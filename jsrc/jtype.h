@@ -85,7 +85,7 @@ struct AD {
  union {
   I m;  // Multi-use field. (1) For NJA/SMM blocks, size of allocation. (2) for blocks coming out of a COUNTITEMS verb, holds the number of items in the
         // raze of the noun (if the types are identical) (3) for SYMB tables for explicit definitions, the symbol positions for y and x (4) for the block
-        // holding the amend offsets in x u} y, the number of axes of y that are built into the indexes in u (5) for VERB blocks, the value of jt->locsyms when the sentence was parsed
+        // holding the amend offsets in x u} y, the number of axes of y that are built into the indexes in u (5) for name references, the value of jt->modifiercount when the name was last looked up
   A back; // For VIRTUAL blocks, points to backing block
 } mback;
  union {
@@ -629,8 +629,8 @@ typedef struct{
 
 
 
-typedef struct {union { D lD; void *lvp; I lI;} localuse;AF valencefns[2];A fgh[3];I4 flag;UI4 fdep; UI4 flag2; RANKT mr,lr,rr; C id; C lc;} V;
-// the localuse field is not freed or counted for space, as the f/g/h fields are.  It is for local optimizations only.  We put if first so that the rest of
+typedef struct {union { D lD; void *lvp; I lI;} localuse;union {A l2A;} localuse2;AF valencefns[2];A fgh[3];I4 flag;/* obsolete UI4 fdep;*/ UI4 flag2; RANKT mr,lr,rr; C id; C lc;} V;  // two cachelines exactly
+// the localuse fields is not freed or counted for space, as the f/g/h fields are.  It is for local optimizations only.  We put if first so that the rest of
 // the block, which is used more, is in a single cacheline.  Local uses are:
 // for ATOMIC2 ops, pointer to the adocv block
 // for name references, pointer to last resolution
@@ -650,7 +650,7 @@ typedef struct {union { D lD; void *lvp; I lI;} localuse;AF valencefns[2];A fgh[
 #define VFHKLVLDEC      (((I)1)<<VFHKLVLDECX)
 #define VFHKLVLGTX      1   // (in (compare L.) hooks) set for < and <: to indicate complement of result of levelle needed
 #define VFHKLVLGT       (((I)1)<<VFHKLVLGTX)
-
+#define VFIMPLOCX       2
 // bits 8 and above are available for all functions:
 #define VGERLX          8
 #define VGERL           (((I)1)<<VGERLX)          /* gerund left  argument           */

@@ -98,7 +98,9 @@ extern F1(jtexg);
 extern F1(jtexpn1);
 extern F1(jtfact);
 extern F1(jtfactor);
+#if !USECSTACK
 extern F1(jtfdepadv);
+#endif
 extern F1(jtfh15);
 extern F1(jtfiller);
 extern F1(jtfix);
@@ -711,7 +713,9 @@ extern A        jtext(J,B,A);
 extern A        jtexta(J,I,I,I,I);
 extern I        jtfa(J,AD * RESTRICT,I);
 extern A        jtfdef(J,I,C,I,AF,AF,A,A,A,I,I,I,I);
+#if !USECSTACK
 extern I        jtfdep(J,A);
+#endif
 extern void     jtfh(J,A);
 extern void     jtfillv(J,I,I,C*);        /* "fill" name conflict on Mac             */
 extern A        jtfindnl(J,I);

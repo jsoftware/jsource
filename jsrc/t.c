@@ -26,7 +26,9 @@ static B jtpdef(J jt,I id,I t,AF f1,AF f2,I m,I l,I r,I flag){A z;V*v;
  v->mr=(RANKT)m;                   /* monadic rank     */
  v->lr=(RANKT)l;                   /* left    rank     */
  v->rr=(RANKT)r;                   /* right   rank     */
+#if !USECSTACK
  v->fdep=1;                 /* function depth   */
+#endif
  v->id=(C)id;                  /* spelling         */
  v->flag=(UI4)flag;              // flags
  v->flag2=(UI4)(id>>8);

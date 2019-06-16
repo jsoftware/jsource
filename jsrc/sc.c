@@ -7,7 +7,7 @@
 
 #if 1
 
-// This function handles both valences: monad as (w,fs,fs), dyad as (a,w,fs)
+// This function handles both valences: monad as (w,fs,fs), dyad as (a,w,fs).  self is the name reference
 //
 // This routine called a 'named' function, which was created by name~ or the equivalent for a stacked verb.
 // It also handles pseudo-named functions, which are anonymous entities that need to be given a temporary name
@@ -54,8 +54,10 @@ static DF2(jtunquote){A z;
  A savname=jt->curname; jt->curname=thisname;  // stack the name of the previous executing entity, replace it with new
  I dyadex = w!=(A)self;   // if we were called with w,fs,fs, we are a monad.  Otherwise (a,w,fs) dyad
  v=FAV(fs);  // repurpose v to point to the resolved verb block
+#if !USECSTACK
  I d=v->fdep; if(!d)RE(d=fdep(fs));  // get stack depth of this function, for overrun prevention
  FDEPINC(d);  // verify sufficient stack space - NO ERRORS until FDEPDEC below
+#endif
  STACKCHKOFL
  if(explocale){ pushcallstack1d(CALLSTACKPOPLOCALE,jt->global); jt->global=explocale;  ++jt->modifiercounter;}  // if locative, switch to it, stacking the prev value. invalidate any extant lookups of modifier names -
  // ************** no errors till the stack has been popped
@@ -89,7 +91,9 @@ static DF2(jtunquote){A z;
   if(PMCTRBPMON&jt->uflags.us.uq.uq_c.pmctrbstk)pmrecord(thisname,jt->global?LOCNAME(jt->global):0,-2L,dyadex?VAL2:VAL1);  // record the return from call
   if(jt->uflags.us.uq.uq_c.spfreeneeded)spfree();   // if garbage collection required, do it
  }
+#if !USECSTACK
  FDEPDEC(d);
+#endif
 
  // Now pop the stack.  Execution may have added entries, but our stack frame always starts in the same place.
  // We may add entries to the end of the caller's stack frame

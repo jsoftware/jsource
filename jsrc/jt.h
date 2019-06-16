@@ -169,9 +169,12 @@ typedef struct {
  I    pmctr;            /* perf. monitor: ctr>0 means do monitoring        */
  C    baselocale[4];    // will be "base"
  UI4  baselocalehash;   // name hash for base locale
+#if !USECSTACK
  I4   fdepi;            /* fn calls: current depth                         */
  I4   fdepn;            /* fn calls: maximum permissible depth             */
+#else
  I    cstackinit;       // C stack pointer at beginning of execution
+#endif
 
 // unordered symbols follow
 // A    local;            /* local symbol table       scaf                       */

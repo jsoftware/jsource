@@ -7,7 +7,7 @@
 #define NCASES          9L           /* # of rows in cases parses table    */
 #define ACTION(f)       A*  f(J jt)
 #define TACT(f)         TA f(J jt,I b,I e,TA*stack)
-#define IS(name,val)    symbis(name,val,jt->local)
+#define IS(name,val)    symbis(name,val,jt->locsyms)
 
 typedef TA(*TAF)();
 typedef A*(*ACTF)();

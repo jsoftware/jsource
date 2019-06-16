@@ -83,7 +83,7 @@ L* jtsymnew(J jt,LX*hv, LX tailx){LX j;L*u,*v;
 // For non-PERMANENT, delete name and value.
 // Reset the fields in the deleted blocks.  If any modifiers are deleted, increment modifiercounter to reset name lookups
 // This is used only for freeing local symbol tables, thus does not need to clear the name/path
-extern void jtsymfreeha(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV(w);
+extern void jtsymfreeha(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
  L *jtsympv=jt->sympv;  // Move base of symbol block to a register.  Block 0 is the base of the free chain.  MUST NOT move the base of the free queue to a register,
   // because when we free a locale it frees its symbols here, and one of them might be a verb that contains a nested SYMB, giving recursion.  It is safe to move sympv to a register because
   // we know there will be no allocations during the free process.
@@ -151,8 +151,8 @@ F1(jtsympool){A aa,q,x,y,*yv,z,*zv;I i,n,*u,*xv;L*pv;LX j,*v;
   RZ(      yv[LXAV0(x)[0]]=aa=rifvs(sfn(1,LOCNAME(x))));
   RZ(q=sympoola(x)); u=AV(q); DO(AN(q), yv[u[i]]=aa;);
  }
- if(x=jt->local){               /* per local table      */
-  RZ(      yv[LXAV0(x)[0]]=aa=rifvs(cstr("**local**")));  // ?? LXAV(x)[0] is always 0
+ if(AN(x=jt->locsyms)>1){               /* per local table      */
+  RZ(      yv[LXAV0(x)[0]]=aa=rifvs(cstr("**local**")));  // ?? LXAV0(x)[0] is always 0
   RZ(q=sympoola(x)); u=AV(q); DO(AN(q), yv[u[i]]=aa;);
  }
  RETF(z);
@@ -194,14 +194,14 @@ L*jtprobe(J jt,I l,C*string,UI4 hash,A g){
 // If the value is empty, return 0 for not found
 // This code is copied in p.c
 L *jtprobelocal(J jt,A a){NM*u;I b,bx;
- // If there is bucket information, there must be a local symbol table, so search it
+ // There is always a local symbol table, but it may be empty
  RZ(a);u=NAV(a);  // u->NM block
  if(b = u->bucket){
   if(0 > (bx = ~u->bucketx)){
    // positive bucketx (now negative); that means skip that many items and then do name search.  This is set for words that were recognized as names but were not detected as assigned-to in the definition
    // If no new names have been assigned since the table was created, we can skip this search, since it must fail (this is the path for words in z eg)
-   if(!(AR(jt->local)&LNAMEADDED))R 0;
-   LX lx = LXAV0(jt->local)[b];  // index of first block if any
+   if(!(AR(jt->locsyms)&LNAMEADDED))R 0;
+   LX lx = LXAV0(jt->locsyms)[b];  // index of first block if any
    I m=u->m; C* s=u->s;  // length/addr of name from name block
    while(0>++bx){lx = jt->sympv[lx].next;}
    // Now lx is the index of the first name that might match.  Do the compares
@@ -213,7 +213,7 @@ L *jtprobelocal(J jt,A a){NM*u;I b,bx;
    }
    R 0;  // no match.
   } else {
-   LX lx = LXAV0(jt->local)[b];  // index of first block if any
+   LX lx = LXAV0(jt->locsyms)[b];  // index of first block if any
    L* l = lx+jt->sympv;  // fetch hashchain headptr, point to L for first symbol
    // negative bucketx (now positive); skip that many items, and then you're at the right place
    while(bx--){l = l->next+jt->sympv;}
@@ -221,17 +221,18 @@ L *jtprobelocal(J jt,A a){NM*u;I b,bx;
   }
  } else {
   // No bucket information, do full search.  This includes names that don't come straight from words in an explicit definition
-  R jt->local?probe(NAV(a)->m,NAV(a)->s,NAV(a)->hash,jt->local) : 0;
+// obsolete   R jt->local?probe(NAV(a)->m,NAV(a)->s,NAV(a)->hash,jt->local) : 0;
+  R probe(NAV(a)->m,NAV(a)->s,NAV(a)->hash,jt->locsyms);
  }
 }
 
-// a is A for name; result is L* address of the symbol-table entry in the local symbol table
+// a is A for name; result is L* address of the symbol-table entry in the local symbol table (which must exist)
 // If not found, one is created
 L *jtprobeislocal(J jt,A a){NM*u;I b,bx;
  // If there is bucket information, there must be a local symbol table, so search it
  RZ(a);u=NAV(a);  // u->NM block
  if(b = u->bucket){
-  LX lx = LXAV0(jt->local)[b];  // index of first block if any
+  LX lx = LXAV0(jt->locsyms)[b];  // index of first block if any
   if(0 > (bx = ~u->bucketx)){
    // positive bucketx (now negative); that means skip that many items and then do name search
    // Even if we know there have been no names assigned we have to spin to the end of the chain
@@ -248,9 +249,9 @@ L *jtprobeislocal(J jt,A a){NM*u;I b,bx;
     tx = lx; lx = l->next;
    }
    // not found, create new symbol.  If tx is 0, the queue is empty, so adding at the head is OK; otherwise add after tx
-   RZ(l=symnew(&LXAV0(jt->local)[b],tx)); 
+   RZ(l=symnew(&LXAV0(jt->locsyms)[b],tx)); 
    ras(a); l->name=a;  // point symbol table to the name block, and increment its use count accordingly
-   AR(jt->local)|=LNAMEADDED;  // Mark that a name has been added beyond what was known at preprocessing time
+   AR(jt->locsyms)|=LNAMEADDED;  // Mark that a name has been added beyond what was known at preprocessing time
    R l;
   } else {L* l = lx+jt->sympv;  // fetch hashchain headptr, point to L for first symbol
    // negative bucketx (now positive); skip that many items, and then you're at the right place
@@ -259,9 +260,9 @@ L *jtprobeislocal(J jt,A a){NM*u;I b,bx;
   }
  } else {
   // No bucket information, do full search
-  L *l=probeis(a,jt->local);
+  L *l=probeis(a,jt->locsyms);
   RZ(l);
-  AR(jt->local)|=(~l->flag)&LPERMANENT;  // Mark that a name has been added beyond what was known at preprocessing time, if the added name is not PERMANENT
+  AR(jt->locsyms)|=(~l->flag)&LPERMANENT;  // Mark that a name has been added beyond what was known at preprocessing time, if the added name is not PERMANENT
   R l;
  }
 }
@@ -327,7 +328,8 @@ static A jtlocindirect(J jt,I n,C*u,UI4 hash){A x,y;C*s,*v,*xv;I k,xn;
   v=s; while('_'!=*--v); ++v;  // v->start of last indirect locative
   k=s-v; s=v-2;    // k=length of indirect locative; s->end+1 of next name if any
   if(!e){  // first time through
-   if(jt->local)e=probe(k,v,hash,jt->local);  // look up local first
+// obsolete    if(jt->local)e=probe(k,v,hash,jt->local);  // look up local first
+   e=probe(k,v,hash,jt->locsyms);  // look up local first
    if(!e)e=syrd1(k,v,hash,jt->global);
   }else e=syrd1(k,v,(UI4)nmhash(k,v),g);   // look up later indirect locatives, yielding an A block for a locative
   ASSERTN(e,EVVALUE,nfs(k,v));  // verify found
@@ -390,7 +392,7 @@ A jtsyrdforlocale(J jt,A a){A g;
  RZ(a);
  if(!(NAV(a)->flag&(NMLOC|NMILOC))){L *e;
   // If there is a local symbol table, search it first
-  if(e = probelocal(a)){R jt->local;}  // return flagging the result if local
+  if(e = probelocal(a)){R jt->locsyms;}  // return flagging the result if local
   g=jt->global;  // Start with the current locale
  } else RZ(g=sybaseloc(a));
  R syrd1forlocale(NAV(a)->m,NAV(a)->s,NAV(a)->hash,g);  // Not local: look up the name starting in locale g
@@ -474,15 +476,16 @@ L* jtprobeisquiet(J jt,A a){A g;
 A jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;L*e;
  RZ(a&&w&&g);
  // If we have an assignsym, we have looked this name up already, so just use the symbol-table entry found then
- // in this case g is the type field of the name being assigned; and jt->local must exist, since it comes from
+ // in this case g is the type field of the name being assigned; and jt->locsyms must exist, since it comes from
  // an explicit definition
  if(jt->assignsym) {
   ASSERT(((I)g&ASGNLOCAL||NAV(a)->flag&(NMLOC|NMILOC)||!probelocal(a)),EVDOMAIN)  //  if global assignment not to locative, verify non locally defined
   e = jt->assignsym;   // point to the symbol-table entry being assigned
   CLEARZOMBIE   // clear until next use.
- } else {A jtlocal=jt->local;
+ } else {A jtlocal=jt->locsyms;
   n=AN(a); NM *v=NAV(a); m=v->m;  // n is length of name, v points to string value of name, m is length of non-locale part of name
-  if(n==m)ASSERT(!(jtlocal&&g!=jtlocal&&probelocal(a)),EVDOMAIN)  // if non-locative, give error if there is a local
+// obsolete   if(n==m)ASSERT(!(jtlocal&&g!=jtlocal&&probelocal(a)),EVDOMAIN)  // if non-locative, give error if there is a local
+  if(n==m)ASSERT(!(g!=jtlocal&&probelocal(a)),EVDOMAIN)  // if non-locative, give error if there is a local
     // symbol table, and we are assigning to the global symbol table, and the name is defined in the local table
   else{C*s=1+m+v->s; RZ(g=NMILOC&v->flag?locindirect(n-m-2,1+s,(UI4)v->bucketx):stfindcre(n-m-2,s,v->bucketx));}
     // locative: s is the length of name_.  Find the symbol table to use, creating one if none found
@@ -529,6 +532,6 @@ A jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;L*e;
   }
  }
  e->sn=jt->slisti;  // Save the script in which this name was defined
- if(jt->stch&&(m<n||jt->local!=g&&jt->stloc!=g))e->flag|=LCH;  // update 'changed' flag if enabled
+ if(jt->stch&&(m<n||jt->locsyms!=g&&jt->stloc!=g))e->flag|=LCH;  // update 'changed' flag if enabled
  R w;   // Return used during testing
 }    /* a: name; w: value; g: symbol table */

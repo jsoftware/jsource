@@ -141,7 +141,8 @@ static PSTK* jtis(J jt,A s1,A v,A n){A f;B ger=0;C c,*s;PSTK* stack=jt->parserst
  else {
   // Point to the block for the assignment; fetch the assignment pseudochar (=. or =:); choose the starting symbol table
   // depending on which type of assignment (but if there is no local symbol table, always use the global)
-  f=stack[1].a; c=*CAV(f); A symtab=jt->local&&c==CASGN?jt->local:jt->global;
+// obsolete  f=stack[1].a; c=*CAV(f); A symtab=jt->local&&c==CASGN?jt->local:jt->global;
+  f=stack[1].a; c=*CAV(f); A symtab=jt->locsyms; if(c!=CASGN||AN(jt->locsyms)==1)symtab=jt->global;
   if((AT(n)&BOX+BOXMULTIASSIGN)==BOX+BOXMULTIASSIGN){
    // string assignment, where the NAME blocks have already been computed.  Use them.  The fast case is where we are assigning a boxed list
    if(AN(n)==1)n=AAV(n)[0];  // if there is only 1 name, treat this like simple assignment, fall through

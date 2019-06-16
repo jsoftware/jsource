@@ -126,7 +126,7 @@ static F1(jtnlx){A z=mtv;B b;I m=0,*v,x;
  jt->workareas.namelist.nlt=m&RHS; b=1&&jt->workareas.namelist.nlt&RHS;
  ASSERT(!(m&MARK),EVDOMAIN);
  if(b           )RZ(z=nlxxx(jt->global));
- if(b&&jt->local)RZ(z=over(nlxxx(jt->local),z));
+ if(b&&(AN(jt->locsyms)>1))RZ(z=over(nlxxx(jt->locsyms),z));
  if(m==SYMB     )RZ(z=over(nlsym(jt->stloc),z));
  R nub(grade2(z,ope(z)));
 }

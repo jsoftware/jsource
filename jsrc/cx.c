@@ -126,7 +126,7 @@ static DF2(jtxdefn){PROLOG(0048);
  TD*tdv=0;  // pointer to base of try. stack
  I tdi=0;  // index of the next open slot in the try. stack
 
- A savloc=jt->local;  // stack area for local symbol table pointer; must set before we set new symbol table
+ A savloc=jt->locsyms;  // stack area for local symbol table pointer; must set before we set new symbol table
  A locsym;  // local symbol table
  UC savdebug; // preserve debug state over calls - this remembers starting debug state.  Needed only if there is a try. stack
 
@@ -145,8 +145,8 @@ static DF2(jtxdefn){PROLOG(0048);
    // This code duplicated below
    locsym=hv[3];  // fetch pointer to preallocated symbol table
    ASSERT(locsym,EVDOMAIN);  // if the valence is not defined, give valence error
-   if(!(AR(locsym)&LSYMINUSE)){jt->local=locsym; AR(locsym)|=LSYMINUSE;}
-   else{RZ(jt->local=clonelocalsyms(locsym));}
+   if(!(AR(locsym)&LSYMINUSE)){jt->locsyms=locsym; AR(locsym)|=LSYMINUSE;}
+   else{RZ(jt->locsyms=clonelocalsyms(locsym));}
   } else {  // something special required
    // If this is a modifier-verb referring to x or y, set u, v to the modifier operands, and sv to the saved text.  The flags don't change
    if(sflg&VXOP){u=sv->fgh[0]; v=sv->fgh[2]; sv=VAV(sv->fgh[1]);}
@@ -154,8 +154,8 @@ static DF2(jtxdefn){PROLOG(0048);
    LINE(sv);
    locsym=hv[3];  // fetch pointer to preallocated symbol table
    ASSERT(locsym,EVDOMAIN);  // if the valence is not defined, give valence error
-   if(!(AR(locsym)&LSYMINUSE)){jt->local=locsym; AR(locsym)|=LSYMINUSE;}
-   else{RZ(jt->local=clonelocalsyms(locsym));}
+   if(!(AR(locsym)&LSYMINUSE)){jt->locsyms=locsym; AR(locsym)|=LSYMINUSE;}
+   else{RZ(jt->locsyms=clonelocalsyms(locsym));}
 
    // lk: 0=normal, 1=this definition is locked, -1=debug mode
    lk=jt->uflags.us.cx.cx_c.glock||sv->flag&VLOCK;
@@ -170,7 +170,7 @@ static DF2(jtxdefn){PROLOG(0048);
      // If we are in debug mode, and the current stack frame has the DCCALL type, pass the debugger
      // information about this execution: the local symbols and the control-word table
      if(self==jt->sitop->dcf){  // if the stack frame is for this exec
-      jt->sitop->dcloc=jt->local; jt->sitop->dcc=hv[1];  // install info about the exec
+      jt->sitop->dcloc=jt->locsyms; jt->sitop->dcc=hv[1];  // install info about the exec
      }
     }
 
@@ -192,8 +192,8 @@ static DF2(jtxdefn){PROLOG(0048);
   // the bucketx for xy are 0 or maybe 1.  We have precalculated the buckets for each table size, so we can install the values
   // directly.
   UI4 yxbucks = (UI4)AM(locsym);  // get the yx bucket indexes, stored in AM by crelocalsyms
-  L *ybuckptr = LXAV0(jt->local)[(US)yxbucks]+jt->sympv;  // pointer to sym block for y
-  L *xbuckptr = LXAV0(jt->local)[yxbucks>>16]+jt->sympv;  // pointer to sym block for y
+  L *ybuckptr = LXAV0(jt->locsyms)[(US)yxbucks]+jt->sympv;  // pointer to sym block for y
+  L *xbuckptr = LXAV0(jt->locsyms)[yxbucks>>16]+jt->sympv;  // pointer to sym block for y
   if(w){ RZ(ras(w)); ybuckptr->val=w; ybuckptr->sn=jt->slisti;}  // If y given, install it & incr usecount as in assignment.  Include the script index of the modification
     // for x (if given), slot is from the beginning of hashchain EXCEPT when that collides with y; then follow y's chain
     // We have verified that hardware CRC32 never results in collision, but the software hashes do (needs to be confirmed on ARM CPU hardware CRC32C)
@@ -339,8 +339,8 @@ static DF2(jtxdefn){PROLOG(0048);
     ++cv->j;  // step to first (or next) iteration
     if(cv->j<cv->n){  // if there are more iterations to do...
      if(cv->x){A x;  // assign xyz and xyz_index for for_xyz.
-      symbis(nfs(6+cv->k,cv->xv),x=sc(cv->j),  jt->local);
-      symbis(nfs(  cv->k,cv->iv),from(x,cv->t),jt->local);
+      symbis(nfs(6+cv->k,cv->xv),x=sc(cv->j),  jt->locsyms);
+      symbis(nfs(  cv->k,cv->iv),from(x,cv->t),jt->locsyms);
      }
      ++i; continue;   // advance to next line and process it
     }
@@ -454,25 +454,25 @@ static DF2(jtxdefn){PROLOG(0048);
  jt->parserqueue = savqueue; jt->parserqueuelen = savqueuelen;  // restore error info for the caller
  if(thisframe){debz();}   // pair with the deba if we did one
  if(!cd){
-  // Normal path.  protect the result block and free everything allocated here, possibly including jt->local
+  // Normal path.  protect the result block and free everything allocated here, possibly including jt->locsyms
   z=EPILOGNORET(z);  // protect return value from being freed when the symbol table is.  Must also be before stack cleanup, in case the return value is xyz_index or the like
  }else{
   // Unusual path with an unclosed contruct (e. g. return. from inside for. loop).  We have to free up the for. stack, but the return value might be one of the names
   // to be deleted on the for. stack, so we must protect the result before we pop the stack.  BUT, EPILOG frees all locally-allocated blocks, which might include the symbol
   // table that we need to pop from.  So we protect the symbol table during the cleanup of the result and stack.
-  ra(jt->local);  // protect local syms
+  ra(jt->locsyms);  // protect local syms
   z=EPILOGNORET(z);  // protect return value from being freed when the symbol table is.  Must also be before stack cleanup, in case the return value is xyz_index or the like
   CDATA *cvminus1 = (CDATA*)VAV(cd)-1; while(cv!=cvminus1){unstackcv(cv); --cv;}  // clean up any remnants left on the for/select stack
   fa(cd);  // have to delete explicitly, because we had to ext() the block and thus protect it with ra()
-  fa(jt->local);  // unprotect local syms.  This deletes them if they were cloned
+  fa(jt->locsyms);  // unprotect local syms.  This deletes them if they were cloned
  }
  // If we are using the original local symbol table, clear it (free all values, free non-permanent names) for next use
  // We detect original symbol table by rank LSYMINUSE - other symbol tables are assigned rank 0.
  // Cloned symbol tables are still hanging on because of the initial ra() - we kill them off here
  // Tables are born with NAMEADDED off.  It gets set when a name is added.  Setting back to initial state here, we clear NAMEADDED
- if(AR(jt->local)&LSYMINUSE){AR(jt->local)&=~(LSYMINUSE|LNAMEADDED); symfreeha(jt->local);}
+ if(AR(jt->locsyms)&LSYMINUSE){AR(jt->locsyms)&=~(LSYMINUSE|LNAMEADDED); symfreeha(jt->locsyms);}
  // Pop the private-area stack; set no assignment (to call for result display)
- jt->local=savloc; jt->asgn=0;
+ jt->locsyms=savloc; jt->asgn=0;
  RETF(z);
 }
 

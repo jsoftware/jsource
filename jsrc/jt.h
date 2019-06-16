@@ -58,9 +58,9 @@ typedef struct {
    } uq;   // flags needed only by unquote
   } us;   // access as US
  } uflags;
- A    local;            /* local symbol table                              */
+ A    locsyms;  // local symbol table, or dummy empty symbol table if none
 // ----- end of cache line 0
- A    global;           /* global symbol table                             */
+ A    global;           /* global symbol table                           */
  A    sf;               /* for $:                                          */
  I    modifiercounter;  // incremented whenever anything happens that could alter modifier lookup: assignment/deletion of a modifier, or any change to locales or path
 // things needed by parsing
@@ -160,7 +160,6 @@ typedef struct {
  I    symindex;         /* symbol table index (monotonically increasing)   */
  UI4  nvrtop;           /* top of nvr stack; # valid entries               */
  UI4  nvrotop;          // previous top of nvr stack
- A    symb;             /* symbol table for assignment                     */
  DC   sitop;            /* top of SI stack                                 */
  I    stmax;            /* numbered locales maximum number                 */
  A    stnum;            /* numbered locale numbers or hash table                         */
@@ -175,6 +174,8 @@ typedef struct {
  I    cstackinit;       // C stack pointer at beginning of execution
 
 // unordered symbols follow
+// A    local;            /* local symbol table       scaf                       */
+ A    symb;             /* symbol table for assignment                     */
 #if !C_CRC32C
  I    hin;              /* used in dyad i. & i:                            */
  I*   hiv;              /* used in dyad i. & i:                            */

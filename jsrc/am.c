@@ -88,7 +88,8 @@ F1(jtcasev){A b,*u,*v,w1,x,y,z;B*bv,p,q;I*aa,c,*iv,j,m,n,r,*s,t;
  // fast (no-error) case; and of course if the use-count is only 1.  But if the assignment is local, we also have to make
  // sure abc is locally defined
  if(p=q&&0<=c&&ACUC1>=AC(u[c])) {  // passes quick check
-   p= !jt->local || *CAV(AAV(v[m+2])[1])!=CASGN || probe(NAV(AAV(v[m+2])[0])->m,NAV(AAV(v[m+2])[0])->s,NAV(AAV(v[m+2])[0])->hash, jt->local);  // OK if not in explicit, or not local assignment, or name defined
+// obsolete    p= !jt->local || *CAV(AAV(v[m+2])[1])!=CASGN || probe(NAV(AAV(v[m+2])[0])->m,NAV(AAV(v[m+2])[0])->s,NAV(AAV(v[m+2])[0])->hash, jt->local);  // OK if not in explicit, or not local assignment, or name defined
+   p= (AN(jt->locsyms)==1) || *CAV(AAV(v[m+2])[1])!=CASGN || probe(NAV(AAV(v[m+2])[0])->m,NAV(AAV(v[m+2])[0])->s,NAV(AAV(v[m+2])[0])->hash, jt->locsyms);  // OK if not in explicit, or not local assignment, or name defined
     // Get the pointer to the parsed sentence; go to its data; take pointer for word[1]; go to its (character) data; take first character
     // then look up the symbol entry for word[0]
  }

@@ -722,7 +722,8 @@ extern unsigned int __cdecl _clearfp (void);
 // When we push, we are about to execute verbs before the last one, and an inplacement there would lead to the name's being assigned with invalid
 // data.  So, we clear the inplace variables if we don't want to allow that: if the user set zomblevel=0, or if there is no local symbol table
 // (which means the user is fooling around at the keyboard & performance is not as important as transparency)
-#define PUSHZOMB L*savassignsym = jt->assignsym; A savzombval; if(savassignsym){savzombval=jt->zombieval; if((UI)jt->asgzomblevel-1>=(UI)jt->local){CLEARZOMBIE}}  // test is (jt->asgzomblevel==0||jt->local==0)
+// obsolete #define PUSHZOMB L*savassignsym = jt->assignsym; A savzombval; if(savassignsym){savzombval=jt->zombieval; if((UI)jt->asgzomblevel-1>=(UI)jt->local){CLEARZOMBIE}}  // test is (jt->asgzomblevel==0||jt->local==0)
+#define PUSHZOMB L*savassignsym = jt->assignsym; A savzombval; if(savassignsym){savzombval=jt->zombieval; if(((jt->asgzomblevel-1)|((AN(jt->locsyms)-2)))<0){CLEARZOMBIE}}  // test is (jt->asgzomblevel==0||AN(jt->locsyms)<2)
 #define POPZOMB if(savassignsym){jt->assignsym=savassignsym;jt->zombieval=savzombval;}
 #define R               return
 #if FINDNULLRET   // When we return 0, we should always have an error code set.  trap if not

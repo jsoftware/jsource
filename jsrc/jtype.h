@@ -79,12 +79,13 @@ struct AD {
  union {
   I k;
   A chain;   // used when block is on free chain
+  A globalst;  // for local symbol tables (SYMB types), AK points to the active global symbol table when the current sentence started parsing
  } kchain;
  FLAGT flag;
  union {
   I m;  // Multi-use field. (1) For NJA/SMM blocks, size of allocation. (2) for blocks coming out of a COUNTITEMS verb, holds the number of items in the
         // raze of the noun (if the types are identical) (3) for SYMB tables for explicit definitions, the symbol positions for y and x (4) for the block
-        // holding the amend offsets in x u} y, the number of axes of y that are built into the indexes in u
+        // holding the amend offsets in x u} y, the number of axes of y that are built into the indexes in u (5) for VERB blocks, the value of jt->locsyms when the sentence was parsed
   A back; // For VIRTUAL blocks, points to backing block
 } mback;
  union {
@@ -128,6 +129,7 @@ typedef I SI;
 /* Fields of type A                                                        */
 
 #define AK(x)           ((x)->kchain.k)        /* offset of ravel wrt x           */
+#define AKGST(x)        ((x)->kchain.globalst)        // global symbol table for this local symbol table
 #define AFLAG(x)        ((x)->flag)     /* flag                            */
 #define AM(x)           ((x)->mback.m)        /* Max # bytes in ravel            */
 #define ABACK(x)        ((x)->mback.back)        /* Max # bytes in ravel            */
@@ -163,14 +165,14 @@ typedef I SI;
 #define UAV(x)          (     (UC*)(x)+AK(x) )  /* unsigned character      */
 #define UIAV(x)         ((UI*)((C*)(x)+AK(x)))  /* unsigned character      */
 #define UI4AV(x)        ((UI4*)((C*)(x)+AK(x)))  /* unsigned 32-bit int      */
-#define LXAV(x)         ((LX*)((C*)(x)+AK(x)))  /* symbol index      */
+// obsolete #define LXAV(x)         ((LX*)((C*)(x)+AK(x)))  /* symbol index      */
 #define C4AV(x)         ((C4*)((C*)(x)+AK(x)))  /* literal4                */
 #define NAV(x)          ((NM*)((C*)(x)+AKXR(1)))  // name, which is always allocated as rank 1, for some reason
 #define IAV(x)          AV(x)                   /* integer                 */
 #define IAV0(x)         ((I*)((C*)(x)+AKXR(0)))  // integer in a stack- or heap-allocated atom (rank 0 - used for internal tables)
 #define IAV1(x)         ((I*)((C*)(x)+AKXR(1)))  // integer in a stack- or heap-allocated list (rank 1)
 #define BAV0(x)         ( (C*)((C*)(x)+AKXR(0)) )  // Boolean when rank is 0 - fixed position (known to avoid segfault)
-#define LXAV0(x)        ( (LX*)((C*)(x)+AKXR(0)) )  // Integer when rank is 0 - fixed position (for SYMB tables)
+#define LXAV0(x)        ( (LX*)((C*)(x)+AKXR(0)) )  // Integer when rank is 0 - fixed position (for SYMB tables).  Note AK() is used in SYMB tables
 #define DAV(x)          ( (D*)((C*)(x)+AK(x)))  /* double                  */
 #define ZAV(x)          ( (Z*)((C*)(x)+AK(x)))  /* complex                 */
 #define XAV(x)          ( (X*)((C*)(x)+AK(x)))  /* extended                */
@@ -477,13 +479,15 @@ typedef struct {I e,p;X x;} DX;
 
 typedef struct {A name,val;US flag;S sn;LX next;} L;
 
-/* symbol pool entry                           LINFO entry                 */
-//---------------------------------------------------------------------------
-/* name - name on LHS of assignment         or locale name                 */
-/* val  - value                             or locale search path          */
-// flag - various flags                        locale flags
-/* sn   - script index                                                     */
-/* next - index of successor   in hash list or 0                           */
+/* symbol pool entry                         LINFO entry (named/numbered)      */
+//-------------------------------------------------------------------------
+/* name - name on LHS of assignment          locale name                    */
+/* val  - value                              locale search path              */
+// flag - various flags                      locale flags                 
+/* sn   - script index                              not used                   */
+/* next - index of successor in hash list or 0      mot used                  */
+
+// FOR EXECUTING LOCAL SYMBOL TABLES: AK() points to the active global symbol table
 
 #define LCH             (I)1            /* changed since last exec of 4!:5 */
 #define LHEAD           (I)2            /* head pointer (no predecessor)   */

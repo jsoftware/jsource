@@ -20,7 +20,7 @@
 #include "p.h"
 
 
-A jteval(J jt,C*s){R parse(tokens(cstr(s),1+!!jt->local));}
+A jteval(J jt,C*s){R parse(tokens(cstr(s),1+(AN(jt->locsyms)>1)));}
 
 A jtev1(J jt,    A w,C*s){R df1(  w,eval(s));}
 A jtev2(J jt,A a,A w,C*s){R df2(a,w,eval(s));}
@@ -32,14 +32,14 @@ F1(jtexec1){A z;
  if(AT(w)&NAME){z=nameref(w);  // the case ".@'name' which is the fastest way to refer to a deferred name
  }else{
   F1RANK(1,jtexec1,0);
-  STACKCHKOFL FDEPINC(1); z=parse(tokens(vs(w),1+!!jt->local)); jt->asgn=0; FDEPDEC(1);
+  STACKCHKOFL FDEPINC(1); z=parse(tokens(vs(w),1+(AN(jt->locsyms)>1))); jt->asgn=0; FDEPDEC(1);
  }
  RETF(z&&!(AT(z)&NOUN)?mtv:z);  // if non-noun result, return empty $0
 }
 
 F1(jtimmex){A z;
  if(!w)R A0;  // if no string, return empty result
- STACKCHKOFL FDEPINC(1); z=parse(tokens(w,1+!!jt->local)); FDEPDEC(1);
+ STACKCHKOFL FDEPINC(1); z=parse(tokens(w,1+(AN(jt->locsyms)>1))); FDEPDEC(1);
  if(z&&!jt->asgn)jpr(z);
  RETF(z);
 }
@@ -70,7 +70,7 @@ A jtjset(J jt,C*name,A x){R symbis(nfs((I)strlen(name),name),x,jt->global);}
 
 F2(jtapplystr){PROLOG(0054);A fs,z;
  F2RANK(1,RMAX,jtapplystr,0);
- RZ(fs=parse(tokens(vs(a),1+!!jt->local)));
+ RZ(fs=parse(tokens(vs(a),1+(AN(jt->locsyms)>1))));
  ASSERT(VERB&AT(fs),EVSYNTAX);
  STACKCHKOFL FDEPINC(d=fdep(fs)); z=CALL1(FAV(fs)->valencefns[0],w,fs); FDEPDEC(d);
  EPILOG(z); 

@@ -270,6 +270,8 @@ B jtsymbinit(J jt){A q;
  RZ(jt->global=stcreate(0,p,sizeof(jt->baselocale),jt->baselocale));
  FULLHASHSIZE(1LL<<12,SYMBSIZE,1,SYMLINFOSIZE,p);  // about 2^13 chains
  RZ(           stcreate(0,p,1L,"z"   ));
+ // Allocate a symbol table with just 1 (empty) chain; then set length to 1 indicating 0 chains; make this the current local symbols, to use when no explicit def is running
+ RZ(jt->locsyms=stcreate(2,2,0,0)); AN(jt->locsyms)=1;
  R 1;
 }
 
@@ -479,7 +481,7 @@ static SYMWALK(jtlocmap1,I,INT,18,3,1,
 F1(jtlocmap){A g,q,x,y,*yv,z,*zv;I c=-1,d,j=0,m,*qv,*xv;
  RZ(w);
  ASSERT(!AR(w),EVRANK);
- RE(g=equ(w,zeroionei[0])?jt->stloc:equ(w,zeroionei[1])?jt->local:locale(0,w));
+ RE(g=equ(w,zeroionei[0])?jt->stloc:equ(w,zeroionei[1])?jt->locsyms:locale(0,w));
  ASSERT(g,EVLOCALE);
  RZ(q=locmap1(g)); qv=AV(q);
  m=*AS(q);

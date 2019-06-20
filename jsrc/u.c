@@ -310,6 +310,10 @@ A jtvec(J jt,I t,I n,void*v){A z; GA(z,t,n,1,0); MC(AV(z),v,n<<bplg(t)); RETF(z)
 
 // return A-block for list of type t, length n, and values *v
 // with special handling to coerce boolean type
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC push_options
+#pragma GCC optimize ("unroll-loops")
+#endif
 #if C_AVX2&&SY_64
 A jtvecb01(J jt,I t,I n,void*v){A z; GA(z,t,n,1,0);if(t&B01){C*p=(C*)AV(z),*q=v; 
 __m256i zeros=_mm256_setzero_si256();
@@ -319,12 +323,25 @@ I n0=n<<bplg(t);
 UI mis=((uintptr_t)q)&31u;
 if(mis){
 n0-=mis;
+#if defined(__clang__)
+#pragma clang loop vectorize(enable) interleave_count(4)
+#endif
 while(mis--)*p++=!!(*q++);
 }
 while (n0 >= 32) {
  _mm256_storeu_si256((__m256i *)p,_mm256_and_si256(_mm256_xor_si256(_mm256_cmpeq_epi8(_mm256_load_si256((__m256i*)q),zeros),ffs),ones));
  n0-=32;p+=32;q+=32;
 }
+if (n0 >= 16) {
+__m128i zeros=_mm_setzero_si128();
+__m128i ones=_mm_set1_epi8(1);
+__m128i ffs=_mm_set1_epi8(0xffu);
+ _mm_storeu_si128((__m128i *)p,_mm_and_si128(_mm_xor_si128(_mm_cmpeq_epi8(_mm_load_si128((__m128i*)q),zeros),ffs),ones));
+ n0-=16;p+=16;q+=16;
+}
+#if defined(__clang__)
+#pragma clang loop vectorize(enable) interleave_count(4)
+#endif
 while(n0--)*p++=!!(*q++);
 }else MC(AV(z),v,n<<bplg(t)); RETF(z);}
 #elif __SSE2__
@@ -336,28 +353,30 @@ I n0=n<<bplg(t);
 UI mis=((uintptr_t)q)&15u;
 if(mis){
 n0-=mis;
+#if defined(__clang__)
+#pragma clang loop vectorize(enable) interleave_count(4)
+#endif
 while(mis--)*p++=!!(*q++);
 }
 while (n0 >= 16) {
  _mm_storeu_si128((__m128i *)p,_mm_and_si128(_mm_xor_si128(_mm_cmpeq_epi8(_mm_load_si128((__m128i*)q),zeros),ffs),ones));
  n0-=16;p+=16;q+=16;
 }
+#if defined(__clang__)
+#pragma clang loop vectorize(enable) interleave_count(4)
+#endif
 while(n0--)*p++=!!(*q++);
 }else MC(AV(z),v,n<<bplg(t)); RETF(z);}
 #else
-#if defined(__GNUC__) && !defined(__clang__)
-#pragma GCC push_options
-#pragma GCC optimize ("unroll-loops")
-#endif
 A jtvecb01(J jt,I t,I n,void*v){A z; GA(z,t,n,1,0);if(t&B01){C*p=(C*)AV(z),*q=v; 
 #if defined(__clang__)
 #pragma clang loop vectorize(enable) interleave_count(4)
 #endif
 for(I i=0;i<n<<bplg(t);i++)*p++=!!(*q++);
 }else MC(AV(z),v,n<<bplg(t)); RETF(z);}
+#endif
 #if defined(__GNUC__) && !defined(__clang__)
 #pragma GCC pop_options
-#endif
 #endif
 
 // Convert w to integer if it isn't integer already (the usual conversion errors apply)

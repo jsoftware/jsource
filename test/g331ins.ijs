@@ -12,16 +12,16 @@ test=: 1 : 0
  xx=: xx,'b=:  (#yy)$1 [ yy=: y{~?233 5$#y'
  for_exp. xx do.
   ".exp
-  assert. (b f;. 1     yy) -: b u/;. 1     yy
-  assert. (b f;._1 etx yy) -: b u/;._1 etx yy
-  assert. (b f;. 2     yy) -: b u/;. 2     yy
-  assert. (b f;._2 etx yy) -: b u/;._2 etx yy
+  assert. (b f;. 1     yy) -: b u f./;. 1     yy
+  assert. (b f;._1 etx yy) -: b u f./;._1 etx yy
+  assert. (b f;. 2     yy) -: b u f./;. 2     yy
+  assert. (b f;._2 etx yy) -: b u f./;._2 etx yy
  end.
  if. (1=3!:0 y) >: (<5!:5 <'u') e. ;:'= < <: > >: +. * *. ~:' do.
   yy=: y{~?10000$#y
   b=: ?(#yy)$2
-  p=: sp  'b u/;.1 yy'
-  q=: spa  b u/;.1 yy
+  p=: sp  'b u f./;.1 yy'
+  q=: spa  b u f./;.1 yy
   assert. p <: q*IF64{2 2.5
  end.
  1

@@ -5,32 +5,32 @@ test=: 1 : 0
  :
  f=: u
  if. *./0=#;.1~x do.
-  assert. (0#y)                    -: x ([: ; <@(u/\ );. 1) etx y
-  assert. (0#y)                    -: x ([: ; <@(u/\.);. 1) etx y
+  assert. (0#y)                    -: x ([: ; <@(u f./\ );. 1) etx y
+  assert. (0#y)                    -: x ([: ; <@(u f./\.);. 1) etx y
  else.
-  assert. (; x <@(u/\ );. 1 etx y) -: x ([: ; <@(u/\ );. 1) etx y
-  assert. (; x <@(u/\.);. 1 etx y) -: x ([: ; <@(u/\.);. 1) etx y
+  assert. (; x <@(u f./\ );. 1 etx y) -: x ([: ; <@(u f./\ );. 1) etx y
+  assert. (; x <@(u f./\.);. 1 etx y) -: x ([: ; <@(u f./\.);. 1) etx y
  end.
  if. *./0=#;.2~x do.
-  assert. (0#y)                    -: x ([: ; <@(u/\ );. 2) etx y
-  assert. (0#y)                    -: x ([: ; <@(u/\.);. 2) etx y
+  assert. (0#y)                    -: x ([: ; <@(u f./\ );. 2) etx y
+  assert. (0#y)                    -: x ([: ; <@(u f./\.);. 2) etx y
  else.
-  assert. (; x <@(u/\ );. 2 etx y) -: x ([: ; <@(u/\ );. 2) etx y
-  assert. (; x <@(u/\.);. 2 etx y) -: x ([: ; <@(u/\.);. 2) etx y
+  assert. (; x <@(u f./\ );. 2 etx y) -: x ([: ; <@(u f./\ );. 2) etx y
+  assert. (; x <@(u f./\.);. 2 etx y) -: x ([: ; <@(u f./\.);. 2) etx y
  end.
  if. *./0=#;._1~x do.
-  assert. (0#y)                    -: x ([: ; <@(u/\ );._1) etx y
-  assert. (0#y)                    -: x ([: ; <@(u/\.);._1) etx y
+  assert. (0#y)                    -: x ([: ; <@(u f./\ );._1) etx y
+  assert. (0#y)                    -: x ([: ; <@(u f./\.);._1) etx y
  else.
-  assert. (; x <@(u/\ );._1 etx y) -: x ([: ; <@(u/\ );._1) etx y
-  assert. (; x <@(u/\.);._1 etx y) -: x ([: ; <@(u/\.);._1) etx y
+  assert. (; x <@(u f./\ );._1 etx y) -: x ([: ; <@(u f./\ );._1) etx y
+  assert. (; x <@(u f./\.);._1 etx y) -: x ([: ; <@(u f./\.);._1) etx y
  end.
  if. *./0=#;._2~x do.
-  assert. (0#y)                    -: x ([: ; <@(u/\ );._2) etx y
-  assert. (0#y)                    -: x ([: ; <@(u/\.);._2) etx y
+  assert. (0#y)                    -: x ([: ; <@(u f./\ );._2) etx y
+  assert. (0#y)                    -: x ([: ; <@(u f./\.);._2) etx y
  else.
-  assert. (; x <@(u/\ );._2 etx y) -: x ([: ; <@(u/\ );._2) etx y
-  assert. (; x <@(u/\.);._2 etx y) -: x ([: ; <@(u/\.);._2) etx y
+  assert. (; x <@(u f./\ );._2 etx y) -: x ([: ; <@(u f./\ );._2) etx y
+  assert. (; x <@(u f./\.);._2 etx y) -: x ([: ; <@(u f./\.);._2) etx y
  end.
  1
 )

@@ -314,21 +314,21 @@ NB. x f/.y on empty x ---------------------------------------------------
 test=: 2 : 0
  n=: p: ?200
  xx=: n ?@$ >.-:n
- assert. xx             (u/. -: v/.) i.n,0
- assert. ((n,0)$0     ) (u/. -: v/.) i.n,0
- assert. ((n,0)$0     ) (u/. -: v/.) i.n
- assert. ((n,0)$''    ) (u/. -: v/.) i.n
- assert. ((n,0)$u: 0  ) (u/. -: v/.) i.n
- assert. ((n,0)$10&u: 0) (u/. -: v/.) i.n
- assert. ((n,0)$2     ) (u/. -: v/.) i.n
- assert. ((n,0)$2.5   ) (u/. -: v/.) i.n
- assert. ((n,0)$2j5   ) (u/. -: v/.) i.n
- assert. ((n,0)$2x    ) (u/. -: v/.) i.n
- assert. ((n,0)$2r5   ) (u/. -: v/.) i.n
- assert. ((n,0)$a:    ) (u/. -: v/.) i.n
- assert. ((n,0)$s:<'x') (u/. -: v/.) i.n
- assert. ((n,0)$s:<u: 128+a.i. 'x') (u/. -: v/.) i.n
- assert. ((n,0)$s:<10&u: 65536+a.i. 'x') (u/. -: v/.) i.n
+ assert. xx             (u f./. -: v/.) i.n,0
+ assert. ((n,0)$0     ) (u f./. -: v/.) i.n,0
+ assert. ((n,0)$0     ) (u f./. -: v/.) i.n
+ assert. ((n,0)$''    ) (u f./. -: v/.) i.n
+ assert. ((n,0)$u: 0  ) (u f./. -: v/.) i.n
+ assert. ((n,0)$10&u: 0) (u f./. -: v/.) i.n
+ assert. ((n,0)$2     ) (u f./. -: v/.) i.n
+ assert. ((n,0)$2.5   ) (u f./. -: v/.) i.n
+ assert. ((n,0)$2j5   ) (u f./. -: v/.) i.n
+ assert. ((n,0)$2x    ) (u f./. -: v/.) i.n
+ assert. ((n,0)$2r5   ) (u f./. -: v/.) i.n
+ assert. ((n,0)$a:    ) (u f./. -: v/.) i.n
+ assert. ((n,0)$s:<'x') (u f./. -: v/.) i.n
+ assert. ((n,0)$s:<u: 128+a.i. 'x') (u f./. -: v/.) i.n
+ assert. ((n,0)$s:<10&u: 65536+a.i. 'x') (u f./. -: v/.) i.n
  1
 )
 

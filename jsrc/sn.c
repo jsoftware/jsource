@@ -66,8 +66,13 @@ A jtnfs(J jt,I n,C*s){A z;C c,f,*t;I m,p;NM*zv;
  RETF(z);
 }    /* name from string */
 
-A jtsfn(J jt,B b,A w){NM*v; RZ(w); v=NAV(w); R str(b?v->m:AN(w),v->s);}
-     /* string from name: 0=b full name; 1=b non-locale part of name */
+// string from name: returns string for the name
+// if b&SFNSIMPLEONLY, return only the simple name
+A jtsfn(J jt,B b,A w){NM*v; RZ(w); v=NAV(w); R str(b&SFNSIMPLEONLY?v->m:AN(w),v->s);}
+
+// string from name evocation: returns string for name UNLESS the name was an NMDOT type; in that case it returns w f. which will be a verb
+A jtsfne(J jt,A w){RZ(w); A wn=FAV(w)->fgh[0]; NM *v=NAV(wn); if(v->flag&NMDOT)R fix(w,zeroionei[0]); R sfn(0,wn);}
+
 
 F1(jtnfb){A y;C*s;I n;
  RZ(w);
@@ -113,10 +118,10 @@ F1(jtnc){A*wv,x,y,z;I i,n,t,*zv;L*v;
 
 
 static SYMWALK(jtnlxxx, A,BOX,20,1, jt->workareas.namelist.nla[*((UC*)NAV(d->name)->s)]&&jt->workareas.namelist.nlt&AT(d->val), 
-    RZ(*zv++=rifvs(sfn(1,d->name))) )
+    RZ(*zv++=rifvs(sfn(SFNSIMPLEONLY,d->name))) )
 
        SYMWALK(jtnlsym, A,BOX,20,1, jt->workareas.namelist.nla[*((UC*)NAV(d->name)->s)],
-    RZ(*zv++=rifvs(sfn(1,d->name))) )
+    RZ(*zv++=rifvs(sfn(SFNSIMPLEONLY,d->name))) )
 
 static I nlmask[] = {NOUN,ADV,CONJ,VERB, MARK,MARK,SYMB,MARK};
 

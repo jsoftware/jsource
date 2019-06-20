@@ -35,6 +35,7 @@ static UC typepriority[] = {   // convert type bit to priority
 static UC prioritytype[] = {  // Convert priority to type bit
 B01X, LITX, C2TX, C4TX, INTX, BOXX, XNUMX, RATX, SBTX, FLX, CMPXX};
 
+// create name block for xyuvmn
 static A jtmakename(J jt,C*s){A z;I m;NM*zv;
  m=strlen(s);
  GATV0(z,NAME,m,1); zv=NAV(z);  // Use GATV because GA doesn't support NAME type
@@ -42,7 +43,7 @@ static A jtmakename(J jt,C*s){A z;I m;NM*zv;
  zv->m   =(UC)m; 
  zv->bucket=0;
  zv->bucketx=0;
- zv->flag=NMDOT;
+ zv->flag=NMDOT+NMXY*((*s=='x')|(*s=='y'));
  zv->hash=(UI4)nmhash(m,s);
  ACX(z);
  R z;
@@ -64,7 +65,7 @@ JE support for threads has problems
 storage belonging to a task or thread should be be rooted in the J structure
 there are only a few globals that have storage not in J
 
-global storage should be initialized in globint()
+global storage should be initialized in globinit()
 this is thread-safe in windows - called from dllmain
 not currently thread-safe in unix, but could be (at least is all in one spot)
 */

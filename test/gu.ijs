@@ -5,18 +5,18 @@ UTYPE=: 131072   NB. type code for Unicode
 
 domerr=: 1 : 0
  if. 1 e. y do. 
-  assert. 'domain error' -: u etx u: 'abcd'
+  assert. 'domain error' -: u f. etx u: 'abcd'
  end.
  if. 2 e. y do.
-  assert. 'domain error' -: 2          u etx u: 'abc'
-  assert. 'domain error' -: (u: 'xyz') u etx 2
-  assert. 'domain error' -: (u: 'xyz') u etx u: 'abc'
+  assert. 'domain error' -: 2          u f. etx u: 'abc'
+  assert. 'domain error' -: (u: 'xyz') u f. etx 2
+  assert. 'domain error' -: (u: 'xyz') u f. etx u: 'abc'
  end.
  if. 'l' e. y do.
-  assert. 'domain error' -: (u: 'ab')  u etx i.2 3
+  assert. 'domain error' -: (u: 'ab')  u f. etx i.2 3
  end.
  if. 'r' e. y do.
-  assert. 'domain error' -: 2 3 4      u etx u: 'abc'
+  assert. 'domain error' -: 2 3 4      u f. etx u: 'abc'
  end.
  1
 )

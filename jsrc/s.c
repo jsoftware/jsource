@@ -135,7 +135,7 @@ F1(jtsympool){A aa,q,x,y,*yv,z,*zv;I i,n,*u,*xv;L*pv;LX j,*v;
   *xv++=pv->flag+(pv->name?LHASNAME:0)+(pv->val?LHASVALUE:0);  // flag
   *xv++=pv->sn;    
   *xv++=pv->next;
-  RZ(*yv++=(q=pv->name)?rifvs(sfn(1,q)):mtv);
+  RZ(*yv++=(q=pv->name)?rifvs(sfn(SFNSIMPLEONLY,q)):mtv);
  }
  // Allocate box 3: locale name
  GATV0(y,BOX,n,1); yv=AAV(y); zv[2]=y;
@@ -143,12 +143,12 @@ F1(jtsympool){A aa,q,x,y,*yv,z,*zv;I i,n,*u,*xv;L*pv;LX j,*v;
  n=AN(jt->stloc); v=LXAV0(jt->stloc); 
  for(i=0;i<n;++i)if(j=v[i]){    /* per named locales ?? does not chase chain   */  // j is index to named local entry
   x=(j+jt->sympv)->val;  // x->symbol table for locale
-  RZ(yv[j]=yv[LXAV0(x)[0]]=aa=rifvs(sfn(1,LOCNAME(x))));  // install name in the entry for the locale
+  RZ(yv[j]=yv[LXAV0(x)[0]]=aa=rifvs(sfn(SFNSIMPLEONLY,LOCNAME(x))));  // install name in the entry for the locale
   RZ(q=sympoola(x)); u=AV(q); DO(AN(q), yv[u[i]]=aa;);
  }
  n=jtcountnl(jt);
  for(i=0;i<n;++i)if(x=jtindexnl(jt,i)){   /* per numbered locales */
-  RZ(      yv[LXAV0(x)[0]]=aa=rifvs(sfn(1,LOCNAME(x))));
+  RZ(      yv[LXAV0(x)[0]]=aa=rifvs(sfn(SFNSIMPLEONLY,LOCNAME(x))));
   RZ(q=sympoola(x)); u=AV(q); DO(AN(q), yv[u[i]]=aa;);
  }
  if(AN(x=jt->locsyms)>1){               /* per local table      */
@@ -472,8 +472,8 @@ L* jtprobeisquiet(J jt,A a){A g;
 
 
 // assign symbol: assign name a in symbol table g to the value w (but g is special if jt->assignsym is nonnull)
-// Non-error result is unused (mark)
-A jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;L*e;
+// Result points to the symbol-table block for the assignment
+L* jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;L*e;
  RZ(a&&w&&g);
  // If we have an assignsym, we have looked this name up already, so just use the symbol-table entry found then
  // in this case g is the type field of the name being assigned; and jt->locsyms must exist, since it comes from
@@ -498,18 +498,26 @@ A jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;L*e;
  }
  if(jt->uflags.us.cx.cx_c.db)RZ(redef(w,e));  // if debug, check for changes to stack
  x=e->val;   // if x is 0, this name has not been assigned yet; if nonzero, x points to the value
- I xaf = AFNVRUNFREED;  // If name is not assigned, indicate that it is not read-only or memory-mapped.  Also set 'impossible' code of unfreed+not NVR
+ I xaf/* obsolete = AFNVRUNFREED*/;  // holder for nvr/free flags
  I xt=0;  // If not assigned, use empty type
- if(x){xaf=AFLAG(x); xt=AT(x);} else {xaf = AFNVRUNFREED; xt=0;}  // if assigned, get the actual flags
+ if(x){
+   xaf=AFLAG(x); xt=AT(x); // if assigned, get the actual flags
+   // When we reassign to u/v, we clear the implicit-locale flags.  We just clear them willy-nilly and rely on xdefn to set them when needed.
+   e->flag&=~LIMPLOCUV;
+ } else {xaf = AFNVRUNFREED; xt=0;}   // If name is not assigned, indicate that it is not read-only or memory-mapped.  Also set 'impossible' code of unfreed+not NVR
  if(!(AFNJA&xaf)){
   // If we are assigning the same data block that's already there, don't bother with changing use counts or checking for relative
   // addressing - if there was any, it should have been fixed when the original assignment was made.
   // It is possible that a name in an upper execution refers to the block, but we can't do anything about that.
   if(x!=w){
-   // When we assign to, or reassign, a modifier, invalidate all the lookups of modifiers that are extant
-   // It's a pity that we have to do this for ALL assignments, even assignments to uv.  If we don't, a reference to a local modifier may get passed in, and
-   // it will still be considered valid even though the local names have disappeared.  Maybe we could avoid this if the local namespace has no defined modifiers - but then we'd have to keep up with that...
-   if((xt|AT(w))&(VERB|CONJ|ADV))++jt->modifiercounter;
+   if((xt|AT(w))&(VERB|CONJ|ADV)){
+    // When we assign to, or reassign, a modifier, invalidate all the lookups of modifiers that are extant
+    // It's a pity that we have to do this for ALL assignments, even assignments to uv.  If we don't, a reference to a local modifier may get passed in, and
+    // it will still be considered valid even though the local names have disappeared.  Maybe we could avoid this if the local namespace has no defined modifiers - but then we'd have to keep up with that...
+    ++jt->modifiercounter;
+    // If the assignment is global, we have to scan the value, and fix it if it contains implicit locatives
+    if(g!=jt->locsyms&&hasimploc(w,0))RZ(w=fix(w,zeroionei[0]));
+   }
    // Increment the use count of the value being assigned, to reflect the fact that the assigned name will refer to it.
    // This realizes any virtual value, and makes the usecount recursive if the type is recursible
    realizeifvirtual(w); ra(w);
@@ -532,6 +540,6 @@ A jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;L*e;
   }
  }
  e->sn=jt->slisti;  // Save the script in which this name was defined
- if(jt->stch&&(m<n||jt->locsyms!=g&&jt->stloc!=g))e->flag|=LCH;  // update 'changed' flag if enabled
- R w;   // Return used during testing
+ if(jt->stch&&(m<n||jt->locsyms!=g&&jt->stloc!=g))e->flag|=LCH;  // update 'changed' flag if enabled, and locative or assignment to global namespace   scaf make this unconditional
+ R e;   // return the block for the assignment
 }    /* a: name; w: value; g: symbol table */

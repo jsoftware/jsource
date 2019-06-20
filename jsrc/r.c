@@ -9,9 +9,11 @@
 
 static F1(jtdrr){PROLOG(0055);A df,dg,fs,gs,hs,*x,z;B b,ex,xop;C c,id;I fl,*hv,m;V*v;
  RZ(w);
- // If noun, return the linear rep of the noun.  If name, use bare string form of the name
- if(AT(w)&NAME)R sfn(0,w);
+ // If the input is a name, it must be from ".@'name' which turned into ".@(name+noun)  - or in debug, but that's discarded
+ if(AT(w)&NAME){RZ(w=sfn(0,w));}
+ // If noun, return the value of the noun.
  if(AT(w)&NOUN)R w;  // no quotes needed
+ // Non-nouns and NMDOT names carry on
  v=FAV(w); id=v->id; fl=v->flag; 
  fs=v->fgh[0]; gs=v->fgh[1]; hs=v->fgh[2]; if(id==CBOX)gs=0;  // ignore gs field in BOX, there to simulate BOXATOP
  if(fl&VXOPCALL)R drr(hs);
@@ -19,7 +21,8 @@ static F1(jtdrr){PROLOG(0055);A df,dg,fs,gs,hs,*x,z;B b,ex,xop;C c,id;I fl,*hv,m
  b=id==CHOOK||id==CADVF; c=id==CFORK;
  m=!!fs+(gs||ex);
  if(!m)R spella(w);
- if(evoke(w))R sfn(0,fs);
+// obsolete  if(evoke(w))R sfn(0,fs);
+ if(evoke(w))R drr(sfne(w));  // turn nameref into string or verb; then take rep
  if(fs)RZ(df=fl&VGERL?every(fxeach(fs),0L,jtdrr):drr(fs));
  if(gs)RZ(dg=fl&VGERR?every(fxeach(gs),0L,jtdrr):drr(gs));
  if(ex)RZ(dg=unparsem(num[0],w));
@@ -43,10 +46,11 @@ F1(jtaro){A fs,gs,hs,s,*u,*x,y,z;B ex,xop;C id;I*hv,m;V*v;
   ex=hs&&id==CCOLON&&!xop;
   m=id==CFORK?3:!!fs+(ex||xop&&hs||!xop&&gs);
   if(!m)R spella(w);
-  if(evoke(w))R sfn(0,fs);
+// obsolete  if(evoke(w))R sfn(0,fs);
+  if(evoke(w)){RZ(w=sfne(w)); if(FUNC&AT(w))w=aro(w); R w;}  // keep nameref as a string, UNLESS it is NMDOT, in which case use the (f.'d) verb value
  }
  GAT0(z,BOX,2,1); x=AAV(z);
- if(NOUN&AT(w)){RZ(x[0]=rifvs(ravel(scc(CNOUN)))); if(AT(w)&NAME)RZ(w=sfn(0,w)); x[1]=INCORPNA(w); RETF(z);}  // if name, must be ".@'name', format name as noun
+ if(NOUN&AT(w)){RZ(x[0]=rifvs(ravel(scc(CNOUN)))); if(AT(w)&NAME)RZ(w=sfn(0,w)); x[1]=INCORPNA(w); RETF(z);}  // if name, must be ".@'name', format name as string
  GATV0(y,BOX,m,1); u=AAV(y);
  if(0<m)RZ(u[0]=rifvs(aro(fs)));
  if(1<m)RZ(u[1]=rifvs(aro(ex?unparsem(num[0],w):xop?hs:gs)));

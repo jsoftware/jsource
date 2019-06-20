@@ -50,16 +50,16 @@ data=: 3 : 0
 
 testvv=: 2 : 0  NB. vector vector
   :
- assert. (u xb v yb) -: xb u@:v yb
- assert. (u xb v yi) -: xb u@:v yi
- assert. (u xb v yd) -: xb u@:v yd
- assert. (u xi v yb) -: xi u@:v yb
- assert. (u xi v yi) -: xi u@:v yi
- assert. (u xi v yd) -: xi u@:v yd
- assert. (u xd v yb) -: xd u@:v yb
- assert. (u xd v yi) -: xd u@:v yi
- assert. (u xd v yd) -: xd u@:v yd
- assert. (u xs v ys) -: xs u@:v ys
+ assert. (u xb v yb) -: xb (u f.)@:(v f.) yb
+ assert. (u xb v yi) -: xb (u f.)@:(v f.) yi
+ assert. (u xb v yd) -: xb (u f.)@:(v f.) yd
+ assert. (u xi v yb) -: xi (u f.)@:(v f.) yb
+ assert. (u xi v yi) -: xi (u f.)@:(v f.) yi
+ assert. (u xi v yd) -: xi (u f.)@:(v f.) yd
+ assert. (u xd v yb) -: xd (u f.)@:(v f.) yb
+ assert. (u xd v yi) -: xd (u f.)@:(v f.) yi
+ assert. (u xd v yd) -: xd (u f.)@:(v f.) yd
+ assert. (u xs v ys) -: xs (u f.)@:(v f.) ys
  f=: u ftab v
  assert. (u xb v yb) -: xb f      yb
  assert. (u xb v yi) -: xb f      yi
@@ -76,25 +76,25 @@ testvv=: 2 : 0  NB. vector vector
 
 testsv=: 2 : 0  NB. scalar vector
   :
- assert. (u 0  v zb) -: 0  u@:v zb
- assert. (u 0  v zi) -: 0  u@:v zi
- assert. (u 0  v zd) -: 0  u@:v zd
- assert. (u 0  v yb) -: 0  u@:v yb
- assert. (u 0  v yi) -: 0  u@:v yi
- assert. (u 0  v yd) -: 0  u@:v yd
- assert. (u 1  v zb) -: 1  u@:v zb
- assert. (u 1  v zi) -: 1  u@:v zi
- assert. (u 1  v zd) -: 1  u@:v zd
- assert. (u 1  v yb) -: 1  u@:v yb
- assert. (u 1  v yi) -: 1  u@:v yi
- assert. (u 1  v yd) -: 1  u@:v yd
- assert. (u ai v yb) -: ai u@:v yb
- assert. (u ai v yi) -: ai u@:v yi
- assert. (u ai v yd) -: ai u@:v yd
- assert. (u ad v yb) -: ad u@:v yb
- assert. (u ad v yi) -: ad u@:v yi
- assert. (u ad v yd) -: ad u@:v yd
- assert. (u as v ys) -: as u@:v ys
+ assert. (u 0  v zb) -: 0  (u f.)@:(v f.) zb
+ assert. (u 0  v zi) -: 0  (u f.)@:(v f.) zi
+ assert. (u 0  v zd) -: 0  (u f.)@:(v f.) zd
+ assert. (u 0  v yb) -: 0  (u f.)@:(v f.) yb
+ assert. (u 0  v yi) -: 0  (u f.)@:(v f.) yi
+ assert. (u 0  v yd) -: 0  (u f.)@:(v f.) yd
+ assert. (u 1  v zb) -: 1  (u f.)@:(v f.) zb
+ assert. (u 1  v zi) -: 1  (u f.)@:(v f.) zi
+ assert. (u 1  v zd) -: 1  (u f.)@:(v f.) zd
+ assert. (u 1  v yb) -: 1  (u f.)@:(v f.) yb
+ assert. (u 1  v yi) -: 1  (u f.)@:(v f.) yi
+ assert. (u 1  v yd) -: 1  (u f.)@:(v f.) yd
+ assert. (u ai v yb) -: ai (u f.)@:(v f.) yb
+ assert. (u ai v yi) -: ai (u f.)@:(v f.) yi
+ assert. (u ai v yd) -: ai (u f.)@:(v f.) yd
+ assert. (u ad v yb) -: ad (u f.)@:(v f.) yb
+ assert. (u ad v yi) -: ad (u f.)@:(v f.) yi
+ assert. (u ad v yd) -: ad (u f.)@:(v f.) yd
+ assert. (u as v ys) -: as (u f.)@:(v f.) ys
  f=: u ftab v
  assert. (u 0  v yb) -: 0  f      yb
  assert. (u 0  v yi) -: 0  f      yi
@@ -114,19 +114,19 @@ testsv=: 2 : 0  NB. scalar vector
 
 testvs=: 2 : 0  NB. vector scalar
   :
- assert. (u xb v 0 ) -: xb u@:v 0
- assert. (u xb v 1 ) -: xb u@:v 1
- assert. (u xb v ai) -: xb u@:v ai
- assert. (u xb v ad) -: xb u@:v ad
- assert. (u xi v 0 ) -: xi u@:v 0
- assert. (u xi v 1 ) -: xi u@:v 1
- assert. (u xi v ai) -: xi u@:v ai
- assert. (u xi v ad) -: xi u@:v ad
- assert. (u xd v 0 ) -: xd u@:v 0
- assert. (u xd v 1 ) -: xd u@:v 1
- assert. (u xd v ai) -: xd u@:v ai
- assert. (u xd v ad) -: xd u@:v ad
- assert. (u xs v as) -: xs u@:v as
+ assert. (u xb v 0 ) -: xb (u f.)@:(v f.) 0
+ assert. (u xb v 1 ) -: xb (u f.)@:(v f.) 1
+ assert. (u xb v ai) -: xb (u f.)@:(v f.) ai
+ assert. (u xb v ad) -: xb (u f.)@:(v f.) ad
+ assert. (u xi v 0 ) -: xi (u f.)@:(v f.) 0
+ assert. (u xi v 1 ) -: xi (u f.)@:(v f.) 1
+ assert. (u xi v ai) -: xi (u f.)@:(v f.) ai
+ assert. (u xi v ad) -: xi (u f.)@:(v f.) ad
+ assert. (u xd v 0 ) -: xd (u f.)@:(v f.) 0
+ assert. (u xd v 1 ) -: xd (u f.)@:(v f.) 1
+ assert. (u xd v ai) -: xd (u f.)@:(v f.) ai
+ assert. (u xd v ad) -: xd (u f.)@:(v f.) ad
+ assert. (u xs v as) -: xs (u f.)@:(v f.) as
  f=: u ftab v
  assert. (u xb v 0 ) -: xb f      0
  assert. (u xb v 1 ) -: xb f      1
@@ -146,23 +146,23 @@ testvs=: 2 : 0  NB. vector scalar
 
 testss=: 2 : 0  NB. scalar scalar
   :
- assert. (u 0  v 0 ) -: 0  u@:v 0
- assert. (u 0  v 1 ) -: 0  u@:v 1
- assert. (u 0  v ai) -: 0  u@:v ai
- assert. (u 0  v ad) -: 0  u@:v ad
- assert. (u 1  v 0 ) -: 1  u@:v 0
- assert. (u 1  v 1 ) -: 1  u@:v 1
- assert. (u 1  v ai) -: 1  u@:v ai
- assert. (u 1  v ad) -: 1  u@:v ad
- assert. (u ai v 0 ) -: ai u@:v 0
- assert. (u ai v 1 ) -: ai u@:v 1
- assert. (u ai v ai) -: ai u@:v ai
- assert. (u ai v ad) -: ai u@:v ad
- assert. (u ad v 0 ) -: ad u@:v 0
- assert. (u ad v 1 ) -: ad u@:v 1
- assert. (u ad v ai) -: ad u@:v ai
- assert. (u ad v ad) -: ad u@:v ad
- assert. (u as v as) -: as u@:v as
+ assert. (u 0  v 0 ) -: 0  (u f.)@:(v f.) 0
+ assert. (u 0  v 1 ) -: 0  (u f.)@:(v f.) 1
+ assert. (u 0  v ai) -: 0  (u f.)@:(v f.) ai
+ assert. (u 0  v ad) -: 0  (u f.)@:(v f.) ad
+ assert. (u 1  v 0 ) -: 1  (u f.)@:(v f.) 0
+ assert. (u 1  v 1 ) -: 1  (u f.)@:(v f.) 1
+ assert. (u 1  v ai) -: 1  (u f.)@:(v f.) ai
+ assert. (u 1  v ad) -: 1  (u f.)@:(v f.) ad
+ assert. (u ai v 0 ) -: ai (u f.)@:(v f.) 0
+ assert. (u ai v 1 ) -: ai (u f.)@:(v f.) 1
+ assert. (u ai v ai) -: ai (u f.)@:(v f.) ai
+ assert. (u ai v ad) -: ai (u f.)@:(v f.) ad
+ assert. (u ad v 0 ) -: ad (u f.)@:(v f.) 0
+ assert. (u ad v 1 ) -: ad (u f.)@:(v f.) 1
+ assert. (u ad v ai) -: ad (u f.)@:(v f.) ai
+ assert. (u ad v ad) -: ad (u f.)@:(v f.) ad
+ assert. (u as v as) -: as (u f.)@:(v f.) as
  f=: u ftab v
  assert. (u 0  v 0 ) -: 0  f      0
  assert. (u 0  v 1 ) -: 0  f      1
@@ -186,14 +186,14 @@ testss=: 2 : 0  NB. scalar scalar
 
 testbvv=: 2 : 0  NB. boolean vector vector
   :
- assert. (u xb  v yb ) -: xb  u@:v yb
- assert. (u xb1 v yb1) -: xb1 u@:v yb1
- assert. (u xb2 v yb2) -: xb2 u@:v yb2
- assert. (u xb3 v yb3) -: xb3 u@:v yb3
- assert. (u xb4 v yb4) -: xb4 u@:v yb4
- assert. (u xb5 v yb5) -: xb5 u@:v yb5
- assert. (u xb6 v yb6) -: xb6 u@:v yb6
- assert. (u xb7 v yb7) -: xb7 u@:v yb7
+ assert. (u xb  v yb ) -: xb  (u f.)@:(v f.) yb
+ assert. (u xb1 v yb1) -: xb1 (u f.)@:(v f.) yb1
+ assert. (u xb2 v yb2) -: xb2 (u f.)@:(v f.) yb2
+ assert. (u xb3 v yb3) -: xb3 (u f.)@:(v f.) yb3
+ assert. (u xb4 v yb4) -: xb4 (u f.)@:(v f.) yb4
+ assert. (u xb5 v yb5) -: xb5 (u f.)@:(v f.) yb5
+ assert. (u xb6 v yb6) -: xb6 (u f.)@:(v f.) yb6
+ assert. (u xb7 v yb7) -: xb7 (u f.)@:(v f.) yb7
  f=: u ftab v
  assert. (u xb  v yb ) -: xb  f      yb
  assert. (u xb1 v yb1) -: xb1 f      yb1
@@ -208,24 +208,24 @@ testbvv=: 2 : 0  NB. boolean vector vector
 
 testbsv=: 2 : 0  NB. boolean scalar vector
   :
- assert. (u 0 v zb  ) -: 0 u@:v zb   
- assert. (u 0 v yb  ) -: 0 u@:v yb   
- assert. (u 0 v yb1 ) -: 0 u@:v yb1
- assert. (u 0 v yb2 ) -: 0 u@:v yb2
- assert. (u 0 v yb3 ) -: 0 u@:v yb3
- assert. (u 0 v yb4 ) -: 0 u@:v yb4
- assert. (u 0 v yb5 ) -: 0 u@:v yb5
- assert. (u 0 v yb6 ) -: 0 u@:v yb6
- assert. (u 0 v yb7 ) -: 0 u@:v yb7
- assert. (u 1 v 0$yb) -: 1 u@:v 0$yb
- assert. (u 1 v yb  ) -: 1 u@:v yb
- assert. (u 1 v yb1 ) -: 1 u@:v yb1
- assert. (u 1 v yb2 ) -: 1 u@:v yb2
- assert. (u 1 v yb3 ) -: 1 u@:v yb3
- assert. (u 1 v yb4 ) -: 1 u@:v yb4
- assert. (u 1 v yb5 ) -: 1 u@:v yb5
- assert. (u 1 v yb6 ) -: 1 u@:v yb6
- assert. (u 1 v yb7 ) -: 1 u@:v yb7
+ assert. (u 0 v zb  ) -: 0 (u f.)@:(v f.) zb   
+ assert. (u 0 v yb  ) -: 0 (u f.)@:(v f.) yb   
+ assert. (u 0 v yb1 ) -: 0 (u f.)@:(v f.) yb1
+ assert. (u 0 v yb2 ) -: 0 (u f.)@:(v f.) yb2
+ assert. (u 0 v yb3 ) -: 0 (u f.)@:(v f.) yb3
+ assert. (u 0 v yb4 ) -: 0 (u f.)@:(v f.) yb4
+ assert. (u 0 v yb5 ) -: 0 (u f.)@:(v f.) yb5
+ assert. (u 0 v yb6 ) -: 0 (u f.)@:(v f.) yb6
+ assert. (u 0 v yb7 ) -: 0 (u f.)@:(v f.) yb7
+ assert. (u 1 v 0$yb) -: 1 (u f.)@:(v f.) 0$yb
+ assert. (u 1 v yb  ) -: 1 (u f.)@:(v f.) yb
+ assert. (u 1 v yb1 ) -: 1 (u f.)@:(v f.) yb1
+ assert. (u 1 v yb2 ) -: 1 (u f.)@:(v f.) yb2
+ assert. (u 1 v yb3 ) -: 1 (u f.)@:(v f.) yb3
+ assert. (u 1 v yb4 ) -: 1 (u f.)@:(v f.) yb4
+ assert. (u 1 v yb5 ) -: 1 (u f.)@:(v f.) yb5
+ assert. (u 1 v yb6 ) -: 1 (u f.)@:(v f.) yb6
+ assert. (u 1 v yb7 ) -: 1 (u f.)@:(v f.) yb7
  f=: u ftab v
  assert. (u 0 v zb   ) -: 0 f      zb   
  assert. (u 0 v yb   ) -: 0 f      yb   
@@ -250,23 +250,23 @@ testbsv=: 2 : 0  NB. boolean scalar vector
 
 testbvs=: 2 : 0  NB. boolean vector scalar
   :
- assert. (u zb     v 0) -: zb     u@:v 0
- assert. (u xb     v 0) -: xb     u@:v 0
- assert. (u xb1    v 0) -: xb1    u@:v 0
- assert. (u xb2    v 0) -: xb2    u@:v 0
- assert. (u xb3    v 0) -: xb3    u@:v 0
- assert. (u xb4    v 0) -: xb4    u@:v 0
- assert. (u xb5    v 0) -: xb5    u@:v 0
- assert. (u xb6    v 0) -: xb6    u@:v 0
- assert. (u xb7    v 0) -: xb7    u@:v 0
- assert. (u xb     v 1) -: xb     u@:v 1
- assert. (u xb1    v 1) -: xb1    u@:v 1
- assert. (u xb2    v 1) -: xb2    u@:v 1
- assert. (u xb3    v 1) -: xb3    u@:v 1
- assert. (u xb4    v 1) -: xb4    u@:v 1
- assert. (u xb5    v 1) -: xb5    u@:v 1
- assert. (u xb6    v 1) -: xb6    u@:v 1
- assert. (u xb7    v 1) -: xb7    u@:v 1
+ assert. (u zb     v 0) -: zb     (u f.)@:(v f.) 0
+ assert. (u xb     v 0) -: xb     (u f.)@:(v f.) 0
+ assert. (u xb1    v 0) -: xb1    (u f.)@:(v f.) 0
+ assert. (u xb2    v 0) -: xb2    (u f.)@:(v f.) 0
+ assert. (u xb3    v 0) -: xb3    (u f.)@:(v f.) 0
+ assert. (u xb4    v 0) -: xb4    (u f.)@:(v f.) 0
+ assert. (u xb5    v 0) -: xb5    (u f.)@:(v f.) 0
+ assert. (u xb6    v 0) -: xb6    (u f.)@:(v f.) 0
+ assert. (u xb7    v 0) -: xb7    (u f.)@:(v f.) 0
+ assert. (u xb     v 1) -: xb     (u f.)@:(v f.) 1
+ assert. (u xb1    v 1) -: xb1    (u f.)@:(v f.) 1
+ assert. (u xb2    v 1) -: xb2    (u f.)@:(v f.) 1
+ assert. (u xb3    v 1) -: xb3    (u f.)@:(v f.) 1
+ assert. (u xb4    v 1) -: xb4    (u f.)@:(v f.) 1
+ assert. (u xb5    v 1) -: xb5    (u f.)@:(v f.) 1
+ assert. (u xb6    v 1) -: xb6    (u f.)@:(v f.) 1
+ assert. (u xb7    v 1) -: xb7    (u f.)@:(v f.) 1
  f=: u ftab v
  assert. (u zb     v 0) -: zb      f      0
  assert. (u xb1    v 0) -: xb1     f      0
@@ -293,7 +293,7 @@ SPTOLER =: IGNOREIFFVI@:((IF64 { 64 128)&>:)
 
 testsp=: 2 : 0
  if. 'I.'-: 5!:5 <'u' do. 1 return. end.
- expression=:  4#,:'sp ''x u@:v y'' [ x=. ,~x [ y=. ,~y'
+ expression=:  4#,:'sp ''x (u f.)@:(v f.) y'' [ x=. ,~x [ y=. ,~y'
  assert. (SPTOLER >./ - <./) ".expression [ x=. xb [ y=. yb
  assert. (SPTOLER >./ - <./) ".expression [ x=. xb [ y=. yi
  assert. (SPTOLER >./ - <./) ".expression [ x=. xb [ y=. yd
@@ -328,14 +328,14 @@ test=: 2 : 0
  u testbsv v
  u testbvs v
  u testsp  v
- u testvv  (v!.0)
- u testsv  (v!.0)
- u testvs  (v!.0)
- u testss  (v!.0)
- u testbvv (v!.0)
- u testbsv (v!.0)
- u testbvs (v!.0)
- u testsp  (v!.0)
+ u testvv  (v f.!.0)
+ u testsv  (v f.!.0)
+ u testvs  (v f.!.0)
+ u testss  (v f.!.0)
+ u testbvv (v f.!.0)
+ u testbsv (v f.!.0)
+ u testbvs (v f.!.0)
+ u testsp  (v f.!.0)
  1
 )
 
@@ -403,17 +403,17 @@ testc=: 2 : 0  NB. character
  yy=: a.{~ ?400$#a.
  xa=: a.{~ ?     #a.
  ya=: a.{~ ?     #a.
- assert. (u xx v yy) -: xx u@:v yy
- assert. (u xx v ya) -: xx u@:v ya
- assert. (u xa v yy) -: xa u@:v yy
- assert. (u xa v ya) -: xa u@:v ya
+ assert. (u xx v yy) -: xx (u f.)@:(v f.) yy
+ assert. (u xx v ya) -: xx (u f.)@:(v f.) ya
+ assert. (u xa v yy) -: xa (u f.)@:(v f.) yy
+ assert. (u xa v ya) -: xa (u f.)@:(v f.) ya
  f=: u ftab v
  assert. (u xx v yy) -: xx f      yy
  assert. (u xx v ya) -: xx f      ya
  assert. (u xa v yy) -: xa f      yy
  assert. (u xa v ya) -: xa f      ya
  if. -.'I.'-: 5!:5 <'u' do.
-  assert. (SPTOLER >./ - <./) t=: ".4#,:'sp ''xx u@:v yy'' [ xx=: ,~xx [ yy=: ,~yy' 
+  assert. (SPTOLER >./ - <./) t=: ".4#,:'sp ''xx (u f.)@:(v f.) yy'' [ xx=: ,~xx [ yy=: ,~yy' 
   assert. (SPTOLER >./ - <./) t=: ".4#,:'sp ''xx f yy''    [ xx=: ,~xx [ yy=: ,~yy'
  end.
  1
@@ -445,17 +445,17 @@ testE=: 2 : 0
  yj=: xj (<"0(?3$9e4)+/i.#xj)}1e5?@$1e6
  xc=: 'abcd'{~ 4  ?@$4
  yc=: 'abcd'{~ 1e5?@$4
- assert. (u xb v yb) -: xb u@:v yb
- assert. (u xc v yc) -: xc u@:v yc
- assert. (u xi v yi) -: xi u@:v yi
- assert. (u xj v yj) -: xj u@:v yj
+ assert. (u xb v yb) -: xb (u f.)@:(v f.) yb
+ assert. (u xc v yc) -: xc (u f.)@:(v f.) yc
+ assert. (u xi v yi) -: xi (u f.)@:(v f.) yi
+ assert. (u xj v yj) -: xj (u f.)@:(v f.) yj
  f=: u ftab v
  assert. (u xb v yb) -: xb f      yb
  assert. (u xc v yc) -: xc f      yc
  assert. (u xi v yi) -: xi f      yi
  assert. (u xj v yj) -: xj f      yj
  if. -.'I.'-: 5!:5 <'u' do.
-  expression=: 4#,:'sp ''xx u@:v yy'' [ xx=: ,~xx [ yy=: ,~yy'
+  expression=: 4#,:'sp ''xx (u f.)@:(v f.) yy'' [ xx=: ,~xx [ yy=: ,~yy'
   assert. (SPTOLER >./ - <./) ". expression [ xx=: xb [ yy=: yb
   assert. (SPTOLER >./ - <./) ". expression [ xx=: xc [ yy=: yc
   assert. (SPTOLER >./ - <./) ". expression [ xx=: xi [ yy=: yi

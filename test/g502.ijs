@@ -9,11 +9,11 @@ ss =: [: +/ *:
 cc=: [:
 f =: cc +/ *:
 (+/*:x) -: f x=:_40+?20$1000
-cc=: c1
-c1=: c2
-c2=: [:
-f =: cc +/ *:
-(+/*:x) -: f x=:_40+?20$1000
+NB. no longer honored cc=: c1
+NB. no longer honored c1=: c2
+NB. no longer honored c2=: [:
+NB. no longer honored f =: cc +/ *:
+NB. no longer honored (+/*:x) -: f x=:_40+?20$1000
 NB. no longer honored cc =. %:
 NB. no longer honored ((%:x)+/*:x) -: f x
 

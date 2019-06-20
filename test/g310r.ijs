@@ -86,7 +86,97 @@ sum=: +/
 (5!:5 <'g1') -: '+/ (',(5!:5 <'G1'),')'
 (5!:5 <'g2') -: '+/ (',(5!:5 <'G2'),')'
 
+NB. processing on u/v in native locales
+a_z_ =: 1 : 0
+s =. 6
+cocurrent 'yyy'
+r =. u y
+assert. (<'yyy') -: coname''
+assert. s = 6
+r
+)
+f =: 3 : 0
+s =. 7
+t =. ".
+j=: 8
+j_xxx_=. 5
+cocurrent 'xxx'
+(t a y) , (t a 'j')
+)
+7 5= f 's'
 
-4!:55 ;:'F f F1 f1 F2 f2 G g G1 g1 G2 g2 nl nn sum'
+d_base_=: 9:
+d_xxx_=:7:
+c_z_ =: 2 : 0
+s =. 15
+cocurrent 'base'
+r =. ((d+u) a x),(v a y)  NB. d and u run in different locales
+NB. execution of a changes the locale because the operator is anonymous
+assert. s = 15
+r
+)
+
+f =: 4 : 0
+s =. 17
+t =. ".
+r =. *:
+j=: 8
+j_xxx_=. 5
+cocurrent 'xxx'
+r =. (x r c t y) , (x r c t 'j')  NB. locale changes between executions because the operator is anonymous
+r
+)
+153 17 153 5 -: 12 f 's'
+
+a =: 1 : 'u'
+20 = +: a 10
+
+aa =: 1 : 'u a'
+20 = +: aa 10
+
+NB. References passed through
+a =: 1 : 0
+1+u
+)
+
+aa =: 1 : 0
+(*:@u) a
+)
+
+26 = (<: aa) 6
+
+NB. References assigned
+aa =: 1 : 0
+s =. 9:
+p =. 10
+t =. *:@u
+q =: *:@u  NB. verifies fix picks up from caller
+(u 'p'),(t 'p'),(q 'p'),((*:@u) a 'p'),(t a 'p'),(q a 'p')
+)
+
+f =: 3 : 0
+s =. ".
+p =. 15
+s aa
+)
+15 225 100 101 101 101 -: f''  NB. The returns from a all get fixed
+
+NB. Returns
+5 -: 10 + (2 : 'u v') - 5
+_5 -: 10 + (2 : '(u~ v)~') - 5
+24 = +: 2 : 'u^:(1:`([v))' - 12
++: 2 :' v"_`u@.(*@#@])' *:
+'domain error' -: 3 : 0 etx ''
+nm =. + + +
+ + 2 : 'v"_`' nm
+)
+(+`-) -: 3 : 0 ''
+nm =. +
+- 2 : 'v`u' nm
+)
+2 : 'undefname@:u'
+
+4!:55 ;:'a aa q a_z_ c_z_ d_base_ d_xxx_ j j_xxx_ F f F1 f1 F2 f2 G g G1 g1 G2 g2 nl nn sum'
+18!:55 ;:'xxx yyy'
 
 

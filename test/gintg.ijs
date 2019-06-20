@@ -11,44 +11,44 @@ test   =: 1 : 'x I D -: x"0'                       NB. use as   f test z
 testlr =: 1 : '(u testl y) , (u testr y)'
 
 testl=: 1 : 0
- assert. t > | (      u     -     u       I D) y
- assert. t > | (<:   @u     - <: @u       I D) y
- assert. t > | (>:   @u     - >: @u       I D) y
- assert. t > | (+:   @u     - +: @u       I D) y
- assert. t > | (-    @u     - -  @u       I D) y
- assert. t > | (-.   @u     - -. @u       I D) y
- assert. t > | (-:   @u     - -: @u       I D) y
- assert. t > | (j.   @u     - j. @u       I D) y
- assert. t > | (0.3&+@u     - 0.3&+@u     I D) y
- assert. t > | (+&0.3@u     - +&0.3@u     I D) y
- assert. t > | (0.3&-@u     - 0.3&-@u     I D) y
- assert. t > | (-&0.3@u     - -&0.3@u     I D) y
- assert. t > | (0.3&*@u     - 0.3&*@u     I D) y
- assert. t > | (*&0.3@u     - *&0.3@u     I D) y
- assert. t > | (%&0.3@u     - %&0.3@u     I D) y
- assert. t > | (0.4 _0.3&p.        @u - (0.4 _0.3&p.)      @u I D) y
- assert. t > | ((0.5"0 + 0.7"0 * ])@u - (0.5"0 + 0.7"0 * ])@u I D) y
+ assert. t > | (      (u f.)     -     (u f.)       I D) y
+ assert. t > | (<:   @(u f.)     - <: @(u f.)       I D) y
+ assert. t > | (>:   @(u f.)     - >: @(u f.)       I D) y
+ assert. t > | (+:   @(u f.)     - +: @(u f.)       I D) y
+ assert. t > | (-    @(u f.)     - -  @(u f.)       I D) y
+ assert. t > | (-.   @(u f.)     - -. @(u f.)       I D) y
+ assert. t > | (-:   @(u f.)     - -: @(u f.)       I D) y
+ assert. t > | (j.   @(u f.)     - j. @(u f.)       I D) y
+ assert. t > | (0.3&+@(u f.)     - 0.3&+@(u f.)     I D) y
+ assert. t > | (+&0.3@(u f.)     - +&0.3@(u f.)     I D) y
+ assert. t > | (0.3&-@(u f.)     - 0.3&-@(u f.)     I D) y
+ assert. t > | (-&0.3@(u f.)     - -&0.3@(u f.)     I D) y
+ assert. t > | (0.3&*@(u f.)     - 0.3&*@(u f.)     I D) y
+ assert. t > | (*&0.3@(u f.)     - *&0.3@(u f.)     I D) y
+ assert. t > | (%&0.3@(u f.)     - %&0.3@(u f.)     I D) y
+ assert. t > | (0.4 _0.3&p.        @(u f.) - (0.4 _0.3&p.)      @(u f.) I D) y
+ assert. t > | ((0.5"0 + 0.7"0 * ])@(u f.) - (0.5"0 + 0.7"0 * ])@(u f.) I D) y
  1
 )
 
 testr=: 1 : 0
- assert. t > | (u           - u           I D) y
- assert. t > | (u@<:        - u@<:        I D) y
- assert. t > | (u@>:        - u@>:        I D) y
- assert. t > | (u@+:        - u@+:        I D) y
- assert. t > | (u@-         - u@-         I D) y
- assert. t > | (u@-.        - u@-.        I D) y
- assert. t > | (u@-:        - u@-:        I D) y
- assert. t > | (u@j.        - u@j.        I D) y
- assert. t > | (u@(0.3&+)   - u@(0.3&+)   I D) y
- assert. t > | (u@(+&0.3)   - u@(+&0.3)   I D) y
- assert. t > | (u@(0.3&-)   - u@(0.3&-)   I D) y
- assert. t > | (u@(-&0.3)   - u@(-&0.3)   I D) y
- assert. t > | (u@(0.4&*)   - u@(0.4&*)   I D) y
- assert. t > | (u@(*&0.5)   - u@(*&0.5)   I D) y
- assert. t > | (u@(%&3)     - u@(%&3)     I D) y
- assert. t > | (u@(0.4 _0.3&p.)       - u@(0.4 _0.3&p.)       I D) y
- assert. t > | (u@(0.5"0 + 0.7"0 * ]) - u@(0.5"0 + 0.7"0 * ]) I D) y
+ assert. t > | ((u f.)           - (u f.)           I D) y
+ assert. t > | ((u f.)@<:        - (u f.)@<:        I D) y
+ assert. t > | ((u f.)@>:        - (u f.)@>:        I D) y
+ assert. t > | ((u f.)@+:        - (u f.)@+:        I D) y
+ assert. t > | ((u f.)@-         - (u f.)@-         I D) y
+ assert. t > | ((u f.)@-.        - (u f.)@-.        I D) y
+ assert. t > | ((u f.)@-:        - (u f.)@-:        I D) y
+ assert. t > | ((u f.)@j.        - (u f.)@j.        I D) y
+ assert. t > | ((u f.)@(0.3&+)   - (u f.)@(0.3&+)   I D) y
+ assert. t > | ((u f.)@(+&0.3)   - (u f.)@(+&0.3)   I D) y
+ assert. t > | ((u f.)@(0.3&-)   - (u f.)@(0.3&-)   I D) y
+ assert. t > | ((u f.)@(-&0.3)   - (u f.)@(-&0.3)   I D) y
+ assert. t > | ((u f.)@(0.4&*)   - (u f.)@(0.4&*)   I D) y
+ assert. t > | ((u f.)@(*&0.5)   - (u f.)@(*&0.5)   I D) y
+ assert. t > | ((u f.)@(%&3)     - (u f.)@(%&3)     I D) y
+ assert. t > | ((u f.)@(0.4 _0.3&p.)       - (u f.)@(0.4 _0.3&p.)       I D) y
+ assert. t > | ((u f.)@(0.5"0 + 0.7"0 * ]) - (u f.)@(0.5"0 + 0.7"0 * ]) I D) y
  1
 )
 

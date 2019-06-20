@@ -39,6 +39,7 @@ F1(jtexec1){A z;
 
 F1(jtimmex){A z;
  if(!w)R A0;  // if no string, return empty result
+ jt->locsyms->kchain.globalst=jt->global; // in case the sentence has operators, set a locale for it
  STACKCHKOFL FDEPINC(1); z=parse(tokens(w,1+(AN(jt->locsyms)>1))); FDEPDEC(1);
  if(z&&!jt->asgn)jpr(z);
  RETF(z);
@@ -66,7 +67,7 @@ F1(jtexg){A*v,*wv,x,y,z;I n;
  R parse(z);
 }
 
-A jtjset(J jt,C*name,A x){R symbis(nfs((I)strlen(name),name),x,jt->global);}
+L* jtjset(J jt,C*name,A x){R symbis(nfs((I)strlen(name),name),x,jt->global);}
 
 F2(jtapplystr){PROLOG(0054);A fs,z;
  F2RANK(1,RMAX,jtapplystr,0);

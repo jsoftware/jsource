@@ -296,14 +296,15 @@ static F1(jtlcolon){A*v,x,y;C*s,*s0;I m,n;
 // Main routine for () and linear rep.  w is to be represented
 static DF1(jtlrr){A fs,gs,hs,t,*tv;C id;I fl,m;V*v;
  RZ(w);
- // If noun, return the linear rep of the noun.  If name, use bare string form of the name UNLESS the name is also flagged as a noun - then treat as a noun  (used by ".@'name')
- if(AT(w)&NAME){RZ(t=sfn(0,w)); if(!(AT(w)&NOUN))R t; w=t;}
+ // If name, it must be in ".@'name', or (in debug mode) the function name, which we will discard
+ if(AT(w)&NAME){RZ(w=sfn(0,w));}
  if(AT(w)&NOUN)R lnoun(w);
  v=VAV(w); id=v->id; fs=v->fgh[0]; gs=v->fgh[1]; hs=v->fgh[2]; fl=v->flag; if(id==CBOX)gs=0;  // ignore gs field in BOX, there to simulate BOXATOP
  if(fl&VXOPCALL)R lrr(hs);
  m=(I )!!fs+(I )(gs&&id!=CBOX)+(I )(id==CFORK)+(I )(hs&&id==CCOLON&&VXOP&fl);  // BOX has g for BOXATOP; ignore it
  if(!m)R lsymb(id,w);
- if(evoke(w))R sfn(0,fs);
+// obsolete  if(evoke(w))R sfn(0,fs);
+ if(evoke(w)){RZ(w=sfne(w)); if(FUNC&AT(w))w=lrr(w); R w;}  // keep named verb as a string, UNLESS it is NMDOT, in which case use the (f.'d) verb value
  if(!(VXOP&fl)&&hs&&BOX&AT(hs)&&id==CCOLON)R lcolon(w);
  GATV0(t,BOX,m,1); tv=AAV(t);
  if(2<m)RZ(tv[2]=lrr(hs));

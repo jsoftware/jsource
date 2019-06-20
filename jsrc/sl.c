@@ -476,7 +476,7 @@ static SYMWALK(jtlocmap1,I,INT,18,3,1,
     {I t=AT(d->val);
      *zv++=i; 
      *zv++=t&NOUN?0:t&VERB?3:t&ADV?1:t&CONJ?2:(t==SYMB)?6:-2;
-     *zv++=(I)rifvs(sfn(1,d->name));})  // this is going to be put into a box
+     *zv++=(I)rifvs(sfn(SFNSIMPLEONLY,d->name));})  // this is going to be put into a box
 
 F1(jtlocmap){A g,q,x,y,*yv,z,*zv;I c=-1,d,j=0,m,*qv,*xv;
  RZ(w);

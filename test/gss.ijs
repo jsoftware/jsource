@@ -7,18 +7,20 @@ NB. Tests of local-name lookup
 
 NB. Local name passed to another modifier
 '`v1 v2 v3' =: -`*:`-:   NB. these are the values found by dou
-dou =: 1 : 'u  :: ] y'
- _5 25 3 -: 3 : 0 ''
+dou =: 1 : '". (5!:5<''u'') , ''  :: ]'' , ": y return. u'  NB. This processes by name
+v =: 3 : 0
 r =. ''
 v1 =. v4 =. v5 =. v6 =. v7 =. v8 =. +
 r =. r , v1 dou 5
-v2 =. %:
+v2 =. %
 r =. r , v2 dou 5
 v3 =. +:
 r =. r , v3 dou 6
 r
 )
-
+_5 25 3 -: v ''
+dou =: 1 : 'u  :: ] y'  NB. This used the implicit locative
+5 0.2 12 -: v ''
 
 NB. Local name assigned to global name
 tolower =: 3 : 'x =. y'
@@ -39,14 +41,14 @@ a =. a (+ , +) b
 NB. Verify that singleton gets same result as 1 item of an array, and also that 
 compss =: 1 : 0 (&>)
 yy =: y
-assert. (u etx y) -: (({.@:(u&(2 $ ,:))) etx y)
-assert. (u"0&:(5&$) y) -: 5&$@:u y 
+assert. (u f. etx y) -: (({.@:(u f.&(2 $ ,:))) etx y)
+assert. (u f."0&:(5&$) y) -: 5&$@:(u f.) y 
 1
 :
 xx =: x
 yy =: y
-assert. (x u etx y) -: (x ({.@:(u&(2 $ ,:))) etx y)
-assert. (x u"0&:(5&$) etx y) -: x 5&$@:u etx y 
+assert. (x u f. etx y) -: (x ({.@:(u f.&(2 $ ,:))) etx y)
+assert. (x (u f."0&:(5&$) etx) y) -: x 5&$@:(u f.) etx y 
 1
 )
 
@@ -116,7 +118,7 @@ NB. ! is slower, especially for big values
 compssp =: 1 : 0 (&>)
 :
 smoutput x,y
-(x u etx y) -: (x ({.@:(u&(2 $ ,:))) etx y)
+(x u f. etx y) -: (x ({.@:(u f.&(2 $ ,:))) etx y)
 )
 v =: 0;1;(<"0 (2.0-2.0)+0 1),((<"0)2 - 1 2),((<"0) 5 ?@$ 1e6),((<"0)100000 * 5 ?@$ 0)
 ! compss/~ v
@@ -126,7 +128,7 @@ NB. Use random data and varying verb rank; only the rank of the result is at iss
 compssn =: 2 : 0
 :
 'l r'=.n
-(x u"n etx y) -: ((<"l x) u&> etx (<"r y))
+(x u f."n etx y) -: ((<"l x) u f.&> etx (<"r y))
 )
 
 ops =: ((1 $~ [) $ ])&.>/"1 b =: (;"0/~ i. 6) ([ ,"0 ($~ $)~) v

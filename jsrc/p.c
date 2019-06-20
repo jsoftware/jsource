@@ -505,9 +505,10 @@ A jtparsea(J jt, A *queue, I m){PSTK *stack;A z,*v;I es; UI4 maxnvrlen;
         // The name is defined.  If it's a noun, use its value (the common & fast case)
         // Or, for special names (x. u. etc) that are always stacked by value, keep the value
         // Otherwise (normal adv/verb/conj name), replace with a 'name~' reference
-        if(AT(sv)&NOUN || at&NAMEBYVALUE){   // use value if noun or special name
+// obsolete         if(AT(sv)&NOUN || at&NAMEBYVALUE){   // use value if noun or special name
+        if((AT(sv)|at)&(NOUN|NAMEBYVALUE)){   // use value if noun or special name
          y=sv;
-         at=AT(y);  // refresh the type with the type of the resolved name
+         at=AT(sv);  // refresh the type with the type of the resolved name
          // In case the name is assigned during this sentence (including subroutines), remember the data block that the name created
          // NOTE: the nvr stack may have been relocated by action routines, so we must refer to the globals
          // Stack a named value only once.  This is needed only for names whose VALUE is put onto the stack; if we stack a REFERENCE
@@ -666,7 +667,8 @@ A jtparsea(J jt, A *queue, I m){PSTK *stack;A z,*v;I es; UI4 maxnvrlen;
     if(s=syrd(y)) {     // Resolve the name.
       A sv;  // pointer to value block for the name
       RZ(sv = s->val);  // symbol table entry, but no value.  Must be in an explicit definition, so there is no need to raise an error
-      if(AT(sv)&NOUN || at&NAMEBYVALUE){   // in noun or special name, use value
+// obsolete       if(AT(sv)&NOUN || at&NAMEBYVALUE){   // in noun or special name, use value
+      if((AT(sv)|at)&(NOUN|NAMEBYVALUE)){   // in noun or special name, use value
        y=sv;
       } else RZ(y = namerefacv(y, s));   // Replace other acv with reference
     } else {

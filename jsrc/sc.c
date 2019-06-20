@@ -27,12 +27,26 @@ static DF2(jtunquote){A z;
    explocale=0;  // flag no explicit locale
   }else{
    NM* thisnameinfo=NAV(thisname);  // the NM block for the current name
-   if(!(thisnameinfo->flag&(NMLOC|NMILOC))) {  // simple name
+   if(!(thisnameinfo->flag&(NMLOC|NMILOC|NMDOT))) {  // simple name, but not u/v
     explocale=0;  // flag no explicit locale
     if(!(stabent = probelocal(thisname)))stabent=syrd1(thisnameinfo->m,thisnameinfo->s,thisnameinfo->hash,jt->global);  // Try local, then look up the name starting in jt->global
-   } else {  // locative
-    RZ(explocale=sybaseloc(thisname));  //  get the explicit locale .  0 if erroneous locale
-    stabent=syrd1(thisnameinfo->m,thisnameinfo->s,thisnameinfo->hash,explocale);  // Look up the name starting in the locale of the locative
+   } else {  // locative or u/v
+    if(!(thisnameinfo->flag&NMDOT)){  // locative
+     RZ(explocale=sybaseloc(thisname));  //  get the explicit locale.  0 if erroneous locale
+     stabent=syrd1(thisnameinfo->m,thisnameinfo->s,thisnameinfo->hash,explocale);  // Look up the name starting in the locale of the locative
+    }else{  // u/v.  We have to look at the assigned name/value to know whether this is an implied locative (it usually is)
+     if(!(stabent = probelocal(thisname)) || !(stabent->flag&LIMPLOCUV)){
+      // The name is u/v, but the value was not one assigned by xdefn.  Treat it as a normal name
+      explocale=0;  // flag no explicit locale
+      if(!stabent)stabent=syrd1(thisnameinfo->m,thisnameinfo->s,thisnameinfo->hash,jt->global);  // Try local, then look up the name starting in jt->global
+     }else{
+      // u/v, assigned by xdefn.  Implied locative.  Extract the local-symbol table from the name, and the globals from that
+      // Stack the current local-symbols table and switch over to the one for evaluating u/v
+      pushcallstack1d(CALLSTACKPUSHLOCALSYMS,jt->locsyms);
+      jt->locsyms=(A)AM(stabent->name);  // get the local syms at the time u/v was assigned; make them current
+      explocale=jt->locsyms->kchain.globalst;  // and the global syms
+     }
+    }
    }
    ASSERT(stabent,EVVALUE);  // name must be defined
    fs=stabent->val;  // fetch the value of the name
@@ -100,7 +114,7 @@ static DF2(jtunquote){A z;
  jt->curname=savname;  // restore the executing name
  if(callstackx!=jt->callstacknext){  // normal case, with no stack, bypasses all this
   // There are stack entries.  Process them
-  if(callstackx+1==jt->callstacknext && jt->callstack[callstackx].type==CALLSTACKPOPLOCALE) {
+  if(jt->callstack[callstackx].type==CALLSTACKPOPLOCALE && callstackx+1==jt->callstacknext) {
    // The only thing on the stack is a simple POP.  Do the pop.  This & the previous case account for almost all the calls here
    jt->global=jt->callstack[callstackx].value;  // restore global locale
    jt->callstacknext=(I4)callstackx;  // restore stackpointer for caller
@@ -113,10 +127,12 @@ static DF2(jtunquote){A z;
    i=jt->callstacknext;  // back to front
    do{
     --i;
-    fromfound|=jt->callstack[i].type&CALLSTACKPOPFROM;  // remember if FROM seen
-    if(jt->callstack[i].type&(CALLSTACKPOPFROM|CALLSTACKPOPLOCALE|CALLSTACKPOPLOCALEFIRST))earlyloc=jt->callstack[i].value;  // remember earliest POP[FROM]
-    // When we remove the earliest POPFROM, we can go back to processing names without requiring stacking the return locale
-    if(jt->callstack[i].type&CALLSTACKPOPLOCALEFIRST){jt->uflags.us.uq.uq_c.pmctrbstk &= ~PMCTRBSTKREQD;}
+    fromfound|=jt->callstack[i].type&CALLSTACKPOPFROM&&!(jt->callstack[callstackx].type&CALLSTACKPUSHLOCALSYMS);  // remember if FROM seen - but if we are processing u/v, always revert global, ignoring any hanging requests
+    if(jt->callstack[i].type&(CALLSTACKPOPFROM|CALLSTACKPOPLOCALE|CALLSTACKPOPLOCALEFIRST)){
+     earlyloc=jt->callstack[i].value;  // remember earliest POP[FROM]
+     // When we remove the earliest POPFROM, we can go back to processing names without requiring stacking the return locale
+     if(jt->callstack[i].type&CALLSTACKPOPLOCALEFIRST){jt->uflags.us.uq.uq_c.pmctrbstk &= ~PMCTRBSTKREQD;}
+    }else if(jt->callstack[i].type&CALLSTACKPUSHLOCALSYMS)jt->locsyms=jt->callstack[i].value;  // restore locsyms if we stacked it
    }while(i!=callstackx);
    if(earlyloc&&!fromfound){jt->global=earlyloc; ++jt->modifiercounter;} // If there is a POP to do, do it; invalidate any extant lookups of modifier names
    // Delete the deletable locales.  If we encounter the (possibly new) current locale, remember that fact and don't delete it.
@@ -239,7 +255,7 @@ A jtnamerefacv(J jt, A a, L* w){A y;V*v;
  A z=fdef(0,CTILDE,AT(y), jtunquote1,jtunquote, a,0L,0L, (v->flag&VASGSAFE)+(VJTFLGOK1|VJTFLGOK2), v->mr,v->lr,v->rr);  // return value of 'name~', with correct rank, part of speech, and safe/inplace bits
  RZ(z); 
  // To prevent having to look up the name every time it is executed, we will remember the address of the block (in localuse), AND the modifier counter at the time of the lookup (in AM).  We can't use
- // old lookups on locatives or canned names like xyuvmn, and we leave localuse 0 as a flag of that condition.
+ // old lookups on locatives or canned names like xyuvmn, and we leave localuse 0 as a flag of that condition to help logic in unquote
  // If the original name was not defined (w==0), don't set a value so that it will be looked up again to produce value error
  if(w&&!(NAV(a)->flag&(NMLOC|NMILOC|NMDOT))){
   FAV(z)->localuse.lvp=y; AM(z)=jt->modifiercounter;

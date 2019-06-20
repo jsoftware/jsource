@@ -15,7 +15,7 @@ f&>c
 
 A=: 1 : 0
   :
- b=. (u"x d) -: t=. u"x s=:(2;y)$.d
+ b=. (u f."x d) -: t=. u f."x s=:(2;y)$.d
  if. b *. 0<#$t do. *./ scheck t else. b end.
 )
 
@@ -50,7 +50,7 @@ A2=: 1 : 0
   :
  xx=: (2;x)$.x0
  yy=: (2;y)$.y0
- b=. (x0 u"r y0) -: t=: xx u"r yy
+ b=. (x0 u f."r y0) -: t=: xx u f."r yy
  if. b *. 0<#$t do.*./ scheck t else. b end.
 )
 

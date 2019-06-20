@@ -86,14 +86,16 @@ struct AD {
   I m;  // Multi-use field. (1) For NJA/SMM blocks, size of allocation. (2) for blocks coming out of a COUNTITEMS verb, holds the number of items in the
         // raze of the noun (if the types are identical) (3) for SYMB tables for explicit definitions, the symbol positions for y and x (4) for the block
         // holding the amend offsets in x u} y, the number of axes of y that are built into the indexes in u (5) for name references, the value of jt->modifiercount when the name was last looked up
+        //  (6) in NAME blocks that are the name of an implicit-locative assignment, the address of the symbol table to use when the value is executed
   A back; // For VIRTUAL blocks, points to backing block
+
 } mback;
  union {
   I t;  // type
   A proxychain;  // used when block is on free chain
  } tproxy;
  I c;  // usecount
- I n;  // # atoms  NOTE!! result.h faux cellshaope block depends on n, r, and s being in place from here to the end of this struct, with 2 Is from n to s
+ I n;  // # atoms  NOTE!! result.h faux cellshape block depends on n, r, and s being in place from here to the end of this struct, with 2 Is from n to s
 #if C_LE
  RANKT r;  // rank
  US h;   // reserved for allocator.  Not used for AFNJA memory
@@ -132,7 +134,7 @@ typedef I SI;
 #define AKGST(x)        ((x)->kchain.globalst)        // global symbol table for this local symbol table
 #define AFLAG(x)        ((x)->flag)     /* flag                            */
 #define AM(x)           ((x)->mback.m)        /* Max # bytes in ravel            */
-#define ABACK(x)        ((x)->mback.back)        /* Max # bytes in ravel            */
+#define ABACK(x)        ((x)->mback.back)        /* In virtual noun, pointer to backing block            */
 #define AT(x)           ((x)->tproxy.t)        /* Type; one of the #define below  */
 #define AC(x)           ((x)->c)        /* Reference count.                */
 #define AN(x)           ((x)->n)        /* # elements in ravel             */
@@ -418,6 +420,9 @@ typedef I SI;
 #define LSYMINUSE 1  // This bit is set in the rank of the original symbol table when it is in use
 #define LNAMEADDED LPERMANENT  // Set in rank when a new name is added to the local symbol table.  We transfer the bit from the L flags to the rank-flag
 
+#define SFNSIMPLEONLY 1   // to sfn: return simple name only, discarding any locative
+
+
 
 typedef struct {I i;US n,go,source;C type;C canend;} CW;
 
@@ -495,6 +500,9 @@ typedef struct {A name,val;US flag;S sn;LX next;} L;
 #define LPERMANENT      (I)8            // This is a permanent entry in a local symbol table; don't delete, just leave val=0
 #define LHASNAME        (I)16      // name is nonnull
 #define LHASVALUE       (I)32     // value is nonnull
+#define LIMPLOCUV      (I)64       // the value is an implied locative.  AM() in the name gives the local syms the name should be executed in, and points to the global syms.  This flag is set
+                                // only when the value is assigned at the start of xdefn.
+#define LCLONENAME      (I)128   // this name holds variable information about 
 // in LINFO entry
 #define LMOD            (I)1          // table has had new entries added (used for local symbol tables only)
 
@@ -509,6 +517,7 @@ typedef struct {
 #define CALLSTACKPOPFROM 4  // value is jt->global that must be modified in the caller of this function also
 #define CALLSTACKCHANGELOCALE 8  // value is jt->global that was changed within execution of this name
 #define CALLSTACKPOPLOCALEFIRST 16  // set in the POPLOCALE that is added when the first POPFROM is seen
+#define CALLSTACKPUSHLOCALSYMS 32  // value is jt->locsyms that must be restored
 #define CALLSTACKDELETE 256  // the given locale must be deleted, and this is the earliest place on the stack that refers to it
 
 // Add an entry to the call stack, and increment the index variable
@@ -534,6 +543,7 @@ typedef struct{UI4 hash;I4 bucket;I bucketx;UC m;C flag,s[1];} NM;
 #define NMLOC           1       /* direct   locale abc_lm_                 */
 #define NMILOC          2       /* indirect locale abc__de__fgh ...        */
 #define NMDOT           4       /* one of the names m. n. u. v. x. y.      */
+#define NMXY            8       // x/y, which must have NAMEBYVALUE set
 
 
 typedef struct {I a,e,i,x;} P;
@@ -635,6 +645,10 @@ typedef struct {union { D lD; void *lvp; I lI;} localuse;union {A l2A;} localuse
 // for ATOMIC2 ops, pointer to the adocv block
 // for name references, pointer to last resolution
 // for FIT conj, the CCT data
+
+// localuse2 can be
+// for VERB values assigned to LIMPLOC name, the pointer to the locsyms to use when running the name
+
 // lc is a local-use byte.  For atomic monads, it is the index of the adocv block
 
 #define ID(f)           (f&&FUNC&AT(f)?FAV(f)->id:C0)
@@ -650,7 +664,6 @@ typedef struct {union { D lD; void *lvp; I lI;} localuse;union {A l2A;} localuse
 #define VFHKLVLDEC      (((I)1)<<VFHKLVLDECX)
 #define VFHKLVLGTX      1   // (in (compare L.) hooks) set for < and <: to indicate complement of result of levelle needed
 #define VFHKLVLGT       (((I)1)<<VFHKLVLGTX)
-#define VFIMPLOCX       2
 // bits 8 and above are available for all functions:
 #define VGERLX          8
 #define VGERL           (((I)1)<<VGERLX)          /* gerund left  argument           */

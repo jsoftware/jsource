@@ -321,6 +321,7 @@ __m256i ones=_mm256_set1_epi8(1);
 __m256i ffs=_mm256_set1_epi8(0xffu);
 I n0=n<<bplg(t);
 UI mis=((uintptr_t)q)&31u;
+mis=(mis>n0)?n0:mis;
 if(mis){
 n0-=mis;
 #if defined(__clang__)
@@ -351,6 +352,7 @@ __m128i ones=_mm_set1_epi8(1);
 __m128i ffs=_mm_set1_epi8(0xffu);
 I n0=n<<bplg(t);
 UI mis=((uintptr_t)q)&15u;
+mis=(mis>n0)?n0:mis;
 if(mis){
 n0-=mis;
 #if defined(__clang__)

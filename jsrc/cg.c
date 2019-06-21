@@ -91,7 +91,7 @@ static B jtatomic(J jt,C m,A w){A f,g;B ax,ay,vf,vg;C c,id;V*v;
   case CQQ:    R ax||atomic(m,f);
   case CFORK:  R (CCAP==ID(f)?atomic(1,g):atomic(m,f)&&atomic(2,g))&&atomic(m,v->fgh[2]);
   case CHOOK:  R atomic(2,f)&&atomic(1,g);
-  case CTILDE: R NAME&AT(f)?atomic(m,fix(f)):atomic(2,f);
+  case CTILDE: R NAME&AT(f)?atomic(m,fix(f,zeroionei[0])):atomic(2,f);
   case CFIT:   R atomic(m,f);
   case CAMP:   
    if(vf&&vg)R atomic(m,f)&&atomic(1,g);

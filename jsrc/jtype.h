@@ -422,6 +422,8 @@ typedef I SI;
 
 #define SFNSIMPLEONLY 1   // to sfn: return simple name only, discarding any locative
 
+#define FIXALOCSONLYLOWEST 4  // to fixa: replace only the first occurrence of u/v in each branch
+#define FIXALOCSONLY 8  // to fixa: replace only u/v (IMPLOC)
 
 
 typedef struct {I i;US n,go,source;C type;C canend;} CW;

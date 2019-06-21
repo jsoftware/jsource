@@ -88,7 +88,7 @@ B nameless(A w){A f,g,h;C id;V*v;
 B jtprimitive(J jt,A w){A x=w;V*v;
  RZ(w);
  v=VAV(w);
- if(CTILDE==v->id&&NOUN&AT(v->fgh[0]))RZ(x=fix(w));
+ if(CTILDE==v->id&&NOUN&AT(v->fgh[0]))RZ(x=fix(w,zeroionei[0]));
  R!VAV(x)->fgh[0];
 }    /* 1 iff w is a primitive */
 

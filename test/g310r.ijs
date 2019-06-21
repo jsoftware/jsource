@@ -1,7 +1,7 @@
 1:@:(dbr bind Debug)@:(9!:19)2^_44[(echo^:ECHOFILENAME) './g310r.ijs'
 NB. : representations of explicit operators -----------------------------
 
-nl=: 10{a.
+nln=: 10{a.
 nn=: <@((,'0')&;)
 
 F=: 2 : 0
@@ -36,10 +36,10 @@ f2=: + F2 *
 (5!:2 <'f1') -: ,&.> '+';(5!:2 <'F1');'*'
 (5!:2 <'f2') -: ,&.> '+';(5!:2 <'F2');'*'
 
-(5!:5 <'F' ) -: '2 : 0',nl,'u v y',nl,':',nl,'x u v y',nl,')'
+(5!:5 <'F' ) -: '2 : 0',nln,'u v y',nln,':',nln,'x u v y',nln,')'
 (5!:5 <'F1') -: '2 : ''u v y'''
 (5!:5 <'F2') -: '2 : ('':''; ''x u v y'')'
-(5!:5 <'f' ) -: '+ (2 : 0) *',(i.&nl }. ]) 5!:5 <'F'
+(5!:5 <'f' ) -: '+ (2 : 0) *',(i.&nln }. ]) 5!:5 <'F'
 (5!:5 <'f1') -: '+ (',(5!:5 <'F1'),') *'
 (5!:5 <'f2') -: '+ (',(5!:5 <'F2'),') *'
 
@@ -79,10 +79,10 @@ sum=: +/
 (5!:2 <'g1') -: (,&.>'+/');<5!:2 <'G1'
 (5!:2 <'g2') -: (,&.>'+/');<5!:2 <'G2'
 
-(5!:5 <'G' ) -: '1 : 0',nl,'u y',nl,':',nl,'x u y',nl,')'
+(5!:5 <'G' ) -: '1 : 0',nln,'u y',nln,':',nln,'x u y',nln,')'
 (5!:5 <'G1') -: '1 : ''u y'''
 (5!:5 <'G2') -: '1 : ('':''; ''x u y'')'
-(5!:5 <'g' ) -: '+/ (1 : 0)',(i.&nl }. ]) 5!:5 <'G'
+(5!:5 <'g' ) -: '+/ (1 : 0)',(i.&nln }. ]) 5!:5 <'G'
 (5!:5 <'g1') -: '+/ (',(5!:5 <'G1'),')'
 (5!:5 <'g2') -: '+/ (',(5!:5 <'G2'),')'
 
@@ -159,14 +159,14 @@ s =. ".
 p =. 15
 s aa
 )
-15 225 100 101 101 101 -: f''  NB. The returns from a all get fixed
+15 225 81 226 226 82 -: f''  NB. The returns from a all get fixed, but only at lowest level
 
 NB. Returns
 5 -: 10 + (2 : 'u v') - 5
 _5 -: 10 + (2 : '(u~ v)~') - 5
 24 = +: 2 : 'u^:(1:`([v))' - 12
 +: 2 :' v"_`u@.(*@#@])' *:
-'domain error' -: 3 : 0 etx ''
+'noun result was required' -: 3 : 0 etx ''
 nm =. + + +
  + 2 : 'v"_`' nm
 )
@@ -174,9 +174,11 @@ nm =. + + +
 nm =. +
 - 2 : 'v`u' nm
 )
-2 : 'undefname@:u'
+6 = 1 (+ 2 : 'x undefname`u`v@.[ y' -) 5
+_3 = 2 (+ 2 : 'x undefname`u`v@.[ y' -) 5
+'value error' -: 0 (+ 2 : 'x undefname`u`v@.[ y' -) etx 5
 
-4!:55 ;:'a aa q a_z_ c_z_ d_base_ d_xxx_ j j_xxx_ F f F1 f1 F2 f2 G g G1 g1 G2 g2 nl nn sum'
+4!:55 ;:'a aa q a_z_ c_z_ d_base_ d_xxx_ j j_xxx_ F f F1 f1 F2 f2 G g G1 g1 G2 g2 nln nn sum'
 18!:55 ;:'xxx yyy'
 
 

@@ -54,7 +54,7 @@ eq  =: 2 : '(ar<''x'') -: (ar<''y'')'
 
 NB. : -------------------------------------------------------------------
 
-nl =: 10{a.                  NB. system independent new-line
+nln =: 10{a.                  NB. system independent new-line
 
 monad =: *:@:>:
 dyad  =: *:@:>:@:+
@@ -69,11 +69,11 @@ f1  =: 3 : (>x)              NB. character matrix
 (f1 -: monad) ?30$100
 (?31$100) (f1 -: dyad) ?31$100
 
-f2  =: 3 : (;x,&.><nl)       NB. string (with embedded newlines)
+f2  =: 3 : (;x,&.><nln)       NB. string (with embedded newlines)
 (f2 -: monad) ?30$100
 (?31$100) (f2 -: dyad) ?31$100
 
-f3  =: 3 : (}:;x,&.><nl)     NB. string without final newline
+f3  =: 3 : (}:;x,&.><nln)     NB. string without final newline
 (f3 -: monad) ?30$100
 (?31$100) (f3 -: dyad) ?31$100
 
@@ -92,20 +92,20 @@ f5a =: 3 : (>2}.x)           NB. matrix dyad only
 f6  =: 3 : '(y+1)^2'         NB. string monad only
 (f6 -: monad) ?30$100
 
-f6a =: 3 : ('(y+1)^2',nl)    NB. string monad only
+f6a =: 3 : ('(y+1)^2',nln)    NB. string monad only
 (f6a -: monad) ?30$100
 
-f6b =: 3 : (':',       nl,'(x+y+1)^2')   NB. string dyad only
+f6b =: 3 : (':',       nln,'(x+y+1)^2')   NB. string dyad only
 (?31$100) (f6b -: dyad) o.?31$100
 
-f6c =: 3 : (':       ',nl,'(x+y+1)^2')   NB. string dyad only
+f6c =: 3 : (':       ',nln,'(x+y+1)^2')   NB. string dyad only
 (?31$100) (f6c -: dyad) o.?31$100
 
 f7  =: 3 : '7'               NB. scalar string
 7 -: f7 ?30$100
 
-x=: 'abc',nl,(a.{~190+i.4),nl
-('p=: 0 : 0',nl,x,')',nl) 1!:2 <'asdf.txt'
+x=: 'abc',nln,(a.{~190+i.4),nln
+('p=: 0 : 0',nln,x,')',nln) 1!:2 <'asdf.txt'
 0!:0 <'asdf.txt'
 p -: x
 1!:55 <'asdf.txt'
@@ -128,7 +128,7 @@ f1 =: 3 : 0
 x=: ];._1 '//  1  NB. aa///  4  NB. bbb/'
 (5!:1 <'f1') -: <(,':');<((,'0');3);<(,'0');,.x
 (5!:2 <'f1') -: 3;(,':');,.x
-(5!:5 <'f1') -: '3 : 0',nl,nl,'  1  NB. aa',nl,nl,nl,'  4  NB. bbb',nl,nl,')'
+(5!:5 <'f1') -: '3 : 0',nln,nln,'  1  NB. aa',nln,nln,nln,'  4  NB. bbb',nln,nln,')'
 
 f2 =: 3 : 0
 
@@ -143,7 +143,7 @@ f2 =: 3 : 0
 x=: ];._1 '//://  1  NB. aa///  4  NB. bbb'
 (5!:1 <'f2') -: <(,':');<((,'0');3);<(,'0');,.x
 (5!:2 <'f2') -: 3;(,':');,.x
-(5!:5 <'f2') -: '3 : 0',nl,nl,':',nl,nl,'  1  NB. aa',nl,nl,nl,'  4  NB. bbb',nl,')'
+(5!:5 <'f2') -: '3 : 0',nln,nln,':',nln,nln,'  1  NB. aa',nln,nln,nln,'  4  NB. bbb',nln,')'
 
 f3 =: 3 : 0
 
@@ -166,7 +166,7 @@ f3 =: 3 : 0
 x=: ];._1 '//  11  NB. aaaa/  12  NB. b///  15  NB. cc///://  21  NB. ddd///  24  NB. e/      NB. ff'
 (5!:1 <'f3') -: <(,':');<((,'0');3);<(,'0');x
 (5!:2 <'f3') -: 3;(,':');x
-(5!:5 <'f3') -: '3 : 0',nl,nl,'  11  NB. aaaa',nl,'  12  NB. b',nl,nl,nl,'  15  NB. cc',nl,nl,nl,':',nl,nl,'  21  NB. ddd',nl,nl,nl,'  24  NB. e',nl,'      NB. ff',nl,')'
+(5!:5 <'f3') -: '3 : 0',nln,nln,'  11  NB. aaaa',nln,'  12  NB. b',nln,nln,nln,'  15  NB. cc',nln,nln,nln,':',nln,nln,'  21  NB. ddd',nln,nln,nln,'  24  NB. e',nln,'      NB. ff',nln,')'
 
 9!:41 ]0  NB. discard comments and white space
 
@@ -182,7 +182,7 @@ f1 =: 3 : 0
 x=: ];._1 '//1///4'
 (5!:1 <'f1') -: <(,':');<((,'0');3);<(,'0');,.x
 (5!:2 <'f1') -: 3;(,':');,.x
-(5!:5 <'f1') -: '3 : 0',nl,nl,'1',nl,nl,nl,'4',nl,')'
+(5!:5 <'f1') -: '3 : 0',nln,nln,'1',nln,nln,nln,'4',nln,')'
 
 f2 =: 3 : 0
 
@@ -197,7 +197,7 @@ f2 =: 3 : 0
 x=: ];._1 '/://1///4'
 (5!:1 <'f2') -: <(,':');<((,'0');3);<(,'0');,.x
 (5!:2 <'f2') -: 3;(,':');,.x
-(5!:5 <'f2') -: '3 : 0',nl,':',nl,nl,'1',nl,nl,nl,'4',nl,')'
+(5!:5 <'f2') -: '3 : 0',nln,':',nln,nln,'1',nln,nln,nln,'4',nln,')'
 
 f3 =: 3 : 0
 
@@ -220,7 +220,7 @@ f3 =: 3 : 0
 x=: ];._1 '//11/12///15/://21///24'
 (5!:1 <'f3') -: <(,':');<((,'0');3);<(,'0');x
 (5!:2 <'f3') -: 3;(,':');x
-(5!:5 <'f3') -: '3 : 0',nl,nl,'11',nl,'12',nl,nl,nl,'15',nl,':',nl,nl,'21',nl,nl,nl,'24',nl,')'
+(5!:5 <'f3') -: '3 : 0',nln,nln,'11',nln,'12',nln,nln,nln,'15',nln,':',nln,nln,'21',nln,nln,nln,'24',nln,')'
 
 9!:41 ]1  NB. retain comments and white space
 
@@ -346,6 +346,6 @@ NB. obsolete 9!:49 svxy
 
 4!:55 ;:'a ar c det dyad eq f f0 f1 f2 f3 f4'
 4!:55 ;:'f4a f5 f5a f6 f6a f6b f6c f7'
-4!:55 ;:'minors monad nl p q svxy Tv ws x'
+4!:55 ;:'minors monad nln p q svxy Tv ws x'
 
 

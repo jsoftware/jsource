@@ -455,9 +455,9 @@ static DF2(jtxdefn){PROLOG(0048);
   }else if(AT(self)&ADV+CONJ){  // non-noun result, but OK from adv/conj
    // if we are returning a non-noun, we have to cleanse it of any implicit locatives that refer to the symbol table in use now.
    // It is OK to refer to other symbol tables, since they will be removed if they try to escape at higher lavels and in the meantime can be executed; but
-   // there is no way we could have a reference to such an implied locative unless we also had a reference to the current table; so until we have a way to
-   // fix only the references to the current symbol table, we don't bother qualifying the search
-   if(hasimploc(z,0))z=fix(z,zeroionei[0]);
+   // there is no way we could have a reference to such an implied locative unless we also had a reference to the current table; so we replace only the
+   // first locative in eqch branch
+   z=fix(z,sc(FIXALOCSONLY|FIXALOCSONLYLOWEST));
   }else {pee(line,&cw[bi],EVNONNOUN,lk,callframe); z=0;}  // signal error, set z to 'no result'
  }else{
   // No result.  Must be an error

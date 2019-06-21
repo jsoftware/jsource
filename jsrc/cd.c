@@ -421,7 +421,7 @@ static F1(jtintg0){A df,dh,f,g,h;B nf,ng,vf,vg;C id;I m,n,p,q;V*fv,*gv,*v;
  R 0;
 }
 
-static DF1(jtddot1){V*v=VAV(self); R df1(w,ddot(fix(v->fgh[0]),v->fgh[1]));}
+static DF1(jtddot1){V*v=VAV(self); R df1(w,ddot(fix(v->fgh[0],zeroionei[0]),v->fgh[1]));}
 
 F2(jtddot){A x,*xv,y,z;AF f;I j,n,p,q,r,*wv;
  RZ(a&&w);
@@ -557,7 +557,7 @@ static DF2(jtsslope){A fs,f0,p,y,z,*zv;I m,n,r,t;V*sv=VAV(self);
 
 static DF1(jtderiv1){A e,ff,fs,gs,s,t,z,*zv;I*gv,d,n,*tv;V*v;
  PREF1(jtderiv1);
- v=VAV(self); RZ(fs=fix(v->fgh[0])); gs=v->fgh[1]; n=AN(gs); gv=AV(gs); 
+ v=VAV(self); RZ(fs=fix(v->fgh[0],zeroionei[0])); gs=v->fgh[1]; n=AN(gs); gv=AV(gs); 
  if(!(AT(w)&FL+CMPX))RZ(w=cvt(FL,w));
  RZ(e=scf((D)1e-7));
  GAT0(t,INT,1,0); tv=AV(t);   // no need to INCORP t, since no one cares and it's not virtual

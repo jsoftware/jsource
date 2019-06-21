@@ -23,7 +23,7 @@ powv=: 2 : 0
 
 pown =: 2 : 0
  if.     #$n do. u powg (>@{.`(>@{:))"1 n;"0<y
- elseif. 0>n do. u inv pown (-n) y
+ elseif. 0>n do. u f. inv pown (-n) y
  elseif. 1 do.
   assert. n-:<.n
   z=.y [ t=.0-:y [ i=._1

@@ -319,7 +319,7 @@ A jtvecb01(J jt,I t,I n,void*v){A z; GA(z,t,n,1,0);if(t&B01){C*p=(C*)AV(z),*q=v;
 __m256i zeros=_mm256_setzero_si256();
 __m256i ones=_mm256_set1_epi8(1);
 __m256i ffs=_mm256_set1_epi8(0xffu);
-I n0=n<<bplg(t);
+UI n0=n<<bplg(t);
 UI mis=((uintptr_t)q)&31u;
 mis=(mis>n0)?n0:mis;
 if(mis){
@@ -350,7 +350,7 @@ A jtvecb01(J jt,I t,I n,void*v){A z; GA(z,t,n,1,0);if(t&B01){C*p=(C*)AV(z),*q=v;
 __m128i zeros=_mm_setzero_si128();
 __m128i ones=_mm_set1_epi8(1);
 __m128i ffs=_mm_set1_epi8(0xffu);
-I n0=n<<bplg(t);
+UI n0=n<<bplg(t);
 UI mis=((uintptr_t)q)&15u;
 mis=(mis>n0)?n0:mis;
 if(mis){

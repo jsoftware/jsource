@@ -43,7 +43,7 @@ static A jtmakename(J jt,C*s){A z;I m;NM*zv;
  zv->m   =(UC)m; 
  zv->bucket=0;
  zv->bucketx=0;
- zv->flag=NMDOT+NMXY*((*s=='x')|(*s=='y'));
+ zv->flag=NMDOT+NMXY/* obsolete *((*s=='x')|(*s=='y'))*/;
  zv->hash=(UI4)nmhash(m,s);
  ACX(z);
  R z;

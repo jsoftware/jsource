@@ -86,6 +86,26 @@ sum=: +/
 (5!:5 <'g1') -: '+/ (',(5!:5 <'G1'),')'
 (5!:5 <'g2') -: '+/ (',(5!:5 <'G2'),')'
 
+1: (0 :0),(0 :0),(0 :0),(0 :0),(0 :0),(0 :0),(0 :0),(0 :0),(0 :0),(0 :0),(0 :0),(0 :0)  NB. temp removed
+
+NB. Local name passed to another modifier
+'`v1 v2 v3' =: -`*:`-:   NB. these are the values found by dou
+dou =: 1 : '". (5!:5<''u'') , ''  :: ]'' , ": y return. u'  NB. This processes by name
+v =: 3 : 0
+r =. ''
+v1 =. v4 =. v5 =. v6 =. v7 =. v8 =. +
+r =. r , v1 dou 5
+v2 =. %
+r =. r , v2 dou 5
+v3 =. +:
+r =. r , v3 dou 6
+r
+)
+_5 25 3 -: v ''
+dou =: 1 : 'u  :: ] y'  NB. This used the implicit locative
+5 0.2 12 -: v ''
+
+
 NB. processing on u/v in native locales
 a_z_ =: 1 : 0
 s =. 6
@@ -177,6 +197,8 @@ nm =. +
 6 = 1 (+ 2 : 'x undefname`u`v@.[ y' -) 5
 _3 = 2 (+ 2 : 'x undefname`u`v@.[ y' -) 5
 'value error' -: 0 (+ 2 : 'x undefname`u`v@.[ y' -) etx 5
+
+)
 
 4!:55 ;:'a aa q a_z_ c_z_ d_base_ d_xxx_ j j_xxx_ F f F1 f1 F2 f2 G g G1 g1 G2 g2 nln nn sum'
 18!:55 ;:'xxx yyy'

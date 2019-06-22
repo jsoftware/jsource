@@ -5,23 +5,6 @@ randuni''
 
 NB. Tests of local-name lookup
 
-NB. Local name passed to another modifier
-'`v1 v2 v3' =: -`*:`-:   NB. these are the values found by dou
-dou =: 1 : '". (5!:5<''u'') , ''  :: ]'' , ": y return. u'  NB. This processes by name
-v =: 3 : 0
-r =. ''
-v1 =. v4 =. v5 =. v6 =. v7 =. v8 =. +
-r =. r , v1 dou 5
-v2 =. %
-r =. r , v2 dou 5
-v3 =. +:
-r =. r , v3 dou 6
-r
-)
-_5 25 3 -: v ''
-dou =: 1 : 'u  :: ] y'  NB. This used the implicit locative
-5 0.2 12 -: v ''
-
 NB. Local name assigned to global name
 tolower =: 3 : 'x =. y'
 3 : 0 ''

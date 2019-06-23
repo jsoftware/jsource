@@ -451,7 +451,7 @@ static void freesymb(J jt, A w){I j,wn=AN(w); LX k,kt,* RESTRICT wv=LXAV0(w);
   // because when we free a locale it frees its symbols here, and one of them might be a verb that contains a nested SYMB, giving recursion.  It is safe to move sympv to a register because
   // we know there will be no allocations during the free process.
  // First, free the path and name (in the SYMLINFO block), and then free the SYMLINFO block itself
- if(k=wv[SYMLINFO]){  // The LINFO block might not have been allocated (for local symbol tables)
+ if(!(AR(w)&LLOCALTABLE)&&(k=wv[SYMLINFO])){  // for local symbol tables, LINFO is not a hashchain; and it might have had an error in allocation
   fr(LOCPATH(w));
   fr(LOCNAME(w));
   // clear the data fields   kludge but this is how it was done (should be done in symnew)

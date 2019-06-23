@@ -192,7 +192,7 @@ static DF2(jtxdefn){PROLOG(0048);
   // order in which the symbols were defined: y then x; and we know that insertions are made at the end; so we know
   // the bucketx for xy are 0 or maybe 1.  We have precalculated the buckets for each table size, so we can install the values
   // directly.
-  UI4 yxbucks = (UI4)AM(locsym);  // get the yx bucket indexes, stored in AM by crelocalsyms
+  UI4 yxbucks = *(UI4*)LXAV0(locsym);  // get the yx bucket indexes, stored in first hashchain by crelocalsyms
   L *ybuckptr = LXAV0(jt->locsyms)[(US)yxbucks]+jt->sympv;  // pointer to sym block for y
   L *xbuckptr = LXAV0(jt->locsyms)[yxbucks>>16]+jt->sympv;  // pointer to sym block for y
   if(w){ RZ(ras(w)); ybuckptr->val=w; ybuckptr->sn=jt->slisti;}  // If y given, install it & incr usecount as in assignment.  Include the script index of the modification
@@ -717,7 +717,8 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
 
  asgct = asgct + (asgct>>1); // leave 33% empty space, since we will have resolved most names here
  RZ(actst=stcreate(2,asgct,0L,0L));  // Allocate the symbol table we will use
- AM(actst)=(I)((SYMHASH(NAV(xnam)->hash,AN(actst)-SYMLINFOSIZE)<<16)+SYMHASH(NAV(ynam)->hash,AN(actst)-SYMLINFOSIZE));  // get the yx bucket indexes for a table of this size, save in AM
+// obsolete  AM(actst)=(I)((SYMHASH(NAV(xnam)->hash,AN(actst)-SYMLINFOSIZE)<<16)+SYMHASH(NAV(ynam)->hash,AN(actst)-SYMLINFOSIZE));  // get the yx bucket indexes for a table of this size, save in AM
+ *(UI4*)LXAV0(actst)=(UI4)((SYMHASH(NAV(xnam)->hash,AN(actst)-SYMLINFOSIZE)<<16)+SYMHASH(NAV(ynam)->hash,AN(actst)-SYMLINFOSIZE));  // get the yx bucket indexes for a table of this size, save in first hashchain
 
  // Transfer the symbols from the pro-forma table to the result table, hashing using the table size
  // For fast argument assignment, we insist that the arguments be the first symbols added to the table.

@@ -231,6 +231,7 @@ A jtindexnl(J jt,I n) { R (A)IAV0(jt->stnum)[n]; }  // the locale address, or 0 
 // on the result and on the name and path
 // For named/numbered types, SYMLINFO (hash chain #0) is filled in to point to the name and path
 //   the name is an A type holding an NM, which has hash filled in, and, for numbered locales, the bucketx filled in with the locale number
+// For local symbol tables, hash chain 0 is repurposed to hold symbol-index info for x/y (filled in later)
 A jtstcreate(J jt,C k,I p,I n,C*u){A g,x,xx;C s[20];L*v;
  GATV0(g,SYMB,(p+1)&-2,0);   // have odd number of hashchains, excluding LINFO
  // Allocate a symbol for the locale info, install in special hashchain 0.  Set flag; set sn to the symindex at time of allocation
@@ -254,6 +255,7 @@ A jtstcreate(J jt,C k,I p,I n,C*u){A g,x,xx;C s[20];L*v;
    break;
   case 2:  /* local symbol table */
    // Don't invalidate ACV lookups, since the local symbol table is not in any path
+   AR(g)|=LLOCALTABLE;  // flag this as a local table so the first hashchain is not freed
    ;
  }
  R g;

@@ -419,6 +419,7 @@ typedef I SI;
 // Flags in the AR field of local symbol tables
 #define LSYMINUSE 1  // This bit is set in the rank of the original symbol table when it is in use
 #define LNAMEADDED LPERMANENT  // Set in rank when a new name is added to the local symbol table.  We transfer the bit from the L flags to the rank-flag
+#define LLOCALTABLE 16  // Set in rank of all local symbol tables.  This indicates that the first hashchain holds x/y info and should not be freed as a symbol
 
 #define SFNSIMPLEONLY 1   // to sfn: return simple name only, discarding any locative
 
@@ -494,7 +495,8 @@ typedef struct {A name,val;US flag;S sn;LX next;} L;
 /* sn   - script index                              not used                   */
 /* next - index of successor in hash list or 0      mot used                  */
 
-// FOR EXECUTING LOCAL SYMBOL TABLES: AK() points to the active global symbol table
+// FOR EXECUTING LOCAL SYMBOL TABLES: AK() points to the active global symbol table, AM() points to the calling local symbol table.
+// In all local symbol tables, the first 'hashchain' has the symbol offsets of x/y
 
 #define LCH             (I)1            /* changed since last exec of 4!:5 */
 #define LHEAD           (I)2            /* head pointer (no predecessor)   */

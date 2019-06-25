@@ -39,7 +39,7 @@ F1(jtexec1){A z;
 
 F1(jtimmex){A z;
  if(!w)R A0;  // if no string, return empty result
- jt->locsyms->kchain.globalst=jt->global; // in case the sentence has operators, set a locale for it
+ AKGST(jt->locsyms)=jt->global; // in case the sentence has operators, set a locale for it
  STACKCHKOFL FDEPINC(1); z=parse(tokens(w,1+(AN(jt->locsyms)>1))); FDEPDEC(1);
  if(z&&!jt->asgn)jpr(z);
  RETF(z);

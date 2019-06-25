@@ -27,24 +27,17 @@ static DF2(jtunquote){A z;
    explocale=0;  // flag no explicit locale
   }else{
    NM* thisnameinfo=NAV(thisname);  // the NM block for the current name
-   if(!(thisnameinfo->flag&(NMLOC|NMILOC|NMDOT))) {  // simple name, but not u/v
+   if(!(thisnameinfo->flag&(NMLOC|NMILOC|NMIMPLOC))) {  // simple name, and not u./v.
     explocale=0;  // flag no explicit locale
     if(!(stabent = probelocal(thisname)))stabent=syrd1(thisnameinfo->m,thisnameinfo->s,thisnameinfo->hash,jt->global);  // Try local, then look up the name starting in jt->global
    } else {  // locative or u/v
-    if(!(thisnameinfo->flag&NMDOT)){  // locative
+    if(!(thisnameinfo->flag&NMIMPLOC)){  // locative
      RZ(explocale=sybaseloc(thisname));  //  get the explicit locale.  0 if erroneous locale
      stabent=syrd1(thisnameinfo->m,thisnameinfo->s,thisnameinfo->hash,explocale);  // Look up the name starting in the locale of the locative
-    }else{  // u/v.  We have to look at the assigned name/value to know whether this is an implied locative (it usually is)
-     if(!(stabent = probelocal(thisname)) || !(stabent->flag&LIMPLOCUV)){
-      // The name is u/v, but the value was not one assigned by xdefn.  Treat it as a normal name
-      explocale=0;  // flag no explicit locale
-      if(!stabent)stabent=syrd1(thisnameinfo->m,thisnameinfo->s,thisnameinfo->hash,jt->global);  // Try local, then look up the name starting in jt->global
-     }else{
-      // u/v, assigned by xdefn.  Implied locative.  Extract the local-symbol table from the name, and the globals from that
-      // Stack the current local-symbols table and switch over to the one for evaluating u/v
-      pushcallstack1d(CALLSTACKPUSHLOCALSYMS,jt->locsyms);
-      jt->locsyms=(A)AM(stabent->name);  // get the local syms at the time u/v was assigned; make them current
-      explocale=jt->locsyms->kchain.globalst;  // and the global syms
+    }else{  // u./v.  We have to look at the assigned name/value to know whether this is an implied locative (it usually is)
+     if(stabent = probelocal(thisname)){
+      // u/v, assigned by xdefn.  Implied locative.  Use switching to the local table a flag for restoring the caller's environment
+      explocale=jt->locsyms;  // We have to use this flag trick, rather than stacking the locales here, because errors after the stack is set could corrupt the stack
      }
     }
    }
@@ -66,14 +59,23 @@ static DF2(jtunquote){A z;
   ASSERT(TYPESEQ(AT(self),AT(fs)),EVDOMAIN);   // make sure its part of speech has not changed since the name was parsed
  }
  A savname=jt->curname; jt->curname=thisname;  // stack the name of the previous executing entity, replace it with new
- I dyadex = w!=(A)self;   // if we were called with w,fs,fs, we are a monad.  Otherwise (a,w,fs) dyad
+ I dyadex = w!=self;   // if we were called with w,fs,fs, we are a monad.  Otherwise (a,w,fs) dyad
  v=FAV(fs);  // repurpose v to point to the resolved verb block
 #if !USECSTACK
  I d=v->fdep; if(!d)RE(d=fdep(fs));  // get stack depth of this function, for overrun prevention
  FDEPINC(d);  // verify sufficient stack space - NO ERRORS until FDEPDEC below
 #endif
  STACKCHKOFL
- if(explocale){ pushcallstack1d(CALLSTACKPOPLOCALE,jt->global); jt->global=explocale;  ++jt->modifiercounter;}  // if locative, switch to it, stacking the prev value. invalidate any extant lookups of modifier names -
+ if(explocale){  // there is a locative or implied locative
+  // locative. switch to it, stacking the prev value.  If the switch is to the current local symbol table, that means 'switch to caller's environment'
+  if(explocale==jt->locsyms){
+   pushcallstack1d(CALLSTACKPUSHLOCALSYMS,jt->locsyms);  // save current locsyms
+   jt->locsyms=(A)AM(jt->locsyms);  // get the local syms at the time u/v was assigned; make them current
+   explocale=AKGST(jt->locsyms);  // fetch global syms for the caller's environment, so we stack it next
+  }
+  pushcallstack1d(CALLSTACKPOPLOCALE,jt->global); jt->global=explocale;  // move to new implied locale
+  ++jt->modifiercounter;  // invalidate any extant lookups of modifier names
+ }
  // ************** no errors till the stack has been popped
  w=dyadex?w:(A)fs;  // set up the bivalent argument with the new self
 
@@ -233,7 +235,7 @@ static DF2(jtunquote){A aa,fs,g,ll,oldn,oln,z;B lk;I d,i;L*e;V*v;
 #endif
 
 // The monad calls the bivalent case with (w,self,self) so that the inputs can pass through to the executed function
-static DF1(jtunquote1){R unquote(w,(A)self,self);}  // This just transfers to jtunquote.  It passes jt, with inplacing bits, unmodified
+static DF1(jtunquote1){R unquote(w,self,self);}  // This just transfers to jtunquote.  It passes jt, with inplacing bits, unmodified
 
 // return ref to adv/conj/verb whose name is a and whose symbol-table entry is w
 // if the value is a noun, we just return the value; otherwise we create a 'name~' block
@@ -286,3 +288,14 @@ F2(jtnamerefop){V*v;
 /* - operator arguments have been supplied                 */
 /* - function arguments have not yet been supplied         */
 // w is an anonymous entity that we want to give the name a to for debug purposes
+
+
+// u./v.
+// We process this as 'u'~ where the name is flagged as NMIMPLOC
+// Bivalent: called with (a,w,self) or (w,self).  We treat as dyad but turn it into monad if input w is not a noun
+DF2(jtimplocref){
+ self=AT(w)&NOUN?self:w;
+ self=jt->implocref[FAV(self)->id&1];
+ w=AT(w)&NOUN?w:self;
+ R unquote(a,w,self); // call as (w,self,self) or (a,w,self)
+}

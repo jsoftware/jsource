@@ -710,13 +710,15 @@ return r;
 
 // w is LIT array of ISO strings (rank>0, not empty), result is array of INTs with nanosecond time for each string
 // We don't bother to support a boxed-string version because the strings are shorter than the boxes & it is probably just about as good to just open the boxed strings
-static A efs(J jt,A w){
+// prec is -1 (day only) or 0,3,9 for that many fractional digits below seconds
+static A efs(J jt,A w,I prec){
 #if SY_64
 	I i;A z;
  // Allocate result area
  I n; PROD(n,AR(w)-1,AS(w)); GATV(z,INT,n,AR(w)-1,AS(w))
  I strglen=AS(w)[AR(w)-1];
  C *s=CAV(w);  // point to start of first string
+ UC afterday=(UC)((~prec)>>8);  //  0x00 if we stop  after the day, 0xff if we continue
 	for(i=0;i<n;++i,s+=strglen){
  	UI4 Y,M,D,ss; I4 hh,mm;  // hh,mm are I because they may go negative during TZ adjustment
   // It's OK to overfetch from a string buffer, as long as you don't rely on the contents fetched.  They're padded
@@ -744,7 +746,7 @@ static A efs(J jt,A w){
   if(c=='T'){D=1; goto gotdate;}    // YYYY-MMT.  Default D
   if(c=='-')c=*++sp;  // skip '-' if present
   RDTWOC(D);
-  if(!c){hh=mm=ss=0; goto gottime;}   // YYYY-MM-DD alone.  Default the rest.  space here is a delimiter
+  if(!(c&afterday)){hh=mm=ss=0; goto gottime;}   // YYYY-MM-DD alone, or after-day ignored.  Default the rest.  space here is a delimiter
 gotdate: ;
   if((c=='T')|(c==' '))c=*++sp;  // Consume the T/sp if present.  It must be followed by HH.  sp as a separator is not ISO 8601
   if(!(c&~' ')){hh=mm=ss=0; goto gottime;}   // YYYY-MM-DDTbb treat this as ending the year, default the rest
@@ -762,7 +764,9 @@ gotdate: ;
   // If the seconds have decimal extension, turn it to nanoseconds.  ISO8601 allows fractional extension on the last time component even if it's not SS, but we don't support that 
   if((c=='.')|(c==',')){
    c=*++sp;  // skip decimal point
-   DO(9, if(!ISDIGIT(c))break; N+=nanopowers[i]*((UI)c-(UI)'0'); c=*++sp;)  // harder than it looks!  We use memory to avoid long carried dependency from the multiply chain
+   DO(prec, if(!ISDIGIT(c))break; N+=nanopowers[i]*((UI)c-(UI)'0'); c=*++sp;)  // harder than it looks!  We use memory to avoid long carried dependency from the multiply chain
+   // discard trailing digits that we are skipping
+   while(ISDIGIT(c))c=*++sp;
   }
 hittz:
   // Timezone [+-]HH[[:]MM]  or Z
@@ -853,17 +857,22 @@ F2(jtetoiso8601){UC decimalpt,zuluflag;I prec;
 }
 
 // 6!:17 convert a block of iso8601-format strings to nanosecond times.  Result has one INT for each string
-// Bivalent.  left arg is TBD
-F2(jtiso8601toe){
+// Bivalent.  left arg is 'd', '0', '3', or '9', like 3d digit of 6!:16, default '9'
+F2(jtiso8601toe){I prec;
  RZ(w);
  ASSERT(SY_64,EVNONCE);
  // If monad, supply defaults; if dyad, audit
  if(AT(w)&NOUN){  // dyad
+  ASSERT(AT(a)&LIT,EVDOMAIN);
+  ASSERT(AN(a)==1,EVLENGTH);
+  ASSERT(AR(a)<=1,EVRANK);  // a must be a 1-character list or atom
+  // convert precision character to precision to use (_1 for date, 0-9)
+  if(CAV(a)[0]=='d')prec=-1; else {prec=CAV(a)[0]-'0'; ASSERT((UI)prec<(UI)10,EVDOMAIN); ASSERT(((I)1<<prec)&0x209,EVNONCE);}  // 0 3 9 allowed
  }else{
-  w=a;  // monad: switch argument, set defaults
+  w=a; prec=9; // monad: switch argument, set defaults
  }
  ASSERT(AT(w)&LIT,EVDOMAIN);  // must be LIT
  ASSERT(AR(w),EVRANK);    // must not be an atom
  if(!AN(w))RETF(dfs1(w,qq(sc(IMIN),zeroionei[1])));   // return _"1 w on empty w - equivalent
- RETF(efs(jt,w));
+ RETF(efs(jt,w,prec));
 }

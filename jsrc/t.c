@@ -181,10 +181,10 @@ B jtpinit(J jt){A t;C*s;
  /*  t. */  pdef(CTDOT,   ADV,  jttdot,    0L,       0,   0,   0   ,VISATOMIC1);
  /*  t: */  pdef(CTCO,    ADV,  jttco,     0L,       0,   0,   0   ,VFLAGNONE);
  /*  T. */  pdef(CTCAP,   CONJ, 0L,        jttcap,   0,   0,   0   ,VFLAGNONE);
- /*  u. */       /* see above */
+ /*  u. */  pdef(CUDOT,   VERB, jtimplocref,    jtimplocref,   RMAX,RMAX,RMAX,VFLAGNONE);
  /*  u: */  pdef(CUCO,    VERB, jtuco1,    jtuco2,   RMAX,RMAX,RMAX,VASGSAFE);
- /*  v. */       /* see above */
- /*  x. */       /* see above */
+ /*  v. */  pdef(CVDOT,   VERB, jtimplocref,    jtimplocref,   RMAX,RMAX,RMAX,VFLAGNONE);
+/*  x. */       /* see above */
  /*  x: */  pdef(CXCO,    VERB, jtxco1,    jtxco2,   RMAX,RMAX,RMAX,VASGSAFE|VISATOMIC1);
  /*  y. */       /* see above */
 

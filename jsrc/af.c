@@ -34,28 +34,28 @@ static B jtselfq(J jt,A w){A hs,*u;V*v;
 }    /* 1 iff w contains $: */
 
 // See if there are references to implicit locatives.  Return 1 if so, 0 if not
-// If oneloc is nonnull, only implicit locatives in that symbol table are detected
-B jthasimploc(J jt,A w,A oneloc){A hs,*u;V*v;
+B jthasimploc(J jt,A w){A hs,*u;V*v;
  RZ(w);
  if(AT(w)&NOUN+NAME)R 0;
  v=FAV(w);
  switch(v->id){
+  case CUDOT: case CVDOT:
+   R 1;  // these are always implicit locatives
   case CTILDE: ;
    A thisname=v->fgh[0]; L *stabent;// the A block for the name of the function (holding an NM) - unless it's a pseudo-name
    if(!thisname)R 0;  // no name
-   if(AT(thisname)&VERB)R hasimploc(thisname,oneloc);  // if v~, go look at v
+   if(AT(thisname)&VERB)R hasimploc(thisname);  // if v~, go look at v
    if(AT(thisname)&NOUN)R 0;   // if noun~, leave as is
    NM* thisnameinfo=NAV(thisname);  // the NM block for the current name
-   if(!(thisnameinfo->flag&NMDOT))R 0; // not NMDOT
-   if(!(stabent = probelocal(thisname)) || !(stabent->flag&LIMPLOCUV))R 0;  // assigned value is not implicit locative
-   if(oneloc && oneloc!=(A)AM(stabent->name))R 0;  // symbol table is not the only one we are looking for
+   if(!(thisnameinfo->flag&NMIMPLOC))R 0; // not NMDOT
+   if(!(stabent = probelocal(thisname)))R 0;  // assigned value does not exist
    R 1;
   case CATDOT:
   case CGRCO:
-   if(hs=v->fgh[2]){u=AAV(hs); DO(AN(hs), if(hasimploc(u[i],oneloc))R 1;);}
+   if(hs=v->fgh[2]){u=AAV(hs); DO(AN(hs), if(hasimploc(u[i]))R 1;);}
    R 0;
   default:     
-   DO(3, if(v->fgh[i]&&hasimploc(v->fgh[i],oneloc))R 1;)
+   DO(3, if(v->fgh[i]&&hasimploc(v->fgh[i]))R 1;)
  }
  R 0;
 }
@@ -77,11 +77,11 @@ static A jtfixa(J jt,A a,A w){A f,g,h,wf,x,y,z=w;V*v;I aa[8];  // place to build
  I aif=ai&(FIXALOCSONLY|FIXALOCSONLYLOWEST); // extract control flags
  ai^=aif;   // now ai = state without flags
  // If we are only interested in replacing locatives, and there aren't any, exit fast
- if(aif&FIXALOCSONLY&&!hasimploc(w,0))R w;  // nothing to fix
+ if(aif&FIXALOCSONLY&&!hasimploc(w))R w;  // nothing to fix
  if(NAME&AT(w)){R sfn(0,w);}  // only way a name gets here is by ".@noun which turns into ".@(name+noun) for execution.  Also in debug, but that's discarded
  if(NOUN&AT(w)||VFIX&VAV(w)->flag)R w;
  v=VAV(w); f=v->fgh[0]; g=v->fgh[1]; h=v->fgh[2]; wf=ds(v->id); I na=ai==0?3:ai;
- if(!(f||g))R w;
+ if(!(f||g||((v->id&-2)==CUDOT)))R w;  // combinations always have f or g; and u./v. must be replaced even though it doesn't
  switch(v->id){
   case CSLASH: 
    R df1(REFIXA(2,f),wf);
@@ -111,6 +111,10 @@ static A jtfixa(J jt,A a,A w){A f,g,h,wf,x,y,z=w;V*v;I aa[8];  // place to build
    if(g)RZ(g=REFIXA(na,g));
    R f&&g ? (VDDOP&v->flag?df2(f,g,df2(head(h),tail(h),wf)):df2(f,g,wf)) : 
             (VDDOP&v->flag?df1(f,  df2(head(h),tail(h),wf)):df1(f,  wf)) ;
+  case CUDOT:
+   R REFIXA(ai,jt->implocref[0]);  // u. is equivalent to 'u.'~ for fix purposes
+  case CVDOT:
+   R REFIXA(ai,jt->implocref[1]);
   case CTILDE:
    if(f&&NAME&AT(f)){
     RZ(y=sfn(0,f));
@@ -118,20 +122,20 @@ static A jtfixa(J jt,A a,A w){A f,g,h,wf,x,y,z=w;V*v;I aa[8];  // place to build
     ASSERT(jt->fxi,EVLIMIT);
     // recursion check finished.  Now replace the name with its value
     if(x=symbrdlock(f)){
-     // if this is an implied locative, we have to switch the environment before we recur on the name for subsequent lookups
+     // if this is an implicit locative, we have to switch the environment before we recur on the name for subsequent lookups
      // The value we get from the lookup must be interpreted in the environment of the higher level
      A savloc=jt->locsyms; A savglob=jt->global;  // initial locales
      A thisname=v->fgh[0];// the A block for the name of the function (holding an NM) - unless it's a pseudo-name
      if(thisname){ // name given
       NM* thisnameinfo=NAV(thisname);  // the NM block for the current name
-      if(thisnameinfo->flag&NMDOT){ L *stabent; //  NMDOT
-       if((stabent = probelocal(thisname)) && (stabent->flag&LIMPLOCUV)){  // assigned value is implicit locative
-        // If our ONLY mission is to replace implied locatives, we are finished after replacing this locative IF
+      if(thisnameinfo->flag&NMIMPLOC){ L *stabent; //  implicit locative
+       if((stabent = probelocal(thisname))){  // name is defined
+        // If our ONLY mission is to replace implicit locatives, we are finished after replacing this locative IF
         // (1) we want to replace only first-level locatives; (2) there are no more locatives in this branch after the replacement
         if(aif&FIXALOCSONLYLOWEST)R x;  // return looked-up value once we hit one
         // If we have to continue after the replacement, we must do so in the environment of the implicit locative.
-        jt->locsyms=(A)AM(stabent->name);  // get the local syms at the time u/v was assigned; make them current
-        jt->global=jt->locsyms->kchain.globalst;  // and the global syms
+        jt->locsyms=(A)AM(jt->locsyms);  // get the local syms at the time u/v was assigned; make them current
+        jt->global=AKGST(jt->locsyms);  // and the global syms
         // NO FAILURES ALLOWED FROM HERE TO RESTORE
        }
       }
@@ -153,6 +157,7 @@ static A jtfixa(J jt,A a,A w){A f,g,h,wf,x,y,z=w;V*v;I aa[8];  // place to build
     ASSERT(TYPESEQ(AT(w),AT(z))||AT(w)&NOUN&&AT(z)&NOUN,EVDOMAIN);
     R z;
    }else R df1(REFIXA(2,f),wf);
+// bug ^: and m} should process gerund args
   default:
    if(f)RZ(f=REFIXA(na,f));
    if(g)RZ(g=REFIXA(na,g));
@@ -167,7 +172,7 @@ DF1(jtfix){PROLOG(0005);A z;
  // only verbs/noun can get in through the parser, but internally we also vet adv/conj
  ASSERT(AT(w)&NAME+VERB+ADV+CONJ,EVDOMAIN);
  self=AT(self)&NOUN?self:zeroionei[0];
- RZ(z=fixa(self,AT(w)&VERB+ADV+CONJ?w:symbrdlock(w)));  // name should not be possible normally
+ RZ(z=fixa(self,AT(w)&VERB+ADV+CONJ?w:symbrdlock(w)));  // name comes from string a
  // Once a node has been fixed, it doesn't need to be looked at ever again.  This applies even if the node itself carries a name.  To indicate this
  // we set VFIX.  We only do so if the node has descendants (or a name).  We also turn off VNAMED, which is set in named explicit definitions (I don't
   // understand why).  We can do this only if we are sure the entire tree was traversed, i. e. we were not just looking for implicit locatives.

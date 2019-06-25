@@ -150,6 +150,7 @@ typedef struct {
  I*   numloctbl;         // pointer to data area for locale-number to locale translation
  UI4  numlocsize;       // AN(jt->stnum)
 #endif
+ A    implocref[2];     // references to 'u.'~ and 'v.', marked as implicit locatives
  I4   parsercalls;      /* # times parser was called                       */
  A*   tstacknext;       // if not 0, points to the recently-used tstack buffer, whose chain field points to tstack (sort of, because of bias)
  D    cct;               /* complementary comparison tolerance                            */

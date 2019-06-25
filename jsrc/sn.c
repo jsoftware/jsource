@@ -162,7 +162,7 @@ F1(jtscind){A*wv,x,y,z;I n,*zv;L*v;
 static A jtnch1(J jt,B b,A w,I*pm,A ch){A*v,x,y;C*s,*yv;LX *e;I i,k,m,p,wn;L*d;
  RZ(w);
  wn=AN(w); e=LXAV0(w);                                /* locale                */
- x=(A)(*e+jt->sympv)->name; p=AN(x); s=NAV(x)->s;  /* locale name           */
+ x=(A)(*e+jt->sympv)->name; p=AN(x); s=NAV(x)->s;  /* locale name/number           */
  m=*pm; v=AAV(ch)+m;                               /* result to appended to */
  for(i=SYMLINFOSIZE;i<wn;++i,++e)if(*e){
   d=*e+jt->sympv;

@@ -87,7 +87,7 @@ extern void jtsymfreeha(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
  L *jtsympv=jt->sympv;  // Move base of symbol block to a register.  Block 0 is the base of the free chain.  MUST NOT move the base of the free queue to a register,
   // because when we free a locale it frees its symbols here, and one of them might be a verb that contains a nested SYMB, giving recursion.  It is safe to move sympv to a register because
   // we know there will be no allocations during the free process.
- // loop through each hash chain, clearing the blocks in the chain
+ // loop through each hash chain, clearing the blocks in the chain.  Do not clear chain 0, which holds x/y bucket numbers
  I ortypes=0;
  for(j=SYMLINFOSIZE;j<wn;++j){
   LX *aprev=&wv[j];  // this points to the predecessor of the last block we processed
@@ -152,7 +152,7 @@ F1(jtsympool){A aa,q,x,y,*yv,z,*zv;I i,n,*u,*xv;L*pv;LX j,*v;
   RZ(q=sympoola(x)); u=AV(q); DO(AN(q), yv[u[i]]=aa;);
  }
  if(AN(x=jt->locsyms)>1){               /* per local table      */
-  RZ(      yv[LXAV0(x)[0]]=aa=rifvs(cstr("**local**")));  // ?? LXAV0(x)[0] is always 0
+  RZ(      /* obsolete yv[LXAV0(x)[0]]=*/aa=rifvs(cstr("**local**")));
   RZ(q=sympoola(x)); u=AV(q); DO(AN(q), yv[u[i]]=aa;);
  }
  RETF(z);
@@ -502,8 +502,8 @@ L* jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;L*e;
  I xt=0;  // If not assigned, use empty type
  if(x){
    xaf=AFLAG(x); xt=AT(x); // if assigned, get the actual flags
-   // When we reassign to u/v, we clear the implicit-locale flags.  We just clear them willy-nilly and rely on xdefn to set them when needed.
-   e->flag&=~LIMPLOCUV;
+// obsolete    // When we reassign to u/v, we clear the implicit-locale flags.  We just clear them willy-nilly and rely on xdefn to set them when needed.
+// obsolete    e->flag&=~LIMPLOCUV;
  } else {xaf = AFNVRUNFREED; xt=0;}   // If name is not assigned, indicate that it is not read-only or memory-mapped.  Also set 'impossible' code of unfreed+not NVR
  if(!(AFNJA&xaf)){
   // If we are assigning the same data block that's already there, don't bother with changing use counts or checking for relative
@@ -515,8 +515,8 @@ L* jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;L*e;
     // It's a pity that we have to do this for ALL assignments, even assignments to uv.  If we don't, a reference to a local modifier may get passed in, and
     // it will still be considered valid even though the local names have disappeared.  Maybe we could avoid this if the local namespace has no defined modifiers - but then we'd have to keep up with that...
     ++jt->modifiercounter;
-    // If the assignment is global, we have to scan the value, and fix it if it contains implicit locatives
-    if(AT(w)&(VERB|CONJ|ADV)&&g!=jt->locsyms)RZ(w=fix(w,sc(FIXALOCSONLY)));
+// obsolete     // If the assignment is global, we have to scan the value, and fix it if it contains implicit locatives
+// obsolete     if(AT(w)&(VERB|CONJ|ADV)&&g!=jt->locsyms)RZ(w=fix(w,sc(FIXALOCSONLY)));
    }
    // Increment the use count of the value being assigned, to reflect the fact that the assigned name will refer to it.
    // This realizes any virtual value, and makes the usecount recursive if the type is recursible

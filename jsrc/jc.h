@@ -196,8 +196,8 @@
 #define CTCO       (C)'\334'       /* 220 334 dc t:                           */
 #define CTCAP      (C)'\335'       /* 221 335 dd T.                           */
 #define CUDOT      (C)'\336'       /* 222 336 de u.                           */
-#define CUCO       (C)'\337'       /* 223 337 df u:                           */
-#define CVDOT      (C)'\340'       /* 224 340 e0 v.                           */
+#define CVDOT      (C)'\337'       /* 223 337 df v.                           */
+#define CUCO       (C)'\340'       /* 224 340 e0 u:                           */
 #define CXDOT      (C)'\341'       /* 225 341 e1 x.                           */
 #define CXCO       (C)'\342'       /* 226 342 e2 x:                           */
 #define CYDOT      (C)'\343'       /* 227 343 e3 y.                           */

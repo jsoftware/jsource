@@ -978,7 +978,7 @@
 #define seeparse(x)                 jtseeparse(jt,(x))
 #define seg(x,y)                    jtseg(jt,(x),(y))   
 #define selfq(x)                    jtselfq(jt,(x))
-#define hasimploc(x,y)              jthasimploc(jt,(x),(y))
+#define hasimploc(x)                jthasimploc(jt,(x))
 #define selm(x)                     jtselm(jt,(x))
 #define selx(x,y,z)                 jtselx(jt,(x),(y),(z))
 #define sely(x0,x1,x2,x3)           jtsely(jt,(x0),(x1),(x2),(x3))

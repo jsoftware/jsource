@@ -86,8 +86,7 @@ sum=: +/
 (5!:5 <'g1') -: '+/ (',(5!:5 <'G1'),')'
 (5!:5 <'g2') -: '+/ (',(5!:5 <'G2'),')'
 
-1: (0 :0),(0 :0),(0 :0),(0 :0),(0 :0),(0 :0),(0 :0),(0 :0),(0 :0),(0 :0),(0 :0),(0 :0)  NB. temp removed
-
+ 
 NB. Local name passed to another modifier
 '`v1 v2 v3' =: -`*:`-:   NB. these are the values found by dou
 dou =: 1 : '". (5!:5<''u'') , ''  :: ]'' , ": y return. u'  NB. This processes by name
@@ -102,15 +101,15 @@ r =. r , v3 dou 6
 r
 )
 _5 25 3 -: v ''
-dou =: 1 : 'u  :: ] y'  NB. This used the implicit locative
+dou =: 1 : 'u.  :: ] y'  NB. This used the implicit locative
 5 0.2 12 -: v ''
 
 
-NB. processing on u/v in native locales
+NB. processing on u./v. in native locales
 a_z_ =: 1 : 0
 s =. 6
 cocurrent 'yyy'
-r =. u y
+r =. u. y
 assert. (<'yyy') -: coname''
 assert. s = 6
 r
@@ -130,7 +129,7 @@ d_xxx_=:7:
 c_z_ =: 2 : 0
 s =. 15
 cocurrent 'base'
-r =. ((d+u) a x),(v a y)  NB. d and u run in different locales
+r =. ((d+u.) a x),(v. a y)  NB. d and u run in different locales
 NB. execution of a changes the locale because the operator is anonymous
 assert. s = 15
 r
@@ -148,15 +147,15 @@ r
 )
 153 17 153 5 -: 12 f 's'
 
-a =: 1 : 'u'
+a =: 1 : 'u.'
 20 = +: a 10
 
-aa =: 1 : 'u a'
+aa =: 1 : 'u. a'
 20 = +: aa 10
 
 NB. References passed through
 a =: 1 : 0
-1+u
+1+u.
 )
 
 aa =: 1 : 0
@@ -169,9 +168,9 @@ NB. References assigned
 aa =: 1 : 0
 s =. 9:
 p =. 10
-t =. *:@u
-q =: *:@u  NB. verifies fix picks up from caller
-(u 'p'),(t 'p'),(q 'p'),((*:@u) a 'p'),(t a 'p'),(q a 'p')
+t =. *:@u.
+q =: *:@u. f.  NB. verifies fix picks up from caller
+(u. 'p'),(t 'p'),(q 'p'),((*:@u.) a 'p'),(t a 'p'),(q a 'p')
 )
 
 f =: 3 : 0
@@ -179,26 +178,26 @@ s =. ".
 p =. 15
 s aa
 )
-15 225 81 226 226 82 -: f''  NB. The returns from a all get fixed, but only at lowest level
+15 225 100 226 226 101 -: f''  NB. The returns from a all get fixed, but only at lowest level
 
 NB. Returns
-5 -: 10 + (2 : 'u v') - 5
-_5 -: 10 + (2 : '(u~ v)~') - 5
-24 = +: 2 : 'u^:(1:`([v))' - 12
-+: 2 :' v"_`u@.(*@#@])' *:
+5 -: 10 + (2 : 'u. v.') - 5
+_5 -: 10 + (2 : '(u.~ v.)~') - 5
+NB. v. not fixed (bug)  24 = +: 2 : 'u.^:(1:`([v.))' - 12
++: 2 :' v."_`u.@.(*@#@])' *:
 'noun result was required' -: 3 : 0 etx ''
 nm =. + + +
- + 2 : 'v"_`' nm
+ + 2 : 'v."_`' nm
 )
-(+`-) -: 3 : 0 ''
+nm =. +:
+2 -: + 2 : 0 - (2)
 nm =. +
-- 2 : 'v`u' nm
+%: 2 : 'u. v.' nm   NB. return contains nm, executed in caller
 )
-6 = 1 (+ 2 : 'x undefname`u`v@.[ y' -) 5
-_3 = 2 (+ 2 : 'x undefname`u`v@.[ y' -) 5
-'value error' -: 0 (+ 2 : 'x undefname`u`v@.[ y' -) etx 5
+6 = 1 (+ 2 : 'x undefname`u.`v.@.[ y' -) 5
+_3 = 2 (+ 2 : 'x undefname`u.`v.@.[ y' -) 5
+'value error' -: 0 (+ 2 : 'x undefname`u.`v.@.[ y' -) etx 5
 
-)
 
 4!:55 ;:'a aa q a_z_ c_z_ d_base_ d_xxx_ j j_xxx_ F f F1 f1 F2 f2 G g G1 g1 G2 g2 nln nn sum'
 18!:55 ;:'xxx yyy'

@@ -84,9 +84,8 @@ struct AD {
  FLAGT flag;
  union {
   I m;  // Multi-use field. (1) For NJA/SMM blocks, size of allocation. (2) for blocks coming out of a COUNTITEMS verb, holds the number of items in the
-        // raze of the noun (if the types are identical) (3) for SYMB tables for explicit definitions, the symbol positions for y and x (4) for the block
+        // raze of the noun (if the types are identical) (3) for SYMB tables for explicit definitions, the address of the calling symbol table (4) for the block
         // holding the amend offsets in x u} y, the number of axes of y that are built into the indexes in u (5) for name references, the value of jt->modifiercount when the name was last looked up
-        //  (6) in NAME blocks that are the name of an implicit-locative assignment, the address of the symbol table to use when the value is executed
   A back; // For VIRTUAL blocks, points to backing block
 
 } mback;
@@ -504,9 +503,6 @@ typedef struct {A name,val;US flag;S sn;LX next;} L;
 #define LPERMANENT      (I)8            // This is a permanent entry in a local symbol table; don't delete, just leave val=0
 #define LHASNAME        (I)16      // name is nonnull
 #define LHASVALUE       (I)32     // value is nonnull
-#define LIMPLOCUV      (I)64       // the value is an implied locative.  AM() in the name gives the local syms the name should be executed in, and points to the global syms.  This flag is set
-                                // only when the value is assigned at the start of xdefn.
-#define LCLONENAME      (I)128   // this name holds variable information about 
 // in LINFO entry
 #define LMOD            (I)1          // table has had new entries added (used for local symbol tables only)
 
@@ -548,6 +544,7 @@ typedef struct{UI4 hash;I4 bucket;I bucketx;UC m;C flag,s[1];} NM;
 #define NMILOC          2       /* indirect locale abc__de__fgh ...        */
 #define NMDOT           4       /* one of the names m. n. u. v. x. y.      */
 #define NMXY            8       // x/y, which must have NAMEBYVALUE set
+#define NMIMPLOC        16      // this NM block is in u./v.
 
 
 typedef struct {I a,e,i,x;} P;
@@ -651,7 +648,6 @@ typedef struct {union { D lD; void *lvp; I lI;} localuse;union {A l2A;} localuse
 // for FIT conj, the CCT data
 
 // localuse2 can be
-// for VERB values assigned to LIMPLOC name, the pointer to the locsyms to use when running the name
 
 // lc is a local-use byte.  For atomic monads, it is the index of the adocv block
 

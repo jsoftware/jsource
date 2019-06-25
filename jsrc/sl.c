@@ -237,9 +237,10 @@ A jtstcreate(J jt,C k,I p,I n,C*u){A g,x,xx;C s[20];L*v;
  // Allocate a symbol for the locale info, install in special hashchain 0.  Set flag; set sn to the symindex at time of allocation
  // (it is queried by 18!:31)
  // The allocation clears all the hash chain bases, including the one used for SYMLINFO
- RZ(v=symnew(&LXAV0(g)[SYMLINFO],0)); v->flag|=LINFO; v->sn=(US)jt->symindex++;   // allocate at head of chain
+// obsolete RZ(v=symnew(&LXAV0(g)[SYMLINFO],0)); v->flag|=LINFO; v->sn=(US)jt->symindex++;   // allocate at head of chain
  switch(k){
   case 0:  /* named    locale */
+   RZ(v=symnew(&LXAV0(g)[SYMLINFO],0)); v->flag|=LINFO; v->sn=(US)jt->symindex++;   // allocate at head of chain
    RZ(x=nfs(n,u));  // this fills in the hash for the name
    // Install name and path.  Path is 'z' except in z locale itself, which has empty path
    RZ(ras(x)); LOCNAME(g)=x; xx=1==n&&'z'==*u?vec(BOX,0L,0L):zpath; ras(xx); LOCPATH(g) = xx;   // ras() is never VIRTUAL
@@ -248,6 +249,7 @@ A jtstcreate(J jt,C k,I p,I n,C*u){A g,x,xx;C s[20];L*v;
    symbis(x,g,jt->stloc);
    break;
   case 1:  /* numbered locale */
+   RZ(v=symnew(&LXAV0(g)[SYMLINFO],0)); v->flag|=LINFO; v->sn=(US)jt->symindex++;   // allocate at head of chain
    sprintf(s,FMTI,n); RZ(x=nfs(strlen(s),s)); NAV(x)->bucketx=n; // this fills in the hash for the name; we save locale# if numeric
    RZ(ras(x)); LOCNAME(g)=x; ras(zpath); LOCPATH(g)=zpath;  // ras() is never virtual
    // Put this locale into the in-use list at an empty location.  ras(g) at that time
@@ -256,6 +258,7 @@ A jtstcreate(J jt,C k,I p,I n,C*u){A g,x,xx;C s[20];L*v;
   case 2:  /* local symbol table */
    // Don't invalidate ACV lookups, since the local symbol table is not in any path
    AR(g)|=LLOCALTABLE;  // flag this as a local table so the first hashchain is not freed
+   // The first hashchain is not used as a symbol pointer - it holds xy bucket info
    ;
  }
  R g;
@@ -273,7 +276,8 @@ B jtsymbinit(J jt){A q;
  FULLHASHSIZE(1LL<<12,SYMBSIZE,1,SYMLINFOSIZE,p);  // about 2^13 chains
  RZ(           stcreate(0,p,1L,"z"   ));
  // Allocate a symbol table with just 1 (empty) chain; then set length to 1 indicating 0 chains; make this the current local symbols, to use when no explicit def is running
- RZ(jt->locsyms=stcreate(2,2,0,0)); AN(jt->locsyms)=1;
+ RZ(jt->locsyms=stcreate(2,2,0,0)); AN(jt->locsyms)=1; AM(jt->locsyms)=(I)jt->locsyms;  // close chain so u. at top level has no effect
+
  R 1;
 }
 

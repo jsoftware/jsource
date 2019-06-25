@@ -661,7 +661,7 @@ I jtra(J jt,AD* RESTRICT wd,I t){I af=AFLAG(wd); I n=AN(wd);
  if(t&BOX){AD* np;
   // boxed.  Loop through each box, recurring if called for.  Two passes are intertwined in the loop
   A* RESTRICT wv=AAV(wd);  // pointer to box pointers
-  I wrel = af&AFNJA?(I)wd:0;  // If relative, add wv[] to wd; otherwise wv[] is a direct pointer
+  I wrel = af&AFNJA?(I)wd:0;  // If relative, add wv[] to wd; otherwise wv[] is a direct pointer scaf remove
   if((af&AFNJA)||n==0)R 0;  // no processing if not J-managed memory (rare)
   np=(A)(intptr_t)((I)*wv+(I)wrel); ++wv;  // point to block for the box
   while(1){AD* np0;  // n is always > 0 to start
@@ -695,7 +695,7 @@ I jtfa(J jt,AD* RESTRICT wd,I t){I af=AFLAG(wd); I n=AN(wd);
  if(t&BOX){AD* np;
   // boxed.  Loop through each box, recurring if called for.
   A* RESTRICT wv=AAV(wd);  // pointer to box pointers
-  I wrel = af&AFNJA?(I)wd:0;  // If relative, add wv[] to wd; othewrwise wv[] is a direct pointer
+  I wrel = af&AFNJA?(I)wd:0;  // If relative, add wv[] to wd; othewrwise wv[] is a direct pointer scaf remove
   if((af&AFNJA)||n==0)R 0;  // no processing if not J-managed memory (rare)
   np=(A)(intptr_t)((I)*wv+(I)wrel); ++wv;   // point to block for box
   while(1){AD* np0;
@@ -730,7 +730,7 @@ I jttpush(J jt,AD* RESTRICT wd,I t,I pushx){I af=AFLAG(wd); I n=AN(wd);
   // boxed.  Loop through each box, recurring if called for.
   A* RESTRICT wv=AAV(wd);  // pointer to box pointers
   A* tstack=jt->tstack;  // base of current output block
-  if((af&AFNJA)||n==0)R pushx;  // no processing if not J-managed memory (rare)
+  if((af&AFNJA)||n==0)R pushx;  // no processing if not J-managed memory (rare) scaf improve
   while(n--){
    A np=*wv; ++wv;   // point to block for box
    if(np){     // it can be 0 if there was error

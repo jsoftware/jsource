@@ -137,7 +137,7 @@ static F2(jtforeigncreate){I p,q;
   case XC(6,14):  R CDERIV(CIBEAM, jtinttoe,    0,      VASGSAFE,RMAX,RMAX,RMAX);
   case XC(6,15):  R CDERIV(CIBEAM, jtetoint,    0,      VASGSAFE,RMAX,RMAX,RMAX);
   case XC(6,16):  R CDERIV(CIBEAM, jtetoiso8601,jtetoiso8601,  VASGSAFE,RMAX,RMAX,RMAX);
-  case XC(6,17):  R CDERIV(CIBEAM, jtiso8601toe,0      ,  VASGSAFE,RMAX,RMAX,RMAX);
+  case XC(6,17):  R CDERIV(CIBEAM, jtiso8601toe,jtiso8601toe,  VASGSAFE,RMAX,RMAX,RMAX);
 
   case XC(7,0):   R CDERIV(CIBEAM, jtsp,         0,            VASGSAFE,RMAX,0,   0   );
   case XC(7,2):   R CDERIV(CIBEAM, jtspit,       0,            VFLAGNONE,1,   0,   0   );

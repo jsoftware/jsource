@@ -28,8 +28,8 @@
                         line=AAV(hv[0]); x=hv[1]; n=AN(x); cw=(CW*)AV(x);}
 
 // Parse/execute a line, result in z.  If locked, reveal nothing.  Save current line number in case we reexecute
-// Before each sentence we snapshot the implied locale in the local symbol table.  If the sentence passes a u/v into an operator, xthe current symbol table will become savloc and will have the u/v environment info
-#define parseline(z) {C attnval=*jt->adbreakr; A *queue=line+ci->i; I m=ci->n; jt->locsyms->kchain.globalst=jt->global; if(!attnval){if(lk>=0)z=parsea(queue,m);else {thisframe->dclnk->dcix=i; z=parsex(queue,m,ci,callframe);}}else{jsignal(EVATTN); z=0;} }
+// Before each sentence we snapshot the implied locale in the local symbol table.  If the sentence passes a u/v into an operator, the current symbol table will become the prev and will have the u/v environment info
+#define parseline(z) {C attnval=*jt->adbreakr; A *queue=line+ci->i; I m=ci->n; AKGST(jt->locsyms)=jt->global; if(!attnval){if(lk>=0)z=parsea(queue,m);else {thisframe->dclnk->dcix=i; z=parsex(queue,m,ci,callframe);}}else{jsignal(EVATTN); z=0;} }
 
 typedef struct{A t,x,line;C*iv,*xv;I j,k,n,w;} CDATA;
 /* for_xyz. t do. control data   */
@@ -127,13 +127,13 @@ static DF2(jtxdefn){PROLOG(0048);
  TD*tdv=0;  // pointer to base of try. stack
  I tdi=0;  // index of the next open slot in the try. stack
 
- A savloc=jt->locsyms;  // stack area for local symbol table pointer; must set before we set new symbol table
- A locsym;  // local symbol table
+// obsolete  A savloc=jt->locsyms;  // stack area for local symbol table pointer; must set before we set new symbol table
  UC savdebug; // preserve debug state over calls - this remembers starting debug state.  Needed only if there is a try. stack
 
  I isdyad=(I )(a!=0)&(I )(w!=0);   // avoid branches, and relieve pressure on a and w
  DC thisframe=0;   // if we allocate a parser-stack frame, this is it
  {A *hv;  // will hold pointer to the precompiled parts
+  A locsym;  // local symbol table to use
   V *sv=FAV(self); I sflg=sv->flag;   // fetch flags, which are the same even if VXOP is set
   A u,v;  // pointers to args
   // If this is adv/conj, it must be (1/2 : n) executed with no x or y.  Set uv then
@@ -146,8 +146,9 @@ static DF2(jtxdefn){PROLOG(0048);
    // This code duplicated below
    locsym=hv[3];  // fetch pointer to preallocated symbol table
    ASSERT(locsym,EVDOMAIN);  // if the valence is not defined, give valence error
-   if(!(AR(locsym)&LSYMINUSE)){jt->locsyms=locsym; AR(locsym)|=LSYMINUSE;}
-   else{RZ(jt->locsyms=clonelocalsyms(locsym));}
+   if(!(AR(locsym)&LSYMINUSE)){/* obsolete jt->locsyms=locsym; */AR(locsym)|=LSYMINUSE;}
+// obsolete    else{RZ(jt->locsyms=clonelocalsyms(locsym));}
+   else{RZ(locsym=clonelocalsyms(locsym));}
   } else {  // something special required
    // If this is a modifier-verb referring to x or y, set u, v to the modifier operands, and sv to the saved text.  The flags don't change
    if(sflg&VXOP){u=sv->fgh[0]; v=sv->fgh[2]; sv=VAV(sv->fgh[1]);}
@@ -155,8 +156,9 @@ static DF2(jtxdefn){PROLOG(0048);
    LINE(sv);
    locsym=hv[3];  // fetch pointer to preallocated symbol table
    ASSERT(locsym,EVDOMAIN);  // if the valence is not defined, give valence error
-   if(!(AR(locsym)&LSYMINUSE)){jt->locsyms=locsym; AR(locsym)|=LSYMINUSE;}
-   else{RZ(jt->locsyms=clonelocalsyms(locsym));}
+   if(!(AR(locsym)&LSYMINUSE)){/* obsolete jt->locsyms=locsym; */AR(locsym)|=LSYMINUSE;}
+// obsolete    else{RZ(jt->locsyms=clonelocalsyms(locsym));}
+   else{RZ(locsym=clonelocalsyms(locsym));}
 
    // lk: 0=normal, 1=this definition is locked, -1=debug mode
    lk=jt->uflags.us.cx.cx_c.glock||sv->flag&VLOCK;
@@ -184,6 +186,7 @@ static DF2(jtxdefn){PROLOG(0048);
    if(sv->flag&VTRY1+VTRY2){A td; GAT0(td,INT,NTD*WTD,1); /* obsolete AS(td)[0]=NTD; AS(td)[1]=WTD; */ tdv=(TD*)AV(td); savdebug = jt->uflags.us.cx.cx_c.db;}
   }
   // End of unusual processing
+  AM(locsym)=(I)jt->locsyms; jt->locsyms=locsym;   // Chain the calling symbol table to this one
 
   // Assign the special names x y m n u v.  Do this late in initialization because it would be bad to fail after assigning to yx (memory leak would result)
   // For low-rank short verbs, this takes a significant amount of time using IS, because the name doesn't have bucket info and is
@@ -201,13 +204,9 @@ static DF2(jtxdefn){PROLOG(0048);
   if(a){ if(!ras(a)&&w){ybuckptr->val=0; fa(w); R0;} if(!C_CRC32C&&xbuckptr==ybuckptr)xbuckptr=xbuckptr->next+jt->sympv; xbuckptr->val=a; xbuckptr->sn=jt->slisti;}
   // Do the other assignments, which occur less frequently, with IS
   if((I)u|(I)v){
-   // If u/v is a verb, we make it an implicit locative so that when it is executed it runs in the caller's namespaces, both local and global.
-   // We put the caller's local syms into the name; they point to the global syms at the time the sentence containing the call to here was executed.
-   // The name was created as a clone when the symbol table was created, so it is OK to modify it
-   //  After the assignment we mark it as an implicit locative, which is used only if the value is non-noun
-   if(u){L *e; RZ(e=IS(unam,u)); e->flag|=LIMPLOCUV; if(NOUN&AT(u))IS(mnam,u);else {AM(e->name)=(I)savloc;} }
-   if(v){L *e; RZ(e=IS(vnam,v)); e->flag|=LIMPLOCUV; if(NOUN&AT(v))IS(nnam,v);else {AM(e->name)=(I)savloc;} }
-// obsolete   if(u){IS(unam,u); if(NOUN&AT(u))IS(mnam,u);}  // bug errors here must be detected
+   if(u){(IS(unam,u)); if(NOUN&AT(u))IS(mnam,u); }  // assign u, and m if u is a noun
+   if(v){(IS(vnam,v)); if(NOUN&AT(v))IS(nnam,v); }  // bug errors here must be detected
+// obsolete   if(u){IS(unam,u); if(NOUN&AT(u))IS(mnam,u);}
 // obsolete   if(v){IS(vnam,v); if(NOUN&AT(v))IS(nnam,v);}
   }
  }
@@ -467,6 +466,7 @@ static DF2(jtxdefn){PROLOG(0048);
 
  jt->parserqueue = savqueue; jt->parserqueuelen = savqueuelen;  // restore error info for the caller
  if(thisframe){debz();}   // pair with the deba if we did one
+ A prevlocsyms=(A)AM(jt->locsyms);  // get symbol table to return to, before we free the old one
  if(!cd){
   // Normal path.  protect the result block and free everything allocated here, possibly including jt->locsyms
   z=EPILOGNORET(z);  // protect return value from being freed when the symbol table is.  Must also be before stack cleanup, in case the return value is xyz_index or the like
@@ -486,7 +486,7 @@ static DF2(jtxdefn){PROLOG(0048);
  // Tables are born with NAMEADDED off.  It gets set when a name is added.  Setting back to initial state here, we clear NAMEADDED
  if(AR(jt->locsyms)&LSYMINUSE){AR(jt->locsyms)&=~(LSYMINUSE|LNAMEADDED); symfreeha(jt->locsyms);}
  // Pop the private-area stack; set no assignment (to call for result display)
- jt->locsyms=savloc; jt->asgn=0;
+ jt->locsyms=prevlocsyms; jt->asgn=0;
  RETF(z);
 }
 
@@ -518,7 +518,7 @@ static DF1(xop1){/* obsolete A ff,x; */
 // h is the compiled form of an explicit function: an array of 2*HN boxes.
 // Boxes 0&HN contain the enqueued words  for the sentences, jammed together
 // Return code indicating what we found:
-// 4: mnuv found 2: x found 1: y found
+// 4: mnuv found 2: x found 1: y found.  u./v. count as u./v.
 static I jtxop(J jt,A w){I i,k;
  // init flags to 'not found'
  I fndflag=0;
@@ -536,16 +536,19 @@ static I jtxop(J jt,A w){I i,k;
      // Get length/string pointer
      I n=AN(w); C *s=NAV(w)->s;
      if(n){
-      // Set flags if this is a special name, or an indirect locative referring to a special name in the last position
+      // Set flags if this is a special name, or an indirect locative referring to a special name in the last position, or u./v.
       if(n==1||(n>=3&&s[n-3]=='_'&&s[n-2]=='_')){
        if(s[n-1]=='m'||s[n-1]=='n'||s[n-1]=='u'||s[n-1]=='v')fndflag|=4;
        else if(s[n-1]=='x')fndflag|=2;
        else if(s[n-1]=='y')fndflag|=1;
-        // exit if we have seen enough: mnuv plus x.  No need to wait for y.  If we have seen only y, keep looking for x
-       if(fndflag>=4+2)R fndflag;
       }   // 'one-character name'
      }  // 'name is not empty'
     } // 'is name'
+    if(AT(w)&VERB){
+      if(FAV(w)->id==CUDOT||FAV(w)->id==CVDOT)fndflag|=4;
+    }
+    // exit if we have seen enough: mnuv plus x.  No need to wait for y.  If we have seen only y, keep looking for x
+    if(fndflag>=4+2)R fndflag;
    }  // loop for each word
   }  // namescope of new w
  }  // loop for each valence
@@ -649,10 +652,8 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
  // create a symbol-table entry for each such name
  // Start with the argument names.  We always assign y, and x EXCEPT when there is a monadic guaranteed-verb
  RZ(probeis(ynam,pfst));if(!(!dyad&&(type>=3||(flags&VXOPR)))){RZ(probeis(xnam,pfst));}
- // u/v must be cloned, because information about the assignment (viz the locsyms to run under) are saved in the name.
- // We also have to mark the symbol to indicate that 
- if(type<3){L *e; RZ(e=probeis(unam,pfst)); e->flag|=LCLONENAME; RZ(probeis(mnam,pfst));}
- if(type==2){L *e; RZ(e=probeis(vnam,pfst)); e->flag|=LCLONENAME; RZ(probeis(nnam,pfst));}
+ if(type<3){RZ(probeis(unam,pfst)); RZ(probeis(mnam,pfst));}
+ if(type==2){RZ(probeis(vnam,pfst)); RZ(probeis(nnam,pfst));}
 // obsolete  if(type==2){RZ(probeis(vnam,pfst));RZ(probeis(nnam,pfst));}}
  // Go through the definition, looking for local assignment.  If the previous token is a simplename, add it
  // to the table.  If it is a literal constant, break it into words, convert each to a name, and process.
@@ -726,7 +727,7 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
  RZ(probeis(ynam,actst));if(!(!dyad&&(type>=3||(flags&VXOPR)))){RZ(probeis(xnam,actst));}
  for(j=1;j<pfstn;++j){  // for each hashchain
   for(pfx=pfstv[j];pfx;pfx=(jt->sympv)[pfx].next){L *newsym;
-   A nm=(jt->sympv)[pfx].name; if((jt->sympv)[pfx].flag&LCLONENAME)RZ(nm=ca(nm));  // if name must be cloned so that it can be modified, do so
+   A nm=(jt->sympv)[pfx].name;
    RZ(newsym=probeis(nm,actst));  // create new symbol (or possibly overwrite old argument name)
    newsym->flag = (jt->sympv)[pfx].flag|LPERMANENT;   // Mark as permanent
   }
@@ -758,11 +759,13 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
 // static A jtclonelocalsyms(J jt, A a){A z;I j;I an=AN(a); I *av=AV(a);I *zv;
 A jtclonelocalsyms(J jt, A a){A z;I j;I an=AN(a); LX *av=LXAV0(a),*zv;
  RZ(z=stcreate(2,AN(a),0L,0L)); zv=LXAV0(z);  // allocate the clone; zv->clone hashchains
- // Go through each hashchain of the model
+ // Copy the first hashchain, which has the x/v hashes
+ zv[0]=av[0]; // Copy as Lx; really it's a UI4
+ // Go through each hashchain of the model, after the first one
  for(j=SYMLINFOSIZE;j<an;++j) {LX *zhbase=&zv[j]; LX ahx=av[j]; LX ztx=0; // hbase->chain base, hx=index of current element, tx is element to insert after
   while(ahx&&(jt->sympv)[ahx].flag&LPERMANENT) {L *l;  // for each permanent entry...
    RZ(l=symnew(zhbase,ztx)); 
-   A nm=(jt->sympv)[ahx].name; if((jt->sympv)[ahx].flag&LCLONENAME)RZ(nm=ca(nm));  // if name must be cloned so that it can be modified, do so
+   A nm=(jt->sympv)[ahx].name;
    l->name=nm; ras(l->name);  // point symbol table to the name block, and increment its use count accordingly
 // obsolete   l->name=(jt->sympv)[ahx].name; ras(l->name);  // point symbol table to the name block, and increment its use count accordingly
    l->flag=(jt->sympv)[ahx].flag|LPERMANENT;  // mark entry as PERMANENT, in case we try to delete the name (as in for_xyz. or 4!:55)

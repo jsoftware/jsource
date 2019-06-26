@@ -657,21 +657,23 @@ I jtgc3(J jt,A *x,A *y,A *z,I old){
 }
 
 // This routine handles the recursion for ra().  ra() itself does the top level, this routine handles the contents
-I jtra(J jt,AD* RESTRICT wd,I t){I af=AFLAG(wd); I n=AN(wd);
+I jtra(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
  if(t&BOX){AD* np;
   // boxed.  Loop through each box, recurring if called for.  Two passes are intertwined in the loop
   A* RESTRICT wv=AAV(wd);  // pointer to box pointers
-  I wrel = af&AFNJA?(I)wd:0;  // If relative, add wv[] to wd; otherwise wv[] is a direct pointer scaf remove
-  if((af&AFNJA)||n==0)R 0;  // no processing if not J-managed memory (rare)
-  np=(A)(intptr_t)((I)*wv+(I)wrel); ++wv;  // point to block for the box
+// obsolete   I wrel = af&AFNJA?(I)wd:0;  // If relative, add wv[] to wd; otherwise wv[] is a direct pointer scaf remove
+  if(/*(af&AFNJA)|| obsolete*/n==0)R 0;  // Can't be mapped boxed; skip prefetch if no boxes
+// obsolete   np=(A)(intptr_t)((I)*wv+(I)wrel); ++wv;  // point to block for the box
+  np=*wv++;  // prefetch first box
   while(1){AD* np0;  // n is always > 0 to start
-   if(--n<0)break;
-   if(n){   // mustn't read past the end of the block, in case of protection check
-    np0=(A)(intptr_t)((I)*wv+(I)wrel); ++wv;  // point to block for next box
+// obsolete    if(--n<0)break;
+   if(--n>0){   // mustn't read past the end of the block, in case of protection check
+// obsolete     np0=(A)(intptr_t)((I)*wv+(I)wrel); ++wv;  // point to block for next box
+    np0=*wv++;  // fetch next box if it exists
 #ifdef PREFETCH
     PREFETCH((C*)np0);   // prefetch the next box
 #endif
-   }
+   }else if(n<0)break;  // exit if no more elements
    if(np){
     ra(np);  // increment the box, possibly turning it to recursive
    }
@@ -691,21 +693,23 @@ I jtra(J jt,AD* RESTRICT wd,I t){I af=AFLAG(wd); I n=AN(wd);
 }
 
 // This handles the recursive part of fa(), freeing the contents of wd
-I jtfa(J jt,AD* RESTRICT wd,I t){I af=AFLAG(wd); I n=AN(wd);
+I jtfa(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
  if(t&BOX){AD* np;
   // boxed.  Loop through each box, recurring if called for.
   A* RESTRICT wv=AAV(wd);  // pointer to box pointers
-  I wrel = af&AFNJA?(I)wd:0;  // If relative, add wv[] to wd; othewrwise wv[] is a direct pointer scaf remove
-  if((af&AFNJA)||n==0)R 0;  // no processing if not J-managed memory (rare)
-  np=(A)(intptr_t)((I)*wv+(I)wrel); ++wv;   // point to block for box
-  while(1){AD* np0;
-   if(--n<0)break;
-   if(n){
-    np0=(A)(intptr_t)((I)*wv+(I)wrel); ++wv;   // point to block for next box
+// obsolete   I wrel = af&AFNJA?(I)wd:0;  // If relative, add wv[] to wd; otherwise wv[] is a direct pointer scaf remove
+  if(/*(af&AFNJA)|| obsolete*/n==0)R 0;  // Can't be mapped boxed; skip prefetch if no boxes
+// obsolete   np=(A)(intptr_t)((I)*wv+(I)wrel); ++wv;  // point to block for the box
+  np=*wv++;  // prefetch first box
+  while(1){AD* np0;  // n is always > 0 to start
+// obsolete    if(--n<0)break;
+   if(--n>0){   // mustn't read past the end of the block, in case of protection check
+// obsolete     np0=(A)(intptr_t)((I)*wv+(I)wrel); ++wv;  // point to block for next box
+    np0=*wv++;  // fetch next box if it exists
 #ifdef PREFETCH
     PREFETCH((C*)np0);   // prefetch the next box
 #endif
-   }
+   }else if(n<0)break;  // exit if no more elements
    fana(np);  // free the contents, but don't audit
    np = np0;  // advance to next box
   }
@@ -730,7 +734,7 @@ I jttpush(J jt,AD* RESTRICT wd,I t,I pushx){I af=AFLAG(wd); I n=AN(wd);
   // boxed.  Loop through each box, recurring if called for.
   A* RESTRICT wv=AAV(wd);  // pointer to box pointers
   A* tstack=jt->tstack;  // base of current output block
-  if((af&AFNJA)||n==0)R pushx;  // no processing if not J-managed memory (rare) scaf improve
+  if((af&AFNJA)/* obsolete ||n==0*/)R pushx;  // no processing if not J-managed memory (rare) scaf improve
   while(n--){
    A np=*wv; ++wv;   // point to block for box
    if(np){     // it can be 0 if there was error

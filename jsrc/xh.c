@@ -48,7 +48,7 @@ F1(jthost){A z;
 #else
 {
  A t;I b=0;C*fn,*s;F f;I n;
-#if defined(ANDROID) || defined(TARGET_OS_IPHONE)
+#if defined(ANDROID) || defined(TARGET_IOS)
  const char*ftmp=getenv("TMPDIR");  /* android always define TMPDIR in jeload */
 #endif
  n=AN(w);
@@ -62,14 +62,14 @@ F1(jthost){A z;
   b=!_wsystem(USAV(fz));
  }
 #else
-#if defined(ANDROID) || defined(TARGET_OS_IPHONE)
+#if defined(ANDROID) || defined(TARGET_IOS)
  strcpy(fn,ftmp);   // s now got trailing nul from by ftmp or "/tmp"
 #else
  strcpy(fn,"/tmp");
 #endif
  strcat(fn,"/tmp.XXXXXX");
  {int fd=mkstemp(fn); close(fd);}
-#if defined(ANDROID) || (defined(__MACH__) && !defined(TARGET_OS_IPHONE))
+#if defined(ANDROID) || (defined(__MACH__) && !defined(TARGET_IOS))
 /* no posix_spawn */
  b=!system(s);
 #else
@@ -107,7 +107,7 @@ F1(jthostne){
  F1RANK(1,jthostne,0);
  RZ(w=vslit(w));
 // #if SY_WINCE
-#if SY_WINCE || SY_WIN32
+#if SY_WINCE || SY_WIN32 || defined(TARGET_IOS)
  ASSERT(0,EVNONCE);
 #else
  {

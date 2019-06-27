@@ -340,7 +340,7 @@ __m128i ffs=_mm_set1_epi8(0xffu);
  _mm_storeu_si128((__m128i *)p,_mm_and_si128(_mm_xor_si128(_mm_cmpeq_epi8(_mm_load_si128((__m128i*)q),zeros),ffs),ones));
  n0-=16;p+=16;q+=16;
 }
-#if defined(__clang__) && !( __clang_major__ == 3 && __clang_minor__ == 8)
+#if defined(__clang__)
 #pragma clang loop vectorize(enable) interleave_count(4)
 #endif
 while(n0--)*p++=!!(*q++);
@@ -355,7 +355,7 @@ UI mis=((uintptr_t)q)&15u;
 mis=(mis>n0)?n0:mis;
 if(mis){
 n0-=mis;
-#if defined(__clang__) && !( __clang_major__ == 3 && __clang_minor__ == 8)
+#if defined(__clang__)
 #pragma clang loop vectorize(enable) interleave_count(4)
 #endif
 while(mis--)*p++=!!(*q++);

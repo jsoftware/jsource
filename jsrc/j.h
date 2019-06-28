@@ -1018,11 +1018,13 @@ static inline UINT _clearfp(void){int r=fetestexcept(FE_ALL_EXCEPT);
 #define DPMUL(x,y,z,s) {I _l,_h; *z=_l=_mul128(x,y,&_h); if(_h+((UI)_l>>(BW-1)))s}
 #define DPMULDDECLS
 #define DPMULD(x,y,z,s) {I _h; z=_mul128(x,y,&_h); if(_h+((UI)z>>(BW-1)))s}
+#define DPUMUL(x,y,z,h) {z=_umul128((x),(y),&(h));}  // product in z and h
 #else
 #define DPMULDECLS
 #define DPMUL(x,y,z,s) if(__builtin_smulll_overflow(x,y,z))s
 #define DPMULDDECLS
 #define DPMULD(x,y,z,s) if(__builtin_smulll_overflow(x,y,&z))s
+#define DPUMUL(x,y,z,h) {__int128 _t; _t=(__int128)(x)*(__int128)(y); z=(I)_t; h=(I)(_t>>64);}  // product in z and h
 #endif
 #else // C_USEMULTINTRINSIC 0 - use standard-C version (64-bit)
 #define DPMULDECLS

@@ -104,12 +104,7 @@ void jepath(char* arg,char* lib,int forceavx)
  *(wcsrchr(wpath, '\\')) = 0;
  WideCharToMultiByte(CP_UTF8,0,wpath,1+(int)wcslen(wpath),path,PLEN,0,0);
 #if SY_64
- char *jeavx=getenv("JEAVX");
- if (forceavx==1) AVX=1;       // force enable avx
- else if (forceavx==2) AVX=0;  // force disable avx
- else if (jeavx&&!strcasecmp(jeavx,"avx")) AVX=1;
- else if (jeavx&&!strcasecmp(jeavx,"noavx")) AVX=0;
- else { // auto detect
+ { // auto detect
 #if 0
 //  AVX= 0!=(0x4UL & GetEnabledXStateFeatures());
 // above line not worked for pre WIN7 SP1
@@ -185,12 +180,7 @@ void jepath(char* arg,char* lib,int forceavx)
 #if defined(__x86_64__)
 // http://en.wikipedia.org/wiki/Advanced_Vector_Extensions
 // Linux: supported since kernel version 2.6.30 released on June 9, 2009.
- char *jeavx=getenv("JEAVX");
- if (forceavx==1) AVX=1;       // force enable avx
- else if (forceavx==2) AVX=0;  // force disable avx
- else if (jeavx&&!strcasecmp(jeavx,"avx")) AVX=1;
- else if (jeavx&&!strcasecmp(jeavx,"noavx")) AVX=0;
- else { // auto detect by uname -r
+ { // auto detect by uname -r
 #if 0
  struct utsname unm;
  if (!uname(&unm) &&

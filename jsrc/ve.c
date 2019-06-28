@@ -347,22 +347,19 @@ AHDR2(remII,I,I,I){I u,v;
    if(!(ua&(ua-1))){I umsk = ua-1; DQC(n, *z++=umsk&*y++;);  // x is a power of 2, including 0
    }else{
     // calculate 1/abs(x) to 53-bit precision.  Remember, x is at least 3, so the MSB will never have signed significance
-    UI uarecip = (UI)(18446744073709551616.0/(D)ua);  // recip, with binary point above the msb.  2^64 / ua
+    UI uarecip = (UI)(18446744073709551616.0/(D)(I)ua);  // recip, with binary point above the msb.  2^64 / ua
     // add in correction for the remaining precision.  The result will still never be higher than the true reciprocal
     I deficitprec = -(I)(uarecip*ua);  // we need to increase uarecip by enough to add (deficitprec) units to (uarecip*ua)
-    UI xx; UI himul; DPUMUL(uarecip,(UI)deficitprec,xx,himul); uarecip=deficitprec<0?himul:uarecip+himul;   // now we have 63 bits of uarecip
+    // because of rounding during the divide, deficitprec may be positive or negative, so we must 2's-comp-correct the product
+    UI xx; UI himul; DPUMUL(uarecip,(UI)deficitprec,xx,himul); uarecip=deficitprec<0?0:uarecip; uarecip+=himul;   // now we have 63 bits of uarecip
     // Now loop through each input value.  It is possible that the quotient coming out of the multiplication will be
     // low by at most 1; we correct it if it is
     // The computations here are unsigned, because if signed the binary point gets offset and the upper significance requires a 128-bit shift.
     // Since negative arguments are unusual, we use 1 branch to handle them.  This may mispredict.
     DQC(n, I yv=*y;
-     if(yv>=0){
       // Multiply by recip to get quotient, which is up to 1/2 LSB low; get remainder; adjust remainder if too high; store
-      DPUMUL(uarecip,(UI)yv,xx,himul); I rem=yv-himul*ua; rem=(rem-(I)ua)>=0?rem-(I)ua:rem; *z++=rem;
-     }else{
-      // If negative, we must do 2's complement correction to the multiply.  The result is still on the low side
-      DPUMUL(uarecip,(UI)yv,xx,himul); himul-=uarecip; I rem=yv-himul*ua; rem=(rem-(I)ua)>=0?rem-(I)ua:rem; *z++=rem;
-     }
+      // 2's-complement adjust for negative y; the result is still always on the low side.  We do this to avoid branch prediction
+      DPUMUL(uarecip,(UI)yv,xx,himul); himul-=uarecip&(yv>>(BW-1)); I rem=yv-himul*ua; rem=(rem-(I)ua)>=0?rem-(I)ua:rem; *z++=rem;
      y++;)
    }
    // if x was negative, move the remainder into the x+1 to 0 range

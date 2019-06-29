@@ -36,9 +36,11 @@ static B jtiixBX(J jt,I n,I m,A a,A w,I*zv){B*av,*b,descend;I p,q;
 static B jtiixI(J jt,I n,I m,A a,A w,I*zv){A t;B ascend;I*av,j,p,q,*tv,*u,*v,*vv,*wv,x,y;
  av=AV(a); wv=AV(w);
  p=av[0]; q=av[n-1]; ascend=p<=q; if(!ascend){x=p; p=q; q=x;}
- GATV0(t,INT,1+q-p,1); v=AV(t); tv=v-p; vv=v+AN(t);
- if(ascend){u=av;     x=*u++; *v++=j=0; DO(n-1, ++j; y=*u++; ASSERT(p<=y&&y<=q&&vv>=v+y-x,EVDOMAIN); DO(y-x, *v++=j;); x=y;);}
- else      {u=av+n-1; x=*u--;      j=n; DO(n-1, --j; y=*u--; ASSERT(p<=y&&y<=q&&vv>=v+y-x,EVDOMAIN); DO(y-x, *v++=j;); x=y;);}
+ GATV0(t,INT,1+q-p,1); v=AV(t); tv=v-p; vv=v+AN(t);  // v->buffer; tv->virtual buffer origin, where p=0; vv->buffer end
+// obsolete  if(ascend){u=av;     x=*u++; *v++=j=0; DO(n-1, ++j; y=*u++; ASSERT(p<=y&&y<=q&&vv>=v+y-x,EVDOMAIN); DO(y-x, *v++=j;); x=y;);}
+// obsolete  else      {u=av+n-1; x=*u--;      j=n; DO(n-1, --j; y=*u--; ASSERT(p<=y&&y<=q&&vv>=v+y-x,EVDOMAIN); DO(y-x, *v++=j;); x=y;);}
+ if(ascend){u=av;     x=*u++; *v++=j=0; DO(n-1, ++j; y=*u++; ASSERT((UI)(y-x)<=(UI)(q-x),EVDOMAIN); DO(y-x, *v++=j;); x=y;);}
+ else      {u=av+n-1; x=*u--;      j=n; DO(n-1, --j; y=*u--; ASSERT((UI)(y-x)<=(UI)(q-x),EVDOMAIN); DO(y-x, *v++=j;); x=y;);}
  if(ascend)DO(m, x=*wv++; *zv++=x<=p?0:q<x?n:tv[x];)
  else      DO(m, x=*wv++; *zv++=x>=q?0:p>x?n:tv[x];);
  R 1;
@@ -56,7 +58,7 @@ static B jtiixI(J jt,I n,I m,A a,A w,I*zv){A t;B ascend;I*av,j,p,q,*tv,*u,*v,*vv
 #define BSLOOP1(CMP)           \
   p=0; q=n-1; y=*wv++;         \
   while(p<=q){MID(k,p,q); CMP; \
-      if(b)q=k-1; else p=k+1;}
+      if(b)q=k-1; else p=k+1;}  // even though this mispredicts, it is faster because it allows an early guess of the next fetch
 #define BSLOOPN(NE,CMP)        \
   p=0; q=n-1;                  \
   while(p<=q){MID(k,p,q); u=av+c*k; v=wv; b=1; DO(c, x=*u++; y=*v++; if(NE){CMP; break;});  \
@@ -83,29 +85,33 @@ static B jtiixI(J jt,I n,I m,A a,A w,I*zv){A t;B ascend;I*av,j,p,q,*tv,*u,*v,*vv
 // large values unsuitable for a branch table, and also took advantage of the fact that
 // codes produced by multiple combinations, such as LIT,B01 and B01,FL which both produce
 // 1111 would not generate spurious accepted cases because only one of them is HOMO.
-#define TT(s,t) (((s)<<5)+(t))
+#define TT(s,t) (((s)&16)<<3)+(((s)&7)<<4)+(((t)&16)>>1)+((t)&7)
 
-F2(jticap2){A*av,*wv,z;B b;C*uu,*vv;I ar,*as,at,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t,/*obsolete *u,*v,*/wr,*ws,wt,* RESTRICT zv;I cc;
+F2(jticap2){A*av,*wv,z;C*uu,*vv;I ar,*as,at,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t,/*obsolete *u,*v,*/wr,*ws,wt,* RESTRICT zv;I cc;
  RZ(a&&w);
- ar=AR(a); at=AT(a); as=AS(a); n=ar?*as:1; r=ar?ar-1:0;
- wr=AR(w); wt=AT(w); ws=AS(w); b=!AN(a)||!AN(w);  // b if something is empty
+ ar=AR(a); at=AT(a); as=AS(a); n=ar?*as:1; r=ar-1<0?0:ar-1;  // n=length of 1-cell of a, r=frame of a
+ wr=AR(w); wt=AT(w); ws=AS(w); I b=(AN(a)-1)|(AN(w)-1);  // b<0 if something is empty
  ASSERT(r<=wr,EVRANK);
 // obsolete u=as+ar; v=ws+wr; DO(r, ASSERT(*--u==*--v,EVLENGTH););
  /*obsolete u=as; v=ws;*/ ASSERTAGREE(as+ar-r,ws+wr-r,r)
- ASSERT(b||HOMO(at,wt),EVDOMAIN);
- ASSERT(b||at&DENSE&&wt&DENSE,EVNONCE);
- CPROD(AN(a),m,wr-r,ws); CPROD(AN(w),c,r,ws+wr-r);
+ if(b>=0){ASSERT(HOMO(at,wt),EVDOMAIN); ASSERT(at&DENSE&&wt&DENSE,EVNONCE); } // if no empties, verify agreement & non-sparse
+ CPROD(AN(w),m,wr-r,ws); CPROD(AN(w),c,r,ws+wr-r);  // m=#atoms in result   c=# atoms in a cell of w
  GATV(z,INT,m,wr-r,ws); zv=AV(z);
- if(!m||!n||!c){DO(m, *zv++=0;); R z;}  // exit with zeros for empty args
+// obsolete  if(!m||!n||!c){DO(m, *zv++=0;); R z;}  // exit with zeros for empty args
+ if(((m-1)|(n-1)|(c-1))<0){DO(m, *zv++=0;); R z;}  // exit with zeros for empty args
  t=maxtyped(at,wt);
- if(1==c){
+ if(1==c){  // the search is for atoms
   if(at&B01&&wt&B01+INT+FL){RZ(iixBX(n,m,a,w,zv)); R z;}
-  if(at&INT&&wt&INT){D r;
-   /*obsoletev=AV(a); */r=(D)IAV(a)[n-1]-(D)IAV(a)[0]; if(0>r)r=-r;
-   if(m+r<1.4*m*log((D)n)){RZ(iixI(n,m,a,w,zv)); R z;}
+  if(at&wt&INT){
+   // Integer search.  check for small-range
+// obsolete    /*obsoletev=AV(a); */D r=(D)IAV(a)[n-1]-(D)IAV(a)[0]; if(0>r)r=-r;  // r=range of a
+   UI r=IAV(a)[n-1]-IAV(a)[0]; r=IAV(a)[n-1]<IAV(a)[0]?(UI)-(I)r:r;  // get range, which may overflow I but will stay within UI
+   UI4 nlg; CTLZI(n,nlg); nlg=(nlg<<1)+((UI)((n<<1)<<(BW-1-nlg))>>(BW-1));   // approx lg with 1 bit frac precision.  Can't shift 64 bits in case r=1
+// obsolete    if(m+r<1.4*m*log((D)n)){RZ(iixI(n,m,a,w,zv)); R z;}
+   if((I)((r>>2)+2*n)<(I)(m*nlg)){RZ(iixI(n,m,a,w,zv)); R z;}  // weight misbranches as equiv to 8 stores
  }}
  jt->workareas.compare.complt=-1; cc=0; uu=CAV(a); vv=CAV(a)+(c*(n-1)<<bplg(at));
- // first decide if the input array is ascending or descending  todo kludge just compare first to last
+ // first decide if the input array is ascending or descending
  switch(CTTZ(at)){
   default:   ASSERT(0,EVNONCE);
   case B01X:  COMPVLOOP(B, c);           break;
@@ -173,4 +179,4 @@ F2(jticap2){A*av,*wv,z;B b;C*uu,*vv;I ar,*as,at,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t,/*
     default:   ASSERT(0,EVNONCE);
  }}
  RETF(z);
-}    /* a I."r w */
+}    /* a I. w */

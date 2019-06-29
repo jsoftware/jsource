@@ -358,9 +358,8 @@ AHDR2(remII,I,I,I){I u,v;
     // Since negative arguments are unusual, we use 1 branch to handle them.  This may mispredict.
     DQC(n, I yv=*y;
       // Multiply by recip to get quotient, which is up to 1/2 LSB low; get remainder; adjust remainder if too high; store
-      // 2's-complement adjust for negative y; the result is still always on the low side.  We do this to avoid branch prediction
-      // if yv is negative and less than the smallest possible himul*ua, himul*ua will overflow and rem will be negative
-      DPUMUL(uarecip,(UI)yv,xx,himul); himul-=uarecip&(yv>>(BW-1)); I rem=yv-himul*ua; rem+=(rem>>(BW-1))&ua; rem=(rem-(I)ua)>=0?rem-(I)ua:rem; *z++=rem;
+      // 2's-complement adjust for negative y; to make the result still always on the low side, subtract an extra 1.
+      DPUMUL(uarecip,(UI)yv,xx,himul); himul-=(uarecip+1)&(yv>>(BW-1)); I rem=yv-himul*ua; /* obsolete rem+=(rem>>(BW-1))&ua;*/ rem=(rem-(I)ua)>=0?rem-(I)ua:rem; *z++=rem;
      y++;)
    }
    // if x was negative, move the remainder into the x+1 to 0 range

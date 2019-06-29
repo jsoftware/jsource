@@ -542,12 +542,14 @@ A jtirs1(J jt,A w,A fs,I m,AF f1){A z;I wr;
  F1PREFIP; RZ(w);
 // Get the rank of w; if the requested rank m is > wr, use ~0 because some verbs test for that as an expedient
 // If m is negative, use wr+m but never < 0
- wr=AR(w); m=m>=wr?(RANKT)~0:m; wr+=m; wr=wr<0?0:wr; wr=m>=0?m:wr;   // requested rank, after negative resolution, or ~0
+ wr=AR(w); m=m>=wr?(RANK2T)~0:m; wr+=m; wr=wr<0?0:wr; wr=m>=0?m:wr;   // requested rank, after negative resolution, or ~0
  jt->ranks=(RANK2T)wr;  // install rank for called routine
  z=CALL1IP(f1,w,fs);
  jt->ranks=(RANK2T)~0;  // reset rank to infinite
  RETF(z);
 }
+#define IRS1(w,fs,r,f1,z) (jt->ranks=(RANK2T)(((AR(w)-(r+1))>>(BW-1))|(r)),z=f1(jt,(w),(A)(fs)),jt->ranks=(RANK2T)~0,z)  // nonneg rank
+#define IRS2(a,w,fs,l,r,f2,z) {ASSERTAGREE(AS(a),AS(w),MIN((r),(l))) (jt->ranks=(RANK2T)(((((AR(a)-(l+1))>>(BW-1))|(l))<<RANKTX)+(((AR(w)-(r+1))>>(BW-1))|(r))),z=f2(jt,(a),(w),(A)(fs)),jt->ranks=(RANK2T)~0,z) } // nonneg rank
 
 // IRS setup for dyads x op y.  This routine sets jt->rank and calls the verb, which loops if it needs to
 // a is x, w is y

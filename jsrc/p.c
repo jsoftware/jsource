@@ -494,8 +494,39 @@ A jtparsea(J jt, A *queue, I m){PSTK *stack;A z,*v;I es; UI4 maxnvrlen;
        // Resolve the name.  If the name is x. m. u. etc, always resolve the name to its current value;
        // otherwise resolve nouns to values, and others to 'name~' references
        // To save some overhead, we inline this and do the analysis in a different order here
-       jt->parsercurrtok = (I4)(m+1);  // syrd can fail, so we have to set the error-word number (before it was decremented) before calling
-       if(s=syrd(y)) {   // look up the name in the symbol tables.
+       // The important performance case is local names with bucket info.  Pull that out & do it without the call overhead
+       // This code is copied from s.c
+       if(NAV(y)->bucket){I bx;
+        if(0 <= (bx = ~NAV(y)->bucketx)){   // negative bucketx (now positive); skip that many items, and then you're at the right place.  This is the path for almost all local symbols
+         s = LXAV0(jt->locsyms)[NAV(y)->bucket]+jt->sympv;  // fetch hashchain headptr, point to L for first symbol
+         while(bx--){s = s->next+jt->sympv;}  // skip the prescribed number
+         if(s->val==0)goto rdglob;  // if value has not been assigned, ignore it
+        }else{
+         // positive bucketx (now negative); that means skip that many items and then do name search.  This is set for words that were recognized as names but were not detected as assigned-to in the definition.  This is the path for global symbols
+         // If no new names have been assigned since the table was created, we can skip this search, since it must fail (this is the path for words in z eg)
+         if(!(AR(jt->locsyms)&LNAMEADDED))goto rdglob;
+         LX lx = LXAV0(jt->locsyms)[NAV(y)->bucket];  // index of first block if any
+         I m=NAV(y)->m; C* nm=NAV(y)->s;  // length/addr of name from name block
+         while(0>++bx){lx = jt->sympv[lx].next;}
+         // Now lx is the index of the first name that might match.  Do the compares
+         while(1) {
+          if(lx==0)goto rdglob;  // If we run off chain, go read from globals
+          s = lx+jt->sympv;  // symbol entry
+          IFCMPNAME(NAV(s->name),nm,m,{if(s->val==0)goto rdglob; break;})  // if match, we're done looking; could be not found, if no value
+// obsolete     if(m==NAV(l->name)->m&&!memcmp(s,NAV(l->name)->s,m))
+// obsolete      {R l->val?l : 0;}
+          lx = s->next;
+         }
+         // Here there was a value
+        }
+       }else{
+        // No bucket info.  Usually this is a locative, but it could be an explicit modifier, console level, or ".
+rdglob: ;
+        jt->parsercurrtok = (I4)(m+1);  // syrd can fail, so we have to set the error-word number (before it was decremented) before calling
+        s=syrdnobuckets(y);  // do full symbol lookup, knowing that we have checked for buckets already
+       }
+       // s has the symbol for the name
+       if(s){   // if symbol was defined...
         A sv;  // pointer to value block for the name
         
         if(!(sv = s->val))FP  // symbol table entry, but no value.

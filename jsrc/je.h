@@ -851,6 +851,7 @@ extern L*       jtsyrd1(J,I,C*,UI4,A);
 extern A        jtsyrdforlocale(J,A);
 extern A        jtsyrd1forlocale(J,I,C*,UI4,A);
 extern L*       jtsyrdfromloc(J,A,A);
+extern L*       jtsyrdnobuckets(J,A);
 extern A        jttaker(J,I,A);
 extern D        jttceil(J,D);
 extern B        jtteq(J,D,D);

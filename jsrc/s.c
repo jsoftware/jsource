@@ -397,6 +397,20 @@ A jtsyrdforlocale(J jt,A a){A g;
  } else RZ(g=sybaseloc(a));
  R syrd1forlocale(NAV(a)->m,NAV(a)->s,NAV(a)->hash,g);  // Not local: look up the name starting in locale g
 }
+// same as syrd, but we have already checked for buckets
+// look up a name (either simple or locative) using the full name resolution
+// result is symbol-table slot for the name if found, or 0 if not found
+// This code is copied in p.c
+L*jtsyrdnobuckets(J jt,A a){A g;
+ RZ(a);
+ if(!(NAV(a)->flag&(NMLOC|NMILOC))){L *e;
+  // If there is a local symbol table, search it first
+  if(!NAV(a)->bucket && (e = probe(NAV(a)->m,NAV(a)->s,NAV(a)->hash,jt->locsyms))){R e;}  // return if found locally from name
+  g=jt->global;  // Start with the current locale
+ } else RZ(g=sybaseloc(a));  // if locative, start in locative locale
+ R syrd1(NAV(a)->m,NAV(a)->s,NAV(a)->hash,g);  // Not local: look up the name starting in locale g
+}
+
 
 static A jtdllsymaddr(J jt,A w,C flag){A*wv,x,y,z;I i,n,*zv;L*v;
  RZ(w);

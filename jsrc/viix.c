@@ -59,6 +59,17 @@ static B jtiixI(J jt,I n,I m,A a,A w,I*zv){A t;B ascend;I*av,j,p,q,*tv,*u,*v,*vv
   p=0; q=n-1; y=*wv++;         \
   while(p<=q){MID(k,p,q); CMP; \
       if(b)q=k-1; else p=k+1;}  // even though this mispredicts, it is faster because it allows an early guess of the next fetch
+#if 0 // WIP
+#define BSLOOP1x(Ta,CMP)           \
+  /* k is index to read, p is #values in interval, q is last value that compared >= y */ \
+  k=n>>1; q=n; p=n; y=*wv++;         \
+  while(p){
+   /* start reads for left and right side */
+   Ta al=, ar=;
+   
+      if(b)q=k-1; else p=k+1;}  // even though this mispredicts, it is faster because it allows an early guess of the next fetch
+#endif
+
 #define BSLOOPN(NE,CMP)        \
   p=0; q=n-1;                  \
   while(p<=q){MID(k,p,q); u=av+c*k; v=wv; b=1; DO(c, x=*u++; y=*v++; if(NE){CMP; break;});  \

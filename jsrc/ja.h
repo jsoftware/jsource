@@ -1096,6 +1096,7 @@
 #define syrd1(x,y,z,w)              jtsyrd1(jt,(x),(y),(z),(w))
 #define syrdforlocale(x)            jtsyrdforlocale(jt,(x))
 #define syrd1forlocale(x,y,z,w)     jtsyrd1forlocale(jt,(x),(y),(z),(w))
+#define syrdnobuckets(x)            jtsyrdnobuckets(jt,(x))
 #define table(x)                    jttable(jt,(x))   
 #define tail(x)                     jttail(jt,(x))    
 #define take(x,y)                   jttake(jt,(x),(y))   

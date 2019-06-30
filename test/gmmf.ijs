@@ -95,7 +95,12 @@ abc -: x
 
 map_jmf_ 'jdata'; (>f); ''; 1  NB. read-only
 x -: jdata
-'read-only data' -: ex 'jdata=: 1 2 3'
+NB. 'read-only data' -: ex 'jdata=: 1 2 3'
+jdata=: 1 2 3
+1 2 3 -: jdata            NB. copy-on-write
+0 -: unmap_jmf_ 'jdata'
+map_jmf_ 'jdata';f
+jdata -: x                NB. original file unchanged
 0 -: unmap_jmf_ 'jdata'
 
 x=: 'Professors in New England guard the glory that was Greece'

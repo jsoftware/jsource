@@ -1,6 +1,7 @@
 1:@:(dbr bind Debug)@:(9!:19)2^_44[(echo^:ECHOFILENAME) './g301.ijs'
 NB. .. and .: -----------------------------------------------------------
 
+1: 0 : 0
 symm =: 2 : 'x -:@:+ x&y'
 skew =: 2 : 'x -:@:- x&y'
 
@@ -35,4 +36,4 @@ x=:(0.01*_700+?20$1400),0,*/\4$0j1
 4!:55 ;:'cos cos1 cos2 cosh cosh1 cosh2 sin sin1 sin2 sinh '
 4!:55 ;:'sinh1 sinh2 skew symm x '
 
-
+)

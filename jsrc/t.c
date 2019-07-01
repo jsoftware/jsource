@@ -98,8 +98,8 @@ B jtpinit(J jt){A t;C*s;
  /*  |. */  pdef(CREV,    VERB, jtreverse, jtrotate, RMAX,1,   RMAX,VASGSAFE|VIRS1|VIRS2);   // alias CROT
  /*  |: */  pdef(CCANT,   VERB, jtcant1,   jtcant2,  RMAX,1,   RMAX,VASGSAFE|VIRS1|VIRS2);
  /*  .  */  pdef(CDOT,    CONJ, 0L,        jtdot,    0,   0,   0   ,VFLAGNONE);
- /*  .. */  pdef(CEVEN,   CONJ, 0L,        jteven,   0,   0,   0   ,VFLAGNONE);
- /*  .: */  pdef(CODD,    CONJ, 0L,        jtodd,    0,   0,   0   ,VFLAGNONE);
+// /*  .. */  pdef(CEVEN,   CONJ, 0L,        jteven,   0,   0,   0   ,VFLAGNONE);
+// /*  .: */  pdef(CODD,    CONJ, 0L,        jtodd,    0,   0,   0   ,VFLAGNONE);
  /*  :  */  pdef(CCOLON,  CONJ, 0L,        jtcolon,  0,   0,   0   ,VFLAGNONE);
  /*  :. */  pdef(COBVERSE,CONJ, 0L,        jtobverse,0,   0,   0   ,VFLAGNONE);
  /*  :: */  pdef(CADVERSE,CONJ, 0L,        jtadverse,0,   0,   0   ,VFLAGNONE);

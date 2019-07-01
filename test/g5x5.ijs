@@ -409,10 +409,10 @@ c=: .
 test2 <'c'
 c=: :
 test2 <'c'
-c=: ..
-test2 <'c'
-c=: .:
-test2 <'c'
+NB. c=: ..
+NB. test2 <'c'
+NB. c=: .:
+NB. test2 <'c'
 c=: &.
 test2 <'c'
 

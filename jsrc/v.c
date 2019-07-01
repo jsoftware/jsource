@@ -50,7 +50,7 @@ F1(jtravel){A a,c,q,x,y,y0,z;B*b;I f,j,m,r,*u,*v,*yv;P*wp,*zp;
   GATV0(y,INT,m*(1+n-r),2); v=AS(y); v[0]=m; v[1]=1+n-r;
   yv=AV(y); u=AV(y0); v=AV(q); j=n-r;
   DO(m, ICPY(yv,u,j); yv[j]=*v++; yv+=1+j; u+=n;);
- }else{RZ(a=ca(SPA(wp,a))); RZ(x=irs1(SPA(wp,x),0L,r,jtravel)); RZ(y=ca(SPA(wp,i)));}
+ }else{RZ(a=ca(SPA(wp,a))); RZ(x=IRS1(SPA(wp,x),0L,r,jtravel,y0)); RZ(y=ca(SPA(wp,i)));}
  SPB(zp,a,a); 
  SPB(zp,e,ca(SPA(wp,e)));
  SPB(zp,x,x);
@@ -63,7 +63,7 @@ F1(jttable){A z;I f,r,*s,wr,*ws,wt;
  wt=AT(w); ws=AS(w);
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; RESETRANK; // wr=rank, r=effective rank (jt->rank is effective rank from irs1), f=frame
 
- if(wt&SPARSE){z=irs1(w,0L,r?r-1:0,jtravel); R r?z:irs1(z,0L,0L,jtravel);}
+ if(wt&SPARSE){A zz; IRS1(w,0L,r?r-1:0,jtravel,z); R r?z:IRS1(z,0L,0L,jtravel,zz);}
  GA(z,wt,AN(w),2+f,ws); s=f+AS(z);
  if(r)*(1+s)=prod(r-1,1+f+ws); else *s=*(1+s)=1;
  MC(AV(z),AV(w),AN(w)<<bplg(wt));
@@ -106,7 +106,7 @@ F1(jtiota){A z;I m,n,*v;
  RZ(w=vi(w)); n=AN(w); v=AV(w);
  if(1==n){m=*v; R 0>m?apv(-m,-m-1,-1L):IX(m);}
  RE(m=prod(n,v)); z=reshape(mag(w),IX(ABS(m)));
- DO(n, if(0>v[i])z=irs1(z,0L,n-i,jtreverse););
+ DO(n, A zz; if(0>v[i])z=IRS1(z,0L,n-i,jtreverse,zz););
  RETF(z);
 }
 

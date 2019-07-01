@@ -505,6 +505,7 @@ A jtparsea(J jt, A *queue, I m){PSTK *stack;A z,*v;I es; UI4 maxnvrlen;
          // positive bucketx (now negative); that means skip that many items and then do name search.  This is set for words that were recognized as names but were not detected as assigned-to in the definition.  This is the path for global symbols
          // If no new names have been assigned since the table was created, we can skip this search, since it must fail (this is the path for words in z eg)
          if(!(AR(jt->locsyms)&LNAMEADDED))goto rdglob;
+         // from here on is rare
          LX lx = LXAV0(jt->locsyms)[NAV(y)->bucket];  // index of first block if any
          I m=NAV(y)->m; C* nm=NAV(y)->s;  // length/addr of name from name block
          while(0>++bx){lx = jt->sympv[lx].next;}

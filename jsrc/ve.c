@@ -491,7 +491,7 @@ F1(jtabase1){A d,z;B*zv;I c,n,p,r,t,*v;UI x;
   // But we can't delete a digit if any of the values were negative - all are significant then
   // We also can't delete a digit if there is only 1 digit in the numbers
   if(AS(z)[AR(z)-1]<=1 || i0(aslash(CPLUSDOT,ravel(lt(w,zeroionei[0])))))R z;
-  if(0==i0(aslash(CMAX,ravel(irs1(z,0L,1L,jthead)))))R irs1(z,0L,1L,jtbehead);
+  if(0==i0(aslash(CMAX,ravel(IRS1(z,0L,1L,jthead,d)))))R IRS1(z,0L,1L,jtbehead,d);
   RETF(z);
  }
  // Integer.  Calculate x=max magnitude encountered (minimum of 1, to leave 1 output value)

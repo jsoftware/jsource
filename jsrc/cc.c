@@ -44,7 +44,7 @@ static F2(jtcut02m){A z;C*u,*v;I*av,c,d,e0,e1,j0,j1,k0,k1,m0,m1,*s,t,wk;
  if(0>e0){d=-wk*m1; v=CAV(w)+wk*(j0*m1+j1+m1*(k0-1));}
  else    {d= wk*m1; v=CAV(w)+wk*(j0*m1+j1          );}
  DO(k0, MC(u,v,c); u+=c; v+=d;);
- RETF(0>e1?irs1(z,0L,1L,jtreverse):z);
+ RETF(0>e1?IRS1(z,0L,1L,jtreverse,zz):z);
 }    /* a ];.0 matrix */
 #endif
 

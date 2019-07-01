@@ -269,14 +269,14 @@ A jtscansp(J jt,A w,A self,AF sf){A e,ee,x,z;B*b;I f,m,j,r,t,wr;P*wp,*zp;
  wp=PAV(w); e=SPA(wp,e); RZ(ee=over(e,e));
  if(!equ(ee,CALL1(sf,ee,self))){
   RZ(x=denseit(w));
-  R irs1(x,self,r,sf);
+  R IRS1(x,self,r,sf,z);
  }else{
   RZ(b=bfi(wr,SPA(wp,a),1));
   if(r&&b[f]){b[f]=0; RZ(w=reaxis(ifb(wr,b),w));}
   j=f; m=0; DO(wr-f, m+=!b[j++];);
  }
  wp=PAV(w); e=SPA(wp,e); x=SPA(wp,x);
- RZ(x=irs1(x,self,m,sf));
+ RZ(x=IRS1(x,self,m,sf,z));
  t=maxtype(AT(e),AT(x)); RZ(e=cvt(t,e)); if(TYPESNE(t,AT(x)))RZ(x=cvt(t,x));
  GASPARSE(z,STYPE(t),1,wr+!m,AS(w)); if(!m)*(wr+AS(z))=1;
  zp=PAV(z); 
@@ -294,15 +294,15 @@ static DF1(jtsscan){A y,z;I d,f,m,n,r,t,wn,wr,*ws,wt;
  wn=AN(w); wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; ws=AS(w); RESETRANK;
  PROD(m,f,ws); PROD1(d,r-1,f+ws+1); n=r?ws[f]:1;  // will not be used if WN==0, so PROD ok.  n is # items along the selected rank
  y=FAV(self)->fgh[0]; // y is f/
- if(2>n||!wn){if(vaid(FAV(y)->fgh[0])){R r?RETARG(w):reshape(over(shape(w),num[1]),w);}else R irs1(w,self,r,jtsuffix);}  // if empty arg, or just 1 cell in selected axis, convert to f/\ which handles the short arg 
+ if(((n-2)|(wn-1))<0){if(vaid(FAV(y)->fgh[0])){R r?RETARG(w):reshape(over(shape(w),num[1]),w);}else R IRS1(w,self,r,jtsuffix,z);}  // if empty arg, or just 1 cell in selected axis, convert to f/\ which handles the short arg 
 
    // note that the above line always takes the r==0 case
  VA2 adocv = vasfx(FAV(y)->fgh[0],wt);  // analyze f
- if(!adocv.f)R irs1ip(w,self,r,jtssg);   // if not supported atomically, go do general suffix
+ if(!adocv.f)R IRSIP1(w,self,r,jtssg,z);   // if not supported atomically, go do general suffix
  if((t=atype(adocv.cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));
  if((I)jtinplace&(adocv.cv>>VIPOKWX)&JTINPLACEW && ASGNINPLACE(w))z=w; else GA(z,rtype(adocv.cv),wn,wr,ws);
  adocv.f(jt,m,d,n,AV(z),AV(w));
- if(jt->jerr)R jt->jerr>=EWOV?irs1(w,self,r,jtsscan):0; else R adocv.cv&VRI+VRD?cvz(adocv.cv,z):z;
+ if(jt->jerr)R jt->jerr>=EWOV?IRS1(w,self,r,jtsscan,z):0; else R adocv.cv&VRI+VRD?cvz(adocv.cv,z):z;
 }    /* f/\."r w main control */
 
 

@@ -325,7 +325,7 @@ NB. lookups of nonassigned names skip local lookup if there have been no assignm
 
 gval_z_ =: 0
 fa =. 3 : '(y) =. 1 [ one =. 1 for. i. 10000 do. gval ] gval ] gval  ] gval  ] gval  ] gval  ] gval  ] gval  ] gval end. gval'
-(100 (6!:2) 'fa ''one''') < (100 (6!:2) 'fa ''two''')  NB. Not much difference, but it should be faster
+NB. too close to rely on now (100 (6!:2) 'fa ''one''') < (100 (6!:2) 'fa ''two''')  NB. Not much difference, but it should be faster
 
 NB. leaks that have been fixed
 NB. a =. 4 - 3  NB. allocate a as an integer

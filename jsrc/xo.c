@@ -46,10 +46,10 @@ F1(jtfname){I j;
  R ca(*(j+AAV(jt->fopa)));
 }    /* string name corresp. to file# w */
 
-F1(jtjfiles){A y;
+F1(jtjfiles){A y,z;
  ASSERTMTV(w);
  RZ(y=vec(INT,jt->fopn,AV(jt->fopf)));
- R grade2(stitch(box0(y),vec(BOX,jt->fopn,AV(jt->fopa))),y);
+ R grade2(stitch(IRS1(y,0,0,jtbox,z),vec(BOX,jt->fopn,AV(jt->fopa))),y);
 }    /* file (number,name) table */
 
 F jtjope(J jt,A w,C*mode){A t;F f;I n;static I nf=25; A z;

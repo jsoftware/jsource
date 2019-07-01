@@ -250,8 +250,8 @@ F1(jtpoly1){A c,e,x;
  // Must be exponent form: a single box containing a table with 2-atom rows
  ASSERT(2==AR(x),EVRANK);
  ASSERT(2==*(1+AS(x)),EVLENGTH);
- RZ(c=irs1(x,0L,1L,jthead));  // c = {."1>y = list of coefficients
- RZ(e=irs1(x,0L,1L,jttail));  // e = {:"1>y = list of exponents
+ RZ(IRS1(x,0L,1L,jthead,c));  // c = {."1>y = list of coefficients
+ RZ(IRS1(x,0L,1L,jttail,e));  // e = {:"1>y = list of exponents
  ASSERT(equ(e,floor1(e))&&all1(le(num[0],e)),EVDOMAIN);  // insist on nonnegative integral exponents
  R evc(c,e,"x y}(1+>./y)$0");  // evaluate c 2 : 'x y}(1+>./y)$0' e
 }
@@ -280,8 +280,8 @@ static F2(jtpoly2a){A c,e,x;I m;
  ASSERT(AT(a)&NUMERIC,EVDOMAIN);
  ASSERT(2==AR(a),EVRANK);
  ASSERT(0<m,EVLENGTH);
- RZ(c=      irs1(a,0L,1L,jthead  ) ); 
- RZ(e=cant1(irs1(a,0L,1L,jtbehead)));
+ RZ(IRS1(a,0L,1L,jthead,c  ) ); 
+ RZ(e=cant1(IRS1(a,0L,1L,jtbehead,e)));
  RZ(x=mnomx(m,w));
  R 1==m?pdt(irs2(x,ravel(e),0L,0L,2L,jtexpn2),c):pdt(df2(x,e,dot(slash(ds(CSTAR)),ds(CEXP))),c);
 }    /* multinomial: (<c,.e0,.e1,.e2) p. <x0,x1,x2, left argument opened */

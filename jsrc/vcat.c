@@ -233,10 +233,10 @@ F2(jtlamin2){A z;I ar,p,q,wr;
  RZ(a&&w); 
  ar=AR(a); p=jt->ranks>>RANKTX; p=ar<p?ar:p;
  wr=AR(w); q=(RANKT)jt->ranks; q=wr<q?wr:q; RESETRANK;
- if(p)a=irs1(a,0L,p,jtlamin1);
- if(q)w=irs1(w,0L,q,jtlamin1);
+ if(p)a=IRS1(a,0L,p,jtlamin1,z);
+ if(q)w=IRS1(w,0L,q,jtlamin1,z);
  RZ(z=irs2(a,w,0L,p+!!p,q+!!q,jtover));
- if(!p&&!q)z=irs1(z,0L,0L,jtlamin1);
+ if(!p&&!q)z=IRS1(z,0L,0L,jtlamin1,a);
  RETF(z);
 }    /* a,:"r w */
 

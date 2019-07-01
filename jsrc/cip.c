@@ -646,7 +646,7 @@ static DF1(jtdet){DECLFG;A h=sv->fgh[2];I c,r,*s;
  R !c ? df1(mtv,slash(gs)) : 1==c ? CALL1(f1,ravel(w),fs) : h && c==*s ? gaussdet(w) : detxm(w,self); 
 }
 
-DF1(jtdetxm){R dotprod(irs1(w,0L,1L,jthead),det(minors(w),self),self);}
+DF1(jtdetxm){A z; R dotprod(IRS1(w,0L,1L,jthead,z),det(minors(w),self),self);}
      /* determinant via expansion by minors. w is matrix with >1 columns */
 
 F2(jtdot){A f,h=0;AF f2=jtdotprod;C c,d;

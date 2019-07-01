@@ -1172,7 +1172,7 @@ static B jtusebs(J jt,A a,I ac,I asct){A*av,x;I t;
 // bk means i: (e. i: 0:) (e. i: 1:)   or prehashed version thereof, i. e. backwards
 // We grade a, producing the ordering permutation.  Then we go through it to discard duplicates
 static A jtnodupgrade(J jt,A a,I acr,I ac,I acn,I ad,I n,I asct,I md,I bk){A*av,h,*u,*v;I*hi,*hu,*hv,l,m1,q;
- RZ(h=irs1(a,0L,acr,jtgrade1)); hv=AV(h)+bk*(asct-1); av=AAV(a);
+ RZ(IRS1(a,0L,acr,jtgrade1,h)); hv=AV(h)+bk*(asct-1); av=AAV(a);
  // if not self-index, close up the duplicates
  if(!(md&IIMODREFLEX))for(l=0;l<ac;++l,av+=acn,hv+=asct){  // for each item of the overall result
   // hi->next index in the grade result, q is its value, u->A block for that index

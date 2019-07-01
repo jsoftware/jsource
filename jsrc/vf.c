@@ -186,7 +186,7 @@ static A jtreshapesp(J jt,A a,A w,I wf,I wcr){A a1,e,t,x,y,z;B az,*b,wz;I an,*av
  wp=PAV(w); a1=SPA(wp,a); c=AN(a1); RZ(b=bfi(wr,a1,1));  // b=bitmask, length wr, with 1s for each value in a1
  RZ(e=ca(SPA(wp,e))); x=SPA(wp,x); y=SPA(wp,i);
  u=av+an; v=ws+wr; m=0; DO(MIN(an,wcr-1), if(*--u!=*--v){m=1; break;});
- if(m||an<wcr) R reshapesp(a,irs1(w,0L,wcr,jtravel),wf,1L);
+ if(m||an<wcr) R reshapesp(a,IRS1(w,0L,wcr,jtravel,z),wf,1L);
  ASSERT(!jt->fill,EVDOMAIN);
  GASPARSE(z,AT(w),1,wf+an,ws); MCISH(wf+AS(z),av,an);
  zp=PAV(z); SPB(zp,e,e);  

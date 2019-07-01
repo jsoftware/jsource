@@ -937,7 +937,7 @@ static B jtusebs(J jt,A a,I ac,I m){A*av,x;I t;
 // should not do the duplicate-removal pass, since it requires an entire pass over the a argument; instead, check
 //  for duplicates as matches are found, and mark when a check has been made.  Duplicate removal might be reasonable for prehashing
 static A jtnodupgrade(J jt,A a,I acr,I ac,I acn,I ad,I n,I m,B b,B bk){A*av,h,*u,*v;I*hi,*hu,*hv,l,m1,q;
- RZ(h=irs1(a,0L,acr,jtgrade1)); hv=AV(h)+bk*(m-1); av=AAV(a);
+ RZ(IRS1(a,0L,acr,jtgrade1,h)); hv=AV(h)+bk*(m-1); av=AAV(a);
  // if not self-index, close up the duplicates
  if(!b)for(l=0;l<ac;++l,av+=acn,hv+=m){  // for each item of the overall result
   // hi->next index in the grade result, q is its value, u->A block for that index

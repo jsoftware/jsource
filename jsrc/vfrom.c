@@ -426,7 +426,7 @@ static F2(jtafrom){PROLOG(0073);A c,ind,p=0,q,*v,y=w;B bb=1;I acr,ar,i=0,j,m,n,p
 // obsolete  if(ar==acr&&wr==wcr){RE(aindex(a,w,wf,&ind)); if(ind)R frombu(ind,w,wf);}
   if(((ar^acr)|(wr^wcr))==0){RE(aindex(a,w,wf,&ind)); if(ind)R frombu(ind,w,wf);}  // if boxing doesn't contribute to shape, open the boxes of a and copy the values
   R wr==wcr?rank2ex(a,w,0L,0L,wcr,0L,wcr,jtafrom):  // if a has frame, rank-loop over a
-      df2(irs1(a,0L,acr,jtbox),irs1(w,0L,wcr,jtbox),amp(ds(CLBRACE),ds(COPE)));  // (<"0 a) {&> <"0 w
+      df2(IRS1(a,0L,acr,jtbox,c),IRS1(w,0L,wcr,jtbox,ind),amp(ds(CLBRACE),ds(COPE)));  // (<"0 a) {&> <"0 w
  }
  c=AAV0(a); t=AT(c); n=IC(c); v=AAV(c);   // B prob not reqd 
  s=AS(w)+wr-wcr;
@@ -506,13 +506,18 @@ F2(jtsfrom){
   RE(aindex1(a,w,0L,&ind)); if(ind)R frombsn(ind,w,0L);
  }
  // If we couldn't handle it as a special case, do it the hard way
- RETF(from(irs1(a,0L,1L,jtbox),w));
+ A z; RETF(from(IRS1(a,0L,1L,jtbox,z),w));
 }    /* (<"1 a){w */
 
-static F2(jtmapx){
+static F2(jtmapx){A z1,z2,z3;
  RZ(a&&w);
  if(!(BOX&AT(w)))R ope(a);
- R every2(box0(every2(a,box0(catalog(every(shape(w),0L,jtiota))),0L,jtover)),w,0L,jtmapx);
+// obsolete  R every2(box0(every2(a,box0(catalog(every(shape(w),0L,jtiota))),0L,jtover)),w,0L,jtmapx);
+ z1=catalog(every(shape(w),0L,jtiota));  // create index list of each box
+ IRS1(z1,0,0,jtbox,z2);
+ z2=every2(a,z2,0L,jtover);
+ IRS1(z2,0,0,jtbox,z3);
+ R every2(z3,w,0L,jtmapx);
 }
 
 F1(jtmap){R mapx(ace,w);}

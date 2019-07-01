@@ -569,14 +569,14 @@ static DF1(jtpscan){A y,z;I d,f,m,n,r,t,wn,wr,*ws,wt;
  PROD(m,f,ws); PROD1(d,r-1,ws+f+1); n=r?ws[f]:1;  // wn=0 doesn't matter
  y=FAV(self)->fgh[0]; // y is the verb u, which is f/
  // If there are 0 or 1 items, or w is empty, return the input unchanged, except: if rank 0, return (($w),1)($,)w - if atomic op, do it right here, otherwise call the routine to get the shape of result cell
- if(2>n||!wn){if(vaid(FAV(y)->fgh[0])){R r?RETARG(w):reshape(over(shape(w),num[1]),w);}else R irs1(w,self,r,jtinfixprefix1);}
+ if(2>n||!wn){if(vaid(FAV(y)->fgh[0])){R r?RETARG(w):reshape(over(shape(w),num[1]),w);}else R IRS1(w,self,r,jtinfixprefix1,z);}
  VA2 adocv = vapfx(FAV(y)->fgh[0],wt);  // fetch info for f/\ and this type of arg
- if(!adocv.f)R irs1(w,self,r,jtinfixprefix1);  // if there is no special function for this type, do general reduce
+ if(!adocv.f)R IRS1(w,self,r,jtinfixprefix1,z);  // if there is no special function for this type, do general reduce
  if((t=atype(adocv.cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));  // convert input if necessary
  // if inplaceable, reuse the input area for the result
  if((I)jtinplace&(adocv.cv>>VIPOKWX)&JTINPLACEW && ASGNINPLACE(w))z=w; else GA(z,rtype(adocv.cv),wn,wr,ws);
  adocv.f(jt,m,d,n,AV(z),AV(w));
- if(jt->jerr)R (jt->jerr>=EWOV)?irs1(w,self,r,jtpscan):0; else R adocv.cv&VRI+VRD?cvz(adocv.cv,z):z;
+ if(jt->jerr)R (jt->jerr>=EWOV)?IRS1(w,self,r,jtpscan,z):0; else R adocv.cv&VRI+VRD?cvz(adocv.cv,z):z;
 }    /* f/\"r w atomic f main control */
 
 static DF2(jtinfixd){A fs,z;C*x,*y;I c=0,d,k,m,n,p,q,r,*s,wr,*ws,wt,zc; 

@@ -548,8 +548,6 @@ A jtirs1(J jt,A w,A fs,I m,AF f1){A z;I wr;
  jt->ranks=(RANK2T)~0;  // reset rank to infinite
  RETF(z);
 }
-#define IRS1(w,fs,r,f1,z) (jt->ranks=(RANK2T)(((AR(w)-(r+1))>>(BW-1))|(r)),z=f1(jt,(w),(A)(fs)),jt->ranks=(RANK2T)~0,z)  // nonneg rank
-#define IRS2(a,w,fs,l,r,f2,z) {ASSERTAGREE(AS(a),AS(w),MIN((r),(l))) (jt->ranks=(RANK2T)(((((AR(a)-(l+1))>>(BW-1))|(l))<<RANKTX)+(((AR(w)-(r+1))>>(BW-1))|(r))),z=f2(jt,(a),(w),(A)(fs)),jt->ranks=(RANK2T)~0,z) } // nonneg rank
 
 // IRS setup for dyads x op y.  This routine sets jt->rank and calls the verb, which loops if it needs to
 // a is x, w is y
@@ -590,9 +588,19 @@ static DF2(cons2){V*sv=FAV(self);I*v=AV(sv->fgh[2]);
 }
 
 // Handle u"n y where u supports irs.  Since the verb may support inplacing even with rank (,"n for example), pass that through.
-// If inplacing is allowed here, pass that on to irs.  It will see whether the action verb can support inplacing.
-// THIS SUPPORTS INPLACING: NOTHING HERE MAY DEREFERENCE jt!!
-static DF1(rank1i){DECLF;A h=sv->fgh[2];I*v=AV(h); R irs1(w,fs,*v,f1);}
+// obsolete static DF1(rank1i){DECLF;A h=sv->fgh[2];I*v=AV(h); R irs1(w,fs,*v,f1);}
+static DF1(rank1i){RZ(w);F1PREFIP;DECLF;  // this version when requested rank is positive
+ I m=AV(sv->fgh[2])[0]; m=m>=AR(w)?~0:m; jt->ranks=(RANK2T)(m);  // install rank for called routine
+ A z=CALL1IP(f1,w,fs);
+ jt->ranks=(RANK2T)~0;  // reset rank to infinite
+ RETF(z);
+}
+static DF1(rank1in){RZ(w);F1PREFIP;DECLF;  // this version when requested rank is negative
+ I m=AV(sv->fgh[2])[0]+AR(w); m=m<0?0:m; jt->ranks=(RANK2T)(m);  // install rank for called routine
+ A z=CALL1IP(f1,w,fs);
+ jt->ranks=(RANK2T)~0;  // reset rank to infinite
+ RETF(z);
+}
 static DF2(rank2i){DECLF;A h=sv->fgh[2];I*v=AV(h); R irs2(a,w,fs,v[1],v[2],f2);}
 
 // u"n y when u does not support irs. We loop over cells, and as we do there is no reason to enable inplacing
@@ -678,7 +686,7 @@ F2(jtqq){A h,t;AF f1,f2;D*d;I *hv,n,r[3],vf,flag2=0,*v;
   // the action routine for the verb.  Otherwise, choose the appropriate rank routine, depending on whether the verb
   // supports IRS.  The IRS verbs may profitably support inplacing, so we enable it for them.
   vf=av->flag&(VASGSAFE|VJTFLGOK1|VJTFLGOK2);  // inherit ASGSAFE from u, and inplacing
-  if(av->flag&VISATOMIC1){f1=av->valencefns[0];}else{if(av->flag&VIRS1){f1=rank1i;}else{f1=r[0]?rank1:jtrank10; flag2|=VF2RANKONLY1;}}
+  if(av->flag&VISATOMIC1){f1=av->valencefns[0];}else{if(av->flag&VIRS1){f1=hv[2]>=0?rank1i:rank1in;}else{f1=r[0]?rank1:jtrank10; flag2|=VF2RANKONLY1;}}
   if(av->flag&VIRS2){f2=rank2i;}else{f2=(r[1]|r[2])?rank2:jtrank20;flag2|=VF2RANKONLY2;}
   // Test for special cases
   if(av->valencefns[1]==jtfslashatg && r[1]==1 && r[2]==1){  // f@:g"1 1 where f and g are known atomic

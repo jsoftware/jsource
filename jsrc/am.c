@@ -201,7 +201,7 @@ static A jtmerge2(J jt,A a,A w,A ind,I cellframelen){F2PREFIP;A z;I t;
 A jtcelloffset(J jt,AD * RESTRICT w,AD * RESTRICT ind){A z;
  RZ(w);
  if(AR(ind)<2){RZ(z=pind(AS(w)[0],ind));  // (m}only) treat a list as a list of independent indexes.  pind handles that case quickly and possibly in-place.
- }else if(AS(ind)[AR(ind)-1]==1){RZ(z=pind(AS(w)[0],irs1(ind,0L,2L,jtravel)));  // if rows are 1 long, pind handles that too - remove the last axis
+ }else if(AS(ind)[AR(ind)-1]==1){RZ(z=pind(AS(w)[0],IRS1(ind,0L,2L,jtravel,z)));  // if rows are 1 long, pind handles that too - remove the last axis
  }else{
   // rank of ind>1, and rows of ind are longer than 1. process each row to a cell offset
   I naxes = AS(ind)[AR(ind)-1];

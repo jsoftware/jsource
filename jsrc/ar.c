@@ -444,7 +444,7 @@ static DF1(jtreducesp){A a,g,z;B b;I f,n,r,*v,wn,wr,*ws,wt,zt;P*wp;
   b=0; DO(AN(a), if(f==v[i]){b=1; break;});
   z=b?redsps(w,self,id,adocv.f,adocv.cv,f,r,zt):redspd(w,self,id,adocv.f,adocv.cv,f,r,zt);
  }
- R jt->jerr>=EWOV?irs1(w,self,r,jtreducesp):z;
+ R jt->jerr>=EWOV?IRS1(w,self,r,jtreducesp,z):z;
 }    /* f/"r for sparse w */
 
 #define BR2IFX(T,F)     {T*u=(T*)wv,*v=u+d,x,y;                                           \
@@ -555,7 +555,7 @@ static DF1(jtreduce){A z;I d,f,m,n,r,t,wn,wr,*ws,wt,zt;
   // if return is EWOV, it's an integer overflow and we must restart, after restoring the ranks
   // EWOV1 means that there was an overflow on a single result, which was calculated accurately and stored as a D.  So in that case all we
   // have to do is change the type of the result.
-  if(jt->jerr)if(jt->jerr==EWOV1){RESETERR;AT(z)=FL;RETF(z);}else {RETF(jt->jerr>=EWOV?irs1(w,self,r,jtreduce):0);} else {RETF(adocv.cv&VRI+VRD?cvz(adocv.cv,z):z);}
+  if(jt->jerr)if(jt->jerr==EWOV1){RESETERR;AT(z)=FL;RETF(z);}else {RETF(jt->jerr>=EWOV?IRS1(w,self,r,jtreduce,z):0);} else {RETF(adocv.cv&VRI+VRD?cvz(adocv.cv,z):z);}
 
   // special cases:
  }else if(n==1)R head(w);    // reduce on single items - ranks are still set
@@ -619,7 +619,7 @@ static DF1(jtredsemi){I f,n,r,*s,wr;
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; s=AS(w); n=r?s[f]:1;  // let the rank run into tail   n=#items  in a cell of w
  if(2>n){ASSERT(n,EVDOMAIN); R tail(w);}  // rank still set
  if(BOX&AT(w))R jtredg(jt,w,self);  // the old way failed because it did not mimic scalar replication; revert to the long way.  ranks are still set
- else R irs1(w,0L,r-1,jtbox);  // unboxed, just box the cells
+ else{A z; R IRS1(w,0L,r-1,jtbox,z);}  // unboxed, just box the cells
 }    /* ;/"r w */
 
 static DF1(jtredstitch){A c,y;I f,n,r,*s,*v,wr;
@@ -627,9 +627,9 @@ static DF1(jtredstitch){A c,y;I f,n,r,*s,*v,wr;
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; RESETRANK;
  s=AS(w); n=r?s[f]:1;
  ASSERT(n,EVDOMAIN);
- if(1==n)R irs1(w,0L,r,jthead);
+ if(1==n)R IRS1(w,0L,r,jthead,y);
  if(1==r)R 2==n?RETARG(w):irs2(irs2(num[-2],w,0L,0L,1L,jtdrop),irs2(num[-2],w,0L,0L,1L,jttake),0L,1L,0L,jtover);
- if(2==r)R irs1(w,0L,2L,jtcant1);
+ if(2==r)R IRS1(w,0L,2L,jtcant1,y);
  RZ(c=apvwr(wr,0L,1L)); v=AV(c); v[f]=f+1; v[f+1]=f; RZ(y=cant2(c,w));  // transpose last 2 axes
  if(SPARSE&AT(w)){A x;
   GATV0(x,INT,f+r-1,1); v=AV(x); MCISH(v,AS(y),f+1);

@@ -39,6 +39,29 @@ F1(jthostne){ASSERT(0,EVDOMAIN);}
 
 #else
 
+extern void __cpuid(int d[4],int type);
+
+// advanced features avx avx2
+F1(jtjgetx){int max; int d[4];
+#if C_64 && C_LE //(SY_WIN32 || SY_LINUX || SY_MAC)
+ __cpuid(d,0);
+ max= d[0];
+
+ fprintf(stdout,"max %i\n",max);
+
+ if(max>=1) {
+	 __cpuid(d,1);
+	 if((d[2] & (1 << 28)) != 0) { R cstr("avx");}
+ }
+
+ if(max>=7) {
+	 __cpuid(d,7);
+	 if((d[1] & (1 << 5)) != 0) { R cstr("avx2");}
+ }
+#endif
+ R cstr("none");
+}
+
 F1(jthost){A z;
  F1RANK(1,jthost,0);
  RZ(w=vslit(w));

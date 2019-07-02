@@ -158,6 +158,7 @@ extern F1(jtjfperm1);
 extern F1(jtjfread);
 extern F1(jtjfsize);
 extern F1(jtjgetenv);
+extern F1(jtjgetx);
 extern F1(jtjgetpid);
 extern F1(jtjico1);
 extern F1(jtjiread);

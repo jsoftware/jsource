@@ -111,7 +111,7 @@ DF2(jtbitwisechar){DECLFG;A*p,x,y,z;B b;I j,m,n,zn;VF f;
  j=i0(VAV(fs)->fgh[0])-16;
  GATV(z,LIT,zn,MAX(AR(a),AR(w)),AS(b?w:a));   // d is fixed; was d==SZI?LIT:C2T; would need GA then
  if(1==n)                 {f=bwI[j]; m=(m+SZI-1)>>LGSZI;}
- else if(!AR(a)||!AR(w)||0==(n&(SZI-1))){f=bwI[j]; n=(n+SZI-1)>>LGSZI; p=b?&x:&y; RZ(*p=irs2(sc(SZI),*p,0L,0L,0L,jtrepeat));}
+ else if(!AR(a)||!AR(w)||0==(n&(SZI-1))){f=bwI[j]; n=(n+SZI-1)>>LGSZI; p=b?&x:&y; A zz; RZ(*p=IRS2(sc(SZI),*p,0L,0L,0L,jtrepeat,zz));}
  else                      f=bwC[j];
  n^=-b; n=(n==~1)?1:n;  // encode b flag in sign of n
  f(jt,m,AV(z),AV(x),AV(y),n); 

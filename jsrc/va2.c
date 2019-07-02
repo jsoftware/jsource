@@ -697,7 +697,7 @@ A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I ak,f,m,
  // If we got an internal-only error during execution of the verb, restart to see if it's
  // a recoverable error such an overflow during integer addition.  We have to restore
  // jt->rank, which might have been modified.  All sparse errors come through here, so they can't
- // do overflow recovery in-place
+ // do overflow recovery in-place.  We don't use the macro because the compiler goes nuts if it thinks it sees recursion
  R NEVM<jt->jerr?irs2(a,w,self,savedranks>>RANKTX,(RANKT)savedranks,jtva2):0;
 }    /* scalar fn primitive and f"r main control */
 

@@ -105,13 +105,14 @@ F2(jtcant2){A*av,p,t,y;I j,k,m,n,*pv,q,r,*v;
  RZ(a&&w);
  r=(RANKT)jt->ranks; r=AR(w)<r?AR(w):r; 
  q=jt->ranks>>RANKTX; q=AR(a)<q?AR(a):q; RESETRANK;
- if(1<q||q<AR(a))R rank2ex(a,w,0L,1,RMAX,q,r,jtcant2);
+ if(1<q||q<AR(a))R rank2ex(a,w,0L,1,RMAX,q,r,jtcant2);  // rank loop on a
  if(BOX&AT(a)){
   RZ(y=pfill(r,t=raze(a))); v=AV(y);
   GATV0(p,INT,AN(y),1); pv=AV(p);
   m=AN(a); n=AN(t); av=AAV(a); 
   j=0; DO(r-n,pv[*v++]=j++;); DO(m, k=AN(av[i]); DO(k,pv[*v++]=j;); if(k)++j;);
- }else p=pinv(pfill(r,a));
- A z= r<AR(w) ? irs2(p,w,0L,1L,r,jtcanta) : canta(p,w);  // Handle rank for a - w is in canta.  p is now INT type
- RZ(z);  RETF(z);
+ }else RZ(p=pinv(pfill(r,a)));
+// obsolete  A z= r<AR(w) ? irs2(p,w,0L,1L,r,jtcanta) : canta(p,w);  // Handle rank for a - w is in canta.  p is now INT type
+ A z; IRS2(p,w,0L,1L,r,jtcanta,z);  // Set rank for w is in canta.  p is now INT type.  No need to check agreement since a has rank 1
+ RETF(z);
 }    /* a|:"r w main control */ 

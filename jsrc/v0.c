@@ -32,8 +32,9 @@ static CFR(jtcfrq,Q,RAT, qplus,qtymes,QNEGATE)
 static F1(jtrsort){A t,z;
  RZ(w);
  PUSHCCT(1.0-jt->fuzz)
- t=over(mag(w),cant1(rect(w)));
- z=dgrade2(w,cant1(irs2(irs2(t,t,0L,1L,1L,jtindexof),t,0L,1L,1L,jtfrom)));
+ RZ(t=over(mag(w),cant1(rect(w))));
+ A tt; RZ(IRS2(t,t,0L,1L,1L,jtindexof,tt));
+ z=dgrade2(w,cant1(IRS2(tt,t,0L,1L,1L,jtfrom,z)));
  POPCCT
  RETF(z);
 }
@@ -283,7 +284,7 @@ static F2(jtpoly2a){A c,e,x;I m;
  RZ(IRS1(a,0L,1L,jthead,c  ) ); 
  RZ(e=cant1(IRS1(a,0L,1L,jtbehead,e)));
  RZ(x=mnomx(m,w));
- R 1==m?pdt(irs2(x,ravel(e),0L,0L,2L,jtexpn2),c):pdt(df2(x,e,dot(slash(ds(CSTAR)),ds(CEXP))),c);
+ if(1==m){A z,er; RZ(er=ravel(e)); R pdt(IRS2(x,er,0L,0L,2L,jtexpn2,z),c);}else{R pdt(df2(x,e,dot(slash(ds(CSTAR)),ds(CEXP))),c);}  // scaf need agreement check?
 }    /* multinomial: (<c,.e0,.e1,.e2) p. <x0,x1,x2, left argument opened */
 
 // x p. y    Supports IRS on the y argument; supports inplace

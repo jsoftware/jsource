@@ -125,11 +125,11 @@ F1(jtjico1){A y,z;B b;D d,*v;I c,m,n;
 DF1(jtnum1){RZ(   w&&self); R FAV(self)->fgh[2];}
 DF2(jtnum2){RZ(a&&w&&self); R FAV(self)->fgh[2];}
 
-F2(jtfromr  ){R irs2(a,w,VFLAGNONE, RMAX,1L,jtfrom  );}
-F2(jtrepeatr){R irs2(a,w,VFLAGNONE, RMAX,1L,jtrepeat);}
+F2(jtfromr  ){RZ(a&&w); A z; R IRS2(a,w,0, RMAX,1L,jtfrom  ,z);} // no agreement check because left rank is 0
+F2(jtrepeatr){RZ(a&&w); A z; R IRS2(a,w,0, RMAX,1L,jtrepeat,z);}
 
-A jttaker(J jt,I n,A w){R irs2(sc(n),w,VFLAGNONE, RMAX,1L,jttake);}
-A jtdropr(J jt,I n,A w){R irs2(sc(n),w,VFLAGNONE, RMAX,1L,jtdrop);}
+A jttaker(J jt,I n,A w){RZ(w); A a,z; RZ(a=sc(n)); R irs2(a,w,0, RMAX,1L,jttake,z);}
+A jtdropr(J jt,I n,A w){RZ(w); A a,z; RZ(a=sc(n)); R irs2(a,w,0, RMAX,1L,jtdrop,z);}
 
 F1(jticap){A a,e;I n;P*p;
  F1RANK(1,jticap,0);

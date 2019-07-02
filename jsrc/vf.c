@@ -245,7 +245,7 @@ F2(jtreshape){A z;B filling;C*wv,*zv;I acr,ar,c,k,m,n,p,q,r,*s,t,* RESTRICT u,wc
  RETF(z);
 }    /* a ($,)"r w */
 
-F2(jtreitem){A y;I acr,an,ar,r,*v,wcr,wr;
+F2(jtreitem){A y,z;I acr,an,ar,r,*v,wcr,wr;
  F2PREFIP;
  RZ(a&&w);
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
@@ -259,7 +259,7 @@ F2(jtreitem){A y;I acr,an,ar,r,*v,wcr,wr;
   fauxINT(y,yfaux,an+r,1) v=AV(y);
   MCISH(v,AV(a),an); MCISH(v+an,AS(w)+wr-r,r);
  }
- R wr==wcr?jtreshape(jtinplace,y,w):irs2(y,w,0L,acr,wcr,jtreshape);
+ R wr==wcr?jtreshape(jtinplace,y,w):IRS2(y,w,0L,acr,wcr,jtreshape,z);  // Since a has no frame, we dont have to protect
 }    /* a $"r w */
 
 #if SY_64

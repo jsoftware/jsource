@@ -513,9 +513,9 @@ static F2(jtmapx){A z1,z2,z3;
  RZ(a&&w);
  if(!(BOX&AT(w)))R ope(a);
 // obsolete  R every2(box0(every2(a,box0(catalog(every(shape(w),0L,jtiota))),0L,jtover)),w,0L,jtmapx);
- z1=catalog(every(shape(w),0L,jtiota));  // create index list of each box
+ RZ(z1=catalog(every(shape(w),0L,jtiota)));  // create index list of each box
  IRS1(z1,0,0,jtbox,z2);
- z2=every2(a,z2,0L,jtover);
+ RZ(z2=every2(a,z2,0L,jtover));
  IRS1(z2,0,0,jtbox,z3);
  R every2(z3,w,0L,jtmapx);
 }

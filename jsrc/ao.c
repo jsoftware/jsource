@@ -13,7 +13,8 @@ static DF1(jtoblique){A x,y;I m,n,r;
  // create y= ,/ w - the _2-cells of w arranged in a list (virtual block)
  RZ(y=redcat(w,self)); if(1>=r){m=AN(w); n=1;}else{m=AS(w)[0]; n=AS(w)[1];}
  // Create x=+"0 1&i./ 2 {. $y
- RZ(x=irs2(IX(m),IX(n),0L,0L,1L,jtplus)); AR(x)=1; *AS(x)=AN(x);
+ A xm; RZ(xm=IX(m)); A xn; RZ(xn=IX(n));
+ RZ(IRS2(xm,xn,0L,0L,1L,jtplus,x)); AR(x)=1; *AS(x)=AN(x);
  // perform x f/. y, which does the requested operation, collecting the identical keys
  RZ(x=df2(x,y,sldot(VAV(self)->fgh[0])));
  // Final tweak: the result should have (0 >. <: +/ 2 {. $y) cells.  It will, as long as

@@ -430,7 +430,7 @@ static DF1(jtreducesp){A a,g,z;B b;I f,n,r,*v,wn,wr,*ws,wt,zt;P*wp;
  C id=vaid(g);
  VA2 adocv = vains(g,wt);
  if(2==n&&!(adocv.f&&strchr(fca,id))){
-  A x=irs2(num[0],w,0L,0,r,jtfrom); A y=irs2(num[1],w,0L,0,r,jtfrom);
+  A x; IRS2(num[0],w,0L,0,r,jtfrom,x); A y; IRS2(num[1],w,0L,0,r,jtfrom,y);
   R df2(x,y,g);  // rank has been reset for this call
  }
  // original rank still set
@@ -628,7 +628,7 @@ static DF1(jtredstitch){A c,y;I f,n,r,*s,*v,wr;
  s=AS(w); n=r?s[f]:1;
  ASSERT(n,EVDOMAIN);
  if(1==n)R IRS1(w,0L,r,jthead,y);
- if(1==r)R 2==n?RETARG(w):irs2(irs2(num[-2],w,0L,0L,1L,jtdrop),irs2(num[-2],w,0L,0L,1L,jttake),0L,1L,0L,jtover);
+ if(1==r){if(2==n)R RETARG(w); A z1,z2,z3; RZ(IRS2(num[-2],w,0L,0L,1L,jtdrop,z1)); RZ(IRS2(num[-2],w,0L,0L,1L,jttake,z2)); R IRS2(z1,z2,0L,1L,0L,jtover,z3);}
  if(2==r)R IRS1(w,0L,2L,jtcant1,y);
  RZ(c=apvwr(wr,0L,1L)); v=AV(c); v[f]=f+1; v[f+1]=f; RZ(y=cant2(c,w));  // transpose last 2 axes
  if(SPARSE&AT(w)){A x;

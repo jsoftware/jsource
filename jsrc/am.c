@@ -280,7 +280,8 @@ static A jtjstd(J jt,A w,A ind,I *cellframelen){A j=0,k,*v,x;B b;I d,i,n,r,*u,wr
     x=AAV0(x); k=IX(d);
     if(AN(x))k=less(k,pind(d,1<AR(x)?ravel(x):x));
    }else k=pind(d,x);
-   RZ(j=irs2(tymes(j,sc(d)),k,0L,VFLAGNONE, RMAX,jtplus));
+   RZ(x=tymes(j,sc(d)));
+   RZ(IRS2(x,k,0L,0, RMAX,jtplus,j));
   }
  }
  // now j is an array of offsets.  n is the number of axes that went into each atom of j.  Return the offsets

@@ -214,11 +214,12 @@ F2(jtover){A z;C*zv;I replct,framect,acn,acr,af,ar,*as,k,m,ma,mw,p,q,r,t,wcn,wcr
  RETF(z);
 }    /* overall control, and a,w and a,"r w for cell rank <: 2 */
 
-F2(jtstitch){B sp2;I ar,wr;
+F2(jtstitch){B sp2;I ar,wr; A z;
  RZ(a&&w);
  ar=AR(a); wr=AR(w); sp2=(SPARSE&AT(a)||SPARSE&AT(w))&&2>=ar&&2>=wr;
  ASSERT(!ar||!wr||*AS(a)==*AS(w),EVLENGTH);
- R sp2 ? stitchsp2(a,w) : irs2(a,w,0L,ar?ar-1:0,wr?wr-1:0,jtover);
+// obsolete  R sp2 ? stitchsp2(a,w) : irs2(a,w,0L,ar?ar-1:0,wr?wr-1:0,jtover);
+ R sp2 ? stitchsp2(a,w) : IRS2(a,w,0L,(ar-1)&RMAX,(wr-1)&RMAX,jtover,z);
 }
 
 F1(jtlamin1){A x;I* RESTRICT s,* RESTRICT v,wcr,wf,wr; 
@@ -233,10 +234,10 @@ F2(jtlamin2){A z;I ar,p,q,wr;
  RZ(a&&w); 
  ar=AR(a); p=jt->ranks>>RANKTX; p=ar<p?ar:p;
  wr=AR(w); q=(RANKT)jt->ranks; q=wr<q?wr:q; RESETRANK;
- if(p)a=IRS1(a,0L,p,jtlamin1,z);
- if(q)w=IRS1(w,0L,q,jtlamin1,z);
- RZ(z=irs2(a,w,0L,p+!!p,q+!!q,jtover));
- if(!p&&!q)z=IRS1(z,0L,0L,jtlamin1,a);
+ if(p)RZ(a=IRS1(a,0L,p,jtlamin1,z));
+ if(q)RZ(w=IRS1(w,0L,q,jtlamin1,z));
+ RZ(IRS2(a,w,0L,p+!!p,q+!!q,jtover,z));
+ if(!(p|q))z=IRS1(z,0L,0L,jtlamin1,a);
  RETF(z);
 }    /* a,:"r w */
 

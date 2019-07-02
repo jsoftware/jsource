@@ -218,7 +218,8 @@ static DF2(jtcut2bx){A*av,b,t,x,*xv,y,*yv;B*bv;I an,bn,i,j,m,p,q,*u,*v,*ws;V*sv;
  }
  RZ(x=ope(catalog(x)));
  RZ(y=ope(catalog(y)));
- RZ(t=AN(x)?irs2(x,y,0L,1L,1L,jtlamin2):iota(over(shape(x),v2(2L,0L))));
+ if(AN(x)){RZ(IRS2(x,y,0L,1L,1L,jtlamin2,t));}else{RZ(t=iota(over(shape(x),v2(2L,0L))));}
+// obsolete  RZ(t=AN(x)?irs2(x,y,0L,1L,1L,jtlamin2):iota(over(shape(x),v2(2L,0L))));
  R cut02(t,w,self);
 }    /* a f;.n w for boxed a, with special code for matrix w */
 
@@ -229,7 +230,7 @@ static DF2(jtcut2bx){A*av,b,t,x,*xv,y,*yv;B*bv;I an,bn,i,j,m,p,q,*u,*v,*ws;V*sv;
    GATV0(z,INT,m,1); zi=AV(z); EACHC(*zi++=d;); R z;                          \
   case CDOLLAR:                                                              \
    GATV0(z,INT,m,1); zi=AV(z); EACHC(*zi++=d;);                               \
-   R irs2(z,vec(INT,MAX(0,r-1),1+s),0L,0L,1L,jtover);                        \
+   A zz,zw; RZ(zw=vec(INT,MAX(0,r-1),1+s)); IRS2(z,zw,0L,0L,1L,jtover,zz); RETF(zz);  \
   case CHEAD:                                                                \
    GA(z,t,m*c,r,s); zc=CAV(z); AS(z)[0]=m;                                     \
    EACHC(ASSERT(d,EVINDEX); MC(zc,v1,k); zc+=k;);                            \
@@ -690,8 +691,8 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);DECLF;A *hv,z,zz;I neg,pfx;C id,*v1,*wv,*zc;
    GATV0(zz,INT,m,1); zi=AV(zz); EACHCUT(*zi++=d;); 
    break;
   case CDOLLAR:
-   GATV0(zz,INT,m,1); zi=AV(zz); EACHCUT(*zi++=d;);
-   R irs2(zz,vec(INT,MAX(0,r-1),AS(w)+1),0L,0L,1L,jtover);
+   GATV0(zz,INT,m,1); zi=AV(zz); EACHCUT(*zi++=d;); A zw=vec(INT,MAX(0,r-1),AS(w)+1);
+   R IRS2(zz,zw,0L,0L,1L,jtover,z);
   case CHEAD:
    GA(zz,wt,m*wcn,r,AS(w)); zc=CAV(zz); AS(zz)[0]=m;
    EACHCUT(if(d)MC(zc,v1,k); else fillv(wt,wcn,zc); zc+=k;);
@@ -900,7 +901,8 @@ static DF2(jttess2){A z,zz=0,virtw,strip;I n,rs[3],cellatoms,cellbytes,vmv,hmv,v
   // w is sparse, atomic, or empty, or the region has no axes or is empty, or the result is empty.  Go the slow way: create a selector block for each cell, and then apply u;.0 to each cell
   // trailing axes taken in full will be omitted from the shape of the result
   RZ(p=tesos(a,w,n,0));  // recalculate all the result shapes
-  RETF(cut02(irs2(cant1(tymes(head(a),cant1(abase2(p,iota(p))))), tail(a),0L,1L,1L,jtlamin2),w,self));  // ((|: ({.a) * |: (#: i.)p) ,:"1 ({:a)) u;.0 w
+  A za, zw; RZ(za=cant1(tymes(head(a),cant1(abase2(p,iota(p)))))); RZ(zw=tail(a));
+  RETF(cut02(IRS2(za, zw,0L,1L,1L,jtlamin2,z),w,self));  // ((|: ({.a) * |: (#: i.)p) ,:"1 ({:a)) u;.0 w
  }
  DECLF;  // get the function pointers
  fauxblockINT(xfaux,5,1); // declare xpose arg where it has scope

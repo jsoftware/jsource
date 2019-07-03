@@ -578,32 +578,32 @@ static DF2(cons2a){R FAV(self)->fgh[0];}
 // Constant verbs do not inplace because we loop over cells.  We could speed this up if it were worthwhile.
 static DF1(cons1){V*sv=FAV(self);
  RZ(w);
- I mr; efr(mr,AR(w),*AV(sv->fgh[2]));
+ I mr; efr(mr,AR(w),(I)sv->localuse.lI4[0]);
  R rank1ex(w,self,mr,cons1a);
 }
-static DF2(cons2){V*sv=FAV(self);I*v=AV(sv->fgh[2]);
+static DF2(cons2){V*sv=FAV(self);
  RZ(a&&w);
- I lr2,rr2; efr(lr2,AR(a),v[1]); efr(rr2,AR(w),v[2]);
+ I lr2,rr2; efr(lr2,AR(a),(I)sv->localuse.lI4[1]); efr(rr2,AR(w),(I)sv->localuse.lI4[2]);
  R rank2ex(a,w,self,AR(a),AR(w),lr2,rr2,cons2a);
 }
 
 // Handle u"n y where u supports irs.  Since the verb may support inplacing even with rank (,"n for example), pass that through.
 // obsolete static DF1(rank1i){DECLF;A h=sv->fgh[2];I*v=AV(h); R irs1(w,fs,*v,f1);}
 static DF1(rank1i){RZ(w);F1PREFIP;DECLF;  // this version when requested rank is positive
- I m=AV(sv->fgh[2])[0]; m=m>=AR(w)?~0:m; jt->ranks=(RANK2T)(m);  // install rank for called routine
+ I m=sv->localuse.lI4[0]; m=m>=AR(w)?~0:m; jt->ranks=(RANK2T)(m);  // install rank for called routine
  A z=CALL1IP(f1,w,fs);
  jt->ranks=(RANK2T)~0;  // reset rank to infinite
  RETF(z);
 }
 static DF1(rank1in){RZ(w);F1PREFIP;DECLF;  // this version when requested rank is negative
- I m=AV(sv->fgh[2])[0]+AR(w); m=m<0?0:m; jt->ranks=(RANK2T)(m);  // install rank for called routine
+ I m=sv->localuse.lI4[0]+AR(w); m=m<0?0:m; jt->ranks=(RANK2T)(m);  // install rank for called routine
  A z=CALL1IP(f1,w,fs);
  jt->ranks=(RANK2T)~0;  // reset rank to infinite
  RETF(z);
 }
 static DF2(rank2i){RZ(w);F2PREFIP;DECLF;  // this version when requested rank is positive
- I ar=AV(sv->fgh[2])[1]; ar=ar>=AR(a)?(RANKT)~0:ar; I af=AR(a)-ar;   // left rank
- I wr=AV(sv->fgh[2])[2]; wr=wr>=AR(w)?(RANKT)~0:wr; I wf=AR(w)-wr;   // right rank
+ I ar=sv->localuse.lI4[1]; ar=ar>=AR(a)?(RANKT)~0:ar; I af=AR(a)-ar;   // left rank
+ I wr=sv->localuse.lI4[2]; wr=wr>=AR(w)?(RANKT)~0:wr; I wf=AR(w)-wr;   // right rank
  af=wf<af?wf:af; af=af<0?0:af;
  ASSERTAGREE(AS(a),AS(w),af)  // verify agreement before we modify jt->ranks
  jt->ranks=(RANK2T)((ar<<RANKTX)+wr);  // install as parm to the function.  Set to ~0 if possible
@@ -612,8 +612,8 @@ static DF2(rank2i){RZ(w);F2PREFIP;DECLF;  // this version when requested rank is
  RETF(z);
 }
 static DF2(rank2in){RZ(w);F2PREFIP;DECLF;  // this version when a requested rank is negative
- I wr=AR(w); I r=AV(sv->fgh[2])[2]; r=r>=wr?(RANKT)~0:r; wr+=r; wr=wr<0?0:wr; wr=r>=0?r:wr; I wf=AR(w)-wr;   // right rank
- I ar=AR(a); r=AV(sv->fgh[2])[1];   r=r>=ar?(RANKT)~0:r; ar+=r; ar=ar<0?0:ar; ar=r>=0?r:ar; I af=AR(a)-ar;   // left rank
+ I wr=AR(w); I r=sv->localuse.lI4[2]; r=r>=wr?(RANKT)~0:r; wr+=r; wr=wr<0?0:wr; wr=r>=0?r:wr; I wf=AR(w)-wr;   // right rank
+ I ar=AR(a); r=sv->localuse.lI4[1];   r=r>=ar?(RANKT)~0:r; ar+=r; ar=ar<0?0:ar; ar=r>=0?r:ar; I af=AR(a)-ar;   // left rank
  af=wf<af?wf:af; af=af<0?0:af;
  ASSERTAGREE(AS(a),AS(w),af)  // verify agreement before we modify jt->ranks
  jt->ranks=(RANK2T)((ar<<RANKTX)+wr);  // install as parm to the function.  Set to ~0 if possible
@@ -625,13 +625,13 @@ static DF2(rank2in){RZ(w);F2PREFIP;DECLF;  // this version when a requested rank
 
 // u"n y when u does not support irs. We loop over cells, and as we do there is no reason to enable inplacing
 // THIS SUPPORTS INPLACING: NOTHING HERE MAY DEREFERENCE jt!!
-static DF1(rank1){DECLF;A h=sv->fgh[2];I m,*v=AV(h),wr;
+static DF1(rank1){DECLF;I m,wr;
  RZ(w);
- wr=AR(w); efr(m,wr,v[0]);
+ wr=AR(w); efr(m,wr,(I)sv->localuse.lI4[0]);
  // We know that the first call is RANKONLY, and we consume any other RANKONLYs in the chain until we get to something else.  The something else becomes the
  // fs/f1 to rank1ex.  Until we can handle multiple fill neighborhoods, we mustn't consume a verb of lower rank
  while(FAV(fs)->flag2&VF2RANKONLY1){
-  h=FAV(fs)->fgh[2]; I hm=AV(h)[0]; efr(hm,m,hm); if(hm<m)break;  // if new rank smaller than old, abort
+  I hm=FAV(fs)->localuse.lI4[0]; efr(hm,m,hm); if(hm<m)break;  // if new rank smaller than old, abort
   m=hm; fs=FAV(fs)->fgh[0]; f1=FAV(fs)->valencefns[0];
  }
  R m<wr?rank1ex(w,fs,m,f1):CALL1(f1,w,fs);
@@ -643,16 +643,16 @@ static DF1(jtrank10){R jtrank1ex0(jt,w,self,jtrank10atom);}  // pass inplaceabil
 
 // For the dyads, rank2ex does a quadruply-nested loop over two rank-pairs, which are the n in u"n (stored in h) and the rank of u itself (fetched from u).
 // THIS SUPPORTS INPLACING: NOTHING HERE MAY DEREFERENCE jt!!
-static DF2(rank2){DECLF;A h=sv->fgh[2];I ar,l=AV(h)[1],r=AV(h)[2],wr;
+static DF2(rank2){DECLF;I ar,l=sv->localuse.lI4[1],r=sv->localuse.lI4[2],wr;
  RZ(a&&w);
  ar=AR(a); efr(l,ar,l);
  wr=AR(w); efr(r,wr,r);
  if(((l-ar)|(r-wr))<0) {I llr=l, lrr=r;  // inner ranks, if any
- // We know that the first call is RANKONLY, and we consume any other RANKONLYs in the chain until we get to something else.  The something else becomes the
- // fs/f1 to rank1ex.  We have to stop if the new ranks will not fit in the two slots allotted to them.
- // This may lead to error until we support multiple fill neighborhoods
+  // We know that the current call is RANKONLY, and we consume any other RANKONLYs in the chain until we get to something else.  The something else becomes the
+  // fs/f1 to rank1ex.  We have to stop if the new ranks will not fit in the two slots allotted to them.
+  // This may lead to error until we support multiple fill neighborhoods
   while(FAV(fs)->flag2&VF2RANKONLY2){
-   h=FAV(fs)->fgh[2]; I hlr=AV(h)[1]; I hrr=AV(h)[2]; efr(hlr,llr,hlr); efr(hrr,lrr,hrr);  // fetch ranks of new verb, resolve negative, clamp against old inner rank
+   I hlr=FAV(fs)->localuse.lI4[1]; I hrr=FAV(fs)->localuse.lI4[2]; efr(hlr,llr,hlr); efr(hrr,lrr,hrr);  // fetch ranks of new verb, resolve negative, clamp against old inner rank
    if((hlr^llr)|(hrr^lrr)){  // if there is a new rank to insert...
     if((l^llr)|(r^lrr))break;  // if lower slot full, exit, we can't add a new one
     llr=hlr; lrr=hrr;  // install new inner ranks, where they are new lows
@@ -669,10 +669,10 @@ static DF2(jtrank20){R jtrank2ex0(jt,a,w,self,jtrank20atom);}  // pass inplaceab
 
 
 // a"w; result is a verb
-F2(jtqq){A h,t;AF f1,f2;D*d;I *hv,n,r[3],vf,flag2=0,*v;
+F2(jtqq){A t;AF f1,f2;D*d;I hv[3],n,r[3],vf,flag2=0,*v;
  RZ(a&&w);
- // The h value in the function will hold the ranks from w.  Allocate it
- GAT0(h,INT,3,1); hv=AV(h);  // hv->rank[0]
+ // The localuse value in the function will hold the ranks from w.
+// obsolete  GAT0(h,INT,3,1); hv=AV(h);  // hv->rank[0]
  if(VERB&AT(w)){
   // verb v.  Extract the ranks into a floating-point list
   GAT0(t,FL,3,1); d=DAV(t);
@@ -688,9 +688,9 @@ F2(jtqq){A h,t;AF f1,f2;D*d;I *hv,n,r[3],vf,flag2=0,*v;
   ASSERT(1>=AR(w),EVRANK);
   ASSERT((UI)(n-1)<3,EVLENGTH);
   RZ(t=vib(w)); v=AV(t);
-  hv[0]=v[2==n]; r[0]=DR(hv[0]);
-  hv[1]=v[3==n]; r[1]=DR(hv[1]);
-  hv[2]=v[n-1];  r[2]=DR(hv[2]);
+  hv[0]=v[2==n]; hv[0]=hv[0]>RMAX?RMAX:hv[0]; hv[0]=hv[0]<-RMAX?-RMAX:hv[0]; r[0]=DR(hv[0]);
+  hv[1]=v[3==n]; hv[1]=hv[1]>RMAX?RMAX:hv[1]; hv[1]=hv[1]<-RMAX?-RMAX:hv[1]; r[1]=DR(hv[1]);
+  hv[2]=v[n-1];  hv[2]=hv[2]>RMAX?RMAX:hv[2]; hv[2]=hv[2]<-RMAX?-RMAX:hv[2]; r[2]=DR(hv[2]);
  }
  // r is the actual verb ranks, never negative.
 
@@ -719,5 +719,7 @@ F2(jtqq){A h,t;AF f1,f2;D*d;I *hv,n,r[3],vf,flag2=0,*v;
  }
 
  // Create the derived verb.  The derived verb (u"n) NEVER supports IRS; it inplaces if the action verb u supports inplacing
- R fdef(flag2,CQQ,VERB, f1,f2, a,w,h, vf, r[0],r[1],r[2]);
+ A z; RZ(z=fdef(flag2,CQQ,VERB, f1,f2, a,w,/* obsolete h*/0, vf, r[0],r[1],r[2]));
+ FAV(z)->localuse.lI4[0]=(I4)hv[0]; FAV(z)->localuse.lI4[1]=(I4)hv[1]; FAV(z)->localuse.lI4[2]=(I4)hv[2];  // pass the possibly-negative ranks in through localuse
+ R z;
 }

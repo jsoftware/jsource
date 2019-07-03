@@ -665,6 +665,7 @@ typedef struct {union { D lD; void *lvp; I lI; I4 lI4[2];} localuse;union {A l2A
 #define VFHKLVLDEC      (((I)1)<<VFHKLVLDECX)
 #define VFHKLVLGTX      1   // (in (compare L.) hooks) set for < and <: to indicate complement of result of levelle needed
 #define VFHKLVLGT       (((I)1)<<VFHKLVLGTX)
+
 // bits 8 and above are available for all functions:
 #define VGERLX          8
 #define VGERL           (((I)1)<<VGERLX)          /* gerund left  argument           */
@@ -719,7 +720,7 @@ typedef struct {union { D lD; void *lvp; I lI; I4 lI4[2];} localuse;union {A l2A
 #define VF2RANKATOP1     ((I)(((I)1)<<VF2RANKATOP1X)) 
 #define VF2RANKATOP2X     12   // set if this verb starts out with an outer rank loop.  " @ & &. and not special-cased
 #define VF2RANKATOP2     ((I)(((I)1)<<VF2RANKATOP2X))
-#define VF2RANKONLY1X     13   // set if this verb is u"r, not special-cased (i. e. function points to rank processing).  The rank may be subsumed into a higher rank before we see arguments
+#define VF2RANKONLY1X     13   // set if this verb is u"r, not special-cased (i. e. function points to rank processing).  The rank may be subsumed into a higher rank before we see arguments.
 #define VF2RANKONLY1     ((I)(((I)1)<<VF2RANKONLY1X)) 
 #define VF2RANKONLY2X     14
 #define VF2RANKONLY2     ((I)(((I)1)<<VF2RANKONLY2X))

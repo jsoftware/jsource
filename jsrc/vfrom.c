@@ -313,13 +313,16 @@ A jtfrombu(J jt,A a,A w,I wf){F1PREFIP;A p,q,z;B b=0;I ar,*as,h,m,r,*u,*v,wcr,wr
  fauxblockINT(pfaux,4,1); fauxINT(p,pfaux,h,1) v=AV(p)+h; u=ws+wf+h; m=1; DO(h, *--v=m; m*=*--u;);  // m is number of items in the block of axes that index into w
  r=wr+1-h;  // rank of result is rank of w, minus h axes that go away and are replaced by 1 axis
  // We will use pdt to create an index to the cell
+ A ind; RZ(ind=pdt(a,p));
  if(r==wr){
-  z=irs2(pdt(a,p),w,VFLAGNONE, RMAX,wcr+1-h,jtifrom);
+// obsolete  z=irs2(ind,w,0, RMAX,wcr+1-h,jtifrom);
+  q=w;
  }else{
   //  reshape w to combine the first h axes of each cell
   RZ(q=virtualip(w,0,r)); AN(q)=AN(w); v=AS(q); MCISH(v,ws,wf); v[wf]=m; MCISH(v+wf+1,ws+wf+h,wcr-h);  /* q is reshape(.,w) */
-  z=irs2(pdt(a,p),q,VFLAGNONE, RMAX,wcr+1-h,jtifrom);
+// obsolete   z=irs2(ind,q,0, RMAX,wcr+1-h,jtifrom);
  }
+ IRS2(ind,q,0, RMAX,wcr+1-h,jtifrom,z);
  RETF(z);
 }    /* (<"1 a){"r w, dense w, integer array a */
 
@@ -446,11 +449,15 @@ static F2(jtafrom){PROLOG(0073);A c,ind,p=0,q,*v,y=w;B bb=1;I acr,ar,i=0,j,m,n,p
  }
  // take axes 2 at a time, properly handling omitted axes.  First time through p is set
  for(;i<n;i+=2){
-  j=1+i; if(!p)p=afi(s[i],v[i]); q=j<n?afi(s[j],v[j]):ace; if(!(p&&q))break;
+  j=1+i; if(!p)p=afi(s[i],v[i]); q=j<n?afi(s[j],v[j]):ace; if(!(p&&q))break;  // pq are 0 if error
   if(p!=ace&&q!=ace){y=afrom2(p,q,y,wcr-i);}
-  else if(p!=ace)   {y=irs2(p,y,0L,AR(p),wcr-i,jtifrom);}
-  else if(q!=ace)   {y=irs2(q,y,0L,AR(q),wcr-j,jtifrom);}
-  p=0;
+// obsolete   else if(p!=ace)   {y=irs2(p,y,0L,AR(p),wcr-i,jtifrom);}
+// obsolete   else if(q!=ace)   {y=irs2(q,y,0L,AR(q),wcr-j,jtifrom);}
+  else{
+   if(q==ace){q=p; j=i;}
+   if(q!=ace)y=IRS2(q,y,0L,AR(q),wcr-j,jtifrom,w);
+  }
+  RZ(y); p=0;
  }
  // We have to make sure that a virtual NJA block does not become the result, because x,y and x u}y allow modifying those even when the usecount is 1.  Realize in that case
  RE(y); if(AFLAG(y)&AFNJA)RZ(y=ca(y));   EPILOG(y);   // If the result is NJA, it must be virtual.

@@ -14,8 +14,8 @@ static REPF(jtrepzdx){A p,q,x;P*wp;
  if(SPARSE&AT(w)){wp=PAV(w); x=SPA(wp,e);}
  else x=jt->fill&&AN(jt->fill)?jt->fill:filler(w);
  RZ(p=repeat(ravel(rect(a)),ravel(stitch(IX(wcr?*(wf+AS(w)):1),num[-1]))));
- RZ(q=irs2(w,x,0L,wcr,0L,jtover));
- R irs2(p,q,0L,1L,wcr+!wcr,jtfrom);
+ RZ(IRS2(w,x,0L,wcr,0L,jtover,q));
+ R IRS2(p,q,0L,1L,wcr+!wcr,jtfrom,x);
 }    /* (dense complex) # (dense or sparse) */
 
 static REPF(jtrepzsx){A q,x,y;I c,d,j,k=-1,m,p=0,*qv,*xv,*yv;P*ap;
@@ -220,7 +220,7 @@ static REPF(jtrepidx){A y;I j,m,p=0,*v,*x;
  DO(m, ASSERT(0<=x[i],EVDOMAIN); p+=x[i]; ASSERT(0<=p,EVLIMIT););
  GATV0(y,INT,p,1); v=AV(y); 
  DO(m, j=i; DO(x[j], *v++=j;););
- R irs2(y,w,0L,1L,wcr,jtfrom);
+ A z; R IRS2(y,w,0L,1L,wcr,jtfrom,z);
 }    /* (dense  integer) #"r (dense or sparse) */
 
 static REPF(jtrepisx){A e,q,x,y;I c,j,m,p=0,*qv,*xv,*yv;P*ap;
@@ -242,10 +242,10 @@ static REPF(jtrepisx){A e,q,x,y;I c,j,m,p=0,*qv,*xv,*yv;P*ap;
 
 static REPF(jtrep1d){A z;C*wv,*zv;I c,k,m,n,p=0,q,t,*ws,zk,zn;
  RZ(a&&w);
- t=AT(a); m=AN(a); ws=AS(w); n=wcr?ws[wf]:1;  // n=length of item axis in input.  If aton, is repeated to length of a
+ t=AT(a); m=AN(a); ws=AS(w); n=wcr?ws[wf]:1;  // n=length of item axis in input.  If atom, is repeated to length of a
  if(t&CMPX){
   if(wcr)R repzdx(from(apv(n,0L,0L),a),w,                wf,wcr);
-  else   R repzdx(a,irs2(apv(m,0L,0L),w,0L,1L,0L,jtfrom),wf,1L ); 
+  else{A za; RZ(za=apv(m,0L,0L)); R repzdx(a,IRS2(za,w,0L,1L,0L,jtfrom,z),wf,1L );}
  }
  if(t&B01){p=bsum(m,BAV(a)); // bsum in case a is big.  Atomic boolean was handled earlier
  }else{I*x; 

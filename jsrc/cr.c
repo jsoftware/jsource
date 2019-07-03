@@ -601,7 +601,27 @@ static DF1(rank1in){RZ(w);F1PREFIP;DECLF;  // this version when requested rank i
  jt->ranks=(RANK2T)~0;  // reset rank to infinite
  RETF(z);
 }
-static DF2(rank2i){DECLF;A h=sv->fgh[2];I*v=AV(h); R irs2(a,w,fs,v[1],v[2],f2);}
+static DF2(rank2i){RZ(w);F2PREFIP;DECLF;  // this version when requested rank is positive
+ I ar=AV(sv->fgh[2])[1]; ar=ar>=AR(a)?(RANKT)~0:ar; I af=AR(a)-ar;   // left rank
+ I wr=AV(sv->fgh[2])[2]; wr=wr>=AR(w)?(RANKT)~0:wr; I wf=AR(w)-wr;   // right rank
+ af=wf<af?wf:af; af=af<0?0:af;
+ ASSERTAGREE(AS(a),AS(w),af)  // verify agreement before we modify jt->ranks
+ jt->ranks=(RANK2T)((ar<<RANKTX)+wr);  // install as parm to the function.  Set to ~0 if possible
+ A z=CALL2IP(f2,a,w,fs);   // save ranks, call setup verb, pop rank stack
+ jt->ranks=(RANK2T)~0;  // reset rank to infinite
+ RETF(z);
+}
+static DF2(rank2in){RZ(w);F2PREFIP;DECLF;  // this version when a requested rank is negative
+ I wr=AR(w); I r=AV(sv->fgh[2])[2]; r=r>=wr?(RANKT)~0:r; wr+=r; wr=wr<0?0:wr; wr=r>=0?r:wr; I wf=AR(w)-wr;   // right rank
+ I ar=AR(a); r=AV(sv->fgh[2])[1];   r=r>=ar?(RANKT)~0:r; ar+=r; ar=ar<0?0:ar; ar=r>=0?r:ar; I af=AR(a)-ar;   // left rank
+ af=wf<af?wf:af; af=af<0?0:af;
+ ASSERTAGREE(AS(a),AS(w),af)  // verify agreement before we modify jt->ranks
+ jt->ranks=(RANK2T)((ar<<RANKTX)+wr);  // install as parm to the function.  Set to ~0 if possible
+ A z=CALL2IP(f2,a,w,fs);   // save ranks, call setup verb, pop rank stack
+ jt->ranks=(RANK2T)~0;  // reset rank to infinite
+ RETF(z);
+}
+// obsolete static DF2(rank2i){DECLF;A h=sv->fgh[2];I*v=AV(h); R irs2(a,w,fs,v[1],v[2],f2);}
 
 // u"n y when u does not support irs. We loop over cells, and as we do there is no reason to enable inplacing
 // THIS SUPPORTS INPLACING: NOTHING HERE MAY DEREFERENCE jt!!
@@ -686,8 +706,8 @@ F2(jtqq){A h,t;AF f1,f2;D*d;I *hv,n,r[3],vf,flag2=0,*v;
   // the action routine for the verb.  Otherwise, choose the appropriate rank routine, depending on whether the verb
   // supports IRS.  The IRS verbs may profitably support inplacing, so we enable it for them.
   vf=av->flag&(VASGSAFE|VJTFLGOK1|VJTFLGOK2);  // inherit ASGSAFE from u, and inplacing
-  if(av->flag&VISATOMIC1){f1=av->valencefns[0];}else{if(av->flag&VIRS1){f1=hv[2]>=0?rank1i:rank1in;}else{f1=r[0]?rank1:jtrank10; flag2|=VF2RANKONLY1;}}
-  if(av->flag&VIRS2){f2=rank2i;}else{f2=(r[1]|r[2])?rank2:jtrank20;flag2|=VF2RANKONLY2;}
+  if(av->flag&VISATOMIC1){f1=av->valencefns[0];}else{if(av->flag&VIRS1){f1=hv[0]>=0?rank1i:rank1in;}else{f1=r[0]?rank1:jtrank10; flag2|=VF2RANKONLY1;}}
+  if(av->flag&VIRS2){f2=(hv[1]|hv[2])>=0?rank2i:rank2in;}else{f2=(r[1]|r[2])?rank2:jtrank20;flag2|=VF2RANKONLY2;}
   // Test for special cases
   if(av->valencefns[1]==jtfslashatg && r[1]==1 && r[2]==1){  // f@:g"1 1 where f and g are known atomic
    I isfork=av->id==CFORK;

@@ -390,7 +390,7 @@ F2(jtexec2){A z;B b,ii,j,p,q,x;C d,*v;I at,c,i,k,m,n,r,*s;
  // use this to set the shape of the result area
  if(!r||*(AS(w)+r-1)){    // skip the count if y is atom, or the last axis of y has dimension 0.   Nothing to count.
   // Calculate w ,"1 0 ' '   to end each (or only) line with delimiter
-  RZ(w=irs2(w,chr[' '],0L,1L,0L,jtover));  // New w will be created
+  {A t; RZ(w=IRS2(w,chr[' '],0L,1L,0L,jtover,t));}  // New w will be created
   v=CAV(w); r=AR(w); s=AS(w); n=s[r-1]; m=prod(r-1,s);  // v->data, m = #lists, n = length of each list
   for(i=0;i<m;++i){I j;
    // b is set when the current character is a space/TAB; p when the previous character was a space/TAB

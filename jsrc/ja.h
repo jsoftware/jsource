@@ -845,7 +845,9 @@
 #endif
 #define ranec(x0,x1,x2,x3,x4,x5)    jtranec(jt,(x0),(x1),(x2),(x3),(x4),(x5))
 #define rank1ex(x0,x1,x2,x3)        jtrank1ex(jt,(x0),(x1),(x2),(x3))
+#define rank1ex0(x0,x1,x2)          jtrank1ex0(jt,(x0),(x1),(x2))
 #define rank2ex(x0,x1,x2,x3,x4,x5,x6,x7)  jtrank2ex(jt,(x0),(x1),(x2),(x3),(x4),(x5),(x6),(x7))
+#define rank2ex0(x0,x1,x2,x3)       jtrank2ex0(jt,(x0),(x1),(x2),(x3))
 #define rankingb(x0,x1,x2,x3,x4,x5) jtrankingb(jt,(x0),(x1),(x2),(x3),(x4),(x5))
 // ras does rifv followed by ra
 #define ras(x)                      ((x) = jtras(jt,x))

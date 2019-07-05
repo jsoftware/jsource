@@ -194,7 +194,7 @@ static A jtreshapesp(J jt,A a,A w,I wf,I wcr){A a1,e,t,x,y,z;B az,*b,wz;I an,*av
  DO(wf, if(b[i])*v++=i;); if(b[wf])DO(d, *v++=wf+i;); j=wf; DO(wcr, if(b[j])*v++=d+j; ++j;);
  SPB(zp,a,t);
  if(b[wf]){I n,q,r,*v0;   /* sparse */
-  if(wf!=*AV(a1))R rank2ex(a,w,0L,1L,wcr,1L,wcr,jtreshape);
+  if(wf!=*AV(a1))R rank2ex(a,w,0L,MIN(AR(a),1),wcr,MIN(AR(a),1),wcr,jtreshape);
   RE(m=prod(1+d,av)); n=IC(y); if(ws[wf]){q=n*(m/ws[wf]); r=m%ws[wf];} else {q=0; r=0;}
   v=AV(y); DO(n, if(r<=*v)break; ++q; v+=c;);
   GATV0(t,INT,q,1); u=AV(t); v=v0=AV(y);
@@ -214,7 +214,7 @@ F2(jtreshape){A z;B filling;C*wv,*zv;I acr,ar,c,k,m,n,p,q,r,*s,t,* RESTRICT u,wc
  RZ(a&&w);
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; ws=AS(w); RESETRANK;
- if((I )(1<acr)|(I )(acr<ar))R rank2ex(a,w,0L,1,RMAX,acr,wcr,jtreshape);
+ if((I )(1<acr)|(I )(acr<ar))R rank2ex(a,w,0L,MIN(acr,1),wcr,acr,wcr,jtreshape);
  // now a is an atom or a list.  w can have any rank
  RZ(a=vip(a)); r=AN(a); u=AV(a);   // r=length of a   u->values of a
  if(SPARSE&AT(w)){RETF(reshapesp(a,w,wf,wcr));}
@@ -250,7 +250,7 @@ F2(jtreitem){A y,z;I acr,an,ar,r,*v,wcr,wr;
  RZ(a&&w);
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; r=wcr-1; RESETRANK;
- if((I )(1<acr)|(I )(acr<ar))R rank2ex(a,w,0L,1,RMAX,acr,wcr,jtreitem);  // We handle only single operations here, where a has rank<2
+ if((I )(1<acr)|(I )(acr<ar))R rank2ex(a,w,0L,MIN(acr,1),wcr,acr,wcr,jtreitem);  // We handle only single operations here, where a has rank<2
  // acr<=ar; ar<=acr; therefore ar==acr here
  fauxblockINT(yfaux,4,1);
  if(1>=wcr)y=a;  // y is atom or list: $ is the same as ($,)

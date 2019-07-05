@@ -412,7 +412,6 @@ static DF2(jtinfixprefix2){F2PREFIP;DECLF;PROLOG(00202);A *hv;
  I remlen;  // number of items of w not processed yet (at start of loop, does not include the first infix).  When this goes to 0, we're done
  I stride;  // number of items to advance virtual-arg pointers by between cells
  I strideb;  // stride*number of bytes per cell (not used for prefix)
-
  I wi=IC(w);  // wi=#items of w
  PROD1(wc,AR(w)-1,AS(w)+1);  // #atoms in cell of a.  Overflow possible only if wi==0, which will go to fill
  // set up for prefix/infix.  Calculate # result slots
@@ -443,7 +442,6 @@ static DF2(jtinfixprefix2){F2PREFIP;DECLF;PROLOG(00202);A *hv;
   remlen=zi;  // count # prefixes
   state |= STATEISPREFIX;
  }
-
  A zz=0;  // place where we will build up the homogeneous result cells
  if(zi>0){A z;
   // Normal case where there are cells.

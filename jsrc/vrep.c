@@ -328,7 +328,7 @@ F2(jtrepeat){A z;I acr,ar,wcr,wf,wr;
    if(!(AT(w)&SPARSE)){GA(z,AT(w),0,AR(w),0); MCISH(AS(z),AS(w),AR(w)) AS(z)[wf]=0; RETF(z);}  // 0 # y, return empty
   }
  }
- if(1<acr||acr<ar)R rank2ex(a,w,0L,1L,RMAX,acr,wcr,jtrepeat);  // loop if multiple cells of a
+ if(((1-acr)|(acr-ar))<0)R rank2ex(a,w,0L,MIN(1,acr),wcr,acr,wcr,jtrepeat);  // loop if multiple cells of a
  ASSERT(!acr||!wcr||(AS(a)[0]==AS(w)[wf]),EVLENGTH);
  if(!acr||!wcr){RZ(z=!((AT(a)|AT(w))&SPARSE)?rep1d(a,w,wf,wcr):rep1s(a,w,wf,wcr)); RETF(z);}   // a is atom, or w is an atom and a has rank <= 1
  if(AT(a)&B01 +SB01 ){RZ(z=AT(a)&DENSE?repbdx(a,w,wf,wcr):repbsx(a,w,wf,wcr)); RETF(z);}

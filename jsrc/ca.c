@@ -70,7 +70,7 @@ static DF2(jtmodpow2){A h;B b,c;I at,m,n,wt,x,z;
  R sc(b?z-m:z);
 }    /* a m&|@^ w ; m guaranteed to be INT or XNUM */
 
-static DF1(jtmodpow1){A g=FAV(self)->fgh[1]; R rank2ex(FAV(g)->fgh[0],w,self,0L,0L,0L,0L,jtmodpow2);}  // m must be an atom; I think n can have shape.  But we treat w as atomic
+static DF1(jtmodpow1){A g=FAV(self)->fgh[1]; R rank2ex0(FAV(g)->fgh[0],w,self,jtmodpow2);}  // m must be an atom; I think n can have shape.  But we treat w as atomic
      /* m&|@(n&^) w ; m guaranteed to be INT or XNUM */
 
 // u@v and u@:v

@@ -446,7 +446,7 @@ F2(jtintdiv){A z;B b,flr;I an,ar,*as,*av,c,d,j,k,m,n,p,p1,r,*s,wn,wr,*ws,*wv,*zv
 }    /* <.@% or >.@% on integers */
 
 
-static F2(jtweight){RZ(a&&w); R df1(behead(over(AR(w)?w:reshape(a,w),num[1])),bsdot(slash(ds(CSTAR))));}
+static F2(jtweight){RZ(a&&w); R df1(behead(over(AR(w)?w:reshape(a,w),num[1])),bsdot(slash(ds(CSTAR))));}  // */\. }. (({:$a)$w),1
 
 F1(jtbase1){A z;B*v;I c,d,m,n,p,r,*s,t,*x;
  RZ(w);
@@ -467,7 +467,7 @@ F2(jtbase2){I ar,*as,at,c,t,wr,*ws,wt;
  ASSERT(!((at|wt)&SPARSE),EVNONCE); t=maxtyped(at,wt);
  if(!(t&at))RZ(a=cvt(t,a));
  if(!(t&wt))RZ(w=cvt(t,w));
- R 1>=ar?pdt(w,weight(sc(c),a)):rank2ex(w,rank2ex(sc(c),a,0L,0L,1L,0L,1L,jtweight),0L,1L,1L,1L,1L,jtpdt);
+ R 1>=ar?pdt(w,weight(sc(c),a)):rank2ex(w,rank2ex(sc(c),a,0L,0L,MIN(ar,1),0L,MIN(ar,1),jtweight),0L,MIN(wr,1),1L,MIN(wr,1),1L,jtpdt);
 }
 
 // #: y

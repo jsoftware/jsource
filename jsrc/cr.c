@@ -130,24 +130,26 @@ A jtrank1ex0(J jt,AD * RESTRICT w,A fs,AF f1){F1PREFIP;PROLOG(0041);A z,virtw;
  if(mn){  // if no cells, go handle fill before we advance over flags
   // Here there are cells to execute on.  Collect ATOP flags
 
-  // RANKONLY verbs contain an invalid f1 pointer (it was used to get to a call to here).  We have to step over the RANKONLY to get to what we can execute
-  while(FAV(fs)->flag2&VF2RANKONLY1){fs=FAV(fs)->fgh[0]; f1=FAV(fs)->valencefns[0];}
+  if(fs){   // calls not from " may not have fs
+   // RANKONLY verbs contain an invalid f1 pointer (it was used to get to a call to here).  We have to step over the RANKONLY to get to what we can execute
+   while(FAV(fs)->flag2&VF2RANKONLY1){fs=FAV(fs)->fgh[0]; f1=FAV(fs)->valencefns[0];}
 
-  while(1){  // loop collecting ATOPs
-   I fstate=(FAV(fs)->flag2&(VF2BOXATOP1|VF2ATOPOPEN1))>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // extract <@ and @> status bits from f
-   if(fstate&state||!fstate)break;  // If this f overlaps with old, or it's not just a flag node, we have to stop
-   if(fstate&ZZFLAGATOPOPEN1){
-    // @> &> &.>
-    //  Advance to the f of f@>
-    fs=FAV(fs)->fgh[0]; f1=FAV(fs)->valencefns[0];
-   }else{
-    // <@: <@ <& <&:
-    // Because the outermost rank is 0, <@f by itself is OK; but later, as in (<@f)@>, it is not.  <@:f is.  So check for infinite rank
-    if(state&ZZFLAGATOPOPEN1 && FAV(fs)->mr<RMAX)break;  // not first, and not infinite rank: ignore
-    // Advance fs to the g of <@g
-    fs=FAV(fs)->fgh[1+((FAV(fs)->flag2>>VF2ISCCAPX)&1)]; f1=FAV(fs)->valencefns[0];
+   while(1){  // loop collecting ATOPs
+    I fstate=(FAV(fs)->flag2&(VF2BOXATOP1|VF2ATOPOPEN1))>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // extract <@ and @> status bits from f
+    if(fstate&state||!fstate)break;  // If this f overlaps with old, or it's not just a flag node, we have to stop
+    if(fstate&ZZFLAGATOPOPEN1){
+     // @> &> &.>
+     //  Advance to the f of f@>
+     fs=FAV(fs)->fgh[0]; f1=FAV(fs)->valencefns[0];
+    }else{
+     // <@: <@ <& <&:
+     // Because the outermost rank is 0, <@f by itself is OK; but later, as in (<@f)@>, it is not.  <@:f is.  So check for infinite rank
+     if(state&ZZFLAGATOPOPEN1 && FAV(fs)->mr<RMAX)break;  // not first, and not infinite rank: ignore
+     // Advance fs to the g of <@g
+     fs=FAV(fs)->fgh[1+((FAV(fs)->flag2>>VF2ISCCAPX)&1)]; f1=FAV(fs)->valencefns[0];
+    }
+    state|=fstate;  // We accepted the new f, so take its flags
    }
-   state|=fstate;  // We accepted the new f, so take its flags
   }
 
   A *wav;   // virtwk is offset of virtual block/pointer to next box
@@ -192,7 +194,7 @@ A jtrank1ex0(J jt,AD * RESTRICT w,A fs,AF f1){F1PREFIP;PROLOG(0041);A z,virtw;
   // However, if the error is a non-computational error, like out of memory, it
   // would be wrong to ignore it, because the verb might execute erroneously with no
   // indication that anything unusual happened.  So fail then
-  if(!(FAV(fs)->flag2&VF2BOXATOP1)){
+  if(!(fs&&FAV(fs)->flag2&VF2BOXATOP1)){
    d=jt->uflags.us.cx.cx_c.db; jt->uflags.us.cx.cx_c.db=0; z=CALL1(f1,virtw,fs); jt->uflags.us.cx.cx_c.db=d;   // normal execution on fill-cell
    if(jt->jerr){if(EMSK(jt->jerr)&EXIGENTERROR)RZ(z); z=num[0]; RESETERR;}  // use 0 as result if error encountered
   }else{
@@ -209,19 +211,20 @@ A jtrank1ex0(J jt,AD * RESTRICT w,A fs,AF f1){F1PREFIP;PROLOG(0041);A z,virtw;
 }
 
 A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,I lr,I rr,I lcr,I rcr,AF f2){F2PREFIP;PROLOG(0042);A virta,virtw,z;
-   I acn,af,ak,ar,*as,at,mn,n=1,wcn,wf,wk,wr,*ws,wt;
+   I acn,af,ak,at,mn,n=1,wcn,wf,wk,wt;
  I outerframect, outerrptct, innerframect, innerrptct, aof, wof, sof, lof, sif, lif, *lis, *los;
  RZ(a&&w);
  at=AT(a); wt=AT(w);
  if(at&SPARSE||wt&SPARSE)R sprank2(a,w,fs,lcr,rcr,f2);  // this needs to be updated to handle multiple ranks
 // lr,rr are the ranks of the underlying verb.  lcr,rcr are the cell-ranks given by u"lcr rcr.
-// If " was not used, lcr,rcr=lr,rr
+// If " was not used, lcr,rcr=lr,rr usually
+// The ranks of the arguments have already been applied, so that we know that lr<=lcr<=AR(a), & similarly for w
 // When processing v"l r the shapes look like:
 // a frame   x x O  | x x x
 //                   <---l-->
 // w frame   x x    | x x x I
 //                   <---r-->
-// the outer frame is to the left of the |, inner frame to the right.
+// the outer frame (from ?cr) is to the left of the |, inner frame (from ?r) to the right.
 // the rank of v is not included; the frames shown above pick up after that.  There are two
 // possible repetitions required: if there is mismatched frame BELOW the rank (l r), as shown by letter I above,
 // the individual cells of the shorter-frame argument must be repeated.  innerrptct gives the
@@ -231,12 +234,17 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,I lr,I rr,I lcr,I rcr,AF f
 // being repeated; outercellct gives the number of (below lr) cells that are processed before an outer repetition.
 // The two repeats can be for either argument independently, depending on which frame is shorter.
 
+ af=AR(a)-lr; wf=AR(w)-rr;   // frames wrt innermost cell
+ if(!(af|wf)){R CALL2IP(f2,a,w,fs);}  // if there's only one cell and no frame, run on it, that's the result.
+ // multiple cells.  Loop through them.
+
  // ?r=rank, ?s->shape, ?cr=effective rank, ?f=#total frame (inner+outer), for each argument
  // if inner rank is > outer rank, set it equal to outer rank
 #define ZZFLAGWORD state
  I ZZFLAGWORD=0;  // init flags, including zz flags
- ar=AR(a); as=AS(a); efr(lcr,ar,lcr); efr(lr,lcr,lr);
- wr=AR(w); ws=AS(w); efr(rcr,wr,rcr); efr(rr,rcr,rr);
+/* obsolete if(lr>lcr||rr>rcr||(UI)lcr>AR(a)||(UI)rcr>AR(w))SEGFAULT; */
+ /* obsolete as=AS(a); ar=AR(a); efr(lcr,ar,lcr); efr(lr,lcr,lr); */
+/* obsolete ws=AS(w);  wr=AR(w); efr(rcr,wr,rcr); efr(rr,rcr,rr); */
 
  // RANKONLY verbs were handled in the caller to this routine, but fs might be RANKATOP.  In that case we can include its rank in the loop here, which will save loop setups
  if(fs&&(I)(((FAV(fs)->flag2&(VF2RANKATOP2|VF2BOXATOP2))-1)|(-((rr^rcr)|(lr^lcr))))>=0){  // prospective new ranks to include
@@ -246,20 +254,18 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,I lr,I rr,I lcr,I rcr,AF f
   // if we are using the BOXATOP from f, we can also use the raze flags.  Set these only if BOXATOP to prevent us from incorrectly
   // marking the result block as having uniform items if we didn't go through the assembly loop here
   state |= (-state) & (I)jtinplace & (JTWILLBEOPENED|JTCOUNTITEMS);
+  af=AR(a)-lr; wf=AR(w)-rr;   // frames wrt new innermost cell
  }
 
- af=ar-lr; wf=wr-rr;   // frames wrt innermost cell
- if(!(af|wf)){R CALL2IP(f2,a,w,fs);}  // if there's only one cell and no frame, run on it, that's the result.
- // multiple cells.  Loop through them.
 
  // Get the length of the outer frames, which are needed only if either "-rank is greater than the verb rank,
  // either argument has frame with respect to the "-ranks, and those frames are not the same length
- aof=ar-lcr; wof=wr-rcr;   // ?of = outer frame
+ aof=AR(a)-lcr; wof=AR(w)-rcr;   // ?of = outer frame
  if(0<=(((lr-lcr)|(rr-rcr))&(-(aof^wof)))){los=0; lof=aof=wof=0; outerframect=outerrptct=1;  // no outer frame unless it's needed
  }else{
   // outerframect is the number of cells in the shorter frame; outerrptct is the number of cells in the residual frame
-  if(aof>=wof){wof=wof<0?0:wof; lof=aof; sof=wof; los=as;}else{aof=aof<0?0:aof;  lof=wof; sof=aof; los=ws; state|=STATEOUTERREPEATA;}  // clamp smaller frame at min=0
-  ASSERTAGREE(as,ws,sof)  // prefixes must agree
+  if(aof>=wof){wof=wof<0?0:wof; lof=aof; sof=wof; los=AS(a);}else{aof=aof<0?0:aof;  lof=wof; sof=aof; los=AS(w); state|=STATEOUTERREPEATA;}  // clamp smaller frame at min=0
+  ASSERTAGREE(AS(a),AS(w),sof)  // prefixes must agree
   RE(outerframect=prod(sof,los)); RE(outerrptct=prod(lof-sof,los+sof));  // get # cells in frame, and in unmatched frame
  }
 
@@ -267,17 +273,17 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,I lr,I rr,I lcr,I rcr,AF f
  // set lif=length of longer inner frame, sif=length of shorter inner frame, lis->longer inner shape
  if((af-aof)==(wf-wof)){
   // inner frames are equal.  No repeats
-  lif=wf-wof; sif=af-aof; lis=ws+wof;
+  lif=wf-wof; sif=af-aof; lis=AS(w)+wof;
  } else if((af-aof)<(wf-wof)){
   // w has the longer inner frame.  Repeat cells of a
-  lif=wf-wof; sif=af-aof; lis=ws+wof;
+  lif=wf-wof; sif=af-aof; lis=AS(w)+wof;
   state |= STATEINNERREPEATA;
  } else{
   // a has the longer inner frame.  Repeat cells of w
-  lif=af-aof; sif=wf-wof; lis=as+aof;
+  lif=af-aof; sif=wf-wof; lis=AS(a)+aof;
   state |= STATEINNERREPEATW;
  }
- ASSERTAGREE(as+aof,ws+wof,sif)  // error if frames are not same as prefix
+ ASSERTAGREE(AS(a)+aof,AS(w)+wof,sif)  // error if frames are not same as prefix
  RE(innerrptct=prod(lif-sif,lis+sif));  // number of repetitions per matched-frame cell
  RE(innerframect=prod(sif,lis));   // number of cells in matched frame
 
@@ -288,7 +294,7 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,I lr,I rr,I lcr,I rcr,AF f
 
  // Get size of each argument cell in atoms.  If this overflows, there must be a 0 in the frame, & we will have
  // gone through the fill path (& caught the overflow)
- PROD(acn,lr,as+af); PROD(wcn,rr,ws+wf);
+ PROD(acn,lr,AS(a)+af); PROD(wcn,rr,AS(w)+wf);
  // Allocate workarea y? to hold one cell of ?, with uu,vv pointing to the data area y?
  // ?cn=number of atoms in a cell, ?k=#bytes in a cell
  ak=acn<<bplg(at);    // reshape below will catch any overflow
@@ -312,13 +318,13 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,I lr,I rr,I lcr,I rcr,AF f
  fauxblock(virtwfaux); fauxblock(virtafaux); 
  if(mn|an){
   jtinplace = (J)(intptr_t)((I)jtinplace & ((((at&TYPEVIPOK)!=0)&(AC(a)>>(BW-1)))*JTINPLACEA+~JTINPLACEA));  // turn off inplacing unless DIRECT and a is inplaceable.
-  fauxvirtual(virta,virtafaux,a,lr,ACUC1|ACINPLACE) MCISH(AS(virta),as+af,lr); AN(virta)=acn;
- }else{RZ(virta=reshape(vec(INT,lr,as+af),filler(a)));}
+  fauxvirtual(virta,virtafaux,a,lr,ACUC1|ACINPLACE) MCISH(AS(virta),AS(a)+af,lr); AN(virta)=acn;
+ }else{RZ(virta=reshape(vec(INT,lr,AS(a)+af),filler(a)));}
 
  if(mn|wn){  // repeat for w
   jtinplace = (J)(intptr_t)((I)jtinplace & ((((wt&TYPEVIPOK)!=0)&(AC(w)>>(BW-1)))*JTINPLACEW+~JTINPLACEW));  // turn off inplacing unless DIRECT and w is inplaceable.
-  fauxvirtual(virtw,virtwfaux,w,rr,ACUC1|ACINPLACE) MCISH(AS(virtw),ws+wf,rr); AN(virtw)=wcn;
- }else{RZ(virtw=reshape(vec(INT,rr,ws+wf),filler(w)));}
+  fauxvirtual(virtw,virtwfaux,w,rr,ACUC1|ACINPLACE) MCISH(AS(virtw),AS(w)+wf,rr); AN(virtw)=wcn;
+ }else{RZ(virtw=reshape(vec(INT,rr,AS(w)+wf),filler(w)));}
 
  A zz=0;  // place where we will build up the homogeneous result cells
  if(mn){I i0, i1, i2, i3;
@@ -430,24 +436,26 @@ A jtrank2ex0(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,AF f2){F2PREFIP;PROLOG(00
   // we would have to keep track of whether we passed an ATOPOPEN.  But then we could avoid executing the fill cell any time the is a BOXATOP, even down the stack.  As it is, the only time we
   // elide the execution is when BOXATOP occurs at the first node, i.e. for an each that is not boxed
 
-  // RANKONLY verbs contain an invalid f1 pointer (it was used to get to a call to here).  We have to step over the RANKONLY to get to what we can execute
-  while(FAV(fs)->flag2&VF2RANKONLY2){fs=FAV(fs)->fgh[0]; f2=FAV(fs)->valencefns[1];}
+  if(fs){  // calls not from " will never have special processing
+   // RANKONLY verbs contain an invalid f1 pointer (it was used to get to a call to here).  We have to step over the RANKONLY to get to what we can execute
+   while(FAV(fs)->flag2&VF2RANKONLY2){fs=FAV(fs)->fgh[0]; f2=FAV(fs)->valencefns[1];}
 
-  while(1){  // loop collecting ATOPs
-   I fstate=(FAV(fs)->flag2&(VF2BOXATOP2|VF2ATOPOPEN2A|VF2ATOPOPEN2W))>>(VF2BOXATOP2X-ZZFLAGBOXATOPX);  // extract <@ and @> status bits from f
-   if(fstate&state||!fstate)break;  // If this f overlaps with old, or it's not a flag-only node, we have to stop
-   if(fstate&ZZFLAGATOPOPEN2W){
-    // @> &> &.>
-    //  Advance to the f of f@>
-    fs=FAV(fs)->fgh[0]; f2=FAV(fs)->valencefns[1];
-   }else{
-    // <@: <@ <& <&:
-    // Because the outermost rank is 0, <@f by itself is OK; but later, as in (<@f)@>, it is not.  <@:f is.  So check for infinite rank
-    if(state&ZZFLAGATOPOPEN2W && FAV(fs)->mr<RMAX)break;  // not first, and not infinite rank: ignore
-    // Advance fs to the g of <@g
-    fs=FAV(fs)->fgh[1+((FAV(fs)->flag2>>VF2ISCCAPX)&1)]; f2=FAV(fs)->valencefns[1];
+   while(1){  // loop collecting ATOPs
+    I fstate=(FAV(fs)->flag2&(VF2BOXATOP2|VF2ATOPOPEN2A|VF2ATOPOPEN2W))>>(VF2BOXATOP2X-ZZFLAGBOXATOPX);  // extract <@ and @> status bits from f
+    if(fstate&state||!fstate)break;  // If this f overlaps with old, or it's not a flag-only node, we have to stop
+    if(fstate&ZZFLAGATOPOPEN2W){
+     // @> &> &.>
+     //  Advance to the f of f@>
+     fs=FAV(fs)->fgh[0]; f2=FAV(fs)->valencefns[1];
+    }else{
+     // <@: <@ <& <&:
+     // Because the outermost rank is 0, <@f by itself is OK; but later, as in (<@f)@>, it is not.  <@:f is.  So check for infinite rank
+     if(state&ZZFLAGATOPOPEN2W && FAV(fs)->mr<RMAX)break;  // not first, and not infinite rank: ignore
+     // Advance fs to the g of <@g
+     fs=FAV(fs)->fgh[1+((FAV(fs)->flag2>>VF2ISCCAPX)&1)]; f2=FAV(fs)->valencefns[1];
+    }
+    state|=fstate;  // We accepted the new f, so take its flags
    }
-   state|=fstate;  // We accepted the new f, so take its flags
   }
 
   // allocate the virtual blocks that we will use for the arguments, and fill in the shape of a cell of each
@@ -509,7 +517,7 @@ A jtrank2ex0(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,AF f2){F2PREFIP;PROLOG(00
   // would be wrong to ignore it, because the verb might execute erroneously with no
   // indication that anything unusual happened.  So fail then
 
-  if(!(FAV(fs)->flag2&VF2BOXATOP2)){
+  if(!(fs&&FAV(fs)->flag2&VF2BOXATOP2)){
    if(!AN(a)){RZ(virta=filler(a));}else{virta = virtual(a,0,0); AN(virta)=1;}  // if there are cells, use first atom; else fill atom
    if(!AN(w)){RZ(virtw=filler(w));}else{virtw = virtual(w,0,0); AN(virtw)=1;}
    d=jt->uflags.us.cx.cx_c.db; jt->uflags.us.cx.cx_c.db=0; z=CALL2(f2,virta,virtw,fs); jt->uflags.us.cx.cx_c.db=d;   // normal execution on fill-cell
@@ -584,7 +592,7 @@ static DF1(cons1){V*sv=FAV(self);
 static DF2(cons2){V*sv=FAV(self);
  RZ(a&&w);
  I lr2,rr2; efr(lr2,AR(a),(I)sv->localuse.lI4[1]); efr(rr2,AR(w),(I)sv->localuse.lI4[2]);
- R rank2ex(a,w,self,AR(a),AR(w),lr2,rr2,cons2a);
+ R rank2ex(a,w,self,lr2,rr2,lr2,rr2,cons2a);
 }
 
 // Handle u"n y where u supports irs.  Since the verb may support inplacing even with rank (,"n for example), pass that through.
@@ -643,6 +651,13 @@ static DF1(jtrank10){R jtrank1ex0(jt,w,self,jtrank10atom);}  // pass inplaceabil
 
 // For the dyads, rank2ex does a quadruply-nested loop over two rank-pairs, which are the n in u"n (stored in h) and the rank of u itself (fetched from u).
 // THIS SUPPORTS INPLACING: NOTHING HERE MAY DEREFERENCE jt!!
+// This version for use when the ranks are nonnegative and u is not RANKONLY
+static DF2(rank2q){
+ RZ(a&&w);
+ I ar=AR(a); ar=ar>FAV(self)->localuse.lI4[1]?FAV(self)->localuse.lI4[1]:ar; I wr=AR(w); wr=wr>FAV(self)->localuse.lI4[2]?FAV(self)->localuse.lI4[2]:wr; A fs=FAV(self)->fgh[0];
+ R rank2ex(a,w,fs,ar,wr,ar,wr,FAV(fs)->valencefns[1]);
+}
+
 static DF2(rank2){DECLF;I ar,l=sv->localuse.lI4[1],r=sv->localuse.lI4[2],wr;
  RZ(a&&w);
  ar=AR(a); efr(l,ar,l);
@@ -707,7 +722,9 @@ F2(jtqq){A t;AF f1,f2;D*d;I hv[3],n,r[3],vf,flag2=0,*v;
   // supports IRS.  The IRS verbs may profitably support inplacing, so we enable it for them.
   vf=av->flag&(VASGSAFE|VJTFLGOK1|VJTFLGOK2);  // inherit ASGSAFE from u, and inplacing
   if(av->flag&VISATOMIC1){f1=av->valencefns[0];}else{if(av->flag&VIRS1){f1=hv[0]>=0?rank1i:rank1in;}else{f1=r[0]?rank1:jtrank10; flag2|=VF2RANKONLY1;}}
-  if(av->flag&VIRS2){f2=(hv[1]|hv[2])>=0?rank2i:rank2in;}else{f2=(r[1]|r[2])?rank2:jtrank20;flag2|=VF2RANKONLY2;}
+  // For dyad, use processor for IRS (there is one for nonnegative, one for negative rank); if not IRS, there are processors for:
+  // rank 0; nonneg ranks where fs is NOT a rank operator; general case
+  if(av->flag&VIRS2){f2=(hv[1]|hv[2])>=0?rank2i:rank2in;}else{f2=(hv[1]|hv[2])?((hv[1]|hv[2])>=0&&!(av->flag2&VF2RANKONLY2)?rank2q:rank2):jtrank20;flag2|=VF2RANKONLY2;}
   // Test for special cases
   if(av->valencefns[1]==jtfslashatg && r[1]==1 && r[2]==1){  // f@:g"1 1 where f and g are known atomic
    I isfork=av->id==CFORK;

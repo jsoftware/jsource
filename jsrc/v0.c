@@ -290,8 +290,8 @@ static F2(jtpoly2a){A c,e,x;I m;
 // x p. y    Supports IRS on the y argument; supports inplace
 F2(jtpoly2){F2PREFIP;A c,za;B b;D*ad,d,p,*x,u,*z;I an,at,j,t,n,wt;Z*az,e,q,*wz,y,*zz;
  RZ(a&&w);
- RANK2T jtr=jt->ranks; RESETRANK; I acr=jtr>=(1L<<RANKTX); I af=AR(a)-acr;   // acr=1 if requested rank >= 1  af=length of frame of a
- if(af>0){jtr=jtr==(RANK2T)~0?0:jtr; I wf=(I)AR(w)-(jtr&RMAX); wf=MIN(af,wf); wf=wf<0?0:wf; ASSERTAGREE(AS(a),AS(w),wf) R rank2ex(a,w,0L,acr,RMAX,acr,RMAX,jtpoly2);}  // if right rank not given, use 0
+ I acr=jt->ranks>>RANKTX; acr=AR(a)<acr?AR(a):acr;  // cell-rank of a
+ if(((1-acr)|(acr-AR(a)))<0){/* obsolete jtr=jtr==(RANK2T)~0?0:jtr; I wf=(I)AR(w)-(jtr&RMAX); wf=MIN(af,wf); wf=wf<0?0:wf; ASSERTAGREE(AS(a),AS(w),wf) */ R rank2ex(a,w,0L,MIN(acr,1),0,acr,MIN(AR(w),jt->ranks&RMAX),jtpoly2);}  // loop if multiple cells
  an=AN(a); at=AT(a); b=1&&BOX&at;   // b if mplr/roots form; otherwise coeff
  n=AN(w); wt=AT(w);
  ASSERT(!(at&SPARSE),EVNONCE);  // sparse polynomial not supported

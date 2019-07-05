@@ -90,7 +90,7 @@ F2(jtlogar2){A z;I t;
  RZ(a&&w); 
  RE(t=maxtype(AT(a),AT(w)));
  if(!(t&XNUM)||jt->xmode==XMEXACT){jt->xmode=XMEXACT; R jtdivide(JTIPAW,logar1(w),logar1(a));}  // better to multiply by recip, but not much, & it makes 0 ^. 0 not fail
- z=rank2ex(cvt(XNUM,a),cvt(XNUM,w),0L,0L,0L,0L,0L,jtxlog2a); 
+ z=rank2ex0(cvt(XNUM,a),cvt(XNUM,w),0L,jtxlog2a); 
  if(z)R z;
  if(jt->jerr==EWIMAG||jt->jerr==EWIRR){RESETERR; jt->xmode=XMEXACT; R divide(logar1(w),logar1(a));}
  R 0;
@@ -100,7 +100,7 @@ F2(jtroot){A z;I t;
  RZ(a&&w);
  RE(t=maxtype(AT(a),AT(w)));
  if(!(t&XNUM))R expn2(cvt(t,w),recip(cvt(t,a)));
- z=rank2ex(cvt(XNUM,a),cvt(XNUM,w),0L,0L,0L,0L,0L,jtxroota);
+ z=rank2ex0(cvt(XNUM,a),cvt(XNUM,w),0L,jtxroota);
  switch(jt->jerr){
   case EWIMAG: RESETERR; R expn2(cvt(CMPX,w),recip(cvt(CMPX,a)));
   case EWRAT: 

@@ -81,7 +81,7 @@ F2(jttake){A s;I acr,af,ar,n,*v,wcr,wf,wr;
  if(!(SPARSE&wt))RZ(w=setfv(w,w)); 
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr; af=ar-acr;  // ?r=rank, ?cr=cell rank, ?f=length of frame
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK; 
- if(af||1<acr)R rank2ex(a,w,0L,1L,RMAX,acr,wcr,jttake);  // if multiple x values, loop over them
+ if(af||1<acr)R rank2ex(a,w,0L,MIN(acr,1),wcr,acr,wcr,jttake);  // if multiple x values, loop over them
  // canonicalize x
  n=AN(a);    // n = #axes in a
  ASSERT(!wcr||n<=wcr,EVLENGTH);  // if y is not atomic, a must not have extra axes
@@ -134,7 +134,7 @@ F2(jtdrop){A s;I acr,af,ar,d,m,n,*u,*v,wcr,wf,wr;
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK; I wt=AT(w);
  // special case: if a is atomic 0, and cells of w are not atomic
  if(wcr&&!ar&&(IAV(a)[0]==0))R RETARG(w);   // 0 }. y, return y
- if(af||1<acr)R rank2ex(a,w,0L,1L,RMAX,acr,wcr,jtdrop);  // if multiple x values, loop over them
+ if(af||1<acr)R rank2ex(a,w,0L,MIN(acr,1),wcr,acr,wcr,jtdrop);  // if multiple x values, loop over them
  n=AN(a); u=AV(a);     // n=#axes to drop, u->1st axis
  // virtual case: scalar a
 // correct if(!(ar|wf|(SPARSE&wt)|!wcr|(AFLAG(w)&(AFNJA)))){  // if there is only 1 take axis, w has no frame and is not atomic

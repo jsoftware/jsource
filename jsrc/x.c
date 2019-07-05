@@ -92,7 +92,8 @@ static F2(jtforeigncreate){I p,q;
   case XC(2,3):   R SDERIV(CIBEAM, jtjwait,      0,            VASGSAFE,0,   0,   0   );
   case XC(2,5):   R SDERIV(CIBEAM, jtjgetenv,    0,            VASGSAFE,1,   0,   0   );
   case XC(2,6):   R SDERIV(CIBEAM, jtjgetpid,    0,            VASGSAFE,1,   0,   0   );
-  case XC(2,55):  R CDERIV(CIBEAM, jtjoff,       0,            VASGSAFE,RMAX,0,   0   );
+  case XC(2,7):   R SDERIV(CIBEAM, jtjgetx,      0,            VASGSAFE,1,   0,   0   );
+  case XC(2,55):  R CDERIV(CIBEAM,jtjoff,0,VASGSAFE,RMAX,0,0);
 
   case XC(3,0):   R CDERIV(CIBEAM, jtstype,      0,            VASGSAFE,RMAX,0,   0  );
   case XC(3,1):   R CDERIV(CIBEAM, jtbinrep1,    jtbinrep2,    VASGSAFE,RMAX,RMAX,RMAX);

@@ -640,15 +640,13 @@ typedef struct{
 
 
 
-typedef struct {union { D lD; void *lvp; I lI; I4 lI4[2];} localuse;union {A l2A;} localuse2;AF valencefns[2];A fgh[3];I4 flag;/* obsolete UI4 fdep;*/ UI4 flag2; RANKT mr,lr,rr; C id; C lc;} V;  // two cachelines exactly
+typedef struct {AF valencefns[2];A fgh[3];union { D lD; void *lvp; I lI; I4 lI4[4]; I lclr[2];} localuse;I4 flag;/* obsolete UI4 fdep;*/ UI4 flag2; RANKT mr,lr,rr; C id; C lc;} V;  // two cachelines exactly
 // the localuse fields is not freed or counted for space, as the f/g/h fields are.  It is for local optimizations only.  We put if first so that the rest of
 // the block, which is used more, is in a single cacheline.  Local uses are:
 // for ATOMIC2 ops, pointer to the adocv block
 // for name references, pointer to last resolution
 // for FIT conj, the CCT data
-// for RANK conj, lI4[] has the signed ranks WHICH OVERFLOW INTO localuse2!!
-
-// localuse2 can be
+// for RANK conj, lI4[0-2] has the signed ranks
 
 // lc is a local-use byte.  For atomic monads, it is the index of the adocv block
 

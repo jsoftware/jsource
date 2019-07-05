@@ -59,8 +59,7 @@ A jtfdef(J jt,I flag2,C id,I t,AF f1,AF f2,A fs,A gs,A hs,I flag,I m,I l,I r){A 
  GAT0(z,INT,(VERBSIZE+SZI-1)>>LGSZI,0); v=FAV(z);  // allocate as fixed size, and as INT to avoid clearing the area, which will be all filled in
  AT(z)=t;  // install actual type
  if(fs)INCORP(fs); if(gs)INCORP(gs); if(hs)INCORP(hs);   // indicate fgh are about to be incorporated
- v->localuse.lvp=0;  // clear the private field
- v->localuse2.l2A=0;  // clear the private field
+ v->localuse.lclr[0]=v->localuse.lclr[1]=0;  // clear the private field
  v->valencefns[0]    =f1?f1:jtdomainerr1;  /* monad C function */
  v->valencefns[1]    =f2?f2:jtdomainerr2;  /* dyad  C function */
  v->fgh[0]     =fs;                  /* monad            */

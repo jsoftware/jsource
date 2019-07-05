@@ -667,7 +667,7 @@ static DF1(jtredcateach){A*u,*v,*wv,x,*xv,z,*zv;I f,m,mn,n,r,wr,*ws,zm,zn;I n1=0
  RETF(z);
 }    /* ,&.>/"r w */
 
-static DF2(jtoprod){R df2(a,w,FAV(self)->fgh[2]);}
+static DF2(jtoprod){R df2(a,w,FAV(self)->fgh[2]);}  // x u/ y - transfer to the u"lr,_ verb (precalculated)
 
 
 F1(jtslash){A h;AF f1;C c;V*v;I flag=0;

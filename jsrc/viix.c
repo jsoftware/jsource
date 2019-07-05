@@ -53,22 +53,20 @@ static B jtiixI(J jt,I n,I m,A a,A w,I*zv){A t;B ascend;I*av,j,p,q,*tv,*u,*v,*vv
 #define COMPVLOOF(T,c,COMP)  \
  {T*u=(T*)uu,*v=(T*)vv; DO(c, if(cc=COMP(*u,*v))break;          ++u; ++v;);}
 
-#define MID(k,p,q)   k=(UI)(p+q)>>1  /* beware integer overflow */
+#define MID(k,p,q)   k=(UI)((p)+(q))>>1  /* beware integer overflow */
 
 #define BSLOOP1(CMP)           \
   p=0; q=n-1; y=*wv++;         \
   while(p<=q){MID(k,p,q); CMP; \
-      if(b)q=k-1; else p=k+1;}  // even though this mispredicts, it is faster because it allows an early guess of the next fetch
-#if 0 // WIP
-#define BSLOOP1x(Ta,CMP)           \
-  /* k is index to read, p is #values in interval, q is last value that compared >= y */ \
-  k=n>>1; q=n; p=n; y=*wv++;         \
-  while(p){
-   /* start reads for left and right side */
-   Ta al=, ar=;
-   
-      if(b)q=k-1; else p=k+1;}  // even though this mispredicts, it is faster because it allows an early guess of the next fetch
-#endif
+      if(b)q=k-1; else p=k+1;}
+// Binary search without misprediction, on atoms
+#define BSLOOP1x(Ta,CMP)    /* if CMP is true, move q; otherwise p */       \
+  y=*wv++; p=0; q=n-1; k=q>>1;         \
+  do{   /* empty lists handled earlier */ \
+   x=av[k]; \
+   I p2=k+1; I q1=k-1; I k2; MID(k,p2,q); MID(k2,p,q1); \
+   k=CMP?k2:k; p=CMP?p:p2; q=CMP?q1:q; \
+  }while(q-p>=0); 
 
 #define BSLOOPN(NE,CMP)        \
   p=0; q=n-1;                  \
@@ -76,13 +74,14 @@ static B jtiixI(J jt,I n,I m,A a,A w,I*zv){A t;B ascend;I*av,j,p,q,*tv,*u,*v,*vv
       if(b)q=k-1; else p=k+1;}
 
 #define BSLOOP(Ta,Tw)       \
- {Ta*av=(Ta*)AV(a),*u,x;                                              \
-  Tw*wv=(Tw*)AV(w),*v,y;                                              \
+ {Ta*av=(Ta*)AV(a),x; Tw y; Tw*wv=(Tw*)AV(w);                                             \
+                                               \
   switch((1==c?0:2)+(I )(1==ge)){                                         \
-   case 0: DO(m, BSLOOP1(b=av[k]>=y); *zv++=1+q;       ); break;      \
-   case 1: DO(m, BSLOOP1(b=av[k]<=y); *zv++=1+q;       ); break;      \
-   case 2: DO(m, BSLOOPN(x!=y,b=x>y); *zv++=1+q; wv+=c;); break;      \
-   case 3: DO(m, BSLOOPN(x!=y,b=x<y); *zv++=1+q; wv+=c;); break;      \
+   case 0: DO(m, BSLOOP1x(Ta,x>=y); *zv++=q+1;       ); break;      \
+/* obsolete    case 1: DO(m, BSLOOP1(b=av[k]<=y); *zv++=1+q;       ); break;    */  \
+   case 1: DO(m, BSLOOP1x(Ta, x<=y); *zv++=q+1;       ); break;      \
+   case 2: DO(m, Ta* u; Tw *v; BSLOOPN(x!=y,b=x>y); *zv++=1+q; wv+=c;); break;      \
+   case 3: DO(m, Ta* u; Tw *v; BSLOOPN(x!=y,b=x<y); *zv++=1+q; wv+=c;); break;      \
  }}
 
 #define BSLOOF(Ta,Tw,COMP)  \

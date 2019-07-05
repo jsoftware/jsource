@@ -455,7 +455,7 @@ F2(jtloccre2){
  RZ(a&&w);
  if(AN(w))R rank2ex0(a,vlocnl(2+1,w),0L,jtloccre);
  ASSERT(1==AR(w),EVRANK);
- R rank1ex(a,0L,0L,jtloccrenum);
+ R rank1ex0(a,0L,jtloccrenum);
 }    /* 18!:3  create locale with specified hash table size */
 
 

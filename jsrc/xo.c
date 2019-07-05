@@ -91,7 +91,7 @@ F jtjope(J jt,A w,C*mode){A t;F f;I n;static I nf=25; A z;
 F1(jtjopen){A z;I h;
  RZ(w);
  if(!AN(w))R w;
- if(AR(w))R rank1ex(w,0L,0L,jtjopen);
+ if(AR(w))R rank1ex0(w,0L,jtjopen);
  RE(h=fnum(w));
  if(h){RZ(z=sc(h)); RZ(fname(z)); R z;}
  else{A ww;
@@ -117,7 +117,7 @@ B jtadd2(J jt,F f1,F f2,C*cmd){A c,x;
 F1(jtjclose){A*av;I*iv,j;
  RZ(w);
  if(!AN(w))R w;
- if(AR(w))R rank1ex(w,0L,0L,jtjclose);
+ if(AR(w))R rank1ex0(w,0L,jtjclose);
  RE(j=i0(indexof(jt->fopf,sc(fnum(w))))); ASSERT(j<jt->fopn,EVFNUM);
  av=AAV(jt->fopa); iv=IAV(jt->fopf); 
 // #if (SYS & SYS_DOS+SYS_MACINTOSH+SYS_UNIX)

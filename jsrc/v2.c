@@ -253,14 +253,14 @@ static F1(jtnextprime){A b,fs,x,y;B*bv;I k,n,*xv,*yv;X*wv;
  GATV(x,INT,n,AR(w),AS(w)); xv=AV(x);
  if(INT&AT(w)){B b=1;I*wv=AV(w);
   DO(n, k=*wv++; if(k==IMAX){b=0; break;}else *xv++=2>k?2:(k+1)|1;);
-  if(b)R rank1ex(x,fs,0L,FAV(fs)->valencefns[0]);
+  if(b)R rank1ex0(x,fs,FAV(fs)->valencefns[0]);
   RZ(w=cvt(XNUM,w));
  }
  if(AT(w)&FL+RAT)RZ(w=cvt(XNUM,floor1(       w )));
  if(AT(w)&CMPX  )RZ(w=cvt(XNUM,floor1(cvt(FL,w))));
  GATV(b,B01,n,AR(w),AS(w)); bv=BAV(b); wv=XAV(w);
  DO(n, y=*wv++; yv=AV(y); *bv++=0<yv[AN(y)-1]; *xv++=(*yv&1)+1;);
- R rank1ex(tymes(b,plus(w,x)),fs,0L,FAV(fs)->valencefns[0]);
+ R rank1ex0(tymes(b,plus(w,x)),fs,FAV(fs)->valencefns[0]);
 }
 
 static F1(jtprevprime){A fs,x,y;I k,m,n,*xv,*yv;X*wv;
@@ -271,13 +271,13 @@ static F1(jtprevprime){A fs,x,y;I k,m,n,*xv,*yv;X*wv;
  GATV(x,INT,n,AR(w),AS(w)); xv=AV(x);
  if(INT&AT(w)){I*wv=AV(w);
   DO(n, k=*wv++; ASSERT(2<k,EVDOMAIN); *xv++=3==k?2:(k-2)|1;);
-  R rank1ex(x,fs,0L,FAV(fs)->valencefns[0]);
+  R rank1ex0(x,fs,FAV(fs)->valencefns[0]);
  }
  if(AT(w)&FL+RAT)RZ(w=cvt(XNUM,ceil1(       w )));
  if(AT(w)&CMPX  )RZ(w=cvt(XNUM,ceil1(cvt(FL,w))));
  wv=XAV(w);
  DO(n, y=*wv++; yv=AV(y); m=AN(y); k=*yv; ASSERT(0<yv[m-1]&&(1<m||2<k),EVDOMAIN); *xv++=1==m&&3==k?1:1+(k&1););
- R rank1ex(minus(w,x),fs,0L,FAV(fs)->valencefns[0]);
+ R rank1ex0(minus(w,x),fs,FAV(fs)->valencefns[0]);
 }
 
 static F1(jttotient){A b,x,z;B*bv,p=0;I k,n,t;

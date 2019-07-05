@@ -555,7 +555,7 @@ static F1(jtthorn1main){PROLOG(0001);A z;
     // we hit an invalid non-ASCII sequence, abort and keep the original byte string.
     // The conversion to C2T includes appending NUL to double-wide chars, and conversion up to
     // C4T if there are surrogate pairs or codes above U+FFFF
-   z=jt->thornuni?rank1ex(w,0L,1L,RoutineA) : RETARG(w);  // check list for U8 codes, return LIT or C2T
+   z=jt->thornuni?rank1ex(w,0L,MIN(AR(w),1L),RoutineA) : RETARG(w);  // check list for U8 codes, return LIT or C2T
    break;
   case C2TX:
    // If C2T output is allowed, keep it as C2T (it's not worth the time to go through
@@ -566,12 +566,14 @@ static F1(jtthorn1main){PROLOG(0001);A z;
    // on any conversion back to U8.
    // If there are surrogates, the value returned here might be C4T
    // If C2T output not allowed, convert to ragged array of bytes
-   z=jt->thornuni?rank1ex(w,0L,1L,RoutineB) : rank1ex(w,0L,1L,jttoutf8a);
+// obsolete    z=jt->thornuni?rank1ex(w,0L,1L,RoutineB) : rank1ex(w,0L,1L,jttoutf8a);
+   z=rank1ex(w,0L,MIN(AR(w),1L),jt->thornuni?RoutineB:jttoutf8a);
    break;
   case C4TX:
    // If C2T output is allowed, keep this as C4T, but add the padding NUL characters following CJK fullwidth.
    // If C2T output not allowed, just convert to UTF-8 bytes
-   z= jt->thornuni?rank1ex(w,0L,1L,RoutineC) : rank1ex(w,0L,1L,jttoutf8a);
+// obsolete    z= jt->thornuni?rank1ex(w,0L,1L,RoutineC) : rank1ex(w,0L,1L,jttoutf8a);
+   z=rank1ex(w,0L,MIN(AR(w),1L),jt->thornuni?RoutineC:jttoutf8a);
    break;
   case BOXX:  z=thbox(w);                  break;
   case SBTX:  z=thsb(w);                   break;
@@ -597,7 +599,7 @@ static F1(jtthorn1main){PROLOG(0001);A z;
 F1(jtthorn1u){ A z; RZ(w); B to = jt->thornuni; jt->thornuni = !(AT(w)&(LIT)); z = thorn1main(w); jt->thornuni = to; R z; }
 
 // entry point for returning LIT array only.  Allow C2T result, then convert.  But always pass literal arguments unchanged
-F1(jtthorn1){ A z; RZ(w); B to = jt->thornuni; jt->thornuni = !(AT(w)&(LIT+C2T+C4T)); z = thorn1main(w); if (z&&AT(z)&(C2T+C4T))z = rank1ex(z, 0L, 1L, RoutineD); jt->thornuni = to; R z; }
+F1(jtthorn1){ A z; RZ(w); B to = jt->thornuni; jt->thornuni = !(AT(w)&(LIT+C2T+C4T)); z = thorn1main(w); if (z&&AT(z)&(C2T+C4T))z = rank1ex(z, 0L, MIN(AR(z),1), RoutineD); jt->thornuni = to; R z; }
 
 
 #define DDD(v)   {*v++='.'; *v++='.'; *v++='.';}

@@ -91,7 +91,7 @@ A jtsprank1(J jt,A w,A fs,I mr,AF f1){PROLOG(0043);A q,wx,wy,wy1,ww,z,ze,zi,*zv;
    j+=k;
   }
   RZ(z=ope(z));
- }else{RZ(zi=ca(wy)); RZ(z=rank1ex(wx,fs,mr,f1)); RZ(ze=CALL1(f1,SPA(wp,e),fs));}
+ }else{RZ(zi=ca(wy)); RZ(z=rank1ex(wx,fs,mr,f1)); RZ(ze=CALL1(f1,SPA(wp,e),fs));}  // mr is 0
  z=sprz(z,zi,ze,wf,ws);
  EPILOG(z);
 }    /* f"r w on sparse arrays */

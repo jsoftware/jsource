@@ -104,14 +104,18 @@ static S jtattu(J jt,A w){C*s;I i,n;S z=0;
  R z;
 }    /* convert from 6-element string into 16-bit attributes */
 
-F1(jtfullname){C*s; C dirpath[1000];
+F1(jtfullname){C dirpath[_MAX_PATH];
  RZ(w=str0(vslit(w)));
- s=CAV(w); DO(AN(w), if(' '!=*s)break; ++s;);
 #if SY_WINCE
+ C*s;
+ s=CAV(w); DO(AN(w), if(' '!=*s)break; ++s;);
  if(*s=='\\'||*s=='/') strcpy(dirpath,s);
  else {strcpy(dirpath, "\\"); strcat(dirpath,s);}
 #else
- _fullpath(dirpath,s,NPATH); 
+ wchar_t wdirpath[_MAX_PATH];
+ RZ(w=toutf16x(w)); USAV(w)[AN(w)]=0;
+ _wfullpath(wdirpath,USAV(w),_MAX_PATH);
+ WideCharToMultiByte(CP_UTF8,0,wdirpath,1+(int)wcslen(wdirpath),dirpath,_MAX_PATH,0,0);
 #endif
  R cstr(dirpath);
 }

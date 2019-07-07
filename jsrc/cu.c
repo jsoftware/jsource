@@ -30,15 +30,16 @@ A jtevery(J jt,A w,A fs,AF f1){A*wv,x,z,*zv;
  if(SPARSE&AT(w))R everysp(w,fs,f1);
 // obsolete if(!(BOX&AT(w)))RZ(IRS1(w,0,0,jtbox,w));
  GATV(z,BOX,AN(w),AR(w),AS(w));
+ I natoms=AN(w); if(!natoms)R z;  // exit if no result atoms
  zv=AAV(z);
- A virtw; I boxedw; I wk;
+ A virtw; I boxedw;
  I virtblockw[NORMAH];  // space for a virtual block of rank 0
  if(boxedw=BOX&AT(w))virtw=*(wv=AAV(w));  // if input is boxed, point to first box
  else{
-  // if input is not boxed, use a faux-virtual block to point to the atoms
-  fauxvirtual(virtw,virtblockw,w,0,ACUC1); AN(virtw)=1; wk=bpnoun(AT(w));
+  // if input is not boxed, use a faux-virtual block to point to the atoms.  Repurpose unneeded wv to hold length
+  fauxvirtual(virtw,virtblockw,w,0,ACUC1); AN(virtw)=1; wv=(A*)bpnoun(AT(w));
  }
- DQ(AN(w), EVERYI(CALL1(f1,virtw,fs)); if(boxedw)virtw=*++wv;else AK(virtw)+=wk;);
+ while(1){EVERYI(CALL1(f1,virtw,fs)); if(!--natoms)break; if(boxedw)virtw=*++wv;else AK(virtw)+=(I)wv;}  // break to avoid fetching over the end of the input
  R z;
 }
 
@@ -62,7 +63,7 @@ A jtevery2(J jt,A a,A w,A fs,AF f2){A*av,*wv,x,z,*zv;
   flags=(C)(((1-rpti)>>(BW-1))&((ar<wr)+1));  // if rpti<2, no repeat; otherwise repeat short frame
   // Verify agreement
   ASSERTAGREE(AS(a),AS(w),cf);  // frames must agree
-  GATV(z,BOX,natoms,lr,AS(la)); RZ(natoms); zv=AAV(z);  // make sure we don't fetch outside empty arg
+  GATV(z,BOX,natoms,lr,AS(la)); if(!natoms)R z; zv=AAV(z);  // make sure we don't fetch outside empty arg
  }
  A virtw;
  // create virtual blocks if needed

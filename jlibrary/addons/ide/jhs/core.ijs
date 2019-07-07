@@ -162,7 +162,7 @@ elseif. 1              do. r=. 'jev_get_',URL,'_'''''
 end.
 logapp 'jhs sentence: ',r
 if. JZWSPU8-:3{.r do. r=. 3}.r end. NB. empty prompt kludge
-r NB. J sentence to run
+r,{.a. NB. J sentence to run
 
 catch.
  logappx 'input error'

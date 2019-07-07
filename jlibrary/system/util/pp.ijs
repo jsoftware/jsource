@@ -103,9 +103,9 @@ if. -. 'NB. ' -: 4 {. ndx }. line do.
 end.
 pre=. ndx {. line
 len=. 57 - +/ 1 + 3 * pre = TAB
-if. (,'=') -: ~. (4+ndx) }. line do.
+if. (2<#s) *. (,'=') -: ~. s=. (4+ndx) }. line do.
   line=. pre,'NB. ',len#'='
-elseif. (,'-') -: ~. (4+ndx) }. line do.
+elseif. (2<#s) *. (,'-') -: ~. s=. (4+ndx) }. line do.
   line=. pre,'NB. ',len#'-'
 end.
 line

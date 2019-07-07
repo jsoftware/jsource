@@ -20,42 +20,83 @@ static A jteverysp(J jt,A w,A fs,AF f1){A*wv,x,z,*zv;P*wp,*zp;
 #define EVERYI(exp)  {RZ(x=exp); INCORP(x); RZ(*zv++=x); ASSERT(!(SPARSE&AT(x)),EVNONCE);}
      /* note: x can be non-noun */
 
-// u&.> work routine.  Does not inplace; if we modify it to inplace, we must make sure to turn off inplacing of contents of x/y if the arg itself is not inplaceable
+// Routine for internal application of u&.>
+// Does not perform the special functions of rank1ex0, namely creating recursive result and checking for BOXATOP
+// Does not inplace; if we modify it to inplace, we must make sure to turn off inplacing of contents of x/y if the arg itself is not inplaceable
 // We keep this around because it is used for internal calls.  Most (not all, especially calls for jtfx) have fs==0, which we could check for in rank1ex0 and treat as &.>
 // It is also the recursion mechanism for L: and S:; that would require looking at a special flag during ex0 to treat that as &.>
 A jtevery(J jt,A w,A fs,AF f1){A*wv,x,z,*zv;
  RZ(w);
  if(SPARSE&AT(w))R everysp(w,fs,f1);
- if(!(BOX&AT(w)))RZ(IRS1(w,0,0,jtbox,w));
+// obsolete if(!(BOX&AT(w)))RZ(IRS1(w,0,0,jtbox,w));
  GATV(z,BOX,AN(w),AR(w),AS(w));
- zv=AAV(z); wv=AAV(w); 
- DO(AN(w), EVERYI(CALL1(f1,wv[i],fs)););
+ zv=AAV(z);
+ A virtw; I boxedw; I wk;
+ I virtblockw[NORMAH];  // space for a virtual block of rank 0
+ if(boxedw=BOX&AT(w))virtw=*(wv=AAV(w));  // if input is boxed, point to first box
+ else{
+  // if input is not boxed, use a faux-virtual block to point to the atoms
+  fauxvirtual(virtw,virtblockw,w,0,ACUC1); AN(virtw)=1; wk=bpnoun(AT(w));
+ }
+ DQ(AN(w), EVERYI(CALL1(f1,virtw,fs)); if(boxedw)virtw=*++wv;else AK(virtw)+=wk;);
  R z;
 }
 
-A jtevery2(J jt,A a,A w,A fs,AF f2){A*av,*wv,x,z,*zv;B ab,b,wb;I an,ar,*as,wn,wr,*ws;
+A jtevery2(J jt,A a,A w,A fs,AF f2){A*av,*wv,x,z,*zv;
 // todo kludge should rewrite with single flag word
  RZ(a&&w); 
- an=AN(a); ar=AR(a); as=AS(a); ab=!!(BOX&AT(a));
- wn=AN(w); wr=AR(w); ws=AS(w); wb=!!(BOX&AT(w));
- b=!ar||!wr||ar==wr; if(b&&ar&&wr)DO(ar, b&=as[i]==ws[i];);
- if(!b)R df2(a,w,atop(ds(CBOX),amp(fs,ds(COPE))));
- GATV(z,BOX,ar?an:wn,ar?ar:wr,ar?as:ws);  zv=AAV(z);
- if(ar&&!ab)RZ(IRS1(a,0,0,jtbox,a)); av=AAV(a); 
- if(wr&&!wb)RZ(IRS1(w,0,0,jtbox,w)); wv=AAV(w); 
- if(ar&&wr)                   DO(an, EVERYI(CALL2(f2,av[i],      wv[i],      fs))) 
- else if(wr){if(ab)a=AAV0(a); DO(wn, EVERYI(CALL2(f2,a,           wv[i],      fs)));}
- else if(ar){if(wb)w=AAV0(w); DO(an, EVERYI(CALL2(f2,av[i],      w,           fs)));}
- else                                EVERYI(CALL2(f2,ab?AAV0(a):a,wb?AAV0(w):w,fs)) ;
+// obsolete  an=AN(a); ar=AR(a); as=AS(a); ab=!!(BOX&AT(a));
+// obsolete  wn=AN(w); wr=AR(w); ws=AS(w); wb=!!(BOX&AT(w));
+// obsolete  b=!ar||!wr||ar==wr; if(b&&ar&&wr)DO(ar, b&=as[i]==ws[i];);
+// obsolete  if(!b)R df2(a,w,atop(ds(CBOX),amp(fs,ds(COPE))));
+ // Get the number of atoms, and the number of times to repeat the short side.
+ // The repetition is the count of the surplus frame.
+ I rpti;  // number of times short frame must be repeated
+ I natoms;  // total # cells
+ C flags;  // 20=w is boxed 40=a is boxed 1=w is repeated 2=a is repeated
+ {
+  I ar=AR(a); I wr=AR(w);
+  I cf=ar; A la=w; cf=ar<wr?cf:wr; la=ar<wr?la:a; I lr=ar+wr-cf;  // #common frame, Ablock with long shape, long rank.
+  PROD(rpti,lr-cf,AS(la)+cf);
+  natoms=MAX(AN(a),AN(w)); natoms=rpti==0?rpti:natoms;  // number of atoms.  Beware of empty arg with surplus frame containing 0; if an arg is empty, so is the result
+  flags=(C)(((1-rpti)>>(BW-1))&((ar<wr)+1));  // if rpti<2, no repeat; otherwise repeat short frame
+  // Verify agreement
+  ASSERTAGREE(AS(a),AS(w),cf);  // frames must agree
+  GATV(z,BOX,natoms,lr,AS(la)); RZ(natoms); zv=AAV(z);  // make sure we don't fetch outside empty arg
+ }
+ A virtw;
+ // create virtual blocks if needed
+ I virtblockw[NORMAH+1];  // space for a virtual block of rank 0
+ if(BOX&AT(w)){flags|=BOX; virtw=*(wv=AAV(w));}  // if input is boxed, point to first box
+ else{
+  // if input is not boxed, use a faux-virtual block to point to the atoms.  In this case wv is not needed and we use it for the length of an atom
+  fauxvirtual(virtw,virtblockw,w,0,ACUC1); AN(virtw)=1; wv=(A*)bpnoun(AT(w));
+ }
+ A virta;
+ I virtblocka[NORMAH+1];  // space for a virtual block of rank 0
+ if(BOX&AT(a)){flags|=BOX<<1; virta=*(av=AAV(a));}  // if input is boxed, point to first box
+ else{
+  // if input is not boxed, use a faux-virtual block to point to the atoms  In this case av is not needed and we use it for the length of an atom
+  fauxvirtual(virta,virtblocka,a,0,ACUC1); AN(virta)=1; av=(A*)bpnoun(AT(a));
+ }
+// obsolete  if(ar&&!ab)RZ(IRS1(a,0,0,jtbox,a)); av=AAV(a); 
+// obsolete  if(wr&&!wb)RZ(IRS1(w,0,0,jtbox,w)); wv=AAV(w); 
+// obsolete  if(ar&&wr)                   DO(an, EVERYI(CALL2(f2,av[i],      wv[i],      fs))) 
+// obsolete  else if(wr){if(ab)a=AAV0(a); DO(wn, EVERYI(CALL2(f2,a,           wv[i],      fs)));}
+// obsolete  else if(ar){if(wb)w=AAV0(w); DO(an, EVERYI(CALL2(f2,av[i],      w,           fs)));}
+// obsolete  else                                EVERYI(CALL2(f2,ab?AAV0(a):a,wb?AAV0(w):w,fs)) ;
+ // Loop for each cell.  Increment the pointer unless the side is being repeated and the repeat-count has not expired.
+ // Break in the middle of the loop to avoid fetching out of bounds to get the next address from [aw]v
+ I rpt=rpti; while(1){EVERYI(CALL2(f2,virta,virtw,fs)); if(!--natoms)break; if(!(flags&2)||(--rpt==0&&(rpt=rpti,1))){if(flags&(BOX<<1))virta=*++av;else AK(virta)+=(I)av;} if(!(flags&1)||(--rpt==0&&(rpt=rpti,1))){if(flags&BOX)virtw=*++wv;else AK(virtw)+=(I)wv;} }
  R z;
 }
 
-// apply f2 on items of a or w.  Pass on rank of f2 to reduce rank nesting
+// apply f2 on items of a or w against the entirety of the other argument.  Pass on rank of f2 to reduce rank nesting
 DF2(jteachl){RZ(a&&w&&self); I lcr=AR(a)-1<0?0:AR(a)-1; I lr=FAV(self)->lr; lr=lcr<lr?lcr:lr; I rr=FAV(self)->rr; rr=AR(w)<rr?AR(w):rr; R rank2ex(a,w,self,lr,rr,lcr,AR(w),FAV(self)->valencefns[1]);}
 DF2(jteachr){RZ(a&&w&&self); I rcr=AR(w)-1<0?0:AR(w)-1; I rr=FAV(self)->rr; rr=rcr<rr?rcr:rr; I lr=FAV(self)->lr; lr=AR(a)<lr?AR(a):lr; R rank2ex(a,w,self,lr,rr,AR(a),rcr,FAV(self)->valencefns[1]);}
 // obsolete DF2(jteachr){RZ(a&&w&&self); R rank2ex(a,w,self,FAV(self)->lr,FAV(self)->rr,RMAX,-1L, FAV(self)->valencefns[1]);}
 
-// u&.v    kludge should calculate fullf as part of under/undco & pass in via h
+// u&.v
 // PUSH/POP ZOMB is performed in atop/amp/ampco
 // under is for when we could not precalculate the inverse
 static DF1(jtunder1){F1PREFIP;DECLFG;A fullf; RZ(fullf=atop(invrecur(fix(gs,zeroionei[0])),amp(fs,gs))); R (FAV(fullf)->valencefns[0])(FAV(fullf)->flag&VJTFLGOK1?jtinplace:jt,w,fullf);}

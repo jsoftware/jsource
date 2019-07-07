@@ -69,11 +69,11 @@ B jthasimploc(J jt,A w){A hs,*u;V*v;
 // Higher flag bits restrict the search:
 // FIXALOCSONLY set if we will replace only implicit locatives.  We don't go down a branch that doesn't contain one
 // FIXALOCSONLYLOWEST set is we replace only lowest-level locatives (suitable for function return).  We stop in a branch when we hit a locative reference
-// a has to be an A type because it goes into every2.  It is always an I type
-static A jtfixa(J jt,A a,A w){A f,g,h,wf,x,y,z=w;V*v;I aa[8];  // place to build recursion parm
-#define REFIXA(a,x) (*IAV0(aa)=(aif|(a)), fixa((A)aa,(x)))
+// a has to be an A type because it goes into every2.  It is always an I type, but it may be virtual when it comes back from every2
+static A jtfixa(J jt,A a,A w){A f,g,h,wf,x,y,z=w;V*v;I aa[NORMAH+1]={AKXR(0)};  // place to build recursion parm - make the AK field right
+#define REFIXA(a,x) (IAV0(aa)[0]=(aif|(a)), fixa((A)aa,(x)))
  RZ(w);
- I ai=*IAV0(a);  // value of a
+ I ai=IAV(a)[0];  // value of a
  I aif=ai&(FIXALOCSONLY|FIXALOCSONLYLOWEST); // extract control flags
  ai^=aif;   // now ai = state without flags
  // If we are only interested in replacing locatives, and there aren't any, exit fast

@@ -63,14 +63,14 @@ static B jtiixI(J jt,I n,I m,A a,A w,I*zv){A t;B ascend;I*av,j,p,q,*tv,*u,*v,*vv
 #define BSLOOP1x(Ta,CMP)    /* if CMP is true, move q; otherwise p */       \
   y=*wv++; p=0; q=n-1; k=q>>1;         \
   do{   /* empty lists handled earlier */ \
-   x=av[k]; \
-   I p2=k+1; I q1=k-1; I k2; MID(k,p2,q); MID(k2,p,q1); \
-   k=CMP?k2:k; p=CMP?p:p2; q=CMP?q1:q; \
-  }while(q-p>=0); 
+   x=av[k]; /* read the next value */ \
+   I p2=k+1; I q1=k-1; I k2; MID(k2,p2,q); MID(k,p,q1); /* calculate new values for kpq depending on which way the compare turns out.  2=upper side (ie if p moved), 1=lower side (if q moved) */\
+   k=CMP?k:k2; p=CMP?p:p2; q=CMP?q1:q; /* move k first to start next fetch */\
+  }while(q>=p); 
 
 #define BSLOOPN(NE,CMP)        \
   p=0; q=n-1;                  \
-  while(p<=q){MID(k,p,q); u=av+c*k; v=wv; b=1; DO(c, x=*u++; y=*v++; if(NE){CMP; break;});  \
+  while(p<=q){MID(k,p,q); u=av+c*k; v=wv; b=1; DO(c, x=*u++; y=*v++; if(NE){CMP; break;}); /* make this compare fixed length? */   \
       if(b)q=k-1; else p=k+1;}
 
 #define BSLOOP(Ta,Tw)       \

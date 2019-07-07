@@ -260,7 +260,7 @@ static A jtjstd(J jt,A w,A ind,I *cellframelen){A j=0,k,*v,x;B b;I d,i,n,r,*u,wr
 // obsolete   AS(x)[0]=n; RZ(j=pdt(j,x)); *cellframelen=n; R j;  // shorten cell-size list to the ones we need; convert each index-list to an offset; remember the size of the cells
  }
  if(!b){
-  // Numeric m.  Each 1-cell is a list of indexes (if m is a list, each atom is a list of indexes)
+  // Numeric m.  Each 1-cell is a list of indexes (if m is a list, each atom is a cell index)
 // obsolete   ASSERT(AR(ind)<2,EVNONCE);
   RZ(j=celloffset(w,ind));  // convert list/table to list of indexes, possibly in place
   n=AR(ind)<2?1:AS(ind)[AR(ind)-1];  // n=#axes used: 1, if m is a list; otherwise {:$m

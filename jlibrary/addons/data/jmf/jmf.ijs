@@ -29,8 +29,8 @@ doc=: 0 : 0
       2 refs
 
   unmapall''                  - unmap all
-  createjmf filename;msize    - creates jmf file as empty vector
-  share name;sharedname       - share 'sharedname' as name
+  createjmf filename;msize    - creates jmf file as empty vector (self-describing)
+  share name;sharedname[;ro]  - share 'sharedname' as name
   showmap''                   - show all maps
 )
 0 : 0
@@ -60,7 +60,7 @@ symget=: 15!:6
 symset=: 15!:7
 allochdr=: 3 : 'r[2 setHADC r=.15!:8 y'
 freehdr=: 15!:9
-msize=: 3 : 'memr y,HADM,1,JINT'
+msize=: gethadmsize=: 3 : 'memr y,HADM,1,JINT'
 fullname=: 3 : 0
 t=. y-.' '
 t,('_'~:{:t)#'_base_'
@@ -114,6 +114,7 @@ else.
   FALSE=: 0
   FILE_BEGIN=: 0
   FILE_END=: 2
+  FILE_MAP_COPY=: 1
   FILE_MAP_READ=: 4
   FILE_MAP_WRITE=: 2
   FILE_SHARE_READ=: 1
@@ -127,7 +128,7 @@ else.
   TRUNCATE_EXISTING=: 5
 
   j=. (GENERIC_READ+GENERIC_WRITE),PAGE_READWRITE,FILE_MAP_WRITE
-  RW=: j,:GENERIC_READ,PAGE_READONLY,FILE_MAP_READ
+  RW=: j,:GENERIC_READ,PAGE_READONLY,FILE_MAP_COPY[FILE_MAP_READ
 
   CloseHandleR=: 'kernel32 CloseHandle > i x'&(15!:0)
   CreateFileMappingR=: 'kernel32 CreateFileMappingW > x x * i i i *w'&(15!:0)
@@ -285,13 +286,13 @@ else.
   'bad noun name'assert ('_'={:name)*._1=nc<name
   fh=. _1
   fn=. ''
-  mh=. OpenFileMappingR (ro{FILE_MAP_WRITE,FILE_MAP_READ);0;uucp sn,{.a.
+  mh=. OpenFileMappingR (ro{FILE_MAP_WRITE,FILE_MAP_COPY);0;uucp sn,{.a.
   if. mh=0 do. assert 0[CloseHandleR fh['bad mapping' end.
-  fad=. MapViewOfFileR mh;FILE_MAP_WRITE;0;0;0
+  fad=. MapViewOfFileR mh;(ro{FILE_MAP_WRITE,FILE_MAP_COPY);0;0;0
   if. fad=0 do. assert 0[CloseHandleR mh[CloseHandleR fh['bad view' end.
   had=. fad
   hs=: 0
-  ts=. msize had
+  ts=. gethadmsize had
   mappings=: mappings,name;fn;sn;fh;mh;fad;had;ts
   (name)=: symset had
   i.0 0
@@ -314,7 +315,7 @@ i. 0 0
 showmap=: 3 : 0
 h=. 'name';'fn';'sn';'fh';'mh';'address';'header';'ts';'msize';'refs'
 hads=. 6{"1 mappings
-h,mappings,.(msize each hads),.refcount each hads
+h,mappings,.(gethadmsize each hads),.refcount each hads
 )
 map=: 3 : 0
 0 map y
@@ -338,21 +339,21 @@ c=. #mappings
 'bad noun name'assert ('_'={:name)*._1=nc<name
 
 ro=. 0~:ro
-aa=. AFNJA+AFRO*ro
+aa=. AFNJA+0[AFRO*ro
 
 if. IFUNIX do.
   'Unix sharename must be same as filename' assert (sn-:'')+.sn-:fn
   ts=. 1!:4 <fn
-  fh=. >0 { c_open fn;(ro{O_RDWR,O_RDONLY);0
+  fh=. >0 { c_open fn;((0[ro){O_RDWR,O_RDONLY);0
   'bad file name/access' assert fh~:_1
   mh=. ts
-  fad=. >0{ c_mmap (<0);ts;(OR ro}. PROT_WRITE, PROT_READ);MAP_SHARED;fh;0
+  fad=. >0{ c_mmap (<0);ts;(OR (0[ro)}. PROT_WRITE, PROT_READ);(ro{MAP_SHARED,MAP_PRIVATE);fh;0
   if. fad e. 0 _1 do.
     'bad view' assert 0[free fh,mh,0
   end.
 else.
   'fa ma va'=. ro{RW
-  fh=. CreateFileR (uucp fn,{.a.);fa;(FILE_SHARE_READ+FILE_SHARE_WRITE);NULLPTR;OPEN_EXISTING;0;0
+  fh=. CreateFileR (uucp fn,{.a.);fa;(OR ro}. FILE_SHARE_WRITE, FILE_SHARE_READ);NULLPTR;OPEN_EXISTING;0;0
   'bad file name/access'assert fh~:_1
   ts=. GetFileSizeR fh
   mh=: CreateFileMappingR fh;NULLPTR;ma;0;0;(0=#sn){(uucp sn,{.a.);<NULLPTR
@@ -389,7 +390,7 @@ elseif. 1 do.
   had=. allochdr 127
   'JBOXED (non-jmf) not supported' assert JBOXED~:type
   bx=. JBOXED=type
-  hs=. (+/hsize)*asize=. JSIZES {~ JTYPES i. type
+  hs=. +/hsize [ asize=. JSIZES {~ JTYPES i. type
   lshape=. bx}.<.(ts-hs)%(*/tshape)*asize
   d=. sfu hs+-/ufs fad,had
   h=. d,aa,ts,type,1,(*/lshape,tshape),((-.bx)+#tshape),lshape,tshape
@@ -445,11 +446,12 @@ mappings=: (row~:i.#mappings)#mappings
 unmapall=: 3 : '>unmap each 0{"1 mappings'
 memshare=: 3 : 0
 bNo_Inherit_Handle=. FALSE
+'y ro'=. 2{.(boxopen y),<0
 lpShareName=. y,{.a.
-mh=. OpenFileMappingR (FILE_MAP_READ+FILE_MAP_WRITE); bNo_Inherit_Handle; uucp lpShareName
+mh=. OpenFileMappingR (ro{FILE_MAP_WRITE,FILE_MAP_COPY); bNo_Inherit_Handle; uucp lpShareName
 ('Unable to map ',y) assert mh~:0
 
-addr=. MapViewOfFileR mh; (FILE_MAP_READ+FILE_MAP_WRITE); 0; 0; 0
+addr=. MapViewOfFileR mh; (ro{FILE_MAP_WRITE,FILE_MAP_COPY); 0; 0; 0
 if. addr=0 do. 'MapViewOfFile failed' assert 0[CloseHandleR mh end.
 ".(_1=4!:0<'mapTable')#'mapTable=:i.0,3'
 mapTable=: mapTable, y; mh; addr

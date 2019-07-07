@@ -1,7 +1,7 @@
 18!:4 <'z'
 3 : 0 ''
 
-JLIB=: '9.01.01'
+JLIB=: '9.01.07'
 
 notdef=. 0: ~: 4!:0 @ <
 hostpathsep=: ('/\'{~6=9!:12'')&(I. @ (e.&'/\')@] })
@@ -46,7 +46,7 @@ end.
 'libc.so.6 setlocale > x i *c'&(15!:0) ::0:^:(UNAME-:'Linux') 1;,'C'
 if. notdef 'IFRASPI' do.
   if. UNAME -: 'Linux' do.
-    cpu=. 2!:0 'cat /proc/cpuinfo'
+    cpu=. 2!:0 ::(''"_) 'cat /proc/cpuinfo'
     IFRASPI=: (1 e. 'BCM2708' E. cpu) +. (1 e. 'BCM2709' E. cpu) +. 1 e. 'BCM2710' E. cpu
   else.
     IFRASPI=: 0
@@ -179,7 +179,7 @@ dm
 'TAB LF FF CR DEL EAV'=: 9 10 12 13 127 255{a.
 LF2=: LF,LF
 CRLF=: CR,LF
-EMPTY=: i.0 0
+EMPTY=: 0 0$0
 Debug=: 0
 'noun adverb conjunction verb monad dyad'=: 0 1 2 3 3 4
 setalpha=: 16bff&$: : (4 : 0)
@@ -199,17 +199,17 @@ y
 apply=: 128!:2
 assert=: 0 0 $ 13!:8^:((0 e. ])`(12"_))
 bind=: 2 : 'x@(y"_)'
-boxopen=: <^:(L.=0:)
-boxxopen=: <^:(L.<*@#)
+boxopen=: <^:(0&(>: L.))
+boxxopen=: <^:((> L.)~ *@#)
 bx=: I.
 clear=: 3 : 0
 ". 'do_',(' '-.~y),'_ '' (#~ -.@(4!:55)) (4!:1) 0 1 2 3'''
 )
-cutLF=: 3 : 'if. L. y do. y else. a: -.~ <;._2 y,LF end.'
+cutLF=: 3 : 'if. 0 (<L.) y do. y else. a: -.~ <;._2 y,LF end.'
 cutopen=: 3 : 0
 y cutopen~ (' ',LF) {~ LF e. ,y
 :
-if. L. y do. y return. end.
+if. 0 (<L.) y do. y return. end.
 if. 1 < #$y do. <"_1 y return. end.
 (<'') -.~ (y e.x) <;._2 y=. y,1{.x
 )
@@ -355,12 +355,12 @@ take=: {.
 timespacex=: 6!:2 , 7!:2@]
 timex=: 6!:2
 tolist=: }.@;@:(LF&,@,@":&.>)
-tolower=: 3 : 0
+tolower=: 3 : 0`((((97+i.26){a.)(65+i.26)}a.) {~ a. i. ])@.(2 = 3!:0)
 x=. I. 26 > n=. ((65+i.26){a.) i. t=. ,y
 ($y) $ ((x{n) { (97+i.26){a.) x}t
 )
 
-toupper=: 3 : 0
+toupper=: 3 : 0`((((65+i.26){a.)(97+i.26)}a.) {~ a. i. ])@.(2 = 3!:0)
 x=. I. 26 > n=. ((97+i.26){a.) i. t=. ,y
 ($y) $ ((x{n) { (65+i.26){a.) x}t
 )
@@ -517,6 +517,7 @@ JCHAR4=: 262144
 JSTR4=: _1,JCHAR4
 JTYPES=: JB01,JCHAR,JINT,JPTR,JFL,JCMPX,JBOXED,JSB,JCHAR2,JCHAR4
 JSIZES=: >IF64{1 1 4 4 8 16 4 4 2 4;1 1 8 8 8 16 8 8 2 4
+SZI=: IF64{4 8
 ic=: 3!:4
 fc=: 3!:5
 endian=: |.^:('a'={.2 ic a.i.'a')
@@ -524,14 +525,28 @@ Endian=: |.^:('a'~:{.2 ic a.i.'a')
 AND=: $:/ : (17 b.)
 OR=: $:/ : (23 b.)
 XOR=: $:/ : (22 b.)
+cocurrent'z'
+
 break=: 3 : 0
-class=. >(0=#y){y;'default'
-p=. 9!:46''
-if. '~' = {.q=. jpath '~break/' do.
-  q=. (>:p i: '/'){.p
+if. y-:0 do. breakhelp_j_ return. end.
+breakclean_j_''
+p=. jpath'~break/'
+fs=.  ((<p),each{."1[1!:0 p,'*')-.<9!:46''
+pc=. (>:;fs i:each'/')}.each fs
+i=. ;pc i.each'.'
+pids=. _1".each i{.each pc
+classes=. (>:i)}.each pc
+if. y-:1 do. /:~(>":each pids),.>' ',each classes  return. end.
+'no task to break'assert #fs
+if. 2=3!:0 y do.
+ b=. classes=    (''-:y){y;'default'
+ 'bad class'assert +/b
+ fs=. (<p),each (":each b#pids),each '.',each b#classes
+else.
+ i=. pids i.<y
+ 'bad pid'assert i~:#pids
+ fs=. <p,(":;i{pids),'.',;i{classes
 end.
-fs=. (<q),each {."1[1!:0<q,'*.',class
-fs=. fs-.<p
 for_f. fs do.
   v=. 2<.>:a.i.1!:11 f,<0 1
   (v{a.) 1!:12 f,<0
@@ -539,14 +554,45 @@ end.
 i.0 0
 )
 setbreak=: 3 : 0
+if. (-.IFQT)*.y-:'default' do. i.0 0 return. end.
 try.
-  p=. jpath '~break/'
-  1!:5 ::] <p
-  f=. p,(":2!:6''),'.',y
-  ({.a.) 1!:12 f;0
-  9!:47 f
-  f
-catch. '' end.
+ assert #y
+ q=. jpath '~break/'
+ 1!:5 ::] <q
+ f=. q,(":2!:6''),'.',y
+ ({.a.) 1!:12 f;0
+ 9!:47 f
+ breakclean_j_''
+ f
+catch. 13!:12'' end.
+)
+breakclean_j_=: 3 : 0
+q=. jpath '~break/'
+fs=. ((<q),each{."1[1!:0 q,'*')-.9!:46''
+if. UNAME-:'Win' do.
+ ferase fs
+else.
+ d=.  dltb each}.<;._2 spawn_jtask_'ps -e'
+ allpids=. ;0".each (d i.each ' '){.each d
+ pc=. (>:;fs i:each'/')}.each fs
+ pids=. ;_1".each (;pc i.each'.'){.each pc
+ ferase (-.pids e. allpids)#fs
+end.
+)
+
+breakhelp_j_=: 0 : 0
+   break 0
+   break 1
+   break ''
+   break '...'
+   break pid
+
+1st break stops execution at line start
+2nd break stops execution mid-line, 6!:3 , socket select
+
+profile does setbreak'default' (does nothing unless Jqt)
+
+   setbreak'...'
 )
 cocurrent 'z'
 calendar=: 3 : 0
@@ -739,12 +785,12 @@ dbcut=: 13!:19
 dbover=: 13!:20
 dbinto=: 13!:21
 dbout=: 13!:22
-dbctx=: 3 3&$: : (4 : 0)
+dbctx=: 10 10&$: : (4 : 0)
 if. -.13!:17'' do. 0 0$'' return. end.
 try.
-  'before after'=. 2{. <. , x, 3 3
+  'before after'=. 2{. <. , x, 10 10
 catch.
-  'before after'=. 3 3
+  'before after'=. 10 10
 end.
 if. 0= #d=. 13!:13'' do. 0 0$'' return. end.
 if. '*' -.@e. sus=. >{:"1 d do. 0 0$'' return. end.
@@ -864,31 +910,31 @@ f is the name of a verb
       dbss 'f :2'  dyadic line 2
       dbss 'f *:*' all lines
 
-dbr     reset, set suspension mode (0=disable, 1=enable)
-dbs     display stack
-dbsq    stop query
-dbss    stop set
-dbrun   run again (from current stop)
-dbnxt   run next (skip line and run)
-dbret   exit and return argument
-dbjmp   jump to line number
-dbsig   signal error
-dbrr    re-run with specified arguments
-dbrrx   re-run with specified executed arguments
-dberr   last error number
-dberm   last error message
-dbstk   call stack
-dblxq   latent expression query
-dblxs   latent expression set
-dbtrace trace control
-dbq     queries suspension mode (set by dbr)
-dbst    returns stack text
+dbr     13!:0  reset, set suspension mode (0=disable, 1=enable)
+dbs     13!:1  display stack
+dbsq    13!:2  stop query
+dbss    13!:3  stop set
+dbrun   13!:4  run again (from current stop)
+dbnxt   13!:5  run next (skip line and run)
+dbret   13!:6  exit and return argument
+dbjmp   13!:7  jump to line number
+dbsig   13!:8  signal error
+dbrr    13!:9  re-run with specified arguments
+dbrrx   13!:10 re-run with specified executed arguments
+dberr   13!:11 last error number
+dberm   13!:12 last error message
+dbstk   13!:13 call stack
+dblxq   13!:14 latent expression query
+dblxs   13!:15 latent expression set
+dbtrace 13!:16 trace control
+dbq     13!:17 queries suspension mode (set by dbr)
+dbst    13!:18 returns stack text
 (these 4 verbs are subject to change without notice)
-dbcut   cut back
-dbover  step over
-dbinto  step into
-dbout   step out
-
+dbcut   13!:19 cut back
+dbover  13!:20 step over (13!:20'' or moveline 13!:20'')
+dbinto  13!:21 step into ...
+dbout   13!:22 step out  ...
+(utilities)
 dbctx       display context
 dbg         turn debug window on/off
 dblocals    display local names on stack
@@ -897,7 +943,7 @@ dbstop      add stop definitions
 dbstops     set all stop definitions
 dbstopme    stop current definition
 dbstopnext  stop current definition at next line
-dbview      view stack
+dbview      (GUI only) view stack
 )
 cocurrent 'z'
 dir=: 3 : 0
@@ -1442,7 +1488,7 @@ msk=. blk >: ndx e. b # ndx
 rplc=: stringreplace~
 fstringreplace=: 4 : 0
 nf=. 'no match found'
-y=. boxopen y
+y=. fboxname y
 try. size=. 1!:4 y catch. nf return. end.
 if. size=0 do. nf return. end.
 old=. freads y

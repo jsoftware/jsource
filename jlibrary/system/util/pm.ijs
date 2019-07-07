@@ -699,6 +699,7 @@ end=. lns = _2
 f=. 1: = [: +/\ (- (0: , 1: - }:))
 msk=. f each ndx < /. bgn
 
+dat =. dat - <./ dat
 ada=. ndx < /. dat * _1 ^ bgn
 
 all=. msk +/@# &> ada
@@ -745,11 +746,6 @@ if. +./mrec=. (_2=PMLINES)*.PMNDX=1|.PMNDX do.
 end.
 sum=. str , edr , spc , spcr
 her=. (nub i. {."1 sum) +/ /. {:"1 sum
-
-if. x=0 do.
-  assert *./ all >: her
-end.
-
 |: req # all ,. her ,. rep
 )
 getused=: 3 : 0

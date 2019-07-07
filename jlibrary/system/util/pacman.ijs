@@ -83,17 +83,9 @@ if. IFUNIX do.
     HTTPCMD=: 'wget ',nc,' -O %O -o %L -t %t %U'
   end.
 else.
-  busybox=. 0
-  if. fexist exe=. jpath '~tools/ftp/wget.exe' do. exe=. '"',exe,'"'
-  elseif. fexist exe=. jpath '~tools/ftp/busybox.exe' do. exe=. '"',exe,'" wget' [ busybox=. 1
-  elseif. do. exe=. '' end.
-  if. #exe do.
-    try. nc=. nc #~ 1 e. nc E. shell exe,' --help' catch. nc=. '' end.
-    HTTPCMD=: exe,' ',nc,busybox{::' -O %O -o %L -t %t -T %T %U';' -q -O %O %U'
-  end.
-  if. fexist UNZIP=: jpath '~tools/zip/unzip.exe' do. UNZIP=: '"',UNZIP,'" -o -C '
-  elseif. fexist UNZIP=: jpath '~tools/ftp/busybox.exe' do. UNZIP=: '"',UNZIP,'" unzip -q -o '
-  elseif. do. UNZIP=: 'unzip.exe -o -C ' end.
+  bbx=. '"','"',~jpath '~tools/ftp/busybox.exe'
+  HTTPCMD=: bbx,' wget -q -O %O %U'
+  UNZIP=: bbx,' unzip -q -o '
 end.
 )
 setfiles=: 3 : 0
@@ -426,28 +418,6 @@ e
 zipext=: 3 : 0
 y, IFUNIX pick '.zip';'.tar.gz'
 )
-busyboxget=: 3 : 0
-'f p'=. 2 {. (boxxopen y),a:
-if. 0=#p do.
-  p=. jpath '~temp/',f #~ -. +./\. f = '/'
-end.
-ferase p
-cmd=. '"','"',~jpath '~tools/ftp/busybox.exe'
-cmd=. cmd,' wget -O ',p,' ',f
-fail=. 0
-try.
-  fail=. _1-: e=. shellcmd cmd
-catch. fail=. 1 end.
-if. fail +. 0 >: fsize p do.
-  msg=. 'Connection failed'
-  log msg
-  r=. 1;msg
-  ferase p
-else.
-  r=. 0;p
-end.
-r
-)
 CHECKADDONSDIR=: 0 : 0
 The addons directory does not exist and cannot be created.
 
@@ -644,11 +614,7 @@ tmp
 )
 gitrepoget=: 3 : 0
 'f p'=. 2 {. (boxxopen y),a:
-if. IFWIN do.
-  busyboxget f;p
-else.
-  httpget f;3;p
-end.
+httpget f;3;p
 )
 install_gitrepo=: 3 : 0
 'tag rep cmt'=. cutrepo y
@@ -1482,9 +1448,9 @@ y=. (*#y){::0;y
 
 smoutput 'Installing Qt library...'
 if. IFWIN do.
-  z=. 'qt59-win-',((y-:'slim')#'slim-'),(IF64 pick 'x86';'x64'),'.zip'
+  z=. 'qt512-win-',((y-:'slim')#'slim-'),(IF64 pick 'x86';'x64'),'.zip'
 else.
-  z=. 'qt59-mac-',((y-:'slim')#'slim-'),(IF64 pick 'x86';'x64'),'.zip'
+  z=. 'qt512-mac-',((y-:'slim')#'slim-'),(IF64 pick 'x86';'x64'),'.zip'
 end.
 'rc p'=. httpget_jpacman_ 'http://www.jsoftware.com/download/j901/qtlib/',z
 if. rc do.

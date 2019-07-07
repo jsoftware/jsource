@@ -23,47 +23,35 @@ NB. jhslinkurl'www.d3js.org' NB. link to D3 home page
 tool_jd3=: 0 : 0
 plot d3 uses D3 javascript library
 see menu help>JHS help>libraries for more info
-
    jd3''
 )
 
 tool_table=: 0 : 0
 table (spreadsheet) uses Handsontable javascript library
 see menu help>JHS help>libraries for more info
-
    'jtable;0 0'cojhs'n' [ n=. i.3 4
-
 n immediately reflects any changes
-
 edit cells and add new rows/cols
 initial data was numeric, so non-numeric is red
-
    'jtable;20 20'cojhs's' [ s=: 2 2$'aa';'b';'c';'dd'
-
 ctrl+\ or red button in corner to properly close app
 )
 
 tool_app=: 0 : 0
 how to build an app
-
 apps are built with J, JHS framework, html, css,
 DOM (document object model), and javascript
-
 learning curve is long, but not steep
 significant rewards along the way
 what you learn is applicable not just to J,
 but to every aspect of web programming
-
 JHS IDE is built with the same facilities
-
 run and study each script/app in order
-
    runapp_jhs_ N
     - copies appN.ijs to ~temp/app
     - runs and opens script in a tab
     - opens the app in a tab
 move the 2 new tabs so you can easily study them
-
  1 HBS - html
  2 JS - javascript event handlers
  3 J event handlers
@@ -76,7 +64,6 @@ move the 2 new tabs so you can easily study them
 
 tool_doc=: 0 : 0
 brief utilities summary
-
    doc_jhs_''     NB. general
    doc_jhs_'html' NB. app building - html
    doc_jhs_'js'   NB. app building - javascript
@@ -88,7 +75,6 @@ simple printing
    0 print_jhs_       'display without print dialog'
      printscript_jhs_ '~addons/ide/jhs/config/jhs.cfg'
    0 printscript_jhs_ '~addons/ide/jhs/config/jhs.cfg'
-
    printwidth_jhs_=: 80 NB. truncate longer lines with ... 
    printstyle_jhs_=: 'font-family"courier new";font-size:16px;'
 )
@@ -96,11 +82,9 @@ simple printing
 tool_demos=: 0 : 0
 simple apps showing JHS gui programming
 run demos to see some of the possibilities
-
 study the source to see how it is done
 study menu tour>app first as the source
 will make more sense after that
-
 1  Roll submit
 2  Roll ajax
 3  Flip ajax
@@ -115,7 +99,6 @@ will make more sense after that
 12 WebGL 3d graphics
 13 D3 line and bar plots
 14 iframes - spreadsheet/graph
-
    rundemo_jhs_ 1
 )
 
@@ -132,7 +115,7 @@ run one of the following sentences:
 )
 
 getlabs=: 3 : 0
-LABFILES=: f=. ,{."1 dirtree'~addons/*.ijt'
+LABFILES=: f=. excludes ,{."1 dirtree'~addons/*.ijt' NB. exclude inserted to remove excluded labs - see exlabs.txt
 d=. (>:#jpath'~addons')}.each f
 d=. (;d i: each '/'){.each d
 b=. ;(<'labs/labs/')=10{.each d
@@ -149,6 +132,23 @@ LABTITLES=: t
 
 NB. could be used to exclude labs - see exlabs.txt
 EXJHS=: 0 : 0
+)
+
+excludes=: 3 : 0  NB. based on excludes_jlab805_ with a different final line
+t=. 'b' fread '~addons/labs/labs/exlabs.txt'
+if. t-:_1 do. y return. end.
+t=. t #~ '#' ~: {.&> t
+0!:100 ; t ,each LF
+r=. EXALL
+if. IFJHS do.
+ r=. r,EXJHS
+elseif. IFQT do.
+ r=. r,EXJQT
+elseif. IFJNET do.
+ r=. r,EXJNET
+end.
+r=. ((jpath '~addons/'),deb) each <;._2 r
+y #~ -. y e. r                       NB. This line is different from the jlab805 version as LABFILES is a list
 )
 
 tool_labs=:3 : 0
@@ -184,4 +184,3 @@ smselout_jijs_=: smfocus_jijs_=: [ NB. allow introcourse to run
 echo'JHS lab advance - ctrl+. or menu >'
 lab_jlab_ f
 )
-

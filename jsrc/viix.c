@@ -72,6 +72,7 @@ static B jtiixI(J jt,I n,I m,A a,A w,I*zv){A t;B ascend;I*av,j,p,q,*tv,*u,*v,*vv
   p=0; q=n-1;                  \
   while(p<=q){MID(k,p,q); u=av+c*k; v=wv; b=1; DO(c, x=*u++; y=*v++; if(NE){CMP; break;}); /* make this compare fixed length? */   \
       if(b)q=k-1; else p=k+1;}
+// Without misprediction
 #define BSLOOPNx(NE,CMP)    /* if CMP is true, move q; otherwise p */       \
   p=0; q=n-1; k=(q>>1);         \
   do{   /* empty lists handled earlier */ \
@@ -80,7 +81,7 @@ static B jtiixI(J jt,I n,I m,A a,A w,I*zv){A t;B ascend;I*av,j,p,q,*tv,*u,*v,*vv
    k=b?k:k2; p=b?p:p2; q=b?q1:q; /* move k first to start next fetch */\
   }while(q>=p); 
 
-#if 0
+#if 0 // obsolete
 #define BSLOOP(Ta,Tw)       \
  {Ta*av=(Ta*)AV(a),x; Tw y; Tw*wv=(Tw*)AV(w);                                             \
                                                \
@@ -91,7 +92,7 @@ static B jtiixI(J jt,I n,I m,A a,A w,I*zv){A t;B ascend;I*av,j,p,q,*tv,*u,*v,*vv
    case 2: DQ(m, Ta* u; Tw *v; BSLOOPN(x!=y,b=x>y); *zv++=1+q; wv+=c;); break;      \
    case 3: DQ(m, Ta* u; Tw *v; BSLOOPNx(x!=y,x<y); *zv++=1+q; wv+=c;); break;      \
  }}
-#endif // scaf
+#endif
 #define BSLOOP(Ta,Tw)       \
  {Ta*av=(Ta*)AV(a),x; Tw y; Tw*wv=(Tw*)AV(w);                                             \
    if(c==1){if(ge!=1)DQ(m, BSLOOP1x(x>=y); *zv++=q+1;)else DQ(m, BSLOOP1x(x<=y); *zv++=q+1;)}      \

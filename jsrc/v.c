@@ -9,18 +9,18 @@
 F1(jttally ){A z; RZ(w); z=sc(IC(w));            RETF(AT(w)&XNUM+RAT?xco1(z):z);}
 F1(jtshapex){A z; RZ(w); z=vec(INT,AR(w),AS(w)); RETF(AT(w)&XNUM+RAT?xco1(z):z);}
 F1(jtshape){RZ(w); R vec(INT,AR(w),AS(w));}
-F1(jtisempty){RZ(w); R num[AN(w)==0];}
-F1(jtisnotempty){RZ(w); R num[AN(w)!=0];}
+F1(jtisempty){RZ(w); if(AT(w)&SPARSE)R eps(zeroionei[0],shape(w)); R num[AN(w)==0];}
+F1(jtisnotempty){RZ(w); if(AT(w)&SPARSE)R not(eps(zeroionei[0],shape(w))); R num[AN(w)!=0];}
 F1(jtisitems){RZ(w); R num[!AR(w)||AS(w)[0]];}
 F1(jtrank){F1PREFIP; RZ(w); R sc(AR(w));}
-F1(jtnatoms){F1PREFIP; RZ(w); R sc(AN(w));}
+F1(jtnatoms){F1PREFIP; RZ(w); if(AT(w)&SPARSE)R df1(shape(w),slash(ds(CPLUS))); R sc(AN(w));}
 
 // ,y and ,"r y - producing virtual blocks
 F1(jtravel){A a,c,q,x,y,y0,z;B*b;I f,j,m,r,*u,*v,*yv;P*wp,*zp;
  F1PREFIP; RZ(w); 
- r=(RANKT)jt->ranks; r=AR(w)<r?AR(w):r; f=AR(w)-r; RESETRANK; // r=effective rank (jt->rank is effective rank from irs1), f=frame
+ r=(RANKT)jt->ranks; r=AR(w)<r?AR(w):r; f=AR(w)-r; // r=effective rank (jt->rank is effective rank from irs1), f=frame
  if(!(AT(w)&SPARSE)){
-  if(r==1)R RETARG(w);  // if we are enfiling 1-cells, there's nothing to do, return the input (note: rank of sparse array is always 1)
+  if(r==1)R RETARG(w);  // if we are enfiling 1-cells, there's nothing to do, return the input (note: AN of sparse array is always 1)
   CPROD(AN(w),m,r,f+AS(w));   // m=#atoms in cell
   if((I)jtinplace&JTINPLACEW && r && ASGNINPLACE(w) && !(AFLAG(w)&AFUNINCORPABLE)){  // inplace allowed, rank not 0 (so shape will fit), usecount is right
    // operation is loosely inplaceable.  Just shorten the shape to frame,(#atoms in cell).  We do this here rather than relying on
@@ -36,6 +36,7 @@ F1(jtravel){A a,c,q,x,y,y0,z;B*b;I f,j,m,r,*u,*v,*yv;P*wp,*zp;
   MC(AV(z),AV(w),AN(w)<<bplg(AT(w))); RETF(z); // if dense, move the data and relocate it as needed
  }
  // the rest handles sparse matrix enfile
+ RESETRANK;   // clear IRS for calls made here
  RE(m=prod(r,f+AS(w)));  // # atoms in cell
  GASPARSE(z,AT(w),1,1+f,AS(w)); AS(z)[f]=m;   // allocate result area, shape=frame+1 more to hold size of cell; fill in shape
  wp=PAV(w); zp=PAV(z);
@@ -58,17 +59,20 @@ F1(jtravel){A a,c,q,x,y,y0,z;B*b;I f,j,m,r,*u,*v,*yv;P*wp,*zp;
  RETF(z);
 }
 
-F1(jttable){A z;I f,r,*s,wr,*ws,wt;
- RZ(w);
- wt=AT(w); ws=AS(w);
- wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; RESETRANK; // wr=rank, r=effective rank (jt->rank is effective rank from irs1), f=frame
-
- if(wt&SPARSE){A zz; IRS1(w,0L,r?r-1:0,jtravel,z); R r?z:IRS1(z,0L,0L,jtravel,zz);}
- GA(z,wt,AN(w),2+f,ws); s=f+AS(z);
- if(r)*(1+s)=prod(r-1,1+f+ws); else *s=*(1+s)=1;
- MC(AV(z),AV(w),AN(w)<<bplg(wt));
- RETF(z);
-}
+F1(jttable){A z,zz;I r,wr;
+ RZ(w);F1PREFIP;
+ wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r;  // r=rank to use
+ RZ(IRSIP1(w,0L,r-1<0?0:r-1,jtravel,z));  // perform ravel on items
+ R r?z:IRSIP1(z,0L,0L,jtravel,zz);  // If we are raveling atoms, do it one more time on atoms
+// obsolete  wt=AT(w); ws=AS(w);
+// obsolete  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; RESETRANK; // wr=rank, r=effective rank (jt->rank is effective rank from irs1), f=frame
+// obsolete 
+// obsolete  if(wt&SPARSE){A zz; IRS1(w,0L,r?r-1:0,jtravel,z); R r?z:IRS1(z,0L,0L,jtravel,zz);}
+// obsolete  GA(z,wt,AN(w),2+f,ws); s=f+AS(z);
+// obsolete  if(r)*(1+s)=prod(r-1,1+f+ws); else *s=*(1+s)=1;
+// obsolete  MC(AV(z),AV(w),AN(w)<<bplg(wt));
+// obsolete  RETF(z);
+} // ,."r y
 
 // ] [ and ]"n ["n, dyadic
 // length error has already been detected, in irs
@@ -78,7 +82,7 @@ static A jtlr2(J jt,B left,A a,A w){A z;C*v;I acr,af,ar,k,n,of,*os,r,*s,t,
  // ?r=rank of ? arg; ?cr= verb-rank for that arg; ?f=frame for ?; ?s->shape
  // We know that jt->rank is nonzero, because the caller checked it
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr; af=ar-acr;
- wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr;  wf=wr-wcr;  // RESETRANK not required because we call no primitives from here on
+ wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr;  wf=wr-wcr;  // RESETRANK not required because we call no primitives from here on,. 
  // Cells of the shorter-frame argument are repeated.  If the shorter- (or equal-)-frame argument
  // is the one being discarded (eg (i. 10 10) ["0 i. 10), the replication doesn't matter, and we
  // simply keep the surviving argument intact.  We can do this because we have no PROLOG

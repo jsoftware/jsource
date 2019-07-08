@@ -91,7 +91,8 @@ static DF1(jtply1){PROLOG(0040);DECLFG;A b,hs,j,*xv,y,z;B*bv,q;I i,k,m,n,*nv,old
  GATV0(x,BOX,m,1); xv=AAV(x);  // cannot be virtual
  while(p<m&&0>nv[p])p++;  // find first positive power
  if(p<m){  // if there is a positive power...
-  RZ(z=ca(w));
+// obsolete  RZ(z=ca(w));
+  z=w;
   n=nv[m-1]; k=p;
   while(k<m&&!nv[k]){INSTALLBOX(x,xv,k,z); ++k;}  // install the input as the result for any 0 powers
   RZ(b=eq(ainf,from(j,ravel(gs)))); bv=BAV(b); q=k<m?bv[k]:0;
@@ -100,11 +101,12 @@ static DF1(jtply1){PROLOG(0040);DECLFG;A b,hs,j,*xv,y,z;B*bv,q;I i,k,m,n,*nv,old
    RZ(z=CALL1(f1,y=z,fs));  // z=next power, y=previous power
    if(q&&equ(y,z)){DO(m-k, INSTALLBOX(x,xv,k,z); ++k;); break;}  // if there is an infinity, check for repetition; if any, use it for all higher powers, & be done
    while(k<m&&i==nv[k]){INSTALLBOX(x,xv,k,z); ++k; q=k<m?bv[k]:0;}  // otherwise use result for all equal powers
-   if(!(i&15))if(!gc3((A*)&x,&z,0L,old))R0;
+   if(!(i&7))if(!gc3((A*)&x,&z,0L,old))R0;
  }}
  if(0<p){  // if there was a negative power...
   RZ(fs=inv(fs)); f1=FAV(fs)->valencefns[0];
-  RZ(z=ca(w));
+// obsolete   RZ(z=ca(w));
+  z=w;
   n=nv[0]; k=p-1;
   RZ(b=eq(scf(-inf),from(j,ravel(gs)))); bv=BAV(b); q=bv[k];
   old=jt->tnextpushx;
@@ -112,9 +114,24 @@ static DF1(jtply1){PROLOG(0040);DECLFG;A b,hs,j,*xv,y,z;B*bv,q;I i,k,m,n,*nv,old
    RZ(z=CALL1(f1,y=z,fs));
    if(q&&equ(y,z)){DO(1+k, INSTALLBOX(x,xv,k,z); --k;); break;}
    while(0<=k&&i==nv[k]){INSTALLBOX(x,xv,k,z); --k; q=0<=k?bv[k]:0;}
-   if(!(i&15))if(!gc3((A*)&x,&z,0L,old))R0;
+   if(!(i&7))if(!gc3((A*)&x,&z,0L,old))R0;
  }}
  z=ope(reshape(shape(hs),from(grade1(j),x))); EPILOG(z);
+}
+
+// u^:_ w
+static DF1(jtpinf1){DECLFG;PROLOG(0340);A z;
+ I i=0;
+ while(1){
+  RZ(z=CALL1(f1,w,fs));  // call the fn
+  I isend=equ(z,w);  // remember if it is the same as last time
+  if(!((isend-1)&++i&7)) {  // every so often, but always when we leave...
+   JBREAK0;   // check for user interrupt, in case the function doesn't allocate memory
+   EPILOGNORET(z);  // free up allocated blocks, but keep z
+   if(isend)RETF(z);  // return at end
+  }
+  w=z;  // make the new result the starting value for next loop
+ }
 }
 
 #define DIST(i,x)  if(i==e){v=CAV(x); \
@@ -150,7 +167,7 @@ static DF1(jtinvh1){F1PREFIP;DECLFGH;A z; RZ(w);    FDEPINC(1); z=(FAV(hs)->vale
 static DF2(jtinv2){DECLFG;A z; RZ(a&&w); FDEPINC(1); z=df1(w,inv(amp(a,fs))); FDEPDEC(1); STACKCHKOFL RETF(z);}  // the CHKOFL is to avoid tail recursion, which prevents a recursion loop from being broken
 static DF1(jtinverr){F1PREFIP;ASSERT(0,EVDOMAIN);}  // used for uninvertible monads
 
-static CS2(jtply2,  df1(w,powop(amp(a,fs),gs,0)),0107)
+static CS2(jtply2,  df1(w,powop(amp(a,fs),gs,0)),0107)  // dyad adds x to make x&u, and then reinterpret the compound.  We could interpret u differently now that it has been changed
 
 static DF1(jtpowg1){A h=FAV(self)->fgh[2]; R df1(  w,*AAV(h));}
 static DF2(jtpowg2){A h=FAV(self)->fgh[2]; R df2(a,w,*AAV(h));}
@@ -226,15 +243,18 @@ DF2(jtpowop){A hs;B b;V*v;
  // unboxed n.
  RZ(hs=vib(w));   // hs=n coerced to integer
  if(!AR(w)){  // input is an atom
-  // Handle the 3 important cases: atomic _1 (inverse), 0 (nop), and 1 (execute u)
-  // kludge should have special case for atomic _ too
+  // Handle the 4 important cases: atomic _1 (inverse), 0 (nop), 1 (execute u), and _ (converge/do while)
   if(!(IAV(hs)[0]&~1))R a=IAV(hs)[0]?a:ds(CRIGHT);  //  u^:0 is like ],  u^:1 is like u 
-  if(IAV(hs)[0]==-1){  //  u^:_1
-   // if there are no names, calculate the monadic inverse and save it in h.  Inverse of the dyad, or the monad if there are names,
-   // must wait until we get arguments
-   A h=0; AF f1=jtinv1; if(nameless(a)){if(h=inv(a)){f1=jtinvh1;}else{f1=jtinverr; RESETERR}} // h must be valid for free.  If no names in w, take the inverse.  If it doesn't exist, fail the monad but keep the dyad going
-   I flag = (FAV(a)->flag&VASGSAFE) + (h?FAV(h)->flag&VJTFLGOK1:VJTFLGOK1);  // inv1 inplaces and calculates ip for next step; invh has ip from inverse
-   R fdef(0,CPOWOP,VERB,(AF)(f1),jtinv2,a,w,h,flag,RMAX,RMAX,RMAX);
+  if((IAV(hs)[0]<<1)==-2){  //  u^:_1 or u^:_
+   if(IAV(hs)[0]<0){  // u^:_1
+    // if there are no names, calculate the monadic inverse and save it in h.  Inverse of the dyad, or the monad if there are names,
+    // must wait until we get arguments
+    A h=0; AF f1=jtinv1; if(nameless(a)){if(h=inv(a)){f1=jtinvh1;}else{f1=jtinverr; RESETERR}} // h must be valid for free.  If no names in w, take the inverse.  If it doesn't exist, fail the monad but keep the dyad going
+    I flag = (FAV(a)->flag&VASGSAFE) + (h?FAV(h)->flag&VJTFLGOK1:VJTFLGOK1);  // inv1 inplaces and calculates ip for next step; invh has ip from inverse
+    R fdef(0,CPOWOP,VERB,(AF)(f1),jtinv2,a,w,h,flag,RMAX,RMAX,RMAX);
+   }else{  // u^:_
+    R fdef(0,CPOWOP,VERB,jtpinf1,jtply2,a,w,0,VFLAGNONE,RMAX,RMAX,RMAX);
+   }
   }
  }
  I m=AN(hs); // m=#atoms of n; n=1st atom; r=n has rank>0

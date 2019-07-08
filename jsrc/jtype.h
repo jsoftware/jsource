@@ -94,7 +94,8 @@ struct AD {
   A proxychain;  // used when block is on free chain
  } tproxy;
  I c;  // usecount
- I n;  // # atoms  NOTE!! result.h faux cellshape block depends on n, r, and s being in place from here to the end of this struct, with 2 Is from n to s
+//  NOTE!! result.h faux cellshape block depends on n, r, and s being in place from here to the end of this struct, with 2 Is from n to s
+ I n;  // # atoms - always 1 for sparse arrays
 #if C_LE
  RANKT r;  // rank
  US h;   // reserved for allocator.  Not used for AFNJA memory

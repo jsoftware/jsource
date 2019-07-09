@@ -529,20 +529,21 @@ static F2(jtmapx){A z1,z2,z3;
 
 F1(jtmap){R mapx(ace,w);}
 
-// extract the single box a from w and open it.  Don't mark it no-inplace.
+// extract the single box a from w and open it.  Don't mark it no-inplace.  If w is not boxed, it had better be an atom, and we return it after auditing the index
 static F2(jtquicksel){I index;
  RE(index=i0(a));  // extract the index
 // obsolete  index=index+((index>>(BW-1))&AN(w)); ASSERT((UI)index<(UI)AN(w),EVINDEX);   // remap negative index, check range
  SETNDX(index,index,AN(w))   // remap negative index, check range
- R AAV(w)[index];  // select the box
+ R AT(w)&BOX?AAV(w)[index]:w;  // select the box, or return the entire unboxed w
 }
 
 F2(jtfetch){A*av, z;I n;F2PREFIP;
- F2RANK(1,RMAX,jtfetch,0);
+ F2RANK(1,RMAX,jtfetch,0);  // body of verb applies to rank-1 a
  if(!(BOX&AT(a))){
   // look for the common special case scalar { boxed vector.  This path doesn't run EPILOG
-  if(!AR(a) && AR(w)==1 && AT(w)&BOX){
-   RZ(z=jtquicksel(jt,a,w));
+// obsolete   if(!AR(a) && AR(w)==1 && AT(w)&BOX){
+  if(((AT(w)>>BOXX)&1)>=(2*AR(a)+AR(w))){  // a is an atom, w is atom or boxed list   AR(a)==0 && (AR(w)==0 || (AR(w)==1 && AT(w)&BOX))
+   RZ(z=jtquicksel(jt,a,w));  // fetch selected box, opened.  If not a box, just return w
    // Inplaceability depends on the context.  If the overall operand is either noninplaceable or in a noninplaceable context, we must
    // protect the value we fetch (the overall operand would matter only if it was flagged without a ra())
    if(!ACIPISOK(w)||!((I)jtinplace&JTINPLACEW))ACIPNO(z); RETF(z);
@@ -551,7 +552,8 @@ F2(jtfetch){A*av, z;I n;F2PREFIP;
  }
  n=AN(a); av=AAV(a); 
  if(!n)R w; z=w;
- DO(n, A next=av[i]; if(!AR(next) && !(AT(next)&BOX) && AR(z)==1 && AT(z)&BOX){RZ(z=jtquicksel(jt,next,z))}
+// obsolete  DO(n, A next=av[i]; if(!AR(next) && !(AT(next)&BOX) && AR(z)==1 && AT(z)&BOX){RZ(z=jtquicksel(jt,next,z))}
+ DO(n, A next=av[i]; if(((AT(z)>>BOXX)&1)>=(2*(AR(next)+(AT(next)&BOX))+AR(z))){RZ(z=jtquicksel(jt,next,z))}  // next is unboxed atom, z is boxed atom or list, use fast indexing  AR(next)==0 && !(AT(next)&BOX) && (AR(z)==0 || (AR(z)==1 && AT(z)&BOX))
       else{RZ(z=afrom(box(next),z)); if(i<n-1)ASSERT(!AR(z),EVRANK); if(!AR(z)&&AT(z)&BOX)RZ(z=ope(z));}
    );
  if(!ACIPISOK(w)||!((I)jtinplace&JTINPLACEW))ACIPNO(z); RETF(z);   // Mark the box as non-inplaceable, as above

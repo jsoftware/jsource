@@ -43,6 +43,21 @@ t -: 3;4   NB. Verify the value fetched from t was non-inplaceable
 'Note asdfasdfs' -: ]^:('NB.' -: 3 {. _1 {:: ])&.;: 'Note  asdfasdfs'
 'Noteasdfasdfs' -: ; (] [ 3 {. _1 {:: ]) ;: 'Note  asdfasdfs'
 
+6 -: 0 {:: <6
+6 7 -: 0 {:: <6 7
+'index error' -: 1 {:: etx <6
+'index error' -: 1 {:: etx 6
+'length error' -: (,0) {:: etx <6
+8 -: 0 {:: 8
+6 -: 0 {:: 6 7
+7 -: 1 {:: 6 7
+'a' -: 0 {:: 'ab'
+'b' -: 1 {:: 'ab'
+(0;1) -: 0 {:: <"0 i. 2 2
+(0;1) -: (,0) {:: <"0 i. 2 2
+'a' -: (0;0) {:: <"0 'abc'
+'a' -: (0;0) {:: <@,"0 'abc'
+
 4!:55 ;:'boxed cat map mapp pick S sc spread_temp si sz t'
 
 

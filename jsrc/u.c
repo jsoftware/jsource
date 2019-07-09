@@ -385,11 +385,12 @@ for(I i=0;i<n<<bplg(t);i++)*p++=!!(*q++);
 F1(jtvi){RZ(w); R INT&AT(w)?w:cvt(INT,w);}
 
 // Audit w to ensure valid integer value(s).  Error if non-integral.  Result is A block for integer array.  Infinities converted to IMAX
-F1(jtvib){A z;D d,e,*wv;I i,n,p=-IMAX,q=IMAX,*zv;
+F1(jtvib){A z;D d,e,*wv;I i,n,*zv;
  RZ(w);
  if(AT(w)&INT)R RETARG(w);  // handle common non-failing cases quickly: INT and boolean
  if(AT(w)&B01){if(!AR(w))R zeroionei[BAV(w)[0]]; R cvt(INT,w);}
  if(w==ainf)R imax;  // sentence words of _ always use the same block, so catch that too
+ I p=-IMAX,q=IMAX;
  RANK2T oqr=jt->ranks; RESETRANK;
  if(AT(w)&SPARSE)RZ(w=denseit(w));
  switch(CTTZNOFLAG(AT(w))){

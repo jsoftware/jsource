@@ -365,8 +365,8 @@ static A jtopes(J jt,I zt,A cs,A w){A a,d,e,sh,t,*wv,x,x1,y,y1,z;B*b;C*xv;I an,*
 F1(jtope){PROLOG(0080);A cs,*v,y,z;I nonh;C*x;I i,n,*p,q=RMAX,r=0,*s,t=0,te=0,*u,zn;
  RZ(w);
  n=AN(w); v=AAV(w);
- if(!(n&&BOX&AT(w)))RCA(w);  // return w if empty or open
-   // wrel is relocation amount for w, 0 if not relative
+// obsolete  if(!(n&&BOX&AT(w)))RCA(w);  // return w if empty or open
+ if(!(BOX&(AT(w)&((-n)>>(BW-1)))))RCA(w);  // return w if empty or open
  if(!AR(w)){z=*v; ACIPNO(z); R z;}   // scalar box: turn off inplacing if we are using the contents directly
  // set q=min rank of contents, r=max rank of contents
  for(i=0;i<n;++i){

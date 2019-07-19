@@ -77,7 +77,7 @@ A jtevery2(J jt,A a,A w,A fs,AF f2){A*av,*wv,x,z,*zv;
  I virtblocka[NORMAH+1];  // space for a virtual block of rank 0
  if(BOX&AT(a)){flags|=BOX<<1; virta=*(av=AAV(a));}  // if input is boxed, point to first box
  else{
-  // if input is not boxed, use a faux-virtual block to point to the atoms  In this case av is not needed and we use it for the length of an atom
+  // if input is not boxed, use a faux-virtual block to point to the atoms.  In this case av is not needed and we use it for the length of an atom
   fauxvirtual(virta,virtblocka,a,0,ACUC1); AN(virta)=1; av=(A*)bpnoun(AT(a));
  }
 // obsolete  if(ar&&!ab)RZ(IRS1(a,0,0,jtbox,a)); av=AAV(a); 

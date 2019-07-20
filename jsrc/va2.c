@@ -475,12 +475,13 @@ printf("va2a: indexes="); spt=SPA(PAV(a),i); DO(AN(spt), printf(" %d",IAV(spt)[i
 A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I ak,f,m,
      mf,n,nf,r,* RESTRICT s,*sf,wk,zk,zn,zt;VA2 adocv;
  RZ(a&&w);F2PREFIP;
+ RANK2T savedranks=jt->ranks;   // save original rank before we change it, in case we have to restart the operation
  {I at=AT(a);
   I wt=AT(w);
   VA *vainfo=(VA*)FAV(self)->localuse.lvp;  // extract table line from the primitive
-  if(((-(jt->jerr|((UNSAFE(at|wt))&(NOUN&~(B01|INT|FL)))))|(AN(a)-1)|(AN(w)-1))>=0){
+  if(((-(jt->jerr|((UNSAFE(at|wt))&(NOUN&~(B01|INT|FL)))))|(AN(a)-1)|(AN(w)-1))>=0){  // no error, bool/int/fl args, no empties
    // Here for the fast and important case, where the arguments are both B01/INT/FL
-   // The index into va is atype*3 + wtype, calculated sneakily
+   // The index into va is atype*3 + wtype, calculated sneakily.  We test here to avoid the call overhead
    jt->mulofloloc = 0;  // Reinit multiplier-overflow count, in case we hit overflow.  Needed only on integer multiply, but there's no better place
    adocv=vainfo->p2[(UNSAFE(at)>>(INTX-1))+((UNSAFE(at)+UNSAFE(wt))>>INTX)];
   }else{
@@ -514,7 +515,6 @@ A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I ak,f,m,
 // I wr = AR(w);
  // Analyze the rank and calculate cell shapes, counts, and sizes.
  // We detect agreement error before domain error
- RANK2T savedranks=jt->ranks;   // save original rank before we change it, in case we have to restart the operation
  {//I *as = AS(a); I *ws = AS(w);
   if(savedranks==(RANK2T)~0){
    // No rank specified.  Since all these verbs have rank 0, that simplifies quite a bit.  ak/wk/zk/sf are not needed and are garbage

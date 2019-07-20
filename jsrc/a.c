@@ -7,7 +7,7 @@
 
 // create inplace bits as copy of W, or swap A & W
 static DF1(swap1){DECLF; F1PREFIP; jtinplace = (J)(intptr_t)(((I)jtinplace&~JTINPLACEA)+2*((I)jtinplace&JTINPLACEW));
- // a~ carried the IRS flag from a and thus we might have ranks set.  If so, usfs,e them, and no need to check ahreement again.  For ease, we just use whatever is set 
+ // a~ carried the IRS flag from a and thus we might have ranks set.  If so, use them, and no need to check agreement again.  For ease, we just use whatever is set 
  A z; IRSIP2(w,w,fs,(RANKT)jt->ranks,(RANKT)jt->ranks,f2,z); R z;
 // obsolete  RANKT mr=(RANKT)jt->ranks;
 // obsolete  if(mr!=RMAX)R jtirs2(jtinplace,w,w,fs,mr,mr,f2); else{jt->ranks=(RANK2T)~0; R (f2)(jtinplace,w,w,fs);}}  // must expand infinite rank to dyadic size

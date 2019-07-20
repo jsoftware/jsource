@@ -477,12 +477,19 @@ A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I ak,f,m,
  RZ(a&&w);F2PREFIP;
  {I at=AT(a);
   I wt=AT(w);
-  // If an operand is empty, turn it to Boolean, and if the OTHER operand is non-numeric, turn that to Boolean too (leaving
-  //  rank and shape untouched).  This change to the other operand is notional only - we won't actually convert
-  // when there is an empty - but it guarantees that execution on an empty never fails.
-  // If we switch a sparse nonnumeric matrix to boolean, that may be a space problem; but we don't
-  // support nonnumeric sparse now
-  if(((-((at|wt)&SPARSE))|(AN(a)-1)|(AN(w)-1))<0) { // test for all unusual cases: sparse or empty arg.  This sets FLAGSPARSE if called for & clears other flags
+  VA *vainfo=(VA*)FAV(self)->localuse.lvp;  // extract table line from the primitive
+  if(((-(jt->jerr|((UNSAFE(at|wt))&(NOUN&~(B01|INT|FL)))))|(AN(a)-1)|(AN(w)-1))>=0){
+   // Here for the fast and important case, where the arguments are both B01/INT/FL
+   // The index into va is atype*3 + wtype, calculated sneakily
+   jt->mulofloloc = 0;  // Reinit multiplier-overflow count, in case we hit overflow.  Needed only on integer multiply, but there's no better place
+   adocv=vainfo->p2[(UNSAFE(at)>>(INTX-1))+((UNSAFE(at)+UNSAFE(wt))>>INTX)];
+  }else{
+
+   // If an operand is empty, turn it to Boolean, and if the OTHER operand is non-numeric, turn that to Boolean too (leaving
+   //  rank and shape untouched).  This change to the other operand is notional only - we won't actually convert
+   // when there is an empty - but it guarantees that execution on an empty never fails.
+   // If we switch a sparse nonnumeric matrix to boolean, that may be a space problem; but we don't
+   // support nonnumeric sparse now
    // if an operand is sparse, replace its type with the corresponding non-sparse type, for purposes of testing operand precisions
    if((at|wt)&SPARSE){
     at=(SPARSE&at)?DTYPE(at):at;
@@ -491,11 +498,12 @@ A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I ak,f,m,
    }
    if(AN(a)==0){at=B01;if(!(wt&NUMERIC))wt=B01;}  // switch empty arg to Boolean & ensure compatibility with other arg
    if(AN(w)==0){wt=B01;if(!(at&NUMERIC))at=B01;}
-  }
 
-  // Figure out the result type.  Don't signal the error from it yet, because domain has lower priority than agreement
-  // Extract zt, the type of the result, and cv, the flags indicating the types selected for the arguments and the result
-  adocv=var(self,at,wt); zt=rtype(adocv.cv);
+   // Figure out the result type.  Don't signal the error from it yet, because domain has lower priority than agreement
+   // Extract zt, the type of the result, and cv, the flags indicating the types selected for the arguments and the result
+   adocv=var(self,at,wt);
+  }
+  zt=rtype(adocv.cv);
  }
 
  // finish up the computation of sizes.  We have to defer this till after var() because

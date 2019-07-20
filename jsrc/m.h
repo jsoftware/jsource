@@ -49,7 +49,7 @@
 // bpnoun is like bp but for NOUN types
 #define bpnoun(i) ((I)1<<bplg(i))
 #else
-#define bpnoun(i) bp(i)
+#define bpnoun(i) (I)bp(i)
 #define bplg(i) CTTZ(bpnoun(i))
 #endif
 

@@ -374,6 +374,7 @@ extern F1(jtxeps);
 extern F2(jtabase2);
 extern F2(jtadot2);
 extern F2(jtadverse);
+extern F2(jtaes2);
 extern F2(jtaflag2);
 extern F2(jtagenda);
 extern F2(jtamp);

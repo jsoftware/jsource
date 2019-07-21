@@ -205,14 +205,14 @@ XF2(jtxrem){I c,d,e;X q,r,y;
   default: R rifvsdebug(0<=(e=xcompare(a,w)) ? (e?w:iv0) : xminus(w,xtymes(a,xdiv(w,a,XMFLR))));
 }}
                                              
-XF2(jtxgcd){I c,d,old;X p,q,t;
+XF2(jtxgcd){I c,d;X p,q,t;
  RZ(a&&w);
  c=XDIG(a); if(0>c)RZ(a=negate(a)); 
  d=XDIG(w); if(0>d)RZ(w=negate(w));
  ASSERT(!(c==XPINF||c==XNINF||d==XPINF||d==XNINF),EVNAN);
  if(!c)R rifvsdebug(w);
  if(!d)R rifvsdebug(a);
- p=a; q=w; old=jt->tnextpushx;
+ p=a; q=w; A *old=jt->tnextpushp;
  while(XDIG(p)){
   t=p;
   RZ(p=xrem(p,q));

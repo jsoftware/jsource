@@ -54,12 +54,12 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
    // Since we are making the result recursive, we can save a lot of overhead by NOT putting the cells onto the tstack.  As we have marked the result as
    // recursive, it will free up the cells when it is deleted.  We want to end up with the usecount in the cells being 1, not inplaceable.  The result itself will be
    // inplaceable with a free on the tstack.
-   // To avoid the tstack overhead, we hijack the tstack pointers and set them up to have no effect on the actual tstack.  We restore them when we're
-   // finished.  If we hit an error, that's OK, because whatever we did get allocated will be freed when the result block is freed.  We use GAE so that we don't abort on error
-   I pushxsave = jt->tnextpushx; A *tstacksave = jt->tstack;  // save tstack info before allocation
-   jt->tstack = (A*)(&jt->tnextpushx);  // use tnextpushx as a temp.  It will be destroyed, which is OK because we are setting it to 0 before every call
-   DO(n, jt->tnextpushx=0; GAE(y,t,m,r,f+ws,break); AFLAG(y)=newflags; AC(y)=ACUC1; MC(CAV(y),wv,k); wv+=k; zv[i]=y;);   // allocate, but don't grow the tstack.  Set usecount of cell to 1
-   jt->tstack=tstacksave; jt->tnextpushx=pushxsave;   // restore tstack pointers
+   // To avoid the tstack overhead, we switch the tpush pointer to our data area, so that blocks are filled in as they are allocated, with nothing put
+   // onto the real tpop stack.  If we hit an error, that's OK, because whatever we did get allocated will be freed when the result block is freed.  We use GAE so that we don't abort on error
+   A *pushxsave = jt->tnextpushp; jt->tnextpushp=zv;  // save tstack info before allocation
+// obsolete    jt->tstack = (A*)(&jt->tnextpushx);  // use tnextpushx as a temp.  It will be destroyed, which is OK because we are setting it to 0 before every call
+   DQ(n, GAE(y,t,m,r,f+ws,break); AFLAG(y)=newflags; AC(y)=ACUC1; MC(CAV(y),wv,k); wv+=k;);   // allocate, but don't grow the tstack.  Set usecount of cell to 1.  Put allocated addr into *jt->tnextpushp++
+   jt->tnextpushp=pushxsave;   // restore tstack pointer
   }else{AFLAG(z) = newflags; DO(n, GA(y,t,m,r,f+ws); AFLAG(y)=newflags; MC(CAV(y),wv,k); wv+=k; zv[i]=y;); } // indirect w; don't set recursible, which might be expensive
  }
  RETF(z);

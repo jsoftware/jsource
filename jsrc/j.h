@@ -286,7 +286,8 @@ extern unsigned int __cdecl _clearfp (void);
 #define NPATH           1024            /* max length for path names,      */
                                         /* including trailing 0 byte       */
 
-#define NTSTACK         16384L          // number of BYTES in an allocated block of tstack - pointers to allocated blocks
+#define NTSTACK         16384L          // number of BYTES in an allocated block of tstack - pointers to allocated blocks - allocation is bigger to leave this many bytes on boundary
+#define NTSTACKBLOCK    2048            // boundary for beginning of stack block
 
 // OBSOLETE OLD WAY (with USECSTACK off)
 // Sizes for the internal stacks.  The goal here is to detect a runaway recursion before it creates a segfault.  This cannot
@@ -715,7 +716,7 @@ extern unsigned int __cdecl _clearfp (void);
 // So, it is preserved by incrementing its usecount before the tpop(_ttop); then after the tpop, it is pushed back onto the tstack, indicating that it will be freed
 // by the next-higher-level function.  Thus, when X calls Y inside PROLOG/EPILOG, the result of Y (which is an A block), has the same viability as any other GA executed in X
 // (unless its usecount is > 1 because it was assigned elsewhere)
-#define PROLOG(x)       I _ttop=jt->tnextpushx
+#define PROLOG(x)       A *_ttop=jt->tnextpushp
 #define EPILOGNORET(z) (gc(z,_ttop))   // protect z and return its address
 #define EPILOG(z)       RETF(EPILOGNORET(z))   // z is the result block
 #define EPILOGNOVIRT(z)       R rifvsdebug((gc(z,_ttop)))   // use this when the repercussions of allowing virtual result are too severe

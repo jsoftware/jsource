@@ -70,7 +70,7 @@ static DF1(jtpowseq){A fs,gs,x;I n=IMAX;V*sv;
 }    /* f^:(<n) w */
 
 // u^:n w where n is nonnegative integer atom
-static DF1(jtfpown){A fs,z;AF f1;I n,old;V*sv;
+static DF1(jtfpown){A fs,z;AF f1;I n;V*sv;A *old;
  RZ(w);
  sv=FAV(self); 
  switch(n=*AV(sv->fgh[2])){
@@ -79,13 +79,13 @@ static DF1(jtfpown){A fs,z;AF f1;I n,old;V*sv;
   default: 
    fs=sv->fgh[0]; f1=FAV(fs)->valencefns[0];
    z=w; 
-   old=jt->tnextpushx; 
+   old=jt->tnextpushp; 
    DO(n, RZ(z=CALL1(f1,z,fs)); z=gc(z,old);); 
    RETF(z);
 }}
 
 // u^:n w where n is any array or scalar infinity or negative
-static DF1(jtply1){PROLOG(0040);DECLFG;A b,hs,j,*xv,y,z;B*bv,q;I i,k,m,n,*nv,old,p=0;AD * RESTRICT x;  // RESTRICT on x fails in VS2013
+static DF1(jtply1){PROLOG(0040);DECLFG;A b,hs,j,*xv,y,z;B*bv,q;I i,k,m,n,*nv,p=0;AD * RESTRICT x;A *old;  // RESTRICT on x fails in VS2013
  hs=sv->fgh[2]; m=AN(hs); 
  RZ(y=ravel(hs)); RZ(y=from(j=grade1(y),y)); nv=AV(y);  // j is grading permutation of y; y is sorted powers
  GATV0(x,BOX,m,1); xv=AAV(x);  // cannot be virtual
@@ -96,7 +96,7 @@ static DF1(jtply1){PROLOG(0040);DECLFG;A b,hs,j,*xv,y,z;B*bv,q;I i,k,m,n,*nv,old
   n=nv[m-1]; k=p;
   while(k<m&&!nv[k]){INSTALLBOX(x,xv,k,z); ++k;}  // install the input as the result for any 0 powers
   RZ(b=eq(ainf,from(j,ravel(gs)))); bv=BAV(b); q=k<m?bv[k]:0;
-  old=jt->tnextpushx;  // should move this up
+  old=jt->tnextpushp;  // should move this up
   for(i=1;i<=n;++i){
    RZ(z=CALL1(f1,y=z,fs));  // z=next power, y=previous power
    if(q&&equ(y,z)){DO(m-k, INSTALLBOX(x,xv,k,z); ++k;); break;}  // if there is an infinity, check for repetition; if any, use it for all higher powers, & be done
@@ -109,7 +109,7 @@ static DF1(jtply1){PROLOG(0040);DECLFG;A b,hs,j,*xv,y,z;B*bv,q;I i,k,m,n,*nv,old
   z=w;
   n=nv[0]; k=p-1;
   RZ(b=eq(scf(-inf),from(j,ravel(gs)))); bv=BAV(b); q=bv[k];
-  old=jt->tnextpushx;
+  old=jt->tnextpushp;
   for(i=-1;i>=n;--i){
    RZ(z=CALL1(f1,y=z,fs));
    if(q&&equ(y,z)){DO(1+k, INSTALLBOX(x,xv,k,z); --k;); break;}

@@ -32,8 +32,9 @@ typedef struct {
  C*   adbreak;			/* must be first! ad mapped shared file break flag */
  C*   adbreakr;         // read location: same as adbreak, except that when we are ignoring interrupts it points to 0
 // things needed by verb execution
- I    tnextpushx;       // running byte index of next store into tstack.  Mask off upper bits to get offset into current frame
- A*   tstack;           // current frame, holding NTSTACK bytes.  First entry is to next-lower bloc.  This value has been biased back by subtracting the offset of the first element, so that *(tstack+nextpushx) is the actual next element
+ A*   tnextpushp;       // pointer to empty slot in allocated-block stack.  When low bits are 00..00, pointer to previous block of pointers.  Chain in first block is 0
+ UI4  nvrtop;           /* top of nvr stack; # valid entries               */
+ UI4  nvrotop;          // previous top of nvr stack
  I    shapesink[2];     // garbage area used as load/store targets of operations we don't want to branch around
  UI4  ranks;            // low half: rank of w high half: rank of a  for IRS
 // things needed by name lookup (unquote)
@@ -152,15 +153,14 @@ typedef struct {
 #endif
  A    implocref[2];     // references to 'u.'~ and 'v.', marked as implicit locatives
  I4   parsercalls;      /* # times parser was called                       */
- A*   tstacknext;       // if not 0, points to the recently-used tstack buffer, whose chain field points to tstack (sort of, because of bias)
+ A*   tstacknext;       // if not 0, points to the recently-used tstack buffer, whose chain field points to tstacknext
+ A*   tstackcurr;       // current allocation, holding NTSTACK bytes+1 block for alignment.  First entry points to next-lower allocation
  D    cct;               /* complementary comparison tolerance                            */
  D    cctdefault;        /* default complementary comparison tolerance                    */
  UIL  ctmask;           /* 1 iff significant wrt ct; for i. and i:         */
  A    idothash0;        // 2-byte hash table for use by i.
  A    idothash1;        // 4-byte hash table for use by i.
  I    symindex;         /* symbol table index (monotonically increasing)   */
- UI4  nvrtop;           /* top of nvr stack; # valid entries               */
- UI4  nvrotop;          // previous top of nvr stack
  DC   sitop;            /* top of SI stack                                 */
  I    stmax;            /* numbered locales maximum number                 */
  A    stnum;            /* numbered locale numbers or hash table                         */

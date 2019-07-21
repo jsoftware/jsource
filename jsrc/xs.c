@@ -42,14 +42,14 @@ void setftype(C*v,OSType type,OSType crea){C p[256];FInfo f;
 /* tso: echo to stdout                          */
 
 #define SEEKLEAK 0
-static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;B xt=jt->tostdout;DC d,xd=jt->dcs;I old;
+static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;B xt=jt->tostdout;DC d,xd=jt->dcs;
  if(equ(w,num[1]))R mtm;
  RZ(w=vs(w));
 // obsolete  UC savdebug = jt->uflags.us.cx.cx_c.db; // preserve debug state over calls
  FDEPINC(1);   // No ASSERTs or returns till the FDEPDEC below
  RZ(d=deba(DCSCRIPT,0L,w,(A)si));
  jt->dcs=d; jt->tostdout=tso&&!jt->seclev;
- old=jt->tnextpushx;
+ A *old=jt->tnextpushp;
  switch(ce){
   case 0: while(x&&!jt->jerr){jt->etxn=0;                           immex(x=jgets("   ")); tpop(old);} break;
   case 1: while(x           ){if(!jt->seclev)showerr(); jt->jerr=0; immex(x=jgets("   ")); tpop(old);} break;

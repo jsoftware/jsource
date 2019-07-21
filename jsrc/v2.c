@@ -207,7 +207,7 @@ static F1(jtiprimetest){A z;B*b;I d,j,n,*pv,q,*v,wn,*wv;
  RETF(z);
 }
 
-static F1(jtxprimetest){A z;B*b,rat;I d,j,q,n,old,*pv,*v,wn,wt,*yv;X r,*wv,x,xmaxint,y;
+static F1(jtxprimetest){A z;B*b,rat;I d,j,q,n,*pv,*v,wn,wt,*yv;X r,*wv,x,xmaxint,y;
  RZ(w);
  wn=AN(w); wt=AT(w); wv=XAV(w); pv=AV(jt->p4792); 
  rat=1&&wt&RAT; RZ(xmaxint=xc(2147483647L)); RZ(y=xc(-1L)); yv=AV(y);
@@ -218,7 +218,7 @@ static F1(jtxprimetest){A z;B*b,rat;I d,j,q,n,old,*pv,*v,wn,wt,*yv;X r,*wv,x,xma
   ASSERT(d!=XPINF&&d!=XNINF,EVDOMAIN);
   if(0>=d)b[j]=0;
   else if(1==xcompare(x,xmaxint)){
-   old=jt->tnextpushx;
+   A *old=jt->tnextpushp;
    DO(100, *yv=*v++; RZ(r=xrem(y,x)); if(!*AV(r)){b[j]=0; break;});
    if(b[j])RE(b[j]=xprimeq(100L,x));
    tpop(old);
@@ -437,11 +437,11 @@ F1(jtfactor){PROLOG(0063);A y,z;I c,d,i,k,m,n,q,*u,*v,wn,*wv,*zv;
  Moduli are n where n-:0 corresponds to rational arithmetic
 */
 
-static B jtsmallprimes(J jt,I n,X x,A*zs,X*zx){A s;I i,m,old,*pv,*sv,*v;X d,q,r;
+static B jtsmallprimes(J jt,I n,X x,A*zs,X*zx){A s;I i,m,*pv,*sv,*v;X d,q,r;
  ASSERT(n<=1229&&n<=AN(jt->p4792),EVLIMIT);
  pv=AV(jt->p4792); m=(I)(3.322*XBASEN*AN(x)); 
  GATV0(s,INT,m,1); v=sv=AV(s);
- old=jt->tnextpushx;
+ A *old=jt->tnextpushp;
  for(i=0;i<n;++i){
   RZ(d=xc(pv[i])); 
   RZ(xdivrem(x,d,&q,&r));   /* d must have only one "digit" */
@@ -458,14 +458,14 @@ static B jtsmallprimes(J jt,I n,X x,A*zs,X*zx){A s;I i,m,old,*pv,*sv,*v;X d,q,r;
 /* if 0=n xprimeq y, then y is certainly composite; and                    */
 /* if 1=n xprimeq y, then y is prime with a probability of error of 0.25^n */
 
-static B jtxprimeq(J jt,I n,X y){A h,om=jt->xmod;B b;I*dv,i,k,old,*pv;X d,m,t,x,y1;
+static B jtxprimeq(J jt,I n,X y){A h,om=jt->xmod;B b;I*dv,i,k,*pv;X d,m,t,x,y1;
  ASSERT(n<=AN(jt->p4792),EVLIMIT);
  pv=AV(jt->p4792);
  GAT0(h,XNUM,1,0); *XAV(h)=y; jt->xmod=h; 
  k=0; RZ(t=xc(2L)); RZ(m=y1=xminus(y,iv1)); 
  while(0==(*AV(m)&1)){++k; RZ(m=xdiv(m,t,XMFLR));}
  GAT0(d,INT,1,1); dv=AV(d);
- old=jt->tnextpushx;
+ A *old=jt->tnextpushp;
  for(i=0;i<n;++i){
   *dv=pv[i]; RZ(x=xpow(d,m)); b=1==AN(x)&&1==*AV(x);
   DO(k*!b, if(!xcompare(x,y1)){b=1; break;} RZ(x=xrem(y,xsq(x))););
@@ -475,11 +475,11 @@ static B jtxprimeq(J jt,I n,X y){A h,om=jt->xmod;B b;I*dv,i,k,old,*pv;X d,m,t,x,
  jt->xmod=om; R b;
 }    /* y assumed to be not in n{.jt->p4792 */
 
-static XF1(jtpollard_p_1){A om=jt->xmod;D p,m;I e,i,n,old,*pv;X c,g,z=iv1;
+static XF1(jtpollard_p_1){A om=jt->xmod;D p,m;I e,i,n,*pv;X c,g,z=iv1;
  n=MIN(1229,AN(jt->p4792)); pv=AV(jt->p4792); m=log((D)pv[n-1]);
  RZ(c=xc(2L));
  RZ(jt->xmod=scx(w));
- old=jt->tnextpushx;
+ A *old=jt->tnextpushp;
  for(i=0;i<n;++i){
   p=(D)pv[i]; e=(I)pow(p,jfloor(m/log(p)));
   RZ(c=xpow(c,sc(e)));
@@ -491,9 +491,10 @@ static XF1(jtpollard_p_1){A om=jt->xmod;D p,m;I e,i,n,old,*pv;X c,g,z=iv1;
  R z;
 }
 
-static XF1(jtpollard_rho){I i,n,old=jt->tnextpushx;X g,y1,y2;
+static XF1(jtpollard_rho){I i,n;X g,y1,y2;
  n=10000;
  RZ(y1=y2=xc(2L));
+ A *old=jt->tnextpushp;
  for(i=0;i<n;++i){
   RZ(y1=xrem(w,xplus(iv1,xsq(y1))));
   RZ(y2=xrem(w,xplus(iv1,xsq(xplus(iv1,xsq(y2))))));
@@ -530,7 +531,8 @@ static A jtdb1b2(J jt,I n,X w){A t,z;D c,d,lg,n1=(D)n-1,p,r;I m,s[2],*v,*zv;
  R z;
 }
 
-static B jtecd(J jt,X n,X a,X b,X*q,X*z){I old=jt->tnextpushx;X m,s,x2,y2,yy,z2;
+static B jtecd(J jt,X n,X a,X b,X*q,X*z){X m,s,x2,y2,yy,z2;
+ A *old=jt->tnextpushp;
  if(0==xcompare(q[1],iv0)||0==xcompare(q[2],iv0)){z[0]=iv0; z[1]=iv1; z[2]=iv0;}
  else{
   RZ(m=xplus(xtymes(xc(3L),xsq(q[0])),xtymes(a,xsq(xsq(q[2])))));
@@ -545,7 +547,8 @@ static B jtecd(J jt,X n,X a,X b,X*q,X*z){I old=jt->tnextpushx;X m,s,x2,y2,yy,z2;
  R 1;
 }    /* elliptic curve double point (mod proj coord) */
 
-static B jteca(J jt,X n,X a,X b,X*p,X*q,X*z){I old=jt->tnextpushx;
+static B jteca(J jt,X n,X a,X b,X*p,X*q,X*z){
+ A *old=jt->tnextpushp;
  if     (0==xcompare(p[2],iv0)){z[0]=q[0]; z[1]=q[1]; z[2]=q[2];}
  else if(0==xcompare(q[2],iv0)){z[0]=p[0]; z[1]=p[1]; z[2]=p[2];}
  else{X m,r,s1,s2,t,t1,t2,u1,u2,w,w2,x3,y3,z12,z22,z3;
@@ -575,7 +578,8 @@ static B jteca(J jt,X n,X a,X b,X*p,X*q,X*z){I old=jt->tnextpushx;
 #define BIT0 0x80000000
 #endif
 
-static B jtecm(J jt,X n,X a,X b,I m,X*p,X*z){I old=jt->tnextpushx;
+static B jtecm(J jt,X n,X a,X b,I m,X*p,X*z){
+ A *old=jt->tnextpushp;
  if(0==m){z[0]=iv0; z[1]=iv1; z[2]=iv0;}
  else{I k;UI c,d;X pm[3],q[3];
   q[0]=p[0]; q[1]=p[1]; q[2]=p[2]; 
@@ -590,7 +594,8 @@ static B jtecm(J jt,X n,X a,X b,I m,X*p,X*z){I old=jt->tnextpushx;
  R 1;
 }    /* scalar mult ladder (mod proj coord) */
 
-static B jtecm_s1(J jt,X n,X a,X b,I b1,X*q,X*z){A tt;D d,lg;I dd,m,old=jt->tnextpushx,*pv;X x[3];
+static B jtecm_s1(J jt,X n,X a,X b,I b1,X*q,X*z){A tt;D d,lg;I dd,m,*pv;X x[3];
+ A *old=jt->tnextpushp;
  lg=log((D)b1); RE(m=i0(plt(sc(b1))));
  if(m<=AN(jt->p4792))pv=AV(jt->p4792); else{RZ(tt=prime1(IX(m))); pv=AV(tt);}
  x[0]=q[0]; x[1]=q[1]; x[2]=q[2];
@@ -600,7 +605,7 @@ static B jtecm_s1(J jt,X n,X a,X b,I b1,X*q,X*z){A tt;D d,lg;I dd,m,old=jt->tnex
  R 1;
 }
 
-static B jtecm_s2(J jt,X n,X a,X b,I b1,I b2,X*q,X*z){A sda,tt;I d,di,i,k,m,old,p0,*pd,*v;X*s1,*sd,*sd0,*sdd,*t,x[3];
+static B jtecm_s2(J jt,X n,X a,X b,I b1,I b2,X*q,X*z){A sda,tt;I d,di,i,k,m,p0,*pd,*v;X*s1,*sd,*sd0,*sdd,*t,x[3];
  RZ(tt=plt(v2(b1,b2))); v=AV(tt); m=(v[1]-v[0])-1;
  RZ(tt=prime1(apv(1+m,v[0],1L))); pd=v=AV(tt); p0=*v;
  d=0; DO(m, v[0]=k=-1+((v[1]-v[0])>>1); ++v; d=MAX(d,k);); d=MIN(100,1+d);
@@ -608,7 +613,7 @@ static B jtecm_s2(J jt,X n,X a,X b,I b1,I b2,X*q,X*z){A sda,tt;I d,di,i,k,m,old,
  RZ(ecd(n,a,b,q,sd)); s1=t=sd; sd+=3;
  DO(d-1, eca(n,a,b,s1,t,sd); t=sd; sd+=3;); sd=sd0; sdd=t;
  RZ(ecm(n,a,b,p0,q,x));
- old=jt->tnextpushx;
+ A *old=jt->tnextpushp;
  for(i=0;i<m;++i){
   di=pd[i];
   DO(di/d, RZ(eca(n,a,b,x,sdd,x)););
@@ -619,9 +624,9 @@ static B jtecm_s2(J jt,X n,X a,X b,I b1,I b2,X*q,X*z){A sda,tt;I d,di,i,k,m,old,
  R 1;
 }
 
-static XF1(jtfac_ecm){A tt;I b1,b2,*b1b2,i,old,m;X a,b,g,q[3];
+static XF1(jtfac_ecm){A tt;I b1,b2,*b1b2,i,m;X a,b,g,q[3];
  RZ(tt=db1b2(20L,w)); m=IC(tt); b1b2=AV(tt);
- old=jt->tnextpushx;
+ A *old=jt->tnextpushp;
  for(i=0;i<m;++i){
   b1=b1b2[0]; b2=b1b2[1]; b1b2+=2;
   ranec(w,&g,&a,&b,q,q+1); q[2]=iv1;

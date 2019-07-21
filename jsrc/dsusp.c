@@ -93,7 +93,7 @@ static B jterrcap(J jt){A y,*yv;
  R 1;
 }    /* error capture */
 
-static void jtsusp(J jt){B t;DC d;I old=jt->tnextpushx;
+static void jtsusp(J jt){B t;DC d;A *old=jt->tnextpushp;
  jt->dbsusact=SUSCONT;
  d=jt->dcs; t=jt->tostdout;
  jt->dcs=0; jt->tostdout=1;

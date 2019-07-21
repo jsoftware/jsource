@@ -38,12 +38,12 @@ static DF2(jtcon2){A h,*hv,*x,z;V*sv;
  R ope(z);
 }
 
-static DF1(jtinsert){A hs,*hv,z;I hfx,j,m,n,old;
+static DF1(jtinsert){A hs,*hv,z;I hfx,j,m,n;A *old;
  RZ(w);
  n=IC(w); j=n-1; hs=FAV(self)->fgh[2]; m=AN(hs); hfx=j%m; hv=AAV(hs);  // m cannot be 0
  if(!n)R df1(w,iden(*hv));
  RZ(z=from(num[-1],w));
- old=jt->tnextpushx;
+ old=jt->tnextpushp;
  --m; DO(n-1, --j; --hfx; hfx=(hfx<0)?m:hfx; RZ(z=CALL2(FAV(hv[hfx])->valencefns[1],from(sc(j),w),z,hv[hfx])); z=gc(z,old);)
  RETF(z);
 }

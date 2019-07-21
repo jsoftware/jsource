@@ -1,4 +1,5 @@
 1:@:(dbr bind Debug)@:(9!:19)2^_44[(echo^:ECHOFILENAME) './gddot.ijs'
+1: 0 : 0  NB. removed in 901
 NB. d. scalar functions -------------------------------------------------
 
 equ=: 2 : '''x'' -:&(5!:5)&< ''y'''
@@ -115,5 +116,5 @@ m=: ^2
 4!:55 ;:'eqt equ eqv m'
 4!:55 ;: 'm'
 
-
+)
 

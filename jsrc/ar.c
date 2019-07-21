@@ -232,7 +232,7 @@ static DF1(jtred0){DECLF;A x;I f,r,wr,*s;
 }    /* f/"r w identity case */
 
 // general reduce.  We inplace the results into the next iteration.  This routine cannot inplace its inputs.
-static DF1(jtredg){F1PREFIP;PROLOG(0020);DECLF;AD * RESTRICT a;I i,k,n,old,r,wr;
+static DF1(jtredg){F1PREFIP;PROLOG(0020);DECLF;AD * RESTRICT a;I i,k,n,r,wr;A *old;
  RZ(w);
  ASSERT(DENSE&AT(w),EVNONCE);
  // loop over rank
@@ -244,7 +244,7 @@ static DF1(jtredg){F1PREFIP;PROLOG(0020);DECLF;AD * RESTRICT a;I i,k,n,old,r,wr;
  // Allocate virtual block for the running x argument.
  A origw=w; I origwc=AC(w);  // save inplaceability of the original w
  fauxblock(virtafaux); fauxvirtual(a,virtafaux,w,r-1,ACUC1|ACINPLACE);  // allocate UNINCORPORABLE block, allow inplacing (only if jtinplace determines that the backer is inplaceable)
- old=jt->tnextpushx; // save stack mark for subsequent frees.  We keep the a argument over the calls, but allow the w to be deleted
+ old=jt->tnextpushp; // save stack mark for subsequent frees.  We keep the a argument over the calls, but allow the w to be deleted
  // w will hold the result from the iterations.  Init to value of last cell
  // Since there are multiple cells, w may be in a virtual block; but we don't rely on that.
  RZ(w=tail(w)); k=AN(w)<<bplg(AT(w)); // k=length of input cell in bytes

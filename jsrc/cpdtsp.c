@@ -132,13 +132,13 @@ static B jtmmharvest(J jt,I ii,I zjn,A zj,D*zyv,I*n,A*zi,A*zx){A x;D*zxv,*zxv0;I
  R 1;
 }    /* collect accumulated values for row ii */
 
-static F2(jtpdtspmm){A z,zi,zj,zx,zy;D*axv,c,d,*dv,*wxv,*zyv;
-     I*aiv,*aivm,i,ii,j,k,k0,m,n=0,old,p,q,*v,wm,*wiv,*wnv,*zjv,*zjv0;P*zp;
+static F2(jtpdtspmm){A z,zi,zj,zx,zy,*old;D*axv,c,d,*dv,*wxv,*zyv;
+     I*aiv,*aivm,i,ii,j,k,k0,m,n=0,p,q,*v,wm,*wiv,*wnv,*zjv,*zjv0;P*zp;
  RZ(a&&w);
  RZ(mmprep(PAV(a),&m,&aiv,0L ,0L  ,&axv)); aivm=m+aiv;
  RZ(mmprep(PAV(w),&m,&wiv,&wm,&wnv,&wxv));
  GATV0(zy,FL,AS(w)[1],1); zyv=DAV(zy); memset(zyv,C0,AN(zy)*sizeof(D));
- old=jt->tnextpushx; 
+ old=jt->tnextpushp; 
  RZ(zj=exta(INT,1L,1L,1000L)); zjv0=AV(zj);
  RZ(zi=exta(INT,2L,2L,1000L));
  RZ(zx=exta(FL, 1L,1L,1000L));

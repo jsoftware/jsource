@@ -115,14 +115,14 @@ A jtfrombsn(J jt,A ind,A w,I wf){A a,j1,p,q,x,x1,y,y1,ys,z;C*xu,*xuu,*xv;
  R z;
 }    /* (<"1 ind){w, sparse w and integer array ind */
 
-static A jtfrombs1(J jt,A ind,A w,I wf){A*iv,x,y,z;I j,m,n,old,wr,wcr;
+static A jtfrombs1(J jt,A ind,A w,I wf){A*iv,x,y,z;I j,m,n,wr,wcr;
  RZ(ind&&w);
  if(!(BOX&AT(ind))){ASSERT(!AN(ind)||NUMERIC&AT(ind),EVINDEX); RZ(ind=every(ind,0L,jtright1));}
  n=AN(ind); iv=AAV(ind);  wr=AR(w); wcr=wr-wf;
  ASSERT(1>=AR(ind),EVRANK);
  ASSERT(n<=wr-wf,EVLENGTH);
  j=n; DO(n, --j; x=iv[j]; if(BOX&AT(x)&&!AR(x)&&(y=AAV0(x),!AN(y)&&1==AR(y)))--n; else break;);
- z=w; old=jt->tnextpushx;
+ z=w; A *old=jt->tnextpushp;
  for(j=0;j<n;++j){
   x=iv[j]; 
   if(BOX&AT(x)){

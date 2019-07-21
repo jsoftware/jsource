@@ -1,4 +1,6 @@
 1:@:(dbr bind Debug)@:(9!:19)2^_44[(echo^:ECHOFILENAME) './gd.ijs'
+
+1: 0 : 0  NB. removed from 901
 NB. D. scalar functions -------------------------------------------------
 
 D =: D. 1
@@ -13,7 +15,7 @@ test =. 2 : 0
  b=.b,h t=: 0.0001*2+?    4$50000
  b=.b,h t=: 0.0001*2+?  3 2$50000
  b=.b,h t=: 0.0001*2+?2 3 1$50000
-)
+()
 
 <:        test '<:'
 >:        test '>:'
@@ -97,4 +99,4 @@ _0.5 1&p. eq (2&! d. 1)
 
 4!:55 ;:'cube D E b dc eq f g h t test x y '
 
-
+)

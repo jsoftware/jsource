@@ -1,4 +1,7 @@
 1:@:(dbr bind Debug)@:(9!:19)2^_44[(echo^:ECHOFILENAME) './gintg.ijs'
+
+1: 0 : 0  NB. removed from 901
+
 NB. scalar function integrals -------------------------------------------
 
 I      =: 1 : 'x d. _1'
@@ -29,7 +32,7 @@ testl=: 1 : 0
  assert. t > | (0.4 _0.3&p.        @(u f.) - (0.4 _0.3&p.)      @(u f.) I D) y
  assert. t > | ((0.5"0 + 0.7"0 * ])@(u f.) - (0.5"0 + 0.7"0 * ])@(u f.) I D) y
  1
-)
+()
 
 testr=: 1 : 0
  assert. t > | ((u f.)           - (u f.)           I D) y
@@ -50,7 +53,7 @@ testr=: 1 : 0
  assert. t > | ((u f.)@(0.4 _0.3&p.)       - (u f.)@(0.4 _0.3&p.)       I D) y
  assert. t > | ((u f.)@(0.5"0 + 0.7"0 * ]) - (u f.)@(0.5"0 + 0.7"0 * ]) I D) y
  1
-)
+()
 
 <:   testlr z
 >:   testlr z
@@ -133,3 +136,5 @@ _1:  testlr z
 
 
 4!:55 ;:'D I t test testl testlr testr z'
+
+)

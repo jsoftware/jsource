@@ -1176,12 +1176,12 @@
 // Handle top level of tpush().  push the current block, and recur if it is traversible and does not have recursive usecount
 // We can have an inplaceable but recursible block, if it was gc'd.  We never push a PERMANENT block, so that we won't try to free it
 // NOTE that PERMANENT blocks are always marked traversible if they are of traversible type, so we will not recur on them internally
-#define tpush(x)                    {if(!ACISPERM(AC(x))){I tt=AT(x); I pushx=jt->tnextpushx; *(I*)((I)jt->tstack+pushx)=(I)(x); pushx+=SZI; if(!(pushx&(NTSTACK-1))){RZ(tg(pushx)); pushx+=SZI;} if((tt^AFLAG(x))&TRAVERSIBLE)RZ(pushx=jttpush(jt,(x),tt,pushx)); jt->tnextpushx=pushx; if(MEMAUDIT&2)audittstack(jt);}}
-// Internal version, used when the local name pushx is known to hold jt->tnextpushx
-#define tpushi(x)                   {if(!ACISPERM(AC(x))){I tt=AT(x); *(I*)((I)jt->tstack+pushx)=(I)(x); pushx+=SZI; if(!(pushx&(NTSTACK-1))){RZ(tg(pushx)); pushx+=SZI;} if((tt^AFLAG(x))&TRAVERSIBLE)RZ(pushx=jttpush(jt,(x),tt,pushx)); }}
+#define tpush(x)                    {if(!ACISPERM(AC(x))){I tt=AT(x); A *pushp=jt->tnextpushp; *pushp++=(x); if(!((I)pushp&(NTSTACKBLOCK-1))){RZ(pushp=tg(pushp));} if((tt^AFLAG(x))&TRAVERSIBLE)RZ(pushp=jttpush(jt,(x),tt,pushp)); jt->tnextpushp=pushp; if(MEMAUDIT&2)audittstack(jt);}}
+// Internal version, used when the local name pushp is known to hold jt->tnextpushp
+#define tpushi(x)                   {if(!ACISPERM(AC(x))){I tt=AT(x); *pushp++=(x); if(!((I)pushp&(NTSTACKBLOCK-1))){RZ(pushp=tg(pushp));} if((tt^AFLAG(x))&TRAVERSIBLE)RZ(pushp=jttpush(jt,(x),tt,pushp)); }}
 #endif
 // tpush1 is like tpush, but it does not recur to lower levels.  Used only for virtual block (which cannot be PERMANENT)
-#define tpush1(x)                   {I pushx=jt->tnextpushx; *(I*)((I)jt->tstack+pushx)=(I)(x); pushx+=SZI; if(!(pushx&(NTSTACK-1))){RZ(tg(pushx)); pushx+=SZI;} jt->tnextpushx=pushx; if(MEMAUDIT&2)audittstack(jt);}
+#define tpush1(x)                   {A *pushp=jt->tnextpushp; *pushp++=(x); if(!((I)pushp&(NTSTACKBLOCK-1))){RZ(pushp=tg(pushp));} jt->tnextpushp=pushp; if(MEMAUDIT&2)audittstack(jt);}
 #define traverse(x,y)               jttraverse(jt,(x),(y))
 #define trc(x)                      jttrc(jt,(x))     
 #define treach(x)                   jttreach(jt,(x))

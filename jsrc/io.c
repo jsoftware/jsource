@@ -146,7 +146,7 @@ F1(jtjoff){I x;
 
 #define capturesize 80000
 
-I jdo(J jt, C* lp){I e,old;A x;
+I jdo(J jt, C* lp){I e;A x;
  jt->jerr=0; jt->etxn=0; /* clear old errors */
  // The named-execution stack contains information on resetting the current locale.  If the first named execution deletes the locale it is running in,
  // that deletion is deferred until the locale is no longer running, which is never detected because there is no earlier named execution to clean up.
@@ -158,7 +158,7 @@ I jdo(J jt, C* lp){I e,old;A x;
   if(jt->capturemax>capturesize){FREE(jt->capture); jt->capture=0; jt->capturemax=0;} // dealloc large capture buffer
   else jt->capture[0]=0; // clear capture buffer
  }
- old=jt->tnextpushx;
+ A *old=jt->tnextpushp;
  *jt->adbreak=0;
  x=inpl(0,(I)strlen(lp),lp);
  while(jt->iepdo&&jt->iep){jt->iepdo=0; immex(jt->iep); if(savcallstack==0)CALLSTACKRESET jt->jerr=0; tpop(old);}
@@ -229,10 +229,10 @@ static char breaknone=0;
 
 B jtsesminit(J jt){jt->adbreakr=jt->adbreak=&breakdata; R 1;}
 
-int _stdcall JDo(J jt, C* lp){int r;I old;
+int _stdcall JDo(J jt, C* lp){int r;
  r=(int)jdo(jt,lp);
  while(jt->nfe){
-  old=jt->tnextpushx; r=(int)jdo(jt,nfeinput(jt,"input_jfe_'   '")); tpop(old);
+  A *old=jt->tnextpushp; r=(int)jdo(jt,nfeinput(jt,"input_jfe_'   '")); tpop(old);
  }
  R r;
 } 
@@ -250,10 +250,10 @@ A _stdcall JGetA(J jt, I n, C* name){A x;
 }
 
 /* socket protocol CMDSET */
-I _stdcall JSetA(J jt,I n,C* name,I dlen,C* d){I old;
+I _stdcall JSetA(J jt,I n,C* name,I dlen,C* d){
  jt->jerr=0;
  if(!vnm(n,name)) R EVILNAME;
- old=jt->tnextpushx;
+ A *old=jt->tnextpushp;
  symbis(nfs(n,name),jtunbin(jt,str(dlen,d)),jt->global);
  tpop(old);
  R jt->jerr;
@@ -369,11 +369,11 @@ J JInit(void){
 */
 
 // clean up at the end of a J instance
-int JFree(J jt){I old;
+int JFree(J jt){
   if(!jt) R 0;
   breakclose(jt);
   jt->jerr=0; jt->etxn=0; /* clear old errors */
-  if(jt->xep&&AN(jt->xep)){old=jt->tnextpushx; immex(jt->xep); fa(jt->xep); jt->xep=0; jt->jerr=0; jt->etxn=0; tpop(old); }
+  if(jt->xep&&AN(jt->xep)){A *old=jt->tnextpushp; immex(jt->xep); fa(jt->xep); jt->xep=0; jt->jerr=0; jt->etxn=0; tpop(old); }
   dllquit(jt);  // clean up call dll
   free(jt->heap);  // free the initial allocation
   R 0;

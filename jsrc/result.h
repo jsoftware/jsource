@@ -86,7 +86,7 @@
 #define ZZSTARTATEND 0  // user defines as 1 to build result starting at the end
 #endif
 #ifndef ZZPOPNEVER
- I zzold;  // place to tpop to between executions
+ A *zzold;  // place to tpop to between executions
 #define ZZPOPNEVER 0  // user defines as 1 to force us to NEVER tpop in the loop
 #endif
 #undef ZZDECL
@@ -141,7 +141,7 @@ do{
        // XNUM (pop not OK), then to FL (pop OK again).  It's not vital to be perfect, but then again it's cheap to be
        ZZFLAGWORD&=~ZZFLAGNOPOP; ZZFLAGWORD|=((((zt&DIRECT)==0)|(ZZFLAGWORD>>ZZFLAGBOXALLOX))&1)<<ZZFLAGNOPOPX;
        // NOTE that if we are converting to an indirect type, the converted block might NOT be recursive
-       zzold=jt->tnextpushx;  // reset the pop-back point so we don't free zz during a pop.  Could gc if needed
+       zzold=jt->tnextpushp;  // reset the pop-back point so we don't free zz during a pop.  Could gc if needed
 #endif
       }
      }else{
@@ -294,7 +294,7 @@ do{
 #if !ZZPOPNEVER
   ZZFLAGWORD |= (zzt&DIRECT)?0:ZZFLAGNOPOP;
   // Remember the point before which we allocated zz.  This will be the free-back-to point, unless we require boxes later
-  zzold=jt->tnextpushx;  // pop back to AFTER where we allocated our result and argument blocks
+  zzold=jt->tnextpushp;  // pop back to AFTER where we allocated our result and argument blocks
 #endif
   // Install frame by running user's routine.  zzs must be left pointing to the cell-shape
   ZZINSTALLFRAME(zzs)

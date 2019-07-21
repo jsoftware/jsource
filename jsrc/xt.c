@@ -164,12 +164,12 @@ __int64 GetMachineCycleCount()
 
 F1(jttss){ASSERTMTV(w); R scf(tod()-jt->tssbase);}
 
-F2(jttsit2){A z;D t;I n,old;
+F2(jttsit2){A z;D t;I n;
  F2RANK(0,1,jttsit2,0);
  RE(n=i0(a));
  FDEPINC(1);  // No ASSERTs/returns till the DEPDEC below
  t=qpc(); 
- old=jt->tnextpushx; DO(n, z=exec1(w); if(!z)break; tpop(old);); 
+ A *old=jt->tnextpushp; DO(n, z=exec1(w); if(!z)break; tpop(old);); 
  t=qpc()-t;
  FDEPDEC(1);  // Assert OK now
  RZ(z);

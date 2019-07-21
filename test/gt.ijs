@@ -1,4 +1,6 @@
 1:@:(dbr bind Debug)@:(9!:19)2^_44[(echo^:ECHOFILENAME) './gt.ijs'
+
+1: 0 : 0  NB. removed from 901
 NB. t. ------------------------------------------------------------------
 
 (%!i.5)        = ^       t. i.5
@@ -135,12 +137,12 @@ rp =: 1 : '%@(x&p.) t.'
 tangent=: 3 : 0  NB. tangent numbers from 0 to y  Tn+1(x)=(1+x^2)Tn'(x)
  f=. [: +//. 1 0 1"_ */ [: }. [ * i.@#
  {."1 f^:(i.>:y) 0 1x
-)
+()
 
 B=: 3 : 0   NB. Bernoulli numbers from 0 to y
  t=. 1,}.}:tangent y
  (* $&_1 _1 1 1@#) _1,t*n*%(* <:)2x^n=. >:i.#t
-)
+()
 
 (B@<:@# -: ! * (% <:@^) t.) i.13x
 (B@<:@# -:     (% <:@^) t:) i.13x
@@ -156,7 +158,7 @@ taysqrt=: 4 : 0
  i=. 0
  while. n>i=.>:i do. c=. c i}~ d * (i{a) - (+/ .* |.) }.i{.c end.
  c
-)
+()
 
 pp=: [: +//. */
 
@@ -237,4 +239,4 @@ phi=: -:%:5
 4!:55 ;:'asin asinh atan atanh B c cos cosh d f g k '
 4!:55 ;:'m n p phi pp q r rp s sin sinh tangent taysqrt x y '
 
-
+)

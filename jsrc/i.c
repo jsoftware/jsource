@@ -75,7 +75,7 @@ J gjt=0; // JPF debug - convenience debug single process
 
 // thread-safe/one-time initialization of all global constants
 // Use GA for all these initializations, to save space since they're done only once
-B jtglobinit(J jt){A x,y;D*d;I oldpushx=jt->tnextpushx;
+B jtglobinit(J jt){A x,y;D*d;A *oldpushx=jt->tnextpushp;
  liln=1&&C_LE;
  MC(jt->typesizes,typesizes,sizeof(jt->typesizes));  // required for ma.  Repeated for each thread in jtinit3
  MC(jt->typepriority,typepriority,sizeof(jt->typepriority));  // may not be needed
@@ -137,7 +137,7 @@ B jtglobinit(J jt){A x,y;D*d;I oldpushx=jt->tnextpushx;
  // fprintf(stderr,"hwfma %d\n",hwfma);
 #endif
  // take all the permanent blocks off the tpop stack so that we don't decrement their usecount.  All blocks allocated here must be permanent
- jt->tnextpushx=oldpushx;
+ jt->tnextpushp=oldpushx;
  R 1;
 }
 
@@ -270,7 +270,7 @@ extern void * HeapAlloc();
  // We have completed initial allocation.  Everything allocated so far will not be freed by a tpop, because
  // tpop() isn't called during initialization.  So, to keep the memory auditor happy, we reset ttop so that it doesn't
  // look like those symbols have a free outstanding.
- jt->tnextpushx=SZI;  // first store is to entry 1 of the first block
+ jt->tnextpushp=(A*)(((I)jt->tstackcurr+NTSTACKBLOCK)&(-NTSTACKBLOCK))+1;  // first store is to entry 1 of the first block
  R !jt->jerr;
 }
 

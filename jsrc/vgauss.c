@@ -6,7 +6,7 @@
 #include "j.h"
 
                     
-F1(jtgausselm){I c,e,i,j,old,r,r1,*s;Q p,*u,*v,*x;
+F1(jtgausselm){I c,e,i,j,r,r1,*s;Q p,*u,*v,*x;
  F1RANK(2,jtgausselm,0);
  ASSERT(RAT&AT(w),EVNONCE);
  // This routine modifies w in place.  If w is virtual, that causes an error, because the blocks referred to in
@@ -15,7 +15,7 @@ F1(jtgausselm){I c,e,i,j,old,r,r1,*s;Q p,*u,*v,*x;
  w=rifvsdebug(w);  // must realize before in-place operations, as above
  ASSERT(2==AR(w),EVRANK);
  s=AS(w); r=s[0]; c=s[1]; r1=MIN(r,c);
- old=jt->tnextpushx;
+ A *old=jt->tnextpushp;
  for(j=0;j<r1;++j){
   v=QAV(w);
   e=-1; u=v+c*j+j; DO(r-j, if(XDIG(u->n)){e=i+j; break;} u+=c;);  /* find pivot row */
@@ -33,11 +33,11 @@ F1(jtgausselm){I c,e,i,j,old,r,r1,*s;Q p,*u,*v,*x;
  R w;
 }    /* Gaussian elimination in place */
 
-static F1(jtdetr){A z;I c,e,g=1,i,j,k,old,r,*s;Q d,p,*u,*v,*x;
+static F1(jtdetr){A z;I c,e,g=1,i,j,k,r,*s;Q d,p,*u,*v,*x;
  RZ(w);
  w=rifvsdebug(w);  // must realize before in-place operations, as above
  s=AS(w); r=s[0]; c=s[1];
- old=jt->tnextpushx;
+ A *old=jt->tnextpushp;
  for(j=0;j<r;++j){
   v=QAV(w); 
   e=-1; u=v+c*j+j; DO(r-j, if(XDIG(u->n)){e=i+j; break;} u+=c;);  /* find pivot row */

@@ -219,7 +219,7 @@ static DF2(jtxdefn){PROLOG(0048);
  // remember tnextpushx.  We will tpop after every sentence to free blocks.  Do this AFTER any memory
  // allocation that has to remain throughout this routine.
  // If the user turns on debugging in the middle of a definition, we will raise old when he does
- I old=jt->tnextpushx;
+ A *old=jt->tnextpushp;
 
  // Push parser-related information.  Since we call the parse repeatedly from this level we move pushes to here rather than doing them for each parse
  // When we are not in debug mode, all we have to stack is the queue and length information from the stack frame.  Since we will
@@ -245,7 +245,7 @@ static DF2(jtxdefn){PROLOG(0048);
     // We check before every sentence in case the user turns on debug in the middle of this definition
     // NOTE: this stack frame could be put on the C stack, but that would reduce the recursion limit because the frame is pretty  big
     BZ(thisframe=deba(DCPARSE,0L,0L,0L));  // if deba fails it will be before it modifies sitop.  Remember our stack frame
-    old=jt->tnextpushx;  // protect the stack frame against free
+    old=jt->tnextpushp;  // protect the stack frame against free
    }
 
    i=debugnewi(i,thisframe,self);  // get possibly-changed execution line

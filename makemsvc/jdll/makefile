@@ -15,6 +15,9 @@ endif
 OBJS=  \
  ../../jsrc/a.o \
  ../../jsrc/ab.o \
+ ../../jsrc/aes128.o \
+ ../../jsrc/aes192.o \
+ ../../jsrc/aes256.o \
  ../../jsrc/af.o \
  ../../jsrc/ai.o \
  ../../jsrc/am.o \
@@ -135,6 +138,7 @@ OBJS=  \
  ../../jsrc/x.o \
  ../../jsrc/x15.o \
  ../../jsrc/xa.o \
+ ../../jsrc/xaes.o \
  ../../jsrc/xb.o \
  ../../jsrc/xc.o \
  ../../jsrc/xcrc.o \

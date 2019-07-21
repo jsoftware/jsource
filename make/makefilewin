@@ -4,13 +4,14 @@ vpath % $(jgit)/jsrc:$(jgit)/dllsrc
 	$(CXX) -c $(CPPFLAGS) -o$@ $^
 
 %.o: %.c
-	$(CC) -c $(CFLAGS) $(CFLAGS_FMA) -o$@ $^
+	$(CC) -c $(CFLAGS) $(CFLAGS_FMA) $(CFLAGS_AESNI) -o$@ $^
 
 CFLAGS=$(COMPILE)
 CPPFLAGS=$(COMPILE)
 $(OBJS_FMA) : CFLAGS_FMA := -mfma 
-$(TARGET) : $(OBJS) $(OBJS_FMA) $(DLLOBJS) $(LIBJRES)
-	$(CXX) $(OBJS) $(OBJS_FMA) $(DLLOBJS) $(LIBJDEF) $(LIBJRES) $(LINK)
+$(OBJS_AESNI) : CFLAGS_AESNI := -maes
+$(TARGET) : $(OBJS) $(OBJS_FMA) $(OBJS_AESNI) $(DLLOBJS) $(LIBJRES)
+	$(CXX) $(OBJS) $(OBJS_FMA) $(OBJS_AESNI) $(DLLOBJS) $(LIBJDEF) $(LIBJRES) $(LINK)
 
 jdllres.o: jdll.rc
 	$(WINDRES) -D NDEBUG -o$@ $^

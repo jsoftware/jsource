@@ -18,6 +18,7 @@ OBJS=  \
  ../../jsrc/aes128.o \
  ../../jsrc/aes192.o \
  ../../jsrc/aes256.o \
+ ../../jsrc/aes-ni.o \
  ../../jsrc/af.o \
  ../../jsrc/ai.o \
  ../../jsrc/am.o \

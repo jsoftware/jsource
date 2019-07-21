@@ -1,9 +1,10 @@
 vpath % $(jgit)/jsrc
 
 %.o: %.c
-	$(CC) -c $(CFLAGS) $(CFLAGS_SIMD) $(CFLAGS_FMA) -o$@ $^
+	$(CC) -c $(CFLAGS) $(CFLAGS_SIMD) $(CFLAGS_FMA) $(CFLAGS_AESNI) -o$@ $^
 
 CFLAGS=$(COMPILE)
 $(OBJS_FMA) : CFLAGS_FMA := -mfma 
-$(TARGET) : $(OBJS) $(OBJS_FMA)
-	$(CC)  $(OBJS) $(OBJS_FMA) $(LINK)
+$(OBJS_AESNI) : CFLAGS_AESNI := -maes
+$(TARGET) : $(OBJS) $(OBJS_FMA) $(OBJS_AESNI)
+	$(CC)  $(OBJS) $(OBJS_FMA) $(OBJS_AESNI) $(LINK)

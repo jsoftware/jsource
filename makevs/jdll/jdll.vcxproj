@@ -938,6 +938,7 @@
     <ClCompile Include="..\..\jsrc\aes128.c" />
     <ClCompile Include="..\..\jsrc\aes192.c" />
     <ClCompile Include="..\..\jsrc\aes256.c" />
+    <ClCompile Include="..\..\jsrc\aes-ni.c" />
     <ClCompile Include="..\..\jsrc\AF.C" />
     <ClCompile Include="..\..\jsrc\AI.C" />
     <ClCompile Include="..\..\jsrc\AM.C" />

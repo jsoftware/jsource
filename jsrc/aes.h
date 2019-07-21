@@ -1,19 +1,16 @@
 #include <stdint.h>
 
-struct AES_ctx_128
-{
+struct AES_ctx_128 {
   uint8_t RoundKey[176];
   uint8_t Iv[16];
 };
 
-struct AES_ctx_192
-{
+struct AES_ctx_192 {
   uint8_t RoundKey[208];
   uint8_t Iv[16];
 };
 
-struct AES_ctx_256
-{
+struct AES_ctx_256 {
   uint8_t RoundKey[240];
   uint8_t Iv[16];
 };

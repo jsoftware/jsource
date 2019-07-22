@@ -868,7 +868,7 @@ extern A*       jttg(J,A*);
 extern A        jttokens(J,A,I);
 extern B        jtunlk(J,I);
 extern A        jtv2(J,I,I);
-extern A        jtva2(J,AD * RESTRICT,AD * RESTRICT,AD * RESTRICT);
+// obsolete extern A        jtva2(J,AD * RESTRICT,AD * RESTRICT,AD * RESTRICT);
 extern A        jtva2s(J,A,A,C,VF,I,I,I,I,I);
 extern C        jtvaid(J,A);
 extern VA2      jtvains(J,A,I);

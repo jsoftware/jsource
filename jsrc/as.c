@@ -214,7 +214,8 @@ static DF1(jtssg){F1PREFIP;PROLOG(0020);A a,z;I i,k,n,r,wr;
  state &= ~((FAV(fs)->flag2&VF2ATOPOPEN2W)>>(VF2ATOPOPEN2WX-ZZFLAGBOXATOPX));  // We don't handle &.> here; ignore it
 
  // We cannot honor WILLBEOPENED, because the same box that goes into the result must also be released into the next application of f.
- state |= (-state) & (I)jtinplace & JTCOUNTITEMS; // remember if this verb is followed by ; - only if we BOXATOP, to avoid invalid flag setting at assembly
+ // Without WILLBEOPENED, there is no need to set COUNTITEMS
+// not checked state |= (-state) & (I)jtinplace & JTCOUNTITEMS; // remember if this verb is followed by ; - only if we BOXATOP, to avoid invalid flag setting at assembly
 #define ZZWILLBEOPENEDNEVER 1
 
  // Allocate virtual block for the running x argument.  UNINCORPABLE, non-inplaceable

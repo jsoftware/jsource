@@ -235,33 +235,37 @@ do{
     }while(1);
    }
   }else{
-   // forced-boxed result.  Must not be sparse.  The result box is recursive to begin with, unless RAZERESULT is set
+   // forced-boxed result.  Must not be sparse.  The result box is recursive to begin with, unless WILLBEOPENED is set
    ASSERT(!(AT(z)&SPARSE),EVNONCE);
    if(ZZWILLBEOPENEDNEVER||!(ZZFLAGWORD&ZZFLAGWILLBEOPENED)) {  // scaf it might be better to allow the virtual to be stored in the main result, and realize it only for the looparound z
     // normal case where we are creating the result box.  Must incorp the result
     realizeifvirtual(z); ra(z);   // Since we are moving the result into a recursive box, we must ra() it.  This plus rifv=INCORP
+    *zzboxp=z;  // install the new box.  zzboxp is ALWAYS a pointer to a box when force-boxed result
    } else {
     // The result of this verb will be opened next, so we can take some liberties with it.  We don't need to realize any virtual block EXCEPT one that we might
     // be reusing in this loop.  The user flags those UNINCORPABLE.  Rather than realize it we just make a virtual clone, since realizing might be expensive.
     // That is, if z is one of the virtual blocks we use to track subarrays, we mustn't incorporate it, so we clone it.  These subarrays can be inputs to functions
     // but never an output from the block it is created in, since it changes during the loop.  Thus, UNINCORPABLEs are found only in the loop that created them.
+    // It might be better to keep the result recursive and transfer ownership of the virtual block, but not by much.
     if(AFLAG(z)&AFUNINCORPABLE){RZ(z=clonevirtual(z));}
     // since we are adding the block to a NONrecursive boxed result,  we DO NOT have to raise the usecount of the block.
-   }
-   *zzboxp=z;  // install the new box.  zzboxp is ALWAYS a pointer to a box when force-boxed result
-   if(ZZFLAGWORD&ZZFLAGCOUNTITEMS){
-    // if the result will be razed next, we will count the items and store that in AM.  We will also ensure that the result boxes' contents have the same type
-    // and item-shape.  If one does not, we turn off special raze processing.  It is safe to take over the AM field in this case, because we know this is WILLBEOPENED and
-    // (1) will never assemble or epilog; (2) will feed directly into a verb that will discard it without doing any usecount modification
+    *zzboxp=z;  // install the new box.  zzboxp is ALWAYS a pointer to a box when force-boxed result
+    if(ZZFLAGWORD&ZZFLAGCOUNTITEMS){
+     // if the result will be razed next, we will count the items and store that in AM.  We will also ensure that the result boxes' contents have the same type
+     // and item-shape.  If one does not, we turn off special raze processing.  It is safe to take over the AM field in this case, because we know this is WILLBEOPENED and
+     // (1) will never assemble or epilog; (2) will feed directly into a verb that will discard it without doing any usecount modification
 #if !ZZSTARTATEND  // going forwards
-    A result0=AAV(zz)[0];   // fetch pointer to the first 
+     A result0=AAV(zz)[0];   // fetch pointer to the first 
 #else
-    A result0=AAV(zz)[AN(zz)-1];  // fetch pointer to first value stored, which is in the last position
+     A result0=AAV(zz)[AN(zz)-1];  // fetch pointer to first value stored, which is in the last position
 #endif
-    I* zs=AS(z); I* ress=AS(result0); I zr=AR(z); I resr=AR(result0); //fetch info
-    I diff=TYPESXOR(AT(z),AT(result0))|(MAX(zr,1)^MAX(resr,1)); resr=(zr>resr)?resr:zr;  DO(resr-1, diff|=zs[i+1]^ress[i+1];)  // see if there is a mismatch.  Fixed loop to avoid misprediction
-    ZZFLAGWORD^=(diff!=0)<<ZZFLAGCOUNTITEMSX;  // turn off bit if so 
-    I nitems=1; nitems=(zr!=0)?zs[0]:nitems; AM(zz)+=nitems;  // add new items to count in zz.  zs[0] will never segfault, even if z is empty
+     I* zs=AS(z); I* ress=AS(result0); I zr=AR(z); I resr=AR(result0); //fetch info
+     I diff=TYPESXOR(AT(z),AT(result0))|(MAX(zr,1)^MAX(resr,1)); resr=(zr>resr)?resr:zr;  DO(resr-1, diff|=zs[i+1]^ress[i+1];)  // see if there is a mismatch.  Fixed loop to avoid misprediction
+     ZZFLAGWORD^=(diff!=0)<<ZZFLAGCOUNTITEMSX;  // turn off bit if so 
+     I nitems=1; nitems=(zr!=0)?zs[0]:nitems; AM(zz)+=nitems;  // add new items to count in zz.  zs[0] will never segfault, even if z is empty
+    }
+    // Note: by checking COUNTITEMS inside WILLBEOPENED we suppress support for COUNTITEMS in \. which sets WILLBEOPENEDNEVER.  It would be safe to
+    // count then, because no virtual contents would be allowed.  But we are not sure that the EPILOG is safe, and this path is now off to the side
    }
   }
   // zzboxp does double duty.  Before the first wreck, it just counts the number of times we wrote to zz before the wreck.  After the first

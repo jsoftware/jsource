@@ -461,7 +461,7 @@ VA2F(vasfx,psfx, plussfxO,minussfxO,tymessfxO)
 // static UC xnumpri[] = {10 ,8 ,9 ,9 ,11 ,8 ,9 ,9};
 #define xnumpri 0x998B998AU   // we use shift to select 4-bit sections
 
-extern A jtva2recur(J jt, AD * RESTRICT a, AD * RESTRICT w, AD * RESTRICT self);
+// obsolete extern A jtva2recur(J jt, AD * RESTRICT a, AD * RESTRICT w, AD * RESTRICT self);
 #if 0 // for debug, to display info about a sparse block
 if(AT(a)&SPARSE){
 printf("va2a: shape="); A spt=a; DO(AR(spt), printf(" %d",AS(spt)[i]);) printf("\n");
@@ -472,15 +472,15 @@ printf("va2a: indexes="); spt=SPA(PAV(a),i); DO(AN(spt), printf(" %d",IAV(spt)[i
 
 // All dyadic arithmetic verbs f enter here, and also f"n.  a and w are the arguments, id
 // is the pseudocharacter indicating what operation is to be performed
-A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I ak,f,m,
+static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I ak,f,m,
      mf,n,nf,r,* RESTRICT s,*sf,wk,zk,zn,zt;VA2 adocv;
  RZ(a&&w);F2PREFIP;
  RANK2T savedranks=jt->ranks;   // save original rank before we change it, in case we have to restart the operation
  {I at=AT(a);
   I wt=AT(w);
-  VA *vainfo=(VA*)FAV(self)->localuse.lvp;  // extract table line from the primitive
   if(((-(jt->jerr|((UNSAFE(at|wt))&(NOUN&~(B01|INT|FL)))))|(AN(a)-1)|(AN(w)-1))>=0){  // no error, bool/int/fl args, no empties
    // Here for the fast and important case, where the arguments are both B01/INT/FL
+   VA *vainfo=(VA*)FAV(self)->localuse.lvp;  // extract table line from the primitive
    // The index into va is atype*3 + wtype, calculated sneakily.  We test here to avoid the call overhead
    jt->mulofloloc = 0;  // Reinit multiplier-overflow count, in case we hit overflow.  Needed only on integer multiply, but there's no better place
    adocv=vainfo->p2[(UNSAFE(at)>>(INTX-1))+((UNSAFE(at)+UNSAFE(wt))>>INTX)];
@@ -516,19 +516,30 @@ A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I ak,f,m,
  // Analyze the rank and calculate cell shapes, counts, and sizes.
  // We detect agreement error before domain error
  {//I *as = AS(a); I *ws = AS(w);
-  if(savedranks==(RANK2T)~0){
+  if(savedranks==(RANK2T)~0){I shortr;
    // No rank specified.  Since all these verbs have rank 0, that simplifies quite a bit.  ak/wk/zk/sf are not needed and are garbage
    // n is not needed for sparse, but we start it early to get it finished
-   mf=AR(w)<=AR(a);  // mf='a is not shorter than w'  nf='w is not shorter than a'
-   nf=AR(w)>=AR(a); zn=AN(AR(w)>=AR(a)?w:a); r=AR(AR(w)>=AR(a)?w:a); s=AS(AR(w)>=AR(a)?w:a); I shortr=AR(AR(w)>=AR(a)?a:w); m=AN(AR(w)>=AR(a)?a:w); PROD(n,r-shortr,s+shortr);  // treat the entire operands as one big cell; get the rest of the values needed
+// obsolete   mf=AR(w)<=AR(a);  // mf='a is not shorter than w'  nf='w is not shorter than a'
+// obsolete   nf=AR(w)>=AR(a); zn=AN(AR(w)>=AR(a)?w:a); r=AR(AR(w)>=AR(a)?w:a); s=AS(AR(w)>=AR(a)?w:a); I shortr=AR(AR(w)>=AR(a)?a:w); m=AN(AR(w)>=AR(a)?a:w);
+   {A t=a;  // will hold, first the longer-rank argument, then the shorter
+    I raminusw=(I)AR(a)-(I)AR(w); t=raminusw<0?w:t;
+    nf=raminusw>>(BW-1);  // nf=-1 if w has longer frame, means cannot inplace a
+    raminusw=-raminusw;
+    mf=raminusw>>(BW-1);  // mf=-1 if a has longer frame, means cannot inplace w
+    zn=AN(t); r=AR(t); s=AS(t);   // atoms, rank, shape of larger frame
+    t=(A)((I)t^((I)a^(I)w)); shortr=AR(t); m=AN(t);  // rank, atoms of shorter frame
+   }
+   PROD(n,r-shortr,s+shortr);  // treat the entire operands as one big cell; get the rest of the values needed
    ASSERTAGREE(AS(a),AS(w),shortr)  // agreement error if not prefix match
    f=0;  // no rank means no outer frame
    if(jtinplace){
     // Non-sparse setup for copy loop, no rank
       // get number of inner cells
-    n^=((1-n)>>(BW-1))&-nf;  // encode 'w has long frame, so a is repeated' as complementary n; but if n<2, leave it alone
+// obsolete     n^=((1-n)>>(BW-1))&-nf;  // encode 'w has long frame, so a is repeated' as complementary n; but if n<2, leave it alone.  Since n=1 when frames are equal, nf in that case is N/C
+    n^=((1-n)>>(BW-1))&nf;  // encode 'w has long frame, so a is repeated' as complementary n; but if n<2, leave it alone.  Since n=1 when frames are equal, nf in that case is N/C
 // scaf    nf=(adocv.cv>>VIPOKWX) & ((I)(a==w)-1) & ((I)(AR(a)==r)*2 + (I)(AR(w)==r));  // set inplaceability here: not if addresses equal (in case of retry); only if op supports; only if nonrepeated cell
-    nf=(adocv.cv>>VIPOKWX) & ((I)(a==w)-1) & (mf*2 + nf);  // set inplaceability here: not if addresses equal (in case of retry); only if op supports; only if nonrepeated cell
+// obsolete     nf=(adocv.cv>>VIPOKWX) & ((I)(a==w)-1) & (mf*2 + nf);  // set inplaceability here: not if addresses equal (in case of retry); only if op supports; only if nonrepeated cell
+    nf=(adocv.cv>>VIPOKWX) & ((I)(a==w)-1) & (3 + nf*2 + mf);  // set inplaceability here: not if addresses equal (in case of retry); only if op supports; only if nonrepeated cell
     jtinplace = (J)(((I)jtinplace&nf)+4*nf+16);  // bits 0-1 of jtinplace are combined input+local; 2-3 just local; 4 set to be non-sparse
     mf=nf=1;  // suppress the outer loop, leaving only the loop over m and n
    }else{
@@ -617,7 +628,6 @@ A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I ak,f,m,
    
       // also turn off inplacing if a==w  or if Boolean with repeated cells   uses B01==1
       // (mf|nf)>1 is a better test than f!=0, because it handles frame of all 1s, but it's slower in the normal case
-      // only the bottom 2 bits of inplaceallow are valid
 
    // Establish the result area z; if we're reusing an argument, make sure the type is updated to the result type
    // If the operation is one that can fail partway through, don't allow it to overwrite a zombie input unless so enabled by the user
@@ -625,7 +635,7 @@ A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I ak,f,m,
 // more regs, less comp    }else if(((inplaceallow>>=1)&(((zn^an)|(ar^(f+r)))==0)) && (AC(a)<ACUC1 || AC(a)==ACUC1&&jt->assignsym&&jt->assignsym->val==a&&!(adocv.cv&VCANHALT && jt->asgzomblevel<2))){z=a; AT(z)=zt;  //  Uses JTINPLACEA==2
   if(((I)jtinplace&1) && (AC(w)<ACUC1 || AC(w)==ACUC1&&jt->assignsym&&jt->assignsym->val==w&&!(adocv.cv&VCANHALT && jt->asgzomblevel<2))){z=w; if(TYPESNE(AT(w),zt))MODBLOCKTYPE(z,zt)  //  Uses JTINPLACEW==1
   }else if(((I)jtinplace&2) && (AC(a)<ACUC1 || AC(a)==ACUC1&&jt->assignsym&&jt->assignsym->val==a&&!(adocv.cv&VCANHALT && jt->asgzomblevel<2))){z=a; if(TYPESNE(AT(a),zt))MODBLOCKTYPE(z,zt)  //  Uses JTINPLACEA==2
-  }else{GA(z,zt,zn,f+r,0); I *zs=AS(z); MCISH(zs,sf,f);    MCISH(zs+f,s,r);} 
+  }else{GA(z,zt,zn,f+r,0); I *zs=AS(z); MCISH(zs,sf,f); MCISH(zs+f,s,r);} 
   // s, r, f, and sf ARE NOT USED FROM HERE ON in this branch to reduce register pressure.  They have been destroyed in the loops above
   if(!zn)RETF(z);  // If the result is empty, the allocated area says it all
   // zn  NOT USED FROM HERE ON
@@ -633,7 +643,7 @@ A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I ak,f,m,
   // End of setup phase.  The execution phase:
 
   {C *av=CAV(a); C *wv=CAV(w); C *zv=CAV(z);   // point to the data
-   // Call the action routines: 
+   // Call the action routines: nf,mf, etc must be preserved in case of repair
 #if 1  // register spills make this code faster.
    // note: the compiler unrolls these call loops.  Would be nice to suppress that
 // obsolete n^=-(bcip>>3); n=(n==~1)?1:n; nf^=(bcip<<(BW-1-2))>>(BW-1);
@@ -1153,6 +1163,7 @@ VA2 jtvar(J jt,A self,I at,I wt){I t;
    retva2.f=0; R retva2;  // if not symbol, return not found
   }
  }else{VA2 retva2;
+  // Here there was an error in a previous run.  We see if we have a way to retry the operation
   retva2.f=0;  // error if not filled in
   switch((UC)FAV(self)->id){
   case CCIRCLE: if(jt->jerr==EWIMAG){retva2.f=(VF)cirZZ; retva2.cv=VZ+VZZ+VRD;} break;

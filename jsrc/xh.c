@@ -44,6 +44,7 @@ F1(jthostne){ASSERT(0,EVDOMAIN);}
 // "avx"  would run javx.dll
 // "avx2" would run javx2.dll
 F1(jtjgetx){
+#if !defined(ANDROID) && (defined(__i386__) || defined(_M_X64) || defined(__x86_64__))
 #if C_64 && C_LE && SY_WIN32
  int m; int d[4];
  extern void __cpuid(int d[4],int type);
@@ -56,6 +57,7 @@ F1(jtjgetx){
 #if C_64 && C_LE && SY_LINUX || SY_MAC
 if(__builtin_cpu_supports("avx2")) R cstr("avx2");
 if(__builtin_cpu_supports("avx"))  R cstr("avx");
+#endif
 #endif
 
 R cstr("");

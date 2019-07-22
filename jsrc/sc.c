@@ -254,7 +254,7 @@ A jtnamerefacv(J jt, A a, L* w){A y;V*v;
  // and let unquote use the up-to-date value.
  // ASGSAFE has a similar problem, and that's more serious, because unquote is too late to stop the inplacing.  We try to ameliorate the
  // problem by making [: unsafe.
- A z=fdef(0,CTILDE,AT(y), jtunquote1,jtunquote, a,0L,0L, (v->flag&VASGSAFE)+(VJTFLGOK1|VJTFLGOK2), v->mr,v->lr,v->rr);  // return value of 'name~', with correct rank, part of speech, and safe/inplace bits
+ A z=fdef(0,CTILDE,AT(y), jtunquote1,jtunquote, a,0L,0L, (v->flag&VASGSAFE)+(VJTFLGOK1|VJTFLGOK2), v->mr,lrv(v),rrv(v));  // return value of 'name~', with correct rank, part of speech, and safe/inplace bits
  RZ(z); 
  // To prevent having to look up the name every time it is executed, we will remember the address of the block (in localuse), AND the modifier counter at the time of the lookup (in AM).  We can't use
  // old lookups on locatives or canned names like xyuvmn, and we leave localuse 0 as a flag of that condition to help logic in unquote
@@ -280,7 +280,7 @@ F1(jtnameref){
 F2(jtnamerefop){V*v;
  RZ(a&&w);
  v=FAV(w);
- R fdef(0,CCOLON,VERB,  jtunquote1,jtunquote, 0L,a,w, VXOPCALL|v->flag, v->mr,v->lr,v->rr);
+ R fdef(0,CCOLON,VERB,  jtunquote1,jtunquote, 0L,a,w, VXOPCALL|v->flag, v->mr,lrv(v),rrv(v));
 }    
 
 /* namerefop() is used by explicit defined operators when: */

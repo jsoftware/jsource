@@ -52,6 +52,8 @@ typedef long double        LD;
 // This is the main structure for J entities
 typedef US                 RANKT;
 #define RANKTX             16   // # bits in a RANKT
+#define RANKTMSK           (((I)1<<RANKTX)-1)
+#define R2MAX              ((RMAX<<RANKTX)+RMAX)  // max value of a RANK2T
 typedef UI4                RANK2T;  // 2 ranks, (l<<16)|r
 typedef I                  FLAGT;
 typedef UI4                LX;  // index of an L block in jt->sympv
@@ -641,7 +643,7 @@ typedef struct{
 
 
 
-typedef struct {union { D lD; void *lvp; I lI; I4 lI4[4]; I lclr[2];} localuse;AF valencefns[2];A fgh[3];I4 flag;/* obsolete UI4 fdep;*/ UI4 flag2; RANKT mr,lr,rr; C id; C lc;} V;  // two cachelines exactly
+typedef struct {union { D lD; void *lvp; I lI; I4 lI4[4]; I lclr[2];} localuse;AF valencefns[2];A fgh[3];I4 flag;/* obsolete UI4 fdep;*/ UI4 flag2; RANK2T lrr; RANKT mr; C id; C lc;} V;  // two cachelines exactly
 // the localuse fields is not freed or counted for space, as the f/g/h fields are.  It is for local optimizations only.  We put if first so that the rest of
 // the block, which is used more, is in a single cacheline.  Local uses are:
 // for ATOMIC2 ops, pointer to the adocv block
@@ -649,7 +651,7 @@ typedef struct {union { D lD; void *lvp; I lI; I4 lI4[4]; I lclr[2];} localuse;A
 // for FIT conj, the CCT data
 // for RANK conj, lI4[0-2] has the signed ranks
 
-// lc is a local-use byte.  For atomic monads, it is the index of the adocv block
+// lc is a local-use byte.  Not yet used
 
 #define ID(f)           (f&&FUNC&AT(f)?FAV(f)->id:C0)
 #define VFLAGNONE 0L

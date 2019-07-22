@@ -71,8 +71,9 @@ A jtfdef(J jt,I flag2,C id,I t,AF f1,AF f2,A fs,A gs,A hs,I flag,I m,I l,I r){A 
 #endif
  v->flag2 = (UI4)flag2;         // more flags
  v->mr    =(RANKT)m;                   /* monadic rank     */
- v->lr    =(RANKT)l;                   /* left    rank     */
- v->rr    =(RANKT)r;                   /* right   rank     */
+// obsolete  v->lr    =(RANKT)l;                   /* left    rank     */
+// obsolete  v->rr    =(RANKT)r;                   /* right   rank     */
+ v->lrr=(RANK2T)((l<<RANKTX)+r);
  v->id    =(C)id;                  /* spelling         */
  R z;
 }
@@ -108,7 +109,7 @@ I boxat(A x, I m, I l, I r){C c;V*v;
    I res = 0;
    if(v->fgh[1]&&VERB&AT(v->fgh[1])){
     res |= FAV(v->fgh[1])->mr>=m;    // monad ok if rank big enough  for either @ or &
-    res |= (c==CAT)&&FAV(v->fgh[1])->lr>=l&&FAV(v->fgh[1])->rr>=r?2:0;  // dyad for @ only, if rank big enough
+    res |= (c==CAT)&&lr(v->fgh[1])>=(UI)l&&rr(v->fgh[1])>=(UI)r?2:0;  // dyad for @ only, if rank big enough
    }
    R res;
  }

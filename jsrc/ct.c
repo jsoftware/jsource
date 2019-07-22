@@ -39,7 +39,7 @@ static F1(jtfacit){A c;V*u,*v;
 }
 
 static A jttayamp(J jt,A w,B nf,A x,A h){A y;B ng=!nf;I j,n;V*v=FAV(h);
- ASSERT(AR(x)<=(nf?v->lr:v->rr),EVRANK);
+ ASSERT(AR(x)<=(nf?lrv(v):rrv(v)),EVRANK);
  switch(v->id){
   case CPLUS:  R tpoly(over(x,num[1]));
   case CMINUS: R tpoly(nf?over(x,num[-1]):over(negate(x),num[1]));

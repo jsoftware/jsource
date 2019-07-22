@@ -305,5 +305,5 @@ A jtvger2(J jt,C id,A a,A w){A h,*hv,x;V*v;
  RZ(x=a?a:w);
  ASSERT(2==AN(x),EVLENGTH);
  RZ(h=fxeachv(1L,x)); hv=AAV(h); v=VAV(*hv);
- R fdef(0,id,VERB, jtgf1,jtgf2, x,a?w:0L, h, VGERL, (I)v->mr,(I)v->lr,(I)v->rr);
+ R fdef(0,id,VERB, jtgf1,jtgf2, x,a?w:0L, h, VGERL, (I)v->mr,lrv(v),rrv(v));
 }    /* verify and define 2-element gerund */

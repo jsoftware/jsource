@@ -616,7 +616,8 @@
 #define locnlx(x)                   jtlocnlx(jt,(x))
 #define logar1(x)                   jtlogar1(jt,(x))  
 #define lp(x)                       jtlp(jt,(x))
-#define lr(x)                       ((I)(FAV(x)->lr))
+#define lrv(x)                      ((UI)((x)->lrr)>>RANKTX)  // lr of V
+#define lr(x)                       lrv(FAV(x))  // lr of A
 #define lr2(x,y,z)                  jtlr2(jt,(x),(y),(z))
 #define lrep(x)                     jtlrep(jt,(x))
 #define lrr(x)                      jtlrr(jt,(x),0L)
@@ -938,7 +939,8 @@
 #define rotate(x,y)                 jtrotate(jt,(x),(y)) 
 #define rotsp(x,y)                  jtrotsp(jt,(x),(y))
 #define roundID(x,y)                jtroundID(jt,(x),(y))
-#define rr(x)                       ((I)(FAV(x)->rr))
+#define rrv(x)                      ((UI)((x)->lrr)&RANKTMSK)  // rr of V
+#define rr(x)                       rrv(FAV(x))  // rr of A
 #define rsh0(x)                     jtrsh0(jt,(x))
 #define rsort(x)                    jtrsort(jt,(x))
 #define sb2(x,y)                    jtsb2(jt,(x),(y))

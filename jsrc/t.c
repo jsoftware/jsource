@@ -24,8 +24,9 @@ static B jtpdef(J jt,I id,I t,AF f1,AF f2,I m,I l,I r,I flag){A z;V*v;
  v->valencefns[0]=f1?f1:jtdomainerr1;  /* monad C function */
  v->valencefns[1]=f2?f2:jtdomainerr2;  /* dyad  C function */
  v->mr=(RANKT)m;                   /* monadic rank     */
- v->lr=(RANKT)l;                   /* left    rank     */
- v->rr=(RANKT)r;                   /* right   rank     */
+// obsolete  v->lr=(RANKT)l;                   /* left    rank     */
+// obsolete  v->rr=(RANKT)r;                   /* right   rank     */
+ v->lrr=(RANK2T)((l<<RANKTX)+r);  // left and right rank
 #if !USECSTACK
  v->fdep=1;                 /* function depth   */
 #endif

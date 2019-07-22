@@ -150,17 +150,18 @@ void va1primsetup(A w){
 // obsolete  FAV(w)->lc=idaddr?(UC)(idaddr-(C*)va1fns):0;  // save it.  immaterial if no match
 }
 
-static A jtva1(J jt,A w,C id){A e,z;B b,m;I cv,n,t,wt,zt;P*wp;VF ado;
+static A jtva1(J jt,A w,C id){A z;I cv,n,t,wt,zt;VF ado;
  RZ(w);F1PREFIP;
- n=AN(w); wt=n?AT(w):B01;
+ n=AN(w); wt=AT(w); wt=n?wt:B01;
  ASSERT(wt&NUMERIC,EVDOMAIN);
- if(b=1&&wt&SPARSE){wp=PAV(w); e=SPA(wp,e); wt=AT(e);}
+// obsolete  if(wt&SPARSE){wp=PAV(w); e=SPA(wp,e); wt=AT(e);}
+ if(wt&SPARSE){wt=AT(SPA(PAV(w),e));}
  VA2 *p=&va1tab[id].p1[(0x54032100>>(CTTZ(wt)<<2))&7];  // from MSB, we need 101 100 xxx 011 010 001 xxx 000
  if(!jt->jerr){
 // obsolete   p=((va1tab+((C*)strchr(va1fns,id)-(C*)va1fns))->p1)[wt&B01?0:wt&INT?1:wt&FL?2:wt&CMPX?3:wt&XNUM?4:5];
   ado=p->f; cv=p->cv;
  }else{
-  m=!(wt&XNUM+RAT);
+  I m=((wt&XNUM+RAT)-1)>>(BW-1);   // -1 if not XNUM/RAT
   switch(VA1CASE(jt->jerr,id)){
    default:     R 0;  // unknown type - impossible
    // all these cases are needed because sparse code may fail over to them
@@ -170,17 +171,18 @@ static A jtva1(J jt,A w,C id){A e,z;B b,m;I cv,n,t,wt,zt;P*wp;VF ado;
    case VA1CASE(EWIRR, CSQRTva1 ): cv=VD+VDD;   ado=sqrtD;                break;
    case VA1CASE(EWIRR, CEXPva1  ): cv=VD+VDD;   ado=expD;                 break;
    case VA1CASE(EWIRR, CBANGva1 ): cv=VD+VDD;   ado=factD;                break;
-   case VA1CASE(EWIRR, CLOGva1  ): cv=VD+VDD*m; ado=m?(VF)logD:(VF)logXD; break;
+   case VA1CASE(EWIRR, CLOGva1  ): cv=VD+(VDD&m); ado=m?(VF)logD:(VF)logXD; break;
    case VA1CASE(EWIMAG,CSQRTva1 ): cv=VZ+VZZ;   ado=sqrtZ;                break;  // this case remains because singleton code fails over to it
-   case VA1CASE(EWIMAG,CLOGva1  ): cv=VZ+VZZ*m; ado=m?(VF)logZ:wt&XNUM?(VF)logXZ:(VF)logQZ;   // singleton code fails over to this too
+   case VA1CASE(EWIMAG,CLOGva1  ): cv=VZ+(VZZ&m); ado=m?(VF)logZ:wt&XNUM?(VF)logXZ:(VF)logQZ;   // singleton code fails over to this too
   }
   RESETERR;
  }
  if(ado==0)R w;  // if function is identity, return arg
- if(b)R va1s(w,id,cv,ado);  // branch off to do sparse
+ if(AT(w)&SPARSE&&n)R va1s(w,id,cv,ado);  // branch off to do sparse
  // from here on is dense va1
  t=atype(cv); zt=rtype(cv);  // extract required type of input and result
- if(t&&TYPESNE(t,wt)){RZ(w=cvt(t,w)); jtinplace=(J)((I)jtinplace|JTINPLACEW);}  // convert input if necessary; if we converted, converted result is ipso facto inplaceable
+// obsolete  if(t&&TYPESNE(t,wt)){RZ(w=cvt(t,w)); jtinplace=(J)((I)jtinplace|JTINPLACEW);}  // convert input if necessary; if we converted, converted result is ipso facto inplaceable.  t is usually 0
+ if(UNSAFE(t&~wt)){RZ(w=cvt(t,w)); jtinplace=(J)((I)jtinplace|JTINPLACEW);}  // convert input if necessary; if we converted, converted result is ipso facto inplaceable.  t is usually 0
  if(((I)jtinplace&(cv>>VIPOKWX)&JTINPLACEW) && ASGNINPLACE(w)){z=w; if(TYPESNE(AT(w),zt))MODBLOCKTYPE(z,zt)}else{GA(z,zt,n,AR(w),AS(w));}
  if(!n)RETF(z); ado(jt,n,AV(z),AV(w));  // perform the operation on all the atoms
  if(jt->jerr){

@@ -26,6 +26,7 @@ typedef struct {VA2 p1[6];} UA;
 #define VRESMSK         (VB|VI|VD|VZ|VX|VQ|VSB)  // mask for result-type
 #define VRD             (SLIT<<VRESX)// convert result to D if possible - unused code point
 #define VRI             (SBOX<<VRESX)// convert result to I if possible - unused code point
+// bits VRESX+8 9 10 12 13 14 are free
 #define VXCVTYPEX       27          // bit position for VX conversion type
 #define VXCVTYPEMSK     (3<<VXCVTYPEX)  // mask for bit-positions hold XNUM conversion type
 #define VXX             (Vxx|(XMEXACT<<VXCVTYPEX))  // exact conversion

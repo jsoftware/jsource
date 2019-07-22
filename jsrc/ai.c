@@ -334,7 +334,7 @@ A jtinv(J jt, A w, I recur){A f,ff,g;B b,nf,ng,vf,vg;C id,*s;I p,q;V*v;
 static F1(jtneutral){A x,y;B b;V*v;
  RZ(w);
  v=FAV(w);
- ASSERT(!v->lr&&!v->rr,EVDOMAIN);
+ ASSERT(!v->lrr,EVDOMAIN);
  RZ(y=v2(0L,1L));
  RZ(x=scf(infm)); b=equ(y,CALL2(v->valencefns[1],x,y,w)); RESETERR; if(b)R x;
  x=ainf;          b=equ(y,CALL2(v->valencefns[1],x,y,w)); RESETERR; if(b)R x;

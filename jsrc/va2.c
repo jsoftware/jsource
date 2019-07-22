@@ -1038,6 +1038,31 @@ DF2(jtfslashatg){A fs,gs,y,z;B b,bb,sb=0;C*av,c,d,*wv;I ak,an,ar,*as,at,m,
 // obsolete #define CHECKSSINGPROV(a,w,f) RZ(a&&w); if(AN(a)==1 && AN(w)==1 && !((AT(a)|AT(w))&UNSAFE(~(B01+INT+FL))))R f(jt,a,w)
 #define CHECKSSINGNZ(a,w,f) SINGTEST(a,w,B01+INT+FL){A z = f(jt,a,w); if(z)R z;}
 
+#if 0
+// Consolidated entry point for ATOMIC2 verbs.  These can be called with self pointing either to a rank block or to the block for
+// the atomic.  If the block is a rank block, we will switch self over to the block for the atomic.
+// Rank can be passed in via jt->ranks, or in the rank for self.  jt->ranks has priority.
+// This entry point supports inplacing
+DF2(jtatomic2){A z;
+ A realself=FAV(self)->fgh[0];  // if rank operator, this is nonzero and points to the left arg of rank
+ RANK2T selfranks=FAV(self)->lrr;  // get left & right rank from rank/primitive
+ F2PREFIP;
+ RANK2T jtranks=jt->ranks;  // fetch IRS ranks if any
+ self=realself?realself:self;  // if this is a rank block, move to the primitive
+ RZ(a&&w);
+ selfranks=jtranks==(RANK2T)~0?selfranks:jtranks;
+ // check for singletons
+ if(!((AN(a)-1)|(AN(w)-1)|((AT(a)|AT(w))&(NOUN&UNSAFE(~(B01+INT+FL)))))){
+  z=ssingleton(jtinplace,a,w,self,selfranks);
+  if(z)RETF(z);  // normal return
+  if(jt->jerr)RETF(z);  // error return if error detected in ssingleton
+  // if no result but no error, fall through
+ }
+ // Run the full dyad
+ RETF(jtva2(jtinplace,a,w,self,selfranks);
+}
+#endif
+
 // These are the entry points for the individual verbs.  They pick up the verb-name
 // and transfer to jtva2 which does the work
 

@@ -431,7 +431,7 @@ F2(jtddot){A x,*xv,y,z;AF f;I j,n,p,q,r,*wv;
  if(!nameless(a)||1<r)R CDERIV(CDDOT, jtddot1,0L, 0L, 0L,0L,0L);
  CR rng = condrange(wv,n,IMAX,IMIN,IMAX-1); p=rng.min; q=rng.range;
  if(!r){
-  if(!p){V*v=VAV(a); R v->mr||v->lr||v->rr?qq(a,zeroionei[0]):a;}
+  if(!p){V*v=VAV(a); R v->mr||v->lrr?qq(a,zeroionei[0]):a;}
   f=0<=p?jtdiff0:jtintg0; y=a; DO(ABS(p), ASSERT(y=CALL1(f,y,0L),EVDOMAIN);); R y;
  }
  q+=p-1; p=0>p?p:0; q=0<q?q:0;
@@ -561,7 +561,7 @@ static DF1(jtderiv1){A e,ff,fs,gs,s,t,z,*zv;I*gv,d,n,*tv;V*v;
  if(!(AT(w)&FL+CMPX))RZ(w=cvt(FL,w));
  RZ(e=scf((D)1e-7));
  GAT0(t,INT,1,0); tv=AV(t);   // no need to INCORP t, since no one cares and it's not virtual
- RZ(s=ca(self)); v=VAV(s); v->fgh[1]=t; v->lr=v->mr;
+ RZ(s=ca(self)); v=VAV(s); v->fgh[1]=t; v->lrr=(v->lrr&RMAX)+(v->mr<<RANKTX);
  GATV(z,BOX,n,AR(gs),AS(gs)); zv=AAV(z);
  DO(n, *tv=d=gv[i]; zv[i]=incorp((ff=dtab(fs,d))?df1(w,ff):sslope(tymes(e,w),w,s)););
  RE(0); R ope(z);

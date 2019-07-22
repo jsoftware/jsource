@@ -53,8 +53,8 @@ static DF1(jtbasis1){DECLF;A z;D*x;I j;V*v;
   case 0:
    GAT0(z,FL,3,1); x=DAV(z); v=FAV(fs);
    j=v->mr; x[0]=j<=-RMAX?-inf:j>=RMAX?inf:j;
-   j=v->lr; x[1]=j<=-RMAX?-inf:j>=RMAX?inf:j;
-   j=v->rr; x[2]=j<=-RMAX?-inf:j>=RMAX?inf:j;
+   j=lrv(v); x[1]=j<=-RMAX?-inf:j>=RMAX?inf:j;
+   j=rrv(v); x[2]=j<=-RMAX?-inf:j>=RMAX?inf:j;
    R pcvt(INT,z);
   case -1: R lrep(inv (fs));
   case  1: R lrep(iden(fs));
@@ -171,6 +171,6 @@ F1(jtmemo){PROLOG(300);A h,*hv,q;I m;V*v;
  GAT0(q,INT,1,0); *AV(q)=0;        hv[0]=q;  // is modified; musn't use sc()
  RZ(q=reshape(v2(m,2L),sc(IMIN)));  RZ(hv[1]=rifvs(q));
  GATV0(q,BOX,m,1);                 hv[2]=q;
- EPILOG(fdef(0,CMCAP,VERB,jtmemo1,jtmemo2,w,0L,h,0L,v->mr,v->lr,v->rr));
+ EPILOG(fdef(0,CMCAP,VERB,jtmemo1,jtmemo2,w,0L,h,0L,v->mr,lrv(v),rrv(v)));
  // Now we have converted the verb result to recursive usecount, and gotten rid of the pending tpops for the components of h
 }

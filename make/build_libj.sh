@@ -73,12 +73,14 @@ COMPILE="$common -m32 -msse2 -mfpmath=sse -DC_NOMULTINTRINSIC "
 # slower, use 387 fpu and truncate extra precision
 # COMPILE="$common -m32 -ffloat-store "
 LINK=" -shared -Wl,-soname,libj.so -m32 -lm -ldl $LDOPENMP32 -o libj.so "
+OBJS_AESNI=" aes-ni.o "
 ;;
 
 linux_j64nonavx) # linux intel 64bit nonavx
 TARGET=libj.so
 COMPILE="$common "
 LINK=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP -o libj.so "
+OBJS_AESNI=" aes-ni.o "
 ;;
 
 linux_j64) # linux intel 64bit avx
@@ -91,6 +93,7 @@ else
 CFLAGS_SIMD=" -DC_AVX2=1 -mavx2 "
 fi
 OBJS_FMA=" blis/gemm_int-fma.o "
+OBJS_AESNI=" aes-ni.o "
 ;;
 
 raspberry_j32) # linux raspbian arm
@@ -109,12 +112,14 @@ darwin_j32) # darwin x86
 TARGET=libj.dylib
 COMPILE="$darwin -m32 $macmin"
 LINK=" -dynamiclib -lm -ldl $LDOPENMP -m32 $macmin -o libj.dylib"
+OBJS_AESNI=" aes-ni.o "
 ;;
 
 darwin_j64nonavx) # darwin intel 64bit nonavx
 TARGET=libj.dylib
 COMPILE="$darwin $macmin"
 LINK=" -dynamiclib -lm -ldl $LDOPENMP $macmin -o libj.dylib"
+OBJS_AESNI=" aes-ni.o "
 ;;
 
 darwin_j64) # darwin intel 64bit
@@ -127,6 +132,7 @@ else
 CFLAGS_SIMD=" -DC_AVX2=1 -mavx2 "
 fi
 OBJS_FMA=" blis/gemm_int-fma.o "
+OBJS_AESNI=" aes-ni.o "
 ;;
 
 *)
@@ -275,6 +281,6 @@ OBJS="\
  xt.o \
  xu.o "
 
-export OBJS OBJS_FMA COMPILE CFLAGS_SIMD LINK TARGET
+export OBJS OBJS_FMA OBJS_AESNI COMPILE CFLAGS_SIMD LINK TARGET
 $jmake/domake.sh $1
 

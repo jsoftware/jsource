@@ -472,7 +472,7 @@ printf("va2a: indexes="); spt=SPA(PAV(a),i); DO(AN(spt), printf(" %d",IAV(spt)[i
 
 // All dyadic arithmetic verbs f enter here, and also f"n.  a and w are the arguments, id
 // is the pseudocharacter indicating what operation is to be performed
-static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I ak,f,m,
+A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I ak,f,m,
      mf,n,nf,r,* RESTRICT s,*sf,wk,zk,zn,zt;VA2 adocv;
  RZ(a&&w);F2PREFIP;
  RANK2T savedranks=jt->ranks;   // save original rank before we change it, in case we have to restart the operation

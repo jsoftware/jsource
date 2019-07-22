@@ -151,15 +151,16 @@ OBJS=  \
  xu.o
 
 %.o: %.c
-	$(CC) -c -o $@ $< $(CFLAGS) $(CFLAGS_SIMD) $(CFLAGS_FMA)
+	$(CC) -c -o $@ $< $(CFLAGS) $(CFLAGS_SIMD) $(CFLAGS_FMA) $(CFLAGS_AESNI)
 
 $(OBJS_FMA) : CFLAGS_FMA := -mfma
-$(ODIR)/$(TARGET) : $(OBJS) $(OBJS_FMA)
-	$(CC) $(LDFLAGS) -o $@ $(OBJS) $(OBJS_FMA)
+$(OBJS_AESNI) : CFLAGS_AESNI := -maes
+$(ODIR)/$(TARGET) : $(OBJS) $(OBJS_FMA) $(OBJS_AESNI)
+	$(CC) $(LDFLAGS) -o $@ $(OBJS) $(OBJS_FMA) $(OBJS_AESNI)
 
 all: $(ODIR)/$(TARGET)
 
 clean:
-	rm -f $(OBJS) $(OBJS_FMA)
+	rm -f $(OBJS) $(OBJS_FMA) $(OBJS_AESNI)
 
 .PHONY: all clean

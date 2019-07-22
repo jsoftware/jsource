@@ -99,12 +99,14 @@ CFLAGS="$common -m32 -msse2 -mfpmath=sse -DC_NOMULTINTRINSIC "
 # slower, use 387 fpu and truncate extra precision
 # CFLAGS="$common -m32 -ffloat-store "
 LDFLAGS=" -shared -Wl,-soname,libj.so -m32 -lm -ldl $LDOPENMP32"
+OBJS_AESNI=" aes-ni.o "
 ;;
 
 linux_j64nonavx) # linux intel 64bit nonavx
 TARGET=libj.so
 CFLAGS="$common "
 LDFLAGS=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP"
+OBJS_AESNI=" aes-ni.o "
 ;;
 
 linux_j64) # linux intel 64bit avx
@@ -117,6 +119,7 @@ else
 CFLAGS_SIMD=" -DC_AVX2=1 -mavx2 "
 fi
 OBJS_FMA=" gemm_int-fma.o "
+OBJS_AESNI=" aes-ni.o "
 ;;
 
 raspberry_j32) # linux raspbian arm
@@ -135,12 +138,14 @@ darwin_j32) # darwin x86
 TARGET=libj.dylib
 CFLAGS="$darwin -m32 $macmin"
 LDFLAGS=" -dynamiclib -lm -ldl $LDOPENMP -m32 $macmin"
+OBJS_AESNI=" aes-ni.o "
 ;;
 
 darwin_j64nonavx) # darwin intel 64bit nonavx
 TARGET=libj.dylib
 CFLAGS="$darwin $macmin"
 LDFLAGS=" -dynamiclib -lm -ldl $LDOPENMP $macmin"
+OBJS_AESNI=" aes-ni.o "
 ;;
 
 darwin_j64) # darwin intel 64bit
@@ -153,6 +158,7 @@ else
 CFLAGS_SIMD=" -DC_AVX2=1 -mavx2 "
 fi
 OBJS_FMA=" gemm_int-fma.o "
+OBJS_AESNI=" aes-ni.o "
 ;;
 
 *)
@@ -169,7 +175,7 @@ fi
 mkdir -p ../bin/$jplatform/$j64x
 mkdir -p obj/$jplatform/$j64x/
 cp makefile-libj obj/$jplatform/$j64x/.
-export CFLAGS LDFLAGS TARGET CFLAGS_SIMD OBJS_FMA jplatform j64x
+export CFLAGS LDFLAGS TARGET CFLAGS_SIMD OBJS_FMA OBJS_AESNI jplatform j64x
 cd obj/$jplatform/$j64x/
 make -f makefile-libj
 cd -

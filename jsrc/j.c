@@ -49,6 +49,7 @@ dcomplex zzero={0.0,0.0};
 A   zpath=0;              /* default locale search path           */
 uint64_t g_cpuFeatures;   // blis
 int hwfma=0;              // blis cpu tuning
+int hwaes=0;              // aes ni
 A   pst[256]={0};
 A   chr[256]={0};         /* scalar for each character, or 0      */
 // obsolete B   testb[256]={0};       /* 1 iff test block follows             */

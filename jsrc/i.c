@@ -135,6 +135,10 @@ B jtglobinit(J jt){A x,y;D*d;A *oldpushx=jt->tnextpushp;
  cpuInit();
  hwfma=(getCpuFeatures()&CPU_X86_FEATURE_FMA)?1:0;
  // fprintf(stderr,"hwfma %d\n",hwfma);
+ hwaes=((getCpuFeatures()&CPU_X86_FEATURE_SSE4_1)&&(getCpuFeatures()&CPU_X86_FEATURE_AES_NI))?1:0;
+#elif !defined(ANDROID) && (defined(__i386__) || defined(_M_X64) || defined(__x86_64__))
+ cpuInit();
+ hwaes=((getCpuFeatures()&CPU_X86_FEATURE_SSE4_1)&&(getCpuFeatures()&CPU_X86_FEATURE_AES_NI))?1:0;
 #endif
  // take all the permanent blocks off the tpop stack so that we don't decrement their usecount.  All blocks allocated here must be permanent
  jt->tnextpushp=oldpushx;

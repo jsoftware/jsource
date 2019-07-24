@@ -27,7 +27,8 @@ int aes_ni(I decrypt,I mode,UC *key,I keyn,UC* iv,UC* out,I n);
  */
 F2(jtaes2)
 {
-  I n,n1,decrypt,keyn,mode=1;
+  I n,decrypt,keyn,mode=1;
+  int n1,padding=1;
   A z,*av,dec;
   UC *out,*key,*iv;
   F2RANK(1,1,jtaes2,0);  // do rank loop if necessary
@@ -52,20 +53,36 @@ F2(jtaes2)
   if(AN(a)>3) {
     ASSERT(AT(av[3])&LIT,EVDOMAIN);
     ASSERT(1>=AR(av[3]),EVRANK);
-    mode=(!strncasecmp(CAV(av[3]),"ECB",AN(av[3])))?0:(!strncasecmp(CAV(av[3]),"CBC",AN(av[3])))?1:(!strncasecmp(CAV(av[3]),"CTR",AN(av[3])))?2:-1;
+    ASSERT(3==AN(av[3])||9==AN(av[3]),EVDOMAIN);
+    if(3==AN(av[3])) {
+      mode=(!strncasecmp(CAV(av[3]),"ECB",AN(av[3])))?0:(!strncasecmp(CAV(av[3]),"CBC",AN(av[3])))?1:(!strncasecmp(CAV(av[3]),"CTR",AN(av[3])))?2:-1;
+    } else {
+      padding=0;
+      mode=(!strncasecmp(CAV(av[3]),"ECB NOPAD",AN(av[3])))?0:(!strncasecmp(CAV(av[3]),"CBC NOPAD",AN(av[3])))?1:(!strncasecmp(CAV(av[3]),"CTR NOPAD",AN(av[3])))?2:-1;
+    }
     ASSERT(mode!=-1,EVDOMAIN);
   }
   n=AN(w);
   ASSERT(!n||AT(w)&LIT,EVDOMAIN);
   ASSERT(!n||1>=AR(w),EVRANK);
-  if(decrypt)ASSERT(!n||0==n%16,EVLENGTH);
-  if((n1=n%16))n+=16-n1;
+  if(decrypt) {
+    ASSERT(n||!padding,EVLENGTH);
+    ASSERT(!n||0==n%16,EVLENGTH);
+  } else {
+    if(!(n1=n%16)&&padding)n+=16;
+    if(n1)n+=16-n1;
+  }
   ASSERT(0==(n%16),EVDOMAIN);
   GATV0(z,LIT,n,1);
   out=UAV(z);
   if(!n)R z;
   MC(out,CAV(w),AN(w));
-  if(n1)memset(out+n-(16-n1),0,16-n1);
+  if(!decrypt) {
+    if(padding) {
+      if(n1)memset(out+n-(16-n1),16-n1,16-n1);
+      else memset(out+n-16,16,16);
+    } else if(n1)memset(out+n-(16-n1),0,16-n1);
+  }
 #if !defined(ANDROID) && (defined(__i386__) || defined(_M_X64) || defined(__x86_64__))
   if(hwaes) {
     ASSERT(!aes_ni(decrypt,mode,key,keyn,iv,out,n),EVDOMAIN);
@@ -75,6 +92,13 @@ F2(jtaes2)
 #else
   ASSERT(!aes_c(decrypt,mode,key,keyn,iv,out,n),EVDOMAIN);
 #endif
+  if(decrypt&&padding) {
+    n1=out[n-1];
+    ASSERT(n1&&n1<=16,EVDOMAIN);
+    for(int i=n1; i>0; i--)ASSERT(n1==out[n-i],EVDOMAIN);
+    *(AS(z))=AN(z)=n-n1;
+    memset(out+n-n1,0,n1);
+  }
   R z;
 }
 

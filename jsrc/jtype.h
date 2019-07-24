@@ -692,7 +692,8 @@ typedef struct {union { D lD; void *lvp; I lI; I4 lI4[4]; I lclr[2];} localuse;A
 #define VJTFLGOK2     (((I)1)<<VJTFLGOK2X)
 #define VASGSAFE        ((I)(1L<<27))     // does not alter locale/path
 #define VISATOMIC1      ((I)(1L<<28))     // processes each atom individually (logically rank 0, but handles all ranks)
-#define VISATOMIC2      ((I)(1L<<29))    // dyad is stomic.  localuse will point to the VA entry for the verb
+#define VISATOMIC2      ((I)(1L<<29))    // dyad is atomic.  localuse will point to the VA entry for the verb
+#define VISATOMIC2TEMP  ((I)(1L<<30))    // dyad is atomic and goes through jtatomic2
 
 // bits in flag2:
 // bit 0 unused

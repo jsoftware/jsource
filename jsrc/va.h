@@ -152,6 +152,42 @@ typedef struct {VA2 p1[6];} UA;
 #define AHDRR(f,Tz,Tx)          void f(J jt,I m,I d,I n,Tz* RESTRICTI z,Tx* RESTRICTI x)
 #define AHDRS(f,Tz,Tx)          void f(J jt,I m,I d,I n,Tz* RESTRICTI z,Tx* RESTRICTI x)
 
+// value in vaptr[]
+#define VA2PLUS 20
+#define VA2MINUS 21
+#define VA2MIN 27
+#define VA2MAX 29
+#define VA2MULT 19
+#define VA2DIV 18
+#define VA2NAND 34
+#define VA2NOR 32
+#define VA2GCD 31
+#define VA2LCM 33
+#define VA2OUTOF 17
+#define VA2POW 25
+#define VA2B0 1
+#define VA2B1 2
+#define VA2B2 3
+#define VA2B3 4
+#define VA2B4 5
+#define VA2B5 6
+#define VA2B6 7
+#define VA2B7 8
+#define VA2B8 9
+#define VA2B9 10
+#define VA2BA 11
+#define VA2BB 12
+#define VA2BC 13
+#define VA2BD 14
+#define VA2BE 15
+#define VA2BF 16
+#define VA2LT 22
+#define VA2EQ 23
+#define VA2GT 24
+#define VA2LE 28
+#define VA2GE 30
+#define VA2NE 35
+
 /*
  b    1 iff cell rank of a <= cell rank of w
  m    # atoms of in the cell with the smaller rank

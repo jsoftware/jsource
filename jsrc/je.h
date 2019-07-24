@@ -595,6 +595,7 @@ extern DF1(jtredravel);
 extern DF1(jtwd);
 
 extern DF2(jtapip);
+extern DF2(jtatomic2);
 extern DF2(jtbitwisechar);
 extern DF2(jtcharfn2);
 extern DF2(jtdbunquote);
@@ -836,6 +837,7 @@ extern B        jtspfree(J);
 extern B        jtspmult(J,A*,A,A,C,I,I,I,I);
 extern A        jtsprank1(J,A,A,I,AF);
 extern A        jtsprank2(J,A,A,A,I,I,AF);
+extern A        jtssingleton(J,A,A,A,RANK2T);
 extern A        jtstcreate(J,C,I,I,C*);
 extern F        jtstdf(J,A);
 extern A        jtstfind(J,I,C*,I);

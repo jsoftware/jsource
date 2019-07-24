@@ -548,7 +548,7 @@ extern unsigned int __cdecl _clearfp (void);
 // see warnings above under GATVS
 #define GATV(name,type,atoms,rank,shaape) GATVS(name,type,atoms,rank,shaape,type##SIZE,GACOPYSHAPE,R 0)
 #define GATVR(name,type,atoms,rank,shaape) GATVS(name,type,atoms,rank,shaape,type##SIZE,GACOPYSHAPER,R 0)
-#define GATV1(name,type,atoms,rank,shaape) GATVS(name,type,atoms,rank,shaape,type##SIZE,GACOPY1,R 0)  // this version copies 1 to the entire shape
+#define GATV1(name,type,atoms,rank) GATVS(name,type,atoms,rank,0,type##SIZE,GACOPY1,R 0)  // this version copies 1 to the entire shape
 #define GATV0(name,type,atoms,rank) GATVS(name,type,atoms,rank,0,type##SIZE,GACOPYSHAPE0,R 0)  // shape not written unless rank==1
 // use this version when you are allocating a sparse matrix.  It handles the AS[0] field correctly
 #define GASPARSE(n,t,a,r,s) {/*if(!(t&SPARSE))SEGFAULT  scaf*/ if((r)==1){GA(n,/* obsolete XZ|*/(t),a,1,0); if(s)AS(n)[0]=(s)[0];}else{GA(n,/* obsolete XZ|*/(t),a,r,s)}}

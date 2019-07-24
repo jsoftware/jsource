@@ -151,6 +151,65 @@ NB. Monads
 *./,   ! compss v
 *./,   o. compss v
 
+NB. Verify each verb goes through a faster path
+compst =: 1 : 0
+:
+x
+y
+u
+timesing =. 2000 (6!:2) 'u f.&>~ y'
+timearray =. 2000 (6!:2) 'u f.~&>~ x'
+timesing,timearray
+)
+vv0 =. <"0 (1000 $ 1 - 1)
+vv1 =. <"1 (1000 2 $ 1 - 1)
+0.75 > %/ vv1 + compst vv0
+0.75 > %/ vv1 = compst vv0
+0.75 > %/ vv1 < compst vv0
+0.75 > %/ vv1 <. compst vv0
+0.75 > %/ vv1 <: compst vv0
+0.75 > %/ vv1 > compst vv0
+0.75 > %/ vv1 >. compst vv0
+0.75 > %/ vv1 >: compst vv0
+0.75 > %/ vv1 + compst vv0
+0.75 > %/ vv1 +. compst vv0
+0.75 > %/ vv1 +: compst vv0
+0.75 > %/ vv1 * compst vv0
+0.75 > %/ vv1 *. compst vv0
+0.75 > %/ vv1 *: compst vv0
+0.75 > %/ vv1 - compst vv0
+0.75 > %/ vv1 % compst vv0
+0.75 > %/ vv1 ~: compst vv0
+0.75 > %/ vv1 ^ compst vv0
+0.75 > %/ vv1 16 b. compst vv0
+0.75 > %/ vv1 17 b. compst vv0
+0.75 > %/ vv1 18 b. compst vv0
+0.75 > %/ vv1 19 b. compst vv0
+0.75 > %/ vv1 20 b. compst vv0
+0.75 > %/ vv1 21 b. compst vv0
+0.75 > %/ vv1 22 b. compst vv0
+0.75 > %/ vv1 23 b. compst vv0
+0.75 > %/ vv1 24 b. compst vv0
+0.75 > %/ vv1 25 b. compst vv0
+0.75 > %/ vv1 26 b. compst vv0
+0.75 > %/ vv1 27 b. compst vv0
+0.75 > %/ vv1 28 b. compst vv0
+0.75 > %/ vv1 29 b. compst vv0
+0.75 > %/ vv1 30 b. compst vv0
+0.75 > %/ vv1 31 b. compst vv0
+NB. no ss 0.75 > %/ vv1 32 b. compst vv0
+NB. no ss 0.75 > %/ vv1 33 b. compst vv0
+NB. no ss 0.75 > %/ vv1 34 b. compst vv0
+
+0.75 > %/ vv1 = compst vv0
+0.75 > %/ vv1 < compst vv0
+0.75 > %/ vv1 <. compst vv0
+0.75 > %/ vv1 <: compst vv0
+0.75 > %/ vv1 > compst vv0
+0.75 > %/ vv1 >. compst vv0
+0.75 > %/ vv1 >: compst vv0
+0.75 > %/ vv1 ~: compst vv0
+
 NB. Verify that operations are performed in-place where possible
 iptime =: 6!:2 '4 : ''for. i. y do. y =.y-1 [ t=.x end.''~ 100000'
 niptime =: 6!:2 '4 : ''for. i. y do. y =.y-1 [ t=.y end.''~ 100000'
@@ -186,5 +245,5 @@ NB. Same for %:y and ^.y
 NB. Verify that the contents of a non-inplacable box are not inplaced
 (2 2 1 $ 0 _2 2 0) -: -&>/~ ((<"_1) ,._1 1)
 
-4!:55 ;:'adot1 adot2 sdot0 b compss compssn compssp dou filecase iptime iptime1 iptime2 iptime3 niptime ops tolower v v1 v2 v3 vv0 vv1 vv2 xx yy'
+4!:55 ;:'adot1 adot2 sdot0 b compss compssn compssp compt dou filecase iptime iptime1 iptime2 iptime3 niptime ops tolower v v1 v2 v3 vv0 vv1 vv2 xx yy'
 randfini''

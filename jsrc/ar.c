@@ -718,7 +718,7 @@ DF1(jtmean){
 A sum=reduce(w,FAV(self)->fgh[0]);  // calculate +/"r
  RESETRANK;  // back to infinite rank for the divide
  RZ(sum);
- RZ(w=JTIPAEX2(divide,sum,sc(n)));  // take quotient inplace and return it
+ RZ(w=jtatomic2(JTIPA,sum,sc(n),ds(CDIV)));  // take quotient inplace and return it
  RETF(w);
 #if 0 // obsolete
  if(!(wn&&2<n&&wt&INT+FL))R divide(df1(w,qq(slash(ds(CPLUS)),sc(r))),sc(n));

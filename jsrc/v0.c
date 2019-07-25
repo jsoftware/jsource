@@ -275,7 +275,7 @@ static A jtmnomx(J jt,I m,A w){A s,*wv,x,z=w,*zv;I i,n,r;
  R z;
 }    /* standardize multinomial right arg */
 
-static F2(jtpoly2a){A c,e,x;I m;
+static F2(jtpoly2a){A c,e,x;I m;D rkblk[16];
  RZ(a&&w);
  m=*(1+AS(a))-1;
  ASSERT(AT(a)&NUMERIC,EVDOMAIN);
@@ -284,7 +284,7 @@ static F2(jtpoly2a){A c,e,x;I m;
  RZ(IRS1(a,0L,1L,jthead,c  ) ); 
  RZ(e=cant1(IRS1(a,0L,1L,jtbehead,e)));
  RZ(x=mnomx(m,w));
- if(1==m){A z,er; RZ(er=ravel(e)); R pdt(IRS2(x,er,0L,0L,2L,jtexpn2,z),c);}else{R pdt(df2(x,e,dot(slash(ds(CSTAR)),ds(CEXP))),c);}  // scaf need agreement check?
+ if(1==m){A er; RZ(er=ravel(e)); R pdt(ATOMIC2(jt,x,er,rkblk,0L,2L,CEXP),c);}else{R pdt(df2(x,e,dot(slash(ds(CSTAR)),ds(CEXP))),c);}  // scaf need agreement check?
 }    /* multinomial: (<c,.e0,.e1,.e2) p. <x0,x1,x2, left argument opened */
 
 // x p. y    Supports IRS on the y argument; supports inplace

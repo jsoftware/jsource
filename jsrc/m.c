@@ -454,7 +454,7 @@ static void freesymb(J jt, A w){I j,wn=AN(w); LX k,kt,* RESTRICT wv=LXAV0(w);
  for(j=SYMLINFOSIZE;j<wn;++j){
   // free the chain; kt->last block freed
   if(k=wv[j]){
-   do{kt=k;fr(jtsympv[k].name);fa(jtsympv[k].val);jtsympv[k].name=0;jtsympv[k].val=0;jtsympv[k].sn=0;jtsympv[k].flag=0;k=jtsympv[k].next;}while(k);  // prev for 18!:31
+   do{kt=k;fr(jtsympv[k].name);fa(jtsympv[k].val);jtsympv[k].name=0;jtsympv[k].val=0;jtsympv[k].sn=0;jtsympv[k].flag=0;k=jtsympv[k].next;}while(k);
    // if the chain is not empty, make it the base of the free pool & chain previous pool from it
    jtsympv[kt].next=jtsympv[0].next;jtsympv[0].next=wv[j];
   }
@@ -820,9 +820,9 @@ A *jttpop(J jt,A *old){A *pushp=jt->tnextpushp; A *endingtpushp;
 #ifdef PREFETCH
    PREFETCH((C*)np0);   // prefetch the next box
 #endif
-// obsolete #if MEMAUDIT&2
-// obsolete    --jt->tnextpushp;  // remove the buffer-to-be-freed from the stack for auditing
-// obsolete #endif
+#if MEMAUDIT&2
+   jt->tnextpushp=pushp;  // remove the buffer-to-be-freed from the stack for auditing.  We must, because it may be a SYMB block that does auditing
+#endif
    // We never tpush a PERMANENT block so we needn't check for it
    if(--c<=0){if(AFLAG(np)&AFVIRTUAL){A b=ABACK(np); fana(b);} if(UCISRECUR(np)){fana(np);}else{mf(np);}}else AC(np)=c;  // decrement usecount and either store it back or free the block
    np=np0;  // Advance to next block

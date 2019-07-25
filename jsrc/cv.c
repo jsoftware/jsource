@@ -10,16 +10,16 @@ static DF1(jtfitct1){DECLFG;F1PREFIP;A z; PUSHCCT(FAV(self)->localuse.lD) z=CALL
 
 #define fitctvector(name,vector) static DF2(name){DECLFG;F2PREFIP;A z; PUSHCCT(FAV(self)->localuse.lD) z=vector; POPCCT RETF(z);}
 fitctvector(jtfitct2,CALL2IP(f2,a,w,fs))
-fitctvector(jtfitcteq,jteq(jtinplace,a,w))
-fitctvector(jtfitctne,jtne(jtinplace,a,w))
-fitctvector(jtfitctgt,jtgt(jtinplace,a,w))
-fitctvector(jtfitctge,jtge(jtinplace,a,w))
-fitctvector(jtfitctlt,jtlt(jtinplace,a,w))
-fitctvector(jtfitctle,jtle(jtinplace,a,w))
+fitctvector(jtfitcteq,jtatomic2(jtinplace,a,w,fs))
+// obsolete fitctvector(jtfitctne,jtne(jtinplace,a,w))
+// obsolete fitctvector(jtfitctgt,jtgt(jtinplace,a,w))
+// obsolete fitctvector(jtfitctge,jtge(jtinplace,a,w))
+// obsolete fitctvector(jtfitctlt,jtlt(jtinplace,a,w))
+// obsolete fitctvector(jtfitctle,jtle(jtinplace,a,w))
 // obsolete static DF2(jtfitct2){DECLFG;F2PREFIP;A z; PUSHCCT(FAV(self)->localuse.lD) z=CALL2IP(f2,a,w,fs); POPCCT RETF(z);}
 
 // To avoid multiple indirect branches, we vector the common comparisons to a routine that jumps directly to them
-static AF aff2[] = {jtfitct2, jtfitcteq, jtfitctne, jtfitctgt, jtfitctge, jtfitctlt, jtfitctle};
+static AF aff2[] = {jtfitct2, jtfitcteq /* obsolete , jtfitctne, jtfitctgt, jtfitctge, jtfitctlt, jtfitctle */};
 static A jtfitct(J jt,A a,A w,I cno){D d;V*sv;
  RZ(a&&w);
  ASSERT(!AR(w),EVRANK);
@@ -61,7 +61,7 @@ F2(jtfit){A f;C c;I k,l,m,r;V*sv;
  sv=FAV(a); m=sv->mr; l=lrv(sv); r=rrv(sv);
  I cno=0;
  switch(sv->id){
-  case CLE: ++cno; case CLT: ++cno; case CGE: ++cno; case CGT: ++cno; case CNE: ++cno; case CEQ: ++cno;
+  case CLE: case CLT: case CGE: case CGT: case CNE: case CEQ: ++cno;
   case CMATCH: case CEPS:   case CIOTA:  case CICO:      case CNUB:     case CSTAR:  
   case CFLOOR: case CCEIL:  case CSTILE: case CPLUSDOT:  case CSTARDOT: case CABASE:
   case CNOT:   case CXCO:   case CSLDOT: case CSPARSE:   case CEBAR:

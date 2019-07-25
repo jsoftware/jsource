@@ -315,7 +315,7 @@ APFX(  maxDB, D,D,B, MAX)     APFX(  maxDI, D,D,I, MAX)         /* maxDD */
 APFX(  maxSS, SB,SB,SB, SBMAX)
 
 
-static D jtremdd(J jt,D a,D b){D q,x,y;
+D jtremdd(J jt,D a,D b){D q,x,y;
  if(!a)R b;
  ASSERT(!INF(b),EVNAN);
  if(a==inf )R 0<=b?b:a;
@@ -326,7 +326,7 @@ static D jtremdd(J jt,D a,D b){D q,x,y;
 ANAN(remDD, D,D,D, remdd)
 ANAN(remZZ, Z,Z,Z, zrem )
 
-static I jtremid(J jt,I a,D b){D r;I k;
+I jtremid(J jt,I a,D b){D r;I k;
  ASSERT(a&&-9e15<b&&b<9e15,EWOV);
  r=b-a*floor(b/a); k=(I)r;
  ASSERT(k==r,EWOV);   // not really overflow - just has a fractional part
@@ -335,7 +335,7 @@ static I jtremid(J jt,I a,D b){D r;I k;
 
 APFX(remID, I,I,D, remid)
 
-static I remii(I a,I b){I r; R (a!=(a>>(BW-1)))?(r=b%a,0<a?r+(a&(r>>(BW-1))):r+(a&((-r)>>(BW-1)))):a?0:b;}  // must handle IMIN/-1, which overflows.  If a=0, return b.
+I remii(I a,I b){I r; R (a!=(a>>(BW-1)))?(r=b%a,0<a?r+(a&(r>>(BW-1))):r+(a&((-r)>>(BW-1)))):a?0:b;}  // must handle IMIN/-1, which overflows.  If a=0, return b.
 
 AHDR2(remII,I,I,I){I u,v;
  if(n-1==0){DQ(m,*z++=remii(*x,*y); x++; y++; )

@@ -536,6 +536,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
     t=(A)((I)t^((I)a^(I)w)); shortr=AR(t); m=AN(t);  // rank, atoms of shorter frame
    }
    PROD(n,r-shortr,s+shortr);  // treat the entire operands as one big cell; get the rest of the values needed
+   RESETRANK;
    ASSERTAGREE(AS(a),AS(w),shortr)  // agreement error if not prefix match
    f=0;  // no rank means no outer frame
    if(jtinplace){
@@ -1034,7 +1035,7 @@ DF2(jtfslashatg){A fs,gs,y,z;B b,bb,sb=0;C*av,c,d,*wv;I ak,an,ar,*as,at,m,
  RE(0); RETF(z);
 }    /* a f/@:g w where f and g are atomic*/
 
-
+#if 0 // obsolete
 // If each argument has a single direct-numeric atom, go process through speedy-singleton code
 #define SINGTEST(a,w,flag) RZ(a&&w); F2PREFIP; if(!((AN(a)-1)|(AN(w)-1)|((AT(a)|AT(w))&(NOUN&UNSAFE(~(flag))))))
 #define CHECKSSING(a,w,f) SINGTEST(a,w,B01+INT+FL)R f(jt,a,w);
@@ -1043,6 +1044,7 @@ DF2(jtfslashatg){A fs,gs,y,z;B b,bb,sb=0;C*av,c,d,*wv;I ak,an,ar,*as,at,m,
 #define CHECKSSINGOPEQNE(a,w,f,op) SINGTEST(a,w,B01+INT+FL/*+LIT+C2T+C4T*/)R f(jt,a,w,op);
 // obsolete #define CHECKSSINGPROV(a,w,f) RZ(a&&w); if(AN(a)==1 && AN(w)==1 && !((AT(a)|AT(w))&UNSAFE(~(B01+INT+FL))))R f(jt,a,w)
 #define CHECKSSINGNZ(a,w,f) SINGTEST(a,w,B01+INT+FL){A z = f(jt,a,w); if(z)R z;}
+#endif
 
 // Consolidated entry point for ATOMIC2 verbs.  These can be called with self pointing either to a rank block or to the block for
 // the atomic.  If the block is a rank block, we will switch self over to the block for the atomic.
@@ -1067,10 +1069,10 @@ DF2(jtatomic2){A z;
   // if retryable error, fall through.  The retry will not be through the singleton code
  }
  // find frame
- I af=(I)AR(a)-((I)selfranks>>RANKTX); af=af<0?0:af;  // framelen of a
- I wf=(I)AR(w)-((I)selfranks&RANKTMSK); wf=wf<0?0:wf;  // framelen of w
+ I af=(I)((UI)AR(a)-((UI)selfranks>>RANKTX)); af=af<0?0:af;  // framelen of a
+ I wf=(I)((UI)AR(w)-((UI)selfranks&RANKTMSK)); wf=wf<0?0:wf;  // framelen of w
  // if there is no frame wrt rank, shift down to working on frame wrt 0.  Set selfranks=0 to signal that case.  It uses simpler setup
- selfranks=af+wf==0?0:selfranks; af=af+wf==0?(I)AR(a):af; wf=selfranks==0?(I)AR(w):wf;  // the conditions had to be like this to prevent a jmp
+ selfranks=af+wf==0?0:selfranks; af=af+wf==0?(UI)AR(a):af; wf=selfranks==0?(UI)AR(w):wf;  // the conditions had to be like this to prevent a jmp
  af=af<wf?af:wf;   // now af is short frame
  ASSERTAGREE(AS(a),AS(w),af);  // outermost (or only) agreement check
 // *** remove agreement check from no-rank case
@@ -1086,51 +1088,52 @@ static DF2(jtretryatomic2){RETF(jtva2(jt,a,w,self,jt->ranks));}  // assumes no i
 // These are the entry points for the individual verbs.  They pick up the verb-name
 // and transfer to jtva2 which does the work
 
-F2(jtbitwise0000){CHECKSSINGOP(a,w,jtssbitwise,0) R jtva2(jtinplace,a,w,ds(16),jt->ranks);}
-F2(jtbitwise0001){CHECKSSINGOP(a,w,jtssbitwise,1) R jtva2(jtinplace,a,w,ds(17),jt->ranks);}
-F2(jtbitwise0010){CHECKSSINGOP(a,w,jtssbitwise,2) R jtva2(jtinplace,a,w,ds(18),jt->ranks);}
-F2(jtbitwise0011){CHECKSSINGOP(a,w,jtssbitwise,3) R jtva2(jtinplace,a,w,ds(19),jt->ranks);}
+// obsolete F2(jtbitwise0000){CHECKSSINGOP(a,w,jtssbitwise,0) R jtva2(jtinplace,a,w,ds(16),jt->ranks);}
+// obsolete F2(jtbitwise0001){CHECKSSINGOP(a,w,jtssbitwise,1) R jtva2(jtinplace,a,w,ds(17),jt->ranks);}
+// obsolete F2(jtbitwise0010){CHECKSSINGOP(a,w,jtssbitwise,2) R jtva2(jtinplace,a,w,ds(18),jt->ranks);}
+// obsolete F2(jtbitwise0011){CHECKSSINGOP(a,w,jtssbitwise,3) R jtva2(jtinplace,a,w,ds(19),jt->ranks);}
 
-F2(jtbitwise0100){CHECKSSINGOP(a,w,jtssbitwise,4) R jtva2(jtinplace,a,w,ds(20),jt->ranks);}
-F2(jtbitwise0101){CHECKSSINGOP(a,w,jtssbitwise,5) R jtva2(jtinplace,a,w,ds(21),jt->ranks);}
-F2(jtbitwise0110){CHECKSSINGOP(a,w,jtssbitwise,6) R jtva2(jtinplace,a,w,ds(22),jt->ranks);}
-F2(jtbitwise0111){CHECKSSINGOP(a,w,jtssbitwise,7) R jtva2(jtinplace,a,w,ds(23),jt->ranks);}
+// obsolete F2(jtbitwise0100){CHECKSSINGOP(a,w,jtssbitwise,4) R jtva2(jtinplace,a,w,ds(20),jt->ranks);}
+// obsolete F2(jtbitwise0101){CHECKSSINGOP(a,w,jtssbitwise,5) R jtva2(jtinplace,a,w,ds(21),jt->ranks);}
+// obsolete F2(jtbitwise0110){CHECKSSINGOP(a,w,jtssbitwise,6) R jtva2(jtinplace,a,w,ds(22),jt->ranks);}
+// obsolete F2(jtbitwise0111){CHECKSSINGOP(a,w,jtssbitwise,7) R jtva2(jtinplace,a,w,ds(23),jt->ranks);}
 
-F2(jtbitwise1000){CHECKSSINGOP(a,w,jtssbitwise,8) R jtva2(jtinplace,a,w,ds(24),jt->ranks);}
-F2(jtbitwise1001){CHECKSSINGOP(a,w,jtssbitwise,9) R jtva2(jtinplace,a,w,ds(25),jt->ranks);}
-F2(jtbitwise1010){CHECKSSINGOP(a,w,jtssbitwise,10) R jtva2(jtinplace,a,w,ds(26),jt->ranks);}
-F2(jtbitwise1011){CHECKSSINGOP(a,w,jtssbitwise,11) R jtva2(jtinplace,a,w,ds(27),jt->ranks);}
+// obsolete F2(jtbitwise1000){CHECKSSINGOP(a,w,jtssbitwise,8) R jtva2(jtinplace,a,w,ds(24),jt->ranks);}
+// obsolete F2(jtbitwise1001){CHECKSSINGOP(a,w,jtssbitwise,9) R jtva2(jtinplace,a,w,ds(25),jt->ranks);}
+// obsolete F2(jtbitwise1010){CHECKSSINGOP(a,w,jtssbitwise,10) R jtva2(jtinplace,a,w,ds(26),jt->ranks);}
+// obsolete F2(jtbitwise1011){CHECKSSINGOP(a,w,jtssbitwise,11) R jtva2(jtinplace,a,w,ds(27),jt->ranks);}
 
-F2(jtbitwise1100){CHECKSSINGOP(a,w,jtssbitwise,12) R jtva2(jtinplace,a,w,ds(28),jt->ranks);}
-F2(jtbitwise1101){CHECKSSINGOP(a,w,jtssbitwise,13) R jtva2(jtinplace,a,w,ds(29),jt->ranks);}
-F2(jtbitwise1110){CHECKSSINGOP(a,w,jtssbitwise,14) R jtva2(jtinplace,a,w,ds(30),jt->ranks);}
-F2(jtbitwise1111){CHECKSSINGOP(a,w,jtssbitwise,15) R jtva2(jtinplace,a,w,ds(31),jt->ranks);}
+// obsolete F2(jtbitwise1100){CHECKSSINGOP(a,w,jtssbitwise,12) R jtva2(jtinplace,a,w,ds(28),jt->ranks);}
+// obsolete F2(jtbitwise1101){CHECKSSINGOP(a,w,jtssbitwise,13) R jtva2(jtinplace,a,w,ds(29),jt->ranks);}
+// obsolete F2(jtbitwise1110){CHECKSSINGOP(a,w,jtssbitwise,14) R jtva2(jtinplace,a,w,ds(30),jt->ranks);}
+// obsolete F2(jtbitwise1111){CHECKSSINGOP(a,w,jtssbitwise,15) R jtva2(jtinplace,a,w,ds(31),jt->ranks);}
 
 // obsolete F2(jtbitwiserotate){CHECKSSINGOP(a,w,jtssbitwise,16) R genbitwiserotate(a,w);}
 // obsolete F2(jtbitwiseshift){CHECKSSINGOP(a,w,jtssbitwise,17) R genbitwiseshift(a,w);}
 // obsolete F2(jtbitwiseshifta){CHECKSSINGOP(a,w,jtssbitwise,18) R genbitwiseshifta(a,w);}
 // obsolete 
-F2(jteq     ){CHECKSSINGOPEQNE(a,w,jtsseqne,0) R jtva2(jtinplace,a,w,ds(CEQ),jt->ranks);}
-F2(jtlt     ){CHECKSSING(a,w,jtsslt) R jtva2(jtinplace,a,w,ds(CLT),jt->ranks);}
-F2(jtminimum){CHECKSSING(a,w,jtssmin) R jtva2(jtinplace,a,w,ds(CMIN),jt->ranks);}
-F2(jtle     ){CHECKSSING(a,w,jtssle) R jtva2(jtinplace,a,w,ds(CLE),jt->ranks);}
-F2(jtgt     ){CHECKSSING(a,w,jtssgt) R jtva2(jtinplace,a,w,ds(CGT),jt->ranks);}
-F2(jtmaximum){CHECKSSING(a,w,jtssmax) R jtva2(jtinplace,a,w,ds(CMAX),jt->ranks);}
-F2(jtge     ){CHECKSSING(a,w,jtssge) R jtva2(jtinplace,a,w,ds(CGE),jt->ranks);}
-F2(jtplus   ){CHECKSSING(a,w,jtssplus) R jtva2(jtinplace,a,w,ds(CPLUS),jt->ranks);}
-F2(jtgcd    ){CHECKSSING(a,w,jtssgcd) R jtva2(jtinplace,a,w,ds(CPLUSDOT),jt->ranks);}
-F2(jtnor    ){CHECKSSING(a,w,jtssnor) R jtva2(jtinplace,a,w,ds(CPLUSCO),jt->ranks);}
-F2(jttymes  ){CHECKSSING(a,w,jtssmult) R jtva2(jtinplace,a,w,ds(CSTAR),jt->ranks);}
-F2(jtlcm    ){CHECKSSING(a,w,jtsslcm) R jtva2(jtinplace,a,w,ds(CSTARDOT),jt->ranks);}
-F2(jtnand   ){CHECKSSING(a,w,jtssnand) R jtva2(jtinplace,a,w,ds(CSTARCO),jt->ranks);}
-F2(jtminus  ){CHECKSSING(a,w,jtssminus) R jtva2(jtinplace,a,w,ds(CMINUS),jt->ranks);}
-F2(jtdivide ){CHECKSSING(a,w,jtssdiv) R jtva2(jtinplace,a,w,ds(CDIV),jt->ranks);}
+// obsolete F2(jteq     ){CHECKSSINGOPEQNE(a,w,jtsseqne,0) R jtva2(jtinplace,a,w,ds(CEQ),jt->ranks);}
+// obsolete F2(jtlt     ){CHECKSSING(a,w,jtsslt) R jtva2(jtinplace,a,w,ds(CLT),jt->ranks);}
+// obsolete F2(jtminimum){CHECKSSING(a,w,jtssmin) R jtva2(jtinplace,a,w,ds(CMIN),jt->ranks);}
+// obsolete F2(jtle     ){CHECKSSING(a,w,jtssle) R jtva2(jtinplace,a,w,ds(CLE),jt->ranks);}
+// obsolete F2(jtgt     ){CHECKSSING(a,w,jtssgt) R jtva2(jtinplace,a,w,ds(CGT),jt->ranks);}
+// obsolete F2(jtmaximum){CHECKSSING(a,w,jtssmax) R jtva2(jtinplace,a,w,ds(CMAX),jt->ranks);}
+// obsolete F2(jtge     ){CHECKSSING(a,w,jtssge) R jtva2(jtinplace,a,w,ds(CGE),jt->ranks);}
+// obsolete F2(jtplus   ){CHECKSSING(a,w,jtssplus) R jtva2(jtinplace,a,w,ds(CPLUS),jt->ranks);}
+// obsolete F2(jtgcd    ){CHECKSSING(a,w,jtssgcd) R jtva2(jtinplace,a,w,ds(CPLUSDOT),jt->ranks);}
+// obsolete F2(jtnor    ){CHECKSSING(a,w,jtssnor) R jtva2(jtinplace,a,w,ds(CPLUSCO),jt->ranks);}
+// obsolete F2(jttymes  ){CHECKSSING(a,w,jtssmult) R jtva2(jtinplace,a,w,ds(CSTAR),jt->ranks);}
+// obsolete F2(jtlcm    ){CHECKSSING(a,w,jtsslcm) R jtva2(jtinplace,a,w,ds(CSTARDOT),jt->ranks);}
+// obsolete F2(jtnand   ){CHECKSSING(a,w,jtssnand) R jtva2(jtinplace,a,w,ds(CSTARCO),jt->ranks);}
+// obsolete F2(jtminus  ){CHECKSSING(a,w,jtssminus) R jtva2(jtinplace,a,w,ds(CMINUS),jt->ranks);}
+// obsolete F2(jtdivide ){CHECKSSING(a,w,jtssdiv) R jtva2(jtinplace,a,w,ds(CDIV),jt->ranks);}
 // obsolete F2(jtexpn2  ){RZ(a&&w); if(((((I)AR(w)-1)&(AT(w)<<(BW-1-FLX)))<0)&&0.5==*DAV(w))R sqroot(a); CHECKSSINGNZ(a,w,jtsspow) R jtva2(jtinplace,a,w,ds(CEXP),jt->ranks);}  // use sqrt hardware for sqrt.  Only for atomic w
-F2(jtexpn2  ){RZ(a&&w); if(((((I)AR(w)-1)&(AT(w)<<(BW-1-FLX)))<0)&&0.5==*DAV(w))R sqroot(a);  R jtatomic2(jt,a,w,ds(CEXP));}  // use sqrt hardware for sqrt.  Only for atomic w.  scaf on the EXP, should be DF2
-F2(jtne     ){CHECKSSINGOPEQNE(a,w,jtsseqne,1) R jtva2(jtinplace,a,w,ds(CNE),jt->ranks);}
-F2(jtoutof  ){CHECKSSING(a,w,jtssoutof) R jtva2(jtinplace,a,w,ds(CBANG),jt->ranks);}
-F2(jtcircle ){F2PREFIP; RZ(a&&w); R jtva2(jtinplace,a,w,ds(CCIRCLE),jt->ranks);}
-F2(jtresidue){F2PREFIP; RZ(a&&w); R INT&AT(w)&&equ(a,num[2])?intmod2(w):jtva2(jtinplace,a,w,ds(CSTILE),jt->ranks);}
+DF2(jtexpn2  ){RZ(a&&w); if(((((I)AR(w)-1)&(AT(w)<<(BW-1-FLX)))<0)&&0.5==*DAV(w))R sqroot(a);  R jtatomic2(jt,a,w,self);}  // use sqrt hardware for sqrt.  Only for atomic w.  scaf on the EXP, should be DF2
+// obsolete F2(jtne     ){CHECKSSINGOPEQNE(a,w,jtsseqne,1) R jtva2(jtinplace,a,w,ds(CNE),jt->ranks);}
+// obsolete F2(jtoutof  ){CHECKSSING(a,w,jtssoutof) R jtva2(jtinplace,a,w,ds(CBANG),jt->ranks);}
+// obsolete DF2(jtcircle ){F2PREFIP; RZ(a&&w); R jtva2(jtinplace,a,w,self,jt->ranks);}
+// scaf the following need to go through atomic2 or a replacement so that they match the changing interface to va2
+DF2(jtresidue){F2PREFIP; RZ(a&&w); if(!(AT(a)|AT(w))&(NOUN&~INT)&&AR(a)==0&&IAV(a)[0]==2)R intmod2(w); R jtatomic2(jtinplace,a,w,self);}
 
 
 // These are the unary ops that are implemented using a canned argument

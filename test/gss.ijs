@@ -21,17 +21,25 @@ a =. a (+ , +) b
 )
 2 2 -: v''
 
-NB. Verify that singleton gets same result as 1 item of an array, and also that 
+NB. Verify that singleton gets same result as 1 item of an array, and also in "0.  Also verify inplacing gives the same value
 compss =: 1 : 0 (&>)
 yy =: y
-assert. (u f. etx y) -: (({.@:(u f.&(2 $ ,:))) etx y)
-assert. (u f."0&:(5&$) y) -: 5&$@:(u f.) y 
+assert. (val =. u f. etx y) -: (({.@:(u f.&(2 $ ,:))) etx y)
+assert. (u f."0&:(5&$) y) -: 5&$@:(u f.) y
+if. 2 ~: 3!:0 val do.
+assert. val -: u f. etx 0 + y
+end.
 1
 :
 xx =: x
 yy =: y
-assert. (x u f. etx y) -: (x ({.@:(u f.&(2 $ ,:))) etx y)
-assert. (x (u f."0&:(5&$) etx) y) -: x 5&$@:(u f.) etx y 
+assert. (val =. x u f. etx y) -: (x ({.@:(u f.&(2 $ ,:))) etx y)
+assert. (x (u f."0&:(5&$) etx) y) -: x 5&$@:(u f.) etx y
+if. 2 ~: 3!:0 val do.
+assert. val -: x u 0 + y
+assert. val -: x u 0 + y
+assert. val -: (0 + x) u 0 + y
+end.
 1
 )
 
@@ -40,9 +48,9 @@ NB. Use smaller arrays if doing full memory audit
 arglen =. 100 2 {~ 9!:57 (0) [ 9!:57 (1)
 NB. v =: 0;1;imax;imin;(<"0 (2.0-2.0)+0 1,imax,imin),((<"0)2 - 1 2),(<"0 i:_20),((<"0) 100 ?@$ 1e6),((<"0) 100000 * 200 ?@$ 0)
 v =: 0;1;imax;imin;(<"0 (2.0-2.0)+0 1,imax,imin),((<"0)2 - 1 2),(<"0 i:_20<.arglen),((<"0) arglen ?@$ 1e6),((<"0) 100000 * (20 <. arglen) ?@$ 0)
-vv0 =: ((<"0) sdot0{~ arglen ?@$ #sdot0)
-vv1 =: ((<"0) adot1{~ arglen ?@$ #adot1)
-vv2 =: ((<"0) adot2{~ arglen ?@$ #adot2)
+NB. vv0 =: ((<"0) sdot0{~ arglen ?@$ #sdot0)
+NB. vv1 =: ((<"0) adot1{~ arglen ?@$ #adot1)
+NB. vv2 =: ((<"0) adot2{~ arglen ?@$ #adot2)
 
 NB.  *./,  faster display scrolling
 *./,   = compss/~ v
@@ -81,21 +89,27 @@ NB.  *./,  faster display scrolling
 *./,   32 b. compss/~ v
 *./,   33 b. compss/~ v
 *./,   34 b. compss/~ v
+*./,   | compss/~ v
 
-*./,   = compss/~ vv0
-*./,   < compss/~ vv0
-*./,   <. compss/~ vv0
-*./,   <: compss/~ vv0
-*./,   > compss/~ vv0
-*./,   >. compss/~ vv0
-*./,   >: compss/~ vv0
-*./,   ~: compss/~ vv0
+*./,   = compss/~ v
+*./,   < compss/~ v
+*./,   <. compss/~ v
+*./,   <: compss/~ v
+*./,   > compss/~ v
+*./,   >. compss/~ v
+*./,   >: compss/~ v
+*./,   ~: compss/~ v
 
-*./,   = compss/~ vv1
-*./,   ~: compss/~ vv1
+NB. Remove large values for trig
+v =: (#~ (1000&> *. _1000&<)@>) v
+ops =: 0 ; 1 ; (, 0.1&+&.>) <"0 i: 12
+*./,   ops o. compss/ v
 
-*./,   = compss/~ vv2
-*./,   ~: compss/~ vv2
+
+NB. *./,   = compss/~ vv1
+NB. *./,   ~: compss/~ vv1
+NB. *./,   = compss/~ vv2
+NB. *./,   ~: compss/~ vv2
 
 NB. ! is slower, especially for big values
 compssp =: 1 : 0 (&>)
@@ -155,7 +169,6 @@ NB. Verify each verb goes through a faster path
 compst =: 1 : 0
 :
 x
-y
 u
 timesing =. 2000 (6!:2) 'u f.&>~ y'
 timearray =. 2000 (6!:2) 'u f.~&>~ x'
@@ -197,10 +210,10 @@ vv1 =. <"1 (1000 2 $ 1 - 1)
 0.75 > %/ vv1 29 b. compst vv0
 0.75 > %/ vv1 30 b. compst vv0
 0.75 > %/ vv1 31 b. compst vv0
+0.75 > %/ vv1 | compst vv0
 NB. no ss 0.75 > %/ vv1 32 b. compst vv0
 NB. no ss 0.75 > %/ vv1 33 b. compst vv0
 NB. no ss 0.75 > %/ vv1 34 b. compst vv0
-
 0.75 > %/ vv1 = compst vv0
 0.75 > %/ vv1 < compst vv0
 0.75 > %/ vv1 <. compst vv0
@@ -209,6 +222,9 @@ NB. no ss 0.75 > %/ vv1 34 b. compst vv0
 0.75 > %/ vv1 >. compst vv0
 0.75 > %/ vv1 >: compst vv0
 0.75 > %/ vv1 ~: compst vv0
+0.75 > %/ vv1 0&o. compst vv0
+0.75 > %/ vv1 1&o. compst vv0
+0.75 > %/ vv1 _1&o. compst vv0
 
 NB. Verify that operations are performed in-place where possible
 iptime =: 6!:2 '4 : ''for. i. y do. y =.y-1 [ t=.x end.''~ 100000'

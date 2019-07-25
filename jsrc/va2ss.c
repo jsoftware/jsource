@@ -2,6 +2,7 @@
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 // Verbs: Atomic (Scalar) Dyadic when arguments have one atom
+// Support for Speedy Singletons
 
 #include "j.h"
 #include "ve.h"
@@ -13,18 +14,9 @@
 #define SSRDC(w) (*(UC*)CAV(w))
 #define SSRDW(w) (*(US*)CAV(w))
 #define SSRDU(w) (*(C4*)CAV(w))
+#define SSRDD(w) (*(D *)CAV(w))
 
-// Support for Speedy Singletons
-#define SSINGF2(f) A f(J jtf, A a, A w){ J jt=(J)(intptr_t)((I)jtf&~JTFLAGMSK); // header for function definition
-#define SSINGF2OP(f) A f(J jtf, A a, A w, I op){ J jt=(J)(intptr_t)((I)jtf&~JTFLAGMSK);   // header for function definition
-
-// An argument can be inplaced if it is enabled in the block AND in the call
-#define AINPLACE ((I)jtf&JTINPLACEA && ((AC(a)<1) || ((AC(a)==1) && (a==jt->zombieval))))
-#define WINPLACE ((I)jtf&JTINPLACEW && ((AC(w)<1) || ((AC(w)==1) && (w==jt->zombieval))))
-
-// #define SSINGENC(a,w) (((a)+((w)>>2))&(2*FL-1))   // Mask off SAFE bits
-// #define SSINGENC(a,w) (3*(UNSAFE(a)>>INTX)+(UNSAFE(w)>>INTX))
-#define SSINGENC(a,w) ((7*UNSAFE(a))+((UNSAFE(w))*5))   // Mask off SAFE bits scaf
+#define SSINGENC(a,w) (3*(UNSAFE(a)>>INTX)+(UNSAFE(w)>>INTX))
 #define SSINGBB SSINGENC(B01,B01)
 #define SSINGBI SSINGENC(B01,INT)
 #define SSINGBD SSINGENC(B01,FL)
@@ -34,89 +26,10 @@
 #define SSINGDB SSINGENC(FL,B01)
 #define SSINGDI SSINGENC(FL,INT)
 #define SSINGDD SSINGENC(FL,FL)
-#define SSINGCC SSINGENC(LIT,LIT)
-#define SSINGCW SSINGENC(LIT,C2T)
-#define SSINGCU SSINGENC(LIT,C4T)
-#define SSINGWC SSINGENC(C2T,LIT)
-#define SSINGWW SSINGENC(C2T,C2T)
-#define SSINGWU SSINGENC(C2T,C4T)
-#define SSINGUC SSINGENC(C4T,LIT)
-#define SSINGUW SSINGENC(C4T,C2T)
-#define SSINGUU SSINGENC(C4T,C4T)
-// obsolete #define SSINGSS SSINGENC(SBT,SBT)
 
-
-#define SSRDD(w) (*(D *)CAV(w))
-#define SSSTORE(v,z,t,type) {MODBLOCKTYPE(z,t) *((type *)CAV(z)) = (v);}
 #define SSSTORENV(v,z,t,type) {*((type *)CAV(z)) = (v); AT(z)=(t); }  // When we know that if the block is reused, we are not changing the type; but we change the type of a new block
+#define SSSTORE(v,z,t,type) SSSTORENV(v,z,t,type)  // we don't use MODBLOCKTYPE any more
 #define SSSTORENVFL(v,z,t,type) {*((type *)CAV(z)) = (v); }  // When we know the type/shape doesn't change (FL,FL->FL)
-
-// jt->rank is set; figure out the rank of the result.  If that's not the rank of one of the arguments,
-// return the rank needed.  If it is, return -1; the argument with larger rank will be the one to use
-// This doesn't have to be perfect, but it's used only when a rank is given, which should be rare when an argument is a singleton
-static I ssingflen(J jt, I ra, I rw, RANK2T ranks){I ca,cw,fa,fw,r;
- fa=ra-(ranks>>RANKTX); fa=fa<0?0:fa; 
- fw=rw-(RANKT)ranks; fw=fw<0?0:fw; 
- ca=ra-fa; cw=rw-fw;  // cell ranks
- RESETRANK;  // clear global rank once we've used it
- r = MAX(fa,fw) + MAX(ca,cw);  // Rank of result is max frame + max cellshape
- if(r!=ra && r!=rw)R r;
- R -1;
-}
-#if 0 // obsolete
-// allocate a singleton block of type t for rank r.
-static A ssingallo(J jt,I r,I t){A z;
- GA(z,t,1,r,0); DO(r, AS(z)[i]=1;); R z;  // not inplaceable since we don't have jt (? we do)
-SSINGALLO(z,r,FL) GAT0(z,FL,1,0)
-}
-#else
-static A ssingalloFL(J jt,I r){A z; GATV1(z,FL,1,r); R z;}  // allocate with rank and shape= all 1
-static A ssingalloB01(J jt,I r){A z; GATV1(z,B01,1,r); R z;}
-// allocate a singleton block of type t for rank f.
-#define SSINGALLO(z,f,t) {if(!f)GATS(z,t,1,0,0,t##SIZE,GACOPYSHAPE0)else RZ(z=ssingallo##t(jt,f))}  // normal case is atom; use subroutine for others
-#endif
-
-// MUST NOT USE AT after SSNUMPREFIX!  We overwrite the type.  Use sw only
-
-// In a normal expression a =. b + c + d the w argument is more likely to be inplaceable than a
-#define SSNUMPREFIX A z; I sw = SSINGENC(AT(a),AT(w));  /* prepare for switch*/ \
-/* Establish the output area.  If this operation is in-placeable, reuse an in-placeable operand if */ \
-/* it has the larger rank.  If not, allocate a single FL block with the required rank/shape.  We will */ \
-/* change the type of this block when we get the result type */ \
-{I ar = AR(a); I wr = AR(w); I f; /* get rank */ \
- if(jt->ranks!=(RANK2T)~0&&(f=ssingflen(jt,ar,wr,jt->ranks))>=0)SSINGALLO(z,f,FL) /* handle frames */ \
- else if (wr >= ar){  \
-  if (WINPLACE){ z = w; } \
-  else if (AINPLACE && ar == wr){ z = a; } \
-  else {GATV(z, FL, 1, wr, AS(w));} \
- } else { \
-  if (AINPLACE){ z = a; } \
-  else {GATV(z, FL, 1, ar, AS(a));} \
- } \
-} /* We have the output block */
-
-// MUST NOT USE AT after SSCOMPPREFIX!  We overwrite the type.  Use sw only
-
-// We don't bother checking zombieval for comparisons, since usually they're scalar constant results
-#define SSCOMPPREFIX A z; I sw = SSINGENC(AT(a), AT(w)); I f; B zv;  \
-/* Establish the output area.  If this produces an atom, it will be num[0] or num[1]; */ \
-/* Nevertheless, we try to reuse an inplaceable argument because that allows the result to be inplaced */ \
-/* If this operation is in-placeable, reuse an in-placeable operand if */ \
-/* it has the larger rank.  If not, allocate a single B01 block with the required rank/shape. */ \
-/* It's OK to modify the AT field of an inplaced input because comparisons (unlike computations) never failover to the normal code */ \
-{I ar = AR(a); I wr = AR(w); \
- if((ar+wr)&&jt->ranks!=(RANK2T)~0&&(f=ssingflen(jt,ar,wr,jt->ranks))>=0)SSINGALLO(z,f,B01) /* handle frames */ \
- else if (wr >= ar){ \
-  if (WINPLACE){ z = w; MODBLOCKTYPE(z,B01) } \
-  else if (AINPLACE && ar == wr){ z = a; MODBLOCKTYPE(z,B01) } \
-  else if (ar + wr == 0)z = 0; \
-  else {GATV(z, B01, 1, wr, AS(w));} \
- } else { \
-  if (AINPLACE){ z = a; MODBLOCKTYPE(z,B01) } \
-  else if (ar + wr == 0)z = 0; \
-  else {GATV(z, B01, 1, ar, AS(a));} \
- } \
-} /* We have the output block, or 0 if we are returning an atom */
 
 // Return int version of d, with error if loss of significance
 static I intforD(J jt, D d){I z;
@@ -128,7 +41,6 @@ static I intforD(J jt, D d){I z;
  R z;
 }
 
-// *** remove MODBLOCKTYPE everywhere
 #define SSINGCASE(id,subtype) (11*(id)+(subtype))   // encode case/args into one branch value scaf
 A jtssingleton(J jt, A a,A w,A self,RANK2T ranks){A z;
  F2PREFIP;
@@ -393,6 +305,35 @@ A jtssingleton(J jt, A a,A w,A self,RANK2T ranks){A z;
  case SSINGCASE(VA2EQ-VA2BF,SSINGII): ziv=SSRDI(a)==SSRDI(w); goto compareresult;
  case SSINGCASE(VA2EQ-VA2BF,SSINGDD): ziv=TEQ(SSRDD(a),SSRDD(w)); goto compareresult;
 
+
+ case SSINGCASE(VA2CIRCLE-VA2BF,SSINGBB): adv=SSRDB(a); wdv=SSRDB(w); goto circleresult;
+ case SSINGCASE(VA2CIRCLE-VA2BF,SSINGBD): adv=SSRDB(a); wdv=SSRDD(w); goto circleresult;
+ case SSINGCASE(VA2CIRCLE-VA2BF,SSINGDB): adv=SSRDD(a); wdv=SSRDB(w); goto circleresult;
+ case SSINGCASE(VA2CIRCLE-VA2BF,SSINGID): adv=(D)SSRDI(a); wdv=SSRDD(w);  goto circleresult;
+ case SSINGCASE(VA2CIRCLE-VA2BF,SSINGDI): adv=SSRDD(a); wdv=(D)SSRDI(w);  goto circleresult;
+ case SSINGCASE(VA2CIRCLE-VA2BF,SSINGBI): adv=(D)SSRDB(a); wdv=(D)SSRDI(w); goto circleresult;
+ case SSINGCASE(VA2CIRCLE-VA2BF,SSINGIB): adv=(D)SSRDI(a); wdv=(D)SSRDB(w); goto circleresult;
+ case SSINGCASE(VA2CIRCLE-VA2BF,SSINGII): adv=(D)SSRDI(a); wdv=(D)SSRDI(w); goto circleresult;
+ case SSINGCASE(VA2CIRCLE-VA2BF,SSINGDD): adv=SSRDD(a); wdv=SSRDD(w);  goto circleresult;
+
+
+ case SSINGCASE(VA2RESIDUE-VA2BF,SSINGBB): ziv=SSRDB(a)<SSRDB(w); goto compareresult;
+ case SSINGCASE(VA2RESIDUE-VA2BF,SSINGIB): aiv=SSRDI(a); wiv=(I)SSRDB(w); goto intresidue;
+ case SSINGCASE(VA2RESIDUE-VA2BF,SSINGBI): aiv=(I)SSRDB(a); wiv=SSRDI(w); goto intresidue;
+ case SSINGCASE(VA2RESIDUE-VA2BF,SSINGII): aiv=SSRDI(a); wiv=SSRDI(w);
+  intresidue: ;
+   ziv=((aiv&-aiv)+(aiv<=0)==0)?wiv&(aiv-1):remii(aiv,wiv);  // if positive power of 2, just AND; otherwise divide
+   SSSTORE(ziv,z,INT,I); R z;
+ case SSINGCASE(VA2RESIDUE-VA2BF,SSINGID): aiv=SSRDI(a); wdv=SSRDD(w);
+   ziv=jtremid(jt,aiv,wdv); if(!jt->jerr){SSSTORE(ziv,z,INT,I);}else z=0; R z;  // Since this can retry, we must not modify the input block if there is an error
+
+ case SSINGCASE(VA2RESIDUE-VA2BF,SSINGBD): adv=(D)SSRDB(a); wdv=SSRDD(w); goto floatresidue;
+ case SSINGCASE(VA2RESIDUE-VA2BF,SSINGDB): adv=SSRDD(a); wdv=(D)SSRDB(w); goto floatresidue;
+ case SSINGCASE(VA2RESIDUE-VA2BF,SSINGDI): adv=SSRDD(a); wdv=(D)SSRDI(w);  goto floatresidue;
+ case SSINGCASE(VA2RESIDUE-VA2BF,SSINGDD): adv=SSRDD(a); wdv=SSRDD(w);
+  floatresidue: ;
+   zdv=jtremdd(jt,adv,wdv); if(!jt->jerr){SSSTORE(zdv,z,FL,D);}else z=0; R z;  // Since this can retry, we must not modify the input block if there is an error
+
  }
  // The only thing left is exit processing for the different functions
  gcdintresult:
@@ -433,7 +374,102 @@ A jtssingleton(J jt, A a,A w,A self,RANK2T ranks){A z;
  aiv=(I)(num[ziv]); z=z?z:(A)aiv;
  SSSTORE((B)ziv,z,B01,B) R z;
 
+ circleresult: ;
+ D cirvals[3]={adv,wdv};  // put ops into memory
+ cirDD(jt,1,cirvals+2,cirvals,cirvals+1,1);  // run the routine
+ if(!jt->jerr){SSSTORE(cirvals[2],z,FL,D);}else z=0; R z;  // Don't change the input block if there is an error
+
 }
+
+#if 0 // obsolete
+#define SSINGF2(f) A f(J jtf, A a, A w){ J jt=(J)(intptr_t)((I)jtf&~JTFLAGMSK); // header for function definition
+#define SSINGF2OP(f) A f(J jtf, A a, A w, I op){ J jt=(J)(intptr_t)((I)jtf&~JTFLAGMSK);   // header for function definition
+
+// An argument can be inplaced if it is enabled in the block AND in the call
+#define AINPLACE ((I)jtf&JTINPLACEA && ((AC(a)<1) || ((AC(a)==1) && (a==jt->zombieval))))
+#define WINPLACE ((I)jtf&JTINPLACEW && ((AC(w)<1) || ((AC(w)==1) && (w==jt->zombieval))))
+
+// #define SSINGENC(a,w) (((a)+((w)>>2))&(2*FL-1))   // Mask off SAFE bits
+// #define SSINGENC(a,w) ((7*UNSAFE(a))+((UNSAFE(w))*5))   // Mask off SAFE bits scaf
+#define SSINGCC SSINGENC(LIT,LIT)
+#define SSINGCW SSINGENC(LIT,C2T)
+#define SSINGCU SSINGENC(LIT,C4T)
+#define SSINGWC SSINGENC(C2T,LIT)
+#define SSINGWW SSINGENC(C2T,C2T)
+#define SSINGWU SSINGENC(C2T,C4T)
+#define SSINGUC SSINGENC(C4T,LIT)
+#define SSINGUW SSINGENC(C4T,C2T)
+#define SSINGUU SSINGENC(C4T,C4T)
+// obsolete #define SSINGSS SSINGENC(SBT,SBT)
+
+
+
+// jt->rank is set; figure out the rank of the result.  If that's not the rank of one of the arguments,
+// return the rank needed.  If it is, return -1; the argument with larger rank will be the one to use
+// This doesn't have to be perfect, but it's used only when a rank is given, which should be rare when an argument is a singleton
+static I ssingflen(J jt, I ra, I rw, RANK2T ranks){I ca,cw,fa,fw,r;
+ fa=ra-(ranks>>RANKTX); fa=fa<0?0:fa; 
+ fw=rw-(RANKT)ranks; fw=fw<0?0:fw; 
+ ca=ra-fa; cw=rw-fw;  // cell ranks
+ RESETRANK;  // clear global rank once we've used it
+ r = MAX(fa,fw) + MAX(ca,cw);  // Rank of result is max frame + max cellshape
+ if(r!=ra && r!=rw)R r;
+ R -1;
+}
+#if 0 // obsolete
+// allocate a singleton block of type t for rank r.
+static A ssingallo(J jt,I r,I t){A z;
+ GA(z,t,1,r,0); DO(r, AS(z)[i]=1;); R z;  // not inplaceable since we don't have jt (? we do)
+SSINGALLO(z,r,FL) GAT0(z,FL,1,0)
+}
+#else
+static A ssingalloFL(J jt,I r){A z; GATV1(z,FL,1,r); R z;}  // allocate with rank and shape= all 1
+static A ssingalloB01(J jt,I r){A z; GATV1(z,B01,1,r); R z;}
+// allocate a singleton block of type t for rank f.
+#define SSINGALLO(z,f,t) {if(!f)GATS(z,t,1,0,0,t##SIZE,GACOPYSHAPE0)else RZ(z=ssingallo##t(jt,f))}  // normal case is atom; use subroutine for others
+#endif
+
+// MUST NOT USE AT after SSNUMPREFIX!  We overwrite the type.  Use sw only
+
+// In a normal expression a =. b + c + d the w argument is more likely to be inplaceable than a
+#define SSNUMPREFIX A z; I sw = SSINGENC(AT(a),AT(w));  /* prepare for switch*/ \
+/* Establish the output area.  If this operation is in-placeable, reuse an in-placeable operand if */ \
+/* it has the larger rank.  If not, allocate a single FL block with the required rank/shape.  We will */ \
+/* change the type of this block when we get the result type */ \
+{I ar = AR(a); I wr = AR(w); I f; /* get rank */ \
+ if(jt->ranks!=(RANK2T)~0&&(f=ssingflen(jt,ar,wr,jt->ranks))>=0)SSINGALLO(z,f,FL) /* handle frames */ \
+ else if (wr >= ar){  \
+  if (WINPLACE){ z = w; } \
+  else if (AINPLACE && ar == wr){ z = a; } \
+  else {GATV(z, FL, 1, wr, AS(w));} \
+ } else { \
+  if (AINPLACE){ z = a; } \
+  else {GATV(z, FL, 1, ar, AS(a));} \
+ } \
+} /* We have the output block */
+
+// MUST NOT USE AT after SSCOMPPREFIX!  We overwrite the type.  Use sw only
+
+// We don't bother checking zombieval for comparisons, since usually they're scalar constant results
+#define SSCOMPPREFIX A z; I sw = SSINGENC(AT(a), AT(w)); I f; B zv;  \
+/* Establish the output area.  If this produces an atom, it will be num[0] or num[1]; */ \
+/* Nevertheless, we try to reuse an inplaceable argument because that allows the result to be inplaced */ \
+/* If this operation is in-placeable, reuse an in-placeable operand if */ \
+/* it has the larger rank.  If not, allocate a single B01 block with the required rank/shape. */ \
+/* It's OK to modify the AT field of an inplaced input because comparisons (unlike computations) never failover to the normal code */ \
+{I ar = AR(a); I wr = AR(w); \
+ if((ar+wr)&&jt->ranks!=(RANK2T)~0&&(f=ssingflen(jt,ar,wr,jt->ranks))>=0)SSINGALLO(z,f,B01) /* handle frames */ \
+ else if (wr >= ar){ \
+  if (WINPLACE){ z = w; MODBLOCKTYPE(z,B01) } \
+  else if (AINPLACE && ar == wr){ z = a; MODBLOCKTYPE(z,B01) } \
+  else if (ar + wr == 0)z = 0; \
+  else {GATV(z, B01, 1, wr, AS(w));} \
+ } else { \
+  if (AINPLACE){ z = a; MODBLOCKTYPE(z,B01) } \
+  else if (ar + wr == 0)z = 0; \
+  else {GATV(z, B01, 1, ar, AS(a));} \
+ } \
+} /* We have the output block, or 0 if we are returning an atom */
 
 // speedy singleton routines: each argument has one atom.  The shapes may be
 // any length, but we know they contain all 1s, so we don't care about jt->rank except to clear it
@@ -896,4 +932,4 @@ SSINGF2OP(jtsseqne) SSCOMPPREFIX
  if(z==0)R num[zv^(B)op];
  BAV(z)[0] = zv^(B)op; R z;
 }
-
+#endif

@@ -187,6 +187,8 @@ typedef struct {VA2 p1[6];} UA;
 #define VA2LE 28
 #define VA2GE 30
 #define VA2NE 35
+#define VA2CIRCLE 36
+#define VA2RESIDUE 26
 
 /*
  b    1 iff cell rank of a <= cell rank of w

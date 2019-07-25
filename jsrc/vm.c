@@ -81,15 +81,17 @@ AHDR2(cirID,D,I,D){ASSERTW(n<=1&&1==m,EWIMAG); n^=n>>(BW-1); cirx(n,   *x,z,y);}
 AHDR2(cirDD,D,D,D){I k=(I)jfloor(0.5+*x);
  ASSERTW(k==*x,EVDOMAIN); 
 // obsolete  ASSERTW(b&&1==m,EWIMAG); 
- ASSERTW(n<=1&&1==m,EWIMAG); 
- n^=n>>(BW-1); cirx(n,k,z,y);
+ ASSERTW(n<=1&&1==m,EWIMAG); // if more than one value, 
+// obsolete   ASSERTW((n|m)==1,EWIMAG); // if more than one value, do the whole computation as complex, then back it to float if possible
+ n^=n>>(BW-1);   // convert complementary n to nonneg
+ cirx(n,k,z,y);
 }
 
 
 F2(jtlogar2){A z;I t;
  RZ(a&&w); 
  RE(t=maxtype(AT(a),AT(w)));
- if(!(t&XNUM)||jt->xmode==XMEXACT){jt->xmode=XMEXACT; R jtdivide(JTIPAW,logar1(w),logar1(a));}  // better to multiply by recip, but not much, & it makes 0 ^. 0 not fail
+ if(!(t&XNUM)||jt->xmode==XMEXACT){jt->xmode=XMEXACT; R jtatomic2(JTIPAW,logar1(w),logar1(a),ds(CDIV));}  // better to multiply by recip, but not much, & it makes 0 ^. 0 not fail
  z=rank2ex0(cvt(XNUM,a),cvt(XNUM,w),0L,jtxlog2a); 
  if(z)R z;
  if(jt->jerr==EWIMAG||jt->jerr==EWIRR){RESETERR; jt->xmode=XMEXACT; R divide(logar1(w),logar1(a));}

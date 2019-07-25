@@ -10,8 +10,8 @@ IV        =: fhex '3dafba429d9eb430b422da802c9fac41'
 Plaintext =: 'Single block msg'
 Ciphertext=: fhex 'e353779c1079aeb82708942dbe77181a'
 
-Ciphertext -: (0;Key;IV;'cbc') (128!:7) Plaintext 
-Plaintext -: (1;Key;IV;'cbc') (128!:7) Ciphertext 
+Ciphertext -: (0;Key;IV;'cbc nopad') (128!:7) Plaintext 
+Plaintext -: (1;Key;IV;'cbc nopad') (128!:7) Ciphertext 
 
 NB. Case #2: Encrypting 32 bytes (2 blocks) using AES-CBC with 128-bit key
 Key       =: fhex 'c286696d887c9aa0611bbb3e2025a45a'
@@ -19,8 +19,8 @@ IV        =: fhex '562e17996d093d28ddb3ba695a2e6f58'
 Plaintext =: fhex '000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f'
 Ciphertext=: fhex 'd296cd94c2cccf8a3a863028b5e1dc0a7586602d253cfff91b8266bea6d61ab1'
 
-Ciphertext -: (0;Key;IV;'cbc') (128!:7) Plaintext 
-Plaintext -: (1;Key;IV;'cbc') (128!:7) Ciphertext 
+Ciphertext -: (0;Key;IV;'cbc nopad') (128!:7) Plaintext 
+Plaintext -: (1;Key;IV;'cbc nopad') (128!:7) Ciphertext 
 
 NB. Case #3: Encrypting 48 bytes (3 blocks) using AES-CBC with 128-bit key
 Key       =: fhex '6c3ea0477630ce21a2ce334aa746c2cd'
@@ -28,8 +28,8 @@ IV        =: fhex 'c782dc4c098c66cbd9cd27d825682c81'
 Plaintext =: 'This is a 48-byte message (exactly 3 AES blocks)'
 Ciphertext=: fhex 'd0a02b3836451753d493665d33f0e8862dea54cdb293abc7506939276772f8d5021c19216bad525c8579695d83ba2684'
 
-Ciphertext -: (0;Key;IV;'cbc') (128!:7) Plaintext 
-Plaintext -: (1;Key;IV;'cbc') (128!:7) Ciphertext 
+Ciphertext -: (0;Key;IV;'cbc nopad') (128!:7) Plaintext 
+Plaintext -: (1;Key;IV;'cbc nopad') (128!:7) Ciphertext 
 
 NB. Case #4: Encrypting 64 bytes (4 blocks) using AES-CBC with 128-bit key
 Key       =: fhex '56e47a38c5598974bc46903dba290349'
@@ -37,8 +37,8 @@ IV        =: fhex '8ce82eefbea0da3c44699ed7db51b7d9'
 Plaintext =: fhex 'a0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedf'
 Ciphertext=: fhex 'c30e32ffedc0774e6aff6af0869f71aa0f3af07a9a31a9c684db207eb0ef8e4e35907aa632c3ffdf868bb7b29d3d46ad83ce9f9a102ee99d49a53e87f4c3da55'
 
-Ciphertext -: (0;Key;IV;'cbc') (128!:7) Plaintext 
-Plaintext -: (1;Key;IV;'cbc') (128!:7) Ciphertext 
+Ciphertext -: (0;Key;IV;'cbc nopad') (128!:7) Plaintext 
+Plaintext -: (1;Key;IV;'cbc nopad') (128!:7) Ciphertext 
 
 test_decrypt_ecb=: 3 : 0
 out=. fhex '6bc1bee22e409f96e93d7e117393172a'
@@ -52,7 +52,7 @@ elseif. y=128 do.
   key=. fhex '2b7e151628aed2a6abf7158809cf4f3c'
   in=. fhex '3ad77bb40d7a3660a89ecaf32466ef97'
 end.
-out -: (1;key;(16$' ');'ecb') (128!:7) in
+out -: (1;key;(16$' ');'ecb nopad') (128!:7) in
 )
 
 
@@ -69,7 +69,7 @@ elseif. y=128 do.
   key=. fhex '2b7e151628aed2a6abf7158809cf4f3c'
   out=. fhex '3ad77bb40d7a3660a89ecaf32466ef97'
 end.
-out -: (0;key;(16$' ');'ecb') (128!:7) in
+out -: (0;key;(16$' ');'ecb nopad') (128!:7) in
 )
 
 test_decrypt_cbc=: 3 : 0
@@ -86,7 +86,7 @@ elseif. y=128 do.
   key=. fhex '2b7e151628aed2a6abf7158809cf4f3c'
   in=. fhex '7649abac8119b246cee98e9b12e9197d5086cb9b507219ee95db113a917678b273bed6b8e3c1743b7116e69e222295163ff1caa1681fac09120eca307586e1a7'
 end.
-out -: (1;key;iv;'cbc') (128!:7) in
+out -: (1;key;iv;'cbc nopad') (128!:7) in
 )
 
 test_encrypt_cbc=: 3 : 0
@@ -102,7 +102,7 @@ elseif. y=128 do.
   key=. fhex '2b7e151628aed2a6abf7158809cf4f3c'
   out=. fhex '7649abac8119b246cee98e9b12e9197d5086cb9b507219ee95db113a917678b273bed6b8e3c1743b7116e69e222295163ff1caa1681fac09120eca307586e1a7'
 end.
-out -: (0;key;iv;'cbc') (128!:7) in
+out -: (0;key;iv;'cbc nopad') (128!:7) in
 )
 
 test_xcrypt_ctr=: 4 : 0
@@ -118,7 +118,7 @@ elseif. y=128 do.
   key=. fhex '2b7e151628aed2a6abf7158809cf4f3c'
   in=. fhex '874d6191b620e3261bef6864990db6ce9806f66b7970fdff8617187bb9fffdff5ae4df3edbd5d35e5b4f09020db03eab1e031dda2fbe03d1792170a0f3009cee'
 end.
-out -: (x;key;iv;'ctr') (128!:7) in
+out -: (x;key;iv;'ctr nopad') (128!:7) in
 )
 
 test_encrypt_ecb 128
@@ -143,6 +143,67 @@ test_decrypt_cbc 256
 1&test_xcrypt_ctr 256
 
 f=: 128!:7
+
+NB. null padding
+
+msg=: 'hello world'
+((0;(16{.a.);(16{.a.);'ecb nopad') f msg) -: ((0;(16{.a.);(16{.a.);'ecb nopad') f msg,5#{.a.)
+((0;(16{.a.);(16{.a.);'cbc nopad') f msg) -: ((0;(16{.a.);(16{.a.);'cbc nopad') f msg,5#{.a.)
+((0;(16{.a.);(16{.a.);'ctr nopad') f msg) -: ((0;(16{.a.);(16{.a.);'ctr nopad') f msg,5#{.a.)
+((0;(24{.a.);(16{.a.);'ecb nopad') f msg) -: ((0;(24{.a.);(16{.a.);'ecb nopad') f msg,5#{.a.)
+((0;(24{.a.);(16{.a.);'cbc nopad') f msg) -: ((0;(24{.a.);(16{.a.);'cbc nopad') f msg,5#{.a.)
+((0;(24{.a.);(16{.a.);'ctr nopad') f msg) -: ((0;(24{.a.);(16{.a.);'ctr nopad') f msg,5#{.a.)
+((0;(32{.a.);(16{.a.);'ecb nopad') f msg) -: ((0;(32{.a.);(16{.a.);'ecb nopad') f msg,5#{.a.)
+((0;(32{.a.);(16{.a.);'cbc nopad') f msg) -: ((0;(32{.a.);(16{.a.);'cbc nopad') f msg,5#{.a.)
+((0;(32{.a.);(16{.a.);'ctr nopad') f msg) -: ((0;(32{.a.);(16{.a.);'ctr nopad') f msg,5#{.a.)
+
+((0;(16{.a.);(16{.a.);'ecb nopad') f 2#msg) -: ((0;(16{.a.);(16{.a.);'ecb nopad') f (2#msg),10#{.a.)
+((0;(16{.a.);(16{.a.);'cbc nopad') f 2#msg) -: ((0;(16{.a.);(16{.a.);'cbc nopad') f (2#msg),10#{.a.)
+((0;(16{.a.);(16{.a.);'ctr nopad') f 2#msg) -: ((0;(16{.a.);(16{.a.);'ctr nopad') f (2#msg),10#{.a.)
+((0;(24{.a.);(16{.a.);'ecb nopad') f 2#msg) -: ((0;(24{.a.);(16{.a.);'ecb nopad') f (2#msg),10#{.a.)
+((0;(24{.a.);(16{.a.);'cbc nopad') f 2#msg) -: ((0;(24{.a.);(16{.a.);'cbc nopad') f (2#msg),10#{.a.)
+((0;(24{.a.);(16{.a.);'ctr nopad') f 2#msg) -: ((0;(24{.a.);(16{.a.);'ctr nopad') f (2#msg),10#{.a.)
+((0;(32{.a.);(16{.a.);'ecb nopad') f 2#msg) -: ((0;(32{.a.);(16{.a.);'ecb nopad') f (2#msg),10#{.a.)
+((0;(32{.a.);(16{.a.);'cbc nopad') f 2#msg) -: ((0;(32{.a.);(16{.a.);'cbc nopad') f (2#msg),10#{.a.)
+((0;(32{.a.);(16{.a.);'ctr nopad') f 2#msg) -: ((0;(32{.a.);(16{.a.);'ctr nopad') f (2#msg),10#{.a.)
+
+NB. pkcs7 padding
+
+pkcs=: 4 : 0
+key=. 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdef'
+iv=. 'uvwxyz0123456789'
+mode=. x
+msg=. ,y
+pad=. >:16|->:#msg
+txt=. msg,pad#pad{a.
+assert. 0=16|#txt
+j=. (0;key;iv;mode,' nopad') 128!:7 txt
+s=. (0;key;iv;mode) 128!:7 msg
+k=. (1;key;iv;mode,' nopad') 128!:7 j
+t=. (1;key;iv;mode) 128!:7 s
+(j-:s)*.(k-:txt)*.(t-:msg)
+)
+
+'ecb' pkcs ''
+'ecb' pkcs 'h'
+'ecb' pkcs 'hello world'
+'ecb' pkcs 'hello world1234'
+'ecb' pkcs 'hello world12345'
+'ecb' pkcs 'hello world123456'
+
+'cbc' pkcs ''
+'cbc' pkcs 'h'
+'cbc' pkcs 'hello world'
+'cbc' pkcs 'hello world1234'
+'cbc' pkcs 'hello world12345'
+'cbc' pkcs 'hello world123456'
+
+'ctr' pkcs ''
+'ctr' pkcs 'h'
+'ctr' pkcs 'hello world'
+'ctr' pkcs 'hello world1234'
+'ctr' pkcs 'hello world12345'
+'ctr' pkcs 'hello world123456'
 
 'domain error' -: f etx 2 3 4
 'domain error' -: f etx 2 3 4x
@@ -175,8 +236,9 @@ f=: 128!:7
 'length error' -: (34;'a')      f etx 'xyz'
 'domain error' -: (34;56;3)     f etx 'xyz'
 'domain error' -: (0;(16{.a.);(16{.a.);'cbcc') f etx 'xyz'
+'domain error' -: (0;(16{.a.);(16{.a.);'cbc pad') f etx 'xyz'
 'domain error' -: (0;(16{.a.);(16{.a.);'cfb')  f etx 'xyz'
-'domain error' -: (0;(16{.a.);(16{.a.);'ofb')  f etx 'xyz'
+'domain error' -: (0;(16{.a.);(16{.a.);'ofb nopad')  f etx 'xyz'
 'domain error' -: (0;(16{.a.);(16{.a.);123)    f etx 'xyz'
 'domain error' -: (0;(17{.a.);(16{.a.);'cbc')  f etx 'xyz'
 'domain error' -: (0;123;(16{.a.);'cbc')       f etx 'xyz'
@@ -187,5 +249,5 @@ f=: 128!:7
 'length error' -: (1;(16{.a.))                 f etx 'xyz'
 'length error' -: (1;(16{.a.);(16{.a.))        f etx 'xyz'
 
-4!:55 ;:'f fhex Key IV Plaintext Ciphertext'
+4!:55 ;:'f pkcs fhex Key IV Plaintext Ciphertext'
 4!:55 ;:'test_encrypt_ecb test_decrypt_ecb test_encrypt_cbc test_decrypt_cbc test_xcrypt_ctr'

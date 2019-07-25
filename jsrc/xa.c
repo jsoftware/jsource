@@ -224,6 +224,8 @@ F1(jtasgzombs){I k;
  R mtm;
 }
 
+// 9!:54/55
+// unicodex78;       /* 1 iff disallow numeric argument for 7 8 u:      */
 F1(jtunicodex78q){
  ASSERTMTV(w);
  R sc(jt->unicodex78);

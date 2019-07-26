@@ -772,7 +772,7 @@ static DF2(jtmovfslash){A x,z;B b;C id,*wv,*zv;I d,m,m0,p,t,wk,wt,zi,zk,zt;
  if((((2^m)-1)|(m-1)|(p-m))<0)R jtinfixprefix2(jt,a,w,self);  // If m is 0-2, go to general case
  x=FAV(self)->fgh[0]; x=FAV(x)->fgh[0]; id=ID(x); 
  if(wt&B01)id=id==CMIN?CSTARDOT:id==CMAX?CPLUSDOT:id; 
- if(id==CBDOT&&(x=VAV(x)->fgh[0],INT&AT(x)&&!AR(x)))id=(C)*AV(x);
+ if(id==CBDOT&&(x=VAV(x)->fgh[1],INT&AT(x)&&!AR(x)))id=(C)*AV(x);
  switch(AR(w)&&0<m0&&m0<=*AS(w)?id:0){
   case CPLUS:    if(wt&B01+INT+FL)R movsumavg(m,w,self,0); break;
   case CMIN:     if(wt&SBT+INT+FL)R movminmax(m,w,self,0); break;

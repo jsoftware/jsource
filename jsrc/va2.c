@@ -391,7 +391,7 @@ static UC vaptr[256]={
 // return atomic2 ID for the verb w.  If w is b., look for its u operand and return the appropriate 
 C jtvaid(J jt,A w){A x;C c;I k;V*v;
  v=FAV(w); c=v->id;
- if(c==CBDOT){x=v->fgh[0]; if(INT&AT(x)&&!AR(x)&&(k=*AV(x),(k&-16)==16))c=(C)k;}
+ if(c==CBDOT){x=v->fgh[1]; if(INT&AT(x)&&!AR(x)&&(k=*AV(x),(k&-16)==16))c=(C)k;}
  R vaptr[(UC)c]?c:0;
 }
 
@@ -1078,6 +1078,7 @@ DF2(jtatomic2){A z;
 // *** remove agreement check from no-rank case
 // *** detect no rank by rank=0
 // *** see if we should pass anything else into va2 to save refetches
+// *** pull retry out of va2 into loop here
  // Run the full dyad
  RETF(jtva2(jtinplace,a,w,self,selfranks));
 }

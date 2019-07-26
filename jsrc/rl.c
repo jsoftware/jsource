@@ -248,7 +248,7 @@ static F2(jtlinsert){A*av,f,g,h,t,t0,t1,t2,*u,y;B b,ft,gt,ht;C c,id;I n;V*v;
  v=VAV(w); id=v->id;
  b=id==CCOLON&&VXOP&v->flag;
 // ?t tells whether () is needed around the f/g/h component
- if(1<=n){f=av[0]; t=v->fgh[0]; c=ID(t); ft=c==CHOOK||c==CFORK||c==CADVF||(b||id==CFORK)&&NOUN&AT(t)&&lp(f);}  // f: () if it's hook fork && or noun left end of nvv or n (op)
+ if(1<=n){f=av[0]; t=v->fgh[!v->fgh[0]]; c=ID(t); ft=c==CHOOK||c==CFORK||c==CADVF||(b||id==CFORK)&&NOUN&AT(t)&&lp(f);}  // f: () if it's hook fork && or noun left end of nvv or n (op)
  if(2<=n){g=av[1]; t=v->fgh[1]; c=ID(t); gt=VERB&AT(w)    ?c==CHOOK||c==CFORK:lp(g);}
  if(3<=n){h=av[2]; t=v->fgh[2]; c=ID(t); ht=VERB&AT(w)&&!b?c==CHOOK          :lp(h);}
  switch(!b?id:2==n?CHOOK:CFORK){
@@ -266,7 +266,7 @@ static F2(jtlinsert){A*av,f,g,h,t,t0,t1,t2,*u,y;B b,ft,gt,ht;C c,id;I n;V*v;
    RZ(u[4]=h=CALL2(jt->lcp,ht,             h,0)); RZ(u[3]=str(' '==cf(h)?0L:1L," "));
    R raze(y);
   default:
-   t0=CALL2(jt->lcp,ft||NOUN&AT(v->fgh[0])&&!(VGERL&v->flag)&&lp(f),f,0);
+   t0=CALL2(jt->lcp,ft||NOUN&AT(v->fgh[!v->fgh[0]])&&!(VGERL&v->flag)&&lp(f),f,0);
    t1=lsymb(id,w);
    y=over(t0,laa(t0,t1)?over(chr[' '],t1):t1);
    if(1==n)R y;
@@ -299,7 +299,8 @@ static DF1(jtlrr){A fs,gs,hs,t,*tv;C id;I fl,m;V*v;
  // If name, it must be in ".@'name', or (in debug mode) the function name, which we will discard
  if(AT(w)&NAME){RZ(w=sfn(0,w));}
  if(AT(w)&NOUN)R lnoun(w);
- v=VAV(w); id=v->id; fs=v->fgh[0]; gs=v->fgh[1]; hs=v->fgh[2]; fl=v->flag; if(id==CBOX)gs=0;  // ignore gs field in BOX, there to simulate BOXATOP
+ // if f is 0, we take f from g.  In other words, adverbs can put their left arg in either f or g.  u b. uses g so that it can leave f=0 to allow it to function as an ATOMIC2 op
+ v=VAV(w); id=v->id; fs=v->fgh[!v->fgh[0]]; gs=v->fgh[!!v->fgh[0]]; hs=v->fgh[2]; fl=v->flag; if(id==CBOX)fs=0;  // ignore gs field in BOX, there to simulate BOXATOP
  if(fl&VXOPCALL)R lrr(hs);
  m=(I )!!fs+(I )(gs&&id!=CBOX)+(I )(id==CFORK)+(I )(hs&&id==CCOLON&&VXOP&fl);  // BOX has g for BOXATOP; ignore it
  if(!m)R lsymb(id,w);

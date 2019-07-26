@@ -221,7 +221,7 @@ static F1(jtinvamp){A f,ff,g,h,*q,x,y;B nf,ng;C c,d,*yv;I n;V*u,*v;
    break;
   case CBDOT:
    RE(n=i0(x));
-   switch(i0(FAV(h)->fgh[0])){
+   switch(i0(FAV(h)->fgh[1])){
     case 22: case 25:          R w;
     case 19: case 28:          if(ng)R w; break;
     case 21: case 26:          if(nf)R w; break;
@@ -374,7 +374,7 @@ F1(jtiden){A f,g,x=0;V*u,*v;
    }
    break;
   case CBDOT:
-   switch(i0(f)){
+   switch(i0(g)){
     case 25:    x=num[-1]; break;
     case  2: case  4: case  5: case  6: case  7:
     case 18: case 20: case 21: case 22: case 23:

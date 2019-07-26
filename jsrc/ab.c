@@ -108,7 +108,7 @@ DF2(jtbitwisechar){DECLFG;A*p,x,y,z;B b;I j,m,n,zn;VF f;
  if(!(AN(a)&&AN(w)&&(AT(a)&AT(w))&LIT))R from(df2(indexof(alp,a),indexof(alp,w),fs),alp);
  b=AR(a)<=AR(w); zn=AN(b?w:a); m=AN(b?a:w); n=zn/m;
  ASSERTAGREE(AS(a),AS(w),MIN(AR(a),AR(w)));
- j=i0(VAV(fs)->fgh[0])-16;
+ j=i0(VAV(fs)->fgh[1])-16;
  GATV(z,LIT,zn,MAX(AR(a),AR(w)),AS(b?w:a));   // d is fixed; was d==SZI?LIT:C2T; would need GA then
  if(1==n)                 {f=bwI[j]; m=(m+SZI-1)>>LGSZI;}
  else if(!AR(a)||!AR(w)||0==(n&(SZI-1))){f=bwI[j]; n=(n+SZI-1)>>LGSZI; p=b?&x:&y; A zz; RZ(*p=IRS2(sc(SZI),*p,0L,0L,0L,jtrepeat,zz));}
@@ -154,7 +154,7 @@ DF1(jtbitwiseinsertchar){A fs,z;I d,j,n,r,wn,wr,zatoms;UC*u,*v,*wv,x,*zv;VF f;
  RZ(w&&self);
  wr=AR(w); wn=AN(w); n=wr?*AS(w):1; z=VAV(self)->fgh[0]; fs=VAV(z)->fgh[0];
  if(!(wn&&SZI<n&&LIT&AT(w)))R from(df1(indexof(alp,w),fs),alp);
- PROD(d,wr-1,AS(w)+1); zatoms=d; wv=CAV(w); j=i0(VAV(fs)->fgh[0])-16; f=bwinsC[j];  // d=#atoms in an item of a cell.  There is only 1 cell here (rank _)
+ PROD(d,wr-1,AS(w)+1); zatoms=d; wv=CAV(w); j=i0(VAV(fs)->fgh[1])-16; f=bwinsC[j];  // d=#atoms in an item of a cell.  There is only 1 cell here (rank _)
  if(1==wr)switch(j){   // d==1 here
   case  0: R scc(0);
   case  3: R scc(*wv);

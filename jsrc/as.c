@@ -339,7 +339,7 @@ static DF2(jtofxinv){A f,fs,z;C c;I t;V*v;
 static DF2(jtofxassoc){A f,i,j,p,s,x,z;C id,*zv;I c,d,k,kc,m,r,t;V*v;VA2 adocv;
  F2RANK(0,RMAX,jtofxassoc,self);
  m=IC(w); RE(k=i0(a)); c=ABS(k);  // m = # items in w; k is value of a; c is # items per suffix
- f=FAV(self)->fgh[0]; x=FAV(f)->fgh[0]; v=FAV(x); id=CBDOT==v->id?(C)*AV(v->fgh[0]):v->id;  // self = f/\. f = f/  x = f  v = verb info for f
+ f=FAV(self)->fgh[0]; x=FAV(f)->fgh[0]; v=FAV(x); id=CBDOT==v->id?(C)*AV(v->fgh[1]):v->id;  // self = f/\. f = f/  x = f  v = verb info for f
  if(k==IMIN||m<=c||id==CSTARDOT&&!(B01&AT(w)))R outfix(a,w,self);  // if there is not >1 outfix, do general code which handles empties
  if(-1<=k){d=m-c;     RZ(i=IX(d)); RZ(j=apv(d,c,1L));}
  else     {d=(m-1)/c; RZ(i=apv(d,c-1,c )); RZ(j=apv(d,c,c ));}
@@ -378,7 +378,7 @@ F1(jtbsdot){A f;AF f1=jtsuffix,f2=jtoutfix;I flag=FAV(ds(CBSDOT))->flag;C id;V*v
   case CPOUND: f1=jtiota1rev; break;
   case CSLASH:
    f1=jtsscan; flag|=VJTFLGOK1;
-   f=v->fgh[0]; id=ID(f); if(id==CBDOT){f=VAV(f)->fgh[0]; if(INT&AT(f)&&!AR(f))id=(C)*AV(f);}
+   f=v->fgh[0]; id=ID(f); if(id==CBDOT){f=VAV(f)->fgh[1]; if(INT&AT(f)&&!AR(f))id=(C)*AV(f);}
    switch(id){
     case CPLUS:   case CEQ:     case CNE:     case CBW0110:  case CBW1001:               
      f2=jtofxinv;   break;

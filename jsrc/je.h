@@ -838,7 +838,7 @@ extern B        jtspfree(J);
 extern B        jtspmult(J,A*,A,A,C,I,I,I,I);
 extern A        jtsprank1(J,A,A,I,AF);
 extern A        jtsprank2(J,A,A,A,I,I,AF);
-extern A        jtssingleton(J,A,A,A,RANK2T);
+extern A        jtssingleton(J,A,A,A,RANK2T,RANK2T);
 extern A        jtstcreate(J,C,I,I,C*);
 extern F        jtstdf(J,A);
 extern A        jtstfind(J,I,C*,I);

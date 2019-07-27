@@ -69,6 +69,11 @@ typedef AD *A;
 // Next flag must match result.h and VF2 flags
 #define JTWILLBEOPENEDX 4   // result of this exec will be opened immediately, so it can contain virtual references to an input to the current verb
 #define JTWILLBEOPENED  (((I)1)<<JTWILLBEOPENEDX)
+#define JTEMPTYX        5  // in va2, this bit indicates the result is empty
+#define JTEMPTY         (((I)1)<<JTEMPTYX)
+#define JTRETRYX        6  // in va2, this bit is set to indicate that the current execution is a retry
+#define JTRETRY         (((I)1)<<JTRETRYX)
+
 // Next flag must match result.h and VF2 flags
 #define JTCOUNTITEMSX   7   // result of this exec will be go into ;, so an item count in m would be helpful
 #define JTCOUNTITEMS    (((I)1)<<JTCOUNTITEMSX)

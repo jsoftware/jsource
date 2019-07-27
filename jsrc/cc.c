@@ -545,7 +545,7 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);DECLF;A *hv,z,zz;I neg,pfx;C id,*v1,*wv,*zc;
     if(state&STATEHASGERUND){A h=hv[0]; R CALL1(VAV(h)->valencefns[0],w,h);}
     else R CALL1(f1,w,fs);
    }
-   if(((-AN(a))&(-(BOX&AT(a))))<0)R cut2bx(a,w,self);  // handle boxed a separately if a not empty
+   if(((-AN(a))&(SGNIF(AT(a),BOXX)))<0)R cut2bx(a,w,self);  // handle boxed a separately if a not empty
    if(!(B01&AT(a)))RZ(a=cvt(B01,a));  // convert other a to binary, error if impossible
    if(!AR(a))RZ(a=reshape(sc(n),a));   // extend scalar x to length of y
    ak=1; at=B01;  // cell of a is 1 byte, and it's Boolean

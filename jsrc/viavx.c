@@ -1676,7 +1676,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z=mtv;
  if(w==mark){mode |= IPHCALC; f=af; s=as; r=acr-1; f1=wcr-r;}  // if w is omitted (for prehashing), use info from a
  else{  // w is given.  See if we need to abort owing to shapes.
   mode |= IIOREPS&((((((I)1)<<IIDOT)|(((I)1)<<IICO)|(((I)1)<<IEPS))<<IIOREPSX)>>mode);  // remember if i./i:/e. (and not prehash)
-  if(1==ar&&TYPESEQ(at,wt)&&(((1-wr)|((mode&IIOREPS)-1)|(-(acr^1))|(-(wr^wcr))|(an-1)|(wn-1)|(-((at|wt)&SPARSE)))>=0)&&
+  if(1==ar&&TYPESEQ(at,wt)&&(((1-wr)|SGNIFNOT(mode,IIOREPSX)|(-(acr^1))|(-(wr^wcr))|(an-1)|(wn-1)|(-((at|wt)&SPARSE)))>=0)&&
     ((wcr==0)||((D)an*(D)wn<COMPARESPERHASHWRITE*an+COMPARESPERHASHREAD*wn+OVERHEADHASHALLO+OVERHEADSHAPES))){
    // Fast path for (vector i./i:/e. atom or short vector) - if not prehashing.  Do sequential search
    I zt=(mode&IEPS)?B01:INT;  // the result type depends on the operation.  The test relies on the fact that EPS does not overlap IDOT or ICO
@@ -1806,7 +1806,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z=mtv;
  // The cost of such a search is (4 inst per loop, at 1/2 cycle each) and the expected number of loops is half of
  // m*number of results.  The cost of small-range hashing is at best 10 cycles per atom added to the table and 8 cycles per lookup.
  // (full hashing is considerably more expensive); also a fair amount of time for range-checking and table-clearing, and further testing here
- if(((((-(wc^1))&(-(wc^ac)))|((mode&IIOREPS)-1))>=0)&&((wcr<acr)||((D)m*(D)zn<(COMPARESPERHASHWRITE*m)+COMPARESPERHASHREAD*zn+OVERHEADHASHALLO))){  // wc==1 or ac, IOREPS, small enough operation
+ if(((((-(wc^1))&(-(wc^ac)))|SGNIFNOT(mode,IIOREPSX))>=0)&&((wcr<acr)||((D)m*(D)zn<(COMPARESPERHASHWRITE*m)+COMPARESPERHASHREAD*zn+OVERHEADHASHALLO))){  // wc==1 or ac, IOREPS, small enough operation
     // this will not choose sequential search enough when the cells are large (comparisons then are cheap because of early exit)
   jtiosc(jt,mode,n,m,c,ac,wc,a,w,z); // simple sequential search without hashing
  }else{B b=1.0==jt->cct;  // b means 'intolerant comparison'

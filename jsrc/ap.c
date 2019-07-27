@@ -369,7 +369,8 @@ static DF2(jtginfix){A h,*hv,x,z,*zv;I d,m,n;
 
 #define STATEHASGERUND 0x1000  // f is a gerund
 #define STATEISPREFIX 0x2000  // this is prefix rather than infix
-#define STATESLASH2 0x4000  // f is f'/ and x is 2
+#define STATESLASH2X 14  // f is f'/ and x is 2
+#define STATESLASH2 ((I)1<<STATESLASH2X)
 
 // prefix and infix: prefix if a is mark
 static DF2(jtinfixprefix2){F2PREFIP;DECLF;PROLOG(00202);A *hv;
@@ -505,7 +506,7 @@ static DF2(jtinfixprefix2){F2PREFIP;DECLF;PROLOG(00202);A *hv;
     // infix case, or 2 f/\ y.  Add to the virtual-block offset.  If this is a shard, reduce the size of the virtual block.
     // If this is 2 f/\ y, advance the second block as well.  It can't be both.
     AK(virtw) += strideb;
-    if(((remlen-stride)|(-(state&(STATESLASH2))))<0){
+    if(((remlen-stride)|(SGNIF(state,STATESLASH2X)))<0){
      // we either have a shard or 2 f/\ y.
      if(state&STATESLASH2){
       // 2 f/\ y.  Advance the second pointer also.

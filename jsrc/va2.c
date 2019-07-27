@@ -478,13 +478,14 @@ printf("va2a: indexes="); spt=SPA(PAV(a),i); DO(AN(spt), printf(" %d",IAV(spt)[i
 // All dyadic arithmetic verbs f enter here, and also f"n.  a and w are the arguments, id
 // is the pseudocharacter indicating what operation is to be performed.  self is the block for this primitive,
 // ranks are the ranks to use
-static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ranks){A z;I ak,f,m,
-     mf,n,nf,r,* RESTRICT s,*sf,wk,zk,zn,zt;VA2 adocv;
+static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ranks,UI argranks){A z;I ak,f,m,
+     mf,n,nf,r,shortr,* RESTRICT s,*sf,wk,zk,zn,zt;VA2 adocv;
+ r=argranks>>RANKTX; shortr=argranks&RANKTMSK;  // ar, wr to begin with.  Changes later
 // obsolete  RZ(a&&w);
  F2PREFIP;
  {I at=AT(a);
   I wt=AT(w);
-  if(((-(jt->jerr|((UNSAFE(at|wt))&(NOUN&~(B01|INT|FL)))))|(AN(a)-1)|(AN(w)-1))>=0){  // no error, bool/int/fl args, no empties
+  if(((-(((I)jtinplace&(JTRETRY|JTEMPTY))|((UNSAFE(at|wt))&(NOUN&~(B01|INT|FL))))))>=0){  // no error, bool/int/fl args, no empties
    // Here for the fast and important case, where the arguments are both B01/INT/FL
    VA *vainfo=(VA*)FAV(self)->localuse.lvp;  // extract table line from the primitive
    // The index into va is atype*3 + wtype, calculated sneakily.  We test here to avoid the call overhead
@@ -503,6 +504,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
     wt=(SPARSE&wt)?DTYPE(wt):wt;
     jtinplace=0;  // We use jtinplace==0 as a flag meaning 'sparse'
    }
+   // We could allocate the result block here & avoid the test after the allocation later.  But we would have to check for agreement etc
    if(AN(a)==0){at=B01;if(!(wt&NUMERIC))wt=B01;}  // switch empty arg to Boolean & ensure compatibility with other arg
    if(AN(w)==0){wt=B01;if(!(at&NUMERIC))at=B01;}
 
@@ -522,22 +524,22 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
  // Analyze the rank and calculate cell shapes, counts, and sizes.
  // We detect agreement error before domain error
  {//I *as = AS(a); I *ws = AS(w);
-  if(((ranks+1)&-2)==0){I shortr;  // rank of 0 0 or _ _ counts as no rank
+  if(ranks==0){ // rank 0 0 means no outer frames, sets up faster
    // No rank specified.  Since all these verbs have rank 0, that simplifies quite a bit.  ak/wk/zk/sf are not needed and are garbage
    // n is not needed for sparse, but we start it early to get it finished
 // obsolete   mf=AR(w)<=AR(a);  // mf='a is not shorter than w'  nf='w is not shorter than a'
 // obsolete   nf=AR(w)>=AR(a); zn=AN(AR(w)>=AR(a)?w:a); r=AR(AR(w)>=AR(a)?w:a); s=AS(AR(w)>=AR(a)?w:a); I shortr=AR(AR(w)>=AR(a)?a:w); m=AN(AR(w)>=AR(a)?a:w);
    {A t=a;  // will hold, first the longer-rank argument, then the shorter
-    I raminusw=(I)AR(a)-(I)AR(w); t=raminusw<0?w:t;
+    I raminusw=r-shortr; t=raminusw<0?w:t;  // t->block with longer frame
+    s=AS(t); zn=AN(t);     // atoms, shape of larger frame.  shape first.  The dependency chain is s/r/shortr->n->move data
     nf=raminusw>>(BW-1);  // nf=-1 if w has longer frame, means cannot inplace a
-    raminusw=-raminusw;
+    raminusw=-raminusw;   // now aw-ar
     mf=raminusw>>(BW-1);  // mf=-1 if a has longer frame, means cannot inplace w
-    zn=AN(t); r=AR(t); s=AS(t);   // atoms, rank, shape of larger frame
-    t=(A)((I)t^((I)a^(I)w)); shortr=AR(t); m=AN(t);  // rank, atoms of shorter frame
+    raminusw=raminusw&nf; r+=raminusw; shortr-=raminusw;  // if ar is the longer one, change nothing; otherwise transfer aw-ar from shortr to r
+    PROD(n,r-shortr,s+shortr);  // treat the entire operands as one big cell; get the rest of the values needed
+    t=(A)((I)t^((I)a^(I)w)); m=AN(t);  // rank, atoms of shorter frame  m needed for data move
    }
-   PROD(n,r-shortr,s+shortr);  // treat the entire operands as one big cell; get the rest of the values needed
-   RESETRANK;
-   ASSERTAGREE(AS(a),AS(w),shortr)  // agreement error if not prefix match
+// obsolete    ASSERTAGREE(AS(a),AS(w),shortr)  // agreement error if not prefix match
    f=0;  // no rank means no outer frame
    if(jtinplace){
     // Non-sparse setup for copy loop, no rank
@@ -552,19 +554,18 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
    }else{
     // Sparse setup: move the block-local variables to longer-lived ones.  We are trying to reduce register pressure
     // repurpose ak/wk/mf/nf to hold acr/wcr/af/wf, which we will pass into vasp.  This allows acr/wcr/af/wf to be block-local
-    ak=AR(a); wk=AR(w); mf=0; nf=0;
+    ak=argranks>>RANKTX; wk=argranks&RANKTMSK; mf=0; nf=0;
    }
   }else{I af,wf,acr,wcr,q;
    // Here, a rank was specified.  That means there must be a frame, according to the IRS rules
-   acr=ranks>>RANKTX; acr=AR(a)<acr?AR(a):acr; af=AR(a)-acr; PROD(ak,acr,AS(a)+af);  // r=left rank of verb, acr=effective rank, af=left frame, here ak=left #atoms/cell
-   wcr=(RANKT)ranks; wcr=AR(w)<wcr?AR(w):wcr; wf=AR(w)-wcr; PROD(wk,wcr,AS(w)+wf); // r=right rank of verb, wcr=effective rank, wf=right frame, here wk=left #atoms/cell
+   acr=ranks>>RANKTX; acr=r<acr?r:acr; af=r-acr; PROD(ak,acr,AS(a)+af);  // r=left rank of verb, acr=effective rank, af=left frame, here ak=left #atoms/cell
+   wcr=(RANKT)ranks; wcr=shortr<wcr?shortr:wcr; wf=shortr-wcr; PROD(wk,wcr,AS(w)+wf); // r=right rank of verb, wcr=effective rank, wf=right frame, here wk=left #atoms/cell
        // note: the prod above can never fail, because it gives the actual # cells of an existing noun
    // Now that we have used the rank info, clear jt->ranks.
    // we do this before we generate failures
-   RESETRANK;  // This is required for xnum/rat/sparse, which call IRS-enabled routines internally.  We could suppress this for mainline types, perhaps in var()
    // if the frames don't agree, that's always an agreement error
    if(jtinplace){  // If not sparse... This block isn't needed for sparse arguments, and may fail on them.  We move it here to reduce register pressure
-    nf=acr<=wcr; zk=acr<=wcr?wk:ak; m=acr<=wcr?ak:wk; r=acr<=wcr?wcr:acr; I shortr=acr<=wcr?acr:wcr; s=AS(acr<=wcr?w:a)+(acr<=wcr?wf:af); PROD(n,r-shortr,s+shortr);   // b='right cell has larger rank'; zk=#atoms in cell with larger rank;
+    nf=acr<=wcr; zk=acr<=wcr?wk:ak; m=acr<=wcr?ak:wk; r=acr<=wcr?wcr:acr; shortr=acr<=wcr?acr:wcr; s=AS(acr<=wcr?w:a)+(acr<=wcr?wf:af); PROD(n,r-shortr,s+shortr);   // b='right cell has larger rank'; zk=#atoms in cell with larger rank;
     n^=((1-n)>>(BW-1))&-nf;  // encode 'w has long frame, so a is repeated' as complementary n; but if n<2, leave it alone
     // m=#atoms in cell with shorter rank; n=#times shorter-rank cells must be repeated; r=larger of cell-ranks; s->shape of larger-rank cell
     // now shortr has the smaller cell-rank, and acr/wcr are free
@@ -577,7 +578,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
     // zk=result-cell size in bytes; ak,wk=left,right arg-cell size in bytes.  Not needed if not looping
     ak*=bp(AT(a)); wk*=bp(AT(w));  // calculate early, using bp, to minimize ALU time & allow time for load/mul to settle.  zt may still be settling
     f=af<=wf?wf:af; q=af<=wf?af:wf; sf=AS(af<=wf?w:a); mf=af<=wf;   // f=#longer frame; q=#shorter frame; sf->shape of arg with longer frame   mf holds -1 if wf is longer   af/wf free
-    nf=(adocv.cv>>VIPOKWX) & ((I)(a==w)-1) & ((I)(AR(a)==f+r)*2 + (I)(AR(w)==f+r));  // set inplaceability here: not if addresses equal (in case of retry); only if op supports; only if nonrepeated cell
+    nf=(adocv.cv>>VIPOKWX) & ((I)(a==w)-1) & ((I)((argranks>>RANKTX)==f+r)*2 + (I)((argranks&RANKTMSK)==f+r));  // set inplaceability here: not if addresses equal (in case of retry); only if op supports; only if nonrepeated cell
     jtinplace = (J)(((I)jtinplace&nf)+4*nf+16);  // bits 0-1 of jtinplace are combined input+local; 2-3 just local; 4 set to be non-sparse
 // obsolete     bcip=((adocv.cv>>VIPOKWX) & (((I)(a==w)/*obsolete |(zt&B01)*/)-1) & ((I)(AR(a)==(f+r))*2 + (I)(AR(w)==(f+r))))+b+(af<=wf?(I)4:0);  // save combined loop control
 // obsolete checked in irs2    ASSERTAGREESEGFAULT(AS(a), AS(w), q)  // frames must match to the shorter length; agreement error if not
@@ -592,6 +593,9 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
   }
   // TODO: for 64-bit, we could move f and r into upper jtinplace; use bit 4 of jtinplace for testing below; make f/r block-local; extract f/r below as needed
  }
+
+ RESETRANK;  // This is required for xnum/rat/sparse, which call IRS-enabled routines internally.  We could suppress this for mainline types, perhaps in var().  Anyone who sets this must sets it back,
+             // so it's OK that we don't clear it if we have error
 
  // Signal domain error if appropriate. Must do this after agreement tests
  ASSERT(adocv.f,EVDOMAIN);
@@ -719,11 +723,12 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
    R zz;  // Return the result after overflow has been corrected
   }
  }else{z=vasp(a,w,FAV(self)->id,adocv.f,adocv.cv,atype(adocv.cv),zt,mf,ak,nf,wk,f,r); if(!jt->jerr)R z;}  // handle sparse arrays separately.  at this point ak/wk/mf/nf hold acr/wcr/af/wf
- // If we got an internal-only error during execution of the verb, restart to see if it's
- // a recoverable error such an overflow during integer addition.  We have to restore
- // jt->rank, which might have been modified.  All sparse errors come through here, so they can't
- // do overflow recovery in-place.  We don't use the macro because the compiler goes nuts if it thinks it sees recursion
- R NEVM<jt->jerr?irs2(a,w,self,ranks>>RANKTX,(RANKT)ranks,jtretryatomic2):0;
+ R 0;  // return to the caller, who will retry any retryable errors
+// obsolete  // If we got an internal-only error during execution of the verb, restart to see if it's
+// obsolete  // a recoverable error such an overflow during integer addition.  We have to restore
+// obsolete  // jt->rank, which might have been modified.  All sparse errors come through here, so they can't
+// obsolete  // do overflow recovery in-place.  We don't use the macro because the compiler goes nuts if it thinks it sees recursion
+// obsolete  R NEVM<jt->jerr?irs2(a,w,self,ranks>>RANKTX,(RANKT)ranks,jtretryatomic2):0;
 }    /* scalar fn primitive and f"r main control */
 
 /*
@@ -1053,38 +1058,39 @@ DF2(jtfslashatg){A fs,gs,y,z;B b,bb,sb=0;C*av,c,d,*wv;I ak,an,ar,*as,at,m,
 DF2(jtatomic2){A z;
  A realself=FAV(self)->fgh[0];  // if rank operator, this is nonzero and points to the left arg of rank
  RANK2T selfranks=FAV(self)->lrr;  // get left & right rank from rank/primitive
- // bitwise ops have the number of the operation in f.  That means we cannot rely on the presence of f to indicate that we are on a rank block.  Thus we have to read the id.
- // We could save this read if we allowed u b. to put u in either f or g; but that would change representation and inverse code
- self=FAV(self)->id==CQQ?realself:self;  // if this is a rank block, move to the primitive
+ self=realself?realself:self;  // if this is a rank block, move to the primitive.  u b. or any atomic primitive has f clear
  RZ(a&&w);
 // obsolete  selfranks=((((I)selfranks>>RANKTX)-(I)AR(a))|(((I)selfranks&RANKTMSK)-(I)AR(w)))<0?selfranks:(RANK2T)~0;
  F2PREFIP;
  RANK2T jtranks=jt->ranks;  // fetch IRS ranks if any
+ UI ar=AR(a), wr=AR(w), awr=(ar<<RANKTX)+wr; I awm1=(AN(a)-1)|(AN(w)-1);
  selfranks=jtranks==(RANK2T)~0?selfranks:jtranks;
  // check for singletons
- if(!((AN(a)-1)|(AN(w)-1)|((AT(a)|AT(w))&(NOUN&UNSAFE(~(B01+INT+FL)))))){
-  z=jtssingleton(jtinplace,a,w,self,selfranks);
-  if(z)RETF(z);  // normal return
-  if(jt->jerr<=NEVM)RETF(z);  // error return if error detected in ssingleton
+ if(!(awm1|((AT(a)|AT(w))&(NOUN&UNSAFE(~(B01+INT+FL)))))){
+  z=jtssingleton(jtinplace,a,w,self,selfranks,(RANK2T)awr);
+  if(z||jt->jerr<=NEVM)RETF(z);  // normal return, or non-retryable error
   // if retryable error, fall through.  The retry will not be through the singleton code
  }
+ // while it's convenient, check for empty result
+ jtinplace=(J)((I)jtinplace+((((UI)awm1>>(BW-1)))<<JTEMPTYX));
  // find frame
- I af=(I)((UI)AR(a)-((UI)selfranks>>RANKTX)); af=af<0?0:af;  // framelen of a
- I wf=(I)((UI)AR(w)-((UI)selfranks&RANKTMSK)); wf=wf<0?0:wf;  // framelen of w
+ I af=(I)(ar-((UI)selfranks>>RANKTX)); af=af<0?0:af;  // framelen of a
+ I wf=(I)(wr-((UI)selfranks&RANKTMSK)); wf=wf<0?0:wf;  // framelen of w
  // if there is no frame wrt rank, shift down to working on frame wrt 0.  Set selfranks=0 to signal that case.  It uses simpler setup
- selfranks=af+wf==0?0:selfranks; af=af+wf==0?(UI)AR(a):af; wf=selfranks==0?(UI)AR(w):wf;  // the conditions had to be like this to prevent a jmp
+ selfranks=af+wf==0?0:selfranks; af=af+wf==0?ar:af; wf=selfranks==0?wr:wf;  // the conditions had to be like this to prevent a jmp
  af=af<wf?af:wf;   // now af is short frame
  ASSERTAGREE(AS(a),AS(w),af);  // outermost (or only) agreement check
-// *** remove agreement check from no-rank case
-// *** detect no rank by rank=0
-// *** see if we should pass anything else into va2 to save refetches
-// *** pull retry out of va2 into loop here
- // Run the full dyad
- RETF(jtva2(jtinplace,a,w,self,selfranks));
+ // Run the full dyad, retrying if a retryable error is returned
+ while(1){  // run until we get no error
+  z=jtva2(jtinplace,a,w,self,selfranks,(RANK2T)awr);  // execute the verb
+  if(z||jt->jerr<=NEVM)RETF(z);   // return if no error or error not retryable
+  if((I)jtinplace&JTRETRY)SEGFAULT   //  scaf
+  jtinplace=(J)((I)jtinplace|JTRETRY);  // indicate that we are retrying the operation
+ }
 }
 
-// Entry point called to retry.  Called through irs2 to disguise the recursion, because the compiler withholds registers if it sees recursion
-static DF2(jtretryatomic2){RETF(jtva2(jt,a,w,self,jt->ranks));}  // assumes no inplacing; probably could support inplacing
+// obsolete // Entry point called to retry.  Called through irs2 to disguise the recursion, because the compiler withholds registers if it sees recursion
+// obsolete static DF2(jtretryatomic2){RETF(jtva2(jt,a,w,self,jt->ranks));}  // assumes no inplacing; probably could support inplacing
 
 // These are the entry points for the individual verbs.  They pick up the verb-name
 // and transfer to jtva2 which does the work

@@ -42,7 +42,7 @@ static I intforD(J jt, D d){I z;
 }
 
 #define SSINGCASE(id,subtype) (11*(id)+(subtype))   // encode case/args into one branch value scaf
-A jtssingleton(J jt, A a,A w,A self,RANK2T ranks){A z;
+A jtssingleton(J jt, A a,A w,A self,RANK2T ranks,RANK2T argranks){A z;
  F2PREFIP;
  I aiv=FAV(self)->lc;   // temp, but start as function #
  // Allocate the result area
@@ -53,15 +53,15 @@ A jtssingleton(J jt, A a,A w,A self,RANK2T ranks){A z;
   I wipok = ((((AC(w)-1)|((I)w^(I)jt->zombieval))==0)|((UI)AC(w)>>(BW-1))) & ((UI)jtinplace>>JTINPLACEWX) & ~(AFLAG(w)>>AFUNINCORPABLEX);
   z=0;
   // find or allocate the result area
-  if((AR(a)|AR(w))==0){  // both atoms
+  if(argranks==0){  // both atoms
    // The usual case: both singletons are atoms.  Verb rank is immaterial.  Pick any inplaceable input, or allocate a FL atom if none
    // For comparison operations leave z=0 rather than allocate, so we can use num[].  But if we can inplace that's better
    z=aipok?a:z; z=wipok?w:z; if(!((I)z|(aiv&0x80)))GAT0(z,FL,1,0);  // top  bit of lc means 'comparison'
   }else{
    // The nouns have rank, and thus there may be frames.  Calculate the rank of the result, and then see if we can inplace an argument of the needed rank
-   I fa=(I)AR(a)-(ranks>>RANKTX); fa=fa<0?0:fa;  // framelen of a - will become larger frame, and then desired rank
-   I fw=(I)AR(w)-(ranks&RANKTMSK); fw=fw<0?0:fw;  // framelen of w
-   I ca=(I)AR(a)-fa; I cw=(I)AR(w)-fw; ca=ca<cw?cw:ca;  // ca=larger cell-rank
+   I4 fa=(argranks>>RANKTX)-(ranks>>RANKTX); fa=fa<0?0:fa;  // framelen of a - will become larger frame, and then desired rank
+   I4 fw=(argranks&RANKTMSK)-(ranks&RANKTMSK); fw=fw<0?0:fw;  // framelen of w
+   I4 ca=(argranks>>RANKTX)-fa; I4 cw=(argranks&RANKTMSK)-fw; ca=ca<cw?cw:ca;  // ca=larger cell-rank
    fa=fa<fw?fw:fa; fa+=ca;  // fa=larger framelen, and then desired rank
    z=aipok>((I)AR(a)^fa)?a:z; z=wipok>((I)AR(w)^fa)?w:z; if(!z)GATV1(z,FL,1,fa);  // accept ip only if rank also matches; if we allocate, fill in the shape with 1s
   }

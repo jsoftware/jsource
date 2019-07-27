@@ -413,6 +413,10 @@ extern unsigned int __cdecl _clearfp (void);
 #define VALIDBOOLEAN 0x01010101   // valid bits in a Boolean
 #endif
 
+// macros for bit testing
+#define SGNIF(v,bitno) ((I)v<<(BW-1-(bitno)))  // Sets sign bit if the numbered bit is set
+#define SGNIFNOT(v,bitno) (~SGNIF(v,bitno))  // Clears sign bit if the numbered bit is set
+
 #define A0              0   // a nonexistent A-block
 #define ABS(a)          (0<=(a)?(a):-(a))
 #define ASSERT(b,e)     {if(!(b)){jsignal(e); R 0;}}

@@ -43,6 +43,9 @@ otherwise the regs may be used and the parameter lost.
 #include <windows.h>
 #include <windowsx.h>
 #define FIXWINUTF8 // possibly should not be defined for MINGW32
+#if defined(_MSC_VER) && !defined(OLECOM)
+#define OLECOM
+#endif
 #ifndef _MSC_VER
 #ifndef _stdcall
 #define _stdcall __stdcall
@@ -769,7 +772,7 @@ static CCT*jtcdload(J jt,CCT*cc,C*lib,C*proc){B ha=0;FARPROC f;HMODULE h;
   cc->h=h; ha=1;
  }
 #if SY_WIN32 && !SY_WINCE
- f=GetProcAddress(h,'#'==*proc?(LPCSTR)(I)atoi(proc+1):proc);
+ f=GetProcAddress(h,'#'==*proc?(LPCSTR)(I)atoi(proc+1):(LPCSTR)proc);
 #endif
 #if SY_WINCE
  f=GetProcAddress(h,tounibuf(proc));
@@ -1395,7 +1398,7 @@ F1(jtcdproc1){CCT*cc;
 #pragma warning(disable: 4276)
 #endif
 
-#if SY_WIN32
+#if SY_WIN32 && defined(OLECOM)
 #define VARIANT void
 int _stdcall JBreak(J jt);
 int _stdcall JIsBusy(J jt);
@@ -1426,7 +1429,7 @@ JSMX,
 JSetA,
 JSetM,
 Jga,
-#if SY_WIN32
+#if SY_WIN32 && defined(OLECOM)
 JBreak,
 JClear,
 JDoR,
@@ -1456,7 +1459,7 @@ static C* jfntnm[]={
 "JSetA",
 "JSetM",
 "Jga",
-#if SY_WIN32
+#if SY_WIN32 && defined(OLECOM)
 "JBreak",
 "JClear",
 "JDoR",
@@ -1484,7 +1487,7 @@ F2(jtcdproc2){C*proc;FARPROC f;HMODULE h;
   f=(k==-1)?(FARPROC)0:(FARPROC)jfntaddr[k];
  }else{
 #if SY_WIN32 && !SY_WINCE
-  f=GetProcAddress(h,'#'==*proc?(LPCSTR)(I)atoi(proc+1):proc);
+  f=GetProcAddress(h,'#'==*proc?(LPCSTR)(I)atoi(proc+1):(LPCSTR)proc);
 #endif
 #if SY_WINCE
   f=GetProcAddress(h,tounibuf(proc));

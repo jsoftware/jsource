@@ -1,4 +1,4 @@
-vpath % ../../../../jsrc:../../../../jsrc/blis
+vpath % ../../../../jsrc:../../../../jsrc/blis:../../../../dllsrc
 
 ifndef jplatform
 jplatform=linux
@@ -155,12 +155,12 @@ OBJS=  \
 
 $(OBJS_FMA) : CFLAGS_FMA := -mfma
 $(OBJS_AESNI) : CFLAGS_AESNI := -maes
-$(ODIR)/$(TARGET) : $(OBJS) $(OBJS_FMA) $(OBJS_AESNI)
-	$(CC) $(LDFLAGS) -o $@ $(OBJS) $(OBJS_FMA) $(OBJS_AESNI)
+$(ODIR)/$(TARGET) : $(OBJS) $(DLLOBJS) $(OBJS_FMA) $(OBJS_AESNI)
+	$(CC) $(LDFLAGS) -o $@ $(OBJS) $(DLLOBJS) $(OBJS_FMA) $(OBJS_AESNI)
 
 all: $(ODIR)/$(TARGET)
 
 clean:
-	rm -f $(OBJS) $(OBJS_FMA) $(OBJS_AESNI)
+	rm -f $(OBJS) $(DLLOBJS) $(OBJS_FMA) $(OBJS_AESNI)
 
 .PHONY: all clean

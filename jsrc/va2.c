@@ -478,9 +478,9 @@ printf("va2a: indexes="); spt=SPA(PAV(a),i); DO(AN(spt), printf(" %d",IAV(spt)[i
 // All dyadic arithmetic verbs f enter here, and also f"n.  a and w are the arguments, id
 // is the pseudocharacter indicating what operation is to be performed.  self is the block for this primitive,
 // ranks are the ranks to use
-static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ranks,UI argranks){A z;I ak,f,m,
-     mf,n,nf,r,shortr,* RESTRICT s,*sf,wk,zk,zn,zt;VA2 adocv;
- r=argranks>>RANKTX; shortr=argranks&RANKTMSK;  // ar, wr to begin with.  Changes later
+static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ranks,UI argranks){A z;I ak,m,
+     mf,n,nf,shortr,* RESTRICT s,*sf,wk,zk,zn,zt;VA2 adocv;UI fr;  // fr will eventually be frame/rank
+ fr=argranks>>RANKTX; shortr=argranks&RANKTMSK;  // fr,shortr = ar,wr to begin with.  Changes later
 // obsolete  RZ(a&&w);
  F2PREFIP;
  {I at=AT(a);
@@ -530,17 +530,18 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
 // obsolete   mf=AR(w)<=AR(a);  // mf='a is not shorter than w'  nf='w is not shorter than a'
 // obsolete   nf=AR(w)>=AR(a); zn=AN(AR(w)>=AR(a)?w:a); r=AR(AR(w)>=AR(a)?w:a); s=AS(AR(w)>=AR(a)?w:a); I shortr=AR(AR(w)>=AR(a)?a:w); m=AN(AR(w)>=AR(a)?a:w);
    {A t=a;  // will hold, first the longer-rank argument, then the shorter
-    I raminusw=r-shortr; t=raminusw<0?w:t;  // t->block with longer frame
+    I raminusw=fr-shortr; t=raminusw<0?w:t;  // t->block with longer frame
     s=AS(t); zn=AN(t);     // atoms, shape of larger frame.  shape first.  The dependency chain is s/r/shortr->n->move data
     nf=raminusw>>(BW-1);  // nf=-1 if w has longer frame, means cannot inplace a
     raminusw=-raminusw;   // now aw-ar
     mf=raminusw>>(BW-1);  // mf=-1 if a has longer frame, means cannot inplace w
-    raminusw=raminusw&nf; r+=raminusw; shortr-=raminusw;  // if ar is the longer one, change nothing; otherwise transfer aw-ar from shortr to r
-    PROD(n,r-shortr,s+shortr);  // treat the entire operands as one big cell; get the rest of the values needed
+    raminusw=raminusw&nf; fr+=raminusw; shortr-=raminusw;  // if ar is the longer one, change nothing; otherwise transfer aw-ar from shortr to r
+    PROD(n,fr-shortr,s+shortr);  // treat the entire operands as one big cell; get the rest of the values needed
     t=(A)((I)t^((I)a^(I)w)); m=AN(t);  // rank, atoms of shorter frame  m needed for data move
    }
 // obsolete    ASSERTAGREE(AS(a),AS(w),shortr)  // agreement error if not prefix match
-   f=0;  // no rank means no outer frame
+// obsolete    f=0;  // no rank means no outer frame
+   // notionally we now repurpose fr to be frame/rank, with the frame 0
    if(jtinplace){
     // Non-sparse setup for copy loop, no rank
       // get number of inner cells
@@ -558,14 +559,14 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
    }
   }else{I af,wf,acr,wcr,q;
    // Here, a rank was specified.  That means there must be a frame, according to the IRS rules
-   acr=ranks>>RANKTX; acr=r<acr?r:acr; af=r-acr; PROD(ak,acr,AS(a)+af);  // r=left rank of verb, acr=effective rank, af=left frame, here ak=left #atoms/cell
+   acr=ranks>>RANKTX; acr=(I)fr<acr?fr:acr; af=fr-acr; PROD(ak,acr,AS(a)+af);  // r=left rank of verb, acr=effective rank, af=left frame, here ak=left #atoms/cell
    wcr=(RANKT)ranks; wcr=shortr<wcr?shortr:wcr; wf=shortr-wcr; PROD(wk,wcr,AS(w)+wf); // r=right rank of verb, wcr=effective rank, wf=right frame, here wk=left #atoms/cell
        // note: the prod above can never fail, because it gives the actual # cells of an existing noun
    // Now that we have used the rank info, clear jt->ranks.
    // we do this before we generate failures
    // if the frames don't agree, that's always an agreement error
    if(jtinplace){  // If not sparse... This block isn't needed for sparse arguments, and may fail on them.  We move it here to reduce register pressure
-    nf=acr<=wcr; zk=acr<=wcr?wk:ak; m=acr<=wcr?ak:wk; r=acr<=wcr?wcr:acr; shortr=acr<=wcr?acr:wcr; s=AS(acr<=wcr?w:a)+(acr<=wcr?wf:af); PROD(n,r-shortr,s+shortr);   // b='right cell has larger rank'; zk=#atoms in cell with larger rank;
+    nf=acr<=wcr; zk=acr<=wcr?wk:ak; m=acr<=wcr?ak:wk; fr=acr<=wcr?wcr:acr; shortr=acr<=wcr?acr:wcr; s=AS(acr<=wcr?w:a)+(acr<=wcr?wf:af); PROD(n,fr-shortr,s+shortr);   // b='right cell has larger rank'; zk=#atoms in cell with larger rank;
     n^=((1-n)>>(BW-1))&-nf;  // encode 'w has long frame, so a is repeated' as complementary n; but if n<2, leave it alone
     // m=#atoms in cell with shorter rank; n=#times shorter-rank cells must be repeated; r=larger of cell-ranks; s->shape of larger-rank cell
     // now shortr has the smaller cell-rank, and acr/wcr are free
@@ -577,12 +578,14 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
     // if looping required, calculate the strides for input & output.  Needed only if mf or nf>1, but not worth testing, since presumably one will, else why use rank?
     // zk=result-cell size in bytes; ak,wk=left,right arg-cell size in bytes.  Not needed if not looping
     ak*=bp(AT(a)); wk*=bp(AT(w));  // calculate early, using bp, to minimize ALU time & allow time for load/mul to settle.  zt may still be settling
-    f=af<=wf?wf:af; q=af<=wf?af:wf; sf=AS(af<=wf?w:a); mf=af<=wf;   // f=#longer frame; q=#shorter frame; sf->shape of arg with longer frame   mf holds -1 if wf is longer   af/wf free
-    nf=(adocv.cv>>VIPOKWX) & ((I)(a==w)-1) & ((I)((argranks>>RANKTX)==f+r)*2 + (I)((argranks&RANKTMSK)==f+r));  // set inplaceability here: not if addresses equal (in case of retry); only if op supports; only if nonrepeated cell
+    {I f=af<=wf?wf:af; q=af<=wf?af:wf; sf=AS(af<=wf?w:a); mf=af<=wf;   // f=#longer frame; q=#shorter frame; sf->shape of arg with longer frame   mf holds -1 if wf is longer   af/wf free
+    nf=(adocv.cv>>VIPOKWX) & ((I)(a==w)-1) & ((I)((argranks>>RANKTX)==f+fr)*2 + (I)((argranks&RANKTMSK)==f+fr));  // set inplaceability here: not if addresses equal (in case of retry); only if op supports; only if nonrepeated cell
     jtinplace = (J)(((I)jtinplace&nf)+4*nf+16);  // bits 0-1 of jtinplace are combined input+local; 2-3 just local; 4 set to be non-sparse
 // obsolete     bcip=((adocv.cv>>VIPOKWX) & (((I)(a==w)/*obsolete |(zt&B01)*/)-1) & ((I)(AR(a)==(f+r))*2 + (I)(AR(w)==(f+r))))+b+(af<=wf?(I)4:0);  // save combined loop control
 // obsolete checked in irs2    ASSERTAGREESEGFAULT(AS(a), AS(w), q)  // frames must match to the shorter length; agreement error if not
     PROD(nf,f-q,q+sf);    // mf=#cells in common frame, nf=#times shorter-frame cell must be repeated.  Not needed if no cells.  First, encode 'wf longer' in sign of nf
+    fr+=f<<RANKTX;  // encode f into fr
+    }
 #ifdef DPMULD
     { DPMULDDECLS DPMULD(nf,zk,zn,{jsignal(EVLIMIT);R 0;}) nf^=((1-nf)>>(BW-1))&-mf; PROD(mf,q,sf); DPMULD(zn,mf,zn,{jsignal(EVLIMIT);R 0;}) }
 #else
@@ -646,7 +649,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
 // more regs, less comp    }else if(((inplaceallow>>=1)&(((zn^an)|(ar^(f+r)))==0)) && (AC(a)<ACUC1 || AC(a)==ACUC1&&jt->assignsym&&jt->assignsym->val==a&&!(adocv.cv&VCANHALT && jt->asgzomblevel<2))){z=a; AT(z)=zt;  //  Uses JTINPLACEA==2
   if(((I)jtinplace&1) && (AC(w)<ACUC1 || AC(w)==ACUC1&&jt->assignsym&&jt->assignsym->val==w&&!(adocv.cv&VCANHALT && jt->asgzomblevel<2))){z=w; if(TYPESNE(AT(w),zt))MODBLOCKTYPE(z,zt)  //  Uses JTINPLACEW==1
   }else if(((I)jtinplace&2) && (AC(a)<ACUC1 || AC(a)==ACUC1&&jt->assignsym&&jt->assignsym->val==a&&!(adocv.cv&VCANHALT && jt->asgzomblevel<2))){z=a; if(TYPESNE(AT(a),zt))MODBLOCKTYPE(z,zt)  //  Uses JTINPLACEA==2
-  }else{GA(z,zt,zn,f+r,0); I *zs=AS(z); MCISH(zs,sf,f); MCISH(zs+f,s,r);} 
+  }else{GA(z,zt,zn,(RANKT)fr+(fr>>RANKTX),0); MCISH(AS(z),sf,fr>>RANKTX); MCISH(AS(z)+(fr>>RANKTX),s,(RANKT)fr);} 
   // s, r, f, and sf ARE NOT USED FROM HERE ON in this branch to reduce register pressure.  They have been destroyed in the loops above
   if(!zn)RETF(z);  // If the result is empty, the allocated area says it all
   // zn  NOT USED FROM HERE ON
@@ -722,7 +725,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
    RESETERR
    R zz;  // Return the result after overflow has been corrected
   }
- }else{z=vasp(a,w,FAV(self)->id,adocv.f,adocv.cv,atype(adocv.cv),zt,mf,ak,nf,wk,f,r); if(!jt->jerr)R z;}  // handle sparse arrays separately.  at this point ak/wk/mf/nf hold acr/wcr/af/wf
+ }else{z=vasp(a,w,FAV(self)->id,adocv.f,adocv.cv,atype(adocv.cv),zt,mf,ak,nf,wk,fr>>RANKTX,(RANKT)fr); if(!jt->jerr)R z;}  // handle sparse arrays separately.  at this point ak/wk/mf/nf hold acr/wcr/af/wf
  R 0;  // return to the caller, who will retry any retryable errors
 // obsolete  // If we got an internal-only error during execution of the verb, restart to see if it's
 // obsolete  // a recoverable error such an overflow during integer addition.  We have to restore

@@ -640,10 +640,10 @@ extern unsigned int __cdecl _clearfp (void);
 // Copy shapes.  Optimized for length <2, to eliminate branches then
 // For AVX, we can profitably use the MASKMOV instruction to do all the  testing
 #if C_AVX&&SY_64
-#define MCISH(dest,src,n) {D *_d=(D*)(dest), *_s=(D*)(src); I _n=4-(n); \
- do{__m256i endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+(_n>=0?_n:0))); \
+#define MCISH(dest,src,n) {D *_d=(D*)(dest), *_s=(D*)(src); I _n=-(I)(n); \
+ do{_n+=NPAR; __m256i endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+(_n>=0?_n:0))); \
   _mm256_maskstore_pd(_d,endmask,_mm256_maskload_pd(_s,endmask)); \
-  if(_n>=0)break; _d+=NPAR; _s+=((UI)_n>>(BW-1))<<LGNPAR; _n+=NPAR;  /* prevent compiler from calculating offsets */ \
+  if(_n>=0)break; _d+=NPAR; _s+=NPAR;  /* prevent compiler from calculating offsets */ \
  }while(_n<4); }  // the test at end is to prevent the compiler from duplicating the loop.  It is almost never executed.
 #else
 #define MCISH(dest,src,n) {I *_d=(I*)(dest); I *_s=(I*)(src); I _n=1-(n); _d=_n>0?jt->shapesink:_d; _s=_n>0?_d:_s; *_d=*_s; do{_s+=(UI)_n>>(BW-1); _d+=(UI)_n>>(BW-1); *_d=*_s;}while(++_n<0);}  // use for copies of shape, optimized for no branch when n<3.

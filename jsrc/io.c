@@ -6,6 +6,9 @@
 #ifdef _WIN32
 #include <windows.h>
 #include <winbase.h>
+#if defined(_MSC_VER) && !defined(OLECOM)
+#define OLECOM
+#endif
 #else
 #include <stdlib.h>
 #include <stdio.h>
@@ -305,7 +308,7 @@ void jsto(J jt,I type,C*s){C e;I ex;
  }else{
   // Normal output.  Call the output routine
   if(jt->smoutput){((outputtype)(jt->smoutput))(jt,(int)type,s);R;} // JFE output
-#if SY_WIN32 && !SY_WINCE
+#if SY_WIN32 && !SY_WINCE && defined(OLECOM)
   if(jt->oleop && (type & MTYOFM)){oleoutput(jt,strlen(s),s);R;} // ole output
 #endif
   // lazy - should check alloc size is reasonable

@@ -77,6 +77,8 @@ common=" -Werror -fPIC -O1 -fwrapv -fno-strict-aliasing -Wextra -Wno-consumed -W
 fi
 darwin=" -fPIC -O1 -fwrapv -fno-strict-aliasing -Wno-string-plus-int -Wno-empty-body -Wno-unsequenced -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-return-type -Wno-constant-logical-operand -Wno-comment -Wno-unsequenced"
 
+TARGET=jconsole
+
 case $jplatform\_$j64x in
 
 linux_j32)
@@ -150,14 +152,22 @@ LDFLAGS=" -ldl $macmin "
 OBJSLN="linenoise.o"
 fi
 ;;
+windows_j32)
+TARGET=jconsole.exe
+CFLAGS="$common -m32 "
+LDFLAGS=" -m32 -Wl,--stack=0x1000000,--subsystem,console -static-libgcc "
+;;
+windows_j64)
+TARGET=jconsole.exe
+CFLAGS="$common "
+LDFLAGS=" -Wl,--stack=0x1000000,--subsystem,console -static-libgcc "
+;;
 *)
 echo no case for those parameters
 exit
 esac
 
 echo "CFLAGS=$CFLAGS"
-
-TARGET=jconsole
 
 if [ ! -f ../jsrc/jversion.h ] ; then
   cp ../jsrc/jversion-x.h ../jsrc/jversion.h

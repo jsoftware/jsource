@@ -30,7 +30,12 @@ extern I utowsize(C4* src, I srcn);
 int valid(C* psrc, C* psnk);
 C* esub(J jt, long ec);
 
+#if defined(_MSC_VER) && !defined(OLECOM)
+#define OLECOM
+#endif
+#ifdef OLECOM
 extern int uniflag;
+#endif
 
 I jdo(J, C*);
 
@@ -63,6 +68,8 @@ void toasc(WCHAR* src, C* sink)
 int _stdcall JBreak(J jt){ return 0;}
 
 int _stdcall JIsBusy(J jt){	return 0;}
+
+#ifdef OLECOM
 
 #if !SY_WINCE
 
@@ -668,6 +675,8 @@ int _stdcall JDoR(J jt, C* p, VARIANT* v)
 	R e;
 }
 #endif // wince
+
+#endif
 
 // previously in separate file when jdll.c and jcom.c both exisited
 char modulepath[_MAX_PATH];

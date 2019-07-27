@@ -253,7 +253,7 @@ int main(int argc, char* argv[])
  jt=jeload(callbacks);
  if(!jt){char m[1000]; jefail(m), fputs(m,stderr); exit(1);}
  adadbreak=(char**)jt; // first address in jt is address of breakdata
-#ifndef _MSC_VER
+#ifndef _WIN32
  if(2==breadline){
   struct sigaction sa;
   sa.sa_flags = 0;

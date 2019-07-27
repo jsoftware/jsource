@@ -41,10 +41,11 @@ static DF2(jtfindrange2){
  R v2(rng.min,rng.range);
 }
 
-static F2(jtforeigncreate){I p,q;
+F2(jtforeign){I p,q;
  RZ(a&&w);
  p=i0(a); q=i0(w); RE(0);
  if(11==p)R fdef(0,CIBEAM,VERB, jtwd,0L, a,w,0L, VASGSAFE, 1L,RMAX,RMAX);
+ ASSERT((UI)p<=(UI)128 && (UI)q<XCC,EVDOMAIN);
 // obsolete  if(q<0||XCC<=q)R CDERIV(CIBEAM, 0,0,  VASGSAFE,RMAX,RMAX,RMAX);
  switch(XC(p,q)){
   case XC(0,  0): 
@@ -286,34 +287,6 @@ static F2(jtforeigncreate){I p,q;
 //  default:        R foreignextra(a,w);
   default:        ASSERT(0,EVDOMAIN);  // any unknown combination is a domain error right away
 }}
-
-// Look up the function to apply for a foreign
-// To avoid the long switch statement (and the cost of building the verb), we keep a hash of the recent combinations used.
-// (The localuse field in the verb holds the actual m,n, and we keep only 2 values per hashslot)
-// This may be a stupid idea since most people use cover names for foreigns, but now that it's implemented we'll keep it
-F2(jtforeign){
- RZ(a&&w);
- I p=i0(a); I q=i0(w); RE(0);
- if(p==11 && q!=0)R fdef(0,CIBEAM,VERB, jtwd,0L, a,w,0L, VASGSAFE, 1L,RMAX,RMAX);  // 11!:n special: hash 11!:0, do the rest individually
- ASSERT((UI)p<=(UI)128 && (UI)q<XCC,EVDOMAIN);
- I hash=(p*3+q)&(sizeof(jt->foreignhash)/sizeof(jt->foreignhash[0])-1);  // hash m,n
- I mn = (p<<8)+q;  // unique value for the foreign
- A ha=jt->foreignhash[hash][0];
- // 2-way set-associative cache.  element 0 is MRU
- // if either bucket has the right value, use it.
- if(ha){
-  if(mn==FAV(ha)->localuse.lI)R ha;  // use it if match
-  if(ha=jt->foreignhash[hash][1]){  // there is a second set, try it
-   if(mn==FAV(ha)->localuse.lI)R ha;  // use it if match
-   // Free the bucket if it has the wrong value
-   fa(ha);  // the incumbent is about to be removed - take away its protection
-  }
-  jt->foreignhash[hash][1]=jt->foreignhash[hash][0];  // no match - we will replace the second set
- }
- // create the correct entity and save it in the table (must ra)
- RZ(jt->foreignhash[hash][0]=ha=jtforeigncreate(jt,a,w)); FAV(ha)->localuse.lI=mn; ras(ha);  // create the block, save it, protect from free
- R ha;
-}
 
 /* SY_64 double trick - null routines here to avoid optimization */
 #if SY_64 & SY_WIN32

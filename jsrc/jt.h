@@ -143,7 +143,6 @@ typedef struct {
  I validitymask[8]; // -1, -1, -1, -1, 0, 0, 0, 0   used to prepare for mask load/store
 #endif
 // --- end cache line 7/8
- A foreignhash[8][2];  // must be power-of-2.  Holds pointers to recently-used foreigns
 #if 0 // used only for direct locale numbering
  I*   numlocdelqh;      // head of deleted queue, waiting for realloc
  I    numlocdelqn;      // number of blocks on the deleted queue  could be UI4

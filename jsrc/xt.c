@@ -55,7 +55,7 @@ F1(jtspit){A z;I k;
 F1(jtparsercalls){ASSERTMTV(w); R sc(jt->parsercalls);}
 
 // 6!:5, window into the running J code
-F1(jtpeekdata){ jt->peekdata = i0(w); R num[0]; }
+F1(jtpeekdata){ I opeek=jt->peekdata; jt->peekdata = i0(w); R sc(opeek); }
 
 /*
 // 6!:6: set y as processor architecture and return previous value.  Now cannot set.  Bit 0=AVX instructions supported

@@ -31,7 +31,19 @@ static int check_xcr0_ymm()
 
 #ifndef _WIN32
 #ifndef ANDROID
-#define x86_cpuid(func, values) __get_cpuid(func, values, values+1, values+2, values+3)
+static __inline int
+get_cpuid_count (unsigned int __level, unsigned int __count,
+           unsigned int *__eax, unsigned int *__ebx,
+           unsigned int *__ecx, unsigned int *__edx)
+{
+    unsigned int __ext = __level & 0x80000000;
+    if (__get_cpuid_max (__ext, 0) < __level)
+        return 0;
+
+    __cpuid_count (__level, __count, *__eax, *__ebx, *__ecx, *__edx);
+    return 1;
+}
+#define x86_cpuid(func, values) get_cpuid_count(func, 0, values, values+1, values+2, values+3)
 #else
 #ifdef __i386__
 static __inline__ void x86_cpuid(int func, int values[4])
@@ -139,6 +151,8 @@ void cpuInit(void)
 // mask off avx if os does not support
   int AVX=0;
 #ifdef _WIN32
+#if 0
+/* not very reliable check */
 #define XSTATE_MASK_AVX   (XSTATE_MASK_GSSE)
   typedef DWORD64 (WINAPI *GETENABLEDXSTATEFEATURES)();
   GETENABLEDXSTATEFEATURES pfnGetEnabledXStateFeatures = NULL;
@@ -148,6 +162,9 @@ void cpuInit(void)
       ((pfnGetEnabledXStateFeatures() & XSTATE_MASK_AVX) != 0))
     AVX=1;
   FreeLibrary(hm);
+#else
+  AVX=1;
+#endif
   if (!(g_cpuFeatures & CPU_X86_FEATURE_AVX) || !check_xcr0_ymm()) AVX=0;
 #elif defined(__MACH__)
 // TODO

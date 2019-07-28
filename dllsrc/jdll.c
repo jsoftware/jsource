@@ -30,9 +30,6 @@ extern I utowsize(C4* src, I srcn);
 int valid(C* psrc, C* psnk);
 C* esub(J jt, long ec);
 
-#if defined(_MSC_VER) && !defined(OLECOM)
-#define OLECOM
-#endif
 #ifdef OLECOM
 extern int uniflag;
 #endif

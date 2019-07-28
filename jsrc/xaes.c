@@ -93,9 +93,10 @@ F2(jtaes2)
   ASSERT(!aes_c(decrypt,mode,key,keyn,iv,out,n),EVDOMAIN);
 #endif
   if(decrypt&&padding) {
+    int i;
     n1=out[n-1];
     ASSERT(n1&&n1<=16,EVDOMAIN);
-    for(int i=n1; i>0; i--)ASSERT(n1==out[n-i],EVDOMAIN);
+    for(i=n1; i>0; i--)ASSERT(n1==out[n-i],EVDOMAIN);
     *(AS(z))=AN(z)=n-n1;
     memset(out+n-n1,0,n1);
   }
@@ -113,6 +114,7 @@ F2(jtaes2)
 // out buffer will be overwritten
 int aes_c(I decrypt,I mode,UC *key,I keyn,UC* iv,UC* out,I n)
 {
+  I i;
   switch(keyn) {
   case 16: {
     struct AES_ctx_128 ctx;
@@ -120,9 +122,9 @@ int aes_c(I decrypt,I mode,UC *key,I keyn,UC* iv,UC* out,I n)
     case 0:
       AES_init_ctx_128(&ctx, key);
       if(decrypt) {
-        for(I i=0; i<n/16; i++) AES_ECB_decrypt_128(&ctx, out+i*16);
+        for(i=0; i<n/16; i++) AES_ECB_decrypt_128(&ctx, out+i*16);
       } else {
-        for(I i=0; i<n/16; i++) AES_ECB_encrypt_128(&ctx, out+i*16);
+        for(i=0; i<n/16; i++) AES_ECB_encrypt_128(&ctx, out+i*16);
       }
       break;
 
@@ -150,9 +152,9 @@ int aes_c(I decrypt,I mode,UC *key,I keyn,UC* iv,UC* out,I n)
     case 0:
       AES_init_ctx_192(&ctx, key);
       if(decrypt) {
-        for(I i=0; i<n/16; i++) AES_ECB_decrypt_192(&ctx, out+i*16);
+        for(i=0; i<n/16; i++) AES_ECB_decrypt_192(&ctx, out+i*16);
       } else {
-        for(I i=0; i<n/16; i++) AES_ECB_encrypt_192(&ctx, out+i*16);
+        for(i=0; i<n/16; i++) AES_ECB_encrypt_192(&ctx, out+i*16);
       }
       break;
 
@@ -180,9 +182,9 @@ int aes_c(I decrypt,I mode,UC *key,I keyn,UC* iv,UC* out,I n)
     case 0:
       AES_init_ctx_256(&ctx, key);
       if(decrypt) {
-        for(I i=0; i<n/16; i++) AES_ECB_decrypt_256(&ctx, out+i*16);
+        for(i=0; i<n/16; i++) AES_ECB_decrypt_256(&ctx, out+i*16);
       } else {
-        for(I i=0; i<n/16; i++) AES_ECB_encrypt_256(&ctx, out+i*16);
+        for(i=0; i<n/16; i++) AES_ECB_encrypt_256(&ctx, out+i*16);
       }
       break;
 

@@ -150,13 +150,19 @@ OBJS=  \
  xt.o \
  xu.o
 
+%.o: %.cpp
+	$(CXX) -c $(CPPFLAGS) -o$@ $^
+
 %.o: %.c
 	$(CC) -c -o $@ $< $(CFLAGS) $(CFLAGS_SIMD) $(CFLAGS_FMA) $(CFLAGS_AESNI)
 
 $(OBJS_FMA) : CFLAGS_FMA := -mfma
 $(OBJS_AESNI) : CFLAGS_AESNI := -maes
-$(ODIR)/$(TARGET) : $(OBJS) $(DLLOBJS) $(OBJS_FMA) $(OBJS_AESNI)
-	$(CC) $(LDFLAGS) -o $@ $(OBJS) $(DLLOBJS) $(OBJS_FMA) $(OBJS_AESNI)
+$(ODIR)/$(TARGET) : $(OBJS) $(OBJS_FMA) $(OBJS_AESNI) $(DLLOBJS) $(LIBJRES)
+	$(CC) $(LDFLAGS) -o $@ $(OBJS) $(OBJS_FMA) $(OBJS_AESNI) $(DLLOBJS) $(LIBJDEF) $(LIBJRES)
+
+$(LIBJRES): jdll.rc
+	$(WINDRES) -D NDEBUG -o$@ $^
 
 all: $(ODIR)/$(TARGET)
 

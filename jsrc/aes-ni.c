@@ -162,8 +162,9 @@ static void aes_key_setup_enc(__m128i* rk, const u8* cipherKey, int keylen)
 /* Decryption key setup */
 static void aes_key_setup_dec(__m128i* dk, const __m128i* ek, int rounds)
 {
+  int i;
   dk[rounds] = ek[0];
-  for (int i = 1; i < rounds; ++i) {
+  for (i = 1; i < rounds; ++i) {
     dk[rounds - i] = _mm_aesimc_si128(ek[i]);
   }
   dk[0] = ek[rounds];
@@ -275,14 +276,15 @@ int aes_ni(I decrypt,I mode,UC *key,I keyn,UC* ivec,UC* out,I len)
 {
   block_state self;
   unsigned char *str=out;
+  I i;
 
   switch(mode) {
   case 0:
     block_init(&self, key, (int)keyn);
     if(decrypt) {
-      for(I i=0; i<len; i+=BLOCK_SIZE) block_decrypt(&self, str+i,out+i);
+      for(i=0; i<len; i+=BLOCK_SIZE) block_decrypt(&self, str+i,out+i);
     } else {
-      for(I i=0; i<len; i+=BLOCK_SIZE) block_encrypt(&self, str+i,out+i);
+      for(i=0; i<len; i+=BLOCK_SIZE) block_encrypt(&self, str+i,out+i);
     }
     block_finalize(&self);
     break;
@@ -292,7 +294,7 @@ int aes_ni(I decrypt,I mode,UC *key,I keyn,UC* ivec,UC* out,I len)
     if(decrypt) {
       __m128i iv, temp, storeNextIv;
       iv = _mm_loadu_si128((__m128i*)ivec);
-      for(I i=0; i<len; i+=BLOCK_SIZE) {
+      for(i=0; i<len; i+=BLOCK_SIZE) {
         storeNextIv = _mm_loadu_si128((__m128i*)(str+i));
         block_decrypt(&self, str+i, (u8*)&temp);
         temp = XOR(temp, iv);
@@ -302,7 +304,7 @@ int aes_ni(I decrypt,I mode,UC *key,I keyn,UC* ivec,UC* out,I len)
     } else {
       __m128i iv, temp;
       iv = _mm_loadu_si128((__m128i*)ivec);
-      for(I i=0; i<len; i+=BLOCK_SIZE) {
+      for(i=0; i<len; i+=BLOCK_SIZE) {
         temp = _mm_loadu_si128((__m128i*)(str+i));
         temp = XOR(temp, iv);
         block_encrypt(&self, (u8*)&temp, out+i);

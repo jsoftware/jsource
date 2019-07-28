@@ -311,8 +311,8 @@ A jtvec(J jt,I t,I n,void*v){A z; GA(z,t,n,1,0); MC(AV(z),v,n<<bplg(t)); RETF(z)
 // return A-block for list of type t, length n, and values *v
 // with special handling to coerce boolean type
 #if defined(__GNUC__) && !defined(__clang__)
-#pragma GCC push_options
-#pragma GCC optimize ("unroll-loops")
+#pragma push_options
+#pragma optimize ("unroll-loops")
 #endif
 #if C_AVX2&&SY_64
 A jtvecb01(J jt,I t,I n,void*v){A z; GA(z,t,n,1,0);if(t&B01){C*p=(C*)AV(z),*q=v; 
@@ -370,15 +370,15 @@ while (n0 >= 16) {
 while(n0--)*p++=!!(*q++);
 }else MC(AV(z),v,n<<bplg(t)); RETF(z);}
 #else
-A jtvecb01(J jt,I t,I n,void*v){A z; GA(z,t,n,1,0);if(t&B01){C*p=(C*)AV(z),*q=v; 
+A jtvecb01(J jt,I t,I n,void*v){A z; I i; GA(z,t,n,1,0);if(t&B01){C*p=(C*)AV(z),*q=v; 
 #if defined(__clang__)
 #pragma clang loop vectorize(enable) interleave_count(4)
 #endif
-for(I i=0;i<n<<bplg(t);i++)*p++=!!(*q++);
+for(i=0;i<n<<bplg(t);i++)*p++=!!(*q++);
 }else MC(AV(z),v,n<<bplg(t)); RETF(z);}
 #endif
 #if defined(__GNUC__) && !defined(__clang__)
-#pragma GCC pop_options
+#pragma pop_options
 #endif
 
 // Convert w to integer if it isn't integer already (the usual conversion errors apply)

@@ -521,7 +521,7 @@
 #define intgamp0(x)                 jtintgamp0(jt,(x))
 #define intgatop(x,y)               jtintgatop(jt,(x),(y))
 #define intgtymes(x,y)              jtintgtymes(jt,(x),(y))
-#define intmod2(x)                  jtintmod2(jt,(x))
+#define intmod2(x,y)                jtintmod2(jt,(x),(y))
 #define intpow(x,y)                 jtintpow(jt,(x),(y))
 #define inv(x)                      jtinv(jt,(x),0)
 #define invrecur(x)                 jtinv(jt,(x),1)  // call inv(), indicating recursive call

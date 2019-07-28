@@ -645,10 +645,11 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
 
    // Establish the result area z; if we're reusing an argument, make sure the type is updated to the result type
    // If the operation is one that can fail partway through, don't allow it to overwrite a zombie input unless so enabled by the user
-// more regs, less comp    if((inplaceallow&(((zn^wn)|(wr^(f+r)))==0)) && (AC(w)<ACUC1 || AC(w)==ACUC1&&jt->assignsym&&jt->assignsym->val==w&&!(adocv.cv&VCANHALT && jt->asgzomblevel<2))){z=w; AT(z)=zt;  //  Uses JTINPLACEW==1
-// more regs, less comp    }else if(((inplaceallow>>=1)&(((zn^an)|(ar^(f+r)))==0)) && (AC(a)<ACUC1 || AC(a)==ACUC1&&jt->assignsym&&jt->assignsym->val==a&&!(adocv.cv&VCANHALT && jt->asgzomblevel<2))){z=a; AT(z)=zt;  //  Uses JTINPLACEA==2
-  if(((I)jtinplace&1) && (AC(w)<ACUC1 || AC(w)==ACUC1&&jt->assignsym&&jt->assignsym->val==w&&!(adocv.cv&VCANHALT && jt->asgzomblevel<2))){z=w; if(TYPESNE(AT(w),zt))MODBLOCKTYPE(z,zt)  //  Uses JTINPLACEW==1
-  }else if(((I)jtinplace&2) && (AC(a)<ACUC1 || AC(a)==ACUC1&&jt->assignsym&&jt->assignsym->val==a&&!(adocv.cv&VCANHALT && jt->asgzomblevel<2))){z=a; if(TYPESNE(AT(a),zt))MODBLOCKTYPE(z,zt)  //  Uses JTINPLACEA==2
+  // The ordering here assumes that jtinplace will usually be set
+// alternative  if(((I)jtinplace&1) && (AC(w)<ACUC1 || AC(w)==ACUC1&&jt->assignsym&&jt->assignsym->val==w&&!(adocv.cv&VCANHALT && jt->asgzomblevel<2))){z=w; if(TYPESNE(AT(w),zt))MODBLOCKTYPE(z,zt)  //  Uses JTINPLACEW==1
+// alternative  }else if(((I)jtinplace&2) && (AC(a)<ACUC1 || AC(a)==ACUC1&&jt->assignsym&&jt->assignsym->val==a&&!(adocv.cv&VCANHALT && jt->asgzomblevel<2))){z=a; if(TYPESNE(AT(a),zt))MODBLOCKTYPE(z,zt)  //  Uses JTINPLACEA==2
+  if( (SGNIF(jtinplace,JTINPLACEWX)&AC(w))<0 || ((SGNIF(jtinplace,JTINPLACEWX)&(AC(w)-2))<0)&&jt->assignsym&&jt->assignsym->val==w&&!(adocv.cv&VCANHALT && jt->asgzomblevel<2)){z=w; if(TYPESNE(AT(w),zt))MODBLOCKTYPE(z,zt)  //  Uses JTINPLACEW==1
+  }else if( (SGNIF(jtinplace,JTINPLACEAX)&AC(a))<0 || ((SGNIF(jtinplace,JTINPLACEAX)&(AC(a)-2))<0)&&jt->assignsym&&jt->assignsym->val==a&&!(adocv.cv&VCANHALT && jt->asgzomblevel<2)){z=a; if(TYPESNE(AT(a),zt))MODBLOCKTYPE(z,zt)  //  Uses JTINPLACEA==2
   }else{GA(z,zt,zn,(RANKT)fr+(fr>>RANKTX),0); MCISH(AS(z),sf,fr>>RANKTX); MCISH(AS(z)+(fr>>RANKTX),s,(RANKT)fr);} 
   // s, fr, and sf ARE NOT USED FROM HERE ON in this branch to reduce register pressure.
   if(!zn)RETF(z);  // If the result is empty, the allocated area says it all
@@ -1070,7 +1071,7 @@ DF2(jtatomic2){A z;
  selfranks=jtranks==(RANK2T)~0?selfranks:jtranks;
  // check for singletons
  if(!(awm1|((AT(a)|AT(w))&(NOUN&UNSAFE(~(B01+INT+FL)))))){
-  z=jtssingleton(jtinplace,a,w,self,selfranks,(RANK2T)awr);
+  z=jtssingleton(jtinplace,a,w,self,(RANK2T)awr,selfranks);
   if(z||jt->jerr<=NEVM)RETF(z);  // normal return, or non-retryable error
   // if retryable error, fall through.  The retry will not be through the singleton code
  }
@@ -1143,7 +1144,7 @@ DF2(jtexpn2  ){RZ(a&&w); if(((((I)AR(w)-1)&(AT(w)<<(BW-1-FLX)))<0)&&0.5==*DAV(w)
 // obsolete F2(jtoutof  ){CHECKSSING(a,w,jtssoutof) R jtva2(jtinplace,a,w,ds(CBANG),jt->ranks);}
 // obsolete DF2(jtcircle ){F2PREFIP; RZ(a&&w); R jtva2(jtinplace,a,w,self,jt->ranks);}
 // scaf the following need to go through atomic2 or a replacement so that they match the changing interface to va2
-DF2(jtresidue){F2PREFIP; RZ(a&&w); if(!(AT(a)|AT(w))&(NOUN&~INT)&&AR(a)==0&&IAV(a)[0]==2)R intmod2(w); R jtatomic2(jtinplace,a,w,self);}
+DF2(jtresidue){F2PREFIP; RZ(a&&w); I intmod; if(!((AT(a)|AT(w))&(NOUN&~INT)|AR(a))&&(intmod=IAV(a)[0], (intmod&-intmod)+(intmod<=0)==0))R intmod2(w,intmod); R jtatomic2(jtinplace,a,w,self);}
 
 
 // These are the unary ops that are implemented using a canned argument

@@ -542,13 +542,20 @@ F2(jtabase2){A z;I an,ar,at,t,wn,wr,wt,zn;
   EPILOG(z);
 }}
 
-// Compute 2 | w for INT w, leaving Boolean result.   kludge this should shift into mask & store fullwords
-F1(jtintmod2){A z;B*b,*v;I mask,m,n,q,r,*u,*wi;
- RZ(w);F1PREFIP;  // allow inplacing but don't use it, since the input is INT and the result is B01
- n=AN(w); q=n>>LGSZI; r=n&(SZI-1); v=BAV(w)+!liln*(SZI-1);
- GATV(z,B01,n,AR(w),AS(w)); u=AV(z);
- b=(B*)&mask; DO(SZI, b[i]=1;);
- b=(B*)&m; DO(q, DO(SZI, b[i]=*v; v+=SZI;); *u++=mask&m;)
- b=(B*)u; wi=AV(w)+(q<<LGSZI); DO(r, *b++=1&*wi++?1:0;);
+// Compute power-of-2 | w for INT w, by ANDing.  Result is boolean if mod is 1 or 2
+A jtintmod2(J jt,A w,I mod){A z;B *v;I n,q,r,*u;UI m=0;  // init m for warning
+ RZ(w);F1PREFIP;
+ if(mod>2)R jtatomic2(jtinplace,sc(mod-1),w,ds(CBW0001));  // INT result, by AND
+ // the rest is boolean result
+ n=AN(w); v=BAV(w)/* obsolete +!liln*(SZI-1)*/;  // littleendian only
+ GATV(z,B01,n,AR(w),AS(w)); RZ(n);  // loops below can't handle empty
+ u=AV(z); q=(n-1)>>(LGSZI/C_LE); r=((n-1)&(SZI-1))+1;   // there is always a remnant
+ I mask=mod==2?VALIDBOOLEAN:0;  // if mod is 1, all results will be 0; otherwise boolean result
+// obsolete b=(B*)&mask; DO(SZI, b[i]=1;);
+// obsolete  b=(B*)&m; DO(q, DO(SZI, b[i]=*v; v+=SZI;); *u++=mask&m;)
+// obsolete  b=(B*)u; wi=AV(w)+(q<<LGSZI); DO(r, *b++=1&*wi++?1:0;);
+ DQ(q, DQ(SZI, m=(m>>8)+((UI)*v<<((SZI-1)*8)); v+=SZI;); *u++=m&mask;)
+ DQ(r, m=(m>>8)+((UI)*v<<((SZI-1)*8)); v+=SZI;);  // 1-8 bytes
+ STOREBYTES(v,m&mask,8-r);
  RETF(z);
 }

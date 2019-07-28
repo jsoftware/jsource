@@ -140,7 +140,7 @@ extern F1(jtieps);
 extern F1(jtimmea);
 extern F1(jtimmex);
 extern F1(jtincrem);
-extern F1(jtintmod2);
+extern A jtintmod2(J,A,I);
 extern F1(jtinttoe);
 extern F1(jtetoint);
 extern F1(jtiota);

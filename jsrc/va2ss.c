@@ -42,7 +42,7 @@ static I intforD(J jt, D d){I z;
 }
 
 #define SSINGCASE(id,subtype) (11*(id)+(subtype))   // encode case/args into one branch value scaf
-A jtssingleton(J jt, A a,A w,A self,RANK2T ranks,RANK2T argranks){A z;
+A jtssingleton(J jt, A a,A w,A self,RANK2T awr,RANK2T ranks){A z;
  F2PREFIP;
  I aiv=FAV(self)->lc;   // temp, but start as function #
  // Allocate the result area
@@ -53,17 +53,17 @@ A jtssingleton(J jt, A a,A w,A self,RANK2T ranks,RANK2T argranks){A z;
   I wipok = ((((AC(w)-1)|((I)w^(I)jt->zombieval))==0)|((UI)AC(w)>>(BW-1))) & ((UI)jtinplace>>JTINPLACEWX) & ~(AFLAG(w)>>AFUNINCORPABLEX);
   z=0;
   // find or allocate the result area
-  if(argranks==0){  // both atoms
+  if(awr==0){  // both atoms
    // The usual case: both singletons are atoms.  Verb rank is immaterial.  Pick any inplaceable input, or allocate a FL atom if none
    // For comparison operations leave z=0 rather than allocate, so we can use num[].  But if we can inplace that's better
    z=aipok?a:z; z=wipok?w:z; if(!((I)z|(aiv&0x80)))GAT0(z,FL,1,0);  // top  bit of lc means 'comparison'
   }else{
    // The nouns have rank, and thus there may be frames.  Calculate the rank of the result, and then see if we can inplace an argument of the needed rank
-   I4 fa=(argranks>>RANKTX)-(ranks>>RANKTX); fa=fa<0?0:fa;  // framelen of a - will become larger frame, and then desired rank
-   I4 fw=(argranks&RANKTMSK)-(ranks&RANKTMSK); fw=fw<0?0:fw;  // framelen of w
-   I4 ca=(argranks>>RANKTX)-fa; I4 cw=(argranks&RANKTMSK)-fw; ca=ca<cw?cw:ca;  // ca=larger cell-rank
+   I4 fa=(awr>>RANKTX)-(ranks>>RANKTX); fa=fa<0?0:fa;  // framelen of a - will become larger frame, and then desired rank
+   I4 fw=(awr&RANKTMSK)-(ranks&RANKTMSK); fw=fw<0?0:fw;  // framelen of w
+   I4 ca=(awr>>RANKTX)-fa; I4 cw=(awr&RANKTMSK)-fw; ca=ca<cw?cw:ca;  // ca=larger cell-rank
    fa=fa<fw?fw:fa; fa+=ca;  // fa=larger framelen, and then desired rank
-   z=aipok>((I)AR(a)^fa)?a:z; z=wipok>((I)AR(w)^fa)?w:z; if(!z)GATV1(z,FL,1,fa);  // accept ip only if rank also matches; if we allocate, fill in the shape with 1s
+   z=aipok>((I)(awr>>RANKTX)^fa)?a:z; z=wipok>((I)(awr&RANKTMSK)^fa)?w:z; if(!z)GATV1(z,FL,1,fa);  // accept ip only if rank also matches; if we allocate, fill in the shape with 1s
   }
  }
 
@@ -365,7 +365,7 @@ A jtssingleton(J jt, A a,A w,A self,RANK2T ranks,RANK2T argranks){A z;
  bitwiseresult:
  RE(0);  // if error on D arg, make sure we abort
  ziv=FAV(self)->lc-VA2B0;  // mask describing operation
- ziv=((aiv&wiv)&-(ziv&1))|((aiv&~wiv)&-((ziv>>1)&1))|((~aiv&wiv)&-((ziv>>2)&1))|((~aiv&~wiv)&-((ziv>>3)&1));
+ ziv=((aiv&wiv)&((ziv<<(BW-1-0))>>(BW-1)))|((aiv&~wiv)&((ziv<<(BW-1-1))>>(BW-1)))|((~aiv&wiv)&((ziv<<(BW-1-2))>>(BW-1)))|((~aiv&~wiv)&((ziv<<(BW-1-3))>>(BW-1)));
  SSSTORE(ziv,z,INT,I) R z;
 
  compareresult:

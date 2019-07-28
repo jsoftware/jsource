@@ -25,6 +25,7 @@
 
 #include "j.h"
 #include "x.h"
+#include "cpuinfo.h"
 
 #if (SYS & SYS_ARCHIMEDES)
 #define Wimp_StartTask 0x400DE
@@ -45,19 +46,8 @@ F1(jthostne){ASSERT(0,EVDOMAIN);}
 // "avx2" would run javx2.dll
 F1(jtjgetx){
 #if !defined(ANDROID) && (defined(__i386__) || defined(_M_X64) || defined(__x86_64__))
-#if C_64 && C_LE && SY_WIN32
- int m; int d[4];
- extern void __cpuid(int d[4],int type);
- __cpuid(d,0);
- m= d[0];
- if(m>=7){ __cpuid(d,7);if((d[1] & (1 << 5)) != 0) { R cstr("avx2");}}
- if(m>=1){ __cpuid(d,1);if((d[2] & (1 << 28)) != 0) { R cstr("avx");}}
-#endif
-
-#if C_64 && C_LE && SY_LINUX || SY_MAC
-if(__builtin_cpu_supports("avx2")) R cstr("avx2");
-if(__builtin_cpu_supports("avx"))  R cstr("avx");
-#endif
+if(getCpuFeatures()&CPU_X86_FEATURE_AVX2) R cstr("avx2");
+if(getCpuFeatures()&CPU_X86_FEATURE_AVX) R cstr("avx");
 #endif
 
 R cstr("");

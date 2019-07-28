@@ -6,9 +6,6 @@
 #ifdef _WIN32
 #include <windows.h>
 #include <winbase.h>
-#if defined(_MSC_VER) && !defined(OLECOM)
-#define OLECOM
-#endif
 #else
 #include <stdlib.h>
 #include <stdio.h>

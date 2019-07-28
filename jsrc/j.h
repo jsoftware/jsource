@@ -60,6 +60,12 @@
 #define TARGET_IOS 1
 #endif
 
+#if SY_WIN32
+#if defined(_MSC_VER) && !defined(OLECOM)
+#define OLECOM
+#endif
+#endif
+
 #if SY_64
 #define IMAX            9223372036854775807LL
 #define IMIN            (~9223372036854775807LL)   /* ANSI C LONG_MIN is  -LONG_MAX */

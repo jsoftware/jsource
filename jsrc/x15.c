@@ -43,9 +43,6 @@ otherwise the regs may be used and the parameter lost.
 #include <windows.h>
 #include <windowsx.h>
 #define FIXWINUTF8 // possibly should not be defined for MINGW32
-#if defined(_MSC_VER) && !defined(OLECOM)
-#define OLECOM
-#endif
 #ifndef _MSC_VER
 #ifndef _stdcall
 #define _stdcall __stdcall

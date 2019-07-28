@@ -1,0 +1,17 @@
+EXPORTS
+                JBreak              @6
+                JDo                 @8
+                JErrorTextM         @10
+                JFree               @11
+                JGetM               @13
+                JInit               @14
+                JIsBusy             @15
+                JSetM               @17
+                JSM                 @18
+                JGetLocale          @19
+                Jga                 @20
+                JGetA               @26
+                JSetA               @27
+                JGetR               @29
+                JSMX                @30
+                

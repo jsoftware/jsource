@@ -220,14 +220,14 @@ AHDR2(tymesIB,I,I,B){I u;B v;
  else      DO(m, v=*y++; if(v){if(z!=x)MC(z,x,n<<LGSZI);}else{memset(z,0,n<<LGSZI);} z+=n; x+=n;)
 }
 
-// DI multiply, using clear/copy
+// BD multiply, using clear/copy
 AHDR2(tymesBD,D,B,D){B u;D v;
  if(n-1==0)  DQ(m, u=*x; *z++=u?*y:0; x++; y++; )
  else if(n-1<0){n=~n; DQ(m, u=*x++; if(u){if(z!=y)MC(z,y,n*sizeof(D));}else{memset(z,0,n*sizeof(D));} z+=n; y+=n;)}
  else      DO(m, v=*y++; DO(n, u=*x; *z++=u?v:0; x++;))
 }
 
-// ID multiply, using clear/copy
+// DB multiply, using clear/copy
 AHDR2(tymesDB,D,D,B){D u;B v;
  if(n-1==0)  DQ(m, v=*y; *z++=v?*x:0; x++; y++; )
  else if(n-1<0)DQ(m, u=*x++; DQC(n, v=*y; *z++=v?u:0; y++;))

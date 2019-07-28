@@ -36,9 +36,10 @@ A   xnam=0;               /* x as a name                          */
 A   ynam=0;               /* y as a name                          */
 A   numv[NUMMAX-NUMMIN+1]={0};
 A   zeroionei[2]={0,0};   // integer 0 and 1
+A   numvr[3]={0,0};       // float 0,1,2
 A   imax=0;               // IMAX as atom
 I   v00[2]={0,0};         // vector value to use for rank 0 0
-A   onehalf;      //  0.5
+A   onehalf;      //  0.5 (float)
 D   pf=0;                 /* performance frequency                */
 A   pie=0;                /* o.1                                  */
 Q   zeroQ={0,0};          /* 0r1                                  */

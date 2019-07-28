@@ -964,6 +964,7 @@ extern A        mtm;
 extern A        mtv;
 extern A        nnam;
 extern A        numv[];
+extern A        numvr[3];
 extern A        onehalf;
 extern D        pf;
 extern A        pie;            /* "pi" name conflict                      */

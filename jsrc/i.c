@@ -93,6 +93,7 @@ B jtglobinit(J jt){A x,y;D*d;A *oldpushx=jt->tnextpushp;
 // obsolete  testb[CIF]=testb[CELSEIF]=testb[CSELECT]=testb[CWHILE]=testb[CWHILST]=testb[CFOR]=testb[CCASE]=testb[CFCASE]=1;
  DO(-NUMMIN, GA(x,INT,1,0,0); ACX(x); * AV(x)=i+NUMMIN;   num[i+NUMMIN]   =x;);
  DO(NUMMAX-1, GA(x,INT,1,0,0); ACX(x); * AV(x)=i+2;       num[i+2]   =x;);
+ DO(sizeof(numvr)/sizeof(numvr[0]), GA(x,FL,1,0,0); ACX(x); *DAV(x)=i;       numvr[i]   =x;);
  GA(x,B01, 1,0,0     ); ACX(x); *BAV(x)=0;                num[0]=x;
  GA(x,B01, 1,0,0     ); ACX(x); *BAV(x)=1;                num[1]=x;
  memset(chr,C0,256*SZI);

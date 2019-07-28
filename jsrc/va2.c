@@ -1152,14 +1152,18 @@ DF2(jtresidue){F2PREFIP; RZ(a&&w); I intmod; if(!((AT(a)|AT(w))&(NOUN&~INT)|AR(a
 // Shift the w-is-inplaceable flag to a.  Bit 1 is known to be 0 in any call to a monad
 #define IPSHIFTWA (jt = (J)(intptr_t)(((I)jt+JTINPLACEW)&-JTINPLACEA))
 
-F1(jtnot   ){R w&&AT(w)&B01+SB01?eq(num[0],w):minus(zeroionei[1],w);}
-F1(jtnegate){R minus(zeroionei[0],w);}
-F1(jtdecrem){IPSHIFTWA; R minus(w,zeroionei[1]);}
-F1(jtincrem){R plus(zeroionei[1],w);}
-F1(jtduble ){R tymes(num[2],w);}
-F1(jtsquare){R tymes(w,w);}   // leave inplaceable in w only  ?? never inplaces
-F1(jtrecip ){R divide(zeroionei[1],w);}
-F1(jthalve ){if(w&&!(AT(w)&XNUM+RAT))R tymes(onehalf,w); IPSHIFTWA; R divide(w,num[2]);}
+// We use the right type of singleton so that we engage AVX loops
+#define SETCONPTR A* conptr=num; conptr=AT(w)&INT?zeroionei:conptr; conptr=AT(w)&FL?numvr:conptr;  // for 0 or 1 only
+#define SETCONPTR2 A* conptr=num; conptr=AT(w)&FL?numvr:conptr;   // used for 2, when the only options are INT/FL
+
+F1(jtnot   ){RZ(w); SETCONPTR R AT(w)&B01+SB01?eq(num[0],w):minus(conptr[1],w);}
+F1(jtnegate){RZ(w); SETCONPTR R minus(conptr[0],w);}
+F1(jtdecrem){RZ(w); SETCONPTR IPSHIFTWA; R minus(w,conptr[1]);}
+F1(jtincrem){RZ(w); SETCONPTR R plus(conptr[1],w);}
+F1(jtduble ){RZ(w); SETCONPTR2 R tymes(conptr[2],w);}
+F1(jtsquare){RZ(w); R tymes(w,w);}   // leave inplaceable in w only  ?? never inplaces
+F1(jtrecip ){RZ(w); SETCONPTR R divide(conptr[1],w);}
+F1(jthalve ){RZ(w); if(!(AT(w)&XNUM+RAT))R tymes(onehalf,w); IPSHIFTWA; R divide(w,num[2]);} 
 
 static AHDR2(zeroF,B,void,void){memset(z,C0,m*(n^(n>>(BW-1))));}
 static AHDR2(oneF,B,void,void){memset(z,C1,m*(n^(n>>(BW-1))));}

@@ -93,7 +93,7 @@ B jtglobinit(J jt){A x,y;D*d;A *oldpushx=jt->tnextpushp;
 // obsolete  testb[CIF]=testb[CELSEIF]=testb[CSELECT]=testb[CWHILE]=testb[CWHILST]=testb[CFOR]=testb[CCASE]=testb[CFCASE]=1;
  DO(-NUMMIN, GA(x,INT,1,0,0); ACX(x); * AV(x)=i+NUMMIN;   num[i+NUMMIN]   =x;);
  DO(NUMMAX-1, GA(x,INT,1,0,0); ACX(x); * AV(x)=i+2;       num[i+2]   =x;);
- DO(sizeof(numvr)/sizeof(numvr[0]), GA(x,FL,1,0,0); ACX(x); *DAV(x)=(D)i;       numvr[i]   =x;);
+ DO(sizeof(numvr)/sizeof(numvr[0]), GA(x,FL,1,0,0); ACX(x); *DAV(x)=(D)i;    numvr[i]   =x;);
  GA(x,B01, 1,0,0     ); ACX(x); *BAV(x)=0;                num[0]=x;
  GA(x,B01, 1,0,0     ); ACX(x); *BAV(x)=1;                num[1]=x;
  memset(chr,C0,256*SZI);
@@ -208,7 +208,7 @@ jt->assert = 1;
  jt->disp[0]=1; jt->disp[1]=5;
  jt->fcalln=NFCALL;
 #if USECSTACK
- jt->cstackinit=(I)&y;  // use a static variable to get the stack address
+ jt->cstackinit=(uintptr_t)&y;  // use a static variable to get the stack address
  jt->cstackmin=jt->cstackinit-(CSTACKSIZE-CSTACKRESERVE);
 #else
  jt->fdepn=NFDEP;

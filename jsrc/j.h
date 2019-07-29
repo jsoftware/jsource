@@ -468,7 +468,7 @@ extern unsigned int __cdecl _clearfp (void);
 #if USECSTACK
 #define FDEPDEC(d)
 #define FDEPINC(d)
-#define STACKCHKOFL {D stackpos; ASSERT((I)&stackpos-jt->cstackmin>=0,EVSTACK);}
+#define STACKCHKOFL {D stackpos; ASSERT((uintptr_t)&stackpos>=jt->cstackmin,EVSTACK);}
 #else  // old style counting J recursion levels
 #define FDEPDEC(d)      jt->fdepi-=(I4)(d)  // can be used in conditional expressions
 #define FDEPINC(d)      {ASSERT(jt->fdepn>=jt->fdepi+(I4)(d),EVSTACK); jt->fdepi+=(I4)(d);}

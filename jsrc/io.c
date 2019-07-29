@@ -154,6 +154,9 @@ I jdo(J jt, C* lp){I e;A x;
  // but we don't bother.  Another possibility would be to reset the callstack only if it was 0, so that a recursive immex will have its deletes handled by
  // the resumption of the name that was interrupted.
  I4 savcallstack = jt->callstacknext;
+#if USECSTACK
+ if(jt->sm==SMJAVA)jt->cstackmin=0;
+#endif
  if(jt->capture){
   if(jt->capturemax>capturesize){FREE(jt->capture); jt->capture=0; jt->capturemax=0;} // dealloc large capture buffer
   else jt->capture[0]=0; // clear capture buffer

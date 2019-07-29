@@ -371,6 +371,7 @@ A jtcvt(J jt,I t,A w){A y;B b;
 
 // Convert numeric type to lowest precision that fits.  Push fuzz/rank onto a stack,
 // and use 'exact' and 'no rank' for them.  If mode=0, do not promote XNUM/RAT to fixed-length types.
+// If mode bit 1 is set, minimum precision is INT; if mode bit 2 is set, minimum precision is FL
 // Result is a new buffer, always
 A jtbcvt(J jt,C mode,A w){FPREFIP; A y,z=w;D ofuzz;
  RZ(w);
@@ -402,7 +403,9 @@ A jtbcvt(J jt,C mode,A w){FPREFIP; A y,z=w;D ofuzz;
  }
 #endif
  // for all numerics, try Boolean/int/float in order, stopping when we find one that holds the data
- if(mode||!(AT(w)&XNUM+RAT))z=ccvt(B01,w,&y)?y:ccvt(INT,w,&y)?y:ccvt(FL,w,&y)?y:w; 
+ if(mode&1||!(AT(w)&XNUM+RAT)){  // if we are not stopping at XNUM/RAT
+  z=!(mode&6)&&ccvt(B01,w,&y)?y:!(mode&4)&&ccvt(INT,w,&y)?y:ccvt(FL,w,&y)?y:w;  // convert to enabled modes one by one, stopping when one works
+ }
  jt->fuzz=ofuzz; jt->ranks=oqr;
  RNE(z);
 }    /* convert to lowest type. 0=mode: don't convert XNUM/RAT to other types */

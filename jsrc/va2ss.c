@@ -32,12 +32,13 @@
 #define SSSTORENVFL(v,z,t,type) {*((type *)CAV(z)) = (v); }  // When we know the type/shape doesn't change (FL,FL->FL)
 
 // Return int version of d, with error if loss of significance
-static I intforD(J jt, D d){I z;
- z=(I)jfloor(d);
- if(!FEQ((D)z,d)){++z;
+static I intforD(J jt, D d){D q;I z;
+ q=jfloor(d);
+ if(!FEQ(q,d)){++q;
   // see if >: <.a is tolerantly equal to (I)a
-  ASSERT(FEQ((D)z,d),EVDOMAIN);
+  ASSERT(FEQ((D)q,d),EVDOMAIN);
  }
+ z=(I)q; if((z<0)!=(q<0))z=0>q?IMIN:IMAX;
  R z;
 }
 

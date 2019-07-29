@@ -208,7 +208,7 @@ jt->assert = 1;
  jt->disp[0]=1; jt->disp[1]=5;
  jt->fcalln=NFCALL;
 #if USECSTACK
- jt->cstackinit=(I)&y;  // use a static variable to get the stack address
+ jt->cstackinit=(uintptr_t)&y;  // use a static variable to get the stack address
  jt->cstackmin=jt->cstackinit-(CSTACKSIZE-CSTACKRESERVE);
 #else
  jt->fdepn=NFDEP;

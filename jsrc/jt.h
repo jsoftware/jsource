@@ -88,7 +88,7 @@ typedef struct {
 // --- end of cache line 3. 1 words carries over
 // things needed by executing explicit defs
  A    curname;          // current name, an A block containing an NM
- I    cstackmin;        // red warning for C stack pointer
+ UI   cstackmin;        // red warning for C stack pointer
  I4   callstacknext;           /* named fn calls: current depth                   */
  I4   fcalln;           /* named fn calls: maximum permissible depth       */
  B    asgn;             /* 1 iff last operation on this line is assignment */
@@ -173,7 +173,7 @@ typedef struct {
  I4   fdepi;            /* fn calls: current depth                         */
  I4   fdepn;            /* fn calls: maximum permissible depth             */
 #else
- I    cstackinit;       // C stack pointer at beginning of execution
+ UI   cstackinit;       // C stack pointer at beginning of execution
 #endif
 
 // unordered symbols follow

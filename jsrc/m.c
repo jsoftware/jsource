@@ -1150,8 +1150,10 @@ A jtexta(J jt,I t,I r,I c,I m){A z;I m1;
  R z;
 }    /* "optimal" allocation for type t rank r, c atoms per item, >=m items */
 
+// forcetomemory does nothing, but it does take an array as argument.  This will spook the compiler out of trying to assign parts of the array to registers.
+void forcetomemory(void * w){R; }
 
-#if 0
+#if 0  // obsolete
 /* debugging tools  */
 
 B jtcheckmf(J jt){C c;I i,j;MS*x,*y;

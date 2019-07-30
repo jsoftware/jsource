@@ -7,7 +7,12 @@ typedef struct {VA2 p2[13];VA2 pins[7];VA2 ppfx[7];VA2 psfx[7];} VA;
 typedef struct {VA2 p1[6];} UA;
 
                                     /*   cv - control vector               */
-#define VARGX           2           // bit position for arg flags
+#define VIPOKWX         0      // This routine can put its result over W
+#define VIPOKW          (1<<VIPOKWX)
+#define VIPOKAX         1      // This routine can put its result over A
+#define VIPOKA          (1<<VIPOKAX)
+// bits 2-3 kept open for flags in va2
+#define VARGX           4           // bit position for arg flags
 #define VBB             (B01<<VARGX)         /* convert arguments to B              */
 #define VII             (INT<<VARGX)         /* convert arguments to I              */
 #define VDD             (FL<<VARGX)          /* convert arguments to D              */
@@ -15,7 +20,7 @@ typedef struct {VA2 p1[6];} UA;
 #define Vxx             (XNUM<<VARGX)        /* convert arguments to XNUM           */
 #define VQQ             (RAT<<VARGX)         /* convert arguments to RAT            */
 #define VARGMSK         (VBB|VII|VDD|VZZ|Vxx|VQQ)  // mask for argument requested type
-#define VRESX           10           // bit position for result flags
+#define VRESX           12           // bit position for result flags
 #define VB              (B01<<VRESX)/* result type B                       */
 #define VI              (INT<<VRESX)/* result type I                       */
 #define VD              (FL<<VRESX) /* result type D                       */
@@ -27,17 +32,13 @@ typedef struct {VA2 p1[6];} UA;
 #define VRD             (SLIT<<VRESX)// convert result to D if possible - unused code point
 #define VRI             (SBOX<<VRESX)// convert result to I if possible - unused code point
 // bits VRESX+8 9 10 12 13 14 are free
-#define VXCVTYPEX       27          // bit position for VX conversion type
-#define VXCVTYPEMSK     (3<<VXCVTYPEX)  // mask for bit-positions hold XNUM conversion type
-#define VXX             (Vxx|(XMEXACT<<VXCVTYPEX))  // exact conversion
-#define VXEQ            (Vxx|(XMEXMT<<VXCVTYPEX))   /* convert to XNUM for = ~:            */
-#define VXCF            (Vxx|(XMCEIL<<VXCVTYPEX))   /* convert to XNUM ceiling/floor       */
-#define VXFC            (Vxx|(XMFLR<<VXCVTYPEX))  /* convert to XNUM floor/ceiling       */
-#define VIPOKWX         0      // This routine can put its result over W
-#define VIPOKW          (1<<VIPOKWX)
-#define VIPOKAX         1      // This routine can put its result over A
-#define VIPOKA          (1<<VIPOKAX)
-#define VCANHALTX       29    // This routine can generate an error after it has started
+#define VXCVTYPEX       29          // bit position for VX conversion type
+#define VXCVTYPEMSK     ((I)3<<VXCVTYPEX)  // mask for bit-positions hold XNUM conversion type
+#define VXX             (Vxx|((I)XMEXACT<<VXCVTYPEX))  // exact conversion
+#define VXEQ            (Vxx|((I)XMEXMT<<VXCVTYPEX))   /* convert to XNUM for = ~:            */
+#define VXCF            (Vxx|((I)XMCEIL<<VXCVTYPEX))   /* convert to XNUM ceiling/floor       */
+#define VXFC            (Vxx|((I)XMFLR<<VXCVTYPEX))  /* convert to XNUM floor/ceiling       */
+#define VCANHALTX       31    // This routine can generate an error after it has started
 #define VCANHALT        (1<<VCANHALTX)
 
 // Extract the argument-conversion type from cv coming from the table

@@ -908,6 +908,7 @@ extern CR       condrange(I *,I,I,I,I);
 extern CR       condrange2(US *,I,I,I,I);
 extern CR       condrange4(C4 *,I,I,I,I);
 extern B        evoke(A);
+extern void     forcetomemory(void *);
 extern UI       hic(I,UC*);
 extern UI       hic2(I,UC*);
 extern UI       hic4(I,UC*);

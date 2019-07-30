@@ -42,14 +42,14 @@ static I intforD(J jt, D d){D q;I z;
  R z;
 }
 
-#define SSINGCASE(id,subtype) (11*(id)+(subtype))   // encode case/args into one branch value scaf
+#define SSINGCASE(id,subtype) (9*(id)+(subtype))   // encode case/args into one branch value scaf
 A jtssingleton(J jt, A a,A w,A self,RANK2T awr,RANK2T ranks){A z;
  F2PREFIP;
  I aiv=FAV(self)->lc;   // temp, but start as function #
  // Allocate the result area
  {
   // Calculate inplaceability for a and w.
-  // Inplaceable if: count=0 and zombieval, or count<0, PROVIDED the arg is inplaceable and the block is not UNINCORPABLE
+  // Inplaceable if: count=1 and zombieval, or count<0, PROVIDED the arg is inplaceable and the block is not UNINCORPABLE
   I aipok = ((((AC(a)-1)|((I)a^(I)jt->zombieval))==0)|((UI)AC(a)>>(BW-1))) & ((UI)jtinplace>>JTINPLACEAX) & ~(AFLAG(a)>>AFUNINCORPABLEX);
   I wipok = ((((AC(w)-1)|((I)w^(I)jt->zombieval))==0)|((UI)AC(w)>>(BW-1))) & ((UI)jtinplace>>JTINPLACEWX) & ~(AFLAG(w)>>AFUNINCORPABLEX);
   z=0;

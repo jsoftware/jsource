@@ -723,10 +723,10 @@ F2(jtqq){A t;AF f1,f2;D*d;I hv[3],n,r[3],vf,flag2=0,*v;
   // the action routine for the verb.  Otherwise, choose the appropriate rank routine, depending on whether the verb
   // supports IRS.  The IRS verbs may profitably support inplacing, so we enable it for them.
   vf=av->flag&(VASGSAFE|VJTFLGOK1|VJTFLGOK2);  // inherit ASGSAFE from u, and inplacing
-  // For monads: atomic verbs ignore rank, so just use the action routine in the rank block.  Otherwise, if the verb supports
+  // For monads: atomic verbs ignore rank, but they require the localuse field, so we can't just point the rank verb at them; we use a passthrough routine instead.  Otherwise, if the verb supports
   // IRS, go to the appropriate routine depending on the sign of rank; otherwise we will be doing an explicit rank loop: distinguish
   // rank-0, quick rank (rank is positive and a is NOT a rankonly type that may need to be combined), and all-purpose cases
-  if(av->flag&VISATOMIC1){f1=av->valencefns[0];}else{if(av->flag&VIRS1){f1=hv[0]>=0?rank1i:rank1in;}else{f1=hv[0]?(hv[0]>=0&&!(av->flag2&VF2RANKONLY1)?rank1q:rank1):jtrank10; flag2|=VF2RANKONLY1;}}
+  if(av->flag&VISATOMIC1){f1=jtrank10atom;}else{if(av->flag&VIRS1){f1=hv[0]>=0?rank1i:rank1in;}else{f1=hv[0]?(hv[0]>=0&&!(av->flag2&VF2RANKONLY1)?rank1q:rank1):jtrank10; flag2|=VF2RANKONLY1;}}
   // For dyad: atomic verbs take the rank from this block, so we take the action routine, and also the parameter it needs; these parameters mean that only
   // nonnegative rank can be accomodated; otherwise, use processor for IRS (there is one for nonnegative, one for negative rank); if not IRS, there are processors for:
   // rank 0; nonneg ranks where fs is NOT a rank operator; general case

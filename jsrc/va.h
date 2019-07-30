@@ -153,18 +153,6 @@ typedef struct {VA2 p1[6];} UA;
 #define AHDRS(f,Tz,Tx)          void f(J jt,I m,I d,I n,Tz* RESTRICTI z,Tx* RESTRICTI x)
 
 // value in vaptr[]
-#define VA2PLUS 20
-#define VA2MINUS 21
-#define VA2MIN 27
-#define VA2MAX 29
-#define VA2MULT 19
-#define VA2DIV 18
-#define VA2NAND 34
-#define VA2NOR 32
-#define VA2GCD 31
-#define VA2LCM 33
-#define VA2OUTOF 17
-#define VA2POW 25
 #define VA2B0 1
 #define VA2B1 2
 #define VA2B2 3
@@ -181,14 +169,30 @@ typedef struct {VA2 p1[6];} UA;
 #define VA2BD 14
 #define VA2BE 15
 #define VA2BF 16
+#define VA2NE 17 // 35
+#define VA2DIV 18
+#define VA2NOR 19 // 32
+#define VA2GCD 20 // 31
+#define VA2MINUS 21
 #define VA2LT 22
 #define VA2EQ 23
 #define VA2GT 24
+#define VA2LCM 25 // 33
+#define VA2NAND 26 // 34
+#define VA2GE 27 // 30
 #define VA2LE 28
-#define VA2GE 30
-#define VA2NE 35
+// the following are in the same order in va1
+#define VA2MIN 29 // 27
+#define VA2MAX 30 // 29
+#define VA2PLUS 31 // 20
+#define VA2MULT 32 // 19
+#define VA2POW 33 // 25
+#define VA2RESIDUE 34 // 26
+#define VA2OUTOF 35 // 17
 #define VA2CIRCLE 36
-#define VA2RESIDUE 26
+#define VA1ROOT 37
+#define VA1LOG 38
+
 
 /*
  b    1 iff cell rank of a <= cell rank of w

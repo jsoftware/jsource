@@ -158,6 +158,7 @@ NB. Monads
 *./,   <. compss v
 *./,   >. compss v
 *./,   * compss v
+*./,   + compss v
 *./,   | compss v
 *./,   %: compss v
 *./,   ^ compss v
@@ -171,7 +172,7 @@ compst =: 1 : 0
 x
 u
 timesing =. 2000 (6!:2) 'u f.&>~ y'
-timearray =. 2000 (6!:2) 'u f.~&>~ x'
+timearray =. 2000 (6!:2) 'u f.&>~ x'
 timesing,timearray
 )
 vv0 =. <"0 (1000 $ 1 - 1)
@@ -225,6 +226,25 @@ NB. no ss 0.75 > %/ vv1 34 b. compst vv0
 0.75 > %/ vv1 0&o. compst vv0
 0.75 > %/ vv1 1&o. compst vv0
 0.75 > %/ vv1 _1&o. compst vv0
+NB. Repeat for monad
+compst =: 1 : 0
+:
+x
+u
+timesing =. 2000 (6!:2) 'u f.&> y'
+timearray =. 2000 (6!:2) 'u f.&> x'
+timesing,timearray
+)
+NB. 0.75 > %/ vv1 <. compst vv0   <. >. on INT/BOOL is just a nop
+NB. 0.75 > %/ vv1 >. compst vv0
+NB. 0.75 > %/ vv1 + compst vv0   + on reals is faster than the ss code; we assume it won't be used much
+0.75 > %/ vv1 * compst vv0
+0.75 > %/ vv1 ^ compst vv0
+0.75 > %/ vv1 | compst vv0
+0.75 > %/ vv1 ! compst vv0
+0.75 > %/ vv1 %: compst vv0
+0.75 > %/ vv1 ^. compst vv0
+0.75 > %/ vv1 o. compst vv0
 
 NB. Verify that operations are performed in-place where possible
 iptime =: 6!:2 '4 : ''for. i. y do. y =.y-1 [ t=.x end.''~ 100000'

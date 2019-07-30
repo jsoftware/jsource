@@ -169,14 +169,14 @@ static VA va[]={
  {{(VF)bw1111pfxI,VI+VII}, {(VF)bw1111pfxI,VI}},
  {{(VF)bw1111sfxI,VI+VII}, {(VF)bw1111sfxI,VI}} },
 
-/* 21 !  */ {
- {{(VF)leBB, VB+VIP            }, {(VF)binDD,VD+VDD+VRI+VIP}, {(VF)binDD,VD+VDD+VIP}, 
-  {(VF)binDD,VD+VDD+VRI+VIP}, {(VF)binDD,VD+VDD+VRI+VIP}, {(VF)binDD,VD+VDD+VIP}, 
-  {(VF)binDD,VD+VDD+VIP    }, {(VF)binDD,VD+VDD+VIP    }, {(VF)binDD,VD+VIP    }, 
-  {(VF)binZZ,VZ+VZZ}, {(VF)binXX,VX+VXX}, {(VF)binQQ,VX+VQQ}, {0,0}}, 
- {{(VF)leinsB,VB}},
- {{(VF)lepfxB,VB}},
- {{(VF)lesfxB,VB}} },
+/* 95 ~: */ {
+ {{(VF)neBB,VB+VIP}, {(VF)neBI,VB+VIPOKA}, {(VF)neBD,VB+VIPOKA},
+  {(VF)neIB,VB+VIPOKW}, {(VF)neII,VB}, {(VF)neID,VB},
+  {(VF)neDB,VB+VIPOKW}, {(VF)neDI,VB}, {(VF)neDD,VB}, 
+  {(VF)neZZ,VB+VZZ}, {(VF)neXX,VB+VXEQ}, {(VF)neQQ,VB+VQQ}, {0,0}},
+ {{(VF)neinsB,VB}},
+ {{(VF)nepfxB,VB}},
+ {{(VF)nesfxB,VB}} },
 
 /* 25 %  */ {
  {{(VF)divBB,VD}, {(VF)divBI,VD+VIP0I}, {(VF)divBD,VD+VIPOKW},
@@ -187,23 +187,23 @@ static VA va[]={
  {{(VF)divpfxD,VD+VDD}, {(VF)divpfxD,VD+VDD}, {(VF)divpfxD,VD}, {(VF)divpfxZ,VZ}},
  {{(VF)divsfxD,VD+VDD}, {(VF)divsfxD,VD+VDD}, {(VF)divsfxD,VD}, {(VF)divsfxZ,VZ}} },
 
-/* 2a *  */ {
- {{(VF)andBB,  VB+VIP}, {(VF)tymesBI,VI+VIPOKW}, {(VF)tymesBD,VD+VIPOKW},
-  {(VF)tymesIB,VI+VIPOKA}, {(VF)tymesII,VI+VIP}, {(VF)tymesID,VD+VIPID},
-  {(VF)tymesDB,VD+VIPOKA}, {(VF)tymesDI,VD+VIPDI}, {(VF)tymesDD,VD+VIP}, 
-  {(VF)tymesZZ,VZ+VZZ}, {(VF)tymesXX,VX+VXX}, {(VF)tymesQQ,VQ+VQQ}, {0,0}},
- {{(VF)andinsB,VB}, {(VF)tymesinsI,VI}, {(VF)tymesinsD,VD}, {(VF)tymesinsZ,VZ}, {0,0},          {0,0},          {0,0}},
- {{(VF)andpfxB,VB}, {(VF)tymespfxI,VI}, {(VF)tymespfxD,VD+VIPOKW}, {(VF)tymespfxZ,VZ}, {(VF)tymespfxX,VX}, {(VF)tymespfxQ,VQ}, {0,0}},
- {{(VF)andsfxB,VB}, {(VF)tymessfxI,VI}, {(VF)tymessfxD,VD+VIPOKW}, {(VF)tymessfxZ,VZ}, {(VF)tymessfxX,VX}, {(VF)tymessfxQ,VQ}, {0,0}} },
+/* 89 +: */ {
+ {{(VF)norBB,VB+VIP    }, {(VF)norBB,VB+VBB+VIP}, {(VF)norBB,VB+VBB+VIP},
+  {(VF)norBB,VB+VBB+VIP}, {(VF)norBB,VB+VBB+VIP}, {(VF)norBB,VB+VBB+VIP},
+  {(VF)norBB,VB+VBB+VIP}, {(VF)norBB,VB+VBB+VIP}, {(VF)norBB,VB+VBB+VIP}, 
+  {(VF)norBB,VB+VBB+VIP}, {(VF)norBB,VB+VBB+VIP}, {(VF)norBB,VB+VBB+VIP}, {0,0}},
+ {{(VF)norinsB,VB}},
+ {{(VF)norpfxB,VB}},
+ {{(VF)norsfxB,VB}} },
 
-/* 2b +  */ {
- {{(VF)plusBB,VI    }, {(VF)plusBI,VI+VIPOKW}, {(VF)plusBD,VD+VIPOKW}, 
-  {(VF)plusIB,VI+VIPOKA}, {(VF)plusII,VI+VIP}, {(VF)plusID,VD+VIPID}, 
-  {(VF)plusDB,VD+VIPOKA    }, {(VF)plusDI,VD+VIPDI    }, {(VF)plusDD,VD+VIP+VCANHALT}, 
-  {(VF)plusZZ,VZ+VZZ+VIP}, {(VF)plusXX,VX+VXX}, {(VF)plusQQ,VQ+VQQ}, {0,0}},
- {{(VF)plusinsB,VI}, {(VF)plusinsI,VI}, {(VF)plusinsD,VD}, {(VF)plusinsZ,VZ}, {0,0},         {0,0},         {0,0}},
- {{(VF)pluspfxB,VI}, {(VF)pluspfxI,VI}, {(VF)pluspfxD,VD+VIPOKW}, {(VF)pluspfxZ,VZ}, {(VF)pluspfxX,VX}, {(VF)pluspfxQ,VQ}, {0,0}},
- {{(VF)plussfxB,VI}, {(VF)plussfxI,VI}, {(VF)plussfxD,VD+VIPOKW}, {(VF)plussfxZ,VZ}, {(VF)plussfxX,VX}, {(VF)plussfxQ,VQ}, {0,0}} },
+/* 88 +. */ {
+ {{(VF)orBB,VB+VIP     }, {(VF)gcdII,VI+VII}, {(VF)gcdDD,VD+VDD+VIP},
+  {(VF)gcdII,VI+VII}, {(VF)gcdII,VI    }, {(VF)gcdDD,VD+VDD+VIP},
+  {(VF)gcdDD,VD+VDD+VIP}, {(VF)gcdDD,VD+VDD+VIP}, {(VF)gcdDD,VD+VIP+VCANHALT}, 
+  {(VF)gcdZZ,VZ+VZZ}, {(VF)gcdXX,VX+VXX}, {(VF)gcdQQ,VQ+VQQ}, {0,0}},
+ {{(VF)orinsB,VB}},
+ {{(VF)orpfxB,VB}},
+ {{(VF)orsfxB,VB}} },
 
 /* 2d -  */ {
  {{(VF)minusBB,VI    }, {(VF)minusBI,VI+VIPOKW}, {(VF)minusBD,VD+VIPOKW}, 
@@ -242,78 +242,6 @@ static VA va[]={
  {{(VF)gtpfxB,VB}},
  {{(VF)gtsfxB,VB}} },
 
-/* 5e ^  */ {   // may produce complex numbers
- {{(VF)geBB, VB+VIP}, {(VF)powBI,VD}, {(VF)powBD,VD},
-  {(VF)powIB,VI}, {(VF)powII,VD}, {(VF)powID,VD+VCANHALT},
-  {(VF)powDB,VD}, {(VF)powDI,VD}, {(VF)powDD,VD+VCANHALT}, 
-  {(VF)powZZ,VZ+VZZ}, {(VF)powXX,VX+VXX}, {(VF)powQQ,VQ+VQQ}, {0,0}},
- {{(VF)geinsB,VB}},
- {{(VF)gepfxB,VB}},
- {{(VF)gesfxB,VB}} },
-
-/* 7c |  */ {
- {{(VF)ltBB, VB+VIP    }, {(VF)remII,VI+VII+VIP}, {(VF)remDD,VD+VDD+VIP},
-  {(VF)remII,VI+VII+VIP}, {(VF)remII,VI+VIP    }, {(VF)remID,VI+VCANHALT    },   // remID can 'overflow' if result is nonintegral
-  {(VF)remDD,VD+VDD+VIP}, {(VF)remDD,VD+VDD+VIP}, {(VF)remDD,VD+VIP+VCANHALT}, 
-  {(VF)remZZ,VZ+VZZ}, {(VF)remXX,VX+VXX}, {(VF)remQQ,VQ+VQQ}, {0,0}},
- {{(VF)ltinsB,VB}},
- {{(VF)ltpfxB,VB}},
- {{(VF)ltsfxB,VB}} },
-
-/* 82 <. */ {
- {{(VF)andBB,VB+VIP}, {(VF)minBI,VI+VIPOKW}, {(VF)minBD,VD+VIPOKW},
-  {(VF)minIB,VI+VIPOKA}, {(VF)minII,VI+VIP}, {(VF)minID,VD+VIPID},
-  {(VF)minDB,VD+VIPOKA}, {(VF)minDI,VD+VIPDI}, {(VF)minDD,VD+VIP}, 
-  {(VF)minDD,VD+VDD+VIP}, {(VF)minXX,VX+VXX}, {(VF)minQQ,VQ+VQQ}, {(VF)minSS,VSB}},  // always VIP a forced conversion
- {{(VF)andinsB,VB}, {(VF)mininsI,VI}, {(VF)mininsD,VD}, {(VF)mininsD,VD+VDD}, {(VF)mininsX,VX}, {0,0},        {(VF)mininsS,VSB}},
- {{(VF)andpfxB,VB}, {(VF)minpfxI,VI+VIPOKW}, {(VF)minpfxD,VD+VIPOKW}, {(VF)minpfxD,VD+VDD}, {(VF)minpfxX,VX}, {(VF)minpfxQ,VQ}, {(VF)minpfxS,VSB}},
- {{(VF)andsfxB,VB}, {(VF)minsfxI,VI+VIPOKW}, {(VF)minsfxD,VD+VIPOKW}, {(VF)minsfxD,VD+VDD}, {(VF)minsfxX,VX}, {(VF)minsfxQ,VQ}, {(VF)minsfxS,VSB}}},
-
-/* 83 <: */ {
- {{(VF)leBB,VB+VIP}, {(VF)leBI,VB+VIPOKA}, {(VF)leBD,VB+VIPOKA},
-  {(VF)leIB,VB+VIPOKW}, {(VF)leII,VB}, {(VF)leID,VB},
-  {(VF)leDB,VB+VIPOKW}, {(VF)leDI,VB}, {(VF)leDD,VB}, 
-  {(VF)leDD,VB+VDD+VIP}, {(VF)leXX,VB+VXCF}, {(VF)leQQ,VB+VQQ}, {(VF)leSS,VB}},
- {{(VF)leinsB,VB}},
- {{(VF)lepfxB,VB}},
- {{(VF)lesfxB,VB}} },
-
-/* 84 >. */ {
- {{(VF)orBB,VB+VIP}, {(VF)maxBI,VI+VIPOKW}, {(VF)maxBD,VD+VIPOKW},
-  {(VF)maxIB,VI+VIPOKA}, {(VF)maxII,VI+VIP}, {(VF)maxID,VD+VIPID},
-  {(VF)maxDB,VD+VIPOKA}, {(VF)maxDI,VD+VIPDI}, {(VF)maxDD,VD+VIP}, 
-  {(VF)maxDD,VD+VDD+VIP}, {(VF)maxXX,VX+VXX}, {(VF)maxQQ,VQ+VQQ}, {(VF)maxSS,VSB}},
- {{(VF)orinsB,VB}, {(VF)maxinsI,VI}, {(VF)maxinsD,VD}, {(VF)maxinsD,VD+VDD}, {(VF)maxinsX,VX}, {0,0},        {(VF)maxinsS,VSB}},
- {{(VF)orpfxB,VB}, {(VF)maxpfxI,VI+VIPOKW}, {(VF)maxpfxD,VD+VIPOKW}, {(VF)maxpfxD,VD+VDD}, {(VF)maxpfxX,VX}, {(VF)maxpfxQ,VQ}, {(VF)maxpfxS,VSB}},
- {{(VF)orsfxB,VB}, {(VF)maxsfxI,VI+VIPOKW}, {(VF)maxsfxD,VD+VIPOKW}, {(VF)maxsfxD,VD+VDD}, {(VF)maxsfxX,VX}, {(VF)maxsfxQ,VQ}, {(VF)maxsfxS,VSB}}},
-
-/* 85 >: */ {
- {{(VF)geBB,VB+VIP}, {(VF)geBI,VB+VIPOKA}, {(VF)geBD,VB+VIPOKA},
-  {(VF)geIB,VB+VIPOKW}, {(VF)geII,VB}, {(VF)geID,VB},
-  {(VF)geDB,VB+VIPOKW}, {(VF)geDI,VB}, {(VF)geDD,VB}, 
-  {(VF)geDD,VB+VDD+VIP}, {(VF)geXX,VB+VXFC}, {(VF)geQQ,VB+VQQ}, {(VF)geSS,VB}},
- {{(VF)geinsB,VB}},
- {{(VF)gepfxB,VB}},
- {{(VF)gesfxB,VB}} },
-
-/* 88 +. */ {
- {{(VF)orBB,VB+VIP     }, {(VF)gcdII,VI+VII}, {(VF)gcdDD,VD+VDD+VIP},
-  {(VF)gcdII,VI+VII}, {(VF)gcdII,VI    }, {(VF)gcdDD,VD+VDD+VIP},
-  {(VF)gcdDD,VD+VDD+VIP}, {(VF)gcdDD,VD+VDD+VIP}, {(VF)gcdDD,VD+VIP+VCANHALT}, 
-  {(VF)gcdZZ,VZ+VZZ}, {(VF)gcdXX,VX+VXX}, {(VF)gcdQQ,VQ+VQQ}, {0,0}},
- {{(VF)orinsB,VB}},
- {{(VF)orpfxB,VB}},
- {{(VF)orsfxB,VB}} },
-
-/* 89 +: */ {
- {{(VF)norBB,VB+VIP    }, {(VF)norBB,VB+VBB+VIP}, {(VF)norBB,VB+VBB+VIP},
-  {(VF)norBB,VB+VBB+VIP}, {(VF)norBB,VB+VBB+VIP}, {(VF)norBB,VB+VBB+VIP},
-  {(VF)norBB,VB+VBB+VIP}, {(VF)norBB,VB+VBB+VIP}, {(VF)norBB,VB+VBB+VIP}, 
-  {(VF)norBB,VB+VBB+VIP}, {(VF)norBB,VB+VBB+VIP}, {(VF)norBB,VB+VBB+VIP}, {0,0}},
- {{(VF)norinsB,VB}},
- {{(VF)norpfxB,VB}},
- {{(VF)norsfxB,VB}} },
-
 /* 8a *. */ {
  {{(VF)andBB,VB+VIP    }, {(VF)lcmII,VI+VII}, {(VF)lcmDD,VD+VDD+VIP},
   {(VF)lcmII,VI+VII}, {(VF)lcmII,VI    }, {(VF)lcmDD,VD+VDD+VIP},
@@ -332,14 +260,86 @@ static VA va[]={
  {{(VF)nandpfxB,VB}},
  {{(VF)nandsfxB,VB}} },
 
-/* 95 ~: */ {
- {{(VF)neBB,VB+VIP}, {(VF)neBI,VB+VIPOKA}, {(VF)neBD,VB+VIPOKA},
-  {(VF)neIB,VB+VIPOKW}, {(VF)neII,VB}, {(VF)neID,VB},
-  {(VF)neDB,VB+VIPOKW}, {(VF)neDI,VB}, {(VF)neDD,VB}, 
-  {(VF)neZZ,VB+VZZ}, {(VF)neXX,VB+VXEQ}, {(VF)neQQ,VB+VQQ}, {0,0}},
- {{(VF)neinsB,VB}},
- {{(VF)nepfxB,VB}},
- {{(VF)nesfxB,VB}} },
+/* 85 >: */ {
+ {{(VF)geBB,VB+VIP}, {(VF)geBI,VB+VIPOKA}, {(VF)geBD,VB+VIPOKA},
+  {(VF)geIB,VB+VIPOKW}, {(VF)geII,VB}, {(VF)geID,VB},
+  {(VF)geDB,VB+VIPOKW}, {(VF)geDI,VB}, {(VF)geDD,VB}, 
+  {(VF)geDD,VB+VDD+VIP}, {(VF)geXX,VB+VXFC}, {(VF)geQQ,VB+VQQ}, {(VF)geSS,VB}},
+ {{(VF)geinsB,VB}},
+ {{(VF)gepfxB,VB}},
+ {{(VF)gesfxB,VB}} },
+
+/* 83 <: */ {
+ {{(VF)leBB,VB+VIP}, {(VF)leBI,VB+VIPOKA}, {(VF)leBD,VB+VIPOKA},
+  {(VF)leIB,VB+VIPOKW}, {(VF)leII,VB}, {(VF)leID,VB},
+  {(VF)leDB,VB+VIPOKW}, {(VF)leDI,VB}, {(VF)leDD,VB}, 
+  {(VF)leDD,VB+VDD+VIP}, {(VF)leXX,VB+VXCF}, {(VF)leQQ,VB+VQQ}, {(VF)leSS,VB}},
+ {{(VF)leinsB,VB}},
+ {{(VF)lepfxB,VB}},
+ {{(VF)lesfxB,VB}} },
+
+/* 82 <. */ {
+ {{(VF)andBB,VB+VIP}, {(VF)minBI,VI+VIPOKW}, {(VF)minBD,VD+VIPOKW},
+  {(VF)minIB,VI+VIPOKA}, {(VF)minII,VI+VIP}, {(VF)minID,VD+VIPID},
+  {(VF)minDB,VD+VIPOKA}, {(VF)minDI,VD+VIPDI}, {(VF)minDD,VD+VIP}, 
+  {(VF)minDD,VD+VDD+VIP}, {(VF)minXX,VX+VXX}, {(VF)minQQ,VQ+VQQ}, {(VF)minSS,VSB}},  // always VIP a forced conversion
+ {{(VF)andinsB,VB}, {(VF)mininsI,VI}, {(VF)mininsD,VD}, {(VF)mininsD,VD+VDD}, {(VF)mininsX,VX}, {0,0},        {(VF)mininsS,VSB}},
+ {{(VF)andpfxB,VB}, {(VF)minpfxI,VI+VIPOKW}, {(VF)minpfxD,VD+VIPOKW}, {(VF)minpfxD,VD+VDD}, {(VF)minpfxX,VX}, {(VF)minpfxQ,VQ}, {(VF)minpfxS,VSB}},
+ {{(VF)andsfxB,VB}, {(VF)minsfxI,VI+VIPOKW}, {(VF)minsfxD,VD+VIPOKW}, {(VF)minsfxD,VD+VDD}, {(VF)minsfxX,VX}, {(VF)minsfxQ,VQ}, {(VF)minsfxS,VSB}}},
+
+/* 84 >. */ {
+ {{(VF)orBB,VB+VIP}, {(VF)maxBI,VI+VIPOKW}, {(VF)maxBD,VD+VIPOKW},
+  {(VF)maxIB,VI+VIPOKA}, {(VF)maxII,VI+VIP}, {(VF)maxID,VD+VIPID},
+  {(VF)maxDB,VD+VIPOKA}, {(VF)maxDI,VD+VIPDI}, {(VF)maxDD,VD+VIP}, 
+  {(VF)maxDD,VD+VDD+VIP}, {(VF)maxXX,VX+VXX}, {(VF)maxQQ,VQ+VQQ}, {(VF)maxSS,VSB}},
+ {{(VF)orinsB,VB}, {(VF)maxinsI,VI}, {(VF)maxinsD,VD}, {(VF)maxinsD,VD+VDD}, {(VF)maxinsX,VX}, {0,0},        {(VF)maxinsS,VSB}},
+ {{(VF)orpfxB,VB}, {(VF)maxpfxI,VI+VIPOKW}, {(VF)maxpfxD,VD+VIPOKW}, {(VF)maxpfxD,VD+VDD}, {(VF)maxpfxX,VX}, {(VF)maxpfxQ,VQ}, {(VF)maxpfxS,VSB}},
+ {{(VF)orsfxB,VB}, {(VF)maxsfxI,VI+VIPOKW}, {(VF)maxsfxD,VD+VIPOKW}, {(VF)maxsfxD,VD+VDD}, {(VF)maxsfxX,VX}, {(VF)maxsfxQ,VQ}, {(VF)maxsfxS,VSB}}},
+
+/* 2b +  */ {
+ {{(VF)plusBB,VI    }, {(VF)plusBI,VI+VIPOKW}, {(VF)plusBD,VD+VIPOKW}, 
+  {(VF)plusIB,VI+VIPOKA}, {(VF)plusII,VI+VIP}, {(VF)plusID,VD+VIPID}, 
+  {(VF)plusDB,VD+VIPOKA    }, {(VF)plusDI,VD+VIPDI    }, {(VF)plusDD,VD+VIP+VCANHALT}, 
+  {(VF)plusZZ,VZ+VZZ+VIP}, {(VF)plusXX,VX+VXX}, {(VF)plusQQ,VQ+VQQ}, {0,0}},
+ {{(VF)plusinsB,VI}, {(VF)plusinsI,VI}, {(VF)plusinsD,VD}, {(VF)plusinsZ,VZ}, {0,0},         {0,0},         {0,0}},
+ {{(VF)pluspfxB,VI}, {(VF)pluspfxI,VI}, {(VF)pluspfxD,VD+VIPOKW}, {(VF)pluspfxZ,VZ}, {(VF)pluspfxX,VX}, {(VF)pluspfxQ,VQ}, {0,0}},
+ {{(VF)plussfxB,VI}, {(VF)plussfxI,VI}, {(VF)plussfxD,VD+VIPOKW}, {(VF)plussfxZ,VZ}, {(VF)plussfxX,VX}, {(VF)plussfxQ,VQ}, {0,0}} },
+
+/* 2a *  */ {
+ {{(VF)andBB,  VB+VIP}, {(VF)tymesBI,VI+VIPOKW}, {(VF)tymesBD,VD+VIPOKW},
+  {(VF)tymesIB,VI+VIPOKA}, {(VF)tymesII,VI+VIP}, {(VF)tymesID,VD+VIPID},
+  {(VF)tymesDB,VD+VIPOKA}, {(VF)tymesDI,VD+VIPDI}, {(VF)tymesDD,VD+VIP}, 
+  {(VF)tymesZZ,VZ+VZZ}, {(VF)tymesXX,VX+VXX}, {(VF)tymesQQ,VQ+VQQ}, {0,0}},
+ {{(VF)andinsB,VB}, {(VF)tymesinsI,VI}, {(VF)tymesinsD,VD}, {(VF)tymesinsZ,VZ}, {0,0},          {0,0},          {0,0}},
+ {{(VF)andpfxB,VB}, {(VF)tymespfxI,VI}, {(VF)tymespfxD,VD+VIPOKW}, {(VF)tymespfxZ,VZ}, {(VF)tymespfxX,VX}, {(VF)tymespfxQ,VQ}, {0,0}},
+ {{(VF)andsfxB,VB}, {(VF)tymessfxI,VI}, {(VF)tymessfxD,VD+VIPOKW}, {(VF)tymessfxZ,VZ}, {(VF)tymessfxX,VX}, {(VF)tymessfxQ,VQ}, {0,0}} },
+
+/* 5e ^  */ {   // may produce complex numbers
+ {{(VF)geBB, VB+VIP}, {(VF)powBI,VD}, {(VF)powBD,VD},
+  {(VF)powIB,VI}, {(VF)powII,VD}, {(VF)powID,VD+VCANHALT},
+  {(VF)powDB,VD}, {(VF)powDI,VD}, {(VF)powDD,VD+VCANHALT}, 
+  {(VF)powZZ,VZ+VZZ}, {(VF)powXX,VX+VXX}, {(VF)powQQ,VQ+VQQ}, {0,0}},
+ {{(VF)geinsB,VB}},
+ {{(VF)gepfxB,VB}},
+ {{(VF)gesfxB,VB}} },
+
+/* 7c |  */ {
+ {{(VF)ltBB, VB+VIP    }, {(VF)remII,VI+VII+VIP}, {(VF)remDD,VD+VDD+VIP},
+  {(VF)remII,VI+VII+VIP}, {(VF)remII,VI+VIP    }, {(VF)remID,VI+VCANHALT    },   // remID can 'overflow' if result is nonintegral
+  {(VF)remDD,VD+VDD+VIP}, {(VF)remDD,VD+VDD+VIP}, {(VF)remDD,VD+VIP+VCANHALT}, 
+  {(VF)remZZ,VZ+VZZ}, {(VF)remXX,VX+VXX}, {(VF)remQQ,VQ+VQQ}, {0,0}},
+ {{(VF)ltinsB,VB}},
+ {{(VF)ltpfxB,VB}},
+ {{(VF)ltsfxB,VB}} },
+
+/* 21 !  */ {
+ {{(VF)leBB, VB+VIP            }, {(VF)binDD,VD+VDD+VRI+VIP}, {(VF)binDD,VD+VDD+VIP}, 
+  {(VF)binDD,VD+VDD+VRI+VIP}, {(VF)binDD,VD+VDD+VRI+VIP}, {(VF)binDD,VD+VDD+VIP}, 
+  {(VF)binDD,VD+VDD+VIP    }, {(VF)binDD,VD+VDD+VIP    }, {(VF)binDD,VD+VIP    }, 
+  {(VF)binZZ,VZ+VZZ}, {(VF)binXX,VX+VXX}, {(VF)binQQ,VX+VQQ}, {0,0}}, 
+ {{(VF)leinsB,VB}},
+ {{(VF)lepfxB,VB}},
+ {{(VF)lesfxB,VB}} },
 
 /* d1 o. */ {
  {{(VF)cirDD,VD+VDD}, {(VF)cirDD,VD+VDD}, {(VF)cirBD,VD},
@@ -350,6 +350,29 @@ static VA va[]={
  {{0,0}},
  {{0,0}} }
 };
+#define VA2NE 17 // 35
+#define VA2DIV 18
+#define VA2NOR 19 // 32
+#define VA2GCD 20 // 31
+#define VA2MINUS 21
+#define VA2LT 22
+#define VA2EQ 23
+#define VA2GT 24
+#define VA2LCM 25 // 33
+#define VA2NAND 26 // 34
+#define VA2GE 27 // 30
+#define VA2LE 28
+// the following are in the same order in va1
+#define VA2MIN 29 // 27
+#define VA2MAX 30 // 29
+#define VA2PLUS 31 // 20
+#define VA2MULT 32 // 19
+#define VA2POW 33 // 25
+#define VA2RESIDUE 34 // 26
+#define VA2OUTOF 35 // 17
+#define VA2CIRCLE 36
+#define VA1ROOT 37
+#define VA1LOG 38
 
 
 static UC vaptr[256]={
@@ -357,21 +380,21 @@ static UC vaptr[256]={
 // C0  C1          ^D                    TAB LF          CR         
    1,  2,  3,  4,  5,  6,  7,  8,    9, 10, 11, 12, 13, 14, 15, 16, /* 1 */
 // <-----------------------bitwise functions -------------------->
-   0, 17,  0,  0,  0, 18,  0,  0,    0,  0, 19, 20,  0, 21,  0,  0, /* 2 */
+   0, VA2OUTOF,  0,  0,  0, VA2DIV,  0,  0,    0,  0, VA2MULT, VA2PLUS,  0, VA2MINUS,  0,  0, /* 2 */
 //     !   "   #   $   %   &   '     (   )   *   +   ,   -   .   /  
-   0,  0,  0,  0,  0,  0,  0,  0,    0,  0,  0,  0, 22, 23, 24,  0, /* 3 */
+   0,  0,  0,  0,  0,  0,  0,  0,    0,  0,  0,  0, VA2LT, VA2EQ, VA2GT,  0, /* 3 */
 // NOUN    HOOK FK ADVF                      :   ;   <   =   >   ?  
    0,  0,  0,  0,  0,  0,  0,  0,    0,  0,  0,  0,  0,  0,  0,  0, /* 4 */
 // @                                                                
-   0,  0,  0,  0,  0,  0,  0,  0,    0,  0,  0,  0,  0,  0, 25,  0, /* 5 */
+   0,  0,  0,  0,  0,  0,  0,  0,    0,  0,  0,  0,  0,  0, VA2POW,  0, /* 5 */
 //                                               [   \   ]   ^   _  
    0,  0,  0,  0,  0,  0,  0,  0,    0,  0,  0,  0,  0,  0,  0,  0, /* 6 */
 // `                                                                
-   0,  0,  0,  0,  0,  0,  0,  0,    0,  0,  0,  0, 26,  0,  0,  0, /* 7 */
+   0,  0,  0,  0,  0,  0,  0,  0,    0,  0,  0,  0, VA2RESIDUE,  0,  0,  0, /* 7 */
 //                                               {   |   }   ~      
-   0,  0, 27, 28, 29, 30,  0,  0,   31, 32, 33, 34,  0,  0,  0,  0, /* 8 */
+   0,  0, VA2MIN, VA2LE, VA2MAX, VA2GE,  0,  0,   VA2GCD, VA2NOR, VA2LCM, VA2NAND,  0,  0,  0,  VA1ROOT, /* 8 */
 // =.  =:  <.  <:  >.  >:  _.        +.  +:  *.  *:  -.  -:  %.  %: 
-   0,  0,  0,  0,  0, 35,  0,  0,    0,  0,  0,  0,  0,  0,  0,  0, /* 9 */
+   VA1LOG,  0,  0,  0,  0, VA2NE,  0,  0,    0,  0,  0,  0,  0,  0,  0,  0, /* 9 */
 // ^.  ^:  $.  $:  ~.  ~:  |.  |:    ..  .:  :.  ::  ,.  ,:  ;.  ;: 
    0,  0,  0,  0,  0,  0,  0,  0,    0,  0,  0,  0,  0,  0,  0,  0, /* a */
 // #.  #:  !.  !:  /.  /:  \.  \:    [.  [:  ].  ]:  {.  {:  }.  }: 
@@ -379,7 +402,7 @@ static UC vaptr[256]={
 // ".  ":  `.  `:  @.  @:  &.  &:    ?.  ?:  a.  A.  a:  b.  c.     
    0,  0,  0,  0,  0,  0,  0,  0,    0,  0,  0,  0,  0,  0,  0,  0, /* c */
 // C.  d.  D.  D:  e.  E.  f.  F:    H.  i.  i:  I.  I:  j.  L.  L: 
-   0,  0,  0, 36,  0,  0,  0,  0,    0,  0,  0,  0,  0,  0,  0,  0, /* d */
+   0,  0,  0, VA2CIRCLE,  0,  0,  0,  0,    0,  0,  0,  0,  0,  0,  0,  0, /* d */
 // m.  M.  n.  o.  p.  p:  Q:  q:    r.  s:  S:  t.  t:  T.  u.  u: 
    0,  0,  0,  0,  0,  0,  0,  0,    0,  0,  0,  0,  0,  0,  0,  0, /* e */
 // v.  x.  x:  y.                    0:  }ip }cs {:: {:: }:: &.: p..
@@ -399,11 +422,12 @@ C jtvaid(J jt,A w){A x;C c;I k;V*v;
 // if the verb is atomic, we fill in the h field with a pointer to the va row for the verb
 void va2primsetup(A w){
  UC xlatedid = vaptr[(UC)FAV(w)->id];  // see which line it is
- FAV(w)->localuse.lvp=(xlatedid?&va[xlatedid]:0);  // point to the line, or 0 if invalid
  // If the id is a comparison operator, turn on the MSB flag bit
- I shiftamt=xlatedid-VA2LT;
- xlatedid += (((((I)0x80<<(VA2LT-VA2LT))|((I)0x80<<(VA2EQ-VA2LT))|((I)0x80<<(VA2GT-VA2LT))|((I)0x80<<(VA2LE-VA2LT))|((I)0x80<<(VA2GE-VA2LT))|((I)0x80<<(VA2NE-VA2LT)))>>shiftamt)&0x80)&((~shiftamt)>>(BW-1));
- FAV(w)->lc=xlatedid;  // save primitive number for use in ssing
+ I shiftamt=xlatedid-VA2NE;
+ xlatedid += (((((I)0x80<<(VA2LT-VA2NE))|((I)0x80<<(VA2EQ-VA2NE))|((I)0x80<<(VA2GT-VA2NE))|((I)0x80<<(VA2LE-VA2NE))|((I)0x80<<(VA2GE-VA2NE))|((I)0x80<<(VA2NE-VA2NE)))>>shiftamt)&0x80)&((~shiftamt)>>(BW-1));
+ FAV(w)->lc=xlatedid;  // save primitive number for use in ssing and monads
+ xlatedid=(xlatedid&0x7f)>VA2CIRCLE?0:xlatedid;  // if this op is monad-only, don't set dyad info & flags
+ FAV(w)->localuse.lvp[0]=(xlatedid?&va[xlatedid&0x7f]:0);  // point to the line, or 0 if invalid
  if(xlatedid)FAV(w)->flag |= VISATOMIC2;  // indicate that localuse contains AV pointer
 }
 
@@ -440,7 +464,7 @@ A jtcvz(J jt,I cv,A w){I t;
  VA2 jt##fname(J jt,A self,I t){  \
   if(!(jt->jerr>=EWOV)){                          \
    if((t&=(NUMERIC+SBT)&(~SPARSE))&&FAV(self)->flag&VISATOMIC2){  /* numeric input, verb with dataline */        \
-    R ((VA*)(FAV(self)->localuse.lvp))->ptr[t<=FL?(t>>INTX):t<=RAT?(3+(t>>XNUMX)):6];  \
+    R ((VA*)(FAV(self)->localuse.lvp[0]))->ptr[t<=FL?(t>>INTX):t<=RAT?(3+(t>>XNUMX)):6];  \
    }else R fname##EWOV[3];                                \
   }else{ \
    jt->jerr=0;                                 \
@@ -487,7 +511,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
   I wt=AT(w);
   if(((-(((I)jtinplace&(JTRETRY|JTEMPTY))|((UNSAFE(at|wt))&(NOUN&~(B01|INT|FL))))))>=0){  // no error, bool/int/fl args, no empties
    // Here for the fast and important case, where the arguments are both B01/INT/FL
-   VA *vainfo=(VA*)FAV(self)->localuse.lvp;  // extract table line from the primitive
+   VA *vainfo=(VA*)FAV(self)->localuse.lvp[0];  // extract table line from the primitive
    // The index into va is atype*3 + wtype, calculated sneakily.  We test here to avoid the call overhead
    jt->mulofloloc = 0;  // Reinit multiplier-overflow count, in case we hit overflow.  Needed only on integer multiply, but there's no better place
    adocv=vainfo->p2[(UNSAFE(at)>>(INTX-1))+((UNSAFE(at)+UNSAFE(wt))>>INTX)];
@@ -1139,7 +1163,7 @@ DF2(jtatomic2){A z;
 // obsolete F2(jtminus  ){CHECKSSING(a,w,jtssminus) R jtva2(jtinplace,a,w,ds(CMINUS),jt->ranks);}
 // obsolete F2(jtdivide ){CHECKSSING(a,w,jtssdiv) R jtva2(jtinplace,a,w,ds(CDIV),jt->ranks);}
 // obsolete F2(jtexpn2  ){RZ(a&&w); if(((((I)AR(w)-1)&(AT(w)<<(BW-1-FLX)))<0)&&0.5==*DAV(w))R sqroot(a); CHECKSSINGNZ(a,w,jtsspow) R jtva2(jtinplace,a,w,ds(CEXP),jt->ranks);}  // use sqrt hardware for sqrt.  Only for atomic w
-DF2(jtexpn2  ){RZ(a&&w); if(((((I)AR(w)-1)&(AT(w)<<(BW-1-FLX)))<0)&&0.5==*DAV(w))R sqroot(a);  R jtatomic2(jt,a,w,self);}  // use sqrt hardware for sqrt.  Only for atomic w.  scaf on the EXP, should be DF2
+DF2(jtexpn2  ){F2PREFIP; RZ(a&&w); if(((((I)AR(w)-1)&(AT(w)<<(BW-1-FLX)))<0)&&0.5==*DAV(w))R sqroot(a);  R jtatomic2(jtinplace,a,w,self);}  // use sqrt hardware for sqrt.  Only for atomic w.  scaf on the EXP, should be DF2
 // obsolete F2(jtne     ){CHECKSSINGOPEQNE(a,w,jtsseqne,1) R jtva2(jtinplace,a,w,ds(CNE),jt->ranks);}
 // obsolete F2(jtoutof  ){CHECKSSING(a,w,jtssoutof) R jtva2(jtinplace,a,w,ds(CBANG),jt->ranks);}
 // obsolete DF2(jtcircle ){F2PREFIP; RZ(a&&w); R jtva2(jtinplace,a,w,self,jt->ranks);}
@@ -1148,6 +1172,7 @@ DF2(jtresidue){F2PREFIP; RZ(a&&w); I intmod; if(!((AT(a)|AT(w))&(NOUN&~INT)|AR(a
 
 
 // These are the unary ops that are implemented using a canned argument
+// NOTE that they pass through inplaceability
 
 // Shift the w-is-inplaceable flag to a.  Bit 1 is known to be 0 in any call to a monad
 #define IPSHIFTWA (jt = (J)(intptr_t)(((I)jt+JTINPLACEW)&-JTINPLACEA))
@@ -1194,7 +1219,7 @@ VA2 jtvar(J jt,A self,I at,I wt){I t;
   // B,I,D; then [9] CMPX [10] XINT (but not RAT) [11] RAT [12] SBT (symbol)
   // then [13-19] are for verb/, with precisions B I D Z X Q Symb
   // [20-26] for verb\, and [27-33] for verb\.
-  VA *vainfo=(VA*)FAV(self)->localuse.lvp;  // extract table line from the primitive
+  VA *vainfo=(VA*)FAV(self)->localuse.lvp[0];  // extract table line from the primitive
   if(!((t=UNSAFE(at|wt))&(NOUN&~(B01|INT|FL)))){
    // Here for the fast and important case, where the arguments are both B01/INT/FL
    // The index into va is atype*3 + wtype, calculated sneakily

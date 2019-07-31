@@ -665,6 +665,7 @@ static I scaneol(I t, C*v,I n){I m=0;
  // other occurrences of CR or LF add 1 each.
  switch(t){
   case 1: {C e,x=0; DQ(n, e=x; x=*v++; if(x==CCR)++m; else if(x==CLF)e==CCR?--m:++m;)} break;
+// this is better if we can test it  case 1: {C e,x=0; DQ(n, x=*v++; m+=(x==CCR); m+=(x==CLF)-2*(e&(x==CLF)); e=(x==CCR);)} break;
   case 2: {US e,x=0,*u=(US*)v; DQ(n, e=x; x=*u++; if(x==CCR)++m; else if(x==CLF)e==CCR?--m:++m;) } break;
   default: {C4 e,x=0,*u=(C4*)v; DQ(n, e=x; x=*u++; if(x==CCR)++m; else if(x==CLF)e==CCR?--m:++m;) } break;  // must be C4T
  }

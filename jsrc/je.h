@@ -52,7 +52,9 @@ extern F1(jtcrccompile);
 extern F1(jtctq);
 extern F1(jtcts);
 extern F1(jtcurtail);
+#if !C_CRC32C
 extern F1(jtcvt0);
+#endif
 extern F1(jtdbc);
 extern F1(jtdbcall);
 extern F1(jtdbcutback);

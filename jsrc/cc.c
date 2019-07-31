@@ -867,7 +867,7 @@ static A jttesos(J jt,A a,A w,I n, I *pv){A p;I*av,c,axisct,k,m,s,*ws;
 }    /* tesselation result outer shape */
 
 
-static F2(jttesa){A x;I*av,ac,c,d,k,p=IMAX,r,*s,t,*u,*v;
+static F2(jttesa){A x;I*av,ac,c,d,k,r,*s,t,*u,*v;
  RZ(a&&w);
  RZ(a=vib(a));    // convert a to integer
  t=AT(a);
@@ -877,8 +877,8 @@ static F2(jttesa){A x;I*av,ac,c,d,k,p=IMAX,r,*s,t,*u,*v;
  if(2==r&&t&INT){RETF(a);}  // if we can use a as given, return a as is
  GATV0(x,INT,2*c,2); s=AS(x); s[0]=2; s[1]=c;  // allocate space for start/stride, only for axes that will be modified.  We will modify it
  u=AV(x); v=u+c; s=AS(w);
- if(2==r)DO(c,   *u++=av[i]; k=av[i+ac]; *v++=k==p?s[i]:k==-p?-s[i]:k;);
- if(2> r)DO(c,   *u++=1;     k=av[i];   *v++=k==p?s[i]:k==-p?-s[i]:k;);
+ if(2==r)DO(c,   *u++=av[i]; k=av[i+ac]; if(k&((I)IMIN>>1)){k=(s[i]^(k>>(BW-1)))-(k>>(BW-1));} *v++=k;);
+ if(2> r)DO(c,   *u++=1;     k=av[i];  if(k&((I)IMIN>>1)){k=(s[i]^(k>>(BW-1)))-(k>>(BW-1));} *v++=k;);
  RETF(x);
 }    /* tesselation standardized left argument */
 
@@ -1084,7 +1084,7 @@ static DF2(jttess2){A z,zz=0,virtw,strip;I n,rs[3],cellatoms,cellbytes,vmv,hmv,v
 static DF1(jttess1){A s;I m,r,*v;
  RZ(w);
  r=AR(w); RZ(s=shape(w)); rifvs(s); v=AV(s);
- m=IMAX; DO(r, if(m>v[i])m=v[i];); DO(r, v[i]=m;);  // Get length of long axis; set all axes to that length in a arg o cut
+ m=IMAX; DO(r, if(m>v[i])m=v[i];); DO(r, v[i]=m;);  // Get length of long axis; set all axes to that length in a arg to cut
  R tess2(s,w,self);
 }
 

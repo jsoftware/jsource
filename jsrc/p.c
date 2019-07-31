@@ -38,7 +38,7 @@ I jtnotonupperstack(J jt, A w) {
   // w is known nonzero
   // see if name was stacked (for the first time) in this very sentence
   A *v=jt->nvrotop+jt->nvrav;  // point to current-sentence region of the nvr area
-  DQ(jt->nvrtop-jt->nvrotop, if(*v==w)R 1; ++v;);   // if name stacked in this sentence, that's OK
+  DO(jt->nvrtop-jt->nvrotop, if(*v==w)R 1; ++v;);   // if name stacked in this sentence, that's OK
   // see if name was not stacked at all
   R !(AFLAG(w)&AFNVR);   // return OK if name not stacked (rare, because if it wasn't stacked in the current sentence why would we think we can inplace it?)
 }
@@ -148,9 +148,9 @@ static PSTK* jtis(J jt,A s1,A v,A n){A f;B ger=0;C c,*s;PSTK* stack=jt->parserst
    if(AN(n)==1)n=AAV(n)[0];  // if there is only 1 name, treat this like simple assignment, fall through
    else{
     // True multiple assignment
-    ASSERT(!AR(v)||AN(n)==AS(v)[0],EVLENGTH);
-    if(AR(v)==1&&AT(v)&BOX){A *nv=AAV(n), *vv=AAV(v); DO(AN(n), symbis(nv[i],vv[i],symtab);)}  // boxed list
-    else {A *nv=AAV(n); DO(AN(n), symbis(nv[i],ope(AR(v)?from(sc(i),v):v),symtab);)}
+    ASSERT(!AR(v)||AN(n)==AS(v)[0],EVLENGTH);   // v is atom, or length matches n
+    if(((AR(v)^1)+(~AT(v)&BOX))==0){A *nv=AAV(n), *vv=AAV(v); DO(AN(n), symbis(nv[i],vv[i],symtab);)}  // v is boxed list
+    else {A *nv=AAV(n); DO(AN(n), symbis(nv[i],ope(AR(v)?from(sc(i),v):v),symtab);)}  // repeat atomic v for each name, otherwise select item.  Open in either case
     RNE(stack+2);
    }
   }
@@ -459,7 +459,7 @@ A jtparsea(J jt, A *queue, I m){PSTK *stack;A z,*v;I es; UI4 maxnvrlen;
   if (m < 128)maxnvrlen = (UI4)m;   // if short enough, assume they're all names
   else {
    maxnvrlen = 0;
-   DQ(m, if(NAME&AT(queue[i]))++maxnvrlen;)
+   DQ(m, maxnvrlen+=(AT(queue[i])>>NAMEX)&1;)
   }
   // extend the nvr stack, doubling its size each time, till it can hold our names
   while((jt->nvrtop+maxnvrlen) > jt->nvran){RZ(jt->nvra = ext(1, jt->nvra)); jt->nvrav = AAV(jt->nvra); jt->nvran=(UI4)AN(jt->nvra);}

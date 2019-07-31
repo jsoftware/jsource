@@ -440,7 +440,7 @@ A RoutineC(J jt,A w){A z;I n,t,q,b=0; C4* wv;
  RZ(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w); wv=C4AV(w);
  ASSERT(t&C4T,EVDOMAIN);
  if(!n) {GATV(z,C4T,n,AR(w),AS(w)); R z;}; // empty C4T list 
- DQ(n, if(*wv>=0xd800&&*wv<=0xdf00){b=1;break;};wv++;);
+ DQ(n, if((UI4)(*wv-0xd800)<=(UI4)(0xdfff-0xd800)){b=1;break;};wv++;);
  if(b){
  q=utousize(C4AV(w),n);
  GATV0(z,C4T,q,1);

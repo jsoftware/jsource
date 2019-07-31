@@ -43,7 +43,7 @@ static F2(jtcut02m){A z;C*u,*v;I*av,c,d,e0,e1,j0,j1,k0,k1,m0,m1,*s,t,wk;
  u=CAV(z); c=wk*k1;
  if(0>e0){d=-wk*m1; v=CAV(w)+wk*(j0*m1+j1+m1*(k0-1));}
  else    {d= wk*m1; v=CAV(w)+wk*(j0*m1+j1          );}
- DO(k0, MC(u,v,c); u+=c; v+=d;);
+ DQ(k0, MC(u,v,c); u+=c; v+=d;);
  RETF(0>e1?IRS1(z,0L,1L,jtreverse,zz):z);
 }    /* a ];.0 matrix */
 #endif
@@ -294,7 +294,7 @@ static A jtsely(J jt,A y,I r,I i,I j){A z;I c,*s,*v;
  GATV0(z,INT,r*c,2); s=AS(z); s[0]=r; s[1]=c;
  v=AV(z);
  ICPY(v,AV(y)+i*c,r*c);
- DO(r, *v-=j; v+=c;);
+ DQ(r, *v-=j; v+=c;);
  R z;
 }    /* ((i+i.r){y)-"1 ({:$y){.j */
 
@@ -310,10 +310,10 @@ static DF2(jtcut2sx){PROLOG(0024);DECLF;A h=0,*hv,y,yy;B b,neg,pfx,*u,*v;C id;I 
  y=SPA(ap,i); yn=AN(y); yv=AV(y); u=v=BAV(SPA(ap,x)); e=m=0;
  GATV0(yy,INT,yn+1,1); yu=AV(yy); *yu++=p=pfx?n:-1;
  switch(pfx+(I )(id==CLEFT||id==CRIGHT||id==CCOMMA?2:0)){
-  case 0:          DO(yn, if(*v){++m;      *yu++=  yv[v-u];              } ++v;); break;
-  case 1: v+=yn-1; DO(yn, if(*v){++m;      *yu++=  yv[v-u];              } --v;); break;
-  case 2:          DO(yn, if(*v){++m; d=p; *yu++=p=yv[v-u]; e=MAX(e,p-d);} ++v;); break;
-  case 3: v+=yn-1; DO(yn, if(*v){++m; d=p; *yu++=p=yv[v-u]; e=MAX(e,d-p);} --v;);
+  case 0:          DQ(yn, if(*v){++m;      *yu++=  yv[v-u];              } ++v;); break;
+  case 1: v+=yn-1; DQ(yn, if(*v){++m;      *yu++=  yv[v-u];              } --v;); break;
+  case 2:          DQ(yn, if(*v){++m; d=p; *yu++=p=yv[v-u]; e=MAX(e,p-d);} ++v;); break;
+  case 3: v+=yn-1; DQ(yn, if(*v){++m; d=p; *yu++=p=yv[v-u]; e=MAX(e,d-p);} --v;);
  }
  yu=AV(yy); p=pfx?yu[m]:0;
  if(t&DENSE){C*wv;I c,k,r,*s;
@@ -785,10 +785,10 @@ static DF1(jtcut1){R cut2(mark,w,self);}
      GA(z,zt,n,1,0);                            \
      u=m+av; wv=m+(Tw*)AV(w); zv=m+(Tz*)AV(z);  \
      switch(pfx+2*(id==CBSLASH)){               \
-      case 0: DO(n, x=*--wv; if(*--u)s=v0; *--zv=F;              ); break;  /* <@(f/\.);.2 */  \
-      case 1: DO(n, x=*--wv;               *--zv=F; if(*--u)s=v0;); break;  /* <@(f/\.);.1 */  \
-      case 2: DO(n, x=*wv++;               *zv++=F; if(*u++)s=v0;); break;  /* <@(f/\ );.2 */  \
-      case 3: DO(n, x=*wv++; if(*u++)s=v0; *zv++=F;              ); break;  /* <@(f/\ );.1 */  \
+      case 0: DQ(n, x=*--wv; if(*--u)s=v0; *--zv=F;              ); break;  /* <@(f/\.);.2 */  \
+      case 1: DQ(n, x=*--wv;               *--zv=F; if(*--u)s=v0;); break;  /* <@(f/\.);.1 */  \
+      case 2: DQ(n, x=*wv++;               *zv++=F; if(*u++)s=v0;); break;  /* <@(f/\ );.2 */  \
+      case 3: DQ(n, x=*wv++; if(*u++)s=v0; *zv++=F;              ); break;  /* <@(f/\ );.1 */  \
     }}
 
 static A jtpartfscan(J jt,A a,A w,I cv,B pfx,C id,C ie){A z=0;B*av;I m,n,zt;
@@ -1009,9 +1009,9 @@ static DF2(jttess2){A z,zz=0,virtw,strip;I n,rs[3],cellatoms,cellbytes,vmv,hmv,v
   C *svb=svh; C *dvb=dvh;  // running pointers used to fill the strip
   // Start with the first cell, above the bottom part.  Copy the left-hand side (length vds1-lrchsiz).
   vtrc=vsz-vlrc;  // number of lines to copy in top half
-  DO(vtrc, I sh=sdataend-(svb+vds1-lrchsiz); sh=(sh>=0)?0:sh; sh+=vds1-lrchsiz; sh=(sh<0)?0:sh; MC(dvb,svb,sh); svb+=vss1; dvb+=vds1;);  // copies to dest are all sequential; sequential rows of src
+  DQ(vtrc, I sh=sdataend-(svb+vds1-lrchsiz); sh=(sh>=0)?0:sh; sh+=vds1-lrchsiz; sh=(sh<0)?0:sh; MC(dvb,svb,sh); svb+=vss1; dvb+=vds1;);  // copies to dest are all sequential; sequential rows of src
   // copy the bottom-left part of the first cell, and of all cells if the cells overlap (i. e. vds!=0) (length vds1-lrchsiz)
-  DO(vds?rs[0]:1, C *svb1=svb; DO(vlrc, I sh=sdataend-(svb1+vds1-lrchsiz); sh=(sh>=0)?0:sh; sh+=vds1-lrchsiz; sh=(sh<0)?0:sh; MC(dvb,svb1,sh); svb1+=vss1; dvb+=vds1;); svb+=vss;);  // sequential to dest; hop to cells of src
+  DQ(vds?rs[0]:1, C *svb1=svb; DQ(vlrc, I sh=sdataend-(svb1+vds1-lrchsiz); sh=(sh>=0)?0:sh; sh+=vds1-lrchsiz; sh=(sh<0)?0:sh; MC(dvb,svb1,sh); svb1+=vss1; dvb+=vds1;); svb+=vss;);  // sequential to dest; hop to cells of src
   // advance the horiz pointers, which now point to the top-left of the top cell, to the top-left of the top-right area of that cell
   svh+=(vds1-lrchsiz); dvh+=(vds1-lrchsiz);
  }
@@ -1036,7 +1036,7 @@ static DF2(jttess2){A z,zz=0,virtw,strip;I n,rs[3],cellatoms,cellbytes,vmv,hmv,v
  for(hi=rs[1];hi;--hi){C *svv, *dvv;  // pointers within the lower-right corner, starting at the top-left of the corner.  Before that we use them to advance through top-right
   // move in the top-right part of top cell, stopping before the lower-right corner.
   svv=svh; dvv=dvh; // init to top-left of right edge (length=lcrhsiz)
-  DO(vtrc, I sh=sdataend-(svv+lrchsiz); sh=(sh>=0)?0:sh; sh+=lrchsiz; sh=(sh<0)?0:sh; MC(dvv,svv,sh); svv+=vss1; dvv+=vds1;);
+  DQ(vtrc, I sh=sdataend-(svv+lrchsiz); sh=(sh>=0)?0:sh; sh+=lrchsiz; sh=(sh<0)?0:sh; MC(dvv,svv,sh); svv+=vss1; dvv+=vds1;);
   // now ?vv points to top-left of lower-right quadrant of top cell
   // point the virtual-block pointer to the top of the row
   AK(virtw)=hvirtofst;
@@ -1045,7 +1045,7 @@ static DF2(jttess2){A z,zz=0,virtw,strip;I n,rs[3],cellatoms,cellbytes,vmv,hmv,v
   // for each cell in the vertical strip, move in the lower-right corner and execute
   for(vi=rs[0];vi;--vi){A opcell=virtw;
    // move in the lower-right corner.  Avoid overrun, and detect if there was overrun.  Watch out for addresses wrapping around the end of memory (length=lcrhsiz)
-   C *dvlrc=dvv, *svlrc=svv; DO(vlrc, I sh=sdataend-(svlrc+lrchsiz); sh=(sh>=0)?0:sh; sh+=lrchsiz; sh=(sh<0)?0:sh; MC(dvlrc,svlrc,sh); svlrc+=vss1; dvlrc+=vds1;);
+   C *dvlrc=dvv, *svlrc=svv; DQ(vlrc, I sh=sdataend-(svlrc+lrchsiz); sh=(sh>=0)?0:sh; sh+=lrchsiz; sh=(sh<0)?0:sh; MC(dvlrc,svlrc,sh); svlrc+=vss1; dvlrc+=vds1;);
    // If a copy was truncated, take only the valid elements.
    if(state&(STATEREFLECTX|STATEREFLECTY|STATETAKE)){  // something might be truncated/reflected
     I vkeep=vkeep1-(vtrunc-vi)*vmv; vkeep=(vkeep>vsz)?vsz:vkeep; // vertical length to keep

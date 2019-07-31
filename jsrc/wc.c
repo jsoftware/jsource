@@ -81,14 +81,14 @@ static I conend(I i,I j,I k,CW*b,CW*c,CW*d,I p,I q,I r){I e,m,t;
    // we will skip over break. for inner loops, which have already been processed). 
    CWASSERT(b&&d); b->go=(US)(1+k); m=i-k-1;   // get # cws between (after while.) and (before end.)
    // fill in break. to go after end., or continue. to go after while.; leave others unchanged
-   DO(m, ++d; t=d->type; if(SMAX==d->go)d->go=(t==CBREAK||t==CBREAKS)?(US)e :(t==CCONT||t==CCONTS)?(US)(1+k):(US)SMAX;);
+   DQ(m, ++d; t=d->type; if(SMAX==d->go)d->go=(t==CBREAK||t==CBREAKS)?(US)e :(t==CCONT||t==CCONTS)?(US)(1+k):(US)SMAX;);
    break;
   case CWCASE(CFOR,CDOF):
    // for. is like while., but end. and continue. go back to the do., and break. is marked as BREAKF
    // to indicate that the for. must be popped off the execution stack.  breakf. is needed even if the block
    // was previously marked as in select.
    CWASSERT(b&&d); b->go=(US)j;   m=i-k-1;
-   DO(m, ++d; t=d->type; if(SMAX==d->go)d->go=(t==CBREAK||t==CBREAKS)?(d->type=CBREAKF,(US)e):(t==CCONT||t==CCONTS)?(US)j:(US)SMAX;);
+   DQ(m, ++d; t=d->type; if(SMAX==d->go)d->go=(t==CBREAK||t==CBREAKS)?(d->type=CBREAKF,(US)e):(t==CCONT||t==CCONTS)?(US)j:(US)SMAX;);
  }
  R -1;
 }
@@ -108,15 +108,15 @@ static I conendtry(I e,I top,I stack[],CW*con){CW*v;I c[3],d[4],i=-1,j,k=0,m,t=0
  }}
  CWASSERT(t==CTRY&&1<k);   // verify at least one catchx.  j now points to try.
  (j+con)->go=(US)d[k-1];                         // point the try. to the first catchx.
- m=k; DO(k-1, --m; (d[m]+con)->go=(US)d[m-1];);  // point each catchx. to the next catchx., and the last one to the end.
+ m=k; DQ(k-1, --m; (d[m]+con)->go=(US)d[m-1];);  // point each catchx. to the next catchx., and the last one to the end.
  (e+con)->go=(US)(1+e);                          // point the end. to NSI
  m=d[k-1];                                    // line# of first catchx.
  // if there is a catch./catchd., scan the lines from after-try. to the first catchx., and point
  // any hitherto not-processed throw. to go to the catch. (if it exists) or catchd. (if no catch.).
  // That way, unfielded throw. counts as an error that can be picked up in catch.
  // kludge if break/continue encountered:  while. do. try. break. catch. end. end.  leaves the break pointing past the outer end, and the try stack unpopped
- if     (0<=c[0]){ii=(US)(1+c[0]); v=j+con; DO(m-j-1, ++v; if(SMAX==v->go&&CBREAK!=v->type&&CCONT!=v->type&&CBREAKS!=v->type&&CCONTS!=v->type)v->go=ii;);}
- else if(0<=c[1]){ii=(US)(1+c[1]); v=j+con; DO(m-j-1, ++v; if(SMAX==v->go&&CBREAK!=v->type&&CCONT!=v->type&&CBREAKS!=v->type&&CCONTS!=v->type)v->go=ii;);}
+ if     (0<=c[0]){ii=(US)(1+c[0]); v=j+con; DQ(m-j-1, ++v; if(SMAX==v->go&&CBREAK!=v->type&&CCONT!=v->type&&CBREAKS!=v->type&&CCONTS!=v->type)v->go=ii;);}
+ else if(0<=c[1]){ii=(US)(1+c[1]); v=j+con; DQ(m-j-1, ++v; if(SMAX==v->go&&CBREAK!=v->type&&CCONT!=v->type&&CBREAKS!=v->type&&CCONTS!=v->type)v->go=ii;);}
  R top;  //return stack pointer with the try. ... end. removed
 }    /* result is new value of top */
 
@@ -135,7 +135,7 @@ static I conendsel(I endline,I top,I stack[],CW*con){I c=endline-1,d=0,j,ot=top,
  }}
  (c+con)->go=(US)(1+c);  // set first case. to fall through to the first test
  // j points to the select. for this end.  Replace any hitherto unfilled break./continue. with BREAKS/CONTS
- DO(endline-j-2, ++j; if(SMAX==con[j].go){if(CBREAK==con[j].type)con[j].type=CBREAKS;else if(CCONT==con[j].type)con[j].type=CCONTS;});
+ DQ(endline-j-2, ++j; if(SMAX==con[j].go){if(CBREAK==con[j].type)con[j].type=CBREAKS;else if(CCONT==con[j].type)con[j].type=CCONTS;});
  R top;     // return stack with select. ... end. removed
 }    /* result is new value of top */
 

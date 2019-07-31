@@ -13,7 +13,7 @@
   for(i=0;i<m;++i){                                                       \
    DO(q, k=0; DO(BB, if(x=*v++){if(AS)k|=bit[i]; else R 0;}); *zv++=k;);  \
    if(r){k=0; DO(r,  if(x=*v++){if(AS)k|=bit[i]; else R 0;}); *zv++=k;}   \
-   DO(r1, *zv++=0;);                                                      \
+   DQ(r1, *zv++=0;);                                                      \
   }} 
 
 static KF1(jtcvt2bit){I c,i,m,q,r,r1,wr,*ws,*wv;UC k,*zv=(UC*)yv;
@@ -30,49 +30,49 @@ static KF1(jtcvt2bit){I c,i,m,q,r,r1,wr,*ws,*wv;UC k,*zv=(UC*)yv;
 
 static KF1(jtC1fromC2){UC*x;US c,*v;
  v=USAV(w); x=(C*)yv;
- DO(AN(w), c=*v++; if(!(256>c))R 0; *x++=(UC)c;);
+ DQ(AN(w), c=*v++; if(!(256>c))R 0; *x++=(UC)c;);
  R 1;
 }
 
 static KF1(jtC2fromC1){UC*v;US*x;
  v=UAV(w); x=(US*)yv;
- DO(AN(w), *x++=*v++;);
+ DQ(AN(w), *x++=*v++;);
  R 1;
 }
 
 static KF1(jtC1fromC4){UC*x;C4 c,*v;
  v=C4AV(w); x=(C*)yv;
- DO(AN(w), c=*v++; if(!(256>c))R 0; *x++=(UC)c;);
+ DQ(AN(w), c=*v++; if(!(256>c))R 0; *x++=(UC)c;);
  R 1;
 }
 
 static KF1(jtC2fromC4){US*x;C4 c,*v;
  v=C4AV(w); x=(US*)yv;
- DO(AN(w), c=*v++; if(!(65536>c))R 0; *x++=(US)c;);
+ DQ(AN(w), c=*v++; if(!(65536>c))R 0; *x++=(US)c;);
  R 1;
 }
 
 static KF1(jtC4fromC1){UC*v;C4*x;
  v=UAV(w); x=(C4*)yv;
- DO(AN(w), *x++=*v++;);
+ DQ(AN(w), *x++=*v++;);
  R 1;
 }
 
 static KF1(jtC4fromC2){US*v;C4*x;
  v=USAV(w); x=(C4*)yv;
- DO(AN(w), *x++=*v++;);
+ DQ(AN(w), *x++=*v++;);
  R 1;
 }
 
 static KF1(jtBfromI){B*x;I n,p,*v;
  n=AN(w); v=AV(w); x=(B*)yv;
- DO(n, p=*v++; if(0==p||1==p)*x++=(B)p; else R 0;);
+ DQ(n, p=*v++; if(0==p||1==p)*x++=(B)p; else R 0;);
  R 1;
 }
 
 static KF1(jtBfromD){B*x;D p,*v;I n;
  n=AN(w); v=DAV(w); x=(B*)yv;
- DO(n, p=*v++; if(p<-2||2<p)R 0; 
+ DQ(n, p=*v++; if(p<-2||2<p)R 0; 
   if(!p)*x++=0; else if(FEQ(1.0,p))*x++=1; else R 0;);
  R 1;
 }
@@ -96,8 +96,8 @@ static KF1(jtIfromD){D p,q,r,*v;I i,k=0,n,*x;
 
 static KF1(jtDfromZ){D d,*x;I n;Z*v;
  n=AN(w); v=ZAV(w); x=(D*)yv;
- if(jt->fuzz)DO(n, d=ABS(v->im); if(d!=inf&&d<=jt->fuzz*ABS(v->re)){*x++=v->re; v++;} else R 0;)
- else        DO(n, d=    v->im ; if(!d                            ){*x++=v->re; v++;} else R 0;);
+ if(jt->fuzz)DQ(n, d=ABS(v->im); if(d!=inf&&d<=jt->fuzz*ABS(v->re)){*x++=v->re; v++;} else R 0;)
+ else        DQ(n, d=    v->im ; if(!d                            ){*x++=v->re; v++;} else R 0;);
  R 1;
 }
 
@@ -164,14 +164,14 @@ static KF1(jtDfromX){D d,*x=(D*)yv,dm,dp;I c,i,n,*v,wn;X p,*wv;
   if     (c==XPINF)d=inf; 
   else if(c==XNINF)d=infm; 
   else{
-   d=0.0; DO(n, d=*v--+d*XBASE;);
+   d=0.0; DQ(n, d=*v--+d*XBASE;);
   }
   x[i]=d;
  } 
  R 1;
 }
 
-static KF1(jtQfromX){X*v=XAV(w),*x=(X*)yv; DO(AN(w), *x++=*v++; *x++=iv1;); R 1;}
+static KF1(jtQfromX){X*v=XAV(w),*x=(X*)yv; DQ(AN(w), *x++=*v++; *x++=iv1;); R 1;}
 
 static KF1(jtQfromD){B neg,recip;D c,d,t,*wv;I e,i,n,*v;Q q,*x;S*tv;
  if(!(w))R 0;
@@ -192,7 +192,7 @@ static KF1(jtQfromD){B neg,recip;D c,d,t,*wv;I e,i,n,*v;Q q,*x;S*tv;
    else     {q.n=xtymes(xd1(t/pow(2.0,e-53.0)),xpow(xc(2L),xc(e-53))); q.d=ca(iv1);}
   }
   q.n=rifvsdebug(q.n); q.d=rifvsdebug(q.d);
-  if(neg){v=AV(q.n); DO(AN(q.n), *v=-*v; ++v;);}
+  if(neg){v=AV(q.n); DQ(AN(q.n), *v=-*v; ++v;);}
   *x++=q;
  }
  R !jt->jerr;
@@ -214,7 +214,7 @@ static KF1(jtDfromQ){D d,f,n,*x,xb=(D)XBASE;I cn,i,k,m,nn,pn,qn,r,*v,wn;Q*wv;X c
    if(!(c=xdiv(take(sc(-(k+pn)),p),q,XMFLR)))R 0;
    cn=AN(c); m=MIN(cn,5); r=cn-(m+k); v=AV(c)+cn-m; 
    n=0.0; f=1.0; DO(m, n+=f*v[i]; f*=xb;);
-   d=1.0; DO(ABS(r), d*=xb;);
+   d=1.0; DQ(ABS(r), d*=xb;);
    x[i]=0>r?n/d:n*d;
  }}
  R 1;
@@ -222,13 +222,13 @@ static KF1(jtDfromQ){D d,f,n,*x,xb=(D)XBASE;I cn,i,k,m,nn,pn,qn,r,*v,wn;Q*wv;X c
 
 static KF1(jtXfromQ){Q*v;X*x;
  v=QAV(w); x=(X*)yv;
- DO(AN(w), if(!(equ(iv1,v->d)))R 0; *x++=v->n; ++v;);           
+ DQ(AN(w), if(!(equ(iv1,v->d)))R 0; *x++=v->n; ++v;);           
  R !jt->jerr;
 }
 
 // Imaginary parts have already been cleared
 static KF1(jtZfromD){
- D *wv=DAV(w); Z *zv=yv; DO(AN(w), zv++->re=*wv++;) R 1;
+ D *wv=DAV(w); Z *zv=yv; DQ(AN(w), zv++->re=*wv++;) R 1;
 }
 
 static B jtDXfI(J jt,I p,A w,DX*x){B b;I e,c,d,i,j,n,r,u[XIDIG],*v;
@@ -252,11 +252,11 @@ static B jtDXfI(J jt,I p,A w,DX*x){A y;I b,c,d,dd,e,i,m,n,q,r,*wv,*yv;
   if(d){e=0; while(d){++e; r=d%10; d=d/10;}}else e=1;
   GATV0(y,INT,m,1); yv=AV(y);
   r=p%XBASEN; q=!!r+((e-r)+XBASEN-1)/XBASEN; 
-  if(d=(e-r)%XBASEN){b=1; DO(XBASEN, b*=10; --d; if(!d)break;);}else b=XBASE;
-  DO(m-q, *yv++=0;);
+  if(d=(e-r)%XBASEN){b=1; DQ(XBASEN, b*=10; --d; if(!d)break;);}else b=XBASE;
+  DQ(m-q, *yv++=0;);
   d=dd/b; r=dd%b; r+=c==IMIN; r*=XBASE/b; 
-  if(0>c){*yv++=-r; DO(q-1, r=d%XBASE; d=d/XBASE; *yv++=-r;);}
-  else   {*yv++= r; DO(q-1, r=d%XBASE; d=d/XBASE; *yv++= r;);}
+  if(0>c){*yv++=-r; DQ(q-1, r=d%XBASE; d=d/XBASE; *yv++=-r;);}
+  else   {*yv++= r; DQ(q-1, r=d%XBASE; d=d/XBASE; *yv++= r;);}
   x[i].e=e-1; x[i].p=p; x[i].x=y;
  }
  R !jt->jerr;
@@ -328,16 +328,16 @@ B jtccvt(J jt,I tflagged,A w,A*y){A d;I n,r,*s,wt; void *wv,*yv;I t=tflagged&~NO
   }
  }
  switch (CVCASE(CTTZ(t),CTTZ(wt))){
-  case CVCASE(INTX, B01X): {I*x = yv; B*v = (B*)wv; DO(n, *x++ = *v++;); } R 1;
+  case CVCASE(INTX, B01X): {I*x = yv; B*v = (B*)wv; DQ(n, *x++ = *v++;); } R 1;
   case CVCASE(XNUMX, B01X): R XfromB(w, yv);
   case CVCASE(RATX, B01X): GATV(d, XNUM, n, r, s); R XfromB(w, AV(d)) && QfromX(d, yv);
-  case CVCASE(FLX, B01X): {D*x = (D*)yv; B*v = (B*)wv; DO(n, *x++ = *v++;); } R 1;
-  case CVCASE(CMPXX, B01X): {Z*x = (Z*)yv; B*v = (B*)wv; DO(n, x++->re = *v++;); } R 1;
+  case CVCASE(FLX, B01X): {D*x = (D*)yv; B*v = (B*)wv; DQ(n, *x++ = *v++;); } R 1;
+  case CVCASE(CMPXX, B01X): {Z*x = (Z*)yv; B*v = (B*)wv; DQ(n, x++->re = *v++;); } R 1;
   case CVCASE(B01X, INTX): R BfromI(w, yv);
   case CVCASE(XNUMX, INTX): R XfromI(w, yv);
   case CVCASE(RATX, INTX): GATV(d, XNUM, n, r, s); R XfromI(w, AV(d)) && QfromX(d, yv);
-  case CVCASE(FLX, INTX): {D*x = (D*)yv; I*v = wv; DO(n, *x++ = (D)*v++;); } R 1;
-  case CVCASE(CMPXX, INTX): {Z*x = (Z*)yv; I*v = wv; DO(n, x++->re = (D)*v++;); } R 1;
+  case CVCASE(FLX, INTX): {D*x = (D*)yv; I*v = wv; DQ(n, *x++ = (D)*v++;); } R 1;
+  case CVCASE(CMPXX, INTX): {Z*x = (Z*)yv; I*v = wv; DQ(n, x++->re = (D)*v++;); } R 1;
   case CVCASE(B01X, FLX): R BfromD(w, yv);
   case CVCASE(INTX, FLX): R IfromD(w, yv);
   case CVCASE(XNUMX, FLX): R XfromD(w, yv);
@@ -437,9 +437,9 @@ F1(jtcvt0){I n,t,*u,*v,z0,z1;
  if(n&&t&FL+CMPX){
   if(t&CMPX)n+=n; u=AV(w); v=(I*)minus0; z0=z1=*v;
 #if SY_64
-             DO(n, if(z0==*u            )*u=0;        ++u; ); 
+             DQ(n, if(z0==*u            )*u=0;        ++u; ); 
 #else
-  z1=*(1+v); DO(n, if(z0==u[0]&&z1==u[1])u[0]=u[1]=0; u+=2;);
+  z1=*(1+v); DQ(n, if(z0==u[0]&&z1==u[1])u[0]=u[1]=0; u+=2;);
 #endif
  }
  R w;
@@ -469,8 +469,8 @@ F2(jtxco2){A z;B b;I j,n,r,*s,t,*wv,*zu,*zv;
    b=1&&t&XD;
    GATV0(z,INT,b?n:2*n,b?r:1+r); s=AS(z); if(!b)*s++=2; MCISH(s,AS(w),r);
    zv=AV(z); zu=n+zv; wv=AV(w);
-   if(t&XD){DX*v=(DX*)wv;   DO(n,         *zv++=v->p;);}
-   else    {ZX*v=(ZX*)wv,y; DO(n, y=*v++; *zv++=y.re.p; *zu++=y.im.p;);}
+   if(t&XD){DX*v=(DX*)wv;   DQ(n,         *zv++=v->p;);}
+   else    {ZX*v=(ZX*)wv,y; DQ(n, y=*v++; *zv++=y.re.p; *zu++=y.im.p;);}
    R z;
   default:
    ASSERT(20<=j,EVDOMAIN);

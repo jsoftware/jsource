@@ -50,17 +50,17 @@ static AHDRR(bw0000insC,UC,UC){I k=    m*d; if(1<n)memset(z,C0 ,k); else MC(z,x,
        AHDRR(bw1111insI,UI,UI){I k=SZI*m*d; if(1<n)memset(z,CFF,k); else MC(z,x,k);}
 static AHDRR(bw1111insC,UC,UC){I k=    m*d; if(1<n)memset(z,CFF,k); else MC(z,x,k);}
 
-       AHDRR(bw0011insI,UI,UI){I k=d*(n-1);                        DO(m, DO(d, *z++=  *x++;); x+=k;);}
-static AHDRR(bw0011insC,UC,UC){I k=d*(n-1);                        DO(m, DO(d, *z++=  *x++;); x+=k;);}
+       AHDRR(bw0011insI,UI,UI){I k=d*(n-1);                        DQ(m, DQ(d, *z++=  *x++;); x+=k;);}
+static AHDRR(bw0011insC,UC,UC){I k=d*(n-1);                        DQ(m, DQ(d, *z++=  *x++;); x+=k;);}
 
-       AHDRR(bw1100insI,UI,UI){I k=d*(n-1);                 if(1<n)DO(m, DO(d, *z++= ~*x++;); x+=k;) else MC(z,x,SZI*m*d);}
-static AHDRR(bw1100insC,UC,UC){I k=d*(n-1);                 if(1<n)DO(m, DO(d, *z++= ~*x++;); x+=k;) else MC(z,x,    m*d);}
+       AHDRR(bw1100insI,UI,UI){I k=d*(n-1);                 if(1<n)DQ(m, DQ(d, *z++= ~*x++;); x+=k;) else MC(z,x,SZI*m*d);}
+static AHDRR(bw1100insC,UC,UC){I k=d*(n-1);                 if(1<n)DQ(m, DQ(d, *z++= ~*x++;); x+=k;) else MC(z,x,    m*d);}
 
-       AHDRR(bw0101insI,UI,UI){I k=d*(n-1);                  x+=k; DO(m, DO(d, *z++=  *x++;); x+=k;);}
-static AHDRR(bw0101insC,UC,UC){I k=d*(n-1);                  x+=k; DO(m, DO(d, *z++=  *x++;); x+=k;);}
+       AHDRR(bw0101insI,UI,UI){I k=d*(n-1);                  x+=k; DQ(m, DQ(d, *z++=  *x++;); x+=k;);}
+static AHDRR(bw0101insC,UC,UC){I k=d*(n-1);                  x+=k; DQ(m, DQ(d, *z++=  *x++;); x+=k;);}
 
-       AHDRR(bw1010insI,UI,UI){I k=d*(n-1);UI t=     (n&1)-1 ; x+=k; DO(m, DO(d, *z++=t^*x++;); x+=k;);}
-static AHDRR(bw1010insC,UC,UC){I k=d*(n-1);UC t=(UC)((n&1)-1); x+=k; DO(m, DO(d, *z++=t^*x++;); x+=k;);}
+       AHDRR(bw1010insI,UI,UI){I k=d*(n-1);UI t=     (n&1)-1 ; x+=k; DQ(m, DQ(d, *z++=t^*x++;); x+=k;);}
+static AHDRR(bw1010insC,UC,UC){I k=d*(n-1);UC t=(UC)((n&1)-1); x+=k; DQ(m, DQ(d, *z++=t^*x++;); x+=k;);}
 
 
 
@@ -74,9 +74,9 @@ static AHDRR(bw1010insC,UC,UC){I k=d*(n-1);UC t=(UC)((n&1)-1); x+=k; DO(m, DO(d,
   ASSERTAGREE(AS(a),AS(w),MIN(AR(a),AR(w)));                      \
   GATV(z,INT,AN(AR(a)>AR(w)?a:w),MAX(AR(a),AR(w)),AS(AR(a)>AR(w)?a:w)); zv=(T*)AV(z);                  \
   if(!AN(z))R z;                                                       \
-  if     (AR(a)==AR(w))DO(AN(a), x=*av++;           y=*wv++; *zv++=op(x,y);  )  \
-  else if(AR(a)< AR(w))DO(AN(a), x=*av++; DO(AN(w)/AN(a), y=*wv++; *zv++=op(x,y););)  \
-  else           DO(AN(w), y=*wv++; DO(AN(a)/AN(w), x=*av++; *zv++=op(x,y););); \
+  if     (AR(a)==AR(w))DQ(AN(a), x=*av++;           y=*wv++; *zv++=op(x,y);  )  \
+  else if(AR(a)< AR(w))DQ(AN(a), x=*av++; DQ(AN(w)/AN(a), y=*wv++; *zv++=op(x,y););)  \
+  else           DQ(AN(w), y=*wv++; DQ(AN(a)/AN(w), x=*av++; *zv++=op(x,y););); \
   RE(0); RETF(z);                                                          \
  }
 
@@ -169,10 +169,10 @@ DF1(jtbitwiseinsertchar){A fs,z;I d,j,n,r,wn,wr,zatoms;UC*u,*v,*wv,x,*zv;VF f;
  if(1==wr){
   r=wn-(n<<LGSZI); u=wv+(n<<LGSZI); x=*zv; v=1+zv; 
   switch(j){  // Handle the remnant for fullword ops
-   case 1: DO(SZI-1, x=BW0001(x,*v); ++v;); DO(r, x=BW0001(x,*u); ++u;); break;
-   case 6: DO(SZI-1, x=BW0110(x,*v); ++v;); DO(r, x=BW0110(x,*u); ++u;); break;
-   case 7: DO(SZI-1, x=BW0111(x,*v); ++v;); DO(r, x=BW0111(x,*u); ++u;); break;
-   case 9: DO(SZI-1, x=BW1001(x,*v); ++v;); DO(r, x=BW1001(x,*u); ++u;); break;
+   case 1: DQ(SZI-1, x=BW0001(x,*v); ++v;); DQ(r, x=BW0001(x,*u); ++u;); break;
+   case 6: DQ(SZI-1, x=BW0110(x,*v); ++v;); DQ(r, x=BW0110(x,*u); ++u;); break;
+   case 7: DQ(SZI-1, x=BW0111(x,*v); ++v;); DQ(r, x=BW0111(x,*u); ++u;); break;
+   case 9: DQ(SZI-1, x=BW1001(x,*v); ++v;); DQ(r, x=BW1001(x,*u); ++u;); break;
   }
   *(I*)zv=0; *zv=x;
  }

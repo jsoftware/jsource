@@ -244,24 +244,24 @@ typedef struct {VA2 p1[6];} UA;
   d=jt->relw;                                                                                  \
   switch((c?2:0)+(d?1:0)){                                                                     \
    case 0:                                                                                     \
-    if(n-1==0)  DO(m,                         *z++=pfx(*x,          *y          ); x++; y++; )   \
-    else if(n-1<0)DO(m, u=         *x++;  DOC(n, *z++=pfx(u,           *y          );      y++;))   \
-    else      DO(m, v=         *y++;  DO(n, *z++=pfx(*x,          v           ); x++;     ));  \
+    if(n-1==0)  DQ(m,                         *z++=pfx(*x,          *y          ); x++; y++; )   \
+    else if(n-1<0)DQ(m, u=         *x++;  DOC(n, *z++=pfx(u,           *y          );      y++;))   \
+    else      DQ(m, v=         *y++;  DQ(n, *z++=pfx(*x,          v           ); x++;     ));  \
     R;                                                                                         \
    case 1:                                                                                     \
-    if(n-1==0)  DO(m,                         *z++=pfx(*x,          (A)(d+(I)*y)); x++; y++; )   \
-    else if(n-1<0)DO(m, u=         *x++;  DOC(n, *z++=pfx(u,           (A)(d+(I)*y));      y++;))   \
-    else      DO(m, v=(A)(d+(I)*y++); DO(n, *z++=pfx(*x,          v           ); x++;     ));  \
+    if(n-1==0)  DQ(m,                         *z++=pfx(*x,          (A)(d+(I)*y)); x++; y++; )   \
+    else if(n-1<0)DQ(m, u=         *x++;  DOC(n, *z++=pfx(u,           (A)(d+(I)*y));      y++;))   \
+    else      DQ(m, v=(A)(d+(I)*y++); DQ(n, *z++=pfx(*x,          v           ); x++;     ));  \
     R;                                                                                         \
    case 2:                                                                                     \
-    if(n-1==0)  DO(m,                         *z++=pfx((A)(c+(I)*x),*y          ); x++; y++; )   \
-    else if(n-1<0)DO(m, u=(A)(c+(I)*x++); DOC(n, *z++=pfx(u,           *y          );      y++;))   \
-    else      DO(m, v=         *y++;  DO(n, *z++=pfx((A)(c+(I)*x),v           ); x++;     ));  \
+    if(n-1==0)  DQ(m,                         *z++=pfx((A)(c+(I)*x),*y          ); x++; y++; )   \
+    else if(n-1<0)DQ(m, u=(A)(c+(I)*x++); DOC(n, *z++=pfx(u,           *y          );      y++;))   \
+    else      DQ(m, v=         *y++;  DQ(n, *z++=pfx((A)(c+(I)*x),v           ); x++;     ));  \
     R;                                                                                         \
    case 3:                                                                                     \
-    if(n-1==0)  DO(m,                         *z++=pfx((A)(c+(I)*x),(A)(d+(I)*y)); x++; y++; )   \
-    else if(n-1<0)DO(m, u=(A)(c+(I)*x++); DOC(n, *z++=pfx(u,           (A)(d+(I)*y));      y++;))   \
-    else      DO(m, v=(A)(d+(I)*y++); DO(n, *z++=pfx((A)(c+(I)*x),v           ); x++;     ));  \
+    if(n-1==0)  DQ(m,                         *z++=pfx((A)(c+(I)*x),(A)(d+(I)*y)); x++; y++; )   \
+    else if(n-1<0)DQ(m, u=(A)(c+(I)*x++); DOC(n, *z++=pfx(u,           (A)(d+(I)*y));      y++;))   \
+    else      DQ(m, v=(A)(d+(I)*y++); DQ(n, *z++=pfx((A)(c+(I)*x),v           ); x++;     ));  \
  }}
 #endif
 
@@ -301,15 +301,15 @@ typedef struct {VA2 p1[6];} UA;
  {B*a,*p,*yb,*zb;I j,k;                                        \
   a=xb; p=(B*)&u; k=0;                                         \
   if(0==r)for(j=0;j<m;++j){                                    \
-   c=*a++; DO(SZI, p[i]=c;); DO(q, v=*yi++; *zz++=pfx(u,v););  \
+   c=*a++; DO(SZI, p[i]=c;); DQ(q, v=*yi++; *zz++=pfx(u,v););  \
   }else   for(j=0;j<m;++j){                                    \
    q=(t-k)>>LGSZI; r=(t-k)&(SZI-1);                                   \
-   c=*a++; DO(SZI, p[i]=c;); DO(q, v=*yi++; *zz++=pfx(u,v););  \
+   c=*a++; DO(SZI, p[i]=c;); DQ(q, v=*yi++; *zz++=pfx(u,v););  \
    if(0==r)k=0;                                                \
    else{                                                       \
     yb=(B*)yi; zb=(B*)zz;                                      \
-                   DO(r, d=*yb++; *zb++=bpfx(c,d););           \
-    c=*a; k=SZI-r; DO(k, d=*yb++; *zb++=bpfx(c,d););           \
+                   DQ(r, d=*yb++; *zb++=bpfx(c,d););           \
+    c=*a; k=SZI-r; DQ(k, d=*yb++; *zb++=bpfx(c,d););           \
     ++yi; ++zz;                                                \
  }}}
 
@@ -318,11 +318,11 @@ typedef struct {VA2 p1[6];} UA;
   t=n-1==0?m:n; q=t>>LGSZI; r=t&(SZI-1);                         \
   xx=(I*)x; yy=(I*)y; zz=(I*)z;                         \
   if(n-1==0){                                             \
-   DO(q, u=*xx++; v=*yy++; *zz++=pfx(u,v););            \
+   DQ(q, u=*xx++; v=*yy++; *zz++=pfx(u,v););            \
    if(r){u=*xx++; v=*yy++; dd=pfx(u,v); MC(zz,&dd,r);}  \
   }else if(t<SZI){                                      \
-   if(n-1<0)DO(m, c=*x++; DOC(n, v=*y++; *z++=bpfx(c,v);))   \
-   else DO(m, d=*y++; DO(n, u=*x++; *z++=bpfx(u,d);));  \
+   if(n-1<0)DQ(m, c=*x++; DOC(n, v=*y++; *z++=bpfx(c,v);))   \
+   else DQ(m, d=*y++; DQ(n, u=*x++; *z++=bpfx(u,d);));  \
   }else if(n-1<0){n=~n; BFSUB(x,yy,pfx, bpfx)}                      \
   else       BFSUB(y,xx,pfyx,bpfyx)                     \
  }

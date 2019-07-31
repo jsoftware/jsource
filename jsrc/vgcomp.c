@@ -71,7 +71,7 @@ I jtcompare(J jt,A a,A w){C*av,*wv;I ar,an,*as,at,c,d,j,m,t,wn,wr,*ws,wt;
   }
  }
  if(1>=ar)R ((I )(an<wn)-(I )(an>wn))*jt->workareas.compare.complt;
- DO(j=ar, --j; c=as[j]; d=ws[j]; if(c!=d)R ((c>d)?-1:1)*jt->workareas.compare.complt;);
+ DQ(j=ar, --j; c=as[j]; d=ws[j]; if(c!=d)R ((c>d)?-1:1)*jt->workareas.compare.complt;);
  R 0;
 }    /* compare 2 arbitrary dense arrays; _1 0 1 per a<w, a=w, a>w */
 

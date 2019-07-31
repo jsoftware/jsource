@@ -39,7 +39,7 @@ static I jtc2j(J jt,B e,I m,C*zv){C c,*s,*t;I k,p;
    while(*t=*(k+t))++t;  // close up the skipped characters, till end of string (including the\0)
    // t now points to trailing \0.  Set p=(field width)-(# characters copied) = #spare characters at end of field
    // if m is 0, p is negative.  Fill to end-of-field with spaces, and append \0 if there was any fill
-   p=m-(t-jt->th2buf); DO(p,*t++=' ';); if(0<=p)jt->th2buf[m]=0;
+   p=m-(t-jt->th2buf); DQ(p,*t++=' ';); if(0<=p)jt->th2buf[m]=0;
  }}
  // point t to start of formatted string, and k to the length.  k will be the return value
  t=jt->th2buf; k=strlen(t);
@@ -68,7 +68,7 @@ static B jtfmtex(J jt,I m,I d,I n,I*xv,B b,I c,I q,I ex){B bm=b||m;C*u,*v=jt->th
  if(jt->th2bufn<20+d){A s; jt->th2bufn=20+d; GATV0(s,LIT,jt->th2bufn,1); v=jt->th2buf=CAV(s);}
  if(b)*v++='_'; else if(m)*v++=' '; *v++=' '; sprintf(v,FMTI,c); v+=q;
  k=(XBASEN+d+1-q)/XBASEN; k=MIN(n-1,k);
- DO(k, c=*--xv; sprintf(v,FMTI04,b?-c:c); v+=XBASEN;);
+ DQ(k, c=*--xv; sprintf(v,FMTI04,b?-c:c); v+=XBASEN;);
  k=v-jt->th2buf-(2+bm);
  if(k<d){memset(v,'0',d-k); v+=d-k;}
  else if(k>d&&(u=v=jt->th2buf+d+2+bm,'5'<=*v)){
@@ -91,7 +91,7 @@ static B jtfmtx(J jt,B e,I m,I d,C*s,I t,X*wv){B b;C*v=jt->th2buf;I c,n,p,q,*xv;
   if(jt->th2bufn<4+p+d){A s; jt->th2bufn=4+p+d; GATV0(s,LIT,jt->th2bufn,1); v=jt->th2buf=CAV(s);}
   if(' '==*s)*v++=' '; if(b)*v++='_'; 
   sprintf(v,FMTI,c); v+=q;
-  DO(n-1, c=*--xv; sprintf(v,FMTI04,b?-c:c); v+=XBASEN;); 
+  DQ(n-1, c=*--xv; sprintf(v,FMTI04,b?-c:c); v+=XBASEN;); 
   if(d){*v++='.'; memset(v,'0',d); v[d]=0;}
  }
  R 1;
@@ -116,10 +116,10 @@ static B jtfmtq(J jt,B e,I m,I d,C*s,I t,Q*wv){B b;C*v=jt->th2buf;I c,ex=0,k,n,p
  else{
   if(jt->th2bufn<4+p+d){A s; jt->th2bufn=4+p+d; GATV0(s,LIT,jt->th2bufn,1); v=jt->th2buf=CAV(s);}
   if(' '==*s)*v++=' '; if(b)*v++='_';
-  if(0>ex){k=-ex-1; DO(1+MIN(d,k), *v++='0';);}
+  if(0>ex){k=-ex-1; DQ(1+MIN(d,k), *v++='0';);}
   sprintf(v,FMTI,c); v+=q;
-  DO(n-1, c=*--xv; sprintf(v,FMTI04,b?-c:c); v+=XBASEN;);
-  if(d){v[1]=0; DO(d, *v=*(v-1); --v;); *v='.';}
+  DQ(n-1, c=*--xv; sprintf(v,FMTI04,b?-c:c); v+=XBASEN;);
+  if(d){v[1]=0; DQ(d, *v=*(v-1); --v;); *v='.';}
  }
  R 1;
 }    /* format one rational number */
@@ -148,7 +148,7 @@ static void jtfmt1(J jt,B e,I m,I d,C*s,I t,C*wv){D y;
 //  zv->place to put result
 // No result: the output area is filled
 static void jtth2c(J jt,B e,I m,I d,C*s,I n,I t,I wk,C*wv,I zk,C*zv){
- DO(n, fmt1(e,m,d,s,t,wv); c2j(e,m,zv); zv+=zk; wv+=wk;);
+ DQ(n, fmt1(e,m,d,s,t,wv); c2j(e,m,zv); zv+=zk; wv+=wk;);
 }    /* format a column */
 
 // Create a column of results (a table) for a single field
@@ -196,9 +196,9 @@ static A jtth2a(J jt,B e,I m,I d,C*s,I n,I t,I wk,C*wv,B first){PROLOG(0049);A y
  // Copy the strings from the formatting area (u->) to the result area (yv->)
  // For exponential fields, start copying from the left, leaving one space if there is a negative sign somewhere else
  // in the column but not in this value; advance to next input & output
- if(e){yv+=!first; DO(n, q=strlen(u); MC(yv+(I )(!b&&CSIGN!=*u),u,q); yv+=m; u+=1+q;);}
+ if(e){yv+=!first; DQ(n, q=strlen(u); MC(yv+(I )(!b&&CSIGN!=*u),u,q); yv+=m; u+=1+q;);}
  // For non-exponential, right-justify the data, step to next input & output
- else {yv+=m;      DO(n, q=strlen(u); MC(yv-q,          u,q); yv+=m; u+=1+q;);}
+ else {yv+=m;      DQ(n, q=strlen(u); MC(yv-q,          u,q); yv+=m; u+=1+q;);}
  EPILOG(y);
 }    /* like th2c, but allocates and returns array */
 

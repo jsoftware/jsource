@@ -21,7 +21,7 @@ static I jtgetnl(J jt){
  // Extend in-use locales list if needed
  if(m<=jt->stused){
   A x=ext(1,jt->stnum); A y=ext(1,jt->stptr); RZ(x&&y); jt->stnum=x; jt->stptr=y;
-  I *nv=m+AV(jt->stnum); A *pv=m+AAV(jt->stptr); DO(AN(x)-m, *nv++=-1; *pv++=0;); 
+  I *nv=m+AV(jt->stnum); A *pv=m+AAV(jt->stptr); DQ(AN(x)-m, *nv++=-1; *pv++=0;); 
  }
  R jt->stmax;
 }
@@ -389,7 +389,7 @@ F2(jtlocnl2){UC*u;
  RZ(a&&w);
  ASSERT(LIT&AT(a),EVDOMAIN);
  memset(jt->workareas.namelist.nla,C0,256); 
- u=UAV(a); DO(AN(a),jt->workareas.namelist.nla[*u++]=1;);
+ u=UAV(a); DQ(AN(a),jt->workareas.namelist.nla[*u++]=1;);
  R locnlx(w); 
 }    /* 18!:1 locale name list */
 
@@ -494,7 +494,7 @@ F1(jtlocmap){A g,q,x,y,*yv,z,*zv;I c=-1,d,j=0,m,*qv,*xv;
  // split the q result between two boxes
  GATVR(x,INT,m*3,2,AS(q)); xv= AV(x);
  GATV0(y,BOX,m,  1); yv=AAV(y);
- DO(m, *xv++=d=*qv++; *xv++=j=c==d?1+j:0; *xv++=*qv++; c=d; *yv++=(A)*qv++;);
+ DQ(m, *xv++=d=*qv++; *xv++=j=c==d?1+j:0; *xv++=*qv++; c=d; *yv++=(A)*qv++;);
  GAT0(z,BOX,2,1); zv=AAV(z); zv[0]=x; zv[1]=y;
  R z;
 }    /* 18!:30 locale map */

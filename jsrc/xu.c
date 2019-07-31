@@ -747,7 +747,7 @@ F1(jttoutf16){A z;I n,t,q,b=0,j; UC* wv; US* c2v; C4* c4v; A c4; I *v;
   RZ(w=vi(w));
   n=AN(w); v=(I*)AV(w);
   GATV0(c4,C4T,n,1); c4v=C4AV(c4);
-  DO(n, j=*v++; ASSERT(0<=j&&j<=0x10ffff,EVINDEX); *c4v++=(C4)j;);
+  DQ(n, j=*v++; ASSERT(0<=j&&j<=0x10ffff,EVINDEX); *c4v++=(C4)j;);
   q=utowsize(C4AV(c4),AN(c4));
   q=(q<0)?(-q):q;   // allow unpaired surrogate as in 10&u:
   GATV0(z,C2T,q,1);
@@ -755,7 +755,7 @@ F1(jttoutf16){A z;I n,t,q,b=0,j; UC* wv; US* c2v; C4* c4v; A c4; I *v;
  }
  else if(LIT&t) // u16 from u8
  {
-  DO(n, if(127<*wv++){b=1;break;});
+  DQ(n, if(127<*wv++){b=1;break;});
   if(!b)RCA(w);  // ascii list unchanged ascii scalar as list
   q=mtowsize(UAV(w),n);
   ASSERT(q>=0,EVDOMAIN);
@@ -765,17 +765,17 @@ F1(jttoutf16){A z;I n,t,q,b=0,j; UC* wv; US* c2v; C4* c4v; A c4; I *v;
  else if(C2T&t)
  {
   c2v=USAV(w);
-  DO(n, if(127<*c2v++){b=1;break;});
+  DQ(n, if(127<*c2v++){b=1;break;});
   if(b)RCA(w); // u16 unchanged
   GATV0(z,LIT,n,1);
   wv=UAV(z);
   c2v=USAV(w);
-  DO(n, *wv++=(UC)*c2v++;);   // fallback to ascii
+  DQ(n, *wv++=(UC)*c2v++;);   // fallback to ascii
  }
  else
  {
   c4v=C4AV(w);
-  DO(n, if(127<*c4v++){b=1;break;});
+  DQ(n, if(127<*c4v++){b=1;break;});
   if(b){
   q=utowsize(C4AV(w),n);
   ASSERT(q>=0,EVDOMAIN);
@@ -787,7 +787,7 @@ F1(jttoutf16){A z;I n,t,q,b=0,j; UC* wv; US* c2v; C4* c4v; A c4; I *v;
   GATV0(z,LIT,n,1);
   wv=UAV(z);
   c4v=C4AV(w);
-  DO(n, *wv++=(char)*c4v++;);   // fallback to ascii
+  DQ(n, *wv++=(char)*c4v++;);   // fallback to ascii
   }
  }
  EPILOG(z);
@@ -831,7 +831,7 @@ if(NUMERIC&t)
 RZ(w=vi(w));
 n=AN(w); v=(I*)AV(w);
 GATV0(c4,C4T,n,1); c4v=C4AV(c4);
-DO(n, j=*v++; ASSERT(0<=j&&j<=0x10ffff,EVINDEX); *c4v++=(C4)j;);
+DQ(n, j=*v++; ASSERT(0<=j&&j<=0x10ffff,EVINDEX); *c4v++=(C4)j;);
 q=utomsize(C4AV(c4),AN(c4));
 q=(q<0)?(-q):q;   // allow unpaired surrogate as in 10&u:
 GATV0(z,LIT,q,1);
@@ -902,11 +902,11 @@ F1(jttoutf32){A z;I n,t,q,b=0,j; UC* wv; US* c2v; C4* c4v; I* v;
   RZ(w=vi(w));
   n=AN(w); v=(I*)AV(w);
   GATV(z,C4T,n,AR(w),AS(w)); c4v=C4AV(z);
-  DO(n, j=*v++; *c4v++=(C4)(UI)j;);
+  DQ(n, j=*v++; *c4v++=(C4)(UI)j;);
  }
  else if(LIT&t) // u32 from u8
  {
-  DO(n, if(127<*wv++){b=1;break;});
+  DQ(n, if(127<*wv++){b=1;break;});
   if(!b)RCA(w);  // ascii list unchanged ascii scalar as list
   q=mtousize(UAV(w),n);
   ASSERT(q>=0,EVDOMAIN);
@@ -916,7 +916,7 @@ F1(jttoutf32){A z;I n,t,q,b=0,j; UC* wv; US* c2v; C4* c4v; I* v;
  else if(C2T&t)
  {
   c2v=USAV(w);
-  DO(n, if(127<*c2v++){b=1;break;});
+  DQ(n, if(127<*c2v++){b=1;break;});
   if(b){
   q=wtousize(USAV(w),n);
   ASSERT(q>=0,EVDOMAIN);
@@ -928,13 +928,13 @@ F1(jttoutf32){A z;I n,t,q,b=0,j; UC* wv; US* c2v; C4* c4v; I* v;
   GATV0(z,LIT,n,1);
   wv=UAV(z);
   c2v=USAV(w);
-  DO(n, *wv++=(char)*c2v++;);
+  DQ(n, *wv++=(char)*c2v++;);
   }
  }
  else
  {
   c4v=C4AV(w);
-  DO(n, if(127<*c4v++){b=1;break;});
+  DQ(n, if(127<*c4v++){b=1;break;});
   if(b){
    q=utousize(C4AV(w),n);
    GATV0(z,C4T,q,1);
@@ -945,7 +945,7 @@ F1(jttoutf32){A z;I n,t,q,b=0,j; UC* wv; US* c2v; C4* c4v; I* v;
   GATV0(z,LIT,n,AR(w));
   wv=UAV(z);
   c4v=C4AV(w);
-  DO(n, *wv++=(UC)*c4v++;);
+  DQ(n, *wv++=(UC)*c4v++;);
   }
  }
  EPILOG(z);
@@ -967,21 +967,21 @@ F1(jttou32){A z;I n,t,b=0,j; UC* wv; US* c2v; C4* c4v; I* v; UC* c1v;
   RZ(w=vi(w));
   n=AN(w); v=(I*)AV(w);
   GATV(z,C4T,n,AR(w),AS(w)); c4v=C4AV(z);
-  DO(n, j=*v++; *c4v++=(C4)(UI)j;);
+  DQ(n, j=*v++; *c4v++=(C4)(UI)j;);
  }
  else if(LIT&t)
  {
   GATV(z,C4T,n,AR(w),AS(w));
   c4v=C4AV(z);
   c1v=(UC*)UAV(w);
-  DO(n, *c4v++=(C4)*c1v++;);
+  DQ(n, *c4v++=(C4)*c1v++;);
  }
  else
  {
   GATV(z,C4T,n,AR(w),AS(w));
   c4v=C4AV(z);
   c2v=USAV(w);
-  DO(n, *c4v++=(C4)*c2v++;);
+  DQ(n, *c4v++=(C4)*c2v++;);
  }
  EPILOG(z);
 }    // 10 u: x - literal4 similar to monad u: for whcar
@@ -1003,9 +1003,9 @@ mtow(wv,n,c2v);
 GATV0(z1,C4T,q,1);
 c4v=C4AV(z1);
 if(cnul){
- DO(q, if(*c2v)*c4v++=(C4)*c2v++;else{*c4v++=(C4)0xc080;c2v++;});
+ DQ(q, if(*c2v)*c4v++=(C4)*c2v++;else{*c4v++=(C4)0xc080;c2v++;});
 }else{
- DO(q, *c4v++=(C4)*c2v++;);
+ DQ(q, *c4v++=(C4)*c2v++;);
 }
 // convert to utf-8
 q=utomsize(C4AV(z1),AN(z1));

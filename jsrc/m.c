@@ -309,7 +309,7 @@ static void auditsimverify0(A w){
  if(!w)R;
  if(AFLAG(w)>>AFAUDITUCX)SEGFAULT   // hang if nonzero count
  if(AFLAG(w)&AFVIRTUAL)auditsimverify0(ABACK(w));  // check backer
- if(AT(w)&(RAT|XNUM)) {A* v=AAV(w);  DO(AT(w)&RAT?2*AN(w):AN(w), if(*v)auditsimverify0(*v); ++v;)}
+ if(AT(w)&(RAT|XNUM)) {A* v=AAV(w);  DQ(AT(w)&RAT?2*AN(w):AN(w), if(*v)auditsimverify0(*v); ++v;)}
  if(UCISRECUR(w)){  // process children
   if(AT(w)&BOX){
    I n=AN(w); I af=AFLAG(w);
@@ -337,7 +337,7 @@ static void auditsimdelete(A w){I delct;
   // handle nonrecursive children.  All recursible types will be recursive
   if(AFLAG(w)&AFVIRTUAL && (AT(wb)^AFLAG(wb))&RECURSIBLE)SEGFAULT
   auditsimdelete(wb);  // delete backer of virtual block, recursibly
-// obsolete   if(AT(wb)&(RAT|XNUM)) {A* v=AAV(wb);  DO(AT(wb)&RAT?2*AN(wb):AN(wb), if(*v)auditsimdelete(*v); ++v;)}  // finish fa() if nonrecursive
+// obsolete   if(AT(wb)&(RAT|XNUM)) {A* v=AAV(wb);  DQ(AT(wb)&RAT?2*AN(wb):AN(wb), if(*v)auditsimdelete(*v); ++v;)}  // finish fa() if nonrecursive
  }
  if(delct==ACUC(w)&&(UCISRECUR(w))){  // we deleted down to 0.  process children
   if(AT(w)&BOX){
@@ -348,7 +348,7 @@ static void auditsimdelete(A w){I delct;
    DO(n, auditsimdelete((A)(intptr_t)((I)wv[i]+(I)wrel)););
   }else if(AT(w)&FUNC) {V* RESTRICT v=VAV(w);
    auditsimdelete(v->fgh[0]); auditsimdelete(v->fgh[1]); auditsimdelete(v->fgh[2]);
-  }else if(AT(w)&RAT|XNUM) {A* v=AAV(w);  DO(AT(w)&RAT?2*AN(w):AN(w), if(*v)auditsimdelete(*v); ++v;)
+  }else if(AT(w)&RAT|XNUM) {A* v=AAV(w);  DQ(AT(w)&RAT?2*AN(w):AN(w), if(*v)auditsimdelete(*v); ++v;)
   }else SEGFAULT  // inadmissible type for recursive usecount
  }
  R;
@@ -360,7 +360,7 @@ static void auditsimreset(A w){I delct;
  AFLAG(w) &= AFAUDITUC-1;   // clear count for next time
  if(AFLAG(w)&AFVIRTUAL){A wb = ABACK(w);
   auditsimreset(wb);  // reset backer of virtual block
-  if(AT(wb)&(RAT|XNUM)) {A* v=AAV(wb);  DO(AT(wb)&RAT?2*AN(wb):AN(wb), if(*v)auditsimreset(*v); ++v;)}  // reset children
+  if(AT(wb)&(RAT|XNUM)) {A* v=AAV(wb);  DQ(AT(wb)&RAT?2*AN(wb):AN(wb), if(*v)auditsimreset(*v); ++v;)}  // reset children
  }
  if(delct==ACUC(w)&&(UCISRECUR(w))){  // if so, recursive reset
   if(AT(w)&BOX){
@@ -371,7 +371,7 @@ static void auditsimreset(A w){I delct;
    DO(n, auditsimreset((A)(intptr_t)((I)wv[i]+(I)wrel)););
   }else if(AT(w)&FUNC) {V* RESTRICT v=VAV(w);
    auditsimreset(v->fgh[0]); auditsimreset(v->fgh[1]); auditsimreset(v->fgh[2]);
-  }else if(AT(w)&RAT|XNUM) {A* v=AAV(w);  DO(AT(w)&RAT?2*AN(w):AN(w), if(*v)auditsimreset(*v); ++v;)
+  }else if(AT(w)&RAT|XNUM) {A* v=AAV(w);  DQ(AT(w)&RAT?2*AN(w):AN(w), if(*v)auditsimreset(*v); ++v;)
   }else SEGFAULT  // inadmissible type for recursive usecount
  }
  R;
@@ -464,9 +464,9 @@ static void freesymb(J jt, A w){I j,wn=AN(w); LX k,kt,* RESTRICT wv=LXAV0(w);
 static void jttraverse(J jt,A wd,AF f){
  switch(CTTZ(AT(wd))){
   case XDX:
-   {DX*v=(DX*)AV(wd); DO(AN(wd), if(v->x)CALL1(f,v->x,0L); ++v;);} break;
+   {DX*v=(DX*)AV(wd); DQ(AN(wd), if(v->x)CALL1(f,v->x,0L); ++v;);} break;
   case RATX:  
-   {A*v=AAV(wd); DO(2*AN(wd), if(*v)CALL1(f,*v++,0L););} break;
+   {A*v=AAV(wd); DQ(2*AN(wd), if(*v)CALL1(f,*v++,0L););} break;
   case XNUMX: case BOXX:
    if(!(AFLAG(wd)&AFNJA)){A*wv=AAV(wd);
    {DO(AN(wd), if(wv[i])CALL1(f,wv[i],0L););}
@@ -676,7 +676,7 @@ I jtra(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
   ras(v->fgh[0]); ras(v->fgh[1]); ras(v->fgh[2]);
  } else if(t&(RAT|XNUM|XD)) {A* RESTRICT v=AAV(wd);
   // single-level indirect forms.  handle each block
-  DO(t&RAT?2*n:n, if(*v)ACINCR(*v); ++v;);
+  DQ(t&RAT?2*n:n, if(*v)ACINCR(*v); ++v;);
  } else if(t&SPARSE){P* RESTRICT v=PAV(wd); A x;
   // all elements of sparse blocks are guaranteed non-virtual, so ra will not reassign them
   x = SPA(v,a); ras(x);     x = SPA(v,e); ras(x);     x = SPA(v,i); ras(x);     x = SPA(v,x); ras(x);
@@ -710,7 +710,7 @@ I jtfa(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
   fana(v->fgh[0]); fana(v->fgh[1]); fana(v->fgh[2]);
  } else if(t&(RAT|XNUM|XD)) {A* RESTRICT v=AAV(wd);
   // single-level indirect forms.  handle each block
-  DO(t&RAT?2*n:n, if(*v)fr(*v); ++v;);
+  DQ(t&RAT?2*n:n, if(*v)fr(*v); ++v;);
  } else if(t&SPARSE){P* RESTRICT v=PAV(wd);
   fana(SPA(v,a)); fana(SPA(v,e)); fana(SPA(v,i)); fana(SPA(v,x)); 
  }
@@ -745,7 +745,7 @@ A *jttpush(J jt,AD* RESTRICT wd,I t,A *pushp){I af=AFLAG(wd); I n=AN(wd);
   if(v->fgh[0])tpushi(v->fgh[0]); if(v->fgh[1])tpushi(v->fgh[1]); if(v->fgh[2])tpushi(v->fgh[2]);
  } else if(t&(RAT|XNUM|XD)) {A* RESTRICT v=AAV(wd);
   // single-level indirect forms.  handle each block
-  DO(t&RAT?2*n:n, if(*v)tpushi(*v); ++v;);
+  DQ(t&RAT?2*n:n, if(*v)tpushi(*v); ++v;);
  } else if(t&SPARSE){P* RESTRICT v=PAV(wd);
   if(SPA(v,a))tpushi(SPA(v,a)); if(SPA(v,e))tpushi(SPA(v,e)); if(SPA(v,x))tpushi(SPA(v,x)); if(SPA(v,i))tpushi(SPA(v,i));
  }

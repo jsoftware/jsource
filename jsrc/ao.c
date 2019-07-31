@@ -99,7 +99,7 @@ static DF1(jtobqfslash){A y,z;B b=0,p;C er,id,*wv;I c,d,k,m,m1,mn,n,n1,r,*s,wt;
   for(i=0;i<zn;++i){                         \
    j=MIN(i,m1); u=aa+j; v=ww+i-j;            \
    p=MIN(1+i,zn-i); p=MIN(p,k);              \
-   expr0; DO(p-1, expr;); *zv++=x;           \
+   expr0; DQ(p-1, expr;); *zv++=x;           \
  }}
 
 DF2(jtpolymult){A f,g,y,z;B b=0;C*av,c,d,*wv;I at,i,j,k,m,m1,n,p,t,wt,zn;V*v;
@@ -275,16 +275,16 @@ static CRT jtkeyrs(J jt,A a,UI maxrange){I ac; CRT res;
 #define KACC1(F,Ta)  \
  {Ta*u;                                                          \
   if(1==c){                                                      \
-   u=(Ta*)av0; DO(n, v=qv+  *u++;       y=*wv++; *v=F;       );  \
-   u=(Ta*)av0; DO(n, if(bv[j=*u++]){*zv++=qv[j];                  bv[j]=0; if(s==++m)break;});  \
+   u=(Ta*)av0; DQ(n, v=qv+  *u++;       y=*wv++; *v=F;       );  \
+   u=(Ta*)av0; DQ(n, if(bv[j=*u++]){*zv++=qv[j];                  bv[j]=0; if(s==++m)break;});  \
   }else{                                                         \
-   u=(Ta*)av0; DO(n, v=qv+c**u++; DO(c, y=*wv++; *v=F; ++v;););  \
-   u=(Ta*)av0; DO(n, if(bv[j=*u++]){v=qv+c*j; DO(c, *zv++=*v++;); bv[j]=0; if(s==++m)break;});  \
+   u=(Ta*)av0; DQ(n, v=qv+c**u++; DQ(c, y=*wv++; *v=F; ++v;););  \
+   u=(Ta*)av0; DQ(n, if(bv[j=*u++]){v=qv+c*j; DQ(c, *zv++=*v++;); bv[j]=0; if(s==++m)break;});  \
  }}
 #define KACC(F,Tz,Tw,v0)   \
  {Tw*wv=(Tw*)wv0,y;Tz*qv=(Tz*)qv0,*v,*zv=(Tz*)zv0;               \
   if(bb){                                                        \
-   m=0; v=qv; DO(AN(q), *v++=v0;); qv-=r*c;                      \
+   m=0; v=qv; DQ(AN(q), *v++=v0;); qv-=r*c;                      \
    switch(CTTZNOFLAG(at)){                                                   \
     case B01X: KACC1(F,B ); break;                                \
     case LITX: KACC1(F,UC); break;                                \
@@ -293,9 +293,9 @@ static CRT jtkeyrs(J jt,A a,UI maxrange){I ac; CRT res;
     case SBTX: KACC1(F,SB); break;                                \
     case INTX: KACC1(F,I ); break;                                \
   }}else{                                                        \
-   v=zv; DO(m*c, *v++=v0;);                                      \
-   if(1==c)DO(n, v=zv+  *xv++;       y=*wv++; *v=F;       )      \
-   else    DO(n, v=zv+c**xv++; DO(c, y=*wv++; *v=F; ++v;););     \
+   v=zv; DQ(m*c, *v++=v0;);                                      \
+   if(1==c)DQ(n, v=zv+  *xv++;       y=*wv++; *v=F;       )      \
+   else    DQ(n, v=zv+c**xv++; DQ(c, y=*wv++; *v=F; ++v;););     \
  }}
 
 static DF2(jtkeyslash){PROLOG(0012);A b,q,x,z=0;B bb,*bv,pp=0;C d;I at,*av0,c,n,j,m,*qv0,r,s,*u,wr,wt,*wv0,*xv,zt,*zv0;
@@ -347,18 +347,18 @@ static DF2(jtkeyslash){PROLOG(0012);A b,q,x,z=0;B bb,*bv,pp=0;C d;I at,*av0,c,n,
 #define KMCASE(ta,tw)  (4*ta+tw) // (ta+65536*tw)
 #define KMACC(Ta,Tw) \
  {Ta*u=(Ta*)av;Tw*v=(Tw*)wv;                                        \
-  if(1==c)DO(n, ++pv[*u];                   qv[*u]+=*v++;   ++u;)   \
-  else    DO(n, ++pv[*u]; vv=qv+c**u; DO(c, *vv++ +=*v++;); ++u;);  \
+  if(1==c)DQ(n, ++pv[*u];                   qv[*u]+=*v++;   ++u;)   \
+  else    DQ(n, ++pv[*u]; vv=qv+c**u; DQ(c, *vv++ +=*v++;); ++u;);  \
  }
 #define KMSET(Ta)    \
  {Ta*u=(Ta*)av;                                                                                           \
-  if(1==c)DO(n, if(pv[j=*u++]){                             *zv++=qv[j]/pv[j]; pv[j]=0; if(s==++m)break;})   \
-  else    DO(n, if(pv[j=*u++]){vv=qv+c*j; d=(D)pv[j]; DO(c, *zv++=*vv++/d;);   pv[j]=0; if(s==++m)break;});  \
+  if(1==c)DQ(n, if(pv[j=*u++]){                             *zv++=qv[j]/pv[j]; pv[j]=0; if(s==++m)break;})   \
+  else    DQ(n, if(pv[j=*u++]){vv=qv+c*j; d=(D)pv[j]; DQ(c, *zv++=*vv++/d;);   pv[j]=0; if(s==++m)break;});  \
  }
 #define KMFUN(Tw)    \
  {Tw*v=(Tw*)wv;                                                      \
-  if(1==c)DO(n, j=*xv++; ++pv[j]; zv[j]+=*v++;)                      \
-  else    DO(n, j=*xv++; ++pv[j]; vv=zv+j*c; DO(c, *vv+++=*v++;););  \
+  if(1==c)DQ(n, j=*xv++; ++pv[j]; zv[j]+=*v++;)                      \
+  else    DQ(n, j=*xv++; ++pv[j]; vv=zv+j*c; DQ(c, *vv+++=*v++;););  \
  }
 
 static DF2(jtkeymean){PROLOG(0013);A p,q,x,z;D d,*qv,*vv,*zv;I at,*av,c,j,m=0,n,*pv,r,s,*u,wr,wt,*wv,*xv;
@@ -411,7 +411,7 @@ static DF2(jtkeymean){PROLOG(0013);A p,q,x,z;D d,*qv,*vv,*zv;I at,*av,c,j,m=0,n,
    case INTX: KMFUN(I); break;
    case FLX:  KMFUN(D); break;
   }
-  if(1==c)DO(m, *zv++/=*pv++;) else DO(m, d=(D)*pv++; DO(c, *zv++/=d;););
+  if(1==c)DQ(m, *zv++/=*pv++;) else DQ(m, d=(D)*pv++; DQ(c, *zv++/=d;););
  }
  if(wt&FL)NAN1;
  EPILOG(z);
@@ -437,7 +437,7 @@ F1(jtgroup){PROLOG(0014);A c,d,x,z,*zv;I**cu,*cv,*dv,j,k,m,n,t,*u,*v,*wv,zn=0;CR
  if(rng.range){
   GATV0(c,INT,rng.range,1); cv=AV(c)-rng.min;  /* counts  */
   GATV0(d,INT,rng.range,1); dv=AV(d)-rng.min;  /* indices */
-  wv=AV(w); v=dv+rng.min; DO(rng.range, *v++=-1;);
+  wv=AV(w); v=dv+rng.min; DQ(rng.range, *v++=-1;);
   switch(k){
    case 1:   GRPCD(UC); break;
    case 2:   GRPCD(US); break;
@@ -448,7 +448,7 @@ F1(jtgroup){PROLOG(0014);A c,d,x,z,*zv;I**cu,*cv,*dv,j,k,m,n,t,*u,*v,*wv,zn=0;CR
  }}else{
   RZ(w=indexof(w,w)); wv=AV(w);
   GATV0(c,INT,n,1); cv=AV(c);
-  m=-1; v=wv; DO(n, j=*v++; if(m>=j)++cv[j]; else{m=j; cv[j]=1; ++zn;});
+  m=-1; v=wv; DQ(n, j=*v++; if(m>=j)++cv[j]; else{m=j; cv[j]=1; ++zn;});
  }
  GATV0(z,BOX,zn,1); zv=AAV(z);
  m=-1; cu=(I**)cv;
@@ -478,13 +478,13 @@ static F1(jtkeytallysp){PROLOG(0015);A b,e,q,x,y,z;I c,d,j,k,*u,*v;P*p;
  RZ(b=ne(e,x));
  RZ(x=repeat(b,x)); RZ(x=keytally(x,x,mark)); u=AV(x); d=AN(x);
  GATV0(z,INT,1+d,1); v=AV(z);
- DO(j, *v++=*u++;); *v++=IC(w)-bsum(c,BAV(b)); DO(d-j, *v++=*u++;);
+ DQ(j, *v++=*u++;); *v++=IC(w)-bsum(c,BAV(b)); DQ(d-j, *v++=*u++;);
  EPILOG(z);
 }    /* x #/.y , sparse x */
 
 #define KEYTALLY(T)     {T*u;                             \
-                         u=(T*)av; DO(n, ++*(qv+*u++););  \
-                         u=(T*)av; DO(n, v=qv+*u++; if(*v){*zv++=*v; *v=0; if(s==++j)break;});}
+                         u=(T*)av; DQ(n, ++*(qv+*u++););  \
+                         u=(T*)av; DQ(n, v=qv+*u++; if(*v){*zv++=*v; *v=0; if(s==++j)break;});}
 
 static DF2(jtkeytally){PROLOG(0016);A q;I at,*av,j=0,k,n,r,s,*qv,*u,*v;
  RZ(a&&w);
@@ -497,7 +497,7 @@ static DF2(jtkeytally){PROLOG(0016);A q;I at,*av,j=0,k,n,r,s,*qv,*u,*v;
  if(s){A z;I*zv;
   GATV0(z,INT,s,1); zv=AV(z);
   GATV0(q,INT,s,1); qv=AV(q)-r;
-  u=qv+r; DO(s, *u++=0;);
+  u=qv+r; DQ(s, *u++=0;);
   switch(CTTZ(at)){
    case LITX: KEYTALLY(UC); break;
    case C2TX: KEYTALLY(US); break;
@@ -511,7 +511,7 @@ static DF2(jtkeytally){PROLOG(0016);A q;I at,*av,j=0,k,n,r,s,*qv,*u,*v;
  RZ(q=indexof(a,a));
  if(!AR(q))R iv1; 
  v=qv=AV(q);
- u=qv; DO(n, ++*(qv+*u++););
+ u=qv; DQ(n, ++*(qv+*u++););
  u=qv; DO(n, k=*u++; if(i<k){j+=*v++=k-i; if(n==j)break;});
  *AS(q)=AN(q)=v-qv;
  EPILOG(q);
@@ -520,7 +520,7 @@ static DF2(jtkeytally){PROLOG(0016);A q;I at,*av,j=0,k,n,r,s,*qv,*u,*v;
 
 #define KEYHEADTALLY(Tz,Ta,Tw,exp0,exp1)  \
  {Ta*u;Tw*wv=(Tw*)AV(w);Tz*zz=(Tz*)zv;    \
-  u=(Ta*)av; DO(n, ++*(qv+*u++););        \
+  u=(Ta*)av; DQ(n, ++*(qv+*u++););        \
   u=(Ta*)av; DO(n, v=qv+*u++; if(*v){*zz++=exp0; *zz++=exp1; k+=*v; if(n==k)break; *v=0;}); \
   AN(z)=zz-(Tz*)zv;                       \
  }
@@ -546,7 +546,7 @@ static DF2(jtkeyheadtally){PROLOG(0017);A f,q,x,y,z;B b;I at,*av,k,n,r,s,*qv,*u,
  if(at&LIT+C2T+C4T+INT+SBT&&wt&B01+INT+FL&&s){
   GA(z,wt&FL?FL:INT,2*s,2,0); zv=AV(z);
   GATV0(q,INT,s,1); qv=AV(q)-r;
-  u=qv+r; DO(s, *u++=0;); k=0;
+  u=qv+r; DQ(s, *u++=0;); k=0;
   switch(15*b+(at&SBT?12:at&C4T?9:at&INT?6:at&C2T?3:0)+(wt&FL?2:wt&INT?1:0)){
    case  0: KEYHEADTALLY(I,UC,B,*v,   wv[i]); break;
    case  1: KEYHEADTALLY(I,UC,I,*v,   wv[i]); break;

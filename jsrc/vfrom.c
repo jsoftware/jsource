@@ -18,7 +18,7 @@ F1(jtcatalog){PROLOG(0072);A b,*wv,x,z,*zv;C*bu,*bv,**pv;I*cv,i,j,k,m=1,n,p,*qv,
  RZ(x=apvwr(n,0L,0L)); cv=AV(x);
  DO(n, x=wv[i]; if(TYPESNE(t,AT(x)))RZ(x=cvt(t,x)); r+=AR(x); qv[i]=p=AN(x); RE(m=mult(m,p)); pv[i]=CAV(x););
  GATV0(z,BOX,m,r);    zv=AAV(z); s=AS(z); 
- DO(n, x=wv[i]; u=AS(x); DO(AR(x),*s++=*u++;););
+ DO(n, x=wv[i]; u=AS(x); DQ(AR(x),*s++=*u++;););
  for(i=0;i<m;i++){
   bu=bv-k;
   DO(n, MC(bu+=k,pv[i]+k*cv[i],k););
@@ -186,7 +186,7 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wk,wn,wr,*ws,zn;
 #if !SY_64 && SY_WIN32
 #define BNNERN(T)   \
  {B*au=av;T*v=(T*)wv,v0,v1,*x=(T*)zv;                                               \
-  DO(m, v0=v[0]; v1=v[1]; u=(I*)av; DO(q, switch(*u++){                             \
+  DQ(m, v0=v[0]; v1=v[1]; u=(I*)av; DQ(q, switch(*u++){                             \
    case B0000: BSET(x,v0,v0,v0,v0); break;  case B0001: BSET(x,v0,v0,v0,v1); break; \
    case B0010: BSET(x,v0,v0,v1,v0); break;  case B0011: BSET(x,v0,v0,v1,v1); break; \
    case B0100: BSET(x,v0,v1,v0,v0); break;  case B0101: BSET(x,v0,v1,v0,v1); break; \
@@ -196,16 +196,16 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wk,wn,wr,*ws,zn;
    case B1100: BSET(x,v1,v1,v0,v0); break;  case B1101: BSET(x,v1,v1,v0,v1); break; \
    case B1110: BSET(x,v1,v1,v1,v0); break;  case B1111: BSET(x,v1,v1,v1,v1); break; \
   });                                                                               \
-  b=(B*)u; DO(r, *x++=*b++?v1:v0;); v+=p;);                                         \
+  b=(B*)u; DQ(r, *x++=*b++?v1:v0;); v+=p;);                                         \
  }
 #define BNNERM(T,T1)   \
  {B*au=av;T*c,*v=(T*)wv,v0,v1,*x=(T*)zv;T1 vv[16],*y;                                  \
-  DO(m, v0=v[0]; v1=v[1]; c=(T*)vv; y=(T1*)x; u=(I*)av;                                \
+  DQ(m, v0=v[0]; v1=v[1]; c=(T*)vv; y=(T1*)x; u=(I*)av;                                \
    BSET(c,v0,v0,v0,v0); BSET(c,v0,v0,v0,v1); BSET(c,v0,v0,v1,v0); BSET(c,v0,v0,v1,v1); \
    BSET(c,v0,v1,v0,v0); BSET(c,v0,v1,v0,v1); BSET(c,v0,v1,v1,v0); BSET(c,v0,v1,v1,v1); \
    BSET(c,v1,v0,v0,v0); BSET(c,v1,v0,v0,v1); BSET(c,v1,v0,v1,v0); BSET(c,v1,v0,v1,v1); \
    BSET(c,v1,v1,v0,v0); BSET(c,v1,v1,v0,v1); BSET(c,v1,v1,v1,v0); BSET(c,v1,v1,v1,v1); \
-   DO(q, switch(*u++){                                                                 \
+   DQ(q, switch(*u++){                                                                 \
     case B0000: *y++=vv[ 0]; break;  case B0001: *y++=vv[ 1]; break;                   \
     case B0010: *y++=vv[ 2]; break;  case B0011: *y++=vv[ 3]; break;                   \
     case B0100: *y++=vv[ 4]; break;  case B0101: *y++=vv[ 5]; break;                   \
@@ -215,7 +215,7 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wk,wn,wr,*ws,zn;
     case B1100: *y++=vv[12]; break;  case B1101: *y++=vv[13]; break;                   \
     case B1110: *y++=vv[14]; break;  case B1111: *y++=vv[15]; break;                   \
    });                                                                                 \
-   b=(B*)u; x=(T*)y; DO(r, *x++=*b++?v1:v0;); v+=p;);                                  \
+   b=(B*)u; x=(T*)y; DQ(r, *x++=*b++?v1:v0;); v+=p;);                                  \
  }
 #else
 #define BNNERN(T)       {T*v=(T*)wv,*x=(T*)zv; DQ(m, b=av; DQ(an, *x++=*(v+*b++);); v+=p;);}
@@ -285,10 +285,10 @@ static F2(jtbfrom){A z;B*av,*b;C*wv,*zv;I acr,an,ar,k,m,p,q,r,*u=0,wcr,wf,wk,wn,
       case B1100: MC(zv,xv12,k4); break;   case B1101: MC(zv,xv13,k4); break;
       case B1110: MC(zv,xv14,k4); break;   case B1111: MC(zv,xv15,k4); break;
      }
-     b=(B*)u; DO(r, MC(zv,wv+k**b++,k); zv+=k;); wv+=wk;
+     b=(B*)u; DQ(r, MC(zv,wv+k**b++,k); zv+=k;); wv+=wk;
    }}
 #else
-   else DO(m, b=av; DO(an, MC(zv,wv+k**b++,k); zv+=k;); wv+=wk;);
+   else DQ(m, b=av; DQ(an, MC(zv,wv+k**b++,k); zv+=k;); wv+=wk;);
 #endif
  }
  RETF(z);  // todo kludge should inherit norel
@@ -305,12 +305,12 @@ A jtfrombu(J jt,A a,A w,I wf){F1PREFIP;A p,q,z;B b=0;I ar,*as,h,m,r,*u,*v,wcr,wr
  DO(wr, if(!ws[i]){b=1; break;});
  if(b){  // empty array, either a or w
   GA(z,AT(w),0,wf+(wcr-h)+(ar-1),0); u=AS(z);
-  v=ws;      DO(wf,    *u++=*v++;);
-  v=as;      DO(ar-1,  *u++=*v++;);
-  v=ws+wf+h; DO(wcr-h, *u++=*v++;);
+  v=ws;      DQ(wf,    *u++=*v++;);
+  v=as;      DQ(ar-1,  *u++=*v++;);
+  v=ws+wf+h; DQ(wcr-h, *u++=*v++;);
   R z;
  }
- fauxblockINT(pfaux,4,1); fauxINT(p,pfaux,h,1) v=AV(p)+h; u=ws+wf+h; m=1; DO(h, *--v=m; m*=*--u;);  // m is number of items in the block of axes that index into w
+ fauxblockINT(pfaux,4,1); fauxINT(p,pfaux,h,1) v=AV(p)+h; u=ws+wf+h; m=1; DQ(h, *--v=m; m*=*--u;);  // m is number of items in the block of axes that index into w
  r=wr+1-h;  // rank of result is rank of w, minus h axes that go away and are replaced by 1 axis
  // We will use pdt to create an index to the cell
  A ind; RZ(ind=pdt(a,p));

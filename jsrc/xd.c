@@ -108,7 +108,7 @@ F1(jtfullname){C dirpath[_MAX_PATH];
  RZ(w=str0(vslit(w)));
 #if SY_WINCE
  C*s;
- s=CAV(w); DO(AN(w), if(' '!=*s)break; ++s;);
+ s=CAV(w); DQ(AN(w), if(' '!=*s)break; ++s;);
  if(*s=='\\'||*s=='/') strcpy(dirpath,s);
  else {strcpy(dirpath, "\\"); strcat(dirpath,s);}
 #else

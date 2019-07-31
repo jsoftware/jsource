@@ -123,9 +123,9 @@ F1(jtranking){A y,z;C*wv;I icn,i,k,m,n,t,wcr,wf,wn,wr,*ws,wt,*zv;CR rng;TTYPE *y
 #if C_LE
    case sizeof(S):
     if(wt&IS1BYTE){I c,d,s,t;US*v;TTYPE *u;
-     v=(US*)wv; DO(n, ++yu[*v++];);
-     s=0;       DO(256, c=0; d=i; DO(256, u=yv+(c+d); c+=256; if(*u){t=*u; *u=(TTYPE)s; s+=t;}););
-     v=(US*)wv; DO(n, *zv++=yu[*v++]++;);
+     v=(US*)wv; DQ(n, ++yu[*v++];);
+     s=0;       DO(256, c=0; d=i; DQ(256, u=yv+(c+d); c+=256; if(*u){t=*u; *u=(TTYPE)s; s+=t;}););
+     v=(US*)wv; DQ(n, *zv++=yu[*v++]++;);
     }else RANKINGLOOP(US);
 #else
    case sizeof(S):   RANKINGLOOP(US);

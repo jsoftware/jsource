@@ -9,7 +9,7 @@
 static I jtord(J jt,A w){I j,n,*v,z;
  RZ(w);
  n=AN(w); z=-n;
- if(n){if(!(INT&AT(w)))RZ(w=cvt(INT,w)); v=AV(w); DO(n, j=*v++; if(z<j)z=j;); ++z;}
+ if(n){if(!(INT&AT(w)))RZ(w=cvt(INT,w)); v=AV(w); DQ(n, j=*v++; if(z<j)z=j;); ++z;}
  R z;
 }  // the order of the permutation w: max element of w (could be negative)
 
@@ -100,7 +100,7 @@ F1(jtpparity){A x,y,z;B p,*u;I i,j,k,m,n,r,*s,*v,*zv;
  for(i=0;i<m;++i){
   j=p=0; memset(u,C1,n);
   DO(n, k=v[i]; if(0>k)v[i]=k+=n; if(0<=k&&k<n&&u[k])u[k]=0; else{j=1+n; break;});
-  for(;j<n;++j)if(j!=v[j]){k=j; DO(n-j-1, ++k; if(j==v[k]){v[k]=v[j]; p=!p; break;});}
+  for(;j<n;++j)if(j!=v[j]){k=j; DQ(n-j-1, ++k; if(j==v[k]){v[k]=v[j]; p=!p; break;});}
   zv[i]=p?-1:j==n; 
   v+=n;
  }

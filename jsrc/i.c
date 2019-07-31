@@ -83,7 +83,7 @@ B jtglobinit(J jt){A x,y;D*d;A *oldpushx=jt->tnextpushp;
  jt->adbreakr=jt->adbreak=&breakdata; /* required for ma to work */
  meminit();  /* required for ma to work */
 // obsolete  s=bitdisp; 
-// obsolete  DO(256, c=(UC)i;      DO(BB, *s++=c&(UC)128?'1':'0'; *s++=' '; c<<=1;);           );
+// obsolete  DO(256, c=(UC)i;      DQ(BB, *s++=c&(UC)128?'1':'0'; *s++=' '; c<<=1;);           );
 // obsolete  DO(16,  c=(UC)i; k=0; DO(BB, if(c&(UC)1)++k;                   c>>=1;); bitc[i]=k;);
 // obsolete  DO(15, j=1+i; DO(16, bitc[16*j+i]=bitc[j]+bitc[i];););
  MC(&inf, XINF,SZD); 
@@ -204,7 +204,7 @@ if(((-1) >> 1) != -1)*(I *)4 = 104;
 jt->asgzomblevel = 1;  // allow premature change to zombie names, but not data-dependent errors
 jt->assert = 1;
  RZ(jt->bxa=cstr("+++++++++|-")); jt->bx=CAV(jt->bxa);
- y=1.0; DO(44, y*=0.5;); jt->cctdefault=jt->cct= 1.0-y; jt->fuzz=y;
+ y=1.0; DQ(44, y*=0.5;); jt->cctdefault=jt->cct= 1.0-y; jt->fuzz=y;
  jt->disp[0]=1; jt->disp[1]=5;
  jt->fcalln=NFCALL;
 #if USECSTACK

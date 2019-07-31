@@ -44,8 +44,8 @@ F2(jtbitmatch){B*v;I ar,*as,at,c,d,i,q,r,r1,rc,m,wr,*ws,wt;UC k,p,*u;
  if(at&BIT){u=UAV(a); v=BAV(w);}
  else      {u=UAV(w); v=BAV(a);}
  for(i=0;i<m;++i){
-  DO(q, k=*u++; p=(UC)128; DO(BB, if((1&&*v++)!=(1&&k&p))R zero; p>>=1;););
-  if(r){k=*u++; p=(UC)128; DO(r,  if((1&&*v++)!=(1&&k&p))R zero; p>>=1;);}
+  DQ(q, k=*u++; p=(UC)128; DQ(BB, if((1&&*v++)!=(1&&k&p))R zero; p>>=1;););
+  if(r){k=*u++; p=(UC)128; DQ(r,  if((1&&*v++)!=(1&&k&p))R zero; p>>=1;);}
   u+=r1;
  }
  R one;
@@ -81,10 +81,10 @@ static F1(jtbitvfypad){I c,d,i,m,rc,wn,wr,*ws;UI mask,*u;
 
 static I bitsum(I n,UC*b){I z=0;
 #if SY_64
- DO((n+BW-1)/BW, z+=bitc[*b++]; z+=bitc[*b++]; z+=bitc[*b++]; z+=bitc[*b++];
+ DQ((n+BW-1)/BW, z+=bitc[*b++]; z+=bitc[*b++]; z+=bitc[*b++]; z+=bitc[*b++];
                  z+=bitc[*b++]; z+=bitc[*b++]; z+=bitc[*b++]; z+=bitc[*b++];);
 #else
- DO((n+BW-1)/BW, z+=bitc[*b++]; z+=bitc[*b++]; z+=bitc[*b++]; z+=bitc[*b++];);
+ DQ((n+BW-1)/BW, z+=bitc[*b++]; z+=bitc[*b++]; z+=bitc[*b++]; z+=bitc[*b++];);
 #endif
  R z;
 }    /* +/ bit vector */
@@ -112,10 +112,10 @@ static F1(jtbitslplus){A t,z;I i,m,mm,n,n1,p,q,*u,wr,*ws,*zv;UC c,*vc,*wv;UI*v,*
  n1=(n+BW-1)/BW; n1*=SZI; q=(n+BB-1)/BB;
  GATV0(t,INT,q,1); v=v0=(UI*)AV(t); wv=UAV(w);
  for(i=(m+mm-1)/mm-1;i>=0;--i){
-  v=v0; DO(q, *v++=0;);
+  v=v0; DQ(q, *v++=0;);
   p=i?mm:m%mm;
-  DO(p, v=v0; DO(q, *v+++=ptab[*wv++];); wv+=n1-q;);
-  vc=(UC*)v0; u=zv; DO(n, c=*vc++; *u+++=c>>4; *u+++=c&(UC)0x0f;);
+  DQ(p, v=v0; DQ(q, *v+++=ptab[*wv++];); wv+=n1-q;);
+  vc=(UC*)v0; u=zv; DQ(n, c=*vc++; *u+++=c>>4; *u+++=c&(UC)0x0f;);
  }
  R z;
 }    /* +/ bit vector */
@@ -126,7 +126,7 @@ static F1(jtbitsland){I n;UI ff,*v;
  ASSERT(1>=AR(w),EVNONCE);
  n=AN(w); v=(UI*)AV(w);
  ff=~(UI)0;
- DO(n/BW, if(ff!=*v++)R zero;);
+ DQ(n/BW, if(ff!=*v++)R zero;);
  if(n%BW)R *v==bitmask(n)?one:zero;
  R one;
 }    /* *./ bit vector */
@@ -136,7 +136,7 @@ static F1(jtbitslor){I n;UI*v;
  ASSERT(BIT&AT(w),EVDOMAIN);
  ASSERT(1>=AR(w),EVNONCE);
  n=AN(w); v=(UI*)AV(w);
- DO(n/BW, if(*v++)R one;);
+ DQ(n/BW, if(*v++)R one;);
  if(n%BW)R *v&bitmask(n)?one:zero;
  R zero;
 }    /* +./ bit vector */
@@ -147,9 +147,9 @@ static F1(jtbitslne){I n;UC c,*v;
  ASSERT(1>=AR(w),EVNONCE);
  n=AN(w); c=0; v=UAV(w);
 #if SY_64
- DO((n+BW-1)/BW, c^=bitc[*v++]; c^=bitc[*v++]; c^=bitc[*v++]; c^=bitc[*v++]; c^=bitc[*v++]; c^=bitc[*v++]; c^=bitc[*v++]; c^=bitc[*v++];);
+ DQ((n+BW-1)/BW, c^=bitc[*v++]; c^=bitc[*v++]; c^=bitc[*v++]; c^=bitc[*v++]; c^=bitc[*v++]; c^=bitc[*v++]; c^=bitc[*v++]; c^=bitc[*v++];);
 #else
- DO((n+BW-1)/BW, c^=bitc[*v++]; c^=bitc[*v++]; c^=bitc[*v++]; c^=bitc[*v++];);
+ DQ((n+BW-1)/BW, c^=bitc[*v++]; c^=bitc[*v++]; c^=bitc[*v++]; c^=bitc[*v++];);
 #endif
  R c&(UC)1?one:zero;
 }    /* ~:/ bit vector */
@@ -160,9 +160,9 @@ static F1(jtbitsleq){I n;UC c,*v;
  ASSERT(1>=AR(w),EVNONCE);
  n=AN(w); c=0; v=UAV(w);
 #if SY_64
- DO((n+BW-1)/BW, c^=bitc[*v++]; c^=bitc[*v++]; c^=bitc[*v++]; c^=bitc[*v++]; c^=bitc[*v++]; c^=bitc[*v++]; c^=bitc[*v++]; c^=bitc[*v++];);
+ DQ((n+BW-1)/BW, c^=bitc[*v++]; c^=bitc[*v++]; c^=bitc[*v++]; c^=bitc[*v++]; c^=bitc[*v++]; c^=bitc[*v++]; c^=bitc[*v++]; c^=bitc[*v++];);
 #else
- DO((n+BW-1)/BW, c^=bitc[*v++]; c^=bitc[*v++]; c^=bitc[*v++]; c^=bitc[*v++];);
+ DQ((n+BW-1)/BW, c^=bitc[*v++]; c^=bitc[*v++]; c^=bitc[*v++]; c^=bitc[*v++];);
 #endif
  R (n-c)&(UC)1?zero:one;
 }    /* =/ bit vector */
@@ -178,12 +178,12 @@ static F1(jtbitscanand){A z;I c,j,m,n;UC ffc,k,p,*u;UI ff,*v,*zv;
  DO(m, if(ff==*v++)*zv++=ff; else{j=i; --v; break;});
  if(0<=j){
   u=(UC*)v; ffc=~(UC)0;
-  DO(SZI, if(ffc!=*u++){--u; break;});
+  DQ(SZI, if(ffc!=*u++){--u; break;});
   c=u-(UC*)v; k=*u; p=0; 
   DO(BB, if(k&bit[i])p|=bit[i]; else break;); 
   *zv=ff; u=c+(UC*)zv; *u++=p;
-  DO((SZI-c)-1, *u++=0;);
-  DO((m-j)-1, *++zv=0;);
+  DQ((SZI-c)-1, *u++=0;);
+  DQ((m-j)-1, *++zv=0;);
  }
  R z;
 }    /* *./\ bit vector */
@@ -198,7 +198,7 @@ static F1(jtbitscanne){A z;I n;UC c,d,p,*v,x,*zv;
  if(!nepfx[255])DO(256, p=(UC)i; c=128; x=d=p&c; DO(7, c>>=1; d|=x=p&c?(x?0:c):(x?c:0);); nepfx[i]=d;);
  x=0; n=AN(w); v=UAV(w);
  GA(z,BIT,n,AR(w),AS(w)); zv=UAV(z);
- DO((n+BB-1)/BB, d=nepfx[*v++]; *zv++=x=1&x?~d:d;);
+ DQ((n+BB-1)/BB, d=nepfx[*v++]; *zv++=x=1&x?~d:d;);
  if(n%BW)*(n/BW+(UI*)AV(z))&=bitmask(n);
  R z;
 }    /* ~:/\ bit vector */
@@ -210,7 +210,7 @@ static F1(jtbitscaneq){A z;I n;UC c,d,p,*v,x,*zv;
  if(!eqpfx[255])DO(256, p=(UC)i; c=128; x=d=p&c; DO(7, c>>=1; d|=x=p&c?(x?c:0):(x?0:c);); eqpfx[i]=d;);
  x=1; n=AN(w); v=UAV(w);
  GA(z,BIT,n,AR(w),AS(w)); zv=UAV(z);
- DO((n+BB-1)/BB, d=eqpfx[*v++]; *zv++=x=1&x?d:~d;);
+ DQ((n+BB-1)/BB, d=eqpfx[*v++]; *zv++=x=1&x?d:~d;);
  if(n%BW)*(n/BW+(UI*)AV(z))&=bitmask(n);
  R z;
 }    /* =/\ bit vector */
@@ -223,8 +223,8 @@ static F1(jtbitnot){A z;I c,m,rc,wn,wr,*ws;UI mask,*u,*zv;
  c=wr?ws[wr-1]:1; m=c?wn/c:0; rc=c%BW;
  mask=bitmask(c);
  GA(z,BIT,wn,wr,ws); zv=(UI*)AV(z);
- if(rc)DO(m, DO(c/BW, *zv++=~*u++;); *zv++=~*u++&mask;)
- else  DO(m, DO(c/BW, *zv++=~*u++;););
+ if(rc)DQ(m, DQ(c/BW, *zv++=~*u++;); *zv++=~*u++&mask;)
+ else  DQ(m, DQ(c/BW, *zv++=~*u++;););
  R z;
 }    /* -. bit array */
 
@@ -238,7 +238,7 @@ static F1(jtbitravel){A z;I c,m,rw,wn,wr,*ws;UC*wv,*zv;
   q=c/BB; r=c%BB; r1=rw?(BW-rw)/BB:0;
   k=0; t=0; ti=BB-t;
   for(j=0;j<m;++j){
-   if(t)DO(q, y=*wv++; k|=y>>t; *zv++=k; k=y<<ti;)
+   if(t)DQ(q, y=*wv++; k|=y>>t; *zv++=k; k=y<<ti;)
    else if(q){MC(zv,wv,q); zv+=q; wv+=q;}
    if(r){y=*wv++; k|=y>>t; if(BB<=t+r){*zv++=k; k=y<<ti;} t=(t+r)%BB; ti=BB-t;}
    wv+=r1;
@@ -260,7 +260,7 @@ static F2(jtbitcat){A z;I an,ar,*as,t,ti,wn,wr,*ws;UC*zv;
  zv+=an/BB;
  if(t=an%BB){UC k,*wv,y;
   ti=BB-t; wv=UAV(w); k=*zv;
-  DO((wn+BB-1)/BB, y=*wv++; k|=y>>t; *zv++=k; k=y<<ti;);
+  DQ((wn+BB-1)/BB, y=*wv++; k|=y>>t; *zv++=k; k=y<<ti;);
   *zv++=k;
  }else MC(zv,AV(w),SZI*((wn+BW-1)/BW));
  R z;
@@ -278,7 +278,7 @@ static F2(jtbitfrom){A z;I an,ar,*as,c,i,j,m,n,q,r,rc,r1,wr,*ws;UC k,*v,*zv;
   for(i=0;i<m;++i){
    DO(q, k=0; DO(BB, j=*u++; if(0>j)j+=n; ASSERT(0<=j&&j<n,EVINDEX); if(v[j/BB]&(UC)128>>j%BB)k|=bit[i];); *zv++=k;);
    if(r){k=0; DO(r,  j=*u++; if(0>j)j+=n; ASSERT(0<=j&&j<n,EVINDEX); if(v[j/BB]&(UC)128>>j%BB)k|=bit[i];); *zv++=k;}
-   DO(r1, *zv++=0;);
+   DQ(r1, *zv++=0;);
  }}else{A x;I*u,*v,zn,zr,*zv;
   zr=ar+wr-1;
   GATV0(x,INT,zr,1); u=AV(x); 
@@ -286,7 +286,7 @@ static F2(jtbitfrom){A z;I an,ar,*as,c,i,j,m,n,q,r,rc,r1,wr,*ws;UC k,*v,*zv;
   GA(z,BIT,zn,zr,u); zv=AV(z);
   n=*ws; c=(ws[wr-1]+BW-1)/BW; RE(m=mult(prod(wr-2,1+ws),c));
   u=AV(a); v=AV(w); 
-  DO(an, j=*u++; if(0>j)j+=n; ASSERT(0<=j&&j<n,EVINDEX); ICPY(zv,v+j*m,m); zv+=m;);
+  DQ(an, j=*u++; if(0>j)j+=n; ASSERT(0<=j&&j<n,EVINDEX); ICPY(zv,v+j*m,m); zv+=m;);
  }
  R z;
 }    /* integer array { bit array */
@@ -305,8 +305,8 @@ static F2(jtbiterror){ASSERT(0,EVNONCE);}
   u=(UI*)AV(a); v=(UI*)AV(w);                    \
   mask=bitmask(c);                               \
   GA(z,BIT,wn,wr,ws); zv=(UI*)AV(z);             \
-  if(rc)DO(m, DO(c/BW, *zv++=OP(*u++,*v++);); *zv++=OP(*u++,*v++)&mask;)  \
-  else  DO(m, DO(c/BW, *zv++=OP(*u++,*v++);););  \
+  if(rc)DQ(m, DQ(c/BW, *zv++=OP(*u++,*v++);); *zv++=OP(*u++,*v++)&mask;)  \
+  else  DQ(m, DQ(c/BW, *zv++=OP(*u++,*v++);););  \
   R z;                                           \
  }   /* bit array op bit array */
 
@@ -323,7 +323,7 @@ static F2(jtbiterror){ASSERT(0,EVNONCE);}
   for(i=0;i<m;++i){                                            \
    DO(q, k=0; DO(BB, if(OP(*u++,*v++))k|=bit[i];); *zv++=k;);  \
    if(r){k=0; DO(r,  if(OP(*u++,*v++))k|=bit[i];); *zv++=k;}   \
-   DO(r1, *zv++=0;);                                           \
+   DQ(r1, *zv++=0;);                                           \
   }                                                            \
   R z;                                                         \
  }   /* integer array op integer array */
@@ -431,7 +431,7 @@ static F2(jtbitindexof){I j,n;UC*u,y;UI*v,x;
  }
 
 #define REPDO(T,exp0,exp1)  {T*u=(T*)wv,*v=(T*)zv;      \
- DO((n+BB-1)/BB, k=*av++; REPSWITCH(k>>4, exp0, exp1); REPSWITCH(k&15, exp0, exp1););}
+ DQ((n+BB-1)/BB, k=*av++; REPSWITCH(k>>4, exp0, exp1); REPSWITCH(k&15, exp0, exp1););}
 
 
 static F2(jtbitrepeat){A z;I c,c1,m,n,p,wr,wk,wt;UC*av,k;

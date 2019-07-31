@@ -6,7 +6,7 @@
 #include "j.h"
 
 
-B jtvc1(J jt,I n,US*v){DO(n, RZ(255>=*v++);); R 1;}
+B jtvc1(J jt,I n,US*v){DQ(n, RZ(255>=*v++);); R 1;}
      /* verify that 2-byte chars have high-order 0 bytes */
 
 // allocate new datablock and return the ASCII for the characters in w
@@ -21,22 +21,22 @@ A jttoc1(J jt,B h,A w){A z;C*wv,*zv;I n;C4*w4;
 #if C_LE
  if(C2T&AT(w))
  {
- if(h)DO(n, *zv++=*wv++; wv++;) else DO(n, *zv++=*wv++; ASSERT(!*wv++,EVDOMAIN);)
+ if(h)DQ(n, *zv++=*wv++; wv++;) else DQ(n, *zv++=*wv++; ASSERT(!*wv++,EVDOMAIN);)
  }
  else
  {
- if(h)DO(n, *zv++=(UC)*w4++; ) else DO(n, *zv++=(UC)*w4++; ASSERT(*(w4-1)<256UL,EVDOMAIN);)
+ if(h)DQ(n, *zv++=(UC)*w4++; ) else DQ(n, *zv++=(UC)*w4++; ASSERT(*(w4-1)<256UL,EVDOMAIN);)
  }
  // copy the low byte of the data (if there is any).  if b==0, verify high byte is 0
  // where low and high are depends on endianness
 #else
  if(C2T&AT(w))
  {
- if(h)DO(n, wv++; *zv++=*wv++;) else DO(n, ASSERT(!*wv++,EVDOMAIN); *zv++=*wv++;)
+ if(h)DQ(n, wv++; *zv++=*wv++;) else DQ(n, ASSERT(!*wv++,EVDOMAIN); *zv++=*wv++;)
  }
  else
  {
- if(h)DO(n, *zv++=(UC)*w4++; ) else DO(n, *zv++=(UC)*w4++; ASSERT(*(w4-1)<256UL,EVDOMAIN);)
+ if(h)DQ(n, *zv++=(UC)*w4++; ) else DQ(n, *zv++=(UC)*w4++; ASSERT(*(w4-1)<256UL,EVDOMAIN);)
  }
 #endif
  RETF(z);
@@ -51,20 +51,20 @@ static F1(jttoc2){A z;C*wv,*zv;I n;C4*w4;US*z2;
 #if C_LE
  if(LIT&AT(w))
  {
- DO(n, *zv++=*wv++; *zv++=0;);
+ DQ(n, *zv++=*wv++; *zv++=0;);
  }
  else
  {
- DO(n, *z2++=(US)*w4++;);
+ DQ(n, *z2++=(US)*w4++;);
  }
 #else
  if(LIT&AT(w))
  {
- DO(n, *zv++=0; *zv++=*wv++;);
+ DQ(n, *zv++=0; *zv++=*wv++;);
  }
  else
  {
- DO(n, *z2++=(US)*w4++;);
+ DQ(n, *z2++=(US)*w4++;);
  }
 #endif
  R z;
@@ -88,12 +88,12 @@ static F1(jtifc2){A z;I n,t,*zv;
  n=AN(w); t=AT(w);
  ASSERT(!n||t&JCHAR,EVDOMAIN);
  GATV(z,INT,n,AR(w),AS(w)); zv=AV(z);
- if(t&LIT){UC*v=UAV(w); DO(n, *zv++=*v++;);}
- else if(t&C2T){US*v=USAV(w); DO(n, *zv++=*v++;);}
+ if(t&LIT){UC*v=UAV(w); DQ(n, *zv++=*v++;);}
+ else if(t&C2T){US*v=USAV(w); DQ(n, *zv++=*v++;);}
 #if SY_64
- else          {C4*v=C4AV(w); DO(n, *zv++=*v++;);}
+ else          {C4*v=C4AV(w); DQ(n, *zv++=*v++;);}
 #else
- else          {I*v=(I*)AV(w); DO(n, *zv++=*v++;);}
+ else          {I*v=(I*)AV(w); DQ(n, *zv++=*v++;);}
 #endif
  RETF(z);
 }    /* integers from 1- or 2-byte or 4-byte chars */
@@ -102,7 +102,7 @@ static F1(jtc2fi){A z;I j,n,*v;US*zv;
  RZ(w=vi(w));
  n=AN(w); v=AV(w);
  GATV(z,C2T,n,AR(w),AS(w)); zv=USAV(z);
- DO(n, j=*v++; ASSERT(SMIN<=j&&j<=SMAX,EVINDEX); *zv++=(US)j;);
+ DQ(n, j=*v++; ASSERT(SMIN<=j&&j<=SMAX,EVINDEX); *zv++=(US)j;);
  RETF(z);
 }    /* 2-byte chars from integers */
 

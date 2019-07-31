@@ -107,13 +107,13 @@ F1(jtts0){A x,z;C s[9],*u,*v,*zv;D*xv;I n,q;
  if(!n)R x;
  if(!(AT(w)&LIT))RZ(w=cvt(LIT,w));
  GATV(z,LIT,n,AR(w),AS(w)); zv=CAV(z); MC(zv,CAV(w),n);
- q=0; v=zv; DO(n, if('Y'==*v++)++q;); u=2==q?s+2:s;
- sprintf(s,FMTI04,(I)xv[0]);             v=zv; DO(n, if(*v=='Y'){*v=*u++; if(!*u)break;} ++v;);
- sprintf(s,FMTI02,(I)xv[1]);        u=s; v=zv; DO(n, if(*v=='M'){*v=*u++; if(!*u)break;} ++v;);
- sprintf(s,FMTI02,(I)xv[2]);        u=s; v=zv; DO(n, if(*v=='D'){*v=*u++; if(!*u)break;} ++v;);
- sprintf(s,FMTI02,(I)xv[3]);        u=s; v=zv; DO(n, if(*v=='h'){*v=*u++; if(!*u)break;} ++v;);
- sprintf(s,FMTI02,(I)xv[4]);        u=s; v=zv; DO(n, if(*v=='m'){*v=*u++; if(!*u)break;} ++v;);
- sprintf(s,FMTI05,(I)(1000*xv[5])); u=s; v=zv; DO(n, if(*v=='s'){*v=*u++; if(!*u)break;} ++v;);
+ q=0; v=zv; DQ(n, if('Y'==*v++)++q;); u=2==q?s+2:s;
+ sprintf(s,FMTI04,(I)xv[0]);             v=zv; DQ(n, if(*v=='Y'){*v=*u++; if(!*u)break;} ++v;);
+ sprintf(s,FMTI02,(I)xv[1]);        u=s; v=zv; DQ(n, if(*v=='M'){*v=*u++; if(!*u)break;} ++v;);
+ sprintf(s,FMTI02,(I)xv[2]);        u=s; v=zv; DQ(n, if(*v=='D'){*v=*u++; if(!*u)break;} ++v;);
+ sprintf(s,FMTI02,(I)xv[3]);        u=s; v=zv; DQ(n, if(*v=='h'){*v=*u++; if(!*u)break;} ++v;);
+ sprintf(s,FMTI02,(I)xv[4]);        u=s; v=zv; DQ(n, if(*v=='m'){*v=*u++; if(!*u)break;} ++v;);
+ sprintf(s,FMTI05,(I)(1000*xv[5])); u=s; v=zv; DQ(n, if(*v=='s'){*v=*u++; if(!*u)break;} ++v;);
  R z;
 }
 
@@ -169,7 +169,7 @@ F2(jttsit2){A z;D t;I n;
  RE(n=i0(a));
  FDEPINC(1);  // No ASSERTs/returns till the DEPDEC below
  t=qpc(); 
- A *old=jt->tnextpushp; DO(n, z=exec1(w); if(!z)break; tpop(old);); 
+ A *old=jt->tnextpushp; DQ(n, z=exec1(w); if(!z)break; tpop(old);); 
  t=qpc()-t;
  FDEPDEC(1);  // Assert OK now
  RZ(z);
@@ -186,12 +186,12 @@ F1(jttsit1){R tsit2(num[1],w);}
 
 F1(jtdl){D m,n,*v;UINT ms,s;
  RZ(w=cvt(FL,w));
- n=0; v=DAV(w); DO(AN(w), m=*v++; ASSERT(0<=m,EVDOMAIN); n+=m;);
+ n=0; v=DAV(w); DQ(AN(w), m=*v++; ASSERT(0<=m,EVDOMAIN); n+=m;);
  s=(UINT)jfloor(n); ms=(UINT)jfloor(0.5+1000*(n-s));
 #if SYS & SYS_MACINTOSH
  {I t=TickCount()+(I)(60*n); while(t>TickCount())JBREAK0;}
 #else
- DO(s, sleepms(1000); JBREAK0;);
+ DQ(s, sleepms(1000); JBREAK0;);
  sleepms(ms);
 #endif
  R w;
@@ -215,7 +215,7 @@ static F1(jtpmfree){A x,y;C*c;I m;PM*v;PM0*u;
  if(w){
   c=CAV(w); u=(PM0*)c; v=(PM*)(c+sizeof(PM0)); 
   m=u->wrapped?u->n:u->i; 
-  DO(m, x=v->name; if(x&&NAME&AT(x)&&AN(x)==*AS(x))fa(x); 
+  DQ(m, x=v->name; if(x&&NAME&AT(x)&&AN(x)==*AS(x))fa(x); 
         y=v->loc;  if(y&&NAME&AT(y)&&AN(y)==*AS(y))fa(y); ++v;);
   fa(w);
  }

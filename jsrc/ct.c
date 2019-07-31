@@ -228,7 +228,7 @@ F1(jttdot){A f,g,h;B nf,ng;C id;V*v;
       ft=tdot(f); RZ(c=d=coeff(ft)); m=AN(c);
       ASSERT(m,EVDOMAIN);
       RZ(h=eval("4 : '+/x*y([:+//.*/)^:(i.#x) 1'"));
-      DO(n-1, RZ(d=df2(c,d,h)););
+      DQ(n-1, RZ(d=df2(c,d,h)););
       R tpoly(d);
  }}}
  ASSERT(id==CFCONS,EVDOMAIN); 

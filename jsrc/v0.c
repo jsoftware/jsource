@@ -19,7 +19,7 @@
   GATVS(z,TYPE,1+n,1,0,TYPE##SIZE,GACOPYSHAPE0,R 0); v=(T*)AV(z); *v=*(T*)AV(a);  \
   for(j=0;j<n;++j){                              \
    d=fnegate(u[j]); t=j+v; *(1+t)=*t;            \
-   DO(j, *t=fplus(*(t-1),ftymes(d,*t)); --t;);   \
+   DQ(j, *t=fplus(*(t-1),ftymes(d,*t)); --t;);   \
    *v=ftymes(d,*v);                              \
   }                                              \
   RE(z); EPILOG(z);                              \
@@ -45,9 +45,9 @@ static F2(jtcfrz){A z;B b=0,p;I j,n;Z c,d,*t,*u,*v;
  GATV0(z,CMPX,1+n,1); v=ZAV(z); *v=c=*ZAV(a); p=!c.im;
  for(j=0;j<n;++j){
   d=znegate(u[j]); t=j+v; *(1+t)=*t; 
-  DO(j, *t=zplus(*(t-1),ztymes(d,*t)); --t;); 
+  DQ(j, *t=zplus(*(t-1),ztymes(d,*t)); --t;); 
   *v=ztymes(d,*v);
-  if(p&&d.im)if(b=!b)c=u[j]; else if(p=ZCJ(c,u[j])){t=v; DO(2+j, t++->im=0.0;);}
+  if(p&&d.im)if(b=!b)c=u[j]; else if(p=ZCJ(c,u[j])){t=v; DQ(2+j, t++->im=0.0;);}
  }
  R p>b?cvt(FL,z):z;
 }
@@ -75,7 +75,7 @@ static Z jtnewt(J jt,I m,Z*a,Z x,I n){I i,j;D e=EPS/1024.0;Z c,p,q,*v;
  c.im=0.0;
  for(i=0;i<n;++i){
   p=q=zeroZ; v=a+m; j=m;
-  DO(m, p=zplus(*v,ztymes(x,p)); c.re=(D)j--; q=zplus(ztymes(c,*v),ztymes(x,q)); --v;);
+  DQ(m, p=zplus(*v,ztymes(x,p)); c.re=(D)j--; q=zplus(ztymes(c,*v),ztymes(x,q)); --v;);
   p=zplus(*a,ztymes(x,p));
   if(e>zmag(p)||e>zmag(q))break;
   x=zminus(x,zdiv(p,q));
@@ -84,18 +84,18 @@ static Z jtnewt(J jt,I m,Z*a,Z x,I n){I i,j;D e=EPS/1024.0;Z c,p,q,*v;
 }    
 
 static B jtdeflateq(J jt,B k,I m,Q*v,Q x){Q q,r,*u;
- u=v+m; q=*u--; DO(m, r=*u--;       q=qplus(r,qtymes(q,x)););
+ u=v+m; q=*u--; DQ(m, r=*u--;       q=qplus(r,qtymes(q,x)););
  RE(0); if(!(QEQ(q,zeroQ)))R 0;
- u=v+m; q=*u--; DO(m, r=*u; *u--=q; q=qplus(r,qtymes(q,x)););
+ u=v+m; q=*u--; DQ(m, r=*u; *u--=q; q=qplus(r,qtymes(q,x)););
  R 1;
 }    /* deflate by x which may or may not be a root. result is 1 iff x is a root. k is ignored. */
 
 static void jtdeflate(J jt,B k,I m,Z*v,Z x){
- if(k){Z q,r; v+=m; q=*v--; DO(m, r=*v; *v--=q; q=zplus(r,ztymes(q,x)););}
+ if(k){Z q,r; v+=m; q=*v--; DQ(m, r=*v; *v--=q; q=zplus(r,ztymes(q,x)););}
  else{D a,b,d,p,q,r;
   a=2*x.re; b=-(x.re*x.re+x.im*x.im);
   v+=m; p=v--->re; q=v--->re;
-  DO(m-1, r=v->re; v->re=d=p; v->im=0.0; --v; p=q+d*a; q=r+d*b;);
+  DQ(m-1, r=v->re; v->re=d=p; v->im=0.0; --v; p=q+d*a; q=r+d*b;);
 }}   /* deflate by single root (1=k) or by conjugates (0=k) */
 
 #define CSZ1 11
@@ -137,7 +137,7 @@ static Q jtmultiple(J jt,D x,Q m){A y;Q q1,q2,q1r2;
 
 static Q jtmaxdenom(J jt,I n,Q*v){Q z;X*u,x,y;
  u=1+(X*)v; x=*u;  // u-> &1st denominator, x=&1st denominator
- DO(n-1, u+=2; y=*u; if(-1==xcompare(x,y))x=y;);  // x=&largest denominator
+ DQ(n-1, u+=2; y=*u; if(-1==xcompare(x,y))x=y;);  // x=&largest denominator
  z.n=x; z.d=iv1; R z;  // set denominator as a rational number
 }    /* maximum denominator in rational vector v */
 
@@ -388,17 +388,17 @@ F2(jtpoly2){F2PREFIP;A c,za;B b;D*ad,d,p,*x,u,*z;I an,at,j,t,n,wt;Z*az,e,q,*wz,y
 #else
   switch(an){  // special cases for linear, quadratic, cubic
   case 2:
-   {D c0=ad[0],c1=ad[1]; DO(n, u=*x++; *z++=c0+u*c1;);} break;
+   {D c0=ad[0],c1=ad[1]; DQ(n, u=*x++; *z++=c0+u*c1;);} break;
   case 3:
-   {D c0=ad[0],c1=ad[1],c2=ad[2]; DO(n, u=*x++; *z++=c0+u*(c1+u*c2););} break; 
+   {D c0=ad[0],c1=ad[1],c2=ad[2]; DQ(n, u=*x++; *z++=c0+u*(c1+u*c2););} break; 
   case 4:
-   {D c0=ad[0],c1=ad[1],c2=ad[2],c3=ad[3]; DO(n, u=*x++; *z++=c0+u*(c1+u*(c2+u*c3)););} break;
+   {D c0=ad[0],c1=ad[1],c2=ad[2],c3=ad[3]; DQ(n, u=*x++; *z++=c0+u*(c1+u*(c2+u*c3)););} break;
   default:
    DO(n, p=ad[an-1]; u=*x++; DQ(an-1,p=ad[i]+u*p;); *z++=p;); break;
   }
 #endif
   NAN1; break;  // Horner's rule.  First multiply is never 0*_
- case 5: NAN0; DO(n, q=zeroZ; y=*wz++; j=an; DO(an,q=zplus(az[--j],ztymes(y,q));); *zz++=q;); NAN1; break;  // CMPX
+ case 5: NAN0; DQ(n, q=zeroZ; y=*wz++; j=an; DQ(an,q=zplus(az[--j],ztymes(y,q));); *zz++=q;); NAN1; break;  // CMPX
  }
  RETF(za);
 }    /* a p."r w */

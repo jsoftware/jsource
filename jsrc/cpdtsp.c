@@ -46,15 +46,15 @@ static F2(jtpdtspmv){A ax,b,g,x,wx,y,yi,yj,z;B*bv;I m,n,s[2],*u,*v,*yv;P*ap,*wp,
  GATVR(yj,INT,n,2,s);
  if(DENSE&AT(w)){
   GATVR(yi,INT,n,2,s); u=AV(yi); AR(yj)=1; v=AV(yj);
-  DO(n, *u++=*yv++; *v++=*yv++;);
+  DQ(n, *u++=*yv++; *v++=*yv++;);
   ax=SPA(ap,x); RZ(wx=from(yj,w));
  }else{
   v=AV(yj);
-  DO(n, yv++; *v++=*yv++;);
+  DQ(n, yv++; *v++=*yv++;);
   wp=PAV(w); RZ(b=eps(yj,SPA(wp,i))); bv=BAV(b); 
   AN(yj)=*AS(yj)=*s=m=bsum(n,bv); v=AV(yj); yv=AV(y);
   GATVR(yi,INT,m,2,s); u=AV(yi);
-  DO(n, if(*bv++){*u++=*yv++; *v++=*yv++;}else yv+=2;);
+  DQ(n, if(*bv++){*u++=*yv++; *v++=*yv++;}else yv+=2;);
   RZ(ax=repeat(b,SPA(ap,x))); RZ(wx=from(indexof(SPA(wp,i),yj),SPA(wp,x))); 
  }
  RZ(x=df2(yi,tymes(ax,wx),sldot(slash(ds(CPLUS)))));
@@ -75,14 +75,14 @@ static F2(jtpdtspvm){A ax,b,g,x,wx,y,yi,yj,z;B*bv;D*av,c,d,*wv,*xv;I m,n,s[2],*u
   GATVR(yj,INT,n,2,s); v=AV(yj); 
   av=DAV(a); x=SPA(wp,x); wv=DAV(x);
   GATV0(x,FL,n,1); xv=DAV(x);
-  DO(n, c=av[*yv++]; *v++=*yv++; d=*wv++; *xv++=c&&d?c*d:0;);
+  DQ(n, c=av[*yv++]; *v++=*yv++; d=*wv++; *xv++=c&&d?c*d:0;);
  }else{
   GATVR(yi,INT,n,2,s); u=AV(yi);
-  DO(n, *u++=*yv++; yv++;);
+  DQ(n, *u++=*yv++; yv++;);
   ap=PAV(a); RZ(b=eps(yi,SPA(ap,i))); bv=BAV(b); 
   AN(yi)=*AS(yi)=*s=m=bsum(n,bv); u=AV(yi); yv=AV(y);
   GATVR(yj,INT,m,2,s); v=AV(yj);
-  DO(n, if(*bv++){*u++=*yv++; *v++=*yv++;}else yv+=2;);
+  DQ(n, if(*bv++){*u++=*yv++; *v++=*yv++;}else yv+=2;);
   RZ(ax=from(indexof(SPA(ap,i),yi),SPA(ap,x))); RZ(wx=repeat(b,SPA(wp,x)));
   RZ(x=tymes(ax,wx));
  }
@@ -127,7 +127,7 @@ static B jtmmharvest(J jt,I ii,I zjn,A zj,D*zyv,I*n,A*zi,A*zx){A x;D*zxv,*zxv0;I
  while(m<*n+zjn){RZ(*zi=ext(0,*zi)); RZ(*zx=ext(0,*zx)); m=MIN(*AS(*zi),*AS(*zx));}
  m=AN(zj); AN(zj)=*AS(zj)=zjn; RZ(x=grade2(zj,zj)); AN(zj)=*AS(zj)=m; 
  p=-1; v=AV(x); ziv=AV(*zi)+(*n<<1); zxv=zxv0=DAV(*zx)+*n;
- DO(zjn, if(p<(j=*v++)){p=j; *ziv++=ii; *ziv++=j; *zxv++=zyv[j]; zyv[j]=0;});
+ DQ(zjn, if(p<(j=*v++)){p=j; *ziv++=ii; *ziv++=j; *zxv++=zyv[j]; zyv[j]=0;});
  *n+=zxv-zxv0;
  R 1;
 }    /* collect accumulated values for row ii */
@@ -153,7 +153,7 @@ static F2(jtpdtspmm){A z,zi,zj,zx,zy,*old;D*axv,c,d,*dv,*wxv,*zyv;
     if(j==ii){
      p=wnv[1+k]-wnv[k]; dv=wxv+wnv[k]; v=1+wiv+(wnv[k]<<1);
      q=zjv-zjv0; while(AN(zj)<p+q){RZ(zj=ext(0,zj)); zjv0=AV(zj); zjv=q+zjv0;}
-     DO(p, if(d=*dv++){if(!zyv[*v])*zjv++=*v; zyv[*v++]+=c*d; v++;});
+     DQ(p, if(d=*dv++){if(!zyv[*v])*zjv++=*v; zyv[*v++]+=c*d; v++;});
     }else k=k0;
    }
    if(aiv>=aivm||i<(p=*aiv++)){    /* done with row i in a, emit row i in z */

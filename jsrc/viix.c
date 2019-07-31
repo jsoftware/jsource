@@ -9,10 +9,10 @@
 #define BXLOOP(T)  \
  {T*wv=(T*)AV(w),x;                                                  \
   switch((4*descend)+(0<=p?2:0)+(I )(0<=q)){                             \
-   case 1: DO(m, *zv++=n*(1<*wv++););              break; /*   q */  \
-   case 2: DO(m, *zv++=n*(0<*wv++););              break; /* p   */  \
-   case 3: DO(m, x=*wv++; *zv++=x<=0?0:x<=1?q:n;); break; /* p q */  \
-   case 7: DO(m, x=*wv++; *zv++=x>=1?0:x>=0?p:n;);        /* p q */  \
+   case 1: DQ(m, *zv++=n*(1<*wv++););              break; /*   q */  \
+   case 2: DQ(m, *zv++=n*(0<*wv++););              break; /* p   */  \
+   case 3: DQ(m, x=*wv++; *zv++=x<=0?0:x<=1?q:n;); break; /* p q */  \
+   case 7: DQ(m, x=*wv++; *zv++=x>=1?0:x>=0?p:n;);        /* p q */  \
  }}
 
 static B jtiixBX(J jt,I n,I m,A a,A w,I*zv){B*av,*b,descend;I p,q;
@@ -26,9 +26,9 @@ static B jtiixBX(J jt,I n,I m,A a,A w,I*zv){B*av,*b,descend;I p,q;
    b=BAV(w);
    switch((4*descend)+(0<=p?2:0)+(I )(0<=q)){
     case 1: memset(zv,C0,m*SZI);   break;  /*   q */
-    case 2: DO(m, *zv++=n* *b++;); break;  /* p   */
-    case 3: DO(m, *zv++=q* *b++;); break;  /* p q */
-    case 7: DO(m, *zv++=p*!*b++;);         /* p q */
+    case 2: DQ(m, *zv++=n* *b++;); break;  /* p   */
+    case 3: DQ(m, *zv++=q* *b++;); break;  /* p q */
+    case 7: DQ(m, *zv++=p*!*b++;);         /* p q */
  }}
  R 1;
 }    /* a I."r w where a is a boolean list */
@@ -37,21 +37,21 @@ static B jtiixI(J jt,I n,I m,A a,A w,I*zv){A t;B ascend;I*av,j,p,q,*tv,*u,*v,*vv
  av=AV(a); wv=AV(w);
  p=av[0]; q=av[n-1]; ascend=p<=q; if(!ascend){x=p; p=q; q=x;}
  GATV0(t,INT,1+q-p,1); v=AV(t); tv=v-p; vv=v+AN(t);  // v->buffer; tv->virtual buffer origin, where p=0; vv->buffer end
-// obsolete  if(ascend){u=av;     x=*u++; *v++=j=0; DO(n-1, ++j; y=*u++; ASSERT(p<=y&&y<=q&&vv>=v+y-x,EVDOMAIN); DO(y-x, *v++=j;); x=y;);}
-// obsolete  else      {u=av+n-1; x=*u--;      j=n; DO(n-1, --j; y=*u--; ASSERT(p<=y&&y<=q&&vv>=v+y-x,EVDOMAIN); DO(y-x, *v++=j;); x=y;);}
- if(ascend){u=av;     x=*u++; *v++=j=0; DO(n-1, ++j; y=*u++; ASSERT((UI)(y-x)<=(UI)(q-x),EVDOMAIN); DO(y-x, *v++=j;); x=y;);}
- else      {u=av+n-1; x=*u--;      j=n; DO(n-1, --j; y=*u--; ASSERT((UI)(y-x)<=(UI)(q-x),EVDOMAIN); DO(y-x, *v++=j;); x=y;);}
- if(ascend)DO(m, x=*wv++; *zv++=x<=p?0:q<x?n:tv[x];)
- else      DO(m, x=*wv++; *zv++=x>=q?0:p>x?n:tv[x];);
+// obsolete  if(ascend){u=av;     x=*u++; *v++=j=0; DQ(n-1, ++j; y=*u++; ASSERT(p<=y&&y<=q&&vv>=v+y-x,EVDOMAIN); DQ(y-x, *v++=j;); x=y;);}
+// obsolete  else      {u=av+n-1; x=*u--;      j=n; DQ(n-1, --j; y=*u--; ASSERT(p<=y&&y<=q&&vv>=v+y-x,EVDOMAIN); DQ(y-x, *v++=j;); x=y;);}
+ if(ascend){u=av;     x=*u++; *v++=j=0; DQ(n-1, ++j; y=*u++; ASSERT((UI)(y-x)<=(UI)(q-x),EVDOMAIN); DQ(y-x, *v++=j;); x=y;);}
+ else      {u=av+n-1; x=*u--;      j=n; DQ(n-1, --j; y=*u--; ASSERT((UI)(y-x)<=(UI)(q-x),EVDOMAIN); DQ(y-x, *v++=j;); x=y;);}
+ if(ascend)DQ(m, x=*wv++; *zv++=x<=p?0:q<x?n:tv[x];)
+ else      DQ(m, x=*wv++; *zv++=x>=q?0:p>x?n:tv[x];);
  R 1;
 }    /* a I. w where a is a list of small range integers */
 
 #define SBCOMP(x,y)       \
  ((SBLT((x),(y)))?-1:(SBGT((x),(y)))?1:0)
 #define COMPVLOOP(T,c)       \
- {T*u=(T*)uu,*v=(T*)vv; DO(c, if(*u!=*v){cc=*u<*v?-1:1; break;} ++u; ++v;);}
+ {T*u=(T*)uu,*v=(T*)vv; DQ(c, if(*u!=*v){cc=*u<*v?-1:1; break;} ++u; ++v;);}
 #define COMPVLOOF(T,c,COMP)  \
- {T*u=(T*)uu,*v=(T*)vv; DO(c, if(cc=COMP(*u,*v))break;          ++u; ++v;);}
+ {T*u=(T*)uu,*v=(T*)vv; DQ(c, if(cc=COMP(*u,*v))break;          ++u; ++v;);}
 
 #define MID(k,p,q)   k=(UI)((p)+(q))>>1  /* beware integer overflow */
 
@@ -70,7 +70,7 @@ static B jtiixI(J jt,I n,I m,A a,A w,I*zv){A t;B ascend;I*av,j,p,q,*tv,*u,*v,*vv
 
 #define BSLOOPN(NE,CMP)        \
   p=0; q=n-1;                  \
-  while(p<=q){MID(k,p,q); u=av+c*k; v=wv; b=1; DO(c, x=*u++; y=*v++; if(NE){CMP; break;}); /* make this compare fixed length? */   \
+  while(p<=q){MID(k,p,q); u=av+c*k; v=wv; b=1; DQ(c, x=*u++; y=*v++; if(NE){CMP; break;}); /* make this compare fixed length? */   \
       if(b)q=k-1; else p=k+1;}
 // Without misprediction
 #define BSLOOPNx(NE,CMP)    /* if CMP is true, move q; otherwise p */       \
@@ -87,7 +87,7 @@ static B jtiixI(J jt,I n,I m,A a,A w,I*zv){A t;B ascend;I*av,j,p,q,*tv,*u,*v,*vv
                                                \
   switch((1==c?0:2)+(I )(1==ge)){                                         \
    case 0: DQ(m, BSLOOP1x(x>=y); *zv++=q+1;       ); break;      \
-/* obsolete    case 1: DO(m, BSLOOP1(b=av[k]<=y); *zv++=1+q;       ); break;    */  \
+/* obsolete    case 1: DQ(m, BSLOOP1(b=av[k]<=y); *zv++=1+q;       ); break;    */  \
    case 1: DQ(m, BSLOOP1x(x<=y); *zv++=q+1;       ); break;      \
    case 2: DQ(m, Ta* u; Tw *v; BSLOOPN(x!=y,b=x>y); *zv++=1+q; wv+=c;); break;      \
    case 3: DQ(m, Ta* u; Tw *v; BSLOOPNx(x!=y,x<y); *zv++=1+q; wv+=c;); break;      \
@@ -102,8 +102,8 @@ static B jtiixI(J jt,I n,I m,A a,A w,I*zv){A t;B ascend;I*av,j,p,q,*tv,*u,*v,*vv
 #define BSLOOF(Ta,Tw,COMP)  \
  {Ta*av=(Ta*)AV(a),*u,x;                                              \
   Tw*wv=(Tw*)AV(w),*v,y;                                              \
-  if(1==c) DO(m, BSLOOP1(b=ge!=COMP(av[k],y));   *zv++=1+q;       )   \
-  else     DO(m, BSLOOPN(cc=COMP(x,y),b=gt==cc); *zv++=1+q; wv+=c;);  \
+  if(1==c) DQ(m, BSLOOP1(b=ge!=COMP(av[k],y));   *zv++=1+q;       )   \
+  else     DQ(m, BSLOOPN(cc=COMP(x,y),b=gt==cc); *zv++=1+q; wv+=c;);  \
  }
 
 // Combine two types into a single value.  Originally this was 7*s+t which produced
@@ -117,13 +117,13 @@ F2(jticap2){A*av,*wv,z;C*uu,*vv;I ar,*as,at,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t,/*obso
  ar=AR(a); at=AT(a); as=AS(a); n=ar?*as:1; r=ar-1<0?0:ar-1;  // n=length of 1-cell of a, r=frame of a
  wr=AR(w); wt=AT(w); ws=AS(w); I b=(AN(a)-1)|(AN(w)-1);  // b<0 if something is empty
  ASSERT(r<=wr,EVRANK);
-// obsolete u=as+ar; v=ws+wr; DO(r, ASSERT(*--u==*--v,EVLENGTH););
+// obsolete u=as+ar; v=ws+wr; DQ(r, ASSERT(*--u==*--v,EVLENGTH););
  /*obsolete u=as; v=ws;*/ ASSERTAGREE(as+ar-r,ws+wr-r,r)
  if(b>=0){ASSERT(HOMO(at,wt),EVDOMAIN); ASSERT(at&DENSE&&wt&DENSE,EVNONCE); } // if no empties, verify agreement & non-sparse
  CPROD(AN(w),m,wr-r,ws); CPROD(AN(w),c,r,ws+wr-r);  // m=#atoms in result   c=# atoms in a cell of w
  GATV(z,INT,m,wr-r,ws); zv=AV(z);
-// obsolete  if(!m||!n||!c){DO(m, *zv++=0;); R z;}  // exit with zeros for empty args
- if(((m-1)|(n-1)|(c-1))<0){DO(m, *zv++=0;); R z;}  // exit with zeros for empty args
+// obsolete  if(!m||!n||!c){DQ(m, *zv++=0;); R z;}  // exit with zeros for empty args
+ if(((m-1)|(n-1)|(c-1))<0){DQ(m, *zv++=0;); R z;}  // exit with zeros for empty args
  t=maxtyped(at,wt);
  if(1==c){  // the search is for atoms
   if(at&B01&&wt&B01+INT+FL){RZ(iixBX(n,m,a,w,zv)); R z;}

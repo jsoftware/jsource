@@ -202,7 +202,7 @@ DF1(jtatomic1){A z;
  F1PREFIP;
  I awm1=AN(w)-1;
  // check for singletons
- if(!(awm1|(AT(w)&(NOUN&UNSAFE(~(B01+INT+FL)))))){
+ if(!(awm1|(AT(w)&(NOUN&UNSAFE(~(B01+INT+FL)))))){  // len=1 andbool/int/float
   z=jtssingleton1(jtinplace,w,self);
   if(z||jt->jerr<=NEVM)RETF(z);  // normal return, or non-retryable error
   // if retryable error, fall through.  The retry will not be through the singleton code

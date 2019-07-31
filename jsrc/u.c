@@ -259,10 +259,10 @@ void mvc(I m,void*z,I n,void*w){I p=n,r;static I k=sizeof(D);
   e=(C*)d; s=w; DO(p, *e++=s[i%n];);
   v=(D*)z; d0=*d;
   switch(p){
-   case  8: DO(m/p, *v++=d0;); break;
-   case 24: DO(m/p, *v++=d0; *v++=d[1]; *v++=d[2];); break;
-   case 40: DO(m/p, *v++=d0; *v++=d[1]; *v++=d[2]; *v++=d[3]; *v++=d[4];); break;
-   case 56: DO(m/p, *v++=d0; *v++=d[1]; *v++=d[2]; *v++=d[3]; *v++=d[4]; *v++=d[5]; *v++=d[6];);
+   case  8: DQ(m/p, *v++=d0;); break;
+   case 24: DQ(m/p, *v++=d0; *v++=d[1]; *v++=d[2];); break;
+   case 40: DQ(m/p, *v++=d0; *v++=d[1]; *v++=d[2]; *v++=d[3]; *v++=d[4];); break;
+   case 56: DQ(m/p, *v++=d0; *v++=d[1]; *v++=d[2]; *v++=d[3]; *v++=d[4]; *v++=d[5]; *v++=d[6];);
   }
   if(r=m%p){s=(C*)v; e=(C*)d; DO(r, *s++=e[i];);}
 }}
@@ -412,7 +412,7 @@ F1(jtvib){A z;D d,e,*wv;I i,n,*zv;
 }
 
 // Convert w to integer if needed, and verify every atom is nonnegative
-F1(jtvip){I*v; RZ(w); if(!(INT&AT(w)))RZ(w=cvt(INT,w)); v=AV(w); DO(AN(w), ASSERT(0<=*v++,EVDOMAIN);); RETF(w);}
+F1(jtvip){I*v; RZ(w); if(!(INT&AT(w)))RZ(w=cvt(INT,w)); v=AV(w); DQ(AN(w), ASSERT(0<=*v++,EVDOMAIN);); RETF(w);}
 
 // Convert w to string, verify it is a list or atom
 F1(jtvs){RZ(w); ASSERT(1>=AR(w),EVRANK); R LIT&AT(w)?w:cvt(LIT,w);}    

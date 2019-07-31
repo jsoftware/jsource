@@ -58,7 +58,7 @@ static NUMH(jtnumi){B neg;C*t;I j;static C*dig="0123456789";
  for(;*s=='0'&&n>1;--n,++s);  // skip leading zeros, as long as there is more than one character
  if(!(19>=n))R 0;   // 2^63 is 9223372036854775808.  So a 20-digit input must overflow, and the most a
   // 19-digit number can be is a little way into the negative; so testing for negative will be a valid test for overflow
- j=0; DO(n, if(!(t=memchr(dig,*s++,10L)))R 0; j=10*j+(t-dig););
+ j=0; DQ(n, if(!(t=memchr(dig,*s++,10L)))R 0; j=10*j+(t-dig););
  if(!(0<=j||neg&&j==IMIN))R 0;  // overflow if negative AND not the case of -2^63, whichs shows as IMIN with a negative flag
  *(I*)vv=0>j||!neg?j:-j;   // if j<0, it must be IMIN, keep it neg; otherwise change sign if neg
  R 1;
@@ -70,7 +70,7 @@ static NUMH(jtnumx){A y;B b,c;C d,*t;I j,k,m,*yv;X*v;static C*dig="0123456789";
  if('-'==d){if(!(2>=n))R 0; if(!(*v=rifvs(vci(1==n?XPINF:XNINF))))R 0; R 1;}
  n-=b+c; if(!(m=(n+XBASEN-1)/XBASEN))R 0; k=n-XBASEN*(m-1);
  GATV0(y,INT,m,1); yv=m+AV(y);
- DO(m, j=0; DO(k, if(!(t=memchr(dig,*s++,10L)))R 0; j=10*j+(t-dig);); *--yv=b?-j:j; k=XBASEN;);
+ DQ(m, j=0; DQ(k, if(!(t=memchr(dig,*s++,10L)))R 0; j=10*j+(t-dig);); *--yv=b?-j:j; k=XBASEN;);
  if(!(*v=yv[m-1]?y:rifvs(xstd(y))))R 0;  // this stores into the extended result
  R 1;
 }
@@ -78,8 +78,8 @@ static NUMH(jtnumx){A y;B b,c;C d,*t;I j,k,m,*yv;X*v;static C*dig="0123456789";
 static X jtx10(J jt,I e){A z;I c,m,r,*zv;
  m=1+e/XBASEN; r=e%XBASEN;
  GATV0(z,INT,m,1); zv=AV(z);
- DO(m-1, *zv++=0;);
- c=1; DO(r, c*=10;); *zv=c;
+ DQ(m-1, *zv++=0;);
+ c=1; DQ(r, c*=10;); *zv=c;
  R z;
 }     /* 10^e as a rational number */
 
@@ -110,7 +110,7 @@ static NUMH(jtnumr){C c,*t;I m,p,q;Q*v;
 }
 
 static NUMH(jtnumq){B b=0;C c,*t;
- t=s; DO(n, c=*t++; if(c=='e'||c=='.'){b=1; break;});
+ t=s; DQ(n, c=*t++; if(c=='e'||c=='.'){b=1; break;});
  R b?nume(n,s,vv):numr(n,s,vv);
 }
 
@@ -151,7 +151,7 @@ static NUMH(jtnumbpx){B ne,ze;C*t,*u;I k,m;Z b,p,q,*v,x,y;
    k=m-(1+k);
    if(ze=!(b.re||b.im))b.re=1;
    if(!(numb(k,1+u,&q,b)))R 0;
-   if(ze){if(q.re)p.re=inf;} else{DO(k,q=zdiv(q,b);); p=zplus(p,q);}
+   if(ze){if(q.re)p.re=inf;} else{DQ(k,q=zdiv(q,b);); p=zplus(p,q);}
   }
   *v=p; if(ne){v->re=-v->re; v->im=-v->im;}
   R 1;

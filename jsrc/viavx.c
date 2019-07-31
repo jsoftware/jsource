@@ -392,22 +392,22 @@ static UI jthiau(J jt,A y){I m,n;UC*v=UAV(y);UI z;X*u,x;
  if(!n)R 0;
  switch(CTTZ(AT(y))){
   case RATX:  m+=n;  /* fall thru */
-  case XNUMX: z=-1LL; u=XAV(y); DO(m, x=*u++; v=UAV(x); z=CRC32((UI4)z,(UI4)hicnz(AN(x)*SZI,UAV(x)));); R z;
+  case XNUMX: z=-1LL; u=XAV(y); DQ(m, x=*u++; v=UAV(x); z=CRC32((UI4)z,(UI4)hicnz(AN(x)*SZI,UAV(x)));); R z;
   case INTX:                                    R hici(n,AV(y));
   default:   R hic(n<<bplg(AT(y)),UAV(y));
 }}
 
 // Comparisons for extended/rational/float/complex types.
-static B jteqx(J jt,I n,X*u,X*v){DO(n, if(!equ(*u,*v))R 0; ++u; ++v;); R 1;}
-static B jteqq(J jt,I n,Q*u,Q*v){DO(n, if(!QEQ(*u,*v))R 0; ++u; ++v;); R 1;}
-static B jeqd(I n,D*u,D*v,D cct){DO(n, if(!TCMPEQ(cct,*u,*v))R 0; ++u; ++v;); R 1;}
-static B jteqz(J jt,I n,Z*u,Z*v){DO(n, if(!zeq(*u,*v))R 0; ++u; ++v;); R 1;}
+static B jteqx(J jt,I n,X*u,X*v){DQ(n, if(!equ(*u,*v))R 0; ++u; ++v;); R 1;}
+static B jteqq(J jt,I n,Q*u,Q*v){DQ(n, if(!QEQ(*u,*v))R 0; ++u; ++v;); R 1;}
+static B jeqd(I n,D*u,D*v,D cct){DQ(n, if(!TCMPEQ(cct,*u,*v))R 0; ++u; ++v;); R 1;}
+static B jteqz(J jt,I n,Z*u,Z*v){DQ(n, if(!zeq(*u,*v))R 0; ++u; ++v;); R 1;}
 
 // test a subset of two boxed arrays for match.  u/v point to pointers to contents, c and d are the relative flags
 // We test n subboxes
-static B jteqa(J jt,I n,A*u,A*v,I c,I d){DO(n, if(!equ(*u,*v))R 0; ++u; ++v;); R 1;}
+static B jteqa(J jt,I n,A*u,A*v,I c,I d){DQ(n, if(!equ(*u,*v))R 0; ++u; ++v;); R 1;}
 // same but intolerant (used for write probes)
-static B jteqa0(J jt,I n,A*u,A*v,I c,I d){PUSHCCT(1.0) B res=1; DO(n, if(!equ(*u,*v)){res=0;break;}; ++u; ++v;); POPCCT R res;}
+static B jteqa0(J jt,I n,A*u,A*v,I c,I d){PUSHCCT(1.0) B res=1; DQ(n, if(!equ(*u,*v)){res=0;break;}; ++u; ++v;); POPCCT R res;}
 
 
 /*
@@ -769,8 +769,8 @@ static IOFX(Z,UI4,jtioz02, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n),
 // If the item might be long we move it only if it is valid
 // For -.
 #define TMVX(T,TH,FXY,expa,expw)   \
-  {if(k==sizeof(T)){DO(wsct, FXY(TH,expa,expw,goto found3;,hj==asct,il=hj;); *(T*)zc=*(T*)v; zc+=(il==asct)*sizeof(T); found3: v=(T*)((C*)v+k); );  \
-            }else{DO(wsct, FXY(TH,expa,expw,goto found2;,hj==asct,goto found2;); {MC(zc,v,k); zc+=k;}; found2: v=(T*)((C*)v+k); );}  \
+  {if(k==sizeof(T)){DQ(wsct, FXY(TH,expa,expw,goto found3;,hj==asct,il=hj;); *(T*)zc=*(T*)v; zc+=(il==asct)*sizeof(T); found3: v=(T*)((C*)v+k); );  \
+            }else{DQ(wsct, FXY(TH,expa,expw,goto found2;,hj==asct,goto found2;); {MC(zc,v,k); zc+=k;}; found2: v=(T*)((C*)v+k); );}  \
  }
 // for ~.  Same idea, but reflexive
 #define TMVY(T,TH,FYY,expa,expw)   \
@@ -1182,8 +1182,8 @@ static A jtnodupgrade(J jt,A a,I acr,I ac,I acn,I ad,I n,I asct,I md,I bk){A*av,
   // don't bother with testing equality if q<index of u (for ascending; reverse for descending)
   // if the list was shortened, replace the last position with -(length of shortened list).  This will be detected
   // and complemented to give (length of list)-1.  0 is OK too, indicating a 1-element list
-  if(bk){hu=--hi; DO(asct-1, q=*hi--; v=av+n*q; if((u<v)||!eqa(n,u,v,0,0)){u=v; *hu--=q;}); m1=hv-hu; if(asct>m1)hv[1-asct]=-m1;}
-  else  {hu=++hi; DO(asct-1, q=*hi++; v=av+n*q; if((v<u)||!eqa(n,u,v,0,0)){u=v; *hu++=q;}); m1=hu-hv; if(asct>m1)hv[asct-1]=-m1;}
+  if(bk){hu=--hi; DQ(asct-1, q=*hi--; v=av+n*q; if((u<v)||!eqa(n,u,v,0,0)){u=v; *hu--=q;}); m1=hv-hu; if(asct>m1)hv[1-asct]=-m1;}
+  else  {hu=++hi; DQ(asct-1, q=*hi++; v=av+n*q; if((v<u)||!eqa(n,u,v,0,0)){u=v; *hu++=q;}); m1=hu-hv; if(asct>m1)hv[asct-1]=-m1;}
  }
  R h;
 } 
@@ -1196,7 +1196,7 @@ static A jtnodupgrade(J jt,A a,I acr,I ac,I acn,I ad,I n,I asct,I md,I bk){A*av,
 #define BSLOOPAA(hiinc,zstmti,zstmt1,zstmt0)  \
  {A* RESTRICT u=av,* RESTRICT v;I* RESTRICT hi=hv,p,q;             \
   p=*hi; hi+=(hiinc); u=av+n*p; zstmti;  /* u->first result value, install result for that value to index itself */      \
-  DO(asct-1, q=*hi; hi+=(hiinc); v=av+n*q; if(((hiinc>0&&v>u)||(hiinc<0&&v<u))&&eqa(n,u,v,0,0))zstmt1; else{u=v; zstmt0;}); /* 
+  DQ(asct-1, q=*hi; hi+=(hiinc); v=av+n*q; if(((hiinc>0&&v>u)||(hiinc<0&&v<u))&&eqa(n,u,v,0,0))zstmt1; else{u=v; zstmt0;}); /* 
    q is input element# that will have result index i, v->it; if *u=*v, v is a duplicate: map the result back to u (index=p)
    if *u!=*p, advance u/p to v/q and use q as the result index */ \
  }
@@ -1694,7 +1694,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z=mtv;
    m=acr?as[af]:1; f0=MAX(0,f1); RE(zn=mult(prod(f,s),prod(f0,ws+wf)));
    switch(mode&IIOPMSK){
     case IIDOT:  
-    case IICO:    GATV(z,INT,zn,f+f0,s); if(af)MCISH(f+AS(z),ws+wf,f0); v=AV(z); DO(zn, *v++=m;); R z;
+    case IICO:    GATV(z,INT,zn,f+f0,s); if(af)MCISH(f+AS(z),ws+wf,f0); v=AV(z); DQ(zn, *v++=m;); R z;
     case IEPS:    GATV(z,B01,zn,f+f0,s); if(af)MCISH(f+AS(z),ws+wf,f0); memset(BAV(z),C0,zn); R z;
     case ILESS:                              RCA(w);
     case IIFBEPS:                            R mtv;
@@ -2118,7 +2118,7 @@ F1(jtsclass){A e,x,xy,y,z;I c,j,m,n,*v;P*p;
  if(n>*AV(e))RZ(xy=over(xy,stitch(e,less(IX(n),y))));
  RZ(xy=grade2(xy,xy)); v=AV(xy);
  c=*AS(xy);
- m=j=-1; DO(c, if(j!=*v){j=*v; ++m;} *v=m; v+=2;);
+ m=j=-1; DQ(c, if(j!=*v){j=*v; ++m;} *v=m; v+=2;);
  GASPARSE(z,SB01,1,2,(I*)0);  v=AS(z); v[0]=1+m; v[1]=n;
  p=PAV(z); 
  SPB(p,a,v2(0L,1L));

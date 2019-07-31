@@ -191,7 +191,7 @@ void jtjsignal3(J jt,I e,A w,I j){
   if(e==EVCTRL){dhead(3,0L); efmt("["FMTI"]",j); eputl(w);}
   else{
    dhead(3,0L); eputl(w);
-   dhead(3,0L); DO(j, eputc(' ');); eputc('^'); eputc(CLF);
+   dhead(3,0L); DQ(j, eputc(' ');); eputc('^'); eputc(CLF);
   }
   debsi1(jt->sitop);
  }

@@ -405,7 +405,7 @@ A RoutineA(J jt,A w){A z;I n,t,q,q1,b=0; UC* wv;
  RZ(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w); wv=UAV(w);
  ASSERT(t&LIT,EVDOMAIN);
  if(!n) {GATV(z,LIT,n,AR(w),AS(w)); R z;}; // empty lit list 
- DO(n, if(127<*wv++){b=1;break;});
+ DQ(n, if(127<*wv++){b=1;break;});
  if(!b)RCA(w);
  q=mtowsize(UAV(w),n);
  if(q<0)RCA(w);
@@ -429,7 +429,7 @@ A RoutineB(J jt,A w){A z;I n,t,q,b=0; UC* wv; US* c2v; C4* c4v;
   GATV(z,C4T,n,AR(w),AS(w));
   c4v=C4AV(z);
   c2v=USAV(w);
-  DO(n, *c4v++=(C4)*c2v++;);
+  DQ(n, *c4v++=(C4)*c2v++;);
   R RoutineC(jt,z);
  }
  if(jt->thornuni)R wtownull(jt,w);
@@ -440,7 +440,7 @@ A RoutineC(J jt,A w){A z;I n,t,q,b=0; C4* wv;
  RZ(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w); wv=C4AV(w);
  ASSERT(t&C4T,EVDOMAIN);
  if(!n) {GATV(z,C4T,n,AR(w),AS(w)); R z;}; // empty C4T list 
- DO(n, if(*wv>=0xd800&&*wv<=0xdf00){b=1;break;};wv++;);
+ DQ(n, if(*wv>=0xd800&&*wv<=0xdf00){b=1;break;};wv++;);
  if(b){
  q=utousize(C4AV(w),n);
  GATV0(z,C4T,q,1);
@@ -458,7 +458,7 @@ ASSERT(t&(C2T+C4T), EVDOMAIN);
 if(t&C4T)
 {
  c4v=C4AV(w);
- DO(n, if(0x10ffff<*c4v++){b=1;break;});
+ DQ(n, if(0x10ffff<*c4v++){b=1;break;});
  ASSERT(!b, EVDOMAIN);
  if(jt->thornuni){
  q=utomnullsize(C4AV(w),n);

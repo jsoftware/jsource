@@ -13,7 +13,7 @@
 #define SUFFIXPFX(f,Tz,Tx,pfx,vecfn)  \
  AHDRS(f,Tz,Tx){I i;Tz v;if(m*d*n==0)SEGFAULT; /* scaf */                                        \
   x+=m*d*n; z+=m*d*n;                                              \
-  if(d==1)DO(m, *--z=v=    *--x; DO(n-1, --x; --z; *z=v=pfx(*x,v);))  \
+  if(d==1)DQ(m, *--z=v=    *--x; DQ(n-1, --x; --z; *z=v=pfx(*x,v);))  \
   else{for(i=0;i<m;++i){                                              \
    DQ(d, *--z=    *--x;);                                        \
    DQ(n-1, Tz *y=z; z-=d; x-=d; vecfn(jt,d,z,x,y,1););                     \
@@ -23,7 +23,7 @@
  AHDRS(f,Tz,Tx){I i;Tz v;if(m*d*n==0)SEGFAULT; /* scaf */                                        \
   NAN0;                                                               \
   x+=m*d*n; z+=m*d*n;                                              \
-  if(d==1)DO(m, *--z=v=    *--x; DO(n-1, --x; --z; *z=v=pfx(*x,v);))  \
+  if(d==1)DQ(m, *--z=v=    *--x; DQ(n-1, --x; --z; *z=v=pfx(*x,v);))  \
   else{for(i=0;i<m;++i){                                              \
    DQ(d, *--z=    *--x;);                                        \
    DQ(n-1, Tz *y=z; z-=d; x-=d; vecfn(jt,d,z,x,y,1););                     \
@@ -34,52 +34,52 @@
 #define SUFFICPFX(f,Tz,Tx,pfx)  \
  AHDRS(f,Tz,Tx){I i;Tz v,*y;                                        \
   x+=m*d*n; z+=m*d*n;                                              \
-  if(d==1)DO(m, *--z=v=(Tz)*--x; DO(n-1, --x; --z; *z=v=pfx(*x,v);))  \
+  if(d==1)DQ(m, *--z=v=(Tz)*--x; DQ(n-1, --x; --z; *z=v=pfx(*x,v);))  \
   else{for(i=0;i<m;++i){                                              \
-   y=z; DO(d, *--z=(Tz)*--x;);                                        \
-   DO(n-1, DO(d, --x; --y; --z; *z=pfx(*x,*y);));                     \
+   y=z; DQ(d, *--z=(Tz)*--x;);                                        \
+   DQ(n-1, DQ(d, --x; --y; --z; *z=pfx(*x,*y);));                     \
  }}}
 
 #define SUFFIXOVF(f,Tz,Tx,fs1,fvv)  \
  AHDRS(f,I,I){C er=0;I i,*xx,*y,*zz;                      \
   xx=x+=m*d*n; zz=z+=m*d*n;                              \
   if(d==1){                                                 \
-   if(1==n)DO(m, *--z=*--x;)                                \
-   else    DO(m, z=zz-=d*n; x=xx-=d*n; fs1(n,z,x); RER;)        \
+   if(1==n)DQ(m, *--z=*--x;)                                \
+   else    DQ(m, z=zz-=d*n; x=xx-=d*n; fs1(n,z,x); RER;)        \
   }else{for(i=0;i<m;++i){                                   \
-   DO(d, *--zz=*--xx;);                                     \
-   DO(n-1, x=xx-=d; y=zz; z=zz-=d; fvv(d,z,x,y); RER;);     \
+   DQ(d, *--zz=*--xx;);                                     \
+   DQ(n-1, x=xx-=d; y=zz; z=zz-=d; fvv(d,z,x,y); RER;);     \
  }}}
 
 #if SY_ALIGN
 #define SUFFIXBFXLOOP(T,pfx)  \
  {T* RESTRICT xx=(T*)x,* RESTRICT yy,* RESTRICT zz=(T*)z;   \
   q=d/sizeof(T);              \
-  DO(m, yy=zz; DO(q, *--zz=*--xx;); DO(n-1, DO(q, --xx; --yy; --zz; *zz=pfx(*xx,*yy);)));  \
+  DQ(m, yy=zz; DQ(q, *--zz=*--xx;); DQ(n-1, DQ(q, --xx; --yy; --zz; *zz=pfx(*xx,*yy);)));  \
  }
   
 #define SUFFIXBFX(f,pfx,ipfx,spfx,bpfx,vexp)  \
  AHDRP(f,B,B){B v,* RESTRICT y;I q;                                        \
   x+=m*d*n; z+=m*d*n;                                           \
-  if(1==d){DO(m, *--z=v=*--x; DO(n-1, --x; --z; *z=v=vexp;)); R;}  \
+  if(1==d){DQ(m, *--z=v=*--x; DQ(n-1, --x; --z; *z=v=vexp;)); R;}  \
   if(0==(d&(sizeof(UI  )-1))){SUFFIXBFXLOOP(UI,   pfx); R;}              \
   if(0==(d&(sizeof(UI4)-1))){SUFFIXBFXLOOP(UINT,ipfx); R;}              \
   if(0==(d&(sizeof(US  )-1))){SUFFIXBFXLOOP(US,  spfx); R;}              \
-  DO(m, y=z; DO(d, *--z=*--x;); DO(n-1, DO(d, --x; --y; --z; *z=bpfx(*x,*y);)));  \
+  DQ(m, y=z; DQ(d, *--z=*--x;); DQ(n-1, DQ(d, --x; --y; --z; *z=bpfx(*x,*y);)));  \
  }
 #else
 #define SUFFIXBFX(f,pfx,ipfx,spfx,bpfx,vexp)  \
  AHDRS(f,B,B){B v;I i,q,r,t,*xi,*yi,*zi;                         \
   x+=m*d*n; z+=m*d*n;                                           \
-  if(1==d){DO(m, *--z=v=*--x; DO(n-1, --x; --z; *z=v=vexp;)); R;}  \
+  if(1==d){DQ(m, *--z=v=*--x; DQ(n-1, --x; --z; *z=v=vexp;)); R;}  \
   q=d>>LGSZI; r=d&(SZI-1); xi=(I*)x; zi=(I*)z;                            \
   if(0==r)for(i=0;i<m;++i){                                        \
-   yi=zi; DO(q, *--zi=*--xi;);                                     \
-   DO(n-1, DO(q, --xi; --yi; --zi; *zi=pfx(*xi,*yi);));            \
+   yi=zi; DQ(q, *--zi=*--xi;);                                     \
+   DQ(n-1, DQ(q, --xi; --yi; --zi; *zi=pfx(*xi,*yi);));            \
   }else for(i=0;i<m;++i){                                          \
-   yi=zi; DO(q, *--zi=*--xi;);                                     \
-   x=(B*)xi; z=(B*)zi; DO(r, *--z=*--x;); xi=(I*)x; zi=(I*)z;      \
-   DO(n-1, DO(q, --xi; --yi; --zi; *zi=pfx(*xi,*yi););             \
+   yi=zi; DQ(q, *--zi=*--xi;);                                     \
+   x=(B*)xi; z=(B*)zi; DQ(r, *--z=*--x;); xi=(I*)x; zi=(I*)z;      \
+   DQ(n-1, DQ(q, --xi; --yi; --zi; *zi=pfx(*xi,*yi););             \
     xi=(I*)((B*)xi-r);                                             \
     yi=(I*)((B*)yi-r);                                             \
     zi=(I*)((B*)zi-r); t=pfx(*xi,*yi); MC(zi,&t,r););              \
@@ -274,7 +274,7 @@ A jtscansp(J jt,A w,A self,AF sf){A e,ee,x,z;B*b;I f,m,j,r,t,wr;P*wp,*zp;
  }else{
   RZ(b=bfi(wr,SPA(wp,a),1));
   if(r&&b[f]){b[f]=0; RZ(w=reaxis(ifb(wr,b),w));}
-  j=f; m=0; DO(wr-f, m+=!b[j++];);
+  j=f; m=0; DQ(wr-f, m+=!b[j++];);
  }
  wp=PAV(w); e=SPA(wp,e); x=SPA(wp,x);
  RZ(x=IRS1(x,self,m,sf,z));

@@ -52,7 +52,7 @@ B jtsymext(J jt,B b){A x,y;I j,m,n,s[2],*v,xn,yn;L*u;
  if(b)ICPY(v,AV(y),yn);                     /* copy old data to new array  */
  memset(v+yn,C0,SZI*(xn-yn));               /* 0 unused area for safety    */
  u=n+(L*)v; j=1+n;
- DO(m-n-1, u++->next=(LX)(j++););                 /* build free list extension, leave last chain 0   */
+ DQ(m-n-1, u++->next=(LX)(j++););                 /* build free list extension, leave last chain 0   */
  if(b)u->next=jt->sympv->next;              /* push extension onto stack   */
  ((L*)v)->next=(LX)n;                           /* new stack top               */
  ras(x); jt->symp=x;                           /* preserve new array          */

@@ -480,7 +480,7 @@ printf("va2a: indexes="); spt=SPA(PAV(a),i); DO(AN(spt), printf(" %d",IAV(spt)[i
 // is the pseudocharacter indicating what operation is to be performed.  self is the block for this primitive,
 // ranks are the ranks to use
 static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ranks,UI argranks){A z;I m,
-     mf,n,nf,shortr,* RESTRICT s,*sf,zn,awzk[3];VA2 adocv;UI fr;  // fr will eventually be frame/rank
+     mf,n,nf,shortr,* RESTRICT s,*sf,zn,awzk[3];VA2 adocv;UI fr;  // fr will eventually be frame/rank  nf (and mf) change roles during execution
  fr=argranks>>RANKTX; shortr=argranks&RANKTMSK;  // fr,shortr = ar,wr to begin with.  Changes later
 // obsolete  RZ(a&&w);
  F2PREFIP;
@@ -567,7 +567,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
    // we do this before we generate failures
    // if the frames don't agree, that's always an agreement error
    if(jtinplace){  // If not sparse... This block isn't needed for sparse arguments, and may fail on them.  We move it here to reduce register pressure
-    nf=acr<=wcr; zk=acr<=wcr?wk:ak; m=acr<=wcr?ak:wk; fr=acr<=wcr?wcr:acr; shortr=acr<=wcr?acr:wcr; s=AS(acr<=wcr?w:a)+(acr<=wcr?wf:af); PROD(n,fr-shortr,s+shortr);   // zk=#atoms in cell with larger rank;
+    nf=acr<=wcr; zk=acr<=wcr?wk:ak; m=acr<=wcr?ak:wk; fr=acr<=wcr?wcr:acr; shortr=acr<=wcr?acr:wcr; s=AS(acr<=wcr?w:a)+(acr<=wcr?wf:af); PROD(n,fr-shortr,s+shortr);   // nf='w has long frame'; zk=#atoms in cell with larger rank;
     n^=((1-n)>>(BW-1))&-nf;  // encode 'w has long frame, so a is repeated' as complementary n; but if n<2, leave it alone
     // m=#atoms in cell with shorter rank; n=#times shorter-rank cells must be repeated; r=larger of cell-ranks; s->shape of larger-rank cell
     // now shortr has the smaller cell-rank, and acr/wcr are free
@@ -685,7 +685,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
     // Set up pointers etc for the overflow handling.  Set b=1 if w is taken for the x argument to repair
     if(jt->jerr==EWOVIP+EWOVIPMULII){D *zzvd=(D*)zzv; I *zvi=IAV(z);
      // Multiply repair.  We have to convert all the pre-overflow results to float, and then finish the multiplies
-     DO(jt->mulofloloc, *zzvd++=(D)*zvi++;);  // convert the multiply results to float
+     DQ(jt->mulofloloc, *zzvd++=(D)*zvi++;);  // convert the multiply results to float
      // Now repeat the processing.  Unlike with add/subtract overflow, we have to match up all the argument atoms
      adocv.f=(VF)tymesIIO;  // multiply-repair routine
      {C *av=CAV(a); C *wv=CAV(w);
@@ -719,7 +719,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
       if(nipw){av=CAV(w), awzk[0]=awzk[1];}else{av=CAV(a);} if(nipw==origc){mf *= nf; nf = 1;} if(nipw==origb){m *= n; n = 1;}
       n^=-nipw;  // install new setting of b flag
      // We have set up ado,nf,mf,nipw,m,n for the conversion.  Now call the repair routine.  n is # times to repeat a for each z, m*n is # atoms of z/zz
-      DO(mf, DO(nf, adocv.f(jt,m,zzv,av,zv,n); zzv+=zzk; zv+=awzk[2];); av+=awzk[0];)  // use each cell of a (nf) times
+      DQ(mf, DQ(nf, adocv.f(jt,m,zzv,av,zv,n); zzv+=zzk; zv+=awzk[2];); av+=awzk[0];)  // use each cell of a (nf) times
      }
     }
     RESETERR
@@ -895,11 +895,11 @@ static A jtsumattymes(J jt, A a, A w, I b, I t, I m, I n, I nn, I r, I *s, I zn)
   {B*av=BAV(a),u,*wv=BAV(w);I*zu,*zv;
    GATV(z,INT,zn,r-1,1+s); zu=AV(z);
    if(1==n){
-             zv=zu; DO(m,                     *zv++ =*av++**wv++;);
-    DO(nn-1, zv=zu; DO(m,                     *zv+++=*av++**wv++;););
+             zv=zu; DQ(m,                     *zv++ =*av++**wv++;);
+    DQ(nn-1, zv=zu; DQ(m,                     *zv+++=*av++**wv++;););
    }else{if(!b){B* tv=av; av=wv; wv=tv;}
-             zv=zu; DO(m, u=*av++;      DO(n, *zv++ =u**wv++;););
-    DO(nn-1, zv=zu; DO(m, u=*av++; if(u)DO(n, *zv+++=u**wv++;) else wv+=n;););
+             zv=zu; DQ(m, u=*av++;      DQ(n, *zv++ =u**wv++;););
+    DQ(nn-1, zv=zu; DQ(m, u=*av++; if(u)DQ(n, *zv+++=u**wv++;) else wv+=n;););
    }
   }
   break;
@@ -908,11 +908,11 @@ static A jtsumattymes(J jt, A a, A w, I b, I t, I m, I n, I nn, I r, I *s, I zn)
   {D u,*zu,*zv;I*av=AV(a),*wv=AV(w);
    GATV(z,FL,zn,r-1,1+s); zu=DAV(z);
    if(1==n){
-             zv=zu; DO(m,                        *zv++ =*av++*(D)*wv++;);
-    DO(nn-1, zv=zu; DO(m,                        *zv+++=*av++*(D)*wv++;););
+             zv=zu; DQ(m,                        *zv++ =*av++*(D)*wv++;);
+    DQ(nn-1, zv=zu; DQ(m,                        *zv+++=*av++*(D)*wv++;););
    }else{if(!b){I *tv=av; av=wv; wv=tv;}
-             zv=zu; DO(m, u=(D)*av++;      DO(n, *zv++ =u**wv++;););
-    DO(nn-1, zv=zu; DO(m, u=(D)*av++; if(u)DO(n, *zv+++=u**wv++;) else wv+=n;););
+             zv=zu; DQ(m, u=(D)*av++;      DQ(n, *zv++ =u**wv++;););
+    DQ(nn-1, zv=zu; DQ(m, u=(D)*av++; if(u)DQ(n, *zv+++=u**wv++;) else wv+=n;););
    }
    RZ(z=icvt(z));
   }
@@ -924,20 +924,20 @@ static A jtsumattymes(J jt, A a, A w, I b, I t, I m, I n, I nn, I r, I *s, I zn)
    NAN0;
    // First, try without testing for 0*_ .  If we hit it, it will raise NAN
    if(1==n){
-             zv=zu; DO(m, u=*av++;            v=*wv++; *zv++ =u*v; );
-    DO(nn-1, zv=zu; DO(m, u=*av++;            v=*wv++; *zv+++=u*v; ););
+             zv=zu; DQ(m, u=*av++;            v=*wv++; *zv++ =u*v; );
+    DQ(nn-1, zv=zu; DQ(m, u=*av++;            v=*wv++; *zv+++=u*v; ););
    }else{if(!b){zv=av; av=wv; wv=zv;}
-             zv=zu; DO(m, u=*av++; DO(n, v=*wv++; *zv++ =u*v;););
-    DO(nn-1, zv=zu; DO(m, u=*av++; DO(n, v=*wv++; *zv+++=u*v;)););
+             zv=zu; DQ(m, u=*av++; DQ(n, v=*wv++; *zv++ =u*v;););
+    DQ(nn-1, zv=zu; DQ(m, u=*av++; DQ(n, v=*wv++; *zv+++=u*v;)););
    }
    if(NANTEST){av-=m*nn;wv-=m*nn*n; // try again, testing for 0*_
     NAN0;
     if(1==n){
-              zv=zu; DO(m, u=*av++;            v=*wv++; *zv++ =u&&v?dmul2(u,v):0;  );
-     DO(nn-1, zv=zu; DO(m, u=*av++;            v=*wv++; *zv+++=u&&v?dmul2(u,v):0;  ););
+              zv=zu; DQ(m, u=*av++;            v=*wv++; *zv++ =u&&v?dmul2(u,v):0;  );
+     DQ(nn-1, zv=zu; DQ(m, u=*av++;            v=*wv++; *zv+++=u&&v?dmul2(u,v):0;  ););
     }else{   // don't swap again
-              zv=zu; DO(m, u=*av++;      DO(n, v=*wv++; *zv++ =u&&v?dmul2(u,v):0;););
-     DO(nn-1, zv=zu; DO(m, u=*av++; if(u)DO(n, v=*wv++; *zv+++=   v?dmul2(u,v):0;) else wv+=n;););
+              zv=zu; DQ(m, u=*av++;      DQ(n, v=*wv++; *zv++ =u&&v?dmul2(u,v):0;););
+     DQ(nn-1, zv=zu; DQ(m, u=*av++; if(u)DQ(n, v=*wv++; *zv+++=   v?dmul2(u,v):0;) else wv+=n;););
     }
     NAN1;
    }
@@ -1038,7 +1038,7 @@ DF2(jtfslashatg){A fs,gs,y,z;B b,bb,sb=0;C*av,c,d,*wv;I ak,an,ar,*as,at,m,
   av=CAV(a)+ak*(nn-1); wv=CAV(w)+wk*(nn-1); yv=CAV(y); zv=CAV(z);
   GA(z1,zt,zn,r-1,1+s); zu=CAV(z1);
   adocv.f(jt,m,zv,av,wv,n);
-  DO(nn-1, av-=ak; wv-=wk; adocv.f(jt,m,yv,av,wv,n); adocvf.f(jt,zn,p?zv:zu,yv,p?zu:zv,(I)1); p=!p;);
+  DQ(nn-1, av-=ak; wv-=wk; adocv.f(jt,m,yv,av,wv,n); adocvf.f(jt,zn,p?zv:zu,yv,p?zu:zv,(I)1); p=!p;);
   if(NEVM<jt->jerr){jt->jerr=0; z=df1(df2(a,w,gs),fs);}else if(p)z=z1;
  }
  RE(0); RETF(z);

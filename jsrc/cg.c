@@ -26,7 +26,7 @@ static DF1(jtcon1){A h,*hv,*x,z;V*sv;
  PREF1(jtcon1);
  sv=FAV(self); h=sv->fgh[2]; hv=AAV(h);
  GATV(z,BOX,AN(h),AR(h),AS(h)); x=AAV(z);
- DO(AN(h), RZ(*x++=CALL1(FAV(*hv)->valencefns[0],  w,*hv)); ++hv;);
+ DQ(AN(h), RZ(*x++=CALL1(FAV(*hv)->valencefns[0],  w,*hv)); ++hv;);
  R ope(z);
 }
 
@@ -34,7 +34,7 @@ static DF2(jtcon2){A h,*hv,*x,z;V*sv;
  PREF2(jtcon2);
  sv=FAV(self); h=sv->fgh[2]; hv=AAV(h);
  GATV(z,BOX,AN(h),AR(h),AS(h)); x=AAV(z);
- DO(AN(h), RZ(*x++=CALL2(FAV(*hv)->valencefns[1],a,w,*hv)); ++hv;);
+ DQ(AN(h), RZ(*x++=CALL2(FAV(*hv)->valencefns[1],a,w,*hv)); ++hv;);
  R ope(z);
 }
 
@@ -44,7 +44,7 @@ static DF1(jtinsert){A hs,*hv,z;I hfx,j,m,n;A *old;
  if(!n)R df1(w,iden(*hv));
  RZ(z=from(num[-1],w));
  old=jt->tnextpushp;
- --m; DO(n-1, --j; --hfx; hfx=(hfx<0)?m:hfx; RZ(z=CALL2(FAV(hv[hfx])->valencefns[1],from(sc(j),w),z,hv[hfx])); z=gc(z,old);)
+ --m; DQ(n-1, --j; --hfx; hfx=(hfx<0)?m:hfx; RZ(z=CALL2(FAV(hv[hfx])->valencefns[1],from(sc(j),w),z,hv[hfx])); z=gc(z,old);)
  RETF(z);
 }
 
@@ -190,7 +190,7 @@ F2(jtagenda){I flag;
  // verb v.  Create a "BOX" type holding the verb form of each gerund
  A avb; RZ(avb = fxeachv(1L,a));
   // Calculate ASGSAFE from all of the verbs (both a and w), provided the user can handle it
- flag = VASGSAFE&FAV(w)->flag; A* avbv = AAV(avb); DO(AN(avb), flag &= FAV(*avbv)->flag; ++avbv;);  // Don't increment inside FAV!
+ flag = VASGSAFE&FAV(w)->flag; A* avbv = AAV(avb); DQ(AN(avb), flag &= FAV(*avbv)->flag; ++avbv;);  // Don't increment inside FAV!
  R fdef(0,CATDOT,VERB, jtcase1,jtcase2, a,w,avb, flag+((VGERL|VJTFLGOK1|VJTFLGOK2)|FAV(ds(CATDOT))->flag), mr(w),lr(w),rr(w));
 }
 

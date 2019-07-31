@@ -53,7 +53,7 @@ F1(jtevms){A t,*tv,*wv;
  GAT0(t,BOX,1+NEVM,1); tv=AAV(t); 
  *tv++=mtv;
  wv=AAV(w);
- DO(NEVM, RZ(*tv++=vs(*wv++)););
+ DQ(NEVM, RZ(*tv++=vs(*wv++)););
  ras(t); fa(jt->evm); jt->evm=t;
  R mtv;
 }

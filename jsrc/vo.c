@@ -286,7 +286,7 @@ static B povtake(J jt,A a,A w,C*x){B b;C*v;I d,i,j,k,m,n,p,q,r,*s,*ss,*u,*uu,y;
  k*=d; n/=d; ss=s+r-p; uu=u+m-p;
  for(i=0;i<n;++i){
   y=0; d=1; q=i; /* y=.a#.((-$a){.(($a)$1),$w)#:i */
-  s=ss; u=uu; DO(r-p, j=*--s; y+=q%j*d; d*=*--u; q/=j;);
+  s=ss; u=uu; DQ(r-p, j=*--s; y+=q%j*d; d*=*--u; q/=j;);
   MC(x+y*k,v,k); v+=k;
  }
  R 1;
@@ -299,7 +299,7 @@ static B jtopes1(J jt,B**zb,A*za,A*ze,I*zm,A cs,A w){A a,e=0,q,*wv,x;B*b;I i,k,m
   if(q=wv[i],SPARSE&AT(q)){
    p=PAV(q); x=SPA(p,x); m+=*AS(x);
    if(!e)e=SPA(p,e); else ASSERT(equ(e,SPA(p,e)),EVSPARSE);
-   k=wcr-AR(q); DO(k, b[i]=1;); a=SPA(p,a); v=AV(a); DO(AN(a), b[k+*v++]=1;);
+   k=wcr-AR(q); DO(k, b[i]=1;); a=SPA(p,a); v=AV(a); DQ(AN(a), b[k+*v++]=1;);
   }
  RZ(*za=caro(ifb(wcr,b)));    /* union of sparse axes           */ // avoid readonly
  *zb=b;                 /* mask corresp. to sparse axes   */
@@ -316,7 +316,7 @@ static B jtopes2(J jt,A*zx,A*zy,B*b,A a,A e,A q,I wcr){A x;B*c;I dt,k,r,*s,t;P*p
   DO(r, if(b[k+i]!=c[i]){RZ(q=reaxis(ifb(r,k+b),q)); break;});
  }else{
   if(k){
-   GA(x,t,AN(q),wcr,0); s=AS(x); DO(k, *s++=1;); MCISH(s,AS(q),r); 
+   GA(x,t,AN(q),wcr,0); s=AS(x); DQ(k, *s++=1;); MCISH(s,AS(q),r); 
    MC(AV(x),AV(q),AN(q)<<bplg(t)); q=x;
   }
   RZ(q=sparseit(t&dt?q:cvt(dt,q),a,e));
@@ -349,7 +349,7 @@ static A jtopes(J jt,I zt,A cs,A w){A a,d,e,sh,t,*wv,x,x1,y,y1,z;B*b;C*xv;I an,*
    RZ(y=take(sc(m),y)); yv= AV(y)+p*yc;
   }
   for(j=wr-1;j;--j)if(dv[j]==zs[j]){dv[j]=0; ++dv[j-1];}else break;
-  v=AV(y1); DO(m1, ICPY(yv,dv,wr); ICPY(yv+yc-k,v,k); yv+=yc; v+=k;); 
+  v=AV(y1); DQ(m1, ICPY(yv,dv,wr); ICPY(yv+yc-k,v,k); yv+=yc; v+=k;); 
   if(memcmp(1+AS(x1),1+s,SZI*c)){*s=m1; povtake(jt,sh,x1,xv);} else MC(xv,AV(x1),m1*xk);
   ++dv[wr-1]; xv+=m1*xk; p+=m1;
  }
@@ -554,13 +554,13 @@ F1(jtrazeh){A*wv,y,z;C*xv,*yv,*zv;I c=0,ck,dk,i,k,n,p,r,*s,t;
   if(t&BOX)RZ(y=car(y));
   yv=CAV(y);
   switch(0==(I)xv%dk&&0==ck%dk?dk:0){
-   case sizeof(I): {I*u,*v=(I*)yv; DO(p, u=(I*)xv; *u=*v++;    xv+=ck;);} break;
+   case sizeof(I): {I*u,*v=(I*)yv; DQ(p, u=(I*)xv; *u=*v++;    xv+=ck;);} break;
 #if SY_64
-   case sizeof(int):{int*u,*v=(int*)yv; DO(p, u=(int*)xv; *u=*v++; xv+=ck;);} break;
+   case sizeof(int):{int*u,*v=(int*)yv; DQ(p, u=(int*)xv; *u=*v++; xv+=ck;);} break;
 #endif
-   case sizeof(S): {S*u,*v=(S*)yv; DO(p, u=(S*)xv; *u=*v++;    xv+=ck;);} break;
-   case sizeof(C):                 DO(p, *xv=*yv++;            xv+=ck;);  break;
-   default:                        DO(p, MC(xv,yv,dk); yv+=dk; xv+=ck;); 
+   case sizeof(S): {S*u,*v=(S*)yv; DQ(p, u=(S*)xv; *u=*v++;    xv+=ck;);} break;
+   case sizeof(C):                 DQ(p, *xv=*yv++;            xv+=ck;);  break;
+   default:                        DQ(p, MC(xv,yv,dk); yv+=dk; xv+=ck;); 
  }}
  RETF(z);
 }    /* >,.&.>/,w */
@@ -579,7 +579,7 @@ F2(jtrazefrom){A*wv,y,z;B b;C*v,*vv;I an,c,d,i,j,klg,m,n,r,*s,t,*u,wn;
  }}
  if(!(b&&t&DIRECT))R raze(from(a,w));
  c=aii(y); klg=bplg(t); 
- RZ(z=exta(t,r,c,(I)((1.2*an*m)/(n*c)))); u=AS(z); *u++=AN(z)/c; DO(r-1, *u++=*s++;);
+ RZ(z=exta(t,r,c,(I)((1.2*an*m)/(n*c)))); u=AS(z); *u++=AN(z)/c; DQ(r-1, *u++=*s++;);
  v=CAV(z); vv=v+(AN(z)<<klg);
  if(B01&AT(a)){B*av=BAV(a);        
   for(i=0;i<an;++i){

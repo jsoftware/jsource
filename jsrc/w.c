@@ -85,16 +85,16 @@ F1(jtwords){A t,*x,z;C*s;I k,n,*y;
  RZ(t=wordil(w));
  s=CAV(w); y=AV(t); n=*y++; n=0>n?-n:n;
  GATV0(z,BOX,n,1); x=AAV(z);
- DO(n, k=*y++; RZ(*x++=rifvs(str(*y++,s+k))););
+ DQ(n, k=*y++; RZ(*x++=rifvs(str(*y++,s+k))););
  RETF(z);  // always boxed chars, and not relative
 }
 
 
 static A jtconstr(J jt,I n,C*s){A z;C b,c,p,*t,*x;I m=0;
- p=0; t=s; DO(n-2, c=*++t; b=c==CQUOTE; if(!b||p)m++;    p=b&&!p;);
+ p=0; t=s; DQ(n-2, c=*++t; b=c==CQUOTE; if(!b||p)m++;    p=b&&!p;);
  if(0==m)R aqq; else if(1==m&&(z=chr[(UC)s[1]]))R z;
  GATV0(z,LIT,m,1!=m); x=CAV(z);
- p=0; t=s; DO(n-2, c=*++t; b=c==CQUOTE; if(!b||p)*x++=c; p=b&&!p;);
+ p=0; t=s; DQ(n-2, c=*++t; b=c==CQUOTE; if(!b||p)*x++=c; p=b&&!p;);
  R z;
 }
 
@@ -161,8 +161,8 @@ A jtenqueue(J jt,A a,A w,I env){A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl;UC c;
    // abc=: pqr}x,...y,:z  (must be odd # words, but that's not worth checking)
    // Verify the form is present: alternating names and commas
    b=1; m=(n-3)>>1;   // number of nouns x..z
-   j=4;      DO(m,   if(!TNAME(j)       ){b=0; break;} j+=2;);  // Check all names
-   j=5; if(b)DO(m-2, if(!TVERB(j,CCOMMA)){b=0; break;} j+=2;);  // Check inbetween, except after last 2 names 
+   j=4;      DQ(m,   if(!TNAME(j)       ){b=0; break;} j+=2;);  // Check all names
+   j=5; if(b)DQ(m-2, if(!TVERB(j,CCOMMA)){b=0; break;} j+=2;);  // Check inbetween, except after last 2 names 
    if(b){  // if the form is right...
     // Synthesize a new argument to replace the list of arrays, and a new sentence to execute on this argument
     // The sentence is abc =: CCASEV (new argument)
@@ -209,7 +209,7 @@ A jttokens(J jt,A w,I env){R enqueue(wordil(w),w,env);}
 #define EMIT0b(T,j,i,r,c)   {CHKJ(j); p=(i)-(j); EXTZ(T,1); RZ(*u++=rifvsdebug(vec(B01,p,(j)+wv)));}
 #define EMIT0x(T,j,i,r,c)   {CHKJ(j); p=(i)-(j); EXTZ(T,1); GA(x,t0,p*wm,wr,AS(w0));  \
                                 *AS(x)=p; MC(AV(x),wv0+wk*(j),wk*p); *u++=x;}
-#define EMIT1(T,j,i,r,c)    {CHKJ(j); p=(i)-(j);            cc=(j)+wv; DO(p, *u++=*cc++;);}
+#define EMIT1(T,j,i,r,c)    {CHKJ(j); p=(i)-(j);            cc=(j)+wv; DQ(p, *u++=*cc++;);}
 #define EMIT1x(T,j,i,r,c)   {CHKJ(j); p=wk*((i)-(j));       MC(u,wv0+j*wk,p); u+=p;}
 #define EMIT2(T,j,i,r,c)    {CHKJ(j); p=(i)-(j); EXTZ(T,2); *u++=(j); *u++=p;}
 #define EMIT3(T,j,i,r,c)    {CHKJ(j);            EXTZ(T,1);                   *u++=(c)+q*(r);}
@@ -286,7 +286,7 @@ F1(jtfsmvfya){PROLOG(0099);A a,*av,m,s,x,z,*zv;I an,c,e,f,ijrd[4],k,p,q,*sv,*v;
  RZ(s=vi(av[1])); sv=AV(s);
  ASSERT(3==AR(s),EVRANK);
  v=AS(s); p=v[0]; q=v[1]; ASSERT(2==v[2],EVLENGTH);
- v=sv; DO(p*q, k=*v++; e=*v++; ASSERT(0<=k&&k<p&&0<=e&&e<=6,EVINDEX););
+ v=sv; DQ(p*q, k=*v++; e=*v++; ASSERT(0<=k&&k<p&&0<=e&&e<=6,EVINDEX););
  ijrd[0]=0; ijrd[1]=-1; ijrd[2]=0; ijrd[3]=-1;
  if(4==an){I d,i,j,n,r;
   RZ(x=vi(av[3])); n=AN(x); v=AV(x);
@@ -327,7 +327,7 @@ static A jtfsm0(J jt,A a,A w,C chka){PROLOG(0100);A*av,m,s,x,w0=w;B b;I c,f,*ijr
   RZ(y=raze(m)); r=AR(y); k=AS(y)[0];  // y = all the input values run together, k=# input values
   ASSERT(r==AR(w)||r==1+AR(w),EVRANK);  // items of m must match rank of w, or the entire w (which will be treated as a single input)
   GATV0(x,INT,1+k,1); v=AV(x); v[k]=c; mv=AAV(m);  // x will hold translated column numbers.  Install 'not found' value at the end
-  DO(c, j=i; t=mv[i]; if(r&&r==AR(t))DO(AS(t)[0], *v++=j;) else *v++=j;);  // go through m; for each box, install index for that box for each item in that box.
+  DO(c, j=i; t=mv[i]; if(r&&r==AR(t))DQ(AS(t)[0], *v++=j;) else *v++=j;);  // go through m; for each box, install index for that box for each item in that box.
   if(b){RZ(m=from(indexof(y,alp),x)); v=AV(m); DO(AN(alp), k=v[i]; ASSERT((UI)k<(UI)q,EVINDEX););}  // for ASCII input, translate & check size
   else {ASSERT(q>c,EVINDEX); RZ(w=from(indexof(y,w),x));}  // # columns of machine must be at least c+1; look up the rest
  }

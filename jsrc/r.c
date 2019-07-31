@@ -142,11 +142,11 @@ static A*jtunparse1a(J jt,I m,A*hv,A*zv){A*v,x,y;CW*u;I i,j,k;
  for(i=0;i<m;++i,++u){
   RZ(x=unparse1(u,vec(BOX,u->n,v+u->i),j,y)); 
   k=u->source;
-  if(j<k){if(y)*zv++=y; DO(k-j-1, *zv++=mtv;);}
+  if(j<k){if(y)*zv++=y; DQ(k-j-1, *zv++=mtv;);}
   y=x; j=k;
  }
  if(y)*zv++=y;
- DO(k-j-1, *zv++=mtv;);
+ DQ(k-j-1, *zv++=mtv;);
  R zv;
 }
 

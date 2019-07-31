@@ -50,28 +50,28 @@ static void ctmask(J jt){DI p,x,y;UINT c,d,e,m,q;
 #define HASHINIT(z)  z=2166136261u    // FNV-1a 32 bits
 #define HASHSTEP(z,byte)  (z=(UI4)((z^(byte))*16777619L))    // FNV-1a 32 bits
 
-       UI hic (     I k,UC*v){UI HASHINIT(z);             DO(k,       HASHSTEP(z,*v++);      ); R z;}
+       UI hic (     I k,UC*v){UI HASHINIT(z);             DQ(k,       HASHSTEP(z,*v++);      ); R z;}
 
-static UI hicnz(    I k,UC*v){UI HASHINIT(z);UC c;        DO(k, c=*v++; if(c&&c!=255)HASHSTEP(z,c);); R z;}
+static UI hicnz(    I k,UC*v){UI HASHINIT(z);UC c;        DQ(k, c=*v++; if(c&&c!=255)HASHSTEP(z,c);); R z;}
 
-static UI hicx(J jt,I k,UC*v){UI HASHINIT(z);I*u=jt->hiv; DO(jt->hin, HASHSTEP(z,v[*u++]);      ); R z;}
+static UI hicx(J jt,I k,UC*v){UI HASHINIT(z);I*u=jt->hiv; DQ(jt->hin, HASHSTEP(z,v[*u++]);      ); R z;}
 
 #if C_LE
-       UI hic2(     I k,UC*v){UI HASHINIT(z);             DO(k>>1,     HASHSTEP(z,v[0]);
+       UI hic2(     I k,UC*v){UI HASHINIT(z);             DQ(k>>1,     HASHSTEP(z,v[0]);
                                                        if(*(v+1)){HASHSTEP(z,v[1]);} v+=2;); R z;}
 #else
-       UI hic2(     I k,UC*v){UI HASHINIT(z); ++v;        DO(k>>1,     HASHSTEP(z,v[0]);
+       UI hic2(     I k,UC*v){UI HASHINIT(z); ++v;        DQ(k>>1,     HASHSTEP(z,v[0]);
                                                        if(*(v-1)){HASHSTEP(z,v[-1]);} v+=2;); R z;}
 #endif
 
 #if C_LE
-       UI hic4(     I k,UC*v){UI HASHINIT(z);             DO(k>>2,     HASHSTEP(z,v[0]);
+       UI hic4(     I k,UC*v){UI HASHINIT(z);             DQ(k>>2,     HASHSTEP(z,v[0]);
                                                if(*(v+2)||*(v+3)){HASHSTEP(z,v[1]);
                                                                   HASHSTEP(z,v[2]);
                                                                   HASHSTEP(z,v[3]);}
                                                   else if(*(v+1)){HASHSTEP(z,v[1]);} v+=4;); R z;}
 #else
-       UI hic4(     I k,UC*v){UI HASHINIT(z); v+=3;       DO(k>>2,     HASHSTEP(z,v[0]);
+       UI hic4(     I k,UC*v){UI HASHINIT(z); v+=3;       DQ(k>>2,     HASHSTEP(z,v[0]);
                                                if(*(v-2)||*(v-3)){HASHSTEP(z,v[-1]);
                                                                   HASHSTEP(z,v[-2]);
                                                                   HASHSTEP(z,v[-3]);}
@@ -120,7 +120,7 @@ static UI jthiau(J jt,A y){I m,n;UC*v=UAV(y);UI z=2038074751;X*u,x;
  if(!n)R 0;
  switch(CTTZ(AT(y))){
   case RATX:  m+=n;  /* fall thru */
-  case XNUMX: u=XAV(y); DO(m, x=*u++; v=UAV(x); z+=hicnz(AN(x)*SZI,UAV(x));); R z;
+  case XNUMX: u=XAV(y); DQ(m, x=*u++; v=UAV(x); z+=hicnz(AN(x)*SZI,UAV(x));); R z;
   case INTX:                                    z =hicnz(n    *SZI,UAV(y));   R z;
   default:   R hic(n<<bplg(AT(y)),UAV(y));
 }}
@@ -131,14 +131,14 @@ static UI hix(X*v){A y=*v;   R hic(AN(y)*SZI,UAV(y));}
 static UI hiq(Q*v){A y=v->n; R hic(AN(y)*SZI,UAV(y));}
 
 // Comparisons for extended/rational/float/complex types.  teq should use the macro
-static B jteqx(J jt,I n,X*u,X*v){DO(n, if(!equ(*u,*v))R 0; ++u; ++v;); R 1;}
-static B jteqq(J jt,I n,Q*u,Q*v){DO(n, if(!QEQ(*u,*v))R 0; ++u; ++v;); R 1;}
-static B jteqd(J jt,I n,D*u,D*v){DO(n, if(!teq(*u,*v))R 0; ++u; ++v;); R 1;}
-static B jteqz(J jt,I n,Z*u,Z*v){DO(n, if(!zeq(*u,*v))R 0; ++u; ++v;); R 1;}
+static B jteqx(J jt,I n,X*u,X*v){DQ(n, if(!equ(*u,*v))R 0; ++u; ++v;); R 1;}
+static B jteqq(J jt,I n,Q*u,Q*v){DQ(n, if(!QEQ(*u,*v))R 0; ++u; ++v;); R 1;}
+static B jteqd(J jt,I n,D*u,D*v){DQ(n, if(!teq(*u,*v))R 0; ++u; ++v;); R 1;}
+static B jteqz(J jt,I n,Z*u,Z*v){DQ(n, if(!zeq(*u,*v))R 0; ++u; ++v;); R 1;}
 
 // test a subset of two boxed arrays for match.  u/v point to pointers to contants, c and d are the relative flags
 // We test n subboxes
-static B jteqa(J jt,I n,A*u,A*v,I c,I d){DO(n, if(!equ(*u,*v))R 0; ++u; ++v;); R 1;}
+static B jteqa(J jt,I n,A*u,A*v,I c,I d){DQ(n, if(!equ(*u,*v))R 0; ++u; ++v;); R 1;}
 
 /*
  mode one of the following:
@@ -222,7 +222,7 @@ static B jteqa(J jt,I n,A*u,A*v,I c,I d){DO(n, if(!equ(*u,*v))R 0; ++u; ++v;); R
 
 // Routines to look up an item of w.  hash calculates the hash function, usually referring to v (the input) and possibly other names.  exp is the comparison routine.  stmt is executed after the hash lookup
 // and must check whether *hj (->prev data) matches the new data in *v
-#define XDO(hash,exp,inc,stmt)     {v=wv;          DO(cm, j=(hash)%pm; FIND(exp); stmt;             inc;);}
+#define XDO(hash,exp,inc,stmt)     {v=wv;          DQ(cm, j=(hash)%pm; FIND(exp); stmt;             inc;);}
 #define XDQ(hash,exp,dec,stmt)     {v=wv+cn*(c-1); DQ(cm, j=(hash)%pm; FIND(exp); stmt;             dec;);}
 // special lookup routines to move the data rather than store its index, used for nub/match
 #define XMV(hash,exp,inc,stmt)      \
@@ -453,10 +453,10 @@ static IOFX(I,jtioi,  hicw(v),           *v!=av[hj],                      ++v,  
 // should combine the cases for all ks to save a test?
 #define TDO(FXY,FYY,expa,expw,stmt)  \
  switch(4*bx+2*b+(I )(k==sizeof(D))){                       \
-  default: DO(c, FXY(expa,expw); stmt; v+=cn;); break;  \
-  case 1:  DO(c, FXY(expa,expw); stmt; ++v;  ); break;  \
-  case 2:  DO(c, FYY(expa,expw); stmt; v+=cn;); break;  \
-  case 3:  DO(c, FYY(expa,expw); stmt; ++v;  );         \
+  default: DQ(c, FXY(expa,expw); stmt; v+=cn;); break;  \
+  case 1:  DQ(c, FXY(expa,expw); stmt; ++v;  ); break;  \
+  case 2:  DQ(c, FYY(expa,expw); stmt; v+=cn;); break;  \
+  case 3:  DQ(c, FYY(expa,expw); stmt; ++v;  );         \
  }
 // Same, but search from the end of y backwards (e. i: 0 etc)
 #define TDQ(FXY,FYY,expa,expw,stmt)  \
@@ -470,10 +470,10 @@ static IOFX(I,jtioi,  hicw(v),           *v!=av[hj],                      ++v,  
 // Version for ~. y and x -. y .  prop is a condition; if true, move the item to *zc++
 #define TMV(FXY,FYY,expa,expw,prop)   \
  switch(4*bx+2*b+(I )(k==sizeof(D))){                                  \
-  default: DO(c, FXY(expa,expw); if(prop){MC(zc,v,k); zc+=k;}; v+=cn;);            break;  \
-  case 1:  DO(c, FXY(expa,expw); if(prop)*zd++=*(D*)v;         ++v;  ); zc=(C*)zd; break;  \
-  case 2:  DO(c, FYY(expa,expw); if(prop){MC(zc,v,k); zc+=k;}; v+=cn;);            break;  \
-  case 3:  DO(c, FYY(expa,expw); if(prop)*zd++=*(D*)v;         ++v;  ); zc=(C*)zd;         \
+  default: DQ(c, FXY(expa,expw); if(prop){MC(zc,v,k); zc+=k;}; v+=cn;);            break;  \
+  case 1:  DQ(c, FXY(expa,expw); if(prop)*zd++=*(D*)v;         ++v;  ); zc=(C*)zd; break;  \
+  case 2:  DQ(c, FYY(expa,expw); if(prop){MC(zc,v,k); zc+=k;}; v+=cn;);            break;  \
+  case 3:  DQ(c, FYY(expa,expw); if(prop)*zd++=*(D*)v;         ++v;  ); zc=(C*)zd;         \
  }
 
 // Do the operation.  Build a hash for a except when unboxed self-index
@@ -488,7 +488,7 @@ static IOFX(I,jtioi,  hicw(v),           *v!=av[hj],                      ++v,  
     DO(p,hv[i]=m;);                                                                              \
     if(bx||!b){                                                                                  \
      v=av; PUSHCCT(1.0)                                                                     \
-     if(IICO==mode){v+=e; DQ(m, FA(expa); v-=cn;);}else DO(m, FA(expa); v+=cn;);                 \
+     if(IICO==mode){v+=e; DQ(m, FA(expa); v-=cn;);}else DQ(m, FA(expa); v+=cn;);                 \
      POPCCT if(w==mark)break;                                                                \
    }}                                                                                            \
    v=wv;                                                                                   \
@@ -534,31 +534,31 @@ static IOFT(A,jtioa1,THASHBX,TFINDBX,TFINDBX,!equ(*v,av[hj]),!equ(*v,av[hj]))
 // create the value vector
 
 // v0 is the EMPTY value.  Clear to empty, then go through and set TRUE for each value found.  Used for [: u e.  where the position doesn't matter
-#define SDO(v0)         if(mode<IPHOFFSET){B v1=!(v0); memset(hv,v0,p); u=av; DO(m, hb[*u++]=v1;);}
+#define SDO(v0)         if(mode<IPHOFFSET){B v1=!(v0); memset(hv,v0,p); u=av; DQ(m, hb[*u++]=v1;);}
 // Clear to empty, then go through and remember the index for each value.  Leaves last index, so used for i:
 #define SDOA            if(mode<IPHOFFSET){DO(p,hv[i]=m; ); u=av;   DO(m,hu[*u++]=i;);}
 // Clear to empty, then go through and remember the index for each value.  Reverse order, so leaves first index, so used for i.
 #define SDQA            if(mode<IPHOFFSET){DO(p,hv[i]=m; ); u=av+m; DQ(m,hu[*--u]=i;);}
 
 // Execute stmt on each cell of w.  stmt is responsible for incrementing input and output pointers
-#define SDOW(stmt)      {u=wv;   DO(cm, stmt;);}
+#define SDOW(stmt)      {u=wv;   DQ(cm, stmt;);}
 
 // loop through the items of w, creating the output.  hh->the value vector
 
 // first, versions for i. i: e.    zz is an lvalue that stores to *zz++, vv is the value to use for not-found
 // this version (used for 1- and 2-byte values) we just store the value from the value vector
-#define SCOZ(hh,zz,vv)  {u=wv;   DO(cm, zz=hh[*u++];                      );}
+#define SCOZ(hh,zz,vv)  {u=wv;   DQ(cm, zz=hh[*u++];                      );}
 // This version for fullword values (which have a partial table); use the table only if the value is represented there
-#define SCOZ1(hh,zz,vv) {u=wv;   DO(cm, x=*u++; zz=min<=x&&x<max?hh[x]:vv;);}
+#define SCOZ1(hh,zz,vv) {u=wv;   DQ(cm, x=*u++; zz=min<=x&&x<max?hh[x]:vv;);}
 
 // for u@e. - for each item of w, see if it is in the value table, execute stmt if so.  Save w value in x before executing stmt
-#define SCOW1(hh,stmt)  {u=wv;   DO(cm, x=*u++; if(min<=x&&x< max&&hh[x     ]){stmt;});}
+#define SCOW1(hh,stmt)  {u=wv;   DQ(cm, x=*u++; if(min<=x&&x< max&&hh[x     ]){stmt;});}
 // reversed: execute stmt when the cell of w is NOT in the value table
-#define SCOW0(hh,stmt)  {u=wv;   DO(cm, x=*u++; if(x<min ||max<=x||hh[x     ]){stmt;});}
+#define SCOW0(hh,stmt)  {u=wv;   DQ(cm, x=*u++; if(x<min ||max<=x||hh[x     ]){stmt;});}
 // faster version of SCOW1 for use when the table contains all possible values
-#define SCOWX(hh,stmt)  {u=wv;   DO(cm,         if(                hh[x=*u++]){stmt;});}
+#define SCOWX(hh,stmt)  {u=wv;   DQ(cm,         if(                hh[x=*u++]){stmt;});}
 // still faster version of SCOWX, don't bother setting x
-#define SCOW(hh,stmt)   {u=wv;   DO(cm,         if(                hh[  *u++]){stmt;});}
+#define SCOW(hh,stmt)   {u=wv;   DQ(cm,         if(                hh[  *u++]){stmt;});}
 
 // just like SCOW1/SCOW0/SCOW, but scanning from the end of w
 #define SCQW(hh,stmt)   {u=wv+c; DQ(cm,         if(                hh[  *--u]){stmt;});}
@@ -947,8 +947,8 @@ static A jtnodupgrade(J jt,A a,I acr,I ac,I acn,I ad,I n,I m,B b,B bk){A*av,h,*u
   // should not bother with testing equality if q<index of u (for ascending; reverse for descending)
   // if the list was shortened, replace the last position with 1-(length of shortened list).  This will be detected
   // and the sign changed to give (length of list)-1.  0 is OK too, indicating a 1-element list
-  if(bk){hu=--hi; DO(m-1, q=*hi--; v=av+n*q; if(!eqa(n,u,v,0,0)){u=v; *hu--=q;}); m1=hv-hu; if(m>m1)hv[1-m]=1-m1;}
-  else  {hu=++hi; DO(m-1, q=*hi++; v=av+n*q; if(!eqa(n,u,v,0,0)){u=v; *hu++=q;}); m1=hu-hv; if(m>m1)hv[m-1]=1-m1;}
+  if(bk){hu=--hi; DQ(m-1, q=*hi--; v=av+n*q; if(!eqa(n,u,v,0,0)){u=v; *hu--=q;}); m1=hv-hu; if(m>m1)hv[1-m]=1-m1;}
+  else  {hu=++hi; DQ(m-1, q=*hi++; v=av+n*q; if(!eqa(n,u,v,0,0)){u=v; *hu++=q;}); m1=hu-hv; if(m>m1)hv[m-1]=1-m1;}
  }
  R h;
 } 
@@ -962,7 +962,7 @@ static A jtnodupgrade(J jt,A a,I acr,I ac,I acn,I ad,I n,I m,B b,B bk){A*av,h,*u
 #define BSLOOPAA(hiinc,zstmti,zstmt1,zstmt0)  \
  {A* RESTRICT u=av,* RESTRICT v;I* RESTRICT hi=hv,p,q;             \
   p=*hiinc; u=av+n*p; zstmti;  /* u->first result value, install result for that value to index itself */      \
-  DO(m-1, q=*hiinc; v=av+n*q; if(eqa(n,u,v,0,0))zstmt1; else{u=v; zstmt0;}); /* 
+  DQ(m-1, q=*hiinc; v=av+n*q; if(eqa(n,u,v,0,0))zstmt1; else{u=v; zstmt0;}); /* 
    q is input element# that will have result index i, v->it; if *u=*v, v is a duplicate: map the result back to u (index=p)
    if *u!=*p, advance u/p to v/q and use q as the result index */ \
  }
@@ -1214,7 +1214,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B mk=w==mark
    m=acr?as[af]:1; f0=MAX(0,f1); RE(zn=mult(prod(f,s),prod(f0,ws+wf)));
    switch(mode){
     case IIDOT:  
-    case IICO:    GATV(z,INT,zn,f+f0,s); if(af)MCISH(f+AS(z),ws+wf,f0); v=AV(z); DO(zn, *v++=m;); R z;
+    case IICO:    GATV(z,INT,zn,f+f0,s); if(af)MCISH(f+AS(z),ws+wf,f0); v=AV(z); DQ(zn, *v++=m;); R z;
     case IEPS:    GATV(z,B01,zn,f+f0,s); if(af)MCISH(f+AS(z),ws+wf,f0); memset(BAV(z),C0,zn); R z;
     case ILESS:                              RCA(w);
     case IIFBEPS:                            R mtv;
@@ -1633,7 +1633,7 @@ F1(jtsclass){A e,x,xy,y,z;I c,j,m,n,*v;P*p;
  if(n>*AV(e))RZ(xy=over(xy,stitch(e,less(IX(n),y))));
  RZ(xy=grade2(xy,xy)); v=AV(xy);
  c=*AS(xy);
- m=j=-1; DO(c, if(j!=*v){j=*v; ++m;} *v=m; v+=2;);
+ m=j=-1; DQ(c, if(j!=*v){j=*v; ++m;} *v=m; v+=2;);
  GASPARSE(z,SB01,1,2,(I*)0);  v=AS(z); v[0]=1+m; v[1]=n;
  p=PAV(z); 
  SPB(p,a,v2(0L,1L));

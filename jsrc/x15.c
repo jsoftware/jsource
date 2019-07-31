@@ -664,11 +664,11 @@ static void convertdown(I*pi,I n,C t){
 
 static void convertup(I*pi,I n,C t){I j=n;
  if(n)switch(t){
-  case 'b': {BYTE*pt=(BYTE*)pi;               DO(n, --j; pi[j]=(I)pt[j];);} break;
-  case 's': {short*pt=(short*)pi;             DO(n, --j; pi[j]=(I)pt[j];);} break;
-  case 'i': {int  *pt=(int  *)pi;             DO(n, --j; pi[j]=(I)pt[j];);} break;
-  case 'f': {float*pt=(float*)pi;D*pd=(D*)pi; DO(n, --j; pd[j]=(D)pt[j];);} break;
-  case 'z': {float_complex*pt=(float_complex*)pi;D*pd=(D*)pi; DO(n, --j; pd[1+2*j]=(D)cimagf(pt[j]); pd[2*j]=(D)crealf(pt[j]););} break;
+  case 'b': {BYTE*pt=(BYTE*)pi;               DQ(n, --j; pi[j]=(I)pt[j];);} break;
+  case 's': {short*pt=(short*)pi;             DQ(n, --j; pi[j]=(I)pt[j];);} break;
+  case 'i': {int  *pt=(int  *)pi;             DQ(n, --j; pi[j]=(I)pt[j];);} break;
+  case 'f': {float*pt=(float*)pi;D*pd=(D*)pi; DQ(n, --j; pd[j]=(D)pt[j];);} break;
+  case 'z': {float_complex*pt=(float_complex*)pi;D*pd=(D*)pi; DQ(n, --j; pd[1+2*j]=(D)cimagf(pt[j]); pd[2*j]=(D)crealf(pt[j]););} break;
 }}   /* convert s or int to I and f to d and z to j */
 
 
@@ -727,7 +727,7 @@ static CCT*jtcdinsert(J jt,A a,CCT*cc){A x;C*s;CCT*pv,*z;I an,hn,*hv,j,k;
  z=pv+jt->cdna; MC(z,cc,sizeof(CCT)); k=jt->cdna++;
  if(AN(jt->cdhash)<=2*jt->cdna){k=0; RZ(x=cdgahash(2*jt->cdna)); fa(jt->cdhash); jt->cdhash=x;}
  hv=AV(jt->cdhash); hn=AN(jt->cdhash);
- DO(jt->cdna-k, j=hic(pv[k].an,s+pv[k].ai)%hn; while(0<=hv[j])if((j=(j+1))==hn)j=0; hv[j]=k; ++k;);
+ DQ(jt->cdna-k, j=hic(pv[k].an,s+pv[k].ai)%hn; while(0<=hv[j])if((j=(j+1))==hn)j=0; hv[j]=k; ++k;);
  R z;
 }
 
@@ -1108,13 +1108,13 @@ F2(jtcd){A z;C*tv,*wv,*zv;CCT*cc;I k,m,n,p,q,t,wr,*ws,wt;
  if(cc->zbx){GATV(z,BOX,m*(1+n),MAX(1,wr),ws); AS(z)[AR(z)-1]=1+n;}
  else{CDASSERT('*'!=cc->zl,DEDEC); GA(z,cc->zt,m,MAX(0,wr-1),ws);}
  if(m&&n&&!(wt&BOX)){
-  t=0; tv=cc->tletter; DO(n, k=cdjtype(*tv++); t=MAX(t,k););
+  t=0; tv=cc->tletter; DQ(n, k=cdjtype(*tv++); t=MAX(t,k););
   CDASSERT(HOMO(t,wt),DEPARM);
   if(!(wt&B01+INT+FL+LIT+C2T+C4T))RZ(w=cvt(wt=t,w));
  }
  wv=CAV(w); zv=CAV(z); k=bpnoun(wt);
  if(1==m)RZ(jtcdexec1(jtinplace,cc,zv,wv,k,wt,0))
- else{p=n*k; q=cc->zbx?sizeof(A)*(1+n):bp(AT(z)); DO(m, RZ(jtcdexec1(jtinplace,cc,zv,wv,k,wt,0)); wv+=p; zv+=q;);}
+ else{p=n*k; q=cc->zbx?sizeof(A)*(1+n):bp(AT(z)); DQ(m, RZ(jtcdexec1(jtinplace,cc,zv,wv,k,wt,0)); wv+=p; zv+=q;);}
  R z;
 }    /* 15!:0 */
 
@@ -1129,7 +1129,7 @@ F2(jtcd){A z;C*tv,*wv,*zv;CCT*cc;I k,m,n,p,q,t,wr,*ws,wt;
 void dllquit(J jt){CCT*av;I j,*v;
  if(!jt->cdarg)R;
  v=AV(jt->cdhashl); av=(CCT*)AV(jt->cdarg);
- DO(AN(jt->cdhashl), j=*v++; if(0<=j)FREELIB(av[j].h););
+ DQ(AN(jt->cdhashl), j=*v++; if(0<=j)FREELIB(av[j].h););
  fa(jt->cdarg);   jt->cdarg  =0; jt->cdna=0;
  fa(jt->cdstr);   jt->cdstr  =0; jt->cdns=0;
  fa(jt->cdhash);  jt->cdhash =0;

@@ -138,7 +138,7 @@ static GF(jtgrx){A x;I ck,t,*xv;I c=ai*n;
  jt->workareas.compare.comp=sortroutines[CTTZ(t)][(UI)jt->workareas.compare.complt>>(BW-1)].comproutine; jt->workareas.compare.compusejt = !!(t&BOX+XNUM+RAT);
  void **(*sortfunc)() = sortroutines[CTTZ(t)][(UI)jt->workareas.compare.complt>>(BW-1)].sortfunc;
  GATV0(x,INT,n,1); xv=AV(x);  /* work area for msmerge() */
- DO(m, msortitems(sortfunc,n,(void**)zv,(void**)xv); jt->workareas.compare.compv+=ck; zv+=n;);
+ DQ(m, msortitems(sortfunc,n,(void**)zv,(void**)xv); jt->workareas.compare.compv+=ck; zv+=n;);
  R !jt->jerr;
 }    /* grade"r w on general w */
 
@@ -166,7 +166,7 @@ I grcol4(I d,I c,UI4*yv,I n,I*xv,I*zv,const I m,US*u,I flags){
   flags &= ~8;
  }else{memset(c+yv,C0,d*sizeof(*yv));}  // full clear if the fast option is not selected
  // increment the bucket for each input value
- v=u; DO(n, ++yv[*v]; v+=m;);
+ v=u; DQ(n, ++yv[*v]; v+=m;);
  // If all the values are sign-extensions (which will happen often) we can short-circuit much of the processing, including the rolling sum
  // Do this only when there is data/index to copy, to save us the trouble of having a case for synthesizing the index
  if(xv&&((ct00=yv[0])+(ctff=yv[65535])==n)){
@@ -227,7 +227,7 @@ I grcol2(I d,I c,US*yv,I n,I*xv,I*zv,const I m,US*u,I flags){
  if(flags&8){
   flags &= ~8;
  }else{memset(c+yv,C0,d*sizeof(*yv));}
- v=u; DO(n, ++yv[*v]; v+=m;);
+ v=u; DQ(n, ++yv[*v]; v+=m;);
  if(xv&&((ct00=yv[0])+(ctff=yv[65535])==n)){
   flags|=8;
   if(ct00&&ctff){S *vs=(S*)u;
@@ -326,7 +326,7 @@ static GF(jtgrd){A x,y;int b;D*v,*wv;I *g,*h,nneg,*xv;US*u;void *yv;I c=ai*n;
   u=(US*)wv+FPLSBWDX;   // point to LSB of input
   // count the number of negative values, call it nneg.  Set b to mean 'both negative and nonnegative are present'
   // If we are doing all negative values, just change the direction and return the sorted values without reversal
-  {v=wv; nneg=0; DO(n, nneg+=(((US*)v)[FPMSBWDX]>>15); ++v;); b=0<nneg&&nneg<n;}
+  {v=wv; nneg=0; DQ(n, nneg+=(((US*)v)[FPMSBWDX]>>15); ++v;); b=0<nneg&&nneg<n;}
   // set the ping-pong buffer pointers so we will end up with the output in zv.  If b is set, we have 5 passes (one final sign-correction pass); if not, 4
   // h is the even-numbered output buffer.  if b is off, we start writing to x and finish in z; if b is set, we start writing to z, finish the 4th pass
   // in x, then the postpass ends in z
@@ -346,14 +346,14 @@ static GF(jtgrd){A x,y;int b;D*v,*wv;I *g,*h,nneg,*xv;US*u;void *yv;I c=ai*n;
    if(colflags&2){  // values were sorted up, & so now contain +0,  +, -0,  -
     I npos0; u=xv+(n-nneg); for(npos0=-(n-nneg);npos0<0&&wv[u[npos0]]==0;++npos0); npos0+=(n-nneg);  // Count +0
     u=xv+n; for(nneg0=-nneg;nneg0<0&&wv[u[nneg0]]==0;++nneg0); nneg0+=nneg;  // Count -0
-    u=zv+nneg-nneg0; I ppos=0,pneg=0; DO(npos0+nneg0, *u++=(pneg>=nneg0||(ppos<npos0&&xv[ppos]<xv[n-nneg+pneg]))?xv[ppos++]:xv[n-nneg+pneg++];)  // merge
+    u=zv+nneg-nneg0; I ppos=0,pneg=0; DQ(npos0+nneg0, *u++=(pneg>=nneg0||(ppos<npos0&&xv[ppos]<xv[n-nneg+pneg]))?xv[ppos++]:xv[n-nneg+pneg++];)  // merge
     // Copy the positives
     ICPY(u,xv+npos0,n-nneg-npos0); //  /: copy the nonnegatives to the end of result area
     u=zv;     v=xv+n;
    }else{  // values were sorted down, & so now contain  - , -0,  +, +0
     I npos0; u=xv+nneg-1; for(npos0=n-nneg;npos0>0&&wv[u[npos0]]==0;--npos0); npos0=(n-nneg)-npos0;  // Count +0
     u=xv-1; for(nneg0=nneg;nneg0>0&&wv[u[nneg0]]==0;--nneg0); nneg0=nneg-nneg0;  // Count -0
-    u=zv+n-nneg-npos0; I ppos=0,pneg=0; DO(npos0+nneg0, *u++=(pneg>=nneg0||(ppos<npos0&&xv[n-npos0+ppos]<xv[nneg-nneg0+pneg]))?xv[n-npos0+ppos++]:xv[nneg-nneg0+pneg++];)  // merge
+    u=zv+n-nneg-npos0; I ppos=0,pneg=0; DQ(npos0+nneg0, *u++=(pneg>=nneg0||(ppos<npos0&&xv[n-npos0+ppos]<xv[nneg-nneg0+pneg]))?xv[n-npos0+ppos++]:xv[nneg-nneg0+pneg++];)  // merge
     // Copy the positives
     ICPY(zv,xv+nneg,n-nneg-npos0); //  /: copy the positives to the beginning of result area
     u=zv+n-nneg+nneg0;     v=xv+nneg-nneg0;
@@ -368,7 +368,7 @@ static GF(jtgrd){A x,y;int b;D*v,*wv;I *g,*h,nneg,*xv;US*u;void *yv;I c=ai*n;
    DO(nneg-nneg0, --v; if(d!=wv[*v]){vv=1+v; m=i-j; DO(m, *u++=*vv++;); j=i; d=wv[*v];});
    // We have to push out the last set by hand because *v is outside the input area.  That wouldn't pose a problem
    // except when there is rank; then *v may be the same value as d and a change would be missed
-   DO(nneg-nneg0-j, *u++=*v++;);  // v starts pointing to first neg
+   DQ(nneg-nneg0-j, *u++=*v++;);  // v starts pointing to first neg
   }
   wv+=c; zv+=n;
  }
@@ -639,9 +639,9 @@ static GF(jtgru){A x,y;B up;I e,i,*xv;UI4 *yv,*yvb;C4 *v,*wv;I c=ai*n;
  {I*g,*h,   j=p-1,k,s=0;UC*v;                          \
   if(b){g=xv; h=zv; b=0;}else{g=zv; h=xv; b=1;}        \
   memset(yv,C0,ps);                                    \
-  v=vv; DO(n, ++yv[iicalc0]; v+=ai;);                   \
+  v=vv; DQ(n, ++yv[iicalc0]; v+=ai;);                   \
   if(up)DO(p, k=yv[i]; yv[i  ]=s; s+=k;)               \
-  else  DO(p, k=yv[j]; yv[j--]=s; s+=k;);              \
+  else  DQ(p, k=yv[j]; yv[j--]=s; s+=k;);              \
   v=vv; DO(n, h[yv[iicalc1]++]=ind;           vinc;);  \
  }
 
@@ -649,9 +649,9 @@ static GF(jtgru){A x,y;B up;I e,i,*xv;UI4 *yv,*yvb;C4 *v,*wv;I c=ai*n;
  {I*g,*h,ii,j=p-1,k,s=0;UC*v;                          \
   if(b){g=xv; h=zv; b=0;}else{g=zv; h=xv; b=1;}        \
   memset(yv,C0,ps);                                    \
-  v=vv; DO(n, IND4(iicalc0); ++yv[ii]; v+=ai;);         \
+  v=vv; DQ(n, IND4(iicalc0); ++yv[ii]; v+=ai;);         \
   if(up)DO(p, k=yv[i]; yv[i  ]=s; s+=k;)               \
-  else  DO(p, k=yv[j]; yv[j--]=s; s+=k;);              \
+  else  DQ(p, k=yv[j]; yv[j--]=s; s+=k;);              \
   v=vv; DO(n, IND4(iicalc1); h[yv[ii]++]=ind; vinc;);  \
  }
 
@@ -769,14 +769,14 @@ F2(jtdgrade2){F2PREFIP;A z;GBEGIN( 1); RZ(a&&w); z=SPARSE&AT(w)?grd2sp(a,w):jtgr
    if(4>=n){u=tv; SORT4; R ATOMF(tv[j]);}        /* stop loop on small partition */       \
    p0=tv[qv[i]%n]; ++i; if(i==qn)i=0;                                                  \
    p1=tv[qv[i]%n]; ++i; if(i==qn)i=0; if(p0>p1){q=p0; p0=p1; p1=q;}       /* create pivots p0, p1 selected from input, with p0 <= p1  */             \
-   if(p0==p1){m0=m1=0; v=tv; DO(n, if(p0>*v)++m0;                     ++v;);}          \
-   else      {m0=m1=0; v=tv; DO(n, if(p0>*v)++m0; else if(p1>*v)++m1; ++v;);}  /* count m0: # < p0; and m1: # p0<=x<p1  */         \
+   if(p0==p1){m0=m1=0; v=tv; DQ(n, if(p0>*v)++m0;                     ++v;);}          \
+   else      {m0=m1=0; v=tv; DQ(n, if(p0>*v)++m0; else if(p1>*v)++m1; ++v;);}  /* count m0: # < p0; and m1: # p0<=x<p1  */         \
    c=m0+m1; m=j<m0?m0:j<c?m1:n-c;    /* calc size of partition holding the result */        \
    if(t)u=v=tv; else{GA(t,wt,m,1,0); u=tv=(T*)AV(t); v=wv;}                            \
-   if     (j<m0){       DO(n, if(*v<p0        )*u++=*v; ++v;); n=m;}                   \
-   else if(j<c ){j-=m0; DO(n, if(p0<=*v&&*v<p1)*u++=*v; ++v;); n=m;}                   \
-   else if(c   ){j-=c;  DO(n, if(p1<=*v       )*u++=*v; ++v;); n=m;}                   \
-   else{DO(n, if(p1<*v)*u++=*v; ++v;); m=u-tv; c=n-m; if(j<c)R ATOMF(p1); j-=c; n=m;}  \
+   if     (j<m0){       DQ(n, if(*v<p0        )*u++=*v; ++v;); n=m;}                   \
+   else if(j<c ){j-=m0; DQ(n, if(p0<=*v&&*v<p1)*u++=*v; ++v;); n=m;}                   \
+   else if(c   ){j-=c;  DQ(n, if(p1<=*v       )*u++=*v; ++v;); n=m;}                   \
+   else{DQ(n, if(p1<*v)*u++=*v; ++v;); m=u-tv; c=n-m; if(j<c)R ATOMF(p1); j-=c; n=m;}  \
  }}
 
 F2(jtordstat){A q,t=0;I c,i=0,j,m,m0,m1,n,qn=53,*qv,wt;

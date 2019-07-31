@@ -24,9 +24,9 @@ for(i=0;i<m;++i, zv+=n, av0+=p){
   // If the result doesn't saturate, perform the calculation.  uv->result, vv->item of w, depending on b value
   uu=(I*)zv; vv=(I*)(b?v1+j*wc:v0+j*wc);
   // Do all the fullword operations
-  DO(q, *uu++ F *vv++;);
+  DQ(q, *uu++ F *vv++;);
   // Finish with byte operations
-  u=(B*)uu; v=(B*)vv; DO(r, *u++ F *v++;);
+  u=(B*)uu; v=(B*)vv; DQ(r, *u++ F *v++;);
  }
 }
 #undef F

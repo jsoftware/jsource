@@ -33,15 +33,15 @@ static A jtipprep(J jt,A a,A w,I zt,I*pm,I*pn,I*pp){A z=mark;I*as,ar,ar1,m,mn,n,
 #define PDTBY(Tz,Tw,INC)          \
  {Tw*v,*wv;Tz c,*x,zero,*zv;      \
   v=wv=(Tw*)AV(w); zv=(Tz*)AV(z); memset(&zero,C0,sizeof(Tz));     \
-  if(1==n)DO(m, v=wv; c=zero;           DO(p,       if(*u++)INC(c,*v);             ++v;);             *zv++=c;)   \
-  else    DO(m, v=wv; memset(zv,C0,zk); DO(p, x=zv; if(*u++)DO(n, INC(*x,*v); ++x; ++v;) else v+=n;); zv+=n;  );  \
+  if(1==n)DQ(m, v=wv; c=zero;           DQ(p,       if(*u++)INC(c,*v);             ++v;);             *zv++=c;)   \
+  else    DQ(m, v=wv; memset(zv,C0,zk); DQ(p, x=zv; if(*u++)DQ(n, INC(*x,*v); ++x; ++v;) else v+=n;); zv+=n;  );  \
  }
 
 #define PDTXB(Tz,Ta,INC,INIT)     \
  {Ta*u;Tz c,*x,zero,*zv;          \
   u=   (Ta*)AV(a); zv=(Tz*)AV(z); memset(&zero,C0,sizeof(Tz));     \
-  if(1==n)DO(m, v=wv; c=zero;           DO(p,                   if(*v++)INC(c,*u); ++u;  ); *zv++=c;)   \
-  else    DO(m, v=wv; memset(zv,C0,zk); DO(p, x=zv; INIT; DO(n, if(*v++)INC(*x,c); ++x;);); zv+=n;  );  \
+  if(1==n)DQ(m, v=wv; c=zero;           DQ(p,                   if(*v++)INC(c,*u); ++u;  ); *zv++=c;)   \
+  else    DQ(m, v=wv; memset(zv,C0,zk); DQ(p, x=zv; INIT; DQ(n, if(*v++)INC(*x,c); ++x;);); zv+=n;  );  \
  }
 
 static F2(jtpdtby){A z;B b,*u,*v,*wv;C er=0;I at,m,n,p,t,wt,zk;
@@ -62,9 +62,9 @@ static F2(jtpdtby){A z;B b,*u,*v,*wv;C er=0;I at,m,n,p,t,wt,zk;
 }    /* x +/ .* y where x or y (but not both) is Boolean */
 
 #define BBLOCK(nn)  \
-     d=ti; DO(nw, *d++=0;);                                           \
-     DO(nn, if(*u++){vi=(UI*)v; d=ti; DO(nw, *d+++=*vi++;);} v+=n;);  \
-     x=zv; c=tc; DO(n, *x+++=*c++;);
+     d=ti; DQ(nw, *d++=0;);                                           \
+     DQ(nn, if(*u++){vi=(UI*)v; d=ti; DQ(nw, *d+++=*vi++;);} v+=n;);  \
+     x=zv; c=tc; DQ(n, *x+++=*c++;);
 
 #if 0&&C_NA    // scaf  asm function no longer used, and no longer defined in C
 /*
@@ -376,12 +376,12 @@ F2(jtpdt){PROLOG(0038);A z;I ar,at,i,m,n,p,p1,t,wr,wt;
    nw=(n+SZI-1)>>LGSZI;
    GATV0(tt,INT,nw,1); ti=(UI*)AV(tt); tc=(UC*)ti;
    u=BAV(a); v=wv=BAV(w); zv=AV(z);
-   for(i=0;i<m;++i,v=wv,zv+=n){x=zv; DO(n, *x++=0;); I pp=p; while((pp-=255)>=0){BBLOCK(255);} BBLOCK(pp+255);}
+   for(i=0;i<m;++i,v=wv,zv+=n){x=zv; DQ(n, *x++=0;); I pp=p; while((pp-=255)>=0){BBLOCK(255);} BBLOCK(pp+255);}
   }else{B*u,*v,*wv;I*x,*zv;
    u=BAV(a); v=wv=BAV(w); zv=AV(z);
    for(i=0;i<m;++i,v=wv,zv+=n){
-           x=zv; if(*u++)DO(n, *x++ =*v++;) else{v+=n; DO(n, *x++=0;);}
-    DO(p1, x=zv; if(*u++)DO(n, *x+++=*v++;) else v+=n;);
+           x=zv; if(*u++)DQ(n, *x++ =*v++;) else{v+=n; DQ(n, *x++=0;);}
+    DQ(p1, x=zv; if(*u++)DQ(n, *x+++=*v++;) else v+=n;);
    }
   }
   break;
@@ -391,7 +391,7 @@ F2(jtpdt){PROLOG(0038);A z;I ar,at,i,m,n,p,p1,t,wr,wt;
  /*
    for(i=0;i<m;++i,v=wv,zv+=n){
      x=zv; c=*u++; er=asmtymes1v(n,x,c,v);    if(er)break; v+=n;
-     DO(p1, x=zv; c=*u++; er=asminnerprodx(n,x,c,v); if(er)break; v+=n;);
+     DQ(p1, x=zv; c=*u++; er=asminnerprodx(n,x,c,v); if(er)break; v+=n;);
 
  */
 #if C_NA   // non-assembler version
@@ -403,30 +403,30 @@ F2(jtpdt){PROLOG(0038);A z;I ar,at,i,m,n,p,p1,t,wr,wt;
     // vector products
     // The fast loop will be used if each multiplicand, and each product, fits in 32 bits
     I er=0;  // will be set if overflow detected
-    I* RESTRICT wv=AV(w); tot=0; DO(p, I wvv=*wv; if((I4)wvv!=wvv){er=1; break;} wvv=wvv<0?-wvv:wvv; tot+=wvv; wv++;)
+    I* RESTRICT wv=AV(w); tot=0; DQ(p, I wvv=*wv; if((I4)wvv!=wvv){er=1; break;} wvv=wvv<0?-wvv:wvv; tot+=wvv; wv++;)
     if(!er){
      // w fits in 32 bits.  Try to accumulate the products.  If we can be sure that the total will not exceed 32 bits unless
      // an a-value does, do the fastest loop
      zv=AV(z); av=AV(a);
      if((UI)(p*tot)<(UI)0x100000000){ // integer overflow
       // The total in w is so small that a mere m values each less than 2^31 cannot overflow
-      DQ(m, I tot=0; wv=AV(w); DO(p, I mpcnd=*av++; I prod=mpcnd**wv++; if(mpcnd!=(I4)mpcnd)goto oflo1; tot+=prod;) *zv++=tot;)
+      DQ(m, I tot=0; wv=AV(w); DQ(p, I mpcnd=*av++; I prod=mpcnd**wv++; if(mpcnd!=(I4)mpcnd)goto oflo1; tot+=prod;) *zv++=tot;)
      }else{
       // w has some big numbers, so we have to check each individual product
-      DQ(m, I tot=0; wv=AV(w); DO(p, I mpcnd=*av++; I prod=mpcnd**wv++; if(mpcnd!=(I4)mpcnd||prod!=(I4)prod)goto oflo1; tot+=prod;) *zv++=tot;)
+      DQ(m, I tot=0; wv=AV(w); DQ(p, I mpcnd=*av++; I prod=mpcnd**wv++; if(mpcnd!=(I4)mpcnd||prod!=(I4)prod)goto oflo1; tot+=prod;) *zv++=tot;)
      }
      AT(z)=INT; break;
     }
 oflo1:
     // Something overflowed 32 bits.  See if it fits in 64.
     zv=AV(z); av=AV(a);
-    DO(m, I lp; I tot=0; wv=AV(w); DO(p, DPMULD(*av++,*wv++, lp, goto oflo2;) I oc=(~tot)^lp; tot+=lp; lp^=tot; if(XANDY(oc,lp)<0)goto oflo2;) *zv++=tot;)
+    DQ(m, I lp; I tot=0; wv=AV(w); DQ(p, DPMULD(*av++,*wv++, lp, goto oflo2;) I oc=(~tot)^lp; tot+=lp; lp^=tot; if(XANDY(oc,lp)<0)goto oflo2;) *zv++=tot;)
     AT(z)=INT; break;
 oflo2:
     // Result does not fit in INT.  Do the computation as float, with float result
     if(m)z=jtsumattymesprods(jt,INT,w,a,p,1,1,1,m,0,z);  // use +/@:*"1 .  Exchange w and a because a is the repeated arg in jtsumattymesprods.  If error, clear z (should not happen here)
 // obsolete     zvd=DAV(z); av=AV(a);
-// obsolete     DO(m, D tot=0; wv=AV(w); DO(p, tot+=(D)*av++*(D)*wv++;) *zvd++=tot;)
+// obsolete     DQ(m, D tot=0; wv=AV(w); DQ(p, tot+=(D)*av++*(D)*wv++;) *zvd++=tot;)
    }else{
      // full matrix products
      I probsize = m*n*(IL)p;  // This is proportional to the number of multiply-adds.  We use it to select the implementation
@@ -446,15 +446,15 @@ oflo2:
 #else  // !C_NA
     for(i=0;i<m;++i,v=wv,zv+=n){
      x=zv; c=*u++; TYMES1V(n,x,c,v); if(er)break; v+=n;
-     DO(p1, x=zv; c=*u++; er=asminnerprodx(n,x,c,v); if(er)break; v+=n;);
+     DQ(p1, x=zv; c=*u++; er=asminnerprodx(n,x,c,v); if(er)break; v+=n;);
      if(er)break;
     }
     if(er){A z1;D c,* RESTRICT x,* RESTRICT zv;I* RESTRICT u,* RESTRICT v,* RESTRICT wv;
      GATV(z1,FL,AN(z),AR(z),AS(z)); z=z1;
      u=AV(a); v=wv=AV(w); zv=DAV(z);
      for(i=0;i<m;++i,v=wv,zv+=n){
-             x=zv; c=(D)*u++; DO(n, *x++ =c**v++;);
-      DO(p1, x=zv; c=(D)*u++; DO(n, *x+++=c**v++;););
+             x=zv; c=(D)*u++; DQ(n, *x++ =c**v++;);
+      DQ(p1, x=zv; c=(D)*u++; DQ(n, *x+++=c**v++;););
    }}}
 #endif
 #else
@@ -463,7 +463,7 @@ oflo2:
    NAN0;
    if(n==1){D* RESTRICT zv; I* RESTRICT av, * RESTRICT wv;
     zv=DAV(z); av=AV(a);
-    DO(m, D tot=0; wv=AV(w); DO(p, tot+=((D)*av++)*((D)*wv++);) *zv++=tot;)
+    DQ(m, D tot=0; wv=AV(w); DQ(p, tot+=((D)*av++)*((D)*wv++);) *zv++=tot;)
     smallprob=0;  // Don't compute it again
    }else if(!(smallprob = m*n*(IL)p<1000LL)){  // if small problem, avoid the startup overhead of the matrix version  TUNE
       memset(DAV(z),C0,m*n*sizeof(D));
@@ -472,10 +472,10 @@ oflo2:
    // If there was a floating-point error, retry it the old way in case it was _ * 0
    if(smallprob||NANTEST){D c,*x,*zv;I*u,*v,*wv;
     u=AV(a); v=wv=AV(w); zv=DAV(z);
-    if(1==n)DO(m, v=wv; c=0.0; DO(p, c+=*u++*(D)*v++;); *zv++=c;)
+    if(1==n)DQ(m, v=wv; c=0.0; DQ(p, c+=*u++*(D)*v++;); *zv++=c;)
     else for(i=0;i<m;++i,v=wv,zv+=n){
-            x=zv; c=(D)*u++; DO(n, *x++ =c**v++;);
-     DO(p1, x=zv; c=(D)*u++; DO(n, *x+++=c**v++;););
+            x=zv; c=(D)*u++; DQ(n, *x++ =c**v++;);
+     DQ(p1, x=zv; c=(D)*u++; DQ(n, *x+++=c**v++;););
     }
    }
   // convert float result back to int if it will fit
@@ -493,7 +493,7 @@ oflo2:
     D* RESTRICT zv, * RESTRICT av, * RESTRICT wv;
     zv=DAV(z); av=DAV(a);
     // Floating add has latency of 4.  We can't address operands and do the arithmetic in less than 2 cycles, so 2 totals are enough
-    DO(m, D tot0=0; D tot1=0; wv=DAV(w); if(p&1)tot1=*av++**wv++; DQ(p>>1, tot0+=*av++**wv++; tot1+=*av++**wv++;) *zv++=tot0+tot1;)
+    DQ(m, D tot0=0; D tot1=0; wv=DAV(w); if(p&1)tot1=*av++**wv++; DQ(p>>1, tot0+=*av++**wv++; tot1+=*av++**wv++;) *zv++=tot0+tot1;)
 #else
     if(m)z=jtsumattymesprods(jt,FL,w,a,p,1,1,1,m,0,z);  // use +/@:*"1 .  Exchange w and a because a is the repeated arg in jtsumattymesprods.  If error, clear z
 #endif
@@ -513,10 +513,10 @@ oflo2:
    if(smallprob||NANTEST){D c,s,t,*u,*v,*wv,*x,*zv;
     u=DAV(a); v=wv=DAV(w); zv=DAV(z);
     NAN0;
-    if(1==n){DO(m, v=wv; c=0.0; DO(p, s=*u++; t=*v++; c+=TYMES(s,t);); *zv++=c;);}
+    if(1==n){DQ(m, v=wv; c=0.0; DQ(p, s=*u++; t=*v++; c+=TYMES(s,t);); *zv++=c;);}
     else for(i=0;i<m;++i,v=wv,zv+=n){
-            x=zv; if(c=*u++){if(INF(c))DO(n, *x++ =TYMES(*v,c); ++v;)else DO(n, *x++ =c**v++;);}else{v+=n; DO(n, *x++=0.0;);}
-     DO(p1, x=zv; if(c=*u++){if(INF(c))DO(n, *x+++=TYMES(*v,c); ++v;)else DO(n, *x+++=c**v++;);}else v+=n;);
+            x=zv; if(c=*u++){if(INF(c))DQ(n, *x++ =TYMES(*v,c); ++v;)else DQ(n, *x++ =c**v++;);}else{v+=n; DQ(n, *x++=0.0;);}
+     DQ(p1, x=zv; if(c=*u++){if(INF(c))DQ(n, *x+++=TYMES(*v,c); ++v;)else DQ(n, *x+++=c**v++;);}else v+=n;);
     }
     NAN1;
    }
@@ -535,10 +535,10 @@ oflo2:
     // There was a floating-point error.  In case it was 0*_ retry old-style
     u=ZAV(a); v=wv=ZAV(w); zv=ZAV(z);
     NAN0;
-    if(1==n)DO(m, v=wv; c=zeroZ; DO(p, c.re+=ZRE(*u,*v); c.im+=ZIM(*u,*v); ++u; ++v;); *zv++=c;)
+    if(1==n)DQ(m, v=wv; c=zeroZ; DQ(p, c.re+=ZRE(*u,*v); c.im+=ZIM(*u,*v); ++u; ++v;); *zv++=c;)
     else for(i=0;i<m;++i,v=wv,zv+=n){
-            x=zv; c=*u++; DO(n, x->re =ZRE(c,*v); x->im =ZIM(c,*v); ++x; ++v;);
-     DO(p1, x=zv; c=*u++; DO(n, x->re+=ZRE(c,*v); x->im+=ZIM(c,*v); ++x; ++v;););
+            x=zv; c=*u++; DQ(n, x->re =ZRE(c,*v); x->im =ZIM(c,*v); ++x; ++v;);
+     DQ(p1, x=zv; c=*u++; DQ(n, x->re+=ZRE(c,*v); x->im+=ZIM(c,*v); ++x; ++v;););
     }
     NAN1;
    }
@@ -553,8 +553,8 @@ oflo2:
   MC(zv,*av?v1:v0,n); if(ac)++av;                    \
   for(j=1;j<p;++j){                                      \
    uu=(I*)zv; vv=(I*)(*av?v1+j*wc:v0+j*wc); if(ac)++av;  \
-   DO(q, *uu++F=*vv++;);                                 \
-   if(r){u=(B*)uu; v=(B*)vv; DO(r, *u++F=*v++;);}        \
+   DQ(q, *uu++F=*vv++;);                                 \
+   if(r){u=(B*)uu; v=(B*)vv; DQ(r, *u++F=*v++;);}        \
   }                                                      \
   zv+=n;                                                 \
  }

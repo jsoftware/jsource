@@ -47,7 +47,7 @@
 /* Calculating Machinery, Harvard University Press, 1951, pp. 141-146.     */
 
 static void lcg(I n,I*v,I seed){D c=16807.0,p=2147483647.0,x=(D)seed;
- DO(n, x*=c; x-=p*(I)(x/p); *v++=(I)x;);
+ DQ(n, x*=c; x-=p*(I)(x/p); *v++=(I)x;);
 }
 
 F1(jtlcg_test){A x;I n=1597,*v;
@@ -124,7 +124,7 @@ F1(jtgb_test){I j=jt->rng;
  RZ(rngselects(sc(GBI)));
  gb_init(-314159);
  ASSERTSYS(gb_next()==119318998,"gb_test 0");
- DO(133, gb_next(););
+ DQ(133, gb_next(););
  ASSERTSYS(gb_unif_rand(0x55555555L)==748103812,"gb_test 1");
  RZ(rngselects(sc(j)));
  R num[1];
@@ -238,8 +238,8 @@ static void jtmt_init_by_array(J jt,UI init_key[], I key_length){I i,j,k;UI*mt=j
 static UI jtmt_next(J jt){UI*mt=jt->rngv,*u,*v,*w,y;
  if (MTN<=jt->rngi) {  /* generate MTN words at one time */
   v=1+mt; w=MTM+mt; 
-  u=mt; DO(MTN-MTM, y=(*u&UM)|(*v++&LM); *u++=*w++^(y>>1)^MATRIX_A*(y&0x1UL););
-  w=mt; DO(MTM-1,   y=(*u&UM)|(*v++&LM); *u++=*w++^(y>>1)^MATRIX_A*(y&0x1UL););
+  u=mt; DQ(MTN-MTM, y=(*u&UM)|(*v++&LM); *u++=*w++^(y>>1)^MATRIX_A*(y&0x1UL););
+  w=mt; DQ(MTM-1,   y=(*u&UM)|(*v++&LM); *u++=*w++^(y>>1)^MATRIX_A*(y&0x1UL););
   v=mt;             y=(*u&UM)|(*v++&LM); *u++=*w++^(y>>1)^MATRIX_A*(y&0x1UL);
   jt->rngi=0;
  }
@@ -265,7 +265,7 @@ F1(jtmt_test){I j=jt->rng;UI init[4]={0x12345ULL, 0x23456ULL, 0x34567ULL, 0x4567
  mt_init_by_array(init,(I)4);
  x=mt_next();
  ASSERTSYS(x==7266447313870364031ULL, "mt_test64 0");
- DO(998, mt_next(););
+ DQ(998, mt_next(););
  x=mt_next();
  ASSERTSYS(x== 994412663058993407ULL, "mt_test64 1");
  RZ(rngselects(sc(j)));
@@ -278,7 +278,7 @@ F1(jtmt_test){I j=jt->rng;UI init[4]={0x123, 0x234, 0x345, 0x456},x;
  mt_init_by_array(init,(I)4);
  x=mt_next();
  ASSERTSYS(x==1067595299UL, "mt_test32 0");
- DO(998, mt_next(););
+ DQ(998, mt_next(););
  x=mt_next();
  ASSERTSYS(x==3460025646UL, "mt_test32 1");
  RZ(rngselects(sc(j)));
@@ -408,7 +408,7 @@ F1(jtmr_test){I j=jt->rng,x;
  x=mr_next(); ASSERTSYS(x==2530141948UL, "mr_test 2");
  x=mr_next(); ASSERTSYS(x==1065433470UL, "mr_test 3");
  x=mr_next(); ASSERTSYS(x==1177634463UL, "mr_test 4");
- DO(40, mr_next(););
+ DQ(40, mr_next(););
  x=mr_next(); ASSERTSYS(x==1134399356UL, "mr_test 45");
  x=mr_next(); ASSERTSYS(x== 630832201UL, "mr_test 46");
  x=mr_next(); ASSERTSYS(x==2411464992UL, "mr_test 47");
@@ -443,7 +443,7 @@ F1(jtrngraw){A z;I n,*v;
  RE(n=i0(w));
  ASSERT(0<=n,EVDOMAIN);
  GATV0(z,INT,n,1); v=AV(z);
- DO(n, *v++=NEXT;);
+ DQ(n, *v++=NEXT;);
  R z;
 }
 
@@ -594,7 +594,7 @@ static F2(jtrollksub){A z;I an,*av,k,m1,n,p,q,r,sh;UI m,mk,s,t,*u,x=jt->rngM[jt-
  an=AN(a); RE(m1=i0(w)); ASSERT(0<=m1,EVDOMAIN); m=m1;
  RZ(a=vip(a)); av=AV(a); RE(n=prod(an,av));
  GA(z,0==m?FL:2==m?B01:INT,n,an,av); u=(UI*)AV(z);
- if(!m){D*v=DAV(z); INITD; if(sh)DO(n, *v++=NEXTD1;)else DO(n, *v++=NEXTD0;);}  // floating-point output
+ if(!m){D*v=DAV(z); INITD; if(sh)DQ(n, *v++=NEXTD1;)else DQ(n, *v++=NEXTD0;);}  // floating-point output
  else if(2==m){I nslice; I j;
   // binary output
   p = (BW/8) * (nslice = (8 - (BW-jt->rngw)));  // #bits/slice, times number of slices
@@ -608,14 +608,14 @@ static F2(jtrollksub){A z;I an,*av,k,m1,n,p,q,r,sh;UI m,mk,s,t,*u,x=jt->rngM[jt-
   // Loop to output all the p-size blocks
   for(j=0;j<q;++j){
    t=NEXT;
-   DO(nslice, *u++=mk&t; t>>=1;);
+   DQ(nslice, *u++=mk&t; t>>=1;);
   }
   // Get a random # for finishing slices, & out them
   t=NEXT;  // Get random # for slices
-  DO(r>>LGSZI, *u++=mk&t; t>>=1;);
+  DQ(r>>LGSZI, *u++=mk&t; t>>=1;);
   // Output the rest, one bit at a time
   t=NEXT;  // Get random # for bits
-  B*c=(B*)u; DO(r&(SZI-1), *c++=1&t; t>>=1;);
+  B*c=(B*)u; DQ(r&(SZI-1), *c++=1&t; t>>=1;);
  }else{
   // integer output
   r=n; s=GMOF(m,x); if(s==x)s=0;
@@ -624,17 +624,17 @@ static F2(jtrollksub){A z;I an,*av,k,m1,n,p,q,r,sh;UI m,mk,s,t,*u,x=jt->rngM[jt-
    k=CTTZI(m);  // lg(m)
    p=jt->rngw/k; q=n/p; r=n%p; mk=m-1;  // r is number of values left after bit processing
    switch((s?2:0)+(I )(1<p)){
-    case 0: DO(q,           t=NEXT;         *u++=mk&t;         ); break;
-    case 1: DO(q,           t=NEXT;   DO(p, *u++=mk&t; t>>=k;);); break;
-    case 2: DO(q, while(s<=(t=NEXT));       *u++=mk&t;         ); break;
-    case 3: DO(q, while(s<=(t=NEXT)); DO(p, *u++=mk&t; t>>=k;););
+    case 0: DQ(q,           t=NEXT;         *u++=mk&t;         ); break;
+    case 1: DQ(q,           t=NEXT;   DQ(p, *u++=mk&t; t>>=k;);); break;
+    case 2: DQ(q, while(s<=(t=NEXT));       *u++=mk&t;         ); break;
+    case 3: DQ(q, while(s<=(t=NEXT)); DQ(p, *u++=mk&t; t>>=k;););
    }
   }
   if(BW==64&&m<(1LL<<50)){ 
    // If we can do the calculation in the floating-point unit, do
-   D md=m*X64; DO(r, *u++=(I)(md*((D)(I)NEXT+(D)x63)); )   // avoid unsigned conversion, which requires conditional correction
+   D md=m*X64; DQ(r, *u++=(I)(md*((D)(I)NEXT+(D)x63)); )   // avoid unsigned conversion, which requires conditional correction
   }else{
-   if(r&&s)DO(r, while(s<=(t=NEXT)); *u++=t%m;) else DO(r, *u++=NEXT%m;);
+   if(r&&s)DQ(r, while(s<=(t=NEXT)); *u++=t%m;) else DQ(r, *u++=NEXT%m;);
   }
  }
  R z;
@@ -655,7 +655,7 @@ static X jtxrand(J jt,X x){PROLOG(0090);A q,z;B b=1;I j,m,n,*qv,*xv,*zv;
  // loop to roll random values until we get one that is less than x
  do{
   RZ(z=roll(q)); zv=AV(z);  // roll one value in each Digit position
-  DO(j=m, --j; if(xv[j]!=zv[j]){b=xv[j]<zv[j]; break;});  // MS mismatched Digit tells the tale; if no mismatch, that's too high, keep b=1
+  DQ(j=m, --j; if(xv[j]!=zv[j]){b=xv[j]<zv[j]; break;});  // MS mismatched Digit tells the tale; if no mismatch, that's too high, keep b=1
  }while(b);  // loop till b=0
  j=m-1; while(0<j&&!zv[j])--j; AN(z)=*AS(z)=++j;  // remove leading 0s from (tail of) result
  EPILOG(z);
@@ -666,12 +666,12 @@ static F1(jtrollxnum){A z;B c=0;I d,n;X*u,*v,x;
  n=AN(w); v=XAV(w);
  GATV(z,XNUM,n,AR(w),AS(w)); u=XAV(z);
  // deal an extended random for each input number.  Error if number <0; if 0, put in 0 as a placeholder
- DO(n, x=*v++; d=XDIG(x); ASSERT(0<=d,EVDOMAIN); if(d)RZ(*u++=rifvs(xrand(x))) else{*u++=iv0; c=1;});
+ DQ(n, x=*v++; d=XDIG(x); ASSERT(0<=d,EVDOMAIN); if(d)RZ(*u++=rifvs(xrand(x))) else{*u++=iv0; c=1;});
  // If there was a 0, convert the whole result to float, and go back and fill the original 0s with random floats
  if(c){D*d;I mk,sh;
   INITD;
   RZ(z=cvt(FL,z)); d=DAV(z); v=XAV(w);
-  DO(n, x=*v++; if(!XDIG(x))*d=sh?NEXTD1:NEXTD0; ++d;);
+  DQ(n, x=*v++; if(!XDIG(x))*d=sh?NEXTD1:NEXTD0; ++d;);
  } 
  R z;
 }    /* ?n$x where x is extended integer */
@@ -680,8 +680,8 @@ static F1(jtrollxnum){A z;B c=0;I d,n;X*u,*v,x;
 static F1(jtrollbool){A z;B*v;D*u;I n,sh;UINT mk;
  n=AN(w); v=BAV(w); INITD;
  GATV(z,FL,n,AR(w),AS(w)); u=DAV(z);
- if(sh)DO(n, *u++=*v++?0.0:NEXTD1;)
- else  DO(n, *u++=*v++?0.0:NEXTD0;)
+ if(sh)DQ(n, *u++=*v++?0.0:NEXTD1;)
+ else  DQ(n, *u++=*v++?0.0:NEXTD0;)
  R z;
 }    /* ?n$x where x is boolean */
 
@@ -708,20 +708,20 @@ static A jtroll2(J jt,A w,B*b){A z;I j,n,nslice,p,q,r,*v;UI mk,t,*zv;
  // Loop to output all the p-size blocks
  for(j=0;j<q;++j){
   t=NEXT;
-  DO(nslice, *zv++=mk&t; t>>=1;);
+  DQ(nslice, *zv++=mk&t; t>>=1;);
  }
  // Get a random # for finishing slices, & out them
  t=NEXT;  // Get random # for slices
- DO(r>>LGSZI, *zv++=mk&t; t>>=1;);
+ DQ(r>>LGSZI, *zv++=mk&t; t>>=1;);
  // Output the rest, one bit at a time
  t=NEXT;  // Get random # for bits
- B*c=(B*)zv; DO(r&(SZI-1), *c++=1&t; t>>=1;);
+ B*c=(B*)zv; DQ(r&(SZI-1), *c++=1&t; t>>=1;);
  *b=1; R z;
 }    /* ?n$x where x is 2, maybe */
 
 static A jtrollnot0(J jt,A w,B*b){A z;I j,m1,n,*u,*v;UI m,s,t,x=jt->rngM[jt->rng];
  *b=0; n=AN(w);
- if(n){v=AV(w); m1=*v++; j=1; DO(n-1, if(m1!=*v++){j=0; break;});}
+ if(n){v=AV(w); m1=*v++; j=1; DQ(n-1, if(m1!=*v++){j=0; break;});}
  if(n&&j)RZ(z=rollksub(shape(w),sc(m1)))
  else{
   GATV(z,INT,n,AR(w),AS(w));
@@ -816,7 +816,7 @@ static F2(jtrollksubdot){A z;I an,*av,k,m1,n,p,q,r,sh;UI j,m,mk,s,t,*u,x=jt->rng
  an=AN(a); RE(m1=i0(w)); ASSERT(0<=m1,EVDOMAIN); m=m1;
  RZ(a=vip(a)); av=AV(a); RE(n=prod(an,av));
  GA(z,0==m?FL:2==m?B01:INT,n,an,av); u=(UI*)AV(z);
- if(!m){D*v=DAV(z); INITD; if(sh)DO(n, *v++=NEXTD1;)else DO(n, *v++=NEXTD0;);}
+ if(!m){D*v=DAV(z); INITD; if(sh)DQ(n, *v++=NEXTD1;)else DQ(n, *v++=NEXTD0;);}
  else if(2==m){I nslice; I j;
   p = (BW/8) * (nslice = (8 - (BW-jt->rngw)));  // #bits/slice, times number of slices
   // See how many p-size blocks we can have, and how many single leftovers
@@ -829,26 +829,26 @@ static F2(jtrollksubdot){A z;I an,*av,k,m1,n,p,q,r,sh;UI j,m,mk,s,t,*u,x=jt->rng
   // Loop to output all the p-size blocks
   for(j=0;j<q;++j){
    t=NEXT;
-   DO(nslice, *u++=mk&t; t>>=1;);
+   DQ(nslice, *u++=mk&t; t>>=1;);
   }
   // Get a random # for finishing slices, & out them
   t=NEXT;  // Get random # for slices
-  DO(r>>LGSZI, *u++=mk&t; t>>=1;);
+  DQ(r>>LGSZI, *u++=mk&t; t>>=1;);
   // Output the rest, one bit at a time
   t=NEXT;  // Get random # for bits
-  B*c=(B*)u; DO(r&(SZI-1), *c++=1&t; t>>=1;);
+  B*c=(B*)u; DQ(r&(SZI-1), *c++=1&t; t>>=1;);
  }else{
   r=n; s=GMOF(m,x); if(s==x)s=0;
   k=0; j=1; while(m>j){++k; j<<=1;}
   if(k&&j==m){  /* m=2^k but is not 1 or 2 */
    p=jt->rngw/k; q=n/p; r=n%p; mk=m-1;
    switch((s?2:0)+(1<p)){
-    case 0: DO(q,           t=NEXT;         *u++=mk&t;         ); break;
-    case 1: DO(q,           t=NEXT;   DO(p, *u++=mk&t; t>>=k;);); break;
-    case 2: DO(q, while(s<=(t=NEXT));       *u++=mk&t;         ); break;
-    case 3: DO(q, while(s<=(t=NEXT)); DO(p, *u++=mk&t; t>>=k;););
+    case 0: DQ(q,           t=NEXT;         *u++=mk&t;         ); break;
+    case 1: DQ(q,           t=NEXT;   DQ(p, *u++=mk&t; t>>=k;);); break;
+    case 2: DQ(q, while(s<=(t=NEXT));       *u++=mk&t;         ); break;
+    case 3: DQ(q, while(s<=(t=NEXT)); DQ(p, *u++=mk&t; t>>=k;););
   }}
-  if(r&&s)DO(r, while(s<=(t=NEXT)); *u++=t%m;) else DO(r, *u++=NEXT%m;);
+  if(r&&s)DQ(r, while(s<=(t=NEXT)); *u++=t%m;) else DQ(r, *u++=NEXT%m;);
  }
  R z;
 }
@@ -872,7 +872,7 @@ static X jtxranddot(J jt,X x){PROLOG(0090);A q,z;B b=1;I j,m,n,*qv,*xv,*zv;
  // loop to roll random values until we get one that is less than x
  do{
   RZ(z=roll(q)); zv=AV(z);  // roll one value in each Digit position
-  DO(j=m, --j; if(xv[j]!=zv[j]){b=xv[j]<zv[j]; break;});  // MS mismatched Digit tells the tale; if no mismatch, that's too high, keep b=1
+  DQ(j=m, --j; if(xv[j]!=zv[j]){b=xv[j]<zv[j]; break;});  // MS mismatched Digit tells the tale; if no mismatch, that's too high, keep b=1
  }while(b);  // loop till b=0
  j=m-1; while(0<j&&!zv[j])--j; AN(z)=*AS(z)=++j;  // remove leading 0s from (tail of) result
  EPILOG(z);
@@ -885,12 +885,12 @@ static F1(jtrollxnumdot){A z;B c=0;I d,n;X*u,*v,x;
  n=AN(w); v=XAV(w);
  GATV(z,XNUM,n,AR(w),AS(w)); u=XAV(z);
  // deal an extended random for each input number.  Error if number <0; if 0, put in 0 as a placeholder
- DO(n, x=*v++; d=XDIG(x); ASSERT(0<=d,EVDOMAIN); if(d)RZ(*u++=rifvs(xrand(x))) else{*u++=iv0; c=1;});
+ DQ(n, x=*v++; d=XDIG(x); ASSERT(0<=d,EVDOMAIN); if(d)RZ(*u++=rifvs(xrand(x))) else{*u++=iv0; c=1;});
  // If there was a 0, convert the whole result to float, and go back and fill the original 0s with random floats
  if(c){D*d;I mk,sh;
   INITD;
   RZ(z=cvt(FL,z)); d=DAV(z); v=XAV(w);
-  DO(n, x=*v++; if(!XDIG(x))*d=sh?NEXTD1:NEXTD0; ++d;);
+  DQ(n, x=*v++; if(!XDIG(x))*d=sh?NEXTD1:NEXTD0; ++d;);
  } 
  R z;
 }    /* ?n$x where x is extended integer */
@@ -900,8 +900,8 @@ static F1(jtrollxnumdot){A z;B c=0;I d,n;X*u,*v,x;
 static F1(jtrollbooldot){A z;B*v;D*u;I n,sh;UINT mk;
  n=AN(w); v=BAV(w); INITD;
  GATV(z,FL,n,AR(w),AS(w)); u=DAV(z);
- if(sh)DO(n, *u++=*v++?0.0:NEXTD1;)
- else  DO(n, *u++=*v++?0.0:NEXTD0;)
+ if(sh)DQ(n, *u++=*v++?0.0:NEXTD1;)
+ else  DQ(n, *u++=*v++?0.0:NEXTD0;)
  R z;
 }    /* ?n$x where x is boolean */
 
@@ -930,14 +930,14 @@ static A jtroll2dot(J jt,A w,B*b){A z;I j,n,nslice,p,q,r,*v;UI mk,t,*zv;
  // Loop to output all the p-size blocks
  for(j=0;j<q;++j){
   t=NEXT;
-  DO(nslice, *zv++=mk&t; t>>=1;);
+  DQ(nslice, *zv++=mk&t; t>>=1;);
  }
  // Get a random # for finishing slices, & out them
  t=NEXT;  // Get random # for slices
- DO(r>>LGSZI, *zv++=mk&t; t>>=1;);
+ DQ(r>>LGSZI, *zv++=mk&t; t>>=1;);
  // Output the rest, one bit at a time
  t=NEXT;  // Get random # for bits
- B*c=(B*)zv; DO(r&(SZI-1), *c++=1&t; t>>=1;);
+ B*c=(B*)zv; DQ(r&(SZI-1), *c++=1&t; t>>=1;);
  *b=1; R z;
 }    /* ?n$x where x is 2, maybe */
 
@@ -945,7 +945,7 @@ static A jtroll2dot(J jt,A w,B*b){A z;I j,n,nslice,p,q,r,*v;UI mk,t,*zv;
 #define rollnot0(w,b) jtrollnot0dot(jt,(w),(b))
 static A jtrollnot0dot(J jt,A w,B*b){A z;I j,m1,n,*u,*v;UI m,s,t,x=jt->rngM[jt->rng];
  *b=0; n=AN(w);
- if(n){v=AV(w); m1=*v++; j=1; DO(n-1, if(m1!=*v++){j=0; break;});}
+ if(n){v=AV(w); m1=*v++; j=1; DQ(n-1, if(m1!=*v++){j=0; break;});}
  if(n&&j)RZ(z=rollksub(shape(w),sc(m1)))
  else{
   GATV(z,INT,n,AR(w),AS(w));
@@ -1035,10 +1035,10 @@ static F1(jtroll){A z;D rl=jt->rl;static D dm=16807,p=2147483647L;I c,n,*v,*x;
  n=AN(w); v=AV(w);
  RZ(z=reshape(shape(w),num[2])); x=AV(z);
  if(ICMP(v,x,n))
-  DO(n, c=*v++; ASSERT(0<c,EVDOMAIN); rl=fmod(rl*dm,p); *x++=(I)jfloor(rl*c/p);)
+  DQ(n, c=*v++; ASSERT(0<c,EVDOMAIN); rl=fmod(rl*dm,p); *x++=(I)jfloor(rl*c/p);)
  else{B*x;D q=p/2;
   GATV(z,B01,n,AR(w),AS(w)); x=BAV(z);
-  DO(n, rl=fmod(rl*dm,p); *x++=rl>q;);
+  DQ(n, rl=fmod(rl*dm,p); *x++=rl>q;);
  }
  jt->rl=(I)rl;
  R z;

@@ -198,11 +198,11 @@ do{
        if(zr>=AN(zzcellshape)){GATV0(zzcellshape,INT,zr+3,0);}   // If old cell not big enough to hold new, reallocate with a little headroom.  >= to leave 1 extra for later
        AR(zzcellshape)=(RANKT)zr;   // set the new result-cell rank
        I *zcsnew=AS(zzcellshape)+zr;  // pointer to end+1 of new cell size
-       DO(zcsr, *--zcsnew=*--zcsold;) DO(zr-zcsr, *--zcsnew=1;)   // move the old axes, followed by 1s for extra axes
+       DQ(zcsr, *--zcsnew=*--zcsold;) DQ(zr-zcsr, *--zcsnew=1;)   // move the old axes, followed by 1s for extra axes
        zcsr=zr;  // now the stored cell has a new rank
       }
       // compare the old against the new, taking the max.  extend new with 1s if short
-      I *zcs=AS(zzcellshape); I zcs0; I zs0; DO(zcsr-zr, zcs0=*zcs; zcs0=(zcs0==0)?1:zcs0; *zcs++=zcs0;)  DO(zr, zcs0=*zcs; zs0=*zs++; zcs0=(zs0>zcs0)?zs0:zcs0; *zcs++=zcs0;)
+      I *zcs=AS(zzcellshape); I zcs0; I zs0; DQ(zcsr-zr, zcs0=*zcs; zcs0=(zcs0==0)?1:zcs0; *zcs++=zcs0;)  DQ(zr, zcs0=*zcs; zs0=*zs++; zcs0=(zs0>zcs0)?zs0:zcs0; *zcs++=zcs0;)
       // Store the address of the result in the next slot
       INCORP(z);  // we can't store a virtual block, because its backer may change before we collect the final result
       *zzboxp=z;
@@ -304,7 +304,7 @@ do{
   ZZINSTALLFRAME(zzs)
   // Install the result shape.  If we encounter a sparse result,  We are going to have to box all the results and open them.  If the sparse result is the first,
   // we are going to have a situation where nothing can ever get moved into zz, so we have to come up with a plausible zz to make that happen.  We create a zz with negative shape
-  is = AS(z); zzt=-(zzt&SPARSE); DO(zzr, *zzs++=zzt|*is++;);    // copy result shape; but if SPARSE, make it negative to guarantee miscompare
+  is = AS(z); zzt=-(zzt&SPARSE); DQ(zzr, *zzs++=zzt|*is++;);    // copy result shape; but if SPARSE, make it negative to guarantee miscompare
   // Set up the pointers/sizes for the rest of the operation
   zzboxp=AAV(zz); zzboxp=ZZFLAGWORD&ZZFLAGBOXATOP?zzboxp:0;  // zzboxp=0 normally (to count stores), but for BOXATOP is the store pointer
 #if !ZZSTARTATEND  // going forwards

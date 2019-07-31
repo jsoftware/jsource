@@ -43,19 +43,19 @@
 #else // obsolete
 #define PREFIXPFX(f,Tz,Tx,pfx)  \
  AHDRP(f,Tz,Tx){I i;Tz v,* y;                                    \
-  if(d==1)DO(m, *z++=v=    *x++; DO(n-1, *z=v=pfx(v,*x); ++z; ++x;))  \
+  if(d==1)DQ(m, *z++=v=    *x++; DQ(n-1, *z=v=pfx(v,*x); ++z; ++x;))  \
   else{for(i=0;i<m;++i){                                              \
-   y=z; DO(d, *z++=    *x++;);                                        \
-   DO(n-1, DO(d, *z=pfx(*y,*x); ++z; ++x; ++y;));                     \
+   y=z; DQ(d, *z++=    *x++;);                                        \
+   DQ(n-1, DQ(d, *z=pfx(*y,*x); ++z; ++x; ++y;));                     \
  }}}  /* for associative functions only */
 
 #define PREFIXNAN(f,Tz,Tx,pfx)  \
  AHDRP(f,Tz,Tx){I i;Tz v,* y;                                    \
   NAN0;                                                               \
-  if(d==1)DO(m, *z++=v=    *x++; DO(n-1, *z=v=pfx(v,*x); ++z; ++x;))  \
+  if(d==1)DQ(m, *z++=v=    *x++; DQ(n-1, *z=v=pfx(v,*x); ++z; ++x;))  \
   else{for(i=0;i<m;++i){                                              \
-   y=z; DO(d, *z++=    *x++;);                                        \
-   DO(n-1, DO(d, *z=pfx(*y,*x); ++z; ++x; ++y;));                     \
+   y=z; DQ(d, *z++=    *x++;);                                        \
+   DQ(n-1, DQ(d, *z=pfx(*y,*x); ++z; ++x; ++y;));                     \
   }}                                                                   \
   NAN1V;                                                              \
  }   /* for associative functions only */
@@ -63,47 +63,47 @@
 
 #define PREFICPFX(f,Tz,Tx,pfx)  \
  AHDRP(f,Tz,Tx){I i;Tz v,* y;                                    \
-  if(d==1)DO(m, *z++=v=(Tz)*x++; DO(n-1, *z=v=pfx(v,*x); ++z; ++x;))  \
+  if(d==1)DQ(m, *z++=v=(Tz)*x++; DQ(n-1, *z=v=pfx(v,*x); ++z; ++x;))  \
   else{for(i=0;i<m;++i){                                              \
-   y=z; DO(d, *z++=(Tz)*x++;);                                        \
-   DO(n-1, DO(d, *z=pfx(*y,*x); ++z; ++x; ++y;));                     \
+   y=z; DQ(d, *z++=(Tz)*x++;);                                        \
+   DQ(n-1, DQ(d, *z=pfx(*y,*x); ++z; ++x; ++y;));                     \
  }}}  /* for associative functions only */
 
 #define PREFIXALT(f,Tz,Tx,pfx)  \
  AHDRP(f,Tz,Tx){B b;I i;Tz v,* y;                                                 \
-  if(d==1)DO(m, *z++=v=    *x++; b=0; DO(n-1, b=!b; pfx(b,*z,v,*x); v=*z; ++z; ++x;))  \
+  if(d==1)DQ(m, *z++=v=    *x++; b=0; DQ(n-1, b=!b; pfx(b,*z,v,*x); v=*z; ++z; ++x;))  \
   else{for(i=0;i<m;++i){                                                               \
-   y=z; DO(d, *z++=    *x++;); b=0;                                                    \
-   DO(n-1, b=!b; DO(d, pfx(b,*z,*y,*x); ++z; ++x; ++y;));                              \
+   y=z; DQ(d, *z++=    *x++;); b=0;                                                    \
+   DQ(n-1, b=!b; DQ(d, pfx(b,*z,*y,*x); ++z; ++x; ++y;));                              \
  }}}
 
 #define PREALTNAN(f,Tz,Tx,pfx)  \
  AHDRP(f,Tz,Tx){B b;I i;Tz v,* y;                                                 \
   NAN0;                                                                                \
-  if(d==1)DO(m, *z++=v=    *x++; b=0; DO(n-1, b=!b; pfx(b,*z,v,*x); v=*z; ++z; ++x;))  \
+  if(d==1)DQ(m, *z++=v=    *x++; b=0; DQ(n-1, b=!b; pfx(b,*z,v,*x); v=*z; ++z; ++x;))  \
   else{for(i=0;i<m;++i){                                                               \
-   y=z; DO(d, *z++=    *x++;); b=0;                                                    \
-   DO(n-1, b=!b; DO(d, pfx(b,*z,*y,*x); ++z; ++x; ++y;));                              \
+   y=z; DQ(d, *z++=    *x++;); b=0;                                                    \
+   DQ(n-1, b=!b; DQ(d, pfx(b,*z,*y,*x); ++z; ++x; ++y;));                              \
   }}                                                                                    \
   NAN1V;                                                                               \
  }
 
 #define PREFICALT(f,Tz,Tx,pfx)  \
  AHDRP(f,Tz,Tx){B b;I i;Tz v,* y;                                                 \
-  if(d==1)DO(m, *z++=v=(Tz)*x++; b=0; DO(n-1, b=!b; pfx(b,*z,v,*x); v=*z; ++z; ++x;))  \
+  if(d==1)DQ(m, *z++=v=(Tz)*x++; b=0; DQ(n-1, b=!b; pfx(b,*z,v,*x); v=*z; ++z; ++x;))  \
   else{for(i=0;i<m;++i){                                                               \
-   y=z; DO(d, *z++=(Tz)*x++;); b=0;                                                    \
-   DO(n-1, b=!b; DO(d, pfx(b,*z,*y,*x); ++z; ++x; ++y;));                              \
+   y=z; DQ(d, *z++=(Tz)*x++;); b=0;                                                    \
+   DQ(n-1, b=!b; DQ(d, pfx(b,*z,*y,*x); ++z; ++x; ++y;));                              \
  }}}
 
 #define PREFIXOVF(f,Tz,Tx,fp1,fvv)  \
  AHDRP(f,I,I){C er=0;I i,*xx=x,* y,*zz=z;                      \
   if(d==1){                                                         \
-   if(1==n)DO(m, *z++=*x++;)                                        \
-   else {I c=d*n;    DO(m, fp1(n,z,x); RER; z=zz+=c; x=xx+=c;) }               \
+   if(1==n)DQ(m, *z++=*x++;)                                        \
+   else {I c=d*n;    DQ(m, fp1(n,z,x); RER; z=zz+=c; x=xx+=c;) }               \
   }else{for(i=0;i<m;++i){                                           \
-   y=z; DO(d, *z++=*x++;); zz=z; xx=x;                              \
-   DO(n-1, fvv(d,z,y,x); RER; x=xx+=d; y=zz; z=zz+=d;);             \
+   y=z; DQ(d, *z++=*x++;); zz=z; xx=x;                              \
+   DQ(n-1, fvv(d,z,y,x); RER; x=xx+=d; y=zz; z=zz+=d;);             \
  }}}
 
   
@@ -111,7 +111,7 @@
 #define PREFIXBFXLOOP(T,pfx)  \
  {T* xx=(T*)x,* yy,* zz=(T*)z;  \
   q=d/sizeof(T);             \
-  DO(m, yy=zz; DO(q, *zz++=*xx++;); DO(n-1, DO(q, *zz++=pfx(*yy,*xx); ++xx; ++yy;)));  \
+  DQ(m, yy=zz; DQ(q, *zz++=*xx++;); DQ(n-1, DQ(q, *zz++=pfx(*yy,*xx); ++xx; ++yy;)));  \
  }
 
 #define PREFIXBFX(f,pfx,ipfx,spfx,bpfx,vexp)          \
@@ -120,7 +120,7 @@
   else if(0==(d&(sizeof(UI  )-1)))PREFIXBFXLOOP(UI,   pfx)  \
   else if(0==(d&(sizeof(UINT)-1)))PREFIXBFXLOOP(UINT,ipfx)  \
   else if(0==(d&(sizeof(US  )-1)))PREFIXBFXLOOP(US,  spfx)  \
-  else DO(m, y=z; DO(d, *z++=*x++;); DO(n-1, DO(d, *z++=bpfx(*y,*x); ++x; ++y;)));  \
+  else DQ(m, y=z; DQ(d, *z++=*x++;); DQ(n-1, DQ(d, *z++=bpfx(*y,*x); ++x; ++y;)));  \
  }    /* f/\"r z for boolean associative atomic function f */
 #else
 #define PREFIXBFX(f,pfx,ipfx,spfx,bpfx,vexp)          \
@@ -128,13 +128,13 @@
   q=d/SZI; r=d%SZI; xi=(I*)x; zi=(I*)z; tv=(B*)&t;        \
   if(1==d)   for(r=0;r<m;++r){vexp}                              \
   else if(!r)for(i=0;i<m;++i){                                   \
-   yi=zi; DO(q, *zi++=*xi++;);                                   \
-   DO(n-1, DO(q, *zi=pfx(*yi,*xi); ++zi; ++xi; ++yi;));          \
+   yi=zi; DQ(q, *zi++=*xi++;);                                   \
+   DQ(n-1, DQ(q, *zi=pfx(*yi,*xi); ++zi; ++xi; ++yi;));          \
   }else for(i=0;i<m;++i){                                        \
    yi=zi; MC(zi,xi,d);                                           \
    xi=(I*)((B*)xi+d);                                            \
    zi=(I*)((B*)zi+d);                                            \
-   DO(n-1, DO(q, *zi=pfx(*yi,*xi); ++zi; ++xi; ++yi;);           \
+   DQ(n-1, DQ(q, *zi=pfx(*yi,*xi); ++zi; ++xi; ++yi;);           \
     t=pfx(*yi,*xi); z=(B*)zi; DO(r, z[i]=tv[i];);                \
     xi=(I*)(r+(B*)xi);                                           \
     yi=(I*)(r+(B*)yi);                                           \
@@ -147,13 +147,13 @@
 
 PREFIXBFX( orpfxB, OR, IOR, SOR, BOR,  BFXANDOR(C1,C0))
 PREFIXBFX(andpfxB, AND,IAND,SAND,BAND, BFXANDOR(C0,C1))
-PREFIXBFX( nepfxB, NE, INE, SNE, BNE, {B b=0; DO(n, *z++=b^=  *x++;);})
-PREFIXBFX( eqpfxB, EQ, IEQ, SEQ, BEQ, {B b=1; DO(n, *z++=b=b==*x++;);})
+PREFIXBFX( nepfxB, NE, INE, SNE, BNE, {B b=0; DQ(n, *z++=b^=  *x++;);})
+PREFIXBFX( eqpfxB, EQ, IEQ, SEQ, BEQ, {B b=1; DQ(n, *z++=b=b==*x++;);})
 
 
 static B jtpscanlt(J jt,I m,I d,I n,B*z,B*x,B p){A t;B*v;I i;
  memset(z,!p,m*n*d); 
- if(1==d)DO(m, if(v=memchr(x,p,n))*(z+(v-x))=p; z+=n; x+=n;)
+ if(1==d)DQ(m, if(v=memchr(x,p,n))*(z+(v-x))=p; z+=n; x+=n;)
  else{
   GATV0(t,B01,d,1); v=BAV(t);
   for(i=0;i<m;++i){
@@ -197,11 +197,11 @@ PREFIXOVF(tymespfxI, I, I, TYMESP,TYMESVV)
 
 AHDRP(minuspfxI,I,I){C er=0;I i,j,n1=n-1,*xx=x,*y,*zz=z;
  if(1==d){
-  if(1==n)DO(m, *z++=*x++;)
-  else    DO(m, MINUSP(n,z,x); RER; z=zz+=d*n; x=xx+=d*n;);
+  if(1==n)DQ(m, *z++=*x++;)
+  else    DQ(m, MINUSP(n,z,x); RER; z=zz+=d*n; x=xx+=d*n;);
  }else for(i=0;i<m;++i){                               
-  y=z; DO(d, *z++=*x++;); zz=z; xx=x; j=0;
-  DO(n1, MINUSVV(d,z,y,x); RER; x=xx+=d; y=zz; z=zz+=d; if(n1<=++j)break;
+  y=z; DQ(d, *z++=*x++;); zz=z; xx=x; j=0;
+  DQ(n1, MINUSVV(d,z,y,x); RER; x=xx+=d; y=zz; z=zz+=d; if(n1<=++j)break;
           PLUSVV(d,z,y,x); RER; x=xx+=d; y=zz; z=zz+=d; if(n1<=++j)break;);
 }}
 
@@ -314,7 +314,7 @@ static A jtifxi(J jt,I m,A w){A z;I d,j,k,n,p,*x;
  GATV0(z,INT,2*d,2); *AS(z)=d; *(1+AS(z))=2;
  // x->result area; k=stride between infixes; j=starting index (prebiased); copy (index,length) for each infix;
  // repair last length if it runs off the end
- x=AV(z); k=0>m?p:1; j=-k; DO(d, *x++=j+=k; *x++=p;); if(d)*--x=MIN(p,n-j);
+ x=AV(z); k=0>m?p:1; j=-k; DQ(d, *x++=j+=k; *x++=p;); if(d)*--x=MIN(p,n-j);
  R z;
 }
 
@@ -589,7 +589,7 @@ static DF2(jtinfixd){A fs,z;C*x,*y;I c=0,d,k,m,n,p,q,r,*s,wr,*ws,wt,zc;
  s=AS(z); *s++=d; *s++=zc; MCISH(s,1+ws,r-2);
  k=c<<bplg(wt); 
  if(AN(z)){
-  if(m>=0){ q=p*k; DO(d, MC(x,y,q);    x+=q; y+=k;);
+  if(m>=0){ q=p*k; DQ(d, MC(x,y,q);    x+=q; y+=k;);
   }else{ MC(x,y,n*k);  if(q=d*p-n)fillv(wt,q*c,x+n*k);
   }
  }
@@ -597,20 +597,20 @@ static DF2(jtinfixd){A fs,z;C*x,*y;I c=0,d,k,m,n,p,q,r,*s,wr,*ws,wt,zc;
 }    /* a[\w and a]\w and a,\w */
 
 
-#define SETZ    {s=yv; DO(c, *zv++=*s++;  );}
-#define SETZD   {s=yv; DO(c, *zv++=*s++/d;);}
+#define SETZ    {s=yv; DQ(c, *zv++=*s++;  );}
+#define SETZD   {s=yv; DQ(c, *zv++=*s++/d;);}
 
 #define MOVSUMAVG(Tw,Ty,ty,Tz,tz,xd,SET)  \
  {Tw*u,*v;Ty*s,x=0,*yv;Tz*zv;                                  \
   GATVS(z,tz,c*(1+p),AR(w),AS(w),tz##SIZE,GACOPYSHAPE,R 0); AS(z)[0]=1+p;                    \
   zv=(Tz*)AV(z); u=v=(Tw*)AV(w);                               \
   if(1==c){                                                    \
-   DO(m, x+=*v++;); *zv++=xd;                                  \
-   DO(p, x+=(Ty)*v++-(Ty)*u++; *zv++=xd;);                     \
+   DQ(m, x+=*v++;); *zv++=xd;                                  \
+   DQ(p, x+=(Ty)*v++-(Ty)*u++; *zv++=xd;);                     \
   }else{                                                       \
-   GATVS(y,ty,c,1,0,ty##SIZE,GACOPYSHAPE0,R 0); s=yv=(Ty*)AV(y); DO(c, *s++=0;);            \
-   DO(m, s=yv; DO(c, *s+++=*v++;);); SET;                      \
-   DO(p, s=yv; DO(c, x=*s+++=(Ty)*v++-(Ty)*u++; *zv++=xd;););  \
+   GATVS(y,ty,c,1,0,ty##SIZE,GACOPYSHAPE0,R 0); s=yv=(Ty*)AV(y); DQ(c, *s++=0;);            \
+   DQ(m, s=yv; DQ(c, *s+++=*v++;);); SET;                      \
+   DQ(p, s=yv; DQ(c, x=*s+++=(Ty)*v++-(Ty)*u++; *zv++=xd;););  \
  }}
 
 static A jtmovsumavg1(J jt,I m,A w,A fs,B avg){A y,z;D d=(D)m;I c,p,wt;
@@ -649,18 +649,18 @@ static DF2(jtmovavg){I m;
  {T d,e,*s,*t,*u,*v,x=ie,*yv,*zv;                              \
   zv=(T*)AV(z); u=v=(T*)AV(w);                                 \
   if(1==c){                                                    \
-   DO(m, d=*v++; if(d CMP x)x=d;); *zv++=x;                    \
+   DQ(m, d=*v++; if(d CMP x)x=d;); *zv++=x;                    \
    for(i=0;i<p;++i){                                           \
     d=*v++; e=*u++;                                            \
-    if(d CMP x)x=d; else if(e==x){x=d; t=u; DO(m-1, e=*t++; if(e CMP x)x=e;);}  \
+    if(d CMP x)x=d; else if(e==x){x=d; t=u; DQ(m-1, e=*t++; if(e CMP x)x=e;);}  \
     *zv++=x;                                                   \
   }}else{                                                      \
-   GATVS(y,type,c,1,0,type##SIZE,GACOPYSHAPE0,R 0); s=yv=(T*)AV(y); DO(c, *s++=ie;);          \
-   DO(m, s=yv; DO(c, d=*v++; if(d CMP *s)*s=d; ++s;);); SETZ;  \
+   GATVS(y,type,c,1,0,type##SIZE,GACOPYSHAPE0,R 0); s=yv=(T*)AV(y); DQ(c, *s++=ie;);          \
+   DQ(m, s=yv; DQ(c, d=*v++; if(d CMP *s)*s=d; ++s;);); SETZ;  \
    for(i=0;i<p;++i){                                           \
     for(j=0,s=yv;j<c;++j,++s){                                 \
      d=*v++; e=*u++; x=*s;                                     \
-     if(d CMP x)x=d; else if(e==x){x=d; t=c+u-1; DO(m-1, e=*t; t+=c; if(e CMP x)x=e;);}  \
+     if(d CMP x)x=d; else if(e==x){x=d; t=c+u-1; DQ(m-1, e=*t; t+=c; if(e CMP x)x=e;);}  \
      *s=x;                                                     \
     }                                                          \
     SETZ;                                                      \
@@ -670,18 +670,18 @@ static DF2(jtmovavg){I m;
  {T d,e,*s,*t,*u,*v,x=ie,*yv,*zv;                              \
   zv=(T*)AV(z); u=v=(T*)AV(w);                                 \
   if(1==c){                                                    \
-   DO(m, d=*v++; if(CMP(d,x))x=d;); *zv++=x;                    \
+   DQ(m, d=*v++; if(CMP(d,x))x=d;); *zv++=x;                    \
    for(i=0;i<p;++i){                                           \
     d=*v++; e=*u++;                                            \
-    if(CMP(d,x))x=d; else if(e==x){x=d; t=u; DO(m-1, e=*t++; if(CMP(e,x))x=e;);}  \
+    if(CMP(d,x))x=d; else if(e==x){x=d; t=u; DQ(m-1, e=*t++; if(CMP(e,x))x=e;);}  \
     *zv++=x;                                                   \
   }}else{                                                      \
-   GATVS(y,type,c,1,0,type##SIZE,GACOPYSHAPE0,R 0); s=yv=(T*)AV(y); DO(c, *s++=ie;);          \
-   DO(m, s=yv; DO(c, d=*v++; if(CMP(d,*s))*s=d; ++s;);); SETZ;  \
+   GATVS(y,type,c,1,0,type##SIZE,GACOPYSHAPE0,R 0); s=yv=(T*)AV(y); DQ(c, *s++=ie;);          \
+   DQ(m, s=yv; DQ(c, d=*v++; if(CMP(d,*s))*s=d; ++s;);); SETZ;  \
    for(i=0;i<p;++i){                                           \
     for(j=0,s=yv;j<c;++j,++s){                                 \
      d=*v++; e=*u++; x=*s;                                     \
-     if(CMP(d,x))x=d; else if(e==x){x=d; t=c+u-1; DO(m-1, e=*t; t+=c; if(CMP(e,x))x=e;);}  \
+     if(CMP(d,x))x=d; else if(e==x){x=d; t=c+u-1; DQ(m-1, e=*t; t+=c; if(CMP(e,x))x=e;);}  \
      *s=x;                                                     \
     }                                                          \
     SETZ;                                                      \
@@ -706,18 +706,18 @@ static A jtmovandor(J jt,I m,A w,A fs,B or){A y,z;B b0,b1,d,e,*s,*t,*u,*v,x,*yv,
  GATV(z,B01,c*(1+p),AR(w),AS(w)); AS(z)[0]=1+p;
  zv=BAV(z); u=v=BAV(w);
  if(1==c){
-  DO(m, if(b1==*v++){x=b1; break;}); *zv++=x; v=u+m;
+  DQ(m, if(b1==*v++){x=b1; break;}); *zv++=x; v=u+m;
   for(i=0;i<p;++i){
    d=*v++; e=*u++;
-   if(d==b1)x=d; else if(e==b1){x=d; t=u; DO(m-1, if(b1==*t++){x=b1; break;});}
+   if(d==b1)x=d; else if(e==b1){x=d; t=u; DQ(m-1, if(b1==*t++){x=b1; break;});}
    *zv++=x;
  }}else{
-  GATV0(y,B01,c,1); s=yv=BAV(y); DO(c, *s++=b0;);
-  DO(m, s=yv; DO(c, if(b1==*v++)*s=b1; ++s;);); SETZ;
+  GATV0(y,B01,c,1); s=yv=BAV(y); DQ(c, *s++=b0;);
+  DQ(m, s=yv; DQ(c, if(b1==*v++)*s=b1; ++s;);); SETZ;
   for(i=0;i<p;++i){
    for(j=0,s=yv;j<c;++j,++s){
     d=*v++; e=*u++; x=*s;
-    if(d==b1)x=d; else if(e==b1){x=d; t=c+u-1; DO(m-1, e=*t; t+=c; if(b1==e){x=b1; break;});}
+    if(d==b1)x=d; else if(e==b1){x=d; t=c+u-1; DQ(m-1, e=*t; t+=c; if(b1==e){x=b1; break;});}
     *s=x;
    }
    SETZ;
@@ -730,10 +730,10 @@ static A jtmovbwandor(J jt,I m,A w,A fs,B or){A z;I c,p,*s,*t,*u,x,*zv;
  GATV(z,INT,c*(1+p),AR(w),AS(w)); AS(z)[0]=1+p;
  zv=AV(z); u=AV(w);
  if(c)switch(or+(1==c?0:2)){
-  case 0: DO(1+p, x=*u++; t=u; DO(m-1, x&=*t++;); *zv++=x;); break;
-  case 1: DO(1+p, x=*u++; t=u; DO(m-1, x|=*t++;); *zv++=x;); break;
-  case 2: DO(1+p, ICPY(zv,u,c); t=u+=c; DO(m-1, s=zv; DO(c, *s++&=*t++;);); zv+=c;); break;
-  case 3: DO(1+p, ICPY(zv,u,c); t=u+=c; DO(m-1, s=zv; DO(c, *s++|=*t++;);); zv+=c;); break;
+  case 0: DQ(1+p, x=*u++; t=u; DQ(m-1, x&=*t++;); *zv++=x;); break;
+  case 1: DQ(1+p, x=*u++; t=u; DQ(m-1, x|=*t++;); *zv++=x;); break;
+  case 2: DQ(1+p, ICPY(zv,u,c); t=u+=c; DQ(m-1, s=zv; DQ(c, *s++&=*t++;);); zv+=c;); break;
+  case 3: DQ(1+p, ICPY(zv,u,c); t=u+=c; DQ(m-1, s=zv; DQ(c, *s++|=*t++;);); zv+=c;); break;
  }
  RETF(z);
 }    /* a 17 b./\w (0=or) or a 23 b./\ (1=or); integer w; 0<m */
@@ -742,12 +742,12 @@ static A jtmovneeq(J jt,I m,A w,A fs,B eq){A y,z;B*s,*u,*v,x,*yv,*zv;I c,p;
  p=IC(w)-m; c=aii(w); x=eq;
  GATV(z,B01,c*(1+p),AR(w),AS(w)); AS(z)[0]=1+p;
  zv=BAV(z); u=v=BAV(w);
- if(1<c){GATV0(y,B01,c,1); s=yv=BAV(y); DO(c, *s++=eq;);}
+ if(1<c){GATV0(y,B01,c,1); s=yv=BAV(y); DQ(c, *s++=eq;);}
  switch(eq+(1<c?2:0)){
-  case 0: DO(m,                   x   ^=   *v++;  ); *zv++=x; DO(p,                   *zv++=x   ^=   *u++^ *v++;  ); break;
-  case 1: DO(m,                   x    =x==*v++;  ); *zv++=x; DO(p,                   *zv++=x    =x==*u++==*v++;  ); break;
-  case 2: DO(m, s=yv; DO(c,       *s++^=   *v++;);); SETZ;    DO(p, s=yv; DO(c,       *zv++=*s++^=   *u++^ *v++;);); break;
-  case 3: DO(m, s=yv; DO(c, x=*s; *s++ =x==*v++;);); SETZ;    DO(p, s=yv; DO(c, x=*s; *zv++=*s++ =x==*u++==*v++;););
+  case 0: DQ(m,                   x   ^=   *v++;  ); *zv++=x; DQ(p,                   *zv++=x   ^=   *u++^ *v++;  ); break;
+  case 1: DQ(m,                   x    =x==*v++;  ); *zv++=x; DQ(p,                   *zv++=x    =x==*u++==*v++;  ); break;
+  case 2: DQ(m, s=yv; DQ(c,       *s++^=   *v++;);); SETZ;    DQ(p, s=yv; DQ(c,       *zv++=*s++^=   *u++^ *v++;);); break;
+  case 3: DQ(m, s=yv; DQ(c, x=*s; *s++ =x==*v++;);); SETZ;    DQ(p, s=yv; DQ(c, x=*s; *zv++=*s++ =x==*u++==*v++;););
  }
  RETF(z);
 }    /* m ~:/\w (0=eq) or m =/\ (1=eq); boolean w; 0<m */
@@ -756,12 +756,12 @@ static A jtmovbwneeq(J jt,I m,A w,A fs,B eq){A y,z;I c,p,*s,*u,*v,x,*yv,*zv;
  p=IC(w)-m; c=aii(w); x=eq?-1:0;
  GATV(z,INT,c*(1+p),AR(w),AS(w)); AS(z)[0]=1+p;
  zv=AV(z); u=v=AV(w);
- if(1<c){GATV0(y,INT,c,1); s=yv=AV(y); DO(c, *s++=x;);}
+ if(1<c){GATV0(y,INT,c,1); s=yv=AV(y); DQ(c, *s++=x;);}
  switch(eq+(1<c?2:0)){
-  case 0: DO(m,                   x   ^=    *v++ ;  ); *zv++=x; DO(p,                   *zv++=x   ^=      *u++^*v++  ;  ); break;
-  case 1: DO(m,                   x    =~(x^*v++);  ); *zv++=x; DO(p,                   *zv++=x    =~(x^~(*u++^*v++));  ); break;
-  case 2: DO(m, s=yv; DO(c,       *s++^=    *v++ ;);); SETZ;    DO(p, s=yv; DO(c,       *zv++=*s++^=      *u++^*v++  ;);); break;
-  case 3: DO(m, s=yv; DO(c, x=*s; *s++ =~(x^*v++););); SETZ;    DO(p, s=yv; DO(c, x=*s; *zv++=*s++ =~(x^~(*u++^*v++));););
+  case 0: DQ(m,                   x   ^=    *v++ ;  ); *zv++=x; DQ(p,                   *zv++=x   ^=      *u++^*v++  ;  ); break;
+  case 1: DQ(m,                   x    =~(x^*v++);  ); *zv++=x; DQ(p,                   *zv++=x    =~(x^~(*u++^*v++));  ); break;
+  case 2: DQ(m, s=yv; DQ(c,       *s++^=    *v++ ;);); SETZ;    DQ(p, s=yv; DQ(c,       *zv++=*s++^=      *u++^*v++  ;);); break;
+  case 3: DQ(m, s=yv; DQ(c, x=*s; *s++ =~(x^*v++););); SETZ;    DQ(p, s=yv; DQ(c, x=*s; *zv++=*s++ =~(x^~(*u++^*v++));););
  }
  RETF(z);
 }    /* m 22 b./\w (0=eq) or m 25 b./\ (1=eq); integer w; 0<m */
@@ -795,7 +795,7 @@ static DF2(jtmovfslash){A x,z;B b;C id,*wv,*zv;I d,m,m0,p,t,wk,wt,zi,zk,zt;
  if((t=atype(adocv.cv))&&TYPESNE(t,wt)){RZ(w=cvt(t,w)); wt=AT(w);}
  zv=CAV(z); zk=d<<bplg(zt); 
  wv=CAV(w); wk=(0<=m0?d:d*m)<<bplg(wt);
- DO(zi-b, adocv.f(jt,(I)1,d,m,zv,wv); zv+=zk; wv+=wk;);
+ DQ(zi-b, adocv.f(jt,(I)1,d,m,zv,wv); zv+=zk; wv+=wk;);
  if(b)adocv.f(jt,(I)1,d,p-m*(zi-1),zv,wv);
  if(jt->jerr>=EWOV){RESETERR; R movfslash(a,cvt(FL,w),self);}else R z;
 }    /* a f/\w */

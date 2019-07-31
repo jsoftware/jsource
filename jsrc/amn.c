@@ -13,7 +13,7 @@
 static I jtcsize(J jt,A z,A ind){B*b;I h,j,m,r,*s;P*zp;
  r=AR(z); s=AS(z); zp=PAV(z);
  RZ(b=bfi(r,SPA(zp,a),0));
- m=1; j=h=*(AR(ind)+AS(ind)-1); DO(r-h, if(b[j])m*=s[j]; ++j;);
+ m=1; j=h=*(AR(ind)+AS(ind)-1); DQ(r-h, if(b[j])m*=s[j]; ++j;);
  R m;
 }    /* data cell size in z for each element of index array ind */
 
@@ -41,12 +41,12 @@ static B jtiaddr(J jt,A z,A ind,A*i1,A*i2){A a,ai,as,ii,jj,q,t,x,y;I c,d,e,h,i,*
  GATV0(q,INT,n,1); qv=AV(q);                            /* group sizes                 */
  for(i=h=0;i<n;++i){
   e=1; d=iv[i]; v=yv+c*d;
-  DO(m-d-1, if(ICMP(v,v+c,c))break; ++e; v+=c;);
+  DQ(m-d-1, if(ICMP(v,v+c,c))break; ++e; v+=c;);
   qv[i]=e; h+=e;                                       /* # elements in group i       */
  }
  GATV0(t,INT,h,1); u=AV(t); *i1=t;
  GATV0(t,INT,h,1); v=AV(t); *i2=t;
- DO(n, e=qv[i]; d=iv[i]; p=jv[i]; DO(e, *u++=d++; *v++=p;););
+ DO(n, e=qv[i]; d=iv[i]; p=jv[i]; DQ(e, *u++=d++; *v++=p;););
  R 1;
 }    /* index i1 (in index matrix) and address i2 (in data array) from index array */
 
@@ -91,7 +91,7 @@ static A jtastdn(J jt,A a,A z,A ind){A a1,q,r,s;B*b;I ar,*as,*av,d,ir,n,n1,*v,zr
  zp=PAV(z); a1=SPA(zp,a); av=AV(a1); n1=n-1;
  GATV0(s,B01,zr,1); b=BAV(s); 
  memset(b,C0,zr); DO(AN(a1), b[av[i]]=1;); memset(b,!memchr(b,C1,n)?C0:C1,n);
- GATV0(r,INT,zr-n1,1); v=AV(r); *v++=ar-(zr-n); DO(zr-n, *v++=1;);
+ GATV0(r,INT,zr-n1,1); v=AV(r); *v++=ar-(zr-n); DQ(zr-n, *v++=1;);
  RZ(q=dgrade1(repeat(r,vec(B01,zr-n1,b+n1))));
  R equ(q,IX(ar))?a:cant2(q,a);
 }    /* convert replacement array a into standard form relative to index array ind */
@@ -135,7 +135,7 @@ A jtamnsp(J jt,A a,A z,A ind,B ip){A i1,i2,t;C*ev,*u,*v,*vv;I c,*dv,i,*iv,j,*jv,
  for(i=0;i<n;++i){
   vv=v+zk*iv[i]+k*jv[i];
   for(j=0;j<c;++j){
-   q=r; DO(r, --q; ++dv[q]; if(dv[q]<s[q])break; dv[q]=0;);
+   q=r; DQ(r, --q; ++dv[q]; if(dv[q]<s[q])break; dv[q]=0;);
    q=1; while(p<m){DO(r, if(q=yv[i]-dv[i])break;); if(0<=q)break; ++p; yv+=r;}
    MC(vv,q?ev:u+k*p,k); 
    vv+=k;

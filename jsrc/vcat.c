@@ -34,12 +34,12 @@ static A jtovs0(J jt,B p,I r,A a,A w){A a1,e,q,x,y,z;B*b;I at,*av,c,d,j,k,f,m,n,
    break;
   case 2:  /* sparse and a equals e */
    RZ(y=ca(y)); 
-   if(!p){v=j+AV(y); DO(m, ++*v; v+=c;);} 
+   if(!p){v=j+AV(y); DQ(m, ++*v; v+=c;);} 
    break;
   case 3:  /* sparse and a not equal to e */
    GATV0(q,INT,c,1); v=AV(q); DO(c, v[i]=ws[av[i]];); v[j]=1; RZ(q=odom(2L,c,v)); n=*AS(q);
-   if(p){RZ(y=over(y,q)); v=AV(y)+j+m*c; d=ws[f]; DO(n, *v=d; v+=c;);}
-   else {RZ(y=over(q,y)); v=AV(y)+j+n*c;          DO(m, ++*v; v+=c;);}
+   if(p){RZ(y=over(y,q)); v=AV(y)+j+m*c; d=ws[f]; DQ(n, *v=d; v+=c;);}
+   else {RZ(y=over(q,y)); v=AV(y)+j+n*c;          DQ(m, ++*v; v+=c;);}
    RZ(q=shape(x)); *AV(q)=n; RZ(q=reshape(q,a)); RZ(x=p?over(x,q):over(q,x));
    if(f){RZ(q=grade1(y)); RZ(y=from(q,y)); RZ(x=from(q,x));}
  }
@@ -78,7 +78,7 @@ static F2(jtovs){A ae,ax,ay,q,we,wx,wy,x,y,z,za,ze;B*ab,*wb,*zb;I acr,ar,*as,at,
  SPB(zp,a,za); SPBV(zp,e,ze,ca(TYPESEQ(t,at)?ae:we));
  if(*zb){
   SPB(zp,x,  over(ax,wx));
-  SPBV(zp,i,y,over(ay,wy)); v=AV(y)+AN(ay); m=*as; DO(*AS(wy), *v+=m; v+=c;);
+  SPBV(zp,i,y,over(ay,wy)); v=AV(y)+AN(ay); m=*as; DQ(*AS(wy), *v+=m; v+=c;);
  }else{C*av,*wv,*xv;I am,ak,i,j,k,mn,p,*u,wk,wm,xk,*yv;
   i=j=p=0; k=bpnoun(t); 
   m=*AS(ay); u=AV(ay); av=CAV(ax); am=aii(ax); ak=k*am;
@@ -126,7 +126,7 @@ static F2(jtovg){A s,z;C*x;I ar,*as,c,k,m,n,r,*sv,t,wr,*ws,zn;
  // Calculate the shape of the result: the shape of the item, max of input shapes
  if(m=MIN(ar,wr)){
   as=ar+AS(a); ws=wr+AS(w); k=r;
-  DO(m, --as; --ws; sv[--k]=MAX(*as,*ws);); 
+  DQ(m, --as; --ws; sv[--k]=MAX(*as,*ws);); 
   DO(r-m, sv[i]=MAX(1,sv[i]););
  }
  RE(c=prod(r-1,1+sv)); m=r>ar?1:IC(a); n=r>wr?1:IC(w); // verify composite item not too big
@@ -291,7 +291,7 @@ A jtapip(J jt, A a, A w, A self){F2PREFIP;A h;C*av,*wv;I ak,k,p,*u,*v,wk,wm,wn;
    // items of w (after its conversion to the precision of a)
    k=bpnoun(AT(a)); ak=k*an; wm=AR(a)==AR(w)?AS(w)[0]:1; wn=wm*aii(a); wk=k*wn;  // We don't need this yet but we start the computation early
    // For each axis to compare, see if a is bigger/equal/smaller than w; OR into p
-   p=0; DO(naxes, p |= *u++-*v++;);
+   p=0; DQ(naxes, p |= *u++-*v++;);
    // Now p<0 if ANY axis of a needs extension - can't inplace then
    if(p>=0) {
     // See if there is room in a to fit w (including trailing pad)

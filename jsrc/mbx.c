@@ -115,11 +115,11 @@ static B jtsmmjoin(J jt,A a,I j){A y;I m,**mfree,n,*p,*q;
  RZ(1<n);
  RZ(y=grade2(y,y));
  p=q=AV(y); m=0;
- DO(n-1, if(p[2]==p[0]+p[1])q[1]+=p[3]; else{q+=2; q[0]=p[2]; q[1]=p[3]; ++m;} p+=2;);
+ DQ(n-1, if(p[2]==p[0]+p[1])q[1]+=p[3]; else{q+=2; q[0]=p[2]; q[1]=p[3]; ++m;} p+=2;);
  ++m;
  mfree=SMMFREE(a); DO(MLEN, mfree[i]=0;);
  p=AV(y);
- DO(m, smmput1(a,mfree,p[1],(C*)p[0]); p+=2;);
+ DQ(m, smmput1(a,mfree,p[1],(C*)p[0]); p+=2;);
  R mfree[j]||smmsplit(a,j);
 }    /* ensure mfree[j] has a free block by joining smaller blocks */
 
@@ -259,8 +259,8 @@ F1(jtsmmblks){A x,y,z;I n,t,*v,*zv;
  n=1+*AS(x)+*AS(y);
  GATV0(z,INT,3*n,2); *AS(z)=n; *(1+AS(z))=3; zv=AV(z); 
  *zv++=IMIN; *zv++=IMIN; *zv++=IMIN;
- v=AV(x); DO(*AS(x), *zv++=*v++; *zv++=*v++; *zv++=SMMCINUSE;);
- v=AV(y); DO(*AS(y), *zv++=*v++; *zv++=*v++; *zv++=SMMCFREE; );
+ v=AV(x); DQ(*AS(x), *zv++=*v++; *zv++=*v++; *zv++=SMMCINUSE;);
+ v=AV(y); DQ(*AS(y), *zv++=*v++; *zv++=*v++; *zv++=SMMCFREE; );
  RZ(z=grade2(z,z)); zv=AV(z);
  *zv++=(I)smmu(w); *zv++=smmsize(w); *zv++=SMMCTOTAL;
  RETF(z);

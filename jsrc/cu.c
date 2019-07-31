@@ -13,7 +13,7 @@ static A jteverysp(J jt,A w,A fs,AF f1){A*wv,x,z,*zv;P*wp,*zp;
  RZ(z=ca(w));
  wp=PAV(w); x=SPA(wp,x); wv=AAV(x);
  zp=PAV(z); x=SPA(zp,x); zv=AAV(x);
- DO(AN(x), RZ(*zv++=CALL1(f1,*wv++,fs)););
+ DQ(AN(x), RZ(*zv++=CALL1(f1,*wv++,fs)););
  R z;
 }
 
@@ -130,7 +130,7 @@ static DF1(jtunderai1){DECLF;A x,y,z;B b;I j,n,*u,*v;UC f[256],*wv,*zv;
  if(!b)R from(df1(indexof(alp,w),fs),alp);
  n=AN(w);
  GATV(z,LIT,n,AR(w),AS(w)); zv=UAV(z); wv=UAV(w);
- if(!bitwisecharamp(f,n,wv,zv))DO(n, *zv++=f[*wv++];); 
+ if(!bitwisecharamp(f,n,wv,zv))DQ(n, *zv++=f[*wv++];); 
  RETF(z);
 }    /* f&.(a.&i.) w */
 

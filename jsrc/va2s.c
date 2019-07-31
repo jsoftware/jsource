@@ -25,7 +25,7 @@ F1(jtvaspz){A e,x,y;B c,*u,*xu,*xv;I j,n,*v,*yu,*yv,xc,yc;P*wp;
  while(u=memchr(xv+xc*j,c,xc*(n-j))){
   j=(u-xv)/xc; v=yv+yc*j;
   if(v==yu){yu+=yc; xu+=xc;}
-  else{DO(yc, *yu++=*v++;); if(1<xc){MC(xu,xv+xc*j,xc); xu+=xc;}}
+  else{DQ(yc, *yu++=*v++;); if(1<xc){MC(xu,xv+xc*j,xc); xu+=xc;}}
   ++j;
  }
  n=(yu-yv)/yc;

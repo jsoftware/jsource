@@ -37,7 +37,7 @@ static I jtpad(J jt,A a,A w,C*zv){C dash,*u,*v,*wv;I c,d,r,*s;
   if(c==d)MC(zv,wv,AN(w));
   else{
    zv-=d; v=zv+c-1; u=wv-c; dash=jt->bx[10];
-   DO(IC(w), MC(zv+=d,u+=c,c); v+=d; if(dash==*v)memset(1+v,dash,d-c););
+   DQ(IC(w), MC(zv+=d,u+=c,c); v+=d; if(dash==*v)memset(1+v,dash,d-c););
  }}
  R r*d;
 }
@@ -112,7 +112,7 @@ static F1(jttconnect){A*wv,x,y,z;B b,d;C c,*u,*xv,*yv,*zv;I e,i,j,m,n,p,q,zn;
     if(b&&c==jt->bx[6])c=jt->bx[7];
     *yv=c; yv+=q; xv+=p;
   }}
-  u=zv-e; yv=CAV(y)-q; DO(m, MC(u+=e,yv+=q,q);); zv+=q;
+  u=zv-e; yv=CAV(y)-q; DQ(m, MC(u+=e,yv+=q,q);); zv+=q;
   x=y; p=q;
  }
  R z;

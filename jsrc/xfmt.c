@@ -80,7 +80,7 @@ static B jtfmtcomma(J jt, C *x, I l, I d, C *subs) {C *v,*u;I j,n,c;
  n=l-(c=(l-!!d-d)>>2); u=x+l-1;
  if(v=memchr(x, SUBd, n)){j=n-(v-x); u-=j; memmove(u+1,v,j); v--;} else v=x+n-1;
  j=0;
- DO(v-x+1, if('0'<=*v&&*v<='9'){if(j==3){*u--=SUBc; j=0;} j++;} *u--=*v--;);
+ DQ(v-x+1, if('0'<=*v&&*v<='9'){if(j==3){*u--=SUBc; j=0;} j++;} *u--=*v--;);
  R 1;
 }
 
@@ -95,7 +95,7 @@ static I jtdpone(J jt, B bits, D w){D t;
 static B jtwidthdp(J jt, A a, I *w, I *d){I n,x,y; C *v;
  RZ(a&&w&&d);
  RZ(a=ca(a)); n=AN(a); v=CAV(a); 
- DO(n, if(!strchr("0123456789.", *v)) *v=' '; v++;);
+ DQ(n, if(!strchr("0123456789.", *v)) *v=' '; v++;);
 
  x=strspn(CAV(a), " "          ); AK(a)+=x;AN(a)-=x;AS(a)[0]=x;
  x=strspn(CAV(a), "0123456789.");
@@ -153,7 +153,7 @@ static F1(jtfmtparse){A x,z,*zv;B ml[2+NMODVALS],mod,t;C c,*cu="srqpnmdblc",*cu1
  if(mtv!=zv[NMODVALS]){C*cu="e,.-*",*cv,subs[5];
   x=zv[NMODVALS]; n=AN(x); cv=CAV(x); MC(subs,cu,5L); memset(ml,C1,5L);
   ASSERT(0==(n&1)&&10>=n,EVDOMAIN);
-  DO(n>>1, ASSERT(s=strchr(cu,*cv++),EVDOMAIN); j=s-cu; ASSERT(ml[j],EVDOMAIN); ml[j]=0; subs[j]=*cv++;);
+  DQ(n>>1, ASSERT(s=strchr(cu,*cv++),EVDOMAIN); j=s-cu; ASSERT(ml[j],EVDOMAIN); ml[j]=0; subs[j]=*cv++;);
   RZ(zv[NMODVALS]=rifvs(str(5L,subs)));
  }
  vals[2]=fb; RZ(*zv=rifvs(vec(INT,3,vals)));
@@ -199,7 +199,7 @@ static D jtexprndID(J jt, I d, D y){I e,s;D f,q,c,x1,x2;DI8 f8,y8,c8;
 
 static B jtsprintfI(J jt, C *x, I m, I dp, I iw, C *subs) {I r,g;
  x+=m-1;
- DO(dp, *x--='0';); if(dp) *x--=SUBd; r=dp+!!dp;
+ DQ(dp, *x--='0';); if(dp) *x--=SUBd; r=dp+!!dp;
  g=SGN(iw); iw=ABS(iw);
  while(iw){ *x--='0'+(C)(iw%10); iw/=10; r++; }
  if(g==0) { *x--='0'; r++; }
@@ -261,13 +261,13 @@ static F2(jtfmtprecomp) {A*as,base,fb,len,strs,*u,z;B*bits,*bw;D dtmp,*dw;
  GAT0(z,BOX,4,1); u=AAV(z); *u++=base; *u++=strs; *u++=len; *u++=fb; 
  ib=AV(base); as=AAV(strs); u=AAV(a);
  if(1==nf){MC(ib,AV(*u),SZI*3); memset(ib+3,C0,SZI*nc); MC(as,u+1,SZA*NMODVALS);}
- else DO(nf, MC(ib,AV(*u),SZI*3); ib[3]=0; ib+=4; MC(as,u+1,SZA*NMODVALS); as+=NMODVALS; u+=1+NMODVALS;);
+ else DQ(nf, MC(ib,AV(*u),SZI*3); ib[3]=0; ib+=4; MC(as,u+1,SZA*NMODVALS); as+=NMODVALS; u+=1+NMODVALS;);
  bits=BAV(fb);
  switch(CTTZNOFLAG(wt)) {
   case B01X:
    bw=BAV(w); ib=AV(base);
-   DO(n, *bits|=BITSz*!*bw; bits++; bw++;);  /* BITSe, BITS_, BITS__, and BITS_d are 0 */
-   DO(nf, if(ib[1]==-1)ib[1]=0; ib+=4;);     /* boolean always has 0 decimal places: */
+   DQ(n, *bits|=BITSz*!*bw; bits++; bw++;);  /* BITSe, BITS_, BITS__, and BITS_d are 0 */
+   DQ(nf, if(ib[1]==-1)ib[1]=0; ib+=4;);     /* boolean always has 0 decimal places: */
    break;
   case INTX:
    iw=AV(w);
@@ -382,7 +382,7 @@ static F2(jtfmtprecomp) {A*as,base,fb,len,strs,*u,z;B*bits,*bw;D dtmp,*dw;
        bits++; dw++; iw++; iv++;
  }
  ib=AV(base);
- if(1==nf){if(!ib[0])ib[0]=maxl;}else DO(nf, if(ib[0]==0)ib[0]=ib[3]; ib+=4;);
+ if(1==nf){if(!ib[0])ib[0]=maxl;}else DQ(nf, if(ib[0]==0)ib[0]=ib[3]; ib+=4;);
  R z;
 } /* format: precomputation to separate the group and column concept */
 

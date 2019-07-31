@@ -96,17 +96,17 @@ static __inline int Vcompare(J jt,I a,I b){I m,n;SBU*u,*v;UC*s,*t;US*p,*q;C4*f,*
 //         u   s   m                        v   t   n
  switch((SBC4&u->flag?6:SBC2&u->flag?3:0)+(SBC4&v->flag?2:SBC2&v->flag?1:0)){
 // u LIT
-  case 0: {                                DO(MIN(m,n), if(*s!=*t)R *s<*t; ++s; ++t;);} break;
-  case 1: {          q=(US*)t;       n>>=1; DO(MIN(m,n), if(*s!=*q)R *s<*q; ++s; ++q;);} break;
-  case 2: {          g=(C4*)t;       n>>=2; DO(MIN(m,n), if(*s!=*g)R *s<*g; ++s; ++g;);} break;
+  case 0: {                                DQ(MIN(m,n), if(*s!=*t)R *s<*t; ++s; ++t;);} break;
+  case 1: {          q=(US*)t;       n>>=1; DQ(MIN(m,n), if(*s!=*q)R *s<*q; ++s; ++q;);} break;
+  case 2: {          g=(C4*)t;       n>>=2; DQ(MIN(m,n), if(*s!=*g)R *s<*g; ++s; ++g;);} break;
 // u C2T
-  case 3: {p=(US*)s;           m>>=1;       DO(MIN(m,n), if(*p!=*t)R *p<*t; ++p; ++t;);} break;
-  case 4: {p=(US*)s; q=(US*)t; m>>=1; n>>=1; DO(MIN(m,n), if(*p!=*q)R *p<*q; ++p; ++q;);} break;
-  case 5: {p=(US*)s; g=(C4*)t; m>>=1; n>>=2; DO(MIN(m,n), if(*p!=*g)R *p<*g; ++p; ++g;);} break;
+  case 3: {p=(US*)s;           m>>=1;       DQ(MIN(m,n), if(*p!=*t)R *p<*t; ++p; ++t;);} break;
+  case 4: {p=(US*)s; q=(US*)t; m>>=1; n>>=1; DQ(MIN(m,n), if(*p!=*q)R *p<*q; ++p; ++q;);} break;
+  case 5: {p=(US*)s; g=(C4*)t; m>>=1; n>>=2; DQ(MIN(m,n), if(*p!=*g)R *p<*g; ++p; ++g;);} break;
 // u C4T
-  case 6: {f=(C4*)s;           m>>=2;       DO(MIN(m,n), if(*f!=*t)R *f<*t; ++f; ++t;);} break;
-  case 7: {f=(C4*)s; q=(US*)t; m>>=2; n>>=1; DO(MIN(m,n), if(*f!=*q)R *f<*q; ++f; ++q;);} break;
-  case 8: {f=(C4*)s; g=(C4*)t; m>>=2; n>>=2; DO(MIN(m,n), if(*f!=*g)R *f<*g; ++f; ++g;);} break;
+  case 6: {f=(C4*)s;           m>>=2;       DQ(MIN(m,n), if(*f!=*t)R *f<*t; ++f; ++t;);} break;
+  case 7: {f=(C4*)s; q=(US*)t; m>>=2; n>>=1; DQ(MIN(m,n), if(*f!=*q)R *f<*q; ++f; ++q;);} break;
+  case 8: {f=(C4*)s; g=(C4*)t; m>>=2; n>>=2; DQ(MIN(m,n), if(*f!=*g)R *f<*g; ++f; ++g;);} break;
  }
  R m<n;
 }
@@ -300,9 +300,9 @@ static SB jtsbinsert(J jt,S c2,S c0,I n,C*s,UI h,UI hi){I c,m,p;SBU*u;
  if(c2==c0)
   MC(SBSV(m+p),s,n);                    /* copy string into sbs         */
  else{
-  if     (c0&SBC4&& c2&SBC2){C4*ss=(C4*)s; US*s0=(US*)SBSV(m+p); DO(n>>1, *s0++=(US)*ss++;);}
-  else if(c0&SBC4&&!c2&SBC2){C4*ss=(C4*)s; UC*s0=(UC*)SBSV(m+p); DO(n,   *s0++=(UC)*ss++;);}
-  else                      {US*ss=(US*)s; UC*s0=(UC*)SBSV(m+p); DO(n,   *s0++=(UC)*ss++;);}
+  if     (c0&SBC4&& c2&SBC2){C4*ss=(C4*)s; US*s0=(US*)SBSV(m+p); DQ(n>>1, *s0++=(US)*ss++;);}
+  else if(c0&SBC4&&!c2&SBC2){C4*ss=(C4*)s; UC*s0=(UC*)SBSV(m+p); DQ(n,   *s0++=(UC)*ss++;);}
+  else                      {US*ss=(US*)s; UC*s0=(UC*)SBSV(m+p); DQ(n,   *s0++=(UC)*ss++;);}
  }
  u=SBUV(c); u->i=m+p; u->n=n; u->h=h;   /* index/length/hash            */
  u->flag=c2;                            /* SBC2 SBC4 flag               */
@@ -317,8 +317,8 @@ static SB jtsbprobe(J jt,S c2,I n,C*s,I test){B b;UC*t;I hi,ui;SBU*u;UI h,hn;UC*
  if(!n)R(SB)0;   // sentinel
 // optimize storage if ascii or short
  S c0=c2;  // save original flag
- if(SBC4&c2){C4*ss=(C4*)s;     c2=c2&~SBC4; DO(n>>2,if(65535<*ss){c2|=SBC4;break;}else if(127<*ss++){c2|=SBC2;});}
- else if(SBC2&c2){US*ss=(US*)s;c2=c2&~SBC2; DO(n>>1,if(127<*ss++){c2|=SBC2;break;});}
+ if(SBC4&c2){C4*ss=(C4*)s;     c2=c2&~SBC4; DQ(n>>2,if(65535<*ss){c2|=SBC4;break;}else if(127<*ss++){c2|=SBC2;});}
+ else if(SBC2&c2){US*ss=(US*)s;c2=c2&~SBC2; DQ(n>>1,if(127<*ss++){c2|=SBC2;break;});}
 
 // hash using c0 on original data
  h=(c0&SBC4?hic4:c0&SBC2?hic2:hic)(n,us);
@@ -393,17 +393,17 @@ static A jtsbunlit(J jt,C cx,A w){A z;S c2;I i,m,wc,wr,*ws;SB*zv;
  if(!wc)memset(zv,C0,m*sizeof(SB));
  else if(c2&SBC4){C4 c=(C4)cx,*s,*wv=C4AV(w);
   for(i=0;i<m;++i){
-   s=wc+wv; DO(wc, if(c!=*--s)break;);   /* exclude trailing "blanks"    */
+   s=wc+wv; DQ(wc, if(c!=*--s)break;);   /* exclude trailing "blanks"    */
    RE(*zv++=sbprobe(c2,4*((c!=*s)+s-wv),(C*)wv,0));
    wv+=wc;
  }}else if(c2&SBC2){US c=(US)cx,*s,*wv=USAV(w);
   for(i=0;i<m;++i){
-   s=wc+wv; DO(wc, if(c!=*--s)break;);   /* exclude trailing "blanks"    */
+   s=wc+wv; DQ(wc, if(c!=*--s)break;);   /* exclude trailing "blanks"    */
    RE(*zv++=sbprobe(c2,2*((c!=*s)+s-wv),(C*)wv,0));
    wv+=wc;
  }}else{C c=cx,*s,*wv=CAV(w);
   for(i=0;i<m;++i){
-   s=wc+wv; DO(wc, if(c!=*--s)break;);   /* exclude trailing "blanks"    */
+   s=wc+wv; DQ(wc, if(c!=*--s)break;);   /* exclude trailing "blanks"    */
    RE(*zv++=sbprobe(c2,(c!=*s)+s-wv,wv,0));
    wv+=wc;
  }}
@@ -427,7 +427,7 @@ static F1(jtsbunbox){A*wv,x,z;S c2;I i,m,n;SB*zv;
 static F1(jtsbunind){A z;I j,n,*zv;
  RZ(z=cvt(INT,w));
  zv=AV(z); n=jt->sbun;
- DO(AN(w), j=*zv++; ASSERT(0<=j&&j<n,EVINDEX););
+ DQ(AN(w), j=*zv++; ASSERT(0<=j&&j<n,EVINDEX););
  AT(z)=SBT;
  R z;
 }    /* w is a numeric array of symbol indices */
@@ -465,7 +465,7 @@ F1(jtsborder){A z;I n,*zv;SB*v;
  n=AN(w); v=SBAV(w);
  ASSERT(!n||SBT&AT(w),EVDOMAIN);
  GATV(z,INT,n,AR(w),AS(w)); zv=AV(z);
- DO(n, *zv++=SBUV(*v++)->order;);
+ DQ(n, *zv++=SBUV(*v++)->order;);
  R z;
 }    /* order numbers for symbol array w */
 
@@ -481,8 +481,8 @@ static F1(jtsbbox){A z,*zv;C*s;I n;SB*v;SBU*u;
 #define C2FSB(zv,u,q,m,c)  \
  {UC*s=SBSV(u->i);I k=u->n;US*us=(US*)s;                            \
   if(SBC4&u->flag){MC(zv,s,k); zv+=k>>=2;}                          \
-  else if(SBC2&u->flag){k>>=1; DO(k, *zv++=*us++;);}else DO(k, *zv++=*s++;);  \
-  if(2==q)*zv++=c; else if(3==q)DO(m-k, *zv++=c;);                 \
+  else if(SBC2&u->flag){k>>=1; DQ(k, *zv++=*us++;);}else DQ(k, *zv++=*s++;);  \
+  if(2==q)*zv++=c; else if(3==q)DQ(m-k, *zv++=c;);                 \
  }
 
 static A jtsbstr(J jt,I q,A w){A z;S c2=0;C c;I m,n;SB*v,*v0;SBU*u;
@@ -490,18 +490,18 @@ static A jtsbstr(J jt,I q,A w){A z;S c2=0;C c;I m,n;SB*v,*v0;SBU*u;
  m=n=AN(w); v=v0=SBAV(w); c=1==q?'`':C0;
  ASSERT(!n||SBT&AT(w),EVDOMAIN);
 // promote to the highest character type for output
- DO(n, u=SBUV(*v++); if(u->flag&SBC4){c2=SBC4; m+=u->n>>2;}else if(u->flag&SBC2){c2=MAX(c2,SBC2); m+=u->n>>1;}else m+=u->n;); 
+ DQ(n, u=SBUV(*v++); if(u->flag&SBC4){c2=SBC4; m+=u->n>>2;}else if(u->flag&SBC2){c2=MAX(c2,SBC2); m+=u->n>>1;}else m+=u->n;); 
  v=v0; 
  GA(z,c2&SBC4?C4T:c2&SBC2?C2T:LIT,m,1,0);
  if(c2&SBC4){C4*zv;
   zv=C4AV(z); 
   if(1==q)*zv++=c;
-  DO(n-1, u=SBUV(*v++); C2FSB(zv,u,2,0,c););
+  DQ(n-1, u=SBUV(*v++); C2FSB(zv,u,2,0,c););
   if(n){  u=SBUV(*v++); C2FSB(zv,u,q,0,c);}
  }else if(c2&SBC2){US*zv;
   zv=USAV(z); 
   if(1==q)*zv++=c;
-  DO(n-1, u=SBUV(*v++); C2FSB(zv,u,2,0,c););
+  DQ(n-1, u=SBUV(*v++); C2FSB(zv,u,2,0,c););
   if(n){  u=SBUV(*v++); C2FSB(zv,u,q,0,c);}
  }else{C*zv;
   zv=CAV(z); 
@@ -517,11 +517,11 @@ static A jtsblit(J jt,C c,A w){A z;S c2=0;I k,m=0,n;SB*v,*v0;SBU*u;
  n=AN(w); v=v0=SBAV(w);
  ASSERT(!n||SBT&AT(w),EVDOMAIN);
 // promote to the highest character type for output
- DO(n, u=SBUV(*v++); k=u->n; if(u->flag&SBC4){c2=SBC4; k>>=2;} else if(u->flag&SBC2){c2=MAX(c2,SBC2);  k>>=1;} if(m<k)m=k;); 
+ DQ(n, u=SBUV(*v++); k=u->n; if(u->flag&SBC4){c2=SBC4; k>>=2;} else if(u->flag&SBC2){c2=MAX(c2,SBC2);  k>>=1;} if(m<k)m=k;); 
  v=v0;
  GA(z,c2&SBC4?C4T:c2&SBC2?C2T:LIT,n*m,1+AR(w),AS(w)); *(AR(w)+AS(z))=m;
- if(c2&SBC4){C4*zv=C4AV(z); DO(n, u=SBUV(*v++); C2FSB(zv,u,3,m,c););}
- else if(c2&SBC2){US*zv=USAV(z); DO(n, u=SBUV(*v++); C2FSB(zv,u,3,m,c););}
+ if(c2&SBC4){C4*zv=C4AV(z); DQ(n, u=SBUV(*v++); C2FSB(zv,u,3,m,c););}
+ else if(c2&SBC2){US*zv=USAV(z); DQ(n, u=SBUV(*v++); C2FSB(zv,u,3,m,c););}
  else  {C*zv=CAV(z); memset(zv,c,n*m); DO(n, u=SBUV(*v++); MC(zv,SBSV(u->i),u->n); zv+=m;);}
  R z;
 }    /* literal array for symbol array w padded with c */

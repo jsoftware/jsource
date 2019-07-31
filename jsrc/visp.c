@@ -14,9 +14,9 @@ static I jtioev(J jt,I mode,A a){A ae,ax,ay,p;B*pv;I j,k,m,n,*yv;P*ap;
  RZ(p=eq(ax,ae)); pv=BAV(p);
  switch((AN(ay)?2:0)+(I )(1==mode)){
   case 0:  DO(m,           if(          pv[i])R i;); R m;
-  case 1:  DO(m,      --k; if(          pv[k])R k;); R n-!m;
+  case 1:  DQ(m,      --k; if(          pv[k])R k;); R n-!m;
   case 2:  DO(m,           if(i!=yv[i]||pv[i])R i;); R m;
-  default: DO(m, --j; --k; if(j!=yv[k]||pv[k])R j;); R m==n?n:n-m-1;
+  default: DQ(m, --j; --k; if(j!=yv[k]||pv[k])R j;); R m==n?n:n-m-1;
 }}   /* index of sparse element */
 
 A jtiovxs(J jt,I mode,A a,A w){A e,x,z;B h;I at,t,wt;P*ap=0,*wp,*zp;
@@ -38,7 +38,7 @@ A jtiovxs(J jt,I mode,A a,A w){A e,x,z;B h;I at,t,wt;P*ap=0,*wp,*zp;
   else{RE(k=i0(indexofsub(mode,ax,e))); SPB(zp,e,sc(AN(ay)?(m>k?yv[k]:n):k));}
   RZ(q=indexofsub(mode,ax,x)); v=AV(q);
   if(AN(ay)||AN(SPA(ap,a))){
-   DO(AN(x), k=*v; *v++=m>k?yv[k]:n;);
+   DQ(AN(x), k=*v; *v++=m>k?yv[k]:n;);
    if(j<n){RZ(p=eq(ae,x)); pv=BAV(p); v=AV(q); DO(AN(x), if(pv[i])*v=j; ++v;);}
   }
   SPB(zp,x,q);
@@ -72,7 +72,7 @@ A jtindexofxx(J jt,I mode,A a,A w){A x;B*b,*c,s;I ar,d,j,m,n,wr;P*p;
  RZ(b=bfi(m,SPA(p,a),1)); b[0]=1;
  GATV0(x,B01,n,1); c=BAV(x);
  DO(ABS(d), c[i]=s;);  // initialize unfilled part of c
- j=0; DO(MIN(ar,wr), ++j; c[n-j]=b[m-j];);
+ j=0; DQ(MIN(ar,wr), ++j; c[n-j]=b[m-j];);
  R indexofss(mode,s?a:reaxis(ifb(n,c),a),s?reaxis(ifb(n,c),w):w);
 }    /* dense i. sparse   or   sparse i. dense;  1<AR(a) */ 
 
@@ -129,7 +129,7 @@ static B jtiopart(J jt,A w,I r,I mm,I*zc,A*zi,A*zj,A*zx){A b,f,wx,x,wy,y;B*bv;
  else if(1==d){j=-1; DO(m, bv[i]=j!=*v; j=*v; v+=n;);}
  else{
   GATV0(x,INT,d,1); xv=AV(x); *xv=-1;
-  DO(m, bv[i]=0; DO(d, if(xv[i]!=v[i]){bv[i]=1; j=i; DO(d-j, xv[j]=v[j]; ++j;); break;}); v+=n;)
+  DO(m, bv[i]=0; DO(d, if(xv[i]!=v[i]){bv[i]=1; j=i; DQ(d-j, xv[j]=v[j]; ++j;); break;}); v+=n;)
  }
  if(m){RZ(f=cut(ds(CCOMMA),num[1])); RZ(y=df2(b,dropr(d,wy),f)); RZ(x=df2(b,wx,f));}
  else{y=mtm; RZ(x=reshape(v2(0L,prod(r,AS(w)+wr-r)),wx));}

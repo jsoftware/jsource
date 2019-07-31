@@ -14,7 +14,7 @@ static A jtfromis1(J jt,A ind,A w,A z,I wf){A a,a1,j1,p,q,x,x1,y,y1;C*xu,*xuu,*x
  a=SPA(wp,a); an=AN(a); av=AV(a); DO(an, if(wf==av[i]){h=i; break;});  // an=#sparse axes
  y=SPA(wp,i); RZ(q=eps(fromr(sc(h),y),ravel(ind))); RZ(y=repeat(q,y)); RZ(x=repeat(q,SPA(wp,x)));  // (h{"_ 1 indexes) e. ,ind
  GATV0(a1,INT,r+an-1,1); v=AV(a1); SPB(zp,a,a1);
- k=av[h]; u=av; DO(h, *v++=*u++;); DO(r, *v++=k++;); u++; DO(an-1-h, *v++=*u+++r-1;);
+ k=av[h]; u=av; DQ(h, *v++=*u++;); DQ(r, *v++=k++;); u++; DQ(an-1-h, *v++=*u+++r-1;);
  if(!r) 
   if(AR(z)){GATV0(q,INT,an-1,1); v=AV(q); DO(an, if(i!=h)*v++=i;); SPB(zp,i,fromr(q,y)); SPB(zp,x,x); R z;}
   else R reshape(mtv,AN(x)?x:SPA(zp,e));
@@ -36,7 +36,7 @@ static A jtfromis1(J jt,A ind,A w,A z,I wf){A a,a1,j1,p,q,x,x1,y,y1;C*xu,*xuu,*x
    c=qu[k]; d=qv[k]; xuu=xu+c*xk; u=yu+c*an;
    for(j=0;j<d;++j){
     MC(xv,xuu,xk); xv+=xk; xuu+=xk;
-    DO(h, *yv++=*u++;); DO(r, *yv++=iv[i];); u++; DO(an-1-h, *yv++=*u++;);
+    DO(h, *yv++=*u++;); DO(r, *yv++=iv[i];); u++; DQ(an-1-h, *yv++=*u++;);
   }}
   iv+=r;
  }
@@ -69,7 +69,7 @@ static A jtaaxis(J jt,A w,I wf,A a,I r,I h,I*pp,I*qq,I*rr){A q;B*b,*c,*d;I wr,x,
  wr=AR(w); zr=wr+r-h;
  RZ(b=bfi(wr,a,1));
  GATV0(q,B01,zr,1); c=BAV(q); 
- x=y=z=0; d=b; DO(wf, if(*d++)++x;); DO(h, if(*d++)++y;); DO(wr-wf-h, if(*d++)++z;);
+ x=y=z=0; d=b; DQ(wf, if(*d++)++x;); DQ(h, if(*d++)++y;); DQ(wr-wf-h, if(*d++)++z;);
  *pp=x; *qq=y; *rr=z;
  MC(c,b,wf); memset(c+wf,y?C1:C0,r); MC(c+wf+r,b+wf+h,wr-wf-h);
  R caro(ifb(zr,c));  // avoid readonly
@@ -108,7 +108,7 @@ A jtfrombsn(J jt,A ind,A w,I wf){A a,j1,p,q,x,x1,y,y1,ys,z;C*xu,*xuu,*xv;
    c=pv[k]; d=qv[k]; xuu=xu+c*xk; u=yu+c*an;
    for(j=0;j<d;++j){
     MC(xv,xuu,xk); xv+=xk; xuu+=xk;
-    DO(pp, *yv++=*u++;); DO(r, *yv++=iv[i];); u+=qq; DO(rr, *yv++=*u++;);
+    DO(pp, *yv++=*u++;); DO(r, *yv++=iv[i];); u+=qq; DQ(rr, *yv++=*u++;);
  }}}
  if(wf){q=grade1(y1); RZ(y1=ifrom(q,y1)); RZ(x1=ifrom(q,x1));}
  SPB(zp,i,y1); SPB(zp,x,x1); 
@@ -121,7 +121,7 @@ static A jtfrombs1(J jt,A ind,A w,I wf){A*iv,x,y,z;I j,m,n,wr,wcr;
  n=AN(ind); iv=AAV(ind);  wr=AR(w); wcr=wr-wf;
  ASSERT(1>=AR(ind),EVRANK);
  ASSERT(n<=wr-wf,EVLENGTH);
- j=n; DO(n, --j; x=iv[j]; if(BOX&AT(x)&&!AR(x)&&(y=AAV0(x),!AN(y)&&1==AR(y)))--n; else break;);
+ j=n; DQ(n, --j; x=iv[j]; if(BOX&AT(x)&&!AR(x)&&(y=AAV0(x),!AN(y)&&1==AR(y)))--n; else break;);
  z=w; A *old=jt->tnextpushp;
  for(j=0;j<n;++j){
   x=iv[j]; 
@@ -189,7 +189,7 @@ F2(jtfromss){A e,x,y,z;B*b;I acr,af,ar,c,d,k,m,n,p,*u,*v,wcr,wf,wr,*ws,*yv;P*ap,
  y=SPA(xp,i); u=AV(y); c=*(1+AS(y)); m=*AS(y); k=0; DO(wf, if(b[i])++k;);
  y=SPA(ap,i); v=AV(y); d=*(1+AS(y)); n=c+d-1; p=c-(1+k);
  GATV0(y,INT,m*n,2); *AS(y)=m; *(1+AS(y))=n; yv=AV(y);
- DO(m, if(k)ICPY(yv,u,k); ICPY(yv+k,v+d*u[k],d); if(p)ICPY(yv+k+d,u+1+k,p); yv+=n; u+=c;);
+ DQ(m, if(k)ICPY(yv,u,k); ICPY(yv+k,v+d*u[k],d); if(p)ICPY(yv+k+d,u+1+k,p); yv+=n; u+=c;);
  SPB(zp,i,y);
  SPB(zp,x,SPA(xp,x));
  RETF(z);

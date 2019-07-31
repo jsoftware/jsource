@@ -92,9 +92,9 @@
  static F2(f){I n;T0*av,x;T1*wv,y;                               \
   av=(T0*)AV(a);                                             \
   wv=(T1*)AV(w);      \
-  if     (!AR(a)){x=*av; DO(n=AN(w),          y=*wv++; if(!F(x,y))R num[0];);} \
-  else if(!AR(w)){y=*wv; DO(n=AN(a), x=*av++;          if(!F(x,y))R num[0];);} \
-  else           {       DO(n=AN(w), x=*av++; y=*wv++; if(!F(x,y))R num[0];);} \
+  if     (!AR(a)){x=*av; DQ(n=AN(w),          y=*wv++; if(!F(x,y))R num[0];);} \
+  else if(!AR(w)){y=*wv; DQ(n=AN(a), x=*av++;          if(!F(x,y))R num[0];);} \
+  else           {       DQ(n=AN(w), x=*av++; y=*wv++; if(!F(x,y))R num[0];);} \
   R num[1];                                                               \
  }
 
@@ -107,9 +107,9 @@
   an=AN(a); av=(T0*)AV(a);                                          \
   wn=AN(w); wv=(T1*)AV(w); n=AR(a)&&AR(w)?MAX(an,wn):AR(a)?an:wn;   \
   RZ(z=exta(INT,1L,1L,MAX(22,n>>7))); zv=AV(z); zu=zv+AN(z);         \
-  if     (!AR(a)){x=*av; DO(n,          y=*wv++; if(F(x,y))IFB1;);} \
-  else if(!AR(w)){y=*wv; DO(n, x=*av++;          if(F(x,y))IFB1;);} \
-  else           {       DO(n, x=*av++; y=*wv++; if(F(x,y))IFB1;);} \
+  if     (!AR(a)){x=*av; DQ(n,          y=*wv++; if(F(x,y))IFB1;);} \
+  else if(!AR(w)){y=*wv; DQ(n, x=*av++;          if(F(x,y))IFB1;);} \
+  else           {       DQ(n, x=*av++; y=*wv++; if(F(x,y))IFB1;);} \
   AN(z)=*AS(z)=zv-AV(z); R z;                                       \
  }
 #endif
@@ -163,15 +163,15 @@
   /* obsolete xv=(B*)&x; tu=(UC*)&t;  */                                                   \
   if     (!AR(a)){                                                           \
    ASSIGNX(av);                                                              \
-   while((p-=255)>0){t=0; DO(255, t+=F(x,    *wv++);); ADDBYTESINI(t); z+=t;}              \
-         t=0; DO(p+255,   t+=F(x,    *wv++);); ADDBYTESINI(t); z+=t; x=F(x,  *wv);  \
+   while((p-=255)>0){t=0; DQ(255, t+=F(x,    *wv++);); ADDBYTESINI(t); z+=t;}              \
+         t=0; DQ(p+255,   t+=F(x,    *wv++);); ADDBYTESINI(t); z+=t; x=F(x,  *wv);  \
   }else if(!AR(w)){                                                          \
    ASSIGNX(wv);                                                              \
-   while((p-=255)>0){t=0; DO(255, t+=F(*av++,x    );); ADDBYTESINI(t); z+=t;}              \
-         t=0; DO(p+255,   t+=F(*av++,x    );); ADDBYTESINI(t); z+=t; x=F(*av,x  );  \
+   while((p-=255)>0){t=0; DQ(255, t+=F(*av++,x    );); ADDBYTESINI(t); z+=t;}              \
+         t=0; DQ(p+255,   t+=F(*av++,x    );); ADDBYTESINI(t); z+=t; x=F(*av,x  );  \
   }else{                                                                     \
-   while((p-=255)>0){t=0; DO(255, t+=F(*av++,*wv++);); ADDBYTESINI(t); z+=t;}              \
-         t=0; DO(p+255,   t+=F(*av++,*wv++);); ADDBYTESINI(t); z+=t; x=F(*av,*wv);  \
+   while((p-=255)>0){t=0; DQ(255, t+=F(*av++,*wv++);); ADDBYTESINI(t); z+=t;}              \
+         t=0; DQ(p+255,   t+=F(*av++,*wv++);); ADDBYTESINI(t); z+=t; x=F(*av,*wv);  \
   }                                                                          \
   x &= ((I)1<<(r1<<LGBB))-1; ADDBYTESINI(x); z+=x;    /* C_LE */                                                       \
   R sc(z);                                                                   \
@@ -184,9 +184,9 @@
   wn=AN(w); wv=AV(w); n=AR(a)&&AR(w)?MAX(an,wn):AR(a)?an:wn;                        \
   p=n>>LGSZI; r1=n&(SZI-1);                                                        \
   xv=(B*)&x;                                                                        \
-  if     (!AR(a)){ASSIGNX(av); DO(p, if(   F(x,    *wv++))R num[1]; ); x=F(x,  *wv);}  \
-  else if(!AR(w)){ASSIGNX(wv); DO(p, if(   F(*av++,x    ))R num[1]; ); x=F(*av,x  );}  \
-  else           {             DO(p, if(   F(*av++,*wv++))R num[1]; ); x=F(*av,*wv);}  \
+  if     (!AR(a)){ASSIGNX(av); DQ(p, if(   F(x,    *wv++))R num[1]; ); x=F(x,  *wv);}  \
+  else if(!AR(w)){ASSIGNX(wv); DQ(p, if(   F(*av++,x    ))R num[1]; ); x=F(*av,x  );}  \
+  else           {             DQ(p, if(   F(*av++,*wv++))R num[1]; ); x=F(*av,*wv);}  \
   DO(r1, if(xv[i])R num[1];);                                                          \
   R num[0];                                                                           \
  }
@@ -197,9 +197,9 @@
   wn=AN(w); wv=AV(w); n=AR(a)&&AR(w)?MAX(an,wn):AR(a)?an:wn;                        \
   p=n>>LGSZI; r1=n&(SZI-1);                                                               \
   xv=(B*)&x; tv=(C*)&t; DO(SZI, tv[i]=1;);                                          \
-  if     (!AR(a)){ASSIGNX(av); DO(p, if(t!=F(x,    *wv++))R num[0];); x=F(x,  *wv);}  \
-  else if(!AR(w)){ASSIGNX(wv); DO(p, if(t!=F(*av++,x    ))R num[0];); x=F(*av,x  );}  \
-  else           {             DO(p, if(t!=F(*av++,*wv++))R num[0];); x=F(*av,*wv);}  \
+  if     (!AR(a)){ASSIGNX(av); DQ(p, if(t!=F(x,    *wv++))R num[0];); x=F(x,  *wv);}  \
+  else if(!AR(w)){ASSIGNX(wv); DQ(p, if(t!=F(*av++,x    ))R num[0];); x=F(*av,x  );}  \
+  else           {             DQ(p, if(t!=F(*av++,*wv++))R num[0];); x=F(*av,*wv);}  \
   DO(r1, if(!xv[i])R num[0];);                                                        \
   R num[1];                                                                            \
  }
@@ -245,9 +245,9 @@
   q=n>>LGSZI; r=n&(SZI-1);                                                                      \
   xv=(B*)&x; yv=(B*)&y;                                                                  \
   RZ(z=exta(INT,1L,1L,MAX(22,n>>LGSZI))); zv=AV(z); zu=zv+AN(z)-SZI;                        \
-  if     (!AR(a)){ASSIGNX(av); DO(q, if(y=F(x,    *wv++))IFB3; m+=SZI;); y=F(x,  *wv);}  \
-  else if(!AR(w)){ASSIGNX(wv); DO(q, if(y=F(*av++,x    ))IFB3; m+=SZI;); y=F(*av,x  );}  \
-  else           {             DO(q, if(y=F(*av++,*wv++))IFB3; m+=SZI;); y=F(*av,*wv);}  \
+  if     (!AR(a)){ASSIGNX(av); DQ(q, if(y=F(x,    *wv++))IFB3; m+=SZI;); y=F(x,  *wv);}  \
+  else if(!AR(w)){ASSIGNX(wv); DQ(q, if(y=F(*av++,x    ))IFB3; m+=SZI;); y=F(*av,x  );}  \
+  else           {             DQ(q, if(y=F(*av++,*wv++))IFB3; m+=SZI;); y=F(*av,*wv);}  \
   if(r&&y){DO(SZI-r, yv[r+i]=0;); IFB3;};                                                \
   AN(z)=*AS(z)=zv-AV(z); R z;                                                            \
  }

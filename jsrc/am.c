@@ -157,7 +157,7 @@ static A jtmerge2(J jt,A a,A w,A ind,I cellframelen){F2PREFIP;A z;I t;
  I *iv=AV(ind);  // start of the cell-index array
  if(UCISRECUR(z)){
   cellsize<<=(t>>RATX);  // RAT has 2 boxes per atom, all others have 1 and are lower
-  {A * RESTRICT zv=AAV(z); A *RESTRICT av=(A*)av0; DO(AN(ind), I ix0=iv[i]*cellsize; DO(cellsize, INSTALLBOXRECUR(zv,ix0,*av); ++ix0; if((++av)==(A*)avn)av=(A*)av0;))}
+  {A * RESTRICT zv=AAV(z); A *RESTRICT av=(A*)av0; DO(AN(ind), I ix0=iv[i]*cellsize; DQ(cellsize, INSTALLBOXRECUR(zv,ix0,*av); ++ix0; if((++av)==(A*)avn)av=(A*)av0;))}
  }else{
   if(cellsize<=AN(a)){
    // there is more than one cell in a.  We can copy entire cells
@@ -249,7 +249,7 @@ static A jtjstd(J jt,A w,A ind,I *cellframelen){A j=0,k,*v,x;B b;I d,i,n,r,*u,wr
   RE(aindex(ind,w,0L,&j));  // see if the boxes are homogeneous
   if(!j){  // if not...
    RZ(x=MODIFIABLE(from(ind,increm(iota(shape(w)))))); u=AV(x); // go back to the original indexes, select from table of all possible incremented indexes; since it is incremented, it is writable
-   DO(AN(x), ASSERT(*u,EVDOMAIN); --*u; ++u;);   // if anything required fill, it will leave a 0.  Fail then, and unincrement the indexes
+   DQ(AN(x), ASSERT(*u,EVDOMAIN); --*u; ++u;);   // if anything required fill, it will leave a 0.  Fail then, and unincrement the indexes
    *cellframelen=AR(w); R x;   // the indexes are what we want, and they include all the axes of w
   }
   // Homogeneous boxes.  j has them in a single table.  turn each row into an index
@@ -271,7 +271,7 @@ static A jtjstd(J jt,A w,A ind,I *cellframelen){A j=0,k,*v,x;B b;I d,i,n,r,*u,wr
   v=AAV(ind);   // now ind is a atom/list of boxes, one per axis
   ASSERT(1>=r,EVINDEX);  // not a table
   ASSERT(n<=wr,EVINDEX);  // not too many axes
-  d=n; DO(n, --d; if(!equ(ace,v[d]))break;); if(n)++d; n=d;  // discard trailing (boxed) empty axes
+  d=n; DQ(n, --d; if(!equ(ace,v[d]))break;); if(n)++d; n=d;  // discard trailing (boxed) empty axes
   j=zeroionei[0];  // init list to a single 0 offset
   for(i=0;i<n;++i){  // for each axis, grow the cartesian product of the specified offsets
    x=v[i]; d=ws[i];

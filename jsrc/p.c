@@ -38,7 +38,7 @@ I jtnotonupperstack(J jt, A w) {
   // w is known nonzero
   // see if name was stacked (for the first time) in this very sentence
   A *v=jt->nvrotop+jt->nvrav;  // point to current-sentence region of the nvr area
-  DO(jt->nvrtop-jt->nvrotop, if(*v==w)R 1; ++v;);   // if name stacked in this sentence, that's OK
+  DQ(jt->nvrtop-jt->nvrotop, if(*v==w)R 1; ++v;);   // if name stacked in this sentence, that's OK
   // see if name was not stacked at all
   R !(AFLAG(w)&AFNVR);   // return OK if name not stacked (rare, because if it wasn't stacked in the current sentence why would we think we can inplace it?)
 }

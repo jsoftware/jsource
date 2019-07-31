@@ -152,7 +152,7 @@ F1(jtgrd1sp){PROLOG(0077);A z;B b,c,*wb;I j,m,wcr,wf,wr;P*wp;
  RZ(wb=bfi(wr,SPA(wp,a),1));
  m=0; j=wr; b=c=0; 
  DO(wf, if(wb[i])++m;); if(1<=m&&m<wf){c=1; memset(wb,C1,wf);}
- DO(wcr, --j; if(wb[j])b=1; else if(b){c=1; wb[j]=1;});
+ DQ(wcr, --j; if(wb[j])b=1; else if(b){c=1; wb[j]=1;});
  if(c)RZ(w=reaxis(ifb(wr,wb),w));
  switch(2*wb[0]+wb[wf]){
   case 0: /* dense  dense  */ z=grd1spdd(w,wf,wcr); break;
@@ -174,7 +174,7 @@ F1(jtgrd1sp){PROLOG(0077);A z;B b,c,*wb;I j,m,wcr,wf,wr;P*wp;
  {I ii,nn=(nx),pp,qq,*tu=(tx),*yu=(yx);    \
   for(ii=(ix);ii<nn;++ii,++m){             \
    pp=xv[ii]; qq=yc*(tu[pp]-1);            \
-   DO(tu[1+pp]-tu[pp], yu[qq+=yc]=m;);     \
+   DQ(tu[1+pp]-tu[pp], yu[qq+=yc]=m;);     \
  }}
 
 static void sp2merge0(I n,I n1,I yc,I*zyv,I*xv,I*yv,I*tv){I c,d=n1-1,h,i,j,k,m=0,p,q;
@@ -201,7 +201,7 @@ static A jtgrd2spss(J jt,A w,I wf,I wcr){A c,t,x,y,z,zy;
  jt->workareas.compare.compswf=wf; jt->workareas.compare.comp=(CMP)(wt&SB01?compspssB:wt&SINT?compspssI:wt&SFL?compspssD:compspssZ); jt->workareas.compare.compusejt=1;
  RZ(spsscell(w,wf,wcr,&c,&t));
  tv=AV(t); cv=AV(c); cn=AN(c);
- m=0; j=1; DO(cn, m=MAX(m,cv[j]); j+=2;);
+ m=0; j=1; DQ(cn, m=MAX(m,cv[j]); j+=2;);
  GATV0(x,INT,m,1); xu=AV(x);  /* work area for msmerge() */
  GATV0(x,INT,m,1); xv=AV(x);  /* work area for msmerge() */
  zy=SPA(zp,i); zyv=AV(zy);
@@ -233,7 +233,7 @@ F2(jtgrd2sp){PROLOG(0078);A z;B b,c,*wb;I acr,af,am,ar,*as,j,m,wcr,wf,wm,wr,*ws;
  RZ(wb=bfi(wr,SPA(wp,a),1));
  m=0; j=wr; b=c=0; 
  DO(wf, if(wb[i])++m;); if(1<=m&&m<wf){c=1; memset(wb,C1,wf);}
- DO(wcr, --j; if(wb[j])b=1; else if(b){c=1; wb[j]=1;});
+ DQ(wcr, --j; if(wb[j])b=1; else if(b){c=1; wb[j]=1;});
  if(c){b=a==w; RZ(w=reaxis(ifb(wr,wb),w)); if(b)a=w;}
  switch((2*wb[0]+wb[wf])*(a==w&&af==wf&&acr==wcr)){
   default: z=irs2(IRS1(w,0L,wcr,jt->workareas.compare.complt<0?jtgrade1:jtdgrade1,z),a,VFLAGNONE, RMAX,acr,jtfrom); break;

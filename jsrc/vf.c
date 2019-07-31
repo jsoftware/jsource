@@ -57,7 +57,7 @@ static F2(jtrotsp){PROLOG(0071);A q,x,y,z;B bx,by;I acr,af,ar,*av,d,k,m,n,p,*qv,
  bx=0; DO(wr-n, if(qv[n+i]){bx=1; break;});
  RZ(x=!bx?ca(SPA(wp,x)):irs2(vec(INT,wr-n,n+qv),SPA(wp,x),0L,1L,-1L,jtrotate));
  if(by){
-  DO(n, if(k=qv[i]){d=s[av[i]]-k; v=i+AV(y); DO(m, *v<k?(*v+=d):(*v-=k); v+=n;);});
+  DO(n, if(k=qv[i]){d=s[av[i]]-k; v=i+AV(y); DQ(m, *v<k?(*v+=d):(*v-=k); v+=n;);});
   RZ(q=grade1(y)); RZ(y=from(q,y)); RZ(x=from(q,x));
  }
  SPB(zp,a,ca(SPA(wp,a))); 
@@ -74,9 +74,9 @@ static F2(jtrotsp){PROLOG(0071);A q,x,y,z;B bx,by;I acr,af,ar,*av,d,k,m,n,p,*qv,
 static void jtrot(J jt,I m,I d,I n,I atomsize,I p,I*av,C*u,C*v){I dk,e,k,j,r,x,y;
  e=n*d*atomsize; dk=d*atomsize; // e=#bytes per cell  dk=bytes per item
  switch((2*(I )!jt->fill)+(I )(1<p)){
-  case 0: r=p?*av:0;     ROF(r); DO(m, if(r<0){mvc(k,v,atomsize,jt->fillv); MC(k+v,u,j);}else{MC(v,j+u,k); mvc(j,k+v,atomsize,jt->fillv);}        u+=e; v+=e;); break;
+  case 0: r=p?*av:0;     ROF(r); DQ(m, if(r<0){mvc(k,v,atomsize,jt->fillv); MC(k+v,u,j);}else{MC(v,j+u,k); mvc(j,k+v,atomsize,jt->fillv);}        u+=e; v+=e;); break;
   case 1: DO(m, r=av[i]; ROF(r);       if(r<0){mvc(k,v,atomsize,jt->fillv); MC(k+v,u,j);}else{MC(v,j+u,k); mvc(j,k+v,atomsize,jt->fillv);}            u+=e; v+=e;); break;
-  case 2: r=p?*av:0;     ROT(r); DO(m, MC(v,j+u,k); MC(k+v,u,j); u+=e; v+=e;); break;
+  case 2: r=p?*av:0;     ROT(r); DQ(m, MC(v,j+u,k); MC(k+v,u,j); u+=e; v+=e;); break;
   case 3: DO(m, r=av[i]; ROT(r);       MC(v,j+u,k); MC(k+v,u,j); u+=e; v+=e;);
 }}
 
@@ -126,7 +126,7 @@ static F1(jtrevsp){A a,q,x,y,z;I c,f,k,m,n,r,*v,wr;P*wp,*zp;
  RZ(q=paxis(wr,a)); v=AV(q); DO(wr, if(f==v[i]){k=i; break;});
  if(!r)       RZ(x=ca(x))
  else if(k>=n)RZ(x=irs2(apv(m,m-1,-1L),x,0L,1L,wr-k,jtfrom))
- else         {v=k+AV(y); c=m-1; DO(IC(y), *v=c-*v; v+=n;); q=grade1(y); RZ(y=from(q,y)); RZ(x=from(q,x));}
+ else         {v=k+AV(y); c=m-1; DQ(IC(y), *v=c-*v; v+=n;); q=grade1(y); RZ(y=from(q,y)); RZ(x=from(q,x));}
  SPB(zp,a,ca(a)); 
  SPB(zp,e,ca(SPA(wp,e))); 
  SPB(zp,i,y); 
@@ -143,18 +143,18 @@ F1(jtreverse){A z;C*wv,*zv;I f,k,m,n,nk,r,*v,*ws,wt,wr;
  wt=AT(w); ws=AS(w); wv=CAV(w);
  n=ws[f]; 
  m=1; DO(f, m*=ws[i];);
- k=bpnoun(wt); v=1+f+ws; DO(r-1, k*=*v++;); nk=n*k;
+ k=bpnoun(wt); v=1+f+ws; DQ(r-1, k*=*v++;); nk=n*k;
  GA(z,wt,AN(w),wr,ws); zv=CAV(z);
  switch(k){
-  default:        {C*s=wv-k,*t; DO(m, t=s+=nk; DO(n, MC(zv,t,k); zv+=k; t-=k;););} break;
-  case sizeof(C): {C*s=    wv,*t,*u=    zv; DO(m, t=s+=n; DO(n, *u++=*--t;););} break;
-  case sizeof(S): {S*s=(S*)wv,*t,*u=(S*)zv; DO(m, t=s+=n; DO(n, *u++=*--t;););} break;
+  default:        {C*s=wv-k,*t; DQ(m, t=s+=nk; DQ(n, MC(zv,t,k); zv+=k; t-=k;););} break;
+  case sizeof(C): {C*s=    wv,*t,*u=    zv; DQ(m, t=s+=n; DQ(n, *u++=*--t;););} break;
+  case sizeof(S): {S*s=(S*)wv,*t,*u=(S*)zv; DQ(m, t=s+=n; DQ(n, *u++=*--t;););} break;
 #if SY_64
-  case sizeof(int):{int*s=(int*)wv,*t,*u=(int*)zv; DO(m, t=s+=n; DO(n, *u++=*--t;););} break;
+  case sizeof(int):{int*s=(int*)wv,*t,*u=(int*)zv; DQ(m, t=s+=n; DQ(n, *u++=*--t;););} break;
 #endif
-  case sizeof(I): {I*s=(I*)wv,*t,*u=(I*)zv; DO(m, t=s+=n; DO(n, *u++=*--t;););} break;
+  case sizeof(I): {I*s=(I*)wv,*t,*u=(I*)zv; DQ(m, t=s+=n; DQ(n, *u++=*--t;););} break;
 #if !SY_64 && SY_WIN32
-  case sizeof(D): {D*s=(D*)wv,*t,*u=(D*)zv; DO(m, t=s+=n; DO(n, *u++=*--t;););} break;
+  case sizeof(D): {D*s=(D*)wv,*t,*u=(D*)zv; DQ(m, t=s+=n; DQ(n, *u++=*--t;););} break;
 #endif
  }
  RETF(z);
@@ -185,18 +185,18 @@ static A jtreshapesp(J jt,A a,A w,I wf,I wcr){A a1,e,t,x,y,z;B az,*b,wz;I an,*av
  if(!an)R reshapesp0(a,w,wf,wcr);
  wp=PAV(w); a1=SPA(wp,a); c=AN(a1); RZ(b=bfi(wr,a1,1));  // b=bitmask, length wr, with 1s for each value in a1
  RZ(e=ca(SPA(wp,e))); x=SPA(wp,x); y=SPA(wp,i);
- u=av+an; v=ws+wr; m=0; DO(MIN(an,wcr-1), if(*--u!=*--v){m=1; break;});
+ u=av+an; v=ws+wr; m=0; DQ(MIN(an,wcr-1), if(*--u!=*--v){m=1; break;});
  if(m||an<wcr) R reshapesp(a,IRS1(w,0L,wcr,jtravel,z),wf,1L);
  ASSERT(!jt->fill,EVDOMAIN);
  GASPARSE(z,AT(w),1,wf+an,ws); MCISH(wf+AS(z),av,an);
  zp=PAV(z); SPB(zp,e,e);  
  GATV0(t,INT,c+d*b[wf],1); v=AV(t); 
- DO(wf, if(b[i])*v++=i;); if(b[wf])DO(d, *v++=wf+i;); j=wf; DO(wcr, if(b[j])*v++=d+j; ++j;);
+ DO(wf, if(b[i])*v++=i;); if(b[wf])DO(d, *v++=wf+i;); j=wf; DQ(wcr, if(b[j])*v++=d+j; ++j;);
  SPB(zp,a,t);
  if(b[wf]){I n,q,r,*v0;   /* sparse */
   if(wf!=*AV(a1))R rank2ex(a,w,0L,MIN(AR(a),1),wcr,MIN(AR(a),1),wcr,jtreshape);
   RE(m=prod(1+d,av)); n=IC(y); if(ws[wf]){q=n*(m/ws[wf]); r=m%ws[wf];} else {q=0; r=0;}
-  v=AV(y); DO(n, if(r<=*v)break; ++q; v+=c;);
+  v=AV(y); DQ(n, if(r<=*v)break; ++q; v+=c;);
   GATV0(t,INT,q,1); u=AV(t); v=v0=AV(y);
   m=j=0; DO(q, u[i]=m+*v; v+=c; ++j; if(j==n){j=0; v=v0; m+=ws[wf];});
   SPB(zp,i,stitch(abase2(vec(INT,1+d,av),t),reitem(sc(q),dropr(1L,y))));
@@ -240,8 +240,8 @@ F2(jtreshape){A z;B filling;C*wv,*zv;I acr,ar,c,k,m,n,p,q,r,*s,t,* RESTRICT u,wc
  GA(z,t,zn,r+wf,0); s=AS(z); MCISH(s,ws,wf); MCISH(s+wf,u,r);
  if(!zn)R z;
  zv=CAV(z); wv=CAV(w); 
- if(filling)DO(c, mvc(q,zv,q,wv); mvc(p-q,q+zv,k,jt->fillv); zv+=p; wv+=q;)
- else DO(c, mvc(p,zv,q,wv); zv+=p; wv+=q;);
+ if(filling)DQ(c, mvc(q,zv,q,wv); mvc(p-q,q+zv,k,jt->fillv); zv+=p; wv+=q;)
+ else DQ(c, mvc(p,zv,q,wv); zv+=p; wv+=q;);
  RETF(z);
 }    /* a ($,)"r w */
 
@@ -266,7 +266,7 @@ F2(jtreitem){A y,z;I acr,an,ar,r,*v,wcr,wr;
 #define EXPAND(T)  \
   {T*u=(T*)wv,*v=(T*)zv,x;                                                \
    mvc(sizeof(T),&x,k,jt->fillv);                                         \
-   DO(an, if(*av++){ASSERT(wx>(C*)u,EVLENGTH); *v++=*u++;}else *v++=x;);  \
+   DQ(an, if(*av++){ASSERT(wx>(C*)u,EVLENGTH); *v++=*u++;}else *v++=x;);  \
    wv=(C*)u;                                                              \
   }
 #else
@@ -291,7 +291,7 @@ F2(jtreitem){A y,z;I acr,an,ar,r,*v,wcr,wr;
     case B1110: ASSERT(wx>2+(C*)u,EVLENGTH); *v++=*u++; *v++=*u++; *v++=*u++; *v++=x;    break;  \
     case B1111: ASSERT(wx>3+(C*)u,EVLENGTH); *v++=*u++; *v++=*u++; *v++=*u++; *v++=*u++; break;  \
    }                                                                                             \
-   if(r){av=(B*)au; DO(r, if(*av++){ASSERT(wx>(C*)u,EVLENGTH); *v++=*u++;}else *v++=x;);}        \
+   if(r){av=(B*)au; DQ(r, if(*av++){ASSERT(wx>(C*)u,EVLENGTH); *v++=*u++;}else *v++=x;);}        \
    wv=(C*)u;                                                                                     \
   }
 #endif

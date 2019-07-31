@@ -31,13 +31,13 @@ static REPF(jtrepzsx){A q,x,y;I c,d,j,k=-1,m,p=0,*qv,*xv,*yv;P*ap;
    if(AN(a)&&!*AV(a)){
     y=SPA(wp,i); v=AS(y); m=v[0]; n=v[1]; v=AV(y);
     k=m?v[(m-1)*n]+1:0; q=0; 
-    DO(m, if(q==*v)++q; else if(q<*v){k=q; break;} v+=n;);
+    DQ(m, if(q==*v)++q; else if(q<*v){k=q; break;} v+=n;);
   }}
   ASSERT(k<=IMAX-1,EVLIMIT);
   if(c==k)RZ(w=irs2(sc(1+k),w,0L,0L,wcr,jttake));
   DO(2*m, ASSERT(0<=xv[i],EVDOMAIN); p+=xv[i]; ASSERT(0<=p,EVLIMIT););
   GATV0(q,INT,p,1); qv=AV(q);
-  DO(m, c=*xv++; d=*xv++; j=yv[i]; DO(c, *qv++=j;); DO(d, *qv++=k;);); 
+  DO(m, c=*xv++; d=*xv++; j=yv[i]; DQ(c, *qv++=j;); DQ(d, *qv++=k;);); 
   R irs2(q,w,0L,1L,wcr,jtfrom);
  }
  ASSERT(0,EVNONCE);
@@ -219,7 +219,7 @@ static REPF(jtrepidx){A y;I j,m,p=0,*v,*x;
  m=*AS(a);
  DO(m, ASSERT(0<=x[i],EVDOMAIN); p+=x[i]; ASSERT(0<=p,EVLIMIT););
  GATV0(y,INT,p,1); v=AV(y); 
- DO(m, j=i; DO(x[j], *v++=j;););
+ DO(m, j=i; DQ(x[j], *v++=j;););
  A z; R IRS2(y,w,0L,1L,wcr,jtfrom,z);
 }    /* (dense  integer) #"r (dense or sparse) */
 
@@ -233,7 +233,7 @@ static REPF(jtrepisx){A e,q,x,y;I c,j,m,p=0,*qv,*xv,*yv;P*ap;
   m=AN(x);  
   DO(m, ASSERT(0<=xv[i],EVDOMAIN); p+=xv[i]; ASSERT(0<=p,EVLIMIT););
   GATV0(q,INT,p,1); qv=AV(q); 
-  DO(m, c=xv[i]; j=yv[i]; DO(c, *qv++=j;);); 
+  DO(m, c=xv[i]; j=yv[i]; DQ(c, *qv++=j;);); 
   R irs2(q,w,0L,1L,wcr,jtfrom);
  }
  ASSERT(0,EVNONCE);
@@ -259,7 +259,7 @@ static REPF(jtrep1d){A z;C*wv,*zv;I c,k,m,n,p=0,q,t,*ws,zk,zn;
  wv=CAV(w); zv=CAV(z);
  PROD(c,wf+(I )(wcr!=0),ws); PROD1(k,wcr-1,ws+wf+1); k <<=bplg(AT(w));  // c=#cell-items to process  k=#atoms per cell-item
  zk=p*k;  // # bytes to fill per item
- DO(c, mvc(zk,zv,k,wv); zv+=zk; wv+=k;);
+ DQ(c, mvc(zk,zv,k,wv); zv+=zk; wv+=k;);
  R z;
 }    /* scalar #"r dense   or   dense #"0 dense */
 

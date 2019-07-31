@@ -16,7 +16,7 @@ B jtvnm(J jt,I n,C*s){C c,d,t;I j,k;
   // (the string can't start with _)
  DO(n, d=c; c=s[i]; t=ctype[(UC)c]; if(!(t==CA||t==C9))R 0; if(c=='_'&&d=='_'&&!j&&i!=n-1){j=i-1;});
  // If the last char is _, any ind loc is invalid; scan to find previous _ (call its index j, error if 0); audit locale name, or OK if empty (base locale)
- if(c=='_'){if(!(!j))R 0; DO(j=n-1, if('_'==s[--j])break;); if(!(j))R 0; k=n-j-2; R(!k||vlocnm(k,s+j+1));}
+ if(c=='_'){if(!(!j))R 0; DQ(j=n-1, if('_'==s[--j])break;); if(!(j))R 0; k=n-j-2; R(!k||vlocnm(k,s+j+1));}
  // Here last char was not _, and j is still pointed after __ if any
  if(j==0)R 1;  // If no ind loc, OK
  // There is an indirect locative.  Scan all of them, verifying first char of each name is alphabetic (all chars were verified alphameric above)
@@ -38,9 +38,9 @@ B vlocnm(I n,C*s){
 // Possible errors: EVILNAME, EVLIMIT (if name too long), or memory error
 A jtnfs(J jt,I n,C*s){A z;C c,f,*t;I m,p;NM*zv;
  // Discard leading and trailing blanks.  Leave t pointing to the last character
- DO(n, if(' '!=*s)break; ++s; --n;); 
+ DQ(n, if(' '!=*s)break; ++s; --n;); 
  t=s+n-1;
- DO(n, if(' '!=*t)break; --t; --n;);
+ DQ(n, if(' '!=*t)break; --t; --n;);
  // If the name is the special x y.. or x. y. ..., return a copy of the preallocated block for that name (we may have to add flags to it)
  c=*s;if((1==n)&&strchr("mnuvxy",c)){
   R ca(c=='y'?ynam:c=='x'?xnam:c=='v'?vnam:c=='u'?unam:c=='n'?nnam:mnam);
@@ -89,8 +89,8 @@ static F1(jtstdnm){C*s;I j,n,p,q;
  if(!(w=vs(w)))R 0;  // convert to ASCII
  n=AN(w); s=CAV(w);  // n = #characters, s->string
  if(!(n))R 0;
- j=0;   DO(n, if(' '!=s[j++])break;); p=j-1;
- j=n-1; DO(n, if(' '!=s[j--])break;); q=(n-2)-j;
+ j=0;   DQ(n, if(' '!=s[j++])break;); p=j-1;
+ j=n-1; DQ(n, if(' '!=s[j--])break;); q=(n-2)-j;
  if(!(vnm(n-(p+q),p+s)))R 0;   // Validate name
  R nfs(n-(p+q),p+s);   // Create NAME block for name
 }    /* 0 result means error or invalid name */
@@ -127,7 +127,7 @@ static I nlmask[] = {NOUN,ADV,CONJ,VERB, MARK,MARK,SYMB,MARK};
 
 static F1(jtnlx){A z=mtv;B b;I m=0,*v,x;
  RZ(w=vi(w)); v=AV(w); 
- DO(AN(w), x=*v++; m|=nlmask[x<0||6<x?7:x];); 
+ DQ(AN(w), x=*v++; m|=nlmask[x<0||6<x?7:x];); 
  jt->workareas.namelist.nlt=m&RHS; b=1&&jt->workareas.namelist.nlt&RHS;
  ASSERT(!(m&MARK),EVDOMAIN);
  if(b           )RZ(z=nlxxx(jt->global));
@@ -143,7 +143,7 @@ F2(jtnl2){UC*u;
  RZ(a&&w);
  ASSERT(LIT&AT(a),EVDOMAIN);
  memset(jt->workareas.namelist.nla,C0,256L); 
- u=UAV(a); DO(AN(a),jt->workareas.namelist.nla[*u++]=1;);
+ u=UAV(a); DQ(AN(a),jt->workareas.namelist.nla[*u++]=1;);
  R nlx(w);
 }    /* 4!:1  name list */
 

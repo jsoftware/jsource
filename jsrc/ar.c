@@ -24,28 +24,28 @@ static DF1(jtreduce);
 
 #if SY_ALIGN
 #define VDONE(T,PAR)  \
- {I q=n/sizeof(T);T s,*y=(T*)x; DO(m, s=0; DO(q, s^=*y++;); PAR; *z++=b==pc;);}
+ {I q=n/sizeof(T);T s,*y=(T*)x; DQ(m, s=0; DQ(q, s^=*y++;); PAR; *z++=b==pc;);}
 
 static void vdone(I m,I n,B*x,B*z,B pc){B b,*u;
  if(1==m){UI s,*xi;
   s=0; b=0;
-  xi=(I*)x; DO(n>>LGSZI, s^=*xi++;); 
-  u=(B*)xi; DO(n&(SZI-1), b^=*u++;);
-  u=(B*)&s; DO(SZI,   b^=*u++;);
+  xi=(I*)x; DQ(n>>LGSZI, s^=*xi++;); 
+  u=(B*)xi; DQ(n&(SZI-1), b^=*u++;);
+  u=(B*)&s; DQ(SZI,   b^=*u++;);
   *z=b==pc;
  }else if(0==(n&(sizeof(UI  )-1)))VDONE(UI,  PARITYW)
  else  if(0==(n&(sizeof(UINT)-1)))VDONE(UINT,PARITY4)
  else  if(0==(n&(sizeof(US  )-1)))VDONE(US,  PARITY2)
- else  DO(m, b=0; DO(n, b^=*x++;); *z++=b==pc;);
+ else  DQ(m, b=0; DQ(n, b^=*x++;); *z++=b==pc;);
 }
 #else
 static void vdone(I m,I n,B*x,B*z,B pc){B b;I q,r;UC*u;UI s,*y;
  q=n>>LGSZI; r=n&(SZI-1); y=(UI*)x;
  switch((r?2:0)+pc){
-  case 0: DO(m, s=0; DO(q, s^=*y++;); PARITYW;                            *z++=!b;); break;
-  case 1: DO(m, s=0; DO(q, s^=*y++;); PARITYW;                            *z++= b;); break;
-  case 2: DO(m, s=0; DO(q, s^=*y++;); PARITYW; u=(UC*)y; DO(r, b^=*u++;); *z++=!b; x+=n; y=(UI*)x;); break;
-  case 3: DO(m, s=0; DO(q, s^=*y++;); PARITYW; u=(UC*)y; DO(r, b^=*u++;); *z++= b; x+=n; y=(UI*)x;); break;
+  case 0: DQ(m, s=0; DQ(q, s^=*y++;); PARITYW;                            *z++=!b;); break;
+  case 1: DQ(m, s=0; DQ(q, s^=*y++;); PARITYW;                            *z++= b;); break;
+  case 2: DQ(m, s=0; DQ(q, s^=*y++;); PARITYW; u=(UC*)y; DQ(r, b^=*u++;); *z++=!b; x+=n; y=(UI*)x;); break;
+  case 3: DQ(m, s=0; DQ(q, s^=*y++;); PARITYW; u=(UC*)y; DQ(r, b^=*u++;); *z++= b; x+=n; y=(UI*)x;); break;
 }}
 #endif
 
@@ -53,16 +53,16 @@ static void vdone(I m,I n,B*x,B*z,B pc){B b;I q,r;UC*u;UI s,*y;
  {T* RESTRICT xx=(T*)x,* RESTRICT yy,*z0,* RESTRICT zz=(T*)z;   \
   q=d/sizeof(T);                  \
   for(j=0;j<m;++j){               \
-   yy=xx; xx-=q; z0=zz; DO(q, --xx; --yy; --zz; *zz=pfx(*xx,*yy););    \
-   DO(n-2,       zz=z0; DO(q, --xx;       --zz; *zz=pfx(*xx,*zz);););  \
+   yy=xx; xx-=q; z0=zz; DQ(q, --xx; --yy; --zz; *zz=pfx(*xx,*yy););    \
+   DQ(n-2,       zz=z0; DQ(q, --xx;       --zz; *zz=pfx(*xx,*zz);););  \
  }}  /* non-commutative */
 
 #define RCFXLOOP(T,pfx)  \
  {T* RESTRICT xx=(T*)x,* RESTRICT yy,*z0,* RESTRICT zz=(T*)z;   \
   q=d/sizeof(T);                  \
   for(j=0;j<m;++j){               \
-   yy=xx; xx+=q; z0=zz; DO(q, *zz++=pfx(*yy,*xx); ++xx; ++yy;);    \
-   DO(n-2,       zz=z0; DO(q, *zz++=pfx(*zz,*xx); ++xx;      ););  \
+   yy=xx; xx+=q; z0=zz; DQ(q, *zz++=pfx(*yy,*xx); ++xx; ++yy;);    \
+   DQ(n-2,       zz=z0; DQ(q, *zz++=pfx(*zz,*xx); ++xx;      ););  \
  }}  /* commutative */
 
 #if SY_ALIGN
@@ -74,9 +74,9 @@ static void vdone(I m,I n,B*x,B*z,B pc){B b;I q,r;UC*u;UI s,*y;
   q=d>>LGSZI; r=d&(SZI-1); xi=(I*)x; zz=z;                                             \
   for(j=0;j<m;++j,zz-=d){                                                       \
    yi=xi; xi=(I*)((B*)xi-d); zi=(I*)zz;                                         \
-   DO(q, --xi; --yi; *--zi=pfx(*xi,*yi););                                      \
+   DQ(q, --xi; --yi; *--zi=pfx(*xi,*yi););                                      \
     xi=(I*)((B*)xi-r); yi=(I*)((B*)yi-r); t=pfx(*xi,*yi); MC((B*)zi-r,&t,r);    \
-   DO(n-2, zi=(I*)zz; DO(q, --xi; --zi; *zi=pfx(*xi,*zi););                     \
+   DQ(n-2, zi=(I*)zz; DQ(q, --xi; --zi; *zi=pfx(*xi,*zi););                     \
     xi=(I*)((B*)xi-r); zi=(I*)((B*)zi-r); t=pfx(*xi,*zi); MC(    zi,  &t,r););  \
  }}  /* non-commutative */
 
@@ -84,14 +84,14 @@ static void vdone(I m,I n,B*x,B*z,B pc){B b;I q,r;UC*u;UI s,*y;
  {I r,t,*xi,*yi,*zi;                                                            \
   q=d>>LGSZI; r=d&(SZI-1);                                                             \
   for(j=0;j<m;++j,x+=d,z+=d){                                                   \
-   yi=(I*)x; x+=d; xi=(I*)x; zi=(I*)z; DO(q, *zi++=pfx(*yi,*xi); ++xi; ++yi;); t=pfx(*yi,*xi); MC(zi,&t,r);    \
-   DO(n-2,   x+=d; xi=(I*)x; zi=(I*)z; DO(q, *zi++=pfx(*zi,*xi); ++xi;      ); t=pfx(*zi,*xi); MC(zi,&t,r););  \
+   yi=(I*)x; x+=d; xi=(I*)x; zi=(I*)z; DQ(q, *zi++=pfx(*yi,*xi); ++xi; ++yi;); t=pfx(*yi,*xi); MC(zi,&t,r);    \
+   DQ(n-2,   x+=d; xi=(I*)x; zi=(I*)z; DQ(q, *zi++=pfx(*zi,*xi); ++xi;      ); t=pfx(*zi,*xi); MC(zi,&t,r););  \
  }}  /* commutative */
 
 #define REDUCECFX(f,pfx,ipfx,spfx,bpfx,vdo)  \
  AHDRP(f,B,B){B*y=0;I j,q;                       \
   if(d==1){vdo; R;}                                \
-  if(1==n)DO(d, *z++=*x++;)                        \
+  if(1==n)DQ(d, *z++=*x++;)                        \
   else if(0==d%sizeof(UI  ))RCFXLOOP(UI,   pfx)    \
   else if(0==d%sizeof(UINT))RCFXLOOP(UINT,ipfx)    \
   else if(0==d%sizeof(US  ))RCFXLOOP(US,  spfx)    \
@@ -104,7 +104,7 @@ static void vdone(I m,I n,B*x,B*z,B pc){B b;I q,r;UC*u;UI s,*y;
  AHDRP(f,B,B){B*y=0;I j,q;                       \
   if(d==1){vdo; R;}                                \
   x+=m*d*n; z+=m*d;                           \
-  if(1==n)DO(d, *--z=*--x;)                        \
+  if(1==n)DQ(d, *--z=*--x;)                        \
   else if(0==d%sizeof(UI  ))RBFXLOOP(UI,   pfx)    \
   else if(0==d%sizeof(UINT))RBFXLOOP(UINT,ipfx)    \
   else if(0==d%sizeof(US  ))RBFXLOOP(US,  spfx)    \
@@ -113,28 +113,28 @@ static void vdone(I m,I n,B*x,B*z,B pc){B b;I q,r;UC*u;UI s,*y;
 
 REDUCECFX(  eqinsB, EQ,  IEQ,  SEQ,  BEQ,  vdone(m,n,x,z,(B)(n&1)))
 REDUCECFX(  neinsB, NE,  INE,  SNE,  BNE,  vdone(m,n,x,z,1       ))
-REDUCECFX(  orinsB, OR,  IOR,  SOR,  BOR,  {I c=d*n; DO(m, *z++=1&&memchr(x,C1,n);                         x+=c;)}) 
-REDUCECFX( andinsB, AND, IAND, SAND, BAND, {I c=d*n; DO(m, *z++=!  memchr(x,C0,n);                         x+=c;}))
-REDUCEBFX(  ltinsB, LT,  ILT,  SLT,  BLT,  {I c=d*n; DO(m, *z++= *(x+n-1)&&!memchr(x,C1,n-1)?1:0;          x+=c;)})
-REDUCEBFX(  leinsB, LE,  ILE,  SLE,  BLE,  {I c=d*n; DO(m, *z++=!*(x+n-1)&&!memchr(x,C0,n-1)?0:1;          x+=c;)})
-REDUCEBFX(  gtinsB, GT,  IGT,  SGT,  BGT,  {I c=d*n; DO(m, y=memchr(x,C0,n); *z++=1&&(y?1&(y-x):1&n);      x+=c;)})
-REDUCEBFX(  geinsB, GE,  IGE,  SGE,  BGE,  {I c=d*n; DO(m, y=memchr(x,C1,n); *z++=!  (y?1&(y-x):1&n);      x+=c;)})
-REDUCEBFX( norinsB, NOR, INOR, SNOR, BNOR, {I c=d*n; DO(m, y=memchr(x,C1,n); d=y?y-x:n; *z++=(1&d)==d<n-1; x+=c;)})
-REDUCEBFX(nandinsB, NAND,INAND,SNAND,BNAND,{I c=d*n; DO(m, y=memchr(x,C0,n); d=y?y-x:n; *z++=(1&d)!=d<n-1; x+=c;)})
+REDUCECFX(  orinsB, OR,  IOR,  SOR,  BOR,  {I c=d*n; DQ(m, *z++=1&&memchr(x,C1,n);                         x+=c;)}) 
+REDUCECFX( andinsB, AND, IAND, SAND, BAND, {I c=d*n; DQ(m, *z++=!  memchr(x,C0,n);                         x+=c;}))
+REDUCEBFX(  ltinsB, LT,  ILT,  SLT,  BLT,  {I c=d*n; DQ(m, *z++= *(x+n-1)&&!memchr(x,C1,n-1)?1:0;          x+=c;)})
+REDUCEBFX(  leinsB, LE,  ILE,  SLE,  BLE,  {I c=d*n; DQ(m, *z++=!*(x+n-1)&&!memchr(x,C0,n-1)?0:1;          x+=c;)})
+REDUCEBFX(  gtinsB, GT,  IGT,  SGT,  BGT,  {I c=d*n; DQ(m, y=memchr(x,C0,n); *z++=1&&(y?1&(y-x):1&n);      x+=c;)})
+REDUCEBFX(  geinsB, GE,  IGE,  SGE,  BGE,  {I c=d*n; DQ(m, y=memchr(x,C1,n); *z++=!  (y?1&(y-x):1&n);      x+=c;)})
+REDUCEBFX( norinsB, NOR, INOR, SNOR, BNOR, {I c=d*n; DQ(m, y=memchr(x,C1,n); d=y?y-x:n; *z++=(1&d)==d<n-1; x+=c;)})
+REDUCEBFX(nandinsB, NAND,INAND,SNAND,BNAND,{I c=d*n; DQ(m, y=memchr(x,C0,n); d=y?y-x:n; *z++=(1&d)!=d<n-1; x+=c;)})
 
 
 #if SY_ALIGN
 REDUCEPFX(plusinsB,I,B,PLUS, plusBB, plusBI)
 #else
 AHDRR(plusinsB,I,B){I dw,i,p,q,r,r1,s;UC*tu;UI*v;
- if(d==1&n<SZI)DO(m, s=0; DO(n, s+=*x++;); *z++=s;)
+ if(d==1&n<SZI)DQ(m, s=0; DQ(n, s+=*x++;); *z++=s;)
  else if(d==1){UI t;
   p=n>>LGSZI; q=p/255; r=p%255; r1=n&(SZI-1); tu=(UC*)&t;
   for(i=0;i<m;++i){
    s=0; v=(UI*)x; 
    DO(q, t=0; DO(255, t+=*v++;); DO(SZI, s+=tu[i];));
          t=0; DO(r,   t+=*v++;); DO(SZI, s+=tu[i];);
-   x=(B*)v; DO(r1, s+=*x++;); 
+   x=(B*)v; DQ(r1, s+=*x++;); 
    *z++=s;
  }}else{A t;UI*tv;
   dw=(d+SZI-1)>>LGSZI; p=dw*SZI; memset(z,C0,m*d*SZI);
@@ -449,13 +449,13 @@ static DF1(jtreducesp){A a,g,z;B b;I f,n,r,*v,wn,wr,*ws,wt,zt;P*wp;
 
 #define BR2IFX(T,F)     {T*u=(T*)wv,*v=u+d,x,y;                                           \
                          GATV(z,B01,wn>>1,wr-1,ws); zv=BAV(z);                               \
-                         if(1<d)DO(m, DO(d, x=*u++; y=*v++; *zv++=x F y; ); u+=d; v+=d;)  \
-                         else   DO(m,       x=*u++; y=*u++; *zv++=x F y;               ); \
+                         if(1<d)DQ(m, DQ(d, x=*u++; y=*v++; *zv++=x F y; ); u+=d; v+=d;)  \
+                         else   DQ(m,       x=*u++; y=*u++; *zv++=x F y;               ); \
                         }
 #define BR2PFX(T,F)     {T*u=(T*)wv,*v=u+d,x,y;                                           \
                          GATV(z,B01,wn>>1,wr-1,ws); zv=BAV(z);                               \
-                         if(1<d)DO(m, DO(d, x=*u++; y=*v++; *zv++=F(x,y);); u+=d; v+=d;)  \
-                         else   DO(m,       x=*u++; y=*u++; *zv++=F(x,y);              ); \
+                         if(1<d)DQ(m, DQ(d, x=*u++; y=*v++; *zv++=F(x,y);); u+=d; v+=d;)  \
+                         else   DQ(m,       x=*u++; y=*u++; *zv++=F(x,y);              ); \
                         }
 #define BTABIFX(F)      {btab[0                        ]=0 F 0;  \
                          btab[C_LE?256:  1]=0 F 1;  \
@@ -511,8 +511,8 @@ static B jtreduce2(J jt,A w,C id,I f,I r,A*zz){A z=0;B b=0,btab[258],*zv;I c,d,m
   case BR2CASE(FLX, CGE     ): BR2PFX(D,TGE); break;
   case BR2CASE(FLX, CNE     ): BR2PFX(D,TNE); break;
  }
- if(b){S*u=(S*)wv; GATV(z,B01,wn>>1,wr-1,ws); zv=BAV(z); DO(m, *zv++=btab[*u++];);}
- if(z&&1<r){I*u=f+AS(z),*v=f+1+ws; DO(r-1, *u++=*v++;);}
+ if(b){S*u=(S*)wv; GATV(z,B01,wn>>1,wr-1,ws); zv=BAV(z); DQ(m, *zv++=btab[*u++];);}
+ if(z&&1<r){I*u=f+AS(z),*v=f+1+ws; DQ(r-1, *u++=*v++;);}
  *zz=z;
  R 1;
 }    /* f/"r for dense w over an axis of length 2 */
@@ -579,14 +579,14 @@ static A jtredcatsp(J jt,A w,A z,I r){A a,q,x,y;B*b;I c,d,e,f,j,k,m,n,n1,p,*u,*v
   SPB(zp,x,ca(x));
   SPB(zp,i,repeatr(ne(a,sc(f)),y)); q=SPA(zp,i);  // allow for virtualization of SPB
   v=j+AV(q); u=j+AV(y);
-  DO(m, *v=p*u[0]+u[1]; v+=n1; u+=n;);
+  DQ(m, *v=p*u[0]+u[1]; v+=n1; u+=n;);
  }else if(!c&&!d){  /* dense dense */
   u=AS(x); GA(q,AT(x),AN(x),xr-1,u); v=k+AS(q); *v=u[k]*u[1+k]; MCISH(1+v,2+k+u,xr-k-2);
   MC(AV(q),AV(x),AN(x)<<bplg(AT(x)));
   SPB(zp,x,q); SPB(zp,i,ca(y));
  }else{             /* other */
   GATV0(q,INT,xr,1); v=AV(q); 
-  if(1!=k){*v++=0; *v++=k; e=0; DO(xr-1, ++e; if(e!=k)*v++=e;); RZ(x=cant2(q,x));}
+  if(1!=k){*v++=0; *v++=k; e=0; DQ(xr-1, ++e; if(e!=k)*v++=e;); RZ(x=cant2(q,x));}
   v=AV(q); u=AS(x); *v=u[0]*u[1]; MCISH(1+v,2+u,xr-1); RZ(x=reshape(vec(INT,xr-1,v),x));
   e=ws[f+c]; RZ(y=repeat(sc(e),y)); v=j+AV(y);
   if(c)DO(m, k=p**v; DO(e, *v=k+  i; v+=n;);)
@@ -658,7 +658,7 @@ static DF1(jtredcateach){A*u,*v,*wv,x,*xv,z,*zv;I f,m,mn,n,r,wr,*ws,zm,zn;I n1=0
  if(!r||1>=n)R reshape(repeat(ne(sc(f),IX(wr)),shape(w)),n?w:ace);
  if(!(BOX&AT(w)))R df1(cant2(sc(f),w),qq(ds(CBOX),zeroionei[1]));
 // bug: ,&.>/ y does scalar replication wrong
-// wv=AN(w)+AAV(w); DO(AN(w), if(AN(*--wv)&&AR(*wv)&&n1&&n2) ASSERT(0,EVNONCE); if((!AR(*wv))&&n1)n2=1; if(AN(*wv)&&1<AR(*wv))n1=1;);
+// wv=AN(w)+AAV(w); DQ(AN(w), if(AN(*--wv)&&AR(*wv)&&n1&&n2) ASSERT(0,EVNONCE); if((!AR(*wv))&&n1)n2=1; if(AN(*wv)&&1<AR(*wv))n1=1;);
  zn=AN(w)/n; PROD(zm,f,ws); PROD(m,r-1,ws+f+1); mn=m*n;
  GATV(z,BOX,zn,wr-1,ws); MCISH(AS(z)+f,ws+f+1,r-1);
  GATV0(x,BOX,n,1); xv=AAV(x);
@@ -692,21 +692,21 @@ A jtatab   (J jt,C c,A a,A w){RZ(a&&w); R df2(a,w,   slash(ds(c))     );}
 #if 0 // obsolete 
 static AHDRR(jtmeanD,D,D){I i;D*y;D v,*zz;
  NAN0;
- if(1==d)DO(m, v=   *x++; DO(n-1, v+=*x++;); *z++=v/n;)
+ if(1==d)DQ(m, v=   *x++; DQ(n-1, v+=*x++;); *z++=v/n;)
  else for(i=0;i<m;++i){
-  y=x; x+=d; zz=z; DO(d, *z++ =*x+++   *y++;);
-  DO(n-3,    z=zz; DO(d, *z+++=*x++;        ));
-             z=zz; DO(d, *z   =(*z+*x++)/n; ++z;);
+  y=x; x+=d; zz=z; DQ(d, *z++ =*x+++   *y++;);
+  DQ(n-3,    z=zz; DQ(d, *z+++=*x++;        ));
+             z=zz; DQ(d, *z   =(*z+*x++)/n; ++z;);
  }
  NAN1V;
 }    /* based on REDUCEPFX; 2<n */
 
 static AHDRR(jtmeanI,D,I){I i;I*y;D v,*zz;
- if(1==d)DO(m, v=(D)*x++; DO(n-1, v+=*x++;); *z++=v/n;)
+ if(1==d)DQ(m, v=(D)*x++; DQ(n-1, v+=*x++;); *z++=v/n;)
  else for(i=0;i<m;++i){
-  y=x; x+=d; zz=z; DO(d, *z++ =*x+++(D)*y++;);
-  DO(n-3,    z=zz; DO(d, *z+++=*x++;        ));
-             z=zz; DO(d, *z   =(*z+*x++)/n; ++z;);
+  y=x; x+=d; zz=z; DQ(d, *z++ =*x+++(D)*y++;);
+  DQ(n-3,    z=zz; DQ(d, *z+++=*x++;        ));
+             z=zz; DQ(d, *z   =(*z+*x++)/n; ++z;);
 }}   /* based on REDUCEPFX; 2<n */
 #endif
 

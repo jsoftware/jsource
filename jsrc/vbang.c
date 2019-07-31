@@ -24,11 +24,11 @@ static I terms=sizeof(coeff)/sizeof(D);
 
 static Z jtzhorner(J jt,I n,D*c,Z v){Z s;D*d=n+c;
  s=zeroZ;
- DO(n, s=zplus(zrj0(*--d),ztymes(v,s));); 
+ DQ(n, s=zplus(zrj0(*--d),ztymes(v,s));); 
  R s;
 }
 
-static D dgps(D v){D*d=terms+coeff,s=0.0; DO(terms, s=*--d+v*s;); R 1/s;}
+static D dgps(D v){D*d=terms+coeff,s=0.0; DQ(terms, s=*--d+v*s;); R 1/s;}
      /* Abramowitz & Stegun, 6.1.34 */
 
 static Z jtzgps(J jt,Z z){R zdiv(z1,zhorner(terms,coeff,z));}
@@ -52,7 +52,7 @@ static Z jtzgauss(J jt,D n,Z z){D d=1/n;Z p,t;
  if(1>=n)R zgrecur(z);
  p=ztymes(zpow(zrj0(2*PI),zrj0((1-n)/2)),zpow(zrj0(n),zminus(z,zrj0(0.5))));
  t=zdiv(z,zrj0(n));
- DO((I)n, p=ztymes(p,zgrecur(t)); t.re+=d;);
+ DQ((I)n, p=ztymes(p,zgrecur(t)); t.re+=d;);
  R p;
 }    /* Abramowitz & Stegun, 6.1.20 */
 
@@ -109,7 +109,7 @@ static D jtdbin(J jt,D x,D y){D c,d,e,h=1.0,p,q,r;I k=0;
 }    /* x and y-x are not negative integers */
 
 static D ibin(D x,D y){D d=MIN(x,y-x),p=1;
- DO((I)d, p*=y--/d--; if(p==inf)R p;); 
+ if(d>0)DQ((I)d, p*=y--/d--; if(p==inf)R p;);   // d may be IMIN if there is a NaN
  R jfloor(0.5+p);
 }    /* x and y are non-negative integers; x<=y */
 

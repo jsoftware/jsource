@@ -76,7 +76,7 @@ I jtthv(J jt,A w,I n,C*s){A t;B ov=0;C buf[WZ],*x,*y=s;I k,n4=n-4,p,wd,wn,wt;VF 
   case XNUMX: case RATX:
    RZ(t=thxqe(w)); p=AN(t); if(ov=n<p)p=n4; MC(y,AV(t),p); y+=p; break;
   case B01X:
-   if(ov=n<2*wn)p=n4>>1; else p=wn; DO(p, *y++=*x++?'1':'0'; *y++=' ';); break;
+   if(ov=n<2*wn)p=n4>>1; else p=wn; DQ(p, *y++=*x++?'1':'0'; *y++=' ';); break;
   case INTX:
 	{C*t;I i,*v,x;
 	v=AV(w);
@@ -89,8 +89,8 @@ I jtthv(J jt,A w,I n,C*s){A t;B ov=0;C buf[WZ],*x,*y=s;I k,n4=n-4,p,wd,wn,wt;VF 
    break;
   default:
    k=bpnoun(wt);
-   if(n>=wn*wd)DO(wn, fmt(jt,y,x); y+=strlen(y); *y++=' '; x+=k;)
-   else        DO(wn, fmt(jt,buf,x); p=strlen(buf); if(ov=n4<1+p+y-s)break; strcpy(y,buf); y+=p; *y++=' '; x+=k;);
+   if(n>=wn*wd)DQ(wn, fmt(jt,y,x); y+=strlen(y); *y++=' '; x+=k;)
+   else        DQ(wn, fmt(jt,buf,x); p=strlen(buf); if(ov=n4<1+p+y-s)break; strcpy(y,buf); y+=p; *y++=' '; x+=k;);
  }
  if(ov){if(' '!=*(y-1))*y++=' '; memset(y,'.',3L); y+=3;}
  else if(' '==*(y-1))--y; 
@@ -106,7 +106,7 @@ A z;UC*x;C*y;I c,i,m,n,p,q,r,r1,*s; n=AN(w); r=AR(w); s=AS(w);
  x=UAV(w); y=CAV(z);
  q=c>>LGBB; r=c&(BB-1); r1=c&(BW-1)?(BW-(c&(BW-1)))>>LGBB:0;
  for(i=0;i<m;++i){
-  DO(q-!r, MC(y,bitdisp+2*BB**x,2*BB  ); ++x; y+=2*BB  ;);
+  DQ(q-!r, MC(y,bitdisp+2*BB**x,2*BB  ); ++x; y+=2*BB  ;);
   if(r)   {MC(y,bitdisp+2*BB**x,2*r -1); ++x; y+=2*r -1;}
   else    {MC(y,bitdisp+2*BB**x,2*BB-1); ++x; y+=2*BB-1;}
   x+=r1;
@@ -120,7 +120,7 @@ static F1(jtthb){A z;B*x;C*y;I c,m,n,p,r,*s;
  c=r?s[r-1]:1; m=n/c; p=2*c-1;
  GATV(z,LIT,m*p,r+!r,s); AS(z)[AR(z)-1]=p; 
  x=BAV(w); y=CAV(z);
- DO(m, DO(c-1, *y++=*x++?'1':'0'; *y++=' ';); *y++=*x++?'1':'0';);
+ DQ(m, DQ(c-1, *y++=*x++?'1':'0'; *y++=' ';); *y++=*x++?'1':'0';);
  RETF(z);
 }
 
@@ -196,7 +196,7 @@ static F1(jtthsb){A d,z;C*zv;I c,*dv,m,n,p,q,r,*s;SB*x,*y;SBU*u;
    GATV(z,LIT,m*p,r+!r,s); zv=CAV(z); memset(zv,' ',AN(z)); AS(z)[AR(z)-1]=p;
    j=0;
    DO(m, zv1=zv=CAV(z)+p*i;   // starting address of each row
-         DO(c, u=SBUV(*y++); *zv='`'; sbtou8(jt,u,1+zv); 
+         DQ(c, u=SBUV(*y++); *zv='`'; sbtou8(jt,u,1+zv); 
 //                 `   utf8    col max - disp width  space
                zv+=1 + ev[j] + (dwv[i]-ewv[j])       + 1;
 // sum of col padding space is over estimated
@@ -244,7 +244,7 @@ static F1(jtthx1){A z;B b;C*s,s1[2+XBASEN];I n,p,p1,*v;
  p=p1+XBASEN*(n-1);
  GATV0(z,LIT,p,1); s=CAV(z); 
  MC(s,s1,p1); if(b)*s=CSIGN; s+=p1; 
- DO(n-1, --v; sprintf(s,FMTI04,b?-*v:*v); s+=XBASEN;);
+ DQ(n-1, --v; sprintf(s,FMTI04,b?-*v:*v); s+=XBASEN;);
  R z;           
 }
 
@@ -265,7 +265,7 @@ static A jtthdx1(J jt,DX y){A x,z;B b;C*s,s1[2+XBASEN],s2[20];I e,n,p,p1,p2,*v;
  if(e&&*v){s=s2; *s++='e'; if(0>e)*s++=CSIGN; sprintf(s,FMTI,0<e?e:-e); p2=strlen(s2);}else p2=0; 
  GATV0(z,LIT,b+p1+(I )(1<p1)+XBASEN*(n-1)+p2,1); s=CAV(z);
  if(b)*s++=CSIGN; *s++=*s1; if(1<p1){*s++='.'; MC(s,1+s1,p1-1); s+=p1-1;}
- DO(n-1, --v; sprintf(s,FMTI04,b?-*v:*v); s+=XBASEN;);
+ DQ(n-1, --v; sprintf(s,FMTI04,b?-*v:*v); s+=XBASEN;);
  MC(s,s2,p2);
  R z;
 }
@@ -309,7 +309,7 @@ static B jtrc(J jt,A w,A*px,A*py, I *t){A*v,x,y;I j=0,k=0,maxt=0,r,*s,xn,*xv,yn,
  // yn = #rows in 2-cell of joined table, y=vector of (yn+1) 0s, v->data for vector
  yn=  r?s[r-1]:1; RZ(*py=y=apvwr(yn,0L,0L)); yv=AV(y);
  // for each atom of w, include height/width in the appropriate row/column cells, and take maximum of types
- DO(AN(w), maxt=MAX(maxt,UNSAFE(AT(*v))); s=AS(*v++); xv[j]=MAX(xv[j],s[0]); yv[k]=MAX(yv[k],s[1]); if(++k==yn){k=0; if(++j==xn)j=0;});
+ DQ(AN(w), maxt=MAX(maxt,UNSAFE(AT(*v))); s=AS(*v++); xv[j]=MAX(xv[j],s[0]); yv[k]=MAX(yv[k],s[1]); if(++k==yn){k=0; if(++j==xn)j=0;});
  // Add 1 to each max width/height to account for the boxing character before that position
  // We have not yet accounted for the boxing character at the end.
  DO(xn, ASSERT(xv[i]<IMAX,EVLIMIT); ++xv[i];); 
@@ -363,7 +363,7 @@ static void jtfminit(J jt,I m,I ht,I wd,A x,A y,C*zv, I cw){C*u,*v;I p,xn,*xv,yn
  // First, install the characters for cells containing data.  We start in the first
  // row of the result, even though this can never keep these characters.
  // Then we propagate this row through all rows except the last.
- fram(9L,yn,yv,zv,cw); u=zv; DO(ht-2, MC(u+=wd,zv,wd););
+ fram(9L,yn,yv,zv,cw); u=zv; DQ(ht-2, MC(u+=wd,zv,wd););
  // Fill in the first interior divider row, whose row index is the height of the first row
  // Then copy this row over all the other interior-divider rows, xn-1 times, which
  //  finishes by writing over the bottom row of the result
@@ -373,7 +373,7 @@ static void jtfminit(J jt,I m,I ht,I wd,A x,A y,C*zv, I cw){C*u,*v;I p,xn,*xv,yn
  // Install the last row, overwriting the interior-divider row first copied there
  fram(6L,yn,yv,zv+p-wd,cw);
  // First 2-cell is complete.  Copy it over all the others
- u=zv; DO(m-1, MC(u+=p,zv,p););
+ u=zv; DQ(m-1, MC(u+=p,zv,p););
 }    /* Initialize with box-drawing characters */
 
 // Copy character data into the boxed result array
@@ -411,15 +411,15 @@ static void jtfmfill(J jt,I p,I q,I wd,A w,A x,A y,C*zv,I cw){A e,*wv;
     f = xp?(d + wd*((xv[j]-1-r)>>(2-xp))) : d;
     if(yp)f = f + cw*((yv[k]-1-c)>>(2-yp));
     // Move in the data.  If sizes are dissimilar, the target must be larger; do length conversion then
-    if(cw==bpnoun(AT(e))){C* v=CAV(e); C* u=zv+f; DO(r, MC(u,v,c*cw); u+=wd; v+=c*cw;)}
+    if(cw==bpnoun(AT(e))){C* v=CAV(e); C* u=zv+f; DQ(r, MC(u,v,c*cw); u+=wd; v+=c*cw;)}
     else{  // conversion required
      if(bp(AT(e))==1){UC *v=UAV(e);   // source is bytes
       if(cw==2){   // dest is C2T
-       US *u=(US*)(zv+f),*uu; DO(r, uu=u; DO(c,*uu++=*v++;) u=(US*)((UC*)u+wd);)
+       US *u=(US*)(zv+f),*uu; DQ(r, uu=u; DQ(c,*uu++=*v++;) u=(US*)((UC*)u+wd);)
       }else{   // dest is C4T
-       C4 *u=(C4*)(zv+f),*uu; DO(r, uu=u; DO(c,*uu++=*v++;) u=(C4*)((UC*)u+wd);)
+       C4 *u=(C4*)(zv+f),*uu; DQ(r, uu=u; DQ(c,*uu++=*v++;) u=(C4*)((UC*)u+wd);)
       }
-     }else{US *v=USAV(e);C4 *u=(C4*)(zv+f),*uu; DO(r, uu=u; DO(c,*uu++=*v++;) u=(C4*)((UC*)u+wd);)}  // must be source is C2T, dest C4T
+     }else{US *v=USAV(e);C4 *u=(C4*)(zv+f),*uu; DQ(r, uu=u; DQ(c,*uu++=*v++;) u=(C4*)((UC*)u+wd);)}  // must be source is C2T, dest C4T
     }
     ++i;   // step to next input cell
     d += cw*yv[k];  // step to next output column 
@@ -522,9 +522,9 @@ static F1(jtths){A e,i,x,z;C c,*u,*v;I d,m,n,*s;P*p;
  RZ(e=shape(x)); s=AV(e)+AN(e)-1; *s=-(*s+3+n);
  RZ(z=take(e,x)); 
  u=CAV(i)-n;        
- d=aii(z); v=CAV(z)-d; DO(m, MC(v+=d,u+=n,n););
+ d=aii(z); v=CAV(z)-d; DQ(m, MC(v+=d,u+=n,n););
  if(2<AR(z))RZ(z=matth1(z));
- s=AS(z); d=*(1+s); v=1+CAV(z); c=jt->bx[9]; DO(*s, *(v+n)=c; v+=d;);
+ s=AS(z); d=*(1+s); v=1+CAV(z); c=jt->bx[9]; DQ(*s, *(v+n)=c; v+=d;);
  R z;
 }
 
@@ -638,15 +638,15 @@ static I countonlines(I (*f)(), I t, C* v, I h, I nq, I c, I lb, I la){
 static I scanbdc(I t, C*v,I n){C x;I m=0;
  if(t==1) {
   // If the input is bytes, the only added characters can come from boxing codes.  Count them
-  DO(n, x=*v; if(x<=26&&16<=x)m+=3; ++v;)
+  DQ(n, x=*v; if(x<=26&&16<=x)m+=3; ++v;)
  } else {
   static US bdc[] = { 0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0x250c,0x252c,0x2510,0x251c, 0x253c,0x2524,0x2514,0x2534,0x2518,0x2502,0x2500 };
   // If the input is C2T/C4T, We count the length of each character.  Also, we convert the boxing codes
   // to their Unicode values here, so we don't have to check again later
   if(t==2){US *u = (US*)v, ux;  // get pointer to wide chars.  Don't analyze as bytes, to be endian-neutral
-   DO(n, ux=*u; if(ux<=26&&16<=ux){m+=2;*u=bdc[ux];}else if(ux>127){++m; if(ux>2047)++m;} ++u;)
+   DQ(n, ux=*u; if(ux<=26&&16<=ux){m+=2;*u=bdc[ux];}else if(ux>127){++m; if(ux>2047)++m;} ++u;)
   }else{C4 *u = (C4*)v, ux;  // get pointer to C4T chars.  Don't analyze as bytes, to be endian-neutral
-   DO(n, ux=*u; if(ux<=26&&16<=ux){m+=2;*u=(C4)bdc[ux];}else if(ux>127){++m; if(ux>2047){++m; if(ux>65535)++m;}} ++u;)
+   DQ(n, ux=*u; if(ux<=26&&16<=ux){m+=2;*u=(C4)bdc[ux];}else if(ux>127){++m; if(ux>2047){++m; if(ux>65535)++m;}} ++u;)
   }
  }
  R m;
@@ -664,9 +664,9 @@ static I scaneol(I t, C*v,I n){I m=0;
  // previous char was CR: then we subtract 1.  So for CRLF we end up adding nothing, while
  // other occurrences of CR or LF add 1 each.
  switch(t){
-  case 1: {C e,x=0; DO(n, e=x; x=*v++; if(x==CCR)++m; else if(x==CLF)e==CCR?--m:++m;)} break;
-  case 2: {US e,x=0,*u=(US*)v; DO(n, e=x; x=*u++; if(x==CCR)++m; else if(x==CLF)e==CCR?--m:++m;) } break;
-  default: {C4 e,x=0,*u=(C4*)v; DO(n, e=x; x=*u++; if(x==CCR)++m; else if(x==CLF)e==CCR?--m:++m;) } break;  // must be C4T
+  case 1: {C e,x=0; DQ(n, e=x; x=*v++; if(x==CCR)++m; else if(x==CLF)e==CCR?--m:++m;)} break;
+  case 2: {US e,x=0,*u=(US*)v; DQ(n, e=x; x=*u++; if(x==CCR)++m; else if(x==CLF)e==CCR?--m:++m;) } break;
+  default: {C4 e,x=0,*u=(C4*)v; DQ(n, e=x; x=*u++; if(x==CCR)++m; else if(x==CLF)e==CCR?--m:++m;) } break;  // must be C4T
  }
  R m;
 }
@@ -687,11 +687,11 @@ static C*dropl(C*zu,C*zv,I lb,I la,C*eol){C ec0,ec1,*u,*v;I n,p,zn=zv-zu;
  // after the last EOL.  The loop counter really doesn't matter since we know there are more
  // EOLs in the result than we have room to display
  u=zu; p=0; if(lb){
-  DO(zn, if(ec0==*u++&&(ec1==0||ec1==*u))if(++p>=lb)break;);
+  DQ(zn, if(ec0==*u++&&(ec1==0||ec1==*u))if(++p>=lb)break;);
   u += ec1!=0;  // u points to char after first EOL char; advance, if needed, to the first char of next line
  }
  // count backward until we have passed la+1 EOLs.  Leave v pointing to the first EOL of the suffix
- v=zv-(I )(ec1!=0); p=0; DO(zn, if(ec0==*--v&&(ec1==0||ec1==v[1]))if(++p>la)break;);
+ v=zv-(I )(ec1!=0); p=0; DQ(zn, if(ec0==*--v&&(ec1==0||ec1==v[1]))if(++p>la)break;);
  // append ... after the prefix, and then move in the suffix including its leading EOL.
  // But if the amount of data to be removed is less than the length of ..., don't do it, since
  // it would overwrite valid data in the suffix
@@ -803,19 +803,19 @@ static A jtjprx(J jt,I ieol,I maxlen,I lb,I la,A w){A y,z;B ch;C e,eov[2],*v,x,*
    switch(t){
    case 2: {US *u=(US*)v,x;
     // C2T result.  There may be zero-width NULs about - suppress them
-    DO(c1, if(x=*u++)UUC(zv,x);); if(c1<c){u+=c-c1; DDD(zv);} v=(C*)u;  // Convert to UTF-8, and save input pointer at the end
+    DQ(c1, if(x=*u++)UUC(zv,x);); if(c1<c){u+=c-c1; DDD(zv);} v=(C*)u;  // Convert to UTF-8, and save input pointer at the end
     }
     break;
    case 1:
     // LIT characters.  Copy them.  If there were boxing characters about, copy one by one and translate if boxing chars
     // No need to suppress NULs - if the result is LIT, all boxes must have converted to LIT, and would have had NUL converted to space
-    if(nbx){DO(c1, x=*v++; BDC(zv,x);); if(c1<c){v+=c-c1; DDD(zv);}}
+    if(nbx){DQ(c1, x=*v++; BDC(zv,x);); if(c1<c){v+=c-c1; DDD(zv);}}
     // Otherwise just move fast
     else {MC(zv,v,c1); zv+=c1; v+=c1;    if(c1<c){v+=c-c1; DDD(zv);}}
     break;
    default: {C4 *u=(C4*)v,x;
     // C4T result.  There may be zero-width NULs about - suppress them
-    DO(c1, if(x=*u++)UUC4(zv,x);); if(c1<c){u+=c-c1; DDD(zv);} v=(C*)u;  // Convert to UTF-8, and save input pointer at the end
+    DQ(c1, if(x=*u++)UUC4(zv,x);); if(c1<c){u+=c-c1; DDD(zv);} v=(C*)u;  // Convert to UTF-8, and save input pointer at the end
     }
     break;
    }

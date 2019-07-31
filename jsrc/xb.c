@@ -160,7 +160,7 @@ static A jthrep(J jt,B b,B d,A w){A y,z;C c,*hex="0123456789abcdef",*u,*v;I n,s[
  n=AN(y); s[0]=n>>LGWS(d); s[1]=2*WS(d); 
  GATVR(z,LIT,2*n,2,s);  
  u=CAV(y); v=CAV(z); 
- DO(n, c=*u++; *v++=hex[(c&0xf0)>>4]; *v++=hex[c&0x0f];); 
+ DQ(n, c=*u++; *v++=hex[(c&0xf0)>>4]; *v++=hex[c&0x0f];); 
  RETF(z);
 }
 
@@ -194,7 +194,7 @@ static F1(jtunhex){A z;C*u;I c,n;UC p,q,*v;
  ASSERT(c==8||c==16,EVLENGTH);  
  n=AN(w)>>1; u=CAV(w);
  GATV0(z,LIT,n,1); v=UAV(z);
- DO(n, p=*u++; q=*u++; *v++=16*unh(p)+unh(q););
+ DQ(n, p=*u++; q=*u++; *v++=16*unh(p)+unh(q););
  RE(z); RETF(z);
 }
 
@@ -252,7 +252,7 @@ F1(jtunbin){A q;B b,d;C*v;I c,i,k,m,n,r,t;
   case (C)0xe3: R unbinr(1,1,0,m,q);
  }
  /* code to handle pre 601 headers */
- d=1; v=8+CAV(w); DO(8, if(CFF!=*v++){d=0; break;});       /* detect 64-bit        */
+ d=1; v=8+CAV(w); DQ(8, if(CFF!=*v++){d=0; break;});       /* detect 64-bit        */
  ASSERT(m>=1+BH(d),EVLENGTH);
  b=0;
  if(!mvw((C*)&t,BTX(d,1,q),1L,BU,0,SY_64,d)){RESETERR; b=1;} /* detect reverse bytes */
@@ -289,15 +289,15 @@ F2(jtic2){A z;I j,m,n,p,*v,*x,zt;I4*y;UI4*y1;S*s;U short*u;
  GA(z,zt,m,1,0); v=AV(z); x=AV(w); 
  switch(j){
   default: ASSERT(0,EVDOMAIN);
-  case -4: y1=(UI4*)x;    DO(m, *v++=    *y1++;); {RETF(z);}
-  case  4: y1=(UI4*)v;    DO(n, *y1++=(UI4)*x++;); {RETF(z);}
+  case -4: y1=(UI4*)x;    DQ(m, *v++=    *y1++;); {RETF(z);}
+  case  4: y1=(UI4*)v;    DQ(n, *y1++=(UI4)*x++;); {RETF(z);}
   case -3: ICPY(v,x,m); {RETF(z);}
   case  3: MC(v,x,m);   {RETF(z);}
-  case -2: y=(I4*)x;      DO(m, *v++=    *y++;); {RETF(z);}
-  case  2: y=(I4*)v;      DO(n, *y++=(I4)*x++;); {RETF(z);}
-  case -1: s=(S*)x;       DO(m, *v++=    *s++;); {RETF(z);}
-  case  1: s=(S*)v;       DO(n, *s++=(S) *x++;); {RETF(z);}
-  case  0: u=(U short*)x; DO(m, *v++=    *u++;); {RETF(z);}
+  case -2: y=(I4*)x;      DQ(m, *v++=    *y++;); {RETF(z);}
+  case  2: y=(I4*)v;      DQ(n, *y++=(I4)*x++;); {RETF(z);}
+  case -1: s=(S*)x;       DQ(m, *v++=    *s++;); {RETF(z);}
+  case  1: s=(S*)v;       DQ(n, *s++=(S) *x++;); {RETF(z);}
+  case  0: u=(U short*)x; DQ(m, *v++=    *u++;); {RETF(z);}
 }}
 
 F2(jtfc2){A z;D*x,*v;I j,m,n,p,zt;float*s;
@@ -313,8 +313,8 @@ F2(jtfc2){A z;D*x,*v;I j,m,n,p,zt;float*s;
   default: ASSERT(0,EVDOMAIN);
   case -2: MC(v,x,n); {RETF(z);}
   case  2: MC(v,x,m); {RETF(z);}
-  case -1: s=(float*)x; DO(m, *v++=       *s++;); {RETF(z);}
-  case  1: s=(float*)v; DO(n, *s++=(float)*x++;); {RETF(z);}
+  case -1: s=(float*)x; DQ(m, *v++=       *s++;); {RETF(z);}
+  case  1: s=(float*)v; DQ(n, *s++=(float)*x++;); {RETF(z);}
 }}
 
 
@@ -324,7 +324,7 @@ static B jtisnanq(J jt,A w){A q,*u,x,x1,*xv,y,*yv;D*v;I m,n,t,top;
  *xv=w; top=1;
  while(top){
   --top; y=xv[top]; n=AN(y); t=AT(y);
-  if(t&FL+CMPX){v=DAV(y); DO(t&CMPX?n+n:n, if(_isnan(*v++))R 1;);}
+  if(t&FL+CMPX){v=DAV(y); DQ(t&CMPX?n+n:n, if(_isnan(*v++))R 1;);}
   else if(t&BOX){
    m=top+n; yv=AAV(y); 
    if(m>AN(y)){GATV0(x1,INT,2*m,1); u=AAV(x1); ICPY(u,xv,top); fa(x); x=x1; xv=u;}
@@ -338,8 +338,8 @@ F1(jtisnan){A*wv,z;B*u;D*v;I n,t;
  n=AN(w); t=AT(w);
  ASSERT(t&DENSE,EVNONCE);
  GATV(z,B01,n,AR(w),AS(w)); u=BAV(z);
- if     (t&FL  ){v=DAV(w); DO(n, *u++=_isnan(*v++););}
- else if(t&CMPX){v=DAV(w); DO(n, *u++=_isnan(*v)||_isnan(*(v+1)); v+=2;);}
+ if     (t&FL  ){v=DAV(w); DQ(n, *u++=_isnan(*v++););}
+ else if(t&CMPX){v=DAV(w); DQ(n, *u++=_isnan(*v)||_isnan(*(v+1)); v+=2;);}
  else if(t&BOX ){wv=AAV(w);  DO(n, *u++=isnanq(wv[i]);); RE(0);}
  else memset(u,C0,n);
  RETF(z);
@@ -358,11 +358,11 @@ F1(jtbit1){A z;B*wv;BT*zv;I c,i,j,n,p,q,r,*s;UI x,y;
   for(i=0;i<p;++i){
    for(j=0;j<q;++j){
     x=0; y=1+(UI)IMAX; 
-    DO(c, if(*wv++)x^=y; y>>=1;); 
+    DQ(c, if(*wv++)x^=y; y>>=1;); 
     *zv++=x;
    }
     x=0; y=1+(UI)IMAX; 
-    DO(r, if(*wv++)x^=y; y>>=1;); 
+    DQ(r, if(*wv++)x^=y; y>>=1;); 
     *zv++=x;
   }
  }

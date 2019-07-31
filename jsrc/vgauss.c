@@ -51,7 +51,7 @@ static F1(jtdetr){A z;I c,e,g=1,i,j,k,r,*s;Q d,p,*u,*v,*x;
   }
   if(!gc3(&w,0L,0L,old))R 0;  // use simple gc3 to ensure all changes use the stack, since w is modified inplace.  Alternatively could turn off inplacing here
  }
- d=0<g?*v:qminus(zeroQ,*v); u=v+1+c; DO(r-1, d=qtymes(d,*u); u+=1+c;);
+ d=0<g?*v:qminus(zeroQ,*v); u=v+1+c; DQ(r-1, d=qtymes(d,*u); u+=1+c;);
  RE(0);
  GAT0(z,RAT,1,0); *QAV(z)=d; R z;
 }    /* determinant on rational matrix; works in place */
@@ -65,8 +65,8 @@ static F1(jtdetd){D g,h,p,q,*u,*v,*x,*y,z=1.0;I c,d,e,i,j,k,r,*s;
   DO(r-j, k=i; DO(c-j, g=ABS(*u); if(h<g){h=g; d=j+k; e=j+i;} ++u;); u+=j;);  /* find pivot, maximum abs element */
   if(h==inf)R mark;
   if(0==h)R scf(0.0);
-  if(j!=d){u=v+c*d+j; y=x+j; DO(c-j, q=*u; *u=*y; *y=q; ++u;  ++y; ); z=-z;}  /* interchange rows j and d */
-  if(j!=e){u=x+e;     y=x+j; DO(r-j, q=*u; *u=*y; *y=q; u+=c; y+=c;); z=-z;}  /* interchange cols j and e */
+  if(j!=d){u=v+c*d+j; y=x+j; DQ(c-j, q=*u; *u=*y; *y=q; ++u;  ++y; ); z=-z;}  /* interchange rows j and d */
+  if(j!=e){u=x+e;     y=x+j; DQ(r-j, q=*u; *u=*y; *y=q; u+=c; y+=c;); z=-z;}  /* interchange cols j and e */
   q=x[j]; z*=q; JBREAK0;
   for(i=j+1;i<r;++i){
    u=v+c*i;
@@ -89,7 +89,7 @@ static F1(jtdetz){A t;D g,h;I c,d,e,i,j,k,r,*s;Z p,q,*u,*v,*x,*y,z;
   if(h==inf)R mark;
   if(0==h)R scf(0.0);
   if(j!=d){u=v+c*d;              DO(c-j, q=u[j+i]; u[j+i]=x[j+i]; x[j+i]=q;); z=zminus(zeroZ,z);}  /* interchange rows j and d */
-  if(j!=e){u=v+c*j+e; y=v+c*j+j; DO(r-j, q=*u; *u=*y; *y=q; u+=c; y+=c;);     z=zminus(zeroZ,z);}  /* interchange cols j and e */
+  if(j!=e){u=v+c*j+e; y=v+c*j+j; DQ(r-j, q=*u; *u=*y; *y=q; u+=c; y+=c;);     z=zminus(zeroZ,z);}  /* interchange cols j and e */
   q=x[j]; z=ztymes(z,q);
   for(i=j+1;i<r;++i){
    u=v+c*i;

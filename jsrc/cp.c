@@ -38,7 +38,7 @@ static F2(jttclosure){A z;B b;I an,*av,c,d,i,wn,wr,wt,*wv,*zu,*zv,*zz;
   ICPY(zv,wv,wn); zu=zv; zv+=wn;
   while(1){
    if(zv==zz){i=zv-AV(z); RZ(z=ext(0,z)); zv=AV(z)+i; zz=AV(z)+AN(z); zu=zv-wn;}
-   b=1; DO(wn, d=c=*zu++; if((UI)c>=(UI)an){c+=an; ASSERT((UI)c<(UI)an,EVINDEX);} *zv++=c=av[c]; if(c!=d)b=0;);
+   b=1; DQ(wn, d=c=*zu++; if((UI)c>=(UI)an){c+=an; ASSERT((UI)c<(UI)an,EVINDEX);} *zv++=c=av[c]; if(c!=d)b=0;);
    if(b)break;
   }
   d=(zv-AV(z))/wn-1;
@@ -80,7 +80,7 @@ static DF1(jtfpown){A fs,z;AF f1;I n;V*sv;A *old;
    fs=sv->fgh[0]; f1=FAV(fs)->valencefns[0];
    z=w; 
    old=jt->tnextpushp; 
-   DO(n, RZ(z=CALL1(f1,z,fs)); z=gc(z,old);); 
+   DQ(n, RZ(z=CALL1(f1,z,fs)); z=gc(z,old);); 
    RETF(z);
 }}
 
@@ -99,7 +99,7 @@ static DF1(jtply1){PROLOG(0040);DECLFG;A b,hs,j,*xv,y,z;B*bv,q;I i,k,m,n,*nv,p=0
   old=jt->tnextpushp;  // should move this up
   for(i=1;i<=n;++i){
    RZ(z=CALL1(f1,y=z,fs));  // z=next power, y=previous power
-   if(q&&equ(y,z)){DO(m-k, INSTALLBOX(x,xv,k,z); ++k;); break;}  // if there is an infinity, check for repetition; if any, use it for all higher powers, & be done
+   if(q&&equ(y,z)){DQ(m-k, INSTALLBOX(x,xv,k,z); ++k;); break;}  // if there is an infinity, check for repetition; if any, use it for all higher powers, & be done
    while(k<m&&i==nv[k]){INSTALLBOX(x,xv,k,z); ++k; q=k<m?bv[k]:0;}  // otherwise use result for all equal powers
    if(!(i&7))if(!gc3((A*)&x,&z,0L,old))R0;
  }}
@@ -112,7 +112,7 @@ static DF1(jtply1){PROLOG(0040);DECLFG;A b,hs,j,*xv,y,z;B*bv,q;I i,k,m,n,*nv,p=0
   old=jt->tnextpushp;
   for(i=-1;i>=n;--i){
    RZ(z=CALL1(f1,y=z,fs));
-   if(q&&equ(y,z)){DO(1+k, INSTALLBOX(x,xv,k,z); --k;); break;}
+   if(q&&equ(y,z)){DQ(1+k, INSTALLBOX(x,xv,k,z); --k;); break;}
    while(0<=k&&i==nv[k]){INSTALLBOX(x,xv,k,z); --k; q=0<=k?bv[k]:0;}
    if(!(i&7))if(!gc3((A*)&x,&z,0L,old))R0;
  }}

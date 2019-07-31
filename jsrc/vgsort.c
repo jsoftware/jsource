@@ -200,9 +200,9 @@ static SF(jtsortb2){A z;B up;I i,ii,j,p,yv[4];US*v,*wv,x,zz[4];
  DO(p, yv[i]=0;); 
  zz[0]=BS00; zz[1]=BS01; zz[2]=BS10; zz[3]=BS11;
  for(i=0;i<m;++i){
-  DO(n, IND2(*wv++); ++yv[ii];);
-  if(up){j=0;   DO(p, x=zz[j]; DO(yv[j], *v++=x;); yv[j]=0; ++j;);}
-  else  {j=p-1; DO(p, x=zz[j]; DO(yv[j], *v++=x;); yv[j]=0; --j;);}
+  DQ(n, IND2(*wv++); ++yv[ii];);
+  if(up){j=0;   DQ(p, x=zz[j]; DQ(yv[j], *v++=x;); yv[j]=0; ++j;);}
+  else  {j=p-1; DQ(p, x=zz[j]; DQ(yv[j], *v++=x;); yv[j]=0; --j;);}
  }
  R z;
 }    /* w grade"r w on 2-byte boolean items */
@@ -216,9 +216,9 @@ static SF(jtsortb4){A z;B up;I i,ii,j,p,yv[16];UINT*v,*wv,x,zz[16];
  zz[ 8]=B1000; zz[ 9]=B1001; zz[10]=B1010; zz[11]=B1011;
  zz[12]=B1100; zz[13]=B1101; zz[14]=B1110; zz[15]=B1111;
  for(i=0;i<m;++i){
-  DO(n, IND4(*wv++); ++yv[ii];);
-  if(up){j=0;   DO(p, x=zz[j]; DO(yv[j], *v++=x;); yv[j]=0; ++j;);}
-  else  {j=p-1; DO(p, x=zz[j]; DO(yv[j], *v++=x;); yv[j]=0; --j;);}
+  DQ(n, IND4(*wv++); ++yv[ii];);
+  if(up){j=0;   DQ(p, x=zz[j]; DQ(yv[j], *v++=x;); yv[j]=0; ++j;);}
+  else  {j=p-1; DQ(p, x=zz[j]; DQ(yv[j], *v++=x;); yv[j]=0; --j;);}
  }
  R z;
 }    /* w grade"r w on 4-byte boolean items */
@@ -228,9 +228,9 @@ static SF(jtsortc){A z;B up;I i,p,yv[256];UC j,*wv,*v;
  wv=UAV(w); p=LIT&AT(w)?256:2; up=(UI)jt->workareas.compare.complt>>(BW-1);
  DO(p, yv[i]=0;);
  for(i=0;i<m;++i){
-  DO(n, ++yv[*wv++];);
-  if(up){j=0;         DO(p, DO(yv[j], *v++=j;); yv[j]=0; ++j;);}
-  else  {j=(UC)(p-1); DO(p, DO(yv[j], *v++=j;); yv[j]=0; --j;);}
+  DQ(n, ++yv[*wv++];);
+  if(up){j=0;         DQ(p, DQ(yv[j], *v++=j;); yv[j]=0; ++j;);}
+  else  {j=(UC)(p-1); DQ(p, DQ(yv[j], *v++=j;); yv[j]=0; --j;);}
  }
  R z;
 }    /* w grade"1 w on boolean or character */
@@ -241,13 +241,13 @@ static SF(jtsortc2){A y,z;B up;I i,p,*yv;US j,k,*wv,*v;
  GATV0(y,INT,p,1); yv=AV(y);
  DO(p, yv[i]=0;);
  for(i=0;i<m;++i){
-  DO(n, ++yv[*wv++];);
+  DQ(n, ++yv[*wv++];);
   if(C2T&AT(w)||!liln){
-   if(up){j=0;         DO(p,                DO(yv[j], *v++=j;); yv[j]=0;           ++j;);}
-   else  {j=(US)(p-1); DO(p,                DO(yv[j], *v++=j;); yv[j]=0;           --j;);}
+   if(up){j=0;         DQ(p,                DQ(yv[j], *v++=j;); yv[j]=0;           ++j;);}
+   else  {j=(US)(p-1); DQ(p,                DQ(yv[j], *v++=j;); yv[j]=0;           --j;);}
   }else{
-   if(up){k=0;         DO(256, j=k; DO(256, DO(yv[j], *v++=j;); yv[j]=0; j+=256;); ++k;);}
-   else  {k=(US)(p-1); DO(256, j=k; DO(256, DO(yv[j], *v++=j;); yv[j]=0; j-=256;); --k;);}
+   if(up){k=0;         DQ(256, j=k; DQ(256, DQ(yv[j], *v++=j;); yv[j]=0; j+=256;); ++k;);}
+   else  {k=(US)(p-1); DQ(256, j=k; DQ(256, DQ(yv[j], *v++=j;); yv[j]=0; j-=256;); --k;);}
  }}
  R z;
 }    /* w grade"1 w on 2-byte character or unicode items */
@@ -324,13 +324,13 @@ static SF(jtsorti){FPREFIP;A y,z;I i;UI4 *yv;I j,s,*wv,*zv;
  // clear all totals to 0, then bias address of area so the data fits
  for(i=0;i<m;++i){  // for each list...
   memset(yv+rng.min,C0,rng.range*sizeof(UI4)); 
-  DO(n, ++yv[*wv++];);  // increment total for each input atom
+  DQ(n, ++yv[*wv++];);  // increment total for each input atom
   // run through the totals, copying in the requisite # repetitions of each value
   // We have to disguise the loop to prevent VS from producing a REP STOS, which we don't want because the loop is usually short
   I incr = -jt->workareas.compare.complt; I zincr = (incr&1/*always 1*/)*sizeof(*zv); j=rng.min+((incr>>(BW-1))&(rng.range-1));  // jt>complt is 1 or -1
   DQ(rng.range, s=yv[j]; DQ(s, *zv=j; zv=(I*)((C*)zv+zincr);) j+=incr;)  // Don't zv+=zincr, because VS doesn't pull the *8 out
-//  if((UI)jt->workareas.compare.complt>>(BW-1)){ j=rng.min; DQ(rng.range, s=(I)yv[j]; DO(s, *zv++=j;); ++j;);}  // generates rep stos, which is slow.  should fix
-//  else{j=rng.min+rng.range; DQ(rng.range, --j; s=(I)yv[j]; DO(s, *zv++=j  ;););}
+//  if((UI)jt->workareas.compare.complt>>(BW-1)){ j=rng.min; DQ(rng.range, s=(I)yv[j]; DQ(s, *zv++=j;); ++j;);}  // generates rep stos, which is slow.  should fix
+//  else{j=rng.min+rng.range; DQ(rng.range, --j; s=(I)yv[j]; DQ(s, *zv++=j  ;););}
  }
  R z;
 }    /* w grade"1 w on small-range integers */
@@ -349,7 +349,7 @@ static SF(jtsortu){FPREFIP;A y,z;I i;UI4 *yv;C4 j,s,*wv,*zv;
  GA(z,AT(w),AN(w),AR(w),AS(w)); zv=C4AV(z);
  for(i=0;i<m;++i){
   memset(yv+rng.min,C0,rng.range*sizeof(UI4)); 
-  DO(n, ++yv[*wv++];);
+  DQ(n, ++yv[*wv++];);
   I incr = -jt->workareas.compare.complt; I zincr = (incr&1)*sizeof(*zv); j=(C4)(rng.min+((incr>>(BW-1))&(rng.range-1)));
   DQ(rng.range, s=yv[j]; DQ(s, *zv=j; zv=(C4*)((C*)zv+zincr);) j+=(C4)incr;)
  }
@@ -409,7 +409,7 @@ static SF(jtsortd){FPREFIP;A x,y,z;B b;D*g,*h,*xu,*wv,*zu;I i,nneg;void *yv;
  { I use4 = n>65535; grcol=use4?(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol4:(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol2; GATV0(y,INT,((65536*sizeof(US))>>LGSZI)<<use4,1); yv=AV(y);}
  GATV0(x,FL, n,1); xu=DAV(x);
  for(i=0;i<m;++i){I colflags;  // for each cell to be sorted...
-  g=wv; nneg=0; DO(n, nneg+=(0>*g++);); b=0<nneg&&nneg<n;
+  g=wv; nneg=0; DQ(n, nneg+=(0>*g++);); b=0<nneg&&nneg<n;
   g=b?xu:zu; h=b?zu:xu;  // select correct alignment to end with result in zv
   colflags=grcol(65536,    0L,      yv,n,(I*)wv,(I*)h,sizeof(D)/sizeof(US),FPLSBWDX+0*WDINC+(US*)wv,4+(((I )(nneg==n)<<1)^(1-jt->workareas.compare.complt))); // 'sort', plus 'up' in bit 1, but reversed if all neg
   colflags=grcol(65536,    0L,      yv,n,(I*)h, (I*)g,sizeof(D)/sizeof(US),FPLSBWDX+1*WDINC+(US*)h ,colflags);
@@ -417,8 +417,8 @@ static SF(jtsortd){FPREFIP;A x,y,z;B b;D*g,*h,*xu,*wv,*zu;I i,nneg;void *yv;
   grcol(32768<<b,(nneg==n)<<15,yv,n,(I*)h, (I*)g,sizeof(D)/sizeof(US),FPLSBWDX+3*WDINC+(US*)h ,colflags);
   if(b){  // if there was not a mix of neg & nonneg, the result is ready now
    g=zu;
-   if(colflags&2){h=n+xu; DO(nneg,   *g++=*--h;); h=  xu; DO(n-nneg, *g++=*h++;);}  // up: reverse neg, foll by nonneg
-   else  {h=nneg+xu; DO(n-nneg, *g++=*h++;); h=nneg+xu; DO(nneg,   *g++=*--h;);}  // down: nonneg foll by reverse neg
+   if(colflags&2){h=n+xu; DQ(nneg,   *g++=*--h;); h=  xu; DQ(n-nneg, *g++=*h++;);}  // up: reverse neg, foll by nonneg
+   else  {h=nneg+xu; DQ(n-nneg, *g++=*h++;); h=nneg+xu; DQ(nneg,   *g++=*--h;);}  // down: nonneg foll by reverse neg
   }
   wv+=n; zu+=n;
  }

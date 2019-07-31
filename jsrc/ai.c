@@ -55,7 +55,7 @@ static F2(jtdiag){I d,m,p,r,t,*v;
  RZ(a&&w);
  r=AR(w); t=AT(w);
  v=AS(w);   m=0;      DO(r, m=MIN(m,v[i]););
- v=AS(w)+r; p=1; d=0; DO(r, d+=p; p*=*--v;);
+ v=AS(w)+r; p=1; d=0; DQ(r, d+=p; p*=*--v;);
  if(TYPESNE(t,AT(a)))RZ(a=cvt(t,a));
  if(AR(a)){
   ASSERT(m==AN(a),EVLENGTH);

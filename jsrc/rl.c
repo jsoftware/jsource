@@ -21,9 +21,9 @@ static B jtlp(J jt,A w){B b=1,p=0;C c,d,q=CQUOTE,*v;I j=0,n;
  RZ(w);
  n=AN(w); v=CAV(w); c=*v; d=*(v+n-1);
  if(1==n||(2==n||3>=n&&' '==c)&&(d==CESC1||d==CESC2)||vnm(n,v))R 0;
- if(C9==ctype[(UC)c])DO(n-1, d=c; c=ctype[(UC)*++v]; if(b=!NUMV(c)||d==CS&&c!=C9)break;)
- else if(c==q)   DO(n-1, c=*v++; if(c==q)p=!p; if(b=p?0:c!=q)break;)
- else if(c=='(') DO(n-1, c=*v++; j+=c=='('?1:c==')'?-1:0; if(b=!j)break;)
+ if(C9==ctype[(UC)c])DQ(n-1, d=c; c=ctype[(UC)*++v]; if(b=!NUMV(c)||d==CS&&c!=C9)break;)
+ else if(c==q)   DQ(n-1, c=*v++; if(c==q)p=!p; if(b=p?0:c!=q)break;)
+ else if(c=='(') DQ(n-1, c=*v++; j+=c=='('?1:c==')'?-1:0; if(b=!j)break;)
  R b;
 }    /* 1 iff put parens around w */
 
@@ -38,9 +38,9 @@ static A jtlcpb(J jt,B b,A w){A z=w;B p;C c,*v,*wv,*zv;I n;
  n=AN(w); wv=CAV(w); 
  if(!b){
   c=ctype[(UC)*wv]; v=wv; p=0;
-  if     (c==CQ)DO(n-1, c=ctype[(UC)*++v]; if(c==CQ)p=!p; else if(p){b=1; break;})
-  else if(c==C9)DO(n-1, c=ctype[(UC)*++v]; if(!(c==C9   ||c==CS   )){b=1; break;})
-  else          DO(n-1, c=      *++v ; if(!(c==CESC1||c==CESC2)){b=1; break;});
+  if     (c==CQ)DQ(n-1, c=ctype[(UC)*++v]; if(c==CQ)p=!p; else if(p){b=1; break;})
+  else if(c==C9)DQ(n-1, c=ctype[(UC)*++v]; if(!(c==C9   ||c==CS   )){b=1; break;})
+  else          DQ(n-1, c=      *++v ; if(!(c==CESC1||c==CESC2)){b=1; break;});
   if(b&&vnm(n,wv))b=0;
  }
  if(b){GATV0(z,LIT,2+n,1); zv=CAV(z); *zv='('; MC(1+zv,wv,n); zv[1+n]=')';}
@@ -62,7 +62,7 @@ static F1(jtltieb){A pt,t,*v,*wv,x,y;B b;C c,*s;I n;
  RZ(w);
  n=AN(w); wv=AAV(w);  RZ(t=spellout(CGRAVE)); RZ(pt=over(scc(')'),t));
  GATV0(y,BOX,n+n,1); v=AAV(y);
- if(1>=n)x=mtv; else{GATV0(x,LIT,n-2,1); s=CAV(x); DO(n-2, *s++='(';);}
+ if(1>=n)x=mtv; else{GATV0(x,LIT,n-2,1); s=CAV(x); DQ(n-2, *s++='(';);}
  DO(n, *v++=0==i?x:1==i?t:pt; x=wv[i]; c=ID(x); RZ(x=lrr(x)); 
      b=c==CHOOK||c==CFORK||i&&lp(x); RZ(*v++=CALL2(jt->lcp,b,x,0)););
  R raze(y);
@@ -90,7 +90,7 @@ static F1(jtlchar){A y;B b,p=1,r1;C c,d,*u,*v;I j,k,m,n;
   R over(over(cstr("a. "),lcpx(lnum(y))),over(cstr("}~"),lchar(from(y,w))));
  }
  j=2; b=7<n||1<n&&1<AR(w);
- DO(n, c=*v++; if(c==CQUOTE)++j; b&=c==d; p&=31<c&&c<127;); 
+ DQ(n, c=*v++; if(c==CQUOTE)++j; b&=c==d; p&=31<c&&c<127;); 
  if(b){n=1; j=MIN(3,j);}
  if(!p){
   k=(UC)d; RZ(y=indexof(alp,w));
@@ -100,7 +100,7 @@ static F1(jtlchar){A y;B b,p=1,r1;C c,d,*u,*v;I j,k,m,n;
  }
  GATV0(y,LIT,n+j,1); v=CAV(y);
  *v=*(v+n+j-1)=CQUOTE; ++v;
- if(2==j)MC(v,u,n); else DO(n, *v++=c=*u++; if(c==CQUOTE)*v++=c;);
+ if(2==j)MC(v,u,n); else DQ(n, *v++=c=*u++; if(c==CQUOTE)*v++=c;);
  R over(b?lsh(w):lshape(w),y);
 }    /* non-empty character array */
 
@@ -120,7 +120,7 @@ static F1(jtlbox){A p,*v,*vv,*wv,x,y;B b=0;I n;
  if(!b){C c[256],d,*t;UC*s;
   DO(256,c[i]=1;); 
   RZ(x=raze(w)); s=UAV(x);
-  DO(AN(x), c[*s++]=0;);
+  DQ(AN(x), c[*s++]=0;);
   if(c[CQUOTE]&&equ(w,words(x)))R over(cstr(";:"),lchar(x));
   if(c[d=' ']||c[d='|']||c[d='/']||c[d=',']||c[d=';']){
    GATV0(y,LIT,n+AN(x),1); t=CAV(y);
@@ -168,7 +168,7 @@ static F1(jtlnum){A b,d,t,*v,y;B p;I n;
 static F1(jtlsparse){A a,e,q,t,x,y,z;B ba,be,bn;I j,r,*v;P*p;
  RZ(w);
  r=AR(w); p=PAV(w); a=SPA(p,a); e=SPA(p,e); y=SPA(p,i); x=SPA(p,x);
- bn=0; v=AS(w); DO(r, if(!*v++){bn=1; break;});
+ bn=0; v=AS(w); DQ(r, if(!*v++){bn=1; break;});
  ba=0; if(r==AR(a)){v=AV(a); DO(r, if(i!=*v++){ba=1; break;});}
  be=!(AT(w)&SFL&&0==*DAV(e));
  if(be)RZ(z=over(lnoun(e),cstr(SB01&AT(w)?"":SINT&AT(w)?"+-~2":SFL&AT(w)?"+-~2.1":"+-~2j1")));

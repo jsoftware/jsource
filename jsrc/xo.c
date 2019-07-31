@@ -27,7 +27,7 @@ B jtxoinit(J jt){A x;
  R 1;
 }
 
-F jtvfn(J jt,F x){I*v=AV(jt->fopf); DO(jt->fopn,if(x==(F)*v++)R x;); ASSERT(0,EVFNUM);}
+F jtvfn(J jt,F x){I*v=AV(jt->fopf); DQ(jt->fopn,if(x==(F)*v++)R x;); ASSERT(0,EVFNUM);}
      /* check that x is in table of file#s */
 
 I jtfnum(J jt,A w){A y;I h,j;

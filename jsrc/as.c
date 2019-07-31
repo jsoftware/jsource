@@ -321,7 +321,7 @@ static DF2(jtgoutfix){A h,*hv,x,z,*zv;I m,n;
  n=IC(x);
  h=VAV(self)->fgh[2]; hv=AAV(h); m=AN(h);
  GATV0(z,BOX,n,1); zv=AAV(z); I imod=0;
- DO(n, imod=(imod==m)?0:imod; RZ(zv[i]=df1(repeat(from(sc(i),x),w),hv[i%m])); ++imod;);
+ DO(n, imod=(imod==m)?0:imod; RZ(zv[i]=df1(repeat(from(sc(i),x),w),hv[imod])); ++imod;);
  R ope(z);
 }
 

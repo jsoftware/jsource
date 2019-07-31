@@ -109,7 +109,9 @@ static D jtdbin(J jt,D x,D y){D c,d,e,h=1.0,p,q,r;I k=0;
 }    /* x and y-x are not negative integers */
 
 static D ibin(D x,D y){D d=MIN(x,y-x),p=1;
- if(d>0)DQ((I)d, p*=y--/d--; if(p==inf)R p;);   // d may be IMIN if there is a NaN
+ // if x and y are _, d is NaN.  Conversion to int is undefined then.  Test for it, but we're gonna get a NaN error when we finish
+ if(_isnan(d))R 0.0;  // avoid looping if d is invalid now
+ DQ((I)d, p*=y--/d--; if(p==inf)R p;);
  R jfloor(0.5+p);
 }    /* x and y are non-negative integers; x<=y */
 

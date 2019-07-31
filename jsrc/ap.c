@@ -71,29 +71,29 @@
 
 #define PREFIXALT(f,Tz,Tx,pfx)  \
  AHDRP(f,Tz,Tx){B b;I i;Tz v,* y;                                                 \
-  if(d==1)DQ(m, *z++=v=    *x++; b=0; DQ(n-1, b=!b; pfx(b,*z,v,*x); v=*z; ++z; ++x;))  \
+  if(d==1)DQ(m, *z++=v=    *x++; b=0; DQ(n-1, b^=1; pfx(b,*z,v,*x); v=*z; ++z; ++x;))  \
   else{for(i=0;i<m;++i){                                                               \
    y=z; DQ(d, *z++=    *x++;); b=0;                                                    \
-   DQ(n-1, b=!b; DQ(d, pfx(b,*z,*y,*x); ++z; ++x; ++y;));                              \
+   DQ(n-1, b^=1; DQ(d, pfx(b,*z,*y,*x); ++z; ++x; ++y;));                              \
  }}}
 
 #define PREALTNAN(f,Tz,Tx,pfx)  \
  AHDRP(f,Tz,Tx){B b;I i;Tz v,* y;                                                 \
   NAN0;                                                                                \
-  if(d==1)DQ(m, *z++=v=    *x++; b=0; DQ(n-1, b=!b; pfx(b,*z,v,*x); v=*z; ++z; ++x;))  \
+  if(d==1)DQ(m, *z++=v=    *x++; b=0; DQ(n-1, b^=1; pfx(b,*z,v,*x); v=*z; ++z; ++x;))  \
   else{for(i=0;i<m;++i){                                                               \
    y=z; DQ(d, *z++=    *x++;); b=0;                                                    \
-   DQ(n-1, b=!b; DQ(d, pfx(b,*z,*y,*x); ++z; ++x; ++y;));                              \
+   DQ(n-1, b^=1; DQ(d, pfx(b,*z,*y,*x); ++z; ++x; ++y;));                              \
   }}                                                                                    \
   NAN1V;                                                                               \
  }
 
 #define PREFICALT(f,Tz,Tx,pfx)  \
  AHDRP(f,Tz,Tx){B b;I i;Tz v,* y;                                                 \
-  if(d==1)DQ(m, *z++=v=(Tz)*x++; b=0; DQ(n-1, b=!b; pfx(b,*z,v,*x); v=*z; ++z; ++x;))  \
+  if(d==1)DQ(m, *z++=v=(Tz)*x++; b=0; DQ(n-1, b^=1; pfx(b,*z,v,*x); v=*z; ++z; ++x;))  \
   else{for(i=0;i<m;++i){                                                               \
    y=z; DQ(d, *z++=(Tz)*x++;); b=0;                                                    \
-   DQ(n-1, b=!b; DQ(d, pfx(b,*z,*y,*x); ++z; ++x; ++y;));                              \
+   DQ(n-1, b^=1; DQ(d, pfx(b,*z,*y,*x); ++z; ++x; ++y;));                              \
  }}}
 
 #define PREFIXOVF(f,Tz,Tx,fp1,fvv)  \
@@ -158,7 +158,7 @@ static B jtpscanlt(J jt,I m,I d,I n,B*z,B*x,B p){A t;B*v;I i;
   GATV0(t,B01,d,1); v=BAV(t);
   for(i=0;i<m;++i){
    memset(v,C1,d);
-   DO(n, DO(d, if(v[i]&&p==x[i]){v[i]=0; z[i]=p;};); z+=d; x+=d;); 
+   DQ(n, DO(d, if(v[i]&&p==x[i]){v[i]=0; z[i]=p;};); z+=d; x+=d;); 
  }}
  R 1;
 }    /* f/\"1 w for < and <: */
@@ -172,7 +172,7 @@ static B jtpscangt(J jt,I m,I d,I n,B*z,B*x,B a,B pp,B pa,B ps){
  if(d==1)for(i=0;i<m;++i){
   if(v=memchr(x,a,n)){
    j=v-x; b=j&1; 
-   mvc(j,z,2L,p); memset(z+j,b!=ps,n-j); *(z+j)=b!=pa;
+   mvc(j,z,2L,p); memset(z+j,b!=ps,n-j); *(z+j)=b^pa;
   }else mvc(n,z,2L,p);
   z+=n; x+=n;
  }else{
@@ -180,7 +180,7 @@ static B jtpscangt(J jt,I m,I d,I n,B*z,B*x,B a,B pp,B pa,B ps){
   for(i=0;i<m;++i){
    e=pp; memset(u,C0,d);
    DO(n, j=i; DO(d, if(u[i])z[i]='1'==u[i]; else 
-     if(a==x[i]){b=j&1; z[i]=b!=pa; u[i]=b!=ps?'1':'0';}else z[i]=e;);
+     if(a==x[i]){b=j&1; z[i]=b^pa; u[i]=b^ps?'1':'0';}else z[i]=e;);
     e=!e; z+=d; x+=d;); 
  }}
  R 1;
@@ -656,7 +656,7 @@ static DF2(jtmovavg){I m;
     *zv++=x;                                                   \
   }}else{                                                      \
    GATVS(y,type,c,1,0,type##SIZE,GACOPYSHAPE0,R 0); s=yv=(T*)AV(y); DQ(c, *s++=ie;);          \
-   DQ(m, s=yv; DQ(c, d=*v++; if(d CMP *s)*s=d; ++s;);); SETZ;  \
+   DQ(m, s=yv; DQ(c, d=*v++; if(d CMP *s)*s=d; ++s;);); SETZ; /* should store to sink instead of branching */ \
    for(i=0;i<p;++i){                                           \
     for(j=0,s=yv;j<c;++j,++s){                                 \
      d=*v++; e=*u++; x=*s;                                     \
@@ -677,7 +677,7 @@ static DF2(jtmovavg){I m;
     *zv++=x;                                                   \
   }}else{                                                      \
    GATVS(y,type,c,1,0,type##SIZE,GACOPYSHAPE0,R 0); s=yv=(T*)AV(y); DQ(c, *s++=ie;);          \
-   DQ(m, s=yv; DQ(c, d=*v++; if(CMP(d,*s))*s=d; ++s;);); SETZ;  \
+   DQ(m, s=yv; DQ(c, d=*v++; if(CMP(d,*s))*s=d; ++s;);); SETZ;  /* should store to sink instead of branching */ \
    for(i=0;i<p;++i){                                           \
     for(j=0,s=yv;j<c;++j,++s){                                 \
      d=*v++; e=*u++; x=*s;                                     \

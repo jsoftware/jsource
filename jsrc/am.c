@@ -37,23 +37,23 @@ static A jtmerge1(J jt,A w,A ind){A z;B*b;C*wc,*zc;D*wd,*zd;I c,it,j,k,m,r,*s,t,
  zi=AV(z); zc=(C*)zi; zd=(D*)zc;
  wi=AV(w); wc=(C*)wi; wd=(D*)wc;
  switch(MCASE(CTTZ(it),k)){
-  case MCASE(B01X,sizeof(C)): DO(c,         *zc++=wc[*b++?i+c:i];); break;
-  case MCASE(B01X,sizeof(I)): DO(c,         *zi++=wi[*b++?i+c:i];); break;
+  case MCASE(B01X,sizeof(C)): DO(c,         *zc++=wc[i+c*(I)*b++];); break;
+  case MCASE(B01X,sizeof(I)): DO(c,         *zi++=wi[i+c*(I)*b++];); break;
 #if !SY_64
-  case MCASE(B01X,sizeof(D)): DO(c,         *zd++=wd[*b++?i+c:i];); break;
+  case MCASE(B01X,sizeof(D)): DO(c,         *zd++=wd[i+c*(I)*b++];];); break;
 #endif
   case MCASE(INTX,sizeof(C)): DO(c, MINDEX; *zc++=wc[i+c*j];); break;
   case MCASE(INTX,sizeof(I)): DO(c, MINDEX; *zi++=wi[i+c*j];); break;
 #if !SY_64
   case MCASE(INTX,sizeof(D)): DO(c, MINDEX; *zd++=wd[i+c*j];); break;
 #endif  
-  default: if(it&B01)DO(c,         MC(zc,wc+k*(*b++?i+c:i),k); zc+=k;)
+  default: if(it&B01)DO(c,         MC(zc,wc+k*(i+c*(I)*b++),k); zc+=k;)
            else      DO(c, MINDEX; MC(zc,wc+k*(i+c*j     ),k); zc+=k;); break;
  }
  R z;
 }
 
-#define CASE2Z(T)  {T*xv=(T*)AV(x),*yv=(T*)AV(y),*zv=(T*)AV(z); DO(n, zv[i]=bv[i]?yv[i]:xv[i];); R z;}
+#define CASE2Z(T)  {T*xv=(T*)AV(x),*yv=(T*)AV(y),*zv=(T*)AV(z); DO(n, zv[i]=(bv[i]?yv:xv)[i];); R z;}
 #define CASE2X(T)  {T*xv=(T*)AV(x),*yv=(T*)AV(y);               DO(n, if( bv[i])xv[i]=yv[i];);   R x;}
 #define CASE2Y(T)  {T*xv=(T*)AV(x),*yv=(T*)AV(y);               DO(n, if(!bv[i])yv[i]=xv[i];);   R y;}
 #define CASENZ(T)  {T*zv=(T*)AV(z); DO(n, j=iv[i]; if(0>j){j+=m; ASSERT(0<=j,EVINDEX);}else ASSERT(j<m,EVINDEX);  \
@@ -67,7 +67,7 @@ F1(jtcasev){A b,*u,*v,w1,x,y,z;B*bv,p,q;I*aa,c,*iv,j,m,n,r,*s,t;
  p=1; m=AN(w)-3; v=AAV(w); c=i0(v[m+1]);   // get # items in list, and index of the matching one
  // Now audit the input names (including pqr), since we haven't properly stacked them & checked them etc.
  // p is set to 0 if an audit fails
- DO(m+1, x=symbrd(v[i]); if(!x){p=0; RESETERR; break;} u[i]=x; p=p&&NOUN&AT(x););  // verify names defined, and are nouns
+ DO(m+1, x=symbrd(v[i]); if(!x){p=0; RESETERR; break;} u[i]=x; p=p&!!(NOUN&AT(x)););  // verify names defined, and are nouns
  if(p){
   b=u[m]; n=AN(b); r=AR(b); s=AS(b); t=AT(*u);  // length, rank, shape, of pqr; type of first value in list
   p=t&DIRECT&&AT(b)&NUMERIC;    // fail if first value in list is indirect or pqr is not numeric
@@ -157,16 +157,17 @@ static A jtmerge2(J jt,A a,A w,A ind,I cellframelen){F2PREFIP;A z;I t;
  I *iv=AV(ind);  // start of the cell-index array
  if(UCISRECUR(z)){
   cellsize<<=(t>>RATX);  // RAT has 2 boxes per atom, all others have 1 and are lower
-  {A * RESTRICT zv=AAV(z); A *RESTRICT av=(A*)av0; DO(AN(ind), I ix0=iv[i]*cellsize; DQ(cellsize, INSTALLBOXRECUR(zv,ix0,*av); ++ix0; if((++av)==(A*)avn)av=(A*)av0;))}
+// obsolete   {A * RESTRICT zv=AAV(z); A *RESTRICT av=(A*)av0; DO(AN(ind), I ix0=iv[i]*cellsize; DQ(cellsize, INSTALLBOXRECUR(zv,ix0,*av); ++ix0; if((++av)==(A*)avn)av=(A*)av0;))}
+  {A * RESTRICT zv=AAV(z); A *RESTRICT av=(A*)av0; DO(AN(ind), I ix0=iv[i]*cellsize; DQ(cellsize, INSTALLBOXRECUR(zv,ix0,*av); ++ix0; ++av; av=(av==(A*)avn)?(A*)av0:av;))}
  }else{
   if(cellsize<=AN(a)){
    // there is more than one cell in a.  We can copy entire cells
    cellsize *= k;   // change cellsize to bytes
    switch(cellsize){
    case sizeof(C):
-    {C * RESTRICT zv=CAV(z); C *RESTRICT av=(C*)av0; DO(AN(ind), zv[iv[i]]=*av; if((++av)==(C*)avn)av=(C*)av0;); break;}  // scatter-copy the data, cyclically
+    {C * RESTRICT zv=CAV(z); C *RESTRICT av=(C*)av0; DO(AN(ind), zv[iv[i]]=*av; ++av; av=(av==(C*)avn)?(C*)av0:av;); break;}  // scatter-copy the data, cyclically
    case sizeof(I):  // may include D
-    {I * RESTRICT zv=AV(z); I *RESTRICT av=(I*)av0; DO(AN(ind), zv[iv[i]]=*av; if((++av)==(I*)avn)av=(I*)av0;); break;}  // scatter-copy the data
+    {I * RESTRICT zv=AV(z); I *RESTRICT av=(I*)av0; DO(AN(ind), zv[iv[i]]=*av; ++av; av=(av==(I*)avn)?(I*)av0:av;); break;}  // scatter-copy the data
    default:
     // handle small integral number of words with a local loop
     if(cellsize<MEMCPYTUNELOOP){  // length is not too big (0 is OK).  We must not copy outside cells boundaries here
@@ -175,7 +176,7 @@ static A jtmerge2(J jt,A a,A w,A ind,I cellframelen){F2PREFIP;A z;I t;
      C* RESTRICT zv=CAV(z); I *RESTRICT av=(I*)av0; DO(AN(ind), I * RESTRICT d=(I*)(zv+(iv[i]*cellsize)); I n=cellsize; while((n-=SZI)>=0){*d++=*av++;} if(n&(SZI-1)){STOREBYTES(d,*av,-n); av=(I*)((C*)av+SZI+n);} av=av==(I*)avn?(I*)av0:av;);  // use local copy
       // we test for the STOREBYTES because this is assumed repeated and might well have even length
     }else{
-     C* RESTRICT zv=CAV(z); C *RESTRICT av=(C*)av0; DO(AN(ind), MC(zv+(iv[i]*cellsize),av,cellsize); if((av+=cellsize)==avn)av=av0;);  // scatter-copy the data, cyclically
+     C* RESTRICT zv=CAV(z); C *RESTRICT av=(C*)av0; DO(AN(ind), MC(zv+(iv[i]*cellsize),av,cellsize); av+=cellsize; av=(av==avn)?av0:av;);  // scatter-copy the data, cyclically
     }
    }
   }else{
@@ -271,7 +272,7 @@ static A jtjstd(J jt,A w,A ind,I *cellframelen){A j=0,k,*v,x;B b;I d,i,n,r,*u,wr
   v=AAV(ind);   // now ind is a atom/list of boxes, one per axis
   ASSERT(1>=r,EVINDEX);  // not a table
   ASSERT(n<=wr,EVINDEX);  // not too many axes
-  d=n; DQ(n, --d; if(!equ(ace,v[d]))break;); if(n)++d; n=d;  // discard trailing (boxed) empty axes
+  /* obsolete d=n; */ DQ(n, if(!equ(ace,v[i]))break; --n;); /* obsolete if(n)++d; n=d; */  // discard trailing (boxed) empty axes
   j=zeroionei[0];  // init list to a single 0 offset
   for(i=0;i<n;++i){  // for each axis, grow the cartesian product of the specified offsets
    x=v[i]; d=ws[i];

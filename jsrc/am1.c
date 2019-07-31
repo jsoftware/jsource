@@ -16,7 +16,7 @@ static A jtistd1(J jt,A z,A ind){A*iv,j,*jv,x;I d,i,n,r,*s;
  if(AN(ind)&&!(BOX&AT(ind))){ASSERT(NUMERIC&AT(ind),EVINDEX); RZ(ind=every(ind,0L,jtright1));}
  s=AS(z); n=AN(ind); iv=AAV(ind); 
  ASSERT(n<=AR(z),EVINDEX);
- d=n; DQ(n, --d; x=iv[d]; if(!equ(x,ace))break;); n=n?1+d:d;
+ /* obsolete d=n; */DQ(n, x=iv[i]; if(!equ(x,ace))break;--n;); /* obsolete n=n?1+d:d; */
  GATV0(j,BOX,n,1); jv=AAV(j);
  for(i=0;i<n;++i){
   x=iv[i]; d=s[i];

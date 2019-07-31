@@ -647,7 +647,8 @@ static DF1(jtredstiteach){A*wv,y;I n,p,r,t;
  n=AN(w);
  if(!(2<n&&1==AR(w)&&BOX&AT(w)))R reduce(w,self);
  wv=AAV(w);  y=wv[0]; p=IC(y); t=AT(y);
- DO(n, y=wv[i]; r=AR(y); if(!(r&&r<=2&&p==IC(y)&&TYPESEQ(t,AT(y))))R reduce(w,self););
+// obsolete  DO(n, y=wv[i]; r=AR(y); if(!(r&&r<=2&&p==IC(y)&&TYPESEQ(t,AT(y))))R reduce(w,self););
+ DO(n, y=wv[i]; r=AR(y); if(!((((r-1)&-2)==0)&&p==IC(y)&&TYPESEQ(t,AT(y))))R reduce(w,self););  // rank 1 or 2, rows match, equal types
  R box(razeh(w));
 }    /* ,.&.>/ w */
 

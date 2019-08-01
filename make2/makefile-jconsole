@@ -19,7 +19,7 @@ OBJS=  \
 	$(CC) -c -o $@ $< $(CFLAGS)
 
 $(ODIR)/$(TARGET) : $(OBJS) $(OBJSLN)
-	$(CC) $(LDFLAGS) -o $@ $(OBJS) $(OBJSLN)
+	$(CC) -o $@ $(OBJS) $(OBJSLN) $(LDFLAGS)
 
 all: $(ODIR)/$(TARGET)
 

@@ -17,8 +17,8 @@ OBJS=  \
 %.o: %.c
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-$(ODIR)/$(TARGET) : $(OBJS) 
-	$(CC) $(LDFLAGS) -o $@ $(OBJS) 
+$(ODIR)/$(TARGET) : $(OBJS)
+	$(CC) -o $@ $(OBJS) $(LDFLAGS)
 
 all: $(ODIR)/$(TARGET)
 

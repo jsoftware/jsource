@@ -362,19 +362,19 @@ static A jtsbunstr(J jt,I q,A w){A z;S c2;I i,j,m,wn;SB*zv;
  c2=AT(w)&C4T?SBC4:AT(w)&C2T?SBC2:0; wn=AN(w);  // c2=0 for LIT, SBC2 for C2T, SBC4 for C4T
  if(c2&SBC4){C4 c,*wv=C4AV(w); 
   c=wv[q==-1?0:wn-1];
-  m=0; DO(wn, if(c==wv[i])++m;);
+  m=0; DO(wn, m+=c==wv[i];);
   GATV0(z,SBT,m,1); zv=SBAV(z);
   if(q==-1){for(i=j=1;i<=wn;++i)if(c==wv[i]||i==wn){RE(*zv++=sbprobe(c2,4*(i-j),(C*)(j+wv),0)); j=i+1;}}
   else     {for(i=j=0;i< wn;++i)if(c==wv[i]       ){RE(*zv++=sbprobe(c2,4*(i-j),(C*)(j+wv),0)); j=i+1;}}
  }else if(c2&SBC2){US c,*wv=USAV(w); 
   c=wv[q==-1?0:wn-1];
-  m=0; DO(wn, if(c==wv[i])++m;);
+  m=0; DO(wn, m+=c==wv[i];);
   GATV0(z,SBT,m,1); zv=SBAV(z);
   if(q==-1){for(i=j=1;i<=wn;++i)if(c==wv[i]||i==wn){RE(*zv++=sbprobe(c2,2*(i-j),(C*)(j+wv),0)); j=i+1;}}
   else     {for(i=j=0;i< wn;++i)if(c==wv[i]       ){RE(*zv++=sbprobe(c2,2*(i-j),(C*)(j+wv),0)); j=i+1;}}
  }else{C c,*wv=CAV(w); 
   c=wv[q==-1?0:wn-1];
-  m=0; DO(wn, if(c==wv[i])++m;);
+  m=0; DO(wn, m+=c==wv[i];);
   GATV0(z,SBT,m,1); zv=SBAV(z);
   if(q==-1){for(i=j=1;i<=wn;++i)if(c==wv[i]||i==wn){RE(*zv++=sbprobe(c2,i-j,j+wv,0)); j=i+1;}}
   else     {for(i=j=0;i< wn;++i)if(c==wv[i]       ){RE(*zv++=sbprobe(c2,i-j,j+wv,0)); j=i+1;}}
@@ -427,7 +427,7 @@ static F1(jtsbunbox){A*wv,x,z;S c2;I i,m,n;SB*zv;
 static F1(jtsbunind){A z;I j,n,*zv;
  RZ(z=cvt(INT,w));
  zv=AV(z); n=jt->sbun;
- DQ(AN(w), j=*zv++; ASSERT(0<=j&&j<n,EVINDEX););
+ DQ(AN(w), j=*zv++; ASSERT((UI)j<(UI)n,EVINDEX););
  AT(z)=SBT;
  R z;
 }    /* w is a numeric array of symbol indices */
@@ -572,7 +572,7 @@ static A jtsbcheck1(J jt,A una,A sna,A u,A s,A h,A roota,A ff,A gp){PROLOG(0003)
  ASSERTD(1==AR(h),"h vector");
  ASSERTD(INT&AT(h),"h integer");
  ASSERTD(c<=AN(h),"c bounded by #h");
- b=0; DO(AN(h), j=hv[i]; if(-1==j)b=1; else ASSERTD(0<=j&&j<c,"h index"););
+ b=0; DO(AN(h), j=hv[i]; if(-1==j)b=1; else ASSERTD((UI)j<(UI)c,"h index"););
  ASSERTD(b,"h full");
  GATV0(x,B01,c,1); lfv=BAV(x); memset(lfv,C0,c);
  GATV0(x,B01,c,1); rtv=BAV(x); memset(rtv,C0,c);

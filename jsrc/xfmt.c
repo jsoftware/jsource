@@ -80,7 +80,7 @@ static B jtfmtcomma(J jt, C *x, I l, I d, C *subs) {C *v,*u;I j,n,c;
  n=l-(c=(l-!!d-d)>>2); u=x+l-1;
  if(v=memchr(x, SUBd, n)){j=n-(v-x); u-=j; memmove(u+1,v,j); v--;} else v=x+n-1;
  j=0;
- DQ(v-x+1, if('0'<=*v&&*v<='9'){if(j==3){*u--=SUBc; j=0;} j++;} *u--=*v--;);
+ DQ(v-x+1, if((C)(*v-'0')<=(C)('9'-'0')){if(j==3){*u--=SUBc; j=0;} j++;} *u--=*v--;);
  R 1;
 }
 

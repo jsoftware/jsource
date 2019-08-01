@@ -107,7 +107,7 @@ F1(jtts0){A x,z;C s[9],*u,*v,*zv;D*xv;I n,q;
  if(!n)R x;
  if(!(AT(w)&LIT))RZ(w=cvt(LIT,w));
  GATV(z,LIT,n,AR(w),AS(w)); zv=CAV(z); MC(zv,CAV(w),n);
- q=0; v=zv; DQ(n, if('Y'==*v++)++q;); u=2==q?s+2:s;
+ q=0; v=zv; DQ(n, q+='Y'==*v++;); u=2==q?s+2:s;   // if only 2 Y, advance over century
  sprintf(s,FMTI04,(I)xv[0]);             v=zv; DQ(n, if(*v=='Y'){*v=*u++; if(!*u)break;} ++v;);
  sprintf(s,FMTI02,(I)xv[1]);        u=s; v=zv; DQ(n, if(*v=='M'){*v=*u++; if(!*u)break;} ++v;);
  sprintf(s,FMTI02,(I)xv[2]);        u=s; v=zv; DQ(n, if(*v=='D'){*v=*u++; if(!*u)break;} ++v;);
@@ -288,7 +288,7 @@ F1(jtpmunpack){A*au,*av,c,t,x,z,*zv;B*b;D*dv;I*iv,k,m,n,p,q,wn,*wv;PM*v,*v0,*vq;
  u=(PM0*)AV(jt->pma); p=u->wrapped?u->n-u->i:0; q=u->i; n=p+q;
  GATV0(x,B01,n,1); b=BAV(x); memset(b,wn?C0:C1,n);
  if(wn){
-  DO(wn, k=wv[i]; if(0>k)k+=n; ASSERT(0<=k&&k<n,EVINDEX); b[k]=1;);
+  DO(wn, k=wv[i]; if(0>k)k+=n; ASSERT((UI)k<(UI)n,EVINDEX); b[k]=1;);
   m=0; 
   DO(n, if(b[i])++m;);
  }else m=n;

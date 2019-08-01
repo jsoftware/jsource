@@ -549,7 +549,7 @@ static A sfe(J jt,A w,I prec,UC decimalpt,UC zuluflag){
   d=(t+((0x444332221100000>>(m<<2))&0xf))%31+1;  // # days   start-of-month must advance to be on 31-day multiple, by month: x x x 0(Mar) 0(Apr) 1 1 2 2 2 3 3 4 4 4
   I4 janfeb=(I4)(12-m)>>(32-1); y-=janfeb; m-=janfeb&12;  // move jan-feb into next year number
   // Now write the result yyyy-mm-ddThh:mm:ss.nnnnnnnnn
-#if 0
+#if 0  // obsolete 
     // This is the straightforward way to write the result.  I have gone to a different method because this version releases 32 integer multiplies,
     // of which 8 have a chained dependency which might amount to 32 clocks.  I'm not sure the whole loop will take 32 clocks - it'll be close -
     // so I have gone to a version that doesn't use the multiply unit as much

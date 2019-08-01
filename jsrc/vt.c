@@ -177,14 +177,13 @@ F1(jthead){I wcr,wf,wr;
  F1PREFIP;
  RZ(w);
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr;  // no RESETRANK so that we can pass rank into other code
- if(!wcr||AS(w)[wf]){  // if cell is atom, or cell has items
+ if(!wcr||AS(w)[wf]){  // if cell is atom, or cell has items - which means it's safe to calculate the size of a cell
   if(((-wf)|((AT(w)&(DIRECT|RECURSIBLE))-1)|(wr-2))>=0){  // frame=0, and DIRECT|RECURSIBLE, and rank>1.  No gain in virtualizing an atom, and it messes up inplacing and allocation-size counting in the tests
-   // just one cell.  Create a virtual block for it, at offset 0
+   // just one cell (no frame).  Create a virtual block for it, at offset 0
    I wn=AN(w); wcr--; wcr=(wcr<0)?wr:wcr;  // wn=#atoms of w, wcr=rank of cell being created
    A z; RZ(z=virtualip(w,0,wcr));  // allocate the cell.  Now fill in shape & #atoms
     // if w is empty we have to worry about overflow when calculating #atoms
-   I zn=1; I *ws=AS(w)+1, *zs=AS(z); DO(wcr, zs[i]=ws[i]; if(wn){zn*=ws[i];}else{zn=mult(zn,ws[i]);RE(0);})   // copy shape of CELL of w into z
-   AN(z)=zn;
+   I zn; MCISH(AS(z),AS(w)+1,wcr) PROD(zn,wcr,AS(w)+1) AN(z)=zn;  /*  I *ws=AS(w)+1, *zs=AS(z); obsolete DO(wcr, zs[i]=ws[i]; if(wn){zn*=ws[i];}else{zn=mult(zn,ws[i]);RE(0);}) */  // copy shape of CELL of w into z
    RETF(z);
   }else{
    // rank not 0, or non-virtualable type, or cell is an atom.  Use from.  Note that jt->ranks is still set, so this may produce multiple cells

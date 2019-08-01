@@ -91,10 +91,11 @@ F1(jtwords){A t,*x,z;C*s;I k,n,*y;
 
 
 static A jtconstr(J jt,I n,C*s){A z;C b,c,p,*t,*x;I m=0;
- p=0; t=s; DQ(n-2, c=*++t; b=c==CQUOTE; if(!b||p)m++;    p=b&&!p;);
+// obsolete  p=0; t=s; DQ(n-2, c=*++t; b=c==CQUOTE; if(!b||p)m++;    p=b&&!p;);
+ p=0; t=s; DQ(n-2, c=*++t; b=c==CQUOTE; m+=(b^1)|p; p=((b^1)|p)^1;);
  if(0==m)R aqq; else if(1==m&&(z=chr[(UC)s[1]]))R z;
  GATV0(z,LIT,m,1!=m); x=CAV(z);
- p=0; t=s; DQ(n-2, c=*++t; b=c==CQUOTE; if(!b||p)*x++=c; p=b&&!p;);
+ p=0; t=s; DQ(n-2, *x=c=*++t; b=c==CQUOTE; x+=(b^1)|p; p=((b^1)|p)^1;);  // This may overstore by 1 character but that's OK because LIT types have allocated space at the end
  R z;
 }
 
@@ -286,7 +287,7 @@ F1(jtfsmvfya){PROLOG(0099);A a,*av,m,s,x,z,*zv;I an,c,e,f,ijrd[4],k,p,q,*sv,*v;
  RZ(s=vi(av[1])); sv=AV(s);
  ASSERT(3==AR(s),EVRANK);
  v=AS(s); p=v[0]; q=v[1]; ASSERT(2==v[2],EVLENGTH);
- v=sv; DQ(p*q, k=*v++; e=*v++; ASSERT(0<=k&&k<p&&0<=e&&e<=6,EVINDEX););
+ v=sv; DQ(p*q, k=*v++; e=*v++; ASSERT((UI)k<(UI)p&&(UI)e<=(UI)6,EVINDEX););
  ijrd[0]=0; ijrd[1]=-1; ijrd[2]=0; ijrd[3]=-1;
  if(4==an){I d,i,j,n,r;
   RZ(x=vi(av[3])); n=AN(x); v=AV(x);
@@ -302,7 +303,7 @@ F1(jtfsmvfya){PROLOG(0099);A a,*av,m,s,x,z,*zv;I an,c,e,f,ijrd[4],k,p,q,*sv,*v;
  if(!c&&1==AR(m)){   /* m is empty; w must be integer vector */  }
  else if(NUMERIC&AT(m)){
   ASSERT(c==AN(alp),EVLENGTH);
-  RZ(m=vi(m)); v=AV(m); DO(c, k=v[i]; ASSERT(0<=k&&k<q,EVINDEX););
+  RZ(m=vi(m)); v=AV(m); DO(c, k=v[i]; ASSERT((UI)k<(UI)q,EVINDEX););
  }else ASSERT(BOX&AT(m),EVDOMAIN);
  GAT0(z,BOX,4,1); zv=AAV(z);
  RZ(zv[0]=rifvs(sc(f))); RZ(zv[1]=rifvs(s)); RZ(zv[2]=rifvs(m)); RZ(zv[3]=rifvs(vec(INT,4L,ijrd)));

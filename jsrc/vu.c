@@ -102,7 +102,7 @@ static F1(jtc2fi){A z;I j,n,*v;US*zv;
  RZ(w=vi(w));
  n=AN(w); v=AV(w);
  GATV(z,C2T,n,AR(w),AS(w)); zv=USAV(z);
- DQ(n, j=*v++; ASSERT(SMIN<=j&&j<=SMAX,EVINDEX); *zv++=(US)j;);
+ DQ(n, j=*v++; ASSERT((UI)(j-SMIN)<=(UI)((I)SMAX-SMIN),EVINDEX); *zv++=(US)j;);
  RETF(z);
 }    /* 2-byte chars from integers */
 

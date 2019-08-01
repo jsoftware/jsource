@@ -831,7 +831,7 @@ if(NUMERIC&t)
 RZ(w=vi(w));
 n=AN(w); v=(I*)AV(w);
 GATV0(c4,C4T,n,1); c4v=C4AV(c4);
-DQ(n, j=*v++; ASSERT(0<=j&&j<=0x10ffff,EVINDEX); *c4v++=(C4)j;);
+DQ(n, j=*v++; ASSERT((UI)j<=(UI)0x10ffff,EVINDEX); *c4v++=(C4)j;);
 q=utomsize(C4AV(c4),AN(c4));
 q=(q<0)?(-q):q;   // allow unpaired surrogate as in 10&u:
 GATV0(z,LIT,q,1);

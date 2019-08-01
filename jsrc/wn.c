@@ -53,24 +53,28 @@ static NUMH(jtnumj){C*t,*ta;D x,y;Z*v;
  R 1;
 }
 
-static NUMH(jtnumi){B neg;C*t;I j;static C*dig="0123456789";
+static NUMH(jtnumi){I neg;I j;
  if(neg='-'==*s){++s; --n; if(!n)R 0;}
  for(;*s=='0'&&n>1;--n,++s);  // skip leading zeros, as long as there is more than one character
  if(!(19>=n))R 0;   // 2^63 is 9223372036854775808.  So a 20-digit input must overflow, and the most a
   // 19-digit number can be is a little way into the negative; so testing for negative will be a valid test for overflow
- j=0; DQ(n, if(!(t=memchr(dig,*s++,10L)))R 0; j=10*j+(t-dig););
- if(!(0<=j||neg&&j==IMIN))R 0;  // overflow if negative AND not the case of -2^63, whichs shows as IMIN with a negative flag
- *(I*)vv=0>j||!neg?j:-j;   // if j<0, it must be IMIN, keep it neg; otherwise change sign if neg
+// obsolete  j=0; DQ(n, if(!(t=memchr(dig,*s++,10L)))R 0; j=10*j+(t-dig););
+ j=0; DQ(n, I dig=*s++; if((UI)(dig-'0')>(UI)('9'-'0'))R 0; j=10*j+(dig-'0'););
+// obsolete  if(!(0<=j||neg&&j==IMIN))R 0;  // overflow if negative AND not the case of -2^63, which shows as IMIN with a negative flag
+ if(j<0&&j!=(neg<<(BW-1)))R 0;  // overflow if negative AND not the case of -2^63, which shows as IMIN with a negative flag
+// obsolete  *(I*)vv=0>j||!neg?j:-j;   // if j<0, it must be IMIN, keep it neg; otherwise change sign if neg
+ *(I*)vv=(j^(-neg))+neg;   // if - was coded, take 2's comp, which will leave IMIN unchanged
  R 1;
 }     /* called only if SY_64 */
 
-static NUMH(jtnumx){A y;B b,c;C d,*t;I j,k,m,*yv;X*v;static C*dig="0123456789";
+static NUMH(jtnumx){A y;B b,c;C d;I j,k,m,*yv;X*v;
  v=(X*)vv;
  d=*(s+n-1); b='-'==*s; c='x'==d||'r'==d; s+=b;
  if('-'==d){if(!(2>=n))R 0; if(!(*v=rifvs(vci(1==n?XPINF:XNINF))))R 0; R 1;}
  n-=b+c; if(!(m=(n+XBASEN-1)/XBASEN))R 0; k=n-XBASEN*(m-1);
  GATV0(y,INT,m,1); yv=m+AV(y);
- DQ(m, j=0; DQ(k, if(!(t=memchr(dig,*s++,10L)))R 0; j=10*j+(t-dig);); *--yv=b?-j:j; k=XBASEN;);
+// obsolete  DQ(m, j=0; DQ(k, if(!(t=memchr(dig,*s++,10L)))R 0; j=10*j+(t-dig);); *--yv=b?-j:j; k=XBASEN;);
+ DQ(m, j=0; DQ(k, I dig=*s++; if((UI)(dig-'0')>(UI)('9'-'0'))R 0; j=10*j+(dig-'0');); *--yv=b?-j:j; k=XBASEN;);
  if(!(*v=yv[m-1]?y:rifvs(xstd(y))))R 0;  // this stores into the extended result
  R 1;
 }
@@ -221,7 +225,7 @@ A jtconnum(J jt,I n,C*s){PROLOG(0101);A y,z;B b,(*f)(J,I,C*,void*),ii,j,p=1,q,x;
  GA(z,t,m,1!=m,0); v=CAV(z);
  if(ii){  // if we think the values are ints, see if they really are
   DO(m, d=i+i; e=yv[d]; if(!numi(yv[1+d]-e,e+s,v)){ii=0; break;} v+=k;);  // read all values, stopping if a value overflows
-  if(!ii){f=jtnumd; if(SZI==SZD){AT(z)=FL;}else{GATV0(z,FL,m,1!=m);} v=CAV(z);}  // if there was overflow, repurpose/allocate the input - and have use reread as floats
+  if(!ii){f=jtnumd; if(SZI==SZD){AT(z)=FL;}else{GATV0(z,FL,m,1!=m);} v=CAV(z);}  // if there was overflow, repurpose/allocate the input with enough space for floats
  }
  if(!ii)DO(m, d=i+i; e=yv[d]; ASSERT(f(jt,yv[1+d]-e,e+s,v),EVILNUM); v+=k;);  // read the values as larger-than-int
  z=bcvt(bcvtmask,z);

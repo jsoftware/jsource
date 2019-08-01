@@ -81,7 +81,7 @@ static I jtgetnl(J jt){
   jt->numlocdelqn += AN(x)-oldsize;  // add the new allocation into the size of the delq
   I relodist=(I)IAV(x)-(I)jt->numloctbl;  // relocation factor
   I oldbase=(I)jt->numloctbl; I *reloptr=IAV(x);  // treat the locale pointer as integers for arithmetic here
-  DQ(oldsize, if((UI)(*reloptr-oldbase)<(oldsize<<LGSZI))*reloptr+=relodist; ++reloptr;)  // if the pointer points to within the old block, relocate it to the new.  reloptr ends pointeing to the first new block
+  DQ(oldsize, if((UI)(*reloptr-oldbase)<(oldsize<<LGSZI))*reloptr+=relodist; ++reloptr;)  // if the pointer points to within the old block, relocate it to the new.  reloptr ends pointing to the first new block
   jt->numlocdelqh=(I*)((I)jt->numlocdelqh+relodist); jt->numlocdelqt=(I*)((I)jt->numlocdelqt+relodist);  // relocate delq head/tail
   // we could make the new block the head of the alloq, but then block 1 would go out before block 0 and Chris would complain.  So we chain them off the tail
   *jt->numlocdelqt=(I)reloptr; // chain the upcoming blocks at end of queue
@@ -397,7 +397,7 @@ static A jtlocale(J jt,B b,A w){A g=0,*wv,y;
  if(!AR(w) && AT(w)&(INT|B01))R (b?jtstfindcre:jtstfind)(jt,-1,0,BIV0(w));  // atomic integer is OK
  RZ(vlocnl(1,w));
  wv=AAV(w); 
- DO(AN(w), y=AT(w)&BOX?AAV(w)[i]:sc(IAV(w)[i]); if(!(g=(b?jtstfindcre:jtstfind)(jt,AT(y)&((INT|B01))?-1:AN(y),CAV(y),AT(y)&((INT|B01))?BIV0(y):BUCKETXLOC(AN(y),CAV(y)))))R 0;);
+ DO(AN(w), y=AT(w)&BOX?AAV(w)[i]:sc(IAV(w)[i]); if(!(g=(b?jtstfindcre:jtstfind)(jt,AT(y)&(INT|B01)?-1:AN(y),CAV(y),AT(y)&(INT|B01)?BIV0(y):BUCKETXLOC(AN(y),CAV(y)))))R 0;);
  R g;
 }    /* last locale (symbol table) from boxed locale names; 0 if none or error.  if b=1, create locale */
 

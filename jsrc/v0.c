@@ -320,7 +320,7 @@ F2(jtpoly2){F2PREFIP;A c,za;B b;D*ad,d,p,*x,u,*z;I an,at,j,t,n,wt;Z*az,e,q,*wz,y
  }
  j=0;  // Set j=1 if there is an infinity in the coeffs/roots.  In that case we can't use Horner's rule (could do this only if !b&&FL?)
  if(t&FL+CMPX){
-        DO(t&FL?an:an+an, u=ad[i]; if(u==inf||u==infm){j=1; break;}); 
+        DO(t&FL?an:an+an, u=ad[i]; if(fabs(u)==inf/* obsolete ||u==infm*/){j=1; break;}); 
  }
  // if we are going to use the fast loop here, allocate space for it.  Inplace if possible
  if(!j&&!(t&XNUM+RAT+SPARSE)){

@@ -54,7 +54,7 @@ static F1(jtltiea){A t,*v,*wv,x,y;B b;C c;I n;
  n=AN(w); wv=AAV(w);  RZ(t=spellout(CGRAVE));
  GATV0(y,BOX,n+n,1); v=AAV(y);
  DO(n, *v++=i?t:mtv; x=wv[i]; c=ID(x); RZ(x=lrr(x)); 
-     b=c==CHOOK||c==CFORK||i&&lp(x); RZ(*v++=CALL2(jt->lcp,b,x,0)););
+     b=(C)(c-CHOOK)<=(C)(CFORK-CHOOK)||i&&lp(x); RZ(*v++=CALL2(jt->lcp,b,x,0)););
  R raze(y);
 }
 
@@ -63,8 +63,9 @@ static F1(jtltieb){A pt,t,*v,*wv,x,y;B b;C c,*s;I n;
  n=AN(w); wv=AAV(w);  RZ(t=spellout(CGRAVE)); RZ(pt=over(scc(')'),t));
  GATV0(y,BOX,n+n,1); v=AAV(y);
  if(1>=n)x=mtv; else{GATV0(x,LIT,n-2,1); s=CAV(x); DQ(n-2, *s++='(';);}
- DO(n, *v++=0==i?x:1==i?t:pt; x=wv[i]; c=ID(x); RZ(x=lrr(x)); 
-     b=c==CHOOK||c==CFORK||i&&lp(x); RZ(*v++=CALL2(jt->lcp,b,x,0)););
+// obsolete  DO(n, *v++=0==i?x:1==i?t:pt; x=wv[i]; c=ID(x); RZ(x=lrr(x)); 
+ DO(n, x=i==1?t:x; x=i>1?pt:x; *v++=x; x=wv[i]; c=ID(x); RZ(x=lrr(x)); 
+     b=(C)(c-CHOOK)<=(C)(CFORK-CHOOK)||i&&lp(x); RZ(*v++=CALL2(jt->lcp,b,x,0)););
  R raze(y);
 }
 
@@ -90,7 +91,8 @@ static F1(jtlchar){A y;B b,p=1,r1;C c,d,*u,*v;I j,k,m,n;
   R over(over(cstr("a. "),lcpx(lnum(y))),over(cstr("}~"),lchar(from(y,w))));
  }
  j=2; b=7<n||1<n&&1<AR(w);
- DQ(n, c=*v++; if(c==CQUOTE)++j; b&=c==d; p&=31<c&&c<127;); 
+// obsolete  DQ(n, c=*v++; if(c==CQUOTE)++j; b&=c==d; p&=31<c&&c<127;); 
+ DQ(n, c=*v++; j+=c==CQUOTE; b&=c==d; p&=(C)(c-32)<(C)(127-32);); 
  if(b){n=1; j=MIN(3,j);}
  if(!p){
   k=(UC)d; RZ(y=indexof(alp,w));
@@ -108,17 +110,18 @@ static F1(jtlbox){A p,*v,*vv,*wv,x,y;B b=0;I n;
  RZ(w);
  if(equ(ace,w)&&B01&AT(AAV0(w)))R cstr("a:");
  n=AN(w); wv=AAV(w); 
- DO(n, x=wv[i]; if(BOX&AT(x)){b=1; break;}); b=b||1==n;
- GATV0(y,BOX,n+n-!b,1); v=vv=AAV(y);
+ DO(n, x=wv[i]; if(BOX&AT(x)){b=1; break;}); b|=1==n;
+ GATV0(y,BOX,n+n-(1^b),1); v=vv=AAV(y);
  if(b){
   RZ(p=cstr("),(<"));
   DO(n, x=wv[i]; *v++=p; RZ(*v++=lnoun(x)););
   RZ(*vv=cstr(1==n?"<":"(<")); if(1<n)RZ(vv[n+n-2]=cstr("),<"));
   R over(lshape(w),raze(y));
  }
- DO(n, x=wv[i]; if(b=1!=AR(x)||!(LIT&AT(x)))break;);
+ DO(n, x=wv[i]; if((AR(x)^1)|(~AT(x)&LIT)){b=1; break;});
  if(!b){C c[256],d,*t;UC*s;
-  DO(256,c[i]=1;); 
+// obsolete  DO(256,c[i]=1;); 
+  memset(c,1,sizeof(c)); 
   RZ(x=raze(w)); s=UAV(x);
   DQ(AN(x), c[*s++]=0;);
   if(c[CQUOTE]&&equ(w,words(x)))R over(cstr(";:"),lchar(x));

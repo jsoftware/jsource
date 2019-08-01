@@ -262,15 +262,18 @@ F2(jtreitem){A y,z;I acr,an,ar,r,*v,wcr,wr;
  R wr==wcr?jtreshape(jtinplace,y,w):IRS2(y,w,0L,acr,wcr,jtreshape,z);  // Since a has no frame, we dont have to check agreement
 }    /* a $"r w */
 
-#if SY_64
+#if 1
 #define EXPAND(T)  \
   {T*u=(T*)wv,*v=(T*)zv,x;                                                \
    mvc(sizeof(T),&x,k,jt->fillv);                                         \
+   DQ(an, I abit=*av++; T *uv=abit?u:&x; *v++=*uv; u+=abit;);  \
+  }
+#else  // obsolete
+#define EXPAND(T)  \
+  {T*u=(T*)wv,*v=(T*)zv,x;                                                \
    DQ(an, if(*av++){ASSERT(wx>(C*)u,EVLENGTH); *v++=*u++;}else *v++=x;);  \
    wv=(C*)u;                                                              \
   }
-#else
-#define EXPAND(T)  \
   {T*u=(T*)wv,*v=(T*)zv,x;                                                                       \
    mvc(sizeof(T),&x,k,jt->fillv);                                                                \
    for(i=0;i<q;++i)switch(*au++){                                                                \
@@ -296,14 +299,15 @@ F2(jtreitem){A y,z;I acr,an,ar,r,*v,wcr,wr;
   }
 #endif
 
-F2(jtexpand){A z;B*av;C*wv,*wx,*zv;I an,*au,i,k,p,q,r,wc,wk,wn,wt,zn;
+F2(jtexpand){A z;B*av;C*wv,*wx,*zv;I an,*au,i,k,p,wc,wk,wn,wt,zn;
  RZ(a&&w);
  if(!(B01&AT(a)))RZ(a=cvt(B01,a));
  ASSERT(1==AR(a),EVRANK);
  RZ(w=setfv(w,w)); 
- if(!AR(w))R from(a,take(num[-2],w));
- av=BAV(a); an=AN(a); q=an>>LGSZI; r=an&(SZI-1); au=(I*)av;
- wv=CAV(w); wn=AN(w); wc=aii(w); wt=AT(w); k=bpnoun(wt); wk=k*wc; wx=wv+wk**AS(w);
+ if(!AR(w))R from(a,take(num[-2],w));  // atomic w, use a { _2 {. w
+ av=BAV(a); an=AN(a); /* obsolete q=an>>LGSZI; r=an&(SZI-1);*/ au=(I*)av;
+ ASSERT(bsum(an,av)==AS(w)[0],EVLENGTH);  // each item of w must be used exactly once
+ wv=CAV(w); wn=AN(w); wc=aii(w); wt=AT(w); k=bpnoun(wt); wk=k*wc; wx=wv+wk*AS(w)[0];  // k=bytes/atom, wk=bytes/item, wx=end+1 of area
  RE(zn=mult(an,wc));
  GA(z,wt,zn,AR(w),AS(w)); AS(z)[0]=an; zv=CAV(z);
  switch(wk){
@@ -314,13 +318,13 @@ F2(jtexpand){A z;B*av;C*wv,*wx,*zv;I an,*au,i,k,p,q,r,wc,wk,wn,wt,zn;
 #endif
   case sizeof(I): EXPAND(I); break;
   default:  
-   mvc(k*zn,zv,k,jt->fillv); 
+   mvc(k*zn,zv,k,jt->fillv); // here we are trying to minimize calls to MC
    for(i=p=0;i<an;++i)
     if(*av++)p+=wk; 
-    else{if(p){ASSERT(wx>=wv+p,EVLENGTH); MC(zv,wv,p); wv+=p; zv+=p; p=0;} zv+=wk;}
-   if(p){ASSERT(wx>=wv+p,EVLENGTH); MC(zv,wv,p); wv+=p;}
+    else{if(p){/* obsolete ASSERT(wx>=wv+p,EVLENGTH);*/ MC(zv,wv,p); wv+=p; zv+=p; p=0;} zv+=wk;}
+   if(p){/* obsolete ASSERT(wx>=wv+p,EVLENGTH);*/ MC(zv,wv,p); /* obsolete wv+=p;*/}
  }
- ASSERT(wx==wv,EVLENGTH);
+// obsolete  ASSERT(wx==wv,EVLENGTH);
  RETF(z);
 }    /* a&#^:_1 w or a&#^:_1!.f w */
 

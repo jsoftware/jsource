@@ -68,7 +68,7 @@ static DF1(jtfxchar){A y;C c,d,id,*s;I m,n;
  ASSERT(1>=AR(w),EVRANK);  // string must be an atom or list
  ASSERT(n,EVLENGTH);
  s=CAV(w); c=*(s+n-1);
- DO(n, d=s[i]; ASSERT((d-32)<(127-32),EVSPELL););  // must be all ASCII
+ DO(n, d=s[i]; ASSERT((C)(d-32)<(C)(127-32),EVSPELL););  // must be all ASCII
  if(CA==ctype[(UC)*s]&&c!=CESC1&&c!=CESC2)R swap(w);  // If name and not control word, treat as name~, create nameref
  ASSERT(id=spellin(n,s),EVSPELL);  // not name, must be control word or primitive.  Also classify string 
  if(id!=CFCONS)y=ds(id); else{m=s[n-2]-'0'; y=FCONS(CSIGN!=*s?scib(m):2==n?ainf:scib(-m));} // define 0:, if it's that, using boolean for 0/1

@@ -26,13 +26,13 @@ static F2(jtebarmat){A ya,yw,z;B b,*zv;C*au,*av,*u,*v,*v0,*wu,*wv;I*as,c,i,k,m,n
  GATVR(z,B01,AN(w),2,ws); zv=BAV(z); memset(zv,C0,AN(z));
  if(t&B01+LIT+C2T+C4T+INT+SBT||1.0==jt->cct&&t&FL+CMPX)
   for(i=0;i<m;++i){
-   DO(n, u=av; b=0; DO(si,                         if(b=!!memcmp(u,v,s))break; u+=s; v+=r;); v=v0+=k; zv[i]=!b;);
+   DO(n, u=av; b=1; DO(si,                         if(memcmp(u,v,s)){b=0; break;} u+=s; v+=r;); v=v0+=k; zv[i]=b;);
    zv+=c; v=v0=wv+=r;
  }else{
   GA(ya,t,sj,1,0); au=CAV(ya);
   GA(yw,t,sj,1,0); wu=CAV(yw);
   for(i=0;i<m;++i){
-   DO(n, u=av; b=0; DO(si, MC(au,u,s); MC(wu,v,s); if(b=!equ(ya,yw)  )break; u+=s; v+=r;); v=v0+=k; zv[i]=!b;);
+   DO(n, u=av; b=1; DO(si, MC(au,u,s); MC(wu,v,s); if(!equ(ya,yw)  ){b=0; break;} u+=s; v+=r;); v=v0+=k; zv[i]=b;);
    zv+=c; v=v0=wv+=r;
  }}
  RETF(z);

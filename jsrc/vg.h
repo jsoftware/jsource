@@ -48,7 +48,7 @@ extern void jtmsort(J,I,void**,void**);
 
 // Convert 4 Booleans to a code 0-15
 #if C_LE
-#define IND4(x) {UINT xx = (x); ii = ((xx<<27)|(xx<<18)|(xx<<9)|xx)>>24;}  // first byte (bit 0) is the MSB when a word is loaded
+#define IND4(x) {UINT xx = (x); xx|=xx<<9; xx|=xx<<18; ii = xx>>24;}  // first byte (bit 0) is the MSB when a word is loaded
 #else
 #define IND4(x) {UINT xx = (x); ii = 0xf&((xx>>21)|(xx>>14)|(xx>>7)|xx);}
 #endif

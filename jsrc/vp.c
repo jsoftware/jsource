@@ -9,15 +9,16 @@
 static I jtord(J jt,A w){I j,n,*v,z;
  RZ(w);
  n=AN(w); z=-n;
- if(n){if(!(INT&AT(w)))RZ(w=cvt(INT,w)); v=AV(w); DQ(n, j=*v++; if(z<j)z=j;); ++z;}
+ if(n){if(!(INT&AT(w)))RZ(w=cvt(INT,w)); v=AV(w); DQ(n, j=*v++; z=z<j?j:z;); ++z;}
  R z;
 }  // the order of the permutation w: max element of w (could be negative)
 
-F1(jtpinv){I m=0,n,*v;
+F1(jtpinv){I m=-1,n,*v;  // empty perm will set m=0
  F1RANK(1,jtpinv,0);
  RZ(w=vi(w));
  n=AN(w); v=AV(w);
- DO(n, m=0>v[i]?MAX(m,-1-v[i]):MAX(m,v[i]);); m+=0<n;
+// obsolete  DO(n, m=0>v[i]?MAX(m,-1-v[i]):MAX(m,v[i]);); m+=0<n;
+ DO(n, I r=v[i]^(v[i]>>(BW-1)); m=r>m?r:m;); ++m;  // take 1s-comp of negative ele#, then find max; add 1 to get #eles
  R indexof(pfill(m,w),IX(m));
 }    /* permutation inverse */
 
@@ -51,7 +52,8 @@ static F1(jtcfd){A b,q,x,z,*zv;B*bv;I c,i,j,n,*qv,*u,*v,zn;
  if(c=1&&INT&AT(w)){
   n=AN(w); v=AV(w);
   GATV0(b,B01,1+n,1); bv=BAV(b); memset(bv,C0,n);
-  DO(n, j=v[i]; if(j<0||n<=j||bv[j]){c=0; break;} bv[j]=1;);
+// obsolete   DO(n, j=v[i]; if(j<0||n<=j||bv[j]){c=0; break;} bv[j]=1;);
+  DO(n, j=v[i]; if((UI)j>=(UI)n||bv[j]){c=0; break;} bv[j]=1;);
  }
  if(!c){n=ord(w); RZ(w=pfill(n,w)); v=AV(w); GATV0(b,B01,1+n,1);}
  bv=BAV(b); memset(bv,C0,1+n); ++bv;
@@ -99,7 +101,8 @@ F1(jtpparity){A x,y,z;B p,*u;I i,j,k,m,n,r,*s,*v,*zv;
  GATV(z,INT,m,r?r-1:0,s); zv=AV(z);
  for(i=0;i<m;++i){
   j=p=0; memset(u,C1,n);
-  DO(n, k=v[i]; if(0>k)v[i]=k+=n; if(0<=k&&k<n&&u[k])u[k]=0; else{j=1+n; break;});
+// obsolete   DO(n, k=v[i]; if(0>k)v[i]=k+=n; if(0<=k&&k<n&&u[k])u[k]=0; else{j=1+n; break;});
+  DO(n, k=v[i]; if(0>k)v[i]=k+=n; if((UI)k<(UI)n&&u[k])u[k]=0; else{j=1+n; break;});
   for(;j<n;++j)if(j!=v[j]){k=j; DQ(n-j-1, ++k; if(j==v[k]){v[k]=v[j]; p=!p; break;});}
   zv[i]=p?-1:j==n; 
   v+=n;

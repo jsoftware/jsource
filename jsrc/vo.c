@@ -174,8 +174,9 @@ A jtassembleresults(J jt, I ZZFLAGWORD, A zz, A zzbox, A* zzboxp, I zzcellp, I z
   // But if the cell is empty, we can't rely on # atoms to verify the shape, and then we have to reallocate
   if((((AR(zz)-zzwf)^zzcr) | (natomsresultcell^natomszzcell) | !natomsresultcell)){
    // The overall result-cell differs in shape or type from the cells of zz.  We must allocate a new result area.
-   GA(zztemp,zft,natomsresult,zzwf+zzcr,0);  I *zzts=AS(zztemp);  I *zzs=AS(zz); // allocate result area, and point to shape
-   DO(zzwf, *zzts++ = zzs[i];) DO(zzcr, *zzts++ = zzcs[i];)   // move in the frame followed by result-cell shape
+   GA(zztemp,zft,natomsresult,zzwf+zzcr,0);  // allocate result area, and point to shape
+   MCISH(AS(zztemp),AS(zz),zzwf); MCISH(AS(zztemp)+zzwf,zzcs,zzcr);   // move in frame and shape
+// obsolete    DO(zzwf, *zzts++ = zzs[i];) DO(zzcr, *zzts++ = zzcs[i];)   // move in the frame followed by result-cell shape
 
    // since zztemp is becoming the new result area, it should become inplace recursive if the type is recursible, and zz needs to
    // become nonrecursive, to transfer ownership of the contents of zz's blocks to zztemp without requiring explicit usecounting.

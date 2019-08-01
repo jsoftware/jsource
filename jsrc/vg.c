@@ -759,10 +759,28 @@ F2(jtdgrade2){F2PREFIP;A z;GBEGIN( 1); RZ(a&&w); z=SPARSE&AT(w)?grd2sp(a,w):jtgr
    if(OSGT(1,2))if(OSGT(0,2))P3(2,0,1) else XC(1,2);         \
  }
 
+#define NRANDS 36  // must be even
 // Partitioning function for order statistics
 // j is the order desired, w is the data .  t is a temp buffer we allocate to hold the shrinking partition
 // TODO: should do the % ops before the partitioning loop; should rewrite partitioning to avoid misprediction
 #define OSLOOP(T,ATOMF)  \
+{T p0,p1,q,*tv,*u,ui,uj,uk,*v,*wv;                                                     \
+  tv=wv=(T*)AV(w);                                                                     \
+  while(1){                                                                            \
+   if(4>=n){u=tv; SORT4; R ATOMF(tv[j]);}        /* stop loop on small partition */       \
+   p0=tv[(I)(qv[i]*n)]; --i;                                                  \
+   p1=tv[(I)(qv[i]*n)]; --i; i=(i<0)?NRANDS-1:i; if(p0>p1){q=p0; p0=p1; p1=q;}       /* create pivots p0, p1 selected from input, with p0 <= p1  */             \
+   {m0=m1=0; v=tv; DQ(n, m0+=*v<p0; m1+=*v<p1; ++v;);}  /* count m0: # < p0; and m1: # < p1  */         \
+   {I l=0,h=m0; l=j>=m0?m0:l; h=j>=m0?m1:h; l=j>=m1?m1:l; h=j>=m1?n:h; m=h-l;}   /* calc size of partition holding the result */\
+   if(t)u=v=tv; else{GA(t,wt,m+1,1,0); u=tv=(T*)AV(t); v=wv;}  /* allow for 1 overstore */                            \
+   if     (j<m0){       DQ(n, *u=*v; u+=*v<p0; ++v;);}                   \
+   else if(j<m1 ){DQ(n, *u=*v; u+=(p0<=*v)&(*v<p1); ++v;); j-=m0;}                   \
+   else if(m1   ){DQ(n, *u=*v; u+=p1<=*v; ++v;); j-=m1;}                   \
+   else{DQ(n, *u=*v; u+=*v>p1; ++v;); m=u-tv; n-=m; if(j<n)R ATOMF(p1); j-=n;} /* pivots both low; use > to split */ \
+   n=m; \
+  }  \
+ }
+#if 0 // obsolete
 {T p0,p1,q,*tv,*u,ui,uj,uk,*v,*wv;                                                     \
   tv=wv=(T*)AV(w);                                                                     \
   while(1){                                                                            \
@@ -778,14 +796,16 @@ F2(jtdgrade2){F2PREFIP;A z;GBEGIN( 1); RZ(a&&w); z=SPARSE&AT(w)?grd2sp(a,w):jtgr
    else if(c   ){j-=c;  DQ(n, if(p1<=*v       )*u++=*v; ++v;); n=m;}                   \
    else{DQ(n, if(p1<*v)*u++=*v; ++v;); m=u-tv; c=n-m; if(j<c)R ATOMF(p1); j-=c; n=m;}  \
  }}
+#endif
 
-F2(jtordstat){A q,t=0;I c,i=0,j,m,m0,m1,n,qn=53,*qv,wt;
+F2(jtordstat){A q,t=0;I j,m,m0,m1,n,wt;D *qv;
+ I i=NRANDS-1;  // i points to the next random number to draw
  RZ(a&&w);
  n=AN(w); wt=AT(w);
- if(!(!AR(a)&&AT(a)&B01+INT&&4<n&&1==AR(w)&&wt&FL+INT))R from(a,grade2(w,w));
+ if(!(!AR(a)&&AT(a)&B01+INT&&4<n&&1==AR(w)&&wt&FL+INT))R from(a,grade2(w,w));  // if not int/float, do full grade
  RE(j=i0(a)); if((UI)j>=(UI)n){j+=n; ASSERT((UI)j<(UI)n,EVINDEX);}
- // deal 53 random large integers to provide pivots.  We reuse them if needed
- RZ(q=df2(sc(qn),sc(IMAX),atop(ds(CQUERY),ds(CDOLLAR)))); qv=AV(q);
+ // deal 53 random floats to provide pivots.  We reuse them if needed
+ RZ(q=df2(sc(NRANDS),num[0],atop(ds(CQUERY),ds(CDOLLAR)))); qv=DAV(q);
  if(wt&FL)OSLOOP(D,scf) else OSLOOP(I,sc);
 }    /* a{/:~w */
 

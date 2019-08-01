@@ -100,11 +100,13 @@ F1(jtpparity){A x,y,z;B p,*u;I i,j,k,m,n,r,*s,*v,*zv;
  GATV0(y,B01,n,1); u=BAV(y);
  GATV(z,INT,m,r?r-1:0,s); zv=AV(z);
  for(i=0;i<m;++i){
-  j=p=0; memset(u,C1,n);
+  j=0; p=1; memset(u,C1,n);
 // obsolete   DO(n, k=v[i]; if(0>k)v[i]=k+=n; if(0<=k&&k<n&&u[k])u[k]=0; else{j=1+n; break;});
-  DO(n, k=v[i]; if(0>k)v[i]=k+=n; if((UI)k<(UI)n&&u[k])u[k]=0; else{j=1+n; break;});
-  for(;j<n;++j)if(j!=v[j]){k=j; DQ(n-j-1, ++k; if(j==v[k]){v[k]=v[j]; p=!p; break;});}
-  zv[i]=p?-1:j==n; 
+  DO(n, k=v[i]; if(0>k)v[i]=k+=n; if((UI)k<(UI)n&&u[k])u[k]=0; else{j=1+n; break;});  // if there are repeated indexes, set j high to force 0 result
+// obsolete   for(;j<n;++j)if(j!=v[j]){k=j; DQ(n-j-1, ++k; if(j==v[k]){v[k]=v[j]; p=!p; break;});}
+  for(;j<n;++j)if(j!=v[j]){k=j; DQ(n-j-1, ++k; if(j==v[k]){v[k]=v[j]; p=-p; break;});}
+// obsolete   zv[i]=p?-1:j==n; 
+  zv[i]=p&(j-n-1);   // return parity or 0
   v+=n;
  }
  R z;

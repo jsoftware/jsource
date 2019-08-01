@@ -804,7 +804,7 @@ F2(jtordstat){A q,t=0;I j,m,m0,m1,n,wt;D *qv;
  n=AN(w); wt=AT(w);
  if(!(!AR(a)&&AT(a)&B01+INT&&4<n&&1==AR(w)&&wt&FL+INT))R from(a,grade2(w,w));  // if not int/float, do full grade
  RE(j=i0(a)); if((UI)j>=(UI)n){j+=n; ASSERT((UI)j<(UI)n,EVINDEX);}
- // deal 53 random floats to provide pivots.  We reuse them if needed
+ // deal a bunch of random floats to provide pivots.  We reuse them if needed
  RZ(q=df2(sc(NRANDS),num[0],atop(ds(CQUERY),ds(CDOLLAR)))); qv=DAV(q);
  if(wt&FL)OSLOOP(D,scf) else OSLOOP(I,sc);
 }    /* a{/:~w */

@@ -47,7 +47,7 @@ static F2(jtcfrz){A z;B b=0,p;I j,n;Z c,d,*t,*u,*v;
   d=znegate(u[j]); t=j+v; *(1+t)=*t; 
   DQ(j, *t=zplus(*(t-1),ztymes(d,*t)); --t;); 
   *v=ztymes(d,*v);
-  if(p&&d.im)if(b=!b)c=u[j]; else if(p=ZCJ(c,u[j])){t=v; DQ(2+j, t++->im=0.0;);}
+  if(p&&d.im)if(b^=1)c=u[j]; else if(p=ZCJ(c,u[j])){t=v; DQ(2+j, t++->im=0.0;);}
  }
  R p>b?cvt(FL,z):z;
 }

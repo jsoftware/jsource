@@ -38,7 +38,7 @@ static F1(jtfacit){A c;V*u,*v;
  R folk(ds(CBANG),ds(CSTAR),w);
 }
 
-static A jttayamp(J jt,A w,B nf,A x,A h){A y;B ng=!nf;I j,n;V*v=FAV(h);
+static A jttayamp(J jt,A w,B nf,A x,A h){A y;B ng=nf^1;I j,n;V*v=FAV(h);
  ASSERT(AR(x)<=(nf?lrv(v):rrv(v)),EVRANK);
  switch(v->id){
   case CPLUS:  R tpoly(over(x,num[1]));

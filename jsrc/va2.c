@@ -1038,7 +1038,7 @@ DF2(jtfslashatg){A fs,gs,y,z;B b,bb,sb=0;C*av,c,d,*wv;I ak,an,ar,*as,at,m,
   av=CAV(a)+ak*(nn-1); wv=CAV(w)+wk*(nn-1); yv=CAV(y); zv=CAV(z);
   GA(z1,zt,zn,r-1,1+s); zu=CAV(z1);
   adocv.f(jt,m,zv,av,wv,n);
-  DQ(nn-1, av-=ak; wv-=wk; adocv.f(jt,m,yv,av,wv,n); adocvf.f(jt,zn,p?zv:zu,yv,p?zu:zv,(I)1); p=!p;);
+  DQ(nn-1, av-=ak; wv-=wk; adocv.f(jt,m,yv,av,wv,n); adocvf.f(jt,zn,p?zv:zu,yv,p?zu:zv,(I)1); p^=1;);
   if(NEVM<jt->jerr){jt->jerr=0; z=df1(df2(a,w,gs),fs);}else if(p)z=z1;
  }
  RE(0); RETF(z);

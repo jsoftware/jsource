@@ -430,7 +430,7 @@ static XF1(jtxpi){A e;B p;I i,n,n1,sk;X a,b,c,d,*ev,k,f,m,q,s,s0,t;
  n1=(13+AN(w)*XBASEN)/14; n=1+n1;
  RZ(e=piev(n,b)); ev=XAV(e); m=ev[n1];
  f=iv0; s0=iv1; sk=1;
- for(i=p=0;;++i,p=!p){
+ for(i=p=0;;++i,p^=1){
   s=xtymes(s0,xplus(c,xtymes(a,xc(i))));
   t=xdiv(xtymes(s,m),ev[i],XMEXACT);
   f=p?xminus(f,t):xplus(f,t);

@@ -196,7 +196,7 @@ static A jtth2a(J jt,B e,I m,I d,C*s,I n,I t,I wk,C*wv,B first){PROLOG(0049);A y
  // Copy the strings from the formatting area (u->) to the result area (yv->)
  // For exponential fields, start copying from the left, leaving one space if there is a negative sign somewhere else
  // in the column but not in this value; advance to next input & output
- if(e){yv+=!first; DQ(n, q=strlen(u); MC(yv+(I )(!b&&CSIGN!=*u),u,q); yv+=m; u+=1+q;);}
+ if(e){yv+=first^1; DQ(n, q=strlen(u); MC(yv+(I )(!b&&CSIGN!=*u),u,q); yv+=m; u+=1+q;);}
  // For non-exponential, right-justify the data, step to next input & output
  else {yv+=m;      DQ(n, q=strlen(u); MC(yv-q,          u,q); yv+=m; u+=1+q;);}
  EPILOG(y);

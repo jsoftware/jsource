@@ -134,7 +134,7 @@ static F1(jtfmtparse){A x,z,*zv;B ml[2+NMODVALS],mod,t;C c,*cu="srqpnmdblc",*cu1
  ASSERT(!n||LIT&AT(w),EVDOMAIN); 
  wv=CAV(w); n1=1+n; t=c=0; fb=0; mi=-1; memset(ml,C1,sizeof(ml));
  for(i=0;i<n1;++i){
-  mod=!t; c=wv[i];
+  mod=t^1; c=wv[i];
   if(i==n)ASSERT(!t,EVDOMAIN)
   else{
    if(t){ASSERT(c!=p,EVDOMAIN); if(c==q)t=0;}

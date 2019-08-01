@@ -109,7 +109,7 @@ F2(jtrotate){A y,z;B b;C*u,*v;I acr,af,ar,*av,d,k,m,n,p,*s,wcr,wf,wn,wr;
  if(1<p){
   GA(y,AT(w),wn,wr,s); u=CAV(y); 
   b=0; s+=wf;
-  DO(p-1, m*=n; n=*++s; PROD(d,wr-wf-i-2,s+1); rot(m,d,n,k,1L,av+i+1,b?u:v,b?v:u); b=!b;);  // s has moved past the frame
+  DO(p-1, m*=n; n=*++s; PROD(d,wr-wf-i-2,s+1); rot(m,d,n,k,1L,av+i+1,b?u:v,b?v:u); b^=1;);  // s has moved past the frame
   z=b?y:z;
  } 
  RETF(z);

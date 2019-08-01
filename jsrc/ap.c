@@ -181,7 +181,7 @@ static B jtpscangt(J jt,I m,I d,I n,B*z,B*x,B a,B pp,B pa,B ps){
    e=pp; memset(u,C0,d);
    DO(n, j=i; DO(d, if(u[i])z[i]='1'==u[i]; else 
      if(a==x[i]){b=j&1; z[i]=b^pa; u[i]=b^ps?'1':'0';}else z[i]=e;);
-    e=!e; z+=d; x+=d;); 
+    e^=1; z+=d; x+=d;); 
  }}
  R 1;
 }    /* f/\"1 w for > >: +: *: */
@@ -702,7 +702,7 @@ static A jtmovminmax(J jt,I m,A w,A fs,B max){A y,z;I c,i,j,p,wt;
 }    /* a <./\w (0=max) or a >./\ (1=max); vector w; integer or float; 0<m */
 
 static A jtmovandor(J jt,I m,A w,A fs,B or){A y,z;B b0,b1,d,e,*s,*t,*u,*v,x,*yv,*zv;I c,i,j,p;
- p=IC(w)-m; c=aii(w); x=b0=!or; b1=or;
+ p=IC(w)-m; c=aii(w); x=b0=or^1; b1=or;
  GATV(z,B01,c*(1+p),AR(w),AS(w)); AS(z)[0]=1+p;
  zv=BAV(z); u=v=BAV(w);
  if(1==c){

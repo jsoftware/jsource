@@ -91,11 +91,11 @@ BITWISE(jtbitwiseshifta,I, BWSHIFTA)
 DF1(jtbitwise1){R CALL2(FAV(self)->valencefns[1],zeroionei[0],w,self);}   // inplaceable - don't touch jt
 
 
-static AHDR2FN* bwC[16]={bw0000CC,bw0001CC,bw0010CC,bw0011CC, bw0100CC,bw0101CC,bw0110CC,bw0111CC,
-                   bw1000CC,bw1001CC,bw1010CC,bw1011CC, bw1100CC,bw1101CC,bw1110CC,bw1111CC};
+static AHDR2FN* bwC[16]={(AHDR2FN*)bw0000CC,(AHDR2FN*)bw0001CC,(AHDR2FN*)bw0010CC,(AHDR2FN*)bw0011CC, (AHDR2FN*)bw0100CC,(AHDR2FN*)bw0101CC,(AHDR2FN*)bw0110CC,(AHDR2FN*)bw0111CC,
+                   (AHDR2FN*)bw1000CC,(AHDR2FN*)bw1001CC,(AHDR2FN*)bw1010CC,(AHDR2FN*)bw1011CC, (AHDR2FN*)bw1100CC,(AHDR2FN*)bw1101CC,(AHDR2FN*)bw1110CC,(AHDR2FN*)bw1111CC};
 
-static AHDR2FN* bwI[16]={bw0000II,bw0001II,bw0010II,bw0011II, bw0100II,bw0101II,bw0110II,bw0111II,
-                   bw1000II,bw1001II,bw1010II,bw1011II, bw1100II,bw1101II,bw1110II,bw1111II};
+static AHDR2FN* bwI[16]={(AHDR2FN*)bw0000II,(AHDR2FN*)bw0001II,(AHDR2FN*)bw0010II,(AHDR2FN*)bw0011II, (AHDR2FN*)bw0100II,(AHDR2FN*)bw0101II,(AHDR2FN*)bw0110II,(AHDR2FN*)bw0111II,
+                   (AHDR2FN*)bw1000II,(AHDR2FN*)bw1001II,(AHDR2FN*)bw1010II,(AHDR2FN*)bw1011II, (AHDR2FN*)bw1100II,(AHDR2FN*)bw1101II,(AHDR2FN*)bw1110II,(AHDR2FN*)bw1111II};
 
 /* a m b.&.(a.&i.) w */
 /* a m b.&.(a.i.]) w */
@@ -110,9 +110,9 @@ DF2(jtbitwisechar){DECLFG;A*p,x,y,z;B b;I j,m,n,zn;AHDR2FN* ado;
  ASSERTAGREE(AS(a),AS(w),MIN(AR(a),AR(w)));
  j=i0(VAV(fs)->fgh[1])-16;
  GATV(z,LIT,zn,MAX(AR(a),AR(w)),AS(b?w:a));   // d is fixed; was d==SZI?LIT:C2T; would need GA then
- if(1==n)                 {ado=bwI[j]; m=(m+SZI-1)>>LGSZI;}
- else if(!AR(a)||!AR(w)||0==(n&(SZI-1))){ado=bwI[j]; n=(n+SZI-1)>>LGSZI; p=b?&x:&y; A zz; RZ(*p=IRS2(sc(SZI),*p,0L,0L,0L,jtrepeat,zz));}
- else                      ado=bwC[j];
+ if(1==n)                 {ado=(AHDR2FN*)bwI[j]; m=(m+SZI-1)>>LGSZI;}
+ else if(!AR(a)||!AR(w)||0==(n&(SZI-1))){ado=(AHDR2FN*)bwI[j]; n=(n+SZI-1)>>LGSZI; p=b?&x:&y; A zz; RZ(*p=IRS2(sc(SZI),*p,0L,0L,0L,jtrepeat,zz));}
+ else                      ado=(AHDR2FN*)bwC[j];
  n^=-b; n=(n==~1)?1:n;  // encode b flag in sign of n
  ado(n,m,AV(x),AV(y),AV(z),jt); 
  *(zn+CAV(z))=0;
@@ -124,12 +124,12 @@ DF2(jtbitwisechar){DECLFG;A*p,x,y,z;B b;I j,m,n,zn;AHDR2FN* ado;
 
 B jtbitwisecharamp(J jt,UC*t,I n,UC*wv,UC*zv){I p;UC c,i,j,*pv,s[256];AHDR2FN* ado;
  i=t[0]; j=t[255];
- if     (i==0    ){c=j; ado=bw0001II;}
- else if(j==i    ){c=i; ado=bw0011II;}
- else if(j==255  ){c=i; ado=bw0111II;}
- else if(j==255-i){c=i; ado=bw0110II;}
- else if(j==0    ){c=i; ado=bw0010II;}
- else if(i==255  ){c=j; ado=bw1011II;}
+ if     (i==0    ){c=j; ado=(AHDR2FN*)bw0001II;}
+ else if(j==i    ){c=i; ado=(AHDR2FN*)bw0011II;}
+ else if(j==255  ){c=i; ado=(AHDR2FN*)bw0111II;}
+ else if(j==255-i){c=i; ado=(AHDR2FN*)bw0110II;}
+ else if(j==0    ){c=i; ado=(AHDR2FN*)bw0010II;}
+ else if(i==255  ){c=j; ado=(AHDR2FN*)bw1011II;}
  else R 0;
  pv=(UC*)&p; DO(SZI, pv[i]=c;);
 // obsolete  f(jt,1,1L,256L/SZI,s,pv,AV(alp)); if(memcmp(s,t,256L))R 0;
@@ -140,11 +140,11 @@ B jtbitwisecharamp(J jt,UC*t,I n,UC*wv,UC*zv){I p;UC c,i,j,*pv,s[256];AHDR2FN* a
 }  // kludge this should be scrapped in favor of wordlong ops
 
 
-static AHDRRFN* bwinsC[16]={bw0000insC,bw0001insC,bw0010insC,bw0011insC, bw0100insC,bw0101insC,bw0110insC,bw0111insC,
-                      bw1000insC,bw1001insC,bw1010insC,bw1011insC, bw1100insC,bw1101insC,bw1110insC,bw1111insC};
+static AHDRRFN* bwinsC[16]={(AHDRRFN*)bw0000insC,(AHDRRFN*)bw0001insC,(AHDRRFN*)bw0010insC,(AHDRRFN*)bw0011insC, (AHDRRFN*)bw0100insC,(AHDRRFN*)bw0101insC,(AHDRRFN*)bw0110insC,(AHDRRFN*)bw0111insC,
+                      (AHDRRFN*)bw1000insC,(AHDRRFN*)bw1001insC,(AHDRRFN*)bw1010insC,(AHDRRFN*)bw1011insC, (AHDRRFN*)bw1100insC,(AHDRRFN*)bw1101insC,(AHDRRFN*)bw1110insC,(AHDRRFN*)bw1111insC};
 
-static AHDRRFN* bwinsI[16]={bw0000insI,bw0001insI,bw0010insI,bw0011insI, bw0100insI,bw0101insI,bw0110insI,bw0111insI,
-                      bw1000insI,bw1001insI,bw1010insI,bw1011insI, bw1100insI,bw1101insI,bw1110insI,bw1111insI};
+static AHDRRFN* bwinsI[16]={(AHDRRFN*)bw0000insI,(AHDRRFN*)bw0001insI,(AHDRRFN*)bw0010insI,(AHDRRFN*)bw0011insI, (AHDRRFN*)bw0100insI,(AHDRRFN*)bw0101insI,(AHDRRFN*)bw0110insI,(AHDRRFN*)bw0111insI,
+                      (AHDRRFN*)bw1000insI,(AHDRRFN*)bw1001insI,(AHDRRFN*)bw1010insI,(AHDRRFN*)bw1011insI, (AHDRRFN*)bw1100insI,(AHDRRFN*)bw1101insI,(AHDRRFN*)bw1110insI,(AHDRRFN*)bw1111insI};
 
 /* m b./&.(a.&i.) w */
 /* m b./&.(a.i.]) w */
@@ -154,7 +154,7 @@ DF1(jtbitwiseinsertchar){A fs,z;I d,j,n,r,wn,wr,zatoms;UC*u,*v,*wv,x,*zv;AHDRRFN
  RZ(w&&self);
  wr=AR(w); wn=AN(w); n=wr?*AS(w):1; z=VAV(self)->fgh[0]; fs=VAV(z)->fgh[0];
  if(!(wn&&SZI<n&&LIT&AT(w)))R from(df1(indexof(alp,w),fs),alp);
- PROD(d,wr-1,AS(w)+1); zatoms=d; wv=CAV(w); j=i0(VAV(fs)->fgh[1])-16; ado=bwinsC[j];  // d=#atoms in an item of a cell.  There is only 1 cell here (rank _)
+ PROD(d,wr-1,AS(w)+1); zatoms=d; wv=CAV(w); j=i0(VAV(fs)->fgh[1])-16; ado=(AHDRRFN*)bwinsC[j];  // d=#atoms in an item of a cell.  There is only 1 cell here (rank _)
  if(1==wr)switch(j){   // d==1 here
   case  0: R scc(0);
   case  3: R scc(*wv);
@@ -162,8 +162,8 @@ DF1(jtbitwiseinsertchar){A fs,z;I d,j,n,r,wn,wr,zatoms;UC*u,*v,*wv,x,*zv;AHDRRFN
   case 10: x=*(wv+wn-1); R scc((UC)(((wn&1)-1))^x);
   case 12: R scc((UC)~*wv);
   case 15: R scc((UC)255);
-  case  1: case 6: case 7: case 9: ado=bwinsI[j]; n=n>>LGSZI;  // this gets # full words in the list arg.  Handle as ints.  Remnant handled below
- }else if(0==(d&(SZI-1))){ado=bwinsI[j]; d>>=LGSZI;}  //if #atoms are a word multiple, switch to handling ints
+  case  1: case 6: case 7: case 9: ado=(AHDRRFN*)bwinsI[j]; n=n>>LGSZI;  // this gets # full words in the list arg.  Handle as ints.  Remnant handled below
+ }else if(0==(d&(SZI-1))){ado=(AHDRRFN*)bwinsI[j]; d>>=LGSZI;}  //if #atoms are a word multiple, switch to handling ints
  GATV(z,LIT,zatoms,wr-1,1+AS(w)); zv=CAV(z);
  ado(d,n,1L,wv,zv,jt);
  if(1==wr){

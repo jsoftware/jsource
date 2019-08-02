@@ -34,7 +34,13 @@ void jtwri(J jt,I type,C*p,I m,C*s){C buf[1024],*t=jt->outseq,*v=buf;I c,d,e,n;
   MC(v,s,d); v+=d; if(m>n){MC(v,"...",3L); v+=3;}
   MC(v,t,e); v+=e; 
   *v=0;
+#ifdef ANDROID
+  A z=tocesu8(str(strlen(buf),buf));
+  *(CAV(z)+AN(z))=0;
+  jsto(jt,type,CAV(z));
+#else
   jsto(jt,type,buf);
+#endif
 }}
 
 static void jtwrf(J jt,I n,C*v,F f){C*u,*x;I j=0,m;

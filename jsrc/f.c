@@ -862,7 +862,9 @@ static F1(jtjpr1){PROLOG(0002);A z;
  if(AN(z)){
 #ifdef ANDROID
   z=tocesu8(z);
+  *(CAV(z)+AN(z))=0;
 #endif
+  ASSERT(!*(CAV(z)+AN(z)),EVSYSTEM);  // trailing null byte
   jsto(jt,jt->mtyo==0?MTYOFM:jt->mtyo,CAV(z));
  }
  EPILOG(mtm);

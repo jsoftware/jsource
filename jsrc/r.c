@@ -7,15 +7,16 @@
 #include "w.h"
 
 
-static F1(jtdrr){PROLOG(0055);A df,dg,fs,gs,hs,*x,z;B b,ex,xop;C c,id;I fl,*hv,m;V*v;
+static F1(jtdrr){PROLOG(0055);A df,dg,hs,*x,z;B b,ex,xop;C c,id;I fl,*hv,m;V*v;
  RZ(w);
  // If the input is a name, it must be from ".@'name' which turned into ".@(name+noun)  - or in debug, but that's discarded
  if(AT(w)&NAME){RZ(w=sfn(0,w));}
  // If noun, return the value of the noun.
  if(AT(w)&NOUN)R w;  // no quotes needed
  // Non-nouns and NMDOT names carry on
- v=FAV(w); id=v->id; fl=v->flag; 
- fs=v->fgh[!v->fgh[0]]; gs=v->fgh[!!v->fgh[0]]; hs=v->fgh[2]; if(id==CBOX)fs=0;  // ignore gs field in BOX, there to simulate BOXATOP
+ v=FAV(w); id=v->id; fl=v->flag;
+ I fndx=(AT(w)&ADV)&&!v->fgh[0]; A fs=v->fgh[fndx]; A gs=v->fgh[fndx^1];  // In adverbs, if f is empty look to g for the left arg (used by m b.)
+ hs=v->fgh[2]; if(id==CBOX)gs=0;  // ignore gs field in BOX, there to simulate BOXATOP
  if(fl&VXOPCALL)R drr(hs);
  xop=1&&VXOP&fl; ex=id==CCOLON&&hs&&!xop;
  b=id==CHOOK||id==CADVF; c=id==CFORK;
@@ -40,7 +41,9 @@ F1(jtdrep){A z=drr(w); R z&&AT(z)&BOX?z:ravel(box(z));}
 F1(jtaro){A fs,gs,hs,s,*u,*x,y,z;B ex,xop;C id;I*hv,m;V*v;
  RZ(w);
  if(FUNC&AT(w)){
-  v=FAV(w); id=v->id; fs=v->fgh[!v->fgh[0]]; gs=v->fgh[!!v->fgh[0]]; hs=v->fgh[2]; if(id==CBOX)fs=0;  // ignore gs field in BOX, there to simulate BOXATOP
+  v=FAV(w); id=v->id;
+  I fndx=(AT(w)&ADV)&&!v->fgh[0]; fs=v->fgh[fndx]; gs=v->fgh[fndx^1];  // In adverbs, if f is empty look to g for the left arg (used by m b.)
+  hs=v->fgh[2]; if(id==CBOX)gs=0;  // ignore gs field in BOX, there to simulate BOXATOP
   if(VXOPCALL&v->flag)R aro(hs);
   xop=1&&VXOP&v->flag;
   ex=hs&&id==CCOLON&&!xop;

@@ -192,8 +192,8 @@ AHDR2(minusBI,I,B,I){I u;I v;I w;I oflo=0;
 // IB subtract, noting overflow and leaving it, possibly in place.  If we add 0, copy the numbers (or leave unchanged, if in place)
 AHDR2(minusIB,I,I,B){I u;I v;I w;I oflo=0;
  if(n-1==0)  DQ(m, u=*x; v=(I)*y; if(u==IMIN)oflo+=v; u=u-v; *z++=u; x++; y++; )
- else if(n-1<0)DQ(m, u=*x++; DQC(n, v=(I)*y; if(u==IMAX)oflo+=v; w=u-v; *z++=w; y++;))
- else      DQ(m, v=(I)*y++; if(v){DQ(n, u=*x; if(u==IMAX)oflo=1; u=u-1; *z++=u; x++;)}else{if(z!=x)MC(z,x,n<<LGSZI); z+=n; x+=n;})
+ else if(n-1<0)DQ(m, u=*x++; DQC(n, v=(I)*y; if(u==IMIN)oflo+=v; w=u-v; *z++=w; y++;))
+ else      DQ(m, v=(I)*y++; if(v){DQ(n, u=*x; if(u==IMIN)oflo=1; u=u-1; *z++=u; x++;)}else{if(z!=x)MC(z,x,n<<LGSZI); z+=n; x+=n;})
  if(oflo)jt->jerr=EWOVIP+EWOVIPMINUSIB;
 }
 

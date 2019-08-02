@@ -27,7 +27,7 @@
   if(d==1)DQ(m, *z++=v=    *x++; DQ(n-1, *z=v=pfx(v,*x); ++z; ++x;))  \
   else{for(i=0;i<m;++i){                                              \
    DO(d, z[i]=    x[i];); x+=d;                                        \
-   DQ(n-1, vecfn(jt,d,z+d,z,x,1); z+=d; x+=d; ); z+=d;                     \
+   DQ(n-1, vecfn(1,d,z,x,z+d,jt); z+=d; x+=d; ); z+=d;                     \
  }}}  /* for associative functions only */
 
 #define PREFIXNAN(f,Tz,Tx,pfx,vecfn)  \
@@ -36,7 +36,7 @@
   if(d==1)DQ(m, *z++=v=    *x++; DQ(n-1, *z=v=pfx(v,*x); ++z; ++x;))  \
   else{for(i=0;i<m;++i){                                              \
    MC(z,x,d*sizeof(Tx)); x+=d;                                        \
-   DQ(n-1, vecfn(jt,d,z+d,z,x,1); z+=d; x+=d; ); z+=d;                     \
+   DQ(n-1, vecfn(1,d,z,x,z+d,jt); z+=d; x+=d; ); z+=d;                     \
   }}                                                                   \
   NAN1V;                                                              \
  }   /* for associative functions only */
@@ -221,7 +221,7 @@ AHDRP(pluspfxD,D,D){I i;
  }else{
   for(i=0;i<m;++i){                                              \
    MC(z,x,d*sizeof(D)); x+=d;                                        \
-   DQ(n-1, plusDD(jt,d,z+d,z,x,1); z+=d; x+=d;); z+=d;                    \
+   DQ(n-1, plusDD(1,d,z,x,z+d,jt); z+=d; x+=d;); z+=d;                    \
   }
  }
  NAN1V;
@@ -574,7 +574,7 @@ static DF1(jtpscan){A y,z;I d,f,m,n,r,t,wn,wr,*ws,wt;
  if((t=atype(adocv.cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));  // convert input if necessary
  // if inplaceable, reuse the input area for the result
  if((I)jtinplace&(adocv.cv>>VIPOKWX)&JTINPLACEW && ASGNINPLACE(w))z=w; else GA(z,rtype(adocv.cv),wn,wr,ws);
- adocv.f(jt,m,d,n,AV(z),AV(w));
+ ((AHDRPFN*)adocv.f)(d,n,m,AV(w),AV(z),jt);
  if(jt->jerr)R (jt->jerr>=EWOV)?IRS1(w,self,r,jtpscan,z):0; else R adocv.cv&VRI+VRD?cvz(adocv.cv,z):z;
 }    /* f/\"r w atomic f main control */
 
@@ -795,8 +795,8 @@ static DF2(jtmovfslash){A x,z;B b;C id,*wv,*zv;I d,m,m0,p,t,wk,wt,zi,zk,zt;
  if((t=atype(adocv.cv))&&TYPESNE(t,wt)){RZ(w=cvt(t,w)); wt=AT(w);}
  zv=CAV(z); zk=d<<bplg(zt); 
  wv=CAV(w); wk=(0<=m0?d:d*m)<<bplg(wt);
- DQ(zi-b, adocv.f(jt,(I)1,d,m,zv,wv); zv+=zk; wv+=wk;);
- if(b)adocv.f(jt,(I)1,d,p-m*(zi-1),zv,wv);
+ DQ(zi-b, ((AHDRPFN*)adocv.f)(d,m,(I)1,wv,zv,jt); zv+=zk; wv+=wk;);
+ if(b)((AHDRPFN*)adocv.f)(d,p-m*(zi-1),(I)1,wv,zv,jt);
  if(jt->jerr>=EWOV){RESETERR; R movfslash(a,cvt(FL,w),self);}else R z;
 }    /* a f/\w */
 

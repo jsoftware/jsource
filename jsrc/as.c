@@ -16,7 +16,7 @@
   if(d==1)DQ(m, *--z=v=    *--x; DQ(n-1, --x; --z; *z=v=pfx(*x,v);))  \
   else{for(i=0;i<m;++i){                                              \
    DQ(d, *--z=    *--x;);                                        \
-   DQ(n-1, Tz *y=z; z-=d; x-=d; vecfn(jt,d,z,x,y,1););                     \
+   DQ(n-1, Tz *y=z; z-=d; x-=d; vecfn(1,d,x,y,z,jt););                     \
  }}}
 
 #define SUFFIXNAN(f,Tz,Tx,pfx,vecfn)  \
@@ -26,7 +26,7 @@
   if(d==1)DQ(m, *--z=v=    *--x; DQ(n-1, --x; --z; *z=v=pfx(*x,v);))  \
   else{for(i=0;i<m;++i){                                              \
    DQ(d, *--z=    *--x;);                                        \
-   DQ(n-1, Tz *y=z; z-=d; x-=d; vecfn(jt,d,z,x,y,1););                     \
+   DQ(n-1, Tz *y=z; z-=d; x-=d; vecfn(1,d,x,y,z,jt););                     \
   }}                                                                   \
   NAN1V;                                                              \
  }
@@ -118,7 +118,7 @@ AHDRS(plussfxD,D,D){I i;
  }else{
   for(i=0;i<m;++i){
    DQ(d, *--z=    *--x;);                                        \
-   DQ(n-1, D *y=z; z-=d; x-=d; plusDD(jt,d,z,x,y,1););                     \
+   DQ(n-1, D *y=z; z-=d; x-=d; plusDD(1,d,x,y,z,jt););                     \
   }
  }
  NAN1V;
@@ -302,7 +302,7 @@ static DF1(jtsscan){A y,z;I d,f,m,n,r,t,wn,wr,*ws,wt;
  if(!adocv.f)R IRSIP1(w,self,r,jtssg,z);   // if not supported atomically, go do general suffix
  if((t=atype(adocv.cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));
  if((I)jtinplace&(adocv.cv>>VIPOKWX)&JTINPLACEW && ASGNINPLACE(w))z=w; else GA(z,rtype(adocv.cv),wn,wr,ws);
- adocv.f(jt,m,d,n,AV(z),AV(w));
+ ((AHDRSFN*)adocv.f)(d,n,m,AV(w),AV(z),jt);
  if(jt->jerr)R jt->jerr>=EWOV?IRS1(w,self,r,jtsscan,z):0; else R adocv.cv&VRI+VRD?cvz(adocv.cv,z):z;
 }    /* f/\."r w main control */
 
@@ -360,7 +360,7 @@ static DF2(jtofxassoc){A f,i,j,p,s,x,z;C id,*zv;I c,d,k,kc,m,r,t;V*v;VA2 adocv;
   GA(z,t,c*(1+d),r,AS(p)); AS(z)[0]=1+d; zv=CAV(z);  // allocate result assuming no overflow
   MC(zv,     AV(s),          kc);                     // first cell is {.s, i. e. all but the first infix
 // obsolete   if(1<d)adocv.f(jt,1,c*(d-1),1L,zv+kc,AV(p),kc+CAV(s));  /* (}:p) f (}.s), with result stored into the result area */  // don't call with 0 length!
-  if(1<d)adocv.f(jt,c*(d-1),zv+kc,AV(p),kc+CAV(s),(I)1);  /* (}:p) f (}.s), with result stored into the result area */  // don't call with 0 length!
+  if(1<d)((AHDR2FN*)adocv.f)((I)1,c*(d-1),AV(p),kc+CAV(s),zv+kc,jt);  /* (}:p) f (}.s), with result stored into the result area */  // don't call with 0 length!
   MC(zv+kc*d,CAV(p)+kc*(d-1),kc);                     // last cell is {:p, i. e. all but the last infix
   // If there was overflow on the ado, we have to redo the operation as a float.
   // We also have to redo if the types of p and s were different (for example, if one overflowed to float and the other didn't)

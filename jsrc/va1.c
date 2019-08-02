@@ -116,8 +116,8 @@ static A jtva1(J,A,A);
 static A jtva1s(J jt,A w,A self,I cv,VF ado){A e,x,z,ze,zx;B c;C ee;I n,t,zt;P*wp,*zp;
  t=atype(cv); zt=rtype(cv);
  wp=PAV(w); e=SPA(wp,e); x=SPA(wp,x); c=t&&TYPESNE(t,AT(e));
- if(c)RZ(e=cvt(t,e));          GA(ze,zt,1,0,    0    ); ado(jt,1L,AV(ze),AV(e));
- if(c)RZ(e=cvt(t,x)); n=AN(x); GA(zx,zt,n,AR(x),AS(x)); if(n)ado(jt,n, AV(zx),AV(x));
+ if(c)RZ(e=cvt(t,e));          GA(ze,zt,1,0,    0    ); ((AHDR1FN*)ado)(jt,1L,AV(ze),AV(e));
+ if(c)RZ(e=cvt(t,x)); n=AN(x); GA(zx,zt,n,AR(x),AS(x)); if(n)((AHDR1FN*)ado)(jt,n, AV(zx),AV(x));
  if(jt->jerr){
   if(jt->jerr<=NEVM)R 0;
   J jtinplace=(J)((I)jt+JTRETRY);
@@ -176,7 +176,7 @@ static A jtva1(J jt,A w,A self){A z;I cv,n,t,wt,zt;VF ado;
 // obsolete  if(t&&TYPESNE(t,wt)){RZ(w=cvt(t,w)); jtinplace=(J)((I)jtinplace|JTINPLACEW);}  // convert input if necessary; if we converted, converted result is ipso facto inplaceable.  t is usually 0
  if(UNSAFE(t&~wt)){RZ(w=cvt(t,w)); jtinplace=(J)((I)jtinplace|JTINPLACEW);}  // convert input if necessary; if we converted, converted result is ipso facto inplaceable.  t is usually 0
  if(((I)jtinplace&(cv>>VIPOKWX)&JTINPLACEW) && ASGNINPLACE(w)){z=w; if(TYPESNE(AT(w),zt))MODBLOCKTYPE(z,zt)}else{GA(z,zt,n,AR(w),AS(w));}
- if(!n)RETF(z); ado(jt,n,AV(z),AV(w));  // perform the operation on all the atoms
+ if(!n)RETF(z); ((AHDR1FN*)ado)(jt,n,AV(z),AV(w));  // perform the operation on all the atoms
  if(!jt->jerr){RETF(cv&VRI+VRD?cvz(cv,z):z);}  // Normal return point: if no error, convert the result if necessary
  else{
   // There was an error.  If it is recoverable in place, handle the cases here

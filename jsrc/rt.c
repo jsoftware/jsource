@@ -120,10 +120,12 @@ static F1(jttconnect){A*wv,x,y,z;B b,d;C c,*u,*xv,*yv,*zv;I e,i,j,m,n,p,q,zn;
 
 static F1(jttreach){R troot(scc('0'),graft(ope(every(w,0L,jttrr))));}
 
-static F1(jttrr){PROLOG(0058);A fs,gs,hs,s,t,*x,z;B ex,xop;C id;I fl,*hv,m;V*v;
+static F1(jttrr){PROLOG(0058);A hs,s,t,*x,z;B ex,xop;C id;I fl,*hv,m;V*v;
  RZ(w);
  if(AT(w)&NOUN+NAME){RETF(tleaf(lrep(w)));}
- v=FAV(w); id=v->id; fl=v->flag; fs=v->fgh[!v->fgh[0]]; gs=v->fgh[!!v->fgh[0]]; hs=v->fgh[2]; if(id==CBOX)fs=0;  // ignore gs field in BOX, there to simulate BOXATOP
+ v=FAV(w); id=v->id; fl=v->flag;
+ I fndx=(AT(w)&ADV)&&!v->fgh[0]; A fs=v->fgh[fndx]; A gs=v->fgh[fndx^1];  // In adverbs, if f is empty look to g for the left arg (used by m b.)
+ hs=v->fgh[2]; if(id==CBOX)gs=0;  // ignore gs field in BOX, there to simulate BOXATOP
  if(fl&VXOPCALL){RETF(trr(hs));}
  xop=1&&VXOP&fl; ex=id==CCOLON&&hs&&!xop;
  m=(I )!!fs+(I )(gs||ex)+(I )(id==CFORK||xop&&hs);

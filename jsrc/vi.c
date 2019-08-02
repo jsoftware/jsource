@@ -222,7 +222,7 @@ static B jteqa(J jt,I n,A*u,A*v,I c,I d){DQ(n, if(!equ(*u,*v))R 0; ++u; ++v;); R
 
 // Routines to look up an item of w.  hash calculates the hash function, usually referring to v (the input) and possibly other names.  exp is the comparison routine.  stmt is executed after the hash lookup
 // and must check whether *hj (->prev data) matches the new data in *v
-#define XDO(hash,exp,inc,stmt)     {v=wv;          DQ(cm, j=(hash)%pm; FIND(exp); stmt;             inc;);}
+#define XDO(hash,exp,inc,stmt)     {v=wv;          DO(cm, j=(hash)%pm; FIND(exp); stmt;             inc;);}
 #define XDQ(hash,exp,dec,stmt)     {v=wv+cn*(c-1); DQ(cm, j=(hash)%pm; FIND(exp); stmt;             dec;);}
 // special lookup routines to move the data rather than store its index, used for nub/match
 #define XMV(hash,exp,inc,stmt)      \
@@ -453,10 +453,10 @@ static IOFX(I,jtioi,  hicw(v),           *v!=av[hj],                      ++v,  
 // should combine the cases for all ks to save a test?
 #define TDO(FXY,FYY,expa,expw,stmt)  \
  switch(4*bx+2*b+(I )(k==sizeof(D))){                       \
-  default: DQ(c, FXY(expa,expw); stmt; v+=cn;); break;  \
-  case 1:  DQ(c, FXY(expa,expw); stmt; ++v;  ); break;  \
-  case 2:  DQ(c, FYY(expa,expw); stmt; v+=cn;); break;  \
-  case 3:  DQ(c, FYY(expa,expw); stmt; ++v;  );         \
+  default: DO(c, FXY(expa,expw); stmt; v+=cn;); break;  \
+  case 1:  DO(c, FXY(expa,expw); stmt; ++v;  ); break;  \
+  case 2:  DO(c, FYY(expa,expw); stmt; v+=cn;); break;  \
+  case 3:  DO(c, FYY(expa,expw); stmt; ++v;  );         \
  }
 // Same, but search from the end of y backwards (e. i: 0 etc)
 #define TDQ(FXY,FYY,expa,expw,stmt)  \
@@ -470,10 +470,10 @@ static IOFX(I,jtioi,  hicw(v),           *v!=av[hj],                      ++v,  
 // Version for ~. y and x -. y .  prop is a condition; if true, move the item to *zc++
 #define TMV(FXY,FYY,expa,expw,prop)   \
  switch(4*bx+2*b+(I )(k==sizeof(D))){                                  \
-  default: DQ(c, FXY(expa,expw); if(prop){MC(zc,v,k); zc+=k;}; v+=cn;);            break;  \
-  case 1:  DQ(c, FXY(expa,expw); if(prop)*zd++=*(D*)v;         ++v;  ); zc=(C*)zd; break;  \
-  case 2:  DQ(c, FYY(expa,expw); if(prop){MC(zc,v,k); zc+=k;}; v+=cn;);            break;  \
-  case 3:  DQ(c, FYY(expa,expw); if(prop)*zd++=*(D*)v;         ++v;  ); zc=(C*)zd;         \
+  default: DO(c, FXY(expa,expw); if(prop){MC(zc,v,k); zc+=k;}; v+=cn;);            break;  \
+  case 1:  DO(c, FXY(expa,expw); if(prop)*zd++=*(D*)v;         ++v;  ); zc=(C*)zd; break;  \
+  case 2:  DO(c, FYY(expa,expw); if(prop){MC(zc,v,k); zc+=k;}; v+=cn;);            break;  \
+  case 3:  DO(c, FYY(expa,expw); if(prop)*zd++=*(D*)v;         ++v;  ); zc=(C*)zd;         \
  }
 
 // Do the operation.  Build a hash for a except when unboxed self-index
@@ -488,7 +488,7 @@ static IOFX(I,jtioi,  hicw(v),           *v!=av[hj],                      ++v,  
     DO(p,hv[i]=m;);                                                                              \
     if(bx||!b){                                                                                  \
      v=av; PUSHCCT(1.0)                                                                     \
-     if(IICO==mode){v+=e; DQ(m, FA(expa); v-=cn;);}else DQ(m, FA(expa); v+=cn;);                 \
+     if(IICO==mode){v+=e; DQ(m, FA(expa); v-=cn;);}else DO(m, FA(expa); v+=cn;);                 \
      POPCCT if(w==mark)break;                                                                \
    }}                                                                                            \
    v=wv;                                                                                   \

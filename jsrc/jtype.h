@@ -731,7 +731,7 @@ typedef struct {AF valencefns[2];A fgh[3];union { D lD; void *lvp[2]; I lI; I4 l
 #define VF2RANKONLY1     ((I)(((I)1)<<VF2RANKONLY1X)) 
 #define VF2RANKONLY2X     14
 #define VF2RANKONLY2     ((I)(((I)1)<<VF2RANKONLY2X))
-// Next 4 flags must be spaced so txhey can shift down to WILLOPEN1 and COUNTITEMS1
+// Next 4 flags must be spaced so they can shift down to WILLOPEN1 and COUNTITEMS1
 #define VF2WILLOPEN2WX      15   // This verb will open y as its first act.  Monad case only
 #define VF2WILLOPEN2W       ((I)(((I)1)<<VF2WILLOPEN2WX))
 #define VF2WILLOPEN2AX      16   // This verb will open y as its first act.  Monad case only

@@ -93,7 +93,11 @@ static A jtfixa(J jt,A a,A w){A f,g,h,wf,x,y,z=w;V*v;I aa[AKXR(0)/SZI+1]={AKXR(0
    f=REFIXA(na,f); g=REFIXA(1,g); R df2(f,g,wf);
   case CCOLON:
    // n : n had VFIX set & never gets here
-   if(v->flag&VXOPR){f=REFIXA(0,f); h=REFIXA(0,h); R xop2(f,h,g);}  // operator: fix the operands and rebuild
+   if(v->flag&VXOPR){
+    // operator: fix the operands and rebuild.  If the operator is a pseudo-name, we have to fish the actual operator block out of h
+    if(!f){v=VAV(h); f=v->fgh[0]; g=v->fgh[1]; h=v->fgh[2]; wf=ds(v->id);}
+    f=REFIXA(0,f); h=REFIXA(0,h); R xop2(f,h,g);
+   }
    else{f=REFIXA(1,f); g=REFIXA(2,g); R df2(f,g,wf);}  // v : v, similarly
   case CADVF:
    f=REFIXA(3,f); g=REFIXA(3,g); R hook(f,g);
@@ -167,7 +171,7 @@ static A jtfixa(J jt,A a,A w){A f,g,h,wf,x,y,z=w;V*v;I aa[AKXR(0)/SZI+1]={AKXR(0
 // On internal calls, self>>1 is passed in as initial flags to fixa, if self is odd.  Otherwise they default to 0
 DF1(jtfix){PROLOG(0005);A z;
  RZ(w);
- RZ(jt->fxpath=rifvs(reshape(sc(jt->fxi=(I)255),ace))); jt->fxpv=AAV(jt->fxpath);
+ RZ(jt->fxpath=rifvs(reshape(sc(jt->fxi=(I)255),ace))); jt->fxpv=AAV(jt->fxpath);  // for stopping infinite recursions
  if(LIT&AT(w)){ASSERT(1>=AR(w),EVRANK); RZ(w=nfs(AN(w),CAV(w)));}
  // only verbs/noun can get in through the parser, but internally we also vet adv/conj
  ASSERT(AT(w)&NAME+VERB+ADV+CONJ,EVDOMAIN);

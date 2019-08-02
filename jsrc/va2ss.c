@@ -377,7 +377,7 @@ A jtssingleton(J jt, A a,A w,A self,RANK2T awr,RANK2T ranks){A z;
 
  circleresult: ;
  D cirvals[3]={adv,wdv};  // put ops into memory
- cirDD(jt,1,cirvals+2,cirvals,cirvals+1,1);  // run the routine
+ cirDD(1,1,cirvals,cirvals+1,cirvals+2,jt);  // run the routine
  if(!jt->jerr){SSSTORE(cirvals[2],z,FL,D);}else z=0; R z;  // Don't change the input block if there is an error
 
 }

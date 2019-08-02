@@ -204,6 +204,7 @@ A jtsprank2(J jt,A a,A w,A fs,I lr,I rr,AF f2){PROLOG(0046);A aa,ae,we,ww,y,zi,z
  EPILOG(z);
 }    /* a f"r w on sparse arrays */
 
+#if 0 // not working
 A jtva2s(J jt,A a,A w,C id,VF ado,I cv,I t,I zt,I lr,I rr){PROLOG(0047);A aa,ae,we,ww,y,zi,z,*zv;B*ab,b,*wb;I ac,acr,af,aj,ak,am,an,
      ar,*as,at,*av,d,f,g,*ii,*iv,j,k,m,s,*u,*v,wc,wcr,wf,wj,wk,wm,wn,wr,*ws,wt,*wv;P*ap,*wp;
  RZ(a&&w);
@@ -261,3 +262,4 @@ A jtva2s(J jt,A a,A w,C id,VF ado,I cv,I t,I zt,I lr,I rr){PROLOG(0047);A aa,ae,
  R 0;
  /* EPILOG(sprz(ope(z),zi,CALL2(f2,ae,we,fs),g,g==af?as:ws)); */
 }    /* a f"r w on sparse arrays for atomic f */
+#endif

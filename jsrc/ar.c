@@ -191,8 +191,8 @@ AHDRR(plusinsD,D,D){I i;D* RESTRICT y;
   else if(1==n){if(sizeof(D)!=sizeof(D)){DQ(n, *z++=    *x++;)}else{MC((C*)z,(C*)x,d*sizeof(D));}}
   else{z+=(m-1)*d; x+=(m*n-1)*d;
    for(i=0;i<m;++i,z-=d){
-    y=x; x-=d; plusDD(jt,d,z,x,y,1); x-=d;
-    DQ(n-2,    plusDD(jt,d,z,x,z,1); x-=d; );
+    y=x; x-=d; plusDD(1,d,x,y,z,jt); x-=d;
+    DQ(n-2,    plusDD(1,d,x,z,z,jt); x-=d; );
    }
   }
   NAN1V;
@@ -300,7 +300,7 @@ static A jtredsp1(J jt,A w,A self,C id,VF ado,I cv,I f,I r,I zt){A e,x,z;I m,n;P
  RZ(w);
  wp=PAV(w); e=SPA(wp,e); x=SPA(wp,x); n=AN(x); m=*AS(w);
  GA(z,zt,1,0,0);
- if(n){ado(jt,1L,1L,n,AV(z),AV(x)); RE(0); if(m==n)R z;}
+ if(n){((AHDRRFN*)ado)(1L,n,1L,AV(x),AV(z),jt); RE(0); if(m==n)R z;}
  R redsp1a(id,z,e,n,AR(w),AS(w));
 }    /* f/"r w for sparse vector w */
 
@@ -314,7 +314,7 @@ DF1(jtredravel){A f,x,z;I n;P*wp;
   VA2 adocv = vains(FAV(f)->fgh[0],AT(x));
   ASSERT(adocv.f,EVNONCE);
   GA(z,rtype(adocv.cv),1,0,0);
-  if(n)adocv.f(jt,(I)1,(I)1,n,AV(z),AV(x));  // mustn't adocv on empty
+  if(n)((AHDRRFN*)adocv.f)((I)1,n,(I)1,AV(x),AV(z),jt);  // mustn't adocv on empty
   if(jt->jerr<EWOV){RE(0); R redsp1a(vaid(FAV(f)->fgh[0]),z,SPA(wp,e),n,AR(w),AS(w));}
 }}  /* f/@, w */
 
@@ -325,7 +325,7 @@ static A jtredspd(J jt,A w,A self,C id,VF ado,I cv,I f,I r,I zt){A a,e,x,z,zx;I 
  xr=r; v=AV(a); DO(AN(a), if(f<v[i])--xr;); xf=AR(x)-xr;
  m=prod(xf,s); c=m?AN(x)/m:0; n=s[xf];
  GA(zx,zt,AN(x)/n,AR(x)-1,s); MCISH(xf+AS(zx),1+xf+s,xr-1); 
- ado(jt,m,c/n,n,AV(zx),AV(x)); RE(0);
+ ((AHDRRFN*)ado)(c/n,n,m,AV(x),AV(zx),jt); RE(0);
  switch(id){
   case CPLUS: if(!equ(e,num[0]))RZ(e=tymes(e,sc(n))); break; 
   case CSTAR: if(!equ(e,num[1] )&&!equ(e,num[0]))RZ(e=expn2(e,sc(n))); break;
@@ -404,7 +404,7 @@ static A jtredsps(J jt,A w,A self,C id,VF ado,I cv,I f,I r,I zt){A a,a1,e,sn,x,x
  for(i=0;i<m;++i){A y;B*p1;C*u;I*vv;
   p1=1+(B*)memchr(pv,C1,yr); n=p1-pv; if(sn)sv[i]=wm-n; pv=p1;
   vv=qv?yv+yc**v:yv; DO(yc-1, *yu++=vv[dv[i]];);
-  if(1<n){if(qv){u=xxv; DO(n, MC(u,xv+xk*v[i],xk); u+=xk;);} ado(jt,1L,xc,n,zv,qv?xxv:xv); RE(0);}
+  if(1<n){if(qv){u=xxv; DO(n, MC(u,xv+xk*v[i],xk); u+=xk;);} ((AHDRRFN*)ado)(xc,n,1L,qv?xxv:xv,zv,jt); RE(0);}
   else   if(zk==xk)MC(zv,qv?xv+xk**v:xv,xk);
   else   {if(!x1)GA(x1,xt,xc,1,0); MC(AV(x1),qv?xv+xk**v:xv,xk); RZ(y=cvt(zt,x1)); MC(zv,AV(y),zk);}
   zv+=zk; if(qv)v+=n; else{xv+=n*xk; yv+=n*yc;}
@@ -551,7 +551,7 @@ static DF1(jtreduce){A z;I d,f,m,n,r,t,wn,wr,*ws,wt,zt;
   // Convert inputs if needed 
   if((t=atype(adocv.cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));
   // call the selected reduce routine.
-  adocv.f(jt,m,d,n,AV(z),AV(w));
+  ((AHDRRFN*)adocv.f)(d,n,m,AV(w),AV(z),jt);
   // if return is EWOV, it's an integer overflow and we must restart, after restoring the ranks
   // EWOV1 means that there was an overflow on a single result, which was calculated accurately and stored as a D.  So in that case all we
   // have to do is change the type of the result.

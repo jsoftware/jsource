@@ -147,11 +147,17 @@ typedef struct {VA2 p1[6];} UA;
 #define BW1110(x,y)     (~( (x)& (y)))
 #define BW1111(x,y)     (-1)
 
-#define AHDR1(f,Tz,Tx)          void f(JST * RESTRICT jt,            I n,Tz* z,Tx* x)
-#define AHDR2(f,Tz,Tx,Ty)       void f(J jt,I m,Tz* RESTRICTI z,Tx* RESTRICTI x,Ty* RESTRICTI y,I n)
-#define AHDRP(f,Tz,Tx)          void f(J jt,I m,I d,I n,Tz* RESTRICTI z,Tx* RESTRICTI x)
-#define AHDRR(f,Tz,Tx)          void f(J jt,I m,I d,I n,Tz* RESTRICTI z,Tx* RESTRICTI x)
-#define AHDRS(f,Tz,Tx)          void f(J jt,I m,I d,I n,Tz* RESTRICTI z,Tx* RESTRICTI x)
+typedef void AHDR1FN(JST * RESTRICT jt,I n,void* z,void* x);
+typedef void AHDR2FN(I n,I m,void* RESTRICTI x,void* RESTRICTI y,void* RESTRICTI z,J jt);
+typedef void AHDRPFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);
+typedef void AHDRRFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);
+typedef void AHDRSFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);
+
+#define AHDR1(f,Tz,Tx)          void f(JST * RESTRICT jt,I n,Tz* z,Tx* x)
+#define AHDR2(f,Tz,Tx,Ty)       void f(I n,I m,Tx* RESTRICTI x,Ty* RESTRICTI y,Tz* RESTRICTI z,J jt)
+#define AHDRP(f,Tz,Tx)          void f(I d,I n,I m,Tx* RESTRICTI x,Tz* RESTRICTI z,J jt)
+#define AHDRR(f,Tz,Tx)          void f(I d,I n,I m,Tx* RESTRICTI x,Tz* RESTRICTI z,J jt)
+#define AHDRS(f,Tz,Tx)          void f(I d,I n,I m,Tx* RESTRICTI x,Tz* RESTRICTI z,J jt)
 
 // value in vaptr[]
 #define VA2B0 1

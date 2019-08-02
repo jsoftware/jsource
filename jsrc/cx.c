@@ -501,7 +501,7 @@ static DF1(xadv){R xdefn(w, 0L,self);}
 static F1(jtxopcall){R jt->uflags.us.cx.cx_c.db&&DCCALL==jt->sitop->dctype?jt->sitop->dca:0;}
 
 
-// This handles adverbs that refer to x/y.  Install a[/w] into the derived verb, and copy the flags
+// This handles adverbs/conjs that refer to x/y.  Install a[/w] into the derived verb, and copy the flags
 // If we have to add a name for debugging purposes, do so
 // Flag the operator with VOPR, and remove VFIX for it so that the compound can be fixed
 DF2(jtxop2){A ff,x;

@@ -669,9 +669,9 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
     // Call the action routines: nf,mf, etc must be preserved in case of repair
     // note: the compiler unrolls these call loops.  Would be nice to suppress that
 // obsolete n^=-(bcip>>3); n=(n==~1)?1:n; nf^=(bcip<<(BW-1-2))>>(BW-1);
-    if(nf-1==0){I i=mf; do{adocv.f(jt,m,zv,av,wv,n); if(!--i)break; av+=awzk[0]; wv+=awzk[1]; zv+=awzk[2];}while(1);}  // if the short cell is not repeated, loop over the frame
-    else if(nf-1<0){I im=mf; do{I in=~nf; do{adocv.f(jt,m,zv,av,wv,n); wv+=awzk[1]; zv+=awzk[2];}while(--in); av+=awzk[0];}while(--im);} // if right frame is longer, repeat cells of a
-    else         {I im=mf; do{I in=nf; do{adocv.f(jt,m,zv,av,wv,n); av+=awzk[0]; zv+=awzk[2];}while(--in); wv+=awzk[1];}while(--im);}  // if left frame is longer, repeat cells of w
+    if(nf-1==0){I i=mf; do{((AHDR2FN*)adocv.f)(n,m,av,wv,zv,jt); if(!--i)break; av+=awzk[0]; wv+=awzk[1]; zv+=awzk[2];}while(1);}  // if the short cell is not repeated, loop over the frame
+    else if(nf-1<0){I im=mf; do{I in=~nf; do{((AHDR2FN*)adocv.f)(n,m,av,wv,zv,jt); wv+=awzk[1]; zv+=awzk[2];}while(--in); av+=awzk[0];}while(--im);} // if right frame is longer, repeat cells of a
+    else         {I im=mf; do{I in=nf; do{((AHDR2FN*)adocv.f)(n,m,av,wv,zv,jt); av+=awzk[0]; zv+=awzk[2];}while(--in); wv+=awzk[1];}while(--im);}  // if left frame is longer, repeat cells of w
    }
    // The work has been done.  If there was no error, check for optional conversion-if-possible or -if-necessary
    if(!jt->jerr){RETF(!((I)jtinplace&VRI+VRD)?z:cvz((I)jtinplace,z));  // normal return is here.  The rest is error recovery
@@ -692,7 +692,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
       I wkm,wkn,akm,akn;
       wkm=awzk[1], akn=awzk[0]; wkn=nf>>(BW-1); nf^=wkn;   // wkn=111..111 iff wk increments with n (and therefore ak with m).  Make nf positive
       akm=akn&wkn; wkn&=wkm; wkm^=wkn; akn^=akm;  // if c, akm=ak/wkn=wk; else akn=ak/wkm=wk.  The other incr is 0
-      I im=mf; do{I in=nf; do{adocv.f(jt,m,zzv,av,wv,n); zzv+=zzk; av+=akn; wv +=wkn;}while(--in); if(!--im)break; av+=akm; wv +=wkm;}while(1);
+      I im=mf; do{I in=nf; do{((AHDR2FN*)adocv.f)(n,m,av,wv,zzv,jt); zzv+=zzk; av+=akn; wv +=wkn;}while(--in); if(!--im)break; av+=akm; wv +=wkm;}while(1);
      }
     } else {I nipw;   // not multiply repair, but something else to do inplace
      switch(jt->jerr-EWOVIP){
@@ -719,7 +719,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
       if(nipw){av=CAV(w), awzk[0]=awzk[1];}else{av=CAV(a);} if(nipw==origc){mf *= nf; nf = 1;} if(nipw==origb){m *= n; n = 1;}
       n^=-nipw;  // install new setting of b flag
      // We have set up ado,nf,mf,nipw,m,n for the conversion.  Now call the repair routine.  n is # times to repeat a for each z, m*n is # atoms of z/zz
-      DQ(mf, DQ(nf, adocv.f(jt,m,zzv,av,zv,n); zzv+=zzk; zv+=awzk[2];); av+=awzk[0];)  // use each cell of a (nf) times
+      DQ(mf, DQ(nf, ((AHDR2FN*)adocv.f)(n,m,av,zv,zzv,jt); zzv+=zzk; zv+=awzk[2];); av+=awzk[0];)  // use each cell of a (nf) times
      }
     }
     RESETERR
@@ -1031,14 +1031,14 @@ DF2(jtfslashatg){A fs,gs,y,z;B b,bb,sb=0;C*av,c,d,*wv;I ak,an,ar,*as,at,m,
   tn=(zn+SZI-1)>>LGSZI; GATV0(t,INT,tn,1); tc=UAV(t); ti=(UI*)tc;
   for(j=nn;0<j;j-=255){
    memset(ti,C0,tn*SZI); 
-   DO(MIN(j,255), adocv.f(jt,m,yv,av,wv,n); av+=ak; wv+=wk; DO(tn,ti[i]+=yv[i];););
+   DO(MIN(j,255), ((AHDR2FN*)adocv.f)(n,m,av,wv,yv,jt); av+=ak; wv+=wk; DO(tn,ti[i]+=yv[i];););
    DO(zn, zv[i]+=tc[i];);
   }
  }else{A z1;B p=0;C*yv,*zu,*zv;
   av=CAV(a)+ak*(nn-1); wv=CAV(w)+wk*(nn-1); yv=CAV(y); zv=CAV(z);
   GA(z1,zt,zn,r-1,1+s); zu=CAV(z1);
-  adocv.f(jt,m,zv,av,wv,n);
-  DQ(nn-1, av-=ak; wv-=wk; adocv.f(jt,m,yv,av,wv,n); adocvf.f(jt,zn,p?zv:zu,yv,p?zu:zv,(I)1); p^=1;);
+  ((AHDR2FN*)adocv.f)(n,m,av,wv,zv,jt);
+  DQ(nn-1, av-=ak; wv-=wk; ((AHDR2FN*)adocv.f)(n,m,av,wv,yv,jt); ((AHDR2FN*)adocvf.f)((I)1,zn,yv,p?zu:zv,p?zv:zu,jt); p^=1;);
   if(NEVM<jt->jerr){jt->jerr=0; z=df1(df2(a,w,gs),fs);}else if(p)z=z1;
  }
  RE(0); RETF(z);

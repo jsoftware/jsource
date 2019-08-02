@@ -176,6 +176,31 @@ imax   -  E _1
 imax   -  E x=: - 10 ?@$ 100
 imin   -  E x=:   10 ?@$ 100
 
+imin - C 0
+imin - C 1
+imin - C 00
+imin - C 01
+imin - C 2
+imin - C 2
+(1 2,imin) - C 0
+(1 2,imin) - C 1
+(1 2,imin) - C 00
+(1 2,imin) - C 01
+(1 2,imin) - C 2
+(1 2,imin) - C 2
+imax + C 0
+imax + C 1
+imax + C 00
+imax + C 01
+imax + C 2
+imax + C 2
+(1 2,imax) + C 0
+(1 2,imax) + C 1
+(1 2,imax) + C 00
+(1 2,imax) + C 01
+(1 2,imax) + C 2
+(1 2,imax) + C 2
+
 _1     *  C imin
 imax   *  C x=: _50 + 10 ?@$ 100
 imin   *  C x=: _50 + 10 ?@$ 100

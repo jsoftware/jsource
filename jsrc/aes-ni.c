@@ -170,7 +170,7 @@ static void aes_key_setup_dec(__m128i* dk, const __m128i* ek, int rounds)
   dk[0] = ek[rounds];
 }
 
-static void block_init(block_state* self, unsigned char* key, int keylen)
+static void block_init(block_state* self, u8* key, int keylen)
 {
   int nr = 0;
   switch (keylen) {
@@ -275,7 +275,7 @@ static void block_decrypt(block_state* self, const u8* in, u8* out)
 int aes_ni(I decrypt,I mode,UC *key,I keyn,UC* ivec,UC* out,I len)
 {
   block_state self;
-  unsigned char *str=out;
+  u8 *str=out;
   I i;
 
   switch(mode) {

@@ -164,6 +164,7 @@ OBJS="\
  aes128.o \
  aes192.o \
  aes256.o \
+ aes-sse2.o \
  af.o \
  ai.o \
  am.o \

@@ -18,6 +18,9 @@ int aes_c(I decrypt,I mode,UC *key,I keyn,UC* iv,UC* out,I n);
 #if !defined(ANDROID) && (defined(__i386__) || defined(_M_X64) || defined(__x86_64__))
 int aes_ni(I decrypt,I mode,UC *key,I keyn,UC* iv,UC* out,I n);
 #endif
+#if defined(__SSE2__)
+int aes_sse2(I decrypt,I mode,UC *key,I keyn,UC* iv,UC* out,I n);
+#endif
 
 /*
   mode
@@ -83,12 +86,24 @@ F2(jtaes2)
       else memset(out+n-16,16,16);
     } else if(n1)memset(out+n-(16-n1),0,16-n1);
   }
-#if !defined(ANDROID) && (defined(__i386__) || defined(_M_X64) || defined(__x86_64__))
+#if (defined(__i386__) || defined(_M_X64) || defined(__x86_64__))
+#if !defined(ANDROID)
   if(hwaes) {
     ASSERT(!aes_ni(decrypt,mode,key,keyn,iv,out,n),EVDOMAIN);
   } else {
+#if defined(__SSE2__)
+    ASSERT(!aes_sse2(decrypt,mode,key,keyn,iv,out,n),EVDOMAIN);
+#else
     ASSERT(!aes_c(decrypt,mode,key,keyn,iv,out,n),EVDOMAIN);
+#endif
   }
+#else
+#if defined(__SSE2__)
+  ASSERT(!aes_sse2(decrypt,mode,key,keyn,iv,out,n),EVDOMAIN);
+#else
+  ASSERT(!aes_c(decrypt,mode,key,keyn,iv,out,n),EVDOMAIN);
+#endif
+#endif
 #else
   ASSERT(!aes_c(decrypt,mode,key,keyn,iv,out,n),EVDOMAIN);
 #endif

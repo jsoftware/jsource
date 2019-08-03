@@ -520,7 +520,9 @@ RESTRICTF A jtvirtual(J jtip, AD *RESTRICT w, I offset, I r){AD* RESTRICT z;
  I wf=AFLAG(w);  // flags in input
   // If this is an inplaceable request for an inplaceable DIRECT block, we don't need to create a new virtual block: just modify the offset in the old block.  Make sure the shape fits
   // if the block is UNINCORPABLE, we don't modify it, because then we would have to check everywhere to see if a parameter block had changed
- if(((I)jtip&JTINPLACEW) && t&DIRECT && AR(w)>=r && ASGNINPLACE(w) && !(wf&AFUNINCORPABLE)){
+  // We could check for assignsym etc, but it's not worth it: all we are saving is allocating one lousy block, usually 64 bytes
+// obsolete  if(((I)jtip&JTINPLACEW) && t&DIRECT && AR(w)>=r && ASGNINPLACE(w) && !(wf&AFUNINCORPABLE)){
+ if((SGNIF((I)jtip,JTINPLACEWX) & (-(t&DIRECT)) & (r-(AR(w)+1)) & c & ((wf&AFUNINCORPABLE)-1))<0){
   // virtual-in-place.  There's nothing to do but change the pointer and fill in the new rank.  AN and AS are handled in the caller
   AK(w)+=offset; AR(w)=(RANKT)r;
   R w;
@@ -531,7 +533,7 @@ RESTRICTF A jtvirtual(J jtip, AD *RESTRICT w, I offset, I r){AD* RESTRICT z;
   AC(z)=ACUC1; AT(z)=t; AK(z)=(CAV(w)-(C*)z)+offset; AR(z)=(RANKT)r;  // virtual, not inplaceable
   // If w is inplaceable and inplacing is enabled, we could transfer the inplaceability to the new virtual block.  We choose not to, because we have already picked up
   // virtual-in-place cases above.  The main case would be an inplaceable UNINCORPABLE block, which might be worth the trouble.
-  if(AFLAG(w)&AFVIRTUAL){
+  if(wf&AFVIRTUAL){
    // If w is virtual, me must disallow inplacing for it, since it may be at large in the execution and we are creating an alias to it
    ACIPNO(w);  // turn off inplacing
    w=ABACK(w);  // if w is itself virtual, use its original backer.  Otherwise we would have trouble knowing when the backer for z is freed.  Backer is never virtual

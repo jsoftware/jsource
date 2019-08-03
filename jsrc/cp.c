@@ -141,8 +141,8 @@ static DF1(jtpinf1){DECLFG;PROLOG(0340);A z;
 static DF1(jtply1s){DECLFG;A hs,j,y,y1,z;C*v,*zv;I c,e,i,*jv,k,m,n,*nv,r,*s,t,zn;
  RZ(w);
  hs=sv->fgh[2]; m=AN(hs); nv=AV(hs); 
- RZ(j=grade1(ravel(hs))); jv=AV(j); e=nv[*jv];
- if(!e&&!nv[jv[m-1]])R reshape(over(shape(hs),shape(w)),w);
+ RZ(j=grade1(ravel(hs))); jv=AV(j); e=nv[*jv];  // e=lowest power
+ if(!e&&!nv[jv[m-1]])R reshape(over(shape(hs),shape(w)),w);  // all powers 0
  RZ(y=y1=CALL1(f1,w,fs)); t=AT(y); r=AR(y);
  if(0>e||t&BOX)R ply1(w,self);
  if(!e){
@@ -226,7 +226,7 @@ DF2(jtpowop){A hs;B b;V*v;
  }
  // u^:n.  Check for special types.
  if(BOX&AT(w)){A x,y;AF f1,f2;
-  // Boxed v.  It could be <n or [v0`]v1`v2.
+  // Boxed v.  It could be <n or [v0`]v1`v2 or <''.
   if(!AR(w)&&(x=*AAV(w),!AR(x)&&NUMERIC&AT(x)||1==AR(x)&&!AN(x))){
    // here for <n or <''.  That will be handled by special code.
    f1=jtpowseq; f2=jtply2; v=FAV(a);

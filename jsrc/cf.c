@@ -161,8 +161,8 @@ A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I
                 if(fi==CCAP&&vaid(gv->fgh[0])&&vaid(h)){f2=jtfslashatg; flag &=~(VJTFLGOK2);}
                 break;
   case CFCONS:  if(hi==CFCONS){x=hv->fgh[2]; j=*BAV(x); m=B01&AT(x)?(gi==CIOTA?j:gi==CICO?2+j:-1):-1;} break;
-  case CRAZE:   if(hi==CLBRACE){f2=jtrazefrom; flag &=~(VJTFLGOK2);}
-                else if(hi==CCUT){
+  case CRAZE:   /* obsolete if(hi==CLBRACE){f2=jtrazefrom; flag &=~(VJTFLGOK2);}
+                else */if(hi==CCUT){
                  j=i0(hv->fgh[1]);
                  if(CBOX==ID(hv->fgh[0])&&!j){f2=jtrazecut0; flag &=~(VJTFLGOK2);}
                  else if(boxatop(h)){  // h is <@g;.j   detect ;@:(<@(f/\);._2 _1 1 2

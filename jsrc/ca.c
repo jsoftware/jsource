@@ -52,7 +52,7 @@ static DF2(jtmodpow2){A h;B b,c;I at,m,n,wt,x,z;
  if(RAT&AT(a))RZ(a=pcvt(XNUM,a)) else if(!(AT(a)&INT+XNUM))RZ(a=pcvt(INT,a)); 
  if(RAT&AT(w))RZ(w=pcvt(XNUM,w)) else if(!(AT(w)&INT+XNUM))RZ(w=pcvt(INT,w));
  at=AT(a); wt=AT(w);
- if((AT(h)&XNUM||at&XNUM||wt&XNUM)&&at&XNUM+INT&&wt&INT+XNUM){A z;
+ if(((AT(h)|at|wt)&XNUM)&&!((at|wt)&(NOUN&~(XNUM+INT)))){A z;
   z=xmodpow(a,w,h); if(!jt->jerr)R z; RESETERR; R residue(h,expn2(a,w)); 
  }
  n=*AV(w);
@@ -268,8 +268,8 @@ F2(jtatco){A f,g;AF f1=on1cell,f2=jtupon2cell;B b=0;C c,d,e;I flag, flag2=0,j,m=
   case CSTAR:   if(d==CPOUND)f1=jtisitems; break;
 
   case CSEMICO:
-   if(d==CLBRACE){f2=jtrazefrom; flag&=~VJTFLGOK2;}  // detect ;@:{
-   else if(d==CCUT){
+// obsolete   if(d==CLBRACE){f2=jtrazefrom; flag&=~VJTFLGOK2;}else   // detect ;@:{
+   if(d==CCUT){
     j=*AV(wv->fgh[1]);   // cut type
     if(CBOX==ID(wv->fgh[0])&&!j){f2=jtrazecut0; flag&=~VJTFLGOK2;}  // detect ;@:(<;.0), used for substring extraction
     else if(boxatop(w)){  // w is <@g;.j   detect ;@:(<@(f/\);._2 _1 1 2

@@ -238,13 +238,13 @@ timesing,timearray
 NB. 0.75 > %/ vv1 <. compst vv0   <. >. on INT/BOOL is just a nop
 NB. 0.75 > %/ vv1 >. compst vv0
 NB. 0.75 > %/ vv1 + compst vv0   + on reals is faster than the ss code; we assume it won't be used much
-0.75 > %/ vv1 * compst vv0
-0.75 > %/ vv1 ^ compst vv0
-0.75 > %/ vv1 | compst vv0
-0.75 > %/ vv1 ! compst vv0
-0.75 > %/ vv1 %: compst vv0
-0.75 > %/ vv1 ^. compst vv0
-0.75 > %/ vv1 o. compst vv0
+0.9 > %/ vv1 * compst vv0
+0.9 > %/ vv1 ^ compst vv0
+0.9 > %/ vv1 | compst vv0
+0.9 > %/ vv1 ! compst vv0
+0.9 > %/ vv1 %: compst vv0
+0.9 > %/ vv1 ^. compst vv0
+0.9 > %/ vv1 o. compst vv0
 
 NB. Verify that operations are performed in-place where possible
 iptime =: 6!:2 '4 : ''for. i. y do. y =.y-1 [ t=.x end.''~ 100000'

@@ -531,7 +531,7 @@ extern F2(jtpmarea2);
 extern F2(jtpoly2);
 extern F2(jtqco2);
 extern F2(jtqq);
-extern F2(jtrazefrom);
+// obsolete extern F2(jtrazefrom);
 extern F2(jtrdot2);
 extern F2(jtreaxis);
 extern F2(jtreitem);

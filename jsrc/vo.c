@@ -566,7 +566,7 @@ F1(jtrazeh){A*wv,y,z;C*xv,*yv,*zv;I c=0,ck,dk,i,k,n,p,r,*s,t;
  RETF(z);
 }    /* >,.&.>/,w */
 
-
+#if 0  // obsolete 
 #define EXTZ    if(vv<=d+v){m=v-CAV(z); RZ(z=ext(0,z)); v=m+CAV(z); vv=CAV(z)+(AN(z)<<klg);}
 
 F2(jtrazefrom){A*wv,y,z;B b;C*v,*vv;I an,c,d,i,j,klg,m,n,r,*s,t,*u,wn;
@@ -594,3 +594,4 @@ F2(jtrazefrom){A*wv,y,z;B b;C*v,*vv;I an,c,d,i,j,klg,m,n,r,*s,t,*u,wn;
  AN(z)=(v-CAV(z))>>klg; *AS(z)=AN(z)/c;     
  RETF(z);
 }    /* a ;@:{ w */
+#endif

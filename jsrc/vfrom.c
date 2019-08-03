@@ -229,12 +229,12 @@ static F2(jtbfrom){A z;B*av,*b;C*wv,*zv;I acr,an,ar,k,m,p,q,r,*u=0,wcr,wf,wk,wn,
  RZ(a&&w);
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK;
- if(ar>acr)R rank2ex(a,w,0L,acr,wcr,acr,wcr,jtbfrom);
+ if(ar>acr)R rank2ex(a,w,0L,acr,wcr,acr,wcr,jtbfrom);  // udr rsnk loop if multiple cells of a
  an=AN(a); wn=AN(w); ws=AS(w);
  // If a is empty, it needs to simulate execution on a cell of fills.  But that might produce domain error, if w has no
  // items, where 0 { empty is an index error!  In that case, we set wr to 0, in effect making it an atom (since failing exec on fill-cell produces atomic result)
 // if(an==0 && wn==0 && ws[wf]==0)wcr=wr=0;
- p=wcr?*(ws+wf):1; q=an>>LGSZI; r=an&(SZI-1);
+ p=wcr?*(ws+wf):1; q=an>>LGSZI; r=an&(SZI-1);   // p=* items of w
  ASSERT(2<=p||1==p&&all0(a)||!p&&!an,EVINDEX);
  // We always need zn, the number of result atoms
  if(wn){

@@ -21,6 +21,9 @@ int aes_ni(I decrypt,I mode,UC *key,I keyn,UC* iv,UC* out,I n);
 #if defined(__SSE2__)
 int aes_sse2(I decrypt,I mode,UC *key,I keyn,UC* iv,UC* out,I n);
 #endif
+#if defined(__aarch64__)
+int aes_arm(I decrypt,I mode,UC *key,I keyn,UC* iv,UC* out,I n);
+#endif
 
 /*
   mode
@@ -98,6 +101,7 @@ F2(jtaes2)
 #endif
   }
 #else
+/* ANDROID x86 */
 #if defined(__SSE2__)
   ASSERT(!aes_sse2(decrypt,mode,key,keyn,iv,out,n),EVDOMAIN);
 #else
@@ -105,7 +109,15 @@ F2(jtaes2)
 #endif
 #endif
 #else
+#if defined(__aarch64__)
+  if(hwaes) {
+    ASSERT(!aes_arm(decrypt,mode,key,keyn,iv,out,n),EVDOMAIN);
+  } else {
+    ASSERT(!aes_c(decrypt,mode,key,keyn,iv,out,n),EVDOMAIN);
+  }
+#else
   ASSERT(!aes_c(decrypt,mode,key,keyn,iv,out,n),EVDOMAIN);
+#endif
 #endif
   if(decrypt&&padding) {
     int i;

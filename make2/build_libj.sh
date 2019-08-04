@@ -130,8 +130,9 @@ LDFLAGS=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP"
 
 raspberry_j64) # linux arm64
 TARGET=libj.so
-CFLAGS="$common -march=armv8-a+crc -DRASPI -DC_CRC32C=1 "
+CFLAGS="$common -march=armv8-a+crc+crypto -DRASPI -DC_CRC32C=1 "
 LDFLAGS=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP"
+OBJS_AESARM=" aes-arm.o "
 ;;
 
 darwin_j32) # darwin x86
@@ -241,7 +242,7 @@ fi
 mkdir -p ../bin/$jplatform/$j64x
 mkdir -p obj/$jplatform/$j64x/
 cp makefile-libj obj/$jplatform/$j64x/.
-export CFLAGS LDFLAGS TARGET CFLAGS_SIMD DLLOBJS LIBJDEF LIBJRES OBJS_FMA OBJS_AESNI jplatform j64x
+export CFLAGS LDFLAGS TARGET CFLAGS_SIMD DLLOBJS LIBJDEF LIBJRES OBJS_FMA OBJS_AESNI OBJS_AESARM jplatform j64x
 cd obj/$jplatform/$j64x/
 make -f makefile-libj
 cd -

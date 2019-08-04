@@ -5,7 +5,7 @@ LOCAL_MODULE    := j
 LOCAL_MODULE_FILENAME    := libj
 
 ifeq ($(TARGET_ARCH_ABI),arm64-v8a)
-  LOCAL_CFLAGS := -DC_CRC32C=1 -fPIC -O1 -ftree-vectorize -fwrapv -Werror -Wno-string-plus-int -Wno-empty-body -Wno-unsequenced -Wno-parentheses -Wno-pointer-sign -Wno-logical-op-parentheses -Wno-unused-value -Wno-null-dereference -Wno-type-limits -fno-strict-aliasing -march=armv8-a+crc
+  LOCAL_CFLAGS := -DC_CRC32C=1 -fPIC -O1 -ftree-vectorize -fwrapv -Werror -Wno-string-plus-int -Wno-empty-body -Wno-unsequenced -Wno-parentheses -Wno-pointer-sign -Wno-logical-op-parentheses -Wno-unused-value -Wno-null-dereference -Wno-type-limits -fno-strict-aliasing -march=armv8-a+crc+crypto
   LOCAL_ARM_NEON := true
 endif
 ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
@@ -26,7 +26,7 @@ LOCAL_LDLIBS := -ldl -llog
 LOCAL_CFLAGS += -fopenmp
 LOCAL_LDFLAGS += -fopenmp
 
-LOCAL_SRC_FILES := a.c ab.c aes128.c aes192.c aes256.c aes-sse2.c af.c ai.c am.c am1.c amn.c ao.c ap.c ar.c as.c au.c c.c ca.c cc.c cd.c cf.c cg.c ch.c cip.c cl.c cp.c cpdtsp.c cpuinfo.c cr.c crs.c \
+LOCAL_SRC_FILES := a.c ab.c aes128.c aes192.c aes256.c aes-arm.c aes-sse2.c af.c ai.c am.c am1.c amn.c ao.c ap.c ar.c as.c au.c c.c ca.c cc.c cd.c cf.c cg.c ch.c cip.c cl.c cp.c cpdtsp.c cpuinfo.c cr.c crs.c \
 	ct.c cu.c cv.c cx.c d.c dc.c dss.c dstop.c dsusp.c dtoa.c f.c f2.c fbu.c gemm.c i.c io.c j.c jdlllic.c k.c m.c mbx.c p.c pv.c px.c r.c rl.c rt.c s.c sc.c sl.c \
 	sn.c t.c u.c v.c v0.c v1.c v2.c va1.c va1ss.c va2.c va2s.c va2ss.c vamultsp.c vb.c vbang.c vbit.c vcant.c vchar.c vcat.c vcatsp.c vcomp.c vcompsc.c vd.c vdx.c ve.c \
 	vf.c vfft.c vfrom.c  vfromsp.c vg.c vgauss.c vgcomp.c vgranking.c vgsort.c vgsp.c vi.c viavx.c viix.c visp.c vm.c vo.c vp.c vq.c vrand.c vrep.c vs.c vsb.c \

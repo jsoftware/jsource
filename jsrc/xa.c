@@ -6,6 +6,13 @@
 #include "j.h"
 #include "x.h"
 
+#include "cpuinfo.h"
+
+#include <string.h>
+#ifdef _MSC_VER
+#define strncasecmp _strnicmp
+#define strcasecmp _stricmp
+#endif
 
 F1(jtassertq){ASSERTMTV(w); R scb(jt->assert);}
 
@@ -224,7 +231,7 @@ F1(jtasgzombs){I k;
  R mtm;
 }
 
-// 9!:54/55
+// 9!:54/55  undocumented
 // unicodex78;       /* 1 iff disallow numeric argument for 7 8 u:      */
 F1(jtunicodex78q){
  ASSERTMTV(w);
@@ -236,6 +243,61 @@ F1(jtunicodex78s){I k;
  ASSERT(0<=k&&k<=1,EVDOMAIN);
  jt->unicodex78=(C)k;
  R mtm;
+}
+
+// 9!:56  undocumented
+// query cpu feature
+F1(jtcpufeature){I k;
+ RZ(w);
+ ASSERT(AT(w)&LIT,EVDOMAIN);
+ ASSERT(AN(w),EVLENGTH);
+ ASSERT(1>=AR(w),EVRANK);
+#if defined(__aarch64__)
+ if     (!strncasecmp(CAV(w),"FP",       AN(w))) R sc(!!(getCpuFeatures()&ARM_HWCAP_FP ));
+ else if(!strncasecmp(CAV(w),"ASIMD",    AN(w))) R sc(!!(getCpuFeatures()&ARM_HWCAP_ASIMD ));
+ else if(!strncasecmp(CAV(w),"EVTSTRM",  AN(w))) R sc(!!(getCpuFeatures()&ARM_HWCAP_EVTSTRM ));
+ else if(!strncasecmp(CAV(w),"AES",      AN(w))) R sc(!!(getCpuFeatures()&ARM_HWCAP_AES ));
+ else if(!strncasecmp(CAV(w),"PMULL",    AN(w))) R sc(!!(getCpuFeatures()&ARM_HWCAP_PMULL ));
+ else if(!strncasecmp(CAV(w),"SHA1",     AN(w))) R sc(!!(getCpuFeatures()&ARM_HWCAP_SHA1 ));
+ else if(!strncasecmp(CAV(w),"SHA2",     AN(w))) R sc(!!(getCpuFeatures()&ARM_HWCAP_SHA2 ));
+ else if(!strncasecmp(CAV(w),"CRC32",    AN(w))) R sc(!!(getCpuFeatures()&ARM_HWCAP_CRC32 ));
+ else if(!strncasecmp(CAV(w),"ATOMICS",  AN(w))) R sc(!!(getCpuFeatures()&ARM_HWCAP_ATOMICS ));
+ else if(!strncasecmp(CAV(w),"FPHP",     AN(w))) R sc(!!(getCpuFeatures()&ARM_HWCAP_FPHP ));
+ else if(!strncasecmp(CAV(w),"ASIMDHP",  AN(w))) R sc(!!(getCpuFeatures()&ARM_HWCAP_ASIMDHP ));
+ else if(!strncasecmp(CAV(w),"CPUID",    AN(w))) R sc(!!(getCpuFeatures()&ARM_HWCAP_CPUID ));
+ else if(!strncasecmp(CAV(w),"ASIMDRDM", AN(w))) R sc(!!(getCpuFeatures()&ARM_HWCAP_ASIMDRDM ));
+ else if(!strncasecmp(CAV(w),"JSCVT",    AN(w))) R sc(!!(getCpuFeatures()&ARM_HWCAP_JSCVT ));
+ else if(!strncasecmp(CAV(w),"FCMA",     AN(w))) R sc(!!(getCpuFeatures()&ARM_HWCAP_FCMA ));
+ else if(!strncasecmp(CAV(w),"LRCPC",    AN(w))) R sc(!!(getCpuFeatures()&ARM_HWCAP_LRCPC ));
+ else if(!strncasecmp(CAV(w),"DCPOP",    AN(w))) R sc(!!(getCpuFeatures()&ARM_HWCAP_DCPOP ));
+ else if(!strncasecmp(CAV(w),"SHA3",     AN(w))) R sc(!!(getCpuFeatures()&ARM_HWCAP_SHA3 ));
+ else if(!strncasecmp(CAV(w),"SM3",      AN(w))) R sc(!!(getCpuFeatures()&ARM_HWCAP_SM3 ));
+ else if(!strncasecmp(CAV(w),"SM4",      AN(w))) R sc(!!(getCpuFeatures()&ARM_HWCAP_SM4 ));
+ else if(!strncasecmp(CAV(w),"ASIMDDP",  AN(w))) R sc(!!(getCpuFeatures()&ARM_HWCAP_ASIMDDP ));
+ else if(!strncasecmp(CAV(w),"SHA512",   AN(w))) R sc(!!(getCpuFeatures()&ARM_HWCAP_SHA512 ));
+ else if(!strncasecmp(CAV(w),"SVE",      AN(w))) R sc(!!(getCpuFeatures()&ARM_HWCAP_SVE ));
+ else if(!strncasecmp(CAV(w),"ASIMDFHM", AN(w))) R sc(!!(getCpuFeatures()&ARM_HWCAP_ASIMDFHM ));
+ else if(!strncasecmp(CAV(w),"DIT",      AN(w))) R sc(!!(getCpuFeatures()&ARM_HWCAP_DIT ));
+ else if(!strncasecmp(CAV(w),"USCAT",    AN(w))) R sc(!!(getCpuFeatures()&ARM_HWCAP_USCAT ));
+ else if(!strncasecmp(CAV(w),"ILRCPC",   AN(w))) R sc(!!(getCpuFeatures()&ARM_HWCAP_ILRCPC ));
+ else if(!strncasecmp(CAV(w),"FLAGM",    AN(w))) R sc(!!(getCpuFeatures()&ARM_HWCAP_FLAGM ));
+ else R sc(0);
+#elif defined(__x86_64__)||defined(__i386__)||defined(_MSC_VER)
+ if     (!strncasecmp(CAV(w),"SSSE3",    AN(w))) R sc(!!(getCpuFeatures()&CPU_X86_FEATURE_SSSE3 ));
+ else if(!strncasecmp(CAV(w),"POPCNT",   AN(w))) R sc(!!(getCpuFeatures()&CPU_X86_FEATURE_POPCNT ));
+ else if(!strncasecmp(CAV(w),"MOVBE",    AN(w))) R sc(!!(getCpuFeatures()&CPU_X86_FEATURE_MOVBE ));
+ else if(!strncasecmp(CAV(w),"SSE4_1",   AN(w))) R sc(!!(getCpuFeatures()&CPU_X86_FEATURE_SSE4_1 ));
+ else if(!strncasecmp(CAV(w),"SSE4_2",   AN(w))) R sc(!!(getCpuFeatures()&CPU_X86_FEATURE_SSE4_2 ));
+ else if(!strncasecmp(CAV(w),"AES_NI",   AN(w))) R sc(!!(getCpuFeatures()&CPU_X86_FEATURE_AES_NI ));
+ else if(!strncasecmp(CAV(w),"AVX",      AN(w))) R sc(!!(getCpuFeatures()&CPU_X86_FEATURE_AVX ));
+ else if(!strncasecmp(CAV(w),"RDRAND",   AN(w))) R sc(!!(getCpuFeatures()&CPU_X86_FEATURE_RDRAND ));
+ else if(!strncasecmp(CAV(w),"AVX2",     AN(w))) R sc(!!(getCpuFeatures()&CPU_X86_FEATURE_AVX2 ));
+ else if(!strncasecmp(CAV(w),"SHA_NI",   AN(w))) R sc(!!(getCpuFeatures()&CPU_X86_FEATURE_SHA_NI ));
+ else if(!strncasecmp(CAV(w),"FMA",      AN(w))) R sc(!!(getCpuFeatures()&CPU_X86_FEATURE_FMA ));
+ else R sc(0);
+#else
+ R sc(0);
+#endif
 }
 
 // enable/disable tstack auditing, since some testcases run too long with it enabled

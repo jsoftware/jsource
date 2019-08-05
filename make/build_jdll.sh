@@ -161,9 +161,7 @@ esac
 OBJS="\
  a.o \
  ab.o \
- aes128.o \
- aes192.o \
- aes256.o \
+ aes-c.o \
  aes-sse2.o \
  af.o \
  ai.o \

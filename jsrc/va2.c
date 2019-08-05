@@ -800,19 +800,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
 // repeata is set if a has the shorter outer frame
 // w is never repeated in the inner loop (i. e. you can have multiple w but not multiple a; exchange args to ensure this
 A jtsumattymesprods(J jt,I it,A a, A w,I dplen,I nfro,I nfri,I ndpo,I ndpi,I repeata,A z){
- switch(it){
- case B01:
-  SUMATLOOP(B,I,
-   I total=0; I k=dplen; I *avi=(I*)av; I *wvi=(I*)wv;
-    while(k>>LGSZI){I kn=MIN(255,k>>LGSZI); k-=kn<<LGSZI; I total2=0; DQ(kn, total2+=*avi++&*wvi++;) ADDBYTESINI(total2); total+=total2;} av=(B*)avi; wv=(B*)wvi; DQ(k, total+=*av++&*wv++;)
-   *zv++=total;
-  )
-  break;
- case INT:
-// obsolete   SUMATLOOP(I,D,D total=0.0; DQ(dplen, total+=(D)*av++*(D)*wv++;); *zv++=total;)
-  SUMATLOOP(I,D,D total0=0.0; D total1=0.0; if(dplen&1)total1=(D)*av++*(D)*wv++; DQ(dplen>>1, total0+=(D)*av++*(D)*wv++; total1+=(D)*av++*(D)*wv++;); *zv++=total0+total1;)
-  break;
- case FL:
+ if(it==FL){
   NAN0;
   SUMATLOOP(D,D,ONEPRODD)
   if(NANTEST){  // if there was an error, it might be 0 * _ which we will turn to 0.  So rerun, checking for that.
@@ -820,7 +808,15 @@ A jtsumattymesprods(J jt,I it,A a, A w,I dplen,I nfro,I nfri,I ndpo,I ndpi,I rep
    SUMATLOOP(D,D,D total=0.0; DQ(dplen, D u=*av++; D v=*wv++; if(u&&v)total+=dmul2(u,v);); *zv++=total;)
    NAN1;
   }
-  break;
+ }else if(it==INT){
+// obsolete   SUMATLOOP(I,D,D total=0.0; DQ(dplen, total+=(D)*av++*(D)*wv++;); *zv++=total;)
+  SUMATLOOP(I,D,D total0=0.0; D total1=0.0; if(dplen&1)total1=(D)*av++*(D)*wv++; DQ(dplen>>1, total0+=(D)*av++*(D)*wv++; total1+=(D)*av++*(D)*wv++;); *zv++=total0+total1;)
+ }else{
+  SUMATLOOP(B,I,
+   I total=0; I k=dplen; I *avi=(I*)av; I *wvi=(I*)wv;
+    while(k>>LGSZI){I kn=MIN(255,k>>LGSZI); k-=kn<<LGSZI; I total2=0; DQ(kn, total2+=*avi++&*wvi++;) ADDBYTESINI(total2); total+=total2;} av=(B*)avi; wv=(B*)wvi; DQ(k, total+=*av++&*wv++;)
+   *zv++=total;
+  )
  }
  RETF(z);
 }

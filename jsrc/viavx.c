@@ -1810,7 +1810,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z=mtv;
  // (full hashing is considerably more expensive); also a fair amount of time for range-checking and table-clearing, and further testing here
  // Here we just use the empirical observations that worked for atoms  TUNE
 // obsolete  if(((((-(wc^1))&(-(wc^ac)))|SGNIFNOT(mode,IIOREPSX))>=0)&&((wcr<acr)||((D)m*(D)zn<(COMPARESPERHASHWRITE*m)+COMPARESPERHASHREAD*zn+OVERHEADHASHALLO))){  // wc==1 or ac, IOREPS, small enough operation
- if(((((-(wc^1))&(-(wc^ac)))|SGNIFNOT(mode,IIOREPSX))>=0)&&((((m-11)|(zn-8)|(m+zn-41))<0))){  // wc==1 or ac, IOREPS, small enough operation   TUNE
+ if(((((-(wc^1))&(-(wc^ac)))|SGNIFNOT(mode,IIOREPSX))>=0)&&(((((I)m-11)|(zn-8)|((I)m+zn-41))<0))){  // wc==1 or ac, IOREPS, small enough operation   TUNE
     // this will not choose sequential search enough when the cells are large (comparisons then are cheap because of early exit)
   jtiosc(jt,mode,n,m,c,ac,wc,a,w,z); // simple sequential search without hashing
  }else{B b=1.0==jt->cct;  // b means 'intolerant comparison'

@@ -73,12 +73,15 @@ static F2(jtrotsp){PROLOG(0071);A q,x,y,z;B bx,by;I acr,af,ar,*av,d,k,m,n,p,*qv,
 // m=#cells d=#atoms per item  n=#items per cell
 static void jtrot(J jt,I m,I d,I n,I atomsize,I p,I*av,C*u,C*v){I dk,e,k,j,r,x,y;
  e=n*d*atomsize; dk=d*atomsize; // e=#bytes per cell  dk=bytes per item
- switch((2*(I )!jt->fill)+(I )(1<p)){
-  case 0: r=p?*av:0;     ROF(r); DQ(m, if(r<0){mvc(k,v,atomsize,jt->fillv); MC(k+v,u,j);}else{MC(v,j+u,k); mvc(j,k+v,atomsize,jt->fillv);}        u+=e; v+=e;); break;
-  case 1: DO(m, r=av[i]; ROF(r);       if(r<0){mvc(k,v,atomsize,jt->fillv); MC(k+v,u,j);}else{MC(v,j+u,k); mvc(j,k+v,atomsize,jt->fillv);}            u+=e; v+=e;); break;
-  case 2: r=p?*av:0;     ROT(r); DQ(m, MC(v,j+u,k); MC(k+v,u,j); u+=e; v+=e;); break;
-  case 3: DO(m, r=av[i]; ROT(r);       MC(v,j+u,k); MC(k+v,u,j); u+=e; v+=e;);
-}}
+// obsolete  switch((2*(I )!jt->fill)+(I )(1<p)){
+ if(jt->fill){
+  if(p<=1){r=p?*av:0;     ROF(r); DQ(m, if(r<0){mvc(k,v,atomsize,jt->fillv); MC(k+v,u,j);}else{MC(v,j+u,k); mvc(j,k+v,atomsize,jt->fillv);}        u+=e; v+=e;);}
+  else{DO(m, r=av[i]; ROF(r);       if(r<0){mvc(k,v,atomsize,jt->fillv); MC(k+v,u,j);}else{MC(v,j+u,k); mvc(j,k+v,atomsize,jt->fillv);}            u+=e; v+=e;);}
+ }else{
+  if(p<=1){r=p?*av:0;     ROT(r); DQ(m, MC(v,j+u,k); MC(k+v,u,j); u+=e; v+=e;);}
+  else{DO(m, r=av[i]; ROT(r);       MC(v,j+u,k); MC(k+v,u,j); u+=e; v+=e;);}
+ }
+}
 
 /* m   # cells
    c   # atoms in each cell

@@ -615,7 +615,8 @@ static DF2(jtinfixd){A fs,z;C*x,*y;I c=0,d,k,m,n,p,q,r,*s,wr,*ws,wt,zc;
 
 static A jtmovsumavg1(J jt,I m,A w,A fs,B avg){A y,z;D d=(D)m;I c,p,wt;
  p=IC(w)-m; wt=AT(w); c=aii(w);
- switch((wt&B01?0:wt&INT?2:4)+avg){
+// obsolete  switch((wt&B01?0:wt&INT?2:4)+avg){
+ switch(((wt>>(INTX-1))&6)+avg){
   case 0:       MOVSUMAVG(B,I,INT,I,INT,x,  SETZ ); break;
   case 1:       MOVSUMAVG(B,I,INT,D,FL, x/d,SETZD); break;
   case 2: 

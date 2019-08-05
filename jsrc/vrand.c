@@ -620,15 +620,17 @@ static F2(jtrollksub){A z;I an,*av,k,m1,n,p,q,r,sh;UI m,mk,s,t,*u,x=jt->rngM[jt-
   // integer output
   r=n; s=GMOF(m,x); if(s==x)s=0;
   if(m>1&&!(m&(m-1))){
-   // here if w is a power of 2, >2; take bits from each value
+   // here if w is a power of 2, >2; take bits from each value.  s cannot be 0
    k=CTTZI(m);  // lg(m)
-   p=jt->rngw/k; q=n/p; r=n%p; mk=m-1;  // r is number of values left after bit processing
-   switch((s?2:0)+(I )(1<p)){
-    case 0: DQ(q,           t=NEXT;         *u++=mk&t;         ); break;
-    case 1: DQ(q,           t=NEXT;   DQ(p, *u++=mk&t; t>>=k;);); break;
-    case 2: DQ(q, while(s<=(t=NEXT));       *u++=mk&t;         ); break;
-    case 3: DQ(q, while(s<=(t=NEXT)); DQ(p, *u++=mk&t; t>>=k;););
-   }
+   p=jt->rngw/k; /* obsolete q=n/p; r=n%p;*/ mk=m-1;  // p=#results per random number; r is number of values left after bit processing
+// obsolete    switch((s?2:0)+(I )(1<p)){
+// obsolete     case 0: DQ(q,           t=NEXT;         *u++=mk&t;         ); break;
+// obsolete     case 1: DQ(q,           t=NEXT;   DQ(p, *u++=mk&t; t>>=k;);); break;
+// obsolete     case 2: DQ(q, while(s<=(t=NEXT));       *u++=mk&t;         ); break;
+// obsolete     case 3: DQ(q, while(s<=(t=NEXT)); DQ(p, *u++=mk&t; t>>=k;););
+// obsolete     }
+   r-=p; while(r>=0){do{t=NEXT;}while(s<=t); DQU(p, *u++=mk&t; t>>=k;) r-=p;}  // deal p at a time till me are as close to n as we can get
+   r+=p;  // rebias to get # values still needed
   }
   if(BW==64&&m<(1LL<<50)){ 
    // If we can do the calculation in the floating-point unit, do

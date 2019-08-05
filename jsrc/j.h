@@ -949,7 +949,7 @@ extern unsigned int __cdecl _clearfp (void);
 
 // For older processors, TZCNT is executed as BSF, which differs from TZCNT in that it does not
 // set the Z flag if the result is 0.  The optimizer sometimes turns a switch into tests rather than a branch
-// table, and it expects TSCNT to set the Z flag properly.  We use CTTZNOFLAG to set it right
+// table, and it expects TZCNT to set the Z flag properly.  We use CTTZNOFLAG to set it right
 #define CTTZNOFLAG(w) (CTTZ(w)&31)
 
 #ifdef __GNUC__

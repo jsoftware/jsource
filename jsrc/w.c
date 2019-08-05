@@ -251,27 +251,28 @@ static A jtfsmdo(J jt,I f,A s,A m,I*ijrd,A w,A w0){A x,z;C*cc,*wv0;
  sv=AV(s); mv=AV(m);
  i=ijrd[0]; j=ijrd[1]; r=ijrd[2]; d=ijrd[3]; vi=vj=vr=vc=-1;
  if(t&INT){t0=AT(w0); wr=AR(w0); wm=aii(w0); wk=wm<<bplg(AT(w0)); wv0=CAV(w0);}
- switch(f+(t&B01?0:t&LIT?10:20)){
-  case  0: {B *wv=BAV(w); FSMF(A,1,BOX,1, 1,   wv[i] ,EMIT0b,ZVAx);} break;
-  case  1: {B *wv=UAV(w); FSMF(B,1,B01,1, 1,   wv[i] ,EMIT1, ZVAx);} break;
-  case  2: {B *wv=BAV(w); FSMF(I,1,INT,2, 2,   wv[i] ,EMIT2, ZVAx);} break;
-  case  3: {B *wv=BAV(w); FSMF(I,1,INT,1, 1,   wv[i] ,EMIT3, ZVAx);} break;
-  case  4: {B *wv=BAV(w); FSMF(I,1,INT,2, 3,   wv[i] ,EMIT4, ZVAx);} break;
-  case  5: {B *wv=BAV(w); FSMF(I,1,INT,2, 6,   wv[i] ,EMIT5, ZVA5);} break;
+// obsolete switch(f+(t&B01?0:t&LIT?10:20)){
+ switch(f+(t&(B01+LIT))*6){
+  case 0+0: {I *wv= AV(w); FSMF(A,1,BOX,1, 1,   wv[i] ,EMIT0x,ZVAx);} break; // other
+  case 0+1: {I *wv= AV(w); FSMF(C,bp(AT(w0)),t0, wr,wm,  wv[i] ,EMIT1x,ZVAx);} break;
+  case 0+2: {I *wv= AV(w); FSMF(I,1,INT,2, 2,   wv[i] ,EMIT2, ZVAx);} break;
+  case 0+3: {I *wv= AV(w); FSMF(I,1,INT,1, 1,   wv[i] ,EMIT3, ZVAx);} break;
+  case 0+4: {I *wv= AV(w); FSMF(I,1,INT,2, 3,   wv[i] ,EMIT4, ZVAx);} break;
+  case 0+5: {I *wv= AV(w); FSMF(I,1,INT,2, 6,   wv[i] ,EMIT5, ZVA5);}
 
-  case 10: {UC*wv=UAV(w); FSMF(A,1,BOX,1, 1,mv[wv[i]],EMIT0c,ZVAx);} break;
-  case 11: {UC*wv=UAV(w); FSMF(C,1,LIT,1, 1,mv[wv[i]],EMIT1, ZVAx);} break;
-  case 12: {UC*wv=UAV(w); FSMF(I,1,INT,2, 2,mv[wv[i]],EMIT2, ZVAx);} break;
-  case 13: {UC*wv=UAV(w); FSMF(I,1,INT,1, 1,mv[wv[i]],EMIT3, ZVAx);} break;
-  case 14: {UC*wv=UAV(w); FSMF(I,1,INT,2, 3,mv[wv[i]],EMIT4, ZVAx);} break;
-  case 15: {UC*wv=UAV(w); FSMF(I,1,INT,2, 6,mv[wv[i]],EMIT5, ZVA5);} break;
+  case 6+0: {B *wv=BAV(w); FSMF(A,1,BOX,1, 1,   wv[i] ,EMIT0b,ZVAx);} break;  // B01
+  case 6+1: {B *wv=UAV(w); FSMF(B,1,B01,1, 1,   wv[i] ,EMIT1, ZVAx);} break;
+  case 6+2: {B *wv=BAV(w); FSMF(I,1,INT,2, 2,   wv[i] ,EMIT2, ZVAx);} break;
+  case 6+3: {B *wv=BAV(w); FSMF(I,1,INT,1, 1,   wv[i] ,EMIT3, ZVAx);} break;
+  case 6+4: {B *wv=BAV(w); FSMF(I,1,INT,2, 3,   wv[i] ,EMIT4, ZVAx);} break;
+  case 6+5: {B *wv=BAV(w); FSMF(I,1,INT,2, 6,   wv[i] ,EMIT5, ZVA5);} break;
 
-  case 20: {I *wv= AV(w); FSMF(A,1,BOX,1, 1,   wv[i] ,EMIT0x,ZVAx);} break;
-  case 21: {I *wv= AV(w); FSMF(C,bp(AT(w0)),t0, wr,wm,  wv[i] ,EMIT1x,ZVAx);} break;
-  case 22: {I *wv= AV(w); FSMF(I,1,INT,2, 2,   wv[i] ,EMIT2, ZVAx);} break;
-  case 23: {I *wv= AV(w); FSMF(I,1,INT,1, 1,   wv[i] ,EMIT3, ZVAx);} break;
-  case 24: {I *wv= AV(w); FSMF(I,1,INT,2, 3,   wv[i] ,EMIT4, ZVAx);} break;
-  case 25: {I *wv= AV(w); FSMF(I,1,INT,2, 6,   wv[i] ,EMIT5, ZVA5);}
+  case 12+0: {UC*wv=UAV(w); FSMF(A,1,BOX,1, 1,mv[wv[i]],EMIT0c,ZVAx);} break;  // LIT
+  case 12+1: {UC*wv=UAV(w); FSMF(C,1,LIT,1, 1,mv[wv[i]],EMIT1, ZVAx);} break;
+  case 12+2: {UC*wv=UAV(w); FSMF(I,1,INT,2, 2,mv[wv[i]],EMIT2, ZVAx);} break;
+  case 12+3: {UC*wv=UAV(w); FSMF(I,1,INT,1, 1,mv[wv[i]],EMIT3, ZVAx);} break;
+  case 12+4: {UC*wv=UAV(w); FSMF(I,1,INT,2, 3,mv[wv[i]],EMIT4, ZVAx);} break;
+  case 12+5: {UC*wv=UAV(w); FSMF(I,1,INT,2, 6,mv[wv[i]],EMIT5, ZVA5);} break;
  }
  R z;
 }

@@ -468,12 +468,11 @@ F2(jtfrom){I at;A z;
  F2PREFIP;
  RZ(a&&w);
  at=AT(a);
- switch((at&SPARSE?2:0)+(AT(w)&SPARSE?1:0)){
-  case 0: z=at&BOX?afrom(a,w)  :at&B01&&AN(a)!=1?bfrom(a,w):jtifrom(jtinplace,a,w); break;  // make 0{ and 1{ allow virtual result
-  case 1: z=at&BOX?frombs(a,w) :                  fromis(a,w); break;
-  case 2: z=fromsd(a,w); break;
-  default: z=fromss(a,w); break;
- }
+// obsolete  switch((at&SPARSE?2:0)+(AT(w)&SPARSE?1:0)){
+ if(!((AT(a)|AT(w))&(SPARSE))){z=at&BOX?afrom(a,w)  :at&B01&&AN(a)!=1?bfrom(a,w):jtifrom(jtinplace,a,w);}  // make 0{ and 1{ allow virtual result
+ else if(!((AT(a)|AT(w))&(NOUN&~SPARSE))){z=fromss(a,w);}
+ else if(AT(w)&SPARSE){z=at&BOX?frombs(a,w) :                  fromis(a,w);}
+ else{z=fromsd(a,w);}
  RZ(z); RETF(z);
 }   /* a{"r w main control */
 

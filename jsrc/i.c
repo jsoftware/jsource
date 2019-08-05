@@ -132,14 +132,18 @@ B jtglobinit(J jt){A x,y;D*d;A *oldpushx=jt->tnextpushp;
  pf=qpf();
  pinit();
 
-#if C_AVX && (defined(_M_X64) || defined(__x86_64__))
  cpuInit();
+#if defined(__aarch64__)
+ hwaes=(getCpuFeatures()&ARM_HWCAP_AES)?1:0;
+ hwsha1=(getCpuFeatures()&ARM_HWCAP_SHA1)?1:0;
+ hwsha2=(getCpuFeatures()&ARM_HWCAP_SHA2)?1:0;
+#elif (defined(__i386__) || defined(_M_X64) || defined(__x86_64__))
+ hwaes=((getCpuFeatures()&CPU_X86_FEATURE_SSE4_1)&&(getCpuFeatures()&CPU_X86_FEATURE_AES_NI))?1:0;
+ hwsha1=hwsha2=(getCpuFeatures()&CPU_X86_FEATURE_SHA_NI)?1:0;
+#if C_AVX && !defined(ANDROID)
  hwfma=(getCpuFeatures()&CPU_X86_FEATURE_FMA)?1:0;
  // fprintf(stderr,"hwfma %d\n",hwfma);
- hwaes=((getCpuFeatures()&CPU_X86_FEATURE_SSE4_1)&&(getCpuFeatures()&CPU_X86_FEATURE_AES_NI))?1:0;
-#elif !defined(ANDROID) && (defined(__i386__) || defined(_M_X64) || defined(__x86_64__))
- cpuInit();
- hwaes=((getCpuFeatures()&CPU_X86_FEATURE_SSE4_1)&&(getCpuFeatures()&CPU_X86_FEATURE_AES_NI))?1:0;
+#endif
 #endif
  // take all the permanent blocks off the tpop stack so that we don't decrement their usecount.  All blocks allocated here must be permanent
  jt->tnextpushp=oldpushx;

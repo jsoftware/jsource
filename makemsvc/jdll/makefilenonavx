@@ -11,10 +11,9 @@ endif
 OBJS=  \
  ../../jsrc/a.o \
  ../../jsrc/ab.o \
- ../../jsrc/aes128.o \
- ../../jsrc/aes192.o \
- ../../jsrc/aes256.o \
+ ../../jsrc/aes-c.o \
  ../../jsrc/aes-ni.o \
+ ../../jsrc/aes-sse2.o \
  ../../jsrc/af.o \
  ../../jsrc/ai.o \
  ../../jsrc/am.o \
@@ -77,6 +76,8 @@ OBJS=  \
  ../../jsrc/s.o \
  ../../jsrc/sc.o \
  ../../jsrc/sl.o \
+ ../../jsrc/sha1-arm.o \
+ ../../jsrc/sha256-arm.o \
  ../../jsrc/sn.o \
  ../../jsrc/t.o \
  ../../jsrc/u.o \

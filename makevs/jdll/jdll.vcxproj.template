@@ -535,6 +535,9 @@
   <ItemGroup>
     <ClCompile Include="..\..\jsrc\a.c" />
     <ClCompile Include="..\..\jsrc\ab.c" />
+    <ClCompile Include="..\..\jsrc\aes-c.c" />
+    <ClCompile Include="..\..\jsrc\aes-ni.c" />
+    <ClCompile Include="..\..\jsrc\aes-sse2.c" />
     <ClCompile Include="..\..\jsrc\AF.C" />
     <ClCompile Include="..\..\jsrc\AI.C" />
     <ClCompile Include="..\..\jsrc\AM.C" />
@@ -596,6 +599,8 @@
     <ClCompile Include="..\..\jsrc\RT.C" />
     <ClCompile Include="..\..\jsrc\S.C" />
     <ClCompile Include="..\..\jsrc\SC.C" />
+    <ClCompile Include="..\..\jsrc\sha1-arm.c" />
+    <ClCompile Include="..\..\jsrc\sha256-arm.c" />
     <ClCompile Include="..\..\jsrc\SL.C" />
     <ClCompile Include="..\..\jsrc\SN.C" />
     <ClCompile Include="..\..\jsrc\T.C" />

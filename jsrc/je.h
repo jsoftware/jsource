@@ -47,6 +47,7 @@ extern F1(jtcdproc1);
 extern F1(jtceil1);
 extern F1(jtconjug);
 extern DF1(jtcork1);
+extern F1(jtcpufeature);
 extern F1(jtcrc1);
 extern F1(jtcrccompile);
 extern F1(jtctq);
@@ -989,8 +990,10 @@ extern dcomplex zone;
 extern dcomplex zzero;
 extern A        zpath;
 /* cpu feature */
-extern int      hwfma;
-extern int      hwaes;
+extern UC       hwfma;
+extern UC       hwaes;
+extern UC       hwsha1;
+extern UC       hwsha2;
 #if (SYS & SYS_ATARIST+SYS_ATT3B1)
 extern int      memcmp();       /* C library fn                            */
 extern D        strtod();       /* C library fn                            */

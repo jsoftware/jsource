@@ -1,5 +1,52 @@
 #include "cpuinfo.h"
 
+extern uint64_t g_cpuFeatures;
+
+#if defined(__aarch64__)
+
+#include <sys/auxv.h>
+#include <asm/hwcap.h>
+#include <arm_neon.h>
+
+void cpuInit(void)
+{
+  g_cpuFeatures = 0;
+
+  unsigned long hwcaps= getauxval(AT_HWCAP);
+
+  if(hwcaps & HWCAP_FP) g_cpuFeatures |= ARM_HWCAP_FP;
+  if(hwcaps & HWCAP_ASIMD) g_cpuFeatures |= ARM_HWCAP_ASIMD;
+  if(hwcaps & HWCAP_EVTSTRM) g_cpuFeatures |= ARM_HWCAP_EVTSTRM;
+  if(hwcaps & HWCAP_AES) g_cpuFeatures |= ARM_HWCAP_AES;
+  if(hwcaps & HWCAP_PMULL) g_cpuFeatures |= ARM_HWCAP_PMULL;
+  if(hwcaps & HWCAP_SHA1) g_cpuFeatures |= ARM_HWCAP_SHA1;
+  if(hwcaps & HWCAP_SHA2) g_cpuFeatures |= ARM_HWCAP_SHA2;
+  if(hwcaps & HWCAP_CRC32) g_cpuFeatures |= ARM_HWCAP_CRC32;
+  if(hwcaps & HWCAP_ATOMICS) g_cpuFeatures |= ARM_HWCAP_ATOMICS;
+  if(hwcaps & HWCAP_FPHP) g_cpuFeatures |= ARM_HWCAP_FPHP;
+  if(hwcaps & HWCAP_ASIMDHP) g_cpuFeatures |= ARM_HWCAP_ASIMDHP;
+  if(hwcaps & HWCAP_CPUID) g_cpuFeatures |= ARM_HWCAP_CPUID;
+  if(hwcaps & HWCAP_ASIMDRDM) g_cpuFeatures |= ARM_HWCAP_ASIMDRDM;
+  if(hwcaps & HWCAP_JSCVT) g_cpuFeatures |= ARM_HWCAP_JSCVT;
+  if(hwcaps & HWCAP_FCMA) g_cpuFeatures |= ARM_HWCAP_FCMA;
+  if(hwcaps & HWCAP_LRCPC) g_cpuFeatures |= ARM_HWCAP_LRCPC;
+  if(hwcaps & HWCAP_DCPOP) g_cpuFeatures |= ARM_HWCAP_DCPOP;
+  if(hwcaps & HWCAP_SHA3) g_cpuFeatures |= ARM_HWCAP_SHA3;
+  if(hwcaps & HWCAP_SM3) g_cpuFeatures |= ARM_HWCAP_SM3;
+  if(hwcaps & HWCAP_SM4) g_cpuFeatures |= ARM_HWCAP_SM4;
+  if(hwcaps & HWCAP_ASIMDDP) g_cpuFeatures |= ARM_HWCAP_ASIMDDP;
+  if(hwcaps & HWCAP_SHA512) g_cpuFeatures |= ARM_HWCAP_SHA512;
+  if(hwcaps & HWCAP_SVE) g_cpuFeatures |= ARM_HWCAP_SVE;
+  if(hwcaps & HWCAP_ASIMDFHM) g_cpuFeatures |= ARM_HWCAP_ASIMDFHM;
+  if(hwcaps & HWCAP_DIT) g_cpuFeatures |= ARM_HWCAP_DIT;
+  if(hwcaps & HWCAP_USCAT) g_cpuFeatures |= ARM_HWCAP_USCAT;
+  if(hwcaps & HWCAP_ILRCPC) g_cpuFeatures |= ARM_HWCAP_ILRCPC;
+  if(hwcaps & HWCAP_FLAGM) g_cpuFeatures |= ARM_HWCAP_FLAGM;
+
+}
+
+#elif defined(__x86_64__)||defined(__i386__)||defined(_MSC_VER)
+
 #ifdef _WIN32
 #include <windows.h>
 extern void __cpuid(int CPUInfo[4], int InfoType);
@@ -13,8 +60,6 @@ extern void __cpuid(int CPUInfo[4], int InfoType);
 #endif
 #endif
 #endif
-
-uint64_t g_cpuFeatures;
 
 #if defined(__x86_64__)||defined(__i386__)||defined(_MSC_VER)
 static int check_xcr0_ymm()
@@ -33,15 +78,15 @@ static int check_xcr0_ymm()
 #ifndef ANDROID
 static __inline int
 get_cpuid_count (unsigned int __level, unsigned int __count,
-           unsigned int *__eax, unsigned int *__ebx,
-           unsigned int *__ecx, unsigned int *__edx)
+                 unsigned int *__eax, unsigned int *__ebx,
+                 unsigned int *__ecx, unsigned int *__edx)
 {
-    unsigned int __ext = __level & 0x80000000;
-    if (__get_cpuid_max (__ext, 0) < __level)
-        return 0;
+  unsigned int __ext = __level & 0x80000000;
+  if (__get_cpuid_max (__ext, 0) < __level)
+    return 0;
 
-    __cpuid_count (__level, __count, *__eax, *__ebx, *__ecx, *__edx);
-    return 1;
+  __cpuid_count (__level, __count, *__eax, *__ebx, *__ecx, *__edx);
+  return 1;
 }
 #define x86_cpuid(func, values) get_cpuid_count(func, 0, values, values+1, values+2, values+3)
 #else
@@ -140,19 +185,19 @@ void cpuInit(void)
   }
 
   if (maxid>=7) {
-  x86_cpuid(7, regs);
-  if ((regs[1] & (1 << 5)) != 0) {
-    g_cpuFeatures |= CPU_X86_FEATURE_AVX2;
-  }
-  if ((regs[1] & (1 << 29)) != 0) {
-    g_cpuFeatures |= CPU_X86_FEATURE_SHA_NI;
-  }
+    x86_cpuid(7, regs);
+    if ((regs[1] & (1 << 5)) != 0) {
+      g_cpuFeatures |= CPU_X86_FEATURE_AVX2;
+    }
+    if ((regs[1] & (1 << 29)) != 0) {
+      g_cpuFeatures |= CPU_X86_FEATURE_SHA_NI;
+    }
   }
 // mask off avx if os does not support
   int AVX=0;
 #ifdef _WIN32
 #if 0
-/* not very reliable check */
+  /* not very reliable check */
 #define XSTATE_MASK_AVX   (XSTATE_MASK_GSSE)
   typedef DWORD64 (WINAPI *GETENABLEDXSTATEFEATURES)();
   GETENABLEDXSTATEFEATURES pfnGetEnabledXStateFeatures = NULL;
@@ -186,6 +231,15 @@ void cpuInit(void)
 #endif
 
 }
+
+#else
+
+void cpuInit(void)
+{
+  g_cpuFeatures = 0;
+}
+
+#endif
 
 uint64_t getCpuFeatures(void)
 {

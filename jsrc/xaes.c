@@ -6,7 +6,7 @@
 #include "j.h"
 #include "x.h"
 
-#include "aes.h"
+#include "aes-c.h"
 
 #include <string.h>
 #ifdef _MSC_VER
@@ -17,6 +17,12 @@
 int aes_c(I decrypt,I mode,UC *key,I keyn,UC* iv,UC* out,I n);
 #if !defined(ANDROID) && (defined(__i386__) || defined(_M_X64) || defined(__x86_64__))
 int aes_ni(I decrypt,I mode,UC *key,I keyn,UC* iv,UC* out,I n);
+#endif
+#if defined(__SSE2__)
+int aes_sse2(I decrypt,I mode,UC *key,I keyn,UC* iv,UC* out,I n);
+#endif
+#if defined(__aarch64__)
+int aes_arm(I decrypt,I mode,UC *key,I keyn,UC* iv,UC* out,I n);
 #endif
 
 /*
@@ -83,14 +89,35 @@ F2(jtaes2)
       else memset(out+n-16,16,16);
     } else if(n1)memset(out+n-(16-n1),0,16-n1);
   }
-#if !defined(ANDROID) && (defined(__i386__) || defined(_M_X64) || defined(__x86_64__))
+#if (defined(__i386__) || defined(_M_X64) || defined(__x86_64__))
+#if !defined(ANDROID)
   if(hwaes) {
     ASSERT(!aes_ni(decrypt,mode,key,keyn,iv,out,n),EVDOMAIN);
+  } else {
+#if defined(__SSE2__)
+    ASSERT(!aes_sse2(decrypt,mode,key,keyn,iv,out,n),EVDOMAIN);
+#else
+    ASSERT(!aes_c(decrypt,mode,key,keyn,iv,out,n),EVDOMAIN);
+#endif
+  }
+#else
+/* ANDROID x86 */
+#if defined(__SSE2__)
+  ASSERT(!aes_sse2(decrypt,mode,key,keyn,iv,out,n),EVDOMAIN);
+#else
+  ASSERT(!aes_c(decrypt,mode,key,keyn,iv,out,n),EVDOMAIN);
+#endif
+#endif
+#else
+#if defined(__aarch64__)
+  if(hwaes) {
+    ASSERT(!aes_arm(decrypt,mode,key,keyn,iv,out,n),EVDOMAIN);
   } else {
     ASSERT(!aes_c(decrypt,mode,key,keyn,iv,out,n),EVDOMAIN);
   }
 #else
   ASSERT(!aes_c(decrypt,mode,key,keyn,iv,out,n),EVDOMAIN);
+#endif
 #endif
   if(decrypt&&padding) {
     int i;
@@ -115,99 +142,30 @@ F2(jtaes2)
 int aes_c(I decrypt,I mode,UC *key,I keyn,UC* iv,UC* out,I n)
 {
   I i;
-  switch(keyn) {
-  case 16: {
-    struct AES_ctx_128 ctx;
+    AES_ctx ctx;
     switch(mode) {
     case 0:
-      AES_init_ctx_128(&ctx, key);
+      AES_init_ctx(&ctx, key, keyn);
       if(decrypt) {
-        for(i=0; i<n/16; i++) AES_ECB_decrypt_128(&ctx, out+i*16);
+        for(i=0; i<n/16; i++) AES_ECB_decrypt(&ctx, out+i*16);
       } else {
-        for(i=0; i<n/16; i++) AES_ECB_encrypt_128(&ctx, out+i*16);
+        for(i=0; i<n/16; i++) AES_ECB_encrypt(&ctx, out+i*16);
       }
       break;
 
     case 1:
-      AES_init_ctx_iv_128(&ctx, key, iv);
-      if(decrypt) AES_CBC_decrypt_buffer_128(&ctx, out, n);
-      else AES_CBC_encrypt_buffer_128(&ctx, out, n);
+      AES_init_ctx_iv(&ctx, key, keyn, iv);
+      if(decrypt) AES_CBC_decrypt_buffer(&ctx, out, n);
+      else AES_CBC_encrypt_buffer(&ctx, out, n);
       break;
 
     case 2:
-      AES_init_ctx_iv_128(&ctx, key, iv);
-      AES_CTR_xcrypt_buffer_128(&ctx, out, n);
+      AES_init_ctx_iv(&ctx, key, keyn, iv);
+      AES_CTR_xcrypt_buffer(&ctx, out, n);
       break;
 
     default:
       R 1;
-
     }
-  }
-  break;
-
-  case 24: {
-    struct AES_ctx_192 ctx;
-    switch(mode) {
-    case 0:
-      AES_init_ctx_192(&ctx, key);
-      if(decrypt) {
-        for(i=0; i<n/16; i++) AES_ECB_decrypt_192(&ctx, out+i*16);
-      } else {
-        for(i=0; i<n/16; i++) AES_ECB_encrypt_192(&ctx, out+i*16);
-      }
-      break;
-
-    case 1:
-      AES_init_ctx_iv_192(&ctx, key, iv);
-      if(decrypt) AES_CBC_decrypt_buffer_192(&ctx, out, n);
-      else AES_CBC_encrypt_buffer_192(&ctx, out, n);
-      break;
-
-    case 2:
-      AES_init_ctx_iv_192(&ctx, key, iv);
-      AES_CTR_xcrypt_buffer_192(&ctx, out, n);
-      break;
-
-    default:
-      R 1;
-
-    }
-  }
-  break;
-
-  case 32: {
-    struct AES_ctx_256 ctx;
-    switch(mode) {
-    case 0:
-      AES_init_ctx_256(&ctx, key);
-      if(decrypt) {
-        for(i=0; i<n/16; i++) AES_ECB_decrypt_256(&ctx, out+i*16);
-      } else {
-        for(i=0; i<n/16; i++) AES_ECB_encrypt_256(&ctx, out+i*16);
-      }
-      break;
-
-    case 1:
-      AES_init_ctx_iv_256(&ctx, key, iv);
-      if(decrypt) AES_CBC_decrypt_buffer_256(&ctx, out, n);
-      else AES_CBC_encrypt_buffer_256(&ctx, out, n);
-      break;
-
-    case 2:
-      AES_init_ctx_iv_256(&ctx, key, iv);
-      AES_CTR_xcrypt_buffer_256(&ctx, out, n);
-      break;
-
-    default:
-      R 1;
-
-    }
-  }
-  break;
-
-  default:
-    R 1;
-  }
   R 0;  // success
 }

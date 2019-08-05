@@ -161,9 +161,8 @@ esac
 OBJS="\
  a.o \
  ab.o \
- aes128.o \
- aes192.o \
- aes256.o \
+ aes-c.o \
+ aes-sse2.o \
  af.o \
  ai.o \
  am.o \
@@ -222,6 +221,8 @@ OBJS="\
  rt.o \
  s.o \
  sc.o \
+ sha1-arm.o \
+ sha256-arm.o \
  sl.o \
  sn.o \
  t.o \

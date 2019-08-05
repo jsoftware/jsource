@@ -49,10 +49,12 @@ dcomplex zone={1.0,0.0};  // used gy gemm
 dcomplex zzero={0.0,0.0};
 A   zpath=0;              /* default locale search path           */
 uint64_t g_cpuFeatures;   // blis
-int hwfma=0;              // blis cpu tuning
-int hwaes=0;              // aes ni
 A   pst[256]={0};
 A   chr[256]={0};         /* scalar for each character, or 0      */
+UC  hwfma=0;              // blis cpu tuning
+UC  hwaes=0;              // aes ni
+UC  hwsha1=0;             // sha1
+UC  hwsha2=0;             // sha2
 // obsolete B   testb[256]={0};       /* 1 iff test block follows             */
 C   wtype[256]={0};
 // obsoletes follow

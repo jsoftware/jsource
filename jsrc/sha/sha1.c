@@ -30,6 +30,10 @@ A million repetitions of "a"
 
 // #include "sha1.h"
 
+#if defined(__aarch64__)
+extern void sha1_process_arm(uint32_t state[5], const uint8_t data[], uint32_t length);
+#endif
+
 #define rol(value, bits) (((value) << (bits)) | ((value) >> (32 - (bits))))
 
 /* blk0() and blk() perform the initial expand. */
@@ -214,9 +218,23 @@ static void SHA1Update(
   j = (j >> 3) & 63;
   if ((j + len) > 63) {
     memcpy(&context->buffer[j], data, (i = 64 - j));
+#if defined(__aarch64__)
+    if(hwsha1)
+      sha1_process_arm(context->state, (const uint8_t *)context->buffer, 64);
+    else
+      SHA1Transform(context->state, context->buffer);
+#else
     SHA1Transform(context->state, context->buffer);
+#endif
     for (; i + 63 < len; i += 64) {
+#if defined(__aarch64__)
+      if(hwsha1)
+        sha1_process_arm(context->state, (const uint8_t *)&data[i], 64);
+      else
+        SHA1Transform(context->state, &data[i]);
+#else
       SHA1Transform(context->state, &data[i]);
+#endif
     }
     j = 0;
   } else

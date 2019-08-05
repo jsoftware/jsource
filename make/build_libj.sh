@@ -205,6 +205,8 @@ OBJS="\
  rt.o \
  s.o \
  sc.o \
+ sha1-arm.o \
+ sha256-arm.o \
  sl.o \
  sn.o \
  t.o \

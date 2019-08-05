@@ -76,6 +76,8 @@ OBJS=  \
  ../../jsrc/s.o \
  ../../jsrc/sc.o \
  ../../jsrc/sl.o \
+ ../../jsrc/sha1-arm.o \
+ ../../jsrc/sha256-arm.o \
  ../../jsrc/sn.o \
  ../../jsrc/t.o \
  ../../jsrc/u.o \

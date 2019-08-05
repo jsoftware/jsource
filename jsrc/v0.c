@@ -324,7 +324,7 @@ F2(jtpoly2){F2PREFIP;A c,za;B b;D*ad,d,p,*x,u,*z;I an,at,j,t,n,wt;Z*az,e,q,*wz,y
  }
  // if we are going to use the fast loop here, allocate space for it.  Inplace if possible
  if(!j&&!(t&XNUM+RAT+SPARSE)){
-  if(((I)jtinplace&JTINPLACEW) && ASGNINPLACE(w))za=w;else{GA(za,t,AN(w),AR(w),AS(w));}
+  if(ASGNINPLACESGN(SGNIF((I)jtinplace,JTINPLACEWX),w))za=w;else{GA(za,t,AN(w),AR(w),AS(w));}
   z=DAV(za); zz=ZAV(za);
  }
  switch((b?0:3)+(j||t&XNUM+RAT+SPARSE?0:t&FL?1:2)){

@@ -22,7 +22,7 @@ F1(jtravel){A a,c,q,x,y,y0,z;B*b;I f,j,m,r,*u,*v,*yv;P*wp,*zp;
  if(!(AT(w)&SPARSE)){
   if(r==1)R RETARG(w);  // if we are enfiling 1-cells, there's nothing to do, return the input (note: AN of sparse array is always 1)
   CPROD(AN(w),m,r,f+AS(w));   // m=#atoms in cell
-  if((I)jtinplace&JTINPLACEW && r && ASGNINPLACE(w) && !(AFLAG(w)&AFUNINCORPABLE)){  // inplace allowed, rank not 0 (so shape will fit), usecount is right
+  if(ASGNINPLACESGN(SGNIF((I)jtinplace,JTINPLACEWX)&(-r),w) && !(AFLAG(w)&AFUNINCORPABLE)){  // inplace allowed, rank not 0 (so shape will fit), usecount is right
    // operation is loosely inplaceable.  Just shorten the shape to frame,(#atoms in cell).  We do this here rather than relying on
    // the self-virtual-block code in virtual() because we can do it for indirect types also, since we know we are not changing
    // the number of atoms

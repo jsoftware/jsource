@@ -133,7 +133,7 @@ static A jtmerge2(J jt,A a,A w,A ind,I cellframelen){F2PREFIP;A z;I t;
  // It is not possible to inplace a value that is backing a virtual block, because we inplace assigned names only when
  // the stack is empty, so if there is a virtual block it must be in a higher sentence, and the backing name must appear on the
  // stack in that sentence if the usecount is only 1.
- I ip = ((I)jtinplace&JTINPLACEW) && ASGNINPLACENJA(w)
+ I ip = ASGNINPLACESGNNJA(SGNIF((I)jtinplace,JTINPLACEWX),w)
       &&TYPESEQ(t,AT(w))&&(AT(w)&(DIRECT|RECURSIBLE))&&w!=a&&w!=ind&&(w!=ABACK(a)||!(AFLAG(a)&AFVIRTUAL));
  // if w is boxed, we have to make one more check, to ensure we don't end up with a loop if we do   (<a) m} a.  Force a to be recursive usecount, then see if the usecount of w is changed
  if(ip&&t&RECURSIBLE){

@@ -175,7 +175,7 @@ static A jtva1(J jt,A w,A self){A z;I cv,n,t,wt,zt;VF ado;
  t=atype(cv); zt=rtype(cv);  // extract required type of input and result
 // obsolete  if(t&&TYPESNE(t,wt)){RZ(w=cvt(t,w)); jtinplace=(J)((I)jtinplace|JTINPLACEW);}  // convert input if necessary; if we converted, converted result is ipso facto inplaceable.  t is usually 0
  if(UNSAFE(t&~wt)){RZ(w=cvt(t,w)); jtinplace=(J)((I)jtinplace|JTINPLACEW);}  // convert input if necessary; if we converted, converted result is ipso facto inplaceable.  t is usually 0
- if(((I)jtinplace&(cv>>VIPOKWX)&JTINPLACEW) && ASGNINPLACE(w)){z=w; if(TYPESNE(AT(w),zt))MODBLOCKTYPE(z,zt)}else{GA(z,zt,n,AR(w),AS(w));}
+ if(ASGNINPLACESGN(SGNIF((I)jtinplace,JTINPLACEWX)&SGNIF(cv,VIPOKWX),w)){z=w; if(TYPESNE(AT(w),zt))MODBLOCKTYPE(z,zt)}else{GA(z,zt,n,AR(w),AS(w));}
  if(!n)RETF(z); ((AHDR1FN*)ado)(jt,n,AV(z),AV(w));  // perform the operation on all the atoms
  if(!jt->jerr){RETF(cv&VRI+VRD?cvz(cv,z):z);}  // Normal return point: if no error, convert the result if necessary
  else{

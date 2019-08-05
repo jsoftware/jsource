@@ -301,7 +301,7 @@ static DF1(jtsscan){A y,z;I d,f,m,n,r,t,wn,wr,*ws,wt;
  VA2 adocv = vasfx(FAV(y)->fgh[0],wt);  // analyze f
  if(!adocv.f)R IRSIP1(w,self,r,jtssg,z);   // if not supported atomically, go do general suffix
  if((t=atype(adocv.cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));
- if((I)jtinplace&(adocv.cv>>VIPOKWX)&JTINPLACEW && ASGNINPLACE(w))z=w; else GA(z,rtype(adocv.cv),wn,wr,ws);
+ if(ASGNINPLACESGN(SGNIF((I)jtinplace,JTINPLACEWX)&SGNIF(adocv.cv,VIPOKWX),w))z=w; else GA(z,rtype(adocv.cv),wn,wr,ws);
  ((AHDRSFN*)adocv.f)(d,n,m,AV(w),AV(z),jt);
  if(jt->jerr)R jt->jerr>=EWOV?IRS1(w,self,r,jtsscan,z):0; else R adocv.cv&VRI+VRD?cvz(adocv.cv,z):z;
 }    /* f/\."r w main control */

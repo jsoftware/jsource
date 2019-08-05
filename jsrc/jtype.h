@@ -396,7 +396,7 @@ typedef I SI;
 // same, but s is an expression that is neg if it's OK to inplace
 #define ASGNINPLACESGN(s,w)  (((s)&AC(w))<0 || ((s)&(AC(w)-2))<0 &&jt->assignsym&&jt->assignsym->val==w&&!(AFLAG(w)&AFRO)&&notonupperstack(w))  // OK to inplace ordinary operation
 // obsolete #define ASGNINPLACENJA(w)  (ASGNINPLACE(w)||(AC(w)==2&&AFLAG(w)&AFNJA))   // OK to inplace, for ops that have special support for NJA blocks
-#define ASGNINPLACENJA(w)  (ACIPISOK(w) || jt->assignsym&&jt->assignsym->val==w&&(AC(w)==1||(AC(w)==2&&AFLAG(w)&AFNJA))&&!(AFLAG(w)&AFRO)&&notonupperstack(w))  // OK to inplace ordinary operation
+#define ASGNINPLACESGNNJA(s,w)  ( ((s)&AC(w))<0 || (((s)&(AC(w)-2))<0||(((s)&(AC(w)-3)&SGNIF(AFLAG(w),AFNJAX))<0))&&jt->assignsym&&jt->assignsym->val==w&&!(AFLAG(w)&AFRO)&&notonupperstack(w))  // OK to inplace ordinary operation
 // define virtreqd and set it to 0 to start   scaf no LIT B01 C2T etc
 // This is used in apip.  We must ALWAYS allow inplacing for NJA types, but for ordinary inplacing we don't bother if the number of atoms of w pushes a over a power-of-2 boundary
 // obsolete #define EXTENDINPLACENJA(w)  (ACIPISOK(a) || (AC(w)==1||(AC(w)==2&&AFLAG(w)&AFNJA))&&((jt->assignsym&&jt->assignsym->val==w&&!(AFLAG(w)&AFRO))||(!jt->assignsym&&(virtreqd=1,!(AFLAG(w)&(AFRO|AFVIRTUAL)))))&&notonupperstack(w))  // OK to inplace ordinary operation

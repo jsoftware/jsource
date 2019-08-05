@@ -82,7 +82,8 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wk,wn,wr,*ws,zn;
   // Also m: #wcr-cells in w 
   PROD(m,wf,ws); zn=k*m;  RE(zn=mult(an,zn));
 // correct  if(((zn-2)|-(wf|(wflag&(AFNJA))))>=0){  // zn>1 and not (frame or NJA)
-  if((((AT(w)&(DIRECT|RECURSIBLE))-1)|(zn-2)|-(wf|(wflag&(AFNJA)))|(wr-2))>=0){  // zn>1 and not (frame or NJA) and rank>1.  Don't take the time creating a virtual blocks  for a list.  User should use ;.0 for that
+// obsolete if(!(AT(w)&(DIRECT|RECURSIBLE)))SEGFAULT  // scaf
+  if(((zn-2)|(wr-2)|-(wf|(wflag&(AFNJA))))>=0){  // zn>1 and not (frame or NJA) and rank>1.  Don't take the time creating a virtual block for a list.  User should use ;.0 for that
    // result is more than one atom and does not come from multiple cells.  Perhaps it should be virtual.  See if the indexes are consecutive
    I index0 = av[0]; index0+=(index0>>(BW-1))&p;  // index of first item
    // check the last item before checking the middle.

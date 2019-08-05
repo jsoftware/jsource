@@ -292,7 +292,7 @@ static I validitymask[12]={-1, -1, -1, -1, 0, 0, 0, 0, -1, -1, -1, -1};  // allo
 
 static SF(jtsortiq){FPREFIP;  // m=#sorts, n=#items in each sort, w is block
  A z; 
- if(((I)jtinplace&JTINPLACEW) && ASGNINPLACE(w))z=w; else RZ(z=ca(w));   // output area, possibly the same as the input
+ if(ASGNINPLACESGN(SGNIF((I)jtinplace,JTINPLACEWX),w))z=w; else RZ(z=ca(w));   // output area, possibly the same as the input
  I *zv=IAV(z); DQ(m, sortiq1(zv,n); if(jt->workareas.compare.complt>0){I *zv1=zv; I *zv2=zv+n; DQ(n>>1, I t=*zv1; *zv1++=*--zv2; *zv2=t;)} zv+=n;)  // sort each list (ascending); reverse if descending
  RETF(z);
 }
@@ -319,7 +319,7 @@ static SF(jtsorti){FPREFIP;A y,z;I i;UI4 *yv;I j,s,*wv,*zv;
 // obsolete if(!rng.range)R n>1300?sorti1(m,n,w):jtsortdirect(jt,m,1,n,w);  // TUNE
  // allocate area for the data, and result area
  GATV0(y,C4T,rng.range,1); yv=C4AV(y)-rng.min;  // yv->totals area
- if(((I)jtinplace&JTINPLACEW) && ASGNINPLACE(w))z=w;else GA(z,AT(w),AN(w),AR(w),AS(w));
+ if(ASGNINPLACESGN(SGNIF((I)jtinplace,JTINPLACEWX),w))z=w;else GA(z,AT(w),AN(w),AR(w),AS(w));
  zv=AV(z);
  // clear all totals to 0, then bias address of area so the data fits
  for(i=0;i<m;++i){  // for each list...
@@ -390,7 +390,7 @@ static SF(jtsortu1){A x,y,z;C4 *xu,*wv,*zu;I i;void *yv;
 
 static SF(jtsortdq){FPREFIP;  // m=#sorts, n=#items in each sort, w is block
  A z; 
- if(((I)jtinplace&JTINPLACEW) && ASGNINPLACE(w))z=w; else RZ(z=ca(w));   // output area, possibly the same as the input
+ if(ASGNINPLACESGN(SGNIF((I)jtinplace,JTINPLACEWX),w))z=w; else RZ(z=ca(w));   // output area, possibly the same as the input
  D *zv=DAV(z); DQ(m, sortdq1(zv,n); if(jt->workareas.compare.complt>0){D *zv1=zv; D *zv2=zv+n; DQ(n>>1, D t=*zv1; *zv1++=*--zv2; *zv2=t;)} zv+=n;)  // sort each list (ascending); reverse if descending
  RETF(z);
 }

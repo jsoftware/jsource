@@ -137,11 +137,31 @@ static F1(jtlbox){A p,*v,*vv,*wv,x,y;B b=0;I n;
  R over(lshape(w),raze(y));
 }    /* non-empty boxed array */
 
+// Apply decoration as needed to a numeric character string w to give it the correct type t
+// Result is A block for decorated string
+A jtdecorate(J jt,A w,I t){
+ if(AN(w)==0)R w;  // if empty string, don't decorate
+ if(t&FL){
+  // float: make sure there is a . somewhere, or infinity/indefinite ('_' followed by space/end/.), else put '.' on the end
+  B needdot = !memchr(CAV(w),'.',AN(w));  // check for decimal point
+  if(needdot){DO(AN(w), if(CAV(w)[i]=='_' && (i==AN(w)-1 || CAV(w)[i+1]==' ')){needdot=0; break;} )}  // check for infinity
+  if(needdot)w=over(w,scc('.'));
+ }else if(t&INT){
+  // integer: if the string contains nothing but one-digit 0/1 values, prepend a '0'
+  I l=AN(w); C *s=CAV(w); do{if((*s&-2)!='0')break; ++s; if(--l==0)break; if(*s!=' ')break; ++s;}while(--l);
+  if(l==0)w=over(scc('0'),w);
+ }else if(t&XNUM+RAT){
+  // numeric/rational: make sure there is an r/x somewhere in the string, else put one on the end
+  if(!memchr(CAV(w),t&XNUM?'x':'r',AN(w)))w=over(w,scc('x'));
+ }
+ R w;
+}
+
 static F1(jtlnum1){A z;I t;
  RZ(w);
  t=AT(w);
  RZ(z=t&FL+CMPX?df1(w,fit(ds(CTHORN),sc((I)18))):thorn1(w));
- R t&XNUM+RAT&&!memchr(CAV(z),t&XNUM?'x':'r',AN(z))?over(z,scc('x')):z;
+ R decorate(z,t);
 }    /* dense non-empty numeric vector */
 
 static F1(jtlnum){A b,d,t,*v,y;B p;I n;

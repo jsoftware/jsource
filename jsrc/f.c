@@ -69,28 +69,31 @@ static void thcase(I t,I*wd,VF*fmt){
   default:   *wd=WI; *fmt=jtfmtI;
 }}
 
+// copy numeric string to error line.  Values in w, n/s = len/addr of output buffer
+// negative n means 'decorate the result to show precision'
 I jtthv(J jt,A w,I n,C*s){A t;B ov=0;C buf[WZ],*x,*y=s;I k,n4=n-4,p,wd,wn,wt;VF fmt;
  RZ(w&&n);
  wn=AN(w); wt=AT(w); x=CAV(w); thcase(wt,&wd,&fmt);
  switch(CTTZNOFLAG(wt)){
-  case XNUMX: case RATX:
-   RZ(t=thxqe(w)); p=AN(t); if(ov=n<p)p=n4; MC(y,AV(t),p); y+=p; break;
-  case B01X:
-   if(ov=n<2*wn)p=n4>>1; else p=wn; DQ(p, *y++=*x++?'1':'0'; *y++=' ';); break;
-  case INTX:
-	{C*t;I i,*v,x;
-	v=AV(w);
-    for(i=0;i<wn;++i){
-     t=buf; x=*v++;
-     sprintf(t,FMTI" ",x);
-	 if('-'==*t)*t=CSIGN;
-     p=strlen(t); if(ov=n4<p+y-s)break; strcpy(y,t); y+=p;
-	}}
-   break;
-  default:
-   k=bpnoun(wt);
-   if(n>=wn*wd)DQ(wn, fmt(jt,y,x); y+=strlen(y); *y++=' '; x+=k;)
-   else        DQ(wn, fmt(jt,buf,x); p=strlen(buf); if(ov=n4<1+p+y-s)break; strcpy(y,buf); y+=p; *y++=' '; x+=k;);
+ case XNUMX: case RATX:
+  RZ(t=thxqe(w)); p=AN(t); if(ov=n<p)p=n4; MC(y,AV(t),p); y+=p; break;
+ case B01X:
+  if(ov=n<2*wn)p=n4>>1; else p=wn; DQ(p, *y++=*x++?'1':'0'; *y++=' ';); break;
+ case INTX:
+ 	{C*t;I i,*v,x;
+  	v=AV(w);
+   for(i=0;i<wn;++i){
+    t=buf; x=*v++;
+    sprintf(t,FMTI" ",x);
+	   if('-'==*t)*t=CSIGN;
+    p=strlen(t); if(ov=n4<p+y-s)break; strcpy(y,t); y+=p;
+  	}
+  }
+  break;
+ default:
+  k=bpnoun(wt);
+  if(n>=wn*wd)DQ(wn, fmt(jt,y,x); y+=strlen(y); *y++=' '; x+=k;)
+  else        DQ(wn, fmt(jt,buf,x); p=strlen(buf); if(ov=n4<1+p+y-s)break; strcpy(y,buf); y+=p; *y++=' '; x+=k;);
  }
  if(ov){if(' '!=*(y-1))*y++=' '; memset(y,'.',3L); y+=3;}
  else if(' '==*(y-1))--y; 

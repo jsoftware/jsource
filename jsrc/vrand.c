@@ -620,7 +620,7 @@ static F2(jtrollksub){A z;I an,*av,k,m1,n,p,q,r,sh;UI m,mk,s,t,*u,x=jt->rngM[jt-
   // integer output
   r=n; s=GMOF(m,x); if(s==x)s=0;
   if(m>1&&!(m&(m-1))){
-   s=-m;  // since we reject t>=s, we must make s less than IMAX.  This is the max possible multiple of s.  We don't check for s=0 in this path
+   if(s==0)s=(UI)-(I)m;  // since we reject t>=s, we must make s less than IMAX.  This is the max possible multiple of s.  We don't check for s=0 in this path.  s==0 possible only in 32-bit
    // here if w is a power of 2, >2; take bits from each value.  s cannot be 0
    k=CTTZI(m);  // lg(m)
    p=jt->rngw/k; /* obsolete q=n/p; r=n%p;*/ mk=m-1;  // p=#results per random number; r is number of values left after bit processing

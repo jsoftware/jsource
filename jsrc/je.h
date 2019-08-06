@@ -699,6 +699,7 @@ extern A        jtdaxis(J,I,A);
 extern DC       jtdeba(J,C,void*,void*,A);
 extern void     jtdebdisp(J,DC);
 extern void     jtdebz(J);
+extern A        jtdecorate(J,A,I);
 extern A        jtdfss1(J,A,A,A);
 extern A        jtdfss2(J,A,A,A,A);
 extern D        jtdgamma(J,D);

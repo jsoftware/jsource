@@ -252,7 +252,7 @@ F1(jtcpufeature){
  ASSERT(AT(w)&LIT,EVDOMAIN);
  ASSERT(AN(w),EVLENGTH);
  ASSERT(1>=AR(w),EVRANK);
- *(CAV(w)+AN(w))=0;
+ w=str0(w);
 #if defined(__aarch64__)
  if     (!strcasecmp(CAV(w),"FP"      )) R sc(!!(getCpuFeatures()&ARM_HWCAP_FP ));
  else if(!strcasecmp(CAV(w),"ASIMD"   )) R sc(!!(getCpuFeatures()&ARM_HWCAP_ASIMD ));

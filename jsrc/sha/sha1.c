@@ -249,7 +249,7 @@ static void SHA1Final(
   SHA1_CTX * context
 )
 {
-  unsigned i;
+  unsigned int i;
 
   unsigned char finalcount[8];
 

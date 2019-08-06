@@ -145,7 +145,7 @@ int aes_c(I decrypt,I mode,UC *key,I keyn,UC* iv,UC* out,I n)
     AES_ctx ctx;
     switch(mode) {
     case 0:
-      AES_init_ctx(&ctx, key, keyn);
+      AES_init_ctx(&ctx, key, (int)keyn);
       if(decrypt) {
         for(i=0; i<n/16; i++) AES_ECB_decrypt(&ctx, out+i*16);
       } else {
@@ -154,13 +154,13 @@ int aes_c(I decrypt,I mode,UC *key,I keyn,UC* iv,UC* out,I n)
       break;
 
     case 1:
-      AES_init_ctx_iv(&ctx, key, keyn, iv);
+      AES_init_ctx_iv(&ctx, key, (int)keyn, iv);
       if(decrypt) AES_CBC_decrypt_buffer(&ctx, out, n);
       else AES_CBC_encrypt_buffer(&ctx, out, n);
       break;
 
     case 2:
-      AES_init_ctx_iv(&ctx, key, keyn, iv);
+      AES_init_ctx_iv(&ctx, key, (int)keyn, iv);
       AES_CTR_xcrypt_buffer(&ctx, out, n);
       break;
 

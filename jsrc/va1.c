@@ -142,13 +142,17 @@ void va1primsetup(A w){
 }
 
 static A jtva1(J jt,A w,A self){A z;I cv,n,t,wt,zt;VF ado;
+ UA *u=(UA *)FAV(self)->localuse.lvp[1];
  RZ(w);F1PREFIP;
  wt=AT(w); n=AN(w); wt=(I)jtinplace&JTEMPTY?B01:wt;
- UA *u=(UA *)FAV(self)->localuse.lvp[1];
- ASSERT(wt&NUMERIC,EVDOMAIN);
-// obsolete  if(wt&SPARSE){wp=PAV(w); e=SPA(wp,e); wt=AT(e);}
+#if SY_64
+ VA2 *p=&u->p1[(0x0321000054032100>>(CTTZ(wt)<<2))&7];  // from MSB, we need xxx 011 010 001 xxx 000 xxx xxx   101 100 xxx 011 010 001 xxx 000
+#else
  if(wt&SPARSE){wt=AT(SPA(PAV(w),e));}
  VA2 *p=&u->p1[(0x54032100>>(CTTZ(wt)<<2))&7];  // from MSB, we need 101 100 xxx 011 010 001 xxx 000
+#endif
+ ASSERT(wt&NUMERIC,EVDOMAIN);
+// obsolete  if(wt&SPARSE){wp=PAV(w); e=SPA(wp,e); wt=AT(e);}
  if(!((I)jtinplace&JTRETRY)){
 // obsolete   p=((va1tab+((C*)strchr(va1fns,id)-(C*)va1fns))->p1)[wt&B01?0:wt&INT?1:wt&FL?2:wt&CMPX?3:wt&XNUM?4:5];
   ado=p->f; cv=p->cv;

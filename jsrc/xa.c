@@ -247,7 +247,7 @@ F1(jtunicodex78s){I k;
 
 // 9!:56  undocumented
 // query cpu feature
-F1(jtcpufeature){I k;
+F1(jtcpufeature){/* obsolete I k ;*/
  RZ(w);
  ASSERT(AT(w)&LIT,EVDOMAIN);
  ASSERT(AN(w),EVLENGTH);

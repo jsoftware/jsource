@@ -4,7 +4,7 @@
 /* Defines:                                                                  */
 /*****************************************************************************/
 // The number of columns comprising a state in AES. This is a constant in AES. Value=4
-#define Nb 4
+#define Nb 4u
 
 /*****************************************************************************/
 /* Private variables:                                                        */
@@ -81,7 +81,7 @@ static uint8_t getSBoxInvert(uint8_t num)
 // This function produces Nb(Nr+1) round keys. The round keys are used in each round to decrypt the states.
 static void KeyExpansion(AES_ctx* ctx, const uint8_t* Key, int keyn)
 {
-  unsigned i, j, k;
+  unsigned int i, j, k;
   uint8_t tempa[4]; // Used for the column/row operations
   uint8_t* RoundKey = ctx->RoundKey;
   if(keyn==32) {

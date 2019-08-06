@@ -248,7 +248,7 @@ sha3_Finalize(void *priv,int keccak)
    * __BYTE_ORDER__!=__ORDER_LITTLE_ENDIAN__ ... the conversion below ...
    * #endif */
   {
-    unsigned i;
+    unsigned int i;
     for(i = 0; i < SHA3_KECCAK_SPONGE_WORDS; i++) {
       const unsigned t1 = (uint32_t) ctx->s[i];
       const unsigned t2 = (uint32_t) ((ctx->s[i] >> 16) >> 16);

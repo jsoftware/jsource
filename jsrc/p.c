@@ -419,31 +419,31 @@ A jtparsea(J jt, A *queue, I m){PSTK *stack;A z,*v;I es; UI4 maxnvrlen;
  // jt->parsercurrtok must be set before executing anything that might fail; it holds the original
  // word number+1 of the token that failed.  jt->parsercurrtok is set before dispatching an action routine,
  // so that the information is available for formatting an error display
+  // Save info for error typeout.  We save sentence info once, and token info for every executed fragment
+ jt->parserqueue=queue; jt->parserqueuelen=(I4)m;  // addr & length of words being parsed
+ jt->asgn = 0;
+ if(m>1) {  // normal case where there is a fragment to parse
   PSTK *oend1=jt->parserstkend1;  // We have to push the stack-top so that repeated calls to parse don't grow the stack down
+  PSTK *obgn=jt->parserstkbgn;  // push the parser stack.  The only reason to stack the bgn pointer is so when we return to console level the stack shows empty
   // allocate the stack.  No need to initialize it, except for the marks at the end, because we
   // never look at a stack location until we have moved from the queue to that position.
   // Each word gets two stack locations: first is the word itself, second the original word number+1
   // to use if there is an error on the word
   // If there is a stack inherited from the previous parse, and it is big enough to hold our queue, just use that.
   // The stack grows down
-  if((uintptr_t)jt->parserstkend1-(uintptr_t)jt->parserstkbgn >= (m+BACKMARKS+FRONTMARKS)*sizeof(PSTK))stack=jt->parserstkend1-BACKMARKS;   // if we can use the previous allocation, start at the end, with 3 marks
-  else{A y;  // this is the alternative, much less likely, branch
-    PSTK *obgn=jt->parserstkbgn;  // push the parser stack.  The only reason to stack the bgn pointer is so when we return to console level the stack shows empty
-    I allo = MAX((m+BACKMARKS+FRONTMARKS)*sizeof(PSTK),PARSERSTKALLO); // number of bytes to allocate.  Allow 4 marks: 1 at beginning, 3 at end
-    GATV0(y,B01,allo,1);
-    jt->parserstkbgn=(PSTK*)AV(y);   // save start of data area
-    // must guarantee stack stays aligned to size boundary; & that SM doesn't use 32-B instructions to copy 2 at a time
-     // We are taking advantage of the fact the NORMAH is 7, and thus a rank-1 array is aligned on a boundary of its size
-    jt->parserstkend1=(PSTK*)((uintptr_t)jt->parserstkbgn+allo);  // point to the end+1 of the allocation
-    y=parsea(queue,m);  // recur to use the new stack
-    jt->parserstkbgn=obgn, jt->parserstkend1=oend1;  // pop the parser stack
-    R y;
+  if((uintptr_t)jt->parserstkend1-(uintptr_t)jt->parserstkbgn < (m+BACKMARKS+FRONTMARKS)*sizeof(PSTK)){A y;  // this is the alternative, much less likely, branch
+   I allo = MAX((m+BACKMARKS+FRONTMARKS)*sizeof(PSTK),PARSERSTKALLO); // number of bytes to allocate.  Allow 4 marks: 1 at beginning, 3 at end
+   GATV0(y,B01,allo,1);
+   jt->parserstkbgn=(PSTK*)AV(y);   // save start of data area
+   // must guarantee stack stays aligned to size boundary; & that SM doesn't use 32-B instructions to copy 2 at a time
+   // We are taking advantage of the fact the NORMAH is 7, and thus a rank-1 array is aligned on a boundary of its size
+   jt->parserstkend1=(PSTK*)((uintptr_t)jt->parserstkbgn+allo);  // point to the end+1 of the allocation
+// obsolete    y=parsea(queue,m);  // recur to use the new stack
+// obsolete    jt->parserstkbgn=obgn, jt->parserstkend1=oend1;  // pop the parser stack
+// obsolete    R y;
+   // We could worry about hysteresis to avoid reallocation of every call
   }
-
- // Save info for error typeout.  We save sentence info once, and token info for every executed fragment
- jt->parserqueue=queue; jt->parserqueuelen=(I4)m;  // addr & length of words being parsed
- jt->asgn = 0;
- if(m>1) {  // normal case where there is a fragment to parse
+  stack=jt->parserstkend1-BACKMARKS;   // start at the end, with 3 marks
 
   ++jt->parsercalls;  // now we are committed to full parse.  Push stacks.
   UI4 ootop=jt->nvrotop; jt->nvrotop=jt->nvrtop; // push top 2 levels of NVR stack
@@ -678,7 +678,7 @@ rdglob: ;
   DQ(jt->nvrtop-jt->nvrotop, A vv = *v; I vf = AFLAG(vv); if(!(vf&AFNVRUNFREED))tpush(vv); AFLAG(vv) = vf &= ~(AFNVR|AFNVRUNFREED); ++v;);   // schedule deferred frees.
   jt->nvrtop=jt->nvrotop; jt->nvrotop=ootop;  // deallocate the region used in this routine
 
-  jt->parserstkend1=oend1; // restore the stack-top
+  jt->parserstkbgn=obgn, jt->parserstkend1=oend1;  // restore the parser stack
 
   // NOW it is OK to return
 

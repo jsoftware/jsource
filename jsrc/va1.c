@@ -22,7 +22,7 @@ static AMON(floorZ, Z,Z, *z=zfloor(*x);)
 #if BW==64
 static AMONPS(ceilDI,I,D,
  D mplrs[2]; mplrs[0]=2.0-jt->cct; mplrs[1]=jt->cct-0.00000000000000011; ,
- {if((*(UI*)x&0x7fffffffffffffff)<0x4310000000000000){I pos=(((UI)-(I)*(UI*)x)-((UI)-(I)*(UI*)x>>(BW-1)))>>(BW-1); *z=(I)(*x*mplrs[pos])+pos;}  // 0 is NOT pos
+ {if((*(UI*)x&0x7fffffffffffffff)<0x4310000000000000){I pos=((0-*(UI*)x)-((0-*(UI*)x)>>(BW-1)))>>(BW-1); *z=(I)(*x*mplrs[pos])+pos;}  // 0 is NOT pos
   else{D d=tceil(*x); if(d!=(I)d){jt->workareas.ceilfloor.oflondx=n+~i; jt->jerr=EWOV; R;} *z=(I)d;}} ,
  ; )  // x100 0011 0001 =>2^50
 #else

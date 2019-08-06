@@ -131,7 +131,7 @@ F2(jticap2){A*av,*wv,z;C*uu,*vv;I ar,*as,at,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t,/*obso
   if(at&wt&INT){
    // Integer search.  check for small-range
 // obsolete    /*obsoletev=AV(a); */D r=(D)IAV(a)[n-1]-(D)IAV(a)[0]; if(0>r)r=-r;  // r=range of a
-   UI r=IAV(a)[n-1]-IAV(a)[0]; r=IAV(a)[n-1]<IAV(a)[0]?(UI)-(I)r:r;  // get range, which may overflow I but will stay within UI
+   UI r=IAV(a)[n-1]-IAV(a)[0]; r=IAV(a)[n-1]<IAV(a)[0]?0-r:r;  // get range, which may overflow I but will stay within UI
    UI4 nlg; CTLZI(n,nlg); nlg=(nlg<<1)+((UI)((n<<1)<<(BW-1-nlg))>>(BW-1));   // approx lg with 1 bit frac precision.  Can't shift 64 bits in case r=1
 // obsolete    if(m+r<1.4*m*log((D)n)){RZ(iixI(n,m,a,w,zv)); R z;}
    if((I)((r>>2)+2*n)<(I)(m*nlg)){RZ(iixI(n,m,a,w,zv)); R z;}  // weight misbranches as equiv to 8 stores

@@ -177,9 +177,11 @@ static void SHA512_Last(SHA512_CTX*);
 static void SHA256_Transform(SHA256_CTX*, const sha2_word32*);
 static void SHA512_Transform(SHA512_CTX*, const sha2_word64*);
 #if defined(__aarch64__)
-extern void sha256_process_arm(uint32_t state[8], const uint8_t data[], uint32_t length);
+extern void sha256_process_arm(uint32_t state[8], const uint8_t data[], uintptr_t length);
 #endif
-
+#if defined(__SSE2__) && (defined(_M_X64) || defined(__x86_64__)) && !defined(_MSC_VER)
+extern void sha256_transform_sse4(uint32_t* s, const unsigned char* chunk, uintptr_t blocks);
+#endif
 
 /*** SHA-XYZ INITIAL HASH VALUES AND CONSTANTS ************************/
 /* Hash constant words K for SHA-256: */
@@ -528,6 +530,11 @@ static void SHA256_Update(SHA256_CTX* context, const sha2_byte *data, size_t len
         sha256_process_arm(context->state, (uint8_t*)context->buffer, 64);
       else
         SHA256_Transform(context, (sha2_word32*)context->buffer);
+#elif defined(__SSE2__) && (defined(_M_X64) || defined(__x86_64__)) && !defined(_MSC_VER)
+      if(hwsse41)
+        sha256_transform_sse4(context->state, (uint8_t*)context->buffer, 1);
+      else
+        SHA256_Transform(context, (sha2_word32*)context->buffer);
 #else
       SHA256_Transform(context, (sha2_word32*)context->buffer);
 #endif
@@ -540,11 +547,33 @@ static void SHA256_Update(SHA256_CTX* context, const sha2_byte *data, size_t len
       return;
     }
   }
+#if defined(__aarch64__)
+  if(hwsha2 && len >= SHA256_BLOCK_LENGTH) {
+    UI iter = len >> 6;
+    sha256_process_arm(context->state, (uint8_t*)data, iter << 6);
+    context->bitcount += iter * SHA256_BLOCK_LENGTH << 3;
+    len -= iter << 6;
+    data += iter << 6;
+  }
+#elif defined(__SSE2__) && (defined(_M_X64) || defined(__x86_64__)) && !defined(_MSC_VER)
+  if(hwsse41 && len >= SHA256_BLOCK_LENGTH) {
+    UI iter = len >> 6;
+    sha256_transform_sse4(context->state, (uint8_t*)data, iter);
+    context->bitcount += iter * SHA256_BLOCK_LENGTH << 3;
+    len -= iter << 6;
+    data += iter << 6;
+  }
+#endif
   while (len >= SHA256_BLOCK_LENGTH) {
     /* Process as many complete blocks as we can */
 #if defined(__aarch64__)
     if(hwsha2)
       sha256_process_arm(context->state, (uint8_t*)data, 64);
+    else
+      SHA256_Transform(context, (sha2_word32*)data);
+#elif defined(__SSE2__) && (defined(_M_X64) || defined(__x86_64__)) && !defined(_MSC_VER)
+    if(hwsse41)
+      sha256_transform_sse4(context->state, (uint8_t*)data, 1);
     else
       SHA256_Transform(context, (sha2_word32*)data);
 #else

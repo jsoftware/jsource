@@ -55,6 +55,8 @@ UC  hwfma=0;              // blis cpu tuning
 UC  hwaes=0;              // aes ni
 UC  hwsha1=0;             // sha1
 UC  hwsha2=0;             // sha2
+UC  hwsse41=0;            // sse4_1
+UC  hwsse42=0;            // sse4_2
 C   wtype[256]={0};
 
 // globals end

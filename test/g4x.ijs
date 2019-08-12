@@ -158,6 +158,25 @@ gamma =. !
 
 1 1 1 1 0 0 -: t=.erase ;:'alpha beta boo hoo + +:'
 
+NB. Verify stacked value not deleted
+a =. 100
+100 -: (([  [: >:@i.&.> i.)@[   [: 4!:55 (<'a')"_) a
+f =. 3 : 0
+a =. >:y  NB. need a new block to get usecount of 1
+100 -: (([  [: >:@i.&.> i.)@[   [: 4!:55 (<'a')"_) a
+)
+f 99
+NB. Verify space is freed
+a =. i. 1e6
+b =. 7!:0''
+1: 4!:55 <'a'
+b > 2e6+7!:0''
+3 : 0 ''
+a =. i. 1e6
+b =. 7!:0''
+1: 4!:55 <'a'
+b > 2e6+7!:0''
+)
 
 NB. 4!: -----------------------------------------------------------------
 

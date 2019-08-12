@@ -215,11 +215,21 @@ F1(jtex){A*wv,y,z;B*zv;I i,n;L*v;I modifierchg=0;
   zv[i]=1&&y;
   // If the name is defined and is an ACV, invalidate all looked-up ACVs
   // If the value is at large in the stacks and not deferred-freed, increment the use count and deferred-free it
+  // If the name is assigned in a local symbol table, we ASSUME it is at large in the stacks and incr/deferred-free it.  We sidestep the nvr stack for local nouns
   if(y&&(v=syrd(y))){
    if(jt->uflags.us.cx.cx_c.db)RZ(redef(mark,v));
-   if(AFLAG(v->val)&AFNVRUNFREED){AFLAG(v->val)&=~AFNVRUNFREED; ras(v->val);}
+   A locfound=syrdforlocale(y);  // get the locale in which the name is defined
+   if(locfound==jt->locsyms||AFLAG(v->val)&AFNVRUNFREED){  // see if local or NVR
+    if(!(AFLAG(v->val)&AFNVR)){
+     // The symbol is a local symbol not on the NVR stack.  We must put it onto the NVR stack.
+     if((jt->parserstackframe.nvrtop+1U) > jt->nvran){ASSERT(jt->parserstackframe.nvrtop<32000,EVLIMIT); RZ(jt->nvra = ext(1, jt->nvra)); jt->nvrav = AAV(jt->nvra); jt->nvran=(UI4)AN(jt->nvra);}  // Extend nvr stack if necessary.  copied from parser
+     jt->nvrav[jt->parserstackframe.nvrtop++] = v->val;   // record the place where the value was protected; it will be freed when this sentence finishes
+     AFLAG(v->val) |= AFNVR;  // mark the value as protected
+    }
+    AFLAG(v->val)&=~AFNVRUNFREED; ras(v->val);  // indicate deferred free, and protect from the upcoming free
+   }
    if(!(v->name->flag&NMDOT)&&v->val&&AT(v->val)&(VERB|ADV|CONJ))modifierchg=1;  // if we delete a modifier, remember that fact
-   probedel(NAV(v->name)->m,NAV(v->name)->s,NAV(v->name)->hash,syrdforlocale(y));  // delete the symbol (incl name and value) in the locale in which it is defined
+   probedel(NAV(v->name)->m,NAV(v->name)->s,NAV(v->name)->hash,locfound);  // delete the symbol (incl name and value) in the locale in which it is defined
   }
  }
  jt->modifiercounter+=modifierchg;

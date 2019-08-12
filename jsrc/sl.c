@@ -247,7 +247,7 @@ A jtstcreate(J jt,C k,I p,I n,C*u){A g,x,xx;C s[20];L*v;
    RZ(ras(x)); LOCNAME(g)=x; xx=1==n&&'z'==*u?vec(BOX,0L,0L):zpath; ras(xx); LOCPATH(g) = xx;   // ras() is never VIRTUAL
    // Assign this name in the locales symbol table to point to the allocated SYMB block
    // This does ras() on g
-   symbis(x,g,jt->stloc);
+   symbisdel(x,g,jt->stloc);
    break;
   case 1:  /* numbered locale */
    RZ(v=symnew(&LXAV0(g)[SYMLINFO],0)); v->flag|=LINFO; v->sn=(US)jt->symindex++;   // allocate at head of chain

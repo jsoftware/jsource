@@ -305,13 +305,13 @@ typedef I SI;
 #define ASGNX 21
 #define ASGN            ((I)1L<<ASGNX)     /* I  assignment                   */
 #define ASGNSIZE sizeof(I)     // only 1 byte, but all non-DIRECT are fullword multiples
-// ASGN type can have the following informational bits set along with ASGN
+// ** ASGN type can have the following informational bits set along with ASGN
 #define ASGNLOCAL       ((I)1L<<SYMBX)     // set for =. (but not when assigning to locative)    aliases with SYMB
 #define ASGNTONAME      ((I)1L<<CONWX)     // set when assignment is to name    aliases with CONW
 // NOTE: The parser assumes that CONW always means ASGNTONAME, so don't use it in any parseable type (such as NAME, NOUN)
-// NOUN types can have the following informational bits set
+// ** NOUN types can have the following informational bits set
 #define NOUNCVTVALIDCT  ((I)1L<<SYMBX)     // Flag for jtcvt: if set, convert only the #atoms given in the parameter   Aliases with SYMB
-// NAME type can have the following information flags set
+// ** NAME type can have the following information flags set
 #define NAMEBYVALUE     ((I)1L<<SYMBX)     // set if the name is one of x x. m m. etc that is always passed by value, never by name   Aliases with SYMB
 // BOX type can have the following informational flags set
 #define BOXMULTIASSIGN  ((I)1L<<MARKX)     // set for the target of a direct multiple assignment (i. e. 'x y' =.), which is stored as a boxed list whose contents are NAMEs    aliases with MARK
@@ -745,7 +745,6 @@ typedef struct {AF valencefns[2];A fgh[3];union { D lD; void *lvp[2]; I lI; I4 l
 
 
 
-
 typedef struct {DX re;DX im;} ZX;
 
 /* extended complex                                                        */
@@ -761,6 +760,17 @@ typedef struct {
  UI4 t;  // token number for this block
  A a;  // pointer to block
 } PSTK;
+
+// stack frame used by the parser
+ typedef struct{
+  PSTK* parserstkbgn;     // &start of parser stack
+  PSTK* parserstkend1;    // &end+1 of parser stack
+  A    *parserqueue;   // for error purposes: words of the sentence being parsed
+  US   parserqueuelen;  // number of words in queue
+  US   parsercurrtok;   // the token number of the word to flag if there is an error
+  US  nvrtop;           /* top of nvr stack; # valid entries               */
+  US  nvrotop;          // previous top of nvr stack
+ } PFRAME;  // these are stacked en bloc
 
 
 // Info for calling an atomic verb

@@ -1091,6 +1091,7 @@
 #define swapc(x)                    jtswapc(jt,(x)) 
 #define symbinit()                  jtsymbinit(jt)
 #define symbis(x,y,z)               jtsymbis(jt,(x),(y),(z))
+#define symbisdel(x,y,z)            jtsymbisdel(jt,(x),(y),(z))
 #define symbrd(x)                   jtsymbrd(jt,(x))
 #define symbrdlock(x)               jtsymbrdlock(jt,(x))
 #define symbrdlocknovalerr(x)       jtsymbrdlocknovalerr(jt,(x))

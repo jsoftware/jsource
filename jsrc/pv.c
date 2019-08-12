@@ -159,7 +159,7 @@ TACT(jtvis){A ea,et,n,t;I j;TA*u,z={0,0};
  if(!t||NTTAB==jt->ttabi)R z;
  DQ(j, if(equ(t,u->a))R z; ++u;);
  ea=stack[e].a; et=stack[e].t;
- symbis(n,ea,jt->locsyms);
+ symbisdel(n,ea,jt->locsyms);
  ++jt->ttabi; u->a=t; u->t=et?et:cfn(ea);
  z.a=ea;  z.t=jt->tsubst?qq(sc(TC+j),num[-1]):et;
  R z;

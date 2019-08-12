@@ -192,7 +192,7 @@ F2(jtover){A z;C*zv;I replct,framect,acn,acr,af,ar,*as,k,m,ma,mw,p,q,r,t,wcn,wcr
  ar=AR(a); wr=AR(w);
  acr=jt->ranks>>RANKTX; as=AS(a); p=as[ar-1]; acr=ar<acr?ar:acr; p=acr?p:1; af=ar-acr;  // acr=rank of cell, af=len of frame, as->shape, p=len of last axis of cell
  wcr=(RANKT)jt->ranks; ws=AS(w); q=ws[wr-1]; wcr=wr<wcr?wr:wcr; q=wcr?q:1; wf=wr-wcr;  // wcr=rank of cell, wf=len of frame, ws->shape, p=len of last axis of cell
- // no RESETRANK - not required by ovv or main line gere
+ // no RESETRANK - not required by ovv or main line here
  if(!(af|wf)&&2>(ar|wr))R ovv(a,w);  // If appending vectors/atoms at infinite rank, go handle that
 
  r=MAX(acr,wcr); r=(r==0)?1:r;  // r=cell-rank, or 1 if both atoms.

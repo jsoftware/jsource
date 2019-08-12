@@ -10,7 +10,7 @@
 // When we move off of a parser frame, or when we go into debug with a new parser frame, fill the frame with
 // the info for the parse that was interrupted
 static void movesentencetosi(J jt,void *wds,I nwds,I errwd){if(jt->sitop&&jt->sitop->dctype==DCPARSE){jt->sitop->dcy=(A)wds; jt->sitop->dcn=(I)nwds; jt->sitop->dcix=(I)errwd; }}
-void moveparseinfotosi(J jt){movesentencetosi(jt,jt->parserqueue,jt->parserqueuelen,jt->parsercurrtok);}
+void moveparseinfotosi(J jt){movesentencetosi(jt,jt->parserstackframe.parserqueue,jt->parserstackframe.parserqueuelen,jt->parserstackframe.parsercurrtok);}
 
 
 /* deba() and debz() must be coded and executed in pairs */
@@ -163,7 +163,7 @@ static A jtdebug(J jt){A z=0;C e;DC c,d;
 // we reconstruct conditions at the beginning of the parse, and set an error on token 1.
 A jtpee(J jt,A *queue,CW*ci,I err,I lk,DC c){A z=0;
  ASSERT(lk<=0,err);  //  locked fn is totally opaque, with no stack.  Exit with 0 result, indicating error
- jt->parserqueue=queue+ci->i; jt->parserqueuelen=(I4)ci->n; jt->parsercurrtok=1;  // unless locked, indicate failing-sentence info
+ jt->parserstackframe.parserqueue=queue+ci->i; jt->parserstackframe.parserqueuelen=(I4)ci->n; jt->parserstackframe.parsercurrtok=1;  // unless locked, indicate failing-sentence info
  jsignal(err);   // signal the requested error
  // enter debug mode if that is enabled
  if(c&&jt->uflags.us.cx.cx_c.db/*&&( obsolete DBTRY!=jt->uflags.us.cx.cx_c.db)*/){DC prevtop=jt->sitop->dclnk; prevtop->dcj=jt->sitop->dcj=jt->jerr; moveparseinfotosi(jt); z=debug(); prevtop->dcj=0;} //  d is PARSE type; set d->dcj=err#; d->dcn must remain # tokens debz();  not sure why we change previous frame

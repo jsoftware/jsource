@@ -263,7 +263,7 @@ I _stdcall JSetA(J jt,I n,C* name,I dlen,C* d){
  jt->jerr=0;
  if(!vnm(n,name)) R EVILNAME;
  A *old=jt->tnextpushp;
- symbis(nfs(n,name),jtunbin(jt,str(dlen,d)),jt->global);
+ symbisdel(nfs(n,name),jtunbin(jt,str(dlen,d)),jt->global);
  tpop(old);
  R jt->jerr;
 }

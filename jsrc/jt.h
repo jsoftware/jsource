@@ -33,11 +33,10 @@ typedef struct {
  C*   adbreakr;         // read location: same as adbreak, except that when we are ignoring interrupts it points to 0
 // things needed by verb execution
  A*   tnextpushp;       // pointer to empty slot in allocated-block stack.  When low bits are 00..00, pointer to previous block of pointers.  Chain in first block is 0
- UI4  nvrtop;           /* top of nvr stack; # valid entries               */
- UI4  nvrotop;          // previous top of nvr stack
  I    shapesink[2];     // garbage area used as load/store targets of operations we don't want to branch around
- UI4  ranks;            // low half: rank of w high half: rank of a  for IRS
 // things needed by name lookup (unquote)
+ I    modifiercounter;  // incremented whenever anything happens that could alter modifier lookup: assignment/deletion of a modifier, or any change to locales or path
+ UI4  ranks;            // low half: rank of w high half: rank of a  for IRS
  union {
   UI4 ui4;    // all 4 flags at once, access as ui4
   struct {
@@ -61,22 +60,18 @@ typedef struct {
  } uflags;
  A    locsyms;  // local symbol table, or dummy empty symbol table if none
 // ----- end of cache line 0
+// things needed by parsing
+ PFRAME parserstackframe;  // 4 words
  A    global;           /* global symbol table                           */
  A    sf;               /* for $:                                          */
- I    modifiercounter;  // incremented whenever anything happens that could alter modifier lookup: assignment/deletion of a modifier, or any change to locales or path
-// things needed by parsing
- A    *parserqueue;   // for error purposes: words of the sentence being parsed
- I4   parserqueuelen;  // number of words in queue
- I4   parsercurrtok;   // the token number of the word to flag if there is an error
  A    zombieval;        // value of assignsym, if it can be reused
  L    *assignsym;       // symbol-table entry for the symbol about to be assigned
- A*   nvrav;            /* AAV(jt->nvra)                                   */
 // ----- end of cache line 1
+ A*   nvrav;            /* AAV(jt->nvra)                                   */
  UI4  nvran;            // number of atoms in nvrav
  I4   slisti;           /* index into slist of current script              */
  A    stloc;            /* locales symbol table                            */
- PSTK* parserstkbgn;     // &start of parser stack
- PSTK* parserstkend1;    // &end+1 of parser stack
+ A    fill;             // fill     stuck here as filler
 // things needed for memory allocation
  I    mfreegenallo;        // Amount allocated through malloc, biased
  void *heap;            // heap handle for large allocations
@@ -123,7 +118,7 @@ typedef struct {
  I    bytes;            /* bytes currently in use                          */
  I    bytesmax;         /* high-water mark of "bytes"                      */
  I    mulofloloc;       // index of the result at which II multiply overflow occurred
- A    fill;             /* fill                                            */
+ D    fuzz;             /* fuzz (sometimes set to 0)                       */
  C    fillv0[sizeof(Z)];/* default fill value                              */
  C*   fillv;            /* fill value                                      */
  C    typesizes[32];    // the length of an allocated item of each type
@@ -150,7 +145,7 @@ typedef struct {
  I*   numloctbl;         // pointer to data area for locale-number to locale translation
  UI4  numlocsize;       // AN(jt->stnum)
 #endif
- A    implocref[2];     // references to 'u.'~ and 'v.', marked as implicit locatives
+ A    implocref[2];     // references to 'u.'~ and 'v.'~, marked as implicit locatives
  I4   parsercalls;      /* # times parser was called                       */
  A*   tstacknext;       // if not 0, points to the recently-used tstack buffer, whose chain field points to tstacknext
  A*   tstackcurr;       // current allocation, holding NTSTACK bytes+1 block for alignment.  First entry points to next-lower allocation
@@ -226,7 +221,6 @@ typedef struct {
  I    etxn;             /* strlen(etx)                                     */
  I    etxn1;            /* last non-zero etxn                              */
  A    evm;              /* event messages                                  */
- D    fuzz;             /* fuzz (sometimes set to 0)                       */
  I    fxi;              /* f. depth countdown                              */
  A    fxpath;           /* f. path of names                                */
  A*   fxpv;             /* f. AAV(fxpath)                                  */

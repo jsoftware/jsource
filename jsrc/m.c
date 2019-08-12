@@ -799,9 +799,11 @@ A* jttg(J jt, A *pushp){     // Filling last slot; must allocate next page.
 // pop stack,  ending when we have freed the entry with tnextpushp==old.  tnextpushp is left pointing to an empty slot
 // return value is pushp
 // If the block has recursive usecount, decrement usecount in children if we free it
-A *jttpop(J jt,A *old){A *pushp=jt->tnextpushp; A *endingtpushp;
+void jttpop(J jt,A *old){A *endingtpushp;
 // obsolete if(old>=pushx)R pushx;  // return fast if nothing to do
  // pushp points to an empty cell.  old points to the last cell to be freed.  decrement pushp to point to the cell to free (or to the chain).  decr old to match
+ A *pushp=jt->tnextpushp;
+ jt->tnextpushp = old;  // when we finish, this will be the new start point.  Set it early so we don't audit things in the middle of popping
  --pushp; --old;
  while(1) {A np;  // loop till end.  Return is at bottom of loop
   // pushp points to next cell to free
@@ -822,9 +824,9 @@ A *jttpop(J jt,A *old){A *pushp=jt->tnextpushp; A *endingtpushp;
 #ifdef PREFETCH
    PREFETCH((C*)np0);   // prefetch the next box
 #endif
-#if MEMAUDIT&2
-   jt->tnextpushp=pushp;  // remove the buffer-to-be-freed from the stack for auditing.  We must, because it may be a SYMB block that does auditing
-#endif
+// obsolete #if MEMAUDIT&2
+// obsolete    jt->tnextpushp=pushp;  // remove the buffer-to-be-freed from the stack for auditing.  We must, because it may be a SYMB block that does auditing
+// obsolete #endif
    // We never tpush a PERMANENT block so we needn't check for it
    if(--c<=0){if(AFLAG(np)&AFVIRTUAL){A b=ABACK(np); fana(b);} if(UCISRECUR(np)){fana(np);}else{mf(np);}}else AC(np)=c;  // decrement usecount and either store it back or free the block
    np=np0;  // Advance to next block
@@ -849,10 +851,10 @@ A *jttpop(J jt,A *old){A *pushp=jt->tnextpushp; A *endingtpushp;
    // The return point:
 #if MEMAUDIT&2
 // obsolete    jt->tnextpushx -= endingtpushx;  ??
-   jt->tnextpushp=old+1;
+// obsolete    jt->tnextpushp=old+1;
    audittstack(jt);   // one audit for each tpop.  Mustn't audit inside tpop loop, because that's inconsistent state
 #endif
-   R jt->tnextpushp=old+1;  // On last time through, update starting pointer for next push, and return that value.  Undo the decr of old
+   R /* obsolete  old+1*/;  // On last time through, update starting pointer for next push, and return that value.  Undo the decr of old
   }
  }
 }

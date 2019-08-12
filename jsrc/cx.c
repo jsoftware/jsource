@@ -221,11 +221,11 @@ static DF2(jtxdefn){PROLOG(0048);
  // If the user turns on debugging in the middle of a definition, we will raise old when he does
  A *old=jt->tnextpushp;
 
- // Push parser-related information.  Since we call the parse repeatedly from this level we move pushes to here rather than doing them for each parse
- // When we are not in debug mode, all we have to stack is the queue and length information from the stack frame.  Since we will
- // be reusing the stack frame, we just save the input once
- A *savqueue = jt->parserqueue; I4 savqueuelen = jt->parserqueuelen;
-
+// obsolete  // Push parser-related information.  Since we call the parse repeatedly from this level we move pushes to here rather than doing them for each parse
+// obsolete  // When we are not in debug mode, all we have to stack is the queue and length information from the stack frame.  Since we will
+// obsolete  // be reusing the stack frame, we just save the input once
+// obsolete  A *savqueue = jt->parserqueue; I4 savqueuelen = jt->parserqueuelen;
+// obsolete 
  // loop over each sentence
  A cd=0;  // pointer to block holding the for./select. stack, if any
  CDATA*cv;  // pointer to the current entry in the for./select. stack
@@ -345,8 +345,8 @@ static DF2(jtxdefn){PROLOG(0048);
     ++cv->j;  // step to first (or next) iteration
     if(cv->j<cv->n){  // if there are more iterations to do...
      if(cv->x){A x;  // assign xyz and xyz_index for for_xyz.
-      symbis(nfs(6+cv->k,cv->xv),x=sc(cv->j),  jt->locsyms);
-      symbis(nfs(  cv->k,cv->iv),from(x,cv->t),jt->locsyms);
+      symbisdel(nfs(6+cv->k,cv->xv),x=sc(cv->j),  jt->locsyms);  // since there is no sentence, take deletion ioff nvr stack
+      symbisdel(nfs(  cv->k,cv->iv),from(x,cv->t),jt->locsyms);
      }
      ++i; continue;   // advance to next line and process it
     }
@@ -464,7 +464,7 @@ static DF2(jtxdefn){PROLOG(0048);
   // Since we initialized z to i. 0 0, there's nothing more to do
  }
 
- jt->parserqueue = savqueue; jt->parserqueuelen = savqueuelen;  // restore error info for the caller
+// obsolete  jt->parserqueue = savqueue; jt->parserqueuelen = savqueuelen;  // restore error info for the caller
  if(thisframe){debz();}   // pair with the deba if we did one
  A prevlocsyms=(A)AM(jt->locsyms);  // get symbol table to return to, before we free the old one
  if(!cd){

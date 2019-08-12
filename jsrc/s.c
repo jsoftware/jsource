@@ -538,7 +538,20 @@ L* jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;L*e;
    // If this is a reassignment, we need to decrement the use count in the old name, since that value is no longer used.
    // But if the value of the name is 'out there' in the sentence (coming from an earlier reference), we'd better not delete
    // that value until its last use.
-   if(!(xaf&AFNVRUNFREED)){fa(x);} else if(xaf&AFNVR) {AFLAG(x)=(xaf&=~AFNVRUNFREED);}  // x may be 0.  Free if not protected; then unprotect
+   // For simplicity, we defer ALL deletions till the end of the sentence.  We put the to-be-deleted value onto the NVR stack if it isn't there already,
+   // and free it.  If the value is already on the NVR stack and has been deferred-frred, we decrement the usecount here to mark the current free, knowing that the whole block
+   // won't be freed till later.  By deferring all deletions we don't have to worry about whether local values are on the stack; and that allows us to avoid putting local values
+   // on the NVR stack at all.
+   if(xaf&AFNVRUNFREED){  // x is 0 or unfreed on the NVR stack.  0 is probably the normal case (assignment to unassigned name)
+    if(xaf&AFNVR) {AFLAG(x)=(xaf&=~AFNVRUNFREED);} // If not 0, mark as freed on the stack
+   }else{  // x is non0 and either already marked as freed on the NVR stack or must be put there now
+    if(!(xaf&AFNVR)){
+     // non-nvr value being replaced, must be local.  Defer till end of sentence
+     if((jt->parserstackframe.nvrtop+1U) > jt->nvran){ASSERT(jt->parserstackframe.nvrtop<32000,EVLIMIT); RZ(jt->nvra = ext(1, jt->nvra)); jt->nvrav = AAV(jt->nvra); jt->nvran=(UI4)AN(jt->nvra);}  // Extend nvr stack if necessary.  copied from parser
+     jt->nvrav[jt->parserstackframe.nvrtop++] = x;   // record the place where the value was protected (i. e. this sentence); it will be freed when this sentence finishes
+     AFLAG(x) |= AFNVR;  // mark the value as protected
+    }else fa(x);  // already NVR+FREED, free again
+   }
    e->val=w;   // install the new value
   } else {ACIPNO(w);}  // Set that this value cannot be in-place assigned - needed if the usecount was not incremented above
     // kludge this should not be required, since the incumbent value should never be inplaceable
@@ -557,3 +570,21 @@ L* jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;L*e;
  if(jt->stch&&(m<n||jt->locsyms!=g&&jt->stloc!=g))e->flag|=LCH;  // update 'changed' flag if enabled, and locative or assignment to global namespace   scaf make this unconditional
  R e;   // return the block for the assignment
 }    /* a: name; w: value; g: symbol table */
+
+// assign symbol and free values immediately
+// assignment within a sentence requires that values linger on a bit: till the end of the sentence or sometimes till printing is complete
+// Values awaiting deletion are accumulated within the NVR stack till the sentence ends.  If there is an assignment not in a sentence, such as for for_x. or from sockets or DLLs,
+// we have to finish the deletion immediately so that the NVR stack doesn't overflow
+L* jtsymbisdel(J jt,A a,A w,A g){
+ RZ(a&&w&&g);
+ I nvrtop=jt->parserstackframe.nvrtop;   // save stack before deletion
+ L *ret=symbis(a,w,g);  // perform assignment
+ I currtop=jt->parserstackframe.nvrtop;
+ while(currtop>nvrtop){  // the only new blocks must be ones that were newly added to the nvr stack by symbis
+  --currtop;  // index points to OPEN slot; back up to slot to free
+  A delval=jt->nvrav[currtop];  // block that has been deferred-freed
+  AFLAG(delval) &= ~(AFNVR|AFNVRUNFREED); fa(delval);  // in case the block survives, indicate that it is off the stack now; then reduce usecount
+ }
+ jt->parserstackframe.nvrtop=(US)nvrtop;  // remove additions to nvr stack
+ R ret;
+}

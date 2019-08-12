@@ -569,7 +569,7 @@ extern unsigned int __cdecl _clearfp (void);
 #if C_AVX&&SY_64
 // Name comparison using wide instructions.   Run stmt if the names match
 #define IFCMPNAME(name,string,len,stmt) \
- if((name)->m==(len)){ \
+ if((name)->m==(len)){  /* compare len.  todo should we also compare hash first? */ \
   __m256i readmask=_mm256_loadu_si256((__m256i*)(jt->validitymask+(((-len)>>LGSZI)&(NPAR-1)))); /* the words we read */ \
   __m256i endmask=_mm256_loadu_si256((__m256i*)((C*)jt->validitymask+((-(len))&((NPAR*SZI)-1))));  /* the valid bytes */\
   __m256d accumdiff=_mm256_xor_pd(_mm256_castsi256_pd(readmask),_mm256_castsi256_pd(readmask)); /* will hold total xor result */ \

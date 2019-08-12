@@ -287,7 +287,7 @@ static A virthook(J jtip, A f, A g){
 #define jthook virthook
 #endif
 
-#define FP {stack = 0; goto exitparse;}   // indicate parse failure
+#define FP goto failparse;   // indicate parse failure and exit
 #define EP goto exitparse;   // exit parser, preserving current status
 #define EPZ(x) if(!(x)){stack=0;EP}   // exit parser if x==0
 
@@ -511,7 +511,7 @@ A jtparsea(J jt, A *queue, I m){PSTK *stack;A z,*v;I es;
          // positive bucketx (now negative); that means skip that many items and then do name search.  This is set for words that were recognized as names but were not detected as assigned-to in the definition.  This is the path for global symbols
          // If no new names have been assigned since the table was created, we can skip this search, since it must fail (this is the path for words in z eg)
          if(!(AR(jt->locsyms)&LNAMEADDED))goto rdglob;
-         // from here on is rare
+         // from here on it is rare to find a name - usually they're globals defined elsewhere
          LX lx = LXAV0(jt->locsyms)[NAV(y)->bucket];  // index of first block if any
          I m=NAV(y)->m; C* nm=NAV(y)->s;  // length/addr of name from name block
          while(0>++bx){lx = jt->sympv[lx].next;}
@@ -541,32 +541,33 @@ rdglob: ;
          AFLAG(s->val) |= AFNVR|AFNVRUNFREED;  // mark the value as protected and not yet deferred-freed
         }
        }
+       // end of looking at local/global symbol tables
        // s has the symbol for the name
        if(s){   // if symbol was defined...
         A sv;  // pointer to value block for the name
         
         if(!(sv = s->val))FP  // symbol table entry, but no value.
           // Following the original parser, we assume this is an error that has been reported earlier.  No ASSERT here, since we must pop nvr stack
-        I svf = AFLAG(sv);
-
+// obsolete         I svf = AFLAG(sv);
+// obsolete 
         // The name is defined.  If it's a noun, use its value (the common & fast case)
         // Or, for special names (x. u. etc) that are always stacked by value, keep the value
         // Otherwise (normal adv/verb/conj name), replace with a 'name~' reference
 // obsolete         if(AT(sv)&NOUN || at&NAMEBYVALUE){   // use value if noun or special name
         if((AT(sv)|at)&(NOUN|NAMEBYVALUE)){   // use value if noun or special name
          y=sv;
-         at=AT(sv);  // refresh the type with the type of the resolved name
+// obsolete         at=AT(sv);  // refresh the type with the type of the resolved name
         } else {
          if (!(y = namerefacv(y, s)))FP   // Replace other acv with reference
-         at=AT(y);  // refresh the type with the type of the resolved name
+// obsolete          at=AT(y);  // refresh the type with the type of the resolved name
         }
        } else {
          // undefined name.  If special x. u. etc, that's fatal; otherwise create a dummy ref to [: (to have a verb)
          if(at&NAMEBYVALUE){jsignal(EVVALUE);FP}  // Report error (Musn't ASSERT: need to pop nvr stack) and quit
          if (!(y = namerefacv(y, s)))FP    // this will create a ref to undefined name as verb [:
            // if syrd gave an error, namerefacv may return 0.  This will have previously signaled an error
-         at=AT(y);  // refresh the type with the type of the resolved name
        }
+       at=AT(y);  // refresh the type with the type of the resolved name
 
       }
 
@@ -577,8 +578,9 @@ rdglob: ;
      // is much more likely to be a primitive; and we don't want to take the time to refetch the resolved type
      } else es = (at>>CONJX)?at>>CONJX:es;  // 1 for CONJ, 2 for RPAR, 0 otherwise
 
-     // y has the resolved value, which is never a NAME unless there is an assignment immediately following
-     PTFROMTYPEASGN(stack[0].pt,at);   // stack the internal type too.  We split the ASGN types into with/without name to speed up IPSETZOMB
+     // y has the resolved value, which is never a NAME unless there is an assignment immediately following.
+     // Put it onto the stack along with a code indicating part of speech and the token number of the word
+     PTFROMTYPEASGN(stack[0].pt,at);   // stack the internal type too.  We split the ASGN types into with/without name to speed up IPSETZOMB.  Set pt first, since it's consulted first; even so we need store forwarding for it (todo could put into name)
      stack[0].t = (UI4)(m+1);  // install the original token number for the word
      stack[0].a = y;   // finish setting the stack entry, with the new word
          // and to reduce required initialization of marks.  Here we take advantage of the fact the CONW is set as a flag ONLY in ASGN type, and that PSN-PS is 1
@@ -681,7 +683,10 @@ rdglob: ;
    // stack[1] is the initial mark, stack[2] is the result, and stack[3] had better be the first ending mark
    z=stack[2].a;   // stack[1..2] are the mark; this is the sentence result, if there is no error
    if(!(PTISCAVN(stack[2])&&PTISM(stack[3]))){jt->parserstackframe.parsercurrtok = 0; jsignal(EVSYNTAX); z=0;}  // OK if 0 or 1 words left (0 should not occur)
-  }else{CLEARZOMBIE z=0;}  // If there was an error during execution or name-stacking, exit with failure.  Error has already been signaled.  Remove zombiesym
+  }else{
+failparse:  // If there was an error during execution or name-stacking, exit with failure.  Error has already been signaled.  Remove zombiesym
+   CLEARZOMBIE z=0;
+  }
 
   // Now that the sentence has completed, take care of some cleanup.  Names that were reassigned after
   // their value was moved onto the stack had the decrementing of the use count deferred: we decrement

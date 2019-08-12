@@ -289,7 +289,7 @@ static A virthook(J jtip, A f, A g){
 
 #define FP goto failparse;   // indicate parse failure and exit
 #define EP goto exitparse;   // exit parser, preserving current status
-#define EPZ(x) if(!(x)){stack=0;EP}   // exit parser if x==0
+#define EPZ(x) if(!(x)){FP}   // exit parser if x==0
 
 #if 0  // keep for commentary
 // In-place operations
@@ -478,6 +478,7 @@ A jtparsea(J jt, A *queue, I m){PSTK *stack;A z,*v;I es;
   // DO NOT RETURN from inside the parser loop.  Stacks must be processed.
 
   while(1){  // till no more matches possible...
+    UI4 stack0pt;  // will hold the EDGE+AVN value, which doesn't change much and is stored late
 
     // no executable fragment, pull from the queue.  If we pull ')', there is no way we can execute
     // anything till 2 more words have been pulled, so we pull them here to avoid parse overhead.
@@ -537,7 +538,7 @@ rdglob: ;
          // (via namerefacv), no special protection is needed.  And, it is not needed for local names, because they are inaccessible to deletion in called
          // functions (that is, the user should not use u. to delete a local name).  If a local name is deleted, we always defer the deletion till the end of the sentence, easier than checking
         if(s&&s->val&&AT(s->val)&NOUN&&!(AFLAG(s->val)&AFNVR)){ 
-         jt->nvrav[jt->parserstackframe.nvrtop++] = s->val;   // record the place where the value was protected
+         jt->nvrav[jt->parserstackframe.nvrtop++] = s->val;   // record the place where the value was protected, so we can free it when this sentence complaetes
          AFLAG(s->val) |= AFNVR|AFNVRUNFREED;  // mark the value as protected and not yet deferred-freed
         }
        }
@@ -580,13 +581,13 @@ rdglob: ;
 
      // y has the resolved value, which is never a NAME unless there is an assignment immediately following.
      // Put it onto the stack along with a code indicating part of speech and the token number of the word
-     PTFROMTYPEASGN(stack[0].pt,at);   // stack the internal type too.  We split the ASGN types into with/without name to speed up IPSETZOMB.  Set pt first, since it's consulted first; even so we need store forwarding for it (todo could put into name)
+     PTFROMTYPEASGN(stack[0].pt=stack0pt,at);   // stack the internal type too.  We split the ASGN types into with/without name to speed up IPSETZOMB.  Save pt in a register to avoid store forwarding
      stack[0].t = (UI4)(m+1);  // install the original token number for the word
      stack[0].a = y;   // finish setting the stack entry, with the new word
          // and to reduce required initialization of marks.  Here we take advantage of the fact the CONW is set as a flag ONLY in ASGN type, and that PSN-PS is 1
     }else{  // No more tokens.  If m was 0, we are at the (virtual) mark; otherwise we are finished
-      if(m==-1) {stack[0].pt = PTMARK; break;}  // realize the virtual mark and use it.  a and pt will not be needed
-      EP       // if there's nothing more to pull, parse is over
+      if(m==-1) {stack[0].pt=stack0pt=PTMARK; break;}  // realize the virtual mark and use it.  a and pt will not be needed
+      EP       // if there's nothing more to pull, parse is over.  This is the normal end-of-parse
     }
    }while(es-->0);  // Repeat if more pulls required.  We also exit with stack==0 if there is an error
    // words have been pulled from queue
@@ -599,7 +600,7 @@ rdglob: ;
     // and finally returning the new front-of-stack pointer
 
     // First, create the bitmask of parser lines that are eligible to execute
-    I pmask=(((~stack[0].pt)&0x80)*2)+((stack[0].pt>>24) & (stack[1].pt>>16) & (stack[2].pt>>8) & stack[3].pt);  // bit 8 is set ONLY for LPAR
+    I pmask=(((~stack0pt)&0x80)*2)+((stack0pt>>24) & (stack[1].pt>>16) & (stack[2].pt>>8) & stack[3].pt);  // bit 8 is set ONLY for LPAR
     if(!pmask)break;  // If all 0, nothing is dispatchable, go push next word
 
     // We are going to execute an action routine.  This will be an indirect branch, and it will mispredict.  To reduce the cost of the misprediction,
@@ -654,7 +655,7 @@ rdglob: ;
       EPZ(y);  // fail parse if error
       stackfs[1].a=y;  // save result 2 3 3 2 3; parsetype is unchanged, token# is immaterial
      }else{
-      // Conj/adv execution.  We must get the parsing type of the result, but we don't need to worry about inplacing or recursion
+      // Lines 3-4, conj/adv execution.  We must get the parsing type of the result, but we don't need to worry about inplacing or recursion
       AF actionfn=FAV(fs)->valencefns[pline-3];  // the routine we will execute.  It's going to take longer to read this than we can fill before the branch is mispredicted, usually
       A arg1=stack[1].a;   // 1st arg, monad or left dyad
       A arg2=stack[pline-1].a;   // 2nd arg, fs or right dyad
@@ -666,12 +667,13 @@ rdglob: ;
       PTFROMTYPE(stack[1].pt,AT(y)) stack[1].t=restok; stack[1].a=y;   // save result, move token#, recalc parsetype
      }
     }else{
-     // Here for lines 5-8, which branch to a canned routine
+     // Here for lines 5-8 (fork/hook/assign/parens), which branch to a canned routine
      PSTK * (*actionfn)()=lines58[pline-5];  // fetch the routine that will handle this line
      // We will call the action routine with stack 1 2 3 (line 5) or 1 2 0 (line 7).  It will fetch the stackpointer from jt->endstk.
      // It will run its function, and return the new stackpointer to use, with the stack all filled in.  If there is an error, the returned stackpointer will be 0.
      stack=(*actionfn)(jt,stack[1].a,stack[2].a,stack[(0x60>>pline)/* obsolete&3*/].a);  // 00011 00000 produces 5-8-> 11 01 00 00
-     if(!stack)EP
+     if(!stack)FP  // fail if error
+     stack0pt=stack[0].pt;  // bottom of stack was modified, so refresh the type for it (lines 0-6 don't change it)
     }
    }
   }  // break with stack==0 on error; main exit is when queue is empty (m<0)

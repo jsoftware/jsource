@@ -404,6 +404,7 @@ static A virthook(J jtip, A f, A g){
 // Closing up the stack
 #define SM(to,from) stack[to]=stack[from]
 #endif
+A* jtextnvr(J jt){ASSERT(jt->parserstackframe.nvrtop<32000,EVLIMIT); RZ(jt->nvra = ext(1, jt->nvra)); jt->nvran=(UI4)AN(jt->nvra); jt->nvrav = AAV(jt->nvra); R jt->nvrav;}
 
 #define BACKMARKS 3   // amount of space to leave for marks at the end.  Because we stack 3 words before we start to parse, we will
  // never see 4 marks on the stack - the most we can have is 1 value + 3 marks.
@@ -465,7 +466,7 @@ A jtparsea(J jt, A *queue, I m){PSTK *stack;A z,*v;I es;
     DQ(m, maxnvrlen+=(AT(queue[i])>>NAMEX)&1;)
    }
    // extend the nvr stack, doubling its size each time, till it can hold our names.  Don't let it get too big.  This code duplicated in 4!:55
-   while((jt->parserstackframe.nvrtop+maxnvrlen) > jt->nvran){ASSERT(jt->parserstackframe.nvrtop<32000,EVLIMIT); RZ(jt->nvra = ext(1, jt->nvra)); jt->nvrav = AAV(jt->nvra); jt->nvran=(UI4)AN(jt->nvra);}
+   while((jt->parserstackframe.nvrtop+maxnvrlen) > jt->nvran)RZ(extnvr());
   }
 
   // We have the initial stack pointer.  Grow the stack down from there

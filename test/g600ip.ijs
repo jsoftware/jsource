@@ -436,6 +436,7 @@ NB. 0|0 allocates an extra FL output buffer.  We ensure that we go through this 
 <. testinplacer 'VBID';'B/I/D/I/I/D/D/D/D/    /I/D///d////   ///I///D/d//'
 >. testinplacer 'VBID';'B/I/D/I/I/D/D/D/D/    /I/D///d////   ///I///D/d//'
 
+1: 0 : 0  NB. partial execution is always allowed now
 NB. Go back and recheck with partial execution not allowed.  No need for checking overlap again, or binary, or overflow
 NB. Note that the flags here have not been updated for inplace booleans, because we don't test booleans here
 9!:53 (1)
@@ -469,6 +470,7 @@ NB. 0|0 allocates an extra FL output buffer.  We ensure that we go through this 
 
 <. testinplacer 'ID';'B/I/D/I/I/D/D/D/D/    b/I/D///d////   b///I///D/d//'
 >. testinplacer 'ID';'B/I/D/I/I/D/D/D/D/    b/I/D///d////   b///I///D/d//'
+)
 
 9!:53 (1)   NB. Reset the default
 

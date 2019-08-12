@@ -547,8 +547,9 @@ L* jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;L*e;
    }else{  // x is non0 and either already marked as freed on the NVR stack or must be put there now
     if(!(xaf&AFNVR)){
      // non-nvr value being replaced, must be local.  Defer till end of sentence
-     if((jt->parserstackframe.nvrtop+1U) > jt->nvran){ASSERT(jt->parserstackframe.nvrtop<32000,EVLIMIT); RZ(jt->nvra = ext(1, jt->nvra)); jt->nvrav = AAV(jt->nvra); jt->nvran=(UI4)AN(jt->nvra);}  // Extend nvr stack if necessary.  copied from parser
-     jt->nvrav[jt->parserstackframe.nvrtop++] = x;   // record the place where the value was protected (i. e. this sentence); it will be freed when this sentence finishes
+     A *nvrav=jt->nvrav;
+     if((jt->parserstackframe.nvrtop+1U) > jt->nvran)RZ(nvrav=extnvr());  // Extend nvr stack if necessary.  copied from parser
+     nvrav[jt->parserstackframe.nvrtop++] = x;   // record the place where the value was protected (i. e. this sentence); it will be freed when this sentence finishes
      AFLAG(x) |= AFNVR;  // mark the value as protected
     }else fa(x);  // already NVR+FREED, free again
    }

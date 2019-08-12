@@ -5,6 +5,7 @@
 
 extern void cpuInit(void);
 extern uint64_t getCpuFeatures(void);
+extern intptr_t getCpuFamily(void);
 
 #if defined(__aarch64__)
 
@@ -39,7 +40,7 @@ enum {
   ARM_HWCAP_FLAGM = (1 << 27),
 };
 
-#elif defined(__x86_64__)||defined(__i386__)||defined(_MSC_VER)
+#elif defined(__x86_64__)||defined(__i386__)||defined(_M_X64)||defined(_M_IX86)
 
 enum {
   CPU_X86_FEATURE_SSSE3  = (1 << 0),
@@ -53,8 +54,18 @@ enum {
   CPU_X86_FEATURE_AVX2 =   (1 << 8),
   CPU_X86_FEATURE_SHA_NI = (1 << 9),
   CPU_X86_FEATURE_FMA    = (1 << 10),
+  CPU_X86_FEATURE_RDSEED = (1 << 11),
 };
 
 #endif
+
+enum {
+  CPU_FAMILY_UNKNOWN = 0,
+  CPU_FAMILY_ARM,
+  CPU_FAMILY_X86,
+  CPU_FAMILY_ARM64,
+  CPU_FAMILY_X86_64,
+  CPU_FAMILY_MAX /* do not remove */
+};
 
 #endif /* CPU_INFO_H */

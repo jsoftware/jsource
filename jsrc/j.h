@@ -251,7 +251,7 @@ extern unsigned int __cdecl _clearfp (void);
 #endif
 #endif
 
-#if defined(__i386__) || defined(__x86_64__) || defined(_M_X64) || defined(_MSC_VER)
+#if defined(__i386__) || defined(__x86_64__) || defined(_M_X64) || defined(_M_IX86)
 #ifndef C_AVX2
 #define C_AVX2 0
 #endif

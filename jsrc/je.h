@@ -401,6 +401,7 @@ extern F2(jtcdot2);
 extern F2(jtcdproc2);
 extern F2(jtcolon);
 extern DF2(jtcork2);
+extern F2(jtcpufeature2);
 extern F2(jtcrc2);
 extern DF2(jtcut2);
 extern F2(jtcut);
@@ -927,11 +928,6 @@ extern dcomplex zzero;
 extern A        zpath;
 /* cpu feature */
 extern UC       hwfma;
-extern UC       hwaes;
-extern UC       hwsha1;
-extern UC       hwsha2;
-extern UC       hwsse41;
-extern UC       hwsse42;
 #if (SYS & SYS_ATARIST+SYS_ATT3B1)
 extern int      memcmp();       /* C library fn                            */
 extern D        strtod();       /* C library fn                            */

@@ -23,7 +23,7 @@
 /* and pop stuff off the stack back to that top on exit       */
 /*                                                                      */
 // The nvr stack contains pointers to values, added as names are moved
-// from the queue to the stack. 
+// from the queue to the stack.  Local values are not pushed.
 
 B jtparseinit(J jt){A x;
  GAT0(x,INT,20,1); ras(x); jt->nvra=x; jt->nvrav=AAV(x); jt->nvran=(UI4)AN(x);  // Initial stack.  Size is doubled as needed
@@ -110,24 +110,24 @@ static UI4 ptcol[] = {
 #define PTFROMTYPE(z,t) {I pt=CTTZ(t); pt-=LASTNOUNX; pt=pt<0?0:pt; z=ptcol[pt];}
 #define PTFROMTYPEASGN(z,t) {I pt=CTTZ(t); pt-=LASTNOUNX; pt=pt<0?0:pt; pt=ptcol[pt]; pt=((t)&CONW)?PTASGNNAME:pt; z=(UI4)pt;}  // clear flag bit if ASGN to name
 
-static PSTK* jtpfork(J jt,A s1, A s2, A s3){
- PSTK* stack=jt->parserstackframe.parserstkend1;  // extract the stack base (completes while the fork is running)
- A y=folk(s1,s2,s3);  // create the fork
+static PSTK* jtpfork(J jt,PSTK *stack){
+// obsolete PSTK* stack=jt->parserstackframe.parserstkend1;  // extract the stack base (completes while the fork is running)
+ A y=folk(stack[1].a,stack[2].a,stack[3].a);  // create the fork
  RZ(y);  // if error, return 0 stackpointer
  stack[3].t = stack[1].t; stack[3].a = y;  // take err tok from f; save result; no need to set parsertype, since it didn't change
  stack[2]=stack[0]; R stack+2;  // close up stack & return
 }
 
-static PSTK* jtphook(J jt,A s1, A s2){
- PSTK* stack=jt->parserstackframe.parserstkend1;  // extract the stack base
- A y=hook(s1,s2);  // create the hook
+static PSTK* jtphook(J jt,PSTK *stack){
+// obsolete  PSTK* stack=jt->parserstackframe.parserstkend1;  // extract the stack base
+ A y=hook(stack[1].a,stack[2].a);  // create the hook
  RZ(y);  // if error, return 0 stackpointer
- PTFROMTYPE(stack[2].pt,AT(y)) stack[2].t = stack[1].t; stack[2].a = y;  // take err tok from f; save result; no need to set parsertype, since it didn't change
+ PTFROMTYPE(stack[2].pt,AT(y)) stack[2].t = stack[1].t; stack[2].a = y;  // take err tok from f; save result
  stack[1]=stack[0]; R stack+1;  // close up stack & return
 }
 
-static PSTK* jtpparen(J jt, A s1, A s2){
- PSTK* stack=jt->parserstackframe.parserstkend1;  // extract the stack base
+static PSTK* jtpparen(J jt,PSTK *stack){
+// obsolete  PSTK* stack=jt->parserstackframe.parserstkend1;  // extract the stack base
  ASSERT(PTISCAVN(stack[1])&&PTISRPAR(stack[2]),EVSYNTAX);  // if error, signal so with 0 stack.  Look only at pt since MARK doesn't have an a
  stack[2].pt=stack[1].pt; stack[2].t=stack[0].t; stack[2].a = stack[1].a;  //  Install result over ).  Use value from expr, token # from (
  R stack+2;  // advance stack pointer to result
@@ -135,14 +135,16 @@ static PSTK* jtpparen(J jt, A s1, A s2){
 
 static F2(jtisf){RZ(symbis(onm(a),CALL1(jt->pre,w,0L),jt->symb)); R num[0];} 
 
-static PSTK* jtis(J jt,A s1,A v,A n){A f;B ger=0;C c,*s;PSTK* stack=jt->parserstackframe.parserstkend1; 
- if(stack[0].t==1)jt->asgn = 1;  // if the word number of the lhs is 1, it's either (noun)=: or name=: or 'value'=: at the beginning of the line; so indicate
- if(jt->assignsym){symbis(n,v,(A)AT(s1));}   // Assign to the known name.  Pass in the type of the ASGN
+static PSTK* jtis(J jt,PSTK *stack){B ger=0;C c,*s;// obsolete PSTK* stack=jt->parserstackframe.parserstkend1;
+  A v=stack[2].a, n=stack[0].a, asgblk=stack[1].a;  // value and name
+// obsolete  if(stack[0].t==1)jt->asgn = 1;  // if the word number of the lhs is 1, it's either (noun)=: or name=: or 'value'=: at the beginning of the line; so indicate
+ jt->asgn = stack[0].t==1;  // if the word number of the lhs is 1, it's either (noun)=: or name=: or 'value'=: at the beginning of the line; so indicate
+ if(jt->assignsym){symbis(n,v,(A)AT(asgblk));}   // Assign to the known name.  Pass in the type of the ASGN
  else {
   // Point to the block for the assignment; fetch the assignment pseudochar (=. or =:); choose the starting symbol table
   // depending on which type of assignment (but if there is no local symbol table, always use the global)
 // obsolete  f=stack[1].a; c=*CAV(f); A symtab=jt->local&&c==CASGN?jt->local:jt->global;
-  f=stack[1].a; c=*CAV(f); A symtab=jt->locsyms; if(c!=CASGN||AN(jt->locsyms)==1)symtab=jt->global;
+  c=*CAV(asgblk); A symtab=jt->locsyms; if(c!=CASGN||AN(jt->locsyms)==1)symtab=jt->global;
   if((AT(n)&BOX+BOXMULTIASSIGN)==BOX+BOXMULTIASSIGN){
    // string assignment, where the NAME blocks have already been computed.  Use them.  The fast case is where we are assigning a boxed list
    if(AN(n)==1)n=AAV(n)[0];  // if there is only 1 name, treat this like simple assignment, fall through
@@ -668,10 +670,11 @@ rdglob: ;
      }
     }else{
      // Here for lines 5-8 (fork/hook/assign/parens), which branch to a canned routine
-     PSTK * (*actionfn)()=lines58[pline-5];  // fetch the routine that will handle this line
-     // We will call the action routine with stack 1 2 3 (line 5) or 1 2 0 (line 7).  It will fetch the stackpointer from jt->endstk.
+// obsolete     PSTK * (*actionfn)()=lines58[pline-5];  // fetch the routine that will handle this line
+// obsolete      // We will call the action routine with stack 1 2 3 (line 5) or 1 2 0 (line 7).  It will fetch the stackpointer from jt->endstk.
      // It will run its function, and return the new stackpointer to use, with the stack all filled in.  If there is an error, the returned stackpointer will be 0.
-     stack=(*actionfn)(jt,stack[1].a,stack[2].a,stack[(0x60>>pline)/* obsolete&3*/].a);  // 00011 00000 produces 5-8-> 11 01 00 00
+// obsolete       stack=(*actionfn)(jt,stack[1].a,stack[2].a,stack[(0x60>>pline)/* obsolete&3*/].a);  // 00011 00000 produces 5-8-> 11 01 00 00
+     stack=(*lines58[pline-5])(jt,stack);  // run it
      if(!stack)FP  // fail if error
      stack0pt=stack[0].pt;  // bottom of stack was modified, so refresh the type for it (lines 0-6 don't change it)
     }

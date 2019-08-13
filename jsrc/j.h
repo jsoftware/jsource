@@ -496,7 +496,8 @@ extern unsigned int __cdecl _clearfp (void);
 #define ALLOBYTESVSZ(atoms,rank,size,islast,isname)      ( ((((rank)|(!SY_64))*SZI  + ((islast)? (isname)?(NORMAH*SZI+sizeof(NM)+SZI):(NORMAH*SZI+SZI) : (NORMAH*SZI)) + (atoms)*(size)))  )  // # bytes to allocate allowing only 1 byte for string pad - include mem hdr
 // here when size is constant.  The number of bytes, rounded up with overhead added, must not exceed 2^(PMINL+4)
 #define ALLOBYTES(atoms,rank,size,islast,isname)      ((size&(SZI-1))?ALLOBYTESVSZ(atoms,rank,size,islast,isname):(SZI*(((rank)|(!SY_64))+NORMAH+((size)>>LGSZI)*(atoms)+!!(islast))))  // # bytes to allocate
-#define ALLOBLOCK(n) ((n)<=2*PMIN?((n)<=PMIN?PMINL:PMINL+1) : (n)<=8*PMIN?((n)<=4*PMIN?PMINL+2:PMINL+3) : (n)<=32*PMIN?PMINL+4:IMIN)   // lg2(#bytes to allocate)
+#define ALLOBLOCK(n) ((n)<=2*PMIN?((n)<=PMIN?PMINL-1:PMINL) : (n)<=8*PMIN?((n)<=4*PMIN?PMINL+1:PMINL+2) : (n)<=32*PMIN?PMINL+3:IMIN)   // lg2(#bytes to allocate)-1
+// obsolete #define ALLOBLOCK(n) ((n)<=2*PMIN?((n)<=PMIN?PMINL:PMINL+1) : (n)<=8*PMIN?((n)<=4*PMIN?PMINL+2:PMINL+3) : (n)<=32*PMIN?PMINL+4:IMIN)   // lg2(#bytes to allocate)
 // value to put into name->bucketx for locale names: number if numeric, hash otherwise
 #define BUCKETXLOC(len,s) ((*(s)<='9')?strtoI10s((len),(s)):(I)nmhash((len),(s)))
 // GA() is used when the type is unknown.  This routine is in m.c and documents the function of these macros.
@@ -530,9 +531,9 @@ extern unsigned int __cdecl _clearfp (void);
  RZ(name);   \
  AK(name)=akx; AT(name)=(type); AN(name)=atoms;   \
  AR(name)=(RANKT)(rank);     \
- /*if((type)&SPARSE)SEGFAULT scaf*/ shapecopier(name,type,atoms,rank,shaape)   \
+ /* obsolete if((type)&SPARSE)SEGFAULT scaf*/ shapecopier(name,type,atoms,rank,shaape)   \
  if(!((type)&DIRECT))memset((C*)name+akx,C0,bytes-akx);  \
- else if((type)&LAST0){((I*)((C*)name+((bytes-SZI)&(-SZI))))[0]=(I)0x285d9a62c08a4f92 /* scaf */; }     \
+ /* obsolete else if((type)&LAST0){((I*)((C*)name+((bytes-SZI)&(-SZI))))[0]=(I)0x285d9a62c08a4f92 /* scaf ; }*/     \
 }
 #define GAT(name,type,atoms,rank,shaape)  GATS(name,type,atoms,rank,shaape,type##SIZE,GACOPYSHAPE)
 #define GATR(name,type,atoms,rank,shaape)  GATS(name,type,atoms,rank,shaape,type##SIZE,GACOPYSHAPER)
@@ -548,9 +549,9 @@ extern unsigned int __cdecl _clearfp (void);
  I akx=AKXR(rank);   \
  if(name){   \
   AK(name)=akx; AT(name)=(type); AN(name)=atoms; AR(name)=(RANKT)(rank);     \
-  /*if((type)&SPARSE)SEGFAULT scaf*/ shapecopier(name,type,atoms,rank,shaape)   \
+  /* obsolete if((type)&SPARSE)SEGFAULT scaf*/ shapecopier(name,type,atoms,rank,shaape)   \
   if(!((type)&DIRECT))memset((C*)name+akx,C0,bytes-akx);  \
-  else if((type)&LAST0){((I*)((C*)name+((bytes-SZI)&(-SZI))))[0]=(I)0x5285d9a62c08a4f9 /* scaf */; }     \
+  /* obsolete else if((type)&LAST0){((I*)((C*)name+((bytes-SZI)&(-SZI))))[0]=(I)0x5285d9a62c08a4f9 /* scaf ; }*/     \
  }else{erraction;} \
 }
 

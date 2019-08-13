@@ -178,7 +178,7 @@ REDUCCPFX(tymesinsO, D, I, TYMESO)
 
 #if 1 // scaf
 AHDRR(plusinsD,D,D){I i;D* RESTRICT y;
-  NAN0;if(d*m*n==0)SEGFAULT; /* scaf*/ 
+  NAN0;/* obsolete if(d*m*n==0)SEGFAULT; /* scaf*/ 
   // latency of add is 4, so use 4 accumulators
   if(d==1){
 #if C_AVX&&SY_64

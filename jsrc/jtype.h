@@ -316,6 +316,7 @@ typedef I SI;
 // BOX type can have the following informational flags set
 #define BOXMULTIASSIGN  ((I)1L<<MARKX)     // set for the target of a direct multiple assignment (i. e. 'x y' =.), which is stored as a boxed list whose contents are NAMEs    aliases with MARK
 // Restriction: CONW must be reserved for use as ASGNTONAME because of how parser tests for it
+// Restriction: MARK must be reserved for use as BOXMULTIASSIGN because of how parser tests for it
 
 // Planned coding to save bits in type
 // Uses bits 24-27 eg

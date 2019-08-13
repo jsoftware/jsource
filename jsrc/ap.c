@@ -23,7 +23,7 @@
 // Don't RESTRICT y since function may be called inplace
 #if 1
 #define PREFIXPFX(f,Tz,Tx,pfx,vecfn)  \
- AHDRP(f,Tz,Tx){I i;Tz v;if(d*m*n==0)SEGFAULT; /* scaf */                                    \
+ AHDRP(f,Tz,Tx){I i;Tz v;/*obsolete if(d*m*n==0)SEGFAULT; /* scaf */                                    \
   if(d==1)DQ(m, *z++=v=    *x++; DQ(n-1, *z=v=pfx(v,*x); ++z; ++x;))  \
   else{for(i=0;i<m;++i){                                              \
    DO(d, z[i]=    x[i];); x+=d;                                        \
@@ -31,7 +31,7 @@
  }}}  /* for associative functions only */
 
 #define PREFIXNAN(f,Tz,Tx,pfx,vecfn)  \
- AHDRP(f,Tz,Tx){I i;Tz v;if(d*m*n==0)SEGFAULT; /* scaf */                                    \
+ AHDRP(f,Tz,Tx){I i;Tz v;/* obsolete if(d*m*n==0)SEGFAULT; /* scaf */                                    \
   NAN0;                                                               \
   if(d==1)DQ(m, *z++=v=    *x++; DQ(n-1, *z=v=pfx(v,*x); ++z; ++x;))  \
   else{for(i=0;i<m;++i){                                              \

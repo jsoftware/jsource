@@ -94,7 +94,7 @@ static I jtdpone(J jt, B bits, D w){D t;
 
 static B jtwidthdp(J jt, A a, I *w, I *d){I n,x,y; C *v;
  RZ(a&&w&&d);
- RZ(a=ca(a)); n=AN(a); v=CAV(a); 
+ RZ(a=ca(a)); n=AN(a); v=CAV(a); v[n]=0;  // null-terminate the string, which is safe since we have made a copy here
  DQ(n, if(!strchr("0123456789.", *v)) *v=' '; v++;);
 
  x=strspn(CAV(a), " "          ); AK(a)+=x;AN(a)-=x;AS(a)[0]=x;
@@ -134,7 +134,7 @@ static F1(jtfmtparse){A x,z,*zv;B ml[2+NMODVALS],mod,t;C c,*cu="srqpnmdblc",*cu1
  ASSERT(!n||LIT&AT(w),EVDOMAIN); 
  wv=CAV(w); n1=1+n; t=c=0; fb=0; mi=-1; memset(ml,C1,sizeof(ml));
  for(i=0;i<n1;++i){
-  mod=t^1; c=wv[i];
+  mod=t^1; c=wv[i]; c=i==n?0:c;
   if(i==n)ASSERT(!t,EVDOMAIN)
   else{
    if(t){ASSERT(c!=p,EVDOMAIN); if(c==q)t=0;}

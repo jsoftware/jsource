@@ -11,7 +11,7 @@
 
 
 #define SUFFIXPFX(f,Tz,Tx,pfx,vecfn)  \
- AHDRS(f,Tz,Tx){I i;Tz v;if(m*d*n==0)SEGFAULT; /* scaf */                                        \
+ AHDRS(f,Tz,Tx){I i;Tz v;/* obsolete if(m*d*n==0)SEGFAULT; /* scaf */                                        \
   x+=m*d*n; z+=m*d*n;                                              \
   if(d==1)DQ(m, *--z=v=    *--x; DQ(n-1, --x; --z; *z=v=pfx(*x,v);))  \
   else{for(i=0;i<m;++i){                                              \
@@ -20,7 +20,7 @@
  }}}
 
 #define SUFFIXNAN(f,Tz,Tx,pfx,vecfn)  \
- AHDRS(f,Tz,Tx){I i;Tz v;if(m*d*n==0)SEGFAULT; /* scaf */                                        \
+ AHDRS(f,Tz,Tx){I i;Tz v;/* obsolete if(m*d*n==0)SEGFAULT; /* scaf */                                        \
   NAN0;                                                               \
   x+=m*d*n; z+=m*d*n;                                              \
   if(d==1)DQ(m, *--z=v=    *--x; DQ(n-1, --x; --z; *z=v=pfx(*x,v);))  \

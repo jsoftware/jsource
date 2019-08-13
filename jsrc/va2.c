@@ -1085,7 +1085,7 @@ DF2(jtatomic2){A z;
  while(1){  // run until we get no error
   z=jtva2(jtinplace,a,w,self,selfranks,(RANK2T)awr);  // execute the verb
   if(z||jt->jerr<=NEVM)RETF(z);   // return if no error or error not retryable
-  if((I)jtinplace&JTRETRY)SEGFAULT   //  scaf
+// obsolete   if((I)jtinplace&JTRETRY)SEGFAULT   //  scaf
   jtinplace=(J)((I)jtinplace|JTRETRY);  // indicate that we are retrying the operation
  }
 }
@@ -1136,7 +1136,7 @@ DF2(jtatomic2){A z;
 // obsolete F2(jtminus  ){CHECKSSING(a,w,jtssminus) R jtva2(jtinplace,a,w,ds(CMINUS),jt->ranks);}
 // obsolete F2(jtdivide ){CHECKSSING(a,w,jtssdiv) R jtva2(jtinplace,a,w,ds(CDIV),jt->ranks);}
 // obsolete F2(jtexpn2  ){RZ(a&&w); if(((((I)AR(w)-1)&(AT(w)<<(BW-1-FLX)))<0)&&0.5==*DAV(w))R sqroot(a); CHECKSSINGNZ(a,w,jtsspow) R jtva2(jtinplace,a,w,ds(CEXP),jt->ranks);}  // use sqrt hardware for sqrt.  Only for atomic w
-DF2(jtexpn2  ){F2PREFIP; RZ(a&&w); if(((((I)AR(w)-1)&(AT(w)<<(BW-1-FLX)))<0)&&0.5==*DAV(w))R sqroot(a);  R jtatomic2(jtinplace,a,w,self);}  // use sqrt hardware for sqrt.  Only for atomic w.  scaf on the EXP, should be DF2
+DF2(jtexpn2  ){F2PREFIP; RZ(a&&w); if(((((I)AR(w)-1)&(AT(w)<<(BW-1-FLX)))<0)&&0.5==*DAV(w))R sqroot(a);  R jtatomic2(jtinplace,a,w,self);}  // use sqrt hardware for sqrt.  Only for atomic w. 
 // obsolete F2(jtne     ){CHECKSSINGOPEQNE(a,w,jtsseqne,1) R jtva2(jtinplace,a,w,ds(CNE),jt->ranks);}
 // obsolete F2(jtoutof  ){CHECKSSING(a,w,jtssoutof) R jtva2(jtinplace,a,w,ds(CBANG),jt->ranks);}
 // obsolete DF2(jtcircle ){F2PREFIP; RZ(a&&w); R jtva2(jtinplace,a,w,self,jt->ranks);}

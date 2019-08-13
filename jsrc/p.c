@@ -135,25 +135,27 @@ static PSTK* jtpparen(J jt,PSTK *stack){
 
 static F2(jtisf){RZ(symbis(onm(a),CALL1(jt->pre,w,0L),jt->symb)); R num[0];} 
 
-static PSTK* jtis(J jt,PSTK *stack){B ger=0;C c,*s;// obsolete PSTK* stack=jt->parserstackframe.parserstkend1;
-  A v=stack[2].a, n=stack[0].a, asgblk=stack[1].a;  // value and name
+static PSTK* jtis(J jt,PSTK *stack){B ger=0;C *s;// obsolete PSTK* stack=jt->parserstackframe.parserstkend1;
+  A asgblk=stack[1].a; I asgt=AT(asgblk); A v=stack[2].a, n=stack[0].a;  // value and name
 // obsolete  if(stack[0].t==1)jt->asgn = 1;  // if the word number of the lhs is 1, it's either (noun)=: or name=: or 'value'=: at the beginning of the line; so indicate
  jt->asgn = stack[0].t==1;  // if the word number of the lhs is 1, it's either (noun)=: or name=: or 'value'=: at the beginning of the line; so indicate
- if(jt->assignsym){symbis(n,v,(A)AT(asgblk));}   // Assign to the known name.  Pass in the type of the ASGN
+ if(jt->assignsym){symbis(n,v,(A)asgt);}   // Assign to the known name.  Pass in the type of the ASGN
  else {
   // Point to the block for the assignment; fetch the assignment pseudochar (=. or =:); choose the starting symbol table
   // depending on which type of assignment (but if there is no local symbol table, always use the global)
 // obsolete  f=stack[1].a; c=*CAV(f); A symtab=jt->local&&c==CASGN?jt->local:jt->global;
-  c=*CAV(asgblk); A symtab=jt->locsyms; if(c!=CASGN||AN(jt->locsyms)==1)symtab=jt->global;
-  if((AT(n)&BOX+BOXMULTIASSIGN)==BOX+BOXMULTIASSIGN){
+// obsolete   c=*CAV(asgblk); A symtab=jt->locsyms; if(c!=CASGN||AN(jt->locsyms)==1)symtab=jt->global;
+  A symtab=jt->locsyms; if(!(asgt&ASGNLOCAL)||AN(jt->locsyms)==1)symtab=jt->global;
+// obsolete   if((AT(n)&BOX+BOXMULTIASSIGN)==BOX+BOXMULTIASSIGN){
+  if(AT(n)&BOXMULTIASSIGN){
    // string assignment, where the NAME blocks have already been computed.  Use them.  The fast case is where we are assigning a boxed list
-   if(AN(n)==1)n=AAV(n)[0];  // if there is only 1 name, treat this like simple assignment, fall through
+   if(AN(n)==1)n=AAV(n)[0];  // if there is only 1 name, treat this like simple assignment to first box, fall through
    else{
     // True multiple assignment
     ASSERT(!AR(v)||AN(n)==AS(v)[0],EVLENGTH);   // v is atom, or length matches n
     if(((AR(v)^1)+(~AT(v)&BOX))==0){A *nv=AAV(n), *vv=AAV(v); DO(AN(n), symbis(nv[i],vv[i],symtab);)}  // v is boxed list
     else {A *nv=AAV(n); DO(AN(n), symbis(nv[i],ope(AR(v)?from(sc(i),v):v),symtab);)}  // repeat atomic v for each name, otherwise select item.  Open in either case
-    RNE(stack+2);
+    goto retstack;
    }
   }
   if(LIT&AT(n)&&1>=AR(n)){
@@ -187,7 +189,9 @@ static PSTK* jtis(J jt,PSTK *stack){B ger=0;C c,*s;// obsolete PSTK* stack=jt->p
 // obsolete   else {ASSERT(1==AR(n),EVRANK); ASSERT(AT(v)&NOUN,EVDOMAIN); jt->symb=symtab; jt->pre=ger?jtfxx:jtope; rank2ex(n,v,0L,-1L,-1L,RMAX,RMAX,jtisf);}
   else {ASSERT(1==AR(n),EVRANK); ASSERT(AT(v)&NOUN,EVDOMAIN); jt->symb=symtab; jt->pre=ger?jtfxx:jtope; rank2ex(n,v,0L,0,AR(v)-1<0?0:AR(v)-1,0,AR(v)-1<0?0:AR(v)-1,jtisf);}
  }
- RNE(stack+2);  // the result is the same value that was assigned
+retstack:  // return, but 0 if error
+ stack+=2; stack=jt->jerr?0:stack; R stack;  // the result is the same value that was assigned
+// obsolete  RNE(stack+2);
 }
 
 static PSTK * (*(lines58[]))() = {jtpfork,jtphook,jtis,jtpparen};  // handlers for parse lines 5-8

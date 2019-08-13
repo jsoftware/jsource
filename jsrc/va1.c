@@ -217,7 +217,7 @@ DF1(jtatomic1){A z;
  while(1){  // run until we get no error
   z=jtva1(jtinplace,w,self);  // execute the verb
   if(z||jt->jerr<=NEVM)RETF(z);   // return if no error or error not retryable
-  if((I)jtinplace&JTRETRY)SEGFAULT   //  scaf
+// obsolete   if((I)jtinplace&JTRETRY)SEGFAULT   //  scaf
   jtinplace=(J)((I)jtinplace|JTRETRY);  // indicate that we are retrying the operation
  }
 }

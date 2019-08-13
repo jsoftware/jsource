@@ -11,33 +11,6 @@
 
 #define CXCHG2(v0,v1) {void *v2=v0; B t=COMPFN(compn,v0,v1); v0=(!t)?v1:v0; v1=(!t)?v2:v1;}
 
-#if 0
-#define CXCHG2D(a,b) {t=a; a=(t<=b)?a:b; b=(t<=b)?b:t;}
-static void sortdq1short(D *v, I n){D a,b,c,d,e,t;
- switch(n){
- case 2:  // happens only if original input is 2 long
-  a=v[0]; b=v[1]; CXCHG2D(a,b);
-  goto exitb;
- case 3:
-  a=v[0]; b=v[1]; c=v[2]; CXCHG2D(b,c); CXCHG2D(a,b); CXCHG2D(b,c);
-  goto exitc;
- case 4:
-  a=v[0]; b=v[1]; c=v[2]; d=v[3]; CXCHG2D(a,b); CXCHG2D(c,d); CXCHG2D(a,c); CXCHG2D(b,d); CXCHG2D(b,c);
-  goto exitd;
- case 5:
-  a=v[0]; b=v[1]; c=v[2]; d=v[3]; e=v[4]; CXCHG2D(b,c); CXCHG2D(d,e); CXCHG2D(b,d); CXCHG2D(a,c); CXCHG2D(a,d); CXCHG2D(c,e); CXCHG2D(a,b); CXCHG2D(c,d); CXCHG2D(b,c);
-  v[4]=e;
-exitd:
-  v[3]=d;
-exitc:
-  v[2]=c;
-exitb:
-  v[1]=b; v[0]=a;
- case 0: case 1:;
- }
- R;
-}
-#else
 static UC orderfromcomp3[8] = {
 36,24,0,9,33,0,18,6
 };
@@ -81,7 +54,6 @@ static US orderfromcomp5[1024] = {
 13380,9796,0,5764,12932,0,8900,5316,0,0,0,1676,0,0,0,1228,0,0,0,0,12428,0,8396,0,0,0,0,0,0,0,4308,724,
 13324,9740,0,0,0,0,0,0,0,5652,0,1620,0,0,0,0,12820,0,0,0,12372,0,0,0,8732,5148,0,1116,8284,0,4252,668
 };
-#endif
 
 // Comparison functions.  Do one comparison before the loop for a fast exit if it differs.
 // On VS this sequence, where a single byte is returned, creates a CMP/JE/SETL sequence, performing only one (fused) compare
@@ -316,7 +288,6 @@ static SF(jtsorti){FPREFIP;A y,z;I i;UI4 *yv;I j,s,*wv,*zv;
   if(n<100000)R jtsortdirect(jt,m,1,n,w);  // 800-99999, mergesort   TUNE
   R sorti1(m,n,w);  // 100000+, radix  TUNE
  }
-// obsolete if(!rng.range)R n>1300?sorti1(m,n,w):jtsortdirect(jt,m,1,n,w);  // TUNE
  // allocate area for the data, and result area
  GATV0(y,C4T,rng.range,1); yv=C4AV(y)-rng.min;  // yv->totals area
  if(ASGNINPLACESGN(SGNIF((I)jtinplace,JTINPLACEWX),w))z=w;else GA(z,AT(w),AN(w),AR(w),AS(w));

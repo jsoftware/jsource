@@ -11,7 +11,7 @@
 
 
 #define SUFFIXPFX(f,Tz,Tx,pfx,vecfn)  \
- AHDRS(f,Tz,Tx){I i;Tz v;/* obsolete if(m*d*n==0)SEGFAULT;  scaf */                                        \
+ AHDRS(f,Tz,Tx){I i;Tz v;                                     \
   x+=m*d*n; z+=m*d*n;                                              \
   if(d==1)DQ(m, *--z=v=    *--x; DQ(n-1, --x; --z; *z=v=pfx(*x,v);))  \
   else{for(i=0;i<m;++i){                                              \
@@ -20,7 +20,7 @@
  }}}
 
 #define SUFFIXNAN(f,Tz,Tx,pfx,vecfn)  \
- AHDRS(f,Tz,Tx){I i;Tz v;/* obsolete if(m*d*n==0)SEGFAULT;  scaf */                                        \
+ AHDRS(f,Tz,Tx){I i;Tz v;                                      \
   NAN0;                                                               \
   x+=m*d*n; z+=m*d*n;                                              \
   if(d==1)DQ(m, *--z=v=    *--x; DQ(n-1, --x; --z; *z=v=pfx(*x,v);))  \
@@ -106,7 +106,6 @@ SUFFICPFX(minussfxO, D, I, MINUS )
 SUFFICPFX(tymessfxO, D, I, TYMES )
 
 SUFFIXPFX( plussfxB, I, B, PLUS, plusBI  )
-#if 1
 AHDRS(plussfxD,D,D){I i;
  NAN0;
  x+=m*d*n; z+=m*d*n;
@@ -123,9 +122,6 @@ AHDRS(plussfxD,D,D){I i;
  }
  NAN1V;
 }
-#else  // obsolete 
-SUFFIXNAN( plussfxD, D, D, PLUS  )
-#endif
 SUFFIXNAN( plussfxZ, Z, Z, zplus, plusZZ )
 SUFFIXPFX( plussfxX, X, X, xplus, plusXX )
 SUFFIXPFX( plussfxQ, Q, Q, qplus, plusQQ )
@@ -331,7 +327,6 @@ static DF2(jtofxinv){A f,fs,z;C c;I t;V*v;
  F2RANK(0,RMAX,jtofxinv,self);
  fs=FAV(self)->fgh[0]; f=FAV(fs)->fgh[0]; v=FAV(f); c=v->id; t=AT(w);  // self = f/\. fs = f/  f = f  v = verb info for f
  if(!(c==CPLUS||c==CBDOT&&t&INT||(c==CEQ||c==CNE)&&t&B01))R outfix(a,w,self);
-// obsolete  z=irs2(df1(w,fs),df2(a,w,bslash(fs)),c==CPLUS?ds(CMINUS):f, RMAX,-1L,c==CPLUS?(AF)jtminus:v->valencefns[1]);
  z=irs2(df1(w,fs),df2(a,w,bslash(fs)),c==CPLUS?ds(CMINUS):f, RMAX,-1L,jtatomic2);
  if(jt->jerr==EVNAN){RESETERR; R outfix(a,w,self);}else R z;
 }    /* a f/\. w where f has an "inverse" */
@@ -359,7 +354,6 @@ static DF2(jtofxassoc){A f,i,j,p,s,x,z;C id,*zv;I c,d,k,kc,m,r,t;V*v;VA2 adocv;
   ASSERTSYS(adocv.f,"ofxassoc");  // scaf
   GA(z,t,c*(1+d),r,AS(p)); AS(z)[0]=1+d; zv=CAV(z);  // allocate result assuming no overflow
   MC(zv,     AV(s),          kc);                     // first cell is {.s, i. e. all but the first infix
-// obsolete   if(1<d)adocv.f(jt,1,c*(d-1),1L,zv+kc,AV(p),kc+CAV(s));  /* (}:p) f (}.s), with result stored into the result area */  // don't call with 0 length!
   if(1<d)((AHDR2FN*)adocv.f)((I)1,c*(d-1),AV(p),kc+CAV(s),zv+kc,jt);  /* (}:p) f (}.s), with result stored into the result area */  // don't call with 0 length!
   MC(zv+kc*d,CAV(p)+kc*(d-1),kc);                     // last cell is {:p, i. e. all but the last infix
   // If there was overflow on the ado, we have to redo the operation as a float.

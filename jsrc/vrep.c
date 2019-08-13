@@ -68,50 +68,6 @@ static REPF(jtrepzsx){A q,x,y;I c,d,j,k=-1,m,p=0,*qv,*xv,*yv;P*ap;
    if(r){B*c=(B*)iv; DO(r, if(c[i])*v++=u[i];);}                      \
  }}
 
-#if 0 && !SY_64 && SY_WIN32  // obsolete - bit-oriented version is better
-static REPF(jtrepbdx){A z;B*b;C*wv,*zv;I c,i,*iv,j,k,m,p,q,r,zn;
- RZ(a&&w);
- if(SPARSE&AT(w))R irs2(ifb(AN(a),BAV(a)),w,0L,1L,wcr,jtfrom);
- m=AN(a); q=m>>LGSZI; r=m&(SZI-1);
- ASSERT(m==*(wf+AS(w)),EVLENGTH);
- b=BAV(a); p=bsum(m,b); zn=m?p*(AN(w)/m):0; 
- ASSERT(0<=zn,EVLIMIT);
- GA(z,AT(w),zn,AR(w),AS(w)); *(wf+AS(z))=p;
- wv=CAV(w); zv=CAV(z);
- RE(c=prod(wf,AS(w)));
- if(zn)switch(k=(AN(w)/(c*m))<<bplg(AT(w)),FL&AT(w)||k!=sizeof(D)?k:0){
-  case sizeof(C): REPB(C); break;
-  case sizeof(S): REPB(S); break;
-#if SY_64
-  case sizeof(int): REPB(int); break;
-#endif
-  case sizeof(I): REPB(I); break;
-  case sizeof(D): REPB(D); break;
-  default: {C*u;I k1=k,k2=k*2,k3=k*3,k4=k*4,km=k*m;                                                     
-  for(i=0;i<c;++i){
-   u=i*km+wv;                                                      
-   for(j=0,iv=(I*)b;j<q;++j,u+=k4)switch(*iv++){                                  
-    case B0001: MC(zv,k3+u,k1); zv+=k1;                         break;
-    case B0010: MC(zv,k2+u,k1); zv+=k1;                         break;
-    case B0011: MC(zv,k2+u,k2); zv+=k2;                         break;
-    case B0100: MC(zv,k1+u,k1); zv+=k1;                         break;
-    case B0101: MC(zv,k1+u,k1); zv+=k1; MC(zv,k3+u,k1); zv+=k1; break;
-    case B0110: MC(zv,k1+u,k2); zv+=k2;                         break;
-    case B0111: MC(zv,k1+u,k3); zv+=k3;                         break;
-    case B1000: MC(zv,   u,k1); zv+=k1;                         break;
-    case B1001: MC(zv,   u,k1); zv+=k1; MC(zv,k3+u,k1); zv+=k1; break;
-    case B1010: MC(zv,   u,k1); zv+=k1; MC(zv,k2+u,k1); zv+=k1; break;
-    case B1011: MC(zv,   u,k1); zv+=k1; MC(zv,k2+u,k2); zv+=k2; break;
-    case B1100: MC(zv,   u,k2); zv+=k2;                         break;
-    case B1101: MC(zv,   u,k2); zv+=k2; MC(zv,k3+u,k1); zv+=k1; break;
-    case B1110: MC(zv,   u,k3); zv+=k3;                         break;
-    case B1111: MC(zv,   u,k4); zv+=k4;
-   }
-   if(r){B*c=(B*)iv; DO(r, if(c[i]){MC(zv,u+i*k,k); zv+=k;});}
- }}}
- R z;
-}    /* (dense boolean)#"r (dense or sparse) */
-#else
 static REPF(jtrepbdx){A z;I c,k,m,p;
  // wf and wcr are set
  RZ(a&&w);F2PREFIP;
@@ -178,7 +134,6 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
 
  R z;
 }    /* (dense boolean)#"r (dense or sparse) */
-#endif
 
 static REPF(jtrepbsx){A ai,c,d,e,g,q,x,wa,wx,wy,y,y1,z,zy;B*b;I*dv,*gv,j,m,n,*u,*v,*v0;P*ap,*wp,*zp;
  RZ(a&&w);

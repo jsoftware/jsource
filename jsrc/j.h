@@ -497,7 +497,6 @@ extern unsigned int __cdecl _clearfp (void);
 // here when size is constant.  The number of bytes, rounded up with overhead added, must not exceed 2^(PMINL+4)
 #define ALLOBYTES(atoms,rank,size,islast,isname)      ((size&(SZI-1))?ALLOBYTESVSZ(atoms,rank,size,islast,isname):(SZI*(((rank)|(!SY_64))+NORMAH+((size)>>LGSZI)*(atoms)+!!(islast))))  // # bytes to allocate
 #define ALLOBLOCK(n) ((n)<=2*PMIN?((n)<=PMIN?PMINL-1:PMINL) : (n)<=8*PMIN?((n)<=4*PMIN?PMINL+1:PMINL+2) : (n)<=32*PMIN?PMINL+3:IMIN)   // lg2(#bytes to allocate)-1
-// obsolete #define ALLOBLOCK(n) ((n)<=2*PMIN?((n)<=PMIN?PMINL:PMINL+1) : (n)<=8*PMIN?((n)<=4*PMIN?PMINL+2:PMINL+3) : (n)<=32*PMIN?PMINL+4:IMIN)   // lg2(#bytes to allocate)
 // value to put into name->bucketx for locale names: number if numeric, hash otherwise
 #define BUCKETXLOC(len,s) ((*(s)<='9')?strtoI10s((len),(s)):(I)nmhash((len),(s)))
 // GA() is used when the type is unknown.  This routine is in m.c and documents the function of these macros.
@@ -507,10 +506,8 @@ extern unsigned int __cdecl _clearfp (void);
 // SHAPE0 is used when the shape is 0 - write shape only if rank==1
 #define GACOPYSHAPE0(name,type,atoms,rank,shaape) if((rank)==1)AS(name)[0]=(atoms);
 // General shape copy, branchless when rank<3  One value is always written to shape: #atoms if rank=1.  Used in jtga()
-// obsolete #define GACOPYSHAPEG(name,type,atoms,rank,shaape) I _r=(shaape)?(rank):1; I *_s=(shaape)?(I*)(shaape):jt->shapesink; I cp=*_s; cp=_r==1?(atoms):cp; I *_d=AS(name); *_d=cp; --_r; do{_s=_r>0?_s:jt->shapesink; _d=_r>0?_d:jt->shapesink; *++_d=*++_s;}while(--_r>0);
 #define GACOPYSHAPEG(name,type,atoms,rank,shaape)  {I *_d=AS(name); I *_s=(shaape); _s=(shaape)?_s:_d; I cp=*_s; I _r=1-(rank); cp=_r==0?(atoms):cp; *_d=cp; do{_s+=(UI)_r>>(BW-1); _d+=(UI)_r>>(BW-1); *_d=*_s;}while(++_r<0);}
 // Use when shape is known to be present but rank is not SDT.  One value is always written to shape
-// obsolete #define GACOPYSHAPE(name,type,atoms,rank,shaape) I _r=(rank); I *_s=(I*)(shaape); I *_d=AS(name); *_d=*_s; --_r; do{_s=_r>0?_s:jt->shapesink; _d=_r>0?_d:jt->shapesink; *++_d=*++_s;}while(--_r>0);
 #if C_AVX&SY_64
 #define GACOPYSHAPE(name,type,atoms,rank,shaape) MCISH(AS(name),shaape,rank)
 #else
@@ -531,9 +528,9 @@ extern unsigned int __cdecl _clearfp (void);
  RZ(name);   \
  AK(name)=akx; AT(name)=(type); AN(name)=atoms;   \
  AR(name)=(RANKT)(rank);     \
- /* obsolete if((type)&SPARSE)SEGFAULT scaf*/ shapecopier(name,type,atoms,rank,shaape)   \
+ shapecopier(name,type,atoms,rank,shaape)   \
  if(!((type)&DIRECT))memset((C*)name+akx,C0,bytes-akx);  \
- /* obsolete else if((type)&LAST0){((I*)((C*)name+((bytes-SZI)&(-SZI))))[0]=(I)0x285d9a62c08a4f92  scaf ; }*/     \
+    \
 }
 #define GAT(name,type,atoms,rank,shaape)  GATS(name,type,atoms,rank,shaape,type##SIZE,GACOPYSHAPE)
 #define GATR(name,type,atoms,rank,shaape)  GATS(name,type,atoms,rank,shaape,type##SIZE,GACOPYSHAPER)
@@ -549,9 +546,9 @@ extern unsigned int __cdecl _clearfp (void);
  I akx=AKXR(rank);   \
  if(name){   \
   AK(name)=akx; AT(name)=(type); AN(name)=atoms; AR(name)=(RANKT)(rank);     \
-  /* obsolete if((type)&SPARSE)SEGFAULT scaf*/ shapecopier(name,type,atoms,rank,shaape)   \
+  shapecopier(name,type,atoms,rank,shaape)   \
   if(!((type)&DIRECT))memset((C*)name+akx,C0,bytes-akx);  \
-  /* obsolete else if((type)&LAST0){((I*)((C*)name+((bytes-SZI)&(-SZI))))[0]=(I)0x5285d9a62c08a4f9  scaf ; }*/     \
+     \
  }else{erraction;} \
 }
 
@@ -561,7 +558,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define GATV1(name,type,atoms,rank) GATVS(name,type,atoms,rank,0,type##SIZE,GACOPY1,R 0)  // this version copies 1 to the entire shape
 #define GATV0(name,type,atoms,rank) GATVS(name,type,atoms,rank,0,type##SIZE,GACOPYSHAPE0,R 0)  // shape not written unless rank==1
 // use this version when you are allocating a sparse matrix.  It handles the AS[0] field correctly
-#define GASPARSE(n,t,a,r,s) {/*if(!(t&SPARSE))SEGFAULT  scaf*/ if((r)==1){GA(n,/* obsolete XZ|*/(t),a,1,0); if(s)AS(n)[0]=(s)[0];}else{GA(n,/* obsolete XZ|*/(t),a,r,s)}}
+#define GASPARSE(n,t,a,r,s) {if((r)==1){GA(n,(t),a,1,0); if(s)AS(n)[0]=(s)[0];}else{GA(n,(t),a,r,s)}}
 
 #define HN              4L  // number of boxes per valence to hold exp-def info (words, control words, original (opt.), symbol table)
 #define IC(w)           (AR(w) ? *AS(w) : 1L)
@@ -640,10 +637,6 @@ extern unsigned int __cdecl _clearfp (void);
 #define MCISd(dest,src,n) {I * RESTRICT _s=(src); I _n=~(n); while((_n-=(_n>>(BW-1)))<0)*dest++=*_s++;}  // ... this version when d increments through the loop
 #define MCISs(dest,src,n) {I * RESTRICT _d=(dest); I _n=~(n); while((_n-=(_n>>(BW-1)))<0)*_d++=*src++;}  // ... this when s increments through the loop
 #define MCISds(dest,src,n) {I _n=~(n); while((_n-=(_n>>(BW-1)))<0)*dest++=*src++;}  // ...this when both
-// obsolete #define MCISH(dest,src,n) {I * RESTRICT _d=(dest); I * RESTRICT _s=(src); I _n=~(n); while((_n-=(_n>>(BW-1)))<0)*_d++=*_s++;}  // use for copies of shape, optimized for no branch when n<3.
-// obsolete #define MCISHd(dest,src,n) {I * RESTRICT _s=(src); I _n=~(n); while((_n-=(_n>>(BW-1)))<0)*dest++=*_s++;}  // ... this version when d increments through the loop
-// obsolete #define MCISHs(dest,src,n) {I * RESTRICT _d=(dest); I _n=~(n); while((_n-=(_n>>(BW-1)))<0)*_d++=*src++;}  // ... this when s increments through the loop
-// obsolete #define MCISHds(dest,src,n) {I _n=~(n); while((_n-=(_n>>(BW-1)))<0)*dest++=*src++;}  // ...this when both
 // Copy shapes.  Optimized for length <2, to eliminate branches then
 // For AVX, we can profitably use the MASKMOV instruction to do all the  testing
 #if C_AVX&&SY_64
@@ -710,8 +703,6 @@ extern unsigned int __cdecl _clearfp (void);
 #endif
 #endif
 // PROD multiplies a list of numbers, where the product is known not to overflow a signed int (for example, it might be part of the shape of a dense array)
-// obsolete #define PROD(result,length,ain) {I _i; if((length)<0)SEGFAULT /*scaf*/ if((_i=(length))<=0)result=1;else{result=(ain)[0];while(--_i>0){result*=(ain)[_i];}}}
-// obsolete #define PROD1(result,length,ain) {I _i; if((length)<-1)SEGFAULT /*scaf*/ if((_i=(length))<=0)result=1;else{result=(ain)[0];while(--_i>0){result*=(ain)[_i];}}}  // scaf
 #define PROD(result,length,ain) {I _i=(length)-1; result=(ain)[_i]; result=_i<0?1:result; do{--_i; I _r=(ain)[_i]*result; result=_i<0?result:_r;}while(_i>0);} 
 #define PROD1(result,length,ain) PROD(result,length,ain)  // scaf
 // CPROD is to be used to create a test testing #atoms.  Because empty arrays can have cells that have too many atoms, we can't use PROD if
@@ -748,7 +739,6 @@ extern unsigned int __cdecl _clearfp (void);
 // When we push, we are about to execute verbs before the last one, and an inplacement there would lead to the name's being assigned with invalid
 // data.  So, we clear the inplace variables if we don't want to allow that: if the user set zomblevel=0, or if there is no local symbol table
 // (which means the user is fooling around at the keyboard & performance is not as important as transparency)
-// obsolete #define PUSHZOMB L*savassignsym = jt->assignsym; A savzombval; if(savassignsym){savzombval=jt->zombieval; if((UI)jt->asgzomblevel-1>=(UI)jt->local){CLEARZOMBIE}}  // test is (jt->asgzomblevel==0||jt->local==0)
 #define PUSHZOMB L*savassignsym = jt->assignsym; A savzombval; if(savassignsym){savzombval=jt->zombieval; if(((jt->asgzomblevel-1)|((AN(jt->locsyms)-2)))<0){CLEARZOMBIE}}  // test is (jt->asgzomblevel==0||AN(jt->locsyms)<2)
 #define POPZOMB if(savassignsym){jt->assignsym=savassignsym;jt->zombieval=savzombval;}
 #define R               return
@@ -776,10 +766,7 @@ extern unsigned int __cdecl _clearfp (void);
 #else
 #define REPLBYTETOW(in,out) (out=(UC)(in),out|=out<<8,out|=out<<16)
 #endif
-// obsolete // Input is I/UI, count is # bytes to store to output pointer (1-7, never 0).  Input value is destroyed
 #if C_LE
-// obsolete #define STOREBYTES(out,in,n) {UC *sboptr=(UC*)(out); DQ(n, *sboptr++=(UC)in; in>>=8;)}
-// obsolete #define STOREBYTES(out,in,n) {*(UI*)(out) = (*(UI*)(out)&((UI)~(I)0 << ((n)<<3))) | ((in)&~((UI)~(I)0 << ((n)<<3)));}
 // Output is pointer, Input is I/UI, count is # bytes to NOT store to output pointer (0-7).
 #define STOREBYTES(out,in,n) {*(UI*)(out) = (*(UI*)(out)&~((UI)~(I)0 >> ((n)<<3))) | ((in)&((UI)~(I)0 >> ((n)<<3)));}
 #endif

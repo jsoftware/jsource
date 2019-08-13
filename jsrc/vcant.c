@@ -112,7 +112,6 @@ F2(jtcant2){A*av,p,t,y;I j,k,m,n,*pv,q,r,*v;
   m=AN(a); n=AN(t); av=AAV(a); 
   j=0; DO(r-n,pv[*v++]=j++;); DO(m, k=AN(av[i]); DQ(k,pv[*v++]=j;); j+=(k!=0););
  }else RZ(p=pinv(pfill(r,a)));
-// obsolete  A z= r<AR(w) ? irs2(p,w,0L,1L,r,jtcanta) : canta(p,w);  // Handle rank for a - w is in canta.  p is now INT type
  A z; IRS2(p,w,0L,1L,r,jtcanta,z);  // Set rank for w is in canta.  p is now INT type.  No need to check agreement since a has rank 1
  RETF(z);
 }    /* a|:"r w main control */ 

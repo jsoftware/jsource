@@ -130,7 +130,6 @@ static F1(jttrr){PROLOG(0058);A hs,s,t,*x,z;B ex,xop;C id;I fl,*hv,m;V*v;
  xop=1&&VXOP&fl; ex=id==CCOLON&&hs&&!xop;
  m=(I )!!fs+(I )(gs||ex)+(I )(id==CFORK||xop&&hs);
  if(!m){RETF(tleaf(spella(w)));}
-// obsolete  if(evoke(w)){RETF(tleaf(sfn(0,fs)));}
  if(evoke(w)){RZ(w=sfne(w)); RETF((AT(w)&FUNC?jttrr:jttleaf)(jt,w));}
  GATV0(t,BOX,m,1); x=AAV(t);
  if(0<m)RZ(x[0]=rifvs(fl&VGERL?treach(fxeach(fs)):trr(fs)));

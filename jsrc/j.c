@@ -55,20 +55,8 @@ UC  hwfma=0;              // blis cpu tuning
 UC  hwaes=0;              // aes ni
 UC  hwsha1=0;             // sha1
 UC  hwsha2=0;             // sha2
-// obsolete B   testb[256]={0};       /* 1 iff test block follows             */
 C   wtype[256]={0};
-// obsoletes follow
 
-#if 0 // obsolete
-UC  bitc[256]={0};        /* # 1 bits in each possible byte       */
-C   bitdisp[256*16]={0};  /* display for each possible byte       */
-A   mdot=0;               /* m.                                   */
-A   ndot=0;               /* n.                                   */
-A   udot=0;               /* u.                                   */
-A   vdot=0;               /* v.                                   */
-A   xdot=0;               /* x.                                   */
-A   ydot=0;               /* y.                                   */
-#endif
 // globals end
 
 #if SY_64

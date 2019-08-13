@@ -57,7 +57,6 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
    // To avoid the tstack overhead, we switch the tpush pointer to our data area, so that blocks are filled in as they are allocated, with nothing put
    // onto the real tpop stack.  If we hit an error, that's OK, because whatever we did get allocated will be freed when the result block is freed.  We use GAE so that we don't abort on error
    A *pushxsave = jt->tnextpushp; jt->tnextpushp=zv;  // save tstack info before allocation
-// obsolete    jt->tstack = (A*)(&jt->tnextpushx);  // use tnextpushx as a temp.  It will be destroyed, which is OK because we are setting it to 0 before every call
    DQ(n, GAE(y,t,m,r,f+ws,break); AFLAG(y)=newflags; AC(y)=ACUC1; MC(CAV(y),wv,k); wv+=k;);   // allocate, but don't grow the tstack.  Set usecount of cell to 1.  Put allocated addr into *jt->tnextpushp++
    jt->tnextpushp=pushxsave;   // restore tstack pointer
   }else{AFLAG(z) = newflags; DO(n, GA(y,t,m,r,f+ws); AFLAG(y)=newflags; MC(CAV(y),wv,k); wv+=k; zv[i]=y;); } // indirect w; don't set recursible, which might be expensive
@@ -176,7 +175,6 @@ A jtassembleresults(J jt, I ZZFLAGWORD, A zz, A zzbox, A* zzboxp, I zzcellp, I z
    // The overall result-cell differs in shape or type from the cells of zz.  We must allocate a new result area.
    GA(zztemp,zft,natomsresult,zzwf+zzcr,0);  // allocate result area, and point to shape
    MCISH(AS(zztemp),AS(zz),zzwf); MCISH(AS(zztemp)+zzwf,zzcs,zzcr);   // move in frame and shape
-// obsolete    DO(zzwf, *zzts++ = zzs[i];) DO(zzcr, *zzts++ = zzcs[i];)   // move in the frame followed by result-cell shape
 
    // since zztemp is becoming the new result area, it should become inplace recursive if the type is recursible, and zz needs to
    // become nonrecursive, to transfer ownership of the contents of zz's blocks to zztemp without requiring explicit usecounting.
@@ -366,7 +364,6 @@ static A jtopes(J jt,I zt,A cs,A w){A a,d,e,sh,t,*wv,x,x1,y,y1,z;B*b;C*xv;I an,*
 F1(jtope){PROLOG(0080);A cs,*v,y,z;I nonh;C*x;I i,n,*p,q=RMAX,r=0,*s,t=0,te=0,*u,zn;
  RZ(w);
  n=AN(w); v=AAV(w);
-// obsolete  if(!(n&&BOX&AT(w)))RCA(w);  // return w if empty or open
  if(!(BOX&(AT(w)&((-n)>>(BW-1)))))RCA(w);  // return w if empty or open
  if(!AR(w)){z=*v; ACIPNO(z); R z;}   // scalar box: turn off inplacing if we are using the contents directly
  // set q=min rank of contents, r=max rank of contents
@@ -566,32 +563,3 @@ F1(jtrazeh){A*wv,y,z;C*xv,*yv,*zv;I c=0,ck,dk,i,k,n,p,r,*s,t;
  RETF(z);
 }    /* >,.&.>/,w */
 
-#if 0  // obsolete 
-#define EXTZ    if(vv<=d+v){m=v-CAV(z); RZ(z=ext(0,z)); v=m+CAV(z); vv=CAV(z)+(AN(z)<<klg);}
-
-F2(jtrazefrom){A*wv,y,z;B b;C*v,*vv;I an,c,d,i,j,klg,m,n,r,*s,t,*u,wn;
- RZ(a&&w);
- an=AN(a); wn=AN(w);
- if(b=NUMERIC&AT(a)&&1==AR(a)&&BOX&AT(w)&&1==AR(w)&&1<wn&&an>10*wn){
-  wv=AAV(w); y=*wv; r=AR(y); s=1+AS(y); n=B01&AT(a)?2:wn;
-  for(i=m=t=0;b&&i<n;++i){
-   y=wv[i]; b=r==AR(y)&&!(1<r&&ICMP(s,1+AS(y),r-1));
-   if(AN(y)){m+=AN(y); if(t)b=b&&TYPESEQ(t,AT(y)); else t=AT(y);}
- }}
- if(!(b&&t&DIRECT))R raze(from(a,w));
- c=aii(y); klg=bplg(t); 
- RZ(z=exta(t,r,c,(I)((1.2*an*m)/(n*c)))); u=AS(z); *u++=AN(z)/c; DQ(r-1, *u++=*s++;);
- v=CAV(z); vv=v+(AN(z)<<klg);
- if(B01&AT(a)){B*av=BAV(a);        
-  for(i=0;i<an;++i){
-   y=wv[*av++]; d=AN(y)<<klg; EXTZ; MC(v,AV(y),d); v+=d;
- }}else{I*av; 
-  RZ(a=vi(a)); av=AV(a); 
-  for(i=0;i<an;++i){
-   j=*av++; if(0>j){j+=wn; ASSERT(0<=j,EVINDEX);}else ASSERT(j<wn,EVINDEX);
-   y=wv[j];     d=AN(y)<<klg; EXTZ; MC(v,AV(y),d); v+=d;
- }}
- AN(z)=(v-CAV(z))>>klg; *AS(z)=AN(z)/c;     
- RETF(z);
-}    /* a ;@:{ w */
-#endif

@@ -1388,7 +1388,6 @@ F1(jtcdproc1){CCT*cc;
  ASSERT(AN(w),EVLENGTH);
  if(!jt->cdarg)RE(cdinit());
  C* enda=&CAV(w)[AN(w)]; C endc=*enda; *enda=0; cc=cdparse(w,1); *enda=endc; RE(cc); // should do outside rank2 loop?
-// obsolete  RE(cc=cdparse(w,1));
  R sc((I)cc->fp);
 }    /* 15!:21 return proc address */
 

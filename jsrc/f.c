@@ -546,7 +546,6 @@ static F1(jtthorn1main){PROLOG(0001);A z;
   case XNUMX: case RATX: case XDX: case XZX:
              z=thxqe(w);                  break;
 #endif
-// obsolete  case BITX:  z=thbit(w);                  break;
   case B01X:  z=thb(w);                    break;
   case LITX:
    // If we are producing byte output, we simply return the input.
@@ -569,13 +568,11 @@ static F1(jtthorn1main){PROLOG(0001);A z;
    // on any conversion back to U8.
    // If there are surrogates, the value returned here might be C4T
    // If C2T output not allowed, convert to ragged array of bytes
-// obsolete    z=jt->thornuni?rank1ex(w,0L,1L,RoutineB) : rank1ex(w,0L,1L,jttoutf8a);
    z=rank1ex(w,0L,MIN(AR(w),1L),jt->thornuni?RoutineB:jttoutf8a);
    break;
   case C4TX:
    // If C2T output is allowed, keep this as C4T, but add the padding NUL characters following CJK fullwidth.
    // If C2T output not allowed, just convert to UTF-8 bytes
-// obsolete    z= jt->thornuni?rank1ex(w,0L,1L,RoutineC) : rank1ex(w,0L,1L,jttoutf8a);
    z=rank1ex(w,0L,MIN(AR(w),1L),jt->thornuni?RoutineC:jttoutf8a);
    break;
   case BOXX:  z=thbox(w);                  break;
@@ -746,10 +743,8 @@ static A jtjprx(J jt,I ieol,I maxlen,I lb,I la,A w){A y,z;B ch;C e,eov[2],*v,x,*
  // h=# beginning lines to output.  If all the lines, including spacing, fit in the user's limit, accept them all; otherwise use the user's starting number
  h=lba<nq+(q?p:0)?lb:IMAX;
  // Loop for each line of output.  lc gives number of lines emitted so far, including ones called for by EOL inside character data
- // obsolete I remqi=1;  // 1+number of lines before we put out an intercell spacing.  Could start at q+1, which would simplify ENGAP.  Later.
  for(i=lc=0;i<nq;++i){
   // Emit leading EOLs according to number of boundary crossings - only when we cross a 2-cell boundary
-// obsolete   if(0==--remqi){remqi=q; ENGAP(i,r,s,EOLC(zv));}  // put out a gap every q lines
   ENGAP(i,r,s,EOLC(zv));  // put out a gap as required
   // If we have emitted all the beginning lines, and the suffix isn't big enough to hold all the lines,
   // emit ..., advance v and i to the suffix, and set h so we don't come here again.

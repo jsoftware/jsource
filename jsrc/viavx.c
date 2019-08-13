@@ -1676,8 +1676,6 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z=mtv;
  if(w==mark){mode |= IPHCALC; f=af; s=as; r=acr-1; f1=wcr-r;}  // if w is omitted (for prehashing), use info from a
  else{  // w is given.  See if we need to abort owing to shapes.
   mode |= IIOREPS&((((((I)1)<<IIDOT)|(((I)1)<<IICO)|(((I)1)<<IEPS))<<IIOREPSX)>>mode);  // remember if i./i:/e. (and not prehash)
-// obsolete   if(1==ar&&TYPESEQ(at,wt)&&(((1-wr)|SGNIFNOT(mode,IIOREPSX)|(-(acr^1))|(-(wr^wcr))|(an-1)|(wn-1)|(-((at|wt)&SPARSE)))>=0)&&
-// obsolete     ((wcr==0)||((D)an*(D)wn<COMPARESPERHASHWRITE*an+COMPARESPERHASHREAD*wn+OVERHEADHASHALLO+OVERHEADSHAPES))){
   // TUNE  From testing 8/2019 on SkylakeX, sequential search wins if an<=10 or wn<=7, or an+wn<=40
   if((((an-11)|(wn-8)|(an+wn-41))<0)&&((ar^1)+TYPESXOR(at,wt))==0&&(((1-wr)|SGNIFNOT(mode,IIOREPSX)|(-((acr^1)|(wr^wcr)|((at|wt)&SPARSE)))|(an-1)|(wn-1))>=0)){
    // Fast path for (vector i./i:/e. atom or short vector) - if not prehashing.  Do sequential search
@@ -1770,11 +1768,11 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z=mtv;
   case II0EPS: case II1EPS: case IJ0EPS: case IJ1EPS:
                 if(wr>MAX(ar,1))R sc(wr>r?ws[0]:1); GAT0(z,INT,1,0); break;
   // ([: I. e.) ([: +/ e.) ([: +./ e.) ([: *./ e.) come here only if e. produces rank 0 or 1.
-  case IIFBEPS: /* obsolete ASSERT(wr<=MAX(ar,1),EVNONCE); */GATV0(z,INT,c+1,1); break;  // +1 because we speculatively overwrite
+  case IIFBEPS: GATV0(z,INT,c+1,1); break;  // +1 because we speculatively overwrite
   case IANYEPS: case IALLEPS:
-                /* obsolete ASSERT(wr<=MAX(ar,1),EVNONCE); */GAT0(z,B01,1,0); break;
+                GAT0(z,B01,1,0); break;
   case ISUMEPS:
-                /* obsolete ASSERT(wr<=MAX(ar,1),EVNONCE); */GAT0(z,INT,1,0); break;
+                GAT0(z,INT,1,0); break;
  }
 
  // Create result for empty/inhomogeneous arguments
@@ -1809,7 +1807,6 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z=mtv;
  // m*number of results.  The cost of small-range hashing is at best 10 cycles per atom added to the table and 8 cycles per lookup.
  // (full hashing is considerably more expensive); also a fair amount of time for range-checking and table-clearing, and further testing here
  // Here we just use the empirical observations that worked for atoms  TUNE
-// obsolete  if(((((-(wc^1))&(-(wc^ac)))|SGNIFNOT(mode,IIOREPSX))>=0)&&((wcr<acr)||((D)m*(D)zn<(COMPARESPERHASHWRITE*m)+COMPARESPERHASHREAD*zn+OVERHEADHASHALLO))){  // wc==1 or ac, IOREPS, small enough operation
  if(((((-(wc^1))&(-(wc^ac)))|SGNIFNOT(mode,IIOREPSX))>=0)&&(((((I)m-11)|(zn-8)|((I)m+zn-41))<0))){  // wc==1 or ac, IOREPS, small enough operation   TUNE
     // this will not choose sequential search enough when the cells are large (comparisons then are cheap because of early exit)
   jtiosc(jt,mode,n,m,c,ac,wc,a,w,z); // simple sequential search without hashing

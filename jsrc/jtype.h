@@ -174,7 +174,6 @@ typedef I SI;
 #define UAV(x)          (     (UC*)(x)+AK(x) )  /* unsigned character      */
 #define UIAV(x)         ((UI*)((C*)(x)+AK(x)))  /* unsigned character      */
 #define UI4AV(x)        ((UI4*)((C*)(x)+AK(x)))  /* unsigned 32-bit int      */
-// obsolete #define LXAV(x)         ((LX*)((C*)(x)+AK(x)))  /* symbol index      */
 #define C4AV(x)         ((C4*)((C*)(x)+AK(x)))  /* literal4                */
 #define NAV(x)          ((NM*)((C*)(x)+AKXR(1)))  // name, which is always allocated as rank 1, for some reason
 #define IAV(x)          AV(x)                   /* integer                 */
@@ -396,11 +395,9 @@ typedef I SI;
 #define ASGNINPLACE(w)  (ACIPISOK(w) || AC(w)==1&&jt->assignsym&&jt->assignsym->val==w&&!(AFLAG(w)&AFRO)&&notonupperstack(w))  // OK to inplace ordinary operation
 // same, but s is an expression that is neg if it's OK to inplace
 #define ASGNINPLACESGN(s,w)  (((s)&AC(w))<0 || ((s)&(AC(w)-2))<0 &&jt->assignsym&&jt->assignsym->val==w&&!(AFLAG(w)&AFRO)&&notonupperstack(w))  // OK to inplace ordinary operation
-// obsolete #define ASGNINPLACENJA(w)  (ASGNINPLACE(w)||(AC(w)==2&&AFLAG(w)&AFNJA))   // OK to inplace, for ops that have special support for NJA blocks
 #define ASGNINPLACESGNNJA(s,w)  ( ((s)&AC(w))<0 || (((s)&(AC(w)-2))<0||(((s)&(AC(w)-3)&SGNIF(AFLAG(w),AFNJAX))<0))&&jt->assignsym&&jt->assignsym->val==w&&!(AFLAG(w)&AFRO)&&notonupperstack(w))  // OK to inplace ordinary operation
 // define virtreqd and set it to 0 to start   scaf no LIT B01 C2T etc
 // This is used in apip.  We must ALWAYS allow inplacing for NJA types, but for ordinary inplacing we don't bother if the number of atoms of w pushes a over a power-of-2 boundary
-// obsolete #define EXTENDINPLACENJA(w)  (ACIPISOK(a) || (AC(w)==1||(AC(w)==2&&AFLAG(w)&AFNJA))&&((jt->assignsym&&jt->assignsym->val==w&&!(AFLAG(w)&AFRO))||(!jt->assignsym&&(virtreqd=1,!(AFLAG(w)&(AFRO|AFVIRTUAL)))))&&notonupperstack(w))  // OK to inplace ordinary operation
 #define EXTENDINPLACENJA(a,w)  ( ((AC(a)&(((AN(a)+AN(w))^AN(a))-AN(a)))<0) || (AC(a)==1||(AC(a)==2&&AFLAG(a)&AFNJA))&&((jt->assignsym&&jt->assignsym->val==a&&!(AFLAG(a)&AFRO))||(!jt->assignsym&&(virtreqd=1,!(AFLAG(a)&(AFRO|AFVIRTUAL)))))&&notonupperstack(a))  // OK to inplace ordinary operation
 
 /* Values for AFLAG(x) field of type A                                     */
@@ -451,7 +448,7 @@ typedef struct {I i;US n,go,source;C type;C canend;} CW;
 #define DCPARSE  1      /* sentence for parser                                          */
 #define DCSCRIPT 2      /* script              -- line()                                */
 #define DCCALL   3      /* verb/adv/conj call  -- dbunquote()                           */
-#define DCJUNK   4      /* stack entry is obsolete                                      */
+#define DCJUNK   4      /* stack entry is stale                                      */
 
 typedef struct DS{      /* 1 2 3                                                        */
  struct DS*dclnk;       /* x x x  link to next stack entry                              */
@@ -651,7 +648,7 @@ typedef struct{
 
 
 
-typedef struct {AF valencefns[2];A fgh[3];union { D lD; void *lvp[2]; I lI; I4 lI4[4]; I lclr[2];} localuse;I4 flag;/* obsolete UI4 fdep;*/ UI4 flag2; RANK2T lrr; RANKT mr; C id; C lc;} V;  // two cachelines exactly
+typedef struct {AF valencefns[2];A fgh[3];union { D lD; void *lvp[2]; I lI; I4 lI4[4]; I lclr[2];} localuse;I4 flag;UI4 flag2; RANK2T lrr; RANKT mr; C id; C lc;} V;  // two cachelines exactly
 // the localuse fields is not freed or counted for space, as the f/g/h fields are.  It is for local optimizations only.  We put if first so that the rest of
 // the block, which is used more, is in a single cacheline.  Local uses are:
 // for ATOMIC2 ops, pointer to the adocv block

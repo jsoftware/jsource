@@ -184,32 +184,6 @@ A jtifb(J jt,I n,B* RESTRICT b){A z;I p,* RESTRICT zv;
  p=bsum(n,b); 
  if(p==n)R IX(n);
  GATV0(z,INT,p,1); zv=AV(z);
-#if 0
-#if !SY_64 && SY_WIN32
- {I i,q=n&-SZI,*u=(I*)b;
-  for(i=0;i<q;i+=SZI)switch(*u++){
-    case B0001:                                *zv++=i+3; break;
-    case B0010:                     *zv++=i+2;            break;
-    case B0011:                     *zv++=i+2; *zv++=i+3; break;
-    case B0100:          *zv++=i+1;                       break;
-    case B0101:          *zv++=i+1;            *zv++=i+3; break;
-    case B0110:          *zv++=i+1; *zv++=i+2;            break;
-    case B0111:          *zv++=i+1; *zv++=i+2; *zv++=i+3; break;
-    case B1000: *zv++=i;                                  break;
-    case B1001: *zv++=i;                       *zv++=i+3; break;
-    case B1010: *zv++=i;            *zv++=i+2;            break;
-    case B1011: *zv++=i;            *zv++=i+2; *zv++=i+3; break;
-    case B1100: *zv++=i; *zv++=i+1;                       break;
-    case B1101: *zv++=i; *zv++=i+1;            *zv++=i+3; break;
-    case B1110: *zv++=i; *zv++=i+1; *zv++=i+2;            break;
-    case B1111: *zv++=i; *zv++=i+1; *zv++=i+2; *zv++=i+3;
-  }
-  b=(B*)u; DO(n&(SZI-1), if(*b++)*zv++=q+i;);
- }
-#else
- DO(n, if(b[i])*zv++=i;);
-#endif
-#else
  n+=(n&(SZI-1))?SZI:0; I zbase=0; UI *wvv=(UI*)b; UI bits=*wvv++;  // prime the pipeline for top of loop
  while(n>0){    // where we load bits SZI at a time
   // skip empty words, to get best speed on near-zero a.  This exits with the first unskipped word in bits
@@ -224,7 +198,6 @@ A jtifb(J jt,I n,B* RESTRICT b){A z;I p,* RESTRICT zv;
   zbase+=BW;  // advance base to next batch of 64
   n-=BW;  // decr count left
  }
-#endif
  R z;
 }    /* integer vector from boolean mask */
 

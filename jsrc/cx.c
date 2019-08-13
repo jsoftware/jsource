@@ -127,7 +127,6 @@ static DF2(jtxdefn){PROLOG(0048);
  TD*tdv=0;  // pointer to base of try. stack
  I tdi=0;  // index of the next open slot in the try. stack
 
-// obsolete  A savloc=jt->locsyms;  // stack area for local symbol table pointer; must set before we set new symbol table
  UC savdebug; // preserve debug state over calls - this remembers starting debug state.  Needed only if there is a try. stack
 
  I isdyad=(I )(a!=0)&(I )(w!=0);   // avoid branches, and relieve pressure on a and w
@@ -146,8 +145,7 @@ static DF2(jtxdefn){PROLOG(0048);
    // This code duplicated below
    locsym=hv[3];  // fetch pointer to preallocated symbol table
    ASSERT(locsym,EVDOMAIN);  // if the valence is not defined, give valence error
-   if(!(AR(locsym)&LSYMINUSE)){/* obsolete jt->locsyms=locsym; */AR(locsym)|=LSYMINUSE;}
-// obsolete    else{RZ(jt->locsyms=clonelocalsyms(locsym));}
+   if(!(AR(locsym)&LSYMINUSE)){AR(locsym)|=LSYMINUSE;}
    else{RZ(locsym=clonelocalsyms(locsym));}
   } else {  // something special required
    // If this is a modifier-verb referring to x or y, set u, v to the modifier operands, and sv to the saved text.  The flags don't change
@@ -156,8 +154,7 @@ static DF2(jtxdefn){PROLOG(0048);
    LINE(sv);
    locsym=hv[3];  // fetch pointer to preallocated symbol table
    ASSERT(locsym,EVDOMAIN);  // if the valence is not defined, give valence error
-   if(!(AR(locsym)&LSYMINUSE)){/* obsolete jt->locsyms=locsym; */AR(locsym)|=LSYMINUSE;}
-// obsolete    else{RZ(jt->locsyms=clonelocalsyms(locsym));}
+   if(!(AR(locsym)&LSYMINUSE)){AR(locsym)|=LSYMINUSE;}
    else{RZ(locsym=clonelocalsyms(locsym));}
 
    // lk: 0=normal, 1=this definition is locked, -1=debug mode
@@ -183,7 +180,7 @@ static DF2(jtxdefn){PROLOG(0048);
    }
 
    // If the verb contains try., allocate a try-stack area for it.  Remember debug state coming in so we can restore on exit
-   if(sv->flag&VTRY1+VTRY2){A td; GAT0(td,INT,NTD*WTD,1); /* obsolete AS(td)[0]=NTD; AS(td)[1]=WTD; */ tdv=(TD*)AV(td); savdebug = jt->uflags.us.cx.cx_c.db;}
+   if(sv->flag&VTRY1+VTRY2){A td; GAT0(td,INT,NTD*WTD,1); tdv=(TD*)AV(td); savdebug = jt->uflags.us.cx.cx_c.db;}
   }
   // End of unusual processing
   AM(locsym)=(I)jt->locsyms; jt->locsyms=locsym;   // Chain the calling symbol table to this one
@@ -206,8 +203,6 @@ static DF2(jtxdefn){PROLOG(0048);
   if((I)u|(I)v){
    if(u){(IS(unam,u)); if(NOUN&AT(u))IS(mnam,u); }  // assign u, and m if u is a noun
    if(v){(IS(vnam,v)); if(NOUN&AT(v))IS(nnam,v); }  // bug errors here must be detected
-// obsolete   if(u){IS(unam,u); if(NOUN&AT(u))IS(mnam,u);}
-// obsolete   if(v){IS(vnam,v); if(NOUN&AT(v))IS(nnam,v);}
   }
  }
  // assignsym etc should never be set here; if it is, there must have been a pun-in-ASGSAFE that caused us to mark a
@@ -221,11 +216,6 @@ static DF2(jtxdefn){PROLOG(0048);
  // If the user turns on debugging in the middle of a definition, we will raise old when he does
  A *old=jt->tnextpushp;
 
-// obsolete  // Push parser-related information.  Since we call the parse repeatedly from this level we move pushes to here rather than doing them for each parse
-// obsolete  // When we are not in debug mode, all we have to stack is the queue and length information from the stack frame.  Since we will
-// obsolete  // be reusing the stack frame, we just save the input once
-// obsolete  A *savqueue = jt->parserqueue; I4 savqueuelen = jt->parserqueuelen;
-// obsolete 
  // loop over each sentence
  A cd=0;  // pointer to block holding the for./select. stack, if any
  CDATA*cv;  // pointer to the current entry in the for./select. stack
@@ -277,7 +267,7 @@ static DF2(jtxdefn){PROLOG(0048);
     tryinit(tdv+tdi,i,cw);
     // turn off debugging UNLESS there is a catchd; then turn on only if user set debug mode
     // if debugging is already off, it stays off
-    if(jt->uflags.us.cx.cx_c.db)jt->uflags.us.cx.cx_c.db=thisframe&&(UC)(tdv+tdi)->d?jt->dbuser:/* obsolete DBTRY*/0;
+    if(jt->uflags.us.cx.cx_c.db)jt->uflags.us.cx.cx_c.db=thisframe&&(UC)(tdv+tdi)->d?jt->dbuser:0;
     ++tdi; ++i;
     break;
    case CCATCH: case CCATCHD: case CCATCHT:
@@ -291,10 +281,9 @@ static DF2(jtxdefn){PROLOG(0048);
     // run the sentence
     tpop(old); parseline(z);
     // if there is no error, or ?? debug mode, step to next line
-// obsolete     if(z||!jt->jerr){
     if(z){
      bi=i,++i;
-    }else if(thisframe&&jt->uflags.us.cx.cx_c.db&(DB1/* obsolete |DBERRCAP*/)){  // if debug mode, we assume we are ready to execute on
+    }else if(thisframe&&jt->uflags.us.cx.cx_c.db&(DB1)){  // if debug mode, we assume we are ready to execute on
      z=mtm,bi=i,i=debugnewi(i+1,thisframe,self);   // Remember the line w/error; fetch continuation line if any. it is OK to have jerr set if we are in debug mode, but z must be a harmless value to avoid error protecting it
     // if the error is THROW, and there is a catcht. block, go there, otherwise pass the THROW up the line
     }else if(EVTHROW==jt->jerr){
@@ -318,7 +307,7 @@ static DF2(jtxdefn){PROLOG(0048);
     // Check for assert.  Since this is only for T-blocks we tolerate the test (rather than duplicating code)
     if(ci->type==CASSERT&&jt->assert&&t&&!(NOUN&AT(t)&&all1(eq(num[1],t))))t=pee(line,ci,EVASSERT,lk,callframe);  // if assert., signal post-execution error if result not all 1s.  May go into debug; sets to result after debug
     if(t)ti=i,++i;  // if no error, continue on
-    else if(thisframe&&DB1&jt->uflags.us.cx.cx_c.db/* obsolete ||DBERRCAP==jt->uflags.us.cx.cx_c.db*/)ti=i,i=debugnewi(i+1,thisframe,self);  // if coming out of debug with error: go to new line (there had better be one)
+    else if(thisframe&&DB1&jt->uflags.us.cx.cx_c.db)ti=i,i=debugnewi(i+1,thisframe,self);  // if coming out of debug with error: go to new line (there had better be one)
     else if(EVTHROW==jt->jerr){if(tdi&&(tdv+tdi-1)->t){i=(tdv+tdi-1)->t+1; RESETERR;}else BASSERT(0,EVTHROW);}  // if throw., and there is a catch., do so
     else{i=ci->go; if(i<SMAX){RESETERR; z=mtm; if(tdi){if(!--tdi)jt->uflags.us.cx.cx_c.db=thisframe&&savdebug;}}else z=0;}  // if we take error exit, we might not have protected z, which is not needed anyway; so clear it to prevent invalid use
       // if we are not taking the error exit, we still need to set z to a safe value since we might not have protected it.  This is B1 try. if. error do. end. catch. return. end.
@@ -464,7 +453,6 @@ static DF2(jtxdefn){PROLOG(0048);
   // Since we initialized z to i. 0 0, there's nothing more to do
  }
 
-// obsolete  jt->parserqueue = savqueue; jt->parserqueuelen = savqueuelen;  // restore error info for the caller
  if(thisframe){debz();}   // pair with the deba if we did one
  A prevlocsyms=(A)AM(jt->locsyms);  // get symbol table to return to, before we free the old one
  if(!cd){
@@ -508,10 +496,8 @@ DF2(jtxop2){A ff,x;
  RZ(ff=fdef(0,CCOLON,VERB, xn1,jtxdefn, a,self,w,  (VXOP|VFIX)^FAV(self)->flag, RMAX,RMAX,RMAX));
  R (x=xopcall(0))?namerefop(x,ff):ff;
 }
-static DF1(xop1){/* obsolete A ff,x; */
+static DF1(xop1){
  R xop2(w,0,self);
-// obsolete  RZ(ff=fdef(0,CCOLON,VERB, xn1,jtxdefn, w,self,0L, VXOP|FAV(self)->flag, RMAX,RMAX,RMAX));
-// obsolete  R (x=xopcall(0))?namerefop(x,ff):ff;
 }
 
 
@@ -654,7 +640,6 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
  RZ(probeis(ynam,pfst));if(!(!dyad&&(type>=3||(flags&VXOPR)))){RZ(probeis(xnam,pfst));}
  if(type<3){RZ(probeis(unam,pfst)); RZ(probeis(mnam,pfst));}
  if(type==2){RZ(probeis(vnam,pfst)); RZ(probeis(nnam,pfst));}
-// obsolete  if(type==2){RZ(probeis(vnam,pfst));RZ(probeis(nnam,pfst));}}
  // Go through the definition, looking for local assignment.  If the previous token is a simplename, add it
  // to the table.  If it is a literal constant, break it into words, convert each to a name, and process.
  ln=AN(l); lv=AAV(l);  // Get # words, address of first box
@@ -718,7 +703,6 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
 
  asgct = asgct + (asgct>>1); // leave 33% empty space, since we will have resolved most names here
  RZ(actst=stcreate(2,asgct,0L,0L));  // Allocate the symbol table we will use
-// obsolete  AM(actst)=(I)((SYMHASH(NAV(xnam)->hash,AN(actst)-SYMLINFOSIZE)<<16)+SYMHASH(NAV(ynam)->hash,AN(actst)-SYMLINFOSIZE));  // get the yx bucket indexes for a table of this size, save in AM
  *(UI4*)LXAV0(actst)=(UI4)((SYMHASH(NAV(xnam)->hash,AN(actst)-SYMLINFOSIZE)<<16)+SYMHASH(NAV(ynam)->hash,AN(actst)-SYMLINFOSIZE));  // get the yx bucket indexes for a table of this size, save in first hashchain
 
  // Transfer the symbols from the pro-forma table to the result table, hashing using the table size
@@ -767,7 +751,6 @@ A jtclonelocalsyms(J jt, A a){A z;I j;I an=AN(a); LX *av=LXAV0(a),*zv;
    RZ(l=symnew(zhbase,ztx)); 
    A nm=(jt->sympv)[ahx].name;
    l->name=nm; ras(l->name);  // point symbol table to the name block, and increment its use count accordingly
-// obsolete   l->name=(jt->sympv)[ahx].name; ras(l->name);  // point symbol table to the name block, and increment its use count accordingly
    l->flag=(jt->sympv)[ahx].flag|LPERMANENT;  // mark entry as PERMANENT, in case we try to delete the name (as in for_xyz. or 4!:55)
    ztx = ztx?(jt->sympv)[ztx].next : *zhbase;  // ztx=index to value we just added.  We avoid address calculation because of the divide.  If we added
       // at head, the added block is the new head; otherwise it's pointed to by previous tail

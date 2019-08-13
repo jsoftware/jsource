@@ -217,8 +217,7 @@ F2(jtatop){A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=0,m=-1
  // special cases of v
  if(d==CEBAR||d==CEPS||(b=FIT0(CEPS,wv))){
   f=av->fgh[0]; g=av->fgh[1]; e=ID(f); if(b)d=ID(wv->fgh[0]);
-  /* obsolete if(c==CICAP)m=7;
-  else */if(c==CSLASH)m=e==CPLUS?4:e==CPLUSDOT?5:e==CSTARDOT?6:-1;
+  if(c==CSLASH)m=e==CPLUS?4:e==CPLUSDOT?5:e==CSTARDOT?6:-1;
   else if(c==CAMP&&(g==num[0]||g==num[1])){j=*BAV(g); m=e==CIOTA?j:e==CICO?2+j:-1;}
   switch(0<=m?d:-1){
    case CEBAR: f2=b?atcomp0:atcomp; flag+=6+8*m; flag&=~VJTFLGOK2; break;
@@ -258,7 +257,7 @@ F2(jtatco){A f,g;AF f1=on1cell,f2=jtupon2cell;B b=0;C c,d,e;I flag, flag2=0,j,m=
   case CFLOOR:  f1=jtonf1; f2=jtuponf2; flag=VFLR; flag&=~(VJTFLGOK1|VJTFLGOK2); break;
   case CQUERY:  if(d==CDOLLAR||d==CPOUND){f2=jtrollk; flag&=~VJTFLGOK2;}  break;
   case CQRYDOT: if(d==CDOLLAR||d==CPOUND){f2=jtrollkx; flag&=~VJTFLGOK2;} break;
-  case CICAP:   /* obsolete m=7; */if(d==CNE){f1=jtnubind; flag&=~VJTFLGOK1;} else if(FIT0(CNE,wv)){f1=jtnubind0; flag&=~VJTFLGOK1;} break;
+  case CICAP:   if(d==CNE){f1=jtnubind; flag&=~VJTFLGOK1;} else if(FIT0(CNE,wv)){f1=jtnubind0; flag&=~VJTFLGOK1;} break;
   case CAMP:    if(g==num[0]||g==num[1]){j=*BAV(g); m=e==CIOTA?j:e==CICO?2+j:-1;} break;
   case CSLASH:  
    if(vaid(f)&&vaid(w)){f2=jtfslashatg; flag&=~VJTFLGOK2;}
@@ -268,7 +267,6 @@ F2(jtatco){A f,g;AF f1=on1cell,f2=jtupon2cell;B b=0;C c,d,e;I flag, flag2=0,j,m=
   case CSTAR:   if(d==CPOUND)f1=jtisitems; break;
 
   case CSEMICO:
-// obsolete   if(d==CLBRACE){f2=jtrazefrom; flag&=~VJTFLGOK2;}else   // detect ;@:{
    if(d==CCUT){
     j=*AV(wv->fgh[1]);   // cut type
     if(CBOX==ID(wv->fgh[0])&&!j){f2=jtrazecut0; flag&=~VJTFLGOK2;}  // detect ;@:(<;.0), used for substring extraction
@@ -345,8 +343,6 @@ F2(jtampco){AF f1=on1cell;C c,d;I flag,flag2=0;V*wv;
 // We pass the WILLOPEN flags through
 static DF1(withl){F1PREFIP;DECLFG; A z; I r=(RANKT)jt->ranks; IRSIP2(fs,w,gs,RMAX,(RANKT)jt->ranks,g2,z); RETF(z);}
 static DF1(withr){F1PREFIP;DECLFG; jtinplace=(J)(intptr_t)((I)jtinplace+((I)jtinplace&JTINPLACEW)); A z; I r=(RANKT)jt->ranks; IRSIP2(w,gs,fs,(RANKT)jt->ranks,RMAX,f2,z); RETF(z);}
-// obsolete static DF1(withl){F1PREFIP;DECLFG; I r=(RANKT)jt->ranks; R r!=(RANKT)~0?jtirs2(jtinplace,fs,w,gs,RMAX,(RANKT)r,g2):(RESETRANK,(g2)(jtinplace,fs,w,gs));}
-// obsolete static DF1(withr){F1PREFIP;DECLFG; jtinplace=(J)(intptr_t)((I)jtinplace+((I)jtinplace&JTINPLACEW)); I r=(RANKT)jt->ranks; R r!=(RANKT)~0?jtirs2(jtinplace,w,gs,fs,r,RMAX,f2):(RESETRANK,(f2)(jtinplace,w,gs,fs));}
 
 // Here for m&i. and m&i:, computing a prehashed table from a
 // v->fgh[2] is the info/hash/bytemask result from calculating the prehash

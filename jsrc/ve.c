@@ -359,7 +359,7 @@ AHDR2(remII,I,I,I){I u,v;
     DQC(n, I yv=*y;
       // Multiply by recip to get quotient, which is up to 1/2 LSB low; get remainder; adjust remainder if too high; store
       // 2's-complement adjust for negative y; to make the result still always on the low side, subtract an extra 1.
-      DPUMUL(uarecip,(UI)yv,xx,himul); himul-=(uarecip+1)&(yv>>(BW-1)); I rem=yv-himul*ua; /* obsolete rem+=(rem>>(BW-1))&ua;*/ rem=(rem-(I)ua)>=0?rem-(I)ua:rem; *z++=rem;
+      DPUMUL(uarecip,(UI)yv,xx,himul); himul-=(uarecip+1)&(yv>>(BW-1)); I rem=yv-himul*ua; rem=(rem-(I)ua)>=0?rem-(I)ua:rem; *z++=rem;
      y++;)
    }
    // if x was negative, move the remainder into the x+1 to 0 range
@@ -547,13 +547,10 @@ A jtintmod2(J jt,A w,I mod){A z;B *v;I n,q,r,*u;UI m=0;  // init m for warning
  RZ(w);F1PREFIP;
  if(mod>2)R jtatomic2(jtinplace,sc(mod-1),w,ds(CBW0001));  // INT result, by AND
  // the rest is boolean result
- n=AN(w); v=BAV(w)/* obsolete +!liln*(SZI-1)*/;  // littleendian only
+ n=AN(w); v=BAV(w);  // littleendian only
  GATV(z,B01,n,AR(w),AS(w)); RZ(n);  // loops below can't handle empty
  u=AV(z); q=(n-1)>>(LGSZI/C_LE); r=((n-1)&(SZI-1))+1;   // there is always a remnant
  I mask=mod==2?VALIDBOOLEAN:0;  // if mod is 1, all results will be 0; otherwise boolean result
-// obsolete b=(B*)&mask; DO(SZI, b[i]=1;);
-// obsolete  b=(B*)&m; DO(q, DO(SZI, b[i]=*v; v+=SZI;); *u++=mask&m;)
-// obsolete  b=(B*)u; wi=AV(w)+(q<<LGSZI); DQ(r, *b++=1&*wi++?1:0;);
  DQ(q, DQ(SZI, m=(m>>8)+((UI)*v<<((SZI-1)*8)); v+=SZI;); *u++=m&mask;)
  DQ(r, m=(m>>8)+((UI)*v<<((SZI-1)*8)); v+=SZI;);  // 1-8 bytes
  STOREBYTES(v,m&mask,8-r);

@@ -88,7 +88,6 @@ F1(jtcasev){A b,*u,*v,w1,x,y,z;B*bv,p,q;I*aa,c,*iv,j,m,n,r,*s,t;
  // fast (no-error) case; and of course if the use-count is only 1.  But if the assignment is local, we also have to make
  // sure abc is locally defined
  if(p=q&&0<=c&&ACUC1>=AC(u[c])) {  // passes quick check
-// obsolete    p= !jt->local || *CAV(AAV(v[m+2])[1])!=CASGN || probe(NAV(AAV(v[m+2])[0])->m,NAV(AAV(v[m+2])[0])->s,NAV(AAV(v[m+2])[0])->hash, jt->local);  // OK if not in explicit, or not local assignment, or name defined
    p= (AN(jt->locsyms)==1) || *CAV(AAV(v[m+2])[1])!=CASGN || probe(NAV(AAV(v[m+2])[0])->m,NAV(AAV(v[m+2])[0])->s,NAV(AAV(v[m+2])[0])->hash, jt->locsyms);  // OK if not in explicit, or not local assignment, or name defined
     // Get the pointer to the parsed sentence; go to its data; take pointer for word[1]; go to its (character) data; take first character
     // then look up the symbol entry for word[0]
@@ -157,7 +156,6 @@ static A jtmerge2(J jt,A a,A w,A ind,I cellframelen){F2PREFIP;A z;I t;
  I *iv=AV(ind);  // start of the cell-index array
  if(UCISRECUR(z)){
   cellsize<<=(t>>RATX);  // RAT has 2 boxes per atom, all others have 1 and are lower
-// obsolete   {A * RESTRICT zv=AAV(z); A *RESTRICT av=(A*)av0; DO(AN(ind), I ix0=iv[i]*cellsize; DQ(cellsize, INSTALLBOXRECUR(zv,ix0,*av); ++ix0; if((++av)==(A*)avn)av=(A*)av0;))}
   {A * RESTRICT zv=AAV(z); A *RESTRICT av=(A*)av0; DO(AN(ind), I ix0=iv[i]*cellsize; DQ(cellsize, INSTALLBOXRECUR(zv,ix0,*av); ++ix0; ++av; av=(av==(A*)avn)?(A*)av0:av;))}
  }else{
   if(cellsize<=AN(a)){
@@ -172,7 +170,6 @@ static A jtmerge2(J jt,A a,A w,A ind,I cellframelen){F2PREFIP;A z;I t;
     // handle small integral number of words with a local loop
     if(cellsize<MEMCPYTUNELOOP){  // length is not too big (0 is OK).  We must not copy outside cells boundaries here
      // move full words followed by the remnant.  Must not overwrite the area, since we are scatter-writing
-// obsolete      C* RESTRICT zv=CAV(z); C *RESTRICT av=(C*)av0; DO(AN(ind), MCIS((I*)(zv+(iv[i]*cellsize)),(I*)av,cellsize>>LGSZI); if((av+=cellsize)==avn)av=av0;);  // use local copy
      C* RESTRICT zv=CAV(z); I *RESTRICT av=(I*)av0; DO(AN(ind), I * RESTRICT d=(I*)(zv+(iv[i]*cellsize)); I n=cellsize; while((n-=SZI)>=0){*d++=*av++;} if(n&(SZI-1)){STOREBYTES(d,*av,-n); av=(I*)((C*)av+SZI+n);} av=av==(I*)avn?(I*)av0:av;);  // use local copy
       // we test for the STOREBYTES because this is assumed repeated and might well have even length
     }else{
@@ -215,7 +212,6 @@ A jtcelloffset(J jt,AD * RESTRICT w,AD * RESTRICT ind){A z;
   if(naxes<3){
    // rank 2
    I ln0=AS(w)[0], ln1=AS(w)[1];
-// obsolete    DQ(nzcells, I in=iv[0]; if(in<0)in+=ln0; I r=in*ln1; ASSERT((UI)in<(UI)ln0,EVINDEX)
    DQ(nzcells, I in=iv[0]; if((UI)in>=(UI)ln0){in+=ln0; ASSERT((UI)in<(UI)ln0,EVINDEX);} I r=in*ln1;
                     in=iv[1]; if((UI)in>=(UI)ln1){in+=ln1; ASSERT((UI)in<(UI)ln1,EVINDEX);} r+=in;
                     *zv++=r; iv+=2;)
@@ -256,13 +252,9 @@ static A jtjstd(J jt,A w,A ind,I *cellframelen){A j=0,k,*v,x;B b;I d,i,n,r,*u,wr
   // Homogeneous boxes.  j has them in a single table.  turn each row into an index
   b=0; ind=j;  // use the code for numeric array
   // later this can use the code for table m
-// obsolete   k=AAV0(ind); n=AN(k);  // k->contents of box 0, n=#atoms there.  Shouldn't we use AS(j)[1]?
-// obsolete   fauxblockINT(xfaux,4,1); fauxINT(x,xfaux,n,1) d=1; DQ(n, IAV1(x)[i]=d; d*=AS(w)[i];);  // create vector x of sizes of each k-cell, but only within the axes used by the table 
-// obsolete   AS(x)[0]=n; RZ(j=pdt(j,x)); *cellframelen=n; R j;  // shorten cell-size list to the ones we need; convert each index-list to an offset; remember the size of the cells
  }
  if(!b){
   // Numeric m.  Each 1-cell is a list of indexes (if m is a list, each atom is a cell index)
-// obsolete   ASSERT(AR(ind)<2,EVNONCE);
   RZ(j=celloffset(w,ind));  // convert list/table to list of indexes, possibly in place
   n=AR(ind)<2?1:AS(ind)[AR(ind)-1];  // n=#axes used: 1, if m is a list; otherwise {:$m
  }else{  // a single box.
@@ -272,7 +264,7 @@ static A jtjstd(J jt,A w,A ind,I *cellframelen){A j=0,k,*v,x;B b;I d,i,n,r,*u,wr
   v=AAV(ind);   // now ind is a atom/list of boxes, one per axis
   ASSERT(1>=r,EVINDEX);  // not a table
   ASSERT(n<=wr,EVINDEX);  // not too many axes
-  /* obsolete d=n; */ DQ(n, if(!equ(ace,v[i]))break; --n;); /* obsolete if(n)++d; n=d; */  // discard trailing (boxed) empty axes
+  DQ(n, if(!equ(ace,v[i]))break; --n;);  // discard trailing (boxed) empty axes
   j=zeroionei[0];  // init list to a single 0 offset
   for(i=0;i<n;++i){  // for each axis, grow the cartesian product of the specified offsets
    x=v[i]; d=ws[i];

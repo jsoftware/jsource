@@ -160,7 +160,6 @@ do{
       // actually have to touch them.  This is a transfer of ownership, and would fail if the new block is not inplaceable: for example, if the block is in a name, with
       // no frees on the tstack, it could have usecount of 1.  Transferring ownership would then leave the block in the name without an owner, and when zz is deleted the
       // name would be corrupted
-// obsolete      if(ACIPISOK(z)&&AFLAG(z)&RECURSIBLE){
       if((AC(z)&(-(AFLAG(z)&RECURSIBLE)))<0){  // if z has AC <0 (inplaceable) and is recursive
        AFLAG(z)&=~RECURSIBLE;  // mark as nonrecursive, transferring ownership to the new block
        if(zzcelllen<MEMCPYTUNELOOP){I * RESTRICT d=(I*)(CAV(zz)+zzcellp); I * RESTRICT s=IAV(z); I n=zzcelllen; while((n-=SZI)>=0){*d++=*s++;} if(n&(SZI-1))STOREBYTES(d,*s,-n);}else{MC(CAV(zz)+zzcellp,AV(z),zzcelllen);}

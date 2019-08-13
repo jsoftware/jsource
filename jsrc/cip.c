@@ -193,8 +193,6 @@ static void cachedmmult (J jt,D* av,D* wv,D* zv,I m,I n,I p,I cmpx){D c[(CACHEHE
      // We have to use masked load at the edges of the array, to make sure we don't fetch from undefined memory.  Fill anything not loaded with 0
      if(a3rem>3){z00 = _mm256_loadu_pd(z3base);if(a2rem>1)z01 = _mm256_loadu_pd(z3base+n); else z01=z21;   // In the main area, do normal (unaligned) loads
      }else{z01 = z00 = z20;
-// obsolete            z00 = _mm256_maskload_pd(z3base,_mm256_set_epi64x(valmask[a3rem],valmask[a3rem+1],valmask[a3rem+2],valmask[a3rem+3]));
-// obsolete            I vx= (a2rem>1)?a3rem:0; z01 = _mm256_maskload_pd(z3base+n,_mm256_set_epi64x(valmask[vx],valmask[vx+1],valmask[vx+2],valmask[vx+3]));
            z00 = _mm256_maskload_pd(z3base,_mm256_loadu_si256((__m256i*)(jt->validitymask+4-a3rem)));
            I vx= (a2rem>1)?a3rem:0; z01 = _mm256_maskload_pd(z3base+n,_mm256_loadu_si256((__m256i*)(jt->validitymask+4-vx)));
      }
@@ -273,8 +271,6 @@ static void cachedmmult (J jt,D* av,D* wv,D* zv,I m,I n,I p,I cmpx){D c[(CACHEHE
 
      // Store accumulator into z.  Don't store outside the array
      if(a3rem>3){_mm256_storeu_pd(z3base,z00);if(a2rem>1)_mm256_storeu_pd(z3base+n,z01);
-// obsolete      }else{_mm256_maskstore_pd(z3base,_mm256_set_epi64x(valmask[a3rem],valmask[a3rem+1],valmask[a3rem+2],valmask[a3rem+3]),z00);
-// obsolete            if(a2rem>1)_mm256_maskstore_pd(z3base+n,_mm256_set_epi64x(valmask[a3rem],valmask[a3rem+1],valmask[a3rem+2],valmask[a3rem+3]),z01);
      }else{_mm256_maskstore_pd(z3base,_mm256_loadu_si256((__m256i*)(jt->validitymask+4-a3rem)),z00);
            if(a2rem>1)_mm256_maskstore_pd(z3base+n,_mm256_loadu_si256((__m256i*)(jt->validitymask+4-a3rem)),z01);
      }
@@ -399,7 +395,7 @@ F2(jtpdt){PROLOG(0038);A z;I ar,at,i,m,n,p,p1,t,wr,wt;
    // one argument (usually w) has only one item, a list that is reused.  So, we check for that case; if found we go through faster code that just
    // performs vector inner products, accumulating in registers.  And we have multiple versions of that: one when the totals can't get close to
    // overflow, and other belt-and-suspenders variants for arbitrary inputs
-   if(n==1){DPMULDDECLS I tot;I* RESTRICT zv, * RESTRICT av;  // obsolete D * RESTRICT zvd;
+   if(n==1){DPMULDDECLS I tot;I* RESTRICT zv, * RESTRICT av;
     // vector products
     // The fast loop will be used if each multiplicand, and each product, fits in 32 bits
     I er=0;  // will be set if overflow detected
@@ -425,8 +421,6 @@ oflo1:
 oflo2:
     // Result does not fit in INT.  Do the computation as float, with float result
     if(m)z=jtsumattymesprods(jt,INT,w,a,p,1,1,1,m,0,z);  // use +/@:*"1 .  Exchange w and a because a is the repeated arg in jtsumattymesprods.  If error, clear z (should not happen here)
-// obsolete     zvd=DAV(z); av=AV(a);
-// obsolete     DQ(m, D tot=0; wv=AV(w); DQ(p, tot+=(D)*av++*(D)*wv++;) *zvd++=tot;)
    }else{
      // full matrix products
      I probsize = m*n*(IL)p;  // This is proportional to the number of multiply-adds.  We use it to select the implementation
@@ -489,14 +483,7 @@ oflo2:
    // As for INT, handle the cases where n=1 separately, because they are used internally & don't require as much setup as matrix multiply
    NAN0;
    if(n==1){
-#if 0
-    D* RESTRICT zv, * RESTRICT av, * RESTRICT wv;
-    zv=DAV(z); av=DAV(a);
-    // Floating add has latency of 4.  We can't address operands and do the arithmetic in less than 2 cycles, so 2 totals are enough
-    DQ(m, D tot0=0; D tot1=0; wv=DAV(w); if(p&1)tot1=*av++**wv++; DQ(p>>1, tot0+=*av++**wv++; tot1+=*av++**wv++;) *zv++=tot0+tot1;)
-#else
     if(m)z=jtsumattymesprods(jt,FL,w,a,p,1,1,1,m,0,z);  // use +/@:*"1 .  Exchange w and a because a is the repeated arg in jtsumattymesprods.  If error, clear z
-#endif
     smallprob=0;  // Don't compute it again
    }else {
      I probsize = (m-1)*n*(IL)p;  // This is proportional to the number of multiply-adds.  We use it to select the implementation.  If m==1 we are doing dot-products; no gain from fancy code then

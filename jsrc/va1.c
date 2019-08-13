@@ -33,9 +33,7 @@ static AMON(ceilZ,  Z,Z, *z=zceil(*x);)
 
 static AMON(cjugZ,  Z,Z, *z=zconjug(*x);)
 
-// obsolete static AMON(sgnI,   I,I, *z=SGN(*x);)
 static AMON(sgnI,   I,I, I xx=*x; *z=(xx>>(BW-1))|(((UI)-xx)>>(BW-1));)
-// obsolete static AMON(sgnD,   I,D, *z=(1.0-jt->cct)>ABS(*x)?0:SGN(*x);)
 static AMON(sgnD,   I,D, *z=((1.0-jt->cct)<=*x) - (-(1.0-jt->cct)>=*x);)
 static AMON(sgnZ,   Z,Z, if((1.0-jt->cct)>zmag(*x))*z=zeroZ; else *z=ztrend(*x);)
 
@@ -67,7 +65,6 @@ AHDR1(absD,D,D){
 }
 
 #else
-// obsolete static AMON(sqrtD,  D,D, ASSERTW(0<=*x,EWIMAG); *z=sqrt(   *x);)
 static AMON(sqrtD,  D,D, if(*x>=0)*z=sqrt(*x);else{*z=-sqrt(-*x); jt->jerr=EWIMAG;})  // if input is negative, leave sqrt as negative
 #if BW==64
 static AMON(absD,   I,I, *z= *x&0x7fffffffffffffff;)
@@ -87,12 +84,10 @@ static AMON(logI,   D,I, ASSERTW(0<=*x,EWIMAG); *z=log((D)*x);)
 static AMON(logD,   D,D, ASSERTW(0<=*x,EWIMAG); *z=log(   *x);)
 static AMON(logZ,   Z,Z, *z=zlog(*x);)
 
-// obsolete static AMON(absI,   I,I, if(0<=*x)*z=*x; else{ASSERTW(IMIN<*x,EWOV); *z=-*x;})
 static AMONPS(absI,   I,I, I vtot=0; , I val=*x; val=(val^(val>>(BW-1)))-(val>>(BW-1)); vtot |= val; *z=val; , if(vtot<0)jt->jerr=EWOV;)
 static AMON(absZ,   D,Z, *z=zmag(*x);)
 
 static AHDR1(oneB,C,C){memset(z,C1,n);}
-// obsolete static AHDR1(idf ,C,C){}  /* dummy */
 
 
 #define VIP (VIPOKW)   // inplace is OK
@@ -152,9 +147,7 @@ static A jtva1(J jt,A w,A self){A z;I cv,n,t,wt,zt;VF ado;
  VA2 *p=&u->p1[(0x54032100>>(CTTZ(wt)<<2))&7];  // from MSB, we need 101 100 xxx 011 010 001 xxx 000
 #endif
  ASSERT(wt&NUMERIC,EVDOMAIN);
-// obsolete  if(wt&SPARSE){wp=PAV(w); e=SPA(wp,e); wt=AT(e);}
  if(!((I)jtinplace&JTRETRY)){
-// obsolete   p=((va1tab+((C*)strchr(va1fns,id)-(C*)va1fns))->p1)[wt&B01?0:wt&INT?1:wt&FL?2:wt&CMPX?3:wt&XNUM?4:5];
   ado=p->f; cv=p->cv;
  }else{
   I m=((wt&XNUM+RAT)-1)>>(BW-1);   // -1 if not XNUM/RAT
@@ -177,7 +170,6 @@ static A jtva1(J jt,A w,A self){A z;I cv,n,t,wt,zt;VF ado;
  if(AT(w)&SPARSE&&n)R va1s(w,self,cv,ado);  // branch off to do sparse
  // from here on is dense va1
  t=atype(cv); zt=rtype(cv);  // extract required type of input and result
-// obsolete  if(t&&TYPESNE(t,wt)){RZ(w=cvt(t,w)); jtinplace=(J)((I)jtinplace|JTINPLACEW);}  // convert input if necessary; if we converted, converted result is ipso facto inplaceable.  t is usually 0
  if(UNSAFE(t&~wt)){RZ(w=cvt(t,w)); jtinplace=(J)((I)jtinplace|JTINPLACEW);}  // convert input if necessary; if we converted, converted result is ipso facto inplaceable.  t is usually 0
  if(ASGNINPLACESGN(SGNIF((I)jtinplace,JTINPLACEWX)&SGNIF(cv,VIPOKWX),w)){z=w; if(TYPESNE(AT(w),zt))MODBLOCKTYPE(z,zt)}else{GA(z,zt,n,AR(w),AS(w));}
  if(!n)RETF(z); ((AHDR1FN*)ado)(jt,n,AV(z),AV(w));  // perform the operation on all the atoms
@@ -217,28 +209,8 @@ DF1(jtatomic1){A z;
  while(1){  // run until we get no error
   z=jtva1(jtinplace,w,self);  // execute the verb
   if(z||jt->jerr<=NEVM)RETF(z);   // return if no error or error not retryable
-// obsolete   if((I)jtinplace&JTRETRY)SEGFAULT   //  scaf
   jtinplace=(J)((I)jtinplace|JTRETRY);  // indicate that we are retrying the operation
  }
 }
 
-#if 0  // obsolete 
-// If argument has a single direct-numeric atom, go process through speedy-singleton code
-// obsolete #define CHECKSSING(w,f) RZ(w); if(AN(w)==1 && (AT(w)&(B01+INT+FL)))R f(jt,w);
-// obsolete #define CHECKSSINGNZ(w,f) RZ(w); if(AN(w)==1 && (AT(w)&(B01+INT+FL))){A z = f(jt,w); if(z)R z;}  // fall through if returns 0
-#define CHECKSSING(w,f) RZ(w); if(!((AN(w)-1)|(AT(w)&(NOUN&~(B01+INT+FL)))))R f(jt,w);
-#define CHECKSSINGNZ(w,f) RZ(w); if(!((AN(w)-1)|(AT(w)&(NOUN&~(B01+INT+FL))))){A z = f(jt,w); if(z)R z;}  // fall through if returns 0
-
-
-F1(jtfloor1){CHECKSSING(w,jtssfloor) R va1(w,CFLOORva1);}
-F1(jtceil1 ){CHECKSSING(w,jtssceil) R va1(w,CCEILva1 );}
-F1(jtconjug){R va1(w,CPLUSva1 );}
-F1(jtsignum){CHECKSSING(w,jtsssignum) R va1(w,CSTARva1 );}
-F1(jtsqroot){CHECKSSINGNZ(w,jtsssqrt) R va1(w,CSQRTva1 );}
-F1(jtexpn1 ){CHECKSSING(w,jtssexp) R va1(w,CEXPva1  );}
-F1(jtlogar1){CHECKSSINGNZ(w,jtsslog) R va1(w,CLOGva1  );}
-F1(jtmag   ){CHECKSSING(w,jtssmag) R va1(w,CSTILEva1);}
-F1(jtfact  ){CHECKSSING(w,jtssfact) R va1(w,CBANGva1 );}
-#endif
 DF1(jtpix   ){RZ(w); F1PREFIP; if(XNUM&AT(w)&&(jt->xmode==XMFLR||jt->xmode==XMCEIL))R jtatomic1(jtinplace,w,self); R jtatomic2(jtinplace,pie,w,ds(CSTAR));}
-// obsolete extern A jtva2recur(J jt, AD * RESTRICT a, AD * RESTRICT w, AD * RESTRICT self){R va2(a,w,self);}  // put in this module so compiler doesn't know it's recursive

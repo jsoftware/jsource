@@ -64,14 +64,6 @@ F1(jttable){A z,zz;I r,wr;
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r;  // r=rank to use
  RZ(IRSIP1(w,0L,r-1<0?0:r-1,jtravel,z));  // perform ravel on items
  R r?z:IRSIP1(z,0L,0L,jtravel,zz);  // If we are raveling atoms, do it one more time on atoms
-// obsolete  wt=AT(w); ws=AS(w);
-// obsolete  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; RESETRANK; // wr=rank, r=effective rank (jt->rank is effective rank from irs1), f=frame
-// obsolete 
-// obsolete  if(wt&SPARSE){A zz; IRS1(w,0L,r?r-1:0,jtravel,z); R r?z:IRS1(z,0L,0L,jtravel,zz);}
-// obsolete  GA(z,wt,AN(w),2+f,ws); s=f+AS(z);
-// obsolete  if(r)*(1+s)=prod(r-1,1+f+ws); else *s=*(1+s)=1;
-// obsolete  MC(AV(z),AV(w),AN(w)<<bplg(wt));
-// obsolete  RETF(z);
 } // ,."r y
 
 // ] [ and ]"n ["n, dyadic

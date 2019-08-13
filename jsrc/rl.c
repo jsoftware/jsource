@@ -63,7 +63,6 @@ static F1(jtltieb){A pt,t,*v,*wv,x,y;B b;C c,*s;I n;
  n=AN(w); wv=AAV(w);  RZ(t=spellout(CGRAVE)); RZ(pt=over(scc(')'),t));
  GATV0(y,BOX,n+n,1); v=AAV(y);
  if(1>=n)x=mtv; else{GATV0(x,LIT,n-2,1); s=CAV(x); DQ(n-2, *s++='(';);}
-// obsolete  DO(n, *v++=0==i?x:1==i?t:pt; x=wv[i]; c=ID(x); RZ(x=lrr(x)); 
  DO(n, x=i==1?t:x; x=i>1?pt:x; *v++=x; x=wv[i]; c=ID(x); RZ(x=lrr(x)); 
      b=(C)(c-CHOOK)<=(C)(CFORK-CHOOK)||i&&lp(x); RZ(*v++=CALL2(jt->lcp,b,x,0)););
  R raze(y);
@@ -91,7 +90,6 @@ static F1(jtlchar){A y;B b,p=1,r1;C c,d,*u,*v;I j,k,m,n;
   R over(over(cstr("a. "),lcpx(lnum(y))),over(cstr("}~"),lchar(from(y,w))));
  }
  j=2; b=7<n||1<n&&1<AR(w);
-// obsolete  DQ(n, c=*v++; if(c==CQUOTE)++j; b&=c==d; p&=31<c&&c<127;); 
  DQ(n, c=*v++; j+=c==CQUOTE; b&=c==d; p&=(C)(c-32)<(C)(127-32);); 
  if(b){n=1; j=MIN(3,j);}
  if(!p){
@@ -120,7 +118,6 @@ static F1(jtlbox){A p,*v,*vv,*wv,x,y;B b=0;I n;
  }
  DO(n, x=wv[i]; if((AR(x)^1)|(~AT(x)&LIT)){b=1; break;});
  if(!b){C c[256],d,*t;UC*s;
-// obsolete  DO(256,c[i]=1;); 
   memset(c,1,sizeof(c)); 
   RZ(x=raze(w)); s=UAV(x);
   DQ(AN(x), c[*s++]=0;);
@@ -330,7 +327,6 @@ static DF1(jtlrr){A hs,t,*tv;C id;I fl,m;V*v;
  if(fl&VXOPCALL)R lrr(hs);
  m=(I )!!fs+(I )(gs&&id!=CBOX)+(I )(id==CFORK)+(I )(hs&&id==CCOLON&&VXOP&fl);  // BOX has g for BOXATOP; ignore it
  if(!m)R lsymb(id,w);
-// obsolete  if(evoke(w))R sfn(0,fs);
  if(evoke(w)){RZ(w=sfne(w)); if(FUNC&AT(w))w=lrr(w); R w;}  // keep named verb as a string, UNLESS it is NMDOT, in which case use the (f.'d) verb value
  if(!(VXOP&fl)&&hs&&BOX&AT(hs)&&id==CCOLON)R lcolon(w);
  GATV0(t,BOX,m,1); tv=AAV(t);

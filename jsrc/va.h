@@ -104,7 +104,6 @@ typedef struct {VA2 p1[6];} UA;
 // comparisons between LIT types, one word at a time producing bits in v.  work is destroyed
 #define CMPEQCC(u,v)    (work=(u)^(v), ZBYTESTOZBITS(work), work=~work, work&=VALIDBOOLEAN)
 #define CMPNECC(u,v)    (work=(u)^(v), ZBYTESTOZBITS(work), work&=VALIDBOOLEAN)
-// obsolete #define CMPNECC(u,v)    (v^=(u), ZBYTESTOZBITS(v), v&=VALIDBOOLEAN)
 
 #define PLUS(u,v)       ((u)+   (v))
 #define PLUSO(u,v)      ((u)+(D)(v))
@@ -243,34 +242,6 @@ typedef void AHDRSFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);
   NAN1V;                                                       \
  }
 
-#if 0 // obsolete
-#define APFY(f,Tz,Tx,Ty,pfx)   \
- AHDR2(f,Tz,A,A){A u,v;I c,d;                                                                  \
-  c=jt->rela;                                                                                  \
-  d=jt->relw;                                                                                  \
-  switch((c?2:0)+(d?1:0)){                                                                     \
-   case 0:                                                                                     \
-    if(n-1==0)  DQ(m,                         *z++=pfx(*x,          *y          ); x++; y++; )   \
-    else if(n-1<0)DQ(m, u=         *x++;  DOC(n, *z++=pfx(u,           *y          );      y++;))   \
-    else      DQ(m, v=         *y++;  DQ(n, *z++=pfx(*x,          v           ); x++;     ));  \
-    R;                                                                                         \
-   case 1:                                                                                     \
-    if(n-1==0)  DQ(m,                         *z++=pfx(*x,          (A)(d+(I)*y)); x++; y++; )   \
-    else if(n-1<0)DQ(m, u=         *x++;  DOC(n, *z++=pfx(u,           (A)(d+(I)*y));      y++;))   \
-    else      DQ(m, v=(A)(d+(I)*y++); DQ(n, *z++=pfx(*x,          v           ); x++;     ));  \
-    R;                                                                                         \
-   case 2:                                                                                     \
-    if(n-1==0)  DQ(m,                         *z++=pfx((A)(c+(I)*x),*y          ); x++; y++; )   \
-    else if(n-1<0)DQ(m, u=(A)(c+(I)*x++); DOC(n, *z++=pfx(u,           *y          );      y++;))   \
-    else      DQ(m, v=         *y++;  DQ(n, *z++=pfx((A)(c+(I)*x),v           ); x++;     ));  \
-    R;                                                                                         \
-   case 3:                                                                                     \
-    if(n-1==0)  DQ(m,                         *z++=pfx((A)(c+(I)*x),(A)(d+(I)*y)); x++; y++; )   \
-    else if(n-1<0)DQ(m, u=(A)(c+(I)*x++); DOC(n, *z++=pfx(u,           (A)(d+(I)*y));      y++;))   \
-    else      DQ(m, v=(A)(d+(I)*y++); DQ(n, *z++=pfx((A)(c+(I)*x),v           ); x++;     ));  \
- }}
-#endif
-
 /* Embedded visual tools v3.0 fails perform the z++ on all wince platforms. -KBI */
 #if SY_WINCE
 #define ACMP(f,Tz,Tx,Ty,pfx)   \
@@ -302,37 +273,6 @@ typedef void AHDRSFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);
  }
 
 
-#if 0 // obsolete original.  It tries to keep alignment, but doesn't handle buffers that are originally unaligned
-#define BFSUB(xb,yi,pfx,bpfx)  \
- {B*a,*p,*yb,*zb;I j,k;                                        \
-  a=xb; p=(B*)&u; k=0;                                         \
-  if(0==r)for(j=0;j<m;++j){                                    \
-   c=*a++; DO(SZI, p[i]=c;); DQ(q, v=*yi++; *zz++=pfx(u,v););  \
-  }else   for(j=0;j<m;++j){                                    \
-   q=(t-k)>>LGSZI; r=(t-k)&(SZI-1);                                   \
-   c=*a++; DO(SZI, p[i]=c;); DQ(q, v=*yi++; *zz++=pfx(u,v););  \
-   if(0==r)k=0;                                                \
-   else{                                                       \
-    yb=(B*)yi; zb=(B*)zz;                                      \
-                   DQ(r, d=*yb++; *zb++=bpfx(c,d););           \
-    c=*a; k=SZI-r; DQ(k, d=*yb++; *zb++=bpfx(c,d););           \
-    ++yi; ++zz;                                                \
- }}}
-
-#define BPFX(f,pfx,bpfx,pfyx,bpfyx)  \
- AHDR2(f,B,B,B){B c,d;I dd,q,r,t,u,v,*xx,*yy,*zz;       \
-  t=n-1==0?m:n; q=t>>LGSZI; r=t&(SZI-1);                         \
-  xx=(I*)x; yy=(I*)y; zz=(I*)z;                         \
-  if(n-1==0){                                             \
-   DQ(q, u=*xx++; v=*yy++; *zz++=pfx(u,v););            \
-   if(r){u=*xx++; v=*yy++; dd=pfx(u,v); MC(zz,&dd,r);}  \
-  }else if(t<SZI){                                      \
-   if(n-1<0)DQ(m, c=*x++; DOC(n, v=*y++; *z++=bpfx(c,v);))   \
-   else DQ(m, d=*y++; DQ(n, u=*x++; *z++=bpfx(u,d);));  \
-  }else if(n-1<0){n=~n; BFSUB(x,yy,pfx, bpfx)}                      \
-  else       BFSUB(y,xx,pfyx,bpfyx)                     \
- }
-#else
 // n and m are never 0.
 #if 0 // waiting till me learn how to XCTL
 static void f##1(J jt,I m,void* RESTRICTI z,void* RESTRICTI x,void* RESTRICTI y){I u,v; \
@@ -347,7 +287,7 @@ static void f##1(J jt,I m,void* RESTRICTI z,void* RESTRICTI x,void* RESTRICTI y)
  u=*(I*)x; v=*(I*)y; u=pfx(u,v); STOREBYTES(z,u,(-m)&(SZI-1));  \
 }
 #endif
-#if 1
+
 #define BPFXNOAVX(f,pfx,bpfx,pfyx,bpfyx,fuv,decls,decls256)  \
 AHDR2(f,void,void,void){ I u,v;       \
  decls \
@@ -416,24 +356,4 @@ AHDR2(f,void,void,void){ I u,v;       \
 #else
 #define BPFXAVX2(f,pfx,bpfx,pfyx,bpfyx,fuv,decls,decls256) BPFXNOAVX(f,pfx,bpfx,pfyx,bpfyx,fuv,decls,decls256)
 #define BPFX(f,pfx,bpfx,pfyx,bpfyx,fuv,decls,decls256) BPFXNOAVX(f,pfx,bpfx,pfyx,bpfyx,fuv,decls,decls256)
-#endif
-#else  // obsolete 
-// n and m are never 0.
-#define BFSUB(xb,yi,pfx,bpfx)  \
- {I j;                                        \
-  for(j=0;j<m;++j){                                    \
-   REPLBYTETOW(*xb++,u); DQ((n-1)>>LGSZI, v=*yi++; *zz++=pfx(u,v););  \
-   v=*yi; I dd=pfx(u,v); STOREBYTES(zz,dd,(-n)&(SZI-1)); yi=(I*)((UC*)yi+(((n-1)&(SZI-1))+1)); zz=(I*)((UC*)zz+(((n-1)&(SZI-1))+1)); \
- }}
-
-#define BPFX(f,pfx,bpfx,pfyx,bpfyx)  \
- AHDR2(f,B,B,B){I u,v,*xx,*yy,*zz;       \
-  xx=(I*)x; yy=(I*)y; zz=(I*)z;                         \
-  if(n-1==0){                                             \
-   DQ((m-1)>>LGSZI, u=*xx++; v=*yy++; *zz++=pfx(u,v););            \
-   u=*xx; v=*yy; I dd=pfx(u,v); STOREBYTES(zz,dd,(-m)&(SZI-1));  \
-  }else if(n-1<0){n=~n; BFSUB(x,yy,pfx, bpfx)}                      \
-  else       BFSUB(y,xx,pfyx,bpfyx)                     \
- }
-#endif
 #endif

@@ -17,7 +17,6 @@ F1(jtpinv){I m=-1,n,*v;  // empty perm will set m=0
  F1RANK(1,jtpinv,0);
  RZ(w=vi(w));
  n=AN(w); v=AV(w);
-// obsolete  DO(n, m=0>v[i]?MAX(m,-1-v[i]):MAX(m,v[i]);); m+=0<n;
  DO(n, I r=v[i]^(v[i]>>(BW-1)); m=r>m?r:m;); ++m;  // take 1s-comp of negative ele#, then find max; add 1 to get #eles
  R indexof(pfill(m,w),IX(m));
 }    /* permutation inverse */
@@ -52,7 +51,6 @@ static F1(jtcfd){A b,q,x,z,*zv;B*bv;I c,i,j,n,*qv,*u,*v,zn;
  if(c=1&&INT&AT(w)){
   n=AN(w); v=AV(w);
   GATV0(b,B01,1+n,1); bv=BAV(b); memset(bv,C0,n);
-// obsolete   DO(n, j=v[i]; if(j<0||n<=j||bv[j]){c=0; break;} bv[j]=1;);
   DO(n, j=v[i]; if((UI)j>=(UI)n||bv[j]){c=0; break;} bv[j]=1;);
  }
  if(!c){n=ord(w); RZ(w=pfill(n,w)); v=AV(w); GATV0(b,B01,1+n,1);}
@@ -101,11 +99,8 @@ F1(jtpparity){A x,y,z;B p,*u;I i,j,k,m,n,r,*s,*v,*zv;
  GATV(z,INT,m,r?r-1:0,s); zv=AV(z);
  for(i=0;i<m;++i){
   j=0; p=1; memset(u,C1,n);
-// obsolete   DO(n, k=v[i]; if(0>k)v[i]=k+=n; if(0<=k&&k<n&&u[k])u[k]=0; else{j=1+n; break;});
   DO(n, k=v[i]; if(0>k)v[i]=k+=n; if((UI)k<(UI)n&&u[k])u[k]=0; else{j=1+n; break;});  // if there are repeated indexes, set j high to force 0 result
-// obsolete   for(;j<n;++j)if(j!=v[j]){k=j; DQ(n-j-1, ++k; if(j==v[k]){v[k]=v[j]; p=!p; break;});}
   for(;j<n;++j)if(j!=v[j]){k=j; DQ(n-j-1, ++k; if(j==v[k]){v[k]=v[j]; p=-p; break;});}
-// obsolete   zv[i]=p?-1:j==n; 
   zv[i]=p&(j-n-1);   // return parity or 0
   v+=n;
  }

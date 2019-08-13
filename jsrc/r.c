@@ -22,7 +22,6 @@ static F1(jtdrr){PROLOG(0055);A df,dg,hs,*x,z;B b,ex,xop;C c,id;I fl,*hv,m;V*v;
  b=id==CHOOK||id==CADVF; c=id==CFORK;
  m=!!fs+(gs||ex);
  if(!m)R spella(w);
-// obsolete  if(evoke(w))R sfn(0,fs);
  if(evoke(w))R drr(sfne(w));  // turn nameref into string or verb; then take rep
  if(fs)RZ(df=fl&VGERL?every(fxeach(fs),0L,jtdrr):drr(fs));
  if(gs)RZ(dg=fl&VGERR?every(fxeach(gs),0L,jtdrr):drr(gs));
@@ -49,7 +48,6 @@ F1(jtaro){A fs,gs,hs,s,*u,*x,y,z;B ex,xop;C id;I*hv,m;V*v;
   ex=hs&&id==CCOLON&&!xop;
   m=id==CFORK?3:!!fs+(ex||xop&&hs||!xop&&gs);
   if(!m)R spella(w);
-// obsolete  if(evoke(w))R sfn(0,fs);
   if(evoke(w)){RZ(w=sfne(w)); if(FUNC&AT(w))w=aro(w); R w;}  // keep nameref as a string, UNLESS it is NMDOT, in which case use the (f.'d) verb value
  }
  GAT0(z,BOX,2,1); x=AAV(z);

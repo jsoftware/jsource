@@ -132,8 +132,6 @@ B jtbitwisecharamp(J jt,UC*t,I n,UC*wv,UC*zv){I p;UC c,i,j,*pv,s[256];AHDR2FN* a
  else if(i==255  ){c=j; ado=(AHDR2FN*)bw1011II;}
  else R 0;
  pv=(UC*)&p; DO(SZI, pv[i]=c;);
-// obsolete  f(jt,1,1L,256L/SZI,s,pv,AV(alp)); if(memcmp(s,t,256L))R 0;
-// obsolete  f(jt,1,1L,(n+SZI-1)>>LGSZI,zv,pv,wv); zv[n]=0;
  ado((I)(256/SZI),(I)1,AV(alp),pv,s,jt); if(memcmp(s,t,256L))R 0;
  ado((n+SZI-1)>>LGSZI,(I)1,wv,pv,zv,jt); zv[n]=0;
  R 1;

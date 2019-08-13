@@ -73,16 +73,12 @@ static void jtcirx(J jt,I n,I k,D*z,D*y){D p,t;
  NAN1V;
 }
 
-// obsolete AHDR2(cirBD,D,B,D){ASSERTW(b&&1==m,EWIMAG); cirx(n,(I)*x,z,y);}
 AHDR2(cirBD,D,B,D){ASSERTW(n<=1&&1==m,EWIMAG); n^=n>>(BW-1); cirx(n,   (I)*x,z,y);}
-// obsolete AHDR2(cirBD,D,B,D){ASSERTW(b&&1==m,EWIMAG); cirx(n,(I)*x,z,y);}
 AHDR2(cirID,D,I,D){ASSERTW(n<=1&&1==m,EWIMAG); n^=n>>(BW-1); cirx(n,   *x,z,y);}
 
 AHDR2(cirDD,D,D,D){I k=(I)jfloor(0.5+*x);
  ASSERTW(k==*x,EVDOMAIN); 
-// obsolete  ASSERTW(b&&1==m,EWIMAG); 
  ASSERTW(n<=1&&1==m,EWIMAG); // if more than one value, 
-// obsolete   ASSERTW((n|m)==1,EWIMAG); // if more than one value, do the whole computation as complex, then back it to float if possible
  n^=n>>(BW-1);   // convert complementary n to nonneg
  cirx(n,k,z,y);
 }

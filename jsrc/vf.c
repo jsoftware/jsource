@@ -73,7 +73,6 @@ static F2(jtrotsp){PROLOG(0071);A q,x,y,z;B bx,by;I acr,af,ar,*av,d,k,m,n,p,*qv,
 // m=#cells d=#atoms per item  n=#items per cell
 static void jtrot(J jt,I m,I d,I n,I atomsize,I p,I*av,C*u,C*v){I dk,e,k,j,r,x,y;
  e=n*d*atomsize; dk=d*atomsize; // e=#bytes per cell  dk=bytes per item
-// obsolete  switch((2*(I )!jt->fill)+(I )(1<p)){
  if(jt->fill){
   if(p<=1){r=p?*av:0;     ROF(r); DQ(m, if(r<0){mvc(k,v,atomsize,jt->fillv); MC(k+v,u,j);}else{MC(v,j+u,k); mvc(j,k+v,atomsize,jt->fillv);}        u+=e; v+=e;);}
   else{DO(m, r=av[i]; ROF(r);       if(r<0){mvc(k,v,atomsize,jt->fillv); MC(k+v,u,j);}else{MC(v,j+u,k); mvc(j,k+v,atomsize,jt->fillv);}            u+=e; v+=e;);}
@@ -228,7 +227,6 @@ F2(jtreshape){A z;B filling;C*wv,*zv;I acr,ar,c,k,m,n,p,q,r,*s,t,* RESTRICT u,wc
   if(c==1) {  // if there is only 1 cell of w...
    // If no fill required, we can probably use a virtual result, or maybe even an inplace one.  Check for inplace first.  Mustn't inplace an indirect that shortens the data,
    // because then who would free the blocks?  (Actually it would be OK if nonrecursive, but we are trying to exterminate those)
-// obsolete    if((I)jtinplace&JTINPLACEW && (m==n||t&DIRECT) && r<=wcr && ASGNINPLACE(w)){  //  inplace allowed, just one cell, result rank (an) <= current rank (so rank fits), usecount is right
    if(ASGNINPLACESGN(SGNIF((I)jtinplace,JTINPLACEWX)&(r-(wcr+1))&((n-(m+1))|-(t&DIRECT)),w)){  //  inplace allowed, just one cell, result rank (an) <= current rank (so rank fits), usecount is right
     // operation is loosely inplaceable.  Copy in the rank, shape, and atom count.
     AR(w)=(RANKT)(r+wf); AN(w)=m; ws+=wf; MCISH(ws,u,r) RETF(w);   // Start the copy after the (unchanged) frame
@@ -266,42 +264,11 @@ F2(jtreitem){A y,z;I acr,an,ar,r,*v,wcr,wr;
  R wr==wcr?jtreshape(jtinplace,y,w):IRS2(y,w,0L,acr,wcr,jtreshape,z);  // Since a has no frame, we dont have to check agreement
 }    /* a $"r w */
 
-#if 1
 #define EXPAND(T)  \
   {T*u=(T*)wv,*v=(T*)zv,x;                                                \
    mvc(sizeof(T),&x,k,jt->fillv);                                         \
    DQ(an, I abit=*av++; T *uv=abit?u:&x; *v++=*uv; u+=abit;);  \
   }
-#else  // obsolete
-#define EXPAND(T)  \
-  {T*u=(T*)wv,*v=(T*)zv,x;                                                \
-   DQ(an, if(*av++){ASSERT(wx>(C*)u,EVLENGTH); *v++=*u++;}else *v++=x;);  \
-   wv=(C*)u;                                                              \
-  }
-  {T*u=(T*)wv,*v=(T*)zv,x;                                                                       \
-   mvc(sizeof(T),&x,k,jt->fillv);                                                                \
-   for(i=0;i<q;++i)switch(*au++){                                                                \
-    case B0000:                              *v++=x;    *v++=x;    *v++=x;    *v++=x;    break;  \
-    case B0001: ASSERT(wx>  (C*)u,EVLENGTH); *v++=x;    *v++=x;    *v++=x;    *v++=*u++; break;  \
-    case B0010: ASSERT(wx>  (C*)u,EVLENGTH); *v++=x;    *v++=x;    *v++=*u++; *v++=x;    break;  \
-    case B0011: ASSERT(wx>1+(C*)u,EVLENGTH); *v++=x;    *v++=x;    *v++=*u++; *v++=*u++; break;  \
-    case B0100: ASSERT(wx>  (C*)u,EVLENGTH); *v++=x;    *v++=*u++; *v++=x;    *v++=x;    break;  \
-    case B0101: ASSERT(wx>1+(C*)u,EVLENGTH); *v++=x;    *v++=*u++; *v++=x;    *v++=*u++; break;  \
-    case B0110: ASSERT(wx>1+(C*)u,EVLENGTH); *v++=x;    *v++=*u++; *v++=*u++; *v++=x;    break;  \
-    case B0111: ASSERT(wx>2+(C*)u,EVLENGTH); *v++=x;    *v++=*u++; *v++=*u++; *v++=*u++; break;  \
-    case B1000: ASSERT(wx>  (C*)u,EVLENGTH); *v++=*u++; *v++=x;    *v++=x;    *v++=x;    break;  \
-    case B1001: ASSERT(wx>1+(C*)u,EVLENGTH); *v++=*u++; *v++=x;    *v++=x;    *v++=*u++; break;  \
-    case B1010: ASSERT(wx>1+(C*)u,EVLENGTH); *v++=*u++; *v++=x;    *v++=*u++; *v++=x;    break;  \
-    case B1011: ASSERT(wx>2+(C*)u,EVLENGTH); *v++=*u++; *v++=x;    *v++=*u++; *v++=*u++; break;  \
-    case B1100: ASSERT(wx>1+(C*)u,EVLENGTH); *v++=*u++; *v++=*u++; *v++=x;    *v++=x;    break;  \
-    case B1101: ASSERT(wx>2+(C*)u,EVLENGTH); *v++=*u++; *v++=*u++; *v++=x;    *v++=*u++; break;  \
-    case B1110: ASSERT(wx>2+(C*)u,EVLENGTH); *v++=*u++; *v++=*u++; *v++=*u++; *v++=x;    break;  \
-    case B1111: ASSERT(wx>3+(C*)u,EVLENGTH); *v++=*u++; *v++=*u++; *v++=*u++; *v++=*u++; break;  \
-   }                                                                                             \
-   if(r){av=(B*)au; DQ(r, if(*av++){ASSERT(wx>(C*)u,EVLENGTH); *v++=*u++;}else *v++=x;);}        \
-   wv=(C*)u;                                                                                     \
-  }
-#endif
 
 F2(jtexpand){A z;B*av;C*wv,*wx,*zv;I an,*au,i,k,p,wc,wk,wn,wt,zn;
  RZ(a&&w);
@@ -309,7 +276,7 @@ F2(jtexpand){A z;B*av;C*wv,*wx,*zv;I an,*au,i,k,p,wc,wk,wn,wt,zn;
  ASSERT(1==AR(a),EVRANK);
  RZ(w=setfv(w,w)); 
  if(!AR(w))R from(a,take(num[-2],w));  // atomic w, use a { _2 {. w
- av=BAV(a); an=AN(a); /* obsolete q=an>>LGSZI; r=an&(SZI-1);*/ au=(I*)av;
+ av=BAV(a); an=AN(a); au=(I*)av;
  ASSERT(bsum(an,av)==AS(w)[0],EVLENGTH);  // each item of w must be used exactly once
  wv=CAV(w); wn=AN(w); wc=aii(w); wt=AT(w); k=bpnoun(wt); wk=k*wc; wx=wv+wk*AS(w)[0];  // k=bytes/atom, wk=bytes/item, wx=end+1 of area
  RE(zn=mult(an,wc));
@@ -325,10 +292,9 @@ F2(jtexpand){A z;B*av;C*wv,*wx,*zv;I an,*au,i,k,p,wc,wk,wn,wt,zn;
    mvc(k*zn,zv,k,jt->fillv); // here we are trying to minimize calls to MC
    for(i=p=0;i<an;++i)
     if(*av++)p+=wk; 
-    else{if(p){/* obsolete ASSERT(wx>=wv+p,EVLENGTH);*/ MC(zv,wv,p); wv+=p; zv+=p; p=0;} zv+=wk;}
-   if(p){/* obsolete ASSERT(wx>=wv+p,EVLENGTH);*/ MC(zv,wv,p); /* obsolete wv+=p;*/}
+    else{if(p){MC(zv,wv,p); wv+=p; zv+=p; p=0;} zv+=wk;}
+   if(p){MC(zv,wv,p);}
  }
-// obsolete  ASSERT(wx==wv,EVLENGTH);
  RETF(z);
 }    /* a&#^:_1 w or a&#^:_1!.f w */
 

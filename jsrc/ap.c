@@ -21,9 +21,8 @@
 #define DIVPZ(b,r,u,v)    if(b)r=zdiv(u,v); else r=ztymes(u,v);
 
 // Don't RESTRICT y since function may be called inplace
-#if 1
 #define PREFIXPFX(f,Tz,Tx,pfx,vecfn)  \
- AHDRP(f,Tz,Tx){I i;Tz v;/*obsolete if(d*m*n==0)SEGFAULT;  scaf */                                    \
+ AHDRP(f,Tz,Tx){I i;Tz v;                                 \
   if(d==1)DQ(m, *z++=v=    *x++; DQ(n-1, *z=v=pfx(v,*x); ++z; ++x;))  \
   else{for(i=0;i<m;++i){                                              \
    DO(d, z[i]=    x[i];); x+=d;                                        \
@@ -31,7 +30,7 @@
  }}}  /* for associative functions only */
 
 #define PREFIXNAN(f,Tz,Tx,pfx,vecfn)  \
- AHDRP(f,Tz,Tx){I i;Tz v;/* obsolete if(d*m*n==0)SEGFAULT;  scaf */                                    \
+ AHDRP(f,Tz,Tx){I i;Tz v;                                \
   NAN0;                                                               \
   if(d==1)DQ(m, *z++=v=    *x++; DQ(n-1, *z=v=pfx(v,*x); ++z; ++x;))  \
   else{for(i=0;i<m;++i){                                              \
@@ -40,26 +39,6 @@
   }}                                                                   \
   NAN1V;                                                              \
  }   /* for associative functions only */
-#else // obsolete
-#define PREFIXPFX(f,Tz,Tx,pfx)  \
- AHDRP(f,Tz,Tx){I i;Tz v,* y;                                    \
-  if(d==1)DQ(m, *z++=v=    *x++; DQ(n-1, *z=v=pfx(v,*x); ++z; ++x;))  \
-  else{for(i=0;i<m;++i){                                              \
-   y=z; DQ(d, *z++=    *x++;);                                        \
-   DQ(n-1, DQ(d, *z=pfx(*y,*x); ++z; ++x; ++y;));                     \
- }}}  /* for associative functions only */
-
-#define PREFIXNAN(f,Tz,Tx,pfx)  \
- AHDRP(f,Tz,Tx){I i;Tz v,* y;                                    \
-  NAN0;                                                               \
-  if(d==1)DQ(m, *z++=v=    *x++; DQ(n-1, *z=v=pfx(v,*x); ++z; ++x;))  \
-  else{for(i=0;i<m;++i){                                              \
-   y=z; DQ(d, *z++=    *x++;);                                        \
-   DQ(n-1, DQ(d, *z=pfx(*y,*x); ++z; ++x; ++y;));                     \
-  }}                                                                   \
-  NAN1V;                                                              \
- }   /* for associative functions only */
-#endif
 
 #define PREFICPFX(f,Tz,Tx,pfx)  \
  AHDRP(f,Tz,Tx){I i;Tz v,* y;                                    \
@@ -210,7 +189,6 @@ PREFICPFX(tymespfxO, D, I,  TYMES  )
 PREFICALT(minuspfxO, D, I,  MINUSPA)
 
 PREFIXPFX( pluspfxB, I, B,  PLUS, plusIB   )
-#if 1
 AHDRP(pluspfxD,D,D){I i;
  NAN0;
  if(d==1){
@@ -226,9 +204,6 @@ AHDRP(pluspfxD,D,D){I i;
  }
  NAN1V;
 }   /* for associative functions only */
-#else  // obsolete 
-PREFIXNAN( pluspfxD, D, D,  PLUS, plusDD   )
-#endif
 PREFIXNAN( pluspfxZ, Z, Z,  zplus, plusZZ  )
 PREFIXPFX( pluspfxX, X, X,  xplus, plusXX  )
 PREFIXPFX( pluspfxQ, Q, Q,  qplus, plusQQ  )
@@ -615,7 +590,6 @@ static DF2(jtinfixd){A fs,z;C*x,*y;I c=0,d,k,m,n,p,q,r,*s,wr,*ws,wt,zc;
 
 static A jtmovsumavg1(J jt,I m,A w,A fs,B avg){A y,z;D d=(D)m;I c,p,wt;
  p=IC(w)-m; wt=AT(w); c=aii(w);
-// obsolete  switch((wt&B01?0:wt&INT?2:4)+avg){
  switch(((wt>>(INTX-1))&6)+avg){
   case 0:       MOVSUMAVG(B,I,INT,I,INT,x,  SETZ ); break;
   case 1:       MOVSUMAVG(B,I,INT,D,FL, x/d,SETZD); break;

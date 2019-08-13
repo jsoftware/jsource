@@ -730,7 +730,6 @@ F1(jtgr1){PROLOG(0075);A z;I c,f,ai,m,n,r,*s,t,wn,wr,zn;
  // allocate the entire result area, one int per item in each input cell
  GATV(z,INT,zn,1+f,s); if(!r)AS(z)[f]=1;
  // if there are no atoms, or we are sorting things with 0-1 item, return an index vector of the appropriate shape 
-// obsolete if(!wn||1>=n)R reshape(shape(z),IX(n));
  if(((wn-1)|(n-2))<0)R reshape(shape(z),IX(n));
  // do the grade, using a special-case routine if possible
  RZ((t&B01&&0==(ai&3)?jtgrb:grroutine[CTTZ(t)])(jt,m,ai,n,w,AV(z)))
@@ -779,29 +778,11 @@ F2(jtdgrade2){F2PREFIP;A z;GBEGIN( 1); RZ(a&&w); z=SPARSE&AT(w)?grd2sp(a,w):jtgr
    n=m; \
   }  \
  }
-#if 0 // obsolete
-{T p0,p1,q,*tv,*u,ui,uj,uk,*v,*wv;                                                     \
-  tv=wv=(T*)AV(w);                                                                     \
-  while(1){                                                                            \
-   if(4>=n){u=tv; SORT4; R ATOMF(tv[j]);}        /* stop loop on small partition */       \
-   p0=tv[qv[i]%n]; ++i; if(i==qn)i=0;                                                  \
-   p1=tv[qv[i]%n]; ++i; if(i==qn)i=0; if(p0>p1){q=p0; p0=p1; p1=q;}       /* create pivots p0, p1 selected from input, with p0 <= p1  */             \
-   if(p0==p1){m0=m1=0; v=tv; DQ(n, if(p0>*v)++m0;                     ++v;);}          \
-   else      {m0=m1=0; v=tv; DQ(n, if(p0>*v)++m0; else if(p1>*v)++m1; ++v;);}  /* count m0: # < p0; and m1: # p0<=x<p1  */         \
-   c=m0+m1; m=j<m0?m0:j<c?m1:n-c;    /* calc size of partition holding the result */        \
-   if(t)u=v=tv; else{GA(t,wt,m,1,0); u=tv=(T*)AV(t); v=wv;}                            \
-   if     (j<m0){       DQ(n, if(*v<p0        )*u++=*v; ++v;); n=m;}                   \
-   else if(j<c ){j-=m0; DQ(n, if(p0<=*v&&*v<p1)*u++=*v; ++v;); n=m;}                   \
-   else if(c   ){j-=c;  DQ(n, if(p1<=*v       )*u++=*v; ++v;); n=m;}                   \
-   else{DQ(n, if(p1<*v)*u++=*v; ++v;); m=u-tv; c=n-m; if(j<c)R ATOMF(p1); j-=c; n=m;}  \
- }}
-#endif
 
 F2(jtordstat){A q,t=0;I j,m,m0,m1,n,wt;D *qv;
  I i=NRANDS-1;  // i points to the next random number to draw
  RZ(a&&w);
  n=AN(w); wt=AT(w); RE(j=i0(a));
-// obsolete  if(!(!AR(a)&&AT(a)&B01+INT&&4<n&&1==AR(w)&&wt&FL+INT))R from(a,grade2(w,w));  // if not int/float, or short, or list a, do full grade
  if(((AR(a)-1)&(4-n)&((1^AR(w))-1)&(-(wt&FL+INT)))>=0)R from(a,grade2(w,w));  // if not int/float, or short, or list a, do full grade
  if((UI)j>=(UI)n){j+=n; ASSERT((UI)j<(UI)n,EVINDEX);}
  // deal a bunch of random floats to provide pivots.  We reuse them if needed

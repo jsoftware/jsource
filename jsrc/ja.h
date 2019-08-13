@@ -648,8 +648,6 @@
 // prioritytype is B01X, LITX, C2TX, C4TX, INTX, BOXX, XNUMX, RATX, SBTX, FLX, CMPXX
 //                 00000 00001 10001 10010 00010 00101 00110  00111 10000 00011 00100
 // reversed        001 0000 0111 0000 0011 1001 1000 1010 0010 1001 0100 0100 0010 0000
-// obsolete #define typeprioritymask 0x328765a9410
-// obsolete #define prioritytypemask 0x1070398a294420
 #define maxtypene(x,y)              jtmaxtype(jt,(x),(y))
 #define maxtype(x,y)                (((x)==(y))?(x):maxtypene(x,y))
 #define maxtypedne(x,y) (jt->typepriority[CTTZ(x)]>jt->typepriority[CTTZ(y)]?(x):(y))
@@ -1177,16 +1175,12 @@
 #define tpoly(x)                    jttpoly(jt,(x))
 #define tpop(x)                     jttpop(jt,(x))
 // if tg() fails, tpush leaves nextpushx unchanged
-#if 0
-#define tpush(x)                    {I tt=AT(x); I pushx=jt->tnextpushx; *(I*)((I)jt->tstack+(pushx&(NTSTACK-1)))=(I)(x); pushx+=SZI; if(!(pushx&(NTSTACK-1))){RZ(tg(pushx)); pushx+=SZI;} if(tt&TRAVERSIBLE)RZ(pushx=jttpush(jt,(x),tt,pushx)); jt->tnextpushx=pushx; if(MEMAUDIT&2)audittstack(jt,(x),ACUC(x));}
-#else
 // Handle top level of tpush().  push the current block, and recur if it is traversible and does not have recursive usecount
 // We can have an inplaceable but recursible block, if it was gc'd.  We never push a PERMANENT block, so that we won't try to free it
 // NOTE that PERMANENT blocks are always marked traversible if they are of traversible type, so we will not recur on them internally
 #define tpush(x)                    {if(!ACISPERM(AC(x))){I tt=AT(x); A *pushp=jt->tnextpushp; *pushp++=(x); if(!((I)pushp&(NTSTACKBLOCK-1))){RZ(pushp=tg(pushp));} if((tt^AFLAG(x))&TRAVERSIBLE)RZ(pushp=jttpush(jt,(x),tt,pushp)); jt->tnextpushp=pushp; if(MEMAUDIT&2)audittstack(jt);}}
 // Internal version, used when the local name pushp is known to hold jt->tnextpushp
 #define tpushi(x)                   {if(!ACISPERM(AC(x))){I tt=AT(x); *pushp++=(x); if(!((I)pushp&(NTSTACKBLOCK-1))){RZ(pushp=tg(pushp));} if((tt^AFLAG(x))&TRAVERSIBLE)RZ(pushp=jttpush(jt,(x),tt,pushp)); }}
-#endif
 // tpush1 is like tpush, but it does not recur to lower levels.  Used only for virtual block (which cannot be PERMANENT)
 #define tpush1(x)                   {A *pushp=jt->tnextpushp; *pushp++=(x); if(!((I)pushp&(NTSTACKBLOCK-1))){RZ(pushp=tg(pushp));} jt->tnextpushp=pushp; if(MEMAUDIT&2)audittstack(jt);}
 #define traverse(x,y)               jttraverse(jt,(x),(y))

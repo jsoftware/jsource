@@ -174,11 +174,6 @@ I jdo(J jt, C* lp){I e;A x;
  if(!jt->jerr)immex(x);
  e=jt->jerr;
  if(savcallstack==0)CALLSTACKRESET jt->jerr=0;
-// obsolete  if(e&&DBERRCAP==jt->uflags.us.cx.cx_c.db&&jt->dbtrap){
-// obsolete   jt->uflags.us.cx.cx_c.db=0;
-// obsolete   immex(jt->dbtrap);
-// obsolete   if(savcallstack==0)CALLSTACKRESET jt->jerr=0;  // whenever we call immex from console level we reset the callstack in case the user tried something that can't be completed, like deleting the running locale
-// obsolete  }
  while(jt->iepdo&&jt->iep){jt->iepdo=0; immex(jt->iep); if(savcallstack==0)CALLSTACKRESET jt->jerr=0; tpop(old);}
  showerr();
  spfree();
@@ -197,7 +192,6 @@ DF1(jtwd){A z=0;C*p=0;D*pd;I e,*pi,t;V*sv;
   ASSERT(2>AR(w),EVRANK);
   sv=VAV(self);
   t=i0(sv->fgh[1]);  // the n arg from the original 11!:n
-// obsolete   if(t>=2000 && t<3000 && AN(w) && !(LIT+C2T+C4T+INT&AT(w))) {
   if((UI)(t-2000)<(UI)(3000-2000) && AN(w) && !(LIT+C2T+C4T+INT&AT(w))) {  // 2000<=t<3000
     switch(UNSAFE(AT(w))) {
     case B01:

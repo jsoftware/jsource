@@ -11,17 +11,10 @@
 #define CMPLT(a,b) ((a)<(b)?1:0)
 #define CMPGE(a,b) ((a)>=(b)?1:0)
 #define CMPLE(a,b) ((a)<=(b)?1:0)
-#if 0  // obsolete early equality result
-#define EQTEMPLATE AIFX
-#define NETEMPLATE APFX
-#define CMPEQ ==
-#define CMPNE(a,b) ((a)!=(b)?1:0)
-#else  // setcc instruction, better if early equality not available
 #define EQTEMPLATE APFX
 #define NETEMPLATE APFX
 #define CMPEQ(a,b) ((a)==(b)?1:0)
 #define CMPNE(a,b) ((a)!=(b)?1:0)
-#endif
 
 B jtteq(J jt,D u,D v){R TCMPEQ(jt->cct,u,v);}
 

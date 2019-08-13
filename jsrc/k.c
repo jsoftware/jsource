@@ -8,7 +8,7 @@
 #define KF1(f)          B f(J jt,A w,void*yv)
 #define CVCASE(a,b)     (((a)<<3)+(b))   // The main cases fit in low 8 bits of mask
 
-#if 0  // fot bit types
+#if 0  // for bit types
 #define TOBIT(T,AS)   {T*v=(T*)wv,x; \
   for(i=0;i<m;++i){                                                       \
    DO(q, k=0; DO(BB, if(x=*v++){if(AS)k|=bit[i]; else R 0;}); *zv++=k;);  \
@@ -67,7 +67,6 @@ static KF1(jtC4fromC2){US*v;C4*x;
 
 static KF1(jtBfromI){B*x;I n,p,*v;
  n=AN(w); v=AV(w); x=(B*)yv;
-// obsolete DQ(n, p=*v++; if(0==p||1==p)*x++=(B)p; else R 0;);
  DQ(n, p=*v++; *x++=(B)p; if(p&-2)R 0;);
  R 1;
 }
@@ -75,7 +74,6 @@ static KF1(jtBfromI){B*x;I n,p,*v;
 static KF1(jtBfromD){B*x;D p,*v;I n;
  n=AN(w); v=DAV(w); x=(B*)yv;
  DQ(n, p=*v++; if(p<-2||2<p)R 0;   // handle infinities
- // obsolete  if(!p)*x++=0; else if(FEQ(1.0,p))*x++=1; else R 0;);
   if(!p)*x++=0; else if(FEQ(1.0,p))*x++=1; else R 0;);
  R 1;
 }
@@ -145,7 +143,6 @@ static KF1(jtXfromD){D*v=DAV(w);X*x=(X*)yv; DO(AN(w), x[i]=rifvsdebug(xd1(v[i]))
 
 static KF1(jtBfromX){A q;B*x;I e;X*v;
  v=XAV(w); x=(B*)yv;
-// obsolete  DO(AN(w), q=v[i]; e=*AV(q); if(!(1==AN(q)&&(0==e||1==e)))R 0; x[i]=(B)e;);
  DO(AN(w), q=v[i]; e=*AV(q); if((AN(q)^1)|(e&-2))R 0; x[i]=(B)e;);
  R 1;
 }

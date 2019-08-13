@@ -8,52 +8,7 @@
 // c=#atoms in a cell
 // d=#atoms in an item of a cell of w (thus c=d*n)
 
-#if 0 // obsolete
-#define REDUCEPFX(f,Tz,Tx,pfx)  \
-AHDRR(f,Tz,Tx){I d,i;Tx* RESTRICT y;Tz v,* RESTRICT zz;                              \
-d=c/n; x+=m*c; zz=z+=m*d;                              \
-if(1==d)DQ(m, v=    *--x; DQ(n-1, --x; v=pfx(*x,v);); *--z=v;)  \
-else if(1==n)DQ(d, *--z=    *--x;)                              \
-else for(i=0;i<m;++i,zz-=d){                                    \
-y=x; x-=d; z=zz; DQ(d, --z; --x; --y; *z=pfx(*x,*y););         \
-DQ(n-2,    z=zz; DQ(d, --z; --x;      *z=pfx(*x,*z);));        \
-}}
 
-#define REDUCENAN(f,Tz,Tx,pfx)  \
- AHDRR(f,Tz,Tx){I d,i;Tx* RESTRICT y;Tz v,* RESTRICT zz;                              \
-  NAN0;                                                           \
-  d=c/n; x+=m*c; zz=z+=m*d;                                       \
-  if(1==d)DQ(m, v=    *--x; DQ(n-1, --x; v=pfx(*x,v);); *--z=v;)  \
-  else if(1==n)DQ(d, *--z=    *--x;)                              \
-  else for(i=0;i<m;++i,zz-=d){                                    \
-   y=x; x-=d; z=zz; DQ(d, --z; --x; --y; *z=pfx(*x,*y););         \
-   DQ(n-2,    z=zz; DQ(d, --z; --x;      *z=pfx(*x,*z);));        \
-  }                                                               \
-  NAN1V;                                                          \
- }
-
-#define REDUCCPFX(f,Tz,Tx,pfx)  \
- AHDRR(f,Tz,Tx){I d,i;Tx* RESTRICT y;Tz v,* RESTRICT zz;                              \
-  d=c/n; x+=m*c; zz=z+=m*d;                                       \
-  if(1==d)DQ(m, v=(Tz)*--x; DQ(n-1, --x; v=pfx(*x,v);); *--z=v;)  \
-  else if(1==n)DQ(d, *--z=(Tz)*--x;)                              \
-  else for(i=0;i<m;++i,zz-=d){                                    \
-   y=x; x-=d; z=zz; DQ(d, --z; --x; --y; *z=pfx(*x,*y););         \
-   DQ(n-2,    z=zz; DQ(d, --z; --x;      *z=pfx(*x,*z);));        \
- }}
-
-#define REDUCEOVF(f,Tz,Tx,fr1,fvv,frn)  \
- AHDRR(f,I,I){C er=0;I d,i,* RESTRICT xx,*y,* RESTRICT zz;                          \
-  d=c/n; xx=x+=m*c; zz=z+=m*d;                                  \
-  if(1==d){DQ(m, z=--zz; x=xx-=c; fr1(n,z,x); RER;); R;}        \
-  if(1==n){DQ(d, *--z=*--x;); R;}                               \
-  xx-=d; zz-=d;                                                 \
-  for(i=0;i<m;++i,xx-=d,zz-=d){                                 \
-   y=xx;   x=xx-=d; z=zz; fvv(d,z,x,y); RER;                    \
-   DQ(n-2, x=xx-=d; z=zz; frn(d,z,x);   RER;);                  \
- }}
-
-#else
 #define REDUCEPFX(f,Tz,Tx,pfx,vecfn1,vecfnn)  \
  AHDRR(f,Tz,Tx){I i;Tz v;                              \
   if(d==1){x += m*n; z+=m; DQ(m, v=*--x; DQ(n-1, --x; v=pfx(*x,v);); *--z=v;)}  \
@@ -90,23 +45,9 @@ DQ(n-2,    z=zz; DQ(d, --z; --x;      *z=pfx(*x,*z);));        \
 #define REDUCEPFXIDEM2PRIM256(f,Tz,Tx,pfx,vecfn,prim,identity) REDUCEPFXIDEM2(f,Tz,Tx,pfx,vecfn)
 #endif
 
-#if 0 // obsolete
-#define REDUCENAN(f,Tz,Tx,pfx,vecfn)  \
- AHDRR(f,Tz,Tx){I i;Tx* RESTRICT y;Tz v,* RESTRICT zz;                              \
-  NAN0;                                                           \
-  if(d==1){x += m*n; z+=m; DQ(m, v=*--x; DQ(n-1, --x; v=pfx(*x,v);); *--z=v;)}  \
-  else if(1==n){if(sizeof(Tz)!=sizeof(Tx)){DQ(n, *z++=    *x++;)}else{MC((C*)z,(C*)x,d*sizeof(Tz));}}          \
-  else{zz=z+=m*d; x+=m*d*n;                                        \
-   for(i=0;i<m;++i,zz-=d){                                    \
-    y=x; x-=d; z=zz; DQ(d, --z; --x; --y; *z=pfx(*x,*y););         \
-    DQ(n-2,    z=zz; DQ(d, --z; --x;      *z=pfx(*x,*z);));        \
-  }}                                                               \
-  NAN1V;                                                          \
-}
-#else
 #define REDUCENAN(f,Tz,Tx,pfx,vecfn)  \
  AHDRR(f,Tz,Tx){I i;Tz v;                              \
-  NAN0; /* obsolete if(d*m*n==0)SEGFAULT;  scaf*/                                                          \
+  NAN0;                                                        \
   if(d==1){x += m*n; z+=m; DQ(m, v=*--x; DQ(n-1, --x; v=pfx(*x,v);); *--z=v;)}  \
   else if(1==n){if(sizeof(Tz)!=sizeof(Tx)){DQ(n, *z++=    *x++;)}else{MC((C*)z,(C*)x,d*sizeof(Tz));}}          \
   else{z+=(m-1)*d; x+=(m*n-1)*d;                                        \
@@ -116,8 +57,6 @@ DQ(n-2,    z=zz; DQ(d, --z; --x;      *z=pfx(*x,*z);));        \
   }}                                                               \
   NAN1V;                                                          \
 }
-#endif
-#endif
 
 #define REDUCCPFX(f,Tz,Tx,pfx)  \
  AHDRR(f,Tz,Tx){I i;Tx* RESTRICT y;Tz v,* RESTRICT zz;                              \

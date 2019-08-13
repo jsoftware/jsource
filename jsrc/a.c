@@ -9,14 +9,9 @@
 static DF1(swap1){DECLF; F1PREFIP; jtinplace = (J)(intptr_t)(((I)jtinplace&~JTINPLACEA)+2*((I)jtinplace&JTINPLACEW));
  // a~ carried the IRS flag from a and thus we might have ranks set.  If so, use them, and no need to check agreement again.  For ease, we just use whatever is set 
  A z; IRSIP2(w,w,fs,(RANKT)jt->ranks,(RANKT)jt->ranks,f2,z); R z;
-// obsolete  RANKT mr=(RANKT)jt->ranks;
-// obsolete  if(mr!=RMAX)R jtirs2(jtinplace,w,w,fs,mr,mr,f2); else{jt->ranks=(RANK2T)~0; R (f2)(jtinplace,w,w,fs);}}  // must expand infinite rank to dyadic size
 }
-// obsolete static DF2(swap2){DECLF; F2PREFIP; jtinplace = (J)(intptr_t)((I)jtinplace+((JTINPLACEW+JTINPLACEA)&(4>>((I)jtinplace&JTINPLACEW+JTINPLACEA)))); RANK2T lrr=jt->ranks;  // exchange inplace flags
 static DF2(swap2){DECLF; F2PREFIP; jtinplace = (J)(intptr_t)((I)jtinplace^((JTINPLACEW+JTINPLACEA)&(0x3C>>(2*((I)jtinplace&JTINPLACEW+JTINPLACEA)))));
  A z; IRSIP2(w,a,fs,(RANKT)jt->ranks,jt->ranks>>RANKTX,f2,z); R z;
-// obsolete RANK2T lrr=jt->ranks;  // exchange inplace flags
-// obsolete  if(lrr!=(RANK2T)~0)R jtirs2(jtinplace,w,a,fs,(RANKT)lrr,lrr>>RANKTX,f2); else R (f2)(jtinplace,w,a,fs);}
 }
 
 // w~, which is either reflexive/passive or evoke

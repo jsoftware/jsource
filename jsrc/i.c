@@ -43,7 +43,7 @@ static A jtmakename(J jt,C*s){A z;I m;NM*zv;
  zv->m   =(UC)m; 
  zv->bucket=0;
  zv->bucketx=0;
- zv->flag=NMDOT+NMXY/* obsolete *((*s=='x')|(*s=='y'))*/;
+ zv->flag=NMDOT+NMXY;
  zv->hash=(UI4)nmhash(m,s);
  ACX(z);
  R z;
@@ -82,15 +82,9 @@ B jtglobinit(J jt){A x,y;D*d;A *oldpushx=jt->tnextpushp;
  MC(jt->prioritytype,prioritytype,sizeof(jt->prioritytype));  // may not be needed
  jt->adbreakr=jt->adbreak=&breakdata; /* required for ma to work */
  meminit();  /* required for ma to work */
-// obsolete  s=bitdisp; 
-// obsolete  DO(256, c=(UC)i;      DQ(BB, *s++=c&(UC)128?'1':'0'; *s++=' '; c<<=1;);           );
-// obsolete  DO(16,  c=(UC)i; k=0; DO(BB, if(c&(UC)1)++k;                   c>>=1;); bitc[i]=k;);
-// obsolete  DO(15, j=1+i; DO(16, bitc[16*j+i]=bitc[j]+bitc[i];););
  MC(&inf, XINF,SZD); 
  MC(&jnan,XNAN,SZD);
  infm=-inf;
-// obsolete memset(testb,C0,256);
-// obsolete  testb[CIF]=testb[CELSEIF]=testb[CSELECT]=testb[CWHILE]=testb[CWHILST]=testb[CFOR]=testb[CCASE]=testb[CFCASE]=1;
  DO(-NUMMIN, GA(x,INT,1,0,0); ACX(x); * AV(x)=i+NUMMIN;   num[i+NUMMIN]   =x;);
  DO(NUMMAX-1, GA(x,INT,1,0,0); ACX(x); * AV(x)=i+2;       num[i+2]   =x;);
  DO(sizeof(numvr)/sizeof(numvr[0]), GA(x,FL,1,0,0); ACX(x); *DAV(x)=(D)i;    numvr[i]   =x;);

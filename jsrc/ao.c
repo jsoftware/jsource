@@ -226,17 +226,7 @@ static DF2(jtkey){F2PREFIP;PROLOG(0009);A frets,wperm,z;
   if(celllen<MEMCPYTUNELOOP) {  // copy by hand if that's faster (0 len OK)
    I n=celllen; while((n-=SZI)>=0){*partitionptr++=*wv++;}
      // move full words.  Must not overwrite the area, since we are scatter-writing.
-#if 1
    if(n&(SZI-1)){STOREBYTES(partitionptr,*wv,-n); partitionptr = (I*)((C*)partitionptr+SZI+n); wv = (I*)((C*)wv+SZI+n);}  // Use test because this code is repeated
-#else   // obsolete
-   if(celllen&(SZI-1)){  // copy in any remnant
-#if LGSZI>2
-    if(celllen&4){*(I4*)partitionptr=*(I4*)wv; partitionptr=(I*)((C*)partitionptr+SZI4); wv=(I*)((C*)wv+SZI4);}
-#endif
-    if(celllen&2){*(S*)partitionptr=*(S*)wv; partitionptr=(I*)((C*)partitionptr+SZS); wv=(I*)((C*)wv+SZS);}
-    if(celllen&1){*(C*)partitionptr=*(C*)wv; partitionptr=(I*)((C*)partitionptr+1); wv=(I*)((C*)wv+1);}
-   }
-#endif
   }else{MC(partitionptr,wv,celllen); partitionptr = (I*)((C*)partitionptr+celllen); wv = (I*)((C*)wv+celllen);}
 
   av[avvalue]=(I)partitionptr;  // store updated end-of-partition after move

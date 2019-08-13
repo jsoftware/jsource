@@ -33,9 +33,6 @@ A jtrank1ex(J jt,AD * RESTRICT w,A fs,I rr,AF f1){F1PREFIP;PROLOG(0041);A z,virt
  if(AT(w)&SPARSE)R sprank1(w,fs,rr,f1);
 #define ZZFLAGWORD state
  I state=0;  // init flags, including zz flags
-// obsolete  // wr=rank, ws->shape, wcr=effective rank, wf=#frame (inner+outer)
-// obsolete  // if inner rank is > outer rank, set it equal to outer rank
-// obsolete  wr=AR(w); ws=AS(w); efr(rr,wr,rr);  // get rank at which to apply the verb
  // RANKONLY verbs were handled in the caller to this routine, but fs might be RANKATOP.  In that case we could include its rank in the loop here,
  // if its rank is not less than the outer rank (we would simply ignore it), but we don't bother.  If its rank is smaller we can't ignore it because assembly might affect
  // the order of fill.  But if f is BOXATOP, there will be no fill, and we can safely use the smaller rank
@@ -214,7 +211,6 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,I lr,I rr,I lcr,I rcr,AF f
  RZ(a&&w);
  af=AR(a)-lr; wf=AR(w)-rr;   // frames wrt innermost cell
  if(!(af|wf)){R CALL2IP(f2,a,w,fs);}  // if there's only one cell and no frame, run on it, that's the result.
-// obsolete  at=AT(a); wt=AT(w);
  if((AT(a)|AT(w))&SPARSE)R sprank2(a,w,fs,lcr,rcr,f2);  // this needs to be updated to handle multiple ranks
 // lr,rr are the ranks of the underlying verb.  lcr,rcr are the cell-ranks given by u"lcr rcr.
 // If " was not used, lcr,rcr=lr,rr usually
@@ -240,9 +236,6 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,I lr,I rr,I lcr,I rcr,AF f
  // if inner rank is > outer rank, set it equal to outer rank
 #define ZZFLAGWORD state
  I ZZFLAGWORD=0;  // init flags, including zz flags
-/* obsolete if(lr>lcr||rr>rcr||(UI)lcr>AR(a)||(UI)rcr>AR(w))SEGFAULT; */
- /* obsolete as=AS(a); ar=AR(a); efr(lcr,ar,lcr); efr(lr,lcr,lr); */
-/* obsolete ws=AS(w);  wr=AR(w); efr(rcr,wr,rcr); efr(rr,rcr,rr); */
 
  // RANKONLY verbs were handled in the caller to this routine, but fs might be RANKATOP.  In that case we can include its rank in the loop here, which will save loop setups
  if(fs&&(I)(((FAV(fs)->flag2&(VF2RANKATOP2|VF2BOXATOP2))-1)|(-((rr^rcr)|(lr^lcr))))>=0){  // prospective new ranks to include
@@ -593,7 +586,6 @@ static DF2(cons2){V*sv=FAV(self);
 }
 
 // Handle u"n y where u supports irs.  Since the verb may support inplacing even with rank (,"n for example), pass that through.
-// obsolete static DF1(rank1i){DECLF;A h=sv->fgh[2];I*v=AV(h); R irs1(w,fs,*v,f1);}
 static DF1(rank1i){RZ(w);F1PREFIP;DECLF;  // this version when requested rank is positive
  I m=sv->localuse.lI4[0]; m=m>=AR(w)?~0:m; jt->ranks=(RANK2T)(m);  // install rank for called routine
  A z=CALL1IP(f1,w,fs);
@@ -626,7 +618,6 @@ static DF2(rank2in){RZ(w);F2PREFIP;DECLF;  // this version when a requested rank
  jt->ranks=(RANK2T)~0;  // reset rank to infinite
  RETF(z);
 }
-// obsolete static DF2(rank2i){DECLF;A h=sv->fgh[2];I*v=AV(h); R irs2(a,w,fs,v[1],v[2],f2);}
 
 // u"n y when u does not support irs. We loop over cells, and as we do there is no reason to enable inplacing
 // THIS SUPPORTS INPLACING: NOTHING HERE MAY DEREFERENCE jt!!
@@ -689,7 +680,6 @@ static DF2(jtrank20){R jtrank2ex0(jt,a,w,self,jtrank20atom);}  // pass inplaceab
 F2(jtqq){A t;AF f1,f2;D*d;I hv[3],n,r[3],vf,flag2=0,*v;
  RZ(a&&w);
  // The localuse value in the function will hold the ranks from w.
-// obsolete  GAT0(h,INT,3,1); hv=AV(h);  // hv->rank[0]
  if(VERB&AT(w)){
   // verb v.  Extract the ranks into a floating-point list
   GAT0(t,FL,3,1); d=DAV(t);
@@ -730,7 +720,7 @@ F2(jtqq){A t;AF f1,f2;D*d;I hv[3],n,r[3],vf,flag2=0,*v;
   // For dyad: atomic verbs take the rank from this block, so we take the action routine, and also the parameter it needs; these parameters mean that only
   // nonnegative rank can be accomodated; otherwise, use processor for IRS (there is one for nonnegative, one for negative rank); if not IRS, there are processors for:
   // rank 0; nonneg ranks where fs is NOT a rank operator; general case
-  if(av->flag&VFUSEDOK2&&(hv[1]|hv[2])>=0){f2=av->valencefns[1];/*  obsolete hv[0]=RMAX+1; hv[1]=(I)av->localuse.lvp; hv[2]=av->lc;*/}
+  if(av->flag&VFUSEDOK2&&(hv[1]|hv[2])>=0){f2=av->valencefns[1];}
   else if(av->flag&VIRS2){f2=(hv[1]|hv[2])>=0?rank2i:rank2in;}else{f2=(hv[1]|hv[2])?((hv[1]|hv[2])>=0&&!(av->flag2&VF2RANKONLY2)?rank2q:rank2):jtrank20;flag2|=VF2RANKONLY2;}
   // Test for special cases
   if(av->valencefns[1]==jtfslashatg && r[1]==1 && r[2]==1){  // f@:g"1 1 where f and g are known atomic
@@ -743,8 +733,7 @@ F2(jtqq){A t;AF f1,f2;D*d;I hv[3],n,r[3],vf,flag2=0,*v;
  }
 
  // Create the derived verb.  The derived verb (u"n) NEVER supports IRS; it inplaces if the action verb u supports inplacing
- A z; RZ(z=fdef(flag2,CQQ,VERB, f1,f2, a,w,/* obsolete h*/0, vf, r[0],r[1],r[2]));
-// obsolete  if(hv[0]>RMAX){FAV(z)->localuse.lvp=(void *)hv[1]; FAV(z)->lc=(C)hv[2];}  // hv[0] used as flag above; copy the ATOMIC2 info
+ A z; RZ(z=fdef(flag2,CQQ,VERB, f1,f2, a,w,0, vf, r[0],r[1],r[2]));
  FAV(z)->localuse.lI4[0]=(I4)hv[0]; FAV(z)->localuse.lI4[1]=(I4)hv[1]; FAV(z)->localuse.lI4[2]=(I4)hv[2];  // pass the possibly-negative ranks in through localuse
  R z;
 }

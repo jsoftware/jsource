@@ -183,7 +183,7 @@ F1(jthead){I wcr,wf,wr;
    I wn=AN(w); wcr--; wcr=(wcr<0)?wr:wcr;  // wn=#atoms of w, wcr=rank of cell being created
    A z; RZ(z=virtualip(w,0,wcr));  // allocate the cell.  Now fill in shape & #atoms
     // if w is empty we have to worry about overflow when calculating #atoms
-   I zn; MCISH(AS(z),AS(w)+1,wcr) PROD(zn,wcr,AS(w)+1) AN(z)=zn;  /*  I *ws=AS(w)+1, *zs=AS(z); obsolete DO(wcr, zs[i]=ws[i]; if(wn){zn*=ws[i];}else{zn=mult(zn,ws[i]);RE(0);}) */  // copy shape of CELL of w into z
+   I zn; MCISH(AS(z),AS(w)+1,wcr) PROD(zn,wcr,AS(w)+1) AN(z)=zn;  // copy shape of CELL of w into z
    RETF(z);
   }else{
    // rank not 0, or non-virtualable type, or cell is an atom.  Use from.  Note that jt->ranks is still set, so this may produce multiple cells

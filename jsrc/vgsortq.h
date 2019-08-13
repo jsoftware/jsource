@@ -155,8 +155,6 @@ finmedxchg:  // exchanges if any are done, and xchgx0/xchgx1 are set
       I bittofill=BW-ncmp1;  // get the running index of where we will put new bits
       SORTQTYPE *vv=v+in1-BW-(NPAR-1);  // pointer to beginning of the 4-word section ending at in1 
       // fill 4-bit sections up to the last, which will be 1-4 bits
-// obsolete       while(bittofill<BW-NPAR){cstk1=cstk1+((I)_mm256_movemask_pd(_mm256_permute4x64_pd(SORTQCASTTOPD(SORTQCMP256(pivot256,SORTQULOAD((SORTQULOADTYPE)vv) SORTQCMPTYPE)),0x1b))<<bittofill); vv-=NPAR; bittofill+=NPAR;}
-// obsolete       cstk1=cstk1+((I)_mm256_movemask_pd(_mm256_permute4x64_pd(SORTQCASTTOPD(SORTQCMP256(pivot256,SORTQMASKLOAD(vv,endmask) SORTQCMPTYPE)),0x1b))<<bittofill);
       // if AVX2, use permute4x rather than the 2 insts here
       while(bittofill<BW-NPAR){cstk1=cstk1+((I)_mm256_movemask_pd(_mm256_permute_pd(_mm256_permute2f128_pd(SORTQCASTTOPD(SORTQCMP256(pivot256,SORTQULOAD((SORTQULOADTYPE)vv) SORTQCMPTYPE)),SORTQCASTTOPD(pivot256),0x01),0x5))<<bittofill); vv-=NPAR; bittofill+=NPAR;}
       cstk1=cstk1+((I)_mm256_movemask_pd(_mm256_permute_pd(_mm256_permute2f128_pd(SORTQCASTTOPD(SORTQCMP256(pivot256,SORTQMASKLOAD(vv,endmask) SORTQCMPTYPE)),SORTQCASTTOPD(pivot256),0x01),0x5))<<bittofill);
@@ -170,14 +168,11 @@ finmedxchg:  // exchanges if any are done, and xchgx0/xchgx1 are set
      in1-=ncmp1; DQ(ncmp1, UI newbit=v[i+in1-BW+1]<pivot?newstkbit:0; cstk1=(cstk1>>1)+newbit;) cstklsb1=CTTZI(cstk1);cstklsb1=(cstk1==0)?BW:cstklsb1;
 #endif
     }while((cstk0==0)||(cstk1==0));
-// obsolete    if((cstklsb0|cstklsb1)&BW)goto partdone;
     // process the comparison stack until one of the stacks is empty.  Perform exchanges
     while(1){
      if(in0+cstklsb0>=in1-cstklsb1)goto partdone;  // if pointers have crossed, we're through
      xchgx0=in0+cstklsb0; xchgx1=in1-cstklsb1;  // remember the successful exchange, so that we don't move a pointer past it
      SORTQTYPE temp=v[xchgx0]; v[xchgx0]=v[xchgx1]; v[xchgx1]=temp;
-// obsolete     cstk0&=cstk0-1; cstk1&=cstk1-1; // remove the bits that were processed
-// obsolete     cstklsb0=CTTZI(cstk0); cstklsb1=CTTZI(cstk1);   // advance the pointer to the next swap; garbage if zero, but that's corrected immediately below
      // Remove the bit we processed, and update the lsb for the next swap.  If there is no swap here, advance LSB to end of word to free up stack space
      if(cstk0&=cstk0-1)cstklsb0=CTTZI(cstk0); else{cstklsb0=BW; break;}  // We hope the processor predicts these branches to fail always, so that we will get one misbranch to exit the loop
      if(cstk1&=cstk1-1)cstklsb1=CTTZI(cstk1); else{cstklsb1=BW; goto testcstk1;}
@@ -200,9 +195,6 @@ finmedxchg:  // exchanges if any are done, and xchgx0/xchgx1 are set
   // push stack for the larger partition; modify batch pointers for the smaller
   // recursions are l..xchgx0 and xchgx1+1..r    the +1 to step over the pivot from this pass
   ++xchgx1;  // the upper partition starts AFTER the pivot
-// obsolete   if(xchgx0-l > r-xchgx1){stack[stackp][0]=l; stack[stackp][1]=xchgx0; l=xchgx1;
-// obsolete   }else{stack[stackp][0]=xchgx1; stack[stackp][1]=r; r=xchgx0;
-// obsolete   }
   I lenl=xchgx0-l, lenr=r-xchgx1, l0=l, r0=r;
   // make l,r the smaller partition and l0,r0 the larger;  then stack l0,r0
   l0=lenl>lenr?l0:xchgx1; l=lenl>lenr?xchgx1:l; r0=lenl>lenr?xchgx0:r0; r=lenl>lenr?r:xchgx0; 

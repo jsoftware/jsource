@@ -26,9 +26,6 @@ static B jtselfq(J jt,A w){A hs,*u;V*v;
    R 0;
   default:
    DO(3, if(v->fgh[i]&&selfq(v->fgh[i]))R 1;)
-// obsolete    if(v->fgh[0]&&selfq(v->fgh[0]))R 1;
-// obsolete    if(v->fgh[1]&&selfq(v->fgh[1]))R 1;
-// obsolete    if(v->fgh[2]&&selfq(v->fgh[2]))R 1;
  }
  R 0;
 }    /* 1 iff w contains $: */

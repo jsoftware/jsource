@@ -219,7 +219,6 @@ static DF2(jtcut2bx){A*av,b,t,x,*xv,y,*yv;B*bv;I an,bn,i,j,m,p,q,*u,*v,*ws;V*sv;
  RZ(x=ope(catalog(x)));
  RZ(y=ope(catalog(y)));
  if(AN(x)){RZ(IRS2(x,y,0L,1L,1L,jtlamin2,t));}else{RZ(t=iota(over(shape(x),v2(2L,0L))));}
-// obsolete  RZ(t=AN(x)?irs2(x,y,0L,1L,1L,jtlamin2):iota(over(shape(x),v2(2L,0L))));
  R cut02(t,w,self);
 }    /* a f;.n w for boxed a, with special code for matrix w */
 
@@ -552,7 +551,6 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);DECLF;A *hv,z,zz;I neg,pfx;C id,*v1,*wv,*zc;
   }else{
    // monadic forms.  If we can handle the type/length here, leave it; otherwise convert to Boolean.
    // If w is Boolean, we have to pretend it's LIT so we use the correct fret value rather than hardwired 1
-// obsolete    if(wt&(B01|LIT|INT|FL|C2T|C4T|SBT)&&k&&((BW==32&&wt&FL&&k==SZD)||(k<=SZI&&(k&-k)==k))){a=w; ak=k; at=(wt+B01)&~B01;  // monadic forms: if w is an immediate type we can handle, and the length is a machine-word length, use w unchanged
    if(wt&(B01|LIT|INT|FL|C2T|C4T|SBT)&((-k)>>(BW-1))&((BW==32&&wt&FL&&k==SZD)|((k&-k&(2*SZI-1))==k))){a=w; ak=k; at=(wt+B01)&~B01;  // monadic forms: if w is an immediate type we can handle, and the length is a machine-word length, use w unchanged
    }else{RZ(a=n?eps(w,take(num[pfx?1:-1],w)):mtv); ak=1; at=B01;}  // any other w, replace by w e. {.w (or {: w).  Set ak to the length of a cell of a, in bytes.  Empty cells of w go through here to convert to list
   }
@@ -567,10 +565,6 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);DECLF;A *hv,z,zz;I neg,pfx;C id,*v1,*wv,*zc;
   I rtnx = CTTZ(k); rtnx=(at&B01)?4:rtnx; rtnx=(at&FL)?5:rtnx;  // 0-3=bytes, 4=B01, 5=FL
   switch(rtnx){
   case 0: // single bytes.  This is like the B01 case below but we cleverly detect noncomparing words by word-wide methods, and then convert the equality test into B01 format a word at a time
-// obsolete    FRETLOOPBYTE(I valI=val|((UI)val<<8); valI|=valI<<16; if(BW==64)valI|=valI<<(BW/2);   ,
-// obsolete     I avvdiff=valI^avvI; avvI=((~avvdiff)&(avvdiff-(I)0x0101010101010101))&(I)0x8080808080808080;    ,
-// obsolete     val==*avv
-// obsolete     ) break;
    {
     // In this loop d is the length of the fret
     I valI=((UC *)fret)[0]; valI|=valI<<8; valI|=valI<<16; if(BW==64)valI|=valI<<(BW/2);  // the fret value, replicated in each byte of the word
@@ -614,7 +608,6 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);DECLF;A *hv,z,zz;I neg,pfx;C id,*v1,*wv,*zc;
    FRETLOOPSGL(UI) break;
 #endif
   case 4: // single-byte Boolean, looking for 1s
-   /* obsolete FRETLOOPBYTE( , , *avv)*/
    {
     // In this loop d is the length of the fret
     // n bits 0..LGSZI-1 are from original n & are the number of valid bits overflowing into a partial word.  Bits LGSZI..LGSZI+LGBB-1 are the (shifted) # words to process

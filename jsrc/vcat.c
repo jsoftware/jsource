@@ -218,7 +218,6 @@ F2(jtstitch){B sp2;I ar,wr; A z;
  RZ(a&&w);
  ar=AR(a); wr=AR(w); sp2=(SPARSE&AT(a)||SPARSE&AT(w))&&2>=ar&&2>=wr;
  ASSERT(!ar||!wr||*AS(a)==*AS(w),EVLENGTH);
-// obsolete  R sp2 ? stitchsp2(a,w) : irs2(a,w,0L,ar?ar-1:0,wr?wr-1:0,jtover);
  R sp2 ? stitchsp2(a,w) : IRS2(a,w,0L,(ar-1)&RMAX,(wr-1)&RMAX,jtover,z);
 }
 
@@ -312,7 +311,6 @@ A jtapip(J jt, A a, A w, A self){F2PREFIP;A h;C*av,*wv;I ak,k,p,*u,*v,wk,wm,wn;
      if(AR(w)&&AR(a)>1+AR(w)){RZ(setfv(a,w)); mvc(wk-wlen,av+wlen,k,jt->fillv);}
      // Copy in the actual data, replicating if w is atomic
      if(AR(w))MC(av,wv,wlen); else mvc(wk,av,k,wv);
-// obsolete      if(AT(a)&LAST0)*(av+wk)=0;   // append the NUL byte if that's called for
      // The data has been copied.  Now adjust the result block to match.  If the operation is virtual extension we have to allocate a new block for the result
      if(!virtreqd){
       // Normal append-in-place.

@@ -91,7 +91,6 @@ F1(jtwords){A t,*x,z;C*s;I k,n,*y;
 
 
 static A jtconstr(J jt,I n,C*s){A z;C b,c,p,*t,*x;I m=0;
-// obsolete  p=0; t=s; DQ(n-2, c=*++t; b=c==CQUOTE; if(!b||p)m++;    p=b&&!p;);
  p=0; t=s; DQ(n-2, c=*++t; b=c==CQUOTE; m+=(b^1)|p; p=((b^1)|p)^1;);
  if(0==m)R aqq; else if(1==m&&(z=chr[(UC)s[1]]))R z;
  GATV0(z,LIT,m,1!=m); x=CAV(z);
@@ -251,7 +250,6 @@ static A jtfsmdo(J jt,I f,A s,A m,I*ijrd,A w,A w0){A x,z;C*cc,*wv0;
  sv=AV(s); mv=AV(m);
  i=ijrd[0]; j=ijrd[1]; r=ijrd[2]; d=ijrd[3]; vi=vj=vr=vc=-1;
  if(t&INT){t0=AT(w0); wr=AR(w0); wm=aii(w0); wk=wm<<bplg(AT(w0)); wv0=CAV(w0);}
-// obsolete switch(f+(t&B01?0:t&LIT?10:20)){
  switch(f+(t&(B01+LIT))*6){
   case 0+0: {I *wv= AV(w); FSMF(A,1,BOX,1, 1,   wv[i] ,EMIT0x,ZVAx);} break; // other
   case 0+1: {I *wv= AV(w); FSMF(C,bp(AT(w0)),t0, wr,wm,  wv[i] ,EMIT1x,ZVAx);} break;

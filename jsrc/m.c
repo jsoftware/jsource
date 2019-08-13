@@ -185,16 +185,6 @@ static F1(jtspfor1){
  if(BOX&AT(w)){A*wv=AAV(w); DO(AN(w), if(wv[i])spfor1(wv[i]););}
  else if(AT(w)&TRAVERSIBLE)traverse(w,jtspfor1); 
  if(!ACISPERM(AC(w))) {
-#if 0 // wrong?
-  if(AFNJA&AFLAG(w)){I j,m,n,p;
-   m=SZI*WP(AT(w),AN(w),AR(w)); 
-   n=p=m+mhb; 
-   j=PMINL; n>>=j; 
-   while(n){n>>=1; ++j;} 
-   if(p==(I)1<<(j-1))--j;
-   jt->spfor+=(I)1<<j;
-  }else jt->spfor+=(I)1<<(((MS*)w-1)->j);
-#else
   // for NJA allocations with contiguous header, the size is the header size (7+64 words) plus the data size
   // for NJA allocations with separate header, the size is the data size plus the size of the base block
   if(AFNJA&AFLAG(w)) {
@@ -207,7 +197,6 @@ static F1(jtspfor1){
   // for non-NJA allocations, just take the full size of the block
    jt->spfor += alloroundsize(w);
   }
-#endif
  }
  R mtm;
 }
@@ -337,7 +326,6 @@ static void auditsimdelete(A w){I delct;
   // handle nonrecursive children.  All recursible types will be recursive
   if(AFLAG(w)&AFVIRTUAL && (AT(wb)^AFLAG(wb))&RECURSIBLE)SEGFAULT
   auditsimdelete(wb);  // delete backer of virtual block, recursibly
-// obsolete   if(AT(wb)&(RAT|XNUM)) {A* v=AAV(wb);  DQ(AT(wb)&RAT?2*AN(wb):AN(wb), if(*v)auditsimdelete(*v); ++v;)}  // finish fa() if nonrecursive
  }
  if(delct==ACUC(w)&&(UCISRECUR(w))){  // we deleted down to 0.  process children
   if(AT(w)&BOX){
@@ -521,7 +509,6 @@ RESTRICTF A jtvirtual(J jtip, AD *RESTRICT w, I offset, I r){AD* RESTRICT z;
   // If this is an inplaceable request for an inplaceable DIRECT block, we don't need to create a new virtual block: just modify the offset in the old block.  Make sure the shape fits
   // if the block is UNINCORPABLE, we don't modify it, because then we would have to check everywhere to see if a parameter block had changed
   // We could check for assignsym etc, but it's not worth it: all we are saving is allocating one lousy block, usually 64 bytes
-// obsolete  if(((I)jtip&JTINPLACEW) && t&DIRECT && AR(w)>=r && ASGNINPLACE(w) && !(wf&AFUNINCORPABLE)){
  if((SGNIF((I)jtip,JTINPLACEWX) & (-(t&DIRECT)) & (r-(AR(w)+1)) & c & ((wf&AFUNINCORPABLE)-1))<0){
   // virtual-in-place.  There's nothing to do but change the pointer and fill in the new rank.  AN and AS are handled in the caller
   AK(w)+=offset; AR(w)=(RANKT)r;
@@ -655,14 +642,10 @@ I jtra(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
  if(t&BOX){AD* np;
   // boxed.  Loop through each box, recurring if called for.  Two passes are intertwined in the loop
   A* RESTRICT wv=AAV(wd);  // pointer to box pointers
-// obsolete   I wrel = af&AFNJA?(I)wd:0;  // If relative, add wv[] to wd; otherwise wv[] is a direct pointer scaf remove
-  if(/*(af&AFNJA)|| obsolete*/n==0)R 0;  // Can't be mapped boxed; skip prefetch if no boxes
-// obsolete   np=(A)(intptr_t)((I)*wv+(I)wrel); ++wv;  // point to block for the box
+  if(n==0)R 0;  // Can't be mapped boxed; skip prefetch if no boxes
   np=*wv++;  // prefetch first box
   while(1){AD* np0;  // n is always > 0 to start
-// obsolete    if(--n<0)break;
    if(--n>0){   // mustn't read past the end of the block, in case of protection check
-// obsolete     np0=(A)(intptr_t)((I)*wv+(I)wrel); ++wv;  // point to block for next box
     np0=*wv++;  // fetch next box if it exists
 #ifdef PREFETCH
     PREFETCH((C*)np0);   // prefetch the next box
@@ -691,14 +674,10 @@ I jtfa(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
  if(t&BOX){AD* np;
   // boxed.  Loop through each box, recurring if called for.
   A* RESTRICT wv=AAV(wd);  // pointer to box pointers
-// obsolete   I wrel = af&AFNJA?(I)wd:0;  // If relative, add wv[] to wd; otherwise wv[] is a direct pointer scaf remove
-  if(/*(af&AFNJA)|| obsolete*/n==0)R 0;  // Can't be mapped boxed; skip prefetch if no boxes
-// obsolete   np=(A)(intptr_t)((I)*wv+(I)wrel); ++wv;  // point to block for the box
+  if(n==0)R 0;  // Can't be mapped boxed; skip prefetch if no boxes
   np=*wv++;  // prefetch first box
   while(1){AD* np0;  // n is always > 0 to start
-// obsolete    if(--n<0)break;
    if(--n>0){   // mustn't read past the end of the block, in case of protection check
-// obsolete     np0=(A)(intptr_t)((I)*wv+(I)wrel); ++wv;  // point to block for next box
     np0=*wv++;  // fetch next box if it exists
 #ifdef PREFETCH
     PREFETCH((C*)np0);   // prefetch the next box
@@ -727,7 +706,7 @@ A *jttpush(J jt,AD* RESTRICT wd,I t,A *pushp){I af=AFLAG(wd); I n=AN(wd);
  if(t&BOX){
   // boxed.  Loop through each box, recurring if called for.
   A* RESTRICT wv=AAV(wd);  // pointer to box pointers
-  if((af&AFNJA)/* obsolete ||n==0*/)R pushp;  // no processing if not J-managed memory (rare) scaf improve
+  if((af&AFNJA))R pushp;  // no processing if not J-managed memory (rare) scaf improve
   while(n--){
    A np=*wv; ++wv;   // point to block for box
    if(np){     // it can be 0 if there was error
@@ -800,7 +779,6 @@ A* jttg(J jt, A *pushp){     // Filling last slot; must allocate next page.
 // return value is pushp
 // If the block has recursive usecount, decrement usecount in children if we free it
 void jttpop(J jt,A *old){A *endingtpushp;
-// obsolete if(old>=pushx)R pushx;  // return fast if nothing to do
  // pushp points to an empty cell.  old points to the last cell to be freed.  decrement pushp to point to the cell to free (or to the chain).  decr old to match
  A *pushp=jt->tnextpushp;
  jt->tnextpushp = old;  // when we finish, this will be the new start point.  Set it early so we don't audit things in the middle of popping
@@ -810,9 +788,6 @@ void jttpop(J jt,A *old){A *endingtpushp;
   // get the address of the first cell we cannot free in this block: old-1, if in the same block as pushp; otherwise cell 0 in pushp
   endingtpushp=(A*)((I)pushp&(-NTSTACKBLOCK));  // in case oldx in different block, use start of this one
   endingtpushp=((I)pushp^(I)old)&(-NTSTACKBLOCK)?endingtpushp:old;  // if old in this block, use it
-// obsolete  endingtpushx = MAX(old,SZI+((pushx-SZI)&-NTSTACK));  // Get # of frees we can perform in this tstack block.  Could be 0
-// obsolete   I nfrees=(A*)pushx-(A*)endingtpushx;
-// obsolete   A* RESTRICT fp = (A*)((I)jt->tstack+(pushx-SZI));  // point to first slot to free, possibly rolling to end of block
   np=*pushp;   // get addr of first block to free
   while(pushp!=endingtpushp){A np0;
    // np has next block to process.  It is *pushp
@@ -824,9 +799,6 @@ void jttpop(J jt,A *old){A *endingtpushp;
 #ifdef PREFETCH
    PREFETCH((C*)np0);   // prefetch the next box
 #endif
-// obsolete #if MEMAUDIT&2
-// obsolete    jt->tnextpushp=pushp;  // remove the buffer-to-be-freed from the stack for auditing.  We must, because it may be a SYMB block that does auditing
-// obsolete #endif
    // We never tpush a PERMANENT block so we needn't check for it
    if(--c<=0){if(AFLAG(np)&AFVIRTUAL){A b=ABACK(np); fana(b);} if(UCISRECUR(np)){fana(np);}else{mf(np);}}else AC(np)=c;  // decrement usecount and either store it back or free the block
    np=np0;  // Advance to next block
@@ -838,23 +810,16 @@ void jttpop(J jt,A *old){A *endingtpushp;
    if((A*)np!=pushp-1){
     // if there is another block in this allocation, step to it.  Otherwise:
     if(jt->tstacknext)FREECHK(jt->tstacknext);   // We will set the block we are vacating as the next-to-use.  We can have only 1 such; if there is one already, free it
-// obsolete     // move the start pointer forward; past old, if this is the last pass
-// obsolete     pushx=endingtpushx-SZI;  // back up to slot 0, so when the next ending address is calculated, it goes all the way back to beginning of block
     jt->tstacknext=jt->tstackcurr;  // save the next-to-use, after removing bias
     jt->tstackcurr=(A*)jt->tstackcurr[0];   // back up to the previous block
    }
    pushp=(A*)np; // move to the next block, whichever allocation it is in 
-// obsolete #if MEMAUDIT&2
-// obsolete    jt->tnextpushx -= SZI;  // skip the chain field on the stack for auditing
-// obsolete #endif
   } else {
    // The return point:
 #if MEMAUDIT&2
-// obsolete    jt->tnextpushx -= endingtpushx;  ??
-// obsolete    jt->tnextpushp=old+1;
    audittstack(jt);   // one audit for each tpop.  Mustn't audit inside tpop loop, because that's inconsistent state
 #endif
-   R /* obsolete  old+1*/;  // On last time through, update starting pointer for next push, and return that value.  Undo the decr of old
+   R;  // On last time through, update starting pointer for next push, and return that value.  Undo the decr of old
   }
  }
 }
@@ -892,7 +857,6 @@ if((I)jt&3)SEGFAULT
  z=jt->mfree[-PMINL+1+blockx].pool;   // tentatively use head of free list as result - normal case, and even if blockx is out of bounds will not segfault
  if(2>*jt->adbreakr){  // this is JBREAK0, done this way so predicted fallthrough will be true
   A *pushp=jt->tnextpushp;  // start reads for tpush
-// obsolete  A* tstack=jt->tstack;
   if(blockx<PLIML){ 
    // small block: allocate from pool
    mfreeb=jt->mfree[-PMINL+1+blockx].ballo; // bytes in pool allocations
@@ -953,8 +917,6 @@ if((I)jt&3)SEGFAULT
    // we do not attempt to combine the AFLAG write into a 64-bit operation, because as of 2017 Intel processors
    // will properly store-forward any read that is to the same boundary as the write, and we always read the same way we write
   *pushp++=z; if(!((I)pushp&(NTSTACKBLOCK-1)))RZ(pushp=tg(pushp)); jt->tnextpushp=pushp;  // advance to next slot, allocating a new block as needed
-// obsolete   *(I*)((I)tstack+pushx)=(I)z; pushx+=SZI;
-// obsolete   if((pushx&(NTSTACK-1))){jt->tnextpushx=pushx;}else{RZ(tg(pushx)); jt->tnextpushx=pushx+SZI;}  // advance to next slot; skip over chain if new block needed
 #if LEAKSNIFF
   if(leakcode>0){  // positive starts logging; set to negative at end to clear out the parser allocations etc
    if(leaknbufs*2 >= AN(leakblock)){
@@ -973,9 +935,8 @@ if((I)jt&3)SEGFAULT
 }
 
 RESTRICTF A jtgafv(J jt, I bytes){UI4 j;
- CTLZI((UI)((bytes-1)|((I)1<<(PMINL-1))),j);/* obsolete  ++j;*/   // 3 or 4 should return 2; 5 should return 3
+ CTLZI((UI)((bytes-1)|((I)1<<(PMINL-1))),j);  // 3 or 4 should return 2; 5 should return 3
  if((UI)bytes<=(UI)jt->mmax){
-// obsolete   j=(j<PMINL)?PMINL:j;
   R jtgaf(jt,(I)j);
  }else{jsignal(EVLIMIT); R 0;}  // do it this way for branch-prediction
 }
@@ -998,11 +959,6 @@ RESTRICTF A jtga(J jt,I type,I atoms,I rank,I* shaape){A z;
   // because COPYSHAPE will always write one shape value, we have to delay the memset to handle the case of rank 0 with atoms (used internally only)
   if(!(type&DIRECT))memset((C*)z+akx,C0,bytes-akx);  // For indirect types, zero the data area.  Needed in case an indirect array has an error before it is valid
     // All non-DIRECT types have items that are multiples of I, so no need to round the length
-  /* obsolete else if(type&LAST0){((I*)((C*)z+((bytes-SZI)&(-SZI))))[0]=(I)0x85d9a62c08a4f927  scaf ;}*/  // We allocated a full SZI for the trailing NUL, because the
-     // code for boolean verbs needs it.
-// obsolete if((1==rank&&type&SPARSE&&shaape) || (type&SPARSE && atoms && !(type&XZ)))
-// obsolete  SEGFAULT  // scaf
-// obsolete AT(z)&=~XZ; // scaf
   R z;
  }else{jsignal(EVLIMIT); R 0;}  // do it this way for branch-prediction
 }
@@ -1159,37 +1115,3 @@ A jtexta(J jt,I t,I r,I c,I m){A z;I m1;
 // forcetomemory does nothing, but it does take an array as argument.  This will spook the compiler out of trying to assign parts of the array to registers.
 void forcetomemory(void * w){R; }
 
-#if 0  // obsolete
-/* debugging tools  */
-
-B jtcheckmf(J jt){C c;I i,j;MS*x,*y;
- for(j=0;j<=PLIML;++j){
-  i=0; y=0; x=(MS*)(jt->mfree[-PMINL+j]); /* head ptr for j-th pool */
-  while(x){
-   ++i; c=x->mflag;
-   if(!(j==x->j)){
-    ASSERTSYS(0,"checkmf 0");
-   }
-   if(!(!c||c==MFHEAD)){
-    ASSERTSYS(0,"checkmf 1");
-   }
-   y=x; x=(MS*)x->a;
- }}
- R 1;
-}    /* traverse free list */
-
-B jtchecksi(J jt){DC d;I dt;
- d=jt->sitop;
- while(d&&!(DCCALL==d->dctype&&d->dcj)){
-  dt=d->dctype;
-  if(!(dt==DCPARSE||dt==DCSCRIPT||dt==DCCALL||dt==DCJUNK)){
-   ASSERTSYS(0,"checksi 0");
-  }
-  if(!(d!=d->dclnk)){
-   ASSERTSYS(0,"checksi 1");
-  }
-  d=d->dclnk;
- }
- R 1;
-}    /* traverse stack per jt->sitop */
-#endif

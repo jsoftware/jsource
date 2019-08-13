@@ -71,8 +71,6 @@ A jtfdef(J jt,I flag2,C id,I t,AF f1,AF f2,A fs,A gs,A hs,I flag,I m,I l,I r){A 
 #endif
  v->flag2 = (UI4)flag2;         // more flags
  v->mr    =(RANKT)m;                   /* monadic rank     */
-// obsolete  v->lr    =(RANKT)l;                   /* left    rank     */
-// obsolete  v->rr    =(RANKT)r;                   /* right   rank     */
  v->lrr=(RANK2T)((l<<RANKTX)+r);
  v->id    =(C)id;                  /* spelling         */
  R z;

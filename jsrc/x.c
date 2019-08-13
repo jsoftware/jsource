@@ -46,7 +46,6 @@ F2(jtforeign){I p,q;
  p=i0(a); q=i0(w); RE(0);
  if(11==p)R fdef(0,CIBEAM,VERB, jtwd,0L, a,w,0L, VASGSAFE, 1L,RMAX,RMAX);
  ASSERT((UI)p<=(UI)128 && (UI)q<XCC,EVDOMAIN);
-// obsolete  if(q<0||XCC<=q)R CDERIV(CIBEAM, 0,0,  VASGSAFE,RMAX,RMAX,RMAX);
  switch(XC(p,q)){
   case XC(0,  0): 
   case XC(0,100): R SDERI2(CIBEAM, jtscm00,      jtscm002,     VASGSAFE,RMAX,RMAX,RMAX);
@@ -103,7 +102,6 @@ F2(jtforeign){I p,q;
   case XC(3,4):   R CDERIV(CIBEAM, 0,            jtic2,        VASGSAFE,0,   RMAX,RMAX);
   case XC(3,5):   R CDERIV(CIBEAM, 0,            jtfc2,        VASGSAFE,0,   RMAX,RMAX);
   case XC(3,6):   R CDERIV(CIBEAM, jtlock1,      jtlock2,      VASGSAFE,RMAX,RMAX,RMAX);
-// obsolete   case XC(3,7):   R CDERIV(CIBEAM, jtbit1,       jtbit2,       VASGSAFE,RMAX,RMAX,RMAX);
   case XC(3,9):   R CDERIV(CIBEAM, 0,            jtnouninfo2,  VASGSAFE,RMAX,RMAX,RMAX);
 
   case XC(4,0):   R CDERIV(CIBEAM, jtnc,         0,            VASGSAFE,0,   0,   0   );
@@ -219,13 +217,13 @@ F2(jtforeign){I p,q;
   case XC(13,7):  R CDERIV(CIBEAM, jtdbjump,     0,            VFLAGNONE,RMAX,0,   0   );
   case XC(13,8):  R CDERIV(CIBEAM, jtdbsig1,     jtdbsig2,     VFLAGNONE,RMAX,RMAX,RMAX);
   case XC(13,9):  R CDERIV(CIBEAM, jtdbrr1,      jtdbrr2,      VFLAGNONE,RMAX,RMAX,RMAX);
-  case XC(13,10):  R CDERIV(CIBEAM, 0,0, VFLAGNONE,RMAX,RMAX,RMAX);  // obsolete but still in stdlib
+  case XC(13,10):  R CDERIV(CIBEAM, 0,0, VFLAGNONE,RMAX,RMAX,RMAX);  // still in stdlib
   case XC(13,11): R CDERIV(CIBEAM, jtdberr,      0,            VFLAGNONE,RMAX,0,   0   );
   case XC(13,12): R CDERIV(CIBEAM, jtdbetx,      0,            VFLAGNONE,RMAX,0,   0   );
   case XC(13,13): R CDERIV(CIBEAM, jtdbcall,     0,            VFLAGNONE,RMAX,0,   0   );
   case XC(13,14): R CDERIV(CIBEAM, jtdbtrapq,    0,            VFLAGNONE,RMAX,0,   0   );
   case XC(13,15): R CDERIV(CIBEAM, jtdbtraps,    0,            VFLAGNONE,RMAX,0,   0   );
-  case XC(13,16):  R CDERIV(CIBEAM, 0,0, VFLAGNONE,RMAX,RMAX,RMAX);  // obsolete but still in stdlib
+  case XC(13,16):  R CDERIV(CIBEAM, 0,0, VFLAGNONE,RMAX,RMAX,RMAX);  // still in stdlib
   case XC(13,17): R CDERIV(CIBEAM, jtdbq,        0,            VFLAGNONE,RMAX,0,   0   );
   case XC(13,18): R CDERIV(CIBEAM, jtdbstackz,   0,            VFLAGNONE,RMAX,0,   0   );
   case XC(13,19): R CDERIV(CIBEAM, jtdbcutback,  0,            VFLAGNONE,RMAX,0,   0   );

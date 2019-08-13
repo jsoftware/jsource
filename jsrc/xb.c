@@ -424,69 +424,6 @@ static I eft(I n,UI* e,UI* t)
 	return 0;
 }
 
-#if 0 // obsolete 
-// iso 8601 from e (epoch date time)
-// sz - separator , or . and zulu 'Z' or ' '
-static I sfe(I rows,I cols,char* s,I* e,char* sz)
-{
-	I k; int i,M,v,d,j,g,m,t,y,hh,mm,ss; char b[1000];char* q;
-	for(i=0;i<rows;++i)
-	{
-		k= e[i];
-		M=k%NANOS;
-		k=k/NANOS;
-		v=k%SECS;
-		k= k/SECS;
-		if(e[i]<0)
-		{
-			if(M<0)
-			{
-				v=v-1;
-				M=M+NANOS;
-				if(M<0) M=-M;
-			}
-			if(v<0)
-			{
-				k=k-1;
-				v=v+24*60*60;
-				if(v<0) v=-v;
-			}
-		}
-		memset(b,0,(int)cols+1);
-		memset(s,' ',(int)cols);		
-		j=(int)k+2451545;
-		g=(int)floor(3*floor((4*j+274277)/146097)/4)-38;
-		j+=1401+g;
-		t=4*j+3;
-		y=(int)floor(t/1461);
-		t=(t%1461)>>2;
-		m=(int)floor((t*5+461)/153);
-		d=(int)floor(((t*5+2)%153)/5);
-		if (m>12) {
-		  y++;
-		  m-=12;
-		}
-		y=y-4716;
-		++d;
-
-		hh= v/3600;
-		v= v%3600;
-		mm= v/60;
-		ss= v%60;
-		sprintf(b,"%04d-%02d-%02dT%02d:%02d:%02d",y,m,d,hh,mm,ss);
-		q=b+strlen(b);
-		*q++=sz[0];
-		sprintf(q,"%09d",(int)M);
-		if(y>=MINY && y<=MAXY)
-			strncpy(s,b,cols);
-		else
-			s[0]='?';
-		if(sz[1]=='Z') s[cols-1]='Z';
-		s+=cols;
-	}
-	return 0;
-}
-#endif
 
 static UC char2tbl[200] = {
 '0','0' , '0','1' , '0','2' , '0','3' , '0','4' , '0','5' , '0','6' , '0','7' , '0','8' , '0','9' ,
@@ -549,18 +486,6 @@ static A sfe(J jt,A w,I prec,UC decimalpt,UC zuluflag){
   d=(t+((0x444332221100000>>(m<<2))&0xf))%31+1;  // # days   start-of-month must advance to be on 31-day multiple, by month: x x x 0(Mar) 0(Apr) 1 1 2 2 2 3 3 4 4 4
   I4 janfeb=(I4)(12-m)>>(32-1); y-=janfeb; m-=janfeb&12;  // move jan-feb into next year number
   // Now write the result yyyy-mm-ddThh:mm:ss.nnnnnnnnn
-#if 0  // obsolete 
-    // This is the straightforward way to write the result.  I have gone to a different method because this version releases 32 integer multiplies,
-    // of which 8 have a chained dependency which might amount to 32 clocks.  I'm not sure the whole loop will take 32 clocks - it'll be close -
-    // so I have gone to a version that doesn't use the multiply unit as much
-   s[3]='0'+y%10; y/=10; s[2]='0'+y%10; y/=10; s[1]='0'+y%10; s[0]='0'+y/10;
-   s[4]='-'; s[5]='0'+m/10; s[6]='0'+m%10;
-   s[7]='-'; s[8]='0'+d/10; s[9]='0'+d%10;
-   s[10]='T'; s[11]='0'+HMS/10; s[12]='0'+HMS%10;
-   s[13]='-'; s[14]='0'+M/10; s[15]='0'+M%10;
-   s[16]='-'; s[17]='0'+E/10; s[18]='0'+E%10;
-   s[19]='.'; DQ(8, s[21+i]='0'+N%10; N/=10;) s[20]='0'+N;
-#endif
   if(linelen!=7*SZI){  // normal case of LIT output
    // Store bytes two at a time using a lookup.  The lookup fits in 4 cache lines & so should be available for most of the loop.
    // (actually, at this time only the values 0-31 will be used much, just 1 cache line)
@@ -595,117 +520,6 @@ R 0;
 #endif
 }
 
-#if 0  // obsolete
-static int gi(I n, char* q)
-{
- char b[10]; I i;
- for(i=0; i<n; ++i)
- {
-  if(isdigit(*q)) b[i]=*q++; else return -1;
- }
- if(isdigit(*q)) return -1;
- b[i]=0;
- return (int)strtol(b,0,10);
-}
-
-// convert iso 8601 to epoch 2000 nanoseconds
-// return count of bad conversions
-static  I efs(I rows,I cols, char* s,I* e,I* offset,I ignoreoffset)
-{
-	int Y,M,D,hh,mm,ss,hho,mmo,v,signn;
-	I k,i,N,r=0; char b[1000]; char* q; C sign;
-	for(i=0;i<rows;++i)
-	{
-     e[i]=IMIN;
-	 if(offset) offset[i]=-1;
-	 ++r; // assume failure
-	 M=D=1;
-	 hh=mm=ss=hho=mmo=0;
-	 N=0;
-	 q= b;
-	 strncpy(q,s,cols);
-	 b[cols]= ' '; b[cols+1]= 0;
-	 if(-1==(v= gi(4, q))) goto bad; q+= 4;
-	 Y= v;
-	 if('-'==*q)
-	 {
-		 ++q;
-		 if(-1==(v= gi(2, q))) goto bad; q+=2;
-		 M= v;
-		 if('-'==*q)
-		 {
-			 ++q;
-			 if(-1==(v= gi(2, q))) goto bad; q+=2;
-			 D=v ;
-		 }
-	}
-	if(*q=='T' || (*q==' '&&isdigit(*(q+1))) ) // T or blank allowed delimiter for time fields
-	{
-		++q;
-		if(-1==(v= gi(2, q))) goto bad; q+=2;
-		hh=v;
-		if(':'==*q)
-		{
-			++q;
-			if(-1==(v= gi(2, q))) goto bad; q+=2;
-			mm= v;
-			if(':'==*q)
-			{
-				++q;
-				if(-1==(v= gi(2, q))) goto bad; q+=2;
-				ss= v;
-				if(*q=='.'||*q==',')
-				{
-					char b[]= "000000000";
-					++q;
-					for(k=0; k<9; ++k){if(isdigit(*q))b[k]=*q++;  else  break;}
-					N=strtol(b,0,10);
-				}
-			}
-		}
-		sign= *q;
-		signn= (sign=='+')?1:-1;
-		if(sign=='+'||sign=='-')
-		{
-		   ++q;
-		   if(-1==(v= gi(2, q))) goto bad; q+=2;
-		   hho= v;
-		   if(*q==':')
-		   {
-			++q;
-			if(-1==(v= gi(2, q))) goto bad; q+=2;
-			mmo= v;
-		   }
-		   if(!ignoreoffset)
-		   {
-            hh-= hho*signn;
-            mm-= mmo*signn;
-		   }
-		}
-	}
-	if(*q=='Z')++q;
-	while(' '==*q)++q;
-	if(0==*q)
-	{
-		if(offset!=0) offset[i]= (hho*60+mmo)*signn;
-		if(Y>=MINY && Y<=MAXY)
-		{
-			if(M<3){Y=Y-1;M=M+12;		}
-			k= (int)floor(365.25*Y)-(int)floor(Y/100)+(int)floor(Y/400)+(int)floor(30.6*(M+1))+D-730548; // seconds since 2000
-			k= 24*60*60*k;
-			k= k+(hh*3600)+(mm*60)+ss;
-			e[i]=N+NANOS*k;
-			--r;
-		}
-		else
-			e[i]=IMIN;
-	}
-bad:
-	s+=cols;
-}
-return r;
-}
-#endif
 
 // w is LIT array of ISO strings (rank>0, not empty), result is array of INTs with nanosecond time for each string
 // We don't bother to support a boxed-string version because the strings are shorter than the boxes & it is probably just about as good to just open the boxed strings
@@ -751,13 +565,9 @@ gotdate: ;
   if(!(c&~' ')){hh=mm=ss=0; goto gottime;}   // YYYY-MM-DDTbb treat this as ending the year, default the rest
   RDTWOC(hh);
   if((c<0x40) & (((I)1<<'+')|((I)1<<'-')|((I)1<<' ')|((I)1<<0))>>c){mm=ss=0; if((c&~' '))goto hittz; goto gottime;}
-// obsolete   if(!(sp[0]&~' ')){mm=ss=0; goto gottime;}   // YYYY-MM-DDTHH.  default the rest
-// obsolete   if((sp[0]=='+')|(sp[0]=='-')){mm=ss=0; goto hittz;}
   if(c==':')c=*++sp;  // skip ':' if present
   RDTWOC(mm);
   if((c<0x40) & (((I)1<<'+')|((I)1<<'-')|((I)1<<' ')|((I)1<<0))>>c){ss=0; if((c&~' '))goto hittz; goto gottime;}
-// obsolete  if(!(sp[0]&~' ')){ss=0; goto gottime;}   // YYYY-MM-DDTHH:MM.  default the rest
-// obsolete  if((sp[0]=='+')|(sp[0]=='-')){ss=0; goto hittz;}
   if(c==':')c=*++sp;  // skip ':' if present
   RDTWOC(ss);
   // If the seconds have decimal extension, turn it to nanoseconds.  ISO8601 allows fractional extension on the last time component even if it's not SS, but we don't support that 

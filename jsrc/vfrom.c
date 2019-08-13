@@ -28,8 +28,6 @@ F1(jtcatalog){PROLOG(0072);A b,*wv,x,z,*zv;C*bu,*bv,**pv;I*cv,i,j,k,m=1,n,p,*qv,
  EPILOG(z);
 }
 
-// obsolete #define SETJ(jexp)    {j=(jexp); if(j<0)j+=p; ASSERT((UI)j<(UI)p,EVINDEX);}
-
 #define SETNDX(ndxvbl,ndxexp,limexp)    {ndxvbl=(ndxexp); if((UI)ndxvbl>=(UI)limexp){ndxvbl+=(limexp); ASSERT((UI)ndxvbl<(UI)limexp,EVINDEX);}}  // if ndxvbl>p, adding p can never make it OK
 #define SETNDXRW(ndxvbl,ndxexp,limexp)    {ndxvbl=(ndxexp); if((UI)ndxvbl>=(UI)limexp){(ndxexp)=ndxvbl+=(limexp); ASSERT((UI)ndxvbl<(UI)limexp,EVINDEX);}}  // this version write to input if the value was negative
 #define SETJ(jexp) SETNDX(j,jexp,p)
@@ -39,14 +37,6 @@ F1(jtcatalog){PROLOG(0072);A b,*wv,x,z,*zv;C*bu,*bv,**pv;I*cv,i,j,k,m=1,n,p,*qv,
   if(1==an){v+=j;   DQ(m,                                    *x++=*v;       v+=p; );}  \
   else              DQ(m, DO(an, SETJ(av[i]);                *x++=v[j];);   v+=p; );   \
  }
-#if 0 // obsolete
-# define IFROMLOOP2(T,qexp)  \
- {T* RESTRICT u,* RESTRICT v=(T*)wv,* RESTRICT x=(T*)zv;  \
-  q=(qexp); pq=p*q;         \
-  if(1==an){v+=j*q; DQ(m,                     u=v;     DQ(q, *x++=*u++;);   v+=pq;);}  \
-  else              DQ(m, DO(an, SETJ(av[i]); u=v+j*q; DQ(q, *x++=*u++;);); v+=pq;);   \
- }
-#else
 #define MVMC(d,s,l) MC(d,s,l); d=(I*)((C*)d+(l)); s=(I*)((C*)s+(l));
 #define MVLOOP(d,s,l) I n=(l); do{*d++=*s++;}while((n-=SZI)>0); d=(I*)((C*)d+n);
 #define IFROMLOOP2(qexp,mvlp)  \
@@ -55,7 +45,6 @@ F1(jtcatalog){PROLOG(0072);A b,*wv,x,z,*zv;C*bu,*bv,**pv;I*cv,i,j,k,m=1,n,p,*qv,
   if(1==an){v=(I*)((C*)v+j*k); DQ(m,                     u=v;     mvlp(x,u,k)  v=(I*)((C*)v+pq););}  \
   else              DQ(m, DO(an, SETJ(av[i]); u=(I*)((C*)v+j*k); mvlp(x,u,k) ); v=(I*)((C*)v+pq););   \
  }
-#endif
 
 F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wk,wn,wr,*ws,zn;
  F1PREFIP;
@@ -82,7 +71,6 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wk,wn,wr,*ws,zn;
   // Also m: #wcr-cells in w 
   PROD(m,wf,ws); zn=k*m;  RE(zn=mult(an,zn));
 // correct  if(((zn-2)|-(wf|(wflag&(AFNJA))))>=0){  // zn>1 and not (frame or NJA)
-// obsolete if(!(AT(w)&(DIRECT|RECURSIBLE)))SEGFAULT  // scaf
   if(((zn-2)|(wr-2)|-(wf|(wflag&(AFNJA))))>=0){  // zn>1 and not (frame or NJA) and rank>1.  Don't take the time creating a virtual block for a list.  User should use ;.0 for that
    // result is more than one atom and does not come from multiple cells.  Perhaps it should be virtual.  See if the indexes are consecutive
    I index0 = av[0]; index0+=(index0>>(BW-1))&p;  // index of first item
@@ -109,10 +97,6 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wk,wn,wr,*ws,zn;
  // from here on we are moving items
  wk=k*p;   // stride between cells of w
  wv=CAV(w); zv=CAV(z); SETJ(*av);
-#if 0 // obsolete No need to bother moving Ds unless they are longer than Is
- if(AT(w)&FL+CMPX){if(k==sizeof(D))IFROMLOOP(D) else IFROMLOOP2(k>>LGSZD);}
- else
-#endif
   switch(k){
   case sizeof(C): IFROMLOOP(C); break; 
   case sizeof(S): IFROMLOOP(S); break;  
@@ -165,18 +149,6 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wk,wn,wr,*ws,zn;
    if(k<MEMCPYTUNELOOP)IFROMLOOP2((k+SZI-1)>>LGSZI,MVLOOP)
    else IFROMLOOP2((k+SZI-1)>>LGSZI,MVMC)
    break;
-#if 0 // obsolete
-   if     (0==(k&(SZI-1)))IFROMLOOP2(I,k>>LGSZI)
-#if SY_64
-   else if(0==(k&(SZI4-1)))IFROMLOOP2(int,k>>LGSZI4)
-#endif
-   else if(0==(k&(SZS-1)))IFROMLOOP2(S,k>>LGSZS)
-   else{S*x,*u;
-    q=1+(k>>LGSZS);
-    if(1==an){wv+=k*j; DQ(m,                     x=(S*)zv; u=(S*) wv;      DQ(q, *x++=*u++;); zv+=k;   wv+=wk;);}
-    else               DO(m, DO(an, SETJ(av[i]); x=(S*)zv; u=(S*)(wv+k*j); DQ(q, *x++=*u++;); zv+=k;); wv+=wk;);
-   }
-#endif
   }
  RETF(z);  // todo kludge should inherit norel
 }    /* a{"r w for numeric a */
@@ -244,7 +216,6 @@ static F2(jtbfrom){A z;B*av,*b;C*wv,*zv;I acr,an,ar,k,m,p,q,r,*u=0,wcr,wf,wk,wn,
  }else{zn=0;}
  GA(z,AT(w),zn,ar+wr-(I )(0<wcr),0);
  MCISH(AS(z),AS(w),wf); MCISH(&AS(z)[wf],AS(a),ar); if(wcr)MCISH(&AS(z)[wf+ar],1+wf+ws,wcr-1);
-// obsolete  s=AS(z)+wf; MCISH(s,AS(a),ar); MCISH(s+ar,1+wf+ws,wcr-1);
  if(!zn)R z;  // If no data to move, just return the shape
  av=BAV(a); wv=CAV(w); zv=CAV(z);
  switch(k+k+(I )(1==an)){
@@ -316,12 +287,10 @@ A jtfrombu(J jt,A a,A w,I wf){F1PREFIP;A p,q,z;B b=0;I ar,*as,h,m,r,*u,*v,wcr,wr
  // We will use pdt to create an index to the cell
  A ind; RZ(ind=pdt(a,p));
  if(r==wr){
-// obsolete  z=irs2(ind,w,0, RMAX,wcr+1-h,jtifrom);
   q=w;
  }else{
   //  reshape w to combine the first h axes of each cell
   RZ(q=virtualip(w,0,r)); AN(q)=AN(w); v=AS(q); MCISH(v,ws,wf); v[wf]=m; MCISH(v+wf+1,ws+wf+h,wcr-h);  /* q is reshape(.,w) */
-// obsolete   z=irs2(ind,q,0, RMAX,wcr+1-h,jtifrom);
  }
  IRS2(ind,q,0, RMAX,wcr+1-h,jtifrom,z);
  RETF(z);
@@ -345,7 +314,6 @@ B jtaindex(J jt,A a,A w,I wf,A*ind){A*av,q,z;I an,ar,c,j,k,t,*u,*v,*ws;
   if(!(t&INT))RZ(q=cvt(INT,q));  // if can't convert to INT, error
   if(!(c==AN(q)&&1>=AR(q)))R 0;   // if not the same length, or rank>1, error
   u=AV(q);
-// obsolete   DO(c, k=u[i]; if(0>k)k+=ws[i]; ASSERT((UI)k<(UI)ws[i],EVINDEX); *v++=k;);
   DO(c, SETNDX(k,u[i],ws[i]) *v++=k;);   // copy in the indexes, with correction for negative indexes
  }
  *ind=z;
@@ -374,7 +342,6 @@ static B jtaindex1(J jt,A a,A w,I wf,A*ind){A z;I c,i,k,n,t,*v,*ws;
  }else{
   // There was a negative index.  Allocate a new block for a and copy to it.
   RZ(z=t&INT?ca(a):cvt(INT,a));  v=AV(z);
-// obsolete   DO(n, DO(c, k=*v; if(0>k)*v=k+=ws[i]; ASSERT((UI)k<(UI)ws[i],EVINDEX); ++v;););  // convert indexes to nonnegative & check for in-range
   DQ(n, DO(c, SETNDXRW(k,*v,ws[i]) ++v;););  // convert indexes to nonnegative & check for in-range
  }
  *ind=z;
@@ -427,7 +394,6 @@ static F2(jtafrom){PROLOG(0073);A c,ind,p=0,q,*v,y=w;B bb=1;I acr,ar,i=0,j,m,n,p
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK;
  if(ar){  // if there is an array of boxes
-// obsolete  if(ar==acr&&wr==wcr){RE(aindex(a,w,wf,&ind)); if(ind)R frombu(ind,w,wf);}
   if(((ar^acr)|(wr^wcr))==0){RE(aindex(a,w,wf,&ind)); if(ind)R frombu(ind,w,wf);}  // if boxing doesn't contribute to shape, open the boxes of a and copy the values
   R wr==wcr?rank2ex(a,w,0L,0L,wcr,0L,wcr,jtafrom):  // if a has frame, rank-loop over a
       df2(IRS1(a,0L,acr,jtbox,c),IRS1(w,0L,wcr,jtbox,ind),amp(ds(CLBRACE),ds(COPE)));  // (<"0 a) {&> <"0 w
@@ -452,8 +418,6 @@ static F2(jtafrom){PROLOG(0073);A c,ind,p=0,q,*v,y=w;B bb=1;I acr,ar,i=0,j,m,n,p
  for(;i<n;i+=2){
   j=1+i; if(!p)p=afi(s[i],v[i]); q=j<n?afi(s[j],v[j]):ace; if(!(p&&q))break;  // pq are 0 if error
   if(p!=ace&&q!=ace){y=afrom2(p,q,y,wcr-i);}
-// obsolete   else if(p!=ace)   {y=irs2(p,y,0L,AR(p),wcr-i,jtifrom);}
-// obsolete   else if(q!=ace)   {y=irs2(q,y,0L,AR(q),wcr-j,jtifrom);}
   else{
    if(q==ace){q=p; j=i;}
    if(q!=ace)y=IRS2(q,y,0L,AR(q),wcr-j,jtifrom,w);
@@ -468,7 +432,6 @@ F2(jtfrom){I at;A z;
  F2PREFIP;
  RZ(a&&w);
  at=AT(a);
-// obsolete  switch((at&SPARSE?2:0)+(AT(w)&SPARSE?1:0)){
  if(!((AT(a)|AT(w))&(SPARSE))){z=at&BOX?afrom(a,w)  :at&B01&&AN(a)!=1?bfrom(a,w):jtifrom(jtinplace,a,w);}  // make 0{ and 1{ allow virtual result
  else if(!((AT(a)|AT(w))&(NOUN&~SPARSE))){z=fromss(a,w);}
  else if(AT(w)&SPARSE){z=at&BOX?frombs(a,w) :                  fromis(a,w);}
@@ -519,7 +482,6 @@ F2(jtsfrom){
 static F2(jtmapx){A z1,z2,z3;
  RZ(a&&w);
  if(!(BOX&AT(w)))R ope(a);
-// obsolete  R every2(box0(every2(a,box0(catalog(every(shape(w),0L,jtiota))),0L,jtover)),w,0L,jtmapx);
  RZ(z1=catalog(every(shape(w),0L,jtiota)));  // create index list of each box
  IRS1(z1,0,0,jtbox,z2);
  RZ(z2=every2(a,z2,0L,jtover));
@@ -532,7 +494,6 @@ F1(jtmap){R mapx(ace,w);}
 // extract the single box a from w and open it.  Don't mark it no-inplace.  If w is not boxed, it had better be an atom, and we return it after auditing the index
 static F2(jtquicksel){I index;
  RE(index=i0(a));  // extract the index
-// obsolete  index=index+((index>>(BW-1))&AN(w)); ASSERT((UI)index<(UI)AN(w),EVINDEX);   // remap negative index, check range
  SETNDX(index,index,AN(w))   // remap negative index, check range
  R AT(w)&BOX?AAV(w)[index]:w;  // select the box, or return the entire unboxed w
 }
@@ -541,7 +502,6 @@ F2(jtfetch){A*av, z;I n;F2PREFIP;
  F2RANK(1,RMAX,jtfetch,0);  // body of verb applies to rank-1 a
  if(!(BOX&AT(a))){
   // look for the common special case scalar { boxed vector.  This path doesn't run EPILOG
-// obsolete   if(!AR(a) && AR(w)==1 && AT(w)&BOX){
   if(((AT(w)>>BOXX)&1)>=(2*AR(a)+AR(w))){  // a is an atom, w is atom or boxed list   AR(a)==0 && (AR(w)==0 || (AR(w)==1 && AT(w)&BOX))
    RZ(z=jtquicksel(jt,a,w));  // fetch selected box, opened.  If not a box, just return w
    // Inplaceability depends on the context.  If the overall operand is either noninplaceable or in a noninplaceable context, we must
@@ -552,7 +512,6 @@ F2(jtfetch){A*av, z;I n;F2PREFIP;
  }
  n=AN(a); av=AAV(a); 
  if(!n)R w; z=w;
-// obsolete  DO(n, A next=av[i]; if(!AR(next) && !(AT(next)&BOX) && AR(z)==1 && AT(z)&BOX){RZ(z=jtquicksel(jt,next,z))}
  DO(n, A next=av[i]; if(((AT(z)>>BOXX)&1)>=(2*(AR(next)+(AT(next)&BOX))+AR(z))){RZ(z=jtquicksel(jt,next,z))}  // next is unboxed atom, z is boxed atom or list, use fast indexing  AR(next)==0 && !(AT(next)&BOX) && (AR(z)==0 || (AR(z)==1 && AT(z)&BOX))
       else{RZ(z=afrom(box(next),z)); if(i<n-1)ASSERT(!AR(z),EVRANK); if(!AR(z)&&AT(z)&BOX)RZ(z=ope(z));}
    );

@@ -152,7 +152,7 @@ F1(jtsympool){A aa,q,x,y,*yv,z,*zv;I i,n,*u,*xv;L*pv;LX j,*v;
   RZ(q=sympoola(x)); u=AV(q); DO(AN(q), yv[u[i]]=aa;);
  }
  if(AN(x=jt->locsyms)>1){               /* per local table      */
-  RZ(      /* obsolete yv[LXAV0(x)[0]]=*/aa=rifvs(cstr("**local**")));
+  RZ(aa=rifvs(cstr("**local**")));
   RZ(q=sympoola(x)); u=AV(q); DO(AN(q), yv[u[i]]=aa;);
  }
  RETF(z);
@@ -168,7 +168,6 @@ L* jtprobedel(J jt,I l,C*string,UI4 hash,A g){
   if(!delblockx)R 0;  // if chain empty or ended, not found
   L *sym=jt->sympv+delblockx;
   IFCMPNAME(NAV(sym->name),string,l,     // (1) exact match - if there is a value, use this slot, else say not found
-// obsolete   if(l==NAV(sym->name)->m&&!memcmp(string,NAV(sym->name)->s,l)){
     {fa(sym->val); sym->val=0; if(!(sym->flag&LPERMANENT)){*asymx=sym->next; fr(sym->name); sym->name=0; sym->flag=0; sym->sn=0; sym->next=jt->sympv[0].next; jt->sympv[0].next=delblockx;} R sym;}
    // if match, bend predecessor around deleted block, return address of match (now deleted but still points to value)
   )
@@ -184,7 +183,6 @@ L*jtprobe(J jt,I l,C*string,UI4 hash,A g){
  while(1){
   if(!symx)R 0;  // if chain empty or ended, not found
   L *sym=jt->sympv+symx;
-// obsolete   if(l==NAV(sym->name)->m&&!memcmp(string,NAV(sym->name)->s,l))R sym->val?sym:0;     // (1) exact match - if there is a value, use this slot, else say not found
   IFCMPNAME(NAV(sym->name),string,l,R sym->val?sym:0;)     // (1) exact match - if there is a value, use this slot, else say not found
   symx=sym->next;   // mismatch - step to next
  }
@@ -207,8 +205,6 @@ L *jtprobelocal(J jt,A a){NM*u;I b,bx;
    // Now lx is the index of the first name that might match.  Do the compares
    while(lx) {L* l = lx+jt->sympv;  // symbol entry
     IFCMPNAME(NAV(l->name),s,m,R l->val?l : 0;)
-// obsolete     if(m==NAV(l->name)->m&&!memcmp(s,NAV(l->name)->s,m))
-// obsolete      {R l->val?l : 0;}
     lx = l->next;
    }
    R 0;  // no match.
@@ -221,7 +217,6 @@ L *jtprobelocal(J jt,A a){NM*u;I b,bx;
   }
  } else {
   // No bucket information, do full search.  This includes names that don't come straight from words in an explicit definition
-// obsolete   R jt->local?probe(NAV(a)->m,NAV(a)->s,NAV(a)->hash,jt->local) : 0;
   R probe(NAV(a)->m,NAV(a)->s,NAV(a)->hash,jt->locsyms);
  }
 }
@@ -245,7 +240,6 @@ L *jtprobeislocal(J jt,A a){NM*u;I b,bx;
    while(lx) {
     l = lx+jt->sympv;  // symbol entry
     IFCMPNAME(NAV(l->name),s,m,R l;)
-// obsolete     if(m==NAV(l->name)->m&&!memcmp(s,NAV(l->name)->s,m)){R l;}  // return if name match
     tx = lx; lx = l->next;
    }
    // not found, create new symbol.  If tx is 0, the queue is empty, so adding at the head is OK; otherwise add after tx
@@ -280,7 +274,6 @@ L*jtprobeis(J jt,A a,A g){C*s;LX *hv,tx;I m;L*v;NM*u;
   while(1){                               
    u=NAV(v->name);
    IFCMPNAME(u,s,m,R v;)    // (1) exact match - may or may not have value
-// obsolete    if(m==u->m&&!memcmp(s,u->s,m))R v;
    if(!v->next)break;                                /* (2) link list end */
    v=(tx=v->next)+jt->sympv;
   }
@@ -328,7 +321,6 @@ static A jtlocindirect(J jt,I n,C*u,UI4 hash){A x,y;C*s,*v,*xv;I k,xn;
   v=s; while('_'!=*--v); ++v;  // v->start of last indirect locative
   k=s-v; s=v-2;    // k=length of indirect locative; s->end+1 of next name if any
   if(!e){  // first time through
-// obsolete    if(jt->local)e=probe(k,v,hash,jt->local);  // look up local first
    e=probe(k,v,hash,jt->locsyms);  // look up local first
    if(!e)e=syrd1(k,v,hash,jt->global);
   }else e=syrd1(k,v,(UI4)nmhash(k,v),g);   // look up later indirect locatives, yielding an A block for a locative
@@ -361,19 +353,6 @@ A jtsybaseloc(J jt,A a) {I m,n;NM*v;
  // Locative: find the indirect locale to start on, or the named locale, creating the locale if not found
  R NMILOC&v->flag?locindirect(n-m-2,2+m+v->s,(UI4)v->bucketx):stfindcre(n-m-2,1+m+v->s,v->bucketx);
 }
-
-#if 0 // obsolete 
-// like syrd, but starting with the locale looked up.  Does not set the local-name flag in the result
-// all obsolete, subsumed into unquote
-L* jtsyrdfromloc(J jt, A a,A g) {
- if((I)g&1) {L *e;
-  // If there is a local symbol table, search it first
-  if(e = probelocal(a)){R e;}
-  g=jt->global;  // Start with the current locale
- }
- R syrd1(NAV(a)->m,NAV(a)->s,NAV(a)->hash,g);  // Not local: look up the name starting in locale g
-}
-#endif
 
 // look up a name (either simple or locative) using the full name resolution
 // result is symbol-table slot for the name if found, or 0 if not found
@@ -498,7 +477,6 @@ L* jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;L*e;
   CLEARZOMBIE   // clear until next use.
  } else {A jtlocal=jt->locsyms;
   n=AN(a); NM *v=NAV(a); m=v->m;  // n is length of name, v points to string value of name, m is length of non-locale part of name
-// obsolete   if(n==m)ASSERT(!(jtlocal&&g!=jtlocal&&probelocal(a)),EVDOMAIN)  // if non-locative, give error if there is a local
   if(n==m)ASSERT(!(g!=jtlocal&&probelocal(a)),EVDOMAIN)  // if non-locative, give error if there is a local
     // symbol table, and we are assigning to the global symbol table, and the name is defined in the local table
   else{C*s=1+m+v->s; RZ(g=NMILOC&v->flag?locindirect(n-m-2,1+s,(UI4)v->bucketx):stfindcre(n-m-2,s,v->bucketx));}
@@ -512,12 +490,10 @@ L* jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;L*e;
  }
  if(jt->uflags.us.cx.cx_c.db)RZ(redef(w,e));  // if debug, check for changes to stack
  x=e->val;   // if x is 0, this name has not been assigned yet; if nonzero, x points to the value
- I xaf/* obsolete = AFNVRUNFREED*/;  // holder for nvr/free flags
+ I xaf;  // holder for nvr/free flags
  I xt=0;  // If not assigned, use empty type
  if(x){
    xaf=AFLAG(x); xt=AT(x); // if assigned, get the actual flags
-// obsolete    // When we reassign to u/v, we clear the implicit-locale flags.  We just clear them willy-nilly and rely on xdefn to set them when needed.
-// obsolete    e->flag&=~LIMPLOCUV;
  } else {xaf = AFNVRUNFREED; xt=0;}   // If name is not assigned, indicate that it is not read-only or memory-mapped.  Also set 'impossible' code of unfreed+not NVR
  if(!(AFNJA&xaf)){
   // If we are assigning the same data block that's already there, don't bother with changing use counts or checking for relative
@@ -529,8 +505,6 @@ L* jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;L*e;
     // It's a pity that we have to do this for ALL assignments, even assignments to uv.  If we don't, a reference to a local modifier may get passed in, and
     // it will still be considered valid even though the local names have disappeared.  Maybe we could avoid this if the local namespace has no defined modifiers - but then we'd have to keep up with that...
     ++jt->modifiercounter;
-// obsolete     // If the assignment is global, we have to scan the value, and fix it if it contains implicit locatives
-// obsolete     if(AT(w)&(VERB|CONJ|ADV)&&g!=jt->locsyms)RZ(w=fix(w,sc(FIXALOCSONLY)));
    }
    // Increment the use count of the value being assigned, to reflect the fact that the assigned name will refer to it.
    // This realizes any virtual value, and makes the usecount recursive if the type is recursible

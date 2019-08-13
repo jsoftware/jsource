@@ -91,7 +91,6 @@ static DF1(jtply1){PROLOG(0040);DECLFG;A b,hs,j,*xv,y,z;B*bv,q;I i,k,m,n,*nv,p=0
  GATV0(x,BOX,m,1); xv=AAV(x);  // cannot be virtual
  while(p<m&&0>nv[p])p++;  // find first positive power
  if(p<m){  // if there is a positive power...
-// obsolete  RZ(z=ca(w));
   z=w;
   n=nv[m-1]; k=p;
   while(k<m&&!nv[k]){INSTALLBOX(x,xv,k,z); ++k;}  // install the input as the result for any 0 powers
@@ -105,7 +104,6 @@ static DF1(jtply1){PROLOG(0040);DECLFG;A b,hs,j,*xv,y,z;B*bv,q;I i,k,m,n,*nv,p=0
  }}
  if(0<p){  // if there was a negative power...
   RZ(fs=inv(fs)); f1=FAV(fs)->valencefns[0];
-// obsolete   RZ(z=ca(w));
   z=w;
   n=nv[0]; k=p-1;
   RZ(b=eq(scf(-inf),from(j,ravel(gs)))); bv=BAV(b); q=bv[k];

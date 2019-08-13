@@ -28,7 +28,6 @@ static A jteverysp(J jt,A w,A fs,AF f1){A*wv,x,z,*zv;P*wp,*zp;
 A jtevery(J jt,A w,A fs,AF f1){A*wv,x,z,*zv;
  RZ(w);
  if(SPARSE&AT(w))R everysp(w,fs,f1);
-// obsolete if(!(BOX&AT(w)))RZ(IRS1(w,0,0,jtbox,w));
  GATV(z,BOX,AN(w),AR(w),AS(w));
  I natoms=AN(w); if(!natoms)R z;  // exit if no result atoms
  zv=AAV(z);
@@ -46,10 +45,6 @@ A jtevery(J jt,A w,A fs,AF f1){A*wv,x,z,*zv;
 A jtevery2(J jt,A a,A w,A fs,AF f2){A*av,*wv,x,z,*zv;
 // todo kludge should rewrite with single flag word
  RZ(a&&w); 
-// obsolete  an=AN(a); ar=AR(a); as=AS(a); ab=!!(BOX&AT(a));
-// obsolete  wn=AN(w); wr=AR(w); ws=AS(w); wb=!!(BOX&AT(w));
-// obsolete  b=!ar||!wr||ar==wr; if(b&&ar&&wr)DO(ar, b&=as[i]==ws[i];);
-// obsolete  if(!b)R df2(a,w,atop(ds(CBOX),amp(fs,ds(COPE))));
  // Get the number of atoms, and the number of times to repeat the short side.
  // The repetition is the count of the surplus frame.
  I rpti;  // number of times short frame must be repeated
@@ -80,12 +75,6 @@ A jtevery2(J jt,A a,A w,A fs,AF f2){A*av,*wv,x,z,*zv;
   // if input is not boxed, use a faux-virtual block to point to the atoms.  In this case av is not needed and we use it for the length of an atom
   fauxvirtual(virta,virtblocka,a,0,ACUC1); AN(virta)=1; av=(A*)bpnoun(AT(a));
  }
-// obsolete  if(ar&&!ab)RZ(IRS1(a,0,0,jtbox,a)); av=AAV(a); 
-// obsolete  if(wr&&!wb)RZ(IRS1(w,0,0,jtbox,w)); wv=AAV(w); 
-// obsolete  if(ar&&wr)                   DO(an, EVERYI(CALL2(f2,av[i],      wv[i],      fs))) 
-// obsolete  else if(wr){if(ab)a=AAV0(a); DO(wn, EVERYI(CALL2(f2,a,           wv[i],      fs)));}
-// obsolete  else if(ar){if(wb)w=AAV0(w); DO(an, EVERYI(CALL2(f2,av[i],      w,           fs)));}
-// obsolete  else                                EVERYI(CALL2(f2,ab?AAV0(a):a,wb?AAV0(w):w,fs)) ;
  // Loop for each cell.  Increment the pointer unless the side is being repeated and the repeat-count has not expired.
  // Break in the middle of the loop to avoid fetching out of bounds to get the next address from [aw]v
  I rpt=rpti; while(1){EVERYI(CALL2(f2,virta,virtw,fs)); if(!--natoms)break; if(!(flags&2)||(--rpt==0&&(rpt=rpti,1))){if(flags&(BOX<<1))virta=*++av;else AK(virta)+=(I)av;} if(!(flags&1)||(--rpt==0&&(rpt=rpti,1))){if(flags&BOX)virtw=*++wv;else AK(virtw)+=(I)wv;} }
@@ -95,7 +84,6 @@ A jtevery2(J jt,A a,A w,A fs,AF f2){A*av,*wv,x,z,*zv;
 // apply f2 on items of a or w against the entirety of the other argument.  Pass on rank of f2 to reduce rank nesting
 DF2(jteachl){RZ(a&&w&&self); I lcr=AR(a)-1<0?0:AR(a)-1; I lr=lr(self); lr=lcr<lr?lcr:lr; I rr=rr(self); rr=AR(w)<rr?AR(w):rr; R rank2ex(a,w,self,lr,rr,lcr,AR(w),FAV(self)->valencefns[1]);}
 DF2(jteachr){RZ(a&&w&&self); I rcr=AR(w)-1<0?0:AR(w)-1; I rr=rr(self); rr=rcr<rr?rcr:rr; I lr=lr(self); lr=AR(a)<lr?AR(a):lr; R rank2ex(a,w,self,lr,rr,AR(a),rcr,FAV(self)->valencefns[1]);}
-// obsolete DF2(jteachr){RZ(a&&w&&self); R rank2ex(a,w,self,FAV(self)->lr,FAV(self)->rr,RMAX,-1L, FAV(self)->valencefns[1]);}
 
 // u&.v
 // PUSH/POP ZOMB is performed in atop/amp/ampco

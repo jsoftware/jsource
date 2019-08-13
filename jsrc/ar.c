@@ -176,9 +176,8 @@ REDUCCPFX(tymesinsO, D, I, TYMESO)
    _mm_storel_pd(z++,_mm256_castpd256_pd128 (acc0)); /* store the single result */ \
   )
 
-#if 1 // scaf
 AHDRR(plusinsD,D,D){I i;D* RESTRICT y;
-  NAN0;/* obsolete if(d*m*n==0)SEGFAULT;  scaf*/ 
+  NAN0;
   // latency of add is 4, so use 4 accumulators
   if(d==1){
 #if C_AVX&&SY_64
@@ -197,9 +196,6 @@ AHDRR(plusinsD,D,D){I i;D* RESTRICT y;
   }
   NAN1V;
 }
-#else
-REDUCENAN( plusinsD, D, D, PLUS, plusDD  ) 
-#endif
 
 REDUCENAN( plusinsZ, Z, Z, zplus, plusZZ )
 REDUCEPFX( plusinsX, X, X, xplus, plusXX, plusXX )
@@ -647,7 +643,6 @@ static DF1(jtredstiteach){A*wv,y;I n,p,r,t;
  n=AN(w);
  if(!(2<n&&1==AR(w)&&BOX&AT(w)))R reduce(w,self);
  wv=AAV(w);  y=wv[0]; p=IC(y); t=AT(y);
-// obsolete  DO(n, y=wv[i]; r=AR(y); if(!(r&&r<=2&&p==IC(y)&&TYPESEQ(t,AT(y))))R reduce(w,self););
  DO(n, y=wv[i]; r=AR(y); if(!((((r-1)&-2)==0)&&p==IC(y)&&TYPESEQ(t,AT(y))))R reduce(w,self););  // rank 1 or 2, rows match, equal types
  R box(razeh(w));
 }    /* ,.&.>/ w */
@@ -690,27 +685,6 @@ A jtaslash (J jt,C c,    A w){RZ(   w); R df1(  w,   slash(ds(c))     );}
 A jtaslash1(J jt,C c,    A w){RZ(   w); R df1(  w,qq(slash(ds(c)),zeroionei[1]));}
 A jtatab   (J jt,C c,A a,A w){RZ(a&&w); R df2(a,w,   slash(ds(c))     );}
 
-#if 0 // obsolete 
-static AHDRR(jtmeanD,D,D){I i;D*y;D v,*zz;
- NAN0;
- if(1==d)DQ(m, v=   *x++; DQ(n-1, v+=*x++;); *z++=v/n;)
- else for(i=0;i<m;++i){
-  y=x; x+=d; zz=z; DQ(d, *z++ =*x+++   *y++;);
-  DQ(n-3,    z=zz; DQ(d, *z+++=*x++;        ));
-             z=zz; DQ(d, *z   =(*z+*x++)/n; ++z;);
- }
- NAN1V;
-}    /* based on REDUCEPFX; 2<n */
-
-static AHDRR(jtmeanI,D,I){I i;I*y;D v,*zz;
- if(1==d)DQ(m, v=(D)*x++; DQ(n-1, v+=*x++;); *z++=v/n;)
- else for(i=0;i<m;++i){
-  y=x; x+=d; zz=z; DQ(d, *z++ =*x+++(D)*y++;);
-  DQ(n-3,    z=zz; DQ(d, *z+++=*x++;        ));
-             z=zz; DQ(d, *z   =(*z+*x++)/n; ++z;);
-}}   /* based on REDUCEPFX; 2<n */
-#endif
-
 DF1(jtmean){
  RZ(w);
  I wr=AR(w); I r=(RANKT)jt->ranks; r=wr<r?wr:r;
@@ -721,13 +695,4 @@ A sum=reduce(w,FAV(self)->fgh[0]);  // calculate +/"r
  RZ(sum);
  RZ(w=jtatomic2(JTIPA,sum,sc(n),ds(CDIV)));  // take quotient inplace and return it
  RETF(w);
-#if 0 // obsolete
- if(!(wn&&2<n&&wt&INT+FL))R divide(df1(w,qq(slash(ds(CPLUS)),sc(r))),sc(n));
- // there must be atoms, so it's OK to PROD infixes of shape
- PROD(m,f,ws); PROD(d,r-1,f+ws+1);
- GATV(z,FL,m*d,MAX(0,wr-1),ws); if(1<r)MCISH(f+AS(z),f+1+ws,r-1);
- if(wt&INT)meanI(m,d,n,DAV(z), AV(w)); 
- else      meanD(m,d,n,DAV(z),DAV(w));
- RE(0); RETF(z);
-#endif
 }    // (+/%#)"r w, implemented as +/"r % cell-length

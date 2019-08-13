@@ -467,7 +467,6 @@ VA2F(vasfx,psfx, plussfxO,minussfxO,tymessfxO)
 // static UC xnumpri[] = {10 ,8 ,9 ,9 ,11 ,8 ,9 ,9};
 #define xnumpri 0x998B998AU   // we use shift to select 4-bit sections
 
-// obsolete extern A jtva2recur(J jt, AD * RESTRICT a, AD * RESTRICT w, AD * RESTRICT self);
 #if 0 // for debug, to display info about a sparse block
 if(AT(a)&SPARSE){
 printf("va2a: shape="); A spt=a; DO(AR(spt), printf(" %d",AS(spt)[i]);) printf("\n");
@@ -482,7 +481,6 @@ printf("va2a: indexes="); spt=SPA(PAV(a),i); DO(AN(spt), printf(" %d",IAV(spt)[i
 static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ranks,UI argranks){A z;I m,
      mf,n,nf,shortr,* RESTRICT s,*sf,zn,awzk[3];VA2 adocv;UI fr;  // fr will eventually be frame/rank  nf (and mf) change roles during execution
  fr=argranks>>RANKTX; shortr=argranks&RANKTMSK;  // fr,shortr = ar,wr to begin with.  Changes later
-// obsolete  RZ(a&&w);
  F2PREFIP;
  {I at=AT(a);
   I wt=AT(w);
@@ -513,7 +511,6 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
    // Extract zt, the type of the result, and cv, the flags indicating the types selected for the arguments and the result
    adocv=var(self,at,wt);
   }
-// obsolete   zt=rtype(adocv.cv);
  }
 
  // finish up the computation of sizes.  We have to defer this till after var() because
@@ -528,8 +525,6 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
   if(ranks==0){ // rank 0 0 means no outer frames, sets up faster
    // No rank specified.  Since all these verbs have rank 0, that simplifies quite a bit.  ak/wk/zk/sf are not needed and are garbage
    // n is not needed for sparse, but we start it early to get it finished
-// obsolete   mf=AR(w)<=AR(a);  // mf='a is not shorter than w'  nf='w is not shorter than a'
-// obsolete   nf=AR(w)>=AR(a); zn=AN(AR(w)>=AR(a)?w:a); r=AR(AR(w)>=AR(a)?w:a); s=AS(AR(w)>=AR(a)?w:a); I shortr=AR(AR(w)>=AR(a)?a:w); m=AN(AR(w)>=AR(a)?a:w);
    {A t=a;  // will hold, first the longer-rank argument, then the shorter
     I raminusw=fr-shortr; t=raminusw<0?w:t;  // t->block with longer frame
     s=AS(t); zn=AN(t);     // atoms, shape of larger frame.  shape first.  The dependency chain is s/r/shortr->n->move data
@@ -540,16 +535,12 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
     PROD(n,fr-shortr,s+shortr);  // treat the entire operands as one big cell; get the rest of the values needed
     t=(A)((I)t^((I)a^(I)w)); m=AN(t);  // rank, atoms of shorter frame  m needed for data move
    }
-// obsolete    ASSERTAGREE(AS(a),AS(w),shortr)  // agreement error if not prefix match
-// obsolete    f=0;  // no rank means no outer frame
    // notionally we now repurpose fr to be frame/rank, with the frame 0
    if(jtinplace){
     // Non-sparse setup for copy loop, no rank
       // get number of inner cells
-// obsolete     n^=((1-n)>>(BW-1))&-nf;  // encode 'w has long frame, so a is repeated' as complementary n; but if n<2, leave it alone.  Since n=1 when frames are equal, nf in that case is N/C
     n^=((1-n)>>(BW-1))&nf;  // encode 'w has long frame, so a is repeated' as complementary n; but if n<2, leave it alone.  Since n=1 when frames are equal, nf in that case is N/C
 // scaf    nf=(adocv.cv>>VIPOKWX) & ((I)(a==w)-1) & ((I)(AR(a)==r)*2 + (I)(AR(w)==r));  // set inplaceability here: not if addresses equal (in case of retry); only if op supports; only if nonrepeated cell
-// obsolete     nf=(adocv.cv>>VIPOKWX) & ((I)(a==w)-1) & (mf*2 + nf);  // set inplaceability here: not if addresses equal (in case of retry); only if op supports; only if nonrepeated cell
     nf=(adocv.cv>>VIPOKWX) & ((I)(a==w)-1) & (3 + nf*2 + mf);  // set inplaceability here: not if addresses equal (in case of retry); only if op supports; only if nonrepeated cell
     jtinplace = (J)(((I)jtinplace&nf)+4*nf+(adocv.cv&-16));  // bits 0-1 of jtinplace are combined input+local; 2-3 just local; 4+ hold adocv.cv; at least one is set to show non-sparse
     mf=nf=1;  // suppress the outer loop, leaving only the loop over m and n
@@ -583,8 +574,6 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
     {I f=af<=wf?wf:af; q=af<=wf?af:wf; sf=AS(af<=wf?w:a); mf=af<=wf;   // f=#longer frame; q=#shorter frame; sf->shape of arg with longer frame   mf holds -1 if wf is longer   af/wf free
     nf=(adocv.cv>>VIPOKWX) & ((I)(a==w)-1) & ((I)((argranks>>RANKTX)==f+fr)*2 + (I)((argranks&RANKTMSK)==f+fr));  // set inplaceability here: not if addresses equal (in case of retry); only if op supports; only if nonrepeated cell
     jtinplace = (J)(((I)jtinplace&nf)+4*nf+(adocv.cv&-16));  // bits 0-1 of jtinplace are combined input+local; 2-3 just local; 4+ hold adocv.cv; at least one is set to show non-sparse
-// obsolete     bcip=((adocv.cv>>VIPOKWX) & (((I)(a==w)/*obsolete |(zt&B01)*/)-1) & ((I)(AR(a)==(f+r))*2 + (I)(AR(w)==(f+r))))+b+(af<=wf?(I)4:0);  // save combined loop control
-// obsolete checked in irs2    ASSERTAGREESEGFAULT(AS(a), AS(w), q)  // frames must match to the shorter length; agreement error if not
     PROD(nf,f-q,q+sf);    // mf=#cells in common frame, nf=#times shorter-frame cell must be repeated.  Not needed if no cells.  First, encode 'wf longer' in sign of nf
     fr+=f<<RANKTX;  // encode f into fr
     }
@@ -595,7 +584,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
 #endif
     zk*=bp(rtype((I)jtinplace));  // now create zk, which is used later than ak/wk.
     awzk[2]=zk;  // move it out of registers
-   }else{/* obsolete ASSERTAGREESEGFAULT(AS(a),AS(w),af<=wf?af:wf) */ /*obsoleteDO(af<=wf?af:wf, ASSERT(AS(a)[i]==AS(w)[i],EVLENGTH);)*/ awzk[0]=acr; awzk[1]=wcr; mf=af; nf=wf;}  // For sparse, repurpose ak/wk/mf/nf to hold acr/wcr/af/wf, which we will pass into vasp.  This allows acr/wcr/af/wf to be block-local
+   }else{awzk[0]=acr; awzk[1]=wcr; mf=af; nf=wf;}  // For sparse, repurpose ak/wk/mf/nf to hold acr/wcr/af/wf, which we will pass into vasp.  This allows acr/wcr/af/wf to be block-local
   }
   // TODO: for 64-bit, we could move f and r into upper jtinplace; use bit 4 of jtinplace for testing below; make f/r block-local; extract f/r below as needed
  }
@@ -668,7 +657,6 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
    {C *av=CAV(a); C *wv=CAV(w); C *zv=CAV(z);   // point to the data
     // Call the action routines: nf,mf, etc must be preserved in case of repair
     // note: the compiler unrolls these call loops.  Would be nice to suppress that
-// obsolete n^=-(bcip>>3); n=(n==~1)?1:n; nf^=(bcip<<(BW-1-2))>>(BW-1);
     if(nf-1==0){I i=mf; do{((AHDR2FN*)adocv.f)(n,m,av,wv,zv,jt); if(!--i)break; av+=awzk[0]; wv+=awzk[1]; zv+=awzk[2];}while(1);}  // if the short cell is not repeated, loop over the frame
     else if(nf-1<0){I im=mf; do{I in=~nf; do{((AHDR2FN*)adocv.f)(n,m,av,wv,zv,jt); wv+=awzk[1]; zv+=awzk[2];}while(--in); av+=awzk[0];}while(--im);} // if right frame is longer, repeat cells of a
     else         {I im=mf; do{I in=nf; do{((AHDR2FN*)adocv.f)(n,m,av,wv,zv,jt); av+=awzk[0]; zv+=awzk[2];}while(--in); wv+=awzk[1];}while(--im);}  // if left frame is longer, repeat cells of w
@@ -728,11 +716,6 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
   }
  }else{z=vasp(a,w,FAV(self)->id,adocv.f,adocv.cv,atype(adocv.cv),rtype(adocv.cv),mf,awzk[0],nf,awzk[1],fr>>RANKTX,(RANKT)fr); if(!jt->jerr)R z;}  // handle sparse arrays separately.  at this point ak/wk/mf/nf hold acr/wcr/af/wf
  R 0;  // return to the caller, who will retry any retryable errors
-// obsolete  // If we got an internal-only error during execution of the verb, restart to see if it's
-// obsolete  // a recoverable error such an overflow during integer addition.  We have to restore
-// obsolete  // jt->rank, which might have been modified.  All sparse errors come through here, so they can't
-// obsolete  // do overflow recovery in-place.  We don't use the macro because the compiler goes nuts if it thinks it sees recursion
-// obsolete  R NEVM<jt->jerr?irs2(a,w,self,ranks>>RANKTX,(RANKT)ranks,jtretryatomic2):0;
 }    /* scalar fn primitive and f"r main control */
 
 /*
@@ -809,7 +792,6 @@ A jtsumattymesprods(J jt,I it,A a, A w,I dplen,I nfro,I nfri,I ndpo,I ndpi,I rep
    NAN1;
   }
  }else if(it==INT){
-// obsolete   SUMATLOOP(I,D,D total=0.0; DQ(dplen, total+=(D)*av++*(D)*wv++;); *zv++=total;)
   SUMATLOOP(I,D,D total0=0.0; D total1=0.0; if(dplen&1)total1=(D)*av++*(D)*wv++; DQ(dplen>>1, total0+=(D)*av++*(D)*wv++; total1+=(D)*av++*(D)*wv++;); *zv++=total0+total1;)
  }else{
   SUMATLOOP(B,I,
@@ -1000,7 +982,6 @@ DF2(jtfslashatg){A fs,gs,y,z;B b,bb,sb=0;C*av,c,d,*wv;I ak,an,ar,*as,at,m,
  if(CFORK==sv->id){fs=sv->fgh[1]; gs=sv->fgh[2];}else{fs=sv->fgh[0]; gs=sv->fgh[1];}
  y=FAV(fs)->fgh[0]; c=ID(y); d=ID(gs);
  if(c==CPLUS){
-// obsolete   if(at&B01&&wt&B01&&1==n&&(0==(zn&(SZI-1))||!SY_ALIGN)&&strchr(sumbf,d))R sumatgbool(a,w,d);
   if((((at&wt&B01&(n==1))>(zn&(SZI-1)))||!SY_ALIGN)&&strchr(sumbf,d))R sumatgbool(a,w,d);
   if(d==CSTAR){
    if(ar&&wr&&TYPESEQ(at,wt)&&at&B01+FL+(INT*!SY_64))R jtsumattymes(jt,a,w,b,at,m,n,nn,r,s,zn);
@@ -1041,17 +1022,6 @@ DF2(jtfslashatg){A fs,gs,y,z;B b,bb,sb=0;C*av,c,d,*wv;I ak,an,ar,*as,at,m,
  RE(0); RETF(z);
 }    /* a f/@:g w where f and g are atomic*/
 
-#if 0 // obsolete
-// If each argument has a single direct-numeric atom, go process through speedy-singleton code
-#define SINGTEST(a,w,flag) RZ(a&&w); F2PREFIP; if(!((AN(a)-1)|(AN(w)-1)|((AT(a)|AT(w))&(NOUN&UNSAFE(~(flag))))))
-#define CHECKSSING(a,w,f) SINGTEST(a,w,B01+INT+FL)R f(jt,a,w);
-// obsolete #define CHECKSSINGSB(a,w,f) RZ(a&&w); if(HOMO(AT(a),AT(w)) && AN(a)==1 && AN(w)==1 && !((AT(a)|AT(w))&UNSAFE(~(B01+INT+FL+SBT))))R f(jt,a,w);
-#define CHECKSSINGOP(a,w,f,op) SINGTEST(a,w,B01+INT+FL)R f(jt,a,w,op);
-#define CHECKSSINGOPEQNE(a,w,f,op) SINGTEST(a,w,B01+INT+FL/*+LIT+C2T+C4T*/)R f(jt,a,w,op);
-// obsolete #define CHECKSSINGPROV(a,w,f) RZ(a&&w); if(AN(a)==1 && AN(w)==1 && !((AT(a)|AT(w))&UNSAFE(~(B01+INT+FL))))R f(jt,a,w)
-#define CHECKSSINGNZ(a,w,f) SINGTEST(a,w,B01+INT+FL){A z = f(jt,a,w); if(z)R z;}
-#endif
-
 // Consolidated entry point for ATOMIC2 verbs.  These can be called with self pointing either to a rank block or to the block for
 // the atomic.  If the block is a rank block, we will switch self over to the block for the atomic.
 // Rank can be passed in via jt->ranks, or in the rank for self.  jt->ranks has priority.
@@ -1061,7 +1031,6 @@ DF2(jtatomic2){A z;
  RANK2T selfranks=FAV(self)->lrr;  // get left & right rank from rank/primitive
  self=realself?realself:self;  // if this is a rank block, move to the primitive.  u b. or any atomic primitive has f clear
  RZ(a&&w);
-// obsolete  selfranks=((((I)selfranks>>RANKTX)-(I)AR(a))|(((I)selfranks&RANKTMSK)-(I)AR(w)))<0?selfranks:(RANK2T)~0;
  F2PREFIP;
  RANK2T jtranks=jt->ranks;  // fetch IRS ranks if any
  UI ar=AR(a), wr=AR(w), awr=(ar<<RANKTX)+wr; I awm1=(AN(a)-1)|(AN(w)-1);
@@ -1085,62 +1054,11 @@ DF2(jtatomic2){A z;
  while(1){  // run until we get no error
   z=jtva2(jtinplace,a,w,self,selfranks,(RANK2T)awr);  // execute the verb
   if(z||jt->jerr<=NEVM)RETF(z);   // return if no error or error not retryable
-// obsolete   if((I)jtinplace&JTRETRY)SEGFAULT   //  scaf
   jtinplace=(J)((I)jtinplace|JTRETRY);  // indicate that we are retrying the operation
  }
 }
 
-// obsolete // Entry point called to retry.  Called through irs2 to disguise the recursion, because the compiler withholds registers if it sees recursion
-// obsolete static DF2(jtretryatomic2){RETF(jtva2(jt,a,w,self,jt->ranks));}  // assumes no inplacing; probably could support inplacing
-
-// These are the entry points for the individual verbs.  They pick up the verb-name
-// and transfer to jtva2 which does the work
-
-// obsolete F2(jtbitwise0000){CHECKSSINGOP(a,w,jtssbitwise,0) R jtva2(jtinplace,a,w,ds(16),jt->ranks);}
-// obsolete F2(jtbitwise0001){CHECKSSINGOP(a,w,jtssbitwise,1) R jtva2(jtinplace,a,w,ds(17),jt->ranks);}
-// obsolete F2(jtbitwise0010){CHECKSSINGOP(a,w,jtssbitwise,2) R jtva2(jtinplace,a,w,ds(18),jt->ranks);}
-// obsolete F2(jtbitwise0011){CHECKSSINGOP(a,w,jtssbitwise,3) R jtva2(jtinplace,a,w,ds(19),jt->ranks);}
-
-// obsolete F2(jtbitwise0100){CHECKSSINGOP(a,w,jtssbitwise,4) R jtva2(jtinplace,a,w,ds(20),jt->ranks);}
-// obsolete F2(jtbitwise0101){CHECKSSINGOP(a,w,jtssbitwise,5) R jtva2(jtinplace,a,w,ds(21),jt->ranks);}
-// obsolete F2(jtbitwise0110){CHECKSSINGOP(a,w,jtssbitwise,6) R jtva2(jtinplace,a,w,ds(22),jt->ranks);}
-// obsolete F2(jtbitwise0111){CHECKSSINGOP(a,w,jtssbitwise,7) R jtva2(jtinplace,a,w,ds(23),jt->ranks);}
-
-// obsolete F2(jtbitwise1000){CHECKSSINGOP(a,w,jtssbitwise,8) R jtva2(jtinplace,a,w,ds(24),jt->ranks);}
-// obsolete F2(jtbitwise1001){CHECKSSINGOP(a,w,jtssbitwise,9) R jtva2(jtinplace,a,w,ds(25),jt->ranks);}
-// obsolete F2(jtbitwise1010){CHECKSSINGOP(a,w,jtssbitwise,10) R jtva2(jtinplace,a,w,ds(26),jt->ranks);}
-// obsolete F2(jtbitwise1011){CHECKSSINGOP(a,w,jtssbitwise,11) R jtva2(jtinplace,a,w,ds(27),jt->ranks);}
-
-// obsolete F2(jtbitwise1100){CHECKSSINGOP(a,w,jtssbitwise,12) R jtva2(jtinplace,a,w,ds(28),jt->ranks);}
-// obsolete F2(jtbitwise1101){CHECKSSINGOP(a,w,jtssbitwise,13) R jtva2(jtinplace,a,w,ds(29),jt->ranks);}
-// obsolete F2(jtbitwise1110){CHECKSSINGOP(a,w,jtssbitwise,14) R jtva2(jtinplace,a,w,ds(30),jt->ranks);}
-// obsolete F2(jtbitwise1111){CHECKSSINGOP(a,w,jtssbitwise,15) R jtva2(jtinplace,a,w,ds(31),jt->ranks);}
-
-// obsolete F2(jtbitwiserotate){CHECKSSINGOP(a,w,jtssbitwise,16) R genbitwiserotate(a,w);}
-// obsolete F2(jtbitwiseshift){CHECKSSINGOP(a,w,jtssbitwise,17) R genbitwiseshift(a,w);}
-// obsolete F2(jtbitwiseshifta){CHECKSSINGOP(a,w,jtssbitwise,18) R genbitwiseshifta(a,w);}
-// obsolete 
-// obsolete F2(jteq     ){CHECKSSINGOPEQNE(a,w,jtsseqne,0) R jtva2(jtinplace,a,w,ds(CEQ),jt->ranks);}
-// obsolete F2(jtlt     ){CHECKSSING(a,w,jtsslt) R jtva2(jtinplace,a,w,ds(CLT),jt->ranks);}
-// obsolete F2(jtminimum){CHECKSSING(a,w,jtssmin) R jtva2(jtinplace,a,w,ds(CMIN),jt->ranks);}
-// obsolete F2(jtle     ){CHECKSSING(a,w,jtssle) R jtva2(jtinplace,a,w,ds(CLE),jt->ranks);}
-// obsolete F2(jtgt     ){CHECKSSING(a,w,jtssgt) R jtva2(jtinplace,a,w,ds(CGT),jt->ranks);}
-// obsolete F2(jtmaximum){CHECKSSING(a,w,jtssmax) R jtva2(jtinplace,a,w,ds(CMAX),jt->ranks);}
-// obsolete F2(jtge     ){CHECKSSING(a,w,jtssge) R jtva2(jtinplace,a,w,ds(CGE),jt->ranks);}
-// obsolete F2(jtplus   ){CHECKSSING(a,w,jtssplus) R jtva2(jtinplace,a,w,ds(CPLUS),jt->ranks);}
-// obsolete F2(jtgcd    ){CHECKSSING(a,w,jtssgcd) R jtva2(jtinplace,a,w,ds(CPLUSDOT),jt->ranks);}
-// obsolete F2(jtnor    ){CHECKSSING(a,w,jtssnor) R jtva2(jtinplace,a,w,ds(CPLUSCO),jt->ranks);}
-// obsolete F2(jttymes  ){CHECKSSING(a,w,jtssmult) R jtva2(jtinplace,a,w,ds(CSTAR),jt->ranks);}
-// obsolete F2(jtlcm    ){CHECKSSING(a,w,jtsslcm) R jtva2(jtinplace,a,w,ds(CSTARDOT),jt->ranks);}
-// obsolete F2(jtnand   ){CHECKSSING(a,w,jtssnand) R jtva2(jtinplace,a,w,ds(CSTARCO),jt->ranks);}
-// obsolete F2(jtminus  ){CHECKSSING(a,w,jtssminus) R jtva2(jtinplace,a,w,ds(CMINUS),jt->ranks);}
-// obsolete F2(jtdivide ){CHECKSSING(a,w,jtssdiv) R jtva2(jtinplace,a,w,ds(CDIV),jt->ranks);}
-// obsolete F2(jtexpn2  ){RZ(a&&w); if(((((I)AR(w)-1)&(AT(w)<<(BW-1-FLX)))<0)&&0.5==*DAV(w))R sqroot(a); CHECKSSINGNZ(a,w,jtsspow) R jtva2(jtinplace,a,w,ds(CEXP),jt->ranks);}  // use sqrt hardware for sqrt.  Only for atomic w
 DF2(jtexpn2  ){F2PREFIP; RZ(a&&w); if(((((I)AR(w)-1)&(AT(w)<<(BW-1-FLX)))<0)&&0.5==*DAV(w))R sqroot(a);  R jtatomic2(jtinplace,a,w,self);}  // use sqrt hardware for sqrt.  Only for atomic w. 
-// obsolete F2(jtne     ){CHECKSSINGOPEQNE(a,w,jtsseqne,1) R jtva2(jtinplace,a,w,ds(CNE),jt->ranks);}
-// obsolete F2(jtoutof  ){CHECKSSING(a,w,jtssoutof) R jtva2(jtinplace,a,w,ds(CBANG),jt->ranks);}
-// obsolete DF2(jtcircle ){F2PREFIP; RZ(a&&w); R jtva2(jtinplace,a,w,self,jt->ranks);}
-// scaf the following need to go through atomic2 or a replacement so that they match the changing interface to va2
 DF2(jtresidue){F2PREFIP; RZ(a&&w); I intmod; if(!((AT(a)|AT(w))&(NOUN&~INT)|AR(a))&&(intmod=IAV(a)[0], (intmod&-intmod)+(intmod<=0)==0))R intmod2(w,intmod); R jtatomic2(jtinplace,a,w,self);}
 
 
@@ -1165,7 +1083,6 @@ F1(jthalve ){RZ(w); if(!(AT(w)&XNUM+RAT))R tymes(onehalf,w); IPSHIFTWA; R divide
 
 static AHDR2(zeroF,B,void,void){memset(z,C0,m*(n^(n>>(BW-1))));}
 static AHDR2(oneF,B,void,void){memset(z,C1,m*(n^(n>>(BW-1))));}
-// obsolete static void  oneF(J jt,B b,I m,I n,B*z,void*x,void*y){memset(z,C1,m*n);}
 
 // table of routines to handle = ~:
 static VF eqnetbl[2][16] = {

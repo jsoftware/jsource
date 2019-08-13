@@ -106,7 +106,7 @@ DQ(n-2,    z=zz; DQ(d, --z; --x;      *z=pfx(*x,*z);));        \
 #else
 #define REDUCENAN(f,Tz,Tx,pfx,vecfn)  \
  AHDRR(f,Tz,Tx){I i;Tz v;                              \
-  NAN0; /* obsolete if(d*m*n==0)SEGFAULT; /* scaf*/                                                          \
+  NAN0; /* obsolete if(d*m*n==0)SEGFAULT;  scaf*/                                                          \
   if(d==1){x += m*n; z+=m; DQ(m, v=*--x; DQ(n-1, --x; v=pfx(*x,v);); *--z=v;)}  \
   else if(1==n){if(sizeof(Tz)!=sizeof(Tx)){DQ(n, *z++=    *x++;)}else{MC((C*)z,(C*)x,d*sizeof(Tz));}}          \
   else{z+=(m-1)*d; x+=(m*n-1)*d;                                        \

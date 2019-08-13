@@ -878,7 +878,7 @@ static I lfsr = 1;  // holds varying memory pattern
 #endif
 
 // static auditmodulus = 0;
-// blockx is bit# of MSB in length, i. e. lg2(bufsize)-1
+// blockx is bit# of MSB in (length-1), i. e. lg2(bufsize)-1
 RESTRICTF A jtgaf(J jt,I blockx){A z;I mfreeb;I n=(I)2<<blockx;  // n=size of allocated block
 // audit free chain I i,j;MS *x; for(i=PMINL;i<=PLIML;++i){j=0; x=(jt->mfree[-PMINL+i].pool); while(x){x=(MS*)(x->a); if(++j>25)break;}}  // every time, audit first 25 entries
 // audit free chain if(++auditmodulus>25){auditmodulus=0; for(i=PMINL;i<=PLIML;++i){j=0; x=(jt->mfree[-PMINL+i].pool); while(x){x=(MS*)(x->a); ++j;}}}
@@ -998,7 +998,7 @@ RESTRICTF A jtga(J jt,I type,I atoms,I rank,I* shaape){A z;
   // because COPYSHAPE will always write one shape value, we have to delay the memset to handle the case of rank 0 with atoms (used internally only)
   if(!(type&DIRECT))memset((C*)z+akx,C0,bytes-akx);  // For indirect types, zero the data area.  Needed in case an indirect array has an error before it is valid
     // All non-DIRECT types have items that are multiples of I, so no need to round the length
-  /* obsolete else if(type&LAST0){((I*)((C*)z+((bytes-SZI)&(-SZI))))[0]=(I)0x85d9a62c08a4f927 /* scaf ;}*/  // We allocated a full SZI for the trailing NUL, because the
+  /* obsolete else if(type&LAST0){((I*)((C*)z+((bytes-SZI)&(-SZI))))[0]=(I)0x85d9a62c08a4f927  scaf ;}*/  // We allocated a full SZI for the trailing NUL, because the
      // code for boolean verbs needs it.
 // obsolete if((1==rank&&type&SPARSE&&shaape) || (type&SPARSE && atoms && !(type&XZ)))
 // obsolete  SEGFAULT  // scaf

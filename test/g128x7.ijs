@@ -142,6 +142,60 @@ test_decrypt_cbc 256
 0&test_xcrypt_ctr 256
 1&test_xcrypt_ctr 256
 
+NB. test non-accelerated
+3 : 0''
+if.('arm64'-:9!:56'cpu') *. 9!:56'aes' do.
+0 (9!:56) 'aes'
+assert. test_encrypt_ecb 128
+assert. test_decrypt_ecb 128
+assert. test_encrypt_cbc 128
+assert. test_decrypt_cbc 128
+assert. 0&test_xcrypt_ctr 128
+assert. 1&test_xcrypt_ctr 128
+
+assert. test_encrypt_ecb 192
+assert. test_decrypt_ecb 192
+assert. test_encrypt_cbc 192
+assert. test_decrypt_cbc 192
+assert. 0&test_xcrypt_ctr 192
+assert. 1&test_xcrypt_ctr 192
+
+assert. test_encrypt_ecb 256
+assert. test_decrypt_ecb 256
+assert. test_encrypt_cbc 256
+assert. test_decrypt_cbc 256
+assert. 0&test_xcrypt_ctr 256
+assert. 1&test_xcrypt_ctr 256
+1 (9!:56) 'aes'
+
+elseif. 9!:56'aes_ni' do.
+0 (9!:56) 'aes_ni'
+assert. test_encrypt_ecb 128
+assert. test_decrypt_ecb 128
+assert. test_encrypt_cbc 128
+assert. test_decrypt_cbc 128
+assert. 0&test_xcrypt_ctr 128
+assert. 1&test_xcrypt_ctr 128
+
+assert. test_encrypt_ecb 192
+assert. test_decrypt_ecb 192
+assert. test_encrypt_cbc 192
+assert. test_decrypt_cbc 192
+assert. 0&test_xcrypt_ctr 192
+assert. 1&test_xcrypt_ctr 192
+
+assert. test_encrypt_ecb 256
+assert. test_decrypt_ecb 256
+assert. test_encrypt_cbc 256
+assert. test_decrypt_cbc 256
+assert. 0&test_xcrypt_ctr 256
+assert. 1&test_xcrypt_ctr 256
+1 (9!:56) 'aes_ni'
+
+end.
+1
+)
+
 f=: 128!:7
 
 NB. null padding

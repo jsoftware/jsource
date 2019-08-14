@@ -515,7 +515,7 @@ RESTRICTF A jtvirtual(J jtip, AD *RESTRICT w, I offset, I r){AD* RESTRICT z;
   R w;
  }else{
   // not self-virtual block: allocate a new one
-  RZ(z=gafv(SZI*(NORMAH+r)));  // allocate the block
+  RZ(z=gafv(SZI*(NORMAH+r)-1));  // allocate the block
   AFLAG(z)=AFVIRTUAL;  // flags: not recursive, not UNINCORPABLE
   AC(z)=ACUC1; AT(z)=t; AK(z)=(CAV(w)-(C*)z)+offset; AR(z)=(RANKT)r;  // virtual, not inplaceable
   // If w is inplaceable and inplacing is enabled, we could transfer the inplaceability to the new virtual block.  We choose not to, because we have already picked up
@@ -934,8 +934,13 @@ if((I)jt&3)SEGFAULT
  }else{jsignal(EVBREAK); R 0;}  // If there was a break event, take it
 }
 
+// bytes is total #bytes needed including headers, -1
 RESTRICTF A jtgafv(J jt, I bytes){UI4 j;
- CTLZI((UI)((bytes-1)|((I)1<<(PMINL-1))),j);  // 3 or 4 should return 2; 5 should return 3
+// obsolete  CTLZI((UI)((bytes-1)|((I)1<<(PMINL-1))),j);  // 3 or 4 should return 2; 5 should return 3
+#if NORMAH*(SY_64?8:4)<(1LL<<(PMINL-1))
+ bytes|=(I)1<<(PMINL-1);  // if the memory header itself doesn't meet the minimum buffer length, insert a minimum
+#endif
+ CTLZI((UI)bytes,j);  // 3 or 4 should return 2; 5 should return 3
  if((UI)bytes<=(UI)jt->mmax){
   R jtgaf(jt,(I)j);
  }else{jsignal(EVLIMIT); R 0;}  // do it this way for branch-prediction
@@ -955,9 +960,12 @@ RESTRICTF A jtga(J jt,I type,I atoms,I rank,I* shaape){A z;
   AK(z)=akx; AT(z)=type; AN(z)=atoms;   // Fill in AK, AT, AN
   // Set rank, and shape if user gives it.  This might leave the shape unset, but that's OK
   AR(z)=(RANKT)rank;   // Storing the extra last I (as was done originally) might wipe out rank, so defer storing rank till here
+  // Since we allocate powers of 2, we can make the memset a multiple of 32 bytes.  The value of an atomic box would come before the cleared region, but we pick that up here when the shape is cleared
+  if(!(type&DIRECT)){if(SY_64){memset((C*)(AS(z)+1),C0,(bytes-32)&-32);}else{memset((C*)z+akx,C0,bytes+1-akx);}}  // bytes=63=>0 bytes cleared.  bytes=64=>32 bytes cleared.  bytes=64 means the block is 65 bytes long
   GACOPYSHAPEG(z,type,atoms,rank,shaape)  /* 1==atoms always if t&SPARSE  */  // copy shape by hand since short
-  // because COPYSHAPE will always write one shape value, we have to delay the memset to handle the case of rank 0 with atoms (used internally only)
-  if(!(type&DIRECT))memset((C*)z+akx,C0,bytes-akx);  // For indirect types, zero the data area.  Needed in case an indirect array has an error before it is valid
+   // Tricky point: if rank=0, GACOPYSHAPEG stores 0 in AS[0] so we don't have to do that in the DIRECT path
+// obsolete   // because COPYSHAPE will always write one shape value, we have to delay the memset to handle the case of rank 0 with atoms (used internally only)
+// obsolete   if(!(type&DIRECT))memset((C*)z+akx,C0,bytes+1-akx);  // For indirect types, zero the data area.  Needed in case an indirect array has an error before it is valid
     // All non-DIRECT types have items that are multiples of I, so no need to round the length
   R z;
  }else{jsignal(EVLIMIT); R 0;}  // do it this way for branch-prediction
@@ -1026,7 +1034,7 @@ if((I)jt&3)SEGFAULT
 // as a backer for a virtual block
 RESTRICTF A jtgah(J jt,I r,A w){A z;
  ASSERT(RMAX>=r,EVLIMIT); 
- RZ(z=gafv(SZI*(NORMAH+r)));
+ RZ(z=gafv(SZI*(NORMAH+r)-1));
  AT(z)=0;
  if(w){
   AT(z)=AT(w); AN(z)=AN(w); AR(z)=(RANKT)r; AK(z)=CAV(w)-(C*)z;

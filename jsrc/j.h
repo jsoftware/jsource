@@ -386,7 +386,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define L2CACHESIZE (((I)1)<<18)
 #define L3CACHESIZE (((I)1)<<22)
 
-#define TOOMANYATOMS 0x01000000000000LL  // more atoms than this is considered overflow (64-bit)
+#define TOOMANYATOMS 0xFFFFFFFFLL  // more atoms than this is considered overflow (64-bit).  i.-family can't handle more than 2G cells in array
 
 #define MEMCPYTUNE 4096  // (bytes) unpredictable blocks shorter than this should just use MCISxx.  Keep as power of 2
 #define MEMCPYTUNELOOP 350  // (bytes) predictable blocks shorter than this should just use MCISxx.
@@ -491,22 +491,22 @@ extern unsigned int __cdecl _clearfp (void);
 // get # of things of size s, rank r to allocate so as to have an odd number of them at least n, after discarding w items of waste.  Try to fill up a full buffer 
 #define FULLHASHSIZE(n,s,r,w,z) {UI4 zzz;  CTLZI((((n)|1)+(w))*(s) + AKXR(r) - 1,zzz); z = ((((I)1<<(zzz+1)) - AKXR(r)) / (s) - 1) | (1&~(w)); }
 // Memory-allocation macros
-// Size-of-block calculations.  VSZ when size is constant or variable
+// Size-of-block calculations.  VSZ when size is constant or variable.  Byte counts are (total length including header)-1
 // Because the Boolean dyads read beyond the end of the byte area (up to 1 extra word), we add one SZI for islast (which includes B01), rather than adding 1
-#define ALLOBYTESVSZ(atoms,rank,size,islast,isname)      ( ((((rank)|(!SY_64))*SZI  + ((islast)? (isname)?(NORMAH*SZI+sizeof(NM)+SZI):(NORMAH*SZI+SZI) : (NORMAH*SZI)) + (atoms)*(size)))  )  // # bytes to allocate allowing only 1 byte for string pad - include mem hdr
+#define ALLOBYTESVSZ(atoms,rank,size,islast,isname)      ( ((((rank)|(!SY_64))*SZI  + ((islast)? (isname)?(NORMAH*SZI+sizeof(NM)+SZI-1):(NORMAH*SZI+SZI-1) : (NORMAH*SZI-1)) + (atoms)*(size)))  )  // # bytes to allocate allowing 1 I for string pad - include mem hdr - minus 1
 // here when size is constant.  The number of bytes, rounded up with overhead added, must not exceed 2^(PMINL+4)
-#define ALLOBYTES(atoms,rank,size,islast,isname)      ((size&(SZI-1))?ALLOBYTESVSZ(atoms,rank,size,islast,isname):(SZI*(((rank)|(!SY_64))+NORMAH+((size)>>LGSZI)*(atoms)+!!(islast))))  // # bytes to allocate
-#define ALLOBLOCK(n) ((n)<=2*PMIN?((n)<=PMIN?PMINL-1:PMINL) : (n)<=8*PMIN?((n)<=4*PMIN?PMINL+1:PMINL+2) : (n)<=32*PMIN?PMINL+3:IMIN)   // lg2(#bytes to allocate)-1
+#define ALLOBYTES(atoms,rank,size,islast,isname)      ((size&(SZI-1))?ALLOBYTESVSZ(atoms,rank,size,islast,isname):(SZI*(((rank)|(!SY_64))+NORMAH+((size)>>LGSZI)*(atoms)+!!(islast))-1))  // # bytes to allocate-1
+#define ALLOBLOCK(n) ((n)<2*PMIN?((n)<PMIN?PMINL-1:PMINL) : (n)<8*PMIN?((n)<4*PMIN?PMINL+1:PMINL+2) : (n)<32*PMIN?PMINL+3:IMIN)   // lg2(#bytes to allocate)-1.  n is #bytes-1
 // value to put into name->bucketx for locale names: number if numeric, hash otherwise
 #define BUCKETXLOC(len,s) ((*(s)<='9')?strtoI10s((len),(s)):(I)nmhash((len),(s)))
 // GA() is used when the type is unknown.  This routine is in m.c and documents the function of these macros.
 // NEVER use GA() for NAME types - it doesn't honor it.
-// SHAPER is used when shape is given and rank is SDT.  Usually 0/1 use COPYSHAPE0 but they can use this; it always copies from the shaape
+// SHAPER is used when shape is given and rank is SDT.  Usually 0/1 use COPYSHAPE0 but they can use this; it always copies from the shaape.  This works only up to rank 2 (but could be extended if needed)
 #define GACOPYSHAPER(name,type,atoms,rank,shaape) if((rank)>0)AS(name)[0]=(shaape)[0]; if((rank)>1)AS(name)[1]=(shaape)[1]; if((rank)>2)AS(name)[2]=(shaape)[2];
 // SHAPE0 is used when the shape is 0 - write shape only if rank==1
 #define GACOPYSHAPE0(name,type,atoms,rank,shaape) if((rank)==1)AS(name)[0]=(atoms);
-// General shape copy, branchless when rank<3  One value is always written to shape: #atoms if rank=1.  Used in jtga()
-#define GACOPYSHAPEG(name,type,atoms,rank,shaape)  {I *_d=AS(name); I *_s=(shaape); _s=(shaape)?_s:_d; I cp=*_s; I _r=1-(rank); cp=_r==0?(atoms):cp; *_d=cp; do{_s+=(UI)_r>>(BW-1); _d+=(UI)_r>>(BW-1); *_d=*_s;}while(++_r<0);}
+// General shape copy, branchless when rank<3  AS[0] is always written: #atoms if rank=1, 0 if rank=0.  Used in jtga(), which uses the 0 in AS[0] as a pun for nullptr
+#define GACOPYSHAPEG(name,type,atoms,rank,shaape)  {I *_d=AS(name); I *_s=(shaape); _s=_s?_s:_d; I cp=*_s; I _r=1-(rank); cp&=_r>>(BW-1); cp=_r==0?(atoms):cp; *_d=cp; do{_s+=(UI)_r>>(BW-1); _d+=(UI)_r>>(BW-1); *_d=*_s;}while(++_r<0);}
 // Use when shape is known to be present but rank is not SDT.  One value is always written to shape
 #if C_AVX&SY_64
 #define GACOPYSHAPE(name,type,atoms,rank,shaape) MCISH(AS(name),shaape,rank)
@@ -528,8 +528,9 @@ extern unsigned int __cdecl _clearfp (void);
  RZ(name);   \
  AK(name)=akx; AT(name)=(type); AN(name)=atoms;   \
  AR(name)=(RANKT)(rank);     \
+ /* obsolete if(!((type)&DIRECT))memset((C*)name+akx,C0,bytes+1-akx); */  \
+ if(!((type)&DIRECT)){if(SY_64){if(rank==0)AS(name)[0]=0; memset((C*)(AS(name)+1),C0,(bytes-32)&-32);}else{memset((C*)name+akx,C0,bytes+1-akx);}}  \
  shapecopier(name,type,atoms,rank,shaape)   \
- if(!((type)&DIRECT))memset((C*)name+akx,C0,bytes-akx);  \
     \
 }
 #define GAT(name,type,atoms,rank,shaape)  GATS(name,type,atoms,rank,shaape,type##SIZE,GACOPYSHAPE)
@@ -546,8 +547,9 @@ extern unsigned int __cdecl _clearfp (void);
  I akx=AKXR(rank);   \
  if(name){   \
   AK(name)=akx; AT(name)=(type); AN(name)=atoms; AR(name)=(RANKT)(rank);     \
+  /* obsolete if(!((type)&DIRECT))memset((C*)name+akx,C0,bytes+1-akx); */  \
+  if(!((type)&DIRECT)){if(SY_64){AS(name)[0]=0; memset((C*)(AS(name)+1),C0,(bytes-32)&-32);}else{memset((C*)name+akx,C0,bytes+1-akx);}}  \
   shapecopier(name,type,atoms,rank,shaape)   \
-  if(!((type)&DIRECT))memset((C*)name+akx,C0,bytes-akx);  \
      \
  }else{erraction;} \
 }

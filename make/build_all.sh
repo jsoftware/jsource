@@ -1,5 +1,5 @@
 #!/bin/bash
-# build all binaries
+# build all binaries for j64 linux/darwin
 cd ~
 
 if [ ! -d jbld ]; then
@@ -11,7 +11,7 @@ $jmake/clean.sh
 
 $jmake/build_jconsole.sh j64
 $jmake/build_libj.sh     j64
-$jmake/build_libj.sh     j64nonavx
+$jmake/build_libj.sh     j64avx
 $jmake/build_tsdll.sh    j64
 
 

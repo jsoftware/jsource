@@ -23,8 +23,6 @@ export CC
 fi
 # compiler=`$CC --version | head -n 1`
 compiler=`readlink -f $(command -v $CC)`
-echo "CC=$CC"
-echo "compiler=$compiler"
 
 USE_OPENMP="${USE_OPENMP:=0}"
 if [ $USE_OPENMP -eq 1 ] ; then
@@ -76,17 +74,17 @@ LINK=" -shared -Wl,-soname,libj.so -m32 -lm -ldl $LDOPENMP32 -o libj.so "
 OBJS_AESNI=" aes-ni.o "
 ;;
 
-linux_j64nonavx) # linux intel 64bit nonavx
+linux_j64) # linux intel 64bit nonavx
 TARGET=libj.so
 COMPILE="$common "
 LINK=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP -o libj.so "
 OBJS_AESNI=" aes-ni.o "
 ;;
 
-linux_j64) # linux intel 64bit avx
-TARGET=libj.so
+linux_j64avx) # linux intel 64bit avx
+TARGET=libjavx.so
 COMPILE="$common -DC_AVX=1 "
-LINK=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP -o libj.so "
+LINK=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP -o libjavx.so "
 if [ "x$javx2" != x'1' ] ; then
 CFLAGS_SIMD=" -mavx "
 else
@@ -115,17 +113,17 @@ LINK=" -dynamiclib -lm -ldl $LDOPENMP -m32 $macmin -o libj.dylib"
 OBJS_AESNI=" aes-ni.o "
 ;;
 
-darwin_j64nonavx) # darwin intel 64bit nonavx
+darwin_j64) # darwin intel 64bit nonavx
 TARGET=libj.dylib
 COMPILE="$darwin $macmin"
 LINK=" -dynamiclib -lm -ldl $LDOPENMP $macmin -o libj.dylib"
 OBJS_AESNI=" aes-ni.o "
 ;;
 
-darwin_j64) # darwin intel 64bit
-TARGET=libj.dylib
+darwin_j64avx) # darwin intel 64bit
+TARGET=libjavx.dylib
 COMPILE="$darwin $macmin -DC_AVX=1"
-LINK=" -dynamiclib -lm -ldl $LDOPENMP $macmin -o libj.dylib"
+LINK=" -dynamiclib -lm -ldl $LDOPENMP $macmin -o libjavx.dylib"
 if [ "x$javx2" != x'1' ] ; then
 CFLAGS_SIMD=" -mavx "
 else
@@ -139,8 +137,6 @@ OBJS_AESNI=" aes-ni.o "
 echo no case for those parameters
 exit
 esac
-
-echo "COMPILE=$COMPILE"
 
 OBJS="\
  a.o \

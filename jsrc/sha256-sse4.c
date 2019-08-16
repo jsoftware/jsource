@@ -1,6 +1,6 @@
 #include "j.h"
 
-#if defined(__SSE2__) && (defined(_M_X64) || defined(__x86_64__)) && !defined(_MSC_VER)
+#if (defined(_M_X64) || defined(__x86_64__)) && !defined(_MSC_VER)
 
 #include <stdint.h>
 #include <emmintrin.h>
@@ -951,4 +951,4 @@ void sha256_transform_sse4(uint32_t* s, const unsigned char* chunk, uintptr_t bl
     "xmm7", "xmm8", "xmm9", "xmm10", "xmm11", "xmm12");
 }
 
-#endif  // defined(__SSE2__) && (defined(_M_X64) || defined(__x86_64__)) && !defined(_MSC_VER)
+#endif  // (defined(_M_X64) || defined(__x86_64__)) && !defined(_MSC_VER)

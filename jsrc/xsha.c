@@ -23,7 +23,7 @@
 #include "x.h"
 #include "cpuinfo.h"
 
-static UC hwsha1=0,hwsha2=0,hwsse41=0;
+static UC hwsha1=0,hwsha2=0,hwssse3=0,hwsse41=0,hwavx=0,hwavx2=0;
 
 #include "sha/sha1.h"
 #include "sha/sha1.c"
@@ -84,7 +84,10 @@ F2(jtshasum2)
  hwsha2=(getCpuFeatures()&ARM_HWCAP_SHA2)?1:0;
 #elif (defined(__i386__) || defined(_M_X64) || defined(__x86_64__))
  hwsha1=hwsha2=(getCpuFeatures()&CPU_X86_FEATURE_SHA_NI)?1:0;
+ hwssse3=(getCpuFeatures()&CPU_X86_FEATURE_SSSE3)?1:0;
  hwsse41=(getCpuFeatures()&CPU_X86_FEATURE_SSE4_1)?1:0;
+ hwavx=(getCpuFeatures()&CPU_X86_FEATURE_AVX)?1:0;
+ hwavx2=(getCpuFeatures()&CPU_X86_FEATURE_AVX2)?1:0;
 #endif
   RZ(a=vi(a));
   n=AN(w);

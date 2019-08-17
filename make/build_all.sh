@@ -2,6 +2,8 @@
 # build all binaries for j64 linux/darwin
 cd ~
 
+cat $jgit/jsrc/jversion.h
+
 if [ ! -d jbld ]; then
  echo "~/jbld does not exist - running install.sh"
  $jmake/install.sh

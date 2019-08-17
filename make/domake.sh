@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# run by build_jconsole and build_libj
-# jconsole $1 is j32 or j64
-# libj     $1 is j32 or j64 or j64avx
+# run by build_jconsole and build_libj and build_tsdll
+# jconsole/tsdll $1 is j32 or j64
+# libj           $1 is j32 or j64 or j64avx j64avx2
 
 echo "domake: $1 $TARGET CC=$CC `readlink -f $(command -v $CC)`"
 

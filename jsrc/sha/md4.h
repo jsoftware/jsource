@@ -7,11 +7,11 @@
 #define _MD4_H
 
 /* Any 32-bit or wider unsigned integer data type will do */
-typedef size_t MD4_u32plus;
+typedef uint32_t MD4_u32plus;
 
 typedef struct {
 	MD4_u32plus lo, hi;
-	MD4_u32plus a, b, c, d;
+	MD4_u32plus abcd[4];
 	unsigned char buffer[64];
 	MD4_u32plus block[16];
 } MD4_CTX;

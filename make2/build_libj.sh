@@ -22,7 +22,9 @@ jplatform="${jplatform:=darwin}"
 else
 jplatform="${jplatform:=linux}"
 fi
-if [ "`uname -m`" = "x86_64" ] || [ "`uname -m`" = "aarch64" ]; then
+if [ "`uname -m`" = "x86_64" ]; then
+j64x="${j64x:=j64avx}"
+elif [ "`uname -m`" = "aarch64" ]; then
 j64x="${j64x:=j64}"
 else
 j64x="${j64x:=j32}"
@@ -89,6 +91,33 @@ darwin="$OPENMP -fPIC -O1 -fwrapv -fno-strict-aliasing -Wno-string-plus-int -Wno
 
 javx2="${javx2:=0}"
 
+OBJS_SHAASM_LINUX=" \
+ ../../../../sha-asm/sha1_ssse3-elf64.o \
+ ../../../../sha-asm/sha256_avx1-elf64.o \
+ ../../../../sha-asm/sha256_avx2_rorx2-elf64.o \
+ ../../../../sha-asm/sha256_avx2_rorx8-elf64.o \
+ ../../../../sha-asm/sha256_sse4-elf64.o \
+ ../../../../sha-asm/sha512_avx-elf64.o \
+ ../../../../sha-asm/sha512_sse4-elf64.o "
+
+OBJS_SHAASM_MAC=" \
+ ../../../../sha-asm/sha1_ssse3-macho64.o \
+ ../../../../sha-asm/sha256_avx1-macho64.o \
+ ../../../../sha-asm/sha256_avx2_rorx2-macho64.o \
+ ../../../../sha-asm/sha256_avx2_rorx8-macho64.o \
+ ../../../../sha-asm/sha256_sse4-macho64.o \
+ ../../../../sha-asm/sha512_avx-macho64.o \
+ ../../../../sha-asm/sha512_sse4-macho64.o "
+
+OBJS_SHAASM_WIN=" \
+ ../../../../sha-asm/sha1_ssse3-x64.o \
+ ../../../../sha-asm/sha256_avx1-x64.o \
+ ../../../../sha-asm/sha256_avx2_rorx2-x64.o \
+ ../../../../sha-asm/sha256_avx2_rorx8-x64.o \
+ ../../../../sha-asm/sha256_sse4-x64.o \
+ ../../../../sha-asm/sha512_avx-x64.o \
+ ../../../../sha-asm/sha512_sse4-x64.o "
+
 case $jplatform\_$j64x in
 
 linux_j32) # linux x86
@@ -102,14 +131,15 @@ LDFLAGS=" -shared -Wl,-soname,libj.so -m32 -lm -ldl $LDOPENMP32"
 OBJS_AESNI=" aes-ni.o "
 ;;
 
-linux_j64nonavx) # linux intel 64bit nonavx
+linux_j64) # linux intel 64bit nonavx
 TARGET=libj.so
 CFLAGS="$common "
 LDFLAGS=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP"
 OBJS_AESNI=" aes-ni.o "
+OBJS_SHAASM="${OBJS_SHAASM_LINUX}"
 ;;
 
-linux_j64) # linux intel 64bit avx
+linux_j64avx) # linux intel 64bit avx
 TARGET=libj.so
 CFLAGS="$common -DC_AVX=1 "
 LDFLAGS=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP"
@@ -120,6 +150,7 @@ CFLAGS_SIMD=" -DC_AVX2=1 -mavx2 "
 fi
 OBJS_FMA=" gemm_int-fma.o "
 OBJS_AESNI=" aes-ni.o "
+OBJS_SHAASM="${OBJS_SHAASM_LINUX}"
 ;;
 
 raspberry_j32) # linux raspbian arm
@@ -142,14 +173,15 @@ LDFLAGS=" -dynamiclib -lm -ldl $LDOPENMP -m32 $macmin"
 OBJS_AESNI=" aes-ni.o "
 ;;
 
-darwin_j64nonavx) # darwin intel 64bit nonavx
+darwin_j64) # darwin intel 64bit nonavx
 TARGET=libj.dylib
 CFLAGS="$darwin $macmin"
 LDFLAGS=" -dynamiclib -lm -ldl $LDOPENMP $macmin"
 OBJS_AESNI=" aes-ni.o "
+OBJS_SHAASM="${OBJS_SHAASM_MAC}"
 ;;
 
-darwin_j64) # darwin intel 64bit
+darwin_j64avx) # darwin intel 64bit
 TARGET=libj.dylib
 CFLAGS="$darwin $macmin -DC_AVX=1 "
 LDFLAGS=" -dynamiclib -lm -ldl $LDOPENMP $macmin"
@@ -160,6 +192,7 @@ CFLAGS_SIMD=" -DC_AVX2=1 -mavx2 "
 fi
 OBJS_FMA=" gemm_int-fma.o "
 OBJS_AESNI=" aes-ni.o "
+OBJS_SHAASM="${OBJS_SHAASM_MAC}"
 ;;
 windows_j32) # windows x86
 jolecom="${jolecom:=0}"
@@ -184,7 +217,7 @@ LIBJRES=" jdllres.o "
 OBJS_AESNI=" aes-ni.o "
 ;;
 
-windows_j64nonavx) # windows intel 64bit nonavx
+windows_j64) # windows intel 64bit nonavx
 jolecom="${jolecom:=0}"
 if [ $jolecom -eq 1 ] ; then
 DOLECOM="-DOLECOM"
@@ -201,9 +234,10 @@ LIBJDEF=" ../../../../dllsrc/jdll2.def "
 fi
 LIBJRES=" jdllres.o "
 OBJS_AESNI=" aes-ni.o "
+OBJS_SHAASM="${OBJS_SHAASM_WIN}"
 ;;
 
-windows_j64) # windows intel 64bit avx
+windows_j64avx) # windows intel 64bit avx
 jolecom="${jolecom:=0}"
 if [ $jolecom -eq 1 ] ; then
 DOLECOM="-DOLECOM"
@@ -226,6 +260,7 @@ fi
 LIBJRES=" jdllres.o "
 OBJS_FMA=" gemm_int-fma.o "
 OBJS_AESNI=" aes-ni.o "
+OBJS_SHAASM="${OBJS_SHAASM_WIN}"
 ;;
 
 *)
@@ -242,7 +277,7 @@ fi
 mkdir -p ../bin/$jplatform/$j64x
 mkdir -p obj/$jplatform/$j64x/
 cp makefile-libj obj/$jplatform/$j64x/.
-export CFLAGS LDFLAGS TARGET CFLAGS_SIMD DLLOBJS LIBJDEF LIBJRES OBJS_FMA OBJS_AESNI OBJS_AESARM jplatform j64x
+export CFLAGS LDFLAGS TARGET CFLAGS_SIMD DLLOBJS LIBJDEF LIBJRES OBJS_FMA OBJS_AESNI OBJS_AESARM OBJS_SHAASM jplatform j64x
 cd obj/$jplatform/$j64x/
 make -f makefile-libj
 cd -

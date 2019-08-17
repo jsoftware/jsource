@@ -22,7 +22,9 @@ jplatform="${jplatform:=darwin}"
 else
 jplatform="${jplatform:=linux}"
 fi
-if [ "`uname -m`" = "x86_64" ] || [ "`uname -m`" = "aarch64" ]; then
+if [ "`uname -m`" = "x86_64" ]; then
+j64x="${j64x:=j64avx}"
+elif [ "`uname -m`" = "aarch64" ]; then
 j64x="${j64x:=j64}"
 else
 j64x="${j64x:=j32}"
@@ -129,7 +131,7 @@ LDFLAGS=" -shared -Wl,-soname,libj.so -m32 -lm -ldl $LDOPENMP32"
 OBJS_AESNI=" aes-ni.o "
 ;;
 
-linux_j64nonavx) # linux intel 64bit nonavx
+linux_j64) # linux intel 64bit nonavx
 TARGET=libj.so
 CFLAGS="$common "
 LDFLAGS=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP"
@@ -137,7 +139,7 @@ OBJS_AESNI=" aes-ni.o "
 OBJS_SHAASM="${OBJS_SHAASM_LINUX}"
 ;;
 
-linux_j64) # linux intel 64bit avx
+linux_j64avx) # linux intel 64bit avx
 TARGET=libj.so
 CFLAGS="$common -DC_AVX=1 "
 LDFLAGS=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP"
@@ -171,7 +173,7 @@ LDFLAGS=" -dynamiclib -lm -ldl $LDOPENMP -m32 $macmin"
 OBJS_AESNI=" aes-ni.o "
 ;;
 
-darwin_j64nonavx) # darwin intel 64bit nonavx
+darwin_j64) # darwin intel 64bit nonavx
 TARGET=libj.dylib
 CFLAGS="$darwin $macmin"
 LDFLAGS=" -dynamiclib -lm -ldl $LDOPENMP $macmin"
@@ -179,7 +181,7 @@ OBJS_AESNI=" aes-ni.o "
 OBJS_SHAASM="${OBJS_SHAASM_MAC}"
 ;;
 
-darwin_j64) # darwin intel 64bit
+darwin_j64avx) # darwin intel 64bit
 TARGET=libj.dylib
 CFLAGS="$darwin $macmin -DC_AVX=1 "
 LDFLAGS=" -dynamiclib -lm -ldl $LDOPENMP $macmin"
@@ -215,7 +217,7 @@ LIBJRES=" jdllres.o "
 OBJS_AESNI=" aes-ni.o "
 ;;
 
-windows_j64nonavx) # windows intel 64bit nonavx
+windows_j64) # windows intel 64bit nonavx
 jolecom="${jolecom:=0}"
 if [ $jolecom -eq 1 ] ; then
 DOLECOM="-DOLECOM"
@@ -235,7 +237,7 @@ OBJS_AESNI=" aes-ni.o "
 OBJS_SHAASM="${OBJS_SHAASM_WIN}"
 ;;
 
-windows_j64) # windows intel 64bit avx
+windows_j64avx) # windows intel 64bit avx
 jolecom="${jolecom:=0}"
 if [ $jolecom -eq 1 ] ; then
 DOLECOM="-DOLECOM"

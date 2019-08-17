@@ -25,7 +25,9 @@ jplatform="${jplatform:=darwin}"
 else
 jplatform="${jplatform:=linux}"
 fi
-if [ "`uname -m`" = "x86_64" ] || [ "`uname -m`" = "aarch64" ]; then
+if [ "`uname -m`" = "x86_64" ]; then
+j64x="${j64x:=j64avx}"
+elif [ "`uname -m`" = "aarch64" ]; then
 j64x="${j64x:=j64}"
 else
 j64x="${j64x:=j32}"

@@ -182,7 +182,7 @@ LD=link
 	$(CC) $(CFLAGS) /Fo$@ /c $<
 
 !ifdef x64
-TARGET= j-nonavx.dll
+TARGET= j.dll
 !else
 TARGET= j32.dll
 !endif

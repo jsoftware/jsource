@@ -18,8 +18,6 @@ export CC
 fi
 # compiler=`$CC --version | head -n 1`
 compiler=`readlink -f $(command -v $CC)`
-echo "CC=$CC"
-echo "compiler=$compiler"
 
 if [ -z "${compiler##*gcc*}" ] || [ -z "${CC##*gcc*}" ]; then
 # gcc
@@ -81,8 +79,6 @@ LINK=" $macmin -dynamiclib -o libtsdll.dylib -lm "
 echo no case for those parameters
 exit
 esac
-
-echo "COMPILE=$COMPILE"
 
 OBJS="tsdll.o "
 export OBJS COMPILE LINK TARGET

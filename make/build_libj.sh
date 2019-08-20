@@ -23,8 +23,6 @@ export CC
 fi
 # compiler=`$CC --version | head -n 1`
 compiler=`readlink -f $(command -v $CC)`
-echo "CC=$CC"
-echo "compiler=$compiler"
 
 USE_OPENMP="${USE_OPENMP:=0}"
 if [ $USE_OPENMP -eq 1 ] ; then
@@ -63,6 +61,33 @@ darwin="$OPENMP -fPIC -O1 -fwrapv -fno-strict-aliasing -Wno-string-plus-int -Wno
 
 javx2="${javx2:=0}"
 
+OBJS_SHAASM_LINUX=" \
+ ${jgit}/sha-asm/sha1_ssse3-elf64.o \
+ ${jgit}/sha-asm/sha256_avx1-elf64.o \
+ ${jgit}/sha-asm/sha256_avx2_rorx2-elf64.o \
+ ${jgit}/sha-asm/sha256_avx2_rorx8-elf64.o \
+ ${jgit}/sha-asm/sha256_sse4-elf64.o \
+ ${jgit}/sha-asm/sha512_avx-elf64.o \
+ ${jgit}/sha-asm/sha512_sse4-elf64.o "
+
+OBJS_SHAASM_MAC=" \
+ ${jgit}/sha-asm/sha1_ssse3-macho64.o \
+ ${jgit}/sha-asm/sha256_avx1-macho64.o \
+ ${jgit}/sha-asm/sha256_avx2_rorx2-macho64.o \
+ ${jgit}/sha-asm/sha256_avx2_rorx8-macho64.o \
+ ${jgit}/sha-asm/sha256_sse4-macho64.o \
+ ${jgit}/sha-asm/sha512_avx-macho64.o \
+ ${jgit}/sha-asm/sha512_sse4-macho64.o "
+
+OBJS_SHAASM_WIN=" \
+ ${jgit}/sha-asm/sha1_ssse3-x64.o \
+ ${jgit}/sha-asm/sha256_avx1-x64.o \
+ ${jgit}/sha-asm/sha256_avx2_rorx2-x64.o \
+ ${jgit}/sha-asm/sha256_avx2_rorx8-x64.o \
+ ${jgit}/sha-asm/sha256_sse4-x64.o \
+ ${jgit}/sha-asm/sha512_avx-x64.o \
+ ${jgit}/sha-asm/sha512_sse4-x64.o "
+
 case $jplatform\_$1 in
 
 linux_j32) # linux x86
@@ -76,17 +101,18 @@ LINK=" -shared -Wl,-soname,libj.so -m32 -lm -ldl $LDOPENMP32 -o libj.so "
 OBJS_AESNI=" aes-ni.o "
 ;;
 
-linux_j64nonavx) # linux intel 64bit nonavx
+linux_j64) # linux intel 64bit nonavx
 TARGET=libj.so
 COMPILE="$common "
 LINK=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP -o libj.so "
 OBJS_AESNI=" aes-ni.o "
+OBJS_SHAASM="${OBJS_SHAASM_LINUX}"
 ;;
 
-linux_j64) # linux intel 64bit avx
-TARGET=libj.so
+linux_j64avx) # linux intel 64bit avx
+TARGET=libjavx.so
 COMPILE="$common -DC_AVX=1 "
-LINK=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP -o libj.so "
+LINK=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP -o libjavx.so "
 if [ "x$javx2" != x'1' ] ; then
 CFLAGS_SIMD=" -mavx "
 else
@@ -94,6 +120,7 @@ CFLAGS_SIMD=" -DC_AVX2=1 -mavx2 "
 fi
 OBJS_FMA=" blis/gemm_int-fma.o "
 OBJS_AESNI=" aes-ni.o "
+OBJS_SHAASM="${OBJS_SHAASM_LINUX}"
 ;;
 
 raspberry_j32) # linux raspbian arm
@@ -106,6 +133,7 @@ raspberry_j64) # linux arm64
 TARGET=libj.so
 COMPILE="$common -march=armv8-a+crc -DRASPI -DC_CRC32C=1 "
 LINK=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP -o libj.so "
+OBJS_AESARM=" aes-arm.o "
 ;;
 
 darwin_j32) # darwin x86
@@ -115,17 +143,18 @@ LINK=" -dynamiclib -lm -ldl $LDOPENMP -m32 $macmin -o libj.dylib"
 OBJS_AESNI=" aes-ni.o "
 ;;
 
-darwin_j64nonavx) # darwin intel 64bit nonavx
+darwin_j64) # darwin intel 64bit nonavx
 TARGET=libj.dylib
 COMPILE="$darwin $macmin"
 LINK=" -dynamiclib -lm -ldl $LDOPENMP $macmin -o libj.dylib"
 OBJS_AESNI=" aes-ni.o "
+OBJS_SHAASM="${OBJS_SHAASM_MAC}"
 ;;
 
-darwin_j64) # darwin intel 64bit
-TARGET=libj.dylib
+darwin_j64avx) # darwin intel 64bit
+TARGET=libjavx.dylib
 COMPILE="$darwin $macmin -DC_AVX=1"
-LINK=" -dynamiclib -lm -ldl $LDOPENMP $macmin -o libj.dylib"
+LINK=" -dynamiclib -lm -ldl $LDOPENMP $macmin -o libjavx.dylib"
 if [ "x$javx2" != x'1' ] ; then
 CFLAGS_SIMD=" -mavx "
 else
@@ -133,14 +162,13 @@ CFLAGS_SIMD=" -DC_AVX2=1 -mavx2 "
 fi
 OBJS_FMA=" blis/gemm_int-fma.o "
 OBJS_AESNI=" aes-ni.o "
+OBJS_SHAASM="${OBJS_SHAASM_MAC}"
 ;;
 
 *)
 echo no case for those parameters
 exit
 esac
-
-echo "COMPILE=$COMPILE"
 
 OBJS="\
  a.o \
@@ -207,6 +235,7 @@ OBJS="\
  sc.o \
  sha1-arm.o \
  sha256-arm.o \
+ sha256-sse4.o \
  sl.o \
  sn.o \
  t.o \
@@ -282,6 +311,6 @@ OBJS="\
  xt.o \
  xu.o "
 
-export OBJS OBJS_FMA OBJS_AESNI COMPILE CFLAGS_SIMD LINK TARGET
+export OBJS OBJS_FMA OBJS_AESNI OBJS_AESARM OBJS_SHAASM COMPILE CFLAGS_SIMD LINK TARGET
 $jmake/domake.sh $1
 

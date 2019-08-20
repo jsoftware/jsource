@@ -142,6 +142,48 @@ test_decrypt_cbc 256
 0&test_xcrypt_ctr 256
 1&test_xcrypt_ctr 256
 
+NB. test non-accelerated
+
+test_1=: 3 : 0
+assert. test_encrypt_ecb 128
+assert. test_decrypt_ecb 128
+assert. test_encrypt_cbc 128
+assert. test_decrypt_cbc 128
+assert. 0&test_xcrypt_ctr 128
+assert. 1&test_xcrypt_ctr 128
+
+assert. test_encrypt_ecb 192
+assert. test_decrypt_ecb 192
+assert. test_encrypt_cbc 192
+assert. test_decrypt_cbc 192
+assert. 0&test_xcrypt_ctr 192
+assert. 1&test_xcrypt_ctr 192
+
+assert. test_encrypt_ecb 256
+assert. test_decrypt_ecb 256
+assert. test_encrypt_cbc 256
+assert. test_decrypt_cbc 256
+assert. 0&test_xcrypt_ctr 256
+assert. 1&test_xcrypt_ctr 256
+
+1
+)
+
+3 : 0''
+if.('arm64'-:9!:56'cpu') *. 9!:56'aes' do.
+  0 (9!:56) 'aes'
+  test_1''
+  1 (9!:56) 'aes'
+elseif. (('x86'-:9!:56'cpu')+.('x86_64'-:9!:56'cpu')) *. (9!:56'sse4_1') *. (9!:56'ase_ni') do.
+  0 (9!:56) 'sse4_1'
+  0 (9!:56) 'aes_ni'
+  test_1''
+  1 (9!:56) 'sse4_1'
+  1 (9!:56) 'aes_ni'
+end.
+1
+)
+
 f=: 128!:7
 
 NB. null padding
@@ -250,4 +292,4 @@ t=. (1;key;iv;mode) 128!:7 s
 'length error' -: (1;(16{.a.);(16{.a.))        f etx 'xyz'
 
 4!:55 ;:'f pkcs fhex Key IV Plaintext Ciphertext'
-4!:55 ;:'test_encrypt_ecb test_decrypt_ecb test_encrypt_cbc test_decrypt_cbc test_xcrypt_ctr'
+4!:55 ;:'test_encrypt_ecb test_decrypt_ecb test_encrypt_cbc test_decrypt_cbc test_xcrypt_ctr test_1'

@@ -152,7 +152,7 @@ void jepath(char* arg,char* lib,int forceavx)
 #endif
 #elif defined(ANDROID)
 #define AndroidPackage "com.jsoftware.j.android"
- struct stat st; int qsdcard; char tmp[PLEN];
+ struct stat st; char tmp[PLEN];
  strcpy(path,"/data/data/");
  strcat(path,AndroidPackage);
  strcpy(pathdll,path);
@@ -184,11 +184,15 @@ void jepath(char* arg,char* lib,int forceavx)
   else
    sprintf(pathdll,"/data/app-lib/%s/%s",AndroidPackage,JDLLNAME);
   if(!stat(pathdll,&st))break;
+  if(i)
+   sprintf(pathdll,"/mnt/asec/%s-%d/lib/%s",AndroidPackage,i,JDLLNAME);
+  else
+   sprintf(pathdll,"/mnt/asec/%s/lib/%s",AndroidPackage,JDLLNAME);
+  if(!stat(pathdll,&st))break;
  }
  }
- strcpy(tmp, "/sdcard/Android/data");
- qsdcard=stat(tmp,&st);
- strcpy(install,(qsdcard)?"/storage/emulated/0/Android/data/":"/sdcard/Android/data/");
+ strcpy(tmp, "/mnt/sdcard/Android/data");
+ strcpy(install,(stat(tmp,&st))?((stat(tmp+4,&st))?"/storage/emulated/0/Android/data/":"/sdcard/Android/data/"):"/mnt/sdcard/Android/data/");
  strcat(install,AndroidPackage);
  strcat(install,"/files");
  setenv("HOME",install,1);
@@ -349,6 +353,11 @@ int jefirst(int type,char* arg)
   if (_system_property_get("ro.build.version.sdk", propval)){
 	strcat(input,"[APILEVEL_ja_=:");
 	strcat(input,propval);
+  }
+  if (_system_property_get("ro.build.version.release", propval)){
+	strcat(input,"[OSRELEASE_ja_=:'");
+	strcat(input,propval);
+	strcat(input,"'");
   }
 	strcat(input,"[UNAME_z_=:'Android'");
 	strcat(input,"[INSTALLROOT_z_=:'");

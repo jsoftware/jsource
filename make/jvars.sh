@@ -16,7 +16,7 @@ CC=clang # compiler
 tsu=$jgit/test/tsu.ijs
 j32="$jbld/j32/bin/jconsole $tsu"
 j64="$jbld/j64/bin/jconsole $tsu"
-j64nonavx="$jbld/j64/bin/jconsole -lib libj-nonavx.$jsuffix $tsu"
+j64avx="$jbld/j64/bin/jconsole -lib libjavx.$jsuffix $tsu"
 jmake=$jgit/make
 
 export jgit jbld jplatform j32 j64 j64nonavx jmake CC

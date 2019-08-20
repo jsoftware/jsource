@@ -131,6 +131,9 @@ static void aes_inverse_key(block_state* self, const uint8_t *fwdkey)
   uint32_t *RK;
   uint32_t *SK;
 
+#if (defined(__clang__) && ( (__clang_major__ > 3) || ((__clang_major__ == 3) && (__clang_minor__ > 4)))) || __GNUC__ > 4 || (__GNUC__ == 4 && (__GNUC_MINOR__ > 6))
+  fwdkey = (const uint8_t *) __builtin_assume_aligned (fwdkey, 16);
+#endif
   RK = (uint32_t *) self->rk;
   SK = ((uint32_t *) fwdkey) + self->Nr * 4;
 
@@ -232,7 +235,11 @@ static void block_finalize(block_state* self)
 int aes_arm(I decrypt,I mode,UC *key,I keyn,UC* ivec,UC* out,I len)
 {
   block_state self;
-  uint8_t rk_tmp[AES_RKSIZE];
+#ifdef _MSC_VER
+  __declspec(align(16)) uint8_t rk_tmp[AES_RKSIZE];
+#else
+  uint8_t __attribute__ ((aligned (16))) rk_tmp[AES_RKSIZE];
+#endif
   uint8_t *str=out;
   I i;
 

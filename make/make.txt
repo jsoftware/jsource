@@ -1,4 +1,4 @@
-how to build/test j32/64/j64nonavx for linux/darwin/raspberry/...
+how to build/test j32/64/j64avx/j64avx2 for linux/darwin/raspberry/...
 
 $jplatform (set by jvars.sh) determines compiler/link flags
 
@@ -26,7 +26,7 @@ cat jvars.sh
 . jvars.sh
 $jmake/build_all.sh
 
-# test j64 ($j64nonavx or $j32)
+# test j64 ($j64avx or $j64avx2 or $j32)
 . jvars.sh
 $j64
 
@@ -42,4 +42,4 @@ $jmake/build_jconsole.sh j64
 $jmake/build_libj.sh     j64
 $jmake/build_tsdll.sh    j64
 
-# build/test j32 j64nonavx binaries the same way (j32 or j64nonavx)
+# build/test other binaries the same way (j32 or j64avx or j64avx2)

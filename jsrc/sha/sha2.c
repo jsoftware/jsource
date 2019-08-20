@@ -177,9 +177,25 @@ static void SHA512_Last(SHA512_CTX*);
 static void SHA256_Transform(SHA256_CTX*, const sha2_word32*);
 static void SHA512_Transform(SHA512_CTX*, const sha2_word64*);
 #if defined(__aarch64__)
-extern void sha256_process_arm(uint32_t state[8], const uint8_t data[], uint32_t length);
+extern void sha256_process_arm(uint32_t state[8], const uint8_t data[], uintptr_t length);
 #endif
-
+#if defined(_M_X64) || defined(__x86_64__)
+#if !defined(_MSC_VER)
+extern void sha256_transform_sse4(uint32_t* s, const unsigned char* chunk, uintptr_t blocks);
+#endif
+/* avx */
+extern void sha256_avx(void *input_data, uint32_t digest[8], uint64_t num_blks);
+/* avx2 */
+extern void sha256_rorx(void *input_data, uint32_t digest[8], uint64_t num_blks);
+/* avx2 */
+extern void sha256_rorx_x8ms(void *input_data, uint32_t digest[8], uint64_t num_blks);
+/* sse4_1 */
+extern void sha256_sse4(void *input_data, uint32_t digest[8], uint64_t num_blks);
+/* avx */
+extern void sha512_avx(const void* M, void* D, uint64_t L);
+/* sse4_1 */
+extern void sha512_sse4(const void* M, void* D, uint64_t L);
+#endif
 
 /*** SHA-XYZ INITIAL HASH VALUES AND CONSTANTS ************************/
 /* Hash constant words K for SHA-256: */
@@ -528,6 +544,22 @@ static void SHA256_Update(SHA256_CTX* context, const sha2_byte *data, size_t len
         sha256_process_arm(context->state, (uint8_t*)context->buffer, 64);
       else
         SHA256_Transform(context, (sha2_word32*)context->buffer);
+#elif defined(_M_X64) || defined(__x86_64__)
+#if defined(ANDROID)
+      if(hwsse41)
+        sha256_transform_sse4(context->state, (uint8_t*)context->buffer, 1);
+      else
+        SHA256_Transform(context, (sha2_word32*)context->buffer);
+#else
+      if(hwavx2)
+        sha256_rorx((void *)context->buffer, context->state, 1);
+      else if(hwavx)
+        sha256_avx((void *)context->buffer, context->state, 1);
+      else if(hwsse41)
+        sha256_sse4((void *)context->buffer, context->state, 1);
+      else
+        SHA256_Transform(context, (sha2_word32*)context->buffer);
+#endif
 #else
       SHA256_Transform(context, (sha2_word32*)context->buffer);
 #endif
@@ -540,6 +572,38 @@ static void SHA256_Update(SHA256_CTX* context, const sha2_byte *data, size_t len
       return;
     }
   }
+#if defined(__aarch64__)
+  if(hwsha2 && len >= SHA256_BLOCK_LENGTH) {
+    UI iter = len >> 6;
+    sha256_process_arm(context->state, (uint8_t*)data, iter << 6);
+    context->bitcount += iter * SHA256_BLOCK_LENGTH << 3;
+    len -= iter << 6;
+    data += iter << 6;
+  }
+#elif defined(_M_X64) || defined(__x86_64__)
+#if defined(ANDROID)
+  if(hwsse41 && len >= SHA256_BLOCK_LENGTH) {
+    UI iter = len >> 6;
+    sha256_transform_sse4(context->state, (uint8_t*)data, iter);
+    context->bitcount += iter * SHA256_BLOCK_LENGTH << 3;
+    len -= iter << 6;
+    data += iter << 6;
+  }
+#else
+  if((hwavx2||hwavx||hwsse41) && len >= SHA256_BLOCK_LENGTH) {
+    UI iter = len >> 6;
+    if(hwavx2)
+      sha256_rorx((void *)data, context->state, iter);
+    else if(hwavx)
+      sha256_avx((void *)data, context->state, iter);
+    else
+      sha256_sse4((void *)data, context->state, iter);
+    context->bitcount += iter * SHA256_BLOCK_LENGTH << 3;
+    len -= iter << 6;
+    data += iter << 6;
+  }
+#endif
+#endif
   while (len >= SHA256_BLOCK_LENGTH) {
     /* Process as many complete blocks as we can */
 #if defined(__aarch64__)
@@ -547,6 +611,22 @@ static void SHA256_Update(SHA256_CTX* context, const sha2_byte *data, size_t len
       sha256_process_arm(context->state, (uint8_t*)data, 64);
     else
       SHA256_Transform(context, (sha2_word32*)data);
+#elif defined(_M_X64) || defined(__x86_64__)
+#if defined(ANDROID)
+    if(hwsse41)
+      sha256_transform_sse4(context->state, (uint8_t*)data, 1);
+    else
+      SHA256_Transform(context, (sha2_word32*)data);
+#else
+    if(hwavx2)
+      sha256_rorx((void *)data, context->state, 1);
+    else if(hwavx)
+      sha256_avx((void *)data, context->state, 1);
+    else if(hwsse41)
+      sha256_sse4((void *)data, context->state, 1);
+    else
+      SHA256_Transform(context, (sha2_word32*)data);
+#endif
 #else
     SHA256_Transform(context, (sha2_word32*)data);
 #endif
@@ -880,7 +960,16 @@ static void SHA512_Update(SHA512_CTX* context, const sha2_byte *data, size_t len
       ADDINC128(context->bitcount, freespace << 3);
       len -= freespace;
       data += freespace;
+#if defined(_M_X64) || defined(__x86_64__)
+      if(hwavx)
+        sha512_avx(context->buffer, context->state, 1);
+      else if(hwsse41)
+        sha512_sse4(context->buffer, context->state, 1);
+      else
+        SHA512_Transform(context, (sha2_word64*)context->buffer);
+#else
       SHA512_Transform(context, (sha2_word64*)context->buffer);
+#endif
     } else {
       /* The buffer is not yet full */
       MEMCPY_BCOPY(&context->buffer[usedspace], data, len);
@@ -890,9 +979,30 @@ static void SHA512_Update(SHA512_CTX* context, const sha2_byte *data, size_t len
       return;
     }
   }
+#if defined(_M_X64) || defined(__x86_64__)
+  if((hwavx||hwsse41) && len >= SHA512_BLOCK_LENGTH) {
+    UI iter = len >> 7;
+    if(hwavx)
+      sha512_avx(data, context->state, iter);
+    else
+      sha512_sse4(data, context->state, iter);
+    ADDINC128(context->bitcount, iter * SHA512_BLOCK_LENGTH << 3);
+    len -= iter << 7;
+    data += iter << 7;
+  }
+#endif
   while (len >= SHA512_BLOCK_LENGTH) {
     /* Process as many complete blocks as we can */
+#if defined(_M_X64) || defined(__x86_64__)
+    if(hwavx)
+      sha512_avx(data, context->state, 1);
+    else if(hwsse41)
+      sha512_sse4(data, context->state, 1);
+    else
+      SHA512_Transform(context, (sha2_word64*)data);
+#else
     SHA512_Transform(context, (sha2_word64*)data);
+#endif
     ADDINC128(context->bitcount, SHA512_BLOCK_LENGTH << 3);
     len -= SHA512_BLOCK_LENGTH;
     data += SHA512_BLOCK_LENGTH;
@@ -928,7 +1038,16 @@ static void SHA512_Last(SHA512_CTX* context)
         MEMSET_BZERO(&context->buffer[usedspace], SHA512_BLOCK_LENGTH - usedspace);
       }
       /* Do second-to-last transform: */
+#if defined(_M_X64) || defined(__x86_64__)
+      if (hwavx)
+        sha512_avx(context->buffer, context->state, 1);
+      else if (hwsse41)
+        sha512_sse4(context->buffer, context->state, 1);
+      else
+        SHA512_Transform(context, (sha2_word64*)context->buffer);
+#else
       SHA512_Transform(context, (sha2_word64*)context->buffer);
+#endif
 
       /* And set-up for the last transform: */
       MEMSET_BZERO(context->buffer, SHA512_BLOCK_LENGTH - 2);

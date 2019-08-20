@@ -71,10 +71,10 @@ static const void *body5(MD5_CTX *ctx, const void *data, size_t size)
 
 	ptr = (const unsigned char *)data;
 
-	a = ctx->a;
-	b = ctx->b;
-	c = ctx->c;
-	d = ctx->d;
+	a = ctx->abcd[0];
+	b = ctx->abcd[1];
+	c = ctx->abcd[2];
+	d = ctx->abcd[3];
 
 	do {
 		saved_a = a;
@@ -162,20 +162,20 @@ static const void *body5(MD5_CTX *ctx, const void *data, size_t size)
 		ptr += 64;
 	} while (size -= 64);
 
-	ctx->a = a;
-	ctx->b = b;
-	ctx->c = c;
-	ctx->d = d;
+	ctx->abcd[0] = a;
+	ctx->abcd[1] = b;
+	ctx->abcd[2] = c;
+	ctx->abcd[3] = d;
 
 	return ptr;
 }
 
 void MD5_Init(MD5_CTX *ctx)
 {
-	ctx->a = 0x67452301;
-	ctx->b = 0xefcdab89;
-	ctx->c = 0x98badcfe;
-	ctx->d = 0x10325476;
+	ctx->abcd[0] = 0x67452301;
+	ctx->abcd[1] = 0xefcdab89;
+	ctx->abcd[2] = 0x98badcfe;
+	ctx->abcd[3] = 0x10325476;
 
 	ctx->lo = 0;
 	ctx->hi = 0;
@@ -189,7 +189,7 @@ void MD5_Update(MD5_CTX *ctx, const void *data, size_t size)
 	saved_lo = ctx->lo;
 	if ((ctx->lo = (saved_lo + size) & 0x1fffffff) < saved_lo)
 		ctx->hi++;
-	ctx->hi += size >> 29;
+	ctx->hi += (MD5_u32plus)(size >> 29);
 
 	used = saved_lo & 0x3f;
 
@@ -246,10 +246,10 @@ void MD5_Final(unsigned char *result, MD5_CTX *ctx)
 
 	body5(ctx, ctx->buffer, 64);
 
-	OUT(&result[0], ctx->a)
-	OUT(&result[4], ctx->b)
-	OUT(&result[8], ctx->c)
-	OUT(&result[12], ctx->d)
+	OUT(&result[0], ctx->abcd[0])
+	OUT(&result[4], ctx->abcd[1])
+	OUT(&result[8], ctx->abcd[2])
+	OUT(&result[12], ctx->abcd[3])
 
 	memset(ctx, 0, sizeof(*ctx));
 }

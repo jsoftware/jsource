@@ -52,24 +52,23 @@ uint64_t g_cpuFeatures;   // blis
 A   pst[256]={0};
 A   chr[256]={0};         /* scalar for each character, or 0      */
 UC  hwfma=0;              // blis cpu tuning
-UC  hwaes=0;              // aes ni
-UC  hwsha1=0;             // sha1
-UC  hwsha2=0;             // sha2
 C   wtype[256]={0};
 
 // globals end
 
 #if SY_64
-#if C_AVX || !(defined(_M_X64) || defined(__x86_64__))
 #define bits "64"
-#else
-#define bits "64nonavx"
-#endif
 #else
 #define bits "32"
 #endif
 
-char jeversion[]= "je9!:14 j"jversion"/j"bits"/"jplatform"/"jtype"/"jlicense"/"jbuilder"/"__DATE__"T"__TIME__;
+#if C_AVX
+#define hw "avx"
+#else
+#define hw ""
+#endif
+
+char jeversion[]= "je9!:14 j"jversion"/j"bits""hw"/"jplatform"/"jtype"/"jlicense"/"jbuilder"/"__DATE__"T"__TIME__;
 
 F1(jtversq){
  char m[1000];char d[21]; char months[] = "Jan01Feb02Mar03Apr04May05Jun06Jul07Aug08Sep09Oct10Nov11Dec12"; C* p; C* q;

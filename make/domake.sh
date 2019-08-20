@@ -1,32 +1,33 @@
 #!/bin/bash
 
-# run by build_jconsole and build_libj
-# $1 is j32 or j64
+# run by build_jconsole and build_libj and build_tsdll
+# jconsole/tsdll $1 is j32 or j64
+# libj           $1 is j32 or j64 or j64avx j64avx2
+
+echo "domake: $1 $TARGET CC=$CC `readlink -f $(command -v $CC)`"
+
+if [ $1 = "j32" ] ; then
+ bits=j32
+else
+ bits=j64
+fi
 
 cd ~
 
-mkdir -p $jbld/jout/$TARGET/$1/blis
-cd $jbld/jout/$TARGET/$1
+bld=bld-
 
-targ=$1
-avx=""
-if [ $1 = "j64nonavx" ] ; then
- targ=j64
- avx=-nonavx
-fi 
+OUT=$jbld/jout/$1/bld-$TARGET
 
-echo "building  $jbld/$targ/bin/$TARGET $avx"
-echo "output in $jbld/$targ/bin/build_$TARGET$avx.txt"
-make -f $jmake/makefile >$jbld/$targ/bin/build_$TARGET$avx.txt 2>&1
+mkdir -p $OUT/blis
+mkdir -p $OUT/txt
+cd       $OUT
 
-egrep -w 'warning|error|note' -B 2 $jbld/$targ/bin/build_$TARGET$avx.txt
+echo "        $OUT/txt/build.txt"
+echo ""
 
-if [ $1 = "j64nonavx" ] ; then
- if [ $TARGET = "libj.dylib" ] ; then
-  cp $TARGET $jbld/j64/bin/libj-nonavx.dylib
- else
-  cp $TARGET $jbld/j64/bin/libj-nonavx.so
- fi
-else
- cp $TARGET $jbld/$1/bin
-fi
+make -f $jmake/makefile >$jbld/jout/$1/$bld$TARGET/txt/build.txt 2>&1
+
+egrep -w 'warning|error|note' -B 2 $OUT/txt/build.txt
+
+cp $TARGET $jbld/$bits/bin
+

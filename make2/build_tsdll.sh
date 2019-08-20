@@ -22,7 +22,9 @@ jplatform="${jplatform:=darwin}"
 else
 jplatform="${jplatform:=linux}"
 fi
-if [ "`uname -m`" = "x86_64" ] || [ "`uname -m`" = "aarch64" ]; then
+if [ "`uname -m`" = "x86_64" ]; then
+j64x="${j64x:=j64avx}"
+elif [ "`uname -m`" = "aarch64" ]; then
 j64x="${j64x:=j64}"
 else
 j64x="${j64x:=j32}"
@@ -88,13 +90,13 @@ CFLAGS="$common -m32 -msse2 -mfpmath=sse -DC_NOMULTINTRINSIC "
 LDFLAGS=" -shared -Wl,-soname,libtsdll.so -m32 -lm -ldl"
 ;;
 
-linux_j64nonavx) # linux intel 64bit nonavx
+linux_j64) # linux intel 64bit nonavx
 TARGET=libtsdll.so
 CFLAGS="$common "
 LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm -ldl"
 ;;
 
-linux_j64) # linux intel 64bit avx
+linux_j64avx) # linux intel 64bit avx
 TARGET=libtsdll.so
 CFLAGS="$common "
 LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm -ldl"
@@ -118,13 +120,13 @@ CFLAGS="$darwin -m32 $macmin"
 LDFLAGS=" -dynamiclib -lm -ldl -m32 $macmin"
 ;;
 
-darwin_j64nonavx) # darwin intel 64bit nonavx
+darwin_j64) # darwin intel 64bit nonavx
 TARGET=libtsdll.dylib
 CFLAGS="$darwin $macmin"
 LDFLAGS=" -dynamiclib -lm -ldl $macmin"
 ;;
 
-darwin_j64) # darwin intel 64bit
+darwin_j64avx) # darwin intel 64bit
 TARGET=libtsdll.dylib
 CFLAGS="$darwin $macmin "
 LDFLAGS=" -dynamiclib -lm -ldl $macmin"

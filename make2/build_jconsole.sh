@@ -22,7 +22,9 @@ jplatform="${jplatform:=darwin}"
 else
 jplatform="${jplatform:=linux}"
 fi
-if [ "`uname -m`" = "x86_64" ] || [ "`uname -m`" = "aarch64" ]; then
+if [ "`uname -m`" = "x86_64" ]; then
+j64x="${j64x:=j64avx}"
+elif [ "`uname -m`" = "aarch64" ]; then
 j64x="${j64x:=j64}"
 else
 j64x="${j64x:=j32}"
@@ -91,7 +93,7 @@ LDFLAGS=" -m32 -ldl "
 OBJSLN="linenoise.o"
 fi
 ;;
-linux_j64nonavx)
+linux_j64)
 if [ "$USE_LINENOISE" -ne "1" ] ; then
 CFLAGS="$common -DREADLINE"
 LDFLAGS=" -ldl "
@@ -101,7 +103,7 @@ LDFLAGS=" -ldl "
 OBJSLN="linenoise.o"
 fi
 ;;
-linux_j64)
+linux_j64avx)
 if [ "$USE_LINENOISE" -ne "1" ] ; then
 CFLAGS="$common -DREADLINE"
 LDFLAGS=" -ldl "
@@ -152,12 +154,27 @@ LDFLAGS=" -ldl $macmin "
 OBJSLN="linenoise.o"
 fi
 ;;
+darwin_j64avx)
+if [ "$USE_LINENOISE" -ne "1" ] ; then
+CFLAGS="$darwin -DREADLINE $macmin"
+LDFLAGS=" -ldl $macmin "
+else
+CFLAGS="$darwin -DREADLINE -DUSE_LINENOISE $macmin"
+LDFLAGS=" -ldl $macmin "
+OBJSLN="linenoise.o"
+fi
+;;
 windows_j32)
 TARGET=jconsole.exe
 CFLAGS="$common -m32 "
 LDFLAGS=" -m32 -Wl,--stack=0x1000000,--subsystem,console -static-libgcc "
 ;;
 windows_j64)
+TARGET=jconsole.exe
+CFLAGS="$common "
+LDFLAGS=" -Wl,--stack=0x1000000,--subsystem,console -static-libgcc "
+;;
+windows_j64avx)
 TARGET=jconsole.exe
 CFLAGS="$common "
 LDFLAGS=" -Wl,--stack=0x1000000,--subsystem,console -static-libgcc "

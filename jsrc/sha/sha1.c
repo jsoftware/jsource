@@ -31,7 +31,11 @@ A million repetitions of "a"
 // #include "sha1.h"
 
 #if defined(__aarch64__)
-extern void sha1_process_arm(uint32_t state[5], const uint8_t data[], uint32_t length);
+extern void sha1_process_arm(uint32_t state[5], const uint8_t data[], uintptr_t length);
+#endif
+#if defined(_M_X64) || defined(__x86_64__)
+/* ssse3 */
+extern void sha1_update_intel(int *hash, const char* input, size_t num_blocks );
 #endif
 
 #define rol(value, bits) (((value) << (bits)) | ((value) >> (32 - (bits))))
@@ -223,13 +227,36 @@ static void SHA1Update(
       sha1_process_arm(context->state, (const uint8_t *)context->buffer, 64);
     else
       SHA1Transform(context->state, context->buffer);
+#elif defined(_M_X64) || defined(__x86_64__)
+    if(hwssse3)
+      sha1_update_intel(context->state, context->buffer, 1);
+    else
+      SHA1Transform(context->state, context->buffer);
 #else
     SHA1Transform(context->state, context->buffer);
+#endif
+#if defined(__aarch64__)
+    if(hwsha1 && i + 63 < len) {
+      UI iter = (len - i) >> 6;
+      sha1_process_arm(context->state, (const uint8_t *)&data[i], iter << 6);
+      i += iter << 6;
+    }
+#elif defined(_M_X64) || defined(__x86_64__)
+    if(hwssse3 && i + 63 < len) {
+      UI iter = (len - i) >> 6;
+      sha1_update_intel(context->state, &data[i], iter);
+      i += iter << 6;
+    }
 #endif
     for (; i + 63 < len; i += 64) {
 #if defined(__aarch64__)
       if(hwsha1)
         sha1_process_arm(context->state, (const uint8_t *)&data[i], 64);
+      else
+        SHA1Transform(context->state, &data[i]);
+#elif defined(_M_X64) || defined(__x86_64__)
+      if(hwssse3)
+        sha1_update_intel(context->state, &data[i], 1);
       else
         SHA1Transform(context->state, &data[i]);
 #else

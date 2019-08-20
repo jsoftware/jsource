@@ -77,7 +77,7 @@ void cpuInit(void)
 
 }
 
-#elif defined(__x86_64__)||defined(__i386__)||defined(_MSC_VER)
+#elif defined(__x86_64__)||defined(__i386__)||defined(_M_X64)||defined(_M_IX86)
 
 #ifdef _WIN32
 #include <windows.h>
@@ -93,7 +93,7 @@ extern void __cpuid(int CPUInfo[4], int InfoType);
 #endif
 #endif
 
-#if defined(__x86_64__)||defined(__i386__)||defined(_MSC_VER)
+#if defined(__x86_64__)||defined(__i386__)||defined(_M_X64)||defined(_M_IX86)
 static int check_xcr0_ymm()
 {
   uint32_t xcr0;
@@ -168,7 +168,7 @@ void cpuInit(void)
 {
   g_cpuFeatures = 0;
 
-#if defined(__i386__) || defined(__x86_64__) || defined(_MSC_VER)
+#if defined(__i386__) || defined(__x86_64__) || defined(_M_X64) || defined(_M_IX86)
   int regs[4];
 
   /* According to http://en.wikipedia.org/wiki/CPUID */
@@ -224,6 +224,9 @@ void cpuInit(void)
     if ((regs[1] & (1 << 29)) != 0) {
       g_cpuFeatures |= CPU_X86_FEATURE_SHA_NI;
     }
+    if ((regs[1] & (1 << 18)) != 0) {
+      g_cpuFeatures |= CPU_X86_FEATURE_RDSEED;
+    }
   }
 // mask off avx if os does not support
   int AVX=0;
@@ -276,5 +279,21 @@ void cpuInit(void)
 uint64_t getCpuFeatures(void)
 {
   return g_cpuFeatures;
+}
+
+
+intptr_t getCpuFamily(void)
+{
+#if defined(__aarch64__)||defined(_M_ARM64)
+  return CPU_FAMILY_ARM64;
+#elif defined(__arm__)||defined(_M_ARM)
+  return CPU_FAMILY_ARM;
+#elif defined(__x86_64__)||defined(_M_X64)
+  return CPU_FAMILY_X86_64;
+#elif defined(__i386__)||defined(_M_IX86)
+  return CPU_FAMILY_X86;
+#else
+  return CPU_FAMILY_UNKNOWN ;
+#endif
 }
 

@@ -225,16 +225,16 @@ sha3_Finalize(void *priv,int keccak)
 
 // #ifndef SHA3_USE_KECCAK
   if (!keccak) {
-  /* SHA3 version */
-  ctx->s[ctx->wordIndex] ^=
-    (ctx->saved ^ ((uint64_t) ((uint64_t) (0x02 | (1 << 2)) <<
-                               ((ctx->byteIndex) * 8))));
+    /* SHA3 version */
+    ctx->s[ctx->wordIndex] ^=
+      (ctx->saved ^ ((uint64_t) ((uint64_t) (0x02 | (1 << 2)) <<
+                                 ((ctx->byteIndex) * 8))));
   } else {
 // #else
-  /* For testing the "pure" Keccak version */
-  ctx->s[ctx->wordIndex] ^=
-    (ctx->saved ^ ((uint64_t) ((uint64_t) 1 << (ctx->byteIndex *
-                               8))));
+    /* For testing the "pure" Keccak version */
+    ctx->s[ctx->wordIndex] ^=
+      (ctx->saved ^ ((uint64_t) ((uint64_t) 1 << (ctx->byteIndex *
+                                 8))));
   }
 // #endif
 

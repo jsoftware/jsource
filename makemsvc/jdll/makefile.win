@@ -5,9 +5,11 @@ CFLAGS= /D _JDLL /DC_AVX=1 /D C_AVX2=1 /arch:AVX2 /DC_NA=0 /WX /W3 /O2 /Ot /Ob1 
 CFLAGS= /D _JDLL /DC_AVX=1 /arch:AVX /DC_NA=0 /WX /W3 /O2 /Ot /Ob1 /GS /Zc:strictStrings /D _USING_V110_SDK71_ /D _CRT_SECURE_NO_WARNINGS /MT /D NDEBUG /D WIN32 /D _WINDOWS
 !endif
 FLAGS= /DLL /NOLOGO /MACHINE:X64 /SUBSYSTEM:WINDOWS,5.02
+ASMFLAGS= /Cx
 !else
 CFLAGS= /D _JDLL /WX /W3 /O2 /Ot /Ob1 /GS /Zc:strictStrings /D _USING_V110_SDK71_ /D _CRT_SECURE_NO_WARNINGS /MT /D _UNICODE /D WIN32 /D _WINDOWS
 FLAGS= /DLL /NOLOGO /MACHINE:X86 /SUBSYSTEM:WINDOWS,5.01
+ASMFLAGS= /Cx /coff
 !endif
 
 .SUFFIXES: .o
@@ -79,8 +81,6 @@ OBJS=  \
  ../../jsrc/rt.o \
  ../../jsrc/s.o \
  ../../jsrc/sc.o \
- ../../jsrc/sha1-arm.o \
- ../../jsrc/sha256-arm.o \
  ../../jsrc/sl.o \
  ../../jsrc/sn.o \
  ../../jsrc/t.o \
@@ -154,18 +154,31 @@ OBJS=  \
  ../../jsrc/xs.o \
  ../../jsrc/xsha.o \
  ../../jsrc/xt.o \
- ../../jsrc/xu.o
+ ../../jsrc/xu.o \
+ ../../jsrc/openssl/sha/keccak1600.o \
+ ../../jsrc/openssl/sha/md4_dgst.o \
+ ../../jsrc/openssl/sha/md4_one.o \
+ ../../jsrc/openssl/sha/md5_dgst.o \
+ ../../jsrc/openssl/sha/md5_one.o \
+ ../../jsrc/openssl/sha/openssl-util.o \
+ ../../jsrc/openssl/sha/sha1_one.o \
+ ../../jsrc/openssl/sha/sha256.o \
+ ../../jsrc/openssl/sha/sha3.o \
+ ../../jsrc/openssl/sha/sha512.o
 
 !ifdef x64
-OBJS_SHAASM_WIN= \
- ../../sha-asm/sha1_ssse3-x64.o \
- ../../sha-asm/sha256_avx1-x64.o \
- ../../sha-asm/sha256_avx2_rorx2-x64.o \
- ../../sha-asm/sha256_avx2_rorx8-x64.o \
- ../../sha-asm/sha256_sse4-x64.o \
- ../../sha-asm/sha512_avx-x64.o \
- ../../sha-asm/sha512_sse4-x64.o
-!endif
+OBJS_ASM= \
+ ../../openssl-asm/keccak1600-x86_64-nasm.o \
+ ../../openssl-asm/sha1-x86_64-nasm.o \
+ ../../openssl-asm/sha256-x86_64-nasm.o \
+ ../../openssl-asm/sha512-x86_64-nasm.o
+!else
+OBJS_ASM= \
+ ../../openssl-asm/keccak1600-mmx-nasm.o \
+ ../../openssl-asm/sha1-586-nasm.o \
+ ../../openssl-asm/sha256-586-nasm.o \
+ ../../openssl-asm/sha512-586-nasm.o
+endif
 
 DEF= ../../dllsrc/jdll.def
 RCS= ../../dllsrc/jdll.rc
@@ -185,14 +198,17 @@ LD=link
 .cpp.o:
 	$(CC) $(CFLAGS) /Fo$@ /c $<
 
+.asm.o:
+	$(ML) $(ASMFLAGS) /Fo$@ /c $<
+
 !ifdef x64
 TARGET= javx.dll
 !else
 TARGET= j32.dll
 !endif
 
-$(TARGET) : $(OBJS) jdll.res
-	$(LD) /NOLOGO /DEF:$(DEF) $(FLAGS) /out:$@ $(OBJS) $(OBJS_SHAASM_WIN) $(ASM) jdll.res advapi32.lib ole32.lib oleaut32.lib shell32.lib uuid.lib
+$(TARGET) : $(OBJS) $(SRC_ASM) $(OBJS_ASM) $(ASM) jdll.res
+	$(LD) /NOLOGO /DEF:$(DEF) $(FLAGS) /out:$@ $(OBJS) $(SRC_ASM) $(OBJS_ASM) $(ASM) jdll.res ole32.lib advapi32.lib oleaut32.lib
 
 jdll.res : $(RCS)
 	$(RC) /L 0x409 /D NDEBUG /D _USING_V110_SDK71_ -R -FO$@ $(RCS)
@@ -200,6 +216,6 @@ jdll.res : $(RCS)
 all: $(TARGET)
 
 clean:
-	erase /q *.lib *.exp *.res ..\..\jsrc\*.o ..\..\dllsrc\*.o
+	erase /q *.lib *.exp *.res ..\..\jsrc\*.o ..\..\jsrc\openssl\*.o ..\..\dllsrc\*.o
 
 .PHONY: all clean

@@ -5,8 +5,6 @@
 
 #include "j.h"
 
-#if 1
-
 // This function handles both valences: monad as (w,fs,fs), dyad as (a,w,fs).  self is the name reference
 //
 // This routine called a 'named' function, which was created by name~ or the equivalent for a stacked verb.
@@ -77,7 +75,7 @@ static DF2(jtunquote){A z;
   ++jt->modifiercounter;  // invalidate any extant lookups of modifier names
  }
  // ************** no errors till the stack has been popped
- w=dyadex?w:(A)fs;  // set up the bivalent argument with the new self
+ w=dyadex?w:(A)fs;  // set up the bivalent argument with the new self, since fs may have been changed
 
  // Execute the name.  First check 4 flags at once to see if anything special is afoot
  if(!(jt->uflags.ui4|(v->flag&VLOCK))) {
@@ -89,7 +87,7 @@ static DF2(jtunquote){A z;
   AF actionfn=v->valencefns[dyadex];
   ++AC(fs);  // protect the entity
   // Recursion through $: does not go higher than the name it was defined in.  We make this happen by pushing the name onto the $: stack
-  A s=jt->sf; jt->sf=fs; z=(*actionfn)((v->flag>>dyadex)&VJTFLGOK1?jtinplace:jt,a,w,fs); jt->sf=s;  // keep all flags in jtinplace
+  A s=jt->sf; jt->sf=fs; z=(*actionfn)(SGNIF(v->flag,dyadex+VJTFLGOK1X)<0?jtinplace:jt,a,w,fs); jt->sf=s;  // keep all flags in jtinplace
   // Undo the protection.  If, most unusually, the usecount goes to 0, back up and do the full recursive decrement
   if(--AC(fs)<=0){++AC(fs); fa(fs);}
  } else {
@@ -171,68 +169,6 @@ static DF2(jtunquote){A z;
  R z;
 }
 
-#else
-
-where is call stack reset?
- oldn=jt->curname; jt->curname=aa;
- oln =jt->curlocn; jt->curlocn=ll=g?LOCNAME(g):0;  // should get rid of this
- ASSERT(jt->fcalln > jt->fcalli, EVSTACK);  // We will increment fcalli before use; 1+fcalln elements are allocated, so advancing to number fcalln is the limit
- i=++jt->fcalli; FDEPINC(d);   // No ASSERTs from here till the FDEPDEC below
- jt->fcallg[i].sw0=jt->stswitched; jt->fcallg[i].og=jtg;   // save previous locale
- jt->fcallg[i].flag=0; jt->stswitched=0; jt->fcallg[i].g=jt->global=g;
- // Execute.  ra() to protect against deleting the name while it is running.
- // This will be fast because we know any name has a recursive usecount before it is assigned
- if(!jt->stswitched)jt->global=jt->fcallg[i].og;  // do this better.  Remove stswitched?  og not needed elsewhere - just stack it here
- jt->stswitched=jt->fcallg[i].sw0;
- if(jt->fcallg[i].flag)locdestroy(i);
- jt->fcallg[i].g=jt->fcallg[i].og=0; jt->stswitched=0; // no need for this?
- --jt->fcalli;  // ASSERT OK now
- jt->curlocn=oln;
- jt->curname=oldn;
-
-
-static DF2(jtunquote){A aa,fs,g,ll,oldn,oln,z;B lk;I d,i;L*e;V*v;
- F2PREFIP;  // We understand inplacing.  We check inplaceability of the called function.
- RE(0);
- JATTN;
- v=FAV(self);
- A jtg = jt->global;  // fetch current locale
- aa=v->fgh[0]; RZ(g=sybaseloc(aa));   // if the name is a locative, get the explicit locale.  0 if erroneous locale, 1 if non-locative
- RE(e=syrdfromloc(aa,g));   // finish looking up name, which can be undefined (0 return) or error (0 return with error set)
- if((I)g&1)g=jtg;  // if not locative, default to current locale
- fs=v->fgh[2]?v->fgh[2]:e?e->val:0;  /* see namerefop() re v->fgh[2] */  // fs is the routine to call; 0 if name undefined
- oldn=jt->curname; jt->curname=aa;
- oln =jt->curlocn; jt->curlocn=ll=g?LOCNAME(g):0;  // should get rid of this
- ASSERT(fs,EVVALUE); 
- ASSERT(TYPESEQ(AT(self),AT(fs)),EVDOMAIN);
- V *fv=FAV(fs);  // point to V struct in fs
- RE(d=fdep(fs));
- ASSERT(jt->fcalln > jt->fcalli, EVSTACK);  // We will increment fcalli before use; 1+fcalln elements are allocated, so advancing to number fcalln is the limit
- if(0<jt->uflags.us.uq.uq_c.pmctrb)pmrecord(aa,ll,-1L,a?VAL2:VAL1);
- lk=jt->uflags.us.cx.cx_c.glock||VLOCK&fv->flag;
- i=++jt->fcalli; FDEPINC(d);   // No ASSERTs from here till the FDEPDEC below
- jt->fcallg[i].sw0=jt->stswitched; jt->fcallg[i].og=jtg;   // save previous locale
- jt->fcallg[i].flag=0; jt->stswitched=0; jt->fcallg[i].g=jt->global=g;
- if(jt->uflags.us.cx.cx_c.db&&!lk){jt->cursymb=e; z=dbunquote(a,w,fs);}  // if debugging, go do that.  save last sym lookup as debug parm
- // Execute.  ra() to protect against deleting the name while it is running.
- // This will be fast because we know any name has a recursive usecount before it is assigned
- else{ra(fs);  // should assert recursive usecount
-  if(a){if(!(fv->flag&VJTFLGOK2))jtinplace=jt; z=dfs2ip(a,w,fs);}else{if(!(fv->flag&VJTFLGOK1))jtinplace=jt; z=dfs1ip(w,fs);}
-  fa(fs);
- }
- if(!jt->stswitched)jt->global=jt->fcallg[i].og;  // do this better.  Remove stswitched?  og not needed elsewhere - just stack it here
- jt->stswitched=jt->fcallg[i].sw0;
- if(jt->fcallg[i].flag)locdestroy(i);
- jt->fcallg[i].g=jt->fcallg[i].og=0; jt->stswitched=0; // no need for this?
- FDEPDEC(d); --jt->fcalli;  // ASSERT OK now
- if(0<jt->uflags.us.uq.uq_c.pmctrb)pmrecord(aa,ll,-2L,a?VAL2:VAL1);
- jt->curlocn=oln;
- jt->curname=oldn;
- if(jt->uflags.us.uq.uq_c.spfreeneeded)spfree();
- R z;
-}
-
-#endif
 
 // The monad calls the bivalent case with (w,self,self) so that the inputs can pass through to the executed function
 static DF1(jtunquote1){R unquote(w,self,self);}  // This just transfers to jtunquote.  It passes jt, with inplacing bits, unmodified

@@ -321,7 +321,7 @@ B jtccvt(J jt,I tflagged,A w,A*y){A d;I n,r,*s,wt; void *wv,*yv;I t=tflagged&~NO
    case CVCASE(C2TX, C4TX): R C2fromC4(w, yv);
    case CVCASE(C4TX, LITX): R C4fromC1(w, yv);
    case CVCASE(C4TX, C2TX): R C4fromC2(w, yv);
-#if 0
+#if 0  // bit types
    case CVCASE(BITX, B01X): R cvt2bit(w, yv);
    case CVCASE(BITX, INTX): R cvt2bit(w, yv);
    case CVCASE(BITX, FLX): R cvt2bit(w, yv);

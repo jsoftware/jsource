@@ -6,58 +6,7 @@
 #include "j.h"
 
 // Interfaces for numbered locales
-#if 0
-// Initialize the numbered-locale system
-static A jtinitnl(J jt){A q;
- RZ(q=apvwr(40,-1L,0L));    jt->stnum=q;  //  start with 40 locales
- GATV0(q,INT,40,1);        jt->stptr=q; memset(AV(q),C0,40*SZI);
- R q;  // return no error
-}
-
-// Get the locale number to use for the next numbered locale.  (0 if error, with error code set) The locale need not be installed, if an error intervenes
-static I jtgetnl(J jt){
- ASSERT(0<=jt->stmax,EVLOCALE);
- I m=AN(jt->stnum);
- // Extend in-use locales list if needed
- if(m<=jt->stused){
-  A x=ext(1,jt->stnum); A y=ext(1,jt->stptr); RZ(x&&y); jt->stnum=x; jt->stptr=y;
-  I *nv=m+AV(jt->stnum); A *pv=m+AAV(jt->stptr); DQ(AN(x)-m, *nv++=-1; *pv++=0;); 
- }
- R jt->stmax;
-}
-
-// Install locale l in the numbered-locale table, at the number returned by the previous jtgetnl.  No error is possible
-static void jtinstallnl(J jt, A l){
- ++jt->stused;
- A *pv=AAV(jt->stptr);
- DO(AN(jt->stnum), if(!pv[i]){ras(l); pv[i]=l; *(i+AV(jt->stnum))=jt->stmax; break;});
- ++jt->stmax;
-}
-
-// return the address of the locale block for number n, or 0 if not found
-A jtfindnl(J jt, I n){
-  I i, iend, *ibgn; for(i=0, iend=AN(jt->stnum), ibgn=IAV(jt->stnum); i<iend; ++i)if(ibgn[i]==n)R AAV(jt->stptr)[i];
-  R 0;
-}
-
-// delete the locale numbered n, if it exists
-static void jterasenl(J jt, I n){
-  I i, iend, *ibgn; for(i=0, iend=AN(jt->stnum), ibgn=IAV(jt->stnum); i<iend; ++i)if(ibgn[i]==n){AAV(jt->stptr)[i]=0; AV(jt->stnum)[i]=-1; --jt->stused; break;};
- }
-
-// return list of active numbered locales, using namelist mask
-static A jtactivenl(J jt){A y;I n=0;C s[20];
-  GATV0(y,BOX,jt->stused,1); A *yv=AAV(y); A *pv=AAV(jt->stptr); I *nv=AV(jt->stnum);
-  DO(AN(jt->stptr), if(pv[i]){sprintf(s,FMTI,nv[i]); 
-      if(jt->workareas.namelist.nla[*s]){RZ(yv[n++]=cstr(s)); if(n==jt->stused)break;}});
-  R take(sc(n),y);
-}
-
-// iterator support
-I jtcountnl(J jt) { R AN(jt->stnum); }  // number of locales to reference by index
-A jtindexnl(J jt,I n) { R AAV(jt->stptr)[n]; }  // the locale address, or 0 if none
-
-#elif 0
+#if 0   // direct locale numbering
 #define DELAYBEFOREREUSE 5000  // min number of locales to have before we start reusing
 // Initialize the numbered-locale system.  Called during initialization, so no need for ras()
 static A jtinitnl(J jt){A q;

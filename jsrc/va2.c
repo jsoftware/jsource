@@ -6,7 +6,6 @@
 #include "j.h"
 #include "ve.h"
 #include "vcomp.h"
-static DF2(jtretryatomic2);
 
 // shorthands for inplacing
 #define VIP (VIPOKA+VIPOKW)   // inplace everything

@@ -270,7 +270,7 @@ extern unsigned int __cdecl _clearfp (void);
 #endif
 #endif
 
-#if defined(__aarch64__)
+#if defined(__aarch64__)||defined(_M_ARM64)
 #include <arm_neon.h>
 #endif
 
@@ -988,7 +988,7 @@ extern J gjt; // global for JPF (procs without jt)
 /* strchr fails for CE MIPS - neg chars - spellit fails in ws.c for f=.+.  */
 #define strchr(a,b)     (C*)strchr((unsigned char*)(a), (unsigned char)(b))
 #endif
-#if (defined(__arm__)||defined(__aarch64__)) && !defined(__MACH__)
+#if (defined(__arm__)||defined(__aarch64__)||defined(_M_ARM64)) && !defined(__MACH__)
 // option -fsigned-char in android and raspberry
 #ifdef strchr
 #undef strchr
@@ -1131,7 +1131,7 @@ static __forceinline void aligned_free(void *ptr) {
 #endif
 
 // Supported in architecture ARMv8.1 and later
-#if (C_CRC32C && defined(__aarch64__))
+#if (C_CRC32C && (defined(__aarch64__)||defined(_M_ARM64)))
 #define CRC32CW(crc, value) __asm__("crc32cw %w[c], %w[c], %w[v]":[c]"+r"(crc):[v]"r"(value))
 #define CRC32CX(crc, value) __asm__("crc32cx %w[c], %w[c], %x[v]":[c]"+r"(crc):[v]"r"(value))
 #define CRC32(crc,value)  ({ uint32_t crci=crc; CRC32CW(crci, value); crci; })
@@ -1161,7 +1161,7 @@ static __forceinline void aligned_free(void *ptr) {
 #define VOIDARG
 #define _mm_set1_epi32_ _mm_set1_epi32   // msvc does not allow redefine intrinsic
 
-#elif defined(__aarch64__)
+#elif defined(__aarch64__)||defined(_M_ARM64)
 #define VOIDARG void
 #define _mm256_zeroupper(x)
 typedef int64x2_t __m128i;

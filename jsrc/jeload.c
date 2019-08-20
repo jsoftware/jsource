@@ -163,7 +163,7 @@ void jepath(char* arg,char* lib,int forceavx)
  strcat(path,AndroidPackage);
  }
  if(stat(pathdll,&st)){ /* android 4 or newer */
-#if defined(__aarch64__)
+#if defined(__aarch64__)||defined(_M_ARM64)
 #define arch "arm64"
 #elif defined(__x86_64__)
 #define arch "x86_64"

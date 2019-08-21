@@ -707,7 +707,7 @@ static DF2(jtfoldx){
  // define the flags as the special global
  RZ(symbis(nfs(11,"Foldtype_j_"),sc(foldflag),jt->locsyms));
  // execute the Fold.  While it is running, set the flag to allow Z:
- B foldrunning=jt->foldrunning; A z=xdefn(a,w,self); jt->foldrunning=foldrunning;
+ B foldrunning=jt->foldrunning; jt->foldrunning=1; A z=xdefn(a,w,self); jt->foldrunning=foldrunning;
  // if there was an error, save the error code and recreate the error at this level, to cover up details inside the script
  if(jt->jerr){I e=jt->jerr; RESETERR; jsignal(e);}
  R z;

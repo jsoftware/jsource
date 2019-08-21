@@ -10,7 +10,7 @@
 // This routine called a 'named' function, which was created by name~ or the equivalent for a stacked verb.
 // It also handles pseudo-named functions, which are anonymous entities that need to be given a temporary name
 // when they are running under debug.  Pseudo-named functions are created by namerefop.  We need to run them here so they get the debug side-effects of having a name.
-static DF2(jtunquote){A z;
+DF2(jtunquote){A z;
  F2PREFIP;  // We understand inplacing.  We check inplaceability of the called function.
  RE(0);
  JATTN;

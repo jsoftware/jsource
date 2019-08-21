@@ -27,6 +27,7 @@ A jtev2(J jt,A a,A w,C*s){R df2(a,w,eval(s));}
 A jteva(J jt,    A w,C*s){R df1(  w,colon(num[1],   cstr(s)));}
 A jtevc(J jt,A a,A w,C*s){R df2(a,w,colon(num[2],cstr(s)));}
 
+// ". y
 F1(jtexec1){A z;
  RZ(w);
  if(AT(w)&NAME){z=nameref(w);  // the case ".@'name' which is the fastest way to refer to a deferred name

@@ -111,7 +111,7 @@ B jtpinit(J jt){A t;C*s;
  /*  #  */  pdef(CPOUND,  VERB, jttally,   jtrepeat, RMAX,1,   RMAX,VASGSAFE|VIRS2|VJTFLGOK2);
  /*  #. */  pdef(CBASE,   VERB, jtbase1,   jtbase2,  1,   1,   1   ,VASGSAFE);
  /*  #: */  pdef(CABASE,  VERB, jtabase1,  jtabase2, RMAX,1,   0   ,VASGSAFE);
- /*  !  */  pdef(CBANG,   VERB, jtatomic1,    jtatomic2,  0,   0,   0   ,VISATOMIC1|VFUSEDOK2|VIRS2|VASGSAFE|VJTFLGOK1|VJTFLGOK2);
+ /*  !  */  pdef(CBANG,   VERB, jtatomic1, jtatomic2,  0,   0,   0   ,VISATOMIC1|VFUSEDOK2|VIRS2|VASGSAFE|VJTFLGOK1|VJTFLGOK2);
  /*  !. */  pdef(CFIT,    CONJ, 0L,        jtfit,    0,   0,   0   ,VASGSAFE);
  /*  !: */  pdef(CIBEAM,  CONJ, 0L,        jtforeign,0,   0,   0   ,VFLAGNONE);
  /*  /  */  pdef(CSLASH,  ADV,  jtslash,   0L,       0,   0,   0   ,VIRS1);
@@ -186,6 +186,13 @@ B jtpinit(J jt){A t;C*s;
 /*  x. */       /* see above */
  /*  x: */  pdef(CXCO,    VERB, jtxco1,    jtxco2,   RMAX,RMAX,RMAX,VASGSAFE|VISATOMIC1);
  /*  y. */       /* see above */
+ /*  F.  */  pdef(CFDOT,  CONJ, 0,    jtfold,  0,   0,   0   ,VFLAGNONE);
+ /*  F.. */  pdef(CFDOTDOT,  CONJ, 0,    jtfold,  0,   0,   0   ,VFLAGNONE);
+ /*  F.: */  pdef(CFDOTCO,  CONJ, 0,    jtfold,  0,   0,   0   ,VFLAGNONE);
+ /*  F:  */  pdef(CFCO,  CONJ, 0,    jtfold,  0,   0,   0   ,VFLAGNONE);
+ /*  F:. */  pdef(CFCODOT,  CONJ, 0,    jtfold,  0,   0,   0   ,VFLAGNONE);
+ /*  F:: */  pdef(CFCOCO,  CONJ, 0,    jtfold,  0,   0,   0   ,VFLAGNONE);
+ /*  Z:  */  pdef(CZCO,  VERB,  0,    jtfoldZ,  RMAX,   RMAX,   RMAX   ,VFLAGNONE);
 
 // modify the BOX verb so that it is flagged BOXATOP (for result purposes), with a g field of ].  Result verbs will
 // treat it as <@], but normal processing as <

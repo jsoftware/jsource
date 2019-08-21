@@ -211,7 +211,14 @@
 #define CEMEND     (C)'\355'       /* 237 355 ed }::                          */
 #define CUNDCO     (C)'\356'       /* 238 356 ee &.:                          */
 #define CPDERIV    (C)'\357'       /* 239 357 ef p..                          */
-#define CAPIP      (C)'\360'       /* 240 360 f0 ,   append in place          */
-// 241-254 free
+// obsolete #define CAPIP      (C)'\360'       /* 240 360 f0 ,   append in place          */
+#define CFDOT      (C)'\360'       // 240 360 f0 F.  the ID codes are used as flags
+#define CFDOTCO    (C)'\361'       // 241 361 f1 F.:
+#define CFDOTDOT   (C)'\362'       // 242 362 f2 F..
+#define CZCO       (C)'\363'       // 243 363 f3 Z:
+#define CFCO       (C)'\364'       // 244 364 f4 F:
+#define CFCOCO     (C)'\365'       // 245 365 f5 F::
+#define CFCODOT    (C)'\366'       // 246 366 f6 F:.
+// 240-254 free
 
 #define CFF        (C)'\377'       /* 255 377 ff                              */

@@ -1,7 +1,7 @@
 /* Copyright 1990-2014, Jsoftware Inc.  All rights reserved.               */
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
-/* Adverbs: Reduce (Insert) and Outer Product                              */
+/* Adverbs: Reduce (Insert), Outer Product, and Fold                              */
 
 #include "j.h"
 #include "vasm.h"
@@ -696,3 +696,53 @@ A sum=reduce(w,FAV(self)->fgh[0]);  // calculate +/"r
  RZ(w=jtatomic2(JTIPA,sum,sc(n),ds(CDIV)));  // take quotient inplace and return it
  RETF(w);
 }    // (+/%#)"r w, implemented as +/"r % cell-length
+
+// entry point to execute monad/dyad Fold after the noun arguments are supplied
+static DF2(jtfoldx){
+ // see if this is monad or dyad
+ I foldflag=(~AT(w)&VERB)>>(VERBX-3);  // flags: dyad mult fwd rev  if w is not conj, this must be a dyad call
+ self=foldflag&8?self:w; w=foldflag&8?w:a; a=foldflag&8?a:mtv; // if monad, it's w self garbage,  move to '' w self
+ // get the rest of the flags from the original ID byte, which was moved to lc
+ foldflag|=FAV(self)->lc-CFDOT;  // this sets mult fwd rev
+ // define the flags as the special global
+ RZ(symbis(nfs(11,"Foldtype_j_"),sc(foldflag),jt->locsyms));
+ // execute the Fold.  While it is running, set the flag to allow Z:
+ B foldrunning=jt->foldrunning; A z=xdefn(a,w,self); jt->foldrunning=foldrunning;
+ // if there was an error, save the error code and recreate the error at this level, to cover up details inside the script
+ if(jt->jerr){I e=jt->jerr; RESETERR; jsignal(e);}
+ R z;
+}
+
+// entry point for monad and dyad F. F.. F.: F: F:. F::
+DF2(jtfold){
+ // The name Fold_j_ should have been loaded at startup.  If not, try loading its script.  If that still fails, quit
+ A foldconj; I step;
+ for(step=0;step<2;++step){
+  switch(step){  // try the startup, from the bottom up
+  case 1: eval("load'dev/fold'");
+  case 0: if(AT(foldconj=nameref(nfs(7,"Fold_j_")))&CONJ)goto found;  // there is always a ref, but it may be to [:
+  }
+ }
+ ASSERT(0,EVNONCE);  // not found or not conjunction - error
+found: ;
+
+ // Apply Fold_j_ to the input arguments, creating a derived verb to do the work
+ A derivvb; RZ(derivvb=unquote(a,w,foldconj));
+ // Modify the derived verb to go to our preparatory stub
+ FAV(derivvb)->valencefns[0]=FAV(derivvb)->valencefns[1]=jtfoldx;
+ // Tell the stub what the original fold type was
+ FAV(derivvb)->lc=FAV(self)->id;
+ R derivvb;
+}
+
+// x Z: y
+DF2(jtfoldZ){
+ ASSERT(jt->foldrunning,EVSYNTAX);  // If fold not running, fail.  Should be a semantic error rather than syntax
+ // The name FoldZ_j_ should have been loaded at startup.  If not, fail
+ A foldvb=nameref(nfs(8,"FoldZ_j_")); ASSERT((AT(foldvb)&VERB),EVNONCE);   // error if undefined or not verb
+ // Apply FoldZ_j_ to the input arguments, creating a derived verb to do the work
+ A z=unquote(a,w,foldvb);
+ // if there was an error, save the error code and recreate the error at this level, to cover up details inside the script
+ if(jt->jerr){I e=jt->jerr; RESETERR; jsignal(e);}
+ R z;
+}

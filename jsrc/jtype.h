@@ -657,6 +657,7 @@ typedef struct {AF valencefns[2];A fgh[3];union { D lD; void *lvp[2]; I lI; I4 l
 // for RANK conj, lI4[0-2] has the signed ranks
 
 // lc is a local-use byte.  Used in atomic dyads to indicate which singleton function to execute
+// in the derived function from fold, lc has the original id byte of the fold op
 
 #define ID(f)           (f&&FUNC&AT(f)?FAV(f)->id:C0)
 #define VFLAGNONE 0L

@@ -91,7 +91,7 @@ typedef struct {
  UC   jerr;             /* error number (0 means no error)                 */
  C    asgzomblevel;     // 0=do not assign zombie name before final assignment; 1=allow premature assignment of complete result; 2=allow premature assignment even of incomplete result
  B    assert;           /* 1 iff evaluate assert. statements               */
- UC   dbuser;           /* user-entered value for db                       */
+ B    foldrunning;      // 1 if fold is running (allows Z:)
  UC   jerr1;            /* last non-zero jerr                              */
  C    cxspecials;       // 1 if special testing needed in cx loop (pm or debug)
  B    iepdo;            /* 1 iff do iep                                    */
@@ -106,7 +106,7 @@ typedef struct {
  B    tmonad;           /* tacit translator: 1 iff monad                   */
  B    tsubst;           /* tacit translator                                */
  B    xco;              /* 1 iff doing x: conversion                       */
-// 1 byte free
+ UC   dbuser;           /* user-entered value for db                       */
  A    flkd;             /* file lock data: number, index, length           */
  I    flkn;             /* file lock count                                 */
  A    fopa;             /* open files boxed names                          */

@@ -115,7 +115,7 @@ static I debugnewi(I i, DC thisframe, A self){
 }
 
 // Processing of explicit definitions, line by line
-static DF2(jtxdefn){PROLOG(0048);
+DF2(jtxdefn){PROLOG(0048);
  RE(0);
  A *line;   // pointer to the words of the definition.  Filled in by LINE
  I n;  // number of lines in the definition.  Filled in by LINE

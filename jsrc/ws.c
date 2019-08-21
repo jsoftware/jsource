@@ -7,7 +7,7 @@
 #include "w.h"
 
 
-static C spell[3][70]={
+static C spell[3][72]={
  '=',     '<',     '>',     '_',     '+',     '*',     '-',     '%',
  '^',     '$',     '~',     '|',     '.',     ':',     ',',     ';',
  '#',     '@',     '/',     CBSLASH, '[',     ']',     '{',     '}',
@@ -16,7 +16,7 @@ static C spell[3][70]={
  'i',     'I',     'j',     'L',     'm',     'M',     'n',     'o',
  'p',     'q',     'r',     's',     'S',     't',     'T',     'u',
  'v',     'x',     'y',     '0',     '1',     '2',     '3',     '4',
- '5',     '6',     '7',     '8',     '9',     0,
+ '5',     '6',     '7',     '8',     '9',     'F',     'Z',     0,
 
  CASGN,   CFLOOR,  CCEIL,   1,       CPLUSDOT,CSTARDOT,CNOT,    CDOMINO,
  CLOG,    CSPARSE, CNUB,    CREV,    CEVEN,   COBVERSE,CCOMDOT, CCUT,
@@ -26,7 +26,7 @@ static C spell[3][70]={
  CIOTA,   CICAP,   CJDOT,   CLDOT,   CMDOT,   CMCAP,   CNDOT,   CCIRCLE,
  CPOLY,   1,       CRDOT,   1,       1,       CTDOT,   CTCAP,   CUDOT,
  CVDOT,   CXDOT,   CYDOT,   1,       1,       1,       1,       1,
- 1,       1,       1,       1,       1,       0,
+ 1,       1,       1,       1,       1,       CFDOT,   1,       0,
 
  CGASGN,  CLE,     CGE,     CFCONS,  CPLUSCO, CSTARCO, CMATCH,  CROOT,
  CPOWOP,  CSELF,   CNE,     CCANT,   CODD,    CADVERSE,CLAMIN,  CWORDS,
@@ -36,14 +36,14 @@ static C spell[3][70]={
  CICO,    1,       1,       CLCAPCO, 1,       1,       1,       1,
  CPCO,    CQCO,    1,       CSCO,    CSCAPCO, CTCO,    1,       CUCO,    
  1,       CXCO,    1,       CFCONS,  CFCONS,  CFCONS,  CFCONS,  CFCONS,  
- CFCONS,  CFCONS,  CFCONS,  CFCONS,  CFCONS,  0,
+ CFCONS,  CFCONS,  CFCONS,  CFCONS,  CFCONS,  CFCO,    CZCO,    0,
 };
 
-static C sp3[4][5]={
- CFETCH, CEMEND, CPDERIV, CUNDCO, 0,
- '{',    '}',    'p',     '&',    0,
- CESC2,  CESC2,  CESC1,   CESC1,  0,
- CESC2,  CESC2,  CESC1,   CESC2,  0,
+static C sp3[4][9]={
+ CFETCH, CEMEND, CPDERIV, CUNDCO, CFDOTDOT, CFDOTCO, CFCODOT, CFCOCO, 0,
+ '{',    '}',    'p',     '&',    'F',      'F',     'F',     'F',    0,
+ CESC2,  CESC2,  CESC1,   CESC1,  CESC1,    CESC1,   CESC2,   CESC2,  0,
+ CESC2,  CESC2,  CESC1,   CESC2,  CESC1,    CESC2,   CESC1,   CESC2,  0,
 };   /* trigraphs */
 
 // *s is a string with length n representing a primitive.  Convert the primitive to
@@ -63,7 +63,7 @@ C spellin(I n,C*s){C c,d,p=*s,*t;I j;
    if(p==CSIGN&&d==CESC2&&'1'<=c&&c<='9')R CFCONS;  // lump all _0-9: as CFCONS
    // sp3 desribes a character in a column.  Row 1 is the uninflected character, rows 2-3 give a supported inflection.  If those match,
    // the pseudocharacter in in row 0
-   if(t=(C*)strchr(sp3[1],p)){j=t-sp3[1]; R c==sp3[2][j]&&d==sp3[3][j]?sp3[0][j]:0;}
+   if(t=(C*)strchr(sp3[1],p)){for(j=t-sp3[1];sp3[1][j]==p;++j){if(c==sp3[2][j]&&d==sp3[3][j])R sp3[0][j];} R 0;}
   default:  /* note: fall through if character does not support 2 inflections */
    // invalid inflection, return 0
    R 0;
@@ -76,7 +76,7 @@ void spellit(C c,C*s){C*q;I k;
  else if(q=(C*)strchr(spell[2],c)){k=q-spell[2]; s[0]=spell[0][k]; s[1]=CESC2;}
  else if(q=(C*)strchr(sp3[0],  c)){k=q-sp3[0];   s[0]=sp3[1][k];   s[1]=sp3[2][k]; s[2]=sp3[3][k];}
  else if(CAMIP==c)s[0]='}';
- else if(CAPIP==c)s[0]=',';
+// obsolete  else if(CAPIP==c)s[0]=',';
 }    /* spell out ID c in s */
 
 A jtspella(J jt,A w){C c,s[3];V*v;

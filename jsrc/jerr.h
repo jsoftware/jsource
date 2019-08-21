@@ -41,7 +41,8 @@
 #define NEVM            35      /* number of event codes       */
 
 /* The following codes are never displayed to the user (but may show up in a 13!:12 query)   */
-
+#define EVFOLDEXIT        43      // abort current execution and return the current result
+#define EVFOLDSKIP        44      // abort current execution and resume with the next iteration
 #define EWIMAG          45      /* imaginary  result           */
 #define EWIRR           46      /* irrational result           */
 #define EWRAT           47      /* rational   result           */

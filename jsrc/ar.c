@@ -719,9 +719,10 @@ DF2(jtfold){
  A foldconj; I step;
  for(step=0;step<2;++step){
   switch(step){  // try the startup, from the bottom up
-  case 1: eval("load'dev/fold'");
-  case 0: if(AT(foldconj=nameref(nfs(7,"Fold_j_")))&CONJ)goto found;  // there is always a ref, but it may be to [:
+  case 1: eval("load'dev/fold'");  // fall through
+  case 0: if((foldconj=nameref(nfs(7,"Fold_j_")))&&AT(foldconj)&CONJ)goto found;  // there is always a ref, but it may be to [:
   }
+  RESETERR;  // if we loop back, clear errors
  }
  ASSERT(0,EVNONCE);  // not found or not conjunction - error
 found: ;
@@ -739,7 +740,7 @@ found: ;
 DF2(jtfoldZ){
  ASSERT(jt->foldrunning,EVSYNTAX);  // If fold not running, fail.  Should be a semantic error rather than syntax
  // The name FoldZ_j_ should have been loaded at startup.  If not, fail
- A foldvb=nameref(nfs(8,"FoldZ_j_")); ASSERT((AT(foldvb)&VERB),EVNONCE);   // error if undefined or not verb
+ A foldvb; RZ(foldvb=nameref(nfs(8,"FoldZ_j_"))); ASSERT((AT(foldvb)&VERB),EVNONCE);   // error if undefined or not verb
  // Apply FoldZ_j_ to the input arguments, creating a derived verb to do the work
  A z=unquote(a,w,foldvb);
  // if there was an error, save the error code and recreate the error at this level, to cover up details inside the script

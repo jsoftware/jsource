@@ -464,7 +464,7 @@ F2(jtsfrom){
      if(cellsize<MEMCPYTUNELOOP){
       C* RESTRICT zv=CAV(z); C *RESTRICT wv=CAV(w); DQ(AN(ind), MCIS((I*)zv,(I*)(wv+*iv++*cellsize),(cellsize+SZI-1)>>LGSZI) zv+=cellsize;)  // use local copy
      }else{
-      C* RESTRICT zv=CAV(z); C *RESTRICT wv=CAV(w); DQ(AN(ind), MC(zv,wv+*iv++*cellsize,cellsize); zv+=cellsize;)  // use memcpy
+      C* RESTRICT zv=CAV(z); C *RESTRICT wv=CAV(w); DQ(AN(ind), MC(zv,wv+*iv++*cellsize,(cellsize+SZI-1)&-SZI); zv+=cellsize;)  // use memcpy
      }
      break;
     }

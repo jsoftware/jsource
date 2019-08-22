@@ -923,7 +923,7 @@ static A jtsumattymes(J jt, A a, A w, I b, I t, I m, I n, I nn, I r, I *s, I zn)
  RETF(z);
 }    /* a +/@:* w for non-scalar a and w */
 
-static C sumbf[]={CSTARDOT,CMIN,CSTAR,CPLUSDOT,CMAX,CEQ,CNE,CSTARCO,CPLUSCO,CLT,CLE,CGT,CGE};
+static C sumbf[]={CSTARDOT,CMIN,CSTAR,CPLUSDOT,CMAX,CEQ,CNE,CSTARCO,CPLUSCO,CLT,CLE,CGT,CGE};  // verbs that support +/@:g
 
 #define SUMBFLOOPW(BF)     \
  {DO(q, memset(tv,C0,p); DO(255, DO(dw,tv[i]+=BF(*u,*v); ++u; ++v;);); DO(zn,zv[i]+=tu[i];));  \
@@ -969,21 +969,23 @@ static A jtsumatgbool(J jt,A a,A w,C id){A t,z;B* RESTRICTI av,* RESTRICTI wv;I 
 }    /* a +/@:g w  for boolean a,w where a-:&(* /@$)w; see also plusinsB */
 
 DF2(jtfslashatg){A fs,gs,y,z;B b,bb,sb=0;C*av,c,d,*wv;I ak,an,ar,*as,at,m,
-     n,nn,r,rs,*s,t,wk,wn,wr,*ws,wt,yt,zn,zt;V*sv;VA2 adocv,adocvf;
+     n,nn,r,rs,*s,t,wk,wn,wr,*ws,wt,yt,zn,zt;VA2 adocv,adocvf;
  RZ(a&&w&&self);
- an=AN(a); ar=AR(a); as=AS(a); at=an?AT(a):B01; sv=FAV(self); 
+ an=AN(a); ar=AR(a); as=AS(a); at=an?AT(a):B01;
  wn=AN(w); wr=AR(w); ws=AS(w); wt=wn?AT(w):B01;
  b=ar<=wr; r=b?wr:ar; rs=b?ar:wr; s=b?ws:as; nn=r?s[0]:1;  // b='w has higher rank'; r=higher rank rs=lower rank s->longer shape  nn=#items in longer-shape arg
  ASSERTAGREE(as,ws,MIN(ar,wr));
- if(SPARSE&(at|wt)||!an||!wn||2>nn){b=CFORK==sv->id; R df1(df2(a,w,b?sv->fgh[2]:sv->fgh[1]),b?sv->fgh[1]:sv->fgh[0]);}  // if sparse or empty, or just 1 item, do it the old-fashioned way
+ {I isfork=CFORK==FAV(self)->id; fs=FAV(self)->fgh[0+isfork]; gs=FAV(self)->fgh[1+isfork];}   // b=0 if @:, 1 if fork; take fs,gs accordingly
+ if(SPARSE&(at|wt)||!an||!wn||2>nn){ R df1(df2(a,w,gs),fs);}  // if sparse or empty, or just 1 item, do it the old-fashioned way
  rs=MAX(1,rs); PROD(m,rs-1,s+1); PROD(n,r-rs,s+rs); zn=m*n;   // zn=#atoms in _1-cell of longer arg = #atoms in result; m=#atoms in _1-cell of shorter arg  n=#times to repeat shorter arg  (*/ surplus longer shape)
    // if the short-frame arg is an atom, move its rank to 1 so we get the lengths of the _1-cells of the replicated arguments
- if(CFORK==sv->id){fs=sv->fgh[1]; gs=sv->fgh[2];}else{fs=sv->fgh[0]; gs=sv->fgh[1];}
+// obsolete  if(CFORK==sv->id){fs=sv->fgh[1]; gs=sv->fgh[2];}else{fs=sv->fgh[0]; gs=sv->fgh[1];}
  y=FAV(fs)->fgh[0]; c=ID(y); d=ID(gs);
  if(c==CPLUS){
-  if((((at&wt&B01&(n==1))>(zn&(SZI-1)))||!SY_ALIGN)&&strchr(sumbf,d))R sumatgbool(a,w,d);
+  // +/@:g is special if args are boolean, length is integral number of I, and g is boolean or *
+  if((((at&wt&B01&(n==1))>(zn&(SZI-1)))||!SY_ALIGN)&&strchr(sumbf,d))R sumatgbool(a,w,d);  // kludge search is slow
   if(d==CSTAR){
-   if(ar&&wr&&TYPESEQ(at,wt)&&at&B01+FL+(INT*!SY_64))R jtsumattymes(jt,a,w,b,at,m,n,nn,r,s,zn);
+   if(ar&&wr&&TYPESEQ(at,wt)&&at&B01+FL+(INT*!SY_64))R jtsumattymes(jt,a,w,b,at,m,n,nn,r,s,zn);  // +/@:*
    if(!ar||!wr){  // if either argument is atomic, apply the distributive property to save multiplies
     z=!ar?tymes(a,df1(w,fs)):tymes(w,df1(a,fs));
     if(jt->jerr==EVNAN)RESETERR else R z;
@@ -1000,23 +1002,25 @@ DF2(jtfslashatg){A fs,gs,y,z;B b,bb,sb=0;C*av,c,d,*wv;I ak,an,ar,*as,at,m,
   if(TYPESNE(t,wt))RZ(w=bb?xcvt((adocv.cv&VXCVTYPEMSK)>>VXCVTYPEX,w):cvt(t,w));
  }
  ak=b?m:zn; wk=b?zn:m; ak=an<nn?0:ak; wk=wn<nn?0:wk; ak<<=bplg(AT(a));wk<<=bplg(AT(w));
- GA(y,yt,zn,1,0); 
- GA(z,zt,zn,r-1,1+s);
+ GA(y,yt,zn,1,0);  // allocate one item for result of g
+ GA(z,zt,zn,r-1,1+s);  // allocate main output area for final result from f/
  n^=-b; n=(n==~1)?1:n;  // encode b flag in sign of n
  if(sb){A t;I j,tn,*zv;UC*tc;UI*ti,*yv;  /* +/@:g for boolean-valued g */
   av=CAV(a); wv=CAV(w); yv=(UI*)AV(y); zv=AV(z); memset(zv,C0,zn*SZI);
   tn=(zn+SZI-1)>>LGSZI; GATV0(t,INT,tn,1); tc=UAV(t); ti=(UI*)tc;
-  for(j=nn;0<j;j-=255){
+  // Run g in batches of up to 255, accumulating the result bytewise.  NOTE: there may be garbage at the end of yv, but because
+  // we are supporting littleendian only, it will not affect the result
+  for(j=nn;0<j;j-=255/C_LE){
    memset(ti,C0,tn*SZI); 
    DO(MIN(j,255), ((AHDR2FN*)adocv.f)(n,m,av,wv,yv,jt); av+=ak; wv+=wk; DO(tn,ti[i]+=yv[i];););
    DO(zn, zv[i]+=tc[i];);
   }
- }else{A z1;B p=0;C*yv,*zu,*zv;
+ }else{A z1;B p=0;C*yv,*zu,*zv;  // general f/@:g.  Do not run g on entire y; instead run one cell at a time
   av=CAV(a)+ak*(nn-1); wv=CAV(w)+wk*(nn-1); yv=CAV(y); zv=CAV(z);
-  GA(z1,zt,zn,r-1,1+s); zu=CAV(z1);
-  ((AHDR2FN*)adocv.f)(n,m,av,wv,zv,jt);
-  DQ(nn-1, av-=ak; wv-=wk; ((AHDR2FN*)adocv.f)(n,m,av,wv,yv,jt); ((AHDR2FN*)adocvf.f)((I)1,zn,yv,p?zu:zv,p?zv:zu,jt); p^=1;);
-  if(NEVM<jt->jerr){jt->jerr=0; z=df1(df2(a,w,gs),fs);}else if(p)z=z1;
+  GA(z1,zt,zn,r-1,1+s); zu=CAV(z1);  // allocate ping-pong output area for f/
+  ((AHDR2FN*)adocv.f)(n,m,av,wv,zv,jt);  // create first result-cell of g
+  DQ(nn-1, av-=ak; wv-=wk; ((AHDR2FN*)adocv.f)(n,m,av,wv,yv,jt); ((AHDR2FN*)adocvf.f)((I)1,zn,yv,p?zu:zv,p?zv:zu,jt); p^=1;);  // p==1 means result goes to ping buffer zv
+  if(NEVM<jt->jerr){jt->jerr=0; z=df1(df2(a,w,gs),fs);}else z=p?z1:z;  // if overflow, revert to old-fashioned way.  If p points to ping, prev result went to pong, make pong the result
  }
  RE(0); RETF(z);
 }    /* a f/@:g w where f and g are atomic*/

@@ -1,4 +1,4 @@
-vpath % ../../../../jsrc:../../../../jsrc/blis:../../../../dllsrc
+vpath % ../../../../jsrc:../../../../jsrc/blis:../../../../jsrc/openssl/sha:../../../../jsrc/openssl/sha/asm:../../../../dllsrc
 
 ifndef jplatform
 jplatform=linux
@@ -74,9 +74,6 @@ OBJS=  \
  rt.o \
  s.o \
  sc.o \
- sha1-arm.o \
- sha256-arm.o \
- sha256-sse4.o \
  sl.o \
  sn.o \
  t.o \
@@ -150,7 +147,17 @@ OBJS=  \
  xs.o \
  xsha.o \
  xt.o \
- xu.o
+ xu.o \
+ keccak1600.o \
+ md4_dgst.o \
+ md4_one.o \
+ md5_dgst.o \
+ md5_one.o \
+ openssl-util.o \
+ sha1_one.o \
+ sha256.o \
+ sha3.o \
+ sha512.o
 
 %.o: %.cpp
 	$(CXX) -c $(CPPFLAGS) -o$@ $^
@@ -158,10 +165,13 @@ OBJS=  \
 %.o: %.c
 	$(CC) -c -o $@ $< $(CFLAGS) $(CFLAGS_SIMD) $(CFLAGS_FMA) $(CFLAGS_AESNI)
 
+%.o: %.S
+	$(CC) $(GASM_FLAGS) -c -o $@ $<
+
 $(OBJS_FMA) : CFLAGS_FMA := -mfma
 $(OBJS_AESNI) : CFLAGS_AESNI := -maes
-$(ODIR)/$(TARGET) : $(OBJS) $(OBJS_FMA) $(OBJS_AESNI) $(OBJS_AESARM) $(OBJS_SHAASM) $(DLLOBJS) $(LIBJRES)
-	$(CC) -o $@ $(OBJS) $(OBJS_FMA) $(OBJS_AESNI) $(OBJS_AESARM) $(OBJS_SHAASM) $(DLLOBJS) $(LIBJDEF) $(LIBJRES) $(LDFLAGS)
+$(ODIR)/$(TARGET) : $(OBJS) $(OBJS_FMA) $(OBJS_AESNI) $(OBJS_AESARM) $(SRC_ASM) $(DLLOBJS) $(LIBJRES)
+	$(CC) -o $@ $(OBJS) $(OBJS_FMA) $(OBJS_AESNI) $(OBJS_AESARM) $(SRC_ASM) $(DLLOBJS) $(LIBJDEF) $(LIBJRES) $(LDFLAGS)
 
 $(LIBJRES): jdll.rc
 	$(WINDRES) -D NDEBUG -o$@ $^
@@ -169,6 +179,6 @@ $(LIBJRES): jdll.rc
 all: $(ODIR)/$(TARGET)
 
 clean:
-	rm -f $(OBJS) $(DLLOBJS) $(OBJS_FMA) $(OBJS_AESNI)
+	rm -f $(OBJS) $(OBJS_FMA) $(OBJS_AESNI) $(OBJS_AESARM) $(SRC_ASM) $(DLLOBJS) $(LIBJRES)
 
 .PHONY: all clean

@@ -6,8 +6,21 @@
 extern void cpuInit(void);
 extern uint64_t getCpuFeatures(void);
 extern intptr_t getCpuFamily(void);
+extern void OPENSSL_setcap(void);
 
-#if defined(__aarch64__)
+#if defined(__aarch64__)||defined(_M_ARM64)
+
+extern uint32_t OPENSSL_armcap_P;
+
+enum {
+  ARMV7_NEON    = (1<<0),
+  ARMV7_TICK    = (1<<1),
+  ARMV8_AES     = (1<<2),
+  ARMV8_SHA1    = (1<<3),
+  ARMV8_SHA256  = (1<<4),
+  ARMV8_PMULL   = (1<<5),
+  ARMV8_SHA512  = (1<<6),
+};
 
 enum {
   ARM_HWCAP_FP = (1 << 0),
@@ -41,6 +54,8 @@ enum {
 };
 
 #elif defined(__x86_64__)||defined(__i386__)||defined(_M_X64)||defined(_M_IX86)
+
+extern uint32_t OPENSSL_ia32cap_P[4];
 
 enum {
   CPU_X86_FEATURE_SSSE3  = (1 << 0),

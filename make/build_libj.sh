@@ -61,32 +61,41 @@ darwin="$OPENMP -fPIC -O1 -fwrapv -fno-strict-aliasing -Wno-string-plus-int -Wno
 
 javx2="${javx2:=0}"
 
-OBJS_SHAASM_LINUX=" \
- ${jgit}/sha-asm/sha1_ssse3-elf64.o \
- ${jgit}/sha-asm/sha256_avx1-elf64.o \
- ${jgit}/sha-asm/sha256_avx2_rorx2-elf64.o \
- ${jgit}/sha-asm/sha256_avx2_rorx8-elf64.o \
- ${jgit}/sha-asm/sha256_sse4-elf64.o \
- ${jgit}/sha-asm/sha512_avx-elf64.o \
- ${jgit}/sha-asm/sha512_sse4-elf64.o "
+SRC_ASM_LINUX=" \
+ keccak1600-x86_64-elf.o \
+ sha1-x86_64-elf.o \
+ sha256-x86_64-elf.o \
+ sha512-x86_64-elf.o "
 
-OBJS_SHAASM_MAC=" \
- ${jgit}/sha-asm/sha1_ssse3-macho64.o \
- ${jgit}/sha-asm/sha256_avx1-macho64.o \
- ${jgit}/sha-asm/sha256_avx2_rorx2-macho64.o \
- ${jgit}/sha-asm/sha256_avx2_rorx8-macho64.o \
- ${jgit}/sha-asm/sha256_sse4-macho64.o \
- ${jgit}/sha-asm/sha512_avx-macho64.o \
- ${jgit}/sha-asm/sha512_sse4-macho64.o "
+SRC_ASM_LINUX32=" \
+ keccak1600-mmx-elf.o \
+ sha1-586-elf.o \
+ sha256-586-elf.o \
+ sha512-586-elf.o "
 
-OBJS_SHAASM_WIN=" \
- ${jgit}/sha-asm/sha1_ssse3-x64.o \
- ${jgit}/sha-asm/sha256_avx1-x64.o \
- ${jgit}/sha-asm/sha256_avx2_rorx2-x64.o \
- ${jgit}/sha-asm/sha256_avx2_rorx8-x64.o \
- ${jgit}/sha-asm/sha256_sse4-x64.o \
- ${jgit}/sha-asm/sha512_avx-x64.o \
- ${jgit}/sha-asm/sha512_sse4-x64.o "
+SRC_ASM_RASPI=" \
+ keccak1600-armv8-elf.o \
+ sha1-armv8-elf.o \
+ sha256-armv8-elf.o \
+ sha512-armv8-elf.o "
+
+SRC_ASM_RASPI32=" \
+ keccak1600-armv4-elf.o \
+ sha1-armv4-elf.o \
+ sha256-armv4-elf.o \
+ sha512-armv4-elf.o "
+
+SRC_ASM_MAC=" \
+ keccak1600-x86_64-macho.o \
+ sha1-x86_64-macho.o \
+ sha256-x86_64-macho.o \
+ sha512-x86_64-macho.o "
+
+SRC_ASM_MAC32=" \
+ keccak1600-mmx-macho.o \
+ sha1-586-macho.o \
+ sha256-586-macho.o \
+ sha512-586-macho.o "
 
 case $jplatform\_$1 in
 
@@ -99,6 +108,8 @@ COMPILE="$common -m32 -msse2 -mfpmath=sse -DC_NOMULTINTRINSIC "
 # COMPILE="$common -m32 -ffloat-store "
 LINK=" -shared -Wl,-soname,libj.so -m32 -lm -ldl $LDOPENMP32 -o libj.so "
 OBJS_AESNI=" aes-ni.o "
+SRC_ASM="${SRC_ASM_LINUX32}"
+GASM_FLAGS="-m32"
 ;;
 
 linux_j64) # linux intel 64bit nonavx
@@ -106,7 +117,8 @@ TARGET=libj.so
 COMPILE="$common "
 LINK=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP -o libj.so "
 OBJS_AESNI=" aes-ni.o "
-OBJS_SHAASM="${OBJS_SHAASM_LINUX}"
+SRC_ASM="${SRC_ASM_LINUX}"
+GASM_FLAGS=""
 ;;
 
 linux_j64avx) # linux intel 64bit avx
@@ -120,13 +132,16 @@ CFLAGS_SIMD=" -DC_AVX2=1 -mavx2 "
 fi
 OBJS_FMA=" blis/gemm_int-fma.o "
 OBJS_AESNI=" aes-ni.o "
-OBJS_SHAASM="${OBJS_SHAASM_LINUX}"
+SRC_ASM="${SRC_ASM_LINUX}"
+GASM_FLAGS=""
 ;;
 
 raspberry_j32) # linux raspbian arm
 TARGET=libj.so
 COMPILE="$common -marm -march=armv6 -mfloat-abi=hard -mfpu=vfp -DRASPI -DC_NOMULTINTRINSIC "
 LINK=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP -o libj.so "
+SRC_ASM="${SRC_ASM_RASPI32}"
+GASM_FLAGS=""
 ;;
 
 raspberry_j64) # linux arm64
@@ -134,6 +149,8 @@ TARGET=libj.so
 COMPILE="$common -march=armv8-a+crc -DRASPI -DC_CRC32C=1 "
 LINK=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP -o libj.so "
 OBJS_AESARM=" aes-arm.o "
+SRC_ASM="${SRC_ASM_RASPI}"
+GASM_FLAGS=""
 ;;
 
 darwin_j32) # darwin x86
@@ -141,6 +158,8 @@ TARGET=libj.dylib
 COMPILE="$darwin -m32 $macmin"
 LINK=" -dynamiclib -lm -ldl $LDOPENMP -m32 $macmin -o libj.dylib"
 OBJS_AESNI=" aes-ni.o "
+SRC_ASM="${SRC_ASM_MAC32}"
+GASM_FLAGS="-m32"
 ;;
 
 darwin_j64) # darwin intel 64bit nonavx
@@ -148,7 +167,8 @@ TARGET=libj.dylib
 COMPILE="$darwin $macmin"
 LINK=" -dynamiclib -lm -ldl $LDOPENMP $macmin -o libj.dylib"
 OBJS_AESNI=" aes-ni.o "
-OBJS_SHAASM="${OBJS_SHAASM_MAC}"
+SRC_ASM="${SRC_ASM_MAC}"
+GASM_FLAGS=""
 ;;
 
 darwin_j64avx) # darwin intel 64bit
@@ -162,7 +182,8 @@ CFLAGS_SIMD=" -DC_AVX2=1 -mavx2 "
 fi
 OBJS_FMA=" blis/gemm_int-fma.o "
 OBJS_AESNI=" aes-ni.o "
-OBJS_SHAASM="${OBJS_SHAASM_MAC}"
+SRC_ASM="${SRC_ASM_MAC}"
+GASM_FLAGS=""
 ;;
 
 *)
@@ -233,9 +254,6 @@ OBJS="\
  rt.o \
  s.o \
  sc.o \
- sha1-arm.o \
- sha256-arm.o \
- sha256-sse4.o \
  sl.o \
  sn.o \
  t.o \
@@ -309,8 +327,18 @@ OBJS="\
  xs.o \
  xsha.o \
  xt.o \
- xu.o "
+ xu.o \
+ keccak1600.o \
+ md4_dgst.o \
+ md4_one.o \
+ md5_dgst.o \
+ md5_one.o \
+ openssl-util.o \
+ sha1_one.o \
+ sha256.o \
+ sha3.o \
+ sha512.o "
 
-export OBJS OBJS_FMA OBJS_AESNI OBJS_AESARM OBJS_SHAASM COMPILE CFLAGS_SIMD LINK TARGET
+export OBJS OBJS_FMA OBJS_AESNI OBJS_AESARM SRC_ASM GASM_FLAGS COMPILE CFLAGS_SIMD LINK TARGET
 $jmake/domake.sh $1
 

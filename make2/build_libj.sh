@@ -91,32 +91,41 @@ darwin="$OPENMP -fPIC -O1 -fwrapv -fno-strict-aliasing -Wno-string-plus-int -Wno
 
 javx2="${javx2:=0}"
 
-OBJS_SHAASM_LINUX=" \
- ../../../../sha-asm/sha1_ssse3-elf64.o \
- ../../../../sha-asm/sha256_avx1-elf64.o \
- ../../../../sha-asm/sha256_avx2_rorx2-elf64.o \
- ../../../../sha-asm/sha256_avx2_rorx8-elf64.o \
- ../../../../sha-asm/sha256_sse4-elf64.o \
- ../../../../sha-asm/sha512_avx-elf64.o \
- ../../../../sha-asm/sha512_sse4-elf64.o "
+SRC_ASM_LINUX=" \
+ keccak1600-x86_64-elf.o \
+ sha1-x86_64-elf.o \
+ sha256-x86_64-elf.o \
+ sha512-x86_64-elf.o "
 
-OBJS_SHAASM_MAC=" \
- ../../../../sha-asm/sha1_ssse3-macho64.o \
- ../../../../sha-asm/sha256_avx1-macho64.o \
- ../../../../sha-asm/sha256_avx2_rorx2-macho64.o \
- ../../../../sha-asm/sha256_avx2_rorx8-macho64.o \
- ../../../../sha-asm/sha256_sse4-macho64.o \
- ../../../../sha-asm/sha512_avx-macho64.o \
- ../../../../sha-asm/sha512_sse4-macho64.o "
+SRC_ASM_LINUX32=" \
+ keccak1600-mmx-elf.o \
+ sha1-586-elf.o \
+ sha256-586-elf.o \
+ sha512-586-elf.o "
 
-OBJS_SHAASM_WIN=" \
- ../../../../sha-asm/sha1_ssse3-x64.o \
- ../../../../sha-asm/sha256_avx1-x64.o \
- ../../../../sha-asm/sha256_avx2_rorx2-x64.o \
- ../../../../sha-asm/sha256_avx2_rorx8-x64.o \
- ../../../../sha-asm/sha256_sse4-x64.o \
- ../../../../sha-asm/sha512_avx-x64.o \
- ../../../../sha-asm/sha512_sse4-x64.o "
+SRC_ASM_RASPI=" \
+ keccak1600-armv8-elf.o \
+ sha1-armv8-elf.o \
+ sha256-armv8-elf.o \
+ sha512-armv8-elf.o "
+
+SRC_ASM_RASPI32=" \
+ keccak1600-armv4-elf.o \
+ sha1-armv4-elf.o \
+ sha256-armv4-elf.o \
+ sha512-armv4-elf.o "
+
+SRC_ASM_MAC=" \
+ keccak1600-x86_64-macho.o \
+ sha1-x86_64-macho.o \
+ sha256-x86_64-macho.o \
+ sha512-x86_64-macho.o "
+
+SRC_ASM_MAC32=" \
+ keccak1600-mmx-macho.o \
+ sha1-586-macho.o \
+ sha256-586-macho.o \
+ sha512-586-macho.o "
 
 case $jplatform\_$j64x in
 
@@ -129,6 +138,8 @@ CFLAGS="$common -m32 -msse2 -mfpmath=sse -DC_NOMULTINTRINSIC "
 # CFLAGS="$common -m32 -ffloat-store "
 LDFLAGS=" -shared -Wl,-soname,libj.so -m32 -lm -ldl $LDOPENMP32"
 OBJS_AESNI=" aes-ni.o "
+SRC_ASM="${SRC_ASM_LINUX32}"
+GASM_FLAGS="-m32"
 ;;
 
 linux_j64) # linux intel 64bit nonavx
@@ -136,7 +147,8 @@ TARGET=libj.so
 CFLAGS="$common "
 LDFLAGS=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP"
 OBJS_AESNI=" aes-ni.o "
-OBJS_SHAASM="${OBJS_SHAASM_LINUX}"
+SRC_ASM="${SRC_ASM_LINUX}"
+GASM_FLAGS=""
 ;;
 
 linux_j64avx) # linux intel 64bit avx
@@ -150,13 +162,16 @@ CFLAGS_SIMD=" -DC_AVX2=1 -mavx2 "
 fi
 OBJS_FMA=" gemm_int-fma.o "
 OBJS_AESNI=" aes-ni.o "
-OBJS_SHAASM="${OBJS_SHAASM_LINUX}"
+SRC_ASM="${SRC_ASM_LINUX}"
+GASM_FLAGS=""
 ;;
 
 raspberry_j32) # linux raspbian arm
 TARGET=libj.so
 CFLAGS="$common -marm -march=armv6 -mfloat-abi=hard -mfpu=vfp -DRASPI -DC_NOMULTINTRINSIC "
 LDFLAGS=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP"
+SRC_ASM="${SRC_ASM_RASPI32}"
+GASM_FLAGS=""
 ;;
 
 raspberry_j64) # linux arm64
@@ -164,6 +179,8 @@ TARGET=libj.so
 CFLAGS="$common -march=armv8-a+crc+crypto -DRASPI -DC_CRC32C=1 "
 LDFLAGS=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP"
 OBJS_AESARM=" aes-arm.o "
+SRC_ASM="${SRC_ASM_RASPI}"
+GASM_FLAGS=""
 ;;
 
 darwin_j32) # darwin x86
@@ -171,6 +188,8 @@ TARGET=libj.dylib
 CFLAGS="$darwin -m32 $macmin"
 LDFLAGS=" -dynamiclib -lm -ldl $LDOPENMP -m32 $macmin"
 OBJS_AESNI=" aes-ni.o "
+SRC_ASM="${SRC_ASM_MAC32}"
+GASM_FLAGS="-m32"
 ;;
 
 darwin_j64) # darwin intel 64bit nonavx
@@ -178,7 +197,8 @@ TARGET=libj.dylib
 CFLAGS="$darwin $macmin"
 LDFLAGS=" -dynamiclib -lm -ldl $LDOPENMP $macmin"
 OBJS_AESNI=" aes-ni.o "
-OBJS_SHAASM="${OBJS_SHAASM_MAC}"
+SRC_ASM="${SRC_ASM_MAC}"
+GASM_FLAGS=""
 ;;
 
 darwin_j64avx) # darwin intel 64bit
@@ -192,7 +212,8 @@ CFLAGS_SIMD=" -DC_AVX2=1 -mavx2 "
 fi
 OBJS_FMA=" gemm_int-fma.o "
 OBJS_AESNI=" aes-ni.o "
-OBJS_SHAASM="${OBJS_SHAASM_MAC}"
+SRC_ASM="${SRC_ASM_MAC}"
+GASM_FLAGS=""
 ;;
 windows_j32) # windows x86
 jolecom="${jolecom:=0}"
@@ -215,6 +236,8 @@ LIBJDEF=" ../../../../dllsrc/jdll2.def "
 fi
 LIBJRES=" jdllres.o "
 OBJS_AESNI=" aes-ni.o "
+SRC_ASM="${SRC_ASM_WIN32}"
+GASM_FLAGS=""
 ;;
 
 windows_j64) # windows intel 64bit nonavx
@@ -234,7 +257,8 @@ LIBJDEF=" ../../../../dllsrc/jdll2.def "
 fi
 LIBJRES=" jdllres.o "
 OBJS_AESNI=" aes-ni.o "
-OBJS_SHAASM="${OBJS_SHAASM_WIN}"
+SRC_ASM="${SRC_ASM_WIN}"
+GASM_FLAGS=""
 ;;
 
 windows_j64avx) # windows intel 64bit avx
@@ -260,7 +284,8 @@ fi
 LIBJRES=" jdllres.o "
 OBJS_FMA=" gemm_int-fma.o "
 OBJS_AESNI=" aes-ni.o "
-OBJS_SHAASM="${OBJS_SHAASM_WIN}"
+SRC_ASM="${SRC_ASM_WIN}"
+GASM_FLAGS=""
 ;;
 
 *)
@@ -277,7 +302,7 @@ fi
 mkdir -p ../bin/$jplatform/$j64x
 mkdir -p obj/$jplatform/$j64x/
 cp makefile-libj obj/$jplatform/$j64x/.
-export CFLAGS LDFLAGS TARGET CFLAGS_SIMD DLLOBJS LIBJDEF LIBJRES OBJS_FMA OBJS_AESNI OBJS_AESARM OBJS_SHAASM jplatform j64x
+export CFLAGS LDFLAGS TARGET CFLAGS_SIMD GASM_FLAGS DLLOBJS LIBJDEF LIBJRES OBJS_FMA OBJS_AESNI OBJS_AESARM SRC_ASM jplatform j64x
 cd obj/$jplatform/$j64x/
 make -f makefile-libj
 cd -

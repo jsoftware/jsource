@@ -189,7 +189,7 @@
     </ResourceCompile>
     <Link>
       <AdditionalOptions>/machine:AMD64 %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>winasm64;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>winasm64.obj;..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>.\Release64\j.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <ModuleDefinitionFile>..\..\dllsrc\JDLL.DEF</ModuleDefinitionFile>
@@ -236,7 +236,7 @@
     </ResourceCompile>
     <Link>
       <AdditionalOptions>/machine:AMD64 %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>winasm64;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>winasm64.obj;..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <ModuleDefinitionFile>..\..\dllsrc\JDLL.DEF</ModuleDefinitionFile>
       <ProgramDatabaseFile>$(outdir)\j.pdb</ProgramDatabaseFile>
@@ -284,7 +284,7 @@
     </ResourceCompile>
     <Link>
       <AdditionalOptions>/machine:AMD64 %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>winasm64.obj;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>winasm64.obj;..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>.\Debug64\j.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <ModuleDefinitionFile>..\..\dllsrc\JDLL.DEF</ModuleDefinitionFile>
@@ -330,7 +330,7 @@
     </ResourceCompile>
     <Link>
       <AdditionalOptions>/machine:AMD64 %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>winasm64.obj;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>winasm64.obj;..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <ModuleDefinitionFile>..\..\dllsrc\JDLL.DEF</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -424,6 +424,7 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
+      <AdditionalDependencies>..\..\openssl-asm\keccak1600-mmx-nasm.o;..\..\openssl-asm\sha1-586-nasm.o;..\..\openssl-asm\sha256-586-nasm.o;..\..\openssl-asm\sha512-586-nasm.o;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>.\release\j.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <ModuleDefinitionFile>..\..\dllsrc\JDLL.DEF</ModuleDefinitionFile>
@@ -516,6 +517,7 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
+      <AdditionalDependencies>..\..\openssl-asm\keccak1600-mmx-nasm.o;..\..\openssl-asm\sha1-586-nasm.o;..\..\openssl-asm\sha256-586-nasm.o;..\..\openssl-asm\sha512-586-nasm.o;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>.\debug\j.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <ModuleDefinitionFile>..\..\dllsrc\JDLL.DEF</ModuleDefinitionFile>
@@ -599,8 +601,6 @@
     <ClCompile Include="..\..\jsrc\RT.C" />
     <ClCompile Include="..\..\jsrc\S.C" />
     <ClCompile Include="..\..\jsrc\SC.C" />
-    <ClCompile Include="..\..\jsrc\sha1-arm.c" />
-    <ClCompile Include="..\..\jsrc\sha256-arm.c" />
     <ClCompile Include="..\..\jsrc\SL.C" />
     <ClCompile Include="..\..\jsrc\SN.C" />
     <ClCompile Include="..\..\jsrc\T.C" />
@@ -672,6 +672,16 @@
     <ClCompile Include="..\..\jsrc\XS.C" />
     <ClCompile Include="..\..\jsrc\XT.C" />
     <ClCompile Include="..\..\jsrc\xu.c" />
+    <ClCompile Include="..\..\jsrc\openssl\sha\keccak1600.c" />
+    <ClCompile Include="..\..\jsrc\openssl\sha\md4_dgst.c" />
+    <ClCompile Include="..\..\jsrc\openssl\sha\md4_one.c" />
+    <ClCompile Include="..\..\jsrc\openssl\sha\md5_dgst.c" />
+    <ClCompile Include="..\..\jsrc\openssl\sha\md5_one.c" />
+    <ClCompile Include="..\..\jsrc\openssl\sha\openssl-util.c" />
+    <ClCompile Include="..\..\jsrc\openssl\sha\sha1_one.c" />
+    <ClCompile Include="..\..\jsrc\openssl\sha\sha256.c" />
+    <ClCompile Include="..\..\jsrc\openssl\sha\sha3.c" />
+    <ClCompile Include="..\..\jsrc\openssl\sha\sha512.c" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\dllsrc\JDLL.DEF" />

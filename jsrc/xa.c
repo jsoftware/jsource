@@ -413,6 +413,7 @@ F2(jtcpufeature2){I k;
  else if(!strcasecmp(CAV(w),"RDSEED"  )) g_cpuFeatures &= ~CPU_X86_FEATURE_RDSEED ;
 #endif
 }
+OPENSSL_setcap();
 #if C_AVX && !defined(ANDROID)
  hwfma=(getCpuFeatures()&CPU_X86_FEATURE_FMA)?1:0;
 #endif

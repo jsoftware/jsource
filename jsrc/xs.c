@@ -70,6 +70,16 @@ static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;B xt=jt->tostdout;DC d,xd=jt
  if(3==ce){z=num[jt->jerr==0]; RESETERR; R z;}else RNE(mtm);
 }
 
+static F1(jtaddscriptname){I i;
+ RE(i=i0(indexof(vec(BOX,jt->slistn,AAV(jt->slist)),box(ravel(w)))));  // look up only in the defined names
+ if(jt->slistn==i){
+  if(jt->slistn==AN(jt->slist))RZ(jt->slist=ext(1,jt->slist)); 
+  RZ(ras(w)); RZ(*(jt->slistn+AAV(jt->slist))=w); 
+  ++jt->slistn;
+ }
+ R sc(i);
+}
+
 static A jtlinf(J jt,A a,A w,C ce,B tso){A x,y,z;B lk=0;C*s;I i=-1,n,oldi=jt->slisti,oldk=jt->uflags.us.cx.cx_c.glock;
  RZ(a&&w);
  ASSERT(AT(w)&BOX,EVDOMAIN);
@@ -88,12 +98,8 @@ static A jtlinf(J jt,A a,A w,C ce,B tso){A x,y,z;B lk=0;C*s;I i=-1,n,oldi=jt->sl
  // if(!memcmp(CAV(x),"\357\273\277",3L))RZ(x=drop(num[3],x))
  // if this is a new file, record it in the list of scripts
  RZ(y=fullname(AAV0(w)));
- RE(i=i0(indexof(vec(BOX,jt->slistn,AAV(jt->slist)),box(y))));
- if(jt->slistn==i){
-  if(jt->slistn==AN(jt->slist))RZ(jt->slist=ext(1,jt->slist)); 
-  RZ(ras(y)); RZ(*(jt->slistn+AAV(jt->slist))=y); 
-  ++jt->slistn;
- }
+ A scripti; RZ(scripti=jtaddscriptname(jt,y)); i=IAV(scripti)[0];
+
  // set the current script number
  jt->slisti=(UI4)i;    jt->uflags.us.cx.cx_c.glock=1==jt->uflags.us.cx.cx_c.glock?1:lk?2:0;
  z=line(x,jt->uflags.us.cx.cx_c.glock?-1L:i,ce,(B)(jt->uflags.us.cx.cx_c.glock?0:tso)); 
@@ -102,6 +108,22 @@ static A jtlinf(J jt,A a,A w,C ce,B tso){A x,y,z;B lk=0;C*s;I i=-1,n,oldi=jt->sl
  if(lk)memset(AV(x),C0,AN(x));  /* security paranoia */
 #endif
  R z;
+}
+
+// 4!:6 add script name to list and return its index
+F1(jtscriptstring){
+ ASSERT(AT(w)&LIT,EVDOMAIN);  // literal
+ ASSERT(AR(w)<2,EVRANK);  // list
+ R jtaddscriptname(jt,w);   // add name if new; return index to name
+}
+
+// 4!:7 set script name to use and return previous value
+F1(jtscriptnum){
+ I i=i0(w);  // fetch index
+ ASSERT((UI)(i+1)<=(UI)jt->slistn,EVINDEX);  // make sure it's _1 or valid index
+ A rv=sc(jt->slisti);  // save the old value
+ RZ(rv); jt->slisti=(UI4)i;  // set the new value (if no error)
+ R rv;  // return prev value
 }
 
 F1(jtscm00 ){I r; RZ(w);    r=1&&AT(w)&LIT+C2T+C4T; F1RANK(     r,jtscm00, 0); R r?line(w,-1L,0,0):linf(mark,w,0,0);}

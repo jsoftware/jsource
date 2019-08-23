@@ -42,7 +42,7 @@ static I intforD(J jt, D d){D q;I z;
  R z;
 }
 
-#define SSINGCASE(id,subtype) (9*(id)+(subtype))   // encode case/args into one branch value scaf
+#define SSINGCASE(id,subtype) (9*(id)+(subtype))   // encode case/args into one branch value
 A jtssingleton(J jt, A a,A w,A self,RANK2T awr,RANK2T ranks){A z;
  F2PREFIP;
  I aiv=FAV(self)->lc;   // temp, but start as function #

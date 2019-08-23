@@ -69,20 +69,24 @@ static DF1(jtpowseq){A fs,gs,x;I n=IMAX;V*sv;
  R df1(w,powop(fs,IX(n),0));
 }    /* f^:(<n) w */
 
-// u^:n w where n is nonnegative integer atom
+// u^:n w where n is nonnegative integer atom (but never 0 or 1, which are handled as special cases)
 static DF1(jtfpown){A fs,z;AF f1;I n;V*sv;A *old;
  RZ(w);
- sv=FAV(self); 
- switch(n=*AV(sv->fgh[2])){
-  case 0:  RCA(w);
-  case 1:  fs=sv->fgh[0]; R CALL1(FAV(fs)->valencefns[0],w,fs);
-  default: 
-   fs=sv->fgh[0]; f1=FAV(fs)->valencefns[0];
-   z=w; 
-   old=jt->tnextpushp; 
-   DQ(n, RZ(z=CALL1(f1,z,fs)); z=gc(z,old);); 
-   RETF(z);
-}}
+ F1PREFIP;
+ sv=FAV(self);
+ n=*AV(sv->fgh[2]);
+// obsolete if(n==0||n==1)SEGFAULT  // scaf
+// switch(n=*AV(sv->fgh[2])){
+//  case 0:  RCA(w);
+//  case 1:  fs=sv->fgh[0]; R CALL1(FAV(fs)->valencefns[0],w,fs);
+//  default: 
+ fs=sv->fgh[0]; f1=FAV(fs)->valencefns[0];
+ z=w; 
+ old=jt->tnextpushp; 
+ DQ(n, RZ(z=CALL1IP(f1,z,fs)); z=gc(z,old);); 
+ RETF(z);
+// }
+}
 
 // u^:n w where n is any array or scalar infinity or negative
 static DF1(jtply1){PROLOG(0040);DECLFG;A b,hs,j,*xv,y,z;B*bv,q;I i,k,m,n,*nv,p=0;AD * RESTRICT x;A *old;  // RESTRICT on x fails in VS2013
@@ -258,7 +262,9 @@ DF2(jtpowop){A hs;B b;V*v;
  I m=AN(hs); // m=#atoms of n; n=1st atom; r=n has rank>0
  // If not special case, fall through to handle general case
  b=0; if(m&&AT(w)&FL+CMPX)RE(b=!all0(eps(w,over(ainf,scf(infm)))));   // set b if n is nonempty FL or CMPX array containing _ or __ kludge should just use hs
- R fdef(0,CPOWOP,VERB, b||!m?jtply1:!AR(w)&&0<=IAV(hs)[0]?jtfpown:jtply1s,jtply2, a,w,hs,   // Create derived verb: special cases for (empty or contains _/__), (scalar n>=0)
-    VFLAGNONE, RMAX,RMAX,RMAX);
+ b|=!m; B nonnegatom=!AR(w)&&0<=IAV(hs)[0]; I flag=FAV(a)->flag&((~b&nonnegatom)<<VJTFLGOK1X);  // flags for (empty or contains _/__), (scalar n>=0); if the latter, keep the inplace flag
+// obsolete  R fdef(0,CPOWOP,VERB, b||!m?jtply1:!AR(w)&&0<=IAV(hs)[0]?jtfpown:jtply1s,jtply2, a,w,hs,   // Create derived verb: special cases for , 
+ R fdef(0,CPOWOP,VERB, b?jtply1:nonnegatom?jtfpown:jtply1s,jtply2, a,w,hs,   // Create derived verb: special cases for , 
+    flag|VFLAGNONE, RMAX,RMAX,RMAX);
  // no reason to inplace this, since it has to keep the old value to check for changes
 }

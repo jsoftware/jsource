@@ -17,7 +17,7 @@
 #define SSSTORENVFL(v,z,t,type) {*((type *)CAV(z)) = (v); }  // When we know the type/shape doesn't change (FL,FL->FL)
 
 #define SSINGENC(type) (UNSAFE(type)>>INTX)
-#define SSINGCASE(id,subtype) (3*(id)+(subtype))   // encode case/args into one branch value scaf
+#define SSINGCASE(id,subtype) (3*(id)+(subtype))   // encode case/args into one branch value
 A jtssingleton1(J jt, A w,A self){A z;
  F2PREFIP;
  I wiv=FAV(self)->lc;   // temp, but start as function #

@@ -46,6 +46,7 @@ F1(jtcatalog){PROLOG(0072);A b,*wv,x,z,*zv;C*bu,*bv,**pv;I*cv,i,j,k,m=1,n,p,*qv,
   else              DQ(m, DO(an, SETJ(av[i]); u=(I*)((C*)v+j*k); mvlp(x,u,k) ); v=(I*)((C*)v+pq););   \
  }
 
+// a is not boxed and not boolean (except when a is an atom, which we pass through here to allow a virtual result)
 F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wk,wn,wr,*ws,zn;
  F1PREFIP;
  RZ(a&&w);
@@ -432,8 +433,24 @@ F2(jtfrom){I at;A z;
  F2PREFIP;
  RZ(a&&w);
  at=AT(a);
- if(!((AT(a)|AT(w))&(SPARSE))){z=at&BOX?afrom(a,w)  :at&B01&&AN(a)!=1?bfrom(a,w):jtifrom(jtinplace,a,w);}  // make 0{ and 1{ allow virtual result
- else if(!((AT(a)|AT(w))&(NOUN&~SPARSE))){z=fromss(a,w);}
+ if(!((AT(a)|AT(w))&(SPARSE))){
+  // if INT atom { INT|FL|BOX list, and right rank is not 0, just pluck the value.  If a is inplaceable and not unincorpable, use it
+  if(SY_64&&!((AT(a)&(NOUN&~INT))+(AT(w)&(NOUN&~(INT|FL|BOX)))+AR(a)+(AR(w)^1)+!(RANKT)jt->ranks)){
+   // Get the area to use for the result: the input if possible, else an INT atom
+   if((SGNIF(jtinplace,JTINPLACEAX)&AC(a)&SGNIFNOT(AFLAG(a),AFUNINCORPABLEX))<0)z=a; else{GAT0(z,INT,1,0)}
+   // Move the value and transfer the block-type
+   I j; SETNDX(j,IAV(a)[0],AN(w)); IAV(z)[0]=IAV(w)[j]; AT(z)=AT(w);
+  }else{
+   // not atom{list.  Process according to type of a
+#if 1
+   A (*fn)(J,A,A);
+   fn=jtifrom; fn=at&BOX?jtafrom:fn; fn=at&(AN(a)!=1)?jtbfrom:fn; jtinplace=fn!=jtifrom?jt:jtinplace;
+   z=(*fn)(jtinplace,a,w);
+#else  // obsolete
+   z=at&BOX?afrom(a,w)  :at&B01&&AN(a)!=1?bfrom(a,w):jtifrom(jtinplace,a,w);  // make 0{ and 1{ allow virtual result
+#endif
+  }
+ }else if(!((AT(a)|AT(w))&(NOUN&~SPARSE))){z=fromss(a,w);}
  else if(AT(w)&SPARSE){z=at&BOX?frombs(a,w) :                  fromis(a,w);}
  else{z=fromsd(a,w);}
  RZ(z); RETF(z);

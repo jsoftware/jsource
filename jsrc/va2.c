@@ -539,7 +539,6 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
     // Non-sparse setup for copy loop, no rank
       // get number of inner cells
     n^=((1-n)>>(BW-1))&nf;  // encode 'w has long frame, so a is repeated' as complementary n; but if n<2, leave it alone.  Since n=1 when frames are equal, nf in that case is N/C
-// scaf    nf=(adocv.cv>>VIPOKWX) & ((I)(a==w)-1) & ((I)(AR(a)==r)*2 + (I)(AR(w)==r));  // set inplaceability here: not if addresses equal (in case of retry); only if op supports; only if nonrepeated cell
     nf=(adocv.cv>>VIPOKWX) & ((I)(a==w)-1) & (3 + nf*2 + mf);  // set inplaceability here: not if addresses equal (in case of retry); only if op supports; only if nonrepeated cell
     jtinplace = (J)(((I)jtinplace&nf)+4*nf+(adocv.cv&-16));  // bits 0-1 of jtinplace are combined input+local; 2-3 just local; 4+ hold adocv.cv; at least one is set to show non-sparse
     mf=nf=1;  // suppress the outer loop, leaving only the loop over m and n

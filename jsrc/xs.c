@@ -45,6 +45,14 @@ void setftype(C*v,OSType type,OSType crea){C p[256];FInfo f;
 static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;B xt=jt->tostdout;DC d,xd=jt->dcs;
  if(equ(w,num[1]))R mtm;
  RZ(w=vs(w));
+ // Handle locking.  Global glock has lock status for higher levels.  We see if this text is locked; if so, we mark lock status for this level
+ // We do not inherit the lock from higher levels, per the original design
+ C oldk=jt->uflags.us.cx.cx_c.glock; // incoming lock status
+ if((jt->uflags.us.cx.cx_c.glock=(AN(w)&&CFF==*CAV(w)))){
+  RZ(w=unlock2(mtm,w));
+  ASSERT(CFF!=*CAV(w),EVDOMAIN);
+  si=-1; tso=0;  // if locked, keep shtum about internals
+ }
  FDEPINC(1);   // No ASSERTs or returns till the FDEPDEC below
  RZ(d=deba(DCSCRIPT,0L,w,(A)si));
  jt->dcs=d; jt->tostdout=tso&&!jt->seclev;
@@ -67,6 +75,7 @@ static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;B xt=jt->tostdout;DC d,xd=jt
  jt->dcs=xd; jt->tostdout=xt;
   debz();
  FDEPDEC(1);  // ASSERT OK now
+ jt->uflags.us.cx.cx_c.glock=oldk; // pop lock status
  if(3==ce){z=num[jt->jerr==0]; RESETERR; R z;}else RNE(mtm);
 }
 
@@ -80,7 +89,7 @@ static F1(jtaddscriptname){I i;
  R sc(i);
 }
 
-static A jtlinf(J jt,A a,A w,C ce,B tso){A x,y,z;B lk=0;C*s;I i=-1,n,oldi=jt->slisti,oldk=jt->uflags.us.cx.cx_c.glock;
+static A jtlinf(J jt,A a,A w,C ce,B tso){A x,y,z;B lk=0;C*s;I i=-1,n,oldi=jt->slisti;
  RZ(a&&w);
  ASSERT(AT(w)&BOX,EVDOMAIN);
  if(jt->seclev){
@@ -89,11 +98,13 @@ static A jtlinf(J jt,A a,A w,C ce,B tso){A x,y,z;B lk=0;C*s;I i=-1,n,oldi=jt->sl
   ASSERT(3<n&&!memcmp(s+n-3,".js",3L)||4<n&&!memcmp(s+n-4,".ijs",4L),EVSECURE);
  }
  RZ(x=jfread(w));
+#if 0 // obsolete
  if(a!=mark||AN(x)&&CFF==*CAV(x)){
   RZ(x=unlock2(a,x));
   ASSERT(CFF!=*CAV(x),EVDOMAIN);
   lk=1;
  }
+#endif
  // Remove UTF8 BOM if present - commented out pending resolution.  Other BOMs should not occur
  // if(!memcmp(CAV(x),"\357\273\277",3L))RZ(x=drop(num[3],x))
  // if this is a new file, record it in the list of scripts
@@ -101,9 +112,10 @@ static A jtlinf(J jt,A a,A w,C ce,B tso){A x,y,z;B lk=0;C*s;I i=-1,n,oldi=jt->sl
  A scripti; RZ(scripti=jtaddscriptname(jt,y)); i=IAV(scripti)[0];
 
  // set the current script number
- jt->slisti=(UI4)i;    jt->uflags.us.cx.cx_c.glock=1==jt->uflags.us.cx.cx_c.glock?1:lk?2:0;
- z=line(x,jt->uflags.us.cx.cx_c.glock?-1L:i,ce,(B)(jt->uflags.us.cx.cx_c.glock?0:tso)); 
- jt->slisti=(UI4)oldi; jt->uflags.us.cx.cx_c.glock=(C)(1==jt->uflags.us.cx.cx_c.glock?1:oldk);
+ jt->slisti=(UI4)i;    // obsolete jt->uflags.us.cx.cx_c.glock=1==jt->uflags.us.cx.cx_c.glock?1:lk?2:0;  // glock=0 or 1 is original setting; 2 if this script is locked (so reset after 
+// obsolete  z=line(x,jt->uflags.us.cx.cx_c.glock?-1L:i,ce,(B)(jt->uflags.us.cx.cx_c.glock?0:tso)); 
+ z=line(x,i,ce,tso); 
+ jt->slisti=(UI4)oldi; // obsolete jt->uflags.us.cx.cx_c.glock=(C)(1==jt->uflags.us.cx.cx_c.glock?1:oldk);
 #if SYS & SYS_PCWIN
  if(lk)memset(AV(x),C0,AN(x));  /* security paranoia */
 #endif

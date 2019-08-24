@@ -53,6 +53,21 @@ f   =: mac{'no/such/dir/or/file';':no:such:dir:or:file'
 'file name error'   -: size etx f
 'file name error'   -: size etx <'noQsuch'
 
+NB. Test 4!:6 and 4!:7
+p =: 4!:3''
+h =: 4!:6 'new string'  NB. If we rerun the test it might not be at the end
+h>5
+h<:#p
+'new string' -: h {:: 4!:3''
+0 -: 4!:6 (0) {:: p
+1 -: 4!:6 (1) {:: p
+1: 4!:7 (_1)
+_1 -: 4!:7 (0) 
+0 -: 4!:7 (<:#4!:3'') 
+(<:#4!:3'') -: 4!:7 (0) 
+'index error' -: 4!:7 etx _2
+'index error' -: 4!:7 etx (#4!:3'')
+
 4!:55 ;:'close d dir f h j mac open p pc s size unix win x ' 
 
 

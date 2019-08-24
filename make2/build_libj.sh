@@ -176,7 +176,7 @@ GASM_FLAGS=""
 
 raspberry_j64) # linux arm64
 TARGET=libj.so
-CFLAGS="$common -march=armv8-a+crc+crypto -DRASPI -DC_CRC32C=1 "
+CFLAGS="$common -march=armv8-a+crc -DRASPI -DC_CRC32C=1 "
 LDFLAGS=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP"
 OBJS_AESARM=" aes-arm.o "
 SRC_ASM="${SRC_ASM_RASPI}"
@@ -189,7 +189,7 @@ CFLAGS="$darwin -m32 $macmin"
 LDFLAGS=" -dynamiclib -lm -ldl $LDOPENMP -m32 $macmin"
 OBJS_AESNI=" aes-ni.o "
 SRC_ASM="${SRC_ASM_MAC32}"
-GASM_FLAGS="-m32"
+GASM_FLAGS="-m32 $macmin"
 ;;
 
 darwin_j64) # darwin intel 64bit nonavx
@@ -198,7 +198,7 @@ CFLAGS="$darwin $macmin"
 LDFLAGS=" -dynamiclib -lm -ldl $LDOPENMP $macmin"
 OBJS_AESNI=" aes-ni.o "
 SRC_ASM="${SRC_ASM_MAC}"
-GASM_FLAGS=""
+GASM_FLAGS="$macmin"
 ;;
 
 darwin_j64avx) # darwin intel 64bit
@@ -213,7 +213,7 @@ fi
 OBJS_FMA=" gemm_int-fma.o "
 OBJS_AESNI=" aes-ni.o "
 SRC_ASM="${SRC_ASM_MAC}"
-GASM_FLAGS=""
+GASM_FLAGS="$macmin"
 ;;
 windows_j32) # windows x86
 jolecom="${jolecom:=0}"

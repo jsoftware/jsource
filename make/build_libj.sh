@@ -159,7 +159,7 @@ COMPILE="$darwin -m32 $macmin"
 LINK=" -dynamiclib -lm -ldl $LDOPENMP -m32 $macmin -o libj.dylib"
 OBJS_AESNI=" aes-ni.o "
 SRC_ASM="${SRC_ASM_MAC32}"
-GASM_FLAGS="-m32"
+GASM_FLAGS="-m32 $macmin"
 ;;
 
 darwin_j64) # darwin intel 64bit nonavx
@@ -168,7 +168,7 @@ COMPILE="$darwin $macmin"
 LINK=" -dynamiclib -lm -ldl $LDOPENMP $macmin -o libj.dylib"
 OBJS_AESNI=" aes-ni.o "
 SRC_ASM="${SRC_ASM_MAC}"
-GASM_FLAGS=""
+GASM_FLAGS="$macmin"
 ;;
 
 darwin_j64avx) # darwin intel 64bit
@@ -183,7 +183,7 @@ fi
 OBJS_FMA=" blis/gemm_int-fma.o "
 OBJS_AESNI=" aes-ni.o "
 SRC_ASM="${SRC_ASM_MAC}"
-GASM_FLAGS=""
+GASM_FLAGS="$macmin"
 ;;
 
 *)

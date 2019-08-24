@@ -8,7 +8,7 @@ extern uint64_t getCpuFeatures(void);
 extern intptr_t getCpuFamily(void);
 extern void OPENSSL_setcap(void);
 
-#if defined(__aarch64__)||defined(_M_ARM64)
+#if defined(__aarch32__)||defined(__arm__)||defined(_M_ARM)||defined(__aarch64__)||defined(_M_ARM64)
 
 extern uint32_t OPENSSL_armcap_P;
 

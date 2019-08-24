@@ -707,7 +707,7 @@ static DF2(jtfoldx){
  // define the flags as the special global
  RZ(symbis(nfs(11,"Foldtype_j_"),sc(foldflag),jt->locsyms));
  // execute the Fold.  While it is running, set the flag to allow Z:
- B foldrunning=jt->foldrunning; jt->foldrunning=1; A z=xdefn(a,w,self); jt->foldrunning=foldrunning;
+ B foldrunning=jt->foldrunning; jt->foldrunning=1; A z=(*(FAV(self)->localuse.lfns[1]))(jt,a,w,self); jt->foldrunning=foldrunning;
  // if there was an error, save the error code and recreate the error at this level, to cover up details inside the script
  if(jt->jerr){I e=jt->jerr; RESETERR; jsignal(e);}
  R z;
@@ -729,7 +729,8 @@ found: ;
 
  // Apply Fold_j_ to the input arguments, creating a derived verb to do the work
  A derivvb; RZ(derivvb=unquote(a,w,foldconj));
- // Modify the derived verb to go to our preparatory stub
+ // Modify the derived verb to go to our preparatory stub.  Save the dyadic entry point for the derived verb so the stub can call it
+ FAV(derivvb)->localuse.lfns[1]=FAV(derivvb)->valencefns[1];
  FAV(derivvb)->valencefns[0]=FAV(derivvb)->valencefns[1]=jtfoldx;
  // Tell the stub what the original fold type was
  FAV(derivvb)->lc=FAV(self)->id;

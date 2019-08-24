@@ -21,8 +21,8 @@
 #define BGATV0(v,t,n,r) BZ(v=ga(t,(I)(n),(I)(r),0))
 #define BZ(e)          if(!(e)){i=-1; z=0; continue;}
 
-// h is the array of saved info for the definition; hv->pointers to boxes;
-// hi=0 for monad, 4 for dyad; line->tokens; x->block for control words; n=#control words; cw->array of control-word data
+// sv->h is the A block for the [2][4] array of saved info for the definition; hv->[4] boxes of info for the current valence;
+// line-> box 0 - tokens; x->box 1 - A block for control words; n=#control words; cw->array of control-word data, a CW struct for each
 #define LINE(sv)       {A x; \
                         hv=AAV(sv->fgh[2])+4*isdyad;  \
                         line=AAV(hv[0]); x=hv[1]; n=AN(x); cw=(CW*)AV(x);}
@@ -129,7 +129,7 @@ DF2(jtxdefn){PROLOG(0048);
 
  UC savdebug; // preserve debug state over calls - this remembers starting debug state.  Needed only if there is a try. stack
 
- I isdyad=(I )(a!=0)&(I )(w!=0);   // avoid branches, and relieve pressure on a and w
+ I isdyad=(I)(a!=0)&(I)(w!=0);   // avoid branches, and relieve pressure on a and w
  DC thisframe=0;   // if we allocate a parser-stack frame, this is it
  {A *hv;  // will hold pointer to the precompiled parts
   A locsym;  // local symbol table to use
@@ -148,7 +148,7 @@ DF2(jtxdefn){PROLOG(0048);
    if(!(AR(locsym)&LSYMINUSE)){AR(locsym)|=LSYMINUSE;}
    else{RZ(locsym=clonelocalsyms(locsym));}
   } else {  // something special required
-   // If this is a modifier-verb referring to x or y, set u, v to the modifier operands, and sv to the saved text.  The flags don't change
+   // If this is a modifier-verb referring to x or y, set u, v to the modifier operands, and sv to the saved modifier (f=type, g=compiled text).  The flags don't change
    if(sflg&VXOP){u=sv->fgh[0]; v=sv->fgh[2]; sv=VAV(sv->fgh[1]);}
    // Read the info for the parsed definition, including control table and number of lines
    LINE(sv);

@@ -542,6 +542,15 @@ NB. (-:!.0 rx@xr) 0.07 ; (j./i.2 3 4) ; ,. <"0@s: ;:'Cogito, ergo sum.'
 (-:!.0 rx@xr) (+%)/\44$1x
 (-:!.0 rx@xr) 5!:1 <'xrh'
 
+NB. 0 : string or box
+NB. Verify they don't check syntax
+'ab:' -: 0 : 'ab:'
+''' ' -: 0 : ''' '
+'do.' -: 0 : 'do.'
+('ab:';''' ') -: 0 : ('ab:';''' ')
+('y';''' ') -: 0 : ('y';''' ')
+(<'do.') -: 0 : (<'do.')
+
 
 4!:55 ;:'adot1 adot2 sdot0 bhdr_pre601 binrep binrep_pre601 br f g H hbr hexrep hrx Indirect'
 4!:55 ;:'rb rbi rx test unbin WS x xr xrh y'

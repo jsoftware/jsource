@@ -34,3 +34,5 @@
 #define CSELECTN       29
 #define CBREAKS        30   // break. with select. as containing looping struct
 #define CCONTS         31   // continue. with select. as containing looping struct
+// following codes cannot be tested by a shift; they alias to lower values
+#define CBBLOCKEND     (32+CBBLOCK)  // B followed by end. that falls through to NSI

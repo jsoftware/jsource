@@ -7,7 +7,7 @@ ww=:     ;:'bblock. tblock. do. if. else.'
 ww=: ww, ;:'end. while. whilst. elseif. try.'  
 ww=: ww, ;:' catch. break. continue. label. goto.'
 ww=: ww, ;:' return. for. do. break. select.'   
-ww=: ww, ;:' case. fcase. do. end. assert. throw. catchd. catcht.'              
+ww=: ww, ;:' case. fcase. do. end. assert. throw. catchd. catcht. select. break. continue. ? bblock.'              
 
 chk=: 4 : 0
  assert. 32 = type y

@@ -29,8 +29,7 @@
 
 // Parse/execute a line, result in z.  If locked, reveal nothing.  Save current line number in case we reexecute
 // Before each sentence we snapshot the implied locale in the local symbol table.  If the sentence passes a u/v into an operator, the current symbol table will become the prev and will have the u/v environment info
-#define parseline(z) {C attnval=*jt->adbreakr; A *queue=line+ci->i; I m=ci->n; AKGST(locsym)=jt->global; if(!attnval){if(!(fctdl&2))z=parsea(queue,m);else {thisframe->dclnk->dcix=i; z=parsex(queue,m,ci,callframe);}}else{jsignal(EVATTN); z=0;} }
-// scaf remove attnval
+#define parseline(z) {C attnval=*jt->adbreakr; A *queue=line+ci->i; I m=ci->n; AKGST(locsym)=jt->global; if(!attnval){if(!(gsfctdl&2))z=parsea(queue,m);else {thisframe->dclnk->dcix=i; z=parsex(queue,m,ci,callframe);}}else{jsignal(EVATTN); z=0;} }
 typedef struct{A t,x,line;C*iv,*xv;I j,k,n,w;} CDATA;
 /* for_xyz. t do. control data   */
 /* line  'for_xyz.'              */
@@ -92,9 +91,9 @@ static I trypopgoto(TD* tdv, I tdi, I dest){
 
 #define CHECKNOUN if (!(NOUN&AT(t))){   /* error, T block not creating noun */ \
     /* Signal post-exec error*/ \
-    t=pee(line,&cw[ti],EVNONNOUN,fctdl<<(BW-2),callframe); \
+    t=pee(line,&cw[ti],EVNONNOUN,gsfctdl<<(BW-2),callframe); \
     /* go to error loc; if we are in a try., send this error to the catch.  z may be unprotected, so clear it, to 0 if error shows, mtm otherwise */ \
-    i = cw[ti].go; if (i<SMAX){ RESETERR; z=mtm; if (fctdl&4){if(!--tdi){jt->uflags.us.cx.cx_c.db=savdebug; fctdl^=4;} } }else z=0; \
+    i = cw[ti].go; if (i<SMAX){ RESETERR; z=mtm; if (gsfctdl&4){if(!--tdi){jt->uflags.us.cx.cx_c.db=(UC)(gsfctdl>>8); gsfctdl^=4;} } }else z=0; \
     break; }
 
 // Return next line to execute, in case debug changed it
@@ -121,14 +120,15 @@ DF2(jtxdefn){PROLOG(0048);
  I n;  // number of lines in the definition.  Filled in by LINE
  CW *cw;  // pointer to control-word info for the definition.  Filled in by LINE
 
- I fctdl;  // flags: 1=locked 2=debug(& not locked) 4=tdi!=0 8=cd!=0 16=thisframe!=0
+ I gsfctdl;  // flags: 1=locked 2=debug(& not locked) 4=tdi!=0 8=cd!=0 16=thisframe!=0 32=symtable was the original (i. e. AR(symtab)&LSYMINUSE) 256=original debug flag (must be highest bit)
 // obsolete I lk;  // lock/debug flag: 1=locked function; 0=normal operation; -1=this function is being debugged
  DC callframe=0;  // pointer to the debug frame of the caller to this function (only if it's named), but 0 if we are not debugging
 
  TD*tdv=0;  // pointer to base of try. stack
  I tdi=0;  // index of the next open slot in the try. stack
+ CDATA*cv;  // pointer to the current entry in the for./select. stack
 
- UC savdebug; // preserve debug state over calls - this remembers starting debug state.  Needed only if there is a try. stack
+// obsolete  UC savdebug; // preserve debug state over calls - this remembers starting debug state.  Needed only if there is a try. stack
  A locsym;  // local symbol table to use
 
  I isdyad=(I)(a!=0)&(I)(w!=0);   // avoid branches, and relieve pressure on a and w
@@ -140,13 +140,13 @@ DF2(jtxdefn){PROLOG(0048);
   u=AT(self)&ADV+CONJ?a:0; v=AT(self)&ADV+CONJ?w:0;
   if(!(jt->uflags.us.cx.cx_us | (sflg&(VLOCK|VXOP|VTRY1|VTRY2)))){
    // Normal case of verbs. Read the info for the parsed definition, including control table and number of lines
-   fctdl=0; LINE(sv);
+   gsfctdl=0; LINE(sv);
    // Create symbol table for this execution.  If the original symbol table is not in use (rank unflagged), use it;
    // otherwise clone a copy of it.  We have to do this before we create the debug frame
    // This code duplicated below
    locsym=hv[3];  // fetch pointer to preallocated symbol table
    ASSERT(locsym,EVDOMAIN);  // if the valence is not defined, give valence error
-   if(!(AR(locsym)&LSYMINUSE)){AR(locsym)|=LSYMINUSE;}
+   if(!(AR(locsym)&LSYMINUSE)){AR(locsym)|=LSYMINUSE;gsfctdl|=32;}  // remember if we are using the original symtab
    else{RZ(locsym=clonelocalsyms(locsym));}
   } else {  // something special required
    // If this is a modifier-verb referring to x or y, set u, v to the modifier operands, and sv to the saved modifier (f=type, g=compiled text).  The flags don't change
@@ -155,17 +155,17 @@ DF2(jtxdefn){PROLOG(0048);
    LINE(sv);
    locsym=hv[3];  // fetch pointer to preallocated symbol table
    ASSERT(locsym,EVDOMAIN);  // if the valence is not defined, give valence error
-   if(!(AR(locsym)&LSYMINUSE)){AR(locsym)|=LSYMINUSE;}
+   if(!(AR(locsym)&LSYMINUSE)){AR(locsym)|=LSYMINUSE;gsfctdl|=32;}  // remember if we are using the original symtab
    else{RZ(locsym=clonelocalsyms(locsym));}
 
 // obsolete    // lk: 0=normal, 1=this definition is locked, -1=debug mode
-   fctdl=jt->uflags.us.cx.cx_c.glock||sv->flag&VLOCK;
+   gsfctdl=jt->uflags.us.cx.cx_c.glock||sv->flag&VLOCK;
    // if we are in debug mode, the call to this defn should be on the stack (unless debug was entered under program control).  If it is, point to its
    // stack frame, which functions as a flag to indicate that we are debugging.  If the function is locked we ignore debug mode
-   if(!fctdl&&jt->uflags.us.cx.cx_c.db){
+   if(!gsfctdl&&jt->uflags.us.cx.cx_c.db){
     if(jt->sitop&&jt->sitop->dctype==DCCALL){   // if current stack frame is a call
 // obsolete      lk=-1;    // indicate we are debugging
-     fctdl=2;   // set debug flag
+     gsfctdl=2;   // set debug flag
      if(sv->flag&VNAMED){
       callframe=jt->sitop;  // if this is a named (rather than anonymous call like 3 : 0"1), there is a tight link with the caller.  Indicate that
      }
@@ -173,6 +173,8 @@ DF2(jtxdefn){PROLOG(0048);
      // information about this execution: the local symbols and the control-word table
      if(self==jt->sitop->dcf){  // if the stack frame is for this exec
       jt->sitop->dcloc=jt->locsyms; jt->sitop->dcc=hv[1];  // install info about the exec
+      // Use this out-of-the-way place to ensure that the compiler will not try to put for. and try. stuff into registers
+      forcetomemory(&tdi); forcetomemory(&tdv); forcetomemory(&cv); 
      }
     }
 
@@ -182,7 +184,7 @@ DF2(jtxdefn){PROLOG(0048);
    }
 
    // If the verb contains try., allocate a try-stack area for it.  Remember debug state coming in so we can restore on exit
-   if(sv->flag&VTRY1+VTRY2){A td; GAT0(td,INT,NTD*WTD,1); tdv=(TD*)AV(td); savdebug = jt->uflags.us.cx.cx_c.db;}
+   if(sv->flag&VTRY1+VTRY2){A td; GAT0(td,INT,NTD*WTD,1); tdv=(TD*)AV(td); gsfctdl |= jt->uflags.us.cx.cx_c.db<<8;}
   }
   // End of unusual processing
   AM(locsym)=(I)jt->locsyms; jt->locsyms=locsym;   // Chain the calling symbol table to this one
@@ -220,7 +222,6 @@ DF2(jtxdefn){PROLOG(0048);
 
  // loop over each sentence
  A cd=0;  // pointer to block holding the for./select. stack, if any
- CDATA*cv;  // pointer to the current entry in the for./select. stack
  I r=0;  // number of unused slots allocated in for./select. stack
  I i=0;  // control-word number of the executing line
  A z=mtm;  // last B-block result; will become the result of the execution. z=0 is treated as an error condition inside the loop, so we have to init the result to i. 0 0
@@ -232,14 +233,14 @@ DF2(jtxdefn){PROLOG(0048);
   // Check for debug and other modes
   if(jt->cxspecials){  // fast check to see if we have overhead functions to perform
 // obsolete   if(!thisframe&&lk<=0&&jt->uflags.us.cx.cx_c.db){
-   if(!(fctdl&(16+1))&&jt->uflags.us.cx.cx_c.db){
+   if(!(gsfctdl&(16+1))&&jt->uflags.us.cx.cx_c.db){
     // If we haven't done so already, allocate an area to use for the SI entries for sentences executed here, if needed.  We need a new area only if we are debugging.  Don't do it if locked.
     // We have to have 1 debug frame to hold parse-error information in, but it is allocated earlier if debug is off
     // We check before every sentence in case the user turns on debug in the middle of this definition
     // NOTE: this stack frame could be put on the C stack, but that would reduce the recursion limit because the frame is pretty big
     BZ(thisframe=deba(DCPARSE,0L,0L,0L));  // if deba fails it will be before it modifies sitop.  Remember our stack frame
     old=jt->tnextpushp;  // protect the stack frame against free
-    fctdl|=16;  // indicate we have a debug frame
+    gsfctdl|=16;  // indicate we have a debug frame
    }
 
    i=debugnewi(i,thisframe,self);  // get possibly-changed execution line
@@ -248,7 +249,7 @@ DF2(jtxdefn){PROLOG(0048);
    // if performance monitor is on, collect data for it
    if(PMCTRBPMON&jt->uflags.us.uq.uq_c.pmctrbstk&&C1==jt->pmrec&&FAV(self)->flag&VNAMED)pmrecord(jt->curname,jt->global?LOCNAME(jt->global):0,i,isdyad?VAL2:VAL1);
    // If the executing verb was reloaded during debug, switch over to the modified definition
-   if((fctdl&16)&&jt->redefined){DC siparent;A *hv;
+   if((gsfctdl&16)&&jt->redefined){DC siparent;A *hv;
     if((siparent=thisframe->dclnk)&&jt->redefined==siparent->dcn&&DCCALL==siparent->dctype&&self!=siparent->dcf){
      self=siparent->dcf; V *sv=FAV(self); LINE(sv); siparent->dcc=hv[1];
      // Clear all local bucket info in the definition, since it doesn't match the symbol table now
@@ -256,180 +257,203 @@ DF2(jtxdefn){PROLOG(0048);
     }
     jt->redefined=0;
    }
-   if(!((I)jt->redefined|(I)jt->pmctr|(I)(fctdl&16)))jt->cxspecials=0;  // if no more special work to do, close the gate
+   if(!((I)jt->redefined|(I)jt->pmctr|(I)(gsfctdl&16)))jt->cxspecials=0;  // if no more special work to do, close the gate
   }
 
   // Don't do the loop-exit test until debug has had the chance to update the execution line.  For example, we might be asked to reexecute the last line of the definition
   if((UI)i>=(UI)n)break;
-
   ci=i+cw;   // ci->control-word info
   // process the control word according to its type
-  switch(ci->type){
-   case CTRY:
-    // try.  create a try-stack entry, step to next line
-    BASSERT(tdi<NTD,EVLIMIT);
-    tryinit(tdv+tdi,i,cw);
-    // turn off debugging UNLESS there is a catchd; then turn on only if user set debug mode
-    // if debugging is already off, it stays off
-    if(jt->uflags.us.cx.cx_c.db)jt->uflags.us.cx.cx_c.db=(fctdl&16)&&(UC)(tdv+tdi)->d?jt->dbuser:0;
-    ++tdi; ++i; fctdl|=4;  // bump tdi pointer, set flag
-    break;
-   case CCATCH: case CCATCHD: case CCATCHT:
-    // catch.  pop the try-stack, go to end., reset debug state.  There should always be a try. stack here
-    if(fctdl&4){if(!--tdi){jt->uflags.us.cx.cx_c.db=(fctdl>>4)&savdebug; fctdl^=4;} i=1+(tdv+tdi)->e;}else i=ci->go; break;
-   case CTHROW:
-    // throw.  Create a faux error
-    BASSERT(0,EVTHROW);
-   case CBBLOCK:
-    // B-block (present on every sentence in the B-block)
-    // run the sentence
-    tpop(old); parseline(z);
-    // if there is no error, or ?? debug mode, step to next line
-    if(z){
-     bi=i,++i;
-    }else if((fctdl&16)&&jt->uflags.us.cx.cx_c.db&(DB1)){  // if debug mode, we assume we are ready to execute on
-     z=mtm,bi=i,i=debugnewi(i+1,thisframe,self);   // Remember the line w/error; fetch continuation line if any. it is OK to have jerr set if we are in debug mode, but z must be a harmless value to avoid error protecting it
-    // if the error is THROW, and there is a catcht. block, go there, otherwise pass the THROW up the line
-    }else if(EVTHROW==jt->jerr){
-     if(fctdl&4&&(tdv+tdi-1)->t){i=(tdv+tdi-1)->t+1; RESETERR; z=mtm;}else BASSERT(0,EVTHROW);  // z might not be protected if we hit error
-    // for other error, go to the error location; if that's out of range, keep the error; if not,
-    // it must be a try. block, so clear the error.  Pop the try. stack, and if it pops back to 0, restore debug mode (since we no longer have a try.)
-    // NOTE ERROR: if we are in a for. or select., going to the catch. will leave the stack corrupted,
-    // with the for./select. structures hanging on.  Solution would be to save the for/select stackpointer in the
-    // try. stack, so that when we go to the catch. we can cut the for/select stack back to where it
-    // was when the try. was encountered
-    }else{i=ci->go; if(i<SMAX){RESETERR; z=mtm; if(fctdl&4){if(!--tdi){jt->uflags.us.cx.cx_c.db=(fctdl>>4)&savdebug; fctdl^=4;}}}  // z might not have been protected: keep it safe. This is B1 try. error catch. return. end.
-    }
-    break;
-   case CASSERT:
-   case CTBLOCK:
-    // execute and parse line as if for B block, except save the result in t
-    // If there is a possibility that the previous B result may become the result of this definition,
-    // protect it during the frees during the T block.  Otherwise, just free memory
-    if(ci->canend&2)tpop(old);else z=gc(z,old);   // 2 means previous B can't be the result
-    parseline(t);
-    // Check for assert.  Since this is only for T-blocks we tolerate the test (rather than duplicating code)
-    if(ci->type==CASSERT&&jt->assert&&t&&!(NOUN&AT(t)&&all1(eq(num[1],t))))t=pee(line,ci,EVASSERT,fctdl<<(BW-2),callframe);  // if assert., signal post-execution error if result not all 1s.  May go into debug; sets to result after debug
-    if(t)ti=i,++i;  // if no error, continue on
-    else if((fctdl&16)&&DB1&jt->uflags.us.cx.cx_c.db)ti=i,i=debugnewi(i+1,thisframe,self);  // if coming out of debug with error: go to new line (there had better be one)
-    else if(EVTHROW==jt->jerr){if(fctdl&4&&(tdv+tdi-1)->t){i=(tdv+tdi-1)->t+1; RESETERR;}else BASSERT(0,EVTHROW);}  // if throw., and there is a catch., do so
-    else{i=ci->go; if(i<SMAX){RESETERR; z=mtm; if(fctdl&4){if(!--tdi){jt->uflags.us.cx.cx_c.db=(fctdl>>4)&savdebug; fctdl^=4;}}}else z=0;}  // if we take error exit, we might not have protected z, which is not needed anyway; so clear it to prevent invalid use
-      // if we are not taking the error exit, we still need to set z to a safe value since we might not have protected it.  This is B1 try. if. error do. end. catch. return. end.
-    break;
-   case CFOR:
-   case CSELECT: case CSELECTN:
-    // for./select. push the stack.  If the stack has not been allocated, start with 9 entries.  After that,
-    // if it fills up, double it as required
-    if(!r)
-     if(fctdl&8){I m=AN(cd)/WCD; BZ(cd=ext(1,cd)); cv=(CDATA*)AV(cd)+m-1; r=AN(cd)/WCD-m;}
-     else  {r=9; BGATV0(cd,INT,r*WCD,1); ras(cd); cv=(CDATA*)AV(cd)-1; fctdl|=8;}
-    ++cv; --r; 
-    // indicate no t result (test value for select., iteration array for for.) and clear iteration index
-    // remember the line number of the for./select.
-    cv->t=cv->x=0; cv->line=line[ci->i]; cv->w=ci->type; ++i;
-    break;
-   case CDOF:   // do. after for.
-    // do. after for. .  If this is first time, initialize the iterator
-    if(!cv->t){
-     BASSERT(t,EVCTRL);   // Error if no sentences in T-block
-     CHECKNOUN    // if t is not a noun, signal error on the last line executed in the T block
-     BZ(forinit(cv,t)); t=0;
-    }
-    ++cv->j;  // step to first (or next) iteration
-    if(cv->j<cv->n){  // if there are more iterations to do...
-     if(cv->x){A x;  // assign xyz and xyz_index for for_xyz.
-      symbisdel(nfs(6+cv->k,cv->xv),x=sc(cv->j),  locsym);  // since there is no sentence, take deletion ioff nvr stack
-      symbisdel(nfs(  cv->k,cv->iv),from(x,cv->t),locsym);
-     }
-     ++i; continue;   // advance to next line and process it
-    }
-    // if there are no more iterations, fall through... (this deallocates the loop variables)
-   case CENDSEL:
-    // end. for select., and do. for for. after the last iteration, must pop the stack - just once
-    // Must rat() if the current result might be final result, in case it includes the variables we will delete in unstack
-    // (this includes ONLY xyz_index, so perhaps we should avoid rat if stack empty or xyz_index not used)
-    if(!(ci->canend&2))BZ(z=rat(z)); unstackcv(cv); --cv; ++r; 
-    i=ci->go;    // continue at new location
-    break;
-   case CBREAKS:
-   case CCONTS:
-    // break./continue-in-while. must pop the stack if there is a select. nested in the loop.  These are
-    // any number of SELECTN, up to the SELECT 
-    if(!(ci->canend&2))BZ(z=rat(z));   // protect possible result from pop, if it might be the final result
-    do{B fin=cv->w==CSELECT; unstackcv(cv); --cv; ++r; if(fin)break;}while(1);
-     // fall through to...
-   case CBREAK:
-   case CCONT:  // break./continue. in while., outside of select.
-    i=ci->go;   // After popping any select. off the stack, continue at new address
-    // It must also pop the try. stack, if the destination is outside the try.-end. range
-    if(fctdl&4){tdi=trypopgoto(tdv,tdi,i); fctdl^=tdi?0:4;}
-    break;
-   case CBREAKF:
-    // break. in a for. must first pop any active select., and then pop the for.
-    // We just pop till we have popped a non-select.
-    // Must rat() if the current result might be final result, in case it includes the variables we will delete in unstack
-    if(!(ci->canend&2))BZ(z=rat(z));   // protect possible result from pop
-    do{B fin=cv->w!=CSELECT&&cv->w!=CSELECTN; unstackcv(cv); --cv; ++r; if(fin)break;}while(1);
-    i=ci->go;     // continue at new location
-    // It must also pop the try. stack, if the destination is outside the try.-end. range
-    if(fctdl&4){tdi=trypopgoto(tdv,tdi,i); fctdl^=tdi?0:4;}
-    break;
-   case CRETURN:
-    // return.  Protect the result during free, pop the stack back to empty, set i (which will exit)
-    i=ci->go;   // If there is a try stack, restore to initial debug state.  Probably safe to  do unconditionally
-    if(fctdl&4)jt->uflags.us.cx.cx_c.db=(fctdl>>4)&savdebug;  // if we had an unfinished try. struct, restore original debug state
-    break;
-   case CCASE:
-   case CFCASE:
-    // case. and fcase. are used to start a selection.  t has the result of the T block; we check to
-    // make sure this is a noun, and save it on the stack in cv->t.  Then clear t
-    if(!cv->t){
-     BASSERT(t,EVCTRL);
-     CHECKNOUN    // if t is not a noun, signal error on the last line executed in the T block
-     t=boxopen(t); BZ(ras(t)); BZ(cv->t=t); t=0;
-    }
-    i=ci->go;  // Go to next sentence, which might be in the default case (if T block is empty)
-    break;
-   case CDOSEL:   // do. after case. or fcase.
-    // do. for case./fcase. evaluates the condition.  t is the result (a T block); if it is nonexistent
-    // or not all 0, we advance to the next sentence (in the case); otherwise skip to next test/end
+  I cwtype;
+  switch(cwtype=ci->type){
+  case CIF: case CWHILE: case CELSEIF: 
+   i=ci->go;  // Go to the next sentence, whatever it is
+   if((UI)i>=(UI)n||(cwtype=(ci=i+cw)->type)!=CTBLOCK||jt->cxspecials)break;  // avoid indirect-branch overhead on the likely case
+  case CASSERT:
+  case CTBLOCK:
+   // execute and parse line as if for B block, except save the result in t
+   // If there is a possibility that the previous B result may become the result of this definition,
+   // protect it during the frees during the T block.  Otherwise, just free memory
+   if(ci->canend&2)tpop(old);else z=gc(z,old);   // 2 means previous B can't be the result
+   parseline(t);
+   // Check for assert.  Since this is only for T-blocks we tolerate the test (rather than duplicating code)
+   if(ci->type==CASSERT&&jt->assert&&t&&!(NOUN&AT(t)&&all1(eq(num[1],t))))t=pee(line,ci,EVASSERT,gsfctdl<<(BW-2),callframe);  // if assert., signal post-execution error if result not all 1s.  May go into debug; sets to result after debug
+   if(t){ti=i,++i;  // if no error, continue on
+    if((UI)i<(UI)n&&(cwtype=(ci=i+cw)->type)==CDO&&!jt->cxspecials)goto docase;  // avoid indirect-branch overhead on the likely case
+   }else if((gsfctdl&16)&&DB1&jt->uflags.us.cx.cx_c.db)ti=i,i=debugnewi(i+1,thisframe,self);  // if coming out of debug with error: go to new line (there had better be one)
+   else if(EVTHROW==jt->jerr){if(gsfctdl&4&&(tdv+tdi-1)->t){i=(tdv+tdi-1)->t+1; RESETERR;}else BASSERT(0,EVTHROW);}  // if throw., and there is a catch., do so
+   else{i=ci->go; if(i<SMAX){RESETERR; z=mtm; if(gsfctdl&4){if(!--tdi){jt->uflags.us.cx.cx_c.db=(UC)(gsfctdl>>8); gsfctdl^=4;}}}else z=0;}  // if we take error exit, we might not have protected z, which is not needed anyway; so clear it to prevent invalid use
+     // if we are not taking the error exit, we still need to set z to a safe value since we might not have protected it.  This is B1 try. if. error do. end. catch. return. end.
+   break;
+  case CDO:
+docase:
+   // do. here is one following if., elseif., or while. .  It always follows a T block, and skips the
+   // following B block if the condition is false.  Set b to 1 iff the condition is true
+   //  Start by assuming condition is true; set to move to the next line then
+   ++i;
+   // Quick true cases are: nonexistent t; empty t; direct numeric t with low byte nonzero.  This gets most of the true.  We add in char types cause it's free (they are always true)
+   if(t&&AN(t)&&(-(AT(t)&(B01|LIT|INT|FL|CMPX|C2T|C4T))&-((I)CAV(t)[0]))>=0){I nexti=ci->go;  // C cond is false if (type direct) and (value not 0).  J cond is true then
+    // here the type is indirect or the low byte is 0.  We must compare more
+    if(AT(t)&B01)i=nexti;  // if boolean, there's no more to compare, it's false
+    else{
+     if(SPARSE&AT(t)){BZ(t=denseit(t)); if(AN(t)==0){t=0; break;}}   // convert sparse to dense - this could make the length go to 0, in which case true
+     // Now go through the types.  INT is by far the likeliest after B01
+     if(AT(t)&INT)i=IAV(t)[0]?i:nexti;
+     else if(AT(t)&FL)i=DAV(t)[0]?i:nexti;
+     else if(AT(t)&CMPX)i=DAV(t)[0]||DAV(t)[1]?i:nexti;
+     else if(AT(t)&(RAT|XNUM))i=1<AN(XAV(t)[0])||IAV(XAV(t)[0])[0]?i:nexti;
+     else if(AT(t)&B01)i=BAV(t)[0]?i:nexti;  // must be sparse
+     else if(!(AT(t)&NOUN)){CHECKNOUN}  // will take error
+     // other types test true, which is how i is set
+#if 0 // obsolete     
+      CHECKNOUN    // if t is not a noun, signal error on the last line executed in the T block
 
-    if(t){CHECKNOUN}    // if t is not a noun, signal error on the last line executed in the T block
-
-    i=t&&all0(eps(cv->t,boxopen(t)))?ci->go:1+i; // cv +./@:e. boxopen t; go to miscompare point if no match
-    // Clear t to ensure that the next case./fcase. does not think it's the first one
-    t=0; 
-    break;
-   case CDO:
-    // do. here is one following if., elseif., or while. .  It always follows a T block, and skips the
-    // following B block if the condition is false.  Set b to 1 iff the condition is true
-    //  Start by assuming condition is true; set to move to the next line then
-    ++i;
-    if(!t)break;  // if t omitted, that's true.  i is set and t is 0
-    {I b=1;
-     if(SPARSE&AT(t))BZ(t=denseit(t));   // convert sparse to dense
-     
-     CHECKNOUN    // if t is not a noun, signal error on the last line executed in the T block
-
-     if(AN(t)){
-      switch(CTTZ(AT(t))){
-      // Check for nonzero.  Nonnumeric types always test true.  Comparisons against 0 are exact.
-      case INTX:  b=*AV(t);                  break;
-      case RATX:
-      case XNUMX: b=*AV(XAV(t)[0])||1<AN(XAV(t)[0]); break;  // rat/xnum true if first word non0, or multiple words
-      case CMPXX: b=0!=*DAV(t)||0!=*(1+DAV(t)); break;  // complex if either part nonzero
-      case FLX:   b=0!=*DAV(t);                 break;
-      case B01X:  b=(I)*BAV(t); break;
-      }
-     }    // If no atoms, that's true too
-     t=0;  // Indicate no T block, now that we have processed it
-     if(b)break;  // if true, step to next sentence.  Otherwise
+      if(AN(t)){
+       switch(CTTZ(AT(t))){
+       // Check for nonzero.  Nonnumeric types always test true.  Comparisons against 0 are exact.
+       case INTX:  b=*AV(t);                  break;
+       case RATX:
+       case XNUMX: b=*AV(XAV(t)[0])||1<AN(XAV(t)[0]); break;  // rat/xnum true if first word non0, or multiple words
+       case CMPXX: b=0!=*DAV(t)||0!=*(1+DAV(t)); break;  // complex if either part nonzero
+       case FLX:   b=0!=*DAV(t);                 break;
+       case B01X:  b=(I)*BAV(t); break;
+       }
+      }    // If no atoms, that's true too
+      i=b?i:nexti;  // if test fails, branch to end
+#endif
     }
+   }
+   t=0;  // Indicate no T block, now that we have processed it
+   if((UI)i>=(UI)n||((cwtype=(ci=i+cw)->type)&31)!=CBBLOCK||jt->cxspecials)break;  // avoid indirect-branch overhead on the likely case
+   // fall through if continuing to BBLOCK (normal)
+  case CBBLOCK: case CBBLOCKEND:
+dobblock:
+   // B-block (present on every sentence in the B-block)
+   // run the sentence
+   tpop(old); parseline(z);
+   // if there is no error, or ?? debug mode, step to next line
+   if(z){bi=i; i+=(cwtype>>5)+1;  // go to next sentence, or to the one after that if it's harmless end. 
+    if((UI)i<(UI)n&&((cwtype=(ci=i+cw)->type)&31)==CBBLOCK&&!jt->cxspecials)goto dobblock;  // avoid indirect-branch overhead on the likely case
+    // BBLOCK is usually followed by another BBLOCK, but another important followon is END followed by BBLOCK.  BBLOCKEND means
+    // 'bblock followed by end that falls through', i. e. a bblock whose successor is i+2.  By handling that we process all sequences of if. T do. B end. B... without having to go through the switch;
+    // this means the switch will learn to go to the if.
+   }else if((gsfctdl&16)&&jt->uflags.us.cx.cx_c.db&(DB1)){  // if debug mode, we assume we are ready to execute on
+    z=mtm,bi=i,i=debugnewi(i+1,thisframe,self);   // Remember the line w/error; fetch continuation line if any. it is OK to have jerr set if we are in debug mode, but z must be a harmless value to avoid error protecting it
+   // if the error is THROW, and there is a catcht. block, go there, otherwise pass the THROW up the line
+   }else if(EVTHROW==jt->jerr){
+    if(gsfctdl&4&&(tdv+tdi-1)->t){i=(tdv+tdi-1)->t+1; RESETERR; z=mtm;}else BASSERT(0,EVTHROW);  // z might not be protected if we hit error
+   // for other error, go to the error location; if that's out of range, keep the error; if not,
+   // it must be a try. block, so clear the error.  Pop the try. stack, and if it pops back to 0, restore debug mode (since we no longer have a try.)
+   // NOTE ERROR: if we are in a for. or select., going to the catch. will leave the stack corrupted,
+   // with the for./select. structures hanging on.  Solution would be to save the for/select stackpointer in the
+   // try. stack, so that when we go to the catch. we can cut the for/select stack back to where it
+   // was when the try. was encountered
+   }else{i=ci->go; if(i<SMAX){RESETERR; z=mtm; if(gsfctdl&4){if(!--tdi){jt->uflags.us.cx.cx_c.db=(UC)(gsfctdl>>8); gsfctdl^=4;}}}  // z might not have been protected: keep it safe. This is B1 try. error catch. return. end.
+   }
+   break;
+  case CTRY:
+   // try.  create a try-stack entry, step to next line
+   BASSERT(tdi<NTD,EVLIMIT);
+   tryinit(tdv+tdi,i,cw);
+   // turn off debugging UNLESS there is a catchd; then turn on only if user set debug mode
+   // if debugging is already off, it stays off
+   if(jt->uflags.us.cx.cx_c.db)jt->uflags.us.cx.cx_c.db=(gsfctdl&16)&&(UC)(tdv+tdi)->d?jt->dbuser:0;
+   ++tdi; ++i; gsfctdl|=4;  // bump tdi pointer, set flag
+   break;
+  case CCATCH: case CCATCHD: case CCATCHT:
+   // catch.  pop the try-stack, go to end., reset debug state.  There should always be a try. stack here
+   if(gsfctdl&4){if(!--tdi){jt->uflags.us.cx.cx_c.db=(UC)(gsfctdl>>8); gsfctdl^=4;} i=1+(tdv+tdi)->e;}else i=ci->go; break;
+  case CTHROW:
+   // throw.  Create a faux error
+   BASSERT(0,EVTHROW);
+  case CFOR:
+  case CSELECT: case CSELECTN:
+   // for./select. push the stack.  If the stack has not been allocated, start with 9 entries.  After that,
+   // if it fills up, double it as required
+   if(!r)
+    if(gsfctdl&8){I m=AN(cd)/WCD; BZ(cd=ext(1,cd)); cv=(CDATA*)AV(cd)+m-1; r=AN(cd)/WCD-m;}
+    else  {r=9; BGATV0(cd,INT,r*WCD,1); ras(cd); cv=(CDATA*)AV(cd)-1; gsfctdl|=8;}
+   ++cv; --r; 
+   // indicate no t result (test value for select., iteration array for for.) and clear iteration index
+   // remember the line number of the for./select.
+   cv->t=cv->x=0; cv->line=line[ci->i]; cv->w=ci->type; ++i;
+   break;
+  case CDOF:   // do. after for.
+   // do. after for. .  If this is first time, initialize the iterator
+   if(!cv->t){
+    BASSERT(t,EVCTRL);   // Error if no sentences in T-block
+    CHECKNOUN    // if t is not a noun, signal error on the last line executed in the T block
+    BZ(forinit(cv,t)); t=0;
+   }
+   ++cv->j;  // step to first (or next) iteration
+   if(cv->j<cv->n){  // if there are more iterations to do...
+    if(cv->x){A x;  // assign xyz and xyz_index for for_xyz.
+     symbisdel(nfs(6+cv->k,cv->xv),x=sc(cv->j),  locsym);  // since there is no sentence, take deletion off nvr stack
+     symbisdel(nfs(  cv->k,cv->iv),from(x,cv->t),locsym);
+    }
+    ++i; continue;   // advance to next line and process it
+   }
+   // if there are no more iterations, fall through... (this deallocates the loop variables)
+  case CENDSEL:
+   // end. for select., and do. for for. after the last iteration, must pop the stack - just once
+   // Must rat() if the current result might be final result, in case it includes the variables we will delete in unstack
+   // (this includes ONLY xyz_index, so perhaps we should avoid rat if stack empty or xyz_index not used)
+   if(!(ci->canend&2))BZ(z=rat(z)); unstackcv(cv); --cv; ++r; 
+   i=ci->go;    // continue at new location
+   break;
+  case CBREAKS:
+  case CCONTS:
+   // break./continue-in-while. must pop the stack if there is a select. nested in the loop.  These are
+   // any number of SELECTN, up to the SELECT 
+   if(!(ci->canend&2))BZ(z=rat(z));   // protect possible result from pop, if it might be the final result
+   do{I fin=cv->w==CSELECT; unstackcv(cv); --cv; ++r; if(fin)break;}while(1);
     // fall through to...
-   default:   //   CIF CELSE CWHILE CWHILST CELSEIF CGOTO CEND
-    if(2<=*jt->adbreakr) { BASSERT(0,EVBREAK);} 
-      // this is JBREAK0, but we have to finish the loop.  This is double-ATTN, and bypasses the TRY block
-    i=ci->go;  // Go to the next sentence, whatever it is
+  case CBREAK:
+  case CCONT:  // break./continue. in while., outside of select.
+   i=ci->go;   // After popping any select. off the stack, continue at new address
+   // It must also pop the try. stack, if the destination is outside the try.-end. range
+   if(gsfctdl&4){tdi=trypopgoto(tdv,tdi,i); gsfctdl^=tdi?0:4;}
+   break;
+  case CBREAKF:
+   // break. in a for. must first pop any active select., and then pop the for.
+   // We just pop till we have popped a non-select.
+   // Must rat() if the current result might be final result, in case it includes the variables we will delete in unstack
+   if(!(ci->canend&2))BZ(z=rat(z));   // protect possible result from pop
+   do{I fin=cv->w!=CSELECT&&cv->w!=CSELECTN; unstackcv(cv); --cv; ++r; if(fin)break;}while(1);
+   i=ci->go;     // continue at new location
+   // It must also pop the try. stack, if the destination is outside the try.-end. range
+   if(gsfctdl&4){tdi=trypopgoto(tdv,tdi,i); gsfctdl^=tdi?0:4;}
+   break;
+  case CRETURN:
+   // return.  Protect the result during free, pop the stack back to empty, set i (which will exit)
+   i=ci->go;   // If there is a try stack, restore to initial debug state.  Probably safe to  do unconditionally
+   if(gsfctdl&4)jt->uflags.us.cx.cx_c.db=(UC)(gsfctdl>>8);  // if we had an unfinished try. struct, restore original debug state
+   break;
+  case CCASE:
+  case CFCASE:
+   // case. and fcase. are used to start a selection.  t has the result of the T block; we check to
+   // make sure this is a noun, and save it on the stack in cv->t.  Then clear t
+   if(!cv->t){
+    BASSERT(t,EVCTRL);
+    CHECKNOUN    // if t is not a noun, signal error on the last line executed in the T block
+    t=boxopen(t); BZ(ras(t)); BZ(cv->t=t); t=0;
+   }
+   i=ci->go;  // Go to next sentence, which might be in the default case (if T block is empty)
+   break;
+  case CDOSEL:   // do. after case. or fcase.
+   // do. for case./fcase. evaluates the condition.  t is the result (a T block); if it is nonexistent
+   // or not all 0, we advance to the next sentence (in the case); otherwise skip to next test/end
+
+   if(t){CHECKNOUN}    // if t is not a noun, signal error on the last line executed in the T block
+
+   i=t&&all0(eps(cv->t,boxopen(t)))?ci->go:1+i; // cv +./@:e. boxopen t; go to miscompare point if no match
+   // Clear t to ensure that the next case./fcase. does not think it's the first one
+   t=0; 
+   break;
+  default:   //   CELSE CWHILST CGOTO CEND
+   if(2<=*jt->adbreakr) { BASSERT(0,EVBREAK);} 
+     // this is JBREAK0, but we have to finish the loop.  This is double-ATTN, and bypasses the TRY block
+   i=ci->go;  // Go to the next sentence, whatever it is
   }
  }  // end of main loop
  // We still must not take an error exit in this runout.  We have to hang around to the end to restore symbol tables, pointers, etc.
@@ -450,16 +474,16 @@ DF2(jtxdefn){PROLOG(0048);
    // there is no way we could have a reference to such an implied locative unless we also had a reference to the current table; so we replace only the
    // first locative in eqch branch
    z=fix(z,sc(FIXALOCSONLY|FIXALOCSONLYLOWEST));
-  }else {pee(line,&cw[bi],EVNONNOUN,fctdl<<(BW-2),callframe); z=0;}  // signal error, set z to 'no result'
+  }else {pee(line,&cw[bi],EVNONNOUN,gsfctdl<<(BW-2),callframe); z=0;}  // signal error, set z to 'no result'
  }else{
   // No result.  Must be an error
-  if(fctdl&4)jt->uflags.us.cx.cx_c.db=(fctdl>>4)&savdebug;  // if we had an unfinished try. struct, restore original debug state
+  if(gsfctdl&4)jt->uflags.us.cx.cx_c.db=(UC)(gsfctdl>>8);  // if we had an unfinished try. struct, restore original debug state
   // Since we initialized z to i. 0 0, there's nothing more to do
  }
 
- if((fctdl&16)){debz();}   // pair with the deba if we did one
+ if((gsfctdl&16)){debz();}   // pair with the deba if we did one
  A prevlocsyms=(A)AM(locsym);  // get symbol table to return to, before we free the old one
- if(!(fctdl&8)){
+ if(!(gsfctdl&8)){
   // Normal path.  protect the result block and free everything allocated here, possibly including jt->locsyms
   z=EPILOGNORET(z);  // protect return value from being freed when the symbol table is.  Must also be before stack cleanup, in case the return value is xyz_index or the like
  }else{
@@ -472,11 +496,13 @@ DF2(jtxdefn){PROLOG(0048);
   fa(cd);  // have to delete explicitly, because we had to ext() the block and thus protect it with ra()
   fa(locsym);  // unprotect local syms.  This deletes them if they were cloned
  }
- // If we are using the original local symbol table, clear it (free all values, free non-permanent names) for next use
+ // locsym may have been freed now
+
+ // If we are using the original local symbol table, clear it (free all values, free non-permanent names) for next use.  We know it hasn't been freed yet
  // We detect original symbol table by rank LSYMINUSE - other symbol tables are assigned rank 0.
  // Cloned symbol tables are still hanging on because of the initial ra() - we kill them off here
  // Tables are born with NAMEADDED off.  It gets set when a name is added.  Setting back to initial state here, we clear NAMEADDED
- if(AR(locsym)&LSYMINUSE){AR(locsym)&=~(LSYMINUSE|LNAMEADDED); symfreeha(locsym);}
+ if(gsfctdl&32){AR(locsym)=LLOCALTABLE; symfreeha(locsym);}
  // Pop the private-area stack; set no assignment (to call for result display)
  jt->locsyms=prevlocsyms; jt->asgn=0;
  RETF(z);

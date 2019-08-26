@@ -224,8 +224,7 @@ B jtsymbinit(J jt){A q;
  FULLHASHSIZE(1LL<<12,SYMBSIZE,1,SYMLINFOSIZE,p);  // about 2^13 chains
  RZ(           stcreate(0,p,1L,"z"   ));
  // Allocate a symbol table with just 1 (empty) chain; then set length to 1 indicating 0 chains; make this the current local symbols, to use when no explicit def is running
- RZ(jt->locsyms=stcreate(2,2,0,0)); AN(jt->locsyms)=1; AM(jt->locsyms)=(I)jt->locsyms;  // close chain so u. at top level has no effect
-
+ RZ(jt->locsyms=stcreate(2,2,0,0)); AKGST(jt->locsyms)=jt->global; AN(jt->locsyms)=1; AM(jt->locsyms)=(I)jt->locsyms;  // close chain so u. at top level has no effect
  R 1;
 }
 
@@ -414,7 +413,8 @@ F1(jtlocswitch){A g;
  // put a marker for the operation on the call stack
  // If there is no name executing, there would be nothing to process this push; so don't push for unnamed execs (i. e. from console)
  if(jt->curname)pushcallstack1(CALLSTACKPOPFROM,jt->global);
- jt->global=g;
+// obsolete  jt->global=g;
+ SYMSETGLOBAL(jt->locsyms,g);
  ++jt->modifiercounter;  // invalidate any extant lookups of modifier names
 
  R mtm;
@@ -494,6 +494,7 @@ B jtlocdestroy(J jt,A g){
   // For named locale, find the entry for this locale in the locales symbol table, and free the locale and the entry for it
   RZ(redefg(g)); probedel(locname->m,locname->s,locname->hash,jt->stloc);  // free the L block for the locale, which frees the locale itself and its names
  }
- if(g==jt->global)jt->global=0;
+// obsolete  if(g==jt->global)jt->global=0;
+ if(g==jt->global)SYMSETGLOBAL(jt->locsyms,0);
  R 1;
 }    /* destroy locale jt->callg[i] (marked earlier by 18!:55) */

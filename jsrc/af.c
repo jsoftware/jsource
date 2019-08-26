@@ -125,7 +125,8 @@ static A jtfixa(J jt,A a,A w){A f,g,h,wf,x,y,z=w;V*v;I aa[AKXR(0)/SZI+1]={AKXR(0
     if(x=symbrdlock(f)){
      // if this is an implicit locative, we have to switch the environment before we recur on the name for subsequent lookups
      // The value we get from the lookup must be interpreted in the environment of the higher level
-     A savloc=jt->locsyms; A savglob=jt->global;  // initial locales
+// obsolete      A savloc=jt->locsyms; A savglob=jt->global;  // initial locales
+     A savloc=jt->locsyms;  // initial locales
      A thisname=v->fgh[0];// the A block for the name of the function (holding an NM) - unless it's a pseudo-name
      if(thisname){ // name given
       NM* thisnameinfo=NAV(thisname);  // the NM block for the current name
@@ -135,8 +136,9 @@ static A jtfixa(J jt,A a,A w){A f,g,h,wf,x,y,z=w;V*v;I aa[AKXR(0)/SZI+1]={AKXR(0
         // (1) we want to replace only first-level locatives; (2) there are no more locatives in this branch after the replacement
         if(aif&FIXALOCSONLYLOWEST)R x;  // return looked-up value once we hit one
         // If we have to continue after the replacement, we must do so in the environment of the implicit locative.
-        jt->locsyms=(A)AM(jt->locsyms);  // get the local syms at the time u/v was assigned; make them current
-        jt->global=AKGST(jt->locsyms);  // and the global syms
+// obsolete         jt->locsyms=(A)AM(jt->locsyms);  // get the local syms at the time u/v was assigned; make them current
+// obsolete         jt->global=AKGST(jt->locsyms);  // and the global syms
+        SYMRESTOREFROMLOCAL((A)AM(jt->locsyms));
         // NO FAILURES ALLOWED FROM HERE TO RESTORE
        }
       }
@@ -150,7 +152,8 @@ static A jtfixa(J jt,A a,A w){A f,g,h,wf,x,y,z=w;V*v;I aa[AKXR(0)/SZI+1]={AKXR(0
      if(z=REFIXA(na,x)){
       if(ai!=0&&selfq(x))z=fixrecursive(sc(ai),z);  // if a lower name contains $:, replace it with explicit equivalent
      }
-     jt->locsyms=savloc; jt->global=savglob;  // restore locales
+// obsolete      jt->locsyms=savloc; jt->global=savglob;  // restore locales
+     SYMRESTOREFROMLOCAL(savloc);
      RZ(z);  // make sure we restore
     }
     jt->fxpv[jt->fxi++]=mtv;

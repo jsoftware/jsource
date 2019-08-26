@@ -122,15 +122,15 @@ j_xxx_=. 5
 cocurrent 'xxx'
 (t a y) , (t a 'j')
 )
-7 5= f 's'
+7 5 = f 's'
 
-d_base_=: 9:
+d_yyy_=: 9:
 d_xxx_=:7:
 c_z_ =: 2 : 0
 s =. 15
 cocurrent 'base'
-r =. ((d+u.) a x),(v. a y)  NB. d and u run in different locales
-NB. execution of a changes the locale because the operator is anonymous
+r =. ((d+u.) a x),(v. a y)  NB. d and u run in different locales (d in yyy, u in calling locale base/xxx)
+NB. execution of a changes the locale to yyy because the operator is anonymous
 assert. s = 15
 r
 )
@@ -199,7 +199,7 @@ _3 = 2 (+ 2 : 'x undefname`u.`v.@.[ y' -) 5
 'value error' -: 0 (+ 2 : 'x undefname`u.`v.@.[ y' -) etx 5
 
 
-4!:55 ;:'a aa q a_z_ c_z_ d_base_ d_xxx_ j j_xxx_ F f F1 f1 F2 f2 G g G1 g1 G2 g2 nln nn sum'
+4!:55 ;:'a aa q a_z_ c_z_ d_yyy_ d_xxx_ j j_xxx_ F f F1 f1 F2 f2 G g G1 g1 G2 g2 nln nn sum'
 18!:55 ;:'xxx yyy'
 
 

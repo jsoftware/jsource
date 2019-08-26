@@ -29,7 +29,7 @@
 
 // Parse/execute a line, result in z.  If locked, reveal nothing.  Save current line number in case we reexecute
 // Before each sentence we snapshot the implied locale in the local symbol table.  If the sentence passes a u/v into an operator, the current symbol table will become the prev and will have the u/v environment info
-#define parseline(z) {C attnval=*jt->adbreakr; A *queue=line+ci->i; I m=ci->n; AKGST(locsym)=jt->global; if(!attnval){if(!(gsfctdl&2))z=parsea(queue,m);else {thisframe->dclnk->dcix=i; z=parsex(queue,m,ci,callframe);}}else{jsignal(EVATTN); z=0;} }
+#define parseline(z) {C attnval=*jt->adbreakr; A *queue=line+ci->i; I m=ci->n; /* obsolete AKGST(locsym)=jt->global;*/ if(!attnval){if(!(gsfctdl&2))z=parsea(queue,m);else {thisframe->dclnk->dcix=i; z=parsex(queue,m,ci,callframe);}}else{jsignal(EVATTN); z=0;} }
 typedef struct{A t,x,line;C*iv,*xv;I j,k,n,w;} CDATA;
 /* for_xyz. t do. control data   */
 /* line  'for_xyz.'              */
@@ -187,7 +187,8 @@ DF2(jtxdefn){PROLOG(0048);
    if(sv->flag&VTRY1+VTRY2){A td; GAT0(td,INT,NTD*WTD,1); tdv=(TD*)AV(td); gsfctdl |= jt->uflags.us.cx.cx_c.db<<8;}
   }
   // End of unusual processing
-  AM(locsym)=(I)jt->locsyms; jt->locsyms=locsym;   // Chain the calling symbol table to this one
+// obsolete   AM(locsym)=(I)jt->locsyms; jt->locsyms=locsym;   // Chain the calling symbol table to this one
+  SYMPUSHLOCAL(locsym);   // Chain the calling symbol table to this one
 
   // Assign the special names x y m n u v.  Do this late in initialization because it would be bad to fail after assigning to yx (memory leak would result)
   // For low-rank short verbs, this takes a significant amount of time using IS, because the name doesn't have bucket info and is
@@ -504,7 +505,9 @@ dobblock:
  // Tables are born with NAMEADDED off.  It gets set when a name is added.  Setting back to initial state here, we clear NAMEADDED
  if(gsfctdl&32){AR(locsym)=LLOCALTABLE; symfreeha(locsym);}
  // Pop the private-area stack; set no assignment (to call for result display)
- jt->locsyms=prevlocsyms; jt->asgn=0;
+// obsolete jt->locsyms=prevlocsyms;
+ SYMSETLOCAL(prevlocsyms);
+ jt->asgn=0;
  RETF(z);
 }
 

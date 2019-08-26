@@ -34,7 +34,7 @@ DF2(jtunquote){A z;
      stabent=syrd1(thisnameinfo->m,thisnameinfo->s,thisnameinfo->hash,explocale);  // Look up the name starting in the locale of the locative
     }else{  // u./v.  We have to look at the assigned name/value to know whether this is an implied locative (it usually is)
      if(stabent = probelocal(thisname)){
-      // u/v, assigned by xdefn.  Implied locative.  Use switching to the local table a flag for restoring the caller's environment
+      // u/v, assigned by xdefn.  Implied locative.  Use switching to the local table as a flag for restoring the caller's environment
       explocale=jt->locsyms;  // We have to use this flag trick, rather than stacking the locales here, because errors after the stack is set could corrupt the stack
      }
     }
@@ -68,10 +68,11 @@ DF2(jtunquote){A z;
   // locative. switch to it, stacking the prev value.  If the switch is to the current local symbol table, that means 'switch to caller's environment'
   if(explocale==jt->locsyms){
    pushcallstack1d(CALLSTACKPUSHLOCALSYMS,jt->locsyms);  // save current locsyms
-   jt->locsyms=(A)AM(jt->locsyms);  // get the local syms at the time u/v was assigned; make them current
+   jt->locsyms=(A)AM(jt->locsyms);  // get the local syms at the time u/v was assigned; make them current.  Leave GST unchanged in it
    explocale=AKGST(jt->locsyms);  // fetch global syms for the caller's environment, so we stack it next
   }
-  pushcallstack1d(CALLSTACKPOPLOCALE,jt->global); jt->global=explocale;  // move to new implied locale
+// obsolete  pushcallstack1d(CALLSTACKPOPLOCALE,jt->global); jt->global=explocale;  // move to new implied locale
+  pushcallstack1d(CALLSTACKPOPLOCALE,jt->global); SYMSETGLOBAL(jt->locsyms,explocale);  // move to new implied locale
   ++jt->modifiercounter;  // invalidate any extant lookups of modifier names
  }
  // ************** no errors till the stack has been popped
@@ -116,7 +117,8 @@ DF2(jtunquote){A z;
   // There are stack entries.  Process them
   if(jt->callstack[callstackx].type==CALLSTACKPOPLOCALE && callstackx+1==jt->callstacknext) {
    // The only thing on the stack is a simple POP.  Do the pop.  This & the previous case account for almost all the calls here
-   jt->global=jt->callstack[callstackx].value;  // restore global locale
+// obsolete    jt->global=jt->callstack[callstackx].value;  // restore global locale
+   SYMSETGLOBAL(jt->locsyms,jt->callstack[callstackx].value);  // restore global locale
    jt->callstacknext=(I4)callstackx;  // restore stackpointer for caller
    ++jt->modifiercounter;  // invalidate any extant lookups of modifier names
   } else {
@@ -132,9 +134,12 @@ DF2(jtunquote){A z;
      earlyloc=jt->callstack[i].value;  // remember earliest POP[FROM]
      // When we remove the earliest POPFROM, we can go back to processing names without requiring stacking the return locale
      if(jt->callstack[i].type&CALLSTACKPOPLOCALEFIRST){jt->uflags.us.uq.uq_c.pmctrbstk &= ~PMCTRBSTKREQD;}
-    }else if(jt->callstack[i].type&CALLSTACKPUSHLOCALSYMS)jt->locsyms=jt->callstack[i].value;  // restore locsyms if we stacked it
+// obsolete     }else if(jt->callstack[i].type&CALLSTACKPUSHLOCALSYMS)jt->locsyms=jt->callstack[i].value;  // restore locsyms if we stacked it
+    }else if(jt->callstack[i].type&CALLSTACKPUSHLOCALSYMS)SYMSETLOCAL((A)jt->callstack[i].value);  // restore locsyms if we stacked it, and restore possibly-changed global value therein
    }while(i!=callstackx);
-   if(earlyloc&&!fromfound){jt->global=earlyloc; ++jt->modifiercounter;} // If there is a POP to do, do it; invalidate any extant lookups of modifier names
+   // if we encountered u./v., we have now restored the previous local symbols so that it is OK to restore the globals into it
+// obsolete    if(earlyloc&&!fromfound){jt->global=earlyloc; ++jt->modifiercounter;} // If there is a POP to do, do it; invalidate any extant lookups of modifier names
+   if(earlyloc&&!fromfound){SYMSETGLOBAL(jt->locsyms,earlyloc); ++jt->modifiercounter;} // If there is a POP to do, do it; invalidate any extant lookups of modifier names
    // Delete the deletable locales.  If we encounter the (possibly new) current locale, remember that fact and don't delete it.
    I delcurr=0;  // set if we have to delete jt->global
    i=jt->callstacknext;  // back to front

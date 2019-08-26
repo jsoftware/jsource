@@ -30,7 +30,7 @@
 // Parse/execute a line, result in z.  If locked, reveal nothing.  Save current line number in case we reexecute
 // Before each sentence we snapshot the implied locale in the local symbol table.  If the sentence passes a u/v into an operator, the current symbol table will become the prev and will have the u/v environment info
 #define parseline(z) {C attnval=*jt->adbreakr; A *queue=line+ci->i; I m=ci->n; /* obsolete AKGST(locsym)=jt->global;*/ if(!attnval){if(!(gsfctdl&2))z=parsea(queue,m);else {thisframe->dclnk->dcix=i; z=parsex(queue,m,ci,callframe);}}else{jsignal(EVATTN); z=0;} }
-typedef struct{A t,x,line;C*iv,*xv;I j,k,n,w;} CDATA;
+typedef struct{A t,x,line;C*iv,*xv;I j,n; I4 k,w;} CDATA;
 /* for_xyz. t do. control data   */
 /* line  'for_xyz.'              */
 /* t     iteration array         */
@@ -44,7 +44,7 @@ typedef struct{A t,x,line;C*iv,*xv;I j,k,n,w;} CDATA;
 
 #define WCD            (sizeof(CDATA)/sizeof(I))
 
-typedef struct{I d,t,e,b;} TD;  // line numbers of catchd., catcht., end. and try.
+typedef struct{I4 d,t,e,b;} TD;  // line numbers of catchd., catcht., end. and try.
 #define WTD            (sizeof(TD)/sizeof(I))
 #define NTD            17     /* maximum nesting for try/catch */
 
@@ -55,7 +55,7 @@ static B jtforinit(J jt,CDATA*cv,A t){A x;C*s,*v;I k;
  cv->n=IC(t);                            /* # of items in t     */
  cv->j=-1;                               /* iteration index     */
  cv->x=0;
- cv->k=k=AN(cv->line)-5;                 /* length of item name */
+ k=AN(cv->line)-5; cv->k=(I4)k;                 /* length of item name */
  if(0<k&&cv->n){                         /* for_xyz.            */
   s=4+CAV(cv->line); RZ(x=str(6+k,s)); ras(x); cv->x=x;
   cv->xv=v=CAV(x); MC(k+v,"_index",6L);  /* index name          */
@@ -71,13 +71,13 @@ static B jtunstackcv(J jt,CDATA*cv){
 }
 
 static void jttryinit(J jt,TD*v,I i,CW*cw){I j=i,t=0;
- v->b=i;v->d=v->t=0;
+ v->b=(I4)i;v->d=v->t=0;
  while(t!=CEND){
   j=(j+cw)->go;  // skip through just the control words for this try. structure
   switch(t=(j+cw)->type){
-   case CCATCHD: v->d=j; break;
-   case CCATCHT: v->t=j; break;
-   case CEND:    v->e=j; break;
+   case CCATCHD: v->d=(I4)j; break;
+   case CCATCHT: v->t=(I4)j; break;
+   case CEND:    v->e=(I4)j; break;
 }}}  /* processing on hitting try. */
 
 // tdv points to the try stack or 0 if none; tdi is index of NEXT try. slot to fill; i is goto line number
@@ -352,6 +352,8 @@ dobblock:
    }else{i=ci->go; if(i<SMAX){RESETERR; z=mtm; if(gsfctdl&4){if(!--tdi){jt->uflags.us.cx.cx_c.db=(UC)(gsfctdl>>8); gsfctdl^=4;}}}  // z might not have been protected: keep it safe. This is B1 try. error catch. return. end.
    }
    break;
+
+  // The rest of the cases are accessed only by indirect branch or fixed fallthrough
   case CTRY:
    // try.  create a try-stack entry, step to next line
    BASSERT(tdi<NTD,EVLIMIT);

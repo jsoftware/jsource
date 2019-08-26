@@ -109,6 +109,8 @@ F2(jtforeign){I p,q;
   case XC(4,3):   R CDERIV(CIBEAM, jtsnl,        0,            VASGSAFE,RMAX,0,   0   );
   case XC(4,4):   R CDERIV(CIBEAM, jtscind,      0,            VASGSAFE,0,   0,   0   );
   case XC(4,5):   R CDERIV(CIBEAM, jtnch,        0,            VASGSAFE,RMAX,0,   0   );
+  case XC(4,6):   R CDERIV(CIBEAM, jtscriptstring,        0,   VASGSAFE,RMAX,0,   0   );
+  case XC(4,7):   R CDERIV(CIBEAM, jtscriptnum,        0,      VASGSAFE,RMAX,0,   0   );
   case XC(4,55):  R CDERIV(CIBEAM, jtex,         0,            VASGSAFE,0,   0,   0   );
 
   case XC(5,0):   R fdef(0,CIBEAM,ADV, jtfxx,0L,  a,w,0L,        VASGSAFE,0L,  0L,  0L  );

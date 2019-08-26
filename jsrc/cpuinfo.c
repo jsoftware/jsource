@@ -2,7 +2,16 @@
 
 extern uint64_t g_cpuFeatures;
 
-#if defined(__aarch64__)||defined(_M_ARM64)
+#if defined(__aarch32__)||defined(__arm__)||defined(_M_ARM)
+uint32_t OPENSSL_armcap_P;
+
+void cpuInit(void)
+{
+  g_cpuFeatures = 0;
+  OPENSSL_armcap_P = 0;
+}
+
+#elif defined(__aarch64__)||defined(_M_ARM64)
 
 #include <sys/auxv.h>
 #include <asm/hwcap.h>
@@ -346,7 +355,7 @@ intptr_t getCpuFamily(void)
 void OPENSSL_setcap(void)
 {
 #if defined(__aarch64__)||defined(_M_ARM64)
-  OPENSSL_armcap_P = ARMV7_NEON | ARMV7_TICK;
+  OPENSSL_armcap_P = ARMV7_NEON;
   OPENSSL_armcap_P |= (g_cpuFeatures & ARM_HWCAP_AES) ? ARMV8_AES : 0;
   OPENSSL_armcap_P |= (g_cpuFeatures & ARM_HWCAP_SHA1) ? ARMV8_SHA1 : 0;
   OPENSSL_armcap_P |= (g_cpuFeatures & ARM_HWCAP_SHA2) ? ARMV8_SHA256 : 0;

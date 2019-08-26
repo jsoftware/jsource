@@ -35,6 +35,29 @@ m1=: 'mean' f.
 
 1!:55 f
 
+NB. Test locking non-file data
+0!:1 (3!:6 'sq=: *:',LF,'mean=: +/ % #')
+(mean -: +/ % #) x=: 100 ?@$ 0
+(sq   -: *:) x
+
+sq1=: *:
+'*:' -: 5!:5 <'sq1'
+
+(5!:1 <'mean') -:  <'mean'
+(5!:2 <'mean') -: ,<'mean'
+(5!:4 <'mean') -: ,:(2${:9!:6 ''),' mean'
+(5!:5 <'mean') -: 'mean'
+(5!:6 <'mean') -: 'mean'
+
+m1=: mean f.
+(5!:5 <'m1') -: 'mean'
+
+m1=: 'mean' f.
+(5!:5 <'m1') -: 'mean'
+
+'domain error' -: 15!:6 etx <'mean'
+
+
 
 4!:55 ;:'abc d f m1 mean sq sq1 x'
 

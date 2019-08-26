@@ -83,7 +83,7 @@ static DF1(jtfpown){A fs,z;AF f1;I n;V*sv;A *old;
  fs=sv->fgh[0]; f1=FAV(fs)->valencefns[0];
  z=w; 
  old=jt->tnextpushp; 
- DQ(n, RZ(z=CALL1IP(f1,z,fs)); z=gc(z,old);); 
+ DQ(n, JATTN; RZ(z=CALL1IP(f1,z,fs)); z=gc(z,old);); 
  RETF(z);
 // }
 }
@@ -104,7 +104,7 @@ static DF1(jtply1){PROLOG(0040);DECLFG;A b,hs,j,*xv,y,z;B*bv,q;I i,k,m,n,*nv,p=0
    RZ(z=CALL1(f1,y=z,fs));  // z=next power, y=previous power
    if(q&&equ(y,z)){DQ(m-k, INSTALLBOX(x,xv,k,z); ++k;); break;}  // if there is an infinity, check for repetition; if any, use it for all higher powers, & be done
    while(k<m&&i==nv[k]){INSTALLBOX(x,xv,k,z); ++k; q=k<m?bv[k]:0;}  // otherwise use result for all equal powers
-   if(!(i&7))if(!gc3((A*)&x,&z,0L,old))R0;
+   if(!(i&7)){JATTN; if(!gc3((A*)&x,&z,0L,old))R0;}
  }}
  if(0<p){  // if there was a negative power...
   RZ(fs=inv(fs)); f1=FAV(fs)->valencefns[0];
@@ -116,7 +116,7 @@ static DF1(jtply1){PROLOG(0040);DECLFG;A b,hs,j,*xv,y,z;B*bv,q;I i,k,m,n,*nv,p=0
    RZ(z=CALL1(f1,y=z,fs));
    if(q&&equ(y,z)){DQ(1+k, INSTALLBOX(x,xv,k,z); --k;); break;}
    while(0<=k&&i==nv[k]){INSTALLBOX(x,xv,k,z); --k; q=0<=k?bv[k]:0;}
-   if(!(i&7))if(!gc3((A*)&x,&z,0L,old))R0;
+   if(!(i&7)){JATTN; if(!gc3((A*)&x,&z,0L,old))R0;}
  }}
  z=ope(reshape(shape(hs),from(grade1(j),x))); EPILOG(z);
 }
@@ -128,7 +128,7 @@ static DF1(jtpinf1){DECLFG;PROLOG(0340);A z;
   RZ(z=CALL1(f1,w,fs));  // call the fn
   I isend=equ(z,w);  // remember if it is the same as last time
   if(!((isend-1)&++i&7)) {  // every so often, but always when we leave...
-   JBREAK0;   // check for user interrupt, in case the function doesn't allocate memory
+   JATTN;   // check for user interrupt, in case the function doesn't allocate memory
    EPILOGNORET(z);  // free up allocated blocks, but keep z
    if(isend)RETF(z);  // return at end
   }

@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <wmmintrin.h>
 #include <stdlib.h>
-#include <malloc.h>
+//#include <malloc.h>
 
 #define ADD _mm_add_epi32
 #define XOR _mm_xor_si128

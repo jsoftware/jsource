@@ -45,6 +45,14 @@ void setftype(C*v,OSType type,OSType crea){C p[256];FInfo f;
 static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;B xt=jt->tostdout;DC d,xd=jt->dcs;
  if(equ(w,num[1]))R mtm;
  RZ(w=vs(w));
+ // Handle locking.  Global glock has lock status for higher levels.  We see if this text is locked; if so, we mark lock status for this level
+ // We do not inherit the lock from higher levels, per the original design
+ C oldk=jt->uflags.us.cx.cx_c.glock; // incoming lock status
+ if((jt->uflags.us.cx.cx_c.glock=(AN(w)&&CFF==*CAV(w)))){
+  RZ(w=unlock2(mtm,w));
+  ASSERT(CFF!=*CAV(w),EVDOMAIN);
+  si=-1; tso=0;  // if locked, keep shtum about internals
+ }
  FDEPINC(1);   // No ASSERTs or returns till the FDEPDEC below
  RZ(d=deba(DCSCRIPT,0L,w,(A)si));
  jt->dcs=d; jt->tostdout=tso&&!jt->seclev;
@@ -67,10 +75,21 @@ static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;B xt=jt->tostdout;DC d,xd=jt
  jt->dcs=xd; jt->tostdout=xt;
   debz();
  FDEPDEC(1);  // ASSERT OK now
+ jt->uflags.us.cx.cx_c.glock=oldk; // pop lock status
  if(3==ce){z=num[jt->jerr==0]; RESETERR; R z;}else RNE(mtm);
 }
 
-static A jtlinf(J jt,A a,A w,C ce,B tso){A x,y,z;B lk=0;C*s;I i=-1,n,oldi=jt->slisti,oldk=jt->uflags.us.cx.cx_c.glock;
+static F1(jtaddscriptname){I i;
+ RE(i=i0(indexof(vec(BOX,jt->slistn,AAV(jt->slist)),box(ravel(w)))));  // look up only in the defined names
+ if(jt->slistn==i){
+  if(jt->slistn==AN(jt->slist))RZ(jt->slist=ext(1,jt->slist)); 
+  RZ(ras(w)); RZ(*(jt->slistn+AAV(jt->slist))=w); 
+  ++jt->slistn;
+ }
+ R sc(i);
+}
+
+static A jtlinf(J jt,A a,A w,C ce,B tso){A x,y,z;B lk=0;C*s;I i=-1,n,oldi=jt->slisti;
  RZ(a&&w);
  ASSERT(AT(w)&BOX,EVDOMAIN);
  if(jt->seclev){
@@ -79,29 +98,44 @@ static A jtlinf(J jt,A a,A w,C ce,B tso){A x,y,z;B lk=0;C*s;I i=-1,n,oldi=jt->sl
   ASSERT(3<n&&!memcmp(s+n-3,".js",3L)||4<n&&!memcmp(s+n-4,".ijs",4L),EVSECURE);
  }
  RZ(x=jfread(w));
+#if 0 // obsolete
  if(a!=mark||AN(x)&&CFF==*CAV(x)){
   RZ(x=unlock2(a,x));
   ASSERT(CFF!=*CAV(x),EVDOMAIN);
   lk=1;
  }
+#endif
  // Remove UTF8 BOM if present - commented out pending resolution.  Other BOMs should not occur
  // if(!memcmp(CAV(x),"\357\273\277",3L))RZ(x=drop(num[3],x))
  // if this is a new file, record it in the list of scripts
  RZ(y=fullname(AAV0(w)));
- RE(i=i0(indexof(vec(BOX,jt->slistn,AAV(jt->slist)),box(y))));
- if(jt->slistn==i){
-  if(jt->slistn==AN(jt->slist))RZ(jt->slist=ext(1,jt->slist)); 
-  RZ(ras(y)); RZ(*(jt->slistn+AAV(jt->slist))=y); 
-  ++jt->slistn;
- }
+ A scripti; RZ(scripti=jtaddscriptname(jt,y)); i=IAV(scripti)[0];
+
  // set the current script number
- jt->slisti=(UI4)i;    jt->uflags.us.cx.cx_c.glock=1==jt->uflags.us.cx.cx_c.glock?1:lk?2:0;
- z=line(x,jt->uflags.us.cx.cx_c.glock?-1L:i,ce,(B)(jt->uflags.us.cx.cx_c.glock?0:tso)); 
- jt->slisti=(UI4)oldi; jt->uflags.us.cx.cx_c.glock=(C)(1==jt->uflags.us.cx.cx_c.glock?1:oldk);
+ jt->slisti=(UI4)i;    // obsolete jt->uflags.us.cx.cx_c.glock=1==jt->uflags.us.cx.cx_c.glock?1:lk?2:0;  // glock=0 or 1 is original setting; 2 if this script is locked (so reset after 
+// obsolete  z=line(x,jt->uflags.us.cx.cx_c.glock?-1L:i,ce,(B)(jt->uflags.us.cx.cx_c.glock?0:tso)); 
+ z=line(x,i,ce,tso); 
+ jt->slisti=(UI4)oldi; // obsolete jt->uflags.us.cx.cx_c.glock=(C)(1==jt->uflags.us.cx.cx_c.glock?1:oldk);
 #if SYS & SYS_PCWIN
  if(lk)memset(AV(x),C0,AN(x));  /* security paranoia */
 #endif
  R z;
+}
+
+// 4!:6 add script name to list and return its index
+F1(jtscriptstring){
+ ASSERT(AT(w)&LIT,EVDOMAIN);  // literal
+ ASSERT(AR(w)<2,EVRANK);  // list
+ R jtaddscriptname(jt,w);   // add name if new; return index to name
+}
+
+// 4!:7 set script name to use and return previous value
+F1(jtscriptnum){
+ I i=i0(w);  // fetch index
+ ASSERT((UI)(i+1)<=(UI)jt->slistn,EVINDEX);  // make sure it's _1 or valid index
+ A rv=sc(jt->slisti);  // save the old value
+ RZ(rv); jt->slisti=(UI4)i;  // set the new value (if no error)
+ R rv;  // return prev value
 }
 
 F1(jtscm00 ){I r; RZ(w);    r=1&&AT(w)&LIT+C2T+C4T; F1RANK(     r,jtscm00, 0); R r?line(w,-1L,0,0):linf(mark,w,0,0);}

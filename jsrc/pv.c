@@ -228,7 +228,7 @@ F1(jtvtrans){PROLOG(0053);A local,y,z=0;B tmonad,tsubst;I c,i;TA ttab[NTTAB],*tt
  for(i=0;!z&&2>i;++i){
   RZ(y=vtokens(w));
   jt->ttab=ttab; jt->ttabi=jt->ttabi0=c;
-  RZ(jt->locsyms=stcreate(2,40,0L,0L));
+  RZ(jt->locsyms=stcreate(2,40,0L,0L));  // not necessary to set global pointers
   IS(ynam,num[1]); if(!jt->tmonad)IS(xnam,num[1]); 
   jt->tsubst=0==i;
   z=tparse(y); RESETERR;

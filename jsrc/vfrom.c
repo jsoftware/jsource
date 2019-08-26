@@ -439,7 +439,7 @@ F2(jtfrom){I at;A z;
    // Get the area to use for the result: the input if possible, else an INT atom
    if((SGNIF(jtinplace,JTINPLACEAX)&AC(a)&SGNIFNOT(AFLAG(a),AFUNINCORPABLEX))<0)z=a; else{GAT0(z,INT,1,0)}
    // Move the value and transfer the block-type
-   I j; SETNDX(j,IAV(a)[0],AN(w)); IAV(z)[0]=IAV(w)[j]; AT(z)=AT(w);
+   I j; AT(z)=AT(w); SETNDX(j,IAV(a)[0],AN(w)); IAV(z)[0]=IAV(w)[j];
   }else{
    // not atom{list.  Process according to type of a
 #if 1

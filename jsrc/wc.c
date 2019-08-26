@@ -81,14 +81,14 @@ static I conend(I i,I j,I k,CW*b,CW*c,CW*d,I p,I q,I r){I e,m,t;
    // we will skip over break. for inner loops, which have already been processed). 
    CWASSERT(b&&d); b->go=(US)(1+k); m=i-k-1;   // get # cws between (after while.) and (before end.)
    // fill in break. to go after end., or continue. to go after while.; leave others unchanged
-   DQ(m, ++d; t=d->type; if(SMAX==d->go)d->go=(((((I)1<<CBREAK)|((I)1<<CBREAKS))>>t)&1)?(US)e :(((((I)1<<CCONT)|((I)1<<CCONTS))>>t)&1)?(US)(1+k):(US)SMAX;);
+   DQ(m, ++d; t=d->type; if(SMAX==d->go)d->go=(((((I)1<<CBREAK)|((I)1<<CBREAKS))>>t)&1)?(US)e :(((((I)1<<CCONT)|((I)1<<CCONTS))>>(t&31))&1)?(US)(1+k):(US)SMAX;);
    break;
   case CWCASE(CFOR,CDOF):
    // for. is like while., but end. and continue. go back to the do., and break. is marked as BREAKF
    // to indicate that the for. must be popped off the execution stack.  breakf. is needed even if the block
    // was previously marked as in select.
    CWASSERT(b&&d); b->go=(US)j;   m=i-k-1;
-   DQ(m, ++d; t=d->type; if(SMAX==d->go)d->go=(((((I)1<<CBREAK)|((I)1<<CBREAKS))>>t)&1)?(d->type=CBREAKF,(US)e):(((((I)1<<CCONT)|((I)1<<CCONTS))>>t)&1)?(US)j:(US)SMAX;);
+   DQ(m, ++d; t=d->type; if(SMAX==d->go)d->go=(((((I)1<<CBREAK)|((I)1<<CBREAKS))>>t)&1)?(d->type=CBREAKF,(US)e):(((((I)1<<CCONT)|((I)1<<CCONTS))>>(t&31))&1)?(US)j:(US)SMAX;);
  }
  R -1;
 }
@@ -115,8 +115,8 @@ static I conendtry(I e,I top,I stack[],CW*con){CW*v;I c[3],d[4],i=-1,j,k=0,m,t=0
  // any hitherto not-processed throw. to go to the catch. (if it exists) or catchd. (if no catch.).
  // That way, unfielded throw. counts as an error that can be picked up in catch.
  // kludge if break/continue encountered:  while. do. try. break. catch. end. end.  leaves the break pointing past the outer end, and the try stack unpopped
- if     (0<=c[0]){ii=(US)(1+c[0]); v=j+con; DQ(m-j-1, ++v; if(SMAX==v->go&&!(((((I)1<<CCONT)|((I)1<<CCONTS)|((I)1<<CBREAK)|((I)1<<CBREAKS))>>v->type)&1))v->go=ii;);}
- else if(0<=c[1]){ii=(US)(1+c[1]); v=j+con; DQ(m-j-1, ++v; if(SMAX==v->go&&!(((((I)1<<CCONT)|((I)1<<CCONTS)|((I)1<<CBREAK)|((I)1<<CBREAKS))>>v->type)&1))v->go=ii;);}
+ if     (0<=c[0]){ii=(US)(1+c[0]); v=j+con; DQ(m-j-1, ++v; if(SMAX==v->go&&!(((((I)1<<CCONT)|((I)1<<CCONTS)|((I)1<<CBREAK)|((I)1<<CBREAKS))>>(v->type&31))&1))v->go=ii;);}
+ else if(0<=c[1]){ii=(US)(1+c[1]); v=j+con; DQ(m-j-1, ++v; if(SMAX==v->go&&!(((((I)1<<CCONT)|((I)1<<CCONTS)|((I)1<<CBREAK)|((I)1<<CBREAKS))>>(v->type&31))&1))v->go=ii;);}
  R top;  //return stack pointer with the try. ... end. removed
 }    /* result is new value of top */
 
@@ -153,8 +153,10 @@ static I jtconall(J jt,I n,CW*con){A y;CW*b=0,*c=0,*d=0;I e,i,j,k,p=0,q,r,*stack
   if(0<top){j=stack[top-1]; c=j+con; q=c->type;}
   if(1<top){k=stack[top-2]; d=k+con; r=d->type;}
   switch(p){
-   case CBBLOCK: if(tb)b->type=CTBLOCK; break;   // In case of  if. if. x do. y end. do. end., y is NOT eligible to be the result, because
+   case CBBLOCK:
+     if(tb)b->type=CTBLOCK;   // In case of  if. if. x do. y end. do. end., y is NOT eligible to be the result, because
      // it is executed  in a T block; so we switch B to T inside ANY T block
+     break;
    case CLABEL:  b->go=(US)e;           break;  // label goes to NSI
    case CTRY:
    case CCATCH:
@@ -186,7 +188,7 @@ static I jtconall(J jt,I n,CW*con){A y;CW*b=0,*c=0,*d=0;I e,i,j,k,p=0,q,r,*stack
     }
     stack[top++]=i; ++tb;  break;            // push addr of cw, increment t-block count
    case CDO:                                   // do. - classify according to what structure we are in
-    CWASSERT(((((I)1<<CIF)|((I)1<<CELSEIF)|((I)1<<CSELECT)|((I)1<<CWHILE)|((I)1<<CWHILST)|((I)1<<CFOR)|((I)1<<CCASE)|((I)1<<CFCASE))>>q)&1);   // first, make sure do. is allowed here
+    CWASSERT(((((I)1<<CIF)|((I)1<<CELSEIF)|((I)1<<CSELECT)|((I)1<<CWHILE)|((I)1<<CWHILST)|((I)1<<CFOR)|((I)1<<CCASE)|((I)1<<CFCASE))>>(q&31))&1);   // first, make sure do. is allowed here
      // classify the do. based on struct: if for. do., call it DOF; if [f]case. do, call it DOSEL;
      // otherwise (if./elseif., while./whilst.) leave it as DO
     b->type=q==CFOR?CDOF:q==CCASE||q==CFCASE?CDOSEL:CDO;
@@ -206,16 +208,20 @@ static I jtconall(J jt,I n,CW*con){A y;CW*b=0,*c=0,*d=0;I e,i,j,k,p=0,q,r,*stack
     break;
    case CEND:                                // end. run a conend... routine to update pointers in the cws. q->the do., r->the starting cw of the structure
     switch(q){
-     case CDOSEL:                            // if [f]case. ... do. ... end. 
-      top=conendsel(i,top,stack,con); CWASSERT(0<=top); b->type=CENDSEL; break;  // end the select., and change the cw to ENDSEL
-     case CCATCH: case CCATCHD: case CCATCHT:  // if a catch?.
-      CWASSERT(1<=top);
-      top=conendtry(i,top,stack,con); CWASSERT(0<=top);                  break;  // end the catch, verify validity
-     default:                                // if if./elseif./else. or while./whilst./for. ...
-      top-=2;                                // pop the starting cw and the do.
-      if(r==CWHILE||r==CWHILST||r==CFOR)--wb;  // if this ends a loop, decrement the nested-loop count
-      CWASSERT(0>conend(i,j,k,b,c,d,p,q,r));   // update the controls matching this end.
- }}}
+    case CDOSEL:                            // if [f]case. ... do. ... end. 
+     top=conendsel(i,top,stack,con); CWASSERT(0<=top); b->type=CENDSEL; break;  // end the select., and change the cw to ENDSEL
+    case CCATCH: case CCATCHD: case CCATCHT:  // if a catch?.
+     CWASSERT(1<=top);
+     top=conendtry(i,top,stack,con); CWASSERT(0<=top);                  break;  // end the catch, verify validity
+    default:                                // if if./elseif./else. or while./whilst./for. ...
+     top-=2;                                // pop the starting cw and the do.
+     if(r==CWHILE||r==CWHILST||r==CFOR)--wb;  // if this ends a loop, decrement the nested-loop count
+     CWASSERT(0>conend(i,j,k,b,c,d,p,q,r));   // update the controls matching this end.
+    }
+    // if the END goes to NSI, change the preceding block from BBLOCK to BBLOCKEND
+    if(i+1<n&&b->go==i+1&&con[i-1].type==CBBLOCK)con[i-1].type=CBBLOCKEND;
+  }
+}
  // when it's over, the stack should be empty.  If not, return the index of the top control on the stack
  if(top)R stack[top-1];
  // Fill in the canend field, which tells whether the previous B-block result can become the overall result.  It is used only
@@ -231,7 +237,7 @@ static I jtconall(J jt,I n,CW*con){A y;CW*b=0,*c=0,*d=0;I e,i,j,k,p=0,q,r,*stack
    I origcanend=con[i].canend;
    if(!(origcanend&3)){  // if the value is filled in with a final already, we won't change it
     switch(con[i].type) {
-     case CBBLOCK: case CTHROW:
+     case CBBLOCK: case CBBLOCKEND: case CTHROW:
       con[i].canend = 8+2; break;  // These are by definition not an end
      case CRETURN:
       con[i].canend = 4+1; break;  // These by definition ARE an end
@@ -274,7 +280,7 @@ A jtspellcon(J jt,I c){
  switch(c){
   default:      ASSERTSYS(0,"spellcon");
   case CASSERT: R cstr("assert.");
-  case CBBLOCK: R cstr("bblock.");
+  case CBBLOCK: case CBBLOCKEND: R cstr("bblock.");
   case CBREAK: case CBREAKF:  case CBREAKS: R cstr("break.");
   case CCASE:   R cstr("case.");
   case CCATCH:  R cstr("catch.");

@@ -287,6 +287,8 @@ extern F1(jtrollx);
 extern F1(jtsb1);
 extern F1(jtsborder);
 extern F1(jtscind);
+extern F1(jtscriptstring);
+extern F1(jtscriptnum);
 extern F1(jtsclass);
 extern F1(jtscm00);
 extern F1(jtscm01);

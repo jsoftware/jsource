@@ -1,5 +1,7 @@
 #!/bin/bash
 # $1 is j32 or j64
+# jvars.sh exports CC as gcc or clang
+
 cd ~
 
 # gcc 5 vs 4 - killing off linux asm routines (overflow detection)
@@ -9,34 +11,19 @@ cd ~
 
 macmin="-mmacosx-version-min=10.6"
 
-if [ "x$CC" = x'' ] ; then
-if [ -f "/usr/bin/cc" ]; then
-CC=cc
-else
-if [ -f "/usr/bin/clang" ]; then
-CC=clang
-else
-CC=gcc
-fi
-fi
-export CC
-fi
-# compiler=`$CC --version | head -n 1`
-compiler=`readlink -f $(command -v $CC)`
-
 USE_OPENMP="${USE_OPENMP:=0}"
 if [ $USE_OPENMP -eq 1 ] ; then
 OPENMP=" -fopenmp "
 LDOPENMP=" -fopenmp "
-if [ -z "${compiler##*gcc*}" ] || [ -z "${CC##*gcc*}" ]; then
+if [ -z "${$CCcc##*gcc*}" ] || [ -z "${CC##*gcc*}" ]; then
 LDOPENMP32=" -l:libgomp.so.1 "    # gcc
 else
 LDOPENMP32=" -l:libomp.so.5 "     # clang
 fi
 fi
 
-if [ -z "${compiler##*gcc*}" ] || [ -z "${CC##*gcc*}" ]; then
-# gcc
+if [ $CC = "gcc" ] ; then
+#gcc
 common="$OPENMP -fPIC -O1 -fwrapv -fno-strict-aliasing -Wextra -Wno-maybe-uninitialized -Wno-unused-parameter -Wno-sign-compare -Wno-clobbered -Wno-empty-body -Wno-unused-value -Wno-pointer-sign -Wno-parentheses"
 OVER_GCC_VER6=$(echo `$CC -dumpversion | cut -f1 -d.` \>= 6 | bc)
 if [ $OVER_GCC_VER6 -eq 1 ] ; then
@@ -57,6 +44,7 @@ else
 # clang 3.5 .. 5.0
 common="$OPENMP -Werror -fPIC -O1 -fwrapv -fno-strict-aliasing -Wextra -Wno-consumed -Wno-uninitialized -Wno-unused-parameter -Wno-sign-compare -Wno-empty-body -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-unsequenced -Wno-string-plus-int -Wno-pass-failed"
 fi
+
 darwin="$OPENMP -fPIC -O1 -fwrapv -fno-strict-aliasing -Wno-string-plus-int -Wno-empty-body -Wno-unsequenced -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-return-type -Wno-constant-logical-operand -Wno-comment -Wno-unsequenced -Wno-pass-failed"
 
 javx2="${javx2:=0}"

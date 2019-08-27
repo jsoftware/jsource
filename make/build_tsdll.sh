@@ -1,25 +1,12 @@
 #!/bin/bash
 # $1 is j32 or j64
+# jvars.sh exports CC as gcc or clang
+
 cd ~
 
 macmin="-mmacosx-version-min=10.6"
 
-if [ "x$CC" = x'' ] ; then
-if [ -f "/usr/bin/cc" ]; then
-CC=cc
-else
-if [ -f "/usr/bin/clang" ]; then
-CC=clang
-else
-CC=gcc
-fi
-fi
-export CC
-fi
-# compiler=`$CC --version | head -n 1`
-compiler=`readlink -f $(command -v $CC)`
-
-if [ -z "${compiler##*gcc*}" ] || [ -z "${CC##*gcc*}" ]; then
+if [ $CC = "gcc" ] ; then
 # gcc
 common=" -fPIC -O1 -fwrapv -fno-strict-aliasing -Wextra -Wno-maybe-uninitialized -Wno-unused-parameter -Wno-sign-compare -Wno-clobbered -Wno-empty-body -Wno-unused-value -Wno-pointer-sign -Wno-parentheses"
 OVER_GCC_VER6=$(echo `$CC -dumpversion | cut -f1 -d.` \>= 6 | bc)

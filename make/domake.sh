@@ -4,7 +4,7 @@
 # jconsole/tsdll $1 is j32 or j64
 # libj           $1 is j32 or j64 or j64avx j64avx2
 
-echo "domake: $1 $TARGET CC=$CC `readlink -f $(command -v $CC)`"
+echo "domake: $1 $TARGET CC=$CC"
 
 if [ $1 = "j32" ] ; then
  bits=j32

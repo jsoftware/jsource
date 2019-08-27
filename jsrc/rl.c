@@ -139,10 +139,10 @@ static F1(jtlbox){A p,*v,*vv,*wv,x,y;B b=0;I n;
 A jtdecorate(J jt,A w,I t){
  if(AN(w)==0)R w;  // if empty string, don't decorate
  if(t&FL){
-  // float: make sure there is a . somewhere, or infinity/indefinite ('_' followed by space/end/.), else put '.' on the end
+  // float: make sure there is a . somewhere, or infinity/indefinite ('_' followed by space/end/.), else put '.' on the end or at position of first 'e'
   B needdot = !memchr(CAV(w),'.',AN(w));  // check for decimal point
   if(needdot){DO(AN(w), if(CAV(w)[i]=='_' && (i==AN(w)-1 || CAV(w)[i+1]==' ')){needdot=0; break;} )}  // check for infinity
-  if(needdot)w=over(w,scc('.'));
+  if(needdot){w=over(w,scc('.')); RZ(w=rifvs(w)); DQ(AN(w) , if(CAV(w)[i]==' ')R w;  if(CAV(w)[i]=='e'){C f='.'; C *s=&CAV(w)[i]; DO(AN(w)-i, C ff=s[i]; s[i]=f; f=ff;)}) }
  }else if(t&INT){
   // integer: if the string contains nothing but one-digit 0/1 values, prepend a '0'
   I l=AN(w); C *s=CAV(w); do{if((*s&-2)!='0')break; ++s; if(--l==0)break; if(*s!=' ')break; ++s;}while(--l);

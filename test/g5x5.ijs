@@ -7,6 +7,7 @@ ar=: 5!:1
 
 test1=: 1 : 0
  0!:10 'asdf=.',5!:5 <'x'
+ assert. 0 <: 4!:0<'asdf'
  assert. (ar <'x') -: ar <'asdf'
  1
 )
@@ -370,6 +371,7 @@ f                                test1
 (3x     (2&+) ])                 test1
 (1 2 3x (2&+) ])                 test1
 (-&3x   (2&+) ])                 test1
+2 b.                             test1
 
 f =:+ 
 g =:- 
@@ -415,6 +417,21 @@ h=:$
 (+/`(-&.+)`(%/\.)@.(i.@])   ) test1
 ((+%)`(-&.+)`(%/\.)@.(i.@]) ) test1
 ((+-*)`(-&.+)`(%/\.)@.(i.@])) test1
+
+a =: 0 : 0
+for_xxx. do.
+ if. y > 4 do.
+ sentence
+ sentence sentence
+ else.
+ sentence sentence
+ end.
+end.
+)
+c =: 4 : a
+('4 : 0',LF,a,')') -: 5!:5 <'c'
+c test1
+
 
 a=: /
 test2 <'a' 

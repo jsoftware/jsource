@@ -15,7 +15,7 @@ static F1(jtdrr){PROLOG(0055);A df,dg,hs,*x,z;B b,ex,xop;C c,id;I fl,*hv,m;V*v;
  if(AT(w)&NOUN)R w;  // no quotes needed
  // Non-nouns and NMDOT names carry on
  v=FAV(w); id=v->id; fl=v->flag;
- I fndx=(AT(w)&ADV)&&!v->fgh[0]; A fs=v->fgh[fndx]; A gs=v->fgh[fndx^1];  // In adverbs, if f is empty look to g for the left arg (used by m b.)
+ I fndx=(id==CBDOT)&&!v->fgh[0]; A fs=v->fgh[fndx]; A gs=v->fgh[fndx^1];  // In verb for m b., if f is empty look to g for the left arg.  It would be nice to be more general
  hs=v->fgh[2]; if(id==CBOX)gs=0;  // ignore gs field in BOX, there to simulate BOXATOP
  if(fl&VXOPCALL)R drr(hs);
  xop=1&&VXOP&fl; ex=id==CCOLON&&hs&&!xop;
@@ -41,7 +41,7 @@ F1(jtaro){A fs,gs,hs,s,*u,*x,y,z;B ex,xop;C id;I*hv,m;V*v;
  RZ(w);
  if(FUNC&AT(w)){
   v=FAV(w); id=v->id;
-  I fndx=(AT(w)&ADV)&&!v->fgh[0]; fs=v->fgh[fndx]; gs=v->fgh[fndx^1];  // In adverbs, if f is empty look to g for the left arg (used by m b.)
+  I fndx=(id==CBDOT)&&!v->fgh[0]; fs=v->fgh[fndx]; gs=v->fgh[fndx^1];  // In verb for m b., if f is empty look to g for the left arg.  It would be nice to be more general
   hs=v->fgh[2]; if(id==CBOX)gs=0;  // ignore gs field in BOX, there to simulate BOXATOP
   if(VXOPCALL&v->flag)R aro(hs);
   xop=1&&VXOP&v->flag;
@@ -121,7 +121,7 @@ DF1(jtfx){A f,fs,g,h,p,q,*wv,y,*yv;C id;I m,n=0;
 
 static A jtunparse1(J jt,CW*c,A x,I j,A y){A q,z;C*s;I t;
  switch(t=c->type){
-  case CBBLOCK: case CTBLOCK: RZ(z=unparse(x));  break;
+  case CBBLOCK: case CBBLOCKEND: case CTBLOCK: RZ(z=unparse(x));  break;
   case CASSERT:               RZ(q=unparse(x)); GATV0(z,LIT,8+AN(q),1); s=CAV(z); 
                               MC(s,"assert. ",8L); MC(8+s,CAV(q),AN(q)); break;
   case CLABEL:  case CGOTO:   RZ(z=ca(*AAV(x))); break;

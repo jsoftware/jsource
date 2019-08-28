@@ -124,7 +124,7 @@ static F1(jttrr){PROLOG(0058);A hs,s,t,*x,z;B ex,xop;C id;I fl,*hv,m;V*v;
  RZ(w);
  if(AT(w)&NOUN+NAME){RETF(tleaf(lrep(w)));}
  v=FAV(w); id=v->id; fl=v->flag;
- I fndx=(AT(w)&ADV)&&!v->fgh[0]; A fs=v->fgh[fndx]; A gs=v->fgh[fndx^1];  // In adverbs, if f is empty look to g for the left arg (used by m b.)
+ I fndx=(id==CBDOT)&&!v->fgh[0]; A fs=v->fgh[fndx]; A gs=v->fgh[fndx^1];  // In verb for m b., if f is empty look to g for the left arg.  It would be nice to be more general
  hs=v->fgh[2]; if(id==CBOX)gs=0;  // ignore gs field in BOX, there to simulate BOXATOP
  if(fl&VXOPCALL){RETF(trr(hs));}
  xop=1&&VXOP&fl; ex=id==CCOLON&&hs&&!xop;

@@ -1,3 +1,38 @@
+2019 August 28 update
+
+NOTE: vcxproj files ARE pushed to the repo - be careful!
+      vsxproj.template is current official version
+
+cleanup of j.dll/jconsole/tsdll.dll vcxproj files
+
+VS2013 current directory is the path to the sln file that is opened
+vcxproj finds source files with ..\..\jsrc (that is, relative path to sln)
+
+debug cleaned up
+previously depended on jconsole.exe and special profile.ijs file in jout folders
+project>configuration properties>debugging>command
+ now runs jbld\j64\bin\jconsole (or j32)
+project>configuration properties>debugging>command arguments
+ has -lib to load debug j.dll and get standare bld profile.ijs
+
+strong assumption that c:\users\name\jbld is folder for building/running things
+
+bat files in a folder in path can simplify running J:
+j32.bat    - jbld\j32\bin\jconsole -js "load'git/jsource/test/tsu.ijs'"
+j64.bat    - jbld\j64\bin\jconsole -js "[load'git/jsource/test/tsu.ijs'"
+j64avx.bat - jbld\j64\bin\jconsole -lib javx.dll -js "load'git/jsource/test/tsu.ijs'"
+
+VS2013
+ Open Project
+ browse to git\jsource\makevs\jdll
+ open jdll.sln
+ Build>Configuration Manager
+  Release64avx - X64 (32 bit builds must be Win32)
+ Build Clean Solution
+ Build Solution
+
+*************************************************************************
+
 how to build/test/debug windows binaries
 **************************************************************************
 general:

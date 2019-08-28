@@ -24,7 +24,7 @@ chk=: 4 : 0
  i=. {.&>c
  assert. i e. 1+i.#ww
  p=. ((<'for_')=4{.&.>t) +. ((<'goto_')=5{.&.>t) +. (<'label_')=6{.&.>t
- assert. (i e. 1 2) ~: (((1+t i.&> '.'){.&.> t) e. 2}.ww) +. p
+ assert. (i e. 1 2 33) ~: (((1+t i.&> '.'){.&.> t) e. 2}.ww) +. p
  assert. (1{&>c) e. 65534 65535,i.1+#c
  assert. (2{&>c) e. i.#c
  1

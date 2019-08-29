@@ -62,10 +62,14 @@ C   wtype[256]={0};
 #define bits "32"
 #endif
 
+#if C_AVX2
+#define hw "avx2"
+#else
 #if C_AVX
 #define hw "avx"
 #else
 #define hw ""
+#endif
 #endif
 
 char jeversion[]= "je9!:14 j"jversion"/j"bits""hw"/"jplatform"/"jtype"/"jlicense"/"jbuilder"/"__DATE__"T"__TIME__;

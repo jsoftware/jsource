@@ -113,11 +113,18 @@ linux_j64avx) # linux intel 64bit avx
 TARGET=libjavx.so
 COMPILE="$common -DC_AVX=1 "
 LINK=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP -o libjavx.so "
-if [ "x$javx2" != x'1' ] ; then
 CFLAGS_SIMD=" -mavx "
-else
-CFLAGS_SIMD=" -DC_AVX2=1 -mavx2 "
-fi
+OBJS_FMA=" blis/gemm_int-fma.o "
+OBJS_AESNI=" aes-ni.o "
+SRC_ASM="${SRC_ASM_LINUX}"
+GASM_FLAGS=""
+;;
+
+linux_j64avx2) # linux intel 64bit avx2
+TARGET=libjavx2.so
+COMPILE="$common -DC_AVX=1 -DC_AVX2=1"
+LINK=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP -o libjavx2.so "
+CFLAGS_SIMD=" -mavx2 "
 OBJS_FMA=" blis/gemm_int-fma.o "
 OBJS_AESNI=" aes-ni.o "
 SRC_ASM="${SRC_ASM_LINUX}"

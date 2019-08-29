@@ -17,6 +17,7 @@ tsu=$jgit/test/tsu.ijs
 j32="$jbld/j32/bin/jconsole $tsu"
 j64="$jbld/j64/bin/jconsole $tsu"
 j64avx="$jbld/j64/bin/jconsole -lib libjavx.$jsuffix $tsu"
+j64avx2="$jbld/j64/bin/jconsole -lib libjavx2.$jsuffix $tsu"
 jmake=$jgit/make
 
-export jgit jbld jplatform j32 j64 j64nonavx jmake CC
+export jgit jbld jplatform j32 j64 j64avx j64avx2 jmake CC

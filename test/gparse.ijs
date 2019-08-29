@@ -35,6 +35,38 @@ multi =: 3 : 'a =: a =: a [ a + a'
 NB. a -: multi^:100 a
 a -: multi^:10 a
 
+a =: 3 : 0
+locnm =. >: y
+locnm [ ". 'locnm =. 1;2;3'
+)
+NB. We don't protect local names (for speed).  That makes the assignment-in-". destroy the value
+NB. 10 11 -: 3 : 0 (3 4)
+NB. (a 5) + a y
+NB. )
+a =: 3 : 0
+locnm =: >: y
+locnm [ ". 'locnm =: 1;2;3'
+)
+10 11 -: 3 : 0 (3 4)
+(a 5) + a y
+)
+a =: 3 : 0
+locnm =: >: y
+locnm [ 4!:55 <'locnm'
+)
+10 11 -: 3 : 0 (3 4)
+(a 5) + a y
+)
+a =: 3 : 0
+locnm =. >: y
+locnm [ 4!:55 <'locnm'
+)
+10 11 -: 3 : 0 (3 4)
+(a 5) + a y
+)
+
+
+
 NB. Test display of error spacing
 '|domain error: efx|   1    +''a''' -: efx '1 + ''a'''
 '|domain error: efx|   2    /' -: efx '2/'
@@ -102,6 +134,6 @@ NB. check the special names must be assigned if used in explicit defs
 'noun result was required' -: 3 : 'zz&(4!:55 <''y'')' etx 4
 NB. t =. * x  NB. OK from console - can't really check without breaking tests when run inside explicit def
 
-4!:55 ;:'a aa bc multi swd t '
+4!:55 ;:'a aa bc locnm multi swd t '
 
 

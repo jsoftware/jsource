@@ -674,9 +674,9 @@ failparse:  // If there was an error during execution or name-stacking, exit wit
   // their value was moved onto the stack had the decrementing of the use count deferred: we decrement
   // them now.  There may be references to these names in the result (if we are returning a verb/adv/conj),
   // so we don't free the names quite yet: we put them on the tpush stack to be freed after we know
-  // we are through with the result.  If we are returning a noun, free them right away
+  // we are through with the result.  If we are returning a noun, free them right away unless they happen to be the very noun we are returning
   v=jt->nvrav+nvrotop;  // point to our region of the nvr area
-  DQ(jt->parserstackframe.nvrtop-nvrotop, A vv = *v; I vf = AFLAG(vv); AFLAG(vv) = vf & ~(AFNVR|AFNVRUNFREED); if(!(vf&AFNVRUNFREED))if(!z||AT(z)&NOUN){fa(vv);}else{tpush(vv);} ++v;);   // schedule deferred frees.
+  DQ(jt->parserstackframe.nvrtop-nvrotop, A vv = *v; I vf = AFLAG(vv); AFLAG(vv) = vf & ~(AFNVR|AFNVRUNFREED); if(!(vf&AFNVRUNFREED))if(!z||(AT(z)&NOUN&&z!=vv)){fa(vv);}else{tpush(vv);} ++v;);   // schedule deferred frees.
   // Still can't return till frame-stack popped
 
   jt->parserstackframe = oframe;

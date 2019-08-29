@@ -1,7 +1,9 @@
-2019 August 28 update
+2019 August 29 update
 
-NOTE: vcxproj files ARE pushed to the repo - be careful!
-      vsxproj.template is current official version
+NOTE: *.vcxproj and *.sln files are NOT in repo
+      *.vcxproj.template and *.sln.template are IN repo
+
+      after a clone (or bad changes) copy the X.template to be X
 
 cleanup of j.dll/jconsole/tsdll.dll vcxproj files
 

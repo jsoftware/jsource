@@ -170,11 +170,18 @@ darwin_j64avx) # darwin intel 64bit
 TARGET=libjavx.dylib
 COMPILE="$darwin $macmin -DC_AVX=1"
 LINK=" -dynamiclib -lm -ldl $LDOPENMP $macmin -o libjavx.dylib"
-if [ "x$javx2" != x'1' ] ; then
 CFLAGS_SIMD=" -mavx "
-else
+OBJS_FMA=" blis/gemm_int-fma.o "
+OBJS_AESNI=" aes-ni.o "
+SRC_ASM="${SRC_ASM_MAC}"
+GASM_FLAGS="$macmin"
+;;
+
+darwin_j64avx2) # darwin intel 64bit
+TARGET=libjavx.dylib
+COMPILE="$darwin $macmin -DC_AVX=1 -DC_AVX2=1"
+LINK=" -dynamiclib -lm -ldl $LDOPENMP $macmin -o libjavx2.dylib"
 CFLAGS_SIMD=" -DC_AVX2=1 -mavx2 "
-fi
 OBJS_FMA=" blis/gemm_int-fma.o "
 OBJS_AESNI=" aes-ni.o "
 SRC_ASM="${SRC_ASM_MAC}"

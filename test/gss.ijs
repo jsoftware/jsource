@@ -194,7 +194,7 @@ vv1 =. <"1 (1000 2 $ 1 - 1)
 0.75 > %/ vv1 - compst vv0
 0.75 > %/ vv1 % compst vv0
 0.75 > %/ vv1 ~: compst vv0
-0.75 > %/ vv1 ^ compst vv0
+0.85 > %/ vv1 ^ compst vv0
 0.75 > %/ vv1 16 b. compst vv0
 0.75 > %/ vv1 17 b. compst vv0
 0.75 > %/ vv1 18 b. compst vv0

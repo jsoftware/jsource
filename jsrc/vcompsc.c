@@ -305,13 +305,13 @@ static AF atcompX[]={   /* table for any vs. any */
 // We require the ranks to be <2 for processing here except for @e., which requires that the result of e. have rank<2
 // If the form is [: f/ g  and g is a simple comparison, use f/@g code for higher ranks
 // If no routine found, return 0 to failover to normal path
-// In the return address bits0-1 indicate postprocessing needed: 00=none, 10=+./ (result is binary 0 if search completed), 11=*./ (result is binary 1 if search completed)
+// compsc.postflags bits 0-1 indicate postprocessing needed: 00=none, 10=+./ (result is binary 0 if search completed), 11=*./ (result is binary 1 if search completed)
 AF jtatcompf(J jt,A a,A w,A self){I m;
  RZ(a&&w);
  m=FAV(self)->flag&255;
  if((m&6)!=6){   // normal comparison
   // verify rank is OK, based on operation
-  if((AR(a)|AR(w))>1)R (m>=(4<<3))?(AF)jtfslashatg:0;   // If an operand has rank>1, reject it unless it can be turned to f/@g special
+  if((AR(a)|AR(w))>1){jt->workareas.compsc.postflags=0; R (m>=(4<<3))?(AF)jtfslashatg:0;}   // If an operand has rank>1, reject it unless it can be turned to f/@g special
   ASSERT(AN(a)==AN(w)||((AR(a)&AR(w))==0),EVLENGTH)   // agreement is same length or one an atom
   // split m into search and comparison
   I search=m>>3; I comp=m&7;

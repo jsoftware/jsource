@@ -476,7 +476,7 @@ printf("va2a: indexes="); spt=SPA(PAV(a),i); DO(AN(spt), printf(" %d",IAV(spt)[i
 
 // All dyadic arithmetic verbs f enter here, and also f"n.  a and w are the arguments, id
 // is the pseudocharacter indicating what operation is to be performed.  self is the block for this primitive,
-// ranks are the ranks to use
+// ranks are the ranks of the verb, argranks are the ranks of a and w combined into 1 field
 static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ranks,UI argranks){A z;I m,
      mf,n,nf,shortr,* RESTRICT s,*sf,zn,awzk[3];VA2 adocv;UI fr;  // fr will eventually be frame/rank  nf (and mf) change roles during execution
  fr=argranks>>RANKTX; shortr=argranks&RANKTMSK;  // fr,shortr = ar,wr to begin with.  Changes later

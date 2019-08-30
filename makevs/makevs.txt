@@ -5,6 +5,9 @@ NOTE: *.vcxproj and *.sln files are NOT in repo
 
       after a clone (or bad changes) copy the X.template to be X
 
+      templates.ijs has utils for working with templates
+      e.g., run template_status'' after a clone
+
 cleanup of j.dll/jconsole/tsdll.dll vcxproj files
 
 VS2013 current directory is the path to the sln file that is opened

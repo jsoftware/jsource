@@ -11,6 +11,13 @@ the base files are in gitignore so are not in repo
 
 changes to the base files that should be in the
 repo must be copied to .template
+and then must be copied to the base files to be used
+
+template_status is currently only verb coded
+
+routines to copy base files to template and template
+to base files should probably be provided
+but for now it must be done manually
 )
 
 vspath=: jpath'git/jsource/makevs/'

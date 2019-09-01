@@ -146,6 +146,7 @@ static B jtevinit(J jt){A q,*v;
  v[EVDOMAIN ]=cstr("domain error"               );
  v[EVFACCESS]=cstr("file access error"          );
  v[EVFNAME  ]=cstr("file name error"            );
+ v[EVFOLDLIMIT]=cstr("fold limit"            );
  v[EVFNUM   ]=cstr("file number error"          );
  v[EVILNAME ]=cstr("ill-formed name"            );
  v[EVILNUM  ]=cstr("ill-formed number"          );

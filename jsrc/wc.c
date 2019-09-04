@@ -218,8 +218,8 @@ static I jtconall(J jt,I n,CW*con){A y;CW*b=0,*c=0,*d=0;I e,i,j,k,p=0,q,r,*stack
      if(r==CWHILE||r==CWHILST||r==CFOR)--wb;  // if this ends a loop, decrement the nested-loop count
      CWASSERT(0>conend(i,j,k,b,c,d,p,q,r));   // update the controls matching this end.
     }
-    // if the END goes to NSI, change the preceding block from BBLOCK to BBLOCKEND
-    if(i+1<n&&b->go==i+1&&con[i-1].type==CBBLOCK)con[i-1].type=CBBLOCKEND;
+    // if the END was not ENDSEL and goes to NSI, change the preceding block from BBLOCK to BBLOCKEND
+    if(i+1<n&&b->go==i+1&&q!=CDOSEL&&con[i-1].type==CBBLOCK)con[i-1].type=CBBLOCKEND;
   }
 }
  // when it's over, the stack should be empty.  If not, return the index of the top control on the stack

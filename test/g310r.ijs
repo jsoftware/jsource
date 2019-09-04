@@ -86,6 +86,28 @@ sum=: +/
 (5!:5 <'g1') -: '+/ (',(5!:5 <'G1'),')'
 (5!:5 <'g2') -: '+/ (',(5!:5 <'G2'),')'
 
+NB. Going through locatives leaves global path unchanged
+a_z_ =. a =. 1 : 0
+u. f.
+1
+)
++ a
+f =. +
+f a
+g =. a_z_
++ g
+f g
+3 : 0 ''
+assert. + a
+ff =. +
+assert. f a
+assert. ff a
+assert. + g
+assert. f g
+assert. ff g
+1
+)
+4!:55 ;:'a a_z_'  NB. names used below
  
 NB. Local name passed to another modifier
 '`v1 v2 v3' =: -`*:`-:   NB. these are the values found by dou
@@ -199,7 +221,7 @@ _3 = 2 (+ 2 : 'x undefname`u.`v.@.[ y' -) 5
 'value error' -: 0 (+ 2 : 'x undefname`u.`v.@.[ y' -) etx 5
 
 
-4!:55 ;:'a aa q a_z_ c_z_ d_yyy_ d_xxx_ j j_xxx_ F f F1 f1 F2 f2 G g G1 g1 G2 g2 nln nn sum'
+4!:55 ;:'a aa q a_z_ c_z_ d_yyy_ d_xxx_ j j_xxx_ dou F f F1 f1 F2 f2 G g G1 g1 G2 g2 nln nn sum'
 18!:55 ;:'xxx yyy'
 
 

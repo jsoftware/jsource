@@ -11,7 +11,7 @@
 static AMONPS(floorDI,I,D,
  D mplrs[2]; mplrs[0]=2.0-jt->cct; mplrs[1]=jt->cct-0.00000000000000011; ,
  {if((*(UI*)x&0x7fffffffffffffff)<0x4310000000000000){I neg=((*(UI*)x)-(*(UI*)x>>(BW-1)))>>(BW-1); *z=(I)(*x*mplrs[neg])-neg;}  // -0 is NOT neg
-  else{D d=tfloor(*x); if(d!=(I)d){jt->workareas.ceilfloor.oflondx=n+~i; jt->jerr=EWOV; R;} *z=(I)d;}} ,
+  else{D d=tfloor(*x); if(d!=(I)d){jt->workareas.ceilfloor.oflondx=n+~i; jt->jerr=EWOV; R;} *z=(I)d;}} ,  // n+~i because we use DQ
  ; )  // x100 0011 0001 =>2^50
 #else
 static AMON(floorDI,I,D, {D d=tfloor(*x); *z=(I)d; ASSERTW(d==*z,EWOV);})

@@ -302,6 +302,24 @@ y =. y , 'h'
 )
 'abcdgh' -: t ''
 
+'abcdecdefg' -: 3 : 0 ''
+y =. y , 'a'
+for. 1 do.
+y =. y , 'b'
+    for. 0 1 do.  NB. works if 1
+y =. y , 'c'
+      select. 3  NB. works if 4
+      case. 3 do.
+y =. y , 'd'
+      end.   NB. works if case. 4 do. inserted above this
+y =. y , 'e'
+    end.
+y =. y , 'f'
+end.
+y =. y , 'g'
+)
+
+
 4!:55 ;:'f0 f1 f2 f3 f4 f5 g1 g2 g3 g4 x t'
 
 

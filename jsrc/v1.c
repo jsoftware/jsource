@@ -102,13 +102,14 @@ static B jteqf(J jt,A a,A w){A p,q;V*u=FAV(a),*v=FAV(w);
 // store the match value(s) in *x.  x may be 0, if af and wf are 0 and m and n are 1.  In this case we don't store anything.
 // but return the match status.  We use this when comparing boxed arrays or functions
 // b1 is the value to use for 'match' - 1 normally, but 0 for top level of -.@-:
+// m=#cells of shorter frame, n=#times a cell of shorter frame must be repeated
 // the comparands may not be sparse
 static B jtmatchsub(J jt,I af,I wf,I m,I n,A a,A w,B* RESTRICT x,B b1){B b;C*av,*wv;I at,c,j=0,p,q,t,wt;
  // we tested for a==w before the call, to save on call overhead
  // m*n cannot be 0.  If this is a recursive call, m=n=1; while if it is the first call, empty m/n were handled at the top level
  p=AR(a)-af; at=UNSAFE(AT(a));
  q=AR(w)-wf; wt=UNSAFE(AT(w)); 
- // p=cell-rank of a; q=cell-rank of w; ?t=type; m=#cells of shorter frame, n=#times a cell of shorter frame must be repeated
+ // p=cell-rank of a; q=cell-rank of w; ?t=type;
  // c=#atoms in a cell, b is 1 if rank or cell-shape mismatches, or if cells are not empty and types are incompatible
  // We know that either there is no frame or both arguments are nonempty (Empty arguments with frame can happen only at the top level
  // and were handled there).

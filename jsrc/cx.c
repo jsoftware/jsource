@@ -272,6 +272,7 @@ DF2(jtxdefn){PROLOG(0048);
    if((UI)i>=(UI)n||(cwtype=(ci=i+cw)->type)!=CTBLOCK||jt->cxspecials)break;  // avoid indirect-branch overhead on the likely case
   case CASSERT:
   case CTBLOCK:
+tblockcase:
    // execute and parse line as if for B block, except save the result in t
    // If there is a possibility that the previous B result may become the result of this definition,
    // protect it during the frees during the T block.  Otherwise, just free memory
@@ -437,21 +438,31 @@ dobblock:
    // case. and fcase. are used to start a selection.  t has the result of the T block; we check to
    // make sure this is a noun, and save it on the stack in cv->t.  Then clear t
    if(!cv->t){
-    BASSERT(t,EVCTRL);
+    // This is the first case.  That means the t block has the select. value.  Save it.
+    BASSERT(t,EVCTRL);  // error if select. case.
     CHECKNOUN    // if t is not a noun, signal error on the last line executed in the T block
-    t=boxopen(t); BZ(ras(t)); BZ(cv->t=t); t=0;
+// obsolete     t=boxopen(t);
+    BZ(ras(t)); cv->t=t; t=0;  // protect t from free while we are comparing with it, save in stack
    }
    i=ci->go;  // Go to next sentence, which might be in the default case (if T block is empty)
-   break;
+   if((UI)i<(UI)n&&(cwtype=(ci=i+cw)->type)==CTBLOCK&&!jt->cxspecials)goto tblockcase;  // avoid indirect-branch overhead on the likely case, which is case. t-block do.
+   break;  // if it's not a t-block, take the indirect branch
   case CDOSEL:   // do. after case. or fcase.
    // do. for case./fcase. evaluates the condition.  t is the result (a T block); if it is nonexistent
    // or not all 0, we advance to the next sentence (in the case); otherwise skip to next test/end
-
-   if(t){CHECKNOUN}    // if t is not a noun, signal error on the last line executed in the T block
-
-   i=t&&all0(eps(cv->t,boxopen(t)))?ci->go:1+i; // cv +./@:e. boxopen t; go to miscompare point if no match
-   // Clear t to ensure that the next case./fcase. does not think it's the first one
-   t=0; 
+   ++i;  // go to NSI if case tests true
+   if(t){    // if t is not a noun, signal error on the last line executed in the T block
+    CHECKNOUN
+    if(!((AT(t)|AT(cv->t))&BOX)){
+     // if neither t nor cv is boxed, just compare for equality.  Boxed empty goes through the other path
+     if(!equ(t,cv->t))i=ci->go;  // should perhaps take the scalar case specially & send it through singleton code
+    }else{
+     if(all0(eps(boxopen(cv->t),boxopen(t))))i=ci->go;  // if case tests false, jump around bblock   test is cv +./@:,@:e. boxopen t
+    }
+    // Clear t to ensure that the next case./fcase. does not reuse this value
+    t=0;
+   }
+   if((UI)i<(UI)n&&((cwtype=(ci=i+cw)->type)&31)==CBBLOCK&&!jt->cxspecials)goto dobblock;  // avoid indirect-branch overhead on the likely  case. ... do. bblock
    break;
   default:   //   CELSE CWHILST CGOTO CEND
    if(2<=*jt->adbreakr) { BASSERT(0,EVBREAK);} 

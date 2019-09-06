@@ -92,17 +92,17 @@ u. f.
 1
 )
 + a
-f =. +
+f =. ((coname '') -: coname)
 f a
 g =. a_z_
 + g
 f g
 3 : 0 ''
 assert. + a
-ff =. +
+ff =. ((coname '') -: coname)
 assert. f a
 assert. ff a
-assert. + g
+assert. ((coname '') -: coname) g
 assert. f g
 assert. ff g
 1

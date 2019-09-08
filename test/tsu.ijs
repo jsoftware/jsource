@@ -349,12 +349,14 @@ tsu_usage=: 0 : 0
 )
 
 tsu_jd=: 0 : 0
-   NB. first run takes a while as it updates everything
-   NB. subsequent runs update only what has changed
-   jdrun'' NB. update addons and run Jd jdtests
+   runjd'' NB. run Jd jdtests
 )
 
-jdrun=: 3 : 0
+tsu_pacman=: 0 : 0
+   runpacman'' NB. update addons
+)
+
+runpacman=: 3 : 0
 if. IFWIN do.
  if. -.fexist'~tools/ftp/busybox.exe' do.
   echo'copy production J ~tools/ftp folder to jbld/j64/tools'
@@ -365,16 +367,18 @@ load'pacman'
 'update'jpkg''
 'install'jpkg'all'
 load'jmf' NB. use possibly new jmf
+)
+
+runjd=: 3 : 0
 load'jd'
 jdtests_jd_''
 )
 
 echo 0 : 0
-see tsu_notes for caveats, tsu_usage for details, and tsu_jd for Jd
+see: tsu_notes, tsu_usage, tsu_pacman, and tsu_jd
 
    RUN  ddall  NB. report scripts that fail
    RECHO ddall NB. echo script names as run and final count of failures
 )
 
 echo 9!:14''
-

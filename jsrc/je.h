@@ -385,7 +385,7 @@ extern F2(jtagenda);
 extern F2(jtamp);
 extern F2(jtampco);
 extern F2(jtanyebar);
-extern F2(jtapipx);
+// obsolete extern F2(jtapipx);
 extern F2(jtapplystr);
 extern F2(jtatco);
 extern F2(jtatop);

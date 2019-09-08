@@ -860,6 +860,7 @@ if((I)jt&3)SEGFAULT
   if(blockx<PLIML){ 
    // small block: allocate from pool
    mfreeb=jt->mfree[-PMINL+1+blockx].ballo; // bytes in pool allocations
+
    if(z){         // allocate from a chain of free blocks
     jt->mfree[-PMINL+1+blockx].pool = AFCHAIN(z);  // remove & use the head of the free chain
 #if MEMAUDIT&1

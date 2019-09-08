@@ -8,24 +8,31 @@
 
 static F1(jtnorm){R sqroot(pdt(w,conjug(w)));}
 
+// take inverse of upper-triangular w
 F1(jtrinv){PROLOG(0066);A ai,bx,di,z;I m,n,r,*s;
  F1RANK(2,jtrinv,0);
- r=AR(w); s=AS(w); n=2>r?1:s[1]; m=(1+n)>>1;
- ASSERT(!r||n==s[0],EVLENGTH);
- if(1>=n)R recip(w);
- ai=rinv(take(v2(m,m),w));
- di=rinv(drop(v2(m,m),w));
- bx=negate(pdt(ai,pdt(take(v2(m,m-n),w),di)));
+ r=AR(w); s=AS(w); n=2>r?1:s[1]; m=(1+n)>>1;  // n is rank of matrix    m is the matrix splitpoint
+ // construe w as a block-matrix Wij where w00 and w11 are upper-triangular, w10 is 0, and w01 is a full matrix
+ ASSERT(!r||n==s[0],EVLENGTH);  // error if not square
+ if(1>=n)R recip(w);  // if an atom, inverse = reciprocal
+ ai=rinv(take(v2(m,m),w));  // take inverse of w00
+ di=rinv(drop(v2(m,m),w));  // take inverse of w11
+ bx=negate(pdt(ai,pdt(take(v2(m,m-n),w),di)));  // -w00^_1 mp w01 mp w11^_1
  z=over(stitch(ai,bx),take(v2(n-m,-n),di));
+ //  w00^_1     -w00^_1 mp w01 mp w11^_1
+ //    0         w11^_1
  EPILOG(z);
 }    /* R.K.W. Hui, Uses of { and }, APL87, p. 56 */
 
+// 
+// recursive subroutine for qr decomposition, returns q;r
 static F1(jtqrr){PROLOG(0067);A a1,q,q0,q1,r,r0,r1,t,*tv,t0,t1,y,z;I m,n,p,*s;
  RZ(w);
- if(2>AR(w)){p=AN(w); n=m=1;}else{s=AS(w); p=s[0]; n=s[1]; m=(1+n)>>1;} 
- if(1>=n){
-  t=norm(ravel(w));
-  ASSERT(!AN(w)||!equ(t,num[0]),EVDOMAIN);
+ if(2>AR(w)){p=AN(w); n=m=1;}else{s=AS(w); p=s[0]; n=s[1]; m=(1+n)>>1;}  // p=#rows, n=#columns
+ // m is half of the number of columns.  We split the array by columns into two equal parts and recur.
+ if(1>=n){  // just 1 col
+  t=norm(ravel(w));  // norm of col 
+  ASSERT(!AN(w)||!equ(t,num[0]),EVDOMAIN);  // 
   RZ(q=divide(w,t));
   R link(2>AR(q)?table(q):q,reshape(v2(n,n),p?t:num[1]));
  }
@@ -40,6 +47,7 @@ static F1(jtqrr){PROLOG(0067);A a1,q,q0,q1,r,r0,r1,t,*tv,t0,t1,y,z;I m,n,p,*s;
  z=link(q,r); EPILOG(z);
 }
 
+// qr (?) decomposition of w, returns q;r
 F1(jtqr){A r,z;D c=inf,d=0,x;I n1,n,*s,wr;
  F1RANK(2,jtqr,0);
  ASSERT(DENSE&AT(w),EVNONCE);
@@ -114,12 +122,13 @@ static F2(jtmdivsp){A a1,x,y;I at,d,m,n,t,*v,xt;P*wp;
 }    /* currently only handles tridiagonal sparse w */
 
 
+// a %. w  for all types
 F2(jtmdiv){PROLOG(0069);A q,r,*v,y,z;B b=0;I t;
  F2RANK(RMAX,2,jtmdiv,0);
  if(AT(a)&SPARSE)RZ(a=denseit(a));
  t=AT(w);
  if(t&SPARSE)R mdivsp(a,w);
- if(t&XNUM+RAT)z=minv(w);
+ if(t&XNUM+RAT)z=minv(w);  // for xnums, take inv of a
  else{
   RZ(y=qr(w)); v=AAV(y); q=*v++; r=*v;
   z=pdt(rinv(r),t&CMPX?conjug(cant1(q)):cant1(q));

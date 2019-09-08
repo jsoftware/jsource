@@ -5,7 +5,7 @@
 
 #include "j.h"
 
-                    
+// w is a rational matrix
 F1(jtgausselm){I c,e,i,j,r,r1,*s;Q p,*u,*v,*x;
  F1RANK(2,jtgausselm,0);
  ASSERT(RAT&AT(w),EVNONCE);

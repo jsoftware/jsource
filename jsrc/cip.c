@@ -220,22 +220,27 @@ static void cachedmmult (J jt,D* av,D* wv,D* zv,I m,I n,I p,I cmpx){D c[(CACHEHE
      // Now do the 16 outer products for the block, each 2ax4w (or 2ax2w if cmpx)
      I a4rem=MIN(w1rem,CACHEHEIGHT);
 #if C_AVX  // This version if AVX instruction set is available.
+#if C_AVX2
+#define MUL_ACC(addend,mplr1,mplr2) _mm256_add_pd(addend , _mm256_mul_pd(mplr1,mplr2))
+#else
+#define MUL_ACC(addend,mplr1,mplr2) _mm256_add_pd(addend , _mm256_mul_pd(mplr1,mplr2))
+#endif
      __m256d * RESTRICT c4base= (__m256d *)c3base;
      __m256d *a4base0=(__m256d *)cva;   // Can't put RESTRICT on this - the loop to init *cva gets optimized away
      if(cmpx!=1){
       // read the 2x1 a values and the 1x4 cache values
       // form outer product, add to accumulator
       do{
-       z00 = _mm256_add_pd(z00 , _mm256_mul_pd(c4base[0],a4base0[0]));    // accumulate into z
-       z01 = _mm256_add_pd(z01 , _mm256_mul_pd(c4base[0],a4base0[1]));    // add latency is 3, so need 3 copies for dual-ALU machines
+       z00 = MUL_ACC(z00 , c4base[0],a4base0[0]);    // accumulate into z
+       z01 = MUL_ACC(z01 , c4base[0],a4base0[1]);    // add latency is 3, so need 3 copies for dual-ALU machines
        if(--a4rem<=0)break;
 
-       z10 = _mm256_add_pd(z10 , _mm256_mul_pd(c4base[CACHEWIDTH*sizeof(D)/sizeof(c4base[0])],a4base0[2]));
-       z11 = _mm256_add_pd(z11 , _mm256_mul_pd(c4base[CACHEWIDTH*sizeof(D)/sizeof(c4base[0])],a4base0[3]));
+       z10 = MUL_ACC(z10 , c4base[CACHEWIDTH*sizeof(D)/sizeof(c4base[0])],a4base0[2]);
+       z11 = MUL_ACC(z11 , c4base[CACHEWIDTH*sizeof(D)/sizeof(c4base[0])],a4base0[3]);
        if(--a4rem<=0)break;
 
-       z20 = _mm256_add_pd(z20 , _mm256_mul_pd(c4base[2*CACHEWIDTH*sizeof(D)/sizeof(c4base[0])],a4base0[4]));
-       z21 = _mm256_add_pd(z21 , _mm256_mul_pd(c4base[2*CACHEWIDTH*sizeof(D)/sizeof(c4base[0])],a4base0[5]));
+       z20 = MUL_ACC(z20 , c4base[2*CACHEWIDTH*sizeof(D)/sizeof(c4base[0])],a4base0[4]);
+       z21 = MUL_ACC(z21 , c4base[2*CACHEWIDTH*sizeof(D)/sizeof(c4base[0])],a4base0[5]);
        if(--a4rem<=0)break;
 
        a4base0 += OPHEIGHT*3;  // OPWIDTH is implied by __m256d type
@@ -244,19 +249,19 @@ static void cachedmmult (J jt,D* av,D* wv,D* zv,I m,I n,I p,I cmpx){D c[(CACHEHE
       // Collect the sums of products
       z10 = _mm256_add_pd(z10,z20);z11 = _mm256_add_pd(z11,z21); z00 = _mm256_add_pd(z00,z10); z01 = _mm256_add_pd(z01,z11);
      }else{
-      // FLT case.  Do the multiply.  We need at least 6 accumulators for latency, as in the real case; since we have real & imaginary parts separately, we need 8 
+      // CMPX case.  Do the multiply.  We need at least 6 accumulators for latency, as in the real case; since we have real & imaginary parts separately, we need 8 
       do{
 
-       z00 = _mm256_add_pd(z00 , _mm256_mul_pd(c4base[0],a4base0[0]));    // c0 riri * a0 rrrr  holds riri for first row
-       z10 = _mm256_add_pd(z10 , _mm256_mul_pd(c4base[0],a4base0[1]));    // c0 riri * a0 iiii  holds iRiR for first row
-       z01 = _mm256_add_pd(z01 , _mm256_mul_pd(c4base[0],a4base0[2]));    // c0 riri * a1 rrrr  holds riri for second row
-       z11 = _mm256_add_pd(z11 , _mm256_mul_pd(c4base[0],a4base0[3]));    // c0 riri * a1 iiii  holds iRiR for second row
+       z00 = MUL_ACC(z00 , c4base[0],a4base0[0]);    // c0 riri * a0 rrrr  holds riri for first row
+       z10 = MUL_ACC(z10 , c4base[0],a4base0[1]);    // c0 riri * a0 iiii  holds iRiR for first row
+       z01 = MUL_ACC(z01 , c4base[0],a4base0[2]);    // c0 riri * a1 rrrr  holds riri for second row
+       z11 = MUL_ACC(z11 , c4base[0],a4base0[3]);    // c0 riri * a1 iiii  holds iRiR for second row
        if(--a4rem<=0)break;
 
-       z20 = _mm256_add_pd(z20 , _mm256_mul_pd(c4base[CACHEWIDTH*sizeof(D)/sizeof(c4base[0])],a4base0[4]));    // c1 riri * a2 rIrI
-       z30 = _mm256_add_pd(z30 , _mm256_mul_pd(c4base[CACHEWIDTH*sizeof(D)/sizeof(c4base[0])],a4base0[5]));    // c1 riri * a2 irir
-       z21 = _mm256_add_pd(z21 , _mm256_mul_pd(c4base[CACHEWIDTH*sizeof(D)/sizeof(c4base[0])],a4base0[6]));    // c1 riri * a3 rIrI
-       z31 = _mm256_add_pd(z31 , _mm256_mul_pd(c4base[CACHEWIDTH*sizeof(D)/sizeof(c4base[0])],a4base0[7]));    // c1 riri * a3 irir
+       z20 = MUL_ACC(z20 , c4base[CACHEWIDTH*sizeof(D)/sizeof(c4base[0])],a4base0[4]);    // c1 riri * a2 rIrI
+       z30 = MUL_ACC(z30 , c4base[CACHEWIDTH*sizeof(D)/sizeof(c4base[0])],a4base0[5]);    // c1 riri * a2 irir
+       z21 = MUL_ACC(z21 , c4base[CACHEWIDTH*sizeof(D)/sizeof(c4base[0])],a4base0[6]);    // c1 riri * a3 rIrI
+       z31 = MUL_ACC(z31 , c4base[CACHEWIDTH*sizeof(D)/sizeof(c4base[0])],a4base0[7]);    // c1 riri * a3 irir
        if(--a4rem<=0)break;
 
        a4base0 += OPHEIGHT*2*2;  // OPWIDTH is implied by __m256d type; this is 2 number, 2 instances per loop

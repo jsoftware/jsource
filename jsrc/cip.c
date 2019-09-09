@@ -221,7 +221,7 @@ static void cachedmmult (J jt,D* av,D* wv,D* zv,I m,I n,I p,I cmpx){D c[(CACHEHE
      I a4rem=MIN(w1rem,CACHEHEIGHT);
 #if C_AVX  // This version if AVX instruction set is available.
 #if C_AVX2
-#define MUL_ACC(addend,mplr1,mplr2) _mm256_add_pd(addend , _mm256_mul_pd(mplr1,mplr2))
+#define MUL_ACC(addend,mplr1,mplr2) _mm256_fmadd_pd(mplr1,mplr2,addend)
 #else
 #define MUL_ACC(addend,mplr1,mplr2) _mm256_add_pd(addend , _mm256_mul_pd(mplr1,mplr2))
 #endif
@@ -230,22 +230,45 @@ static void cachedmmult (J jt,D* av,D* wv,D* zv,I m,I n,I p,I cmpx){D c[(CACHEHE
      if(cmpx!=1){
       // read the 2x1 a values and the 1x4 cache values
       // form outer product, add to accumulator
-      do{
-       z00 = MUL_ACC(z00 , c4base[0],a4base0[0]);    // accumulate into z
-       z01 = MUL_ACC(z01 , c4base[0],a4base0[1]);    // add latency is 3, so need 3 copies for dual-ALU machines
-       if(--a4rem<=0)break;
+      if(a4rem==CACHEHEIGHT){   // scaf
+       do{
+        z00 = MUL_ACC(z00 , c4base[0*CACHEWIDTH*sizeof(D)/sizeof(c4base[0])],a4base0[0]);
+        z01 = MUL_ACC(z01 , c4base[0*CACHEWIDTH*sizeof(D)/sizeof(c4base[0])],a4base0[1]);
+        z10 = MUL_ACC(z10 , c4base[1*CACHEWIDTH*sizeof(D)/sizeof(c4base[0])],a4base0[2]);
+        z11 = MUL_ACC(z11 , c4base[1*CACHEWIDTH*sizeof(D)/sizeof(c4base[0])],a4base0[3]);
+        z20 = MUL_ACC(z20 , c4base[2*CACHEWIDTH*sizeof(D)/sizeof(c4base[0])],a4base0[4]);
+        z21 = MUL_ACC(z21 , c4base[2*CACHEWIDTH*sizeof(D)/sizeof(c4base[0])],a4base0[5]);
+        z00 = MUL_ACC(z00 , c4base[3*CACHEWIDTH*sizeof(D)/sizeof(c4base[0])],a4base0[6]);
+        z01 = MUL_ACC(z01 , c4base[3*CACHEWIDTH*sizeof(D)/sizeof(c4base[0])],a4base0[7]);
+        z10 = MUL_ACC(z10 , c4base[4*CACHEWIDTH*sizeof(D)/sizeof(c4base[0])],a4base0[8]);
+        z11 = MUL_ACC(z11 , c4base[4*CACHEWIDTH*sizeof(D)/sizeof(c4base[0])],a4base0[9]);
+        z20 = MUL_ACC(z20 , c4base[5*CACHEWIDTH*sizeof(D)/sizeof(c4base[0])],a4base0[10]);
+        z21 = MUL_ACC(z21 , c4base[5*CACHEWIDTH*sizeof(D)/sizeof(c4base[0])],a4base0[11]);
+        z00 = MUL_ACC(z00 , c4base[6*CACHEWIDTH*sizeof(D)/sizeof(c4base[0])],a4base0[12]);
+        z01 = MUL_ACC(z01 , c4base[6*CACHEWIDTH*sizeof(D)/sizeof(c4base[0])],a4base0[13]);
+        z10 = MUL_ACC(z10 , c4base[7*CACHEWIDTH*sizeof(D)/sizeof(c4base[0])],a4base0[14]);
+        z11 = MUL_ACC(z11 , c4base[7*CACHEWIDTH*sizeof(D)/sizeof(c4base[0])],a4base0[15]);
+        a4base0 += OPHEIGHT*8;  // OPWIDTH is implied by __m256d type
+        c4base+=(CACHEWIDTH*sizeof(D)/sizeof(c4base[0]))*8;
+       }while(a4rem-=8);
+      }else{
+       do{
+        z00 = MUL_ACC(z00 , c4base[0],a4base0[0]);    // accumulate into z
+        z01 = MUL_ACC(z01 , c4base[0],a4base0[1]);    // add latency is 3, so need 3 copies for dual-ALU machines
+        if(--a4rem<=0)break;
 
-       z10 = MUL_ACC(z10 , c4base[CACHEWIDTH*sizeof(D)/sizeof(c4base[0])],a4base0[2]);
-       z11 = MUL_ACC(z11 , c4base[CACHEWIDTH*sizeof(D)/sizeof(c4base[0])],a4base0[3]);
-       if(--a4rem<=0)break;
+        z10 = MUL_ACC(z10 , c4base[CACHEWIDTH*sizeof(D)/sizeof(c4base[0])],a4base0[2]);
+        z11 = MUL_ACC(z11 , c4base[CACHEWIDTH*sizeof(D)/sizeof(c4base[0])],a4base0[3]);
+        if(--a4rem<=0)break;
 
-       z20 = MUL_ACC(z20 , c4base[2*CACHEWIDTH*sizeof(D)/sizeof(c4base[0])],a4base0[4]);
-       z21 = MUL_ACC(z21 , c4base[2*CACHEWIDTH*sizeof(D)/sizeof(c4base[0])],a4base0[5]);
-       if(--a4rem<=0)break;
+        z20 = MUL_ACC(z20 , c4base[2*CACHEWIDTH*sizeof(D)/sizeof(c4base[0])],a4base0[4]);
+        z21 = MUL_ACC(z21 , c4base[2*CACHEWIDTH*sizeof(D)/sizeof(c4base[0])],a4base0[5]);
+        if(--a4rem<=0)break;
 
-       a4base0 += OPHEIGHT*3;  // OPWIDTH is implied by __m256d type
-       c4base+=(CACHEWIDTH*sizeof(D)/sizeof(c4base[0]))*3;
-      }while(1);
+        a4base0 += OPHEIGHT*3;  // OPWIDTH is implied by __m256d type
+        c4base+=(CACHEWIDTH*sizeof(D)/sizeof(c4base[0]))*3;
+       }while(1);
+      }
       // Collect the sums of products
       z10 = _mm256_add_pd(z10,z20);z11 = _mm256_add_pd(z11,z21); z00 = _mm256_add_pd(z00,z10); z01 = _mm256_add_pd(z01,z11);
      }else{

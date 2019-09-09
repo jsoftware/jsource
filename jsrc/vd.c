@@ -11,7 +11,9 @@ static F1(jtnorm){R sqroot(pdt(w,conjug(w)));}
 // take inverse of upper-triangular w
 F1(jtrinv){PROLOG(0066);A ai,bx,di,z;I m,n,r,*s;
  F1RANK(2,jtrinv,0);
- r=AR(w); s=AS(w); n=2>r?1:s[1]; m=(1+n)>>1;  // n is rank of matrix    m is the matrix splitpoint
+ r=AR(w); s=AS(w); n=2>r?1:s[1]; // n is rank of matrix
+// obsolete m=(1+n)>>1; //    m is the matrix splitpoint
+ UI4 ctz; CTLZI(n,ctz); m=1LL<<(ctz-1);  m=(1+n)>>1;  // To avoid ragged edges, recur on power-of-2 size.  m is the matrix splitpoint
  // construe w as a block-matrix Wij where w00 and w11 are upper-triangular, w10 is 0, and w01 is a full matrix
  ASSERT(!r||n==s[0],EVLENGTH);  // error if not square
  if(1>=n)R recip(w);  // if an atom, inverse = reciprocal
@@ -28,22 +30,28 @@ F1(jtrinv){PROLOG(0066);A ai,bx,di,z;I m,n,r,*s;
 // recursive subroutine for qr decomposition, returns q;r
 static F1(jtqrr){PROLOG(0067);A a1,q,q0,q1,r,r0,r1,t,*tv,t0,t1,y,z;I m,n,p,*s;
  RZ(w);
- if(2>AR(w)){p=AN(w); n=m=1;}else{s=AS(w); p=s[0]; n=s[1]; m=(1+n)>>1;}  // p=#rows, n=#columns
- // m is half of the number of columns.  We split the array by columns into two equal parts and recur.
+// obsolete  if(2>AR(w)){p=AN(w); n=m=1;}else{s=AS(w); p=s[0]; n=s[1]; m=(1+n)>>1;}  // p=#rows, n=#columns
+ if(2>AR(w)){p=AN(w); n=1;}else{s=AS(w); p=s[0]; n=s[1];}  // p=#rows, n=#columns
+ UI4 ctz; CTLZI(n,ctz); m=1LL<<(ctz-1);  m=(1+n)>>1;  // To avoid ragged edges, recur on power-of-2 size.  m is the matrix splitpoint
  if(1>=n){  // just 1 col
   t=norm(ravel(w));  // norm of col 
-  ASSERT(!AN(w)||!equ(t,num[0]),EVDOMAIN);  // 
+  ASSERT(!AN(w)||!equ(t,num[0]),EVDOMAIN);  // norm must not be 0 unless column is empty
   RZ(q=divide(w,t));
   R link(2>AR(q)?table(q):q,reshape(v2(n,n),p?t:num[1]));
  }
- RZ(t0=qrr(take(v2(p,m),w)));
- tv=AAV(t0); q0=*tv++; r0=*tv;
- RZ(a1=drop(v2(0L,m),w));
- RZ(y=pdt(conjug(cant1(q0)),a1));
- RZ(t1=qrr(minus(a1,pdt(q0,y))));
- tv=AAV(t1); q1=*tv++; r1=*tv;
- RZ(q=stitch(q0,q1));
+ // construe w as w0 w1 w0t w1t
+ RZ(t0=qrr(take(v2(p,m),w)));  // find QR of w0  w0t
+ tv=AAV(t0); q0=*tv++; r0=*tv;  // point to Q and R of w0  w0t
+ RZ(a1=drop(v2(0L,m),w));  // a1=w1   w1t
+ RZ(y=pdt(conjug(cant1(q0)),a1));  // q0* w1   w1t q0t*   q0t*=/q0
+ RZ(t1=qrr(minus(a1,pdt(q0,y))));  // get QR of w1-(q0 q0* w1)    w1t-(w1t q0t* q0t)
+ tv=AAV(t1); q1=*tv++; r1=*tv;  
+ RZ(q=stitch(q0,q1));  // overall q is q0t    Q of (w1t-(w1t q0t* q0t))
  RZ(r=over(stitch(r0,y),take(v2(n-m,-n),r1)));
+ // r is   r0    q0* w1
+ //        0     R of w1-(q0 q0* w1)
+ // qr is  q0 r0    (q0 q0* w1) + (Q of w1-(q0 q0* w1))(R of w1-(q0 q0* w1))
+ // = w0 w1 = w
  z=link(q,r); EPILOG(z);
 }
 

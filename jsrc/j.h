@@ -908,7 +908,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define CTTZ(w) _tzcnt_u32((UINT)(w))
 #if SY_64
 #define CTTZI(w) _tzcnt_u64((UI)(w))
-#define CTLZI(in,out) _BitScanReverse64(&(out),in)
+#define CTLZI(in,out) _BitScanReverse64(&(out),in)  // actually bit # of highest set bit
 #else
 #define CTTZI(w) _tzcnt_u32((UINT)(w))
 #define CTLZI(in,out) _BitScanReverse(&(out),in)

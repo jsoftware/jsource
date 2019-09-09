@@ -594,7 +594,7 @@ static F1(jtcolon0){A l,z;C*p,*q,*s;I m,n;
   RE(l=jgets("\001"));
   if(!l)break;
   m=AN(l); p=q=CAV(l); 
-  if(m){while(' '==*p)++p; if(')'==*p){while(' '==*++p); if(p>=m+q)break;}}
+  while(p<q+m&&' '==*p)++p; if(p<q+m&&')'==*p){while(p<q+m&&' '==*++p); if(p>=m+q)break;}  // if ) with nothing else but blanks, stop
   while(AN(z)<=n+m){RZ(z=ext(0,z)); s=CAV(z);}
   MC(s+n,q,m); n+=m; *(s+n)=CLF; ++n;
  }
@@ -809,12 +809,12 @@ A jtclonelocalsyms(J jt, A a){A z;I j;I an=AN(a); LX *av=LXAV0(a),*zv;
 
 F2(jtcolon){A d,h,*hv,m;B b;C*s;I flag=VFLAGNONE,n,p;
  RZ(a&&w);
- if(VERB&AT(a)&AT(w)){
+ if(VERB&AT(a)&AT(w)){  // v : v case
   if(CCOLON==FAV(a)->id&&FAV(a)->fgh[0]&&VERB&AT(FAV(a)->fgh[0])&&VERB&AT(FAV(a)->fgh[1]))a=FAV(a)->fgh[0];  // look for v : v; don't fail if fgh[0]==0 (namerefop).  Must test fgh[0] first
   if(CCOLON==FAV(w)->id&&FAV(w)->fgh[0]&&VERB&AT(FAV(w)->fgh[0])&&VERB&AT(FAV(w)->fgh[1]))w=FAV(w)->fgh[1];
   R fdef(0,CCOLON,VERB,xv1,xv2,a,w,0L,((FAV(a)->flag&FAV(w)->flag)&VASGSAFE),mr(a),lr(w),rr(w));  // derived verb is ASGSAFE if both parents are 
  }
- RE(n=i0(a));
+ RE(n=i0(a));  // m : n; set n=type of result
  if(equ(w,num[0])){RZ(w=colon0(mark)); if(!n)R w;}
  if((C2T+C4T)&AT(w))RZ(w=cvt(LIT,w));
  if(10<n){s=CAV(w); p=AN(w); if(p&&CLF==s[p-1])RZ(w=str(p-1,s));}

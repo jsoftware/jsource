@@ -13,7 +13,7 @@ F1(jtrinv){PROLOG(0066);A ai,bx,di,z;I m,n,r,*s;
  F1RANK(2,jtrinv,0);
  r=AR(w); s=AS(w); n=2>r?1:s[1]; // n is rank of matrix
 // obsolete m=(1+n)>>1; //    m is the matrix splitpoint
- UI4 ctz; CTLZI(n,ctz); m=1LL<<(ctz-1);  m=(1+n)>>1;  // To avoid ragged edges, recur on power-of-2 size.  m is the matrix splitpoint
+ m=n>>1; I tom=(0x01222100>>((n&7)<<2))&3; m=(m+tom<n)?m+tom:m;  // Minimize number of wasted multiply slots, processing in batches of 4
  // construe w as a block-matrix Wij where w00 and w11 are upper-triangular, w10 is 0, and w01 is a full matrix
  ASSERT(!r||n==s[0],EVLENGTH);  // error if not square
  if(1>=n)R recip(w);  // if an atom, inverse = reciprocal
@@ -32,11 +32,12 @@ static F1(jtqrr){PROLOG(0067);A a1,q,q0,q1,r,r0,r1,t,*tv,t0,t1,y,z;I m,n,p,*s;
  RZ(w);
 // obsolete  if(2>AR(w)){p=AN(w); n=m=1;}else{s=AS(w); p=s[0]; n=s[1]; m=(1+n)>>1;}  // p=#rows, n=#columns
  if(2>AR(w)){p=AN(w); n=1;}else{s=AS(w); p=s[0]; n=s[1];}  // p=#rows, n=#columns
- UI4 ctz; CTLZI(n,ctz); m=1LL<<(ctz-1);  m=(1+n)>>1;  // To avoid ragged edges, recur on power-of-2 size.  m is the matrix splitpoint
+ m=n>>1; I tom=(0x01222100>>((n&7)<<2))&3; m=(m+tom<n)?m+tom:m;  // Minimize number of wasted multiply slots, processing in batches of 4
  if(1>=n){  // just 1 col
   t=norm(ravel(w));  // norm of col 
   ASSERT(!AN(w)||!equ(t,num[0]),EVDOMAIN);  // norm must not be 0 unless column is empty
-  RZ(q=divide(w,t));
+// obsolete  RZ(q=divide(w,t));
+  RZ(q=tymes(w,recip(t)));
   R link(2>AR(q)?table(q):q,reshape(v2(n,n),p?t:num[1]));
  }
  // construe w as w0 w1 w0t w1t

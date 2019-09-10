@@ -568,7 +568,7 @@ extern DF1(jtredcat);
 extern DF1(jtredravel);
 extern DF1(jtwd);
 
-extern DF2(jtapip);
+extern F2(jtapip);
 extern DF1(jtatomic1);
 extern DF2(jtatomic2);
 extern DF2(jtbitwisechar);

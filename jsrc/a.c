@@ -37,7 +37,7 @@ static B booltab[64]={
  1,0,0,0, 1,0,0,1, 1,0,1,0, 1,0,1,1,  1,1,0,0, 1,1,0,1, 1,1,1,0, 1,1,1,1,
 };
 
-static DF2(jtbdot2){R from(plus(duble(cvt(B01,a)),cvt(B01,w)),FAV(self)->fgh[2]);}
+static DF2(jtbdot2){R from(plusA(duble(cvt(B01,a)),cvt(B01,w)),FAV(self)->fgh[2]);}
 
 static DF1(jtbdot1){R bdot2(num[0],w,self);}
 

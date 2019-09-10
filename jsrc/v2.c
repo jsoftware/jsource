@@ -293,7 +293,7 @@ static F1(jttotient){A b,x,z;B*bv,p=0;I k,n,t;
   DO(n, y=xv[i]; k=*(AV(y)+AN(y)-1); ASSERT(0<=k,EVDOMAIN); if(k)*bv++=1; else{*bv++=0; xv[i]=iv1; p=1;});
  }
  z=cvt(AT(x),df1(x,eval("(- ~:)&.q:"))); 
- R p?tymes(b,z):z;
+ R p?tymesW(b,z):z;
 }
 
 /*
@@ -655,8 +655,8 @@ static F1(jtxfactor){PROLOG(0064);A st,z;B b=0;I k,m;X g,*sv,*sv0,x;
  while(sv-sv0){
   x=*--sv; 
   if(2>(k=sv-sv0)){A stsav = st; GATV0(st,XNUM,2*AN(stsav),1); MC(XAV(st),sv0,k*sizeof(A)); sv0=XAV(st); sv=k+sv0;}
-  if(1>xcompare(x,xc(2147483647L))){RZ(z=over(z,factor(sc(xint(x))))); continue;}
-  if(xprimeq(100L,x)){RZ(z=over(z,scx(x))); continue;}
+  if(1>xcompare(x,xc(2147483647L))){RZ(z=apip(z,factor(sc(xint(x))))); continue;}
+  if(xprimeq(100L,x)){RZ(z=apip(z,scx(x))); continue;}
   RZ(g=pollard_p_1(x)); if(g!=iv1){*sv++=g; RZ(*sv++=xdiv(x,g,XMFLR)); continue;}
   RZ(g=pollard_rho(x)); if(g!=iv1){*sv++=g; RZ(*sv++=xdiv(x,g,XMFLR)); continue;}
   if(!b){b=1; RZ(rngseeds(sc(jt->rngS[jt->rng]))); RZ(roll(v2(m,m*m)));} 

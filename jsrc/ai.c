@@ -231,7 +231,7 @@ static F1(jtinvamp){A f,ff,g,h,x,y;B nf,ng;C c,d,*yv;I n;V*u,*v;
   case CPOLY:
    if(nf&&1==AR(x)&&2==AN(x)&&NUMERIC&AT(x)&&!equ(zeroionei[0],tail(x))){  // linear polynomial only
     RZ(y=recip(tail(x)));
-    R amp(over(tymes(y,negate(head(x))),y),h);
+    R amp(apip(tymes(y,negate(head(x))),y),h);
  }}
  ASSERT(0,EVDOMAIN);
 }

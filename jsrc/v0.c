@@ -415,7 +415,7 @@ F2(jtpderiv2){
  F2RANK(0,1,jtpderiv2,0);
  if(!(NUMERIC&AT(w)))RZ(w=poly1(w));
  ASSERT(NUMERIC&AT(a),EVDOMAIN);
- R over(a,divide(w,apv(AN(w),1L,1L)));
+ R over(a,divideW(w,apv(AN(w),1L,1L)));
 }    /* a p.. w */
 
 

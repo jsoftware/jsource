@@ -241,7 +241,7 @@ F2(jtlamin2){A z;I ar,p,q,wr;
 }    /* a,:"r w */
 
 // Append, including tests for append-in-place
-A jtapip(J jt, A a, A w, A self){F2PREFIP;A h;C*av,*wv;I ak,k,p,*u,*v,wk,wm,wn;
+A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;I ak,k,p,*u,*v,wk,wm,wn;
  RZ(a&&w);
  // Allow inplacing if we have detected an assignment to a name on the last execution, and the address
  // being assigned is the same as a, and the usecount of a allows inplacing; or

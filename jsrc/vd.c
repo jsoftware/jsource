@@ -26,7 +26,26 @@ F1(jtrinv){PROLOG(0066);A ai,bx,di,z;I m,n,r,*s;
  EPILOG(z);
 }    /* R.K.W. Hui, Uses of { and }, APL87, p. 56 */
 
-// 
+#if 0
+// transposed version
+F1(jtrinvt){PROLOG(0066);A ai,bx,di,z;I m,n,r,*s;
+ F1RANK(2,jtrinv,0);
+ r=AR(w); s=AS(w); n=2>r?1:s[1]; // n is rank of matrix
+// obsolete m=(1+n)>>1; //    m is the matrix splitpoint
+ m=n>>1; I tom=(0x01222100>>((n&7)<<2))&3; m=(m+tom<n)?m+tom:m;  // Minimize number of wasted multiply slots, processing in batches of 4
+ // construe w as a block-matrix Wij where w00 and w11 are upper-triangular, w10 is 0, and w01 is a full matrix
+ ASSERT(!r||n==s[0],EVLENGTH);  // error if not square
+ if(1>=n)R recip(w);  // if an atom, inverse = reciprocal
+ ai=rinv(take(v2(m,m),w));  // take inverse of w00
+ di=rinv(drop(v2(m,m),w));  // take inverse of w11
+ bx=negate(pdt(pdt(di,take(v2(m-n,m),w)),ai));  // -w00^_1 mp w01 mp w11^_1
+ z=stitch(over(ai,bx),take(v2(-n,n-m),di));
+ //  w00^_1     -w00^_1 mp w01 mp w11^_1
+ //    0         w11^_1
+ EPILOG(z);
+}    /* R.K.W. Hui, Uses of { and }, APL87, p. 56 */
+#endif
+
 // recursive subroutine for qr decomposition, returns q;r
 static F1(jtqrr){PROLOG(0067);A a1,q,q0,q1,r,r0,r1,t,*tv,t0,t1,y,z;I m,n,p,*s;
  RZ(w);
@@ -41,11 +60,11 @@ static F1(jtqrr){PROLOG(0067);A a1,q,q0,q1,r,r0,r1,t,*tv,t0,t1,y,z;I m,n,p,*s;
   R link(2>AR(q)?table(q):q,reshape(v2(n,n),p?t:num[1]));
  }
  // construe w as w0 w1 w0t w1t
- RZ(t0=qrr(take(v2(p,m),w)));  // find QR of w0  w0t
- tv=AAV(t0); q0=*tv++; r0=*tv;  // point to Q and R of w0  w0t
- RZ(a1=drop(v2(0L,m),w));  // a1=w1   w1t
- RZ(y=pdt(conjug(cant1(q0)),a1));  // q0* w1   w1t q0t*   q0t*=/q0
- RZ(t1=qrr(minus(a1,pdt(q0,y))));  // get QR of w1-(q0 q0* w1)    w1t-(w1t q0t* q0t)
+ RZ(t0=qrr(take(v2(p,m),w)));  // find QR of w0 pxm   w0t
+ tv=AAV(t0); q0=*tv++; r0=*tv;  // point to Q and R of w0  pxm mxm  w0t    
+ RZ(a1=drop(v2(0L,m),w));  // a1=w1  pxn-m  w1t
+ RZ(y=pdt(conjug(cant1(q0)),a1));  // q0* w1 mxpxn-m     w1t q0t*   q0t*=/q0      result is mxn-m
+ RZ(t1=qrr(minus(a1,pdt(q0,y))));  // pxmxn-m  get QR of w1-(q0 q0* w1)    w1t-(w1t q0t* q0t)    
  tv=AAV(t1); q1=*tv++; r1=*tv;  
  RZ(q=stitch(q0,q1));  // overall q is q0t    Q of (w1t-(w1t q0t* q0t))
  RZ(r=over(stitch(r0,y),take(v2(n-m,-n),r1)));
@@ -55,6 +74,36 @@ static F1(jtqrr){PROLOG(0067);A a1,q,q0,q1,r,r0,r1,t,*tv,t0,t1,y,z;I m,n,p,*s;
  // = w0 w1 = w
  z=link(q,r); EPILOG(z);
 }
+
+#if 0
+// this version operates on rows
+static F1(jtqrrt){PROLOG(0067);A a1,q,q0,q1,r,r0,r1,t,*tv,t0,t1,y,z;I m,n,p,*s;
+ RZ(w);
+ if(2>AR(w)){n=AN(w); p=1;}else{s=AS(w); n=s[0]; p=s[1];}  // p=#cols, n=#rows
+ m=n>>1; I tom=(0x01222100>>((n&7)<<2))&3; m=(m+tom<n)?m+tom:m;  // Minimize number of wasted multiply slots, processing in batches of 4
+ if(1>=n){  // just 1 row
+  t=norm(ravel(w));  // norm of row
+  ASSERT(!AN(w)||!equ(t,num[0]),EVDOMAIN);  // norm must not be 0 unless row is empty
+// obsolete  RZ(q=divide(w,t));
+  RZ(q=tymes(w,recip(t)));
+  R link(2>AR(q)?table(q):q,reshape(v2(n,n),p?t:num[1]));
+ }
+ // construe w as w0 w1
+ RZ(t0=qrr(take(a1=sc(m),w)));  // find QR of w0 pxm   w0t
+ q0=AAV(t0)[0]; r0=AAV(t0)[1];  // point to Q and R of w0  pxm mxm  w0t    
+ RZ(a1=drop(a1,w));  // a1=w1
+ RZ(y=pdt(cant1(a1),conjug(q0)));  // q0* w1 mxpxn-m     w1t q0t*   q0t*=/q0      result is mxn-m
+ RZ(t1=qrr(minus(a1,pdt(y,q0))));  // pxmxn-m  get QR of w1-(q0 q0* w1)    w1t-(w1t q0t* q0t)    
+ q1=AAV(t1)[0]; r1=AAV(t1)[1];  
+ RZ(q=over(q0,q1));  // overall q is q0t    Q of (w1t-(w1t q0t* q0t))
+ RZ(r=stitch(over(r0,y),take(sc(-n),r1)));
+ // r is   r0    q0* w1
+ //        0     R of w1-(q0 q0* w1)
+ // qr is  q0 r0    (q0 q0* w1) + (Q of w1-(q0 q0* w1))(R of w1-(q0 q0* w1))
+ // = w0 w1 = w
+ z=link(q,r); EPILOG(z);
+}
+#endif
 
 // qr (?) decomposition of w, returns q;r
 F1(jtqr){A r,z;D c=inf,d=0,x;I n1,n,*s,wr;

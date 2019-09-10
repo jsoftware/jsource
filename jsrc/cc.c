@@ -896,7 +896,7 @@ static DF2(jttess2){A z,zz=0,virtw,strip;I n,rs[3],cellatoms,cellbytes,vmv,hmv,v
   // w is sparse, atomic, or empty, or the region has no axes or is empty, or the result is empty.  Go the slow way: create a selector block for each cell, and then apply u;.0 to each cell
   // trailing axes taken in full will be omitted from the shape of the result
   RZ(p=tesos(a,w,n,0));  // recalculate all the result shapes
-  A za, zw; RZ(za=cant1(tymes(head(a),cant1(abase2(p,iota(p)))))); RZ(zw=tail(a));
+  A za, zw; RZ(za=cant1(tymesW(head(a),cant1(abase2(p,iota(p)))))); RZ(zw=tail(a));
   RETF(cut02(IRS2(za, zw,0L,1L,1L,jtlamin2,z),w,self));  // ((|: ({.a) * |: (#: i.)p) ,:"1 ({:a)) u;.0 w
  }
  DECLF;  // get the function pointers

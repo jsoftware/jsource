@@ -282,7 +282,7 @@ static A jtredsp1a(J jt,C id,A z,A e,I n,I r,I*s){A t;B b,p=0;D d=1;
   case CSTARDOT: R n?lcm(z,e):ca(e);
   case CMIN:     R n?minimum(z,e):ca(e);
   case CMAX:     R n?maximum(z,e):ca(e);
-  case CPLUS:    if(n&&equ(e,num[0]))R z; DO(r, d*=s[i];); t=tymes(e,d>IMAX?scf(d-n):sc((I)d-n)); R n?plus (z,t):t;
+  case CPLUS:    if(n&&equ(e,num[0]))R z; DO(r, d*=s[i];); t=tymes(e,d>IMAX?scf(d-n):sc((I)d-n)); R n?plus(z,t):t;
   case CSTAR:    if(n&&equ(e,num[1] ))R z; DO(r, d*=s[i];); t=expn2(e,d>IMAX?scf(d-n):sc((I)d-n)); R n?tymes(z,t):t;
   case CEQ:      p=1;  /* fall thru */
   case CNE:

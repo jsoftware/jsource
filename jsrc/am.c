@@ -273,7 +273,7 @@ static A jtjstd(J jt,A w,A ind,I *cellframelen){A j=0,k,*v,x;B b;I d,i,n,r,*u,wr
     x=AAV0(x); k=IX(d);
     if(AN(x))k=less(k,pind(d,1<AR(x)?ravel(x):x));
    }else k=pind(d,x);
-   RZ(x=tymes(j,sc(d)));
+   RZ(x=tymesA(j,sc(d)));
    RZ(j=ATOMIC2(jt,x,k,rkblk,0, RMAX,CPLUS));
   }
  }

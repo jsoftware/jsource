@@ -68,7 +68,7 @@ static F1(jtltieb){A pt,t,*v,*wv,x,y;B b;C c,*s;I n;
  R raze(y);
 }
 
-static F1(jtlsh){R over(thorn1(shape(w)),spellout(CDOLLAR));}
+static F1(jtlsh){R apip(thorn1(shape(w)),spellout(CDOLLAR));}
 
 static F1(jtlshape){I r,*s;
  RZ(w);
@@ -149,7 +149,7 @@ A jtdecorate(J jt,A w,I t){
   if(l==0)w=over(scc('0'),w);
  }else if(t&XNUM+RAT){
   // numeric/rational: make sure there is an r/x somewhere in the string, else put one on the end
-  if(!memchr(CAV(w),t&XNUM?'x':'r',AN(w)))w=over(w,scc('x'));
+  if(!memchr(CAV(w),t&XNUM?'x':'r',AN(w)))w=apip(w,scc('x'));
  }
  R w;
 }
@@ -218,16 +218,16 @@ static F1(jtlnoun0){A s,x;B r1;
  r1=1==AR(w); RZ(s=thorn1(shape(w)));
  switch(CTTZ(AT(w))){
   default:   R over(cstr("i."),s);
-  case LITX:  x=cstr(   "''"); R r1?x:over(over(s,scc('$')),x);
-  case C2TX:  x=cstr("u: ''"); R r1?x:over(over(s,scc('$')),x);
-  case C4TX:  x=cstr("10&u: ''"); R r1?x:over(over(s,scc('$')),x);
-  case BOXX:  R over(s,cstr("$a:"    ));
-  case B01X:  R over(s,cstr("$0"     ));
-  case FLX:   R over(s,cstr("$0.5"   ));
-  case CMPXX: R over(s,cstr("$0j5"   ));
-  case XNUMX: R over(s,cstr("$0x"    ));
-  case RATX:  R over(s,cstr("$1r2"   ));
-  case SBTX:  R over(s,cstr("$s: ' '"));
+  case LITX:  x=cstr(   "''"); R r1?x:apip(apip(s,scc('$')),x);
+  case C2TX:  x=cstr("u: ''"); R r1?x:apip(apip(s,scc('$')),x);
+  case C4TX:  x=cstr("10&u: ''"); R r1?x:apip(apip(s,scc('$')),x);
+  case BOXX:  R apip(s,cstr("$a:"    ));
+  case B01X:  R apip(s,cstr("$0"     ));
+  case FLX:   R apip(s,cstr("$0.5"   ));
+  case CMPXX: R apip(s,cstr("$0j5"   ));
+  case XNUMX: R apip(s,cstr("$0x"    ));
+  case RATX:  R apip(s,cstr("$1r2"   ));
+  case SBTX:  R apip(s,cstr("$s: ' '"));
 }}   /* empty dense array */
 
 static F1(jtlnoun){I t;
@@ -342,7 +342,7 @@ static DF1(jtlrr){A hs,t,*tv;C id;I fl,m;V*v;
 F1(jtlrep){PROLOG(0056);A z;
  jt->ltext=0; jt->lcp=(AF)jtlcpa; jt->ltie=jtltiea;
  RE(z=jtlrr(jt,w,w));  // the w for self is just any nonzero to indicate top-level call
- if(jt->ltext)z=over(z,jt->ltext);
+ if(jt->ltext)z=apip(z,jt->ltext);
  jt->ltext=0;
  EPILOG(z);
 }
@@ -352,7 +352,7 @@ F1(jtlrep){PROLOG(0056);A z;
 F1(jtprep){PROLOG(0057);A z;
  jt->ltext=0; jt->lcp=(AF)jtlcpb; jt->ltie=jtltieb;
  RE(z=jtlrr(jt,w,w));
- if(jt->ltext)z=over(z,jt->ltext);
+ if(jt->ltext)z=apip(z,jt->ltext);
  jt->ltext=0;
  EPILOG(z);
 }

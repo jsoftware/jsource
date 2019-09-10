@@ -113,7 +113,7 @@ F1(jtjico1){A y,z;B b;D d,*v;I c,m,n;
  ASSERT(0<m||!m&&0==d,EVDOMAIN);
  n=(I)jfloor(d+0.1); b=FEQ(d,n); c=(2*ABS(n))/(m?m:1);
  if(b&&m*c==2*ABS(n))z=apv(1+m,-n,0>d?-c:c);
- else                z=plus(scf(0>d?d:-d),tymes(scf(2*ABS(d)/m),apv(1+m,0>d?m:0L,0>d?-1L:1L)));
+ else                z=plusW(scf(0>d?d:-d),tymesW(scf(2*ABS(d)/m),apv(1+m,0>d?m:0L,0>d?-1L:1L)));
  if(AT(w)&XNUM+RAT)z=cvt(AT(w)&XNUM||equ(w,floor1(w))?XNUM:RAT,z);
  RETF(z);
 }

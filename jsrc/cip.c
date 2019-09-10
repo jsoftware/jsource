@@ -220,11 +220,6 @@ static void cachedmmult (J jt,D* av,D* wv,D* zv,I m,I n,I p,I cmpx){D c[(CACHEHE
      // Now do the 16 outer products for the block, each 2ax4w (or 2ax2w if cmpx)
      I a4rem=MIN(w1rem,CACHEHEIGHT);
 #if C_AVX  // This version if AVX instruction set is available.
-#if C_AVX2
-#define MUL_ACC(addend,mplr1,mplr2) _mm256_fmadd_pd(mplr1,mplr2,addend)
-#else
-#define MUL_ACC(addend,mplr1,mplr2) _mm256_add_pd(addend , _mm256_mul_pd(mplr1,mplr2))
-#endif
      __m256d * RESTRICT c4base= (__m256d *)c3base;
      __m256d *a4base0=(__m256d *)cva;   // Can't put RESTRICT on this - the loop to init *cva gets optimized away
      if(cmpx!=1){

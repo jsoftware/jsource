@@ -19,7 +19,10 @@ CA, CA, CA, CA, CA, CA, CA, CA, CA, CA, CA,  0,  0,  0,  0,  0, /* 7 pqrstuvwxyz
 /*   1   2   3   4   5   6   7   8   9   a   b   c   d   e   f   */
 
 static B jtpdef(J jt,I id,I t,AF f1,AF f2,I m,I l,I r,I flag){A z;V*v;
- GA(z,t,1,0,0); ACX(z); v=FAV(z);
+ GAT0(z,BOX,(VERBSIZE+SZI-1)>>LGSZI,0);   // use BOX so it will all be cleared
+// obsolete  GA(z,t,1,0,0);
+ AT(z)=t;  // install actual type
+ ACX(z); v=FAV(z);
  AFLAG(z) |= AT(z)&TRAVERSIBLE;  // ensure that traversible types in pst are marked traversible, so tpush/ra/fa will not recur on them
  v->valencefns[0]=f1?f1:jtdomainerr1;  /* monad C function */
  v->valencefns[1]=f2?f2:jtdomainerr2;  /* dyad  C function */

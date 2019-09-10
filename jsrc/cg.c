@@ -6,14 +6,38 @@
 #include "j.h"
 
 
+// Bivalent entry point.
+// self is a cyclic iterator
+// we extract the pointer to the verb to be executed, advance the cycle pointer with wraparound, and call the verb
+// passes inplacing through
+static DF2(jtexeccyclicgerund){  // call is w,self or a,w,self
+ // find the real self, valence-dependent
+ RZ(w);
+ F2PREFIP;
+ I ismonad=(AT(w)>>VERBX)&1; self=ismonad?w:self;
+ I nexttoexec=FAV(self)->localuse.lI; A vbtoexec=AAV(FAV(self)->fgh[2])[nexttoexec]; AF fntoexec=FAV(vbtoexec)->valencefns[1-ismonad]; ASSERT(fntoexec,EVDOMAIN); // get fn to exec
+ ++nexttoexec; nexttoexec=AN(FAV(self)->fgh[2])==nexttoexec?0:nexttoexec; FAV(self)->localuse.lI=nexttoexec; // cyclically advance exec pointer
+ w=ismonad?vbtoexec:w; R (*fntoexec)(jtinplace,a,w,vbtoexec);  // vector to the function, as a,vbtoexec or a,w,vbtoexec as appropriate
+}
+
+// w is a verb that refers to a cyclic gerund which is stored in h.
+// Result is a clone that is used to hold which gerund is next to execute
+// the gerund must not be empty
+A jtcreatecycliciterator(J jt, A w){A z;
+ // Create the clone, point it to come to the execution point, set the next-verb number to 0
+ RZ(z=ca(w)); FAV(z)->valencefns[0]=FAV(z)->valencefns[1]=jtexeccyclicgerund; FAV(z)->localuse.lI=0;
+ R z;
+}
+
+// w is a gerund whose max rank is r.  Result is a boxed array of VERBs, one for each gerund, if they are well forrmed
 A jtfxeachv(J jt,I r,A w){A*wv,x,z,*zv;I n;
  RZ(w);
  n=AN(w); wv=AAV(w); 
- ASSERT(r>=AR(w),EVRANK);
- ASSERT(n,EVLENGTH);
- ASSERT(BOX&AT(w),EVDOMAIN);
- GATV(z,BOX,n,AR(w),AS(w)); zv=AAV(z);
- DO(n, RZ(zv[i]=x=fx(wv[i])); ASSERT(VERB&AT(x),EVDOMAIN););
+ ASSERT(r>=AR(w),EVRANK);  // max rank allowed
+ ASSERT(n,EVLENGTH);  // gerund must not be empty
+ ASSERT(BOX&AT(w),EVDOMAIN);   // must be boxed
+ GATV(z,BOX,n,AR(w),AS(w)); zv=AAV(z);  // allocate one box per gerund
+ DO(n, RZ(zv[i]=x=fx(wv[i])); ASSERT(VERB&AT(x),EVDOMAIN););   // create verb, verify it is a verb
  R z;
 }
 

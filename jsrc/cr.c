@@ -585,6 +585,23 @@ static DF2(cons2){V*sv=FAV(self);
  R rank2ex(a,w,self,lr2,rr2,lr2,rr2,cons2a);
 }
 
+// cyclic-gerund verbs create an iterator from the gerund and pass that into rank processing, looping over cells
+static DF1(cycr1){V*sv=FAV(self);
+ RZ(w);
+ RZ(self=createcycliciterator(self));  // fill in an iterator for this gerund
+ I mr; efr(mr,AR(w),(I)sv->localuse.lI4[0]);
+ R rank1ex(w,self,mr,FAV(self)->valencefns[0]);  // callback is to the cyclic-execution function
+}
+static DF2(cycr2){V*sv=FAV(self);
+ RZ(a&&w);
+ RZ(self=createcycliciterator(self));  // fill in an iterator for this gerund
+ I lr2,rr2; efr(lr2,AR(a),(I)sv->localuse.lI4[1]); efr(rr2,AR(w),(I)sv->localuse.lI4[2]);
+ R rank2ex(a,w,self,lr2,rr2,lr2,rr2,FAV(self)->valencefns[1]);  // callback is to the cyclic-execution function
+}
+
+
+
+
 // Handle u"n y where u supports irs.  Since the verb may support inplacing even with rank (,"n for example), pass that through.
 static DF1(rank1i){RZ(w);F1PREFIP;DECLF;  // this version when requested rank is positive
  I m=sv->localuse.lI4[0]; m=m>=AR(w)?~0:m; jt->ranks=(RANK2T)(m);  // install rank for called routine
@@ -677,7 +694,7 @@ static DF2(jtrank20){R jtrank2ex0(jt,a,w,self,jtrank20atom);}  // pass inplaceab
 
 
 // a"w; result is a verb
-F2(jtqq){A t;AF f1,f2;D*d;I hv[3],n,r[3],vf,flag2=0,*v;
+F2(jtqq){A t;AF f1,f2;D*d;I hv[3],n,r[3],vf,flag2=0,*v;A ger=0;
  RZ(a&&w);
  // The localuse value in the function will hold the ranks from w.
  if(VERB&AT(w)){
@@ -702,11 +719,19 @@ F2(jtqq){A t;AF f1,f2;D*d;I hv[3],n,r[3],vf,flag2=0,*v;
  // r is the actual verb ranks, never negative.
 
  // Get the action routines and flags to use for the derived verb
- if(NOUN&AT(a)){f1=cons1; f2=cons2; ACIPNO(a);// use the constant routines for nouns; mark the constant non-inplaceable since it may be reused;
-  // Mark the noun as non-inplaceable.  If the derived verb is used in another sentence, it must first be
-  // assigned to a name, which will protects values inside it.
-  ACIPNO(a);
-  vf=VASGSAFE;    // the noun can't mess up assignment, and does not support IRS
+ if(NOUN&AT(a)){  // could be gerund"n or noun"n
+  // gerund requires: some rank not RMAX; boxed m; rank of m=1; and then the gerund must be well formed
+  if(((hv[0]^RMAX)|(hv[1]^RMAX)|(hv[2]^RMAX)) && !((AR(a)^1) | (AT(a)&(NOUN&~BOX))) && (ger=fxeachv(1LL,a))){
+   f1=cycr1; f2=cycr2;  // process this with the cyclic-gerund routines
+   vf=VFLAGNONE;   // the cyclic processor does not inplace or IRS and we don't bother figuring out whether it is ASGSAFE
+  } else {
+   RESETERR;  // the gerund check may have raised an error
+   f1=cons1; f2=cons2; ACIPNO(a);// use the constant routines for nouns; mark the constant non-inplaceable since it may be reused;
+   // Mark the noun as non-inplaceable.  If the derived verb is used in another sentence, it must first be
+   // assigned to a name, which will protects values inside it.
+   ACIPNO(a);
+   vf=VASGSAFE;    // the noun can't mess up assignment, and does not support IRS or inplacing
+  }
  }else{
   V* av=FAV(a);   // point to verb info
   // The flags for u indicate its IRS and atomic status.  If atomic (for monads only), ignore the rank, just point to
@@ -733,7 +758,7 @@ F2(jtqq){A t;AF f1,f2;D*d;I hv[3],n,r[3],vf,flag2=0,*v;
  }
 
  // Create the derived verb.  The derived verb (u"n) NEVER supports IRS; it inplaces if the action verb u supports inplacing
- A z; RZ(z=fdef(flag2,CQQ,VERB, f1,f2, a,w,0, vf, r[0],r[1],r[2]));
+ A z; RZ(z=fdef(flag2,CQQ,VERB, f1,f2, a,w,ger, vf, r[0],r[1],r[2]));
  FAV(z)->localuse.lI4[0]=(I4)hv[0]; FAV(z)->localuse.lI4[1]=(I4)hv[1]; FAV(z)->localuse.lI4[2]=(I4)hv[2];  // pass the possibly-negative ranks in through localuse
  R z;
 }

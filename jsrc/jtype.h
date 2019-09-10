@@ -656,6 +656,7 @@ typedef struct {AF valencefns[2];A fgh[3];union { D lD; void *lvp[2]; I lI; I4 l
 // for FIT conj, the CCT data
 // for RANK conj, lI4[0-2] has the signed ranks
 // for Fold final operator, pointer to the dyadic EP of the handler (xdefn or unquote)
+// For cyclic iterators, lI has the index of the next gerund to execute
 
 // lc is a local-use byte.  Used in atomic dyads to indicate which singleton function to execute
 // in the derived function from fold, lc has the original id byte of the fold op

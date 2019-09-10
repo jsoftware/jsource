@@ -47,7 +47,7 @@ ZF2(jtzdiv){ZF2DECL;D t;
   if(ABS(c)<ABS(d)){t=a; a=-b; b=t;  t=c; c=-d; d=t;}
   a/=c; b/=c; d/=c; t=1+d*d; zr=(a+TYMES(b,d))/t; zi=(b-TYMES(a,d))/t;
  }else if(ZNZ(u))switch(2*(I )(0>a)+(I )(0>b)){
-   case 0: if(a> b)zr= inf; else zi= inf; break;
+   case 0: if(a> b)zr= inf; else zi= inf; break; 
    case 1: if(a>-b)zr= inf; else zi=-inf; break;
    case 2: if(a<-b)zr=-inf; else zi= inf; break;
    case 3: if(a< b)zr=-inf; else zi=-inf;

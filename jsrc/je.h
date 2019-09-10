@@ -634,6 +634,7 @@ extern I        jtcompare(J,A,A);
 extern A        jtconnum(J,I,C*);
 extern I        jtcountnl(J);
 extern A        jtcpa(J,B,A);
+extern A        jtcreatecycliciterator(J,A);
 extern A        jtcrelocalsyms(J,A,A,I,I,I);
 extern A        jtcstr(J,C*);
 extern A        jtcvt(J,I,A);

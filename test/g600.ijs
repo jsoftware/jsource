@@ -950,7 +950,51 @@ minus =: -
 NB. Negative rank from correct value
 (<"1 i. 3 3) -: <"_1 2 0 i. 3 3
 
-4!:55 ;:'a adot1 adot2 sdot0 agree asm b boxr c c1 c2 cells crank cs cshape dr er f fr frame '
-4!:55 ;:'glob lag minus mm mrk msh ops pfx rag rank rk s1 svy t x xx y '
+NB. gerund"r monad and dyad
+cycinit =: 3 : 0  NB. init for appcyc
+savger =: y
+prevmod =: _1
+''
+)
+appcyc =: 3 : 0
+(savger {~ (#savger) | prevmod =: >: prevmod)`:6 y
+:
+x (savger {~ (#savger) | prevmod =: >: prevmod)`:6 y
+)
+
+(ger"0 -: appcyc"0) i. 5 [ cycinit ger=:+:`*:
+f =: %:
+(ger"0 -: appcyc"0) i. 4 5 [ cycinit ger=:+:`*:`f
+(ger"1 -: appcyc"1) i. 4 5 [ cycinit ger=:+:`*:`f
+(ger"2 -: appcyc"2) i. 2 4 5 [ cycinit ger=:+:`*:`f
+(ger"3 -: appcyc"3) i. 2 4 5 [ cycinit ger=:+:`*:`f
+(ger"0 -: appcyc"0) i. 0 5 [ cycinit ger=:+:`*:`f
+(ger"0 -: appcyc"0) i. 0 [ cycinit ger=:+:`*:`f
+(ger"0 -: appcyc"0) i. 0 [ cycinit ger=:i.`*:`f
+(ger"0 -: appcyc"0) i. 0 [ cycinit ger=:(5 5 5"_)`*:`f
+(*:`+:) -: (*:`+:)"_ i. 5  NB. not if infinite rank
+(5 # {. *:`+:) -: ({. *:`+:)"0 i. 5  NB. not if atom
+(*: i. 5) -: (1 {. *:`+:)"0 i. 5  NB. yes if 1-atom list
+(5 # ,:1;3) -: (1;3)"0 i. 5  NB. not if ill-formed gerund
+
+(i. 5) (ger"0 -: appcyc"0) i. 5 [ cycinit ger=:+`*
+f =: ^
+(i. 4 5) (ger"0 -: appcyc"0) i. 4 5 [ cycinit ger=:+`*`f
+(i. 4) (ger"0 -: appcyc"0) i. 4 5 [ cycinit ger=:+`*`f
+(8) (ger"0 -: appcyc"0) i. 4 5 [ cycinit ger=:+`*`f
+(i. 4 5) (ger"1 -: appcyc"1) i. 4 5 [ cycinit ger=:+`*`f
+(i. 5) (ger"1 -: appcyc"1) i. 4 5 [ cycinit ger=:+`*`f
+(i. 2 4 5) (ger"2 -: appcyc"2) i. 2 4 5 [ cycinit ger=:+`*`f
+(i. 4 5) (ger"2 -: appcyc"2) i. 2 4 5 [ cycinit ger=:+`*`f
+(i. 2 4 5) (ger"3 -: appcyc"3) i. 2 4 5 [ cycinit ger=:+`*`f
+(8) (ger"3 -: appcyc"3) i. 2 4 5 [ cycinit ger=:+`*`f
+(i. 0 5) (ger"0 -: appcyc"0) i. 0 5 [ cycinit ger=:+`*`f
+0 (ger"0 -: appcyc"0) i. 0 [ cycinit ger=:+`*`f
+0 (ger"0 -: appcyc"0) i. 0 [ cycinit ger=:$`*`f
+0 (ger"0 -: appcyc"0) i. 0 [ cycinit ger=:(5 5 5"_)`*`f
+
+
+4!:55 ;:'a adot1 adot2 sdot0 agree appcyc asm b boxr c c1 c2 cells crank cs cshape cycinit dr er f fr frame '
+4!:55 ;:'ger glob lag minus mm mrk msh prevmod ops pfx rag rank rk savger s1 svy t x xx y '
 randfini''
 

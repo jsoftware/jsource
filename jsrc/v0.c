@@ -346,7 +346,8 @@ F2(jtpoly2){F2PREFIP;A c,za;B b;D*ad,d,p,*x,u,*z;I an,at,j,t,n,wt;Z*az,e,q,*wz,y
     __m256d a0;__m256d t0;  t0=_mm256_set1_pd(ad[1]);
     a0=_mm256_set1_pd(ad[0]);
 ,
-    u=_mm256_add_pd(a0,_mm256_mul_pd(u,t0));
+    u=MUL_ACC(a0,u,t0);
+ // obsolete   u=_mm256_add_pd(a0,_mm256_mul_pd(u,t0));
 ,
    )} break;
   case 3:
@@ -354,7 +355,7 @@ F2(jtpoly2){F2PREFIP;A c,za;B b;D*ad,d,p,*x,u,*z;I an,at,j,t,n,wt;Z*az,e,q,*wz,y
     __m256d a0;__m256d a1;__m256d t0;__m256d t;  t0=_mm256_set1_pd(ad[2]);
     a1=_mm256_set1_pd(ad[1]); a0=_mm256_set1_pd(ad[0]);
 ,
-    t=t0; t=_mm256_add_pd(a1,_mm256_mul_pd(u,t)); u=_mm256_add_pd(a0,_mm256_mul_pd(u,t));
+    t=t0; t=MUL_ACC(a1,u,t); u=MUL_ACC(a0,u,t);
 ,
    )} break;
   case 4:
@@ -362,7 +363,7 @@ F2(jtpoly2){F2PREFIP;A c,za;B b;D*ad,d,p,*x,u,*z;I an,at,j,t,n,wt;Z*az,e,q,*wz,y
     __m256d a0;__m256d a1;__m256d a2;__m256d t0;__m256d t;  t0=_mm256_set1_pd(ad[3]);
     a2=_mm256_set1_pd(ad[2]); a1=_mm256_set1_pd(ad[1]); a0=_mm256_set1_pd(ad[0]);
 ,
-    t=t0; t=_mm256_add_pd(a2,_mm256_mul_pd(u,t)); t=_mm256_add_pd(a1,_mm256_mul_pd(u,t)); u=_mm256_add_pd(a0,_mm256_mul_pd(u,t));
+    t=t0; t=MUL_ACC(a2,u,t); t=MUL_ACC(a1,u,t); u=MUL_ACC(a0,u,t);
 ,
    )} break;
   case 5:
@@ -371,8 +372,8 @@ F2(jtpoly2){F2PREFIP;A c,za;B b;D*ad,d,p,*x,u,*z;I an,at,j,t,n,wt;Z*az,e,q,*wz,y
     a3=_mm256_set1_pd(ad[3]); a2=_mm256_set1_pd(ad[2]);
     a1=_mm256_set1_pd(ad[1]); a0=_mm256_set1_pd(ad[0]);
 ,
-    t=t0; t=_mm256_add_pd(a3,_mm256_mul_pd(u,t)); t=_mm256_add_pd(a2,_mm256_mul_pd(u,t));
-    t=_mm256_add_pd(a1,_mm256_mul_pd(u,t)); u=_mm256_add_pd(a0,_mm256_mul_pd(u,t));
+    t=t0; t=MUL_ACC(a3,u,t); t=MUL_ACC(a2,u,t);
+    t=MUL_ACC(a1,u,t); u=MUL_ACC(a0,u,t);
 ,
     ;
    )} break;
@@ -380,7 +381,7 @@ F2(jtpoly2){F2PREFIP;A c,za;B b;D*ad,d,p,*x,u,*z;I an,at,j,t,n,wt;Z*az,e,q,*wz,y
     {AVXATOMLOOP(
     __m256d t0;__m256d t;  t0=_mm256_set1_pd(ad[an-1]);
 ,
-    t=t0; DQ(an-1, t=_mm256_add_pd(_mm256_set1_pd(ad[i]),_mm256_mul_pd(u,t));); u=t;
+    t=t0; DQ(an-1, t=MUL_ACC(_mm256_set1_pd(ad[i]),u,t);); u=t;
 ,
     ;
    )} break;

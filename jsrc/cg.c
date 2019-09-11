@@ -26,6 +26,8 @@ static DF2(jtexeccyclicgerund){  // call is w,self or a,w,self
 A jtcreatecycliciterator(J jt, A w){A z;
  // Create the clone, point it to come to the execution point, set the next-verb number to 0
  RZ(z=ca(w)); FAV(z)->valencefns[0]=FAV(z)->valencefns[1]=jtexeccyclicgerund; FAV(z)->localuse.lI=0;
+ // clear the BOXATOP flags for this iterator
+ FAV(z)->flag2=0;
  R z;
 }
 

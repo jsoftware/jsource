@@ -7,8 +7,8 @@
 #include "vcomp.h"
 #define ZZDEFN
 #include "result.h"
-#define STATEHASGERUNDX 10
-#define STATEHASGERUND (((I)1)<<STATEHASGERUNDX)
+// obsolete #define STATEHASGERUNDX 10
+// obsolete #define STATEHASGERUND (((I)1)<<STATEHASGERUNDX)
 #define STATENEEDSASSEMBLYX 11
 #define STATENEEDSASSEMBLY (((I)1)<<STATENEEDSASSEMBLYX)
 
@@ -48,13 +48,16 @@ static F2(jtcut02m){A z;C*u,*v;I*av,c,d,e0,e1,j0,j1,k0,k1,m0,m1,*s,t,wk;
 }    /* a ];.0 matrix */
 #endif
 
-static DF2(jtcut02){F2PREFIP;DECLF;A *hv,q,qq,*qv,z,zz=0;C id;I*as,c,e,hn,i,ii,j,k,m,n,*u,*ws;PROLOG(876);
+static DF2(jtcut02){F2PREFIP;A fs,q,qq,*qv,z,zz=0;/* obsolete C id;*/I*as,c,e,i,ii,j,k,m,n,*u,*ws;PROLOG(876);
  RZ(a&&w);
 #define ZZFLAGWORD state
  I state=0;  // init flags, including zz flags
 
 
- if(!(VGERL&sv->flag)){hv=0; id=ID(fs);  // if verb, point to its data and fetch its pseudocharacter
+ if(!(VGERL&FAV(self)->flag)){
+  // not gerund: OK to test fs
+  fs=FAV(self)->fgh[0];  // the verb we will execute
+// obsolete  if(!(VGERL&sv->flag)){id=ID(fs);  // if verb, point to its data and fetch its pseudocharacter
   // not gerund, OK to test fs
   if(FAV(fs)->mr>=AR(w)){
    // we are going to execute f without any lower rank loop.  Thus we can use the BOXATOP etc flags here.  These flags are used only if we go through the full assemble path
@@ -63,16 +66,21 @@ static DF2(jtcut02){F2PREFIP;DECLF;A *hv,q,qq,*qv,z,zz=0;C id;I*as,c,e,hn,i,ii,j
    state |= (-state) & (I)jtinplace & (ZZFLAGWILLBEOPENED|ZZFLAGCOUNTITEMS); // remember if this verb is followed by > or ; - only if we BOXATOP, to avoid invalid flag setting at assembly
   }
  }else{
-  state |= STATEHASGERUND; A h=sv->fgh[2]; hv=AAV(h); hn=AN(h); ASSERT(hn,EVLENGTH);  // Gerund case.  Mark it, set hv->1st gerund, hn=#gerunds.  Verify gerunds not empty
-  id=0;  // set an invalid pseudochar id for the gerund, to indicate 'not a primitive'
+  RZ(fs=createcycliciterator(self));  // use a verb that cycles through the gerunds.
+// obsolete   state |= STATEHASGERUND; A h=sv->fgh[2]; hv=AAV(h); hn=AN(h); ASSERT(hn,EVLENGTH);  // Gerund case.  Mark it, set hv->1st gerund, hn=#gerunds.  Verify gerunds not empty
+// obsolete   id=0;  // set an invalid pseudochar id for the gerund, to indicate 'not a primitive'
  }
+// obsolete   state |= STATEHASGERUND; A h=sv->fgh[2]; hv=AAV(h); hn=AN(h); ASSERT(hn,EVLENGTH);  // Gerund case.  Mark it, set hv->1st gerund, hn=#gerunds.  Verify gerunds not empty
+ AF f1=FAV(fs)->valencefns[0];  // point to the action routine now that we have handled gerunds
+
  I wr=AR(w);  // rank of w
  RZ(a=vib(a));  // audit for valid integers
  if(1>=AR(a))RZ(a=lamin2(zeroionei[0],a));   // default list to be lengths starting at origin
  as=AS(a); m=AR(a)-2; PROD(n,m,as); c=as[1+m]; u=AV(a);  // n = # 2-cells in a, c = #axes of subarray given, m is index of next-last axis of a, u->1st atom of a
  ASSERT((-(as[m]^2)|(wr-c))>=0,EVLENGTH);    // shapes must end with 2,c where c does not exceed rank of r
  if(!n){  /* empty result; figure out result type */
-  if(!(state&STATEHASGERUND))z=CALL1(f1,w,fs);else z=df1(w,hv[0]);
+// obsolete   if(!(state&STATEHASGERUND))z=CALL1(f1,w,fs);else z=df1(w,hv[0]);
+  z=CALL1(f1,w,fs);
   if(z==0)z=zeroionei[0];  // use zero as fill result if error
   GA(zz,AT(z),n,m+AR(z),0); I *zzs=AS(zz); I *zs=AS(z); 
   MCISH(zzs,as,m) MCISH(zzs+m,zs,AR(z)) // move in frame of a followed by shape of result-cell
@@ -101,10 +109,10 @@ static DF2(jtcut02){F2PREFIP;DECLF;A *hv,q,qq,*qv,z,zz=0;C id;I*as,c,e,hn,i,ii,j
  }
  if(m){
    // There is a frame; we will have to assemble the results, even if there is only one
-   // See if this verb is BOXATOP.  NOTE that if this is a gerund, fs is invalid and we mustn't check it.
+   // See if this verb is BOXATOP.  NOTE that if this is a gerund, fs points to a cyclic iterator which is never BOXATOP
    // We honor BOXATOP if the verb can operate on a cell of w in its entirety
    state |= STATENEEDSASSEMBLY;  // force us to go through the assembly code
-   if(!(state&STATEHASGERUND))ZZFLAGWORD |= ((FAV(fs)->mr>=wr?VF2BOXATOP1:0)&(FAV(fs)->flag2&VF2BOXATOP1))>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // If this is BOXATOP, set so for loop.
+   /* obsolete if(!(state&STATEHASGERUND))*/ZZFLAGWORD |= ((FAV(fs)->mr>=wr?VF2BOXATOP1:0)&(FAV(fs)->flag2/* obsolete &VF2BOXATOP1*/))>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // If this is BOXATOP, set so for loop.
    ZZPARMS(m,n,1)
 #define ZZINSTALLFRAME(optr) MCISHd(optr,as,m)
  }
@@ -141,7 +149,7 @@ static DF2(jtcut02){F2PREFIP;DECLF;A *hv,q,qq,*qv,z,zz=0;C id;I*as,c,e,hn,i,ii,j
    }while(1);
    RZ(z=from(qq,w));
   }
-  if(!(state&STATEHASGERUND)){RZ(z=CALL1(f1,z,fs));}else{RZ(z=df1(z,hv[gerundx])); ++gerundx; gerundx=(gerundx==hn)?0:gerundx;}
+  /* obsolete if(!(state&STATEHASGERUND)){*/RZ(z=CALL1(f1,z,fs));/*obsolete }else{RZ(z=df1(z,hv[gerundx])); ++gerundx; gerundx=(gerundx==hn)?0:gerundx;} */
   if(!(state&STATENEEDSASSEMBLY)){if(AFLAG(z)&AFUNINCORPABLE){z=clonevirtual(z);} EPILOG(z);}  // if we have just 1 input and no frame, return the one result directly (for speed).  If it is UNINCORPABLE, it must not be allowed to escape - realize it
       // we use clonevirtual so that ];.0 can return a virtual block
 #define ZZBODY
@@ -513,8 +521,8 @@ static A jtgetnewpd(J jt, UC* pd, A pd0){A new;
 }
 
 
-DF2(jtcut2){F2PREFIP;PROLOG(0025);DECLF;A *hv,z,zz;I neg,pfx;C id,*v1,*wv,*zc;
-     I ak,at,wcn,d,hn,k,m=0,n,r,wt,*zi;I d1[32]; A pd0; UC *pd, *pdend;  // Don't make d1 too big - it fill lots of stack space
+DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;
+     I ak,at,wcn,d,k,m=0,n,r,wt,*zi;I d1[32]; A pd0; UC *pd, *pdend;  // Don't make d1 too big - it fill lots of stack space
  PREF2(jtcut2);
  if(SB01&AT(a)||SPARSE&AT(w))R cut2sx(a,w,self);
 #define ZZFLAGWORD state
@@ -523,8 +531,12 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);DECLF;A *hv,z,zz;I neg,pfx;C id,*v1,*wv,*zc;
  n=IC(w); wt=AT(w);   // n=#items of w; wt=type of w
  r=MAX(1,AR(w)); wv=CAV(w); wcn=aii(w); k=wcn<<bplg(wt);   // r=rank>.1, s->w shape, wv->w data, wcn=#atoms in cell of w, k=#bytes in cell of w;
  // If the verb is a gerund, it comes in through h, otherwise the verb comes through f.  Set up for the two cases
- if(!(VGERL&sv->flag)){id=FAV(fs)->id;  // if verb, point to its data and fetch its pseudocharacter
+ if(!(VGERL&FAV(self)->flag)){
   // not gerund: OK to test fs
+  fs=FAV(self)->fgh[0];  // the verb we will execute
+  id=FAV(fs)->id;  // fetch its pseudocharacter
+// obsolete  if(!(VGERL&sv->flag)){
+// obsolete   // not gerund: OK to test fs
   if(FAV(fs)->mr>=r){
    // we are going to execute f without any lower rank loop.  Thus we can use the BOXATOP etc flags here.  These flags are used only if we go through the full assemble path
    state = (FAV(fs)->flag2&VF2BOXATOP1)>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // Don't touch fs yet, since we might not loop
@@ -532,17 +544,19 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);DECLF;A *hv,z,zz;I neg,pfx;C id,*v1,*wv,*zc;
    state |= (-state) & (I)jtinplace & (ZZFLAGWILLBEOPENED|ZZFLAGCOUNTITEMS); // remember if this verb is followed by > or ; - only if we BOXATOP, to avoid invalid flag setting at assembly
   }
  }else{
-  state |= STATEHASGERUND; A h=sv->fgh[2]; hv=AAV(h); hn=AN(h); ASSERT(hn,EVLENGTH);  // Gerund case.  Mark it, set hv->1st gerund, hn=#gerunds.  Verify gerunds not empty
+  RZ(fs=createcycliciterator(self));  // use a verb that cycles through the gerunds.
+// obsolete   state |= STATEHASGERUND; A h=sv->fgh[2]; hv=AAV(h); hn=AN(h); ASSERT(hn,EVLENGTH);  // Gerund case.  Mark it, set hv->1st gerund, hn=#gerunds.  Verify gerunds not empty
   id=0;  // set an invalid pseudochar id for the gerund, to indicate 'not a primitive'
  }
+ AF f1=FAV(fs)->valencefns[0];  // point to the action routine now that we have handled gerunds
 
  // Time to find the frets.  If a is the impossible type INT+LIT, a contains the frets already, in the single buffer (that means we are acting on behalf of Key /.)
- if(sv->id==CCUT){   // see if we are acting on behalf of /.  Fall through if not
-  pfx=IAV(sv->fgh[1])[0]; neg=(UI)pfx>>(BW-1); pfx&=1;  // neg=cut type is _1/_2; pfx=cut type is 1/_1
+ if(FAV(self)->id==CCUT){   // see if we are acting on behalf of /.  Fall through if not
+  pfx=IAV(FAV(self)->fgh[1])[0]; neg=(UI)pfx>>(BW-1); pfx&=1;  // neg=cut type is _1/_2; pfx=cut type is 1/_1
   if(a!=mark){  // dyadic forms
    if(((AN(a)-1)&(-n))<0){  // empty x, do one call on the entire w if y is non-empty
-    if(state&STATEHASGERUND){A h=hv[0]; R CALL1(VAV(h)->valencefns[0],w,h);}
-    else R CALL1(f1,w,fs);
+    /* obsolete if(state&STATEHASGERUND){A h=hv[0]; R CALL1(VAV(h)->valencefns[0],w,h);}
+    else */R CALL1(f1,w,fs);
    }
    if(((-AN(a))&(SGNIF(AT(a),BOXX)))<0)R cut2bx(a,w,self);  // handle boxed a separately if a not empty
    if(!(B01&AT(a)))RZ(a=cvt(B01,a));  // convert other a to binary, error if impossible
@@ -707,7 +721,7 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);DECLF;A *hv,z,zz;I neg,pfx;C id,*v1,*wv,*zc;
     I atomsize=bpnoun(zt);
     zc=CAV(zz); zk=wcn*atomsize;
     if((t=atype(adocv.cv))&&TYPESNE(t,wt)){RZ(w=cvt(t,w)); wv=CAV(w);}
-    EACHCUT(if(d)((AHDRRFN*)adocv.f)(wcn,d,(I)1,v1,zc,jt); else{if(!z0){z0=idenv0(a,w,sv,zt,&z); // compared to normal reduces, c means d and d means n
+    EACHCUT(if(d)((AHDRRFN*)adocv.f)(wcn,d,(I)1,v1,zc,jt); else{if(!z0){z0=idenv0(a,w,FAV(self),zt,&z); // compared to normal reduces, c means d and d means n
         if(!z0){if(z)R z; else break;}} mvc(zk,zc,atomsize,z0);} zc+=zk;);
     if(jt->jerr)R jt->jerr>=EWOV?cut2(a,w,self):0; else R adocv.cv&VRI+VRD?cvz(adocv.cv,zz):zz;
     break;
@@ -741,11 +755,11 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);DECLF;A *hv,z,zz;I neg,pfx;C id,*v1,*wv,*zc;
      AS(virtw)[0]=d; AN(virtw)=wcn*d; // install the size of the partition into the virtual block, and # atoms
      // call the user's function
      AC(virtw)=ACUC1|ACINPLACE;   // in case we created a virtual block from it, restore inplaceability to the UNINCORPABLE block
-     if(!(state&STATEHASGERUND)){
-      RZ(z=CALL1IP(f1,virtw,fs));  //normal case
-     }else{
-      RZ(z=df1(virtw,hv[gerundx])); ++gerundx; gerundx=(gerundx==hn)?0:gerundx;  // gerund case.  Advance gerund cyclically
-     }
+// obsolete      if(!(state&STATEHASGERUND)){
+     RZ(z=CALL1IP(f1,virtw,fs));  //normal case
+// obsolete      }else{
+// obsolete       RZ(z=df1(virtw,hv[gerundx])); ++gerundx; gerundx=(gerundx==hn)?0:gerundx;  // gerund case.  Advance gerund cyclically
+// obsolete      }
 
 #define ZZBODY  // assemble results
 #include "result.h"
@@ -762,7 +776,7 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);DECLF;A *hv,z,zz;I neg,pfx;C id,*v1,*wv,*zc;
   }else{
    // No frets.  Apply the operand to 0 items; return (0,$result) $ result (or $,'' if error on fill-cell).  The call is non-inplaceable
    RZ(z=reitem(zeroionei[0],w));  // create 0 items of the type of w
-   UC d=jt->uflags.us.cx.cx_c.db; jt->uflags.us.cx.cx_c.db=0; zz=(state&STATEHASGERUND)?df1(z,hv[0]):CALL1(f1,z,fs); jt->uflags.us.cx.cx_c.db=d; if(EMSK(jt->jerr)&EXIGENTERROR)RZ(zz); RESETERR;
+   UC d=jt->uflags.us.cx.cx_c.db; jt->uflags.us.cx.cx_c.db=0; zz=/* obsolete (state&STATEHASGERUND)?df1(z,hv[0]):*/CALL1(f1,z,fs); jt->uflags.us.cx.cx_c.db=d; if(EMSK(jt->jerr)&EXIGENTERROR)RZ(zz); RESETERR;
    RZ(zz=reshape(over(zeroionei[0],shape(zz?zz:mtv)),zz?zz:zeroionei[0]));
   }
  }

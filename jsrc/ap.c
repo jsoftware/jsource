@@ -342,14 +342,14 @@ static DF2(jtginfix){A h,*hv,x,z,*zv;I d,m,n;
   R reshape(over(zeroionei[0],shape(x)),x);
 }}
 
-#define STATEHASGERUND 0x1000  // f is a gerund
+// obsolete #define STATEHASGERUND 0x1000  // f is a gerund
 #define STATEISPREFIX 0x2000  // this is prefix rather than infix
 #define STATESLASH2X 14  // f is f'/ and x is 2
 #define STATESLASH2 ((I)1<<STATESLASH2X)
 
 // prefix and infix: prefix if a is mark
-static DF2(jtinfixprefix2){F2PREFIP;DECLF;PROLOG(00202);A *hv;
-   I hn,wt;
+static DF2(jtinfixprefix2){F2PREFIP;PROLOG(00202);A fs;// obsolete A *hv;
+   I wt;
  
  RZ(w);
  PREF2IP(jtinfixprefix2);  // handle rank loop if needed
@@ -368,8 +368,10 @@ static DF2(jtinfixprefix2){F2PREFIP;DECLF;PROLOG(00202);A *hv;
  I state=0;  // init flags, including zz flags
 
  // If the verb is a gerund, it comes in through h, otherwise the verb comes through f.  Set up for the two cases
- if(!(VGERL&sv->flag)){V *vf=FAV(fs);  // if verb, point to its data
+ if(!(VGERL&FAV(self)->flag)){
   // not gerund: OK to test fs
+  fs=FAV(self)->fgh[0];  // the verb we will execute
+  V *vf=FAV(fs);  // if verb, point to its u operand
   if(vf->mr>=AR(w)){
    // we are going to execute f without any lower rank loop.  Thus we can use the BOXATOP etc flags here.  These flags are used only if we go through the full assemble path
    state = vf->flag2>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // Don't touch fs yet, since we might not loop
@@ -378,8 +380,10 @@ static DF2(jtinfixprefix2){F2PREFIP;DECLF;PROLOG(00202);A *hv;
    state |= (-state) & (I)jtinplace & (ZZFLAGWILLBEOPENED|ZZFLAGCOUNTITEMS); // remember if this verb is followed by > or ; - only if we BOXATOP, to avoid invalid flag setting at assembly
   }
  }else{
-  state |= STATEHASGERUND; A h=sv->fgh[2]; hv=AAV(h); hn=AN(h); ASSERT(hn,EVLENGTH);  // Gerund case.  Mark it, set hv->1st gerund, hn=#gerunds.  Verify gerunds not empty
+  RZ(fs=createcycliciterator(self));  // use a verb that cycles through the gerunds.
+// obsolete   state |= STATEHASGERUND; A h=sv->fgh[2]; hv=AAV(h); hn=AN(h); ASSERT(hn,EVLENGTH);  // Gerund case.  Mark it, set hv->1st gerund, hn=#gerunds.  Verify gerunds not empty
  }
+ AF f1=FAV(fs)->valencefns[0];  // point to the action routine now that we have handled gerunds
 
  I zi;  // number of items in the result
  I ilnval;  // value of a, set to -1 for prefix (for fill purposes)
@@ -432,7 +436,7 @@ static DF2(jtinfixprefix2){F2PREFIP;DECLF;PROLOG(00202);A *hv;
   I vr=AR(w); vr+=(vr==0);  // rank of infix is same as rank of w, except that atoms are promoted to singleton lists
 
   // check for special case of 2 u/\ y; if found, set new function and allocate a second virtual argument
-  // NOTE: gerund/ is encoded are `:, so we can be sure id==SLASH does not have gerund
+  // NOTE: gerund/ is encoded as `:, so we can be sure id==SLASH does not have gerund
   fauxblock(virtafaux); fauxblock(virtwfaux);
   if(((VAV(fs)->id^CSLASH)|((ilnabs|(wi&((UI)ilnval>>(BW-1))))^2))){   // char==/ and (ilnabs==2, but not if input array is odd and ilnval is neg)
    // normal case, infix/prefix.  Allocate a virtual block
@@ -457,16 +461,16 @@ static DF2(jtinfixprefix2){F2PREFIP;DECLF;PROLOG(00202);A *hv;
   while(1){
 
    // call the user's function
-   if(!(state&(STATEHASGERUND|STATESLASH2))){
+   if(!(state&(/* obsolete STATEHASGERUND|*/STATESLASH2))){
     // normal case: prefix/infix, no gerund
     RZ(z=CALL1(f1,virtw,fs));  //normal case
-   }else if(state&STATESLASH2){
+   }else /* obsolete if(state&STATESLASH2)*/ {
     // 2 f/\ y case
     RZ(z=CALL2(f1,virta,virtw,fs));  //normal case
-   }else{
+   }/* obsolete else{
     // prefix/infix, gerund case
     RZ(z=df1(virtw,hv[gerundx])); ++gerundx; gerundx=(gerundx==hn)?0:gerundx;  // gerund case.  Advance gerund cyclically
-   }
+   } */
 
 #define ZZBODY  // assemble results
 #include "result.h"
@@ -517,7 +521,7 @@ static DF2(jtinfixprefix2){F2PREFIP;DECLF;PROLOG(00202);A *hv;
   // for infix -, 0 items of fill
   RZ(z=reitem(zeroionei[0],w));  // create 0 items of the type of w
   if(ilnval>=0){ilnval=(ilnval==IMAX)?(wi+1):ilnval; RZ(z=take(sc(ilnval),z));}    // if items needed, create them.  For compatibility, treat _ as 1 more than #items in w
-  UC d=jt->uflags.us.cx.cx_c.db; jt->uflags.us.cx.cx_c.db=0; zz=(state&STATEHASGERUND)?df1(z,hv[0]):CALL1(f1,z,fs); jt->uflags.us.cx.cx_c.db=d; if(EMSK(jt->jerr)&EXIGENTERROR)RZ(zz); RESETERR;
+  UC d=jt->uflags.us.cx.cx_c.db; jt->uflags.us.cx.cx_c.db=0; zz=/*(state&STATEHASGERUND)?df1(z,hv[0]):*/CALL1(f1,z,fs); jt->uflags.us.cx.cx_c.db=d; if(EMSK(jt->jerr)&EXIGENTERROR)RZ(zz); RESETERR;
   RZ(zz=reshape(over(zeroionei[0],shape(zz?zz:mtv)),zz?zz:zeroionei[0]));
  }
 

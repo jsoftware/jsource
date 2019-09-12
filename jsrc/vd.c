@@ -76,32 +76,33 @@ static F1(jtqrr){PROLOG(0067);A a1,q,q0,q1,r,r0,r1,t,*tv,t0,t1,y,z;I m,n,p,*s;
 }
 
 #if 0
-// this version operates on rows
-static F1(jtqrrt){PROLOG(0067);A a1,q,q0,q1,r,r0,r1,t,*tv,t0,t1,y,z;I m,n,p,*s;
+// this version operates on rows, inplace.  w is not empty
+// q is the ADJOINT of the original q matrix
+static F1(jtlqip){PROLOG(0067);A a1,q,q0,q1,r,r0,r1,t,*tv,t0,t1,y,z;I m,n,p,*s;
  RZ(w);
- if(2>AR(w)){n=AN(w); p=1;}else{s=AS(w); n=s[0]; p=s[1];}  // p=#cols, n=#rows
- m=n>>1; I tom=(0x01222100>>((n&7)<<2))&3; m=(m+tom<n)?m+tom:m;  // Minimize number of wasted multiply slots, processing in batches of 4
+ I rw=AS(w)[0]; I cl=AS(w)[1];  // # rows, # columns
  if(1>=n){  // just 1 row
-  t=norm(ravel(w));  // norm of row
-  ASSERT(!AN(w)||!equ(t,num[0]),EVDOMAIN);  // norm must not be 0 unless row is empty
+  A t; RZ(t=norm(ravel(w)));  // norm of row
+  ASSERT(!equ(t,num[0]),EVDOMAIN);  // norm must not be 0
 // obsolete  RZ(q=divide(w,t));
-  RZ(q=tymes(w,recip(t)));
-  R link(2>AR(q)?table(q):q,reshape(v2(n,n),p?t:num[1]));
+  ACIP(w); A z; RZ(z=tymesA(w,recip(t))); verifyinplace(w,z);
+  R table(t);
  }
+ I m=rw>>1; I tom=(0x01222100>>((rw&7)<<2))&3; m=(m+tom<rw)?m+tom:m;  // Minimize number of wasted multiply slots, processing in batches of 4
  // construe w as w0 w1
- RZ(t0=qrr(take(a1=sc(m),w)));  // find QR of w0 pxm   w0t
- q0=AAV(t0)[0]; r0=AAV(t0)[1];  // point to Q and R of w0  pxm mxm  w0t    
- RZ(a1=drop(a1,w));  // a1=w1
- RZ(y=pdt(cant1(a1),conjug(q0)));  // q0* w1 mxpxn-m     w1t q0t*   q0t*=/q0      result is mxn-m
- RZ(t1=qrr(minus(a1,pdt(y,q0))));  // pxmxn-m  get QR of w1-(q0 q0* w1)    w1t-(w1t q0t* q0t)    
- q1=AAV(t1)[0]; r1=AAV(t1)[1];  
- RZ(q=over(q0,q1));  // overall q is q0t    Q of (w1t-(w1t q0t* q0t))
- RZ(r=stitch(over(r0,y),take(sc(-n),r1)));
- // r is   r0    q0* w1
- //        0     R of w1-(q0 q0* w1)
- // qr is  q0 r0    (q0 q0* w1) + (Q of w1-(q0 q0* w1))(R of w1-(q0 q0* w1))
- // = w0 w1 = w
- z=link(q,r); EPILOG(z);
+fauxvirtq0 for first m rows of w, inplaceable
+ RZ(l0=lqip(virtwq0));  // form q0 in place, return l0
+set virtq1 to last rows of w, inplaceable
+ RZ(y=pdt(virtwq1,conjug(cant1(virtwq0))));  // w1 q0*   n-mxpxm
+ RZ(z=minusA(virtwq1,pdt(y,q0)); verifyinplace(virtwq1,z);   // w1 - (w1 q0*) q0   n-mxmxp
+ RZ(l1=lqip(virtwq1));  //  get QR of   w1 - (w1 q0*) q0  
+ RZ(z=stitch(over(l0,y),take(sc(-n),l1)));
+ // l is   l0      0
+ //        w1 q0*  L of w1 - (w1 q0*) q0
+ // lq is  l0 q0
+//         (w1 q0*) q0 + (L of (w1 q0*) q0)(Q of (w1 q0*) q0)
+ // = w
+ EPILOG(z);
 }
 #endif
 
@@ -140,6 +141,7 @@ F1(jtminv){PROLOG(0068);A q,r,*v,y,z;I m,n,*s,t,wr;
   z=drop(v2(0L,n),gausselm(stitch(y,reshape(v2(n,n),take(sc(1+n),xco1(scf(1.0)))))));
   if(2>wr)z=tymes(reshape(mtv,z),w); else if(m>n)z=pdt(z,q);
  }else{
+  // not RAT/XNUM.  Calculate inverse as R^-1 Q^-1 after taking QR decomp & using Q^-1=Q* 
   RZ(y=qr(w)); v=AAV(y); q=*v++; r=*v;
   z=pdt(rinv(r),t&CMPX?conjug(cant1(q)):cant1(q));
   if(t&B01+INT&&2==wr&&m==n)z=icor(r,z);

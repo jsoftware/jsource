@@ -137,6 +137,7 @@ static F2(jtovg){A s,z;C*x;I ar,*as,c,k,m,n,r,*sv,t,wr,*ws,zn;
  RETF(z);
 }    /* a,w general case for dense array with the same type; jt->ranks=0 */
 
+#if 0
 static F2(jtovv){A z;I m,t;
  t=AT(a); 
  GA(z,t,AN(a)+AN(w),1,0);  
@@ -145,7 +146,9 @@ static F2(jtovv){A z;I m,t;
  MC(x+m,AV(w),AN(w)<<klg);
  RETF(z);
 }    /* a,w for vectors/scalars with the same type */
+#endif
 
+// these variants copy vectors or scalars, with optional repetition of items and, for the scalars, scalar repetition
 static void moveawVV(C *zv,C *av,C *wv,I c,I k,I ma,I mw,I arptreset,I wrptreset){
  I arptct=arptreset-1; I wrptct=wrptreset-1;
  if((arptct|wrptct)==0) {
@@ -185,32 +188,62 @@ static void moveawSV(C *zv,C *av,C *wv,I c,I k,I ma,I mw,I arptreset,I wrptreset
 }
 int (*p[4]) (int x, int y);
 static void(*moveawtbl[])() = {moveawVV,moveawVS,moveawSV};
-F2(jtover){A z;C*zv;I replct,framect,acn,acr,af,ar,*as,k,m,ma,mw,p,q,r,t,wcn,wcr,wf,wr,*ws,zn;
+F2(jtover){A z;C*zv;I replct,framect,acr,af,ar,*as,k,m,ma,mw,p,q,r,t,wcr,wf,wr,*ws,zn;
  RZ(a&&w);
+ UI jtr=jt->ranks;//  fetch early
  if(SPARSE&(AT(a)|AT(w))){R ovs(a,w);}  // if either arg is sparse, switch to sparse code
  if(AT(a)!=(t=AT(w))){t=maxtypedne(AT(a)|(AN(a)==0),t|(AN(w)==0)); t&=-t; if(!TYPESEQ(t,AT(a))){RZ(a=cvt(t,a));} else {RZ(w=cvt(t,w));}}  // convert args to compatible precisions, changing a and w if needed
  ar=AR(a); wr=AR(w);
- acr=jt->ranks>>RANKTX; as=AS(a); p=as[ar-1]; acr=ar<acr?ar:acr; p=acr?p:1; af=ar-acr;  // acr=rank of cell, af=len of frame, as->shape, p=len of last axis of cell
- wcr=(RANKT)jt->ranks; ws=AS(w); q=ws[wr-1]; wcr=wr<wcr?wr:wcr; q=wcr?q:1; wf=wr-wcr;  // wcr=rank of cell, wf=len of frame, ws->shape, p=len of last axis of cell
+ acr=jtr>>RANKTX; acr=ar<acr?ar:acr; af=ar-acr;  // acr=rank of cell, af=len of frame, as->shape
+ wcr=(RANKT)jtr; wcr=wr<wcr?wr:wcr; wf=wr-wcr;  // wcr=rank of cell, wf=len of frame, ws->shape
  // no RESETRANK - not required by ovv or main line here
- if(!(af|wf)&&2>(ar|wr))R ovv(a,w);  // If appending vectors/atoms at infinite rank, go handle that
-
+// obsolete  if(!(af|wf)&&2>(ar|wr))R ovv(a,w);  // If appending vectors/atoms at infinite rank, go handle that
+// should look for no frame, identical item shape after rank extension, copying en bloc
+ as=AS(a); ws=AS(w);
+ if(af+wf==0){
+  // No frame.  See if ranks are equal or different by 1, and if the items have the same shape
+  I lr=ar;  // rank of arg with long shape
+  A l=a; l=wr>ar?w:l; lr=wr>ar?wr:lr;  // arg with long shape
+  if(2*lr-1<=ar+wr){  // if ranks differ by at most 1
+   // items have the same rank or one argument is an item of the other (we don't bother with cases where the ranks differ by more than 1)
+   // see if the shapes agree up to the shape of an item of the longer argument
+   I mismatch=0; I *ase=as+ar-1, *wse=ws+wr-1; DQ(lr-1, mismatch|=*ase--^*wse--;);
+   if(!mismatch){
+    // The data can be copied in toto, with only the number of items changing.
+    A s=(A)((I)a+(I)w-(I)l);  // arg with short shape
+    // The rank is the rank of the long argument, unless both arguments are atoms; then it's 1
+    // The itemcount is the sum of the itemcounts; but if the ranks are different, use 1 for the shorter; and if both ranks are 0, the item count is 2
+    // empty items are OK: they just have 0 length but their shape follows the normal rules
+    I si=AS(s)[0]; si=ar==wr?si:1; si+=AS(l)[0]; si=lr==0?2:si; lr=lr==0?1:lr;
+    I klg=bplg(t); I alen=AN(a)<<klg; I wlen=AN(w)<<klg;
+    GA(z,t,AN(a)+AN(w),lr,AS(l)); AS(z)[0]=si; C *x=CAV(z);
+    MC(x,CAV(a),alen); MC(x+alen,CAV(w),wlen);
+    RETF(z);
+   }
+  }
+ }
+ // dissimilar items, or there is frame.
+ p=as[ar-1];   // p=len of last axis of cell.  Always safe to fetch first 
+ q=ws[wr-1];   //  q=len of last axis of cell
  r=MAX(acr,wcr); r=(r==0)?1:r;  // r=cell-rank, or 1 if both atoms.
  // if max cell-rank>2, or an argument is empty, or (joining table/table or table/row with cells of different lengths), do general case
- if((((2-r)|(AN(a)-1)|(AN(w)-1))<0)||2<acr+wcr&&p!=q){  // r>2, or empty
+ if((((2-r)|(AN(a)-1)|(AN(w)-1))<0)||2<acr+wcr&&p!=q){  // r>2, or empty.  If max rank <= 2 and sum of ranks >2, neither can be an atom
   RESETRANK; z=rank2ex(a,w,0L,acr,wcr,acr,wcr,jtovg); R z;  // ovg calls other functions, so we clear rank
  }
  // joining rows, or table/row with same lengths, or table/atom.  In any case no fill is possible
- acn=1>=acr?p:p*as[ar-2]; ma=!acr&&2==wcr?q:acn;  // acn is #atoms in a cell of a  ma is acn EXCEPT when joining atom a to table w: then length of row of w
- wcn=1>=wcr?q:q*ws[wr-2]; mw=!wcr&&2==acr?p:wcn; m=ma+mw;  // sim for w;  m=total # atoms to move per cell (table/row of a plus table/row of w)
+// obsolete  p=acr?p:1; ma=1>=acr?p:p*as[ar-2]; ma=!acr&&2==wcr?q:ma;  //   ma is #atoms in a cell of a EXCEPT when joining atom a to table w: then length of row of w
+// obsolete  q=wcr?q:1; mw=1>=wcr?q:q*ws[wr-2]; mw=!wcr&&2==acr?p:mw; m=ma+mw;  // sim for w;  m=total # atoms to move per cell (table/row of a plus table/row of w)
+ I cc2a=as[ar-2]; p=acr?p:1; cc2a=acr<=1?1:cc2a; ma=cc2a*p; ma=wcr>acr+1?q:ma;  //   cc2a is # 2-cells of a; ma is #atoms in a cell of a EXCEPT when joining atom a to table w: then length of row of w
+ I cc2w=ws[wr-2]; q=wcr?q:1; cc2w=wcr<=1?1:cc2w; mw=cc2w*q; mw=acr>wcr+1?p:mw; m=ma+mw;  // sim for w;  m=total # atoms to move per cell (table/row of a plus table/row of w)
  I f=(wf>=af)?wf:af; I shortf=(wf>=af)?af:wf; I *s=(wf>=af)?ws:as;
  PROD(replct,f-shortf,s+shortf); PROD(framect,shortf,s);  // Number of cells in a and w; known non-empty shapes
  RE(zn=mult(replct*framect,m));  // total # atoms in result
- GA(z,t,zn,f+r,s); zv=CAV(z); s=AS(z)+AR(z)-1;   // allocate result; repurpose s to point to END of shape field
- if(2>r)*s=m; else{*s=acr?p:q; *(s-1)=(1<acr?as[ar-2]:1)+(1<wcr?ws[wr-2]:1);}  // fill in last 2 atoms of shape
+ GA(z,t,zn,f+r,s); zv=CAV(z); s=AS(z)+f+r;   // allocate result; repurpose s to point to END+1 of shape field
+// obsolete  if(2>r)s[0]=m; else{s[0]=acr?p:q; s[-1]=(1<acr?as[ar-2]:1)+(1<wcr?ws[wr-2]:1);}  // fill in last 2 atoms of shape
+ if(2>r)s[-1]=m; else{s[-1]=acr?p:q; s[-2]=cc2a+cc2w;}  // fill in last 2 atoms of shape
  k=bpnoun(t);   // # bytes per atom of result
  // copy in the data, creating the result in order (to avoid page thrashing and to make best use of write buffers)
- moveawtbl[(I )(!acr&&ma>1)*2+(I )(!wcr&&mw>1)](CAV(z),CAV(a),CAV(w),replct*framect,k,ma*k,mw*k,(wf>=af)?replct:1,(wf>=af)?1:replct);
+ moveawtbl[(I)(!acr&&ma>1)*2+(I)(!wcr&&mw>1)](CAV(z),CAV(a),CAV(w),replct*framect,k,ma*k,mw*k,(wf>=af)?replct:1,(wf>=af)?1:replct);
  RETF(z);
 }    /* overall control, and a,w and a,"r w for cell rank <: 2 */
 

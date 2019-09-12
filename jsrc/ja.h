@@ -754,7 +754,7 @@
 #define ovgmove(x0,x1,x2,x3,x4,x5,x6)               jtovgmove(jt,(x0),(x1),(x2),(x3),(x4),(x5),(x6))
 #define ovs(x,y)                    jtovs(jt,(x),(y))
 #define ovs0(x0,x1,x2,x3)           jtovs0(jt,(x0),(x1),(x2),(x3))
-#define ovv(x,y)                    jtovv(jt,(x),(y))
+// obsolete #define ovv(x,y)                    jtovv(jt,(x),(y))
 #define pad(x,y,z)                  jtpad(jt,(x),(y),(z))
 #define parse(x)                    jtparse(jt,(x))
 #define parsea(x,y)                 jtparsea(jt,(x),(y))

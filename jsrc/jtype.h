@@ -116,7 +116,7 @@ struct AD {
  US h;   // reserved for allocator.  Not used for AFNJA memory
  RANKT r;  // rank
 #endif
- I s[1];   // shape starts here
+ I s[1];   // shape starts here.  NOTE!! s[0] is always OK to fetch.  We allocate 8 words minimum and s[0] is the last.
 };
 
 typedef struct {A a,t;}TA;

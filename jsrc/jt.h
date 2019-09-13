@@ -302,7 +302,11 @@ typedef struct {
  UI*  rngV0[5];         /* RNG: state vectors for RNG0                     */
  UI*  rngv;             /* RNG: rngV[rng]                                  */
  I    rngw;             /* RNG: # bits in a random #                       */
+// workareas for individual primitives, overlapping in the same memory
 union {
+ struct{
+  D determ;  // determinant of the triangular matrix, if the matrix to be inverted was B01 or INT.  Set to 0 to suppress INT rounding
+ } minv;
  struct {
   B    nla[256];         /* namelist names mask                             */
   I    nlt;              /* namelist type  mask                             */

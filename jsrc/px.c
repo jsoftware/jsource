@@ -56,6 +56,7 @@ F1(jtimmea){A t,z;
 static A jtcex(J jt,A w,AF f,A self){A z; RE(w); z=f(jt,w,self); RESETERR; R z;}
      /* conditional execute */
 
+// convert the gerund (i.e  AR) in w into a verb
 F1(jtexg){A*v,*wv,x,y,z;I n;
  RZ(w);
  n=AN(w); wv=AAV(w); 

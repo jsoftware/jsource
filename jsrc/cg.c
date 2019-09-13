@@ -64,6 +64,7 @@ static DF2(jtcon2){A h,*hv,*x,z;V*sv;
  R ope(z);
 }
 
+// u`:3 insert 
 static DF1(jtinsert){A hs,*hv,z;I hfx,j,m,n;A *old;
  RZ(w);
  n=IC(w); j=n-1; hs=FAV(self)->fgh[2]; m=AN(hs); hfx=j%m; hv=AAV(hs);  // m cannot be 0
@@ -74,6 +75,7 @@ static DF1(jtinsert){A hs,*hv,z;I hfx,j,m,n;A *old;
  RETF(z);
 }
 
+// u`:m
 F2(jtevger){A hs;I k;
  RZ(a&&w);
  RE(k=i0(w)); 

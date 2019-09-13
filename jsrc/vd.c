@@ -19,32 +19,12 @@ F1(jtrinv){PROLOG(0066);A ai,bx,di,z;I m,n,r,*s;
  if(1>=n)R recip(w);  // if an atom, inverse = reciprocal
  ai=rinv(take(v2(m,m),w));  // take inverse of w00
  di=rinv(drop(v2(m,m),w));  // take inverse of w11
- bx=negate(pdt(ai,pdt(take(v2(m,m-n),w),di)));  // -w00^_1 mp w01 mp w11^_1
- z=over(stitch(ai,bx),take(v2(n-m,-n),di));
+ bx=negateW(pdt(ai,pdt(take(v2(m,m-n),w),di)));  // -w00^_1 mp w01 mp w11^_1   could have fast multiplier for diagonal mtces
+ z=over(stitch(ai,bx),take(v2(n-m,-n),di));  // should copy this over w, inplace
  //  w00^_1     -w00^_1 mp w01 mp w11^_1
  //    0         w11^_1
  EPILOG(z);
 }    /* R.K.W. Hui, Uses of { and }, APL87, p. 56 */
-
-#if 0
-// transposed version
-F1(jtrinvt){PROLOG(0066);A ai,bx,di,z;I m,n,r,*s;
- F1RANK(2,jtrinv,0);
- r=AR(w); s=AS(w); n=2>r?1:s[1]; // n is rank of matrix
-// obsolete m=(1+n)>>1; //    m is the matrix splitpoint
- m=n>>1; I tom=(0x01222100>>((n&7)<<2))&3; m=(m+tom<n)?m+tom:m;  // Minimize number of wasted multiply slots, processing in batches of 4
- // construe w as a block-matrix Wij where w00 and w11 are upper-triangular, w10 is 0, and w01 is a full matrix
- ASSERT(!r||n==s[0],EVLENGTH);  // error if not square
- if(1>=n)R recip(w);  // if an atom, inverse = reciprocal
- ai=rinv(take(v2(m,m),w));  // take inverse of w00
- di=rinv(drop(v2(m,m),w));  // take inverse of w11
- bx=negate(pdt(pdt(di,take(v2(m-n,m),w)),ai));  // -w00^_1 mp w01 mp w11^_1
- z=stitch(over(ai,bx),take(v2(-n,n-m),di));
- //  w00^_1     -w00^_1 mp w01 mp w11^_1
- //    0         w11^_1
- EPILOG(z);
-}    /* R.K.W. Hui, Uses of { and }, APL87, p. 56 */
-#endif
 
 // recursive subroutine for qr decomposition, returns q;r
 static F1(jtqrr){PROLOG(0067);A a1,q,q0,q1,r,r0,r1,t,*tv,t0,t1,y,z;I m,n,p,*s;
@@ -75,36 +55,39 @@ static F1(jtqrr){PROLOG(0067);A a1,q,q0,q1,r,r0,r1,t,*tv,t0,t1,y,z;I m,n,p,*s;
  z=link(q,r); EPILOG(z);
 }
 
-#if 0
+#define verifyinplace(to,from) if(to!=from){MC(CAV(to),CAV(from),AN(to)<<bplg(AT(to)));}  // scaf
 // this version operates on rows, inplace.  w is not empty
 // q is the ADJOINT of the original q matrix
-static F1(jtlqip){PROLOG(0067);A a1,q,q0,q1,r,r0,r1,t,*tv,t0,t1,y,z;I m,n,p,*s;
+static F1(jtltqip){PROLOG(0067);A l0,l1,y,z;
  RZ(w);
+ A q0; fauxblock(virtwq0);
  I rw=AS(w)[0]; I cl=AS(w)[1];  // # rows, # columns
- if(1>=n){  // just 1 row
-  A t; RZ(t=norm(ravel(w)));  // norm of row
+ if(rw<=1){  // just 1 row
+  // Use a faux-virtual block to take the norm of w, so that we leave w inplaceable for when we normalize it in place
+  fauxvirtual(q0,virtwq0,w,1,ACUC1); AS(q0)[0]=cl; AN(q0)=cl;
+  A t; RZ(t=norm(q0));  // norm of row
   ASSERT(!equ(t,num[0]),EVDOMAIN);  // norm must not be 0
 // obsolete  RZ(q=divide(w,t));
-  ACIP(w); A z; RZ(z=tymesA(w,recip(t))); verifyinplace(w,z);
-  R table(t);
+  A z; RZ(z=tymesA(w,recip(t))); verifyinplace(w,z);
+  R table(t);  // this is real, so it is also the conjugate of L
  }
  I m=rw>>1; I tom=(0x01222100>>((rw&7)<<2))&3; m=(m+tom<rw)?m+tom:m;  // Minimize number of wasted multiply slots, processing in batches of 4
  // construe w as w0 w1
-fauxvirtq0 for first m rows of w, inplaceable
- RZ(l0=lqip(virtwq0));  // form q0 in place, return l0
-set virtq1 to last rows of w, inplaceable
- RZ(y=pdt(virtwq1,conjug(cant1(virtwq0))));  // w1 q0*   n-mxpxm
- RZ(z=minusA(virtwq1,pdt(y,q0)); verifyinplace(virtwq1,z);   // w1 - (w1 q0*) q0   n-mxmxp
- RZ(l1=lqip(virtwq1));  //  get QR of   w1 - (w1 q0*) q0  
- RZ(z=stitch(over(l0,y),take(sc(-n),l1)));
- // l is   l0      0
- //        w1 q0*  L of w1 - (w1 q0*) q0
+ fauxvirtual(q0,virtwq0,w,2,ACUC1|ACINPLACE); AS(q0)[0]=m; AS(q0)[1]=cl; AN(q0)=m*cl; 
+ RZ(l0=jtltqip(jt,q0));  // form q0 in place, return l0
+ A q1; fauxblock(virtwq1);  fauxvirtual(q1,virtwq1,w,2,ACUC1|ACINPLACE); AK(q1)+=(m*cl)<<bplg(AT(w)); AS(q1)[0]=rw-m; AS(q1)[1]=cl; AN(q1)=(rw-m)*cl; 
+ RZ(y=pdt(q1,conjug(cant1(q0))));  // w1 q0*   n-mxpxm
+ RZ(z=minusA(q1,pdt(y,q0))); verifyinplace(q1,z);   // w1 - (w1 q0*) q0   n-mxmxp
+ RZ(l1=jtltqip(jt,q1));  //  get QR of   w1 - (w1 q0*) q0  
+ RZ(z=over(stitch(l0,conjug(cant1(y))),take(v2(rw-m,-rw),l1)));  // create result as L*, which is upper-tri
+// should build result with copying
+ // l* is   l0*    (w1 q0*)*
+ //         0      (L of w1 - (w1 q0*) q0)*
  // lq is  l0 q0
-//         (w1 q0*) q0 + (L of (w1 q0*) q0)(Q of (w1 q0*) q0)
+//         (w1 q0*) q0 + (L of w1 - (w1 q0*) q0)(Q of w1 - (w1 q0*) q0)
  // = w
  EPILOG(z);
 }
-#endif
 
 // qr (?) decomposition of w, returns q;r
 F1(jtqr){A r,z;D c=inf,d=0,x;I n1,n,*s,wr;
@@ -114,23 +97,47 @@ F1(jtqr){A r,z;D c=inf,d=0,x;I n1,n,*s,wr;
  wr=AR(w); s=AS(w);
  ASSERT(2>wr||s[0]>=s[1],EVLENGTH);
  RZ(z=qrr(w)); r=*(1+AAV(z)); n=*AS(r); n1=1+n;
- if(FL&AT(r)){D*v=DAV(r);  DQ(n, x= ABS(*v); if(x<c)c=x; if(x>d)d=x; v+=n1;);} 
+ if(FL&AT(r)){D*v=DAV(r);  DQ(n, x= ABS(*v); if(x<c)c=x; if(x>d)d=x; v+=n1;);}
  else        {Z*v=ZAV(r);  DQ(n, x=zmag(*v); if(x<c)c=x; if(x>d)d=x; v+=n1;);}
  ASSERT(!n||c>d*jt->fuzz,EVDOMAIN);
- RETF(z);
+RETF(z);
 }
 
-static F2(jticor){D d,*v;I n;
- RZ(a&&w);
- d=1; n=1+*AS(a);
- v=DAV(a); DQ(n-1, d*=*v; v+=n;); d=jfloor(0.5+ABS(d));
- if(!d||d>1e20)R w;
- v=DAV(w); DO(AN(w), v[i]=jfloor(0.5+d*v[i])/d;);
+// return inverse of w, calculated by lq applied to adjoint
+// result has rank 2
+static F1(jtlq){A l;D c=inf,d=0,x;I n1,n,*s,wr;
+ F1RANK(2,jtqr,0);
+ ASSERT(DENSE&AT(w),EVNONCE);
+ ASSERT(AT(w)&B01+INT+FL+CMPX,EVDOMAIN);
+ wr=AR(w); s=AS(w);
+ ASSERT(2>wr||s[0]>=s[1],EVLENGTH);
+ if(AT(w)&B01+INT)RZ(w=cvt(FL,w));  // convert boolean/integer to real
+ if(wr==1)w=table(w);  // convert column vector to column matrix
+ w=conjug(cant1(w));  // create w*, where the result will be built inplace
+ RZ(l=jtltqip(jt,w)); n=AS(l)[0]; n1=1+n;
+ // build determinant for integer correction, if that is enabled (i. e. nonzero)
+ if(FL&AT(l)){D*v=DAV(l); D determ=jt->workareas.minv.determ; DQ(n, x= ABS(*v); if(determ!=0){determ*=x; if(determ>1e20)determ=0.0;} if(x<c)c=x; if(x>d)d=x; v+=n1;); jt->workareas.minv.determ=determ;} 
+ else        {Z*v=ZAV(l);  DQ(n, x=zmag(*v); if(x<c)c=x; if(x>d)d=x; v+=n1;);}
+ ASSERT(!n||c>d*jt->fuzz,EVDOMAIN);
+ RETF(pdt(rinv(l),w));
+}
+
+// Boolean/integer correction.  If the inversand was B01 or INT, we can eliminate some rounginr error by forcing the
+// determinant to integer and then each value to an integer multiple of the determinant.
+// The determinant was calculated when we inverted the matrix
+static F1(jticor){D d,*v;
+ RZ(w);
+ d=jt->workareas.minv.determ;  // fetch flag/determinant
+ if(d==0.0)R w;  // if not enabled or not applicable, return input unchanged
+ d=jfloor(0.5+ABS(d));  // force determinant to integer
+ D recipd=1/d;
+ v=DAV(w); DO(AN(w), v[i]=jfloor(0.5+d*v[i])*recipd;);  // force each value to multiple of recip of determinant, then divide
  R w;
 }
 
-F1(jtminv){PROLOG(0068);A q,r,*v,y,z;I m,n,*s,t,wr;
+F1(jtminv){PROLOG(0068);A q,y,z;I m,n,*s,t,wr;
  F1RANK(2,jtminv,0);
+ jt->workareas.minv.determ=0.0;
  t=AT(w); wr=AR(w); s=AS(w); m=wr?s[0]:1; n=1<wr?s[1]:1;
  if(!wr)R recip(w);
  if(!AN(w)){ASSERT(1==wr||m>=n,EVLENGTH); R cant1(w);}
@@ -141,10 +148,16 @@ F1(jtminv){PROLOG(0068);A q,r,*v,y,z;I m,n,*s,t,wr;
   z=drop(v2(0L,n),gausselm(stitch(y,reshape(v2(n,n),take(sc(1+n),xco1(scf(1.0)))))));
   if(2>wr)z=tymes(reshape(mtv,z),w); else if(m>n)z=pdt(z,q);
  }else{
-  // not RAT/XNUM.  Calculate inverse as R^-1 Q^-1 after taking QR decomp & using Q^-1=Q* 
+  // not RAT/XNUM.  Calculate inverse as R^-1 Q^-1 after taking QR decomp & using Q^-1=Q*
+  if(t&B01+INT&&2==wr&&m==n)jt->workareas.minv.determ=1.0;  // if taking inverse of square int, allow setting up for correction afterward
+#if 0
   RZ(y=qr(w)); v=AAV(y); q=*v++; r=*v;
   z=pdt(rinv(r),t&CMPX?conjug(cant1(q)):cant1(q));
-  if(t&B01+INT&&2==wr&&m==n)z=icor(r,z);
+// obsolete   if(t&B01+INT&&2==wr&&m==n)z=icor(z);
+#else
+  z=jtlq(jt,w);
+#endif
+  z=icor(z);  // if integer correction called for, do it
   z=2==wr?z:reshape(shape(w),z);
  }
  EPILOG(z);
@@ -183,11 +196,12 @@ static F2(jtmdivsp){A a1,x,y;I at,d,m,n,t,*v,xt;P*wp;
 
 
 // a %. w  for all types
-F2(jtmdiv){PROLOG(0069);A q,r,*v,y,z;B b=0;I t;
+F2(jtmdiv){PROLOG(0069);A z;I t;
  F2RANK(RMAX,2,jtmdiv,0);
  if(AT(a)&SPARSE)RZ(a=denseit(a));
  t=AT(w);
  if(t&SPARSE)R mdivsp(a,w);
+#if 0 // obsolete
  if(t&XNUM+RAT)z=minv(w);  // for xnums, take inv of a
  else{
   RZ(y=qr(w)); v=AAV(y); q=*v++; r=*v;
@@ -195,7 +209,9 @@ F2(jtmdiv){PROLOG(0069);A q,r,*v,y,z;B b=0;I t;
   b=t&B01+INT&&2==AR(w)&&*AS(w)==*(1+AS(w));
   if(b)z=icor(r,z);
  }
- z=pdt(2>AR(w)?reshape(shape(w),z):z,a);
- if(b&&AT(a)&B01+INT)z=icor(r,z);
+#endif
+ z=minv(w);  // take generalized inverse of w, setting up for icor if needed
+ z=pdt(2>AR(w)?reshape(shape(w),z):z,a);  // a * w^-1
+ if(AT(a)&B01+INT)z=icor(z);  // integer correct if a is not float (& correction is possible)
  EPILOG(z);
 }

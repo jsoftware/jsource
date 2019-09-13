@@ -188,7 +188,7 @@ static void moveawSV(C *zv,C *av,C *wv,I c,I k,I ma,I mw,I arptreset,I wrptreset
 }
 int (*p[4]) (int x, int y);
 static void(*moveawtbl[])() = {moveawVV,moveawVS,moveawSV};
-F2(jtover){A z;C*zv;I replct,framect,acr,af,ar,*as,k,m,ma,mw,p,q,r,t,wcr,wf,wr,*ws,zn;
+F2(jtover){A z;C*zv;I replct,framect,acr,af,ar,*as,k,ma,mw,p,q,r,t,wcr,wf,wr,*ws,zn;
  RZ(a&&w);
  UI jtr=jt->ranks;//  fetch early
  if(SPARSE&(AT(a)|AT(w))){R ovs(a,w);}  // if either arg is sparse, switch to sparse code
@@ -203,7 +203,7 @@ F2(jtover){A z;C*zv;I replct,framect,acr,af,ar,*as,k,m,ma,mw,p,q,r,t,wcr,wf,wr,*
  if(af+wf==0){
   // No frame.  See if ranks are equal or different by 1, and if the items have the same shape
   I lr=ar;  // rank of arg with long shape
-  A l=a; l=wr>ar?w:l; lr=wr>ar?wr:lr;  // arg with long shape
+  A l=a; l=wr>ar?w:l; lr=wr>ar?wr:lr;  // arg with long shape.  Not needed till later but we usually go through the fast path
   if(2*lr-1<=ar+wr){  // if ranks differ by at most 1
    // items have the same rank or one argument is an item of the other (we don't bother with cases where the ranks differ by more than 1)
    // see if the shapes agree up to the shape of an item of the longer argument
@@ -214,9 +214,9 @@ F2(jtover){A z;C*zv;I replct,framect,acr,af,ar,*as,k,m,ma,mw,p,q,r,t,wcr,wf,wr,*
     // The rank is the rank of the long argument, unless both arguments are atoms; then it's 1
     // The itemcount is the sum of the itemcounts; but if the ranks are different, use 1 for the shorter; and if both ranks are 0, the item count is 2
     // empty items are OK: they just have 0 length but their shape follows the normal rules
-    I si=AS(s)[0]; si=ar==wr?si:1; si+=AS(l)[0]; si=lr==0?2:si; lr=lr==0?1:lr;
+    I si=AS(s)[0]; si=ar==wr?si:1; si+=AS(l)[0]; si=lr==0?2:si; lr=lr==0?1:lr;  // get short item count; adjust to 1 if lower rank; add long item count; adjust if atom+atom
     I klg=bplg(t); I alen=AN(a)<<klg; I wlen=AN(w)<<klg;
-    GA(z,t,AN(a)+AN(w),lr,AS(l)); AS(z)[0]=si; C *x=CAV(z);
+    GA(z,t,AN(a)+AN(w),lr,AS(l)); AS(z)[0]=si; C *x=CAV(z);  // install # items after copying shape
     MC(x,CAV(a),alen); MC(x+alen,CAV(w),wlen);
     RETF(z);
    }
@@ -234,22 +234,25 @@ F2(jtover){A z;C*zv;I replct,framect,acr,af,ar,*as,k,m,ma,mw,p,q,r,t,wcr,wf,wr,*
 // obsolete  p=acr?p:1; ma=1>=acr?p:p*as[ar-2]; ma=!acr&&2==wcr?q:ma;  //   ma is #atoms in a cell of a EXCEPT when joining atom a to table w: then length of row of w
 // obsolete  q=wcr?q:1; mw=1>=wcr?q:q*ws[wr-2]; mw=!wcr&&2==acr?p:mw; m=ma+mw;  // sim for w;  m=total # atoms to move per cell (table/row of a plus table/row of w)
  I cc2a=as[ar-2]; p=acr?p:1; cc2a=acr<=1?1:cc2a; ma=cc2a*p; ma=wcr>acr+1?q:ma;  //   cc2a is # 2-cells of a; ma is #atoms in a cell of a EXCEPT when joining atom a to table w: then length of row of w
- I cc2w=ws[wr-2]; q=wcr?q:1; cc2w=wcr<=1?1:cc2w; mw=cc2w*q; mw=acr>wcr+1?p:mw; m=ma+mw;  // sim for w;  m=total # atoms to move per cell (table/row of a plus table/row of w)
+ I cc2w=ws[wr-2]; q=wcr?q:1; cc2w=wcr<=1?1:cc2w; mw=cc2w*q; mw=acr>wcr+1?p:mw;  // sim for w;
  I f=(wf>=af)?wf:af; I shortf=(wf>=af)?af:wf; I *s=(wf>=af)?ws:as;
  PROD(replct,f-shortf,s+shortf); PROD(framect,shortf,s);  // Number of cells in a and w; known non-empty shapes
- RE(zn=mult(replct*framect,m));  // total # atoms in result
+ RE(zn=mult(replct*framect,ma+mw));  // total # atoms in result
  GA(z,t,zn,f+r,s); zv=CAV(z); s=AS(z)+f+r;   // allocate result; repurpose s to point to END+1 of shape field
 // obsolete  if(2>r)s[0]=m; else{s[0]=acr?p:q; s[-1]=(1<acr?as[ar-2]:1)+(1<wcr?ws[wr-2]:1);}  // fill in last 2 atoms of shape
- if(2>r)s[-1]=m; else{s[-1]=acr?p:q; s[-2]=cc2a+cc2w;}  // fill in last 2 atoms of shape
+ if(2>r)s[-1]=ma+mw; else{s[-1]=acr?p:q; s[-2]=cc2a+cc2w;}  // fill in last 2 atoms of shape
  k=bpnoun(t);   // # bytes per atom of result
  // copy in the data, creating the result in order (to avoid page thrashing and to make best use of write buffers)
- moveawtbl[(I)(!acr&&ma>1)*2+(I)(!wcr&&mw>1)](CAV(z),CAV(a),CAV(w),replct*framect,k,ma*k,mw*k,(wf>=af)?replct:1,(wf>=af)?1:replct);
+ // scalar replication is required for any arg whose rank is 0 and yet its length is >1.  Choose the copy routine based on that
+// obsolete  moveawtbl[(I)(!acr&&ma>1)*2+(I)(!wcr&&mw>1)](CAV(z),CAV(a),CAV(w),replct*framect,k,ma*k,mw*k,(wf>=af)?replct:1,(wf>=af)?1:replct);
+ moveawtbl[((UI)((acr-1)&(1-ma))>>(BW-1))*2+((UI)((wcr-1)&(1-mw))>>(BW-1))](CAV(z),CAV(a),CAV(w),replct*framect,k,ma*k,mw*k,(wf>=af)?replct:1,(wf>=af)?1:replct);
  RETF(z);
 }    /* overall control, and a,w and a,"r w for cell rank <: 2 */
 
 F2(jtstitch){B sp2;I ar,wr; A z;
  RZ(a&&w);
- ar=AR(a); wr=AR(w); sp2=(SPARSE&AT(a)||SPARSE&AT(w))&&2>=ar&&2>=wr;
+// obsolete  ar=AR(a); wr=AR(w); sp2=(SPARSE&AT(a)||SPARSE&AT(w))&&2>=ar&&2>=wr;
+ ar=AR(a); wr=AR(w); sp2=(SPARSE&(AT(a)|AT(w)))&&2>=ar&&2>=wr;
  ASSERT(!ar||!wr||*AS(a)==*AS(w),EVLENGTH);
  R sp2 ? stitchsp2(a,w) : IRS2(a,w,0L,(ar-1)&RMAX,(wr-1)&RMAX,jtover,z);
 }

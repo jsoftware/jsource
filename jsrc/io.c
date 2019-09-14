@@ -509,7 +509,7 @@ C* esub(J jt, I ec)
  if(ec == EDCBUSY) return "busy with previous input";
  if(ec == EDCEXE) return "not supported in EXE server";
  if(ec > NEVM || ec < 0) return "unknown error";
- return (C*)AV(*(ec+AAV(jt->evm)));
+ return CAV(AAV(jt->evm)[ec]);
 }
 
 int _stdcall JErrorTextM(J jt, I ec, I* p)

@@ -61,7 +61,7 @@ F1(jtevms){A t,*tv,*wv;
  GAT0(t,BOX,1+NEVM,1); tv=AAV(t); 
  *tv++=mtv;
  wv=AAV(w);
- DQ(NEVM, RZ(*tv++=vs(*wv++)););
+ DQ(NEVM, RZ(*tv=ca(vs(*wv))); CAV(*tv)[AN(*tv)]=0; ++tv; ++wv;);  // NUL-terminate.  ca to make sure there's room
  ras(t); fa(jt->evm); jt->evm=t;
  R mtv;
 }

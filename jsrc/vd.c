@@ -20,7 +20,18 @@ F1(jtrinv){PROLOG(0066);A ai,bx,di,z;I m,n,r,*s;
  ai=rinv(take(v2(m,m),w));  // take inverse of w00
  di=rinv(drop(v2(m,m),w));  // take inverse of w11
  bx=negateW(pdt(ai,pdt(take(v2(m,m-n),w),di)));  // -w00^_1 mp w01 mp w11^_1   could have fast multiplier for diagonal mtces
- z=over(stitch(ai,bx),take(v2(n-m,-n),di));  // should copy this over w, inplace
+ if(AT(w)&SPARSE){z=over(stitch(ai,bx),take(v2(n-m,-n),di));  // should copy this over w, inplace
+ }else{
+  // copy in the pieces, line by line
+  I leftlen = m<<bplg(AT(w)); I rightlen=(n-m)<<bplg(AT(w));
+  GA(z,AT(w),n*n,2,AS(w)); void *zr=voidAV(z);  // allocate result, set pointer to output
+  // copy top part: ai,.bx
+  void *leftr=voidAV(ai), *rightr=voidAV(bx);  // input pointers
+  DQ(m, MC(zr,leftr,leftlen); zr=(C*)zr+leftlen; leftr=(C*)leftr+leftlen; MC(zr,rightr,rightlen); zr=(C*)zr+rightlen; rightr=(C*)rightr+rightlen;)
+  // copy bottom part: 0,.di
+  rightr=voidAV(di);
+  DQ(n-m, memset(zr,C0,leftlen); zr=(C*)zr+leftlen; MC(zr,rightr,rightlen); zr=(C*)zr+rightlen; rightr=(C*)rightr+rightlen;)
+ }
  //  w00^_1     -w00^_1 mp w01 mp w11^_1
  //    0         w11^_1
  EPILOG(z);
@@ -55,7 +66,7 @@ static F1(jtqrr){PROLOG(0067);A a1,q,q0,q1,r,r0,r1,t,*tv,t0,t1,y,z;I m,n,p,*s;
  z=link(q,r); EPILOG(z);
 }
 
-#define verifyinplace(to,from) if(to!=from){MC(CAV(to),CAV(from),AN(to)<<bplg(AT(to)));}  // scaf
+#define verifyinplace(to,from) if(to!=from){MC(CAV(to),CAV(from),AN(to)<<bplg(AT(to)));}
 // this version operates on rows, inplace.  w is not empty
 // q is the ADJOINT of the original q matrix
 static F1(jtltqip){PROLOG(0067);A l0,l1,y,z;
@@ -64,7 +75,7 @@ static F1(jtltqip){PROLOG(0067);A l0,l1,y,z;
  I rw=AS(w)[0]; I cl=AS(w)[1];  // # rows, # columns
  if(rw<=1){  // just 1 row
   // Use a faux-virtual block to take the norm of w, so that we leave w inplaceable for when we normalize it in place
-  fauxvirtual(q0,virtwq0,w,1,ACUC1); AS(q0)[0]=cl; AN(q0)=cl;
+  fauxvirtual(q0,virtwq0,w,1,ACUC1); AS(q0)[0]=cl; AN(q0)=cl;  // kludge use sumattymesprod to create a table result directly
   A t; RZ(t=norm(q0));  // norm of row
   ASSERT(!equ(t,num[0]),EVDOMAIN);  // norm must not be 0
 // obsolete  RZ(q=divide(w,t));
@@ -79,7 +90,16 @@ static F1(jtltqip){PROLOG(0067);A l0,l1,y,z;
  RZ(y=pdt(q1,conjug(cant1(q0))));  // w1 q0*   n-mxpxm
  RZ(z=minusA(q1,pdt(y,q0))); verifyinplace(q1,z);   // w1 - (w1 q0*) q0   n-mxmxp
  RZ(l1=jtltqip(jt,q1));  //  get QR of   w1 - (w1 q0*) q0  
- RZ(z=over(stitch(l0,conjug(cant1(y))),take(v2(rw-m,-rw),l1)));  // create result as L*, which is upper-tri
+// obsolete  RZ(z=over(stitch(l0,conjug(cant1(y))),take(v2(rw-m,-rw),l1)));  // create result as L*, which is upper-tri
+ // copy in the pieces, line by line
+ I leftlen = m<<bplg(AT(w)); I rightlen=(rw-m)<<bplg(AT(w));
+ GA(z,AT(w),rw*rw,2,AS(w)); AS(z)[1]=rw; void *zr=voidAV(z);  // allocate result, set pointer to output
+ // copy top part: l0*,. (w1 q0*)*
+ void *leftr=voidAV(l0), *rightr=voidAV(conjug(cant1(y)));  // input pointers
+ DQ(m, MC(zr,leftr,leftlen); zr=(C*)zr+leftlen; leftr=(C*)leftr+leftlen; MC(zr,rightr,rightlen); zr=(C*)zr+rightlen; rightr=(C*)rightr+rightlen;)
+ // copy bottom part: 0,.(L of w1 - (w1 q0*) q0)*
+ rightr=voidAV(l1);
+ DQ(rw-m, memset(zr,C0,leftlen); zr=(C*)zr+leftlen; MC(zr,rightr,rightlen); zr=(C*)zr+rightlen; rightr=(C*)rightr+rightlen;)
 // should build result with copying
  // l* is   l0*    (w1 q0*)*
  //         0      (L of w1 - (w1 q0*) q0)*
@@ -119,7 +139,7 @@ static F1(jtlq){A l;D c=inf,d=0,x;I n1,n,*s,wr;
  if(FL&AT(l)){D*v=DAV(l); D determ=jt->workareas.minv.determ; DQ(n, x= ABS(*v); if(determ!=0){determ*=x; if(determ>1e20)determ=0.0;} if(x<c)c=x; if(x>d)d=x; v+=n1;); jt->workareas.minv.determ=determ;} 
  else        {Z*v=ZAV(l);  DQ(n, x=zmag(*v); if(x<c)c=x; if(x>d)d=x; v+=n1;);}
  ASSERT(!n||c>d*jt->fuzz,EVDOMAIN);
- RETF(pdt(rinv(l),w));
+ RETF(pdt(rinv(l),w));  // kludge could have fast multiplier for diagonal matrices
 }
 
 // Boolean/integer correction.  If the inversand was B01 or INT, we can eliminate some rounginr error by forcing the
@@ -150,7 +170,7 @@ F1(jtminv){PROLOG(0068);A q,y,z;I m,n,*s,t,wr;
  }else{
   // not RAT/XNUM.  Calculate inverse as R^-1 Q^-1 after taking QR decomp & using Q^-1=Q*
   if(t&B01+INT&&2==wr&&m==n)jt->workareas.minv.determ=1.0;  // if taking inverse of square int, allow setting up for correction afterward
-#if 0
+#if 0   // obsolete
   RZ(y=qr(w)); v=AAV(y); q=*v++; r=*v;
   z=pdt(rinv(r),t&CMPX?conjug(cant1(q)):cant1(q));
 // obsolete   if(t&B01+INT&&2==wr&&m==n)z=icor(z);

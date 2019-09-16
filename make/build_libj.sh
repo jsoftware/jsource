@@ -124,7 +124,7 @@ linux_j64avx2) # linux intel 64bit avx2
 TARGET=libjavx2.so
 COMPILE="$common -DC_AVX=1 -DC_AVX2=1"
 LINK=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP -o libjavx2.so "
-CFLAGS_SIMD=" -mavx2 "
+CFLAGS_SIMD=" -mavx2  -mfma"
 OBJS_FMA=" blis/gemm_int-fma.o "
 OBJS_AESNI=" aes-ni.o "
 SRC_ASM="${SRC_ASM_LINUX}"
@@ -181,7 +181,7 @@ darwin_j64avx2) # darwin intel 64bit
 TARGET=libjavx.dylib
 COMPILE="$darwin $macmin -DC_AVX=1 -DC_AVX2=1"
 LINK=" -dynamiclib -lm -ldl $LDOPENMP $macmin -o libjavx2.dylib"
-CFLAGS_SIMD=" -DC_AVX2=1 -mavx2 "
+CFLAGS_SIMD=" -DC_AVX2=1 -mavx2  -mfma "
 OBJS_FMA=" blis/gemm_int-fma.o "
 OBJS_AESNI=" aes-ni.o "
 SRC_ASM="${SRC_ASM_MAC}"

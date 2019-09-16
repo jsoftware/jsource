@@ -496,7 +496,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define ALLOBYTESVSZ(atoms,rank,size,islast,isname)      ( ((((rank)|(!SY_64))*SZI  + ((islast)? (isname)?(NORMAH*SZI+sizeof(NM)+SZI-1):(NORMAH*SZI+SZI-1) : (NORMAH*SZI-1)) + (atoms)*(size)))  )  // # bytes to allocate allowing 1 I for string pad - include mem hdr - minus 1
 // here when size is constant.  The number of bytes, rounded up with overhead added, must not exceed 2^(PMINL+4)
 #define ALLOBYTES(atoms,rank,size,islast,isname)      ((size&(SZI-1))?ALLOBYTESVSZ(atoms,rank,size,islast,isname):(SZI*(((rank)|(!SY_64))+NORMAH+((size)>>LGSZI)*(atoms)+!!(islast))-1))  // # bytes to allocate-1
-#define ALLOBLOCK(n) ((n)<2*PMIN?((n)<PMIN?PMINL-1:PMINL) : (n)<8*PMIN?((n)<4*PMIN?PMINL+1:PMINL+2) : (n)<32*PMIN?PMINL+3:IMIN)   // lg2(#bytes to allocate)-1.  n is #bytes-1
+#define ALLOBLOCK(n) ((n)<2*PMIN?((n)<PMIN?PMINL-1:PMINL) : (n)<8*PMIN?((n)<4*PMIN?PMINL+1:PMINL+2) : (n)<32*PMIN?((n)<16*PMIN?PMINL+3:PMINL+4) : IMIN)   // lg2(#bytes to allocate)-1.  n is #bytes-1
 // value to put into name->bucketx for locale names: number if numeric, hash otherwise
 #define BUCKETXLOC(len,s) ((*(s)<='9')?strtoI10s((len),(s)):(I)nmhash((len),(s)))
 // GA() is used when the type is unknown.  This routine is in m.c and documents the function of these macros.

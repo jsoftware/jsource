@@ -160,6 +160,19 @@ cder''
 
 2 0-:f''
 
+f=: 3 : 0
+t=. dquote LIBFILE
+jt=. >@{. (t, ' JInit x')cd ''
+assert. 0= >@{. (t, ' JDo x x *c')cd jt;'i.5'
+assert. 21= rc=. >@{. (t, ' JDo x x *c')cd jt;'foo i.5'
+p=. {. >@{: (t, ' JErrorTextM x x x *x')cd jt;rc;,2-2
+assert. 'value error'-: memr p,0,11,2
+assert. (,{.a.) -: memr p,11,1,2
+1
+)
+
+f''
+
 4!:55 ;:'a a1 add address b b1 cdrc dcd f i lib n obj_add pc s s0 s1 td td1a td3 td4 tf tf3'
 4!:55 ;:'v0 v1 v2 v3 v4 v5 x xbasic_add xx yy z'
 

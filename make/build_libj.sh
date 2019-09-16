@@ -178,7 +178,7 @@ GASM_FLAGS="$macmin"
 ;;
 
 darwin_j64avx2) # darwin intel 64bit
-TARGET=libjavx.dylib
+TARGET=libjavx2.dylib
 COMPILE="$darwin $macmin -DC_AVX=1 -DC_AVX2=1"
 LINK=" -dynamiclib -lm -ldl $LDOPENMP $macmin -o libjavx2.dylib"
 CFLAGS_SIMD=" -DC_AVX2=1 -mavx2  -mfma "

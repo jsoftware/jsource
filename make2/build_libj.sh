@@ -89,8 +89,6 @@ common="$OPENMP -Werror -fPIC -O1 -fwrapv -fno-strict-aliasing -Wextra -Wno-cons
 fi
 darwin="$OPENMP -fPIC -O1 -fwrapv -fno-strict-aliasing -Wno-string-plus-int -Wno-empty-body -Wno-unsequenced -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-return-type -Wno-constant-logical-operand -Wno-comment -Wno-unsequenced -Wno-pass-failed"
 
-javx2="${javx2:=0}"
-
 SRC_ASM_LINUX=" \
  keccak1600-x86_64-elf.o \
  sha1-x86_64-elf.o \
@@ -155,11 +153,18 @@ linux_j64avx) # linux intel 64bit avx
 TARGET=libj.so
 CFLAGS="$common -DC_AVX=1 "
 LDFLAGS=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP"
-if [ "x$javx2" != x'1' ] ; then
 CFLAGS_SIMD=" -mavx "
-else
-CFLAGS_SIMD=" -DC_AVX2=1 -mavx2 "
-fi
+OBJS_FMA=" gemm_int-fma.o "
+OBJS_AESNI=" aes-ni.o "
+SRC_ASM="${SRC_ASM_LINUX}"
+GASM_FLAGS=""
+;;
+
+linux_j64avx2) # linux intel 64bit avx2
+TARGET=libj.so
+CFLAGS="$common -DC_AVX=1 -DC_AVX2=1 "
+LDFLAGS=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP"
+CFLAGS_SIMD=" -mavx2 -mfma "
 OBJS_FMA=" gemm_int-fma.o "
 OBJS_AESNI=" aes-ni.o "
 SRC_ASM="${SRC_ASM_LINUX}"
@@ -205,16 +210,24 @@ darwin_j64avx) # darwin intel 64bit
 TARGET=libj.dylib
 CFLAGS="$darwin $macmin -DC_AVX=1 "
 LDFLAGS=" -dynamiclib -lm -ldl $LDOPENMP $macmin"
-if [ "x$javx2" != x'1' ] ; then
 CFLAGS_SIMD=" -mavx "
-else
-CFLAGS_SIMD=" -DC_AVX2=1 -mavx2 "
-fi
 OBJS_FMA=" gemm_int-fma.o "
 OBJS_AESNI=" aes-ni.o "
 SRC_ASM="${SRC_ASM_MAC}"
 GASM_FLAGS="$macmin"
 ;;
+
+darwin_j64avx2) # darwin intel 64bit
+TARGET=libj.dylib
+CFLAGS="$darwin $macmin -DC_AVX=1 -DC_AVX2=1 "
+LDFLAGS=" -dynamiclib -lm -ldl $LDOPENMP $macmin"
+CFLAGS_SIMD=" -mavx2 -mfma "
+OBJS_FMA=" gemm_int-fma.o "
+OBJS_AESNI=" aes-ni.o "
+SRC_ASM="${SRC_ASM_MAC}"
+GASM_FLAGS="$macmin"
+;;
+
 windows_j32) # windows x86
 jolecom="${jolecom:=0}"
 if [ $jolecom -eq 1 ] ; then
@@ -269,11 +282,30 @@ fi
 TARGET=j.dll
 CFLAGS="$common $DOLECOM -DC_AVX=1 -D_FILE_OFFSET_BITS=64 -D_JDLL "
 LDFLAGS=" -shared -Wl,--enable-stdcall-fixup -lm -static-libgcc -static-libstdc++ $LDOPENMP "
-if [ "x$javx2" != x'1' ] ; then
 CFLAGS_SIMD=" -mavx "
+if [ $jolecom -eq 1 ] ; then
+DLLOBJS=" jdll.o jdllcomx.o "
+LIBJDEF=" ../../../../dllsrc/jdll.def "
 else
-CFLAGS_SIMD=" -DC_AVX2=1 -mavx2 "
+DLLOBJS=" jdll.o "
+LIBJDEF=" ../../../../dllsrc/jdll2.def "
 fi
+LIBJRES=" jdllres.o "
+OBJS_FMA=" gemm_int-fma.o "
+OBJS_AESNI=" aes-ni.o "
+SRC_ASM="${SRC_ASM_WIN}"
+GASM_FLAGS=""
+;;
+
+windows_j64avx2) # windows intel 64bit avx
+jolecom="${jolecom:=0}"
+if [ $jolecom -eq 1 ] ; then
+DOLECOM="-DOLECOM"
+fi
+TARGET=j.dll
+CFLAGS="$common $DOLECOM -DC_AVX=1 -DC_AVX2=1 -D_FILE_OFFSET_BITS=64 -D_JDLL "
+LDFLAGS=" -shared -Wl,--enable-stdcall-fixup -lm -static-libgcc -static-libstdc++ $LDOPENMP "
+CFLAGS_SIMD=" -mavx2 -mfma "
 if [ $jolecom -eq 1 ] ; then
 DLLOBJS=" jdll.o jdllcomx.o "
 LIBJDEF=" ../../../../dllsrc/jdll.def "

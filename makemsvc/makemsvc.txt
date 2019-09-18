@@ -25,20 +25,25 @@ jsrc\jversion-x.h is template for this file
 ...>release.bat
 
 **************************************************************************
-j64 
+j64
 
 0. start powershell and cd to this folder
 run the batch file vcvarsx86_amd64.bat in vs2013 vc\bin\x86_amd64 folder
 
 1. build jconsole.exe
+cd jconsole
 nmake -f makefile.win x64=1 clean
 nmake -f makefile.win x64=1
 cd ..
 
 2. build j.dll
-same as for jconsole but cd into jdll
- 
-3. build tsdll.dll -  used in test suite to validate cd 
+same as for jconsole but cd into jdll. add JAVX2 flag as needed
+cd jdll
+nmake -f makefile.win x64=1 JAVX2=1 clean
+nmake -f makefile.win x64=1 JAVX2=1
+cd ..
+
+3. build tsdll.dll -  used in test suite to validate cd
 same as for jconsole but cd into tsdll
 
 4. run test suite
@@ -68,8 +73,8 @@ cd ..
 
 2. build j.dll
 same as for jconsole but cd into jdll
- 
-3. build tsdll.dll -  used in test suite to validate cd 
+
+3. build tsdll.dll -  used in test suite to validate cd
 same as for jconsole but cd into tsdll
 
 4. run test suite

@@ -8,7 +8,7 @@
 
 static F1(jtnorm){R sqroot(pdt(w,conjug(w)));}
 
-// take inverse of upper-triangular w
+// take inverse of upper-triangular w.
 F1(jtrinv){PROLOG(0066);A ai,bx,di,z;I m,n,r,*s;
  F1RANK(2,jtrinv,0);
  r=AR(w); s=AS(w); n=2>r?1:s[1]; // n is rank of matrix
@@ -16,7 +16,7 @@ F1(jtrinv){PROLOG(0066);A ai,bx,di,z;I m,n,r,*s;
  m=n>>1; I tom=(0x01222100>>((n&7)<<2))&3; m=(m+tom<n)?m+tom:m;  // Minimize number of wasted multiply slots, processing in batches of 4
  // construe w as a block-matrix Wij where w00 and w11 are upper-triangular, w10 is 0, and w01 is a full matrix
  ASSERT(!r||n==s[0],EVLENGTH);  // error if not square
- if(1>=n)R recip(w);  // if an atom, inverse = reciprocal
+ if(1>=n)R recip(w);  // if an atom, inverse = reciprocal   scaf use inplace for ssing speed.  must check usage
  ai=rinv(take(v2(m,m),w));  // take inverse of w00
  di=rinv(drop(v2(m,m),w));  // take inverse of w11
  bx=negateW(pdt(ai,pdt(take(v2(m,m-n),w),di)));  // -w00^_1 mp w01 mp w11^_1   could have fast multiplier for diagonal mtces
@@ -31,6 +31,7 @@ F1(jtrinv){PROLOG(0066);A ai,bx,di,z;I m,n,r,*s;
   // copy bottom part: 0,.di
   rightr=voidAV(di);
   DQ(n-m, memset(zr,C0,leftlen); zr=(C*)zr+leftlen; MC(zr,rightr,rightlen); zr=(C*)zr+rightlen; rightr=(C*)rightr+rightlen;)
+  AFLAG(z)|=AFUPPERTRI; // Mark result as upper-triangular in case we multiply a matrix by it
  }
  //  w00^_1     -w00^_1 mp w01 mp w11^_1
  //    0         w11^_1
@@ -69,6 +70,7 @@ static F1(jtqrr){PROLOG(0067);A a1,q,q0,q1,r,r0,r1,t,*tv,t0,t1,y,z;I m,n,p,*s;
 #define verifyinplace(to,from) if(to!=from){MC(CAV(to),CAV(from),AN(to)<<bplg(AT(to)));}
 // this version operates on rows, inplace.  w is not empty
 // q is the ADJOINT of the original q matrix
+// result is adjoint of the L in LQ decomp, therefore upper-triangular
 static F1(jtltqip){PROLOG(0067);A l0,l1,y,z;
  RZ(w);
  A q0; fauxblock(virtwq0);
@@ -80,7 +82,7 @@ static F1(jtltqip){PROLOG(0067);A l0,l1,y,z;
   ASSERT(!equ(t,num[0]),EVDOMAIN);  // norm must not be 0
 // obsolete  RZ(q=divide(w,t));
   A z; RZ(z=tymesA(w,recip(t))); verifyinplace(w,z);
-  R table(t);  // this is real, so it is also the conjugate of L
+  R table(t);  // this is real, so it is also the adjoint of L
  }
  I m=rw>>1; I tom=(0x01222100>>((rw&7)<<2))&3; m=(m+tom<rw)?m+tom:m;  // Minimize number of wasted multiply slots, processing in batches of 4
  // construe w as w0 w1
@@ -100,12 +102,12 @@ static F1(jtltqip){PROLOG(0067);A l0,l1,y,z;
  // copy bottom part: 0,.(L of w1 - (w1 q0*) q0)*
  rightr=voidAV(l1);
  DQ(rw-m, memset(zr,C0,leftlen); zr=(C*)zr+leftlen; MC(zr,rightr,rightlen); zr=(C*)zr+rightlen; rightr=(C*)rightr+rightlen;)
-// should build result with copying
  // l* is   l0*    (w1 q0*)*
  //         0      (L of w1 - (w1 q0*) q0)*
  // lq is  l0 q0
 //         (w1 q0*) q0 + (L of w1 - (w1 q0*) q0)(Q of w1 - (w1 q0*) q0)
  // = w
+ AFLAG(z)|=AFUPPERTRI; // Mark result as upper-triangular in case we multiply a matrix by it
  EPILOG(z);
 }
 

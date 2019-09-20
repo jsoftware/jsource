@@ -8,23 +8,41 @@
 
 static F1(jtnorm){R sqroot(pdt(w,conjug(w)));}
 
-// take inverse of upper-triangular w.
-F1(jtrinv){PROLOG(0066);A ai,bx,di,z;I m,n,r,*s;
- F1RANK(2,jtrinv,0);
- r=AR(w); s=AS(w); n=2>r?1:s[1]; // n is rank of matrix
+// take inverse of upper-triangular w.  We ASSUME w is inplaceable
+// n is the size of the nxn matrix w; ncomp codes for special processing
+// if n<=ncomp, this is a small FL matrix & we take the inverse inplace
+static A jtrinvip(J jt,A w,I n,I ncomp){PROLOG(0066);A ai,bx,di,z;I m;
+ RZ(w);
+// obsolete  r=AR(w); s=AS(w); n=2>r?1:s[1]; // n is rank of matrix
+// obsolete n=AS(w)[0];  // size of matrix
+ if(n<=ncomp){
+  // Handle 2x2 and smaller FL quickly and inplace to avoid recursion and memory-allocation overhead
+  // result is 1/w00 w01/(w00*w11)
+  //             0     1/w11     for 1x1, only the top-left
+  D w00r, w11r;
+  w00r=DAV2(w)[0]=1.0/DAV2(w)[0];  // 1/w00
+  if(n>1){
+   w11r=DAV2(w)[3]=1.0/DAV2(w)[3];  // 1/w11
+   DAV2(w)[1]*=-w00r*w11r;  //  w01/(w00*w11)
+   // w10 is already 0
+  }
+  R w;
+  // Don't bother marking so small a matrix as uppertri
+ }
+ // fall through for other types & shapes
+ if(1>=n)R recip(w);  // if an atom, inverse = reciprocal.  Must be CMPX or RAT
 // obsolete m=(1+n)>>1; //    m is the matrix splitpoint
  m=n>>1; I tom=(0x01222100>>((n&7)<<2))&3; m=(m+tom<n)?m+tom:m;  // Minimize number of wasted multiply slots, processing in batches of 4
  // construe w as a block-matrix Wij where w00 and w11 are upper-triangular, w10 is 0, and w01 is a full matrix
- ASSERT(!r||n==s[0],EVLENGTH);  // error if not square
- if(1>=n)R recip(w);  // if an atom, inverse = reciprocal   scaf use inplace for ssing speed.  must check usage
- ai=rinv(take(v2(m,m),w));  // take inverse of w00
- di=rinv(drop(v2(m,m),w));  // take inverse of w11
- bx=negateW(pdt(ai,pdt(take(v2(m,m-n),w),di)));  // -w00^_1 mp w01 mp w11^_1   could have fast multiplier for diagonal mtces
+ ai=jtrinvip(jt,take(v2(m,m),w),m,ncomp);  // take inverse of w00  kludge could use faux block to avoid take overhead esp for 2x2 FL results
+ di=jtrinvip(jt,drop(v2(m,m),w),n-m,ncomp);  // take inverse of w11
+ bx=negateW(pdt(ai,pdt(take(v2(m,m-n),w),di)));  // -w00^_1 mp w01 mp w11^_1
  if(AT(w)&SPARSE){z=over(stitch(ai,bx),take(v2(n-m,-n),di));  // should copy this over w, inplace
  }else{
-  // copy in the pieces, line by line
+  // copy in the pieces, line by line, writing over the input area
   I leftlen = m<<bplg(AT(w)); I rightlen=(n-m)<<bplg(AT(w));
-  GA(z,AT(w),n*n,2,AS(w)); void *zr=voidAV(z);  // allocate result, set pointer to output
+// obsolete   GA(z,AT(w),n*n,2,AS(w)); 
+  z=w; void *zr=voidAV(z);  // reuse input area, set pointer to output
   // copy top part: ai,.bx
   void *leftr=voidAV(ai), *rightr=voidAV(bx);  // input pointers
   DQ(m, MC(zr,leftr,leftlen); zr=(C*)zr+leftlen; leftr=(C*)leftr+leftlen; MC(zr,rightr,rightlen); zr=(C*)zr+rightlen; rightr=(C*)rightr+rightlen;)
@@ -37,6 +55,17 @@ F1(jtrinv){PROLOG(0066);A ai,bx,di,z;I m,n,r,*s;
  //    0         w11^_1
  EPILOG(z);
 }    /* R.K.W. Hui, Uses of { and }, APL87, p. 56 */
+
+
+// 128!:1 Invert Upper-triangular matrix R
+F1(jtrinv){
+ RZ(w);
+ F1RANK(2,jtrinv,0);
+ ASSERT(AR(w)==2,EVRANK);  // rank at least 2
+ ASSERT(AS(w)[0]==AS(w)[1],EVLENGTH);  // error if not square
+ if(!AN(w))R w;  // if empty, return empty
+ R jtrinvip(jt,ca(w),AS(w)[0],AT(w)&FL?2:0);  // take the inverse.  Since it runs in place, clone w.  For float, reduce overhead at bottom of recursion
+}
 
 // recursive subroutine for qr decomposition, returns q;r
 static F1(jtqrr){PROLOG(0067);A a1,q,q0,q1,r,r0,r1,t,*tv,t0,t1,y,z;I m,n,p,*s;
@@ -82,7 +111,7 @@ static F1(jtltqip){PROLOG(0067);A l0,l1,y,z;
   ASSERT(!equ(t,num[0]),EVDOMAIN);  // norm must not be 0
 // obsolete  RZ(q=divide(w,t));
   A z; RZ(z=tymesA(w,recip(t))); verifyinplace(w,z);
-  R table(t);  // this is real, so it is also the adjoint of L
+  RZ(t=table(t)); realizeifvirtual(t); R t; // this is real, so it is also the adjoint of L
  }
  I m=rw>>1; I tom=(0x01222100>>((rw&7)<<2))&3; m=(m+tom<rw)?m+tom:m;  // Minimize number of wasted multiply slots, processing in batches of 4
  // construe w as w0 w1
@@ -102,6 +131,7 @@ static F1(jtltqip){PROLOG(0067);A l0,l1,y,z;
  // copy bottom part: 0,.(L of w1 - (w1 q0*) q0)*
  rightr=voidAV(l1);
  DQ(rw-m, memset(zr,C0,leftlen); zr=(C*)zr+leftlen; MC(zr,rightr,rightlen); zr=(C*)zr+rightlen; rightr=(C*)rightr+rightlen;)
+ // q is    q0     (Q of w1 - (w1 q0*) q0)
  // l* is   l0*    (w1 q0*)*
  //         0      (L of w1 - (w1 q0*) q0)*
  // lq is  l0 q0
@@ -141,7 +171,7 @@ static F1(jtlq){A l;D c=inf,d=0,x;I n1,n,*s,wr;
  if(FL&AT(l)){D*v=DAV(l); D determ=jt->workareas.minv.determ; DQ(n, x= ABS(*v); if(determ!=0){determ*=x; if(determ>1e20)determ=0.0;} if(x<c)c=x; if(x>d)d=x; v+=n1;); jt->workareas.minv.determ=determ;} 
  else        {Z*v=ZAV(l);  DQ(n, x=zmag(*v); if(x<c)c=x; if(x>d)d=x; v+=n1;);}
  ASSERT(!n||c>d*jt->fuzz,EVDOMAIN);
- RETF(pdt(rinv(l),w));  // kludge could have fast multiplier for diagonal matrices
+ RETF(pdt(jtrinvip(jt,l,n,AT(w)&FL?2:0),w));  // engage fast reciprocal for float matrices
 }
 
 // Boolean/integer correction.  If the inversand was B01 or INT, we can eliminate some rounginr error by forcing the

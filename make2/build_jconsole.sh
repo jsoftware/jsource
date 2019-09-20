@@ -113,6 +113,16 @@ LDFLAGS=" -ldl "
 OBJSLN="linenoise.o"
 fi
 ;;
+linux_j64avx2)
+if [ "$USE_LINENOISE" -ne "1" ] ; then
+CFLAGS="$common -DREADLINE"
+LDFLAGS=" -ldl "
+else
+CFLAGS="$common -DREADLINE -DUSE_LINENOISE"
+LDFLAGS=" -ldl "
+OBJSLN="linenoise.o"
+fi
+;;
 raspberry_j32)
 if [ "$USE_LINENOISE" -ne "1" ] ; then
 CFLAGS="$common -marm -march=armv6 -mfloat-abi=hard -mfpu=vfp -DREADLINE -DRASPI"
@@ -164,6 +174,16 @@ LDFLAGS=" -ldl $macmin "
 OBJSLN="linenoise.o"
 fi
 ;;
+darwin_j64avx2)
+if [ "$USE_LINENOISE" -ne "1" ] ; then
+CFLAGS="$darwin -DREADLINE $macmin"
+LDFLAGS=" -ldl $macmin "
+else
+CFLAGS="$darwin -DREADLINE -DUSE_LINENOISE $macmin"
+LDFLAGS=" -ldl $macmin "
+OBJSLN="linenoise.o"
+fi
+;;
 windows_j32)
 TARGET=jconsole.exe
 CFLAGS="$common -m32 "
@@ -175,6 +195,11 @@ CFLAGS="$common "
 LDFLAGS=" -Wl,--stack=0x1000000,--subsystem,console -static-libgcc "
 ;;
 windows_j64avx)
+TARGET=jconsole.exe
+CFLAGS="$common "
+LDFLAGS=" -Wl,--stack=0x1000000,--subsystem,console -static-libgcc "
+;;
+windows_j64avx2)
 TARGET=jconsole.exe
 CFLAGS="$common "
 LDFLAGS=" -Wl,--stack=0x1000000,--subsystem,console -static-libgcc "

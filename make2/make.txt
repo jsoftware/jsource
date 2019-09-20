@@ -1,4 +1,4 @@
-how to build/test j32/j64/j64avx for linux/darwin/raspberry/...
+how to build/test j32/j64/j64avx/j64avx2 for linux/darwin/raspberry/...
 
 **************************************************************************
 # commands are assumed to run in make2 folder
@@ -15,12 +15,11 @@ chmod +x *.sh
 
 # general format for build_... commands 
 # don't miss the ./ part when typing commands
-javx2=(..) jplatform=(..) j64x=(..) ./build_libj.sh
+jplatform=(..) j64x=(..) ./build_libj.sh
 
 where 
 jplatform : linux darwin raspberry  (default host)
-j64x : j64 j64avx j32  (default host or j64avx)
-javx2 : 0 1  (default 0)
+j64x : j64 j64avx j64avx2 j32  (default host or j64avx)
 
 # binaries generated inside the bin folder under jsource
 

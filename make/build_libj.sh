@@ -47,8 +47,6 @@ fi
 
 darwin="$OPENMP -fPIC -O1 -fwrapv -fno-strict-aliasing -Wno-string-plus-int -Wno-empty-body -Wno-unsequenced -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-return-type -Wno-constant-logical-operand -Wno-comment -Wno-unsequenced -Wno-pass-failed"
 
-javx2="${javx2:=0}"
-
 SRC_ASM_LINUX=" \
  keccak1600-x86_64-elf.o \
  sha1-x86_64-elf.o \
@@ -124,7 +122,7 @@ linux_j64avx2) # linux intel 64bit avx2
 TARGET=libjavx2.so
 COMPILE="$common -DC_AVX=1 -DC_AVX2=1"
 LINK=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP -o libjavx2.so "
-CFLAGS_SIMD=" -mavx2 "
+CFLAGS_SIMD=" -mavx2 -mfma "
 OBJS_FMA=" blis/gemm_int-fma.o "
 OBJS_AESNI=" aes-ni.o "
 SRC_ASM="${SRC_ASM_LINUX}"
@@ -178,10 +176,10 @@ GASM_FLAGS="$macmin"
 ;;
 
 darwin_j64avx2) # darwin intel 64bit
-TARGET=libjavx.dylib
+TARGET=libjavx2.dylib
 COMPILE="$darwin $macmin -DC_AVX=1 -DC_AVX2=1"
 LINK=" -dynamiclib -lm -ldl $LDOPENMP $macmin -o libjavx2.dylib"
-CFLAGS_SIMD=" -DC_AVX2=1 -mavx2 "
+CFLAGS_SIMD=" -mavx2 -mfma "
 OBJS_FMA=" blis/gemm_int-fma.o "
 OBJS_AESNI=" aes-ni.o "
 SRC_ASM="${SRC_ASM_MAC}"

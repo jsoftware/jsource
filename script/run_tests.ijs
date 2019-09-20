@@ -15,9 +15,9 @@ spawn_jtask_ t
 
 runall=: 3 : 0
 ferase output
-'RUN 3{.ddall' runit 'libj.so'
-'RUN 3{.ddall' runit 'libjavx.so'
-'RUN 3{.ddall' runit 'libjavx2.so'
+'RUN ddall' runit 'libj.so'
+'RUN ddall' runit 'libjavx.so'
+'RUN ddall' runit 'libjavx2.so'
 
 'runpacman''''' runit 'libj.so'
 'runpacman''''' runit 'libjavx.so'
@@ -32,7 +32,8 @@ check''
 
 NB. report important (error) lines in output
 check=: 3 : 0
-d=. <;.2 fread output
+d=. <;._2 fread output
+d=. d-.<'0 failed'
 b=. 'g'=;{.each d
 b=. b+.;+./each(<'failed') E.each d
 b=. b+.;+./each(<'error')  E.each d

@@ -102,6 +102,12 @@ CFLAGS="$common "
 LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm -ldl"
 ;;
 
+linux_j64avx2) # linux intel 64bit avx
+TARGET=libtsdll.so
+CFLAGS="$common "
+LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm -ldl"
+;;
+
 raspberry_j32) # linux raspbian arm
 TARGET=libtsdll.so
 CFLAGS="$common -marm -march=armv6 -mfloat-abi=hard -mfpu=vfp -DRASPI -DC_NOMULTINTRINSIC "
@@ -127,6 +133,12 @@ LDFLAGS=" -dynamiclib -lm -ldl $macmin"
 ;;
 
 darwin_j64avx) # darwin intel 64bit
+TARGET=libtsdll.dylib
+CFLAGS="$darwin $macmin "
+LDFLAGS=" -dynamiclib -lm -ldl $macmin"
+;;
+
+darwin_j64avx2) # darwin intel 64bit
 TARGET=libtsdll.dylib
 CFLAGS="$darwin $macmin "
 LDFLAGS=" -dynamiclib -lm -ldl $macmin"

@@ -95,6 +95,11 @@ TARGET=libjnative.so
 CFLAGS="$common -I$JAVA_HOME/include -I$JAVA_HOME/include/linux "
 LDFLAGS=" -shared -Wl,-soname,libjnative.so "
 ;;
+linux_j64avx2)
+TARGET=libjnative.so
+CFLAGS="$common -I$JAVA_HOME/include -I$JAVA_HOME/include/linux "
+LDFLAGS=" -shared -Wl,-soname,libjnative.so "
+;;
 raspberry_j32)
 TARGET=libjnative.so
 CFLAGS="$common -marm -march=armv6 -mfloat-abi=hard -mfpu=vfp -I$JAVA_HOME/include -I$JAVA_HOME/include/linux "
@@ -116,6 +121,11 @@ CFLAGS="$darwin $macmin -I$JAVA_HOME/include -I$JAVA_HOME/include/darwin "
 LDFLAGS=" $macmin -dynamiclib "
 ;;
 darwin_j64avx)
+TARGET=libjnative.dylib
+CFLAGS="$darwin $macmin -I$JAVA_HOME/include -I$JAVA_HOME/include/darwin "
+LDFLAGS=" $macmin -dynamiclib "
+;;
+darwin_j64avx2)
 TARGET=libjnative.dylib
 CFLAGS="$darwin $macmin -I$JAVA_HOME/include -I$JAVA_HOME/include/darwin "
 LDFLAGS=" $macmin -dynamiclib "

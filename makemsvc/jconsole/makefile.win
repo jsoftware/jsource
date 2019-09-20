@@ -15,7 +15,7 @@ OBJS=  \
 !ifdef READLINE
 OBJSLN=  ../../jsrc/linenoise.o
 CFLAGSLN= -DREADLINE -DUSE_LINENOISE
-endif
+!endif
 
 RCS= ../../makevs/jconsole/jconsole.rc
 

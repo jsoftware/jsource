@@ -743,26 +743,27 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
 #define SUMATLOOP2(ti,to,oneprod2,oneprod1) \
   {ti * RESTRICT av=ti##AV(a),* RESTRICT wv=ti##AV(w); to * RESTRICT zv=to##AV(z); \
    __m256i endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-dplen)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
-   __m256d acc00; __m256d acc01; __m256d acc10; __m256d acc11; \
+   __m256d acc000; __m256d acc010; __m256d acc100; __m256d acc110; \
+   __m256d acc001; __m256d acc011; __m256d acc101; __m256d acc111; \
    _mm256_zeroupper(VOIDARG); \
    DQ(nfro, I jj=nfri; ti *ov0=repeata?av:wv; \
     while(1){  \
      DQ(ndpo, I j=ndpi; ti *av0=av; /* i is how many a's are left, j is how many w's*/ \
       while(1){ \
-       if(repeata&&i>1){ \
-        ti * RESTRICT av1=av+dplen; \
+       if(i>1){ \
         ti * RESTRICT wv1=wv+dplen; wv1=j==1?wv:wv1; \
         oneprod2  \
-        if(j>1){--j; store} \
-        else{} \
-        --i; zv +=2;  \
+        if(j>1){--j; store; wv+=dplen; zv +=2;} \
+        else{_mm_storel_pd(zv,_mm256_castpd256_pd128 (acc000)); _mm_storel_pd(zv+ndpi,_mm256_castpd256_pd128 (acc100));  zv+=1;} \
        }else{ \
         oneprod1  \
-       _mm_storel_pd(zv,_mm256_castpd256_pd128 (acc00)); \
-       zv+=1; \
+        _mm_storel_pd(zv,_mm256_castpd256_pd128 (acc000)); \
+        zv+=1; \
        } \
        if(!--j)break; \
-       av=av0;} \
+       av=av0;  \
+      } \
+      if(i>1){--i; av+=dplen; zv+=ndpi;} \
      ) \
      if(!--jj)break; \
      if(repeata)av=ov0;else wv=ov0; } \
@@ -785,29 +786,29 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
 // Do one 2x2 product of length dplen.  Leave results in acc00-01.  dplen must be >0
 // av, av1, wv, wv1 are set up
 #define ONEPRODAVXD2(label,mid2x2,last2x2) {\
-   acc00=_mm256_set1_pd(0.0); acc01=acc00; acc10=acc00; acc1=acc00; \
-   __m256d acc00a=acc00; __m256d acc01a=acc00; __m256d acc10a=acc00; __m256d acc11=acc00; \
+   acc000=_mm256_set1_pd(0.0); acc010=acc00; acc100=acc000; acc110=acc000; \
+   acc001=acc000; acc011=acc000; acc101=acc000; acc111=acc000; \
    I rem=dplen; \
-   if(rem>NPARS){ \
-    label##4: mid2x2(3,)  label##3: mid2x2(2,a)  label##2: mid2x2(1,)  label##1: mid2x2(0,a)  \
-    if((rem-=4*NPAR)>4*NPAR)goto label##4;  \
-    if(rem>2*NPAR){{if(rem>3*NPAR)goto label##3;else goto label##2;}else if(rem>1*NPAR)goto label##1;} \
-   }  \
+   if(rem>8*NPAR)goto label##8; \
+   while(rem>NPAR){ \
+    if(rem>4*NPAR) \
+     {if(rem>6*NPAR){if(rem>7*NPAR)goto label##7;else goto label##6;}else {if(rem>5*NPAR)goto label##5;else goto label##4}} \
+    else{if(rem>2*NPAR){if(rem>3*NPAR)goto label##3;else goto label##2;}else {if(rem>1*NPAR)goto label##1;else break;}} \
+    label##8: mid2x2(1,1,0)  label##7: mid2x2(1,1,1)  label##6: mid2x2(1,0,0)  label##5: mid2x2(1,0,1)  \
+    label##4: mid2x2(0,1,0)  label##3: mid2x2(0,1,1)  label##2: mid2x2(0,0,0)  label##1: mid2x2(0,0,1)  \
+    av+=8*NPAR; wv+=8*NPAR; wv1+=8*NPAR; \
+    if((rem-=8*NPAR)>8*NPAR)goto label##8;  \
+   } \
+   av-=(NPAR-rem)&-NPAR; wv-=(NPAR-rem)&-NPAR; wv1-=(NPAR-rem)&-NPAR; \
    last2x2  \
-   acc00=_mm256_add_pd(acc00,acc00a); acc01=_mm256_add_pd(acc01,acc01a); acc10=_mm256_add_pd(acc10,acc10a); acc11=_mm256_add_pd(acc11,acc11a);  \
-   acc00=_mm256_add_pd(acc00,_mm256_permute2f128_pd(acc00,acc00,0x01)); acc01=_mm256_add_pd(acc01,_mm256_permute2f128_pd(acc01,acc01,0x01)); \
-    acc10=_mm256_add_pd(acc10,_mm256_permute2f128_pd(acc10,acc10,0x01)); acc11=_mm256_add_pd(acc11,_mm256_permute2f128_pd(acc11,acc11,0x01)); \
-   acc00=_mm256_add_pd(acc00,_mm256_permute_pd (acc00,0xf)); acc01=_mm256_add_pd(acc01,_mm256_permute_pd (acc01,0xf));  \
-    acc10=_mm256_add_pd(acc10,_mm256_permute_pd (acc10,0xf)); acc11=_mm256_add_pd(acc11,_mm256_permute_pd (acc11,0xf));
-blend into 00 and 01
-
-
-
-
+   acc000=_mm256_add_pd(acc000,acc001); acc010=_mm256_add_pd(acc010,acc011); acc100=_mm256_add_pd(acc10,acc101); acc110=_mm256_add_pd(acc110,acc111);  \
+   acc000=_mm256_add_pd(acc000,_mm256_permute2f128_pd(acc000,acc000,0x01)); acc010=_mm256_add_pd(acc010,_mm256_permute2f128_pd(acc010,acc010,0x01)); \
+    acc100=_mm256_add_pd(acc100,_mm256_permute2f128_pd(acc100,acc100,0x01)); acc110=_mm256_add_pd(acc110,_mm256_permute2f128_pd(acc110,acc110,0x01)); \
+   acc000=_mm256_add_pd(acc000,_mm256_permute_pd (acc000,0xf)); acc010=_mm256_add_pd(acc010,_mm256_permute_pd (acc010,0xf));  \
+    acc100=_mm256_add_pd(acc100,_mm256_permute_pd (acc100,0xf)); acc110=_mm256_add_pd(acc110,_mm256_permute_pd (acc110,0xf)); \
+blend into 00 and 01  \
+   av+=((dplen-1)&(NPAR-1))+1;  wv+=((dplen-1)&(NPAR-1))+1; \
    }
-
-
-}
 
 #define ONEPRODD \
  __m256i endmask; /* length mask for the last word */ \

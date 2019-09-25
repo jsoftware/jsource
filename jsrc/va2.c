@@ -740,10 +740,75 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
 
 // 4-nested loop for dot-products.  Handles repeats for inner and outer frame.  oneprod is the code for calculating a single vector inner product *zv++ = *av++ dot *wv++
 // If there is inner frame, it is the a arg that is repeated
+#define SUMATLOOP2(ti,to,oneprod2,oneprod1) \
+  {ti * RESTRICT av=ti##AV(a),* RESTRICT wv=ti##AV(w); to * RESTRICT zv=to##AV(z); \
+   __m256i endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-dplen)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
+   __m256d acc00; __m256d acc01; __m256d acc10; __m256d acc11; \
+   _mm256_zeroupper(VOIDARG); \
+   DQ(nfro, I jj=nfri; ti *ov0=repeata?av:wv; \
+    while(1){  \
+     DQ(ndpo, I j=ndpi; ti *av0=av; /* i is how many a's are left, j is how many w's*/ \
+      while(1){ \
+       if(repeata&&i>1){ \
+        ti * RESTRICT av1=av+dplen; \
+        ti * RESTRICT wv1=wv+dplen; wv1=j==1?wv:wv1; \
+        oneprod2  \
+        if(j>1){--j; store} \
+        else{} \
+        --i; zv +=2;  \
+       }else{ \
+        oneprod1  \
+       _mm_storel_pd(zv,_mm256_castpd256_pd128 (acc00)); \
+       zv+=1; \
+       } \
+       if(!--j)break; \
+       av=av0;} \
+     ) \
+     if(!--jj)break; \
+     if(repeata)av=ov0;else wv=ov0; } \
+   ) \
+  }
 #define SUMATLOOP(ti,to,oneprod) \
-  {ti * RESTRICT av=ti##AV(a),* RESTRICT wv=ti##AV(w); to * RESTRICT zv=to##AV(z); DQ(nfro, I jj=nfri; ti *ov0=repeata?av:wv; while(1){DQ(ndpo, I j=ndpi; ti *av0=av; while(1){oneprod if(!--j)break; av=av0;}) if(!--jj)break; if(repeata)av=ov0;else wv=ov0; })}
+  {ti * RESTRICT av=ti##AV(a),* RESTRICT wv=ti##AV(w); to * RESTRICT zv=to##AV(z); \
+   DQ(nfro, I jj=nfri; ti *ov0=repeata?av:wv; \
+    while(1){  \
+     DQ(ndpo, I j=ndpi; ti *av0=av; /* i is how many a's are left, j is how many w's*/ \
+      while(1){oneprod if(!--j)break; av=av0;} \
+     ) \
+     if(!--jj)break; \
+     if(repeata)av=ov0;else wv=ov0; } \
+   ) \
+  }
 
+// 
 #if C_AVX&&SY_64
+// Do one 2x2 product of length dplen.  Leave results in acc00-01.  dplen must be >0
+// av, av1, wv, wv1 are set up
+#define ONEPRODAVXD2(label,mid2x2,last2x2) {\
+   acc00=_mm256_set1_pd(0.0); acc01=acc00; acc10=acc00; acc1=acc00; \
+   __m256d acc00a=acc00; __m256d acc01a=acc00; __m256d acc10a=acc00; __m256d acc11=acc00; \
+   I rem=dplen; \
+   if(rem>NPARS){ \
+    label##4: mid2x2(3,)  label##3: mid2x2(2,a)  label##2: mid2x2(1,)  label##1: mid2x2(0,a)  \
+    if((rem-=4*NPAR)>4*NPAR)goto label##4;  \
+    if(rem>2*NPAR){{if(rem>3*NPAR)goto label##3;else goto label##2;}else if(rem>1*NPAR)goto label##1;} \
+   }  \
+   last2x2  \
+   acc00=_mm256_add_pd(acc00,acc00a); acc01=_mm256_add_pd(acc01,acc01a); acc10=_mm256_add_pd(acc10,acc10a); acc11=_mm256_add_pd(acc11,acc11a);  \
+   acc00=_mm256_add_pd(acc00,_mm256_permute2f128_pd(acc00,acc00,0x01)); acc01=_mm256_add_pd(acc01,_mm256_permute2f128_pd(acc01,acc01,0x01)); \
+    acc10=_mm256_add_pd(acc10,_mm256_permute2f128_pd(acc10,acc10,0x01)); acc11=_mm256_add_pd(acc11,_mm256_permute2f128_pd(acc11,acc11,0x01)); \
+   acc00=_mm256_add_pd(acc00,_mm256_permute_pd (acc00,0xf)); acc01=_mm256_add_pd(acc01,_mm256_permute_pd (acc01,0xf));  \
+    acc10=_mm256_add_pd(acc10,_mm256_permute_pd (acc10,0xf)); acc11=_mm256_add_pd(acc11,_mm256_permute_pd (acc11,0xf));
+blend into 00 and 01
+
+
+
+
+   }
+
+
+}
+
 #define ONEPRODD \
  __m256i endmask; /* length mask for the last word */ \
  _mm256_zeroupper(VOIDARG); \

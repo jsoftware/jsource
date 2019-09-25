@@ -245,11 +245,12 @@ static I cachedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){D c[(CACHEHEIGHT
 #endif
       // The inner loop.  If everything is inbounds do the whole thing without loops
       if(a4rem==CACHEHEIGHT&&a2rem>3){
-        __m256d wval0, wval1;
+        __m256d wval0, wval1, aval;
 #define LDW(opno)  wval0=_mm256_load_pd(&c4base[opno*CACHEWIDTH+0]); wval1=_mm256_load_pd(&c4base[opno*CACHEWIDTH+NPAR]);  // opno=outer-product number
-#define ONEP(opno,opx) z##opx##0 = MUL_ACC(z##opx##0,wval0,(*a4base0)[0][opx][opno]); z##opx##1 = MUL_ACC(z##opx##1,wval1,(*a4base0)[0][opx][opno]);  // opx=a row number=mul# within outer product
+#define ONEP(opno,opx) aval=(*a4base0)[0][opx][opno]; z##opx##0 = MUL_ACC(z##opx##0,wval0,aval); z##opx##1 = MUL_ACC(z##opx##1,wval1,aval);  // opx=a row number=mul# within outer product  could allow compiler to gather commons
 #define OUTERP(opno) LDW(opno) ONEP(opno,0) ONEP(opno,1) ONEP(opno,2) ONEP(opno,3)
-       PREFETCH((C*)zilblock+4*CACHELINESIZE); OUTERP(0) OUTERP(1) PREFETCH((C*)zilblock+5*CACHELINESIZE); OUTERP(2) OUTERP(3) PREFETCH((C*)zilblock+6*CACHELINESIZE); OUTERP(4) OUTERP(5) PREFETCH((C*)zilblock+7*CACHELINESIZE); OUTERP(6) OUTERP(7) OUTERP(8) OUTERP(9) OUTERP(10) OUTERP(11) OUTERP(12) OUTERP(13) OUTERP(14) OUTERP(15)
+       PREFETCH((C*)zilblock+4*CACHELINESIZE); OUTERP(0) OUTERP(1) PREFETCH((C*)zilblock+5*CACHELINESIZE); OUTERP(2) OUTERP(3) PREFETCH((C*)zilblock+6*CACHELINESIZE); OUTERP(4) OUTERP(5) PREFETCH((C*)zilblock+7*CACHELINESIZE);
+       OUTERP(6) OUTERP(7) OUTERP(8) OUTERP(9) OUTERP(10) OUTERP(11) OUTERP(12) OUTERP(13) OUTERP(14) OUTERP(15)
 // obsolete        OUTERP(0) OUTERP(1) OUTERP(2) OUTERP(3) OUTERP(4) OUTERP(5) OUTERP(6) OUTERP(7) OUTERP(8) OUTERP(9) OUTERP(10) OUTERP(11) OUTERP(12) OUTERP(13) OUTERP(14) OUTERP(15)
 // prefetch doesn't seem to help
 

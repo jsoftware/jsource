@@ -474,6 +474,7 @@ dobblock:
  // We still must not take an error exit in this runout.  We have to hang around to the end to restore symbol tables, pointers, etc.
 
  FDEPDEC(1);  // OK to ASSERT now
+ //  z may be 0 here and may become 0 before we exit
  if(z){
   // There was a result (normal case)
   // If we are executing a verb (whether or not it started with 3 : or [12] :), make sure the result is a noun.

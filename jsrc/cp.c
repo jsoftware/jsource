@@ -129,7 +129,7 @@ static DF1(jtpinf1){DECLFG;PROLOG(0340);A z;
   I isend=equ(z,w);  // remember if it is the same as last time
   if(!((isend-1)&++i&7)) {  // every so often, but always when we leave...
    JBREAK0;   // check for user interrupt, in case the function doesn't allocate memory
-   EPILOGNORET(z);  // free up allocated blocks, but keep z
+   RZ(z=EPILOGNORET(z));  // free up allocated blocks, but keep z.  If z is virtual it will be realized
    if(isend)RETF(z);  // return at end
   }
   w=z;  // make the new result the starting value for next loop

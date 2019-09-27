@@ -64,8 +64,9 @@ static B jtforinit(J jt,CDATA*cv,A t){A x;C*s,*v;I k;
  R 1;
 }    /* for. do. end. initializations */
 
+// A for. block is ending.   free what needs to be freed.  Don't delete any names
 static B jtunstackcv(J jt,CDATA*cv){
- if(cv->x){ex(link(cv->x,str(cv->k,cv->iv))); fa(cv->x);}
+ if(cv->x){/* obsolete ex(link(cv->x,str(cv->k,cv->iv)));*/ fa(cv->x);}
  fa(cv->t); 
  R 1;
 }
@@ -391,11 +392,15 @@ dobblock:
     BZ(forinit(cv,t)); t=0;
    }
    ++cv->j;  // step to first (or next) iteration
+   if(cv->x){A x;  // assign xyz and xyz_index for for_xyz.
+    symbisdel(nfs(6+cv->k,cv->xv),x=sc(cv->j),  locsym);  // Assign line number.  since there is no sentence, take deletion off nvr stack
+    symbisdel(nfs(  cv->k,cv->iv),cv->j<cv->n?from(x,cv->t):mtv,locsym);
+   }
    if(cv->j<cv->n){  // if there are more iterations to do...
-    if(cv->x){A x;  // assign xyz and xyz_index for for_xyz.
-     symbisdel(nfs(6+cv->k,cv->xv),x=sc(cv->j),  locsym);  // since there is no sentence, take deletion off nvr stack
-     symbisdel(nfs(  cv->k,cv->iv),from(x,cv->t),locsym);
-    }
+// obsolete     if(cv->x){A x;  // assign xyz and xyz_index for for_xyz.
+// obsolete      symbisdel(nfs(6+cv->k,cv->xv),x=sc(cv->j),  locsym);  // since there is no sentence, take deletion off nvr stack
+// obsolete      symbisdel(nfs(  cv->k,cv->iv),from(x,cv->t),locsym);
+// obsolete     }
     ++i; continue;   // advance to next line and process it
    }
    // if there are no more iterations, fall through... (this deallocates the loop variables)

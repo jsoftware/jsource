@@ -753,7 +753,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
        if(i>1){ \
         ti * RESTRICT wv1=wv+dplen; wv1=j==1?wv:wv1; \
         oneprod2  \
-        if(j>1){--j; store; wv+=dplen; zv +=2;} \
+        if(j>1){--j; _mm_storeu_pd(zv,_mm256_castpd256_pd128 (acc000)); _mm_storeu_pd(zv+ndpi,_mm256_castpd256_pd128 (acc100));; wv+=dplen; zv +=2;} \
         else{_mm_storel_pd(zv,_mm256_castpd256_pd128 (acc000)); _mm_storel_pd(zv+ndpi,_mm256_castpd256_pd128 (acc100));  zv+=1;} \
        }else{ \
         oneprod1  \
@@ -794,8 +794,8 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
     if(rem>4*NPAR) \
      {if(rem>6*NPAR){if(rem>7*NPAR)goto label##7;else goto label##6;}else {if(rem>5*NPAR)goto label##5;else goto label##4}} \
     else{if(rem>2*NPAR){if(rem>3*NPAR)goto label##3;else goto label##2;}else {if(rem>1*NPAR)goto label##1;else break;}} \
-    label##8: mid2x2(1,1,0)  label##7: mid2x2(1,1,1)  label##6: mid2x2(1,0,0)  label##5: mid2x2(1,0,1)  \
-    label##4: mid2x2(0,1,0)  label##3: mid2x2(0,1,1)  label##2: mid2x2(0,0,0)  label##1: mid2x2(0,0,1)  \
+    label##8: mid2x2(7,0)  label##7: mid2x2(6,1)  label##6: mid2x2(5,0)  label##5: mid2x2(4,1)  \
+    label##4: mid2x2(3,0)  label##3: mid2x2(2,1)  label##2: mid2x2(1,0)  label##1: mid2x2(0,1)  \
     av+=8*NPAR; wv+=8*NPAR; wv1+=8*NPAR; \
     if((rem-=8*NPAR)>8*NPAR)goto label##8;  \
    } \
@@ -804,11 +804,20 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
    acc000=_mm256_add_pd(acc000,acc001); acc010=_mm256_add_pd(acc010,acc011); acc100=_mm256_add_pd(acc10,acc101); acc110=_mm256_add_pd(acc110,acc111);  \
    acc000=_mm256_add_pd(acc000,_mm256_permute2f128_pd(acc000,acc000,0x01)); acc010=_mm256_add_pd(acc010,_mm256_permute2f128_pd(acc010,acc010,0x01)); \
     acc100=_mm256_add_pd(acc100,_mm256_permute2f128_pd(acc100,acc100,0x01)); acc110=_mm256_add_pd(acc110,_mm256_permute2f128_pd(acc110,acc110,0x01)); \
-   acc000=_mm256_add_pd(acc000,_mm256_permute_pd (acc000,0xf)); acc010=_mm256_add_pd(acc010,_mm256_permute_pd (acc010,0xf));  \
-    acc100=_mm256_add_pd(acc100,_mm256_permute_pd (acc100,0xf)); acc110=_mm256_add_pd(acc110,_mm256_permute_pd (acc110,0xf)); \
-blend into 00 and 01  \
+   acc000=_mm256_add_pd(acc000,_mm256_permute_pd (acc000,0xf)); acc010=_mm256_add_pd(acc010,_mm256_permute_pd (acc010,0x0));  \
+    acc100=_mm256_add_pd(acc100,_mm256_permute_pd (acc100,0xf)); acc110=_mm256_add_pd(acc110,_mm256_permute_pd (acc110,0x0)); \
+   acc00=_mm256_blend_pd(acc00,acc01,0xa); acc10=_mm256_blend_pd(acc10,acc11,0xa); \
    av+=((dplen-1)&(NPAR-1))+1;  wv+=((dplen-1)&(NPAR-1))+1; \
    }
+
+// do one 2x2, 4 combinations from offset using accumulator accno.
+// av, wv, and wv1 are set
+#define CELL2x2M(offset,accno) \
+ MUL_ACC(acc00##accno, _mm256_loadu_pd(&av[offset*NPAR]), _mm256_loadu_pd(&wv[offset*NPAR])); \
+ MUL_ACC(acc01##accno, _mm256_loadu_pd(&av[offset*NPAR]), _mm256_loadu_pd(&wv1[offset*NPAR])); \
+ MUL_ACC(acc10##accno, _mm256_loadu_pd(&av[dplen+offset*NPAR]), _mm256_loadu_pd(&wv[offset*NPAR])); \
+ MUL_ACC(acc11##accno, _mm256_loadu_pd(&av[dplen+offset*NPAR]), _mm256_loadu_pd(&wv1[offset*NPAR]));
+
 
 #define ONEPRODD \
  __m256i endmask; /* length mask for the last word */ \

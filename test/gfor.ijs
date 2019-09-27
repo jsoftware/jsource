@@ -83,14 +83,25 @@ f3a=: 3 : 0
 f4=: 3 : 0
  t=.4!:0 ;:'xyz xyz_index'
  for_xyz.
-  1
+  y
  do.
-  t=.t,4!:0 ;:'xyz xyz_index'
+  t=.t,($xyz),xyz_index
  end.
- t=.t,4!:0 ;:'xyz xyz_index'
+  t=.t,($xyz),xyz_index
 )
 
-_1 _1 0 0 _1 _1 -: f4 0
+_1 _1 0 0 1 -: f4 1
+_1 _1 0 1 2 0 3 -: f4 i. 3
+_1 _1 3 0 3 1 0 2 -: f4 i. 2 3
+
+NB. 50000 loops will overrun NVR stack if we leave anything on it after end.
+3 : 0 ''
+C=: 0
+while. 50000>C=:>:C do.
+ for_n. 0 do. end. NB. required to get limit error
+end.
+1
+)
 
 f5=: 3 : 0
  'm n'=. $y

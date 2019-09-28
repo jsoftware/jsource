@@ -611,8 +611,13 @@ extern unsigned int __cdecl _clearfp (void);
 #define INSTALLRATNF(x,xv,k,z) if(UCISRECUR(x)){ra(z.n); ra(z.d);} xv[k]=z   // Don't do the free - if we are installing into known 0
 #define INSTALLRATRECUR(xv,k,z) rifv(z.n); rifv(z.d); {I zzK=(k); {Q zzZ=xv[k]; ra(z.n); ra(z.d); fa(zzZ.n); fa(zzZ.d);} xv[zzK]=z;}  // Don't test - we know we are installing into a recursive block
 // Use IRS[12] to call a verb that supports IRS.  Rank is nonnegative; result is assigned to z
-#define IRS1(w,fs,r,f1,z) (jt->ranks=(RANK2T)((((UI)AR(w)-(r+1))>>(BW-1))|(r)),z=((AF)(f1))(jt,(w),(A)(fs)),jt->ranks=(RANK2T)~0,z)  // nonneg rank
-#define IRSIP1(w,fs,r,f1,z) (jt->ranks=(RANK2T)((((UI)AR(w)-(r+1))>>(BW-1))|(r)),z=((AF)(f1))(jtinplace,(w),(A)(fs)),jt->ranks=(RANK2T)~0,z)  // nonneg rank
+#if defined(__GNUC__) && !defined(__clang__) && (__GNUC__ < 5)
+#define IRS1(w,fs,r,f1,z) (jt->ranks=(RANK2T)((r>=AR(w)?-1:0)|(r)),z=((AF)(f1))(jt,(w),(A)(fs)),jt->ranks=(RANK2T)~0,z)  // nonneg rank
+#define IRSIP1(w,fs,r,f1,z) (jt->ranks=(RANK2T)((r>=AR(w)?-1:0)|(r)),z=((AF)(f1))(jtinplace,(w),(A)(fs)),jt->ranks=(RANK2T)~0,z)  // nonneg rank
+#else
+#define IRS1(w,fs,r,f1,z) (jt->ranks=(RANK2T)((((I)AR(w)-(r+1))>>(BW-1))|(r)),z=((AF)(f1))(jt,(w),(A)(fs)),jt->ranks=(RANK2T)~0,z)  // nonneg rank
+#define IRSIP1(w,fs,r,f1,z) (jt->ranks=(RANK2T)((((I)AR(w)-(r+1))>>(BW-1))|(r)),z=((AF)(f1))(jtinplace,(w),(A)(fs)),jt->ranks=(RANK2T)~0,z)  // nonneg rank
+#endif
 #define IRS2COMMON(j,a,w,fs,l,r,f2,z) (jt->ranks=(RANK2T)(((((I)AR(a)-(l)>0)?(l):RMAX)<<RANKTX)+(((I)AR(w)-(r)>0)?(r):RMAX)),z=((AF)(f2))(j,(a),(w),(A)(fs)),jt->ranks=(RANK2T)~0,z) // nonneg rank
 #define IRS2(a,w,fs,l,r,f2,z) IRS2COMMON(jt,a,w,fs,l,r,f2,z)
 #define IRSIP2(a,w,fs,l,r,f2,z) IRS2COMMON(jtinplace,a,w,fs,l,r,f2,z)

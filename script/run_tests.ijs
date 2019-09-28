@@ -3,6 +3,23 @@ NB. rough version and not complete
 
 NB. todo - macos and windows
 
+3 : 0''
+select. UNAME
+case. 'Linux' do.
+ j=:     'libj.so'
+ javx=:  'libjavx.so'
+ javx2=: 'libjavx2.so'
+case. 'Darwin' do.
+ j=:     'libj.dylib'
+ javx=:  'libjavx.dylib'
+ javx2=: 'libjavx2.dylib'
+case. 'Win' do.
+ j=:     'j.dll'
+ javx=:  'javx.dll'
+ javx2=: 'javx2.dll'
+end.
+)
+
 output=: jpath'~temp/run_tests.txt'
 
 NB.!while testing - 'RUN 3{.ddall' runit 'libj.so'
@@ -15,17 +32,17 @@ spawn_jtask_ t
 
 runall=: 3 : 0
 ferase output
-'RUN ddall' runit 'libj.so'
-'RUN ddall' runit 'libjavx.so'
-'RUN ddall' runit 'libjavx2.so'
+'RUN ddall'     runit j
+'RUN ddall'     runit javx
+'RUN ddall'     runit javx2
 
-'runpacman''''' runit 'libj.so'
-'runpacman''''' runit 'libjavx.so'
-'runpacman''''' runit 'libjavx2.so'
+'runpacman''''' runit j
+'runpacman''''' runit javx
+'runpacman''''' runit javx2
 
-'runjd''''' runit 'libj.so'
-'runjd''''' runit 'libjavx.so'
-'runjd''''' runit 'libjavx2.so'
+'runjd'''''     runit j
+'runjd'''''     runit javx
+'runjd'''''     runit javx2
 
 check''
 )

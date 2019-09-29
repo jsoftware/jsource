@@ -202,7 +202,7 @@ static I jtconall(J jt,I n,CW*con){A y;CW*b=0,*c=0,*d=0;I e,i,j,k,p=0,q,r,*stack
                                              // note that the previous block was a B and we have now moved to a T
     break;
    case CELSE:                               // else.
-    CWASSERT(r==CIF&&q==CDO);                // verify part of if. ... do. ... else.
+    CWASSERT((r==CIF||r==CELSEIF)&&q==CDO);                // verify part of if./elseif. ... do. ... else.
     c->go=(US)e;                             // set if. to jump to NSI
     stack[top-2]=stack[top-1]; stack[top-1]=i;  // replace if. ... do. on stack with do. ... else.
     break;

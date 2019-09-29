@@ -186,6 +186,12 @@ NB. Test argument types
 'domain error' -: +/@:*"1~ etx 'abc'
 'domain error' -: +/@:*"1~ etx u: 'abc'
 
+NB. Test varying sizes to catch all boundaries
+(?@$&0 (+/@:*"1 -: +/@:*"_"1) ?@$&0)"1 ((4 + $ ?@$ 4:) ,. ]) i. 99
+((((4 + $ ?@$ 4:) ,. ]) ?@$ 0:) (+/@:*"1/ -: +/@:*"_"1/) (((4 + $ ?@$ 4:) ,. ]) ?@$ 0:))"0  i. 99
+
+NB. Verify double-speed on AVX2 when a repeated
+
 NB. Test for NaN
 0 _ 1 (+/@:*"1 -: +/@:*"_"1) _ 0 2   NB. removable NaN
 'NaN error' -: _ 0 __ +/@:*"1 etx  1 1 1

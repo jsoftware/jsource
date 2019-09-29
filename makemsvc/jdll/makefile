@@ -2,7 +2,11 @@ ifdef x64
 ifdef JAVX2
 CFLAGS= /D _JDLL /DC_AVX=1 /D C_AVX2=1 /arch:AVX2 /DC_NA=0 /WX /W3 /O2 /Ot /Ob1 /GS /Zc:strictStrings /D _USING_V110_SDK71_ /D _CRT_SECURE_NO_WARNINGS /MT /D NDEBUG /D WIN32 /D _WINDOWS
 else
+ifdef JAVX
 CFLAGS= /D _JDLL /DC_AVX=1 /arch:AVX /DC_NA=0 /WX /W3 /O2 /Ot /Ob1 /GS /Zc:strictStrings /D _USING_V110_SDK71_ /D _CRT_SECURE_NO_WARNINGS /MT /D NDEBUG /D WIN32 /D _WINDOWS
+else
+CFLAGS= /D _JDLL /DC_NA=0 /WX /W3 /O2 /Ot /Ob1 /GS /Zc:strictStrings /D _USING_V110_SDK71_ /D _CRT_SECURE_NO_WARNINGS /MT /D NDEBUG /D WIN32 /D _WINDOWS
+endif
 endif
 FLAGS= /DLL /NOLOGO /MACHINE:X64 /SUBSYSTEM:WINDOWS,5.02
 ASMFLAGS= /Cx
@@ -202,7 +206,15 @@ endif
 	$(ML) $(ASMFLAGS) /Fo$@ /c $<
 
 ifdef x64
+ifdef JAVX2
+TARGET= javx2.dll
+else
+ifdef JAVX
 TARGET= javx.dll
+else
+TARGET= j.dll
+endif
+endif
 else
 TARGET= j32.dll
 endif

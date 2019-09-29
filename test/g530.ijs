@@ -362,6 +362,9 @@ y -: (i.0)  ($0)} y
 y -: (0$0.5)($0)} y
 y -: (0$0j5)($0)} y
 
+NB. integrated rank support
+'foabar' -: 'ab' (<"0 (0 1) +/~ ,2) } 'foobar'
+
 NB. Test cell sizes and types
 
 NB. integer indexing

@@ -862,7 +862,7 @@ static F1(jtjpr1){PROLOG(0002);A z;
   z=tocesu8(z);
   *(CAV(z)+AN(z))=0;
 #endif
-  ASSERTSYS(!*(CAV(z)+AN(z)),"missing NUL");  // trailing null byte
+  ASSERTSYS(!*(CAV(z)+AN(z)),"jtjpr1 trailing null byte");
   jsto(jt,jt->mtyo==0?MTYOFM:jt->mtyo,CAV(z));
  }
  EPILOG(mtm);

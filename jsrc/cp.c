@@ -204,8 +204,9 @@ z=(FAV(u)->valencefns[1])(FAV(u)->flag&VJTFLGOK2?jtinplace:jt,a,w,u);} \
 ,0109)
 // here for x u@:]^:v y and x u@]^:v y
 CS2IP(static,jtpowv2a, \
+jtinplace=(J)((I)jtinplace&~JTINPLACEA); /* monads always have IP2 clear */ \
 A u; A v; fs=FAV(fs)->fgh[0]; RZ(u=CALL2(g2,a,w,gs));  /* execute v */ \
-if(!AR(u) && (v=vib(u)) && !(IAV(v)[0]&~1)){z=IAV(v)[0]?(FAV(fs)->valencefns[0])(FAV(fs)->flag&VJTFLGOK2?jtinplace:jt,w,fs):w;} \
+if(!AR(u) && (v=vib(u)) && !(IAV(v)[0]&~1)){z=IAV(v)[0]?(FAV(fs)->valencefns[0])(FAV(fs)->flag&VJTFLGOK1?jtinplace:jt,w,fs):w;} \
 else{RESETERR; RZ(u = powop(fs,u,(A)1));  \
 z=(FAV(u)->valencefns[0])(FAV(u)->flag&VJTFLGOK1?jtinplace:jt,w,u);} \
 ,0110)

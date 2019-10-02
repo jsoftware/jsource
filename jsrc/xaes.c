@@ -51,7 +51,7 @@ F2(jtaes2)
   ASSERT(AN(a)>=3&&AN(a)<=4,EVLENGTH);
   av=AAV(a);
   ASSERT(1>=AR(av[0]),EVRANK);
-  RZ(dec=vi(av[0]));
+  RE(dec=vi(av[0]));
   ASSERT(AN(dec)==1,EVDOMAIN);
   decrypt=(AV(dec))[0];
   ASSERT(decrypt==0||decrypt==1,EVDOMAIN);

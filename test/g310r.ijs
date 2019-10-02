@@ -220,8 +220,31 @@ nm =. +
 _3 = 2 (+ 2 : 'x undefname`u.`v.@.[ y' -) 5
 'value error' -: 0 (+ 2 : 'x undefname`u.`v.@.[ y' -) etx 5
 
+NB. Inverse lookups stop fixing at inverse
+4!:55 ;:'a c'
+cocurrent 'xxx'
+nameinxxx =: ]
+dec=: 3 : 0
+nameinxxx y
+:
+nameinxxx y
+)
+enc=: 3 : 0
+>:@nameinxxx y
+:
+>:@nameinxxx y
+)
+cocurrent 'z'
+a =: enc_xxx_ :. dec_xxx_
+c=: a_z_^:_1
+cocurrent 'base'
+1 -: ]&.a 0
+1 -: ]&.c 0
+101 -: 100 [&.a 0
+101 -: 100 [&.c 0
 
-4!:55 ;:'a aa q a_z_ c_z_ d_yyy_ d_xxx_ j j_xxx_ dou F f F1 f1 F2 f2 G g G1 g1 G2 g2 nln nn sum'
+
+4!:55 ;:'a aa q a_z_ c_z_ d_yyy_ d_xxx_ j j_xxx_ dou F f F1 f1 F2 f2 G g G1 g1 G2 g2 nameinxxx_xxx_ nln nn sum'
 18!:55 ;:'xxx yyy'
 
 

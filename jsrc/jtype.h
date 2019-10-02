@@ -436,6 +436,7 @@ typedef I SI;
 
 #define FIXALOCSONLYLOWEST 4  // to fixa: replace only the first occurrence of u/v in each branch
 #define FIXALOCSONLY 8  // to fixa: replace only u/v (IMPLOC)
+#define FIXASTOPATINV 16  // to fixa: stop afixing a branch when it gets to a an explicit obverse
 
 
 typedef struct {I i;US n,go,source;C type;C canend;} CW;

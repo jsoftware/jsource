@@ -65,13 +65,14 @@ B jthasimploc(J jt,A w){A hs,*u;V*v;
 //   be replaced by an explicit equivalent with the indicated valence(s)
 // Higher flag bits restrict the search:
 // FIXALOCSONLY set if we will replace only implicit locatives.  We don't go down a branch that doesn't contain one
-// FIXALOCSONLYLOWEST set is we replace only lowest-level locatives (suitable for function return).  We stop in a branch when we hit a locative reference
+// FIXALOCSONLYLOWEST set if we replace only lowest-level locatives (suitable for function return).  We stop in a branch when we hit a locative reference
+// FIXASTOPATINV set if we halt at a defined oberse
 // a has to be an A type because it goes into every2.  It is always an I type, but it may be virtual when it comes back from every2
 static A jtfixa(J jt,A a,A w){A f,g,h,wf,x,y,z=w;V*v;I aa[AKXR(0)/SZI+1]={AKXR(0)};  // place to build recursion parm - make the AK field right
 #define REFIXA(a,x) (IAV0(aa)[0]=(aif|(a)), fixa((A)aa,(x)))
  RZ(w);
  I ai=IAV(a)[0];  // value of a
- I aif=ai&(FIXALOCSONLY|FIXALOCSONLYLOWEST); // extract control flags
+ I aif=ai&(FIXALOCSONLY|FIXALOCSONLYLOWEST|FIXASTOPATINV); // extract control flags
  ai^=aif;   // now ai = state without flags
  // If we are only interested in replacing locatives, and there aren't any, exit fast
  if(aif&FIXALOCSONLY&&!hasimploc(w))R w;  // nothing to fix
@@ -162,25 +163,28 @@ static A jtfixa(J jt,A a,A w){A f,g,h,wf,x,y,z=w;V*v;I aa[AKXR(0)/SZI+1]={AKXR(0
     R z;
    }else R df1(REFIXA(2,f),wf);
 // bug ^: and m} should process gerund args
+  case COBVERSE:
+   if(aif&FIXASTOPATINV)R w;  // stop at obverse if told to
+   // otherwise fall through to normal processing
   default:
    if(f)RZ(f=REFIXA(na,f));
    if(g)RZ(g=REFIXA(na,g));
    R f&&g?df2(f,g,wf):f?df1(f,wf):w;
 }}   /* 0=a if fix names; 1=a if fix names only if does not contain $: */
 
-// On internal calls, self>>1 is passed in as initial flags to fixa, if self is odd.  Otherwise they default to 0
+// On internal calls, self is an integer whose value contains flags.  Otherwise zeroionei is used
 DF1(jtfix){PROLOG(0005);A z;
  RZ(w);
  RZ(jt->fxpath=rifvs(reshape(sc(jt->fxi=(I)255),ace))); jt->fxpv=AAV(jt->fxpath);  // for stopping infinite recursions
  if(LIT&AT(w)){ASSERT(1>=AR(w),EVRANK); RZ(w=nfs(AN(w),CAV(w)));}
  // only verbs/noun can get in through the parser, but internally we also vet adv/conj
  ASSERT(AT(w)&NAME+VERB+ADV+CONJ,EVDOMAIN);
- self=AT(self)&NOUN?self:zeroionei[0];
+ self=AT(self)&NOUN?self:zeroionei[0];  // default to 0 if noun not given
  RZ(z=fixa(self,AT(w)&VERB+ADV+CONJ?w:symbrdlock(w)));  // name comes from string a
  // Once a node has been fixed, it doesn't need to be looked at ever again.  This applies even if the node itself carries a name.  To indicate this
  // we set VFIX.  We only do so if the node has descendants (or a name).  We also turn off VNAMED, which is set in named explicit definitions (I don't
-  // understand why).  We can do this only if we are sure the entire tree was traversed, i. e. we were not just looking for implicit locatives.
- if(!(*IAV0(self)&(FIXALOCSONLY|FIXALOCSONLYLOWEST))&&AT(z)&VERB+ADV+CONJ){V*v=FAV(z); if(v->fgh[0]){v->flag|=VFIX+VNAMED; v->flag^=VNAMED;}}  // f is clear for anything in the pst
+  // understand why).  We can do this only if we are sure the entire tree was traversed, i. e. we were not just looking for implicit locatives orminverses.
+ if(!(*IAV0(self)&(FIXALOCSONLY|FIXALOCSONLYLOWEST|FIXASTOPATINV))&&AT(z)&VERB+ADV+CONJ){V*v=FAV(z); if(v->fgh[0]){v->flag|=VFIX+VNAMED; v->flag^=VNAMED;}}  // f is clear for anything in the pst
  jt->fxpath=0;
  EPILOG(z);
 }

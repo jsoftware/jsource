@@ -99,7 +99,7 @@ static void jtsusp(J jt){B t;DC d;A *old=jt->tnextpushp;
  jt->dcs=0; jt->tostdout=1;
 #if USECSTACK
  jt->cstackmin=MAX(jt->cstackinit-(CSTACKSIZE-CSTACKRESERVE),jt->cstackmin-CSTACKSIZE/10);
- if(jt->sm==SMJAVA)jt->cstackmin=0;
+ if(0x8&jt->smoption)jt->cstackmin=0;
 #else
  jt->fdepn =MIN(NFDEP ,jt->fdepn +NFDEP /10);
 #endif
@@ -122,7 +122,7 @@ static void jtsusp(J jt){B t;DC d;A *old=jt->tnextpushp;
  } else {
 #if USECSTACK
   jt->cstackmin=jt->cstackinit-(CSTACKSIZE-CSTACKRESERVE);
-  if(jt->sm==SMJAVA)jt->cstackmin=0;
+  if(0x8&jt->smoption)jt->cstackmin=0;
 #else
   jt->fdepn =NFDEP;
 #endif
@@ -224,7 +224,7 @@ F1(jtdbc){UC k;
   jt->uflags.us.cx.cx_c.db=jt->dbuser=k;
 #if USECSTACK
   jt->cstackmin=jt->cstackinit-((CSTACKSIZE-CSTACKRESERVE)>>k);
-  if(jt->sm==SMJAVA)jt->cstackmin=0;
+  if(0x8&jt->smoption)jt->cstackmin=0;
 #else
   jt->fdepn=NFDEP>>k;
 #endif

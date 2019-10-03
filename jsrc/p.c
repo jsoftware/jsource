@@ -603,13 +603,16 @@ rdglob: ;
      // We will be making a bivalent call to the action routine; it will be w,fs,fs for monads and a,w,fs for dyads (with appropriate changes for modifiers).  Fetch those arguments
      // We have fs already.  arg1 will come from position 2 3 1 1 1 depending on stack line; arg2 will come from 1 2 3 2 3
      if(pmask&0x7){A y;
-      // Verb execution.  We must support inplacing, including assignment in place, and support recursion
+      // Verb execution (in  order: V N, V V N, N V N).  We must support inplacing, including assignment in place, and support recursion
       jt->sf=fs;  // push $: stack
       // While we are waiting for the branch address, work on inplacing.  See if the primitive being executed is inplaceable
       if((FAV(fs)->flag>>(pline>>1))&VJTFLGOK1){L *s;
        // Inplaceable.  If it is an assignment to a known name that has a value, remember the name and the value
-       if(PTISASGNNAME(stack[0])&&PTISM(stackfs[2])&&(FAV(fs)->flag&VASGSAFE)   // assignment to name; nothing in the stack to the right of what we are about to execute; well-behaved function (doesn't change locales)
-          &&(s=((AT(stack[0].a))&ASGNLOCAL?jtprobelocal:jtprobeisquiet)(jt,queue[m-1])) ){
+       // We handle =: N V N, =: V N, =: V V N.  In the last case both Vs must be ASGSAFE.  When we set jt->assignsym we are warranting
+       // that the next assignment will be to the name, and that the reassigned value is available for inplacing.  In the V V N case,
+       // this may be over two verbs
+       if(PTISASGNNAME(stack[0])&&PTISM(stackfs[2])   // assignment to name; nothing in the stack to the right of what we are about to execute; well-behaved function (doesn't change locales)
+          &&(s=((AT(stack[0].a))&ASGNLOCAL?jtprobelocal:jtprobeisquiet)(jt,queue[m-1]))&&((FAV(fs)->flag)&VASGSAFE)&&(pline!=1||FAV(stack[1].a)->flag&VASGSAFE) ){
         // It is OK to remember the address of the symbol being assigned, because anything that might conceivably create a new symbol (and thus trigger
         // a relocation of the symbol table) is marked as not ASGSAFE
         jt->assignsym=s;  // remember the symbol being assigned.  It may have no value yet, but that's OK - save the lookup

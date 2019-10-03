@@ -120,7 +120,6 @@ DF2(jtxdefn){PROLOG(0048);
  A *line;   // pointer to the words of the definition.  Filled in by LINE
  I n;  // number of lines in the definition.  Filled in by LINE
  CW *cw;  // pointer to control-word info for the definition.  Filled in by LINE
-
  I gsfctdl;  // flags: 1=locked 2=debug(& not locked) 4=tdi!=0 8=cd!=0 16=thisframe!=0 32=symtable was the original (i. e. AR(symtab)&LSYMINUSE) 256=original debug flag (must be highest bit)
 // obsolete I lk;  // lock/debug flag: 1=locked function; 0=normal operation; -1=this function is being debugged
  DC callframe=0;  // pointer to the debug frame of the caller to this function (only if it's named), but 0 if we are not debugging
@@ -192,6 +191,10 @@ DF2(jtxdefn){PROLOG(0048);
 // obsolete   AM(locsym)=(I)jt->locsyms; jt->locsyms=locsym;   // Chain the calling symbol table to this one
   SYMPUSHLOCAL(locsym);   // Chain the calling symbol table to this one
 
+  // assignsym etc should never be set here; if it is, there must have been a pun-in-ASGSAFE that caused us to mark a
+  // derived verb as ASGSAFE and it was later overwritten with an unsafe verb.  That would be a major mess; we'll invest 2 stores
+  // in preventing it - still not a full fix, since invalid inplacing may have been done already
+  CLEARZOMBIE
   // Assign the special names x y m n u v.  Do this late in initialization because it would be bad to fail after assigning to yx (memory leak would result)
   // For low-rank short verbs, this takes a significant amount of time using IS, because the name doesn't have bucket info and is
   // not an assignment-in-place
@@ -212,10 +215,6 @@ DF2(jtxdefn){PROLOG(0048);
    if(v){(IS(vnam,v)); if(NOUN&AT(v))IS(nnam,v); }  // bug errors here must be detected
   }
  }
- // assignsym etc should never be set here; if it is, there must have been a pun-in-ASGSAFE that caused us to mark a
- // derived verb as ASGSAFE and it was later overwritten with an unsafe verb.  That would be a major mess; we'll invest 2 stores
- // in preventing it - still not a full fix, since invalid inplacing may have been done already
- CLEARZOMBIE
 
  FDEPINC(1);   // do not use error exit after this point; use BASSERT, BGA, BZ
  // remember tnextpushx.  We will tpop after every sentence to free blocks.  Do this AFTER any memory

@@ -161,7 +161,7 @@ I jdo(J jt, C* lp){I e;A x;
  // the resumption of the name that was interrupted.
  I4 savcallstack = jt->callstacknext;
 #if USECSTACK
- if(jt->sm==SMJAVA)jt->cstackmin=0;
+ if(0x8&jt->smoption)jt->cstackmin=0;
 #endif
  if(jt->capture){
   if(jt->capturemax>capturesize){FREE(jt->capture); jt->capture=0; jt->capturemax=0;} // dealloc large capture buffer
@@ -213,6 +213,7 @@ DF1(jtwd){A z=0;C*p=0;D*pd;I e,*pi,t;V*sv;
 //   1=pass current locale
 //   2=result not allocated by jga
 //   4=use smpoll to get last result
+//   8=multithreaded
   if(0x1&jt->smoption) {
     e=jt->smdowd ? ((dowdtype2)(jt->smdowd))(jt, (int)t, w, &z, getlocale(jt)) : EVDOMAIN;
   } else {
@@ -271,6 +272,7 @@ void _stdcall JSM(J jt, void* callbacks[])
  jt->smpoll = (polltype)callbacks[3];
  jt->sm = 0xff & (I)callbacks[4];
  jt->smoption = ((~0xff) & (UI)callbacks[4]) >> 8;
+ if(jt->sm==SMJAVA) jt->smoption |= 0x8;  /* assume java is multithreaded */
 }
 
 /* set jclient callbacks from values - easier for nodejs */
@@ -282,6 +284,7 @@ void _stdcall JSMX(J jt, void* out, void* wd, void* in, void* poll, I opts)
  jt->smpoll = (polltype)poll;
  jt->sm = 0xff & opts;
  jt->smoption = ((~0xff) & (UI)opts) >> 8;
+ if(jt->sm==SMJAVA) jt->smoption |= 0x8;  /* assume java is multithreaded */
 }
 
 C* _stdcall JGetLocale(J jt){return getlocale(jt);}

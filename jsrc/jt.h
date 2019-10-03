@@ -271,7 +271,7 @@ typedef struct {
  void*sminput;
  void*smoutput;         /* sm.. sm/wd callbacks set by JSM()               */
  void*smpoll;           /* re-used in wd                                   */
- I    smoption;         /* wd options, see comment in jtwd                 */
+ UI   smoption;         /* wd options, see comment in jtwd                 */
  D    spfor;            /* semi-global for use by spfor()                  */
  C*   th2buf;           /* space for formatting one number                 */
  I    th2bufn;          /* current max length of buf                       */

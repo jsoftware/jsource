@@ -477,7 +477,7 @@ L* jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;L*e;
   CLEARZOMBIE   // clear until next use.
  } else {A jtlocal=jt->locsyms;
   n=AN(a); NM *v=NAV(a); m=v->m;  // n is length of name, v points to string value of name, m is length of non-locale part of name
-  if(n==m)ASSERT(!(g!=jtlocal&&probelocal(a)),EVDOMAIN)  // if non-locative, give error if there is a local
+  if(n==m)ASSERT(!(g==jt->global&&probelocal(a)),EVDOMAIN)  // if non-locative, give error if there is a local
     // symbol table, and we are assigning to the global symbol table, and the name is defined in the local table
   else{C*s=1+m+v->s; RZ(g=NMILOC&v->flag?locindirect(n-m-2,1+s,(UI4)v->bucketx):stfindcre(n-m-2,s,v->bucketx));}
     // locative: s is the length of name_.  Find the symbol table to use, creating one if none found
@@ -538,7 +538,7 @@ L* jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;L*e;
    wt=AT(w); wn=AN(w); wr=AR(w); m=wn<<bplg(wt);
    ASSERT(wt&DIRECT,EVDOMAIN);
    ASSERT(allosize(x)>=m,EVALLOC);
-   AT(x)=wt; AN(x)=wn; AR(x)=(RANKT)wr; MCISH(AS(x),AS(w),wr); MC(AV(x),AV(w),m);
+   AT(x)=wt; AN(x)=wn; AR(x)=(RANKT)wr; MCISH(AS(x),AS(w),wr); MC(AV(x),AV(w),m);  // copy in the data
   }
  }
  e->sn=jt->slisti;  // Save the script in which this name was defined

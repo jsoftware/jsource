@@ -5,7 +5,7 @@
 
 #include "j.h"
 
-
+#if 0
 static F1(jttayatop);
 
 static F1(jtcoeff){V*v;
@@ -265,3 +265,4 @@ F2(jttcap){A c,p,s,t;I n;
  RZ(s=over(s,over(lrep(a),cstr(") t.)@i.';'g +:^:(g ~: g@+:)^:_ ] 1') \" 0"))));
  R eval(CAV(str0(s)));
 }
+#endif

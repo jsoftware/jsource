@@ -119,6 +119,107 @@ l1:
 }
 #endif
 #if C_AVX && defined(PREFETCH)
+// blocked multiply, processing vertical mx16 strips of y.  Good when y has few rows
+// *av is mxp, *wv is pxn, *zv is mxn
+// flgs is 0 for float, 1 for complex, i. e. lg2(# values per atom), 2 for upper-tri, 4 for INT.  If FLGCMP is set, n and p are even, and give the lengths of the arguments in values
+//FLGCMP is not supported yet
+// m, n, and p are all non0
+void blockedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){
+ // Since we sometimes use 128-bit instructions in other places, make sure we don't get stuck in slow state
+ _mm256_zeroupper();
+ // for(each full mx16 strip of w)
+ //  for(each pair of rows of a)
+ //   for(each pair of rows of w)
+ //    take product of 2x2 of a with 2x16 of w, producing 2x16 result, accumulated
+ //   if there is another row of w, accumulate it too
+ //   write out 2x16 result
+ //  if there is another row of a
+ //   for(each row of w)
+ //    accumulate 1x16 a*w
+ //   write out 1x16 result
+ // for(last partial strip of w)
+ //   do it all again, under mask
+ // 
+#define INITTO0(reg) _mm256_set1_pd(0.0)   // should be _mm256_xor_pd(reg,reg)  but compiler complains
+#define LD4(wr,wc) wt=_mm256_load_pd(wv1+wr*n+wc*NPAR);
+#define ST1(wr,wc) _mm256_storeu_pd(zv1+wr*n+wc*NPAR,z##wr##wc);
+#define ST2(wc) {ST1(0,wc) ST1(1,wc)}
+#define MUL2x4(wr,wc,ldm) {ldm(wr,wc) z0##wc=MUL_ACC(z0##wc,a0,wt); z1##wc=MUL_ACC(z1##wc,a1,wt);}  // (wr,wc) is multiplied by a0,:a1
+#define MUL2x16r(nc,ac,ldm) {a0=_mm256_set1_pd(av1[0+ac]); a1=_mm256_set1_pd(av1[p+ac]); MUL2x4(ac,0,ldm) if(nc>1)MUL2x4(ac,1,ldm) if(nc>2)MUL2x4(ac,2,ldm) if(nc>3)MUL2x4(ac,3,ldm)}  // ac is col of a=row of w
+#define MUL2x16(nr,nc,ldm) {MUL2x16r(nc,0,ldm) if(nr>1)MUL2x16r(nc,1,ldm)}
+#define MUL1x4(wr,wc,ldm) {ldm(wr,wc) z0##wc=MUL_ACC(z0##wc,a0,wt);}  // (wr,wc) is multiplied by a0
+#define MUL1x16(nc,ldm) a0=_mm256_set1_pd(av1[0]); MUL1x4(0,0,ldm) if(nc>1)MUL1x4(0,1,ldm) if(nc>2)MUL1x4(0,2,ldm) if(nc>3)MUL1x4(0,3,ldm)  // ac is col of a=row of w
+ I nrem=n;  // number of columns left
+ while(nrem>=NPAR){  // do 1x4s as long as possible.  The load bandwidth is twice as high
+  // create mx16 strip of result
+  I mrem=m;  // number of rows of a left
+  D *av1=av;  // scan pointer through a values, by cols then by rows, i. e. incrementing
+  D *zv1=zv;  // output pointer down the column
+  do{
+   // create 2x16 section of result
+   I prem=p;  // number of cols of a/rows of w to be accumulated into one 2x16 result
+   __m256d z00=INITTO0(z00); __m256d z01=z00,  z02=z00, z03=z00, z10=z00, z11=z00, z12=z00, z13=z00;
+   D *wv1=wv;  // top-left of current strip of w
+   do{__m256d wt, a0, a1;  // staging nodes for a and w values
+    if(nrem>=4*NPAR)MUL2x16(2,4,LD4) else if(nrem>=3*NPAR)MUL2x16(2,3,LD4) else if(nrem>=2*NPAR)MUL2x16(2,2,LD4) else MUL2x16(2,1,LD4)
+    av1+=2; wv1+=2*n;  // advance to next columns of a and rows of w
+   }while((prem-=2)>1);
+   if(prem){__m256d wt, a0, a1;  // staging nodes for a and w values
+    // a has an odd number of columns (and w has an odd number of rows).  Add in the last product
+    if(nrem>=4*NPAR)MUL2x16(1,4,LD4) else if(nrem>=3*NPAR)MUL2x16(1,3,LD4) else if(nrem>=2*NPAR)MUL2x16(1,2,LD4) else MUL2x16(1,1,LD4)
+    av1+=1;
+   }
+   // store the 2x16
+   ST2(0) if(nrem>=2*NPAR)ST2(1) if(nrem>=3*NPAR)ST2(2) if(nrem>=4*NPAR)ST2(3) 
+   av1+=p; zv1+=2*n;  // since we go through two rows of a at a time, we must  skip exactly one row at the end
+  }while((mrem-=2)>1);
+  if(mrem){
+   // a has an odd number of rows.  Hande the last one one at a time.  This doesn't have enough accumulators, but it also needs more memory bandwidth and loop
+   // overhead, thus runs about half as fast
+   I prem=p;  // number of cols of a/rows of w to be accumulated into one 2x16 result
+   __m256d z00=INITTO0(z00); __m256d z01=z00,  z02=z00, z03=z00;
+   D *wv1=wv;  // top-left of current strip of w
+   do{__m256d wt, a0;  // staging nodes for a and w values
+    if(nrem>=4*NPAR)MUL1x16(4,LD4) else if(nrem>=3*NPAR)MUL1x16(3,LD4) else if(nrem>=2*NPAR)MUL1x16(2,LD4) else MUL1x16(1,LD4)
+    av1+=1; wv1+=n;  // advance to next columns of a and rows of w
+   }while(--prem);
+   // store the 1x16
+   ST1(0,0); if(nrem>=2*NPAR)ST1(0,1); if(nrem>=3*NPAR)ST1(0,2); if(nrem>=4*NPAR)ST1(0,3);
+  }
+  wv+=4*NPAR; zv+=4*NPAR; nrem-=4*NPAR;  // advance to next strip of w/z
+ }
+
+ // We have done all we can do in full NPARs; we are left (possibly) with 1-3 columns of w that must be processed through a
+ // Since we have to maskload the w values, there is no way to get full speed on the multiplies.  We use 4 accumulators for latency,
+ // but we branch for each one
+ if(nrem&(NPAR-1)){  // if there is a remnant of w...
+  // Back up wv and zv to the start of the remnant
+  wv-=nrem&-NPAR; zv-=nrem&-NPAR;  // restore pointer to the unprocessed data
+  // Get the mask for the w columns
+  __m256i mask;  // horizontal mask for w values
+  mask=_mm256_loadu_si256((__m256i*)(jt->validitymask+4-(nrem&(NPAR-1))));  // a3rem { 4 3 2 1 0 0 0 0
+
+  I mrem=m;  // number of rows of a left
+  D *av1=av;  // scan pointer through a values, by cols then by rows, i. e. incrementing
+  D *zv1=zv;  // output pointer down the column
+  do{
+   // create 1x4 section of result
+   I prem=p;  // number of cols of a/rows of w to be accumulated into one 2x16 result
+   __m256d z00=INITTO0(z00); __m256d z01=z00, z02=z00, z03=z00;  // 4 accumulators for latency
+   D *wv1=wv;  // top-left of current strip of w
+   while(1){  // loop with 4 accumulators to create dot-product.  We can run about one product per cycle
+    z00=MUL_ACC(z00,_mm256_set1_pd(av1[0]),_mm256_maskload_pd(wv1+0*n,mask)); if(--prem<=0)break;
+    z01=MUL_ACC(z01,_mm256_set1_pd(av1[1]),_mm256_maskload_pd(wv1+1*n,mask)); if(--prem<=0)break;
+    z02=MUL_ACC(z02,_mm256_set1_pd(av1[2]),_mm256_maskload_pd(wv1+2*n,mask)); if(--prem<=0)break;
+    z03=MUL_ACC(z03,_mm256_set1_pd(av1[3]),_mm256_maskload_pd(wv1+3*n,mask)); if(--prem<=0)break;
+    av1+=4; wv1+=4*n;  // advance to next columns of a and rows of w
+   };
+   // combine accumulators & store the result
+   _mm256_maskstore_pd(zv1,mask,_mm256_add_pd(_mm256_add_pd(z00,z01),_mm256_add_pd(z02,z03)));
+   zv1+=n;  // since we go through two rows of a at a time, we must  skip exactly one row at the end
+  }while(--mrem>=0);
+ }
+}
 // cache-blocking code
 #define OPHEIGHT 4  // height of outer-product block
 #define OPWIDTHX 3
@@ -127,7 +228,7 @@ l1:
 #define CACHEHEIGHT 16  // height of resident cache block
 // Floating-point matrix multiply, hived off to a subroutine to get fresh register allocation
 // *zv=*av * *wv, with *cv being a cache-aligned region big enough to hold CACHEWIDTH*CACHEHEIGHT floats
-// a is shape mxp, w is shape pxn.  Result is 0 if OK, 1 if overflow
+// a is shape mxp, w is shape pxn.  Result is 0 if OK, 1 if fatal error
 static I cachedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){D c[(CACHEHEIGHT+1)*CACHEWIDTH + (CACHEHEIGHT+1)*OPHEIGHT*OPWIDTH*2 + 2*CACHELINESIZE/sizeof(D)];  // 2 in case complex
  // m is # 1-cells of a
  // n is # values in an item of w (and result)

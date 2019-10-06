@@ -166,9 +166,9 @@
 #define CCDOT      (C)'\276'       /* 190 276 be c.                           */
 // 191 free
 #define CCYCLE     (C)'\300'       /* 192 300 c0 C.                           */
-#define CDDOT      (C)'\301'       /* 193 301 c1 d.                           */
-#define CDCAP      (C)'\302'       /* 194 302 c2 D.                           */
-#define CDCAPCO    (C)'\303'       /* 195 303 c3 D:                           */
+// obsolete #define CDDOT      (C)'\301'       /* 193 301 c1 d.                           */
+// obsolete #define CDCAP      (C)'\302'       /* 194 302 c2 D.                           */
+// obsolete #define CDCAPCO    (C)'\303'       /* 195 303 c3 D:                           */
 #define CEPS       (C)'\304'       /* 196 304 c4 e.                           */
 #define CEBAR      (C)'\305'       /* 197 305 c5 E.                           */
 #define CFIX       (C)'\306'       /* 198 306 c6 f.                           */

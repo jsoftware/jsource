@@ -2,7 +2,7 @@
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Conjunctions: Differentiation and Integration                           */
-
+#if 0
 #include "j.h"
 
 // returns TRUE if w is a constant verb m"r
@@ -582,3 +582,4 @@ F2(jtdcapco){I r,*v;
  r=mr(a);
  R CDERIV(CDCAPCO,0L,jtsslope,VFLAGNONE,0L,r,r);
 }
+#endif

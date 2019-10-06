@@ -690,8 +690,16 @@ assert. allos -:&(/:~) 0&".@> fnm =. 18!:1 (1) [ 1
 
 f''
 
+NB. Verify local name doesn't affect lookup
+f =: 3 : 0 ''
+xy_z_  =: 1:
+nonlocale =. 5
+xy_nonlocale_ ''
+)
+
 4!:55 ;:'a a_z_ ab c d dd e ee f '
 4!:55 ;:'indirect k lcreate ldestroy lname lnc lnl lpath lswitch '
-4!:55 ;:'not_a_locative spnow t test x xy_z_ y '
+4!:55 ;:'not_a_locative spnow t test x xy_z_ xy_nonlocale_ y '
+18!:55 ;:'nonlocale'
 
 

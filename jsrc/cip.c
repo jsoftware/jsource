@@ -8,8 +8,13 @@
 #include "gemm.h"
 
 #define IGEMM_THRES  5000000     // when m*n*p less than this use cached; when higher, use BLAS   scaf must TUNE this
+#define DGEMM_THRES  5000000     // when m*n*p less than this use cached; when higher, use BLAS  
 #define DCACHED_THRES  (64*64*64)    // when m*n*p less than this use blocked; when higher, use cached
 #define ZGEMM_THRES  2000000     // when m*n*p less than this use cached; when higher, use BLAS  
+
+I igemm_thres=IGEMM_THRES;
+I dgemm_thres=DGEMM_THRES;
+I zgemm_thres=ZGEMM_THRES;
 
 // Analysis for inner product
 // a,w are arguments
@@ -742,7 +747,7 @@ oflo2:
    }else{
      // full matrix products
      I probsize = m*n*(IL)p;  // This is proportional to the number of multiply-adds.  We use it to select the implementation
-     if(probsize < IGEMM_THRES){RZ(cachedmmult(jt,DAV(a),DAV(w),DAV(z),m,n,p,FLGINT))}  // Do our one-core matrix multiply - converting   TUNE this is 160x160 times 160x160
+     if(probsize < igemm_thres){RZ(cachedmmult(jt,DAV(a),DAV(w),DAV(z),m,n,p,FLGINT))}  // Do our one-core matrix multiply - converting   TUNE this is 160x160 times 160x160
      else {
       // for large problem, use BLAS
       memset(DAV(z),C0,m*n*sizeof(D));
@@ -890,6 +895,10 @@ time1 ,&(x,y)"0 ((256 1e20 1e20 65536 > x*y) # 0 1 2 3) +/ lens
     smallprob=0;  // never use Dic method
     D *av=DAV(a), *wv=DAV(w), *zv=DAV(z);  //  pointers to sections
     I flgs=((AFLAG(a)>>(AFUPPERTRIX-FLGAUTRIX))&FLGAUTRI)|((AFLAG(w)>>(AFUPPERTRIX-FLGWUTRIX))&FLGWUTRI);  // flags from a or w
+    if((m*n*(IL)p)>=dgemm_thres){
+    memset(DAV(z),C0,m*n*sizeof(D));
+    dgemm_nn(m,n,p,1.0,DAV(a),p,1,DAV(w),n,1,0.0,DAV(z),n,1);
+    } else {
     // use blocked if any axis is short, or if all axes are shortish
     if(((50-m)&(50-n)&(16-p)&(DCACHED_THRES-m*n*p))>=0)blockedmmult(jt,av,wv,zv,m,n,p,flgs);  // blocked for small arrays in either dimension
     else {
@@ -905,16 +914,17 @@ time1 ,&(x,y)"0 ((256 1e20 1e20 65536 > x*y) # 0 1 2 3) +/ lens
       flgs=0;  // no Tri flags after first section
      }
     }
+    }
 #else
     I probsize = (m-1)*n*(IL)p;  // This is proportional to the number of multiply-adds.  We use it to select the implementation.  If m==1 we are doing dot-products; no gain from fancy code then
     if(!(smallprob = (m<=4||probsize<1000LL))){  // if small problem, avoid the startup overhead of the matrix version  TUNE
-// obsolete      if(probsize < DGEMM_THRES){
-     RZ(cachedmmult(jt,DAV(a),DAV(w),DAV(z),m,n,p,((AFLAG(a)>>(AFUPPERTRIX-FLGAUTRIX))&FLGAUTRI)|((AFLAG(w)>>(AFUPPERTRIX-FLGWUTRIX))&FLGWUTRI)))  // Do our one-core matrix multiply - real   TUNE this is 160x160 times 160x160.  Tell routine if uppertri
-// obsolete      else{
-// obsolete       // If the problem is really big, use BLAS
-// obsolete       memset(DAV(z),C0,m*n*sizeof(D));
-// obsolete       dgemm_nn(m,n,p,1.0,DAV(a),p,1,DAV(w),n,1,0.0,DAV(z),n,1);
-// obsolete      }
+     if(probsize < dgemm_thres)
+      RZ(cachedmmult(jt,DAV(a),DAV(w),DAV(z),m,n,p,((AFLAG(a)>>(AFUPPERTRIX-FLGAUTRIX))&FLGAUTRI)|((AFLAG(w)>>(AFUPPERTRIX-FLGWUTRIX))&FLGWUTRI)))  // Do our one-core matrix multiply - real   TUNE this is 160x160 times 160x160.  Tell routine if uppertri
+     else{
+      // If the problem is really big, use BLAS
+      memset(DAV(z),C0,m*n*sizeof(D));
+      dgemm_nn(m,n,p,1.0,DAV(a),p,1,DAV(w),n,1,0.0,DAV(z),n,1);
+     }
     }
 #endif
 #endif
@@ -935,7 +945,7 @@ time1 ,&(x,y)"0 ((256 1e20 1e20 65536 > x*y) # 0 1 2 3) +/ lens
  case CMPXX:
   {NAN0;
    I probsize = m*n*(IL)p;  // This is proportional to the number of multiply-adds.  We use it to select the implementation
-   if(probsize<ZGEMM_THRES){RZ(cachedmmult(jt,DAV(a),DAV(w),DAV(z),m,n*2,p*2,((AFLAG(a)>>(AFUPPERTRIX-FLGAUTRIX))&FLGAUTRI)|((AFLAG(w)>>(AFUPPERTRIX-FLGWUTRIX))&FLGWUTRI)|FLGCMP))}  // Do the fast matrix multiply - complex.  Change widths to widths in D atoms, not complex atoms  TUNE  this is 130x130 times 130x130
+   if(probsize<zgemm_thres){RZ(cachedmmult(jt,DAV(a),DAV(w),DAV(z),m,n*2,p*2,((AFLAG(a)>>(AFUPPERTRIX-FLGAUTRIX))&FLGAUTRI)|((AFLAG(w)>>(AFUPPERTRIX-FLGWUTRIX))&FLGWUTRI)|FLGCMP))}  // Do the fast matrix multiply - complex.  Change widths to widths in D atoms, not complex atoms  TUNE  this is 130x130 times 130x130
    else {
      // Large problem - start up BLAS
      memset(DAV(z),C0,2*m*n*sizeof(D));

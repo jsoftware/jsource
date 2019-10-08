@@ -420,6 +420,42 @@ OPENSSL_setcap();
 R mtm;
 }
 
+// 9!:58  undocumented
+// query/set gemm threshold
+// 0 igemm_thres  integer threshold
+// 1 dgemm_thres  real threshold
+// 2 zgemm_thres  complex threshold
+
+extern I igemm_thres,dgemm_thres,zgemm_thres;
+
+F1(jtgemmtune){I k;
+ RZ(w);
+ ASSERT(AT(w)&(B01+INT),EVDOMAIN);
+ ASSERT(1==AN(w),EVLENGTH);
+ ASSERT(1>=AR(w),EVRANK);
+ RE(k=i0(w));  // get arg
+ ASSERT(k==0||k==1||k==2,EVDOMAIN);
+ R sc((0==k)?igemm_thres:(1==k)?dgemm_thres:zgemm_thres);
+}
+
+F2(jtgemmtune2){I j,k;
+ RZ(a&&w);
+ ASSERT(AT(a)&(B01+INT),EVDOMAIN);
+ ASSERT(1==AN(a),EVLENGTH);
+ ASSERT(1>=AR(a),EVRANK);
+ ASSERT(AT(w)&(B01+INT),EVDOMAIN);
+ ASSERT(1==AN(w),EVLENGTH);
+ ASSERT(1>=AR(w),EVRANK);
+ RE(j=i0(a));  // get arg
+ RE(k=i0(w));  // get arg
+ ASSERT(j>=0,EVDOMAIN);
+ ASSERT(k==0||k==1||k==2,EVDOMAIN);
+ if(k==0) igemm_thres=j;
+ else if(k==1) dgemm_thres=j;
+ else zgemm_thres=j;
+ R sc(1);
+}
+
 // enable/disable tstack auditing, since some testcases run too long with it enabled
 // bit 0 is set to disable, bit 1 is a one-shot to ask for an audit
 // result is old value

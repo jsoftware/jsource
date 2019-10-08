@@ -201,6 +201,7 @@ F2(jtforeign){I p,q;
   case XC(9,55):  R CDERIV(CIBEAM, jtunicodex78s, 0,            VFLAGNONE,RMAX,0,   0  );
   case XC(9,56):  R CDERIV(CIBEAM, jtcpufeature, jtcpufeature2, VASGSAFE,RMAX,RMAX,RMAX);
   case XC(9,57):  R CDERIV(CIBEAM, jtaudittdisab, 0,            VFLAGNONE,RMAX,0,   0  );
+  case XC(9,58):  R CDERIV(CIBEAM, jtgemmtune, jtgemmtune2,    VFLAGNONE,RMAX,RMAX,RMAX);
   case XC(9,60):  R CDERIV(CIBEAM, jtleakblockread, 0,            VFLAGNONE,RMAX,0,   0  );
   case XC(9,61):  R CDERIV(CIBEAM, jtleakblockreset, 0,            VFLAGNONE,RMAX,0,   0  );
 

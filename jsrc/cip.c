@@ -11,21 +11,6 @@
 #define DGEMM_THRES  5000000     // real threshold
 #define ZGEMM_THRES  2000000     // complex threshold
 
-// flags in call to cachedmmult
-#define FLGCMPX 0
-#define FLGCMP ((I)1<<FLGCMPX)  // arguments are complex
-#define FLGAUTRIX 1
-#define FLGAUTRI ((I)1<<FLGAUTRIX)  // left arg is upper-triangular
-#define FLGWUTRIX 2
-#define FLGWUTRI ((I)1<<FLGWUTRIX)  // left arg is upper-triangular
-#define FLGINTX 3
-#define FLGINT ((I)1<<FLGINTX)  // args are INT
-#define FLGZFIRSTX 4
-#define FLGZFIRST ((I)1<<FLGZFIRSTX)  // first pass of the Z values, use 0
-#define FLGZLASTX 5
-#define FLGZLAST ((I)1<<FLGZLASTX)  // last pass of the Z values, write to output
-
-
 // Analysis for inner product
 // a,w are arguments
 // zt is type of result
@@ -123,11 +108,12 @@ l1:
 // *av is mxp, *wv is pxn, *zv is mxn
 // flgs is 0 for float, 1 for complex, i. e. lg2(# values per atom), 2 for upper-tri, 4 for INT.  If FLGCMP is set, n and p are even, and give the lengths of the arguments in values
 //FLGCMP is not supported yet
+//  FLGWMINUSZ is supported
 // m, n, and p are all non0
 void blockedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){
  // Since we sometimes use 128-bit instructions in other places, make sure we don't get stuck in slow state
  _mm256_zeroupper();
- // for(each full mx16 strip of w)
+ __m256d z00=_mm256_set1_pd(0.0); // set here to avoid warnings
  //  for(each pair of rows of a)
  //   for(each pair of rows of w)
  //    take product of 2x2 of a with 2x16 of w, producing 2x16 result, accumulated
@@ -141,40 +127,44 @@ void blockedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){
  //   do it all again, under mask
  // 
 #define INITTO0(reg) _mm256_set1_pd(0.0)   // should be _mm256_xor_pd(reg,reg)  but compiler complains
-#define LD4(wr,wc) wt=_mm256_load_pd(wv1+wr*n+wc*NPAR);
+#define LD4EXP(wr,wc) _mm256_load_pd(wv1+wr*n+wc*NPAR)
+#define LD4(wr,wc) wt=LD4EXP(wr,wc);
 #define ST1(wr,wc) _mm256_storeu_pd(zv1+wr*n+wc*NPAR,z##wr##wc);
 #define ST2(wc) {ST1(0,wc) ST1(1,wc)}
 #define MUL2x4(wr,wc,ldm) {ldm(wr,wc) z0##wc=MUL_ACC(z0##wc,a0,wt); z1##wc=MUL_ACC(z1##wc,a1,wt);}  // (wr,wc) is multiplied by a0,:a1
 #define MUL2x16r(nc,ac,ldm) {a0=_mm256_set1_pd(av1[0+ac]); a1=_mm256_set1_pd(av1[p+ac]); MUL2x4(ac,0,ldm) if(nc>1)MUL2x4(ac,1,ldm) if(nc>2)MUL2x4(ac,2,ldm) if(nc>3)MUL2x4(ac,3,ldm)}  // ac is col of a=row of w
 #define MUL2x16(nr,nc,ldm) {MUL2x16r(nc,0,ldm) if(nr>1)MUL2x16r(nc,1,ldm)}
 #define MUL1x4(wr,wc,ldm) {ldm(wr,wc) z0##wc=MUL_ACC(z0##wc,a0,wt);}  // (wr,wc) is multiplied by a0
-#define MUL1x16(nc,ldm) a0=_mm256_set1_pd(av1[0]); MUL1x4(0,0,ldm) if(nc>1)MUL1x4(0,1,ldm) if(nc>2)MUL1x4(0,2,ldm) if(nc>3)MUL1x4(0,3,ldm)  // ac is col of a=row of w
+#define MUL1x16(nc,ldm) {a0=_mm256_set1_pd(av1[0]); MUL1x4(0,0,ldm) if(nc>1)MUL1x4(0,1,ldm) if(nc>2)MUL1x4(0,2,ldm) if(nc>3)MUL1x4(0,3,ldm)}  // ac is col of a=row of w
+#define WMZ(wr,wc) {z##wr##wc=_mm256_sub_pd(LD4EXP(wr,wc),z##wr##wc);}
  I nrem=n;  // number of columns left
  while(nrem>=NPAR){  // do 1x4s as long as possible.  The load bandwidth is twice as high
   // create mx16 strip of result
   I mrem=m;  // number of rows of a left
   D *av1=av;  // scan pointer through a values, by cols then by rows, i. e. incrementing
   D *zv1=zv;  // output pointer down the column
-  do{
+  for(--mrem;mrem>0;mrem-=2){  // bias merem down 1, so <=0 if no pairs; do each pair
    // create 2x16 section of result
    I prem=p;  // number of cols of a/rows of w to be accumulated into one 2x16 result
-   __m256d z00=INITTO0(z00); __m256d z01=z00,  z02=z00, z03=z00, z10=z00, z11=z00, z12=z00, z13=z00;
+   z00=INITTO0(z00); __m256d z01=z00,  z02=z00, z03=z00, z10=z00, z11=z00, z12=z00, z13=z00;
    D *wv1=wv;  // top-left of current strip of w
-   do{__m256d wt, a0, a1;  // staging nodes for a and w values
+   for(--prem;prem>0;prem-=2){__m256d wt, a0, a1;  // staging nodes for a and w values.  Bias prem down 1, process in pairs
     if(nrem>=4*NPAR)MUL2x16(2,4,LD4) else if(nrem>=3*NPAR)MUL2x16(2,3,LD4) else if(nrem>=2*NPAR)MUL2x16(2,2,LD4) else MUL2x16(2,1,LD4)
     av1+=2; wv1+=2*n;  // advance to next columns of a and rows of w
-   }while((prem-=2)>1);
-   if(prem){__m256d wt, a0, a1;  // staging nodes for a and w values
+   }
+   if(prem==0){__m256d wt, a0, a1;  // staging nodes for a and w values.  prem is -1 or 0 here, and was biased down 1
     // a has an odd number of columns (and w has an odd number of rows).  Add in the last product
     if(nrem>=4*NPAR)MUL2x16(1,4,LD4) else if(nrem>=3*NPAR)MUL2x16(1,3,LD4) else if(nrem>=2*NPAR)MUL2x16(1,2,LD4) else MUL2x16(1,1,LD4)
     av1+=1;
    }
-   // store the 2x16
+   // store the 2x16.  If WMINUSZ, do that first
+   if(flgs&FLGWMINUSZ){WMZ(0,0) WMZ(1,0) if(nrem>=2*NPAR){WMZ(0,1) WMZ(1,1)} if(nrem>=3*NPAR){WMZ(0,2) WMZ(1,2)} if(nrem>=4*NPAR){WMZ(0,3) WMZ(1,3)}}
    ST2(0) if(nrem>=2*NPAR)ST2(1) if(nrem>=3*NPAR)ST2(2) if(nrem>=4*NPAR)ST2(3) 
    av1+=p; zv1+=2*n;  // since we go through two rows of a at a time, we must  skip exactly one row at the end
-  }while((mrem-=2)>1);
-  if(mrem){
-   // a has an odd number of rows.  Hande the last one one at a time.  This doesn't have enough accumulators, but it also needs more memory bandwidth and loop
+  }
+
+  if(mrem==0){  // mrem is 0 or -1 here.  0 means one more to do
+   // a has an odd number of rows.  Handle the last one one at a time.  This doesn't have enough accumulators, but it also needs more memory bandwidth and loop
    // overhead, thus runs about half as fast
    I prem=p;  // number of cols of a/rows of w to be accumulated into one 2x16 result
    __m256d z00=INITTO0(z00); __m256d z01=z00,  z02=z00, z03=z00;
@@ -184,6 +174,7 @@ void blockedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){
     av1+=1; wv1+=n;  // advance to next columns of a and rows of w
    }while(--prem);
    // store the 1x16
+   if(flgs&FLGWMINUSZ){WMZ(0,0) if(nrem>=2*NPAR){WMZ(0,1)} if(nrem>=3*NPAR){WMZ(0,2)} if(nrem>=4*NPAR){WMZ(0,3)}}
    ST1(0,0); if(nrem>=2*NPAR)ST1(0,1); if(nrem>=3*NPAR)ST1(0,2); if(nrem>=4*NPAR)ST1(0,3);
   }
   wv+=4*NPAR; zv+=4*NPAR; nrem-=4*NPAR;  // advance to next strip of w/z
@@ -194,7 +185,7 @@ void blockedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){
  // but we branch for each one
  if(nrem&(NPAR-1)){  // if there is a remnant of w...
   // Back up wv and zv to the start of the remnant
-  wv-=nrem&-NPAR; zv-=nrem&-NPAR;  // restore pointer to the unprocessed data
+  wv+=nrem&-NPAR; zv+=nrem&-NPAR;  // restore pointer to the unprocessed data
   // Get the mask for the w columns
   __m256i mask;  // horizontal mask for w values
   mask=_mm256_loadu_si256((__m256i*)(jt->validitymask+4-(nrem&(NPAR-1))));  // a3rem { 4 3 2 1 0 0 0 0
@@ -205,19 +196,26 @@ void blockedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){
   do{
    // create 1x4 section of result
    I prem=p;  // number of cols of a/rows of w to be accumulated into one 2x16 result
-   __m256d z00=INITTO0(z00); __m256d z01=z00, z02=z00, z03=z00;  // 4 accumulators for latency
+   z00=INITTO0(z00); __m256d z01=z00, z02=z00, z03=z00;  // 4 accumulators for latency
    D *wv1=wv;  // top-left of current strip of w
    while(1){  // loop with 4 accumulators to create dot-product.  We can run about one product per cycle
     z00=MUL_ACC(z00,_mm256_set1_pd(av1[0]),_mm256_maskload_pd(wv1+0*n,mask)); if(--prem<=0)break;
     z01=MUL_ACC(z01,_mm256_set1_pd(av1[1]),_mm256_maskload_pd(wv1+1*n,mask)); if(--prem<=0)break;
     z02=MUL_ACC(z02,_mm256_set1_pd(av1[2]),_mm256_maskload_pd(wv1+2*n,mask)); if(--prem<=0)break;
-    z03=MUL_ACC(z03,_mm256_set1_pd(av1[3]),_mm256_maskload_pd(wv1+3*n,mask)); if(--prem<=0)break;
+    z03=MUL_ACC(z03,_mm256_set1_pd(av1[3]),_mm256_maskload_pd(wv1+3*n,mask));
     av1+=4; wv1+=4*n;  // advance to next columns of a and rows of w
+    if(--prem<=0)break;
    };
+   // advance a to account for the p values processed before breaking out of the last loop
+   av1+=(p&3);
    // combine accumulators & store the result
-   _mm256_maskstore_pd(zv1,mask,_mm256_add_pd(_mm256_add_pd(z00,z01),_mm256_add_pd(z02,z03)));
-   zv1+=n;  // since we go through two rows of a at a time, we must  skip exactly one row at the end
-  }while(--mrem>=0);
+   z00=_mm256_add_pd(_mm256_add_pd(z00,z01),_mm256_add_pd(z02,z03));
+   // do WMINUS if called for
+#define WMZ(wr,wc) {z##wr##wc=_mm256_sub_pd(LD4EXP(wr,wc),z##wr##wc);}
+   if(flgs&FLGWMINUSZ){z00=_mm256_sub_pd(_mm256_maskload_pd(zv1,mask),z00);}
+   _mm256_maskstore_pd(zv1,mask,z00);  // store result
+   zv1+=n;  // advance to next row
+  }while(--mrem);
  }
 }
 // cache-blocking code
@@ -241,8 +239,8 @@ static I cachedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){D c[(CACHEHEIGHT
  __m256d (*cva)[2][OPHEIGHT][CACHEHEIGHT] = (__m256d (*)[2][OPHEIGHT][CACHEHEIGHT])(((I)cvw+(CACHEHEIGHT+1)*CACHEWIDTH*sizeof(D)+(CACHELINESIZE-1))&-CACHELINESIZE);   // place where expanded rows of a are staged
  // Allocate a temporary result area for the stripe of z results
  D *zblock;  // cache-aligned area to hold z values
- {A zt; I zlen=((m+OPHEIGHT)&(-OPHEIGHT))*CACHEWIDTH; zlen=(zlen+CACHELINESIZE/SZD);  // big enough to hold a cache-aligned stripe
-  GATV0(zt,FL,zlen,1); zblock=(D*)(((I)DAV(zt)+CACHELINESIZE-1)&(-CACHELINESIZE));  // take aligned section
+ {A zt; I zlen=((m+OPHEIGHT)&(-OPHEIGHT))*CACHEWIDTH; zlen=(zlen+5*CACHELINESIZE/SZD);  // big enough to hold a cache-aligned stripe
+  GATV0(zt,FL,zlen,1); zblock=(D*)(((I)DAV(zt)+5*CACHELINESIZE-1)&(-CACHELINESIZE));  // take aligned section
  }
  // If a is upper-triangular, we write out the entire column of z values only when we process the last section of the w stripe.  If w is also upper-triangular,
  // we stop processing sections before we get to the bottom.  So in that case (which never happens currently), clear the entire result areas leaving 0 in the untouched bits
@@ -312,7 +310,7 @@ static I cachedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){D c[(CACHEHEIGHT
     // We are guaranteed to initialize each bit of the z stripe exactly once.
     flgs|=(a2rem<=newrowsct)?FLGZFIRST:0;
 
-    // process each 16x8 section of cache, accumulating into z (this holds 16x4 complex values, if FLGCMP)
+    // process each 16x8 section of w, accumulating into z (this holds 16x4 complex values, if FLGCMP)
     I a3rem=MIN(w0rem,CACHEWIDTH);
     D* RESTRICT z3base=z2base; D* c3base=c2base;
     for(;a3rem>0;a3rem-=OPWIDTH,c3base+=OPWIDTH){  // a3rem is the number of row/col products left in this cache block (rows of a, cols of w)
@@ -328,12 +326,8 @@ static I cachedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){D c[(CACHEHEIGHT
       // We guarantee that we do not add to or store a row that does not exist in a, so we don't have to initialize them
       // We have to use masked load at the edges of the array, to make sure we don't fetch from undefined memory.  Fill anything not loaded with 0
       __m256d z00,z01,z10,z11,z20,z21,z30,z31;   // (float) zij has the total for row i col j  (complex) ?
-      if(flgs&FLGZFIRST){z31 = z30 = z21 = z20 = z11 = z10 = z01 = z00 = _mm256_set1_pd(0.0);
-      }else{
-       z00=_mm256_load_pd(zilblock); z01=_mm256_load_pd(zilblock+NPAR); z10=_mm256_load_pd(zilblock+2*NPAR); z11=_mm256_load_pd(zilblock+3*NPAR);  // scaf move these loads earlier
-       z20=_mm256_load_pd(zilblock+4*NPAR); z21=_mm256_load_pd(zilblock+5*NPAR); z30=_mm256_load_pd(zilblock+6*NPAR); z31=_mm256_load_pd(zilblock+7*NPAR);
-      }
-#if 0   // this seems to slow things down with not much gain.  Perhaps they're already there
+      z31 = z30 = z21 = z20 = z11 = z10 = z01 = z00 = _mm256_set1_pd(0.0);  // scaf use xor
+#if 1   // needed if a gets bigger than L2
       // Prefetch the next lines of a into L2 cache.  We don't prefetch all the way to L1 because that might overfill L1,
       // if all the prefetches hit the same cache line (we already have 2 full banks for our cache area, plus the current z values)
       // The a area to fetch is OPHEIGHTxCACHEHEIGHT: the next section of a.  The number of PREFETCH instructions needed for a is OPHEIGHT*(CACHEHEIGHT*sizeof(D)/CACHELINESIZE)+1=4*3; for complex
@@ -342,10 +336,10 @@ static I cachedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){D c[(CACHEHEIGHT
       // For the current sizes, that means one set of prefetches every time
       // We defer the prefetches till here to fill the time between the fetch of z above and the main multiply
       // We don't prefetch z because it is sequentially accessed in zilblock and we will prefetch there if we need it
-      if(1||a3rem<=5*OPWIDTH){  // scaf try without
-       I lineno = ((a3rem)>>OPWIDTHX)&(CACHEWIDTH/OPWIDTH-1);  // iteration number, 0-3  prefer -a3rem
-       D *base = a2base0 + ((lineno>>1)|OPHEIGHT)*p + (lineno&1)*(CACHELINESIZE/SZD);  // address to prefetch from - one full OPHEIGHT block after the current base pointers
-       PREFETCH((C*)base); // PREFETCH((C*)base+CACHELINESIZE);
+      if(a3rem&OPWIDTH){
+       I lineno = ((-a3rem)>>(OPWIDTHX+1))&((CACHEWIDTH>>(OPWIDTHX+1))-1);  // iteration number, 0-3
+       D *base = a2base0 + (lineno+2*OPHEIGHT)*p;  // address to prefetch from - >=1 full OPHEIGHT block after the current base pointers
+       PREFETCH((C*)base); PREFETCH((C*)base+CACHELINESIZE); PREFETCH((C*)base+2*CACHELINESIZE);
       }
 #endif
       // The inner loop.  If everything is inbounds do the whole thing without loops
@@ -354,9 +348,9 @@ static I cachedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){D c[(CACHEHEIGHT
 #define LDW(opno)  wval0=_mm256_load_pd(&c4base[opno*CACHEWIDTH+0]); wval1=_mm256_load_pd(&c4base[opno*CACHEWIDTH+NPAR]);  // opno=outer-product number
 #define ONEP(opno,opx) aval=(*a4base0)[0][opx][opno]; z##opx##0 = MUL_ACC(z##opx##0,wval0,aval); z##opx##1 = MUL_ACC(z##opx##1,wval1,aval);  // opx=a row number=mul# within outer product  could allow compiler to gather commons
 #define OUTERP(opno) LDW(opno) ONEP(opno,0) ONEP(opno,1) ONEP(opno,2) ONEP(opno,3)
-       PREFETCH((C*)zilblock+4*CACHELINESIZE); OUTERP(0) OUTERP(1) PREFETCH((C*)zilblock+5*CACHELINESIZE); OUTERP(2) OUTERP(3) PREFETCH((C*)zilblock+6*CACHELINESIZE); OUTERP(4) OUTERP(5) PREFETCH((C*)zilblock+7*CACHELINESIZE);
-       OUTERP(6) OUTERP(7) OUTERP(8) OUTERP(9) OUTERP(10) OUTERP(11) OUTERP(12) OUTERP(13) OUTERP(14) OUTERP(15)
-// obsolete        OUTERP(0) OUTERP(1) OUTERP(2) OUTERP(3) OUTERP(4) OUTERP(5) OUTERP(6) OUTERP(7) OUTERP(8) OUTERP(9) OUTERP(10) OUTERP(11) OUTERP(12) OUTERP(13) OUTERP(14) OUTERP(15)
+// obsolete        PREFETCH((C*)zilblock+0*CACHELINESIZE); OUTERP(0) OUTERP(1) PREFETCH((C*)zilblock+1*CACHELINESIZE); OUTERP(2) OUTERP(3) PREFETCH((C*)zilblock+2*CACHELINESIZE); OUTERP(4) OUTERP(5) PREFETCH((C*)zilblock+3*CACHELINESIZE);
+// obsolete        OUTERP(6) OUTERP(7) OUTERP(8) OUTERP(9) OUTERP(10) OUTERP(11) OUTERP(12) OUTERP(13) OUTERP(14) OUTERP(15)
+       OUTERP(0) OUTERP(1) OUTERP(2) OUTERP(3) OUTERP(4) OUTERP(5) OUTERP(6) OUTERP(7) OUTERP(8) OUTERP(9) OUTERP(10) OUTERP(11) OUTERP(12) OUTERP(13) OUTERP(14) OUTERP(15)
 // prefetch doesn't seem to help
 
       }else{
@@ -372,10 +366,16 @@ static I cachedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){D c[(CACHEHEIGHT
        }while(--a4rem>0);
       }
 
+      /*if((a3rem|a3rem-1)<1)scaf to disable*/if(!(flgs&FLGZFIRST)){
+#define ACCZ(r,c) z##r##c=_mm256_add_pd(z##r##c,_mm256_load_pd(zilblock+NPAR*(2*r+c)));
+        ACCZ(0,0); ACCZ(0,1); ACCZ(1,0); ACCZ(1,1); ACCZ(2,0); ACCZ(2,1); ACCZ(3,0); ACCZ(3,1);
+      }
+
+// for some reason, storing into z slows down processing by a factor of 2 when m exceeds 500 and n,p are 16 64 - even if we don't load
       if(!(flgs&FLGZLAST)){
        _mm256_store_pd(zilblock,z00); _mm256_store_pd(zilblock+NPAR,z01); _mm256_store_pd(zilblock+2*NPAR,z10); _mm256_store_pd(zilblock+3*NPAR,z11);
        _mm256_store_pd(zilblock+4*NPAR,z20); _mm256_store_pd(zilblock+5*NPAR,z21); _mm256_store_pd(zilblock+6*NPAR,z30); _mm256_store_pd(zilblock+7*NPAR,z31);
-      }else{
+      }else {
         // for the last z pass we have to store into the final result area
        if(a3rem>7){  // no problem horizontally
         _mm256_storeu_pd(z3base,z00); _mm256_storeu_pd(z3base+NPAR,z01);
@@ -628,8 +628,6 @@ F2(jtpdt){PROLOG(0038);A z;I ar,at,i,m,n,p,p1,t,wr,wt;
  if(B01&(at|wt)&&TYPESNE(at,wt)&&((ar-1)|(wr-1)|(AN(a)-1)|(AN(w)-1))>=0)R pdtby(a,w);   // If exactly one arg is boolean, handle separately
  {t=maxtyped(at,wt); if(!TYPESEQ(t,AT(a))){RZ(a=cvt(t,a));} if(!TYPESEQ(t,AT(w))){RZ(w=cvt(t,w));}}  // convert args to compatible precisions, changing a and w if needed.  B01 if both empty
  ASSERT(t&NUMERIC,EVDOMAIN);
- // When w has a single column, we could replace +/ . * with +/@:*"1.  But the special code below is about as fast.
-// if(wr==1&&((ar-1)|(-((AT(a)|AT(w))&(NOUN&~(B01|INT|FL))))|(AN(a)-1)|(AN(w)-1))>=0)R sumattymes1(a,w,0);  // If w is a single column, the matrix-multiply methods give no advantage, so treat it as +/@:*"1.  The long test is to ensure that sumattymes1 does the work, not needing self
  // Allocate result area and calculate loop controls
  // m is # 1-cells of a
  // n is # atoms in an item of w
@@ -637,6 +635,7 @@ F2(jtpdt){PROLOG(0038);A z;I ar,at,i,m,n,p,p1,t,wr,wt;
 
  // INT multiplies convert to float, for both 32- and 64-bit systems.  It is converted back if there is no overflow
  RZ(z=ipprep(a,w,t&B01?INT:t&INT?FL:t,&m,&n,&p));  // allocate the result area, with the needed shape and type
+ if(AN(z)==0)R z;  // return without computing if result is empty
  if(!p){memset(AV(z),C0,AN(z)<<bplg(AT(z))); R z;}  // if dot-products are all 0 length, set them all to 0
  // If either arg is atomic, reshape it to a list
  if(!ar!=!wr){if(ar)RZ(w=reshape(sc(p),w)) else RZ(a=reshape(sc(p),a));}
@@ -762,24 +761,108 @@ oflo2:
     if(m)z=jtsumattymesprods(jt,FL,w,a,p,1,1,1,m,0,z);  // use +/@:*"1 .  Exchange w and a because a is the repeated arg in jtsumattymesprods.  If error, clear z
     smallprob=0;  // Don't compute it again
    }else {
-#if 0  // for TUNEing
-    // if low 2 bits of shared axis are 00, use small; if 01, use medium; if 1x, use large
-    if((p&3)==1){RZ(cachedmmult(jt,DAV(a),DAV(w),DAV(z),m,n,p,0))}
-    else if(p&2){
+#if 0   // for TUNEing
+// %.: 100 .0008, 200 0.005, 500 0.62, 1000 0.4, 10000 285
+// Results 10/2019
+// m n 
+// 2 2  blocked always; smallprob beats cached up to 100000
+// 3 3  blocked always; smallprob beats cached up to 10000
+// 4 4  blocked always; smallprob beats cached up to 200
+// 8 8  blocked always; smallprob beats cached below 20
+// 16 16 blocked always; cached competitive for 5000 and above
+// 24 24 blocked always; cached competitive
+// 28 28 blocked always; cached competitive
+// 32 32 blocked up to 1000, then cached
+// 64 64 blocked up to 52, then cached
+// 128 128 cached
+// 256 256 cached
+// 512 512 cached
+// 768 768 cached
+// 1024 1024 BLAS because cached takes a beating - fix this
+// others cached
+//
+// p n
+// 2 2  blocked always; smallprob beats cached up to 100000
+// 3 3  blocked always; smallprob beats cached up to 100000
+// 4 4  blocked always; smallprob beats cached up to 100000
+// 8 8  blocked; otherwise cached
+// 16 16  blocked; otherwise cached
+// 24 24  blocked; otherwise BLAS
+// 32 32  blocked; otherwise BLAS
+// 64 64  cached till m=500; then blocked till 10000; then BLAS
+// 132 132  cached till m=2000; then BLAS
+// 256 256  cached till m=2000; then BLAS
+// 520 520  cached till m=2000; then BL7AS
+// 1032 1032  cached till m=5000; then BLAS
+// 2056 2056  cached till m=5000; then BLAS
+//
+/*
+NB. y is m,p,n, result is 1 timing value
+time1 =: 3 : 0"1
+rpts =. 10000 <. 5 >. <. 1e9% * / y
+l =. (2 {. y) ?@$ 0
+r =. (_2 {. y) ?@$ 0
+rpts 6!:2 'l +/ . * r'
+)
+*/
+#if 0  // large n, possibly short m p
+/*
+NB. x is m, y is p, we run timings with a range of n for each algorithm
+NB. result is 4 rows, 1 for each algo
+timemp =: 4 : 0
+lens =. (1e10 % x*y) (> # ]) 12 20 52 100 200 500 1000 2000 5000 10000 20000 50000 100000 200000 500000 1000000
+time1 (x,y)&,"0 ((256 1e20 1e20 65536 > x*y) # 0 1 2 3) +/ lens
+)
+*/
+    // if low 2 bits of n are 00, use small; if 01, use cached; if 10, use BLAS; if 11 use blocked
+    smallprob=0;
+    if((n&3)==3){blockedmmult(jt,DAV(a),DAV(w),DAV(z),m,n,p,0);}
+    else if(n&2){
      memset(DAV(z),C0,m*n*sizeof(D));
      dgemm_nn(m,n,p,1.0,DAV(a),p,1,DAV(w),n,1,0.0,DAV(z),n,1);
+    }else if(n&1){RZ(cachedmmult(jt,DAV(a),DAV(w),DAV(z),m,n,p,0))
     }else smallprob=1;
+#else  // large m, possibly short p n
+/*
+NB. x is m, y is p, we run timings with a range of n for each algorithm
+NB. result is 4 rows, 1 for each algo
+timemp =: 4 : 0
+lens =. (1e10 % x*y) (> # ]) 12 20 52 100 200 500 1000 2000 5000 10000 20000 50000 100000 200000 500000 1000000
+time1 ,&(x,y)"0 ((256 1e20 1e20 65536 > x*y) # 0 1 2 3) +/ lens
+)
+*/
+    // if low 2 bits of m are 00, use small; if 01, use cached; if 10, use BLAS; if 11 use blocked
+    smallprob=0;
+    if((m&3)==3){blockedmmult(jt,DAV(a),DAV(w),DAV(z),m,n,p,0);}
+    else if(m&2){
+     memset(DAV(z),C0,m*n*sizeof(D));
+     dgemm_nn(m,n,p,1.0,DAV(a),p,1,DAV(w),n,1,0.0,DAV(z),n,1);
+    }else if(m&1){RZ(cachedmmult(jt,DAV(a),DAV(w),DAV(z),m,n,p,0))
+    }else smallprob=1;
+#endif
+#else
+   // not single column.  Choose the algorithm to use
+#if C_AVX && defined(PREFETCH)
+    smallprob=0;  // never use Dic method
+    if(MAX(m,n)<=32)blockedmmult(jt,DAV(a),DAV(w),DAV(z),m,n,p,0);  // blocked for small arrays
+    //For some reason the cached code runs slow when m*p is large.  It appwars to be related to the stores.  Till we fix it, use BLAS then
+    else if(m*p>1000000){
+     memset(DAV(z),C0,m*n*sizeof(D));
+     dgemm_nn(m,n,p,1.0,DAV(a),p,1,DAV(w),n,1,0.0,DAV(z),n,1);
+    } else RZ(cachedmmult(jt,DAV(a),DAV(w),DAV(z),m,n,p,((AFLAG(a)>>(AFUPPERTRIX-FLGAUTRIX))&FLGAUTRI)|((AFLAG(w)>>(AFUPPERTRIX-FLGWUTRIX))&FLGWUTRI)))
 #else
     I probsize = (m-1)*n*(IL)p;  // This is proportional to the number of multiply-adds.  We use it to select the implementation.  If m==1 we are doing dot-products; no gain from fancy code then
-    if(!(smallprob = probsize<1000LL)){  // if small problem, avoid the startup overhead of the matrix version  TUNE
-     if(probsize < DGEMM_THRES){RZ(cachedmmult(jt,DAV(a),DAV(w),DAV(z),m,n,p,((AFLAG(a)>>(AFUPPERTRIX-FLGAUTRIX))&FLGAUTRI)|((AFLAG(w)>>(AFUPPERTRIX-FLGWUTRIX))&FLGWUTRI)))}  // Do our one-core matrix multiply - real   TUNE this is 160x160 times 160x160.  Tell routine if uppertri
-     else{
-      // If the problem is really big, use BLAS
-      memset(DAV(z),C0,m*n*sizeof(D));
-      dgemm_nn(m,n,p,1.0,DAV(a),p,1,DAV(w),n,1,0.0,DAV(z),n,1);
-     }
-#endif
+    if(!(smallprob = (m<=4||probsize<1000LL))){  // if small problem, avoid the startup overhead of the matrix version  TUNE
+// obsolete      if(probsize < DGEMM_THRES){
+     RZ(cachedmmult(jt,DAV(a),DAV(w),DAV(z),m,n,p,((AFLAG(a)>>(AFUPPERTRIX-FLGAUTRIX))&FLGAUTRI)|((AFLAG(w)>>(AFUPPERTRIX-FLGWUTRIX))&FLGWUTRI)))}  // Do our one-core matrix multiply - real   TUNE this is 160x160 times 160x160.  Tell routine if uppertri
+// obsolete      else{
+// obsolete       // If the problem is really big, use BLAS
+// obsolete       memset(DAV(z),C0,m*n*sizeof(D));
+// obsolete       dgemm_nn(m,n,p,1.0,DAV(a),p,1,DAV(w),n,1,0.0,DAV(z),n,1);
+// obsolete      }
     }
+#endif
+#endif
    }
    // If there was a floating-point error, retry it the old way in case it was _ * 0
    if(smallprob||NANTEST){D c,s,t,*u,*v,*wv,*x,*zv;
@@ -817,6 +900,7 @@ oflo2:
   }
   break;
  }
+auditmemchains();  // scaf
  EPILOG(z);
 }
 

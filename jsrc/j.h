@@ -885,6 +885,23 @@ extern unsigned int __cdecl _clearfp (void);
 #define CACHELINESIZE 64  // size of processor cache line, in case we align to it
 
 
+// flags in call to cachedmmult and blockedmmult
+#define FLGCMPX 0
+#define FLGCMP ((I)1<<FLGCMPX)  // arguments are complex
+#define FLGAUTRIX 1
+#define FLGAUTRI ((I)1<<FLGAUTRIX)  // left arg is upper-triangular
+#define FLGWUTRIX 2
+#define FLGWUTRI ((I)1<<FLGWUTRIX)  // left arg is upper-triangular
+#define FLGINTX 3
+#define FLGINT ((I)1<<FLGINTX)  // args are INT
+#define FLGZFIRSTX 4
+#define FLGZFIRST ((I)1<<FLGZFIRSTX)  // first pass of the Z values, use 0
+#define FLGZLASTX 5
+#define FLGZLAST ((I)1<<FLGZLASTX)  // last pass of the Z values, write to output
+#define FLGWMINUSZX 6
+#define FLGWMINUSZ ((I)1<<FLGWMINUSZX)  // calculate z-x*y rather than x*y.  Used by %.
+
+
 
 #include "ja.h" 
 #include "jc.h" 

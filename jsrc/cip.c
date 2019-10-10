@@ -127,15 +127,15 @@ void blockedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){
  //   do it all again, under mask
  // 
 #define INITTO0(reg) _mm256_set1_pd(0.0)   // should be _mm256_xor_pd(reg,reg)  but compiler complains
-#define LD4EXP(wr,wc) _mm256_load_pd(wv1+wr*n+wc*NPAR)
+#define LD4EXP(wr,wc) _mm256_loadu_pd(wv1+(wr)*n+(wc)*NPAR)
 #define LD4(wr,wc) wt=LD4EXP(wr,wc);
-#define ST1(wr,wc) _mm256_storeu_pd(zv1+wr*n+wc*NPAR,z##wr##wc);
+#define ST1(wr,wc) _mm256_storeu_pd(zv1+(wr)*n+(wc)*NPAR,z##wr##wc);
 #define ST2(wc) {ST1(0,wc) ST1(1,wc)}
 #define MUL2x4(wr,wc,ldm) {ldm(wr,wc) z0##wc=MUL_ACC(z0##wc,a0,wt); z1##wc=MUL_ACC(z1##wc,a1,wt);}  // (wr,wc) is multiplied by a0,:a1
-#define MUL2x16r(nc,ac,ldm) {a0=_mm256_set1_pd(av1[0+ac]); a1=_mm256_set1_pd(av1[p+ac]); MUL2x4(ac,0,ldm) if(nc>1)MUL2x4(ac,1,ldm) if(nc>2)MUL2x4(ac,2,ldm) if(nc>3)MUL2x4(ac,3,ldm)}  // ac is col of a=row of w
-#define MUL2x16(nr,nc,ldm) {MUL2x16r(nc,0,ldm) if(nr>1)MUL2x16r(nc,1,ldm)}
+#define MUL2x16r(nc,ac,ldm) {a0=_mm256_set1_pd(av1[0+(ac)]); a1=_mm256_set1_pd(av1[p+(ac)]); MUL2x4(ac,0,ldm) if(nc>1)MUL2x4(ac,1,ldm) if(nc>2)MUL2x4(ac,2,ldm) if(nc>3)MUL2x4(ac,3,ldm)}  // ac is col of a=row of w
+#define MUL2x16(nr,nc,ldm) {MUL2x16r(nc,0,ldm) if((nr)>1)MUL2x16r(nc,1,ldm)}
 #define MUL1x4(wr,wc,ldm) {ldm(wr,wc) z0##wc=MUL_ACC(z0##wc,a0,wt);}  // (wr,wc) is multiplied by a0
-#define MUL1x16(nc,ldm) {a0=_mm256_set1_pd(av1[0]); MUL1x4(0,0,ldm) if(nc>1)MUL1x4(0,1,ldm) if(nc>2)MUL1x4(0,2,ldm) if(nc>3)MUL1x4(0,3,ldm)}  // ac is col of a=row of w
+#define MUL1x16(nc,ldm) {a0=_mm256_set1_pd(av1[0]); MUL1x4(0,0,ldm) if((nc)>1)MUL1x4(0,1,ldm) if((nc)>2)MUL1x4(0,2,ldm) if((nc)>3)MUL1x4(0,3,ldm)}  // ac is col of a=row of w
 #define WMZ(wr,wc) {z##wr##wc=_mm256_sub_pd(LD4EXP(wr,wc),z##wr##wc);}
  I nrem=n;  // number of columns left
  while(nrem>=NPAR){  // do 1x4s as long as possible.  The load bandwidth is twice as high
@@ -760,7 +760,7 @@ oflo2:
    if(n==1){
     if(m)z=jtsumattymesprods(jt,FL,w,a,p,1,1,1,m,0,z);  // use +/@:*"1 .  Exchange w and a because a is the repeated arg in jtsumattymesprods.  If error, clear z
     smallprob=0;  // Don't compute it again
-   }else {
+   }else{
 #if 0   // for TUNEing
 // %.: 100 .0008, 200 0.005, 500 0.62, 1000 0.4, 10000 285
 // Results 10/2019
@@ -843,18 +843,29 @@ time1 ,&(x,y)"0 ((256 1e20 1e20 65536 > x*y) # 0 1 2 3) +/ lens
 #else
    // not single column.  Choose the algorithm to use
 #if C_AVX && defined(PREFETCH)
+#define MAXAROWS 512  // max rows of a that we cab process to stay in L2 cache
     smallprob=0;  // never use Dic method
-    if(MAX(m,n)<=32)blockedmmult(jt,DAV(a),DAV(w),DAV(z),m,n,p,0);  // blocked for small arrays
-    //For some reason the cached code runs slow when m*p is large.  It appwars to be related to the stores.  Till we fix it, use BLAS then
-    else if(m*p>1000000){
-     memset(DAV(z),C0,m*n*sizeof(D));
-     dgemm_nn(m,n,p,1.0,DAV(a),p,1,DAV(w),n,1,0.0,DAV(z),n,1);
-    } else RZ(cachedmmult(jt,DAV(a),DAV(w),DAV(z),m,n,p,((AFLAG(a)>>(AFUPPERTRIX-FLGAUTRIX))&FLGAUTRI)|((AFLAG(w)>>(AFUPPERTRIX-FLGWUTRIX))&FLGWUTRI)))
+    D *av=DAV(a), *wv=DAV(w), *zv=DAV(z);  //  pointers to sections
+    I flgs=((AFLAG(a)>>(AFUPPERTRIX-FLGAUTRIX))&FLGAUTRI)|((AFLAG(w)>>(AFUPPERTRIX-FLGWUTRIX))&FLGWUTRI);  // flags from 
+    if((m|n)<32)blockedmmult(jt,av,wv,zv,m,n,p,flgs);  // blocked for small arrays in either dimenion
+    else {
+     // if m is very large, the buffer used to hold result values, and the strip of a values, become so large that they exceed L2 cache; and the bandwidth needed
+     // for the zs is more than L3 can supply.  So we chop up the a argument.
+     I mrem;  // number of rows left
+     for(mrem=m;mrem>0;mrem-=MAXAROWS){
+// obsolete      memset(DAV(z),C0,m*n*sizeof(D));
+// obsolete      dgemm_nn(m,n,p,1.0,DAV(a),p,1,DAV(w),n,1,0.0,DAV(z),n,1);
+      if(mrem<32)blockedmmult(jt,av,wv,zv,mrem,n,p,flgs);  // blocked for small remnant
+      else RZ(cachedmmult(jt,av,wv,zv,MIN(MAXAROWS,mrem),n,p,flgs))
+      av+=MAXAROWS*p; zv+=MAXAROWS*n;  // advance to next horizontal swath
+      flgs=0;  // no Tri flags after first section
+     }
+    }
 #else
     I probsize = (m-1)*n*(IL)p;  // This is proportional to the number of multiply-adds.  We use it to select the implementation.  If m==1 we are doing dot-products; no gain from fancy code then
     if(!(smallprob = (m<=4||probsize<1000LL))){  // if small problem, avoid the startup overhead of the matrix version  TUNE
 // obsolete      if(probsize < DGEMM_THRES){
-     RZ(cachedmmult(jt,DAV(a),DAV(w),DAV(z),m,n,p,((AFLAG(a)>>(AFUPPERTRIX-FLGAUTRIX))&FLGAUTRI)|((AFLAG(w)>>(AFUPPERTRIX-FLGWUTRIX))&FLGWUTRI)))}  // Do our one-core matrix multiply - real   TUNE this is 160x160 times 160x160.  Tell routine if uppertri
+     RZ(cachedmmult(jt,DAV(a),DAV(w),DAV(z),m,n,p,((AFLAG(a)>>(AFUPPERTRIX-FLGAUTRIX))&FLGAUTRI)|((AFLAG(w)>>(AFUPPERTRIX-FLGWUTRIX))&FLGWUTRI)))  // Do our one-core matrix multiply - real   TUNE this is 160x160 times 160x160.  Tell routine if uppertri
 // obsolete      else{
 // obsolete       // If the problem is really big, use BLAS
 // obsolete       memset(DAV(z),C0,m*n*sizeof(D));

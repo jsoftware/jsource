@@ -911,7 +911,6 @@ time1 ,&(x,y)"0 ((256 1e20 1e20 65536 > x*y) # 0 1 2 3) +/ lens
   }
   break;
  }
-auditmemchains();  // scaf
  EPILOG(z);
 }
 

@@ -598,6 +598,7 @@ extern A virtifnonip(J jt, I ipok, A buf);
 #endif
 extern A        jtassembleresults(J,I, A, A,A*,I,I,I,A,I,I,I);
 extern void     audittstack(J);
+extern void     blockedmmult(J,D*,D*,D*,I,I,I,I);
 extern A        jtac1(J,AF);
 extern A        jtac2(J,AF);
 extern B        jtadd2(J,F,F,C*);
@@ -796,7 +797,7 @@ extern F        jtstdf(J,A);
 extern A        jtstfind(J,I,C*,I);
 extern A        jtstfindcre(J,I,C*,I);
 extern A        jtstr(J,I,C*);
-extern A        jtsumattymesprods(J,I,A,A,I,I,I,I,I,I,A);
+extern I        jtsumattymesprods(J,I,void *,void *,I,I,I,I,I,void *);
 extern B        jtsymbinit(J);
 extern L*       jtsymbis(J,A,A,A);
 extern L*       jtsymbisdel(J,A,A,A);

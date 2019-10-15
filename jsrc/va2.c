@@ -742,12 +742,12 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
 // If there is inner frame, it is the a arg that is repeated
 // LIT is set in it if it is OK to use 2x2 operations (viz a has no inner frame & w has no outer frame)
 #define SUMATLOOP2(ti,to,oneprod2,oneprod1) \
-  {ti * RESTRICT av=ti##AV(a),* RESTRICT wv=ti##AV(w); to * RESTRICT zv=to##AV(z); \
+  {ti * RESTRICT av=avp,* RESTRICT wv=wvp; to * RESTRICT zv=zvp; \
    __m256i endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-dplen)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
    __m256d acc000; __m256d acc010; __m256d acc100; __m256d acc110; \
    __m256d acc001; __m256d acc011; __m256d acc101; __m256d acc111; \
    _mm256_zeroupper(VOIDARG); \
-   DQ(nfro, I jj=nfri; ti *ov0=repeata?av:wv; \
+   DQ(nfro, I jj=nfri; ti *ov0=it&BOX?av:wv; \
     while(1){  \
      DQ(ndpo, I j=ndpi; ti *av0=av; /* i is how many a's are left, j is how many w's*/ \
       while(1){ \
@@ -767,20 +767,20 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
       if(it&LIT&&jj>1){--i; av+=dplen; zv+=ndpi;} \
      ) \
      if((jj-=(((it&LIT)>>1)+1))<=0)break; \
-     if(repeata)av=ov0;else wv=ov0; \
+     if(it&BOX)av=ov0;else wv=ov0; \
     } \
    ) \
   }
 
 #define SUMATLOOP(ti,to,oneprod) \
-  {ti * RESTRICT av=ti##AV(a),* RESTRICT wv=ti##AV(w); to * RESTRICT zv=to##AV(z); \
-   DQ(nfro, I jj=nfri; ti *ov0=repeata?av:wv; \
+  {ti * RESTRICT av=avp,* RESTRICT wv=wvp; to * RESTRICT zv=zvp; \
+   DQ(nfro, I jj=nfri; ti *ov0=it&BOX?av:wv; \
     while(1){  \
      DQ(ndpo, I j=ndpi; ti *av0=av; /* i is how many a's are left, j is how many w's*/ \
       while(1){oneprod if(!--j)break; av=av0;} \
      ) \
      if(!--jj)break; \
-     if(repeata)av=ov0;else wv=ov0; } \
+     if(it&BOX)av=ov0;else wv=ov0; } \
    ) \
   }
 
@@ -899,10 +899,11 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
 // ndpo is */ inner frame of w, i. e. the number of times to repeat the inner loop
 // nfri is the number of times to repeat the short-frame operand for the outer loop
 // nfri is */ surplus outer frame
-// repeata is set if a has the shorter outer frame
+// it&BOX is set if a has the shorter outer frame
 // w is never repeated in the inner loop (i. e. you can have multiple w but not multiple a; exchange args to ensure this
 // if LIT is set in it, it is OK to use 2x2 operations (viz inner frame of a and outer frame of w are empty)
-A jtsumattymesprods(J jt,I it,A a, A w,I dplen,I nfro,I nfri,I ndpo,I ndpi,I repeata,A z){
+// 'repeata' flag comes from it&BOX
+I jtsumattymesprods(J jt,I it,void *avp, void *wvp,I dplen,I nfro,I nfri,I ndpo,I ndpi,void *zvp){
  if(it&FL){
   NAN0;
 #if C_AVX
@@ -980,7 +981,7 @@ ONEPRODAVXD1(D1,CELL1X1M,CELL1X1L)
    *zv++=total;
   )
  }
- RETF(z);
+ RETF(1);
 }
 
 
@@ -1027,7 +1028,7 @@ DF2(jtsumattymes1){
 
  A z; 
  // if there is frame, create the outer loop values
- I nfro,nfri,repeata;  // outer loop counts, and which arg is repeated
+ I nfro,nfri;  // outer loop counts, and which arg is repeated
  if(((ar-acr)|(wr-wcr))==0){  // normal case
   nfro=nfri=1;  // no outer loops, repeata immaterial
   GA(z,FL>>(it&B01),ndpo*ndpi,wcr-1,AS(w));  // type is INT if inputs booleans, otherwise FL
@@ -1035,7 +1036,7 @@ DF2(jtsumattymes1){
   // There is frame, analyze and check it
   I af=ar-acr; I wf=wr-wcr; I commonf=wf; I *as=AS(a), *ws=AS(w); I *longs=as;
   it|=(ndpo==1)>wf?LIT:0;  // if there is no inner frame for a, and no outer frame for w, signal OK to use 2x2 multiplies.  Mainly this is +/@:*"1/
-  repeata=wf>=af; commonf=wf>=af?af:commonf; longs=wf>=af?ws:longs;  // repeat flag, length of common frame, pointer to long shape
+  commonf=wf>=af?af:commonf; longs=wf>=af?ws:longs; it|=wf>=af?BOX:0;  // repeat flag, length of common frame, pointer to long shape
   af+=wf; af-=2*commonf;  // repurpose af to be length of surplus frame
   ASSERTAGREE(as,ws,commonf)  // verify common frame
   PROD(nfri,af,longs+commonf); PROD(nfro,commonf,longs);   // number of outer loops, number of repeats
@@ -1045,8 +1046,8 @@ DF2(jtsumattymes1){
   MCISH(zs,longs,af+commonf); MCISH(zs+af+commonf,ws+wr-wcr,wcr-1);
  }
 
-
- RETF(jtsumattymesprods(jt,it,a,w,dplen,nfro,nfri,ndpo,ndpi,repeata,z));
+ RZ(jtsumattymesprods(jt,it,voidAV(a),voidAV(w),dplen,nfro,nfri,ndpo,ndpi,voidAV(z)));  // eval, check for error
+ RETF(z);
 }
 
 

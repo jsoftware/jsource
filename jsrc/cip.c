@@ -7,9 +7,9 @@
 #include "vasm.h"
 #include "gemm.h"
 
-#define IGEMM_THRES  5000000     // integer threshold
-#define DGEMM_THRES  5000000     // real threshold
-#define ZGEMM_THRES  2000000     // complex threshold
+#define IGEMM_THRES  5000000     // when m*n*p less than this use cached; when higher, use BLAS   scaf must TUNE this
+#define DCACHED_THRES  (64*64*64)    // when m*n*p less than this use blocked; when higher, use cached
+#define ZGEMM_THRES  2000000     // when m*n*p less than this use cached; when higher, use BLAS  
 
 // Analysis for inner product
 // a,w are arguments
@@ -114,6 +114,7 @@ void blockedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){
  // Since we sometimes use 128-bit instructions in other places, make sure we don't get stuck in slow state
  _mm256_zeroupper();
  __m256d z00=_mm256_set1_pd(0.0); // set here to avoid warnings
+ // handle small mx2 separately
  //  for(each pair of rows of a)
  //   for(each pair of rows of w)
  //    take product of 2x2 of a with 2x16 of w, producing 2x16 result, accumulated
@@ -127,8 +128,8 @@ void blockedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){
  //   do it all again, under mask
  // 
 #define INITTO0(reg) _mm256_set1_pd(0.0)   // should be _mm256_xor_pd(reg,reg)  but compiler complains
-#define LD4EXP(wr,wc) _mm256_loadu_pd(wv1+(wr)*n+(wc)*NPAR)
-#define LD4(wr,wc) wt=LD4EXP(wr,wc);
+#define LD4EXP(wr,wc,base) _mm256_loadu_pd(base+(wr)*n+(wc)*NPAR)
+#define LD4(wr,wc) wt=LD4EXP(wr,wc,wv1);
 #define ST1(wr,wc) _mm256_storeu_pd(zv1+(wr)*n+(wc)*NPAR,z##wr##wc);
 #define ST2(wc) {ST1(0,wc) ST1(1,wc)}
 #define MUL2x4(wr,wc,ldm) {ldm(wr,wc) z0##wc=MUL_ACC(z0##wc,a0,wt); z1##wc=MUL_ACC(z1##wc,a1,wt);}  // (wr,wc) is multiplied by a0,:a1
@@ -136,14 +137,36 @@ void blockedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){
 #define MUL2x16(nr,nc,ldm) {MUL2x16r(nc,0,ldm) if((nr)>1)MUL2x16r(nc,1,ldm)}
 #define MUL1x4(wr,wc,ldm) {ldm(wr,wc) z0##wc=MUL_ACC(z0##wc,a0,wt);}  // (wr,wc) is multiplied by a0
 #define MUL1x16(nc,ldm) {a0=_mm256_set1_pd(av1[0]); MUL1x4(0,0,ldm) if((nc)>1)MUL1x4(0,1,ldm) if((nc)>2)MUL1x4(0,2,ldm) if((nc)>3)MUL1x4(0,3,ldm)}  // ac is col of a=row of w
-#define WMZ(wr,wc) {z##wr##wc=_mm256_sub_pd(LD4EXP(wr,wc),z##wr##wc);}
+#define WMZ(wr,wc) {z##wr##wc=_mm256_sub_pd(LD4EXP(wr,wc,zv1),z##wr##wc);}
+ // Handle the special case where a is small, mx2 m<=4.  We MUST do this because %. expects to be able operate on w inplace when m is 2x2.  We want to do this because
+ // it reduces the inner-loop overhead.
  I nrem=n;  // number of columns left
+ if(((p-2)|(p-m))==0){  // m=p=2
+  // m is 2x2.  preload it, then read pairs of inputs to produce pairs of outputs.  Must allow inplace ops
+  D *wv1=wv, *zv1=zv;  // scan pointer through row-pairs of w and z (which may be the same)
+  __m256d z10, a00=_mm256_set1_pd(av[0]), a01=_mm256_set1_pd(av[1]), a10=_mm256_set1_pd(av[2]), a11=_mm256_set1_pd(av[3]);
+  while(nrem>NPAR){  // guarantee nonempty remnant
+   __m256d w0=_mm256_loadu_pd(wv1), w1=_mm256_loadu_pd(wv1+n);
+   z00=_mm256_mul_pd(a00,w0); z00=MUL_ACC(z00,a01,w1); z10=_mm256_mul_pd(a10,w0); z10=MUL_ACC(z10,a11,w1);
+   if(flgs&FLGWMINUSZ){WMZ(0,0) WMZ(1,0)}  // handle WMINUSZ, used for next-to-last bit of %.
+   ST2(0)  // (over?)write the result
+   wv1+=NPAR; zv1+=NPAR; nrem-=NPAR;  // advance to next strip of w/z
+  }
+  // handle the remnant, which is never empty (to avoid branch misprediction)
+  __m256i mask;  // horizontal mask for w values
+  mask=_mm256_loadu_si256((__m256i*)(jt->validitymask+3-((nrem-1)&(NPAR-1))));  // nrem { x 1 2 3 4 x x x
+  __m256d w0=_mm256_maskload_pd(wv1,mask), w1=_mm256_maskload_pd(wv1+n,mask);
+  z00=_mm256_mul_pd(a00,w0); z00=MUL_ACC(z00,a01,w1); z10=_mm256_mul_pd(a10,w0); z10=MUL_ACC(z10,a11,w1);
+  if(flgs&FLGWMINUSZ){WMZ(0,0) WMZ(1,0)}  // handle WMINUSZ, used for next-to-last bit of %.
+  _mm256_maskstore_pd(zv1,mask,z00);_mm256_maskstore_pd(zv1+n,mask,z10);
+  R;
+ }
  while(nrem>=NPAR){  // do 1x4s as long as possible.  The load bandwidth is twice as high
   // create mx16 strip of result
   I mrem=m;  // number of rows of a left
   D *av1=av;  // scan pointer through a values, by cols then by rows, i. e. incrementing
   D *zv1=zv;  // output pointer down the column
-  for(--mrem;mrem>0;mrem-=2){  // bias merem down 1, so <=0 if no pairs; do each pair
+  for(--mrem;mrem>0;mrem-=2){  // bias mrem down 1, so <=0 if no pairs; do each pair
    // create 2x16 section of result
    I prem=p;  // number of cols of a/rows of w to be accumulated into one 2x16 result
    z00=INITTO0(z00); __m256d z01=z00,  z02=z00, z03=z00, z10=z00, z11=z00, z12=z00, z13=z00;
@@ -211,7 +234,6 @@ void blockedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){
    // combine accumulators & store the result
    z00=_mm256_add_pd(_mm256_add_pd(z00,z01),_mm256_add_pd(z02,z03));
    // do WMINUS if called for
-#define WMZ(wr,wc) {z##wr##wc=_mm256_sub_pd(LD4EXP(wr,wc),z##wr##wc);}
    if(flgs&FLGWMINUSZ){z00=_mm256_sub_pd(_mm256_maskload_pd(zv1,mask),z00);}
    _mm256_maskstore_pd(zv1,mask,z00);  // store result
    zv1+=n;  // advance to next row
@@ -695,7 +717,7 @@ oflo1:
     AT(z)=INT; break;
 oflo2:
     // Result does not fit in INT.  Do the computation as float, with float result
-    if(m)z=jtsumattymesprods(jt,INT,w,a,p,1,1,1,m,0,z);  // use +/@:*"1 .  Exchange w and a because a is the repeated arg in jtsumattymesprods.  If error, clear z (should not happen here)
+    if(m)RZ(jtsumattymesprods(jt,INT,voidAV(w),voidAV(a),p,1,1,1,m,voidAV(z)));  // use +/@:*"1 .  Exchange w and a because a is the repeated arg in jtsumattymesprods.  If error, clear z (should not happen here)
    }else{
      // full matrix products
      I probsize = m*n*(IL)p;  // This is proportional to the number of multiply-adds.  We use it to select the implementation
@@ -758,7 +780,7 @@ oflo2:
    // As for INT, handle the cases where n=1 separately, because they are used internally & don't require as much setup as matrix multiply
    NAN0;
    if(n==1){
-    if(m)z=jtsumattymesprods(jt,FL,w,a,p,1,1,1,m,0,z);  // use +/@:*"1 .  Exchange w and a because a is the repeated arg in jtsumattymesprods.  If error, clear z
+    if(m)RZ(jtsumattymesprods(jt,FL,voidAV(w),voidAV(a),p,1,1,1,m,voidAV(z)));  // use +/@:*"1 .  Exchange w and a because a is the repeated arg in jtsumattymesprods.  If error, clear z
     smallprob=0;  // Don't compute it again
    }else{
 #if 0   // for TUNEing
@@ -843,11 +865,12 @@ time1 ,&(x,y)"0 ((256 1e20 1e20 65536 > x*y) # 0 1 2 3) +/ lens
 #else
    // not single column.  Choose the algorithm to use
 #if C_AVX && defined(PREFETCH)
-#define MAXAROWS 512  // max rows of a that we cab process to stay in L2 cache
+#define MAXAROWS 512  // max rows of a that we can process to stay in L2 cache
     smallprob=0;  // never use Dic method
     D *av=DAV(a), *wv=DAV(w), *zv=DAV(z);  //  pointers to sections
-    I flgs=((AFLAG(a)>>(AFUPPERTRIX-FLGAUTRIX))&FLGAUTRI)|((AFLAG(w)>>(AFUPPERTRIX-FLGWUTRIX))&FLGWUTRI);  // flags from 
-    if((m|n)<32)blockedmmult(jt,av,wv,zv,m,n,p,flgs);  // blocked for small arrays in either dimenion
+    I flgs=((AFLAG(a)>>(AFUPPERTRIX-FLGAUTRIX))&FLGAUTRI)|((AFLAG(w)>>(AFUPPERTRIX-FLGWUTRIX))&FLGWUTRI);  // flags from a or w
+    // use blocked if any axis is short, or if all axes are shortish
+    if(((50-m)&(50-n)&(16-p)&(DCACHED_THRES-m*n*p))>=0)blockedmmult(jt,av,wv,zv,m,n,p,flgs);  // blocked for small arrays in either dimension
     else {
      // if m is very large, the buffer used to hold result values, and the strip of a values, become so large that they exceed L2 cache; and the bandwidth needed
      // for the zs is more than L3 can supply.  So we chop up the a argument.

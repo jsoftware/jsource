@@ -101,27 +101,78 @@ static F1(jtqrr){PROLOG(0067);A a1,q,q0,q1,r,r0,r1,t,*tv,t0,t1,y,z;I m,n,p,*s;
 // q is the ADJOINT of the original q matrix
 // result is adjoint of the L in LQ decomp, therefore upper-triangular
 static F1(jtltqip){PROLOG(0067);A l0,l1,y,z;
- RZ(w);
- A q0; fauxblock(virtwq0);
+#if C_AVX
+ D ipa[8], *ipv;
+#endif
+RZ(w);
+ A q0; fauxblock(virtwq0); D *w0v=DAV(w);  // q0 & q1 data
  I rw=AS(w)[0]; I cl=AS(w)[1];  // # rows, # columns
- if(rw<=1){  // just 1 row
-  // Use a faux-virtual block to take the norm of w, so that we leave w inplaceable for when we normalize it in place
-  fauxvirtual(q0,virtwq0,w,1,ACUC1); AS(q0)[0]=cl; AN(q0)=cl;  // kludge use sumattymesprod to create a table result directly
-  A t; RZ(t=norm(q0));  // norm of row
-  ASSERT(!equ(t,num[0]),EVDOMAIN);  // norm must not be 0
-// obsolete  RZ(q=divide(w,t));
-  A z; RZ(z=tymesA(w,recip(t))); verifyinplace(w,z);
-  RZ(t=table(t)); realizeifvirtual(t); R t; // this is real, so it is also the adjoint of L
+  // handle case of 2 rows
+ if(rw<=2) {
+#if C_AVX
+  if(rw==2 && AT(w)&FL){
+   // We calculate the 2-row case rather than recurring to handle the rows individually, because we can keep the multipliers busy
+   // Let Pij be the inner product of row i and row j.  Then
+   // q0 = w0 / sqrt(P00)
+   // q1 =  (w1 - w1.q0 q0) / sqrt ((w1 - w1.q0 q0).(w1 - w1.q0 q0))
+   //   = (w1 - (P01/P00)w0) / sqrt((w1 - (P01/P00)w0).(w1 - (P01/P00)w0))
+   //   = (w1 - (P01/P00)w0) / sqrt(P11 - 2*(P01^2)/P00) + (P01^2)/P00)
+   //   = (w1 - (P01/P00)w0) / sqrt(P11 - (P01^2)/P00)
+   // Letting S0=1/sqrt(00) and S1=1/sqrt(P11 - (P01^2)/P00) = sqrt(P00)/sqrt(det)
+   // q0 = w0 * S0
+   // q1 = w0 * -(P01/P00)S1  +  w1 * S1
+   // We could calculate the Ps quicker by noticing the symmetry, i. e. the fact that the operands are the same
+   RZ(jtsumattymesprods(jt,FL|LIT,w0v,w0v,cl,1,2,1,2,ipa));  // calculate Pij, 2 at a time
+   // The L* result is
+   // sqrt(P00)   P01/sqrt(P00)
+   // 0           sqrt(P11 - (P01^2)/P00)
+   GAT0(y,FL,4,2); AS(y)[0]=AS(y)[1]=2; D *yv=DAV(y);
+   D P00=ipa[0]; D P01=ipa[1]; D P11=ipa[3]; D R00=sqrt(P00); D det=P00*P11 - P01*P01;
+   ipa[0]=(1/R00); ipa[1]=0; ipa[2]=-P01*(1/R00)*(1/sqrt(det)); ipa[3]=R00*(1/sqrt(det));  // as above
+   yv[0]=R00; yv[1]=P01*(1/R00); yv[2]=0; yv[3]=sqrt(det)*(1/R00);  // as above
+   blockedmmult(jt,ipa,w0v,w0v,2,cl,2,0); // w1 - (w1 q0*) q0, in place    scaf NaN?
+   RETF(y);
+  }
+#endif
+  // If not FL length 2, handle any length 1
+  if(rw<=1){  // just 1 row
+   // Use a faux-virtual block to take the norm of w, so that we leave w inplaceable for when we normalize it in place
+   fauxvirtual(q0,virtwq0,w,1,ACUC1); AS(q0)[0]=cl; AN(q0)=cl;  // kludge use sumattymesprod to create a table result directly
+   A t; RZ(t=norm(q0));  // norm of row
+   ASSERT(!equ(t,num[0]),EVDOMAIN);  // norm must not be 0
+ // obsolete  RZ(q=divide(w,t));
+   A z; RZ(z=tymesA(w,recip(t))); verifyinplace(w,z);
+   RZ(t=table(t)); realizeifvirtual(t); R t; // this is real, so it is also the adjoint of L
+  }
  }
+ // continue for blocks that must be subdivided
  I m=rw>>1; I tom=(0x01222100>>((rw&7)<<2))&3; m=(m+tom<rw)?m+tom:m;  // Minimize number of wasted multiply slots, processing in batches of 4
  // construe w as w0 w1
- fauxvirtual(q0,virtwq0,w,2,ACUC1|ACINPLACE); AS(q0)[0]=m; AS(q0)[1]=cl; AN(q0)=m*cl; 
+ fauxvirtual(q0,virtwq0,w,2,ACUC1|ACINPLACE); AS(q0)[0]=m; AS(q0)[1]=cl; AN(q0)=m*cl;
  RZ(l0=jtltqip(jt,q0));  // form q0 in place, return l0
  A q1; fauxblock(virtwq1);  fauxvirtual(q1,virtwq1,w,2,ACUC1|ACINPLACE); AK(q1)+=(m*cl)<<bplg(AT(w)); AS(q1)[0]=rw-m; AS(q1)[1]=cl; AN(q1)=(rw-m)*cl; 
- RZ(y=pdt(q1,conjug(cant1(q0))));  // w1 q0*   n-mxpxm
- RZ(z=minusA(q1,pdt(y,q0))); verifyinplace(q1,z);   // w1 - (w1 q0*) q0   n-mxmxp
+ // calculate w1 - (w1 q0*) q0
+#if C_AVX
+ if(AT(w)&FL && (m<50 || m*m*cl<(64*64*64))){
+  // floating-point w that isn't larger than L2 cache.  (1) use inner-products to calculate w1 q0* (2) use blockedmmult to calculate final product
+  if((m*(rw-m))>(sizeof(ipa)/sizeof(ipa[0]))){
+   GATV0(y,FL,m*(rw-m),2); ipv=DAV(y);
+  }else{  // avoid allocating short y
+   ipv=ipa; y=q0; AN(y)=m*(rw-m); AK(y)=(C*)ipa-(C*)y;
+  }
+  AS(y)[0]=rw-m; AS(y)[1]=m;  // now AS and AN are set in y.  q0 has been repurposed.
+  D *w1v=DAV(q1);  // addr of w1, same over calls
+  RZ(jtsumattymesprods(jt,FL|LIT,w1v,w0v,cl,1,rw-m,1,m,ipv));  // w1 q0*, into ipv is rw-m x cl x m
+  blockedmmult(jt,ipv,w0v,w1v,rw-m,cl,m,FLGWMINUSZ); // w1 - (w1 q0*) q0, in place    scaf NaN?
+ }else{
+#else
+ {
+#endif
+  // general case for all types
+  RZ(y=pdt(q1,conjug(cant1(q0))));  // w1 q0*   n-mxpxm
+  RZ(z=minusA(q1,pdt(y,q0))); verifyinplace(q1,z);   // w1 - (w1 q0*) q0   n-mxmxp
+ }
  RZ(l1=jtltqip(jt,q1));  //  get QR of   w1 - (w1 q0*) q0  
-// obsolete  RZ(z=over(stitch(l0,conjug(cant1(y))),take(v2(rw-m,-rw),l1)));  // create result as L*, which is upper-tri
  // copy in the pieces, line by line
  I leftlen = m<<bplg(AT(w)); I rightlen=(rw-m)<<bplg(AT(w));
  GA(z,AT(w),rw*rw,2,AS(w)); AS(z)[1]=rw; void *zr=voidAV(z);  // allocate result, set pointer to output
@@ -135,7 +186,7 @@ static F1(jtltqip){PROLOG(0067);A l0,l1,y,z;
  // l* is   l0*    (w1 q0*)*
  //         0      (L of w1 - (w1 q0*) q0)*
  // lq is  l0 q0
-//         (w1 q0*) q0 + (L of w1 - (w1 q0*) q0)(Q of w1 - (w1 q0*) q0)
+ //        (w1 q0*) q0 + (L of w1 - (w1 q0*) q0)(Q of w1 - (w1 q0*) q0)
  // = w
  AFLAG(z)|=AFUPPERTRI; // Mark result as upper-triangular in case we multiply a matrix by it
  EPILOG(z);

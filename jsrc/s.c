@@ -542,7 +542,7 @@ L* jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;L*e;
   }
  }
  e->sn=jt->slisti;  // Save the script in which this name was defined
- if(jt->stch&&(m<n||jt->locsyms!=g&&jt->stloc!=g))e->flag|=LCH;  // update 'changed' flag if enabled, and locative or assignment to global namespace   scaf make this unconditional
+ if(jt->stch&&(m<n||jt->locsyms!=g&&jt->stloc!=g))e->flag|=LCH;  // update 'changed' flag if enabled, and locative or assignment to global namespace
  R e;   // return the block for the assignment
 }    /* a: name; w: value; g: symbol table */
 

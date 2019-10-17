@@ -13,6 +13,17 @@ _946684800000000000 = efs '1970-01-01' NB. negative for nanoseconds before 2000
 IMIN = efs '1700'    NB. before 1800 is invalid
 IMIN = efs '2300'    NB. after  2200 is invalid
 IMIN = efs '????'    NB. canonical invalid date rather than error
+IMIN = efs '2000-00-01'
+IMIN = efs '2000-13-01'
+IMIN = efs '2000-01-00'
+IMIN = efs '2000-01-32'
+IMIN = efs '2000-01-01T25:00:00'
+IMIN = efs '2000-01-01T01:60:00'
+IMIN = efs '2000-01-01T01:00:61'
+IMIN = efs '2000-01-01T01:00:00+24:00'
+IMIN = efs '2000-01-01T01:00:00+00:60'
+IMIN = efs '2000-01-01T01:00:00-24:00'
+IMIN = efs '2000-01-01T01:00:00-00:60'
 
 '1970-01-01' -: ', d' sfe efs '1970'
 '1970-01-01T00:00:00' -: ', 0' sfe efs '1970'

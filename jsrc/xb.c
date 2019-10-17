@@ -542,34 +542,34 @@ static A efs(J jt,A w,I prec){
   // We code this on the assumption that the format is constant throughout, and therefore branches will not be mispredicted after the first loop
 #define DOERR {IAV(z)[i]=IMIN; goto err;}
 #define ISDIGIT(d) (((UI4)d-(UI4)'0')<=((UI4)'9'-(UI4)'0'))
-#define RDTWO(z) if(!ISDIGIT(sp[1]))DOERR z=(UI4)sp[0]*10+((UI4)sp[1]-(UI4)'0')-((UI4)'0'*(UI4)10); if((UI4)z>(UI4)99)DOERR sp+=2;
+// obsolete #define RDTWO(z) if(!ISDIGIT(sp[1]))DOERR z=(UI4)sp[0]*10+((UI4)sp[1]-(UI4)'0')-((UI4)'0'*(UI4)10); if((UI4)z>(UI4)99)DOERR sp+=2;
 // same, but use c for the first digit
-#define RDTWOC(z) if(!ISDIGIT(sp[1]))DOERR z=(UI4)c*10+((UI4)sp[1]-(UI4)'0')-((UI4)'0'*(UI4)10); if((UI4)z>(UI4)99)DOERR sp+=2; c=*sp;
+#define RDTWOC(z,min,max) if(!ISDIGIT(sp[1]))DOERR z=(UI4)c*10+((UI4)sp[1]-(UI4)'0')-((UI4)'0'*(UI4)10); if((UI4)(z-(min))>(UI4)((max)-(min)))DOERR sp+=2; c=*sp;
   UI N=0;  // init nanosec accum to 0
   // throughout this stretch we may have c set to 'next character'
   UC c=*sp;
-  RDTWOC(Y); RDTWOC(M); Y=100*Y+M;  // fetch YYYY.  M is a temp
+  RDTWOC(Y,0,99); RDTWOC(M,0,99); Y=100*Y+M;  // fetch YYYY.  M is a temp
   if((UI4)(Y-MINY)>(UI4)(MAXY-MINY))DOERR
   if(!(c&~' ')){M=D=1; hh=mm=ss=0; goto gottime;}   // YYYY alone.  Default the rest
   if(c=='T'){M=D=1; goto gotdate;}    // YYYYT.  Default MD
   // normal case
   if(c=='-')c=*++sp;  // skip '-' if present
-  RDTWOC(M);
+  RDTWOC(M,1,12);
   if(!(c&~' ')){D=1; hh=mm=ss=0; goto gottime;}   // YYYY-MM alone.  Default the rest
   if(c=='T'){D=1; goto gotdate;}    // YYYY-MMT.  Default D
   if(c=='-')c=*++sp;  // skip '-' if present
-  RDTWOC(D);
+  RDTWOC(D,1,31);
   if(!(c&afterday)){hh=mm=ss=0; goto gottime;}   // YYYY-MM-DD alone, or after-day ignored.  Default the rest.  space here is a delimiter
 gotdate: ;
   if((c=='T')|(c==' '))c=*++sp;  // Consume the T/sp if present.  It must be followed by HH.  sp as a separator is not ISO 8601
   if(!(c&~' ')){hh=mm=ss=0; goto gottime;}   // YYYY-MM-DDTbb treat this as ending the year, default the rest
-  RDTWOC(hh);
+  RDTWOC(hh,0,24);  // 24 allowed at midnight
   if((c<0x40) & (((I)1<<'+')|((I)1<<'-')|((I)1<<' ')|((I)1<<0))>>c){mm=ss=0; if((c&~' '))goto hittz; goto gottime;}
   if(c==':')c=*++sp;  // skip ':' if present
-  RDTWOC(mm);
+  RDTWOC(mm,0,59);
   if((c<0x40) & (((I)1<<'+')|((I)1<<'-')|((I)1<<' ')|((I)1<<0))>>c){ss=0; if((c&~' '))goto hittz; goto gottime;}
   if(c==':')c=*++sp;  // skip ':' if present
-  RDTWOC(ss);
+  RDTWOC(ss,0,60);  // 60 allowed for leap second
   // If the seconds have decimal extension, turn it to nanoseconds.  ISO8601 allows fractional extension on the last time component even if it's not SS, but we don't support that 
   if((c=='.')|(c==',')){
    c=*++sp;  // skip decimal point
@@ -582,12 +582,12 @@ hittz:
   if((c=='+')|(c=='-')){
    I4 tzisplus=2*(c=='+')-1;   // +1 for +, -1 for -
    c=*++sp;  // skip tz indic
-   I4 tzhm; RDTWOC(tzhm);
+   I4 tzhm; RDTWOC(tzhm,0,23);
    // Apply tz adjustment to hours.  This may make hours negative; that's OK
    hh-=tzisplus*tzhm;    // +tz means UTC was advanced by tz hours; undo it
    if(c==':')c=*++sp;  // skip ':' if present
    if(ISDIGIT(c)){
-    RDTWOC(tzhm);
+    RDTWOC(tzhm,0,59);
     mm-=tzisplus*tzhm;    // same for minutes, may go negative
    }
   }else if(c=='Z')c=*++sp;  // no numbered timezone; skip Zulu timezone if given

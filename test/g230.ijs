@@ -64,6 +64,7 @@ y=: j./ _500  + 2 10000 ?@$ 1000
 x=: j./ _500  + 2 10000 ?@$ 1000
 y=: j./ _5000 + 2 10000 ?@$ 10000
 *./ (0=x) +. (|x) > |x|y
+0 = 0j1 +. 16.1  NB. Euclid gets in a loop
 
 'domain error' -: 'abc' | etx 1 2 3
 'domain error' -: 'abc' | etx 'feg'

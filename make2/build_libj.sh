@@ -125,6 +125,18 @@ SRC_ASM_MAC32=" \
  sha256-586-macho.o \
  sha512-586-macho.o "
 
+OBJS_ASM_WIN=" \
+ ../../../../openssl-asm/keccak1600-x86_64-nasm.o \
+ ../../../../openssl-asm/sha1-x86_64-nasm.o \
+ ../../../../openssl-asm/sha256-x86_64-nasm.o \
+ ../../../../openssl-asm/sha512-x86_64-nasm.o "
+
+OBJS_ASM_WIN32=" \
+ ../../../../openssl-asm/keccak1600-mmx-nasm.o \
+ ../../../../openssl-asm/sha1-586-nasm.o \
+ ../../../../openssl-asm/sha256-586-nasm.o \
+ ../../../../openssl-asm/sha512-586-nasm.o "
+
 case $jplatform\_$j64x in
 
 linux_j32) # linux x86
@@ -250,6 +262,7 @@ fi
 LIBJRES=" jdllres.o "
 OBJS_AESNI=" aes-ni.o "
 SRC_ASM="${SRC_ASM_WIN32}"
+OBJS_ASM="${OBJS_ASM_WIN32}"
 GASM_FLAGS=""
 ;;
 
@@ -271,6 +284,7 @@ fi
 LIBJRES=" jdllres.o "
 OBJS_AESNI=" aes-ni.o "
 SRC_ASM="${SRC_ASM_WIN}"
+OBJS_ASM="${OBJS_ASM_WIN}"
 GASM_FLAGS=""
 ;;
 
@@ -294,6 +308,7 @@ LIBJRES=" jdllres.o "
 OBJS_FMA=" gemm_int-fma.o "
 OBJS_AESNI=" aes-ni.o "
 SRC_ASM="${SRC_ASM_WIN}"
+OBJS_ASM="${OBJS_ASM_WIN}"
 GASM_FLAGS=""
 ;;
 
@@ -317,6 +332,7 @@ LIBJRES=" jdllres.o "
 OBJS_FMA=" gemm_int-fma.o "
 OBJS_AESNI=" aes-ni.o "
 SRC_ASM="${SRC_ASM_WIN}"
+OBJS_ASM="${OBJS_ASM_WIN}"
 GASM_FLAGS=""
 ;;
 
@@ -334,7 +350,7 @@ fi
 mkdir -p ../bin/$jplatform/$j64x
 mkdir -p obj/$jplatform/$j64x/
 cp makefile-libj obj/$jplatform/$j64x/.
-export CFLAGS LDFLAGS TARGET CFLAGS_SIMD GASM_FLAGS DLLOBJS LIBJDEF LIBJRES OBJS_FMA OBJS_AESNI OBJS_AESARM SRC_ASM jplatform j64x
+export CFLAGS LDFLAGS TARGET CFLAGS_SIMD GASM_FLAGS DLLOBJS LIBJDEF LIBJRES OBJS_FMA OBJS_AESNI OBJS_AESARM OBJS_ASM SRC_ASM jplatform j64x
 cd obj/$jplatform/$j64x/
 make -f makefile-libj
 cd -

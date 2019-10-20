@@ -8,7 +8,7 @@
 
 static A jtlev1(J jt,A w,A self){A fs;
  RZ(w&&self);
- if(levelle(w,jt->lmon)){fs=FAV(self)->fgh[0]; R CALL1(FAV(fs)->valencefns[0],w,fs);} else R every(w,self,jtlev1);
+ if(levelle(w,jt->lmon)){fs=FAV(self)->fgh[0]; R CALL1(FAV(fs)->valencefns[0],w,fs);} else{STACKCHKOFL R every(w,self,jtlev1);}  // since this recurs, check stack
 }
 
 static A jtlev2(J jt,A a,A w,A self){A fs;
@@ -18,7 +18,7 @@ static A jtlev2(J jt,A a,A w,A self){A fs;
  // add a boxing level before we drop down so that when it is processed it will be the first level at which it became active.  This result could
  // be achieved by altering the left/right levels, but Roger did it this way.
  if(aready&wready){fs=FAV(self)->fgh[0]; R CALL2(FAV(fs)->valencefns[1],a,w,fs);
- }else{R every2(aready?box(a):a,wready?box(w):w,self,jtlev2);}
+ }else{STACKCHKOFL R every2(aready?box(a):a,wready?box(w):w,self,jtlev2);}  // since this recurs, check stack
  // We do this with the if statement rather than a computed branch in the hope that the CPU can detect patterns in the conditions.
  // There may be a structure in the user's data that could be detected for branch prediction.
 }

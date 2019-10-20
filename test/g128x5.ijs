@@ -23,6 +23,7 @@ isnan=: 128!:5
 0 = isnan <20 ?@$ 2
 0 = isnan <20 ?@$ 2e9
 0 = isnan <'abc'
+0 = isnan <'abc';(<0 2$a:)
 
 x=: 1e6 ?@$ 0
 b=: (#x) ?@$ 2

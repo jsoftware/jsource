@@ -637,6 +637,9 @@ rdglob: ;
       y=(*actionfn)(jt,arg1,arg2,fs);
       jt=(J)(intptr_t)((I)jt&~JTFLAGMSK);
       // jt is OK again
+#if MEMAUDIT&0x10
+      auditmemchains();  // trap here while we still point to the action routine
+#endif
       EPZ(y);  // fail parse if error
       stackfs[1].a=y;  // save result 2 3 3 2 3; parsetype is unchanged, token# is immaterial
      }else{
@@ -648,6 +651,9 @@ rdglob: ;
       stack[pline-2]=stack[0]; // close up the stack
       stack=stack+pline-2;  // advance stackpointer to position before result 1 2
       A y=(*actionfn)(jt,arg1,arg2,fs);
+#if MEMAUDIT&0x10
+      auditmemchains();  // trap here while we still point to the action routine
+#endif
       EPZ(y);  // fail parse if error
       PTFROMTYPE(stack[1].pt,AT(y)) stack[1].t=restok; stack[1].a=y;   // save result, move token#, recalc parsetype
      }
@@ -655,6 +661,9 @@ rdglob: ;
      // Here for lines 5-8 (fork/hook/assign/parens), which branch to a canned routine
      // It will run its function, and return the new stackpointer to use, with the stack all filled in.  If there is an error, the returned stackpointer will be 0.
      stack=(*lines58[pline-5])(jt,stack);  // run it
+#if MEMAUDIT&0x10
+     auditmemchains();  // trap here while we still point to the action routine
+#endif
      if(!stack)FP  // fail if error
      stack0pt=stack[0].pt;  // bottom of stack was modified, so refresh the type for it (lines 0-6 don't change it)
     }

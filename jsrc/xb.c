@@ -317,10 +317,11 @@ F2(jtfc2){A z;D*x,*v;I j,m,n,p,zt;float*s;
   case  1: s=(float*)v; DQ(n, *s++=(float)*x++;); {RETF(z);}
 }}
 
-
-static B jtisnanq(J jt,A w){A q,*u,x,x1,*xv,y,*yv;D*v;I m,n,t,top;
+// w is a box, result is 1 if it contains a  NaN
+static B jtisnanq(J jt,A w){
  RZ(w);
- GATV0(x,INT,BOX&AT(w)?2*AN(w):1,1); xv=AAV(x);
+#if 0  // obsolete
+A q,*u,x,x1,*xv,y,*yv;D*v;I m,n,t,top; GATV0(x,INT,BOX&AT(w)?2*AN(w):1,1); xv=AAV(x);
  *xv=w; top=1;
  while(top){
   --top; y=xv[top]; n=AN(y); t=AT(y);
@@ -329,19 +330,26 @@ static B jtisnanq(J jt,A w){A q,*u,x,x1,*xv,y,*yv;D*v;I m,n,t,top;
    m=top+n; yv=AAV(y); 
    if(m>AN(y)){GATV0(x1,INT,2*m,1); u=AAV(x1); ICPY(u,xv,top); fa(x); x=x1; xv=u;}
    u=xv+top; DO(n, q=yv[i]; if(AT(q)&FL+CMPX+BOX)*u++=q;); top=u-xv;
- }}
- R 0;
+  }
+ }
+#else
+ if(AT(w)&FL+CMPX){D *v=DAV(w); DQ(AN(w)<<((AT(w)>>CMPXX)&1), if(_isnan(v[i]))R 1;);}  // if there might be a NaN, return if there is one
+ else if(AT(w)&BOX){A *v=AAV(w); STACKCHKOFL DQ(AN(w), if(isnanq(v[i]))R 1;);}  // if boxed, check each one recursively; ensure no stack overflow
+ // other types never have NaN
+#endif
+ R 0;  // if we get here, there must be no NaN
 }
 
+// 128!:5  Result is boolean with same shape as w
 F1(jtisnan){A*wv,z;B*u;D*v;I n,t;
  RZ(w);
  n=AN(w); t=AT(w);
  ASSERT(t&DENSE,EVNONCE);
  GATV(z,B01,n,AR(w),AS(w)); u=BAV(z);
- if     (t&FL  ){v=DAV(w); DQ(n, *u++=_isnan(*v++););}
- else if(t&CMPX){v=DAV(w); DQ(n, *u++=_isnan(*v)||_isnan(*(v+1)); v+=2;);}
- else if(t&BOX ){wv=AAV(w);  DO(n, *u++=isnanq(wv[i]);); RE(0);}
- else memset(u,C0,n);
+ if (t&FL){v=DAV(w); DQ(n, *u++=_isnan(*v++););}  // float - check each atom
+ else if(t&CMPX){v=DAV(w); DQ(n, *u++=_isnan(v[0])|_isnan(v[1]); v+=2;);}  // complex - check each half
+ else if(t&BOX){wv=AAV(w); DO(n, *u++=isnanq(wv[i]);); RE(0);}  // boxed - check contents
+ else memset(u,C0,n);  // other types are never NaN
  RETF(z);
 }
 

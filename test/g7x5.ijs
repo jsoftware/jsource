@@ -143,6 +143,12 @@ x=: 2 : 0
 NB. 7!:5 on mapped arrays -----------------------------------------------
 
 load'jmf'
+3 : 0 ''
+if. _1=nc<'MAPNAME_jmf_' do.
+ 'MAPNAME_jmf_ MAPFN_jmf_ MAPSN_jmf_ MAPFH_jmf_ MAPMH_jmf_ MAPADDRESS_jmf_ MAPHEADER_jmf_ MAPFSIZE_jmf_ MAPMSIZE_jmf_ MAPREFS_jmf_'=: i.10
+end. 
+1
+) 
 18!:4 <'base'
 1 [ unmap_jmf_ 'q'
 f=: <jpath '~temp/q.jmf'
@@ -191,7 +197,7 @@ goo=: 3 : 0
 
 NB. run foo calling goo calling foo (note perhaps nasty goo calling foo!)
 1 [ 1 foo '' NB. a NB. ".&.> <'a' [ !a
-(<,2) -: (<1 9) { showmap_jmf_''
+(<,2) -: (<1,MAPREFS_jmf_) { showmap_jmf_''
 1 [ unmap_jmf_ 'a'
 
 18!:55 <'jmf'

@@ -2,6 +2,12 @@
 NB. memory mapped files -------------------------------------------------
 
 1 [ 18!:4 <'base' [ load 'jmf'
+3 : 0 ''
+if. _1=nc<'MAPNAME_jmf_' do.
+ 'MAPNAME_jmf_ MAPFN_jmf_ MAPSN_jmf_ MAPFH_jmf_ MAPMH_jmf_ MAPADDRESS_jmf_ MAPHEADER_jmf_ MAPFSIZE_jmf_ MAPMSIZE_jmf_ MAPREFS_jmf_'=: i.10
+end. 
+1
+) 
 1 [ unmapall_jmf_ ''
 
 JSB_z_=: 65536
@@ -32,9 +38,9 @@ t=: s:' testing testing 1 2 3'
 t -: _6&s: (IF64{_2 _3) ic fread f0
 JSB map_jmf_ 'abc';f0     NB. map abc to file
 abc -: t
-2 = >(<(({."1 t) i. <'abc_base_');9){t=: showmap_jmf_ ''
+2 = >(<(({."1 t) i. <'abc_base_');MAPREFS_jmf_){t=: showmap_jmf_ ''
 4!:55 ;:'abc'
-1 = >(<(({."1 t) i. <'abc_base_');9){t=: showmap_jmf_ ''
+1 = >(<(({."1 t) i. <'abc_base_');MAPREFS_jmf_){t=: showmap_jmf_ ''
 0 -: unmap_jmf_ 'abc'
 -. (<'abc_base_') e. {."1 t=: showmap_jmf_ ''
 
@@ -77,7 +83,7 @@ t=: showmap_jmf_''          NB. mapping information
 
 ((<1;0){t) = <'jdata_base_'
 ((<1;1){t) = f
-((<1;8){t) = <,1000
+((<1;MAPMSIZE_jmf_){t) = <,1000
 
 0 -: unmap_jmf_ 'jdata'     NB. 0 result is success
 1 -: # showmap_jmf_ ''
@@ -87,18 +93,16 @@ map_jmf_ 'jdata';f
 jdata=: x
 abc=: jdata
 abc -: x
-3 = >(<(({."1 t) i. <'jdata_base_'),9){t=: showmap_jmf_ 'jdata'
+3 = >(<(({."1 t) i. <'jdata_base_'),MAPREFS_jmf_){t=: showmap_jmf_ 'jdata'
 2 -: unmap_jmf_ 'jdata'
-2 = >(<(({."1 t) i. <'jdata_base_'),9){t=: showmap_jmf_ 'jdata'
+2 = >(<(({."1 t) i. <'jdata_base_'),MAPREFS_jmf_){t=: showmap_jmf_ 'jdata'
 4!:55 ;:'abc'
-1 = >(<(({."1 t) i. <'jdata_base_'),9){t=: showmap_jmf_ 'jdata'
+1 = >(<(({."1 t) i. <'jdata_base_'),MAPREFS_jmf_){t=: showmap_jmf_ 'jdata'
 0 -: unmap_jmf_ 'jdata'
 
 map_jmf_ 'jdata'; (>f); ''; 1  NB. read-only
 x -: jdata
-NB. 'read-only data' -: ex 'jdata=: 1 2 3'
-jdata=: 1 2 3
-1 2 3 -: jdata            NB. copy-on-write
+'read-only data' -: ex 'jdata=: 1 2 3'
 0 -: unmap_jmf_ 'jdata'
 map_jmf_ 'jdata';f
 jdata -: x                NB. original file unchanged

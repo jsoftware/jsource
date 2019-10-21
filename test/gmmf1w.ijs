@@ -107,6 +107,15 @@ map_jmf_ 'jdata';f
 jdata -: x                NB. original file unchanged
 0 -: unmap_jmf_ 'jdata'
 
+map_jmf_ 'jdata'; (>f); ''; 2  NB. copy-on-write
+x -: jdata
+jdata=: 1 2 3
+1 2 3 -: jdata            NB. copy-on-write
+0 -: unmap_jmf_ 'jdata'
+map_jmf_ 'jdata';f
+jdata -: x                NB. original file unchanged
+0 -: unmap_jmf_ 'jdata'
+
 x=: u:'Professors in New England guard the glory that was Greece'
 x fwrite f
 JCHAR2 map_jmf_ 'jdata';f

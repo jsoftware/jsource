@@ -225,6 +225,9 @@ jt->assert = 1;
  A vimp=ca(vnam); NAV(vimp)->flag|=NMIMPLOC;
  jt->implocref[1] = fdef(0,CTILDE,VERB, 0,0, vimp,0L,0L, 0, RMAX,RMAX,RMAX);  //create 'v.'~
 
+ jt->igemm_thres=IGEMM_THRES;   // tuning parameters for cip.c
+ jt->dgemm_thres=DGEMM_THRES;
+ jt->zgemm_thres=ZGEMM_THRES;
  R 1;
 }
 

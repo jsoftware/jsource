@@ -426,8 +426,6 @@ R mtm;
 // 1 dgemm_thres  real threshold
 // 2 zgemm_thres  complex threshold
 
-extern I igemm_thres,dgemm_thres,zgemm_thres;
-
 F1(jtgemmtune){I k;
  RZ(w);
  ASSERT(AT(w)&(B01+INT),EVDOMAIN);
@@ -435,7 +433,7 @@ F1(jtgemmtune){I k;
  ASSERT(1>=AR(w),EVRANK);
  RE(k=i0(w));  // get arg
  ASSERT(k==0||k==1||k==2,EVDOMAIN);
- R sc((0==k)?igemm_thres:(1==k)?dgemm_thres:zgemm_thres);
+ R sc((0==k)?jt->igemm_thres:(1==k)?jt->dgemm_thres:jt->zgemm_thres);
 }
 
 F2(jtgemmtune2){I j,k;
@@ -448,11 +446,11 @@ F2(jtgemmtune2){I j,k;
  ASSERT(1>=AR(w),EVRANK);
  RE(j=i0(a));  // get arg
  RE(k=i0(w));  // get arg
- ASSERT(j>=0,EVDOMAIN);
+ ASSERT(j>=-1,EVDOMAIN);
  ASSERT(k==0||k==1||k==2,EVDOMAIN);
- if(k==0) igemm_thres=j;
- else if(k==1) dgemm_thres=j;
- else zgemm_thres=j;
+ if(k==0) jt->igemm_thres=j;
+ else if(k==1) jt->dgemm_thres=j;
+ else jt->zgemm_thres=j;
  R sc(1);
 }
 

@@ -391,6 +391,13 @@ extern unsigned int __cdecl _clearfp (void);
 #define MEMCPYTUNE 4096  // (bytes) unpredictable blocks shorter than this should just use MCISxx.  Keep as power of 2
 #define MEMCPYTUNELOOP 350  // (bytes) predictable blocks shorter than this should just use MCISxx.
 
+// Tuning options for cip.c
+#define IGEMM_THRES  5000000     // when m*n*p less than this use cached; when higher, use BLAS   scaf must TUNE this
+#define DGEMM_THRES  (-1)     // when m*n*p less than this use cached; when higher, use BLAS   _1 means 'never'
+#define DCACHED_THRES  (64*64*64)    // when m*n*p less than this use blocked; when higher, use cached
+#define ZGEMM_THRES  2000000     // when m*n*p less than this use cached; when higher, use BLAS  
+
+
 
 // Debugging options
 

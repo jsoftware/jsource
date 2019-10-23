@@ -393,7 +393,11 @@ extern unsigned int __cdecl _clearfp (void);
 
 // Tuning options for cip.c
 #define IGEMM_THRES  5000000     // when m*n*p less than this use cached; when higher, use BLAS   scaf must TUNE this
+#ifdef _MSC_VER
 #define DGEMM_THRES  (-1)     // when m*n*p less than this use cached; when higher, use BLAS   _1 means 'never'
+#else
+#define DGEMM_THRES  5000000     // when m*n*p less than this use cached; when higher, use BLAS   _1 means 'never'
+#endif
 #define DCACHED_THRES  (64*64*64)    // when m*n*p less than this use blocked; when higher, use cached
 #define ZGEMM_THRES  2000000     // when m*n*p less than this use cached; when higher, use BLAS  
 

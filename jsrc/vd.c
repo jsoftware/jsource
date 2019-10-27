@@ -225,7 +225,7 @@ static F1(jtlq){A l;D c=inf,d=0,x;I n1,n,*s,wr;
  RETF(pdt(jtrinvip(jt,l,n,AT(w)&FL?2:0),w));  // engage fast reciprocal for float matrices
 }
 
-// Boolean/integer correction.  If the inversand was B01 or INT, we can eliminate some rounginr error by forcing the
+// Boolean/integer correction.  If the inversand was B01 or INT, we can eliminate some rounding error by forcing the
 // determinant to integer and then each value to an integer multiple of the determinant.
 // The determinant was calculated when we inverted the matrix
 static F1(jticor){D d,*v;

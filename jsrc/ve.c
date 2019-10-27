@@ -207,31 +207,31 @@ oflo: jt->jerr = EWOVIP+EWOVIPMULII; *x=u; *y=v; goto exit;  // back out the las
 }
 
 // BI multiply, using clear/copy
-AHDR2(tymesBI,I,B,I){B u;I v;
- if(n-1==0)  DQ(m, u=*x; *z++=u?*y:0; x++; y++; )
- else if(n-1<0){n=~n; DQ(m, u=*x++; if(u){if(z!=y)MC(z,y,n<<LGSZI);}else{memset(z,0,n<<LGSZI);} z+=n; y+=n;)}
- else      DQ(m, v=*y++; DQ(n, u=*x; *z++=u?v:0; x++;))
+AHDR2(tymesBI,I,B,I){I v;
+ if(n-1==0)  DQ(m, I u=*x; *z++=*y&-u; x++; y++; )
+ else if(n-1<0){n=~n; DQ(m, B u=*x++; if(u){if(z!=y)MC(z,y,n<<LGSZI);}else{memset(z,0,n<<LGSZI);} z+=n; y+=n;)}
+ else DQ(m, v=*y++; DQ(n, I u=*x; *z++=v&-u; x++;))
 }
 
 // IB multiply, using clear/copy
-AHDR2(tymesIB,I,I,B){I u;B v;
- if(n-1==0)  DQ(m, v=*y; *z++=v?*x:0; x++; y++; )
- else if(n-1<0)DQ(m, u=*x++; DQC(n, v=*y; *z++=v?u:0; y++;))
- else      DQ(m, v=*y++; if(v){if(z!=x)MC(z,x,n<<LGSZI);}else{memset(z,0,n<<LGSZI);} z+=n; x+=n;)
+AHDR2(tymesIB,I,I,B){I u;
+ if(n-1==0)  DQ(m, I v=*y; *z++=*x&-v; x++; y++; )
+ else if(n-1<0)DQ(m, u=*x++; DQC(n, I v=*y; *z++=u&-v; y++;))
+ else DQ(m, B v=*y++; if(v){if(z!=x)MC(z,x,n<<LGSZI);}else{memset(z,0,n<<LGSZI);} z+=n; x+=n;)
 }
 
 // BD multiply, using clear/copy
-AHDR2(tymesBD,D,B,D){B u;D v;
- if(n-1==0)  DQ(m, u=*x; *z++=u?*y:0; x++; y++; )
- else if(n-1<0){n=~n; DQ(m, u=*x++; if(u){if(z!=y)MC(z,y,n*sizeof(D));}else{memset(z,0,n*sizeof(D));} z+=n; y+=n;)}
- else      DQ(m, v=*y++; DQ(n, u=*x; *z++=u?v:0; x++;))
+AHDR2(tymesBD,D,B,D){
+ if(n-1==0)  DQ(m, D *yv=&dzero; yv=*x?y:yv; *z++=*yv; x++; y++; )
+ else if(n-1<0){n=~n; DQ(m, B u=*x++; if(u){if(z!=y)MC(z,y,n*sizeof(D));}else{memset(z,0,n*sizeof(D));} z+=n; y+=n;)}
+ else DQ(m, DQ(n, D *yv=&dzero; yv=*x?y:yv; *z++=*yv; x++;) ++y;)
 }
 
 // DB multiply, using clear/copy
-AHDR2(tymesDB,D,D,B){D u;B v;
- if(n-1==0)  DQ(m, v=*y; *z++=v?*x:0; x++; y++; )
- else if(n-1<0)DQ(m, u=*x++; DQC(n, v=*y; *z++=v?u:0; y++;))
- else      DQ(m, v=*y++; if(v){if(z!=x)MC(z,x,n*sizeof(D));}else{memset(z,0,n*sizeof(D));} z+=n; x+=n;)
+AHDR2(tymesDB,D,D,B){
+ if(n-1==0)  DQ(m, D *yv=&dzero; yv=*y?x:yv; *z++=*yv; x++; y++; )
+ else if(n-1<0)DQ(m, DQC(n, D *yv=&dzero; yv=*y?x:yv; *z++=*yv; y++;) ++x;)
+ else DQ(m, B v=*y++; if(v){if(z!=x)MC(z,x,n*sizeof(D));}else{memset(z,0,n*sizeof(D));} z+=n; x+=n;)
 }
 
 // Overflow repair routines

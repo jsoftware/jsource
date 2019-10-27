@@ -433,7 +433,7 @@ static I cachedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){D c[(CACHEHEIGHT
        _mm256_store_pd(zilblock+4*NPAR,z20); _mm256_store_pd(zilblock+5*NPAR,z21); _mm256_store_pd(zilblock+6*NPAR,z30); _mm256_store_pd(zilblock+7*NPAR,z31);
       }else {
         // for the last z pass we have to store into the final result area
-       if(a3rem>7){  // no problem horizontally
+       if(a3rem>=OPWIDTH){  // no problem horizontally
         _mm256_storeu_pd(z3base,z00); _mm256_storeu_pd(z3base+NPAR,z01);
         if(a2rem>1){_mm256_storeu_pd(z3base+n,z10); _mm256_storeu_pd(z3base+n+NPAR,z11);}
         if(a2rem>2){_mm256_storeu_pd(z3base+2*n,z20); _mm256_storeu_pd(z3base+2*n+NPAR,z21);}
@@ -442,8 +442,9 @@ static I cachedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){D c[(CACHEHEIGHT
         __m256i mask0, mask1;  // horizontal masks for w values, if needed
 // obsolete         mask0=_mm256_loadu_si256((__m256i*)(jt->validitymask+((4-a3rem)<0?0:4-a3rem)));  // a3rem { 4 3 2 1 0 0 0 0
 // obsolete         mask1=_mm256_loadu_si256((__m256i*)(jt->validitymask+((8-a3rem)>4?4:8-a3rem)));  // a3rem { 4 4 4 4 4 3 2 1
-        mask0=_mm256_loadu_si256((__m256i*)(jt->validitymask+((0x00001234>>(a3rem<<2))&0x7)));  // a3rem { 4 3 2 1 0 0 0 0
-        mask1=_mm256_loadu_si256((__m256i*)(jt->validitymask+((0x12344444>>(a3rem<<2))&0x7)));  // a3rem { 4 4 4 4 4 3 2 1
+        I nvalids=0x048cdef0>>(a3rem<<2);  // 4 bits: f1f0 l1l0 where f10 is the offset to use for first 4 values, l10 if offset-1 for last 4.  Offset0=4 words, 1=3 words, 2-2 words, 3=1 word.  Can't have 0 words for f, can for l
+        mask0=_mm256_loadu_si256((__m256i*)(jt->validitymask+(nvalids&0x3)));  // a3rem { 4 3 2 1 0 0 0 0
+        mask1=_mm256_loadu_si256((__m256i*)(jt->validitymask+1+((nvalids>>2)&0x3)));  // a3rem { 4 4 4 4 4 3 2 1
         _mm256_maskstore_pd(z3base,mask0,z00); _mm256_maskstore_pd(z3base+NPAR,mask1,z01);
         if(a2rem>1){_mm256_maskstore_pd(z3base+n,mask0,z10); _mm256_maskstore_pd(z3base+n+NPAR,mask1,z11);}
         if(a2rem>2){_mm256_maskstore_pd(z3base+2*n,mask0,z20); _mm256_maskstore_pd(z3base+2*n+NPAR,mask1,z21);}

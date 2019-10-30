@@ -126,11 +126,11 @@ A jtenqueue(J jt,A a,A w,I env){A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl;UC c;
    // Since the address of the shared primitive block is used, we can use that to compare against to identify the primitive later
    // We keep track of We keep track of whether }~ was found.  If } starts the sentence, this will compare garbage, but
    // without risk of program check
-   // If the word is an assignment, use the appropriate assignment block, depending on the previous word and the environment
-   // In environment 0 (tacit translator), leave as simple assignment
    if(env!=0 && AT(y)&ASGN) {
-    if(env==1 || (i && AT(x[-1])&NAME && (NAV(x[-1])->flag&(NMLOC|NMILOC)))){y=ds(CGASGN);}   // sentence is NOT for explicit definition, or preceding word is a locative.  Convert to a global assignment.  This will make the display show =:
-    if(i&& AT(x[-1])&NAME){y= y==ds(CGASGN)?asgngloname:asgnlocsimp;}  // if ASGN preceded by NAME, flag it thus, by switching to the block with the ASGNTONAME flag set
+    // If the word is an assignment, use the appropriate assignment block, depending on the previous word and the environment
+    // In environment 0 (tacit translator), leave as simple assignment
+    if(e==CASGN && (env==1 || (i && AT(x[-1])&NAME && (NAV(x[-1])->flag&(NMLOC|NMILOC))))){y=asgnforceglo;}   // sentence is NOT for explicit definition, or preceding word is a locative.  Convert to a global assignment.  This will make the display show =:
+    if(i&& AT(x[-1])&NAME){y= y==asgnforceglo?asgnforcegloname:y==ds(CGASGN)?asgngloname:asgnlocsimp;}  // if ASGN preceded by NAME, flag it thus, by switching to the block with the ASGNTONAME flag set
    }
    if(AT(y)&NAME&&(NAV(y)->flag&NMDOT)){RZ(y=ca(y)); if((env==2)&&(NAV(*x)->flag&NMXY)){AT(*x)|=NAMEBYVALUE;}}  // The inflected names are the old-fashioned x. y. etc.  They must be cloned lest we modify the shared copy
    *x=y;   // install the value

@@ -11,7 +11,9 @@
 A   a0j1=0;               /* 0j1                                  */
 A   aqq=0;                /* ''                                   */
 A   asgnlocsimp;          // =. flagged as LOCAL+NAME
-A   asgngloname;          // =. flagged as NAME
+A   asgngloname;          // =: flagged as NAME
+A   asgnforceglo;         // =. flagged as ()  = global
+A   asgnforcegloname;     // =. flagged as NAME  = global
 UC  bit[8]={(UC)0x80, (UC)0x40, (UC)0x20, (UC)0x10, (UC)0x08, (UC)0x04, (UC)0x02, (UC)0x01};
 C   breakdata=0;
 double dzero=0.0;   // used by gemm

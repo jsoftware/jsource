@@ -340,6 +340,7 @@ a > 7!:0''
 4!:55 <'xxx'
 a > 7!:0''
 
+0 = ('=',':') +./@:E. a =. 2 , :: (13!:12@'') '2'  NB. For a while the =. was changed to =:
 
 4!:55 ;:'Cogito Ich_liebe_dich a a_man aa abc alta b def erase ergo'
 4!:55 ;:'fa fb first global global1 global2 global3'

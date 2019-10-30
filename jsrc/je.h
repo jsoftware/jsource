@@ -898,6 +898,8 @@ extern A        alp;
 extern A        aqq;
 extern A        asgnlocsimp;  // points to block with ASGN+ASGNLOCAL+ASGTONNAME
 extern A        asgngloname;  // points to block with ASGN+ASGNTONAME
+extern A        asgnforceglo;  // points to block with ASGN but char is =. CASGN
+extern A        asgnforcegloname;  // points to block with ASGN+ASGNTONAME  but char is =. CASGN
 extern UC       bit[];
 extern C        breakdata;
 extern A        chr[];

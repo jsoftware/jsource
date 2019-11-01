@@ -86,7 +86,7 @@ n=: 1+?35
 0 = x=: pmctr _1
 
 s=: pmstats ''
-t=: pmunpack ''
+t=: ((}.&.>~ _1 i.~ 3&{::)@:(6&{.) (i.6)} ]) pmunpack ''
 
 4 = type s
 (dbq'')+. 2 >: +/ 100 100 100 1 100 100 * | s - 0 0 200,(200<.3+2*n),(200<:3+2*n),0   NB. 3 not 4: the first EXIT record is not emitted.  Allow leeway in case we get into slow-name path
@@ -94,7 +94,7 @@ t=: pmunpack ''
 f=: 4 : 0
  if. dbq'' do. 1 return. end.  NB. skip if Debug
  t=. y
- assert. (32=type t) *. ((,7) -: $t) *. (*./ 1 = #@$&>t) *. *./ x = 6{.#&>t
+ assert. (32=type t) *. ((,7) -: $t) *. (*./ 1 = #@$&>t) *. *./ x e.~ 6{.#&>t
  assert. (type&.>t) e.&> 4;4;4;4;1 4 8;1 4 8;32
  assert. *./ (>0{t) e. i.#>6{t
  assert. *./ (>1{t) e. i.#>6{t
@@ -105,7 +105,7 @@ f=: 4 : 0
  1
 )
 
-(3+2*n) f t
+(3 4+2*n) f t
 (dbq'')+. ({&:>/0 6{t) -: (0 2,(2*n),1)#;:'pmctr pmstats avg pmctr'
 (dbq'')+. ({&:>/1 6{t) e. <'base'
 (dbq'')+. (>3{t) -: _1 _2,((2*n)$_1 _2),_1
@@ -119,12 +119,12 @@ n=: 1+?35
 0 = x=: pmctr _1
 
 s=: pmstats ''
-t=: pmunpack ''
+t=: ((}.&.>~ _1 i.~ 3&{::)@:(6&{.) (i.6)} ]) pmunpack ''
 
 4 = type s
-(dbq'')+. s -: 1 0 200,(200<.3+5*n),(200<:3+5*n),0
+(dbq'')+. 2 >: +/ 100 100 100 1 100 100 * | s - 1 0 200,(200<.3+5*n),(200<:3+5*n),0
 
-(3+5*n) f t
+(3 4+5*n) f t
 (dbq'')+. ({&:>/0 6{t) -: (0 2,(5*n),1)#;:'pmctr pmstats avg pmctr'
 (dbq'')+. ({&:>/1 6{t) e. <'base'
 (dbq'')+. (>3{t) -: _1 _2,((5*n)$_1 0 1 2 _2),_1
@@ -143,8 +143,8 @@ mean_l6x_=: 3 : 0
 1 -: pmctr 1
 1 [ mean_l6x_ i.12
 0 -: pmctr _1
-t=: 6!:11 ''
-9 f t
+t=: ((}.&.>~ _1 i.~ 3&{::)@:(6&{.) (i.6)} ]) 6!:11 ''
+9 10 f t
 (dbq'')+. ({&:>/0 6{t) -: ;:'mean_l6x_ mean_l6x_ sum sum_foo_ sum_foo_ sum_foo_ sum mean_l6x_ pmctr'
 (dbq'')+. ({&:>/1 6{t) -: ;:'l6x       l6x       l6x foo      foo      foo      l6x l6x       base'
 
@@ -157,8 +157,8 @@ mean_aa_=: 3 : 0
 1 -: pmctr 1
 1 [ mean_aa_ i.12
 0 -: pmctr _1
-t=: 6!:11 ''
-7 f t
+t=: ((}.&.>~ _1 i.~ 3&{::)@:(6&{.) (i.6)} ]) 6!:11 ''
+7 8 f t
 (dbq'')+. ({&:>/0 6{t) -: ;:'mean_aa_ mean_aa_ mean_aa_ sum sum mean_aa_ pmctr'
 (dbq'')+. ({&:>/1 6{t) -: ;:'aa       aa       aa       aa  aa  aa       base'
 

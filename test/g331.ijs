@@ -1155,6 +1155,9 @@ P -: (<"0 i.7 8) [ 1 2 > ;. _3 P =:  <"0 i.7 8
 P -: (<"0 i.3 4) [ 3 4 > ;. _3 P =:  <"0 i.3 4
 P -: (<"0 i.3 4 1 3 4 5) [ 1 2 > ;. _3 P =:  <"0 i.3 4 1 3 4 5  NB. past the size of faux virtual
 
+1 10 -: $ (3 ,: _) ];._3 i. 10 
+4 10 -: $ (3 ,: _) ];.3 i. 10 
+
 4!:55 ;:'a adot1 adot2 sdot0 b bb c cut3 cutm3 f f1 f2 f3 f4 f5'
 4!:55 ;:'i1 i2 m P p q size t test testw w x y'
 4!:55 ;: 'a c'

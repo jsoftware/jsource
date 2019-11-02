@@ -865,12 +865,13 @@ DF1(jtrazecut1){R razecut2(mark,w,self);}
 // if pv given, it is the place to put the shapes of the top 2 result axes.  If omitted, do them all and return an A block for them
 // if pv is given, set pv[0] to 0 if there is a 0 anywhere in the result frame
 // we look at all the axes even if we don't store them all; if any are 0 we set
+// n is the op type (as in u;.n)
 static A jttesos(J jt,A a,A w,I n, I *pv){A p;I*av,c,axisct,k,m,s,*ws;
  RZ(a&&w);
  axisct=c=AS(a)[1]; av=AV(a); ws=AS(w);
  if(pv){c=(c>2)?2:c; p=0; // if more than 2 axes requested, limit the return to that
  }else{GATV0(p,INT,c,1); pv=AV(p); AS(p)[0]=c;}  // all requested, make an A block for it
- if(n>0)DO(axisct, m=av[i]; s=ws[i]; if(!((I)p|(m = m?(s+m-1)/m:1&&s)))pv[0]=0;; if(i<c)pv[i]=m;)
+ if(n>0)DO(axisct, m=av[i]; s=ws[i]; if(!((I)p|(m = m?(s+m-1)/m:1&&s)))pv[0]=0; if(i<c)pv[i]=m;)  // ;.3, calculate # sections
  else   DO(axisct, m=av[i]; k=av[axisct+i]; s=ws[i]-ABS(k); if(!((I)p|(m = 0>s?0:m?(I )(k||s%m)+s/m:1)))pv[0]=0; if(i<c)pv[i]=m;);
  R p;
 }    /* tesselation result outer shape */
@@ -878,29 +879,29 @@ static A jttesos(J jt,A a,A w,I n, I *pv){A p;I*av,c,axisct,k,m,s,*ws;
 
 static F2(jttesa){A x;I*av,ac,c,d,k,r,*s,t,*u,*v;
  RZ(a&&w);
- RZ(a=vib(a));    // convert a to integer
  t=AT(a);
+ RZ(a=vib(a));    // convert a to integer (possibly with infinities)
  r=AR(a); s=AS(a); ac=c=r?s[r-1]:1; av=AV(a); d=AR(w);  // r = rank of x; s->shape of x; c=#axes specd in x, av->data; d=rank of w
  ASSERT(d>=c&&(2>r||2==s[0]),EVLENGTH);  // x must not be bigger than called for by rank of w, and must be a list or 2-item table
  if(2<=r)DO(c, ASSERT(0<=av[i],EVDOMAIN););  // if movement vector given, it must be nonnegative
  if(2==r&&t&INT){RETF(a);}  // if we can use a as given, return a as is
  GATV0(x,INT,2*c,2); s=AS(x); s[0]=2; s[1]=c;  // allocate space for start/stride, only for axes that will be modified.  We will modify it
- u=AV(x); v=u+c; s=AS(w);
- if(2==r)DO(c,   *u++=av[i]; k=av[i+ac]; if(k&((I)IMIN>>1)){k=(s[i]^(k>>(BW-1)))-(k>>(BW-1));} *v++=k;);
+ u=AV(x); v=u+c; s=AS(w);  // u->movement vector, v->length
+ if(2==r)DO(c,   *u++=av[i]; k=av[i+ac]; if(k&((I)IMIN>>1)){k=(s[i]^(k>>(BW-1)))-(k>>(BW-1));} *v++=k;);  // if k infinite, make length the axis length, + or -
  if(2> r)DO(c,   *u++=1;     k=av[i];  if(k&((I)IMIN>>1)){k=(s[i]^(k>>(BW-1)))-(k>>(BW-1));} *v++=k;);
  RETF(x);
 }    /* tesselation standardized left argument */
 
 // These bits overlap with those used for ;.0
-#define STATEREFLECTX 0x400
+#define STATEREFLECTX 0x400  // subarray must be reflected
 #define STATEREFLECTY 0x800
-#define STATETAKE 0x1000
+#define STATETAKE 0x1000  // subarray must be shortened at the end
 static DF2(jttess2){A z,zz=0,virtw,strip;I n,rs[3],cellatoms,cellbytes,vmv,hmv,vsz,hsz,hss,hds,vss1,vss,vds1,vds,vlrc,vtrc,lrchsiz,hi,vi,vkeep1,vtrunc,hkeep1,htrunc;C *svh,*dvh;
  PROLOG(600); PREF2(jttess2);   // enforce left rank 2
 #define ZZFLAGWORD state
  I state;
  RZ(a=tesa(a,w));   // expand x to canonical form, with trailing axes-in-full deleted
- A gs=FAV(self)->fgh[1]; n=IAV(gs)[0]; state=(~n)&STATETAKE;  // set TAKE bit if code=3: we will shorten out-of-bounds args
+ A gs=FAV(self)->fgh[1]; n=IAV(gs)[0]; state=(~n)&STATETAKE;  // n=op type (as in u;.n); set TAKE bit if code=3: we will shorten out-of-bounds args
  I wr=AR(w); I wt=AT(w); // rank of w, type of w
  I *as=AS(a), *av=IAV(a), axisct=as[1];  // a-> shape of a, axisct=# axes in a, av->mv/size area
  // get shape of final result

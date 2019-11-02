@@ -49,4 +49,5 @@ C* _stdcall Jinput(J jt, C*);
 #define SMWIN    0  /* j.exe    Jwdw (Windows) front end */
 #define SMJAVA   2  /* j.jar    Jwdp (Java) front end */
 #define SMCON    3  /* jconsole */
+#define SMQT     4  /* jqt */
 

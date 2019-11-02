@@ -84,6 +84,7 @@ typedef struct {
 // things needed by executing explicit defs
  A    curname;          // current name, an A block containing an NM
  UI   cstackmin;        // red warning for C stack pointer
+ UI   qtstackinit;      // jqt front-end C stack pointer
  I4   callstacknext;           /* named fn calls: current depth                   */
  I4   fcalln;           /* named fn calls: maximum permissible depth       */
  B    asgn;             /* 1 iff last operation on this line is assignment */

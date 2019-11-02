@@ -271,8 +271,11 @@ void _stdcall JSM(J jt, void* callbacks[])
  jt->sminput = (inputtype)callbacks[2];
  jt->smpoll = (polltype)callbacks[3];
  jt->sm = 0xff & (I)callbacks[4];
+ jt->qtstackinit = (SMQT==jt->sm) ? (uintptr_t)callbacks[3] : 0;
  jt->smoption = ((~0xff) & (UI)callbacks[4]) >> 8;
  if(jt->sm==SMJAVA) jt->smoption |= 0x8;  /* assume java is multithreaded */
+ if(SMQT==jt->sm) jt->smoption = (~0x4) & jt->smoption;  /* smpoll not used */
+// fprintf(stderr,"%llu %llu %lld\n",jt->qtstackinit,jt->cstackinit,jt->qtstackinit-jt->cstackinit);
 }
 
 /* set jclient callbacks from values - easier for nodejs */
@@ -283,8 +286,10 @@ void _stdcall JSMX(J jt, void* out, void* wd, void* in, void* poll, I opts)
  jt->sminput = (inputtype)in;
  jt->smpoll = (polltype)poll;
  jt->sm = 0xff & opts;
+ jt->qtstackinit = (SMQT==jt->sm) ? (uintptr_t)poll : 0;
  jt->smoption = ((~0xff) & (UI)opts) >> 8;
  if(jt->sm==SMJAVA) jt->smoption |= 0x8;  /* assume java is multithreaded */
+ if(SMQT==jt->sm) jt->smoption = (~0x4) & jt->smoption;  /* smpoll not used */
 }
 
 C* _stdcall JGetLocale(J jt){return getlocale(jt);}

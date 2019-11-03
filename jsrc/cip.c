@@ -995,12 +995,13 @@ time1 ,&(x,y)"0 ((256 1e20 1e20 65536 > x*y) # 0 1 2 3) +/ lens
 
 // a f/ . g w  for boolean a and w
 // c is pseudochar for f, d is pseudochar for g
-static A jtipbx(J jt,A a,A w,C c,C d){A g=0,x0,x1,z;B*av,*av0,b,*u,*v,*v0,*v1,*zv;C c0,c1;
+static A jtipbx(J jt,A a,A w,C c,C d){A g=0,x0,x1,z;B*av,*av0,b,/* obsolete *u,*v,*/*v0,*v1,*zv;C c0,c1;
     I ana,i,j,m,n,p,q,r,*uu,*vv,wc;
  RZ(a&&w);
  RZ(z=ipprep(a,w,B01,&m,&n,&p));
  // m=#1-cells of a, n=# bytes in 1-cell of w, p=length of individual inner product creating an atom
- ana=!!AR(a); wc=AR(w)?n:0; q=n>>LGSZI; r=n&(SZI-1);  // ana = 1 if a is not atomic; wc = stride between items of w; q=#fullwords in an item of w, r=remainder
+// obsolete  if(AN(z)==0)R z;  // a and w are never empty
+ ana=!!AR(a); wc=AR(w)?n:0; q=(n-1)>>LGSZI; r=(-n)&(SZI-1);  // ana = 1 if a is not atomic; wc = stride between items of w; q=#fullwords to proc, r=#bytes of last one NOT to proc
  // Set c0 & c1 to classify the g operation
  switch(B01&AT(w)?d:0){
   case CEQ:                             c0=IPBXNW; c1=IPBXW;  break;
@@ -1013,7 +1014,7 @@ static A jtipbx(J jt,A a,A w,C c,C d){A g=0,x0,x1,z;B*av,*av0,b,*u,*v,*v0,*v1,*z
   case CGE:                             c0=IPBXNW; c1=IPBX1;  break;
   case CPLUSCO:                         c0=IPBXNW; c1=IPBX0;  break;
   case CSTARCO:                         c0=IPBX1;  c1=IPBXNW; break;
-  default: c0=c1=-1; g=ds(d); RZ(x0=df2(num[0],w,g)); RZ(x1=df2(num[0],w,g));
+  default: c0=c1=-1; g=ds(d); RZ(x0=df2(num[0],w,g)); RZ(x1=df2(num[0],w,g)); break;
  }
  // Set up x0 to be the argument to use for y if the atom of x is 0: 0, 1, y, -.y
  // Set up x1 to be the arg if xatom is 1
@@ -1026,11 +1027,11 @@ static A jtipbx(J jt,A a,A w,C c,C d){A g=0,x0,x1,z;B*av,*av0,b,*u,*v,*v0,*v1,*z
  // terminate the entire operation
  I esat=2, eskip=2;  // if byte of a equals esat, the entire result-cell is set to its limit value; if it equals eskip, the innerproduct is skipped
  if(c==CPLUSDOT&&(c0==IPBX1||c1==IPBX1)||c==CSTARDOT&&(c0==IPBX0||c1==IPBX0)){
- // +./ . (+. <: >: *:)   *./ . (*. < > +:)   a byte of a can saturate the entire result-cell: see which value does that
+ // +./ . [+. <: >: *:}   *./ . [*. < > +:]   a byte of a can saturate the entire result-cell: see which value does that
   esat=c==CPLUSDOT?c1==IPBX1:c1==IPBX0;  // esat==1 if +./ . (+. >:)   or *./ . (< +:) where x=1 overrides y (producing 1);  if esat=0, x=0 overrides y (producing 1)
  }else if(c==CPLUSDOT&&(c0==IPBX0||c1==IPBX0)||c==CSTARDOT&&(c0==IPBX1||c1==IPBX1)||
      c==CNE&&(c0==IPBX0||c1==IPBX0)){
-  // (+. ~:)/ . (*. < > +:)   *./ . (+. <: >: *:)  a byte of a can guarantee the current innerproduct has no effect
+  // [+. ~:]/ . [*. < > +:]   *./ . [+. <: >: *:]  a byte of a can guarantee the current innerproduct has no effect
   eskip=c==CSTARDOT?c1==IPBX1:c1==IPBX0;  // eskip==1 if  (+. ~:)/ . (+:)   *./ . (+. >:)  where x=1 has no effect; if esat=0, x=0 has no effect
  }
 
@@ -1053,11 +1054,11 @@ static A jtipbx(J jt,A a,A w,C c,C d){A g=0,x0,x1,z;B*av,*av0,b,*u,*v,*v0,*v1,*z
 
 static DF2(jtdotprod){A fs,gs;C c,d;I r;V*sv;
  RZ(a&&w&&self);
- sv=FAV(self); fs=sv->fgh[0]; gs=sv->fgh[1];
- if(B01&AT(a)&&AN(a)&&AN(w)&&CSLASH==ID(fs)&&(d=vaid(gs))&&
-     (c=vaid(FAV(fs)->fgh[0]),c==CSTARDOT||c==CPLUSDOT||c==CNE))R ipbx(a,w,c,d);
- r=lr(gs);
- R df2(a,w,atop(fs,qq(gs,v2(r==RMAX?r:1+r,RMAX))));
+ sv=FAV(self); fs=sv->fgh[0]; gs=sv->fgh[1];  // op is fs . gs
+ if((-(B01&(AT(a)&AT(w)))&-AN(a)&-AN(w)&-(d=vaid(gs)))<0&&CSLASH==ID(fs)&&  // fs is c/
+     (c=vaid(FAV(fs)->fgh[0]),c==CSTARDOT||c==CPLUSDOT||c==CNE))R ipbx(a,w,c,d);  // [+.*.~:]/ . boolean
+ r=lr(gs);   // left rank of v
+ R df2(a,w,atop(fs,qq(gs,v2(r==RMAX?r:1+r,RMAX))));  // inner product according to the Dic
 }
 
 
@@ -1081,10 +1082,10 @@ DF1(jtdetxm){A z; R dotprod(IRS1(w,0L,1L,jthead,z),det(minors(w),self),self);}
 F2(jtdot){A f,h=0;AF f2=jtdotprod;C c,d;
  ASSERTVV(a,w);
  if(CSLASH==ID(a)){
-  f=FAV(a)->fgh[0]; c=ID(f); d=ID(w);
+  f=FAV(a)->fgh[0]; c=ID(f); d=ID(w);  // op was c/ . d
   if(d==CSTAR){
-   if(c==CPLUS )f2=jtpdt; 
-   if(c==CMINUS)RZ(h=eval("[: -/\"1 {.\"2 * |.\"1@:({:\"2)"));
+   if(c==CPLUS )f2=jtpdt;   // +/ . * is a special function
+   if(c==CMINUS)RZ(h=eval("[: -/\"1 {.\"2 * |.\"1@:({:\"2)"));  // -/ . * - calculate some function used by determinant?
  }}
  R fdef(0,CDOT,VERB, jtdet,f2, a,w,h, 0L, 2L,RMAX,RMAX);
 }

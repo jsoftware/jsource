@@ -546,6 +546,8 @@ a =. i. 1e6
 4000 > 7!:2 '+/ 1e5 }. a'
 4000 > 7!:2 '+/ 1000 }. a'
 
+20 -: #@, {. >: i. 10 10 2   NB. self-virtual used to mess up atom count
+
 
 4!:55 ;:'a adot1 adot2 sdot0 case eb ec en f f0 f1 f2 fill '
 4!:55 ;:'g1 g2 head itake jot larg mt n pad raise '

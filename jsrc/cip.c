@@ -977,6 +977,7 @@ time1 ,&(x,y)"0 ((256 1e20 1e20 65536 > x*y) # 0 1 2 3) +/ lens
  EPILOG(z);
 }
 
+#if 0 // obsolete
 #define IPBX(F)  \
  for(i=0;i<m;++i){                                       \
   MC(zv,*av?v1:v0,n); if(ac)++av;                    \
@@ -987,6 +988,7 @@ time1 ,&(x,y)"0 ((256 1e20 1e20 65536 > x*y) # 0 1 2 3) +/ lens
   }                                                      \
   zv+=n;                                                 \
  }
+#endif
 
 #define IPBX0  0
 #define IPBX1  1

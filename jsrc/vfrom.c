@@ -290,7 +290,7 @@ A jtfrombu(J jt,A a,A w,I wf){F1PREFIP;A p,q,z;B b=0;I ar,*as,h,m,r,*u,*v,wcr,wr
  if(r==wr){
   q=w;
  }else{
-  //  reshape w to combine the first h axes of each cell
+  //  reshape w to combine the first h axes of each cell.  Be careful with the copying, because w and q may be the same block.  Some axes may be closed up by the copy
   RZ(q=virtualip(w,0,r)); AN(q)=AN(w); v=AS(q); MCISH(v,ws,wf); v[wf]=m; MCISH(v+wf+1,ws+wf+h,wcr-h);  /* q is reshape(.,w) */
  }
  IRS2(ind,q,0, RMAX,wcr+1-h,jtifrom,z);

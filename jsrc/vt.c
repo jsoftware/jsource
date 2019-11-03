@@ -112,7 +112,7 @@ F2(jttake){A s;I acr,af,ar,n,*v,wcr,wf,wr;
    I offset = woffset * wcellsize;  // offset in atoms of the virtual data
    // allocate virtual block, passing in the in-place status from w
    RZ(s = virtualip(w,offset,wr));    // allocate block
-   // fill in shape
+   // fill in shape.  Note that s and w may be the same block, so ws is destroyed
    I* RESTRICT ss=AS(s); ss[0]=tkabs; DO(wr-1, ss[i+1]=ws[i+1];);  // shape of virtual matches shape of w except for #items
    AN(s)=tkabs*wcellsize;  // install # atoms
    RETF(s);
@@ -150,7 +150,7 @@ F2(jtdrop){A s;I acr,af,ar,d,m,n,*u,*v,wcr,wf,wr;
   I offset = woffset * wcellsize;  // offset in bytes of the virtual data
   // allocate virtual block.  May use inplace w
   RZ(s = virtualip(w,offset,wr));    // allocate block
-  // fill in shape
+  // fill in shape.  s and w may be the same block, so ws is destroyed
   I* RESTRICT ss=AS(s); ss[0]=remlen; DO(wr-1, ss[i+1]=ws[i+1];);  // shape of virtual matches shape of w except for #items
   AN(s)=remlen*wcellsize;  // install # atoms
   RETF(s);
@@ -183,7 +183,7 @@ F1(jthead){I wcr,wf,wr;
    I wn=AN(w); wcr--; wcr=(wcr<0)?wr:wcr;  // wn=#atoms of w, wcr=rank of cell being created
    A z; RZ(z=virtualip(w,0,wcr));  // allocate the cell.  Now fill in shape & #atoms
     // if w is empty we have to worry about overflow when calculating #atoms
-   I zn; MCISH(AS(z),AS(w)+1,wcr) PROD(zn,wcr,AS(w)+1) AN(z)=zn;  // copy shape of CELL of w into z
+   I zn; PROD(zn,wcr,AS(w)+1) MCISH(AS(z),AS(w)+1,wcr) AN(z)=zn;  // Since z and w may be the same, the copy destroys AS(w).  So calc zn first.  copy shape of CELL of w into z
    RETF(z);
   }else{
    // rank not 0, or non-virtualable type, or cell is an atom.  Use from.  Note that jt->ranks is still set, so this may produce multiple cells

@@ -211,10 +211,10 @@ extern unsigned int __cdecl _clearfp (void);
 // the x and y, so it would be safe to get the faster loop that RESTRICT generates, even though strictly speaking if x or y is the
 // same address as z the terms of the RESTRICT are violated.  But on 32-bit machines, registers are so tight that sometimes *z is used
 // as a temp, which means we can't take the liberties there
-#define RESTRICTI __restrict
+#define RESTRICTI // __restrict don't take chances
 #endif
 #ifdef __GNUC__
-#define RESTRICTI __restrict
+#define RESTRICTI // __restrict  don't take chances
 #endif
 #endif  // SY_64
 

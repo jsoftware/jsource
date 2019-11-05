@@ -260,7 +260,8 @@ static B laa(A a,A w){C c,d;
  R (c==C9||c==CA)&&(d==C9||d==CA);
 }
 
-static B lnn(A a,A w){C c; if(!(a&&w))R 0; c=cl(a); R ('x'==c||C9==ctype[(UC)c])&&C9==ctype[(UC)cf(w)];}
+// Is a string a number?  Must start with a digit and end with digit, x, or .
+static B lnn(A a,A w){C c; if(!(a&&w))R 0; c=cl(a); R ('x'==c||'.'==c||C9==ctype[(UC)c])&&C9==ctype[(UC)cf(w)];}
 
 static F2(jtlinsert){A*av,f,g,h,t,t0,t1,t2,*u,y;B b,ft,gt,ht;C c,id;I n;V*v;
  RZ(a&&w);

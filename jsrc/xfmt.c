@@ -88,7 +88,7 @@ static I jtdpone(J jt, B bits, D w){D t;
  if(bits&BITSf) R 0;
  w=ABS(w);
  if(bits&BITSe) w/=pow(10,tfloor(log10(w)));
- DO(10, t=npwrs[i]*jfloor(0.5+ppwrs[i]*w); if(TEQ(t,w)) R i; );
+ DO(10, t=npwrs[i]*jround(ppwrs[i]*w); if(TEQ(t,w)) R i; );
  R 9;
 }
 

@@ -4,6 +4,7 @@
 /* Format: ": Dyad                                                         */
 
 #include "j.h"
+#include "vcomp.h"
 
 
 static F2(jtth2box){A z;I n,p,q,*v,x,y;
@@ -231,8 +232,8 @@ static B jtth2ctrl(J jt,A a,A*ep,A*mp,A*dp,A*sp,I*zkp){A da,ea,ma,s;B b=1,*ev,r,
   // Split a into field-width m and #decimal places d, and x as a flag, negative to indicate exponential form
   if(r){m=av[i]; x=m<0; d=0;}  // real a: m= value of a, d=0 (no decimal places), 
   else{
-   y=au[i].re; m=(I)tfloor(y); ASSERT(teq(y,(D)m),EVDOMAIN); x=m<0;  // real is field size, audit is integer
-   y=au[i].im; d=(I)tfloor(y); ASSERT(teq(y,(D)d),EVDOMAIN); if(0>y)x=1;  // imag is decimal places
+   y=au[i].re; m=(I)tfloor(y); ASSERT(TEQ(y,(D)m),EVDOMAIN); x=m<0;  // real is field size, audit is integer
+   y=au[i].im; d=(I)tfloor(y); ASSERT(TEQ(y,(D)d),EVDOMAIN); if(0>y)x=1;  // imag is decimal places
   }
   // Take abs of field sizes
   if(0>m)m=-m; if(0>d)d=-d; ASSERT(0<=(m|d),EVLIMIT);  // verify no overflow

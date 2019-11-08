@@ -16,10 +16,10 @@
 #define CMPEQ(a,b) ((a)==(b)?1:0)
 #define CMPNE(a,b) ((a)!=(b)?1:0)
 
-B jtteq(J jt,D u,D v){R TCMPEQ(jt->cct,u,v);}
+// obsolete B jtteq(J jt,D u,D v){R TEQ(u,v);}
 
-D jttfloor(J jt,D v){D x; R v<-4e35||4e35<v ? v : (x=jfloor(0.5+v), x-TGT(x,v));}
-D jttceil (J jt,D v){D x; R v<-4e35||4e35<v ? v : (x=jfloor(0.5+v), x+TLT(x,v));}
+D jttfloor(J jt,D v){D x; R /* obsolete v<-4e35||4e35<v ? v : */ (x=jround(v), x-TGT(x,v));}
+D jttceil (J jt,D v){D x; R /* obsolete v<-4e35||4e35<v ? v : */ (x=jround(v), x+TLT(x,v));}
 
 BPFX(eqBB, EQ,BEQ,EQ,BEQ, _mm256_xor_pd(bool256,_mm256_xor_pd(u256,v256)) , ,__m256d bool256=_mm256_castsi256_pd(_mm256_set1_epi64x(0x0101010101010101));)
 BPFX(neBB, NE,BNE,NE,BNE, _mm256_xor_pd(u256,v256) , ,)

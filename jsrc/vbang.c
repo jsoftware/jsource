@@ -65,7 +65,7 @@ static Z jtzstirling(J jt,Z z){Z p,q;
 }    /* Abramowitz & Stegun, 6.1.37 */
 
 static Z jtzgamma(J jt,Z z){D y=ABS(z.im);
- R !y?zrj0(dgamma(z.re)):20<y?zstirling(z):zgauss(ceil(y/0.8660254),z);
+ R !y?zrj0(dgamma(z.re)):20<y?zstirling(z):zgauss(jceil(y/0.8660254),z);
 }
 
 AMON(factI,  D,I, *z=dgamma(1.0+(D)*x);)
@@ -112,7 +112,7 @@ static D ibin(D x,D y){D d=MIN(x,y-x),p=1;
  // if x and y are _, d is NaN.  Conversion to int is undefined then.  Test for it, but we're gonna get a NaN error when we finish
  if(_isnan(d))R 0.0;  // avoid looping if d is invalid now
  DQ((I)d, p*=y--/d--; if(p==inf)R p;);
- R jfloor(0.5+p);
+ R jround(p);
 }    /* x and y are non-negative integers; x<=y */
 
 static Z jtzbin(J jt,Z x,Z y){Z a,b,c;

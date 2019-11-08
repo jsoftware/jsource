@@ -894,7 +894,7 @@ strcpy(proc,"x15lseek32");
  R cc;
 }
 
-#define CDT(x,y) ((x)+32*(y))  // x runs from LIT to C4T, 2-18
+#define CDT(x,y) ((x)+32*(y))  // x runs from B01 to C4T 0-3, 17-18
 
 static I*jtconvert0(J jt,I zt,I*v,I wt,C*u){D p,q;I k=0;US s;C4 s4;
  switch(CDT(CTTZ(zt),CTTZ(wt))){
@@ -914,13 +914,28 @@ static I*jtconvert0(J jt,I zt,I*v,I wt,C*u){D p,q;I k=0;US s;C4 s4;
   case CDT(INTX,B01X): *    v=*(B*)u; break;
   case CDT(INTX,INTX): *    v=*(I*)u; break;
   case CDT(INTX,FLX ):
+#if SY_64
+  p=*(D*)u; q=jround(p);
+  if(p==q || FEQ(p,q)/* obsolete || (++q,FEQ(p,q))*/){   // exact equality is likely enough to test for explicitly
+   // If the conversion will give garbage, the value could still be tolerantly equal to IMIN/IMAX, so check for that
+   if(p<(D)IMIN){
+    if(p<IMIN*(1+jt->fuzz))R 0;  // tolerantly < IMIN, error
+    else *v=IMIN;
+   }else if(p>=-(D)IMIN){  // IMIN is exact
+    if(p>IMAX*(1+jt->fuzz))R 0;  // tolerantly > IMAX, error
+    else *v=IMAX;
+   }else *v=(I)q;
+  }
+#if 0 // obsolete
    p=*(D*)u; q=jfloor(p);
    if(p<IMIN*(1+jt->fuzz)||IMAX*(1+jt->fuzz)<p)R 0;
-#if SY_64
    if         (FEQ(p,q)){k=(I)q; *v=SGN(k)==SGN(q)?k:0>q?IMIN:IMAX;}
    else if(++q,FEQ(p,q)){k=(I)q; *v=SGN(k)==SGN(q)?k:0>q?IMIN:IMAX;}
    else R 0;
+#endif
 #else
+   p=*(D*)u; q=jfloor(p);
+   if(p<IMIN*(1+jt->fuzz)||IMAX*(1+jt->fuzz)<p)R 0;
    if(FEQ(p,q))*v=(I)q; else if(FEQ(p,1+q))*v=(I)(1+q); else R 0;
 #endif
  }

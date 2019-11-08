@@ -302,7 +302,7 @@ static XF2(jtxroot){A q;D x;I an,*av,c,d,r,wn,*wv;X n,n1,p,t,z;
  if(2==r)R xsqrt(w);
  x=xlogabs(w)/r;
  if(x<709.78){RZ(q=ceil1(cvt(RAT,scf(exp(x))))); z=*XAV(q);}
- else        {RZ(q=cvt(XNUM,scf(ceil(x)))); z=xexp(*XAV(q),XMCEIL);}
+ else        {RZ(q=cvt(XNUM,scf(jceil(x)))); z=xexp(*XAV(q),XMCEIL);}
  RZ(n=xc(r)); RZ(n1=xc(r-1));
  RZ(t=xdiv(w,p=xpow(z,n1),XMFLR));
  RZ(z=xdiv(xplus(t,xtymes(z,n1)),n,XMFLR))

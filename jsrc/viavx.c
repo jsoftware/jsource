@@ -2182,10 +2182,10 @@ F1(jtsclass){A e,x,xy,y,z;I c,j,m,n,*v;P*p;
  }}
 
 // create the index-of routines.  These hash just the real part of a complex value
-static IOCOLFT(D,jtiocold,hid(*v),    hid(tl*x),hid(tr*x),!teq(*v,av[wsct*hj]))
+static IOCOLFT(D,jtiocold,hid(*v),    hid(tl*x),hid(tr*x),!TEQ(*v,av[wsct*hj]))
 static IOCOLFT(Z,jtiocolz,hid(*(D*)v),hid(tl*x),hid(tr*x),!zeq(*v,av[wsct*hj]))
 
-static JOCOLFT(D,jtjocold,hid(*v),    hid(tl*x),hid(tr*x),!teq(*v,av[wsct*hj]))
+static JOCOLFT(D,jtjocold,hid(*v),    hid(tl*x),hid(tr*x),!TEQ(*v,av[wsct*hj]))
 static JOCOLFT(Z,jtjocolz,hid(*(D*)v),hid(tl*x),hid(tr*x),!zeq(*v,av[wsct*hj]))
 
 // support for a i."1 &.|:w or a i:"1 &.|:w   used only by some sparse-array stuff

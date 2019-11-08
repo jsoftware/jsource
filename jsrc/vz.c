@@ -234,7 +234,7 @@ static ZF1(jtzarc){D x,y;Z t,z;
 ZF2(jtzcir){D r;I x;Z z;
  z=zeroZ;
  r=u.re;
- x=(I)jfloor(0.5+r);
+ x=(I)jround(r);
  ZASSERT(-12<=r&&r<=12&&FEQ(x,r)&&!u.im,EVDOMAIN);
  switch(x){
   default: ZASSERT(0,EVDOMAIN);

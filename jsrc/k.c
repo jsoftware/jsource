@@ -4,6 +4,7 @@
 /* Conversions Amongst Internal Types                                      */
 
 #include "j.h"
+#include "vcomp.h"
 
 #define KF1(f)          B f(J jt,A w,void*yv)
 #define CVCASE(a,b)     (((a)<<3)+(b))   // The main cases fit in low 8 bits of mask
@@ -78,20 +79,42 @@ static KF1(jtBfromD){B*x;D p,*v;I n;
  R 1;
 }
 
-static KF1(jtIfromD){D p,q,r,*v;I i,k=0,n,*x;
+static KF1(jtIfromD){D p,q,*v;I i,k=0,n,*x;
  n=AN(w); v=DAV(w); x=(I*)yv;
- q=IMIN*(1+jt->fuzz); r=IMAX*(1+jt->fuzz);
+#if SY_64
+#if 1
+ for(i=0;i<n;++i){
+  p=v[i]; q=jround(p);
+  if(p==q || FEQ(p,q)/* obsolete || (++q,FEQ(p,q))*/){   // exact equality is likely enough to test for explicitly
+   // If the conversion will give garbage, the value could still be tolerantly equal to IMIN/IMAX, so check for that
+   if(p<(D)IMIN){
+    if(p<IMIN*(1+jt->fuzz))R 0;  // tolerantly < IMIN, error
+    else *x++=IMIN;
+   }else if(p>=-(D)IMIN){  // IMIN is exact
+    if(p>IMAX*(1+jt->fuzz))R 0;  // tolerantly > IMAX, error
+    else *x++=IMAX;
+   }else *x++=(I)q;
+  }
+  else R 0;
+ }
+#else // obsolete
+ q=IMIN*(1+jt->fuzz); D r=IMAX*(1+jt->fuzz);
  DO(n, p=v[i]; if(p<q||r<p)R 0;);
  for(i=0;i<n;++i){
   p=v[i]; q=jfloor(p);
-#if SY_64
   if         (FEQ(p,q)){k=(I)q; *x++=SGN(k)==SGN(q)?k:0>q?IMIN:IMAX;}
   else if(++q,FEQ(p,q)){k=(I)q; *x++=SGN(k)==SGN(q)?k:0>q?IMIN:IMAX;}
   else R 0;
-#else
-  if(FEQ(p,q))*x++=(I)q; else if(FEQ(p,1+q))*x++=(I)(1+q); else R 0;
-#endif
  }
+#endif
+#else
+ q=IMIN*(1+jt->fuzz); D r=IMAX*(1+jt->fuzz);
+ DO(n, p=v[i]; if(p<q||r<p)R 0;);
+ for(i=0;i<n;++i){
+  p=v[i]; q=jfloor(p);
+  if(FEQ(p,q))*x++=(I)q; else if(FEQ(p,1+q))*x++=(I)(1+q); else R 0;
+ }
+#endif
  R 1;
 }
 
@@ -123,9 +146,9 @@ static KF1(jtXfromI){B b;I c,d,i,j,n,r,u[XIDIG],*v;X*x;
 static X jtxd1(J jt,D p){PROLOG(0052);A t;D d,e=tfloor(p),q,r;I m,*u;
  switch(jt->xmode){
   case XMFLR:   p=e;                            break;
-  case XMCEIL:  p=ceil(p);                      break;
-  case XMEXACT: ASSERT(teq(p,e),EVDOMAIN); p=e; break;
-  case XMEXMT:  if(!teq(p,e))R vec(INT,0L,&m);
+  case XMCEIL:  p=jceil(p);                      break;
+  case XMEXACT: ASSERT(TEQ(p,e),EVDOMAIN); p=e; break;
+  case XMEXMT:  if(!TEQ(p,e))R vec(INT,0L,&m);
  }
  if(p== inf)R vci(XPINF);
  if(p==-inf)R vci(XNINF);
@@ -184,7 +207,7 @@ static KF1(jtQfromD){B neg,recip;D c,d,t,*wv;I e,i,n,*v;Q q,*x;S*tv;
   if     (t==inf)q.n=vci(XPINF);
   else if(t==0.0)q.n=iv0;
   else if(1.1102230246251565e-16<t&&t<9.007199254740992e15){
-   d=jfloor(0.5+1/dgcd(1.0,t)); c=jfloor(0.5+d*t); 
+   d=jround(1/dgcd(1.0,t)); c=jround(d*t); 
    q.n=xd1(c); q.d=xd1(d); q=qstd(q);
   }else{
    if(recip=1>t)t=1.0/t;

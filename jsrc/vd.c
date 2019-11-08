@@ -232,9 +232,9 @@ static F1(jticor){D d,*v;
  RZ(w);
  d=jt->workareas.minv.determ;  // fetch flag/determinant
  if(d==0.0)R w;  // if not enabled or not applicable, return input unchanged
- d=jfloor(0.5+ABS(d));  // force determinant to integer
+ d=jround(ABS(d));  // force determinant to integer
  D recipd=1/d;
- v=DAV(w); DO(AN(w), v[i]=jfloor(0.5+d*v[i])*recipd;);  // force each value to multiple of recip of determinant, then divide
+ v=DAV(w); DO(AN(w), v[i]=jround(d*v[i])*recipd;);  // force each value to multiple of recip of determinant, then divide
  R w;
 }
 

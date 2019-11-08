@@ -434,14 +434,33 @@ F2(jtfrom){I at;A z;
  RZ(a&&w);
  at=AT(a);
  if(!((AT(a)|AT(w))&(SPARSE))){
-  // if INT atom { INT|FL|BOX list, and right rank is not 0, just pluck the value.  If a is inplaceable and not unincorpable, use it
-  if(SY_64&&!((AT(a)&(NOUN&~INT))+(AT(w)&(NOUN&~(INT|FL|BOX)))+AR(a)+(AR(w)^1)+!(RANKT)jt->ranks)){
-   // Get the area to use for the result: the input if possible, else an INT atom
-   if((SGNIF(jtinplace,JTINPLACEAX)&AC(a)&SGNIFNOT(AFLAG(a),AFUNINCORPABLEX))<0)z=a; else{GAT0(z,INT,1,0)}
-   // Move the value and transfer the block-type
-   I j; AT(z)=AT(w); SETNDX(j,IAV(a)[0],AN(w)); IAV(z)[0]=IAV(w)[j];
+  // if INT|FL atom { INT|FL array, and no frame, just pluck the value.  If a is inplaceable and not unincorpable, use it
+  // If we turn the result to BOX it will have the original flags, i. e. it will be nonrecursive.  Thus fa will not free the contents, which do not have incremented usecount (and are garbage on error)
+  if(SY_64&&!((AT(a)&(NOUN&~(INT|FL)))+(AT(w)&(NOUN&~(INT|FL|BOX)))+AR(a)+((UI)(((RANKT)jt->ranks-AR(w))|(AR(w)-1))>>(BW-1))+(AFLAG(w)&AFNJA))){
+   I av;  // selector value
+   if(AT(a)&INT){av=IAV(a)[0];  // INT index
+   }else{  // FL index
+    D af=DAV(a)[0], f=jround(af);
+    if(f==af || FEQ(f,af)/*  obsolete || (++f,FEQ(f,af))*/)av=(I)f;  // no need to worry about imax/imin
+    else ASSERT(0,EVDOMAIN);  // if index not integral, complain
+   }
+   I wr1=AR(w)-1;
+   if(wr1<=0){  // w is atom or list, result is atom
+    // Get the area to use for the result: the input if possible, else an INT atom
+    if((SGNIF(jtinplace,JTINPLACEAX)&AC(a)&SGNIFNOT(AFLAG(a),AFUNINCORPABLEX))<0)z=a; else{GAT0(z,INT,1,0)}
+    // Move the value and transfer the block-type
+    I j; AT(z)=AT(w); SETNDX(j,av,AN(w)); IAV(z)[0]=IAV(w)[j];
+   }else{
+    // rank of w > 1, return virtual cell
+    I *ws=AS(w);  // shape of w
+    I m; PROD(m,wr1,ws+1);  // number of atoms in a cell
+    I j; SETNDX(j,av,ws[0]);  // j=positive index
+    RZ(z=virtualip(w,j*m,wr1));   // if w is rank 2, could reuse inplaceable a for this virtual block
+    // fill in shape and number of atoms.  ar can be anything.
+    AN(z)=m; MCISH(AS(z),ws+1,wr1)
+   }
   }else{
-   // not atom{list.  Process according to type of a
+   // not atom{array.  Process according to type of a
 #if 1
    A (*fn)(J,A,A);
    fn=jtifrom; fn=at&BOX?jtafrom:fn; fn=at&(AN(a)!=1)?jtbfrom:fn; jtinplace=fn!=jtifrom?jt:jtinplace;

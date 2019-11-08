@@ -36,7 +36,8 @@ A jtssingleton1(J jt, A w,A self){A z;
  case SSINGCASE(VA2MIN-VA2MIN,SSINGENC(B01)): 
  case SSINGCASE(VA2MIN-VA2MIN,SSINGENC(INT)): R w;
  case SSINGCASE(VA2MIN-VA2MIN,SSINGENC(FL)):
-   wdv = tfloor(SSRDD(w));
+// obsolete   wdv = tfloor(SSRDD(w));
+   {D x=SSRDD(w); wdv=jround(x); D xf=jfloor(x); if(TNE(x,wdv))wdv=xf;}  // do round/floor in parallel
    if(wdv == (D)(I)wdv) SSSTORE((I)wdv,z,INT,I) else SSSTORENVFL(wdv,z,FL,D)
    R z;
 
@@ -44,7 +45,8 @@ A jtssingleton1(J jt, A w,A self){A z;
  case SSINGCASE(VA2MAX-VA2MIN,SSINGENC(B01)):
  case SSINGCASE(VA2MAX-VA2MIN,SSINGENC(INT)): R w;
  case SSINGCASE(VA2MAX-VA2MIN,SSINGENC(FL)):
-   wdv = tceil(SSRDD(w));
+// obsolete    wdv = tceil(SSRDD(w));
+   {D x=SSRDD(w); wdv=jround(x); D xc=jceil(x); if(TNE(x,wdv))wdv=xc;}  // do round/ceil in parallel
    if(wdv == (D)(I)wdv) SSSTORE((I)wdv,z,INT,I) else SSSTORENVFL(wdv,z,FL,D)
    R z;
 

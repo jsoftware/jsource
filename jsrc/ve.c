@@ -5,6 +5,7 @@
 
 #include "j.h"
 #include "vasm.h"
+#include "vcomp.h"
 
 #define DIVI(u,v)     (u||v ? ddiv2(u,(D)v) : 0.0)
 #define DIVBB(u,v)    (v?u:u?inf:0.0)
@@ -320,7 +321,7 @@ D jtremdd(J jt,D a,D b){D q,x,y;
  ASSERT(!INF(b),EVNAN);
  if(a==inf )R 0<=b?b:a;
  if(a==infm)R 0>=b?b:a;
- q=b/a; x=tfloor(q); y=tceil(q); R teq(x,y)?0:b-a*x;
+ q=b/a; x=tfloor(q); y=tceil(q); R TEQ(x,y)?0:b-a*x;
 }
 
 ANAN(remDD, D,D,D, remdd)
@@ -328,7 +329,7 @@ ANAN(remZZ, Z,Z,Z, zrem )
 
 I jtremid(J jt,I a,D b){D r;I k;
  ASSERT(a&&-9e15<b&&b<9e15,EWOV);
- r=b-a*floor(b/a); k=(I)r;
+ r=b-a*jfloor(b/a); k=(I)r;
  ASSERT(k==r,EWOV);   // not really overflow - just has a fractional part
  R k;
 }
@@ -391,7 +392,7 @@ D jtdgcd(J jt,D a,D b){D a1,b1,t;B stop = 0;
  ASSERT(inf!=b,EVNAN);
  if(!a)R b;
  a1=a; b1=b;
- while(remdd(a1/jfloor(0.5+a1/a),b1)){t=a; if((a=remdd(a,b))==0)break; b=t;}  // avoid infinite loop if a goes to 0
+ while(remdd(a1/jround(a1/a),b1)){t=a; if((a=remdd(a,b))==0)break; b=t;}  // avoid infinite loop if a goes to 0
  R a;
 }    /* D.L. Forkes 1984; E.E. McDonnell 1992 */
 I jtilcm(J jt,I a,I b){I z;I d;

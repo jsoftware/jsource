@@ -6,11 +6,11 @@
 /* See  R. Bernecky, Comparison Tolerance, SATN-23, IPSA, 1977-06-10       */
 /* For finite numbers, the following defns hold:                           */
 /*                                                                         */
-/*   teq(u,v)   ABS(u-v)<=ct*MAX(ABS(u),ABS(v))                            */
-/*   tne(u,v)   !teq(u,v)                                                  */
+/*   TEQ(u,v)   ABS(u-v)<=ct*MAX(ABS(u),ABS(v))                            */
+/*   tne(u,v)   !TEQ(u,v)                                                  */
 /*   tlt(u,v)   (u< v)&&tne(u,v)                                           */
-/*   tle(u,v)   (u<=v)||teq(u,v)                                           */
-/*   tge(u,v)   (u>=v)||teq(u,v)                                           */
+/*   tle(u,v)   (u<=v)||TEQ(u,v)                                           */
+/*   tge(u,v)   (u>=v)||TEQ(u,v)                                           */
 /*   tgt(u,v)   (u> v)&&tne(u,v)                                           */
 /*   tfloor(v)  x=floor(0.5+v), x-tgt(x,v)                                 */
 /*   tceil(v)   x=floor(0.5+v), x+tlt(x,v)                                 */

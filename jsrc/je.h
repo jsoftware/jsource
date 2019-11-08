@@ -815,7 +815,7 @@ extern L*       jtsyrdfromloc(J,A,A);
 extern L*       jtsyrdnobuckets(J,A);
 extern A        jttaker(J,I,A);
 extern D        jttceil(J,D);
-extern B        jtteq(J,D,D);
+// obsolete extern B        jtteq(J,D,D);
 extern D        jttfloor(J,D);
 extern I        jtthv(J,A,I,C*);
 extern A        jttoc1(J,B,A);

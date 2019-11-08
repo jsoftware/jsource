@@ -103,7 +103,7 @@ static I init4792(J jt) {
  if(!jt->p4792){RZ(jt->p4792=prime1(IX(4792L))); ACX(jt->p4792);} R 1;
 }
 
-static I rem(D x,I d){R (I)floor(x-d*floor(x/(D)d));}
+static I rem(D x,I d){R (I)jfloor(x-d*jfloor(x/(D)d));}
 
 static void sieved(D n,I m,B*b){I c,d,e,i,q,r,*u,*v;
  static B t[]={

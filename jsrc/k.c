@@ -75,7 +75,7 @@ static KF1(jtBfromI){B*x;I n,p,*v;
 static KF1(jtBfromD){B*x;D p,*v;I n;
  n=AN(w); v=DAV(w); x=(B*)yv;
  DQ(n, p=*v++; if(p<-2||2<p)R 0;   // handle infinities
-  if(!p)*x++=0; else if(FEQ(1.0,p))*x++=1; else R 0;);
+  if(!p)*x++=0; else if(FIEQ(p,1.0))*x++=1; else R 0;);
  R 1;
 }
 
@@ -84,18 +84,12 @@ static KF1(jtIfromD){D p,q,*v;I i,k=0,n,*x;
 #if SY_64
 #if 1
  for(i=0;i<n;++i){
-  p=v[i]; q=jround(p);
-  if(p==q || FEQ(p,q)/* obsolete || (++q,FEQ(p,q))*/){   // exact equality is likely enough to test for explicitly
-   // If the conversion will give garbage, the value could still be tolerantly equal to IMIN/IMAX, so check for that
-   if(p<(D)IMIN){
-    if(p<IMIN*(1+jt->fuzz))R 0;  // tolerantly < IMIN, error
-    else *x++=IMIN;
-   }else if(p>=-(D)IMIN){  // IMIN is exact
-    if(p>IMAX*(1+jt->fuzz))R 0;  // tolerantly > IMAX, error
-    else *x++=IMAX;
-   }else *x++=(I)q;
-  }
-  else R 0;
+  p=v[i]; q=jround(p); I rq=(I)q;
+  if(!(p==q || FIEQ(p,q)))R 0;  // must equal int, possibly out of range
+  // out-of-range values don't convert, handle separately
+  if(p<(D)IMIN){if(!(p>=IMIN*(1+jt->fuzz)))R 0; rq=IMIN;}  // if tolerantly < IMIN, error; else take IMIN
+  else if(p>=-(D)IMIN){if(!(p<=IMAX*(1+jt->fuzz)))R 0; rq=IMAX;}  // if tolerantly > IMAX, error; else take IMAX
+  *x++=rq;
  }
 #else // obsolete
  q=IMIN*(1+jt->fuzz); D r=IMAX*(1+jt->fuzz);
@@ -112,7 +106,7 @@ static KF1(jtIfromD){D p,q,*v;I i,k=0,n,*x;
  DO(n, p=v[i]; if(p<q||r<p)R 0;);
  for(i=0;i<n;++i){
   p=v[i]; q=jfloor(p);
-  if(FEQ(p,q))*x++=(I)q; else if(FEQ(p,1+q))*x++=(I)(1+q); else R 0;
+  if(FIEQ(p,q))*x++=(I)q; else if(FIEQ(p,1+q))*x++=(I)(1+q); else R 0;
  }
 #endif
  R 1;

@@ -196,7 +196,7 @@ if(((-1) >> 1) != -1)*(I *)4 = 104;
 jt->asgzomblevel = 1;  // allow premature change to zombie names, but not data-dependent errors
 jt->assert = 1;
  RZ(jt->bxa=cstr("+++++++++|-")); jt->bx=CAV(jt->bxa);
- y=1.0; DQ(44, y*=0.5;); jt->cctdefault=jt->cct= 1.0-y; jt->fuzz=y;
+ /* obsolete y=1.0; DQ(44, y*=0.5;); */ jt->cctdefault=jt->cct= 1.0-FUZZ; jt->fuzz=FUZZ;
  jt->disp[0]=1; jt->disp[1]=5;
  jt->fcalln=NFCALL;
 #if USECSTACK

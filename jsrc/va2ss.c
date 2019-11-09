@@ -33,12 +33,20 @@
 
 // Return int version of d, with error if loss of significance
 static I intforD(J jt, D d){D q;I z;
+#if 1
+ q=jround(d); z=(I)q;
+ ASSERT(d==q || FFIEQ(d,q),EVDOMAIN);  /* obsolete  || (++e,FEQ(d,e))*/
+ // too-large values don't convert, handle separately
+ if(d<(D)IMIN){ASSERT(d>=IMIN*(1+FUZZ),EVDOMAIN); z=IMIN;}  // if tolerantly < IMIN, error; else take IMIN
+ else if(d>=-(D)IMIN){ASSERT(d<=IMAX*(1+FUZZ),EVDOMAIN); z=IMAX;}  // if tolerantly > IMAX, error; else take IMAX
+#else // obsolete
  q=jfloor(d);
  if(!FEQ(q,d)){++q;
   // see if >: <.a is tolerantly equal to (I)a
   ASSERT(FEQ((D)q,d),EVDOMAIN);
  }
  z=(I)q; if((z<0)!=(q<0))z=0>q?IMIN:IMAX;
+#endif
  R z;
 }
 

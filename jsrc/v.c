@@ -106,15 +106,17 @@ F1(jtiota){A z;I m,n,*v;
  RETF(z);
 }
 
+// i: w
 F1(jtjico1){A y,z;B b;D d,*v;I c,m,n; 
  F1RANK(0,jtjico1,0);
- RZ(y=cvt(FL,rect(w))); v=DAV(y); d=*v;
- RE(m=v[1]?i0(cvt(INT,tail(y))):i0(tymes(mag(w),num[2])));
- ASSERT(0<m||!m&&0==d,EVDOMAIN);
- n=(I)jfloor(d+0.1); b=FEQ(d,n); c=(2*ABS(n))/(m?m:1);
- if(b&&m*c==2*ABS(n))z=apv(1+m,-n,0>d?-c:c);
- else                z=plusW(scf(0>d?d:-d),tymesW(scf(2*ABS(d)/m),apv(1+m,0>d?m:0L,0>d?-1L:1L)));
- if(AT(w)&XNUM+RAT)z=cvt(AT(w)&XNUM||equ(w,floor1(w))?XNUM:RAT,z);
+ RZ(y=cvt(FL,rect(w))); v=DAV(y); d=*v;  // convert to complex, d=real part of value
+ RE(m=v[1]?i0(cvt(INT,tail(y))):i0(tymes(mag(w),num[2])));  // m=#steps: imaginary part if nonzero; otherwise 2*|w
+ ASSERT(0<m||!m&&0==d,EVDOMAIN);  // error if imag part was negative, or 0 unless d is also 0
+// obsolete  n=(I)jfloor(d+0.1); b=FIEQ(d,n); c=(2*ABS(n))/(m?m:1);
+ n=(I)jround(d); b=FFIEQ(d,n); c=(2*ABS(n))/(m?m:1);   // try as integer
+ if(b&&m*c==2*ABS(n))z=apv(1+m,-n,0>d?-c:c);  // if integer works, use it
+ else                z=plusW(scf(0>d?d:-d),tymesW(scf(2*ABS(d)/m),apv(1+m,0>d?m:0L,0>d?-1L:1L)));  // otherwise FL
+ if(AT(w)&XNUM+RAT)z=cvt(AT(w)&XNUM||equ(w,floor1(w))?XNUM:RAT,z);  // cvrt to XNUM as needed
  RETF(z);
 }
 

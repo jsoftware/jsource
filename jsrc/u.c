@@ -376,20 +376,19 @@ F1(jtvib){A z;D d,e,*wv;I i,n,*zv;
    n=AN(w); wv=DAV(w);
    GATV(z,INT,n,AR(w),AS(w)); zv=AV(z);
    for(i=0;i<n;++i){
-    d=wv[i]; e=jround(d);
+    d=wv[i]; e=jround(d); I cval=(I)e;
     // if an atom is tolerantly equal to integer,  there's a good chance it is exactly equal.
     // infinities will always round to themselves
 #if 1
-    if(d==e || FEQ(d,e)/* obsolete  || (++e,FEQ(d,e))*/){
-     I cval=(I)e; cval=d<(D)-IMAX?-IMAX:cval; cval=d>(D)IMAX?IMAX:cval; zv[i]=cval;
-    }
+    ASSERT(d==e || FFIEQ(d,e),EVDOMAIN);  /* obsolete  || (++e,FEQ(d,e))*/
+    cval=d<(D)-IMAX?-IMAX:cval; cval=d>(D)IMAX?IMAX:cval; zv[i]=cval;  // too-large values don't convert, handle separately
 #else  // obsolete
     if     (d==inf )     zv[i]=q;
     else if(d==infm)     zv[i]=p;
     else if(    FEQ(d,e))zv[i]=d<p?p:q<d?q:(I)e;
     else if(++e,FEQ(d,e))zv[i]=d<p?p:q<d?q:(I)e;
-#endif
     else ASSERT(0,EVDOMAIN);
+#endif
   }
  }
  jt->ranks=oqr; RETF(z);

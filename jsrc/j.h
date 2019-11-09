@@ -495,7 +495,14 @@ extern unsigned int __cdecl _clearfp (void);
 #define STACKVERIFY
 #endif
 #define FCONS(x)        fdef(0,CFCONS,VERB,jtnum1,jtnum2,0L,0L,(x),VFLAGNONE, RMAX,RMAX,RMAX)
+// fuzzy-equal is used for tolerant comparisons not related to jt->cct; for example testing whether x in x { y is an integer
+#define FUZZ            0.000000000000056843418860808015   // tolerance
+// FEQ/FIEQ are used in bcvt, where jt->fuzz may be set to 0 to ensure only exact values are demoted to lower precision
 #define FEQ(u,v)        (ABS((u)-(v))<=jt->fuzz*MAX(ABS(u),ABS(v)))
+#define FIEQ(u,v)       (ABS((u)-(v))<=jt->fuzz*ABS(v))  // used when v is known to be exact integer.  It's close enough, maybe ULP too small on the high end
+// FFEQ/FFIEQ (fixed fuzz) are used where we know for sure the test should be tolerant
+#define FFEQ(u,v)        (ABS((u)-(v))<=FUZZ*MAX(ABS(u),ABS(v)))
+#define FFIEQ(u,v)       (ABS((u)-(v))<=FUZZ*ABS(v))  // used when v is known to be exact integer.  It's close enough, maybe ULP too small on the high end
 #define F1(f)           A f(J jt,    A w)
 #define F2(f)           A f(J jt,A a,A w)
 #define FPREF           

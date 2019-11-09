@@ -915,17 +915,12 @@ static I*jtconvert0(J jt,I zt,I*v,I wt,C*u){D p,q;I k=0;US s;C4 s4;
   case CDT(INTX,INTX): *    v=*(I*)u; break;
   case CDT(INTX,FLX ):
 #if SY_64
-  p=*(D*)u; q=jround(p);
-  if(p==q || FEQ(p,q)/* obsolete || (++q,FEQ(p,q))*/){   // exact equality is likely enough to test for explicitly
-   // If the conversion will give garbage, the value could still be tolerantly equal to IMIN/IMAX, so check for that
-   if(p<(D)IMIN){
-    if(p<IMIN*(1+jt->fuzz))R 0;  // tolerantly < IMIN, error
-    else *v=IMIN;
-   }else if(p>=-(D)IMIN){  // IMIN is exact
-    if(p>IMAX*(1+jt->fuzz))R 0;  // tolerantly > IMAX, error
-    else *v=IMAX;
-   }else *v=(I)q;
-  }
+  p=*(D*)u; q=jround(p); I rq=(I)q;
+  if(!(p==q || FFIEQ(p,q)))R 0;  // must equal int, possibly out of range.  Exact equality is common enough to test for
+  // out-of-range values don't convert, handle separately
+  if(p<(D)IMIN){if(!(p>=IMIN*(1+FUZZ)))R 0; rq=IMIN;}  // if tolerantly < IMIN, error; else take IMIN
+  else if(p>=-(D)IMIN){if(!(p<=IMAX*(1+FUZZ)))R 0; rq=IMAX;}  // if tolerantly > IMAX, error; else take IMAX
+  *v=rq;
 #if 0 // obsolete
    p=*(D*)u; q=jfloor(p);
    if(p<IMIN*(1+jt->fuzz)||IMAX*(1+jt->fuzz)<p)R 0;

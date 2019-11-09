@@ -123,7 +123,7 @@ F1(jtrect){A e,z;B b;I r,t;P*wp,*zp;Z c;
   b=1&&t&SCMPX;
   GASPARSE(z,b?SFL:t,1,1+r,AS(w)); AS(z)[r]=2;
   wp=PAV(w); zp=PAV(z);
-  if(b){e=SPA(wp,e); c=*ZAV(e); ASSERT(FEQ(c.re,c.im),EVSPARSE); SPB(zp,e,scf(c.re));}
+  if(b){e=SPA(wp,e); c=*ZAV(e); ASSERT(FFEQ(c.re,c.im),EVSPARSE); SPB(zp,e,scf(c.re));}
   else SPB(zp,e,ca(SPA(wp,e)));
   SPB(zp,a,ca(SPA(wp,a)));
   SPB(zp,i,ca(SPA(wp,i)));

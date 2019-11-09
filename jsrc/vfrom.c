@@ -440,9 +440,8 @@ F2(jtfrom){I at;A z;
    I av;  // selector value
    if(AT(a)&INT){av=IAV(a)[0];  // INT index
    }else{  // FL index
-    D af=DAV(a)[0], f=jround(af);
-    if(f==af || FEQ(f,af)/*  obsolete || (++f,FEQ(f,af))*/)av=(I)f;  // no need to worry about imax/imin
-    else ASSERT(0,EVDOMAIN);  // if index not integral, complain
+    D af=DAV(a)[0], f=jround(af); av=(I)f;
+    ASSERT(f==af || FFIEQ(f,af),EVDOMAIN);  // if index not integral, complain.  IMAX/IMIN will fail presently
    }
    I wr1=AR(w)-1;
    if(wr1<=0){  // w is atom or list, result is atom

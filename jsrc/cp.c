@@ -121,18 +121,23 @@ static DF1(jtply1){PROLOG(0040);DECLFG;A b,hs,j,*xv,y,z;B*bv,q;I i,k,m,n,*nv,p=0
  z=ope(reshape(shape(hs),from(grade1(j),x))); EPILOG(z);
 }
 
-// u^:_ w
-static DF1(jtpinf1){DECLFG;PROLOG(0340);A z;
+// u^:_ w  Bivalent, called as w,fs or a,w,fs
+static DF2(jtpinf12){PROLOG(0340);A z;  // no reason to inplace, since w must be preserved for comparison, & a for reuse
  I i=0;
+ I ismonad=(AT(w)>>VERBX)&1; self=ismonad?w:self;  // the call shows the dyad; if it's really a monad, w->self, leave arg in a
+ A fs=FAV(self)->fgh[0]; w=ismonad?fs:w;   // for monad, fs->w
+ AF f=FAV(fs)->valencefns[1-ismonad];
  while(1){
-  RZ(z=CALL1(f1,w,fs));  // call the fn
-  I isend=equ(z,w);  // remember if it is the same as last time
+// obsolete   RZ(z=CALL1(f1,w,fs));  // call the fn
+  RZ(z=CALL2(f,a,w,fs));  // call the fn, either monadic or dyadic
+  A oldw=w; oldw=ismonad?a:oldw; w=ismonad?w:z; a=ismonad?z:a;  // oldw=input w to f; save result for next loop overwriting a(monad) or w(dyad)
+  I isend=equ(z,oldw);  // remember if result is same an input
   if(!((isend-1)&++i&7)) {  // every so often, but always when we leave...
    JBREAK0;   // check for user interrupt, in case the function doesn't allocate memory
    RZ(z=EPILOGNORET(z));  // free up allocated blocks, but keep z.  If z is virtual it will be realized
    if(isend)RETF(z);  // return at end
   }
-  w=z;  // make the new result the starting value for next loop
+    // make the new result the starting value for next loop, replacing w wherever it is
  }
 }
 
@@ -169,7 +174,7 @@ static DF1(jtinvh1){F1PREFIP;DECLFGH;A z; RZ(w);    FDEPINC(1); z=(FAV(hs)->vale
 static DF2(jtinv2){DECLFG;A z; RZ(a&&w); FDEPINC(1); z=df1(w,inv(amp(a,fs))); FDEPDEC(1); STACKCHKOFL RETF(z);}  // the CHKOFL is to avoid tail recursion, which prevents a recursion loop from being broken
 static DF1(jtinverr){F1PREFIP;ASSERT(0,EVDOMAIN);}  // used for uninvertible monads
 
-static CS2(jtply2,  df1(w,powop(amp(a,fs),gs,0)),0107)  // dyad adds x to make x&u, and then reinterpret the compound.  We could interpret u differently now that it has been changed
+static CS2(jtply2,  df1(w,powop(amp(a,fs),gs,0)),0107)  // dyad adds x to make x&u, and then reinterpret the compound.  We could interpret u differently now that it has been changed (x {~^:a: y)
 
 static DF1(jtpowg1){A h=FAV(self)->fgh[2]; R df1(  w,*AAV(h));}
 static DF2(jtpowg2){A h=FAV(self)->fgh[2]; R df2(a,w,*AAV(h));}
@@ -256,7 +261,7 @@ DF2(jtpowop){A hs;B b;V*v;
     I flag = (FAV(a)->flag&VASGSAFE) + (h?FAV(h)->flag&VJTFLGOK1:VJTFLGOK1);  // inv1 inplaces and calculates ip for next step; invh has ip from inverse
     R fdef(0,CPOWOP,VERB,(AF)(f1),jtinv2,a,w,h,flag,RMAX,RMAX,RMAX);
    }else{  // u^:_
-    R fdef(0,CPOWOP,VERB,jtpinf1,jtply2,a,w,0,VFLAGNONE,RMAX,RMAX,RMAX);
+    R fdef(0,CPOWOP,VERB,jtpinf12,jtpinf12,a,w,0,VFLAGNONE,RMAX,RMAX,RMAX);
    }
   }
  }

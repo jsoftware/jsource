@@ -105,15 +105,17 @@ static B jteqf(J jt,A a,A w){A p,q;V*u=FAV(a),*v=FAV(w);
 // m=#cells of shorter frame, n=#times a cell of shorter frame must be repeated
 // the comparands may not be sparse
 static B jtmatchsub(J jt,I af,I wf,I m,I n,A a,A w,B* RESTRICT x,B b1){B b;C*av,*wv;I at,c,j=0,p,q,t,wt;
- // we tested for a==w before the call, to save on call overhead
+ // we tested for a==w before the call, to save on call overhead (usually)
  // m*n cannot be 0.  If this is a recursive call, m=n=1; while if it is the first call, empty m/n were handled at the top level
+// obsolete  // Very fastest path: different numbers of atoms (when there is no frame)
+// obsolete  if(((af-1)&(wf-1)&(-(AN(a)^AN(w))))<0){b=1; if(x)memset(x,b^b1,m*n); R b^b1;}  // af==0, wf==0, AN(a)!=AN(w).  Set b to try to use common code
  p=AR(a)-af; at=UNSAFE(AT(a));
  q=AR(w)-wf; wt=UNSAFE(AT(w)); 
  // p=cell-rank of a; q=cell-rank of w; ?t=type;
  // c=#atoms in a cell, b is 1 if rank or cell-shape mismatches, or if cells are not empty and types are incompatible
  // We know that either there is no frame or both arguments are nonempty (Empty arguments with frame can happen only at the top level
  // and were handled there).
- PROD(c,p,af+AS(a)); b=p!=q||ICMP(af+AS(a),wf+AS(w),p)||c&&!HOMO(at,wt);
+ if(!(b=p!=q)){if(!(b=!!ICMP(af+AS(a),wf+AS(w),p))){PROD(c,p,af+AS(a)); b=c&&!HOMO(at,wt);}}  // b='mismatch'
  // If we know the result - either they mismatch, or the cell is empty, or the buffers are identical - return all success/failure
  if(b||!c||a==w){if(x)memset(x,b^b1,m*n); R b^b1;}
  // If we're comparing functions, return that result

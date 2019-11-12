@@ -51,3 +51,25 @@ DF1(jtcrcfixedleft){A h,*hv;I n;UINT*t,z;UC*v;
  DQ(n, z=z>>8^t[255&(z^*v++)];);
  R sc((I)(I4)(z^-1L));
 }
+
+// CRC-based hash.  Bivalent
+F2(jtqhash12){F2PREFIP; I hsiz; UI crc;
+ RZ(a&&w);
+ if(AT(w)&NOUN){RE(hsiz=i0(vib(a)));} else{w=a; hsiz=0;}  // fetch hashtable size; set w=data to hash
+ ASSERT(hsiz>=0,EVDOMAIN);
+ ASSERT(AT(w)&DENSE,EVNONCE);  // not sparse for now
+ if(AT(w)&DIRECT){ // Direct value, calculate CRC of atoms
+  crc=hic(AN(w)<<bplg(AT(w)),UCAV(w));  // sign-extend result if needed to make 64-bit and 32-bit the same numeric value
+ }else{   // not DIRECT, calculate CRC of component CRCs
+  crc=-1;  // where we accumulate CRC
+  I lpct=AN(w)<<((AT(w)>>RATX)&1);  // number of component values
+  A *av=AAV(w);  // pointer to subvalues
+  DQ(lpct, crc=CRC32L(crc,i0(jtqhash12(jt,zeroionei[0],*av++)));)  // recur
+ }
+#if SY_64
+ if(hsiz)crc=(crc*(UI)hsiz)>>32;   // convert hash to user's range
+#else
+ if(hsiz)crc=crc%hsiz;   // convert hash to user's range
+#endif
+ R sc((I)(I4)crc);   // make the result a valid integer.  Could reuse the a arg inplace
+}

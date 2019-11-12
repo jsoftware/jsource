@@ -100,7 +100,7 @@ static DF2(jtscapco2){PROLOG(556);A x,z=0;I l,r;V*v=FAV(self);
 
 static A jtlsub(J jt,C id,A a,A w){A h,t;B b=id==CLCAPCO;I*hv,n,*v;
  RZ(a&&w);
- ASSERT(VERB&AT(a)&&NOUN&AT(w),EVDOMAIN);
+ ASSERT((SGNIF(AT(a),VERBX)&-(AT(w)&NOUN))<0,EVDOMAIN);
  n=AN(w); 
  ASSERT(1>=AR(w),EVRANK);
  ASSERT(0<n&&n<4,EVLENGTH);

@@ -325,7 +325,8 @@ static A jtfsm0(J jt,A a,A w,C chka){PROLOG(0100);A*av,m,s,x,w0=w;B b;I c,f,*ijr
  }else{A*mv,t,y;I j,r;
   ASSERT(BOX&AT(m),EVDOMAIN);  // otherwise m must be boxes
   RZ(y=raze(m)); r=AR(y); k=AS(y)[0];  // y = all the input values run together, k=# input values
-  ASSERT(r==AR(w)||r==1+AR(w),EVRANK);  // items of m must match rank of w, or the entire w (which will be treated as a single input)
+// obsolete  ASSERT(r==AR(w)||r==1+AR(w),EVRANK);  // items of m must match rank of w, or the entire w (which will be treated as a single input)
+  ASSERT((UI)(r-AR(w))<=(UI)1,EVRANK);  // items of m must match rank of w, or the entire w (which will be treated as a single input)
   GATV0(x,INT,1+k,1); v=AV(x); v[k]=c; mv=AAV(m);  // x will hold translated column numbers.  Install 'not found' value at the end
   DO(c, j=i; t=mv[i]; if(r&&r==AR(t))DQ(AS(t)[0], *v++=j;) else *v++=j;);  // go through m; for each box, install index for that box for each item in that box.
   if(b){RZ(m=from(indexof(y,alp),x)); v=AV(m); DO(AN(alp), k=v[i]; ASSERT((UI)k<(UI)q,EVINDEX););}  // for ASCII input, translate & check size

@@ -8,7 +8,7 @@
 
 F1(jtcatalog){PROLOG(0072);A b,*wv,x,z,*zv;C*bu,*bv,**pv;I*cv,i,j,k,m=1,n,p,*qv,r=0,*s,t=0,*u;
  F1RANK(1,jtcatalog,0);
- if(!(AN(w)&&AT(w)&BOX+SBOX))R box(w);
+ if((-AN(w)&-(AT(w)&BOX+SBOX))>=0)R box(w);
  n=AN(w); wv=AAV(w); 
  DO(n, x=wv[i]; if(AN(x)){p=AT(x); t=t?t:p; ASSERT(HOMO(t,p),EVDOMAIN); RE(t=maxtype(t,p));});  // use vector maxtype
  t=t?t:B01; k=bpnoun(t);
@@ -313,7 +313,8 @@ B jtaindex(J jt,A a,A w,I wf,A*ind){A*av,q,z;I an,ar,c,j,k,t,*u,*v,*ws;
   q=av[j]; t=AT(q);
   if(t&BOX)R 0;   // if empty boxed array, error
   if(!(t&INT))RZ(q=cvt(INT,q));  // if can't convert to INT, error
-  if(!(c==AN(q)&&1>=AR(q)))R 0;   // if not the same length, or rank>1, error
+// obsolete   if(!(c==AN(q)&&1>=AR(q)))R 0;   // if not the same length, or rank>1, error
+  if((((c^AN(q))-1)&(AR(q)-2))>=0)R 0;   // if not the same length, or rank>1, error
   u=AV(q);
   DO(c, SETNDX(k,u[i],ws[i]) *v++=k;);   // copy in the indexes, with correction for negative indexes
  }
@@ -384,7 +385,7 @@ static A jtafrom2(J jt,A p,A q,A w,I r){A z;C*wv,*zv;I d,e,j,k,m,n,pn,pr,* RESTR
 // n is length of axis, w is doubly-unboxed selector
 // result is list of selectors - complementary if w is boxed
 static A jtafi(J jt,I n,A w){A x;
- if(!(AN(w)&&BOX&AT(w)))R pind(n,w);
+ if((-AN(w)&SGNIF(AT(w),BOXX))>=0)R pind(n,w);
  ASSERT(!AR(w),EVINDEX);  // if boxed, must be an atom
  x=AAV0(w);
  R AN(x)?less(IX(n),pind(n,x)):ace; 
@@ -404,11 +405,13 @@ static F2(jtafrom){PROLOG(0073);A c,ind,p=0,q,*v,y=w;B bb=1;I acr,ar,i=0,j,m,n,p
  ASSERT(1>=AR(c),EVRANK);
  ASSERT(n<=wcr,EVLENGTH);
  if(n&&!(t&BOX)){RE(aindex(a,w,wf,&ind)); if(ind)R frombu(ind,w,wf);}
- if(wcr==wr)for(i=m=pr=0;i<n;++i){
-  p=afi(s[i],v[i]);
-  if(!(p&&1==AN(p)&&INT&AT(p)))break;
-  pr+=AR(p); 
-  m+=*AV(p)*prod(wcr-i-1,1+i+s);
+ if(wcr==wr){
+  for(i=m=pr=0;i<n;++i){
+   p=afi(s[i],v[i]);
+   if(!(p&&1==AN(p)&&INT&AT(p)))break;
+   pr+=AR(p); 
+   m+=*AV(p)*prod(wcr-i-1,1+i+s);
+  }
  }
  if(i){I*ys;
   RZ(y=virtual(w,m,pr+wcr-i));
@@ -548,8 +551,8 @@ F2(jtfetch){A*av, z;I n;F2PREFIP;
  n=AN(a); av=AAV(a); 
  if(!n)R w; z=w;
  DO(n, A next=av[i]; if(((AT(z)>>BOXX)&1)>=(2*(AR(next)+(AT(next)&BOX))+AR(z))){RZ(z=jtquicksel(jt,next,z))}  // next is unboxed atom, z is boxed atom or list, use fast indexing  AR(next)==0 && !(AT(next)&BOX) && (AR(z)==0 || (AR(z)==1 && AT(z)&BOX))
-      else{RZ(z=afrom(box(next),z)); if(i<n-1)ASSERT(!AR(z),EVRANK); if(!AR(z)&&AT(z)&BOX)RZ(z=ope(z));}
+// obsolete       else{RZ(z=afrom(box(next),z)); if(i<n-1)ASSERT(!AR(z),EVRANK); if(!AR(z)&&AT(z)&BOX)RZ(z=ope(z));}
+      else{RZ(z=afrom(box(next),z)); ASSERT(((i+1-n)&-AR(z))>=0,EVRANK); if(((AR(z)-1)&SGNIF(AT(z),BOXX))<0)RZ(z=ope(z));}  // Rank must be 0 unless last; open if boxed atom
    );
  if(!ACIPISOK(w)||!((I)jtinplace&JTINPLACEW))ACIPNO(z); RETF(z);   // Mark the box as non-inplaceable, as above
 }
-

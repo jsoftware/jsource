@@ -151,7 +151,8 @@ static PSTK* jtis(J jt,PSTK *stack){B ger=0;C *s;
     goto retstack;
    }
   }
-  if(LIT&AT(n)&&1>=AR(n)){
+// obsolete   if(LIT&AT(n)&&1>=AR(n)){
+  if((SGNIF(AT(n),LITX)&(AR(n)-2))<0){
    // lhs is ASCII characters, atom or list.  Convert it to words
    //ASSERT(1>=AR(n),EVRANK); must be true
    s=CAV(n); ger=CGRAVE==*s;   // s->1st character; remember if it is `

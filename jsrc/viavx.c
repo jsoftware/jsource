@@ -197,14 +197,21 @@ UI hic(I k, UC *v) {
  // Do 3 CRCs in parallel because the latency of the CRC instruction is 3 clocks.
  // This is executed repeatedly so we expect all the branches to predict correctly
  UI crc0=-1, crc1=crc0, crc2=crc0;  // init all CRCs
-#if SY_64
- for(;k>=24;v+=24,k-=24){  // Do blocks of 24 bytes
-#else
- for(;k>=12;v+=12,k-=12){  // Do blocks of 12 bytes
-#endif
+// obsolete #if SY_64
+ for(;k>=3*SZI;v+=3*SZI,k-=3*SZI){  // Do blocks of 24 bytes
+// obsolete #else
+// obsolete  for(;k>=12;v+=12,k-=12){  // Do blocks of 12 bytes
+// obsolete #endif
   crc0=CRC32L(crc0,((UI*)v)[0]); crc1=CRC32L(crc1,((UI*)v)[1]); crc2=CRC32L(crc2,((UI*)v)[2]);
  }
  // The order of this runout is replicated in the other character routines
+#if 1
+ if(k>=SZI){crc0=CRC32L(crc0,((UI*)v)[0]); v+=SZI;}  // finish the remnant
+ if(k>=2*SZI){crc1=CRC32L(crc1,((UI*)v)[0]); v+=SZI;}
+ if(k&=(SZI-1)){  // last few bytes
+  crc2=CRC32L(crc2,((UI*)v)[0]&~((UI)-((I)1)<<(k<<3)));  // mask out invalid bytes - must use 64-bit shift!
+ }
+#else // obsolete 
 #if SY_64
  if(k>=8){crc0=CRC32L(crc0,((UI*)v)[0]); v+=SZI;}  // finish the remnant
  if(k>=16){crc1=CRC32L(crc1,((UI*)v)[0]); v+=SZI;}
@@ -217,6 +224,7 @@ UI hic(I k, UC *v) {
  if(k&=3){  // last few bytes,  k<<3 convert to # of bits
   crc2=CRC32L(crc2,((UI*)v)[0]&~((UI)-((I)1)<<(k<<3)));  // mask out invalid bytes - must use 64-bit shift!
  }
+#endif
 #endif
  RETCRC3;
 }

@@ -344,7 +344,8 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;I ak,k,p,*u,*v,wk,wm,wn;
      // If an item of a is higher-rank than the entire w (except when w is an atom, which gets replicated),
      // copy fill to the output area.  Start the copy after the area that will be filled in by w
      I wlen = k*AN(w); // the length in bytes of the data in w
-     if(AR(w)&&AR(a)>1+AR(w)){RZ(setfv(a,w)); mvc(wk-wlen,av+wlen,k,jt->fillv);}
+// obsolete      if(AR(w)&&AR(a)>1+AR(w)){RZ(setfv(a,w)); mvc(wk-wlen,av+wlen,k,jt->fillv);}
+     if((-AR(w)&(1+AR(w)-AR(a)))<0){RZ(setfv(a,w)); mvc(wk-wlen,av+wlen,k,jt->fillv);}
      // Copy in the actual data, replicating if w is atomic
      if(AR(w))MC(av,wv,wlen); else mvc(wk,av,k,wv);
      // The data has been copied.  Now adjust the result block to match.  If the operation is virtual extension we have to allocate a new block for the result

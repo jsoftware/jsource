@@ -20,7 +20,7 @@ static DF2(jtuponf2){PROLOG(0022);DECLFG;A z;I flag=sv->flag,m=jt->xmode;
  if(primitive(gs))if(flag&VFLR)jt->xmode=XMFLR; else if(flag&VCEIL)jt->xmode=XMCEIL;
  if(RAT&AT(a))RZ(a=pcvt(XNUM,a));
  if(RAT&AT(w))RZ(w=pcvt(XNUM,w));
- RZ(z=INT&AT(a)&&INT&AT(w)&&CDIV==ID(gs)?intdiv(a,w):CALL1(f1,CALL2(g2,a,w,gs),fs));
+ RZ(z=INT&AT(a)&AT(w)&&CDIV==ID(gs)?intdiv(a,w):CALL1(f1,CALL2(g2,a,w,gs),fs));
  jt->xmode=m;
  EPILOG(z);
 }
@@ -379,7 +379,7 @@ F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;I flag,flag2=0,mode=-1,p,r;V*u,*v;
   // assigned to a name, which will protect values inside it.
   if(AC(a)>=0){flag &= ~VASGSAFE;}else{ACIPNO(a);}
   
-  if(AN(a)&&AR(a)){
+  if((-AN(a)&-AR(a))<0){
     // c holds the pseudochar for the v op.  If v is u!.n, replace c with the pseudochar for n
     // Also set b if the fit is !.0
    if(b=c==CFIT&&equ(num[0],v->fgh[1]))c=ID(v->fgh[0]); 
@@ -403,7 +403,7 @@ F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;I flag,flag2=0,mode=-1,p,r;V*u,*v;
   // Otherwise, mark the noun as non-inplaceable (so it will not be modified during use).  If the derived verb is used in another sentence, it must first be
   // assigned to a name, which will protect values inside it.
   if(AC(w)>=0){flag &= ~VASGSAFE;}else{ACIPNO(w);}
-  if(AN(w)&&AR(w)){
+  if((-AN(w)&-AR(w))<0){
     // c holds the pseudochar for the v op.  If v is u!.n, replace c with the pseudochar for n
     // Also set b if the fit is !.0
    c=v->id; p=v->flag&255; if(b=c==CFIT&&equ(num[0],v->fgh[1]))c=ID(v->fgh[0]);

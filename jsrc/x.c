@@ -280,10 +280,7 @@ F2(jtforeign){I p,q;
   case XC(128,5): R CDERIV(CIBEAM, jtisnan,      0,            VASGSAFE,RMAX,0,   0   );
   case XC(128,6): R CDERIV(CIBEAM, jtshasum1,    jtshasum2,    VASGSAFE,1,1,RMAX);
   case XC(128,7): R CDERIV(CIBEAM, 0,            jtaes2,       VASGSAFE,RMAX,RMAX,RMAX);
-#ifdef LOCALFOREIGNS
-  case XC(128,20): R CDERIV(CIBEAM, 0,    jtpartitiongrades,    VASGSAFE,1,1,RMAX);
-  case XC(128,21): R CDERIV(CIBEAM, jtfindsplit,    0,    VASGSAFE,1,0,0);
-#endif
+  case XC(128,8): R CDERIV(CIBEAM, jtqhash12,    jtqhash12,    VASGSAFE|VJTFLGOK1|VJTFLGOK2,RMAX,RMAX,RMAX);  
 //  case XC(128,110): R CDERIV(CIBEAM, jttest1,    0,            VASGSAFE,RMAX,RMAX,RMAX);
 
 //  default:        R foreignextra(a,w);

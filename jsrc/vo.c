@@ -7,7 +7,8 @@
 #include "result.h"
 
 I level(A w){A*wv;I d,j;
- if(!(AN(w)&&AT(w)&BOX+SBOX))R 0;
+// obsolete  if(!(AN(w)&&AT(w)&BOX+SBOX))R 0;
+ if((-AN(w)&-(AT(w)&BOX+SBOX))>=0)R 0;
  d=0; wv=AAV(w);
  DO(AN(w), j=level(wv[i]); d=d<j?j:d;);
  R 1+d;
@@ -16,7 +17,8 @@ I level(A w){A*wv;I d,j;
 // return 0 if the level of w is greater than l, 1 if <=
 // terminates early if possible
 I levelle(A w,I l){
- if(!(AN(w)&&AT(w)&BOX+SBOX))R ((UI)~l)>>(BW-1);  // if arg is unboxed, its level is 0, so return 1 if l>=0
+// obsolete  if(!(AN(w)&&AT(w)&BOX+SBOX))R ((UI)~l)>>(BW-1);  // if arg is unboxed, its level is 0, so return 1 if l>=0
+ if((-AN(w)&-(AT(w)&BOX+SBOX))>=0)R ((UI)~l)>>(BW-1);  // if arg is unboxed, its level is 0, so return 1 if l>=0
  if(l<=0)R 0;  // (arg is boxed) if l is <=0, arglevel is  > l
  --l; A *wv=AAV(w);
  DO(AN(w), if(!levelle(wv[i],l))R 0;);  // stop as soon as we see level big enough
@@ -64,7 +66,7 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
  RETF(z);
 }    /* <"r w */
 
-F1(jtboxopen){RZ(w); if(!(AN(w)&&BOX&AT(w))){w = box(w);} R w;}
+F1(jtboxopen){RZ(w); if((-AN(w)&-(AT(w)&BOX+SBOX))>=0){w = box(w);} R w;}
 
 F2(jtlink){
 RZ(a&&w);
@@ -82,7 +84,9 @@ RZ(a&&w);
   I i; for(i=AR(a)-1; i>=0&&AS(a)[i]==AS(ABACK(a))[i];--i); if(i<0)a = ABACK(a);
  }
 #endif
-if(!(AN(w)&&AT(w)&BOX)){w = box(w);} R over(box(a),w);}
+// obsolete if(!(AN(w)&&AT(w)&BOX)){w = box(w);} R over(box(a),w);}
+ if((-AN(w)&SGNIF(AT(w),BOXX))>=0){w = box(w);} R over(box(a),w);  // box empty or unboxed w, join to boxed a
+}
 
 // Calculate the value to use for r arg of copyresultcell: bit 0=ra() flag, next 15=rank requiring fill, higher=-(#leading axes of 1)
 // zs, zr = address/length of shape of result cell   s,r = address/length of shape of cell to copy

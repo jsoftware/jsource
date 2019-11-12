@@ -505,6 +505,7 @@ extern F2(jtpdtsp);
 extern F2(jtpmarea2);
 extern F2(jtpoly2);
 extern F2(jtqco2);
+extern F2(jtqhash12);
 extern F2(jtqq);
 extern F2(jtrdot2);
 extern F2(jtreaxis);
@@ -944,9 +945,4 @@ extern UC       hwfma;
 extern int      memcmp();       /* C library fn                            */
 extern D        strtod();       /* C library fn                            */
 extern I        strtol();       /* C library fn                            */
-#endif
-#ifdef LOCALFOREIGNS
-// declare new entry points here
-extern F2(jtpartitiongrades);
-extern F1(jtfindsplit);
 #endif

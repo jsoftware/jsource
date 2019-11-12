@@ -116,7 +116,8 @@ F1(jtcasev){A b,*u,*v,w1,x,y,z;B*bv,p,q;I*aa,c,*iv,j,m,n,r,*s,t;
 // cellframelen is the number of axes of w that were used in computing the cell indexes
 static A jtmerge2(J jt,A a,A w,A ind,I cellframelen){F2PREFIP;A z;I t;
  RZ(a&&w&&ind);
- ASSERT(HOMO(AT(a),AT(w))||!AN(a)||!AN(w),EVDOMAIN);  // error if xy not empty and not compatible
+// obsolete  ASSERT(HOMO(AT(a),AT(w))||!AN(a)||!AN(w),EVDOMAIN);  // error if xy not empty and not compatible
+ ASSERT(HOMO(AT(a),AT(w))||(-AN(a)&-AN(w))>=0,EVDOMAIN);  // error if xy both not empty and not compatible
  ASSERT(AR(a)<=AR(w)+AR(ind)-cellframelen,EVRANK);   // max # axes in a is the axes in w, plus any surplus axes of m that did not go into selecting cells
  //   w w w w w
  // m m m . w w   the rank of m may be more or less than cellframelen which is the number of axes that are covered by m.  For single boxed m, AR(ind)=cellframelen
@@ -133,7 +134,8 @@ static A jtmerge2(J jt,A a,A w,A ind,I cellframelen){F2PREFIP;A z;I t;
  // the stack is empty, so if there is a virtual block it must be in a higher sentence, and the backing name must appear on the
  // stack in that sentence if the usecount is only 1.
  I ip = ASGNINPLACESGNNJA(SGNIF((I)jtinplace,JTINPLACEWX),w)
-      &&TYPESEQ(t,AT(w))&&(AT(w)&(DIRECT|RECURSIBLE))&&w!=a&&w!=ind&&(w!=ABACK(a)||!(AFLAG(a)&AFVIRTUAL));
+// obsolete       &&TYPESEQ(t,AT(w))&&(AT(w)&(DIRECT|RECURSIBLE))&&w!=a&&w!=ind&&(w!=ABACK(a)||!(AFLAG(a)&AFVIRTUAL));
+      &&( ((AT(w)&t&(DIRECT|RECURSIBLE))!=0)&(w!=a)&(w!=ind)&((w!=ABACK(a))|(~AFLAG(a)>>AFVIRTUALX)) );
  // if w is boxed, we have to make one more check, to ensure we don't end up with a loop if we do   (<a) m} a.  Force a to be recursive usecount, then see if the usecount of w is changed
  if(ip&&t&RECURSIBLE){
   I oldac = ACUC(w);  // remember original UC of w
@@ -268,7 +270,7 @@ static A jtjstd(J jt,A w,A ind,I *cellframelen){A j=0,k,*v,x;B b;I d,i,n,r,*u,wr
   j=zeroionei[0];  // init list to a single 0 offset
   for(i=0;i<n;++i){  // for each axis, grow the cartesian product of the specified offsets
    x=v[i]; d=ws[i];
-   if(AN(x)&&BOX&AT(x)){
+   if((-AN(x)&-(BOX&AT(x)))<0){   // notempty and boxed
     ASSERT(!AR(x),EVINDEX); 
     x=AAV0(x); k=IX(d);
     if(AN(x))k=less(k,pind(d,1<AR(x)?ravel(x):x));
@@ -335,10 +337,12 @@ static DF2(amccv2){F2PREFIP;DECLF;
 static DF1(mergn1){       R merge1(w,VAV(self)->fgh[0]);}
 static DF1(mergv1){DECLF; R merge1(w,CALL1(f1,w,fs));}
 
+// called from m}, m is usually NOT a gerund
 static B ger(A w){A*wv,x;
  if(!(BOX&AT(w)))R 0;
  wv=AAV(w); 
- DO(AN(w), x=wv[i]; if(BOX&AT(x)&&1==AR(x)&&2==AN(x))x=AAV0(x); if(!(LIT&AT(x)&&1>=AR(x)&&AN(x)))R 0;);
+// obsolete  DO(AN(w), x=wv[i]; if(BOX&AT(x)&&1==AR(x)&&2==AN(x))x=AAV0(x); if(!(LIT&AT(x)&&1>=AR(x)&&AN(x)))R 0;);
+ DO(AN(w), x=wv[i]; if((-(BOX&AT(x))&(((AR(x)^1)|(AN(x)^2))-1))<0)x=AAV0(x); if(((-(LIT&AT(x))&(AR(x)-2)&-AN(x)))>=0)R 0;);  // box/rank1/N=2; lit/R<2/N!=0
  R 1;
 }    /* 0 if w is definitely not a gerund; 1 if possibly a gerund */
 
@@ -362,7 +366,7 @@ static B gerar(J jt, A w){A x; C c;
   if(!(n==2))R 0;  // verify 2 boxes
   wv = AAV(w);  x=wv[0]; // point to pointers to boxes; point to first box contents
   // see if first box is a special flag
-  if(LIT&AT(x) && 1>=AR(x) && 1==AN(x)){
+  if((-(LIT&AT(x))&(AR(x)-2)&((AN(x)^1)-1))<0){ // LIT, rank<2, AN=1
    c = CAV(x)[0];   // fetch that character
    if(c=='0')R 1;    // if noun, the second box can be anything & is always OK, don't require AR there
    else if(c=='2'||c=='4')bmin=bmax=2;
@@ -372,8 +376,9 @@ static B gerar(J jt, A w){A x; C c;
   if(bmin==0){if(!(gerar(jt,x)))R 0; bmin=1,bmax=2;}
   // Now look at the second box.  It should contain between bmin and bmax boxes, each of which must be an AR
   x = wv[1];   // point to second box
-  if(!(BOX&AT(x) && 1==AR(x)))R 0;   // verify it contains a list of boxes
-  if(!(bmin<=AN(x)&&bmax>=AN(x)))R 0;  // verify correct number of boxes
+// obsolete   if(!(BOX&AT(x) && 1==AR(x)))R 0;   // verify it contains a list of boxes
+  if((-(BOX&AT(x)) & ((AR(x)^1)-1))>=0)R 0;   // verify it contains a list of boxes
+  if((UI)(AN(x)-bmin)>(UI)(bmax-bmin))R 0;  // verify correct number of boxes
   R gerexact(x);  // recursively audit the other ARs in the second box
  } else R 0;
  R 1;

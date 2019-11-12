@@ -105,13 +105,14 @@ DF2(jtbitwisechar){DECLFG;A*p,x,y,z;B b;I j,m,n,zn;AHDR2FN* ado;
  RZ(a&&w);
  x=a;
  y=w;
- if(!(AN(a)&&AN(w)&&(AT(a)&AT(w))&LIT))R from(df2(indexof(alp,a),indexof(alp,w),fs),alp);
+// obsolete  if(!(AN(a)&&AN(w)&&(AT(a)&AT(w))&LIT))R from(df2(indexof(alp,a),indexof(alp,w),fs),alp);
+ if((-AN(a)&-AN(w)&-(AT(a)&AT(w))&LIT)>=0)R from(df2(indexof(alp,a),indexof(alp,w),fs),alp);  // empty or not LIT
  b=AR(a)<=AR(w); zn=AN(b?w:a); m=AN(b?a:w); n=zn/m;
  ASSERTAGREE(AS(a),AS(w),MIN(AR(a),AR(w)));
  j=i0(VAV(fs)->fgh[1])-16;
  GATV(z,LIT,zn,MAX(AR(a),AR(w)),AS(b?w:a));   // d is fixed; was d==SZI?LIT:C2T; would need GA then
  if(1==n)                 {ado=(AHDR2FN*)bwI[j]; m=(m+SZI-1)>>LGSZI;}
- else if(!AR(a)||!AR(w)||0==(n&(SZI-1))){ado=(AHDR2FN*)bwI[j]; n=(n+SZI-1)>>LGSZI; p=b?&x:&y; A zz; RZ(*p=IRS2(sc(SZI),*p,0L,0L,0L,jtrepeat,zz));}
+ else if((-AR(a)&-AR(w)&-(n&(SZI-1)))>=0){ado=(AHDR2FN*)bwI[j]; n=(n+SZI-1)>>LGSZI; p=b?&x:&y; A zz; RZ(*p=IRS2(sc(SZI),*p,0L,0L,0L,jtrepeat,zz));} // a atom, w atom, or multiple of SZI
  else                      ado=(AHDR2FN*)bwC[j];
  n^=-b; n=(n==~1)?1:n;  // encode b flag in sign of n
  ado(n,m,AV(x),AV(y),AV(z),jt); 

@@ -176,7 +176,7 @@ F2(jtmatch){A z;I af,f,m,n,mn,*s,wf;
  af=AR(a)-(I)(jt->ranks>>RANKTX); af=af<0?0:af; wf=AR(w)-(I)((RANKT)jt->ranks); wf=wf<0?0:wf; RESETRANK;
  // If either operand is empty return without any comparisons.  In this case we have to worry that the
  // number of cells may overflow, even if there are no atoms
- if(!AN(a)||!AN(w)){B b; I p;
+ if(((-AN(a))&(-AN(w)))>=0){B b; I p;  // AN(a) is 0 or AN(w) is 0
   // no atoms.  The shape of the result is the length of the longer frame.  See how many cells that is
   if(af>wf){f=af; s=AS(a); RE(mn = prod(af,AS(a)));}else{f=wf; s=AS(w); RE(mn = prod(wf,AS(w)));}
   // The result for each cell is 1 if the cell-shapes are the same
@@ -199,7 +199,8 @@ F2(jtnotmatch){A z;I af,f,m,n,mn,*s,wf;
  af=AR(a)-(I)(jt->ranks>>RANKTX); af=af<0?0:af; wf=AR(w)-(I)((RANKT)jt->ranks); wf=wf<0?0:wf; RESETRANK;
  // If either operand is empty return without any comparisons.  In this case we have to worry that the
  // number of cells may overflow, even if there are no atoms
- if(!AN(a)||!AN(w)){B b; I p;
+ if(((-AN(a))&(-AN(w)))>=0){B b; I p;  // AN(a) is 0 or AN(w) is 0
+// obsolete if(!AN(a)||!AN(w)){B b; I p;
   // no atoms.  The shape of the result is the length of the longer frame.  See how many cells that is
   if(af>wf){f=af; s=AS(a); RE(mn = prod(af,AS(a)));}else{f=wf; s=AS(w); RE(mn = prod(wf,AS(w)));}
   // The result for each cell is 1 if the cell-shapes are the same

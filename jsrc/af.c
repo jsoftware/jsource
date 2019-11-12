@@ -159,7 +159,7 @@ static A jtfixa(J jt,A a,A w){A f,g,h,wf,x,y,z=w;V*v;I aa[AKXR(0)/SZI+1]={AKXR(0
     }
     jt->fxpv[jt->fxi++]=mtv;
     RE(z);
-    ASSERT(TYPESEQ(AT(w),AT(z))||AT(w)&NOUN&&AT(z)&NOUN,EVDOMAIN);
+    ASSERT(TYPESEQ(AT(w),AT(z))||AT(w)&AT(z)&NOUN,EVDOMAIN);
     R z;
    }else R df1(REFIXA(2,f),wf);
 // bug ^: and m} should process gerund args

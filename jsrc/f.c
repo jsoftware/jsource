@@ -247,7 +247,7 @@ static F1(jtthx1){A z;B b;C*s,s1[2+XBASEN];I n,p,p1,*v;
  p=p1+XBASEN*(n-1);
  GATV0(z,LIT,p,1); s=CAV(z); 
  MC(s,s1,p1); if(b)*s=CSIGN; s+=p1; 
- DQ(n-1, --v; sprintf(s,FMTI04,b?-*v:*v); s+=XBASEN;);
+ DQ(n-1, --v; I j=*v; j=b?-j:j; sprintf(s,FMTI04,j); s+=XBASEN;);
  R z;           
 }
 
@@ -268,7 +268,7 @@ static A jtthdx1(J jt,DX y){A x,z;B b;C*s,s1[2+XBASEN],s2[20];I e,n,p,p1,p2,*v;
  if(e&&*v){s=s2; *s++='e'; if(0>e)*s++=CSIGN; sprintf(s,FMTI,0<e?e:-e); p2=strlen(s2);}else p2=0; 
  GATV0(z,LIT,b+p1+(I )(1<p1)+XBASEN*(n-1)+p2,1); s=CAV(z);
  if(b)*s++=CSIGN; *s++=*s1; if(1<p1){*s++='.'; MC(s,1+s1,p1-1); s+=p1-1;}
- DQ(n-1, --v; sprintf(s,FMTI04,b?-*v:*v); s+=XBASEN;);
+ DQ(n-1, --v; I j=*v; j=b?-j:j; sprintf(s,FMTI04,j); s+=XBASEN;);
  MC(s,s2,p2);
  R z;
 }

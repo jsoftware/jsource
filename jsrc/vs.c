@@ -5,7 +5,7 @@
 
 #include "j.h"
 
-B jtscheck(J jt,A w){A a,e,x,y;I r,*s,t;P*p;D rkblk[16];
+B jtscheck(J jt,A w){A a,e,x,y;I k1,k2,r,*s,t;P*p;D rkblk[16];
  RZ(w);
  r=AR(w); s=AS(w); t=AT(w);
  if(t&DENSE)R 1;
@@ -24,8 +24,8 @@ B jtscheck(J jt,A w){A a,e,x,y;I r,*s,t;P*p;D rkblk[16];
  ASSERTSYS(TYPESEQ(AT(e),AT(x)),"scheck e/x type");
  ASSERTSYS(2==AR(y),"scheck i rank");
  ASSERTSYS(INT&AT(y),"scheck i type");
- ASSERTSYS(IC(y)==IC(x),"scheck i/x tally");
- ASSERTSYS(*(1+AS(y))==IC(a),"scheck i/a length");
+ ASSERTSYS(SETIC(y,k1)==SETIC(x,k2),"scheck i/x tally");
+ ASSERTSYS(*(1+AS(y))==SETIC(a,k1),"scheck i/a length");
  ASSERTSYS(equ(y,nub(y)),"scheck i unique");
  ASSERTSYS(all1(le(num[0],y)),"scheck i negative");
  ASSERTSYS(all1(ATOMIC2(jt,y,from(a,shape(w)),rkblk,1L,1L,CLT)),"scheck i index");
@@ -167,7 +167,7 @@ F1(jtdenseit){A a,e,q,s1,x,y,z;B b;C*xv,*zv;I an,ck,k,n,r,t,*s,xn,*yv;P*wp;
  GA(z,t,n,r,s); zv=CAV(z); xv=CAV(x); 
  if(1<an)RZ(y=base2(vec(INT,an,s),y)); yv=AV(y);
  k=bpnoun(t); ck=k*aii(x); mvc(k*n,zv,k,AV(e));
- DQ(IC(y), MC(zv+ck**yv,xv,ck); ++yv; xv+=ck;);
+ DQ(SETIC(y,an), MC(zv+ck**yv,xv,ck); ++yv; xv+=ck;);
  R b?z:cant2(pinv(q),z);
 }    /* $.^:_1 */
 
@@ -346,7 +346,7 @@ F2(jtsparse2){A*av,q=0;B b;I j,k,t,*v;P*p;
   case 3:  R q?rezero(q,w):rat(SPA(p,e));  // ? there rat()s don't protect anything?  SPA is as permanent as w
   case 4:  ASSERT(!q,EVDOMAIN); R rat(SPA(p,i)); 
   case 5:  ASSERT(!q,EVDOMAIN); R rat(SPA(p,x));
-  case 7:  ASSERT(!q,EVDOMAIN); R sc(IC(SPA(p,i)));
+  case 7:  ASSERT(!q,EVDOMAIN); R sc(SETIC(SPA(p,i),j));
   case 8:  ASSERT(!q,EVDOMAIN); R unzero(w);
   default: ASSERT(0,EVDOMAIN);
 }}   /* x $. y */

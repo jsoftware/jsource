@@ -162,7 +162,7 @@ static DF2(jtkey);
 
 static DF2(jtkeysp){PROLOG(0008);A b,by,e,q,x,y,z;I j,k,n,*u,*v;P*p;
  RZ(a&&w);
- n=IC(a); 
+ SETIC(a,n); 
  RZ(q=indexof(a,a)); p=PAV(q); 
  x=SPA(p,x); u=AV(x);
  y=SPA(p,i); v=AV(y);
@@ -181,7 +181,7 @@ static DF2(jtkeysp){PROLOG(0008);A b,by,e,q,x,y,z;I j,k,n,*u,*v;P*p;
 // a u/. w.  Self-classify a, then rearrange w and call cut
 static DF2(jtkey){F2PREFIP;PROLOG(0009);A frets,wperm,z;
  RZ(a&&w);
- ASSERT(IC(a)==IC(w),EVLENGTH);  // verify agreement
+ {I t1,t2; ASSERT(SETIC(a,t1)==SETIC(w,t2),EVLENGTH);}  // verify agreement
  if(SPARSE&AT(a))R keysp(a,w,self);  // if sparse, go handle it
  RZ(a=indexof(a,a));  rifv(a); // self-classify the input using ct set before this verb; we are going to modify a, so make sure it's not virtual
  PUSHCCT(jt->cctdefault);  // now that partitioning is over, reset ct for the executions of u
@@ -291,9 +291,9 @@ static CRT jtkeyrs(J jt,A a,UI maxrange){I ac; CRT res;
 
 static DF2(jtkeyslash){PROLOG(0012);A b,q,x,z=0;B bb,*bv,pp=0;C d;I at,*av0,c,n,j,m,*qv0,r,s,*u,wr,wt,*wv0,*xv,zt,*zv0;
  RZ(a&&w);
- at=AT(a); av0=AV(a); n=IC(a); 
+ at=AT(a); av0=AV(a); SETIC(a,n); 
  wt=AT(w); wv0=AV(w); wr=AR(w);
- ASSERT(n==IC(w),EVLENGTH);
+ ASSERT(n==SETIC(w,m),EVLENGTH);
  x=FAV(self)->fgh[0]; d=vaid(VAV(x)->fgh[0]); if(B01&wt)d=d==CMAX?CPLUSDOT:d==CMIN||d==CSTAR?CSTARDOT:d;
  if(!(AN(a)&&AN(w)&&at&DENSE&&
      (wt&B01&&(d==CEQ||d==CPLUSDOT||d==CSTARDOT||d==CNE||d==CPLUS)||
@@ -354,9 +354,9 @@ static DF2(jtkeyslash){PROLOG(0012);A b,q,x,z=0;B bb,*bv,pp=0;C d;I at,*av0,c,n,
 
 static DF2(jtkeymean){PROLOG(0013);A p,q,x,z;D d,*qv,*vv,*zv;I at,*av,c,j,m=0,n,*pv,r,s,*u,wr,wt,*wv,*xv;
  RZ(a&&w);
- at=AT(a); av=AV(a); n=IC(a); 
+ at=AT(a); av=AV(a); SETIC(a,n); 
  wt=AT(w); wv=AV(w); wr=AR(w);
- ASSERT(n==IC(w),EVLENGTH);
+ ASSERT(n==SETIC(w,j),EVLENGTH);
  if(!(AN(a)&&AN(w)&&at&DENSE&&wt&B01+INT+FL))R df2(a,w,folk(sldot(slash(ds(CPLUS))),ds(CDIV),sldot(ds(CPOUND))));
  CRT rng = keyrs(a,MAX(2*n,65536)); at=rng.type; r=rng.minrange.min; s=rng.minrange.range; c=aii(w);
  if(wt&FL)NAN0;
@@ -419,7 +419,7 @@ UI4 shortrange[3][4] = {{0,65536,65536,0}, {0,2,258,0}, {0,256,65536,0}};  // C2
 F1(jtgroup){PROLOG(0014);A c,d,x,z,*zv;I**cu,*cv,*dv,j,k,m,n,t,*u,*v,*wv,zn=0;CR rng;
  RZ(w);
  if(SPARSE&AT(w))RZ(w=denseit(w));
- n=IC(w); t=AT(w); k=n?aii(w)<<bplg(t):0;
+ SETIC(w,n); t=AT(w); k=n?aii(w)<<bplg(t):0;
  if(!AN(w)){GATV0(z,BOX,n?1:0,1); if(n)RZ(*AAV(z)=IX(n)); R z;}
  if(2>=k){rng.range=shortrange[t&(B01+LIT)][k]; rng.min = 0;}
  else if(k==sizeof(C4)&&t&C4T){rng=condrange4(C4AV(w),n,-1,0,2*n);}
@@ -469,7 +469,7 @@ static F1(jtkeytallysp){PROLOG(0015);A b,e,q,x,y,z;I c,d,j,k,*u,*v;P*p;
  RZ(b=ne(e,x));
  RZ(x=repeat(b,x)); RZ(x=keytally(x,x,mark)); u=AV(x); d=AN(x);
  GATV0(z,INT,1+d,1); v=AV(z);
- DQ(j, *v++=*u++;); *v++=IC(w)-bsum(c,BAV(b)); DQ(d-j, *v++=*u++;);
+ DQ(j, *v++=*u++;); *v++=SETIC(w,k)-bsum(c,BAV(b)); DQ(d-j, *v++=*u++;);
  EPILOG(z);
 }    /* x #/.y , sparse x */
 
@@ -479,8 +479,8 @@ static F1(jtkeytallysp){PROLOG(0015);A b,e,q,x,y,z;I c,d,j,k,*u,*v;P*p;
 
 static DF2(jtkeytally){PROLOG(0016);A q;I at,*av,j=0,k,n,r,s,*qv,*u,*v;
  RZ(a&&w);
- n=IC(a); at=AT(a); av=AV(a);
- ASSERT(n==IC(w),EVLENGTH);
+ SETIC(a,n); at=AT(a); av=AV(a);
+ ASSERT(n==SETIC(w,k),EVLENGTH);
  if(!AN(a))R vec(INT,n?1:0,&n);
  if(at&SPARSE)R keytallysp(a);
  CRT rng = keyrs(a,MAX(2*n,65536)); at=rng.type; r=rng.minrange.min; s=rng.minrange.range;
@@ -518,8 +518,8 @@ static DF2(jtkeytally){PROLOG(0016);A q;I at,*av,j=0,k,n,r,s,*qv,*u,*v;
 
 static DF2(jtkeyheadtally){PROLOG(0017);A f,q,x,y,z;B b;I at,*av,k,n,r,s,*qv,*u,*v,wt,*zv;
  RZ(a&&w);
- n=IC(a); wt=AT(w);
- ASSERT(n==IC(w),EVLENGTH);
+ SETIC(a,n); wt=AT(w);
+ ASSERT(n==SETIC(w,k),EVLENGTH);
  ASSERT(!n||wt&NUMERIC,EVDOMAIN);
  if(SPARSE&AT(a)||1<AR(w)||!n||!AN(a))R key(a,w,self);
  CRT rng = keyrs(a,MAX(2*n,65536)); at=rng.type; r=rng.minrange.min; s=rng.minrange.range;

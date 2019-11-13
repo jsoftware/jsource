@@ -215,7 +215,7 @@ A jtifb(J jt,I n,B* RESTRICT b){A z;I p,* RESTRICT zv;
 }    /* integer vector from boolean mask */
 
 // i. # w
-static F1(jtii){RZ(w); RETF(IX(IC(w)));}
+static F1(jtii){RZ(w); I j; RETF(IX(SETIC(w,j)));}
 
 // Return the higher-priority of the types s and t.  s and t are known to be not equal.
 // If either is sparse, convert the result to sparse.

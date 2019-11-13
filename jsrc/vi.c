@@ -1624,7 +1624,7 @@ F1(jtsclass){A e,x,xy,y,z;I c,j,m,n,*v;P*p;
  RZ(w);
  // If w is scalar, return 1 1$1
  if(!AR(w))R reshape(v2(1L,1L),num[1]);
- n=IC(w);   // n=#items of y
+ SETIC(w,n);   // n=#items of y
  RZ(x=indexof(w,w));   // x = i.~ y
  // if w is dense, return ((x = i.n) # x) =/ x
  if(DENSE&AT(w))R atab(CEQ,repeat(eq(IX(n),x),x),x);

@@ -13,7 +13,7 @@ static F1(jttrc){A bot,p,*v,x,y;B b;C*bv,c,ul,ll,*pv;I j,k,m,*s,xn,*xv,yn,*yv;
  s=AS(w); v=AAV(w);
  xn=s[0]; RZ(x=apvwr(xn,0L,0L)); xv=AV(x);
  yn=s[1]; RZ(y=apvwr(yn,0L,0L)); yv=AV(y);
- j=0; DO(xn, xv[i]=IC(v[j]); j+=yn;);
+ j=0; DO(xn, xv[i]=SETIC(v[j],k); j+=yn;);
  GATV0(bot,LIT,yn,1); bv=CAV(bot);
  ul=jt->bx[0]; ll=jt->bx[6];
  for(j=b=0;j<xn;++j,b=0<j)
@@ -35,9 +35,9 @@ static I jtpad(J jt,A a,A w,C*zv){C dash,*u,*v,*wv;I c,d,r,*s;
  if(AN(w)){
   c=*(1+AS(w)); wv=CAV(w);
   if(c==d)MC(zv,wv,AN(w));
-  else{
+  else{I k;
    zv-=d; v=zv+c-1; u=wv-c; dash=jt->bx[10];
-   DQ(IC(w), MC(zv+=d,u+=c,c); v+=d; if(dash==*v)memset(1+v,dash,d-c););
+   DQ(SETIC(w,k), MC(zv+=d,u+=c,c); v+=d; if(dash==*v)memset(1+v,dash,d-c););
  }}
  R r*d;
 }

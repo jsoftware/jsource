@@ -129,13 +129,14 @@ static F2(jtovg){A s,z;C*x;I ar,*as,c,k,m,n,r,*sv,t,wr,*ws,zn;
   DQ(m, --as; --ws; sv[--k]=MAX(*as,*ws);); 
   DO(r-m, sv[i]=MAX(1,sv[i]););
  }
- RE(c=prod(r-1,1+sv)); m=r>ar?1:IC(a); n=r>wr?1:IC(w); // verify composite item not too big
+// obsolete RE(c=prod(r-1,1+sv)); m=r>ar?1:IC(a); n=r>wr?1:IC(w); // verify composite item not too big
+ RE(c=prod(r-1,1+sv)); m=AS(a)[0]; m=r>ar?1:m; n=AS(w)[0]; n=r>wr?1:n; // verify composite item not too big
  RE(zn=mult(c,m+n)); ASSERT(0<=m+n,EVLIMIT);
  GA(z,AT(a),zn,r,sv); AS(z)[0]=m+n; x=CAV(z); k=bpnoun(AT(a));
  RZ(x=ovgmove(k,c,m,s,a,x,z));
  RZ(x=ovgmove(k,c,n,s,w,x,z));
  RETF(z);
-}    /* a,w general case for dense array with the same type; jt->ranks=0 */
+}    /* a,w general case for dense array with the same type; jt->ranks=~0 */
 
 #if 0
 static F2(jtovv){A z;I m,t;

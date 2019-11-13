@@ -86,15 +86,16 @@ static A jtdfc(J jt,I n,A w){PROLOG(0082);A b,q,*wv,z;B*bv;I c,j,qn,*qv,*x;
 
 F1(jtcdot1){F1RANK(1,jtcdot1,0); R BOX&AT(w)?dfc(ord(raze(w)),w):cfd(w);}
 
-F2(jtcdot2){A p;
+F2(jtcdot2){A p;I k;
  F2RANK(1,RMAX,jtcdot2,0);
- RZ(p=BOX&AT(a)?dfc(IC(w),a):pfill(IC(w),a));
+ SETIC(w,k);
+ RZ(p=BOX&AT(a)?dfc(k,a):pfill(k,a));
  R AR(w)?from(p,w):w;
 }
 
 F1(jtpparity){A x,y,z;B p,*u;I i,j,k,m,n,r,*s,*v,*zv;
  RZ(x=cvt(INT,w));
- r=AR(x); s=AS(x); n=r?*(s+r-1):1; RE(m=prod(r-1,s)); v=AV(x);
+ r=AR(x); s=AS(x); n=AS(x)[r-1]; n=r?n:1; RE(m=prod(r-1,s)); v=AV(x);
  GATV0(y,B01,n,1); u=BAV(y);
  GATV(z,INT,m,r?r-1:0,s); zv=AV(z);
  for(i=0;i<m;++i){
@@ -129,13 +130,13 @@ static F1(jtrfd){A z;I j,k,m,n,r,*s,*x;
 F1(jtadot1){A y;I n;
  F1RANK(1,jtadot1,0);
  RZ(y=BOX&AT(w)?cdot1(w):pfill(ord(w),w));
- n=IC(y);
+ SETIC(y,n);
  R base2(cvt(XNUM,apv(n,n,-1L)),rfd(y));
 }
 
 F2(jtadot2){A m,p;I n;
  RZ(a&&w);
- n=IC(w); p=sc(n); if(XNUM&AT(a))p=cvt(XNUM,p); RZ(m=fact(p));
+ SETIC(w,n); p=sc(n); if(XNUM&AT(a))p=cvt(XNUM,p); RZ(m=fact(p));
  ASSERT(all1(le(negate(m),a))&&all1(lt(a,m)),EVINDEX);
  if(!AR(w)){RZ(vi(a)); RCA(w);}
  RZ(p=dfr(vi(abase2(apv(n,n,-1L),a))));

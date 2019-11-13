@@ -25,7 +25,7 @@ static A jtmerge1(J jt,A w,A ind){PROLOG(0006);A z;C*v,*x;I c,k,r,*s,t,*u;
 
 static A jtmerge1(J jt,A w,A ind){A z;B*b;C*wc,*zc;D*wd,*zd;I c,it,j,k,m,r,*s,t,*u,*wi,*zi;
  RZ(w&&ind);
- r=MAX(0,AR(w)-1); s=1+AS(w); t=AT(w); k=bpnoun(t); m=IC(w); c=aii(w);
+ r=MAX(0,AR(w)-1); s=1+AS(w); t=AT(w); k=bpnoun(t); SETIC(w,m); c=aii(w);
  ASSERT(!(t&SPARSE),EVNONCE);
  ASSERT(r==AR(ind),EVRANK);
  ASSERTAGREE(s,AS(ind),r);

@@ -451,7 +451,7 @@ static F2(jtweight){RZ(a&&w); R df1(behead(over(AR(w)?w:reshape(a,w),num[1])),bs
 
 F1(jtbase1){A z;B*v;I c,d,m,n,p,r,*s,t,*x;
  RZ(w);
- n=AN(w); t=AT(w); r=AR(w); s=AS(w); c=r?*(s+r-1):1;
+ n=AN(w); t=AT(w); r=AR(w); s=AS(w); c=AS(w)[r-1]; c=r?c:1;
  ASSERT(t&DENSE,EVNONCE);
  if(c>(SY_64?63:31)||!(t&B01))R pdt(w,weight(sc(c),t&RAT+XNUM?cvt(XNUM,num[2]):num[2]));
  CPROD1(n,m,r-1,s);
@@ -464,7 +464,7 @@ F1(jtbase1){A z;B*v;I c,d,m,n,p,r,*s,t,*x;
 F2(jtbase2){I ar,*as,at,c,t,wr,*ws,wt;
  RZ(a&&w);
  at=AT(a); ar=AR(a); as=AS(a);
- wt=AT(w); wr=AR(w); ws=AS(w); c=wr?*(ws+wr-1):1;
+ wt=AT(w); wr=AR(w); ws=AS(w); c=AS(w)[wr-1]; c=wr?c:1;
  ASSERT(!((at|wt)&SPARSE),EVNONCE); t=maxtyped(at,wt);
  if(!(t&at))RZ(a=cvt(t,a));
  if(!(t&wt))RZ(w=cvt(t,w));

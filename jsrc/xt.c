@@ -280,7 +280,7 @@ void jtpmrecord(J jt,A name,A loc,I lc,int val){A x,y;B b;PM*v;PM0*u;
 #endif
 }
 
-F1(jtpmunpack){A*au,*av,c,t,x,z,*zv;B*b;D*dv;I*iv,k,m,n,p,q,wn,*wv;PM*v,*v0,*vq;PM0*u;
+F1(jtpmunpack){A*au,*av,c,t,x,z,*zv;B*b;D*dv;I*iv,k,k1,m,n,p,q,wn,*wv;PM*v,*v0,*vq;PM0*u;
  RZ(w);
  ASSERT(jt->pma,EVDOMAIN);
  if(!(INT&AT(w)))RZ(w=cvt(INT,w));
@@ -298,7 +298,7 @@ F1(jtpmunpack){A*au,*av,c,t,x,z,*zv;B*b;D*dv;I*iv,k,m,n,p,q,wn,*wv;PM*v,*v0,*vq;
  v=vq; DO(p, if(b[  i]){RZ(*av++=v->name?rifvs(sfn(0,v->name)):mtv); RZ(*au++=v->loc?rifvs(sfn(0,v->loc)):mtv);} ++v;); 
  v=v0; DO(q, if(b[p+i]){RZ(*av++=v->name?rifvs(sfn(0,v->name)):mtv); RZ(*au++=v->loc?rifvs(sfn(0,v->loc)):mtv);} ++v;); 
  RZ(x=indexof(t,t));
- RZ(c=eq(x,IX(IC(x))));
+ RZ(c=eq(x,IX(SETIC(x,k1))));
  RZ(zv[6]=rifvs(repeat(c,t)));
  RZ(x=indexof(repeat(c,x),x)); iv=AV(x);
  RZ(zv[0]=rifvs(vec(INT,m,  iv)));

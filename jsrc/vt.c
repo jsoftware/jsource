@@ -34,7 +34,7 @@ static F2(jttks){PROLOG(0092);A a1,q,x,y,z;B b,c;I an,m,r,*s,*u,*v;P*wp,*zp;
  else x=SPA(wp,x);
  if(c){A j;C*xv,*yv;I d,i,*iv,*jv,k,n,t;
   d=0; t=AT(x); k=aii(x)<<bplg(t);
-  q=SPA(wp,i); n=IC(q);
+  q=SPA(wp,i); SETIC(q,n);
   GATV(j,INT,AN(q),AR(q),AS(q)); jv= AV(j); iv= AV(q);
   GA(y,t,  AN(x),AR(x),AS(x)); yv=CAV(y); xv=CAV(x);
   for(i=0;i<n;++i){

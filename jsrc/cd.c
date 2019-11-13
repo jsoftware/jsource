@@ -33,7 +33,7 @@ static I jtispoly(J jt,A w){A e,f,g,h,x,y;B nf,ng,vf,vg;C c,id;I k,m,n,t;V*v;
  if(!(id==CAMP&&(t&NUMERIC||c==CPOLY)))R 0;
  if(nf&&1>=AR(x)&&c==CPOLY){
   if(!(t&BOX+NUMERIC))R 0;
-  k=IC(x);
+  SETIC(x,k);
   if(t&NUMERIC)R k;
   y=*(AAV(x)+k-1); if(!(2>=AR(y)))R 0;
   if(1>=AR(y))R 1+IC(y);

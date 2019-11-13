@@ -101,7 +101,7 @@ static B jtiixI(J jt,I n,I m,A a,A w,I*zv){A t;B ascend;I*av,j,p,q,*tv,*u,*v,*vv
 
 F2(jticap2){A*av,*wv,z;C*uu,*vv;I ar,*as,at,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t,wr,*ws,wt,* RESTRICT zv;I cc;
  RZ(a&&w);
- ar=AR(a); at=AT(a); as=AS(a); n=ar?*as:1; r=ar-1<0?0:ar-1;  // n=length of 1-cell of a, r=frame of a
+ ar=AR(a); at=AT(a); as=AS(a); SETIC(a,n); r=ar-1<0?0:ar-1;  // n=length of 1-cell of a, r=frame of a
  wr=AR(w); wt=AT(w); ws=AS(w); I b=(AN(a)-1)|(AN(w)-1);  // b<0 if something is empty
  ASSERT(r<=wr,EVRANK);
  ASSERTAGREE(as+ar-r,ws+wr-r,r)

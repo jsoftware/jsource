@@ -6,7 +6,7 @@
 #include "j.h"
 
 
-F1(jttally ){A z; RZ(w); z=sc(IC(w));            RETF(AT(w)&XNUM+RAT?xco1(z):z);}
+F1(jttally ){A z; I k; RZ(w); z=sc(SETIC(w,k));            RETF(AT(w)&XNUM+RAT?xco1(z):z);}
 F1(jtshapex){A z; RZ(w); z=vec(INT,AR(w),AS(w)); RETF(AT(w)&XNUM+RAT?xco1(z):z);}
 F1(jtshape){RZ(w); R vec(INT,AR(w),AS(w));}
 F1(jtisempty){RZ(w); if(AT(w)&SPARSE)R eps(zeroionei[0],shape(w)); R num[AN(w)==0];}
@@ -131,7 +131,7 @@ A jtdropr(J jt,I n,A w){RZ(w); A a,z; RZ(a=sc(n)); R IRS2(a,w,0, RMAX,1L,jtdrop,
 
 F1(jticap){A a,e;I n;P*p;
  F1RANK(1,jticap,0);
- n=IC(w);
+ SETIC(w,n);
  if(SB01&AT(w)){
   p=PAV(w); a=SPA(p,a); e=SPA(p,e); 
   R *BAV(e)||equ(mtv,a) ? repeat(w,IX(n)) : repeat(SPA(p,x),ravel(SPA(p,i)));

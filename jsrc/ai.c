@@ -165,7 +165,7 @@ static F1(jtinvamp){A f,ff,g,h,x,y;B nf,ng;C c,d,*yv;I n;V*u,*v;
    if(VGERL&u->flag){ff=*(1+AAV(u->fgh[2])); R amp(nf?x:ff,nf?ff:x);} 
    break;
   case CCOMMA:  
-   n=IC(x); 
+   SETIC(x,n); 
    R obverse(1==n?ds(nf?CDROP:CCTAIL):amp(sc(nf?n:-n),ds(CDROP)),w);
   case CBASE:   
    if(!nf)break;

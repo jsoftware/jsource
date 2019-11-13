@@ -49,7 +49,7 @@ static F2(jtrotsp){PROLOG(0071);A q,x,y,z;B bx,by;I acr,af,ar,*av,d,k,m,n,p,*qv,
  GATV0(q,INT,wr,1L); qv=AV(q); memset(qv,C0,wr*SZI); 
  RZ(a=vi(a)); v=AV(a); 
  DO(p, k=v[i]; d=s[wf+i]; qv[wf+i]=!d?0:0<k?k%d:k==IMIN?d-(-d-k)%d:d-(-k)%d;);
- wp=PAV(w); a=SPA(wp,a); RZ(y=ca(SPA(wp,i))); m=IC(y);
+ wp=PAV(w); a=SPA(wp,a); RZ(y=ca(SPA(wp,i))); SETIC(y,m);
  n=AN(a); RZ(a=paxis(wr,a)); av=AV(a);
  RZ(q=from(a,q)); qv=AV(q);
  GASPARSE(z,AT(w),1,wr,s); zp=PAV(z);
@@ -128,7 +128,7 @@ static F1(jtrevsp){A a,q,x,y,z;I c,f,k,m,n,r,*v,wr;P*wp,*zp;
  RZ(q=paxis(wr,a)); v=AV(q); DO(wr, if(f==v[i]){k=i; break;});
  if(!r)       RZ(x=ca(x))
  else if(k>=n)RZ(x=irs2(apv(m,m-1,-1L),x,0L,1L,wr-k,jtfrom))
- else         {v=k+AV(y); c=m-1; DQ(IC(y), *v=c-*v; v+=n;); q=grade1(y); RZ(y=from(q,y)); RZ(x=from(q,x));}
+ else         {v=k+AV(y); c=m-1; DQ(SETIC(y,r), *v=c-*v; v+=n;); q=grade1(y); RZ(y=from(q,y)); RZ(x=from(q,x));}
  SPB(zp,a,ca(a)); 
  SPB(zp,e,ca(SPA(wp,e))); 
  SPB(zp,i,y); 
@@ -197,7 +197,7 @@ static A jtreshapesp(J jt,A a,A w,I wf,I wcr){A a1,e,t,x,y,z;B az,*b,wz;I an,*av
  SPB(zp,a,t);
  if(b[wf]){I n,q,r,*v0;   /* sparse */
   if(wf!=*AV(a1))R rank2ex(a,w,0L,MIN(AR(a),1),wcr,MIN(AR(a),1),wcr,jtreshape);
-  RE(m=prod(1+d,av)); n=IC(y); if(ws[wf]){q=n*(m/ws[wf]); r=m%ws[wf];} else {q=0; r=0;}
+  RE(m=prod(1+d,av)); SETIC(y,n); if(ws[wf]){q=n*(m/ws[wf]); r=m%ws[wf];} else {q=0; r=0;}
   v=AV(y); DQ(n, if(r<=*v)break; ++q; v+=c;);
   GATV0(t,INT,q,1); u=AV(t); v=v0=AV(y);
   m=j=0; DO(q, u[i]=m+*v; v+=c; ++j; if(j==n){j=0; v=v0; m+=ws[wf];});

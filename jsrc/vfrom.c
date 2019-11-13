@@ -284,9 +284,10 @@ A jtfrombu(J jt,A a,A w,I wf){F1PREFIP;A p,q,z;B b=0;I ar,*as,h,m,r,*u,*v,wcr,wr
   R z;
  }
  fauxblockINT(pfaux,4,1); fauxINT(p,pfaux,h,1) v=AV(p)+h; u=ws+wf+h; m=1; DQ(h, *--v=m; m*=*--u;);  // m is number of items in the block of axes that index into w
- r=wr+1-h;  // rank of result is rank of w, minus h axes that go away and are replaced by 1 axis
+ r=wr+1-h;  // rank of intermediate w arg is rank of w, minus h axes that go away and are replaced by 1 axis
  // We will use pdt to create an index to the cell
  A ind; RZ(ind=pdt(a,p));
+ PROLOG(777);
  if(r==wr){
   q=w;
  }else{
@@ -294,7 +295,7 @@ A jtfrombu(J jt,A a,A w,I wf){F1PREFIP;A p,q,z;B b=0;I ar,*as,h,m,r,*u,*v,wcr,wr
   RZ(q=virtualip(w,0,r)); AN(q)=AN(w); v=AS(q); MCISH(v,ws,wf); v[wf]=m; MCISH(v+wf+1,ws+wf+h,wcr-h);  /* q is reshape(.,w) */
  }
  IRS2(ind,q,0, RMAX,wcr+1-h,jtifrom,z);
- RETF(z);
+ EPILOG(z);  // we have to release the virtual block so that w is inplaceable later on in the sentence
 }    /* (<"1 a){"r w, dense w, integer array a */
 
 #define AUDITPOSINDEX(x,lim) if((UI)(x)>=(UI)(lim)){if((x)<0)break; ASSERT(0,EVINDEX);}
@@ -400,7 +401,7 @@ static F2(jtafrom){PROLOG(0073);A c,ind,p=0,q,*v,y=w;B bb=1;I acr,ar,i=0,j,m,n,p
   R wr==wcr?rank2ex(a,w,0L,0L,wcr,0L,wcr,jtafrom):  // if a has frame, rank-loop over a
       df2(IRS1(a,0L,acr,jtbox,c),IRS1(w,0L,wcr,jtbox,ind),amp(ds(CLBRACE),ds(COPE)));  // (<"0 a) {&> <"0 w
  }
- c=AAV0(a); t=AT(c); n=IC(c); v=AAV(c);   // B prob not reqd 
+ c=AAV0(a); t=AT(c); SETIC(c,n); v=AAV(c);   // B prob not reqd 
  s=AS(w)+wr-wcr;
  ASSERT(1>=AR(c),EVRANK);
  ASSERT(n<=wcr,EVLENGTH);
@@ -444,7 +445,7 @@ F2(jtfrom){I at;A z;
    if(AT(a)&(B01|INT)){av=BIV0(a);  // INT index
    }else{  // FL index
     D af=DAV(a)[0], f=jround(af); av=(I)f;
-    ASSERT(f==af || FFIEQ(f,af),EVDOMAIN);  // if index not integral, complain.  IMAX/IMIN will fail presently
+    ASSERT(f==af || FFIEQ(f,af),EVDOMAIN);  // if index not integral, complain.  IMAX/IMIN will fail presently.  We rely on out-of-bounds conversion to peg out one side or other (standard violation)
    }
    I wr1=AR(w)-1;
    if(wr1<=0){  // w is atom or list, result is atom
@@ -472,9 +473,9 @@ F2(jtfrom){I at;A z;
 #endif
   }
  }else if(!((AT(a)|AT(w))&(NOUN&~SPARSE))){z=fromss(a,w);}
- else if(AT(w)&SPARSE){z=at&BOX?frombs(a,w) :                  fromis(a,w);}
+ else if(AT(w)&SPARSE){z=at&BOX?frombs(a,w) : fromis(a,w);}
  else{z=fromsd(a,w);}
- RZ(z); RETF(z);
+ RETF(z);
 }   /* a{"r w main control */
 
 F2(jtsfrom){

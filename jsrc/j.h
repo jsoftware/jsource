@@ -590,8 +590,8 @@ extern unsigned int __cdecl _clearfp (void);
 #define GASPARSE(n,t,a,r,s) {if((r)==1){GA(n,(t),a,1,0); if(s)AS(n)[0]=(s)[0];}else{GA(n,(t),a,r,s)}}
 
 #define HN              4L  // number of boxes per valence to hold exp-def info (words, control words, original (opt.), symbol table)
-// not yet#define IC(w,temp)      (temp=AS(w)[0], temp=AR(w)?temp:1)  //     ((AS(w)[0] & (-(I)AR(w)>>(BW-1))) - ~(-(I)AR(w)>>(BW-1)))  // (AR(w) ? *AS(w) : 1L)   better: (temp=AS(w)[0], temp=AR(w)?temp:1)
-#define IC(w)     (AR(w) ? *AS(w) : 1L) //  better: (temp=AS(w)[0], temp=AR(w)?temp:1)
+#define SETIC(w,targ)      (targ=AS(w)[0], targ=AR(w)?targ:1)  //     ((AS(w)[0] & (-(I)AR(w)>>(BW-1))) - ~(-(I)AR(w)>>(BW-1)))  // (AR(w) ? *AS(w) : 1L)   better: (temp=AS(w)[0], temp=AR(w)?temp:1)
+// obsolete #define IC(w)     (AR(w) ? *AS(w) : 1L) //  better: (temp=AS(w)[0], temp=AR(w)?temp:1)
 #define ICMP(z,w,n)     memcmp((z),(w),(n)*SZI)
 #define ICPY(z,w,n)     memcpy((z),(w),(n)*SZI)
 #if C_AVX&&SY_64

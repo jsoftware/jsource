@@ -67,7 +67,7 @@ static DF2(jtcon2){A h,*hv,*x,z;V*sv;
 // u`:3 insert 
 static DF1(jtinsert){A hs,*hv,z;I hfx,j,m,n;A *old;
  RZ(w);
- n=IC(w); j=n-1; hs=FAV(self)->fgh[2]; m=AN(hs); hfx=j%m; hv=AAV(hs);  // m cannot be 0
+ SETIC(w,n); j=n-1; hs=FAV(self)->fgh[2]; m=AN(hs); hfx=j%m; hv=AAV(hs);  // m cannot be 0
  if(!n)R df1(w,iden(*hv));
  RZ(z=from(num[-1],w));
  old=jt->tnextpushp;

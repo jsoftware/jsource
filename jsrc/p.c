@@ -151,18 +151,19 @@ static PSTK* jtis(J jt,PSTK *stack){B ger=0;C *s;
     goto retstack;
    }
   }
+  // single assignment or variable assignment
 // obsolete   if(LIT&AT(n)&&1>=AR(n)){
   if((SGNIF(AT(n),LITX)&(AR(n)-2))<0){
    // lhs is ASCII characters, atom or list.  Convert it to words
    //ASSERT(1>=AR(n),EVRANK); must be true
    s=CAV(n); ger=CGRAVE==*s;   // s->1st character; remember if it is `
    RZ(n=words(ger?str(AN(n)-1,1+s):n));  // convert to words (discarding leading ` if present)
+   ASSERT(AN(n)||(AR(v)&&!AS(v)[0]),EVILNAME);  // error if namelist empty or multiple assignment to no names, if there is something to be assigned
    if(1==AN(n)){
     // Only one name in the list.  If one-name AR assignment, leave as a list so we go through the AR-assignment path below
     if(!ger){RZ(n=head(n));}   // One-name normal assignment: make it a scalar, so we go through the name-assignment path & avoid unboxing
    }
   }
-  ASSERT(AN(n)||!IC(v),EVILNAME);  // error if name empty or multiple assignment to no names, if there is something to be assigned
   // if simple assignment to a name (normal case), do it
   if(NAME&AT(n)){
 #if FORCEVIRTUALINPUTS
@@ -173,14 +174,17 @@ static PSTK* jtis(J jt,PSTK *stack){B ger=0;C *s;
    stack[2].a=
 #endif
    symbis(n,v,symtab);
+  }else{
+   // computed name(s)
+   ASSERT(AN(n)||(AR(v)&&!AS(v)[0]),EVILNAME);  // error if namelist empty or multiple assignment to no names, if there is something to be assigned
+   // otherwise, if it's an assignment to an atomic computed name, convert the string to a name and do the single assignment
+   if(!AR(n))symbis(onm(n),v,symtab);
+   // otherwise it's multiple assignment (could have just 1 name to assign, if it is AR assignment).
+   // Verify rank 1.  For each lhs-rhs pair, do the assignment (in jtisf).
+   // if it is AR assignment, apply jtfxx to each assignand, to convert AR to internal form
+   // if not AR assignment, just open each box of rhs and assign
+   else {ASSERT(1==AR(n),EVRANK); ASSERT(AT(v)&NOUN,EVDOMAIN); jt->symb=symtab; jt->pre=ger?jtfxx:jtope; rank2ex(n,v,0L,0,AR(v)-1<0?0:AR(v)-1,0,AR(v)-1<0?0:AR(v)-1,jtisf);}
   }
-  // otherwise, if it's an assignment to an atomic computed name, convert the string to a name and do the single assignment
-  else if(!AR(n))symbis(onm(n),v,symtab);
-  // otherwise it's multiple assignment (could have just 1 name to assign, if it is AR assignment).
-  // Verify rank 1.  For each lhs-rhs pair, do the assignment (in jtisf).
-  // if it is AR assignment, apply jtfxx to each assignand, to convert AR to internal form
-  // if not AR assignment, just open each box of rhs and assign
-  else {ASSERT(1==AR(n),EVRANK); ASSERT(AT(v)&NOUN,EVDOMAIN); jt->symb=symtab; jt->pre=ger?jtfxx:jtope; rank2ex(n,v,0L,0,AR(v)-1<0?0:AR(v)-1,0,AR(v)-1<0?0:AR(v)-1,jtisf);}
  }
 retstack:  // return, but 0 if error
  stack+=2; stack=jt->jerr?0:stack; R stack;  // the result is the same value that was assigned

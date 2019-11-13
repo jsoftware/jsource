@@ -171,13 +171,13 @@ SUFFIXPFX(bw1111sfxI, UI,UI, BW1111, bw1111II)
 static DF1(jtsuffix){DECLF;I r;
  RZ(w);
  r=(RANKT)jt->ranks; RESETRANK; if(r<AR(w))R rank1ex(w,self,r,jtsuffix);
- R eachl(IX(IC(w)),w,atop(fs,ds(CDROP)));
+ R eachl(IX(SETIC(w,r)),w,atop(fs,ds(CDROP)));
 }    /* f\."r w for general f */
 
 static DF1(jtgsuffix){A h,*hv,z,*zv;I m,n,r;
  RZ(w);
  r=(RANKT)jt->ranks; RESETRANK; if(r<AR(w))R rank1ex(w,self,r,jtgsuffix);
- n=IC(w); 
+ SETIC(w,n); 
  h=VAV(self)->fgh[2]; hv=AAV(h); m=AN(h);
  GATV0(z,BOX,n,1); zv=AAV(z); I imod=0;
  DO(n, imod=(imod==m)?0:imod; RZ(zv[i]=df1(drop(sc(i),w),hv[imod])); ++imod;);
@@ -305,7 +305,7 @@ static DF1(jtsscan){A y,z;I d,f,m,n,r,t,wn,wr,*ws,wt;
 
 static F2(jtomask){A c,r,x,y;I m,n,p;
  RZ(a&&w);
- RE(m=i0(a)); p=ABS(m); n=IC(w);
+ RE(m=i0(a)); p=ABS(m); SETIC(w,n);
  r=sc(0>m?(n+p-1)/p:MAX(0,1+n-m)); c=tally(w);
  x=reshape(sc(p),  num[0]);
  y=reshape(0>m?c:r,num[1] );
@@ -314,7 +314,7 @@ static F2(jtomask){A c,r,x,y;I m,n,p;
 
 static DF2(jtgoutfix){A h,*hv,x,z,*zv;I m,n;
  RZ(x=omask(a,w));
- n=IC(x);
+ SETIC(x,n);
  h=VAV(self)->fgh[2]; hv=AAV(h); m=AN(h);
  GATV0(z,BOX,n,1); zv=AAV(z); I imod=0;
  DO(n, imod=(imod==m)?0:imod; RZ(zv[i]=df1(repeat(from(sc(i),x),w),hv[imod])); ++imod;);
@@ -333,7 +333,7 @@ static DF2(jtofxinv){A f,fs,z;C c;I t;V*v;
 
 static DF2(jtofxassoc){A f,i,j,p,s,x,z;C id,*zv;I c,d,k,kc,m,r,t;V*v;VA2 adocv;
  F2RANK(0,RMAX,jtofxassoc,self);
- m=IC(w); RE(k=i0(a)); c=ABS(k);  // m = # items in w; k is value of a; c is # items per suffix
+ SETIC(w,m); RE(k=i0(a)); c=ABS(k);  // m = # items in w; k is value of a; c is # items per suffix
  f=FAV(self)->fgh[0]; x=FAV(f)->fgh[0]; v=FAV(x); id=CBDOT==v->id?(C)*AV(v->fgh[1]):v->id;  // self = f/\. f = f/  x = f  v = verb info for f
  if(k==IMIN||m<=c||id==CSTARDOT&&!(B01&AT(w)))R outfix(a,w,self);  // if there is not >1 outfix, do general code which handles empties
  if(-1<=k){d=m-c;     RZ(i=IX(d)); RZ(j=apv(d,c,1L));}
@@ -362,7 +362,7 @@ static DF2(jtofxassoc){A f,i,j,p,s,x,z;C id,*zv;I c,d,k,kc,m,r,t;V*v;VA2 adocv;
  if(jt->jerr>=EWOV){RESETERR; R ofxassoc(a,cvt(FL,w),self);}else R z;
 }    /* a f/\. w where f is an atomic associative fn */
 
-static DF1(jtiota1rev){R apv(IC(w),IC(w),-1L);}
+static DF1(jtiota1rev){I j; SETIC(w,j); R apv(j,j,-1L);}
 
 F1(jtbsdot){A f;AF f1=jtsuffix,f2=jtoutfix;I flag=FAV(ds(CBSDOT))->flag;C id;V*v;
  RZ(w);

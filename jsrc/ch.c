@@ -58,7 +58,7 @@ static DF2(jthgeom2){PROLOG(0036);A h,*hv,t,z;B b;I an,*av,j,n;V*sv=FAV(self);
   while(z&&!equ(z,t)){t=z; z=hgv(0,j,w,self); j+=j;} 
   RZ(z); if(1<an)z=hgv(1,j,w,self);
  }
- if(1<an)z=from(minimum(a,sc(IC(z)-1)),z);
+ if(1<an)z=from(minimum(a,sc(SETIC(z,an)-1)),z);
  EPILOG(z);
 }
 

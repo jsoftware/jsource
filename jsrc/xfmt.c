@@ -252,7 +252,7 @@ static B jtsprintfeD(J jt, C *x, I m, I dp, D dw, C *subs) {I y,y0;int decpt,sig
 static F2(jtfmtprecomp) {A*as,base,fb,len,strs,*u,z;B*bits,*bw;D dtmp,*dw;
      I d,i,*ib,imod,*iw,*iv,maxl,mods,n,nB,nD,nMN,nPQ,nc,nf,*s,wr,*ws,wt;
  RZ(a&&w); 
- nf=1==AR(a)?1:*AS(a); n=AN(w); wt=AT(w); wr=AR(w); ws=AS(w); nc=wr?ws[wr-1]:1;  // nf=#cells, nc=length of 1-cell (# columns)
+ nf=AS(a)[0]; nf=1==AR(a)?1:nf; n=AN(w); wt=AT(w); wr=AR(w); ws=AS(w); nc=wr?ws[wr-1]:1;  // nf=#cells, nc=length of 1-cell (# columns)
  ASSERT(wt&B01+INT+FL, EVDOMAIN);
  if(1<nf){GATV0(base,INT,nf*4,2); s=AS(base); *s++=nf; *s=4;}else GATV0(base,INT,3+nc,1);
  GATV0(strs,BOX,nf*NMODVALS,2); s=AS(strs); *s++=nf; *s=NMODVALS;
@@ -541,23 +541,23 @@ static A jtfmtxi(J jt, A a, A w, I mode, I *omode){I lvl;
 
 F2(jtfmt02){I mode; R fmtxi(a,w,0,&mode);} /* 8!:0 dyad */
 
-F2(jtfmt12){A z;I mode,r,*s;
+F2(jtfmt12){A z;I mode,r,j;
  RZ(a&&w);
  ASSERT(2>=AR(w), EVRANK);
  RZ(z=fmtxi(a,w,1,&mode));
  if(mode==1)R z;
- r=AR(z); s=AS(z);
- z=df1(cant1(2==r?z:reshape(v2(1L,r?*s:1L),z)), qq(atco(ds(CBOX),ds(COPE)),num[1]));
+ r=AR(z);
+ z=df1(cant1(2==r?z:reshape(v2(1L,SETIC(z,j)),z)), qq(atco(ds(CBOX),ds(COPE)),num[1]));
  R ravel(z);
 } /* 8!:1 dyad */
 
-F2(jtfmt22){A z;I mode,r,*s;
+F2(jtfmt22){A z;I mode,r,j;
  RZ(a&&w);
  ASSERT(2>=AR(w), EVRANK);
  RZ(z=fmtxi(a,w,2,&mode));
  if(mode==2)R z;
- r=AR(z); s=AS(z);
- z=df1(cant1(2==r?z:reshape(v2(1L,r?*s:1L),z)), qq(atco(ds(CBOX),ds(COPE)),num[1]));
+ r=AR(z);
+ z=df1(cant1(2==r?z:reshape(v2(1L,SETIC(z,j)),z)), qq(atco(ds(CBOX),ds(COPE)),num[1]));
  RZ(z=ravel(z));
  R *AS(z)?razeh(z):lamin1(z);
 } /* 8!:2 dyad */

@@ -2021,7 +2021,7 @@ A jtindexofprehashed(J jt,A a,A w,A hs){A h,*hv,x,z;AF fn;I ar,*as,at,c,f1,k,m,m
  hv=AAV(hs); x=hv[0]; h=hv[1]; 
  // get the info from the info vector
  xv=AV(x); mode=xv[0]; n=xv[1]; k=xv[2]; /* noavx jt->min=xv[3]; */ fn=(AF)xv[4];
- ar=AR(a); as=AS(a); at=AT(a); t=at; m=ar?*as:1; 
+ ar=AR(a); as=AS(a); at=AT(a); t=at; SETIC(a,m); 
  wr=AR(w); ws=AS(w); wt=AT(w);
  r=ar?ar-1:0;
  f1=wr-r;
@@ -2118,7 +2118,7 @@ F1(jtsclass){A e,x,xy,y,z;I c,j,m,n,*v;P*p;
  RZ(w);
  // If w is scalar, return 1 1$1
  if(!AR(w))R reshape(v2(1L,1L),num[1]);
- n=IC(w);   // n=#items of y
+ SETIC(w,n);   // n=#items of y
  RZ(x=indexof(w,w));   // x = i.~ y
  // if w is dense, return ((x = i.n) # x) =/ x
  if(DENSE&AT(w))R atab(CEQ,repeat(eq(IX(n),x),x),x);

@@ -245,7 +245,7 @@ A jttokens(J jt,A w,I env){R enqueue(wordil(w),w,env);}
 
 static A jtfsmdo(J jt,I f,A s,A m,I*ijrd,A w,A w0){A x,z;C*cc,*wv0;
      I c,d,e,i,j,k,*mv,n,p,q,r,*sv,t,t0,*v,vc,vi,vj,vr,wk,wm,wr,*zv;
- n=IC(w); t=AT(w);
+ SETIC(w,n); t=AT(w);
  q=*(1+AS(s));
  sv=AV(s); mv=AV(m);
  i=ijrd[0]; j=ijrd[1]; r=ijrd[2]; d=ijrd[3]; vi=vj=vr=vc=-1;

@@ -29,9 +29,9 @@ static DF2(jtfitexp2){
  R aslash(CSTAR,plus(a,df2(iota(w),FAV(self)->fgh[1],slash(ds(CSTAR)))));
 }    /* a ^!.s w */
 
-static DF2(jtfitpoly2){
+static DF2(jtfitpoly2){I j;
  F2RANK(1,0,jtfitpoly2,self);
- R aslash(CPLUS,tymes(a,ascan(CSTAR,shift1(plus(w,df2(IX(IC(a)),FAV(self)->fgh[1],slash(ds(CSTAR))))))));
+ R aslash(CPLUS,tymes(a,ascan(CSTAR,shift1(plus(w,df2(IX(SETIC(a,j)),FAV(self)->fgh[1],slash(ds(CSTAR))))))));
 }    /* a p.!.s w */
 
 static DF1(jtfitfill1){DECLFG;F1PREFIP;A z; jt->fill=gs; z=CALL1IP(f1,  w,fs); jt->fill=0; RETF(z);}  // gs cannot be virtual

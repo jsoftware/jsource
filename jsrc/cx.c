@@ -52,7 +52,7 @@ typedef struct{I4 d,t,e,b;} TD;  // line numbers of catchd., catcht., end. and t
 static B jtforinit(J jt,CDATA*cv,A t){A x;C*s,*v;I k;
  ASSERT(t,EVCTRL);
  RZ(ras(t)); cv->t=t;                            /* iteration array     */
- cv->n=IC(t);                            /* # of items in t     */
+ SETIC(t,cv->n);                            /* # of items in t     */
  cv->j=-1;                               /* iteration index     */
  cv->x=0;
  k=AN(cv->line)-5; cv->k=(I4)k;                 /* length of item name */

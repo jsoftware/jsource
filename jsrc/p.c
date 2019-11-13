@@ -551,7 +551,7 @@ rdglob: ;
         }
        } else {
          // undefined name.  If special x. u. etc, that's fatal; otherwise create a dummy ref to [: (to have a verb)
-         if(at&NAMEBYVALUE){jsignal(EVVALUE);FP}  // Report error (Musn't ASSERT: need to pop nvr stack) and quit
+         if(at&NAMEBYVALUE){jsignal(EVVALUE);FP}  // Report error (Musn't ASSERT: need to pop all stacks) and quit
          if (!(y = namerefacv(y, s)))FP    // this will create a ref to undefined name as verb [:
            // if syrd gave an error, namerefacv may return 0.  This will have previously signaled an error
        }
@@ -703,7 +703,8 @@ failparse:  // If there was an error during execution or name-stacking, exit wit
  }else{A y;  // m<2.  Happens fairly often, and full parse can be omitted
   if(m==1){  // exit fast if empty input.  Happens only during load, but we can't deal with it
    // Only 1 word in the queue.  No need to parse - just evaluate & return.  We do it here to avoid parsing
-   // overhead, because it happens enough to notice
+   // overhead, because it happens enough to notice.
+   // No ASSERT - must get to the end to pop stack
    jt->parserstackframe.parsercurrtok=0;  // error token if error found
    I at=AT(y = queue[0]);  // fetch the word
    if(at&NAME) {L *s;
@@ -712,14 +713,14 @@ failparse:  // If there was an error during execution or name-stacking, exit wit
       RZ(sv = s->val);  // symbol table entry, but no value.  Must be in an explicit definition, so there is no need to raise an error
       if((AT(sv)|at)&(NOUN|NAMEBYVALUE)){   // in noun or special name, use value
        y=sv;
-      } else RZ(y = namerefacv(y, s));   // Replace other acv with reference
+      } else y = namerefacv(y, s);   // Replace other acv with reference.  Could fail.
     } else {
       // undefined name.
-      ASSERT(!(at&NAMEBYVALUE),EVVALUE)  // Error if the unresolved name is x y etc
-      RZ(y = namerefacv(y, s));    // this will create a ref to undefined name as verb [:
+      if(at&NAMEBYVALUE){jsignal(EVVALUE); y=0;}  // Error if the unresolved name is x y etc.  Don't ASSERT since we must pop stack
+      else y = namerefacv(y, s);    // this will create a ref to undefined name as verb [: .  Could set y to 0 if error
     }
    }
-   ASSERT(AT(y)&CAVN,EVSYNTAX);
+   if(y&&!(AT(y)&CAVN)){jsignal(EVSYNTAX); y=0;}  // if not CAVN result, error
   }else y=mark;  // empty input - return with 'mark' as the value, which means nothing to parse.  This result must not be passed into a sentence
   jt->parserstackframe = oframe;
   R y;

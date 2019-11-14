@@ -53,6 +53,9 @@ DF1(jtcrcfixedleft){A h,*hv;I n;UINT*t,z;UC*v;
 }
 
 // CRC-based hash.  Bivalent
+#ifndef CRC32L
+#define CRC32L(acc,in) (acc^in)   // if no hardware CRC (rare), mix the bits a little
+#endif
 F2(jtqhash12){F2PREFIP; I hsiz; UI crc;
  RZ(a&&w);
  if(AT(w)&NOUN){RE(hsiz=i0(vib(a)));} else{w=a; hsiz=0;}  // fetch hashtable size; set w=data to hash

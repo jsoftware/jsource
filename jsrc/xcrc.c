@@ -54,7 +54,7 @@ DF1(jtcrcfixedleft){A h,*hv;I n;UINT*t,z;UC*v;
 
 // CRC-based hash.  Bivalent
 #ifndef CRC32L
-#define CRC32L(acc,in) (acc^in)   // if no hardware CRC (rare), mix the bits a little
+#define CRC32L(acc,in) (0xffffffff&((acc*15015)^(in)))   // if no hardware CRC (rare), mix the bits a little
 #endif
 F2(jtqhash12){F2PREFIP; I hsiz; UI crc;
  RZ(a&&w);

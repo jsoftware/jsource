@@ -120,7 +120,7 @@ DF2(jtxdefn){PROLOG(0048);
  A *line;   // pointer to the words of the definition.  Filled in by LINE
  I n;  // number of lines in the definition.  Filled in by LINE
  CW *cw;  // pointer to control-word info for the definition.  Filled in by LINE
- I gsfctdl;  // flags: 1=locked 2=debug(& not locked) 4=tdi!=0 8=cd!=0 16=thisframe!=0 32=symtable was the original (i. e. AR(symtab)&LSYMINUSE) 256=original debug flag (must be highest bit)
+ I gsfctdl=0;  // flags: 1=locked 2=debug(& not locked) 4=tdi!=0 8=cd!=0 16=thisframe!=0 32=symtable was the original (i. e. AR(symtab)&LSYMINUSE) 256=original debug flag (must be highest bit)
 // obsolete I lk;  // lock/debug flag: 1=locked function; 0=normal operation; -1=this function is being debugged
  DC callframe=0;  // pointer to the debug frame of the caller to this function (only if it's named), but 0 if we are not debugging
 
@@ -140,7 +140,7 @@ DF2(jtxdefn){PROLOG(0048);
   u=AT(self)&ADV+CONJ?a:0; v=AT(self)&ADV+CONJ?w:0;
   if(!(jt->uflags.us.cx.cx_us | (sflg&(VLOCK|VXOP|VTRY1|VTRY2)))){
    // Normal case of verbs. Read the info for the parsed definition, including control table and number of lines
-   gsfctdl=0; LINE(sv);
+   LINE(sv);
    // Create symbol table for this execution.  If the original symbol table is not in use (rank unflagged), use it;
    // otherwise clone a copy of it.  We have to do this before we create the debug frame
    // This code duplicated below
@@ -159,13 +159,13 @@ DF2(jtxdefn){PROLOG(0048);
    else{RZ(locsym=clonelocalsyms(locsym));}
 
 // obsolete    // lk: 0=normal, 1=this definition is locked, -1=debug mode
-   gsfctdl=jt->uflags.us.cx.cx_c.glock||sv->flag&VLOCK;
+   gsfctdl|=jt->uflags.us.cx.cx_c.glock||sv->flag&VLOCK;  // 1=lock bit
    // if we are in debug mode, the call to this defn should be on the stack (unless debug was entered under program control).  If it is, point to its
    // stack frame, which functions as a flag to indicate that we are debugging.  If the function is locked we ignore debug mode
-   if(!gsfctdl&&jt->uflags.us.cx.cx_c.db){
+   if(!(gsfctdl&1)&&jt->uflags.us.cx.cx_c.db){
     if(jt->sitop&&jt->sitop->dctype==DCCALL){   // if current stack frame is a call
 // obsolete      lk=-1;    // indicate we are debugging
-     gsfctdl=2;   // set debug flag
+     gsfctdl|=2;   // set debug flag if debug requested and not locked
      if(sv->flag&VNAMED){
       callframe=jt->sitop;  // if this is a named (rather than anonymous call like 3 : 0"1), there is a tight link with the caller.  Indicate that
      }

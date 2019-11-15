@@ -101,7 +101,7 @@ B jtmeminit(J jt){I k,m=MLEN;
 // Audit all memory chains to detect overrun
 void jtauditmemchains(J jt){
 #if MEMAUDIT&16
-I Wi,Wj;A Wx,prevWx=0; if(jt->peekdata){for(Wi=PMINL;Wi<=PLIML;++Wi){Wj=0; Wx=(jt->mfree[-PMINL+Wi].pool); while(Wx){if(FHRHPOOLBIN(AFHRH(Wx))!=(Wi-PMINL)||(UI4)AFHRH(Wx)!=Wx->fill)SEGFAULT prevWx=Wx; Wx=AFCHAIN(Wx); ++Wj;}}}
+I Wi,Wj;A Wx,prevWx=0; if(jt->peekdata){for(Wi=PMINL;Wi<=PLIML;++Wi){Wj=0; Wx=(jt->mfree[-PMINL+Wi].pool); while(Wx){if(FHRHPOOLBIN(AFHRH(Wx))!=(Wi-PMINL)||(UI4)AFHRH(Wx)!=Wx->fill||Wj>0x10000000)SEGFAULT prevWx=Wx; Wx=AFCHAIN(Wx); ++Wj;}}}
 #endif
 }
 

@@ -72,10 +72,10 @@ B jtequ0(J jt,A a,A w){
 
 // Test for equality of functions, 1 if they match.  To match, the functions must have the same pseudocharacter and fgh
 static B jteqf(J jt,A a,A w){A p,q;V*u=FAV(a),*v=FAV(w);
- if(!(TYPESEQ(AT(a),AT(w))&&u->id==v->id))R 0;
- p=u->fgh[0]; q=v->fgh[0]; if(!(!p&&!q||p&&q&&(p==q||matchsub(0L,0L,1L,1L,p,q,0,C1))))R 0;
- p=u->fgh[1]; q=v->fgh[1]; if(!(!p&&!q||p&&q&&(p==q||matchsub(0L,0L,1L,1L,p,q,0,C1))))R 0;
- p=u->fgh[2]; q=v->fgh[2];    R !p&&!q||p&&q&&(p==q||matchsub(0L,0L,1L,1L,p,q,0,C1));
+ if(TYPESXOR(AT(a),AT(w))+(u->id^v->id))R 0;   // must match on type and id
+ p=u->fgh[0]; q=v->fgh[0]; if(!((p==q||p&&q&&matchsub(0L,0L,1L,1L,p,q,0,C1))))R 0;
+ p=u->fgh[1]; q=v->fgh[1]; if(!((p==q||p&&q&&matchsub(0L,0L,1L,1L,p,q,0,C1))))R 0;
+ p=u->fgh[2]; q=v->fgh[2];    R (p==q||p&&q&&matchsub(0L,0L,1L,1L,p,q,0,C1));
 }
 
 // compare function for boxes.  Do a test on the single contents of the box.  Reset comparison direction to normal.

@@ -88,15 +88,15 @@ A jtssingleton(J jt, A a,A w,A self,RANK2T awr,RANK2T ranks){A z;
  case SSINGCASE(VA2PLUS-VA2BF,SSINGDI): SSSTORE(SSRDD(a)+SSRDI(w),z,FL,D) R z;
  case SSINGCASE(VA2PLUS-VA2BF,SSINGBI): 
   {B av = SSRDB(a); I wv = SSRDI(w); I zv = av+wv;
-  if(zv<wv)SSSTORE((D)av+(D)wv,z,FL,D) else SSSTORENV(zv,z,INT,I)
+  if(zv>=wv)SSSTORENV(zv,z,INT,I) else SSSTORE((D)av+(D)wv,z,FL,D)
   R z;}
  case SSINGCASE(VA2PLUS-VA2BF,SSINGIB):
   {I av = SSRDI(a); B wv = SSRDB(w); I zv = av + wv;
-  if (zv<av)SSSTORE((D)av+(D)wv,z,FL,D) else SSSTORENV(zv,z,INT,I)
+  if (zv>=av)SSSTORENV(zv,z,INT,I) else SSSTORE((D)av+(D)wv,z,FL,D)
   R z;}
  case SSINGCASE(VA2PLUS-VA2BF,SSINGII):
   {I av = SSRDI(a); I wv = SSRDI(w); I zv = av + wv;
-  if (XANDY((zv^av),(zv^wv))<0)SSSTORE((D)av+(D)wv,z,FL,D) else SSSTORENV(zv,z,INT,I)
+  if (XANDY((zv^av),(zv^wv))>=0)SSSTORENV(zv,z,INT,I) else SSSTORE((D)av+(D)wv,z,FL,D)
   R z;}
  case SSINGCASE(VA2PLUS-VA2BF,SSINGDD):
   {NAN0; SSSTORENVFL(SSRDD(a)+SSRDD(w),z,FL,D) NAN1; R z;}
@@ -109,15 +109,15 @@ A jtssingleton(J jt, A a,A w,A self,RANK2T awr,RANK2T ranks){A z;
  case SSINGCASE(VA2MINUS-VA2BF,SSINGDI): SSSTORE(SSRDD(a)-SSRDI(w),z,FL,D) R z;
  case SSINGCASE(VA2MINUS-VA2BF,SSINGBI): 
   {B av = SSRDB(a); I wv = SSRDI(w); I zv = av-wv;
-  if(wv<0&&zv<=av)SSSTORE((D)av-(D)wv,z,FL,D) else SSSTORENV(zv,z,INT,I)
+  if((wv&zv)>=0)SSSTORENV(zv,z,INT,I) else SSSTORE((D)av-(D)wv,z,FL,D)
   R z;}
  case SSINGCASE(VA2MINUS-VA2BF,SSINGIB):
   {I av = SSRDI(a); I wv = (I)SSRDB(w); I zv = av - wv;   
-  if (zv>av)SSSTORE((D)av-(D)wv,z,FL,D) else SSSTORENV(zv,z,INT,I)
+  if (zv<=av)SSSTORENV(zv,z,INT,I) else SSSTORE((D)av-(D)wv,z,FL,D)
   R z;}
  case SSINGCASE(VA2MINUS-VA2BF,SSINGII):
   {I av = SSRDI(a); I wv = SSRDI(w); I zv = av - wv;
-  if (XANDY((zv^av),~(zv^wv))<0)SSSTORE((D)av-(D)wv,z,FL,D) else SSSTORENV(zv,z,INT,I)
+  if (XANDY((zv^av),~(zv^wv))>=0)SSSTORENV(zv,z,INT,I) else SSSTORE((D)av-(D)wv,z,FL,D)
   R z;}
  case SSINGCASE(VA2MINUS-VA2BF,SSINGDD):
   {NAN0; SSSTORENVFL(SSRDD(a)-SSRDD(w),z,FL,D) NAN1;  R z;}

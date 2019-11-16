@@ -208,7 +208,7 @@ static F2(jtbfrom){A z;B*av,*b;C*wv,*zv;I acr,an,ar,k,m,p,q,r,*u=0,wcr,wf,wk,wn,
  // If a is empty, it needs to simulate execution on a cell of fills.  But that might produce domain error, if w has no
  // items, where 0 { empty is an index error!  In that case, we set wr to 0, in effect making it an atom (since failing exec on fill-cell produces atomic result)
 // if(an==0 && wn==0 && ws[wf]==0)wcr=wr=0;
- p=wcr?*(ws+wf):1; q=an>>LGSZI; r=an&(SZI-1);   // p=* items of w
+ p=wcr?*(ws+wf):1; q=an>>LGSZI; r=an&(SZI-1);   // p=# items of w
  ASSERT(2<=p||1==p&&all0(a)||!p&&!an,EVINDEX);
  // We always need zn, the number of result atoms
  if(wn){
@@ -386,12 +386,13 @@ static A jtafrom2(J jt,A p,A q,A w,I r){A z;C*wv,*zv;I d,e,j,k,m,n,pn,pr,* RESTR
 // n is length of axis, w is doubly-unboxed selector
 // result is list of selectors - complementary if w is boxed
 static A jtafi(J jt,I n,A w){A x;
- if((-AN(w)&SGNIF(AT(w),BOXX))>=0)R pind(n,w);
+ if((-AN(w)&SGNIF(AT(w),BOXX))>=0)R pind(n,w);   // empty or not boxed
  ASSERT(!AR(w),EVINDEX);  // if boxed, must be an atom
  x=AAV0(w);
- R AN(x)?less(IX(n),pind(n,x)):ace; 
+ R AN(x)?less(IX(n),pind(n,x)):ace;   // complementary
 }
 
+// general boxed a
 static F2(jtafrom){PROLOG(0073);A c,ind,p=0,q,*v,y=w;B bb=1;I acr,ar,i=0,j,m,n,pr,*s,t,wcr,wf,wr;
  RZ(a&&w);
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
@@ -405,13 +406,16 @@ static F2(jtafrom){PROLOG(0073);A c,ind,p=0,q,*v,y=w;B bb=1;I acr,ar,i=0,j,m,n,p
  s=AS(w)+wr-wcr;
  ASSERT(1>=AR(c),EVRANK);
  ASSERT(n<=wcr,EVLENGTH);
- if(n&&!(t&BOX)){RE(aindex(a,w,wf,&ind)); if(ind)R frombu(ind,w,wf);}
+// obsolete  if(n&&!(t&BOX)){RE(aindex(a,w,wf,&ind)); if(ind)R frombu(ind,w,wf);}
+ if((-n&SGNIFNOT(t,BOXX))<0){RE(aindex(a,w,wf,&ind)); if(ind)R frombu(ind,w,wf);}  // not empty and not boxed, handle as 1 index list
  if(wcr==wr){
   for(i=m=pr=0;i<n;++i){
    p=afi(s[i],v[i]);
-   if(!(p&&1==AN(p)&&INT&AT(p)))break;
+// obsolete    if(!(p&&1==AN(p)&&INT&AT(p)))break;  // if 1 selection from axis, do selection here, by adding offset to selected cell
+   if(!(p&&(((AN(p)^1)-1)&-(AT(p)&NUMERIC))<0))break;  // if 1 selection from numeric axis, do selection here, by adding offset to selected cell
    pr+=AR(p); 
-   m+=*AV(p)*prod(wcr-i-1,1+i+s);
+// obsolete    m+=*AV(p)*prod(wcr-i-1,1+i+s);
+   RANKT rsav=AR(p); AR(p)=0; m+=i0(p)*prod(wcr-i-1,1+i+s); AR(p)=rsav;  // kludge but easier than creating a fauxvirtual block
   }
  }
  if(i){I*ys;
@@ -419,7 +423,7 @@ static F2(jtafrom){PROLOG(0073);A c,ind,p=0,q,*v,y=w;B bb=1;I acr,ar,i=0,j,m,n,p
   ys=AS(y); DO(pr, *ys++=1;); MCISH(ys,s+i,wcr-i);
   AN(y)=prod(AR(y),AS(y));
  }
- // take axes 2 at a time, properly handling omitted axes.  First time through p is set
+ // take remaining axes 2 at a time, properly handling omitted axes.  First time through p is set if there has been no error
  for(;i<n;i+=2){
   j=1+i; if(!p)p=afi(s[i],v[i]); q=j<n?afi(s[j],v[j]):ace; if(!(p&&q))break;  // pq are 0 if error
   if(p!=ace&&q!=ace){y=afrom2(p,q,y,wcr-i);}

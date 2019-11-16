@@ -409,8 +409,8 @@ void va2primsetup(A w){
 
 A jtcvz(J jt,I cv,A w){I t;
  t=AT(w);
- if(cv&VRD&&!(t&FL) )R pcvt(FL,w);
- if(cv&VRI&&!(t&INT))R icvt(w);
+ if(cv&VRD&&!(t&FL) )R pcvt(FL,w);  // convert if possible
+ if(cv&VRI&&!(t&INT))R icvt(w);  // convert to integer if possible
  R w;
 }    /* convert result */
 
@@ -430,7 +430,7 @@ A jtcvz(J jt,I cv,A w){I t;
    *ado=p->fgh[0]; *cv=p->cv;                       \
   }else *ado=0;                                \
  }
-// Routine to lookup function/flags
+// Routine to lookup function/flags for u/ u\ u\.
 // ptr is the type of lookup (insert/prefix/suffix) to generate the function for
 // In the function, id is the pseudochar for the function to look up
 //  t is the argument type
@@ -438,15 +438,23 @@ A jtcvz(J jt,I cv,A w){I t;
 #define VA2F(fname,ptr,fp,fm,ft)   \
  static VA2 fname##EWOV[] = { {ft,VD} , {fp,VD}, {fm,VD}, {0,0} }; \
  VA2 jt##fname(J jt,A self,I t){  \
-  if(!(jt->jerr>=EWOV)){                          \
-   if((t&=(NUMERIC+SBT)&(~SPARSE))&&FAV(self)->flag&VISATOMIC2){  /* numeric input, verb with dataline */        \
-    R ((VA*)(FAV(self)->localuse.lvp[0]))->ptr[t<=FL?(t>>INTX):t<=RAT?(3+(t>>XNUMX)):6];  \
-   }else R fname##EWOV[3];                                \
-  }else{ \
+  if(!(jt->jerr>=EWOV)){  /* normal case, starting the op */                        \
+   t&=(NUMERIC+SBT)&(~SPARSE); t=FAV(self)->flag&VISATOMIC2?t:0;   /* t=0 is not numeric or not atomic fn */  \
+   I tx=t>>INTX; if(t>FL){tx>>=(XNUMX-INTX); tx=t>RAT?3:tx; tx+=3;}  /* index of type */  \
+   VA2 *ra=((VA*)(FAV(self)->localuse.lvp[0]))->ptr+tx; ra=t?ra:fname##EWOV+3;  /* point to return slot */  \
+   R *ra;   /* return the routine address/flags */  \
+  }else{ /* here to recover from integer overflow */ \
    jt->jerr=0;                                 \
    R fname##EWOV[2*(FAV(self)->id==CMINUS) + (FAV(self)->id==CPLUS)]; \
   }  \
  }
+
+#if 0 // obsolete
+   if((t&=(NUMERIC+SBT)&(~SPARSE))&&FAV(self)->flag&VISATOMIC2){  /* numeric input, verb with dataline */        \
+    R ((VA*)(FAV(self)->localuse.lvp[0]))->ptr[t<=FL?(t>>INTX):t<=RAT?(3+(t>>XNUMX)):6];  \
+   }else R fname##EWOV[3];                                \
+
+#endif
 
 // Lookup the action routine & flags for insert/prefix/suffix
 // first name is name of the generated function
@@ -1169,18 +1177,19 @@ DF2(jtfslashatg){A fs,gs,y,z;B b,bb,sb=0;C*av,c,d,*wv;I ak,an,ar,*as,at,m,
  y=FAV(fs)->fgh[0]; c=ID(y); d=ID(gs);
  if(c==CPLUS){
   // +/@:g is special if args are boolean, length is integral number of I, and g is boolean or *
+if(at&wt&B01)R sumatgbool(a,w,d);
+if(!(at&wt&INT)); else R tymes(a,w);
   if((((at&wt&B01&(n==1))>(zn&(SZI-1)))||!SY_ALIGN)&&strchr(sumbf,d))R sumatgbool(a,w,d);  // kludge search is slow
   if(d==CSTAR){
-   if(ar&&wr&&TYPESEQ(at,wt)&&at&B01+FL+(INT*!SY_64))R jtsumattymes(jt,a,w,b,at,m,n,nn,r,s,zn);  // +/@:*
    if(!ar||!wr){  // if either argument is atomic, apply the distributive property to save multiplies
     z=!ar?tymes(a,df1(w,fs)):tymes(w,df1(a,fs));
     if(jt->jerr==EVNAN)RESETERR else R z;
-   }
+   }else if(TYPESEQ(at,wt)&&at&B01+FL+(INT*!SY_64))R jtsumattymes(jt,a,w,b,at,m,n,nn,r,s,zn);  // +/@:*
   }
  }
  adocv=var(gs,at,wt); ASSERT(adocv.f,EVDOMAIN); yt=rtype(adocv.cv ); t=atype(adocv.cv);
  adocvf=var(y,yt,yt); ASSERT(adocvf.f,EVDOMAIN); zt=rtype(adocvf.cv);
- sb=(yt&B01)&&(c==CPLUS);  // +/@:g where g produces Boolean.  Could use &
+ sb=yt&(c==CPLUS);  // +/@:g where g produces Boolean.
  if(!(sb||TYPESEQ(yt,zt)))R df1(df2(a,w,gs),fs);
  if(t){
   bb=1&&t&XNUM;

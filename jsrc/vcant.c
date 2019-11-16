@@ -105,7 +105,8 @@ F2(jtcant2){A*av,p,t,y;I j,k,m,n,*pv,q,r,*v;
  RZ(a&&w);
  r=(RANKT)jt->ranks; r=AR(w)<r?AR(w):r; 
  q=jt->ranks>>RANKTX; q=AR(a)<q?AR(a):q; RESETRANK;
- if(1<q||q<AR(a))R rank2ex(a,w,0L,MIN(q,1),r,q,r,jtcant2);  // rank loop on a
+// obsolete  if(1<q||q<AR(a))R rank2ex(a,w,0L,MIN(q,1),r,q,r,jtcant2);  // rank loop on a
+ if(((q-2)&(AR(a)-q-1))>=0)R rank2ex(a,w,0L,MIN(q,1),r,q,r,jtcant2);  // rank loop on a
  if(BOX&AT(a)){
   RZ(y=pfill(r,t=raze(a))); v=AV(y);
   GATV0(p,INT,AN(y),1); pv=AV(p);

@@ -48,7 +48,8 @@ F1(jtwordil){A z;C e,nv,s,t=0;I b,i,m,n,*x,xb,xe;ST p;UC*v;
   p=state[s][wtype[v[i]]]; e=p.effect;    // go to next state
   if(e==EI){  // if 'emit'...
    t&=s==S9;   // was previous state S9? (means we were building a number)
-   if(t){if(!nv){nv=1; xb=b;} xe=i;}   // if so, b must be set; if this is first number, remember starting index.  In any case remember presumptive ending index
+// obsolete    if(t){if(!nv){nv=1; xb=b;} xe=i;}   // if so, b must be set; if this is first number, remember starting index.  In any case remember presumptive ending index
+   if(t){xb=nv?xb:b; nv=1; xe=i;}   // if so, b must be set; if this is first number, remember starting index.  In any case remember presumptive ending index
    else{if(nv){nv=0; *x++=xb; *x++=xe-xb;} *x++=b; *x++=i-b;}  // Not S9.  If a numeric constant was in progress, it ended on the word BEFORE
     // the one ending now.  In that case, emit the numeric constant.  Then in any case emit the (nonnumeric) ending here.
   }
@@ -119,14 +120,14 @@ A jtenqueue(J jt,A a,A w,I env){A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl;UC c;
    // beginning-of-list pointer v, to start of list of output pointers
  for(i=0;i<n;i++,x++){  // for each word
   wi=s+*u++; wl=*u++; c=e=*wi; p=ctype[(UC)c]; b=0;   // wi=first char, wl=length, c=e=first char, p=type of first char, b='no inflections'
-  if(1<wl){d=*(wi+wl-1); if(b=p!=C9&&d==CESC1||d==CESC2)e=spellin(wl,wi);}  // if word has >1 character, starts with nonnumeric, and ends with inflection, convert to pseudocharacter
-  if(c>=32&&128>c&&(y=ds(e))){
+  if(1<wl){d=*(wi+wl-1); if(b=((p!=C9)&(d==CESC1))|(d==CESC2))e=spellin(wl,wi);}  // if word has >1 character, starts with nonnumeric, and ends with inflection, convert to pseudocharacter
+  if(((UI)c-32)<(UI)(128-32)&&(y=ds(e))){
    // If first char is ASCII, see if the form including inflections is a primitive;
    // if so, that is the word to put into the queue.  No need to copy it
    // Since the address of the shared primitive block is used, we can use that to compare against to identify the primitive later
    // We keep track of We keep track of whether }~ was found.  If } starts the sentence, this will compare garbage, but
    // without risk of program check
-   if(env!=0 && AT(y)&ASGN) {
+   if((-env & SGNIF(AT(y),ASGNX))<0) {
     // If the word is an assignment, use the appropriate assignment block, depending on the previous word and the environment
     // In environment 0 (tacit translator), leave as simple assignment
     if(e==CASGN && (env==1 || (i && AT(x[-1])&NAME && (NAV(x[-1])->flag&(NMLOC|NMILOC))))){y=asgnforceglo;}   // sentence is NOT for explicit definition, or preceding word is a locative.  Convert to a global assignment.  This will make the display show =:
@@ -229,7 +230,7 @@ A jttokens(J jt,A w,I env){R enqueue(wordil(w),w,env);}
 
 #define FSMF(T,zk,zt,zr,zm,cexp,EMIT,ZVA)    \
  {T*u,*uu;                                                                  \
-  RZ(z=exta((zt),(zr),(zm),1==f||5==f?n+1:n/3));                              \
+  RZ(z=exta((zt),(zr),(zm),(f|4)==5?n+1:n/3));                              \
   if(1<(zr)){I*s=AS(z); s[1]=(zm); if(1==f&&2<wr)MCISH(1+s,1+AS(w0),wr-1);}  \
   zv=AV(z); u=(T*)zv; uu=u+AN(z);                                           \
   for(;i<n;++i,r=*v){c=(cexp); v=sv+2*(c+r*q); ZVA; DO_ONE(T,EMIT);}        \
@@ -237,7 +238,7 @@ A jttokens(J jt,A w,I env){R enqueue(wordil(w),w,env);}
    if(0<=d)         {c=d;      v=sv+2*(c+r*q); ZVA; DO_ONE(T,EMIT);}        \
    else{                                                                    \
     if(0<=vi      )EMIT(T,vj,r==vr?n:vi,vr,vc);                             \
-    if(r!=vr&&0<=j)EMIT(T,j,n,r,c);                                         \
+    if((-(r!=vr)&~j)<0)EMIT(T,j,n,r,c);    /*  r!=vr and j>=0 */                                     \
   }}                                                                        \
   if(5==f)u=(T*)zv;                                                         \
   i=AN(z); AN(z)=j=(u-(T*)AV(z))/zk; *AS(z)=j/(zm); if(i>3*j)RZ(z=ca(z));        \
@@ -280,9 +281,9 @@ F1(jtfsmvfya){PROLOG(0099);A a,*av,m,s,x,z,*zv;I an,c,e,f,ijrd[4],k,p,q,*sv,*v;
  ASSERT(1==AR(a),EVRANK);
  ASSERT(BOX&AT(a),EVDOMAIN);
  an=AN(a); av=AAV(a); 
- ASSERT(2<=an&&an<=4,EVLENGTH);
+ ASSERT((UI)(an-2)<=(UI)(4-2),EVLENGTH);
  RE(f=i0(av[0]));
- ASSERT(0<=f&&f<=5,EVINDEX);
+ ASSERT((UI)f<=(UI)5,EVINDEX);
  RZ(s=vi(av[1])); sv=AV(s);
  ASSERT(3==AR(s),EVRANK);
  v=AS(s); p=v[0]; q=v[1]; ASSERT(2==v[2],EVLENGTH);
@@ -293,9 +294,12 @@ F1(jtfsmvfya){PROLOG(0099);A a,*av,m,s,x,z,*zv;I an,c,e,f,ijrd[4],k,p,q,*sv,*v;
   ASSERT(1==AR(x),EVRANK);
   ASSERT(4>=n,EVLENGTH);
   if(1<=n) ijrd[0]=i=*v++;
-  if(2<=n){ijrd[1]=j=*v++; ASSERT(j==-1||0<=j&&j<i,EVINDEX);}
-  if(3<=n){ijrd[2]=r=*v++; ASSERT(       0<=r&&r<p,EVINDEX);}
-  if(4==n){ijrd[3]=d=*v++; ASSERT(d==-1||0<=d&&d<q,EVINDEX);}
+// obsolete   if(2<=n){ijrd[1]=j=*v++; ASSERT(j==-1||0<=j&&j<i,EVINDEX);}
+// obsolete   if(3<=n){ijrd[2]=r=*v++; ASSERT(       0<=r&&r<p,EVINDEX);}
+// obsolete   if(4==n){ijrd[3]=d=*v++; ASSERT(d==-1||0<=d&&d<q,EVINDEX);}
+  if(2<=n){ijrd[1]=j=*v++; ASSERT((UI)(j-(-1))<(UI)(i-(-1)),EVINDEX);}
+  if(3<=n){ijrd[2]=r=*v++; ASSERT((UI)r<(UI)p,EVINDEX);}
+  if(4==n){ijrd[3]=d=*v++; ASSERT((UI)(d-(-1))<(UI)(q-(-1)),EVINDEX);}
  }
  m=2==an?mtv:av[2]; c=AN(m);
  ASSERT(1>=AR(m),EVRANK);
@@ -315,9 +319,9 @@ static A jtfsm0(J jt,A a,A w,C chka){PROLOG(0100);A*av,m,s,x,w0=w;B b;I c,f,*ijr
  av=AAV(a); 
  f=i0(av[0]); s=av[1]; m=av[2]; ijrd=AV(av[3]);
  n=AN(w); v=AS(s); p=v[0]; q=v[1];
- ASSERT(0<=ijrd[0]&&ijrd[0]<n,EVINDEX);
+ ASSERT((UI)ijrd[0]<(UI)n,EVINDEX);
  b=1>=AR(w)&&(!n||LIT&AT(w)); c=AN(m);  // b=w is atom/list, either literal or empty; c is # columns mapped to input through m
- if(!c&&1==AR(m)){  // m is omitted or empty, use column numbers in y; audit them first
+ if(((c-1)&((AR(m)^1)-1))<0){  // m is omitted or empty, use column numbers in y; audit them first   m is emptry list
   ASSERT(1>=AR(w),EVRANK);
   if(!(B01&AT(w))){RZ(w=w0=vi(w)); v=AV(w); DO(n, k=v[i]; ASSERT((UI)k<(UI)q,EVINDEX););}
  }else if(NUMERIC&AT(m)){  // m is numeric list
@@ -328,7 +332,7 @@ static A jtfsm0(J jt,A a,A w,C chka){PROLOG(0100);A*av,m,s,x,w0=w;B b;I c,f,*ijr
 // obsolete  ASSERT(r==AR(w)||r==1+AR(w),EVRANK);  // items of m must match rank of w, or the entire w (which will be treated as a single input)
   ASSERT((UI)(r-AR(w))<=(UI)1,EVRANK);  // items of m must match rank of w, or the entire w (which will be treated as a single input)
   GATV0(x,INT,1+k,1); v=AV(x); v[k]=c; mv=AAV(m);  // x will hold translated column numbers.  Install 'not found' value at the end
-  DO(c, j=i; t=mv[i]; if(r&&r==AR(t))DQ(AS(t)[0], *v++=j;) else *v++=j;);  // go through m; for each box, install index for that box for each item in that box.
+  DO(c, j=i; t=mv[i]; if((-r&((r^AR(t))-1))<0)DQ(AS(t)[0], *v++=j;) else *v++=j;);  // go through m; for each box, install index for that box for each item in that box.
   if(b){RZ(m=from(indexof(y,alp),x)); v=AV(m); DO(AN(alp), k=v[i]; ASSERT((UI)k<(UI)q,EVINDEX););}  // for ASCII input, translate & check size
   else {ASSERT(q>c,EVINDEX); RZ(w=from(indexof(y,w),x));}  // # columns of machine must be at least c+1; look up the rest
  }

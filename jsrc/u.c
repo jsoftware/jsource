@@ -187,6 +187,7 @@ I jti0(J jt,A w){RZ(w);
   // infinities will always round to themselves
   ASSERT(d==e || FFIEQ(d,e),EVDOMAIN);  /* obsolete  || (++e,FEQ(d,e))*/
   cval=d<(D)-IMAX?-IMAX:cval; cval=d>=-(D)-IMIN?IMAX:cval;
+  ASSERT(!AR(w),EVRANK);
   R cval;  // too-large values don't convert, handle separately
  }
  if(!(w=vi(w)))R 0; ASSERT(!AR(w),EVRANK);
@@ -291,7 +292,8 @@ A jtv2(J jt,I a,I b){A z;I*x; GAT0(z,INT,2,1); x=AV(z); *x++=a; *x=b; RETF(z);}
 // return A-block for singleton integer list whose value is k
 A jtvci(J jt,I k){A z; GAT0(z,INT,1,1); *IAV(z)=k; RETF(z);}
 
-// return A-block for list of type t, length n, and values *v 
+// return A-block for list of type t, length n, and values *v
+// MUST NOT return virtual or fixed block, because we often modify the returned area
 A jtvec(J jt,I t,I n,void*v){A z; GA(z,t,n,1,0); MC(AV(z),v,n<<bplg(t)); RETF(z);}
 
 // return A-block for list of type t, length n, and values *v

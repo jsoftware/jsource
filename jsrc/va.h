@@ -39,7 +39,7 @@ typedef struct {VA2 p1[6];} UA;
 #define VXCF            (Vxx|((I)XMCEIL<<VXCVTYPEX))   /* convert to XNUM ceiling/floor       */
 #define VXFC            (Vxx|((I)XMFLR<<VXCVTYPEX))  /* convert to XNUM floor/ceiling       */
 #define VCANHALTX       31    // This routine can generate an error after it has started
-#define VCANHALT        (1<<VCANHALTX)
+#define VCANHALT        ((I)1<<VCANHALTX)
 
 // Extract the argument-conversion type from cv coming from the table
 #define atype(x) (((x)&VARGMSK)>>VARGX)

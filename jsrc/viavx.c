@@ -378,7 +378,7 @@ static UI jthid(J jt,D d){R *(UIL*)&d!=NEGATIVE0?CRC32LL(-1L,*(UIL*)&d&jt->ctmas
 //  is ctmask=~0 for exact compares?  Better be.
 static UI jthia(J jt,D hct,A y){UC*yv;D d;I n,t;Q*u;
  n=AN(y); t=AT(y); yv=UAV(y);
- if(!n||t&BOX)R hic((I)AR(y)*SZI,(UC*)AS(y));
+ if(((n-1)|SGNIF(t,BOXX))<0)R hic((I)AR(y)*SZI,(UC*)AS(y));  // boxed or empty
  switch(CTTZ(t)){
   case LITX:  R hic(n,yv);
   case C2TX:  R hic2(2*n,yv);
@@ -594,7 +594,7 @@ static B jteqa0(J jt,I n,A*u,A*v,I c,I d){PUSHCCT(1.0) B res=1; DQ(n, if(!equ(*u
   vp=_mm_set1_epi32_(0);  /* to avoid warnings */ \
   md=mode&IIOPMSK;   /* clear upper flags including REFLEX bit */                                            \
     /* look for IIDOT/IICO/INUBSV/INUB/INUBI - we set IIMODREFLEX if one of those is set */ \
-  if(a==w&&ac==wc)md|=IIMODREFLEX&((((1<<IIDOT)|(1<<IICO)|(1<<INUBSV)|(1<<INUB)|(1<<INUBI))<<IIMODREFLEXX)>>md);  /* remember if this is reflexive, which doesn't prehash */  \
+  if(!(((uintptr_t)a^(uintptr_t)w)|(ac^wc)))md|=IIMODREFLEX&((((1<<IIDOT)|(1<<IICO)|(1<<INUBSV)|(1<<INUB)|(1<<INUBI))<<IIMODREFLEXX)>>md);  /* remember if this is reflexive, which doesn't prehash */  \
   if(w==mark){wsct=0;}   /* if prehashing, turn off the second half */                          \
   for(l=0;l<ac;++l,av+=acn,wv+=wcn){                                                 \
    /* zv progresses through the result - for those versions that support IRS */ \
@@ -808,7 +808,7 @@ static IOFX(Z,UI4,jtioz02, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n),
   __m128d xval, xnew, xrot; SETXNEW \
   vp=_mm_set1_epi32_(0);  /* to avoid warnings */ \
   md=mode&IIOPMSK;   /* clear upper flags including REFLEX bit */                            \
-  if(a==w&&ac==wc)md|=(IIMODREFLEX&((((1<<IIDOT)|(1<<IICO)|(1<<INUBSV)|(1<<INUB)|(1<<INUBI))<<IIMODREFLEXX)>>md));  /* remember if this is reflexive, which doesn't prehash */  \
+  if(!(((uintptr_t)a^(uintptr_t)w)|(ac^wc)))md|=(IIMODREFLEX&((((1<<IIDOT)|(1<<IICO)|(1<<INUBSV)|(1<<INUB)|(1<<INUBI))<<IIMODREFLEXX)>>md));  /* remember if this is reflexive, which doesn't prehash */  \
   jx=0;                                                                     \
   for(;ac>0;av+=acn,wv+=wcn,--ac){                                                             \
    if(!(mode&IPHOFFSET)){  /* if we are not using a prehashed table */                                        \
@@ -1251,7 +1251,7 @@ static IOF(jtiobs){A*av,*wv,y;B *yb,*zb;C*zc;I acn,*hu,*hv,l,m1,md,s,wcn,*zi,*zv
  if(!(mode&IPHOFFSET)){  // if we are not using a presorted table...
   // look for IIDOT/IICO/INUBSV/INUB/INUBI - we set IIMODREFLEX if one of those is set.  They don't remove dups.
   // we don't set REFLEX if there is a prehash, because the prehash always removes dups, and we would be left missing some values
-  if(a==w&&ac==wc)md+=IIMODREFLEX&((((1<<IIDOT)|(1<<IICO)|(1<<INUBSV)|(1<<INUB)|(1<<INUBI))<<IIMODREFLEXX)>>md);
+  if(!(((uintptr_t)a^(uintptr_t)w)|(ac^wc)))md+=IIMODREFLEX&((((1<<IIDOT)|(1<<IICO)|(1<<INUBSV)|(1<<INUB)|(1<<INUBI))<<IIMODREFLEXX)>>md);
   RZ(h=nodupgrade(a,(I)h,ac,acn,0,n,asct,md,bk));   // h is used to pass in acr
  }
  if(w==mark)R h;
@@ -1275,8 +1275,8 @@ static IOF(jtiobs){A*av,*wv,y;B *yb,*zb;C*zc;I acn,*hu,*hv,l,m1,md,s,wcn,*zi,*zv
    case IJ0EPS:  s=asct; BSLOOQAW(if(-2< q){s=i; break;});        *zi++=s;    break;
    case II1EPS:  s=asct; BSLOOPAW(if(-2==q){s=i; break;});        *zi++=s;    break;
    case IJ1EPS:  s=asct; BSLOOQAW(if(-2==q){s=i; break;});        *zi++=s;    break;
-   case IANYEPS: s=0; BSLOOPAW(if(-2==q){s=1; break;});        *zb++=1&&s; break;
-   case IALLEPS: s=1; BSLOOPAW(if(-2< q){s=0; break;});        *zb++=1&&s; break;
+   case IANYEPS: s=0; BSLOOPAW(if(-2==q){s=1; break;});        *zb++=(B)s; break;
+   case IALLEPS: s=1; BSLOOPAW(if(-2< q){s=0; break;});        *zb++=(B)s; break;
    case ISUMEPS: s=0; BSLOOPAW(if(-2==q)++s);                  *zi++=s;    break;
    case IIFBEPS:      BSLOOPAW(if(-2==q)*zi++=i);              ZISHAPE;    break;
  }}
@@ -1721,7 +1721,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z=mtv;
   // Handle sparse arguments
   mode &= IIOPMSK;  // remove flags before going to sparse code
   if(1>=acr)R af?sprank2(a,w,0L,acr,RMAX,jtindexof):wt&SPARSE?iovxs(mode,a,w):iovsd(mode,a,w);
-  if(af||wf)R sprank2(a,w,0L,acr,wcr,jtindexof);
+  if(af|wf)R sprank2(a,w,0L,acr,wcr,jtindexof);
   switch((at&SPARSE?2:0)+(wt&SPARSE?1:0)){
    case 1: z=indexofxx(mode,a,w); break;
    case 2: z=indexofxx(mode,a,w); break;
@@ -1818,7 +1818,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z=mtv;
  if(((((-(wc^1))&(-(wc^ac)))|SGNIFNOT(mode,IIOREPSX))>=0)&&(((((I)m-11)|(zn-8)|((I)m+zn-41))<0))){  // wc==1 or ac, IOREPS, small enough operation   TUNE
     // this will not choose sequential search enough when the cells are large (comparisons then are cheap because of early exit)
   jtiosc(jt,mode,n,m,c,ac,wc,a,w,z); // simple sequential search without hashing
- }else{B b=1.0==jt->cct;  // b means 'intolerant comparison'
+ }else{I b=1.0==jt->cct;  // b means 'intolerant comparison'
 // jtioa* BOX
 // jtiox  XNUM
 // jtioq  RAT
@@ -1843,7 +1843,8 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z=mtv;
   // p>>booladj is the number of hashtable entries we need.  booladj is 0 for full hash, 3 if we just need one byte-encoded boolean per input value, 5 if just one bit per input value
   UI booladj=(mode&(IIOPMSK&~(IIDOT^IICO)))?5:0;  // boolean allowed when not i./i:
   p=0;  // indicate we haven't come up with the table size yet.  It depends on reverse and small-range decisions
-  if(!b&&t&BOX+FL+CMPX)ctmask(jt);   // calculate ctmask if comparison is tolerant and there might be floats
+// obsolete   if(!b&&t&BOX+FL+CMPX)ctmask(jt);   // calculate ctmask if comparison is tolerant and there might be floats
+  if((b-1)&t&BOX+FL+CMPX)ctmask(jt);   // calculate ctmask if comparison is tolerant and there might be floats
 
   if(t&BOX+XNUM+RAT){
    if(t&BOX){I t1; fnx=b&&(1<n||usebs(a,ac,m))?FNTBLBOXSSORT:1<n?FNTBLBOXARRAY:b?FNTBLBOXINTOLERANT:
@@ -1874,7 +1875,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z=mtv;
     }
    }
    if(fnx<0){  // if we don't have it yet, it will be a hash or small-range integers.  Decide which one
-    if(k==SZI&&!(t&FL)){  // non-float, might be INT or SBT, or characters.  FL has -0 problem
+    if((k&~(t&FL))==SZI){  // non-float, might be INT or SBT, or characters.  FL has -0 problem   requires SZI==FL
      if(t&INT+SBT){I fnprov;A rangearg; UI rangearglen;  // same here, for I types
       // small-range processing is a possibility, but we need to decide whether we are going to do a reversed hash, so we will
       // know which range to check.  For i./i:, we reverse if c is much shorter than m; for e., we have to consider whether
@@ -1902,7 +1903,8 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z=mtv;
    p=m;
    if(((m>>1)>c) && (mode&IIOREPS) && fntbl[fnx+FNTBLREVERSE]){p=c; fnx+=FNTBLREVERSE;}
    // set p based on the length of the argument being hashed
-   if(t&B01&&k<(BW-1)){p=MIN(p,(UI)((I)1)<<k);}  // Get max # different possible values to hash; the number of items, but less than that for short booleans
+// obsolete    if(t&B01&&k<(BW-1)){p=MIN(p,(UI)((I)1)<<k);}  // Get max # different possible values to hash; the number of items, but less than that for short booleans
+   if((SGNIF(t,B01X)&(k-(BW-1)))<0){p=MIN(p,(UI)((I)1)<<k);}  // Get max # different possible values to hash; the number of items, but less than that for short booleans
    // Find the best hash size, based on empirical studies.  Allow at least 3x hashentries per input value; if that's less than the size of the small hash, go to the limit of
    // the small hash.  But not more than 10 hashtable entries per input (to save time clearing)
    p=MIN(IMAX-5,(p<SMALLHASHMAX/10)?(p*10) : (p<SMALLHASHMAX/3?SMALLHASHMAX:3*p));
@@ -2084,7 +2086,7 @@ F2(jtless){A x=w;I ar,at,k,r,*s,wr,*ws,wt;
  wt=AT(w); wr=AR(w); r=MAX(1,ar);
  if(ar>1+wr)RCA(a);  // if w's rank is smaller than that of a cell of a, nothing can be removed, return a
  // if w's rank is larger than that of a cell of a, reheader w to look like a list of such cells
- if(wr&&r!=wr){RZ(x=virtual(w,0,r)); AN(x)=AN(w); s=AS(x); ws=AS(w); k=ar>wr?0:1+wr-r; *s=prod(k,ws); MCISH(1+s,k+ws,r-1);}  // bug: should test for error on the prod()
+ if((-wr&-(r^wr))<0){RZ(x=virtual(w,0,r)); AN(x)=AN(w); s=AS(x); ws=AS(w); k=ar>wr?0:1+wr-r; *s=prod(k,ws); MCISH(1+s,k+ws,r-1);}  // bug: should test for error on the prod()  use fauxvirtual here
 // if nothing special (like sparse, or incompatible types, or x requires conversion) do the fast way; otherwise (-. x e. y) # y
  R !(at&SPARSE)&&HOMO(at,wt)&&TYPESEQ(at,maxtyped(at,wt))&&!(AFLAG(a)&AFNJA)?indexofsub(ILESS,x,a):
      repeat(not(eps(a,x)),a);

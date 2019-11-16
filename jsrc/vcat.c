@@ -103,13 +103,14 @@ static F2(jtovs){A ae,ax,ay,q,we,wx,wy,x,y,z,za,ze;B*ab,*wb,*zb;I acr,ar,*as,at,
 
 
 static C*jtovgmove(J jt,I k,I c,I m,A s,A w,C*x,A z){I d,n,p=c*m;
-   // z may not be boxed; but if it is, w must be also.  zrel=relocation offset, 0 if not relative
+   // z may not be boxed; but if it is, w must be also.
  if(AR(w)){
   n=AN(w); d=AN(s)-AR(w);
-  if((!n||d))mvc(k*p,x,k,jt->fillv);
-  if(n&&n<p){I *v=AV(s); *v=m; RZ(w=take(d?vec(INT,AR(w),d+v):s,w));}
-  if(n){
-   MC(x,AV(w),k*AN(w));
+// obsolete   if((!n||d))mvc(k*p,x,k,jt->fillv);  // fill required: w empty or shape short
+  if((-n&(d-1))>=0)mvc(k*p,x,k,jt->fillv);  // fill required: w empty or shape short (d>0)
+  if(n){  // nonempty cell, must copy in the data
+   if(n<p){I *v=AV(s); *v=m; RZ(w=take(d?vec(INT,AR(w),d+v):s,w));}  // incoming cell smaller than result area: take to result-cell size
+   MC(x,AV(w),k*AN(w));  // copy in the data, now the right cell shape but possibly shorter than the fill  kludge could avoid double copy
   }
  }else{  // scalar replication
   mvc(k*p,x,k,AV(w));
@@ -255,7 +256,8 @@ F2(jtstitch){B sp2;I ar,wr; A z;
 // obsolete  ar=AR(a); wr=AR(w); sp2=(SPARSE&AT(a)||SPARSE&AT(w))&&2>=ar&&2>=wr;
  ar=AR(a); wr=AR(w); sp2=(SPARSE&(AT(a)|AT(w)))&&2>=ar&&2>=wr;
  ASSERT(!ar||!wr||*AS(a)==*AS(w),EVLENGTH);
- R sp2 ? stitchsp2(a,w) : IRS2(a,w,0L,(ar-1)&RMAX,(wr-1)&RMAX,jtover,z);
+ if((((SPARSE&(AT(a)|AT(w)))-1)&(2-ar)&(2-wr))>=0)R IRS2(a,w,0L,(ar-1)&RMAX,(wr-1)&RMAX,jtover,z);  // not sparse or rank>2
+ R stitchsp2(a,w);  // sparse rank <=2 separately
 }
 
 F1(jtlamin1){A x;I* RESTRICT s,* RESTRICT v,wcr,wf,wr; 

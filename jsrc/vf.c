@@ -11,7 +11,8 @@
 // w is expected to be the reference input; if it is relative, we relocate jt->fillv to be wrt w
 F2(jtsetfv){A q=jt->fill;I t;
  RZ(a&&w);
- t=AN(a)?AT(a):AN(w)?AT(w):0;
+// obsolete  t=AN(a)?AT(a):AN(w)?AT(w):0;
+ I t2=((-AN(w))>>(BW-1))&AT(w); t=((-AN(a))>>(BW-1))&AT(a); t=t?t:t2;  // ignoring empties, use type of a then w
  if(q&&AN(q)){
   RE(t=t?maxtype(t,AT(q)):AT(q)); 
   if(TYPESNE(t,AT(q)))RZ(q=cvt(t,q));

@@ -229,7 +229,7 @@ F1(jtvtrans){PROLOG(0053);A local,y,z=0;B tmonad,tsubst;I c,i;TA ttab[NTTAB],*tt
   RZ(y=vtokens(w));
   jt->ttab=ttab; jt->ttabi=jt->ttabi0=c;
   RZ(jt->locsyms=stcreate(2,40,0L,0L));  // not necessary to set global pointers
-  IS(ynam,num[1]); if(!jt->tmonad)IS(xnam,num[1]); 
+  IS(mnuvxynam[5],num[1]); if(!jt->tmonad)IS(mnuvxynam[4],num[1]); 
   jt->tsubst=0==i;
   z=tparse(y); RESETERR;
   if(i&&!z)z=colon(num[4-jt->tmonad],w);

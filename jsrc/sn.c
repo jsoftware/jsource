@@ -34,16 +34,19 @@ B vlocnm(I n,C*s){
  R accummask==((I)1<<C9);   // if there are any alphabetics, give error
 }    /* validate locale name: 1 if locale-name OK, 0 if error */
 
+static C argnames[7]={'m','n','u','v','x','y',0};
 // s-> a string of length n.  If the name is valid, create a NAME block for it
 // Possible errors: EVILNAME, EVLIMIT (if name too long), or memory error
-A jtnfs(J jt,I n,C*s){A z;C c,f,*t;I m,p;NM*zv;
+A jtnfs(J jt,I n,C*s){A z;C f,*t;I m,p;NM*zv;
  // Discard leading and trailing blanks.  Leave t pointing to the last character
  DQ(n, if(' '!=*s)break; ++s; --n;); 
  t=s+n-1;
  DQ(n, if(' '!=*t)break; --t; --n;);
  // If the name is the special x y.. or x. y. ..., return a copy of the preallocated block for that name (we may have to add flags to it)
- c=*s;if((1==n)&&strchr("mnuvxy",c)){
-  R ca(c=='y'?ynam:c=='x'?xnam:c=='v'?vnam:c=='u'?unam:c=='n'?nnam:mnam);
+// obsolete  c=*s;if((1==n)&&strchr("mnuvxy",c)){
+// obsolete   R ca(c=='y'?ynam:c=='x'?xnam:c=='v'?vnam:c=='u'?unam:c=='n'?nnam:mnam);
+ C *nmp;if((1==n)&&(nmp=strchr(argnames,*s))){  // if an argument name
+  R ca(mnuvxynam[nmp-argnames]);  // return a clone of the argument block (because flags may be added)
  }
  ASSERT(n,EVILNAME);   // error if name is empty
  // The name may not be valid, but we will allocate a NAME block for it anyway
@@ -111,7 +114,10 @@ F1(jtnc){A*wv,x,y,z;I i,n,t,*zv;L*v;
   // kludge: if the locale is not defined, syrd will create it.  Better to use a version/parameter to syrd to control that?
   //   If that were done, we could dispense with the error check here (but invalid locale would be treated as undefined rather than invalid).
   // Would have to mod locindirect too
-  zv[i]=!y?-2:!x?-1:t&NOUN?0:t&VERB?3:t&ADV?1:2;  // calculate the type, store in result array
+  I zc=2; zc=(0x21c>>((t>>(VERBX-1))&0xe))&3;   // C A V N = 4 2 1 0 -> 2 1 3 0    10 xx 01 11 00
+  zc=x?zc:-1; zc=y?zc:-2;
+// obsolete   zv[i]=!y?-2:!x?-1:t&NOUN?0:t&VERB?3:t&ADV?1:2;  // calculate the type, store in result array
+  zv[i]=zc;  // calculate the type, store in result array
  }
  RETF(z);
 }    /* 4!:0  name class */

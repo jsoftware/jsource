@@ -321,11 +321,12 @@ F1(jtlocnc){A*wv,y,z;C c,*u;I i,m,n,*zv;
  RETF(z);
 }    /* 18!:0 locale name class */
 
-static F1(jtlocnlx){A y,z;B*wv;I m=0;
- RZ(w=cvt(B01,w)); wv=BAV(w); DO(AN(w), m|=1+wv[i];);
- if(1&m)z=nlsym(jt->stloc);
- if(2&m)RZ(y=jtactivenl(jt));  // get list of active locales
- z=0==m?mtv:1==m?z:2==m?y:over(y,z);
+static F1(jtlocnlx){A y,z=0;B*wv;I m=0;
+ RZ(w=cvt(B01,w)); wv=BAV(w); DO(AN(w), m|=1+wv[i];);  // accumulate mask of requested types
+ if(1&m)z=nlsym(jt->stloc);  // named locales
+ if(2&m){RZ(y=jtactivenl(jt)); z=z?over(y,z):y;}  // get list of active numbered locales
+// crashes in glocale  init z to mtv    if(2&m){RZ(y=jtactivenl(jt)); over(y,z); auditmemchains();}  // get list of active numbered locales
+// obsolete  z=0==m?mtv:1==m?z:2==m?y:over(y,z);
  R grade2(z,ope(z));
 }
 
@@ -429,7 +430,10 @@ F1(jtlocname){A g=jt->global;
 static SYMWALK(jtlocmap1,I,INT,18,3,1,
     {I t=AT(d->val);
      *zv++=i; 
-     *zv++=t&NOUN?0:t&VERB?3:t&ADV?1:t&CONJ?2:(t==SYMB)?6:-2;
+     I zc=2; zc=(0x21c>>((t>>(VERBX-1))&0xe))&3;   // C A V N = 4 2 1 0 -> 2 1 3 0    10 xx 01 11 00
+     zc=t==SYMB?6:zc; zc=t&(NOUN|VERB|ADV|CONJ|SYMB)?zc:-2;
+     *zv++=zc;
+// obsolete      *zv++=t&NOUN?0:t&VERB?3:t&ADV?1:t&CONJ?2:(t==SYMB)?6:-2;
      *zv++=(I)rifvs(sfn(SFNSIMPLEONLY,d->name));})  // this is going to be put into a box
 
 F1(jtlocmap){A g,q,x,y,*yv,z,*zv;I c=-1,d,j=0,m,*qv,*xv;

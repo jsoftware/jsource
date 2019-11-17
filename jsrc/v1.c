@@ -10,7 +10,7 @@
 static B jtmatchsub(J,I,I,I,I,A,A,B* RESTRICT,B);
 static F2(jtmatchs);
 
-#define MCS(q,af,wf)  ((1<q?8:q?4:0)+(af?2:0)+(wf?1:0))
+#define MCS(q,af,wf)  ((((q>1)+(q>0))<<2)+(af?2:0)+(wf?1:0))
 // set *x++ to b1 if *u=*v, b0 otherwise
 #define QLOOP         b=b1; DO(q, if(u[i]!=v[i]){b^=1; break;}); *x++=b;
 // comparison, with special cases for 1/more than 1, and looping over repeated cells

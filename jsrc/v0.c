@@ -64,7 +64,9 @@ static F1(jtcfr){A c,r,*wv;I t;
  t=AN(r)?AT(r):B01; if(t&B01+INT)t=XNUM; t=maxtyped(t,AT(c));
  if(TYPESNE(t,AT(c)))RZ(c=cvt(t,c));
  if(TYPESNE(t,AT(r)))RZ(r=cvt(t,r));
- R t&RAT?cfrq(c,r):t&XNUM?cfrx(c,r):t&CMPX?cfrz(c,r):cfrd(c,r);
+ AF tf; tf=(AF)jtcfrd; tf=t&CMPX?(AF)jtcfrz:tf; tf=t&XNUM?(AF)jtcfrx:tf; tf=t&RAT?(AF)jtcfrq:tf;
+ R (*tf)(jt,c,r);
+// obsolete R t&RAT?cfrq(c,r):t&XNUM?cfrx(c,r):t&CMPX?cfrz(c,r):cfrd(c,r);
 }    /* coefficients from roots */
 
 

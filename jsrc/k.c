@@ -430,13 +430,13 @@ A jtbcvt(J jt,C mode,A w){FPREFIP; A y,z=w;D ofuzz;
  RNE(z);
 }    /* convert to lowest type. 0=mode: don't convert XNUM/RAT to other types */
 
-F1(jticvt){A z;D*v,x;I i,k=0,n,*u;
+F1(jticvt){A z;D*v,x;I i,n,*u;
  RZ(w);
  n=AN(w); v=DAV(w);
  GATV(z,INT,n,AR(w),AS(w)); u=AV(z);
  for(i=0;i<n;++i){
-  x=*v++; if(x<IMIN||IMAX<x)R w;
-#if SY_64
+  x=*v++; if(x<IMIN||IMAX<x)R w;  // if conversion will fail, skip it
+#if 0 && SY_64  // obsolete
   k=(I)x; *u++=SGN(k)==SGN(x)?k:0>x?IMIN:IMAX;
 #else
   *u++=(I)x;
@@ -487,8 +487,9 @@ F2(jtxco2){A z;B b;I j,n,r,*s,t,*wv,*zu,*zv;
    R z;
   case  3:
    ASSERT(t&XD+XZ,EVDOMAIN);
-   b=1&&t&XD;
-   GATV0(z,INT,b?n:2*n,b?r:1+r); s=AS(z); if(!b)*s++=2; MCISH(s,AS(w),r);
+   b=(~t>>XDX)&1;   // b=NOT XD
+// obsolete    GATV0(z,INT,b?n:2*n,b?r:1+r); s=AS(z); if(!b)*s++=2; MCISH(s,AS(w),r);
+   GATV0(z,INT,n<<b,r+b); s=AS(z); if(b)*s++ =2; MCISH(s,AS(w),r);
    zv=AV(z); zu=n+zv; wv=AV(w);
    if(t&XD){DX*v=(DX*)wv;   DQ(n,         *zv++=v->p;);}
    else    {ZX*v=(ZX*)wv,y; DQ(n, y=*v++; *zv++=y.re.p; *zu++=y.im.p;);}

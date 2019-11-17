@@ -11,9 +11,14 @@
   switch((4*descend)+(0<=p?2:0)+(I )(0<=q)){                             \
    case 1: DQ(m, *zv++=n*(1<*wv++););              break; /*   q */  \
    case 2: DQ(m, *zv++=n*(0<*wv++););              break; /* p   */  \
+   case 3: DQ(m, x=*wv++; I t=n; t=x<=1?q:t; t=x<=0?0:t; *zv++=t;); break; /* p q */  \
+   case 7: DQ(m, x=*wv++; I t=n; t=x>=0?p:t; t=x>=1?0:t; *zv++=t;);        /* p q */  \
+ }}
+#if 0 // obsolete 
    case 3: DQ(m, x=*wv++; *zv++=x<=0?0:x<=1?q:n;); break; /* p q */  \
    case 7: DQ(m, x=*wv++; *zv++=x>=1?0:x>=0?p:n;);        /* p q */  \
- }}
+
+#endif
 
 static B jtiixBX(J jt,I n,I m,A a,A w,I*zv){B*av,*b,descend;I p,q;
  av=BAV(a); descend=av[0]>av[n-1];
@@ -45,8 +50,7 @@ static B jtiixI(J jt,I n,I m,A a,A w,I*zv){A t;B ascend;I*av,j,p,q,*tv,*u,*v,*vv
  R 1;
 }    /* a I. w where a is a list of small range integers */
 
-#define SBCOMP(x,y)       \
- ((SBLT((x),(y)))?-1:(SBGT((x),(y)))?1:0)
+#define SBCOMP(x,y) (SBGT((x),(y))-SBLT((x),(y)))
 #define COMPVLOOP(T,c)       \
  {T*u=(T*)uu,*v=(T*)vv; DQ(c, if(*u!=*v){cc=*u<*v?-1:1; break;} ++u; ++v;);}
 #define COMPVLOOF(T,c,COMP)  \

@@ -211,8 +211,8 @@ DF2(jtxdefn){PROLOG(0048);
   if(a){ if(!ras(a)&&w){ybuckptr->val=0; fa(w); R0;} if(!C_CRC32C&&xbuckptr==ybuckptr)xbuckptr=xbuckptr->next+jt->sympv; xbuckptr->val=a; xbuckptr->sn=jt->slisti;}
   // Do the other assignments, which occur less frequently, with IS
   if((I)u|(I)v){
-   if(u){(IS(unam,u)); if(NOUN&AT(u))IS(mnam,u); }  // assign u, and m if u is a noun
-   if(v){(IS(vnam,v)); if(NOUN&AT(v))IS(nnam,v); }  // bug errors here must be detected
+   if(u){(IS(mnuvxynam[2],u)); if(NOUN&AT(u))IS(mnuvxynam[0],u); }  // assign u, and m if u is a noun
+   if(v){(IS(mnuvxynam[3],v)); if(NOUN&AT(v))IS(mnuvxynam[1],v); }  // bug errors here must be detected
   }
  }
 
@@ -689,9 +689,9 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
  // Do a probe-for-assignment for every name that is locally assigned in this definition.  This will
  // create a symbol-table entry for each such name
  // Start with the argument names.  We always assign y, and x EXCEPT when there is a monadic guaranteed-verb
- RZ(probeis(ynam,pfst));if(!(!dyad&&(type>=3||(flags&VXOPR)))){RZ(probeis(xnam,pfst));}
- if(type<3){RZ(probeis(unam,pfst)); RZ(probeis(mnam,pfst));}
- if(type==2){RZ(probeis(vnam,pfst)); RZ(probeis(nnam,pfst));}
+ RZ(probeis(mnuvxynam[5],pfst));if(!(!dyad&&(type>=3||(flags&VXOPR)))){RZ(probeis(mnuvxynam[4],pfst));}
+ if(type<3){RZ(probeis(mnuvxynam[2],pfst)); RZ(probeis(mnuvxynam[0],pfst));}
+ if(type==2){RZ(probeis(mnuvxynam[3],pfst)); RZ(probeis(mnuvxynam[1],pfst));}
  // Go through the definition, looking for local assignment.  If the previous token is a simplename, add it
  // to the table.  If it is a literal constant, break it into words, convert each to a name, and process.
  ln=AN(l); lv=AAV(l);  // Get # words, address of first box
@@ -755,12 +755,12 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
 
  asgct = asgct + (asgct>>1); // leave 33% empty space, since we will have resolved most names here
  RZ(actst=stcreate(2,asgct,0L,0L));  // Allocate the symbol table we will use
- *(UI4*)LXAV0(actst)=(UI4)((SYMHASH(NAV(xnam)->hash,AN(actst)-SYMLINFOSIZE)<<16)+SYMHASH(NAV(ynam)->hash,AN(actst)-SYMLINFOSIZE));  // get the yx bucket indexes for a table of this size, save in first hashchain
+ *(UI4*)LXAV0(actst)=(UI4)((SYMHASH(NAV(mnuvxynam[4])->hash,AN(actst)-SYMLINFOSIZE)<<16)+SYMHASH(NAV(mnuvxynam[5])->hash,AN(actst)-SYMLINFOSIZE));  // get the yx bucket indexes for a table of this size, save in first hashchain
 
  // Transfer the symbols from the pro-forma table to the result table, hashing using the table size
  // For fast argument assignment, we insist that the arguments be the first symbols added to the table.
  // So we add them by hand - just y and possibly x.
- RZ(probeis(ynam,actst));if(!(!dyad&&(type>=3||(flags&VXOPR)))){RZ(probeis(xnam,actst));}
+ RZ(probeis(mnuvxynam[5],actst));if(!(!dyad&&(type>=3||(flags&VXOPR)))){RZ(probeis(mnuvxynam[4],actst));}
  for(j=1;j<pfstn;++j){  // for each hashchain
   for(pfx=pfstv[j];pfx;pfx=(jt->sympv)[pfx].next){L *newsym;
    A nm=(jt->sympv)[pfx].name;

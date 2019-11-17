@@ -17,7 +17,8 @@
 static A jtipprep(J jt,A a,A w,I zt,I*pm,I*pn,I*pp){A z=mark;I*as,ar,ar1,m,mn,n,p,*ws,wr,wr1;
  ar=AR(a); as=AS(a); ar1=ar-1>=0?ar-1:0; RE(*pm=m=prod(ar1,as));  // m=# 1-cells of a.  It could overflow, if there are no atoms
  wr=AR(w); ws=AS(w); wr1=wr-1>=0?wr-1:0; RE(*pn=n=prod(wr1,1+ws)); RE(mn=mult(m,n));  // n=#atoms in item of w; mn = #atoms in result
- *pp=p=ar?*(as+ar1):wr?*ws:1;  // if a is an array, the length of a 1-cell; otherwise, the number of items of w
+// obsolete  *pp=p=ar?*(as+ar1):wr?*ws:1;  // if a is an array, the length of a 1-cell; otherwise, the number of items of w
+ I t=AS(w)[0]; p=wr?t:1; t=AS(a)[ar1]; p=ar?t:p; *pp=p;  // if a is an array, the length of a 1-cell; otherwise, the number of items of w
  ASSERT(!(ar&&wr)||p==*ws,EVLENGTH);
  GA(z,zt,mn,ar1+wr1,0);   // allocate result area
  MCISH(AS(z),      as,ar1);  // Set shape: 1-frame of a followed by shape of item of w

@@ -414,6 +414,7 @@ A jtcvz(J jt,I cv,A w){I t;
  R w;
 }    /* convert result */
 
+#if 0 // obsolete 
 // Routine to lookup function/flags
 // ptr is the type of lookup (insert/prefix/suffix) to generate the function for
 // In the function, id is the pseudochar for the function to look up
@@ -430,6 +431,7 @@ A jtcvz(J jt,I cv,A w){I t;
    *ado=p->fgh[0]; *cv=p->cv;                       \
   }else *ado=0;                                \
  }
+#endif
 // Routine to lookup function/flags for u/ u\ u\.
 // ptr is the type of lookup (insert/prefix/suffix) to generate the function for
 // In the function, id is the pseudochar for the function to look up
@@ -1177,9 +1179,7 @@ DF2(jtfslashatg){A fs,gs,y,z;B b,bb,sb=0;C*av,c,d,*wv;I ak,an,ar,*as,at,m,
  y=FAV(fs)->fgh[0]; c=ID(y); d=ID(gs);
  if(c==CPLUS){
   // +/@:g is special if args are boolean, length is integral number of I, and g is boolean or *
-if(at&wt&B01)R sumatgbool(a,w,d);
-if(!(at&wt&INT)); else R tymes(a,w);
-  if((((at&wt&B01&(n==1))>(zn&(SZI-1)))||!SY_ALIGN)&&strchr(sumbf,d))R sumatgbool(a,w,d);  // kludge search is slow
+  if((((at&wt&(n==1))>(zn&(SZI-1)))||!SY_ALIGN)&&strchr(sumbf,d))R sumatgbool(a,w,d);  // kludge search is slow   relies on B01==1
   if(d==CSTAR){
    if(!ar||!wr){  // if either argument is atomic, apply the distributive property to save multiplies
     z=!ar?tymes(a,df1(w,fs)):tymes(w,df1(a,fs));

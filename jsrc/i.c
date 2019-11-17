@@ -115,12 +115,12 @@ B jtglobinit(J jt){A x,y;D*d;A *oldpushx=jt->tnextpushp;
  GA(x,ASGN+ASGNTONAME, 1,1,0     ); ACX(x); *CAV(x)=CGASGN; asgngloname=x;
  GA(x,ASGN+ASGNTONAME, 1,1,0     ); ACX(x); *CAV(x)=CASGN; asgnforcegloname=x;  // =. converted to global+NAME
  GA(x,ASGN, 1,1,0     ); ACX(x); *CAV(x)=CASGN; asgnforceglo=x;  // =. converted to global
- RZ(mnam=makename("m"));
- RZ(nnam=makename("n"));
- RZ(unam=makename("u"));
- RZ(vnam=makename("v"));
- RZ(xnam=makename("x"));
- RZ(ynam=makename("y"));
+ RZ(mnuvxynam[0]=makename("m"));
+ RZ(mnuvxynam[1]=makename("n"));
+ RZ(mnuvxynam[2]=makename("u"));
+ RZ(mnuvxynam[3]=makename("v"));
+ RZ(mnuvxynam[4]=makename("x"));
+ RZ(mnuvxynam[5]=makename("y"));
  zeroQ.n =iv0; zeroQ.d =iv1;
  zeroDX.e=0;     zeroDX.x=iv0;
  memset(minus0,C0,8L); minus0[C_LE?7:0]='\200';
@@ -222,9 +222,9 @@ jt->assert = 1;
  memset(&jt->validitymask[0],-1,4*sizeof(I)); memset(&jt->validitymask[4],0,4*sizeof(I));  // -1, -1, -1, -1, 0, 0, 0, 0   used to prepare for mask load/store
 #endif
   // Init for u./v.
- A uimp=ca(unam); NAV(uimp)->flag|=NMIMPLOC;  // create the name for u.
+ A uimp=ca(mnuvxynam[2]); NAV(uimp)->flag|=NMIMPLOC;  // create the name for u.
  jt->implocref[0] = fdef(0,CTILDE,VERB, 0,0, uimp,0L,0L, 0, RMAX,RMAX,RMAX);  //create 'u.'~
- A vimp=ca(vnam); NAV(vimp)->flag|=NMIMPLOC;
+ A vimp=ca(mnuvxynam[3]); NAV(vimp)->flag|=NMIMPLOC;
  jt->implocref[1] = fdef(0,CTILDE,VERB, 0,0, vimp,0L,0L, 0, RMAX,RMAX,RMAX);  //create 'v.'~
 
  jt->igemm_thres=IGEMM_THRES;   // tuning parameters for cip.c

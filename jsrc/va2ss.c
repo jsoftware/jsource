@@ -56,7 +56,7 @@ A jtssingleton(J jt, A a,A w,A self,RANK2T awr,RANK2T ranks){A z;
  I aiv=FAV(self)->lc;   // temp, but start as function #
  // Allocate the result area
  {
-  // Calculate inplaceability for a and w.
+  // Calculate inplaceability for a and w.  Result must be 0 or 1
   // Inplaceable if: count=1 and zombieval, or count<0, PROVIDED the arg is inplaceable and the block is not UNINCORPABLE
   I aipok = ((((AC(a)-1)|((I)a^(I)jt->zombieval))==0)|((UI)AC(a)>>(BW-1))) & ((UI)jtinplace>>JTINPLACEAX) & ~(AFLAG(a)>>AFUNINCORPABLEX);
   I wipok = ((((AC(w)-1)|((I)w^(I)jt->zombieval))==0)|((UI)AC(w)>>(BW-1))) & ((UI)jtinplace>>JTINPLACEWX) & ~(AFLAG(w)>>AFUNINCORPABLEX);
@@ -221,9 +221,9 @@ A jtssingleton(J jt, A a,A w,A self,RANK2T awr,RANK2T ranks){A z;
  case SSINGCASE(VA2OUTOF-VA2BF,SSINGDB): adv=SSRDD(a); wdv=SSRDB(w);  goto outofresult;
  case SSINGCASE(VA2OUTOF-VA2BF,SSINGID): adv=(D)SSRDI(a); wdv=SSRDD(w);  goto outofresult;
  case SSINGCASE(VA2OUTOF-VA2BF,SSINGDI): adv=SSRDD(a); wdv=(D)SSRDI(w);  goto outofresult;
- case SSINGCASE(VA2OUTOF-VA2BF,SSINGBI): adv=(D)SSRDB(a); wdv=(D)SSRDI(w); goto outofresult;
- case SSINGCASE(VA2OUTOF-VA2BF,SSINGIB): adv=(D)SSRDI(a); wdv=(D)SSRDB(w); goto outofresult;
- case SSINGCASE(VA2OUTOF-VA2BF,SSINGII): adv=(D)SSRDI(a); wdv=(D)SSRDI(w); goto outofresult;
+ case SSINGCASE(VA2OUTOF-VA2BF,SSINGBI): adv=(D)SSRDB(a); wdv=(D)SSRDI(w); goto outofresultcvti;
+ case SSINGCASE(VA2OUTOF-VA2BF,SSINGIB): adv=(D)SSRDI(a); wdv=(D)SSRDB(w); goto outofresultcvti;
+ case SSINGCASE(VA2OUTOF-VA2BF,SSINGII): adv=(D)SSRDI(a); wdv=(D)SSRDI(w); goto outofresultcvti;
  case SSINGCASE(VA2OUTOF-VA2BF,SSINGDD): adv=SSRDD(a); wdv=SSRDD(w);  goto outofresult;
 
 
@@ -370,6 +370,10 @@ A jtssingleton(J jt, A a,A w,A self,RANK2T awr,RANK2T ranks){A z;
  outofresult:
  NAN0; zdv=bindd(adv,wdv); NAN1;
  SSSTORE(zdv,z,FL,D) R z;  // Return the value if valid
+
+ outofresultcvti:
+ NAN0; zdv=bindd(adv,wdv); NAN1;
+ if(zdv>=(D)IMIN&&zdv<=(D)IMAX){SSSTORE((I)zdv,z,INT,I)}else{SSSTORE(zdv,z,FL,D)} R z;  // Return the value if valid, as integer if possible
 
  bitwiseresult:
  RE(0);  // if error on D arg, make sure we abort

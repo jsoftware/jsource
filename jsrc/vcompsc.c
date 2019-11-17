@@ -89,18 +89,22 @@
 #define INDB(f,T0,T1,F)  \
  static F2(f){I an,*av,n,q,wn,*wv,x,y;                                 \
   an=AN(a); av=AV(a);                                                             \
-  wn=AN(w); wv=AV(w); n=AR(a)&&AR(w)?MAX(an,wn):AR(a)?an:wn;                      \
+  wn=AN(w); wv=AV(w); n=1; n=AR(a)?an:n; n=AR(w)?wn:n;                      \
   q=(n+(SZI-1))>>LGSZI;                                           \
   if     (!AR(a)){ASSIGNX(av); DO(q, if(y=F(x,    *wv++))INDB3;);}  \
   else if(!AR(w)){ASSIGNX(wv); DO(q, if(y=F(*av++,x    ))INDB3;);}  \
   else           {             DO(q, if(y=F(*av++,*wv++))INDB3;);}  \
   R sc(n);                                                                        \
  }
+#if 0 // obsolete 
+  wn=AN(w); wv=AV(w); n=AR(a)&&AR(w)?MAX(an,wn):AR(a)?an:wn;                      \
+
+#endif
 
 #define JNDB(f,T0,T1,F)  \
  static F2(f){I an,*av,n,q,r,wn,*wv,x,y;                                             \
   an=AN(a); av=AV(a);                                                                         \
-  wn=AN(w); wv=AV(w); n=AR(a)&&AR(w)?MAX(an,wn):AR(a)?an:wn;                                  \
+  wn=AN(w); wv=AV(w); n=1; n=AR(a)?an:n; n=AR(w)?wn:n;                      \
   if((q=(n-1)>>LGSZI)<0)R zeroionei[0]; r=((n-1)&(SZI-1));  /* # first bytes to do minus 1 */                                                                           \
   I i=q;                                                                       \
   if     (!AR(a)){ASSIGNX(av); wv+=q; y=(F(x,*wv))&(((I)0x100<<(r<<3))-1); while(1){if(y)JNDB3; if(--i<0)break; y=F(x,*--wv);} }  \
@@ -112,7 +116,7 @@
 #define SUMB(f,T0,T1,F)  \
  static F2(f){I an,*av,n,p,r1,wn,*wv,z=0;UI t,x;              \
   an=AN(a); av=AV(a);                                                        \
-  wn=AN(w); wv=AV(w); n=AR(a)&&AR(w)?MAX(an,wn):AR(a)?an:wn;                 \
+  wn=AN(w); wv=AV(w); n=1; n=AR(a)?an:n; n=AR(w)?wn:n;                      \
   p=n>>LGSZI; r1=n&(SZI-1);                                       \
   if     (!AR(a)){                                                           \
    ASSIGNX(av);                                                              \
@@ -312,7 +316,7 @@ AF jtatcompf(J jt,A a,A w,A self){I m;
  if((m&6)!=6){   // normal comparison
   // verify rank is OK, based on operation
   if((AR(a)|AR(w))>1){jt->workareas.compsc.postflags=0; R (m>=(4<<3))?(AF)jtfslashatg:0;}   // If an operand has rank>1, reject it unless it can be turned to f/@g special
-  ASSERT(AN(a)==AN(w)||((AR(a)&AR(w))==0),EVLENGTH)   // agreement is same length or one an atom
+  ASSERT(AN(a)==AN(w)||((AR(a)&AR(w))==0),EVLENGTH)   // agreement is same length or one an atom - we know ranks<=1
   // split m into search and comparison
   I search=m>>3; I comp=m&7;
   // Change +./ to i.&1, *./ to i.&0; save flag bits to include in return address

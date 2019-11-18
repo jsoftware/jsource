@@ -29,7 +29,7 @@
 
 // Parse/execute a line, result in z.  If locked, reveal nothing.  Save current line number in case we reexecute
 // Before each sentence we snapshot the implied locale in the local symbol table.  If the sentence passes a u/v into an operator, the current symbol table will become the prev and will have the u/v environment info
-#define parseline(z) {C attnval=*jt->adbreakr; A *queue=line+ci->i; I m=ci->n; /* obsolete AKGST(locsym)=jt->global;*/ if(!attnval){if(!(gsfctdl&2))z=parsea(queue,m);else {thisframe->dclnk->dcix=i; z=parsex(queue,m,ci,callframe);}}else{jsignal(EVATTN); z=0;} }
+#define parseline(z) {C attnval=*jt->adbreakr; A *queue=line+ci->i; I m=ci->n; /* obsolete AKGST(locsym)=jt->global;*/ if(!attnval){if(!(gsfctdl&16))z=parsea(queue,m);else {thisframe->dclnk->dcix=i; z=parsex(queue,m,ci,callframe);}}else{jsignal(EVATTN); z=0;} }
 typedef struct{A t,x,line;C*iv,*xv;I j,n; I4 k,w;} CDATA;
 /* for_xyz. t do. control data   */
 /* line  'for_xyz.'              */
@@ -165,7 +165,7 @@ DF2(jtxdefn){PROLOG(0048);
    if(!(gsfctdl&1)&&jt->uflags.us.cx.cx_c.db){
     if(jt->sitop&&jt->sitop->dctype==DCCALL){   // if current stack frame is a call
 // obsolete      lk=-1;    // indicate we are debugging
-     gsfctdl|=2;   // set debug flag if debug requested and not locked
+     gsfctdl|=2;   // set debug flag if debug requested and not locked (no longer used)
      if(sv->flag&VNAMED){
       callframe=jt->sitop;  // if this is a named (rather than anonymous call like 3 : 0"1), there is a tight link with the caller.  Indicate that
      }
@@ -240,9 +240,13 @@ DF2(jtxdefn){PROLOG(0048);
     // We have to have 1 debug frame to hold parse-error information in, but it is allocated earlier if debug is off
     // We check before every sentence in case the user turns on debug in the middle of this definition
     // NOTE: this stack frame could be put on the C stack, but that would reduce the recursion limit because the frame is pretty big
-    BZ(thisframe=deba(DCPARSE,0L,0L,0L));  // if deba fails it will be before it modifies sitop.  Remember our stack frame
-    old=jt->tnextpushp;  // protect the stack frame against free
-    gsfctdl|=16;  // indicate we have a debug frame
+    // If there is no calling stack frame we can't turn on debug mode because we can't suspend
+    DC d; for(d=jt->sitop;d&&DCCALL!=d->dctype;d=d->dclnk);  /* find bottommost call                 */
+    if(d){  // if there is a call and thus we can suspend
+     BZ(thisframe=deba(DCPARSE,0L,0L,0L));  // if deba fails it will be before it modifies sitop.  Remember our stack frame
+     old=jt->tnextpushp;  // protect the stack frame against free
+     gsfctdl|=16+2;  // indicate we have a debug frame and are in debug mode
+    }
    }
 
    i=debugnewi(i,thisframe,self);  // get possibly-changed execution line

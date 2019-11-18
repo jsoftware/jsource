@@ -221,7 +221,7 @@ F1(jtdbc){UC k;
  }
  jt->redefined=0;
  if(AN(w)){
-  jt->uflags.us.cx.cx_c.db=jt->dbuser=k;
+  jt->uflags.us.cx.cx_c.db=jt->dbuser=k; jt->cxspecials=1;
 #if USECSTACK
   jt->cstackmin=jt->cstackinit-((CSTACKSIZE-CSTACKRESERVE)>>k);
   if(0x8&jt->smoption)jt->cstackmin=0;

@@ -165,7 +165,7 @@ static void jterasenl(J jt, I n){
 static A jtactivenl(J jt){A y;
  GATV0(y,INT,jt->sttsize,1); I *yv=IAV(y);   // allocate place to hold numbers of active locales
  I nloc=0; DO(jt->sttsize, if(IAV0(jt->stnum)[i]){yv[nloc]=NAV(LOCNAME((A)IAV0(jt->stnum)[i]))->bucketx; ++nloc;})
- R every(take(sc(nloc),y),0,jtthorn1);  // ".&.> nloc{.y
+ R every(take(sc(nloc),y),0,jtthorn1);  // ":&.> nloc{.y
 }
 
 // iterator support.  countnl returns a number of iterations.  indexnl returns the A block (or 0) for 
@@ -237,8 +237,8 @@ F1(jtlocsizes){I p,q,*v;
  ASSERT(1==AR(w),EVRANK);
  ASSERT(2==AN(w),EVLENGTH);
  RZ(w=vi(w)); v=AV(w); p=v[0]; q=v[1];
- ASSERT(0<=p&&0<=q,EVDOMAIN);
- ASSERT(p<14&&q<14,EVLIMIT);
+ ASSERT((p|q)>=0,EVDOMAIN);
+ ASSERT(((p-14)&(q-14))<0,EVLIMIT);
  jt->locsize[0]=p;
  jt->locsize[1]=q;
  R mtm;
@@ -263,7 +263,7 @@ A jtstfind(J jt,I n,C*u,I bucketx){L*v;
 // look up locale name, and create the locale if not found
 // bucketx is hash (for named locale) or number (for numeric locale)
 // n=0 means 'use base locale'
-// n=-1 means 'numbered locale, don't bother checking digits'
+// n=-1 means 'numbered locale, don't bother checking digits'   u is invalid
 A jtstfindcre(J jt,I n,C*u,I bucketx){
  A v = stfind(n,u,bucketx);  // lookup
  if(v)R v;  // return if found
@@ -278,18 +278,22 @@ A jtstfindcre(J jt,I n,C*u,I bucketx){
 // b is flags: 1=check name for validity, 2=do not allow numeric locales (whether atomic or not)
 static A jtvlocnl(J jt,I b,A w){A*wv,y;C*s;I i,m,n;
  RZ(w);
- if((!(b&2)) && (AT(w)&INT || AT(w)&B01/C_LE && !AR(w)))R w;  // integer list or scalar boolean is OK
+// obsolete  if((!(b&2)) && (AT(w)&INT || AT(w)&B01/C_LE && !AR(w)))R w;  // integer list or scalar boolean is OK
+ if(((b-2) & (SGNIF(AT(w),INTX) | (SGNIF(AT(w),B01X) & (AR(w)-1))))<0)R w;  // integer list or scalar boolean is OK  C_LE
  n=AN(w);
- ASSERT(!n||BOX&AT(w),EVDOMAIN);
+// obsolete ASSERT(!n||BOX&AT(w),EVDOMAIN);
+ ASSERT(((n-1)|SGNIF(AT(w),BOXX))<0,EVDOMAIN);
  wv=AAV(w); 
  for(i=0;i<n;++i){
   y=wv[i];  // pointer to box
-  if((!(b&2))&&!AR(y)&&AT(y)&(INT|B01)/C_LE)continue;   // scalar numeric locale is ok
+// obsolete  if((!(b&2))&&!AR(y)&&AT(y)&(INT|B01)/C_LE)continue;   // scalar numeric locale is ok
+  if(((b-2)&(AR(y)-1)&-(AT(y)&(INT|B01)))<0)continue;   // scalar numeric locale is ok
   m=AN(y); s=CAV(y);
   ASSERT(1>=AR(y),EVRANK);
   ASSERT(m,EVLENGTH);
   ASSERT(LIT&AT(y),EVDOMAIN);
-  ASSERT(!(b&2) || CAV(y)[0]>'9',EVDOMAIN);  // numeric locale not allowed except when called for in b
+// obsolete  ASSERT(!(b&2) || CAV(y)[0]>'9',EVDOMAIN);  // numeric locale not allowed except when called for in b
+  ASSERT(((1-b) & (I)((UI)CAV(y)[0]-('9'+1)))>=0,EVDOMAIN);  // numeric locale not allowed except when called for in b
   if(b&1)ASSERTN(vlocnm(m,s),EVILNAME,nfs(m,s));
  }
  R w;
@@ -305,7 +309,8 @@ F1(jtlocnc){A*wv,y,z;C c,*u;I i,m,n,*zv;
  RZ(vlocnl(0,w));
  n=AN(w); wv=AAV(w); 
  GATV(z,INT,n,AR(w),AS(w)); zv=AV(z);
- if(AT(w)&(INT|B01)){IAV(z)[0]=findnl(BIV0(w))?1:-1; RETF(z);}
+ if(!n)R z;  // if no input, return empty before handling numeric-atom case
+ if(AT(w)&(INT|B01)){IAV(z)[0]=findnl(BIV0(w))?1:-1; RETF(z);}  // if integer, must have been atomic or empty.  Handle the one value
  for(i=0;i<n;++i){
   y=wv[i];
   if(!AR(y)&&AT(y)&((INT|B01))){  // atomic numeric locale
@@ -321,11 +326,10 @@ F1(jtlocnc){A*wv,y,z;C c,*u;I i,m,n,*zv;
  RETF(z);
 }    /* 18!:0 locale name class */
 
-static F1(jtlocnlx){A y,z=0;B*wv;I m=0;
+static F1(jtlocnlx){A y,z=mtv;B*wv;I m=0;
  RZ(w=cvt(B01,w)); wv=BAV(w); DO(AN(w), m|=1+wv[i];);  // accumulate mask of requested types
  if(1&m)z=nlsym(jt->stloc);  // named locales
- if(2&m){RZ(y=jtactivenl(jt)); z=z?over(y,z):y;}  // get list of active numbered locales
-// crashes in glocale  init z to mtv    if(2&m){RZ(y=jtactivenl(jt)); over(y,z); auditmemchains();}  // get list of active numbered locales
+ if(2&m){RZ(y=jtactivenl(jt)); z=over(y,z); }  // get list of active numbered locales
 // obsolete  z=0==m?mtv:1==m?z:2==m?y:over(y,z);
  R grade2(z,ope(z));
 }
@@ -342,7 +346,8 @@ F2(jtlocnl2){UC*u;
 }    /* 18!:1 locale name list */
 
 static A jtlocale(J jt,B b,A w){A g=0,*wv,y;
- if(!AR(w) && AT(w)&(INT|B01))R (b?jtstfindcre:jtstfind)(jt,-1,0,BIV0(w));  // atomic integer is OK
+// obsolete  if(!AR(w) && AT(w)&(INT|B01))R (b?jtstfindcre:jtstfind)(jt,-1,0,BIV0(w));  // atomic integer is OK
+ if(((AR(w)-1) & -(AT(w)&(INT|B01)))<0)R (b?jtstfindcre:jtstfind)(jt,-1,0,BIV0(w));  // atomic integer is OK
  RZ(vlocnl(1,w));
  wv=AAV(w); 
  DO(AN(w), y=AT(w)&BOX?AAV(w)[i]:sc(IAV(w)[i]); if(!(g=(b?jtstfindcre:jtstfind)(jt,AT(y)&(INT|B01)?-1:AN(y),CAV(y),AT(y)&(INT|B01)?BIV0(y):BUCKETXLOC(AN(y),CAV(y)))))R 0;);

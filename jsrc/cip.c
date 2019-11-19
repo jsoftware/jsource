@@ -692,7 +692,8 @@ F2(jtpdt){PROLOG(0038);A z;I ar,at,i,m,n,p,p1,t,wr,wt;
  // p is number of inner-product muladds (length of a row of a)
 
  // INT multiplies convert to float, for both 32- and 64-bit systems.  It is converted back if there is no overflow
- RZ(z=ipprep(a,w,t&B01?INT:t&INT?FL:t,&m,&n,&p));  // allocate the result area, with the needed shape and type
+ m=t; m=t&INT?FL:m; m=t&B01?INT:m;  // type of result, promoting bool and int
+ RZ(z=ipprep(a,w,m,&m,&n,&p));  // allocate the result area, with the needed shape and type
  if(AN(z)==0)R z;  // return without computing if result is empty
  if(!p){memset(AV(z),C0,AN(z)<<bplg(AT(z))); R z;}  // if dot-products are all 0 length, set them all to 0
  // If either arg is atomic, reshape it to a list

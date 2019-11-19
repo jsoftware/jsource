@@ -274,8 +274,13 @@ void _stdcall JSM(J jt, void* callbacks[])
  jt->qtstackinit = (SMQT==jt->sm) ? (uintptr_t)callbacks[3] : 0;
  jt->smoption = ((~0xff) & (UI)callbacks[4]) >> 8;
  if(jt->sm==SMJAVA) jt->smoption |= 0x8;  /* assume java is multithreaded */
- if(SMQT==jt->sm) jt->smoption = (~0x4) & jt->smoption;  /* smpoll not used */
-// fprintf(stderr,"%llu %llu %lld\n",jt->qtstackinit,jt->cstackinit,jt->qtstackinit-jt->cstackinit);
+ if(SMQT==jt->sm){
+  jt->smoption = (~0x4) & jt->smoption;  /* smpoll not used */
+  // If the user is giving us a better view of the stack through jt->qtstackinit, use it.  We get just the top-of-stack
+  // address so we have to guess about the bottom, using our view of the minimum possible stack we have.
+  // if cstackmin is 0, the user has turned off stack checking and we honor that decision
+  if(jt->qtstackinit&&jt->cstackmin)jt->cstackmin=(jt->cstackinit=jt->qtstackinit)-(CSTACKSIZE-CSTACKRESERVE);
+ }
 }
 
 /* set jclient callbacks from values - easier for nodejs */
@@ -289,7 +294,10 @@ void _stdcall JSMX(J jt, void* out, void* wd, void* in, void* poll, I opts)
  jt->qtstackinit = (SMQT==jt->sm) ? (uintptr_t)poll : 0;
  jt->smoption = ((~0xff) & (UI)opts) >> 8;
  if(jt->sm==SMJAVA) jt->smoption |= 0x8;  /* assume java is multithreaded */
- if(SMQT==jt->sm) jt->smoption = (~0x4) & jt->smoption;  /* smpoll not used */
+ if(SMQT==jt->sm){
+  jt->smoption = (~0x4) & jt->smoption;  /* smpoll not used */
+  if(jt->qtstackinit&&jt->cstackinit)jt->cstackmin=(jt->cstackinit=jt->qtstackinit)-(CSTACKSIZE-CSTACKRESERVE);
+ }
 }
 
 C* _stdcall JGetLocale(J jt){return getlocale(jt);}

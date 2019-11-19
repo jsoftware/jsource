@@ -294,14 +294,15 @@ static DF2(jtkeyslash){PROLOG(0012);A b,q,x,z=0;B bb,*bv,pp=0;C d;I at,*av0,c,n,
  at=AT(a); av0=AV(a); SETIC(a,n); 
  wt=AT(w); wv0=AV(w); wr=AR(w);
  ASSERT(n==SETIC(w,m),EVLENGTH);
- x=FAV(self)->fgh[0]; d=vaid(VAV(x)->fgh[0]); if(B01&wt)d=d==CMAX?CPLUSDOT:d==CMIN||d==CSTAR?CSTARDOT:d;
+ x=FAV(self)->fgh[0]; d=vaid(VAV(x)->fgh[0]); if(B01&wt){d=d==CMAX?CPLUSDOT:d; d=(d==CMIN)|(d==CSTAR)?CSTARDOT:d;}
  if(!(AN(a)&&AN(w)&&at&DENSE&&
      (wt&B01&&(d==CEQ||d==CPLUSDOT||d==CSTARDOT||d==CNE||d==CPLUS)||
      wt&SBT&&(d==CMIN||d==CMAX)||
      wt&INT&&(17<=d&&d<=25)||
      wt&INT+FL&&(d==CMIN||d==CMAX||d==CPLUS) )))R key(a,w,self);
  CRT rng=keyrs(a,MAX(2*n,65536)); c=aii(w); at=rng.type; r=rng.minrange.min; s=rng.minrange.range; m=s;
- zt=d==CPLUS?(wt&B01?INT:wt&INT?FL:wt):wt; bb=s!=0;
+ zt=wt; zt=wt&INT?FL:zt; zt=wt&B01?INT:zt; zt=d==CPLUS?zt:wt;  // type of result, promoting bool and int but only if +
+ /* obsolete zt=d==CPLUS?(wt&B01?INT:wt&INT?FL:wt):wt;*/ bb=s!=0;
  if(bb){
   GATV0(b,B01,s,  1); bv=BAV(b); memset(bv,C1,s); bv-=r;
   GA(q,zt, s*c,1,0); qv0=AV(q);
@@ -484,7 +485,8 @@ static DF2(jtkeytally){PROLOG(0016);A q;I at,*av,j=0,k,n,r,s,*qv,*u,*v;
  if(!AN(a))R vec(INT,n?1:0,&n);
  if(at&SPARSE)R keytallysp(a);
  CRT rng = keyrs(a,MAX(2*n,65536)); at=rng.type; r=rng.minrange.min; s=rng.minrange.range;
- if(n&&at&B01&&1>=AR(a)){B*b=(B*)av; k=bsum(n,b); R !k||n==k?vci(k?k:n):v2(*b?k:n-k,*b?n-k:k);}
+// obsolete  if(n&&at&B01&&1>=AR(a)){B*b=(B*)av; k=bsum(n,b); R !k||n==k?vci(k?k:n):v2(*b?k:n-k,*b?n-k:k);}  // boolean a, just add the 1s
+ if((-n&SGNIF(at,B01X)&(AR(a)-2))<0){B*b=(B*)av; k=bsum(n,b); R (UI)(k-1)>=(UI)(n-1)?vci(n):v2(*b?k:n-k,*b?n-k:k);}  // nonempty rank<2 boolean a, just add the 1s
  if(s){A z;I*zv;
   GATV0(z,INT,s,1); zv=AV(z);
   GATV0(q,INT,s,1); qv=AV(q)-r;
@@ -499,7 +501,7 @@ static DF2(jtkeytally){PROLOG(0016);A q;I at,*av,j=0,k,n,r,s,*qv,*u,*v;
   AN(z)=*AS(z)=j;
   EPILOG(z);
  }
- RZ(q=indexof(a,a));
+ RZ(q=indexof(a,a)); realizeifvirtual(q);
  if(!AR(q))R iv1; 
  v=qv=AV(q);
  u=qv; DQ(n, ++*(qv+*u++););
@@ -538,7 +540,9 @@ static DF2(jtkeyheadtally){PROLOG(0017);A f,q,x,y,z;B b;I at,*av,k,n,r,s,*qv,*u,
   GA(z,wt&FL?FL:INT,2*s,2,0); zv=AV(z);
   GATV0(q,INT,s,1); qv=AV(q)-r;
   u=qv+r; DQ(s, *u++=0;); k=0;
-  switch(15*b+(at&SBT?12:at&C4T?9:at&INT?6:at&C2T?3:0)+(wt&FL?2:wt&INT?1:0)){
+  r=0; r=at&C2T?3:r; r=at&INT?6:r; r=at&C4T?9:r; r=at&SBT?12:r; 
+// obsolete   switch(15*b+(at&SBT?12:at&C4T?9:at&INT?6:at&C2T?3:0)+(wt&FL?2:wt&INT?1:0)){
+  switch(15*b+r+((wt>>INTX)&3)){
    case  0: KEYHEADTALLY(I,UC,B,*v,   wv[i]); break;
    case  1: KEYHEADTALLY(I,UC,I,*v,   wv[i]); break;
    case  2: KEYHEADTALLY(D,UC,D,(D)*v,wv[i]); break;

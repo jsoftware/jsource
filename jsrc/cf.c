@@ -5,7 +5,8 @@
 
 #include "j.h"
 
-#define TC1(t)          (t&NOUN?0:t&VERB?3:t&CONJ?2:1)
+// obsolete #define TC1(t)          (t&NOUN?0:t&VERB?3:t&CONJ?2:1)
+#define TC1(t)          (((t>>ADVX)&3)+(t&NOUN?3:0))   // C A V N -> 2 1 0 3
 #define BD(ft,gt)       (4*TC1(ft)+TC1(gt))
 #define TDECL           V*sv=FAV(self);A fs=sv->fgh[0],gs=sv->fgh[1],hs=sv->fgh[2]
 
@@ -157,10 +158,10 @@ A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I
   case CQUERY:  if(hi==CDOLLAR||hi==CPOUND){f2=jtrollk; flag &=~(VJTFLGOK2);}  break;
   case CQRYDOT: if(hi==CDOLLAR||hi==CPOUND){f2=jtrollkx; flag &=~(VJTFLGOK2);} break;
   case CICAP:   if(fi==CCAP){if(hi==CNE)f1=jtnubind; else if(FIT0(CNE,hv)){f1=jtnubind0; flag &=~(VJTFLGOK1);}} break;
-  case CSLASH:  c=ID(gv->fgh[0]); m=c==CPLUS?4:c==CPLUSDOT?5:c==CSTARDOT?6:-1; 
+  case CSLASH:  c=ID(gv->fgh[0]); m=-1; m=c==CPLUS?4:m; m=c==CPLUSDOT?5:m; m=c==CSTARDOT?6:m; 
                 if(fi==CCAP&&vaid(gv->fgh[0])&&vaid(h)){f2=jtfslashatg; flag &=~(VJTFLGOK2);}
                 break;
-  case CFCONS:  if(hi==CFCONS){x=hv->fgh[2]; j=*BAV(x); m=B01&AT(x)?(gi==CIOTA?j:gi==CICO?2+j:-1):-1;} break;
+  case CFCONS:  if(hi==CFCONS){x=hv->fgh[2]; j=*BAV(x); m=-1; m=gi==CIOTA?j:m; m=gi==CICO?2+j:m; m=B01&AT(x)?m:-1;} break;
   case CRAZE:   if(hi==CCUT){
                  j=i0(hv->fgh[1]);
                  if(CBOX==ID(hv->fgh[0])&&!j){f2=jtrazecut0; flag &=~(VJTFLGOK2);}
@@ -287,7 +288,8 @@ F2(jthook){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE;V*u,*v;
    if(d==CCOMMA)switch(c){   // all of this except for $, could be handled by virtual blocks
     case CDOLLAR: f2=jtreshape; flag+=VIRS2; break;  // ($,) is inplace
    }else if(d==CLDOT){   // (compare L.)
-    I comptype=c==CLT?VFHKLVLGT:c==CGT?VFHKLVLDEC:c==CLE?VFHKLVLDEC+VFHKLVLGT:c==CGE?4:0; if(comptype){flag|=comptype; f2=jthklvl2; flag &=~VJTFLGOK2;}
+    I comptype=0; comptype=c==CLT?VFHKLVLGT:comptype; comptype=c==CGT?VFHKLVLDEC:comptype; comptype=c==CLE?VFHKLVLDEC+VFHKLVLGT:comptype; comptype=c==CGE?4:comptype;
+    if(comptype){flag|=comptype; f2=jthklvl2; flag &=~VJTFLGOK2;}
    }else        switch(c){
     case CSLDOT:  if(COMPOSE(d)&&e==CIOTA&&CPOUND==ID(v->fgh[1])&&CBOX==ID(u->fgh[0])){f1=jtgroup; flag &=~VJTFLGOK1;} break;
     case CPOUND:  if(COMPOSE(d)&&e==CIOTA&&CPOUND==ID(v->fgh[1])){f1=jthkiota; flag &=~VJTFLGOK1;} break;

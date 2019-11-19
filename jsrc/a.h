@@ -8,8 +8,8 @@
 #define GINSERT         (I)3
 #define GTRAIN          (I)6
 
-#define COMPOSE(c)  ((c)==CAT||(c)==CATCO||(c)==CAMP||(c)==CAMPCO)
-#define COMPOSECO(c)  ((c)==CATCO||(c)==CAMPCO)
+#define COMPOSE(c)  (((c)==CAT)|((c)==CATCO)|((c)==CAMP)|((c)==CAMPCO))
+#define COMPOSECO(c)  (((c)==CATCO)|((c)==CAMPCO))
 
 #define CONJCASE(a,w)   (2*!(VERB&AT(a))+!(VERB&AT(w)))
 #define NN              3               /* NOUN NOUN                       */

@@ -99,7 +99,8 @@ F1(jtcasev){A b,*u,*v,w1,x,y,z;B*bv,p,q;I*aa,c,*iv,j,m,n,r,*s,t;
 //  case  8: CASE2Y(C);  case  9: CASE2Y(I);  case 10: CASE2Y(D);  case 11: CASE2Y(Z);
 //  case 12: CASENZ(C);  case 13: CASENZ(I);  case 14: CASENZ(D);  case 15: CASENZ(Z);
 // 0 B01+LIT 1 INT 2 FL 3 CMPX 4 C2T 5 C4T 6 SBT 7 unused
- switch((!q?24:!p?0:c==0?8:16)+(t&B01+LIT?0:t&INT?1:t&FL?2:t&CMPX?3:t&C2T?4:t&C4T?5:6)){   // choose a comparison based on data
+ r=6; r=t&C4T?5:r;  r=t&C2T?4:r;  r=t&CMPX?3:r;  r=t&FL?2:r;  r=t&INT?1:r;  r=t&B01+LIT?0:r; 
+ switch((!q?24:!p?0:c==0?8:16)+r){   // choose a comparison based on data
   case  0: CASE2Z(C);  case  1: CASE2Z(I);  case  2: CASE2Z(D);  case  3: CASE2Z(Z);
   case  4: CASE2Z(US); case  5: CASE2Z(C4); case  6: CASE2Z(I);
   case  8: CASE2X(C);  case  9: CASE2X(I);  case 10: CASE2X(D);  case 11: CASE2X(Z);

@@ -132,8 +132,8 @@ NB. Inplaceable arguments
 ((0.95 > ?@$&0) (4 : 'x (# -: (# >:@<:)) y') ?@$&1000)"0 i. 100   NB. Include long runs of 1s
 ((0.95 > ?@$&0) (4 : 'x (# -: (# >:@<:)) y') [: ?@$&1000 ,&5)"0 i. 100
 NB. Verify long leading 1s are fast
-l1 =. (9999#1),0
-l0 =. 0 (0}) l1
+l1 =: (9999#1),0
+l0 =: 0 (0}) l1
 ((1000) 6!:2 'l0 # i. 10000') (> 1.25&*)&(-&((1000) 6!:2 'i. 10000')) ((1000) 6!:2 'l1 # i. 10000')  NB. occasionally miscompares
 
 NB. NaN related tests
@@ -560,7 +560,7 @@ f u: 'a'
 f 10 u: 'a'
 
 NB. Verify that virtuals pass through a sequence of open/box verbs
-a =. <"1 i. 120 100000
+a =: <"1 i. 120 100000
 (7!:2 '{.&.> }.&.> a') > 100 * (7!:2 '{.&.> @ (}.&.>) a')
 ({.&.> @: (}.&.>) a) -: ({.&.> }.&.> a)
 ({.&.> @ (}.&.>) a) -: ({.&.> }.&.> a)
@@ -568,8 +568,8 @@ a =. <"1 i. 120 100000
  ,(2e6 2e6 _2e6 _2e6)  (*/\  0&=@:- */\ @((o.0)&+))@,&> 3e7 _3e7 3e7 _3e7
 
 NB. Verify that WILLOPEN is passed through fork
-a =. 1000000$4
-b =. 1000000 $ 250000 {. 1
+a =: 1000000$4
+b =: 1000000 $ 250000 {. 1
 16000 > 7!:2 '(2: 0:&.> b&(<;.1)) a'
 16000 > 7!:2 '(2 0:&.> b&(<;.1)) a'
 16000 > 7!:2 'b (I.@[ 0:&.> (<;.1)) a'
@@ -579,7 +579,6 @@ NB. Now hook
 16000 > 7!:2 '1 2 3 4 (0:&.> b&(<;.1)) a'
 
 
-4!:55 ;:'a a0 a1 abox adot1 adot2 sdot0 b c copy f f1 f2 f3 f4 g m n siz1200 siz12002 tally x xx y '
-4!:55 ;:'a b ' 
+4!:55 ;:'a a0 a1 abox adot1 adot2 sdot0 b c copy f f1 f2 f3 f4 g l0 l1 m n siz1200 siz12002 tally x xx y '
 randfini''
 

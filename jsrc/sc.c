@@ -23,6 +23,7 @@ DF2(jtunquote){A z;
    // The most recent lookup is still valid, and it is nonzero.  Use it
    fs=v->localuse.lvp[0];
    explocale=0;  // flag no explicit locale
+   stabent=(L*)fs;  // set stabent to NONZERO to indicate not a pseudofunction
   }else{
    NM* thisnameinfo=NAV(thisname);  // the NM block for the current name
    if(!(thisnameinfo->flag&(NMLOC|NMILOC|NMIMPLOC))) {  // simple name, and not u./v.
@@ -48,13 +49,17 @@ DF2(jtunquote){A z;
   }
  }else{
   // here for pseudo-named function.  The actual name is in g, and the function itself is pointed to by h.  The verb is an anonymous explicit modifier that has received operands (but not arguments)
-  // The name is defined, but it has the value before the modifier operands were given, so ignore it except for the name
-  stabent=0;  // no symbol table for pseudo-names, since they aren't looked up
+  // The name is defined, but it has the value before the modifier operands were given, so ignore fields in it except for the name
   thisname=v->fgh[1];  // get the original name
   explocale=0;  // flag no explicit locale
   fs=v->fgh[2];  // point to the actual executable
   ASSERT(fs,EVVALUE); // make sure the name's value is given also
   ASSERT(TYPESEQ(AT(self),AT(fs)),EVDOMAIN);   // make sure its part of speech has not changed since the name was parsed
+  // The pseudo-named function was created under debug mode.  If the same sequence had been parsed outside of debug, it would have been anonymous.  This has
+  // implications: anonymous verbs do not push/pop the locale stack.  If PMCTRBSTKREQD is set, ALL functions will push the stack here.  That is bad, because
+  // it means that a function that modifies the current locale behaves differently depending on whether debug is on or not.  We use stabent=0 to indicate that
+  // the forced-push should be omitted.
+  stabent=0;  // no symbol table for pseudo-names, since they aren't looked up
  }
  A savname=jt->curname; jt->curname=thisname;  // stack the name of the previous executing entity, replace it with new
  I dyadex = w!=self;   // if we were called with w,fs,fs, we are a monad.  Otherwise (a,w,fs) dyad
@@ -71,7 +76,7 @@ DF2(jtunquote){A z;
    jt->locsyms=(A)AM(jt->locsyms);  // get the local syms at the time u/v was assigned; make them current.  Leave GST unchanged in it
    explocale=AKGST(jt->locsyms);  // fetch global syms for the caller's environment, so we stack it next
   }
- pushcallstack1d(CALLSTACKPOPLOCALE,jt->global); jt->global=explocale;  // move to new implied locale.  DO NOT change locale it lt->locsyms.  It is set only by explicit action so that on a chain of locatives it stays unchanged
+  pushcallstack1d(CALLSTACKPOPLOCALE,jt->global); jt->global=explocale;  // move to new implied locale.  DO NOT change locale it lt->locsyms.  It is set only by explicit action so that on a chain of locatives it stays unchanged
 // obsolete   pushcallstack1d(CALLSTACKPOPLOCALE,jt->global); SYMSETGLOBAL(jt->locsyms,explocale);  // move to new implied locale
   ++jt->modifiercounter;  // invalidate any extant lookups of modifier names
  }
@@ -94,8 +99,8 @@ DF2(jtunquote){A z;
  } else {
   // Extra processing is required.  Check each option individually
   if(PMCTRBPMON&jt->uflags.us.uq.uq_c.pmctrbstk)pmrecord(thisname,jt->global?LOCNAME(jt->global):0,-1L,dyadex?VAL2:VAL1);  // Record the call to the name, if perf monitoring on
-  // If we are required to insert a marker for each call, do so (if it hasn't been done already)
-  if(jt->uflags.us.uq.uq_c.pmctrbstk&PMCTRBSTKREQD && callstackx==jt->callstacknext){pushcallstack1d(CALLSTACKPOPLOCALE,jt->global);}  //  If cocurrent is about, make every call visible
+  // If we are required to insert a marker for each call, do so (if it hasn't been done already).  But not for pseudo-named functions
+  if(stabent!=0 && jt->uflags.us.uq.uq_c.pmctrbstk&PMCTRBSTKREQD && callstackx==jt->callstacknext){pushcallstack1d(CALLSTACKPOPLOCALE,jt->global);}  //  If cocurrent is about, make every call visible
   if(jt->uflags.us.cx.cx_c.db&&!(jt->uflags.us.cx.cx_c.glock||VLOCK&v->flag)){  // The verb is locked if it is marked as locked, or if the script is locked
    jt->cursymb=stabent; z=dbunquote(dyadex?a:0,dyadex?w:a,fs);  // if debugging, go do that.  save last sym lookup as debug parm
   }else{

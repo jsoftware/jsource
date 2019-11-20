@@ -87,14 +87,14 @@ sum=: +/
 (5!:5 <'g2') -: '+/ (',(5!:5 <'G2'),')'
 
 NB. Going through locatives leaves global path unchanged
-a_z_ =. a =. 1 : 0
+a_z_ =: a =: 1 : 0
 u. f.
 1
 )
 + a
-f =. ((coname '') -: coname)
+f =: ((coname '') -: coname)
 f a
-g =. a_z_
+g =: a_z_
 + g
 f g
 3 : 0 ''
@@ -244,7 +244,7 @@ cocurrent 'base'
 101 -: 100 [&.c 0
 
 
-4!:55 ;:'a aa q a_z_ c_z_ d_yyy_ d_xxx_ j j_xxx_ dou F f F1 f1 F2 f2 G g G1 g1 G2 g2 nameinxxx_xxx_ nln nn sum'
+4!:55 ;:'a aa q a_z_ c_z_ d_yyy_ d_xxx_ j j_xxx_ dou F f F1 f1 F2 f2 G g G1 g1 G2 g2 nameinxxx_xxx_ nln nn sum v'
 18!:55 ;:'xxx yyy'
 
 

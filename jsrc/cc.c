@@ -19,7 +19,7 @@ static DF1(jtcut01){DECLF;A h,x;
  if(VGERL&sv->flag){h=sv->fgh[2]; R df1(x,*AAV(h));}else R CALL1(f1,x,fs);
 }    /* f;.0 w */
 
-#if 0  // special cases no longer used
+#if 0  // obsolete special cases no longer used
 static F2(jtcut02v){A z;I*av,e,j,k,m,t,wk;
  m=AN(w); t=AT(w); wk=bpnoun(t);
  av=AV(a); j=av[0]; e=av[1]; k=ABS(e);

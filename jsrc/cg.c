@@ -267,7 +267,7 @@ A jtgconj(J jt,A a,A w,C id){A hs,y;B na;I n;
  ASSERT(((AT(a)|AT(w))&(VERB|BOX))==(VERB|BOX),EVDOMAIN);  // v`box or box`v
  na=1&&BOX&AT(a); y=na?a:w; n=AN(y);  // na is 1 for gerund}; y is the gerund
  ASSERT(1>=AR(y),EVRANK);
- ASSERT(2==n||3==n,EVLENGTH);
+ ASSERT((n&-2)==2,EVLENGTH);  // length is 2 or 3
  ASSERT(BOX&AT(y),EVDOMAIN);
  RZ(hs=fxeach(3==n?y:link(scc(CLEFT),y)));
  R fdef(0,id,VERB, na?jtgcl1:jtgcr1,na?jtgcl2:jtgcr2, a,w,hs, na?VGERL:VGERR, RMAX,RMAX,RMAX);

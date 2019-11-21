@@ -51,7 +51,7 @@ static FMTF(jtfmtD,D){B q;C buf[1+WD],c,*t;D x=*v;I k=0;
  if(_isnan(*v)          ){strcpy(s,"_."); R;}
  x=*v; x=x==*(D*)minus0?0.0:x;  /* -0 to 0*/
  sprintf(buf,jt->pp,x);
- c=*buf; if(q=c=='-')*s++=CSIGN; q=q||(c=='+');
+ c=*buf; if(q=c=='-')*s++=CSIGN; q=q|(c=='+');
  if('.'==buf[q])*s++='0';
  MC(s,buf+q,WD+1-q);
  if(t=strchr(s,'e')){
@@ -605,7 +605,7 @@ F1(jtthorn1){ A z; RZ(w); B to = jt->thornuni; jt->thornuni = !(AT(w)&(LIT+C2T+C
 #define DDD(v)   {*v++='.'; *v++='.'; *v++='.';}
 #define EOL(zv)  {zv[0]=eov[0]; zv[1]=eov[1]; zv+=m;}
 #define EOLC(zv) {++lc; EOL(zv)}
-#define BDC(zv,x)  {if(x<=26&&16<=x){*zv++='\342'; *zv++='\224'; *zv++=bdc[x];}else *zv++=x;}
+#define BDC(zv,x)  {if((UI)((x)-16)<=(UI)(26-16)){*zv++='\342'; *zv++='\224'; *zv++=bdc[x];}else *zv++=x;}
 #define UUC(zv,x)  {if((x)<=127)*zv++=(C)(x);else if((x)<=2047){*zv++=(C)(0xc0+((x)>>6));*zv++=(C)(0x80+((x)&0x3f));}else{*zv++=(C)(0xe0+((x)>>12));*zv++=(C)(0x80+(((x)>>6)&0x3f));*zv++=(C)(0x80+((x)&0x3f));}}
 #define UUC4(zv,x)  {if((x)<=127)*zv++=(C)(x);else if((x)<=2047){*zv++=(C)(0xc0+((x)>>6));*zv++=(C)(0x80+((x)&0x3f));}else if((x)<=65535){*zv++=(C)(0xe0+((x)>>12));*zv++=(C)(0x80+(((x)>>6)&0x3f));*zv++=(C)(0x80+((x)&0x3f));} \
 else{*zv++=(C)(0xf0+((x)>>18));*zv++=(C)(0x80+(((x)>>12)&0x3f));*zv++=(C)(0x80+(((x)>>6)&0x3f));*zv++=(C)(0x80+((x)&0x3f));}}
@@ -638,15 +638,15 @@ static I countonlines(I (*f)(), I t, C* v, I h, I nq, I c, I lb, I la){
 static I scanbdc(I t, C*v,I n){C x;I m=0;
  if(t==1) {
   // If the input is bytes, the only added characters can come from boxing codes.  Count them
-  DQ(n, x=*v; if(x<=26&&16<=x)m+=3; ++v;)
+  DQ(n, x=*v; if((UI)((x)-16)<=(UI)(26-16))m+=3; ++v;)
  } else {
   static US bdc[] = { 0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0x250c,0x252c,0x2510,0x251c, 0x253c,0x2524,0x2514,0x2534,0x2518,0x2502,0x2500 };
   // If the input is C2T/C4T, We count the length of each character.  Also, we convert the boxing codes
   // to their Unicode values here, so we don't have to check again later
   if(t==2){US *u = (US*)v, ux;  // get pointer to wide chars.  Don't analyze as bytes, to be endian-neutral
-   DQ(n, ux=*u; if(ux<=26&&16<=ux){m+=2;*u=bdc[ux];}else if(ux>127){++m; if(ux>2047)++m;} ++u;)
+   DQ(n, ux=*u; if((UI)((ux)-16)<=(UI)(26-16)){m+=2;*u=bdc[ux];}else if(ux>127){++m; if(ux>2047)++m;} ++u;)
   }else{C4 *u = (C4*)v, ux;  // get pointer to C4T chars.  Don't analyze as bytes, to be endian-neutral
-   DQ(n, ux=*u; if(ux<=26&&16<=ux){m+=2;*u=(C4)bdc[ux];}else if(ux>127){++m; if(ux>2047){++m; if(ux>65535)++m;}} ++u;)
+   DQ(n, ux=*u; if((UI)((ux)-16)<=(UI)(26-16)){m+=2;*u=(C4)bdc[ux];}else if(ux>127){++m; if(ux>2047){++m; if(ux>65535)++m;}} ++u;)
   }
  }
  R m;

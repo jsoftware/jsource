@@ -158,7 +158,7 @@ static PSTK* jtis(J jt,PSTK *stack){B ger=0;C *s;
    //ASSERT(1>=AR(n),EVRANK); must be true
    s=CAV(n); ger=CGRAVE==*s;   // s->1st character; remember if it is `
    RZ(n=words(ger?str(AN(n)-1,1+s):n));  // convert to words (discarding leading ` if present)
-   ASSERT(AN(n)||(AR(v)&&!AS(v)[0]),EVILNAME);  // error if namelist empty or multiple assignment to no names, if there is something to be assigned
+   ASSERT(AN(n)||(AR(v)&&!AS(v)[0]),EVILNAME);  // error if namelist empty or multiple assignment with no values, if there is something to be assigned
    if(1==AN(n)){
     // Only one name in the list.  If one-name AR assignment, leave as a list so we go through the AR-assignment path below
     if(!ger){RZ(n=head(n));}   // One-name normal assignment: make it a scalar, so we go through the name-assignment path & avoid unboxing
@@ -410,7 +410,7 @@ A* jtextnvr(J jt){ASSERT(jt->parserstackframe.nvrtop<32000,EVLIMIT); RZ(jt->nvra
  // never see 4 marks on the stack - the most we can have is 1 value + 3 marks.
 #define FRONTMARKS 1  // amount of space to leave for front-of-string mark
 // Parse a J sentence.  Input is the queue of tokens
-A jtparsea(J jt, A *queue, I m){PSTK *stack;A z,*v;I es;
+A jtparsea(J jt, A *queue, I m){PSTK * RESTRICT stack;A z,*v;I es;
 
  // This routine has two global responsibilities in addition to parsing.  jt->asgn must be set to 1
  // if the last thing is an assignment, and since this flag is cleared during execution (by ". and
@@ -530,7 +530,7 @@ rdglob: ;
          // (via namerefacv), no special protection is needed.  And, it is not needed for local names, because they are inaccessible to deletion in called
          // functions (that is, the user should not use u. to delete a local name).  If a local name is deleted, we always defer the deletion till the end of the sentence, easier than checking
         if(s&&s->val&&AT(s->val)&NOUN&&!(AFLAG(s->val)&AFNVR)){ 
-         jt->nvrav[jt->parserstackframe.nvrtop++] = s->val;   // record the place where the value was protected, so we can free it when this sentence complaetes
+         jt->nvrav[jt->parserstackframe.nvrtop++] = s->val;   // record the place where the value was protected, so we can free it when this sentence completes
          AFLAG(s->val) |= AFNVR|AFNVRUNFREED;  // mark the value as protected and not yet deferred-freed
         }
        }
@@ -616,12 +616,18 @@ rdglob: ;
        // We handle =: N V N, =: V N, =: V V N.  In the last case both Vs must be ASGSAFE.  When we set jt->assignsym we are warranting
        // that the next assignment will be to the name, and that the reassigned value is available for inplacing.  In the V V N case,
        // this may be over two verbs
-       if(PTISASGNNAME(stack[0])&&PTISM(stackfs[2])   // assignment to name; nothing in the stack to the right of what we are about to execute; well-behaved function (doesn't change locales)
-          &&(s=((AT(stack[0].a))&ASGNLOCAL?jtprobelocal:jtprobeisquiet)(jt,queue[m-1]))&&((FAV(fs)->flag)&VASGSAFE)&&(pline!=1||FAV(stack[1].a)->flag&VASGSAFE) ){
+       if(PTISASGNNAME(stack[0])&&PTISM(stackfs[2])){   // assignment to name; nothing in the stack to the right of what we are about to execute; well-behaved function (doesn't change locales)
+// obsolete           &&(s=((AT(stack[0].a))&ASGNLOCAL?jtprobelocal:jtprobeisquiet)(jt,queue[m-1]))&&((FAV(fs)->flag)&VASGSAFE)&&(pline!=1||FAV(stack[1].a)->flag&VASGSAFE) ){
+        s=((AT(stack[0].a))&ASGNLOCAL?jtprobelocal:jtprobeisquiet)(jt,queue[m-1]);  // look up the target.  It will usually be found (in an explicit definition)
+        // Don't remember the assignand if it may change during execution, i. e. if the verb is unsafe.  For line 1 we have to look at BOTH verbs that come after the assignment
+        s=((FAV(fs)->flag|(FAV(stack[1].a)->flag|(pmask<<(VASGSAFEX-1))))&VASGSAFE)?s:0;
         // It is OK to remember the address of the symbol being assigned, because anything that might conceivably create a new symbol (and thus trigger
         // a relocation of the symbol table) is marked as not ASGSAFE
-        jt->assignsym=s;  // remember the symbol being assigned.  It may have no value yet, but that's OK - save the lookup
-        if(s->val&&AT(stack[0].a)&ASGNLOCAL)jt->zombieval=s->val;  // if the value is being assigned locally & it exists, remember the value.  We have to avoid private/public puns
+// obsolete         if(s->val&&AT(stack[0].a)&ASGNLOCAL)jt->zombieval=s->val;  // Remember the value, whether it exists or not.  We have to avoid private/public puns
+        if(s){
+         jt->assignsym=s;  // remember the symbol being assigned.  It may have no value yet, but that's OK - save the lookup
+         A sval=s->val; sval=AT(stack[0].a)&ASGNLOCAL?sval:0; jt->zombieval=sval;  // Remember the value, whether it exists or not.  We have to avoid private/public puns
+        }
        }
        jt=(J)(intptr_t)((I)jt+(pline|1));   // set bit 0, and bit 1 if dyadic
       }
@@ -693,7 +699,9 @@ failparse:  // If there was an error during execution or name-stacking, exit wit
   // so we don't free the names quite yet: we put them on the tpush stack to be freed after we know
   // we are through with the result.  If we are returning a noun, free them right away unless they happen to be the very noun we are returning
   v=jt->nvrav+nvrotop;  // point to our region of the nvr area
-  DQ(jt->parserstackframe.nvrtop-nvrotop, A vv = *v; I vf = AFLAG(vv); AFLAG(vv) = vf & ~(AFNVR|AFNVRUNFREED); if(!(vf&AFNVRUNFREED))if(!z||(AT(z)&NOUN&&z!=vv)){fa(vv);}else{tpush(vv);} ++v;);   // schedule deferred frees.
+  UI zcompval = !z||AT(z)&NOUN?0:-1;  // if z is 0, or a noun, immediately free only values !=z.  Otherwise don't free anything
+// obsolete   DQ(jt->parserstackframe.nvrtop-nvrotop, A vv = *v; I vf = AFLAG(vv); AFLAG(vv) = vf & ~(AFNVR|AFNVRUNFREED); if(!(vf&AFNVRUNFREED))if(!z||(AT(z)&NOUN&&z!=vv)){fa(vv);}else{tpush(vv);} ++v;);   // schedule deferred frees.
+  DQ(jt->parserstackframe.nvrtop-nvrotop, A vv = *v; I vf = AFLAG(vv); AFLAG(vv) = vf & ~(AFNVR|AFNVRUNFREED); if(!(vf&AFNVRUNFREED))if(((UI)z^(UI)vv)>zcompval){fa(vv);}else{tpush(vv);} ++v;);   // schedule deferred frees.
   // Still can't return till frame-stack popped
 
   jt->parserstackframe = oframe;

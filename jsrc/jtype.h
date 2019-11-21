@@ -703,7 +703,8 @@ typedef struct {AF valencefns[2];A fgh[3];union { D lD; void *lvp[2]; I lI; I4 l
 #define VJTFLGOK1     (((I)1)<<VJTFLGOK1X)
 #define VJTFLGOK2X    26    // 26 dyad can handle in-place args
 #define VJTFLGOK2     (((I)1)<<VJTFLGOK2X)
-#define VASGSAFE        ((I)(1L<<27))     // does not alter locale/path
+#define VASGSAFEX     27
+#define VASGSAFE      (((I)1)<<VASGSAFEX)     // does not alter locale/path
 #define VISATOMIC1      ((I)(1L<<28))     // processes each atom individually (logically rank 0, but handles all ranks)
 #define VISATOMIC2      ((I)(1L<<29))    // dyad is atomic.  localuse will point to the VA entry for the verb
 #define VFUSEDOK2  ((I)(1L<<30))    // this block can be executed by passing in another block (containing rank) whose fgh[0] points to the native block for this primitive

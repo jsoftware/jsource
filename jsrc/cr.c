@@ -162,7 +162,7 @@ A jtrank1ex0(J jt,AD * RESTRICT w,A fs,AF f1){F1PREFIP;PROLOG(0041);A z,virtw;
   // Now that we have handled the structural requirements of ATOPOPEN, clear it if w is not open
   // Allocate a non-in-place virtual block unless this is ATOPOPEN and w is boxed, in which case we will just use the value of the A block
   fauxblock(virtwfaux);
-  if(!(state&ZZFLAGATOPOPEN1)||!(AT(w)&BOX)){
+  if((SGNIF(state,ZZFLAGATOPOPEN1X)&SGNIF(AT(w),BOXX))>=0){   // if not (ATOPOPEN and w boxed)...
    fauxvirtual(virtw,virtwfaux,w,0,ACUC1); AN(virtw)=1; state&=~ZZFLAGATOPOPEN1;
   }else{wav=AAV(w); virtw=*wav++;}
 #define ZZINSTALLFRAME(optr) MCISHd(optr,AS(w),AR(w))
@@ -464,10 +464,10 @@ A jtrank2ex0(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,AF f2){F2PREFIP;PROLOG(00
 
   // Now that we have handled the structural requirements of ATOPOPEN, clear it if the argument is not boxed
   // Allocate a non-in-place virtual block unless this is ATOPOPEN and w is boxed, in which case we will just use the value of the A block
-  if(!(state&ZZFLAGATOPOPEN2W)||!(AT(w)&BOX)){
+  if((SGNIF(state,ZZFLAGATOPOPEN2WX)&SGNIF(AT(w),BOXX))>=0){
    fauxvirtual(virtw,virtwfaux,w,0,ACUC1); AN(virtw)=1; state&=~ZZFLAGATOPOPEN2W;
   }else{wav=AAV(w); virtw=*wav;}
-  if(!(state&ZZFLAGATOPOPEN2A)||!(AT(a)&BOX)){
+  if((SGNIF(state,ZZFLAGATOPOPEN2AX)&SGNIF(AT(a),BOXX))>=0){
    fauxvirtual(virta,virtafaux,a,0,ACUC1); AN(virta)=1; state&=~ZZFLAGATOPOPEN2A;
   }else{aav=AAV(a); virta=*aav;}
   

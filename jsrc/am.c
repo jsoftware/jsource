@@ -138,7 +138,8 @@ static A jtmerge2(J jt,A a,A w,A ind,I cellframelen){F2PREFIP;A z;I t;
 // obsolete       &&TYPESEQ(t,AT(w))&&(AT(w)&(DIRECT|RECURSIBLE))&&w!=a&&w!=ind&&(w!=ABACK(a)||!(AFLAG(a)&AFVIRTUAL));
       &&( ((AT(w)&t&(DIRECT|RECURSIBLE))!=0)&(w!=a)&(w!=ind)&((w!=ABACK(a))|(~AFLAG(a)>>AFVIRTUALX)) );
  // if w is boxed, we have to make one more check, to ensure we don't end up with a loop if we do   (<a) m} a.  Force a to be recursive usecount, then see if the usecount of w is changed
- if(ip&&t&RECURSIBLE){
+// obsolete  if(ip&&t&RECURSIBLE){
+ if(-ip&t&RECURSIBLE){
   I oldac = ACUC(w);  // remember original UC of w
   ra0(a);  // ensure a is recursive usecount.  This will be fast if a is one boxing level
   ip = AC(w)<=oldac;  // turn off inplacing if a referred to w
@@ -242,10 +243,10 @@ A jtcelloffset(J jt,AD * RESTRICT w,AD * RESTRICT ind){A z;
 
 // Convert ind to a list of cell offsets.  Error if inhomogeneous cells.
 // Result *cellframelen gives the number of axes of w that have been boiled down to indices in the result
-static A jtjstd(J jt,A w,A ind,I *cellframelen){A j=0,k,*v,x;B b;I d,i,n,r,*u,wr,*ws;D rkblk[16];
- wr=AR(w); ws=AS(w); b=AN(ind)&&BOX&AT(ind);  // b=indexes are boxed and nonempty
+static A jtjstd(J jt,A w,A ind,I *cellframelen){A j=0,k,*v,x;I b;I d,i,n,r,*u,wr,*ws;D rkblk[16];
+ wr=AR(w); ws=AS(w); b=-AN(ind)&SGNIF(AT(ind),BOXX);  // b<0 = indexes are boxed and nonempty
  if(!wr){x=from(ind,zeroionei[0]); *cellframelen=0; R x;}  // if w is an atom, the best you can get is indexes of 0.  No axes are used
- if(b&&AR(ind)){   // array of boxed indexes
+ if((b&-AR(ind))<0){   // array of boxed indexes
   RE(aindex(ind,w,0L,&j));  // see if the boxes are homogeneous
   if(!j){  // if not...
    RZ(x=MODIFIABLE(from(ind,increm(iota(shape(w)))))); u=AV(x); // go back to the original indexes, select from table of all possible incremented indexes; since it is incremented, it is writable
@@ -256,14 +257,16 @@ static A jtjstd(J jt,A w,A ind,I *cellframelen){A j=0,k,*v,x;B b;I d,i,n,r,*u,wr
   b=0; ind=j;  // use the code for numeric array
   // later this can use the code for table m
  }
- if(!b){
+ if(b>=0){
   // Numeric m.  Each 1-cell is a list of indexes (if m is a list, each atom is a cell index)
   RZ(j=celloffset(w,ind));  // convert list/table to list of indexes, possibly in place
   n=AR(ind)<2?1:AS(ind)[AR(ind)-1];  // n=#axes used: 1, if m is a list; otherwise {:$m
  }else{  // a single box.
   ind=AAV0(ind); n=AN(ind); r=AR(ind);  // ind etc now refer to the CONTENTS of the single box
-  ASSERT(!n&&1==r||AT(ind)&BOX+NUMERIC,EVINDEX);  // must be empty list or numeric or boxed
-  if(n&&!(BOX&AT(ind)))RZ(ind=every(ind,0L,jtright1));  // if numeric, box each atom
+// obsolete  ASSERT(!n&&1==r||AT(ind)&BOX+NUMERIC,EVINDEX);  // must be empty list or numeric or boxed
+  ASSERT((-(n|(r^1))&((AT(ind)&BOX+NUMERIC)-1))>=0,EVINDEX);  // must be empty list or numeric or boxed
+// obsolete  if(n&&!(BOX&AT(ind)))RZ(ind=every(ind,0L,jtright1));  // if numeric, box each atom
+  if(((n-1)|SGNIF(AT(ind),BOXX))>=0)RZ(ind=IRS1(ind,0,0,jtbox,j));  // if numeric, box each atom
   v=AAV(ind);   // now ind is a atom/list of boxes, one per axis
   ASSERT(1>=r,EVINDEX);  // not a table
   ASSERT(n<=wr,EVINDEX);  // not too many axes
@@ -271,7 +274,7 @@ static A jtjstd(J jt,A w,A ind,I *cellframelen){A j=0,k,*v,x;B b;I d,i,n,r,*u,wr
   j=zeroionei[0];  // init list to a single 0 offset
   for(i=0;i<n;++i){  // for each axis, grow the cartesian product of the specified offsets
    x=v[i]; d=ws[i];
-   if((-AN(x)&-(BOX&AT(x)))<0){   // notempty and boxed
+   if((-AN(x)&SGNIF(AT(x),BOXX))<0){   // notempty and boxed
     ASSERT(!AR(x),EVINDEX); 
     x=AAV0(x); k=IX(d);
     if(AN(x))k=less(k,pind(d,1<AR(x)?ravel(x):x));

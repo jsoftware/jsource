@@ -75,7 +75,8 @@ static KF1(jtBfromI){B*x;I n,p,*v;
 static KF1(jtBfromD){B*x;D p,*v;I n;
  n=AN(w); v=DAV(w); x=(B*)yv;
  DQ(n, p=*v++; if(p<-2||2<p)R 0;   // handle infinities
-  if(!p)*x++=0; else if(FIEQ(p,1.0))*x++=1; else R 0;);
+// obsolete   if(!p)*x++=0; else if(FIEQ(p,1.0))*x++=1; else R 0;);
+  I val=2; val=(p==0)?0:val; val=FIEQ(p,1.0)?1:val; if(val==2)R 0; *x++=(B)val; )
  R 1;
 }
 

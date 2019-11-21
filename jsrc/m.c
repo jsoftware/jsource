@@ -618,7 +618,7 @@ A jtgc (J jt,A w,A* old){
  // NOTE: certain functions (ex: rational determinant) perform operations 'in place' on non-direct names and then protect those names using gc().  The protection is
  // ineffective if the code goes through the fa() path here, because components that were modified will be freed immediately rather than later.  In those places we
  // must either use gc3() which always does the tpush, or do ACIPNO to force us through the tpush path here.  We generally use gc3().
- if((c&(1-AC(w)))<0){fa(w);} else {tpush(w);}  // test is c<0 && AC(w)>1
+ if((c&(1-AC(w)))<0){fa(w);} else {tpush(w);}  // test is c<0 and AC(w)>1
  // The usecount of w is now back to where it started, or possibly lower, if the block was popped multiple times.
  // But we know for sure that if the block was inplaceable to begin with, its usecount is 1 now, and we should make it inplaceable on exit
  // Note: a block that was originally VIRTUAL cannot have been inplaceable

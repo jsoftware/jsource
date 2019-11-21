@@ -8,7 +8,7 @@
 // a and w (which may be the same) are 2 nouns.  We pick the fill based  on the types of a/w (a first, then w, skipping a if empty)
 // if jt->fill is set, we use that value instead
 // we put one atom of fill into jt->fillv0 and point jt->fillv to that atom
-// w is expected to be the reference input; if it is relative, we relocate jt->fillv to be wrt w
+// if w is not the same type as the fill, convert it.  The user has to handle a.
 F2(jtsetfv){A q=jt->fill;I t;
  RZ(a&&w);
 // obsolete  t=AN(a)?AT(a):AN(w)?AT(w):0;

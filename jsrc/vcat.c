@@ -120,8 +120,8 @@ static C*jtovgmove(J jt,I k,I c,I m,A s,A w,C*x,A z){I d,n,p=c*m;
 
 static F2(jtovg){A s,z;C*x;I ar,*as,c,k,m,n,r,*sv,t,wr,*ws,zn;
  RZ(a&&w);
- RZ(w=setfv(a,w));
-  if(AT(a)!=(t=AT(w))){t=maxtypedne(AT(a)|(AN(a)==0),t|(AN(w)==0)); t&=-t; if(!TYPESEQ(t,AT(a))){RZ(a=cvt(t,a));} else {RZ(w=cvt(t,w));}}  // convert args to compatible precisions, changing a and w if needed.  B01 if both empty
+ I origwt=AT(w); RZ(w=setfv(a,w));
+ if(AT(a)!=(t=AT(w))){t=maxtypedne(AT(a)|(AN(a)==0),t|(((t^origwt)+AN(w))==0)); t&=-t; if(!TYPESEQ(t,AT(a))){RZ(a=cvt(t,a));} else {RZ(w=cvt(t,w));}}  // convert args to compatible precisions, changing a and w if needed.  B01 if both empty.  If fill changed w, don't do B01 for it
  ar=AR(a); wr=AR(w); r=ar+wr?MAX(ar,wr):1;
  RZ(s=r?vec(INT,r,r==ar?AS(a):AS(w)):num[2]); sv=AV(s);   // Allocate list for shape of composite item
  // Calculate the shape of the result: the shape of the item, max of input shapes

@@ -296,7 +296,8 @@ static XF2(jtxroot){A q;D x;I an,*av,c,d,r,wn,*wv;X n,n1,p,t,z;
  an=AN(a); av=AV(a); c=av[an-1];
  wn=AN(w); wv=AV(w); d=wv[wn-1]; 
  ASSERT(0<=d,EWIMAG);
- if(1==wn&&(0==d||1==d))R 1==d?iv1:0<=c?iv0:vci(XPINF);
+// obsolete  if(1==wn&&(0==d||1==d))R 1==d?iv1:0<=c?iv0:vci(XPINF);
+ if(1==wn&&((d&~1)==0))R 1==d?iv1:0<=c?iv0:vci(XPINF);
  if(!c&&0<d)R rifvsdebug(vci(XPINF));
  r=xint(a); if(jt->jerr){RESETERR; R iv1;}
  if(2==r)R xsqrt(w);

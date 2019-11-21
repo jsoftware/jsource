@@ -63,7 +63,7 @@ A jtnfs(J jt,I n,C*s){A z;C f,*t;I m,p;NM*zv;
    // otherwise either simple name or indirect locative.  Look for the __
    DO(n, if('_'==s[i]&&'_'==s[1+i]){ f=NMILOC; p=n-2-i; for(m=n; s[m-1]!='_'||s[m-2]!='_';--m); zv->bucketx=(I)nmhash(n-m,s+m); m=n-(2+p); break;});  // p=#locales, m=#simplename, hash last indirect if there is one
  }
- ASSERT(m<=255&&p<=255,EVLIMIT);  // error if name too long.
+ ASSERT((m|p)<=255,EVLIMIT);  // error if name too long.  Requires limit be power of 2
  zv->flag=f;  // Install locative flag
  zv->m=(UC)m; zv->hash=(UI4)nmhash(m,s); // Install length, and calculate hash of simple name
  RETF(z);

@@ -10,6 +10,7 @@
 // When we move off of a parser frame, or when we go into debug with a new parser frame, fill the frame with
 // the info for the parse that was interrupted
 static void movesentencetosi(J jt,void *wds,I nwds,I errwd){if(jt->sitop&&jt->sitop->dctype==DCPARSE){jt->sitop->dcy=(A)wds; jt->sitop->dcn=(I)nwds; jt->sitop->dcix=(I)errwd; }}
+static void movecurrtoktosi(J jt){if(jt->sitop&&jt->sitop->dctype==DCPARSE){jt->sitop->dcix=jt->parserstackframe.parsercurrtok; }}
 void moveparseinfotosi(J jt){movesentencetosi(jt,jt->parserstackframe.parserqueue,jt->parserstackframe.parserqueuelen,jt->parserstackframe.parsercurrtok);}
 
 
@@ -23,7 +24,7 @@ void moveparseinfotosi(J jt){movesentencetosi(jt,jt->parserstackframe.parserqueu
 DC jtdeba(J jt,C t,void *x,void *y,A fs){DC d;
  {A q; GAT0(q,LIT,sizeof(DST),1); d=(DC)AV(q);}
  memset(d,C0,sizeof(DST));
- if(jt->sitop)moveparseinfotosi(jt);
+ if(jt->sitop&&t!=DCJUNK)moveparseinfotosi(jt);  // if we are creating a space between normal and suspension, don't modify the normal stack
  d->dctype=t; d->dclnk=jt->sitop; jt->sitop=d;
  switch(t){
   case DCPARSE:  d->dcy=(A)x; d->dcn=(I)y; break;
@@ -93,8 +94,16 @@ static B jterrcap(J jt){A y,*yv;
  R 1;
 }    /* error capture */
 
-static void jtsusp(J jt){B t;DC d;A *old=jt->tnextpushp;
+// suspension.  Loop on keyboard input.  Keep executing sentences until something changes dbsusact.
+static void jtsusp(J jt){B t;DC d;
+ // normally we run with an empty stack frame which is always ready to hold the display of the next sentence
+ // to execute; the values are filled in when there is an error.  We are about to call immex to run sentences,
+ // and it will create a stack frame for its result.  CREATION of this stack frame will overwrite the current top-of-stack
+ // if it holds error information.  So, we create an empty frame to take the store from immex.  This frame has no display.
+ jt->dbsusact=SUSCLEAR;  // if we can't add a frame, exit suspension
+ if(!deba(DCJUNK,0,0,0))R; // create spacer frame
  jt->dbsusact=SUSCONT;
+ A *old=jt->tnextpushp;  // fence must be after we have allocated out stack block
  d=jt->dcs; t=jt->tostdout;
  jt->dcs=0; jt->tostdout=1;
 #if USECSTACK
@@ -128,6 +137,7 @@ static void jtsusp(J jt){B t;DC d;A *old=jt->tnextpushp;
 #endif
   jt->fcalln =NFCALL;
  }
+ debz(); 
  jt->dcs=d; jt->tostdout=t;
 }    /* user keyboard loop while suspended */
 
@@ -166,7 +176,7 @@ A jtpee(J jt,A *queue,CW*ci,I err,I lk,DC c){A z=0;
  jt->parserstackframe.parserqueue=queue+ci->i; jt->parserstackframe.parserqueuelen=(I4)ci->n; jt->parserstackframe.parsercurrtok=1;  // unless locked, indicate failing-sentence info
  jsignal(err);   // signal the requested error
  // enter debug mode if that is enabled
- if(c&&jt->uflags.us.cx.cx_c.db){DC prevtop=jt->sitop->dclnk; prevtop->dcj=jt->sitop->dcj=jt->jerr; moveparseinfotosi(jt); z=debug(); prevtop->dcj=0;} //  d is PARSE type; set d->dcj=err#; d->dcn must remain # tokens debz();  not sure why we change previous frame
+ if(c&&jt->uflags.us.cx.cx_c.db){/* obsolete DC prevtop=jt->sitop->dclnk; prevtop->dcj=*/jt->sitop->dcj=jt->jerr; /* obsolete moveparseinfotosi(jt);*/ z=debug(); jt->sitop->dcj=0;} //  d is PARSE type; set d->dcj=err#; d->dcn must remain # tokens debz();  not sure why we change previous frame
  if(jt->jerr)z=0; R z;  // if we entered debug, the error may have been cleared.  If not, clear the result.  Return debug result, which is result to use or 0 to indicate jump
 }
 
@@ -182,8 +192,8 @@ A jtparsex(J jt,A* queue,I m,CW*ci,DC c){A z;B s;
  if(s=dbstop(c,ci->source)){z=0; jsignal(EVSTOP);}
  else                      {z=parsea(queue,m);     }
  // If we hit a stop, or if we hit an error outside of try./catch., enter debug mode.  But if debug mode is off now, we must have just
- // executed 13!:0]0, and we should continue on outside of debug mode.  Fill in the current si line with the info from the parse
- if(!z&&jt->uflags.us.cx.cx_c.db){DC t=jt->sitop->dclnk; t->dcj=jt->sitop->dcj=jt->jerr; moveparseinfotosi(jt); z=debug(); t->dcj=0;} //  d is PARSE type; set d->dcj=err#; d->dcn must remain # tokens
+ // executed 13!:0]0, and we should continue on outside of debug mode.  Error processing filled the current si line with the info from the parse
+ if(!z&&jt->uflags.us.cx.cx_c.db){DC t=jt->sitop->dclnk; t->dcj=jt->sitop->dcj=jt->jerr; /* obsolete moveparseinfotosi(jt);*/ z=debug(); t->dcj=0;} //  d is PARSE type; set d->dcj=err#; d->dcn must remain # tokens
  R z;
 }
 
@@ -200,7 +210,7 @@ DF2(jtdbunquote){A t,z;B b=0,s;DC d;V*sv;
    else              {ras(self); z=a?dfs2(a,w,self):dfs1(w,self); fa(self);}
    // If we hit a stop, or if we hit an error outside of try./catch., enter debug mode.  But if debug mode is off now, we must have just
    // executed 13!:8]0, and we should continue on outside of debug mode
-   if(!z&&jt->uflags.us.cx.cx_c.db){d->dcj=jt->jerr; moveparseinfotosi(jt); z=debug(); if(self!=jt->sitop->dcf)self=jt->sitop->dcf;}
+   if(!z&&jt->uflags.us.cx.cx_c.db){d->dcj=jt->jerr; movecurrtoktosi(jt); z=debug(); if(self!=jt->sitop->dcf)self=jt->sitop->dcf;}
    if(b){fa(a); fa(w);}
    if(b=jt->dbalpha||jt->dbomega){a=jt->dbalpha; w=jt->dbomega; jt->dbalpha=jt->dbomega=0;}
   }while(d->dcnewlineno&&d->dcix!=-1);  // if suspension tries to reexecute a line other than -1 (which means 'exit'), reexecute

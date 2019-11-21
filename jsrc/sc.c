@@ -17,7 +17,9 @@ DF2(jtunquote){A z;
  V *v=FAV(self);  // V block for this V/A/C reference
  I callstackx=jt->callstacknext; // Remember where our stack frame starts.  We may add an entry; execution may add more
  A thisname=v->fgh[0]; A fs; A explocale; L *stabent;// the A block for the name of the function (holding an NM) - unless it's a pseudo-name   fs is the 'named' function itself  explocale=explicit locale if any stabent=symbol-table entry if any
+ A savname=jt->curname;  // we stack the executing name
  if(thisname){
+  jt->curname=thisname;  // set failing name before we have value errors
   // normal path for named functions
   if(AM(self)==jt->modifiercounter&&v->localuse.lvp[0]){
    // The most recent lookup is still valid, and it is nonzero.  Use it
@@ -50,7 +52,7 @@ DF2(jtunquote){A z;
  }else{
   // here for pseudo-named function.  The actual name is in g, and the function itself is pointed to by h.  The verb is an anonymous explicit modifier that has received operands (but not arguments)
   // The name is defined, but it has the value before the modifier operands were given, so ignore fields in it except for the name
-  thisname=v->fgh[1];  // get the original name
+  jt->curname=thisname=v->fgh[1];  // get the original name
   explocale=0;  // flag no explicit locale
   fs=v->fgh[2];  // point to the actual executable
   ASSERT(fs,EVVALUE); // make sure the name's value is given also
@@ -61,7 +63,6 @@ DF2(jtunquote){A z;
   // the forced-push should be omitted.
   stabent=0;  // no symbol table for pseudo-names, since they aren't looked up
  }
- A savname=jt->curname; jt->curname=thisname;  // stack the name of the previous executing entity, replace it with new
  I dyadex = w!=self;   // if we were called with w,fs,fs, we are a monad.  Otherwise (a,w,fs) dyad
  v=FAV(fs);  // repurpose v to point to the resolved verb block
 #if !USECSTACK

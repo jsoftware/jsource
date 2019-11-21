@@ -81,10 +81,12 @@ F2(jttake){A s;I acr,af,ar,n,*v,wcr,wf,wr;
  if(!(SPARSE&wt))RZ(w=setfv(w,w)); 
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr; af=ar-acr;  // ?r=rank, ?cr=cell rank, ?f=length of frame
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK; 
- if(af||1<acr)R rank2ex(a,w,0L,MIN(acr,1),wcr,acr,wcr,jttake);  // if multiple x values, loop over them
+// obsolete  if(af||1<acr)R rank2ex(a,w,0L,MIN(acr,1),wcr,acr,wcr,jttake);  // if multiple x values, loop over them
+ if(((af-1)&(acr-2))>=0)R rank2ex(a,w,0L,MIN(acr,1),wcr,acr,wcr,jttake);  // if multiple x values, loop over them  af>0 or acr>1
  // canonicalize x
  n=AN(a);    // n = #axes in a
- ASSERT(!wcr||n<=wcr,EVLENGTH);  // if y is not atomic, a must not have extra axes
+// obsolete  ASSERT(!wcr||n<=wcr,EVLENGTH);  // if y is not atomic, a must not have extra axes
+ ASSERT((UI)(n-1)<=(UI)(wcr-1),EVLENGTH);  // if y is not atomic, a must not have extra axes  wcr==0 is always true
  I * RESTRICT ws=AS(w);  // ws->shape of w
  RZ(s=vib(a));  // convert input to integer, auditing for illegal values; and convert infinities to IMAX/-IMAX
  // if the input was not INT/bool, we go through and replace any infinities with the length of the axis.  If we do this, we have

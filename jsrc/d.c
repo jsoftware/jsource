@@ -126,7 +126,7 @@ void jtdebdisp(J jt,DC d){A*x,y;I e,t;
   case DCCALL:   dhead(0,d); seecall(d);  eputc(CLF); break;
   case DCSCRIPT: dhead(0,d); efmt("[-"FMTI"] ", d->dcn-1); 
                  if(0<=d->dcm){y=*(d->dcm+AAV(jt->slist)); ep(AN(y),CAV(y));}
-                 eputc(CLF);
+                 eputc(CLF); break;
 }}
 
 static B jtdebsi1(J jt,DC d){I t;

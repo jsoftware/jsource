@@ -60,7 +60,7 @@ C spellin(I n,C*s){C c,d,p=*s,*t;I j;
    R j&&(t=(C*)strchr(spell[0],p)) ? spell[j][t-spell[0]] : 0;  // if inflection is not . or :, or character not found, return error
   case 3:
    c=s[1]; d=s[2];
-   if(p==CSIGN&&d==CESC2&&'1'<=c&&c<='9')R CFCONS;  // lump all _0-9: as CFCONS
+   if(p==CSIGN&&d==CESC2&&(UI)(c-'1')<=(UI)('9'-'1'))R CFCONS;  // lump all _0-9: as CFCONS
    // sp3 desribes a character in a column.  Row 1 is the uninflected character, rows 2-3 give a supported inflection.  If those match,
    // the pseudocharacter in in row 0
    if(t=(C*)strchr(sp3[1],p)){for(j=t-sp3[1];sp3[1][j]==p;++j){if(c==sp3[2][j]&&d==sp3[3][j])R sp3[0][j];} R 0;}

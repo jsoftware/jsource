@@ -610,7 +610,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
    // might fail because the type in t is incompatible with the actual type in a.  t is rare.
    //
    // Because of the priority of errors we mustn't check the type until we have verified agreement above
-   if((I)jtinplace&VARGMSK&&zn>0){I t=atype((I)jtinplace);  // t not 0, and the result is not empty
+   if((I)jtinplace&VARGMSK&&zn>0){I t=atype((I)jtinplace);  // input conversion required (rare), and the result is not empty
     // Conversions to XNUM use a routine that pushes/sets/pops jt->mode, which controls the
     // type of conversion to XNUM in use.  Any result of the conversion is automatically inplaceable.  If type changes, change the cell-size too
     // bits 2-3 of jtinplace indicate whether inplaceability is allowed by the op, the ranks, and the addresses

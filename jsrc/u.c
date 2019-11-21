@@ -186,7 +186,7 @@ I jti0(J jt,A w){RZ(w);
   // if an atom is tolerantly equal to integer,  there's a good chance it is exactly equal.
   // infinities will always round to themselves
   ASSERT(d==e || FFIEQ(d,e),EVDOMAIN);  /* obsolete  || (++e,FEQ(d,e))*/
-  cval=d<(D)-IMAX?-IMAX:cval; cval=d>=-(D)-IMIN?IMAX:cval;
+  cval=d<(D)-IMAX?-IMAX:cval; cval=d>=-(D)IMIN?IMAX:cval;
   ASSERT(!AR(w),EVRANK);
   R cval;  // too-large values don't convert, handle separately
  }
@@ -201,7 +201,7 @@ A jtifb(J jt,I n,B* RESTRICT b){A z;I p,* RESTRICT zv;
  n+=(n&(SZI-1))?SZI:0; I zbase=0; UI *wvv=(UI*)b; UI bits=*wvv++;  // prime the pipeline for top of loop
  while(n>0){    // where we load bits SZI at a time
   // skip empty words, to get best speed on near-zero a.  This exits with the first unskipped word in bits
-  while(bits==0 && n>=(2*SZI)){bits=*wvv++; n-=SZI; zbase+=SZI;}  // fast-forward over zeros.  Always leave 1 word so we have a batch to process
+  while(bits==0 && n>=(2*SZI)){zbase+=SZI; bits=*wvv++; n-=SZI;}  // fast-forward over zeros.  Always leave 1 word so we have a batch to process
   I batchsize=n>>LGSZI; batchsize=MIN(BB,batchsize);
   UI bitstack=0; while(--batchsize>0){I bits2=*wvv++; PACKBITSINTO(bits,bitstack); bits=bits2;};  // keep read pipe ahead
   // Handle the last word of the batch.  It might have non-Boolean data at the end, AFTER the Boolean padding.  Just clear the non-boolean part in this line
@@ -394,7 +394,7 @@ F1(jtvib){A z;D d,e,*wv;I i,n,*zv;
     // infinities will always round to themselves
 #if 1
     ASSERT(d==e || FFIEQ(d,e),EVDOMAIN);  /* obsolete  || (++e,FEQ(d,e))*/
-    cval=d<(D)-IMAX?-IMAX:cval; cval=d>=-(D)-IMIN?IMAX:cval; zv[i]=cval;  // too-large values don't convert, handle separately
+    cval=d<(D)-IMAX?-IMAX:cval; cval=d>=-(D)IMIN?IMAX:cval; zv[i]=cval;  // too-large values don't convert, handle separately
 #else  // obsolete
     if     (d==inf )     zv[i]=q;
     else if(d==infm)     zv[i]=p;

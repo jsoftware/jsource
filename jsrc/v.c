@@ -143,10 +143,12 @@ A jtcharmap(J jt,A w,A x,A y){A z;B bb[256];I k,n,wn;UC c,*u,*v,zz[256];
  RZ(w&&x&&y);
  if(!(LIT&AT(w)))R from(indexof(x,w),y);
  wn=AN(w); n=MIN(AN(x),AN(y)); u=n+UAV(x); v=n+UAV(y);
- k=256; memset(bb,C0,256); if(n<AN(y))memset(zz,*(n+UAV(y)),256);
- DQ(n, c=*--u; zz[c]=*--v; if(!bb[c]){--k; bb[c]=1;});
+ k=256; memset(bb,C0,256); if(n<AN(y))memset(zz,*(n+UAV(y)),256);  // bb is array telling which input chars are in x; zz is result char to map for given input byte.  If not exact mapping, init z to the 'not found' char
+// obsolete DQ(n, c=*--u; zz[c]=*--v; if(!bb[c]){--k; bb[c]=1;});
+ DQ(n, c=*--u; zz[c]=*--v; k-=(I)bb[c]^1; bb[c]=1;);   // mark characters in x, and count down to see if we hit all 256.  Note earliest mapped character for each
  GATV(z,LIT,wn,AR(w),AS(w)); v=UAV(z); u=UAV(w);
- if(k&&n==AN(y))DQ(wn, c=*u++; ASSERT(bb[c],EVINDEX); *v++=zz[c];)
- else if(!bitwisecharamp(zz,wn,u,v))DQ(wn, *v++=zz[*u++];);
+// obsolete  if(k&&n==AN(y))DQ(wn, c=*u++; ASSERT(bb[c],EVINDEX); *v++=zz[c];)  // not all codes mapped AND #x>=#y, meaning index error possible on {
+ if(((k-1)&(n-AN(y)))>=0)DQ(wn, c=*u++; ASSERT(bb[c],EVINDEX); *v++=zz[c];)  // not all codes mapped AND #x>=#y, meaning index error possible on {
+ else if(!bitwisecharamp(zz,wn,u,v))DQ(wn, *v++=zz[*u++];);  // no index error possible, and special case not handled
  RETF(z);
 }    /* y {~ x i. w */

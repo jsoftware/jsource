@@ -44,7 +44,8 @@ static F2(jtebarvec){A y,z;B*zv;C*av,*wv,*yv;I an,k,n,s,t,wn;
  wn=AN(w); wv=CAV(w); n=1+wn-an; 
  t=AT(w); k=bpnoun(t); s=k*an;
  GATV0(z,B01,wn,AR(w)?1:0); zv=BAV(z); 
- if(an&&wn>an)memset(zv+n,C0,wn-n); else memset(zv,C0,wn);
+// obsolete  if(an&&wn>an)memset(zv+n,C0,wn-n); else memset(zv,C0,wn);
+ if((-an&(an-wn))<0)memset(zv+n,C0,wn-n); else memset(zv,C0,wn);
  if(t&B01+LIT+C2T+C4T+INT+SBT||1.0==jt->cct&&t&FL+CMPX)DO(n, zv[i]=!memcmp(av,wv,s); wv+=k;)
  else{GA(y,t,an,AR(a),0); yv=CAV(y); DO(n, MC(yv,wv,s); zv[i]=equ(a,y); wv+=k;);}
  RETF(z);
@@ -63,17 +64,18 @@ static I jtebarprep(J jt,A a,A w,A*za,A*zw,I*zc){I ar,at,m,n,t,wr,wt,memlimit;CR
  ar=AR(a); at=AT(a); m=AN(a);
  wr=AR(w); wt=AT(w); n=AN(w);
  ASSERT(!((at|wt)&SPARSE),EVNONCE);
- ASSERT(ar==wr||!ar&&1==wr,EVRANK);
+// obsolete  ASSERT(ar==wr||!ar&&1==wr,EVRANK);
+ ASSERT(ar==wr||(ar+(wr^1))==0,EVRANK);
  if(m&&n&&!HOMO(at,wt))R -1;
+ if(1<wr)R 2==wr?-2:-3;
  t=maxtyped(at|(I )(m==0),wt|(I )(n==0)); t&=-t;  // default missing type to B01; if we select one, discard higher bits
  if(TYPESNE(t,at))RZ(a=cvt(t,a));
  if(TYPESNE(t,wt))RZ(w=cvt(t,w));
  *za=a; *zw=w;
  // The inputs have been converted to common type
- if(1<wr)R 2==wr?-2:-3;
- memlimit = MIN(4*n,(I)((jt->mmax-100)>>LGSZI));  // maximum size we will allow our d to reach.  Used only for I type.
+ memlimit = MIN(4*n+1,(I)((jt->mmax-100)>>LGSZI));  // maximum size we will allow our d to reach.  Used only for I type.
   // 4*the size of the search area seems big enough; but not more than what a single memory allocation supports.  The size
-  // is measured in Is.  The 100 is to account for memory-manager overhead
+  // is measured in Is.  The 100 is to account for memory-manager overhead.  Minimum value must be > 0 for the <= test below
  switch(CTTZNOFLAG(t)){
   // calculate the number of distinct values in the range of the two operands.
   // for strings, we just assume the worst (all codes)
@@ -93,7 +95,8 @@ static I jtebarprep(J jt,A a,A w,A*za,A*zw,I*zc){I ar,at,m,n,t,wr,wt,memlimit;CR
  *zc=rng.min;  // Now that we know c, return it
  // if the range of integers is too big, revert to simple search.
  // Also revert for continuous type.  But always use fast search for character/boolean types
- R t&B01+LIT+C2T||t&INT+SBT+C4T&&0<rng.range&&rng.range<=memlimit ? rng.range : -4;
+// obsolete  R t&B01+LIT+C2T||t&INT+SBT+C4T&&0<rng.range&&rng.range<=memlimit ? rng.range : -4;
+ R t&B01+LIT+C2T||t&INT+SBT+C4T&&(UI)(rng.range-1)<=(UI)(memlimit-1) ? rng.range : -4;
 }
 
 #define EBLOOP(T,SUB0,SUB1,ZFUNC)  \

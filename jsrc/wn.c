@@ -251,7 +251,7 @@ static EXEC2F(jtexec2z,numbpx,CMPX,Z)
 
 // Try to convert a numeric field to integer.  Result is the integer, and *out is the
 // output pointer after the integer - this will be either the \0 at the end of the field, or
-// ==in to indicate failure.  Result is undefined on failure.
+// ==in to indicate failure.  Result is 0 on failure, and the output pointer equals the input.
 // This routine must recognize all valid ints,  We accept at most one sign, followed by any number
 // of digits or commas, followed optionally by a decimal point, followed optionally by a
 // string of 0s.  So, 123,456.00 is recognized as an integer.  If the input overflows an
@@ -270,11 +270,12 @@ I strtoint(C* in, C** out) {
    // could be just + (error) or just - (inf)
  for(;;++in) {   // Read integer part:
   dig = (I)*in - (I)'0';
-  if(dig>= 0 && dig <= 9){  // numeric digit.  Accept it and check for overflow
-   if(res==IMIN)R 0;  // if previous digit overflowed to IMIN, this must fail
-   if(res >= 1+IMAX/10) R 0;  // fail if this will overflow for sure.
+  if((UI)dig<=(UI)9){  // numeric digit.  Accept it and check for overflow
+// obsolete   if(res==IMIN)R 0;  // if previous digit overflowed to IMIN, this must fail
+   if((UI)res >= 1+IMAX/10) R 0;  // fail if this will overflow for sure.  res could be IMIN
    res = res * 10 + dig; // accept the digit.  This may overflow, but that's not fatal yet if it overflows to IMIN
-   if(res<0 && res!=IMIN)R 0;  // We allow IMIN to continue on, representing IMAX+1
+// obsolete    if(res<0 && res!=IMIN)R 0;  // We allow IMIN to continue on, representing IMAX+1
+   if(res-1 < -1)R 0;  // If result overflowed to neg, fail.  We allow IMIN to continue on, representing IMAX+1
    continue;
   }
   if(*in==C0 || *in=='.')break;  // end-of-field or end-of-integer part: exit
@@ -292,7 +293,8 @@ I strtoint(C* in, C** out) {
  // It passed as an int.  Return it, unless it overflows on sign
  // If the value is IMIN, it has already had the sign switched; otherwise apply the sign
  if(res==IMIN){if(!neg)R 0;}   // -2^63 is OK, but not +2^63
- else{if(neg)res=-res;}
+// obsolete else{if(neg)res=-res;}
+ res=(res^(-neg))+neg;   // change sign if neg
  *out=in;   // Finally, signal success
  R res;  // Return the int value
 }

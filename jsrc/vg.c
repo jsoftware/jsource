@@ -172,7 +172,7 @@ I grcol4(I d,I c,UI4*yv,I n,I*xv,I*zv,const I m,US*u,I flags){
  if(xv&&((ct00=yv[0])+(ctff=yv[65535])==n)){
   // All sign extensions.  If there is only one, do nothing except copy the input to the output
   flags|=8;  // tell the next pass the good news
-  if(ct00&&ctff){S *vs=(S*)u;  // since we know they're sign-extensions, extend when we load
+  if((-ct00&-ctff)<0){S *vs=(S*)u;  // since we know they're sign-extensions, extend when we load
    // There are both positive & negative sign-extensions.  Simulate the full processing, but without the fetches from the table
    // We need the output index for 00 and ff values, which will depend on the up/split values
    // Copy 00 values into index 0 if up && !split  or !up && split; otherwise to ctff
@@ -315,7 +315,7 @@ static GF(jtgrd){A x,y;int b;D*v,*wv;I *g,*h,nneg,*xv;US*u;void *yv;I c=ai*n;
 #endif
   // if not large and 1 atom per key, go do general grade
  if(!(ai==1&&n>3300))R grx(m,ai,n,w,zv);  // Empirically derived crossover   TUNE
- // The rest of this routine is not used when the fast list code is available
+ // The rest of this routine is not used on lists when the fast list code is available
  // grade float by radix sort of halfwords.  Save some control parameters
  wv=DAV(w);
  // choose bucket table size & function; allocate the bucket area

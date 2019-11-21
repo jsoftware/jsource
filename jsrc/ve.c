@@ -449,14 +449,17 @@ F2(jtintdiv){A z;B b,flr;I an,ar,*as,*av,c,d,j,k,m,n,p,p1,r,*s,wn,wr,*ws,*wv,*zv
 
 static F2(jtweight){RZ(a&&w); R df1(behead(over(AR(w)?w:reshape(a,w),num[1])),bsdot(slash(ds(CSTAR))));}  // */\. }. (({:$a)$w),1
 
-F1(jtbase1){A z;B*v;I c,d,m,n,p,r,*s,t,*x;
+F1(jtbase1){A z;B*v;I c,m,n,p,r,*s,t,*x;
  RZ(w);
  n=AN(w); t=AT(w); r=AR(w); s=AS(w); c=AS(w)[r-1]; c=r?c:1;
  ASSERT(t&DENSE,EVNONCE);
- if(c>(SY_64?63:31)||!(t&B01))R pdt(w,weight(sc(c),t&RAT+XNUM?cvt(XNUM,num[2]):num[2]));
+// obsolete  if(c>(SY_64?63:31)||!(t&B01))R pdt(w,weight(sc(c),t&RAT+XNUM?cvt(XNUM,num[2]):num[2]));
+ if(((c-BW)&SGNIF(t,B01X))>=0)R pdt(w,weight(sc(c),t&RAT+XNUM?cvt(XNUM,num[2]):num[2]));  // 
  CPROD1(n,m,r-1,s);
- GATV(z,INT,m,r?r-1:0,s); x=m+AV(z); v=n+BAV(w);
- if(c)DQ(m, p=0; d=1; DQ(c, if(*--v)p+=d; d+=d;); *--x=p;)
+// obsolete  GATV(z,INT,m,r?r-1:0,s); x=m+AV(z); v=n+BAV(w);
+// obsolete  if(c)DQ(m, p=0; d=1; DQ(c, if(*--v)p+=d; d+=d;); *--x=p;)
+ GATV(z,INT,m,r?r-1:0,s); x=AV(z); v=BAV(w);
+ if(c)DQ(m, p=0; DQ(c, p=2*p+*v++;); *x++=p;)
  else memset(x-m,C0,m*SZI);
  RETF(z);
 }
@@ -479,7 +482,8 @@ F1(jtabase1){A d,z;B*zv;I c,n,p,r,t,*v;UI x;
  ASSERT(t&DENSE,EVNONCE);
  // Result has rank one more than the input.  If there are no atoms,
  // return (($w),0)($,)w; if Boolean, return (($w),1)($,)w
- if(!n||t&B01)R reshape(over(shape(w),num[n!=0]),w);
+// obsolete  if(!n||t&B01)R reshape(over(shape(w),num[n!=0]),w);
+ if((-n&SGNIFNOT(t,B01X))>=0)R reshape(over(shape(w),num[n!=0]),w);
  if(!(t&INT)){
   // Not integer.  Calculate # digits-1 as d = 2 <.@^. >./ | , w  
   d=df2(num[2],maximum(zeroionei[1],aslash(CMAX,mag(ravel(w)))),atop(ds(CFLOOR),ds(CLOG)));
@@ -509,7 +513,7 @@ F2(jtabase2){A z;I an,ar,at,t,wn,wr,wt,zn;
  RZ(a&&w);
  an=AN(a); ar=AR(a); at=AT(a);
  wn=AN(w); wr=AR(w); wt=AT(w);
- ASSERT(at&DENSE&&wt&DENSE,EVNONCE);
+ ASSERT(!((at|wt)&SPARSE),EVNONCE);
  if(1>ar)R residue(a,w);
  if(1==ar&&!((at|wt)&(NOUN-(B01+INT)))){I*av,d,r,*u,*wv,x,*zv;
   // both types are int/boolean, and ar is a list
@@ -520,7 +524,8 @@ F2(jtabase2){A z;I an,ar,at,t,wn,wr,wt,zn;
   if(d&&*zv==-1){zv=wv; DQ(wn, if(*--zv==IMIN){d=0; break;}) if(!d){RZ(a=cvt(FL,a)); R abase2(a,w);}}
   RE(zn=mult(an,wn)); GATV(z,INT,zn,1+wr,AS(w)); AS(z)[wr]=an;  // allocate result area
   zv=zn+AV(z);
-  if(2==an&&!av[-2]&&0<(d=av[-1])){I d1,k;
+// obsolete  if(2==an&&!av[-2]&&0<(d=av[-1])){I d1,k;
+  if((((2^an)-1)&(av[-2]-1)&-(d=av[-1]))<0){I d1,k;
    // Special case: a is (0,d) where d is positive
    if(d&(d1=d-1)){I q,r,xs;
     // d is not a power of 2

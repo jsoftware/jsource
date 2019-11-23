@@ -45,7 +45,7 @@ end.
 
 NB. values to use
 NB. Use smaller arrays if doing full memory audit
-arglen =. 100 2 {~ 9!:57 (0) [ 9!:57 (1)
+arglen =. ((QKTEST{100 10),2) {~ 9!:57 (0) [ 9!:57 (1)
 NB. v =: 0;1;imax;imin;(<"0 (2.0-2.0)+0 1,imax,imin),((<"0)2 - 1 2),(<"0 i:_20),((<"0) 100 ?@$ 1e6),((<"0) 100000 * 200 ?@$ 0)
 v =: 0;1;imax;imin;(<"0 (2.0-2.0)+0 1,imax,imin),((<"0)2 - 1 2),(<"0 i:_20<.arglen),((<"0) arglen ?@$ 1e6),((<"0) 100000 * (20 <. arglen) ?@$ 0)
 NB. vv0 =: ((<"0) sdot0{~ arglen ?@$ #sdot0)
@@ -171,8 +171,8 @@ compst =: 1 : 0
 :
 x
 u
-timesing =. 2000 (6!:2) 'u f.&>~ y'
-timearray =. 2000 (6!:2) 'u f.&>~ x'
+timesing =. (QKTEST{2000 200) (6!:2) 'u f.&>~ y'
+timearray =. (QKTEST{2000 200) (6!:2) 'u f.&>~ x'
 timesing,timearray
 )
 vv0 =. <"0 (1000 $ 1 - 1)
@@ -231,8 +231,8 @@ compst =: 1 : 0
 :
 x
 u
-timesing =. 2000 (6!:2) 'u f.&> y'
-timearray =. 2000 (6!:2) 'u f.&> x'
+timesing =. (QKTEST{2000 200) (6!:2) 'u f.&> y'
+timearray =. (QKTEST{2000 200) (6!:2) 'u f.&> x'
 timesing,timearray
 )
 NB. 0.75 > %/ vv1 <. compst vv0   <. >. on INT/BOOL is just a nop

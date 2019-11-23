@@ -32,9 +32,6 @@ NB. black list
 NB. gmbx.ijs is not an independent test
 NB. gfft and glapack - run separately with additional addons
 blacklist=: ((<testpath),each 'gmbx.ijs';'gfft.ijs';'glapack.ijs'),testfiles 'gmbx'  NB. mapped boxed arrays no longer supported
-NB. blacklist=: blacklist, (IFRASPI+.UNAME-:'Android')#(<testpath),each <'g600ip.ijs'
-blacklist=: blacklist, (IFRASPI)#(<testpath),each <'g600ip.ijs'
-blacklist=: blacklist, (IFRASPI)#(<testpath),each 'gsco1u.ijs';'gsco1w.ijs'
 blacklist=: blacklist, (<testpath),each <'gregex.ijs' NB. require libjpcre2 binary
 blacklist=: blacklist, (-.IF64)#(<testpath),each <'g6x14.ijs' NB. require 64-bit
 
@@ -194,6 +191,7 @@ NB. bill extensions
 
 ECHOFILENAME=: 0   NB. echo file name
 Debug=: 0
+QKTEST=: IFIOS+.IFRASPI+.UNAME-:'Android'  NB. run quick test
 
 RUNN=: 4 : 0
 x123=. (0=x){x,1

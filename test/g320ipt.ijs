@@ -39,7 +39,7 @@ h1=: 3 : 0
  end.
 )
 
-x =: ((IFRASPI+.UNAME-:'Android'){800 400) * 2^i.8
+x =: (QKTEST{800 400) * 2^i.8
 y =: timer 'h1 ',"1 ":,.x
 y1=: (1,.x) +/ .*y %. 1,.x
 THRESHOLD +. threshold < y rsq y1

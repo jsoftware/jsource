@@ -372,21 +372,21 @@ f =: 4 : 0
 
 NB. n ifc c      index from combination, the index of combination c
 NB. n cfi i      combination from index, the i-th combination of i.n
-NB. (m,n) ic c   (m comb0 n) i. c
+NB. (m,n) iic c  (m comb0 n) i. c
 NB. (m,n) ci i   i{(m comb0 n)
 
 ifc=: 4 : 0 " 0 1
- (+/(i.#y)!x) + ((#y),x) ic y
+ (+/(i.#y)!x) + ((#y),x) iic y
 )
 
-ic=: 4 : 0 " 1
+iic=: 4 : 0 " 1
  'm n'=. x
  if. 1>:m do. {.y,0
  else. 
   k=. {.y
   i=. m-1
   j=. i+i.i-n
-  (+/i!k{.j) + (x-1,1+k) ic (}.y-1+k)
+  (+/i!k{.j) + (x-1,1+k) iic (}.y-1+k)
  end.
 )
 
@@ -413,7 +413,7 @@ ci=: 4 : 0 " 1 0
 (x{5 comb0 9) -: 5 9 ci x=:?20$5!9
 (  4 comb0 6) -: 4 6 ci i.!/4 6
 
-(<:20!100x) -: 20 100x ic 80x+i.20
+(<:20!100x) -: 20 100x iic 80x+i.20
 (79x+(3 2$0 1 0 2 1 2),"1]3+i.18) -: 20 100x ci (20!100x)-3 2 1
 
 i0=: [: ; ] ifc&.> i.@>: comb0&.> ]
@@ -445,7 +445,7 @@ NB. Types, for singleton and not
 4!:55 ;:'count em en '
 4!:55 ;:'f f000 f001 f010 f011 f100 f101 f110 f111 '
 4!:55 ;:'fac g gamma Gauss gm gps grecur grm grow grp '
-4!:55 ;:'i ic ifc im i0 i1 i2 i3 j0 j1 k m n p'
+4!:55 ;:'i iic ifc im i0 i1 i2 i3 j0 j1 k m n p'
 4!:55 ;:'pascal0 pascal1 pascal2 q re'
 4!:55 ;:'recur rm sbase scorr seed seed5 sinh start stirlf stirlg Stirling '
 4!:55 ;:'t test x y z '

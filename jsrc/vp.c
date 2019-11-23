@@ -93,7 +93,7 @@ F2(jtcdot2){A p;I k;
  R AR(w)?from(p,w):w;
 }
 
-F1(jtpparity){A x,y,z;B p,*u;I i,j,k,m,n,r,*s,*v,*zv;
+F1(jtpparity){A x,y,z;ZB p,*u;I i,j,k,m,n,r,*s,*v,*zv;
  RZ(x=cvt(INT,w));
  r=AR(x); s=AS(x); n=AS(x)[r-1]; n=r?n:1; RE(m=prod(r-1,s)); v=AV(x);
  GATV0(y,B01,n,1); u=BAV(y);

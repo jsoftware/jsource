@@ -76,7 +76,7 @@ add=: mema 2*IF64{4 8
 0=memf add
 
 NB. memr/memw boolean
-add=: mema n=: 127+1e5*1024
+add=: mema n=: 127+1e4*1024
 (a=: n$a.) memw add,0,n,JCHAR
 a -: memr add,0,n,JCHAR
 NB. noise margin for memr

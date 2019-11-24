@@ -58,7 +58,7 @@ a. -: 5 u: 10&u:i.256
 UTYPE -: type 10&u: 128{.a.
 UTYPE -: type 10&u: 128}.a.
 
-(4294967296&|^:IF64 i) -: 3 u: 10&u: i=: RAND32 ?((IFRASPI+.UNAME-:'Android'){1e6 1e5)#C4MAX
+(4294967296&|^:IF64 i) -: 3 u: 10&u: i=: RAND32 ?(QKTEST{1e6 1e5)#C4MAX
 ($i) = $ 10&u: i
 (10&u: i) -: 9 u: i
 ($i) = $ 9 u: i

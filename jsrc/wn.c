@@ -139,7 +139,7 @@ static NUMH(jtnumbpx){B ne,ze;C*t,*u;I k,m;Z b,p,q,*v,x,y;
   // if the base is an integer, we can't just do everything in the complex domain because of loss of precision.
   // in that case reproduce the calculation from numb, but with the integer base, and if the result is still integral, flag it
   I intbase=(I)b.re; if(!u && b.im==0.0 && b.re==(D)intbase){A d;
-   if(!(d=indexof(str(strlen(dig),dig),str(m,t))))R 0;  // convert digits to iindex numbers
+   if(!(d=indexof(str(strlen(dig),dig),str(m,t))))R 0;  // convert digits to index numbers
    if(!(all0(eps(sc(strlen(dig)),d))))R 0;   // verify only allowed digits in the field
    if(ne)if(!(d=negate(d)))R 0;  // recover negative sign
    if(!(d=bcvt(0,base2(sc(intbase),d))))R 0;  // d =. base #. d converted to smallest possible precision

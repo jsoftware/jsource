@@ -198,9 +198,10 @@ DF2(jtrazecut0){A z;C*wv,*zv;I ar,*as,(*av)[2],j,k,m,n,wt;
 }    /* a ;@:(<;.0) vector */
 
 
-static DF2(jtcut2bx){A*av,b,t,x,*xv,y,*yv;B*bv;I an,bn,i,j,m,p,q,*u,*v,*ws;V*sv;
+static DF2(jtcut2bx){A*av,b,t,x,*xv,y,*yv;B*bv;I an,bn,i,j,m,p,q,*u,*v,*ws;
  RZ(a&&w&&self);
- sv=FAV(self); q=*AV(sv->fgh[1]);
+// obsolete sv=FAV(self); q=*AV(sv->fgh[1]);
+ q=FAV(self)->localuse.lI;  // fetch the n in the original u;.n
  an=AN(a); av=AAV(a);  ws=AS(w);
  ASSERT(an<=AR(w),EVLENGTH);
  GATV0(x,BOX,an,1); xv=AAV(x);  // could be faux
@@ -307,7 +308,7 @@ static A jtsely(J jt,A y,I r,I i,I j){A z;I c,*s,*v;
 
 static DF2(jtcut2sx){PROLOG(0024);DECLF;A h=0,*hv,y,yy;B b,neg,pfx,*u,*v;C id;I d,e,hn,m,n,p,t,yn,*yu,*yv;P*ap;V*vf;
  PREF2(jtcut2sx);
- SETIC(w,n); t=AT(w); m=*AV(sv->fgh[1]); neg=0>m; pfx=m==1||m==-1; b=neg&&pfx;
+ SETIC(w,n); t=AT(w); /* obsolete  m=*AV(sv->fgh[1]);*/ m=sv->localuse.lI; neg=0>m; pfx=m==1||m==-1; b=neg&&pfx;  // m = n from u;.n
  RZ(a=a==mark?eps(w,take(num[pfx?1:-1],w)):DENSE&AT(a)?sparse1(a):a);
  ASSERT(n==*AS(a),EVLENGTH);
  ap=PAV(a);
@@ -389,7 +390,7 @@ static C*jtidenv0(J jt,A a,A w,V*sv,I zt,A*zz){A fs,y;
  *zz=0; 
  fs=sv->fgh[0];
  RE(y=df1(num[0],iden(VAV(fs)->fgh[0])));
- if(TYPESLT(zt,AT(y))){*zz=df1(cut2(a,w,cut(ds(CBOX),sv->fgh[1])),amp(fs,ds(COPE))); R 0;}
+ if(TYPESLT(zt,AT(y))){*zz=df1(cut2(a,w,cut(ds(CBOX),sv->fgh[1])),amp(fs,ds(COPE))); R 0;}  // fgh still has the original A, OK to use
  if(TYPESGT(zt,AT(y)))RE(y=cvt(zt,y)); 
  R CAV(y);
 }    /* pointer to identity element */
@@ -553,7 +554,7 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;
 
  // Time to find the frets.  If a is the impossible type INT+LIT, a contains the frets already, in the single buffer (that means we are acting on behalf of Key /.)
  if(FAV(self)->id==CCUT){   // see if we are acting on behalf of /.  Fall through if not
-  pfx=IAV(FAV(self)->fgh[1])[0]; neg=(UI)pfx>>(BW-1); pfx&=1;  // neg=cut type is _1/_2; pfx=cut type is 1/_1
+  pfx=/* obsolete IAV(FAV(self)->fgh[1])[0]*/FAV(self)->localuse.lI; neg=(UI)pfx>>(BW-1); pfx&=1;  // neg=cut type is _1/_2; pfx=cut type is 1/_1
   if(a!=mark){  // dyadic forms
    if(((AN(a)-1)&(-n))<0){  // empty x, do one call on the entire w if y is non-empty
     /* obsolete if(state&STATEHASGERUND){A h=hv[0]; R CALL1(VAV(h)->valencefns[0],w,h);}
@@ -827,7 +828,7 @@ DF2(jtrazecut2){A fs,gs,y,z=0;B b; I neg,pfx;C id,sep,*u,*v,*wv,*zv;I d,k,m=0,wi
  RZ(a&&w);
 // obsolete sv=FAV(self); gs=CFORK==sv->id?sv->fgh[2]:sv->fgh[1]; vv=VAV(gs); y=vv->fgh[0]; fs=VAV(y)->fgh[1];  // self is ;@:(<@(f/\);.1)     gs  gs is <@(f/\);.1   y is <@(f/\)  fs is   f/\  ...
  gs=FAV(self)->fgh[1+(CFORK==FAV(self)->id)]; vv=VAV(gs); y=vv->fgh[0]; fs=VAV(y)->fgh[1];  // self is ;@:(<@(f/\);.1)     gs  gs is <@(f/\);.1   y is <@(f/\)  fs is   f/\  ...
- p=SETIC(w,wi); wt=AT(w); k=*AV(vv->fgh[1]); neg=0>k; pfx=k==1||k==-1; b=neg&&pfx;
+ p=SETIC(w,wi); wt=AT(w); k=/* obsolete *AV(vv->fgh[1])*/vv->localuse.lI; neg=0>k; pfx=k==1||k==-1; b=neg&&pfx;
  id=FAV(fs)->id;  // fs is f/id   where id is \ \.
   // if f is atomic/\ or atomic /\., set ado and cv with info for the operation
  if(id==CBSLASH)adocv = vapfx(FAV(FAV(fs)->fgh[0])->fgh[0],wt);   // FAV(fs)->fgh[0] is f/    FAV(FAV(fs)->fgh[0])->fgh[0] is f
@@ -906,7 +907,7 @@ static DF2(jttess2){A z,zz=0,virtw,strip;I n,rs[3],cellatoms,cellbytes,vmv,hmv,v
 #define ZZFLAGWORD state
  I state;
  RZ(a=tesa(a,w));   // expand x to canonical form, with trailing axes-in-full deleted
- A gs=FAV(self)->fgh[1]; n=IAV(gs)[0]; state=(~n)&STATETAKE;  // n=op type (as in u;.n); set TAKE bit if code=3: we will shorten out-of-bounds args
+ /* obsolete A gs=FAV(self)->fgh[1]; n=IAV(gs)[0];*/n=FAV(self)->localuse.lI; state=(~n)&STATETAKE;  // n=op type (as in u;.n); set TAKE bit if code=3: we will shorten out-of-bounds args
  I wr=AR(w); I wt=AT(w); // rank of w, type of w
  I *as=AS(a), *av=IAV(a), axisct=as[1];  // a-> shape of a, axisct=# axes in a, av->mv/size area
  // get shape of final result
@@ -1104,18 +1105,22 @@ static DF1(jttess1){A s;I m,r,*v;
 }
 
 
-F2(jtcut){A h=0;I flag=0,k;
+F2(jtcut){A h=0,z;I flag=0,k;
 // NOTE: u/. is processed using the code for u;.1 and passing the self for /. into the cut verb.  So, the self produced
 // by /. and ;.1 must be the same as far as flags etc.  For the shared case, inplacing is OK
  RZ(a&&w);
  ASSERT(NOUN&AT(w),EVDOMAIN);
- RZ(w=vi(w));
+// obsolete  RZ(w=vi(w));
  RE(k=i0(w));
  if(NOUN&AT(a)){flag=VGERL; RZ(h=fxeachv(1L,a)); ASSERT(-2<=k&&k<=2,EVNONCE);}
  switch(k){
-  case 0:          R fdef(0,CCUT,VERB, jtcut01,jtcut02, a,w,h, flag|VJTFLGOK2, RMAX,2L,RMAX);
-  case 1: case -1:
-  case 2: case -2: if(!(NOUN&AT(a)))flag=VJTFLGOK2+VJTFLGOK1; R fdef(0,CCUT,VERB, jtcut1, jtcut2,  a,w,h, flag, RMAX,1L,RMAX);
-  case 3: case -3: case 259: case -259: R fdef(0,CCUT,VERB, jttess1,jttess2, a,w,h, flag, RMAX,2L,RMAX);
-  default:         ASSERT(0,EVDOMAIN);
-}}
+ case 0:          z=fdef(0,CCUT,VERB, jtcut01,jtcut02, a,w,h, flag|VJTFLGOK2, RMAX,2L,RMAX); break;
+ case 1: case -1:
+ case 2: case -2: if(!(NOUN&AT(a)))flag=VJTFLGOK2+VJTFLGOK1; z=fdef(0,CCUT,VERB, jtcut1, jtcut2,  a,w,h, flag, RMAX,1L,RMAX); break;
+ case 3: case -3: case 259: case -259: z=fdef(0,CCUT,VERB, jttess1,jttess2, a,w,h, flag, RMAX,2L,RMAX); break;
+ default:         ASSERT(0,EVDOMAIN);
+ }
+ RZ(z);
+ FAV(z)->localuse.lI=k;  // remember the integer form of the cut selector
+ R z;
+}

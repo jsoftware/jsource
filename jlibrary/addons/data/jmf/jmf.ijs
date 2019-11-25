@@ -3,35 +3,30 @@ jsystemdefs 'hostdefs'
 coinsert 'jdefs'
 
 doc=: 0 : 0
- map name;filename [;sharename;readonly]
-       - map jmf file (self-describing)
+map name;filename [;sharename [;mt] ]
+ map jmf file (self-describing)
 
- opt map name;filename [;sharename;readonly]
-       - map data file (opt is description)
+(type [;tshape]) map name;filename [;sharename [;mt] ]
+ map data file
 
-     where:  opt=type [;trailing_shape]
+ types from dll.ijs: JB01,JCHAR,JCHAR2,JCHAR4,JINT,JFL,JCMPX,JSB
 
-        types are defined in dll.ijs as:
-            JB01      boolean
-            JCHAR     character
-            JCHAR2    unicode
-            JCHAR4    unicode4
-            JINT      integer
-            JFL       floating point
-            JCMPX     complex
-            JSB       symbol
+ tshape - trailing shape - }.shape    (default '')
 
-         trailing_shape= }. shape    (default '')
+mt (map type):
+ 0 - MTRW - default read/write mapping 
+ 1 - MTRO - read-only mapping - map jmf file copies header to private area
+ 2 - MTCW - copy-on-write - private mapping - changes not reflected in file
 
- [force] unmap name
-      0 ok
-      1 not mapped
-      2 refs
+[force] unmap name - result 0 ok, 1 not mapped, 2 refs prevent unmap
 
-  unmapall''                  - unmap all
-  createjmf filename;msize    - creates jmf file as empty vector (self-describing)
-  share name;sharedname[;ro]  - share 'sharedname' as name
-  showmap''                   - show all maps
+createjmf filename;msize  - create jmf file as empty vector (self-describing)
+unmapall''                - unmap all
+showmap''                 - map info with col headers and extras
+mappings                  - map info
+share name;sharename[;mt] - share 'sharename' as name
+
+MAPNAME,MAPFN,... showmap col indexes 
 )
 0 : 0
 807 made changes to the header that affect jmf J code
@@ -43,6 +38,8 @@ newheader is 1 if 807 header format
 )
 IFBE=: 'a'~:{.2 ic a.i.'a'
 SZI=: IF64{4 8
+'MAPNAME MAPFN MAPSN MAPFH MAPMH MAPADDRESS MAPHEADER MAPFSIZE MAPJMF MAPMT MAPMSIZE MAPREFS'=: i.12
+'MTRW MTRO MTCW'=: i.3
 'HADK HADFLAG HADM HADT HADC HADN HADR HADS'=: SZI*i.8
 HADRUS=: HADR+IFBE*IF64{2 6
 HADCN=: <.HADC%SZI
@@ -108,6 +105,10 @@ if. IFUNIX do.
   c_lseek=: 'lseek x i x i' api
   c_mmap=: 'mmap * * x i i i x' api
   c_munmap=: 'munmap i * x' api
+
+  t=.           O_RDWR,   PROT_WRITE,  MAP_SHARED
+  t=. t,:       O_RDONLY, PROT_READ,   MAP_SHARED
+  mtflags=:  t, O_RDWR,   PROT_WRITE,  MAP_PRIVATE
 else.
   CREATE_ALWAYS=: 2
   CREATE_NEW=: 1
@@ -127,8 +128,9 @@ else.
   PAGE_READWRITE=: 4
   TRUNCATE_EXISTING=: 5
 
-  j=. (GENERIC_READ+GENERIC_WRITE),PAGE_READWRITE,FILE_MAP_WRITE
-  RW=: j,:GENERIC_READ,PAGE_READONLY,FILE_MAP_COPY[FILE_MAP_READ
+  t=.           (GENERIC_READ+GENERIC_WRITE), PAGE_READWRITE,  FILE_MAP_WRITE
+  t=.       t,: GENERIC_READ,                 PAGE_READONLY,   FILE_MAP_READ
+  mtflags=: t,  (GENERIC_READ+GENERIC_WRITE), PAGE_READWRITE,  FILE_MAP_COPY
 
   CloseHandleR=: 'kernel32 CloseHandle > i x'&(15!:0)
   CreateFileMappingR=: 'kernel32 CreateFileMappingW > x x * i i i *w'&(15!:0)
@@ -209,7 +211,6 @@ if. ts>:HS do.
   *./((HS,ts-HS)=0 2{d),1 2 4 8 16 32 131072 262144 65536 e.~ nountype 3{d
 else. 0 end.
 )
-ERROR_NOT_ENOUGH_MEMORY=: 8
 j=. <;._2 (0 : 0)
 1  ERROR_INVALID_FUNCTION
 2  ERROR_FILE_NOT_FOUND
@@ -273,31 +274,6 @@ else.
 end.
 i.0 0
 )
-share=: 3 : 0
-'name sn ro'=. 3{.y,<0
-sn=. '/' (('\'=sn)#i.#sn)} sn
-if. IFUNIX do.
-  map name;sn;sn;ro
-else.
-  name=. fullname name
-  c=. #mappings
-  assert c=({."1 mappings)i.<name['noun already mapped'
-  4!:55 ::] <name
-  'bad noun name'assert ('_'={:name)*._1=nc<name
-  fh=. _1
-  fn=. ''
-  mh=. OpenFileMappingR (ro{FILE_MAP_WRITE,FILE_MAP_COPY);0;uucp sn,{.a.
-  if. mh=0 do. assert 0[CloseHandleR fh['bad mapping' end.
-  fad=. MapViewOfFileR mh;(ro{FILE_MAP_WRITE,FILE_MAP_COPY);0;0;0
-  if. fad=0 do. assert 0[CloseHandleR mh[CloseHandleR fh['bad view' end.
-  had=. fad
-  hs=: 0
-  ts=. gethadmsize had
-  mappings=: mappings,name;fn;sn;fh;mh;fad;had;ts
-  (name)=: symset had
-  i.0 0
-end.
-)
 getflagsad=: 3 : 0
 SZI+1{memr (symget <fullname y),0 4,JINT
 )
@@ -313,9 +289,43 @@ i. 0 0
 )
 
 showmap=: 3 : 0
-h=. 'name';'fn';'sn';'fh';'mh';'address';'header';'ts';'msize';'refs'
+h=. 'name';'fn';'sn';'fh';'mh';'address';'header';'fsize';'jmf';'mt';'msize';'refs'
 hads=. 6{"1 mappings
 h,mappings,.(gethadmsize each hads),.refcount each hads
+)
+mapsub=: 3 : 0
+'name fn sn ro'=. y
+ts=. 1!:4 <fn
+if. IFUNIX do.
+  'Unix sharename must be same as filename' assert (sn-:'')+.sn-:fn
+  'FO FMP FMM'=. ro{mtflags
+  fh=. >0 { c_open fn;FO;0
+  'bad file name/access' assert fh~:_1
+  mh=. ts
+  fad=. >0{ c_mmap (<0);ts;FMP;FMM;fh;0
+  if. fad e. 0 _1 do. 'bad view' assert 0[free fh,mh,0 end.
+else.
+  'Win sharename must not have /' assert -.'/'e.sn
+  'fa ma va'=. ro{mtflags
+
+
+
+  fh=. CreateFileR (uucp fn,{.a.);fa;(OR FILE_SHARE_WRITE, FILE_SHARE_READ);NULLPTR;OPEN_EXISTING;0;0
+  if. fh=_1 do.
+   6!:3[2
+   fh=. CreateFileR (uucp fn,{.a.);fa;(OR FILE_SHARE_WRITE, FILE_SHARE_READ);NULLPTR;OPEN_EXISTING;0;0
+   'bad file name/access'assert fh~:_1
+  end. 
+  mh=: CreateFileMappingR fh;NULLPTR;ma;0;0;(0=#sn){(uucp sn,{.a.);<NULLPTR
+  if. mh=0 do. 'bad mapping'assert 0[free fh,0,0 end.
+  fad=. MapViewOfFileR mh;va;0;0;0
+  if. fad=0 do.
+    errno=. GetLastError''
+    free fh,mh,0
+    0 assert~;(8=errno){'bad view';'not enough memory'
+  end.
+end.
+name;fn;sn;fh;mh;fad;0;ts;0;ro
 )
 map=: 3 : 0
 0 map y
@@ -332,43 +342,16 @@ sn=. '/' (('\'=sn)#i.#sn)} sn
 name=. fullname name
 c=. #mappings
 
+'maptype must be 0 (MTRW), 1 (MTRO), or 2 (MTCW - copy on write)' assert ro e. 0 1 2
 'name already mapped'assert c=({."1 mappings)i.<name
 'filename already mapped'assert c=(1{"1 mappings)i.<fn
 'sharename already mapped'assert (''-:sn)+.c=(2{"1 mappings)i.<sn
 4!:55 ::] <name
 'bad noun name'assert ('_'={:name)*._1=nc<name
+aa=. AFNJA+AFRO*ro=1
 
-ro=. 0~:ro
-aa=. AFNJA+0[AFRO*ro
-
-if. IFUNIX do.
-  'Unix sharename must be same as filename' assert (sn-:'')+.sn-:fn
-  ts=. 1!:4 <fn
-  fh=. >0 { c_open fn;((0[ro){O_RDWR,O_RDONLY);0
-  'bad file name/access' assert fh~:_1
-  mh=. ts
-  fad=. >0{ c_mmap (<0);ts;(OR (0[ro)}. PROT_WRITE, PROT_READ);(ro{MAP_SHARED,MAP_PRIVATE);fh;0
-  if. fad e. 0 _1 do.
-    'bad view' assert 0[free fh,mh,0
-  end.
-else.
-  'fa ma va'=. ro{RW
-  fh=. CreateFileR (uucp fn,{.a.);fa;(OR ro}. FILE_SHARE_WRITE, FILE_SHARE_READ);NULLPTR;OPEN_EXISTING;0;0
-  'bad file name/access'assert fh~:_1
-  ts=. GetFileSizeR fh
-  mh=: CreateFileMappingR fh;NULLPTR;ma;0;0;(0=#sn){(uucp sn,{.a.);<NULLPTR
-  if. mh=0 do. 'bad mapping'assert 0[free fh,0,0 end.
-  fad=. MapViewOfFileR mh;va;0;0;0
-  if. fad=0 do.
-    errno=. GetLastError''
-    free fh,mh,0
-    if. ERROR_NOT_ENOUGH_MEMORY-:errno do.
-      'not enough memory' assert 0
-    else.
-      'bad view' assert 0
-    end.
-  end.
-end.
+m=. mapsub name;fn;sn;ro
+'fh mh fad had ts'=. (MAPFH,MAPMH,MAPADDRESS,MAPHEADER,MAPFSIZE){m
 
 if. ro*.0=type do.
   had=. allochdr 127
@@ -397,9 +380,34 @@ elseif. 1 do.
   h setheader had
 end.
 
-mappings=: mappings,name;fn;sn;fh;mh;fad;had
+m=. (had;0=type) (MAPHEADER,MAPJMF)}m
+mappings=: mappings,m
 (name)=: symset had
 i.0 0
+)
+remap=: 3 : 0
+name=. fullname y
+row=. ({."1 mappings)i.<name
+'remap: not mapped' assert row<#mappings
+m=. row{mappings
+fn=. ;1{m
+ro=.  >MAPMT{m
+jmf=. >MAPJMF{m
+hs=. HS*jmf
+'sn fh mh fad had'=. 5{.2}.m
+free fh,mh,fad
+m=. mapsub name;fn;sn;ro
+m=. (had;jmf) (MAPHEADER,MAPJMF)}m
+mappings=: m row}mappings
+fad=. >MAPADDRESS{m
+d=. sfu hs+-/ufs fad,had
+d memw had,HADK,1,JINT
+((>MAPFSIZE{m)-hs) memw had,HADM,1,JINT
+i.0 0
+)
+share=: 3 : 0
+'name sn ro'=. 3{.y,<0
+map name;sn;sn;ro
 )
 unmap=: 3 : 0
 0 unmap y
@@ -448,10 +456,10 @@ memshare=: 3 : 0
 bNo_Inherit_Handle=. FALSE
 'y ro'=. 2{.(boxopen y),<0
 lpShareName=. y,{.a.
-mh=. OpenFileMappingR (ro{FILE_MAP_WRITE,FILE_MAP_COPY); bNo_Inherit_Handle; uucp lpShareName
+mh=. OpenFileMappingR (ro{FILE_MAP_WRITE,FILE_MAP_READ); bNo_Inherit_Handle; uucp lpShareName
 ('Unable to map ',y) assert mh~:0
 
-addr=. MapViewOfFileR mh; (ro{FILE_MAP_WRITE,FILE_MAP_COPY); 0; 0; 0
+addr=. MapViewOfFileR mh; (ro{FILE_MAP_WRITE,FILE_MAP_READ); 0; 0; 0
 if. addr=0 do. 'MapViewOfFile failed' assert 0[CloseHandleR mh end.
 ".(_1=4!:0<'mapTable')#'mapTable=:i.0,3'
 mapTable=: mapTable, y; mh; addr

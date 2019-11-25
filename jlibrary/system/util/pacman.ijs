@@ -543,7 +543,11 @@ end.
 if. 0 = libupm do.
   msg,LF,'The base library is up to date.'
 else.
-  msg,LF,'There is a newer version of the base library.'
+  if. JLIB -: CRLF -.~ fread '~system/config/version.txt' do.
+    msg,LF,'There is a newer version of the base library.'
+  else.
+    msg,LF,'Restart J to get the latest version of the base library.'
+  end.
 end.
 )
 write_lastupdate=: 3 : 0
@@ -670,7 +674,13 @@ t=. ":{.t,3
 ferase p;q
 fail=. 0
 cmd=. HTTPCMD rplc '%O';(dquote p);'%L';(dquote q);'%t';t;'%T';(":TIMEOUT);'%U';f
-if. ''-:HTTPCMD do.
+if. UNAME-:'Android' do.
+  try.
+    (<p) 1!:2~ (11!:4000) f
+  catch.
+    fail=. 1 [ (<q) 1!:2~ (11!:0) 'qer'
+  end.
+elseif. ''-:HTTPCMD do.
   require 'socket'
   1!:55 ::0: <p
   rc=. 0 [ e=. pp=. ''
@@ -1235,62 +1245,67 @@ case. do.
   msg,'  update, upgrade'
 end.
 )
-jef=: '~temp/je_update/'
-
 je_update=: 3 : 0
 if. IFIOS+.UNAME-:'Android' do. 'update not supported for this platform' return. end.
-mkdir_j_ jef
-sh=. 'update.',;(UNAME-:'Win'){'sh';'bat'
-ferase jef,sh
+'jxxx jbithw platform br comm web dt'=. <;._1 '/',9!:14''
+if. -.(comm-:'commercial')*.web-:'www.jsoftware.com' do. 'update not possible for this install' return. end.
+br=. (br i.'-'){.br
+path=. 'http://www.jsoftware.com/download/jengine/',jxxx,'-',br,'/'
 'plat name bname'=. je_sub''
-old=. fread bname
-old fwrite jef,name,'.old'
-if. #msg=. je_get'' do. echo msg return. end.
-if. (-.'force'-:y) *. old-:fread jef,name,'.new' do.
-  echo 'the current JE is already up to date' return.
-end.
-OLD=. hostpathsep jpath bname
-NEW=. hostpathsep jpath jef,name,'.new'
-if. UNAME-:'Win' do.
-  (win_update rplc 'OLD';OLD;'NEW';NEW) fwrite jef,sh
+DLL=. hostpathsep jpath bname
+OLD=. hostpathsep jpath bname,'.old'
+NEW=. hostpathsep jpath bname,'.new'
+if. 1~:ftype bname do. 'update not supported for this type of install' return. end.
+
+if. IF64 > IFRASPI do.
+ t=. httpget path,plat,'/j64'
+ if. 1=;{.t do. 'update - read jengine folder failed' return end.
+ a=. fread '~temp/j64'   
+ i=. >:((;(UNAME-:'Win'){'>libj';'>j') E. a)#i.#a
+ a=. i}.each (#i)#<a
+ a=. (a i.each'<'){.each a
+ a=. a}.~each a i.each 'j'
+ a=. }.each a{.~each a i.each '.'
+ try. t7=. 2!:7'' catch. t7=. '' end.
+ a=. 'j',;{:(a e. ;:t7)#a
+ i=. name i.'.'
+ name=. <(}:i{.name),a,i}.name
 else.
-  if. FHS*.UNAME-:'Linux' do.
-    d=. deb_update
-  else.
-    d=. unix_update
+ name=. <name
+end. 
+
+arg=. (<jxxx),(<br),(<platform),(<3{.jbithw),name
+r=. je_get arg
+if. _1=r do. 'update file not found' return. end.
+if. r-:fread DLL do. 'update not required - already current' return. end.
+
+if. -.testaccess'' do. 'update must be run with admin privileges' end.
+r fwrite NEW
+(fread DLL) fwrite OLD
+
+if. UNAME-:'Win' do.
+  if. fexist OLD do.
+   if. -.ferase OLD do. 'update failed - ferase j.dll.old - exit all J sessions and try again' return. end.
   end.
-  (d rplc 'OLD';OLD;'NEW';NEW) fwrite jef,sh
-  2!:0 'chmod +x ',jpath jef,sh
+ if. -.OLD frename DLL do. 'update failed - rename j.dll to j.dll.old' return. end.
+ if. -.DLL frename NEW do. 'update failed - rename j.dll.new to j.dll' return. end.
+else.
+  if. -.ferase DLL do. 'update failed - ferase libj.so.old - exit all J sessions and try again' return. end.
+  if. -.DLL frename NEW do. 'update failed - rename libj.so.new to libj.so' return. end.
+  if. FHS*.UNAME-:'Linux' do.
+    2!:0 'chmod 644 "',DLL,'"'
+    2!:0 'chown root:root "',DLL,'"'
+    2!:0 'ldconfig'
+  end.
 end.
-echo shutdown rplc 'CMD';hostpathsep jpath jef,sh
+'update installed - shutdown, restart, and check JVERSION'
 )
 je_get=: 3 : 0
-mkdir_j_ jef
-'plat name bname'=. je_sub''
-t=. <;._1 '/',9!:14''
-version=. ;{.t
-br=. ;3{t
-i=. ('beta';'rele')i. <4{.br
-if. i=2 do. 'current JE is not beta or release' return. end.
-type=. ;i{'beta';'release'
-if. 1~:ftype bname do. 'update not supported for this type of install' return. end.
-erase'JENEW'
-jeold=. fread bname
-path=. 'http://www.jsoftware.com/download/jengine/',version,'-',type,'/'
-avxname=. name
-avx=. 'nonavx'-:_6{.;1{t
-if. avx do.
-  avxname=. avxname rplc '.';'-nonavx.'
-end.
-tname=. '~temp/',avxname
-ferase tname
-arg=. path,'P/jX/N' rplc 'P';plat;'N';avxname;'X';;IF64{'32';'64'
-echo arg
-httpget_jpacman_ arg
-(fread tname)fwrite jef,name,'.new'
-echo 'saved as:    ',jef,name,'.new'
-echo 'new version: ',jengine_version tname
-''
+'jxxx br plat bits name'=. y
+arg=. 'http://www.jsoftware.com/download/jengine/',jxxx,'-',br,'/',plat,'/',bits,'/',name
+ferase'~temp/',name
+httpget arg
+fread '~temp/',name
 )
 
 je_sub=: 3 : 0
@@ -1328,40 +1343,6 @@ date=. 11{.dt
 m=. 2":>:(;:'Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec')i.<3{.date
 date=. ((_4{.date),'-',m,'-',4 5{date)rplc' ';'0'
 (_20}.s),date,11}.dt
-)
-
-unix_update=: 0 : 0
-#!/bin/sh
-cp "NEW" "OLD"
-echo restart J and check JVERSION
-)
-
-deb_update=: 0 : 0
-#!/bin/sh
-sudo cp "NEW" "OLD"
-sudo chmod 644 "OLD"
-sudo chown root:root "OLD"
-sudo ldconfig
-)
-
-win_update=: 0 : 0
-@ECHO OFF
-copy "NEW" "OLD"
-echo restart J and check JVERSION
-)
-
-shutdown=: 0 : 0
-
-hint: copy command so you can paste it in terminal/command window
-
-!!! shutdown J (all copies running this version) !!!
-
-in a terminal/command window run the following:
-
-"CMD"
-
-note: command may require admin/sudo priviliege
-
 )
 do_install=: 3 : 0
 if. -. checkaccess_jpacman_ '' do. return. end.

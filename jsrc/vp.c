@@ -93,15 +93,15 @@ F2(jtcdot2){A p;I k;
  R AR(w)?from(p,w):w;
 }
 
-F1(jtpparity){A x,y,z;ZB p,*u;I i,j,k,m,n,r,*s,*v,*zv;
- RZ(x=cvt(INT,w));
+F1(jtpparity){A x,y,z;B *u;I i,j,k,m,n,p,r,*s,*v,*zv;
+ RZ(x=cvt(INT,w)); realizeifvirtual(x);   // we ALWAYS create a copy of w, because we modify it here
  r=AR(x); s=AS(x); n=AS(x)[r-1]; n=r?n:1; RE(m=prod(r-1,s)); v=AV(x);
  GATV0(y,B01,n,1); u=BAV(y);
  GATV(z,INT,m,r?r-1:0,s); zv=AV(z);
  for(i=0;i<m;++i){
   j=0; p=1; memset(u,C1,n);
   DO(n, k=v[i]; if(0>k)v[i]=k+=n; if((UI)k<(UI)n&&u[k])u[k]=0; else{j=1+n; break;});  // if there are repeated indexes, set j high to force 0 result
-  for(;j<n;++j)if(j!=v[j]){k=j; DQ(n-j-1, ++k; if(j==v[k]){v[k]=v[j]; p=-p; break;});}
+  for(;j<n;++j)if(j!=v[j]){k=j; DQ(n-j-1, ++k; if(j==v[k]){v[k]=v[j]; p=-p; break;});}  // if interchange required, find it and do it (half of it, anyway)
   zv[i]=p&(j-n-1);   // return parity or 0
   v+=n;
  }

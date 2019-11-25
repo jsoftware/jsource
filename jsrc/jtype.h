@@ -32,7 +32,6 @@ typedef long long          IL;
 #endif
 
 typedef char               B;
-typedef signed char        ZB;
 typedef unsigned char      C;
 typedef char*              Ptr;
 typedef short              S;

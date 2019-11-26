@@ -1,7 +1,7 @@
 18!:4 <'z'
 3 : 0 ''
 
-JLIB=: '9.01.07'
+JLIB=: '9.01.15'
 
 notdef=. 0: ~: 4!:0 @ <
 hostpathsep=: ('/\'{~6=9!:12'')&(I. @ (e.&'/\')@] })
@@ -13,7 +13,7 @@ IF64=: 16={:$3!:3[2
 IFBE=: 'a'~:{.2 (3!:4) a.i.'a'
 'IFUNIX IFWIN IFWINCE'=: 5 6 7 = 9!:12''
 IFJHS=: 0
-IFWINE=: (0 ~: 'ntdll wine_get_version >+ x'&(15!:0)) ::0:`0:@.IFUNIX ''
+IFWINE=: (0 ~: 'ntdll wine_get_version >+ x'&(15!:0)) ::(0:@(15!:10))`0:@.IFUNIX ''
 if. notdef 'IFIOS' do.
   IFIOS=: 0
 end.
@@ -43,11 +43,11 @@ end.
 if. notdef 'FHS' do.
   FHS=: IFUNIX>'/'e.LIBFILE
 end.
-'libc.so.6 setlocale > x i *c'&(15!:0) ::0:^:(UNAME-:'Linux') 1;,'C'
+'libc.so.6 setlocale > x i *c'&(15!:0) ::(0:@(15!:10)@(''"_))^:(UNAME-:'Linux') 1;,'C'
 if. notdef 'IFRASPI' do.
   if. UNAME -: 'Linux' do.
     cpu=. 2!:0 ::(''"_) 'cat /proc/cpuinfo'
-    IFRASPI=: (1 e. 'BCM2708' E. cpu) +. (1 e. 'BCM2709' E. cpu) +. 1 e. 'BCM2710' E. cpu
+    IFRASPI=: (1 e. 'BCM2708' E. cpu) +. (1 e. 'BCM2709' E. cpu) +. (1 e. 'BCM2710' E. cpu) +. 1 e. 'BCM2711' E. cpu
   else.
     IFRASPI=: 0
   end.
@@ -525,75 +525,6 @@ Endian=: |.^:('a'~:{.2 ic a.i.'a')
 AND=: $:/ : (17 b.)
 OR=: $:/ : (23 b.)
 XOR=: $:/ : (22 b.)
-cocurrent'z'
-
-break=: 3 : 0
-if. y-:0 do. breakhelp_j_ return. end.
-breakclean_j_''
-p=. jpath'~break/'
-fs=.  ((<p),each{."1[1!:0 p,'*')-.<9!:46''
-pc=. (>:;fs i:each'/')}.each fs
-i=. ;pc i.each'.'
-pids=. _1".each i{.each pc
-classes=. (>:i)}.each pc
-if. y-:1 do. /:~(>":each pids),.>' ',each classes  return. end.
-'no task to break'assert #fs
-if. 2=3!:0 y do.
- b=. classes=    (''-:y){y;'default'
- 'bad class'assert +/b
- fs=. (<p),each (":each b#pids),each '.',each b#classes
-else.
- i=. pids i.<y
- 'bad pid'assert i~:#pids
- fs=. <p,(":;i{pids),'.',;i{classes
-end.
-for_f. fs do.
-  v=. 2<.>:a.i.1!:11 f,<0 1
-  (v{a.) 1!:12 f,<0
-end.
-i.0 0
-)
-setbreak=: 3 : 0
-if. (-.IFQT)*.y-:'default' do. i.0 0 return. end.
-try.
- assert #y
- q=. jpath '~break/'
- 1!:5 ::] <q
- f=. q,(":2!:6''),'.',y
- ({.a.) 1!:12 f;0
- 9!:47 f
- breakclean_j_''
- f
-catch. 13!:12'' end.
-)
-breakclean_j_=: 3 : 0
-q=. jpath '~break/'
-fs=. ((<q),each{."1[1!:0 q,'*')-.9!:46''
-if. UNAME-:'Win' do.
- ferase fs
-else.
- d=.  dltb each}.<;._2 spawn_jtask_'ps -e'
- allpids=. ;0".each (d i.each ' '){.each d
- pc=. (>:;fs i:each'/')}.each fs
- pids=. ;_1".each (;pc i.each'.'){.each pc
- ferase (-.pids e. allpids)#fs
-end.
-)
-
-breakhelp_j_=: 0 : 0
-   break 0
-   break 1
-   break ''
-   break '...'
-   break pid
-
-1st break stops execution at line start
-2nd break stops execution mid-line, 6!:3 , socket select
-
-profile does setbreak'default' (does nothing unless Jqt)
-
-   setbreak'...'
-)
 cocurrent 'z'
 calendar=: 3 : 0
 0 calendar y
@@ -1614,6 +1545,119 @@ if. IFIOS do.
 end.
 EMPTY
 )
+NB. break
+NB.%break.ijs - break utilities
+NB.-This script defines break utilities and is included in the J standard library.
+NB.-Definitions are loaded into the z locale.
+NB.-
+NB.-`setbreak 'default'` is done by profile for Jqt. JHS and jconsole can use ctrl+c. 
+NB.-
+NB.-setbreak creates file `~break/Pid.Class` and writes 0 to the first byte.
+NB.-
+NB.-Pid is the process id and Class is normally 'default'.
+NB.-
+NB.-setbreak calls 9!:47 with this file.
+NB.-
+NB.-9!:47 maps the first byte of file, and JE tests this byte for break requests.
+NB.-
+NB.-Another task writes 1 or 2 to the file for attention/break.
+NB.-
+NB.-9!:46 returns the filename.
+NB.-
+NB.-`break 'abc'` sets break for JEs with class abc.
+NB.-
+NB.-JEs with the same class all get the break. A non-default class protects JE from the default break.
+NB.-
+NB.- A new setbreak replaces the old.
+NB.-
+NB.-`break 0'` shows breakhelp
+
+cocurrent'z'
+
+NB. =========================================================
+NB.*break v break J execution
+NB. y is class to signal - '' treated as 'default'
+break=: 3 : 0
+if. y-:0 do. breakhelp_j_ return. end.
+breakclean_j_''
+p=. jpath'~break/'
+fs=. ((<p),each{."1[1!:0 p,'*')-.<9!:46''
+pc=. (>:;fs i:each'/')}.each fs
+i=. ;pc i.each'.'
+pids=. _1".each i{.each pc
+classes=. (>:i)}.each pc
+if. y-:1 do. /:~(>":each pids),.>' ',each classes return. end.
+'no task to break'assert #fs
+if. (0=#y)+.2=3!:0 y do.
+  b=. classes= (0=#y){y;'default'
+  'bad class'assert +/b
+  fs=. (<p),each (":each b#pids),each '.',each b#classes
+else.
+  i=. pids i.<y
+  'bad pid'assert i~:#pids
+  fs=. <p,(":;i{pids),'.',;i{classes
+end.
+for_f. fs do.
+  v=. 2<.>:a.i.1!:11 f,<0 1
+  (v{a.) 1!:12 f,<0
+end.
+i.0 0
+)
+
+NB. =========================================================
+NB.*setbreak v set break file
+NB.-Set break
+NB. y is class
+NB. Creates unique file ~break/Pid.Class
+setbreak=: 3 : 0
+if. (-.IFQT)*.y-:'default' do. i.0 0 return. end. NB. only for qt and not default
+try.
+  assert #y
+  q=. jpath '~break/'
+  1!:5 ::] <q
+  f=. q,(":2!:6''),'.',y
+  ({.a.) 1!:12 f;0
+  9!:47 f
+  breakclean_j_''
+  f
+catch. 13!:12'' end.
+)
+
+NB. =========================================================
+NB.*breakclean v erase orphan break files
+breakclean_j_=: 3 : 0
+q=. jpath '~break/'
+fs=. ((<q),each{."1[1!:0 q,'*')-.9!:46''
+if. UNAME-:'Win' do.
+  ferase fs NB. windows erase has not effect while file is in use
+else.
+  d=. dltb each}.<;._2 spawn_jtask_'ps -e'
+  allpids=. ;0".each (d i.each ' '){.each d
+  pc=. (>:;fs i:each'/')}.each fs
+  pids=. ;_1".each (;pc i.each'.'){.each pc
+  ferase (-.pids e. allpids)#fs
+end.
+)
+
+NB. =========================================================
+NB.*breakhelp n break help
+breakhelp_j_=: 0 : 0
+   break 0     NB. help
+   break 1     NB. list other ~break pids and classes
+   break ''    NB. break to all default class tasks
+   break '...' NB. break to all ... class tasks
+   break pid   NB. break to that pid
+
+1st break stops execution at line start
+2nd break stops execution mid-line, 6!:3 , socket select
+
+profile does setbreak'default' for Jqt
+profile does not do it for jconsole or JHS (use ctrl+c)
+
+   setbreak'abc' NB. set break file for this pid and class abc
+
+https://code.jsoftware.com/wiki/Standard_Library/break
+)
 
 cocurrent <'j'
 Alpha=: a. {~ , (a.i.'Aa') +/ i.26
@@ -2490,4 +2534,92 @@ NY=: n }. NY
 compare_z_=: compare_jcompare_
 fcompare_z_=: fcompare_jcompare_
 fcompares_z_=: fcompares_jcompare_
+FoldZv_j_ =: 0 0  NB. isfold, iteration count
+NB. Fold.  Foldtype_j_ is set by caller
+Fold_j_ =: 2 : 0
+'init mult fwd rev' =. 2 2 2 2 #: Foldtype_j_
+4!:55 <'Foldtype_j_'
+fzv =. FoldZv_j_  NB. stack fold info
+FoldZv_j_ =. 0 0
+FoldThrow_j_ =: $0  NB. If nonempty, set to throw type
+if. fwd+rev do.  NB. if forward or reverse...
+  nitems =. init + #y  NB. total # items, including init if any
+  if. nitems<2 do.
+    emptycell =. 0 # (,:x) [^:init y  NB. fillcell: empty array of x or (item of y)
+    try. res =. v. u./ emptycell  NB. get the neutral for the empty cell, and try applying v to it
+    catcht. 13!:8 (3)  NB. Z: on empty is domain error
+NB. obsolete     catch. 13!:8 (3 3&, {~ 43 44&i.) 13!:11 '' [ FoldZv_j_ =. fzv  NB. if error, pass it through; if no results, error
+    end.
+    if. mult do. res =. 0 # ,: res end.  NB. Single result is neutral, Multiple result is empty array of them
+  else.  NB. at least 2 cells.  We will run the loop
+    if. init do. cellres =. x else. cellres =. (-rev) { y end.  NB. cellres=first cell, either 0 (fwd) or _1 (rev)
+    cellx =. -init  NB. 1 less than index of first cell for left side
+    res =. ''   NB. init list of results - to nonboxed empty
+    while. (({.FoldZv_j_)<:1) *. (cellx=.>:cellx) < #y do.
+      FoldZv_j_ =: FoldZv_j_ + 0 1  NB. increment number of times we started u (used by Z:)
+      try. vres =. v. cellres =. ((24 b.^:rev cellx) { y) u. cellres  NB. 1s-comp of cellx if rev
+      catcht.
+        FoldThrow_j_ =: $0 [ ft =. FoldThrow_j_  NB. save & clear signaling vbl
+        if. 43 -: ft do. break. end.  NB. abort iteration and end
+        if. 44 -: ft do. continue. end.  NB. abort iteration and continue
+        13!:8 (35) [ FoldZv_j_ =. fzv  NB. not an iteration control, pass the throw. along
+NB. obsolete       catch.
+NB. obsolete         if. 43 = 13!:11'' do. break. end.  NB. abort iteration and end
+NB. obsolete         if. 44 = 13!:11'' do. continue. end.  NB. abort iteration and continue
+NB. obsolete         13!:8 ] 13!:11 '' [ FoldZv_j_ =. fzv  NB. not an iteration control, fail with that error code
+      end.
+      NB. continuing iteration.  cellres is the u result, vres is the boxed v result
+      if. ({.FoldZv_j_) e. 0 2 do. res =. res ,^:mult <vres else. FoldZv_j_ =. FoldZv_j_ 18 b. 1 0 end.
+    end.
+    if. 32 ~: 3!:0 res do. 13!:8 (3) [ FoldZv_j_ =. fzv end.  NB. If nothing produced result, error
+    res =. > res
+  end.
+else.  NB. repeated iteration on y, not related to items
+  res =. '' [ cellres =. y   NB. no results, and 
+  while. (({.FoldZv_j_)<:1) do.
+    FoldZv_j_ =: FoldZv_j_ + 0 1  NB. increment number of times we started u (used by Z:)
+    try.
+      if. init do. cellres =. x u. cellres else. cellres =. u. cellres end.
+      vres =. v. cellres
+    catcht.
+      FoldThrow_j_ =: $0 [ ft =. FoldThrow_j_  NB. save & clear signaling vbl
+      if. 43 -: ft do. break. end.  NB. abort iteration and end
+      if. 44 -: ft do. continue. end.  NB. abort iteration and continue
+      13!:8 (35) [ FoldZv_j_ =. fzv  NB. not an iteration control, pass the throw. along
+NB. obsolete     catch.
+NB. obsolete       if. 43 = 13!:11'' do. break. end.  NB. abort iteration and end
+NB. obsolete       if. 44 = 13!:11'' do. continue. end.  NB. abort iteration and continue
+NB. obsolete       13!:8 ] 13!:11 '' [ FoldZv_j_ =. fzv  NB. not an iteration control, fail with that error code
+    end.
+    NB. continuing iteration.  cellres is the u result, vres is the boxed v result
+    if. ({.FoldZv_j_) e. 0 2 do. res =. res ,^:mult <vres else. FoldZv_j_ =. FoldZv_j_ 18 b. 1 0 end.
+  end.
+  if. 32 ~: 3!:0 res do. 13!:8 (3) [ FoldZv_j_ =. fzv end.  NB. no results is domain error
+  res =. >res
+end. 
+res [ FoldZv_j_ =. fzv
+)
+
+   
+FoldZ_j_ =: 4 : 0
+if. 0~:#@$ y do. 13!:8(3) end.
+if. 0~:#@$ x do. 13!:8(3) end.
+if. y do.
+  select. x
+  case. _3 do.
+    if. y <: 1 { FoldZv_j_ do. 13!:8 ] 36 end.
+  case. _2 do.
+    FoldThrow_j_ =: 43 throw.  NB. break
+  case. _1 do.
+    FoldThrow_j_ =: 44 throw.  NB. continue
+  case. 0 do.
+  FoldZv_j_ =: FoldZv_j_ 23 b. 1 0  NB. suppress output
+  case. 1 do.
+  FoldZv_j_ =: FoldZv_j_ 23 b. 2 0 NB. stop after this
+  end.
+end.
+$0
+)
+
+      
 cocurrent <'base'

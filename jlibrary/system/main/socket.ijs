@@ -244,12 +244,6 @@ SOCKETS_jsocket_=: SOCKETS_jsocket_,s
 sdbind=: 3 : 0"1
 rc0 bindJ (>{.y);(sockaddr_in y);sockaddr_in_sz
 )
-sdasync=: 3 : 0"0
-if. IFUNIX do. 'not implemented under Unix - please use sdselect' assert 0 end.
-flags=. OR/ FD_READ,FD_WRITE,FD_OOB,FD_ACCEPT,FD_CONNECT,FD_CLOSE
-hwnd=. ".wd'qhwndx'
-if. >{.WSAAsyncSelectJ ({.y);hwnd;1026;flags do. sdsockerror '' else. 0 end.
-)
 sdlisten=: 3 : 0"1
 rc0 listenJ ;/2 {. y,<^:(L.y) SOMAXCONN
 )

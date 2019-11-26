@@ -127,7 +127,8 @@ static A jtmerge2(J jt,A a,A w,A ind,I cellframelen){F2PREFIP;A z;I t;
  ASSERTAGREE(AS(a)+MAX(0,AR(a)-(AR(w)-cellframelen)),AS(w)+AR(w)-(AR(a)-MAX(0,AR(a)-(AR(w)-cellframelen))),AR(a)-MAX(0,AR(a)-(AR(w)-cellframelen)));  // the rest of the shape of m{y comes from shape of y
  if(!AN(w))RCA(w);  // if y empty, return.  It's small.  Ignore inplacing
  t=AN(a)?maxtyped(AT(a),AT(w)):AT(w);  // get the type of the result: max of types, but if x empty, leave y as is
- if(AN(a)&&!TYPESEQ(t,AT(a)))RZ(a=cvt(t,a));  // if a must change precision, do so
+// obsolete if(AN(a)&&!TYPESEQ(t,AT(a)))RZ(a=cvt(t,a));  // if a must change precision, do so
+ if((-AN(a)&-TYPESXOR(t,AT(a)))<0)RZ(a=cvt(t,a));  // if a must change precision, do so
  // Keep the original address if the caller allowed it, precision of y is OK, the usecount allows inplacing, and the type is either
  // DIRECT or this is a boxed memory-mapped array; and don't inplace a =: a m} a or a =: x a} a
  // kludge this inplaces boxed mm arrays when usecount>2.  Seems wrong, but that's the way it was done
@@ -370,7 +371,7 @@ static B gerar(J jt, A w){A x; C c;
   if(!(n==2))R 0;  // verify 2 boxes
   wv = AAV(w);  x=wv[0]; // point to pointers to boxes; point to first box contents
   // see if first box is a special flag
-  if((-(LIT&AT(x))&(AR(x)-2)&((AN(x)^1)-1))<0){ // LIT, rank<2, AN=1
+  if((SGNIF(AT(x),LITX)&(AR(x)-2)&((AN(x)^1)-1))<0){ // LIT, rank<2, AN=1
    c = CAV(x)[0];   // fetch that character
    if(c=='0')R 1;    // if noun, the second box can be anything & is always OK, don't require AR there
    else if(c=='2'||c=='4')bmin=bmax=2;
@@ -381,7 +382,7 @@ static B gerar(J jt, A w){A x; C c;
   // Now look at the second box.  It should contain between bmin and bmax boxes, each of which must be an AR
   x = wv[1];   // point to second box
 // obsolete   if(!(BOX&AT(x) && 1==AR(x)))R 0;   // verify it contains a list of boxes
-  if((-(BOX&AT(x)) & ((AR(x)^1)-1))>=0)R 0;   // verify it contains a list of boxes
+  if((SGNIF(AT(x),BOXX) & ((AR(x)^1)-1))>=0)R 0;   // verify it contains a list of boxes
   if((UI)(AN(x)-bmin)>(UI)(bmax-bmin))R 0;  // verify correct number of boxes
   R gerexact(x);  // recursively audit the other ARs in the second box
  } else R 0;

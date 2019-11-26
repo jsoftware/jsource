@@ -409,7 +409,8 @@ A jtbcvt(J jt,C mode,A w){FPREFIP; A y,z=w;D ofuzz;
  if((((AN(w)-1)|(AT(w)&CMPX)-1))>=0){  // not empty AND complex
   I allflag=1, anyflag=0; Z *wv = ZAV(w); DO(AN(w), I isflag=*(I*)&wv[i].im==NANFLAG; allflag&=isflag; anyflag|=isflag;)
   if(anyflag){
-   I ipok=(-(I)jtinplace&JTINPLACEW) & AC(w);  // both sign bits set (<0) if inplaceable
+// obsolete and wrong   I ipok=(-(I)jtinplace&JTINPLACEW) & AC(w);  // both sign bits set (<0) if inplaceable
+   I ipok=SGNIF(jtinplace,JTINPLACEWX) & AC(w);  // both sign bits set (<0) if inplaceable
    if(allflag){
     if(ipok>=0)GATV(z,INT,AN(w),AR(w),AS(w));
     I *zv=IAV(z);  // output area

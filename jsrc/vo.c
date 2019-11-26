@@ -492,10 +492,11 @@ F1(jtraze){A*v,y,z,* RESTRICT zv;C* RESTRICT zu;I *wws,d,i,klg,m=0,n,r=1,t=0,te=
  if(!(AFLAG(w)&AFUNIFORMITEMS)) {  // normal case
   for(i=0;i<n;++i){
    y=v[i]; r=MAX(r,AR(y));
-   if(AN(y)){
-    m+=AN(y);  // accumulate # items.  the only time we use this m is when the item-rank is 0.  In that case AN gives the # atoms too.
-    t|=AT(y);  // accumulate types found
-   }else te|=AT(y);
+   I yt=AT(y); te|=yt; m+=AN(y); yt=AN(y)?yt:0; t|=yt;
+// obsolete    if(AN(y)){
+// obsolete     m+=AN(y);  // accumulate # items.  the only time we use this m is when the item-rank is 0.  In that case AN gives the # atoms too.
+// obsolete     t|=AT(y);  // accumulate types found
+// obsolete    }else te|=AT(y);
   }
   // if there was a nonempty, verify that the nonempties are compatible and find the highest-priority one
   // Fill creates a subtlety: we don't know whether empty boxes are going to contribute to

@@ -237,7 +237,7 @@ void mvc(I m,void*z,I n,void*w){I p=n,r;static I k=sizeof(D);  // ???
  MC(z,w,MIN(p,m)); while(m>p){r=m-p; MC(p+(C*)z,z,MIN(p,r)); p+=p;}
 }
 
-/* // faster but on some compilers runs afoul of things that look like NaNs 
+/* // obsolete faster but on some compilers runs afoul of things that look like NaNs 
    // exponent bytes are silently changed by one bit
 void mvc(I m,void*z,I n,void*w){I p=n,r;static I k=sizeof(D);
  if(m<k||k<n||(I)z%k){MC(z,w,MIN(p,m)); while(m>p){r=m-p; MC(p+(C*)z,z,MIN(p,r)); p+=p;}}

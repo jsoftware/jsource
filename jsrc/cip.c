@@ -1059,7 +1059,8 @@ static A jtipbx(J jt,A a,A w,C c,C d){A g=0,x0,x1,z;B*av,*av0,b,/* obsolete *u,*
 static DF2(jtdotprod){A fs,gs;C c,d;I r;V*sv;
  RZ(a&&w&&self);
  sv=FAV(self); fs=sv->fgh[0]; gs=sv->fgh[1];  // op is fs . gs
- if((-(B01&(AT(a)&AT(w)))&-AN(a)&-AN(w)&-(d=vaid(gs)))<0&&CSLASH==ID(fs)&&  // fs is c/
+// obsolete if((-(B01&(AT(a)&AT(w)))&-AN(a)&-AN(w)&-(d=vaid(gs)))<0&&CSLASH==ID(fs)&&  // fs is c/
+ if((SGNIF(AT(a)&AT(w),B01X)&-AN(a)&-AN(w)&-(d=vaid(gs)))<0&&CSLASH==ID(fs)&&  // fs is c/
      (c=vaid(FAV(fs)->fgh[0]),c==CSTARDOT||c==CPLUSDOT||c==CNE))R ipbx(a,w,c,d);  // [+.*.~:]/ . boolean
  r=lr(gs);   // left rank of v
  R df2(a,w,atop(fs,qq(gs,v2(r==RMAX?r:1+r,RMAX))));  // inner product according to the Dic

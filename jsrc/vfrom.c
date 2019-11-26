@@ -271,16 +271,18 @@ static F2(jtbfrom){A z;B*av,*b;C*wv,*zv;I acr,an,ar,k,m,p,q,r,*u=0,wcr,wf,wk,wn,
 // result is the indexed items
 // the numbers in a have been audited for validity
 // w is length of the frame
-A jtfrombu(J jt,A a,A w,I wf){F1PREFIP;A p,q,z;B b=0;I ar,*as,h,m,r,*u,*v,wcr,wr,*ws;
+A jtfrombu(J jt,A a,A w,I wf){F1PREFIP;A p,q,z;I ar,*as,h,m,r,*u,*v,wcr,wr,*ws;
  ar=AR(a); as=AS(a); h=as[ar-1];  // h is length of the index list, i. e. number of axes of w that disappear during indexing
  wr=AR(w); ws=AS(w); wcr=wr-wf;
- DO(ar, if(!as[i]){b=1; break;});
- DO(wr, if(!ws[i]){b=1; break;});
- if(b){  // empty array, either a or w
-  GA(z,AT(w),0,wf+(wcr-h)+(ar-1),0); u=AS(z);
-  v=ws;      DQ(wf,    *u++=*v++;);
-  v=as;      DQ(ar-1,  *u++=*v++;);
-  v=ws+wf+h; DQ(wcr-h, *u++=*v++;);
+// obsolete  DO(ar, if(!as[i]){b=1; break;});
+// obsolete  DO(wr, if(!ws[i]){b=1; break;});
+ if(!AN(a)&&!AN(w)){  // empty array, either a or w
+  // allocate empty result, move in shape: frame of w, frame of a, shape of item
+  GA(z,AT(w),0,wf+(wcr-h)+(ar-1),0); MCISH(AS(z),AS(w),wf) MCISH(AS(z)+wf,AS(a),ar-1)  MCISH(AS(z)+wf+ar-1,AS(w)+wf+h,wcr-h)
+// obsolete   u=AS(z);
+// obsolete   v=ws;      DQ(wf,    *u++=*v++;);
+// obsolete   v=as;      DQ(ar-1,  *u++=*v++;);
+// obsolete   v=ws+wf+h; DQ(wcr-h, *u++=*v++;);
   R z;
  }
  fauxblockINT(pfaux,4,1); fauxINT(p,pfaux,h,1) v=AV(p)+h; u=ws+wf+h; m=1; DQ(h, *--v=m; m*=*--u;);  // m is number of items in the block of axes that index into w
@@ -549,7 +551,8 @@ F2(jtfetch){A*av, z;I n;F2PREFIP;
    RZ(z=jtquicksel(jt,a,w));  // fetch selected box, opened.  If not a box, just return w
    // Inplaceability depends on the context.  If the overall operand is either noninplaceable or in a noninplaceable context, we must
    // protect the value we fetch (the overall operand would matter only if it was flagged without a ra())
-   if(!ACIPISOK(w)||!((I)jtinplace&JTINPLACEW))ACIPNO(z); RETF(z);
+// obsolete   if(!ACIPISOK(w)||!((I)jtinplace&JTINPLACEW))ACIPNO(z); RETF(z);
+   if((AC(w)&SGNIF(jtinplace,JTINPLACEWX))>=0)ACIPNO(z); RETF(z);   // turn off inplace if w not inplaceable, or jt not inplaceable
   }
   RZ(a=box(a));  // if not special case, box any unboxed a
  }
@@ -559,5 +562,5 @@ F2(jtfetch){A*av, z;I n;F2PREFIP;
 // obsolete       else{RZ(z=afrom(box(next),z)); if(i<n-1)ASSERT(!AR(z),EVRANK); if(!AR(z)&&AT(z)&BOX)RZ(z=ope(z));}
       else{RZ(z=afrom(box(next),z)); ASSERT(((i+1-n)&-AR(z))>=0,EVRANK); if(((AR(z)-1)&SGNIF(AT(z),BOXX))<0)RZ(z=ope(z));}  // Rank must be 0 unless last; open if boxed atom
    );
- if(!ACIPISOK(w)||!((I)jtinplace&JTINPLACEW))ACIPNO(z); RETF(z);   // Mark the box as non-inplaceable, as above
+ if((AC(w)&SGNIF(jtinplace,JTINPLACEWX))>=0)ACIPNO(z); RETF(z);   // Mark the box as non-inplaceable, as above
 }

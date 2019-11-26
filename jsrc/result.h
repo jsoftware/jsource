@@ -22,7 +22,7 @@
 // make sure these don't overlap with the definitions in cr.c
 #define ZZFLAGNOPOPX 0 // set to suppress tpop
 #define ZZFLAGNOPOP (((I)1)<<ZZFLAGNOPOPX)
-#define ZZFLAGBOXATOPX 1 // set if u is <@f
+#define ZZFLAGBOXATOPX 1 // set if u is <@f - must not be above JTWILLBEOPENED and JTCOUNTITEMS
 #define ZZFLAGBOXATOP (((I)1)<<ZZFLAGBOXATOPX)
 #define ZZFLAGUSEOPENX (LGSZI^1)  // result contains a cell for which a full call to OPEN will be required (viz sparse)
 #define ZZFLAGUSEOPEN (((I)1)<<ZZFLAGUSEOPENX)

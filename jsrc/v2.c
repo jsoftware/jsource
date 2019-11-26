@@ -233,7 +233,8 @@ static F1(jtxprimetest){A z;B*b,rat;I d,j,q,n,*pv,*v,wn,wt,*yv;X r,*wv,x,xmaxint
 static F1(jtprimetest){A x;I t;
  RZ(w);
  t=AT(w);
- if(!AN(w)||t&B01)R reshape(shape(w),num[0]);
+// obsolete if(!AN(w)||t&B01)R reshape(shape(w),num[0]);
+ if((UI)SGNIF(t,B01X)>=(UI)AN(w))R reshape(shape(w),num[0]);  // AN is 0, or t is boolean
  switch(CTTZ(t)){
   default:             ASSERT(0,EVDOMAIN);
   case INTX:            R iprimetest(w);
@@ -247,7 +248,8 @@ static F1(jtprimetest){A x;I t;
 static F1(jtnextprime){A b,fs,x,y;B*bv;I k,n,*xv,*yv;X*wv;
  RZ(w);
  n=AN(w);
- if(!n||B01&AT(w))R reshape(shape(w),num[2]);
+ if((UI)SGNIF(AT(w),B01X)>=(UI)AN(w))R reshape(shape(w),num[2]);
+// obsolete  if(!n||B01&AT(w))R reshape(shape(w),num[2]);
  ASSERT(NUMERIC&AT(w),EVDOMAIN);
  RZ(fs=eval("2&+^:(0&p:)^:_"));
  GATV(x,INT,n,AR(w),AS(w)); xv=AV(x);

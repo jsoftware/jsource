@@ -66,7 +66,7 @@ typedef AD *A;
 #define JTINPLACEW      (((I)1)<<JTINPLACEWX)
 #define JTINPLACEAX     1   // turn this on in jt to indicate that a can be inplaced.  Must be 1+JTINPLACEWX
 #define JTINPLACEA      (((I)1)<<JTINPLACEAX)
-// Next flag must match result.h and VF2 flags
+// Next flag must match result.h and VF2 flags, and must be above ZZFLAGBOXATOP
 #define JTWILLBEOPENEDX 4   // result of this exec will be opened immediately, so it can contain virtual references to an input to the current verb
 #define JTWILLBEOPENED  (((I)1)<<JTWILLBEOPENEDX)
 #define JTEMPTYX        5  // in va2, this bit indicates the result is empty
@@ -74,7 +74,7 @@ typedef AD *A;
 #define JTRETRYX        6  // in va2, this bit is set to indicate that the current execution is a retry
 #define JTRETRY         (((I)1)<<JTRETRYX)
 
-// Next flag must match result.h and VF2 flags
+// Next flag must match result.h and VF2 flags, and must be above ZZFLAGBOXATOP
 #define JTCOUNTITEMSX   7   // result of this exec will be go into ;, so an item count in m would be helpful
 #define JTCOUNTITEMS    (((I)1)<<JTCOUNTITEMSX)
 

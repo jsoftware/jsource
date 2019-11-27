@@ -154,7 +154,7 @@ static void jterasenl(J jt, I n){
    probehash=HASHSLOT(NAV(LOCNAME((A)IAV0(jt->stnum)[probe]))->bucketx,jt->sttsize);  // see where the probed cell would like to hash
     // If we are not allowed to move the new probe into the hole, because its hash is after the probe position but before-or-equal the hole,
     // we leave it in place and continue looking at the next position.  This test must be performed cyclically, because the probe may have wrapped around 0
-  }while(((UI)(probehash-probe)<(UI)(lastdel-probe))||(probe>lastdel&&(probe<=probehash||probehash<lastdel)));  // first half is normal, second if probe wrapped around
+  }while((BETWEENO(probehash,probe,lastdel)/* obsolete (UI)(probehash-probe)<(UI)(lastdel-probe)*/)||(probe>lastdel&&(probe<=probehash||probehash<lastdel)));  // first half is normal, second if probe wrapped around
   // here lastdel is the hole, and probe is a slot that hashed somewhere before lastdel.  We can safely move the probe to cover the hole.
   // This creates a new hole at probe, which we loop back to clear & then try to fill
   IAV0(jt->stnum)[lastdel]=IAV0(jt->stnum)[probe];  // move the hole forward

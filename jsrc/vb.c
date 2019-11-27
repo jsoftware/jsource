@@ -96,7 +96,7 @@ static I jtebarprep(J jt,A a,A w,A*za,A*zw,I*zc){I ar,at,m,n,t,wr,wt,memlimit;CR
  // if the range of integers is too big, revert to simple search.
  // Also revert for continuous type.  But always use fast search for character/boolean types
 // obsolete  R t&B01+LIT+C2T||t&INT+SBT+C4T&&0<rng.range&&rng.range<=memlimit ? rng.range : -4;
- R t&B01+LIT+C2T||t&INT+SBT+C4T&&(UI)(rng.range-1)<=(UI)(memlimit-1) ? rng.range : -4;
+ R t&B01+LIT+C2T||t&INT+SBT+C4T&&BETWEENC(rng.range,1,memlimit)/* obsolete (UI)(rng.range-1)<=(UI)(memlimit-1)*/ ? rng.range : -4;
 }
 
 #define EBLOOP(T,SUB0,SUB1,ZFUNC)  \

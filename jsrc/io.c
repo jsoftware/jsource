@@ -192,7 +192,7 @@ DF1(jtwd){A z=0;C*p=0;D*pd;I e,*pi,t;V*sv;
   ASSERT(2>AR(w),EVRANK);
   sv=VAV(self);
   t=i0(sv->fgh[1]);  // the n arg from the original 11!:n
-  if((UI)(t-2000)<(UI)(3000-2000) && AN(w) && !(LIT+C2T+C4T+INT&AT(w))) {  // 2000<=t<3000
+  if(BETWEENO(t,2000,3000)/* obsolete (UI)(t-2000)<(UI)(3000-2000)*/ && AN(w) && !(LIT+C2T+C4T+INT&AT(w))) {  // 2000<=t<3000
     switch(UNSAFE(AT(w))) {
     case B01:
       RZ(w=vi(w));

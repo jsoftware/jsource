@@ -86,7 +86,8 @@ static F1(jttoc2e){A z;I m,n,r;
 static F1(jtifc2){A z;I n,t,*zv;
  RZ(w);
  n=AN(w); t=AT(w);
- ASSERT(!n||t&JCHAR,EVDOMAIN);
+// obsolete  ASSERT(!n||t&JCHAR,EVDOMAIN);
+ ASSERT(((n-1)&((t&JCHAR)-1))>=0,EVDOMAIN);
  GATV(z,INT,n,AR(w),AS(w)); zv=AV(z);
  if(t&LIT){UC*v=UAV(w); DQ(n, *zv++=*v++;);}
  else if(t&C2T){US*v=USAV(w); DQ(n, *zv++=*v++;);}
@@ -102,7 +103,7 @@ static F1(jtc2fi){A z;I j,n,*v;US*zv;
  RZ(w=vi(w));
  n=AN(w); v=AV(w);
  GATV(z,C2T,n,AR(w),AS(w)); zv=USAV(z);
- DQ(n, j=*v++; ASSERT((UI)(j-SMIN)<=(UI)((I)SMAX-SMIN),EVINDEX); *zv++=(US)j;);
+ DQ(n, j=*v++; ASSERT(BETWEENC(j,SMIN,SMAX)/*obsolete (UI)(j-SMIN)<=(UI)((I)SMAX-SMIN)*/,EVINDEX); *zv++=(US)j;);
  RETF(z);
 }    /* 2-byte chars from integers */
 

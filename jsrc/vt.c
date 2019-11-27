@@ -86,7 +86,7 @@ F2(jttake){A s;I acr,af,ar,n,*v,wcr,wf,wr;
  // canonicalize x
  n=AN(a);    // n = #axes in a
 // obsolete  ASSERT(!wcr||n<=wcr,EVLENGTH);  // if y is not atomic, a must not have extra axes
- ASSERT((UI)(n-1)<=(UI)(wcr-1),EVLENGTH);  // if y is not atomic, a must not have extra axes  wcr==0 is always true
+ ASSERT(BETWEENC(n,1,wcr)/* obsolete (UI)(n-1)<=(UI)(wcr-1)*/,EVLENGTH);  // if y is not atomic, a must not have extra axes  wcr==0 is always true
  I * RESTRICT ws=AS(w);  // ws->shape of w
  RZ(s=vib(a));  // convert input to integer, auditing for illegal values; and convert infinities to IMAX/-IMAX
  // if the input was not INT/bool, we go through and replace any infinities with the length of the axis.  If we do this, we have

@@ -383,7 +383,7 @@ static B gerar(J jt, A w){A x; C c;
   x = wv[1];   // point to second box
 // obsolete   if(!(BOX&AT(x) && 1==AR(x)))R 0;   // verify it contains a list of boxes
   if((SGNIF(AT(x),BOXX) & ((AR(x)^1)-1))>=0)R 0;   // verify it contains a list of boxes
-  if((UI)(AN(x)-bmin)>(UI)(bmax-bmin))R 0;  // verify correct number of boxes
+  if(!BETWEENC(AN(x),bmin,bmax)/* obsolete if((UI)(AN(x)-bmin)>(UI)(bmax-bmin)*/)R 0;  // verify correct number of boxes
   R gerexact(x);  // recursively audit the other ARs in the second box
  } else R 0;
  R 1;

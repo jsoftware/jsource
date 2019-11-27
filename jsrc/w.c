@@ -121,7 +121,7 @@ A jtenqueue(J jt,A a,A w,I env){A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl;UC c;
  for(i=0;i<n;i++,x++){  // for each word
   wi=s+*u++; wl=*u++; c=e=*wi; p=ctype[(UC)c]; b=0;   // wi=first char, wl=length, c=e=first char, p=type of first char, b='no inflections'
   if(1<wl){d=*(wi+wl-1); if(b=((p!=C9)&(d==CESC1))|(d==CESC2))e=spellin(wl,wi);}  // if word has >1 character, starts with nonnumeric, and ends with inflection, convert to pseudocharacter
-  if(((UI)c-32)<(UI)(128-32)&&(y=ds(e))){
+  if(BETWEENO(c,32,128)/* obsolete ((UI)c-32)<(UI)(128-32)*/&&(y=ds(e))){
    // If first char is ASCII, see if the form including inflections is a primitive;
    // if so, that is the word to put into the queue.  No need to copy it
    // Since the address of the shared primitive block is used, we can use that to compare against to identify the primitive later
@@ -281,7 +281,7 @@ F1(jtfsmvfya){PROLOG(0099);A a,*av,m,s,x,z,*zv;I an,c,e,f,ijrd[4],k,p,q,*sv,*v;
  ASSERT(1==AR(a),EVRANK);
  ASSERT(BOX&AT(a),EVDOMAIN);
  an=AN(a); av=AAV(a); 
- ASSERT((UI)(an-2)<=(UI)(4-2),EVLENGTH);
+ ASSERT(BETWEENC(an,2,4)/* obsolete (UI)(an-2)<=(UI)(4-2)*/,EVLENGTH);
  RE(f=i0(av[0]));
  ASSERT((UI)f<=(UI)5,EVINDEX);
  RZ(s=vi(av[1])); sv=AV(s);
@@ -297,9 +297,9 @@ F1(jtfsmvfya){PROLOG(0099);A a,*av,m,s,x,z,*zv;I an,c,e,f,ijrd[4],k,p,q,*sv,*v;
 // obsolete   if(2<=n){ijrd[1]=j=*v++; ASSERT(j==-1||0<=j&&j<i,EVINDEX);}
 // obsolete   if(3<=n){ijrd[2]=r=*v++; ASSERT(       0<=r&&r<p,EVINDEX);}
 // obsolete   if(4==n){ijrd[3]=d=*v++; ASSERT(d==-1||0<=d&&d<q,EVINDEX);}
-  if(2<=n){ijrd[1]=j=*v++; ASSERT((UI)(j-(-1))<(UI)(i-(-1)),EVINDEX);}
+  if(2<=n){ijrd[1]=j=*v++; ASSERT(BETWEENO(j, -1, i)/* obsolete (UI)(j-(-1))<(UI)(i-(-1))*/,EVINDEX);}
   if(3<=n){ijrd[2]=r=*v++; ASSERT((UI)r<(UI)p,EVINDEX);}
-  if(4==n){ijrd[3]=d=*v++; ASSERT((UI)(d-(-1))<(UI)(q-(-1)),EVINDEX);}
+  if(4==n){ijrd[3]=d=*v++; ASSERT(BETWEENO(d, -1, q)/* obsolete (UI)(d-(-1))<(UI)(q-(-1))*/,EVINDEX);}
  }
  m=2==an?mtv:av[2]; c=AN(m);
  ASSERT(1>=AR(m),EVRANK);

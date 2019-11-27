@@ -123,7 +123,7 @@ static DF1(jtunderai1){DECLF;A x,y,z;B b;I j,n,*u,*v;UC f[256],*wv,*zv;
 }    /* f&.(a.&i.) w */
 
 // u&.v
-F2(jtunder){A x;AF f1,f2;B b,b1;C c,uid;I m,r;V*u,*v;
+F2(jtunder){A x;AF f1,f2;B b,b1;C c,uid;I r;V*u,*v;
  ASSERTVV(a,w);
  c=0; f1=0; f2=0; r=mr(w); v=FAV(w);
  // Set flag with ASGSAFE status of u/v, and inplaceable.  It will stay inplaceable unless we select an uninplaceable processing routine, of we
@@ -137,7 +137,7 @@ F2(jtunder){A x;AF f1,f2;B b,b1;C c,uid;I m,r;V*u,*v;
   case CAMP:  
    u=FAV(a);  // point to a in a&.w.  w is f1&g1 or (f1 g1 h1)
    if(b1=CSLASH==(uid=u->id)){x=u->fgh[0]; if(AT(x)&VERB){u=FAV(x);uid=u->id;}else uid=0;}   // cases: f&.{f1&g1 or (f1 g1 h1)}  b1=0    f/&.{f1&g1 or (f1 g1 h1)}   b1=1
-   b=CBDOT==uid&&(x=u->fgh[1],(((AR(x)-1)&SGNIF(AT(x),INTX))<0)&&(m=*AV(x),(UI)(m-16)<=(UI)(32-16)));   // b if f=m b. where m is atomic int 16<=m<=32
+   b=CBDOT==uid&&(x=u->fgh[1],(((AR(x)-1)&SGNIF(AT(x),INTX))<0)&&BETWEENC(IAV(x)[0],16,32)/* obsolete (m=*AV(x),(UI)(m-16)<=(UI)(32-16))*/);   // b if f=m b. where m is atomic int 16<=m<=32
    if(CIOTA==ID(v->fgh[1])&&(!c|(c==CLEFT)|(c==CRIGHT))&&equ(alp,v->fgh[0])){   // w is  {a.&i.  or  (a. i. ][)}
     f1=b& b1?jtbitwiseinsertchar:jtunderai1;    // m b./ &. {a.&i.  or  (a. i. ][)}   or  f &. {a.&i.  or  (a. i. ][)}
     f2=((uid==CMAX)|(uid==CMIN))>b1?(AF)jtcharfn2:f2; f2=b>b1?(AF)jtbitwisechar:f2;   // m b. &. {a.&i.  or  (a. i. ][)}   or  >. &. {a.&i.  or  (a. i. ][)}   or f &. {a.&i.  or  (a. i. ][)}

@@ -61,8 +61,8 @@ F1(jtbdot){A b,h=0;I j,n,*v;
  if(VERB&AT(w))R ADERIV(CBDOT, jtbasis1,0L, 0L,0,0,0);
  RZ(w=vi(w));
  n=AN(w); v=AV(w);
- if(1==n){j=*v; ASSERT((UI)(j-(-16))<=(UI)(34-(-16)),EVINDEX);}
- else DQ(n, j=*v++; ASSERT((UI)(j-(-16))<=(UI)(16-(-16)),EVINDEX););
+ if(1==n){j=*v; ASSERT(BETWEENC(j,-16,34),EVINDEX);}
+ else DQ(n, j=*v++; ASSERT(BETWEENC(j,-16,15),EVINDEX););
  if(1!=n||j<16){
   GAT0(b,B01,64,2); AS(b)[0]=16; AS(b)[1]=4; MC(AV(b),booltab,64L);
   RZ(h=cant2(IX(AR(w)),from(w,b)));

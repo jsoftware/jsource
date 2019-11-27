@@ -132,7 +132,7 @@ F1(jtscriptstring){
 // 4!:7 set script name to use and return previous value
 F1(jtscriptnum){
  I i=i0(w);  // fetch index
- ASSERT((UI)(i+1)<=(UI)jt->slistn,EVINDEX);  // make sure it's _1 or valid index
+ ASSERT(BETWEENO(i,-1,jt->slistn)/* obsolete (UI)(i+1)<=(UI)jt->slistn*/,EVINDEX);  // make sure it's _1 or valid index
  A rv=sc(jt->slisti);  // save the old value
  RZ(rv); jt->slisti=(UI4)i;  // set the new value (if no error)
  R rv;  // return prev value

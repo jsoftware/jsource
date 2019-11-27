@@ -611,7 +611,7 @@ gottime: ;
   // Add in leap-years (since the year 0, for comp. ease).  Year 2000 eg, which starts Mar 1, is a leap year and has 1 added to its day#s (since they come after Feb 29)
   D+=Y>>2;
   // Gregorian correction.  Since it is very unlikely we will encounter a date that needs correcting, we use an IF
-  if((UI)(Y-1901)>(2100-1901)){  // date is outside 1901-2099
+  if(!BETWEENC(Y,1901,2100)/* obsolete )(UI)(Y-1901)>(2100-1901)*/){  // date is outside 1901-2099
    D+=(((Y/100)>>2)-(Y/100))-((2000/400)-(2000/100));  // 1900 2100 2200 2300 2500 etc are NOT leapyears.  Create correction from Y2000 count
   }
   // Add in extra days for earlier 31-day months in this adjusted year (so add 0 in March)

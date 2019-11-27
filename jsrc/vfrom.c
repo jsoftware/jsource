@@ -300,7 +300,7 @@ A jtfrombu(J jt,A a,A w,I wf){F1PREFIP;A p,q,z;I ar,*as,h,m,r,*u,*v,wcr,wr,*ws;
  EPILOG(z);  // we have to release the virtual block so that w is inplaceable later on in the sentence
 }    /* (<"1 a){"r w, dense w, integer array a */
 
-#define AUDITPOSINDEX(x,lim) if((UI)(x)>=(UI)(lim)){if((x)<0)break; ASSERT(0,EVINDEX);}
+#define AUDITPOSINDEX(x,lim) if(!BETWEENO((x),0,(lim))/* obsolete (UI)(x)>=(UI)(lim)*/){if((x)<0)break; ASSERT(0,EVINDEX);}
 // a is boxed list, w is array, wf is frame of operation, *ind will hold the result
 // if the opened boxes have contents with the same item shape (treating atoms as same as singleton lists), create an array of all the indexes; put that into *ind and return 1.
 // otherwise return 0

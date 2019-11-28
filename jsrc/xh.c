@@ -184,3 +184,11 @@ F1(jthostio){C*s;A z;F*pz;int fi[2],fo[2],r;int fii[2],foi[2];
 F1(jtjwait){I k;int s; RE(k=i0(w)); if(-1==waitpid(k,&s,0))jerrno(); R sc(s);}
 
 #endif
+
+/* return errno info from c library */
+F1(jtcerrno){C buf[1024];
+ ASSERTMTV(w);
+ strcpy (buf, errno?strerror(errno):"");
+ R link(sc(errno),cstr(buf));
+}    /* 2!:8  errno information */
+

@@ -269,6 +269,7 @@ typedef struct {
  A    sca;              // S: result vector  rank=1 AN=#elements AS[0]=#used
  int  sdinited;         /* sockets                                         */
  A    slist;            /* files used in right arg to 0!:                  */
+ A    sclist;           /* slisti when items of slist were added           */
  I    slistn;           /* slist # of real entries                         */
  I    sm;               /* sm options set by JSM()                         */
  void*smdowd;

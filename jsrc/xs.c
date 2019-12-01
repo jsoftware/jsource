@@ -14,12 +14,17 @@
 
 B jtxsinit(J jt){A x;
  GAT0(x,BOX,10,1); memset(AV(x),C0,AN(x)*SZI); ras(x); jt->slist=x;
+ GAT0(x,INT,10,1); memset(AV(x),C0,AN(x)*SZI); ras(x); jt->sclist=x;
  jt->slisti=-1;
  R 1;
 }
 
 F1(jtsnl){ASSERTMTV(w); R vec(BOX,jt->slistn,AAV(jt->slist));}
      /* 4!:3  list of script names */
+
+F1(jtscnl){ASSERTMTV(w); R vec(INT,jt->slistn,AAV(jt->sclist));}
+     /* 4!:8  list of script indices which loaded slist */
+
 
 #if (SYS & SYS_MACINTOSH)
 void setftype(C*v,OSType type,OSType crea){C p[256];FInfo f;
@@ -82,12 +87,14 @@ static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;B xt=jt->tostdout;DC d,xd=jt
 static F1(jtaddscriptname){I i;
  RE(i=i0(indexof(vec(BOX,jt->slistn,AAV(jt->slist)),box(ravel(w)))));  // look up only in the defined names
  if(jt->slistn==i){
-  if(jt->slistn==AN(jt->slist))RZ(jt->slist=ext(1,jt->slist)); 
-  RZ(ras(w)); RZ(*(jt->slistn+AAV(jt->slist))=w); 
+  if(jt->slistn==AN(jt->slist)){RZ(jt->slist=ext(1,jt->slist));RZ(jt->sclist=ext(1,jt->sclist));}
+  RZ(ras(w)); RZ(*(jt->slistn+AAV(jt->slist))=w); *(jt->slistn+IAV(jt->sclist))=jt->slisti;
   ++jt->slistn;
  }
  R sc(i);
 }
+
+
 
 static A jtlinf(J jt,A a,A w,C ce,B tso){A x,y,z;B lk=0;C*s;I i=-1,n,oldi=jt->slisti;
  RZ(a&&w);

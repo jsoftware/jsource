@@ -296,6 +296,7 @@ extern F1(jtscm00);
 extern F1(jtscm01);
 extern F1(jtscm10);
 extern F1(jtscm11);
+extern F1(jtscnl);
 extern F1(jtsct1);
 extern F1(jtscz1);
 extern F1(jtseclevq);

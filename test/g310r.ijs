@@ -220,6 +220,23 @@ nm =. +
 _3 = 2 (+ 2 : 'x undefname`u.`v.@.[ y' -) 5
 'value error' -: 0 (+ 2 : 'x undefname`u.`v.@.[ y' -) etx 5
 
+1: 0 : 0
+a =: 1 : 0
+u. aa y
+<@i."0 i. 30
+u =. %:
+g y
+()
+aa =: 1 : 0
+u. aaa y
+u. y
+()
+aaa =: 1 : 0
+g =: u.
+u. y
+()
+)
+
 NB. Inverse lookups stop fixing at inverse
 4!:55 ;:'a c'
 cocurrent 'xxx'

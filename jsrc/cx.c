@@ -101,7 +101,7 @@ static I trypopgoto(TD* tdv, I tdi, I dest){
 // If debug is running we have to check for a new line to run, after any execution with error or on any line in case the debugger interrupted something
 // result is line to continue on
 static I debugnewi(I i, DC thisframe, A self){
- if(thisframe){DC siparent;
+ if(thisframe){DC siparent;  // if we can take debug input
   // debug mode was on when this execution started.  See if the execution pointer was changed by debug.
   if((siparent=thisframe->dclnk)&&siparent->dctype==DCCALL&&self==siparent->dcf){   // if prev stack frame is a call to here
    if(siparent->dcnewlineno){  // the debugger has asked for a jump

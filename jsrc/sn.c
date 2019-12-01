@@ -60,7 +60,7 @@ A jtnfs(J jt,I n,C*s){A z;C f,*t;I m,p;NM*zv;
    // install hash/number for the direct locale
    zv->bucketx=BUCKETXLOC(p,t+1);  // number if numeric, hash otherwise
  }else{
-   // otherwise either simple name or indirect locative.  Look for the __
+   // otherwise either simple name or indirect locative.  Look for the __; if present, find & hash the last indirect name
    DO(n, if('_'==s[i]&&'_'==s[1+i]){ f=NMILOC; p=n-2-i; for(m=n; s[m-1]!='_'||s[m-2]!='_';--m); zv->bucketx=(I)nmhash(n-m,s+m); m=n-(2+p); break;});  // p=#locales, m=#simplename, hash last indirect if there is one
  }
  ASSERT((m|p)<=255,EVLIMIT);  // error if name too long.  Requires limit be power of 2

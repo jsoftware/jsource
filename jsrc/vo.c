@@ -410,8 +410,8 @@ F1(jtope){PROLOG(0080);A cs,*v,y,z;I nonh;C*x;I i,n,*p,q=RMAX,r=0,*s,t=0,te=0,*u
 // ; y general case, where rank > 1 (therefore items are not atoms)
 // w is the data to raze (boxed), t is type of nonempty boxes of w, n=#,w, r=max rank of contents of w, v->w data,
 // zrel=1 if any of the contents uses relative addressing
-static A jtrazeg(J jt,A w,I t,I n,I r,A*v,I nonempt){A h,h1,y,z;C*zu;I c=0,d,i,j,k,m,*s,*v1,yr,*ys;UI p;
- d=SZI*(r-1);    // d=#bytes in (stored shape of result-cell)
+static A jtrazeg(J jt,A w,I t,I n,I r,A*v,I nonempt){A h,h1,y,z;C*zu;I c=0,i,j,k,m,*s,*v1,yr,*ys;UI p;
+// obsolete  d=SZI*(r-1);    // d=#bytes in (stored shape of result-cell)
  // Calculate the shape of a result-cell (it has rank r-1); and c, the number of result-cells
  fauxblockINT(hfaux,4,1); fauxINT(h,hfaux,r,1) s=AV(h); memset(s,C0,r*SZI);  // h will hold the shape of the result; s->shape data; clear to 0 for compares below
  for(i=0;i<n;++i){   // loop over all contents
@@ -468,12 +468,12 @@ static A jtrazeg(J jt,A w,I t,I n,I r,A*v,I nonempt){A h,h1,y,z;C*zu;I c=0,d,i,j
    // nonatomic contents: rank extension+fill rather than replication
    // if IC(y)==0 this all does nothing, but perhaps not worth checking
    if(j=r-yr){DO(j,v1[i]=1;); MCISH(j+v1,ys,yr); RZ(y=reshape(h1,y)); }  // if rank extension needed, create rank 1 1...,yr and reshape to that shape
-   if(memcmp(1+s,1+AS(y),d)){SETIC(y,*s); RZ(y=take(h,y));}  // if cell of y has different shape from cell of result, install the
+// obsolete    if(memcmp(1+s,1+AS(y),d))
+   for(j=1;j<r;++j)if(s[j]!=AS(y)[j])break; if(j!=r){SETIC(y,*s); RZ(y=take(h,y));}  // if cell of y has different shape from cell of result, install the
      // #items into s (giving #cell,result-cell shape) and fill to that shape.  This destroys *s (#result items) buts leaves the rest of s
    {j=k*AN(y); MC(zu,AV(y),j); zu+=j;}
   }
  }
- // todo kludge should inherit nosmrel
  RETF(z);
 }    /* raze general case */
 

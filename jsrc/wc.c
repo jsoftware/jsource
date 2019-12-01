@@ -29,7 +29,8 @@ static A jtcongotoblk(J jt,I n,CW*con){A z;CW*d=con;I i,j,k,*u,*v;
 
 static I jtcongotochk(J jt,I i,I j,A x){I k,n,*v;
  n=*AS(x); v=AV(x);
- for(k=0;k<n;++k,v+=2)if(v[0]<=j&&j<=v[1]&&!(v[0]<=i&&i<=v[1]))R i;
+// obsolete  for(k=0;k<n;++k,v+=2)if(v[0]<=j&&j<=v[1]&&!(v[0]<=i&&i<=v[1]))R i;
+ for(k=0;k<n;++k,v+=2)if(BETWEENO(j,v[0],v[1])&&!BETWEENO(i,v[0],v[1])/* obsolete v[0]<=j&&j<=v[1]&&!(v[0]<=i&&i<=v[1]) */)R i;
  R -1;
 }    /* i: goto; j: label; return -1 if ok or i if bad */
 

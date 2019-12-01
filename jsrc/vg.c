@@ -193,7 +193,7 @@ I grcol4(I d,I c,UI4*yv,I n,I*xv,I*zv,const I m,US*u,I flags){
   }else{
    // All the sign-extensions are the same.  All there is to do is copy the input to the output.  could try to save the copy with pointer tricks?
    // The length, as below, depends on the operation mode
-   memcpy(zv,xv,n*((flags&4)?m*sizeof(US):sizeof(I)));
+   I csiz=m<<LGSZUS; csiz=flags&4?csiz:SZI; memcpy(zv,xv,n*csiz);
   }
  }else{UI4 k;
   // Normal case.  Create +/\ of the bucket totals, or +/\. if sorting down (to preserve stability)

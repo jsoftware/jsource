@@ -5,7 +5,7 @@ match=: -:&(3!:1)
 xi   =: x:^:_1
 
 ( 64=type x), 5 _ -: x=: 5x  _
-( 64=type x), 5 _ -: x=: 5r1 _
+( 128=type x), 5 _ -: x=: 5r1 _
 
 (128 -: type x), _  1r2 match x=:x:  _ 0.5
 (128 -: type x), __ 1r2 match x=:x: __ 0.5

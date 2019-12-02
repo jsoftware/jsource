@@ -327,8 +327,8 @@ b=: b,-b=:%/1+?2 20$20
 _  =  4 % 0r1
 __ = _4 % 0r1
 
-64 = type 0r1
-64 = type 0 % 0r1
+128 = type 0r1
+128 = type 0 % 0r1
 (4%x+2.5-2.5) -: 4 % x=:1 2 3 4 0r1
 128 = type 4 % x
 
@@ -378,25 +378,38 @@ NB. ^ -------------------------------------------------------------------
 (^  2.5) -: ^  5r2
 (^ _2.5) -: ^ _5r2
 
-(xint x) *. 0r1 = x=: 0r1 ^ 1
-(xint x) *. 0r1 = x=: 0r1 ^ 5
-(xint x) *. 0r1 = x=: 0r1 ^ 5x
+(rat x) *. 0r1 = x=: 0r1 ^ 1
+(rat x) *. 0r1 = x=: 0r1 ^ 5
+(rat x) *. 0r1 = x=: 0r1 ^ 5x
+(xint x) *. 0r1 = x=: 0x ^ 1
+(xint x) *. 0r1 = x=: 0x ^ 5
+(xint x) *. 0r1 = x=: 0x ^ 5x
 (rat  x) *. 0r1 = x=: 0r1 ^ 5r2
 (rat  x) *. 0r1 = x=: 0r1 ^ 1 2 3 5r2
 
 (fl  x) *. 0   = x=: 0r1 ^ 1p1
 
-(xint x) *. 1r1 = x=: 0r1 ^ 0
-(xint x) *. 1r1 = x=: 0r1 ^ 0x
-(xint x) *. 1r1 = x=: 0r1 ^ 0r1
+(rat x) *. 1r1 = x=: 0r1 ^ 0
+(rat x) *. 1r1 = x=: 0r1 ^ 0x
+(rat x) *. 1r1 = x=: 0r1 ^ 0r1
+(xint x) *. 1r1 = x=: 0x ^ 0
+(xint x) *. 1r1 = x=: 0x ^ 0x
+(rat x) *. 1r1 = x=: 0x ^ 0r1
 
-(xint x) *. 1r1 = x=: 1r1 ^ 5
-(xint x) *. 1r1 = x=: 1r1 ^ 5x
+(xint x) *. 1r1 = x=: 1x ^ 5
+(xint x) *. 1r1 = x=: 1x ^ 5x
+(rat  x) *. 1r1 = x=: 1x ^ 5r2
+(xint x) *. 1r1 = x=: 1x ^ _5
+(rat  x) *. 1r1 = x=: 1x ^ _5r2
+(xint x) *. 1r1 = x=: 1x ^ 0
+(xint x) *. 1r1 = x=: 1x ^ _5+i.11
+(rat x) *. 1r1 = x=: 1r1 ^ 5
+(rat x) *. 1r1 = x=: 1r1 ^ 5x
 (rat  x) *. 1r1 = x=: 1r1 ^ 5r2
-(xint x) *. 1r1 = x=: 1r1 ^ _5
+(rat x) *. 1r1 = x=: 1r1 ^ _5
 (rat  x) *. 1r1 = x=: 1r1 ^ _5r2
-(xint x) *. 1r1 = x=: 1r1 ^ 0
-(xint x) *. 1r1 = x=: 1r1 ^ _5+i.11
+(rat x) *. 1r1 = x=: 1r1 ^ 0
+(rat x) *. 1r1 = x=: 1r1 ^ _5+i.11
 
 (fl   x) *. 1   = x=: 1r1 ^ 1p1
 

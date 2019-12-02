@@ -134,25 +134,28 @@ static F1(jtlbox){A p,*v,*vv,*wv,x,y;B b=0;I n;
  R over(lshape(w),raze(y));
 }    /* non-empty boxed array */
 
+A jtdinsert(J jt,A w,A ic,I ix){A l=sc4(INT,ix); R over(over(take(l,w),ic),drop(l,w));}   /* insert ic before position ix in w */
+A jtdcapp(J jt,A w,C c,A ap){R (memchr(CAV(w),c,AN(w)))?w:over(w,ap);}  /* conditionally append ap to w if it doesn't contain c */
+
 // Apply decoration as needed to a numeric character string w to give it the correct type t
 // Result is A block for decorated string
 A jtdecorate(J jt,A w,I t){
  if(AN(w)==0)R w;  // if empty string, don't decorate
  if(t&FL){
-  // float: make sure there is a . somewhere, or infinity/indefinite ('_' followed by space/end/.), else put '.' on the end or at position of first 'e'
+  // float: make sure there is a . somewhere, or infinity/indefinite ('_' followed by space/end/.), else put '.' at end
   B needdot = !memchr(CAV(w),'.',AN(w));  // check for decimal point
   if(needdot){DO(AN(w), if(CAV(w)[i]=='_' && (i==AN(w)-1 || CAV(w)[i+1]==' ')){needdot=0; break;} )}  // check for infinity
   if(needdot){w=over(w,scc('.')); RZ(w=rifvs(w)); DQ(AN(w) , if(CAV(w)[i]==' ')R w;  if(CAV(w)[i]=='e'){C f='.'; C *s=&CAV(w)[i]; DO(AN(w)-i, C ff=s[i]; s[i]=f; f=ff;)}) }
  }else if(t&INT){
-  // integer: if the string contains nothing but one-digit 0/1 values, prepend a '0'
+ // integer: if the string contains nothing but one-digit 0/1 values, insert '0' before last number
   I l=AN(w); C *s=CAV(w); do{if((*s&-2)!='0')break; ++s; if(--l==0)break; if(*s!=' ')break; ++s;}while(--l);
-  if(l==0)w=over(scc('0'),w);
- }else if(t&XNUM+RAT){
-  // numeric/rational: make sure there is an r/x somewhere in the string, else put one on the end
-  if(!memchr(CAV(w),t&XNUM?'x':'r',AN(w)))w=apip(w,scc('x'));
- }
+  if(l==0){I ls=0; DQ(AN(w), if(CAV(w)[i]==' ') ls=i;); w=ls?jtdinsert(jt,w,scc('0'),ls+1):over(scc('0'),w);}
+ }else if(t&XNUM) w=jtdcapp(jt, w,'x',scc('x')); // extended: make sure there is an x somewhere in the string, else put 'x' at end
+ else if(t&RAT) w=jtdcapp(jt, w,'r',cstr("r1")); // rational: make sure there is an r somewhere in the string, else put 'r1' at end
+ else if(t&CMPX) w=jtdcapp(jt, w,'j',cstr("j0")); // complex: make sure there is a j somewhere in the string, else put "j0" at end
  R w;
 }
+
 
 static F1(jtlnum1){A z;I t;
  RZ(w);
@@ -217,18 +220,19 @@ static F1(jtlnoun0){A s,x;B r1;
  RZ(w);
  r1=1==AR(w); RZ(s=thorn1(shape(w)));
  switch(CTTZ(AT(w))){
-  default:   R over(cstr("i."),s);
+  default:    R apip(s,cstr("$00"    ));  // over(cstr("i."),s);
   case LITX:  x=cstr(   "''"); R r1?x:apip(apip(s,scc('$')),x);
   case C2TX:  x=cstr("u: ''"); R r1?x:apip(apip(s,scc('$')),x);
   case C4TX:  x=cstr("10&u: ''"); R r1?x:apip(apip(s,scc('$')),x);
   case BOXX:  R apip(s,cstr("$a:"    ));
   case B01X:  R apip(s,cstr("$0"     ));
-  case FLX:   R apip(s,cstr("$0.5"   ));
-  case CMPXX: R apip(s,cstr("$0j5"   ));
+  case FLX:   R apip(s,cstr("$0."    ));
+  case CMPXX: R apip(s,cstr("$0j0"   ));
   case XNUMX: R apip(s,cstr("$0x"    ));
-  case RATX:  R apip(s,cstr("$1r2"   ));
+  case RATX:  R apip(s,cstr("$0r0"   ));
   case SBTX:  R apip(s,cstr("$s: ' '"));
 }}   /* empty dense array */
+
 
 static F1(jtlnoun){I t;
  RZ(w);

@@ -392,14 +392,12 @@ A jtcvt(J jt,I t,A w){A y;B b;
 
 // Convert numeric type to lowest precision that fits.  Push fuzz/rank onto a stack,
 // and use 'exact' and 'no rank' for them.  If mode=0, do not promote XNUM/RAT to fixed-length types.
-// If mode bit 1 is set, minimum precision is INT; if mode bit 2 is set, minimum precision is FL
+// If mode bit 1 is set, minimum precision is INT; if mode bit 2 is set, minimum precision is FL; if mode bit 3 is set, minimum precision is CMPX 
 // Result is a new buffer, always
 A jtbcvt(J jt,C mode,A w){FPREFIP; A y,z=w;D ofuzz;
  RZ(w);
  ofuzz=jt->fuzz; RANK2T oqr=jt->ranks;  // save status for comparison, and ranks in case sparse needs them (should let sparse do the saving)
  jt->fuzz=0;     RESETRANK;
- // for rationals, try converting to XNUM; otherwise stay at rational
- if(RAT&AT(w))z=ccvt(XNUM,w,&y)?y:w;
 #ifdef NANFLAG
  // there may be values (especially b types) that were nominally CMPX but might actually be integers.  Those were
  // stored with the real part being the actual integer value and the imaginary part as the special 'flag' value.  We
@@ -426,7 +424,7 @@ A jtbcvt(J jt,C mode,A w){FPREFIP; A y,z=w;D ofuzz;
 #endif
  // for all numerics, try Boolean/int/float in order, stopping when we find one that holds the data
  if(mode&1||!(AT(w)&XNUM+RAT)){  // if we are not stopping at XNUM/RAT
-  z=!(mode&6)&&ccvt(B01,w,&y)?y:!(mode&4)&&ccvt(INT,w,&y)?y:ccvt(FL,w,&y)?y:w;  // convert to enabled modes one by one, stopping when one works
+  z=!(mode&14)&&ccvt(B01,w,&y)?y:!(mode&12)&&ccvt(INT,w,&y)?y:!(mode&8)&&ccvt(FL,w,&y)?y:w;  // convert to enabled modes one by one, stopping when one works
  }
  jt->fuzz=ofuzz; jt->ranks=oqr;
  RNE(z);

@@ -214,6 +214,7 @@ A jtconnum(J jt,I n,C*s){PROLOG(0101);A y,z;B b,(*f)(J,I,C*,void*),ii,j,p=1,q,x;
    // if we encounter '.', make sure the result is at least FL; if we encounter two non-whitespace in a row, make sure result is at least INT
  yv[d++]=n; m=d>>1;  // append end for last field in case it is missing; m=#fields.  If end was not missing the extra store is harmless
  numcase(n,s,&b,&j,&x,&q,&ii);   // analyze contents of values
+ bcvtmask|=j>b?8:0; // flag we have complex
  f=jtnumd; t=FL;  f=ii?jtnumi:f; t=ii?INT:t;  f=b|j?jtnumbpx:f; t=b|j?CMPX:t;  f=x?jtnumx:f; t=x?XNUM:t;  f=q?jtnumq:f; t=q?RAT:t;  // routine to use, and type of result
  k=bpnoun(t);   // size in bytes of 1 result value
  GA(z,t,m,1!=m,0); v=CAV(z);

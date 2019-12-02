@@ -326,9 +326,23 @@ Erase ;:'abc abc_z_ ces_exist_ sum_z_'
 
 18!:55 ;:'exist nonexist'
 
+NB. Script lists --------------------------------------------------------
+
+(4!:3 =&# 4!:8) ''
+this1=: 'this1'
+si_g4x=: 4!:4 <'this1'
+si_g4x e. i.#4!:3 ''
+'g4x.ijs'-:tolower _7{.>si_g4x{4!:3 ''
+
+empty 4!:7 si_sn [ this2=: 'this2' [ si_sn=: 4!:7 ] 4!:6 sn=. 'scriptname',":?1e6
+sn-:>(4!:4 <'this2'){4!:3 ''
+si_g4x=(4!:4 <'this2'){4!:8 ''
+
+
+
 4!:55 ;:'a ab_cd abc abc__ abc_z_ abcd '
 4!:55 ;:'advx alpha b beta c ces conjx Erase f'
-4!:55 ;:'g gamma jnc jnc_z_ jnl jnl_z_ nm nounx plus scind sum '
-4!:55 ;:'sum__ sum_z_ t v verbx x y '
+4!:55 ;:'g gamma jnc jnc_z_ jnl jnl_z_ nm nounx plus scind si_g4x si_sn sn sum '
+4!:55 ;:'sum__ sum_z_ t this1 this2 v verbx x y '
 
 

@@ -57,6 +57,13 @@ x    eq ". ":  x
 (4=type x) *. 0 = (- y) - x=:  ". '_',":    y=: 2^IF64{31 63x
 (4=type x) *. 0 = (<:y) - x=:  ".     ": <: y=: 2^IF64{31 63x
 
+1=type@> 0;1;0 1
+4=type@> 00;01
+8=type@> 1.2;1.0;1.;1. 0
+16=type@> 1j4;1j0;0 1j0
+64=type@> 123x;123 0x
+128=type@> 2r3;0r0;2r1;2r1 0
+
 'ill-formed number' -: ". etx '3ee4'
 'ill-formed number' -: ". etx '3jj4'
 'ill-formed number' -: ". etx '_b_'

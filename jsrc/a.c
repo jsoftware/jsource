@@ -56,7 +56,7 @@ static DF1(jtbasis1){DECLF;A z;D*x;I j;V*v;
   default: ASSERT(0,EVDOMAIN);
 }}
 
-F1(jtbdot){A b,h=0;I j,n,*v;
+F1(jtbdot){A b,h=0;I j=0,n,*v;
  RZ(w);
  if(VERB&AT(w))R ADERIV(CBDOT, jtbasis1,0L, 0L,0,0,0);
  RZ(w=vi(w));

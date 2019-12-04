@@ -214,6 +214,7 @@ NB.  11 s: ''    NB. reset symbol
  echo (+/ % #) 0 s: 12
 end.
 Debug=: d123
+dbr 0
 echo 'Finish'
 ''
 )
@@ -246,6 +247,7 @@ NB.  11 s: ''    NB. reset symbol
  end.
 end.
 Debug=: d123
+dbr 0
 echo 'Finish'
 ''
 )
@@ -280,6 +282,7 @@ NB.   11 s: ''    NB. reset symbol
  x123=. <:x123
 end.
 Debug=: d123
+dbr 0
 echo 'Finish'
 ''
 )
@@ -312,6 +315,7 @@ NB.  11 s: ''    NB. reset symbol
  end.
 end.
 Debug=: d123
+dbr 0
 echo 'Finish'
 ''
 )
@@ -342,6 +346,7 @@ NB.  11 s: ''    NB. reset symbol
  echo (+/ % #) 0 s: 12
 end.
 Debug=: d123
+dbr 0
 echo 'Finish'
 ''
 )

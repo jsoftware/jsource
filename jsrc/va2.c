@@ -493,7 +493,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
  F2PREFIP;
  {I at=AT(a);
   I wt=AT(w);
-  if(((-(((I)jtinplace&(JTRETRY|JTEMPTY))|((UNSAFE(at|wt))&(NOUN&~(B01|INT|FL))))))>=0){  // no error, bool/int/fl args, no empties
+  if(!(((I)jtinplace&(JTRETRY|JTEMPTY))+((UNSAFE(at|wt))&(NOUN&~(B01|INT|FL))))){  // no error, bool/int/fl args, no empties
    // Here for the fast and important case, where the arguments are both B01/INT/FL
    VA *vainfo=(VA*)FAV(self)->localuse.lvp[0];  // extract table line from the primitive
    // The index into va is atype*3 + wtype, calculated sneakily.  We test here to avoid the call overhead

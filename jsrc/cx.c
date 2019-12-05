@@ -30,6 +30,7 @@
 // Parse/execute a line, result in z.  If locked, reveal nothing.  Save current line number in case we reexecute
 // Before each sentence we snapshot the implied locale in the local symbol table.  If the sentence passes a u/v into an operator, the current symbol table will become the prev and will have the u/v environment info
 #define parseline(z) {C attnval=*jt->adbreakr; A *queue=line+ci->i; I m=ci->n; /* obsolete AKGST(locsym)=jt->global;*/ if(!attnval){if(!(gsfctdl&16))z=parsea(queue,m);else {thisframe->dclnk->dcix=i; z=parsex(queue,m,ci,callframe);}}else{jsignal(EVATTN); z=0;} }
+
 typedef struct{A t,x,line;C*iv,*xv;I j,n; I4 k,w;} CDATA;
 /* for_xyz. t do. control data   */
 /* line  'for_xyz.'              */
@@ -56,7 +57,8 @@ static B jtforinit(J jt,CDATA*cv,A t){A x;C*s,*v;I k;
  cv->j=-1;                               /* iteration index     */
  cv->x=0;
  k=AN(cv->line)-5; cv->k=(I4)k;                 /* length of item name */
- if(0<k&&cv->n){                         /* for_xyz.            */
+// obsolete  if(0<k&&cv->n){                         /* for_xyz.   k nonzero and cv->n nonzero         */
+ if((-k&-cv->n)<0){                         /* for_xyz.            */
   s=4+CAV(cv->line); RZ(x=str(6+k,s)); ras(x); cv->x=x;
   cv->xv=v=CAV(x); MC(k+v,"_index",6L);  /* index name          */
   cv->iv=s;                              /* item name           */
@@ -86,7 +88,8 @@ static void jttryinit(J jt,TD*v,I i,CW*cw){I j=i,t=0;
 // result is new value for tdi
 // This is called only if tdi is nonzero & therefore we have a stack
 static I trypopgoto(TD* tdv, I tdi, I dest){
- while(tdi&&(tdv[tdi-1].b>dest||tdv[tdi-1].e<dest))--tdi;  // discard stack frame if structure does not include dest
+// obsolete  while(tdi&&(tdv[tdi-1].b>dest||tdv[tdi-1].e<dest))--tdi;  // discard stack frame if structure does not include dest
+ while(tdi&&!BETWEENC(dest,tdv[tdi-1].b,tdv[tdi-1].e))--tdi;  // discard stack frame if structure does not include dest
  R tdi;
 }
 
@@ -479,6 +482,7 @@ dobblock:
    i=ci->go;  // Go to the next sentence, whatever it is
   }
  }  // end of main loop
+
  // We still must not take an error exit in this runout.  We have to hang around to the end to restore symbol tables, pointers, etc.
 
  FDEPDEC(1);  // OK to ASSERT now

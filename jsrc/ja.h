@@ -328,7 +328,7 @@
 #define exec1(x)                    jtexec1(jt,(x))   
 #define exec2(x,y)                  jtexec2(jt,(x),(y))   
 #define exec2q(x0,x1,x2,x3,x4)      jtexec2q(jt,(x0),(x1),(x2),(x3),(x4)) 
-#define exec2r(x0,x1,x2,x3,x4)      jtexec2r(jt,(x0),(x1),(x2),(x3),(x4)) 
+#define exec2r(x0,x1,x2,x3,x4,x5)   jtexec2r(jt,(x0),(x1),(x2),(x3),(x4),(x5)) 
 #define exec2x(x0,x1,x2,x3,x4)      jtexec2x(jt,(x0),(x1),(x2),(x3),(x4)) 
 #define exec2z(x0,x1,x2,x3,x4)      jtexec2z(jt,(x0),(x1),(x2),(x3),(x4))
 #define exg(x)                      jtexg(jt,(x))
@@ -725,7 +725,7 @@
 #define num                         (numv-NUMMIN)  // the block for number 0
 #define numb(x0,x1,x2,x3)           jtnumb(jt,(x0),(x1),(x2),(x3))
 #define numbpx(x,y,z)               jtnumbpx(jt,(x),(y),(z))
-#define numcase(x0,x1,x2,x3,x4,x5,x6)               jtnumcase(jt,(x0),(x1),(x2),(x3),(x4),(x5),(x6))
+#define numcase(x0,x1)              jtnumcase(jt,(x0),(x1))
 #define numd(x,y,z)                 jtnumd(jt,(x),(y),(z))
 #define nume(x,y,z)                 jtnume(jt,(x),(y),(z))
 #define numi(x,y,z)                 jtnumi(jt,(x),(y),(z))

@@ -424,7 +424,10 @@ A jtbcvt(J jt,C mode,A w){FPREFIP; A y,z=w;D ofuzz;
 #endif
  // for all numerics, try Boolean/int/float in order, stopping when we find one that holds the data
  if(mode&1||!(AT(w)&XNUM+RAT)){  // if we are not stopping at XNUM/RAT
-  z=!(mode&14)&&ccvt(B01,w,&y)?y:!(mode&12)&&ccvt(INT,w,&y)?y:!(mode&8)&&ccvt(FL,w,&y)?y:w;  // convert to enabled modes one by one, stopping when one works
+  // To avoid a needless copy, suppress conversion to B01 if type is B01, to INT if type is INT, etc
+  z=!(mode&14)&&ccvt(B01,w,&y)?y:
+    (y=w,AT(w)&INT||(!(mode&12)&&ccvt(INT,w,&y)))?y:
+    (y=w,AT(w)&FL||(!(mode&8)&&ccvt(FL,w,&y)))?y:w;  // convert to enabled modes one by one, stopping when one works
  }
  jt->fuzz=ofuzz; jt->ranks=oqr;
  RNE(z);

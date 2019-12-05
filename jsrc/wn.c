@@ -27,15 +27,18 @@
 static NUMH(jtnumd){C c,*t;D*v,x,y;
  if(!(n))R 0;
  v=(D*)vv;
- if('-'==*s&&3>n)
+// obsolete  if('-'==*s&&3>n)
+ if(((((I)s[0]^'-')-1)&(n-3))<0){   // '-' and n<3
   if(1==n){*v=inf; R 1;}
   else{
-   c=*(1+s);
+   c=s[1];
    if('-'==c){*v=infm; R 1;}
    else if('.'==c){*v=jnan; R 1;}
   }
+ }
  x=strtod(s,(char**)&t);
- if(t<s+n-1&&'r'==*t){y=strtod(1+t,(char**)&t); x=y?x/y:0<x?inf:0>x?infm:0;}
+ if(t>=s+n){*v=x; R 1;}  // normal return when field consumed
+ if(t<s+n-1&&'r'==*t){y=strtod(1+t,(char**)&t); x=y?x/y:0<x?inf:0>x?infm:0;}  // if r in float value, handle the denominator
  R t>=s+n?(*v=x,1):0;
 }
 
@@ -174,55 +177,78 @@ static NUMH(jtnumbpx){B ne,ze;C*t,*u;I k,m;Z b,p,q,*v,x,y;
 // Example: '1j1 1x' sets j but not x, so 1x is ill-formed
 // Example:  '16b4 1x' similarly, and '4.0 1x' similarly
 /* (n,s) string containing the vector constant                */
-/* j:  1 iff contains 1j2 or 1ad2 or 1ar2                     */
-/* b:  1 iff has 1b1a or 1p2 or 1x2 (note: must handle 1j3b4) */
-/* x:  1 iff contains 123x                                    */
-/* q:  1 iff contains 3r4                                     */
-/* ii: 1 iff integer (but not x)                              */
-// kludge this should simply return a bitmask
+// returns type bits set in a mask
+/* CMPX:  1 iff contains 1j2 or 1ad2 or 1ar2                     */
+/* LIT:  1 iff has 1b1a or 1p2 or 1x2 (note: must handle 1j3b4) */
+/* XNUM:  1 iff contains 123x                                    */
+/* RAT:  1 iff contains 3r4                                     */
+/* INT: 1 iff integer (but not x)                              */
 
-static void jtnumcase(J jt,I n,C*s,B*b,B*j,B*x,B*q,B*ii){B e;C c;
- *x=*q=*ii=0;
- // if the string contains 'a' or 'j', it must be complex
- *j=memchr(s,'j',n)||memchr(s,'a',n);
- // if it contains 'b' or 'p', that becomes the type regardless of others
- // (types incompatible with that raise errors later)
- *b=memchr(s,'b',n)||memchr(s,'p',n);
- if(!*j&&!*b){
+#define WDDOT (I)0x2e2e2e2e2e2e2e2e  // a word of '.'
+static I jtnumcase(J jt,I n,C*s){B e;C c;I ret;
+ // First, a quick pass to see if there are any alphabetics or .
+ I *si=(I*)s;  // running pointer to data
+ I allor=0, anydot=0;  // will hold mask info over all characters
+ DQ(n>>LGSZI, allor|=*si; anydot|=(*si^WDDOT)-VALIDBOOLEAN; ++si;)  // sets a sign bit if anything is '.', valid only if no alphas
+ I tailmsk=~((~(I)0)<<((n&(SZI-1))<<3)); allor|=(*si&tailmsk); anydot|=((*si&tailmsk)^WDDOT)-VALIDBOOLEAN;
+ if(!(allor&(3*VALIDBOOLEAN<<6))){   // if no 0xc0 bit set, there are no lower-case alphas or non-ASCII chars
+  R (anydot&(VALIDBOOLEAN<<6))==0?INT:0;  // no byte had 0xC0 set; if byte^'.' - 1 had 0x40 set, it must have been '.'.  Set ii if there are none such
+ }else{
+  // if there are alphabetics/non-ASCII, do the full analysis
+// obsolete   *x=*q=*ii=0;
+// obsolete   // if the string contains 'a' or 'j', it must be complex
+// obsolete   *j=memchr(s,'j',n)||memchr(s,'a',n);
+  // if it contains 'b' or 'p', that becomes the type regardless of others
+  // (types incompatible with that raise errors later)
+// obsolete   *b=memchr(s,'b',n)||memchr(s,'p',n);
+  ret=(memchr(s,'j',n)||memchr(s,'a',n)?CMPX:0) + (memchr(s,'b',n)||memchr(s,'p',n)?LIT:0);
+// obsolete   if(!*j&!*b){
+  if(ret==0){
 #if SY_64
-  *ii=1;
+// obsolete   *ii=1;
+   ret|=INT;  // default to 'nothing seen except integers'
 #endif
-  // if not j or b type, scan again. x indicates 1x2 or 23x.  Set both
-  if(memchr(s,'x',n)){*b=*x=1; *ii=0;}
-  // if string contains r, it's rational (since not ar)
-  if(memchr(s,'r',n)){*q=1;    *ii=0;}
-  // if no x or r found, exit as float/integer
-  if(!*x&&!*q&&!*ii)R;
-  // If any . or e found, or 'x' not at the end, treat as float/int, with all other modes cleared
-  // Thus, 4. 1r3 produces float, while 4 1r3 produces rational
-  DO(n, c=s[i]; e=!s[1+i]; if(c=='.'||c=='e'||c=='x'&&!e){*x=*q=*ii=0; R;});
-}}
+   // if not j or b type, scan again. x indicates 1x2 or 23x.  Set both
+// obsolete    if(memchr(s,'x',n)){*b=*x=1; *ii=0;}
+   if(memchr(s,'x',n)){ret|=LIT+XNUM; ret&=~INT;}
+   // if string contains r, it's rational (since not ar)
+// obsolete    if(memchr(s,'r',n)){*q=1;    *ii=0;}
+   if(memchr(s,'r',n)){ret|=RAT;    ret&=~INT;}
+   // if no x or r found, exit as float
+// obsolete    if(!*x&!*q&!*ii)R;
+   if(!(ret&RAT+XNUM+INT))R ret;
+   // If any . or e found, or 'x' not at the end, treat as float, with exact modes cleared.  LIT could still be set for 1x2
+   // Thus, 4. 1r3 produces float, while 4 1r3 produces rational
+ // obsolete   DO(n, c=s[i]; e=!s[1+i]; if(c=='.'||c=='e'||c=='x'&&!e){*x=*q=*ii=0; R;});
+   e=s[0]; DO(n, c=e; e=s[i+1]; if(c=='.'||c=='e'||c=='x'&&e){R ret&~(XNUM+RAT+INT);});  // must look at stopper because comma strings have multiple NULs at the end
+  }
+  R ret;
+ }
+}
 
 // n is string length, s is string representing valid J numbers
-A jtconnum(J jt,I n,C*s){PROLOG(0101);A y,z;B b,(*f)(J,I,C*,void*),ii,j,p=1,q,x;C c,*v;I d=0,e,k,m,t,*yv;
+A jtconnum(J jt,I n,C*s){PROLOG(0101);A y,z;B (*f)(J,I,C*,void*),p=1;C c,*v;I d=0,e,k,m,t,*yv;
  if(1==n)                {if(k=s[0]-'0',(UI)k<=(UI)9)R num[ k]; else R ainf;}  // single digit - a number or _
  else if(2==n&&CSIGN==*s){if(k=s[1]-'0',(UI)k<=(UI)9)R num[-k];}
  RZ(y=str(1+n,s)); rifvs(y); s=v=CAV(y); s[n]=0;  // s->null-terminated string in new copy, which we will modify
  GATV0(y,INT,1+n,1); yv=AV(y);  // allocate area for start/end positions
  C bcvtmask=0;  // bit 1 set to suppress B01, bit 2 to suppress INT
- DO(n, c=*v; c=c==CSIGN?'-':c; c=(c==CTAB)|(c==' ')?C0:c; *v++=c; b=C0==c; bcvtmask=bcvtmask|(4*(c=='.')+2*((p|b)^1)); yv[d]=i; d+=p!=b; p=b;);  // replace _ with -, whitespace with \0; and record start and end positions
+ DO(n, c=*v; c=c==CSIGN?'-':c; c=(c==CTAB)|(c==' ')?C0:c; *v++=c; B b=C0==c; bcvtmask=bcvtmask|(4*(c=='.')+2*((p|b)^1)); yv[d]=i; d+=p^b; p=b;);  // replace _ with -, whitespace with \0; and record start and end positions
    // if we encounter '.', make sure the result is at least FL; if we encounter two non-whitespace in a row, make sure result is at least INT
  yv[d++]=n; m=d>>1;  // append end for last field in case it is missing; m=#fields.  If end was not missing the extra store is harmless
- numcase(n,s,&b,&j,&x,&q,&ii);   // analyze contents of values
- bcvtmask|=j>b?8:0; // flag we have complex
- f=jtnumd; t=FL;  f=ii?jtnumi:f; t=ii?INT:t;  f=b|j?jtnumbpx:f; t=b|j?CMPX:t;  f=x?jtnumx:f; t=x?XNUM:t;  f=q?jtnumq:f; t=q?RAT:t;  // routine to use, and type of result
+// obsolete  numcase(n,s,&b,&j,&x,&q,&ii);   // analyze contents of values
+// obsolete  bcvtmask|=j>b?8:0; // flag we have complex
+// obsolete  f=jtnumd; t=FL;  f=ii?jtnumi:f; t=ii?INT:t;  f=b|j?jtnumbpx:f; t=b|j?CMPX:t;  f=x?jtnumx:f; t=x?XNUM:t;  f=q?jtnumq:f; t=q?RAT:t;  // routine to use, and type of result
+ I tt=numcase(n,s);   // analyze contents of values; returns type flags for chars, as expected except LIT for b
+ bcvtmask|=(tt&CMPX+LIT)==CMPX?8:0; // flag to force complex if we have j but not b
+ f=jtnumd; t=FL;  f=tt&INT?jtnumi:f; t=tt&INT?INT:t;  f=tt&CMPX+LIT?jtnumbpx:f; t=tt&CMPX+LIT?CMPX:t;  f=tt&XNUM?jtnumx:f; t=tt&XNUM?XNUM:t;  f=tt&RAT?jtnumq:f; t=tt&RAT?RAT:t;  // routine to use, and type of result
  k=bpnoun(t);   // size in bytes of 1 result value
  GA(z,t,m,1!=m,0); v=CAV(z);
- if(ii){  // if we think the values are ints, see if they really are
-  DO(m, d=i+i; e=yv[d]; if(!numi(yv[1+d]-e,e+s,v)){ii=0; break;} v+=k;);  // read all values, stopping if a value overflows
-  if(!ii){f=jtnumd; if(SZI==SZD){AT(z)=FL;}else{GATV0(z,FL,m,1!=m);} v=CAV(z);}  // if there was overflow, repurpose/allocate the input with enough space for floats
+ if(t==INT){  // if we think the values are ints, see if they really are
+  DO(m, d=i+i; e=yv[d]; if(!numi(yv[1+d]-e,e+s,v)){t=FL; break;} v+=k;);  // read all values, stopping if a value overflows
+  if(t!=INT){f=jtnumd; if(SZI==SZD){AT(z)=FL;}else{GATV0(z,FL,m,1!=m);} v=CAV(z);}  // if there was overflow, repurpose/allocate the input with enough space for floats
  }
- if(!ii)DO(m, d=i+i; e=yv[d]; ASSERT(f(jt,yv[1+d]-e,e+s,v),EVILNUM); v+=k;);  // read the values as larger-than-int
+ if(t!=INT)DO(m, d=i+i; e=yv[d]; ASSERT(f(jt,yv[1+d]-e,e+s,v),EVILNUM); v+=k;);  // read the values as larger-than-int
  z=bcvt(bcvtmask,z);
  EPILOG(z);
 }
@@ -300,10 +326,14 @@ I strtoint(C* in, C** out) {
  R res;  // Return the int value
 }
 
+// Install the default into zv[k++]
+#define INSDEFAULT {if(tryingint && AT(a)&FL){tryingint=0; DO(k, zv[i] = (D)((I *)zv)[i];)} zv[k++]=a0;}
+
 // Normal numeric-to-character conversion.
 // a is the default, w is the character buffer to convert, m is the number of rows of characters,
 // n is the length of each row, c is the number of values in each row
-static A jtexec2r(J jt,A a,A w,I n,I m,I c){A z;B b,e;C d,*u,*uu,*v,*x,*y;D a0,a1,*zv;I k,j,mc,r;
+// fillreqd is negative if the lines have different lengths
+static A jtexec2r(J jt,A a,A w,I n,I m,I c,I fillreqd){A z;B b,e;C d,*u,*uu,*v,*x,*y;D a0,*zv;I k,j,mc,r;
  B tryingint; // set if we have to attempt to convert to int before float, if ints can hold
    // higher precision than float
 B valueisint; // set if the value we are processing is really an int
@@ -315,9 +345,9 @@ B valueisint; // set if the value we are processing is really an int
  // Allocate the result array, as floats.  If the last atom of shape was not removed, replace it with c, the output length per list
  GATV(z,FL,mc,r,AS(w)); if(0<r&&1!=c)AS(z)[r-1]=c; zv=DAV(z);
  if(!mc)R z;  // If no fields at all, exit with empty result (avoids infinite loop below)
- // Convert the default to float, unless we are trying big integers.  We try ints if the default is int,
+ // Convert the default to float, unless we are trying big integers.  We try ints if the default is int or infinite,
  // but only on 64-bit systems where int and float have the same size
- if(!(tryingint = sizeof(D)==sizeof(I) && AT(a)&B01+INT)){RZ(a=cvt(FL,a));}
+ if(!(tryingint = sizeof(D)==sizeof(I) && (AT(a)&B01+INT || (fillreqd>=0 && AT(a)&FL)))){RZ(a=cvt(FL,a));}
  else if(AT(a)&B01)RZ(a=cvt(INT,a));  // If we are trying ints, we must promote Bool to int
  // Get the default value; supposedly a (D) but if we are trying ints it might be really an (I)
  a0=DAV(a)[0];
@@ -328,7 +358,7 @@ B valueisint; // set if the value we are processing is really an int
   while(u<uu&&C0==*u)++u;
   // If we have consumed all the input for the current row, fill the rest of the
   // row with defaults, then advance input & output to next row; return if all done
-  while(u>=y){while(k<j)zv[k++]=a0; j+=c; y+=n;}
+  while(u>=y){while(k<j)INSDEFAULT j+=c; y+=n;}
   if(k>=mc)break;   // exit loop if all inputs processed
   // Read a number from the input, leaving v pointing to the character that stopped the conversion
   // If we are trying ints first to avoid floating-point truncation, do so
@@ -345,7 +375,7 @@ B valueisint; // set if the value we are processing is really an int
     // comma.  We will remove commas from the number and then rescan it.
     b=u==v; x=v;   // b='first character was comma'; x is output pointer for the copy
     while(d=*++v)if(','!=d)*x++=d;   // copy to end-of-field, discarding commas
-    if(b||','==*(v-1)){zv[k++]=a0; u=v;}else while(v>x)*x++=C0;  // if first or last character is comma, use default and continue, skipping the field;
+    if(b||','==*(v-1)){INSDEFAULT u=v;}else while(v>x)*x++=C0;  // if first or last character is comma, use default and continue, skipping the field;
        // otherwise put \0 over the characters after the last copied one, and go back to rescan the number
     continue;
    case '-':
@@ -356,7 +386,7 @@ B valueisint; // set if the value we are processing is really an int
     if     (e&& C0==d){zv[k]=inf;}   // -<end> infinity: take it
     else if(b&&'-'==d){zv[k]=infm;}   // --<end> neginfinity
     else if(b&&'.'==d){zv[k]=jnan;}  // -.<end> NaN
-    else{zv[k++]=a0; --v; while(C0!=*v++); u=v;continue;}   // NOTA; invalid including - in the middle, use default; advance to end-of-field
+    else{INSDEFAULT --v; while(C0!=*v++); u=v;continue;}   // NOTA; invalid including - in the middle, use default; advance to end-of-field
     // the non-error cases fall through to process the input value...
    case C0:
     // \0 (normal end-of-field), or fallthrough from '-' non-error.  Either way it's a number.  Accept the number and continue.  But if this is the
@@ -365,7 +395,8 @@ B valueisint; // set if the value we are processing is really an int
      // We hit a float.  Forget about ints
      tryingint = 0;
      // Convert the default value to float
-     a1 = a0; a0 = (D)*(I *)&a1;
+// obsolete     a1 = a0; a0 = (D)*(I *)&a1;
+     if(AT(a)&INT)a0=(D)IAV(a)[0];
      // Convert all previously-read values to float.  Also converted the default value above
      // We have to use pointer aliasing to read the value in zv as an int
      DO(k, zv[i] = (D)((I *)zv)[i];)
@@ -377,7 +408,7 @@ B valueisint; // set if the value we are processing is really an int
     // but if special character at beginning of field, that's not a valid complex number, fall through to...
    default:
     // Other stopper character, that's invalid, use default, skip the field
-    zv[k++]=a0; while(C0!=*++v); u=v;
+    INSDEFAULT while(C0!=*++v); u=v;
  }}
  // All done.  If we ended still looking for ints, the whole result must be int, so flag it as such
  if(tryingint)AT(z) = INT;
@@ -385,7 +416,7 @@ B valueisint; // set if the value we are processing is really an int
 }
 
 // x ". y
-F2(jtexec2){A z;B b,ii,j,p,q,x;C d,*v;I at,c,i,k,m,n,r,*s;
+F2(jtexec2){A z;B b,p;C d,*v;I at,c,i,k,m,n,r,*s;
  RZ(a&&w);
  ASSERT(!AR(a),EVRANK);  // x must be an atom
  at=AT(a);
@@ -395,34 +426,43 @@ F2(jtexec2){A z;B b,ii,j,p,q,x;C d,*v;I at,c,i,k,m,n,r,*s;
 
  // process each list of the input to see how many numbers it contains.  We will
  // use this to set the shape of the result area
+ I fillreqd=0;  // will be <0 if lines have different lengths
  if(!r||*(AS(w)+r-1)){    // skip the count if y is atom, or the last axis of y has dimension 0.   Nothing to count.
   // Calculate w ,"1 0 ' '   to end each (or only) line with delimiter
-  {A t; RZ(w=IRS2(w,chr[' '],0L,1L,0L,jtover,t));}  // New w will be created
+  {A t; RZ(w=IRS2(w,chr[' '],0L,1L,0L,jtover,t)); realizeifvirtual(w);}  // New w will be created
   v=CAV(w); r=AR(w); s=AS(w); n=s[r-1]; m=prod(r-1,s);  // v->data, m = #lists, n = length of each list
   for(i=0;i<m;++i){I j;
-   // b is set when the current character is a space/TAB; p when the previous character was a space/TAB
+   // b is set when the current character is significant (i. e. not whitespace); p when the previous character was significant
    // k counts the number of words on this line
    // c is the max # words found on a line
-   b=1; k=0; 
+   b=0/* obsolete 1*/; k=0; 
    for(j=0;j<n;++j){
-    p=b; d=*v; b=0;
-    switch(d){
-     case ' ': case CTAB:  *v=C0; b=1; break;
-     case CSIGN: *v='-'; 
-    }
-    ++v; if(p>b)++k;
-   } 
-   if(k>c)c=k;
+    p=b; d=*v;
+// obsolete     b=0;
+// obsolete     switch(d){
+// obsolete      case ' ': case CTAB:  *v=C0; b=1; break;
+// obsolete      case CSIGN: *v='-'; 
+// obsolete     }
+// obsolete     ++v; if(p>b)++k;
+    // replace ' ' and TAB with \0; replace _ with -
+    b=(d!=' ')&(d!=CTAB); d=d==CSIGN?'-':d; d&=-b;
+    *v=d; ++v; k+=b&~p;  // write out the possibly-changed character; if char is a new start-of-field, increment word count
+   }
+   fillreqd |= -i&-(c^k);   // indic fill needed if c!=k except on the first line
+   c=k>c?k:c;  // c is running max of linelengths
  }}
  // c is length of each output list; the list has had _ replaced by - and space/TAB replaced by \0
  // Classify the input y according the types it contains
- numcase(m*n,CAV(w),&b,&j,&x,&q,&ii);
+ I tt=numcase(m*n,CAV(w));
 
  // Select the conversion routine.  We allow -0 in the result now
  if(at&CMPX)                z=exec2z(a,w,n,m,c);  // If x argument is complex, force that mode
- else if(q)                 z=exec2q(a,w,n,m,c);  // Otherwise, if data contains rationals, use that mode
- else if(x&&at&B01+INT+XNUM)z=exec2x(a,w,n,m,c);   // Otherwise if data contains extended integers, use that mode as long as x is compatible
- else                       z=exec2r(a,w,n,m,c);  // otherwise do normal int/float conversion
- // Select the precision to use: the smallest that can hold the data
- R bcvt(0,z);
+ else if(tt&RAT)                 z=exec2q(a,w,n,m,c);  // Otherwise, if data contains rationals, use that mode
+ else if(tt&XNUM&&at&B01+INT+XNUM)z=exec2x(a,w,n,m,c);   // Otherwise if data contains extended integers, use that mode as long as x is compatible
+ else                       z=exec2r(a,w,n,m,c,fillreqd);  // otherwise do normal int/float conversion, with failover to other types
+ // Select the precision to use: the smallest that can hold the data, but never less than the precision of x
+ C cvtmask=(~AT(a)&B01)<<1;  // if x is not B01, set mask to suppress conversion to B01
+ cvtmask=AT(a)&B01+INT?cvtmask:6;  // if not B01 or INT, suppress conversion to INT (but it may be INT already)
+ cvtmask=AT(a)&B01+INT+FL?cvtmask:14;  // if not B01/INT/FL, suppress conversion to FL
+ R bcvt(cvtmask,z);
 }

@@ -5,6 +5,7 @@
 
 #include "j.h"
 
+// These routines support IRS iff the underlying verb does, so all we have to do is switch the ranks if any and vector on to the function
 // create inplace bits as copy of W, or swap A & W
 static DF1(swap1){DECLF; F1PREFIP; jtinplace = (J)(intptr_t)(((I)jtinplace&~JTINPLACEA)+2*((I)jtinplace&JTINPLACEW));
  // a~ carried the IRS flag from a and thus we might have ranks set.  If so, use them, and no need to check agreement again.  For ease, we just use whatever is set 
@@ -18,7 +19,7 @@ static DF2(swap2){DECLF; F2PREFIP; jtinplace = (J)(intptr_t)((I)jtinplace^((JTIN
 F1(jtswap){A y;C*s;I n;
  RZ(w); 
  if(VERB&AT(w)){
-  // reflexive/passive.  Create verb that swaps
+  // reflexive/passive.  Create verb that swaps.  Most flags do not apply to the derived verb
   I flag = FAV(w)->flag&(VIRS2|VJTFLGOK2); flag = (FAV(w)->flag&VASGSAFE)+flag+(flag>>1);  // set ASGSAFE, both inplace/irs bits from dyad; ISATOMIC immaterial, since always dyad
   R fdef(0,CTILDE,VERB,(AF)(swap1),(AF)(swap2),w,0L,0L,flag,(I)(RMAX),(I)(rr(w)),(I)(lr(w)));
  }else{
@@ -62,7 +63,7 @@ F1(jtbdot){A b,h=0;I j=0,n,*v;
  RZ(w=vi(w));
  n=AN(w); v=AV(w);
  if(1==n){j=*v; ASSERT(BETWEENC(j,-16,34),EVINDEX);}
- else DQ(n, j=*v++; ASSERT(BETWEENC(j,-16,15),EVINDEX););
+ else DQ(n, j=*v++; ASSERT(BETWEENC(j,-16,15),EVINDEX););  // j must be initialized because the loop might not run
  if(/* obsolete 1!=n||*/j<16){
   GAT0(b,B01,64,2); AS(b)[0]=16; AS(b)[1]=4; MC(AV(b),booltab,64L);
   RZ(h=cant2(IX(AR(w)),from(w,b)));  // h is an array representing b.  One cell for each atom of b; cell is 4 values

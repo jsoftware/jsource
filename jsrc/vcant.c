@@ -28,6 +28,7 @@ static A jtcants(J jt,A a,A w,A z){A a1,q,y;B*b,*c;I*u,wr,zr;P*wp,*zp;
 // we create result items in order.  tv[] is the representation in the index space of the result.  When
 // we move a cell we increment the low-order index and propagate carries up the line.  Each entry of mv[] tells
 // how many bytes to move the input pointer for a move of 1 in the result axis
+// exp moves one cell into the result area with postincrement, e. g. *u++=*(C*)v;
 #define CANTA(T,exp)  \
  {T*u=(T*)zv; C*v=(C*)wv;                                                  \
   do{j = r-1; I mvr1=mv[j]; DQ(sv[j], exp; v+=mvr1;)                        \
@@ -79,12 +80,12 @@ static F2(jtcanta){A m,s,t,z;C*wv,*zv;I*av,j,*mv,r,*sv,*tv,wf,wr,*ws,zn,zr,ms[4]
  zv=CAV(z); wv=CAV(w);
  memset(tv,C0,r*SZI);  // repurpose tv to be the index list of the input pointer, and set to 0s.  Only the first r axes matter
  switch(cellsizeb){
+ case sizeof(I): CANTA(I, *u++=*(I*)v;); break;
  case sizeof(C): CANTA(C, *u++=*(C*)v;); break;
  case sizeof(S): CANTA(S, *u++=*(S*)v;); break;
 #if SY_64
  case sizeof(I4): CANTA(I4, *u++=*(I4*)v;); break;
 #endif
- case sizeof(I): CANTA(I, *u++=*(I*)v;); break;
 #if !SY_64 && SY_WIN32
  case sizeof(D): if(AT(w)&FL){CANTA(D, *u++=*(D*)v;); break;}
    // move as D type only if echt floats - otherwise they get corrupted.  If not float, fall through to...

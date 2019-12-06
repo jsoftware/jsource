@@ -8,13 +8,19 @@
 
 #define BXLOOP(T)  \
  {T*wv=(T*)AV(w),x;                                                  \
+  if(descend){DQ(m, x=*wv++; I t=n; t=x>=0?p:t; t=x>=1?0:t; *zv++=t;);        /* p q */  \
+  }else if(p<0){DQ(m, *zv++=n*(1<*wv++);) /*   q */  \
+  }else if(q<0){DQ(m, *zv++=n*(0<*wv++););   /* p   */  \
+  }else{DQ(m, x=*wv++; I t=n; t=x<=1?q:t; t=x<=0?0:t; *zv++=t;) /* p q */  \
+  }  \
+ }
+
+#if 0 // obsolete 
   switch((4*descend)+(0<=p?2:0)+(I )(0<=q)){                             \
    case 1: DQ(m, *zv++=n*(1<*wv++););              break; /*   q */  \
    case 2: DQ(m, *zv++=n*(0<*wv++););              break; /* p   */  \
    case 3: DQ(m, x=*wv++; I t=n; t=x<=1?q:t; t=x<=0?0:t; *zv++=t;); break; /* p q */  \
    case 7: DQ(m, x=*wv++; I t=n; t=x>=0?p:t; t=x>=1?0:t; *zv++=t;);        /* p q */  \
- }}
-#if 0 // obsolete 
    case 3: DQ(m, x=*wv++; *zv++=x<=0?0:x<=1?q:n;); break; /* p q */  \
    case 7: DQ(m, x=*wv++; *zv++=x>=1?0:x>=0?p:n;);        /* p q */  \
 
@@ -24,17 +30,18 @@ static B jtiixBX(J jt,I n,I m,A a,A w,I*zv){B*av,*b,descend;I p,q;
  av=BAV(a); descend=av[0]>av[n-1];
  b=memchr(av,C0,n); p=b?b-av:-1;
  b=memchr(av,C1,n); q=b?b-av:-1;
- switch(CTTZNOFLAG(AT(w))){
-  case INTX: BXLOOP(I); break;
-  case FLX:  BXLOOP(D); break;
-  case B01X:
-   b=BAV(w);
-   switch((4*descend)+(0<=p?2:0)+(I )(0<=q)){
-    case 1: memset(zv,C0,m*SZI);   break;  /*   q */
-    case 2: DQ(m, *zv++=n* *b++;); break;  /* p   */
-    case 3: DQ(m, *zv++=q* *b++;); break;  /* p q */
-    case 7: DQ(m, *zv++=p*!*b++;);         /* p q */
- }}
+ switch(UNSAFE(AT(w))){
+ case INT: BXLOOP(I); break;
+ case FL:  BXLOOP(D); break;
+ case B01:
+  b=BAV(w);
+// obsolete    switch((4*descend)+(0<=p?2:0)+(I )(0<=q)){
+  if(descend){DQ(m, *zv++=p*!*b++;)         /* p q */
+  }else if(p<0){memset(zv,C0,m*SZI);  /*   q */
+  }else if(q<0){DQ(m, *zv++=n* *b++;)  /* p   */
+  }else{DQ(m, *zv++=q* *b++;)  /* p q */
+  }
+ }
  R 1;
 }    /* a I."r w where a is a boolean list */
 
@@ -123,7 +130,7 @@ F2(jticap2){A*av,*wv,z;C*uu,*vv;I ar,*as,at,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t,wr,*ws
    if((I)((r>>2)+2*n)<(I)(m*nlg)){RZ(iixI(n,m,a,w,zv)); R z;}  // weight misbranches as equiv to 8 stores
  }}
  jt->workareas.compare.complt=-1; cc=0; uu=CAV(a); vv=CAV(a)+(c*(n-1)<<bplg(at));
- // first decide if the input array is ascending or descending
+ // first decide if the input array is ascending or descending, comparing the first & last items atom by atom
  switch(CTTZ(at)){
   default:   ASSERT(0,EVNONCE);
   case B01X:  COMPVLOOP(B, c);           break;
@@ -183,11 +190,11 @@ F2(jticap2){A*av,*wv,z;C*uu,*vv;I ar,*as,at,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t,wr,*ws
    ASSERT(TYPESNE(at,wt),EVNONCE);
    if(TYPESNE(t,at))RZ(a=cvt(t,a));
    if(TYPESNE(t,wt))RZ(w=cvt(t,w));
-   switch(CTTZ(t)){
-    case CMPXX: c+=c;  /* fall thru */ 
-    case FLX:   BSLOOP(D,D);           break;
-    case XNUMX: BSLOOF(X,X, xcompare); break;
-    case RATX:  BSLOOF(Q,Q, qcompare); break;
+   switch(UNSAFE(t)){
+    case CMPX: c+=c;  /* fall thru */ 
+    case FL:   BSLOOP(D,D);           break;
+    case XNUM: BSLOOF(X,X, xcompare); break;
+    case RAT:  BSLOOF(Q,Q, qcompare); break;
     default:   ASSERT(0,EVNONCE);
  }}
  RETF(z);

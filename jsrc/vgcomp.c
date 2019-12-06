@@ -58,11 +58,11 @@ I jtcompare(J jt,A a,A w){C*av,*wv;I ar,an,*as,at,c,d,j,m,t,wn,wr,*ws,wt;
   if(TYPESNE(t,wt))RZ(w=cvt(t,w));
   av=CAV(a); wv=CAV(w);
   switch(CTTZ(t)){
+   case INTX:  COMPLOOQ (I, m  );         break;
    default:   COMPLOOQ (UC,m  );         break;
    case C2TX:  COMPLOOQ (US,m  );         break;
    case C4TX:  COMPLOOQ (C4,m  );         break;
    case SBTX:  COMPLOOS (SB,m  );         break;
-   case INTX:  COMPLOOQ (I, m  );         break;
    case FLX:   COMPLOOQ (D, m  );         break;
    case CMPXX: COMPLOOQ (D, m+m);         break;
    case XNUMX: COMPLOOQG(X, m, xcompare); break;

@@ -607,8 +607,8 @@ rdglob: ;
 //     AF actionfn=FAV(fs)->valencefns[(pline&2)>>1];  // the routine we will execute.  It's going to take longer to read this than we can fill before the branch is mispredicted, usually
      // We will be making a bivalent call to the action routine; it will be w,fs,fs for monads and a,w,fs for dyads (with appropriate changes for modifiers).  Fetch those arguments
      // We have fs already.  arg1 will come from position 2 3 1 1 1 depending on stack line; arg2 will come from 1 2 3 2 3
-     if(pmask&0x7){A y;
-      // Verb execution (in  order: V N, V V N, N V N).  We must support inplacing, including assignment in place, and support recursion
+     if(pmask&0x7){A y;  // lines 0 1 2
+      // Verb execution (in order: V N, V V N, N V N).  We must support inplacing, including assignment in place, and support recursion
       jt->sf=fs;  // push $: stack
       // While we are waiting for the branch address, work on inplacing.  See if the primitive being executed is inplaceable
       if((FAV(fs)->flag>>(pline>>1))&VJTFLGOK1){L *s;
@@ -620,7 +620,7 @@ rdglob: ;
 // obsolete           &&(s=((AT(stack[0].a))&ASGNLOCAL?jtprobelocal:jtprobeisquiet)(jt,queue[m-1]))&&((FAV(fs)->flag)&VASGSAFE)&&(pline!=1||FAV(stack[1].a)->flag&VASGSAFE) ){
         s=((AT(stack[0].a))&ASGNLOCAL?jtprobelocal:jtprobeisquiet)(jt,queue[m-1]);  // look up the target.  It will usually be found (in an explicit definition)
         // Don't remember the assignand if it may change during execution, i. e. if the verb is unsafe.  For line 1 we have to look at BOTH verbs that come after the assignment
-        s=((FAV(fs)->flag|(FAV(stack[1].a)->flag|(pmask<<(VASGSAFEX-1))))&VASGSAFE)?s:0;
+        s=((FAV(fs)->flag&(FAV(stack[1].a)->flag|((~pmask)<<(VASGSAFEX-1))))&VASGSAFE)?s:0;
         // It is OK to remember the address of the symbol being assigned, because anything that might conceivably create a new symbol (and thus trigger
         // a relocation of the symbol table) is marked as not ASGSAFE
 // obsolete         if(s->val&&AT(stack[0].a)&ASGNLOCAL)jt->zombieval=s->val;  // Remember the value, whether it exists or not.  We have to avoid private/public puns

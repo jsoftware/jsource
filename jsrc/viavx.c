@@ -380,16 +380,16 @@ static UI jthia(J jt,D hct,A y){UC*yv;D d;I n,t;Q*u;
  n=AN(y); t=AT(y); yv=UAV(y);
  if(((n-1)|SGNIF(t,BOXX))<0)R hic((I)AR(y)*SZI,(UC*)AS(y));  // boxed or empty
  switch(CTTZ(t)){
+  case INTX:  d=(D)*(I*)yv; break;
   case LITX:  R hic(n,yv);
   case C2TX:  R hic2(2*n,yv);
   case C4TX:  R hic4(4*n,yv);
   case SBTX:  R hic(n*SZI,yv);
   case B01X:  d=*(B*)yv; break;
-  case INTX:  d=(D)*(I*)yv; break;
   case FLX: 
   case CMPXX: d=*(D*)yv; break;
   case XNUMX: d=xdouble(*(X*)yv); break;
-  case RATX:  u=(Q*)yv; d=xdouble(u->n)/xdouble(u->d);
+  case RATX:  u=(Q*)yv; d=xdouble(u->n)/xdouble(u->d); break;
  }
  R hid(d*hct);
 }
@@ -398,10 +398,10 @@ static UI jthia(J jt,D hct,A y){UC*yv;D d;I n,t;Q*u;
 static UI jthiau(J jt,A y){I m,n;UC*v=UAV(y);UI z;X*u,x;
  m=n=AN(y);
  if(!n)R 0;
- switch(CTTZ(AT(y))){
-  case RATX:  m+=n;  /* fall thru */
-  case XNUMX: z=-1LL; u=XAV(y); DQ(m, x=*u++; v=UAV(x); z=CRC32((UI4)z,(UI4)hicnz(AN(x)*SZI,UAV(x)));); R z;
-  case INTX:                                    R hici(n,AV(y));
+ switch(UNSAFE(AT(y))){
+  case INT:                                    R hici(n,AV(y));
+  case RAT:  m+=n;  /* fall thru */
+  case XNUM: z=-1LL; u=XAV(y); DQ(m, x=*u++; v=UAV(x); z=CRC32((UI4)z,(UI4)hicnz(AN(x)*SZI,UAV(x)));); R z;
   default:   R hic(n<<bplg(AT(y)),UAV(y));
 }}
 
@@ -2216,10 +2216,10 @@ A jtiocol(J jt,I mode,A a,A w){A h,z;I ar,at,c,d,m,p,t,wr,*ws,wt;void(*fn)();
  GATV0(h,INT,p,1);
  GATV(z,INT,AN(w),wr,ws);
  // call routine based on types.  Only float and CMPX are supported
- switch(CTTZ(t)){
+ switch(UNSAFE(t)){
   default:   ASSERT(0,EVNONCE);     
-  case FLX:   fn=mode==IICO?jtjocold:jtiocold; ctmask(jt); break;
-  case CMPXX: fn=mode==IICO?jtjocolz:jtiocolz; ctmask(jt); break;
+  case FL:   fn=mode==IICO?jtjocold:jtiocold; ctmask(jt); break;
+  case CMPX: fn=mode==IICO?jtjocolz:jtiocolz; ctmask(jt); break;
  }
  fn(jt,m,c,d,a,w,z,h);
  R z;

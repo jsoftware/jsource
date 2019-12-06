@@ -192,7 +192,7 @@ static I jtnumcase(J jt,I n,C*s){B e;C c;I ret;
  DQ(n>>LGSZI, allor|=*si; anydot|=(*si^WDDOT)-VALIDBOOLEAN; ++si;)  // sets a sign bit if anything is '.', valid only if no alphas
  I tailmsk=~((~(I)0)<<((n&(SZI-1))<<3)); allor|=(*si&tailmsk); anydot|=((*si&tailmsk)^WDDOT)-VALIDBOOLEAN;
  if(!(allor&(3*VALIDBOOLEAN<<6))){   // if no 0xc0 bit set, there are no lower-case alphas or non-ASCII chars
-  R (anydot&(VALIDBOOLEAN<<6))==0?INT:0;  // no byte had 0xC0 set; if byte^'.' - 1 had 0x40 set, it must have been '.'.  Set ii if there are none such
+  R SY_64?((anydot&(VALIDBOOLEAN<<6))==0?INT:0):0;  // no byte had 0xC0 set; if byte^'.' - 1 had 0x40 set, it must have been '.'.  Set ii if there are none such
  }else{
   // if there are alphabetics/non-ASCII, do the full analysis
 // obsolete   *x=*q=*ii=0;
@@ -394,7 +394,7 @@ B valueisint; // set if the value we are processing is really an int
     if (valueisint != tryingint) {
      // We hit a float.  Forget about ints
      tryingint = 0;
-     // Convert the default value to float
+     // Convert the default value to float if it isn't already
 // obsolete     a1 = a0; a0 = (D)*(I *)&a1;
      if(AT(a)&INT)a0=(D)IAV(a)[0];
      // Convert all previously-read values to float.  Also converted the default value above

@@ -479,34 +479,33 @@ static A jtfmtallcol(J jt, A a, A w, I mode) {A *a1v,base,fb,len,strs,*u,v,x;
     else if(dtmp< 0       ) { *cv=SUBm;                              }
     else if(dtmp>=0 && mPQ) { MC(cv, cP, nP); MC(cv+*il-nQ, cQ, nQ); }
    } else {
-    switch(CTTZNOFLAG(t)) {
-     case B01X:
-      if(mPQ) { MC(cv, cP, nP); MC(cv+*il-nQ, cQ, nQ); }
-      RZ(sprintfI(cv+nP, *il-nP-nQ, d, *bv, subs));
-      break;
-     case INTX:
-      y=*iv < 0; g=0; 
-      if(*iv < 0 && mMN) { y=nM; g=nN; }
-      else if(*iv>=0 && mPQ) { y=nP; g=nQ; }
-      m=*il-y-g; if(mC) m=m-((m-!!d-d)>>2);
-      RZ(sprintfI(cv+y, m, d, *iv, subs));
-      if(mC) RZ(fmtcomma(cv+y, *il-y-g, d, subs));
-      if     (*iv < 0 && mMN) { MC(cv, cM, nM); MC(cv+*il-nN, cN, nN); }
-      else if(*iv < 0       ) { *cv=SUBm;                              }
-      else if(*iv>= 0 && mPQ) { MC(cv, cP, nP); MC(cv+*il-nQ, cQ, nQ); }
-      break;
-     case FLX:
-      y=*dv < 0; g=0;
-      if(*dv < 0 && mMN) { y=nM; g=nN; }
-      else if(*dv>=0 && mPQ) { y=nP; g=nQ; }
-      m=*il-y-g; if(mC) m=m-((m-!!d-d)>>2);
-      RZ(sprintfnD(cv+y, m, d, afzrndID(d,*dv), subs));
-      if(mC) RZ(fmtcomma(cv+y, *il-y-g, d, subs));
-      if     (*dv < 0 && mMN) { MC(cv, cM, nM); MC(cv+*il-nN, cN, nN); }
-      else if(*dv < 0       ) { *cv=SUBm;                              }
-      else if(*dv>= 0 && mPQ) { MC(cv, cP, nP); MC(cv+*il-nQ, cQ, nQ); }
-      break;
-  }}}
+// obsolete     switch(CTTZNOFLAG(t)) {
+    if(UNSAFE(t)==INT){
+     y=*iv < 0; g=0; 
+     if(*iv < 0 && mMN) { y=nM; g=nN; }
+     else if(*iv>=0 && mPQ) { y=nP; g=nQ; }
+     m=*il-y-g; if(mC) m=m-((m-!!d-d)>>2);
+     RZ(sprintfI(cv+y, m, d, *iv, subs));
+     if(mC) RZ(fmtcomma(cv+y, *il-y-g, d, subs));
+     if     (*iv < 0 && mMN) { MC(cv, cM, nM); MC(cv+*il-nN, cN, nN); }
+     else if(*iv < 0       ) { *cv=SUBm;                              }
+     else if(*iv>= 0 && mPQ) { MC(cv, cP, nP); MC(cv+*il-nQ, cQ, nQ); }
+    }else if(UNSAFE(t)<INT){  // B01
+     if(mPQ) { MC(cv, cP, nP); MC(cv+*il-nQ, cQ, nQ); }
+     RZ(sprintfI(cv+nP, *il-nP-nQ, d, *bv, subs));
+    }else{  // FL
+     y=*dv < 0; g=0;
+     if(*dv < 0 && mMN) { y=nM; g=nN; }
+     else if(*dv>=0 && mPQ) { y=nP; g=nQ; }
+     m=*il-y-g; if(mC) m=m-((m-!!d-d)>>2);
+     RZ(sprintfnD(cv+y, m, d, afzrndID(d,*dv), subs));
+     if(mC) RZ(fmtcomma(cv+y, *il-y-g, d, subs));
+     if     (*dv < 0 && mMN) { MC(cv, cM, nM); MC(cv+*il-nN, cN, nN); }
+     else if(*dv < 0       ) { *cv=SUBm;                              }
+     else if(*dv>= 0 && mPQ) { MC(cv, cP, nP); MC(cv+*il-nQ, cQ, nQ); }
+    }
+   }
+  }
   a1v++; il++; bits++; bv++; iv++; dv++; h++; j++;
  }
  

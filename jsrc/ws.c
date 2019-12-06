@@ -56,7 +56,8 @@ C spellin(I n,C*s){C c,d,p=*s,*t;I j;
    R p;
   case 2:
    // For 2-byte characters, look the character up in the table and choose the appropriate inflection
-   c=s[1]; j=c==CESC1?1:c==CESC2?2:0;
+// obsolete    c=s[1]; j=c==CESC1?1:c==CESC2?2:0;
+   c=s[1]; j=c==CESC1; j=c==CESC2?2:j;  // 0 only if erroneous user AR
    R j&&(t=(C*)strchr(spell[0],p)) ? spell[j][t-spell[0]] : 0;  // if inflection is not . or :, or character not found, return error
   case 3:
    c=s[1]; d=s[2];

@@ -276,7 +276,7 @@ A jtfrombu(J jt,A a,A w,I wf){F1PREFIP;A p,q,z;I ar,*as,h,m,r,*u,*v,wcr,wr,*ws;
  wr=AR(w); ws=AS(w); wcr=wr-wf;
 // obsolete  DO(ar, if(!as[i]){b=1; break;});
 // obsolete  DO(wr, if(!ws[i]){b=1; break;});
- if(!AN(a)&&!AN(w)){  // empty array, either a or w
+ if((-AN(a)&-AN(w))>=0){  // empty array, either a or w
   // allocate empty result, move in shape: frame of w, frame of a, shape of item
   GA(z,AT(w),0,wf+(wcr-h)+(ar-1),0); MCISH(AS(z),AS(w),wf) MCISH(AS(z)+wf,AS(a),ar-1)  MCISH(AS(z)+wf+ar-1,AS(w)+wf+h,wcr-h)
 // obsolete   u=AS(z);

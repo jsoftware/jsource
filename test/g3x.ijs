@@ -551,6 +551,7 @@ NB. Verify they don't check syntax
 ('y';''' ') -: 0 : ('y';''' ')
 (<'do.') -: 0 : (<'do.')
 
+3 : 'for. do. end.'  NB. used to crash
 
 4!:55 ;:'adot1 adot2 sdot0 bhdr_pre601 binrep binrep_pre601 br f g H hbr hexrep hrx Indirect'
 4!:55 ;:'rb rbi rx test unbin WS x xr xrh y'

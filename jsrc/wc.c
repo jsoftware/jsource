@@ -396,7 +396,7 @@ B jtpreparse(J jt,A w,A*zl,A*zc){PROLOG(0004);A c,l,*lv,*v,w0,w1,*wv,x,y;B b=0,t
    d->go= (((((I)1<<0)|((I)1<<CCONT)|((I)1<<CBREAK)|((I)1<<CCONTS)|((I)1<<CBREAKS)|((I)1<<CTHROW))>>k)&1) ? (US)SMAX : k==CRETURN ? (US)SMAX-1 : (US)(1+n);
    b|=k==CGOTO;                         // remember if we see a goto_.
    // if not cw (ie executable sentence), turn words into an executable queue.  If cw, check for cw with data.  Set x to queue/cw, or 1 if cw w/o data
-   if(!k)RZ(x=enqueue(w1,w0,2)) else x=k==CLABEL||k==CGOTO||k==CFOR&&4<AN(w0)?w0:0L;
+   if(!k)RZ(x=enqueue(w1,w0,2)) else x=k==CLABEL||k==CGOTO||k==CFOR/* obsolete &&4<AN(w0)*/?w0:0L;  // FOR must always go out; the length of the name is always needed, even if 0
    q=k?1&&x:AN(x);   // q=#words in sentence (1 if cw w/o data; 1 if cw w/data (eg for_x.); #words in sentence otherwise
    ASSERT(q<SMAX,EVLIMIT);
    // append the words (which are a queue or a cw) to the list of words

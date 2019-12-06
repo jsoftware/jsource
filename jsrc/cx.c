@@ -28,7 +28,7 @@
                         line=AAV(hv[0]); x=hv[1]; n=AN(x); cw=(CW*)AV(x);}
 
 // Parse/execute a line, result in z.  If locked, reveal nothing.  Save current line number in case we reexecute
-// Before each sentence we snapshot the implied locale in the local symbol table.  If the sentence passes a u/v into an operator, the current symbol table will become the prev and will have the u/v environment info
+// If the sentence passes a u/v into an operator, the current symbol table will become the prev and will have the u/v environment info
 #define parseline(z) {C attnval=*jt->adbreakr; A *queue=line+ci->i; I m=ci->n; /* obsolete AKGST(locsym)=jt->global;*/ if(!attnval){if(!(gsfctdl&16))z=parsea(queue,m);else {thisframe->dclnk->dcix=i; z=parsex(queue,m,ci,callframe);}}else{jsignal(EVATTN); z=0;} }
 
 typedef struct{A t,x,line;C*iv,*xv;I j,n; I4 k,w;} CDATA;
@@ -56,9 +56,9 @@ static B jtforinit(J jt,CDATA*cv,A t){A x;C*s,*v;I k;
  SETIC(t,cv->n);                            /* # of items in t     */
  cv->j=-1;                               /* iteration index     */
  cv->x=0;
- k=AN(cv->line)-5; cv->k=(I4)k;                 /* length of item name */
+ k=AN(cv->line)-5; cv->k=(I4)k;                 /* length of item name; -1 if omitted (for.; for_. not allowed) */
 // obsolete  if(0<k&&cv->n){                         /* for_xyz.   k nonzero and cv->n nonzero         */
- if((-k&-cv->n)<0){                         /* for_xyz.            */
+ if((-k&-cv->n)<0){                         /* for_xyz.       k>0 and cv->n >0     */
   s=4+CAV(cv->line); RZ(x=str(6+k,s)); ras(x); cv->x=x;
   cv->xv=v=CAV(x); MC(k+v,"_index",6L);  /* index name          */
   cv->iv=s;                              /* item name           */

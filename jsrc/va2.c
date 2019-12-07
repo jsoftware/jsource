@@ -1063,8 +1063,8 @@ DF2(jtsumattymes1){
 
 static A jtsumattymes(J jt, A a, A w, I b, I t, I m, I n, I nn, I r, I *s, I zn){A z;
  RZ(a&&w);
- switch(CTTZNOFLAG(t)){
- case B01X:  // the aligned cases are handled elsewhere, a word at a time
+ switch(UNSAFE(t)){
+ case B01:  // the aligned cases are handled elsewhere, a word at a time
   {B*av=BAV(a),u,*wv=BAV(w);I*zu,*zv;
    GATV(z,INT,zn,r-1,1+s); zu=AV(z);
    if(1==n){
@@ -1077,7 +1077,7 @@ static A jtsumattymes(J jt, A a, A w, I b, I t, I m, I n, I nn, I r, I *s, I zn)
   }
   break;
 #if !SY_64
- case INTX:
+ case INT:
   {D u,*zu,*zv;I*av=AV(a),*wv=AV(w);
    GATV(z,FL,zn,r-1,1+s); zu=DAV(z);
    if(1==n){
@@ -1091,7 +1091,7 @@ static A jtsumattymes(J jt, A a, A w, I b, I t, I m, I n, I nn, I r, I *s, I zn)
   }
   break;
 #endif
- case FLX:   
+ case FL:   
   {D*av=DAV(a),u,v,*wv=DAV(w),*zu,*zv;
    GATV(z,FL,zn,r-1,1+s); zu=DAV(z);
    NAN0;

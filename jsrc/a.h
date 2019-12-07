@@ -49,11 +49,13 @@
 #define ADERIV(id,f1,f2,flag,m,l,r)  fdef(0,id,VERB,(AF)(f1),(AF)(f2),w,0L,0L,(flag),(I)(m),(I)(l),(I)(r))
 #define CDERIV(id,f1,f2,flag,m,l,r)  fdef(0,id,VERB,(AF)(f1),(AF)(f2),a,w ,0L,(flag),(I)(m),(I)(l),(I)(r))
 
-#define ASSERTVV(a,w)   RZ(a&&w); ASSERT(VERB&AT(a)&&VERB&AT(w),EVDOMAIN)
-#define ASSERTVVn(a,w)  RZ(a&&w); ASSERT(VERB&AT(a)&&(VERB|NOUN)&AT(w),EVDOMAIN)
-#define ASSERTVN(a,w)   RZ(a&&w); ASSERT(VERB&AT(a)&&NOUN&AT(w),EVDOMAIN)
-#define ASSERTNN(a,w)   RZ(a&&w); ASSERT(NOUN&AT(a)&&NOUN&AT(w),EVDOMAIN)
+#define ASSERTVV(a,w)   RZ(a&&w); ASSERT(VERB&AT(a)&AT(w),EVDOMAIN)
+#define ASSERTVVn(a,w)  RZ(a&&w); ASSERT(VERB&AT(a),EVDOMAIN)
+#define ASSERTVN(a,w)   RZ(a&&w); ASSERT((VERB&AT(a))>(VERB&AT(w)),EVDOMAIN)
+#define ASSERTNN(a,w)   RZ(a&&w); ASSERT(!(VERB&(AT(a)|AT(w))),EVDOMAIN)
 
 #define SCALARFN(id,w)  (id==ID(w)&&!lr(w)&&!rr(w))
 
-#define FIT0(c,v)       (CFIT==v->id&&c==ID(v->fgh[0])&&equ(num[0],v->fgh[1]))
+// TRUE if v is c!.0.  This is used for detecting use of special code.  We detect only the case where the 0 was hardcoded as 0
+// obsolete #define FIT0(c,v)       (CFIT==v->id&&c==ID(v->fgh[0])&&equ(num[0],v->fgh[1]))
+#define FIT0(c,v)       (CFIT==v->id&&v->fgh[1]==num[0]&&c==ID(v->fgh[0]))

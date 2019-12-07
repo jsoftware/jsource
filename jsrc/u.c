@@ -381,9 +381,7 @@ F1(jtvib){A z;D d,e,*wv;I i,n,*zv;
  I p=-IMAX,q=IMAX;
  RANK2T oqr=jt->ranks; RESETRANK;
  if(AT(w)&SPARSE)RZ(w=denseit(w));
- switch(CTTZNOFLAG(AT(w))){
-  case XNUMX:
-  case RATX:  z=cvt(INT,maximum(sc(p),minimum(sc(q),w))); break;
+ switch(UNSAFE(AT(w))){
   default:
    if(!(AT(w)&FL))RZ(w=cvt(FL,w));
    n=AN(w); wv=DAV(w);
@@ -402,6 +400,8 @@ F1(jtvib){A z;D d,e,*wv;I i,n,*zv;
     else if(++e,FEQ(d,e))zv[i]=d<p?p:q<d?q:(I)e;
     else ASSERT(0,EVDOMAIN);
 #endif
+  case XNUM:
+  case RAT:  z=cvt(INT,maximum(sc(p),minimum(sc(q),w))); break;
   }
  }
  jt->ranks=oqr; RETF(z);

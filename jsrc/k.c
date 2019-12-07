@@ -287,8 +287,9 @@ static B jtDXfI(J jt,I p,A w,DX*x){A y;I b,c,d,dd,e,i,m,n,q,r,*wv,*yv;
 B jtccvt(J jt,I tflagged,A w,A*y){A d;I n,r,*s,wt; void *wv,*yv;I t=tflagged&~NOUNCVTVALIDCT;
  if(!(w))R 0;
  r=AR(w); s=AS(w);
- // Handle sparse
- switch((t&SPARSE?2:0)+(AT(w)&SPARSE?1:0)){I t1;P*wp,*yp;
+ if((t|AT(w))&SPARSE){
+  // Handle sparse
+  switch((t&SPARSE?2:0)+(AT(w)&SPARSE?1:0)){I t1;P*wp,*yp;
   case 1: RZ(w=denseit(w)); break;  // sparse to dense
   case 2: RZ(*y=sparseit(cvt(DTYPE(t),w),IX(r),cvt(DTYPE(t),num[0]))); R 1;  // dense to sparse; convert type first (even if same dtype)
   case 3: // sparse to sparse
@@ -299,10 +300,11 @@ B jtccvt(J jt,I tflagged,A w,A*y){A d;I n,r,*s,wt; void *wv,*yv;I t=tflagged&~NO
    SPB(yp,e,cvt(t1,SPA(wp,e)));
    SPB(yp,x,cvt(t1,SPA(wp,x)));
    R 1;
+  }
  }
  // Now known to be non-sparse
  n=AN(w); wt=AT(w);
- // If type is already correct, return a clone - should not occur
+ // If type is already correct, return a clone - used to force a copy
  if(TYPESEQ(t,wt)){RZ(*y=ca(w)); R 1;}
  // else if(n&&t&JCHAR){ASSERT(HOMO(t,wt),EVDOMAIN); RZ(*y=uco1(w)); R 1;}
  // Kludge on behalf of result assembly: we want to be able to stop converting after the valid cells.  If NOUNCVTVALIDCT is set in the type,

@@ -92,10 +92,11 @@ F2(jttake){A s;I acr,af,ar,n,*v,wcr,wf,wr;
  // if the input was not INT/bool, we go through and replace any infinities with the length of the axis.  If we do this, we have
  // to clone the area, because vib might return a canned value
  if(!(AT(a)&B01+INT)){
-  I i; for(i=0;i<AN(s);++i){I m=IAV(s)[i]; I ms=m>>(BW-1); if((m^ms)-ms == IMAX)break;}
+// obsolete   I i; for(i=0;i<AN(s);++i){I m=IAV(s)[i]; I ms=m>>(BW-1); if((m^ms)-ms == IMAX)break;}
+  I i; for(i=0;i<AN(s);++i){I m=IAV(s)[i]; I ms=m>>(BW-1); if((m^ms) == IMAX)break;}  // see if there are infinities
   if(i<AN(s)){
    s=ca(s); if(!(AT(a)&FL))RZ(a=cvt(FL,a));  // copy area we are going to change; put a in a form where we can recognize infinity
-   for(;i<AN(s);++i){if(DAV(a)[i]==IMIN)IAV(s)[i]=IMIN;else if(INF(DAV(a)[i]))IAV(s)[i]=wcr?ws[wf+i]:1;}  // kludge.  The problem is which hugs values to consider infinite.  This is how it was done
+   for(;i<AN(s);++i){if(DAV(a)[i]==IMIN)IAV(s)[i]=IMIN;else if(INF(DAV(a)[i]))IAV(s)[i]=wcr?ws[wf+i]:1;}  // kludge.  The problem is which huge values to consider infinite.  This is how it was done
   }
  }
  a=s;

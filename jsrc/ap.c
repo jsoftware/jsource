@@ -669,7 +669,8 @@ static DF2(jtmovavg){I m,j;
 static A jtmovminmax(J jt,I m,A w,A fs,B max){A y,z;I c,i,j,p,wt;
  SETIC(w,p); p-=m; wt=AT(w); c=aii(w);
  GA(z,AT(w),c*(1+p),AR(w),AS(w)); AS(z)[0]=1+p;
- switch(max+(wt&SBT?0:wt&INT?2:4)){
+// obsolete  switch(max+(wt&SBT?0:wt&INT?2:4)){
+ switch(max + ((wt>>(INTX-1))&6)){
   case 0: MOVMINMAXS(SB,SBT,jt->sbuv[0].down,SBLE); break;
   case 1: MOVMINMAXS(SB,SBT,0,SBGE); break;
   case 2: MOVMINMAX(I,INT,IMAX,<=); break;
@@ -678,7 +679,7 @@ static A jtmovminmax(J jt,I m,A w,A fs,B max){A y,z;I c,i,j,p,wt;
   case 5: MOVMINMAX(D,FL, infm,>=); break;
  }
  RETF(z);
-}    /* a <./\w (0=max) or a >./\ (1=max); vector w; integer or float; 0<m */
+}    /* a <./\w (0=max) or a >./\ (1=max); vector w; integer/float/symbol; 0<m */
 
 static A jtmovandor(J jt,I m,A w,A fs,B or){A y,z;B b0,b1,d,e,*s,*t,*u,*v,x,*yv,*zv;I c,i,j,p;
  SETIC(w,p); p-=m; c=aii(w); x=b0=or^1; b1=or;
@@ -753,7 +754,8 @@ static DF2(jtmovfslash){A x,z;B b;C id,*wv,*zv;I d,m,m0,p,t,wk,wt,zi,zk,zt;
  x=FAV(self)->fgh[0]; x=FAV(x)->fgh[0]; id=ID(x); 
  if(wt&B01){id=id==CMIN?CSTARDOT:id; id=id==CMAX?CPLUSDOT:id;}
  if(id==CBDOT&&(x=VAV(x)->fgh[1],INT&AT(x)&&!AR(x)))id=(C)*AV(x);
- switch(AR(w)&&0<m0&&m0<=*AS(w)?id:0){
+// obsolete switch(AR(w)&&0<m0&&m0<=*AS(w)?id:0){
+ switch(AR(w)&&BETWEENC(m0,0,AS(w)[0])?id:0){
   case CPLUS:    if(wt&B01+INT+FL)R movsumavg(m,w,self,0); break;
   case CMIN:     if(wt&SBT+INT+FL)R movminmax(m,w,self,0); break;
   case CMAX:     if(wt&SBT+INT+FL)R movminmax(m,w,self,1); break;

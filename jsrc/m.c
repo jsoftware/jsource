@@ -451,10 +451,6 @@ static void freesymb(J jt, A w){I j,wn=AN(w); LX k,kt,* RESTRICT wv=LXAV0(w);
 
 static void jttraverse(J jt,A wd,AF f){
  switch(CTTZ(AT(wd))){
-  case XDX:
-   {DX*v=(DX*)AV(wd); DQ(AN(wd), if(v->x)CALL1(f,v->x,0L); ++v;);} break;
-  case RATX:  
-   {A*v=AAV(wd); DQ(2*AN(wd), if(*v)CALL1(f,*v++,0L););} break;
   case XNUMX: case BOXX:
    if(!(AFLAG(wd)&AFNJA)){A*wv=AAV(wd);
    {DO(AN(wd), if(wv[i])CALL1(f,wv[i],0L););}
@@ -462,6 +458,10 @@ static void jttraverse(J jt,A wd,AF f){
    break;
   case VERBX: case ADVX:  case CONJX: 
    {V*v=FAV(wd); if(v->fgh[0])CALL1(f,v->fgh[0],0L); if(v->fgh[1])CALL1(f,v->fgh[1],0L); if(v->fgh[2])CALL1(f,v->fgh[2],0L);} break;
+  case XDX:
+   {DX*v=(DX*)AV(wd); DQ(AN(wd), if(v->x)CALL1(f,v->x,0L); ++v;);} break;
+  case RATX:  
+   {A*v=AAV(wd); DQ(2*AN(wd), if(*v)CALL1(f,*v++,0L););} break;
   case SB01X: case SINTX: case SFLX: case SCMPXX: case SLITX: case SBOXX:
    {P*v=PAV(wd); if(SPA(v,a))CALL1(f,SPA(v,a),0L); if(SPA(v,e))CALL1(f,SPA(v,e),0L); if(SPA(v,i))CALL1(f,SPA(v,i),0L); if(SPA(v,x))CALL1(f,SPA(v,x),0L);} break;
  }

@@ -99,11 +99,6 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wk,wn,wr,*ws,zn;
  wk=k*p;   // stride between cells of w
  wv=CAV(w); zv=CAV(z); SETJ(*av);
   switch(k){
-  case sizeof(C): IFROMLOOP(C); break; 
-  case sizeof(S): IFROMLOOP(S); break;  
-#if SY_64
-  case sizeof(int):IFROMLOOP(int); break;
-#endif
   case sizeof(I):
 #if C_AVX2
   {__m256i endmask; /* length mask for the last word */ 
@@ -145,6 +140,11 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wk,wn,wr,*ws,zn;
    IFROMLOOP(I);
 #endif
    break;
+  case sizeof(C): IFROMLOOP(C); break; 
+  case sizeof(S): IFROMLOOP(S); break;  
+#if SY_64
+  case sizeof(int):IFROMLOOP(int); break;
+#endif
   default:
   // cells are not simple items.  We can safely move full words, since there is always extra buffer space at the end of any type that is not a word-multiple
    if(k<MEMCPYTUNELOOP)IFROMLOOP2((k+SZI-1)>>LGSZI,MVLOOP)

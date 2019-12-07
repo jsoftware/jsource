@@ -488,6 +488,8 @@ extern unsigned int __cdecl _clearfp (void);
 #define DPUC(n,stm)      {I i=(n)+1;    do{stm}while(++i<0);}   // i runs from -n to -1 (faster than DO), always at least once
 #define DQUC(n,stm)      {I i=-2-(I)(n);  do{stm}while(--i>=0);}  // i runs from n-1 downto 0, always at least once
 #define ds(c)           pst[(UC)(c)]
+// see if value of x is the atom v.  Do INT/B01/FL here, subroutine for exotic cases
+#define EQINTATOM(x,v)  ( (AR(x)==0)&& (AT(t)&INT+B01 ? ((*IAV0(t)&(((AT(t)&B01)<<8)-1)==(v)) : AT(t)&FL ? *DAV0(t)==(D)(v) : 0!=equ(int[v],x))  )
 #if USECSTACK
 #define FDEPDEC(d)
 #define FDEPINC(d)

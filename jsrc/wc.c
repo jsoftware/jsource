@@ -400,11 +400,11 @@ B jtpreparse(J jt,A w,A*zl,A*zc){PROLOG(0004);A c,l,*lv,*v,w0,w1,*wv,x,y;B b=0,t
    q=k?1&&x:AN(x);   // q=#words in sentence (1 if cw w/o data; 1 if cw w/data (eg for_x.); #words in sentence otherwise
    ASSERT(q<SMAX,EVLIMIT);
    // append the words (which are a queue or a cw) to the list of words
-   if(x){                               // queue or 
+   if(x){                               // set unless the control word is not needed (it usually isn't)
     while(AN(l)<m+q){RZ(l=ext(0,l)); lv=AAV(l);}  // if word buffer filled, extend it & refresh data pointer
     if(k)lv[m]=rifvs(x); else ICPY(m+lv,AAV(x),q);   // install word(s): the cw, or the words of the queue
    }
-   // Now that the words have been moved, install the index to them, and their number, into the cw info; step word pointer over the words added 
+   // Now that the words have been moved, install the index to them, and their number, into the cw info; step word pointer over the words added (even if empty spaces)
    d->i=m; d->n=(US)q; m+=q;
    if(2==as)as=0;  // get out of post-post-assert. state if we are in it
    ++n;
@@ -412,7 +412,7 @@ B jtpreparse(J jt,A w,A*zl,A*zc){PROLOG(0004);A c,l,*lv,*v,w0,w1,*wv,x,y;B b=0,t
  RE(0);
  ASSERTCW(!as,p-1);
  ASSERTCW(!b||0>(i=congoto(n,cv,lv)),(i+cv)->source);
- // Audit control structures and point the go linw correctly
+ // Audit control structures and point the go line correctly
  ASSERTCW(    0>(i= conall(n,cv   )),(i+cv)->source);
  // Install the number of words and cws into the return blocks, and return those blocks
  AN(l)=*AS(l)=m; *zl=rifvs(l);

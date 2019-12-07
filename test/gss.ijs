@@ -281,5 +281,5 @@ NB. Same for %:y and ^.y
 NB. Verify that the contents of a non-inplacable box are not inplaced
 (2 2 1 $ 0 _2 2 0) -: -&>/~ ((<"_1) ,._1 1)
 
-4!:55 ;:'adot1 adot2 sdot0 b compss compssn compssp compt dou filecase iptime iptime1 iptime2 iptime3 niptime ops tolower v v1 v2 v3 vv0 vv1 vv2 xx yy'
+4!:55 ;:'adot1 adot2 sdot0 b compss compssn compssp compst compt dou filecase iptime iptime1 iptime2 iptime3 niptime ops tolower v v1 v2 v3 vv0 vv1 vv2 xx yy'
 randfini''

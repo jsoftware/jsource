@@ -126,6 +126,7 @@ _5 25 3 -: v ''
 dou =: 1 : 'u.  :: ] y'  NB. This used the implicit locative
 5 0.2 12 -: v ''
 
+4!:55 ;:'v1 v2 v3'  NB. names used above
 
 NB. processing on u./v. in native locales
 a_z_ =: 1 : 0

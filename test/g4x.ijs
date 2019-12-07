@@ -3,14 +3,14 @@ NB. 4!:0 ----------------------------------------------------------------
 
 jnc   =: 4!:0
 jnl   =: 4!:1
-Erase =: 4!:55
+erase =: 4!:55
 ttt   =: jnl i. 4
 nounx =: ?3 4$1000
 verbx =: +/ % #
 advx  =: 1 : 'x^:_1'
 conjx =: ^:
 
-1 [ Erase ;:'x y'
+1 [ erase ;:'x y'
 
 0  -: jnc <'nounx'
 1  -: jnc <'advx'
@@ -53,21 +53,21 @@ verbx =: +/ . *
 advx  =: /
 conjx =: .
 0  3 1  2 -: jnc 'nounx';'verbx';'advx';'conjx'
-Erase 'verbx';'conjx'
+erase 'verbx';'conjx'
 0 _1 1 _1 -: jnc 'nounx';'verbx';'advx';'conjx'
 
 a=:/
 b=:0
 c=:&
 v=:+/
-Erase <'z'
+erase <'z'
 
 
 NB. 4!:1 ----------------------------------------------------------------
 
 jnc   =: 4!:0
 jnl   =: 4!:1
-Erase =: 4!:55
+erase =: 4!:55
 
 nounx =: 2
 verbx =: +/ . *
@@ -86,7 +86,7 @@ conjx =: .
 (;:'nounx verbx advx conjx') e. a. jnl i.4
 (;:'nounx verbx')    e. 'nv' jnl i.4
 (;:'advx conjx' ) -.@e. 'nv' jnl i.4
-Erase 'verbx';'conjx'
+erase 'verbx';'conjx'
 (;:'verbx conjx') -.@e. jnl i.4
 (;:'nounx advx' )    e. jnl i.4
 
@@ -112,14 +112,14 @@ NB. 4!:55 ---------------------------------------------------------------
 
 jnc   =: 4!:0
 jnl   =: 4!:1
-Erase =: 4!:55
+erase =: 4!:55
 
 nounx =: 2
 verbx =: +/ . *
 advx  =: /
 conjx =: .
 nm   =: ;:'nounx verbx advx conjx'
-f    =: 3 : ('".y'; 'b=.jnc nm'; 'Erase nm'; 'a=.jnc nm'; 'b,a')
+f    =: 3 : ('".y'; 'b=.jnc nm'; 'erase nm'; 'a=.jnc nm'; 'b,a')
  0  3  1  2 -: jnc nm
  3  3  3  3  0  3  1  2 -: f '(nounx=.verbx=.advx=.conjx=.*) 12'
  0  3  1  2 -: jnc nm
@@ -132,8 +132,8 @@ f    =: 3 : ('".y'; 'b=.jnc nm'; 'Erase nm'; 'a=.jnc nm'; 'b,a')
  0 _1 _1 _1 _1 _1 _1 _1 -: f '12'
 _1 _1 _1 _1 -: jnc nm
 
-Erase ;:'x y'
-g =: 3 : (t,':'; t =: 'yy=.y'; 'b=.jnc yy'; 'Erase yy'; 'a=.jnc yy'; 'b,a')
+erase ;:'x y'
+g =: 3 : (t,':'; t =: 'yy=.y'; 'b=.jnc yy'; 'erase yy'; 'a=.jnc yy'; 'b,a')
  0 _1 -:   g <'y'
 _1 _1 -:   g <'x'
  0 _1 -: 2 g <'y'
@@ -144,19 +144,19 @@ verbx =: +/ . *
 advx  =: /
 conjx =: .
  0  3  1  2 _1 -: jnc ;:'nounx verbx advx conjx undef'
- 1  1  1  1  1 -: t=:Erase ;:'nounx verbx advx conjx undef'
+ 1  1  1  1  1 -: t=:erase ;:'nounx verbx advx conjx undef'
 _1 _1 _1 _1 _1 -: jnc ;:'nounx verbx advx conjx undef'
 
-0 -: Erase <'*&^invalid@'
+0 -: erase <'*&^invalid@'
 
 a =: 9
-1 1 0 0 0 -: t=:Erase 'a'; 'undefined'; 'in+valid'; '8.'; 'a.'
+1 1 0 0 0 -: t=:erase 'a'; 'undefined'; 'in+valid'; '8.'; 'a.'
 
 alpha =: i.3 4
 beta  =: ;:'Cogito, ergo sum.'
 gamma =: !
 
-1 1 1 1 0 0 -: t=:Erase ;:'alpha beta boo hoo + +:'
+1 1 1 1 0 0 -: t=:erase ;:'alpha beta boo hoo + +:'
 
 NB. Verify stacked value not deleted
 a =: 100
@@ -183,10 +183,10 @@ NB. 4!: -----------------------------------------------------------------
 jnc   =: 4!:0
 jnl   =: 4!:1
 scind =: 4!:4
-Erase =: 4!:55
+erase =: 4!:55
 
 _2 -: jnc    <''
-0  -: Erase <''
+0  -: erase <''
 
 'domain error'    -: jnc etx 1
 'domain error'    -: jnc etx 1 2
@@ -216,18 +216,18 @@ _2 -: jnc    <''
 'domain error'    -: 3j54     jnl etx 3
 'domain error'    -: (<'abc') jnl etx 3
 
-'domain error'    -: Erase etx 1      
-'domain error'    -: Erase etx 1 2    
-'domain error'    -: Erase etx 3 3.5  
-'domain error'    -: Erase etx 'abc'    
-'domain error'    -: Erase etx 3j4    
-'domain error'    -: Erase etx 'a';1      
-'domain error'    -: Erase etx 'a';1 2    
-'domain error'    -: Erase etx 'a';3 3.5  
-'domain error'    -: Erase etx 'a';3j4    
-'domain error'    -: Erase etx <<'ab'        
+'domain error'    -: erase etx 1      
+'domain error'    -: erase etx 1 2    
+'domain error'    -: erase etx 3 3.5  
+'domain error'    -: erase etx 'abc'    
+'domain error'    -: erase etx 3j4    
+'domain error'    -: erase etx 'a';1      
+'domain error'    -: erase etx 'a';1 2    
+'domain error'    -: erase etx 'a';3 3.5  
+'domain error'    -: erase etx 'a';3j4    
+'domain error'    -: erase etx <<'ab'        
 
-'rank error'      -: Erase etx <3 4$'a'
+'rank error'      -: erase etx <3 4$'a'
 
 'domain error'    -: scind etx 1 2 3
 'domain error'    -: scind etx 'abc123'
@@ -247,7 +247,7 @@ NB. locales -------------------------------------------------------------
 
 jnc    =: 4!:0
 jnl    =: 4!:1
-Erase =: 4!:55
+erase =: 4!:55
 
 x =: ?13$100000
 y =: 'supercalifragilisticespialidocious'
@@ -260,7 +260,7 @@ abcd_locale_ -: y
 (<'locale') e. 'l' jnl 6
 -. (<'locale') e. 'abc' jnl 6
 1=+/(jnl 0) e. <'abcd'
-Erase <'abcd_locale_'
+erase <'abcd_locale_'
 abcd -: x
 0 _1 -: jnc ;:'abcd abcd_locale_'
 
@@ -274,7 +274,7 @@ ab_cd -: x
 (<'asdf') e. 'abc' jnl 6
 -. (<'asdf') e. 'xyz' jnl 6
 1=+/(jnl 0) e. <'ab_cd'
-Erase <'ab_cd_asdf_'
+erase <'ab_cd_asdf_'
 ab_cd -: x
 0 _1 -: jnc ;:'ab_cd ab_cd_asdf_'
 1=+/(jnl 0 3) e. <'ab_cd'
@@ -284,7 +284,7 @@ exec_foo_ =: ".
 xy_foo_ -: i.3 4
 1 [ exec_foo_ 'ces__ =: ;:''Cogito, ergo sum.'''
 ces -: ;:'Cogito, ergo sum.'
-Erase ;:'exec_foo_ xy_foo_ ces__'
+erase ;:'exec_foo_ xy_foo_ ces__'
 
 'ill-formed name' -: ex 'a_      =: 12'
 'ill-formed name' -: ex 'abcd_   =: 12'
@@ -299,7 +299,7 @@ NB. 'nonce error'     -: 3 : 'abc_d_ =. 17' etx 17
 
 NB. z locale ------------------------------------------------------------
 
-Erase ;:'abc abc_z_ sum sum_z_'
+erase ;:'abc abc_z_ sum sum_z_'
 x=: o.?3 4$1000
 abc__ =: x
 abc__ -: x
@@ -322,7 +322,7 @@ jnc_z_ =: jnc f.
 jnl_z_ =: jnl f.
 3 -: jnc_z_ <'sum'
 (<'sum') e. jnl_z_ 3
-Erase ;:'abc abc_z_ ces_exist_ sum_z_'
+erase ;:'abc abc_z_ ces_exist_ sum_z_'
 
 18!:55 ;:'exist nonexist'
 
@@ -341,7 +341,7 @@ si_g4x=(4!:4 <'this2'){4!:8 ''
 
 
 4!:55 ;:'a ab_cd abc abc__ abc_z_ abcd '
-4!:55 ;:'advx alpha b beta c ces conjx Erase f'
+4!:55 ;:'advx alpha b beta c ces conjx erase f'
 4!:55 ;:'g gamma jnc jnc_z_ jnl jnl_z_ nm nounx plus scind si_g4x si_sn sn sum '
 4!:55 ;:'sum__ sum_z_ t this1 this2 v verbx x y '
 

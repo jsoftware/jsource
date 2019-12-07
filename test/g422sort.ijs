@@ -378,6 +378,6 @@ test1 1.5 + <. 0.001 + 100 10000 ?@$ 0
 test1 1.5 + <. 20 * 100 1000 ?@$ 0
 
 
-4!:55 ;:'adot1 adot2 sdot0 b n t t1 test test1 yy'
+4!:55 ;:'adot1 adot2 sdot0 b n ips t t1 test test1 yy'
 randfini''
 

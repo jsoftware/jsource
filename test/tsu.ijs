@@ -193,59 +193,33 @@ ECHOFILENAME=: 0   NB. echo file name
 Debug=: 0
 QKTEST=: IFIOS+.IFRASPI+.UNAME-:'Android'  NB. run quick test
 
-RUNN=: 4 : 0
-x123=. (0=x){x,1
-y123=. y
-d123=. Debug
-4!:55 'x';'y'
-while. x123~:0 do.
- echo 'countdown ',":x123
- Debug=: 0
- RUN y123
- r123=. RB=: ((#y123)#1)*.RB
- echo RBAD''
- Debug=: 1
- RUN y123
- r123=. RB=: ((#y123)#1)*.RB +. r123
- echo RBAD''
- Debug=: 0
- x123=. <:x123
-NB.  11 s: ''    NB. reset symbol
- echo (+/ % #) 0 s: 12
-end.
-Debug=: d123
-dbr 0
-echo 'Finish'
-''
-)
-
 RUND1=: 4 : 0
 x123=. x>.1
 y123=. y
 d123=. Debug
-4!:55 'x';'y'
-oldnl=: (nl'')-.;:'x y'
+assert. (<'base')-:18!:5''
+4!:55 ;:'x y oldnl RLAST'
+assert. 0=(;:'x y oldnl RLAST') e. nl''
+oldnl=: nl''
 for_y234. y123 do.
  echo RLAST=: >y234
  for. i.x123 do.
   Debug=: 0
   0!:2 y234
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
-  assert. _1 = 4!:0 <"0 a.{~,|:(i.26)+/ a.i.'Aa'
-  4!:55 (nl'')-.oldnl,'oldnl';'y234';'x123';'RLAST'
-  4!:55 (nl'')-.oldnl,'oldnl';'y234';'x123';'RLAST'
+  assert. (<'base')-:18!:5''
+  assert. ((;:'oldnl y234 RLAST')-.~nl'') -: oldnl
   Debug=: 1
   0!:2 y234
   Debug=: 0
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
-  assert. _1 = 4!:0 <"0 a.{~,|:(i.26)+/ a.i.'Aa'
-  4!:55 (nl'')-.oldnl,'oldnl';'y234';'x123';'RLAST'
-  4!:55 (nl'')-.oldnl,'oldnl';'y234';'x123';'RLAST'
-  assert. 0=#(nl'')-.oldnl,'oldnl';'y234';'x123';'RLAST'   NB. no memory leak
+  assert. (<'base')-:18!:5''
+  assert. ((;:'oldnl y234 RLAST')-.~nl'') -: oldnl
 NB.  11 s: ''    NB. reset symbol
   echo (+/ % #) 0 s: 12
  end.
 end.
+4!:55 ;:'oldnl'
 Debug=: d123
 dbr 0
 echo 'Finish'
@@ -256,8 +230,10 @@ RUND2=: 4 : 0
 x123=. (0=x){x,1
 y123=. y
 d123=. Debug
-4!:55 'x';'y'
-oldnl=: (nl'')-.;:'x y'
+assert. (<'base')-:18!:5''
+4!:55 ;:'x y oldnl RLAST'
+assert. 0=(;:'x y oldnl RLAST') e. nl''
+oldnl=: nl''
 while. x123~:0 do.
  for_y234. y123{~?~#y123 do.
   echo RLAST=: >y234
@@ -265,22 +241,20 @@ while. x123~:0 do.
   Debug=: 0
   0!:2 y234
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
-  assert. _1 = 4!:0 <"0 a.{~,|:(i.26)+/ a.i.'Aa'
-  4!:55 (nl'')-.oldnl,'oldnl';'y234';'x123';'RLAST'
-  4!:55 (nl'')-.oldnl,'oldnl';'y234';'x123';'RLAST'
+  assert. (<'base')-:18!:5''
+  assert. ((;:'oldnl y234 RLAST save_ran')-.~nl'') -: oldnl
   Debug=: 1
   0!:2 y234
   Debug=: 0
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
-  assert. _1 = 4!:0 <"0 a.{~,|:(i.26)+/ a.i.'Aa'
-  4!:55 (nl'')-.oldnl,'oldnl';'y234';'x123';'RLAST';'save_ran'
-  4!:55 (nl'')-.oldnl,'oldnl';'y234';'x123';'RLAST';'save_ran'
-  assert. 0=#(nl'')-.oldnl,'oldnl';'y234';'x123';'RLAST';'save_ran'   NB. no memory leak
+  assert. (<'base')-:18!:5''
+  assert. ((;:'oldnl y234 RLAST save_ran')-.~nl'') -: oldnl
 NB.   11 s: ''    NB. reset symbol
   echo (+/ % #) 0 s: 12
  end.
  x123=. <:x123
 end.
+4!:55 ;:'oldnl save_ran'
 Debug=: d123
 dbr 0
 echo 'Finish'
@@ -291,29 +265,29 @@ RUND3=: 4 : 0
 x123=. x>.1
 y123=. y
 d123=. Debug
-4!:55 'x';'y'
-oldnl=: (nl'')-.;:'x y'
+assert. (<'base')-:18!:5''
+4!:55 ;:'x y oldnl RLAST'
+assert. 0=(;:'x y oldnl RLAST') e. nl''
+oldnl=: nl''
 for_y234. y123{~?~#y123 do.
  echo RLAST=: >y234
  for. i.x123 do.
   Debug=: 0
   0!:2 y234
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
-  assert. _1 = 4!:0 <"0 a.{~,|:(i.26)+/ a.i.'Aa'
-  4!:55 (nl'')-.oldnl,'oldnl';'y234';'x123';'RLAST'
-  4!:55 (nl'')-.oldnl,'oldnl';'y234';'x123';'RLAST'
+  assert. (<'base')-:18!:5''
+  assert. ((;:'oldnl y234 RLAST')-.~nl'') -: oldnl
   Debug=: 1
   0!:2 y234
   Debug=: 0
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
-  assert. _1 = 4!:0 <"0 a.{~,|:(i.26)+/ a.i.'Aa'
-  4!:55 (nl'')-.oldnl,'oldnl';'y234';'x123';'RLAST'
-  4!:55 (nl'')-.oldnl,'oldnl';'y234';'x123';'RLAST'
-  assert. 0=#(nl'')-.oldnl,'oldnl';'y234';'x123';'RLAST'   NB. no memory leak
+  assert. (<'base')-:18!:5''
+  assert. ((;:'oldnl y234 RLAST')-.~nl'') -: oldnl
 NB.  11 s: ''    NB. reset symbol
   echo (+/ % #) 0 s: 12
  end.
 end.
+4!:55 ;:'oldnl'
 Debug=: d123
 dbr 0
 echo 'Finish'
@@ -324,27 +298,27 @@ RUN2=: 4 : 0
 x123=. (0=x){x,1
 y123=. y
 d123=. Debug
-4!:55 'x';'y'
-oldnl=: (nl'')-.;:'x y'
+assert. (<'base')-:18!:5''
+4!:55 ;:'x y oldnl'
+assert. 0=(;:'x y oldnl') e. nl''
+oldnl=: nl''
 while. x123~:0 do.
  Debug=: 0
  0!:2<testpath,y123,'.ijs'
  assert. 0 s: 11
- assert. _1 = 4!:0 <"0 a.{~,|:(i.26)+/ a.i.'Aa'
- 4!:55 (nl'')-.oldnl,'oldnl';'x123';'RLAST'
- 4!:55 (nl'')-.oldnl,'oldnl';'x123';'RLAST'
+ assert. (<'base')-:18!:5''
+ assert. ((;:'oldnl')-.~nl'') -: oldnl
  Debug=: 1
  0!:2<testpath,y123,'.ijs'
- assert. 0 s: 11
  Debug=: 0
- assert. _1 = 4!:0 <"0 a.{~,|:(i.26)+/ a.i.'Aa'
- 4!:55 (nl'')-.oldnl,'oldnl';'x123';'RLAST'
- 4!:55 (nl'')-.oldnl,'oldnl';'x123';'RLAST'
- assert. 0=#(nl'')-.oldnl,'oldnl';'x123';'RLAST'
+ assert. 0 s: 11
+ assert. (<'base')-:18!:5''
+ assert. ((;:'oldnl')-.~nl'') -: oldnl
  x123=. <:x123
 NB.  11 s: ''    NB. reset symbol
  echo (+/ % #) 0 s: 12
 end.
+4!:55 ;:'oldnl'
 Debug=: d123
 dbr 0
 echo 'Finish'
@@ -370,7 +344,6 @@ g401 occasionally fails (random data?) but then runs clean
 
 tsu_usage=: 0 : 0
    RUN  ddall  NB. report scripts that fail
- n RUNN ddall  NB. same as RUN but run for n times
    
    RUN1 'g000' NB. run script with display
  n RUN2 'g000' NB. run script with display for n times

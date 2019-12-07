@@ -783,6 +783,7 @@ NB. That got the early test, the following gets the later test
 1: 1.5 >  (,&2&.> 1000 2000) f/ 1000 2000   NB. if sequential, the ratio will be high
 
 4!:55 ;:'a adot1 adot2 sdot0 b c ciof ct f f1 f2 g iota j map n p q t test x xx y yy'
+4!:55 ;:'xop yop1 yopn'
 4!:55 ;: 'mtchontally mtchonreshape mtchontally0 mtchonreshape0'
 randfini''
 

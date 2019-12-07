@@ -182,7 +182,7 @@ typedef I SI;
 #define BAV0(x)         ( (C*)((C*)(x)+AKXR(0)) )  // Boolean when rank is 0 - fixed position (known to avoid segfault)
 #define LXAV0(x)        ( (LX*)((C*)(x)+AKXR(0)) )  // Symbol when rank is 0 - fixed position (for SYMB tables).  Note AK() is used in SYMB tables
 #define DAV(x)          ( (D*)((C*)(x)+AK(x)))  /* double                  */
-#define DAV0(x)         ( (D*)((C*)(x)+AKXR(0)(x)))  // double atom
+#define DAV0(x)         ( (D*)((C*)(x)+AKXR(0)))  // double atom
 #define DAV2(x)         ( (D*)((C*)(x)+AKXR(2)) )  // Double when rank is 2 - fixed position (for matrix inversion)
 #define ZAV(x)          ( (Z*)((C*)(x)+AK(x)))  /* complex                 */
 #define XAV(x)          ( (X*)((C*)(x)+AK(x)))  /* extended                */

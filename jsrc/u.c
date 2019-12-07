@@ -372,7 +372,7 @@ for(i=0;i<n<<bplg(t);i++)*p++=!!(*q++);
 // Convert w to integer if it isn't integer already (the usual conversion errors apply)
 F1(jtvi){RZ(w); R INT&AT(w)?w:cvt(INT,w);}
 
-// Audit w to ensure valid integer value(s).  Error if non-integral.  Result is A block for integer array.  Infinities converted to IMAX
+// Audit w to ensure valid integer value(s).  Error if non-integral.  Result is A block for integer array.  Infinities converted to IMAX/-IMAX
 F1(jtvib){A z;D d,e,*wv;I i,n,*zv;
  RZ(w);
  if(AT(w)&INT)R RETARG(w);  // handle common non-failing cases quickly: INT and boolean
@@ -382,17 +382,17 @@ F1(jtvib){A z;D d,e,*wv;I i,n,*zv;
  RANK2T oqr=jt->ranks; RESETRANK;
  if(AT(w)&SPARSE)RZ(w=denseit(w));
  switch(UNSAFE(AT(w))){
-  default:
-   if(!(AT(w)&FL))RZ(w=cvt(FL,w));
-   n=AN(w); wv=DAV(w);
-   GATV(z,INT,n,AR(w),AS(w)); zv=AV(z);
-   for(i=0;i<n;++i){
-    d=wv[i]; e=jround(d); I cval=(I)e;
-    // if an atom is tolerantly equal to integer,  there's a good chance it is exactly equal.
-    // infinities will always round to themselves
+ default:
+  if(!(AT(w)&FL))RZ(w=cvt(FL,w));
+  n=AN(w); wv=DAV(w);
+  GATV(z,INT,n,AR(w),AS(w)); zv=AV(z);
+  for(i=0;i<n;++i){
+   d=wv[i]; e=jround(d); I cval=(I)e;
+   // if an atom is tolerantly equal to integer,  there's a good chance it is exactly equal.
+   // infinities will always round to themselves
 #if 1
-    ASSERT(d==e || FFIEQ(d,e),EVDOMAIN);  /* obsolete  || (++e,FEQ(d,e))*/
-    cval=d<(D)-IMAX?-IMAX:cval; cval=d>=-(D)IMIN?IMAX:cval; zv[i]=cval;  // too-large values don't convert, handle separately
+   ASSERT(d==e || FFIEQ(d,e),EVDOMAIN);  /* obsolete  || (++e,FEQ(d,e))*/
+   cval=d<(D)-IMAX?-IMAX:cval; cval=d>=-(D)IMIN?IMAX:cval; zv[i]=cval;  // too-large values don't convert, handle separately
 #else  // obsolete
     if     (d==inf )     zv[i]=q;
     else if(d==infm)     zv[i]=p;
@@ -400,9 +400,10 @@ F1(jtvib){A z;D d,e,*wv;I i,n,*zv;
     else if(++e,FEQ(d,e))zv[i]=d<p?p:q<d?q:(I)e;
     else ASSERT(0,EVDOMAIN);
 #endif
+   }
+   break;
   case XNUM:
   case RAT:  z=cvt(INT,maximum(sc(p),minimum(sc(q),w))); break;
-  }
  }
  jt->ranks=oqr; RETF(z);
 }

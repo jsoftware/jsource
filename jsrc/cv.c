@@ -67,7 +67,8 @@ F2(jtfit){A f;C c;I k,l,m,r;V*sv;
    ASSERT(AT(w)&NUMERIC,EVDOMAIN);
    R CDERIV(CFIT,0L,jtfitpoly2,0L, m,l,r);   // CPOLY has no VIRS
   case CPOWOP:  // support for #^:_1!.n
-   if(VERB&AT(sv->fgh[1])||!equ(num[-1],sv->fgh[1]))R fitct(a,w,0);
+// obsolete    if(VERB&AT(sv->fgh[1])||!equ(num[-1],sv->fgh[1]))R fitct(a,w,0);
+   if(sv->fgh[1]!=num[-1])R fitct(a,w,0);
    f=sv->fgh[0]; c=ID(f);
    if(c==CPOUND){ASSERT(!AR(w),EVRANK); R CDERIV(CFIT,0,jtfitfill2,VFLAGNONE,m,l,r);}  // CPOWOP has no VIRS
    ASSERT(c==CAMP,EVDOMAIN);

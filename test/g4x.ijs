@@ -343,6 +343,6 @@ si_g4x=(4!:4 <'this2'){4!:8 ''
 4!:55 ;:'a ab_cd abc abc__ abc_z_ abcd '
 4!:55 ;:'advx alpha b beta c ces conjx erase f'
 4!:55 ;:'g gamma jnc jnc_z_ jnl jnl_z_ nm nounx plus scind si_g4x si_sn sn sum '
-4!:55 ;:'sum__ sum_z_ t this1 this2 v verbx x y '
+4!:55 ;:'sum__ sum_z_ t ttt this1 this2 v verbx x y '
 
 

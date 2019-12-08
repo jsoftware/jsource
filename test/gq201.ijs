@@ -1,6 +1,10 @@
 1:@:(dbr bind Debug)@:(9!:19)2^_44[(echo^:ECHOFILENAME) './gq201.ijs'
 NB. ^. on extended integers and rational numbers ------------------------
 
+NB. test failed on small ct
+ct   =: 9!:18''
+9!:19[2^_40
+
 test=: 4 : 0
  assert. y -: x ^. x ^ x: y
  assert. (<:y)= x <.@^. <: x^ x: y
@@ -77,6 +81,8 @@ test=: 4 : 0
 (0.07;1;1.5;2;7.8;10) test&>/ 0;0.1;1;2;2.11;1234;1234.5
 
 
-4!:55 ;:'phi t test x xx y y1 y2 y3 yy'
+9!:19 ct
+
+4!:55 ;:'ct phi t test x xx y y1 y2 y3 yy'
 
 

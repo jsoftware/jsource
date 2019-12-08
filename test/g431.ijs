@@ -4,6 +4,10 @@ en     =: #@]
 
 randuni''
 
+NB. test failed on small ct
+ct   =: 9!:18''
+9!:19[2^_40
+
 em     =: (en >.@% 1&>.@|@[)`(en 0&>.@>:@- [) @. (0&<:@[)
 kay    =: en`em @. (0&<@[)
 omask  =: (em,en) $ ($&0@|@[ , $&1@kay)
@@ -289,8 +293,9 @@ xover =: 3 : '~:/y'
 (-: +/\."2) i. 0 (2)}?4$10
 (-: +/\."2) i. 0 (2)}?5$10
 
+9!:19 ct
 
-4!:55 ;:'a adot1 adot2 sdot0 base bs bsd em en f iind infix '
+4!:55 ;:'a adot1 adot2 sdot0 base bs bsd ct em en f iind infix '
 4!:55 ;:'kay key max maxover n ob oind omask osub outfix '
 4!:55 ;:'plus prefix product sd seg suffix sum t times x xor xover z zzz'
 randfini''

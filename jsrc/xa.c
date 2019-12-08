@@ -137,7 +137,7 @@ F1(jtposs){I n,p,q,*v;
  ASSERT(1>=AR(w),EVRANK);
  ASSERT(1==n||2==n,EVLENGTH);
  if(1==n)p=q=*v; else{p=v[0]; q=v[1];} 
- ASSERT(0<=p&&p<=2&&0<=q&&q<=2,EVDOMAIN);
+ ASSERT(BETWEENC(p,0,2)&&BETWEENC(q,0,2),EVDOMAIN);
  jt->pos[0]=p; jt->pos[1]=q;   
  R mtv;
 }
@@ -227,7 +227,7 @@ F1(jtasgzombq){ASSERTMTV(w); R sc(jt->asgzomblevel);}
 
 F1(jtasgzombs){I k; 
  RE(k=i0(w)); 
- ASSERT(0<=k&&k<=2,EVDOMAIN);
+ ASSERT(BETWEENC(k,0,2),EVDOMAIN);
  jt->asgzomblevel=(C)k;
  R mtm;
 }
@@ -241,7 +241,7 @@ F1(jtunicodex78q){
 
 F1(jtunicodex78s){I k;
  RE(k=i0(w));
- ASSERT(0<=k&&k<=1,EVDOMAIN);
+ ASSERT(BETWEENC(k,0,1),EVDOMAIN);
  jt->unicodex78=(C)k;
  R mtm;
 }

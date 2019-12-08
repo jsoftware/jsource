@@ -706,7 +706,7 @@ A *jttpush(J jt,AD* RESTRICT wd,I t,A *pushp){I af=AFLAG(wd); I n=AN(wd);
  if(t&BOX){
   // boxed.  Loop through each box, recurring if called for.
   A* RESTRICT wv=AAV(wd);  // pointer to box pointers
-  if((af&AFNJA))R pushp;  // no processing if not J-managed memory (rare) scaf improve
+// obsolete   if((af&AFNJA))R pushp;  // no processing if not J-managed memory (rare)   no longer supported for boxed arrays
   while(n--){
    A np=*wv; ++wv;   // point to block for box
    if(np){     // it can be 0 if there was error

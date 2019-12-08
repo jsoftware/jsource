@@ -112,7 +112,7 @@ static DF1(jtunderai1){DECLF;A x,y,z;B b;I j,n,*u,*v;UC f[256],*wv,*zv;
         x=df1(iota(v2(128L, 2L)),fs); b=x&&256==AN(x)&&NUMERIC&AT(x);
   if(b){y=df1(iota(v2(  8L,32L)),fs); b=y&&256==AN(y)&&NUMERIC&AT(y);}
   if(b){x=vi(x); y=vi(y); b=x&&y;} 
-  if(b){u=AV(x); v=AV(y); DO(256, j=*u++; if(j==*v++&&-256<=j&&j<256)f[i]=(UC)(0<=j?j:j+256); else{b=0; break;});}
+  if(b){u=AV(x); v=AV(y); DO(256, j=*u++; if(j==*v++&&BETWEENO(j,-256,256))f[i]=(UC)(0<=j?j:j+256); else{b=0; break;});}
   if(jt->jerr)RESETERR;
  }         
  if(!b)R from(df1(indexof(alp,w),fs),alp);

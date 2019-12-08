@@ -151,7 +151,7 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wk,wn,wr,*ws,zn;
    else IFROMLOOP2((k+SZI-1)>>LGSZI,MVMC)
    break;
   }
- RETF(z);  // todo kludge should inherit norel
+ RETF(z);
 }    /* a{"r w for numeric a */
 
 #define BSET(x,y0,y1,y2,y3)     *x++=y0; *x++=y1; *x++=y2; *x++=y3;
@@ -264,7 +264,7 @@ static F2(jtbfrom){A z;B*av,*b;C*wv,*zv;I acr,an,ar,k,m,p,q,r,*u=0,wcr,wf,wk,wn,
    else DQ(m, b=av; DQ(an, MC(zv,wv+k**b++,k); zv+=k;); wv+=wk;);
 #endif
  }
- RETF(z);  // todo kludge should inherit norel
+ RETF(z);
 }    /* a{"r w for boolean a */
 
 // a is array whose 1-cells are index lists, w is array

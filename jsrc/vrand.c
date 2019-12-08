@@ -483,7 +483,7 @@ static B jtrngga(J jt,I i,UI**vv){
 
 F1(jtrngselects){I i;UI**vv=jt->rngV;
  RE(i=i0(w));
- ASSERT(0<=i&&i<NRNG,EVDOMAIN);
+ ASSERT(BETWEENO(i,0,NRNG),EVDOMAIN);
  jt->rngI[jt->rng]=jt->rngi;
  switch(jt->rng=i){
   case SMI: vv=jt->rngV0;      jt->rngw=SY_64?64:32;

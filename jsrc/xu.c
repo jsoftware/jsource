@@ -572,13 +572,13 @@ void utom(C4* src, I srcn, UC* snk){ C4 w;
    *snk++=0xc0|(w>>6);
    *snk++=0x80|(0x3f&w);
   }
-  else if((w>=0x800&&w<=0xd7ff)||(w>=0xe000&&w<=0xffff))
+  else if(BETWEENC(w,0x800,0xffff)&&!BETWEENC(w,0xd800,0xdfff))
   {
    *snk++=0xe0|w>>12;
    *snk++=0x80|(0x3f&(w>>6));
    *snk++=0x80|(0x3f&w);
   }
-  else if(w>=0xd800&&w<=0xdfff) // utf-16 surrogate invalid in utf-32
+  else if(BETWEENC(w,0xd800,0xdfff)) // utf-16 surrogate invalid in utf-32
   {
    *snk++=0xe0|w>>12;
    *snk++=0x80|(0x3f&(w>>6));
@@ -609,9 +609,9 @@ I utomsize(C4* src, I srcn){ C4 w;I r=0;int invalid=0;
    ++r;
   else if(w<=0x7ff)
    r+=2;
-  else if((w>=0x800&&w<=0xd7ff)||(w>=0xe000&&w<=0xffff))
+  else if(BETWEENC(w,0x800,0xffff)&&!BETWEENC(w,0xd800,0xdfff))
    r+=3;
-  else if(w>=0xd800&&w<=0xdfff) // utf-16 surrogate invalid in utf-32
+  else if(BETWEENC(w,0xd800,0xdfff)) // utf-16 surrogate invalid in utf-32
   {r+=3;invalid=1;}
   else if(w>0x10ffff)          // invalid range
   {++r;invalid=1;}             // demoted to 1-byte. utf8 atmost 4 bytes
@@ -660,7 +660,7 @@ I utowsize(C4* src, I srcn){ C4 w;I r=0;int invalid=0;
   {
    if(w>=0x10000)
     r+=2;
-   else if(w>=0xd800&&w<=0xdfff) // utf-16 surrogate invalid in utf-32
+   else if(BETWEENC(w,0xd800,0xdfff)) // utf-16 surrogate invalid in utf-32
     {r+=1; invalid=1;}
    else
     r+=1;
@@ -674,7 +674,7 @@ void utou(C4* src, I srcn, C4* snk){ C4 w,w1;
  while(srcn--)
  {
   w=*src++;
-  if(w<=0xd7ff||(w>=0xe000))
+  if(!BETWEENC(w,0xd800,0xdfff))
   {
    *snk++=(C4)w;
   }
@@ -688,7 +688,7 @@ void utou(C4* src, I srcn, C4* snk){ C4 w,w1;
    else
    {
     w1=*src;
-    if(w>=0xdc00||w1<=0xdbff||w1>=0xe000) // incorrect high/low surrogate
+    if(w>=0xdc00||!BETWEENC(w1,0xdc00,0xdfff)) // incorrect high/low surrogate
     {
      *snk++=(C4)w;
     }
@@ -721,7 +721,7 @@ I utousize(C4* src, I srcn){ C4 w,w1; I r=0;
    else
    {
     w1=*src;
-    if(w>=0xdc00||w1<=0xdbff||w1>=0xe000) // incorrect high/low surrogate
+    if(w>=0xdc00||!BETWEENC(w1,0xdc00,0xdfff)) // incorrect high/low surrogate
     {
       r++;
     }
@@ -747,7 +747,7 @@ F1(jttoutf16){A z;I n,t,q,b=0,j; UC* wv; US* c2v; C4* c4v; A c4; I *v;
   RZ(w=vi(w));
   n=AN(w); v=(I*)AV(w);
   GATV0(c4,C4T,n,1); c4v=C4AV(c4);
-  DQ(n, j=*v++; ASSERT(0<=j&&j<=0x10ffff,EVINDEX); *c4v++=(C4)j;);
+  DQ(n, j=*v++; ASSERT(BETWEENC(j,0,0x10ffff),EVINDEX); *c4v++=(C4)j;);
   q=utowsize(C4AV(c4),AN(c4));
   q=(q<0)?(-q):q;   // allow unpaired surrogate as in 10&u:
   GATV0(z,C2T,q,1);

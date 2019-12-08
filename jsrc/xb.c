@@ -170,21 +170,21 @@ F1(jthexrep1){RZ(w); ASSERT(NOUN&AT(w),EVDOMAIN); R hrep(BU,SY_64,w);}  /* 3!:3 
 F2(jtbinrep2){I k;
  RZ(a&&w);
  RE(k=i0(a)); if(10<=k)k-=8;
- ASSERT(k<=0||k<=3,EVDOMAIN);
+ ASSERT(BETWEENC(k,0,3),EVDOMAIN);
  R brep((B)(k&1),(B)(2<=k),w);
 }    /* a 3!:1 w */
 
 F2(jthexrep2){I k;
  RZ(a&&w); 
  RE(k=i0(a)); if(10<=k)k-=8;
- ASSERT(k<=0||k<=3,EVDOMAIN);
+ ASSERT(BETWEENC(k,0,3),EVDOMAIN);
  R hrep((B)(k&1),(B)(2<=k),w);
 }    /* a 3!:3 w */
 
 
 static S jtunh(J jt,C c){
- if('0'<=c&&c<='9')R c-'0';
- if('a'<=c&&c<='f')R 10+c-'a';
+ if(BETWEENC(c,'0','9'))R c-'0';
+ if(BETWEENC(c,'a','f'))R 10+c-'a';
  ASSERT(0,EVDOMAIN);
 }
 
@@ -206,7 +206,7 @@ static A jtunbinr(J jt,B b,B d,B pre601,I m,A w){A y,z;C*u=(C*)w,*v;I e,j,kk,n,p
  kk=WS(d); v=BV(d,w,r);
  ASSERT((t==LOWESTBIT(t))&&t&(B01|INT|FL|CMPX|BOX|XNUM|RAT|LIT|C2T|C4T|SB01|SLIT|SINT|SFL|SCMPX|SBOX|SBT),EVDOMAIN);
  ASSERT(0<=n,EVDOMAIN);
- ASSERT(0<=r&&r<=RMAX,EVRANK);
+ ASSERT(BETWEENC(r,0,RMAX),EVRANK);
  p=bsize(jt,d,0,t,n,r,0L); e=t&RAT?n+n:t&SPARSE?1+sizeof(P)/SZI:n; 
  ASSERT(m>=p,EVLENGTH);
  if(t&DENSE){GA(z,t,n,r,0)}else{GASPARSE(z,t,n,r,(I*)0)} s=AS(z);
@@ -218,14 +218,14 @@ static A jtunbinr(J jt,B b,B d,B pre601,I m,A w){A y,z;C*u=(C*)w,*v;I e,j,kk,n,p
   RZ(y=indexof(y,y)); iv=AV(y);
   for(i=0;i<e;++i){
    j=vv[i]; 
-   ASSERT(0<=j&&j<m,EVINDEX);
+   ASSERT(BETWEENO(j,0,m),EVINDEX);
    if(i>iv[i])zv[i]=zv[iv[i]];
    else{while(k<e&&j>=vv[k])++k; zv[i]=rifvs(unbinr(b,d,pre601,k<e?vv[k]-j:m-j,(A)(u+j)));}
  }}else if(t&SPARSE){P*zp=PAV(z);
-  j=vv[1]; ASSERT(0<=j&&j<m,EVINDEX); SPB(zp,a,unbinr(b,d,pre601,vv[2]-j,(A)(u+j)));
-  j=vv[2]; ASSERT(0<=j&&j<m,EVINDEX); SPB(zp,e,unbinr(b,d,pre601,vv[3]-j,(A)(u+j)));
-  j=vv[3]; ASSERT(0<=j&&j<m,EVINDEX); SPB(zp,i,unbinr(b,d,pre601,vv[4]-j,(A)(u+j)));
-  j=vv[4]; ASSERT(0<=j&&j<m,EVINDEX); SPB(zp,x,unbinr(b,d,pre601,m    -j,(A)(u+j)));
+  j=vv[1]; ASSERT(BETWEENO(j,0,m),EVINDEX); SPB(zp,a,unbinr(b,d,pre601,vv[2]-j,(A)(u+j)));
+  j=vv[2]; ASSERT(BETWEENO(j,0,m),EVINDEX); SPB(zp,e,unbinr(b,d,pre601,vv[3]-j,(A)(u+j)));
+  j=vv[3]; ASSERT(BETWEENO(j,0,m),EVINDEX); SPB(zp,i,unbinr(b,d,pre601,vv[4]-j,(A)(u+j)));
+  j=vv[4]; ASSERT(BETWEENO(j,0,m),EVINDEX); SPB(zp,x,unbinr(b,d,pre601,m    -j,(A)(u+j)));
  }else if(n)switch(CTTZNOFLAG(t)){
   case B01X:  {B c,*zv=BAV(z); DO(n, c=v[i]; ASSERT(c==C0||c==C1,EVDOMAIN); zv[i]=c;);} break; 
   case SBTX:

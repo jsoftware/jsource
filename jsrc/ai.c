@@ -115,7 +115,7 @@ static F1(jtinvamp){A f,ff,g,h,x,y;B nf,ng;C c,d,*yv;I n;V*u,*v;
   case CLBRACE:  R nf?amp(pinv(x),h):amp(x,ds(CIOTA));
   case COBVERSE: ff=FAV(h)->fgh[1]; R amp(nf?x:ff,nf?ff:x);
   case CPDERIV:  if(nf&&!AR(x))R ds(CPDERIV); break;  // only atom&p.. is invertible
-  case CXCO:     RE(n=i0(x)); ASSERT(n&&-3<n&&n<3,EVDOMAIN);  // fall through to create (-x)&u
+  case CXCO:     RE(n=i0(x)); ASSERT(n&&BETWEENC(n,-2,2),EVDOMAIN);  // fall through to create (-x)&u
   case CROT:          // fall through to create (-x)&u
   case CCIRCLE:       // fall through to create (-x)&u
   case CSPARSE:  if(nf)R amp(negate(x),h);   break;
@@ -127,11 +127,12 @@ static F1(jtinvamp){A f,ff,g,h,x,y;B nf,ng;C c,d,*yv;I n;V*u,*v;
    else{ff=unname(h); R invamp(amp(nf?x:ff,nf?ff:x));}
   case CSCO:     
    ASSERT(nf,EVDOMAIN); 
-   RE(n=i0(x)); ASSERT(n&&-6<=n&&n<=6,EVDOMAIN);
+   RE(n=i0(x)); ASSERT(n&&BETWEENC(n,-6,6),EVDOMAIN);
    R amp(sc(-n),h);
   case CUCO:
    ASSERT(nf,EVDOMAIN); 
-   RE(n=i0(x)); ASSERT(1<=n&&n<=4||7<=n&&n<=8,EVDOMAIN);
+// obsolete    RE(n=i0(x)); ASSERT(1<=n&&n<=4||7<=n&&n<=8,EVDOMAIN);
+   RE(n=i0(x)); ASSERT(BETWEENC(n,1,8)&!BETWEENC(n,5,6),EVDOMAIN);
    R amp(sc(-(1^(-n))),h);
   case CCANT:    
    ASSERT(nf,EVDOMAIN); 
@@ -215,7 +216,7 @@ static F1(jtinvamp){A f,ff,g,h,x,y;B nf,ng;C c,d,*yv;I n;V*u,*v;
    x=FAV(h)->fgh[0]; y=FAV(h)->fgh[1];
    if(NOUN&AT(x)&&equ(x,num[3])&&NOUN&AT(y)){
     RE(n=i0(f));
-    if(all1(eps(y,v2(4L,5L)))){ASSERT(n&&-2<=n&&n<=2,EVDOMAIN); R amp(sc(-n),g);}
+    if(all1(eps(y,v2(4L,5L)))){ASSERT(n&&BETWEENC(n,-2,2),EVDOMAIN); R amp(sc(-n),g);}
     if(all1(eps(y,v2(1L,3L)))){ASSERT(0==n||1==n||10==n||11==n,EVDOMAIN); R foreign(x,num[2]);}
    }
    break;

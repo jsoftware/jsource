@@ -588,7 +588,7 @@ static A jtsbcheck1(J jt,A una,A sna,A u,A s,A h,A roota,A ff,A gp){PROLOG(0003)
   vc=(UC*)(sv+vi);
   ASSERTD(!c2||(c2&SBC2)||(c2&SBC4),"u flag");
   ASSERTD(!c2||(1&&c2&SBC2)^(1&&c2&SBC4),"u flag");
-  ASSERTD(0<=vi&&vi<=sn,"u index");
+  ASSERTD(BETWEENC(vi,0,sn),"u index");
   ASSERTD(!c2||(c2&SBC2&&!(vi&1))||(c2&SBC4&&!(vi&3)),"u index alignment");
   ASSERTD(0<=vn&&(!c2||(c2&SBC2&&!(vi&1))||(c2&SBC4&&!(vi&3))),"u length");
   ASSERTD(sn>=vi+vn,"u index/length");
@@ -599,11 +599,11 @@ static A jtsbcheck1(J jt,A una,A sna,A u,A s,A h,A roota,A ff,A gp){PROLOG(0003)
   ASSERTD(BLACK==v->color||RED==v->color,"u color");
   RZ(xv[i]=rifvs(c2&SBC4?vec(C4T,vn>>2,vc):c2&SBC2?vec(C2T,vn>>1,vc):str(vn,vc)));
   yv[i]=ord=v->order;
-  j=v->parent; ASSERTD(    0<=j&&j<c&&2>=++ptv[j],"u parent");                        
-  j=v->left;   ASSERTD(!j||0<=j&&j<c&&1>=++lfv[j]&&     ord>(j+uv)->order ,"u left"       );
-  j=v->right;  ASSERTD(!j||0<=j&&j<c&&1>=++rtv[j]&&     ord<(j+uv)->order ,"u right"      );
-  j=v->down;   ASSERTD(    0<=j&&j<c&&1>=++dnv[j]&&(!j||ord>(j+uv)->order),"u predecessor");
-  j=v->up;     ASSERTD(    0<=j&&j<c&&1>=++upv[j]&&(!j||ord<(j+uv)->order),"u successor"  );
+  j=v->parent; ASSERTD(    BETWEENO(j,0,c)&&2>=++ptv[j],"u parent");                        
+  j=v->left;   ASSERTD(!j||BETWEENO(j,0,c)&&1>=++lfv[j]&&     ord>(j+uv)->order ,"u left"       );
+  j=v->right;  ASSERTD(!j||BETWEENO(j,0,c)&&1>=++rtv[j]&&     ord<(j+uv)->order ,"u right"      );
+  j=v->down;   ASSERTD(    BETWEENO(j,0,c)&&1>=++dnv[j]&&(!j||ord>(j+uv)->order),"u predecessor");
+  j=v->up;     ASSERTD(    BETWEENO(j,0,c)&&1>=++upv[j]&&(!j||ord<(j+uv)->order),"u successor"  );
  }
  ASSERTD(equ(grade1(x),grade1(y)),"u order");
  EPILOG(num[1]);
@@ -640,7 +640,7 @@ static A jtsbcheck2(J jt,A una,A sna,A u,A s){PROLOG(0000);
   vc=(UC*)(sv+vi);
   ASSERTD(!c2||(c2&SBC2)||(c2&SBC4),"u flag");
   ASSERTD(!c2||(1&&c2&SBC2)^(1&&c2&SBC4),"u flag");
-  ASSERTD(0<=vi&&vi<=sn,"u index");
+  ASSERTD(BETWEENC(vi,0,sn),"u index");
   ASSERTD(!c2||(c2&SBC2&&!(vi&1))||(c2&SBC4&&!(vi&3)),"u index alignment");
   ASSERTD(0<=vn&&(!c2||(c2&SBC2&&!(vi&1))||(c2&SBC4&&!(vi&3))),"u length");
   ASSERTD(sn>=vi+vn,"u index/length");
@@ -731,7 +731,7 @@ F2(jtsb2){A z;I j,k,n;
 #endif
  RZ(a&&w);
  RE(j=i0(a)); n=AN(w);
- ASSERT(!(1<=j&&j<=7)||!n||SBT&AT(w),EVDOMAIN);
+ ASSERT(!BETWEENC(j,1,7)||!n||SBT&AT(w),EVDOMAIN);
  switch(j){
   default:   ASSERT(0,EVDOMAIN);
   case 0:

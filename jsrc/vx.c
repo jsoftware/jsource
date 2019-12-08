@@ -39,7 +39,8 @@ I jtxint(J jt,X w){I c,n,*v,z;
  n=AN(w); v=AV(w); v+=n; c=z=*--v;
  ASSERT(n<=XIDIG&&c!=XPINF&&c!=XNINF,EVDOMAIN);
  DQ(n-1, z=*--v+z*XBASE;);
- ASSERT((c<0)==(z<0),EVDOMAIN);
+// obsolete  ASSERT((c<0)==(z<0),EVDOMAIN);
+ ASSERT((c^z)>=0,EVDOMAIN);
  R z;
 }
 
@@ -182,7 +183,8 @@ X jtxdiv(J jt,X a,X w,I mode){PROLOG(0096);B di;I an,*av,c,c0,d,e,k,s,u[2],u1,wn
    RZ(q=vec(INT,u1?2L:1L,u)); 
    RZ(y=xtymes(w,q)); yn=AN(y); e=*(AV(y)+yn-1);
    k=c0>=e?c0/e:e/c0; 
-   k=k<=3?0:k>3162?4:3<k&&k<=32?1:32<k&&k<=316?2:3;
+// obsolete   k=k<=3?0:k>3162?4:3<k&&k<=32?1:32<k&&k<=316?2:3;
+   k=(k>3)+(k>32)+(k>316)+(k>3162);
    s=XBASEN*(an-yn)+(c0>=e?k:-k); 
    if(s){q=shift10(s,q); y=shift10(s,y);}
    A z=xplus(q,xdiv(xminus(a,y),w,mode));

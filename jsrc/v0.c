@@ -274,7 +274,8 @@ static A jtmnomx(J jt,I m,A w){A s,*wv,x,z=w,*zv;I i,n,r;
    x=wv[i]; r=AR(x); 
    ASSERT(1>=r,EVRANK); 
    ASSERT(!r||m==AN(x),EVLENGTH); 
-   zv[i]=1<m==1<r?x:1<m?reshape(s,x):head(x);
+// obsolete    zv[i]=1<m==1<r?x:1<m?reshape(s,x):head(x);  1<r always false
+   zv[i]=m<=1?x:reshape(s,x);
   }
   RE(z); RZ(z=ope(z));
  }

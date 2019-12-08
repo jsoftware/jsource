@@ -113,7 +113,7 @@ static B jtwidthdp(J jt, A a, I *w, I *d){I n,x,y; C *v;
   } else *w=-1;
  } else *w=*d=-1;
 
- ASSERT(-1 <= *d && *d <= 9, EVDOMAIN);
+ ASSERT(BETWEENC(*d,-1,9), EVDOMAIN);
  R 1;
 } /* width and decimal places */
 
@@ -148,7 +148,7 @@ static F1(jtfmtparse){A x,z,*zv;B ml[2+NMODVALS],mod,t;C c,*cu="srqpnmdblc",*cu1
    if(s=strchr(cu1,d)){if(i-mi>3)RZ(zv[s-cu1]=rifvs(str(i-mi-3,wv+mi+2)));}else ASSERT(1==i-mi,EVDOMAIN);
   }
   mi=i;
-  if('0'<=c&&c<='9'){RZ(widthdp(str(n-i,wv+i),vals,vals+1)); break;} 
+  if(BETWEENC(c,'0','9')){RZ(widthdp(str(n-i,wv+i),vals,vals+1)); break;} 
  }
  if(mtv!=zv[NMODVALS]){C*cu="e,.-*",*cv,subs[5];
   x=zv[NMODVALS]; n=AN(x); cv=CAV(x); MC(subs,cu,5L); memset(ml,C1,5L);
@@ -454,7 +454,7 @@ static A jtfmtallcol(J jt, A a, A w, I mode) {A *a1v,base,fb,len,strs,*u,v,x;
    case 2: k=0<l?l:coll; cv=cx; cx+=k; break;
    default: ASSERTSYS(0, "jtfmtallcol: mode");
   }
-  if(0<l && l<*il) memset(cv,SUBs,l);
+  if(l>0 && l<*il) memset(cv,SUBs,l);  // can't dereference il if l==0
   else {
    if(0<=l && mL){if(nR)mvc(k,cv,nR,cR); else memset(cv+*il, ' ', l-*il);}
    else if(0<=l) {if(nR)mvc(k,cv,nR,cR); else memset(cv, ' ', l-*il); cv+=l-*il;}

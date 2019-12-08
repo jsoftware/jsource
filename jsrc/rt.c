@@ -77,7 +77,7 @@ static A jtcenter(J jt,A a,I j,I k,I m){A z;C*x;I n,*s,zn;
 
 static F2(jttroot){A t,x;B b;C*u,*v;I j=0,k=0,m,n,*s;
  RZ(a&&w);
- m=AN(a); u=CAV(a); b=!m||1==m&&'0'<=*u&&*u<='9';
+ m=AN(a); u=CAV(a); b=!m||1==m&&BETWEENC(*u,'0','9');
  GATV0(x,LIT,b?1:4+m,1); v=CAV(x);
  *v=jt->bx[10]; if(!b){v[3+m]=jt->bx[10]; v[1]=v[2+m]=' '; MC(2+v,u,m);}
  t=*AAV(w); s=AS(t); m=*s; n=*(1+s);

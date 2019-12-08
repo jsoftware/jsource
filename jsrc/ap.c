@@ -619,8 +619,8 @@ static A jtmovsumavg(J jt,I m,A w,A fs,B avg){A z;
 
 static DF2(jtmovavg){I m,j;
  PREF2(jtmovavg);
- RE(m=i0(vib(a)));
- if(0<m&&m<=SETIC(w,j)&&AT(w)&B01+FL+INT)R movsumavg(m,w,self,1); 
+ RE(m=i0(vib(a)));SETIC(w,j);
+ if(0<m&&m<=j&&AT(w)&B01+FL+INT)R movsumavg(m,w,self,1);   // j may be 0
  R jtinfixprefix2(jt,a,w,self);
 }    /* a (+/ % #)\w */
 

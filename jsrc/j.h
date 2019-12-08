@@ -402,11 +402,11 @@ extern unsigned int __cdecl _clearfp (void);
 
 // Tuning options for cip.c
 #if C_AVX2
-#define IGEMM_THRES  (-1)     // when m*n*p less than this use cached; when higher, use BLAS   scaf must TUNE this
+#define IGEMM_THRES  (-1)     // when m*n*p less than this use cached; when higher, use BLAS
 #define DGEMM_THRES  (-1)     // when m*n*p less than this use cached; when higher, use BLAS   _1 means 'never'
 #else
 #define DGEMM_THRES  5000000     // when m*n*p less than this use cached; when higher, use BLAS   _1 means 'never'
-#define IGEMM_THRES  5000000     // when m*n*p less than this use cached; when higher, use BLAS   scaf must TUNE this
+#define IGEMM_THRES  5000000     // when m*n*p less than this use cached; when higher, use BLAS
 #endif
 #define DCACHED_THRES  (64*64*64)    // when m*n*p less than this use blocked; when higher, use cached
 #define ZGEMM_THRES  2000000     // when m*n*p less than this use cached; when higher, use BLAS  
@@ -463,6 +463,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define ASSERTAGREE(x,y,l) {I *aaa=(x), *aab=(y), aai=(l)-1; do{aab=aai<0?aaa:aab; ASSERT(aaa[aai]==aab[aai],EVLENGTH); --aai; aab=aai<0?aaa:aab; ASSERT(aaa[aai]==aab[aai],EVLENGTH); --aai;}while(aai>=0); }
 #endif
 #define ASSERTAGREESEGFAULT(x,y,l) {I *aaa=(x), *aab=(y), aai=(l)-1; do{aab=aai<0?aaa:aab; if(aaa[aai]!=aab[aai])SEGFAULT --aai; aab=aai<0?aaa:aab; if(aaa[aai]!=aab[aai])SEGFAULT --aai;}while(aai>=0); }
+// BETWEENx requires that lo be <= hi
 #define BETWEENC(x,lo,hi) ((UI)((x)-(lo))<=(UI)((hi)-(lo)))   // x is in [lo,hi]
 #define BETWEENO(x,lo,hi) ((UI)((x)-(lo))<(UI)((hi)-(lo)))   // x is in [lo,hi)
 #define CALL1(f,w,fs)   ((f)(jt,    (w),(A)(fs)))

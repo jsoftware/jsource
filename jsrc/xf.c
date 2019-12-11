@@ -279,7 +279,7 @@ F1(jtpathchdir){A z;
  ASSERT(!chdir(CAV(toutf8x(w))),EVFACE);
 #else
  RZ(z=toutf16x(toutf8(w))); USAV(z)[AN(z)]=0;  // install termination
- _wchdir(USAV(z));
+ ASSERT(0==_wchdir(USAV(z)),EVFACE);
 #endif
  R mtv;
 }

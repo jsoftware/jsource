@@ -108,6 +108,41 @@ fg =. 3 : 0
 'big'  -: fg 17.5
 'big'  -: fg 'abc'
 
+fg =. 3 : 0
+res =. 'a'
+if. y=0 [ res =. res,'b' do. res =. res , 'c'
+elseif. y=1 [ res =. res,'d' do. res =. res , 'e'
+elseif. y=2 [ res =. res,'f' do. res =. res , 'g'
+elseif. y=3 [ res =. res,'h' do. res =. res , 'i'
+else. res =. res , 'j'
+end.
+res =. res , 'k'
+res
+)
+'abck' -: fg 0
+'abdek' -: fg 1
+'abdfgk' -: fg 2
+'abdfhik' -: fg 3
+'abdfhjk' -: fg 4
+
+fg =. 3 : 0
+res =. 'a'
+if. y=0 [ res =. res,'b' do. res =. res , 'c'
+elseif. y=1 [ res =. res,'d' do. res =. res , 'e'
+elseif. y=2 [ res =. res,'f' do. res =. res , 'g'
+elseif. y=3 [ res =. res,'h' do. res =. res , 'i'
+elseif. do. res =. res , 'j'
+end.
+res =. res , 'k'
+res
+)
+'abck' -: fg 0
+'abdek' -: fg 1
+'abdfgk' -: fg 2
+'abdfhik' -: fg 3
+'abdfhjk' -: fg 4
+
+
 fi =. 3 : 'if. y do. ''good'' return. end. ''bad'''
 
 'good' -: fi 1 2 3

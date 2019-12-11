@@ -13,6 +13,8 @@ NB. 1!:43 and 1!:44 -----------------------------------------------------
 
 'length error' -: 1!:44 etx ''
 
+'interface error' -: 1!:44 etx 'undefinedpath'
+
 
 4!:55 ;:'s'
 

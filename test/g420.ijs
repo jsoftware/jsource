@@ -3,6 +3,9 @@ NB. f/y for atomic verbs ------------------------------------------------
 
 randuni''
 
+NB. test failed on small ct
+ct   =: 9!:18''
+9!:19[2^_40
 
 insert =: 1 : '{. ` ({. x $:@}.) @. (1&<@#)'     NB. one or more items
 
@@ -813,7 +816,9 @@ _3 Z: 1000
 'fold limit' -: a F. ] etx t =: 0
 t -: 1000  NB. quit after 1000 tries
 
-4!:55 ;:'A adot1 adot2 sdot0 a c f g i insert iota k MC n p pl q '
+9!:19 ct
+
+4!:55 ;:'A adot1 adot2 sdot0 a c ct f g i insert iota k MC n p pl q '
 4!:55 ;:'rand s t test x y z'
 randfini''
 

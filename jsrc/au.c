@@ -43,8 +43,8 @@ A jtdfss1(J jt, A w, A self, A self0)     {RZ(self); R CALL1(FAV(self)->valencef
 A jtdfss2(J jt, A a, A w, A self, A self0){RZ(self); R CALL2(FAV(self)->valencefns[1],a,w,self0);}
      // used to treat self as an argument.  Used with routines that don't really use self
 
-F1(jtself1){A z; FDEPINC(d=fdep(jt->sf)); STACKCHKOFL z=df1(  w,jt->sf); FDEPDEC(d); RETF(z);}
-F2(jtself2){A z; FDEPINC(d=fdep(jt->sf)); STACKCHKOFL z=df2(a,w,jt->sf); FDEPDEC(d); RETF(z);}
+F1(jtself1){A z; FDEPINC(d=fdep(jt->sf)); STACKCHKOFL z=df1(  w,jt->sf); FDEPDEC(d); forcetomemory(w); RETF(z);}
+F2(jtself2){A z; FDEPINC(d=fdep(jt->sf)); STACKCHKOFL z=df2(a,w,jt->sf); FDEPDEC(d); forcetomemory(w); RETF(z);}
 
 A jtac1(J jt,AF f){R fdef(0,0,VERB, f,0L, 0L,0L,0L, VFLAGNONE, RMAX,RMAX,RMAX);}
 A jtac2(J jt,AF f){R fdef(0,0,VERB, 0L,f, 0L,0L,0L, VFLAGNONE, RMAX,RMAX,RMAX);}

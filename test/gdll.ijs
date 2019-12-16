@@ -153,7 +153,6 @@ NB. ugh - windows ignores trailing blanks in file names
 f=: 3 : 0
 i=. LIBTSDLL i:'.'
 t=. dltb jpath '~temp',(}.~ i:&'/') jpathsep (i{.LIBTSDLL),(":2!:6''),(8 u: 16b1f601),'ê',i}.LIBTSDLL
-echo t
 if. -.fexist t do. (fread dltb LIBTSDLL)fwrite t end. NB. no write if exists - could be in use
 try. ((dquote t),' fubar x')cd '' catch. end.
 cder''

@@ -44,13 +44,12 @@ else
 # clang 3.4
 common="$OPENMP -Werror -fPIC -O2 -fwrapv -fno-strict-aliasing -Wextra -Wno-consumed -Wno-uninitialized -Wno-unused-parameter -Wno-sign-compare -Wno-empty-body -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-unsequenced -Wno-string-plus-int -Wno-tautological-constant-out-of-range-compare"
 # clang 4
-OVER_CLANG_VER4=$(echo `$CC -dumpversion | cut -f1 -d.` \>= 4 | bc)
-if [ $OVER_CLANG_VER4 -eq 1 ] ; then
+CLANG_MAJOR=$(echo __clang_major__ | $CC -E -x c - | tail -n 1)
+if [ $CLANG_MAJOR -ge 4 ] ; then
 common="$common -Wno-pass-failed"
 fi
 # clang 10
-OVER_CLANG_VER10=$(echo `$CC -dumpversion | cut -f1 -d.` \>= 10 | bc)
-if [ $OVER_CLANG_VER10 -eq 1 ] ; then
+if [ $CLANG_MAJOR -ge 10 ] ; then
 common="$common -Wno-implicit-int-float-conversion"
 fi
 fi

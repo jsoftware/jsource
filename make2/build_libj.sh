@@ -84,12 +84,18 @@ if [ $OVER_GCC_VER8 -eq 1 ] ; then
 common="$common -Wno-cast-function-type"
 fi
 else
-# clang 3.5 .. 5.0
-#if defined(__clang__) && ( (__clang_major__ > 3) || ((__clang_major__ == 3) && (__clang_minor__ > 4)))
-common="$OPENMP -Werror -fPIC -O2 -fwrapv -fno-strict-aliasing -Wextra -Wno-consumed -Wno-uninitialized -Wno-unused-parameter -Wno-sign-compare -Wno-empty-body -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-unsequenced -Wno-string-plus-int -Wno-pass-failed"
-#else
-common="$OPENMP -Werror -fPIC -O2 -fwrapv -fno-strict-aliasing -Wextra -Wno-consumed -Wno-uninitialized -Wno-unused-parameter -Wno-sign-compare -Wno-empty-body -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-unsequenced -Wno-string-plus-int"
-#endif
+# clang 3.4
+common="$OPENMP -Werror -fPIC -O2 -fwrapv -fno-strict-aliasing -Wextra -Wno-consumed -Wno-uninitialized -Wno-unused-parameter -Wno-sign-compare -Wno-empty-body -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-unsequenced -Wno-string-plus-int -Wno-tautological-constant-out-of-range-compare"
+# clang 4
+OVER_CLANG_VER4=$(echo `$CC -dumpversion | cut -f1 -d.` \>= 4 | bc)
+if [ $OVER_CLANG_VER4 -eq 1 ] ; then
+common="$common -Wno-pass-failed"
+fi
+# clang 10
+OVER_CLANG_VER10=$(echo `$CC -dumpversion | cut -f1 -d.` \>= 10 | bc)
+if [ $OVER_CLANG_VER10 -eq 1 ] ; then
+common="$common -Wno-implicit-int-float-conversion"
+fi
 fi
 darwin="$OPENMP -fPIC -O2 -fwrapv -fno-strict-aliasing -Wno-string-plus-int -Wno-empty-body -Wno-unsequenced -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-return-type -Wno-constant-logical-operand -Wno-comment -Wno-unsequenced -Wno-pass-failed"
 

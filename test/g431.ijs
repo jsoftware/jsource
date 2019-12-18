@@ -6,7 +6,7 @@ randuni''
 
 NB. test failed on small ct
 ct   =: 9!:18''
-9!:19[2^_40
+9!:19[2^_38
 
 em     =: (en >.@% 1&>.@|@[)`(en 0&>.@>:@- [) @. (0&<:@[)
 kay    =: en`em @. (0&<@[)

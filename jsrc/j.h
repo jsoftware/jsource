@@ -395,7 +395,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define L2CACHESIZE (((I)1)<<18)
 #define L3CACHESIZE (((I)1)<<22)
 
-#define TOOMANYATOMS 0xFFFFFFFFLL  // more atoms than this is considered overflow (64-bit).  i.-family can't handle more than 2G cells in array
+#define TOOMANYATOMS 0xFFFFFFFFFFFFLL  // more atoms than this is considered overflow (64-bit).  i.-family can't handle more than 2G cells in array.
 
 #define MEMCPYTUNE 4096  // (bytes) unpredictable blocks shorter than this should just use MCISxx.  Keep as power of 2
 #define MEMCPYTUNELOOP 350  // (bytes) predictable blocks shorter than this should just use MCISxx.
@@ -574,8 +574,8 @@ extern unsigned int __cdecl _clearfp (void);
 // Note: assigns name before assigning the components of the array, so the components had better not depend on name, i. e. no GATV(z,BOX,AN(z),AR(z),AS(z))
 #define GATVS(name,type,atoms,rank,shaape,size,shapecopier,erraction) \
 { I bytes = ALLOBYTES(atoms,rank,size,(type)&LAST0,(type)&NAME); \
- ASSERT(SY_64?((unsigned long long)(atoms))<TOOMANYATOMS:(I)bytes>(I)(atoms)&&(I)(atoms)>=(I)0,EVLIMIT); \
- ASSERT(!((rank)&~RMAX),EVLIMIT); \
+ if(SY_64){ASSERT(!((((unsigned long long)(atoms))&~TOOMANYATOMS)+((rank)&~RMAX)),EVLIMIT)} \
+ else{ASSERT(((I)bytes>(I)(atoms)&&(I)(atoms)>=(I)0)&&!((rank)&~RMAX),EVLIMIT)} \
  name = jtgafv(jt, bytes);   \
  I akx=AKXR(rank);   \
  if(name){   \

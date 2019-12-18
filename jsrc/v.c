@@ -101,7 +101,7 @@ F1(jtiota){A z;I m,n,*v;
  if(AT(w)&XNUM+RAT)R cvt(XNUM,iota(vi(w)));
  RZ(w=vi(w)); n=AN(w); v=AV(w);
  if(1==n){m=*v; R 0>m?apv(-m,-m-1,-1L):IX(m);}
- RE(m=prod(n,v)); z=reshape(mag(w),IX(ABS(m)));
+ RE(m=prod(n,v)); RZ(z=IX(ABS(m))); RZ(z=reshape(mag(w),z));
  DO(n, A zz; if(0>v[i])z=IRS1(z,0L,n-i,jtreverse,zz););
  RETF(z);
 }

@@ -1969,6 +1969,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z=mtv;
     // using the long table.  Use the current one if it is long enough; otherwise allocate a new one
     // First, make a decision for Boolean tables.  If the table will be Boolean, decide whether to use packed bits
     // or bytes, and represent that information in mode and booladj.
+    ASSERT((UI)m<=(UI)(UI4)-1,EVLIMIT);  // there must not be more items than we can distinguish with different hash indexes
     if(booladj){if(p>MAXBYTEBOOL){mode|=IIMODPACK|IIMODBITS;}else{mode|=IIMODBITS;booladj=5-3;}  // set MODBITS as a flag to hashallo
     }else{
 #if 0  // now that we have wide instructions, it always makes sense to clear the allocated area

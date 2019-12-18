@@ -952,9 +952,11 @@ RESTRICTF A jtga(J jt,I type,I atoms,I rank,I* shaape){A z;
  // trailing NUL (because boolean-op code needs it)
  I bytes = ALLOBYTESVSZ(atoms,rank,bp(type),type&LAST0,0);  // We never use GA for NAME types, so we don't need to check for it
 #if SY_64
- if((UI)atoms<TOOMANYATOMS && !(rank&~RMAX)){ // check for too many atoms, to preempt overflow
+ if(!((((unsigned long long)(atoms))&~TOOMANYATOMS)+((rank)&~RMAX))){ \
+// obsolete  if((UI)atoms<TOOMANYATOMS && !(rank&~RMAX)){ // check for too many atoms, to preempt overflow
 #else
- if(bytes>atoms&&atoms>=0){ // beware integer overflow
+ if(((I)bytes>(I)(atoms)&&(I)(atoms)>=(I)0)&&!((rank)&~RMAX)){ \
+// obsolete  if(bytes>atoms&&atoms>=0){ // beware integer overflow
 #endif
   RZ(z = jtgafv(jt, bytes));   // allocate the block, filling in AC and AFLAG
   I akx=AKXR(rank);   // Get offset to data

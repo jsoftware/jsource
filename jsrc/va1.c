@@ -152,7 +152,7 @@ static A jtva1(J jt,A w,A self){A z;I cv,n,t,wt,zt;VF ado;
  }else{
   I m=((wt&XNUM+RAT)-1)>>(BW-1);   // -1 if not XNUM/RAT
   switch(VA1CASE(jt->jerr,FAV(self)->lc-VA2MIN)){
-   default:     R 0;  // unknown type - impossible
+   default:     R 0;  // unknown type - error must have come from previous verb
    // all these cases are needed because sparse code may fail over to them
    case VA1CASE(EWOV,  VA2MIN-VA2MIN): cv=VD;       ado=floorD;               break;
    case VA1CASE(EWOV,  VA2MAX-VA2MIN): cv=VD;       ado=ceilD;                break;

@@ -460,7 +460,7 @@ F1(jtbase1){A z;B*v;I c,m,n,p,r,*s,t,*x;
 // obsolete  if(c)DQ(m, p=0; d=1; DQ(c, if(*--v)p+=d; d+=d;); *--x=p;)
  GATV(z,INT,m,r?r-1:0,s); x=AV(z); v=BAV(w);
  if(c)DQ(m, p=0; DQ(c, p=2*p+*v++;); *x++=p;)
- else memset(x-m,C0,m*SZI);
+ else memset(x,C0,m*SZI);
  RETF(z);
 }
 

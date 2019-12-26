@@ -98,6 +98,15 @@ fi
 fi
 darwin="$OPENMP -fPIC -O2 -fwrapv -fno-strict-aliasing -Wno-string-plus-int -Wno-empty-body -Wno-unsequenced -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-return-type -Wno-constant-logical-operand -Wno-comment -Wno-unsequenced -Wno-pass-failed"
 
+NO_SHA_ASM="${NO_SHA_ASM:=0}"
+
+if [ $NO_SHA_ASM -ne 0 ] ; then
+
+common="$common -DNO_SHA_ASM"
+darwin="$darwin -DNO_SHA_ASM"
+
+else
+
 SRC_ASM_LINUX=" \
  keccak1600-x86_64-elf.o \
  sha1-x86_64-elf.o \
@@ -145,6 +154,8 @@ OBJS_ASM_WIN32=" \
  ../../../../openssl-asm/sha1-586-nasm.o \
  ../../../../openssl-asm/sha256-586-nasm.o \
  ../../../../openssl-asm/sha512-586-nasm.o "
+
+fi
 
 case $jplatform\_$j64x in
 

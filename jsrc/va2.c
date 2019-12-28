@@ -916,7 +916,8 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
 I jtsumattymesprods(J jt,I it,void *avp, void *wvp,I dplen,I nfro,I nfri,I ndpo,I ndpi,void *zvp){
  if(it&FL){
   NAN0;
-#if C_AVX
+// workaround gcc incorrect result for 1 _1 1 (+/ . *) 5 _ _
+#if C_AVX && (defined(__clang__) || !defined(__GNUC__))
 #if 0 // obsolete 
   {D * RESTRICT av=DAV(a),* RESTRICT wv=DAV(w); D * RESTRICT zv=DAV(z); 
    __m256i endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-dplen)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ 

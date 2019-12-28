@@ -170,6 +170,9 @@ OBJS=  \
  ../../jsrc/openssl/sha/sha3.o \
  ../../jsrc/openssl/sha/sha512.o
 
+!ifdef NO_SHA_ASM
+CFLAGS1= /D NO_SHA_ASM
+!else
 !ifdef x64
 OBJS_ASM= \
  ../../openssl-asm/keccak1600-x86_64-nasm.o \
@@ -182,6 +185,7 @@ OBJS_ASM= \
  ../../openssl-asm/sha1-586-nasm.o \
  ../../openssl-asm/sha256-586-nasm.o \
  ../../openssl-asm/sha512-586-nasm.o
+!endif
 !endif
 
 DEF= ../../dllsrc/jdll.def
@@ -197,7 +201,7 @@ LD=link
 !endif
 
 .c.o:
-	$(CC) $(CFLAGS) /Fo$@ /c $<
+	$(CC) $(CFLAGS) $(CFLAGS1) /Fo$@ /c $<
 
 .cpp.o:
 	$(CC) $(CFLAGS) /Fo$@ /c $<

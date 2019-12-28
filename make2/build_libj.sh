@@ -67,7 +67,7 @@ fi
 
 if [ -z "${compiler##*gcc*}" ] || [ -z "${CC##*gcc*}" ]; then
 # gcc
-common="$OPENMP -fPIC -O1 -fwrapv -fno-strict-aliasing -Wextra -Wno-maybe-uninitialized -Wno-unused-parameter -Wno-sign-compare -Wno-clobbered -Wno-empty-body -Wno-unused-value -Wno-pointer-sign -Wno-parentheses"
+common="$OPENMP -fPIC -O2 -fwrapv -fno-strict-aliasing -Wextra -Wno-maybe-uninitialized -Wno-unused-parameter -Wno-sign-compare -Wno-clobbered -Wno-empty-body -Wno-unused-value -Wno-pointer-sign -Wno-parentheses"
 OVER_GCC_VER6=$(echo `$CC -dumpversion | cut -f1 -d.` \>= 6 | bc)
 if [ $OVER_GCC_VER6 -eq 1 ] ; then
 common="$common -Wno-shift-negative-value"
@@ -97,6 +97,15 @@ common="$common -Wno-implicit-int-float-conversion"
 fi
 fi
 darwin="$OPENMP -fPIC -O2 -fwrapv -fno-strict-aliasing -Wno-string-plus-int -Wno-empty-body -Wno-unsequenced -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-return-type -Wno-constant-logical-operand -Wno-comment -Wno-unsequenced -Wno-pass-failed"
+
+NO_SHA_ASM="${NO_SHA_ASM:=0}"
+
+if [ $NO_SHA_ASM -ne 0 ] ; then
+
+common="$common -DNO_SHA_ASM"
+darwin="$darwin -DNO_SHA_ASM"
+
+else
 
 SRC_ASM_LINUX=" \
  keccak1600-x86_64-elf.o \
@@ -145,6 +154,8 @@ OBJS_ASM_WIN32=" \
  ../../../../openssl-asm/sha1-586-nasm.o \
  ../../../../openssl-asm/sha256-586-nasm.o \
  ../../../../openssl-asm/sha512-586-nasm.o "
+
+fi
 
 case $jplatform\_$j64x in
 

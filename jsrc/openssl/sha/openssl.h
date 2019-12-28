@@ -1,5 +1,7 @@
 #include <stdint.h>
 
+#ifndef NO_SHA_ASM
+
 // #define MD5_ASM
 #if defined(__aarch64__)||defined(_M_ARM64)
 #define SHA1_ASM
@@ -25,6 +27,8 @@
 #define SHA512_ASM
 #define KECCAK1600_ASM
 #define SELFTEST
+#endif
+
 #endif
 
 extern void OPENSSL_cleanse(void *ptr, size_t len);

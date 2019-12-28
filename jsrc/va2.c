@@ -800,9 +800,9 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
 // av, wv, wv1 are set up
 #define ONEPRODAVXD2(label,mid2x2,last2x2) {\
    acc000=_mm256_set1_pd(0.0); acc010=acc000; acc100=acc000; acc110=acc000; \
+   if(dplen<=NPAR)goto label##9; \
    acc001=acc000; acc011=acc000; acc101=acc000; acc111=acc000; \
-   I rem=dplen; \
-   if(rem>8*NPAR)goto label##8; \
+   I rem=dplen; if(rem>8*NPAR)goto label##8; \
    while(rem>NPAR){ \
     if(rem>4*NPAR) \
      {if(rem>6*NPAR){if(rem>7*NPAR)goto label##7;else goto label##6;}else {if(rem>5*NPAR)goto label##5;else goto label##4;}} \
@@ -813,8 +813,8 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
     if((rem-=8*NPAR)>8*NPAR)goto label##8;  \
    } \
    av-=(NPAR-rem)&-NPAR; wv-=(NPAR-rem)&-NPAR; wv1-=(NPAR-rem)&-NPAR; \
-   last2x2  \
    acc000=_mm256_add_pd(acc000,acc001); acc010=_mm256_add_pd(acc010,acc011); acc100=_mm256_add_pd(acc100,acc101); acc110=_mm256_add_pd(acc110,acc111);  \
+   label##9: last2x2  \
    acc000=_mm256_add_pd(acc000,_mm256_permute2f128_pd(acc000,acc000,0x01)); acc010=_mm256_add_pd(acc010,_mm256_permute2f128_pd(acc010,acc010,0x01)); \
     acc100=_mm256_add_pd(acc100,_mm256_permute2f128_pd(acc100,acc100,0x01)); acc110=_mm256_add_pd(acc110,_mm256_permute2f128_pd(acc110,acc110,0x01)); \
    acc000=_mm256_add_pd(acc000,_mm256_permute_pd (acc000,0xf)); acc010=_mm256_add_pd(acc010,_mm256_permute_pd (acc010,0x0));  \
@@ -841,10 +841,10 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
 // Do one 1x1 product of length dplen.  Leave results in acc000.  dplen must be >0
 // av,  wv, are set up
 #define ONEPRODAVXD1(label,mid1x1,last1x1) {\
-   acc000=_mm256_set1_pd(0.0); acc010=acc000; acc100=acc000; acc110=acc000; \
+   acc000=_mm256_set1_pd(0.0); if(dplen<=NPAR)goto label##9; \
+   acc010=acc000; acc100=acc000; acc110=acc000; \
    acc001=acc000; acc011=acc000; acc101=acc000; acc111=acc000; \
-   I rem=dplen; \
-   if(rem>8*NPAR)goto label##8; \
+   I rem=dplen; if(rem>8*NPAR)goto label##8; \
    while(rem>NPAR){ \
     if(rem>4*NPAR) \
      {if(rem>6*NPAR){if(rem>7*NPAR)goto label##7;else goto label##6;}else {if(rem>5*NPAR)goto label##5;else goto label##4;}} \
@@ -854,11 +854,11 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
     av+=8*NPAR; wv+=8*NPAR;  \
     if((rem-=8*NPAR)>8*NPAR)goto label##8;  \
    } \
-   av-=(NPAR-rem)&-NPAR; wv-=(NPAR-rem)&-NPAR; \
-   last1x1  \
    acc000=_mm256_add_pd(acc000,acc001); acc010=_mm256_add_pd(acc010,acc011); acc100=_mm256_add_pd(acc100,acc101); acc110=_mm256_add_pd(acc110,acc111);  \
    acc000=_mm256_add_pd(acc000,acc010); acc100=_mm256_add_pd(acc100,acc110); \
    acc000=_mm256_add_pd(acc000,acc100);  \
+   av-=(NPAR-rem)&-NPAR; wv-=(NPAR-rem)&-NPAR; \
+   label##9: last1x1  \
    acc000=_mm256_add_pd(acc000,_mm256_permute2f128_pd(acc000,acc000,0x01)); \
    acc000=_mm256_add_pd(acc000,_mm256_permute_pd (acc000,0xf)); \
    av+=((dplen-1)&(NPAR-1))+1;  wv+=((dplen-1)&(NPAR-1))+1; \

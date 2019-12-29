@@ -1,4 +1,8 @@
 #include "cpuinfo.h"
+#if defined(TARGET_OS_IPHONE)||defined(TARGET_OS_IOS)||defined(TARGET_OS_TV)||defined(TARGET_OS_WATCH)
+#define TARGET_IOSDEVICE 1
+#endif
+
 
 extern uint64_t g_cpuFeatures;
 
@@ -13,9 +17,11 @@ void cpuInit(void)
 
 #elif defined(__aarch64__)||defined(_M_ARM64)
 
+#ifndef TARGET_IOSDEVICE
 #include <sys/auxv.h>
 #include <asm/hwcap.h>
 #include <arm_neon.h>
+#endif
 
 uint32_t OPENSSL_armcap_P;
 
@@ -23,6 +29,7 @@ void cpuInit(void)
 {
   g_cpuFeatures = 0;
 
+#ifndef TARGET_IOSDEVICE
   unsigned long hwcaps= getauxval(AT_HWCAP);
 
 #if defined(ANDROID)
@@ -84,6 +91,8 @@ void cpuInit(void)
   if(hwcaps & ARM_HWCAP_USCAT) g_cpuFeatures |= ARM_HWCAP_USCAT;
   if(hwcaps & ARM_HWCAP_ILRCPC) g_cpuFeatures |= ARM_HWCAP_ILRCPC;
   if(hwcaps & ARM_HWCAP_FLAGM) g_cpuFeatures |= ARM_HWCAP_FLAGM;
+#endif
+
 #endif
 
   OPENSSL_setcap();
@@ -356,11 +365,13 @@ void OPENSSL_setcap(void)
 {
 #if defined(__aarch64__)||defined(_M_ARM64)
   OPENSSL_armcap_P = ARMV7_NEON;
+#ifndef TARGET_IOSDEVICE
   OPENSSL_armcap_P |= (g_cpuFeatures & ARM_HWCAP_AES) ? ARMV8_AES : 0;
   OPENSSL_armcap_P |= (g_cpuFeatures & ARM_HWCAP_SHA1) ? ARMV8_SHA1 : 0;
   OPENSSL_armcap_P |= (g_cpuFeatures & ARM_HWCAP_SHA2) ? ARMV8_SHA256 : 0;
   OPENSSL_armcap_P |= (g_cpuFeatures & ARM_HWCAP_PMULL) ? ARMV8_PMULL : 0;
   OPENSSL_armcap_P |= (g_cpuFeatures & ARM_HWCAP_SHA512) ? ARMV8_SHA512 : 0;
+#endif
 #elif defined(__x86_64__)||defined(__i386__)||defined(_M_X64)||defined(_M_IX86)
   if (!(AVX&&OSXSAVE)) {
     g_cpuFeatures &= ~CPU_X86_FEATURE_AVX;

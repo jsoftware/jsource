@@ -235,8 +235,10 @@ _ _ _ -: asdfnotexist b. 0
 'domain error' -: - b. etx _                
 'domain error' -: ^ b. etx 0.5
 
-u =. > >: :. l
-l =. > >: :. u
+4!:55 ;:'l u'
+4!:55 ;:'l u'
+u =: > >: :. l
+l =: > >: :. u
 'domain error' -: u b. etx _1
 
 

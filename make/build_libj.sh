@@ -24,20 +24,22 @@ fi
 
 if [ $CC = "gcc" ] ; then
 #gcc
-common="$OPENMP -fPIC -O2 -fwrapv -fno-strict-aliasing -Wextra -Wno-maybe-uninitialized -Wno-unused-parameter -Wno-sign-compare -Wno-clobbered -Wno-empty-body -Wno-unused-value -Wno-pointer-sign -Wno-parentheses"
-OVER_GCC_VER6=$(echo `$CC -dumpversion | cut -f1 -d.` \>= 6 | bc)
-if [ $OVER_GCC_VER6 -eq 1 ] ; then
-common="$common -Wno-shift-negative-value"
+common="$OPENMP -Werror -fPIC -O2 -fwrapv -fno-strict-aliasing -Wextra -Wno-unused-parameter -Wno-sign-compare -Wno-clobbered -Wno-empty-body -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-type-limits"
+GNUC_MAJOR=$(echo __GNUC__ | $CC -E -x c - | tail -n 1)
+GNUC_MINOR=$(echo __GNUC_MINOR__ | $CC -E -x c - | tail -n 1)
+if [ $GNUC_MAJOR -ge 5 ] ; then
+common="$common -Wno-maybe-uninitialized"
 else
-common="$common -Wno-type-limits"
+common="$common -DC_NOMULTINTRINSIC -Wno-uninitialized"
+fi
+if [ $GNUC_MAJOR -ge 6 ] ; then
+common="$common -Wno-shift-negative-value"
 fi
 # alternatively, add comment /* fall through */
-OVER_GCC_VER7=$(echo `$CC -dumpversion | cut -f1 -d.` \>= 7 | bc)
-if [ $OVER_GCC_VER7 -eq 1 ] ; then
+if [ $GNUC_MAJOR -ge 7 ] ; then
 common="$common -Wno-implicit-fallthrough"
 fi
-OVER_GCC_VER8=$(echo `$CC -dumpversion | cut -f1 -d.` \>= 8 | bc)
-if [ $OVER_GCC_VER8 -eq 1 ] ; then
+if [ $GNUC_MAJOR -ge 8 ] ; then
 common="$common -Wno-cast-function-type"
 fi
 else
@@ -102,7 +104,7 @@ linux_j32) # linux x86
 TARGET=libj.so
 # faster, but sse2 not available for 32-bit amd cpu
 # sse does not support mfpmath=sse in 32-bit gcc
-COMPILE="$common -m32 -msse2 -mfpmath=sse -DC_NOMULTINTRINSIC "
+COMPILE="$common -m32 -msse2 -mfpmath=sse "
 # slower, use 387 fpu and truncate extra precision
 # COMPILE="$common -m32 -ffloat-store "
 LINK=" -shared -Wl,-soname,libj.so -m32 -lm -ldl $LDOPENMP32 -o libj.so "
@@ -144,7 +146,7 @@ GASM_FLAGS=""
 
 raspberry_j32) # linux raspbian arm
 TARGET=libj.so
-COMPILE="$common -marm -march=armv6 -mfloat-abi=hard -mfpu=vfp -DRASPI -DC_NOMULTINTRINSIC "
+COMPILE="$common -marm -march=armv6 -mfloat-abi=hard -mfpu=vfp -DRASPI "
 LINK=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP -o libj.so "
 SRC_ASM="${SRC_ASM_RASPI32}"
 GASM_FLAGS=""

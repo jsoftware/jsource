@@ -86,10 +86,15 @@ fi
 else
 # clang 3.4
 common="$OPENMP -Werror -fPIC -O2 -fwrapv -fno-strict-aliasing -Wextra -Wno-consumed -Wno-uninitialized -Wno-unused-parameter -Wno-sign-compare -Wno-empty-body -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-unsequenced -Wno-string-plus-int -Wno-tautological-constant-out-of-range-compare"
-# clang 4
+# clang 3.8
 CLANG_MAJOR=$(echo __clang_major__ | $CC -E -x c - | tail -n 1)
+CLANG_MINOR=$(echo __clang_minor__ | $CC -E -x c - | tail -n 1)
+if [ $CLANG_MAJOR -eq 3 ] && [ $CLANG_MINOR -ge 8 ] ; then
+common="$common -Wno-pass-failed"
+else
 if [ $CLANG_MAJOR -ge 4 ] ; then
 common="$common -Wno-pass-failed"
+fi
 fi
 # clang 10
 if [ $CLANG_MAJOR -ge 10 ] ; then

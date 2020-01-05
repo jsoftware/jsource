@@ -131,7 +131,7 @@ static void aes_inverse_key(block_state* self, const uint8_t *fwdkey)
   uint32_t *RK;
   uint32_t *SK;
 
-#if (defined(__clang__) && ( (__clang_major__ > 3) || ((__clang_major__ == 3) && (__clang_minor__ > 4)))) || __GNUC__ > 4 || (__GNUC__ == 4 && (__GNUC_MINOR__ > 6))
+#if (defined(__clang__) && ( (__clang_major__ > 3) || ((__clang_major__ == 3) && ((__clang_minor__ > 5) || !(defined(__aarch32__)||defined(__arm__)||defined(__aarch64__)) )))) || __GNUC__ > 4 || (__GNUC__ == 4 && (__GNUC_MINOR__ > 6))
   fwdkey = (const uint8_t *) __builtin_assume_aligned (fwdkey, 16);
 #endif
   RK = (uint32_t *) self->rk;

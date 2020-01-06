@@ -21,29 +21,45 @@ compiler=`readlink -f $(command -v $CC)`
 echo "CC=$CC"
 echo "compiler=$compiler"
 
-if [ -z "${compiler##*gcc*}" ] || [ -z "${CC##*gcc*}" ]; then
+if [ $CC = "gcc" ] ; then
 # gcc
-common=" -fPIC -O1 -fwrapv -fno-strict-aliasing -Wextra -Wno-maybe-uninitialized -Wno-unused-parameter -Wno-sign-compare -Wno-clobbered -Wno-empty-body -Wno-unused-value -Wno-pointer-sign -Wno-parentheses"
-OVER_GCC_VER6=$(echo `$CC -dumpversion | cut -f1 -d.` \>= 6 | bc)
-if [ $OVER_GCC_VER6 -eq 1 ] ; then
-common="$common -Wno-shift-negative-value"
+common="-Werror -fPIC -O2 -fwrapv -fno-strict-aliasing -Wextra -Wno-unused-parameter -Wno-sign-compare -Wno-clobbered -Wno-empty-body -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-type-limits"
+GNUC_MAJOR=$(echo __GNUC__ | $CC -E -x c - | tail -n 1)
+GNUC_MINOR=$(echo __GNUC_MINOR__ | $CC -E -x c - | tail -n 1)
+if [ $GNUC_MAJOR -ge 5 ] ; then
+common="$common -Wno-maybe-uninitialized"
 else
-common="$common -Wno-type-limits"
+common="$common -DC_NOMULTINTRINSIC -Wno-uninitialized"
+fi
+if [ $GNUC_MAJOR -ge 6 ] ; then
+common="$common -Wno-shift-negative-value"
 fi
 # alternatively, add comment /* fall through */
-OVER_GCC_VER7=$(echo `$CC -dumpversion | cut -f1 -d.` \>= 7 | bc)
-if [ $OVER_GCC_VER7 -eq 1 ] ; then
+if [ $GNUC_MAJOR -ge 7 ] ; then
 common="$common -Wno-implicit-fallthrough"
 fi
-OVER_GCC_VER8=$(echo `$CC -dumpversion | cut -f1 -d.` \>= 8 | bc)
-if [ $OVER_GCC_VER8 -eq 1 ] ; then
+if [ $GNUC_MAJOR -ge 8 ] ; then
 common="$common -Wno-cast-function-type"
 fi
 else
-# clang 3.5 .. 5.0
-common=" -Werror -fPIC -O1 -fwrapv -fno-strict-aliasing -Wextra -Wno-consumed -Wno-uninitialized -Wno-unused-parameter -Wno-sign-compare -Wno-empty-body -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-unsequenced -Wno-string-plus-int"
+# clang 3.4
+common="-Werror -fPIC -O2 -fwrapv -fno-strict-aliasing -Wextra -Wno-consumed -Wno-uninitialized -Wno-unused-parameter -Wno-sign-compare -Wno-empty-body -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-unsequenced -Wno-string-plus-int -Wno-tautological-constant-out-of-range-compare"
+# clang 3.8
+CLANG_MAJOR=$(echo __clang_major__ | $CC -E -x c - | tail -n 1)
+CLANG_MINOR=$(echo __clang_minor__ | $CC -E -x c - | tail -n 1)
+if [ $CLANG_MAJOR -eq 3 ] && [ $CLANG_MINOR -ge 8 ] ; then
+common="$common -Wno-pass-failed"
+else
+if [ $CLANG_MAJOR -ge 4 ] ; then
+common="$common -Wno-pass-failed"
 fi
-darwin=" -fPIC -O1 -fwrapv -fno-strict-aliasing -Wno-string-plus-int -Wno-empty-body -Wno-unsequenced -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-return-type -Wno-constant-logical-operand -Wno-comment -Wno-unsequenced"
+fi
+# clang 10
+if [ $CLANG_MAJOR -ge 10 ] ; then
+common="$common -Wno-implicit-int-float-conversion"
+fi
+fi
+darwin="-fPIC -O2 -fwrapv -fno-strict-aliasing -Wno-string-plus-int -Wno-empty-body -Wno-unsequenced -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-return-type -Wno-constant-logical-operand -Wno-comment -Wno-unsequenced -Wno-pass-failed"
 
 case $jplatform\_$1 in
 

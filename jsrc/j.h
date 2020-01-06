@@ -397,8 +397,13 @@ extern unsigned int __cdecl _clearfp (void);
 
 #define TOOMANYATOMS 0xFFFFFFFFFFFFLL  // more atoms than this is considered overflow (64-bit).  i.-family can't handle more than 2G cells in array.
 
+#if defined(__aarch32__)||defined(__arm__)||defined(_M_ARM)||defined(__aarch64__)||defined(_M_ARM64)
+#define MEMCPYTUNE 0     // (bytes) unpredictable blocks shorter than this should just use MCISxx.  Keep as power of 2
+#define MEMCPYTUNELOOP 0    // (bytes) predictable blocks shorter than this should just use MCISxx.
+#else
 #define MEMCPYTUNE 4096  // (bytes) unpredictable blocks shorter than this should just use MCISxx.  Keep as power of 2
 #define MEMCPYTUNELOOP 350  // (bytes) predictable blocks shorter than this should just use MCISxx.
+#endif
 
 // Tuning options for cip.c
 #if C_AVX2

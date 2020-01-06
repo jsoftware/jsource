@@ -412,5 +412,17 @@ void jefail(char* msg)
 {
 	strcpy(msg, "Load library ");
 	strcat(msg, pathdll);
-	strcat(msg," failed.\n");
+	strcat(msg," failed: ");
+#ifdef _WIN32
+	char buf[256];
+	FormatMessageA(
+	 FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+	 NULL, GetLastError(),
+	 MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),  /* Default language */
+	 buf, (sizeof(buf)/sizeof(char)), 0);
+	strcat(msg,buf);
+#else
+	strcat(msg,strerror(errno));
+#endif
+	strcat(msg,"\n");
 }

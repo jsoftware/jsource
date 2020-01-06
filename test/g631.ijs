@@ -43,6 +43,10 @@ NB. f&.> ----------------------------------------------------------------
 'length error' -: (i.12)  +&.> etx i.3 4
 'length error' -: (i.3 4) +&.> etx i.4 3
 
+NB. f&> ----------------------------------------------------------------
+
+11111 22222 33333 555555 -: ". 36 37 38 31 }.&> 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa 11111'; 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa 22222'; 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa 33333'; 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa 555555'
+
 4!:55 ;:'t1 totient x y '
 
 

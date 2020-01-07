@@ -60,6 +60,12 @@
 #define TARGET_IOS 1
 #endif
 
+#if defined(__aarch32__)||defined(__arm__)||defined(_M_ARM)||defined(__aarch64__)||defined(_M_ARM64)
+#ifndef __ARM_FEATURE_UNALIGNED
+#define ALIGNEDMEM
+#endif
+#endif
+
 #if SY_WIN32
 #if defined(_MSC_VER) && !defined(OLECOM)
 #define OLECOM
@@ -397,7 +403,7 @@ extern unsigned int __cdecl _clearfp (void);
 
 #define TOOMANYATOMS 0xFFFFFFFFFFFFLL  // more atoms than this is considered overflow (64-bit).  i.-family can't handle more than 2G cells in array.
 
-#if defined(__aarch32__)||defined(__arm__)||defined(_M_ARM)||defined(__aarch64__)||defined(_M_ARM64)
+#ifdef ALIGNEDMEM
 #define MEMCPYTUNE 0     // (bytes) unpredictable blocks shorter than this should just use MCISxx.  Keep as power of 2
 #define MEMCPYTUNELOOP 0    // (bytes) predictable blocks shorter than this should just use MCISxx.
 #else

@@ -29,6 +29,10 @@ static void sigint(int k){**adadbreak+=1;signal(SIGINT,sigint);}
 static void sigint2(int k){**adadbreak+=1;}
 static char input[30000];
 
+#if defined(_WIN32)
+#undef READLINE
+#undef USE_LINENOISE
+#endif
 /* J calls for keyboard input (debug suspension and 1!:1[1) */
 /* we call to get next input */
 #ifdef READLINE

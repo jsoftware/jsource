@@ -175,7 +175,7 @@ $(ODIR)/$(TARGET) : $(OBJS) $(OBJS_FMA) $(OBJS_AESNI) $(OBJS_AESARM) $(SRC_ASM) 
 	$(CC) -o $@ $(OBJS) $(OBJS_FMA) $(OBJS_AESNI) $(OBJS_AESARM) $(OBJS_ASM) $(SRC_ASM) $(DLLOBJS) $(LIBJDEF) $(LIBJRES) $(LDFLAGS)
 
 $(LIBJRES): jdll.rc
-	$(WINDRES) -D NDEBUG -o$@ $^
+	$(WINDRES) -o$@ $^
 
 all: $(ODIR)/$(TARGET)
 

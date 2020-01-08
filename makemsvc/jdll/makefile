@@ -216,11 +216,6 @@ endif
 
 DEF= ../../dllsrc/jdll.def
 RCS= ../../dllsrc/jdll.rc
-ifdef x64
-ASM= ../../makevs/jdll/winasm64.obj 
-else
-ASM=
-endif
 
 ifndef LD
 LD=link

@@ -106,6 +106,23 @@ cop j64avx libj.dylib bin libjavx.dylib
 cop j64avx2 libj.dylib bin libjavx2.dylib
 cop j64avx512 libj.dylib bin libjavx512.dylib
 
+if [ -f "../bin/${jplatform}/j64$DEBUGDIR/jamalgam" ] && [ -f "../bin/${jplatform}/j64arm$DEBUGDIR/jamalgam" ]; then
+# fat binary
+if [ -f "../jlibrary/bin/jamalgam" ]; then
+mv -f "../jlibrary/bin/jamalgam" "/tmp/jamalgam.old.$$"
+fi
+echo \# lipo "../bin/${jplatform}/j64$DEBUGDIR/jamalgam" "../bin/${jplatform}/j64arm$DEBUGDIR/jamalgam" -create -output "../jlibrary/bin/jamalgam-mac"
+lipo "../bin/${jplatform}/j64$DEBUGDIR/jamalgam" "../bin/${jplatform}/j64arm$DEBUGDIR/jamalgam" -create -output "../jlibrary/bin/jamalgam-mac"
+cp ../jlibrary/bin/jamalgam-mac ../jlibrary/bin/jamalgam
+elif [ -f "../bin/${jplatform}/j64$DEBUGDIR/jamalgam" ]; then
+cop j64 jamalgam bin jamalgam-mac
+cp ../jlibrary/bin/jamalgam-mac ../jlibrary/bin/jamalgam
+elif [ -f "../bin/${jplatform}/j64arm$DEBUGDIR/jamalgam" ]; then
+cop j64arm jamalgam bin jamalgam-mac
+cp ../jlibrary/bin/jamalgam-mac ../jlibrary/bin/jamalgam
+fi
+
+
 else
 
 # linux/raspberry 64-bit

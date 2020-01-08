@@ -812,13 +812,15 @@ static CCT*jtcdload(J jt,CCT*cc,C*lib,C*proc){FARPROC f;HMODULE h;
  #if SY_WINCE
    h=LoadLibrary(tounibuf(lib));
  #else
+   if(*lib){
   #ifdef FIXWINUTF8
-    wchar_t wlib[1024];
-    MultiByteToWideChar(CP_UTF8,0,lib,1+(int)strlen(lib),wlib,1024);
+    wchar_t wlib[_MAX_PATH];
+    MultiByteToWideChar(CP_UTF8,0,lib,1+(int)strlen(lib),wlib,_MAX_PATH);
     h=LoadLibraryW(wlib);
   #else
     h=LoadLibraryA(lib);
   #endif
+   }else h=GetModuleHandle(NULL);
  #endif
  CDASSERT((UI)h>HINSTANCE_ERROR,DEBADLIB);
 #endif
@@ -1765,15 +1767,23 @@ F1(jtcddlopen){HMODULE h;
  ARGCHK1(w); ASSERT(!JT(jt,seclev),EVSECURE)
  ASSERT(LIT&AT(w),EVDOMAIN);
  ASSERT(1>=AR(w),EVRANK);
+ if(AN(w)){
  ASSERT(AN(w),EVLENGTH);
  C*lib=CAV(str0(w));
 #ifdef _WIN32
- wchar_t wlib[1024];
- MultiByteToWideChar(CP_UTF8,0,lib,1+(int)strlen(lib),wlib,1024);
+ wchar_t wlib[_MAX_PATH];
+ MultiByteToWideChar(CP_UTF8,0,lib,1+(int)strlen(lib),wlib,_MAX_PATH);
  h=LoadLibraryW(wlib);
 #else
  h=dlopen((*lib)?lib:0,RTLD_LAZY);
 #endif
+ }else{
+#ifdef _WIN32
+ h=GetModuleHandle(NULL);
+#else
+ h=dlopen(0,RTLD_LAZY);
+#endif
+ }
 R sc((I)(intptr_t)h);
 }    /* 15!:20 return library handle */
 

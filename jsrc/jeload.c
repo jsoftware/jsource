@@ -2,10 +2,10 @@
 /* Licensed use only. Any other use is in violation of copyright.          */
 // utilities for JFE to load JE, initiallize, and run profile sentence
 // JFEs are jconsole, jwdw, and jwdp
-#define PLEN 1000 // path length
 #ifdef _WIN32
  #include <windows.h>
  #define GETPROCADDRESS(h,p) GetProcAddress(h,p)
+ #define PLEN _MAX_PATH // path length
  #define JDLLNAME "j"
  #define JDLLEXT ".dll"
  #define filesep '\\'
@@ -18,6 +18,7 @@
  #include <dlfcn.h>
  #define GETPROCADDRESS(h,p)	dlsym(h,p)
  #define _stdcall
+ #define PLEN PATH_MAX // path length
  #define filesep '/'
  #define filesepx "/"
  #define JDLLNAME "libj"
@@ -33,7 +34,7 @@
 #include "jversion.h"
 #include <stdint.h>
 
-static void* hjdll;
+static void* hjdll=0;
 static JST* jt;
 static JDoType jdo;
 static JInterruptType jinterrupt;
@@ -102,6 +103,18 @@ void* jehjdll(){return hjdll;}
 // load JE, Jinit, getprocaddresses, JSM
 JST* jeload(void* callbacks)
 {
+#ifdef JAMALGAM
+ jt=JInit();
+ if(!jt) return 0;
+ JSM(jt,callbacks);
+ jdo=JDo;
+ jinterrupt=JInterrupt;
+ jfree=JFree;
+ jga=Jga;
+ jgetlocale=JGetLocale;
+ jgeta=JGetA;
+ jseta=JSetA;
+#else
 #ifdef _WIN32
  WCHAR wpath[PLEN];
  MultiByteToWideChar(CP_UTF8,0,pathdll,1+(int)strlen(pathdll),wpath,PLEN);
@@ -121,6 +134,7 @@ JST* jeload(void* callbacks)
  jgetlocale=(JGetLocaleType)GETPROCADDRESS(hjdll,"JGetLocale");
  jgeta=(JGetAType)GETPROCADDRESS(hjdll,"JGetA");
  jseta=(JSetAType)GETPROCADDRESS(hjdll,"JSetA");
+#endif
  return jt;
 }
 
@@ -133,7 +147,7 @@ void jepath(char* arg,char* lib)
 #endif
 #ifdef _WIN32
  WCHAR wpath[PLEN];
- GetModuleFileNameW(0,wpath,_MAX_PATH);
+ GetModuleFileNameW(0,wpath,PLEN);
  *(wcsrchr(wpath, '\\')) = 0;
  WideCharToMultiByte(CP_UTF8,0,wpath,1+(int)wcslen(wpath),path,PLEN,0,0);
  strcpy(libpathj,path);
@@ -424,6 +438,7 @@ int jefirst(int type,char* arg)
 	strcat(input,"'");
 
 	strcat(input,"[LIBFILE_z_=:'");
+#ifndef JAMALGAM
 	p=pathdll;
 	q=input+strlen(input);
 	while(*p)
@@ -432,6 +447,7 @@ int jefirst(int type,char* arg)
 		*q++=*p++;
 	}
 	*q=0;
+#endif
 	strcat(input,"'");
 
 	r=jedo(input);

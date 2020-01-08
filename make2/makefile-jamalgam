@@ -1,0 +1,228 @@
+vpath % ../../../../jsrc:../../../../libbacktrace:../../../../jsrc/blis:../../../../jsrc/openssl/sha:../../../../jsrc/openssl/sha/asm:../../../../dllsrc
+
+ifndef jplatform64
+jplatform64=linux/j64x
+endif
+
+ODIR=../../../../bin/$(jplatform64)
+
+.SUFFIXES: .o
+
+ifneq (bsd,$(findstring bsd,$(jplatform64)))
+
+BACKTRACE_OBJS := \
+ atomic.o \
+ backtrace.o \
+ dwarf.o \
+ fileline.o \
+ mmap.o \
+ mmapio.o \
+ posix.o \
+ print.o \
+ simple.o \
+ sort.o \
+ state.o
+
+ifeq (darwin,$(findstring darwin,$(jplatform64)))
+BACKTRACE_OBJS := $(BACKTRACE_OBJS) macho.o
+else
+BACKTRACE_OBJS := $(BACKTRACE_OBJS) elf.o
+endif
+
+endif
+
+# note: the slowest builds have been placed at the top, to avoid starvation in parallel builds
+# (viavx is still longer than everything else combined--should maybe be broken up into multiple tus...)
+OBJS=  \
+ viavx.o \
+ viavx1-2.o \
+ viavx1-4.o \
+ viavx2.o \
+ viavx3.o \
+ viavx4.o \
+ viavx5.o \
+ viavx6.o \
+ vi.o \
+ vcompsc.o \
+ a.o \
+ ab.o \
+ aes-c.o \
+ aes-sse2.o \
+ af.o \
+ ai.o \
+ am.o \
+ am1.o \
+ amn.o \
+ ao.o \
+ ap.o \
+ ar.o \
+ as.o \
+ au.o \
+ gemm_c-ref.o \
+ gemm_int-aarch64.o \
+ gemm_int-avx.o \
+ gemm_int-sse2.o \
+ gemm_vec-ref.o \
+ c.o \
+ ca.o \
+ cc.o \
+ cd.o \
+ cf.o \
+ cg.o \
+ ch.o \
+ cip.o \
+ cl.o \
+ cp.o \
+ cpdtsp.o \
+ cpuinfo.o \
+ cr.o \
+ crs.o \
+ ct.o \
+ cu.o \
+ cv.o \
+ cx.o \
+ d.o \
+ dc.o \
+ dss.o \
+ dstop.o \
+ dsusp.o \
+ dtoa.o \
+ f.o \
+ f2.o \
+ fbu.o \
+ gemm.o \
+ i.o \
+ io.o \
+ j.o \
+ jdlllic.o \
+ jgmpinit.o \
+ k.o \
+ m.o \
+ mbx.o \
+ mt.o \
+ p.o \
+ pv.o \
+ px.o \
+ r.o \
+ rl.o \
+ rt.o \
+ s.o \
+ sc.o \
+ sl.o \
+ sn.o \
+ t.o \
+ u.o \
+ v.o \
+ v0.o \
+ v1.o \
+ v2.o \
+ va1.o \
+ va1ss.o \
+ va2.o \
+ va2s.o \
+ va2ss.o \
+ vamultsp.o \
+ vb.o \
+ vbang.o \
+ vbit.o \
+ vcant.o \
+ vcat.o \
+ vcatsp.o \
+ vchar.o \
+ vcomp.o \
+ vd.o \
+ vdx.o \
+ ve.o \
+ vf.o \
+ vfft.o \
+ vfrom.o \
+ vfromsp.o \
+ vg.o \
+ vgauss.o \
+ vgcomp.o \
+ vgranking.o \
+ vgsort.o \
+ vgsortiqavx512.o \
+ vgsp.o \
+ viix.o \
+ visp.o \
+ vm.o \
+ vo.o \
+ vp.o \
+ vq.o \
+ vrand.o \
+ vrep.o \
+ vs.o \
+ vsb.o \
+ vt.o \
+ vu.o \
+ vx.o \
+ vz.o \
+ w.o \
+ wc.o \
+ wn.o \
+ ws.o \
+ x.o \
+ x15.o \
+ xa.o \
+ xaes.o \
+ xb.o \
+ xc.o \
+ xcrc.o \
+ xd.o \
+ xf.o \
+ xfmt.o \
+ xh.o \
+ xi.o \
+ xl.o \
+ xo.o \
+ xs.o \
+ xsha.o \
+ xt.o \
+ xu.o \
+ crc32c.o \
+ str.o \
+ strptime.o \
+ keccak1600.o \
+ md4_dgst.o \
+ md4_one.o \
+ md5_dgst.o \
+ md5_one.o \
+ openssl-util.o \
+ sha1_one.o \
+ sha256.o \
+ sha3.o \
+ sha512.o \
+ jconsole.o \
+ jeload.o \
+ $(BACKTRACE_OBJS)
+
+%.o: %.cpp
+	$(CXX) -c $(CPPFLAGS) -o$@ $^
+
+%.o: %.c
+	$(CC) -c -o $@ $< $(CFLAGS) $(CFLAGS_SIMD) $(CFLAGS_FMA) $(CFLAGS_AESNI) $(CFLAGS_AESARM) $(CFLAGS_SLEEF) $(CFLAGS_BASE64)
+
+%.o: %.S
+	$(CC) $(GASM_FLAGS) -c -o $@ $<
+
+%.o: %.asm
+	nasm $(NASM_FLAGS) -felf64 -o $@ $<
+
+$(OBJS_FMA) : CFLAGS_FMA := -mfma
+$(OBJS_AESNI) : CFLAGS_AESNI := -maes
+$(OBJS_AESARM) : CFLAGS_AESARM := -march=armv8-a+crc+crypto
+$(OBJS_SLEEF) : CFLAGS_SLEEF := $(FLAGS_SLEEF) -DSLEEF_STATIC_LIBS -DNDEBUG -DDORENAME=1 -Wno-sign-compare -ffp-contract=off -fno-math-errno -fno-trapping-math -I../../../../sleef/src/arch -I../../../../sleef/src/common
+$(OBJS_BASE64) : CFLAGS_BASE64 := $(FLAGS_BASE64)
+$(ODIR)/$(TARGET) : $(OBJS) $(OBJS_BASE64) $(OBJS_FMA) $(OBJS_AESNI) $(OBJS_AESARM) $(OBJS_SLEEF) $(SRC_ASM) $(DLLOBJS) $(LIBJRES) $(OBJSLN)
+	$(CC) -o $@ $(OBJS) $(OBJS_FMA) $(OBJS_AESNI) $(OBJS_AESARM) $(OBJS_SLEEF) $(OBJS_BASE64) $(OBJS_ASM) $(SRC_ASM) $(DLLOBJS) $(LIBJDEF) $(LIBJRES) $(LDFLAGS) $(OBJSLN)
+
+$(LIBJRES): jamalgam.rc
+	$(WINDRES) -o$@ $^
+
+all: $(ODIR)/$(TARGET)
+
+clean:
+	rm -f $(OBJS) $(OBJS_FMA) $(OBJS_AESNI) $(OBJS_AESARM) $(OBJS_SLEEF) $(OBJS_BASE64) $(SRC_ASM) $(DLLOBJS) $(LIBJRES) $(OBJSLN) linenoise.o
+
+.PHONY: all clean

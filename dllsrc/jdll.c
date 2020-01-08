@@ -693,7 +693,7 @@ extern char sopath[];
 void dllquit(JJ);
 void oleoutput(JS,I n,char* s);
 HINSTANCE g_hinst;
-JS g_jt;
+JS g_jt=0;
 
 extern C* getlocale(JS);
 extern void  FreeGL(HANDLE hglrc);
@@ -733,6 +733,20 @@ JS heapinit()
 	if(!jvmcommit(jt,sz)){jvmrelease(jt,sizeof(JST));R 0;} //no memory
  jvmwire(jt,sz); //try to wire JS.  Don't bother with error checking; failure is non-catastrophic
 	R jt;
+}
+#endif
+
+#ifdef JAMALGAM
+// DllMain not called, so jconsole must call this
+static int attach_process()
+{
+	if(!(g_jt=(JS)_Initializer((void*)hDLL))) return 0;
+	return TRUE;
+}
+static int detach_process()
+{
+	if(g_jt){jvmrelease(g_jt,sizeof(JST));g_jt=0;}
+	return TRUE;
 }
 #endif
 

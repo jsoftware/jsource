@@ -82,3 +82,10 @@ if [ "$(cat /var/run/dmesg.boot | grep -c AVX512)" -ne 0 ] && [ -f "j64/libjavx5
   j64/jconsole -lib libjavx512.$ext testga.ijs
 fi
 fi
+if [ $m64 -eq 1 ]; then
+ls -l j64
+j64/jamalgam testga.ijs
+else
+ls -l j32
+j32/jamalgam testga.ijs
+fi

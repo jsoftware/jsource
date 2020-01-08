@@ -5,22 +5,23 @@ LOCAL_MODULE    := j
 LOCAL_MODULE_FILENAME    := libj
 
 ifeq ($(TARGET_ARCH_ABI),arm64-v8a)
-  LOCAL_CFLAGS := -DC_CRC32C=1 -fPIC -O2 -ftree-vectorize -fwrapv -Werror -Wno-string-plus-int -Wno-empty-body -Wno-unsequenced -Wno-parentheses -Wno-pointer-sign -Wno-logical-op-parentheses -Wno-unused-value -Wno-null-dereference -Wno-type-limits -fno-strict-aliasing -march=armv8-a+crc+crypto
+  LOCAL_CFLAGS := -DC_CRC32C=1 -fPIC -O2 -ftree-vectorize -fwrapv -Werror -Wno-string-plus-int -Wno-empty-body -Wno-unsequenced -Wno-parentheses -Wno-pointer-sign -Wno-logical-op-parentheses -Wno-unused-value -Wno-null-dereference -Wno-type-limits -Wno-pass-failed -fno-strict-aliasing -march=armv8-a+crc+crypto
   LOCAL_ARM_NEON := true
 endif
 ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
-  LOCAL_CFLAGS := -fPIC -O2 -fwrapv -Werror -Wno-string-plus-int -Wno-empty-body -Wno-unsequenced -Wno-parentheses -Wno-empty-body -Wno-unsequenced -Wno-parentheses -Wno-pointer-sign -Wno-logical-op-parentheses -Wno-unused-value -Wno-null-dereference -Wno-type-limits -fno-strict-aliasing -mfloat-abi=softfp -mfpu=vfpv3-d16 -march=armv7-a
+  LOCAL_CFLAGS := -fPIC -O2 -fwrapv -Werror -Wno-string-plus-int -Wno-empty-body -Wno-unsequenced -Wno-parentheses -Wno-empty-body -Wno-unsequenced -Wno-parentheses -Wno-pointer-sign -Wno-logical-op-parentheses -Wno-unused-value -Wno-null-dereference -Wno-type-limits -Wno-pass-failed -fno-strict-aliasing -mfloat-abi=softfp -march=armv7-a
   LOCAL_ARM_MODE := arm
+  LOCAL_ARM_NEON := true
 endif
 ifeq ($(TARGET_ARCH_ABI),armeabi)
   LOCAL_CFLAGS := -fPIC -Os -fwrapv -Werror -Wno-string-plus-int -Wno-empty-body -Wno-unsequenced -Wno-parentheses -Wno-empty-body -Wno-unsequenced -Wno-parentheses -Wno-pointer-sign -Wno-logical-op-parentheses -Wno-unused-value -Wno-null-dereference -Wno-type-limits -fno-strict-aliasing -mfloat-abi=softfp -march=armv5te
   LOCAL_ARM_MODE := arm
 endif
 ifeq ($(TARGET_ARCH),x86_64)
-  LOCAL_CFLAGS := -DC_CRC32C=1 -fPIC -O2 -ftree-vectorize -fwrapv -Werror -Wno-string-plus-int -Wno-empty-body -Wno-unsequenced -Wno-parentheses -Wno-empty-body -Wno-unsequenced -Wno-parentheses -Wno-pointer-sign -Wno-logical-op-parentheses -Wno-unused-value -Wno-null-dereference -Wno-type-limits -fno-strict-aliasing -march=x86-64 -mtune=intel -msse4.2 -mpopcnt -fno-stack-protector
+  LOCAL_CFLAGS := -DC_CRC32C=1 -fPIC -O2 -ftree-vectorize -fwrapv -Werror -Wno-string-plus-int -Wno-empty-body -Wno-unsequenced -Wno-parentheses -Wno-empty-body -Wno-unsequenced -Wno-parentheses -Wno-pointer-sign -Wno-logical-op-parentheses -Wno-unused-value -Wno-null-dereference -Wno-type-limits -Wno-pass-failed -fno-strict-aliasing -march=x86-64 -mtune=intel -msse4.2 -mpopcnt -fno-stack-protector
 endif
 ifeq ($(TARGET_ARCH),x86)
-  LOCAL_CFLAGS := -fPIC -O2 -ftree-vectorize -fwrapv -Werror -Wno-string-plus-int -Wno-empty-body -Wno-unsequenced -Wno-parentheses -Wno-empty-body -Wno-unsequenced -Wno-parentheses -Wno-pointer-sign -Wno-logical-op-parentheses -Wno-unused-value -Wno-null-dereference -Wno-type-limits -fno-strict-aliasing -march=i686 -mtune=intel -mssse3 -mfpmath=sse -fno-stack-protector
+  LOCAL_CFLAGS := -fPIC -O2 -ftree-vectorize -fwrapv -Werror -Wno-string-plus-int -Wno-empty-body -Wno-unsequenced -Wno-parentheses -Wno-empty-body -Wno-unsequenced -Wno-parentheses -Wno-pointer-sign -Wno-logical-op-parentheses -Wno-unused-value -Wno-null-dereference -Wno-type-limits -Wno-pass-failed -fno-strict-aliasing -march=i686 -mtune=intel -mssse3 -mfpmath=sse -fno-stack-protector
 endif
 LOCAL_LDLIBS := -ldl -llog
 LOCAL_CFLAGS += -fopenmp

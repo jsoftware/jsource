@@ -729,7 +729,12 @@ extern unsigned int __cdecl _clearfp (void);
 #define NAN1            {if(_SW_INVALID&_clearfp()){jsignal(EVNAN); R 0;}}
 #define NAN1V           {if(_SW_INVALID&_clearfp()){jsignal(EVNAN); R  ;}}
 #define NANTEST         (_SW_INVALID&_clearfp())
+// for debug only
+// #define NAN1            {if(_SW_INVALID&_clearfp()){fprintf(stderr,"nan error: file %s line %d\n",__FILE__,__LINE__);jsignal(EVNAN); R 0;}}
+// #define NAN1V           {if(_SW_INVALID&_clearfp()){fprintf(stderr,"nan error: file %s line %d\n",__FILE__,__LINE__);jsignal(EVNAN); R  ;}}
+// #define NAN1T           {if(_SW_INVALID&_clearfp()){fprintf(stderr,"nan error: file %s line %d\n",__FILE__,__LINE__);jsignal(EVNAN);     }}
 #endif
+
 #if C_AVX&&SY_64
 #define NPAR ((I)(sizeof(__m256)/sizeof(D))) // number of Ds processed in parallel
 #define LGNPAR 2  // no good automatic way to do this
@@ -1098,7 +1103,12 @@ extern J gjt; // global for JPF (procs without jt)
 
 #if SYS & SYS_UNIX
 #include <fenv.h>
+// bug clang isnan(x) set NaN flag if x is NaN
+#if defined(ANDROID) && (defined(__aarch32__)||defined(__arm__))
+#define _isnan       __builtin_isnan
+#else
 #define _isnan       isnan
+#endif
 #define _SW_INVALID  FE_INVALID
 
 static inline UINT _clearfp(void){int r=fetestexcept(FE_ALL_EXCEPT);

@@ -7,7 +7,6 @@
  #include <windows.h>
  #define GETPROCADDRESS(h,p) GetProcAddress(h,p)
  #define JDLLNAME "j.dll"
- #define JNONAVXDLLNAME "j-nonavx.dll"
  #define filesep '\\'
  #define filesepx "\\"
  #ifdef _MSC_VER
@@ -23,20 +22,14 @@
  #ifdef __MACH__
   extern int _NSGetExecutablePath(char*, int*);
   #define JDLLNAME "libj.dylib"
-  #define JNONAVXDLLNAME "libj-nonavx.dylib"
  #else
   #include <sys/utsname.h>
   #define JDLLNAME "libj.so"
-  #define JNONAVXDLLNAME "libj-nonavx.so"
  #endif
 #endif
 #include "j.h"
 #include "jversion.h"
 #include <stdint.h>
-#if !(defined(_M_X64) || defined(__x86_64__))
-#undef JNONAVXDLLNAME
-#define JNONAVXDLLNAME JDLLNAME
-#endif
 
 static void* hjdll;
 static J jt;
@@ -50,11 +43,6 @@ char path[PLEN];
 char pathdll[PLEN];
 static char jdllver[20];
 static int FHS=0;
-#if !(defined(_M_X64) || defined(__x86_64__))
-static int AVX=0;
-#else
-static int AVX=1;
-#endif
 #ifdef ANDROID
 #include <sys/system_properties.h>
 #include <android/log.h>
@@ -125,34 +113,17 @@ J jeload(void* callbacks)
 // WIN arg is 0, Unix arg is argv[0]
 void jepath(char* arg,char* lib,int forceavx)
 {
+#ifndef _WIN32
+ struct stat st;
+#endif
 #ifdef _WIN32
  WCHAR wpath[PLEN];
  GetModuleFileNameW(0,wpath,_MAX_PATH);
  *(wcsrchr(wpath, '\\')) = 0;
  WideCharToMultiByte(CP_UTF8,0,wpath,1+(int)wcslen(wpath),path,PLEN,0,0);
-#if SY_64
- { // auto detect
-#if 0
-//  AVX= 0!=(0x4UL & GetEnabledXStateFeatures());
-// above line not worked for pre WIN7 SP1
-// Working with XState Context (Windows)
-// https://msdn.microsoft.com/en-us/library/windows/desktop/hh134240(v=vs.85).aspx
-// Windows 7 SP1 is the first version of Windows to support the AVX API.
- #define XSTATE_MASK_AVX   (XSTATE_MASK_GSSE)
- typedef DWORD64 (WINAPI *GETENABLEDXSTATEFEATURES)();
- GETENABLEDXSTATEFEATURES pfnGetEnabledXStateFeatures = NULL;
- // Get the addresses of the AVX XState functions.
- HMODULE hm = GetModuleHandleA("kernel32.dll");
- if ((pfnGetEnabledXStateFeatures = (GETENABLEDXSTATEFEATURES)GetProcAddress(hm, "GetEnabledXStateFeatures")) &&
-     ((pfnGetEnabledXStateFeatures() & XSTATE_MASK_AVX) != 0))
-  AVX=1;
- FreeLibrary(hm);
-#endif
- }
-#endif
 #elif defined(ANDROID)
 #define AndroidPackage "com.jsoftware.j.android"
- struct stat st; char tmp[PLEN];
+ char tmp[PLEN];
  strcpy(path,"/data/data/");
  strcat(path,AndroidPackage);
  strcpy(pathdll,path);
@@ -205,8 +176,9 @@ void jepath(char* arg,char* lib,int forceavx)
  }
  chmod(getenv("TMPDIR"), S_IRWXU | S_IRWXG | S_IRWXO);
  strcat(path,"/app_jandroid/bin");
-#else
+#endif
 
+#ifndef _WIN32
 #define sz 4000
  char arg2[sz],arg3[sz];
  char* src,*snk;int n,len=sz;
@@ -217,21 +189,6 @@ void jepath(char* arg,char* lib,int forceavx)
  n=_NSGetExecutablePath(arg2,&len);
  if(0!=n) strcat(arg2,arg);
 #else
-#if defined(__x86_64__)
-// http://en.wikipedia.org/wiki/Advanced_Vector_Extensions
-// Linux: supported since kernel version 2.6.30 released on June 9, 2009.
- { // auto detect by uname -r
-#if 0
- struct utsname unm;
- if (!uname(&unm) &&
-     ((unm.release[0]>'2'&&unm.release[0]<='9')||  // avoid sign/unsigned char difference
-      (strlen(unm.release)>5&&unm.release[0]=='2'&&unm.release[2]=='6'&&unm.release[4]=='3'&&
-       (unm.release[5]>='0'&&unm.release[5]<='9'))))
-  AVX= 0!= __builtin_cpu_supports("avx");
-// fprintf(stderr,"kernel release :%s:\n",unm.release);
-#endif
- }
-#endif
  n=readlink("/proc/self/exe",arg2,sizeof(arg2));
  if(-1==n) strcpy(arg2,arg); else arg2[n]=0;
 #endif
@@ -269,12 +226,16 @@ void jepath(char* arg,char* lib,int forceavx)
  snk=path+strlen(path)-1;
  if('/'==*snk) *snk=0;
 #endif
-#ifndef ANDROID
+#ifdef ANDROID
+ strcpy(tmp,pathdll);
+#endif
  strcpy(pathdll,path);
  strcat(pathdll,filesepx);
- strcat(pathdll,(AVX)?JDLLNAME:JNONAVXDLLNAME);
-#ifndef _WIN32
- struct stat st;
+ strcat(pathdll,JDLLNAME);
+#ifdef ANDROID
+ if(stat(pathdll,&st))strcpy(pathdll,tmp);
+#endif
+#if !defined(_WIN32) && defined(__MACH__) && !defined(ANDROID)
  char pathdllpx[10];
  strncpy(pathdllpx,pathdll,10); pathdllpx[9]=0;
  if(stat(pathdll,&st)&&!strcmp(pathdllpx,"/usr/bin/")) FHS=1;
@@ -284,7 +245,7 @@ void jepath(char* arg,char* lib,int forceavx)
   jdllver[0]=_jdllver[0];
   jdllver[1]='.';
   strcat(jdllver+2,_jdllver+1);
-  strcpy(pathdll,(AVX)?JDLLNAME:JNONAVXDLLNAME);
+  strcpy(pathdll,JDLLNAME);
   strcat(pathdll,".");
   strcat(pathdll,jdllver);
  }
@@ -300,7 +261,6 @@ void jepath(char* arg,char* lib,int forceavx)
 		 strcat(pathdll,lib); // relative path
 	 }
  }
-#endif
 }
 
 // called by jwdp (java jnative.c) to set path

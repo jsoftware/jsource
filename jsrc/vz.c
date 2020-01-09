@@ -215,7 +215,12 @@ static ZF1(jtzatan){ZF1DECL;
  R z;
 }    /* 4.4.22 */
 
+// NaN bug in android asin() _1 o. _1
+#if defined(ANDROID) && (defined(__aarch32__)||defined(__arm__)||defined(__aarch64__))
+static ZF1(jtzasin){R !v.im&&-1<=v.re&&v.re<=1?zrj0(({D _d=asin(v.re);NAN0;_d;})):zmj(zasinh(zjx(v)));}   /* 4.4.20 */
+#else
 static ZF1(jtzasin){R !v.im&&-1<=v.re&&v.re<=1?zrj0(asin(v.re)):zmj(zasinh(zjx(v)));}   /* 4.4.20 */
+#endif
 
 static ZF1(jtzacos){R zminus(zrj0(PI/2.0),zasin(v));}
 

@@ -56,7 +56,12 @@ static void jtcirx(J jt,I n,I k,D*z,D*y){D p,t;
   case  6: DQ(n, t=*y++;                                     *z++=t<-EMAX2||    EMAX2<t?inf:cosh(t););     break;
 // math library tanh is slooooow  case  7: DQ(n, t=*y++;                                     *z++=t<-TMAX?-1:TMAX<t?1:tanh(t););           break;
   case  7: DQ(n, t=*y++;                                     *z++=t<-TMAX?-1:TMAX<t?1:(1.0-exp(-2*t))/(1.0+exp(-2*t)););           break;
+// NaN bug in android asin()  _1 o. _1
+#if defined(ANDROID) && (defined(__aarch32__)||defined(__arm__)||defined(__aarch64__))
+  case -1: DQ(n, t=*y++; ASSERTW( -1.0<=t&&t<=1.0, EWIMAG ); *z++=asin(t););NAN0;  break;
+#else
   case -1: DQ(n, t=*y++; ASSERTW( -1.0<=t&&t<=1.0, EWIMAG ); *z++=asin(t););       break;
+#endif
   case -2: DQ(n, t=*y++; ASSERTW( -1.0<=t&&t<=1.0, EWIMAG ); *z++=acos(t););       break;
   case -3: DQ(n,                                             *z++=atan(*y++););    break;
   case -4: DQ(n, t=*y++; ASSERTW(t<=-1.0||1.0<=t,  EWIMAG ); *z++=t<-1e8||1e8<t?t:t==-1?0:(t+1)*sqrt((t-1)/(t+1));); break;

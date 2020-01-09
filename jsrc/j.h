@@ -60,6 +60,12 @@
 #define TARGET_IOS 1
 #endif
 
+#if defined(__aarch32__)||defined(__arm__)||defined(_M_ARM)||defined(__aarch64__)||defined(_M_ARM64)
+#ifndef __ARM_FEATURE_UNALIGNED
+#define ALIGNEDMEM
+#endif
+#endif
+
 #if SY_WIN32
 #if defined(_MSC_VER) && !defined(OLECOM)
 #define OLECOM
@@ -397,8 +403,13 @@ extern unsigned int __cdecl _clearfp (void);
 
 #define TOOMANYATOMS 0xFFFFFFFFFFFFLL  // more atoms than this is considered overflow (64-bit).  i.-family can't handle more than 2G cells in array.
 
+#ifdef ALIGNEDMEM
+#define MEMCPYTUNE 0     // (bytes) unpredictable blocks shorter than this should just use MCISxx.  Keep as power of 2
+#define MEMCPYTUNELOOP 0    // (bytes) predictable blocks shorter than this should just use MCISxx.
+#else
 #define MEMCPYTUNE 4096  // (bytes) unpredictable blocks shorter than this should just use MCISxx.  Keep as power of 2
 #define MEMCPYTUNELOOP 350  // (bytes) predictable blocks shorter than this should just use MCISxx.
+#endif
 
 // Tuning options for cip.c
 #if C_AVX2
@@ -718,7 +729,12 @@ extern unsigned int __cdecl _clearfp (void);
 #define NAN1            {if(_SW_INVALID&_clearfp()){jsignal(EVNAN); R 0;}}
 #define NAN1V           {if(_SW_INVALID&_clearfp()){jsignal(EVNAN); R  ;}}
 #define NANTEST         (_SW_INVALID&_clearfp())
+// for debug only
+// #define NAN1            {if(_SW_INVALID&_clearfp()){fprintf(stderr,"nan error: file %s line %d\n",__FILE__,__LINE__);jsignal(EVNAN); R 0;}}
+// #define NAN1V           {if(_SW_INVALID&_clearfp()){fprintf(stderr,"nan error: file %s line %d\n",__FILE__,__LINE__);jsignal(EVNAN); R  ;}}
+// #define NAN1T           {if(_SW_INVALID&_clearfp()){fprintf(stderr,"nan error: file %s line %d\n",__FILE__,__LINE__);jsignal(EVNAN);     }}
 #endif
+
 #if C_AVX&&SY_64
 #define NPAR ((I)(sizeof(__m256)/sizeof(D))) // number of Ds processed in parallel
 #define LGNPAR 2  // no good automatic way to do this
@@ -1087,7 +1103,12 @@ extern J gjt; // global for JPF (procs without jt)
 
 #if SYS & SYS_UNIX
 #include <fenv.h>
+// bug clang isnan(x) set NaN flag if x is NaN
+#if defined(ANDROID) && (defined(__aarch32__)||defined(__arm__))
+#define _isnan       __builtin_isnan
+#else
 #define _isnan       isnan
+#endif
 #define _SW_INVALID  FE_INVALID
 
 static inline UINT _clearfp(void){int r=fetestexcept(FE_ALL_EXCEPT);

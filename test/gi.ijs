@@ -774,13 +774,13 @@ yop1 =: y {. xop  NB. integer 0 finishes search too fast - it makes hash-on-w lo
 yopn =: >: xop {~  y ?@$ #xop  NB. randomly misses, finishes slow but perhaps not so slow if hashing
 %/ 10000&(6!:2) 'xop i. yop1' ,: 'xop i. yopn'
 )
-1: 0.5 > %/"1 (1000 2000) f/ 7 8  NB. 7 is sequential, has lower ratio = higher discrepancy
-1: 0.8 > %/ (10 11) f/ 1000 2000  NB. 10 is sequential, has lower ratio = higher discrepancy
-1: 1.5 >  1000 2000 f/ 1000 2000   NB. if sequential, the ratio will be high
+THRESHOLD +.  0.5 > %/"1 (1000 2000) f/ 7 8  NB. 7 is sequential, has lower ratio = higher discrepancy
+THRESHOLD +.  0.8 > %/ (10 11) f/ 1000 2000  NB. 10 is sequential, has lower ratio = higher discrepancy
+THRESHOLD +.  1.5 >  1000 2000 f/ 1000 2000   NB. if sequential, the ratio will be high
 NB. That got the early test, the following gets the later test
-1: 0.5 > %/"1 (,&2&.> 1000 2000) f/ 7 8  NB. 7 is sequential, has lower ratio = higher discrepancy
-1: 0.8 > %/ (,&2&.> 10 11) f/ 1000 2000  NB. 10 is sequential, has lower ratio = higher discrepancy
-1: 1.5 >  (,&2&.> 1000 2000) f/ 1000 2000   NB. if sequential, the ratio will be high
+THRESHOLD +.  0.5 > %/"1 (,&2&.> 1000 2000) f/ 7 8  NB. 7 is sequential, has lower ratio = higher discrepancy
+THRESHOLD +.  0.8 > %/ (,&2&.> 10 11) f/ 1000 2000  NB. 10 is sequential, has lower ratio = higher discrepancy
+THRESHOLD +.  1.5 >  (,&2&.> 1000 2000) f/ 1000 2000   NB. if sequential, the ratio will be high
 
 4!:55 ;:'a adot1 adot2 sdot0 b c ciof ct f f1 f2 g iota j map n p q t test x xx y yy'
 4!:55 ;:'xop yop1 yopn'

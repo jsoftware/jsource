@@ -14,4 +14,4 @@ $(TARGET) : $(OBJS) $(OBJS_FMA) $(OBJS_AESNI) $(DLLOBJS) $(LIBJRES)
 	$(CXX) $(OBJS) $(OBJS_FMA) $(OBJS_AESNI) $(DLLOBJS) $(LIBJDEF) $(LIBJRES) $(LINK)
 
 jdllres.o: jdll.rc
-	$(WINDRES) -D NDEBUG -o$@ $^
+	$(WINDRES) -o$@ $^

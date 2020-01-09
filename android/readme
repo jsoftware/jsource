@@ -12,8 +12,14 @@ $ cd ..
 
 $ ndk-build
 
-for armeabi and armeabi-v7a targets, use gcc and older version of ndk
-$ NDK_TOOLCHAIN_VERSION=4.9 ~/android/android-ndk-r14b/ndk-build
+for armeabi target, use gcc and older version of ndk
+$ NDK_TOOLCHAIN_VERSION=4.9 ~/android/android-ndk-r16b/ndk-build
+
+debug built
+in Application.mk change to APP_OPTIM=debug
+NO need to change anything in Android.mk
+ 
+$ NDK_TOOLCHAIN_VERSION=4.9 ~/android/android-ndk-r16b/ndk-build NDK_DEBUG=1
 
 binaries in libs folder
 

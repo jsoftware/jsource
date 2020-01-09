@@ -12,11 +12,12 @@
 #ifdef _JDLL
 void showapp(long b){};
 #else
-#include "..\smsrc\isi.h"
-extern void* pjst;
+// JEXEServer untested !!!
+// #include "..\smsrc\isi.h"
+extern "C" void *jt;
 static int displayflag = 0;
-void showapp(long b);
-void shutdown();
+void showapp(long b){};
+void shutdown(){};
 extern BOOL quitflag;
 #endif
 
@@ -27,10 +28,10 @@ extern "C"
 	long runit(WCHAR* p, BOOL f);
 	int uniflag = -1;	// -1 not set (unicode), 0 ansi, 1 unicode
 	HINSTANCE g_hinst;
-#ifdef _JDLL
+// #ifdef _JDLL
 	void touni(char* src, WCHAR* sink);
 	void toasc(WCHAR* src, LPSTR sink);
-#endif
+// #endif
 }
 
 #ifdef _JDLL
@@ -143,7 +144,7 @@ CJServer::CJServer(LPUNKNOWN pUnkOuter, PFNDESTROYED pfnDestroy)
     m_pfnDestroy=pfnDestroy;
     m_pITINeutral=NULL;
 #ifndef _JDLL
-	m_pjst=pjst; // J instance data
+	m_pjst=jt; // J instance data
 #endif
 
     return;
@@ -357,6 +358,7 @@ STDMETHODIMP CJServer::ErrorTextM(long ec, long* text, long* pr)
 
 #else
 
+#define EDCEXE 0
 // JEXEServer methods
 VARIANT* outputvariant;
 
@@ -370,7 +372,13 @@ BOOL CJServer::Init(void)
 
 STDMETHODIMP CJServer::Do(BSTR input, long *pr)
 {
-	*pr = runit(input, !displayflag);
+//	*pr = runit(input, !displayflag);
+
+  char line[1000];
+  *pr = toutf8n(input, line, sizeof line);
+  if(*pr) return NOERROR;
+	*pr = JDo(m_pjst, line);
+
     return NOERROR;
 }
 

@@ -348,6 +348,10 @@ _1 -: 7 o. _710j1e9
 0.5p1 _0.5p1 -: _3 o. _ __
 (0*x)={:"1 +.   _3 o. x=:1e_10*_5000+?4 5$1e4
 
+NB. NaN on arm clang
+0 = _2&o. 1j0
+_1.5707963267949 = _1 o. _1
+
 9!:19 ct
 
 4!:55 ;:'a acos acosh asin asinh atan atanh b cir0 cir4 '

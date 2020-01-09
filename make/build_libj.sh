@@ -23,7 +23,7 @@ fi
 fi
 
 if [ $CC = "gcc" ] ; then
-#gcc
+# gcc
 common="$OPENMP -Werror -fPIC -O2 -fwrapv -fno-strict-aliasing -Wextra -Wno-unused-parameter -Wno-sign-compare -Wno-clobbered -Wno-empty-body -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-type-limits"
 GNUC_MAJOR=$(echo __GNUC__ | $CC -E -x c - | tail -n 1)
 GNUC_MINOR=$(echo __GNUC_MINOR__ | $CC -E -x c - | tail -n 1)

@@ -61,7 +61,7 @@ static __m128i InvMixColumns(__m128i data);      //5.3.3 InvMixColumns
 static __m128i InvAddRoundKey(block_state* self, __m128i data, int i);    //5.3.4 InvAddRoundKey
 
 //==============================================================
-//   コンストラクタ
+//   constant
 //--------------------------------------------------------------
 // input parameters
 //   char     cNK  = 4 : 128bit AES

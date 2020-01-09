@@ -409,7 +409,7 @@ dobblock:
 // obsolete     }
     ++i; continue;   // advance to next line and process it
    }
-   // if there are no more iterations, fall through... (this deallocates the loop variables)
+   // if there are no more iterations, fall through...
   case CENDSEL:
    // end. for select., and do. for for. after the last iteration, must pop the stack - just once
    // Must rat() if the current result might be final result, in case it includes the variables we will delete in unstack

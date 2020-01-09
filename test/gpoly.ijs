@@ -197,6 +197,11 @@ NB. complex
 (x=:r.?2$110)      fc y=:o._7+?3 4$13
 (x=:r._4+?6$11)    fc y=:r._7+?2 1 4$13
 
+($0) -: (1 1&p. 0#0) % (1 1&p. 0#0)  NB. crashed when loop ran with 0 elements
+($0) -: (1 1&p. 0#4) % (1 1&p. 0#4)  NB. crashed when loop ran with 0 elements
+($0) -: (1 1&p. 0#1.) % (1 1&p. 0#1.)  NB. crashed when loop ran with 0 elements
+($0) -: (1 1&p. 0#1j1) % (1 1&p. 0#1j1)  NB. crashed when loop ran with 0 elements
+
 '' fc y=:?3 4$2
 '' fc y=:?3 4 1$100
 '' fc y=:o.?3 4$100

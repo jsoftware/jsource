@@ -513,11 +513,12 @@ L* jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;L*e;
    // But if the value of the name is 'out there' in the sentence (coming from an earlier reference), we'd better not delete
    // that value until its last use.
    // For simplicity, we defer ALL deletions till the end of the sentence.  We put the to-be-deleted value onto the NVR stack if it isn't there already,
-   // and free it.  If the value is already on the NVR stack and has been deferred-frred, we decrement the usecount here to mark the current free, knowing that the whole block
+   // and free it.  If the value is already on the NVR stack and has been deferred-freed, we decrement the usecount here to mark the current free, knowing that the whole block
    // won't be freed till later.  By deferring all deletions we don't have to worry about whether local values are on the stack; and that allows us to avoid putting local values
    // on the NVR stack at all.
-   if(xaf&AFNVRUNFREED){  // x is 0 or unfreed on the NVR stack.  0 is probably the normal case (assignment to unassigned name)
-    if(xaf&AFNVR) {AFLAG(x)=(xaf&=~AFNVRUNFREED);} // If not 0, mark as freed on the stack
+   if(xaf&(AFNVRUNFREED|AFVIRTUAL)){  // x is 0, or virtual, or unfreed on the NVR stack.  Do not fa().  0 is probably the normal case (assignment to unassigned name)
+    if(xaf&AFNVR) {AFLAG(x)=(xaf&=~AFNVRUNFREED);} // If unfreed on the NVR stack, mark as freed on the stack.  It is possible that the value is virtual AND on the
+        // NVR stack, if the name were x/y (BUT because local names are not put onto NVR, this case actually doesn't happen)
    }else{  // x is non0 and either already marked as freed on the NVR stack or must be put there now
     if(!(xaf&AFNVR)){
      // non-nvr value being replaced, must be local.  Defer till end of sentence

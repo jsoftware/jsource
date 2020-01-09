@@ -336,6 +336,7 @@ F2(jtpoly2){F2PREFIP;A c,za;I b;D*ad,d,p,*x,u,*z;I an,at,j,t,n,wt;Z*az,e,q,*wz,y
 // obsolete  if(!j&&!(t&XNUM+RAT+SPARSE)){
  if(((j-1)&((t&XNUM+RAT+SPARSE)-1))<0){
   if(ASGNINPLACESGN(SGNIF((I)jtinplace,JTINPLACEWX),w))za=w;else{GA(za,t,AN(w),AR(w),AS(w));}
+  if(n==0)RETF(za);  // don't run the copy loop if 0 atoms in result
   z=DAV(za); zz=ZAV(za);
   b+=(t>>FLX)&3; // must be FL/CMPX, add 1 or 2
  }

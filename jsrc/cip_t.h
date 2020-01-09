@@ -27,7 +27,6 @@ for(i=0;i<m;++i, zv+=n, av0+=p){
   DQ(q, *uu++ F *vv++;);
   // Finish with masked-word operation
   STOREBYTES(uu,(*uu F *vv),r);  // process all but r bytes of the last word
-// obsolete  u=(B*)uu; v=(B*)vv; DQ(r, *u++ F *v++;);
  }
 }
 #undef F

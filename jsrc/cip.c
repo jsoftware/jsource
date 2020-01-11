@@ -916,13 +916,15 @@ time1 ,&(x,y)"0 ((256 1e20 1e20 65536 > x*y) # 0 1 2 3) +/ lens
       // if m is very large, the buffer used to hold result values, and the strip of a values, become so large that they exceed L2 cache; and the bandwidth needed
       // for the zs is more than L3 can supply.  So we chop up the a argument.
       I mrem;  // number of rows left
+      // We have to turn off the triangular flags if m has to be split.  This is because the routine calculates how many rows from the bottom can be omitted.  If we passed in
+      // the distance from the bottom we could restore the flags (would have to test both blocked and cached)
+      if(m>MAXAROWS)flgs&=(FLGCMP|FLGINT|FLGWMINUSZ);
       for(mrem=m;mrem>0;mrem-=MAXAROWS){
 // obsolete      memset(DAV(z),C0,m*n*sizeof(D));
 // obsolete      dgemm_nn(m,n,p,1.0,DAV(a),p,1,DAV(w),n,1,0.0,DAV(z),n,1);
        if(mrem<32)blockedmmult(jt,av,wv,zv,mrem,n,p,flgs);  // blocked for small remnant
        else RZ(cachedmmult(jt,av,wv,zv,MIN(MAXAROWS,mrem),n,p,flgs))
        av+=MAXAROWS*p; zv+=MAXAROWS*n;  // advance to next horizontal swath
-       flgs=0;  // no Tri flags after first section
       }
      }
     }

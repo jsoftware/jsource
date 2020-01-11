@@ -235,7 +235,7 @@ void jepath(char* arg,char* lib,int forceavx)
 #ifdef ANDROID
  if(stat(pathdll,&st))strcpy(pathdll,tmp);
 #endif
-#if !defined(_WIN32) && defined(__MACH__) && !defined(ANDROID)
+#if !defined(_WIN32) && !defined(__MACH__) && !defined(ANDROID)
  char pathdllpx[10];
  strncpy(pathdllpx,pathdll,10); pathdllpx[9]=0;
  if(stat(pathdll,&st)&&!strcmp(pathdllpx,"/usr/bin/")) FHS=1;

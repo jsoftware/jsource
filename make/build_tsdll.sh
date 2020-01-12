@@ -6,6 +6,19 @@ cd ~
 
 macmin="-mmacosx-version-min=10.6"
 
+if [ "x$CC" = x'' ] ; then
+if [ -f "/usr/bin/cc" ]; then
+CC=cc
+else
+if [ -f "/usr/bin/clang" ]; then
+CC=clang
+else
+CC=gcc
+fi
+fi
+export CC
+fi
+
 if [ $CC = "gcc" ] ; then
 # gcc
 common="-Werror -fPIC -O2 -fwrapv -fno-strict-aliasing -Wextra -Wno-unused-parameter -Wno-sign-compare -Wno-clobbered -Wno-empty-body -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-type-limits"

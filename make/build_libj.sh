@@ -11,6 +11,19 @@ cd ~
 
 macmin="-mmacosx-version-min=10.6"
 
+if [ "x$CC" = x'' ] ; then
+if [ -f "/usr/bin/cc" ]; then
+CC=cc
+else
+if [ -f "/usr/bin/clang" ]; then
+CC=clang
+else
+CC=gcc
+fi
+fi
+export CC
+fi
+
 USE_OPENMP="${USE_OPENMP:=0}"
 if [ $USE_OPENMP -eq 1 ] ; then
 OPENMP=" -fopenmp "

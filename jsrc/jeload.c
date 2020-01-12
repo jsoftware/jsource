@@ -111,7 +111,7 @@ J jeload(void* callbacks)
 
 // set path and pathdll (wpath also set for win)
 // WIN arg is 0, Unix arg is argv[0]
-void jepath(char* arg,char* lib,int forceavx)
+void jepath(char* arg,char* lib)
 {
 #ifndef _WIN32
  struct stat st;

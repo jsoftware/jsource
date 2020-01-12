@@ -1,6 +1,6 @@
 /* Copyright 1990-2007, Jsoftware Inc.  All rights reserved.               */
 /* Licensed use only. Any other use is in violation of copyright.          */
-void jepath(char*,char *,int);
+void jepath(char*,char *);
 void jesetpath(char*);
 void* jeload(void* callbacks); // returns J
 int jefirst(int,char*);

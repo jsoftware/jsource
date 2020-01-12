@@ -89,10 +89,9 @@ fi
 fi
 # clang 10
 if [ $CLANG_MAJOR -ge 10 ] ; then
-common="$common -Wno-implicit-int-float-conversion"
+common="$common -Wno-implicit-float-conversion"
 fi
 fi
-darwin="-fPIC -O2 -fwrapv -fno-strict-aliasing -Wno-string-plus-int -Wno-empty-body -Wno-unsequenced -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-return-type -Wno-constant-logical-operand -Wno-comment -Wno-unsequenced -Wno-pass-failed"
 
 case $jplatform\_$j64x in
 
@@ -138,25 +137,25 @@ LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm -ldl"
 
 darwin_j32) # darwin x86
 TARGET=libtsdll.dylib
-CFLAGS="$darwin -m32 $macmin"
+CFLAGS="$common -m32 $macmin"
 LDFLAGS=" -dynamiclib -lm -ldl -m32 $macmin"
 ;;
 
 darwin_j64) # darwin intel 64bit nonavx
 TARGET=libtsdll.dylib
-CFLAGS="$darwin $macmin"
+CFLAGS="$common $macmin"
 LDFLAGS=" -dynamiclib -lm -ldl $macmin"
 ;;
 
 darwin_j64avx) # darwin intel 64bit
 TARGET=libtsdll.dylib
-CFLAGS="$darwin $macmin "
+CFLAGS="$common $macmin "
 LDFLAGS=" -dynamiclib -lm -ldl $macmin"
 ;;
 
 darwin_j64avx2) # darwin intel 64bit
 TARGET=libtsdll.dylib
-CFLAGS="$darwin $macmin "
+CFLAGS="$common $macmin "
 LDFLAGS=" -dynamiclib -lm -ldl $macmin"
 ;;
 

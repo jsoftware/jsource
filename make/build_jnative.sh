@@ -56,10 +56,9 @@ fi
 fi
 # clang 10
 if [ $CLANG_MAJOR -ge 10 ] ; then
-common="$common -Wno-implicit-int-float-conversion"
+common="$common -Wno-implicit-float-conversion"
 fi
 fi
-darwin="-fPIC -O2 -fwrapv -fno-strict-aliasing -Wno-string-plus-int -Wno-empty-body -Wno-unsequenced -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-return-type -Wno-constant-logical-operand -Wno-comment -Wno-unsequenced -Wno-pass-failed"
 
 case $jplatform\_$1 in
 
@@ -85,12 +84,12 @@ LINK=" -shared -Wl,-soname,libjnative.so -o libjnative.so "
 ;;
 darwin_j32)
 TARGET=libjnative.dylib
-COMPILE="$darwin -m32 $macmin -I$JAVA_HOME/include -I$JAVA_HOME/include/darwin "
+COMPILE="$common -m32 $macmin -I$JAVA_HOME/include -I$JAVA_HOME/include/darwin "
 LINK=" -m32 $macmin -dynamiclib -o libjnative.dylib "
 ;;
 darwin_j64)
 TARGET=libjnative.dylib
-COMPILE="$darwin $macmin -I$JAVA_HOME/include -I$JAVA_HOME/include/darwin "
+COMPILE="$common $macmin -I$JAVA_HOME/include -I$JAVA_HOME/include/darwin "
 LINK=" $macmin -dynamiclib -o libjnative.dylib "
 ;;
 *)

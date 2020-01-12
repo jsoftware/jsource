@@ -55,17 +55,14 @@ fi
 fi
 # clang 10
 if [ $CLANG_MAJOR -ge 10 ] ; then
-common="$common -Wno-implicit-int-float-conversion"
+common="$common -Wno-implicit-float-conversion"
 fi
 fi
-darwin="-fPIC -O2 -fwrapv -fno-strict-aliasing -Wno-string-plus-int -Wno-empty-body -Wno-unsequenced -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-return-type -Wno-constant-logical-operand -Wno-comment -Wno-unsequenced -Wno-pass-failed"
 
 if [ "$USE_LINENOISE" -ne "1" ] ; then
 common="$common -DREADLINE"
-darwin="$darwin -DREADLINE"
 else
 common="$common -DREADLINE -DUSE_LINENOISE"
-darwin="$darwin -DREADLINE -DUSE_LINENOISE"
 OBJSLN="linenoise.o"
 fi
 
@@ -88,12 +85,12 @@ COMPILE="$common -march=armv8-a+crc -DRASPI"
 LINK=" -ldl -o jconsole "
 ;;
 darwin_j32)
-COMPILE="$darwin -m32 $macmin"
+COMPILE="$common -m32 $macmin"
 LINK=" -ldl -m32 $macmin -o jconsole "
 ;;
 #-mmacosx-version-min=10.5
 darwin_j64)
-COMPILE="$darwin $macmin"
+COMPILE="$common $macmin"
 LINK=" -ldl $macmin -o jconsole "
 ;;
 *)

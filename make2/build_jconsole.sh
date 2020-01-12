@@ -90,19 +90,16 @@ fi
 fi
 # clang 10
 if [ $CLANG_MAJOR -ge 10 ] ; then
-common="$common -Wno-implicit-int-float-conversion"
+common="$common -Wno-implicit-float-conversion"
 fi
 fi
-darwin="-fPIC -O2 -fwrapv -fno-strict-aliasing -Wno-string-plus-int -Wno-empty-body -Wno-unsequenced -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-return-type -Wno-constant-logical-operand -Wno-comment -Wno-unsequenced -Wno-pass-failed"
 
 TARGET=jconsole
 
 if [ "$USE_LINENOISE" -ne "1" ] ; then
 common="$common -DREADLINE"
-darwin="$darwin -DREADLINE"
 else
 common="$common -DREADLINE -DUSE_LINENOISE"
-darwin="$darwin -DREADLINE -DUSE_LINENOISE"
 OBJSLN="linenoise.o"
 fi
 
@@ -133,20 +130,20 @@ CFLAGS="$common -march=armv8-a+crc -DRASPI"
 LDFLAGS=" -ldl "
 ;;
 darwin_j32)
-CFLAGS="$darwin -m32 $macmin"
+CFLAGS="$common -m32 $macmin"
 LDFLAGS=" -ldl -m32 $macmin "
 ;;
 #-mmacosx-version-min=10.5
 darwin_j64)
-CFLAGS="$darwin $macmin"
+CFLAGS="$common $macmin"
 LDFLAGS=" -ldl $macmin "
 ;;
 darwin_j64avx)
-CFLAGS="$darwin $macmin"
+CFLAGS="$common $macmin"
 LDFLAGS=" -ldl $macmin "
 ;;
 darwin_j64avx2)
-CFLAGS="$darwin $macmin"
+CFLAGS="$common $macmin"
 LDFLAGS=" -ldl $macmin "
 ;;
 windows_j32)

@@ -1,3 +1,4 @@
+READLINE=1
 ifdef DEBUG
 
 ifdef x64

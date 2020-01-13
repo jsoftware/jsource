@@ -1,669 +1,14 @@
 #define USE_UTF8
 
-#if defined(_MSC_VER)
+#ifdef _WIN32
+#ifdef _MSC_VER
+#pragma warning(disable: 4244 4267)
 #define inline __inline
-#endif
-
-#ifndef UTF8_UTIL_H
-#define UTF8_UTIL_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/**
- * UTF-8 utility functions
- *
- * (c) 2010-2016 Steve Bennett <steveb@workware.net.au>
- *
- * See LICENCE for licence details.
- */
-
-#ifndef USE_UTF8
-#include <ctype.h>
-
-#define MAX_UTF8_LEN 1
-
-/* No utf-8 support. 1 byte = 1 char */
-#define utf8_strlen(S, B) ((B) < 0 ? (int)strlen(S) : (B))
-#define utf8_strwidth(S, B) utf8_strlen((S), (B))
-#define utf8_tounicode(S, CP) (*(CP) = (unsigned char)*(S), 1)
-#define utf8_index(C, I) (I)
-#define utf8_charlen(C) 1
- #define utf8_width(C) 1
-
 #else
-
-#define MAX_UTF8_LEN 4
-
-/**
- * Converts the given unicode codepoint (0 - 0x1fffff) to utf-8
- * and stores the result at 'p'.
- *
- * Returns the number of utf-8 characters
- */
-int utf8_fromunicode(char *p, unsigned uc);
-
-/**
- * Returns the length of the utf-8 sequence starting with 'c'.
- *
- * Returns 1-4, or -1 if this is not a valid start byte.
- *
- * Note that charlen=4 is not supported by the rest of the API.
- */
-int utf8_charlen(int c);
-
-/**
- * Returns the number of characters in the utf-8
- * string of the given byte length.
- *
- * Any bytes which are not part of an valid utf-8
- * sequence are treated as individual characters.
- *
- * The string *must* be null terminated.
- *
- * Does not support unicode code points > \u1fffff
- */
-int utf8_strlen(const char *str, int bytelen);
-
-/**
- * Calculates the display width of the first 'charlen' characters in 'str'.
- * See utf8_width()
- */
-int utf8_strwidth(const char *str, int charlen);
-
-/**
- * Returns the byte index of the given character in the utf-8 string.
- *
- * The string *must* be null terminated.
- *
- * This will return the byte length of a utf-8 string
- * if given the char length.
- */
-int utf8_index(const char *str, int charindex);
-
-/**
- * Returns the unicode codepoint corresponding to the
- * utf-8 sequence 'str'.
- *
- * Stores the result in *uc and returns the number of bytes
- * consumed.
- *
- * If 'str' is null terminated, then an invalid utf-8 sequence
- * at the end of the string will be returned as individual bytes.
- *
- * If it is not null terminated, the length *must* be checked first.
- *
- * Does not support unicode code points > \u1fffff
- */
-int utf8_tounicode(const char *str, int *uc);
-
-/**
- * Returns the width (in characters) of the given unicode codepoint.
- * This is 1 for normal letters and 0 for combining characters and 2 for wide characters.
- */
-int utf8_width(int ch);
-
+#define inline __inline__ __attribute__((__always_inline__,__gnu_inline__))
+#endif
 #endif
 
-#ifdef __cplusplus
-}
-#endif
-
-#endif
-/**
- * UTF-8 utility functions
- *
- * (c) 2010-2016 Steve Bennett <steveb@workware.net.au>
- *
- * See LICENCE for licence details.
- */
-
-#include <ctype.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-// #include "utf8.h"
-
-#ifdef USE_UTF8
-int utf8_fromunicode(char *p, unsigned uc)
-{
-    if (uc <= 0x7f) {
-        *p = uc;
-        return 1;
-    }
-    else if (uc <= 0x7ff) {
-        *p++ = 0xc0 | ((uc & 0x7c0) >> 6);
-        *p = 0x80 | (uc & 0x3f);
-        return 2;
-    }
-    else if (uc <= 0xffff) {
-        *p++ = 0xe0 | ((uc & 0xf000) >> 12);
-        *p++ = 0x80 | ((uc & 0xfc0) >> 6);
-        *p = 0x80 | (uc & 0x3f);
-        return 3;
-    }
-    /* Note: We silently truncate to 21 bits here: 0x1fffff */
-    else {
-        *p++ = 0xf0 | ((uc & 0x1c0000) >> 18);
-        *p++ = 0x80 | ((uc & 0x3f000) >> 12);
-        *p++ = 0x80 | ((uc & 0xfc0) >> 6);
-        *p = 0x80 | (uc & 0x3f);
-        return 4;
-    }
-}
-
-int utf8_charlen(int c)
-{
-    if ((c & 0x80) == 0) {
-        return 1;
-    }
-    if ((c & 0xe0) == 0xc0) {
-        return 2;
-    }
-    if ((c & 0xf0) == 0xe0) {
-        return 3;
-    }
-    if ((c & 0xf8) == 0xf0) {
-        return 4;
-    }
-    /* Invalid sequence */
-    return -1;
-}
-
-int utf8_strlen(const char *str, int bytelen)
-{
-    int charlen = 0;
-    if (bytelen < 0) {
-        bytelen = (int)strlen(str);
-    }
-    while (bytelen > 0) {
-        int c;
-        int l = utf8_tounicode(str, &c);
-        charlen++;
-        str += l;
-        bytelen -= l;
-    }
-    return charlen;
-}
-
-int utf8_strwidth(const char *str, int charlen)
-{
-    int width = 0;
-    while (charlen) {
-        int c;
-        int l = utf8_tounicode(str, &c);
-        width += utf8_width(c);
-        str += l;
-        charlen--;
-    }
-    return width;
-}
-
-int utf8_index(const char *str, int index)
-{
-    const char *s = str;
-    while (index--) {
-        int c;
-        s += utf8_tounicode(s, &c);
-    }
-    return (int)(s - str);
-}
-
-int utf8_tounicode(const char *str, int *uc)
-{
-    unsigned const char *s = (unsigned const char *)str;
-
-    if (s[0] < 0xc0) {
-        *uc = s[0];
-        return 1;
-    }
-    if (s[0] < 0xe0) {
-        if ((s[1] & 0xc0) == 0x80) {
-            *uc = ((s[0] & ~0xc0) << 6) | (s[1] & ~0x80);
-            if (*uc >= 0x80) {
-                return 2;
-            }
-            /* Otherwise this is an invalid sequence */
-        }
-    }
-    else if (s[0] < 0xf0) {
-        if (((str[1] & 0xc0) == 0x80) && ((str[2] & 0xc0) == 0x80)) {
-            *uc = ((s[0] & ~0xe0) << 12) | ((s[1] & ~0x80) << 6) | (s[2] & ~0x80);
-            if (*uc >= 0x800) {
-                return 3;
-            }
-            /* Otherwise this is an invalid sequence */
-        }
-    }
-    else if (s[0] < 0xf8) {
-        if (((str[1] & 0xc0) == 0x80) && ((str[2] & 0xc0) == 0x80) && ((str[3] & 0xc0) == 0x80)) {
-            *uc = ((s[0] & ~0xf0) << 18) | ((s[1] & ~0x80) << 12) | ((s[2] & ~0x80) << 6) | (s[3] & ~0x80);
-            if (*uc >= 0x10000) {
-                return 4;
-            }
-            /* Otherwise this is an invalid sequence */
-        }
-    }
-
-    /* Invalid sequence, so just return the byte */
-    *uc = *s;
-    return 1;
-}
-
-struct utf8range {
-    int lower;     /* lower inclusive */
-    int upper;     /* upper exclusive */
-};
-
-/* From http://unicode.org/Public/UNIDATA/UnicodeData.txt */
-static const struct utf8range unicode_range_combining[] = {
-        { 0x0300, 0x0370 },     { 0x0483, 0x048a },     { 0x0591, 0x05d0 },     { 0x0610, 0x061b },
-        { 0x064b, 0x0660 },     { 0x0670, 0x0671 },     { 0x06d6, 0x06dd },     { 0x06df, 0x06e5 },
-        { 0x06e7, 0x06ee },     { 0x0711, 0x0712 },     { 0x0730, 0x074d },     { 0x07a6, 0x07b1 },
-        { 0x07eb, 0x07f4 },     { 0x0816, 0x0830 },     { 0x0859, 0x085e },     { 0x08d4, 0x0904 },
-        { 0x093a, 0x0958 },     { 0x0962, 0x0964 },     { 0x0981, 0x0985 },     { 0x09bc, 0x09ce },
-        { 0x09d7, 0x09dc },     { 0x09e2, 0x09e6 },     { 0x0a01, 0x0a05 },     { 0x0a3c, 0x0a59 },
-        { 0x0a70, 0x0a72 },     { 0x0a75, 0x0a85 },     { 0x0abc, 0x0ad0 },     { 0x0ae2, 0x0ae6 },
-        { 0x0afa, 0x0b05 },     { 0x0b3c, 0x0b5c },     { 0x0b62, 0x0b66 },     { 0x0b82, 0x0b83 },
-        { 0x0bbe, 0x0bd0 },     { 0x0bd7, 0x0be6 },     { 0x0c00, 0x0c05 },     { 0x0c3e, 0x0c58 },
-        { 0x0c62, 0x0c66 },     { 0x0c81, 0x0c85 },     { 0x0cbc, 0x0cde },     { 0x0ce2, 0x0ce6 },
-        { 0x0d00, 0x0d05 },     { 0x0d3b, 0x0d4e },     { 0x0d57, 0x0d58 },     { 0x0d62, 0x0d66 },
-        { 0x0d82, 0x0d85 },     { 0x0dca, 0x0de6 },     { 0x0df2, 0x0df4 },     { 0x0e31, 0x0e32 },
-        { 0x0e34, 0x0e3f },     { 0x0e47, 0x0e4f },     { 0x0eb1, 0x0eb2 },     { 0x0eb4, 0x0ebd },
-        { 0x0ec8, 0x0ed0 },     { 0x0f18, 0x0f1a },     { 0x0f35, 0x0f3a },     { 0x0f3e, 0x0f40 },
-        { 0x0f71, 0x0f88 },     { 0x0f8d, 0x0fbe },     { 0x0fc6, 0x0fc7 },     { 0x102b, 0x103f },
-        { 0x1056, 0x105a },     { 0x105e, 0x1065 },     { 0x1067, 0x106e },     { 0x1071, 0x1075 },
-        { 0x1082, 0x1090 },     { 0x109a, 0x109e },     { 0x135d, 0x1360 },     { 0x1712, 0x1720 },
-        { 0x1732, 0x1735 },     { 0x1752, 0x1760 },     { 0x1772, 0x1780 },     { 0x17b4, 0x17d4 },
-        { 0x17dd, 0x17e0 },     { 0x180b, 0x180e },     { 0x1885, 0x1887 },     { 0x18a9, 0x18aa },
-        { 0x1920, 0x1940 },     { 0x1a17, 0x1a1e },     { 0x1a55, 0x1a80 },     { 0x1ab0, 0x1b05 },
-        { 0x1b34, 0x1b45 },     { 0x1b6b, 0x1b74 },     { 0x1b80, 0x1b83 },     { 0x1ba1, 0x1bae },
-        { 0x1be6, 0x1bfc },     { 0x1c24, 0x1c3b },     { 0x1cd0, 0x1ce9 },     { 0x1ced, 0x1cee },
-        { 0x1cf2, 0x1cf5 },     { 0x1cf7, 0x1d00 },     { 0x1dc0, 0x1e00 },     { 0x20d0, 0x2100 },
-        { 0x2cef, 0x2cf2 },     { 0x2d7f, 0x2d80 },     { 0x2de0, 0x2e00 },     { 0x302a, 0x3030 },
-        { 0x3099, 0x309b },     { 0xa66f, 0xa67e },     { 0xa69e, 0xa6a0 },     { 0xa6f0, 0xa6f2 },
-        { 0xa802, 0xa803 },     { 0xa806, 0xa807 },     { 0xa80b, 0xa80c },     { 0xa823, 0xa828 },
-        { 0xa880, 0xa882 },     { 0xa8b4, 0xa8ce },     { 0xa8e0, 0xa8f2 },     { 0xa926, 0xa92e },
-        { 0xa947, 0xa95f },     { 0xa980, 0xa984 },     { 0xa9b3, 0xa9c1 },     { 0xa9e5, 0xa9e6 },
-        { 0xaa29, 0xaa40 },     { 0xaa43, 0xaa44 },     { 0xaa4c, 0xaa50 },     { 0xaa7b, 0xaa7e },
-        { 0xaab0, 0xaab5 },     { 0xaab7, 0xaab9 },     { 0xaabe, 0xaac2 },     { 0xaaeb, 0xaaf0 },
-        { 0xaaf5, 0xab01 },     { 0xabe3, 0xabf0 },     { 0xfb1e, 0xfb1f },     { 0xfe00, 0xfe10 },
-        { 0xfe20, 0xfe30 },
-};
-
-/* From http://unicode.org/Public/UNIDATA/EastAsianWidth.txt */
-static const struct utf8range unicode_range_wide[] = {
-        { 0x1100, 0x115f },     { 0x231a, 0x231b },     { 0x2329, 0x232a },     { 0x23e9, 0x23ec },
-        { 0x23f0, 0x23f0 },     { 0x23f3, 0x23f3 },     { 0x25fd, 0x25fe },     { 0x2614, 0x2615 },
-        { 0x2648, 0x2653 },     { 0x267f, 0x267f },     { 0x2693, 0x2693 },     { 0x26a1, 0x26a1 },
-        { 0x26aa, 0x26ab },     { 0x26bd, 0x26be },     { 0x26c4, 0x26c5 },     { 0x26ce, 0x26ce },
-        { 0x26d4, 0x26d4 },     { 0x26ea, 0x26ea },     { 0x26f2, 0x26f3 },     { 0x26f5, 0x26f5 },
-        { 0x26fa, 0x26fa },     { 0x26fd, 0x26fd },     { 0x2705, 0x2705 },     { 0x270a, 0x270b },
-        { 0x2728, 0x2728 },     { 0x274c, 0x274c },     { 0x274e, 0x274e },     { 0x2753, 0x2755 },
-        { 0x2757, 0x2757 },     { 0x2795, 0x2797 },     { 0x27b0, 0x27b0 },     { 0x27bf, 0x27bf },
-        { 0x2b1b, 0x2b1c },     { 0x2b50, 0x2b50 },     { 0x2b55, 0x2b55 },     { 0x2e80, 0x2e99 },
-        { 0x2e9b, 0x2ef3 },     { 0x2f00, 0x2fd5 },     { 0x2ff0, 0x2ffb },     { 0x3001, 0x303e },
-        { 0x3041, 0x3096 },     { 0x3099, 0x30ff },     { 0x3105, 0x312e },     { 0x3131, 0x318e },
-        { 0x3190, 0x31ba },     { 0x31c0, 0x31e3 },     { 0x31f0, 0x321e },     { 0x3220, 0x3247 },
-        { 0x3250, 0x32fe },     { 0x3300, 0x4dbf },     { 0x4e00, 0xa48c },     { 0xa490, 0xa4c6 },
-        { 0xa960, 0xa97c },     { 0xac00, 0xd7a3 },     { 0xf900, 0xfaff },     { 0xfe10, 0xfe19 },
-        { 0xfe30, 0xfe52 },     { 0xfe54, 0xfe66 },     { 0xfe68, 0xfe6b },     { 0x16fe0, 0x16fe1 },
-        { 0x17000, 0x187ec },   { 0x18800, 0x18af2 },   { 0x1b000, 0x1b11e },   { 0x1b170, 0x1b2fb },
-        { 0x1f004, 0x1f004 },   { 0x1f0cf, 0x1f0cf },   { 0x1f18e, 0x1f18e },   { 0x1f191, 0x1f19a },
-        { 0x1f200, 0x1f202 },   { 0x1f210, 0x1f23b },   { 0x1f240, 0x1f248 },   { 0x1f250, 0x1f251 },
-        { 0x1f260, 0x1f265 },   { 0x1f300, 0x1f320 },   { 0x1f32d, 0x1f335 },   { 0x1f337, 0x1f37c },
-        { 0x1f37e, 0x1f393 },   { 0x1f3a0, 0x1f3ca },   { 0x1f3cf, 0x1f3d3 },   { 0x1f3e0, 0x1f3f0 },
-        { 0x1f3f4, 0x1f3f4 },   { 0x1f3f8, 0x1f43e },   { 0x1f440, 0x1f440 },   { 0x1f442, 0x1f4fc },
-        { 0x1f4ff, 0x1f53d },   { 0x1f54b, 0x1f54e },   { 0x1f550, 0x1f567 },   { 0x1f57a, 0x1f57a },
-        { 0x1f595, 0x1f596 },   { 0x1f5a4, 0x1f5a4 },   { 0x1f5fb, 0x1f64f },   { 0x1f680, 0x1f6c5 },
-        { 0x1f6cc, 0x1f6cc },   { 0x1f6d0, 0x1f6d2 },   { 0x1f6eb, 0x1f6ec },   { 0x1f6f4, 0x1f6f8 },
-        { 0x1f910, 0x1f93e },   { 0x1f940, 0x1f94c },   { 0x1f950, 0x1f96b },   { 0x1f980, 0x1f997 },
-        { 0x1f9c0, 0x1f9c0 },   { 0x1f9d0, 0x1f9e6 },   { 0x20000, 0x2fffd },   { 0x30000, 0x3fffd },
-};
-
-#define aRRAYSIZE(A) sizeof(A) / sizeof(*(A))
-
-static int cmp_range(const void *key, const void *cm)
-{
-    const struct utf8range *range = (const struct utf8range *)cm;
-    int ch = *(int *)key;
-    if (ch < range->lower) {
-        return -1;
-    }
-    if (ch >= range->upper) {
-        return 1;
-    }
-    return 0;
-}
-
-static int utf8_in_range(const struct utf8range *range, int num, int ch)
-{
-    const struct utf8range *r =
-        bsearch(&ch, range, num, sizeof(*range), cmp_range);
-
-    if (r) {
-        return 1;
-    }
-    return 0;
-}
-
-int utf8_width(int ch)
-{
-    /* short circuit for common case */
-    if (isascii(ch)) {
-        return 1;
-    }
-    if (utf8_in_range(unicode_range_combining, aRRAYSIZE(unicode_range_combining), ch)) {
-        return 0;
-    }
-    if (utf8_in_range(unicode_range_wide, aRRAYSIZE(unicode_range_wide), ch)) {
-        return 2;
-    }
-    return 1;
-}
-#endif
-#ifndef STRINGBUF_H
-#define STRINGBUF_H
-
-/* (c) 2017 Workware Systems Pty Ltd  -- All Rights Reserved */
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/** @file
- * A stringbuf is a resizing, null terminated string buffer.
- *
- * The buffer is reallocated as necessary.
- *
- * In general it is *not* OK to call these functions with a NULL pointer
- * unless stated otherwise.
- *
- * If USE_UTF8 is defined, supports utf8.
- */
-
-/**
- * The stringbuf structure should not be accessed directly.
- * Use the functions below.
- */
-typedef struct {
-	int remaining;	/**< Allocated, but unused space */
-	int last;		/**< Index of the null terminator (and thus the length of the string) */
-#ifdef USE_UTF8
-	int chars;		/**< Count of characters */
-#endif
-	char *data;		/**< Allocated memory containing the string or NULL for empty */
-} stringbuf;
-
-/**
- * Allocates and returns a new stringbuf with no elements.
- */
-stringbuf *sb_alloc(void);
-
-/**
- * Frees a stringbuf.
- * It is OK to call this with NULL.
- */
-void sb_free(stringbuf *sb);
-
-/**
- * Returns an allocated copy of the stringbuf
- */
-stringbuf *sb_copy(stringbuf *sb);
-
-/**
- * Returns the length of the buffer.
- * 
- * Returns 0 for both a NULL buffer and an empty buffer.
- */
-static inline int sb_len(stringbuf *sb) {
-	return sb->last;
-}
-
-/**
- * Returns the utf8 character length of the buffer.
- * 
- * Returns 0 for both a NULL buffer and an empty buffer.
- */
-static inline int sb_chars(stringbuf *sb) {
-#ifdef USE_UTF8
-	return sb->chars;
-#else
-	return sb->last;
-#endif
-}
-
-/**
- * Appends a null terminated string to the stringbuf
- */
-void sb_append(stringbuf *sb, const char *str);
-
-/**
- * Like sb_append() except does not require a null terminated string.
- * The length of 'str' is given as 'len'
- *
- * Note that in utf8 mode, characters will *not* be counted correctly
- * if a partial utf8 sequence is added with sb_append_len()
- */
-void sb_append_len(stringbuf *sb, const char *str, int len);
-
-/**
- * Returns a pointer to the null terminated string in the buffer.
- *
- * Note this pointer only remains valid until the next modification to the
- * string buffer.
- *
- * The returned pointer can be used to update the buffer in-place
- * as long as care is taken to not overwrite the end of the buffer.
- */
-static inline char *sb_str(const stringbuf *sb)
-{
-	return sb->data;
-}
-
-/**
- * Inserts the given string *before* (zero-based) 'index' in the stringbuf.
- * If index is past the end of the buffer, the string is appended,
- * just like sb_append()
- */
-void sb_insert(stringbuf *sb, int index, const char *str);
-
-/**
- * Delete 'len' bytes in the string at the given index.
- *
- * Any bytes past the end of the buffer are ignored.
- * The buffer remains null terminated.
- *
- * If len is -1, deletes to the end of the buffer.
- */
-void sb_delete(stringbuf *sb, int index, int len);
-
-/**
- * Clear to an empty buffer.
- */
-void sb_clear(stringbuf *sb);
-
-/**
- * Return an allocated copy of buffer and frees 'sb'.
- *
- * If 'sb' is empty, returns an allocated copy of "".
- */
-char *sb_to_string(stringbuf *sb);
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-#include <ctype.h>
-#include <assert.h>
-
-#ifndef STRINGBUF_H
-#include "stringbuf.h"
-#endif
-#ifdef USE_UTF8
-// #include "utf8.h"
-#endif
-
-#define SB_INCREMENT 200
-
-stringbuf *sb_alloc(void)
-{
-	stringbuf *sb = (stringbuf *)malloc(sizeof(*sb));
-	sb->remaining = 0;
-	sb->last = 0;
-#ifdef USE_UTF8
-	sb->chars = 0;
-#endif
-	sb->data = NULL;
-
-	return(sb);
-}
-
-void sb_free(stringbuf *sb)
-{
-	if (sb) {
-		free(sb->data);
-	}
-	free(sb);
-}
-
-void sb_realloc(stringbuf *sb, int newlen)
-{
-	sb->data = (char *)realloc(sb->data, newlen);
-	sb->remaining = newlen - sb->last;
-}
-
-void sb_append(stringbuf *sb, const char *str)
-{
-	sb_append_len(sb, str, (int)strlen(str));
-}
-
-void sb_append_len(stringbuf *sb, const char *str, int len)
-{
-	if (sb->remaining < len + 1) {
-		sb_realloc(sb, sb->last + len + 1 + SB_INCREMENT);
-	}
-	memcpy(sb->data + sb->last, str, len);
-	sb->data[sb->last + len] = 0;
-
-	sb->last += len;
-	sb->remaining -= len;
-#ifdef USE_UTF8
-	sb->chars += utf8_strlen(str, len);
-#endif
-}
-
-char *sb_to_string(stringbuf *sb)
-{
-	if (sb->data == NULL) {
-		/* Return an allocated empty string, not null */
-#if defined(_MSC_VER)
-		return _strdup("");
-#else
-		return strdup("");
-#endif
-	}
-	else {
-		/* Just return the data and free the stringbuf structure */
-		char *pt = sb->data;
-		free(sb);
-		return pt;
-	}
-}
-
-/* Insert and delete operations */
-
-/* Moves up all the data at position 'pos' and beyond by 'len' bytes
- * to make room for new data
- *
- * Note: Does *not* update sb->chars
- */
-static void sb_insert_space(stringbuf *sb, int pos, int len)
-{
-	assert(pos <= sb->last);
-
-	/* Make sure there is enough space */
-	if (sb->remaining < len) {
-		sb_realloc(sb, sb->last + len + SB_INCREMENT);
-	}
-	/* Now move it up */
-	memmove(sb->data + pos + len, sb->data + pos, sb->last - pos);
-	sb->last += len;
-	sb->remaining -= len;
-	/* And null terminate */
-	sb->data[sb->last] = 0;
-}
-
-/**
- * Move down all the data from pos + len, effectively
- * deleting the data at position 'pos' of length 'len'
- */
-static void sb_delete_space(stringbuf *sb, int pos, int len)
-{
-	assert(pos < sb->last);
-	assert(pos + len <= sb->last);
-
-#ifdef USE_UTF8
-	sb->chars -= utf8_strlen(sb->data + pos, len);
-#endif
-
-	/* Now move it up */
-	memmove(sb->data + pos, sb->data + pos + len, sb->last - pos - len);
-	sb->last -= len;
-	sb->remaining += len;
-	/* And null terminate */
-	sb->data[sb->last] = 0;
-}
-
-void sb_insert(stringbuf *sb, int index, const char *str)
-{
-	if (index >= sb->last) {
-		/* Inserting after the end of the list appends. */
-		sb_append(sb, str);
-	}
-	else {
-		int len = (int)strlen(str);
-
-		sb_insert_space(sb, index, len);
-		memcpy(sb->data + index, str, len);
-#ifdef USE_UTF8
-		sb->chars += utf8_strlen(str, len);
-#endif
-	}
-}
-
-/**
- * Delete the bytes at index 'index' for length 'len'
- * Has no effect if the index is past the end of the list.
- */
-void sb_delete(stringbuf *sb, int index, int len)
-{
-	if (index < sb->last) {
-		char *pos = sb->data + index;
-		if (len < 0) {
-			len = sb->last;
-		}
-
-		sb_delete_space(sb, (int)(pos - sb->data), len);
-	}
-}
-
-void sb_clear(stringbuf *sb)
-{
-	if (sb->data) {
-		/* Null terminate */
-		sb->data[0] = 0;
-		sb->last = 0;
-#ifdef USE_UTF8
-		sb->chars = 0;
-#endif
-	}
-}
 /* linenoise.c -- guerrilla line editing library against the idea that a
  * line editing lib needs to be 20,000 lines of C code.
  *
@@ -808,10 +153,694 @@ void sb_clear(stringbuf *sb)
 #include <sys/types.h>
 
 #include "linenoise.h"
-#ifndef STRINGBUF_H
-#include "stringbuf.h"
-#endif
+// #ifndef STRINGBUF_H
+// #include "stringbuf.h"
+// #endif
 // #include "utf8.h"
+
+
+/**
+ * UTF-8 utility functions
+ *
+ * (c) 2010-2019 Steve Bennett <steveb@workware.net.au>
+ *
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * * Redistributions of source code must retain the above copyright notice,
+ *   this list of conditions and the following disclaimer.
+ *
+ * * Redistributions in binary form must reproduce the above copyright notice,
+ *   this list of conditions and the following disclaimer in the documentation
+ *   and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ * ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+#include <ctype.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+// #include "utf8.h"
+
+#ifndef UTF8_UTIL_H
+#define UTF8_UTIL_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/**
+ * UTF-8 utility functions
+ *
+ * (c) 2010-2019 Steve Bennett <steveb@workware.net.au>
+ *
+ * See utf8.c for licence details.
+ */
+
+#ifndef USE_UTF8
+#include <ctype.h>
+
+#define MAX_UTF8_LEN 1
+
+/* No utf-8 support. 1 byte = 1 char */
+#define utf8_strlen(S, B) ((B) < 0 ? (int)strlen(S) : (B))
+#define utf8_strwidth(S, B) utf8_strlen((S), (B))
+#define utf8_tounicode(S, CP) (*(CP) = (unsigned char)*(S), 1)
+#define utf8_index(C, I) (I)
+#define utf8_charlen(C) 1
+ #define utf8_width(C) 1
+
+#else
+
+#define MAX_UTF8_LEN 4
+
+/**
+ * Converts the given unicode codepoint (0 - 0x1fffff) to utf-8
+ * and stores the result at 'p'.
+ *
+ * Returns the number of utf-8 characters
+ */
+int utf8_fromunicode(char *p, unsigned uc);
+
+/**
+ * Returns the length of the utf-8 sequence starting with 'c'.
+ *
+ * Returns 1-4, or -1 if this is not a valid start byte.
+ *
+ * Note that charlen=4 is not supported by the rest of the API.
+ */
+int utf8_charlen(int c);
+
+/**
+ * Returns the number of characters in the utf-8
+ * string of the given byte length.
+ *
+ * Any bytes which are not part of an valid utf-8
+ * sequence are treated as individual characters.
+ *
+ * The string *must* be null terminated.
+ *
+ * Does not support unicode code points > \u1fffff
+ */
+int utf8_strlen(const char *str, int bytelen);
+
+/**
+ * Calculates the display width of the first 'charlen' characters in 'str'.
+ * See utf8_width()
+ */
+int utf8_strwidth(const char *str, int charlen);
+
+/**
+ * Returns the byte index of the given character in the utf-8 string.
+ *
+ * The string *must* be null terminated.
+ *
+ * This will return the byte length of a utf-8 string
+ * if given the char length.
+ */
+int utf8_index(const char *str, int charindex);
+
+/**
+ * Returns the unicode codepoint corresponding to the
+ * utf-8 sequence 'str'.
+ *
+ * Stores the result in *uc and returns the number of bytes
+ * consumed.
+ *
+ * If 'str' is null terminated, then an invalid utf-8 sequence
+ * at the end of the string will be returned as individual bytes.
+ *
+ * If it is not null terminated, the length *must* be checked first.
+ *
+ * Does not support unicode code points > \u1fffff
+ */
+int utf8_tounicode(const char *str, int *uc);
+
+/**
+ * Returns the width (in characters) of the given unicode codepoint.
+ * This is 1 for normal letters and 0 for combining characters and 2 for wide characters.
+ */
+int utf8_width(int ch);
+
+#endif
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
+#ifdef USE_UTF8
+int utf8_fromunicode(char *p, unsigned uc)
+{
+    if (uc <= 0x7f) {
+        *p = uc;
+        return 1;
+    }
+    else if (uc <= 0x7ff) {
+        *p++ = 0xc0 | ((uc & 0x7c0) >> 6);
+        *p = 0x80 | (uc & 0x3f);
+        return 2;
+    }
+    else if (uc <= 0xffff) {
+        *p++ = 0xe0 | ((uc & 0xf000) >> 12);
+        *p++ = 0x80 | ((uc & 0xfc0) >> 6);
+        *p = 0x80 | (uc & 0x3f);
+        return 3;
+    }
+    /* Note: We silently truncate to 21 bits here: 0x1fffff */
+    else {
+        *p++ = 0xf0 | ((uc & 0x1c0000) >> 18);
+        *p++ = 0x80 | ((uc & 0x3f000) >> 12);
+        *p++ = 0x80 | ((uc & 0xfc0) >> 6);
+        *p = 0x80 | (uc & 0x3f);
+        return 4;
+    }
+}
+
+int utf8_charlen(int c)
+{
+    if ((c & 0x80) == 0) {
+        return 1;
+    }
+    if ((c & 0xe0) == 0xc0) {
+        return 2;
+    }
+    if ((c & 0xf0) == 0xe0) {
+        return 3;
+    }
+    if ((c & 0xf8) == 0xf0) {
+        return 4;
+    }
+    /* Invalid sequence */
+    return -1;
+}
+
+int utf8_strlen(const char *str, int bytelen)
+{
+    int charlen = 0;
+    if (bytelen < 0) {
+        bytelen = strlen(str);
+    }
+    while (bytelen > 0) {
+        int c;
+        int l = utf8_tounicode(str, &c);
+        charlen++;
+        str += l;
+        bytelen -= l;
+    }
+    return charlen;
+}
+
+int utf8_strwidth(const char *str, int charlen)
+{
+    int width = 0;
+    while (charlen) {
+        int c;
+        int l = utf8_tounicode(str, &c);
+        width += utf8_width(c);
+        str += l;
+        charlen--;
+    }
+    return width;
+}
+
+int utf8_index(const char *str, int index)
+{
+    const char *s = str;
+    while (index--) {
+        int c;
+        s += utf8_tounicode(s, &c);
+    }
+    return s - str;
+}
+
+int utf8_tounicode(const char *str, int *uc)
+{
+    unsigned const char *s = (unsigned const char *)str;
+
+    if (s[0] < 0xc0) {
+        *uc = s[0];
+        return 1;
+    }
+    if (s[0] < 0xe0) {
+        if ((s[1] & 0xc0) == 0x80) {
+            *uc = ((s[0] & ~0xc0) << 6) | (s[1] & ~0x80);
+            if (*uc >= 0x80) {
+                return 2;
+            }
+            /* Otherwise this is an invalid sequence */
+        }
+    }
+    else if (s[0] < 0xf0) {
+        if (((str[1] & 0xc0) == 0x80) && ((str[2] & 0xc0) == 0x80)) {
+            *uc = ((s[0] & ~0xe0) << 12) | ((s[1] & ~0x80) << 6) | (s[2] & ~0x80);
+            if (*uc >= 0x800) {
+                return 3;
+            }
+            /* Otherwise this is an invalid sequence */
+        }
+    }
+    else if (s[0] < 0xf8) {
+        if (((str[1] & 0xc0) == 0x80) && ((str[2] & 0xc0) == 0x80) && ((str[3] & 0xc0) == 0x80)) {
+            *uc = ((s[0] & ~0xf0) << 18) | ((s[1] & ~0x80) << 12) | ((s[2] & ~0x80) << 6) | (s[3] & ~0x80);
+            if (*uc >= 0x10000) {
+                return 4;
+            }
+            /* Otherwise this is an invalid sequence */
+        }
+    }
+
+    /* Invalid sequence, so just return the byte */
+    *uc = *s;
+    return 1;
+}
+
+struct utf8range {
+    int lower;     /* lower inclusive */
+    int upper;     /* upper exclusive */
+};
+
+/* From http://unicode.org/Public/UNIDATA/UnicodeData.txt */
+static const struct utf8range unicode_range_combining[] = {
+        { 0x0300, 0x0370 },     { 0x0483, 0x048a },     { 0x0591, 0x05d0 },     { 0x0610, 0x061b },
+        { 0x064b, 0x0660 },     { 0x0670, 0x0671 },     { 0x06d6, 0x06dd },     { 0x06df, 0x06e5 },
+        { 0x06e7, 0x06ee },     { 0x0711, 0x0712 },     { 0x0730, 0x074d },     { 0x07a6, 0x07b1 },
+        { 0x07eb, 0x07f4 },     { 0x0816, 0x0830 },     { 0x0859, 0x085e },     { 0x08d4, 0x0904 },
+        { 0x093a, 0x0958 },     { 0x0962, 0x0964 },     { 0x0981, 0x0985 },     { 0x09bc, 0x09ce },
+        { 0x09d7, 0x09dc },     { 0x09e2, 0x09e6 },     { 0x0a01, 0x0a05 },     { 0x0a3c, 0x0a59 },
+        { 0x0a70, 0x0a72 },     { 0x0a75, 0x0a85 },     { 0x0abc, 0x0ad0 },     { 0x0ae2, 0x0ae6 },
+        { 0x0afa, 0x0b05 },     { 0x0b3c, 0x0b5c },     { 0x0b62, 0x0b66 },     { 0x0b82, 0x0b83 },
+        { 0x0bbe, 0x0bd0 },     { 0x0bd7, 0x0be6 },     { 0x0c00, 0x0c05 },     { 0x0c3e, 0x0c58 },
+        { 0x0c62, 0x0c66 },     { 0x0c81, 0x0c85 },     { 0x0cbc, 0x0cde },     { 0x0ce2, 0x0ce6 },
+        { 0x0d00, 0x0d05 },     { 0x0d3b, 0x0d4e },     { 0x0d57, 0x0d58 },     { 0x0d62, 0x0d66 },
+        { 0x0d82, 0x0d85 },     { 0x0dca, 0x0de6 },     { 0x0df2, 0x0df4 },     { 0x0e31, 0x0e32 },
+        { 0x0e34, 0x0e3f },     { 0x0e47, 0x0e4f },     { 0x0eb1, 0x0eb2 },     { 0x0eb4, 0x0ebd },
+        { 0x0ec8, 0x0ed0 },     { 0x0f18, 0x0f1a },     { 0x0f35, 0x0f3a },     { 0x0f3e, 0x0f40 },
+        { 0x0f71, 0x0f88 },     { 0x0f8d, 0x0fbe },     { 0x0fc6, 0x0fc7 },     { 0x102b, 0x103f },
+        { 0x1056, 0x105a },     { 0x105e, 0x1065 },     { 0x1067, 0x106e },     { 0x1071, 0x1075 },
+        { 0x1082, 0x1090 },     { 0x109a, 0x109e },     { 0x135d, 0x1360 },     { 0x1712, 0x1720 },
+        { 0x1732, 0x1735 },     { 0x1752, 0x1760 },     { 0x1772, 0x1780 },     { 0x17b4, 0x17d4 },
+        { 0x17dd, 0x17e0 },     { 0x180b, 0x180e },     { 0x1885, 0x1887 },     { 0x18a9, 0x18aa },
+        { 0x1920, 0x1940 },     { 0x1a17, 0x1a1e },     { 0x1a55, 0x1a80 },     { 0x1ab0, 0x1b05 },
+        { 0x1b34, 0x1b45 },     { 0x1b6b, 0x1b74 },     { 0x1b80, 0x1b83 },     { 0x1ba1, 0x1bae },
+        { 0x1be6, 0x1bfc },     { 0x1c24, 0x1c3b },     { 0x1cd0, 0x1ce9 },     { 0x1ced, 0x1cee },
+        { 0x1cf2, 0x1cf5 },     { 0x1cf7, 0x1d00 },     { 0x1dc0, 0x1e00 },     { 0x20d0, 0x2100 },
+        { 0x2cef, 0x2cf2 },     { 0x2d7f, 0x2d80 },     { 0x2de0, 0x2e00 },     { 0x302a, 0x3030 },
+        { 0x3099, 0x309b },     { 0xa66f, 0xa67e },     { 0xa69e, 0xa6a0 },     { 0xa6f0, 0xa6f2 },
+        { 0xa802, 0xa803 },     { 0xa806, 0xa807 },     { 0xa80b, 0xa80c },     { 0xa823, 0xa828 },
+        { 0xa880, 0xa882 },     { 0xa8b4, 0xa8ce },     { 0xa8e0, 0xa8f2 },     { 0xa926, 0xa92e },
+        { 0xa947, 0xa95f },     { 0xa980, 0xa984 },     { 0xa9b3, 0xa9c1 },     { 0xa9e5, 0xa9e6 },
+        { 0xaa29, 0xaa40 },     { 0xaa43, 0xaa44 },     { 0xaa4c, 0xaa50 },     { 0xaa7b, 0xaa7e },
+        { 0xaab0, 0xaab5 },     { 0xaab7, 0xaab9 },     { 0xaabe, 0xaac2 },     { 0xaaeb, 0xaaf0 },
+        { 0xaaf5, 0xab01 },     { 0xabe3, 0xabf0 },     { 0xfb1e, 0xfb1f },     { 0xfe00, 0xfe10 },
+        { 0xfe20, 0xfe30 },
+};
+
+/* From http://unicode.org/Public/UNIDATA/EastAsianWidth.txt */
+static const struct utf8range unicode_range_wide[] = {
+        { 0x1100, 0x115f },     { 0x231a, 0x231b },     { 0x2329, 0x232a },     { 0x23e9, 0x23ec },
+        { 0x23f0, 0x23f0 },     { 0x23f3, 0x23f3 },     { 0x25fd, 0x25fe },     { 0x2614, 0x2615 },
+        { 0x2648, 0x2653 },     { 0x267f, 0x267f },     { 0x2693, 0x2693 },     { 0x26a1, 0x26a1 },
+        { 0x26aa, 0x26ab },     { 0x26bd, 0x26be },     { 0x26c4, 0x26c5 },     { 0x26ce, 0x26ce },
+        { 0x26d4, 0x26d4 },     { 0x26ea, 0x26ea },     { 0x26f2, 0x26f3 },     { 0x26f5, 0x26f5 },
+        { 0x26fa, 0x26fa },     { 0x26fd, 0x26fd },     { 0x2705, 0x2705 },     { 0x270a, 0x270b },
+        { 0x2728, 0x2728 },     { 0x274c, 0x274c },     { 0x274e, 0x274e },     { 0x2753, 0x2755 },
+        { 0x2757, 0x2757 },     { 0x2795, 0x2797 },     { 0x27b0, 0x27b0 },     { 0x27bf, 0x27bf },
+        { 0x2b1b, 0x2b1c },     { 0x2b50, 0x2b50 },     { 0x2b55, 0x2b55 },     { 0x2e80, 0x2e99 },
+        { 0x2e9b, 0x2ef3 },     { 0x2f00, 0x2fd5 },     { 0x2ff0, 0x2ffb },     { 0x3001, 0x303e },
+        { 0x3041, 0x3096 },     { 0x3099, 0x30ff },     { 0x3105, 0x312e },     { 0x3131, 0x318e },
+        { 0x3190, 0x31ba },     { 0x31c0, 0x31e3 },     { 0x31f0, 0x321e },     { 0x3220, 0x3247 },
+        { 0x3250, 0x32fe },     { 0x3300, 0x4dbf },     { 0x4e00, 0xa48c },     { 0xa490, 0xa4c6 },
+        { 0xa960, 0xa97c },     { 0xac00, 0xd7a3 },     { 0xf900, 0xfaff },     { 0xfe10, 0xfe19 },
+        { 0xfe30, 0xfe52 },     { 0xfe54, 0xfe66 },     { 0xfe68, 0xfe6b },     { 0x16fe0, 0x16fe1 },
+        { 0x17000, 0x187ec },   { 0x18800, 0x18af2 },   { 0x1b000, 0x1b11e },   { 0x1b170, 0x1b2fb },
+        { 0x1f004, 0x1f004 },   { 0x1f0cf, 0x1f0cf },   { 0x1f18e, 0x1f18e },   { 0x1f191, 0x1f19a },
+        { 0x1f200, 0x1f202 },   { 0x1f210, 0x1f23b },   { 0x1f240, 0x1f248 },   { 0x1f250, 0x1f251 },
+        { 0x1f260, 0x1f265 },   { 0x1f300, 0x1f320 },   { 0x1f32d, 0x1f335 },   { 0x1f337, 0x1f37c },
+        { 0x1f37e, 0x1f393 },   { 0x1f3a0, 0x1f3ca },   { 0x1f3cf, 0x1f3d3 },   { 0x1f3e0, 0x1f3f0 },
+        { 0x1f3f4, 0x1f3f4 },   { 0x1f3f8, 0x1f43e },   { 0x1f440, 0x1f440 },   { 0x1f442, 0x1f4fc },
+        { 0x1f4ff, 0x1f53d },   { 0x1f54b, 0x1f54e },   { 0x1f550, 0x1f567 },   { 0x1f57a, 0x1f57a },
+        { 0x1f595, 0x1f596 },   { 0x1f5a4, 0x1f5a4 },   { 0x1f5fb, 0x1f64f },   { 0x1f680, 0x1f6c5 },
+        { 0x1f6cc, 0x1f6cc },   { 0x1f6d0, 0x1f6d2 },   { 0x1f6eb, 0x1f6ec },   { 0x1f6f4, 0x1f6f8 },
+        { 0x1f910, 0x1f93e },   { 0x1f940, 0x1f94c },   { 0x1f950, 0x1f96b },   { 0x1f980, 0x1f997 },
+        { 0x1f9c0, 0x1f9c0 },   { 0x1f9d0, 0x1f9e6 },   { 0x20000, 0x2fffd },   { 0x30000, 0x3fffd },
+};
+
+#ifdef ARRAYSIZE
+#undef ARRAYSIZE
+#endif
+#define ARRAYSIZE(A) sizeof(A) / sizeof(*(A))
+
+static int cmp_range(const void *key, const void *cm)
+{
+    const struct utf8range *range = (const struct utf8range *)cm;
+    int ch = *(int *)key;
+    if (ch < range->lower) {
+        return -1;
+    }
+    if (ch >= range->upper) {
+        return 1;
+    }
+    return 0;
+}
+
+static int utf8_in_range(const struct utf8range *range, int num, int ch)
+{
+    const struct utf8range *r =
+        bsearch(&ch, range, num, sizeof(*range), cmp_range);
+
+    if (r) {
+        return 1;
+    }
+    return 0;
+}
+
+int utf8_width(int ch)
+{
+    /* short circuit for common case */
+    if (isascii(ch)) {
+        return 1;
+    }
+    if (utf8_in_range(unicode_range_combining, ARRAYSIZE(unicode_range_combining), ch)) {
+        return 0;
+    }
+    if (utf8_in_range(unicode_range_wide, ARRAYSIZE(unicode_range_wide), ch)) {
+        return 2;
+    }
+    return 1;
+}
+#endif
+
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+#include <ctype.h>
+#include <assert.h>
+
+// #ifndef STRINGBUF_H
+// #include "stringbuf.h"
+// #endif
+// #ifdef USE_UTF8
+// #include "utf8.h"
+// #endif
+#ifndef STRINGBUF_H
+#define STRINGBUF_H
+
+/* (c) 2017 Workware Systems Pty Ltd  -- All Rights Reserved */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/** @file
+ * A stringbuf is a resizing, null terminated string buffer.
+ *
+ * The buffer is reallocated as necessary.
+ *
+ * In general it is *not* OK to call these functions with a NULL pointer
+ * unless stated otherwise.
+ *
+ * If USE_UTF8 is defined, supports utf8.
+ */
+
+/**
+ * The stringbuf structure should not be accessed directly.
+ * Use the functions below.
+ */
+typedef struct {
+	int remaining;	/**< Allocated, but unused space */
+	int last;		/**< Index of the null terminator (and thus the length of the string) */
+#ifdef USE_UTF8
+	int chars;		/**< Count of characters */
+#endif
+	char *data;		/**< Allocated memory containing the string or NULL for empty */
+} stringbuf;
+
+/**
+ * Allocates and returns a new stringbuf with no elements.
+ */
+stringbuf *sb_alloc(void);
+
+/**
+ * Frees a stringbuf.
+ * It is OK to call this with NULL.
+ */
+void sb_free(stringbuf *sb);
+
+/**
+ * Returns an allocated copy of the stringbuf
+ */
+stringbuf *sb_copy(stringbuf *sb);
+
+/**
+ * Returns the length of the buffer.
+ * 
+ * Returns 0 for both a NULL buffer and an empty buffer.
+ */
+static inline int sb_len(stringbuf *sb) {
+	return sb->last;
+}
+
+/**
+ * Returns the utf8 character length of the buffer.
+ * 
+ * Returns 0 for both a NULL buffer and an empty buffer.
+ */
+static inline int sb_chars(stringbuf *sb) {
+#ifdef USE_UTF8
+	return sb->chars;
+#else
+	return sb->last;
+#endif
+}
+
+/**
+ * Appends a null terminated string to the stringbuf
+ */
+void sb_append(stringbuf *sb, const char *str);
+
+/**
+ * Like sb_append() except does not require a null terminated string.
+ * The length of 'str' is given as 'len'
+ *
+ * Note that in utf8 mode, characters will *not* be counted correctly
+ * if a partial utf8 sequence is added with sb_append_len()
+ */
+void sb_append_len(stringbuf *sb, const char *str, int len);
+
+/**
+ * Returns a pointer to the null terminated string in the buffer.
+ *
+ * Note this pointer only remains valid until the next modification to the
+ * string buffer.
+ *
+ * The returned pointer can be used to update the buffer in-place
+ * as long as care is taken to not overwrite the end of the buffer.
+ */
+static inline char *sb_str(const stringbuf *sb)
+{
+	return sb->data;
+}
+
+/**
+ * Inserts the given string *before* (zero-based) 'index' in the stringbuf.
+ * If index is past the end of the buffer, the string is appended,
+ * just like sb_append()
+ */
+void sb_insert(stringbuf *sb, int index, const char *str);
+
+/**
+ * Delete 'len' bytes in the string at the given index.
+ *
+ * Any bytes past the end of the buffer are ignored.
+ * The buffer remains null terminated.
+ *
+ * If len is -1, deletes to the end of the buffer.
+ */
+void sb_delete(stringbuf *sb, int index, int len);
+
+/**
+ * Clear to an empty buffer.
+ */
+void sb_clear(stringbuf *sb);
+
+/**
+ * Return an allocated copy of buffer and frees 'sb'.
+ *
+ * If 'sb' is empty, returns an allocated copy of "".
+ */
+char *sb_to_string(stringbuf *sb);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
+
+#define SB_INCREMENT 200
+
+stringbuf *sb_alloc(void)
+{
+	stringbuf *sb = (stringbuf *)malloc(sizeof(*sb));
+	sb->remaining = 0;
+	sb->last = 0;
+#ifdef USE_UTF8
+	sb->chars = 0;
+#endif
+	sb->data = NULL;
+
+	return(sb);
+}
+
+void sb_free(stringbuf *sb)
+{
+	if (sb) {
+		free(sb->data);
+	}
+	free(sb);
+}
+
+void sb_realloc(stringbuf *sb, int newlen)
+{
+	sb->data = (char *)realloc(sb->data, newlen);
+	sb->remaining = newlen - sb->last;
+}
+
+void sb_append(stringbuf *sb, const char *str)
+{
+	sb_append_len(sb, str, strlen(str));
+}
+
+void sb_append_len(stringbuf *sb, const char *str, int len)
+{
+	if (sb->remaining < len + 1) {
+		sb_realloc(sb, sb->last + len + 1 + SB_INCREMENT);
+	}
+	memcpy(sb->data + sb->last, str, len);
+	sb->data[sb->last + len] = 0;
+
+	sb->last += len;
+	sb->remaining -= len;
+#ifdef USE_UTF8
+	sb->chars += utf8_strlen(str, len);
+#endif
+}
+
+char *sb_to_string(stringbuf *sb)
+{
+	if (sb->data == NULL) {
+		/* Return an allocated empty string, not null */
+		return strdup("");
+	}
+	else {
+		/* Just return the data and free the stringbuf structure */
+		char *pt = sb->data;
+		free(sb);
+		return pt;
+	}
+}
+
+/* Insert and delete operations */
+
+/* Moves up all the data at position 'pos' and beyond by 'len' bytes
+ * to make room for new data
+ *
+ * Note: Does *not* update sb->chars
+ */
+static void sb_insert_space(stringbuf *sb, int pos, int len)
+{
+	assert(pos <= sb->last);
+
+	/* Make sure there is enough space */
+	if (sb->remaining < len) {
+		sb_realloc(sb, sb->last + len + SB_INCREMENT);
+	}
+	/* Now move it up */
+	memmove(sb->data + pos + len, sb->data + pos, sb->last - pos);
+	sb->last += len;
+	sb->remaining -= len;
+	/* And null terminate */
+	sb->data[sb->last] = 0;
+}
+
+/**
+ * Move down all the data from pos + len, effectively
+ * deleting the data at position 'pos' of length 'len'
+ */
+static void sb_delete_space(stringbuf *sb, int pos, int len)
+{
+	assert(pos < sb->last);
+	assert(pos + len <= sb->last);
+
+#ifdef USE_UTF8
+	sb->chars -= utf8_strlen(sb->data + pos, len);
+#endif
+
+	/* Now move it up */
+	memmove(sb->data + pos, sb->data + pos + len, sb->last - pos - len);
+	sb->last -= len;
+	sb->remaining += len;
+	/* And null terminate */
+	sb->data[sb->last] = 0;
+}
+
+void sb_insert(stringbuf *sb, int index, const char *str)
+{
+	if (index >= sb->last) {
+		/* Inserting after the end of the list appends. */
+		sb_append(sb, str);
+	}
+	else {
+		int len = strlen(str);
+
+		sb_insert_space(sb, index, len);
+		memcpy(sb->data + index, str, len);
+#ifdef USE_UTF8
+		sb->chars += utf8_strlen(str, len);
+#endif
+	}
+}
+
+/**
+ * Delete the bytes at index 'index' for length 'len'
+ * Has no effect if the index is past the end of the list.
+ */
+void sb_delete(stringbuf *sb, int index, int len)
+{
+	if (index < sb->last) {
+		char *pos = sb->data + index;
+		if (len < 0) {
+			len = sb->last;
+		}
+
+		sb_delete_space(sb, pos - sb->data, len);
+	}
+}
+
+void sb_clear(stringbuf *sb)
+{
+	if (sb->data) {
+		/* Null terminate */
+		sb->data[0] = 0;
+		sb->last = 0;
+#ifdef USE_UTF8
+		sb->chars = 0;
+#endif
+	}
+}
+
 
 #define LINENOISE_DEFAULT_HISTORY_MAX_LEN 100
 
@@ -983,7 +1012,11 @@ donedigits:
 /*#define DEBUG_REFRESHLINE*/
 
 #ifdef DEBUG_REFRESHLINE
+#ifdef _MSC_VER
+#define DRL(ARGS, ...) fprintf(dfh, ARGS)
+#else
 #define DRL(ARGS...) fprintf(dfh, ARGS)
+#endif
 static FILE *dfh;
 
 static void DRL_CHAR(int ch)
@@ -1008,13 +1041,393 @@ static void DRL_STR(const char *str)
     }
 }
 #else
-#define DRL(ARGS, ...)
+#ifdef _MSC_VER
+#define DRL(...)
+#else
+#define DRL(ARGS...)
+#endif
 #define DRL_CHAR(ch)
 #define DRL_STR(str)
 #endif
 
 #if defined(USE_WINCONSOLE)
-#include "linenoise-win32.c"
+// #include "linenoise-win32.c"
+
+/* this code is not standalone
+ * it is included into linenoise.c
+ * for windows.
+ * It is deliberately kept separate so that
+ * applications that have no need for windows
+ * support can omit this
+ */
+static DWORD orig_consolemode = 0;
+
+static int flushOutput(struct current *current);
+static void outputNewline(struct current *current);
+
+static void refreshStart(struct current *current)
+{
+}
+
+static void refreshEnd(struct current *current)
+{
+}
+
+static void refreshStartChars(struct current *current)
+{
+    assert(current->output == NULL);
+    /* We accumulate all output here */
+    current->output = sb_alloc();
+#ifdef USE_UTF8
+    current->ubuflen = 0;
+#endif
+}
+
+static void refreshNewline(struct current *current)
+{
+    DRL("<nl>");
+    outputNewline(current);
+}
+
+static void refreshEndChars(struct current *current)
+{
+    assert(current->output);
+    flushOutput(current);
+    sb_free(current->output);
+    current->output = NULL;
+}
+
+static int enableRawMode(struct current *current) {
+    DWORD n;
+    INPUT_RECORD irec;
+
+    current->outh = GetStdHandle(STD_OUTPUT_HANDLE);
+    current->inh = GetStdHandle(STD_INPUT_HANDLE);
+
+    if (!PeekConsoleInput(current->inh, &irec, 1, &n)) {
+        return -1;
+    }
+    if (getWindowSize(current) != 0) {
+        return -1;
+    }
+    if (GetConsoleMode(current->inh, &orig_consolemode)) {
+        SetConsoleMode(current->inh, ENABLE_PROCESSED_INPUT);
+    }
+#ifdef USE_UTF8
+    /* XXX is this the right thing to do? */
+    SetConsoleCP(65001);
+#endif
+    return 0;
+}
+
+static void disableRawMode(struct current *current)
+{
+    SetConsoleMode(current->inh, orig_consolemode);
+}
+
+void linenoiseClearScreen(void)
+{
+    /* XXX: This is ugly. Should just have the caller pass a handle */
+    struct current current;
+
+    current.outh = GetStdHandle(STD_OUTPUT_HANDLE);
+
+    if (getWindowSize(&current) == 0) {
+        COORD topleft = { 0, 0 };
+        DWORD n;
+
+        FillConsoleOutputCharacter(current.outh, ' ',
+            current.cols * current.rows, topleft, &n);
+        FillConsoleOutputAttribute(current.outh,
+            FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_GREEN,
+            current.cols * current.rows, topleft, &n);
+        SetConsoleCursorPosition(current.outh, topleft);
+    }
+}
+
+static void cursorToLeft(struct current *current)
+{
+    COORD pos;
+    DWORD n;
+
+    pos.X = 0;
+    pos.Y = (SHORT)current->y;
+
+    FillConsoleOutputAttribute(current->outh,
+        FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_GREEN, current->cols, pos, &n);
+    current->x = 0;
+}
+
+#ifdef USE_UTF8
+static void flush_ubuf(struct current *current)
+{
+    COORD pos;
+    DWORD nwritten;
+    pos.Y = (SHORT)current->y;
+    pos.X = (SHORT)current->x;
+    SetConsoleCursorPosition(current->outh, pos);
+    WriteConsoleW(current->outh, current->ubuf, current->ubuflen, &nwritten, 0);
+    current->x += current->ubufcols;
+    current->ubuflen = 0;
+    current->ubufcols = 0;
+}
+
+static void add_ubuf(struct current *current, int ch)
+{
+    /* This code originally by: Author: Mark E. Davis, 1994. */
+    static const int halfShift  = 10; /* used for shifting by 10 bits */
+
+    static const DWORD halfBase = 0x0010000UL;
+    static const DWORD halfMask = 0x3FFUL;
+
+    #define UNI_SUR_HIGH_START  0xD800
+    #define UNI_SUR_HIGH_END    0xDBFF
+    #define UNI_SUR_LOW_START   0xDC00
+    #define UNI_SUR_LOW_END     0xDFFF
+
+    #define UNI_MAX_BMP 0x0000FFFF
+
+    if (ch > UNI_MAX_BMP) {
+        /* convert from unicode to utf16 surrogate pairs
+         * There is always space for one extra word in ubuf
+         */
+        ch -= halfBase;
+        current->ubuf[current->ubuflen++] = (WORD)((ch >> halfShift) + UNI_SUR_HIGH_START);
+        current->ubuf[current->ubuflen++] = (WORD)((ch & halfMask) + UNI_SUR_LOW_START);
+    }
+    else {
+        current->ubuf[current->ubuflen++] = ch;
+    }
+    current->ubufcols += utf8_width(ch);
+    if (current->ubuflen >= UBUF_MAX_CHARS) {
+        flush_ubuf(current);
+    }
+}
+#endif
+
+static int flushOutput(struct current *current)
+{
+    const char *pt = sb_str(current->output);
+    int len = sb_len(current->output);
+
+#ifdef USE_UTF8
+    /* convert utf8 in current->output into utf16 in current->ubuf
+     */
+    while (len) {
+        int ch;
+        int n = utf8_tounicode(pt, &ch);
+
+        pt += n;
+        len -= n;
+
+        add_ubuf(current, ch);
+    }
+    flush_ubuf(current);
+#else
+    DWORD nwritten;
+    COORD pos;
+
+    pos.Y = (SHORT)current->y;
+    pos.X = (SHORT)current->x;
+
+    SetConsoleCursorPosition(current->outh, pos);
+    WriteConsoleA(current->outh, pt, len, &nwritten, 0);
+
+    current->x += len;
+#endif
+
+    sb_clear(current->output);
+
+    return 0;
+}
+
+static int outputChars(struct current *current, const char *buf, int len)
+{
+    if (len < 0) {
+        len = strlen(buf);
+    }
+    assert(current->output);
+
+    sb_append_len(current->output, buf, len);
+
+    return 0;
+}
+
+static void outputNewline(struct current *current)
+{
+    /* On the last row output a newline to force a scroll */
+    if (current->y + 1 == current->rows) {
+        outputChars(current, "\n", 1);
+    }
+    flushOutput(current);
+    current->x = 0;
+    current->y++;
+}
+
+static void setOutputHighlight(struct current *current, const int *props, int nprops)
+{
+    int colour = FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_GREEN;
+    int bold = 0;
+    int reverse = 0;
+    int i;
+
+    for (i = 0; i < nprops; i++) {
+        switch (props[i]) {
+            case 0:
+               colour = FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_GREEN;
+               bold = 0;
+               reverse = 0;
+               break;
+            case 1:
+               bold = FOREGROUND_INTENSITY;
+               break;
+            case 7:
+               reverse = 1;
+               break;
+            case 30:
+               colour = 0;
+               break;
+            case 31:
+               colour = FOREGROUND_RED;
+               break;
+            case 32:
+               colour = FOREGROUND_GREEN;
+               break;
+            case 33:
+               colour = FOREGROUND_RED | FOREGROUND_GREEN;
+               break;
+            case 34:
+               colour = FOREGROUND_BLUE;
+               break;
+            case 35:
+               colour = FOREGROUND_RED | FOREGROUND_BLUE;
+               break;
+            case 36:
+               colour = FOREGROUND_BLUE | FOREGROUND_GREEN;
+               break;
+            case 37:
+               colour = FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_GREEN;
+               break;
+        }
+    }
+
+    flushOutput(current);
+
+    if (reverse) {
+        SetConsoleTextAttribute(current->outh, BACKGROUND_INTENSITY);
+    }
+    else {
+        SetConsoleTextAttribute(current->outh, colour | bold);
+    }
+}
+
+static void eraseEol(struct current *current)
+{
+    COORD pos;
+    DWORD n;
+
+    pos.X = (SHORT) current->x;
+    pos.Y = (SHORT) current->y;
+
+    FillConsoleOutputCharacter(current->outh, ' ', current->cols - current->x, pos, &n);
+}
+
+static void setCursorXY(struct current *current)
+{
+    COORD pos;
+
+    pos.X = (SHORT) current->x;
+    pos.Y = (SHORT) current->y;
+
+    SetConsoleCursorPosition(current->outh, pos);
+}
+
+
+static void setCursorPos(struct current *current, int x)
+{
+    current->x = x;
+    setCursorXY(current);
+}
+
+static void cursorUp(struct current *current, int n)
+{
+    current->y -= n;
+    setCursorXY(current);
+}
+
+static void cursorDown(struct current *current, int n)
+{
+    current->y += n;
+    setCursorXY(current);
+}
+
+static int fd_read(struct current *current)
+{
+    while (1) {
+        INPUT_RECORD irec;
+        DWORD n;
+        if (WaitForSingleObject(current->inh, INFINITE) != WAIT_OBJECT_0) {
+            break;
+        }
+        if (!ReadConsoleInputW(current->inh, &irec, 1, &n)) {
+            break;
+        }
+        if (irec.EventType == KEY_EVENT) {
+            KEY_EVENT_RECORD *k = &irec.Event.KeyEvent;
+            if (k->bKeyDown || k->wVirtualKeyCode == VK_MENU) {
+                if (k->dwControlKeyState & ENHANCED_KEY) {
+                    switch (k->wVirtualKeyCode) {
+                     case VK_LEFT:
+                        return SPECIAL_LEFT;
+                     case VK_RIGHT:
+                        return SPECIAL_RIGHT;
+                     case VK_UP:
+                        return SPECIAL_UP;
+                     case VK_DOWN:
+                        return SPECIAL_DOWN;
+                     case VK_INSERT:
+                        return SPECIAL_INSERT;
+                     case VK_DELETE:
+                        return SPECIAL_DELETE;
+                     case VK_HOME:
+                        return SPECIAL_HOME;
+                     case VK_END:
+                        return SPECIAL_END;
+                     case VK_PRIOR:
+                        return SPECIAL_PAGE_UP;
+                     case VK_NEXT:
+                        return SPECIAL_PAGE_DOWN;
+                    }
+                }
+                /* Note that control characters are already translated in AsciiChar */
+                else if (k->wVirtualKeyCode == VK_CONTROL)
+                    continue;
+                else {
+                    return k->uChar.UnicodeChar;
+                }
+            }
+        }
+    }
+    return -1;
+}
+
+static int getWindowSize(struct current *current)
+{
+    CONSOLE_SCREEN_BUFFER_INFO info;
+    if (!GetConsoleScreenBufferInfo(current->outh, &info)) {
+        return -1;
+    }
+    current->cols = info.dwSize.X;
+    current->rows = info.dwSize.Y;
+    if (current->cols <= 0 || current->rows <= 0) {
+        current->cols = 80;
+        return -1;
+    }
+    current->y = info.dwCursorPosition.Y;
+    current->x = info.dwCursorPosition.X;
+    return 0;
+}
+
 #endif
 
 #if defined(USE_TERMIOS)
@@ -1947,13 +2360,14 @@ static int remove_char(struct current *current, int pos)
         int rc = 1;
 
         /* Now we try to optimise in the simple but very common case that:
-         * - we are remove the char at EOL
+         * - outputChars() can be used directly (not win32)
+         * - we are removing the char at EOL
          * - the buffer is not empty
          * - there are columns available to the left
          * - the char being deleted is not a wide or utf-8 character
          * - no hints are being shown
          */
-        if (current->pos == pos + 1 && current->pos == sb_chars(current->buf) && pos > 0) {
+        if (current->output && current->pos == pos + 1 && current->pos == sb_chars(current->buf) && pos > 0) {
 #ifdef USE_UTF8
             /* Could implement utf8_prev_len() but simplest just to not optimise this case */
             char last = sb_str(current->buf)[offset];
@@ -2008,11 +2422,12 @@ static int insert_char(struct current *current, int pos, int ch)
         buf[n] = 0;
 
         /* Now we try to optimise in the simple but very common case that:
+         * - outputChars() can be used directly (not win32)
          * - we are inserting at EOL
          * - there are enough columns available
          * - no hints are being shown
          */
-        if (pos == current->pos && pos == sb_chars(current->buf)) {
+        if (current->output && pos == current->pos && pos == sb_chars(current->buf)) {
             int width = char_display_width(ch);
             if (current->colsright > width) {
                 /* Yes, can optimise */
@@ -2129,7 +2544,7 @@ static int reverseIncrementalSearch(struct current *current)
             if (rchars) {
                 int p = utf8_index(rbuf, --rchars);
                 rbuf[p] = 0;
-                rlen = (int)strlen(rbuf);
+                rlen = strlen(rbuf);
             }
             continue;
         }
@@ -2183,7 +2598,7 @@ static int reverseIncrementalSearch(struct current *current)
                 }
                 /* Copy the matching line and set the cursor position */
                 set_current(current,history[searchpos]);
-                current->pos = utf8_strlen(history[searchpos], (int)(p - history[searchpos]));
+                current->pos = utf8_strlen(history[searchpos], p - history[searchpos]);
                 break;
             }
         }
@@ -2250,7 +2665,8 @@ static int linenoiseEdit(struct current *current) {
         switch(c) {
         case SPECIAL_NONE:
             break;
-        case '\r':    /* enter */
+        case '\r':    /* enter/CR */
+        case '\n':    /* LF */
             history_len--;
             free(history[history_len]);
             current->pos = sb_chars(current->buf);
@@ -2261,9 +2677,8 @@ static int linenoiseEdit(struct current *current) {
             }
             return sb_len(current->buf);
         case ctrl('C'):     /* ctrl-c */
-//            errno = EAGAIN;
-//            return -1;
-            break;       // jconsole signal
+            errno = EAGAIN;
+            return -1;
         case ctrl('Z'):     /* ctrl-z */
 #ifdef SIGTSTP
             /* send ourselves SIGSUSP */
@@ -2656,3 +3071,4 @@ char **linenoiseHistory(int *len) {
     }
     return history;
 }
+

@@ -100,17 +100,15 @@ fi
 fi
 # clang 10
 if [ $CLANG_MAJOR -ge 10 ] ; then
-common="$common -Wno-implicit-int-float-conversion"
+common="$common -Wno-implicit-float-conversion"
 fi
 fi
-darwin="$OPENMP -fPIC -O2 -fwrapv -fno-strict-aliasing -Wno-string-plus-int -Wno-empty-body -Wno-unsequenced -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-return-type -Wno-constant-logical-operand -Wno-comment -Wno-unsequenced -Wno-pass-failed"
 
 NO_SHA_ASM="${NO_SHA_ASM:=0}"
 
 if [ $NO_SHA_ASM -ne 0 ] ; then
 
 common="$common -DNO_SHA_ASM"
-darwin="$darwin -DNO_SHA_ASM"
 
 else
 
@@ -229,7 +227,7 @@ GASM_FLAGS=""
 
 darwin_j32) # darwin x86
 TARGET=libj.dylib
-CFLAGS="$darwin -m32 $macmin"
+CFLAGS="$common -m32 $macmin"
 LDFLAGS=" -dynamiclib -lm -ldl $LDOPENMP -m32 $macmin"
 OBJS_AESNI=" aes-ni.o "
 SRC_ASM="${SRC_ASM_MAC32}"
@@ -238,7 +236,7 @@ GASM_FLAGS="-m32 $macmin"
 
 darwin_j64) # darwin intel 64bit nonavx
 TARGET=libj.dylib
-CFLAGS="$darwin $macmin"
+CFLAGS="$common $macmin"
 LDFLAGS=" -dynamiclib -lm -ldl $LDOPENMP $macmin"
 OBJS_AESNI=" aes-ni.o "
 SRC_ASM="${SRC_ASM_MAC}"
@@ -247,7 +245,7 @@ GASM_FLAGS="$macmin"
 
 darwin_j64avx) # darwin intel 64bit
 TARGET=libj.dylib
-CFLAGS="$darwin $macmin -DC_AVX=1 "
+CFLAGS="$common $macmin -DC_AVX=1 "
 LDFLAGS=" -dynamiclib -lm -ldl $LDOPENMP $macmin"
 CFLAGS_SIMD=" -mavx "
 OBJS_FMA=" gemm_int-fma.o "
@@ -258,7 +256,7 @@ GASM_FLAGS="$macmin"
 
 darwin_j64avx2) # darwin intel 64bit
 TARGET=libj.dylib
-CFLAGS="$darwin $macmin -DC_AVX=1 -DC_AVX2=1 "
+CFLAGS="$common $macmin -DC_AVX=1 -DC_AVX2=1 "
 LDFLAGS=" -dynamiclib -lm -ldl $LDOPENMP $macmin"
 CFLAGS_SIMD=" -mavx2 -mfma "
 OBJS_FMA=" gemm_int-fma.o "

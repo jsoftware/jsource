@@ -89,10 +89,9 @@ fi
 fi
 # clang 10
 if [ $CLANG_MAJOR -ge 10 ] ; then
-common="$common -Wno-implicit-int-float-conversion"
+common="$common -Wno-implicit-float-conversion"
 fi
 fi
-darwin="-fPIC -O2 -fwrapv -fno-strict-aliasing -Wno-string-plus-int -Wno-empty-body -Wno-unsequenced -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-return-type -Wno-constant-logical-operand -Wno-comment -Wno-unsequenced -Wno-pass-failed"
 
 case $jplatform\_$j64x in
 
@@ -128,22 +127,22 @@ LDFLAGS=" -shared -Wl,-soname,libjnative.so "
 ;;
 darwin_j32)
 TARGET=libjnative.dylib
-CFLAGS="$darwin -m32 $macmin -I$JAVA_HOME/include -I$JAVA_HOME/include/darwin "
+CFLAGS="$common -m32 $macmin -I$JAVA_HOME/include -I$JAVA_HOME/include/darwin "
 LDFLAGS=" -m32 $macmin -dynamiclib "
 ;;
 darwin_j64)
 TARGET=libjnative.dylib
-CFLAGS="$darwin $macmin -I$JAVA_HOME/include -I$JAVA_HOME/include/darwin "
+CFLAGS="$common $macmin -I$JAVA_HOME/include -I$JAVA_HOME/include/darwin "
 LDFLAGS=" $macmin -dynamiclib "
 ;;
 darwin_j64avx)
 TARGET=libjnative.dylib
-CFLAGS="$darwin $macmin -I$JAVA_HOME/include -I$JAVA_HOME/include/darwin "
+CFLAGS="$common $macmin -I$JAVA_HOME/include -I$JAVA_HOME/include/darwin "
 LDFLAGS=" $macmin -dynamiclib "
 ;;
 darwin_j64avx2)
 TARGET=libjnative.dylib
-CFLAGS="$darwin $macmin -I$JAVA_HOME/include -I$JAVA_HOME/include/darwin "
+CFLAGS="$common $macmin -I$JAVA_HOME/include -I$JAVA_HOME/include/darwin "
 LDFLAGS=" $macmin -dynamiclib "
 ;;
 *)

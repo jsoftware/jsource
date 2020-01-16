@@ -22,6 +22,7 @@
 
 #define J_STACK  0x1000000uL // 16mb
 
+static int forceprmpt=0;   /* emit prompt even if isatty is false */
 static int breadline=0;    /* 0: none  1: libedit  2: linenoise */
 static int norl=0;         /* disable readline/linenoise */
 static char **adadbreak;
@@ -29,9 +30,11 @@ static void sigint(int k){**adadbreak+=1;signal(SIGINT,sigint);}
 static void sigint2(int k){**adadbreak+=1;}
 static char input[30000];
 
-#if defined(_WIN32)
-#undef READLINE
+#if defined(ANDROID) || defined(_WIN32)
 #undef USE_LINENOISE
+#ifdef READLINE
+#define USE_LINENOISE
+#endif
 #endif
 /* J calls for keyboard input (debug suspension and 1!:1[1) */
 /* we call to get next input */
@@ -111,7 +114,11 @@ if(hist)
 		char* s;
 		hist=0;
 		histfile[0]=0;
+#ifdef _WIN32
+		s=getenv("USERPROFILE");
+#else
 		s=getenv("HOME");
+#endif
 		if(s)
 		{
 			strcpy(histfile,s);
@@ -133,7 +140,7 @@ if(hist)
 
 char* Jinput_stdio(char* prompt)
 {
-  if(_isatty(_fileno(stdin))){
+  if(prompt&&strlen(prompt)){
 	fputs(prompt,stdout);
 	fflush(stdout); /* windows emacs */
   }
@@ -141,7 +148,7 @@ char* Jinput_stdio(char* prompt)
 	{
 #ifdef _WIN32
 		/* ctrl+c gets here for win */
-		if(!_isatty(_fileno(stdin))) return "2!:55''";
+		if(!(forceprmpt||_isatty(_fileno(stdin)))) return "2!:55''";
 		fputs("\n",stdout);
 		fflush(stdout);
 		**adadbreak+=1;
@@ -203,40 +210,26 @@ J jt;
 
 int main(int argc, char* argv[])
 {
- void* callbacks[] ={Joutput,0,Jinput,0,(void*)SMCON}; int type; int flag=0,remove=0; int forceavx=0;
-
- if(argc>=3&&!strcmp(argv[1],"-lib")&&'-'!=*(argv[2])) flag=1;
- else if(argc>=3&&!strcmp(argv[1],"-lib")&&!strcmp(argv[2],"-norl")) norl=1;
- else if(argc>=2&&!strcmp(argv[1],"-norl")) norl=1;
- if(1==flag){
-  if(argc>=4&&!strcmp(argv[3],"-norl")) norl=1;
- } else if(1==norl&&!strcmp(argv[1],"-norl")){
-  if(argc>=4&&!strcmp(argv[2],"-lib")&&'-'!=*(argv[3])) flag=1;
+ void* callbacks[] ={Joutput,0,Jinput,0,(void*)SMCON}; int type;
+ int i,poslib=0,poslibpath=0,posnorl=0,posprmpt=0; // assume all absent
+ for(i=1;i<argc;i++){
+  if(!poslib&&!strcmp(argv[i],"-lib")){poslib=i; if((i<argc-1)&&('-'!=*(argv[i+1])))poslibpath=i+1;}
+  else if(!posnorl&&!strcmp(argv[i],"-norl")) {posnorl=i; norl=1;}
+  else if(!posprmpt&&!strcmp(argv[i],"-prompt")) {posprmpt=i; forceprmpt=1;}
  }
- jepath(argv[0],(0==flag)?"":('-'!=*(argv[2]))?argv[2]:argv[3],forceavx);
+// fprintf(stderr,"poslib %d,poslibpath %d,posnorl %d,posprmpt %d\n",poslib,poslibpath,posnorl,posprmpt);
+ jepath(argv[0],(poslibpath)?argv[poslibpath]:"");
  // remove processed arg
- if(argc>=2&&(!strcmp(argv[1],"-norl"))){
-  remove+=1;
-  if(argc>=3&&(!strcmp(argv[2],"-lib"))){
-   remove+=1;
-   if(argc>=4&&'-'!=*(argv[3]))remove+=1;
+ if(poslib||poslibpath||posnorl||posprmpt){
+  int j=0; 
+  char **argvv = malloc(argc*sizeof(char*));
+  argvv[j++]=argv[0];
+  for(i=1;i<argc;i++){
+   if(!(i==poslib||i==poslibpath||i==posnorl||i==posprmpt))argvv[j++]=argv[i];
   }
- }else if(argc>=2&&(!strcmp(argv[1],"-lib"))){
-  remove+=1;
-  if(argc>=3&&'-'!=*(argv[2])){
-   remove+=1;
-   if(argc>=4&&(!strcmp(argv[3],"-norl")))remove+=1;
-  }else
-    if(argc>=3&&(!strcmp(argv[2],"-norl")))remove+=1;
- }
- if(remove){
- int i;
- int n=remove;
-  for(i=1;i<argc-n;++i)
-  {
-   argv[i]=argv[i+n];
-  }
-  argc=argc-n;
+  argc=j;
+  for(i=1;i<argc;++i)argv[i]=argvv[i];
+  free(argvv);
  }
 
 #if !defined(WIN32)
@@ -250,12 +243,28 @@ int main(int argc, char* argv[])
  }
 #endif
 #ifdef READLINE
+  norl|=!_isatty(_fileno(stdin));    // readline works on tty only
+#if defined(USE_LINENOISE)
+  if(!norl){
+   char *term;
+   term=getenv("TERM");
+   if(term){
+    static const char *unsupported_term[] = {"dumb","cons25","emacs",NULL};
+    int j;
+    for(j=0; unsupported_term[j]; j++)
+     if (strcmp(term, unsupported_term[j]) == 0) {norl=1; break; }
+   }
+  }
+#ifdef _WIN32
+  if(!norl) norl|=!!getenv("SHELL");  // only works on real windows terminals
+#endif
+#endif
   if(!norl&&_isatty(_fileno(stdin)))
    breadline=readlineinit();
 #endif
 
  jt=jeload(callbacks);
- if(!jt){char m[1000]; jefail(m), fputs(m,stderr); exit(1);}
+ if(!jt){char m[1000]; jefail(m); fputs(m,stderr); exit(1);}
  adadbreak=(char**)jt; // first address in jt is address of breakdata
 #ifndef _WIN32
  if(2==breadline){
@@ -290,7 +299,7 @@ int main(int argc, char* argv[])
   _setmode( _fileno( stdin ), _O_TEXT ); //readline filters '\r' (so does this)
 #endif
  jefirst(type,input);
- while(1){jedo((char*)Jinput(jt,(C*)"   "));}
+ while(1){jedo((char*)Jinput(jt,(forceprmpt||_isatty(_fileno(stdin)))?(C*)"   ":(C*)""));}
  jefree();
  return 0;
 }

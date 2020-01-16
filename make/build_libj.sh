@@ -11,6 +11,19 @@ cd ~
 
 macmin="-mmacosx-version-min=10.6"
 
+if [ "x$CC" = x'' ] ; then
+if [ -f "/usr/bin/cc" ]; then
+CC=cc
+else
+if [ -f "/usr/bin/clang" ]; then
+CC=clang
+else
+CC=gcc
+fi
+fi
+export CC
+fi
+
 USE_OPENMP="${USE_OPENMP:=0}"
 if [ $USE_OPENMP -eq 1 ] ; then
 OPENMP=" -fopenmp "
@@ -57,10 +70,9 @@ fi
 fi
 # clang 10
 if [ $CLANG_MAJOR -ge 10 ] ; then
-common="$common -Wno-implicit-int-float-conversion"
+common="$common -Wno-implicit-float-conversion"
 fi
 fi
-darwin="$OPENMP -fPIC -O2 -fwrapv -fno-strict-aliasing -Wno-string-plus-int -Wno-empty-body -Wno-unsequenced -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-return-type -Wno-constant-logical-operand -Wno-comment -Wno-unsequenced -Wno-pass-failed"
 
 SRC_ASM_LINUX=" \
  keccak1600-x86_64-elf.o \
@@ -163,7 +175,7 @@ GASM_FLAGS=""
 
 darwin_j32) # darwin x86
 TARGET=libj.dylib
-COMPILE="$darwin -m32 $macmin"
+COMPILE="$common -m32 $macmin"
 LINK=" -dynamiclib -lm -ldl $LDOPENMP -m32 $macmin -o libj.dylib"
 OBJS_AESNI=" aes-ni.o "
 SRC_ASM="${SRC_ASM_MAC32}"
@@ -172,7 +184,7 @@ GASM_FLAGS="-m32 $macmin"
 
 darwin_j64) # darwin intel 64bit nonavx
 TARGET=libj.dylib
-COMPILE="$darwin $macmin"
+COMPILE="$common $macmin"
 LINK=" -dynamiclib -lm -ldl $LDOPENMP $macmin -o libj.dylib"
 OBJS_AESNI=" aes-ni.o "
 SRC_ASM="${SRC_ASM_MAC}"
@@ -181,7 +193,7 @@ GASM_FLAGS="$macmin"
 
 darwin_j64avx) # darwin intel 64bit
 TARGET=libjavx.dylib
-COMPILE="$darwin $macmin -DC_AVX=1"
+COMPILE="$common $macmin -DC_AVX=1"
 LINK=" -dynamiclib -lm -ldl $LDOPENMP $macmin -o libjavx.dylib"
 CFLAGS_SIMD=" -mavx "
 OBJS_FMA=" blis/gemm_int-fma.o "
@@ -192,7 +204,7 @@ GASM_FLAGS="$macmin"
 
 darwin_j64avx2) # darwin intel 64bit
 TARGET=libjavx2.dylib
-COMPILE="$darwin $macmin -DC_AVX=1 -DC_AVX2=1"
+COMPILE="$common $macmin -DC_AVX=1 -DC_AVX2=1"
 LINK=" -dynamiclib -lm -ldl $LDOPENMP $macmin -o libjavx2.dylib"
 CFLAGS_SIMD=" -mavx2 -mfma "
 OBJS_FMA=" blis/gemm_int-fma.o "

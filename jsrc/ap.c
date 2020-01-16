@@ -319,12 +319,13 @@ static DF2(jtinfix){PROLOG(0018);DECLF;A x,z;I m;
  EPILOG(z);
 }
 
-static DF2(jtinfix2){PROLOG(0019);A f;I m,n,t; 
- PREF2(jtinfix); 
- RE(m=i0(vib(a))); t=AT(w); SETIC(w,n); 
- if(!(2==m&&2<=n&&t&DENSE))R infix(a,w,self);
- f=FAV(self)->fgh[0]; f=FAV(f)->fgh[0];
- A z=df2(curtail(w),behead(w),vaid(f)?f:qq(f,num[-1]));
+static DF1(jtinfix2){PROLOG(0019);A f; 
+// obsolete  PREF2(jtinfix); 
+// obsolete  RE(m=i0(vib(a))); t=AT(w); SETIC(w,n); 
+// obsolete  if(!(2==m&&2<=n&&t&DENSE))R infix(a,w,self);
+ f=FAV(self)->fgh[0]; f=FAV(f)->fgh[0];  // f=u in u/\ y
+ A l=curtail(w), r=behead(w), z; IRS2(l,r,f,AR(w)-1,AR(w)-1,FAV(f)->valencefns[1],z);
+// obsolete  A z=df2(curtail(w),behead(w),vaid(f)?f:qq(f,num[-1]));
  EPILOG(z);
 }    /* 2 f/\w */
 
@@ -746,11 +747,23 @@ static A jtmovbwneeq(J jt,I m,A w,A fs,B eq){A y,z;I c,p,*s,*u,*v,x,*yv,*zv;
  RETF(z);
 }    /* m 22 b./\w (0=eq) or m 25 b./\ (1=eq); integer w; 0<m */
 
+#if 0 // obsolete 
+ PREF2(jtmovfslash);
+ p=IC(w); wt=AT(w);
+ RE(m0=i0(vib(a))); m=0<=m0?m0:m0==IMIN?p:MIN(p,-m0); 
+ if(2==m0)R infix2(a,w,self);
+ x=VAV(self)->f; x=VAV(x)->f; id=ID(x); 
+ if(wt&B01)id=id==CMIN?CSTARDOT:id==CMAX?CPLUSDOT:id; 
+ if(id==CBDOT&&(x=VAV(x)->f,INT&AT(x)&&!AR(x)))id=(C)*AV(x);
+ switch(AR(w)&&0<m0&&m0<=*AS(w)?id:0){
+#endif
+
 static DF2(jtmovfslash){A x,z;B b;C id,*wv,*zv;I d,m,m0,p,t,wk,wt,zi,zk,zt;
  PREF2(jtmovfslash);
  SETIC(w,p); wt=AT(w);   // p=#items of w
- RE(m0=i0(vib(a))); m=m0>>(BW-1); m=(m^m0)-m; m^=(m>>(BW-1));  // m0=infx x,  m=abs(m0), handling IMIN 
- if((((2^m)-1)|(m-1)|(p-m))<0)R jtinfixprefix2(jt,a,w,self);  // If m is 0-2, go to general case
+ RE(m0=i0(vib(a))); m=m0>>(BW-1); m=(m^m0)-m; m^=(m>>(BW-1));  // m0=infx x,  m=abs(m0), handling IMIN
+ if((SGNIF((m0==2)&FAV(self)->flag,VFSCANIRSX)&-(wt&DENSE)&(1-p))<0)R jtinfix2(jt,w,self);  // if  2 u/\ y supports IRS, go do (}: u }.) y - faster than cells - if >1 cell and dense  uses VFSCANIRSX=0
+ if((((2^m)-1)|(m-1)|(p-m))<0)R jtinfixprefix2(jt,a,w,self);  // If m is 0 or 2, or if there is just 1 infix, go to general case
  x=FAV(self)->fgh[0]; x=FAV(x)->fgh[0]; id=ID(x); 
  if(wt&B01){id=id==CMIN?CSTARDOT:id; id=id==CMAX?CPLUSDOT:id;}
  if(id==CBDOT&&(x=VAV(x)->fgh[1],INT&AT(x)&&!AR(x)))id=(C)*AV(x);
@@ -783,11 +796,11 @@ static DF2(jtmovfslash){A x,z;B b;C id,*wv,*zv;I d,m,m0,p,t,wk,wt,zi,zk,zt;
 
 static DF1(jtiota1){I j; R apv(SETIC(w,j),1L,1L);}
 
-F1(jtbslash){A f;AF f1=jtinfixprefix1,f2=jtinfixprefix2;V*v;I flag=FAV(ds(CBSLASH))->flag;
+F1(jtbslash){AF f1=jtinfixprefix1,f2=jtinfixprefix2;V*v;I flag=FAV(ds(CBSLASH))->flag;
 ;
  RZ(w);
  if(NOUN&AT(w))R fdef(0,CBSLASH,VERB, jtinfixprefix1,jtinfixprefix2, w,0L,fxeachv(1L,w), VGERL|flag, RMAX,0L,RMAX);
- v=FAV(w); f=FAV(w)->fgh[0];
+ v=FAV(w);  // v is the u in u\ y
  switch(v->id){
   case CPOUND:
    f1=jtiota1; break;
@@ -795,8 +808,10 @@ F1(jtbslash){A f;AF f1=jtinfixprefix1,f2=jtinfixprefix2;V*v;I flag=FAV(ds(CBSLAS
    f2=jtinfixd; break;
   case CFORK:  
    if(v->valencefns[0]==(AF)jtmean)f2=jtmovavg; break;
-  case CSLASH: 
-   f2=jtmovfslash; if(vaid(f)){f1=jtpscan; flag|=VASGSAFE|VJTFLGOK1;} break;
+  case CSLASH: ;
+   A u=v->fgh[0];  // the u in u/\ y
+   if(AT(u)&VERB)flag |= (FAV(u)->flag >> (VIRS2X-VFSCANIRSX)) & VFSCANIRS;  // indic if we should use {: f }: for 2 /\ y
+   f2=jtmovfslash; if(vaid(u)){f1=jtpscan; flag|=VASGSAFE|VJTFLGOK1;} break;
   default:
    flag |= VJTFLGOK1|VJTFLGOK2; break; // The default u\ looks at WILLBEOPENED
  }

@@ -681,6 +681,9 @@ typedef struct {AF valencefns[2];A fgh[3];union { D lD; void *lvp[2]; I lI; I4 l
 #define VFHKLVLDEC      (((I)1)<<VFHKLVLDECX)
 #define VFHKLVLGTX      1   // (in (compare L.) hooks) set for < and <: to indicate complement of result of levelle needed
 #define VFHKLVLGT       (((I)1)<<VFHKLVLGTX)
+#define VFSCANIRSX     0   // (in u/\) set if u supports IRD2
+#define VFSCANIRS      (((I)1)<<VFSCANIRSX)
+
 
 // bits 8 and above are available for all functions:
 #define VGERLX          8
@@ -688,7 +691,8 @@ typedef struct {AF valencefns[2];A fgh[3];union { D lD; void *lvp[2]; I lI; I4 l
 #define VGERR           (I)512          /* gerund right argument           */
 #define VTAYFINITE      (I)1024         /* t. finite polynomial            */
 #define VIRS1           (I)2048         /* 11 monad has integral rank support */
-#define VIRS2           (I)4096         /* 12 dyad  has integral rank support */
+#define VIRS2X          12
+#define VIRS2           (((I)1)<<VIRS2X)         /* 12 dyad  has integral rank support */
 #define VFLR            (I)8192         /* function is <.@g                */
 #define VCEIL           (I)16384        /* function is >.@g                */
 #define VMOD            (I)32768        /* function is m&|@g               */

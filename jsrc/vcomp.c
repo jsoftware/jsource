@@ -36,11 +36,16 @@ APFX(eqZZ, B,Z,Z, zeq  )
 APFX(eqXX, B,X,X, equ  )   
 APFX(eqQQ, B,Q,Q, QEQ  )
 BPFXAVX2(eqCC, CMPEQCC,x, CMPEQCC, x,
+   (workarea=_mm256_castpd_si256(_mm256_xor_pd(u256,v256)), _mm256_castsi256_pd(_mm256_and_si256(_mm256_srli_epi64(_mm256_andnot_si256(workarea,_mm256_sub_epi8(workarea,bool256)),7),bool256))) ,
+   I work; , __m256i workarea; __m256i bool256=_mm256_set1_epi64x(0x0101010101010101);
+   )
+
+#if 0 // obsolete 
  (workarea=_mm256_xor_pd(u256,v256), workarea=_mm256_or_pd(workarea,_mm256_castsi256_pd(_mm256_srli_epi64(_mm256_castpd_si256(workarea),4))) ,
      workarea=_mm256_or_pd(workarea,_mm256_castsi256_pd(_mm256_srli_epi64(_mm256_castpd_si256(workarea),2))),
      _mm256_andnot_pd(_mm256_or_pd(workarea,_mm256_castsi256_pd(_mm256_srli_epi64(_mm256_castpd_si256(workarea),1))),bool256) ) , 
-   I work; , __m256d workarea; __m256d bool256=_mm256_castsi256_pd(_mm256_set1_epi64x(0x0101010101010101));
-   )
+#endif
+
                            EQTEMPLATE(eqCS, B,UC,US, CMPEQ )  EQTEMPLATE(eqSC, B,US,UC, CMPEQ )  EQTEMPLATE(eqSS, B,S,S, CMPEQ)
 EQTEMPLATE(eqUU, B,C4,C4, CMPEQ )  EQTEMPLATE(eqUS, B,C4,US, CMPEQ )  EQTEMPLATE(eqSU, B,US,C4, CMPEQ )
 EQTEMPLATE(eqCU, B,UC,C4, CMPEQ )  EQTEMPLATE(eqUC, B,C4,UC, CMPEQ )
@@ -53,11 +58,14 @@ APFX(neZZ, B,Z,Z, !zeq )
 APFX(neXX, B,X,X, !equ )
 APFX(neQQ, B,Q,Q, !QEQ )
 BPFXAVX2(neCC, CMPNECC,x, CMPNECC, x,
+   (workarea=_mm256_castpd_si256(_mm256_xor_pd(u256,v256)), _mm256_castsi256_pd(_mm256_andnot_si256(_mm256_srli_epi64(_mm256_andnot_si256(workarea,_mm256_sub_epi8(workarea,bool256)),7),bool256))) ,
+   I work; , __m256i workarea; __m256i bool256=_mm256_set1_epi64x(0x0101010101010101);
+   )
+#if 0 // obsolete 
  (workarea=_mm256_xor_pd(u256,v256), workarea=_mm256_or_pd(workarea,_mm256_castsi256_pd(_mm256_srli_epi64(_mm256_castpd_si256(workarea),4))) ,
      workarea=_mm256_or_pd(workarea,_mm256_castsi256_pd(_mm256_srli_epi64(_mm256_castpd_si256(workarea),2))),
      _mm256_and_pd(_mm256_or_pd(workarea,_mm256_castsi256_pd(_mm256_srli_epi64(_mm256_castpd_si256(workarea),1))),bool256) ) , 
-   I work; , __m256d workarea; __m256d bool256=_mm256_castsi256_pd(_mm256_set1_epi64x(0x0101010101010101));
-   )
+#endif
                            NETEMPLATE(neCS, B,UC,US, CMPNE )  NETEMPLATE(neSC, B,US,UC, CMPNE )  NETEMPLATE(neSS, B,S,S, CMPNE)
 NETEMPLATE(neUU, B,C4,C4, CMPNE )  NETEMPLATE(neUS, B,C4,US, CMPNE )  NETEMPLATE(neSU, B,US,C4, CMPNE )
 NETEMPLATE(neCU, B,UC,C4, CMPNE )  NETEMPLATE(neUC, B,C4,UC, CMPNE )

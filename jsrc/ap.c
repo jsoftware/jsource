@@ -324,10 +324,10 @@ static DF1(jtinfix2){PROLOG(0019);A f;
 // obsolete  RE(m=i0(vib(a))); t=AT(w); SETIC(w,n); 
 // obsolete  if(!(2==m&&2<=n&&t&DENSE))R infix(a,w,self);
  f=FAV(self)->fgh[0]; f=FAV(f)->fgh[0];  // f=u in u/\ y
- A l=curtail(w), r=behead(w), z; IRS2(l,r,f,AR(w)-1,AR(w)-1,FAV(f)->valencefns[1],z);
+ A l=curtail(w), r=behead(w), z; IRS2(l,r,f,AR(w)-1,AR(w)-1,FAV(f)->valencefns[1],z); // (}: u"_1 }.) y
 // obsolete  A z=df2(curtail(w),behead(w),vaid(f)?f:qq(f,num[-1]));
  EPILOG(z);
-}    /* 2 f/\w */
+}    /* 2 f/\w, where f supports IRS */
 
 static DF2(jtginfix){A h,*hv,x,z,*zv;I d,m,n;
  RE(m=i0(vib(a))); 

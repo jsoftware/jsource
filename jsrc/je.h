@@ -932,6 +932,7 @@ extern dcomplex zone;
 extern dcomplex zzero;
 extern A        zpath;
 /* cpu feature */
+extern UC       hwaes;
 extern UC       hwfma;
 #if (SYS & SYS_ATARIST+SYS_ATT3B1)
 extern int      memcmp();       /* C library fn                            */

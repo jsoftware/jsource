@@ -316,6 +316,7 @@ F1(jtcpufeature){
 #endif
 }
 
+// thread unsafe
 F2(jtcpufeature2){I k;
  RZ(a&&w);
  ASSERT(AT(w)&LIT,EVDOMAIN);

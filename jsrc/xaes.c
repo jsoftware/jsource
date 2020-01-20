@@ -7,8 +7,6 @@
 #include "x.h"
 #include "cpuinfo.h"
 
-static UC hwaes=0;
-
 #include "aes-c.h"
 
 #include <string.h>
@@ -41,11 +39,6 @@ F2(jtaes2)
   A z,*av,dec;
   UC *out,*key,*iv;
   F2RANK(1,1,jtaes2,0);  // do rank loop if necessary
-#if defined(__aarch64__)
- hwaes=(getCpuFeatures()&ARM_HWCAP_AES)?1:0;
-#elif (defined(__i386__) || defined(_M_X64) || defined(__x86_64__))
- hwaes=((getCpuFeatures()&CPU_X86_FEATURE_SSE4_1)&&(getCpuFeatures()&CPU_X86_FEATURE_AES_NI))?1:0;
-#endif
   ASSERT(AT(a)&BOX,EVDOMAIN);
   ASSERT(1>=AR(a),EVRANK);
   ASSERT(AN(a)>=3&&AN(a)<=4,EVLENGTH);

@@ -54,6 +54,7 @@ A   zpath=0;              /* default locale search path           */
 uint64_t g_cpuFeatures;   // blis
 A   pst[256]={0};
 A   chr[256]={0};         /* scalar for each character, or 0      */
+UC  hwaes=0;              // hardware aes support
 UC  hwfma=0;              // blis cpu tuning
 C   wtype[256]={0};
 

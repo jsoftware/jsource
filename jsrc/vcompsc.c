@@ -96,10 +96,6 @@
   else           {             DO(q, if(y=F(*av++,*wv++))INDB3;);}  \
   R sc(n);                                                                        \
  }
-#if 0 // obsolete 
-  wn=AN(w); wv=AV(w); n=AR(a)&&AR(w)?MAX(an,wn):AR(a)?an:wn;                      \
-
-#endif
 
 #define JNDB(f,T0,T1,F)  \
  static F2(f){I an,*av,n,q,r,wn,*wv,x,y;                                             \

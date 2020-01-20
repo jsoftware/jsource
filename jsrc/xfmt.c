@@ -479,7 +479,6 @@ static A jtfmtallcol(J jt, A a, A w, I mode) {A *a1v,base,fb,len,strs,*u,v,x;
     else if(dtmp< 0       ) { *cv=SUBm;                              }
     else if(dtmp>=0 && mPQ) { MC(cv, cP, nP); MC(cv+*il-nQ, cQ, nQ); }
    } else {
-// obsolete     switch(CTTZNOFLAG(t)) {
     if(UNSAFE(t)==INT){
      y=*iv < 0; g=0; 
      if(*iv < 0 && mMN) { y=nM; g=nN; }

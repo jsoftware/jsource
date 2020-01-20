@@ -106,7 +106,6 @@ static C*jtovgmove(J jt,I k,I c,I m,A s,A w,C*x,A z){I d,n,p=c*m;
    // z may not be boxed; but if it is, w must be also.
  if(AR(w)){
   n=AN(w); d=AN(s)-AR(w);
-// obsolete   if((!n||d))mvc(k*p,x,k,jt->fillv);  // fill required: w empty or shape short
   if((-n&(d-1))>=0)mvc(k*p,x,k,jt->fillv);  // fill required: w empty or shape short (d>0)
   if(n){  // nonempty cell, must copy in the data
    if(n<p){I *v=AV(s); *v=m; RZ(w=take(d?vec(INT,AR(w),d+v):s,w));}  // incoming cell smaller than result area: take to result-cell size
@@ -130,7 +129,6 @@ static F2(jtovg){A s,z;C*x;I ar,*as,c,k,m,n,r,*sv,t,wr,*ws,zn;
   DQ(m, --as; --ws; sv[--k]=MAX(*as,*ws);); 
   DO(r-m, sv[i]=MAX(1,sv[i]););
  }
-// obsolete RE(c=prod(r-1,1+sv)); m=r>ar?1:IC(a); n=r>wr?1:IC(w); // verify composite item not too big
  RE(c=prod(r-1,1+sv)); m=AS(a)[0]; m=r>ar?1:m; n=AS(w)[0]; n=r>wr?1:n; // verify composite item not too big
  RE(zn=mult(c,m+n)); ASSERT(0<=m+n,EVLIMIT);
  GA(z,AT(a),zn,r,sv); AS(z)[0]=m+n; x=CAV(z); k=bpnoun(AT(a));
@@ -139,7 +137,7 @@ static F2(jtovg){A s,z;C*x;I ar,*as,c,k,m,n,r,*sv,t,wr,*ws,zn;
  RETF(z);
 }    /* a,w general case for dense array with the same type; jt->ranks=~0 */
 
-#if 0
+#if 0  // obsolete 
 static F2(jtovv){A z;I m,t;
  t=AT(a); 
  GA(z,t,AN(a)+AN(w),1,0);  
@@ -199,7 +197,6 @@ F2(jtover){A z;C*zv;I replct,framect,acr,af,ar,*as,k,ma,mw,p,q,r,t,wcr,wf,wr,*ws
  acr=jtr>>RANKTX; acr=ar<acr?ar:acr; af=ar-acr;  // acr=rank of cell, af=len of frame, as->shape
  wcr=(RANKT)jtr; wcr=wr<wcr?wr:wcr; wf=wr-wcr;  // wcr=rank of cell, wf=len of frame, ws->shape
  // no RESETRANK - not required by ovv or main line here
-// obsolete  if(!(af|wf)&&2>(ar|wr))R ovv(a,w);  // If appending vectors/atoms at infinite rank, go handle that
 // should look for no frame, identical item shape after rank extension, copying en bloc
  as=AS(a); ws=AS(w);
  if(af+wf==0){
@@ -233,27 +230,22 @@ F2(jtover){A z;C*zv;I replct,framect,acr,af,ar,*as,k,ma,mw,p,q,r,t,wcr,wf,wr,*ws
   RESETRANK; z=rank2ex(a,w,0L,acr,wcr,acr,wcr,jtovg); R z;  // ovg calls other functions, so we clear rank
  }
  // joining rows, or table/row with same lengths, or table/atom.  In any case no fill is possible
-// obsolete  p=acr?p:1; ma=1>=acr?p:p*as[ar-2]; ma=!acr&&2==wcr?q:ma;  //   ma is #atoms in a cell of a EXCEPT when joining atom a to table w: then length of row of w
-// obsolete  q=wcr?q:1; mw=1>=wcr?q:q*ws[wr-2]; mw=!wcr&&2==acr?p:mw; m=ma+mw;  // sim for w;  m=total # atoms to move per cell (table/row of a plus table/row of w)
  I cc2a=as[ar-2]; p=acr?p:1; cc2a=acr<=1?1:cc2a; ma=cc2a*p; ma=wcr>acr+1?q:ma;  //   cc2a is # 2-cells of a; ma is #atoms in a cell of a EXCEPT when joining atom a to table w: then length of row of w
  I cc2w=ws[wr-2]; q=wcr?q:1; cc2w=wcr<=1?1:cc2w; mw=cc2w*q; mw=acr>wcr+1?p:mw;  // sim for w;
  I f=(wf>=af)?wf:af; I shortf=(wf>=af)?af:wf; I *s=(wf>=af)?ws:as;
  PROD(replct,f-shortf,s+shortf); PROD(framect,shortf,s);  // Number of cells in a and w; known non-empty shapes
  RE(zn=mult(replct*framect,ma+mw));  // total # atoms in result
  GA(z,t,zn,f+r,s); zv=CAV(z); s=AS(z)+f+r;   // allocate result; repurpose s to point to END+1 of shape field
-// obsolete  if(2>r)s[0]=m; else{s[0]=acr?p:q; s[-1]=(1<acr?as[ar-2]:1)+(1<wcr?ws[wr-2]:1);}  // fill in last 2 atoms of shape
  if(2>r)s[-1]=ma+mw; else{s[-1]=acr?p:q; s[-2]=cc2a+cc2w;}  // fill in last 2 atoms of shape
  k=bpnoun(t);   // # bytes per atom of result
  // copy in the data, creating the result in order (to avoid page thrashing and to make best use of write buffers)
  // scalar replication is required for any arg whose rank is 0 and yet its length is >1.  Choose the copy routine based on that
-// obsolete  moveawtbl[(I)(!acr&&ma>1)*2+(I)(!wcr&&mw>1)](CAV(z),CAV(a),CAV(w),replct*framect,k,ma*k,mw*k,(wf>=af)?replct:1,(wf>=af)?1:replct);
  moveawtbl[((UI)((acr-1)&(1-ma))>>(BW-1))*2+((UI)((wcr-1)&(1-mw))>>(BW-1))](CAV(z),CAV(a),CAV(w),replct*framect,k,ma*k,mw*k,(wf>=af)?replct:1,(wf>=af)?1:replct);
  RETF(z);
 }    /* overall control, and a,w and a,"r w for cell rank <: 2 */
 
 F2(jtstitch){B sp2;I ar,wr; A z;
  RZ(a&&w);
-// obsolete  ar=AR(a); wr=AR(w); sp2=(SPARSE&AT(a)||SPARSE&AT(w))&&2>=ar&&2>=wr;
  ar=AR(a); wr=AR(w); sp2=(SPARSE&(AT(a)|AT(w)))&&2>=ar&&2>=wr;
  ASSERT(!ar||!wr||*AS(a)==*AS(w),EVLENGTH);
  if((((SPARSE&(AT(a)|AT(w)))-1)&(2-ar)&(2-wr))>=0)R IRS2(a,w,0L,(ar-1)&RMAX,(wr-1)&RMAX,jtover,z);  // not sparse or rank>2
@@ -347,7 +339,6 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;I ak,k,p,*u,*v,wk,wm,wn;
      // If an item of a is higher-rank than the entire w (except when w is an atom, which gets replicated),
      // copy fill to the output area.  Start the copy after the area that will be filled in by w
      I wlen = k*AN(w); // the length in bytes of the data in w
-// obsolete      if(AR(w)&&AR(a)>1+AR(w)){RZ(setfv(a,w)); mvc(wk-wlen,av+wlen,k,jt->fillv);}
      if((-AR(w)&(1+AR(w)-AR(a)))<0){RZ(setfv(a,w)); mvc(wk-wlen,av+wlen,k,jt->fillv);}
      // Copy in the actual data, replicating if w is atomic
      if(AR(w))MC(av,wv,wlen); else mvc(wk,av,k,wv);

@@ -29,7 +29,7 @@
 
 // Parse/execute a line, result in z.  If locked, reveal nothing.  Save current line number in case we reexecute
 // If the sentence passes a u/v into an operator, the current symbol table will become the prev and will have the u/v environment info
-#define parseline(z) {C attnval=*jt->adbreakr; A *queue=line+ci->i; I m=ci->n; /* obsolete AKGST(locsym)=jt->global;*/ if(!attnval){if(!(gsfctdl&16))z=parsea(queue,m);else {thisframe->dclnk->dcix=i; z=parsex(queue,m,ci,callframe);}}else{jsignal(EVATTN); z=0;} }
+#define parseline(z) {C attnval=*jt->adbreakr; A *queue=line+ci->i; I m=ci->n; if(!attnval){if(!(gsfctdl&16))z=parsea(queue,m);else {thisframe->dclnk->dcix=i; z=parsex(queue,m,ci,callframe);}}else{jsignal(EVATTN); z=0;} }
 
 typedef struct{A t,x,line;C*iv,*xv;I j,n; I4 k,w;} CDATA;
 /* for_xyz. t do. control data   */
@@ -57,7 +57,6 @@ static B jtforinit(J jt,CDATA*cv,A t){A x;C*s,*v;I k;
  cv->j=-1;                               /* iteration index     */
  cv->x=0;
  k=AN(cv->line)-5; cv->k=(I4)k;                 /* length of item name; -1 if omitted (for.; for_. not allowed) */
-// obsolete  if(0<k&&cv->n){                         /* for_xyz.   k nonzero and cv->n nonzero         */
  if((-k&-cv->n)<0){                         /* for_xyz.       k>0 and cv->n >0     */
   s=4+CAV(cv->line); RZ(x=str(6+k,s)); ras(x); cv->x=x;
   cv->xv=v=CAV(x); MC(k+v,"_index",6L);  /* index name          */
@@ -68,7 +67,7 @@ static B jtforinit(J jt,CDATA*cv,A t){A x;C*s,*v;I k;
 
 // A for. block is ending.   free what needs to be freed.  Don't delete any names
 static B jtunstackcv(J jt,CDATA*cv){
- if(cv->x){/* obsolete ex(link(cv->x,str(cv->k,cv->iv)));*/ fa(cv->x);}
+ if(cv->x){fa(cv->x);}
  fa(cv->t); 
  R 1;
 }
@@ -88,7 +87,6 @@ static void jttryinit(J jt,TD*v,I i,CW*cw){I j=i,t=0;
 // result is new value for tdi
 // This is called only if tdi is nonzero & therefore we have a stack
 static I trypopgoto(TD* tdv, I tdi, I dest){
-// obsolete  while(tdi&&(tdv[tdi-1].b>dest||tdv[tdi-1].e<dest))--tdi;  // discard stack frame if structure does not include dest
  while(tdi&&!BETWEENC(dest,tdv[tdi-1].b,tdv[tdi-1].e))--tdi;  // discard stack frame if structure does not include dest
  R tdi;
 }
@@ -124,14 +122,12 @@ DF2(jtxdefn){PROLOG(0048);
  I n;  // number of lines in the definition.  Filled in by LINE
  CW *cw;  // pointer to control-word info for the definition.  Filled in by LINE
  I gsfctdl=0;  // flags: 1=locked 2=debug(& not locked) 4=tdi!=0 8=cd!=0 16=thisframe!=0 32=symtable was the original (i. e. AR(symtab)&LSYMINUSE) 256=original debug flag (must be highest bit)
-// obsolete I lk;  // lock/debug flag: 1=locked function; 0=normal operation; -1=this function is being debugged
  DC callframe=0;  // pointer to the debug frame of the caller to this function (only if it's named), but 0 if we are not debugging
 
  TD*tdv=0;  // pointer to base of try. stack
  I tdi=0;  // index of the next open slot in the try. stack
  CDATA*cv;  // pointer to the current entry in the for./select. stack
 
-// obsolete  UC savdebug; // preserve debug state over calls - this remembers starting debug state.  Needed only if there is a try. stack
  A locsym;  // local symbol table to use
 
  I isdyad=(I)(a!=0)&(I)(w!=0);   // avoid branches, and relieve pressure on a and w
@@ -161,13 +157,11 @@ DF2(jtxdefn){PROLOG(0048);
    if(!(AR(locsym)&LSYMINUSE)){AR(locsym)|=LSYMINUSE;gsfctdl|=32;}  // remember if we are using the original symtab
    else{RZ(locsym=clonelocalsyms(locsym));}
 
-// obsolete    // lk: 0=normal, 1=this definition is locked, -1=debug mode
    gsfctdl|=jt->uflags.us.cx.cx_c.glock||sv->flag&VLOCK;  // 1=lock bit
    // if we are in debug mode, the call to this defn should be on the stack (unless debug was entered under program control).  If it is, point to its
    // stack frame, which functions as a flag to indicate that we are debugging.  If the function is locked we ignore debug mode
    if(!(gsfctdl&1)&&jt->uflags.us.cx.cx_c.db){
     if(jt->sitop&&jt->sitop->dctype==DCCALL){   // if current stack frame is a call
-// obsolete      lk=-1;    // indicate we are debugging
      gsfctdl|=2;   // set debug flag if debug requested and not locked (no longer used)
      if(sv->flag&VNAMED){
       callframe=jt->sitop;  // if this is a named (rather than anonymous call like 3 : 0"1), there is a tight link with the caller.  Indicate that
@@ -175,7 +169,6 @@ DF2(jtxdefn){PROLOG(0048);
      // If we are in debug mode, and the current stack frame has the DCCALL type, pass the debugger
      // information about this execution: the local symbols and the control-word table
      if(self==jt->sitop->dcf){  // if the stack frame is for this exec
-// obsolete       jt->sitop->dcloc=jt->locsyms; jt->sitop->dcc=hv[1];  // install info about the exec
       jt->sitop->dcloc=locsym; jt->sitop->dcc=hv[1];  // install info about the exec
       // Use this out-of-the-way place to ensure that the compiler will not try to put for. and try. stuff into registers
       forcetomemory(&tdi); forcetomemory(&tdv); forcetomemory(&cv); 
@@ -191,7 +184,6 @@ DF2(jtxdefn){PROLOG(0048);
    if(sv->flag&VTRY1+VTRY2){A td; GAT0(td,INT,NTD*WTD,1); tdv=(TD*)AV(td); gsfctdl |= jt->uflags.us.cx.cx_c.db<<8;}
   }
   // End of unusual processing
-// obsolete   AM(locsym)=(I)jt->locsyms; jt->locsyms=locsym;   // Chain the calling symbol table to this one
   SYMPUSHLOCAL(locsym);   // Chain the calling symbol table to this one
 
   // assignsym etc should never be set here; if it is, there must have been a pun-in-ASGSAFE that caused us to mark a
@@ -237,7 +229,6 @@ DF2(jtxdefn){PROLOG(0048);
   // i holds the control-word number of the current control word
   // Check for debug and other modes
   if(jt->cxspecials){  // fast check to see if we have overhead functions to perform
-// obsolete   if(!thisframe&&lk<=0&&jt->uflags.us.cx.cx_c.db){
    if(!(gsfctdl&(16+1))&&jt->uflags.us.cx.cx_c.db){
     // If we haven't done so already, allocate an area to use for the SI entries for sentences executed here, if needed.  We need a new area only if we are debugging.  Don't do it if locked.
     // We have to have 1 debug frame to hold parse-error information in, but it is allocated earlier if debug is off
@@ -315,22 +306,6 @@ docase:
      else if(AT(t)&B01)i=BAV(t)[0]?i:nexti;  // must be sparse
      else if(!(AT(t)&NOUN)){CHECKNOUN}  // will take error
      // other types test true, which is how i is set
-#if 0 // obsolete     
-      CHECKNOUN    // if t is not a noun, signal error on the last line executed in the T block
-
-      if(AN(t)){
-       switch(CTTZ(AT(t))){
-       // Check for nonzero.  Nonnumeric types always test true.  Comparisons against 0 are exact.
-       case INTX:  b=*AV(t);                  break;
-       case RATX:
-       case XNUMX: b=*AV(XAV(t)[0])||1<AN(XAV(t)[0]); break;  // rat/xnum true if first word non0, or multiple words
-       case CMPXX: b=0!=*DAV(t)||0!=*(1+DAV(t)); break;  // complex if either part nonzero
-       case FLX:   b=0!=*DAV(t);                 break;
-       case B01X:  b=(I)*BAV(t); break;
-       }
-      }    // If no atoms, that's true too
-      i=b?i:nexti;  // if test fails, branch to end
-#endif
     }
    }
    t=0;  // Indicate no T block, now that we have processed it
@@ -403,10 +378,6 @@ dobblock:
     symbisdel(nfs(  cv->k,cv->iv),cv->j<cv->n?from(x,cv->t):mtv,locsym);
    }
    if(cv->j<cv->n){  // if there are more iterations to do...
-// obsolete     if(cv->x){A x;  // assign xyz and xyz_index for for_xyz.
-// obsolete      symbisdel(nfs(6+cv->k,cv->xv),x=sc(cv->j),  locsym);  // since there is no sentence, take deletion off nvr stack
-// obsolete      symbisdel(nfs(  cv->k,cv->iv),from(x,cv->t),locsym);
-// obsolete     }
     ++i; continue;   // advance to next line and process it
    }
    // if there are no more iterations, fall through...
@@ -453,7 +424,6 @@ dobblock:
     // This is the first case.  That means the t block has the select. value.  Save it.
     BASSERT(t,EVCTRL);  // error if select. case.
     CHECKNOUN    // if t is not a noun, signal error on the last line executed in the T block
-// obsolete     t=boxopen(t);
     BZ(ras(t)); cv->t=t; t=0;  // protect t from free while we are comparing with it, save in stack
    }
    i=ci->go;  // Go to next sentence, which might be in the default case (if T block is empty)
@@ -532,7 +502,6 @@ dobblock:
  // Tables are born with NAMEADDED off.  It gets set when a name is added.  Setting back to initial state here, we clear NAMEADDED
  if(gsfctdl&32){AR(locsym)=LLOCALTABLE; symfreeha(locsym);}
  // Pop the private-area stack; set no assignment (to call for result display)
-// obsolete jt->locsyms=prevlocsyms;
  SYMSETLOCAL(prevlocsyms);
  jt->asgn=0;
  RETF(z);
@@ -834,7 +803,6 @@ F2(jtcolon){A d,h,*hv,m;B b;C*s;I flag=VFLAGNONE,n,p;
  if(10<n){s=CAV(w); p=AN(w); if(p&&CLF==s[p-1])RZ(w=str(p-1,s));}
  else{
   RZ(BOX&AT(w)?sent12b(w,&m,&d):sent12c(w,&m,&d)); INCORP(m); INCORP(d);  // get monad & dyad parts; we are incorporating them into hv[]
-// obsolete   if(4==n){if(AN(m)&&!AN(d))d=m; m=mtv;}  //  for 4 :, make the single def given the monadic one
   if(4==n){if((-AN(m)&(AN(d)-1))<0)d=m; m=mtv;}  //  for 4 :, make the single def given the dyadic one
   GAT0(h,BOX,2*HN,1); hv=AAV(h);
   if(n){  // if not noun, audit the valences as valid sentences

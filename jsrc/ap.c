@@ -320,12 +320,8 @@ static DF2(jtinfix){PROLOG(0018);DECLF;A x,z;I m;
 }
 
 static DF1(jtinfix2){PROLOG(0019);A f; 
-// obsolete  PREF2(jtinfix); 
-// obsolete  RE(m=i0(vib(a))); t=AT(w); SETIC(w,n); 
-// obsolete  if(!(2==m&&2<=n&&t&DENSE))R infix(a,w,self);
  f=FAV(self)->fgh[0]; f=FAV(f)->fgh[0];  // f=u in u/\ y
  A l=curtail(w), r=behead(w), z; IRS2(l,r,f,AR(w)-1,AR(w)-1,FAV(f)->valencefns[1],z); // (}: u"_1 }.) y
-// obsolete  A z=df2(curtail(w),behead(w),vaid(f)?f:qq(f,num[-1]));
  EPILOG(z);
 }    /* 2 f/\w, where f supports IRS */
 
@@ -343,13 +339,12 @@ static DF2(jtginfix){A h,*hv,x,z,*zv;I d,m,n;
   R reshape(over(zeroionei[0],shape(x)),x);
 }}
 
-// obsolete #define STATEHASGERUND 0x1000  // f is a gerund
 #define STATEISPREFIX 0x2000  // this is prefix rather than infix
 #define STATESLASH2X 14  // f is f'/ and x is 2
 #define STATESLASH2 ((I)1<<STATESLASH2X)
 
 // prefix and infix: prefix if a is mark
-static DF2(jtinfixprefix2){F2PREFIP;PROLOG(00202);A fs;// obsolete A *hv;
+static DF2(jtinfixprefix2){F2PREFIP;PROLOG(00202);A fs;
    I wt;
  
  RZ(w);
@@ -382,7 +377,6 @@ static DF2(jtinfixprefix2){F2PREFIP;PROLOG(00202);A fs;// obsolete A *hv;
   }
  }else{
   RZ(fs=createcycliciterator(self));  // use a verb that cycles through the gerunds.
-// obsolete   state |= STATEHASGERUND; A h=sv->fgh[2]; hv=AAV(h); hn=AN(h); ASSERT(hn,EVLENGTH);  // Gerund case.  Mark it, set hv->1st gerund, hn=#gerunds.  Verify gerunds not empty
  }
  AF f1=FAV(fs)->valencefns[0];  // point to the action routine now that we have handled gerunds
 
@@ -462,16 +456,13 @@ static DF2(jtinfixprefix2){F2PREFIP;PROLOG(00202);A fs;// obsolete A *hv;
   while(1){
 
    // call the user's function
-   if(!(state&(/* obsolete STATEHASGERUND|*/STATESLASH2))){
+   if(!(state&(STATESLASH2))){
     // normal case: prefix/infix, no gerund
     RZ(z=CALL1(f1,virtw,fs));  //normal case
-   }else /* obsolete if(state&STATESLASH2)*/ {
+   }else {
     // 2 f/\ y case
     RZ(z=CALL2(f1,virta,virtw,fs));  //normal case
-   }/* obsolete else{
-    // prefix/infix, gerund case
-    RZ(z=df1(virtw,hv[gerundx])); ++gerundx; gerundx=(gerundx==hn)?0:gerundx;  // gerund case.  Advance gerund cyclically
-   } */
+   }
 
 #define ZZBODY  // assemble results
 #include "result.h"
@@ -522,7 +513,7 @@ static DF2(jtinfixprefix2){F2PREFIP;PROLOG(00202);A fs;// obsolete A *hv;
   // for infix -, 0 items of fill
   RZ(z=reitem(zeroionei[0],w));  // create 0 items of the type of w
   if(ilnval>=0){ilnval=(ilnval==IMAX)?(wi+1):ilnval; RZ(z=take(sc(ilnval),z));}    // if items needed, create them.  For compatibility, treat _ as 1 more than #items in w
-  UC d=jt->uflags.us.cx.cx_c.db; jt->uflags.us.cx.cx_c.db=0; zz=/* obsolete (state&STATEHASGERUND)?df1(z,hv[0]):*/CALL1(f1,z,fs); jt->uflags.us.cx.cx_c.db=d; if(EMSK(jt->jerr)&EXIGENTERROR)RZ(zz); RESETERR;
+  UC d=jt->uflags.us.cx.cx_c.db; jt->uflags.us.cx.cx_c.db=0; zz=CALL1(f1,z,fs); jt->uflags.us.cx.cx_c.db=d; if(EMSK(jt->jerr)&EXIGENTERROR)RZ(zz); RESETERR;
   RZ(zz=reshape(over(zeroionei[0],shape(zz?zz:mtv)),zz?zz:zeroionei[0]));
  }
 
@@ -670,7 +661,6 @@ static DF2(jtmovavg){I m,j;
 static A jtmovminmax(J jt,I m,A w,A fs,B max){A y,z;I c,i,j,p,wt;
  SETIC(w,p); p-=m; wt=AT(w); c=aii(w);
  GA(z,AT(w),c*(1+p),AR(w),AS(w)); AS(z)[0]=1+p;
-// obsolete  switch(max+(wt&SBT?0:wt&INT?2:4)){
  switch(max + ((wt>>(INTX-1))&6)){
   case 0: MOVMINMAXS(SB,SBT,jt->sbuv[0].down,SBLE); break;
   case 1: MOVMINMAXS(SB,SBT,0,SBGE); break;
@@ -747,17 +737,6 @@ static A jtmovbwneeq(J jt,I m,A w,A fs,B eq){A y,z;I c,p,*s,*u,*v,x,*yv,*zv;
  RETF(z);
 }    /* m 22 b./\w (0=eq) or m 25 b./\ (1=eq); integer w; 0<m */
 
-#if 0 // obsolete 
- PREF2(jtmovfslash);
- p=IC(w); wt=AT(w);
- RE(m0=i0(vib(a))); m=0<=m0?m0:m0==IMIN?p:MIN(p,-m0); 
- if(2==m0)R infix2(a,w,self);
- x=VAV(self)->f; x=VAV(x)->f; id=ID(x); 
- if(wt&B01)id=id==CMIN?CSTARDOT:id==CMAX?CPLUSDOT:id; 
- if(id==CBDOT&&(x=VAV(x)->f,INT&AT(x)&&!AR(x)))id=(C)*AV(x);
- switch(AR(w)&&0<m0&&m0<=*AS(w)?id:0){
-#endif
-
 static DF2(jtmovfslash){A x,z;B b;C id,*wv,*zv;I d,m,m0,p,t,wk,wt,zi,zk,zt;
  PREF2(jtmovfslash);
  SETIC(w,p); wt=AT(w);   // p=#items of w
@@ -767,7 +746,6 @@ static DF2(jtmovfslash){A x,z;B b;C id,*wv,*zv;I d,m,m0,p,t,wk,wt,zi,zk,zt;
  x=FAV(self)->fgh[0]; x=FAV(x)->fgh[0]; id=ID(x); 
  if(wt&B01){id=id==CMIN?CSTARDOT:id; id=id==CMAX?CPLUSDOT:id;}
  if(id==CBDOT&&(x=VAV(x)->fgh[1],INT&AT(x)&&!AR(x)))id=(C)*AV(x);
-// obsolete switch(AR(w)&&0<m0&&m0<=*AS(w)?id:0){
  switch(AR(w)&&BETWEENC(m0,0,AS(w)[0])?id:0){
   case CPLUS:    if(wt&B01+INT+FL)R movsumavg(m,w,self,0); break;
   case CMIN:     if(wt&SBT+INT+FL)R movminmax(m,w,self,0); break;

@@ -112,7 +112,6 @@ F1(jtjico1){A y,z;B b;D d,*v;I c,m,n;
  RZ(y=cvt(FL,rect(w))); v=DAV(y); d=*v;  // convert to complex, d=real part of value
  RE(m=v[1]?i0(cvt(INT,tail(y))):i0(tymes(mag(w),num[2])));  // m=#steps: imaginary part if nonzero; otherwise 2*|w
  ASSERT(0<m||!m&&0==d,EVDOMAIN);  // error if imag part was negative, or 0 unless d is also 0
-// obsolete  n=(I)jfloor(d+0.1); b=FIEQ(d,n); c=(2*ABS(n))/(m?m:1);
  n=(I)jround(d); b=FFIEQ(d,n); c=(2*ABS(n))/(m?m:1);   // try as integer
  if(b&&m*c==2*ABS(n))z=apv(1+m,-n,0>d?-c:c);  // if integer works, use it
  else                z=plusW(scf(0>d?d:-d),tymesW(scf(2*ABS(d)/m),apv(1+m,0>d?m:0L,0>d?-1L:1L)));  // otherwise FL
@@ -144,10 +143,8 @@ A jtcharmap(J jt,A w,A x,A y){A z;B bb[256];I k,n,wn;UC c,*u,*v,zz[256];
  if(!(LIT&AT(w)))R from(indexof(x,w),y);
  wn=AN(w); n=MIN(AN(x),AN(y)); u=n+UAV(x); v=n+UAV(y);
  k=256; memset(bb,C0,256); if(n<AN(y))memset(zz,*(n+UAV(y)),256);  // bb is array telling which input chars are in x; zz is result char to map for given input byte.  If not exact mapping, init z to the 'not found' char
-// obsolete DQ(n, c=*--u; zz[c]=*--v; if(!bb[c]){--k; bb[c]=1;});
  DQ(n, c=*--u; zz[c]=*--v; k-=(I)bb[c]^1; bb[c]=1;);   // mark characters in x, and count down to see if we hit all 256.  Note earliest mapped character for each
  GATV(z,LIT,wn,AR(w),AS(w)); v=UAV(z); u=UAV(w);
-// obsolete  if(k&&n==AN(y))DQ(wn, c=*u++; ASSERT(bb[c],EVINDEX); *v++=zz[c];)  // not all codes mapped AND #x>=#y, meaning index error possible on {
  if(((k-1)&(n-AN(y)))>=0)DQ(wn, c=*u++; ASSERT(bb[c],EVINDEX); *v++=zz[c];)  // not all codes mapped AND #x>=#y, meaning index error possible on {
  else if(!bitwisecharamp(zz,wn,u,v))DQ(wn, *v++=zz[*u++];);  // no index error possible, and special case not handled
  RETF(z);

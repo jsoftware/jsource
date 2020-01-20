@@ -572,7 +572,6 @@ extern unsigned int __cdecl _clearfp (void);
  RZ(name);   \
  AK(name)=akx; AT(name)=(type); AN(name)=atoms;   \
  AR(name)=(RANKT)(rank);     \
- /* obsolete if(!((type)&DIRECT))memset((C*)name+akx,C0,bytes+1-akx); */  \
  if(!((type)&DIRECT)){if(SY_64){if(rank==0)AS(name)[0]=0; memset((C*)(AS(name)+1),C0,(bytes-32)&-32);}else{memset((C*)name+akx,C0,bytes+1-akx);}}  \
  shapecopier(name,type,atoms,rank,shaape)   \
     \
@@ -591,7 +590,6 @@ extern unsigned int __cdecl _clearfp (void);
  I akx=AKXR(rank);   \
  if(name){   \
   AK(name)=akx; AT(name)=(type); AN(name)=atoms; AR(name)=(RANKT)(rank);     \
-  /* obsolete if(!((type)&DIRECT))memset((C*)name+akx,C0,bytes+1-akx); */  \
   if(!((type)&DIRECT)){if(SY_64){AS(name)[0]=0; memset((C*)(AS(name)+1),C0,(bytes-32)&-32);}else{memset((C*)name+akx,C0,bytes+1-akx);}}  \
   shapecopier(name,type,atoms,rank,shaape)   \
      \
@@ -603,12 +601,11 @@ extern unsigned int __cdecl _clearfp (void);
 #define GATVR(name,type,atoms,rank,shaape) GATVS(name,type,atoms,rank,shaape,type##SIZE,GACOPYSHAPER,R 0)
 #define GATV1(name,type,atoms,rank) GATVS(name,type,atoms,rank,0,type##SIZE,GACOPY1,R 0)  // this version copies 1 to the entire shape
 #define GATV0(name,type,atoms,rank) GATVS(name,type,atoms,rank,0,type##SIZE,GACOPYSHAPE0,R 0)  // shape not written unless rank==1
-// use this version when you are allocating a sparse matrix.  It handles the AS[0] field correctly
-#define GASPARSE(n,t,a,r,s) {if((r)==1){GA(n,(t),a,1,0); if(s)AS(n)[0]=(s)[0];}else{GA(n,(t),a,r,s)}}
+// use this version when you are allocating a sparse matrix.  It handles the AS[0] field correctly.  ALL sparse allocations must come through here so that AC is set sorrectly
+#define GASPARSE(n,t,a,r,s) {if((r)==1){GA(n,(t),a,1,0); if(s)AS(n)[0]=(s)[0];}else{GA(n,(t),a,r,s)} AC(n)=ACUC1;}
 
 #define HN              4L  // number of boxes per valence to hold exp-def info (words, control words, original (opt.), symbol table)
 #define SETIC(w,targ)      (targ=AS(w)[0], targ=AR(w)?targ:1)  //     ((AS(w)[0] & (-(I)AR(w)>>(BW-1))) - ~(-(I)AR(w)>>(BW-1)))  // (AR(w) ? *AS(w) : 1L)   better: (temp=AS(w)[0], temp=AR(w)?temp:1)
-// obsolete #define IC(w)     (AR(w) ? *AS(w) : 1L) //  better: (temp=AS(w)[0], temp=AR(w)?temp:1)
 #define ICMP(z,w,n)     memcmp((z),(w),(n)*SZI)
 #define ICPY(z,w,n)     memcpy((z),(w),(n)*SZI)
 #if C_AVX&&SY_64
@@ -656,16 +653,9 @@ extern unsigned int __cdecl _clearfp (void);
 #define INSTALLRATNF(x,xv,k,z) if(UCISRECUR(x)){ra(z.n); ra(z.d);} xv[k]=z   // Don't do the free - if we are installing into known 0
 #define INSTALLRATRECUR(xv,k,z) rifv(z.n); rifv(z.d); {I zzK=(k); {Q zzZ=xv[k]; ra(z.n); ra(z.d); fa(zzZ.n); fa(zzZ.d);} xv[zzK]=z;}  // Don't test - we know we are installing into a recursive block
 // Use IRS[12] to call a verb that supports IRS.  Rank is nonnegative; result is assigned to z
-// obsolete #if defined(__GNUC__) && !defined(__clang__) && (__GNUC__ < 5)
-// obsolete #define IRS1(w,fs,r,f1,z) (jt->ranks=(RANK2T)((r>=AR(w)?-1:0)|(r)),z=((AF)(f1))(jt,(w),(A)(fs)),jt->ranks=(RANK2T)~0,z)  // nonneg rank
-// obsolete #define IRSIP1(w,fs,r,f1,z) (jt->ranks=(RANK2T)((r>=AR(w)?-1:0)|(r)),z=((AF)(f1))(jtinplace,(w),(A)(fs)),jt->ranks=(RANK2T)~0,z)  // nonneg rank
-// obsolete #else
 #define IRS1COMMON(j,w,fs,r,f1,z) (z=(A)(r),z=(I)AR(w)>(I)(r)?z:(A)~0,jt->ranks=(RANK2T)(I)z,z=((AF)(f1))(j,(w),(A)(fs)),jt->ranks=(RANK2T)~0,z)  // nonneg rank
-// obsolete #define IRS1(w,fs,r,f1,z) (jt->ranks=(RANK2T)((((I)AR(w)-(r+1))>>(BW-1))|(r)),z=((AF)(f1))(jt,(w),(A)(fs)),jt->ranks=(RANK2T)~0,z)  // nonneg rank
-// obsolete #define IRSIP1(w,fs,r,f1,z) (jt->ranks=(RANK2T)((((I)AR(w)-(r+1))>>(BW-1))|(r)),z=((AF)(f1))(jtinplace,(w),(A)(fs)),jt->ranks=(RANK2T)~0,z)  // nonneg rank
 #define IRS1(w,fs,r,f1,z) IRS1COMMON(jt,w,fs,r,f1,z)  // nonneg rank
 #define IRSIP1(w,fs,r,f1,z) IRS1COMMON(jtinplace,w,fs,r,f1,z)  // nonneg rank
-// obsolete #endif
 #define IRS2COMMON(j,a,w,fs,l,r,f2,z) (jt->ranks=(RANK2T)(((((I)AR(a)-(l)>0)?(l):RMAX)<<RANKTX)+(((I)AR(w)-(r)>0)?(r):RMAX)),z=((AF)(f2))(j,(a),(w),(A)(fs)),jt->ranks=(RANK2T)~0,z) // nonneg rank
 #define IRS2(a,w,fs,l,r,f2,z) IRS2COMMON(jt,a,w,fs,l,r,f2,z)
 #define IRSIP2(a,w,fs,l,r,f2,z) IRS2COMMON(jtinplace,a,w,fs,l,r,f2,z)

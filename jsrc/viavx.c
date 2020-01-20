@@ -197,35 +197,15 @@ UI hic(I k, UC *v) {
  // Do 3 CRCs in parallel because the latency of the CRC instruction is 3 clocks.
  // This is executed repeatedly so we expect all the branches to predict correctly
  UI crc0=-1, crc1=crc0, crc2=crc0;  // init all CRCs
-// obsolete #if SY_64
  for(;k>=3*SZI;v+=3*SZI,k-=3*SZI){  // Do blocks of 24 bytes
-// obsolete #else
-// obsolete  for(;k>=12;v+=12,k-=12){  // Do blocks of 12 bytes
-// obsolete #endif
   crc0=CRC32L(crc0,((UI*)v)[0]); crc1=CRC32L(crc1,((UI*)v)[1]); crc2=CRC32L(crc2,((UI*)v)[2]);
  }
  // The order of this runout is replicated in the other character routines
-#if 1
  if(k>=SZI){crc0=CRC32L(crc0,((UI*)v)[0]); v+=SZI;}  // finish the remnant
  if(k>=2*SZI){crc1=CRC32L(crc1,((UI*)v)[0]); v+=SZI;}
  if(k&=(SZI-1)){  // last few bytes
   crc2=CRC32L(crc2,((UI*)v)[0]&~((UI)-((I)1)<<(k<<3)));  // mask out invalid bytes - must use 64-bit shift!
  }
-#else // obsolete 
-#if SY_64
- if(k>=8){crc0=CRC32L(crc0,((UI*)v)[0]); v+=SZI;}  // finish the remnant
- if(k>=16){crc1=CRC32L(crc1,((UI*)v)[0]); v+=SZI;}
- if(k&=7){  // last few bytes
-  crc2=CRC32L(crc2,((UI*)v)[0]&~((UI)-((I)1)<<(k<<3)));  // mask out invalid bytes - must use 64-bit shift!
- }
-#else
- if(k>=4){crc0=CRC32L(crc0,((UI*)v)[0]); v+=SZI;}  // finish the remnant
- if(k>=8){crc1=CRC32L(crc1,((UI*)v)[0]); v+=SZI;}
- if(k&=3){  // last few bytes,  k<<3 convert to # of bits
-  crc2=CRC32L(crc2,((UI*)v)[0]&~((UI)-((I)1)<<(k<<3)));  // mask out invalid bytes - must use 64-bit shift!
- }
-#endif
-#endif
  RETCRC3;
 }
 
@@ -1843,7 +1823,6 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z=mtv;
   // p>>booladj is the number of hashtable entries we need.  booladj is 0 for full hash, 3 if we just need one byte-encoded boolean per input value, 5 if just one bit per input value
   UI booladj=(mode&(IIOPMSK&~(IIDOT^IICO)))?5:0;  // boolean allowed when not i./i:
   p=0;  // indicate we haven't come up with the table size yet.  It depends on reverse and small-range decisions
-// obsolete   if(!b&&t&BOX+FL+CMPX)ctmask(jt);   // calculate ctmask if comparison is tolerant and there might be floats
   if((b-1)&t&BOX+FL+CMPX)ctmask(jt);   // calculate ctmask if comparison is tolerant and there might be floats
 
   if(t&BOX+XNUM+RAT){
@@ -1903,11 +1882,9 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z=mtv;
    p=m;
    if(((m>>1)>c) && (mode&IIOREPS) && fntbl[fnx+FNTBLREVERSE]){p=c; fnx+=FNTBLREVERSE;}
    // set p based on the length of the argument being hashed
-// obsolete    if(t&B01&&k<(BW-1)){p=MIN(p,(UI)((I)1)<<k);}  // Get max # different possible values to hash; the number of items, but less than that for short booleans
    if((SGNIF(t,B01X)&(k-(BW-1)))<0){p=MIN(p,(UI)((I)1)<<k);}  // Get max # different possible values to hash; the number of items, but less than that for short booleans
    // Find the best hash size, based on empirical studies.  Allow at least 3x hashentries per input value; if that's less than the size of the small hash, go to the limit of
    // the small hash.  But not more than 10 hashtable entries per input (to save time clearing)
-// obsolete    p=MIN(IMAX-5,(p<SMALLHASHMAX/10)?(p*10) : (p<SMALLHASHMAX/3?SMALLHASHMAX:3*p));
    {UI op=p*10; op=p>=SMALLHASHMAX/10?IMAX-5:op; p=p>(IMAX-5)/3?(IMAX-5)/3:p; p*=3; p=p<SMALLHASHMAX?SMALLHASHMAX:p; p=p>op?op:p;}
   }
 // testing  p = (UI)MIN(IMAX-5,(HASHFACTOR*p));  // length we will use for hashtable, if small-range not used

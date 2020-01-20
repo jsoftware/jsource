@@ -7,6 +7,8 @@
 #include "vasm.h"
 #include "gemm.h"
 
+#define MAXAROWS 384  // max rows of a that we can process to stay in L2 cache   a strip is m*CACHEHEIGHT, z strip is m*CACHEWIDTH
+
 // Analysis for inner product
 // a,w are arguments
 // zt is type of result
@@ -17,7 +19,6 @@
 static A jtipprep(J jt,A a,A w,I zt,I*pm,I*pn,I*pp){A z=mark;I*as,ar,ar1,m,mn,n,p,*ws,wr,wr1;
  ar=AR(a); as=AS(a); ar1=ar-1>=0?ar-1:0; RE(*pm=m=prod(ar1,as));  // m=# 1-cells of a.  It could overflow, if there are no atoms
  wr=AR(w); ws=AS(w); wr1=wr-1>=0?wr-1:0; RE(*pn=n=prod(wr1,1+ws)); RE(mn=mult(m,n));  // n=#atoms in item of w; mn = #atoms in result
-// obsolete  *pp=p=ar?*(as+ar1):wr?*ws:1;  // if a is an array, the length of a 1-cell; otherwise, the number of items of w
  I t=AS(w)[0]; p=wr?t:1; t=AS(a)[ar1]; p=ar?t:p; *pp=p;  // if a is an array, the length of a 1-cell; otherwise, the number of items of w
  ASSERT(!(ar&&wr)||p==*ws,EVLENGTH);
  GA(z,zt,mn,ar1+wr1,0);   // allocate result area
@@ -263,7 +264,17 @@ void blockedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){
 // Floating-point matrix multiply, hived off to a subroutine to get fresh register allocation
 // *zv=*av * *wv, with *cv being a cache-aligned region big enough to hold CACHEWIDTH*CACHEHEIGHT floats
 // a is shape mxp, w is shape pxn.  Result is 0 if OK, 1 if fatal error
-static I cachedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){D c[(CACHEHEIGHT+1)*CACHEWIDTH + (CACHEHEIGHT+1)*OPHEIGHT*OPWIDTH*2 + 2*CACHELINESIZE/sizeof(D)];  // 2 in case complex
+// m must not exceed MAXAROWS.  mfull is the number of rows from the actual starting row to the end of a
+static I cachedmmultx(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs, I mfull){D c[(CACHEHEIGHT+1)*CACHEWIDTH + (CACHEHEIGHT+1)*OPHEIGHT*OPWIDTH*2 + 2*CACHELINESIZE/sizeof(D)];  // 2 in case complex
+ // Allocate a temporary result area for the stripe of z results
+ D zt[((MAXAROWS+OPHEIGHT)&(-OPHEIGHT))*CACHEWIDTH+5*CACHELINESIZE/SZD];
+ D *zblock=(D*)(((I)zt+5*CACHELINESIZE-1)&(-CACHELINESIZE));  // cache-aligned area to hold z values
+#if 0  // obsolete
+ {A zt; I zlen=;  // big enough to hold a cache-aligned stripe
+  GATV0(zt,FL,zlen,1); zblock=(D*)(((I)DAV(zt)+5*CACHELINESIZE-1)&(-CACHELINESIZE));  // take aligned section
+ }
+#endif
+
  // m is # 1-cells of a
  // n is # values in an item of w (and result)
  // p is number of inner-product muladds (length of a row of a, and # items of w)
@@ -273,11 +284,6 @@ static I cachedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){D c[(CACHEHEIGHT
  _mm256_zeroupper();
  D *cvw = (D*)(((I)&c+(CACHELINESIZE-1))&-CACHELINESIZE);  // place where cache-blocks of w are staged
  D (*cva)[2][OPHEIGHT][CACHEHEIGHT] = (D (*)[2][OPHEIGHT][CACHEHEIGHT])(((I)cvw+(CACHEHEIGHT+1)*CACHEWIDTH*sizeof(D)+(CACHELINESIZE-1))&-CACHELINESIZE);   // place where expanded rows of a are staged
- // Allocate a temporary result area for the stripe of z results
- D *zblock;  // cache-aligned area to hold z values
- {A zt; I zlen=((m+OPHEIGHT)&(-OPHEIGHT))*CACHEWIDTH; zlen=(zlen+5*CACHELINESIZE/SZD);  // big enough to hold a cache-aligned stripe
-  GATV0(zt,FL,zlen,1); zblock=(D*)(((I)DAV(zt)+5*CACHELINESIZE-1)&(-CACHELINESIZE));  // take aligned section
- }
  // If a is upper-triangular, we write out the entire column of z values only when we process the last section of the w stripe.  If w is also upper-triangular,
  // we stop processing sections before we get to the bottom.  So in that case (which never happens currently), clear the entire result areas leaving 0 in the untouched bits
  if((flgs&(FLGWUTRI|FLGAUTRI))==(FLGWUTRI|FLGAUTRI))memset(zv,C0,m*n*SZD);  // if w is upper-triangular, we will not visit all the z values and we must clear the lower-triangular part.  Here we just clear them all
@@ -288,6 +294,8 @@ static I cachedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){D c[(CACHEHEIGHT
   D* a1base=av; D* w1base=w0base; D* z1base=z0base; I w1rem=p>>(flgs&FLGCMP); flgs|=FLGZFIRST;  // w1rem counts atoms
   // if w is upper-triangular, there is no need to process sections whose upper index exceeds the rightmost index; that is, limit w1rem based on w0rem
   if(flgs&FLGWUTRI){I bottomlen=(w0rem-CACHEWIDTH)>>(flgs&FLGCMP); bottomlen=bottomlen>=0?bottomlen:0; w1rem-=bottomlen;}
+  I preva2rem=0;   // number of rows of a processed in previous pass (used to establish newrowsct1)
+  I newrowsct1=0;   // the number of new exposed rows of upper-triangular a (they need initializing), plus 1
   for(;w1rem>0;w1rem-=CACHEHEIGHT,a1base+=CACHEHEIGHT<<(flgs&FLGCMP),w1base+=CACHEHEIGHT*n){D* RESTRICT cvx;D* w1next=w1base;I i;
    // if this is the last section for this stripe, set a flag to tell us the results of this section must go to the final result area
    flgs|=w1rem<=CACHEHEIGHT?FLGZLAST:0;
@@ -297,21 +305,22 @@ static I cachedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){D c[(CACHEHEIGHT
    for(i=MIN(CACHEHEIGHT,w1rem),cvx=cvw;i;--i){I j;
     D* RESTRICT w1x=w1next; w1next+=n;  // save start of current input row, point to next row...
     j=0;
-    /* obsolete if(!(flgs&FLGINT))*/for(j=0;j<(MIN(CACHEWIDTH,w0rem)&-NPAR);j+=NPAR){_mm256_store_pd(cvx,_mm256_loadu_pd(w1x)); cvx+=NPAR; w1x+=NPAR;}
-    for(;j<MIN(CACHEWIDTH,w0rem);++j){D fv = *w1x; /* obsolete if(flgs&FLGINT)fv=(D)*(I*)w1x;*/ *cvx++=fv; w1x++;}  // move the valid data
+    for(j=0;j<(MIN(CACHEWIDTH,w0rem)&-NPAR);j+=NPAR){_mm256_store_pd(cvx,_mm256_loadu_pd(w1x)); cvx+=NPAR; w1x+=NPAR;}
+    for(;j<MIN(CACHEWIDTH,w0rem);++j){D fv = *w1x; *cvx++=fv; w1x++;}  // move the valid data
     for(;j<CACHEWIDTH;++j)*cvx++=0.0;   // fill the rest with 0
    }
-// obsolete    // Because of loop unrolling, we fetch and multiply one extra value in each cache column.  We make sure those values are 0 to avoid NaN errors
-// obsolete    for(i=0;i<MIN(CACHEWIDTH,w0rem);++i)*cvx++=0.0; 
    // w1next is left pointing to the next cache block in the column.  We will use that to prefetch
    D *nextprefetch=w1next;  // start prefetches for the next block at the beginning
 
    // the single mx16 vertical strip of a (mx32 doubles if flgs) will be multiplied by the 16x64 section of w and accumulated into the mx64 slice of z
    // process each 4x16 (or 32) section of a against the 16x64 cache block
    D *a2base0=a1base; D* w2base=w1base; I a2rem=m; D* z2base=z1base; D* c2base=cvw;
-   // if a if upper-triangular, we can stop when the top index of a exceeds the bottommost index of w.
-   I newrowsct;   // the number of new exposed rows of upper-triangular a (they need initializing)
-   if(flgs&FLGAUTRI){I bottomlen=w1rem-CACHEHEIGHT; bottomlen=bottomlen>=0?bottomlen:0; a2rem-=bottomlen; newrowsct=((a2rem-1)&(CACHEHEIGHT-1))+1;}else newrowsct=0;
+   // if a is upper-triangular, we can stop when the top index of a exceeds the bottommost index of w.
+// obsolete    if(flgs&FLGAUTRI){I bottomlen=w1rem-CACHEHEIGHT; bottomlen=bottomlen>=0?bottomlen:0; a2rem-=bottomlen; newrowsct=((a2rem-1)&(CACHEHEIGHT-1))+1;}else newrowsct=0;
+   if(flgs&FLGAUTRI){
+    // see where the validity of a expires (at a distance, based on w position, from the actual bottom of the full a); clamp #rows to process; see how many are new rows that must be initialized
+    I fullrem=mfull-w1rem+CACHEHEIGHT; fullrem=fullrem<CACHEHEIGHT?CACHEHEIGHT:fullrem; a2rem=a2rem>fullrem?fullrem:a2rem; newrowsct1=a2rem-preva2rem+1; preva2rem=a2rem;
+   }
    // scaf could skip leading 16x8s for uppertri w, if that doesn't foul z
    for(;a2rem>0;a2rem-=OPHEIGHT,a2base0+=OPHEIGHT*p,z2base+=OPHEIGHT*n){  // a2rem is the number of lines left in the entire column of a
    static D missingrow[CACHEHEIGHT]={1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
@@ -333,12 +342,9 @@ static I cachedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){D c[(CACHEHEIGHT
    }else{  // partial block
     for(i=0;i<OPHEIGHT;++i){I j;  // for each row (i. e. for the length of the outer product)
       D *a0x=a2base0+p*i; a0x=i>=a2rem?missingrow:a0x;  // start of samples for the row, or a repeated row if past the end
-// obsolete      if(!(flgs&(FLGCMP|FLGINT))){for(j=0;j<nvalidops;++j){_mm256_store_pd((D*)&(*cva)[0][i][j],_mm256_set1_pd(*a0x)); ++a0x;}}  // float
       if(!(flgs&(FLGCMP))){
        for(j=0;j<(nvalidops&-NPAR);j+=NPAR){_mm256_store_pd(&(*cva)[0][i][j],_mm256_loadu_pd(a0x)); a0x+=NPAR;}  // quads as long as possible
        for(;j<nvalidops;++j){(*cva)[0][i][j]=*a0x; ++a0x;}  // float
-      /* obsolete else if(flgs&FLGINT){for(j=0;j<nvalidops;++j){(*cva)[0][i][j]=_mm256_set1_pd((D)*(I*)a0x); ++a0x;}}  // integer */
-// obsolete      else {for(j=0;j<nvalidops;++j){(*cva)[0][i][j]=_mm256_set1_pd(*a0x); ++a0x; (*cva)[1][i][j]=_mm256_set1_pd(*a0x); ++a0x;}}  // complex: real and imaginary  scaf interleave
       }else {for(j=0;j<nvalidops;++j){(*cva)[0][i][j]=*a0x; ++a0x; (*cva)[1][i][j]=*a0x; ++a0x;}}  // complex: real and imaginary  scaf interleave
      }
     }
@@ -361,7 +367,7 @@ static I cachedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){D c[(CACHEHEIGHT
     // To fix this we turn on ZFIRST when we are processing the LAST new rows of upper-triangular a.  The new rows are any after the previous section.  This works because (1) each succeeding section of w exposes exactly
     // CACHEHEIGHT new nonzero columns of a whose corresponding rows must be processed; (2) the exposed sections of a are on CACHEHEIGHT boundaries until the last remnant.
     // We are guaranteed to initialize each bit of the z stripe exactly once.
-    flgs|=(a2rem<=newrowsct)?FLGZFIRST:0;
+    flgs|=((a2rem-newrowsct1)>>(BW-1))&FLGZFIRST;
 
     // process each 16x8 section of w, accumulating into z (this holds 16x4 complex values, if FLGCMP)
     I a3rem=MIN(w0rem,CACHEWIDTH);
@@ -382,7 +388,6 @@ static I cachedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){D c[(CACHEHEIGHT
 
       // load running total, or 0 if first time
       /*if((a3rem|a3rem-1)<1)scaf to disable*/if(!(flgs&FLGZFIRST)){
-// obsolete #define ACCZ(r,c) z##r##c=_mm256_add_pd(z##r##c,_mm256_load_pd(zilblock+NPAR*(2*r+c)));
 #define ACCZ(r,c) z##r##c=_mm256_load_pd(zilblock+NPAR*(2*r+c));
         ACCZ(0,0); ACCZ(0,1); ACCZ(1,0); ACCZ(1,1); ACCZ(2,0); ACCZ(2,1); ACCZ(3,0); ACCZ(3,1);
       }else z31 = z30 = z21 = z20 = z11 = z10 = z01 = z00 = _mm256_set1_pd(0.0);  // scaf use xor
@@ -409,8 +414,6 @@ static I cachedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){D c[(CACHEHEIGHT
 #define LDW(opno)  wval0=_mm256_load_pd(&c4base[opno*CACHEWIDTH+0]); wval1=_mm256_load_pd(&c4base[opno*CACHEWIDTH+NPAR]);  // opno=outer-product number
 #define ONEP(opno,opx) aval=_mm256_set1_pd((*a4base0)[0][opx][opno]); z##opx##0 = MUL_ACC(z##opx##0,wval0,aval); z##opx##1 = MUL_ACC(z##opx##1,wval1,aval);  // opx=a row number=mul# within outer product  could allow compiler to gather commons
 #define OUTERP(opno) LDW(opno) ONEP(opno,0) ONEP(opno,1) ONEP(opno,2) ONEP(opno,3)
-// obsolete        PREFETCH((C*)zilblock+0*CACHELINESIZE); OUTERP(0) OUTERP(1) PREFETCH((C*)zilblock+1*CACHELINESIZE); OUTERP(2) OUTERP(3) PREFETCH((C*)zilblock+2*CACHELINESIZE); OUTERP(4) OUTERP(5) PREFETCH((C*)zilblock+3*CACHELINESIZE);
-// obsolete        OUTERP(6) OUTERP(7) OUTERP(8) OUTERP(9) OUTERP(10) OUTERP(11) OUTERP(12) OUTERP(13) OUTERP(14) OUTERP(15)
        OUTERP(0) OUTERP(1) OUTERP(2) OUTERP(3) OUTERP(4) OUTERP(5) OUTERP(6) OUTERP(7) OUTERP(8) OUTERP(9) OUTERP(10) OUTERP(11) OUTERP(12) OUTERP(13) OUTERP(14) OUTERP(15)
 // prefetch doesn't seem to help
 
@@ -441,8 +444,6 @@ static I cachedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){D c[(CACHEHEIGHT
         if(a2rem>3){_mm256_storeu_pd(z3base+3*n,z30); _mm256_storeu_pd(z3base+3*n+NPAR,z31);}
        } else {
         __m256i mask0, mask1;  // horizontal masks for w values, if needed
-// obsolete         mask0=_mm256_loadu_si256((__m256i*)(jt->validitymask+((4-a3rem)<0?0:4-a3rem)));  // a3rem { 4 3 2 1 0 0 0 0
-// obsolete         mask1=_mm256_loadu_si256((__m256i*)(jt->validitymask+((8-a3rem)>4?4:8-a3rem)));  // a3rem { 4 4 4 4 4 3 2 1
         I nvalids=0x048cdef0>>(a3rem<<2);  // 4 bits: f1f0 l1l0 where f10 is the offset to use for first 4 values, l10 if offset-1 for last 4.  Offset0=4 words, 1=3 words, 2-2 words, 3=1 word.  Can't have 0 words for f, can for l
         mask0=_mm256_loadu_si256((__m256i*)(jt->validitymask+(nvalids&0x3)));  // a3rem { 4 3 2 1 0 0 0 0
         mask1=_mm256_loadu_si256((__m256i*)(jt->validitymask+1+((nvalids>>2)&0x3)));  // a3rem { 4 4 4 4 4 3 2 1
@@ -524,6 +525,14 @@ static I cachedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){D c[(CACHEHEIGHT
  }  // end of loop for each 64-col slice of w
  R 1;
 }
+// looping entry point for cached mmul
+// We split the input into products where the left arg has at most MAXAROWS rows.  This is to avoid overrunning L2 cache
+static I cachedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){
+ I nblocks = (m+MAXAROWS)/MAXAROWS;  // number of blocks to execute
+ DO(nblocks, RZ(cachedmmultx(jt,av+((p*i*MAXAROWS)<<(flgs&FLGCMP)),wv,zv+((n*i*MAXAROWS)<<(flgs&FLGCMP)),MIN(MAXAROWS,m-i*MAXAROWS),n,p,flgs,m-i*MAXAROWS));)
+ R 1;
+}
+
 #else
 // cache-blocking code
 #define OPHEIGHT 2  // height of outer-product block
@@ -758,7 +767,7 @@ oflo2:
    }else{
      // full matrix products
      I probsize = m*n*(IL)p;  // This is proportional to the number of multiply-adds.  We use it to select the implementation
-     if((UI)probsize < (UI)jt->igemm_thres){RZ(a=cvt(FL,a)); RZ(w=cvt(FL,w)); RZ(cachedmmult(jt,DAV(a),DAV(w),DAV(z),m,n,p,0))}  // Do our one-core matrix multiply - converting   TUNE
+     if((UI)probsize < (UI)jt->igemm_thres){RZ(a=cvt(FL,a)); RZ(w=cvt(FL,w)); RZ(cachedmmult(jt,DAV(a),DAV(w),DAV(z),m,n,p,0))}  // Do our matrix multiply - converting   TUNE
      else {
       // for large problem, use BLAS
       memset(DAV(z),C0,m*n*sizeof(D));
@@ -902,7 +911,6 @@ time1 ,&(x,y)"0 ((256 1e20 1e20 65536 > x*y) # 0 1 2 3) +/ lens
 #else
    // not single column.  Choose the algorithm to use
 #if C_AVX && defined(PREFETCH)
-#define MAXAROWS 384  // max rows of a that we can process to stay in L2 cache   a strip is m*CACHEHEIGHT, z strip is m*CACHEWIDTH
     smallprob=0;  // never use Dic method
     D *av=DAV(a), *wv=DAV(w), *zv=DAV(z);  //  pointers to sections
     I flgs=((AFLAG(a)>>(AFUPPERTRIX-FLGAUTRIX))&FLGAUTRI)|((AFLAG(w)>>(AFUPPERTRIX-FLGWUTRIX))&FLGWUTRI);  // flags from a or w
@@ -913,6 +921,7 @@ time1 ,&(x,y)"0 ((256 1e20 1e20 65536 > x*y) # 0 1 2 3) +/ lens
      // use blocked if any axis is short, or if all axes are shortish
      if(((50-m)&(50-n)&(16-p)&(DCACHED_THRES-m*n*p))>=0)blockedmmult(jt,av,wv,zv,m,n,p,flgs);  // blocked for small arrays in either dimension
      else {
+#if 0  // obsolete
       // if m is very large, the buffer used to hold result values, and the strip of a values, become so large that they exceed L2 cache; and the bandwidth needed
       // for the zs is more than L3 can supply.  So we chop up the a argument.
       I mrem;  // number of rows left
@@ -920,12 +929,13 @@ time1 ,&(x,y)"0 ((256 1e20 1e20 65536 > x*y) # 0 1 2 3) +/ lens
       // the distance from the bottom we could restore the flags (would have to test both blocked and cached)
       if(m>MAXAROWS)flgs&=(FLGCMP|FLGINT|FLGWMINUSZ);
       for(mrem=m;mrem>0;mrem-=MAXAROWS){
-// obsolete      memset(DAV(z),C0,m*n*sizeof(D));
-// obsolete      dgemm_nn(m,n,p,1.0,DAV(a),p,1,DAV(w),n,1,0.0,DAV(z),n,1);
        if(mrem<32)blockedmmult(jt,av,wv,zv,mrem,n,p,flgs);  // blocked for small remnant
        else RZ(cachedmmult(jt,av,wv,zv,MIN(MAXAROWS,mrem),n,p,flgs))
        av+=MAXAROWS*p; zv+=MAXAROWS*n;  // advance to next horizontal swath
       }
+#else
+      RZ(cachedmmult(jt,av,wv,zv,m,n,p,flgs))
+#endif
      }
     }
 #else
@@ -981,18 +991,6 @@ time1 ,&(x,y)"0 ((256 1e20 1e20 65536 > x*y) # 0 1 2 3) +/ lens
  EPILOG(z);
 }
 
-#if 0 // obsolete
-#define IPBX(F)  \
- for(i=0;i<m;++i){                                       \
-  MC(zv,*av?v1:v0,n); if(ac)++av;                    \
-  for(j=1;j<p;++j){                                      \
-   uu=(I*)zv; vv=(I*)(*av?v1+j*wc:v0+j*wc); if(ac)++av;  \
-   DQ(q, *uu++F=*vv++;);                                 \
-   if(r){u=(B*)uu; v=(B*)vv; DQ(r, *u++F=*v++;);}        \
-  }                                                      \
-  zv+=n;                                                 \
- }
-#endif
 
 #define IPBX0  0
 #define IPBX1  1
@@ -1001,12 +999,11 @@ time1 ,&(x,y)"0 ((256 1e20 1e20 65536 > x*y) # 0 1 2 3) +/ lens
 
 // a f/ . g w  for boolean a and w
 // c is pseudochar for f, d is pseudochar for g
-static A jtipbx(J jt,A a,A w,C c,C d){A g=0,x0,x1,z;B*av,*av0,b,/* obsolete *u,*v,*/*v0,*v1,*zv;C c0,c1;
+static A jtipbx(J jt,A a,A w,C c,C d){A g=0,x0,x1,z;B*av,*av0,b,*v0,*v1,*zv;C c0,c1;
     I ana,i,j,m,n,p,q,r,*uu,*vv,wc;
  RZ(a&&w);
  RZ(z=ipprep(a,w,B01,&m,&n,&p));
  // m=#1-cells of a, n=# bytes in 1-cell of w, p=length of individual inner product creating an atom
-// obsolete  if(AN(z)==0)R z;  // a and w are never empty
  ana=!!AR(a); wc=AR(w)?n:0; q=(n-1)>>LGSZI; r=(-n)&(SZI-1);  // ana = 1 if a is not atomic; wc = stride between items of w; q=#fullwords to proc, r=#bytes of last one NOT to proc
  // Set c0 & c1 to classify the g operation
  switch(B01&AT(w)?d:0){
@@ -1061,7 +1058,6 @@ static A jtipbx(J jt,A a,A w,C c,C d){A g=0,x0,x1,z;B*av,*av0,b,/* obsolete *u,*
 static DF2(jtdotprod){A fs,gs;C c,d;I r;V*sv;
  RZ(a&&w&&self);
  sv=FAV(self); fs=sv->fgh[0]; gs=sv->fgh[1];  // op is fs . gs
-// obsolete if((-(B01&(AT(a)&AT(w)))&-AN(a)&-AN(w)&-(d=vaid(gs)))<0&&CSLASH==ID(fs)&&  // fs is c/
  if((SGNIF(AT(a)&AT(w),B01X)&-AN(a)&-AN(w)&-(d=vaid(gs)))<0&&CSLASH==ID(fs)&&  // fs is c/
      (c=vaid(FAV(fs)->fgh[0]),c==CSTARDOT||c==CPLUSDOT||c==CNE))R ipbx(a,w,c,d);  // [+.*.~:]/ . boolean
  r=lr(gs);   // left rank of v

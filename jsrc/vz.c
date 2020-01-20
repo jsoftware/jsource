@@ -240,7 +240,6 @@ ZF2(jtzcir){D r;I x;Z z;
  z=zeroZ;
  r=u.re;
  x=(I)jround(r);
-// obsolete  ZASSERT(-12<=r&&r<=12&&FFEQ(x,r)&&!u.im,EVDOMAIN);
  ZASSERT(BETWEENC(x,-12,12)&&FFEQ(x,r)&&!u.im,EVDOMAIN);
  switch(x){
   default: ZASSERT(0,EVDOMAIN);

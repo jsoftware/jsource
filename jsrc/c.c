@@ -34,10 +34,3 @@ static DF2(ad2){DECLFG;A z;UC od=jt->uflags.us.cx.cx_c.db;
 // Set ASGSAFE from operands.  Noun operand is always safe
 F2(jtadverse){ASSERTVVn(a,w); R CDERIV(CADVERSE,ad1,ad2,(FAV(a)->flag&(AT(w)&VERB?FAV(w)->flag:~0)&VASGSAFE),RMAX,RMAX,RMAX);}
 
-#if 0 // obsolete withdrawn 
-static CS1(even1, halve(df1(w,folk(fs,ds(CPLUS ),atop(fs,gs)))),0115)
-static CS1(odd1,  halve(df1(w,folk(fs,ds(CMINUS),atop(fs,gs)))),0116)
-
-F2(jteven){ASSERTVV(a,w); R CDERIV(CEVEN,even1,0L, VFLAGNONE, RMAX,0L,0L);}
-F2(jtodd ){ASSERTVV(a,w); R CDERIV(CODD, odd1, 0L, VFLAGNONE, RMAX,0L,0L);}
-#endif

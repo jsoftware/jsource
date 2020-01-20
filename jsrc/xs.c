@@ -105,13 +105,6 @@ static A jtlinf(J jt,A a,A w,C ce,B tso){A x,y,z;B lk=0;C*s;I i=-1,n,oldi=jt->sl
   ASSERT(3<n&&!memcmp(s+n-3,".js",3L)||4<n&&!memcmp(s+n-4,".ijs",4L),EVSECURE);
  }
  RZ(x=jfread(w));
-#if 0 // obsolete
- if(a!=mark||AN(x)&&CFF==*CAV(x)){
-  RZ(x=unlock2(a,x));
-  ASSERT(CFF!=*CAV(x),EVDOMAIN);
-  lk=1;
- }
-#endif
  // Remove UTF8 BOM if present - commented out pending resolution.  Other BOMs should not occur
  // if(!memcmp(CAV(x),"\357\273\277",3L))RZ(x=drop(num[3],x))
  // if this is a new file, record it in the list of scripts
@@ -119,10 +112,9 @@ static A jtlinf(J jt,A a,A w,C ce,B tso){A x,y,z;B lk=0;C*s;I i=-1,n,oldi=jt->sl
  A scripti; RZ(scripti=jtaddscriptname(jt,y)); i=IAV(scripti)[0];
 
  // set the current script number
- jt->slisti=(UI4)i;    // obsolete jt->uflags.us.cx.cx_c.glock=1==jt->uflags.us.cx.cx_c.glock?1:lk?2:0;  // glock=0 or 1 is original setting; 2 if this script is locked (so reset after 
-// obsolete  z=line(x,jt->uflags.us.cx.cx_c.glock?-1L:i,ce,(B)(jt->uflags.us.cx.cx_c.glock?0:tso)); 
+ jt->slisti=(UI4)i;    // glock=0 or 1 is original setting; 2 if this script is locked (so reset after 
  z=line(x,i,ce,tso); 
- jt->slisti=(UI4)oldi; // obsolete jt->uflags.us.cx.cx_c.glock=(C)(1==jt->uflags.us.cx.cx_c.glock?1:oldk);
+ jt->slisti=(UI4)oldi;
 #if SYS & SYS_PCWIN
  if(lk)memset(AV(x),C0,AN(x));  /* security paranoia */
 #endif
@@ -139,7 +131,7 @@ F1(jtscriptstring){
 // 4!:7 set script name to use and return previous value
 F1(jtscriptnum){
  I i=i0(w);  // fetch index
- ASSERT(BETWEENO(i,-1,jt->slistn)/* obsolete (UI)(i+1)<=(UI)jt->slistn*/,EVINDEX);  // make sure it's _1 or valid index
+ ASSERT(BETWEENO(i,-1,jt->slistn),EVINDEX);  // make sure it's _1 or valid index
  A rv=sc(jt->slisti);  // save the old value
  RZ(rv); jt->slisti=(UI4)i;  // set the new value (if no error)
  R rv;  // return prev value

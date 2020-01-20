@@ -83,18 +83,6 @@ F2(jthgeom){A c,d,h=0;B p,q;I at,wt;
  R fdef(0,CHGEOM,VERB, jthgeom1,jthgeom2, a,w,h, 0L, 0L,0L,0L);
 }    /* a H. w */
 
-#if 0 // obsolete
-F1(jthgdiff){A*hv,p,q,x,y;V*v=FAV(w);
- ASSERTNN(v->fgh[0],v->fgh[1]);
- hv=AAV(v->fgh[2]); 
- x=hv[0]; x=1==AN(x)?head(x):x;
- y=hv[1]; y=1==AN(y)?head(y):y;
- p=divide(aslash(CSTAR,x),aslash(CSTAR,y));
- q=hgeom(increm(x),increm(y));
- R equ(p,num[1])?q:folk(qq(p,zeroionei[0]),ds(CSTAR),q);
-}    /* a H. w D. 1 */
-#endif
-
 DF1(jthgcoeff){PROLOG(0037);A c,d,h,*hv,y,z;B b;I j,n,pn,qn,*v;V*sv=FAV(self);
  RZ(w=vi(w)); v=AV(w); 
  n=0; DO(AN(w), j=v[i]; ASSERT(0<=j,EVDOMAIN); if(n<j)n=j;);

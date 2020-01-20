@@ -539,7 +539,7 @@ static GF(jtgri){A x,y;B up;I e,i,*v,*wv,*xv;UI4 *yv,*yvb;I c=ai*n;
   UI4 lgn3; CTLZI(n,lgn3); lgn3 = (UI4)((lgn3*8) - 8 + (n>>(lgn3-3)));  // approx lg(n)<<3
   rng = condrange(wv,AN(w),IMAX,IMIN,MIN((L2CACHESIZE>>LGSZI),(n*lgn3)>>(3-1)));  // let range go up to 2n lgn, but never more than L2 size
   if(!rng.range){
-   if(!BETWEENC(n,5500,500000)/* obsolete (UI)(n-5500)>(UI)(500000-5500)*/)R jtgriq(jt,m,ai,n,w,zv);  // quicksort except for 5500-500000
+   if(!BETWEENC(n,5500,500000))R jtgriq(jt,m,ai,n,w,zv);  // quicksort except for 5500-500000
    // in the middle range, we still use quicksort if the atoms have more than 2 bytes of significance.  We just spot-check rather than running condrange,
    // because the main appl is sorting timestamps, which are ALL big
    DO(10, if(0xffffffff00000000 & (0x0000000080000000+wv[i<<9]))R jtgriq(jt,m,ai,n,w,zv);)  // quicksort if more than 2 bytes of significance, sampling the input

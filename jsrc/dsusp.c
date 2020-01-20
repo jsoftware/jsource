@@ -176,7 +176,7 @@ A jtpee(J jt,A *queue,CW*ci,I err,I lk,DC c){A z=0;
  jt->parserstackframe.parserqueue=queue+ci->i; jt->parserstackframe.parserqueuelen=(I4)ci->n; jt->parserstackframe.parsercurrtok=1;  // unless locked, indicate failing-sentence info
  jsignal(err);   // signal the requested error
  // enter debug mode if that is enabled
- if(c&&jt->uflags.us.cx.cx_c.db){/* obsolete DC prevtop=jt->sitop->dclnk; prevtop->dcj=*/jt->sitop->dcj=jt->jerr; /* obsolete moveparseinfotosi(jt);*/ z=debug(); jt->sitop->dcj=0;} //  d is PARSE type; set d->dcj=err#; d->dcn must remain # tokens debz();  not sure why we change previous frame
+ if(c&&jt->uflags.us.cx.cx_c.db){jt->sitop->dcj=jt->jerr; z=debug(); jt->sitop->dcj=0;} //  d is PARSE type; set d->dcj=err#; d->dcn must remain # tokens debz();  not sure why we change previous frame
  if(jt->jerr)z=0; R z;  // if we entered debug, the error may have been cleared.  If not, clear the result.  Return debug result, which is result to use or 0 to indicate jump
 }
 
@@ -193,7 +193,7 @@ A jtparsex(J jt,A* queue,I m,CW*ci,DC c){A z;B s;
  else                      {z=parsea(queue,m);     }
  // If we hit a stop, or if we hit an error outside of try./catch., enter debug mode.  But if debug mode is off now, we must have just
  // executed 13!:0]0, and we should continue on outside of debug mode.  Error processing filled the current si line with the info from the parse
- if(!z&&jt->uflags.us.cx.cx_c.db){DC t=jt->sitop->dclnk; t->dcj=jt->sitop->dcj=jt->jerr; /* obsolete moveparseinfotosi(jt);*/ z=debug(); t->dcj=0;} //  d is PARSE type; set d->dcj=err#; d->dcn must remain # tokens
+ if(!z&&jt->uflags.us.cx.cx_c.db){DC t=jt->sitop->dclnk; t->dcj=jt->sitop->dcj=jt->jerr; z=debug(); t->dcj=0;} //  d is PARSE type; set d->dcj=err#; d->dcn must remain # tokens
  R z;
 }
 

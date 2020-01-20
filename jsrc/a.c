@@ -64,7 +64,7 @@ F1(jtbdot){A b,h=0;I j=0,n,*v;
  n=AN(w); v=AV(w);
  if(1==n){j=*v; ASSERT(BETWEENC(j,-16,34),EVINDEX);}
  else DQ(n, j=*v++; ASSERT(BETWEENC(j,-16,15),EVINDEX););  // j must be initialized because the loop might not run
- if(/* obsolete 1!=n||*/j<16){
+ if(j<16){
   GAT0(b,B01,64,2); AS(b)[0]=16; AS(b)[1]=4; MC(AV(b),booltab,64L);
   RZ(h=cant2(IX(AR(w)),from(w,b)));  // h is an array representing b.  One cell for each atom of b; cell is 4 values
   R fdef(0,CBDOT,VERB, jtbdot1,jtbdot2, 0L,w,h, VFLAGNONE, RMAX,0L,0L);

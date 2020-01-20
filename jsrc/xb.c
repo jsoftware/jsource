@@ -320,23 +320,9 @@ F2(jtfc2){A z;D*x,*v;I j,m,n,p,zt;float*s;
 // w is a box, result is 1 if it contains a  NaN
 static B jtisnanq(J jt,A w){
  RZ(w);
-#if 0  // obsolete
-A q,*u,x,x1,*xv,y,*yv;D*v;I m,n,t,top; GATV0(x,INT,BOX&AT(w)?2*AN(w):1,1); xv=AAV(x);
- *xv=w; top=1;
- while(top){
-  --top; y=xv[top]; n=AN(y); t=AT(y);
-  if(t&FL+CMPX){v=DAV(y); DQ(t&CMPX?n+n:n, if(_isnan(*v++))R 1;);}
-  else if(t&BOX){
-   m=top+n; yv=AAV(y); 
-   if(m>AN(y)){GATV0(x1,INT,2*m,1); u=AAV(x1); ICPY(u,xv,top); fa(x); x=x1; xv=u;}
-   u=xv+top; DO(n, q=yv[i]; if(AT(q)&FL+CMPX+BOX)*u++=q;); top=u-xv;
-  }
- }
-#else
  if(AT(w)&FL+CMPX){D *v=DAV(w); DQ(AN(w)<<((AT(w)>>CMPXX)&1), if(_isnan(v[i]))R 1;);}  // if there might be a NaN, return if there is one
  else if(AT(w)&BOX){A *v=AAV(w); STACKCHKOFL DQ(AN(w), if(isnanq(v[i]))R 1;);}  // if boxed, check each one recursively; ensure no stack overflow
  // other types never have NaN
-#endif
  R 0;  // if we get here, there must be no NaN
 }
 
@@ -550,7 +536,6 @@ static A efs(J jt,A w,I prec){
   // We code this on the assumption that the format is constant throughout, and therefore branches will not be mispredicted after the first loop
 #define DOERR {IAV(z)[i]=IMIN; goto err;}
 #define ISDIGIT(d) (((UI4)d-(UI4)'0')<=((UI4)'9'-(UI4)'0'))
-// obsolete #define RDTWO(z) if(!ISDIGIT(sp[1]))DOERR z=(UI4)sp[0]*10+((UI4)sp[1]-(UI4)'0')-((UI4)'0'*(UI4)10); if((UI4)z>(UI4)99)DOERR sp+=2;
 // same, but use c for the first digit
 #define RDTWOC(z,min,max) if(!ISDIGIT(sp[1]))DOERR z=(UI4)c*10+((UI4)sp[1]-(UI4)'0')-((UI4)'0'*(UI4)10); if((UI4)(z-(min))>(UI4)((max)-(min)))DOERR sp+=2; c=*sp;
   UI N=0;  // init nanosec accum to 0
@@ -611,7 +596,7 @@ gottime: ;
   // Add in leap-years (since the year 0, for comp. ease).  Year 2000 eg, which starts Mar 1, is a leap year and has 1 added to its day#s (since they come after Feb 29)
   D+=Y>>2;
   // Gregorian correction.  Since it is very unlikely we will encounter a date that needs correcting, we use an IF
-  if(!BETWEENC(Y,1901,2100)/* obsolete )(UI)(Y-1901)>(2100-1901)*/){  // date is outside 1901-2099
+  if(!BETWEENC(Y,1901,2100)){  // date is outside 1901-2099
    D+=(((Y/100)>>2)-(Y/100))-((2000/400)-(2000/100));  // 1900 2100 2200 2300 2500 etc are NOT leapyears.  Create correction from Y2000 count
   }
   // Add in extra days for earlier 31-day months in this adjusted year (so add 0 in March)

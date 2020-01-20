@@ -152,10 +152,8 @@ static PSTK* jtis(J jt,PSTK *stack){B ger=0;C *s;
    }
   }
   // single assignment or variable assignment
-// obsolete   if(LIT&AT(n)&&1>=AR(n)){
   if((SGNIF(AT(n),LITX)&(AR(n)-2))<0){
    // lhs is ASCII characters, atom or list.  Convert it to words
-   //ASSERT(1>=AR(n),EVRANK); must be true
    s=CAV(n); ger=CGRAVE==*s;   // s->1st character; remember if it is `
    RZ(n=words(ger?str(AN(n)-1,1+s):n));  // convert to words (discarding leading ` if present)
    ASSERT(AN(n)||(AR(v)&&!AS(v)[0]),EVILNAME);  // error if namelist empty or multiple assignment with no values, if there is something to be assigned
@@ -617,13 +615,11 @@ rdglob: ;
        // that the next assignment will be to the name, and that the reassigned value is available for inplacing.  In the V V N case,
        // this may be over two verbs
        if(PTISASGNNAME(stack[0])&&PTISM(stackfs[2])){   // assignment to name; nothing in the stack to the right of what we are about to execute; well-behaved function (doesn't change locales)
-// obsolete           &&(s=((AT(stack[0].a))&ASGNLOCAL?jtprobelocal:jtprobeisquiet)(jt,queue[m-1]))&&((FAV(fs)->flag)&VASGSAFE)&&(pline!=1||FAV(stack[1].a)->flag&VASGSAFE) ){
         s=((AT(stack[0].a))&ASGNLOCAL?jtprobelocal:jtprobeisquiet)(jt,queue[m-1]);  // look up the target.  It will usually be found (in an explicit definition)
         // Don't remember the assignand if it may change during execution, i. e. if the verb is unsafe.  For line 1 we have to look at BOTH verbs that come after the assignment
         s=((FAV(fs)->flag&(FAV(stack[1].a)->flag|((~pmask)<<(VASGSAFEX-1))))&VASGSAFE)?s:0;
         // It is OK to remember the address of the symbol being assigned, because anything that might conceivably create a new symbol (and thus trigger
         // a relocation of the symbol table) is marked as not ASGSAFE
-// obsolete         if(s->val&&AT(stack[0].a)&ASGNLOCAL)jt->zombieval=s->val;  // Remember the value, whether it exists or not.  We have to avoid private/public puns
         if(s){
          jt->assignsym=s;  // remember the symbol being assigned.  It may have no value yet, but that's OK - save the lookup
          A sval=s->val; sval=AT(stack[0].a)&ASGNLOCAL?sval:0; jt->zombieval=sval;  // Remember the value, whether it exists or not.  We have to avoid private/public puns
@@ -700,7 +696,6 @@ failparse:  // If there was an error during execution or name-stacking, exit wit
   // we are through with the result.  If we are returning a noun, free them right away unless they happen to be the very noun we are returning
   v=jt->nvrav+nvrotop;  // point to our region of the nvr area
   UI zcompval = !z||AT(z)&NOUN?0:-1;  // if z is 0, or a noun, immediately free only values !=z.  Otherwise don't free anything
-// obsolete   DQ(jt->parserstackframe.nvrtop-nvrotop, A vv = *v; I vf = AFLAG(vv); AFLAG(vv) = vf & ~(AFNVR|AFNVRUNFREED); if(!(vf&AFNVRUNFREED))if(!z||(AT(z)&NOUN&&z!=vv)){fa(vv);}else{tpush(vv);} ++v;);   // schedule deferred frees.
   DQ(jt->parserstackframe.nvrtop-nvrotop, A vv = *v; I vf = AFLAG(vv); AFLAG(vv) = vf & ~(AFNVR|AFNVRUNFREED); if(!(vf&AFNVRUNFREED))if(((UI)z^(UI)vv)>zcompval){fa(vv);}else{tpush(vv);} ++v;);   // schedule deferred frees.
   // Still can't return till frame-stack popped
 

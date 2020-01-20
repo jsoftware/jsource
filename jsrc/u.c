@@ -185,7 +185,7 @@ I jti0(J jt,A w){RZ(w);
  if(AT(w)&FL){D d=DAV(w)[0]; D e=jround(d); I cval=(I)e;  // FL without call to cvt
   // if an atom is tolerantly equal to integer,  there's a good chance it is exactly equal.
   // infinities will always round to themselves
-  ASSERT(d==e || FFIEQ(d,e),EVDOMAIN);  /* obsolete  || (++e,FEQ(d,e))*/
+  ASSERT(d==e || FFIEQ(d,e),EVDOMAIN);
   cval=d<(D)-IMAX?-IMAX:cval; cval=d>=-(D)IMIN?IMAX:cval;
   ASSERT(!AR(w),EVRANK);
   R cval;  // too-large values don't convert, handle separately
@@ -390,16 +390,8 @@ F1(jtvib){A z;D d,e,*wv;I i,n,*zv;
    d=wv[i]; e=jround(d); I cval=(I)e;
    // if an atom is tolerantly equal to integer,  there's a good chance it is exactly equal.
    // infinities will always round to themselves
-#if 1
-   ASSERT(d==e || FFIEQ(d,e),EVDOMAIN);  /* obsolete  || (++e,FEQ(d,e))*/
+   ASSERT(d==e || FFIEQ(d,e),EVDOMAIN);
    cval=d<(D)-IMAX?-IMAX:cval; cval=d>=-(D)IMIN?IMAX:cval; zv[i]=cval;  // too-large values don't convert, handle separately
-#else  // obsolete
-    if     (d==inf )     zv[i]=q;
-    else if(d==infm)     zv[i]=p;
-    else if(    FEQ(d,e))zv[i]=d<p?p:q<d?q:(I)e;
-    else if(++e,FEQ(d,e))zv[i]=d<p?p:q<d?q:(I)e;
-    else ASSERT(0,EVDOMAIN);
-#endif
    }
    break;
   case XNUM:

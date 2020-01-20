@@ -43,8 +43,6 @@ A jtnfs(J jt,I n,C*s){A z;C f,*t;I m,p;NM*zv;
  t=s+n-1;
  DQ(n, if(' '!=*t)break; --t; --n;);
  // If the name is the special x y.. or x. y. ..., return a copy of the preallocated block for that name (we may have to add flags to it)
-// obsolete  c=*s;if((1==n)&&strchr("mnuvxy",c)){
-// obsolete   R ca(c=='y'?ynam:c=='x'?xnam:c=='v'?vnam:c=='u'?unam:c=='n'?nnam:mnam);
  C *nmp;if((1==n)&&(nmp=strchr(argnames,*s))){  // if an argument name
   R ca(mnuvxynam[nmp-argnames]);  // return a clone of the argument block (because flags may be added)
  }
@@ -74,7 +72,7 @@ A jtnfs(J jt,I n,C*s){A z;C f,*t;I m,p;NM*zv;
 A jtsfn(J jt,B b,A w){NM*v; RZ(w); v=NAV(w); R str(b&SFNSIMPLEONLY?v->m:AN(w),v->s);}
 
 // string from name evocation: returns string for name UNLESS the name was an NMDOT type; in that case it returns w f. which will be a verb
-A jtsfne(J jt,A w){RZ(w); A wn=FAV(w)->fgh[0]; /* obsolete NM *v=NAV(wn);*/ if(AT(wn)&NAMEBYVALUE/*obsolete v->flag&NMDOT*/)R fix(w,zeroionei[0]); R sfn(0,wn);}
+A jtsfne(J jt,A w){RZ(w); A wn=FAV(w)->fgh[0]; if(AT(wn)&NAMEBYVALUE)R fix(w,zeroionei[0]); R sfn(0,wn);}
 
 
 F1(jtnfb){A y;C*s;I n;
@@ -116,7 +114,6 @@ F1(jtnc){A*wv,x,y,z;I i,n,t,*zv;L*v;
   // Would have to mod locindirect too
   I zc=2; zc=(0x21c>>((t>>(VERBX-1))&0xe))&3;   // C A V N = 4 2 1 0 -> 2 1 3 0    10 xx 01 11 00
   zc=x?zc:-1; zc=y?zc:-2;
-// obsolete   zv[i]=!y?-2:!x?-1:t&NOUN?0:t&VERB?3:t&ADV?1:2;  // calculate the type, store in result array
   zv[i]=zc;  // calculate the type, store in result array
  }
  RETF(z);

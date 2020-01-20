@@ -166,9 +166,6 @@
 #define CCDOT      (C)'\276'       /* 190 276 be c.                           */
 // 191 free
 #define CCYCLE     (C)'\300'       /* 192 300 c0 C.                           */
-// obsolete #define CDDOT      (C)'\301'       /* 193 301 c1 d.                           */
-// obsolete #define CDCAP      (C)'\302'       /* 194 302 c2 D.                           */
-// obsolete #define CDCAPCO    (C)'\303'       /* 195 303 c3 D:                           */
 #define CEPS       (C)'\304'       /* 196 304 c4 e.                           */
 #define CEBAR      (C)'\305'       /* 197 305 c5 E.                           */
 #define CFIX       (C)'\306'       /* 198 306 c6 f.                           */
@@ -211,7 +208,6 @@
 #define CEMEND     (C)'\355'       /* 237 355 ed }::                          */
 #define CUNDCO     (C)'\356'       /* 238 356 ee &.:                          */
 #define CPDERIV    (C)'\357'       /* 239 357 ef p..                          */
-// obsolete #define CAPIP      (C)'\360'       /* 240 360 f0 ,   append in place          */
 #define CFDOT      (C)'\360'       // 240 360 f0 F.  the ID codes are used as flags
 #define CFDOTCO    (C)'\361'       // 241 361 f1 F.:
 #define CFDOTDOT   (C)'\362'       // 242 362 f2 F..

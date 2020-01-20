@@ -154,7 +154,7 @@ static void jterasenl(J jt, I n){
    probehash=HASHSLOT(NAV(LOCNAME((A)IAV0(jt->stnum)[probe]))->bucketx,jt->sttsize);  // see where the probed cell would like to hash
     // If we are not allowed to move the new probe into the hole, because its hash is after the probe position but before-or-equal the hole,
     // we leave it in place and continue looking at the next position.  This test must be performed cyclically, because the probe may have wrapped around 0
-  }while((BETWEENO(probehash,probe,lastdel)/* obsolete (UI)(probehash-probe)<(UI)(lastdel-probe)*/)||(probe>lastdel&&(probe<=probehash||probehash<lastdel)));  // first half is normal, second if probe wrapped around
+  }while((BETWEENO(probehash,probe,lastdel))||(probe>lastdel&&(probe<=probehash||probehash<lastdel)));  // first half is normal, second if probe wrapped around
   // here lastdel is the hole, and probe is a slot that hashed somewhere before lastdel.  We can safely move the probe to cover the hole.
   // This creates a new hole at probe, which we loop back to clear & then try to fill
   IAV0(jt->stnum)[lastdel]=IAV0(jt->stnum)[probe];  // move the hole forward
@@ -278,21 +278,17 @@ A jtstfindcre(J jt,I n,C*u,I bucketx){
 // b is flags: 1=check name for validity, 2=do not allow numeric locales (whether atomic or not)
 static A jtvlocnl(J jt,I b,A w){A*wv,y;C*s;I i,m,n;
  RZ(w);
-// obsolete  if((!(b&2)) && (AT(w)&INT || AT(w)&B01/C_LE && !AR(w)))R w;  // integer list or scalar boolean is OK
  if(((b-2) & (SGNIF(AT(w),INTX) | (SGNIF(AT(w),B01X) & (AR(w)-1))))<0)R w;  // integer list or scalar boolean is OK  C_LE
  n=AN(w);
-// obsolete ASSERT(!n||BOX&AT(w),EVDOMAIN);
  ASSERT(((n-1)|SGNIF(AT(w),BOXX))<0,EVDOMAIN);
  wv=AAV(w); 
  for(i=0;i<n;++i){
   y=wv[i];  // pointer to box
-// obsolete  if((!(b&2))&&!AR(y)&&AT(y)&(INT|B01)/C_LE)continue;   // scalar numeric locale is ok
   if(((b-2)&(AR(y)-1)&-(AT(y)&(INT|B01)))<0)continue;   // scalar numeric locale is ok
   m=AN(y); s=CAV(y);
   ASSERT(1>=AR(y),EVRANK);
   ASSERT(m,EVLENGTH);
   ASSERT(LIT&AT(y),EVDOMAIN);
-// obsolete  ASSERT(!(b&2) || CAV(y)[0]>'9',EVDOMAIN);  // numeric locale not allowed except when called for in b
   ASSERT(((1-b) & (I)((UI)CAV(y)[0]-('9'+1)))>=0,EVDOMAIN);  // numeric locale not allowed except when called for in b
   if(b&1)ASSERTN(vlocnm(m,s),EVILNAME,nfs(m,s));
  }
@@ -330,7 +326,6 @@ static F1(jtlocnlx){A y,z=mtv;B*wv;I m=0;
  RZ(w=cvt(B01,w)); wv=BAV(w); DO(AN(w), m|=1+wv[i];);  // accumulate mask of requested types
  if(1&m)z=nlsym(jt->stloc);  // named locales
  if(2&m){RZ(y=jtactivenl(jt)); z=over(y,z); }  // get list of active numbered locales
-// obsolete  z=0==m?mtv:1==m?z:2==m?y:over(y,z);
  R grade2(z,ope(z));
 }
 
@@ -346,7 +341,6 @@ F2(jtlocnl2){UC*u;
 }    /* 18!:1 locale name list */
 
 static A jtlocale(J jt,B b,A w){A g=0,*wv,y;
-// obsolete  if(!AR(w) && AT(w)&(INT|B01))R (b?jtstfindcre:jtstfind)(jt,-1,0,BIV0(w));  // atomic integer is OK
  if(((AR(w)-1) & -(AT(w)&(INT|B01)))<0)R (b?jtstfindcre:jtstfind)(jt,-1,0,BIV0(w));  // atomic integer is OK
  RZ(vlocnl(1,w));
  wv=AAV(w); 
@@ -419,7 +413,6 @@ F1(jtlocswitch){A g;
  // put a marker for the operation on the call stack
  // If there is no name executing, there would be nothing to process this push; so don't push for unnamed execs (i. e. from console)
  if(jt->curname)pushcallstack1(CALLSTACKPOPFROM,jt->global);
-// obsolete  jt->global=g;
  SYMSETGLOBAL(jt->locsyms,g);
  ++jt->modifiercounter;  // invalidate any extant lookups of modifier names
 
@@ -438,7 +431,6 @@ static SYMWALK(jtlocmap1,I,INT,18,3,1,
      I zc=2; zc=(0x21c>>((t>>(VERBX-1))&0xe))&3;   // C A V N = 4 2 1 0 -> 2 1 3 0    10 xx 01 11 00
      zc=t==SYMB?6:zc; zc=t&(NOUN|VERB|ADV|CONJ|SYMB)?zc:-2;
      *zv++=zc;
-// obsolete      *zv++=t&NOUN?0:t&VERB?3:t&ADV?1:t&CONJ?2:(t==SYMB)?6:-2;
      *zv++=(I)rifvs(sfn(SFNSIMPLEONLY,d->name));})  // this is going to be put into a box
 
 F1(jtlocmap){A g,q,x,y,*yv,z,*zv;I c=-1,d,j=0,m,*qv,*xv;
@@ -503,7 +495,6 @@ B jtlocdestroy(J jt,A g){
   // For named locale, find the entry for this locale in the locales symbol table, and free the locale and the entry for it
   RZ(redefg(g)); probedel(locname->m,locname->s,locname->hash,jt->stloc);  // free the L block for the locale, which frees the locale itself and its names
  }
-// obsolete  if(g==jt->global)jt->global=0;
  if(g==jt->global)SYMSETGLOBAL(jt->locsyms,0);
  R 1;
 }    /* destroy locale jt->callg[i] (marked earlier by 18!:55) */

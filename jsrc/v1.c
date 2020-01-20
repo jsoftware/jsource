@@ -107,8 +107,6 @@ static B jteqf(J jt,A a,A w){A p,q;V*u=FAV(a),*v=FAV(w);
 static B jtmatchsub(J jt,I af,I wf,I m,I n,A a,A w,B* RESTRICT x,B b1){B b;C*av,*wv;I at,c,j=0,p,q,t,wt;
  // we tested for a==w before the call, to save on call overhead (usually)
  // m*n cannot be 0.  If this is a recursive call, m=n=1; while if it is the first call, empty m/n were handled at the top level
-// obsolete  // Very fastest path: different numbers of atoms (when there is no frame)
-// obsolete  if(((af-1)&(wf-1)&(-(AN(a)^AN(w))))<0){b=1; if(x)memset(x,b^b1,m*n); R b^b1;}  // af==0, wf==0, AN(a)!=AN(w).  Set b to try to use common code
  p=AR(a)-af; at=UNSAFE(AT(a));
  q=AR(w)-wf; wt=UNSAFE(AT(w)); 
  // p=cell-rank of a; q=cell-rank of w; ?t=type;
@@ -200,7 +198,6 @@ F2(jtnotmatch){A z;I af,f,m,n,mn,*s,wf;
  // If either operand is empty return without any comparisons.  In this case we have to worry that the
  // number of cells may overflow, even if there are no atoms
  if(((-AN(a))&(-AN(w)))>=0){B b; I p;  // AN(a) is 0 or AN(w) is 0
-// obsolete if(!AN(a)||!AN(w)){B b; I p;
   // no atoms.  The shape of the result is the length of the longer frame.  See how many cells that is
   if(af>wf){f=af; s=AS(a); RE(mn = prod(af,AS(a)));}else{f=wf; s=AS(w); RE(mn = prod(wf,AS(w)));}
   // The result for each cell is 1 if the cell-shapes are the same

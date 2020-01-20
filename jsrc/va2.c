@@ -414,24 +414,6 @@ A jtcvz(J jt,I cv,A w){I t;
  R w;
 }    /* convert result */
 
-#if 0 // obsolete 
-// Routine to lookup function/flags
-// ptr is the type of lookup (insert/prefix/suffix) to generate the function for
-// In the function, id is the pseudochar for the function to look up
-//  t is the argument type
-//  action routine is stored in *ado, flags in *cv.  If no action routine, *ado=0
-#define VAF(fname,ptr,fp,fm,ft)   \
- void fname(J jt,C id,I t,VF*ado,I*cv){VA2*p;  \
-  if(jt->jerr>=EWOV){                          \
-   jt->jerr=0;                                 \
-   *ado=(id==CPLUS?fp:id==CMINUS?fm:ft);       \
-   *cv=VD;                                     \
-  }else if(t&=NUMERIC+SBT){                     \
-   p=(va+vaptr[(UC)id])->ptr+(t<=FL?(t>>INTX):t<=RAT?(3+(t>>XNUMX)):6);  \
-   *ado=p->fgh[0]; *cv=p->cv;                       \
-  }else *ado=0;                                \
- }
-#endif
 // Routine to lookup function/flags for u/ u\ u\.
 // ptr is the type of lookup (insert/prefix/suffix) to generate the function for
 // In the function, id is the pseudochar for the function to look up
@@ -450,13 +432,6 @@ A jtcvz(J jt,I cv,A w){I t;
    R fname##EWOV[2*(FAV(self)->id==CMINUS) + (FAV(self)->id==CPLUS)]; \
   }  \
  }
-
-#if 0 // obsolete
-   if((t&=(NUMERIC+SBT)&(~SPARSE))&&FAV(self)->flag&VISATOMIC2){  /* numeric input, verb with dataline */        \
-    R ((VA*)(FAV(self)->localuse.lvp[0]))->ptr[t<=FL?(t>>INTX):t<=RAT?(3+(t>>XNUMX)):6];  \
-   }else R fname##EWOV[3];                                \
-
-#endif
 
 // Lookup the action routine & flags for insert/prefix/suffix
 // first name is name of the generated function
@@ -917,63 +892,7 @@ I jtsumattymesprods(J jt,I it,void *avp, void *wvp,I dplen,I nfro,I nfri,I ndpo,
  if(it&FL){
   NAN0;
 #if C_AVX
-#if 0 // obsolete 
-  {D * RESTRICT av=DAV(a),* RESTRICT wv=DAV(w); D * RESTRICT zv=DAV(z); 
-   _mm256_zeroupper(VOIDARG); 
-   __m256i endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-dplen)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ 
-   __m256d acc000; __m256d acc010; __m256d acc100; __m256d acc110; 
-   __m256d acc001; __m256d acc011; __m256d acc101; __m256d acc111; 
-   {I i=(I)(nfro)-1;    for(;i>=0;--i){ I jj=nfri; D *ov0=repeata?av:wv; 
-    while(1){  
-     {I i=(I)(ndpo)-1;    for(;i>=0;--i){I j=ndpi; D *av0=av; /* i is how many a's are left, j is how many w's*/ 
-      while(1){ 
-       if(it&LIT&&jj>1){ 
-        D * RESTRICT wv1=wv+dplen; wv1=j==1?wv:wv1; 
-   {
-   acc000=_mm256_set1_pd(0.0); acc010=acc000; acc100=acc000; acc110=acc000; 
-   acc001=acc000; acc011=acc000; acc101=acc000; acc111=acc000; 
-   I rem=dplen; 
-   if(rem>8*NPAR)goto label8; 
-   while(rem>NPAR){ 
-    if(rem>4*NPAR) 
-     {if(rem>6*NPAR){if(rem>7*NPAR)goto label7;else goto label6;}else {if(rem>5*NPAR)goto label5;else goto label4;}} 
-    else{if(rem>2*NPAR){if(rem>3*NPAR)goto label3;else goto label2;}else {if(rem>1*NPAR)goto label1;else break;}} 
-    label8: CELL2X2M(7,0)  label7: CELL2X2M(6,1)  label6: CELL2X2M(5,0)  label5: CELL2X2M(4,1)  
-    label4: CELL2X2M(3,0)  label3: CELL2X2M(2,1)  label2: CELL2X2M(1,0)  label1: CELL2X2M(0,1)  
-    av+=8*NPAR; wv+=8*NPAR; wv1+=8*NPAR; 
-    if((rem-=8*NPAR)>8*NPAR)goto label8;  
-   } 
-   av-=(NPAR-rem)&-NPAR; wv-=(NPAR-rem)&-NPAR; wv1-=(NPAR-rem)&-NPAR; 
-   CELL2X2L  
-   acc000=_mm256_add_pd(acc000,acc001); acc010=_mm256_add_pd(acc010,acc011); acc100=_mm256_add_pd(acc100,acc101); acc110=_mm256_add_pd(acc110,acc111);  
-   acc000=_mm256_add_pd(acc000,_mm256_permute2f128_pd(acc000,acc000,0x01)); acc010=_mm256_add_pd(acc010,_mm256_permute2f128_pd(acc010,acc010,0x01)); 
-    acc100=_mm256_add_pd(acc100,_mm256_permute2f128_pd(acc100,acc100,0x01)); acc110=_mm256_add_pd(acc110,_mm256_permute2f128_pd(acc110,acc110,0x01)); 
-   acc000=_mm256_add_pd(acc000,_mm256_permute_pd (acc000,0xf)); acc010=_mm256_add_pd(acc010,_mm256_permute_pd (acc010,0x0));  
-    acc100=_mm256_add_pd(acc100,_mm256_permute_pd (acc100,0xf)); acc110=_mm256_add_pd(acc110,_mm256_permute_pd (acc110,0x0)); 
-   acc000=_mm256_blend_pd(acc000,acc010,0xa); acc100=_mm256_blend_pd(acc100,acc110,0xa); 
-   av+=((dplen-1)&(NPAR-1))+1;  wv+=((dplen-1)&(NPAR-1))+1; 
-   }
-// scaf        ONEPRODAVXD2(D2,CELL2X2M,CELL2X2L)  
-        if(j>1){--j; _mm_storeu_pd(zv,_mm256_castpd256_pd128 (acc000)); _mm_storeu_pd(zv+ndpi,_mm256_castpd256_pd128 (acc100)); wv+=dplen; zv +=2;} 
-        else{_mm_storel_pd(zv,_mm256_castpd256_pd128 (acc000)); _mm_storel_pd(zv+ndpi,_mm256_castpd256_pd128 (acc100));  zv+=1;} 
-       }else{ 
-ONEPRODAVXD1(D1,CELL1X1M,CELL1X1L)
-        _mm_storel_pd(zv,_mm256_castpd256_pd128 (acc000)); 
-        zv+=1; 
-       } 
-       if(!--j)break; 
-       av=av0;  
-      } 
-      if(it&LIT&&jj>1){--i; av+=dplen; zv+=ndpi;} 
-     }}
-     if((jj-=(((it&LIT)>>1)+1))<=0)break; 
-     if(repeata)av=ov0;else wv=ov0; 
-    } 
-   }}
-  }
-#else
   SUMATLOOP2(D,D,ONEPRODAVXD2(D2,CELL2X2M,CELL2X2L),ONEPRODAVXD1(D1,CELL1X1M,CELL1X1L));
-#endif
 #else
   SUMATLOOP(D,D,ONEPRODD)
 #endif
@@ -1175,7 +1094,6 @@ DF2(jtfslashatg){A fs,gs,y,z;B b,bb,sb=0;C*av,c,d,*wv;I ak,an,ar,*as,at,m,
  if(SPARSE&(at|wt)||!an||!wn||2>nn){ R df1(df2(a,w,gs),fs);}  // if sparse or empty, or just 1 item, do it the old-fashioned way
  rs=MAX(1,rs); PROD(m,rs-1,s+1); PROD(n,r-rs,s+rs); zn=m*n;   // zn=#atoms in _1-cell of longer arg = #atoms in result; m=#atoms in _1-cell of shorter arg  n=#times to repeat shorter arg  (*/ surplus longer shape)
    // if the short-frame arg is an atom, move its rank to 1 so we get the lengths of the _1-cells of the replicated arguments
-// obsolete  if(CFORK==sv->id){fs=sv->fgh[1]; gs=sv->fgh[2];}else{fs=sv->fgh[0]; gs=sv->fgh[1];}
  y=FAV(fs)->fgh[0]; c=ID(y); d=ID(gs);
  if(c==CPLUS){
   // +/@:g is special if args are boolean, length is integral number of I, and g is boolean or *

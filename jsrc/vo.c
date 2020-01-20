@@ -7,7 +7,6 @@
 #include "result.h"
 
 I level(A w){A*wv;I d,j;
-// obsolete  if(!(AN(w)&&AT(w)&BOX+SBOX))R 0;
  if((-AN(w)&-(AT(w)&BOX+SBOX))>=0)R 0;
  d=0; wv=AAV(w);
  DO(AN(w), j=level(wv[i]); d=d<j?j:d;);
@@ -17,7 +16,6 @@ I level(A w){A*wv;I d,j;
 // return 0 if the level of w is greater than l, 1 if <=
 // terminates early if possible
 I levelle(A w,I l){
-// obsolete  if(!(AN(w)&&AT(w)&BOX+SBOX))R ((UI)~l)>>(BW-1);  // if arg is unboxed, its level is 0, so return 1 if l>=0
  if((-AN(w)&-(AT(w)&BOX+SBOX))>=0)R ((UI)~l)>>(BW-1);  // if arg is unboxed, its level is 0, so return 1 if l>=0
  if(l<=0)R 0;  // (arg is boxed) if l is <=0, arglevel is  > l
  --l; A *wv=AAV(w);
@@ -84,7 +82,6 @@ RZ(a&&w);
   I i; for(i=AR(a)-1; i>=0&&AS(a)[i]==AS(ABACK(a))[i];--i); if(i<0)a = ABACK(a);
  }
 #endif
-// obsolete if(!(AN(w)&&AT(w)&BOX)){w = box(w);} R over(box(a),w);}
  if((-AN(w)&SGNIF(AT(w),BOXX))>=0){w = box(w);} R over(box(a),w);  // box empty or unboxed w, join to boxed a
 }
 
@@ -411,7 +408,6 @@ F1(jtope){PROLOG(0080);A cs,*v,y,z;I nonh;C*x;I i,n,*p,q=RMAX,r=0,*s,t=0,te=0,*u
 // w is the data to raze (boxed), t is type of nonempty boxes of w, n=#,w, r=max rank of contents of w, v->w data,
 // zrel=1 if any of the contents uses relative addressing
 static A jtrazeg(J jt,A w,I t,I n,I r,A*v,I nonempt){A h,h1,y,z;C*zu;I c=0,i,j,k,m,*s,*v1,yr,*ys;UI p;
-// obsolete  d=SZI*(r-1);    // d=#bytes in (stored shape of result-cell)
  // Calculate the shape of a result-cell (it has rank r-1); and c, the number of result-cells
  fauxblockINT(hfaux,4,1); fauxINT(h,hfaux,r,1) s=AV(h); memset(s,C0,r*SZI);  // h will hold the shape of the result; s->shape data; clear to 0 for compares below
  for(i=0;i<n;++i){   // loop over all contents
@@ -468,7 +464,6 @@ static A jtrazeg(J jt,A w,I t,I n,I r,A*v,I nonempt){A h,h1,y,z;C*zu;I c=0,i,j,k
    // nonatomic contents: rank extension+fill rather than replication
    // if IC(y)==0 this all does nothing, but perhaps not worth checking
    if(j=r-yr){DO(j,v1[i]=1;); MCISH(j+v1,ys,yr); RZ(y=reshape(h1,y)); }  // if rank extension needed, create rank 1 1...,yr and reshape to that shape
-// obsolete    if(memcmp(1+s,1+AS(y),d))
    for(j=1;j<r;++j)if(s[j]!=AS(y)[j])break; if(j!=r){SETIC(y,*s); RZ(y=take(h,y));}  // if cell of y has different shape from cell of result, install the
      // #items into s (giving #cell,result-cell shape) and fill to that shape.  This destroys *s (#result items) buts leaves the rest of s
    {j=k*AN(y); MC(zu,AV(y),j); zu+=j;}
@@ -493,10 +488,6 @@ F1(jtraze){A*v,y,z,* RESTRICT zv;C* RESTRICT zu;I *wws,d,i,klg,m=0,n,r=1,t=0,te=
   for(i=0;i<n;++i){
    y=v[i]; r=MAX(r,AR(y));
    I yt=AT(y); te|=yt; m+=AN(y); yt=AN(y)?yt:0; t|=yt;
-// obsolete    if(AN(y)){
-// obsolete     m+=AN(y);  // accumulate # items.  the only time we use this m is when the item-rank is 0.  In that case AN gives the # atoms too.
-// obsolete     t|=AT(y);  // accumulate types found
-// obsolete    }else te|=AT(y);
   }
   // if there was a nonempty, verify that the nonempties are compatible and find the highest-priority one
   // Fill creates a subtlety: we don't know whether empty boxes are going to contribute to

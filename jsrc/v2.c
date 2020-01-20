@@ -89,7 +89,7 @@ static F1(jtprime1){A d,t,y,z;B*b,*u;I c,*dv,e,i,j,k,m,n,p,q,*wv,x,*zv;
  j=3; p=0; e=PT; q=1+(I)sqrt((D)m); x=wv[dv[k]]; 
  GATV0(t,B01,q,1);         u=BAV(t); sieve(0L,q,u,u); 
  GATV0(y,B01,MIN(m,MM),1); b=BAV(y); 
- for(;BETWEENO(p,0,m)/* obsolete (UI)p<(UI)m*/;p+=q){
+ for(;BETWEENO(p,0,m);p+=q){
   if(x>=e){c=x/PT; e=PT*(1+c); c=MIN(c,ptn); if(j<c*PT){j=c*PT; p=ptt[c-1];}}
   JBREAK0; q=MIN(MM,m-p); sieve(p,q,b,u); c=j+q/3;
   if(x>c)for(i=1-(p&1);i<q;i+=2)j+=b[i];
@@ -167,7 +167,7 @@ F1(jtplt){PROLOG(0062);A d,t,y,z;B*b,*u,xt;I c,*dv,e,i,j,k,m,n,p,q,*wv,x,*zv;
  while(n>k&&3>=wv[dv[k]])zv[dv[k++]]=1; 
  while(n>k&&5>=wv[dv[k]])zv[dv[k++]]=2; 
  if(n==k){EPILOG(z);} x=wv[dv[k]]; 
- for(;BETWEENO(p,0,m)/* obsolete (UI)p<(UI)m*/;p+=q){
+ for(;BETWEENO(p,0,m);p+=q){
   if(x>=e){
    while(ptn>c&&x>=ptt[c])++c; 
    if(j<c*PT){p=ptt[c-1]; e=c<ptn?ptt[c]:IMAX; j=c*PT;}
@@ -233,7 +233,6 @@ static F1(jtxprimetest){A z;B*b,rat;I d,j,q,n,*pv,*v,wn,wt,*yv;X r,*wv,x,xmaxint
 static F1(jtprimetest){A x;I t;
  RZ(w);
  t=AT(w);
-// obsolete if(!AN(w)||t&B01)R reshape(shape(w),num[0]);
  if((UI)SGNIF(t,B01X)>=(UI)AN(w))R reshape(shape(w),num[0]);  // AN is 0, or t is boolean
  switch(CTTZ(t)){
   default:             ASSERT(0,EVDOMAIN);
@@ -249,7 +248,6 @@ static F1(jtnextprime){A b,fs,x,y;B*bv;I k,n,*xv,*yv;X*wv;
  RZ(w);
  n=AN(w);
  if((UI)SGNIF(AT(w),B01X)>=(UI)AN(w))R reshape(shape(w),num[2]);
-// obsolete  if(!n||B01&AT(w))R reshape(shape(w),num[2]);
  ASSERT(NUMERIC&AT(w),EVDOMAIN);
  RZ(fs=eval("2&+^:(0&p:)^:_"));
  GATV(x,INT,n,AR(w),AS(w)); xv=AV(x);

@@ -27,7 +27,6 @@
 static NUMH(jtnumd){C c,*t;D*v,x,y;
  if(!(n))R 0;
  v=(D*)vv;
-// obsolete  if('-'==*s&&3>n)
  if(((((I)s[0]^'-')-1)&(n-3))<0){   // '-' and n<3
   if(1==n){*v=inf; R 1;}
   else{
@@ -61,7 +60,7 @@ static NUMH(jtnumi){I neg;I j;
  for(;*s=='0'&&n>1;--n,++s);  // skip leading zeros, as long as there is more than one character
  if(!(19>=n))R 0;   // 2^63 is 9223372036854775808.  So a 20-digit input must overflow, and the most a
   // 19-digit number can be is a little way into the negative; so testing for negative will be a valid test for overflow
- j=0; DQ(n, I dig=*s++; if(!BETWEENC(dig,'0','9')/* obsolete (UI)(dig-'0')>(UI)('9'-'0')*/)R 0; j=10*j+(dig-'0'););
+ j=0; DQ(n, I dig=*s++; if(!BETWEENC(dig,'0','9'))R 0; j=10*j+(dig-'0'););
  if(j<0&&j!=(neg<<(BW-1)))R 0;  // overflow if negative AND not the case of -2^63, which shows as IMIN with a negative flag
  *(I*)vv=(j^(-neg))+neg;   // if - was coded, take 2's comp, which will leave IMIN unchanged
  R 1;
@@ -73,7 +72,7 @@ static NUMH(jtnumx){A y;B b,c;C d;I j,k,m,*yv;X*v;
  if('-'==d){if(!(2>=n))R 0; if(!(*v=rifvs(vci(1==n?XPINF:XNINF))))R 0; R 1;}
  n-=b+c; if(!(m=(n+XBASEN-1)/XBASEN))R 0; k=n-XBASEN*(m-1);
  GATV0(y,INT,m,1); yv=m+AV(y);
- DQ(m, j=0; DQ(k, I dig=*s++; if(!BETWEENC(dig,'0','9')/* obsolete (UI)(dig-'0')>(UI)('9'-'0')*/)R 0; j=10*j+(dig-'0');); *--yv=b?-j:j; k=XBASEN;);
+ DQ(m, j=0; DQ(k, I dig=*s++; if(!BETWEENC(dig,'0','9'))R 0; j=10*j+(dig-'0');); *--yv=b?-j:j; k=XBASEN;);
  if(!(*v=yv[m-1]?y:rifvs(xstd(y))))R 0;  // this stores into the extended result
  R 1;
 }
@@ -195,31 +194,21 @@ static I jtnumcase(J jt,I n,C*s){B e;C c;I ret;
   R SY_64?((anydot&(VALIDBOOLEAN<<6))==0?INT:0):0;  // no byte had 0xC0 set; if byte^'.' - 1 had 0x40 set, it must have been '.'.  Set ii if there are none such
  }else{
   // if there are alphabetics/non-ASCII, do the full analysis
-// obsolete   *x=*q=*ii=0;
-// obsolete   // if the string contains 'a' or 'j', it must be complex
-// obsolete   *j=memchr(s,'j',n)||memchr(s,'a',n);
   // if it contains 'b' or 'p', that becomes the type regardless of others
   // (types incompatible with that raise errors later)
-// obsolete   *b=memchr(s,'b',n)||memchr(s,'p',n);
   ret=(memchr(s,'j',n)||memchr(s,'a',n)?CMPX:0) + (memchr(s,'b',n)||memchr(s,'p',n)?LIT:0);
-// obsolete   if(!*j&!*b){
   if(ret==0){
 #if SY_64
-// obsolete   *ii=1;
    ret|=INT;  // default to 'nothing seen except integers'
 #endif
    // if not j or b type, scan again. x indicates 1x2 or 23x.  Set both
-// obsolete    if(memchr(s,'x',n)){*b=*x=1; *ii=0;}
    if(memchr(s,'x',n)){ret|=LIT+XNUM; ret&=~INT;}
    // if string contains r, it's rational (since not ar)
-// obsolete    if(memchr(s,'r',n)){*q=1;    *ii=0;}
    if(memchr(s,'r',n)){ret|=RAT;    ret&=~INT;}
    // if no x or r found, exit as float
-// obsolete    if(!*x&!*q&!*ii)R;
    if(!(ret&RAT+XNUM+INT))R ret;
    // If any . or e found, or 'x' not at the end, treat as float, with exact modes cleared.  LIT could still be set for 1x2
    // Thus, 4. 1r3 produces float, while 4 1r3 produces rational
- // obsolete   DO(n, c=s[i]; e=!s[1+i]; if(c=='.'||c=='e'||c=='x'&&!e){*x=*q=*ii=0; R;});
    e=s[0]; DO(n, c=e; e=s[i+1]; if(c=='.'||c=='e'||c=='x'&&e){R ret&~(XNUM+RAT+INT);});  // must look at stopper because comma strings have multiple NULs at the end
   }
   R ret;
@@ -236,9 +225,6 @@ A jtconnum(J jt,I n,C*s){PROLOG(0101);A y,z;B (*f)(J,I,C*,void*),p=1;C c,*v;I d=
  DO(n, c=*v; c=c==CSIGN?'-':c; c=(c==CTAB)|(c==' ')?C0:c; *v++=c; B b=C0==c; bcvtmask=bcvtmask|(4*(c=='.')+2*((p|b)^1)); yv[d]=i; d+=p^b; p=b;);  // replace _ with -, whitespace with \0; and record start and end positions
    // if we encounter '.', make sure the result is at least FL; if we encounter two non-whitespace in a row, make sure result is at least INT
  yv[d++]=n; m=d>>1;  // append end for last field in case it is missing; m=#fields.  If end was not missing the extra store is harmless
-// obsolete  numcase(n,s,&b,&j,&x,&q,&ii);   // analyze contents of values
-// obsolete  bcvtmask|=j>b?8:0; // flag we have complex
-// obsolete  f=jtnumd; t=FL;  f=ii?jtnumi:f; t=ii?INT:t;  f=b|j?jtnumbpx:f; t=b|j?CMPX:t;  f=x?jtnumx:f; t=x?XNUM:t;  f=q?jtnumq:f; t=q?RAT:t;  // routine to use, and type of result
  I tt=numcase(n,s);   // analyze contents of values; returns type flags for chars, as expected except LIT for b
  bcvtmask|=(tt&CMPX+LIT)==CMPX?8:0; // flag to force complex if we have j but not b
  f=jtnumd; t=FL;  f=tt&INT?jtnumi:f; t=tt&INT?INT:t;  f=tt&CMPX+LIT?jtnumbpx:f; t=tt&CMPX+LIT?CMPX:t;  f=tt&XNUM?jtnumx:f; t=tt&XNUM?XNUM:t;  f=tt&RAT?jtnumq:f; t=tt&RAT?RAT:t;  // routine to use, and type of result
@@ -298,10 +284,8 @@ I strtoint(C* in, C** out) {
  for(;;++in) {   // Read integer part:
   dig = (I)*in - (I)'0';
   if((UI)dig<=(UI)9){  // numeric digit.  Accept it and check for overflow
-// obsolete   if(res==IMIN)R 0;  // if previous digit overflowed to IMIN, this must fail
    if((UI)res >= 1+IMAX/10) R 0;  // fail if this will overflow for sure.  res could be IMIN
    res = res * 10 + dig; // accept the digit.  This may overflow, but that's not fatal yet if it overflows to IMIN
-// obsolete    if(res<0 && res!=IMIN)R 0;  // We allow IMIN to continue on, representing IMAX+1
    if(res-1 < -1)R 0;  // If result overflowed to neg, fail.  We allow IMIN to continue on, representing IMAX+1
    continue;
   }
@@ -320,7 +304,6 @@ I strtoint(C* in, C** out) {
  // It passed as an int.  Return it, unless it overflows on sign
  // If the value is IMIN, it has already had the sign switched; otherwise apply the sign
  if(res==IMIN){if(!neg)R 0;}   // -2^63 is OK, but not +2^63
-// obsolete else{if(neg)res=-res;}
  res=(res^(-neg))+neg;   // change sign if neg
  *out=in;   // Finally, signal success
  R res;  // Return the int value
@@ -395,7 +378,6 @@ B valueisint; // set if the value we are processing is really an int
      // We hit a float.  Forget about ints
      tryingint = 0;
      // Convert the default value to float if it isn't already
-// obsolete     a1 = a0; a0 = (D)*(I *)&a1;
      if(AT(a)&INT)a0=(D)IAV(a)[0];
      // Convert all previously-read values to float.  Also converted the default value above
      // We have to use pointer aliasing to read the value in zv as an int
@@ -435,15 +417,9 @@ F2(jtexec2){A z;B b,p;C d,*v;I at,c,i,k,m,n,r,*s;
    // b is set when the current character is significant (i. e. not whitespace); p when the previous character was significant
    // k counts the number of words on this line
    // c is the max # words found on a line
-   b=0/* obsolete 1*/; k=0; 
+   b=0; k=0; 
    for(j=0;j<n;++j){
     p=b; d=*v;
-// obsolete     b=0;
-// obsolete     switch(d){
-// obsolete      case ' ': case CTAB:  *v=C0; b=1; break;
-// obsolete      case CSIGN: *v='-'; 
-// obsolete     }
-// obsolete     ++v; if(p>b)++k;
     // replace ' ' and TAB with \0; replace _ with -
     b=(d!=' ')&(d!=CTAB); d=d==CSIGN?'-':d; d&=-b;
     *v=d; ++v; k+=b&~p;  // write out the possibly-changed character; if char is a new start-of-field, increment word count

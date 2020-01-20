@@ -81,18 +81,15 @@ F2(jttake){A s;I acr,af,ar,n,*v,wcr,wf,wr;
  if(!(SPARSE&wt))RZ(w=setfv(w,w)); 
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr; af=ar-acr;  // ?r=rank, ?cr=cell rank, ?f=length of frame
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK; 
-// obsolete  if(af||1<acr)R rank2ex(a,w,0L,MIN(acr,1),wcr,acr,wcr,jttake);  // if multiple x values, loop over them
  if(((af-1)&(acr-2))>=0)R rank2ex(a,w,0L,MIN(acr,1),wcr,acr,wcr,jttake);  // if multiple x values, loop over them  af>0 or acr>1
  // canonicalize x
  n=AN(a);    // n = #axes in a
-// obsolete  ASSERT(!wcr||n<=wcr,EVLENGTH);  // if y is not atomic, a must not have extra axes
- ASSERT(BETWEENC(n,1,wcr)/* obsolete (UI)(n-1)<=(UI)(wcr-1)*/,EVLENGTH);  // if y is not atomic, a must not have extra axes  wcr==0 is always true
+ ASSERT(BETWEENC(n,1,wcr),EVLENGTH);  // if y is not atomic, a must not have extra axes  wcr==0 is always true
  I * RESTRICT ws=AS(w);  // ws->shape of w
  RZ(s=vib(a));  // convert input to integer, auditing for illegal values; and convert infinities to IMAX/-IMAX
  // if the input was not INT/bool, we go through and replace any infinities with the length of the axis.  If we do this, we have
  // to clone the area, because vib might return a canned value
  if(!(AT(a)&B01+INT)){
-// obsolete   I i; for(i=0;i<AN(s);++i){I m=IAV(s)[i]; I ms=m>>(BW-1); if((m^ms)-ms == IMAX)break;}
   I i; for(i=0;i<AN(s);++i){I m=IAV(s)[i]; I ms=m>>(BW-1); if((m^ms)-ms == IMAX)break;}  // see if there are infinities.  They are IMAX/-IMAX, so take abc & see if result is IMAX
   if(i<AN(s)){
    s=ca(s); if(!(AT(a)&FL))RZ(a=cvt(FL,a));  // copy area we are going to change; put a in a form where we can recognize infinity
@@ -122,7 +119,6 @@ F2(jttake){A s;I acr,af,ar,n,*v,wcr,wf,wr;
   }
  }
  // full processing for more complex a
-// obsolete  if(!wcr||wf){   // if y is an atom, or y has multiple cells:
  if((-wcr&(wf-1))>=0){   // if y is an atom, or y has multiple cells:
   RZ(s=vec(INT,wf+n,AS(w))); v=wf+AV(s);   // s is a block holding shape of a cell of input to the result: w-frame followed by #$a axes, all taken from w.  vec is never virtual
   if(!wcr){DO(n,v[i]=1;); RZ(w=reshape(s,w));}  // if w is an atom, change it to a singleton of rank #$a
@@ -138,7 +134,6 @@ F2(jtdrop){A s;I acr,af,ar,d,m,n,*u,*v,wcr,wf,wr;
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK; I wt=AT(w);
  // special case: if a is atomic 0, and cells of w are not atomic
  if((-wcr&(ar-1))<0&&(IAV(a)[0]==0))R RETARG(w);   // 0 }. y, return y
-// obsolete  if(af||1<acr)R rank2ex(a,w,0L,MIN(acr,1),wcr,acr,wcr,jtdrop);  // if multiple x values, loop over them
  if(((af-1)&(acr-2))>=0)R rank2ex(a,w,0L,MIN(acr,1),wcr,acr,wcr,jtdrop);  // if multiple x values, loop over them  af>0 or acr>1
  n=AN(a); u=AV(a);     // n=#axes to drop, u->1st axis
  // virtual case: scalar a

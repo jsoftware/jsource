@@ -11,7 +11,6 @@
 // if w is not the same type as the fill, convert it.  The user has to handle a.
 F2(jtsetfv){A q=jt->fill;I t;
  RZ(a&&w);
-// obsolete  t=AN(a)?AT(a):AN(w)?AT(w):0;
  I t2=((-AN(w))>>(BW-1))&AT(w); t=((-AN(a))>>(BW-1))&AT(a); t=t?t:t2;  // ignoring empties, use type of a then w
  if(q&&AN(q)){
   RE(t=t?maxtype(t,AT(q)):AT(q)); 

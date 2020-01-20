@@ -75,7 +75,6 @@ static KF1(jtBfromI){B*x;I n,p,*v;
 static KF1(jtBfromD){B*x;D p,*v;I n;
  n=AN(w); v=DAV(w); x=(B*)yv;
  DQ(n, p=*v++; if(p<-2||2<p)R 0;   // handle infinities
-// obsolete   if(!p)*x++=0; else if(FIEQ(p,1.0))*x++=1; else R 0;);
   I val=2; val=(p==0)?0:val; val=FIEQ(p,1.0)?1:val; if(val==2)R 0; *x++=(B)val; )
  R 1;
 }
@@ -83,7 +82,6 @@ static KF1(jtBfromD){B*x;D p,*v;I n;
 static KF1(jtIfromD){D p,q,*v;I i,k=0,n,*x;
  n=AN(w); v=DAV(w); x=(I*)yv;
 #if SY_64
-#if 1
  for(i=0;i<n;++i){
   p=v[i]; q=jround(p); I rq=(I)q;
   if(!(p==q || FIEQ(p,q)))R 0;  // must equal int, possibly out of range
@@ -92,16 +90,6 @@ static KF1(jtIfromD){D p,q,*v;I i,k=0,n,*x;
   else if(p>=-(D)IMIN){if(!(p<=IMAX*(1+jt->fuzz)))R 0; rq=IMAX;}  // if tolerantly > IMAX, error; else take IMAX
   *x++=rq;
  }
-#else // obsolete
- q=IMIN*(1+jt->fuzz); D r=IMAX*(1+jt->fuzz);
- DO(n, p=v[i]; if(p<q||r<p)R 0;);
- for(i=0;i<n;++i){
-  p=v[i]; q=jfloor(p);
-  if         (FEQ(p,q)){k=(I)q; *x++=SGN(k)==SGN(q)?k:0>q?IMIN:IMAX;}
-  else if(++q,FEQ(p,q)){k=(I)q; *x++=SGN(k)==SGN(q)?k:0>q?IMIN:IMAX;}
-  else R 0;
- }
-#endif
 #else
  q=IMIN*(1+jt->fuzz); D r=IMAX*(1+jt->fuzz);
  DO(n, p=v[i]; if(p<q||r<p)R 0;);
@@ -409,7 +397,6 @@ A jtbcvt(J jt,C mode,A w){FPREFIP; A y,z=w;D ofuzz;
  if((((AN(w)-1)|(AT(w)&CMPX)-1))>=0){  // not empty AND complex
   I allflag=1, anyflag=0; Z *wv = ZAV(w); DO(AN(w), I isflag=*(I*)&wv[i].im==NANFLAG; allflag&=isflag; anyflag|=isflag;)
   if(anyflag){
-// obsolete and wrong   I ipok=(-(I)jtinplace&JTINPLACEW) & AC(w);  // both sign bits set (<0) if inplaceable
    I ipok=SGNIF(jtinplace,JTINPLACEWX) & AC(w);  // both sign bits set (<0) if inplaceable
    if(allflag){
     if(ipok>=0)GATV(z,INT,AN(w),AR(w),AS(w));
@@ -441,11 +428,7 @@ F1(jticvt){A z;D*v,x;I i,n,*u;
  GATV(z,INT,n,AR(w),AS(w)); u=AV(z);
  for(i=0;i<n;++i){
   x=*v++; if(x<IMIN||IMAX<x)R w;  // if conversion will fail, skip it
-#if 0 && SY_64  // obsolete
-  k=(I)x; *u++=SGN(k)==SGN(x)?k:0>x?IMIN:IMAX;
-#else
   *u++=(I)x;
-#endif
  }
  R z;
 }
@@ -493,7 +476,6 @@ F2(jtxco2){A z;B b;I j,n,r,*s,t,*wv,*zu,*zv;
   case  3:
    ASSERT(t&XD+XZ,EVDOMAIN);
    b=(~t>>XDX)&1;   // b=NOT XD
-// obsolete    GATV0(z,INT,b?n:2*n,b?r:1+r); s=AS(z); if(!b)*s++=2; MCISH(s,AS(w),r);
    GATV0(z,INT,n<<b,r+b); s=AS(z); if(b)*s++ =2; MCISH(s,AS(w),r);
    zv=AV(z); zu=n+zv; wv=AV(w);
    if(t&XD){DX*v=(DX*)wv;   DQ(n,         *zv++=v->p;);}

@@ -132,7 +132,6 @@ static B jtatomic(J jt,C m,A w){A f,g;B ax,ay,vf,vg;C c,id;V*v;
 static A jtgjoin(J jt,C c,A a,A w){A f;
  RZ(a&&w);
  ASSERT(1>=(AR(a)|AR(w)),EVRANK);  // both ranks<2
-// obsolete  ASSERT((!AN(a)||BOX&AT(a))&&(!AN(w)||BOX&AT(w)),EVDOMAIN);  // both boxed or empty
  ASSERT((((AN(a)-1)|-(BOX&AT(a)))&((AN(w)-1)|-(BOX&AT(w))))<0,EVDOMAIN);  // both boxed or empty
  RZ(f=qq(atop(ds(CBOX),ds(CCOMMA)),zeroionei[0]));  // f = <@,"0
  R df2(box(spellout(c)),df2(a,w,f),f);   // gerund: (<c) <@,"0 a <@,"0 w
@@ -263,7 +262,6 @@ static DF2(jtgcr2){DECLFG;A ff,*hv=AAV(sv->fgh[2]);
 // a is the original u, w is the original v
 A jtgconj(J jt,A a,A w,C id){A hs,y;B na;I n;
  RZ(a&&w);
-// obsolete ASSERT(VERB&AT(a)&&BOX&AT(w)||BOX&AT(a)&&VERB&AT(w),EVDOMAIN);
  ASSERT(((AT(a)|AT(w))&(VERB|BOX))==(VERB|BOX),EVDOMAIN);  // v`box or box`v
  na=1&&BOX&AT(a); y=na?a:w; n=AN(y);  // na is 1 for gerund}; y is the gerund
  ASSERT(1>=AR(y),EVRANK);
@@ -322,7 +320,6 @@ A jtgadv(J jt,A w,C id){A hs;I n;
  // hs is a BOX array, but its elements are ARs
  // The derived verb is ASGSAFE if all the components are; it has gerund left-operand; and it supports inplace operation on the dyad
  // Also set the LSB flags to indicate whether v0 is u@[ or u@]
-// obsolete ASSERT(AT(AAV(hs)[0])&VERB&&AT(AAV(hs)[1])&VERB&&AT(AAV(hs)[2])&VERB,EVDOMAIN);
  ASSERT(AT(AAV(hs)[0])&AT(AAV(hs)[1])&AT(AAV(hs)[2])&VERB,EVDOMAIN);
  I flag=(FAV(AAV(hs)[0])->flag&FAV(AAV(hs)[1])->flag&FAV(AAV(hs)[2])->flag&VASGSAFE)+(VGERL|VJTFLGOK2)+atoplr(AAV(hs)[0]);
  R fdef(0,id,VERB, jtgav1,jtgav2, w,0L,hs,flag, RMAX,RMAX,RMAX);  // create the derived verb

@@ -56,12 +56,11 @@ C spellin(I n,C*s){C c,d,p=*s,*t;I j;
    R p;
   case 2:
    // For 2-byte characters, look the character up in the table and choose the appropriate inflection
-// obsolete    c=s[1]; j=c==CESC1?1:c==CESC2?2:0;
    c=s[1]; j=c==CESC1; j=c==CESC2?2:j;  // 0 only if erroneous user AR
    R j&&(t=(C*)strchr(spell[0],p)) ? spell[j][t-spell[0]] : 0;  // if inflection is not . or :, or character not found, return error
   case 3:
    c=s[1]; d=s[2];
-   if(p==CSIGN&&d==CESC2&&BETWEENC(c,'1','9')/* obsolete (UI)(c-'1')<=(UI)('9'-'1')*/)R CFCONS;  // lump all _0-9: as CFCONS
+   if(p==CSIGN&&d==CESC2&&BETWEENC(c,'1','9'))R CFCONS;  // lump all _0-9: as CFCONS
    // sp3 desribes a character in a column.  Row 1 is the uninflected character, rows 2-3 give a supported inflection.  If those match,
    // the pseudocharacter in in row 0
    if(t=(C*)strchr(sp3[1],p)){for(j=t-sp3[1];sp3[1][j]==p;++j){if(c==sp3[2][j]&&d==sp3[3][j])R sp3[0][j];} R 0;}
@@ -77,7 +76,6 @@ void spellit(C c,C*s){C*q;I k;
  else if(q=(C*)strchr(spell[2],c)){k=q-spell[2]; s[0]=spell[0][k]; s[1]=CESC2;}
  else if(q=(C*)strchr(sp3[0],  c)){k=q-sp3[0];   s[0]=sp3[1][k];   s[1]=sp3[2][k]; s[2]=sp3[3][k];}
  else if(CAMIP==c)s[0]='}';
-// obsolete  else if(CAPIP==c)s[0]=',';
 }    /* spell out ID c in s */
 
 A jtspella(J jt,A w){C c,s[3];V*v;
@@ -85,7 +83,6 @@ A jtspella(J jt,A w){C c,s[3];V*v;
  v=FAV(w); c=v->id;
  if(c==CFCONS)R over(thorn1(v->fgh[2]),chr[':']); 
  spellit(c,s); 
-// obsolete  R str(s[2]?3L:s[1]?2L:1L,s);
  R str(1+!!s[1]+!!s[2],s);
 }
 

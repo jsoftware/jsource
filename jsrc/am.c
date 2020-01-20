@@ -117,7 +117,6 @@ F1(jtcasev){A b,*u,*v,w1,x,y,z;B*bv,p,q;I*aa,c,*iv,j,m,n,r,*s,t;
 // cellframelen is the number of axes of w that were used in computing the cell indexes
 static A jtmerge2(J jt,A a,A w,A ind,I cellframelen){F2PREFIP;A z;I t;
  RZ(a&&w&&ind);
-// obsolete  ASSERT(HOMO(AT(a),AT(w))||!AN(a)||!AN(w),EVDOMAIN);  // error if xy not empty and not compatible
  ASSERT(HOMO(AT(a),AT(w))||(-AN(a)&-AN(w))>=0,EVDOMAIN);  // error if xy both not empty and not compatible
  ASSERT(AR(a)<=AR(w)+AR(ind)-cellframelen,EVRANK);   // max # axes in a is the axes in w, plus any surplus axes of m that did not go into selecting cells
  //   w w w w w
@@ -127,7 +126,6 @@ static A jtmerge2(J jt,A a,A w,A ind,I cellframelen){F2PREFIP;A z;I t;
  ASSERTAGREE(AS(a)+MAX(0,AR(a)-(AR(w)-cellframelen)),AS(w)+AR(w)-(AR(a)-MAX(0,AR(a)-(AR(w)-cellframelen))),AR(a)-MAX(0,AR(a)-(AR(w)-cellframelen)));  // the rest of the shape of m{y comes from shape of y
  if(!AN(w))RCA(w);  // if y empty, return.  It's small.  Ignore inplacing
  t=AN(a)?maxtyped(AT(a),AT(w)):AT(w);  // get the type of the result: max of types, but if x empty, leave y as is
-// obsolete if(AN(a)&&!TYPESEQ(t,AT(a)))RZ(a=cvt(t,a));  // if a must change precision, do so
  if((-AN(a)&-TYPESXOR(t,AT(a)))<0)RZ(a=cvt(t,a));  // if a must change precision, do so
  // Keep the original address if the caller allowed it, precision of y is OK, the usecount allows inplacing, and the type is either
  // DIRECT or this is a boxed memory-mapped array; and don't inplace a =: a m} a or a =: x a} a
@@ -136,10 +134,8 @@ static A jtmerge2(J jt,A a,A w,A ind,I cellframelen){F2PREFIP;A z;I t;
  // the stack is empty, so if there is a virtual block it must be in a higher sentence, and the backing name must appear on the
  // stack in that sentence if the usecount is only 1.
  I ip = ASGNINPLACESGNNJA(SGNIF((I)jtinplace,JTINPLACEWX),w)
-// obsolete       &&TYPESEQ(t,AT(w))&&(AT(w)&(DIRECT|RECURSIBLE))&&w!=a&&w!=ind&&(w!=ABACK(a)||!(AFLAG(a)&AFVIRTUAL));
       &&( ((AT(w)&t&(DIRECT|RECURSIBLE))!=0)&(w!=a)&(w!=ind)&((w!=ABACK(a))|(~AFLAG(a)>>AFVIRTUALX)) );
  // if w is boxed, we have to make one more check, to ensure we don't end up with a loop if we do   (<a) m} a.  Force a to be recursive usecount, then see if the usecount of w is changed
-// obsolete  if(ip&&t&RECURSIBLE){
  if(-ip&t&RECURSIBLE){
   I oldac = ACUC(w);  // remember original UC of w
   ra0(a);  // ensure a is recursive usecount.  This will be fast if a is one boxing level
@@ -264,9 +260,7 @@ static A jtjstd(J jt,A w,A ind,I *cellframelen){A j=0,k,*v,x;I b;I d,i,n,r,*u,wr
   n=AR(ind)<2?1:AS(ind)[AR(ind)-1];  // n=#axes used: 1, if m is a list; otherwise {:$m
  }else{  // a single box.
   ind=AAV0(ind); n=AN(ind); r=AR(ind);  // ind etc now refer to the CONTENTS of the single box
-// obsolete  ASSERT(!n&&1==r||AT(ind)&BOX+NUMERIC,EVINDEX);  // must be empty list or numeric or boxed
   ASSERT((-(n|(r^1))&((AT(ind)&BOX+NUMERIC)-1))>=0,EVINDEX);  // must be empty list or numeric or boxed
-// obsolete  if(n&&!(BOX&AT(ind)))RZ(ind=every(ind,0L,jtright1));  // if numeric, box each atom
   if(((n-1)|SGNIF(AT(ind),BOXX))>=0)RZ(ind=IRS1(ind,0,0,jtbox,j));  // if numeric, box each atom
   v=AAV(ind);   // now ind is a atom/list of boxes, one per axis
   ASSERT(1>=r,EVINDEX);  // not a table
@@ -346,7 +340,6 @@ static DF1(mergv1){DECLF; R merge1(w,CALL1(f1,w,fs));}
 static B ger(A w){A*wv,x;
  if(!(BOX&AT(w)))R 0;
  wv=AAV(w); 
-// obsolete  DO(AN(w), x=wv[i]; if(BOX&AT(x)&&1==AR(x)&&2==AN(x))x=AAV0(x); if(!(LIT&AT(x)&&1>=AR(x)&&AN(x)))R 0;);
  DO(AN(w), x=wv[i]; if((-(BOX&AT(x))&(((AR(x)^1)|(AN(x)^2))-1))<0)x=AAV0(x); if(((-(LIT&AT(x))&(AR(x)-2)&-AN(x)))>=0)R 0;);  // box/rank1/N=2; lit/R<2/N!=0
  R 1;
 }    /* 0 if w is definitely not a gerund; 1 if possibly a gerund */
@@ -381,9 +374,8 @@ static B gerar(J jt, A w){A x; C c;
   if(bmin==0){if(!(gerar(jt,x)))R 0; bmin=1,bmax=2;}
   // Now look at the second box.  It should contain between bmin and bmax boxes, each of which must be an AR
   x = wv[1];   // point to second box
-// obsolete   if(!(BOX&AT(x) && 1==AR(x)))R 0;   // verify it contains a list of boxes
   if((SGNIF(AT(x),BOXX) & ((AR(x)^1)-1))>=0)R 0;   // verify it contains a list of boxes
-  if(!BETWEENC(AN(x),bmin,bmax)/* obsolete if((UI)(AN(x)-bmin)>(UI)(bmax-bmin)*/)R 0;  // verify correct number of boxes
+  if(!BETWEENC(AN(x),bmin,bmax))R 0;  // verify correct number of boxes
   R gerexact(x);  // recursively audit the other ARs in the second box
  } else R 0;
  R 1;

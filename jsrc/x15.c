@@ -921,13 +921,6 @@ static I*jtconvert0(J jt,I zt,I*v,I wt,C*u){D p,q;I k=0;US s;C4 s4;
   if(p<(D)IMIN){if(!(p>=IMIN*(1+FUZZ)))R 0; rq=IMIN;}  // if tolerantly < IMIN, error; else take IMIN
   else if(p>=-(D)IMIN){if(!(p<=IMAX*(1+FUZZ)))R 0; rq=IMAX;}  // if tolerantly > IMAX, error; else take IMAX
   *v=rq;
-#if 0 // obsolete
-   p=*(D*)u; q=jfloor(p);
-   if(p<IMIN*(1+jt->fuzz)||IMAX*(1+jt->fuzz)<p)R 0;
-   if         (FEQ(p,q)){k=(I)q; *v=SGN(k)==SGN(q)?k:0>q?IMIN:IMAX;}
-   else if(++q,FEQ(p,q)){k=(I)q; *v=SGN(k)==SGN(q)?k:0>q?IMIN:IMAX;}
-   else R 0;
-#endif
 #else
    p=*(D*)u; q=jfloor(p);
    if(p<IMIN*(1+jt->fuzz)||IMAX*(1+jt->fuzz)<p)R 0;

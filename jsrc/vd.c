@@ -13,8 +13,6 @@ static F1(jtnorm){R sqroot(pdt(w,conjug(w)));}
 // if n<=ncomp, this is a small FL matrix & we take the inverse inplace
 static A jtrinvip(J jt,A w,I n,I ncomp){PROLOG(0066);A ai,bx,di,z;I m;
  RZ(w);
-// obsolete  r=AR(w); s=AS(w); n=2>r?1:s[1]; // n is rank of matrix
-// obsolete n=AS(w)[0];  // size of matrix
  if(n<=ncomp){
   // Handle 2x2 and smaller FL quickly and inplace to avoid recursion and memory-allocation overhead
   // result is 1/w00 w01/(w00*w11)
@@ -31,7 +29,6 @@ static A jtrinvip(J jt,A w,I n,I ncomp){PROLOG(0066);A ai,bx,di,z;I m;
  }
  // fall through for other types & shapes
  if(1>=n)R recip(w);  // if an atom, inverse = reciprocal.  Must be CMPX or RAT
-// obsolete m=(1+n)>>1; //    m is the matrix splitpoint
  m=n>>1; I tom=(0x01222100>>((n&7)<<2))&3; m=(m+tom<n)?m+tom:m;  // Minimize number of wasted multiply slots, processing in batches of 4
  // construe w as a block-matrix Wij where w00 and w11 are upper-triangular, w10 is 0, and w01 is a full matrix
  ai=jtrinvip(jt,take(v2(m,m),w),m,ncomp);  // take inverse of w00  kludge could use faux block to avoid take overhead esp for 2x2 FL results
@@ -41,7 +38,6 @@ static A jtrinvip(J jt,A w,I n,I ncomp){PROLOG(0066);A ai,bx,di,z;I m;
  }else{
   // copy in the pieces, line by line, writing over the input area
   I leftlen = m<<bplg(AT(w)); I rightlen=(n-m)<<bplg(AT(w));
-// obsolete   GA(z,AT(w),n*n,2,AS(w)); 
   z=w; void *zr=voidAV(z);  // reuse input area, set pointer to output
   // copy top part: ai,.bx
   void *leftr=voidAV(ai), *rightr=voidAV(bx);  // input pointers
@@ -70,13 +66,11 @@ F1(jtrinv){
 // recursive subroutine for qr decomposition, returns q;r
 static F1(jtqrr){PROLOG(0067);A a1,q,q0,q1,r,r0,r1,t,*tv,t0,t1,y,z;I m,n,p,*s;
  RZ(w);
-// obsolete  if(2>AR(w)){p=AN(w); n=m=1;}else{s=AS(w); p=s[0]; n=s[1]; m=(1+n)>>1;}  // p=#rows, n=#columns
  if(2>AR(w)){p=AN(w); n=1;}else{s=AS(w); p=s[0]; n=s[1];}  // p=#rows, n=#columns
  m=n>>1; I tom=(0x01222100>>((n&7)<<2))&3; m=(m+tom<n)?m+tom:m;  // Minimize number of wasted multiply slots, processing in batches of 4
  if(1>=n){  // just 1 col
   t=norm(ravel(w));  // norm of col 
   ASSERT(!AN(w)||!equ(t,num[0]),EVDOMAIN);  // norm must not be 0 unless column is empty
-// obsolete  RZ(q=divide(w,t));
   RZ(q=tymes(w,recip(t)));
   R link(2>AR(q)?table(q):q,reshape(v2(n,n),p?t:num[1]));
  }
@@ -140,7 +134,6 @@ RZ(w);
    fauxvirtual(q0,virtwq0,w,1,ACUC1); AS(q0)[0]=cl; AN(q0)=cl;  // kludge use sumattymesprod to create a table result directly
    A t; RZ(t=norm(q0));  // norm of row
    ASSERT(!equ(t,num[0]),EVDOMAIN);  // norm must not be 0
- // obsolete  RZ(q=divide(w,t));
    A z; RZ(z=tymesA(w,recip(t))); verifyinplace(w,z);
    RZ(t=table(t)); realizeifvirtual(t); R t; // this is real, so it is also the adjoint of L
   }
@@ -253,13 +246,7 @@ F1(jtminv){PROLOG(0068);A q,y,z;I m,n,*s,t,wr;
  }else{
   // not RAT/XNUM.  Calculate inverse as R^-1 Q^-1 after taking QR decomp & using Q^-1=Q*
   if(t&B01+INT&&2==wr&&m==n)jt->workareas.minv.determ=1.0;  // if taking inverse of square int, allow setting up for correction afterward
-#if 0   // obsolete
-  RZ(y=qr(w)); v=AAV(y); q=*v++; r=*v;
-  z=pdt(rinv(r),t&CMPX?conjug(cant1(q)):cant1(q));
-// obsolete   if(t&B01+INT&&2==wr&&m==n)z=icor(z);
-#else
   z=jtlq(jt,w);
-#endif
   z=icor(z);  // if integer correction called for, do it
   z=2==wr?z:reshape(shape(w),z);
  }
@@ -304,15 +291,6 @@ F2(jtmdiv){PROLOG(0069);A z;I t;
  if(AT(a)&SPARSE)RZ(a=denseit(a));
  t=AT(w);
  if(t&SPARSE)R mdivsp(a,w);
-#if 0 // obsolete
- if(t&XNUM+RAT)z=minv(w);  // for xnums, take inv of a
- else{
-  RZ(y=qr(w)); v=AAV(y); q=*v++; r=*v;
-  z=pdt(rinv(r),t&CMPX?conjug(cant1(q)):cant1(q));
-  b=t&B01+INT&&2==AR(w)&&*AS(w)==*(1+AS(w));
-  if(b)z=icor(r,z);
- }
-#endif
  z=minv(w);  // take generalized inverse of w, setting up for icor if needed
  z=pdt(2>AR(w)?reshape(shape(w),z):z,a);  // a * w^-1
  if(AT(a)&B01+INT)z=icor(z);  // integer correct if a is not float (& correction is possible)

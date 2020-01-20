@@ -48,7 +48,6 @@ F1(jtwordil){A z;C e,nv,s,t=0;I b,i,m,n,*x,xb,xe;ST p;UC*v;
   p=state[s][wtype[v[i]]]; e=p.effect;    // go to next state
   if(e==EI){  // if 'emit'...
    t&=s==S9;   // was previous state S9? (means we were building a number)
-// obsolete    if(t){if(!nv){nv=1; xb=b;} xe=i;}   // if so, b must be set; if this is first number, remember starting index.  In any case remember presumptive ending index
    if(t){xb=nv?xb:b; nv=1; xe=i;}   // if so, b must be set; if this is first number, remember starting index.  In any case remember presumptive ending index
    else{if(nv){nv=0; *x++=xb; *x++=xe-xb;} *x++=b; *x++=i-b;}  // Not S9.  If a numeric constant was in progress, it ended on the word BEFORE
     // the one ending now.  In that case, emit the numeric constant.  Then in any case emit the (nonnumeric) ending here.
@@ -121,7 +120,7 @@ A jtenqueue(J jt,A a,A w,I env){A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl;UC c;
  for(i=0;i<n;i++,x++){  // for each word
   wi=s+*u++; wl=*u++; c=e=*wi; p=ctype[(UC)c]; b=0;   // wi=first char, wl=length, c=e=first char, p=type of first char, b='no inflections'
   if(1<wl){d=*(wi+wl-1); if(b=((p!=C9)&(d==CESC1))|(d==CESC2))e=spellin(wl,wi);}  // if word has >1 character, starts with nonnumeric, and ends with inflection, convert to pseudocharacter
-  if(BETWEENO(c,32,128)/* obsolete ((UI)c-32)<(UI)(128-32)*/&&(y=ds(e))){
+  if(BETWEENO(c,32,128)&&(y=ds(e))){
    // If first char is ASCII, see if the form including inflections is a primitive;
    // if so, that is the word to put into the queue.  No need to copy it
    // Since the address of the shared primitive block is used, we can use that to compare against to identify the primitive later
@@ -281,7 +280,7 @@ F1(jtfsmvfya){PROLOG(0099);A a,*av,m,s,x,z,*zv;I an,c,e,f,ijrd[4],k,p,q,*sv,*v;
  ASSERT(1==AR(a),EVRANK);
  ASSERT(BOX&AT(a),EVDOMAIN);
  an=AN(a); av=AAV(a); 
- ASSERT(BETWEENC(an,2,4)/* obsolete (UI)(an-2)<=(UI)(4-2)*/,EVLENGTH);
+ ASSERT(BETWEENC(an,2,4),EVLENGTH);
  RE(f=i0(av[0]));
  ASSERT((UI)f<=(UI)5,EVINDEX);
  RZ(s=vi(av[1])); sv=AV(s);
@@ -294,12 +293,9 @@ F1(jtfsmvfya){PROLOG(0099);A a,*av,m,s,x,z,*zv;I an,c,e,f,ijrd[4],k,p,q,*sv,*v;
   ASSERT(1==AR(x),EVRANK);
   ASSERT(4>=n,EVLENGTH);
   if(1<=n) ijrd[0]=i=*v++;
-// obsolete   if(2<=n){ijrd[1]=j=*v++; ASSERT(j==-1||0<=j&&j<i,EVINDEX);}
-// obsolete   if(3<=n){ijrd[2]=r=*v++; ASSERT(       0<=r&&r<p,EVINDEX);}
-// obsolete   if(4==n){ijrd[3]=d=*v++; ASSERT(d==-1||0<=d&&d<q,EVINDEX);}
-  if(2<=n){ijrd[1]=j=*v++; ASSERT(BETWEENO(j, -1, i)/* obsolete (UI)(j-(-1))<(UI)(i-(-1))*/,EVINDEX);}
+  if(2<=n){ijrd[1]=j=*v++; ASSERT(BETWEENO(j, -1, i),EVINDEX);}
   if(3<=n){ijrd[2]=r=*v++; ASSERT((UI)r<(UI)p,EVINDEX);}
-  if(4==n){ijrd[3]=d=*v++; ASSERT(BETWEENO(d, -1, q)/* obsolete (UI)(d-(-1))<(UI)(q-(-1))*/,EVINDEX);}
+  if(4==n){ijrd[3]=d=*v++; ASSERT(BETWEENO(d, -1, q),EVINDEX);}
  }
  m=2==an?mtv:av[2]; c=AN(m);
  ASSERT(1>=AR(m),EVRANK);
@@ -329,7 +325,6 @@ static A jtfsm0(J jt,A a,A w,C chka){PROLOG(0100);A*av,m,s,x,w0=w;B b;I c,f,*ijr
  }else{A*mv,t,y;I j,r;
   ASSERT(BOX&AT(m),EVDOMAIN);  // otherwise m must be boxes
   RZ(y=raze(m)); r=AR(y); k=AS(y)[0];  // y = all the input values run together, k=# input values
-// obsolete  ASSERT(r==AR(w)||r==1+AR(w),EVRANK);  // items of m must match rank of w, or the entire w (which will be treated as a single input)
   ASSERT((UI)(r-AR(w))<=(UI)1,EVRANK);  // items of m must match rank of w, or the entire w (which will be treated as a single input)
   GATV0(x,INT,1+k,1); v=AV(x); v[k]=c; mv=AAV(m);  // x will hold translated column numbers.  Install 'not found' value at the end
   DO(c, j=i; t=mv[i]; if((-r&((r^AR(t))-1))<0)DQ(AS(t)[0], *v++=j;) else *v++=j;);  // go through m; for each box, install index for that box for each item in that box.

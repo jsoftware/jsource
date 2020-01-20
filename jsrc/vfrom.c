@@ -274,15 +274,9 @@ static F2(jtbfrom){A z;B*av,*b;C*wv,*zv;I acr,an,ar,k,m,p,q,r,*u=0,wcr,wf,wk,wn,
 A jtfrombu(J jt,A a,A w,I wf){F1PREFIP;A p,q,z;I ar,*as,h,m,r,*u,*v,wcr,wr,*ws;
  ar=AR(a); as=AS(a); h=as[ar-1];  // h is length of the index list, i. e. number of axes of w that disappear during indexing
  wr=AR(w); ws=AS(w); wcr=wr-wf;
-// obsolete  DO(ar, if(!as[i]){b=1; break;});
-// obsolete  DO(wr, if(!ws[i]){b=1; break;});
  if((-AN(a)&-AN(w))>=0){  // empty array, either a or w
   // allocate empty result, move in shape: frame of w, frame of a, shape of item
   GA(z,AT(w),0,wf+(wcr-h)+(ar-1),0); MCISH(AS(z),AS(w),wf) MCISH(AS(z)+wf,AS(a),ar-1)  MCISH(AS(z)+wf+ar-1,AS(w)+wf+h,wcr-h)
-// obsolete   u=AS(z);
-// obsolete   v=ws;      DQ(wf,    *u++=*v++;);
-// obsolete   v=as;      DQ(ar-1,  *u++=*v++;);
-// obsolete   v=ws+wf+h; DQ(wcr-h, *u++=*v++;);
   R z;
  }
  fauxblockINT(pfaux,4,1); fauxINT(p,pfaux,h,1) v=AV(p)+h; u=ws+wf+h; m=1; DQ(h, *--v=m; m*=*--u;);  // m is number of items in the block of axes that index into w
@@ -300,7 +294,7 @@ A jtfrombu(J jt,A a,A w,I wf){F1PREFIP;A p,q,z;I ar,*as,h,m,r,*u,*v,wcr,wr,*ws;
  EPILOG(z);  // we have to release the virtual block so that w is inplaceable later on in the sentence
 }    /* (<"1 a){"r w, dense w, integer array a */
 
-#define AUDITPOSINDEX(x,lim) if(!BETWEENO((x),0,(lim))/* obsolete (UI)(x)>=(UI)(lim)*/){if((x)<0)break; ASSERT(0,EVINDEX);}
+#define AUDITPOSINDEX(x,lim) if(!BETWEENO((x),0,(lim))){if((x)<0)break; ASSERT(0,EVINDEX);}
 // a is boxed list, w is array, wf is frame of operation, *ind will hold the result
 // if the opened boxes have contents with the same item shape (treating atoms as same as singleton lists), create an array of all the indexes; put that into *ind and return 1.
 // otherwise return 0
@@ -316,7 +310,6 @@ B jtaindex(J jt,A a,A w,I wf,A*ind){A*av,q,z;I an,ar,c,j,k,t,*u,*v,*ws;
   q=av[j]; t=AT(q);
   if(t&BOX)R 0;   // if empty boxed array, error
   if(!(t&INT))RZ(q=cvt(INT,q));  // if can't convert to INT, error
-// obsolete   if(!(c==AN(q)&&1>=AR(q)))R 0;   // if not the same length, or rank>1, error
   if((((c^AN(q))-1)&(AR(q)-2))>=0)R 0;   // if not the same length, or rank>1, error
   u=AV(q);
   DO(c, SETNDX(k,u[i],ws[i]) *v++=k;);   // copy in the indexes, with correction for negative indexes
@@ -408,15 +401,12 @@ static F2(jtafrom){PROLOG(0073);A c,ind,p=0,q,*v,y=w;B bb=1;I acr,ar,i=0,j,m,n,p
  s=AS(w)+wr-wcr;
  ASSERT(1>=AR(c),EVRANK);
  ASSERT(n<=wcr,EVLENGTH);
-// obsolete  if(n&&!(t&BOX)){RE(aindex(a,w,wf,&ind)); if(ind)R frombu(ind,w,wf);}
  if((-n&SGNIFNOT(t,BOXX))<0){RE(aindex(a,w,wf,&ind)); if(ind)R frombu(ind,w,wf);}  // not empty and not boxed, handle as 1 index list
  if(wcr==wr){
   for(i=m=pr=0;i<n;++i){
    p=afi(s[i],v[i]);
-// obsolete    if(!(p&&1==AN(p)&&INT&AT(p)))break;  // if 1 selection from axis, do selection here, by adding offset to selected cell
    if(!(p&&(((AN(p)^1)-1)&-(AT(p)&NUMERIC))<0))break;  // if 1 selection from numeric axis, do selection here, by adding offset to selected cell
    pr+=AR(p); 
-// obsolete    m+=*AV(p)*prod(wcr-i-1,1+i+s);
    RANKT rsav=AR(p); AR(p)=0; m+=i0(p)*prod(wcr-i-1,1+i+s); AR(p)=rsav;  // kludge but easier than creating a fauxvirtual block
   }
  }
@@ -470,13 +460,9 @@ F2(jtfrom){I at;A z;
    }
   }else{
    // not atom{array.  Process according to type of a
-#if 1
    A (*fn)(J,A,A);
    fn=jtifrom; fn=at&BOX?jtafrom:fn; fn=at&(AN(a)!=1)?jtbfrom:fn; jtinplace=fn!=jtifrom?jt:jtinplace;
    z=(*fn)(jtinplace,a,w);
-#else  // obsolete
-   z=at&BOX?afrom(a,w)  :at&B01&&AN(a)!=1?bfrom(a,w):jtifrom(jtinplace,a,w);  // make 0{ and 1{ allow virtual result
-#endif
   }
  }else if(!((AT(a)|AT(w))&(NOUN&~SPARSE))){z=fromss(a,w);}
  else if(AT(w)&SPARSE){z=at&BOX?frombs(a,w) : fromis(a,w);}
@@ -551,7 +537,6 @@ F2(jtfetch){A*av, z;I n;F2PREFIP;
    RZ(z=jtquicksel(jt,a,w));  // fetch selected box, opened.  If not a box, just return w
    // Inplaceability depends on the context.  If the overall operand is either noninplaceable or in a noninplaceable context, we must
    // protect the value we fetch (the overall operand would matter only if it was flagged without a ra())
-// obsolete   if(!ACIPISOK(w)||!((I)jtinplace&JTINPLACEW))ACIPNO(z); RETF(z);
    if((AC(w)&SGNIF(jtinplace,JTINPLACEWX))>=0)ACIPNO(z); RETF(z);   // turn off inplace if w not inplaceable, or jt not inplaceable
   }
   RZ(a=box(a));  // if not special case, box any unboxed a
@@ -559,7 +544,6 @@ F2(jtfetch){A*av, z;I n;F2PREFIP;
  n=AN(a); av=AAV(a); 
  if(!n)R w; z=w;
  DO(n, A next=av[i]; if(((AT(z)>>BOXX)&1)>=(2*(AR(next)+(AT(next)&BOX))+AR(z))){RZ(z=jtquicksel(jt,next,z))}  // next is unboxed atom, z is boxed atom or list, use fast indexing  AR(next)==0 && !(AT(next)&BOX) && (AR(z)==0 || (AR(z)==1 && AT(z)&BOX))
-// obsolete       else{RZ(z=afrom(box(next),z)); if(i<n-1)ASSERT(!AR(z),EVRANK); if(!AR(z)&&AT(z)&BOX)RZ(z=ope(z));}
       else{RZ(z=afrom(box(next),z)); ASSERT(((i+1-n)&-AR(z))>=0,EVRANK); if(((AR(z)-1)&SGNIF(AT(z),BOXX))<0)RZ(z=ope(z));}  // Rank must be 0 unless last; open if boxed atom
    );
  if((AC(w)&SGNIF(jtinplace,JTINPLACEWX))>=0)ACIPNO(z); RETF(z);   // Mark the box as non-inplaceable, as above

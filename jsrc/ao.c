@@ -112,7 +112,6 @@ DF2(jtpolymult){A f,g,y,z;B b=0;C*av,c,d,*wv;I at,i,j,k,m,m1,n,p,t,wt,zn;V*v;
  v=FAV(self);  // f//. 
  f=v->fgh[0]; y=FAV(f)->fgh[0]; y=VAV(y)->fgh[0]; c=vaid(y);  // f/, then f
  g=v->fgh[1]; y=VAV(g)->fgh[0];              d=vaid(y);   // g taken from g/
-// obsolete  if(!(m&&1==AR(a)&&n&&1==AR(w)))R obqfslash(df2(a,w,g),f);  // if empty, or not lists, do general code
  if(!(m&&1==AR(a)&&n&&1==AR(w)))R obqfslash(df2(a,w,g),f);  // if empty, or not lists, do general code.  Never happens.
  // from here on polymult on nonempty lists
  if(t&FL+CMPX)NAN0;
@@ -302,7 +301,7 @@ static DF2(jtkeyslash){PROLOG(0012);A b,q,x,z=0;B bb,*bv,pp=0;C d;I at,*av0,c,n,
      wt&INT+FL&&(d==CMIN||d==CMAX||d==CPLUS) )))R key(a,w,self);
  CRT rng=keyrs(a,MAX(2*n,65536)); c=aii(w); at=rng.type; r=rng.minrange.min; s=rng.minrange.range; m=s;
  zt=wt; zt=wt&INT?FL:zt; zt=wt&B01?INT:zt; zt=d==CPLUS?zt:wt;  // type of result, promoting bool and int but only if +
- /* obsolete zt=d==CPLUS?(wt&B01?INT:wt&INT?FL:wt):wt;*/ bb=s!=0;
+ bb=s!=0;
  if(bb){
   GATV0(b,B01,s,  1); bv=BAV(b); memset(bv,C1,s); bv-=r;
   GA(q,zt, s*c,1,0); qv0=AV(q);
@@ -485,7 +484,6 @@ static DF2(jtkeytally){PROLOG(0016);A q;I at,*av,j=0,k,n,r,s,*qv,*u,*v;
  if(!AN(a))R vec(INT,n?1:0,&n);
  if(at&SPARSE)R keytallysp(a);
  CRT rng = keyrs(a,MAX(2*n,65536)); at=rng.type; r=rng.minrange.min; s=rng.minrange.range;
-// obsolete  if(n&&at&B01&&1>=AR(a)){B*b=(B*)av; k=bsum(n,b); R !k||n==k?vci(k?k:n):v2(*b?k:n-k,*b?n-k:k);}  // boolean a, just add the 1s
  if((-n&SGNIF(at,B01X)&(AR(a)-2))<0){B*b=(B*)av; k=bsum(n,b); R BETWEENO(k,1,n)?v2(*b?k:n-k,*b?n-k:k):vci(n);}  // nonempty rank<2 boolean a, just add the 1s
  if(s){A z;I*zv;
   GATV0(z,INT,s,1); zv=AV(z);
@@ -541,7 +539,6 @@ static DF2(jtkeyheadtally){PROLOG(0017);A f,q,x,y,z;B b;I at,*av,k,n,r,s,*qv,*u,
   GATV0(q,INT,s,1); qv=AV(q)-r;
   u=qv+r; DQ(s, *u++=0;); k=0;
   r=0; r=at&C2T?3:r; r=at&INT?6:r; r=at&C4T?9:r; r=at&SBT?12:r; 
-// obsolete   switch(15*b+(at&SBT?12:at&C4T?9:at&INT?6:at&C2T?3:0)+(wt&FL?2:wt&INT?1:0)){
   switch(15*b+r+((wt>>INTX)&3)){
    case  0: KEYHEADTALLY(I,UC,B,*v,   wv[i]); break;
    case  1: KEYHEADTALLY(I,UC,I,*v,   wv[i]); break;

@@ -5,7 +5,6 @@
 
 #include "j.h"
 
-// obsolete #define TC1(t)          (t&NOUN?0:t&VERB?3:t&CONJ?2:1)
 #define TC1(t)          (((t>>ADVX)&3)+(t&NOUN?3:0))   // C A V N -> 2 1 0 3
 #define BD(ft,gt)       (4*TC1(ft)+TC1(gt))
 #define TDECL           V*sv=FAV(self);A fs=sv->fgh[0],gs=sv->fgh[1],hs=sv->fgh[2]
@@ -151,7 +150,6 @@ A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I
   case CAT:    /* <"1@[ { ] */
    if(gi==CLBRACE&&hi==CRIGHT){                                   
     p=fv->fgh[0]; q=fv->fgh[1]; 
-// obsolete     if(CLEFT==ID(q)&&CQQ==ID(p)&&(v=VAV(p),x=v->fgh[0],CLT==ID(x)&&equ(num[1],v->fgh[1]))){f2=jtsfrom; flag &=~(VJTFLGOK2);}
     if(CLEFT==ID(q)&&CQQ==ID(p)&&(v=VAV(p),x=v->fgh[0],CLT==ID(x)&&v->fgh[1]==num[1])){f2=jtsfrom; flag &=~(VJTFLGOK2);}
    }
  }
@@ -164,7 +162,6 @@ A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I
                 break;
   case CFCONS:  if(hi==CFCONS){x=hv->fgh[2]; j=*BAV(x); m=-1; m=gi==CIOTA?j:m; m=gi==CICO?2+j:m; m=B01&AT(x)?m:-1;} break;
   case CRAZE:   if(hi==CCUT){
-// obsolete                  j=i0(hv->fgh[1]);
                  j=hv->localuse.lI;
                  if(CBOX==ID(hv->fgh[0])&&!j){f2=jtrazecut0; flag &=~(VJTFLGOK2);}
                  else if(boxatop(h)){  // h is <@g;.j   detect ;@:(<@(f/\);._2 _1 1 2
@@ -182,7 +179,6 @@ A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I
                 }
  }
  if(0<=m){
-// obsolete   v=4<=m?hv:fv; b=CFIT==v->id&&equ(num[0],v->fgh[1]);
   v=4<=m?hv:fv; b=CFIT==v->id&&v->fgh[1]==num[0];
   switch(b?ID(v->fgh[0]):v->id){
    case CEQ:   f2=b?jtfolkcomp0:jtfolkcomp; flag|=0+8*m; flag &=~(VJTFLGOK1|VJTFLGOK2); break;

@@ -20,7 +20,6 @@ CA, CA, CA, CA, CA, CA, CA, CA, CA, CA, CA,  0,  0,  0,  0,  0, /* 7 pqrstuvwxyz
 
 static B jtpdef(J jt,I id,I t,AF f1,AF f2,I m,I l,I r,I flag){A z;V*v;
  GAT0(z,BOX,(VERBSIZE+SZI-1)>>LGSZI,0);   // use BOX so it will all be cleared
-// obsolete  GA(z,t,1,0,0);
  AT(z)=t;  // install actual type
  ACX(z); v=FAV(z);
  AFLAG(z) |= AT(z)&TRAVERSIBLE;  // ensure that traversible types in pst are marked traversible, so tpush/ra/fa will not recur on them
@@ -100,8 +99,6 @@ B jtpinit(J jt){A t;C*s;
  /*  |. */  pdef(CREV,    VERB, jtreverse, jtrotate, RMAX,1,   RMAX,VASGSAFE|VIRS1|VIRS2);   // alias CROT
  /*  |: */  pdef(CCANT,   VERB, jtcant1,   jtcant2,  RMAX,1,   RMAX,VASGSAFE|VIRS1|VIRS2);
  /*  .  */  pdef(CDOT,    CONJ, 0L,        jtdot,    0,   0,   0   ,VFLAGNONE);
-// obsolete /*  .. */  pdef(CEVEN,   CONJ, 0L,        jteven,   0,   0,   0   ,VFLAGNONE);
-// obsolete /*  .: */  pdef(CODD,    CONJ, 0L,        jtodd,    0,   0,   0   ,VFLAGNONE);
  /*  :  */  pdef(CCOLON,  CONJ, 0L,        jtcolon,  0,   0,   0   ,VFLAGNONE);
  /*  :. */  pdef(COBVERSE,CONJ, 0L,        jtobverse,0,   0,   0   ,VFLAGNONE);
  /*  :: */  pdef(CADVERSE,CONJ, 0L,        jtadverse,0,   0,   0   ,VFLAGNONE);
@@ -156,9 +153,6 @@ B jtpinit(J jt){A t;C*s;
  /*  A. */  pdef(CATOMIC, VERB, jtadot1,   jtadot2,  1,   0,   RMAX,VASGSAFE);
  /*  b. */  pdef(CBDOT,   ADV,  jtbdot,    0L,       0,   0,   0   ,VASGSAFE);
  /*  C. */  pdef(CCYCLE,  VERB, jtcdot1,   jtcdot2,  1,   1,   RMAX,VASGSAFE);
-// obsolete  /*  d. */  pdef(CDDOT,   CONJ, 0L,        jtddot,   0,   0,   0   ,VFLAGNONE);
-// obsolete  /*  D. */  pdef(CDCAP,   CONJ, 0L,        jtdcap,   0,   0,   0   ,VFLAGNONE);
-// obsolete  /*  D: */  pdef(CDCAPCO, CONJ, 0L,        jtdcapco, 0,   0,   0   ,VFLAGNONE);
  /*  e. */  pdef(CEPS,    VERB, jtrazein,  jteps,    RMAX,RMAX,RMAX,VASGSAFE|VIRS2);
  /*  E. */  pdef(CEBAR,   VERB, 0L,        jtebar,   0,   RMAX,RMAX,VASGSAFE);
  /*  f. */  pdef(CFIX,    ADV,  jtfix,     0L,       0,   0,   0   ,VFLAGNONE);
@@ -180,9 +174,6 @@ B jtpinit(J jt){A t;C*s;
  /*  r. */  pdef(CRDOT,   VERB, jtrdot1,   jtrdot2,  0,   0,   0   ,VISATOMIC1|VASGSAFE);
  /*  s: */  pdef(CSCO,    VERB, jtsb1,     jtsb2,    RMAX,RMAX,RMAX,VASGSAFE);
  /*  S: */  pdef(CSCAPCO, CONJ, 0L,        jtscapco, 0,   0,   0   ,VFLAGNONE);
-// obsolete /*  t. */  pdef(CTDOT,   ADV,  jttdot,    0L,       0,   0,   0   ,VISATOMIC1);
-// obsolete /*  t: */  pdef(CTCO,    ADV,  jttco,     0L,       0,   0,   0   ,VFLAGNONE);
-// obsolete /*  T. */  pdef(CTCAP,   CONJ, 0L,        jttcap,   0,   0,   0   ,VFLAGNONE);
  /*  u. */  pdef(CUDOT,   VERB, jtimplocref,    jtimplocref,   RMAX,RMAX,RMAX,VFLAGNONE);
  /*  u: */  pdef(CUCO,    VERB, jtuco1,    jtuco2,   RMAX,RMAX,RMAX,VASGSAFE);
  /*  v. */  pdef(CVDOT,   VERB, jtimplocref,    jtimplocref,   RMAX,RMAX,RMAX,VFLAGNONE);

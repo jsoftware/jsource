@@ -602,7 +602,7 @@ A jtgc (J jt,A w,A* old){
   R w;  // if realize() failed, this could be returning 0
  }
  // non-VIRTUAL path
- ra(w);  // protect w and its descendants from tpop; also converts w to recursive usecount.
+ ra(w);  // protect w and its descendants from tpop; also converts w to recursive usecount (unless sparse).
   // if we are turning w to recursive, this is the last pass through all of w incrementing usecounts.  All currently-on-stack pointers to blocks are compatible with the increment
  tpop(old);  // delete everything allocated on the stack, except for w which was protected
  // Now we need to undo the effect of the initial ra and get the usecount back to its original value, with a matching tpush on the stack.
@@ -618,11 +618,17 @@ A jtgc (J jt,A w,A* old){
  // NOTE: certain functions (ex: rational determinant) perform operations 'in place' on non-direct names and then protect those names using gc().  The protection is
  // ineffective if the code goes through the fa() path here, because components that were modified will be freed immediately rather than later.  In those places we
  // must either use gc3() which always does the tpush, or do ACIPNO to force us through the tpush path here.  We generally use gc3().
+#if 0  // obsolete
  if((c&(1-AC(w)))<0){fa(w);} else {tpush(w);}  // test is c<0 and AC(w)>1
  // The usecount of w is now back to where it started, or possibly lower, if the block was popped multiple times.
  // But we know for sure that if the block was inplaceable to begin with, its usecount is 1 now, and we should make it inplaceable on exit
  // Note: a block that was originally VIRTUAL cannot have been inplaceable
  if(c<0)AC(w) = c;  // restore inplaceability.  Could use AC(w)=(c<0)?c:AC(w) to avoid conditional jump
+#else
+ // Since w now has recursive usecounts (except for sparse, which is never inplaceable), we don't have to do a full fa() on a block that is returning
+ // inplaceable - we just reset the usecount in the block.
+ I cafter=AC(w); if((c&(1-cafter))>=0){tpush(w);} cafter=c<0?c:cafter; AC(w)=cafter;  // push unless was inplaceable and was not on stack; make inplaceable if it was originally
+#endif
  R w;
 }
 
@@ -706,7 +712,6 @@ A *jttpush(J jt,AD* RESTRICT wd,I t,A *pushp){I af=AFLAG(wd); I n=AN(wd);
  if(t&BOX){
   // boxed.  Loop through each box, recurring if called for.
   A* RESTRICT wv=AAV(wd);  // pointer to box pointers
-// obsolete   if((af&AFNJA))R pushp;  // no processing if not J-managed memory (rare)   no longer supported for boxed arrays
   while(n--){
    A np=*wv; ++wv;   // point to block for box
    if(np){     // it can be 0 if there was error
@@ -937,7 +942,6 @@ if((I)jt&3)SEGFAULT
 
 // bytes is total #bytes needed including headers, -1
 RESTRICTF A jtgafv(J jt, I bytes){UI4 j;
-// obsolete  CTLZI((UI)((bytes-1)|((I)1<<(PMINL-1))),j);  // 3 or 4 should return 2; 5 should return 3
 #if NORMAH*(SY_64?8:4)<(1LL<<(PMINL-1))
  bytes|=(I)1<<(PMINL-1);  // if the memory header itself doesn't meet the minimum buffer length, insert a minimum
 #endif
@@ -952,11 +956,9 @@ RESTRICTF A jtga(J jt,I type,I atoms,I rank,I* shaape){A z;
  // trailing NUL (because boolean-op code needs it)
  I bytes = ALLOBYTESVSZ(atoms,rank,bp(type),type&LAST0,0);  // We never use GA for NAME types, so we don't need to check for it
 #if SY_64
- if(!((((unsigned long long)(atoms))&~TOOMANYATOMS)+((rank)&~RMAX))){ \
-// obsolete  if((UI)atoms<TOOMANYATOMS && !(rank&~RMAX)){ // check for too many atoms, to preempt overflow
+ if(!((((unsigned long long)(atoms))&~TOOMANYATOMS)+((rank)&~RMAX))){
 #else
- if(((I)bytes>(I)(atoms)&&(I)(atoms)>=(I)0)&&!((rank)&~RMAX)){ \
-// obsolete  if(bytes>atoms&&atoms>=0){ // beware integer overflow
+ if(((I)bytes>(I)(atoms)&&(I)(atoms)>=(I)0)&&!((rank)&~RMAX)){
 #endif
   RZ(z = jtgafv(jt, bytes));   // allocate the block, filling in AC and AFLAG
   I akx=AKXR(rank);   // Get offset to data
@@ -967,8 +969,6 @@ RESTRICTF A jtga(J jt,I type,I atoms,I rank,I* shaape){A z;
   if(!(type&DIRECT)){if(SY_64){memset((C*)(AS(z)+1),C0,(bytes-32)&-32);}else{memset((C*)z+akx,C0,bytes+1-akx);}}  // bytes=63=>0 bytes cleared.  bytes=64=>32 bytes cleared.  bytes=64 means the block is 65 bytes long
   GACOPYSHAPEG(z,type,atoms,rank,shaape)  /* 1==atoms always if t&SPARSE  */  // copy shape by hand since short
    // Tricky point: if rank=0, GACOPYSHAPEG stores 0 in AS[0] so we don't have to do that in the DIRECT path
-// obsolete   // because COPYSHAPE will always write one shape value, we have to delay the memset to handle the case of rank 0 with atoms (used internally only)
-// obsolete   if(!(type&DIRECT))memset((C*)z+akx,C0,bytes+1-akx);  // For indirect types, zero the data area.  Needed in case an indirect array has an error before it is valid
     // All non-DIRECT types have items that are multiples of I, so no need to round the length
   R z;
  }else{jsignal(EVLIMIT); R 0;}  // do it this way for branch-prediction

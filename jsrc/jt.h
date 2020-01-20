@@ -176,7 +176,6 @@ typedef struct {
 #endif
 
 // unordered symbols follow
-// A    local;            /* local symbol table       scaf                       */
  A    symb;             /* symbol table for assignment                     */
 #if !C_CRC32C
  I    hin;              /* used in dyad i. & i:                            */

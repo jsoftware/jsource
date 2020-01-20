@@ -105,7 +105,6 @@ DF2(jtbitwisechar){DECLFG;A*p,x,y,z;B b;I j,m,n,zn;AHDR2FN* ado;
  RZ(a&&w);
  x=a;
  y=w;
-// obsolete  if(!(AN(a)&&AN(w)&&(AT(a)&AT(w))&LIT))R from(df2(indexof(alp,a),indexof(alp,w),fs),alp);
  if((-AN(a)&-AN(w)&-(AT(a)&AT(w))&LIT)>=0)R from(df2(indexof(alp,a),indexof(alp,w),fs),alp);  // empty or not LIT
  b=AR(a)<=AR(w); zn=AN(b?w:a); m=AN(b?a:w); n=zn/m;
  ASSERTAGREE(AS(a),AS(w),MIN(AR(a),AR(w)));

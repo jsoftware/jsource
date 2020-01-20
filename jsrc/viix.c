@@ -15,17 +15,6 @@
   }  \
  }
 
-#if 0 // obsolete 
-  switch((4*descend)+(0<=p?2:0)+(I )(0<=q)){                             \
-   case 1: DQ(m, *zv++=n*(1<*wv++););              break; /*   q */  \
-   case 2: DQ(m, *zv++=n*(0<*wv++););              break; /* p   */  \
-   case 3: DQ(m, x=*wv++; I t=n; t=x<=1?q:t; t=x<=0?0:t; *zv++=t;); break; /* p q */  \
-   case 7: DQ(m, x=*wv++; I t=n; t=x>=0?p:t; t=x>=1?0:t; *zv++=t;);        /* p q */  \
-   case 3: DQ(m, x=*wv++; *zv++=x<=0?0:x<=1?q:n;); break; /* p q */  \
-   case 7: DQ(m, x=*wv++; *zv++=x>=1?0:x>=0?p:n;);        /* p q */  \
-
-#endif
-
 static B jtiixBX(J jt,I n,I m,A a,A w,I*zv){B*av,*b,descend;I p,q;
  av=BAV(a); descend=av[0]>av[n-1];
  b=memchr(av,C0,n); p=b?b-av:-1;
@@ -35,7 +24,6 @@ static B jtiixBX(J jt,I n,I m,A a,A w,I*zv){B*av,*b,descend;I p,q;
  case FL:  BXLOOP(D); break;
  case B01:
   b=BAV(w);
-// obsolete    switch((4*descend)+(0<=p?2:0)+(I )(0<=q)){
   if(descend){DQ(m, *zv++=p*!*b++;)         /* p q */
   }else if(p<0){memset(zv,C0,m*SZI);  /*   q */
   }else if(q<0){DQ(m, *zv++=n* *b++;)  /* p   */
@@ -50,8 +38,8 @@ static B jtiixI(J jt,I n,I m,A a,A w,I*zv){A t;B ascend;I*av,j,p,q,*tv,*u,*v,*vv
  p=av[0]; q=av[n-1]; ascend=p<=q; if(!ascend){x=p; p=q; q=x;}
  GATV0(t,INT,1+q-p,1); v=AV(t); tv=v-p; vv=v+AN(t);  // v->buffer; tv->virtual buffer origin, where p=0; vv->buffer end
   // This could be recoded to allocate slots for <p and >q, but it would be better only if those cases were common
- if(ascend){u=av;     x=*u++; *v++=j=0; DQ(n-1, ++j; y=*u++; ASSERT(BETWEENC(y,x,q)/* obsolete (UI)(y-x)<=(UI)(q-x)*/,EVDOMAIN); DQ(y-x, *v++=j;); x=y;);}
- else      {u=av+n-1; x=*u--;      j=n; DQ(n-1, --j; y=*u--; ASSERT(BETWEENC(y,x,q)/* obsolete (UI)(y-x)<=(UI)(q-x)*/,EVDOMAIN); DQ(y-x, *v++=j;); x=y;);}
+ if(ascend){u=av;     x=*u++; *v++=j=0; DQ(n-1, ++j; y=*u++; ASSERT(BETWEENC(y,x,q),EVDOMAIN); DQ(y-x, *v++=j;); x=y;);}
+ else      {u=av+n-1; x=*u--;      j=n; DQ(n-1, --j; y=*u--; ASSERT(BETWEENC(y,x,q),EVDOMAIN); DQ(y-x, *v++=j;); x=y;);}
  if(ascend)DQ(m, x=*wv++; *zv++=x<=p?0:q<x?n:tv[x];)
  else      DQ(m, x=*wv++; *zv++=x>=q?0:p>x?n:tv[x];);
  R 1;

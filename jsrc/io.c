@@ -234,10 +234,12 @@ static char breaknone=0;
 B jtsesminit(J jt){jt->adbreakr=jt->adbreak=&breakdata; R 1;}
 
 int _stdcall JDo(J jt, C* lp){int r;
+ MTXLOCK("JDo")
  r=(int)jdo(jt,lp);
  while(jt->nfe){
   A *old=jt->tnextpushp; r=(int)jdo(jt,nfeinput(jt,"input_jfe_'   '")); tpop(old);
  }
+ MTXUNLOCK("JDo")
  R r;
 } 
 
@@ -246,20 +248,25 @@ C* _stdcall JGetR(J jt){
 }
 
 /* socket protocol CMDGET name */
-A _stdcall JGetA(J jt, I n, C* name){A x;
+A _stdcall JGetA(J jt, I n, C* name){A x,z;
+ MTXLOCK("JGetA")
  jt->jerr=0;
- RZ(x=symbrdlock(nfs(n,name)));
- ASSERT(!(FUNC&AT(x)),EVDOMAIN);
- R binrep1(x);
+ if(!(x=symbrdlock(nfs(n,name)))){ jsignal(EVILNAME); MTXUNLOCK("JGetA"); R 0;}
+ if(FUNC&AT(x)){ jsignal(EVDOMAIN); MTXUNLOCK("JGetA"); R 0;}
+ z=binrep1(x);
+ MTXUNLOCK("JGetA")
+ R z;
 }
 
 /* socket protocol CMDSET */
 I _stdcall JSetA(J jt,I n,C* name,I dlen,C* d){
+ MTXLOCK("JSetA")
  jt->jerr=0;
- if(!vnm(n,name)) R EVILNAME;
+ if(!vnm(n,name)){ jsignal(EVILNAME); MTXUNLOCK("JSetA"); R EVILNAME;}
  A *old=jt->tnextpushp;
  symbisdel(nfs(n,name),jtunbin(jt,str(dlen,d)),jt->global);
  tpop(old);
+ MTXUNLOCK("JSetA")
  R jt->jerr;
 }
 
@@ -394,6 +401,11 @@ int JFree(J jt){
   jt->jerr=0; jt->etxn=0; /* clear old errors */
   if(jt->xep&&AN(jt->xep)){A *old=jt->tnextpushp; immex(jt->xep); fa(jt->xep); jt->xep=0; jt->jerr=0; jt->etxn=0; tpop(old); }
   dllquit(jt);  // clean up call dll
+#if defined(USE_THREAD)
+  int rc;
+  if(jt->plocked){ jt->plocked--; pthread_mutex_unlock(&jt->plock); VLOGFD("%p %s mutex unlock\n",jt,"JFree"); }
+  if(rc=pthread_mutex_destroy(&jt->plock)){ VLOGFD("%p mutex destroy failed rc %d\n",jt,rc); }
+#endif
   free(jt->heap);  // free the initial allocation
   R 0;
 }
@@ -446,14 +458,16 @@ int valid(C* psrc, C* psnk)
 int _stdcall JGetM(J jt, C* name, I* jtype, I* jrank, I* jshape, I* jdata)
 {
  A a; char gn[256];
- if(strlen(name) >= sizeof(gn)) return EVILNAME;
- if(valid(name, gn)) return EVILNAME;
- RZ(a=symbrdlock(nfs(strlen(gn),gn)));
-    if(FUNC&AT(a))R EVDOMAIN;
+ MTXLOCK("JGetM");
+ if(strlen(name) >= sizeof(gn)){ jsignal(EVILNAME); MTXUNLOCK("JGetM"); return EVILNAME;}
+ if(valid(name, gn)){ jsignal(EVILNAME); MTXUNLOCK("JGetM"); return EVILNAME;}
+ if(!(a=symbrdlock(nfs(strlen(gn),gn)))){ jsignal(EVDOMAIN); MTXUNLOCK("JGetM"); R EVDOMAIN;}
+ if(FUNC&AT(a)){ jsignal(EVDOMAIN); MTXUNLOCK("JGetM"); R EVDOMAIN;}
  *jtype = AT(a);
  *jrank = AR(a);
  *jshape = (I)AS(a);
  *jdata = (I)AV(a);
+ MTXUNLOCK("JGetM");
  return 0;
 }
 
@@ -511,8 +525,10 @@ int _stdcall JSetM(J jt, C* name, I* jtype, I* jrank, I* jshape, I* jdata)
  int er;
 
  PROLOG(0051);
+ MTXLOCK("JSetM");
  er = setterm(jt, name, jtype, jrank, jshape, jdata);
  tpop(_ttop);
+ MTXUNLOCK("JSetM");
  return er;
 }
 
@@ -530,7 +546,9 @@ C* esub(J jt, I ec)
 
 int _stdcall JErrorTextM(J jt, I ec, I* p)
 {
+ MTXLOCK("JErrorTextM");
  *p = (I)esub(jt, ec);
+ MTXUNLOCK("JErrorTextM");
  return 0;
 }
 

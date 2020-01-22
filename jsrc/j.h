@@ -56,6 +56,22 @@
 #define logcat_d(msg) __android_log_write(ANDROID_LOG_DEBUG,(const char*)"libj",msg)
 #endif
 
+#if defined(VERBOSELOG)
+#define VLOGD(msg) {fprintf(stderr,msg);fflush(stderr);}
+#define VLOGFD(...) {fprintf(stderr,__VA_ARGS__);fflush(stderr);}
+#else
+#define VLOGD(msg)
+#define VLOGFD(...)
+#endif
+
+#if defined(USE_THREAD)
+#define MTXLOCK(f)      {if((SMCON==jt->sm)&&(0x8&jt->smoption)){ VLOGFD("%p %s mutex before lock\n",jt,f);pthread_mutex_lock(&jt->plock); jt->plocked++; VLOGFD("%p %s mutex after lock\n",jt,f); }}
+#define MTXUNLOCK(f)    {if((SMCON==jt->sm)&&(0x8&jt->smoption)){if(jt->plocked){ jt->plocked--; pthread_mutex_unlock(&jt->plock); VLOGFD("%p %s mutex unlock\n",jt,f); }else {fprintf(stderr,"system error: %s : file %s line %d\n","MTXUNOCK",__FILE__,__LINE__); jsignal(EVSYSTEM); jtwri(jt,MTYOSYS,"",(I)strlen("MTXUNOCK"),"MTXUNOCK");} }}
+#else
+#define MTXLOCK(f)
+#define MTXUNLOCK(f)
+#endif
+
 #if defined(TARGET_OS_IPHONE)||defined(TARGET_OS_IOS)||defined(TARGET_OS_TV)||defined(TARGET_OS_WATCH)||defined(TARGET_OS_SIMULATOR)||defined(TARGET_OS_EMBEDDED)||defined(TARGET_IPHONE_SIMULATOR)
 #define TARGET_IOS 1
 #endif

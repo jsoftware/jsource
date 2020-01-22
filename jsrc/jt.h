@@ -10,7 +10,7 @@
 #if  (SYS & SYS_UNIX)   /*   IVL   */
 #include <sys/stat.h>
 #endif
-#ifdef USE_THREAD
+#if defined(USE_THREAD)
 #include <pthread.h>
 #endif
 
@@ -349,8 +349,9 @@ union {
  C    etx[1+NETX];      // display text for last error (+1 for trailing 0)  fits in main page
  LS   callstack[1+NFCALL]; // named fn calls: stack.  Usually only a little is used; the rest overflows onto a new DRAM page
  C    breakfn[NPATH];   /* break file name                                 */
-#ifdef USE_THREAD
+#if defined(USE_THREAD)
  pthread_mutex_t plock;
+ UC   plocked;
 #endif
 } JST;
 

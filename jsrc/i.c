@@ -239,7 +239,7 @@ jt->assert = 1;
 }
 
 static C jtjinit3(J jt){S t;
-#ifdef USE_THREAD
+#if defined(USE_THREAD)
 /* initialized but only active for SMCON multithread */
  int rc;
  if ((rc=pthread_mutex_init(&jt->plock, NULL)) != 0) {

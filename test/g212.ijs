@@ -11,9 +11,6 @@ x -: f x=: _50+?2 3 4$100
 x -: f x=: j./_50+?2 3 4$100
 (x+y) -: x f y=: j./_50+2 3 4$100
 
-'stack error' -: $: etx 5
-'stack error' -: 4 $: etx 5
-
 4!:55 ;:'f x y'
 
 

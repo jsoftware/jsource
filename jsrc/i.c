@@ -239,6 +239,14 @@ jt->assert = 1;
 }
 
 static C jtjinit3(J jt){S t;
+#ifdef USE_THREAD
+/* initialized but only active for SMCON multithread */
+ int rc;
+ if ((rc=pthread_mutex_init(&jt->plock, NULL)) != 0) {
+  VLOGFD("%p mutex init failed rc %d\n",jt,rc);
+  return 0;
+ }
+#endif
 /* required for jdll and doesn't hurt others */
  gjt=jt; // global jt for JPF debug
  MC(jt->typesizes,typesizes,sizeof(jt->typesizes));  // required for ma.

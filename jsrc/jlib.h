@@ -22,6 +22,10 @@ typedef void  (_stdcall *JSMType)       (J, void*);
 typedef void  (_stdcall *JSMXType)      (J, void*, void*, void*, void*, I);
 typedef void  (_stdcall *JFreeType)     (J);
 typedef A     (_stdcall *JgaType)       (J jt, I t, I n, I r, I*s);
+typedef int   (_stdcall *JGetMType)     (J jt,C* name,I* jtype,I* jrank,I* jshape,I* jdata);
+typedef int   (_stdcall *JSetMType)     (J jt,C* name,I* jtype,I* jrank,I* jshape,I* jdata);
+typedef C*    (_stdcall *JGetRType)     (J jt);
+typedef int   (_stdcall *JErrorTextMType)(J jt,I ec,I* p);
 typedef A     (_stdcall *JGetAType)     (J jt,I n,C* name);
 typedef I     (_stdcall *JSetAType)     (J jt,I n,C* name,I x,C* d);
 
@@ -50,4 +54,5 @@ C* _stdcall Jinput(J jt, C*);
 #define SMJAVA   2  /* j.jar    Jwdp (Java) front end */
 #define SMCON    3  /* jconsole */
 #define SMQT     4  /* jqt */
+#define SMJA     5  /* jandroid */
 

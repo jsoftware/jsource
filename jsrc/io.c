@@ -234,10 +234,23 @@ static char breaknone=0;
 B jtsesminit(J jt){jt->adbreakr=jt->adbreak=&breakdata; R 1;}
 
 int _stdcall JDo(J jt, C* lp){int r;
+#ifdef USE_THREAD
+ if((SMCON==jt->sm)&&(0x8&jt->smoption)){
+ VLOGFD("%p JDo mutex before lock\n",jt);
+ pthread_mutex_lock(&jt->plock);
+ VLOGFD("%p JDo mutex after lock\n",jt);
+ }
+#endif
  r=(int)jdo(jt,lp);
  while(jt->nfe){
   A *old=jt->tnextpushp; r=(int)jdo(jt,nfeinput(jt,"input_jfe_'   '")); tpop(old);
  }
+#ifdef USE_THREAD
+ if((SMCON==jt->sm)&&(0x8&jt->smoption)){
+ pthread_mutex_unlock(&jt->plock);
+ VLOGFD("%p JDo mutex unlock\n",jt);
+ }
+#endif
  R r;
 } 
 
@@ -395,6 +408,12 @@ int JFree(J jt){
   if(jt->xep&&AN(jt->xep)){A *old=jt->tnextpushp; immex(jt->xep); fa(jt->xep); jt->xep=0; jt->jerr=0; jt->etxn=0; tpop(old); }
   dllquit(jt);  // clean up call dll
   free(jt->heap);  // free the initial allocation
+#ifdef USE_THREAD
+  int rc;
+  if ((rc=pthread_mutex_destroy(&jt->plock)) != 0) {
+    VLOGFD("%p mutex destroy failed rc %d\n",jt,rc);
+  }
+#endif
   R 0;
 }
 #endif
@@ -446,14 +465,56 @@ int valid(C* psrc, C* psnk)
 int _stdcall JGetM(J jt, C* name, I* jtype, I* jrank, I* jshape, I* jdata)
 {
  A a; char gn[256];
- if(strlen(name) >= sizeof(gn)) return EVILNAME;
- if(valid(name, gn)) return EVILNAME;
- RZ(a=symbrdlock(nfs(strlen(gn),gn)));
-    if(FUNC&AT(a))R EVDOMAIN;
+#ifdef USE_THREAD
+ if((SMCON==jt->sm)&&(0x8&jt->smoption)){
+ VLOGFD("%p JGetM mutex before lock\n",jt);
+ pthread_mutex_lock(&jt->plock);
+ VLOGFD("%p JGetM mutex after lock\n",jt);
+ }
+#endif
+ if(strlen(name) >= sizeof(gn)) {
+#ifdef USE_THREAD
+  if((SMCON==jt->sm)&&(0x8&jt->smoption)){
+  VLOGFD("%p JGetM mutex unlock EVILNAME too long name %s\n",jt,name);
+  pthread_mutex_unlock(&jt->plock);
+  }
+#endif
+  return  EVILNAME;}
+ if(valid(name, gn)) {
+#ifdef USE_THREAD
+  if((SMCON==jt->sm)&&(0x8&jt->smoption)){
+  VLOGFD("%p JGetM mutex unlock EVILNAME invalid name %s\n",jt,name);
+  pthread_mutex_unlock(&jt->plock);
+  }
+#endif
+  return  EVILNAME;}
+ a=symbrdlock(nfs(strlen(gn),gn));
+ if(!a){
+#ifdef USE_THREAD
+  if((SMCON==jt->sm)&&(0x8&jt->smoption)){
+  VLOGFD("%p JGetM mutex unlock RZ symbrdlock\n",jt);
+  pthread_mutex_unlock(&jt->plock);
+  }
+#endif
+  RZ(a);}
+ if(FUNC&AT(a)){
+#ifdef USE_THREAD
+  if((SMCON==jt->sm)&&(0x8&jt->smoption)){
+  VLOGFD("%p JGetM mutex unlock FUNC EDOMAIN name %s\n",jt,name);
+  pthread_mutex_unlock(&jt->plock);
+  }
+#endif
+  return EVDOMAIN;}
  *jtype = AT(a);
  *jrank = AR(a);
  *jshape = (I)AS(a);
  *jdata = (I)AV(a);
+#ifdef USE_THREAD
+ if((SMCON==jt->sm)&&(0x8&jt->smoption)){
+ pthread_mutex_unlock(&jt->plock);
+ VLOGFD("%p JGetM mutex unlock\n",jt);
+ }
+#endif
  return 0;
 }
 

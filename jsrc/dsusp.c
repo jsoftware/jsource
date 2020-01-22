@@ -75,10 +75,10 @@ I lnumsi(DC d){A c;I i;
 
 
 
-static DC suspset(DC d){DC e;
+static DC suspset(DC d){DC e=0;
  while(d&&DCCALL!=d->dctype){e=d; d=d->dclnk;}  /* find bottommost call                 */
  if(!(d&&DCCALL==d->dctype))R 0;                /* don't suspend if no such call     */
- if(d->dcc)e->dcsusp=1;                         /* if explicit, set susp on line     */
+ if(d->dcc){RZ(e); e->dcsusp=1;}               // if explicit, set susp on line - there should always be a following frame, but if not do nothing
  else      d->dcsusp=1;                         /* if not explicit, set susp on call */
  R d;
 }    /* find topmost call and set suspension flag */

@@ -658,10 +658,10 @@ typedef struct {AF valencefns[2];A fgh[3];union { D lD; void *lvp[2]; I lI; I4 l
 // the localuse fields is not freed or counted for space, as the f/g/h fields are.  It is for local optimizations only.  We put if first so that the rest of
 // the block, which is used more, is in a single cacheline.  Local uses are:
 // for ATOMIC2 ops, pointer to the adocv block
-// for name references, pointer to last resolution
+// for name references, lvp[0] is pointer to last resolution
 // for FIT conj, the CCT data
 // for RANK conj, lI4[0-2] has the signed ranks
-// for Fold final operator, pointer to the dyadic EP of the handler (xdefn or unquote)
+// for Fold final operator, lfns[1] has pointer to the dyadic EP of the handler (xdefn or unquote)
 // For cyclic iterators, lI has the index of the next gerund to execute
 // for u;.n, lI holds n.  u/. also goes through this code
 
@@ -693,18 +693,18 @@ typedef struct {AF valencefns[2];A fgh[3];union { D lD; void *lvp[2]; I lI; I4 l
 #define VIRS1           (I)2048         /* 11 monad has integral rank support */
 #define VIRS2X          12
 #define VIRS2           (((I)1)<<VIRS2X)         /* 12 dyad  has integral rank support */
-#define VFLR            (I)8192         /* function is <.@g                */
-#define VCEIL           (I)16384        /* function is >.@g                */
-#define VMOD            (I)32768        /* function is m&|@g               */
-#define VLOCK           (I)65536        /* function is locked              */
-#define VNAMED          (I)131072       /* named explicit defn             */
-#define VFIX            (I)262144       /* f. applied                      */
-#define VXOPR           (I)524288       /* : defn with u. and x.           */
-#define VXOP            (I)1048576      /* : defn derived fn               */
-#define VXOPCALL        (I)2097152      /* : defn derived fn call          */
-#define VTRY1           (I)4194304      /* monad contains try.             */
-#define VTRY2           (I)8388608      /* dyad  contains try.             */
-#define VDDOP           (I)16777216     /* 24 derived from a derived operator */
+#define VFLR            (I)0x2000         /* function is <.@g                */
+#define VCEIL           (I)0x4000       /* function is >.@g                */
+#define VMOD            (I)0x8000        /* function is m&|@g               */
+#define VLOCK           (I)0x10000        /* function is locked              */
+#define VNAMED          (I)0x20000       /* named explicit defn             */
+#define VFIX            (I)0x40000       /* f. applied                      */
+#define VXOPR           (I)0x80000       /* : defn with u. and x.           */
+#define VXOP            (I)0x100000      /* : defn derived fn               */
+#define VXOPCALL        (I)0x200000      /* : defn derived fn call          */
+#define VTRY1           (I)0x400000      /* monad contains try.             */
+#define VTRY2           (I)0x800000      /* dyad  contains try.             */
+#define VDDOP           (I)0x1000000     /* 24 derived from a derived operator */
 #define VJTFLGOK1X    25    // 25 monad can handle in-place args
 #define VJTFLGOK1     (((I)1)<<VJTFLGOK1X)
 #define VJTFLGOK2X    26    // 26 dyad can handle in-place args

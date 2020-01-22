@@ -700,8 +700,8 @@ A sum=reduce(w,FAV(self)->fgh[0]);  // calculate +/"r
 // entry point to execute monad/dyad Fold after the noun arguments are supplied
 static DF2(jtfoldx){
  // see if this is monad or dyad
- I foldflag=(~AT(w)&VERB)>>(VERBX-3);  // flags: dyad mult fwd rev  if w is not conj, this must be a dyad call
- self=foldflag&8?self:w; w=foldflag&8?w:a; a=foldflag&8?a:mtv; // if monad, it's w self garbage,  move to '' w self
+ I foldflag=((~AT(w))>>(VERBX-3))&8;  // flags: dyad mult fwd rev  if w is not conj, this must be a dyad call
+ self=foldflag?self:w; w=foldflag?w:a; a=foldflag?a:mtv; // if monad, it's w self garbage,  move to '' w self
  // get the rest of the flags from the original ID byte, which was moved to lc
  foldflag|=FAV(self)->lc-CFDOT;  // this sets mult fwd rev
  // define the flags as the special global

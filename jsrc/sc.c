@@ -219,7 +219,7 @@ F1(jtnameref){
 }    /* argument assumed to be a NAME */
 
 // Create a pseudo-named entity.  a is the name, w is the actual entity
-// Result will go to unquote.  We mark a pseudo-named entity by having f=0, g=name, h=actual entity to execute
+// Result has type ':' but goes to unquote.  We mark a pseudo-named entity by having f=0, g=name, h=actual entity to execute
 F2(jtnamerefop){V*v;
  RZ(a&&w);
  v=FAV(w);

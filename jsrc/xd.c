@@ -318,8 +318,8 @@ static int ismatch(J jt,C*pat,C*name){
  R 1;
 }
 
-static A jtdir1(J jt,struct dirent*f){A z,*zv;C*s,att[16];I n,ts[6],i,m,sz;S x;struct tm *tm;
- tm=localtime(&jt->dirstatbuf.st_mtime);
+static A jtdir1(J jt,struct dirent*f){A z,*zv;C*s,att[16];I n,ts[6],i,m,sz;S x;struct tm tmr,*tm=&tmr;
+ tm=localtime_r(&jt->dirstatbuf.st_mtime,tm);
  ts[0]=1900+tm->tm_year; ts[1]=1+tm->tm_mon; ts[2]=tm->tm_mday;
  ts[3]=tm->tm_hour; ts[4]=tm->tm_min; ts[5]=tm->tm_sec;
  s=f->d_name; n=strlen(s);

@@ -85,9 +85,9 @@ R sc((I)getCpuFeatures());
 #if SY_WIN32
  /* defined in jdll.c */
 #else
-F1(jtts){A z;D*x;struct tm*t;struct timeval tv;
+F1(jtts){A z;D*x;struct tm tr,*t=&tr;struct timeval tv;
  ASSERTMTV(w);
- gettimeofday(&tv,NULL); t=localtime((time_t*)&tv.tv_sec);
+ gettimeofday(&tv,NULL); t=localtime_r((time_t*)&tv.tv_sec,t);
  GAT0(z,FL,6,1); x=DAV(z);
  x[0]=t->tm_year+1900;
  x[1]=t->tm_mon+1;

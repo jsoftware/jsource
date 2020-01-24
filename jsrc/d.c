@@ -23,7 +23,7 @@ static void jteputc(J jt,C c){ep(1L,&c);}
 
 static void jteputl(J jt,A w){ep(AN(w),CAV(w)); eputc(CLF);}
 
-static void jteputv(J jt,A w){I m=NETX-jt->etxn; jt->etxn+=thv(w,MIN(m,200),jt->etx+jt->etxn);}
+static void jteputv(J jt,A w){I m=NETX-jt->etxn; if(m>0){jt->etxn+=thv(w,MIN(m,200),jt->etx+jt->etxn);}} // stop writing when there is no room in the buffer
      /* numeric vector w */
 
 static void jteputq(J jt,A w){C q=CQUOTE,*s;
@@ -41,7 +41,7 @@ static void jtefmt(J jt,C*s,I i){
 void jtshowerr(J jt){C b[1+2*NETX],*p,*q,*r;
  if(jt->etxn&&jt->tostdout){
   p=b; q=jt->etx; r=q+jt->etxn;
-  while(q<r){if(*q==CLF){strcpy(p,jt->outseq); p+=strlen(jt->outseq); ++q;}else *p++=*q++;}
+  while(q<r&&p<b+2*NETX-3){if(*q==CLF){strcpy(p,jt->outseq); p+=strlen(jt->outseq); ++q;}else *p++=*q++;}  // avoid buffer overrun on huge typeouts
   *p=0;
 #ifdef ANDROID
   A z=tocesu8(str(strlen(b),b));

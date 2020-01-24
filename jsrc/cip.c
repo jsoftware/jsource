@@ -527,12 +527,13 @@ static I cachedmmultx(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs, I mfull){D c[(C
 }
 // looping entry point for cached mmul
 // We split the input into products where the left arg has at most MAXAROWS rows.  This is to avoid overrunning L2 cache
+// for complex n and p have been multiplied by 2
 static I cachedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){
  I rc=0,i,nblocks;
  nblocks = ((m+MAXAROWS)*0x55555555)>>(32+7);  // number of blocks to execute
 //#pragma omp parallel for reduction(+:rc)
  for(i=0;i<nblocks;++i){
-  rc += 0==cachedmmultx(jt,av+((p*i*MAXAROWS)<<(flgs&FLGCMP)),wv,zv+((n*i*MAXAROWS)<<(flgs&FLGCMP)),MIN(MAXAROWS,m-i*MAXAROWS),n,p,flgs,m-i*MAXAROWS);
+  rc += 0==cachedmmultx(jt,av+(p*i*MAXAROWS),wv,zv+(n*i*MAXAROWS),MIN(MAXAROWS,m-i*MAXAROWS),n,p,flgs,m-i*MAXAROWS);
  }
  R rc==0;
 }

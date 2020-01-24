@@ -154,6 +154,7 @@ typedef struct {
  I    zgemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for complex matrix product.  _1 means 'never'
  A    implocref[2];     // references to 'u.'~ and 'v.'~, marked as implicit locatives
  I4   parsercalls;      /* # times parser was called                       */
+ I4   nthreads;  // number of threads to use, or 0 if we haven't checked
  A*   tstacknext;       // if not 0, points to the recently-used tstack buffer, whose chain field points to tstacknext
  A*   tstackcurr;       // current allocation, holding NTSTACK bytes+1 block for alignment.  First entry points to next-lower allocation
  D    cct;               /* complementary comparison tolerance                            */

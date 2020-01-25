@@ -738,7 +738,7 @@ static CCT*jtcdload(J jt,CCT*cc,C*lib,C*proc){B ha=0;FARPROC f;HMODULE h;
  /* search path and case can cause us to reload the same dll         */
  if(cc->cc){C buf[SY_64?21:12];I k,n;
   n=strlen(proc);
-  CDASSERT(n&&n<(int)sizeof(buf),DEBADFN);
+  CDASSERT(BETWEENO(n,1,sizeof(buf)),DEBADFN);
   k='_'==*proc?-strtoI(1+proc,0L,10):strtoI(proc,0L,10);
   CDASSERT(k&&'0'==*lib||0<=k&&'1'==*lib,DEBADFN);
   sprintf(buf,FMTI,k); if(0>k)*buf='_';

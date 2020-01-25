@@ -201,7 +201,7 @@ F2(jtunlock2){int i,j,len,tlen;UC c1,c2,k1[SK],*lp,*sp,*d;
  tlen=(int)AN(w);
  if(!tlen || 255!=d[0] || 0 != d[1] || tlen<8+SK) return w;	/* not jl */
  MC(k1, d+8, SK);
- for(i=0;i<sizeof(int);++i)	*(i+(UC*)&len) = k1[i] ^ d[4+i];
+ for(i=0;i<(int)sizeof(int);++i)	*(i+(UC*)&len) = k1[i] ^ d[4+i];
 #if !(SYS & SYS_LILENDIAN)
  len=swapint(len);
 #endif

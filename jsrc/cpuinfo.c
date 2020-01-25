@@ -143,7 +143,7 @@ get_cpuid_count (unsigned int __level, unsigned int __count,
                  unsigned int *__ecx, unsigned int *__edx)
 {
   unsigned int __ext = __level & 0x80000000;
-  if (__get_cpuid_max (__ext, 0) < __level)
+  if ((int)__get_cpuid_max (__ext, 0) < (int)__level)
     return 0;
 
   __cpuid_count (__level, __count, *__eax, *__ebx, *__ecx, *__edx);
@@ -152,7 +152,7 @@ get_cpuid_count (unsigned int __level, unsigned int __count,
 #define x86_cpuid(func, values) get_cpuid_count(func, 0, values, values+1, values+2, values+3)
 #else
 #ifdef __i386__
-static __inline__ void x86_cpuid(int func, int values[4])
+static __inline__ void x86_cpuid(unsigned int func, unsigned int values[4])
 {
   int a, b, c, d;
   /* We need to preserve ebx since we're compiling PIC code */
@@ -171,7 +171,7 @@ static __inline__ void x86_cpuid(int func, int values[4])
   values[3] = d;
 }
 #elif defined(__x86_64__)
-static __inline__ void x86_cpuid(int func, int values[4])
+static __inline__ void x86_cpuid(unsigned int func, unsigned int values[4])
 {
   int64_t a, b, c, d;
   /* We need to preserve ebx since we're compiling PIC code */
@@ -198,7 +198,7 @@ void cpuInit(void)
   g_cpuFeatures = 0;
 
 #if defined(__i386__) || defined(__x86_64__) || defined(_M_X64) || defined(_M_IX86)
-  int regs[4];
+  unsigned int regs[4];
 
   /* According to http://en.wikipedia.org/wiki/CPUID */
 

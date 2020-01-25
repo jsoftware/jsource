@@ -235,7 +235,7 @@ F2(jtatop){A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=0,m=-1
  // Install the flags to indicate that this function starts out with a rank loop, and thus can be subsumed into a higher rank loop
  // If the compound has rank 0, switch to the loop for that; if rank is infinite, avoid the loop
  if(f1==on1){flag2|=VF2RANKATOP1; if(wv->mr==RMAX)f1=on1cell; else{if(wv->mr==0)f1=jton10;}}
- if(f2==jtupon2){flag2|=VF2RANKATOP2; if(wv->lrr==R2MAX)f2=jtupon2cell; else{if(wv->lrr==0)f2=jtupon20;}}
+ if(f2==jtupon2){flag2|=VF2RANKATOP2; if(wv->lrr==(UI)R2MAX)f2=jtupon2cell; else{if(wv->lrr==0)f2=jtupon20;}}
 
  R fdef(flag2,CAT,VERB, f1,f2, a,w,h, flag, (I)wv->mr,(I)lrv(wv),rrv(wv));
 }

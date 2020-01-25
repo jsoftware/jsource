@@ -219,7 +219,7 @@ extern void *MALLOC(size_t);
 #ifndef PRIVATE_MEM
 #define PRIVATE_MEM 2304
 #endif
-#define PRIVATE_mem ((PRIVATE_MEM+sizeof(double)-1)/sizeof(double))
+#define PRIVATE_mem (long)((PRIVATE_MEM+sizeof(double)-1)/sizeof(double))
 #ifndef Use_J_Memory
 static double private_mem[PRIVATE_mem], *pmem_next = private_mem;
 #endif

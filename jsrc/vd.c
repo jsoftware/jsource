@@ -148,7 +148,7 @@ RZ(w);
 #if C_AVX
  if(AT(w)&FL && (m<50 || m*m*cl<(64*64*64))){
   // floating-point w that isn't larger than L2 cache.  (1) use inner-products to calculate w1 q0* (2) use blockedmmult to calculate final product
-  if((m*(rw-m))>(sizeof(ipa)/sizeof(ipa[0]))){
+  if((m*(rw-m))>(int)(sizeof(ipa)/sizeof(ipa[0]))){
    GATV0(y,FL,m*(rw-m),2); ipv=DAV(y);
   }else{  // avoid allocating short y
    ipv=ipa; y=q0; AN(y)=m*(rw-m); AK(y)=(C*)ipa-(C*)y;

@@ -76,7 +76,7 @@ common="$common -Wno-cast-function-type"
 fi
 else
 # clang 3.4
-common="-Werror -fPIC -O2 -fwrapv -fno-strict-aliasing -Wextra -Wno-consumed -Wno-uninitialized -Wno-unused-parameter -Wno-sign-compare -Wno-empty-body -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-unsequenced -Wno-string-plus-int -Wno-tautological-constant-out-of-range-compare"
+common="-Werror -fPIC -O2 -fwrapv -fno-strict-aliasing -Wextra -Wno-consumed -Wuninitialized -Wno-unused-parameter -Wsign-compare -Wno-empty-body -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wunsequenced -Wno-string-plus-int -Wtautological-constant-out-of-range-compare"
 # clang 3.8
 CLANG_MAJOR=$(echo __clang_major__ | $CC -E -x c - | tail -n 1)
 CLANG_MINOR=$(echo __clang_minor__ | $CC -E -x c - | tail -n 1)

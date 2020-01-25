@@ -12,9 +12,9 @@
 static DF1(jtreduce);
 
 
-#define PARITY2         u=(UC*)&s; b=0; b^=*u++; b^=*u++;
-#define PARITY4         u=(UC*)&s; b=0; b^=*u++; b^=*u++; b^=*u++; b^=*u++; 
-#define PARITY8         u=(UC*)&s; b=0; b^=*u++; b^=*u++; b^=*u++; b^=*u++; b^=*u++; b^=*u++; b^=*u++; b^=*u++;
+#define PARITY2         u=(B*)&s; b=0; b^=*u++; b^=*u++;
+#define PARITY4         u=(B*)&s; b=0; b^=*u++; b^=*u++; b^=*u++; b^=*u++; 
+#define PARITY8         u=(B*)&s; b=0; b^=*u++; b^=*u++; b^=*u++; b^=*u++; b^=*u++; b^=*u++; b^=*u++; b^=*u++;
 
 #if SY_64
 #define PARITYW         PARITY8
@@ -29,7 +29,7 @@ static DF1(jtreduce);
 static void vdone(I m,I n,B*x,B*z,B pc){B b,*u;
  if(1==m){UI s,*xi;
   s=0; b=0;
-  xi=(I*)x; DQ(n>>LGSZI, s^=*xi++;); 
+  xi=(UI*)x; DQ(n>>LGSZI, s^=*xi++;); 
   u=(B*)xi; DQ(n&(SZI-1), b^=*u++;);
   u=(B*)&s; DQ(SZI,   b^=*u++;);
   *z=b==pc;

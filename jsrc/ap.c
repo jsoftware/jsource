@@ -147,7 +147,7 @@ AHDRP(lepfxB,B,B){pscanlt(m,d,n,z,x,C0);}
 
 
 static B jtpscangt(J jt,I m,I d,I n,B*z,B*x,B a,B pp,B pa,B ps){
-  A t;B b,*cc="\000\001\000",e,*p=cc+pp,*v;C*u;I i,j;
+  A t;B b,*cc="\000\001\000",e,*p=cc+pp,*v;B*u;I i,j;
  if(d==1)for(i=0;i<m;++i){
   if(v=memchr(x,a,n)){
    j=v-x; b=j&1; 
@@ -392,7 +392,8 @@ static DF2(jtinfixprefix2){F2PREFIP;PROLOG(00202);A fs;
  // set up for prefix/infix.  Calculate # result slots
  if(a!=mark){
   // infix.
-  ilnval; RE(ilnval=i0(vib(a))); // ilnval=infix # (error if nonintegral; convert inf to HIGH_VALUE)
+//  ilnval; RE(ilnval=i0(vib(a))); // ilnval=infix # (error if nonintegral; convert inf to HIGH_VALUE)
+  RE(ilnval=i0(vib(a))); // ilnval=infix # (error if nonintegral; convert inf to HIGH_VALUE)
   if(ilnval>=0){
    // positive infix.  Stride is 1 cell.
    ilnabs=ilnval;

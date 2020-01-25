@@ -56,7 +56,7 @@ static I ptt[]={
  2102429887L, 2113154951L, 2123895979L, 2134651583L, 2145390539L,
 };   /* p: PT*1+i.210 */
 
-#define ptn (sizeof(ptt)/sizeof(ptt[0]))
+#define ptn (I)(sizeof(ptt)/sizeof(ptt[0]))
 
 static I jtsup(J jt,I n,I*wv){I c,d,j,k;
  c=0; DO(n, j=wv[i]; ASSERT(0<=j,EVDOMAIN); if(c<j)c=j;); 

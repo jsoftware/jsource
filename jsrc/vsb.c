@@ -348,7 +348,7 @@ static SB jtsbprobe(J jt,S c2,I n,C*s,I test){B b;UC*t;I hi,ui;SBU*u;UI h,hn;UC*
     case 8:
     case 0: if(n==u->n&&!memcmp(t,s,n))R(SB)ui; break;
   }}
-  ++hi; hi&=(I )(hi==hn)-1;                         /* next hash table index        */
+  ++hi; hi&=(I )(hi==(I)hn)-1;                         /* next hash table index        */
   }
  }   /* insert new symbol or get existing symbol */
 

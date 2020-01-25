@@ -50,7 +50,7 @@ static F2(jtcanta){A m,s,t,z;C*wv,*zv;I*av,j,*mv,r,*sv,*tv,wf,wr,*ws,zn,zr,ms[4]
   av=tv;
  }
  zr=-1; DO(wr, zr=MAX(zr,av[i]);); ++zr;  // zr = result rank: largest axis number in a + 1 (0 if a is atomic)
- if((zr|wr)<=sizeof(ms)/sizeof(ms[0]))mv=ms, sv=ss, tv=ts;
+ if((zr|wr)<=(I)(sizeof(ms)/sizeof(ms[0])))mv=ms, sv=ss, tv=ts;
  else{  // if rank of array is large, allocate space for rank.  Otherwise use stack areas
   GATV0(m,INT,zr,1); mv=AV(m);  // mv[i] is distance (in cells) to move in w corresponding to move of 1 in axis i of the result
   GATV0(s,INT,zr,1); sv=AV(s);  // sv[i] is the length of axis i in the result
@@ -71,7 +71,7 @@ static F2(jtcanta){A m,s,t,z;C*wv,*zv;I*av,j,*mv,r,*sv,*tv,wf,wr,*ws,zn,zr,ms[4]
   // we are looking for the length of the axis and the stride between successive elements along that axis.
   // if there are multiple matches, those axes are run together: we take the stride in both, and limit the length to that of the shortest axis
   DO(wr, if(j==av[i]){axislenin+=tv[i]; axislenres=((UI)ws[i]<axislenres)?ws[i]:axislenres;});  // this includes deleted trailing axes of w, because we need the entire shape in zn/sv (mv doesn't matter)
-  ASSERT(axislenres!=~0,EVINDEX);  // abort if there is no input axis as source for this result axis
+  ASSERT(axislenres!=~0UL,EVINDEX);  // abort if there is no input axis as source for this result axis
   zn*=(I)axislenres; sv[j]=(I)axislenres; mv[j]=axislenin*cellsizeb;  // accumulate result: axis len multiplies * cells, smallest goes to sv, total stride to mv
  }
  if(SPARSE&AT(w)){GASPARSE(z,AT(w),1,zr,sv); R cants(a,w,z);}  // if sparse, go to sparse transpose code.

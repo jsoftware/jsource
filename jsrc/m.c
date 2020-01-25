@@ -650,7 +650,8 @@ I jtra(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
   A* RESTRICT wv=AAV(wd);  // pointer to box pointers
   if(n==0)R 0;  // Can't be mapped boxed; skip prefetch if no boxes
   np=*wv++;  // prefetch first box
-  while(1){AD* np0;  // n is always > 0 to start
+//  while(1){AD* np0;  // n is always > 0 to start
+  while(1){AD* np0=*wv;  // n is always > 0 to start
    if(--n>0){   // mustn't read past the end of the block, in case of protection check
     np0=*wv++;  // fetch next box if it exists
 #ifdef PREFETCH
@@ -682,7 +683,8 @@ I jtfa(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
   A* RESTRICT wv=AAV(wd);  // pointer to box pointers
   if(n==0)R 0;  // Can't be mapped boxed; skip prefetch if no boxes
   np=*wv++;  // prefetch first box
-  while(1){AD* np0;  // n is always > 0 to start
+//  while(1){AD* np0;  // n is always > 0 to start
+  while(1){AD* np0=*wv;  // n is always > 0 to start
    if(--n>0){   // mustn't read past the end of the block, in case of protection check
     np0=*wv++;  // fetch next box if it exists
 #ifdef PREFETCH

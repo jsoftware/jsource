@@ -167,7 +167,7 @@ typedef I SI;
 #define AKX(x)          AKXR(AR(x))
 
 #define AV(x)           ( (I*)((C*)(x)+AK(x)))  /* pointer to ravel        */
-#define BAV(x)          (      (C*)(x)+AK(x) )  /* boolean                 */
+#define BAV(x)          (      (B*)(x)+AK(x) )  /* boolean                 */
 #define CAV(x)          (      (C*)(x)+AK(x) )  /* character               */
 #define UCAV(x)         (     (UC*)(x)+AK(x) )  /* unsigned character      */
 #define USAV(x)         ((US*)((C*)(x)+AK(x)))  /* wchar                   */

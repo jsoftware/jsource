@@ -241,25 +241,25 @@ AHDR2(tymesDB,D,D,B){
 // *y is the I result of the operation that overflowed
 // *z is the D result area (which might be the same as *y)
 // b is unused for plus
-AHDR2(plusIIO,D,I,I){I u; I absn=n^(n>>(BW-1));
+AHDR2(plusIIO,D,I,I){I u; I absn=n^REPSGN(n);
  DQ(m, u=*x++; DQ(absn, *z=(D)u + (D)(*y-u); ++y; ++z;));
 }
-AHDR2(plusBIO,D,B,I){I u; I absn=n^(n>>(BW-1));
+AHDR2(plusBIO,D,B,I){I u; I absn=n^REPSGN(n);
  DQ(m, u=(I)*x++; DQ(absn, *z=(D)u + (D)(*y-u); ++y; ++z;));
 }
 
 // For subtract repair, b is 1 if x was the subtrahend, 0 if the minuend
-AHDR2(minusIIO,D,I,I){I u; I absn=n^(n>>(BW-1));
+AHDR2(minusIIO,D,I,I){I u; I absn=n^REPSGN(n);
  DQ(m, u=*x++; DQ(absn, *z=n<0?((D)(*y+u)-(D)u):((D)u - (D)(u-*y)); ++y; ++z;));
 }
-AHDR2(minusBIO,D,B,I){I u; I absn=n^(n>>(BW-1));
+AHDR2(minusBIO,D,B,I){I u; I absn=n^REPSGN(n);
  DQ(m, u=(I)*x++; DQ(absn, *z=n<0?((D)(*y+u)-(D)u):((D)u - (D)(u-*y)); ++y; ++z;));
 }
 
 // In multiply repair, z points to result, x and y to inputs
 // Parts of z before mulofloloc have been filled in already
 // We have to track the inputs just as for any other action routine
-AHDR2(tymesIIO,D,I,I){I u,v; I absn=n^(n>>(BW-1));
+AHDR2(tymesIIO,D,I,I){I u,v; I absn=n^REPSGN(n);
  // if all the multiplies are to be skipped, skip them quickly
  I skipct=jt->mulofloloc;
  if(skipct>=m*absn){skipct-=m*absn;
@@ -336,7 +336,7 @@ I jtremid(J jt,I a,D b){D r;I k;
 
 APFX(remID, I,I,D, remid)
 
-I remii(I a,I b){I r; R (a!=(a>>(BW-1)))?(r=b%a,0<a?r+(a&(r>>(BW-1))):r+(a&((-r)>>(BW-1)))):a?0:b;}  // must handle IMIN/-1, which overflows.  If a=0, return b.
+I remii(I a,I b){I r; R (a!=REPSGN(a))?(r=b%a,0<a?r+(a&REPSGN(r)):r+(a&REPSGN(-r))):a?0:b;}  // must handle IMIN/-1, which overflows.  If a=0, return b.
 
 AHDR2(remII,I,I,I){I u,v;
  if(n-1==0){DQ(m,*z++=remii(*x,*y); x++; y++; )
@@ -360,7 +360,7 @@ AHDR2(remII,I,I,I){I u,v;
     DQC(n, I yv=*y;
       // Multiply by recip to get quotient, which is up to 1/2 LSB low; get remainder; adjust remainder if too high; store
       // 2's-complement adjust for negative y; to make the result still always on the low side, subtract an extra 1.
-      DPUMUL(uarecip,(UI)yv,xx,himul); himul-=(uarecip+1)&(yv>>(BW-1)); I rem=yv-himul*ua; rem=(rem-(I)ua)>=0?rem-(I)ua:rem; *z++=rem;
+      DPUMUL(uarecip,(UI)yv,xx,himul); himul-=(uarecip+1)&REPSGN(yv); I rem=yv-himul*ua; rem=(rem-(I)ua)>=0?rem-(I)ua:rem; *z++=rem;
      y++;)
    }
    // if x was negative, move the remainder into the x+1 to 0 range
@@ -524,7 +524,7 @@ F2(jtabase2){A z;I an,ar,at,t,wn,wr,wt,zn;
    // Special case: a is (0,d) where d is positive
    if(d&(d1=d-1)){I q,r,xs;
     // d is not a power of 2
-    DQ(wn, x=*--wv; xs=(x>>(BW-1)); q=(x-xs)/d+xs; r=x-q*d; *--zv=r; *--zv=q;)  // remainder has same sign as dividend.  If neg, add 1, divide, sub 1 from quotient; then make remainder right
+    DQ(wn, x=*--wv; xs=REPSGN(x); q=(x-xs)/d+xs; r=x-q*d; *--zv=r; *--zv=q;)  // remainder has same sign as dividend.  If neg, add 1, divide, sub 1 from quotient; then make remainder right
    }else{
     // d is a power of 2
     k=CTTZ(d);  // k = #zeros below the 1 in d

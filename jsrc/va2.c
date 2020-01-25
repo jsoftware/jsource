@@ -400,7 +400,7 @@ void va2primsetup(A w){
  UC xlatedid = vaptr[(UC)FAV(w)->id];  // see which line it is
  // If the id is a comparison operator, turn on the MSB flag bit
  I shiftamt=xlatedid-VA2NE;
- xlatedid += (((((I)0x80<<(VA2LT-VA2NE))|((I)0x80<<(VA2EQ-VA2NE))|((I)0x80<<(VA2GT-VA2NE))|((I)0x80<<(VA2LE-VA2NE))|((I)0x80<<(VA2GE-VA2NE))|((I)0x80<<(VA2NE-VA2NE)))>>shiftamt)&0x80)&((~shiftamt)>>(BW-1));
+ xlatedid += (((((I)0x80<<(VA2LT-VA2NE))|((I)0x80<<(VA2EQ-VA2NE))|((I)0x80<<(VA2GT-VA2NE))|((I)0x80<<(VA2LE-VA2NE))|((I)0x80<<(VA2GE-VA2NE))|((I)0x80<<(VA2NE-VA2NE)))>>shiftamt)&0x80)&REPSGN(~shiftamt);
  FAV(w)->lc=xlatedid;  // save primitive number for use in ssing and monads
  xlatedid=(xlatedid&0x7f)>VA2CIRCLE?0:xlatedid;  // if this op is monad-only, don't set dyad info & flags
  FAV(w)->localuse.lvp[0]=(xlatedid?&va[xlatedid&0x7f]:0);  // point to the line, or 0 if invalid
@@ -512,9 +512,9 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
    {A t=a;  // will hold, first the longer-rank argument, then the shorter
     I raminusw=fr-shortr; t=raminusw<0?w:t;  // t->block with longer frame
     s=AS(t); zn=AN(t);     // atoms, shape of larger frame.  shape first.  The dependency chain is s/r/shortr->n->move data
-    nf=raminusw>>(BW-1);  // nf=-1 if w has longer frame, means cannot inplace a
+    nf=REPSGN(raminusw);  // nf=-1 if w has longer frame, means cannot inplace a
     raminusw=-raminusw;   // now aw-ar
-    mf=raminusw>>(BW-1);  // mf=-1 if a has longer frame, means cannot inplace w
+    mf=REPSGN(raminusw);  // mf=-1 if a has longer frame, means cannot inplace w
     raminusw=raminusw&nf; fr+=raminusw; shortr-=raminusw;  // if ar is the longer one, change nothing; otherwise transfer aw-ar from shortr to r
     PROD(n,fr-shortr,s+shortr);  // treat the entire operands as one big cell; get the rest of the values needed
     t=(A)((I)t^((I)a^(I)w)); m=AN(t);  // rank, atoms of shorter frame  m needed for data move
@@ -523,7 +523,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
    if(jtinplace){
     // Non-sparse setup for copy loop, no rank
       // get number of inner cells
-    n^=((1-n)>>(BW-1))&nf;  // encode 'w has long frame, so a is repeated' as complementary n; but if n<2, leave it alone.  Since n=1 when frames are equal, nf in that case is N/C
+    n^=REPSGN(1-n)&nf;  // encode 'w has long frame, so a is repeated' as complementary n; but if n<2, leave it alone.  Since n=1 when frames are equal, nf in that case is N/C
     nf=(adocv.cv>>VIPOKWX) & ((I)(a==w)-1) & (3 + nf*2 + mf);  // set inplaceability here: not if addresses equal (in case of retry); only if op supports; only if nonrepeated cell
     jtinplace = (J)(((I)jtinplace&nf)+4*nf+(adocv.cv&-16));  // bits 0-1 of jtinplace are combined input+local; 2-3 just local; 4+ hold adocv.cv; at least one is set to show non-sparse
     mf=nf=1;  // suppress the outer loop, leaving only the loop over m and n
@@ -542,7 +542,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
    // if the frames don't agree, that's always an agreement error
    if(jtinplace){  // If not sparse... This block isn't needed for sparse arguments, and may fail on them.  We move it here to reduce register pressure
     nf=acr<=wcr; zk=acr<=wcr?wk:ak; m=acr<=wcr?ak:wk; fr=acr<=wcr?wcr:acr; shortr=acr<=wcr?acr:wcr; s=AS(acr<=wcr?w:a)+(acr<=wcr?wf:af); PROD(n,fr-shortr,s+shortr);   // nf='w has long frame'; zk=#atoms in cell with larger rank;
-    n^=((1-n)>>(BW-1))&-nf;  // encode 'w has long frame, so a is repeated' as complementary n; but if n<2, leave it alone
+    n^=REPSGN(1-n)&-nf;  // encode 'w has long frame, so a is repeated' as complementary n; but if n<2, leave it alone
     // m=#atoms in cell with shorter rank; n=#times shorter-rank cells must be repeated; r=larger of cell-ranks; s->shape of larger-rank cell
     // now shortr has the smaller cell-rank, and acr/wcr are free
     // if the cell-shapes don't match, that's an agreement error UNLESS the frame contains 0; in that case it counts as
@@ -561,9 +561,9 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
     fr+=f<<RANKTX;  // encode f into fr
     }
 #ifdef DPMULD
-    { DPMULDDECLS DPMULD(nf,zk,zn,{jsignal(EVLIMIT);R 0;}) nf^=((1-nf)>>(BW-1))&-mf; PROD(mf,q,sf); DPMULD(zn,mf,zn,{jsignal(EVLIMIT);R 0;}) }
+    { DPMULDDECLS DPMULD(nf,zk,zn,{jsignal(EVLIMIT);R 0;}) nf^=REPSGN(1-nf)&-mf; PROD(mf,q,sf); DPMULD(zn,mf,zn,{jsignal(EVLIMIT);R 0;}) }
 #else
-    RE(zn=mult(nf,zk)); nf^=((1-nf)>>(BW-1))&-mf; PROD(mf,q,sf); RE(zn=mult(mf,zn));  // zn=total # result atoms  (only if non-sparse)
+    RE(zn=mult(nf,zk)); nf^=REPSGN(1-nf)&-mf; PROD(mf,q,sf); RE(zn=mult(mf,zn));  // zn=total # result atoms  (only if non-sparse)
 #endif
     zk*=bp(rtype((I)jtinplace));  // now create zk, which is used later than ak/wk.
     awzk[2]=zk;  // move it out of registers
@@ -661,7 +661,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
      adocv.f=(VF)tymesIIO;  // multiply-repair routine
      {C *av=CAV(a); C *wv=CAV(w);
       I wkm,wkn,akm,akn;
-      wkm=awzk[1], akn=awzk[0]; wkn=nf>>(BW-1); nf^=wkn;   // wkn=111..111 iff wk increments with n (and therefore ak with m).  Make nf positive
+      wkm=awzk[1], akn=awzk[0]; wkn=REPSGN(nf); nf^=wkn;   // wkn=111..111 iff wk increments with n (and therefore ak with m).  Make nf positive
       akm=akn&wkn; wkn&=wkm; wkm^=wkn; akn^=akm;  // if c, akm=ak/wkn=wk; else akn=ak/wkm=wk.  The other incr is 0
       I im=mf; do{I in=nf; do{((AHDR2FN*)adocv.f)(n,m,av,wv,zzv,jt); zzv+=zzk; av+=akn; wv +=wkn;}while(--in); if(!--im)break; av+=akm; wv +=wkm;}while(1);
      }
@@ -686,7 +686,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
      // b means 'repeat atoms inside a'; so if nipw!=b we repeat atoms of not-in-place, if nipw==b we set n to 1
      {C *av, *zv=CAV(z);
       I origc=(UI)nf>>(BW-1); I origb=(UI)n>>(BW-1);   // see what the original repeat flags were
-      nf^=nf>>(BW-1); n^=n>>(BW-1);  // take abs of n, nf for calculations here
+      nf^=REPSGN(nf); n^=REPSGN(n);  // take abs of n, nf for calculations here
       if(nipw){av=CAV(w), awzk[0]=awzk[1];}else{av=CAV(a);} if(nipw==origc){mf *= nf; nf = 1;} if(nipw==origb){m *= n; n = 1;}
       n^=-nipw;  // install new setting of b flag
      // We have set up ado,nf,mf,nipw,m,n for the conversion.  Now call the repair routine.  n is # times to repeat a for each z, m*n is # atoms of z/zz
@@ -1197,8 +1197,8 @@ F1(jtsquare){RZ(w); R tymes(w,w);}   // leave inplaceable in w only  ?? never in
 F1(jtrecip ){RZ(w); SETCONPTR R divide(conptr[1],w);}
 F1(jthalve ){RZ(w); if(!(AT(w)&XNUM+RAT))R tymes(onehalf,w); IPSHIFTWA; R divide(w,num[2]);} 
 
-static AHDR2(zeroF,B,void,void){memset(z,C0,m*(n^(n>>(BW-1))));}
-static AHDR2(oneF,B,void,void){memset(z,C1,m*(n^(n>>(BW-1))));}
+static AHDR2(zeroF,B,void,void){memset(z,C0,m*(n^REPSGN(n)));}
+static AHDR2(oneF,B,void,void){memset(z,C1,m*(n^REPSGN(n)));}
 
 // table of routines to handle = ~:
 static VF eqnetbl[2][16] = {

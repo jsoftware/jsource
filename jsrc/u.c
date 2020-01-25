@@ -265,15 +265,15 @@ A jtodom(J jt,I r,I n,I* RESTRICT s){A z;I m,mn,*u,*zv;
  if(1==n)DO(m, zv[i]=i;)
  else{
   I *zvo=zv-1; DQ(n, *zv++=0;)   // init first row, point zvo to before the first value
-  DQ(m-1, I dontadd=0; zv=zvo+n; zvo=zv+n; DQ(n, I out=*zv + 1 + dontadd; dontadd=(out-s[i])>>(BW-1); *zvo = out&dontadd; --zv; --zvo;))  // add 1 first time, & continue as long as there is carry.  Once dontadd goes to -1 it stays there
+  DQ(m-1, I dontadd=0; zv=zvo+n; zvo=zv+n; DQ(n, I out=*zv + 1 + dontadd; dontadd=REPSGN(out-s[i]); *zvo = out&dontadd; --zv; --zvo;))  // add 1 first time, & continue as long as there is carry.  Once dontadd goes to -1 it stays there
  }
  R z;
 }
 
 F1(jtrankle){R!w||AR(w)?w:ravel(w);}
 
-A jtsc(J jt,I k)     {A z; if((k^(k>>(BW-1)))<=NUMMAX)R (k&~1?num:zeroionei)[k]; GAT0(z,INT, 1,0); *IAV(z)=k;     RETF(z);}  // always return I
-A jtscib(J jt,I k)   {A z; if((k^(k>>(BW-1)))<=NUMMAX)R num[k]; GAT0(z,INT, 1,0); *IAV(z)=k;     RETF(z);}  // return b if 0 or 1, else I
+A jtsc(J jt,I k)     {A z; if((k^REPSGN(k))<=NUMMAX)R (k&~1?num:zeroionei)[k]; GAT0(z,INT, 1,0); *IAV(z)=k;     RETF(z);}  // always return I
+A jtscib(J jt,I k)   {A z; if((k^REPSGN(k))<=NUMMAX)R num[k]; GAT0(z,INT, 1,0); *IAV(z)=k;     RETF(z);}  // return b if 0 or 1, else I
 A jtsc4(J jt,I t,I v){A z; GA(z,t,   1,0,0); *IAV(z)=v;     RETF(z);}  // return scalar with a given I-length type (numeric or box)
 A jtscb(J jt,B b)    {R num[b];}   // A block for boolean
 A jtscc(J jt,C c)    {A z; GAT0(z,LIT, 1,0); *CAV(z)=c;     RETF(z);}  // create scalar character

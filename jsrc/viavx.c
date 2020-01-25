@@ -1032,7 +1032,7 @@ static IOFSMALLRANGE(jtio42,I,US)  static IOFSMALLRANGE(jtio44,I,UI4)  // 4/8-by
 // ac is # outer cells of a, asct=#items in 1 inner cell, wc is #outer search cells, wsct is #items to search for per outer cell
 // n is #atoms in a cell
 static void jtiosc(J jt,I mode,I n,I asct,I wsct,I ac,I wc,A a,A w,A z){I j,p,q; void *u,*v,*zv;
- p=ac>1?asct:0; q=(1-(wc|wsct))>>(BW-1); p*=n; q&=n;  // q=1<wc||1<wsct; number of atoms to move between repeats
+ p=ac>1?asct:0; q=REPSGN(1-(wc|wsct)); p*=n; q&=n;  // q=1<wc||1<wsct; number of atoms to move between repeats
  zv=voidAV(z); u=voidAV(a); v=voidAV(w);
  // Create a pseudotype 19 (=XDX) for intolerant comparison.  This puns on XDX-FLX==16
  I bit=CTTZ(AT(a)); bit+=((AT(a)>>FLX)&(jt->cct==1.0))<<4;
@@ -1725,7 +1725,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z=mtv;
   PROD1(n,acr-1,as+af+1); k=n<<klg; // n=number of atoms in a target item; k=number of bytes in a target item
   PROD(ac,af,as); PROD(wc,wf,ws); PROD1(c,MAX(f1,-1),ws+wf);  // ?c=#cells in a & w;  c=#target items (and therefore #result values) in a result-cell.  -1 so we don't fetch outside the shape
   RE(zn=mult(af?ac:wc,c));   // #results is results/cell * number of cells; number of cells comes from ac if a has frame, otherwise w.  If both have frame, a's must be longer, use it
-  ak=(acr?as[af]*k:k)&((1-ac)>>(BW-1)); wk=(c*k)&((1-wc)>>(BW-1));   // # bytes in a cell, but 0 if there are 0 or 1 cells
+  ak=(acr?as[af]*k:k)&REPSGN(1-ac); wk=(c*k)&REPSGN(1-wc);   // # bytes in a cell, but 0 if there are 0 or 1 cells
   if(!af)c=zn;   // if af=0, wc may be >1 if there is w-frame.  In that case, #result/a-cell must include the # w-cells.  This has been included in zn
  }else{
   // An argument is empty.  We must beware of overflow in counting cells.  Just do it the old slow way
@@ -2009,7 +2009,7 @@ A jtindexofprehashed(J jt,A a,A w,A hs){A h,*hv,x,z;AF fn;I ar,*as,at,c,f1,k,m,m
  RE(c=prod(f1,ws));  // c=#cells of w (and result)
  // audit conformance of input shapes.  If there is an error, pass to the main code to get the error result
  // Use c=0 as an error flag
- c &= (~(f1|(ar-r)))>>(BW-1);   // w must have rank big enough to hold a cell of a.  Clear c if f1<0 or r>ar
+ c &= REPSGN(~(f1|(ar-r)));   // w must have rank big enough to hold a cell of a.  Clear c if f1<0 or r>ar
  if(ICMP(as+ar-r,ws+f1,r))c=0;  // and its shape at that rank must match the shape of a cell of a
  // If there is any error, switch back to the non-prehashed code.  We must remove any command bits from mode, leaving just the operation type
  if(!(m&&n&&c&&HOMO(t,wt)&&UNSAFE(t)>=UNSAFE(wt)))R indexofsub(mode&IIOPMSK,a,w);

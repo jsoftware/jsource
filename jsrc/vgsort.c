@@ -298,7 +298,7 @@ static SF(jtsorti){FPREFIP;A y,z;I i;UI4 *yv;I j,s,*wv,*zv;
   DQ(n, ++yv[*wv++];);  // increment total for each input atom
   // run through the totals, copying in the requisite # repetitions of each value
   // We have to disguise the loop to prevent VS from producing a REP STOS, which we don't want because the loop is usually short
-  I incr = -jt->workareas.compare.complt; I zincr = (incr&1/*always 1*/)*sizeof(*zv); j=rng.min+((incr>>(BW-1))&(rng.range-1));  // jt>complt is 1 or -1
+  I incr = -jt->workareas.compare.complt; I zincr = (incr&1/*always 1*/)*sizeof(*zv); j=rng.min+(REPSGN(incr)&(rng.range-1));  // jt>complt is 1 or -1
   DQ(rng.range, s=yv[j]; DQ(s, *zv=j; zv=(I*)((C*)zv+zincr);) j+=incr;)  // Don't zv+=zincr, because VS doesn't pull the *8 out
 //  if((UI)jt->workareas.compare.complt>>(BW-1)){ j=rng.min; DQ(rng.range, s=(I)yv[j]; DQ(s, *zv++=j;); ++j;);}  // generates rep stos, which is slow.  should fix
 //  else{j=rng.min+rng.range; DQ(rng.range, --j; s=(I)yv[j]; DQ(s, *zv++=j  ;););}
@@ -321,7 +321,7 @@ static SF(jtsortu){FPREFIP;A y,z;I i;UI4 *yv;C4 j,s,*wv,*zv;
  for(i=0;i<m;++i){
   memset(yv+rng.min,C0,rng.range*sizeof(UI4)); 
   DQ(n, ++yv[*wv++];);
-  I incr = -jt->workareas.compare.complt; I zincr = (incr&1)*sizeof(*zv); j=(C4)(rng.min+((incr>>(BW-1))&(rng.range-1)));
+  I incr = -jt->workareas.compare.complt; I zincr = (incr&1)*sizeof(*zv); j=(C4)(rng.min+(REPSGN(incr)&(rng.range-1)));
   DQ(rng.range, s=yv[j]; DQ(s, *zv=j; zv=(C4*)((C*)zv+zincr);) j+=(C4)incr;)
  }
  R z;

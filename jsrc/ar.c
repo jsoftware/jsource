@@ -248,7 +248,7 @@ static DF1(jtredg){F1PREFIP;PROLOG(0020);DECLF;AD * RESTRICT a;I i,k,n,r,wr;A *o
  // We can inplace the right arg the first time if it is direct inplaceable, and always after that.  This is subject to approval by the verb u
  // and the input jtinplace.  We turn off WILLBEOPENED status in jtinplace for the callee.
  I inplacelaterw = (FAV(fs)->flag>>(VJTFLGOK2X-JTINPLACEWX)) & JTINPLACEW;  // JTINPLACEW if the verb can handle inplacing
- jtinplace = (J)(intptr_t)(((I)jt) + (JTINPLACEW+JTINPLACEA)*(inplacelaterw&(I)jtinplace&((AT(w)&TYPEVIPOK)!=0)&(origwc>>(BW-1))));  // inplace left arg, and first right arg, only if w is direct inplaceable, enabled, and verb can take it
+ jtinplace = (J)(intptr_t)(((I)jt) + (JTINPLACEW+JTINPLACEA)*(inplacelaterw&(I)jtinplace&((AT(w)&TYPEVIPOK)!=0)&REPSGN(origwc)));  // inplace left arg, and first right arg, only if w is direct inplaceable, enabled, and verb can take it
  // fill in the shape, offset, and item-count of the virtual block
  AN(a)=AN(w); AK(a)+=(n-2)*k; MCISH(AS(a),AS(w),r-1);  // make the virtual block look like the tail, except for the offset
  // Mark the blocks as inplaceable.  They won't be used as inplaceable unless permitted by jtinplace

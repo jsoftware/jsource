@@ -496,11 +496,11 @@ C asminnerprodx(I,I*,I,I*);
 
 // accumulate the total in double integer precision; at the end decide which to use.  vs accumulates the number of negative numbers added: each one
 // should be sign-extended and added to the high part, but we wait till the end to combine them, to save pipeline stalls
-#define PLUSR(n,z,x)      {UI s=0,v,vs=0,h=0;   DQ(n, v=*x; vs += (I)v>>(BW-1); SPDPADD(v, s, h) x++;); *z=(I)s; if(h+vs+((UI)s>>(BW-1))){if(m==1){er=EWOV1; *(D*)z=(I)(h+vs)*(-2*(D)IMIN)+s;}else er=EWOV;}}
+#define PLUSR(n,z,x)      {UI s=0,v,vs=0,h=0;   DQ(n, v=*x; vs += REPSGN((I)v); SPDPADD(v, s, h) x++;); *z=(I)s; if(h+vs+REPSGN((UI)s)){if(m==1){er=EWOV1; *(D*)z=(I)(h+vs)*(-2*(D)IMIN)+s;}else er=EWOV;}}
 // accumulate in double integer precision; p alternates between 0 (add) and _1 (subtract); subtract by adding one's-complement + 1.  As with addition,
 // we accumulate high-order sign-extensions to add and add them at the end.  Also, we don't add the 1 in the complement+1 each time: we just
 // calculate the number of subtracts there will be, and add them all at once (at initialization of z)
-#define MINUSR(n,z,x)      {UI s=n>>1,v,vs=0,h=0,p=0;  DQ(n, v=*x^p; vs += (I)v>>(BW-1); SPDPADD(v, s, h) x++; p=~p;); *z=(I)s; if(h+vs+((UI)s>>(BW-1))){if(m==1){er=EWOV1; *(D*)z=(I)(h+vs)*(-2*(D)IMIN)+s;}else er=EWOV;}}
+#define MINUSR(n,z,x)      {UI s=n>>1,v,vs=0,h=0,p=0;  DQ(n, v=*x^p; vs += REPSGN((I)v); SPDPADD(v, s, h) x++; p=~p;); *z=(I)s; if(h+vs+REPSGN((UI)s)){if(m==1){er=EWOV1; *(D*)z=(I)(h+vs)*(-2*(D)IMIN)+s;}else er=EWOV;}}
 #define TYMESR(n,z,x)      {I l=1; DPMULDDECLS DQ(n, DPMULD(l,*x,l,{er=EWOV; break;}); x++;) *z=l;}
 
 #define PLUSRV(n,z,x)     {I u,v,w; DQ(n, u=*x; v=*z; w=~u; u+=v; *z=u; ++x; ++z; w^=v; v^=u; BOV(XANDY(w,v)<0))}

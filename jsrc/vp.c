@@ -17,7 +17,7 @@ F1(jtpinv){I m=-1,n,*v;  // empty perm will set m=0
  F1RANK(1,jtpinv,0);
  RZ(w=vi(w));
  n=AN(w); v=AV(w);
- DO(n, I r=v[i]^(v[i]>>(BW-1)); m=r>m?r:m;); ++m;  // take 1s-comp of negative ele#, then find max; add 1 to get #eles
+ DO(n, I r=v[i]^REPSGN(v[i]); m=r>m?r:m;); ++m;  // take 1s-comp of negative ele#, then find max; add 1 to get #eles
  R indexof(pfill(m,w),IX(m));
 }    /* permutation inverse */
 

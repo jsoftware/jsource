@@ -86,7 +86,7 @@ A jtssingleton1(J jt, A w,A self){A z;
 
  case SSINGCASE(VA2RESIDUE-VA2MIN,SSINGENC(B01)): SSSTORENV(SSRDB(w),z,INT,I) R z;   // return INT rather than normal B01
  case SSINGCASE(VA2RESIDUE-VA2MIN,SSINGENC(INT)):
-    wiv = SSRDI(w); wiv=(wiv^(wiv>>(BW-1)))-(wiv>>(BW-1)); if(wiv>=0){SSSTORENV(wiv,z,INT,I)}else SSSTORE(-(D)IMIN,z,FL,D) R z;
+    wiv = SSRDI(w); wiv=(wiv^REPSGN(wiv))-REPSGN(wiv); if(wiv>=0){SSSTORENV(wiv,z,INT,I)}else SSSTORE(-(D)IMIN,z,FL,D) R z;
  case SSINGCASE(VA2RESIDUE-VA2MIN,SSINGENC(FL)):
     wdv = SSRDD(w); wdv=ABS(wdv); SSSTORENVFL(wdv,z,FL,D) R z;
 

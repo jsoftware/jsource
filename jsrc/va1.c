@@ -33,7 +33,7 @@ static AMON(ceilZ,  Z,Z, *z=zceil(*x);)
 
 static AMON(cjugZ,  Z,Z, *z=zconjug(*x);)
 
-static AMON(sgnI,   I,I, I xx=*x; *z=(xx>>(BW-1))|(((UI)-xx)>>(BW-1));)
+static AMON(sgnI,   I,I, I xx=*x; *z=REPSGN(xx)|(((UI)-xx)>>(BW-1));)
 static AMON(sgnD,   I,D, *z=((1.0-jt->cct)<=*x) - (-(1.0-jt->cct)>=*x);)
 static AMON(sgnZ,   Z,Z, if((1.0-jt->cct)>zmag(*x))*z=zeroZ; else *z=ztrend(*x);)
 
@@ -84,7 +84,7 @@ static AMON(logI,   D,I, ASSERTW(0<=*x,EWIMAG); *z=log((D)*x);)
 static AMON(logD,   D,D, ASSERTW(0<=*x,EWIMAG); *z=log(   *x);)
 static AMON(logZ,   Z,Z, *z=zlog(*x);)
 
-static AMONPS(absI,   I,I, I vtot=0; , I val=*x; val=(val^(val>>(BW-1)))-(val>>(BW-1)); vtot |= val; *z=val; , if(vtot<0)jt->jerr=EWOV;)
+static AMONPS(absI,   I,I, I vtot=0; , I val=*x; val=(val^REPSGN(val))-REPSGN(val); vtot |= val; *z=val; , if(vtot<0)jt->jerr=EWOV;)
 static AMON(absZ,   D,Z, *z=zmag(*x);)
 
 static AHDR1(oneB,C,C){memset(z,C1,n);}
@@ -150,7 +150,7 @@ static A jtva1(J jt,A w,A self){A z;I cv,n,t,wt,zt;VF ado;
  if(!((I)jtinplace&JTRETRY)){
   ado=p->f; cv=p->cv;
  }else{
-  I m=((wt&XNUM+RAT)-1)>>(BW-1);   // -1 if not XNUM/RAT
+  I m=REPSGN((wt&XNUM+RAT)-1);   // -1 if not XNUM/RAT
   switch(VA1CASE(jt->jerr,FAV(self)->lc-VA2MIN)){
    default:     R 0;  // unknown type - error must have come from previous verb
    // all these cases are needed because sparse code may fail over to them

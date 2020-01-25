@@ -201,7 +201,7 @@ I grcol4(I d,I c,UI4*yv,I n,I*xv,I*zv,const I m,US*u,I flags){
   // the result of this stage is the starting position in the output of each input value
   I tct = d>>(split=flags&1);  // number of iterations per section
   I tinc = (flags&2)-1;  // +1 if up, -1 if down
-  UI4 *t=yv+c+(tct&((tinc>>(BW-1))|-split))+(tinc>>(BW-1));  // starting position: based on up/split: 00: +d-1  01: +d/2-1  10: +0  11: +d/2
+  UI4 *t=yv+c+(tct&(REPSGN(tinc)|-split))+REPSGN(tinc);  // starting position: based on up/split: 00: +d-1  01: +d/2-1  10: +0  11: +d/2
   UI4 s=0; do{DP(tct, k=*t; *t=s; s+=k; t+=tinc;) t-=tinc*d;}while(--split>=0);  // 1 iteration if not split, 2 if split
   // create the output.  Each input produces an output in the position indicated by yv.
   // If sort is set, we move the value; otherwise move the index.
@@ -244,7 +244,7 @@ I grcol2(I d,I c,US*yv,I n,I*xv,I*zv,const I m,US*u,I flags){
  }else{US k;
   I tct = d>>(split=flags&1);
   I tinc = (flags&2)-1;
-  US *t=yv+c+(tct&((tinc>>(BW-1))|-split))+(tinc>>(BW-1));
+  US *t=yv+c+(tct&(REPSGN(tinc)|-split))+REPSGN(tinc);
   US s=0; do{DP(tct, k=*t; *t=s; s+=k; t+=tinc;) t-=tinc*d;}while(--split>=0);
   v=u;
   if(flags&4){
@@ -418,7 +418,7 @@ static GF(jtgru1){A x,y;C4*wv;I i,*xv;US*u;void *yv;I c=ai*n;
 // We interpret the input as integer form so that we can hide the item number in an infinity without turning it into a NaN
 static GF(jtgriq){
  GBEGIN(-1);  // subsorts will always be ascending
- I gradedown=(~olt)>>(BW-1);  // ~0 if sorting down, else 0
+ I gradedown=REPSGN(~olt);  // ~0 if sorting down, else 0
  // See how many bits we must reserve for the item number, and make a mask for the item number
  unsigned long hbit; CTLZI(n-1,hbit); ++hbit; I itemmask=((I)1<<hbit)-1;  // mask where the item number will go
  I itemmsb=(I)1<<(BW-1-hbit); I itemsigmsk=2*-itemmsb;  // get bit at place we will shift into sign bit, and a mask for all higher bits

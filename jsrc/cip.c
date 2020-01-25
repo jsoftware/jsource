@@ -3,9 +3,10 @@
 /*                                                                         */
 /* Conjunctions: Inner Product                                             */
 
-#include "j.h"
-#include "vasm.h"
-#include "gemm.h"
+#include "../../jsource/jsrc/j.h"
+#include "../../jsource/jsrc/vasm.h"
+#include "../../jsource/jsrc/gemm.h"
+#include <omp.h>
 
 #define MAXAROWS 384  // max rows of a that we can process to stay in L2 cache   a strip is m*CACHEHEIGHT, z strip is m*CACHEWIDTH   this is wired to 128*3 - check if you chage
 
@@ -109,8 +110,9 @@ l1:
 //  FLGWMINUSZ is supported
 //  FLGAUTRI is supported
 // m, n, and p are all non0
-void blockedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){
+I blockedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I pnom,I pstored,I flgs){
  // Since we sometimes use 128-bit instructions in other places, make sure we don't get stuck in slow state
+ NAN0;
  _mm256_zeroupper();
  __m256d z00=_mm256_set1_pd(0.0); // set here to avoid warnings
  // handle small mx2 separately
@@ -134,7 +136,7 @@ void blockedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){
 #define ST1(wr,wc) _mm256_storeu_pd(zv1+(wr)*n+(wc)*NPAR,z##wr##wc);
 #define ST2(wc) {ST1(0,wc) ST1(1,wc)}
 #define MUL2x4(wr,wc,ldm) {ldm(wr,wc) z0##wc=MUL_ACC(z0##wc,a0,wt); z1##wc=MUL_ACC(z1##wc,a1,wt);}  // (wr,wc) is multiplied by a0,:a1
-#define MUL2x16r(nc,ac,ldm) {a0=_mm256_set1_pd(av1[0+(ac)]); a1=_mm256_set1_pd(av1[p+(ac)]); MUL2x4(ac,0,ldm) if(nc>1)MUL2x4(ac,1,ldm) if(nc>2)MUL2x4(ac,2,ldm) if(nc>3)MUL2x4(ac,3,ldm)}  // ac is col of a=row of w
+#define MUL2x16r(nc,ac,ldm) {a0=_mm256_set1_pd(av1[0+(ac)]); a1=_mm256_set1_pd(av1[pstored+(ac)]); MUL2x4(ac,0,ldm) if(nc>1)MUL2x4(ac,1,ldm) if(nc>2)MUL2x4(ac,2,ldm) if(nc>3)MUL2x4(ac,3,ldm)}  // ac is col of a=row of w
 #define MUL2x16(nr,nc,ldm) {MUL2x16r(nc,0,ldm) if((nr)>1)MUL2x16r(nc,1,ldm)}
 #define MUL1x4(wr,wc,ldm) {ldm(wr,wc) z0##wc=MUL_ACC(z0##wc,a0,wt);}  // (wr,wc) is multiplied by a0
 #define MUL1x16(nc,ldm) {a0=_mm256_set1_pd(av1[0]); MUL1x4(0,0,ldm) if((nc)>1)MUL1x4(0,1,ldm) if((nc)>2)MUL1x4(0,2,ldm) if((nc)>3)MUL1x4(0,3,ldm)}  // ac is col of a=row of w
@@ -142,7 +144,7 @@ void blockedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){
  // Handle the special case where a is small, mx2 m<=4.  We MUST do this because %. expects to be able operate on w inplace when m is 2x2.  We want to do this because
  // it reduces the inner-loop overhead.
  I nrem=n;  // number of columns left
- if(((p-2)|(p-m))==0){  // m=p=2
+ if(((pnom-2)|(pnom-m))==0){  // m=p=2
   // m is 2x2.  preload it, then read pairs of inputs to produce pairs of outputs.  Must allow inplace ops
   D *wv1=wv, *zv1=zv;  // scan pointer through row-pairs of w and z (which may be the same)
   __m256d z10, a00=_mm256_set1_pd(av[0]), a01=_mm256_set1_pd(av[1]), a10=_mm256_set1_pd(av[2]), a11=_mm256_set1_pd(av[3]);
@@ -160,18 +162,18 @@ void blockedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){
   z00=_mm256_mul_pd(a00,w0); z00=MUL_ACC(z00,a01,w1); z10=_mm256_mul_pd(a10,w0); z10=MUL_ACC(z10,a11,w1);
   if(flgs&FLGWMINUSZ){WMZ(0,0) WMZ(1,0)}  // handle WMINUSZ, used for next-to-last bit of %.
   _mm256_maskstore_pd(zv1,mask,z00);_mm256_maskstore_pd(zv1+n,mask,z10);
-  R;
+  R 0==NANTEST;  // return 0 if floating-point error
  }
  // not 2x2
- I wskips=p-NPAR*4; wskips=flgs&FLGWUTRI?wskips:0; wskips=wskips<0?0:wskips;  // number of known trailing 0s in w, therefore shortening each dp
+ I wskips=pnom-NPAR*4; wskips=flgs&FLGWUTRI?wskips:0; wskips=wskips<0?0:wskips;  // number of known trailing 0s in w, therefore shortening each dp
  while(nrem>=NPAR){  // do 1x4s as long as possible.  The load bandwidth is twice as high
   // create mx16 strip of result
   I mrem=m;  // number of rows of a left
   D *av1=av;  // scan pointer through a values, by cols then by rows, i. e. incrementing
   D *zv1=zv;  // output pointer down the column
   D *wvtri=wv;  // pointer to first row to process - advanced if AUTRI
-  I ptri=p;  // ptri is length of an inner product, which goes down as we advance through upper-tri a
-  I avtri=0;  // number of a values to skip at the start of a line, to get over the zeros
+  I ptri=pnom;  // ptri is length of an inner product, which goes down as we advance through upper-tri a
+// obsolete   I avtri=0;  // number of a values to skip at the start of a line, to get over the zeros
   for(--mrem;mrem>0;mrem-=2){  // bias mrem down 1, so <=0 if no pairs; do each pair
    // create 2x16 section of result
    I prem=ptri-wskips;  // number of cols of a/rows of w to be accumulated into one 2x16 result.  May go negative.
@@ -189,7 +191,7 @@ void blockedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){
    // store the 2x16.  If WMINUSZ, do that first
    if(flgs&FLGWMINUSZ){WMZ(0,0) WMZ(1,0) if(nrem>=2*NPAR){WMZ(0,1) WMZ(1,1)} if(nrem>=3*NPAR){WMZ(0,2) WMZ(1,2)} if(nrem>=4*NPAR){WMZ(0,3) WMZ(1,3)}}
    ST2(0) if(nrem>=2*NPAR)ST2(1) if(nrem>=3*NPAR)ST2(2) if(nrem>=4*NPAR)ST2(3) 
-   av1=svav1+2*p; zv1+=2*n;  // since we go through two rows of a at a time, we must skip exactly one row at the end
+   av1=svav1+2*pstored; zv1+=2*n;  // since we go through two rows of a at a time, we must skip exactly one row at the end
    // if AUTRI, advance the a and w startpoints (by 2 cols and 2 rows respectively) and decrement the number of products in each row
    if(flgs&FLGAUTRI){av1+=2; wvtri+=2*n; ptri-=2;}  // a skips over 2 more values each row
   }
@@ -228,8 +230,8 @@ void blockedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){
   D *av1=av;  // scan pointer through a values, by cols then by rows, i. e. incrementing
   D *zv1=zv;  // output pointer down the column
   D *wvtri=wv;  // pointer to first row to process - advanced if AUTRI
-  I ptri=p;  // ptri is length of an inner product, which goes down as we advance through upper-tri a
-  I avtri=0;  // number of a values to skip at the start of a line, to get over the zeros
+  I ptri=pnom;  // ptri is length of an inner product, which goes down as we advance through upper-tri a
+  I avtri=pstored-pnom;  // number of a values to skip at the start of a line, to get over the zeros
   do{
    // create 1x4 section of result
    I prem=ptri;  // number of cols of a/rows of w to be accumulated into one 2x16 result
@@ -254,9 +256,11 @@ void blockedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){
    if(flgs&FLGAUTRI){avtri+=1; av1+=avtri; wvtri+=n; ptri-=1;}
   }while(--mrem);
  }
+ R NANTEST==0;  // return with error (0) if any FP error
 }
 // cache-blocking code
-#define OPHEIGHT 4  // height of outer-product block
+#define OPHEIGHTX 2
+#define OPHEIGHT ((I)1<<OPHEIGHTX)  // height of outer-product block
 #define OPWIDTHX 3
 #define OPWIDTH ((I)1<<OPWIDTHX)  // width of outer-product block
 #define CACHEWIDTH 64  // width of resident cache block (in D atoms)
@@ -265,10 +269,12 @@ void blockedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){
 // *zv=*av * *wv, with *cv being a cache-aligned region big enough to hold CACHEWIDTH*CACHEHEIGHT floats
 // a is shape mxp, w is shape pxn.  Result is 0 if OK, 1 if fatal error
 // m must not exceed MAXAROWS.  mfull is the number of rows from the actual starting row to the end of a
-static I cachedmmultx(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs, I mfull){D c[(CACHEHEIGHT+1)*CACHEWIDTH + (CACHEHEIGHT+1)*OPHEIGHT*OPWIDTH*2 + 2*CACHELINESIZE/sizeof(D)];  // 2 in case complex
+// Result is 0 if NaN error, 1 if OK
+static I cachedmmultx(J jt,D* av,D* wv,D* zv,I m,I n,I pnom,I pstored,I flgs){D c[(CACHEHEIGHT+1)*CACHEWIDTH + (CACHEHEIGHT+1)*OPHEIGHT*OPWIDTH*2 + 2*CACHELINESIZE/sizeof(D)];  // 2 in case complex
  // Allocate a temporary result area for the stripe of z results
  D zt[((MAXAROWS+OPHEIGHT)&(-OPHEIGHT))*CACHEWIDTH+5*CACHELINESIZE/SZD];
  D *zblock=(D*)(((I)zt+5*CACHELINESIZE-1)&(-CACHELINESIZE));  // cache-aligned area to hold z values
+ NAN0;  // see if we hit any errors during this block
 #if 0  // obsolete
  {A zt; I zlen=;  // big enough to hold a cache-aligned stripe
   GATV0(zt,FL,zlen,1); zblock=(D*)(((I)DAV(zt)+5*CACHELINESIZE-1)&(-CACHELINESIZE));  // take aligned section
@@ -291,7 +297,7 @@ static I cachedmmultx(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs, I mfull){D c[(C
  D* w0base = wv; D* z0base = zv; I w0rem = n;   // w0rem counts doubles
  for(;w0rem>0;w0rem-=CACHEWIDTH,w0base+=CACHEWIDTH,z0base+=CACHEWIDTH){
   // process each 16x64 section of w, adding each result to the same columns of z.  Each section goes through one corresponding set of 16/32 columns of a.  First time through init z values to 0
-  D* a1base=av; D* w1base=w0base; D* z1base=z0base; I w1rem=p>>(flgs&FLGCMP); flgs|=FLGZFIRST;  // w1rem counts atoms
+  D* a1base=av; D* w1base=w0base; D* z1base=z0base; I w1rem=pnom>>(flgs&FLGCMP); flgs|=FLGZFIRST;  // w1rem counts atoms
   // if w is upper-triangular, there is no need to process sections whose upper index exceeds the rightmost index; that is, limit w1rem based on w0rem
   if(flgs&FLGWUTRI){I bottomlen=(w0rem-CACHEWIDTH)>>(flgs&FLGCMP); bottomlen=bottomlen>=0?bottomlen:0; w1rem-=bottomlen;}
   I preva2rem=0;   // number of rows of a processed in previous pass (used to establish newrowsct1)
@@ -312,17 +318,18 @@ static I cachedmmultx(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs, I mfull){D c[(C
    // w1next is left pointing to the next cache block in the column.  We will use that to prefetch
    D *nextprefetch=w1next;  // start prefetches for the next block at the beginning
 
-   // the single mx16 vertical strip of a (mx32 doubles if flgs) will be multiplied by the 16x64 section of w and accumulated into the mx64 slice of z
+   // the single mx16 vertical strip of a (mx32 doubles if complex) will be multiplied by the 16x64 section of w and accumulated into the mx64 slice of z
    // process each 4x16 (or 32) section of a against the 16x64 cache block
    D *a2base0=a1base; D* w2base=w1base; I a2rem=m; D* z2base=z1base; D* c2base=cvw;
    // if a is upper-triangular, we can stop when the top index of a exceeds the bottommost index of w.
 // obsolete    if(flgs&FLGAUTRI){I bottomlen=w1rem-CACHEHEIGHT; bottomlen=bottomlen>=0?bottomlen:0; a2rem-=bottomlen; newrowsct=((a2rem-1)&(CACHEHEIGHT-1))+1;}else newrowsct=0;
    if(flgs&FLGAUTRI){
     // see where the validity of a expires (at a distance, based on w position, from the actual bottom of the full a); clamp #rows to process; see how many are new rows that must be initialized
-    I fullrem=mfull-w1rem+CACHEHEIGHT; fullrem=fullrem<CACHEHEIGHT?CACHEHEIGHT:fullrem; a2rem=a2rem>fullrem?fullrem:a2rem; newrowsct1=a2rem-preva2rem+1; preva2rem=a2rem;
+    I fullrem=(pnom>>(flgs&FLGCMP))-(w1rem-CACHEHEIGHT); fullrem=fullrem<0?0:fullrem; a2rem=a2rem>fullrem?fullrem:a2rem; newrowsct1=a2rem-preva2rem+1; preva2rem=a2rem;
+    // This won't work if WUTRI is also set - then w1rem doesn't count from the top of the region to the bottom, but only down to the diagonal - you would need to bring w0rem into the mix
    }
    // scaf could skip leading 16x8s for uppertri w, if that doesn't foul z
-   for(;a2rem>0;a2rem-=OPHEIGHT,a2base0+=OPHEIGHT*p,z2base+=OPHEIGHT*n){  // a2rem is the number of lines left in the entire column of a
+   for(;a2rem>0;a2rem-=OPHEIGHT,a2base0+=OPHEIGHT*pstored,z2base+=OPHEIGHT*n){  // a2rem is the number of lines left in the entire column of a
    static D missingrow[CACHEHEIGHT]={1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
     // Prepare for the 4x16 block of a (4x32 if cmplx)
     // If a row of a is off the end of the data, we mustn't fetch it - repeat a row instead so it won't give NaN error on multiplying by infinity
@@ -333,15 +340,15 @@ static I cachedmmultx(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs, I mfull){D c[(C
    if((((CACHEHEIGHT-1)-nvalidops)&((OPHEIGHT-1)-a2rem)&((flgs&FLGCMP)-1))<0){  // full block and not complex
     // load in horizontal order for best prefetch; store aligned in column order which is order of use
     __m256d t0,t1,t2,t3,t4,t5,t6,t7;
-    t0=_mm256_loadu_pd(a2base0+0*p+0*NPAR); t1=_mm256_loadu_pd(a2base0+0*p+1*NPAR); _mm256_store_pd(&(*cva)[0][0][0*NPAR],t0);  _mm256_store_pd(&(*cva)[0][0][1*NPAR],t1); t2=_mm256_loadu_pd(a2base0+0*p+2*NPAR); t3=_mm256_loadu_pd(a2base0+0*p+3*NPAR);
-    t0=_mm256_loadu_pd(a2base0+1*p+0*NPAR); t1=_mm256_loadu_pd(a2base0+1*p+1*NPAR); _mm256_store_pd(&(*cva)[0][1][0*NPAR],t0);  _mm256_store_pd(&(*cva)[0][1][1*NPAR],t1); t4=_mm256_loadu_pd(a2base0+1*p+2*NPAR); t5=_mm256_loadu_pd(a2base0+1*p+3*NPAR);
-    t0=_mm256_loadu_pd(a2base0+2*p+0*NPAR); t1=_mm256_loadu_pd(a2base0+2*p+1*NPAR); _mm256_store_pd(&(*cva)[0][2][0*NPAR],t0);  _mm256_store_pd(&(*cva)[0][2][1*NPAR],t1); t6=_mm256_loadu_pd(a2base0+2*p+2*NPAR); t7=_mm256_loadu_pd(a2base0+2*p+3*NPAR);
-    t0=_mm256_loadu_pd(a2base0+3*p+0*NPAR); t1=_mm256_loadu_pd(a2base0+3*p+1*NPAR); _mm256_store_pd(&(*cva)[0][3][0*NPAR],t0);  _mm256_store_pd(&(*cva)[0][3][1*NPAR],t1); t0=_mm256_loadu_pd(a2base0+3*p+2*NPAR); t1=_mm256_loadu_pd(a2base0+3*p+3*NPAR);
+    t0=_mm256_loadu_pd(a2base0+0*pstored+0*NPAR); t1=_mm256_loadu_pd(a2base0+0*pstored+1*NPAR); _mm256_store_pd(&(*cva)[0][0][0*NPAR],t0);  _mm256_store_pd(&(*cva)[0][0][1*NPAR],t1); t2=_mm256_loadu_pd(a2base0+0*pstored+2*NPAR); t3=_mm256_loadu_pd(a2base0+0*pstored+3*NPAR);
+    t0=_mm256_loadu_pd(a2base0+1*pstored+0*NPAR); t1=_mm256_loadu_pd(a2base0+1*pstored+1*NPAR); _mm256_store_pd(&(*cva)[0][1][0*NPAR],t0);  _mm256_store_pd(&(*cva)[0][1][1*NPAR],t1); t4=_mm256_loadu_pd(a2base0+1*pstored+2*NPAR); t5=_mm256_loadu_pd(a2base0+1*pstored+3*NPAR);
+    t0=_mm256_loadu_pd(a2base0+2*pstored+0*NPAR); t1=_mm256_loadu_pd(a2base0+2*pstored+1*NPAR); _mm256_store_pd(&(*cva)[0][2][0*NPAR],t0);  _mm256_store_pd(&(*cva)[0][2][1*NPAR],t1); t6=_mm256_loadu_pd(a2base0+2*pstored+2*NPAR); t7=_mm256_loadu_pd(a2base0+2*pstored+3*NPAR);
+    t0=_mm256_loadu_pd(a2base0+3*pstored+0*NPAR); t1=_mm256_loadu_pd(a2base0+3*pstored+1*NPAR); _mm256_store_pd(&(*cva)[0][3][0*NPAR],t0);  _mm256_store_pd(&(*cva)[0][3][1*NPAR],t1); t0=_mm256_loadu_pd(a2base0+3*pstored+2*NPAR); t1=_mm256_loadu_pd(a2base0+3*pstored+3*NPAR);
     _mm256_store_pd(&(*cva)[0][0][2*NPAR],t2);  _mm256_store_pd(&(*cva)[0][0][3*NPAR],t3); _mm256_store_pd(&(*cva)[0][1][2*NPAR],t4);  _mm256_store_pd(&(*cva)[0][1][3*NPAR],t5);
     _mm256_store_pd(&(*cva)[0][2][2*NPAR],t6);  _mm256_store_pd(&(*cva)[0][2][3*NPAR],t7); _mm256_store_pd(&(*cva)[0][3][2*NPAR],t0);  _mm256_store_pd(&(*cva)[0][3][3*NPAR],t1);
    }else{  // partial block
     for(i=0;i<OPHEIGHT;++i){I j;  // for each row (i. e. for the length of the outer product)
-      D *a0x=a2base0+p*i; a0x=i>=a2rem?missingrow:a0x;  // start of samples for the row, or a repeated row if past the end
+      D *a0x=a2base0+pstored*i; a0x=i>=a2rem?missingrow:a0x;  // start of samples for the row, or a repeated row if past the end
       if(!(flgs&(FLGCMP))){
        for(j=0;j<(nvalidops&-NPAR);j+=NPAR){_mm256_store_pd(&(*cva)[0][i][j],_mm256_loadu_pd(a0x)); a0x+=NPAR;}  // quads as long as possible
        for(;j<nvalidops;++j){(*cva)[0][i][j]=*a0x; ++a0x;}  // float
@@ -367,7 +374,7 @@ static I cachedmmultx(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs, I mfull){D c[(C
     // To fix this we turn on ZFIRST when we are processing the LAST new rows of upper-triangular a.  The new rows are any after the previous section.  This works because (1) each succeeding section of w exposes exactly
     // CACHEHEIGHT new nonzero columns of a whose corresponding rows must be processed; (2) the exposed sections of a are on CACHEHEIGHT boundaries until the last remnant.
     // We are guaranteed to initialize each bit of the z stripe exactly once.
-    flgs|=((a2rem-newrowsct1)>>(BW-1))&FLGZFIRST;
+    flgs|=REPSGN(a2rem-newrowsct1)&FLGZFIRST;
 
     // process each 16x8 section of w, accumulating into z (this holds 16x4 complex values, if FLGCMP)
     I a3rem=MIN(w0rem,CACHEWIDTH);
@@ -523,19 +530,39 @@ static I cachedmmultx(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs, I mfull){D c[(C
    flgs&=~(FLGZFIRST|FLGZLAST);  // we have finished a 16x64 cache section.  That touched all the columns of z.  For the remaining sections we must accumulate into the z values.  If this was the last pass, clear that flag too, since we're finished
   }  // end of loop for each 16x64 section of w
  }  // end of loop for each 64-col slice of w
- R 1;
+ R NANTEST==0;  // return with error (0) if any FP error
 }
 // looping entry point for cached mmul
 // We split the input into products where the left arg has at most MAXAROWS rows.  This is to avoid overrunning L2 cache
-// for complex n and p have been multiplied by 2
-static I cachedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){
- I rc=0,i,nblocks;
- nblocks = ((m+MAXAROWS)*0x55555555)>>(32+7);  // number of blocks to execute
-//#pragma omp parallel for reduction(+:rc)
- for(i=0;i<nblocks;++i){
-  rc += 0==cachedmmultx(jt,av+(p*i*MAXAROWS),wv,zv+(n*i*MAXAROWS),MIN(MAXAROWS,m-i*MAXAROWS),n,p,flgs,m-i*MAXAROWS);
+// Result is 0 if error, which must be NaN error
+// For historical reason (i. e. to match the non-AVX2 version) n and p have been multiplied by 2 for complex multiplies
+I cachedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){
+ int rc=1,i;
+ I blocksize,nblocks,(*fn)();  // loop controls
+ if(((((50-m)&(50-n)&(16-p)&(DCACHED_THRES-m*n*p))|SGNIF(flgs,FLGCMPX))&SGNIFNOT(flgs,FLGWMINUSZX))>=0){  // blocked for small arrays in either dimension (after threading); not if CMP; force if WMINUSZ (can't be both)
+  // blocked algorithm.  there is no size limit on the blocks
+  fn=blockedmmult;  // select function
+  nblocks=1; blocksize=m; // do it all in a single block
+ }else{
+  // cached algorithm.  blocks must not exceed MAXAROWS lines
+  fn=cachedmmultx;  // select function
+  // Figure out the number of blocks we will use, and the size of each.  We make the number of blocks a multiple of the number of threads, and round the
+  // block size up to a multiple of OPHEIGHT
+  nblocks = ((m+MAXAROWS)*0x55555555)>>(32+7);  // minimum number of blocks needed
+  blocksize=MAXAROWS;   // max size of each
  }
- R rc==0;
+ for(i=0;i<nblocks;++i){
+  // if AUTRI, bring a in from the left and w down from the top as we proceed.  And shorten p.
+  if(0==(*fn)(jt,
+              av+(i*MAXAROWS*(p+(((flgs>>FLGAUTRIX)&1)<<(flgs&FLGCMP)))),
+              wv+((n*i*MAXAROWS)&-((flgs>>FLGAUTRIX)&1)),
+              zv+(n*i*MAXAROWS),
+              MIN(blocksize,m-i*MAXAROWS),
+              n,
+              p-(((i*MAXAROWS)&-((flgs>>FLGAUTRIX)&1))<<(flgs&FLGCMP)),
+              p,flgs)){rc=0; break;}  // set error if one was found
+ }
+ R rc;
 }
 
 #else
@@ -772,7 +799,7 @@ oflo2:
    }else{
      // full matrix products
      I probsize = m*n*(IL)p;  // This is proportional to the number of multiply-adds.  We use it to select the implementation
-     if((UI)probsize < (UI)jt->igemm_thres){RZ(a=cvt(FL,a)); RZ(w=cvt(FL,w)); RZ(cachedmmult(jt,DAV(a),DAV(w),DAV(z),m,n,p,0))}  // Do our matrix multiply - converting   TUNE
+     if((UI)probsize < (UI)jt->igemm_thres){RZ(a=cvt(FL,a)); RZ(w=cvt(FL,w)); cachedmmult(jt,DAV(a),DAV(w),DAV(z),m,n,p,0);}  // Do our matrix multiply - converting   TUNE
      else {
       // for large problem, use BLAS
       memset(DAV(z),C0,m*n*sizeof(D));
@@ -893,7 +920,7 @@ time1 (x,y)&,"0 ((256 1e20 1e20 65536 > x*y) # 0 1 2 3) +/ lens
     else if(n&2){
      memset(DAV(z),C0,m*n*sizeof(D));
      dgemm_nn(m,n,p,1.0,DAV(a),p,1,DAV(w),n,1,0.0,DAV(z),n,1);
-    }else if(n&1){RZ(cachedmmult(jt,DAV(a),DAV(w),DAV(z),m,n,p,0))
+    }else if(n&1){cachedmmult(jt,DAV(a),DAV(w),DAV(z),m,n,p,0);
     }else smallprob=1;
 #else  // large m, possibly short p n
 /*
@@ -910,44 +937,26 @@ time1 ,&(x,y)"0 ((256 1e20 1e20 65536 > x*y) # 0 1 2 3) +/ lens
     else if(m&2){
      memset(DAV(z),C0,m*n*sizeof(D));
      dgemm_nn(m,n,p,1.0,DAV(a),p,1,DAV(w),n,1,0.0,DAV(z),n,1);
-    }else if(m&1){RZ(cachedmmult(jt,DAV(a),DAV(w),DAV(z),m,n,p,0))
+    }else if(m&1){cachedmmult(jt,DAV(a),DAV(w),DAV(z),m,n,p,0);
     }else smallprob=1;
 #endif
 #else
    // not single column.  Choose the algorithm to use
 #if C_AVX && defined(PREFETCH)
-    smallprob=0;  // never use Dic method
+    smallprob=0;  // never use Dic method; but used to detect pick up NaN errors
     D *av=DAV(a), *wv=DAV(w), *zv=DAV(z);  //  pointers to sections
     I flgs=((AFLAG(a)>>(AFUPPERTRIX-FLGAUTRIX))&FLGAUTRI)|((AFLAG(w)>>(AFUPPERTRIX-FLGWUTRIX))&FLGWUTRI);  // flags from a or w
     if((UI)(m*n*(IL)p)>=(UI)jt->dgemm_thres){   // test for BLAS.  For AVX2 this should not be taken; for other architectures tuning is required
      memset(DAV(z),C0,m*n*sizeof(D));
      dgemm_nn(m,n,p,1.0,DAV(a),p,1,DAV(w),n,1,0.0,DAV(z),n,1);
     } else {
-     // use blocked if any axis is short, or if all axes are shortish
-     if(((50-m)&(50-n)&(16-p)&(DCACHED_THRES-m*n*p))>=0)blockedmmult(jt,av,wv,zv,m,n,p,flgs);  // blocked for small arrays in either dimension
-     else {
-#if 0  // obsolete
-      // if m is very large, the buffer used to hold result values, and the strip of a values, become so large that they exceed L2 cache; and the bandwidth needed
-      // for the zs is more than L3 can supply.  So we chop up the a argument.
-      I mrem;  // number of rows left
-      // We have to turn off the triangular flags if m has to be split.  This is because the routine calculates how many rows from the bottom can be omitted.  If we passed in
-      // the distance from the bottom we could restore the flags (would have to test both blocked and cached)
-      if(m>MAXAROWS)flgs&=(FLGCMP|FLGINT|FLGWMINUSZ);
-      for(mrem=m;mrem>0;mrem-=MAXAROWS){
-       if(mrem<32)blockedmmult(jt,av,wv,zv,mrem,n,p,flgs);  // blocked for small remnant
-       else RZ(cachedmmult(jt,av,wv,zv,MIN(MAXAROWS,mrem),n,p,flgs))
-       av+=MAXAROWS*p; zv+=MAXAROWS*n;  // advance to next horizontal swath
-      }
-#else
-      RZ(cachedmmult(jt,av,wv,zv,m,n,p,flgs))
-#endif
-     }
+     smallprob=1^cachedmmult(jt,av,wv,zv,m,n,p,flgs);  // run the cached mult; if NaN error, remember that fact
     }
 #else
     I probsize = (m-1)*n*(IL)p;  // This is proportional to the number of multiply-adds.  We use it to select the implementation.  If m==1 we are doing dot-products; no gain from fancy code then
     if(!(smallprob = (m<=4||probsize<1000LL))){  // if small problem, avoid the startup overhead of the matrix version  TUNE
      if((UI)probsize < (UI)jt->dgemm_thres)
-      RZ(cachedmmult(jt,DAV(a),DAV(w),DAV(z),m,n,p,((AFLAG(a)>>(AFUPPERTRIX-FLGAUTRIX))&FLGAUTRI)|((AFLAG(w)>>(AFUPPERTRIX-FLGWUTRIX))&FLGWUTRI)))  // Do our one-core matrix multiply - real   TUNE this is 160x160 times 160x160.  Tell routine if uppertri
+      cachedmmult(jt,DAV(a),DAV(w),DAV(z),m,n,p,((AFLAG(a)>>(AFUPPERTRIX-FLGAUTRIX))&FLGAUTRI)|((AFLAG(w)>>(AFUPPERTRIX-FLGWUTRIX))&FLGWUTRI));  // Do our one-core matrix multiply - real   TUNE this is 160x160 times 160x160.  Tell routine if uppertri
      else{
       // If the problem is really big, use BLAS
       memset(DAV(z),C0,m*n*sizeof(D));
@@ -973,13 +982,16 @@ time1 ,&(x,y)"0 ((256 1e20 1e20 65536 > x*y) # 0 1 2 3) +/ lens
  case CMPXX:
   {NAN0;
    I probsize = m*n*(IL)p;  // This is proportional to the number of multiply-adds.  We use it to select the implementation
-   if((UI)probsize<(UI)jt->zgemm_thres){RZ(cachedmmult(jt,DAV(a),DAV(w),DAV(z),m,n*2,p*2,((AFLAG(a)>>(AFUPPERTRIX-FLGAUTRIX))&FLGAUTRI)|((AFLAG(w)>>(AFUPPERTRIX-FLGWUTRIX))&FLGWUTRI)|FLGCMP))}  // Do the fast matrix multiply - complex.  Change widths to widths in D atoms, not complex atoms  TUNE  this is 130x130 times 130x130
-   else {
-     // Large problem - start up BLAS
-     memset(DAV(z),C0,2*m*n*sizeof(D));
-     zgemm_nn(m,n,p,zone,(dcomplex*)DAV(a),p,1,(dcomplex*)DAV(w),n,1,zzero,(dcomplex*)DAV(z),n,1);
+   I smallprob=probsize<1000;  // set if we do the old-fashioned way, possibly after error
+   if(!smallprob){  // use old-fashioned way if small.  16b3.4 comes though here
+    if((UI)probsize<(UI)jt->zgemm_thres){smallprob=1^cachedmmult(jt,DAV(a),DAV(w),DAV(z),m,n*2,p*2,((AFLAG(a)>>(AFUPPERTRIX-FLGAUTRIX))&FLGAUTRI)|((AFLAG(w)>>(AFUPPERTRIX-FLGWUTRIX))&FLGWUTRI)|FLGCMP);}  // Do the fast matrix multiply - complex.  Change widths to widths in D atoms, not complex atoms  TUNE  this is 130x130 times 130x130
+    else {
+      // Large problem - start up BLAS
+      memset(DAV(z),C0,2*m*n*sizeof(D));
+      zgemm_nn(m,n,p,zone,(dcomplex*)DAV(a),p,1,(dcomplex*)DAV(w),n,1,zzero,(dcomplex*)DAV(z),n,1);
+    }
    }
-   if(NANTEST){Z c,*u,*v,*wv,*x,*zv;
+   if(smallprob||NANTEST){Z c,*u,*v,*wv,*x,*zv;
     // There was a floating-point error.  In case it was 0*_ retry old-style
     u=ZAV(a); v=wv=ZAV(w); zv=ZAV(z);
     NAN0;
@@ -1046,15 +1058,15 @@ static A jtipbx(J jt,A a,A w,C c,C d){A g=0,x0,x1,z;B*av,*av0,b,*v0,*v1,*zv;C c0
  switch(c){
   case CPLUSDOT:
 #define F |=
-#include "cip_t.h"
+#include "../../jsource/jsrc/cip_t.h"
    break;
   case CSTARDOT:
 #define F &=
-#include "cip_t.h"
+#include "../../jsource/jsrc/cip_t.h"
    break;
   case CNE:
 #define F ^=
-#include "cip_t.h"
+#include "../../jsource/jsrc/cip_t.h"
    break;
  }
  R z;

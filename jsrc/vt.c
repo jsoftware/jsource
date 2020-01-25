@@ -66,7 +66,7 @@ static F2(jttk){PROLOG(0093);A y,z;B b=0;C*yv,*zv;I c,d,dy,dz,e,i,k,m,n,p,q,r,*s
    itemsize *= k; e=itemsize*MIN(m,q);  //  itemsize=in bytes; e=total bytes moved per item
    dy=itemsize*q; yv=CAV(y);
    dz=itemsize*m; zv=CAV(z);
-   m-=q; I yzdiff=dy-dz; yv+=((p&m)>>(BW-1))&yzdiff; zv-=((p&-m)>>(BW-1))&yzdiff;
+   m-=q; I yzdiff=dy-dz; yv+=REPSGN(p&m)&yzdiff; zv-=REPSGN(p&-m)&yzdiff;
    DQ(c, MC(yv,zv,e); yv+=dy; zv+=dz;);
    z=y;
   }
@@ -90,7 +90,7 @@ F2(jttake){A s;I acr,af,ar,n,*v,wcr,wf,wr;
  // if the input was not INT/bool, we go through and replace any infinities with the length of the axis.  If we do this, we have
  // to clone the area, because vib might return a canned value
  if(!(AT(a)&B01+INT)){
-  I i; for(i=0;i<AN(s);++i){I m=IAV(s)[i]; I ms=m>>(BW-1); if((m^ms)-ms == IMAX)break;}  // see if there are infinities.  They are IMAX/-IMAX, so take abc & see if result is IMAX
+  I i; for(i=0;i<AN(s);++i){I m=IAV(s)[i]; I ms=REPSGN(m); if((m^ms)-ms == IMAX)break;}  // see if there are infinities.  They are IMAX/-IMAX, so take abc & see if result is IMAX
   if(i<AN(s)){
    s=ca(s); if(!(AT(a)&FL))RZ(a=cvt(FL,a));  // copy area we are going to change; put a in a form where we can recognize infinity
    for(;i<AN(s);++i){if(DAV(a)[i]==IMIN)IAV(s)[i]=IMIN;else if(INF(DAV(a)[i]))IAV(s)[i]=wcr?ws[wf+i]:1;}  // kludge.  The problem is which huge values to consider infinite.  This is how it was done
@@ -101,7 +101,7 @@ F2(jttake){A s;I acr,af,ar,n,*v,wcr,wf,wr;
  if(!(ar|wf|((NOUN&~(DIRECT|RECURSIBLE))&wt)|!wcr|(AFLAG(w)&(AFNJA)))){  // if there is only 1 take axis, w has no frame and is not atomic
   // if the length of take is within the bounds of the first axis
   I tklen = IAV(a)[0];  // get the one number in a, the take amount
-  I tkasign = tklen>>(BW-1);  // 0 if tklen nonneg, ~0 if neg
+  I tkasign = REPSGN(tklen);  // 0 if tklen nonneg, ~0 if neg
   I nitems = ws[0];  // number of items of w
   I tkabs = (tklen^tkasign)-tkasign;  // ABS(tklen)
   if((UI)tkabs<=(UI)nitems) {  // if this is not an overtake...  (unsigned to handle overflow, if tklen=IMIN).
@@ -158,7 +158,7 @@ F2(jtdrop){A s;I acr,af,ar,d,m,n,*u,*v,wcr,wf,wr;
 
    // length error if too many axes
  fauxblockINT(sfaux,4,1);
- if(wcr){ASSERT(n<=wcr,EVLENGTH);RZ(s=shape(w)); v=wf+AV(s); DO(n, d=u[i]; m=v[i]; m=d<0?m:-m; m+=d; v[i]=m&=((m^d)>>(BW-1)););}  // nonatomic w-cell: s is (w frame),(values of a clamped to within size), then convert to equivalent take
+ if(wcr){ASSERT(n<=wcr,EVLENGTH);RZ(s=shape(w)); v=wf+AV(s); DO(n, d=u[i]; m=v[i]; m=d<0?m:-m; m+=d; v[i]=m&=REPSGN(m^d););}  // nonatomic w-cell: s is (w frame),(values of a clamped to within size), then convert to equivalent take
  else{fauxINT(s,sfaux,wr+n,1) v=AV(s); MCISH(v,AS(w),wf); v+=wf; DO(n, v[i]=!u[i];); RZ(w=reshape(s,w));}  // atomic w-cell: reshape w-cell  to result-cell shape, with axis length 0 or 1 as will be in result
  R tk(s,w);
 }

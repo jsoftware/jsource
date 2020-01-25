@@ -289,7 +289,7 @@
 #define ecvt(x0,x1,x2,x3,x4)        jtecvt(jt,(x0),(x1),(x2),(x3),(x4))
 #define efflev(x,y,z)               jtefflev(jt,(x),(y),(z))
 #define efmt(x,y)                   jtefmt(jt,(x),(y))
-#define efr(z,ar,r)                 (z = ((r)>(ar)?(ar):(r))+(((r)>>(BW-1))&(ar)), z=(z<0)?0:z)  // effective rank: ar is rank of argument, r is rank of verb (may be negative), z becomes rank of argument cell
+#define efr(z,ar,r)                 (z = ((r)>(ar)?(ar):(r))+(REPSGN(r)&(ar)), z=(z<0)?0:z)  // effective rank: ar is rank of argument, r is rank of verb (may be negative), z becomes rank of argument cell
 #define enframe(x)                  jtenframe(jt,(x))
 #define enqueue(x,y,z)              jtenqueue(jt,(x),(y),(z))
 #define ep(x,y)                     jtep(jt,(x),(y))

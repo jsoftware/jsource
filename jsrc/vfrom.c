@@ -74,11 +74,11 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wk,wn,wr,*ws,zn;
 // correct  if(((zn-2)|-(wf|(wflag&(AFNJA))))>=0){  // zn>1 and not (frame or NJA)
   if(((zn-2)|(wr-2)|-(wf|(wflag&(AFNJA))))>=0){  // zn>1 and not (frame or NJA) and rank>1.  Don't take the time creating a virtual block for a list.  User should use ;.0 for that
    // result is more than one atom and does not come from multiple cells.  Perhaps it should be virtual.  See if the indexes are consecutive
-   I index0 = av[0]; index0+=(index0>>(BW-1))&p;  // index of first item
+   I index0 = av[0]; index0+=REPSGN(index0)&p;  // index of first item
    // check the last item before checking the middle.
-   I indexn = av[an-1]; indexn+=(indexn>>(BW-1))&p;
+   I indexn = av[an-1]; indexn+=REPSGN(indexn)&p;
    if(indexn==index0+an-1){
-     I indexp=index0; DO(an-1, indexn=av[1+i]; indexn+=(indexn>>(BW-1))&p; if(indexn!=indexp+1){indexn=p; break;} indexp=indexn;);
+     I indexp=index0; DO(an-1, indexn=av[1+i]; indexn+=REPSGN(indexn)&p; if(indexn!=indexp+1){indexn=p; break;} indexp=indexn;);
    }else indexn=p;
    if((index0|(p-indexn-1))>=0){  // index0>0 and indexn<=p-1
     // indexes are consecutive and in range.  Make the result virtual.  Rank of w cell must be > 0, since we have >=2 consecutive result atoms

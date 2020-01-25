@@ -369,7 +369,7 @@ A jtssingleton(J jt, A a,A w,A self,RANK2T awr,RANK2T ranks){A z;
  bitwiseresult:
  RE(0);  // if error on D arg, make sure we abort
  ziv=FAV(self)->lc-VA2B0;  // mask describing operation
- ziv=((aiv&wiv)&((ziv<<(BW-1-0))>>(BW-1)))|((aiv&~wiv)&((ziv<<(BW-1-1))>>(BW-1)))|((~aiv&wiv)&((ziv<<(BW-1-2))>>(BW-1)))|((~aiv&~wiv)&((ziv<<(BW-1-3))>>(BW-1)));
+ ziv=((aiv&wiv)&REPSGN(ziv<<(BW-1-0)))|((aiv&~wiv)&REPSGN(ziv<<(BW-1-1)))|((~aiv&wiv)&REPSGN(ziv<<(BW-1-2)))|((~aiv&~wiv)&REPSGN(ziv<<(BW-1-3)));
  SSSTORE(ziv,z,INT,I) R z;
 
  compareresult:

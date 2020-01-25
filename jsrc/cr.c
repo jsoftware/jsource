@@ -62,7 +62,7 @@ A jtrank1ex(J jt,AD * RESTRICT w,A fs,I rr,AF f1){F1PREFIP;PROLOG(0041);A z,virt
   // if the original block was direct inplaceable, make the virtual block inplaceable.  (We can't do this for indirect blocks because a virtual block is not marked recursive - rather it increments
   // the usecount of the entire backing block - and modifying the virtual contents would leave the usecounts invalid if the backing block is recursive.  Maybe could do this if it isn't?)
   // Don't pass WILLOPEN status - we use that at this level
-  jtinplace = (J)((I)jtinplace & (~(JTWILLBEOPENED+JTCOUNTITEMS)) & ((((AT(w)&TYPEVIPOK)!=0)&(AC(w)>>(BW-1)))*JTINPLACEW-(JTINPLACEW<<1)));  // turn off inplacing unless DIRECT and w is inplaceable
+  jtinplace = (J)((I)jtinplace & (~(JTWILLBEOPENED+JTCOUNTITEMS)) & ((((AT(w)&TYPEVIPOK)!=0)&REPSGN(AC(w)))*JTINPLACEW-(JTINPLACEW<<1)));  // turn off inplacing unless DIRECT and w is inplaceable
   fauxvirtual(virtw,virtwfaux,w,rr,ACUC1|ACINPLACE) MCISH(AS(virtw),AS(w)+wf,rr); AN(virtw)=wcn;
   // mark the virtual block inplaceable; this will be ineffective unless the original w was direct inplaceable, and inplacing is allowed by u
 #define ZZDECL
@@ -308,12 +308,12 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,I lr,I rr,I lcr,I rcr,AF f
  // us through a flag bit.
  fauxblock(virtwfaux); fauxblock(virtafaux); 
  if(mn|an){
-  jtinplace = (J)(intptr_t)((I)jtinplace & ((((AT(a)&TYPEVIPOK)!=0)&(AC(a)>>(BW-1)))*JTINPLACEA+~JTINPLACEA));  // turn off inplacing unless DIRECT and a is inplaceable.
+  jtinplace = (J)(intptr_t)((I)jtinplace & ((((AT(a)&TYPEVIPOK)!=0)&REPSGN(AC(a)))*JTINPLACEA+~JTINPLACEA));  // turn off inplacing unless DIRECT and a is inplaceable.
   fauxvirtual(virta,virtafaux,a,lr,ACUC1|ACINPLACE) MCISH(AS(virta),AS(a)+af,lr); AN(virta)=acn;
  }else{RZ(virta=reshape(vec(INT,lr,AS(a)+af),filler(a)));}
 
  if(mn|wn){  // repeat for w
-  jtinplace = (J)(intptr_t)((I)jtinplace & ((((AT(w)&TYPEVIPOK)!=0)&(AC(w)>>(BW-1)))*JTINPLACEW+~JTINPLACEW));  // turn off inplacing unless DIRECT and w is inplaceable.
+  jtinplace = (J)(intptr_t)((I)jtinplace & ((((AT(w)&TYPEVIPOK)!=0)&REPSGN(AC(w)))*JTINPLACEW+~JTINPLACEW));  // turn off inplacing unless DIRECT and w is inplaceable.
   fauxvirtual(virtw,virtwfaux,w,rr,ACUC1|ACINPLACE) MCISH(AS(virtw),AS(w)+wf,rr); AN(virtw)=wcn;
  }else{RZ(virtw=reshape(vec(INT,rr,AS(w)+wf),filler(w)));}
 

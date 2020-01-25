@@ -566,7 +566,7 @@ extern unsigned int __cdecl _clearfp (void);
 // SHAPE0 is used when the shape is 0 - write shape only if rank==1
 #define GACOPYSHAPE0(name,type,atoms,rank,shaape) if((rank)==1)AS(name)[0]=(atoms);
 // General shape copy, branchless when rank<3  AS[0] is always written: #atoms if rank=1, 0 if rank=0.  Used in jtga(), which uses the 0 in AS[0] as a pun for nullptr
-#define GACOPYSHAPEG(name,type,atoms,rank,shaape)  {I *_d=AS(name); I *_s=(shaape); _s=_s?_s:_d; I cp=*_s; I _r=1-(rank); cp&=_r>>(BW-1); cp=_r==0?(atoms):cp; _s=_r==0?_d:_s; *_d=cp; do{_s+=(UI)_r>>(BW-1); _d+=(UI)_r>>(BW-1); *_d=*_s;}while(++_r<0);}
+#define GACOPYSHAPEG(name,type,atoms,rank,shaape)  {I *_d=AS(name); I *_s=(shaape); _s=_s?_s:_d; I cp=*_s; I _r=1-(rank); cp&=REPSGN(_r); cp=_r==0?(atoms):cp; _s=_r==0?_d:_s; *_d=cp; do{_s+=(UI)_r>>(BW-1); _d+=(UI)_r>>(BW-1); *_d=*_s;}while(++_r<0);}
 // Use when shape is known to be present but rank is not SDT.  One value is always written to shape
 #if C_AVX&SY_64
 #define GACOPYSHAPE(name,type,atoms,rank,shaape) MCISH(AS(name),shaape,rank)
@@ -621,7 +621,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define GASPARSE(n,t,a,r,s) {if((r)==1){GA(n,(t),a,1,0); if(s)AS(n)[0]=(s)[0];}else{GA(n,(t),a,r,s)} AC(n)=ACUC1;}
 
 #define HN              4L  // number of boxes per valence to hold exp-def info (words, control words, original (opt.), symbol table)
-#define SETIC(w,targ)      (targ=AS(w)[0], targ=AR(w)?targ:1)  //     ((AS(w)[0] & (-(I)AR(w)>>(BW-1))) - ~(-(I)AR(w)>>(BW-1)))  // (AR(w) ? *AS(w) : 1L)   better: (temp=AS(w)[0], temp=AR(w)?temp:1)
+#define SETIC(w,targ)      (targ=AS(w)[0], targ=AR(w)?targ:1)  //   (AR(w) ? *AS(w) : 1L)
 #define ICMP(z,w,n)     memcmp((z),(w),(n)*SZI)
 #define ICPY(z,w,n)     memcpy((z),(w),(n)*SZI)
 #if C_AVX&&SY_64
@@ -694,10 +694,10 @@ extern unsigned int __cdecl _clearfp (void);
 #define MCL(dest,src,n) memcpy(dest,src,n)  // use when copy is expected to be long
 #define MCI(dest,src,n) memcpy(dest,src,(n)*sizeof(*src))   // copy items of source
 #define MCIL(dest,src,n) memcpy(dest,src,(n)*sizeof(*src))   // use when copy expected to be long
-#define MCIS(dest,src,n) {I * RESTRICT _d=(dest); I * RESTRICT _s=(src); I _n=~(n); while((_n-=(_n>>(BW-1)))<0)*_d++=*_s++;}  // use for short copies.  the tricky stuff is to confound the compiler so it doesn't produce memcpy
-#define MCISd(dest,src,n) {I * RESTRICT _s=(src); I _n=~(n); while((_n-=(_n>>(BW-1)))<0)*dest++=*_s++;}  // ... this version when d increments through the loop
-#define MCISs(dest,src,n) {I * RESTRICT _d=(dest); I _n=~(n); while((_n-=(_n>>(BW-1)))<0)*_d++=*src++;}  // ... this when s increments through the loop
-#define MCISds(dest,src,n) {I _n=~(n); while((_n-=(_n>>(BW-1)))<0)*dest++=*src++;}  // ...this when both
+#define MCIS(dest,src,n) {I * RESTRICT _d=(dest); I * RESTRICT _s=(src); I _n=~(n); while((_n-=REPSGN(_n))<0)*_d++=*_s++;}  // use for short copies.  the tricky stuff is to confound the compiler so it doesn't produce memcpy
+#define MCISd(dest,src,n) {I * RESTRICT _s=(src); I _n=~(n); while((_n-=REPSGN(_n))<0)*dest++=*_s++;}  // ... this version when d increments through the loop
+#define MCISs(dest,src,n) {I * RESTRICT _d=(dest); I _n=~(n); while((_n-=REPSGN(_n))<0)*_d++=*src++;}  // ... this when s increments through the loop
+#define MCISds(dest,src,n) {I _n=~(n); while((_n-=REPSGN(_n))<0)*dest++=*src++;}  // ...this when both
 // Copy shapes.  Optimized for length <2, to eliminate branches then
 // For AVX, we can profitably use the MASKMOV instruction to do all the  testing
 #if C_AVX&&SY_64
@@ -819,6 +819,7 @@ extern unsigned int __cdecl _clearfp (void);
 #else
 #define R0 R 0;
 #endif
+#define REPSGN(x) ((x)>>(BW-1))  // replicate sign bit of x to entire word (assuming x is signed type - if unsigned, just move sign to bit 0)
 // In the original JE many verbs returned a clone of the input, i. e. R ca(w).  We have changed these to avoid the clone, but we preserve the memory in case we need to go back
 #define RCA(w)          R w
 #define RE(exp)         {if((exp),jt->jerr)R 0;}

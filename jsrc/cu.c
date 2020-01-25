@@ -55,7 +55,7 @@ A jtevery2(J jt,A a,A w,A fs,AF f2){A*av,*wv,x,z,*zv;
   I cf=ar; A la=w; cf=ar<wr?cf:wr; la=ar<wr?la:a; I lr=ar+wr-cf;  // #common frame, Ablock with long shape, long rank.
   PROD(rpti,lr-cf,AS(la)+cf);
   natoms=MAX(AN(a),AN(w)); natoms=rpti==0?rpti:natoms;  // number of atoms.  Beware of empty arg with surplus frame containing 0; if an arg is empty, so is the result
-  flags=(C)(((1-rpti)>>(BW-1))&((ar<wr)+1));  // if rpti<2, no repeat; otherwise repeat short frame
+  flags=(C)(REPSGN(1-rpti)&((ar<wr)+1));  // if rpti<2, no repeat; otherwise repeat short frame
   // Verify agreement
   ASSERTAGREE(AS(a),AS(w),cf);  // frames must agree
   GATV(z,BOX,natoms,lr,AS(la)); if(!natoms)R z; zv=AAV(z);  // make sure we don't fetch outside empty arg

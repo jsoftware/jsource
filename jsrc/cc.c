@@ -525,7 +525,7 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;
   }else{
    // monadic forms.  If we can handle the type/length here, leave it; otherwise convert to Boolean.
    // If w is Boolean, we have to pretend it's LIT so we use the correct fret value rather than hardwired 1
-   if(wt&(B01|LIT|INT|FL|C2T|C4T|SBT)&((-k)>>(BW-1))&((BW==32&&wt&FL&&k==SZD)|((k&-k&(2*SZI-1))==k))){a=w; ak=k; at=(wt+B01)&~B01;  // monadic forms: if w is an immediate type we can handle, and the length is a machine-word length, use w unchanged
+   if((((wt&(B01|LIT|INT|FL|C2T|C4T|SBT))-1)|(k-1)|(((BW==32&&wt&FL&&k==SZD)-1)&((k&-k&(2*SZI-1))-k)))>=0){a=w; ak=k; at=(wt+B01)&~B01;  // monadic forms: if w is an immediate type we can handle, and the length is a machine-word length, use w unchanged
    }else{RZ(a=n?eps(w,take(num[pfx?1:-1],w)):mtv); ak=1; at=B01;}  // any other w, replace by w e. {.w (or {: w).  Set ak to the length of a cell of a, in bytes.  Empty cells of w go through here to convert to list
   }
   {I x; ASSERT(n==SETIC(a,x),EVLENGTH);}
@@ -701,7 +701,7 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;
    AK(virtw)=v1-(C*)virtw;  // v1 is set to point to starting cell; transfer that info
    // Remove WILLOPEN for the callee.  We use the caller's WILLOPEN status for the result created here
    // Remove inplacing if the verb is not inplaceable, possible because we always set u;. to inplaceable so we can get the WILLBEOPENED flags
-   jtinplace = (J)(intptr_t)((I)jtinplace & (~(JTWILLBEOPENED+JTCOUNTITEMS+JTINPLACEA)) & ((((wt&TYPEVIPOK)!=0)&(AC(w)>>(BW-1))&(FAV(fs)->flag>>(VJTFLGOK1X-JTINPLACEWX)))*JTINPLACEW-(JTINPLACEW<<1)));  // turn off inplacing unless DIRECT and w is inplaceable
+   jtinplace = (J)(intptr_t)((I)jtinplace & (~(JTWILLBEOPENED+JTCOUNTITEMS+JTINPLACEA)) & ((((wt&TYPEVIPOK)!=0)&REPSGN(AC(w))&(FAV(fs)->flag>>(VJTFLGOK1X-JTINPLACEWX)))*JTINPLACEW-(JTINPLACEW<<1)));  // turn off inplacing unless DIRECT and w is inplaceable
 
 #define ZZDECL
 #include "result.h"
@@ -843,8 +843,8 @@ static F2(jttesa){A x;I*av,ac,c,d,k,r,*s,t,*u,*v;
  if(2==r&&t&INT){RETF(a);}  // if we can use a as given, return a as is
  GATV0(x,INT,2*c,2); s=AS(x); s[0]=2; s[1]=c;  // allocate space for start/stride, only for axes that will be modified.  We will modify it
  u=AV(x); v=u+c; s=AS(w);  // u->movement vector, v->length
- if(2==r)DO(c,   *u++=av[i]; k=av[i+ac]; if(k&((I)IMIN>>1)){k=(s[i]^(k>>(BW-1)))-(k>>(BW-1));} *v++=k;);  // if k infinite, make length the axis length, + or -
- if(2> r)DO(c,   *u++=1;     k=av[i];  if(k&((I)IMIN>>1)){k=(s[i]^(k>>(BW-1)))-(k>>(BW-1));} *v++=k;);
+ if(2==r)DO(c,   *u++=av[i]; k=av[i+ac]; if(k&((I)IMIN>>1)){k=(s[i]^REPSGN(k))-REPSGN(k);} *v++=k;);  // if k infinite, make length the axis length, + or -
+ if(2> r)DO(c,   *u++=1;     k=av[i];  if(k&((I)IMIN>>1)){k=(s[i]^REPSGN(k))-REPSGN(k);} *v++=k;);
  RETF(x);
 }    /* tesselation standardized left argument */
 
@@ -943,7 +943,7 @@ static DF2(jttess2){A z,zz=0,virtw,strip;I n,rs[3],cellatoms,cellbytes,vmv,hmv,v
   // reuse the overlapping parts of the strip.
 
   hmv=av[1];  hsz=av[axisct+1];    // h movement vector and size
-  state|=(vsz>>(BW-1))&STATEREFLECTY; state|=(hsz>>(BW-1))&STATEREFLECTX; 
+  state|=REPSGN(vsz)&STATEREFLECTY; state|=REPSGN(hsz)&STATEREFLECTX; 
   vsz=(vsz<0)?-vsz:vsz; hsz=(hsz<0)?-hsz:hsz;  // take abs(size)
   // Calculate the amount to add to the strip position when we move along the second axis.  If there is no overlap in the second axis, just move 0.
   hss = hmv*cellbytes; I hdsc=(hmv>=hsz)?0:hmv;  // horiz source stride, dest stride in cells.  A mv of 0 must have the same effect as an mv of infinity

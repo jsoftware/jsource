@@ -444,7 +444,7 @@ static A sfe(J jt,A w,I prec,UC decimalpt,UC zuluflag){
  // Validate input.  We will accept FL input, but it's not going to have nanosecond precision
  RZ(w=vi(w));  // convert to INT
  // Figure out size of result. 10 for date, 9 for time, 1 for binary point (opt), 1 for each fractional digit (opt), 1 for timezone
- I linelen=(10+9)-((prec>>(BW-1))&9)+prec+(prec!=0)+(zuluflag=='Z');  // bytes per line of result: 20, but 10 if no date, plus one per frac digit, plus decimal point if any frac digits, 1 if Z
+ I linelen=(10+9)-(REPSGN(prec)&9)+prec+(prec!=0)+(zuluflag=='Z');  // bytes per line of result: 20, but 10 if no date, plus one per frac digit, plus decimal point if any frac digits, 1 if Z
    // if we are running for 6!:15, linelen will come out 56 and the store will be 7 INTs
  // Allocate result area, one row per input value
  GATV0(z,LIT,AN(w)*linelen,AR(w)+1) MCISH(AS(z),AS(w),AR(w)) AS(z)[AR(w)]=linelen==7*SZI?7:linelen;
@@ -459,12 +459,12 @@ static A sfe(J jt,A w,I prec,UC decimalpt,UC zuluflag){
 	for(i=0;i<rows;++i, s+=linelen){
   // fetch the time.  If it is negative, add days amounting to the earliest allowed time so that the modulus calculations can always
   // be positive to get hmsn.  We will add the days back for all the day calculations, since they are in the Julian epoch anyway
-		k= e[i] + ((e[i]>>(BW-1))&(MIND*(I)24*(I)3600*(I)NANOS));  // ymdHMSN
+		k= e[i] + (REPSGN(e[i])&(MIND*(I)24*(I)3600*(I)NANOS));  // ymdHMSN
   if((UI)k>=(UI)(MAXD*(I)24*(I)3600*(I)NANOS)){if(linelen==7*SZI)DO(7, ((I*)s)[i]=0;)else{DO(linelen, s[i]=' ';) s[0]='?';} continue;}  // input too low - probably DATAFILL(=IMIN) - return fast unknown
     // we use the fact that MAXD>MIND to get the out-of-bounds test right
   N=(UI4)(k%NANOS); k=k/NANOS;  // can't fast-divide by more than 32 bits.  k=ymdHMS N=nanosec
 		HMS=(UI4)(k%((I)24*(I)3600));	ymd=(UI4)(k/((I)24*(I)3600));
-  ymd-=((e[i]>>(BW-1))&MIND);  // remove negative-year bias if given
+  ymd-=(REPSGN(e[i])&MIND);  // remove negative-year bias if given
   E=HMS%60; HMS/=60;  // sec
   M=HMS%60; HMS/=60;  // minutes; HMS now=hours
   // Now the leap-year calculations.  We follow Richards at https://en.wikipedia.org/wiki/Julian_day#Julian_or_Gregorian_calendar_from_Julian_day_number

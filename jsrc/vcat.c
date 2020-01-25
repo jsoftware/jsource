@@ -162,9 +162,9 @@ static void moveawVV(C *zv,C *av,C *wv,I c,I k,I ma,I mw,I arptreset,I wrptreset
  }else{
   while(--c>=0){
    // copy one cell from a; advance z; advance a if not repeated
-   MC(zv,av,ma); zv+=ma; --arptct; av+=(arptct>>(BW-1))&ma; arptct+=(arptct>>(BW-1))&arptreset;
+   MC(zv,av,ma); zv+=ma; --arptct; av+=REPSGN(arptct)&ma; arptct+=REPSGN(arptct)&arptreset;
    // repeat for w
-   MC(zv,wv,mw); zv+=mw; --wrptct; wv+=(wrptct>>(BW-1))&mw; wrptct+=(wrptct>>(BW-1))&wrptreset;
+   MC(zv,wv,mw); zv+=mw; --wrptct; wv+=REPSGN(wrptct)&mw; wrptct+=REPSGN(wrptct)&wrptreset;
   }
  }
 }
@@ -172,18 +172,18 @@ static void moveawVS(C *zv,C *av,C *wv,I c,I k,I ma,I mw,I arptreset,I wrptreset
  I arptct=arptreset-1; I wrptct=wrptreset-1;
  while(--c>=0){
   // copy one cell from a; advance z; advance a if not repeated
-  MC(zv,av,ma); zv+=ma; --arptct; av+=(arptct>>(BW-1))&ma; arptct+=(arptct>>(BW-1))&arptreset;
+  MC(zv,av,ma); zv+=ma; --arptct; av+=REPSGN(arptct)&ma; arptct+=REPSGN(arptct)&arptreset;
   // repeat for w
-  mvc(mw,zv,k,wv); zv+=mw; --wrptct; wv+=(wrptct>>(BW-1))&k; wrptct+=(wrptct>>(BW-1))&wrptreset;
+  mvc(mw,zv,k,wv); zv+=mw; --wrptct; wv+=REPSGN(wrptct)&k; wrptct+=REPSGN(wrptct)&wrptreset;
  }
 }
 static void moveawSV(C *zv,C *av,C *wv,I c,I k,I ma,I mw,I arptreset,I wrptreset){
  I arptct=arptreset-1; I wrptct=wrptreset-1;
  while(--c>=0){
   // copy one cell from a; advance z; advance a if not repeated
-  mvc(ma,zv,k,av); zv+=ma; --arptct; av+=(arptct>>(BW-1))&k; arptct+=(arptct>>(BW-1))&arptreset;
+  mvc(ma,zv,k,av); zv+=ma; --arptct; av+=REPSGN(arptct)&k; arptct+=REPSGN(arptct)&arptreset;
   // repeat for w
-  MC(zv,wv,mw); zv+=mw; --wrptct; wv+=(wrptct>>(BW-1))&mw; wrptct+=(wrptct>>(BW-1))&wrptreset;
+  MC(zv,wv,mw); zv+=mw; --wrptct; wv+=REPSGN(wrptct)&mw; wrptct+=REPSGN(wrptct)&wrptreset;
  }
 }
 int (*p[4]) (int x, int y);

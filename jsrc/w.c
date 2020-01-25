@@ -113,7 +113,7 @@ static A jtconstr(J jt,I n,C*s){A z;C b,c,p,*t,*x;I m=0;
 // env is the environment for which this is being parsed: 0=tacit translator, 1=keyboard/immex with no locals, 2=for explicit defn
 A jtenqueue(J jt,A a,A w,I env){A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl;UC c;
  RZ(a&&w);
- s=CAV(w); u=AV(a); n=*u++; n=(n>>(BW-1))^n;  // point s to start of string; set u as running pointer pointer in a; fetch # words;
+ s=CAV(w); u=AV(a); n=*u++; n=REPSGN(n)^n;  // point s to start of string; set u as running pointer pointer in a; fetch # words;
     // if negative (meaning last word is NB.), discard the NB. from the count; step u to point to first (i0,l0) pair
  GATV0(z,BOX,n,1); x=v=AAV(z);   //  allocate list of words; set running word pointer x, and static
    // beginning-of-list pointer v, to start of list of output pointers

@@ -648,6 +648,7 @@ I jtra(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
  if(t&BOX){AD* np;
   // boxed.  Loop through each box, recurring if called for.  Two passes are intertwined in the loop
   A* RESTRICT wv=AAV(wd);  // pointer to box pointers
+#if 0 // obsolete
   if(n==0)R 0;  // Can't be mapped boxed; skip prefetch if no boxes
   np=*wv++;  // prefetch first box
   while(1){AD* np0;  // n is always > 0 to start
@@ -662,6 +663,20 @@ I jtra(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
    }
    np=np0;  // advance to next box
   }
+#else
+  n=1-n;  // convert count to complementary count: 0 for last, <0 before last
+  if(n>0)R 0;  // Can't be mapped boxed; skip everything if no boxes
+  np=*wv;  // prefetch first box
+  do{AD* np0;  // n is always <=0 to start.  n here is complementary count, 0 on the last item
+   wv+=(UI)n>>(BW-1);   // advance to pointer to next, unless this is the last
+   np0=*wv;  // fetch next box if it exists, otherwise harmless value.  This fetch settles while the ra() is running
+#ifdef PREFETCH
+   PREFETCH((C*)np0);   // prefetch the next box while ra() is running
+#endif
+   if(np)ra(np);  // increment the box, possibly turning it to recursive
+   np=np0;  // advance to next box
+  }while(++n<=0);
+#endif
  } else if(t&(VERB|ADV|CONJ)){V* RESTRICT v=FAV(wd);
   // ACV.  Recur on each component
   ras(v->fgh[0]); ras(v->fgh[1]); ras(v->fgh[2]);
@@ -680,6 +695,7 @@ I jtfa(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
  if(t&BOX){AD* np;
   // boxed.  Loop through each box, recurring if called for.
   A* RESTRICT wv=AAV(wd);  // pointer to box pointers
+#if 0
   if(n==0)R 0;  // Can't be mapped boxed; skip prefetch if no boxes
   np=*wv++;  // prefetch first box
   while(1){AD* np0;  // n is always > 0 to start
@@ -692,6 +708,20 @@ I jtfa(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
    fana(np);  // free the contents, but don't audit
    np = np0;  // advance to next box
   }
+#else
+  n=1-n;  // convert count to complementary count: 0 for last, <0 before last
+  if(n>0)R 0;  // Can't be mapped boxed; skip everything if no boxes
+  np=*wv;  // prefetch first box
+  do{AD* np0;  // n is always <=0 to start.  n here is complementary count, 0 on the last item
+   wv+=(UI)n>>(BW-1);   // advance to pointer to next, unless this is the last
+   np0=*wv;  // fetch next box if it exists, otherwise harmless value.  This fetch settles while the ra() is running
+#ifdef PREFETCH
+   PREFETCH((C*)np0);   // prefetch the next box while ra() is running
+#endif
+   fana(np);  // increment the box, possibly turning it to recursive
+   np=np0;  // advance to next box
+  }while(++n<=0);
+#endif
  } else if(t&(VERB|ADV|CONJ)){V* RESTRICT v=FAV(wd);
   // ACV.
   fana(v->fgh[0]); fana(v->fgh[1]); fana(v->fgh[2]);
@@ -804,11 +834,14 @@ void jttpop(J jt,A *old){A *endingtpushp;
 #ifdef PREFETCH
    PREFETCH((C*)np0);   // prefetch the next box
 #endif
-   // We never tpush a PERMANENT block so we needn't check for it
+   // We never tpush a PERMANENT block so we needn't check for it.
+   // If count goes to 0: if the usercount is marked recursive, do the recursive fa(), otherwise just free using mf().  If virtual, the backer must be recursive, so fa() it
+   // Otherwise just decrement the count
    if(--c<=0){if(AFLAG(np)&AFVIRTUAL){A b=ABACK(np); fana(b);} if(UCISRECUR(np)){fana(np);}else{mf(np);}}else AC(np)=c;  // decrement usecount and either store it back or free the block
+// should streamline the second fana here to avoid needless tests
    np=np0;  // Advance to next block
   }
-  // np has the pointer before the last one we processed in this block.  pushp points to thatSee if there are more blocks to do
+  // np has the pointer before the last one we processed in this block.  pushp points to that.  See if there are more blocks to do
   if(endingtpushp!=old){      // If we haven't done them all, we must have hit start-of-block.  Move back to previous block
    // end-of-block.  np=*pushp is the chain to the end of the previous block.  We will go there, but first see if we have finished the current allocation
    // There is no way two allocations could back up so as to make the end of one exactly the beginning of the other

@@ -3,6 +3,9 @@
 /*                                                                         */
 /* Initializations                                                         */
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
 #include "j.h"
 #include "w.h"
 #include "cpuinfo.h"
@@ -240,12 +243,19 @@ jt->assert = 1;
 
 static C jtjinit3(J jt){S t;
 #if defined(USE_THREAD)
-/* initialized but only active for SMCON multithread */
- int rc;
- if ((rc=pthread_mutex_init(&jt->plock, NULL)) != 0) {
-  VLOGFD("%p mutex init failed rc %d\n",jt,rc);
+#ifdef _WIN32
+ if ((jt->plock=(I)CreateMutex(NULL,FALSE,NULL)) == 0) {
+  VLOGFD("jt %p mutex init failed rc %u\n",jt,GetLastError());
   return 0;
  }
+#else
+ int rc;
+ if ((rc=pthread_mutex_init(&jt->plock, NULL)) != 0) {
+  VLOGFD("jt %p mutex init failed rc %d\n",jt,rc);
+  return 0;
+ }
+#endif
+ jt->ptid=-1;
 #endif
 /* required for jdll and doesn't hurt others */
  gjt=jt; // global jt for JPF debug
@@ -265,7 +275,7 @@ static C jtjinit3(J jt){S t;
  jt->thornuni=0;  // init to non-unicode (normal) state
  jt->jprx=0;      // init to non jprx jconsole output (normal) state
  meminit();
-extern void * HeapAlloc();
+// extern void * HeapAlloc();
  sesminit();
  evinit();
  consinit();

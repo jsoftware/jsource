@@ -211,6 +211,7 @@ J jt;
 int main(int argc, char* argv[])
 {
  void* callbacks[] ={Joutput,0,Jinput,0,(void*)SMCON}; int type;
+// void* callbacks[] ={Joutput,0,Jinput,0,(void*)(SMCON|(SMOPTMTH<<8))}; int type;
  int i,poslib=0,poslibpath=0,posnorl=0,posprmpt=0; // assume all absent
  for(i=1;i<argc;i++){
   if(!poslib&&!strcmp(argv[i],"-lib")){poslib=i; if((i<argc-1)&&('-'!=*(argv[i+1])))poslibpath=i+1;}

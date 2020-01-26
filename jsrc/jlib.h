@@ -56,3 +56,7 @@ C* _stdcall Jinput(J jt, C*);
 #define SMQT     4  /* jqt */
 #define SMJA     5  /* jandroid */
 
+#define SMOPTLOCALE 1  /* pass current locale */
+#define SMOPTNOJGA  2  /* result not allocated by jga */
+#define SMOPTPOLL   4  /* use smpoll to get last result */
+#define SMOPTMTH    8  /* multithreaded */

@@ -16,7 +16,7 @@ I level(A w){A*wv;I d,j;
 // return 0 if the level of w is greater than l, 1 if <=
 // terminates early if possible
 I levelle(A w,I l){
- if((-AN(w)&-(AT(w)&BOX+SBOX))>=0)R ((UI)~l)>>(BW-1);  // if arg is unboxed, its level is 0, so return 1 if l>=0
+ if((-AN(w)&-(AT(w)&BOX+SBOX))>=0)R SGNTO0(~l);  // if arg is unboxed, its level is 0, so return 1 if l>=0
  if(l<=0)R 0;  // (arg is boxed) if l is <=0, arglevel is  > l
  --l; A *wv=AAV(w);
  DO(AN(w), if(!levelle(wv[i],l))R 0;);  // stop as soon as we see level big enough
@@ -517,7 +517,7 @@ F1(jtraze){A*v,y,z,* RESTRICT zv;C* RESTRICT zu;I *wws,d,i,klg,m=0,n,r=1,t=0,te=
  }else{
   // special case where the result-assembly code checked to make sure the items were uniform.  In this case the number of items was hidden away in the AM field (otherwise unneeded, since we know the block isn't virtual)
   // and we just need to extract the rank and the type, and calculate the atoms-per-item.  We know there is at least one box.
-  A ww0=AAV(w)[0]; t=AT(ww0); r=AR(ww0); r+=(UI)(r-1)>>(BW-1); wws=&AS(ww0)[0]; // ww0->1st contents; t=type; r=rank>.1; wws->item shape
+  A ww0=AAV(w)[0]; t=AT(ww0); r=AR(ww0); r+=SGNTO0(r-1); wws=&AS(ww0)[0]; // ww0->1st contents; t=type; r=rank>.1; wws->item shape
   PROD(m,r-1,wws+1);  // get #atoms in an item of w
   I nitems=AM(w);  // total # result items is stored in w
   GA(z,t,m*nitems,r,wws); AS(z)[0]=nitems; // allocate the result area; finish shape

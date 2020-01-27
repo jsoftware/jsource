@@ -668,7 +668,7 @@ I jtra(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
   if(n>0)R 0;  // Can't be mapped boxed; skip everything if no boxes
   np=*wv;  // prefetch first box
   do{AD* np0;  // n is always <=0 to start.  n here is complementary count, 0 on the last item
-   wv+=(UI)n>>(BW-1);   // advance to pointer to next, unless this is the last
+   wv+=SGNTO0(n);   // advance to pointer to next, unless this is the last
    np0=*wv;  // fetch next box if it exists, otherwise harmless value.  This fetch settles while the ra() is running
 #ifdef PREFETCH
    PREFETCH((C*)np0);   // prefetch the next box while ra() is running
@@ -695,7 +695,7 @@ I jtfa(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
  if(t&BOX){AD* np;
   // boxed.  Loop through each box, recurring if called for.
   A* RESTRICT wv=AAV(wd);  // pointer to box pointers
-#if 0
+#if 0   // obsolete
   if(n==0)R 0;  // Can't be mapped boxed; skip prefetch if no boxes
   np=*wv++;  // prefetch first box
   while(1){AD* np0;  // n is always > 0 to start
@@ -713,7 +713,7 @@ I jtfa(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
   if(n>0)R 0;  // Can't be mapped boxed; skip everything if no boxes
   np=*wv;  // prefetch first box
   do{AD* np0;  // n is always <=0 to start.  n here is complementary count, 0 on the last item
-   wv+=(UI)n>>(BW-1);   // advance to pointer to next, unless this is the last
+   wv+=SGNTO0(n);   // advance to pointer to next, unless this is the last
    np0=*wv;  // fetch next box if it exists, otherwise harmless value.  This fetch settles while the ra() is running
 #ifdef PREFETCH
    PREFETCH((C*)np0);   // prefetch the next box while ra() is running
@@ -831,14 +831,20 @@ void jttpop(J jt,A *old){A *endingtpushp;
    // to the previous free block (or 0 at end), all of which is OK to read and then prefetch from
    np0=*pushp;   // point to block for next pass through loop
    I c=AC(np);  // fetch usecount
+   I flg=AFLAG(np);  // fetch flags
 #ifdef PREFETCH
    PREFETCH((C*)np0);   // prefetch the next box
 #endif
    // We never tpush a PERMANENT block so we needn't check for it.
    // If count goes to 0: if the usercount is marked recursive, do the recursive fa(), otherwise just free using mf().  If virtual, the backer must be recursive, so fa() it
    // Otherwise just decrement the count
-   if(--c<=0){if(AFLAG(np)&AFVIRTUAL){A b=ABACK(np); fana(b);} if(UCISRECUR(np)){fana(np);}else{mf(np);}}else AC(np)=c;  // decrement usecount and either store it back or free the block
-// should streamline the second fana here to avoid needless tests
+// obsolete   if(--c<=0){if(AFLAG(np)&AFVIRTUAL){A b=ABACK(np); fana(b);} if(UCISRECUR(np)){fana(np);}else{mf(np);}}else AC(np)=c;  // decrement usecount and either store it back or free the block
+   AC(np)=--c;  // update count & store...
+   if(c<=0){
+    // The block is going to be destroyed.  See if there are further ramifications
+    if(flg&AFVIRTUAL){A b=ABACK(np); fanano0(b);}  // if virtual block going away, reduce usecount in backer.  NOTE that ALL non-faux virtual blocks, even self-virtual ones, are on the tpop stack & get handled here
+    fanapop(np,flg);  // do the recursive POP only if RECURSIBLE block; then free np
+   }
    np=np0;  // Advance to next block
   }
   // np has the pointer before the last one we processed in this block.  pushp points to that.  See if there are more blocks to do
@@ -857,7 +863,7 @@ void jttpop(J jt,A *old){A *endingtpushp;
 #if MEMAUDIT&2
    audittstack(jt);   // one audit for each tpop.  Mustn't audit inside tpop loop, because that's inconsistent state
 #endif
-   R;  // On last time through, update starting pointer for next push, and return that value.  Undo the decr of old
+   R;
   }
  }
 }

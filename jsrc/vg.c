@@ -135,8 +135,8 @@ static GF(jtgrx){A x;I ck,t,*xv;I c=ai*n;
  t=AT(w);
  jt->workareas.compare.compk=ai<<bplg(t); ck=jt->workareas.compare.compk*n;
  jt->workareas.compare.compn=ai<<((t>>CMPXX)&1); jt->workareas.compare.compv=CAV(w);
- jt->workareas.compare.comp=sortroutines[CTTZ(t)][(UI)jt->workareas.compare.complt>>(BW-1)].comproutine; jt->workareas.compare.compusejt = !!(t&BOX+XNUM+RAT);
- void **(*sortfunc)() = sortroutines[CTTZ(t)][(UI)jt->workareas.compare.complt>>(BW-1)].sortfunc;
+ jt->workareas.compare.comp=sortroutines[CTTZ(t)][SGNTO0(jt->workareas.compare.complt)].comproutine; jt->workareas.compare.compusejt = !!(t&BOX+XNUM+RAT);
+ void **(*sortfunc)() = sortroutines[CTTZ(t)][SGNTO0(jt->workareas.compare.complt)].sortfunc;
  GATV0(x,INT,n,1); xv=AV(x);  /* work area for msmerge() */
  DQ(m, msortitems(sortfunc,n,(void**)zv,(void**)xv); jt->workareas.compare.compv+=ck; zv+=n;);
  R !jt->jerr;
@@ -278,7 +278,7 @@ static GF(jtgrdq){
   // convert -0 to 0
   // if input neg, complement low bits to make correct sort order
   // install item number
-  DO(n, I v=wv[i]^sortdown63; v^=(UI)(v>>(BW-1))>>1; v=(v==0)?-1:v; zv[i]=(v&(~itemmask))+i;)
+  DO(n, I v=wv[i]^sortdown63; v^=(UI)REPSGN(v)>>1; v=(v==0)?-1:v; zv[i]=(v&(~itemmask))+i;)
   // sort the result area in place
   sortiq1(zv,n);
   // pass through the result area, removing the upper bits.  If consecutive values have the same upper bits, go through them,
@@ -290,7 +290,7 @@ static GF(jtgrdq){
    if(((nextv=zv[i+1])^currv)&~itemmask){zv[i]=currv&itemmask;  // normal case with no repetition
    }else{  // reprocess the repeated block
     I j=i;do{
-     I v=wv[zv[j]&itemmask]^sortdown63; v^=(UI)(v>>(BW-1))>>1; v=(v==0)?-1:v; zv[j]=((v&itemmask)<<hbit)+(zv[j]&itemmask); // fetch original v, reconstitute; get itemmask in uppper bits 
+     I v=wv[zv[j]&itemmask]^sortdown63; v^=(UI)REPSGN(v)>>1; v=(v==0)?-1:v; zv[j]=((v&itemmask)<<hbit)+(zv[j]&itemmask); // fetch original v, reconstitute; get itemmask in uppper bits 
     }while(!(++j==n || (((nextv=zv[j])^currv)&~itemmask)));
     sortiq1(zv+i,j-i);  // sort the collision area in place.  j points to first item beyond the collision area, and nextv is its value
     while(i<j){zv[i]&=itemmask; ++i;}
@@ -556,7 +556,7 @@ static GF(jtgri){A x,y;B up;I e,i,*v,*wv,*xv;UI4 *yv,*yvb;I c=ai*n;
  if(!rng.range)R c==n&&n>2000?gri1(m,ai,n,w,zv):grx(m,ai,n,w,zv);  // revert to other methods if not small-range   TUNE
 #endif
  // doing small-range grade.  Allocate a hashtable area.  We will access it as UI4
- GATV0(y,C4T,rng.range,1); yvb=C4AV(y); yv=yvb-rng.min; up=(UI)jt->workareas.compare.complt>>(BW-1);
+ GATV0(y,C4T,rng.range,1); yvb=C4AV(y); yv=yvb-rng.min; up=SGNTO0(jt->workareas.compare.complt);
  // if there are multiple ints per item, we have to do multiple passes.  Allocate a workarea
  // should start in correct position to end in z
  if(1<ai){GATV0(x,INT,n,1); xv=AV(x);
@@ -607,7 +607,7 @@ static GF(jtgru){A x,y;B up;I e,i,*xv;UI4 *yv,*yvb;C4 *v,*wv;I c=ai*n;
  if(ai<=6){rng = condrange4(wv,AN(w),-1,0,(MIN(((ai*n<(L2CACHESIZE>>LGSZI))?16:4),80>>ai))*n);   //  TUNE
  }else rng.range=0;
  if(!rng.range)R c==n&&n>1500?gru1(m,ai,n,w,zv):grx(m,ai,n,w,zv);  // revert to other methods if not small-range    TUNE
- GATV0(y,C4T,rng.range,1); yvb=C4AV(y); yv=yvb-rng.min; up=(UI)jt->workareas.compare.complt>>(BW-1);
+ GATV0(y,C4T,rng.range,1); yvb=C4AV(y); yv=yvb-rng.min; up=SGNTO0(jt->workareas.compare.complt);
  if(1<ai){GATV0(x,INT,n,1); xv=AV(x);
  }
  for(i=0;i<m;++i){
@@ -658,7 +658,7 @@ static GF(jtgru){A x,y;B up;I e,i,*xv;UI4 *yv,*yvb;C4 *v,*wv;I c=ai*n;
 static GF(jtgrb){A x;B b,up;I i,p,ps,q,*xv,yv[16];UC*vv,*wv;I c=ai*n;
  UI4 lgn; CTLZI(n,lgn);
  if((UI)ai>4*lgn)R grx(m,ai,n,w,zv);     // TUNE
- q=ai>>2; p=16; ps=p*SZI; wv=UAV(w); up=(UI)jt->workareas.compare.complt>>(BW-1);
+ q=ai>>2; p=16; ps=p*SZI; wv=UAV(w); up=SGNTO0(jt->workareas.compare.complt);
  if(1<q){GATV0(x,INT,n,1); xv=AV(x);}
  for(i=0;i<m;++i){
   vv=wv+ai; b=(q&1);
@@ -673,7 +673,7 @@ static GF(jtgrc){A x;B b,q,up;I e,i,p,ps,*xv,yv[256];UC*vv,*wv;
  UI4 lgn; CTLZI(n,lgn);
  if((UI)ai>lgn)R grx(m,ai,n,w,zv);   // TUNE
  ai<<=((AT(w)>>C2TX)&1);
- p=B01&AT(w)?2:256; ps=p*SZI; wv=UAV(w); up=(UI)jt->workareas.compare.complt>>(BW-1);
+ p=B01&AT(w)?2:256; ps=p*SZI; wv=UAV(w); up=SGNTO0(jt->workareas.compare.complt);
  q=C2T&AT(w) && C_LE;
  if(1<ai){GATV0(x,INT,n,1); xv=AV(x);}
  for(i=0;i<m;++i){

@@ -25,7 +25,7 @@ A jtssingleton1(J jt, A w,A self){A z;
  {
   // Calculate inplaceability for a and w.
   // Inplaceable if: count=1 and zombieval, or count<0, PROVIDED the arg is inplaceable and the block is not UNINCORPABLE
-  I wipok = ((((AC(w)-1)|((I)w^(I)jt->zombieval))==0)|((UI)AC(w)>>(BW-1))) & ((UI)jtinplace>>JTINPLACEWX) & ~(AFLAG(w)>>AFUNINCORPABLEX);
+  I wipok = ((((AC(w)-1)|((I)w^(I)jt->zombieval))==0)|(SGNTO0(AC(w)))) & ((UI)jtinplace>>JTINPLACEWX) & ~(AFLAG(w)>>AFUNINCORPABLEX);
   if(wipok){ z=w; } else {GATV(z, FL, 1, AR(w), AS(w));}
  }
 
@@ -50,7 +50,7 @@ A jtssingleton1(J jt, A w,A self){A z;
 
 
  case SSINGCASE(VA2MULT-VA2MIN,SSINGENC(B01)): R w;
- case SSINGCASE(VA2MULT-VA2MIN,SSINGENC(INT)): SSSTORENV((SSRDI(w)>0)-((UI)SSRDI(w)>>(BW-1)),z,INT,I) R z;
+ case SSINGCASE(VA2MULT-VA2MIN,SSINGENC(INT)): SSSTORENV((SSRDI(w)>0)-(SGNTO0(SSRDI(w))),z,INT,I) R z;
  case SSINGCASE(VA2MULT-VA2MIN,SSINGENC(FL)):
    wdv = SSRDD(w);
    SSSTORE((wdv>=1.0-jt->cct)-(-wdv>=1.0-jt->cct),z,INT,I)

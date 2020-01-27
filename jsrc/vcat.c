@@ -240,7 +240,7 @@ F2(jtover){A z;C*zv;I replct,framect,acr,af,ar,*as,k,ma,mw,p,q,r,t,wcr,wf,wr,*ws
  k=bpnoun(t);   // # bytes per atom of result
  // copy in the data, creating the result in order (to avoid page thrashing and to make best use of write buffers)
  // scalar replication is required for any arg whose rank is 0 and yet its length is >1.  Choose the copy routine based on that
- moveawtbl[((UI)((acr-1)&(1-ma))>>(BW-1))*2+((UI)((wcr-1)&(1-mw))>>(BW-1))](CAV(z),CAV(a),CAV(w),replct*framect,k,ma*k,mw*k,(wf>=af)?replct:1,(wf>=af)?1:replct);
+ moveawtbl[SGNTO0((acr-1)&(1-ma))*2+(SGNTO0(((wcr-1)&(1-mw))))](CAV(z),CAV(a),CAV(w),replct*framect,k,ma*k,mw*k,(wf>=af)?replct:1,(wf>=af)?1:replct);
  RETF(z);
 }    /* overall control, and a,w and a,"r w for cell rank <: 2 */
 

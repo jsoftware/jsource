@@ -176,7 +176,8 @@ static DF1(jtcase1b){A h,u;V*sv;
  F1PREFIP;sv=FAV(self); h=sv->fgh[2];
  RZ(u=from(df1(w,sv->fgh[1]),h));  // not inplace
  ASSERT(!AR(u),EVRANK);
- R jtdf1(FAV(*AAV(u))->flag&VJTFLGOK1?jtinplace:jt,w,*AAV(u));  // inplace if the verb can handle it
+// obsolete  R jtdf1(FAV(*AAV(u))->flag&VJTFLGOK1?jtinplace:jt,w,*AAV(u));  // inplace if the verb can handle it
+ R (FAV(*AAV(u))->valencefns[0])(FAV(*AAV(u))->flag&VJTFLGOK1?jtinplace:jt,w,*AAV(u));  // inplace if the verb can handle it
 }
 
 // m@.v y.  First check for atomic verbs (special case case1a); if not, process through case1b.  Pass inplacing to case1b only if there is 1 cell
@@ -196,7 +197,8 @@ static DF2(jtcase2){A u;V*sv;
  sv=FAV(self);
  RZ(u=from(df2(a,w,sv->fgh[1]),sv->fgh[2]));
  ASSERT(!AR(u),EVRANK);
- R jtdf2(FAV(*AAV(u))->flag&VJTFLGOK2?jtinplace:jt,a,w,*AAV(u));  // inplace if the verb can handle it
+// obsolete  R jtdf2(FAV(*AAV(u))->flag&VJTFLGOK2?jtinplace:jt,a,w,*AAV(u));  // inplace if the verb can handle it
+ R (FAV(*AAV(u))->valencefns[1])(FAV(*AAV(u))->flag&VJTFLGOK2?jtinplace:jt,a,w,*AAV(u));  // inplace if the verb can handle it
 }
 
 // @.n

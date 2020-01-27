@@ -98,8 +98,8 @@ F1(jtbdot){A b,h=0;I j=0,n,*v;
 static A jtmemoget(J jt,I x,I y,A self){A h,*hv,q;I*jv,k,m,*v;
  h=FAV(self)->fgh[2]; hv=AAV(h); 
  q=hv[1]; jv=AV(q); m=*AS(q);
- k=HIC(x,y)%m; v=jv+2*k; while(IMIN!=*v&&!(y==*v&&x==v[1])){v+=2; if(v==jv+2*m)v=jv;}
- R*(AAV(hv[2])+((v-jv)>>1));
+ k=HIC(x,y)%m; v=jv+2*k; while(IMIN!=*v&&!(y==*v&&x==v[1])){v+=2; if(v==jv+2*m)v=jv;}  // search hash table, stop on match or end
+ R AAV(hv[2])[((v-jv)>>1)];  // return match if found, 0 if not
 }
 
 static A jtmemoput(J jt,I x,I y,A self,A z){A*cv,h,*hv,q;I *jv,k,m,*mv,*v;
@@ -150,7 +150,7 @@ static DF1(jtmemo1){DECLF;A z;I x,y;
 static DF2(jtmemo2){DECLF;A z;I x,y; 
  RZ(a&&w);
  x=int0(a); y=int0(w);
- if(x==IMIN||y==IMIN)R CALL2(f2,a,w,fs);
+ if(MIN(x,y)==IMIN)R CALL2(f2,a,w,fs);  // IMIN is unmemoable, run fn
  R (z=memoget(x,y,self))?z:memoput(x,y,self,CALL2(f2,a,w,fs));  // if memo lookup returns empty, run the function and remember the result
 }
 

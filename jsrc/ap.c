@@ -434,7 +434,7 @@ static DF2(jtinfixprefix2){F2PREFIP;PROLOG(00202);A fs;
   // check for special case of 2 u/\ y; if found, set new function and allocate a second virtual argument
   // NOTE: gerund/ is encoded as `:, so we can be sure id==SLASH does not have gerund
   fauxblock(virtafaux); fauxblock(virtwfaux);
-  if(((VAV(fs)->id^CSLASH)|((ilnabs|(wi&((UI)ilnval>>(BW-1))))^2))){   // char==/ and (ilnabs==2, but not if input array is odd and ilnval is neg)
+  if(((VAV(fs)->id^CSLASH)|((ilnabs|(wi&(SGNTO0(ilnval))))^2))){   // char==/ and (ilnabs==2, but not if input array is odd and ilnval is neg)
    // normal case, infix/prefix.  Allocate a virtual block
    fauxvirtual(virtw,virtwfaux,w,vr,ACUC1);
 
@@ -445,7 +445,7 @@ static DF2(jtinfixprefix2){F2PREFIP;PROLOG(00202);A fs;
    fauxvirtual(virta,virtafaux,w,vr-1,ACUC1); // first block is for a
    MCISH(AS(virta),AS(w)+1,vr-1); AN(virta)=wc; // shape is (shape of cell)  tally is celllength
    fauxvirtual(virtw,virtwfaux,w,vr-1,ACUC1);  // second is w
-   AK(virtw) += strideb >> ((UI)ilnval>>(BW-1));  // we want to advance 1 cell.  If ilnval is positive, strideb is 1 cell; otherwise strideb is 2 cells
+   AK(virtw) += strideb >> (SGNTO0(ilnval));  // we want to advance 1 cell.  If ilnval is positive, strideb is 1 cell; otherwise strideb is 2 cells
    MCISH(AS(virtw),AS(w)+1,vr-1); AN(virtw)=wc; // shape is (shape of cell)  tally is celllength
    // advance from f/ to f and get the function pointer.  Note that 2 <@(f/)\ will go through here too
    fs=FAV(fs)->fgh[0]; f1=FAV(fs)->valencefns[1];

@@ -675,6 +675,6 @@ F2(jtiso8601toe){I prec;
  }
  ASSERT(AT(w)&LIT,EVDOMAIN);  // must be LIT
  ASSERT(AR(w),EVRANK);    // must not be an atom
- if(!AN(w))RETF(dfs1(w,qq(sc(IMIN),zeroionei[1])));   // return _"1 w on empty w - equivalent
+ if(!AN(w))RETF(df1(w,qq(sc(IMIN),zeroionei[1])));   // return _"1 w on empty w - equivalent
  RETF(efs(jt,w,prec));
 }

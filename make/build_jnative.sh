@@ -23,7 +23,7 @@ echo "compiler=$compiler"
 
 if [ $CC = "gcc" ] ; then
 # gcc
-common="-Werror -fPIC -O2 -fwrapv -fno-strict-aliasing -Wextra -Wno-unused-parameter -Wno-sign-compare -Wno-clobbered -Wno-empty-body -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-type-limits"
+common="-Werror -fPIC -O2 -fvisibility=hidden -fwrapv -fno-strict-aliasing -Wextra -Wno-unused-parameter -Wno-sign-compare -Wno-clobbered -Wno-empty-body -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-type-limits"
 GNUC_MAJOR=$(echo __GNUC__ | $CC -E -x c - | tail -n 1)
 GNUC_MINOR=$(echo __GNUC_MINOR__ | $CC -E -x c - | tail -n 1)
 if [ $GNUC_MAJOR -ge 5 ] ; then
@@ -43,7 +43,7 @@ common="$common -Wno-cast-function-type"
 fi
 else
 # clang 3.4
-common="-Werror -fPIC -O2 -fwrapv -fno-strict-aliasing -Wextra -Wno-consumed -Wuninitialized -Wno-unused-parameter -Wsign-compare -Wno-empty-body -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wunsequenced -Wno-string-plus-int -Wtautological-constant-out-of-range-compare"
+common="-Werror -fPIC -O2 -fvisibility=hidden -fwrapv -fno-strict-aliasing -Wextra -Wno-consumed -Wuninitialized -Wno-unused-parameter -Wsign-compare -Wno-empty-body -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wunsequenced -Wno-string-plus-int -Wtautological-constant-out-of-range-compare"
 # clang 3.8
 CLANG_MAJOR=$(echo __clang_major__ | $CC -E -x c - | tail -n 1)
 CLANG_MINOR=$(echo __clang_minor__ | $CC -E -x c - | tail -n 1)

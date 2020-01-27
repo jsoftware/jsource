@@ -9,6 +9,14 @@
 #define _stdcall      
 #endif
 
+#ifdef _MSC_VER
+#define CDPROC __declspec(dllexport)
+#elif defined(__GNUC__)
+#define CDPROC __attribute__ ((visibility ("default")))
+#else
+#define CDPROC
+#endif
+
 #if SY_64
 typedef long long          A1;
 typedef unsigned long long BT;

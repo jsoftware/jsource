@@ -55,9 +55,20 @@ compiler=$(readlink -f $(command -v $CC) 2> /dev/null || echo $CC)
 echo "CC=$CC"
 echo "compiler=$compiler"
 
+USE_THREAD="${USE_THREAD:=0}"
+if [ $USE_THREAD -eq 1 ] ; then
+USETHREAD=" -DUSE_THREAD "
+# LDTHREAD=" -pthread "
+fi
+
+VERBOSELOG="${VERBOSELOG:=0}"
+if [ $VERBOSELOG -eq 1 ] ; then
+FVERBOSELOG=" -DVERBOSELOG "
+fi
+
 if [ -z "${compiler##*gcc*}" ] || [ -z "${CC##*gcc*}" ]; then
 # gcc
-common="-Werror -fPIC -O2 -fwrapv -fno-strict-aliasing -Wextra -Wno-unused-parameter -Wno-sign-compare -Wno-clobbered -Wno-empty-body -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-type-limits"
+common="$USETHREAD $FVERBOSELOG -Werror -fPIC -O2 -fvisibility=hidden -fwrapv -fno-strict-aliasing -Wextra -Wno-unused-parameter -Wno-sign-compare -Wno-clobbered -Wno-empty-body -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-type-limits"
 GNUC_MAJOR=$(echo __GNUC__ | $CC -E -x c - | tail -n 1)
 GNUC_MINOR=$(echo __GNUC_MINOR__ | $CC -E -x c - | tail -n 1)
 if [ $GNUC_MAJOR -ge 5 ] ; then
@@ -77,7 +88,7 @@ common="$common -Wno-cast-function-type"
 fi
 else
 # clang 3.4
-common="-Werror -fPIC -O2 -fwrapv -fno-strict-aliasing -Wextra -Wno-consumed -Wuninitialized -Wno-unused-parameter -Wsign-compare -Wno-empty-body -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wunsequenced -Wno-string-plus-int -Wtautological-constant-out-of-range-compare"
+common="$USETHREAD $FVERBOSELOG -Werror -fPIC -O2 -fvisibility=hidden -fwrapv -fno-strict-aliasing -Wextra -Wno-consumed -Wuninitialized -Wno-unused-parameter -Wsign-compare -Wno-empty-body -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wunsequenced -Wno-string-plus-int -Wtautological-constant-out-of-range-compare"
 # clang 3.8
 CLANG_MAJOR=$(echo __clang_major__ | $CC -E -x c - | tail -n 1)
 CLANG_MINOR=$(echo __clang_minor__ | $CC -E -x c - | tail -n 1)
@@ -107,64 +118,64 @@ case $jplatform\_$j64x in
 
 linux_j32)
 CFLAGS="$common -m32"
-LDFLAGS=" -m32 -ldl "
+LDFLAGS=" -m32 -ldl $LDTHREAD"
 ;;
 linux_j64)
 CFLAGS="$common"
-LDFLAGS=" -ldl "
+LDFLAGS=" -ldl $LDTHREAD"
 ;;
 linux_j64avx)
 CFLAGS="$common"
-LDFLAGS=" -ldl "
+LDFLAGS=" -ldl $LDTHREAD"
 ;;
 linux_j64avx2)
 CFLAGS="$common"
-LDFLAGS=" -ldl "
+LDFLAGS=" -ldl $LDTHREAD"
 ;;
 raspberry_j32)
 CFLAGS="$common -marm -march=armv6 -mfloat-abi=hard -mfpu=vfp -DRASPI"
-LDFLAGS=" -ldl "
+LDFLAGS=" -ldl $LDTHREAD"
 ;;
 raspberry_j64)
 CFLAGS="$common -march=armv8-a+crc -DRASPI"
-LDFLAGS=" -ldl "
+LDFLAGS=" -ldl $LDTHREAD"
 ;;
 darwin_j32)
 CFLAGS="$common -m32 $macmin"
-LDFLAGS=" -ldl -m32 $macmin "
+LDFLAGS=" -ldl $LDTHREAD -m32 $macmin "
 ;;
 #-mmacosx-version-min=10.5
 darwin_j64)
 CFLAGS="$common $macmin"
-LDFLAGS=" -ldl $macmin "
+LDFLAGS=" -ldl $LDTHREAD $macmin "
 ;;
 darwin_j64avx)
 CFLAGS="$common $macmin"
-LDFLAGS=" -ldl $macmin "
+LDFLAGS=" -ldl $LDTHREAD $macmin "
 ;;
 darwin_j64avx2)
 CFLAGS="$common $macmin"
-LDFLAGS=" -ldl $macmin "
+LDFLAGS=" -ldl $LDTHREAD $macmin "
 ;;
 windows_j32)
 TARGET=jconsole.exe
 CFLAGS="$common -m32 "
-LDFLAGS=" -m32 -Wl,--stack=0x1000000,--subsystem,console -static-libgcc "
+LDFLAGS=" -m32 -Wl,--stack=0x1000000,--subsystem,console -static-libgcc $LDTHREAD"
 ;;
 windows_j64)
 TARGET=jconsole.exe
 CFLAGS="$common"
-LDFLAGS=" -Wl,--stack=0x1000000,--subsystem,console -static-libgcc "
+LDFLAGS=" -Wl,--stack=0x1000000,--subsystem,console -static-libgcc $LDTHREAD"
 ;;
 windows_j64avx)
 TARGET=jconsole.exe
 CFLAGS="$common"
-LDFLAGS=" -Wl,--stack=0x1000000,--subsystem,console -static-libgcc "
+LDFLAGS=" -Wl,--stack=0x1000000,--subsystem,console -static-libgcc $LDTHREAD"
 ;;
 windows_j64avx2)
 TARGET=jconsole.exe
 CFLAGS="$common"
-LDFLAGS=" -Wl,--stack=0x1000000,--subsystem,console -static-libgcc "
+LDFLAGS=" -Wl,--stack=0x1000000,--subsystem,console -static-libgcc $LDTHREAD"
 ;;
 *)
 echo no case for those parameters

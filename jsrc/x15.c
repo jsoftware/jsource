@@ -1400,18 +1400,18 @@ F1(jtcdproc1){CCT*cc;
 
 #if SY_WIN32 && defined(OLECOM)
 #define VARIANT void
-int _stdcall JBreak(J jt);
-int _stdcall JIsBusy(J jt);
-int _stdcall JGet(J jt, C* name, VARIANT* v);
-int _stdcall JGetB(J jt, C* name, VARIANT* v);
-int _stdcall JSet(J jt, C* name, VARIANT* v);
-int _stdcall JSetB(J jt, C* name, VARIANT* v);
-int _stdcall JErrorText(J jt, long ec, VARIANT* v);
-int _stdcall JClear(J jt);
-int _stdcall JTranspose(J jt, long b);
-int _stdcall JErrorTextB(J jt, long ec, VARIANT* v);
-int _stdcall JDoR(J jt, C* p, VARIANT* v);
-int _stdcall JInt64R(J jt, long b);
+CDPROC int _stdcall JBreak(J jt);
+CDPROC int _stdcall JIsBusy(J jt);
+CDPROC int _stdcall JGet(J jt, C* name, VARIANT* v);
+CDPROC int _stdcall JGetB(J jt, C* name, VARIANT* v);
+CDPROC int _stdcall JSet(J jt, C* name, VARIANT* v);
+CDPROC int _stdcall JSetB(J jt, C* name, VARIANT* v);
+CDPROC int _stdcall JErrorText(J jt, long ec, VARIANT* v);
+CDPROC int _stdcall JClear(J jt);
+CDPROC int _stdcall JTranspose(J jt, long b);
+CDPROC int _stdcall JErrorTextB(J jt, long ec, VARIANT* v);
+CDPROC int _stdcall JDoR(J jt, C* p, VARIANT* v);
+CDPROC int _stdcall JInt64R(J jt, long b);
 #endif
 
 // procedures in jlib.h

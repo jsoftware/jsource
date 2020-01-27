@@ -25,8 +25,13 @@ else
 TARGET= tsdll32.dll
 endif
 
+ifdef x64
+$(TARGET) : $(OBJS)
+	$(LD) /NOLOGO $(FLAGS) /out:$@ $(OBJS)
+else
 $(TARGET) : $(OBJS)
 	$(LD) /NOLOGO /DEF:$(DEF) $(FLAGS) /out:$@ $(OBJS)
+endif
 
 jddll.res : $(RCS)
 	$(RC) /L 0x409 /D _USING_V110_SDK71_ -R -FO$@ $(RCS)

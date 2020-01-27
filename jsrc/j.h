@@ -65,8 +65,13 @@
 #endif
 
 #if defined(USE_THREAD)
-#define MTXLOCK(f)      {if((SMCON==jt->sm)&&(0x8&jt->smoption)){ VLOGFD("%p %s mutex before lock\n",jt,f);pthread_mutex_lock(&jt->plock); jt->plocked++; VLOGFD("%p %s mutex after lock\n",jt,f); }}
-#define MTXUNLOCK(f)    {if((SMCON==jt->sm)&&(0x8&jt->smoption)){if(jt->plocked){ jt->plocked--; pthread_mutex_unlock(&jt->plock); VLOGFD("%p %s mutex unlock\n",jt,f); }else {fprintf(stderr,"system error: %s : file %s line %d\n","MTXUNOCK",__FILE__,__LINE__); jsignal(EVSYSTEM); jtwri(jt,MTYOSYS,"",(I)strlen("MTXUNOCK"),"MTXUNOCK");} }}
+#ifdef _WIN32
+#define MTXLOCK(f)      {if(SMOPTMTH&jt->smoption){ if((jt->ptid!=(I)GetCurrentThreadId())&&jt->plocked){VLOGFD("jt %p thread %u %s mutex before lock\n",jt,GetCurrentThreadId(),f); WaitForSingleObject((HANDLE)jt->plock,INFINITE); jt->ptid=(I)GetCurrentThreadId();} jt->plocked++; VLOGFD("jt %p thread %u %s mutex lock depth %d\n",jt,(DWORD)jt->ptid,f,(int)jt->plocked);}}
+#define MTXUNLOCK(f)    {if(SMOPTMTH&jt->smoption){ if(jt->plocked){ jt->plocked--; if(!jt->plocked)ReleaseMutex((HANDLE)jt->plock); VLOGFD("jt %p thread %u %s mutex unlock depth %d\n",jt,(DWORD)jt->ptid,f,(int)jt->plocked); }else {fprintf(stderr,"system error: %s : file %s line %d\n","MTXUNOCK",__FILE__,__LINE__); jsignal(EVSYSTEM); jtwri(jt,MTYOSYS,"",(I)strlen("MTXUNOCK"),"MTXUNOCK");} }}
+#else
+#define MTXLOCK(f)      {if(SMOPTMTH&jt->smoption){ if(!(pthread_equal((pthread_t)jt->ptid,pthread_self())&&jt->plocked)){VLOGFD("jt %p thread %p %s mutex before lock\n",jt,(void*)pthread_self(),f); pthread_mutex_lock(&jt->plock); jt->ptid=(I)pthread_self();} jt->plocked++; VLOGFD("jt %p thread %p %s mutex lock depth %d\n",jt,(void*)jt->ptid,f,(int)jt->plocked);}}
+#define MTXUNLOCK(f)    {if(SMOPTMTH&jt->smoption){ if(jt->plocked){ jt->plocked--; if(!jt->plocked)pthread_mutex_unlock(&jt->plock); VLOGFD("jt %p thread %p %s mutex unlock depth %d\n",jt,(void*)jt->ptid,f,(int)jt->plocked); }else {fprintf(stderr,"system error: %s : file %s line %d\n","MTXUNOCK",__FILE__,__LINE__); jsignal(EVSYSTEM); jtwri(jt,MTYOSYS,"",(I)strlen("MTXUNOCK"),"MTXUNOCK");} }}
+#endif
 #else
 #define MTXLOCK(f)
 #define MTXUNLOCK(f)

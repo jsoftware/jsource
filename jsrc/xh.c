@@ -186,9 +186,13 @@ F1(jtjwait){I k;int s; RE(k=i0(w)); if(-1==waitpid(k,&s,0))jerrno(); R sc(s);}
 #endif
 
 /* return errno info from c library */
-F1(jtcerrno){C buf[1024];
+F1(jtcerrno){C buf[1024],ermsg[1024];
  ASSERTMTV(w);
- strcpy (buf, errno?strerror(errno):"");
+#ifdef _WIN32
+ if(errno&&!strerror_s(ermsg,1024,errno)) strcpy (buf, ermsg); else strcpy (buf, "");
+#else
+ if(errno&&!strerror_r(errno,ermsg,1024)) strcpy (buf, ermsg); else strcpy (buf, "");
+#endif
  R link(sc(errno),cstr(buf));
 }    /* 2!:8  errno information */
 

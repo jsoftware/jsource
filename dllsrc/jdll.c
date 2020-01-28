@@ -62,9 +62,9 @@ void toasc(WCHAR* src, C* sink)
 	*sink++=0;
 }
 
-int _stdcall JBreak(J jt){ return 0;}
+CDPROC int _stdcall JBreak(J jt){ return 0;}
 
-int _stdcall JIsBusy(J jt){	return 0;}
+CDPROC int _stdcall JIsBusy(J jt){	return 0;}
 
 #ifdef OLECOM
 
@@ -272,12 +272,12 @@ int jget(J jt, C* name, VARIANT* v, int dobstr)
 	return er;
 }
 
-int _stdcall JGet(J jt, C* name, VARIANT* v)
+CDPROC int _stdcall JGet(J jt, C* name, VARIANT* v)
 {
 	return jget(jt, name, v, 0); // no bstrs
 }
 
-int _stdcall JGetB(J jt, C* name, VARIANT* v)
+CDPROC int _stdcall JGetB(J jt, C* name, VARIANT* v)
 {
 	return jget(jt, name, v, 1); // do bstrs
 }
@@ -601,17 +601,17 @@ int jsetx(J jt, C* name, VARIANT* v, int dobstrs)
 	return er;
 }
 
-int _stdcall JSet(J jt, C* name, VARIANT* v)
+CDPROC int _stdcall JSet(J jt, C* name, VARIANT* v)
 {
 	return jsetx(jt, name, v, 0);	// no bstrs
 }
 
-int _stdcall JSetB(J jt, C* name, VARIANT* v)
+CDPROC int _stdcall JSetB(J jt, C* name, VARIANT* v)
 {
 	return jsetx(jt, name, v, 1);	// do bstrs
 }
 
-int _stdcall JErrorText(J jt, long ec, VARIANT* v)
+CDPROC int _stdcall JErrorText(J jt, long ec, VARIANT* v)
 {
 	C* p;
 	SAFEARRAY FAR* psa; 
@@ -630,9 +630,9 @@ int _stdcall JErrorText(J jt, long ec, VARIANT* v)
 	return 0;
 }
 
-int _stdcall JClear(J jt){ return 0;};
+CDPROC int _stdcall JClear(J jt){ return 0;};
 
-int _stdcall JInt64R(J jt, long b)
+CDPROC int _stdcall JInt64R(J jt, long b)
 {
 #if SY_64
 	jt->int64rflag = b;
@@ -640,13 +640,13 @@ int _stdcall JInt64R(J jt, long b)
 	return 0;
 }
 
-int _stdcall JTranspose(J jt, long b)
+CDPROC int _stdcall JTranspose(J jt, long b)
 {
 	jt->transposeflag = b;
 	return 0;
 }
 
-int _stdcall JErrorTextB(J jt, long ec, VARIANT* v)
+CDPROC int _stdcall JErrorTextB(J jt, long ec, VARIANT* v)
 {
 	C* p;
 	BSTR bstr;
@@ -659,7 +659,7 @@ int _stdcall JErrorTextB(J jt, long ec, VARIANT* v)
 	R 0;
 }
 
-int _stdcall JDoR(J jt, C* p, VARIANT* v)
+CDPROC int _stdcall JDoR(J jt, C* p, VARIANT* v)
 {
 	int e;
 	
@@ -768,7 +768,7 @@ int WINAPI DllMain (HINSTANCE hDLL, DWORD dwReason, LPVOID lpReserved)
 return TRUE;
 }
 
-J _stdcall JInit()
+CDPROC J _stdcall JInit()
 {
 	JST* jt;
 
@@ -783,7 +783,7 @@ J _stdcall JInit()
 }
 
 // clean up at the end of a J instance
-int _stdcall JFree(J jt)
+CDPROC int _stdcall JFree(J jt)
 {
 	if(!jt) return 0;
 #if !SY_WINCE

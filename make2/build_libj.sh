@@ -312,8 +312,10 @@ CFLAGS="$common $DOLECOM -D_FILE_OFFSET_BITS=64 -D_JDLL "
 LDFLAGS=" -shared -Wl,--enable-stdcall-fixup -lm -static-libgcc -static-libstdc++ $LDOPENMP $LDTHREAD"
 if [ $jolecom -eq 1 ] ; then
 DLLOBJS=" jdll.o jdllcomx.o "
+LIBJDEF=" ../../../../dllsrc/jdll.def "
 else
 DLLOBJS=" jdll.o "
+LIBJDEF=" ../../../../dllsrc/jdll2.def "
 fi
 LIBJRES=" jdllres.o "
 OBJS_AESNI=" aes-ni.o "
@@ -333,8 +335,10 @@ LDFLAGS=" -shared -Wl,--enable-stdcall-fixup -lm -static-libgcc -static-libstdc+
 CFLAGS_SIMD=" -mavx "
 if [ $jolecom -eq 1 ] ; then
 DLLOBJS=" jdll.o jdllcomx.o "
+LIBJDEF=" ../../../../dllsrc/jdll.def "
 else
 DLLOBJS=" jdll.o "
+LIBJDEF=" ../../../../dllsrc/jdll2.def "
 fi
 LIBJRES=" jdllres.o "
 OBJS_FMA=" gemm_int-fma.o "
@@ -355,8 +359,10 @@ LDFLAGS=" -shared -Wl,--enable-stdcall-fixup -lm -static-libgcc -static-libstdc+
 CFLAGS_SIMD=" -mavx2 -mfma "
 if [ $jolecom -eq 1 ] ; then
 DLLOBJS=" jdll.o jdllcomx.o "
+LIBJDEF=" ../../../../dllsrc/jdll.def "
 else
 DLLOBJS=" jdll.o "
+LIBJDEF=" ../../../../dllsrc/jdll2.def "
 fi
 LIBJRES=" jdllres.o "
 OBJS_FMA=" gemm_int-fma.o "

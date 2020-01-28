@@ -18,7 +18,7 @@ typedef unsigned short wc;
 typedef unsigned int uc;
 #endif
 #ifdef _MSC_VER
-#define CDPROC __declspec(dllexport)
+#define CDPROC
 #elif defined(__GNUC__)
 #define CDPROC __attribute__ ((visibility ("default")))
 #else

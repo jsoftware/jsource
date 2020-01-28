@@ -244,13 +244,8 @@ else
 TARGET= j32.dll
 endif
 
-ifdef x64
-$(TARGET) : $(OBJS) $(SRC_ASM) $(OBJS_ASM) $(ASM) jdll.res
-	$(LD) /NOLOGO $(FLAGS) /out:$@ $(OBJS) $(SRC_ASM) $(OBJS_ASM) $(ASM) jdll.res ole32.lib advapi32.lib oleaut32.lib
-else
 $(TARGET) : $(OBJS) $(SRC_ASM) $(OBJS_ASM) $(ASM) jdll.res
 	$(LD) /NOLOGO /DEF:$(DEF) $(FLAGS) /out:$@ $(OBJS) $(SRC_ASM) $(OBJS_ASM) $(ASM) jdll.res ole32.lib advapi32.lib oleaut32.lib
-endif
 
 jdll.res : $(RCS)
 	$(RC) /L 0x409 /D _USING_V110_SDK71_ -R -FO$@ $(RCS)

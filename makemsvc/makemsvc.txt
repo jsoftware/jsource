@@ -44,7 +44,7 @@ nmake -f makefile.win x64=1 JAVX2=1
 nmake -f makefile.win x64=1 JAVX=1 clean
 nmake -f makefile.win x64=1 JAVX=1
 nmake -f makefile.win x64=1 clean
-nmake -f makefile.win x64=1 
+nmake -f makefile.win x64=1
 cd ..
 
 3. build tsdll.dll -  used in test suite to validate cd

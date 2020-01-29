@@ -9,4 +9,3 @@ mkdir jbld\j64
 
 xcopy /E /Y /Q %1%\jsource\jlibrary jbld\j32\
 xcopy /E /Y /Q %1%\jsource\jlibrary jbld\j64\
-    

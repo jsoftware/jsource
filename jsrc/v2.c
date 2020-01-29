@@ -292,7 +292,7 @@ static F1(jttotient){A b,x,z;B*bv,p=0;I k,n,t;
   RZ(x=cvt(XNUM,w)); xv=XAV(x);
   DO(n, y=xv[i]; k=*(AV(y)+AN(y)-1); ASSERT(0<=k,EVDOMAIN); if(k)*bv++=1; else{*bv++=0; xv[i]=iv1; p=1;});
  }
- z=cvt(AT(x),df1(x,eval("(- ~:)&.q:"))); 
+ A z0; z=cvt(AT(x),df1(z0,x,eval("(- ~:)&.q:"))); 
  R p?tymesW(b,z):z;
 }
 
@@ -381,14 +381,14 @@ F2(jtqco2){A q,y,z;B b,bb,xt;I c,j,k,m,*qv,wn,wr,*yv,*zv;
  bb=equ(a,ainf);
  if(b&bb){ /* __ q: w */
   RZ(y=ne(q,curtail(over(zeroionei[0],q))));
-  R lamin2(repeat(y,q),df1(y,cut(ds(CPOUND),zeroionei[1])));
+  R lamin2(repeat(y,q),df1(z,y,cut(ds(CPOUND),zeroionei[1])));
  }
  RZ(y=vi(plt(q))); yv=AV(y);
  k=-1; DO(AN(y), if(k<yv[i])k=yv[i];); ++k;
  if(bb)m=k; else RE(m=i0(a));
  if(b){
   q=repeat(ge(y,sc(k-m)),q);
-  R lamin2(nub(q),df2(q,q,sldot(ds(CPOUND))));
+  R lamin2(nub(q),df2(z,q,q,sldot(ds(CPOUND))));
  }else{
   GATV(z,INT,wn*m,1+wr,AS(w)); AS(z)[wr]=m; zv=AV(z);
   memset(zv,C0,AN(z)*SZI);

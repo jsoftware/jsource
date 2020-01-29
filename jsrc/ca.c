@@ -361,7 +361,7 @@ static DF1(ixfixedright0){A z;V*v=FAV(self);
  R z;
 }
 
-static DF2(with2){R df1(w,powop(self,a,0));}
+static DF2(with2){A z; R df1(z,w,powop(self,a,0));}
 
 // u&v
 F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;I flag,flag2=0,mode=-1,p,r;V*u,*v;

@@ -109,13 +109,13 @@ static DF2(jtunderh20){R jtrank2ex0(jt,a,w,self,jtunderh2);}  // pass inplaceabi
 static DF1(jtunderai1){DECLF;A x,y,z;B b;I j,n,*u,*v;UC f[256],*wv,*zv;
  RZ(w);
  if(b=LIT&AT(w)&&256<AN(w)){
-        x=df1(iota(v2(128L, 2L)),fs); b=x&&256==AN(x)&&NUMERIC&AT(x);
-  if(b){y=df1(iota(v2(  8L,32L)),fs); b=y&&256==AN(y)&&NUMERIC&AT(y);}
+        df1(x,iota(v2(128L, 2L)),fs); b=x&&256==AN(x)&&NUMERIC&AT(x);
+  if(b){df1(y,iota(v2(  8L,32L)),fs); b=y&&256==AN(y)&&NUMERIC&AT(y);}
   if(b){x=vi(x); y=vi(y); b=x&&y;} 
   if(b){u=AV(x); v=AV(y); DO(256, j=*u++; if(j==*v++&&BETWEENO(j,-256,256))f[i]=(UC)(0<=j?j:j+256); else{b=0; break;});}
   if(jt->jerr)RESETERR;
  }         
- if(!b)R from(df1(indexof(alp,w),fs),alp);
+ if(!b)R from(df1(z,indexof(alp,w),fs),alp);
  n=AN(w);
  GATV(z,LIT,n,AR(w),AS(w)); zv=UAV(z); wv=UAV(w);
  if(!bitwisecharamp(f,n,wv,zv))DQ(n, *zv++=f[*wv++];); 

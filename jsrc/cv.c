@@ -26,12 +26,12 @@ static A jtfitct(J jt,A a,A w,I cno){D d;V*sv;
 static DF2(jtfitexp2){
  F2RANK(0,0,jtfitexp2,self);
  ASSERT(0<=i0(w)&&!jt->jerr,EVDOMAIN);
- R aslash(CSTAR,plus(a,df2(iota(w),FAV(self)->fgh[1],slash(ds(CSTAR)))));
+ A z; R aslash(CSTAR,plus(a,df2(z,iota(w),FAV(self)->fgh[1],slash(ds(CSTAR)))));
 }    /* a ^!.s w */
 
 static DF2(jtfitpoly2){I j;
  F2RANK(1,0,jtfitpoly2,self);
- R aslash(CPLUS,tymes(a,ascan(CSTAR,shift1(plus(w,df2(IX(SETIC(a,j)),FAV(self)->fgh[1],slash(ds(CSTAR))))))));
+ A z; R aslash(CPLUS,tymes(a,ascan(CSTAR,shift1(plus(w,df2(z,IX(SETIC(a,j)),FAV(self)->fgh[1],slash(ds(CSTAR))))))));
 }    /* a p.!.s w */
 
 static DF1(jtfitfill1){DECLFG;F1PREFIP;A z; jt->fill=gs; z=CALL1IP(f1,  w,fs); jt->fill=0; RETF(z);}  // gs cannot be virtual
@@ -44,8 +44,8 @@ static DF1(jtfitpp1){DECLFG;A z;C d[8],*s=3+jt->pp;
  RETF(z);
 }
 
-static DF1(jtfitf1){V*sv=FAV(self); R df1(  w,fit(fix(sv->fgh[0],zeroionei[0]),sv->fgh[1]));}
-static DF2(jtfitf2){V*sv=FAV(self); R df2(a,w,fit(fix(sv->fgh[0],zeroionei[0]),sv->fgh[1]));}
+static DF1(jtfitf1){V*sv=FAV(self); A z; R df1(z,  w,fit(fix(sv->fgh[0],zeroionei[0]),sv->fgh[1]));}
+static DF2(jtfitf2){V*sv=FAV(self); A z; R df2(z,a,w,fit(fix(sv->fgh[0],zeroionei[0]),sv->fgh[1]));}
 
 // Fit conjunction u!.n
 // Preserve IRS1/IRS2 from u in result verb (exception: CEXP)

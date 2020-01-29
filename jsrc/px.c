@@ -22,10 +22,10 @@
 
 A jteval(J jt,C*s){R parse(tokens(cstr(s),1+(AN(jt->locsyms)>1)));}
 
-A jtev1(J jt,    A w,C*s){R df1(  w,eval(s));}
-A jtev2(J jt,A a,A w,C*s){R df2(a,w,eval(s));}
-A jteva(J jt,    A w,C*s){R df1(  w,colon(num[1],   cstr(s)));}
-A jtevc(J jt,A a,A w,C*s){R df2(a,w,colon(num[2],cstr(s)));}
+A jtev1(J jt,    A w,C*s){A z; R df1(z,  w,eval(s));}
+A jtev2(J jt,A a,A w,C*s){A z; R df2(z,a,w,eval(s));}
+A jteva(J jt,    A w,C*s){A z; R df1(z,  w,colon(num[1],   cstr(s)));}
+A jtevc(J jt,A a,A w,C*s){A z; R df2(z,a,w,colon(num[2],cstr(s)));}
 
 // ". y
 F1(jtexec1){A z;
@@ -46,10 +46,10 @@ F1(jtimmex){A z;
  RETF(z);
 }
 
-F1(jtimmea){A t,z;
+F1(jtimmea){A t,z,z1;
  z=immex(w); 
  ASSERT(jt->asgn||!z||!(AT(z)&NOUN)||(t=eq(num[1],z),
-     all1(AT(z)&SPARSE?df1(t,atop(slash(ds(CSTARDOT)),ds(CCOMMA))):t)),EVASSERT);
+     all1(AT(z)&SPARSE?df1(z1,t,atop(slash(ds(CSTARDOT)),ds(CCOMMA))):t)),EVASSERT);
  RETF(z);
 }
 

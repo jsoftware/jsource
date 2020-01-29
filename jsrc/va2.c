@@ -1091,7 +1091,7 @@ DF2(jtfslashatg){A fs,gs,y,z;B b,bb,sb=0;C*av,c,d,*wv;I ak,an,ar,*as,at,m,
  b=ar<=wr; r=b?wr:ar; rs=b?ar:wr; s=b?ws:as; nn=r?s[0]:1;  // b='w has higher rank'; r=higher rank rs=lower rank s->longer shape  nn=#items in longer-shape arg
  ASSERTAGREE(as,ws,MIN(ar,wr));
  {I isfork=CFORK==FAV(self)->id; fs=FAV(self)->fgh[0+isfork]; gs=FAV(self)->fgh[1+isfork];}   // b=0 if @:, 1 if fork; take fs,gs accordingly
- if(SPARSE&(at|wt)||!an||!wn||2>nn){ R df1(df2(a,w,gs),fs);}  // if sparse or empty, or just 1 item, do it the old-fashioned way
+ if(SPARSE&(at|wt)||!an||!wn||2>nn){ R df1(z,df2(y,a,w,gs),fs);}  // if sparse or empty, or just 1 item, do it the old-fashioned way
  rs=MAX(1,rs); PROD(m,rs-1,s+1); PROD(n,r-rs,s+rs); zn=m*n;   // zn=#atoms in _1-cell of longer arg = #atoms in result; m=#atoms in _1-cell of shorter arg  n=#times to repeat shorter arg  (*/ surplus longer shape)
    // if the short-frame arg is an atom, move its rank to 1 so we get the lengths of the _1-cells of the replicated arguments
  y=FAV(fs)->fgh[0]; c=ID(y); d=ID(gs);
@@ -1100,7 +1100,7 @@ DF2(jtfslashatg){A fs,gs,y,z;B b,bb,sb=0;C*av,c,d,*wv;I ak,an,ar,*as,at,m,
   if((((at&wt&(n==1))>(zn&(SZI-1)))||!SY_ALIGN)&&strchr(sumbf,d))R sumatgbool(a,w,d);  // kludge search is slow   relies on B01==1
   if(d==CSTAR){
    if(!ar||!wr){  // if either argument is atomic, apply the distributive property to save multiplies
-    z=!ar?tymes(a,df1(w,fs)):tymes(w,df1(a,fs));
+    A z0; z=!ar?tymes(a,df1(z0,w,fs)):tymes(w,df1(z0,a,fs));
     if(jt->jerr==EVNAN)RESETERR else R z;
    }else if(TYPESEQ(at,wt)&&at&B01+FL+(INT*!SY_64))R jtsumattymes(jt,a,w,b,at,m,n,nn,r,s,zn);  // +/@:*
   }
@@ -1108,7 +1108,7 @@ DF2(jtfslashatg){A fs,gs,y,z;B b,bb,sb=0;C*av,c,d,*wv;I ak,an,ar,*as,at,m,
  adocv=var(gs,at,wt); ASSERT(adocv.f,EVDOMAIN); yt=rtype(adocv.cv ); t=atype(adocv.cv);
  adocvf=var(y,yt,yt); ASSERT(adocvf.f,EVDOMAIN); zt=rtype(adocvf.cv);
  sb=yt&(c==CPLUS);  // +/@:g where g produces Boolean.
- if(!(sb||TYPESEQ(yt,zt)))R df1(df2(a,w,gs),fs);
+ if(!(sb||TYPESEQ(yt,zt)))R df1(z,df2(y,a,w,gs),fs);
  if(t){
   bb=1&&t&XNUM;
   if(TYPESNE(t,at))RZ(a=bb?xcvt((adocv.cv&VXCVTYPEMSK)>>VXCVTYPEX,a):cvt(t,a));
@@ -1133,7 +1133,7 @@ DF2(jtfslashatg){A fs,gs,y,z;B b,bb,sb=0;C*av,c,d,*wv;I ak,an,ar,*as,at,m,
   GA(z1,zt,zn,r-1,1+s); zu=CAV(z1);  // allocate ping-pong output area for f/
   ((AHDR2FN*)adocv.f)(n,m,av,wv,zv,jt);  // create first result-cell of g
   DQ(nn-1, av-=ak; wv-=wk; ((AHDR2FN*)adocv.f)(n,m,av,wv,yv,jt); ((AHDR2FN*)adocvf.f)((I)1,zn,yv,p?zu:zv,p?zv:zu,jt); p^=1;);  // p==1 means result goes to ping buffer zv
-  if(NEVM<jt->jerr){jt->jerr=0; z=df1(df2(a,w,gs),fs);}else z=p?z1:z;  // if overflow, revert to old-fashioned way.  If p points to ping, prev result went to pong, make pong the result
+  if(NEVM<jt->jerr){jt->jerr=0; df1(z,df2(y,a,w,gs),fs);}else z=p?z1:z;  // if overflow, revert to old-fashioned way.  If p points to ping, prev result went to pong, make pong the result
  }
  RE(0); RETF(z);
 }    /* a f/@:g w where f and g are atomic*/

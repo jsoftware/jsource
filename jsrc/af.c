@@ -83,13 +83,13 @@ static A jtfixa(J jt,A a,A w){A f,g,h,wf,x,y,z=w;V*v;I aa[AKXR(0)/SZI+1]={AKXR(0
  if(!(((I)f|(I)g)||((v->id&-2)==CUDOT)))R w;  // combinations always have f or g; and u./v. must be replaced even though it doesn't
  switch(v->id){
   case CSLASH: 
-   R df1(REFIXA(2,f),wf);
+   R df1(z,REFIXA(2,f),wf);
   case CSLDOT: case CBSLASH: case CBSDOT:
-   R df1(REFIXA(1,f),wf);
+   R df1(z,REFIXA(1,f),wf);
   case CAT: case CATCO: case CCUT:
-   f=REFIXA(1,f); g=REFIXA(na,g); R df2(f,g,wf);
+   f=REFIXA(1,f); g=REFIXA(na,g); R df2(z,f,g,wf);
   case CAMP: case CAMPCO: case CUNDER: case CUNDCO:
-   f=REFIXA(na,f); g=REFIXA(1,g); R df2(f,g,wf);
+   f=REFIXA(na,f); g=REFIXA(1,g); R df2(z,f,g,wf);
   case CCOLON:
    // n : n had VFIX set & never gets here
    if(v->flag&VXOPR){
@@ -97,7 +97,7 @@ static A jtfixa(J jt,A a,A w){A f,g,h,wf,x,y,z=w;V*v;I aa[AKXR(0)/SZI+1]={AKXR(0
     if(!f){v=VAV(h); f=v->fgh[0]; g=v->fgh[1]; h=v->fgh[2]; wf=ds(v->id);}
     f=REFIXA(0,f); h=REFIXA(0,h); R xop2(f,h,g);
    }
-   else{f=REFIXA(1,f); g=REFIXA(2,g); R df2(f,g,wf);}  // v : v, similarly
+   else{f=REFIXA(1,f); g=REFIXA(2,g); R df2(z,f,g,wf);}  // v : v, similarly
   case CADVF:
    f=REFIXA(3,f); g=REFIXA(3,g); R hook(f,g);
   case CHOOK:
@@ -108,12 +108,12 @@ static A jtfixa(J jt,A a,A w){A f,g,h,wf,x,y,z=w;V*v;I aa[AKXR(0)/SZI+1]={AKXR(0
   case CGRCO:
    RZ(f=every(every2(sc(aif|na),h,0L,jtfixa),0L,jtaro)); // full A block required for call
    RZ(g=REFIXA(na,g));
-   R df2(f,g,wf);
+   R df2(z,f,g,wf);
   case CIBEAM:
    if(f)RZ(f=REFIXA(na,f));
    if(g)RZ(g=REFIXA(na,g));
-   R f&&g ? (VDDOP&v->flag?df2(f,g,df2(head(h),tail(h),wf)):df2(f,g,wf)) : 
-            (VDDOP&v->flag?df1(f,  df2(head(h),tail(h),wf)):df1(f,  wf)) ;
+   R f&&g ? (VDDOP&v->flag?df2(z,f,g,df2(x,head(h),tail(h),wf)):df2(z,f,g,wf)) : 
+            (VDDOP&v->flag?df1(z,f,  df2(x,head(h),tail(h),wf)):df1(z,f,  wf)) ;
   case CUDOT:
    R REFIXA(ai,jt->implocref[0]);  // u. is equivalent to 'u.'~ for fix purposes
   case CVDOT:
@@ -158,7 +158,7 @@ static A jtfixa(J jt,A a,A w){A f,g,h,wf,x,y,z=w;V*v;I aa[AKXR(0)/SZI+1]={AKXR(0
     RE(z);
     ASSERT(TYPESEQ(AT(w),AT(z))||AT(w)&AT(z)&NOUN,EVDOMAIN);
     R z;
-   }else R df1(REFIXA(2,f),wf);
+   }else R df1(z,REFIXA(2,f),wf);
 // bug ^: and m} should process gerund args
   case COBVERSE:
    if(aif&FIXASTOPATINV)R w;  // stop at obverse if told to
@@ -166,7 +166,7 @@ static A jtfixa(J jt,A a,A w){A f,g,h,wf,x,y,z=w;V*v;I aa[AKXR(0)/SZI+1]={AKXR(0
   default:
    if(f)RZ(f=REFIXA(na,f));
    if(g)RZ(g=REFIXA(na,g));
-   R f&&g?df2(f,g,wf):f?df1(f,wf):w;
+   R f&&g?df2(z,f,g,wf):f?df1(z,f,wf):w;
 }}   /* 0=a if fix names; 1=a if fix names only if does not contain $: */
 
 // On internal calls, self is an integer whose value contains flags.  Otherwise zeroionei is used

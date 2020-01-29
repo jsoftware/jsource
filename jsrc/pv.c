@@ -64,7 +64,7 @@ static F1(jtswapc){C c;
 
 TACT(jtvmonad){A fs;TA y,z={num[1],0};V*v;
  y=stack[e]; fs=stack[b].a;
- if(!y.t)z.a=df1(y.a,fs);
+ if(!y.t)df1(z.a,y.a,fs);
  else{
   v=FAV(y.t);
   if(!(CFORK==v->id&&0<=tvi(v->fgh[2])))z.t=folk(CP,fs,tine(y.t));
@@ -90,7 +90,7 @@ TACT(jtvdyad){A fs,sf,xt,yt;B xl,xr,yl,yr;I xi=-1,yi=-1;TA x,y,z={num[1],0};V*u=
  if(yt=tine(y.t)){yi=tvi(y.t); v=FAV(yt); if(0>yi&&CFORK==v->id){yi=tvi(v->fgh[0]); if(0>yi)yi=tvi(v->fgh[2]);}}
  if(fs==ds(CLEFT)){if(xt)z.t=xt; else z.a=x.a; R z;}
  if(0>xi&&0>yi)switch((xt?2:0)+(yt?1:0)){
-  case 0: z.a=df2(x.a,y.a,fs); break;
+  case 0: df2(z.a,x.a,y.a,fs); break;
   case 1: z.t=folk(x.a,fs,yt); break;
   case 2: z.t=folk(y.a,sf,xt); break;
   case 3:
@@ -142,9 +142,9 @@ TACT(jtvdyad){A fs,sf,xt,yt;B xl,xr,yl,yr;I xi=-1,yi=-1;TA x,y,z={num[1],0};V*u=
  R z;
 }
 
-TACT(jtvadv ){TA z={0,0}; if(CHK1)z.a=df1(stack[b].a,stack[e].a); R z;}
+TACT(jtvadv ){TA z={0,0}; if(CHK1)df1(z.a,stack[b].a,stack[e].a); R z;}
 
-TACT(jtvconj){TA z={0,0}; if(CHK2)z.a=df2(stack[b].a,stack[e].a,stack[e-1].a); R z;}
+TACT(jtvconj){TA z={0,0}; if(CHK2)df2(z.a,stack[b].a,stack[e].a,stack[e-1].a); R z;}
 
 TACT(jtvfolk){TA z={0,0}; if(CHK3)z.a=folk(stack[b].a,stack[1+b].a,stack[e].a); R z;}
 

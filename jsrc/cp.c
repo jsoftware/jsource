@@ -12,7 +12,7 @@ static DF1(jtpowseqlim){PROLOG(0039);A x,y,z,*zv;I i,n;
  i=1; n=AN(z);
  while(1){
   if(n==i){RZ(z=ext(0,z)); zv=i+AAV(z); n=AN(z);}
-  RZ(*zv++=x=df1(y=x,self));
+  A z0; RZ(*zv++=x=df1(z0,y=x,self));
   if(equ(x,y)){AN(z)=*AS(z)=i; break;}
   ++i;
  }
@@ -66,7 +66,7 @@ static DF1(jtpowseq){A fs,gs,x;I n=IMAX;V*sv;
  x=*AAV(gs); if(!AR(x))RE(n=i0(vib(x)));
  if(0>n){RZ(fs=inv(fs)); n=-n;}
  if(n==IMAX||1==AR(x)&&!AN(x))R powseqlim(w,fs);
- R df1(w,powop(fs,IX(n),0));
+ R df1(gs,w,powop(fs,IX(n),0));
 }    /* f^:(<n) w */
 
 // u^:n w where n is nonnegative integer atom (but never 0 or 1, which are handled as special cases)
@@ -165,13 +165,13 @@ static DF1(jtply1s){DECLFG;A hs,j,y,y1,z;C*v,*zv;I c,e,i,*jv,k,m,n,*nv,r,*s,t,zn
 
 static DF1(jtinv1){F1PREFIP;DECLFG;A z; RZ(w);A i; RZ(i=inv((fs))); FDEPINC(1);  z=(FAV(i)->valencefns[0])(FAV(i)->flag&VJTFLGOK1?jtinplace:jt,w,i);       FDEPDEC(1); RETF(z);}  // was invrecur(fix(fs))
 static DF1(jtinvh1){F1PREFIP;DECLFGH;A z; RZ(w);    FDEPINC(1); z=(FAV(hs)->valencefns[0])(jtinplace,w,hs);        FDEPDEC(1); RETF(z);}
-static DF2(jtinv2){DECLFG;A z; RZ(a&&w); FDEPINC(1); z=df1(w,inv(amp(a,fs))); FDEPDEC(1); STACKCHKOFL RETF(z);}  // the CHKOFL is to avoid tail recursion, which prevents a recursion loop from being broken
+static DF2(jtinv2){DECLFG;A z; RZ(a&&w); FDEPINC(1); df1(z,w,inv(amp(a,fs))); FDEPDEC(1); STACKCHKOFL RETF(z);}  // the CHKOFL is to avoid tail recursion, which prevents a recursion loop from being broken
 static DF1(jtinverr){F1PREFIP;ASSERT(0,EVDOMAIN);}  // used for uninvertible monads
 
-static CS2(jtply2,  df1(w,powop(amp(a,fs),gs,0)),0107)  // dyad adds x to make x&u, and then reinterpret the compound.  We could interpret u differently now that it has been changed (x {~^:a: y)
+static CS2(jtply2,  df1(z,w,powop(amp(a,fs),gs,0)),0107)  // dyad adds x to make x&u, and then reinterpret the compound.  We could interpret u differently now that it has been changed (x {~^:a: y)
 
-static DF1(jtpowg1){A h=FAV(self)->fgh[2]; R df1(  w,*AAV(h));}
-static DF2(jtpowg2){A h=FAV(self)->fgh[2]; R df2(a,w,*AAV(h));}
+static DF1(jtpowg1){A z,h=FAV(self)->fgh[2]; R df1(z,  w,*AAV(h));}
+static DF2(jtpowg2){A z,h=FAV(self)->fgh[2]; R df2(z,a,w,*AAV(h));}
 
 // When u^:v is encountered, we replace it with a verb that comes to one of these.
 // This creates a verb, jtpowxx, which calls jtdf1 within a PROLOG/EPILOG pair, after creating several names:

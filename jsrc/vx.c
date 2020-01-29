@@ -8,14 +8,14 @@
 
 
 X jtxev1(J jt,A w,C*s){A y; 
- RZ(y=df1(cvt(XNUM,w),eval(s)));
+ RZ(df1(y,cvt(XNUM,w),eval(s)));
  ASSERTSYS(!AR(y),"xev1");
  if(!(XNUM&AT(y)))RZ(y=cvt(XNUM,y)); 
  R*XAV(y);
 }
 
 X jtxev2(J jt,A a,A w,C*s){A y; 
- RZ(y=df2(cvt(XNUM,a),cvt(XNUM,w),eval(s))); 
+ RZ(df2(y,cvt(XNUM,a),cvt(XNUM,w),eval(s))); 
  ASSERTSYS(!AR(y),"xev2");
  if(!(XNUM&AT(y)))RZ(y=cvt(XNUM,y)); 
  R*XAV(y);

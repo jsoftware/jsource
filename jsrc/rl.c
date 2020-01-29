@@ -157,10 +157,10 @@ A jtdecorate(J jt,A w,I t){
 }
 
 
-static F1(jtlnum1){A z;I t;
+static F1(jtlnum1){A z,z0;I t;
  RZ(w);
  t=AT(w);
- RZ(z=t&FL+CMPX?df1(w,fit(ds(CTHORN),sc((I)18))):thorn1(w));
+ RZ(z=t&FL+CMPX?df1(z0,w,fit(ds(CTHORN),sc((I)18))):thorn1(w));
  R decorate(z,t);
 }    /* dense non-empty numeric vector */
 

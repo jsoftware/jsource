@@ -31,7 +31,7 @@ static F1(jtinvfork){A f,fi,g,gi,h,k;B b,c;V*v;
  if(CCAP==ID(f))R fong(invrecur(h),invrecur(g));
  c=1&&NOUN&AT(f); b=c||consf(f);
  ASSERT(b!=consf(h),EVDOMAIN);
- RZ(k=c?f:df1(num[0],b?f:h));
+ RZ(k=c?f:df1(gi,num[0],b?f:h));
  RZ(gi=invrecur(b?amp(k,g):amp(g,k)));
  RZ(fi=invrecur(b?h:f));
  if(CAMP==ID(gi)){
@@ -91,7 +91,7 @@ static F1(jtbminv){A*wv,x,z=w;I i,j,m,r,*s,t=0,*u,**v,*y,wn,wr,*ws;
    if(2>AR(x)){DO(wr, hv[i]=*(v[i]+u[i]);); RZ(zv[i]=diag(x,reshape(h,f)));}
    j=wr-1; while(1){--j; ++u[j]; if(ws[j]>u[j])break; u[j]=0;}
  }}
- DO(wr, RZ(z=df1(z,slash(under(qq(ds(CCOMMA),sc(wr-i)),ds(COPE))))););
+ DO(wr, A t=z; RZ(df1(z,t,slash(under(qq(ds(CCOMMA),sc(wr-i)),ds(COPE))))););
  RETF(ope(z));
 }    /* <;.1 or <;.2 inverse on matrix argument */
 
@@ -355,7 +355,7 @@ F1(jtiden){A f,g,x=0;V*u,*v;
                 x=num[1]; break;
   case CMAX:    x=scf(infm); break;
   case CMIN:    x=ainf; break;
-  case CUNDER:  x=df1(df1(mtv,iden(f)),inv(g)); break;
+  case CUNDER:  ; A t; df1(x,df1(t,mtv,iden(f)),inv(g)); break;
   case CAT:
    if(CAMP==ID(f)&&(u=FAV(f),NOUN&AT(u->fgh[0])&&!AR(u->fgh[0])&&CSTILE==ID(u->fgh[1])))switch(ID(g)){
     case CSTAR: case CEXP: x=num[1];  break;

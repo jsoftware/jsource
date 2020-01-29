@@ -447,7 +447,7 @@ F2(jtintdiv){A z;B b,flr;I an,ar,*as,*av,c,d,j,k,m,n,p,p1,r,*s,wn,wr,*ws,*wv,*zv
 }    /* <.@% or >.@% on integers */
 
 
-static F2(jtweight){RZ(a&&w); R df1(behead(over(AR(w)?w:reshape(a,w),num[1])),bsdot(slash(ds(CSTAR))));}  // */\. }. (({:$a)$w),1
+static F2(jtweight){RZ(a&&w); A z; R df1(z,behead(over(AR(w)?w:reshape(a,w),num[1])),bsdot(slash(ds(CSTAR))));}  // */\. }. (({:$a)$w),1
 
 F1(jtbase1){A z;B*v;I c,m,n,p,r,*s,t,*x;
  RZ(w);
@@ -482,7 +482,7 @@ F1(jtabase1){A d,z;B*zv;I c,n,p,r,t,*v;UI x;
  if((-n&SGNIFNOT(t,B01X))>=0)R reshape(over(shape(w),num[n!=0]),w);
  if(!(t&INT)){
   // Not integer.  Calculate # digits-1 as d = 2 <.@^. >./ | , w  
-  d=df2(num[2],maximum(zeroionei[1],aslash(CMAX,mag(ravel(w)))),atop(ds(CFLOOR),ds(CLOG)));
+  df2(d,num[2],maximum(zeroionei[1],aslash(CMAX,mag(ravel(w)))),atop(ds(CFLOOR),ds(CLOG)));
   // Calculate z = ((1+d)$2) #: w
   RZ(z=abase2(reshape(increm(d),num[2]),w));
   // If not float, result is exact or complex; either way, keep it

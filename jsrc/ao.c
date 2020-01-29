@@ -7,7 +7,7 @@
 // TODO: remove idiv from keymean
 
 // This is the derived verb for f/. y
-static DF1(jtoblique){A x,y;I m,n,r;D rkblk[16];
+static DF1(jtoblique){A x,y,z;I m,n,r;D rkblk[16];
  RZ(w);
  r=AR(w);  // r = rank of w
  // create y= ,/ w - the _2-cells of w arranged in a list (virtual block)
@@ -16,12 +16,12 @@ static DF1(jtoblique){A x,y;I m,n,r;D rkblk[16];
  A xm; RZ(xm=IX(m)); A xn; RZ(xn=IX(n));
  RZ(x=ATOMIC2(jt,xm,xn,rkblk,0L,1L,CPLUS)); AR(x)=1; *AS(x)=AN(x);
  // perform x f/. y, which does the requested operation, collecting the identical keys
- RZ(x=df2(x,y,sldot(VAV(self)->fgh[0])));
+ RZ(df2(z,x,y,sldot(VAV(self)->fgh[0])));
  // Final tweak: the result should have (0 >. <: +/ 2 {. $y) cells.  It will, as long as
  // m and n are both non0: when one is 0, result has 0 cells (but that cell is the correct result
  // of execution on a fill-cell).  Correct the length of the 0 case, when the result length should be nonzero
 // if((m==0 || n==0) && (m+n>0)){R reitem(sc(m+n-1),x);}  This change withdrawn pending further deliberation
- RETF(x);
+ RETF(z);
 }
 
 
@@ -112,7 +112,7 @@ DF2(jtpolymult){A f,g,y,z;B b=0;C*av,c,d,*wv;I at,i,j,k,m,m1,n,p,t,wt,zn;V*v;
  v=FAV(self);  // f//. 
  f=v->fgh[0]; y=FAV(f)->fgh[0]; y=VAV(y)->fgh[0]; c=vaid(y);  // f/, then f
  g=v->fgh[1]; y=VAV(g)->fgh[0];              d=vaid(y);   // g taken from g/
- if(!(m&&1==AR(a)&&n&&1==AR(w)))R obqfslash(df2(a,w,g),f);  // if empty, or not lists, do general code.  Never happens.
+ if(!(m&&1==AR(a)&&n&&1==AR(w)))R obqfslash(df2(z,a,w,g),f);  // if empty, or not lists, do general code.  Never happens.
  // from here on polymult on nonempty lists
  if(t&FL+CMPX)NAN0;
  switch(PMCASE(CTTZ(t),c,d)){
@@ -152,7 +152,7 @@ DF2(jtpolymult){A f,g,y,z;B b=0;C*av,c,d,*wv;I at,i,j,k,m,m1,n,p,t,wt,zn;V*v;
   break;}
  }
  if(t&FL+CMPX)NAN1; RE(0);
- if(!b)R obqfslash(df2(a,w,g),f);
+ if(!b)R obqfslash(df2(z,a,w,g),f);
  RETF(z);
 }    /* f//.@(g/) for atomic f, g */
 
@@ -172,7 +172,7 @@ static DF2(jtkeysp){PROLOG(0008);A b,by,e,q,x,y,z;I j,k,n,*u,*v;P*p;
  RZ(x=key(repeat(b,x),from(ravel(by),w),self));
  GASPARSE(q,SB01,1,1,(I*)0); *AS(q)=n;  /* q=: 0 by}1$.n;0;1 */
  p=PAV(q); SPB(p,a,iv0); SPB(p,e,num[1]); SPB(p,i,by); SPB(p,x,reshape(tally(by),num[0]));
- RZ(z=over(df1(repeat(q,w),VAV(self)->fgh[0]),x));
+ RZ(z=over(df1(b,repeat(q,w),VAV(self)->fgh[0]),x));
  z=j?cdot2(box(IX(1+j)),z):z;
  EPILOG(z);
 }
@@ -357,7 +357,7 @@ static DF2(jtkeymean){PROLOG(0013);A p,q,x,z;D d,*qv,*vv,*zv;I at,*av,c,j,m=0,n,
  at=AT(a); av=AV(a); SETIC(a,n); 
  wt=AT(w); wv=AV(w); wr=AR(w);
  ASSERT(n==SETIC(w,j),EVLENGTH);
- if(!(AN(a)&&AN(w)&&at&DENSE&&wt&B01+INT+FL))R df2(a,w,folk(sldot(slash(ds(CPLUS))),ds(CDIV),sldot(ds(CPOUND))));
+ if(!(AN(a)&&AN(w)&&at&DENSE&&wt&B01+INT+FL))R df2(z,a,w,folk(sldot(slash(ds(CPLUS))),ds(CDIV),sldot(ds(CPOUND))));
  CRT rng = keyrs(a,MAX(2*n,65536)); at=rng.type; r=rng.minrange.min; s=rng.minrange.range; c=aii(w);
  if(wt&FL)NAN0;
  if(s){

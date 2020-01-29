@@ -221,10 +221,10 @@ REDUCEPFX(  mininsX, X, X, XMIN, minXX, minXX  )
 REDUCEPFX(  mininsS, SB,SB,SBMIN, minSS, minSS )
 
 
-static DF1(jtred0){DECLF;A x;I f,r,wr,*s;
+static DF1(jtred0){DECLF;A x,z;I f,r,wr,*s;
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; RESETRANK; s=AS(w);
  if(AT(w)&DENSE){GA(x,AT(w),0L,r,f+s);}else{GASPARSE(x,AT(w),1,r,f+s);}
- R reitem(vec(INT,f,s),lamin1(df1(x,(AT(w)&SBT)?idensb(fs):iden(fs))));
+ R reitem(vec(INT,f,s),lamin1(df1(z,x,(AT(w)&SBT)?idensb(fs):iden(fs))));
 }    /* f/"r w identity case */
 
 // general reduce.  We inplace the results into the next iteration.  This routine cannot inplace its inputs.
@@ -427,7 +427,7 @@ static DF1(jtreducesp){A a,g,z;B b;I f,n,r,*v,wn,wr,*ws,wt,zt;P*wp;
  VA2 adocv = vains(g,wt);
  if(2==n&&!(adocv.f&&strchr(fca,id))){
   A x; IRS2(num[0],w,0L,0,r,jtfrom,x); A y; IRS2(num[1],w,0L,0,r,jtfrom,y);
-  R df2(x,y,g);  // rank has been reset for this call
+  R df2(z,x,y,g);  // rank has been reset for this call
  }
  // original rank still set
  if(!adocv.f)R redg(w,self);
@@ -652,7 +652,7 @@ static DF1(jtredcateach){A*u,*v,*wv,x,*xv,z,*zv;I f,m,mn,n,r,wr,*ws,zm,zn;I n1=0
  wr=AR(w); ws=AS(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; RESETRANK;
  n=r?ws[f]:1;
  if(!r||1>=n)R reshape(repeat(ne(sc(f),IX(wr)),shape(w)),n?w:ace);
- if(!(BOX&AT(w)))R df1(cant2(sc(f),w),qq(ds(CBOX),zeroionei[1]));
+ if(!(BOX&AT(w)))R df1(z,cant2(sc(f),w),qq(ds(CBOX),zeroionei[1]));
 // bug: ,&.>/ y does scalar replication wrong
 // wv=AN(w)+AAV(w); DQ(AN(w), if(AN(*--wv)&&AR(*wv)&&n1&&n2) ASSERT(0,EVNONCE); if((!AR(*wv))&&n1)n2=1; if(AN(*wv)&&1<AR(*wv))n1=1;);
  zn=AN(w)/n; PROD(zm,f,ws); PROD(m,r-1,ws+f+1); mn=m*n;
@@ -663,7 +663,7 @@ static DF1(jtredcateach){A*u,*v,*wv,x,*xv,z,*zv;I f,m,mn,n,r,wr,*ws,zm,zn;I n1=0
  RETF(z);
 }    /* ,&.>/"r w */
 
-static DF2(jtoprod){R df2(a,w,FAV(self)->fgh[2]);}  // x u/ y - transfer to the u"lr,_ verb (precalculated)
+static DF2(jtoprod){A z; R df2(z,a,w,FAV(self)->fgh[2]);}  // x u/ y - transfer to the u"lr,_ verb (precalculated)
 
 
 F1(jtslash){A h;AF f1;C c;V*v;I flag=0;
@@ -681,9 +681,9 @@ F1(jtslash){A h;AF f1;C c;V*v;I flag=0;
  R fdef(0,CSLASH,VERB, f1,jtoprod, w,0L,h, flag|FAV(ds(CSLASH))->flag, RMAX,RMAX,RMAX);
 }
 
-A jtaslash (J jt,C c,    A w){RZ(   w); R df1(  w,   slash(ds(c))     );}
-A jtaslash1(J jt,C c,    A w){RZ(   w); R df1(  w,qq(slash(ds(c)),zeroionei[1]));}
-A jtatab   (J jt,C c,A a,A w){RZ(a&&w); R df2(a,w,   slash(ds(c))     );}
+A jtaslash (J jt,C c,    A w){RZ(   w); A z; R df1(z,  w,   slash(ds(c))     );}
+A jtaslash1(J jt,C c,    A w){RZ(   w); A z; R df1(z,  w,qq(slash(ds(c)),zeroionei[1]));}
+A jtatab   (J jt,C c,A a,A w){RZ(a&&w); A z; R df2(z,a,w,   slash(ds(c))     );}
 
 DF1(jtmean){
  RZ(w);

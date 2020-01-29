@@ -285,7 +285,7 @@ static F2(jtpoly2a){A c,e,x;I m;D rkblk[16];
  RZ(IRS1(a,0L,1L,jthead,c  ) ); 
  RZ(e=cant1(IRS1(a,0L,1L,jtbehead,e)));
  RZ(x=mnomx(m,w));
- if(1==m){A er; RZ(er=ravel(e)); R pdt(ATOMIC2(jt,x,er,rkblk,0L,2L,CEXP),c);}else{R pdt(df2(x,e,dot(slash(ds(CSTAR)),ds(CEXP))),c);}  // scaf need agreement check?
+ if(1==m){A er; RZ(er=ravel(e)); R pdt(ATOMIC2(jt,x,er,rkblk,0L,2L,CEXP),c);}else{A z; R pdt(df2(z,x,e,dot(slash(ds(CSTAR)),ds(CEXP))),c);}  // scaf need agreement check?
 }    /* multinomial: (<c,.e0,.e1,.e2) p. <x0,x1,x2, left argument opened */
 
 // x p. y    Supports IRS on the y argument; supports inplace
@@ -333,7 +333,7 @@ F2(jtpoly2){F2PREFIP;A c,za;I b;D*ad,d,p,*x,u,*z;I an,at,j,t,n,wt;Z*az,e,q,*wz,y
  }
  switch(b){
  // coeffs: d/e are not set
- case 0: R df2(w,a,eval("(^/i.@#) +/ .* ]"));  // XNUM/RAT/SPARSE
+ case 0: R df2(za,w,a,eval("(^/i.@#) +/ .* ]"));  // XNUM/RAT/SPARSE
  case 1: NAN0;  // FL
 #if C_AVX&&SY_64
 // loop for atomic parallel ops.  // fixed: n is #atoms, x->input, z->result, u=input atom4 and result
@@ -399,7 +399,7 @@ F2(jtpoly2){F2PREFIP;A c,za;I b;D*ad,d,p,*x,u,*z;I an,at,j,t,n,wt;Z*az,e,q,*wz,y
   NAN1; break;  // Horner's rule.  First multiply is never 0*_
  case 2: NAN0; DQ(n, q=zeroZ; y=*wz++; j=an; DQ(an,q=zplus(az[--j],ztymes(y,q));); *zz++=q;); NAN1; break;  // CMPX
  // mult/roots: d/e are set
- case 3: R tymes(c,df2(negate(a),w,eval("*/@(+/)")));
+ case 3: R tymes(c,df2(za,negate(a),w,eval("*/@(+/)")));
  case 4: NAN0; DO(n, p=d; u=*x++; DO(an,p*=u-ad[i];); *z++=p;); NAN1;                  break;
  case 5: NAN0; DO(n, q=e; y=*wz++; DO(an,q=ztymes(q,zminus(y,az[i]));); *zz++=q;); NAN1; break;
  }

@@ -221,7 +221,7 @@ DF1(jtwd){A z=0;C*p=0;D*pd;I e,*pi,t;V*sv;
   if(SMOPTPOLL&jt->smoption) RZ(z=(A)((polltype)(jt->smpoll))(jt, (int)t, (int)e));
   if(SMOPTNOJGA&jt->smoption) z=ca(z);
   if(e==-2){      // e==-2 is lit pairs
-    RZ(z=df1(z,cut(ds(CBOX),num[-2])));
+    A x=z; RZ(df1(z,x,cut(ds(CBOX),num[-2])));
     RETF(reshape(v2(AN(z)>>1,2L),z));
   } else {RETF(z);}
 }

@@ -12,9 +12,9 @@
 
 
 
-static DF1(jtcut01){DECLF;A h,x;
+static DF1(jtcut01){DECLF;A h,x,z;
  RZ(x=from(box(every(negate(shape(w)),0L,jtiota)),w));
- if(VGERL&sv->flag){h=sv->fgh[2]; R df1(x,*AAV(h));}else R CALL1(f1,x,fs);
+ if(VGERL&sv->flag){h=sv->fgh[2]; R df1(z,x,*AAV(h));}else R CALL1(f1,x,fs);
 }    /* f;.0 w */
 
 static DF2(jtcut02){F2PREFIP;A fs,q,qq,*qv,z,zz=0;I*as,c,e,i,ii,j,k,m,n,*u,*ws;PROLOG(876);
@@ -230,9 +230,9 @@ static DF2(jtcut2bx){A*av,b,t,x,*xv,y,*yv;B*bv;I an,bn,i,j,m,p,q,*u,*v,*ws;
    }                                                                         \
    /* note: fall through */                                                  \
   default:                                                                   \
-   if(!m){y=reitem(zeroionei[0],w); R iota(over(zeroionei[0],shape(h?df1(y,*hv):CALL1(f1,y,fs))));}                            \
+   if(!m){y=reitem(zeroionei[0],w); R iota(over(zeroionei[0],shape(h?df1(z,y,*hv):CALL1(f1,y,fs))));}                            \
    GATV0(z,BOX,m,1); za=AAV(z); j=0;                                          \
-   if(h){EACHC(GA(y,t,d*c,r,s); AS(y)[0]=d; MC(AV(y),v1,d*k); A Zz; RZ (Zz = df1(y,hv[j])); j=(1+j)%hn; rifv(Zz); *za++=Zz;); \
+   if(h){EACHC(GA(y,t,d*c,r,s); AS(y)[0]=d; MC(AV(y),v1,d*k); A Zz; RZ (df1(Zz,y,hv[j])); j=(1+j)%hn; rifv(Zz); *za++=Zz;); \
    }else{EACHC(GA(y,t,d*c,r,s); AS(y)[0]=d; MC(AV(y),v1,d*k); A Zz; RZ(Zz = CALL1(f1,y,fs)); rifv(Zz); *za++=Zz; ); \
    }                                                                         \
    z=ope(z);                                                                 \
@@ -295,7 +295,7 @@ static DF2(jtcut2sx){PROLOG(0024);DECLF;A h=0,*hv,y,yy;B b,neg,pfx,*u,*v;C id;I 
   if(pfx)for(i=m;i>=1;--i)*zi++=(yu[i-1]-yu[i  ])-neg;
   else   for(i=1;i<=m;++i)*zi++=(yu[i  ]-yu[i-1])-neg;
   EPILOG(z);
- }else{A a,ww,x,y,z,*za,zz;I c,i,j,q,qn,r;P*wp,*wwp;
+ }else{A a,ww,x,y,z,*za,zz,z0;I c,i,j,q,qn,r;P*wp,*wwp;
   wp=PAV(w); a=SPA(wp,a); x=SPA(wp,x); y=SPA(wp,i); yv=AV(y); r=*AS(y); c=*(1+AS(y));
   RZ(ww=cps(w)); wwp=PAV(ww);
   GATV0(z,BOX,m,1); za=AAV(z);
@@ -308,7 +308,7 @@ static DF2(jtcut2sx){PROLOG(0024);DECLF;A h=0,*hv,y,yy;B b,neg,pfx,*u,*v;C id;I 
      *AS(ww)=(yu[i]-yu[i-1])-neg; 
      SPB(wwp,i,sely(y,qn,p,1+yu[i-1]));
      SPB(wwp,x,selx(x,qn,p));
-     RZ(*za++=zz=h?df1(ww,hv[(i-1)%hn]):CALL1(f1,ww,fs));
+     RZ(*za++=zz=h?df1(z0,ww,hv[(i-1)%hn]):CALL1(f1,ww,fs));
      // reallocate ww if it was used, which we detect by seeing the usecount incremented.  This requires that everything that
      // touches a buffer either copy it or rat().  So that ] doesn't have to rat(), we also detect reuse here if the same buffer
      // is returned to us
@@ -323,7 +323,7 @@ static DF2(jtcut2sx){PROLOG(0024);DECLF;A h=0,*hv,y,yy;B b,neg,pfx,*u,*v;C id;I 
      *AS(ww)=(yu[i-1]-yu[i])-neg; 
      SPB(wwp,i,sely(y,qn,p+q-qn,yu[i]+neg));
      SPB(wwp,x,selx(x,qn,p+q-qn));
-     RZ(*za++=zz=h?df1(ww,hv[(m-i)%hn]):CALL1(f1,ww,fs));
+     RZ(*za++=zz=h?df1(z0,ww,hv[(m-i)%hn]):CALL1(f1,ww,fs));
      p+=q; if(WASINCORP1(zz,ww)){RZ(ww=cps(w)); wwp=PAV(ww);}
     }
     break;
@@ -331,7 +331,7 @@ static DF2(jtcut2sx){PROLOG(0024);DECLF;A h=0,*hv,y,yy;B b,neg,pfx,*u,*v;C id;I 
     for(i=1;i<=m;++i){
      q=yu[i]-yu[i-1]; *AS(ww)=q-neg;
      SPB(wwp,x,irs2(apv(q-neg,p,1L),x,0L,1L,-1L,jtfrom));
-     RZ(*za++=zz=h?df1(ww,hv[(i-1)%hn]):CALL1(f1,ww,fs));
+     RZ(*za++=zz=h?df1(z0,ww,hv[(i-1)%hn]):CALL1(f1,ww,fs));
      p+=q; if(WASINCORP1(zz,ww)){RZ(ww=cps(w)); wwp=PAV(ww);}
     }
     break;
@@ -339,7 +339,7 @@ static DF2(jtcut2sx){PROLOG(0024);DECLF;A h=0,*hv,y,yy;B b,neg,pfx,*u,*v;C id;I 
     for(i=m;i>=1;--i){
      q=yu[i-1]-yu[i]; *AS(ww)=q-neg;
      SPB(wwp,x,irs2(apv(q-neg,p+neg,1L),x,0L,1L,-1L,jtfrom));
-     RZ(*za++=zz=h?df1(ww,hv[(i-1)%hn]):CALL1(f1,ww,fs));
+     RZ(*za++=zz=h?df1(z0,ww,hv[(i-1)%hn]):CALL1(f1,ww,fs));
      p+=q; if(WASINCORP1(zz,ww)){RZ(ww=cps(w)); wwp=PAV(ww);}
     }
     break;
@@ -349,11 +349,11 @@ static DF2(jtcut2sx){PROLOG(0024);DECLF;A h=0,*hv,y,yy;B b,neg,pfx,*u,*v;C id;I 
 }}   /* sparse f;.n (dense or sparse) */
 
 
-static C*jtidenv0(J jt,A a,A w,V*sv,I zt,A*zz){A fs,y;
+static C*jtidenv0(J jt,A a,A w,V*sv,I zt,A*zz){A fs,y,z;
  *zz=0; 
  fs=sv->fgh[0];
- RE(y=df1(num[0],iden(VAV(fs)->fgh[0])));
- if(TYPESLT(zt,AT(y))){*zz=df1(cut2(a,w,cut(ds(CBOX),sv->fgh[1])),amp(fs,ds(COPE))); R 0;}  // fgh still has the original A, OK to use
+ RE(df1(y,num[0],iden(VAV(fs)->fgh[0])));
+ if(TYPESLT(zt,AT(y))){*zz=df1(z,cut2(a,w,cut(ds(CBOX),sv->fgh[1])),amp(fs,ds(COPE))); R 0;}  // fgh still has the original A, OK to use
  if(TYPESGT(zt,AT(y)))RE(y=cvt(zt,y)); 
  R CAV(y);
 }    /* pointer to identity element */
@@ -1019,7 +1019,7 @@ static DF2(jttess2){A z,zz=0,virtw,strip;I n,rs[3],cellatoms,cellbytes,vmv,hmv,v
      RZ(opcell=take((hkeep-hsz)>=0?sc(vkeep):v2(vkeep,hkeep),virtw));
     }
     if(state&STATEREFLECTY)RZ(opcell=reverse(opcell));  // reverse vertical
-    if(state&STATEREFLECTX)RZ(opcell=df1(opcell,qq(ds(CREV),num[-1])));  // reverse horizontal
+    if(state&STATEREFLECTX)RZ(opcell=df1(z,opcell,qq(ds(CREV),num[-1])));  // reverse horizontal
    }
    // execute the verb on the cell and assemble results
    RZ(z=CALL1(f1,opcell,fs)); 

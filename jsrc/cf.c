@@ -198,9 +198,9 @@ A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I
  R fdef(flag2,CFORK,VERB, f1,f2, f,g,h, flag, RMAX,RMAX,RMAX);
 }
 
-static DF1(taa){TDECL;A t=df1(w,fs); ASSERT(!t||AT(t)&NOUN+VERB,EVSYNTAX); R df1(t,gs);}
-static DF1(tvc){TDECL; R df2(fs,w,gs);}  /* also nc */
-static DF1(tcv){TDECL; R df2(w,gs,fs);}  /* also cn */
+static DF1(taa){TDECL; A z,t; df1(t,w,fs); ASSERT(!t||AT(t)&NOUN+VERB,EVSYNTAX); R df1(z,t,gs);}
+static DF1(tvc){TDECL; A z; R df2(z,fs,w,gs);}  /* also nc */
+static DF1(tcv){TDECL; A z; R df2(z,w,gs,fs);}  /* also cn */
 
 CS1IP(static,jthook1, \
 {PUSHZOMB; A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); \

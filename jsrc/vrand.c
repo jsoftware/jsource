@@ -637,10 +637,10 @@ static F2(jtrollksub){A z;I an,*av,k,m1,n,p,q,r,sh;UI m,mk,s,t,*u,x=jt->rngM[jt-
  R z;
 }
 
-DF2(jtrollk){A g;V*sv;
+DF2(jtrollk){A g,z;V*sv;
  RZ(a&&w&&self);
  sv=FAV(self); g=sv->fgh[2]?sv->fgh[2]:sv->fgh[1];
- if(AT(w)&XNUM+RAT||!(!AR(w)&&1>=AR(a)&&(g==ds(CDOLLAR)||1==AN(a))))R roll(df2(a,w,g));
+ if(AT(w)&XNUM+RAT||!(!AR(w)&&1>=AR(a)&&(g==ds(CDOLLAR)||1==AN(a))))R roll(df2(z,a,w,g));
  RETF(rollksub(a,vi(w)));
 }    /* ?@$ or ?@# or [:?$ or [:?# */
 
@@ -852,10 +852,10 @@ static F2(jtrollksubdot){A z;I an,*av,k,m1,n,p,q,r,sh;UI j,m,mk,s,t,*u,x=jt->rng
 
 #undef rollk
 #define rollk(a,w,self) jtrollkdot(jt,(a),(w),(self))
-DF2(jtrollkdot){A g;V*sv;
+DF2(jtrollkdot){A g,z;V*sv;
  RZ(a&&w&&self);
  sv=FAV(self); g=sv->fgh[2]?sv->fgh[2]:sv->fgh[1];
- if(AT(w)&XNUM+RAT||!(!AR(w)&&1>=AR(a)&&(g==ds(CDOLLAR)||1==AN(a))))R roll(df2(a,w,g));
+ if(AT(w)&XNUM+RAT||!(!AR(w)&&1>=AR(a)&&(g==ds(CDOLLAR)||1==AN(a))))R roll(df2(z,a,w,g));
  RETF(rollksub(a,vi(w)));
 }    /* ?@$ or ?@# or [:?$ or [:?# */
 

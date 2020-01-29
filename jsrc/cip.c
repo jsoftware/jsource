@@ -723,7 +723,7 @@ F2(jtpdt){PROLOG(0038);A z;I ar,at,i,m,n,p,p1,t,wr,wt;
  ar=AR(a); at=AN(a)?AT(a):B01;
  wr=AR(w); wt=AN(w)?AT(w):B01;
  if((at|wt)&SPARSE)R pdtsp(a,w);  // Transfer to sparse code if either arg sparse
- if((at|wt)&XNUM+RAT)R df2(a,w,atop(slash(ds(CPLUS)),qq(ds(CSTAR),v2(1L,AR(w)))));  // On indirect numeric, execute as +/@(*"(1,(wr)))
+ if((at|wt)&XNUM+RAT)R df2(z,a,w,atop(slash(ds(CPLUS)),qq(ds(CSTAR),v2(1L,AR(w)))));  // On indirect numeric, execute as +/@(*"(1,(wr)))
  if(B01&(at|wt)&&TYPESNE(at,wt)&&((ar-1)|(wr-1)|(AN(a)-1)|(AN(w)-1))>=0)R pdtby(a,w);   // If exactly one arg is boolean, handle separately
  {t=maxtyped(at,wt); if(!TYPESEQ(t,AT(a))){RZ(a=cvt(t,a));} if(!TYPESEQ(t,AT(w))){RZ(w=cvt(t,w));}}  // convert args to compatible precisions, changing a and w if needed.  B01 if both empty
  ASSERT(t&NUMERIC,EVDOMAIN);
@@ -1034,7 +1034,7 @@ static A jtipbx(J jt,A a,A w,C c,C d){A g=0,x0,x1,z;B*av,*av0,b,*v0,*v1,*zv;C c0
   case CGE:                             c0=IPBXNW; c1=IPBX1;  break;
   case CPLUSCO:                         c0=IPBXNW; c1=IPBX0;  break;
   case CSTARCO:                         c0=IPBX1;  c1=IPBXNW; break;
-  default: c0=c1=-1; g=ds(d); RZ(x0=df2(num[0],w,g)); RZ(x1=df2(num[0],w,g)); break;
+  default: c0=c1=-1; g=ds(d); RZ(df2(x0,num[0],w,g)); RZ(df2(x1,num[0],w,g)); break;
  }
  // Set up x0 to be the argument to use for y if the atom of x is 0: 0, 1, y, -.y
  // Set up x1 to be the arg if xatom is 1
@@ -1078,22 +1078,22 @@ static DF2(jtdotprod){A fs,gs;C c,d;I r;V*sv;
  if((SGNIF(AT(a)&AT(w),B01X)&-AN(a)&-AN(w)&-(d=vaid(gs)))<0&&CSLASH==ID(fs)&&  // fs is c/
      (c=vaid(FAV(fs)->fgh[0]),c==CSTARDOT||c==CPLUSDOT||c==CNE))R ipbx(a,w,c,d);  // [+.*.~:]/ . boolean
  r=lr(gs);   // left rank of v
- R df2(a,w,atop(fs,qq(gs,v2(r==RMAX?r:1+r,RMAX))));  // inner product according to the Dic
+ A z; R df2(z,a,w,atop(fs,qq(gs,v2(r==RMAX?r:1+r,RMAX))));  // inner product according to the Dic
 }
 
 
-static F1(jtminors){A d;
+static F1(jtminors){A d,z;
  RZ(d=apvwr(3L,-1L,1L)); *AV(d)=0;
- R drop(d,df2(num[1],w,bsdot(ds(CLEFT))));  // 0 0 1 }. 1 [\. w 
+ R drop(d,df2(z,num[1],w,bsdot(ds(CLEFT))));  // 0 0 1 }. 1 [\. w 
 }
 
 static DF1(jtdet){DECLFG;A h=sv->fgh[2];I c,r,*s;
  RZ(w);
  r=AR(w); s=AS(w);
- if(h&&1<r&&2==s[r-1]&&s[r-2]==s[r-1])R df1(w,h);
+ A z; if(h&&1<r&&2==s[r-1]&&s[r-2]==s[r-1])R df1(z,w,h);
  F1RANK(2,jtdet,self);
  c=2>r?1:s[1];
- R !c ? df1(mtv,slash(gs)) : 1==c ? CALL1(f1,ravel(w),fs) : h && c==*s ? gaussdet(w) : detxm(w,self); 
+ R !c ? df1(z,mtv,slash(gs)) : 1==c ? CALL1(f1,ravel(w),fs) : h && c==*s ? gaussdet(w) : detxm(w,self); 
 }
 
 DF1(jtdetxm){A z; R dotprod(IRS1(w,0L,1L,jthead,z),det(minors(w),self),self);}

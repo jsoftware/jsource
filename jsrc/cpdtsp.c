@@ -57,7 +57,7 @@ static F2(jtpdtspmv){A ax,b,g,x,wx,y,yi,yj,z;B*bv;I m,n,s[2],*u,*v,*yv;P*ap,*wp,
   DQ(n, if(*bv++){*u++=*yv++; *v++=*yv++;}else yv+=2;);
   RZ(ax=repeat(b,SPA(ap,x))); RZ(wx=from(indexof(SPA(wp,i),yj),SPA(wp,x))); 
  }
- RZ(x=df2(yi,tymes(ax,wx),sldot(slash(ds(CPLUS)))));
+ RZ(df2(x,yi,tymes(ax,wx),sldot(slash(ds(CPLUS)))));
  RZ(y=nub(yi));
  RZ(g=grade1(y));
  GASPARSE(z,STYPE(AT(x)),1,1,AS(a)); zp=PAV(z);
@@ -86,7 +86,7 @@ static F2(jtpdtspvm){A ax,b,g,x,wx,y,yi,yj,z;B*bv;D*av,c,d,*wv,*xv;I m,n,s[2],*u
   RZ(ax=from(indexof(SPA(ap,i),yi),SPA(ap,x))); RZ(wx=repeat(b,SPA(wp,x)));
   RZ(x=tymes(ax,wx));
  }
- RZ(x=df2(yj,x,sldot(slash(ds(CPLUS)))));
+ RZ(df2(y,yj,x,sldot(slash(ds(CPLUS)))));
  RZ(y=nub(yj));
  RZ(g=grade1(y));
  GASPARSE(z,STYPE(AT(x)),1,1,1+AS(w)); zp=PAV(z);
@@ -180,5 +180,5 @@ F2(jtpdtsp){A x;B ab=0,wb=0;P*p;
  if(ab&&2==AR(a)&&    1==AR(w))R pdtspmv(a,w);
  if(    1==AR(a)&&wb&&2==AR(w))R pdtspvm(a,w);
  if(ab&&2==AR(a)&&wb&&2==AR(w))R pdtspmm(a,w);
- R df2(a,w,atop(slash(ds(CPLUS)),qq(ds(CSTAR),v2(1L,AR(w)))));
+ R df2(x,a,w,atop(slash(ds(CPLUS)),qq(ds(CSTAR),v2(1L,AR(w)))));
 }

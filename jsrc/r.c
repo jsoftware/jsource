@@ -116,7 +116,7 @@ DF1(jtfx){A f,fs,g,h,p,q,*wv,y,*yv;C id;I m,n=0;
    ASSERT(1==n&&ADV&AT(fs)||2==n&&CONJ&AT(fs),EVLENGTH);
    if(0<n){RZ(p=fx(yv[0])); ASSERT(AT(p)&NOUN+VERB,EVDOMAIN);}
    if(1<n){RZ(q=fx(yv[1])); ASSERT(AT(q)&NOUN+VERB,EVDOMAIN);}
-   R 1==n ? df1(p,fs) : df2(p,q,fs);
+   R 1==n ? df1(g,p,fs) : df2(g,p,q,fs);
 }}
 
 static A jtunparse1(J jt,CW*c,A x,I j,A y){A q,z;C*s;I t;

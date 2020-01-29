@@ -117,7 +117,7 @@ F1(jtrdot1){R expn1(jdot1(w));}
 F2(jtrdot2){R tymes(a,rdot1(w));}
 
 
-F1(jtpolar){RZ(w); R cvt(SPARSE&AT(w)?SFL:FL,df2(v2(10L,12L),w,qq(ds(CCIRCLE),v2(1L,0L))));}
+F1(jtpolar){RZ(w); A z; R cvt(SPARSE&AT(w)?SFL:FL,df2(z,v2(10L,12L),w,qq(ds(CCIRCLE),v2(1L,0L))));}
 
 F1(jtrect){A e,z;B b;I r,t;P*wp,*zp;Z c;
  RZ(w); 
@@ -134,5 +134,5 @@ F1(jtrect){A e,z;B b;I r,t;P*wp,*zp;Z c;
   SPB(zp,i,ca(SPA(wp,i)));
   SPB(zp,x,rect(SPA(wp,x)));
   R z;
- }else R df2(w,num[0],qq(ds(CCOMMA),zeroionei[0]));
+ }else R df2(z,w,num[0],qq(ds(CCOMMA),zeroionei[0]));
 }

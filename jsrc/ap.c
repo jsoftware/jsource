@@ -258,7 +258,7 @@ static DF1(jtgprefix){A h,*hv,z,*zv;I m,n,r;
  SETIC(w,n); 
  h=VAV(self)->fgh[2]; hv=AAV(h); m=AN(h);
  GATV0(z,BOX,n,1); zv=AAV(z); I imod=0;
- DO(n, imod=(imod==m)?0:imod; RZ(zv[i]=df1(take(sc(1+i),w),hv[imod])); ++imod;);
+ DO(n, imod=(imod==m)?0:imod; RZ(zv[i]=df1(h,take(sc(1+i),w),hv[imod])); ++imod;);
  R ope(z);
 }    /* g\"r w for gerund g */
 
@@ -312,7 +312,7 @@ static DF2(jtinfix){PROLOG(0018);DECLF;A x,z;I m;
   // r = rank of w, rr=rank of list of items of w, s is block for list of length rr; copy shape of r; override #items of infix
   r=AR(w); rr=MAX(1,r); GATV0(s,INT,rr,1); if(r)MCISH(AV(s),AS(w),r); *AV(s)=0>m?0:m==IMAX?1+SETIC(w,r):m;
   // Create fill-cell of shape s; apply u to it
-  RZ(x=df1(reshape(s,filler(w)),fs));
+  RZ(df1(x,reshape(s,filler(w)),fs));
   // Prepend leading axis of 0 to the result
   z=reshape(over(zeroionei[0],shape(x)),x);
  } 
@@ -331,11 +331,11 @@ static DF2(jtginfix){A h,*hv,x,z,*zv;I d,m,n;
  h=VAV(self)->fgh[2]; hv=AAV(h); d=AN(h);
  if(SETIC(x,n)){
   GATV0(z,BOX,n,1); zv=AAV(z);
-  DO(n, RZ(zv[i]=df1(seg(from(sc(i),x),w),hv[i%d])););
+  DO(n, RZ(zv[i]=df1(h,seg(from(sc(i),x),w),hv[i%d])););
   R ope(z);
  }else{A s;
   RZ(s=AR(w)?shape(w):ca(iv0)); *AV(s)=ABS(m);
-  RZ(x=df1(reshape(s,filler(w)),*hv));
+  RZ(df1(x,reshape(s,filler(w)),*hv));
   R reshape(over(zeroionei[0],shape(x)),x);
 }}
 
@@ -797,4 +797,4 @@ F1(jtbslash){AF f1=jtinfixprefix1,f2=jtinfixprefix2;V*v;I flag=FAV(ds(CBSLASH))-
  R ADERIV(CBSLASH,f1,f2,flag,RMAX,0L,RMAX);
 }
 
-A jtascan(J jt,C c,A w){RZ(w); R df1(w,bslash(slash(ds(c))));}
+A jtascan(J jt,C c,A w){RZ(w); A z; R df1(z,w,bslash(slash(ds(c))));}

@@ -13,7 +13,7 @@ BPFX(nandBB, NAND,BNAND,NAND,BNAND, _mm256_xor_pd(bool256,_mm256_and_pd(u256,v25
 BPFX( norBB, NOR ,BNOR, NOR, BNOR, _mm256_xor_pd(bool256,_mm256_or_pd(u256,v256)) , , __m256d bool256=_mm256_castsi256_pd(_mm256_set1_epi64x(0x0101010101010101)); )
 
 
-F1(jtrazein){R df2(w,box(raze(w)),amp(swap(ds(CEPS)),ds(COPE)));}
+F1(jtrazein){A z; R df2(z,w,box(raze(w)),amp(swap(ds(CEPS)),ds(COPE)));}
 
 
 static F2(jtebarmat){A ya,yw,z;B b,*zv;C*au,*av,*u,*v,*v0,*wu,*wv;I*as,c,i,k,m,n,r,s,si,sj,t,*ws;
@@ -111,7 +111,7 @@ F2(jtebar){PROLOG(0065);A y,z;B*zv;C*av,*wv;I c,d,i,k=0,m,n,p,*yv;
  switch(d){
   case -1: R reshape(shape(w),num[0]);
   case -2: R ebarmat(a,w);
-  case -3: R df2(shape(a),w,cut(amp(a,ds(CMATCH)),num[3]));
+  case -3: R df2(z,shape(a),w,cut(amp(a,ds(CMATCH)),num[3]));
   case -4: R ebarvec(a,w);
  }
  GATV0(z,B01,n,AR(w)); zv=BAV(z); memset(zv,C0,n);

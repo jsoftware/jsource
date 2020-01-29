@@ -508,8 +508,8 @@ dobblock:
 }
 
 
-static DF1(xv1){R df1(  w,FAV(self)->fgh[0]);}
-static DF2(xv2){R df2(a,w,FAV(self)->fgh[1]);}
+static DF1(xv1){A z; R df1(z,  w,FAV(self)->fgh[0]);}
+static DF2(xv2){A z; R df2(z,a,w,FAV(self)->fgh[1]);}
 
 static DF1(xn1 ){R xdefn(0L,w, self);}  // Transfer monadic xdef to the common code
 static DF1(xadv){R xdefn(w, 0L,self);}
@@ -588,7 +588,7 @@ static F1(jtlineit){
  R 1<AR(w)?ravel(stitch(w,scc(CLF))):AN(w)&&CLF==cl(w)?w:over(w,scc(CLF));
 }
 
-static B jtsent12c(J jt,A w,A*m,A*d){C*p,*q,*r,*s,*x;
+static B jtsent12c(J jt,A w,A*m,A*d){C*p,*q,*r,*s,*x;A z;
  ASSERT(!AN(w)||LIT&AT(w),EVDOMAIN);
  ASSERT(2>=AR(w),EVRANK);
  RZ(w=lineit(w));
@@ -600,8 +600,9 @@ static B jtsent12c(J jt,A w,A*m,A*d){C*p,*q,*r,*s,*x;
   while(CLF!=*x++);
  }
  if(x==s)q=r=s;
- *m=df1(str(q-p,p),cut(ds(CBOX),num[-2]));
- *d=df1(str(s-r,r),cut(ds(CBOX),num[-2]));
+ A zc=cut(ds(CBOX),num[-2]);
+ *m=df1(z,str(q-p,p),zc);
+ *d=df1(z,str(s-r,r),zc);
  R *m&&*d;
 }    /* literal fret-terminated or matrix sentences into monad/dyad */
 

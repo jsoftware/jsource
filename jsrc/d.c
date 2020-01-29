@@ -147,11 +147,11 @@ F1(jtdbstack){DC d=jt->sitop;
  R mtm;
 }    /* 13!:1  display SI stack */
 
-F1(jtdbstackz){A y; 
+F1(jtdbstackz){A y,z; 
  RE(dbstack(w)); 
  RZ(y=str(jt->etxn,jt->etx)); 
  jt->etxn=0; 
- R df1(y,cut(ds(CLEFT),num[-2]));
+ R df1(z,y,cut(ds(CLEFT),num[-2]));
 }    /* 13!:18  SI stack as result */
 
 

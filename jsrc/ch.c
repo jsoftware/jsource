@@ -66,8 +66,8 @@ static DF1(jthgeom1){R hgeom2(sc(IMAX),w,self);}
 
 static F2(jtcancel){A c,d,f,x,y;
  f=eval("#/.~");
- a=ravel(a); x=nub(a); c=df1(a,f);
- w=ravel(w); y=nub(w); d=df1(w,f);
+ a=ravel(a); x=nub(a); df1(c,a,f);
+ w=ravel(w); y=nub(w); df1(d,w,f);
  a=repeat(maximum(num[0],minus(c,from(indexof(y,x),over(d,zeroionei[0])))),x);
  w=repeat(maximum(num[0],minus(d,from(indexof(x,y),over(c,zeroionei[0])))),y);
  R link(a,w);

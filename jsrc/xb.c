@@ -660,7 +660,7 @@ F2(jtetoiso8601){UC decimalpt,zuluflag;I prec;
 
 // 6!:17 convert a block of iso8601-format strings to nanosecond times.  Result has one INT for each string
 // Bivalent.  left arg is 'd', '0', '3', or '9', like 3d digit of 6!:16, default '9'
-F2(jtiso8601toe){I prec;
+F2(jtiso8601toe){A z;I prec;
  RZ(w);
  ASSERT(SY_64,EVNONCE);
  // If monad, supply defaults; if dyad, audit
@@ -675,6 +675,6 @@ F2(jtiso8601toe){I prec;
  }
  ASSERT(AT(w)&LIT,EVDOMAIN);  // must be LIT
  ASSERT(AR(w),EVRANK);    // must not be an atom
- if(!AN(w))RETF(df1(w,qq(sc(IMIN),zeroionei[1])));   // return _"1 w on empty w - equivalent
+ if(!AN(w))RETF(df1(z,w,qq(sc(IMIN),zeroionei[1])));   // return _"1 w on empty w - equivalent
  RETF(efs(jt,w,prec));
 }

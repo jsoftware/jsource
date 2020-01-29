@@ -141,10 +141,12 @@ F1(jtsympool){A aa,q,x,y,*yv,z,*zv;I i,n,*u,*xv;L*pv;LX j,*v;
  GATV0(y,BOX,n,1); yv=AAV(y); zv[2]=y;
  DO(n, yv[i]=mtv;);
  n=AN(jt->stloc); v=LXAV0(jt->stloc); 
- for(i=0;i<n;++i)if(j=v[i]){    /* per named locales ?? does not chase chain   */  // j is index to named local entry
-  x=(j+jt->sympv)->val;  // x->symbol table for locale
-  RZ(yv[j]=yv[LXAV0(x)[0]]=aa=rifvs(sfn(SFNSIMPLEONLY,LOCNAME(x))));  // install name in the entry for the locale
-  RZ(q=sympoola(x)); u=AV(q); DO(AN(q), yv[u[i]]=aa;);
+ for(i=0;i<n;++i){  // for each chain-base in locales pool
+  for(j=v[i];j;j=(j+jt->sympv)->next){      // j is index to named local entry; process the chain
+   x=(j+jt->sympv)->val;  // x->symbol table for locale
+   RZ(yv[j]=yv[LXAV0(x)[0]]=aa=rifvs(sfn(SFNSIMPLEONLY,LOCNAME(x))));  // install name in the entry for the locale
+   RZ(q=sympoola(x)); u=AV(q); DO(AN(q), yv[u[i]]=aa;);
+  }
  }
  n=jtcountnl(jt);
  for(i=0;i<n;++i)if(x=jtindexnl(jt,i)){   /* per numbered locales */

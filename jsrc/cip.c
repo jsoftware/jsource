@@ -6,9 +6,6 @@
 #include "../../jsource/jsrc/j.h"
 #include "../../jsource/jsrc/vasm.h"
 #include "../../jsource/jsrc/gemm.h"
-#if _OPENMP
-#include <omp.h>
-#endif
 
 #define MAXAROWS 384  // max rows of a that we can process to stay in L2 cache   a strip is m*CACHEHEIGHT, z strip is m*CACHEWIDTH   this is wired to 128*3 - check if you chage
 

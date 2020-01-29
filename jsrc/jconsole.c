@@ -16,6 +16,7 @@
 #endif
 #include <signal.h>
 #include <stdint.h>
+#include <locale.h>
 
 #include "j.h"
 #include "jeload.h"
@@ -210,6 +211,13 @@ J jt;
 
 int main(int argc, char* argv[])
 {
+ setlocale(LC_ALL, "");
+#if !(defined(ANDROID)||defined(_WIN32))
+ locale_t loc;
+ if ((loc = newlocale(LC_NUMERIC_MASK, "C", (locale_t) 0))) uselocale(loc);
+#else
+ setlocale(LC_NUMERIC,"C");
+#endif
 #if defined(USE_THREAD)
  void* callbacks[] ={Joutput,0,Jinput,0,(void*)(SMCON|(SMOPTMTH<<8))}; int type;
 #else
@@ -305,5 +313,8 @@ int main(int argc, char* argv[])
  jefirst(type,input);
  while(1){jedo((char*)Jinput(jt,(forceprmpt||_isatty(_fileno(stdin)))?(C*)"   ":(C*)""));}
  jefree();
+#if !(defined(ANDROID)||defined(_WIN32))
+ if(loc)freelocale(loc);
+#endif
  return 0;
 }

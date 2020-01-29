@@ -3,7 +3,7 @@ NB. 2!:x ----------------------------------------------------------------
 
 errnox =: 2!:8
 
-'file name error' -: 1!:1 etx <'a/b/c/d/e'
+'file name error' -: 1!:1 etx <'a',(1 2 3 4 5{a.),'/b/c/d/e'
 (2;'No such file or directory') -: errnox ''
 
 1:@(1!:0) jpath '~temp'

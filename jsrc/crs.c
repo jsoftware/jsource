@@ -149,6 +149,7 @@ static A jtsprank2_a0(J jt,A a,A w,A fs,AF f2,I af,I acr){PROLOG(0045);A aa,ae,y
 A jtsprank2(J jt,A a,A w,A fs,I lr,I rr,AF f2){PROLOG(0046);A aa,ae,we,ww,y,zi,z,*zv;B*ab,b,*wb;I ac,acr,af,aj,ak,am,an,
      ar,*as,at,*av,d,f,g,*ii,*iv,j,k,m,s,*u,*v,wc,wcr,wf,wj,wk,wm,wn,wr,*ws,wt,*wv;P*ap,*wp;
  RZ(a&&w);
+ STACKCHKOFL
  ar=AR(a); as=AS(a); efr(acr,ar,lr); af=ar-acr; 
  wr=AR(w); ws=AS(w); efr(wcr,wr,rr); wf=wr-wcr; 
  if(!af&&!wf)R CALL2(f2,a,w,fs);

@@ -245,17 +245,26 @@ static C jtjinit3(J jt){S t;
 #if defined(USE_THREAD)
 #ifdef _WIN32
  if ((jt->plock=(I)CreateMutex(NULL,FALSE,NULL)) == 0) {
-  VLOGFD("jt %p mutex init failed rc %u\n",jt,GetLastError());
+  fprintf(stderr,"jt %p mutex init failed rc %u\n",jt,GetLastError());
   return 0;
  }
 #else
  int rc;
+#ifndef NO_MUTEX_RECURSIVE
+ pthread_mutexattr_t Attr;
+ pthread_mutexattr_init(&Attr);
+ pthread_mutexattr_settype(&Attr, PTHREAD_MUTEX_RECURSIVE);
+ if ((rc=pthread_mutex_init(&jt->plock, &Attr)) != 0) {
+#else
  if ((rc=pthread_mutex_init(&jt->plock, NULL)) != 0) {
-  VLOGFD("jt %p mutex init failed rc %d\n",jt,rc);
+#endif
+  fprintf(stderr,"jt %p mutex init failed rc %d\n",jt,rc);
   return 0;
  }
 #endif
+#ifdef NO_MUTEX_RECURSIVE
  jt->ptid=-1;
+#endif
 #endif
 /* required for jdll and doesn't hurt others */
  gjt=jt; // global jt for JPF debug

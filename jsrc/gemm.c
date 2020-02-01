@@ -318,7 +318,7 @@ dgemm_nn         (I              m,
                    _B);
 
 // loop 3
-            I i;
+            I i=0;
 #pragma omp parallel for default(none),private(i),shared(j,l,A,C,mb,nc,kc,alpha,_beta,_mc,_B,rs_a,cs_a,rs_c,cs_c)
             for (i=0; i<mb; ++i) {
                 I mc;
@@ -501,7 +501,7 @@ igemm_nn         (I              m,
                    _B);
 
 // loop 3
-            I i;
+            I i=0;
 #pragma omp parallel for default(none),private(i),shared(j,l,A,C,mb,nc,kc,alpha,_beta,_mc,_B,rs_a,cs_a,rs_c,cs_c)
             for (i=0; i<mb; ++i) {
                 I mc;
@@ -831,7 +831,7 @@ zgemm_nn         (I              m,
                    _B);
 
 // loop 3
-            I i;
+            I i=0;
 #pragma omp parallel for default(none),private(i),shared(j,l,A,C,mb,nc,kc,alpha,_beta,_mc,_B,rs_a,cs_a,rs_c,cs_c)
             for (i=0; i<mb; ++i) {
                 I mc;

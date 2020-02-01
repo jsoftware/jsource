@@ -26,12 +26,18 @@ fi
 
 USE_OPENMP="${USE_OPENMP:=0}"
 if [ $USE_OPENMP -eq 1 ] ; then
+if [ -z "${jplatform##*darwin*}" ]; then
+# assume libomp installed at /usr/local/opt/libomp
+OPENMP=" -Xpreprocessor -fopenmp -I/usr/local/opt/libomp/include "
+LDOPENMP=" -L/usr/local/opt/libomp/lib -Wl,-rpath,/usr/local/opt/libomp/lib -lomp "
+else
 OPENMP=" -fopenmp "
 LDOPENMP=" -fopenmp "
-if [ -z "${$CCcc##*gcc*}" ] || [ -z "${CC##*gcc*}" ]; then
+if [ -z "${CC##*gcc*}" ]; then
 LDOPENMP32=" -l:libgomp.so.1 "    # gcc
 else
 LDOPENMP32=" -l:libomp.so.5 "     # clang
+fi
 fi
 fi
 

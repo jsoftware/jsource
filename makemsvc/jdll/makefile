@@ -1,7 +1,7 @@
-ifeq (1,${AVX2})
+ifeq (1,${JAVX2})
 FAVX2= /DC_AVX=1 /DC_AVX2=1 /arch:AVX2
 else
-ifeq (1,${AVX})
+ifeq (1,${JAVX})
 FAVX= /DC_AVX=1 /arch:AVX
 endif
 endif
@@ -26,7 +26,7 @@ ASMFLAGS= /Cx
 else
 # /Og fail g310r
 # /Oy crash ]^:_"1[0
-CFLAGS= ${FDEBUG} /D_JDLL ${FAVX} ${FAVX2} ${FOPENMP} ${FUSE_THREAD} ${FVERBOSELOG} /WX /W3 /Ot /Oy- /GS /Zc:strictStrings /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT
+CFLAGS= ${FDEBUG} /D_JDLL ${FOPENMP} ${FUSE_THREAD} ${FVERBOSELOG} /WX /W3 /Ot /Oy- /GS /Zc:strictStrings /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT
 FLAGS= ${LDEBUG} /DLL /MACHINE:X86 /SUBSYSTEM:WINDOWS,5.01
 ASMFLAGS= /Cx /coff
 endif

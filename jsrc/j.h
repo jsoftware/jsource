@@ -426,7 +426,7 @@ extern unsigned int __cdecl _clearfp (void);
 #endif
 
 // Tuning options for cip.c
-#if C_AVX2
+#if C_AVX2 && defined(_WIN32)
 #define IGEMM_THRES  (-1)     // when m*n*p less than this use cached; when higher, use BLAS
 #define DGEMM_THRES  (-1)     // when m*n*p less than this use cached; when higher, use BLAS   _1 means 'never'
 #else

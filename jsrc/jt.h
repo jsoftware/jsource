@@ -9,9 +9,6 @@
 
 #if  (SYS & SYS_UNIX)   /*   IVL   */
 #include <sys/stat.h>
-#if defined(USE_THREAD)
-#include <pthread.h>
-#endif
 #endif
 
 /*
@@ -350,17 +347,6 @@ union {
  C    etx[1+NETX];      // display text for last error (+1 for trailing 0)  fits in main page
  LS   callstack[1+NFCALL]; // named fn calls: stack.  Usually only a little is used; the rest overflows onto a new DRAM page
  C    breakfn[NPATH];   /* break file name                                 */
-#if defined(USE_THREAD)
-#ifdef _WIN32
- I plock;
-#else
- pthread_mutex_t plock;
-#endif
-#ifdef NO_MUTEX_RECURSIVE
- I    plocked;   // depth of re-entrance
- I    ptid;      // thread id
-#endif
-#endif
  UC   cstacktype;  /* cstackmin set during 0: jt init  1: passed in JSM  2: set in JDo */
 } JST;
 

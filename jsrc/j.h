@@ -56,20 +56,6 @@
 #define logcat_d(msg) __android_log_write(ANDROID_LOG_DEBUG,(const char*)"libj",msg)
 #endif
 
-#if defined(VERBOSELOG)
-#define VLOGD(msg) {fprintf(stderr,msg);fflush(stderr);}
-#define VLOGFD(...) {fprintf(stderr,__VA_ARGS__);fflush(stderr);}
-#else
-#define VLOGD(msg)
-#define VLOGFD(...)
-#endif
-
-// #define NO_MUTEX_RECURSIVE
-#ifdef _WIN32
-#undef NO_MUTEX_RECURSIVE
-#define NO_MUTEX_RECURSIVE
-#endif
-
 #if defined(TARGET_OS_IPHONE)||defined(TARGET_OS_IOS)||defined(TARGET_OS_TV)||defined(TARGET_OS_WATCH)||defined(TARGET_OS_SIMULATOR)||defined(TARGET_OS_EMBEDDED)||defined(TARGET_IPHONE_SIMULATOR)
 #define TARGET_IOS 1
 #endif

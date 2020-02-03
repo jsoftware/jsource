@@ -22,32 +22,6 @@
 #include "j.h"
 #include "d.h"
 
-#ifdef _WIN32
-static __forceinline char* strerr(char*buf){FormatMessageA( FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),  /* Default language */ buf, (sizeof(buf)/sizeof(char)), 0);return buf;}
-#else
-static __forceinline char* strerr(char*buf){return strerror(errno);}
-#endif
-
-#if defined(USE_THREAD)
-#ifdef _WIN32
-static __forceinline int MTXLOCK(J jt,C*f)   {int rc=0; if(SMOPTMTH&jt->smoption){ if(jt->ptid!=(I)GetCurrentThreadId()){ int rc1; VLOGFD("jt %p thread %u %s mutex before lock\n",jt,GetCurrentThreadId(),f); rc1=WaitForSingleObject((HANDLE)jt->plock,INFINITE); if(WAIT_OBJECT_0==rc1){jt->ptid=(I)GetCurrentThreadId(); jt->plocked=1; } else rc=EVFACE;} else jt->plocked++; VLOGFD("jt %p thread %u %s mutex lock rc %d depth %d\n",jt,(DWORD)jt->ptid,f,rc,(int)jt->plocked); } R rc;}
-static __forceinline int MTXUNLOCK(J jt,C*f) {int rc=0; if(SMOPTMTH&jt->smoption){ if(jt->plocked){ VLOGFD("jt %p thread %u %s mutex unlock depth %d\n",jt,(DWORD)jt->ptid,f,(int)jt->plocked); jt->plocked--; if(!jt->plocked){if(ReleaseMutex((HANDLE)jt->plock)) jt->ptid=-1; else rc=EVFACE; }} else {fprintf(stderr,"system error: %s : file %s line %d\n","MTXUNOCK",__FILE__,__LINE__); jsignal(rc=EVSYSTEM); jtwri(jt,MTYOSYS,"",(I)strlen("MTXUNOCK"),"MTXUNOCK");} } R rc;}
-#else
-#ifndef NO_MUTEX_RECURSIVE
-#define MTXLOCK(jt,f)      ({int rc=0; if(SMOPTMTH&jt->smoption){ VLOGFD("jt %p thread %p %s mutex before lock\n",jt,(void*)pthread_self(),f); rc=pthread_mutex_lock(&jt->plock); VLOGFD("jt %p thread %p %s mutex after lock rc %d\n",jt,(void*)pthread_self(),f,rc);} rc;})
-#define MTXUNLOCK(jt,f)    ({int rc=0; if(SMOPTMTH&jt->smoption){ rc=pthread_mutex_unlock(&jt->plock); VLOGFD("jt %p thread %p %s mutex unlock rc %d\n",jt,(void*)pthread_self(),f,rc); } rc;})
-#else
-#define MTXLOCK(jt,f)      ({int rc=0; if(SMOPTMTH&jt->smoption){ if(!(pthread_equal((pthread_t)jt->ptid,pthread_self()))){ VLOGFD("jt %p thread %p %s mutex before lock\n",jt,(void*)pthread_self(),f); rc=pthread_mutex_lock(&jt->plock); if(!rc){jt->ptid=(I)pthread_self(); jt->plocked=1;}} else jt->plocked++; VLOGFD("jt %p thread %p %s mutex lock rc %d depth %d\n",jt,(void*)jt->ptid,f,rc,(int)jt->plocked);} rc;})
-#define MTXUNLOCK(jt,f)    ({int rc=0; if(SMOPTMTH&jt->smoption){ if(jt->plocked){ VLOGFD("jt %p thread %p %s mutex unlock depth %d\n",jt,(void*)jt->ptid,f,(int)jt->plocked); jt->plocked--; if(!jt->plocked){ rc=pthread_mutex_unlock(&jt->plock); if(!rc)jt->ptid=-1; }} else {fprintf(stderr,"system error: %s : file %s line %d\n","MTXUNOCK",__FILE__,__LINE__); jsignal(rc=EVSYSTEM); jtwri(jt,MTYOSYS,"",(I)strlen("MTXUNOCK"),"MTXUNOCK");} } rc;})
-#endif
-#endif
-#define MTXERROR(f,e) {char buf[100];jsignal(EVFACE);fprintf(stderr,"mutex %s %s\n",f,strerr(buf));R e;}
-#else
-#define MTXLOCK(jt,f)      0
-#define MTXUNLOCK(jt,f)    0
-#define MTXERROR(f,e)      {}
-#endif
-
 extern void dllquit(J);
 
 void jtwri(J jt,I type,C*p,I m,C*s){C buf[1024],*t=jt->outseq,*v=buf;I c,d,e,n;
@@ -257,7 +231,6 @@ static char breaknone=0;
 B jtsesminit(J jt){jt->adbreakr=jt->adbreak=&breakdata; R 1;}
 
 int _stdcall JDo(J jt, C* lp){int r;
- if(MTXLOCK(jt,"JDo")) MTXERROR("JDo",EVFACE);
 #if USECSTACK
  if(jt->cstacktype==2){
   jt->qtstackinit = (uintptr_t)&jt;
@@ -268,7 +241,6 @@ int _stdcall JDo(J jt, C* lp){int r;
  while(jt->nfe){
   A *old=jt->tnextpushp; r=(int)jdo(jt,nfeinput(jt,"input_jfe_'   '")); tpop(old);
  }
- if(MTXUNLOCK(jt,"JDo")) MTXERROR("JDo",EVFACE);
  R r;
 } 
 
@@ -278,24 +250,20 @@ C* _stdcall JGetR(J jt){
 
 /* socket protocol CMDGET name */
 A _stdcall JGetA(J jt, I n, C* name){A x,z;
- if(MTXLOCK(jt,"JGetA")) MTXERROR("JGetA",0);
  jt->jerr=0;
- if(!(x=symbrdlock(nfs(n,name)))){ jsignal(EVILNAME); MTXUNLOCK(jt,"JGetA"); R 0;}
- if(FUNC&AT(x)){ jsignal(EVDOMAIN); MTXUNLOCK(jt,"JGetA"); R 0;}
+ if(!(x=symbrdlock(nfs(n,name)))){ jsignal(EVILNAME); R 0;}
+ if(FUNC&AT(x)){ jsignal(EVDOMAIN); R 0;}
  z=binrep1(x);
- if(MTXUNLOCK(jt,"JGetA")) MTXERROR("JGetA",0);
  R z;
 }
 
 /* socket protocol CMDSET */
 I _stdcall JSetA(J jt,I n,C* name,I dlen,C* d){
- if(MTXLOCK(jt,"JSetA")) MTXERROR("JSetA",EVFACE);
  jt->jerr=0;
- if(!vnm(n,name)){ jsignal(EVILNAME); MTXUNLOCK(jt,"JSetA"); R EVILNAME;}
+ if(!vnm(n,name)){ jsignal(EVILNAME); R EVILNAME;}
  A *old=jt->tnextpushp;
  symbisdel(nfs(n,name),jtunbin(jt,str(dlen,d)),jt->global);
  tpop(old);
- if(MTXUNLOCK(jt,"JSetA")) MTXERROR("JSetA",EVFACE);
  R jt->jerr;
 }
 
@@ -352,9 +320,7 @@ void _stdcall JSMX(J jt, void* out, void* wd, void* in, void* poll, I opts)
 C* _stdcall JGetLocale(J jt){return getlocale(jt);}
 
 A _stdcall Jga(J jt, I t, I n, I r, I*s){A z;
- if(MTXLOCK(jt,"Jga")) MTXERROR("Jga",0);
  z=ga(t, n, r, s);
- if(MTXUNLOCK(jt,"Jga")) MTXERROR("Jga",0);
  return z;
 }
 
@@ -446,18 +412,6 @@ int JFree(J jt){
   jt->jerr=0; jt->etxn=0; /* clear old errors */
   if(jt->xep&&AN(jt->xep)){A *old=jt->tnextpushp; immex(jt->xep); fa(jt->xep); jt->xep=0; jt->jerr=0; jt->etxn=0; tpop(old); }
   dllquit(jt);  // clean up call dll
-#if defined(USE_THREAD)
-#ifdef _WIN32
-  if((jt->ptid!=-1)&&jt->plocked){ ReleaseMutex((HANDLE)jt->plock); VLOGFD("%p %s mutex unlock\n",jt,"JFree"); }
-  if(!CloseHandle((HANDLE)jt->plock)){ VLOGFD("%p mutex destroy failed rc %u\n",jt,GetLastError()); }
-#else
-  int rc;
-#ifdef NO_MUTEX_RECURSIVE
-  if((jt->ptid!=-1)&&jt->plocked){ pthread_mutex_unlock(&jt->plock); VLOGFD("%p %s mutex unlock\n",jt,"JFree"); }
-#endif
-  if((rc=pthread_mutex_destroy(&jt->plock))){ VLOGFD("%p mutex destroy failed rc %d\n",jt,rc); }
-#endif
-#endif
   free(jt->heap);  // free the initial allocation
   R 0;
 }
@@ -510,16 +464,14 @@ int valid(C* psrc, C* psnk)
 int _stdcall JGetM(J jt, C* name, I* jtype, I* jrank, I* jshape, I* jdata)
 {
  A a; char gn[256];
- if(MTXLOCK(jt,"JGetM")) MTXERROR("JGetM",EVFACE);
- if(strlen(name) >= sizeof(gn)){ jsignal(EVILNAME); MTXUNLOCK(jt,"JGetM"); return EVILNAME;}
- if(valid(name, gn)){ jsignal(EVILNAME); MTXUNLOCK(jt,"JGetM"); return EVILNAME;}
- if(!(a=symbrdlock(nfs(strlen(gn),gn)))){ jsignal(EVDOMAIN); MTXUNLOCK(jt,"JGetM"); R EVDOMAIN;}
- if(FUNC&AT(a)){ jsignal(EVDOMAIN); MTXUNLOCK(jt,"JGetM"); R EVDOMAIN;}
+ if(strlen(name) >= sizeof(gn)){ jsignal(EVILNAME); return EVILNAME;}
+ if(valid(name, gn)){ jsignal(EVILNAME); return EVILNAME;}
+ if(!(a=symbrdlock(nfs(strlen(gn),gn)))){ jsignal(EVDOMAIN); R EVDOMAIN;}
+ if(FUNC&AT(a)){ jsignal(EVDOMAIN); R EVDOMAIN;}
  *jtype = AT(a);
  *jrank = AR(a);
  *jshape = (I)AS(a);
  *jdata = (I)AV(a);
- if(MTXUNLOCK(jt,"JGetM")) MTXERROR("JGetM",EVFACE);
  return 0;
 }
 
@@ -577,10 +529,8 @@ int _stdcall JSetM(J jt, C* name, I* jtype, I* jrank, I* jshape, I* jdata)
  int er;
 
  PROLOG(0051);
- if(MTXLOCK(jt,"JSetM")) MTXERROR("JSetM",EVFACE);
  er = setterm(jt, name, jtype, jrank, jshape, jdata);
  tpop(_ttop);
- if(MTXUNLOCK(jt,"JSetM")) MTXERROR("JSetM",EVFACE);
  return er;
 }
 
@@ -598,9 +548,7 @@ C* esub(J jt, I ec)
 
 int _stdcall JErrorTextM(J jt, I ec, I* p)
 {
- if(MTXLOCK(jt,"JErrorTextM")) MTXERROR("JErrorTextM",EVFACE);
  *p = (I)esub(jt, ec);
- if(MTXUNLOCK(jt,"JErrorTextM")) MTXERROR("JErrorTextM",EVFACE);
  return 0;
 }
 

@@ -3,9 +3,9 @@
 /*                                                                         */
 /* Conjunctions: Inner Product                                             */
 
-#include "../../jsource/jsrc/j.h"
-#include "../../jsource/jsrc/vasm.h"
-#include "../../jsource/jsrc/gemm.h"
+#include "j.h"
+#include "vasm.h"
+#include "gemm.h"
 
 #define MAXAROWS 384  // max rows of a that we can process to stay in L2 cache   a strip is m*CACHEHEIGHT, z strip is m*CACHEWIDTH   this is wired to 128*3 - check if you chage
 
@@ -1057,15 +1057,15 @@ static A jtipbx(J jt,A a,A w,C c,C d){A g=0,x0,x1,z;B*av,*av0,b,*v0,*v1,*zv;C c0
  switch(c){
   case CPLUSDOT:
 #define F |=
-#include "../../jsource/jsrc/cip_t.h"
+#include "cip_t.h"
    break;
   case CSTARDOT:
 #define F &=
-#include "../../jsource/jsrc/cip_t.h"
+#include "cip_t.h"
    break;
   case CNE:
 #define F ^=
-#include "../../jsource/jsrc/cip_t.h"
+#include "cip_t.h"
    break;
  }
  R z;

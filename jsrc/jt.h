@@ -356,8 +356,10 @@ union {
 #else
  pthread_mutex_t plock;
 #endif
+#ifdef NO_MUTEX_RECURSIVE
  I    plocked;   // depth of re-entrance
  I    ptid;      // thread id
+#endif
 #endif
  UC   cstacktype;  /* cstackmin set during 0: jt init  1: passed in JSM  2: set in JDo */
 } JST;

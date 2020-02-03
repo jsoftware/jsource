@@ -427,14 +427,23 @@ extern unsigned int __cdecl _clearfp (void);
 
 // Tuning options for cip.c
 #if C_AVX2 && defined(_WIN32)
+// tuned for windows
+#if _OPENMP
+#define IGEMM_THRES  (400*400*400)   // when m*n*p less than this use cached; when higher, use BLAS
+#define DGEMM_THRES  (300*300*300)   // when m*n*p less than this use cached; when higher, use BLAS   _1 means 'never'
+#define ZGEMM_THRES  (400*400*400)   // when m*n*p less than this use cached; when higher, use BLAS  
+#else
 #define IGEMM_THRES  (-1)     // when m*n*p less than this use cached; when higher, use BLAS
 #define DGEMM_THRES  (-1)     // when m*n*p less than this use cached; when higher, use BLAS   _1 means 'never'
+#define ZGEMM_THRES  (-1)     // when m*n*p less than this use cached; when higher, use BLAS   _1 means 'never'
+#endif
 #else
-#define DGEMM_THRES  5000000     // when m*n*p less than this use cached; when higher, use BLAS   _1 means 'never'
-#define IGEMM_THRES  5000000     // when m*n*p less than this use cached; when higher, use BLAS
+// tuned for linux
+#define IGEMM_THRES  (200*200*200)   // when m*n*p less than this use cached; when higher, use BLAS
+#define DGEMM_THRES  (200*200*200)   // when m*n*p less than this use cached; when higher, use BLAS   _1 means 'never'
+#define ZGEMM_THRES  (60*60*60)      // when m*n*p less than this use cached; when higher, use BLAS  
 #endif
 #define DCACHED_THRES  (64*64*64)    // when m*n*p less than this use blocked; when higher, use cached
-#define ZGEMM_THRES  2000000     // when m*n*p less than this use cached; when higher, use BLAS  
 
 
 

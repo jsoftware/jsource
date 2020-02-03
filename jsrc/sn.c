@@ -19,7 +19,7 @@ B jtvnm(J jt,I n,C*s){C c,t;I j;
  if(n<=2)R 1^((t&1)|(cn=='_'));  // 1- or 2-char name, OK if char(s) OK & doesn't end with _
  {C prevcu0; C cu0=cn^'_';  // cu0 = 0 iff cn=='_'
   j=-1;  // Init no indirect locative found
-  DQU(n-2, prevcu0=cu0; t|=ctype[(UC)c=s[i+1]]; cu0=c^'_'; j=(cu0|prevcu0)?j:i;)
+  DQU(n-2, prevcu0=cu0; t|=ctype[(UC)(c=s[i+1])]; cu0=c^'_'; j=(cu0|prevcu0)?j:i;)
  }
  // Now t is the mask of invalidity, and j is the index one before the first __ (-1 if no __)
  if((t&1)+((cn!='_')&SGNTO0(j)))R 1^(t&1);   // Return if accumulated error, or if not trailing '_' and no __ (normal return)

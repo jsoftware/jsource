@@ -50,7 +50,7 @@ A   pst[256]={0};
 A   chr[256]={0};         /* scalar for each character, or 0      */
 UC  hwaes=0;              // hardware aes support
 UC  hwfma=0;              // blis cpu tuning
-C   wtype[256]={0};
+// obsolete C   wtype[256]={0};
 
 // globals end
 

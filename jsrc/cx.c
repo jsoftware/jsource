@@ -268,7 +268,7 @@ DF2(jtxdefn){PROLOG(0048);
   switch(cwtype=ci->type){
   case CIF: case CWHILE: case CELSEIF: 
    i=ci->go;  // Go to the next sentence, whatever it is
-   if((UI)i>=(UI)n||(cwtype=(ci=i+cw)->type)!=CTBLOCK||jt->cxspecials)break;  // avoid indirect-branch overhead on the likely case
+   if((UI)i>=(UI)n||(((cwtype=(ci=i+cw)->type)^CTBLOCK)+jt->cxspecials))break;  // avoid indirect-branch overhead on the likely case
   case CASSERT:
   case CTBLOCK:
 tblockcase:
@@ -280,7 +280,7 @@ tblockcase:
    // Check for assert.  Since this is only for T-blocks we tolerate the test (rather than duplicating code)
    if(ci->type==CASSERT&&jt->assert&&t&&!(NOUN&AT(t)&&all1(eq(num[1],t))))t=pee(line,ci,EVASSERT,gsfctdl<<(BW-2),callframe);  // if assert., signal post-execution error if result not all 1s.  May go into debug; sets to result after debug
    if(t){ti=i,++i;  // if no error, continue on
-    if((UI)i<(UI)n&&(cwtype=(ci=i+cw)->type)==CDO&&!jt->cxspecials)goto docase;  // avoid indirect-branch overhead on the likely case
+    if((UI)i<(UI)n&&!(((cwtype=(ci=i+cw)->type)^CDO)+jt->cxspecials))goto docase;  // avoid indirect-branch overhead on the likely case
    }else if((gsfctdl&16)&&DB1&jt->uflags.us.cx.cx_c.db)ti=i,i=debugnewi(i+1,thisframe,self);  // if coming out of debug with error: go to new line (there had better be one)
    else if(EVTHROW==jt->jerr){if(gsfctdl&4&&(tdv+tdi-1)->t){i=(tdv+tdi-1)->t+1; RESETERR;}else BASSERT(0,EVTHROW);}  // if throw., and there is a catch., do so
    else{i=ci->go; if(i<SMAX){RESETERR; z=mtm; if(gsfctdl&4){if(!--tdi){jt->uflags.us.cx.cx_c.db=(UC)(gsfctdl>>8); gsfctdl^=4;}}}else z=0;}  // if we take error exit, we might not have protected z, which is not needed anyway; so clear it to prevent invalid use
@@ -295,21 +295,24 @@ docase:
    // Quick true cases are: nonexistent t; empty t; direct numeric t with low byte nonzero.  This gets most of the true.  We add in char types cause it's free (they are always true)
    if(t&&AN(t)&&(-(AT(t)&(B01|LIT|INT|FL|CMPX|C2T|C4T))&-((I)CAV(t)[0]))>=0){I nexti=ci->go;  // C cond is false if (type direct) and (value not 0).  J cond is true then
     // here the type is indirect or the low byte is 0.  We must compare more
-    if(AT(t)&B01)i=nexti;  // if boolean, there's no more to compare, it's false
-    else{
-     if(SPARSE&AT(t)){BZ(t=denseit(t)); if(AN(t)==0){t=0; break;}}   // convert sparse to dense - this could make the length go to 0, in which case true
-     // Now go through the types.  INT is by far the likeliest after B01
-     if(AT(t)&INT)i=IAV(t)[0]?i:nexti;
-     else if(AT(t)&FL)i=DAV(t)[0]?i:nexti;
-     else if(AT(t)&CMPX)i=DAV(t)[0]||DAV(t)[1]?i:nexti;
-     else if(AT(t)&(RAT|XNUM))i=1<AN(XAV(t)[0])||IAV(XAV(t)[0])[0]?i:nexti;
-     else if(AT(t)&B01)i=BAV(t)[0]?i:nexti;  // must be sparse
-     else if(!(AT(t)&NOUN)){CHECKNOUN}  // will take error
-     // other types test true, which is how i is set
+    while(1){  // 2 loops if sparse
+     if(AT(t)&B01){i=nexti; break;}  // if boolean, there's no more to compare, it's false
+     else{
+      // Now go through the types.  INT is by far the likeliest after B01
+      if(AT(t)&INT)i=IAV(t)[0]?i:nexti;
+      else if(AT(t)&FL)i=DAV(t)[0]?i:nexti;
+      else if(AT(t)&CMPX)i=DAV(t)[0]||DAV(t)[1]?i:nexti;
+      else if(AT(t)&(RAT|XNUM))i=1<AN(XAV(t)[0])||IAV(XAV(t)[0])[0]?i:nexti;
+      else if(AT(t)&B01)i=BAV(t)[0]?i:nexti;  // must be sparse
+      else if(!(AT(t)&NOUN)){CHECKNOUN}  // will take error
+      // other types test true, which is how i is set
+      if(!(SPARSE&AT(t)))break;
+      BZ(t=denseit(t)); if(AN(t)==0)break;  // convert sparse to dense - this could make the length go to 0, in which case true
+     }
     }
    }
    t=0;  // Indicate no T block, now that we have processed it
-   if((UI)i>=(UI)n||((cwtype=(ci=i+cw)->type)&31)!=CBBLOCK||jt->cxspecials)break;  // avoid indirect-branch overhead on the likely case
+   if((UI)i>=(UI)n||((((cwtype=(ci=i+cw)->type)&31)^CBBLOCK)+jt->cxspecials))break;  // avoid indirect-branch overhead on the likely case
    // fall through if continuing to BBLOCK (normal)
   case CBBLOCK: case CBBLOCKEND:
 dobblock:
@@ -318,7 +321,7 @@ dobblock:
    tpop(old); parseline(z);
    // if there is no error, or ?? debug mode, step to next line
    if(z){bi=i; i+=(cwtype>>5)+1;  // go to next sentence, or to the one after that if it's harmless end. 
-    if((UI)i<(UI)n&&((cwtype=(ci=i+cw)->type)&31)==CBBLOCK&&!jt->cxspecials)goto dobblock;  // avoid indirect-branch overhead on the likely case
+    if((UI)i<(UI)n&&!((((cwtype=(ci=i+cw)->type)&31)^CBBLOCK)+jt->cxspecials))goto dobblock;  // avoid indirect-branch overhead on the likely case
     // BBLOCK is usually followed by another BBLOCK, but another important followon is END followed by BBLOCK.  BBLOCKEND means
     // 'bblock followed by end that falls through', i. e. a bblock whose successor is i+2.  By handling that we process all sequences of if. T do. B end. B... without having to go through the switch;
     // this means the switch will learn to go to the if.
@@ -427,7 +430,7 @@ dobblock:
     BZ(ras(t)); cv->t=t; t=0;  // protect t from free while we are comparing with it, save in stack
    }
    i=ci->go;  // Go to next sentence, which might be in the default case (if T block is empty)
-   if((UI)i<(UI)n&&(cwtype=(ci=i+cw)->type)==CTBLOCK&&!jt->cxspecials)goto tblockcase;  // avoid indirect-branch overhead on the likely case, which is case. t-block do.
+   if((UI)i<(UI)n&&!(((cwtype=(ci=i+cw)->type)^CTBLOCK)+jt->cxspecials))goto tblockcase;  // avoid indirect-branch overhead on the likely case, which is case. t-block do.
    break;  // if it's not a t-block, take the indirect branch
   case CDOSEL:   // do. after case. or fcase.
    // do. for case./fcase. evaluates the condition.  t is the result (a T block); if it is nonexistent
@@ -444,7 +447,7 @@ dobblock:
     // Clear t to ensure that the next case./fcase. does not reuse this value
     t=0;
    }
-   if((UI)i<(UI)n&&((cwtype=(ci=i+cw)->type)&31)==CBBLOCK&&!jt->cxspecials)goto dobblock;  // avoid indirect-branch overhead on the likely  case. ... do. bblock
+   if((UI)i<(UI)n&&!((((cwtype=(ci=i+cw)->type)&31)^CBBLOCK)+jt->cxspecials))goto dobblock;  // avoid indirect-branch overhead on the likely  case. ... do. bblock
    break;
   default:   //   CELSE CWHILST CGOTO CEND
    if(2<=*jt->adbreakr) { BASSERT(0,EVBREAK);} 
@@ -561,7 +564,7 @@ static I jtxop(J jt,A w){I i,k;
      }  // 'name is not empty'
     } // 'is name'
     if(AT(w)&VERB){
-      if(FAV(w)->id==CUDOT||FAV(w)->id==CVDOT)fndflag|=4;
+      if((FAV(w)->id&-2)==CUDOT)fndflag|=4;
     }
     // exit if we have seen enough: mnuv plus x.  No need to wait for y.  If we have seen only y, keep looking for x
     if(fndflag>=4+2)R fndflag;

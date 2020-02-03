@@ -60,7 +60,7 @@ static void jtdspell(J jt,C id,A w){C c,s[5];
   s[0]=' '; s[4]=0;
   spellit(id,1+s);
   c=s[1]; 
-  eputs(s+!(c==CESC1||c==CESC2||jt->nflag&&CA==ctype[(UC)c]));
+  eputs(s+!(c==CESC1||c==CESC2||jt->nflag&&((ctype[(UC)c]&~CA)==0)));
 }}
 
 static F1(jtsfn0){R sfn(0,w);}  // return string form of full name for a NAME block

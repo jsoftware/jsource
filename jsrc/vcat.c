@@ -226,10 +226,11 @@ F2(jtover){A z;C*zv;I replct,framect,acr,af,ar,*as,k,ma,mw,p,q,r,t,wcr,wf,wr,*ws
  q=ws[wr-1];   //  q=len of last axis of cell
  r=MAX(acr,wcr); r=(r==0)?1:r;  // r=cell-rank, or 1 if both atoms.
  // if max cell-rank>2, or an argument is empty, or (joining table/table or table/row with cells of different lengths), do general case
- if((((2-r)|(AN(a)-1)|(AN(w)-1))<0)||2<acr+wcr&&p!=q){  // r>2, or empty.  If max rank <= 2 and sum of ranks >2, neither can be an atom
+// obsolete  if((((2-r)|(AN(a)-1)|(AN(w)-1))<0)||2<acr+wcr&&p!=q){  // r>2, or empty.  If max rank <= 2 and sum of ranks >2, neither can be an atom
+ if(((r-3)&-AN(a)&-AN(w)&((acr+wcr-3)|((p^q)-1)))>=0){  // r>2, or empty (if max rank <= 2 and sum of ranks >2, neither can possibly be an atom), and items (which are lists) have same length 
   RESETRANK; z=rank2ex(a,w,0L,acr,wcr,acr,wcr,jtovg); R z;  // ovg calls other functions, so we clear rank
  }
- // joining rows, or table/row with same lengths, or table/atom.  In any case no fill is possible
+ // joining rows, or table/row with same lengths, or table/atom.  In any case no fill is possible, but scalar repliction might be
  I cc2a=as[ar-2]; p=acr?p:1; cc2a=acr<=1?1:cc2a; ma=cc2a*p; ma=wcr>acr+1?q:ma;  //   cc2a is # 2-cells of a; ma is #atoms in a cell of a EXCEPT when joining atom a to table w: then length of row of w
  I cc2w=ws[wr-2]; q=wcr?q:1; cc2w=wcr<=1?1:cc2w; mw=cc2w*q; mw=acr>wcr+1?p:mw;  // sim for w;
  I f=(wf>=af)?wf:af; I shortf=(wf>=af)?af:wf; I *s=(wf>=af)?ws:as;
@@ -244,10 +245,11 @@ F2(jtover){A z;C*zv;I replct,framect,acr,af,ar,*as,k,ma,mw,p,q,r,t,wcr,wf,wr,*ws
  RETF(z);
 }    /* overall control, and a,w and a,"r w for cell rank <: 2 */
 
-F2(jtstitch){B sp2;I ar,wr; A z;
+F2(jtstitch){/* obsolete B sp2;*/I ar,wr; A z;
  RZ(a&&w);
- ar=AR(a); wr=AR(w); sp2=(SPARSE&(AT(a)|AT(w)))&&2>=ar&&2>=wr;
- ASSERT(!ar||!wr||*AS(a)==*AS(w),EVLENGTH);
+ ar=AR(a); wr=AR(w); // obsolete sp2=(SPARSE&(AT(a)|AT(w)))&&2>=ar&&2>=wr;
+// obsolete  ASSERT(!ar||!wr||*AS(a)==*AS(w),EVLENGTH);  // always OK to fetch s[0]
+ ASSERT((-ar&-wr&-(AS(a)[0]^AS(w)[0]))>=0,EVLENGTH);  // a or w scalar, or same # items    always OK to fetch s[0]
  if((((SPARSE&(AT(a)|AT(w)))-1)&(2-ar)&(2-wr))>=0)R IRS2(a,w,0L,(ar-1)&RMAX,(wr-1)&RMAX,jtover,z);  // not sparse or rank>2
  R stitchsp2(a,w);  // sparse rank <=2 separately
 }

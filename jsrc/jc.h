@@ -3,16 +3,15 @@
 /*                                                                         */
 /* Character Definitions                                                   */
 
-
-#define CX         0            /* other                                   */
-#define CS         1            /* space or tab                            */
-#define CA         2            /* letter                                  */
-#define CN         3            /* N (capital N)                           */
-#define CB         4            /* B (capital B)                           */
-#define C9         5            /* digit or sign (underscore)              */
-#define CD         6            /* dot                                     */
-#define CC         7            /* colon                                   */
-#define CQ         8            /* quote                                   */
+#define CX         9            /* other                                   */
+#define CS         5            /* space or tab                            */
+#define CA         6            /* letter                                  */
+#define CN         4            /* N (capital N)                           */
+#define CB         2            /* B (capital B)                           */
+#define C9         8            /* digit or sign (underscore)              */
+#define CD         1            /* dot                                     */
+#define CC         3            /* colon                                   */
+#define CQ         7            /* quote                                   */
 
 #define CESC1      (C)'.'          /*  46 056 2e     1st escape char          */
 #define CESC2      (C)':'          /*  58 072 3a     2nd escape char          */

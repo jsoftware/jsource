@@ -14,7 +14,8 @@ static F1(jtlnoun);
 static F1(jtlnum);
 static DF1(jtlrr);
 
-#define NUMV(c)  (c==C9||c==CD||c==CA||c==CS)
+// obsolete #define NUMV(c)  (c==C9||c==CD||c==CA||c==CS)
+#define NUMV(c)  (((1LL<<C9)|(1LL<<CD)|(1LL<<CS)|(1LL<<CA)|(1LL<<CN)|(1LL<<CB))&(1LL<<(c)))
 
 
 static B jtlp(J jt,A w){B b=1,p=0;C c,d,q=CQUOTE,*v;I j=0,n;
@@ -261,7 +262,8 @@ static A jtlsymb(J jt,C c,A w){A t;C buf[20],d,*s;I*u;V*v=FAV(w);
 static B laa(A a,A w){C c,d;
  if(!(a&&w))R 0;
  c=ctype[(UC)cl(a)]; d=ctype[(UC)cf(w)];
- R (c==C9||c==CA)&&(d==C9||d==CA);
+// obsolete R (c==C9||c==CA)&&(d==C9||d==CA);
+ R ((c|d)&(0xf&~(CA|C9)))^1;  // 1 if c,d both alphameric
 }
 
 // Is a string a number?  Must start with a digit and end with digit, x, or .

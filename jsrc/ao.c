@@ -39,11 +39,13 @@ static DF1(jtoblique){A x,y,z;I m,n,r;D rkblk[16];
 static DF1(jtobqfslash){A y,z;B b=0,p;C er,id,*wv;I c,d,k,m,m1,mn,n,n1,r,*s,wt;
  RZ(w);
  r=AR(w); s=AS(w); wt=AT(w); wv=CAV(w);
- if(!(AN(w)&&1<r&&DENSE&wt))R oblique(w,self);  // revert to default if rank<2, empty, or sparse
+// obsolete  if(!(AN(w)&&1<r&&DENSE&wt))R oblique(w,self);  // revert to default if rank<2, empty, or sparse
+ if((-AN(w)&(1-r)&-(DENSE&wt))>=0)R oblique(w,self);  // revert to default if rank<2, empty, or sparse.  This implies m/n below are non0
  y=FAV(self)->fgh[0]; y=VAV(y)->fgh[0]; id=vaid(y);
  m=s[0]; m1=m-1;
  n=s[1]; n1=n-1; mn=m*n; d=m+n-1; PROD(c,r-2,2+s);
- if(1==m||1==n){GA(z,wt,AN(w),r-1,1+s); AS(z)[0]=d; MC(AV(z),wv,AN(w)<<bplg(wt)); R z;}
+// obsolete  if(1==m||1==n){GA(z,wt,AN(w),r-1,1+s); AS(z)[0]=d; MC(AV(z),wv,AN(w)<<bplg(wt)); R z;}
+ if(((1-m)&(1-n))>=0){GA(z,wt,AN(w),r-1,1+s); AS(z)[0]=d; MC(AV(z),wv,AN(w)<<bplg(wt)); R z;}  // m=1 or n=1, return item of input
  if(wt&FL+CMPX)NAN0;
  if(1==c)switch(OBQCASE(CTTZ(wt),id)){
   case OBQCASE(B01X, CNE     ): OBQLOOP(B,B,wt,x=*u, x^=*u        ); break;
@@ -112,7 +114,9 @@ DF2(jtpolymult){A f,g,y,z;B b=0;C*av,c,d,*wv;I at,i,j,k,m,m1,n,p,t,wt,zn;V*v;
  v=FAV(self);  // f//. 
  f=v->fgh[0]; y=FAV(f)->fgh[0]; y=VAV(y)->fgh[0]; c=vaid(y);  // f/, then f
  g=v->fgh[1]; y=VAV(g)->fgh[0];              d=vaid(y);   // g taken from g/
- if(!(m&&1==AR(a)&&n&&1==AR(w)))R obqfslash(df2(z,a,w,g),f);  // if empty, or not lists, do general code.  Never happens.
+// obsolete  if(!(m&&1==AR(a)&&n&&1==AR(w)))R obqfslash(df2(z,a,w,g),f);  // if empty, or not lists, do general code.  Never happens.
+// obsolete  if(!(m&&1>=AR(a)&&n&&1>=AR(w)))R obqfslash(df2(z,a,w,g),f);  // if empty, or not lists, do general code.  Never happens.
+ if((-m&(AR(a)-2)&-n&(AR(w)-2))>=0)R obqfslash(df2(z,a,w,g),f);  // if empty, or not atoms/lists, do general code.  Never happens.
  // from here on polymult on nonempty lists
  if(t&FL+CMPX)NAN0;
  switch(PMCASE(CTTZ(t),c,d)){
@@ -310,10 +314,10 @@ static DF2(jtkeyslash){PROLOG(0012);A b,q,x,z=0;B bb,*bv,pp=0;C d;I at,*av0,c,n,
  if(wt&FL)NAN0;
  PUSHCCT(jt->cctdefault)
  switch(KCASE(d,CTTZ(wt))){
-  case KCASE(CEQ,     B01X): KACC(*v==y,    B, B, 1   ); break;
-  case KCASE(CPLUSDOT,B01X): KACC(*v||y,    B, B, 0   ); break;
-  case KCASE(CSTARDOT,B01X): KACC(*v&&y,    B, B, 1   ); break;
-  case KCASE(CNE,     B01X): KACC(*v!=y,    B, B, 0   ); break;
+  case KCASE(CEQ,     B01X): KACC(*v^y^1,    B, B, 1   ); break;
+  case KCASE(CPLUSDOT,B01X): KACC(*v|y,    B, B, 0   ); break;
+  case KCASE(CSTARDOT,B01X): KACC(*v&y,    B, B, 1   ); break;
+  case KCASE(CNE,     B01X): KACC(*v^y,    B, B, 0   ); break;
   case KCASE(CMIN,    SBTX): KACC(SBLT(*v,y)?*v:y,SB,SB,jt->sbuv[0].down); break;
   case KCASE(CMAX,    SBTX): KACC(SBGT(*v,y)?*v:y,SB,SB,0); break;
   case KCASE(CMIN,    INTX): KACC(MIN(*v,y),I, I, IMAX); break;  
@@ -357,7 +361,8 @@ static DF2(jtkeymean){PROLOG(0013);A p,q,x,z;D d,*qv,*vv,*zv;I at,*av,c,j,m=0,n,
  at=AT(a); av=AV(a); SETIC(a,n); 
  wt=AT(w); wv=AV(w); wr=AR(w);
  ASSERT(n==SETIC(w,j),EVLENGTH);
- if(!(AN(a)&&AN(w)&&at&DENSE&&wt&B01+INT+FL))R df2(z,a,w,folk(sldot(slash(ds(CPLUS))),ds(CDIV),sldot(ds(CPOUND))));
+// obsolete  if(!(AN(a)&&AN(w)&&at&DENSE&&wt&B01+INT+FL))R df2(z,a,w,folk(sldot(slash(ds(CPLUS))),ds(CDIV),sldot(ds(CPOUND))));
+ if((-AN(a)&-AN(w)&-(at&DENSE)&-(wt&B01+INT+FL))>=0)R df2(z,a,w,folk(sldot(slash(ds(CPLUS))),ds(CDIV),sldot(ds(CPOUND))));
  CRT rng = keyrs(a,MAX(2*n,65536)); at=rng.type; r=rng.minrange.min; s=rng.minrange.range; c=aii(w);
  if(wt&FL)NAN0;
  if(s){
@@ -422,8 +427,10 @@ F1(jtgroup){PROLOG(0014);A c,d,x,z,*zv;I**cu,*cv,*dv,j,k,m,n,t,*u,*v,*wv,zn=0;CR
  SETIC(w,n); t=AT(w); k=n?aii(w)<<bplg(t):0;
  if(!AN(w)){GATV0(z,BOX,n?1:0,1); if(n)RZ(*AAV(z)=IX(n)); R z;}
  if(2>=k){rng.range=shortrange[t&(B01+LIT)][k]; rng.min = 0;}
- else if(k==sizeof(C4)&&t&C4T){rng=condrange4(C4AV(w),n,-1,0,2*n);}
- else if(k==SZI&&t&INT+SBT){rng=condrange(AV(w),n,IMAX,IMIN,2*n);}
+// obsolete  else if(k==sizeof(C4)&&t&C4T){rng=condrange4(C4AV(w),n,-1,0,2*n);}
+// obsolete  else if(k==SZI&&t&INT+SBT){rng=condrange(AV(w),n,IMAX,IMIN,2*n);}
+ else if(((k^sizeof(C4))+(t&(NOUN&~C4T)))==0){rng=condrange4(C4AV(w),n,-1,0,2*n);}
+ else if(((k^SZI)+(t&(NOUN&~(INT+SBT))))==0){rng=condrange(AV(w),n,IMAX,IMIN,2*n);}
  else{rng.range=0;}
  if(rng.range){
   GATV0(c,INT,rng.range,1); cv=AV(c)-rng.min;  /* counts  */
@@ -520,21 +527,26 @@ static DF2(jtkeyheadtally){PROLOG(0017);A f,q,x,y,z;B b;I at,*av,k,n,r,s,*qv,*u,
  RZ(a&&w);
  SETIC(a,n); wt=AT(w);
  ASSERT(n==SETIC(w,k),EVLENGTH);
- ASSERT(!n||wt&NUMERIC,EVDOMAIN);
+// obsolete  ASSERT(!n||wt&NUMERIC,EVDOMAIN);
+ ASSERT((-n&((wt&NUMERIC)-1))>=0,EVDOMAIN); // OK if n=0 or numeric w
  if(SPARSE&AT(a)||1<AR(w)||!n||!AN(a))R key(a,w,self);
  CRT rng = keyrs(a,MAX(2*n,65536)); at=rng.type; r=rng.minrange.min; s=rng.minrange.range;
  av=AV(a); 
  f=FAV(self)->fgh[0]; f=VAV(f)->fgh[0]; b=CHEAD==ID(f);
- if(at&B01&&1>=AR(a)){B*c,*d,*p=(B*)av;I i,j,m;
-  c=d=p;
-  if(*p){i=0; d=(B*)memchr(p,C0,n); j=d?d-p:0;}
-  else  {j=0; c=(B*)memchr(p,C1,n); i=c?c-p:0;}
-  k=bsum(n,p); m=c&&d?2:1;
-  GATV0(x,INT,m,1); v=AV(x); *v++=MIN(i,j);      if(c&&d)*v=MAX(i,j); 
-  GATV0(y,INT,m,1); v=AV(y); *v++=i<j||!d?k:n-k; if(c&&d)*v=i<j?n-k:k;
-  R stitch(b?from(x,w):y,b?y:from(x,w));
+ if(at&B01&&1>=AR(a)){B*p=(B*)av;I i,j,m;  // first special case: boolean list/atom
+// obsolete   c=d=p;
+  if(*p){i=0; B *d=(B*)memchr(p,C0,n); j=d-p; j=d?j:0;} // i=index of first 1, j=index of first 0 (0 if not found)
+  else  {j=0; B *c=(B*)memchr(p,C1,n); i=c-p; i=c?i:0;}
+// obsolete   k=bsum(n,p); m=c&&d?2:1;  // k=# 1s
+// obsolete   GATV0(x,INT,m,1); v=AV(x); *v++=MIN(i,j);      if(c&&d)*v=MAX(i,j); 
+// obsolete   GATV0(y,INT,m,1); v=AV(y); *v++=i<j||!d?k:n-k; if(c&&d)*v=i<j?n-k:k;
+  k=bsum(n,p); m=i+j?1:0;  // k=# 1s  m is 1 if there are 0s and 1s
+  GATV0(x,INT,m+1,1); v=AV(x); v[m]=i+j; v[0]=0;  // 0=index of first item (always 0); 1 if it exists is the other
+  GATV0(y,INT,m+1,1); v=AV(y); j=n-k; k=i?j:k; k&=-m; v[0]=k; v[m]=n-k;  // if 1st value is 0, complement k; if only 1 value, clear k
+  RZ(x=w=from(x,w)); x=b?x:y; y=b?y:w; R stitch(x,y);
  }
- if(at&LIT+C2T+C4T+INT+SBT&&wt&B01+INT+FL&&s){
+// obsolete  if(at&LIT+C2T+C4T+INT+SBT&&wt&B01+INT+FL&&s){  // second special case: small-range
+ if((-(at&LIT+C2T+C4T+INT+SBT)&-(wt&B01+INT+FL)&-s)<0){  // second special case: small-range on integral x
   GA(z,wt&FL?FL:INT,2*s,2,0); zv=AV(z);
   GATV0(q,INT,s,1); qv=AV(q)-r;
   u=qv+r; DQ(s, *u++=0;); k=0;
@@ -572,7 +584,7 @@ static DF2(jtkeyheadtally){PROLOG(0017);A f,q,x,y,z;B b;I at,*av,k,n,r,s,*qv,*u,
    case 29: KEYHEADTALLY(D,SB,D,wv[i],(D)*v); break;
   }
   *AS(z)=AN(z)>>1; *(1+AS(z))=2;
- }else{
+ }else{  // no special processing
   RZ(q=indexof(a,a));
   x=repeat(eq(q,IX(n)),w); y=keytally(q,q,0L); z=stitch(b?x:y,b?y:x);
  }
@@ -591,7 +603,7 @@ F1(jtsldot){A h=0;AF f1=jtoblique,f2;C c,d,e;I flag=0;V*v;
   case CSLASH: f2=jtkeyslash; if(vaid(v->fgh[0]))f1=jtobqfslash; break;
   case CFORK:  if(v->valencefns[0]==(AF)jtmean){f2=jtkeymean; break;}
                c=ID(v->fgh[0]); d=ID(v->fgh[1]); e=ID(v->fgh[2]); 
-               if(d==CCOMMA&&(c==CHEAD&&e==CPOUND||c==CPOUND&&e==CHEAD)){f2=jtkeyheadtally; break;}
+               if(((c^e)==(CHEAD^CPOUND))&&d==CCOMMA&&(c==CHEAD||c==CPOUND)){f2=jtkeyheadtally; break;}
                // otherwise fall through to...
   default: f2=jtkey; flag |= (FAV(w)->flag&VASGSAFE)|VJTFLGOK2;  // pass through ASGSAFE.  jtkey can handle inplace
  }

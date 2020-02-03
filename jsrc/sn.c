@@ -6,50 +6,66 @@
 #include "j.h"
 
 // validate fullname (possibly locative).  s->name, n=length.  Returns 1 if name valid, 0 if not
-B jtvnm(J jt,I n,C*s){C c,d,t;I j,k;
- if(!(n))R 0;  // error if empty string
- c=*s; d=*(s+n-1);   // c = first char of name, d is the last
- if(!(CA==ctype[(UC)c]))R 0;   // first char must be alphabetic
- // c='a';    // Now c='this character', d='previous character'; assign c to harmless value (not needed)
- j=0;  // Init no indirect locative found
+B jtvnm(J jt,I n,C*s){C c,t;I j;
+// obsolete  if(!(n))R 0;  // error if empty string
+ s=n==0?ctype+1:s;  // if empty string, point to erroneous string (we will fetch s[0] and s[-1]) 
+ c=s[0];    // c = first char of name
+// obsolete  if((ctype[(UC)c]&~CA)!=0)R 0;   // first char must be alphabetic
+ t=ctype[(UC)c]; t|=t>>3;   // decode char type; move 'numeric' to 'error'.  We accumulate error in LSB of t
  // scan the string: verify all remaining characters alphameric (incl _); set j=index of first indirect locative (pointing to the __), or 0 if no ind loc
   // (the string can't start with _)
- DO(n, d=c; c=s[i]; t=ctype[(UC)c]; if(!(t==CA||t==C9))R 0; if(c=='_'&&d=='_'&&!j&&i!=n-1){j=i-1;});
- // If the last char is _, any ind loc is invalid; scan to find previous _ (call its index j, error if 0); audit locale name, or OK if empty (base locale)
- if(c=='_'){if(!(!j))R 0; DQ(j=n-1, if('_'==s[--j])break;); if(!(j))R 0; k=n-j-2; R(!k||vlocnm(k,s+j+1));}
+ C cn=s[n-1];  // last character
+ t|=ctype[(UC)cn];   // include flags for last char
+ if(n<=2)R 1^((t&1)|(cn=='_'));  // 1- or 2-char name, OK if char(s) OK & doesn't end with _
+ {C prevcu0; C cu0=cn^'_';  // cu0 = 0 iff cn=='_'
+  j=-1;  // Init no indirect locative found
+  DQU(n-2, prevcu0=cu0; t|=ctype[(UC)c=s[i+1]]; cu0=c^'_'; j=(cu0|prevcu0)?j:i;)
+ }
+ // Now t is the mask of invalidity, and j is the index one before the first __ (-1 if no __)
+ if((t&1)+((cn!='_')&SGNTO0(j)))R 1^(t&1);   // Return if accumulated error, or if not trailing '_' and no __ (normal return)
+ // If the last char is _, any ind loc is invalid (but not trailing __); scan to find previous _ (call its index j, error if 0); audit locale name, or OK if empty (base locale)
+// obsolete  if(cn=='_'){j=(j==n-3)?0:j+1; if(!(!j))R 0; DQ(j=n-1, if('_'==s[--j])break;); if(!(j))R 0; k=n-j-2; R(!k||vlocnm(k,s+j+1));}
+ if(cn=='_'){if(j>=0)R j==n-3; j=n-3; do{if(s[j]=='_')R((ctype[(UC)s[j+1]]&CA)||vlocnm(n-j-2,s+j+1));}while(--j>0); R 0;}  // return if any __, including at end; find last '_', which cannot be in the last 2 chars; see if valid locale name; if no '_', error
  // Here last char was not _, and j is still pointed after __ if any
- if(j==0)R 1;  // If no ind loc, OK
+// obsolete  if(j<0)R 1;  // If no ind loc, OK
  // There is an indirect locative.  Scan all of them, verifying first char of each name is alphabetic (all chars were verified alphameric above)
  // Also verify that any _ is preceded or followed by _
- DO(n-j-1, if(s[j+i]=='_'){if(s[j+i+1]=='_'){if(!(CA==ctype[(UC)s[j+i+2]]))R 0;}else{if(!(s[j+i-1]=='_'))R 0;}});
+ // We do this with a state machine that scans 3 characters at a time, creating 3 bits: [0]='_' [1]='_' [2]=digit (including _).  We always start pointing to the first '_'.  State result tells
+ // how many characters to advance, 0 meaning error.  We stop when there are <2 characters left.  The word cannot end with '_'.  If it ends xx9_9 we will go to 9_9 and then _9?, i. e. overfetch the buffer by 1.  But that's OK on literal data.
+ // advance counts are: xxa=3, xx9=2, x_a=0, x_9=1, _xa=0, _x9=0, __a=3, __9=0 
+// obsolete  ++j; DO(n-j-1, if(s[j+i]=='_'){if(s[j+i+1]=='_'){if((ctype[(UC)s[j+i+2]]&~CA)!=0)R 0;}else{if(!(s[j+i-1]=='_'))R 0;}});
+ ++j; do{I state=4*(s[j]=='_')+2*(s[j+1]=='_')+(ctype[(UC)s[j+2]]>>3); state=(0x03001023L>>(state<<2))&3; if(state==0)R 0; j+=state;}while(j<n-1);
  R 1;
 }    /* validate name s, return 1 if name well-formed or 0 if error */
 
 B vlocnm(I n,C*s){
- I accummask=0; DO(n, UC c=s[i]; C t=ctype[c]; t=c=='_'?CX:t; accummask|=(I)1<<t;)  // create mask of types encountered.  Treat  '_' as nonalpha
- if(accummask&~(((I)1<<CA)|((I)1<<C9)))R 0;  // error if any non-alphameric encountered
+ I accummask=0; DO(n, UC c=s[i]; C t=ctype[c]; t=c=='_'?CX:t; accummask|=t;)  // create mask of types encountered.  Treat  '_' as nonalphameric
+ if(accummask&~(CA|C9))R 0;  // error if any non-alphameric encountered
  if(n<2)R (B)n;  // error if n=0; OK if n=1 (any alphameric is OK then)
  if(s[0]>'9')R 1;  // if nonnumeric locale, alphameric name must be OK
- if(s[0]=='0'||n>(SZI==8?18:9))R 0;  // numeric locale: if (multi-digit) locale starts with '0', or number is too long for an INt (conservatively), error
- R accummask==((I)1<<C9);   // if there are any alphabetics, give error
+ if(s[0]=='0'||n>(SZI==8?18:9))R 0;  // numeric locale: if (multi-digit) locale starts with '0', or number is too long for an I (conservatively), error
+ R accummask==C9;   // if there are any alphabetics, give error
 }    /* validate locale name: 1 if locale-name OK, 0 if error */
 
 static C argnames[7]={'m','n','u','v','x','y',0};
-// s-> a string of length n.  If the name is valid, create a NAME block for it
+// s-> a string of length n.  Make a NAME block for the name.  It might not be valid; use our best efforts then.  We ALWAYS look at the first and last character, even if length is 0
 // Possible errors: EVILNAME, EVLIMIT (if name too long), or memory error
 A jtnfs(J jt,I n,C*s){A z;C f,*t;I m,p;NM*zv;
  // Discard leading and trailing blanks.  Leave t pointing to the last character
- DQ(n, if(' '!=*s)break; ++s; --n;); 
+ DQ(n, if(' '!=(f=*s))break; ++s; --n;); 
  t=s+n-1;
  DQ(n, if(' '!=*t)break; --t; --n;);
+ ASSERT(n,EVILNAME);   // error if name is empty  (? not required since name always valid?
  // If the name is the special x y.. or x. y. ..., return a copy of the preallocated block for that name (we may have to add flags to it)
- C *nmp;if((1==n)&&(nmp=strchr(argnames,*s))){  // if an argument name
-  R ca(mnuvxynam[nmp-argnames]);  // return a clone of the argument block (because flags may be added)
+// obsolete  C *nmp;if((1==n)&&(nmp=strchr(argnames,*s))){  // if an argument name
+// obsolete   R ca(mnuvxynam[nmp-argnames]);  // return a clone of the argument block (because flags may be added)
+ if(SGNTO0(n-2)&BETWEENC(f,'m','y')&(p=(0x1b03>>(f-'m')))){  // M N o p q r s t U V w X Y 1101100000011
+  R ca(mnuvxynam[5-((p&0x800)>>(11-2))-((p&0x8)>>(3-1))-((p&0x2)>>(1-0))]);  // return a clone of the argument block (because flags may be added)
  }
- ASSERT(n,EVILNAME);   // error if name is empty
  // The name may not be valid, but we will allocate a NAME block for it anyway
  GATV0(z,NAME,n,1); zv=NAV(z);   // the block is cleared to 0
- MC(zv->s,s,n); *(n+zv->s)=0;  // copy in the name, null-terminate it
+ MC(zv->s,s,n); *(n+zv->s)=0;  // should copy locally, with special dispensation for <4 chars
+// no because sources may be short  MCISH(zv->s,s,(n+SZI-1)>>LGSZI); *(n+zv->s)=0;  // copy in the name in fullwords (OK because NAMEs are passed, null-terminate it
  f=0; m=n; p=0;
  // Split name into simplename and locale, verify length of each; set flag and hash for locative/indirect locative
  if('_'==*t){
@@ -211,7 +227,8 @@ F1(jtnch){A ch;B b;LX *e;I i,m,n;L*d;
 F1(jtex){A*wv,y,z;B*zv;I i,n;L*v;I modifierchg=0;
  RZ(w);
  n=AN(w); wv=AAV(w); 
- ASSERT(!n||BOX&AT(w),EVDOMAIN);
+// obsolete  ASSERT(!n||BOX&AT(w),EVDOMAIN);
+ ASSERT(((n-1)|SGNIF(AT(w),BOXX))<0,EVDOMAIN);
  GATV(z,B01,n,AR(w),AS(w)); zv=BAV(z);
  for(i=0;i<n;++i){
   RE(y=stdnm(wv[i]));
@@ -222,7 +239,7 @@ F1(jtex){A*wv,y,z;B*zv;I i,n;L*v;I modifierchg=0;
   if(y&&(v=syrd(y))){
    if(jt->uflags.us.cx.cx_c.db)RZ(redef(mark,v));
    A locfound=syrdforlocale(y);  // get the locale in which the name is defined
-   if(locfound==jt->locsyms||AFLAG(v->val)&AFNVRUNFREED){  // see if local or NVR
+   if((locfound==jt->locsyms)|(AFLAG(v->val)&AFNVRUNFREED)){  // see if local or NVR
     if(!(AFLAG(v->val)&AFNVR)){
      // The symbol is a local symbol not on the NVR stack.  We must put it onto the NVR stack.
      A *nvrav=jt->nvrav;

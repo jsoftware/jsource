@@ -925,7 +925,7 @@ extern I        prokey;
 extern A        pst[];
 extern UI4      shortrange[3][4];
 extern I        v00[2];
-extern C        wtype[];
+// obsolete extern C        wtype[];
 extern A        zeroionei[2];
 extern Z        zeroZ;
 extern dcomplex zone;

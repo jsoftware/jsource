@@ -21,19 +21,21 @@ static A jtmerge1(J jt,A w,A ind){PROLOG(0006);A z;C*v,*x;I c,k,r,*s,t,*u;
 */
 
 #define MCASE(t,k)  ((t)+4*(k))
-#define MINDEX        {j=*u++; if(0>j)j+=m; ASSERT((UI)j<(UI)m,EVINDEX);}
+#define MINDEX        {j=*u++; if(0>j)j+=m; ASSERT(BETWEENO(j,0,m),EVINDEX);}
 
 static A jtmerge1(J jt,A w,A ind){A z;B*b;C*wc,*zc;D*wd,*zd;I c,it,j,k,m,r,*s,t,*u,*wi,*zi;
  RZ(w&&ind);
- r=MAX(0,AR(w)-1); s=1+AS(w); t=AT(w); k=bpnoun(t); SETIC(w,m); c=aii(w);
+ r=MAX(0,AR(w)-1); s=1+AS(w); t=AT(w); k=bpnoun(t); SETIC(w,m); c=aii(w);  // m = # items of w
  ASSERT(!(t&SPARSE),EVNONCE);
  ASSERT(r==AR(ind),EVRANK);
  ASSERTAGREE(s,AS(ind),r);
  GA(z,t,c,r,s);
  if(!(AT(ind)&B01+INT))RZ(ind=cvt(INT,ind));
  it=AT(ind); u=AV(ind); b=(B*)u;
- ASSERT(!c||1<m||!(it&B01),EVINDEX);
- ASSERT(!c||1!=m||!memchr(b,C1,c),EVINDEX);
+// obsolete  ASSERT(!c||1<m||!(it&B01),EVINDEX);  // if m is 0 no selection is possible
+// obsolete  ASSERT(!c||m,EVINDEX);  // if m is 0 no selection is possible
+// obsolete  ASSERT(!c||1!=m||!memchr(b,C1,c),EVINDEX);  // if m is 1 all selectors must be 0.  INT will be checked individually, so we just look at the first c bytes
+ ASSERT((-c&(m-2))>=0||(!c||(m==1&&!memchr(b,C1,c))),EVINDEX);  // unless items are empty, m must have items.  if m is 1 all selectors must be 0.  INT will be checked individually, so we just look at the first c bytes
  zi=AV(z); zc=(C*)zi; zd=(D*)zc;
  wi=AV(w); wc=(C*)wi; wd=(D*)wc;
  switch(MCASE(CTTZ(it),k)){
@@ -354,7 +356,8 @@ static B gerar(J jt, A w){A x; C c;
   if(!vnm(n,stg)){
    // not name, see if valid primitive
    UC p = spellin(n,stg);
-   R p>=128||ds(p);  // return if valid primitive (all pseudochars are valid primitives, but 0: is not in pst[])
+// obsolete    R p>=128||ds(p);  // return if valid primitive (all pseudochars are valid primitives, but 0: is not in pst[])
+   R (p>>7)|!!ds(p);  // return if valid primitive (all non-ASCII are valid primitives, but 0: is not in pst[] so force that in)
   }
  } else if(AT(w)&BOX) {A *wv;I bmin=0,bmax=0;
   // boxed contents.  There must be exactly 2 boxes.  The first one may be a general AR; or the special cases singleton 0, 2, 3, or 4
@@ -367,8 +370,10 @@ static B gerar(J jt, A w){A x; C c;
   if((SGNIF(AT(x),LITX)&(AR(x)-2)&((AN(x)^1)-1))<0){ // LIT, rank<2, AN=1
    c = CAV(x)[0];   // fetch that character
    if(c=='0')R 1;    // if noun, the second box can be anything & is always OK, don't require AR there
-   else if(c=='2'||c=='4')bmin=bmax=2;
-   else if(c=='3')bmin=bmax=3;
+   I oride=2+(c&1);  // 2 if '2'/'4', 3 if '3'
+   bmin=BETWEENC(c,'2','4')?oride:bmin; bmax=BETWEENC(c,'2','4')?oride:bmax; 
+// obsolete    else if(c=='2'||c=='4')bmin=bmax=2;
+// obsolete    else if(c=='3')bmin=bmax=3;
   }
   // If the first box is not a special case, it had better be a valid AR; and it will take 1 or 2 operands
   if(bmin==0){if(!(gerar(jt,x)))R 0; bmin=1,bmax=2;}

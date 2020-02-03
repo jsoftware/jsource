@@ -132,7 +132,8 @@ A jtrank1ex0(J jt,AD * RESTRICT w,A fs,AF f1){F1PREFIP;PROLOG(0041);A z,virtw;
 
    while(1){  // loop collecting ATOPs
     I fstate=(FAV(fs)->flag2&(VF2BOXATOP1|VF2ATOPOPEN1))>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // extract <@ and @> status bits from f
-    if(fstate&state||!fstate)break;  // If this f overlaps with old, or it's not just a flag node, we have to stop
+// obsolete     if(fstate&state||!fstate)break;  // If this f overlaps with old, or it's not just a flag node, we have to stop
+    if((((fstate&state)-1)&-fstate)>=0)break;  // If this f overlaps with old, or it's not just a flag node, we have to stop
     if(fstate&ZZFLAGATOPOPEN1){
      // @> &> &.>
      //  Advance to the f of f@>
@@ -434,7 +435,8 @@ A jtrank2ex0(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,AF f2){F2PREFIP;PROLOG(00
 
    while(1){  // loop collecting ATOPs
     I fstate=(FAV(fs)->flag2&(VF2BOXATOP2|VF2ATOPOPEN2A|VF2ATOPOPEN2W))>>(VF2BOXATOP2X-ZZFLAGBOXATOPX);  // extract <@ and @> status bits from f
-    if(fstate&state||!fstate)break;  // If this f overlaps with old, or it's not a flag-only node, we have to stop
+// obsolete     if(fstate&state||!fstate)break;  // If this f overlaps with old, or it's not a flag-only node, we have to stop
+    if((((fstate&state)-1)&-fstate)>=0)break;  // If this f overlaps with old, or it's not just a flag node, we have to stop
     if(fstate&ZZFLAGATOPOPEN2W){
      // @> &> &.>
      //  Advance to the f of f@>

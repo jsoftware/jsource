@@ -22,19 +22,18 @@
 
 typedef struct {C new,effect;} ST;
 
-static ST state[10][9]={
-/*SS */ {{SX,EN},{SS,0 },{SA,EN},{SN,EN},{SA,EN},{S9,EN},{SX,EN},{SX,EN},{SQ,EN}},
-/*SX */ {{SX,EI},{SS,EI},{SA,EI},{SN,EI},{SA,EI},{S9,EI},{SX,0 },{SX,0 },{SQ,EI}},
-/*SA */ {{SX,EI},{SS,EI},{SA,0 },{SA,0 },{SA,0 },{SA,0 },{SX,0 },{SX,0 },{SQ,EI}},
-/*SN */ {{SX,EI},{SS,EI},{SA,0 },{SA,0 },{SNB,0},{SA,0 },{SX,0 },{SX,0 },{SQ,EI}},
-/*SNB*/ {{SX,EI},{SS,EI},{SA,0 },{SA,0 },{SA,0 },{SA,0 },{SNZ,0},{SX,0 },{SQ,EI}},
-/*SNZ*/ {{SZ,0 },{SZ,0 },{SZ,0 },{SZ,0 },{SZ,0 },{SZ,0 },{SX,0 },{SX,0 },{SZ,0 }},
-/*S9 */ {{SX,EI},{SS,EI},{S9,0 },{S9,0 },{S9,0 },{S9,0 },{S9,0 },{SX,0 },{SQ,EI}},
-/*SQ */ {{SQ,0 },{SQ,0 },{SQ,0 },{SQ,0 },{SQ,0 },{SQ,0 },{SQ,0 },{SQ,0 },{SQQ,0}},
-/*SQQ*/ {{SX,EI},{SS,EI},{SA,EI},{SN,EI},{SA,EI},{S9,EI},{SX,EI},{SX,EI},{SQ,0 }},
-/*SZ */ {{SZ,0 },{SZ,0 },{SZ,0 },{SZ,0 },{SZ,0 },{SZ,0 },{SZ,0 },{SZ,0 },{SZ,0 }}
+static ST state[10][CX+1]={
+/*SS */ {[CX]={SX,EN},[CS]={SS,0 },[CA]={SA,EN},[CN]={SN,EN},[CB]={SA,EN},[C9]={S9,EN},[CD]={SX,EN},[CC]={SX,EN},[CQ]={SQ,EN}},
+/*SX */ {[CX]={SX,EI},[CS]={SS,EI},[CA]={SA,EI},[CN]={SN,EI},[CB]={SA,EI},[C9]={S9,EI},[CD]={SX,0 },[CC]={SX,0 },[CQ]={SQ,EI}},
+/*SA */ {[CX]={SX,EI},[CS]={SS,EI},[CA]={SA,0 },[CN]={SA,0 },[CB]={SA,0 },[C9]={SA,0 },[CD]={SX,0 },[CC]={SX,0 },[CQ]={SQ,EI}},
+/*SN */ {[CX]={SX,EI},[CS]={SS,EI},[CA]={SA,0 },[CN]={SA,0 },[CB]={SNB,0},[C9]={SA,0 },[CD]={SX,0 },[CC]={SX,0 },[CQ]={SQ,EI}},
+/*SNB*/ {[CX]={SX,EI},[CS]={SS,EI},[CA]={SA,0 },[CN]={SA,0 },[CB]={SA,0 },[C9]={SA,0 },[CD]={SNZ,0},[CC]={SX,0 },[CQ]={SQ,EI}},
+/*SNZ*/ {[CX]={SZ,0 },[CS]={SZ,0 },[CA]={SZ,0 },[CN]={SZ,0 },[CB]={SZ,0 },[C9]={SZ,0 },[CD]={SX,0 },[CC]={SX,0 },[CQ]={SZ,0 }},
+/*S9 */ {[CX]={SX,EI},[CS]={SS,EI},[CA]={S9,0 },[CN]={S9,0 },[CB]={S9,0 },[C9]={S9,0 },[CD]={S9,0 },[CC]={SX,0 },[CQ]={SQ,EI}},
+/*SQ */ {[CX]={SQ,0 },[CS]={SQ,0 },[CA]={SQ,0 },[CN]={SQ,0 },[CB]={SQ,0 },[C9]={SQ,0 },[CD]={SQ,0 },[CC]={SQ,0 },[CQ]={SQQ,0}},
+/*SQQ*/ {[CX]={SX,EI},[CS]={SS,EI},[CA]={SA,EI},[CN]={SN,EI},[CB]={SA,EI},[C9]={S9,EI},[CD]={SX,EI},[CC]={SX,EI},[CQ]={SQ,0 }},
+/*SZ */ {[CX]={SZ,0 },[CS]={SZ,0 },[CA]={SZ,0 },[CN]={SZ,0 },[CB]={SZ,0 },[C9]={SZ,0 },[CD]={SZ,0 },[CC]={SZ,0 },[CQ]={SZ,0 }}
 };
-/*         CX      CS      CA      CN      CB      C9      CD      CC      CQ   */
 
 // w points to a string A-block
 // result is word index & length; z is (# words),(i0,l0),(i1,l1),...
@@ -45,7 +44,7 @@ F1(jtwordil){A z;C e,nv,s,t=0;I b,i,m,n,*x,xb,xe;ST p;UC*v;
  n=AN(w); v=UAV(w); GATV0(z,INT,1+n+n,1); x=1+AV(z);  // get count of characters n and address v;
   // allocate absolute worst-case output area (each char is 1 word, plus 1 for count); point x to output indexes
  for(i=0;i<n;++i){   // run the state machine
-  p=state[s][wtype[v[i]]]; e=p.effect;    // go to next state
+  p=state[s][ctype[v[i]]]; e=p.effect;    // go to next state
   if(e==EI){  // if 'emit'...
    t&=s==S9;   // was previous state S9? (means we were building a number)
    if(t){xb=nv?xb:b; nv=1; xe=i;}   // if so, b must be set; if this is first number, remember starting index.  In any case remember presumptive ending index
@@ -119,7 +118,7 @@ A jtenqueue(J jt,A a,A w,I env){A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl;UC c;
    // beginning-of-list pointer v, to start of list of output pointers
  for(i=0;i<n;i++,x++){  // for each word
   wi=s+*u++; wl=*u++; c=e=*wi; p=ctype[(UC)c]; b=0;   // wi=first char, wl=length, c=e=first char, p=type of first char, b='no inflections'
-  if(1<wl){d=*(wi+wl-1); if(b=((p!=C9)&(d==CESC1))|(d==CESC2))e=spellin(wl,wi);}  // if word has >1 character, starts with nonnumeric, and ends with inflection, convert to pseudocharacter
+  if(1<wl){d=*(wi+wl-1); if(b=((p!=C9)&(d==CESC1))|(d==CESC2))e=spellin(wl,wi);}  // if word has >1 character, is 9--. or ---:, convert to pseudocharacter
   if(BETWEENO(c,32,128)&&(y=ds(e))){
    // If first char is ASCII, see if the form including inflections is a primitive;
    // if so, that is the word to put into the queue.  No need to copy it
@@ -135,12 +134,19 @@ A jtenqueue(J jt,A a,A w,I env){A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl;UC c;
    if(AT(y)&NAME&&(NAV(y)->flag&NMDOT)){RZ(y=ca(y)); if((env==2)&&(NAV(*x)->flag&NMXY)){AT(*x)|=NAMEBYVALUE;}}  // The inflected names are the old-fashioned x. y. etc.  They must be cloned lest we modify the shared copy
    *x=y;   // install the value
   } else if(e==CFCONS){RZ(*x=FCONS(connum(wl-1,wi)))  // if the inflected form says [_]0-9:, create word for that
-  } else switch(b?0:p){    // otherwise, it's not a primitive, but data, either numeric, string, or name.  Check first character, but fail if inflected form, which must be invalid
-   default: jsignal3(EVSPELL,w,wi-s); R 0;   // bad first character or inflection
-   case C9: RZ(*x=connum(wl,wi));   break;   // starts with numeric, create numeric constant
-   case CQ: RZ(*x=constr(wl,wi));   break;   // start with ', make string constant
-   case CA: ASSERTN(vnm(wl,wi),EVILNAME,nfs(wl,wi)); RZ(*x=nfs(wl,wi)); if((env==2)&&(NAV(*x)->flag&NMXY)){AT(*x)|=NAMEBYVALUE;}  // starts with alphabetic, make it a name, error if invalid name
+  } else {
+// obsolete switch(b?0:p){    // otherwise, it's not a primitive, but data, either numeric, string, or name.  Check first character, but fail if inflected form, which must be invalid
+// obsolete    default: jsignal3(EVSPELL,w,wi-s); R 0;   // bad first character or inflection
+// obsolete    case C9: RZ(*x=connum(wl,wi));   break;   // starts with numeric, create numeric constant
+// obsolete    case CQ: RZ(*x=constr(wl,wi));   break;   // start with ', make string constant
+// obsolete    case CA: ASSERTN(vnm(wl,wi),EVILNAME,nfs(wl,wi)); RZ(*x=nfs(wl,wi)); if((env==2)&&(NAV(*x)->flag&NMXY)){AT(*x)|=NAMEBYVALUE;}  // starts with alphabetic, make it a name, error if invalid name
+// obsolete   }
+   p=b?b:p;    // otherwise, it's not a primitive, but data, either numeric, string, or name.  Check first character, but fail if inflected form, which must be invalid.  p must be non0
     // If the name is a call-by-value name (x y u. etc), we mark it as BYVALUE if it is slated for execution in an explicit definition
+   if((p&~CA)==0){ASSERTN(vnm(wl,wi),EVILNAME,nfs(wl,wi)); RZ(*x=nfs(wl,wi)); if((env==2)&&(NAV(*x)->flag&NMXY)){AT(*x)|=NAMEBYVALUE;}  // starts with alphabetic, make it a name, error if invalid name
+   }else if(p==C9){RZ(*x=connum(wl,wi));   // starts with numeric, create numeric constant
+   }else if(p==CQ){ RZ(*x=constr(wl,wi));   // start with ', make string constant
+   }else{jsignal3(EVSPELL,w,wi-s); R 0;}   // bad first character or inflection
   }
   // Since the word is being incorporated into a list, we must realize it
   rifv(*x);

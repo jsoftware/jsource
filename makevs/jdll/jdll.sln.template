@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Express 2013 for Windows Desktop
 VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "j", "Jdll.vcxproj", "{17AF2AED-60EB-4BD6-991B-A46CFC28DA37}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "j", "jdll.vcxproj", "{17AF2AED-60EB-4BD6-991B-A46CFC28DA37}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{14A1C2EB-3BFA-4FC4-93E0-F0287F4A8CA6}"
 EndProject

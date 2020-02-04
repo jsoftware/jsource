@@ -182,7 +182,7 @@
       <MkTypLibCompatible>true</MkTypLibCompatible>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <TargetEnvironment>Win32</TargetEnvironment>
-      <TypeLibraryName>.\Release64/Jdll.tlb</TypeLibraryName>
+      <TypeLibraryName>.\Release64/jdll.tlb</TypeLibraryName>
       <HeaderFileName />
     </Midl>
     <ClCompile>
@@ -193,7 +193,7 @@
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
-      <PrecompiledHeaderOutputFile>.\Release64/Jdll.pch</PrecompiledHeaderOutputFile>
+      <PrecompiledHeaderOutputFile>.\Release64/jdll.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>.\Release64/</AssemblerListingLocation>
       <ObjectFileName>.\Release64/</ObjectFileName>
       <ProgramDataBaseFileName>.\Release64/</ProgramDataBaseFileName>
@@ -209,7 +209,7 @@
       <AdditionalDependencies>winasm64.obj;..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>.\Release64\j.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <ModuleDefinitionFile>..\..\dllsrc\JDLL.DEF</ModuleDefinitionFile>
+      <ModuleDefinitionFile>..\..\dllsrc\jdll.def</ModuleDefinitionFile>
       <ProgramDatabaseFile>.\Release64/j.pdb</ProgramDatabaseFile>
       <GenerateMapFile>true</GenerateMapFile>
       <MapFileName>.\Release64/j.map</MapFileName>
@@ -218,7 +218,7 @@
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\Release64/Jdll.bsc</OutputFile>
+      <OutputFile>.\Release64/jdll.bsc</OutputFile>
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release64avx|Win32'">
@@ -227,7 +227,7 @@
       <MkTypLibCompatible>true</MkTypLibCompatible>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <TargetEnvironment>Win32</TargetEnvironment>
-      <TypeLibraryName>.\Release64/Jdll.tlb</TypeLibraryName>
+      <TypeLibraryName>.\Release64/jdll.tlb</TypeLibraryName>
       <HeaderFileName>
       </HeaderFileName>
     </Midl>
@@ -239,7 +239,7 @@
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
-      <PrecompiledHeaderOutputFile>.\Release64/Jdll.pch</PrecompiledHeaderOutputFile>
+      <PrecompiledHeaderOutputFile>.\Release64/jdll.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>.\Release64/</AssemblerListingLocation>
       <ObjectFileName>.\Release64/</ObjectFileName>
       <ProgramDataBaseFileName>.\Release64/</ProgramDataBaseFileName>
@@ -255,7 +255,7 @@
       <AdditionalDependencies>winasm64.obj;..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>.\Release64\j.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <ModuleDefinitionFile>..\..\dllsrc\JDLL.DEF</ModuleDefinitionFile>
+      <ModuleDefinitionFile>..\..\dllsrc\jdll.def</ModuleDefinitionFile>
       <ProgramDatabaseFile>.\Release64/j.pdb</ProgramDatabaseFile>
       <GenerateMapFile>true</GenerateMapFile>
       <MapFileName>.\Release64/j.map</MapFileName>
@@ -264,7 +264,7 @@
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\Release64/Jdll.bsc</OutputFile>
+      <OutputFile>.\Release64/jdll.bsc</OutputFile>
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release64avx2|Win32'">
@@ -273,7 +273,7 @@
       <MkTypLibCompatible>true</MkTypLibCompatible>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <TargetEnvironment>Win32</TargetEnvironment>
-      <TypeLibraryName>.\Release64/Jdll.tlb</TypeLibraryName>
+      <TypeLibraryName>.\Release64/jdll.tlb</TypeLibraryName>
       <HeaderFileName>
       </HeaderFileName>
     </Midl>
@@ -285,7 +285,7 @@
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
-      <PrecompiledHeaderOutputFile>.\Release64/Jdll.pch</PrecompiledHeaderOutputFile>
+      <PrecompiledHeaderOutputFile>.\Release64/jdll.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>.\Release64/</AssemblerListingLocation>
       <ObjectFileName>.\Release64/</ObjectFileName>
       <ProgramDataBaseFileName>.\Release64/</ProgramDataBaseFileName>
@@ -301,7 +301,7 @@
       <AdditionalDependencies>winasm64.obj;..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>.\Release64\j.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <ModuleDefinitionFile>..\..\dllsrc\JDLL.DEF</ModuleDefinitionFile>
+      <ModuleDefinitionFile>..\..\dllsrc\jdll.def</ModuleDefinitionFile>
       <ProgramDatabaseFile>.\Release64/j.pdb</ProgramDatabaseFile>
       <GenerateMapFile>true</GenerateMapFile>
       <MapFileName>.\Release64/j.map</MapFileName>
@@ -310,7 +310,7 @@
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\Release64/Jdll.bsc</OutputFile>
+      <OutputFile>.\Release64/jdll.bsc</OutputFile>
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug64avx|Win32'">
@@ -319,7 +319,7 @@
       <MkTypLibCompatible>true</MkTypLibCompatible>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <TargetEnvironment>Win32</TargetEnvironment>
-      <TypeLibraryName>.\Release64/Jdll.tlb</TypeLibraryName>
+      <TypeLibraryName>.\Release64/jdll.tlb</TypeLibraryName>
       <HeaderFileName>
       </HeaderFileName>
     </Midl>
@@ -331,7 +331,7 @@
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
-      <PrecompiledHeaderOutputFile>.\Release64/Jdll.pch</PrecompiledHeaderOutputFile>
+      <PrecompiledHeaderOutputFile>.\Release64/jdll.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>.\Release64/</AssemblerListingLocation>
       <ObjectFileName>.\Release64/</ObjectFileName>
       <ProgramDataBaseFileName>.\Release64/</ProgramDataBaseFileName>
@@ -347,7 +347,7 @@
       <AdditionalDependencies>winasm64.obj;..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>.\Release64\j.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <ModuleDefinitionFile>..\..\dllsrc\JDLL.DEF</ModuleDefinitionFile>
+      <ModuleDefinitionFile>..\..\dllsrc\jdll.def</ModuleDefinitionFile>
       <ProgramDatabaseFile>.\Release64/j.pdb</ProgramDatabaseFile>
       <GenerateMapFile>true</GenerateMapFile>
       <MapFileName>.\Release64/j.map</MapFileName>
@@ -356,7 +356,7 @@
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\Release64/Jdll.bsc</OutputFile>
+      <OutputFile>.\Release64/jdll.bsc</OutputFile>
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug64avx2|Win32'">
@@ -365,7 +365,7 @@
       <MkTypLibCompatible>true</MkTypLibCompatible>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <TargetEnvironment>Win32</TargetEnvironment>
-      <TypeLibraryName>.\Release64/Jdll.tlb</TypeLibraryName>
+      <TypeLibraryName>.\Release64/jdll.tlb</TypeLibraryName>
       <HeaderFileName>
       </HeaderFileName>
     </Midl>
@@ -377,7 +377,7 @@
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
-      <PrecompiledHeaderOutputFile>.\Release64/Jdll.pch</PrecompiledHeaderOutputFile>
+      <PrecompiledHeaderOutputFile>.\Release64/jdll.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>.\Release64/</AssemblerListingLocation>
       <ObjectFileName>.\Release64/</ObjectFileName>
       <ProgramDataBaseFileName>.\Release64/</ProgramDataBaseFileName>
@@ -393,7 +393,7 @@
       <AdditionalDependencies>winasm64.obj;..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>.\Release64\j.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <ModuleDefinitionFile>..\..\dllsrc\JDLL.DEF</ModuleDefinitionFile>
+      <ModuleDefinitionFile>..\..\dllsrc\jdll.def</ModuleDefinitionFile>
       <ProgramDatabaseFile>.\Release64/j.pdb</ProgramDatabaseFile>
       <GenerateMapFile>true</GenerateMapFile>
       <MapFileName>.\Release64/j.map</MapFileName>
@@ -402,7 +402,7 @@
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\Release64/Jdll.bsc</OutputFile>
+      <OutputFile>.\Release64/jdll.bsc</OutputFile>
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release64|x64'">
@@ -411,7 +411,7 @@
       <MkTypLibCompatible>true</MkTypLibCompatible>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <TargetEnvironment>X64</TargetEnvironment>
-      <TypeLibraryName>.\Release64/Jdll.tlb</TypeLibraryName>
+      <TypeLibraryName>.\Release64/jdll.tlb</TypeLibraryName>
       <HeaderFileName />
     </Midl>
     <ClCompile>
@@ -424,7 +424,7 @@
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
-      <PrecompiledHeaderOutputFile>$(outdir)/Jdll.pch</PrecompiledHeaderOutputFile>
+      <PrecompiledHeaderOutputFile>$(outdir)/jdll.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>$(outdir)</AssemblerListingLocation>
       <ObjectFileName>$(outdir)</ObjectFileName>
       <ProgramDataBaseFileName>$(outdir)</ProgramDataBaseFileName>
@@ -440,7 +440,7 @@
       <AdditionalOptions>/machine:AMD64 %(AdditionalOptions)</AdditionalOptions>
       <AdditionalDependencies>winasm64.obj;..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <ModuleDefinitionFile>..\..\dllsrc\JDLL.DEF</ModuleDefinitionFile>
+      <ModuleDefinitionFile>..\..\dllsrc\jdll.def</ModuleDefinitionFile>
       <ProgramDatabaseFile>$(outdir)\j.pdb</ProgramDatabaseFile>
       <GenerateMapFile>true</GenerateMapFile>
       <MapFileName>$(outdir)\j.map</MapFileName>
@@ -450,7 +450,7 @@
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\Release64/Jdll.bsc</OutputFile>
+      <OutputFile>.\Release64/jdll.bsc</OutputFile>
     </Bscmake>
     <PostBuildEvent>
       <Command>copy $(outdir)\j.dll $(userprofile)\jbld\j64\bin\j.dll</Command>
@@ -462,7 +462,7 @@
       <MkTypLibCompatible>true</MkTypLibCompatible>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <TargetEnvironment>X64</TargetEnvironment>
-      <TypeLibraryName>.\Release64/Jdll.tlb</TypeLibraryName>
+      <TypeLibraryName>.\Release64/jdll.tlb</TypeLibraryName>
       <HeaderFileName>
       </HeaderFileName>
     </Midl>
@@ -476,7 +476,7 @@
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
-      <PrecompiledHeaderOutputFile>$(outdir)/Jdll.pch</PrecompiledHeaderOutputFile>
+      <PrecompiledHeaderOutputFile>$(outdir)/jdll.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>$(outdir)</AssemblerListingLocation>
       <ObjectFileName>$(outdir)</ObjectFileName>
       <ProgramDataBaseFileName>$(outdir)</ProgramDataBaseFileName>
@@ -493,7 +493,7 @@
       <AdditionalOptions>/machine:AMD64 %(AdditionalOptions)</AdditionalOptions>
       <AdditionalDependencies>winasm64.obj;..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <ModuleDefinitionFile>..\..\dllsrc\JDLL.DEF</ModuleDefinitionFile>
+      <ModuleDefinitionFile>..\..\dllsrc\jdll.def</ModuleDefinitionFile>
       <ProgramDatabaseFile>$(outdir)\j.pdb</ProgramDatabaseFile>
       <GenerateMapFile>true</GenerateMapFile>
       <MapFileName>$(outdir)\j.map</MapFileName>
@@ -503,7 +503,7 @@
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\Release64/Jdll.bsc</OutputFile>
+      <OutputFile>.\Release64/jdll.bsc</OutputFile>
     </Bscmake>
     <PostBuildEvent>
       <Command>copy $(outdir)\j.dll $(userprofile)\jbld\j64\bin\javx.dll</Command>
@@ -515,7 +515,7 @@
       <MkTypLibCompatible>true</MkTypLibCompatible>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <TargetEnvironment>X64</TargetEnvironment>
-      <TypeLibraryName>.\Release64/Jdll.tlb</TypeLibraryName>
+      <TypeLibraryName>.\Release64/jdll.tlb</TypeLibraryName>
       <HeaderFileName>
       </HeaderFileName>
     </Midl>
@@ -529,7 +529,7 @@
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
-      <PrecompiledHeaderOutputFile>$(outdir)/Jdll.pch</PrecompiledHeaderOutputFile>
+      <PrecompiledHeaderOutputFile>$(outdir)/jdll.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>$(outdir)</AssemblerListingLocation>
       <ObjectFileName>$(outdir)</ObjectFileName>
       <ProgramDataBaseFileName>$(outdir)</ProgramDataBaseFileName>
@@ -546,7 +546,7 @@
       <AdditionalOptions>/machine:AMD64 %(AdditionalOptions)</AdditionalOptions>
       <AdditionalDependencies>winasm64.obj;..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <ModuleDefinitionFile>..\..\dllsrc\JDLL.DEF</ModuleDefinitionFile>
+      <ModuleDefinitionFile>..\..\dllsrc\jdll.def</ModuleDefinitionFile>
       <ProgramDatabaseFile>$(outdir)\j.pdb</ProgramDatabaseFile>
       <GenerateMapFile>true</GenerateMapFile>
       <MapFileName>$(outdir)\j.map</MapFileName>
@@ -556,7 +556,7 @@
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\Release64/Jdll.bsc</OutputFile>
+      <OutputFile>.\Release64/jdll.bsc</OutputFile>
     </Bscmake>
     <PostBuildEvent>
       <Command>copy $(outdir)\j.dll $(userprofile)\jbld\j64\bin\javx2.dll</Command>
@@ -568,7 +568,7 @@
       <MkTypLibCompatible>true</MkTypLibCompatible>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <TargetEnvironment>X64</TargetEnvironment>
-      <TypeLibraryName>.\Release64/Jdll.tlb</TypeLibraryName>
+      <TypeLibraryName>.\Release64/jdll.tlb</TypeLibraryName>
       <HeaderFileName>
       </HeaderFileName>
     </Midl>
@@ -582,7 +582,7 @@
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
-      <PrecompiledHeaderOutputFile>$(outdir)/Jdll.pch</PrecompiledHeaderOutputFile>
+      <PrecompiledHeaderOutputFile>$(outdir)/jdll.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>$(outdir)</AssemblerListingLocation>
       <ObjectFileName>$(outdir)</ObjectFileName>
       <ProgramDataBaseFileName>$(outdir)</ProgramDataBaseFileName>
@@ -599,7 +599,7 @@
       <AdditionalOptions>/machine:AMD64 %(AdditionalOptions)</AdditionalOptions>
       <AdditionalDependencies>winasm64.obj;..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <ModuleDefinitionFile>..\..\dllsrc\JDLL.DEF</ModuleDefinitionFile>
+      <ModuleDefinitionFile>..\..\dllsrc\jdll.def</ModuleDefinitionFile>
       <ProgramDatabaseFile>$(outdir)\j.pdb</ProgramDatabaseFile>
       <GenerateMapFile>true</GenerateMapFile>
       <MapFileName>$(outdir)\j.map</MapFileName>
@@ -610,7 +610,7 @@
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\Release64/Jdll.bsc</OutputFile>
+      <OutputFile>.\Release64/jdll.bsc</OutputFile>
     </Bscmake>
     <PostBuildEvent>
       <Command>
@@ -623,7 +623,7 @@
       <MkTypLibCompatible>true</MkTypLibCompatible>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <TargetEnvironment>X64</TargetEnvironment>
-      <TypeLibraryName>.\Release64/Jdll.tlb</TypeLibraryName>
+      <TypeLibraryName>.\Release64/jdll.tlb</TypeLibraryName>
       <HeaderFileName>
       </HeaderFileName>
     </Midl>
@@ -637,7 +637,7 @@
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
-      <PrecompiledHeaderOutputFile>$(outdir)/Jdll.pch</PrecompiledHeaderOutputFile>
+      <PrecompiledHeaderOutputFile>$(outdir)/jdll.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>$(outdir)</AssemblerListingLocation>
       <ObjectFileName>$(outdir)</ObjectFileName>
       <ProgramDataBaseFileName>$(outdir)</ProgramDataBaseFileName>
@@ -654,7 +654,7 @@
       <AdditionalOptions>/machine:AMD64 %(AdditionalOptions)</AdditionalOptions>
       <AdditionalDependencies>winasm64.obj;..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <ModuleDefinitionFile>..\..\dllsrc\JDLL.DEF</ModuleDefinitionFile>
+      <ModuleDefinitionFile>..\..\dllsrc\jdll.def</ModuleDefinitionFile>
       <ProgramDatabaseFile>$(outdir)\j.pdb</ProgramDatabaseFile>
       <GenerateMapFile>true</GenerateMapFile>
       <MapFileName>$(outdir)\j.map</MapFileName>
@@ -665,7 +665,7 @@
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\Release64/Jdll.bsc</OutputFile>
+      <OutputFile>.\Release64/jdll.bsc</OutputFile>
     </Bscmake>
     <PostBuildEvent>
       <Command>
@@ -678,7 +678,7 @@
       <MkTypLibCompatible>true</MkTypLibCompatible>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <TargetEnvironment>Win32</TargetEnvironment>
-      <TypeLibraryName>.\Debug64/Jdll.tlb</TypeLibraryName>
+      <TypeLibraryName>.\Debug64/jdll.tlb</TypeLibraryName>
       <HeaderFileName />
     </Midl>
     <ClCompile>
@@ -687,7 +687,7 @@
       <PreprocessorDefinitions>_DEBUG;WIN32;_WINDOWS;_JDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <PrecompiledHeaderOutputFile>.\Debug64/Jdll.pch</PrecompiledHeaderOutputFile>
+      <PrecompiledHeaderOutputFile>.\Debug64/jdll.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>.\Debug64/</AssemblerListingLocation>
       <ObjectFileName>.\Debug64/</ObjectFileName>
       <ProgramDataBaseFileName>.\Debug64/</ProgramDataBaseFileName>
@@ -705,7 +705,7 @@
       <AdditionalDependencies>winasm64.obj;..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>.\Debug64\j.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <ModuleDefinitionFile>..\..\dllsrc\JDLL.DEF</ModuleDefinitionFile>
+      <ModuleDefinitionFile>..\..\dllsrc\jdll.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>.\Debug64/j.pdb</ProgramDatabaseFile>
       <GenerateMapFile>true</GenerateMapFile>
@@ -715,7 +715,7 @@
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\Debug64/Jdll.bsc</OutputFile>
+      <OutputFile>.\Debug64/jdll.bsc</OutputFile>
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug64|x64'">
@@ -724,7 +724,7 @@
       <MkTypLibCompatible>true</MkTypLibCompatible>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <TargetEnvironment>X64</TargetEnvironment>
-      <TypeLibraryName>.\Debug64/Jdll.tlb</TypeLibraryName>
+      <TypeLibraryName>.\Debug64/jdll.tlb</TypeLibraryName>
       <HeaderFileName />
     </Midl>
     <ClCompile>
@@ -733,7 +733,7 @@
       <PreprocessorDefinitions>C_NA=0;_DEBUG;WIN32;_WINDOWS;_JDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <PrecompiledHeaderOutputFile>$(outdir)\Jdll.pch</PrecompiledHeaderOutputFile>
+      <PrecompiledHeaderOutputFile>$(outdir)\jdll.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>$(outdir)</AssemblerListingLocation>
       <ObjectFileName>$(outdir)</ObjectFileName>
       <ProgramDataBaseFileName>$(outdir)</ProgramDataBaseFileName>
@@ -750,7 +750,7 @@
       <AdditionalOptions>/machine:AMD64 %(AdditionalOptions)</AdditionalOptions>
       <AdditionalDependencies>winasm64.obj;..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <ModuleDefinitionFile>..\..\dllsrc\JDLL.DEF</ModuleDefinitionFile>
+      <ModuleDefinitionFile>..\..\dllsrc\jdll.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(outdir)\j.pdb</ProgramDatabaseFile>
       <GenerateMapFile>true</GenerateMapFile>
@@ -761,7 +761,7 @@
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>$(outdir)\Jdll.bsc</OutputFile>
+      <OutputFile>$(outdir)\jdll.bsc</OutputFile>
     </Bscmake>
     <PostBuildEvent>
       <Command>
@@ -774,7 +774,7 @@
       <MkTypLibCompatible>true</MkTypLibCompatible>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <TargetEnvironment>Win32</TargetEnvironment>
-      <TypeLibraryName>.\release/Jdll.tlb</TypeLibraryName>
+      <TypeLibraryName>.\release/jdll.tlb</TypeLibraryName>
       <HeaderFileName />
     </Midl>
     <ClCompile>
@@ -785,7 +785,7 @@
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
-      <PrecompiledHeaderOutputFile>$(outdir)/Jdll.pch</PrecompiledHeaderOutputFile>
+      <PrecompiledHeaderOutputFile>$(outdir)/jdll.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>$(outdir)</AssemblerListingLocation>
       <ObjectFileName>$(outdir)</ObjectFileName>
       <ProgramDataBaseFileName>$(outdir)</ProgramDataBaseFileName>
@@ -799,7 +799,7 @@
     </ResourceCompile>
     <Link>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <ModuleDefinitionFile>..\..\dllsrc\JDLL.DEF</ModuleDefinitionFile>
+      <ModuleDefinitionFile>..\..\dllsrc\jdll.def</ModuleDefinitionFile>
       <ProgramDatabaseFile>$(outdir)/j.pdb</ProgramDatabaseFile>
       <GenerateMapFile>true</GenerateMapFile>
       <MapFileName>$(outdir)\j.map</MapFileName>
@@ -810,7 +810,7 @@
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\release/Jdll.bsc</OutputFile>
+      <OutputFile>.\release/jdll.bsc</OutputFile>
     </Bscmake>
     <PostBuildEvent>
       <Command>copy $(outdir)\j.dll $(userprofile)\jbld\j32\bin\j.dll</Command>
@@ -822,7 +822,7 @@
       <MkTypLibCompatible>true</MkTypLibCompatible>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <TargetEnvironment>Win32</TargetEnvironment>
-      <TypeLibraryName>.\release/Jdll.tlb</TypeLibraryName>
+      <TypeLibraryName>.\release/jdll.tlb</TypeLibraryName>
       <HeaderFileName>
       </HeaderFileName>
     </Midl>
@@ -834,7 +834,7 @@
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
-      <PrecompiledHeaderOutputFile>$(outdir)/Jdll.pch</PrecompiledHeaderOutputFile>
+      <PrecompiledHeaderOutputFile>$(outdir)/jdll.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>$(outdir)</AssemblerListingLocation>
       <ObjectFileName>$(outdir)</ObjectFileName>
       <ProgramDataBaseFileName>$(outdir)</ProgramDataBaseFileName>
@@ -848,7 +848,7 @@
     </ResourceCompile>
     <Link>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <ModuleDefinitionFile>..\..\dllsrc\JDLL.DEF</ModuleDefinitionFile>
+      <ModuleDefinitionFile>..\..\dllsrc\jdll.def</ModuleDefinitionFile>
       <ProgramDatabaseFile>$(outdir)/j.pdb</ProgramDatabaseFile>
       <GenerateMapFile>true</GenerateMapFile>
       <MapFileName>$(outdir)\j.map</MapFileName>
@@ -858,7 +858,7 @@
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\release/Jdll.bsc</OutputFile>
+      <OutputFile>.\release/jdll.bsc</OutputFile>
     </Bscmake>
     <PostBuildEvent>
       <Command>copy $(outdir)\j.dll $(userprofile)\jbld\j32\bin\j.dll</Command>
@@ -870,7 +870,7 @@
       <MkTypLibCompatible>true</MkTypLibCompatible>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <TargetEnvironment>X64</TargetEnvironment>
-      <TypeLibraryName>.\release/Jdll.tlb</TypeLibraryName>
+      <TypeLibraryName>.\release/jdll.tlb</TypeLibraryName>
       <HeaderFileName />
     </Midl>
     <ClCompile>
@@ -880,7 +880,7 @@
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
-      <PrecompiledHeaderOutputFile>.\release/Jdll.pch</PrecompiledHeaderOutputFile>
+      <PrecompiledHeaderOutputFile>.\release/jdll.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>.\release/</AssemblerListingLocation>
       <ObjectFileName>.\release/</ObjectFileName>
       <ProgramDataBaseFileName>.\release/</ProgramDataBaseFileName>
@@ -895,7 +895,7 @@
       <AdditionalDependencies>..\..\openssl-asm\keccak1600-mmx-nasm.o;..\..\openssl-asm\sha1-586-nasm.o;..\..\openssl-asm\sha256-586-nasm.o;..\..\openssl-asm\sha512-586-nasm.o;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>.\release\j.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <ModuleDefinitionFile>..\..\dllsrc\JDLL.DEF</ModuleDefinitionFile>
+      <ModuleDefinitionFile>..\..\dllsrc\jdll.def</ModuleDefinitionFile>
       <ProgramDatabaseFile>.\release/j.pdb</ProgramDatabaseFile>
       <GenerateMapFile>true</GenerateMapFile>
       <MapFileName>.\release/j.map</MapFileName>
@@ -905,7 +905,7 @@
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\release/Jdll.bsc</OutputFile>
+      <OutputFile>.\release/jdll.bsc</OutputFile>
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='j32|x64'">
@@ -914,7 +914,7 @@
       <MkTypLibCompatible>true</MkTypLibCompatible>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <TargetEnvironment>X64</TargetEnvironment>
-      <TypeLibraryName>.\release/Jdll.tlb</TypeLibraryName>
+      <TypeLibraryName>.\release/jdll.tlb</TypeLibraryName>
       <HeaderFileName>
       </HeaderFileName>
     </Midl>
@@ -925,7 +925,7 @@
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
-      <PrecompiledHeaderOutputFile>.\release/Jdll.pch</PrecompiledHeaderOutputFile>
+      <PrecompiledHeaderOutputFile>.\release/jdll.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>.\release/</AssemblerListingLocation>
       <ObjectFileName>.\release/</ObjectFileName>
       <ProgramDataBaseFileName>.\release/</ProgramDataBaseFileName>
@@ -940,7 +940,7 @@
       <AdditionalDependencies>..\..\openssl-asm\keccak1600-mmx-nasm.o;..\..\openssl-asm\sha1-586-nasm.o;..\..\openssl-asm\sha256-586-nasm.o;..\..\openssl-asm\sha512-586-nasm.o;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>.\release\j.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <ModuleDefinitionFile>..\..\dllsrc\JDLL.DEF</ModuleDefinitionFile>
+      <ModuleDefinitionFile>..\..\dllsrc\jdll.def</ModuleDefinitionFile>
       <ProgramDatabaseFile>.\release/j.pdb</ProgramDatabaseFile>
       <GenerateMapFile>true</GenerateMapFile>
       <MapFileName>.\release/j.map</MapFileName>
@@ -950,7 +950,7 @@
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\release/Jdll.bsc</OutputFile>
+      <OutputFile>.\release/jdll.bsc</OutputFile>
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -959,7 +959,7 @@
       <MkTypLibCompatible>true</MkTypLibCompatible>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <TargetEnvironment>Win32</TargetEnvironment>
-      <TypeLibraryName>.\debug/Jdll.tlb</TypeLibraryName>
+      <TypeLibraryName>.\debug/jdll.tlb</TypeLibraryName>
       <HeaderFileName />
     </Midl>
     <ClCompile>
@@ -967,7 +967,7 @@
       <PreprocessorDefinitions>C_64=0;C_NA=0;_DEBUG;WIN32;_WINDOWS;_JDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <PrecompiledHeaderOutputFile>$(outdir)\Jdll.pch</PrecompiledHeaderOutputFile>
+      <PrecompiledHeaderOutputFile>$(outdir)\jdll.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>$(outdir)</AssemblerListingLocation>
       <ObjectFileName>$(outdir)</ObjectFileName>
       <ProgramDataBaseFileName>$(outdir)</ProgramDataBaseFileName>
@@ -984,7 +984,7 @@
     </ResourceCompile>
     <Link>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <ModuleDefinitionFile>..\..\dllsrc\JDLL.DEF</ModuleDefinitionFile>
+      <ModuleDefinitionFile>..\..\dllsrc\jdll.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(outdir)/j.pdb</ProgramDatabaseFile>
       <GenerateMapFile>true</GenerateMapFile>
@@ -997,7 +997,7 @@
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>$(outdir)\Jdll.bsc</OutputFile>
+      <OutputFile>$(outdir)\jdll.bsc</OutputFile>
     </Bscmake>
     <PostBuildEvent>
       <Command>
@@ -1010,7 +1010,7 @@
       <MkTypLibCompatible>true</MkTypLibCompatible>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <TargetEnvironment>X64</TargetEnvironment>
-      <TypeLibraryName>.\debug/Jdll.tlb</TypeLibraryName>
+      <TypeLibraryName>.\debug/jdll.tlb</TypeLibraryName>
       <HeaderFileName />
     </Midl>
     <ClCompile>
@@ -1018,7 +1018,7 @@
       <PreprocessorDefinitions>_DEBUG;WIN32;_WINDOWS;_JDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <PrecompiledHeaderOutputFile>.\debug/Jdll.pch</PrecompiledHeaderOutputFile>
+      <PrecompiledHeaderOutputFile>.\debug/jdll.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>.\debug/</AssemblerListingLocation>
       <ObjectFileName>.\debug/</ObjectFileName>
       <ProgramDataBaseFileName>.\debug/</ProgramDataBaseFileName>
@@ -1035,7 +1035,7 @@
       <AdditionalDependencies>..\..\openssl-asm\keccak1600-mmx-nasm.o;..\..\openssl-asm\sha1-586-nasm.o;..\..\openssl-asm\sha256-586-nasm.o;..\..\openssl-asm\sha512-586-nasm.o;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>.\debug\j.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <ModuleDefinitionFile>..\..\dllsrc\JDLL.DEF</ModuleDefinitionFile>
+      <ModuleDefinitionFile>..\..\dllsrc\jdll.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>.\debug/j.pdb</ProgramDatabaseFile>
       <GenerateMapFile>true</GenerateMapFile>
@@ -1046,7 +1046,7 @@
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\debug/Jdll.bsc</OutputFile>
+      <OutputFile>.\debug/jdll.bsc</OutputFile>
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -1055,99 +1055,99 @@
     <ClCompile Include="..\..\jsrc\aes-c.c" />
     <ClCompile Include="..\..\jsrc\aes-ni.c" />
     <ClCompile Include="..\..\jsrc\aes-sse2.c" />
-    <ClCompile Include="..\..\jsrc\AF.C" />
-    <ClCompile Include="..\..\jsrc\AI.C" />
-    <ClCompile Include="..\..\jsrc\AM.C" />
-    <ClCompile Include="..\..\jsrc\AM1.C" />
-    <ClCompile Include="..\..\jsrc\AMN.C" />
-    <ClCompile Include="..\..\jsrc\AO.C" />
-    <ClCompile Include="..\..\jsrc\AP.C" />
-    <ClCompile Include="..\..\jsrc\AR.C" />
-    <ClCompile Include="..\..\jsrc\AS.C" />
-    <ClCompile Include="..\..\jsrc\AU.C" />
+    <ClCompile Include="..\..\jsrc\af.c" />
+    <ClCompile Include="..\..\jsrc\ai.c" />
+    <ClCompile Include="..\..\jsrc\am.c" />
+    <ClCompile Include="..\..\jsrc\am1.c" />
+    <ClCompile Include="..\..\jsrc\amn.c" />
+    <ClCompile Include="..\..\jsrc\ao.c" />
+    <ClCompile Include="..\..\jsrc\ap.c" />
+    <ClCompile Include="..\..\jsrc\ar.c" />
+    <ClCompile Include="..\..\jsrc\as.c" />
+    <ClCompile Include="..\..\jsrc\au.c" />
     <ClCompile Include="..\..\jsrc\blis\gemm_c-ref.c" />
     <ClCompile Include="..\..\jsrc\blis\gemm_int-aarch64.c" />
     <ClCompile Include="..\..\jsrc\blis\gemm_int-avx.c" />
     <ClCompile Include="..\..\jsrc\blis\gemm_int-fma.c" />
     <ClCompile Include="..\..\jsrc\blis\gemm_int-sse2.c" />
     <ClCompile Include="..\..\jsrc\blis\gemm_vec-ref.c" />
-    <ClCompile Include="..\..\jsrc\C.C" />
-    <ClCompile Include="..\..\jsrc\CA.C" />
-    <ClCompile Include="..\..\jsrc\CC.C" />
-    <ClCompile Include="..\..\jsrc\CD.C" />
-    <ClCompile Include="..\..\jsrc\CF.C" />
-    <ClCompile Include="..\..\jsrc\CG.C" />
-    <ClCompile Include="..\..\jsrc\CH.C" />
+    <ClCompile Include="..\..\jsrc\c.c" />
+    <ClCompile Include="..\..\jsrc\ca.c" />
+    <ClCompile Include="..\..\jsrc\cc.c" />
+    <ClCompile Include="..\..\jsrc\cd.c" />
+    <ClCompile Include="..\..\jsrc\cf.c" />
+    <ClCompile Include="..\..\jsrc\cg.c" />
+    <ClCompile Include="..\..\jsrc\ch.c" />
     <ClCompile Include="..\..\jsrc\cip.c" />
-    <ClCompile Include="..\..\jsrc\CL.C" />
-    <ClCompile Include="..\..\jsrc\CP.C" />
+    <ClCompile Include="..\..\jsrc\cl.c" />
+    <ClCompile Include="..\..\jsrc\cp.c" />
     <ClCompile Include="..\..\jsrc\cpdtsp.c" />
     <ClCompile Include="..\..\jsrc\cpuinfo.c" />
-    <ClCompile Include="..\..\jsrc\CR.C" />
-    <ClCompile Include="..\..\jsrc\CRS.C" />
-    <ClCompile Include="..\..\jsrc\CT.C" />
-    <ClCompile Include="..\..\jsrc\CU.C" />
-    <ClCompile Include="..\..\jsrc\CV.C" />
-    <ClCompile Include="..\..\jsrc\CX.C" />
-    <ClCompile Include="..\..\jsrc\D.C" />
-    <ClCompile Include="..\..\jsrc\DC.C" />
-    <ClCompile Include="..\..\jsrc\DSS.C" />
-    <ClCompile Include="..\..\jsrc\DSTOP.C" />
-    <ClCompile Include="..\..\jsrc\DSUSP.C" />
+    <ClCompile Include="..\..\jsrc\cr.c" />
+    <ClCompile Include="..\..\jsrc\crs.c" />
+    <ClCompile Include="..\..\jsrc\ct.c" />
+    <ClCompile Include="..\..\jsrc\cu.c" />
+    <ClCompile Include="..\..\jsrc\cv.c" />
+    <ClCompile Include="..\..\jsrc\cx.c" />
+    <ClCompile Include="..\..\jsrc\d.c" />
+    <ClCompile Include="..\..\jsrc\dc.c" />
+    <ClCompile Include="..\..\jsrc\dss.c" />
+    <ClCompile Include="..\..\jsrc\dstop.c" />
+    <ClCompile Include="..\..\jsrc\dsusp.c" />
     <ClCompile Include="..\..\jsrc\dtoa.c" />
-    <ClCompile Include="..\..\jsrc\F.C" />
-    <ClCompile Include="..\..\jsrc\F2.C" />
+    <ClCompile Include="..\..\jsrc\f.c" />
+    <ClCompile Include="..\..\jsrc\f2.c" />
     <ClCompile Include="..\..\jsrc\fbu.c" />
     <ClCompile Include="..\..\jsrc\gemm.c" />
-    <ClCompile Include="..\..\jsrc\I.C" />
-    <ClCompile Include="..\..\jsrc\IO.C" />
-    <ClCompile Include="..\..\jsrc\J.C" />
-    <ClCompile Include="..\..\dllsrc\JDLL.C" />
+    <ClCompile Include="..\..\jsrc\i.c" />
+    <ClCompile Include="..\..\jsrc\io.c" />
+    <ClCompile Include="..\..\jsrc\j.c" />
+    <ClCompile Include="..\..\dllsrc\jdll.c" />
     <ClCompile Include="..\..\dllsrc\jdllcomx.cpp" />
     <ClCompile Include="..\..\jsrc\jdlllic.c" />
-    <ClCompile Include="..\..\jsrc\K.C" />
-    <ClCompile Include="..\..\jsrc\M.C" />
-    <ClCompile Include="..\..\jsrc\Mbx.c" />
-    <ClCompile Include="..\..\jsrc\P.C" />
-    <ClCompile Include="..\..\jsrc\PV.C" />
-    <ClCompile Include="..\..\jsrc\PX.C" />
-    <ClCompile Include="..\..\jsrc\R.C" />
-    <ClCompile Include="..\..\jsrc\RL.C" />
-    <ClCompile Include="..\..\jsrc\RT.C" />
-    <ClCompile Include="..\..\jsrc\S.C" />
-    <ClCompile Include="..\..\jsrc\SC.C" />
-    <ClCompile Include="..\..\jsrc\SL.C" />
-    <ClCompile Include="..\..\jsrc\SN.C" />
-    <ClCompile Include="..\..\jsrc\T.C" />
-    <ClCompile Include="..\..\jsrc\U.C" />
-    <ClCompile Include="..\..\jsrc\V.C" />
-    <ClCompile Include="..\..\jsrc\V0.C" />
-    <ClCompile Include="..\..\jsrc\V1.C" />
-    <ClCompile Include="..\..\jsrc\V2.C" />
-    <ClCompile Include="..\..\jsrc\VA1.C" />
+    <ClCompile Include="..\..\jsrc\k.c" />
+    <ClCompile Include="..\..\jsrc\m.c" />
+    <ClCompile Include="..\..\jsrc\mbx.c" />
+    <ClCompile Include="..\..\jsrc\p.c" />
+    <ClCompile Include="..\..\jsrc\pv.c" />
+    <ClCompile Include="..\..\jsrc\px.c" />
+    <ClCompile Include="..\..\jsrc\r.c" />
+    <ClCompile Include="..\..\jsrc\rl.c" />
+    <ClCompile Include="..\..\jsrc\rt.c" />
+    <ClCompile Include="..\..\jsrc\s.c" />
+    <ClCompile Include="..\..\jsrc\sc.c" />
+    <ClCompile Include="..\..\jsrc\sl.c" />
+    <ClCompile Include="..\..\jsrc\sn.c" />
+    <ClCompile Include="..\..\jsrc\t.c" />
+    <ClCompile Include="..\..\jsrc\u.c" />
+    <ClCompile Include="..\..\jsrc\v.c" />
+    <ClCompile Include="..\..\jsrc\v0.c" />
+    <ClCompile Include="..\..\jsrc\v1.c" />
+    <ClCompile Include="..\..\jsrc\v2.c" />
+    <ClCompile Include="..\..\jsrc\va1.c" />
     <ClCompile Include="..\..\jsrc\va1ss.c" />
-    <ClCompile Include="..\..\jsrc\VA2.C" />
-    <ClCompile Include="..\..\jsrc\VA2S.C" />
-    <ClCompile Include="..\..\jsrc\VA2ss.C" />
+    <ClCompile Include="..\..\jsrc\va2.c" />
+    <ClCompile Include="..\..\jsrc\va2s.c" />
+    <ClCompile Include="..\..\jsrc\va2ss.c" />
     <ClCompile Include="..\..\jsrc\vamultsp.c" />
-    <ClCompile Include="..\..\jsrc\VB.C" />
-    <ClCompile Include="..\..\jsrc\VBANG.C" />
+    <ClCompile Include="..\..\jsrc\vb.c" />
+    <ClCompile Include="..\..\jsrc\vbang.c" />
     <ClCompile Include="..\..\jsrc\vbit.c" />
-    <ClCompile Include="..\..\jsrc\VCANT.C" />
-    <ClCompile Include="..\..\jsrc\VCAT.C" />
+    <ClCompile Include="..\..\jsrc\vcant.c" />
+    <ClCompile Include="..\..\jsrc\vcat.c" />
     <ClCompile Include="..\..\jsrc\vcatsp.c" />
     <ClCompile Include="..\..\jsrc\vchar.c" />
-    <ClCompile Include="..\..\jsrc\VCOMP.C" />
-    <ClCompile Include="..\..\jsrc\VCOMPSC.C" />
-    <ClCompile Include="..\..\jsrc\VD.C" />
+    <ClCompile Include="..\..\jsrc\vcomp.c" />
+    <ClCompile Include="..\..\jsrc\vcompsc.c" />
+    <ClCompile Include="..\..\jsrc\vd.c" />
     <ClCompile Include="..\..\jsrc\vdx.c" />
-    <ClCompile Include="..\..\jsrc\VE.C" />
-    <ClCompile Include="..\..\jsrc\VF.C" />
+    <ClCompile Include="..\..\jsrc\ve.c" />
+    <ClCompile Include="..\..\jsrc\vf.c" />
     <ClCompile Include="..\..\jsrc\vfft.c" />
-    <ClCompile Include="..\..\jsrc\VFROM.C" />
-    <ClCompile Include="..\..\jsrc\Vfromsp.c" />
-    <ClCompile Include="..\..\jsrc\VG.C" />
-    <ClCompile Include="..\..\jsrc\VGAUSS.C" />
+    <ClCompile Include="..\..\jsrc\vfrom.c" />
+    <ClCompile Include="..\..\jsrc\vfromsp.c" />
+    <ClCompile Include="..\..\jsrc\vg.c" />
+    <ClCompile Include="..\..\jsrc\vgauss.c" />
     <ClCompile Include="..\..\jsrc\vgcomp.c" />
     <ClCompile Include="..\..\jsrc\vgranking.c" />
     <ClCompile Include="..\..\jsrc\vgsort.c" />
@@ -1155,40 +1155,40 @@
     <ClCompile Include="..\..\jsrc\vi.c" />
     <ClCompile Include="..\..\jsrc\viavx.c" />
     <ClCompile Include="..\..\jsrc\viix.c" />
-    <ClCompile Include="..\..\jsrc\Visp.c" />
-    <ClCompile Include="..\..\jsrc\VM.C" />
-    <ClCompile Include="..\..\jsrc\VO.C" />
-    <ClCompile Include="..\..\jsrc\VP.C" />
-    <ClCompile Include="..\..\jsrc\VQ.C" />
+    <ClCompile Include="..\..\jsrc\visp.c" />
+    <ClCompile Include="..\..\jsrc\vm.c" />
+    <ClCompile Include="..\..\jsrc\vo.c" />
+    <ClCompile Include="..\..\jsrc\vp.c" />
+    <ClCompile Include="..\..\jsrc\vq.c" />
     <ClCompile Include="..\..\jsrc\vrand.c" />
-    <ClCompile Include="..\..\jsrc\Vrep.c" />
-    <ClCompile Include="..\..\jsrc\VS.C" />
-    <ClCompile Include="..\..\jsrc\Vsb.c" />
-    <ClCompile Include="..\..\jsrc\VT.C" />
-    <ClCompile Include="..\..\jsrc\Vu.c" />
-    <ClCompile Include="..\..\jsrc\VX.C" />
-    <ClCompile Include="..\..\jsrc\VZ.C" />
-    <ClCompile Include="..\..\jsrc\W.C" />
-    <ClCompile Include="..\..\jsrc\WC.C" />
-    <ClCompile Include="..\..\jsrc\WN.C" />
-    <ClCompile Include="..\..\jsrc\WS.C" />
-    <ClCompile Include="..\..\jsrc\X.C" />
-    <ClCompile Include="..\..\jsrc\X15.C" />
-    <ClCompile Include="..\..\jsrc\XA.C" />
+    <ClCompile Include="..\..\jsrc\vrep.c" />
+    <ClCompile Include="..\..\jsrc\vs.c" />
+    <ClCompile Include="..\..\jsrc\vsb.c" />
+    <ClCompile Include="..\..\jsrc\vt.c" />
+    <ClCompile Include="..\..\jsrc\vu.c" />
+    <ClCompile Include="..\..\jsrc\vx.c" />
+    <ClCompile Include="..\..\jsrc\vz.c" />
+    <ClCompile Include="..\..\jsrc\w.c" />
+    <ClCompile Include="..\..\jsrc\wc.c" />
+    <ClCompile Include="..\..\jsrc\wn.c" />
+    <ClCompile Include="..\..\jsrc\ws.c" />
+    <ClCompile Include="..\..\jsrc\x.c" />
+    <ClCompile Include="..\..\jsrc\x15.c" />
+    <ClCompile Include="..\..\jsrc\xa.c" />
     <ClCompile Include="..\..\jsrc\xaes.c" />
-    <ClCompile Include="..\..\jsrc\XB.C" />
+    <ClCompile Include="..\..\jsrc\xb.c" />
     <ClCompile Include="..\..\jsrc\xc.c" />
     <ClCompile Include="..\..\jsrc\xcrc.c" />
-    <ClCompile Include="..\..\jsrc\XD.C" />
-    <ClCompile Include="..\..\jsrc\XF.C" />
+    <ClCompile Include="..\..\jsrc\xd.c" />
+    <ClCompile Include="..\..\jsrc\xf.c" />
     <ClCompile Include="..\..\jsrc\xfmt.c" />
-    <ClCompile Include="..\..\jsrc\XH.C" />
-    <ClCompile Include="..\..\jsrc\XI.C" />
-    <ClCompile Include="..\..\jsrc\XL.C" />
-    <ClCompile Include="..\..\jsrc\XO.C" />
-    <ClCompile Include="..\..\jsrc\XS.C" />
+    <ClCompile Include="..\..\jsrc\xh.c" />
+    <ClCompile Include="..\..\jsrc\xi.c" />
+    <ClCompile Include="..\..\jsrc\xl.c" />
+    <ClCompile Include="..\..\jsrc\xo.c" />
+    <ClCompile Include="..\..\jsrc\xs.c" />
     <ClCompile Include="..\..\jsrc\xsha.c" />
-    <ClCompile Include="..\..\jsrc\XT.C" />
+    <ClCompile Include="..\..\jsrc\xt.c" />
     <ClCompile Include="..\..\jsrc\xu.c" />
     <ClCompile Include="..\..\jsrc\openssl\sha\keccak1600.c" />
     <ClCompile Include="..\..\jsrc\openssl\sha\md4_dgst.c" />
@@ -1202,7 +1202,7 @@
     <ClCompile Include="..\..\jsrc\openssl\sha\sha512.c" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\dllsrc\JDLL.DEF" />
+    <None Include="..\..\dllsrc\jdll.def" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\..\dllsrc\jdll.rc">
@@ -1228,27 +1228,27 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\jsrc\a.h" />
-    <ClInclude Include="..\..\jsrc\D.H" />
-    <ClInclude Include="..\..\jsrc\DD.H" />
+    <ClInclude Include="..\..\jsrc\d.h" />
+    <ClInclude Include="..\..\jsrc\dd.h" />
     <ClInclude Include="..\..\jsrc\jversion.h" />
     <ClInclude Include="..\..\jsrc\j.h" />
-    <ClInclude Include="..\..\jsrc\JC.H" />
-    <ClInclude Include="..\..\jsrc\JE.H" />
+    <ClInclude Include="..\..\jsrc\jc.h" />
+    <ClInclude Include="..\..\jsrc\je.h" />
     <ClInclude Include="..\..\jsrc\jerr.h" />
-    <ClInclude Include="..\..\jsrc\JS.H" />
-    <ClInclude Include="..\..\jsrc\JT.H" />
+    <ClInclude Include="..\..\jsrc\js.h" />
+    <ClInclude Include="..\..\jsrc\jt.h" />
     <ClInclude Include="..\..\jsrc\jtype.h" />
     <ClInclude Include="..\..\jsrc\m.h" />
-    <ClInclude Include="..\..\jsrc\P.H" />
+    <ClInclude Include="..\..\jsrc\p.h" />
     <ClInclude Include="..\..\jsrc\result.h" />
-    <ClInclude Include="..\..\jsrc\VA.H" />
+    <ClInclude Include="..\..\jsrc\va.h" />
     <ClInclude Include="..\..\jsrc\vasm.h" />
-    <ClInclude Include="..\..\jsrc\VE.H" />
+    <ClInclude Include="..\..\jsrc\ve.h" />
     <ClInclude Include="..\..\jsrc\vgsort.h" />
-    <ClInclude Include="..\..\jsrc\VX.H" />
-    <ClInclude Include="..\..\jsrc\VZ.H" />
-    <ClInclude Include="..\..\jsrc\W.H" />
-    <ClInclude Include="..\..\jsrc\X.H" />
+    <ClInclude Include="..\..\jsrc\vx.h" />
+    <ClInclude Include="..\..\jsrc\vz.h" />
+    <ClInclude Include="..\..\jsrc\w.h" />
+    <ClInclude Include="..\..\jsrc\x.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

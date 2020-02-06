@@ -17,7 +17,12 @@ jhrajax''
 
 files=: 3 : 0
 addrecent_jsp_''
-'</div>',~'<div>',;fx each SPFILES_jsp_
+
+if. 0=#SPFILES_jsp_ do.
+ '</div>',~'<div>The recent files list is empty.'
+else.
+ '</div>',~'<div>',;fx each SPFILES_jsp_
+end. 
 )
 
 fx=: 3 : 0

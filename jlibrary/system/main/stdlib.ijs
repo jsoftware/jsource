@@ -1,7 +1,7 @@
 18!:4 <'z'
 3 : 0 ''
 
-JLIB=: '9.01.15'
+JLIB=: '9.01.21'
 
 notdef=. 0: ~: 4!:0 @ <
 hostpathsep=: ('/\'{~6=9!:12'')&(I. @ (e.&'/\')@] })
@@ -43,7 +43,6 @@ end.
 if. notdef 'FHS' do.
   FHS=: IFUNIX>'/'e.LIBFILE
 end.
-'libc.so.6 setlocale > x i *c'&(15!:0) ::(0:@(15!:10)@(''"_))^:(UNAME-:'Linux') 1;,'C'
 if. notdef 'IFRASPI' do.
   if. UNAME -: 'Linux' do.
     cpu=. 2!:0 ::(''"_) 'cat /proc/cpuinfo'
@@ -2032,6 +2031,9 @@ case. 'Win' do. ''
 case. 'Darwin' do. 'open'
 case. do.
   try.
+    2!:0'which xdg-open 2>/dev/null'
+    'xdg-open' return. catch. end.
+  try.
     2!:0'which evince 2>/dev/null'
     'evince' return. catch. end.
   try.
@@ -2314,6 +2316,9 @@ case. 'Android' do. ''
 case. 'Win' do. ''
 case. 'Darwin' do. 'open'
 case. do.
+  try.
+    2!:0'which xdg-open 2>/dev/null'
+    'xdg-open' return. catch. end.
   try.
     2!:0'which eog 2>/dev/null'
     'eog' return. catch. end.

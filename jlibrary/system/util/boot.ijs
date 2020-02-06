@@ -62,7 +62,13 @@ elseif. IFJA do.
   r=. r,LF,'J Android: ',wd'version'
 end.
 if. UNAME-:'Android' do.
-  r=. r,LF,'Platform: ',UNAME,' ',(IF64 pick '32';'64'),' (', ')',~ LF-.~ 2!:0'getprop ro.product.cpu.abi'
+  arch=. LF-.~ 2!:0'getprop ro.product.cpu.abi'
+  if. IF64 < arch-:'arm64-v8a' do.
+    arch=. 'armeabi-v7a'
+  elseif. IF64 < arch-:'x86_64' do.
+    arch=. 'x86'
+  end.
+  r=. r,LF,'Platform: ',UNAME,' ',(IF64 pick '32';'64'),' (', ')',~ arch
 else.
   r=. r,LF,'Platform: ',UNAME,' ',IF64 pick '32';'64'
 end.

@@ -510,7 +510,7 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\jsrc\Jconsole.c" />
+    <ClCompile Include="..\..\jsrc\jconsole.c" />
     <ClCompile Include="..\..\jsrc\jeload.c" />
   </ItemGroup>
   <ItemGroup>

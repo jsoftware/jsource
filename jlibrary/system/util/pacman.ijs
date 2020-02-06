@@ -672,15 +672,17 @@ if. 0=#p do. p=. jpath '~temp/',n end.
 q=. jpath '~temp/httpget.log'
 t=. ":{.t,3
 ferase p;q
-fail=. 0
+retry=. fail=. 0
 cmd=. HTTPCMD rplc '%O';(dquote p);'%L';(dquote q);'%t';t;'%T';(":TIMEOUT);'%U';f
-if. UNAME-:'Android' do.
+if. IFJA do.
   try.
     (<p) 1!:2~ (11!:4000) f
   catch.
-    fail=. 1 [ (<q) 1!:2~ (11!:0) 'qer'
+    retry=. fail=. 1 [ (<q) 1!:2~ (11!:0) 'qer'
   end.
-elseif. ''-:HTTPCMD do.
+end.
+if. (IFJA < ''-:HTTPCMD) +. (IFJA *. retry *. ''-:HTTPCMD) do.
+  fail=. 0
   require 'socket'
   1!:55 ::0: <p
   rc=. 0 [ e=. pp=. ''
@@ -708,7 +710,7 @@ elseif. ''-:HTTPCMD do.
   else.
     if. 0~:rc do. e=. sderror_jsocket_ rc end.
   end.
-elseif. do.
+elseif. (UNAME-.@-:'Android') do.
   try.
     fail=. _1-: e=. shellcmd cmd
   catch. fail=. 1 end.
@@ -842,6 +844,241 @@ write_config=: 3 : 0
 txt=. 'NB. Addon configuration',LF2
 txt=. txt,'ADDLABS=: 0 : 0',LF,ADDLABS,')',LF
 txt fwrites ADDCFGIJS
+)
+installer=: 3 : 0
+echo 'these steps can take several minutes'
+echo '*** next step updates addons and base library'
+'update'jpkg''
+'upgrade'jpkg'all'
+'install'jpkg {."1'shownotinstalled'jpkg''
+if. IFIOS +. UNAME-:'Android' do.
+ echo LF,'ALL DONE!',LF,'exit this J session and start new session'
+ i.0 0
+ return.
+end.
+echo '*** next step updates Jqt ide'
+do_install'qtide'
+echo '*** next step updates JE'
+'upgrade'jpkg'jengine'
+echo '*** next step creates desktop J launch icons'
+if. 2~:ftype jpath'~/Desktop' do.
+ echo '~/Desktop folder does not exist for shortcuts'
+ echo 'perhaps create ~/Desktop as link to your Desktop folder and rerun'
+ assert 0
+else.
+ shortcut'jc'
+ shortcut'jhs'
+ shortcut'jqt'
+end.
+echo LF,'ALL DONE!',LF,'exit this J session and start new session with double click',LF,'of desktop icon to run J with the corresponding user interface'
+i.0 0
+)
+shortcut=: 3 : 0
+try. ".UNAME,' y' catchd. echo 'create ',y,' launch icon failed' end. 
+)
+
+defaults=: 3 : 0
+A=:   ' ~addons/ide/jhs/config/jhs.cfg'
+L=:   hostpathsep jpath'~/Desktop/'
+W=:   hostpathsep jpath'~'
+I=:   hostpathsep jpath'~bin/icons/'
+N=:   (1 2 3{9!:14''),;IF64{'-32';''
+DS=:  ;(('Win';'Linux';'Darwin')i.<UNAME){'.lnk';'.desktop';'.app'
+LIB=: ''
+)
+vbs=: 0 : 0
+Set oWS=WScript.CreateObject("WScript.Shell")
+Set oLink=oWS.CreateShortcut("<N>")
+oLink.TargetPath="<C>"
+oLink.Arguments="<A>"
+oLink.WorkingDirectory = "<W>"
+oLink.IconLocation="<I>"
+oLink.Save
+)
+
+Win=: 3 : 0
+defaults''
+Winx y
+)
+
+Winx=: 3 : 0
+select. y
+case.'jc' do.
+ win'jc' ;'jconsole';'jgray.ico';LIB
+case. 'jhs' do. 
+ win'jhs';'jconsole';'jblue.ico';LIB,A
+case. 'jqt' do.
+ win'jqt';'jqt'     ;'jgreen.ico';LIB
+case. do.
+ assert 0
+end.
+)
+
+win=: 3 : 0
+'type bin icon arg'=.y
+f=. jpath '~temp/shortcut.vbs'
+n=. L,type,N,DS
+c=. hostpathsep jpath '~bin/',bin
+(vbs rplc '<N>';n;'<C>';c;'<A>';arg;'<W>';W;'<I>';I,icon) fwrite f
+r=. spawn_jtask_ 'cscript "',f,'"'
+r assert -.'runtime error' E. r
+ferase f
+i.0 0
+)
+desktop=: 0 : 0
+[Desktop Entry]
+Version=1.0
+Type=Application
+Terminal=false
+Name=<N>
+Exec=<E>
+Path=<W>
+Icon=<I>
+)
+desktoprh=: 0 : 0
+[Desktop Entry]
+Version=1.0
+Type=Application
+Terminal=<TT>
+Name=<N>
+Exec=<E>
+Path=<W>
+Icon=<I>
+)
+
+lter=: 0 : 0
+
+x-terminal-emulator does not exist and does not link to your preferred terminal
+edit launch icon properties and change x-terminal-emulator to be your preferred terminal
+ or
+create it with: sudo update-alternatives --config x-terminal-emulator
+
+)
+
+get_terminal=: 3 : 0
+t=. 'x-terminal-emulator'
+if. 0=shell :: 0:'which ',t do. echo lter end.
+t
+)
+
+Linux=: 3 : 0
+defaults''
+Linuxx y
+)
+
+Linuxx=: 3 : 0
+select. y
+case.'jc' do.
+ linux'jc' ;'jconsole';'jgray.png';LIB
+case. 'jhs' do. 
+ linux'jhs';'jconsole';'jblue.png';LIB,A
+case. 'jqt' do.
+ linux'jqt';'jqt'     ;'jgreen.png';LIB
+case. do.
+ assert 0
+end.
+i.0 0
+)
+
+linux=: 3 : 0
+'type bin icon arg'=.y
+n=. type,N
+f=. L,type,N,DS
+c=. hostpathsep jpath '~bin/',bin
+rh=. 1<#fread '/etc/redhat-release' 
+if. rh do.
+ if. type-:'jqt' do.
+  e=. c
+ else.
+  e=. c,' ',arg
+ end.
+else.
+ if. type-:'jqt' do.
+  e=. '"',c,'"'
+ else.
+  e=. '<T> -e "\"<C>\"<A>"'rplc '<T>';(get_terminal'');'<C>';c;'<A>';arg
+ end.
+end.
+
+if. rh do.
+ r=. desktoprh rplc '<N>';n
+ r=. r rplc '<E>';e
+ r=. r rplc '<W>';W
+ r=. r rplc '<I>';I,icon
+ r=. r rplc '<TT>';(type-:'jc'){'false';'true'
+ r fwrite f
+ 2!:0'chmod +x ',f
+else.
+ r=. desktop rplc '<N>';n
+ r=. r rplc '<E>';e
+ r=. r rplc '<W>';W
+ r=. r rplc '<I>';I,icon
+ r fwrite f
+ 2!:0'chmod +x ',f
+end.
+)
+plist=: 0 : 0
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+<key>CFBundleExecutable</key><string>apprun</string>
+<key>CFBundleIconFile</key><string>i.icns</string>
+<key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
+<key>CFBundleName</key><string>j</string>
+<key>CFBundlePackageType</key><string>APPL</string>
+<key>CFBundleVersion</key><string>1.0</string>
+</dict></plist>
+)
+
+COM=: jpath'~temp/launch.command'
+
+Darwin=: 3 : 0
+defaults''
+Darwinx y
+)
+
+
+Darwinx=: 3 : 0
+select. y
+case.'jc' do.
+ darwin'jc' ;'jconsole';'jgray.icns';LIB
+case. 'jhs' do. 
+ darwin'jhs';'jconsole';'jblue.icns';LIB,A
+case. 'jqt' do.
+ darwin'jqt';'jqt'     ;'jgreen.icns';LIB
+case. do.
+ assert 0
+end.
+i.0 0
+)
+darwin=: 3 : 0
+'type bin icon arg'=.y
+n=. type,N
+f=. L,type,N,DS
+c=. hostpathsep jpath '~bin/',bin
+select. type
+case.'jc' do.
+
+ r=. new_launch rplc '<COM>';COM;'<C>';(hostpathsep jpath '~bin/jconsole');'<A>';LIB
+case. 'jhs' do.
+ r=. new_launch rplc '<COM>';COM;'<C>';(hostpathsep jpath '~bin/jconsole');'<A>';LIB,A
+case. 'jqt' do.
+ r=.'#!/bin/sh',LF,'"',c,'.command" ',LIB
+end.
+fpathcreate f,'/Contents/MacOS'
+fpathcreate f,'/Contents/Resources'
+plist fwrite f,'/Contents/info.plist'
+r fwrite f,'/Contents/MacOS/apprun'
+(fread '~bin/icons/',icon) fwrite f,'/Contents/Resources/i.icns'
+2!:0'chmod -R +x ',f
+)
+
+new_launch=: 0 : 0 
+#!/bin/sh
+echo '#!/bin/sh' > "<COM>"
+echo '"<C>" <A>' >> "<COM>"
+chmod +x <COM>
+open "<COM>"
 )
 getmanifesturl=: 3 : 0
 'tag rep cmt'=. y
@@ -1211,6 +1448,15 @@ end.
 if. y -: 'server' do. res=. getserver'' end.
 res
 )
+
+man=: 0 : 0
+Valid options are:
+ history, install, manifest, remove, reinstall, search,
+ show, showinstalled, shownotinstalled, showupgrade,
+ status, update, upgrade
+
+https://code.jsoftware.com/wiki/JAL/Package_Manager/jpkg
+)
 jpkg=: 4 : 0
 if. -.INITDONE_jpacman_ do.
   checkaccess''
@@ -1222,7 +1468,7 @@ case. 'history';'manifest' do.
   x showfiles_console y
 case. 'install' do.
   if. -. HASFILEACCESS*.HASADDONSDIR do. 'file permission error' return. end.
-  install_console y
+  if. '*'-:y do. installer'' else. install_console y end.
 case. 'reinstall' do.
   if. -. HASFILEACCESS*.HASADDONSDIR do. 'file permission error' return. end.
   remove_console y
@@ -1237,30 +1483,29 @@ case. 'update' do.
   updatejal ''
 case. 'upgrade' do.
   if. -. HASFILEACCESS*.HASADDONSDIR do. 'file permission error' return. end.
-  upgrade_console y
+  if. 'jengine'-:y do. je_update'' else. upgrade_console y end.
+case. 'shortcut' do.
+  shortcut tolower y
 case. do.
-  msg=. 'Valid options are:',LF
-  msg=. msg,'  history, install, manifest, remove, reinstall, show, search,',LF
-  msg=. msg,'  showinstalled, shownotinstalled, showupgrade, status,',LF
-  msg,'  update, upgrade'
+  man
 end.
 )
 je_update=: 3 : 0
-if. IFIOS+.UNAME-:'Android' do. 'update not supported for this platform' return. end.
+if. IFIOS+.UNAME-:'Android' do. log'upgrade not supported for this platform' return. end.
 'jxxx jbithw platform br comm web dt'=. <;._1 '/',9!:14''
-if. -.(comm-:'commercial')*.web-:'www.jsoftware.com' do. 'update not possible for this install' return. end.
+if. -.(comm-:'commercial')*.web-:'www.jsoftware.com' do. log'upgrade not possible for this install' return. end.
 br=. (br i.'-'){.br
 path=. 'http://www.jsoftware.com/download/jengine/',jxxx,'-',br,'/'
 'plat name bname'=. je_sub''
 DLL=. hostpathsep jpath bname
 OLD=. hostpathsep jpath bname,'.old'
 NEW=. hostpathsep jpath bname,'.new'
-if. 1~:ftype bname do. 'update not supported for this type of install' return. end.
+if. 1~:ftype bname do. log'upgrade not supported for this type of install' return. end.
 
 if. IF64 > IFRASPI do.
  t=. httpget path,plat,'/j64'
- if. 1=;{.t do. 'update - read jengine folder failed' return end.
- a=. fread '~temp/j64'   
+ if. 1=;{.t do. log'upgrade - read jengine folder failed' return end.
+ a=. fread '~temp/j64'
  i=. >:((;(UNAME-:'Win'){'>libj';'>j') E. a)#i.#a
  a=. i}.each (#i)#<a
  a=. (a i.each'<'){.each a
@@ -1272,33 +1517,33 @@ if. IF64 > IFRASPI do.
  name=. <(}:i{.name),a,i}.name
 else.
  name=. <name
-end. 
+end.
 
 arg=. (<jxxx),(<br),(<platform),(<3{.jbithw),name
 r=. je_get arg
-if. _1=r do. 'update file not found' return. end.
-if. r-:fread DLL do. 'update not required - already current' return. end.
+if. _1=r do. log'upgrade file not found' return. end.
+if. r-:fread DLL do. log'upgrade not required - already current' return. end.
 
-if. -.testaccess'' do. 'update must be run with admin privileges' end.
+if. -.testaccess'' do. log'upgrade must be run with admin privileges' return. end.
 r fwrite NEW
 (fread DLL) fwrite OLD
 
 if. UNAME-:'Win' do.
   if. fexist OLD do.
-   if. -.ferase OLD do. 'update failed - ferase j.dll.old - exit all J sessions and try again' return. end.
+   if. -.ferase OLD do. log'upgrade failed - ferase j.dll.old - exit all J sessions and try again' return. end.
   end.
- if. -.OLD frename DLL do. 'update failed - rename j.dll to j.dll.old' return. end.
- if. -.DLL frename NEW do. 'update failed - rename j.dll.new to j.dll' return. end.
+ if. -.OLD frename DLL do. log'upgrade failed - rename j.dll to j.dll.old' return. end.
+ if. -.DLL frename NEW do. log'upgrade failed - rename j.dll.new to j.dll' return. end.
 else.
-  if. -.ferase DLL do. 'update failed - ferase libj.so.old - exit all J sessions and try again' return. end.
-  if. -.DLL frename NEW do. 'update failed - rename libj.so.new to libj.so' return. end.
+  if. -.ferase DLL do. log'upgrade failed - ferase libj.so.old - exit all J sessions and try again' return. end.
+  if. -.DLL frename NEW do. log'upgrade failed - rename libj.so.new to libj.so' return. end.
   if. FHS*.UNAME-:'Linux' do.
     2!:0 'chmod 644 "',DLL,'"'
     2!:0 'chown root:root "',DLL,'"'
     2!:0 'ldconfig'
   end.
 end.
-'update installed - shutdown, restart, and check JVERSION'
+'upgrade installed - shutdown, restart, and check JVERSION'
 )
 je_get=: 3 : 0
 'jxxx br plat bits name'=. y

@@ -5,27 +5,35 @@ LOCAL_MODULE    := j
 LOCAL_MODULE_FILENAME    := libj
 
 ifeq ($(TARGET_ARCH_ABI),arm64-v8a)
-  LOCAL_CFLAGS := -DUSE_THREAD -DC_CRC32C=1 -fPIC -Os -fvisibility=hidden -fwrapv -Werror -Wno-string-plus-int -Wno-empty-body -Wno-parentheses -Wno-pointer-sign -Wno-logical-op-parentheses -Wno-unused-value -Wno-null-dereference -Wno-type-limits -Wno-pass-failed -D_FORTIFY_SOURCE=2 -Werror=fortify-source -fno-strict-aliasing -march=armv8-a+crc+crypto
+  LOCAL_CFLAGS := -DC_CRC32C=1 -fPIC -Os -fvisibility=hidden -fwrapv -Werror -Wno-string-plus-int -Wno-empty-body -Wno-parentheses -Wno-pointer-sign -Wno-logical-op-parentheses -Wno-unused-value -Wno-null-dereference -Wno-type-limits -Wno-pass-failed -D_FORTIFY_SOURCE=2 -Werror=fortify-source -fno-strict-aliasing -march=armv8-a+crc+crypto
   LOCAL_ARM_NEON := true
+  LOCAL_CFLAGS += -fopenmp
+  LOCAL_LDFLAGS += -fopenmp
 endif
 ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
-  LOCAL_CFLAGS := -DUSE_THREAD -fPIC -Os -fvisibility=hidden -fwrapv -Werror -Wno-string-plus-int -Wno-empty-body -Wno-parentheses -Wno-pointer-sign -Wno-logical-op-parentheses -Wno-unused-value -Wno-null-dereference -Wno-type-limits -Wno-pass-failed -D_FORTIFY_SOURCE=2 -Werror=fortify-source -fno-strict-aliasing -mfloat-abi=softfp -march=armv7-a
-  LOCAL_ARM_MODE := arm
+  LOCAL_CFLAGS := -fPIC -Os -fvisibility=hidden -fwrapv -Werror -Wno-string-plus-int -Wno-empty-body -Wno-parentheses -Wno-pointer-sign -Wno-logical-op-parentheses -Wno-unused-value -Wno-null-dereference -Wno-type-limits -Wno-pass-failed -D_FORTIFY_SOURCE=2 -Werror=fortify-source -fno-strict-aliasing -mfloat-abi=softfp -march=armv7-a
+  LOCAL_ARM_MODE := thumb
   LOCAL_ARM_NEON := true
+# LOCAL_CFLAGS += -fopenmp
+# LOCAL_LDFLAGS += -fopenmp
 endif
 ifeq ($(TARGET_ARCH_ABI),armeabi)
-  LOCAL_CFLAGS := -DUSE_THREAD -fPIC -Os -fvisibility=hidden -fwrapv -Werror -Wno-string-plus-int -Wno-empty-body -Wno-parentheses -Wno-pointer-sign -Wno-logical-op-parentheses -Wno-unused-value -Wno-null-dereference -Wno-type-limits -fno-strict-aliasing -mfloat-abi=softfp -march=armv5te
+  LOCAL_CFLAGS := -fPIC -Os -fvisibility=hidden -fwrapv -Werror -Wno-string-plus-int -Wno-empty-body -Wno-parentheses -Wno-pointer-sign -Wno-logical-op-parentheses -Wno-unused-value -Wno-null-dereference -Wno-type-limits -fno-strict-aliasing -mfloat-abi=softfp -march=armv5te
   LOCAL_ARM_MODE := arm
+  LOCAL_CFLAGS += -fopenmp
+  LOCAL_LDFLAGS += -fopenmp
 endif
 ifeq ($(TARGET_ARCH),x86_64)
-  LOCAL_CFLAGS := -DUSE_THREAD -DC_CRC32C=1 -fPIC -Os -fvisibility=hidden -fwrapv -Werror -Wno-string-plus-int -Wno-empty-body -Wno-parentheses -Wno-pointer-sign -Wno-logical-op-parentheses -Wno-unused-value -Wno-null-dereference -Wno-type-limits -Wno-pass-failed -D_FORTIFY_SOURCE=2 -Werror=fortify-source -fno-strict-aliasing -march=x86-64 -mtune=intel -msse4.2 -mpopcnt -fno-stack-protector
+  LOCAL_CFLAGS := -DC_CRC32C=1 -fPIC -Os -fvisibility=hidden -fwrapv -Werror -Wno-string-plus-int -Wno-empty-body -Wno-parentheses -Wno-pointer-sign -Wno-logical-op-parentheses -Wno-unused-value -Wno-null-dereference -Wno-type-limits -Wno-pass-failed -D_FORTIFY_SOURCE=2 -Werror=fortify-source -fno-strict-aliasing -march=x86-64 -mtune=intel -msse4.2 -mpopcnt -fno-stack-protector
+  LOCAL_CFLAGS += -fopenmp
+  LOCAL_LDFLAGS += -fopenmp
 endif
 ifeq ($(TARGET_ARCH),x86)
-  LOCAL_CFLAGS := -DUSE_THREAD -fPIC -Os -fvisibility=hidden -fwrapv -Werror -Wno-string-plus-int -Wno-empty-body -Wno-parentheses -Wno-pointer-sign -Wno-logical-op-parentheses -Wno-unused-value -Wno-null-dereference -Wno-type-limits -Wno-pass-failed -D_FORTIFY_SOURCE=2 -Werror=fortify-source -fno-strict-aliasing -march=i686 -mtune=intel -mssse3 -mfpmath=sse -fno-stack-protector
+  LOCAL_CFLAGS := -fPIC -Os -fvisibility=hidden -fwrapv -Werror -Wno-string-plus-int -Wno-empty-body -Wno-parentheses -Wno-pointer-sign -Wno-logical-op-parentheses -Wno-unused-value -Wno-null-dereference -Wno-type-limits -Wno-pass-failed -D_FORTIFY_SOURCE=2 -Werror=fortify-source -fno-strict-aliasing -march=i686 -mtune=intel -mssse3 -mfpmath=sse -fno-stack-protector
+  LOCAL_CFLAGS += -fopenmp
+  LOCAL_LDFLAGS += -fopenmp
 endif
 LOCAL_LDLIBS := -ldl -llog
-LOCAL_CFLAGS += -fopenmp
-LOCAL_LDFLAGS += -fopenmp
 
 LOCAL_SRC_FILES := a.c ab.c aes-c.c aes-arm.c aes-sse2.c af.c ai.c am.c am1.c amn.c ao.c ap.c ar.c as.c au.c c.c ca.c cc.c cd.c cf.c cg.c ch.c cip.c cl.c cp.c cpdtsp.c cpuinfo.c cr.c crs.c \
 	ct.c cu.c cv.c cx.c d.c dc.c dss.c dstop.c dsusp.c dtoa.c f.c f2.c fbu.c gemm.c i.c io.c j.c jdlllic.c k.c m.c mbx.c p.c pv.c px.c r.c rl.c rt.c s.c sc.c sl.c \

@@ -19,9 +19,14 @@ jhjmlink''
  'demo'    jhmab'demo'
  'app'     jhmab'app'
  'labs'    jhmab'labs'
+'wiki'     jhmg 'wiki';1;10
+ 'helpwikijhs'       jhmab'JHS'
+ 'helpwikinuvoc'     jhmab'NuVoc'
+ 'helpwikiconstant'  jhmab'constant'
+ 'helpwikicontrol'   jhmab'control'
+ 'helpwikiforeign'   jhmab'foreign'
+ 'helpwikiancilliary'jhmab'Ancilliary'
 'help'          jhmg'help';1;10
- 'helpwikijhs'   jhmab'wiki JHS'
- 'helpwikinuvoc' jhmab'wiki nuvoc'
  'helphelp'      jhmab'help'
  'helpinfo'      jhmab'info'
  'helpvocab'     jhmab'vocabulary'
@@ -94,7 +99,7 @@ ev_about_click=: 3 : 0
 jhtml'<hr/>'
 echo JVERSION
 echo' '
-echo'Copyright 1994-2017 Jsoftware Inc.'
+echo'Copyright 1994-2019 Jsoftware Inc.'
 jhtml'<hr/>'
 )
 
@@ -180,7 +185,7 @@ t=. t,'jfile'  jhmab'jfile    f^'
 t=. t,'jfiles' jhmab'jfiles   k^'
 t=. t,JIJSAPP  jhmab'jijs     J^'
 t=. t,'jfif'   jhmab'jfif     F^'
-t=. t,'jal'    jhmab'jal'
+t=. t,'jal'    jhmab'pacman'
 t=. t,'jijx'   jhmab'jijx     j^'
 t=. t,'clearwindow'jhmab'clear window'
 t=. t,'clearrefresh'jhmab'clear refresh'
@@ -429,14 +434,7 @@ function ev_about_click(){jdoajax([]);}
 function ev_clearwindow_click(){jbyid("log").innerHTML= "";newpline("   ");}
 function ev_clearrefresh_click(){jdoajax([]);}
 function ev_clearLS_click(){localStorage.clear();};
-
-function linkclick(a)
-{
- w=window.open("",a);
- w.close();
- window.open(a,a);
-}
-
+function linkclick(a){w=window.open("",a);w.close();window.open(a,a);return false;}
 function ev_jfile_click(){linkclick("jfile");}
 function ev_jfiles_click(){linkclick("jfiles");}
 function ev_jfif_click(){linkclick("jfif");}
@@ -448,6 +446,13 @@ function ev_helphelp_click(){linkclick("~addons/docs/help/index.htm")};
 function ev_helpinfo_click(){linkclick("~addons/docs/help/user/product.htm")};
 function ev_helpvocab_click(){linkclick("~addons/docs/help/dictionary/vocabul.htm")};
 function ev_helpwikinuvoc_click(){linkclick("http://code.jsoftware.com/wiki/NuVoc")};
+function ev_helpwikiancilliary_click(){linkclick("http://code.jsoftware.com/wiki/NuVoc#bottomrefs")};
+
+function ev_helpwikiconstant_click(){linkclick("http://code.jsoftware.com/wiki/Vocabulary/Constants")};
+function ev_helpwikicontrol_click(){linkclick("http://code.jsoftware.com/wiki/Vocabulary/ControlStructures")};
+function ev_helpwikiforeign_click(){linkclick("http://code.jsoftware.com/wiki/Vocabulary/Foreigns")};
+
+
 function ev_helpconstant_click(){linkclick("~addons/docs/help/dictionary/dcons.htm")};
 function ev_helpcontrol_click(){linkclick("~addons/docs/help/dictionary/ctrl.htm")};
 function ev_helpforeign_click(){linkclick("~addons/docs/help/dictionary/xmain.htm")};

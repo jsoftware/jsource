@@ -7,42 +7,70 @@
 #include "w.h"
 
 #define SS              0    /* space                           */
-#define SX              1    /* other                           */
-#define SA              2    /* alphanumeric                    */
-#define SN              3    /* N                               */
-#define SNB             4    /* NB                              */
-#define SNZ             5    /* NB.                             */
-#define S9              6    /* numeric                         */
-#define SQ              7    /* quote                           */
-#define SQQ             8    /* even quotes                     */
-#define SZ              9    /* trailing comment                */
+#define SS9             1    // space, previous field was numeric
+#define SX              2    /* other                           */
+#define SA              3    /* alphanumeric                    */
+#define SN              4    /* N                               */
+#define SNB             5    /* NB                              */
+#define SQQ             6    /* even quotes                     */
+#define S9              7    /* numeric                         */
+#define S99             8    // numeric, previous field was numeric
+#define SQ              9    /* quote                           */
+#define SNZ             10    // NB. - bit 3 of state means 'comment'
+#define SZ              11    // trailing comment - bit 3 of state means 'comment'
 
-#define EI              1    /* emit (b,i-1); b=.i              */
-#define EN              2    /* b=.i                            */
-
+#if 0 // obsolete 
+#define E0              0  // 1 no action
+#define EI              1    /* 4 emit (b,i-1); b=.i              */
+#define EN              2    /* 5 b=.i                            */
 typedef struct {C new,effect;} ST;
+#define SE(s,e) {s,e}
+#else
+#if 0
+// bits 0-2 and 7 of the state are flags: 0=!EI 1=state is SS 2=EI|EN 7=state is S9  6=state is comment
+#define E0              1  // no action
+#define EI              4    // end of previous word - emit
+#define EN              5    // start of next word - save position
+#define EZ              EI   // end and start together - $ eg
 
-static ST state[10][CX+1]={
-/*SS */ {[CX]={SX,EN},[CS]={SS,0 },[CA]={SA,EN},[CN]={SN,EN},[CB]={SA,EN},[C9]={S9,EN},[CD]={SX,EN},[CC]={SX,EN},[CQ]={SQ,EN}},
-/*SX */ {[CX]={SX,EI},[CS]={SS,EI},[CA]={SA,EI},[CN]={SN,EI},[CB]={SA,EI},[C9]={S9,EI},[CD]={SX,0 },[CC]={SX,0 },[CQ]={SQ,EI}},
-/*SA */ {[CX]={SX,EI},[CS]={SS,EI},[CA]={SA,0 },[CN]={SA,0 },[CB]={SA,0 },[C9]={SA,0 },[CD]={SX,0 },[CC]={SX,0 },[CQ]={SQ,EI}},
-/*SN */ {[CX]={SX,EI},[CS]={SS,EI},[CA]={SA,0 },[CN]={SA,0 },[CB]={SNB,0},[C9]={SA,0 },[CD]={SX,0 },[CC]={SX,0 },[CQ]={SQ,EI}},
-/*SNB*/ {[CX]={SX,EI},[CS]={SS,EI},[CA]={SA,0 },[CN]={SA,0 },[CB]={SA,0 },[C9]={SA,0 },[CD]={SNZ,0},[CC]={SX,0 },[CQ]={SQ,EI}},
-/*SNZ*/ {[CX]={SZ,0 },[CS]={SZ,0 },[CA]={SZ,0 },[CN]={SZ,0 },[CB]={SZ,0 },[C9]={SZ,0 },[CD]={SX,0 },[CC]={SX,0 },[CQ]={SZ,0 }},
-/*S9 */ {[CX]={SX,EI},[CS]={SS,EI},[CA]={S9,0 },[CN]={S9,0 },[CB]={S9,0 },[C9]={S9,0 },[CD]={S9,0 },[CC]={SX,0 },[CQ]={SQ,EI}},
-/*SQ */ {[CX]={SQ,0 },[CS]={SQ,0 },[CA]={SQ,0 },[CN]={SQ,0 },[CB]={SQ,0 },[C9]={SQ,0 },[CD]={SQ,0 },[CC]={SQ,0 },[CQ]={SQQ,0}},
-/*SQQ*/ {[CX]={SX,EI},[CS]={SS,EI},[CA]={SA,EI},[CN]={SN,EI},[CB]={SA,EI},[C9]={S9,EI},[CD]={SX,EI},[CC]={SX,EI},[CQ]={SQ,0 }},
-/*SZ */ {[CX]={SZ,0 },[CS]={SZ,0 },[CA]={SZ,0 },[CN]={SZ,0 },[CB]={SZ,0 },[C9]={SZ,0 },[CD]={SZ,0 },[CC]={SZ,0 },[CQ]={SZ,0 }}
+typedef C ST;
+#define SE(s,e) (((s)==S9)<<7)|((s)<<3)|(((s)==SS)<<1)|e
+#else
+#define E0              0  // no action
+#define EI              1    // end of previous word - emit
+#define EN              1    // start of next word - save position
+#define EZ              2   // end and start together - +$ eg
+
+typedef C ST;
+#define SE(s,e) (((s)<<4)|((((s)==S99)*3)<<2)|(e))  // set bit 2 inside followon numeric
+#endif
+#endif
+
+static ST state[SZ+1][16]={
+/*SS */ {[CX]=SE(SX,EN),[CS]=SE(SS,E0),[CA]=SE(SA,EN),[CN]=SE(SN,EN),[CB]=SE(SA,EN),[C9]=SE(S9,EN),[CD]=SE(SX,EN),[CC]=SE(SX,EN),[CQ]=SE(SQ,EN)},
+/*SS9*/ {[CX]=SE(SX,EN),[CS]=SE(SS9,E0),[CA]=SE(SA,EN),[CN]=SE(SN,EN),[CB]=SE(SA,EN),[C9]=SE(S99,EN),[CD]=SE(SX,EN),[CC]=SE(SX,EN),[CQ]=SE(SQ,EN)},
+/*SX */ {[CX]=SE(SX,EZ),[CS]=SE(SS,EI),[CA]=SE(SA,EZ),[CN]=SE(SN,EZ),[CB]=SE(SA,EZ),[C9]=SE(S9,EZ),[CD]=SE(SX,E0),[CC]=SE(SX,E0),[CQ]=SE(SQ,EZ)},
+/*SA */ {[CX]=SE(SX,EZ),[CS]=SE(SS,EI),[CA]=SE(SA,E0),[CN]=SE(SA,E0),[CB]=SE(SA,E0),[C9]=SE(SA,E0),[CD]=SE(SX,E0),[CC]=SE(SX,E0),[CQ]=SE(SQ,EZ)},
+/*SN */ {[CX]=SE(SX,EZ),[CS]=SE(SS,EI),[CA]=SE(SA,E0),[CN]=SE(SA,E0),[CB]=SE(SNB,E0),[C9]=SE(SA,E0),[CD]=SE(SX,E0),[CC]=SE(SX,E0),[CQ]=SE(SQ,EZ)},
+/*SNB*/ {[CX]=SE(SX,EZ),[CS]=SE(SS,EI),[CA]=SE(SA,E0),[CN]=SE(SA,E0),[CB]=SE(SA,E0),[C9]=SE(SA,E0),[CD]=SE(SNZ,E0),[CC]=SE(SX,E0),[CQ]=SE(SQ,EZ)},
+/*SQQ*/ {[CX]=SE(SX,EZ),[CS]=SE(SS,EI),[CA]=SE(SA,EZ),[CN]=SE(SN,EZ),[CB]=SE(SA,EZ),[C9]=SE(S9,EZ),[CD]=SE(SX,EZ),[CC]=SE(SX,EZ),[CQ]=SE(SQ,E0)},
+/*S9 */ {[CX]=SE(SX,EZ),[CS]=SE(SS9,EI),[CA]=SE(S9,E0),[CN]=SE(S9,E0),[CB]=SE(S9,E0),[C9]=SE(S9,E0),[CD]=SE(S9,E0),[CC]=SE(SX,E0),[CQ]=SE(SQ,EZ)},
+/*S99*/ {[CX]=SE(SX,EZ),[CS]=SE(SS9,EI),[CA]=SE(S99,E0),[CN]=SE(S99,E0),[CB]=SE(S99,E0),[C9]=SE(S99,E0),[CD]=SE(S99,E0),[CC]=SE(SX,E0),[CQ]=SE(SQ,EZ)},
+/*SQ */ {[CX]=SE(SQ,E0),[CS]=SE(SQ,E0),[CA]=SE(SQ,E0),[CN]=SE(SQ,E0),[CB]=SE(SQ,E0),[C9]=SE(SQ,E0),[CD]=SE(SQ,E0),[CC]=SE(SQ,E0),[CQ]=SE(SQQ,E0)},
+/*SNZ*/ {[CX]=SE(SZ,E0),[CS]=SE(SZ,E0),[CA]=SE(SZ,E0),[CN]=SE(SZ,E0),[CB]=SE(SZ,E0),[C9]=SE(SZ,E0),[CD]=SE(SX,E0),[CC]=SE(SX,E0),[CQ]=SE(SZ,E0)},
+/*SZ */ {[CX]=SE(SZ,E0),[CS]=SE(SZ,E0),[CA]=SE(SZ,E0),[CN]=SE(SZ,E0),[CB]=SE(SZ,E0),[C9]=SE(SZ,E0),[CD]=SE(SZ,E0),[CC]=SE(SZ,E0),[CQ]=SE(SZ,E0)}
 };
 
 // w points to a string A-block
 // result is word index & length; z is (# words),(i0,l0),(i1,l1),...
 // (# words) is negated if the last word is NB.
-F1(jtwordil){A z;C e,nv,s,t=0;I b,i,m,n,*x,xb,xe;ST p;UC*v;
+F1(jtwordil){A z;I s,i,m,n,nv,*x;UC*v;
  RZ(w);  // if no string, could be empty line from keyboard; return null A in that case
- nv=0; s=SS;   // set not creating numeric constant; init state (after space)
+ nv=0;    // set not creating numeric constant
  n=AN(w); v=UAV(w); GATV0(z,INT,1+n+n,1); x=1+AV(z);  // get count of characters n and address v;
   // allocate absolute worst-case output area (each char is 1 word, plus 1 for count); point x to output indexes
+#if 0  // obsolete 
+ s=SS; // init state (after space)
  for(i=0;i<n;++i){   // run the state machine
   p=state[s][ctype[v[i]]]; e=p.effect;    // go to next state
   if(e==EI){  // if 'emit'...
@@ -58,25 +86,65 @@ F1(jtwordil){A z;C e,nv,s,t=0;I b,i,m,n,*x,xb,xe;ST p;UC*v;
  t&=s==S9;    // finish outing the last word as above
  if(t){*x++=xb=nv?xb:b; *x++=n-xb;}
  else{if(nv){*x++=xb; *x++=xe-xb;} if(s!=SS){*x++=b; *x++=n-b;}}  // if final state was 'spaces', there is nothing to put out
- m=x-AV(z); *AV(z)=s==SZ||s==SNZ?-(m>>1):(m>>1);  // Calculate & install count; if last field is NB., make count negative
+#else
+#if 0  // obsolete 
+ s=SE(SS,E0); I swas9=0; I b=0; I t=0;
+ for(i=0;i<n;++i){   // run the state machine
+  C *statebase=(C*)state+ctype[v[i]]; s=statebase[2*(s&0x78)];
+  // t is set if we are producing a number; nv is t delayed by one emit (updated only at EI)
+  // thus t&!nv is first, t&nv is middle, !t&nv is last   for numbers, and !t&!nv is a single non-number.
+  // we write out the starting point b every time, and also the current length i-b.
+  // for first, we write start and length but do not advance after the length.
+  // for middle we write both start and length to length (the second write survives) and do not advance either time
+  // for last we advance (off the length) before writing for the next (nonnumber) start/length, advance after both
+  // for non-number we advance after both
+  t&=swas9|(s&1);   // bit0 is 0 for EI
+  I *oldx=x; x+=(s&1)+(nv&(t^1)); *x=b; x+=(t&nv)^1; *x=i/* obsolete -x[-1]*/; x+=t^1; x=(s&1)?oldx:x;
+  nv=s&1?nv:t; // sample nv on any E1
+  swas9=s>>7;   // bit 7 set if new state there is s9
+  b=s&4?i:b; t=s&4?swas9:t;  // bit 2 set on any nonnull action: move start pointer, init numeric flag
+ }
+ if((s>>3)==SQ){jsignal3(EVOPENQ,w,b); R 0;}  // error if open quote
+ // force an EI at the end
+ t&=swas9;   // always EI
+ x+=nv&(t^1); *x=b; x+=(t&nv)^1; *x=i/* obsolete -x[-1]*/; x+=t^1;
+ // if final state was 'spaces', retract the last word
+ x-=s&2;  // bit 1 means 'SS'
+#else
+ s=SE(SS,0);
+ for(i=0;i<n;++i){   // run the state machine
+  I prevs=s;  // state before new character
+  I currc=ctype[v[i]];
+  C *statebase=(C*)state+currc; s=statebase[s&0xf0];
+  // Handle followon numerics.  If the previous state was 'followon numeric' and the new character is CX/CS/CQ, we will emit after this state but
+  // we need to overwrite the previous numeric.  Decrement the pointer by 2 before writing.  This runs while the state-fetch is happening and is fast enough to allow
+  // the store addresses to be calculated before the next fetch
+  x=(I*)((I)x-(((((prevs>>1)&6)+currc)&16)>>(3-LGSZI)));  // add 6 to currc if followon numeric, then add that to char code.  This produces carry to 16 for CX/CS/CQ.
+// obsolete   x-=(((prevs&currc)>>3)&(currc&1))<<1;  // state bit 3 is set in followon numeric; bits 3 and 0 of char class are set in CX/CS/CQ
+  // do two stores, and advance over any that are to be emitted.  0, 1, or 2 may be emitted (0 when the state has no action, 1 when the
+  // state is an end+1 or start value, and 2 if an end+1 AND start value.
+  x[0]=i; x[1]=i; x+=s&3;
+ }
+ if((s>>4)==SQ){jsignal3(EVOPENQ,w,x[-1]); R 0;}  // error if open quote
+ // force an EI at the end, as if with a space.  We don't increment x because we are about to calculate the number of slots in x and we have to decrement x by 1 to
+ // take away the first slot which is the count.  If the line ends without a token being open (spaces perhaps) this will be half of a field and will be shifted away
+ x=(I*)((I)x-(((((s>>1)&6)+CS)&16)>>(3-LGSZI)));     // as above, for final state
+ *x=i;
+#endif
+#endif
+// obsolete  m=x-AV(z); *AV(z)=s==SZ||s==SNZ?-(m>>1):(m>>1);  // Calculate & install count; if last field is NB., make count negative
+ m=(x-AV(z))>>1; I isnb=REPSGN((I)(SE(SNZ,0)-1)-s); *AV(z)=(m^isnb)-isnb;  // Calculate & install count; if last field is NB., make count negative
  R z;
-}    /* word index & length; z is (# words),(i0,l0),(i1,l1),... */
+}    /* word index & end+1; z is (# words),(i0,e0),(i1,e1),... */
 
 /* locals in wordil:                                            */
-/* b:  beginning index of current word                          */
-/* e:  current effect                                           */
 /* i:  index of current character being scanned                 */
 /* m:  2 * actual number of words                               */
 /* n:  length of input string w                                 */
-/* nv: 1 iff numeric constant vector being built                */
-/* p:  state table entry per current state & character          */
 /* s:  current state                                            */
-/* t:  1 iff current state is S9                                */
 /* v:  ptr to input string                                      */
 /* x:  ptr to current element of z being computed               */
-/* xb: beginning index of current numeric vector                */
-/* xe: end index of current numeric vector                      */
-/* z:  result; maximum of n words                               */
+/* z:  result; maximum of n pairs                               */
 
 F1(jtwords){A t,*x,z;C*s;I k,n,*y;
  F1RANK(1,jtwords,0);
@@ -84,7 +152,7 @@ F1(jtwords){A t,*x,z;C*s;I k,n,*y;
  RZ(t=wordil(w));
  s=CAV(w); y=AV(t); n=*y++; n=0>n?-n:n;
  GATV0(z,BOX,n,1); x=AAV(z);
- DQ(n, k=*y++; RZ(*x++=rifvs(str(*y++,s+k))););
+ DQ(n, k=*y++; RZ(*x++=rifvs(str(*y++-k,s+k))););
  RETF(z);  // always boxed chars, and not relative
 }
 
@@ -107,7 +175,7 @@ static A jtconstr(J jt,I n,C*s){A z;C b,c,p,*t,*x;I m=0;
   // true if the two words are names, word 1 is assignment, and the names are equal
 
 // Convert text sentence to a sequence of words to be the queue for parsing
-// a holds the result of wordil, which is an integer list of word index & length: (# words),(i0,l0),(i1,l1)...
+// a holds the result of wordil, which is an integer list of word index & end+1: (# words),(i0,e0),(i1,e1)...
 // w holds the string text of the sentence
 // env is the environment for which this is being parsed: 0=tacit translator, 1=keyboard/immex with no locals, 2=for explicit defn
 A jtenqueue(J jt,A a,A w,I env){A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl;UC c;
@@ -117,7 +185,7 @@ A jtenqueue(J jt,A a,A w,I env){A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl;UC c;
  GATV0(z,BOX,n,1); x=v=AAV(z);   //  allocate list of words; set running word pointer x, and static
    // beginning-of-list pointer v, to start of list of output pointers
  for(i=0;i<n;i++,x++){  // for each word
-  wi=s+*u++; wl=*u++; c=e=*wi; p=ctype[(UC)c]; b=0;   // wi=first char, wl=length, c=e=first char, p=type of first char, b='no inflections'
+  wl=u[1]-u[0]; wi=u[0]+s; u+=2; c=e=*wi; p=ctype[(UC)c]; b=0;   // wi=first char, wl=length, c=e=first char, p=type of first char, b='no inflections'
   if(1<wl){d=*(wi+wl-1); if(b=((p!=C9)&(d==CESC1))|(d==CESC2))e=spellin(wl,wi);}  // if word has >1 character, is 9--. or ---:, convert to pseudocharacter
   if(BETWEENO(c,32,128)&&(y=ds(e))){
    // If first char is ASCII, see if the form including inflections is a primitive;

@@ -310,7 +310,7 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;I ak,k,p,*u,*v,wk,wm,wn;
 #if BW==64
   if((((an-1)|(AR(a)-1)|(AR(a)-AR(w))|(AT(a)-AT(w))|((I)jt->ranks-(I)(RANK2T)~0))>=0)&&(!jt->fill||(AT(a)==AT(jt->fill)))){  // a not empty, a not atomic, ar>=wr, atype >= wtype, no jt->ranks given.  And never if fill specified
 #else
-  if(((an-1)|(AR(a)-1)|(AR(a)-AR(w))|(AT(a)-AT(w)))>=0&&(jt->ranks==(RANK2T)~0)&&!jt->fill){  // a not empty, a not atomic, ar>=wr, atype >= wtype, no jt->ranks given.  And never if fill specified
+  if(((an-1)|(AR(a)-1)|(AR(a)-AR(w))|(AT(a)-AT(w)))>=0&&(jt->ranks==(RANK2T)~0)&&(!jt->fill||(AT(a)==AT(jt->fill)))){  // a not empty, a not atomic, ar>=wr, atype >= wtype, no jt->ranks given.  And never if fill specified
 #endif
    //  Check the item sizes.  Set p<0 if the
    // items of a require fill (ecch - can't go inplace), p=0 if no padding needed, p>0 if items of w require fill

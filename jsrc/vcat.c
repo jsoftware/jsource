@@ -308,7 +308,7 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;I ak,k,p,*u,*v,wk,wm,wn;
   // would be OK to inplace an operation where the frame of a (and maybe even w) is all 1s, but that's not worth checking for
   // OK to use type as proxy for size, since indirect types are excluded
 #if BW==64
-  if((((an-1)|(AR(a)-1)|(AR(a)-AR(w))|(AT(a)-AT(w))|((I)jt->ranks-(I)(RANK2T)~0))>=0)&&!jt->fill){  // a not empty, a not atomic, ar>=wr, atype >= wtype, no jt->ranks given.  And never if fill specified
+  if((((an-1)|(AR(a)-1)|(AR(a)-AR(w))|(AT(a)-AT(w))|((I)jt->ranks-(I)(RANK2T)~0))>=0)&&(!jt->fill||(AT(a)==AT(jt->fill)))){  // a not empty, a not atomic, ar>=wr, atype >= wtype, no jt->ranks given.  And never if fill specified
 #else
   if(((an-1)|(AR(a)-1)|(AR(a)-AR(w))|(AT(a)-AT(w)))>=0&&(jt->ranks==(RANK2T)~0)&&!jt->fill){  // a not empty, a not atomic, ar>=wr, atype >= wtype, no jt->ranks given.  And never if fill specified
 #endif
@@ -336,6 +336,7 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;I ak,k,p,*u,*v,wk,wm,wn;
      // an item of a, leaving the number of items unchanged.  Otherwise, the whole of w becomes an
      // item of the result, and it is extended to the size of a corresponding cell of a.  The extra
      // rank is implicit in the shape of a.
+     // The take relies on the fill value
      if(p){RZ(h=caro(vec(INT,AR(w),AS(a)+AR(a)-AR(w)))); if(AR(a)==AR(w))AV(h)[0]=AS(w)[0]; RZ(w=take(h,w));}
      av=ak+CAV(a); wv=CAV(w);   // av->end of a data, wv->w data
      // If an item of a is higher-rank than the entire w (except when w is an atom, which gets replicated),

@@ -52,21 +52,26 @@ static int rmdir2(J jt, const wchar_t *dir);
 
 
 #if SY_64
-static I fsize(F f){fpos_t z;
+static I fsize(F f){
  if(!f)R 0;
 #if SY_WIN32
- _lseeki64(_fileno(f),0,SEEK_END); 
+ R _filelengthi64(_fileno(f));
 #else
+ fpos_t z;
  fseek(f,0L,SEEK_END);
-#endif
  fgetpos(f,&z);
  R *(I*)&z;
+#endif
 }
 #else
 static I fsize(F f){
  RZ(f);
+#if SY_WIN32
+ R _filelength(_fileno(f));
+#else
  if(fseek(f,0L,SEEK_END))R -1;
  R ftell(f);
+#endif
 }
 #endif
 

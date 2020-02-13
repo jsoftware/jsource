@@ -42,7 +42,7 @@ typedef C ST;
 #define EZ              2   // end and start together - +$ eg
 
 typedef C ST;
-#define SE(s,e) (((s)<<4)|((((s)==S99)*3)<<2)|(e))  // set bit 2 inside followon numeric
+#define SE(s,e) (((s)<<4)|((((s)==S99))<<3)|(e))  // set bit 3 inside followon numeric
 #endif
 #endif
 
@@ -119,16 +119,20 @@ F1(jtwordil){A z;I s,i,m,n,nv,*x;UC*v;
   // Handle followon numerics.  If the previous state was 'followon numeric' and the new character is CX/CS/CQ, we will emit after this state but
   // we need to overwrite the previous numeric.  Decrement the pointer by 2 before writing.  This runs while the state-fetch is happening and is fast enough to allow
   // the store addresses to be calculated before the next fetch
-  x=(I*)((I)x-(((((prevs>>1)&6)+currc)&16)>>(3-LGSZI)));  // add 6 to currc if followon numeric, then add that to char code.  This produces carry to 16 for CX/CS/CQ.
+// obsolete   x=(I*)((I)x-(((((prevs>>1)&6)+currc)&16)>>(3-LGSZI)));  // add 6 to currc if followon numeric, then add that to char code.  This produces carry to 16 for CX/CS/CQ.
+  currc+=16-CX; currc&=16; prevs=2*prevs+1; currc&=prevs;   // set currc to 16 iff CX/CS/CQ; move 'foolowon numeric' flag to bit 4; combine
+   // the +1 is to trick the compiler.  Without it it moves the &16 onto prevs, but prevs is the critical path
+  x=(I*)((I)x-(currc>>(3-LGSZI)));  // subtract from x, to move x back 2 positions if coming out of followon numeric with a number
 // obsolete   x-=(((prevs&currc)>>3)&(currc&1))<<1;  // state bit 3 is set in followon numeric; bits 3 and 0 of char class are set in CX/CS/CQ
   // do two stores, and advance over any that are to be emitted.  0, 1, or 2 may be emitted (0 when the state has no action, 1 when the
-  // state is an end+1 or start value, and 2 if an end+1 AND start value.
+  // state is an end+1 or start value, and 2 if an end+1 AND start value)
   x[0]=i; x[1]=i; x+=s&3;
  }
  if((s>>4)==SQ){jsignal3(EVOPENQ,w,x[-1]); R 0;}  // error if open quote
  // force an EI at the end, as if with a space.  We don't increment x because we are about to calculate the number of slots in x and we have to decrement x by 1 to
  // take away the first slot which is the count.  If the line ends without a token being open (spaces perhaps) this will be half of a field and will be shifted away
- x=(I*)((I)x-(((((s>>1)&6)+CS)&16)>>(3-LGSZI)));     // as above, for final state
+// obsolete  x=(I*)((I)x-(((((s>>1)&6)+CS)&16)>>(3-LGSZI)));     // as above, for final state
+ x=(I*)((I)x-(((s<<1)&16)>>(3-LGSZI)));    // same as above, with CS as the character
  *x=i;
 #endif
 #endif

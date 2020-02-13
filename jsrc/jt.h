@@ -316,9 +316,9 @@ union {
   B    nla[256];         /* namelist names mask                             */
   I    nlt;              /* namelist type  mask                             */
  } namelist;
- struct {
-  I    oflondx;  // index at which overflow happened
- } ceilfloor;
+// obsolete  struct {
+// obsolete   I    oflondx;  // index at which overflow happened
+// obsolete  } ceilfloor;
  struct {
   I    postflags;  // what to do with the result
  } compsc;

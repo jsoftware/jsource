@@ -146,13 +146,13 @@ typedef struct {VA2 p1[6];} UA;
 #define BW1110(x,y)     (~( (x)& (y)))
 #define BW1111(x,y)     (-1)
 
-typedef void AHDR1FN(JST * RESTRICT jt,I n,void* z,void* x);
+typedef I AHDR1FN(JST * RESTRICT jt,I n,void* z,void* x);
 typedef void AHDR2FN(I n,I m,void* RESTRICTI x,void* RESTRICTI y,void* RESTRICTI z,J jt);
 typedef void AHDRPFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);
 typedef void AHDRRFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);
 typedef void AHDRSFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);
 
-#define AHDR1(f,Tz,Tx)          void f(JST * RESTRICT jt,I n,Tz* z,Tx* x)
+#define AHDR1(f,Tz,Tx)          I f(JST * RESTRICT jt,I n,Tz* z,Tx* x)
 #define AHDR2(f,Tz,Tx,Ty)       void f(I n,I m,Tx* RESTRICTI x,Ty* RESTRICTI y,Tz* RESTRICTI z,J jt)
 #define AHDRP(f,Tz,Tx)          void f(I d,I n,I m,Tx* RESTRICTI x,Tz* RESTRICTI z,J jt)
 #define AHDRR(f,Tz,Tx)          void f(I d,I n,I m,Tx* RESTRICTI x,Tz* RESTRICTI z,J jt)
@@ -209,7 +209,7 @@ typedef void AHDRSFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);
  y    pointer to w      atoms
 */
 
-#define AMON(f,Tz,Tx,stmt)      AHDR1(f,Tz,Tx){DQ(n, {stmt} ++z; ++x;);}
+#define AMON(f,Tz,Tx,stmt)      AHDR1(f,Tz,Tx){DQ(n, {stmt} ++z; ++x;); R 0;}
 #define AMONPS(f,Tz,Tx,prefix,stmt,suffix)      AHDR1(f,Tz,Tx){prefix DQ(n, {stmt} ++z; ++x;) suffix}
 
 #define AIFX(f,Tz,Tx,Ty,symb)  \

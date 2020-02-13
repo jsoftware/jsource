@@ -107,17 +107,17 @@ static D jtqlogd1(J jt,Q w){ASSERT(0<=XDIG(w.n),EWIMAG); R xlogabs(w.n)-xlogabs(
 static Z jtqlogz1(J jt,Q w){Z z; z.re=xlogabs(w.n)-xlogabs(w.d); z.im=0>XDIG(w.n)?PI:0.0; R z;}
 
 
-#define QSQRT(x)    z->n=rifvsdebug(xsqrt(x->n)); z->d=rifvsdebug(xsqrt(x->d)); if(jt->jerr)R;
-#define QFACT(x)    ASSERTW(QX1(x->d),EWIRR); *z=xfact(x->n);
+#define QSQRT(x)    z->n=rifvsdebug(xsqrt(x->n)); z->d=rifvsdebug(xsqrt(x->d)); {I rc; if(rc=jt->jerr){RESETERR; R rc;}}
+#define QFACT(x)    ASSERTWR(QX1(x->d),EWIRR); *z=xfact(x->n);
 
 AMON(floorQ, X,Q, *z=rifvsdebug(xdiv(x->n,x->d,XMFLR ));)
 AMON( ceilQ, X,Q, *z=rifvsdebug(xdiv(x->n,x->d,XMCEIL));)
 AMON(  sgnQ, X,Q, *z=rifvsdebug(xsgn(x->n));            )
 AMON(  absQ, Q,Q, z->n=rifvs(mag(x->n)); z->d=x->d;)
-AMON( sqrtQ, Q,Q, QSQRT(x))
-AMON( factQ, X,Q, QFACT(x))
-AMON( logQD, D,Q, *z=qlogd1(*x);)
-AMON( logQZ, Z,Q, *z=qlogz1(*x);)
+AMONPS( sqrtQ, Q,Q, , QSQRT(x) , I rc=jt->jerr; R rc;)
+AMONPS( factQ, X,Q, , QFACT(x) , I rc=jt->jerr; R rc;)
+AMONPS( logQD, D,Q, , *z=qlogd1(*x); , I rc=jt->jerr; R rc;)
+AMONPS( logQZ, Z,Q, , *z=qlogz1(*x); , I rc=jt->jerr; R rc;)
 
 APFX(  maxQQ, Q,Q,Q, QMAX  )
 APFX(  minQQ, Q,Q,Q, QMIN  )

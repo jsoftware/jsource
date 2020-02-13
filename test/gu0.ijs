@@ -409,83 +409,83 @@ NB. 1!: -----------------------------------------------------------------
 
 (1!:0 '*.*') -: 1!:0 '*.*'
 x=: ' triskaidekaphobia deipnosophist boustrophedonic octothorpe'
-(8 u: 10&u: x) 1!:2 <'asdf'
-x -: 1!:1 <8 u: 10&u: 'asdf'
+(8 u: 10&u: x) 1!:2 <'dfas'
+x -: 1!:1 <8 u: 10&u: 'dfas'
 
 x=: 10&u: RAND32 ?237$C4MAX
-x 1!:2 <'asdf'
-(3 u: x) -: 4294967296&|^:IF64 _2&ic 1!:1 <'asdf'
+x 1!:2 <'dfas'
+(3 u: x) -: 4294967296&|^:IF64 _2&ic 1!:1 <'dfas'
 x=: 10&u: ?237$U4MAX
-x 1!:2 <'asdf'
-(3 u: x) -: _2&ic 1!:1 <'asdf'
+x 1!:2 <'dfas'
+(3 u: x) -: _2&ic 1!:1 <'dfas'
 
 x=: 'everything not forbidden is mandatory'
-x 1!:2 <'asdf'
-x -: 1!:1 <'asdf'
-'01234' 1!:3 <'asdf'
-(x,'01234') -: 1!:1 <'asdf'
-(5+#x) -: 1!:4 <'asdf'
+x 1!:2 <'dfas'
+x -: 1!:1 <'dfas'
+'01234' 1!:3 <'dfas'
+(x,'01234') -: 1!:1 <'dfas'
+(5+#x) -: 1!:4 <'dfas'
 
 3 : 0 ''
  if. (9!:12 '') e. 6 do.  NB. do only if PC
-  assert. (1!:6@< -: 1!:6@<@(8&u:)@(10&u:)) 'asdf'
-  assert. (1!:6 <'asdf') 1!:6 <'asdf'
-  assert. (1!:7@< -: 1!:7@<@(8&u:)@(10&u:)) 'asdf'
-  assert. (1!:7 <'asdf') -: 1!:7 <'asdf'
+  assert. (1!:6@< -: 1!:6@<@(8&u:)@(10&u:)) 'dfas'
+  assert. (1!:6 <'dfas') 1!:6 <'dfas'
+  assert. (1!:7@< -: 1!:7@<@(8&u:)@(10&u:)) 'dfas'
+  assert. (1!:7 <'dfas') -: 1!:7 <'dfas'
  end.
  1
 )
 
-'01234' -: 1!:11 (8 u: 10&u: 'asdf');(#x),5
-'abcde' 1!:12 (8 u: 10&u: 'asdf');#x
-'abcde' -: 1!:11 (8 u: 10&u: 'asdf');(#x),5
+'01234' -: 1!:11 (8 u: 10&u: 'dfas');(#x),5
+'abcde' 1!:12 (8 u: 10&u: 'dfas');#x
+'abcde' -: 1!:11 (8 u: 10&u: 'dfas');(#x),5
 
-t=: 1!:21 <8 u: 10&u: 'asdf'
-+./@('asdf'&E.)&> {:"1 (1!:20) ''
+t=: 1!:21 <8 u: 10&u: 'dfas'
++./@('dfas'&E.)&> {:"1 (1!:20) ''
 1!:22 t
 
-1!:55 <8 u: 10&u: 'asdf'
+1!:55 <8 u: 10&u: 'dfas'
 
 NB. unicode
 
 (1!:0 '*.*') -: 1!:0 '*.*'
 x=: ' triskaidekaphobia deipnosophist boustrophedonic octothorpe'
-(8 u: 10&u: x) 1!:2 <10 u: 100000 + a.i.'asdf'
-x -: 1!:1 <8 u: 10 u: 100000 + a.i.'asdf'
+(8 u: 10&u: x) 1!:2 <10 u: 100000 + a.i.'dfas'
+x -: 1!:1 <8 u: 10 u: 100000 + a.i.'dfas'
 
 x=: 10&u: RAND32 ?237$C4MAX
-x 1!:2 <10 u: 100000 + a.i.'asdf'
-(3 u: x) -: 4294967296&|^:IF64 _2&ic 1!:1 <10 u: 100000 + a.i.'asdf'
+x 1!:2 <10 u: 100000 + a.i.'dfas'
+(3 u: x) -: 4294967296&|^:IF64 _2&ic 1!:1 <10 u: 100000 + a.i.'dfas'
 x=: 10&u: ?237$U4MAX
-x 1!:2 <7 u: 10 u: 100000 + a.i.'asdf'
-(3 u: x) -: _2&ic 1!:1 <8 u: 10 u: 100000 + a.i.'asdf'
+x 1!:2 <7 u: 10 u: 100000 + a.i.'dfas'
+(3 u: x) -: _2&ic 1!:1 <8 u: 10 u: 100000 + a.i.'dfas'
 
 x=: 'everything not forbidden is mandatory'
-x 1!:2 <10 u: 100000 + a.i.'asdf'
-x -: 1!:1 <10 u: 100000 + a.i.'asdf'
-'01234' 1!:3 <10 u: 100000 + a.i.'asdf'
-(x,'01234') -: 1!:1 <10 u: 100000 + a.i.'asdf'
-(5+#x) -: 1!:4 <8 u: 10 u: 100000 + a.i.'asdf'
+x 1!:2 <10 u: 100000 + a.i.'dfas'
+x -: 1!:1 <10 u: 100000 + a.i.'dfas'
+'01234' 1!:3 <10 u: 100000 + a.i.'dfas'
+(x,'01234') -: 1!:1 <10 u: 100000 + a.i.'dfas'
+(5+#x) -: 1!:4 <8 u: 10 u: 100000 + a.i.'dfas'
 
 3 : 0 ''
  if. (9!:12 '') e. 6 do.  NB. do only if PC
-  assert. (1!:6@< -: 1!:6@<@(8&u:)@(10&u:)) 10 u: 100000 + a.i.'asdf'
-  assert. (1!:6 <8 u: 10 u: 100000 + a.i.'asdf') 1!:6 <10 u: 100000 + a.i.'asdf'
-  assert. (1!:7@< -: 1!:7@<@(8&u:)@(10&u:)) 10 u: 100000 + a.i.'asdf'
-  assert. (1!:7 <8 u: 10 u: 100000 + a.i.'asdf') -: 1!:7 <10 u: 100000 + a.i.'asdf'
+  assert. (1!:6@< -: 1!:6@<@(8&u:)@(10&u:)) 10 u: 100000 + a.i.'dfas'
+  assert. (1!:6 <8 u: 10 u: 100000 + a.i.'dfas') 1!:6 <10 u: 100000 + a.i.'dfas'
+  assert. (1!:7@< -: 1!:7@<@(8&u:)@(10&u:)) 10 u: 100000 + a.i.'dfas'
+  assert. (1!:7 <8 u: 10 u: 100000 + a.i.'dfas') -: 1!:7 <10 u: 100000 + a.i.'dfas'
  end.
  1
 )
 
-'01234' -: 1!:11 (10 u: 100000 + a.i. 'asdf');(#x),5
-'abcde' 1!:12 (8 u: 10 u: 100000 + a.i. 'asdf');#x
-'abcde' -: 1!:11 (10 u: 100000 + a.i. 'asdf');(#x),5
+'01234' -: 1!:11 (10 u: 100000 + a.i. 'dfas');(#x),5
+'abcde' 1!:12 (8 u: 10 u: 100000 + a.i. 'dfas');#x
+'abcde' -: 1!:11 (10 u: 100000 + a.i. 'dfas');(#x),5
 
-t=: 1!:21 <10 u: 100000 + a.i.'asdf'
-+./@((8 u: 10 u: 100000 + a.i. 'asdf')&E.)&> {:"1 (1!:20) ''
+t=: 1!:21 <10 u: 100000 + a.i.'dfas'
++./@((8 u: 10 u: 100000 + a.i. 'dfas')&E.)&> {:"1 (1!:20) ''
 1!:22 t
 
-1!:55 <10 u: 100000 + a.i. 'asdf'
+1!:55 <10 u: 100000 + a.i. 'dfas'
 
 NB. 3!:n ----------------------------------------------------------------
 

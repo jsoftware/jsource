@@ -404,79 +404,79 @@ NB. 1!: -----------------------------------------------------------------
 
 (1!:0 '*.*') -: 1!:0 u: '*.*'
 x=: ' triskaidekaphobia deipnosophist boustrophedonic octothorpe'
-(8 u: u: x) 1!:2 <8 u: u: 'asdf'
-x -: 1!:1 <8 u: u: 'asdf'
+(8 u: u: x) 1!:2 <8 u: u: 'sdfa'
+x -: 1!:1 <8 u: u: 'sdfa'
 
 x=: u: ?237$65536
-x 1!:2 <'asdf'
-x -: 6 u: 1!:1 <'asdf'
-x -: 6 u: 1!:1 <8 u: u: 'asdf'
+x 1!:2 <'sdfa'
+x -: 6 u: 1!:1 <'sdfa'
+x -: 6 u: 1!:1 <8 u: u: 'sdfa'
 
 x=: 'everything not forbidden is mandatory'
-x 1!:2 <8 u: u: 'asdf'
-x -: 1!:1 <8 u: u: 'asdf'
-'01234' 1!:3 <8 u: 'asdf'
-(x,'01234') -: 1!:1 <8 u: u: 'asdf'
-(5+#x) -: 1!:4 <8 u: u: 'asdf'
+x 1!:2 <8 u: u: 'sdfa'
+x -: 1!:1 <8 u: u: 'sdfa'
+'01234' 1!:3 <8 u: 'sdfa'
+(x,'01234') -: 1!:1 <8 u: u: 'sdfa'
+(5+#x) -: 1!:4 <8 u: u: 'sdfa'
 
 3 : 0 ''
  if. (9!:12 '') e. 6 do.  NB. do only if PC
-  assert. (1!:6@< -: 1!:6@<@(8&u:)@u:) 'asdf'
-  assert. (1!:6 <'asdf') 1!:6 <8 u: u: 'asdf'
-  assert. (1!:7@< -: 1!:7@<@(8&u:)@u:) 'asdf'
-  assert. (1!:7 <'asdf') -: 1!:7 <8 u: u: 'asdf'
+  assert. (1!:6@< -: 1!:6@<@(8&u:)@u:) 'sdfa'
+  assert. (1!:6 <'sdfa') 1!:6 <8 u: u: 'sdfa'
+  assert. (1!:7@< -: 1!:7@<@(8&u:)@u:) 'sdfa'
+  assert. (1!:7 <'sdfa') -: 1!:7 <8 u: u: 'sdfa'
  end.
  1
 )
 
-'01234' -: 1!:11 (8 u: 'asdf');(#x),5
-'abcde' 1!:12 (8 u: 'asdf');#x
-'abcde' -: 1!:11 (8 u: 'asdf');(#x),5
+'01234' -: 1!:11 (8 u: 'sdfa');(#x),5
+'abcde' 1!:12 (8 u: 'sdfa');#x
+'abcde' -: 1!:11 (8 u: 'sdfa');(#x),5
 
-t=: 1!:21 <8 u: u: 'asdf'
-+./@('asdf'&E.)&> {:"1 (1!:20) ''
+t=: 1!:21 <8 u: u: 'sdfa'
++./@('sdfa'&E.)&> {:"1 (1!:20) ''
 1!:22 t
 
-1!:55 <8 u: u: 'asdf'
+1!:55 <8 u: u: 'sdfa'
 
 NB. unicode
 
 (1!:0 '*.*') -: 1!:0 u: '*.*'
 x=: ' triskaidekaphobia deipnosophist boustrophedonic octothorpe'
-(8 u: u: x) 1!:2 <7 u: 10 u: 100000 + a.i.'asdf'
-x -: 1!:1 <7 u: 10 u: 100000 + a.i.'asdf'
+(8 u: u: x) 1!:2 <7 u: 10 u: 100000 + a.i.'sdfa'
+x -: 1!:1 <7 u: 10 u: 100000 + a.i.'sdfa'
 
 x=: u: ?237$65536
-x 1!:2 <7 u: 10 u: 100000 + a.i.'asdf'
-x -: 6 u: 1!:1 <7 u: 10 u: 100000 + a.i.'asdf'
-x -: 6 u: 1!:1 <8 u: 10 u: 100000 + a.i.'asdf'
+x 1!:2 <7 u: 10 u: 100000 + a.i.'sdfa'
+x -: 6 u: 1!:1 <7 u: 10 u: 100000 + a.i.'sdfa'
+x -: 6 u: 1!:1 <8 u: 10 u: 100000 + a.i.'sdfa'
 
 x=: 'everything not forbidden is mandatory'
-x 1!:2 <7 u: 10 u: 100000 + a.i.'asdf'
-x -: 1!:1 <7 u: 10 u: 100000 + a.i.'asdf'
-'01234' 1!:3 <7 u: 10 u: 100000 + a.i.'asdf'
-(x,'01234') -: 1!:1 <7 u: 10 u: 100000 + a.i.'asdf'
-(5+#x) -: 1!:4 <7 u: 10 u: 100000 + a.i.'asdf'
+x 1!:2 <7 u: 10 u: 100000 + a.i.'sdfa'
+x -: 1!:1 <7 u: 10 u: 100000 + a.i.'sdfa'
+'01234' 1!:3 <7 u: 10 u: 100000 + a.i.'sdfa'
+(x,'01234') -: 1!:1 <7 u: 10 u: 100000 + a.i.'sdfa'
+(5+#x) -: 1!:4 <7 u: 10 u: 100000 + a.i.'sdfa'
 
 3 : 0 ''
  if. (9!:12 '') e. 6 do.  NB. do only if PC
-  assert. (1!:6@< -: 1!:6@<@(8&u:)@u:) 7 u: 10 u: 100000 + a.i.'asdf'
-  assert. (1!:6 <8 u: 10 u: 100000 + a.i.'asdf') 1!:6 <7 u: 10 u: 100000 + a.i.'asdf'
-  assert. (1!:7@< -: 1!:7@<@(8&u:)@u:) 7 u: 10 u: 100000 + a.i.'asdf'
-  assert. (1!:7 <8 u: 10 u: 100000 + a.i.'asdf') -: 1!:7 <7 u: 10 u: 100000 + a.i.'asdf'
+  assert. (1!:6@< -: 1!:6@<@(8&u:)@u:) 7 u: 10 u: 100000 + a.i.'sdfa'
+  assert. (1!:6 <8 u: 10 u: 100000 + a.i.'sdfa') 1!:6 <7 u: 10 u: 100000 + a.i.'sdfa'
+  assert. (1!:7@< -: 1!:7@<@(8&u:)@u:) 7 u: 10 u: 100000 + a.i.'sdfa'
+  assert. (1!:7 <8 u: 10 u: 100000 + a.i.'sdfa') -: 1!:7 <7 u: 10 u: 100000 + a.i.'sdfa'
  end.
  1
 )
 
-'01234' -: 1!:11 (7 u: 10 u: 100000 + a.i. 'asdf');(#x),5
-'abcde' 1!:12 (8 u: 10 u: 100000 + a.i. 'asdf');#x
-'abcde' -: 1!:11 (7 u: 10 u: 100000 + a.i. 'asdf');(#x),5
+'01234' -: 1!:11 (7 u: 10 u: 100000 + a.i. 'sdfa');(#x),5
+'abcde' 1!:12 (8 u: 10 u: 100000 + a.i. 'sdfa');#x
+'abcde' -: 1!:11 (7 u: 10 u: 100000 + a.i. 'sdfa');(#x),5
 
-t=: 1!:21 <7 u: 10 u: 100000 + a.i. 'asdf'
-+./@((8 u: 10 u: 100000 + a.i. 'asdf')&E.)&> {:"1 (1!:20) ''
+t=: 1!:21 <7 u: 10 u: 100000 + a.i. 'sdfa'
++./@((8 u: 10 u: 100000 + a.i. 'sdfa')&E.)&> {:"1 (1!:20) ''
 1!:22 t
 
-1!:55 <7 u: 10 u: 100000 + a.i. 'asdf'
+1!:55 <7 u: 10 u: 100000 + a.i. 'sdfa'
 
 NB. 3!:n ----------------------------------------------------------------
 

@@ -186,7 +186,10 @@ static ZF1(jtzcos){D a,b,c,s;Z z;
 
 static ZF1(jtztan){R zdiv(zsin(v),zcos(v));}
 
+// bug in some versions of Visual Studio
+#pragma auto_inline(off)
 static ZF1(jtzp4){R zsqrt(zplus(z1,ztymes(v,v)));}
+#pragma auto_inline(on)
 
 static ZF1(jtzm4){R 1e16<hypoth(v.re,v.im)?v:ztymes(zplus(v,z1),zsqrt(zdiv(zminus(v,z1),zplus(v,z1))));}
 

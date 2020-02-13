@@ -12,12 +12,18 @@ intv  =. [ {~ ([: ({. + i.@{:) ])
 f =. <jpath '~temp/foo1x11.x'
 t =. a.{~?1000$#a.
 t write f
+1000 = 1!:4 f
 (t intv i) -: iread f,<i=.?100 900
 h =. open f
+1000 = 1!:4 h
 (t intv i) -: iread f,<i=.?100 900
+1000 = 1!:4 h
 (t intv i) -: iread h, i=.?200 800
+1000 = 1!:4 h
 (t intv i) -: iread h; i=.?300 700
+1000 = 1!:4 h
 (t intv i) -: iread h, i=.(?1000),0
+1000 = 1!:4 h
 
 (i}.t) -: iread h, i=.?1000
 (i}.t) -: iread h; i=.?1000

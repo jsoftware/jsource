@@ -1,4 +1,4 @@
-!ifeq (1,${x64})
+!if "1"=="$(x64)"
 CFLAGS= /WX /W3 /O2 /GS /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT
 FLAGS= /DLL /MACHINE:X64 /SUBSYSTEM:WINDOWS,5.02
 !else
@@ -19,7 +19,7 @@ LD=link
 .c.o:
 	$(CC) $(CFLAGS) /I "%JAVA_HOME%/include" /I "%JAVA_HOME%/include/win32" /Fo$@ /c $<
 
-!ifeq (1,${x64})
+!if "1"=="$(x64)"
 TARGET= jnative.dll
 !else
 TARGET= jnative32.dll

@@ -11,7 +11,9 @@ erase  =. 1!:55
 f =. <jpath '~temp/foo1x12.x'
 x =. (?1000$#a.){a.
 x write f
+1000 = 1!:4 f
 h =. open f
+1000 = 1!:4 h
 
 '' iwrite h,?#x
 x -: read h

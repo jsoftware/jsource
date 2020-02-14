@@ -127,7 +127,7 @@ static UA va1tab[]={
 
 static A jtva1(J,A,A);
 
-static A jtva1s(J jt,A w,A self,I cv,VF ado){A e,x,z,ze,zx;B c;I n,oprc,t,zt;P*wp,*zp;
+static A jtva1s(J jt,A w,A self,I cv,VA1F ado){A e,x,z,ze,zx;B c;I n,oprc,t,zt;P*wp,*zp;
  t=atype(cv); zt=rtype(cv);
  wp=PAV(w); e=SPA(wp,e); x=SPA(wp,x); c=t&&TYPESNE(t,AT(e));
  if(c)RZ(e=cvt(t,e));          GA(ze,zt,1,0,    0    ); oprc=((AHDR1FN*)ado)(jt,1L,AV(ze),AV(e));

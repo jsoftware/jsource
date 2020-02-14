@@ -68,9 +68,9 @@ static Z jtzgamma(J jt,Z z){D y=ABS(z.im);
  R !y?zrj0(dgamma(z.re)):20<y?zstirling(z):zgauss(jceil(y/0.8660254),z);
 }
 
-AMONPS(factI,  D,I, , *z=dgamma(1.0+(D)*x); , I rc=jt->jerr; R rc;)
-AMONPS(factD,  D,D, , *z=_isnan(*x)?*x:dgamma(1.0+*x); , I rc=jt->jerr; R rc;)
-AMONPS(factZ,  Z,Z, , *z=zgamma(zplus(z1,*x)); , I rc=jt->jerr; R rc;)
+AMONPS(factI,  D,I, , *z=dgamma(1.0+(D)*x); , HDR1JERR)
+AMONPS(factD,  D,D, , *z=_isnan(*x)?*x:dgamma(1.0+*x); , HDR1JERR)
+AMONPS(factZ,  Z,Z, , *z=zgamma(zplus(z1,*x)); , HDR1JERR)
 
 
 #define PQLOOP(expr) while(n&&h&&h!=inf&&h!=infm){h*=expr; --n;}

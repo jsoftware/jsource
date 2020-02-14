@@ -456,14 +456,14 @@ APFX(  powXX, X,X,X, xpow  )
 APFX(  binXX, X,X,X, xbin  )
 
 AMON( sgnX, X,X, *z=  rifvsdebug(xsgn(*x));)
-AMONPS(sqrtX, X,X, , *z= rifvsdebug(xsqrt(*x)); , I rc=jt->jerr; R rc;)
-AMONPS( expX, X,X, , *z=  rifvsdebug(xexp(*x,jt->xmode)); , I rc=jt->jerr; R rc;)
-AMONPS( logX, X,X, , *z= rifvsdebug(xlog1(*x)); , I rc=jt->jerr; R rc;)
-AMONPS(logXD, D,X, , *z=xlogd1(*x); , I rc=jt->jerr; R rc;)
+AMONPS(sqrtX, X,X, , *z= rifvsdebug(xsqrt(*x)); , HDR1JERR)
+AMONPS( expX, X,X, , *z=  rifvsdebug(xexp(*x,jt->xmode)); , HDR1JERR)
+AMONPS( logX, X,X, , *z= rifvsdebug(xlog1(*x)); , HDR1JERR)
+AMONPS(logXD, D,X, , *z=xlogd1(*x); , HDR1JERR)
 AMON(logXZ, Z,X, *z=xlogz1(*x);)
-AMONPS( absX, X,X, , *z=   rifvs(mag(*x)); , I rc=jt->jerr; R rc;)
-AMONPS(factX, X,X, , *z= rifvsdebug(xfact(*x)); , I rc=jt->jerr; R rc;)
-AMONPS( pixX, X,X, , *z=   rifvsdebug(xpi(*x)); , I rc=jt->jerr; R rc;)
+AMONPS( absX, X,X, , *z=   rifvs(mag(*x)); , HDR1JERR)
+AMONPS(factX, X,X, , *z= rifvsdebug(xfact(*x)); , HDR1JERR)
+AMONPS( pixX, X,X, , *z=   rifvsdebug(xpi(*x)); , HDR1JERR)
 
 
 F1(jtdigits10){A z;B b=0;I c,m,n,*v,*zv,*zv0;X x;

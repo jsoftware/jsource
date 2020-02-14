@@ -7,7 +7,7 @@
 #include "vasm.h"
 #include "gemm.h"
 
-#define MAXAROWS 384  // max rows of a that we can process to stay in L2 cache   a strip is m*CACHEHEIGHT, z strip is m*CACHEWIDTH   this is wired to 128*3 - check if you chage
+#define MAXAROWS 384  // max rows of a that we can process to stay in L2 cache   a strip is m*CACHEHEIGHT, z strip is m*CACHEWIDTH   this is wired to 128*3 - check if you change
 
 // Analysis for inner product
 // a,w are arguments

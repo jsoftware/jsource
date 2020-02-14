@@ -59,6 +59,8 @@
 #define EWOVIPMINUSIB    5
 #define EWOVIPMULII    6
 
+#define EVOK            256  // error code used to mean 'no error' in cases where we have to take the minimum of returned errors
+
 // Exigent errors are those errors that must not be ignored if they happen during execution on a fill-cell
 #define EMSK(x) (((I)1)<<((x)-1))
 #define EXIGENTERROR (EMSK(EVALLOC) | EMSK(EVATTN) | EMSK(EVBREAK) | EMSK(EVINPRUPT) | EMSK(EVFACE) | EMSK(EVWSFULL) | EMSK(EVTIME) | EMSK(EVSTACK) | EMSK(EVSYSTEM) )  // errors that always create failure

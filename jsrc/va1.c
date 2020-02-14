@@ -20,7 +20,7 @@ static AMONPS(floorDI,I,D,
   // if there is a value above 2^61, encode it by setting bit 62 to the opposite of bit 63 (we know bit 62 was 1 originally).  Remember the fact that we need a correction pass.
   // See if the value must be promoted to floating-point in the correction pass.  Return value of -2 if there are values all of which fit in an integer, -3 if float is required
   else{rc|=2; D d=tfloor(*x); *z=fbits^(SGNTO0(fbits)<<(BW-2)); if(d!=(I)d)rc|=1;} } ,  // we use DQ; i is n-1-reali, ~i = (reali-n+1)-1 = i-n
-  R -rc;
+  rc=-rc; R rc?rc:EVOK;
  ; )  // x100 0011 1100 =>2^61
 #else
 static AMON(floorDI,I,D, {D d=tfloor(*x); *z=(I)d; ASSERTWR(d==*z,EWOV);})
@@ -41,7 +41,7 @@ static AMONPS(ceilDI,I,D,
   // if there is a value above 2^61, encode it by setting bit 62 to the opposite of bit 63 (we know bit 62 was 1 originally).  Remember the fact that we need a correction pass.
   // See if the value must be promoted to floating-point in the correction pass.  Return value of -2 if there are values all of which fit in an integer, -3 if float is required
   else{rc|=2; D d=tceil(*x); *z=fbits^(SGNTO0(fbits)<<(BW-2)); if(d!=(I)d)rc|=1;} } ,  // we use DQ; i is n-1-reali, ~i = (reali-n+1)-1 = i-n
-  R -rc;
+  rc=-rc; R rc?rc:EVOK;
  ; )  // x100 0011 1100 =>2^61
 #else
 static AMON(ceilDI, I,D, {D d=tceil(*x);  *z=(I)d; ASSERTWR(d==*z,EWOV);})
@@ -53,7 +53,7 @@ static AMON(cjugZ,  Z,Z, *z=zconjug(*x);)
 
 static AMON(sgnI,   I,I, I xx=*x; *z=REPSGN(xx)|SGNTO0(-xx);)
 static AMON(sgnD,   I,D, *z=((1.0-jt->cct)<=*x) - (-(1.0-jt->cct)>=*x);)
-static AMONPS(sgnZ,   Z,Z, , if((1.0-jt->cct)>zmag(*x))*z=zeroZ; else *z=ztrend(*x); , I rc=jt->jerr; R rc;)
+static AMONPS(sgnZ,   Z,Z, , if((1.0-jt->cct)>zmag(*x))*z=zeroZ; else *z=ztrend(*x); , HDR1JERR)
 
 static AMON(sqrtI,  D,I, ASSERTWR(0<=*x,EWIMAG); *z=sqrt((D)*x);)
 
@@ -69,7 +69,7 @@ AHDR1(sqrtD,D,D){
   u=_mm256_sqrt_pd(_mm256_blendv_pd(u,comp,neg)); comp=_mm256_sub_pd(zero,u); u=_mm256_blendv_pd(u,comp,neg);  // store sqrt, with sign of the original value
 
  ,
- R (_mm256_movemask_pd(anyneg)&0xf)?EWIMAG:0;  // if there are any negative values, call for a postpass
+ R (_mm256_movemask_pd(anyneg)&0xf)?EWIMAG:EVOK;  // if there are any negative values, call for a postpass
  )
 }
 
@@ -79,12 +79,12 @@ AHDR1(absD,D,D){
  ,
   u=_mm256_and_pd(u,absmask);
  ,
-  R 0;
+  R EVOK;
  )
 }
 
 #else
-static AMON(sqrtD,  D,D, I ret=0; . if(*x>=0)*z=sqrt(*x);else{*z=-sqrt(-*x); ret=EWIMAG;}, R ret;)  // if input is negative, leave sqrt as negative
+static AMONPS(sqrtD,  D,D, I ret=EVOK; , if(*x>=0)*z=sqrt(*x);else{*z=-sqrt(-*x); ret=EWIMAG;}, R ret;)  // if input is negative, leave sqrt as negative
 #if BW==64
 static AMON(absD,   I,I, *z= *x&0x7fffffffffffffff;)
 #else
@@ -96,17 +96,17 @@ static AMON(sqrtZ,  Z,Z, *z=zsqrt(*x);)
 static AMON(expB,   D,B, *z=*x?2.71828182845904523536:1;)
 static AMON(expI,   D,I, *z=*x<EMIN?0.0:EMAX<*x?inf:exp((D)*x);)
 static AMON(expD,   D,D, *z=*x<EMIN?0.0:EMAX<*x?inf:exp(   *x);)
-static AMONPS(expZ, Z,Z, , *z=zexp(*x); , I rc=jt->jerr; R rc;)
+static AMONPS(expZ, Z,Z, , *z=zexp(*x); , HDR1JERR)
 
 static AMON(logB,   D,B, *z=*x?0:infm;)
 static AMON(logI,   D,I, ASSERTWR(0<=*x,EWIMAG); *z=log((D)*x);)
 static AMON(logD,   D,D, ASSERTWR(0<=*x,EWIMAG); *z=log(   *x);)
 static AMON(logZ,   Z,Z, *z=zlog(*x);)
 
-static AMONPS(absI,   I,I, I vtot=0; , I val=*x; val=(val^REPSGN(val))-REPSGN(val); vtot |= val; *z=val; , R REPSGN(vtot)&EWOV;)
-static AMONPS(absZ,   D,Z, , *z=zmag(*x); , I rc=jt->jerr; R rc;)
+static AMONPS(absI,   I,I, I vtot=0; , I val=*x; val=(val^REPSGN(val))-REPSGN(val); vtot |= val; *z=val; , R vtot<0?EWOV:EVOK;)
+static AMONPS(absZ,   D,Z, , *z=zmag(*x); , HDR1JERR)
 
-static AHDR1(oneB,C,C){memset(z,C1,n); R 0;}
+static AHDR1(oneB,C,C){memset(z,C1,n); R EVOK;}
 
 
 #define VIP (VIPOKW)   // inplace is OK
@@ -131,10 +131,10 @@ static A jtva1s(J jt,A w,A self,I cv,VF ado){A e,x,z,ze,zx;B c;I n,oprc,t,zt;P*w
  t=atype(cv); zt=rtype(cv);
  wp=PAV(w); e=SPA(wp,e); x=SPA(wp,x); c=t&&TYPESNE(t,AT(e));
  if(c)RZ(e=cvt(t,e));          GA(ze,zt,1,0,    0    ); oprc=((AHDR1FN*)ado)(jt,1L,AV(ze),AV(e));
- if(c)RZ(e=cvt(t,x)); n=AN(x); if(oprc==0){GA(zx,zt,n,AR(x),AS(x)); if(n)oprc=((AHDR1FN*)ado)(jt,n, AV(zx),AV(x));}
+ if(c)RZ(e=cvt(t,x)); n=AN(x); if(oprc==EVOK){GA(zx,zt,n,AR(x),AS(x)); if(n)oprc=((AHDR1FN*)ado)(jt,n, AV(zx),AV(x));}
  // sparse does not do inplace repair.  Always retry, and never inplace.
  oprc=oprc<0?EWOV:oprc;  //   If a restart is required, turn the result to EWOV (must be floor/ceil)
- if(oprc){
+ if(oprc!=EVOK){
   jt->jerr=(UC)oprc;  // signal error to the retry code, or to the system
   if(jt->jerr<=NEVM)R 0;
   J jtinplace=(J)((I)jt+JTRETRY);  // tell va1 it's a retry
@@ -158,7 +158,7 @@ void va1primsetup(A w){
  if(xlatedid>=VA2MIN)FAV(w)->localuse.lvp[1]=&va1tab[xlatedid-VA2MIN];  // if there is a va1 function, install it
 }
 
-static A jtva1(J jt,A w,A self){A z;I cv,n,t,wt,zt;VF ado;
+static A jtva1(J jt,A w,A self){A z;I cv,n,t,wt,zt;VA1F ado;
  UA *u=(UA *)FAV(self)->localuse.lvp[1];
  RZ(w);F1PREFIP;
  wt=AT(w); n=AN(w); wt=(I)jtinplace&JTEMPTY?B01:wt;
@@ -166,7 +166,7 @@ static A jtva1(J jt,A w,A self){A z;I cv,n,t,wt,zt;VF ado;
  VA1 *p=&u->p1[(0x0321000054032100>>(CTTZ(wt)<<2))&7];  // from MSB, we need xxx 011 010 001 xxx 000 xxx xxx   101 100 xxx 011 010 001 xxx 000
 #else
  if(wt&SPARSE){wt=AT(SPA(PAV(w),e));}
- VA2 *p=&u->p1[(0x54032100>>(CTTZ(wt)<<2))&7];  // from MSB, we need 101 100 xxx 011 010 001 xxx 000
+ VA1 *p=&u->p1[(0x54032100>>(CTTZ(wt)<<2))&7];  // from MSB, we need 101 100 xxx 011 010 001 xxx 000
 #endif
  ASSERT(wt&NUMERIC,EVDOMAIN);
  if(!((I)jtinplace&JTRETRY)){
@@ -182,9 +182,9 @@ static A jtva1(J jt,A w,A self){A z;I cv,n,t,wt,zt;VF ado;
    case VA1CASE(EWIRR, VA1ROOT-VA2MIN): cv=VD+VDD;   ado=sqrtD;                break;
    case VA1CASE(EWIRR, VA2POW-VA2MIN): cv=VD+VDD;   ado=expD;                 break;
    case VA1CASE(EWIRR, VA2OUTOF-VA2MIN): cv=VD+VDD;   ado=factD;                break;
-   case VA1CASE(EWIRR, VA1LOG-VA2MIN): cv=VD+(VDD&m); ado=m?(VF)logD:(VF)logXD; break;
+   case VA1CASE(EWIRR, VA1LOG-VA2MIN): cv=VD+(VDD&m); ado=m?(VA1F)logD:(VA1F)logXD; break;
    case VA1CASE(EWIMAG,VA1ROOT-VA2MIN): cv=VZ+VZZ;   ado=sqrtZ;                break;  // this case remains because singleton code fails over to it
-   case VA1CASE(EWIMAG,VA1LOG-VA2MIN): cv=VZ+(VZZ&m); ado=m?(VF)logZ:wt&XNUM?(VF)logXZ:(VF)logQZ; break;   // singleton code fails over to this too
+   case VA1CASE(EWIMAG,VA1LOG-VA2MIN): cv=VZ+(VZZ&m); ado=m?(VA1F)logZ:wt&XNUM?(VA1F)logXZ:(VA1F)logQZ; break;   // singleton code fails over to this too
   }
   RESETERR;
  }
@@ -196,7 +196,7 @@ static A jtva1(J jt,A w,A self){A z;I cv,n,t,wt,zt;VF ado;
  if(ASGNINPLACESGN(SGNIF((I)jtinplace,JTINPLACEWX)&SGNIF(cv,VIPOKWX),w)){z=w; if(TYPESNE(AT(w),zt))MODBLOCKTYPE(z,zt)}else{GA(z,zt,n,AR(w),AS(w));}
  if(!n)RETF(z); 
  I oprc = ((AHDR1FN*)ado)(jt,n,AV(z),AV(w));  // perform the operation on all the atoms, save result status.  If an error was signaled it will be reported here, but not necessarily vice versa
- if(oprc==0){RETF(cv&VRI+VRD?cvz(cv,z):z);}  // Normal return point: if no error, convert the result if necessary (rare)
+ if(oprc==EVOK){RETF(cv&VRI+VRD?cvz(cv,z):z);}  // Normal return point: if no error, convert the result if necessary (rare)
  else{
   // There was an error.  If it is recoverable in place, handle the cases here
   // positive result gives error type to use for retrying the operation; negative is 1's complement of the restart point (first value NOT stored)

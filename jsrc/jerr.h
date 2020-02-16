@@ -58,7 +58,8 @@
 #define EWOVIPMINUSBI    4
 #define EWOVIPMINUSIB    5
 #define EWOVIPMULII    6
-
+#define EWOVFLOOR0      52   // minor oflo in <./>., can be left as INT
+#define EWOVFLOOR1      53   // major oflo in <./>., must be converted to FL
 #define EVOK            256  // error code used to mean 'no error' in cases where we have to take the minimum of returned errors
 
 // Exigent errors are those errors that must not be ignored if they happen during execution on a fill-cell

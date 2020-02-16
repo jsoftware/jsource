@@ -274,7 +274,7 @@ static EXEC2F(jtexec2z,numbpx,CMPX,Z)
 // the number except the beginning or end.
 // This routine assumes 64-bit signed integers.
 I strtoint(C* in, C** out) {
- I res = 0; // init result
+ UI res = 0; // init result
  I neg, dig;  // negative flag, digit value
  *out = in;  // assume failure
  if(neg = '-'==*in){   // starting with - could be negative sign.  Remember the sign
@@ -286,9 +286,9 @@ I strtoint(C* in, C** out) {
  for(;;++in) {   // Read integer part:
   dig = (I)*in - (I)'0';
   if((UI)dig<=(UI)9){  // numeric digit.  Accept it and check for overflow
-   if((UI)res >= 1+IMAX/10) R 0;  // fail if this will overflow for sure.  res could be IMIN
+   if(res >= 1+IMAX/10) R 0;  // fail if this will overflow for sure.  res could be IMIN
    res = res * 10 + dig; // accept the digit.  This may overflow, but that's not fatal yet if it overflows to IMIN
-   if(res-1 < -1)R 0;  // If result overflowed to neg, fail.  We allow IMIN to continue on, representing IMAX+1
+   if(-(I)res > 0)R 0;  // If result overflowed to neg, fail.  We allow IMIN to continue on, representing IMAX+1
    continue;
   }
   if(*in==C0 || *in=='.')break;  // end-of-field or end-of-integer part: exit
@@ -308,7 +308,7 @@ I strtoint(C* in, C** out) {
  if(res==IMIN){if(!neg)R 0;}   // -2^63 is OK, but not +2^63
  res=(res^(-neg))+neg;   // change sign if neg
  *out=in;   // Finally, signal success
- R res;  // Return the int value
+ R (I)res;  // Return the int value
 }
 
 // Install the default into zv[k++]

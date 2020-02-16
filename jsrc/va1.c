@@ -18,9 +18,9 @@ static AMONPS(floorDI,I,D,
  I rc=0; UI fbits; D mplrs[2]; mplrs[0]=2.0-jt->cct; mplrs[1]=jt->cct-0.00000000000000011; ,
  {if(((fbits=*(UI*)x)&0x7fffffffffffffff)<0x43c0000000000000){I neg=SGNTO0((*(UI*)x)-SGNTO0(*(UI*)x)); *z=(I)(*x*mplrs[neg])-neg;}  // -0 is NOT neg; take everything up to +-2^61
   // if there is a value above 2^61, encode it by setting bit 62 to the opposite of bit 63 (we know bit 62 was 1 originally).  Remember the fact that we need a correction pass.
-  // See if the value must be promoted to floating-point in the correction pass.  Return value of -2 if there are values all of which fit in an integer, -3 if float is required
-  else{rc|=2; D d=tfloor(*x); *z=fbits^(SGNTO0(fbits)<<(BW-2)); if(d!=(I)d)rc|=1;} } ,  // we use DQ; i is n-1-reali, ~i = (reali-n+1)-1 = i-n
-  rc=-rc; R rc?rc:EVOK;
+  // See if the value must be promoted to floating-point in the correction pass.  Return value of EWOVFLOOR0 if there are values all of which fit in an integer, EWOVFLOOR1 if float is required
+  else{rc|=EWOVFLOOR0; D d=tfloor(*x); *z=fbits^(SGNTO0(fbits)<<(BW-2)); if(d!=(I)d)rc|=EWOVFLOOR1;} } ,  // we use DQ; i is n-1-reali, ~i = (reali-n+1)-1 = i-n
+  R rc?rc:EVOK;
  ; )  // x100 0011 1100 =>2^61
 #else
 static AMON(floorDI,I,D, {D d=tfloor(*x); *z=(I)d; ASSERTWR(d==*z,EWOV);})
@@ -40,8 +40,8 @@ static AMONPS(ceilDI,I,D,
  {if(((fbits=*(UI*)x)&0x7fffffffffffffff)<0x43c0000000000000){I pos=SGNTO0((0-*(UI*)x)-SGNTO0(0-*(UI*)x)); *z=(I)(*x*mplrs[pos])+pos;}  // 0 is NOT pos; take everything up to +-2^61
   // if there is a value above 2^61, encode it by setting bit 62 to the opposite of bit 63 (we know bit 62 was 1 originally).  Remember the fact that we need a correction pass.
   // See if the value must be promoted to floating-point in the correction pass.  Return value of -2 if there are values all of which fit in an integer, -3 if float is required
-  else{rc|=2; D d=tceil(*x); *z=fbits^(SGNTO0(fbits)<<(BW-2)); if(d!=(I)d)rc|=1;} } ,  // we use DQ; i is n-1-reali, ~i = (reali-n+1)-1 = i-n
-  rc=-rc; R rc?rc:EVOK;
+  else{rc|=EWOVFLOOR0; D d=tceil(*x); *z=fbits^(SGNTO0(fbits)<<(BW-2)); if(d!=(I)d)rc|=EWOVFLOOR1;} } ,  // we use DQ; i is n-1-reali, ~i = (reali-n+1)-1 = i-n
+  R rc?rc:EVOK;
  ; )  // x100 0011 1100 =>2^61
 #else
 static AMON(ceilDI, I,D, {D d=tceil(*x);  *z=(I)d; ASSERTWR(d==*z,EWOV);})
@@ -208,7 +208,7 @@ static A jtva1(J jt,A w,A self){A z;I cv,n,t,wt,zt;VA1F ado;
 // obsolete   if(VIP64&&ado==floorDI){/* obsolete RESETERR; */A zz=z; MODBLOCKTYPE(zz,FL) I *zv=IAV(z); D *zzv=DAV(zz); DQ(~oprc, *zzv++=(D)*zv++;)
 // obsolete    D *wv=DAV(w)+~oprc; DQ(n-~oprc, *zzv++=tfloor(*wv++);) RETF(zz);}
   // float floor: unconvertable cases are stored with bit 63 and bit 62 unlike; restore the float value by setting bit 62.
-  // if bit 0 of oprc is 1, values must be converted to float; if 1, they can be left as int
+  // if bit 0 of oprc is 1, values must be converted to float; if 0, they can be left as int
   if(VIP64&&ado==floorDI){A zz=z;
    if(!(oprc&1)){I *zv=IAV(z); DQ(n, I bits=*(I*)zv; if((bits^SGNIF(bits,BW-2))<0){bits|=0x4000000000000000; *zv=(I)tfloor(*(D*)&bits);} ++zv;)}  // convert overflows, turn back to integer
    else{MODBLOCKTYPE(zz,FL) I *zv=IAV(z); D *zzv=DAV(zz); DQ(n, I bits=*(I*)zv++; if((bits^SGNIF(bits,BW-2))>=0)*zzv=(D)bits;else{bits|=0x4000000000000000; *zzv=tfloor(*(D*)&bits);} ++zzv;)}   // force float conversion

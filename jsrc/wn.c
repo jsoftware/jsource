@@ -305,7 +305,7 @@ I strtoint(C* in, C** out) {
  if(','==in[-1])R 0;  // fail if last character of the field is comma.  *in here must be \0
  // It passed as an int.  Return it, unless it overflows on sign
  // If the value is IMIN, it has already had the sign switched; otherwise apply the sign
- if(res==IMIN){if(!neg)R 0;}   // -2^63 is OK, but not +2^63
+ if((I)res==IMIN){if(!neg)R 0;}   // -2^63 is OK, but not +2^63
  res=(res^(-neg))+neg;   // change sign if neg
  *out=in;   // Finally, signal success
  R (I)res;  // Return the int value

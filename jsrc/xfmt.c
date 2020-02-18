@@ -34,23 +34,29 @@ static const C*qq=">)}]";
 #define BITSf  14
 #define BITSz  16
 
-#define NMODVALS 8
+#define NMODVALS 11
 
-#define mC  (mods&0x0200)
-#define mL  (mods&0x0100)
+#define mC  (mods&0x1000)
+#define mL  (mods&0x0800)
+#define mK  (mods&0x0400)
+#define mJ  (mods&0x0200)
+#define mI  (mods&0x0100)
 #define mB  (mods&0x0080)
 #define mD  (mods&0x0040)
 #define mMN (mods&0x0030)
 #define mPQ (mods&0x000c)
 #define mR  (mods&0x0002)
-#define uB  (u[1])
-#define uD  (u[2])
-#define uM  (u[3])
-#define uN  (u[4])
-#define uP  (u[5])
-#define uQ  (u[6])
-#define uR  (u[7])
-#define uS  (u[8])
+#define uK  (u[1])  // unused
+#define uJ  (u[2])  // unused
+#define uI  (u[3])
+#define uB  (u[4])
+#define uD  (u[5])
+#define uM  (u[6])
+#define uN  (u[7])
+#define uP  (u[8])
+#define uQ  (u[9])
+#define uR  (u[10])
+#define uS  (u[11])
 
 
 static F1(jtfmtbfc){A*u,z;B t;C c,p,q,*s,*wv;I i,j,m,n;
@@ -118,12 +124,12 @@ static B jtwidthdp(J jt, A a, I *w, I *d){I n,x,y; C *v;
 } /* width and decimal places */
 
 /* parse a single boxed format phrase                                        */
-/* result:   (width,decimal_places,modifiers);b;d;m;n;p;q;r;s                */
-/* where modifiers are 2b11 1111 1111                                        */
-/* corresponding to      cl bdmn pqrs                                        */
-/* b d m n p q r s are the strings to use; s is '' if all defaults           */
+/* result:   (width,decimal_places,modifiers);k;j;i;b;d;m;n;p;q;r;s                */
+/* where modifiers are 2b1 1111 1111 1111                                        */
+/* corresponding to      c lkji bdmn pqrs                                        */
+/* k j i b d m n p q r s are the strings to use; s is '' if all defaults           */
 
-static F1(jtfmtparse){A x,z,*zv;B ml[2+NMODVALS],mod,t;C c,*cu="srqpnmdblc",*cu1="?bdmnpqrs",d,*s,*wv;
+static F1(jtfmtparse){A x,z,*zv;B ml[2+NMODVALS],mod,t;C c,*cu="srqpnmdbijklc",*cu1="?kjibdmnpqrs",d,*s,*wv;
      I fb,i,j,mi,n,n1,p,q,vals[3]={-1,-1,0};
  RZ(w);
  w=AAV0(w); n=AN(w);
@@ -200,8 +206,8 @@ static D jtexprndID(J jt, I d, D y){I e,s;D f,q,c,x1,x2;DI8 f8,y8,c8;
 static B jtsprintfI(J jt, C *x, I m, I dp, I iw, C *subs) {I r,g;
  x+=m-1;
  DQ(dp, *x--='0';); if(dp) *x--=SUBd; r=dp+!!dp;
- g=SGN(iw); iw=ABS(iw);
- while(iw){ *x--='0'+(C)(iw%10); iw/=10; r++; }
+ g=SGN(iw); UI uiw=ABS(iw);
+ while(uiw){ *x--='0'+(C)(uiw%10); uiw/=10; r++; }
  if(g==0) { *x--='0'; r++; }
  R 1;
 }
@@ -250,7 +256,7 @@ static B jtsprintfeD(J jt, C *x, I m, I dp, D dw, C *subs) {I y,y0;int decpt,sig
 #define mods_coldp 0x40000000 /* applied to modifiers when we're computing this columns # of decimal places */
 
 static F2(jtfmtprecomp) {A*as,base,fb,len,strs,*u,z;B*bits,*bw;D dtmp,*dw;
-     I d,i,*ib,imod,*iw,*iv,maxl,mods,n,nB,nD,nMN,nPQ,nc,nf,*s,wr,*ws,wt;
+     I d,i,*ib,imod,*iw,*iv,maxl,mods,n,nB,nD,nMN,nPQ,nI,nc,nf,*s,wr,*ws,wt;
  RZ(a&&w); 
  nf=AS(a)[0]; nf=1==AR(a)?1:nf; n=AN(w); wt=AT(w); wr=AR(w); ws=AS(w); nc=wr?ws[wr-1]:1;  // nf=#cells, nc=length of 1-cell (# columns)
  ASSERT(wt&B01+INT+FL, EVDOMAIN);
@@ -276,7 +282,7 @@ static F2(jtfmtprecomp) {A*as,base,fb,len,strs,*u,z;B*bits,*bw;D dtmp,*dw;
    for(i=0;i<n;++i){
     ib+=4; --imod; ib=(imod==0)?AV(base):ib; imod=(imod==0)?nf:imod;
     d=ib[1];
-    if(d==-1) *bits |= BITSe * (2000000000L < ABS(*iw));
+    if(d==-1) *bits |= BITSe * (2000000000L < (UI)ABS(*iw));
     /* BITS_, BITS__, and BITS_d are 0 */
     *bits |= BITSz*!*iw;
     if(d==-1) *iv = dpone(*bits,(D)*iw);
@@ -332,18 +338,19 @@ static F2(jtfmtprecomp) {A*as,base,fb,len,strs,*u,z;B*bits,*bw;D dtmp,*dw;
  iw=AV(w); dw=DAV(w); maxl=-1;
  imod=1;  // row size counter
  I imodc=-1;  // 
- for(i=0;i<n;i++) {
+ for(i=0;i<n;i++) {  // go through the values figuring the length needed for each value
        ib+=4; u+=NMODVALS; --imod; ib=(imod==0)?AV(base):ib; u=(imod==0)?AAV(strs)-1:u; imod=(imod==0)?nf:imod;
        ++imodc; imodc=(imodc==nc)?0:imodc;  // imodc is i%nc
-       nB=AN(uB); nD=AN(uD); nMN=AN(uM)+AN(uN); nPQ=AN(uP)+AN(uQ);
+       nB=AN(uB); nD=AN(uD); nMN=AN(uM)+AN(uN); nPQ=AN(uP)+AN(uQ); nI=AN(uI);
        d=ib[1]; mods=ib[2]; 
-       if(*bits&BITSf) { if(mD) *iv=nD; else *iv=2-!!(*bits&BITS_); }
+       if(*bits&BITSf) { if(mI&&*bits&BITS__)*iv=nI; else if(mD) *iv=nD; else *iv=2-!!(*bits&BITS_); }
        else if(*bits&BITSz) { 
         if(mB) *iv=nB; 
         else {
          *iv=1+d+!!d;
          if(mPQ) (*iv) += nPQ;
         }
+       } else if(mI && wt&INT && *iw==IMIN){*iv=nI;  // if we recognize NUL, do so regardless of output precision
        } else if(*bits&BITSe) {
         if(FL&wt) {
          if     (ABS(*dw) < 1e-99) *iv=2+!!d+d+1+3;
@@ -355,7 +362,7 @@ static F2(jtfmtprecomp) {A*as,base,fb,len,strs,*u,z;B*bits,*bw;D dtmp,*dw;
          else if(mPQ) (*iv)+=nPQ;
         } else {
 #if SY_64
-         if (ABS(*iw) < 10000000000L) *iv=2+!!d+d+  1;
+         if ((UI)ABS(*iw) < 10000000000L) *iv=2+!!d+d+  1;
          else                         *iv=2+!!d+d+  2;
 #else
          *iv=2+!!d+d+  1;
@@ -389,9 +396,9 @@ static F2(jtfmtprecomp) {A*as,base,fb,len,strs,*u,z;B*bits,*bw;D dtmp,*dw;
 /* a is jtfmtprecomp result */
 /* w is argument to format, but with BO1, INT, or FL type. */
 static A jtfmtallcol(J jt, A a, A w, I mode) {A *a1v,base,fb,len,strs,*u,v,x;
-    B *bits,*bv;C*cB,*cD,*cM,*cN,*cP,*cQ,*cR,*cv,**cvv,*cx,*subs;D dtmp,*dv;
-    I coll,d,g,h,i,*ib,imod,*iv,*il,j,k,l,m,mods,n,nB,nD,nM,nN,nP,nQ,nR,nc,nf,t,wr,*ws,y,zs[2];
- RZ(a); u=AAV(a); base=*u++; strs=*u++; len=*u++; fb=*u++; u=0; subs=0;
+    B *bits,*bv;C*cB,*cD,*cM,*cN,*cP,*cQ,*cR,*cI,*cJ,*cK,*cv,**cvv,*cx,*subs;D dtmp,*dv;
+    I coll,d,g,h,i,*ib,imod,*iv,*il,j,k,l,m,mods,nB,nD,nM,nN,nP,nQ,nR,nI,nJ,nK,n,nc,nf,t,wr,*ws,y,zs[2];
+ RZ(a); u=AAV(a); base=*u++; strs=*u++; len=*u++; fb=*u++; u=0; subs=0;  // extract components: len->lengths of the values
  RZ(w); n=AN(w); t=AT(w); wr=AR(w); ws=AS(w); nc=wr?ws[wr-1]:1;
  ASSERT(B01+INT+FL&t, EVDOMAIN);
 
@@ -445,8 +452,8 @@ static A jtfmtallcol(J jt, A a, A w, I mode) {A *a1v,base,fb,len,strs,*u,v,x;
   }
   if(j==nc) j=0;
   k=l=ib[0]; d=ib[1]; mods=ib[2]; coll=ib[3+(I )(1==nf)*j];
-  nB= AN(uB); nD= AN(uD); nM= AN(uM); nN= AN(uN); nP= AN(uP); nQ= AN(uQ); nR= AN(uR);
-  cB=CAV(uB); cD=CAV(uD); cM=CAV(uM); cN=CAV(uN); cP=CAV(uP); cQ=CAV(uQ); cR=CAV(uR);
+  nB= AN(uB); nD= AN(uD); nM= AN(uM); nN= AN(uN); nP= AN(uP); nQ= AN(uQ); nR= AN(uR); nI= AN(uI); nJ= AN(uJ); nK= AN(uK);
+  cB=CAV(uB); cD=CAV(uD); cM=CAV(uM); cN=CAV(uN); cP=CAV(uP); cQ=CAV(uQ); cR=CAV(uR); cI=CAV(uI); cJ=CAV(uJ); cK=CAV(uK);
   subs=AN(uS)?CAV(uS):(C*)"e,.-*";
   switch(mode) {
    case 0: v=*a1v; cv=CAV(v); break;
@@ -454,50 +461,54 @@ static A jtfmtallcol(J jt, A a, A w, I mode) {A *a1v,base,fb,len,strs,*u,v,x;
    case 2: k=0<l?l:coll; cv=cx; cx+=k; break;
    default: ASSERTSYS(0, "jtfmtallcol: mode");
   }
-  if(l>0 && l<*il) memset(cv,SUBs,l);  // can't dereference il if l==0
+  if(l>0 && l<*il) memset(cv,SUBs,l);  // can't dereference il if l==0.  If field too short, fill with user's * character
   else {
+   // first, install background if r<xx> given; otherwise blanks
    if(0<=l && mL){if(nR)mvc(k,cv,nR,cR); else memset(cv+*il, ' ', l-*il);}
    else if(0<=l) {if(nR)mvc(k,cv,nR,cR); else memset(cv, ' ', l-*il); cv+=l-*il;}
-   if(*bits&BITSf) {
-    if(mD) MC(cv, cD, nD);
-    else if(*bits&BITS_ ) { cv[0]='_'; }
+   // format the value.
+   if(*bits&BITSf) {  // value is _ __ _. (and therefore FL type)
+    if(mI && *bits&BITS__)MC(cv, cI, nI);  // NULL has priority i<xx>
+    else if(mD) MC(cv, cD, nD);  // if d<xx> given, use it
+    else if(*bits&BITS_ ) { cv[0]='_'; }  // otherwise, use the visual representation of the value
     else if(*bits&BITS__) { cv[0]='_'; cv[1]='_'; }
     else                  { cv[0]='_'; cv[1]='.'; }
-   } else if(*bits&BITSz) {
-    if(mB) MC(cv, cB, nB);
+   } else if(*bits&BITSz) {  // not infinity; is 0?  (could be B01, INT, or FL)
+    if(mB) MC(cv, cB, nB);  // if b<xx> given, use it
     else {
-     if(mPQ) { MC(cv, cP, nP); MC(cv+*il-nQ, cQ, nQ); }
-     RZ(sprintfI(cv+nP,*il-nP-nQ,d,0,subs));
+     if(mPQ) { MC(cv, cP, nP); MC(cv+*il-nQ, cQ, nQ); }  // if p<xx> or q<xx> given, move in those fields
+     RZ(sprintfI(cv+nP,*il-nP-nQ,d,0,subs));  // format 0 into the field, skipping p/q
     }
-   } else if(*bits&BITSe) {
-    dtmp=t&FL?*dv:(D)*iv;
-    y=dtmp < 0; g=0; 
-    if(dtmp < 0 && mMN) { y=nM; g=nN; } 
-    else if(dtmp>=0 && mPQ) { y=nP; g=nQ; }
-    RZ(sprintfeD(cv+y,*il-y-g,d,exprndID(d,dtmp),subs));
-    if     (dtmp< 0 && mMN) { MC(cv, cM, nM); MC(cv+*il-nN, cN, nN); }
-    else if(dtmp< 0       ) { *cv=SUBm;                              }
-    else if(dtmp>=0 && mPQ) { MC(cv, cP, nP); MC(cv+*il-nQ, cQ, nQ); }
+   } else if(mI && t&INT && *iv==IMIN){MC(cv, cI, nI);  // if we are checking for NULL, that overrides exponential
+   } else if(*bits&BITSe) {  // is nonzero to be displayed in exponential notation?  (must be INT or FL)
+    dtmp=t&FL?*dv:(D)*iv;  // get value, as a float
+    y=dtmp < 0; g=0;    // y will be length of sign prefix; init to 1 if negative.  g is length of sign suffix9
+    if(dtmp < 0 && mMN) { y=nM; g=nN; }   // if value is negative and m<xx> or n<xx> given, set pref/suff length from m/n
+    else if(dtmp>=0 && mPQ) { y=nP; g=nQ; }   // if value is nonnegative and p<xx> or q<xx> given, set pref/suff length from p/q
+    RZ(sprintfeD(cv+y,*il-y-g,d,exprndID(d,dtmp),subs));  // format the number, skipping pref/suff
+    if     (dtmp< 0 && mMN) { MC(cv, cM, nM); MC(cv+*il-nN, cN, nN); }  // if negative & pref/suff given, move them in
+    else if(dtmp< 0       ) { *cv=SUBm;                              }   // if other negative, use the specified - sign
+    else if(dtmp>=0 && mPQ) { MC(cv, cP, nP); MC(cv+*il-nQ, cQ, nQ); }  // if nonnegative & pref/suff given, move them in
    } else {
-    if(UNSAFE(t)==INT){
+    if(UNSAFE(t)==INT){  // integer to be displayed in fixed-point
      y=*iv < 0; g=0; 
      if(*iv < 0 && mMN) { y=nM; g=nN; }
-     else if(*iv>=0 && mPQ) { y=nP; g=nQ; }
-     m=*il-y-g; if(mC) m=m-((m-!!d-d)>>2);
-     RZ(sprintfI(cv+y, m, d, *iv, subs));
-     if(mC) RZ(fmtcomma(cv+y, *il-y-g, d, subs));
-     if     (*iv < 0 && mMN) { MC(cv, cM, nM); MC(cv+*il-nN, cN, nN); }
+     else if(*iv>=0 && mPQ) { y=nP; g=nQ; }  // pref/suff length as above
+     m=*il-y-g; if(mC) m=m-((m-!!d-d)>>2);  // m=length left for value after pref/suff, and any added commas
+     RZ(sprintfI(cv+y, m, d, *iv, subs));  // format as integer
+     if(mC) RZ(fmtcomma(cv+y, *il-y-g, d, subs));  // insert commas if called for
+     if     (*iv < 0 && mMN) { MC(cv, cM, nM); MC(cv+*il-nN, cN, nN); }  // install pref/suff as above
      else if(*iv < 0       ) { *cv=SUBm;                              }
      else if(*iv>= 0 && mPQ) { MC(cv, cP, nP); MC(cv+*il-nQ, cQ, nQ); }
     }else if(UNSAFE(t)<INT){  // B01
      if(mPQ) { MC(cv, cP, nP); MC(cv+*il-nQ, cQ, nQ); }
      RZ(sprintfI(cv+nP, *il-nP-nQ, d, *bv, subs));
-    }else{  // FL
+    }else{  // FL to be displayed in fixed point, as above but with decimal places
      y=*dv < 0; g=0;
      if(*dv < 0 && mMN) { y=nM; g=nN; }
      else if(*dv>=0 && mPQ) { y=nP; g=nQ; }
      m=*il-y-g; if(mC) m=m-((m-!!d-d)>>2);
-     RZ(sprintfnD(cv+y, m, d, afzrndID(d,*dv), subs));
+     RZ(sprintfnD(cv+y, m, d, afzrndID(d,*dv), subs));  // round to the display precision
      if(mC) RZ(fmtcomma(cv+y, *il-y-g, d, subs));
      if     (*dv < 0 && mMN) { MC(cv, cM, nM); MC(cv+*il-nN, cN, nN); }
      else if(*dv < 0       ) { *cv=SUBm;                              }

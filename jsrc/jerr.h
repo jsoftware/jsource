@@ -51,13 +51,13 @@
 #define EWOV            50      // integer overflow from the old routines that do not support recovery.  Anything >= EWOV is an overflow.  Leave at 50 until asm routines are retired
 #define EWOV1           51      // integer overflow that can be recovered because the float version has already been saved
 #define EWOVIP          52      // overflow, but recoverable even though executed in place.  It starts here, but identifies the routine it came from:
-#define EWOVIPPLUSII    0
-#define EWOVIPPLUSBI    1
-#define EWOVIPPLUSIB    2
-#define EWOVIPMINUSII    3
-#define EWOVIPMINUSBI    4
-#define EWOVIPMINUSIB    5
-#define EWOVIPMULII    6
+#define EWOVIPPLUSII    1  //0b001
+#define EWOVIPPLUSBI    0  //0b000  // bit 2=XOR value, bit0=AND value, bits 1:0 indicate function to use
+#define EWOVIPPLUSIB    4  //0b100
+#define EWOVIPMINUSII   3  //0b011
+#define EWOVIPMINUSBI   2  //0b010
+#define EWOVIPMINUSIB   6  //0b110
+#define EWOVIPMULII     5
 #define EWOVFLOOR0      52   // minor oflo in <./>., can be left as INT
 #define EWOVFLOOR1      53   // major oflo in <./>., must be converted to FL
 #define EVOK            256  // error code used to mean 'no error' in cases where we have to take the minimum of returned errors

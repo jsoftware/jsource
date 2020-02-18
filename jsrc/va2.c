@@ -442,7 +442,7 @@ VA2F(vains,pins, plusinsO,minusinsO,tymesinsO)
 VA2F(vapfx,ppfx, pluspfxO,minuspfxO,tymespfxO)
 VA2F(vasfx,psfx, plussfxO,minussfxO,tymessfxO)
 
-#define VARCASE(e,c) (70*(e)+(c))
+// obsolete #define VARCASE(e,c) (70*(e)+(c))
 
 // Table converting operand types to slot numbers in a va[] entry
 // Employed when one arg is known to be CMPX/XNUM/RAT.  Indexed by
@@ -457,6 +457,23 @@ printf("va2a: shape="); A spt=a; DO(AR(spt), printf(" %d",AS(spt)[i]);) printf("
 printf("va2a: axes="); spt=SPA(PAV(spt),a); DO(AN(spt), printf(" %d",IAV(spt)[i]);) printf("\n"); 
 printf("va2a: indexes="); spt=SPA(PAV(a),i); DO(AN(spt), printf(" %d",IAV(spt)[i]);) printf("\n");
 }
+#endif
+// repair routines for 
+static VF repairip[4] = {plusBIO, plusIIO, minusBIO, minusIIO};
+
+#if 0
+      // choose the non-in-place argument
+      adocv.f=(VF)plusIIO; nipw = z!=w; break; // if w not repeated, select it for not-in-place
+     case EWOVIPPLUSBI:
+      adocv.f=(VF)plusBIO; nipw = 0; break;   // Leave the Boolean argument as a
+     case EWOVIPPLUSIB:
+      adocv.f=(VF)plusBIO; nipw = 1; break;  // Use w as not-in-place
+     case EWOVIPMINUSII:
+      adocv.f=(VF)minusIIO; nipw = z!=w; break; // if w not repeated, select it for not-in-place
+     case EWOVIPMINUSBI:
+      adocv.f=(VF)minusBIO; nipw = 0; break;   // Leave the Boolean argument as a
+     case EWOVIPMINUSIB:
+      adocv.f=(VF)minusBIO; nipw = 1; break;  // Use w as not-in-place
 #endif
 
 // All dyadic arithmetic verbs f enter here, and also f"n.  a and w are the arguments, id
@@ -565,6 +582,9 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
 #else
     RE(zn=mult(nf,zk)); nf^=REPSGN(1-nf)&-mf; PROD(mf,q,sf); RE(zn=mult(mf,zn));  // zn=total # result atoms  (only if non-sparse)
 #endif
+    // if mf=1, we can cut down to 1 loop.  Transfer the length in nf to mf, set nf to 1, and set awzk[0]=0 if nf<1, awzk[1]=0 if nf>=1.  Register pressure is over
+
+// scaf    if(mf==1&&nf!=1) SEGFAULT
     zk*=bp(rtype((I)jtinplace));  // now create zk, which is used later than ak/wk.
     awzk[2]=zk;  // move it out of registers
    }else{awzk[0]=acr; awzk[1]=wcr; mf=af; nf=wf;}  // For sparse, repurpose ak/wk/mf/nf to hold acr/wcr/af/wf, which we will pass into vasp.  This allows acr/wcr/af/wf to be block-local
@@ -572,7 +592,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
   // TODO: for 64-bit, we could move f and r into upper jtinplace; use bit 4 of jtinplace for testing below; make f/r block-local; extract f/r below as needed
  }
 
- RESETRANK;  // This is required for xnum/rat/sparse, which call IRS-enabled routines internally.  We could suppress this for mainline types, perhaps in var().  Anyone who sets this must sets it back,
+ RESETRANK;  // This is required for xnum/rat/sparse, which call IRS-enabled routines internally.  We could suppress this for mainline types, perhaps in var().  Anyone who sets this must set it back,
              // so it's OK that we don't clear it if we have error
 
  // Signal domain error if appropriate. Must do this after agreement tests
@@ -587,7 +607,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
    // Because of the priority of errors we mustn't check the type until we have verified agreement above
    if((I)jtinplace&VARGMSK&&zn>0){I t=atype((I)jtinplace);  // input conversion required (rare), and the result is not empty
     // Conversions to XNUM use a routine that pushes/sets/pops jt->mode, which controls the
-    // type of conversion to XNUM in use.  Any result of the conversion is automatically inplaceable.  If type changes, change the cell-size too
+    // type of conversion to XNUM in use.  Any result of the conversion is automatically inplaceable.  If type changes, change the cell-size too, possibly larger or smaller
     // bits 2-3 of jtinplace indicate whether inplaceability is allowed by the op, the ranks, and the addresses
     if(TYPESNE(t,AT(a))){awzk[0]>>=bplg(AT(a)); RZ(a=!(t&XNUM)?cvt(t,a):xcvt(((I)jtinplace&VXCVTYPEMSK)>>VXCVTYPEX,a));jtinplace = (J)(intptr_t)((I)jtinplace | (((I)jtinplace>>2)&JTINPLACEA)); awzk[0]<<=bplg(AT(a)); forcetomemory(awzk);}
     if(TYPESNE(t,AT(w))){awzk[1]>>=bplg(AT(w)); RZ(w=!(t&XNUM)?cvt(t,w):xcvt(((I)jtinplace&VXCVTYPEMSK)>>VXCVTYPEX,w));jtinplace = (J)(intptr_t)((I)jtinplace | (((I)jtinplace>>2)&JTINPLACEW)); awzk[1]<<=bplg(AT(w));}
@@ -639,10 +659,18 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
   {
    {C *av=CAV(a); C *wv=CAV(w); C *zv=CAV(z);   // point to the data
     // Call the action routines: nf,mf, etc must be preserved in case of repair
+#if 1   // obsolete
     // note: the compiler unrolls these call loops.  Would be nice to suppress that
     if(nf-1==0){I i=mf; do{((AHDR2FN*)adocv.f)(n,m,av,wv,zv,jt); if(!--i)break; av+=awzk[0]; wv+=awzk[1]; zv+=awzk[2];}while(1);}  // if the short cell is not repeated, loop over the frame
     else if(nf-1<0){I im=mf; do{I in=~nf; do{((AHDR2FN*)adocv.f)(n,m,av,wv,zv,jt); wv+=awzk[1]; zv+=awzk[2];}while(--in); av+=awzk[0];}while(--im);} // if right frame is longer, repeat cells of a
     else         {I im=mf; do{I in=nf; do{((AHDR2FN*)adocv.f)(n,m,av,wv,zv,jt); av+=awzk[0]; zv+=awzk[2];}while(--in); wv+=awzk[1];}while(--im);}  // if left frame is longer, repeat cells of w
+#else
+   // nf is # inner loops, with flags.   nf is <1 if w always advances, i. e. a inner is 0aw
+   I aawwzk[5];  // a outer/only, a inner, w outer/only, w inner, z
+   aawwzk[3]=aawwzk[2]=awzk[1]; aawwzk[1]=aawwzk[0]=awzk[0]; aawwzk[4]=awzk[2];
+   I j=ABS(nf); I i=mf*j; j=j-1;   // move these up
+   I jj=j; while(1){((AHDR2FN*)adocv.f)(n,m,av,wv,zv,jt); if(!--i)break; zv+=aawwzk[4]; I jj1=--jj; jj=jj<0?j:jj; av+=aawwzk[1+REPSGN(jj1)]; wv+=aawwzk[3+REPSGN(jj1)];}  // jj1 is -1 on the last inner iter, where we use outer incr
+#endif
    }
    // The work has been done.  If there was no error, check for optional conversion-if-possible or -if-necessary
    if(!jt->jerr){RETF(!((I)jtinplace&VRI+VRD)?z:cvz((I)jtinplace,z));  // normal return is here.  The rest is error recovery
@@ -665,22 +693,24 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
       akm=akn&wkn; wkn&=wkm; wkm^=wkn; akn^=akm;  // if c, akm=ak/wkn=wk; else akn=ak/wkm=wk.  The other incr is 0
       I im=mf; do{I in=nf; do{((AHDR2FN*)adocv.f)(n,m,av,wv,zzv,jt); zzv+=zzk; av+=akn; wv +=wkn;}while(--in); if(!--im)break; av+=akm; wv +=wkm;}while(1);
      }
-    } else {I nipw;   // not multiply repair, but something else to do inplace
-     switch(jt->jerr-EWOVIP){
-     case EWOVIPPLUSII:
-      // choose the non-in-place argument
-      adocv.f=(VF)plusIIO; nipw = z!=w; break; // if w not repeated, select it for not-in-place
-     case EWOVIPPLUSBI:
-      adocv.f=(VF)plusBIO; nipw = 0; break;   // Leave the Boolean argument as a
-     case EWOVIPPLUSIB:
-      adocv.f=(VF)plusBIO; nipw = 1; break;  // Use w as not-in-place
-     case EWOVIPMINUSII:
-      adocv.f=(VF)minusIIO; nipw = z!=w; break; // if w not repeated, select it for not-in-place
-     case EWOVIPMINUSBI:
-      adocv.f=(VF)minusBIO; nipw = 0; break;   // Leave the Boolean argument as a
-     case EWOVIPMINUSIB:
-      adocv.f=(VF)minusBIO; nipw = 1; break;  // Use w as not-in-place
-     }
+    } else {   // not multiply repair, but something else to do inplace
+     adocv.f = repairip[(jt->jerr-EWOVIP)&3];   // fetch ep from table
+     I nipw = ((z!=w) & (jt->jerr-EWOVIP)) ^ (((jt->jerr-EWOVIP)>>2) & 1);  // nipw from z!=w if bits2,0==01; 1 if 10; 0 if 00
+// obsolete      switch(jt->jerr-EWOVIP){
+// obsolete      case EWOVIPPLUSII:
+// obsolete       // choose the non-in-place argument
+// obsolete       adocv.f=(VF)plusIIO; nipw = z!=w; break; // if w not repeated, select it for not-in-place
+// obsolete      case EWOVIPPLUSBI:
+// obsolete       adocv.f=(VF)plusBIO; nipw = 0; break;   // Leave the Boolean argument as a
+// obsolete      case EWOVIPPLUSIB:
+// obsolete       adocv.f=(VF)plusBIO; nipw = 1; break;  // Use w as not-in-place
+// obsolete      case EWOVIPMINUSII:
+// obsolete       adocv.f=(VF)minusIIO; nipw = z!=w; break; // if w not repeated, select it for not-in-place
+// obsolete      case EWOVIPMINUSBI:
+// obsolete       adocv.f=(VF)minusBIO; nipw = 0; break;   // Leave the Boolean argument as a
+// obsolete      case EWOVIPMINUSIB:
+// obsolete       adocv.f=(VF)minusBIO; nipw = 1; break;  // Use w as not-in-place
+// obsolete      }
      // nipw means 'use w as not-in-place'; c means 'repeat cells of a'; so if nipw!=c we repeat cells of not-in-place, if nipw==c we set nf to 1
      // if we are repeating cells of the not-in-place, we leave the repetition count in nf, otherwise subsume it in mf
      // b means 'repeat atoms inside a'; so if nipw!=b we repeat atoms of not-in-place, if nipw==b we set n to 1

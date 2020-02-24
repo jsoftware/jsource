@@ -753,6 +753,22 @@ extern unsigned int __cdecl _clearfp (void);
  loopbody \
  _mm256_maskstore_pd(z, endmask, u); \
  postloop
+
+// Dyadic version.  v is right argument, u is still result
+#define AVXATOMLOOP2(preloop,loopbody,postloop) \
+ __m256i endmask;  __m256d u,v; \
+ _mm256_zeroupper(VOIDARG); \
+ endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-n)&(NPAR-1))));  /* mask for 0 1 2 3 4 5 is xxxx 0001 0011 0111 1111 0001 */ \
+ preloop \
+ I i=(n-1)>>LGNPAR;  /* # loops for 0 1 2 3 4 5 is x 0 0 0 0 1 */ \
+ while(--i>=0){ u=_mm256_loadu_pd(x); v=_mm256_loadu_pd(y); \
+  loopbody \
+  _mm256_storeu_pd(z, u); x+=NPAR; y+=NPAR; z+=NPAR; \
+ } \
+ u=_mm256_maskload_pd(x,endmask); \
+ loopbody \
+ _mm256_maskstore_pd(z, endmask, u); \
+ postloop
 #endif
 
 #define NUMMAX          9    // largest number represented in num[]

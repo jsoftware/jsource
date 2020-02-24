@@ -454,7 +454,7 @@ F1(jtcvt0){I n,t,*u,*v,z0,z1;
 }    /* convert -0 to 0 in place */
 #endif
 
-
+// convert to xnum, using conversion type in m.  Old conversion type is stacked
 A jtxcvt(J jt,I m,A w){A z;I old=jt->xmode; jt->xmode=m; z=cvt(XNUM,w); jt->xmode=old; R z;}
 
 F1(jtxco1){RZ(w); ASSERT(AT(w)&DENSE,EVNONCE); R cvt(AT(w)&B01+INT+XNUM?XNUM:RAT,w);}

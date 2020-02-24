@@ -16,15 +16,6 @@
 #define TYMESDI(u,v)  (   v?u*v:0)
 #define TYMESDD(u,v)  TYMES(u,v)
 
-// II add, noting overflow and leaving it, possibly in place
-AHDR2(plusII,I,I,I){I u;I v;I w;I oflo=0;
- // overflow is (input signs equal) and (result sign differs from one of them)
- // If u==0, v^=u is always 0 & therefore no overflow
- if(n-1==0) DQ(m, u=*x; v=*y; w= ~u; u+=v; *z=u; ++x; ++y; ++z; w^=v; v^=u; if(XANDY(w,v)<0)++oflo;)
- else if(n-1<0)DQ(m, u=*x++; I thresh = IMIN-u; if (u<=0){DQC(n, v=*y; if(v<thresh)++oflo; v=u+v; *z++=v; y++;)}else{DQC(n, v=*y; if(v>=thresh)++oflo; v=u+v; *z++=v; y++;)})
- else      DQ(m, v=*y++; I thresh = IMIN-v; if (v<=0){DQ(n, u=*x; if(u<thresh)++oflo; u=u+v; *z++=u; x++;)}else{DQ(n, u=*x; if(u>=thresh)++oflo; u=u+v; *z++=u; x++;)})
- if(oflo)jt->jerr=EWOVIP+EWOVIPPLUSII;
-}
 
 // BI add, noting overflow and leaving it, possibly in place.  If we add 0, copy the numbers (or leave unchanged, if in place)
 AHDR2(plusBI,I,B,I){I u;I v;I oflo=0;
@@ -43,45 +34,53 @@ AHDR2(plusIB,I,I,B){I u;I v;I oflo=0;
 }
 
 #if C_AVX&&SY_64
-#define primop256(name,primop) \
+// commute=bit0 = commjutative, bit1 set if incomplete y must be filled with 0 (to avoid isub oflo), bit2 set if incomplete x must be filled with i (for fdiv NaN) 
+#define primop256(name,commute,pref,zzop,suff) \
 AHDR2(name,D,D,D){ \
+ __m256d xx,yy,zz; \
  __m256i endmask; /* length mask for the last word */ \
  _mm256_zeroupper(VOIDARG); \
- NAN0; \
+   /* will be removed except for divide */ \
+ pref \
  if(n-1==0){ \
   /* vector-to-vector, no repetitions */ \
   endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-m)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
-  DQ((m-1)>>LGNPAR, _mm256_storeu_pd(z, primop(_mm256_loadu_pd(x),_mm256_loadu_pd(y))); x+=NPAR; y+=NPAR; z+=NPAR;) \
+  DQ((m-1)>>LGNPAR, xx=_mm256_loadu_pd(x); yy=_mm256_loadu_pd(y); zzop; _mm256_storeu_pd(z, zz); x+=NPAR; y+=NPAR; z+=NPAR;) \
   /* runout, using mask */ \
-  _mm256_maskstore_pd(z, endmask, primop(_mm256_maskload_pd(x,endmask),_mm256_maskload_pd(y,endmask))); \
+  xx=_mm256_maskload_pd(x,endmask); yy=_mm256_maskload_pd(y,endmask); if(commute&4)xx=_mm256_blendv_pd(_mm256_set1_pd(1.0),xx,_mm256_castsi256_pd(endmask)); zzop; _mm256_maskstore_pd(z, endmask, zz); \
  }else{ \
-  if(n-1<0){n=~n; \
+  if(!(commute&1)&&n-1<0){n=~n; \
    /* atom+vector */ \
    endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-n)&(NPAR-1)))); \
-   DQ(m, __m256d u; u=_mm256_set1_pd(*x); ++x; \
-     DQ((n-1)>>LGNPAR, _mm256_storeu_pd(z, primop(u,_mm256_loadu_pd(y))); y+=NPAR; z+=NPAR;)  _mm256_maskstore_pd(z, endmask, primop(u,_mm256_maskload_pd(y,endmask))); \
+   DQ(m, xx=_mm256_set1_pd(*x); ++x; \
+     DQ((n-1)>>LGNPAR, yy=_mm256_loadu_pd(y); zzop; _mm256_storeu_pd(z, zz); y+=NPAR; z+=NPAR;)  yy=_mm256_maskload_pd(y,endmask); if(commute&4)xx=_mm256_blendv_pd(_mm256_set1_pd(1.0),xx,_mm256_castsi256_pd(endmask)); zzop; _mm256_maskstore_pd(z, endmask, zz); \
      y+=((n-1)&(NPAR-1))+1; z+=((n-1)&(NPAR-1))+1;) \
   }else{ \
    /* vector+atom */ \
-   endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-n)&(NPAR-1)))); \
-   DQ(m, __m256d v; v=_mm256_set1_pd(*y); ++y; \
-     DQ((n-1)>>LGNPAR, _mm256_storeu_pd(z, primop(_mm256_loadu_pd(x),v)); x+=NPAR; z+=NPAR;)  _mm256_maskstore_pd(z, endmask, primop(_mm256_maskload_pd(x,endmask),v)); \
+   if(commute&1){I taddr=(I)x^(I)y; x=n<0?y:x; y=(D*)((I)x^taddr); n^=REPSGN(n);}; endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-n)&(NPAR-1)))); \
+   DQ(m, yy=_mm256_set1_pd(*y); ++y; \
+     DQ((n-1)>>LGNPAR, xx=_mm256_loadu_pd(x); zzop; _mm256_storeu_pd(z, zz); x+=NPAR; z+=NPAR;)  xx=_mm256_maskload_pd(x,endmask); if(commute&2)yy=_mm256_blendv_pd(_mm256_castsi256_pd(endmask),yy,_mm256_castsi256_pd(endmask)); zzop; _mm256_maskstore_pd(z, endmask, zz); \
      x+=((n-1)&(NPAR-1))+1; z+=((n-1)&(NPAR-1))+1;) \
   } \
  } \
- NAN1V; \
+ suff \
 }
 // D + D, never 0 times
-primop256(plusDD,_mm256_add_pd)
-primop256(minusDD,_mm256_sub_pd)
-primop256(minDD,_mm256_min_pd)
-primop256(maxDD,_mm256_max_pd)
+primop256(plusDD,1,NAN0;,zz=_mm256_add_pd(xx,yy),if(NANTEST)jsignal(EVNAN);)
+primop256(minusDD,0,NAN0;,zz=_mm256_sub_pd(xx,yy),if(NANTEST)jsignal(EVNAN);)
+primop256(minDD,1,,zz=_mm256_min_pd(xx,yy),)
+primop256(maxDD,1,,zz=_mm256_max_pd(xx,yy),)
+primop256(tymesDD,1,D *zsav=z;NAN0;,zz=_mm256_mul_pd(xx,yy),if(NANTEST){z=zsav; DQ(n*m, if(_isnan(*z))*z=0.0; ++z;)})
+// div can fail from 0%0 (which we turn to 0) or inf%inf (which we fail)
+primop256(divDD,4,D *zsav=z; D *xsav=x; D *ysav=y; I nsav=n;NAN0;,zz=_mm256_div_pd(xx,yy),
+  if(NANTEST){z=zsav; xsav=zsav==ysav?xsav:ysav; m*=n; n=(nsav^SGNIF(zsav==ysav,0))>=0?n:1; nsav=--n; DQ(m, if(_isnan(*z)){if(*xsav!=0)jsignal(EVNAN); *z=0.0;} ++z; --n; xsav-=REPSGN(n); n=n<0?nsav:n;)})
 
+#if 0 // obsolete 
 // * and % have special requirements
 AHDR2(tymesDD,D,D,D){
  // install the length mask for the last word
  __m256i endmask;
- __m256d zero; zero=_mm256_set1_pd(0.0);
+ __m256d zero; zero=_mm256_setzero_pd();
  __m256d u, v, unonzero, vnonzero;  // mask: all ones unless the arg is 0.  AND with OTHER arg to turn 0*inf into 0*0
  _mm256_zeroupper(VOIDARG);
  NAN0;
@@ -121,7 +120,7 @@ AHDR2(tymesDD,D,D,D){
 AHDR2(divDD,D,D,D){
  // install the length mask for the last word
  __m256i endmask;
- __m256d zero; zero=_mm256_set1_pd(0.0);
+ __m256d zero; zero=_mm256_setzero_pd();
  __m256d one; one=_mm256_set1_pd(1.0);
  __m256d signmask; signmask=_mm256_castsi256_pd(_mm256_set1_epi64x (0x8000000000000000));
 
@@ -161,6 +160,7 @@ AHDR2(divDD,D,D,D){
  }
  NAN1V;
 }
+#endif
 #else
 ANAN( plusDD, D,D,D, PLUS)
 ANAN(minusDD, D,D,D, MINUS)
@@ -169,9 +169,31 @@ APFX(maxDD, D,D,D, MAX)
 APFX(tymesDD, D,D,D, TYMESDD)
 ANAN(  divDD, D,D,D, DIV)
 #endif
-// BD DB add similarly?
 
+#if C_AVX2&&SY_64
+primop256(plusII,1,__m256d oflo=_mm256_setzero_pd();,
+ zz=_mm256_castsi256_pd(_mm256_add_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy))); oflo=_mm256_or_pd(oflo,_mm256_andnot_pd(_mm256_xor_pd(xx,yy),_mm256_xor_pd(xx,zz)));,
+ if(_mm256_movemask_pd(oflo))jsignal(EWOVIP+EWOVIPPLUSII);)
+primop256(minusII,2,__m256d oflo=_mm256_setzero_pd();,
+ zz=_mm256_castsi256_pd(_mm256_sub_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy))); oflo=_mm256_or_pd(oflo,_mm256_and_pd(_mm256_xor_pd(xx,yy),_mm256_xor_pd(xx,zz)));,
+ if(_mm256_movemask_pd(oflo))jsignal(EWOVIP+EWOVIPMINUSII);)
+primop256(minII,1,,
+ zz=_mm256_blendv_pd(xx,yy,_mm256_castsi256_pd(_mm256_cmpgt_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)))); ,
+)
+primop256(maxII,1,,
+ zz=_mm256_blendv_pd(yy,xx,_mm256_castsi256_pd(_mm256_cmpgt_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)))); ,
+)
+#else
+// II add, noting overflow and leaving it, possibly in place
+AHDR2(plusII,I,I,I){I u;I v;I w;I oflo=0;
+ // overflow is (input signs equal) and (result sign differs from one of them)
+ // If u==0, v^=u is always 0 & therefore no overflow
+ if(n-1==0) DQ(m, u=*x; v=*y; w= ~u; u+=v; *z=u; ++x; ++y; ++z; w^=v; v^=u; if(XANDY(w,v)<0)++oflo;)
+ else if(n-1<0)DQ(m, u=*x++; I thresh = IMIN-u; if (u<=0){DQC(n, v=*y; if(v<thresh)++oflo; v=u+v; *z++=v; y++;)}else{DQC(n, v=*y; if(v>=thresh)++oflo; v=u+v; *z++=v; y++;)})
+ else      DQ(m, v=*y++; I thresh = IMIN-v; if (v<=0){DQ(n, u=*x; if(u<thresh)++oflo; u=u+v; *z++=u; x++;)}else{DQ(n, u=*x; if(u>=thresh)++oflo; u=u+v; *z++=u; x++;)})
+ if(oflo)jt->jerr=EWOVIP+EWOVIPPLUSII;
 // II subtract, noting overflow and leaving it, possibly in place
+}
 AHDR2(minusII,I,I,I){I u;I v;I w;I oflo=0;
  // overflow is (input signs differ) and (result sign differs from minuend sign)
  if(n-1==0)  {DQ(m, u=*x; v=*y; w=u-v; *z=w; ++x; ++y; ++z; v^=u; u^=w; if(XANDY(u,v)<0)++oflo;)}
@@ -181,6 +203,11 @@ AHDR2(minusII,I,I,I){I u;I v;I w;I oflo=0;
  else      DQ(m, v=*y++; I thresh = v-IMIN; if (v<=0){DQ(n, u=*x; if(u>=thresh)++oflo; u=u-v; *z++=u; x++;)}else{DQ(n, u=*x; if(u<thresh)++oflo; u=u-v; *z++=u; x++;)})
  if(oflo)jt->jerr=EWOVIP+EWOVIPMINUSII;
 }
+APFX(  minII, I,I,I, MIN)
+APFX(  maxII, I,I,I, MAX)
+
+#endif
+// BD DB add similarly?
 
 // BI subtract, noting overflow and leaving it, possibly in place.  If we add 0, copy the numbers (or leave unchanged, if in place)
 AHDR2(minusBI,I,B,I){I u;I v;I w;I oflo=0;
@@ -306,15 +333,14 @@ APFX(  divDB, D,D,B, DIVI )   APFX(  divDI, D,D,I, DIVI)       /* divDD */
 ANAN(  divZZ, Z,Z,Z, zdiv )
 
      /* orBB */               APFX(  minBI, I,B,I, MIN)     APFX(  minBD, D,B,D, MIN)    
-APFX(  minIB, I,I,B, MIN)     APFX(  minII, I,I,I, MIN)     APFX(  minID, D,I,D, MIN)  
+APFX(  minIB, I,I,B, MIN)     /* minII */                   APFX(  minID, D,I,D, MIN)  
 APFX(  minDB, D,D,B, MIN)     APFX(  minDI, D,D,I, MIN)        /* minDD */
 APFX(  minSS, SB,SB,SB, SBMIN)
 
     /* andBB */               APFX(  maxBI, I,B,I, MAX)     APFX(  maxBD, D,B,D, MAX)    
-APFX(  maxIB, I,I,B, MAX)     APFX(  maxII, I,I,I, MAX)     APFX(  maxID, D,I,D, MAX)  
+APFX(  maxIB, I,I,B, MAX)     /* maxII */                   APFX(  maxID, D,I,D, MAX)  
 APFX(  maxDB, D,D,B, MAX)     APFX(  maxDI, D,D,I, MAX)         /* maxDD */
 APFX(  maxSS, SB,SB,SB, SBMAX)
-
 
 D jtremdd(J jt,D a,D b){D q,x,y;
  if(!a)R b;

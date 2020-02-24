@@ -786,7 +786,7 @@ static IOFX(Z,UI4,jtioz02, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n),
   __m128i vp, vpstride;   /* v for hash/v for search; stride for each */ \
   _mm256_zeroupper(VOIDARG);  \
   __m128d xval, xnew, xrot; SETXNEW \
-  vp=_mm_set1_epi32_(0);  /* to avoid warnings */ \
+  vp=_mm_setzero_si128();  /* to avoid warnings */ \
   md=mode&IIOPMSK;   /* clear upper flags including REFLEX bit */                            \
   if(!(((uintptr_t)a^(uintptr_t)w)|(ac^wc)))md|=(IIMODREFLEX&((((1<<IIDOT)|(1<<IICO)|(1<<INUBSV)|(1<<INUB)|(1<<INUBI))<<IIMODREFLEXX)>>md));  /* remember if this is reflexive, which doesn't prehash */  \
   jx=0;                                                                     \
@@ -1302,7 +1302,7 @@ static I jtutype(J jt,A w,I c){A*wv,x;I m,t;
  \
   __m128i vp, vpstride;   /* v for hash/v for search; stride for each */ \
   _mm256_zeroupper(VOIDARG);  \
-  vp=_mm_set1_epi32_(0);  /* to avoid warnings */ \
+  vp=_mm_setzero_si128();  /* to avoid warnings */ \
   md=mode&IIOPMSK;   /* clear upper flags including REFLEX bit */  \
   A indtbl; GATV0(indtbl,INT,((asct*sizeof(TH)+SZI)>>LGSZI),0); TH * RESTRICT indtdd=TH##AV(indtbl); \
   for(l=0;l<ac;++l,av+=acn,wv+=wcn){I chainct=0;  /* number of chains in w */   \

@@ -113,7 +113,7 @@ I blockedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I pnom,I pstored,I flgs){
  // Since we sometimes use 128-bit instructions in other places, make sure we don't get stuck in slow state
  NAN0;
  _mm256_zeroupper();
- __m256d z00=_mm256_set1_pd(0.0); // set here to avoid warnings
+ __m256d z00=_mm256_setzero_pd(); // set here to avoid warnings
  // handle small mx2 separately
  // for(each vertical strip of w, processed 4-16 values at a time)
  //  for(each pair of rows of a)
@@ -129,7 +129,7 @@ I blockedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I pnom,I pstored,I flgs){
  // for(last partial strip of w)
  //  do it all again, under mask
  // 
-#define INITTO0(reg) _mm256_set1_pd(0.0)   // should be _mm256_xor_pd(reg,reg)  but compiler complains
+#define INITTO0(reg) _mm256_setzero_pd()   // should be _mm256_xor_pd(reg,reg)  but compiler complains
 #define LD4EXP(wr,wc,base) _mm256_loadu_pd(base+(wr)*n+(wc)*NPAR)
 #define LD4(wr,wc) wt=LD4EXP(wr,wc,wv1);
 #define ST1(wr,wc) _mm256_storeu_pd(zv1+(wr)*n+(wc)*NPAR,z##wr##wc);
@@ -396,7 +396,7 @@ static I cachedmmultx(J jt,D* av,D* wv,D* zv,I m,I n,I pnom,I pstored,I flgs){D 
       /*if((a3rem|a3rem-1)<1)scaf to disable*/if(!(flgs&FLGZFIRST)){
 #define ACCZ(r,c) z##r##c=_mm256_load_pd(zilblock+NPAR*(2*r+c));
         ACCZ(0,0); ACCZ(0,1); ACCZ(1,0); ACCZ(1,1); ACCZ(2,0); ACCZ(2,1); ACCZ(3,0); ACCZ(3,1);
-      }else z31 = z30 = z21 = z20 = z11 = z10 = z01 = z00 = _mm256_set1_pd(0.0);  // scaf use xor
+      }else z31 = z30 = z21 = z20 = z11 = z10 = z01 = z00 = _mm256_setzero_pd();  // scaf use xor
 
 // we might want to prefetch a anyway in case a row is a multiple of a cache line
 #if 0   // needed if a gets bigger than L2.  Since we don't allow m to exceed 512, a cannot exceed m*CACHEHEIGHT Ds which fits in L2.  z similarly
@@ -473,8 +473,8 @@ static I cachedmmultx(J jt,D* av,D* wv,D* zv,I m,I n,I pnom,I pstored,I flgs){D 
        // First get the 
        // initialize accumulator with the z values accumulated so far.
        __m256d z00r,z00i,z01r,z01i,z10r,z10i,z11r,z11i;   // (complex) zijr has row i real x col j; ziji has row i imag x col j.  Result goes into the rs
-       z00i = z01i = z10i = z11i = _mm256_set1_pd(0.0);   // values are accumulated & stored in r vbls
-       if(flgs&FLGZFIRST){z00r = z01r = z10r = z11r = _mm256_set1_pd(0.0);
+       z00i = z01i = z10i = z11i = _mm256_setzero_pd();   // values are accumulated & stored in r vbls
+       if(flgs&FLGZFIRST){z00r = z01r = z10r = z11r = _mm256_setzero_pd();
        }else{
         z00r=_mm256_load_pd(zilblock); z01r=_mm256_load_pd(zilblock+NPAR); z10r=_mm256_load_pd(zilblock+2*NPAR); z11r=_mm256_load_pd(zilblock+3*NPAR);  // scaf move these loads earlier
        }

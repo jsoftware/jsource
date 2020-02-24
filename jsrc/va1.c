@@ -60,7 +60,7 @@ static AMON(sqrtI,  D,I, ASSERTWR(0<=*x,EWIMAG); *z=sqrt((D)*x);)
 #if C_AVX&&SY_64
 AHDR1(sqrtD,D,D){
  AVXATOMLOOP(
- __m256d zero; zero=_mm256_set1_pd(0.0);
+ __m256d zero; zero=_mm256_setzero_pd();
  __m256d neg; __m256d comp; __m256d anyneg; anyneg=zero;
 
 ,

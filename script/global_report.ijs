@@ -1,3 +1,10 @@
+0 : 0
+linux objdump
+
+data also contains rodata 
+)
+
+
 getglobinit=: 3 : 0
 d=. <;._2 fread'git/jsource/jsrc/je.h'
 d=. ('/'~:;{.each d)#d
@@ -30,4 +37,9 @@ echo 'bss names that are not set by globinit'
 report2=: 3 : 0
 echo 'data names in je.h that should be marked constant (simple so do not need to be in globinit)'
 (getmap'data')-.(getmap'data')-.getglobinit''
+)
+
+report3=: 3 : 0
+echo 'data names that are not in rodata'
+(getmap'data')-.getmap'rodata'
 )

@@ -225,7 +225,7 @@ static F1(jtinvamp){A f,ff,g,h,x,y;B nf,ng;C c,d,*yv;I n;V*u,*v;
  ASSERT(0,EVDOMAIN);
 }
 
-static C invf[2][29] = {
+static const C invf[2][29] = {
  CDIV,   CPLUS,  CMINUS,  CLEFT,   CRIGHT,  CREV,    CCANT,   CPOLY, 
  CNOT,   CGRADE, CCYCLE,  CDOMINO, COPE,    CBOX,    CLOG,    CEXP,
  CGE,    CLE,    CHALVE,  CPLUSCO, CSQRT,   CSTARCO, CHEAD,   CLAMIN,

@@ -93,7 +93,7 @@ F1(jtieps){
  R mtm;
 }
 
-I prokey=1; /* enabled for 5.01 beta */
+const I prokey=1; /* enabled for 5.01 beta */
 
 F1(jtoutparmq){A z;D*u,x;I*v;
  ASSERTMTV(w);

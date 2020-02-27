@@ -22,7 +22,7 @@
 #define RZZ(exp)    {if(!(exp))R zz;}
 
 
-static TA zz={0,0};
+static const TA zz={0,0};
 
 static F1(jtvtokens){A t,*y,z;I n,*s;TA*x;
  RZ(t=tokens(vs(w),0)); n=AN(t); y=AAV(t);
@@ -54,7 +54,7 @@ static I tvi(A w){A x;I i,z=-1;V*v;
  R z;
 }
 
-static C ctab[]={CEQ,CMIN,CMAX,CPLUS,CPLUSDOT,CPLUSCO,CSTAR,CSTARDOT,CSTARCO,CMATCH,CNE,0};
+static const C ctab[]={CEQ,CMIN,CMAX,CPLUS,CPLUSDOT,CPLUSCO,CSTAR,CSTARDOT,CSTARCO,CMATCH,CNE,0};
 
 static F1(jtswapc){C c;
  if(!primitive(w))R swap(w);

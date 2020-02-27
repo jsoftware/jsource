@@ -765,7 +765,7 @@ zgemm_macro_kernel(dim_t   mc,
                                    &auxdata, 0);
             } else {
                 ((hwfma)?zgemm2_micro_kernel:zgemm_micro_kernel)(kc, &alpha, &_A[i*kc*MR], &_B[j*kc*NR],
-                                   &zzero,
+                                   (dcomplex*)&zzero,
                                    _C, 1, MR,
                                    &auxdata, 0);
                 zgescal(mr, nr, beta,

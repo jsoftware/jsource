@@ -898,10 +898,10 @@ extern A        asgnlocsimp;  // points to block with ASGN+ASGNLOCAL+ASGTONNAME
 extern A        asgngloname;  // points to block with ASGN+ASGNTONAME
 extern A        asgnforceglo;  // points to block with ASGN but char is =. CASGN
 extern A        asgnforcegloname;  // points to block with ASGN+ASGNTONAME  but char is =. CASGN
-extern UC       bit[];
+extern const UC       bit[];
 extern C        breakdata;
 extern A        chr[];
-extern C        ctype[];
+extern const C        ctype[];
 extern double dzero;
 extern A        imax;
 extern D        inf;
@@ -921,15 +921,15 @@ extern A        numvr[3];
 extern A        onehalf;
 extern D        pf;
 extern A        pie;            /* "pi" name conflict                      */
-extern I        prokey;
+extern const I        prokey;
 extern A        pst[];
-extern UI4      shortrange[3][4];
+extern const UI4      shortrange[3][4];
 extern I        v00[2];
 // obsolete extern C        wtype[];
 extern A        zeroionei[2];
 extern Z        zeroZ;
-extern dcomplex zone;
-extern dcomplex zzero;
+extern const dcomplex zone;
+extern const dcomplex zzero;
 extern A        zpath;
 /* cpu feature */
 extern UC       hwaes;

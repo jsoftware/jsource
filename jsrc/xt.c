@@ -133,7 +133,7 @@ D tod(void){R(D)clock()/CLOCKS_PER_SEC;}
 
 typedef LARGE_INTEGER LI;
 
-static D qpm=4294967296.0;  /* 2^32 */
+static const D qpm=4294967296.0;  /* 2^32 */
 
 D qpf(void){LI n; QueryPerformanceFrequency(&n); R n.LowPart+qpm*n.HighPart;}
 

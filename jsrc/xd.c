@@ -383,7 +383,7 @@ F1(jtjfperm1){A y;F f;C b[11];
 }
 
 
-static struct tperms {C*c;I p[4];} permtab[]=
+static const struct tperms {C*c;I p[4];} permtab[]=
     {  {"-r"  ,{0,S_IRUSR}},
        {"-w"  ,{0,S_IWUSR}},
        {"-xSs",{0,S_IXUSR,S_ISUID,S_ISUID+S_IXUSR}},

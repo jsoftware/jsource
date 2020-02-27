@@ -13,7 +13,7 @@ fitctvector(jtfitct2,CALL2IP(f2,a,w,fs))
 fitctvector(jtfitcteq,jtatomic2(jtinplace,a,w,fs))
 
 // To avoid multiple indirect branches, we vector the common comparisons to a routine that jumps directly to them
-static AF aff2[] = {jtfitct2, jtfitcteq};
+static const AF aff2[] = {jtfitct2, jtfitcteq};
 static A jtfitct(J jt,A a,A w,I cno){D d;V*sv;
  RZ(a&&w);
  ASSERT(!AR(w),EVRANK);

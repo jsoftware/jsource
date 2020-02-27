@@ -6,7 +6,7 @@
 #include "j.h"
 
 
-static Z z1={1, 0};
+static const Z z1={1, 0};
 
 static D coeff[]={
  0.0, 1.0,            0.5772156649015329, -0.6558780715202538, 

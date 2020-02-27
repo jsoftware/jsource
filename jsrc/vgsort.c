@@ -11,16 +11,16 @@
 
 #define CXCHG2(v0,v1) {void *v2=v0; B t=COMPFN(compn,v0,v1); v0=(!t)?v1:v0; v1=(!t)?v2:v1;}
 
-static UC orderfromcomp3[8] = {
+static const UC orderfromcomp3[8] = {
 36,24,0,9,33,0,18,6
 };
 
-static UC orderfromcomp4[64] = {
+static const UC orderfromcomp4[64] = {
 228,180,0,120,216,0,156,108,0,0,0,57,0,0,0,45,0,0,0,0,201,0,141,0,0,0,0,0,0,0,78,30,
 225,177,0,0,0,0,0,0,0,114,0,54,0,0,0,0,210,0,0,0,198,0,0,0,147,99,0,39,135,0,75,27
 };
 
-static US orderfromcomp5[1024] = {
+static const US orderfromcomp5[1024] = {
 18056,14472,0,10440,17608,0,13576,9992,0,0,0,6352,0,0,0,5904,0,0,0,0,17104,0,13072,0,0,0,0,0,0,0,8984,5400,
 18000,14416,0,0,0,0,0,0,0,10328,0,6296,0,0,0,0,17496,0,0,0,17048,0,0,0,13408,9824,0,5792,12960,0,8928,5344,
 0,0,0,0,0,0,0,0,0,0,0,2257,0,0,0,1809,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1305,
@@ -245,7 +245,7 @@ static SF(jtsorti1){A x,y,z;I*wv;I i,*xv,*zv;void *yv;
  R z;
 }    /* w grade"r w on large-range integers */
 
-static I validitymask[12]={-1, -1, -1, -1, 0, 0, 0, 0, -1, -1, -1, -1};  // allows inverted mask
+static const I validitymask[12]={-1, -1, -1, -1, 0, 0, 0, 0, -1, -1, -1, -1};  // allows inverted mask
 
 // sort a single integer list using quicksort without misprediction, inplace
 #define SORTQCOND C_AVX2&&SY_64

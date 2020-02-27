@@ -66,10 +66,10 @@ static I jtsup(J jt,I n,I*wv){I c,d,j,k;
 }    /* (_1+2^31) <. 135 >. (*>.@(2&^.)) >./ w */
 
 static void sieve(I n,I m,B*b,B*u){I i,j,q;
- static B t[]={
+ static const B t[]={
   0,1,0,0,0, 0,0,1,0,0, 0,1,0,1,0, 0,0,1,0,1, 0,0,0,1,0, 0,0,0,0,1,
   0,1,0,0,0, 0,0,1,0,0, 0,1,0,1,0, 0,0,1,0,1, 0,0,0,1,0, 0,0,0,0,1};
- mvc(m,b,30L,t+n%30); if(!n)b[1]=0; q=1+(I)sqrt(n+(D)m);
+ mvc(m,b,30L,(C*)t+n%30); if(!n)b[1]=0; q=1+(I)sqrt(n+(D)m);
  if(n)for(i=7;i<q;i+=2){if(u[i]){j=n%i; j=j?i-j:0; while(j<m){b[j]=0; j+=i;}}}
  else for(i=7;i<q;i+=2){if(b[i]){j=i+i;            while(j<m){b[j]=0; j+=i;}}}
 }    /* sieve b for n+i.m, but if 0=n then b=. 0 (2 3 5)}b */
@@ -106,14 +106,14 @@ static I init4792(J jt) {
 static I rem(D x,I d){R (I)jfloor(x-d*jfloor(x/(D)d));}
 
 static void sieved(D n,I m,B*b){I c,d,e,i,q,r,*u,*v;
- static B t[]={
+ static const B t[]={
   0,1,0,0,0, 0,0,1,0,0, 0,1,0,1,0, 0,0,1,0,1, 0,0,0,1,0, 0,0,0,0,1,
   0,1,0,0,0, 0,0,1,0,0, 0,1,0,1,0, 0,0,1,0,1, 0,0,0,1,0, 0,0,0,0,1};
- static I dt[]={1,7,11,13,17,19,23,29};
- c=2*3*5; v=dt+sizeof(dt)/SZI; q=1+(I)sqrt(n+(D)m);
- mvc(m,b,30L,t+rem(n,30L));
+ static const I dt[]={1,7,11,13,17,19,23,29};
+ c=2*3*5; v=(I*)dt+sizeof(dt)/SZI; q=1+(I)sqrt(n+(D)m);
+ mvc(m,b,30L,(B*)t+rem(n,30L));
  for(i=c;i<q;i+=c){
-  u=dt;
+  u=(I*)dt;
   while(u<v){
    d=i+*u++; r=rem(n,d); e=r?d-r:0;
    while(d<m){b[e]=0; e+=d;}
@@ -189,7 +189,7 @@ F1(jtplt){PROLOG(0062);A d,t,y,z;B*b,*u,xt;I c,*dv,e,i,j,k,m,n,p,q,*wv,x,*zv;
 static B jtxprimeq(J,I,X);
 static F1(jtxprimetest);
 
-static B pmsk[]={0,0,1,1,0,1,0,1,0,0, 0,1,0,1,0,0,0,1,0,1, 0,0,0,1,0,0,0,0,0,1, 0,1};
+static const B pmsk[]={0,0,1,1,0,1,0,1,0,0, 0,1,0,1,0,0,0,1,0,1, 0,0,0,1,0,0,0,0,0,1, 0,1};
      /* indicates which i<32 is prime */
 
 static F1(jtiprimetest){A z;B*b;I d,j,n,*pv,q,*v,wn,*wv;

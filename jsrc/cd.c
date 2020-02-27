@@ -12,7 +12,7 @@ static B jtiscons(J jt,A w){A x;V*v;
  R CQQ==v->id&&NOUN&AT(x)&&!AR(x);
 }
 
-static C ispoly1[]={CLEFT,CRIGHT,CLE,CGE,CNOT,CMINUS,CPLUSCO,CHALVE,CCIRCLE,CJDOT,0};
+static const C ispoly1[]={CLEFT,CRIGHT,CLE,CGE,CNOT,CMINUS,CPLUSCO,CHALVE,CCIRCLE,CJDOT,0};
 
 static I jtispoly(J jt,A w){A e,f,g,h,x,y;B nf,ng,vf,vg;C c,id;I k,m,n,t;V*v;
  if(!w)R 0;

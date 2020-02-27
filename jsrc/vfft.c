@@ -47,7 +47,7 @@ floop=: 4 : 0
 #define REVBITS(x,y)   {y[3]=revb[x[0]]; y[2]=revb[x[1]]; y[1]=revb[x[2]]; y[0]=revb[x[3]];}
 #endif
 
-static UC revb16[16]={0,8,4,12, 2,10,6,14, 1,9,5,13, 3,11,7,15};
+static const UC revb16[16]={0,8,4,12, 2,10,6,14, 1,9,5,13, 3,11,7,15};
 static UC revb[256];
 
 static F1(jtravtranspose){I i,n,s;Z t,*v;UC*iv,*jv;UI j;

@@ -252,7 +252,7 @@ dgemm_macro_kernel(dim_t   mc,
                                    &auxdata, 0);
             } else {
                 ((hwfma)?dgemm2_micro_kernel:dgemm_micro_kernel)(kc, &alpha, &_A[i*kc*MR], &_B[j*kc*NR],
-                                   &dzero,
+                                   (double*)&dzero,
                                    _C, 1, MR,
                                    &auxdata, 0);
                 dgescal(mr, nr, beta,

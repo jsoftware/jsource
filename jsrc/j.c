@@ -16,7 +16,7 @@ A   asgnforceglo;         // =. flagged as ()  = global
 A   asgnforcegloname;     // =. flagged as NAME  = global
 const UC  bit[8]={(UC)0x80, (UC)0x40, (UC)0x20, (UC)0x10, (UC)0x08, (UC)0x04, (UC)0x02, (UC)0x01};
 C   breakdata=0;
-double dzero=0.0;   // used by gemm
+const double dzero=0.0;   // used by gemm
 D   inf=0;                /* _                                    */
 D   infm=0;               /* __                                   */
 A   ace=0;                /* a:                                   */

@@ -902,7 +902,7 @@ extern const UC       bit[];
 extern C        breakdata;
 extern A        chr[];
 extern const C        ctype[];
-extern double dzero;
+extern const double dzero;
 extern A        imax;
 extern D        inf;
 extern D        infm;

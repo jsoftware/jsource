@@ -381,30 +381,6 @@ J JInit(void){
  R jt;
 }
 
-// old verson - before constructor - might be needed in systems that don't have the facility
-/*
-J JInit(void){
- static J g_jt=0;
- J jt;
-
- if(!g_jt)
- {
-  J g_jtnobdy=malloc(sizeof(JST)+JTALIGNBDY-1);
-  if(!g_jtnobdy) R 0;
-  g_jt = (J)(((I)g_jtnobdy+JTALIGNBDY-1)&-JTALIGNBDY);  // force to SDRAM page boundary
-  memset(g_jt,0,sizeof(JST));
-  if(!jtglobinit(g_jt)){free(g_jtnobdy);g_jt=0; R 0;}
-  g_jt->heap=(void *)g_jtnobdy;  // save allo address for later free
- }
- J jtnobdy; RZ(jtnobdy=malloc(sizeof(JST)+JTALIGNBDY-1));
- jt = (J)(((I)jtnobdy+JTALIGNBDY-1)&-JTALIGNBDY);  // force to SDRAM page boundary
- memset(jt,0,sizeof(JST));
- if(!jtjinit2(jt,0,0)){free(jtnobdy); R 0;};
- jt->heap=(void *)jtnobdy;  // save allo address for later free
- R jt;
-}
-*/
-
 // clean up at the end of a J instance
 int JFree(J jt){
   if(!jt) R 0;

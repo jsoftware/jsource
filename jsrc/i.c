@@ -56,18 +56,14 @@ global memory is distinct between tasks but is shared between threads
 
 JE support for multiple tasks is good
 
-JE support for threads has problems
- unix globinit is not thread-safe
- there are a few globals not handled in globinit or that
-  are not constants and they need to be found and sorted out
+JE support for threads has a few problems
+ there are a few global constants not handled in globinit
+ they need to be found and sorted out
+
  global storage that changes after globinit is a bad bug waiting to happen
 
-storage belonging to a task or thread should be be rooted in the J structure
+storage belonging to a task or thread MUST be be in the J structure
 there are only a few globals that have storage not in J
-
-global storage should be initialized in globinit()
-this is thread-safe in windows - called from dllmain
-not currently thread-safe in unix, but could be (at least is all in one spot)
 */
 
 // globals 

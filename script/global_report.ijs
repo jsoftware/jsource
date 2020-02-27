@@ -39,6 +39,19 @@ echo 'data names in je.h that should be marked constant (simple so do not need t
 (getmap'data')-.(getmap'data')-.getglobinit''
 )
 
+reportbss=: 3 : 0
+echo 'bss names not in rodata'
+(getmap'bss')-.getmap'rodata'
+)
+
+reportdata=: 3 : 0
+echo 'data names not in rodata'
+(getmap'data')-.getmap'rodata'
+)
+
+
+
+
 report3=: 3 : 0
 echo 'data names that are not in rodata'
 (getmap'data')-.getmap'rodata'

@@ -93,8 +93,6 @@ F1(jtieps){
  R mtm;
 }
 
-const I prokey=1; /* enabled for 5.01 beta */
-
 F1(jtoutparmq){A z;D*u,x;I*v;
  ASSERTMTV(w);
  if(IMAX==jt->outmaxlen||IMAX==jt->outmaxbefore||IMAX==jt->outmaxafter){

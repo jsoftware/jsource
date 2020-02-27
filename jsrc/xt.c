@@ -226,7 +226,6 @@ F1(jtpmarea1){R pmarea2(vec(B01,2L,&zeroZ),w);}
 
 F2(jtpmarea2){A x;B a0,a1,*av;C*v;I an,n=0,s=sizeof(PM),s0=sizeof(PM0),wn;PM0*u;
  RZ(a&&w);
- ASSERT(prokey, EVDOMAIN);
  RZ(a=cvt(B01,a)); 
  an=AN(a);
  ASSERT(1>=AR(a),EVRANK);

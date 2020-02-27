@@ -3,9 +3,9 @@
 
 cd ~/jbld/j64/bin
 # unitialized
-objdump -t libj.so | grep ' \.bss'    >  globals.txt
+objdump -t libjavx2.so | grep ' \.bss'    >  globals.txt
 # initialized
-objdump -t libj.so | grep ' \.data'   >> globals.txt
+objdump -t libjavx2.so | grep ' \.data'   >> globals.txt
 # const
-objdump -t libj.so | grep ' \.rodata' >> globals.txt
+objdump -t libjavx2.so | grep ' \.rodata' >> globals.txt
 

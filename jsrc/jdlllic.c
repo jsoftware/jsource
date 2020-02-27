@@ -36,7 +36,7 @@ F1(jtlock1){A z; C* p; C* src;
 
  RZ(w);
  ASSERT(1==AR(w),EVRANK);
- ASSERT(prokey&&AT(w)&LIT,EVDOMAIN);
+ ASSERT(AT(w)&LIT,EVDOMAIN);
  src=UAV(w);
  len=(int)AN(w);
  xlen=len;

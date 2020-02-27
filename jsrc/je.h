@@ -921,7 +921,6 @@ extern A        numvr[3];
 extern A        onehalf;
 extern D        pf;
 extern A        pie;            /* "pi" name conflict                      */
-extern const I        prokey;
 extern A        pst[];
 extern const UI4      shortrange[3][4];
 extern I        v00[2];

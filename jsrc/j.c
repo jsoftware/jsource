@@ -7,20 +7,16 @@
 #include "jversion.h"
 #include "gemm.h"
 
-// globals start - set by globinit at dll initialization
+// globals start - set by globinit in initialization
 A   a0j1=0;               /* 0j1                                  */
 A   aqq=0;                /* ''                                   */
 A   asgnlocsimp;          // =. flagged as LOCAL+NAME
 A   asgngloname;          // =: flagged as NAME
 A   asgnforceglo;         // =. flagged as ()  = global
 A   asgnforcegloname;     // =. flagged as NAME  = global
-const UC  bit[8]={(UC)0x80, (UC)0x40, (UC)0x20, (UC)0x10, (UC)0x08, (UC)0x04, (UC)0x02, (UC)0x01};
 C   breakdata=0;
-const double dzero=0.0;   // used by gemm
 D   inf=0;                /* _                                    */
 D   infm=0;               /* __                                   */
-// obsolete A   ds(CACE)=0;                /* a:                                   */
-// obsolete A   ds(CALP)=0;                /* a.                                   */
 A   ainf=0;               /* _                                    */
 A   iv0=0;                /* ,0   also extended integer 0                                */
 A   iv1=0;                /* ,1   also extended integer 1                                */
@@ -42,18 +38,21 @@ A   pie=0;                /* o.1                                  */
 Q   zeroQ={0,0};          /* 0r1                                  */
 DX  zeroDX={0,0,0};       /* 0                                    */
 Z   zeroZ={0,0};          /* 0j0                                  */
-const dcomplex zone={1.0,0.0};  // used gy gemm
-const dcomplex zzero={0.0,0.0};
 A   zpath=0;              /* default locale search path           */
 uint64_t g_cpuFeatures;   // blis
-// obsolete A   pst[256]={0};
 PRIM primtab[256];         // inits to 0
 A   chr[256]={0};         /* scalar for each character, or 0      */
 UC  hwaes=0;              // hardware aes support
 UC  hwfma=0;              // blis cpu tuning
-// obsolete C   wtype[256]={0};
-
 // globals end
+
+// global const start -  do not need globinit
+const UC  bit[8]={(UC)0x80, (UC)0x40, (UC)0x20, (UC)0x10, (UC)0x08, (UC)0x04, (UC)0x02, (UC)0x01};
+const double dzero=0.0;   // used by gemm
+const dcomplex zone={1.0,0.0};  // used gy gemm
+const dcomplex zzero={0.0,0.0};
+// global const end 
+
 
 #if SY_64
 #define bits "64"

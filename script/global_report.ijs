@@ -56,3 +56,39 @@ report3=: 3 : 0
 echo 'data names that are not in rodata'
 (getmap'data')-.getmap'rodata'
 )
+
+
+getglobinits=: 3 : 0
+d=. <;._2 fread'git/jsource/jsrc/i.c'
+a=. 'B jtglobinit(J jt)'
+i=. ((#a){.each d)i.<a
+d=. }.i}.d
+i=. (;{.each d)i.'}'
+d=. _3}.i{.d
+d=. d rplc each <'''/''';'''x'''
+d=. (d i. each <'/'){.each d NB. lazy - could be made better
+d=. ~.;;:each d
+d=. ((;{.each d)e.26}.Alpha_j_)#d NB. assume globals all start with lowercase letter
+d=. (1~:;#each d)#d               NB. assume no globals have a single letter
+d=. d-.;:'MC if elif endif'
+d=. /:~d
+)
+
+getglobals=: 3 : 0
+d=. <;._2 fread'git/jsource/jsrc/j.c'
+a=. '// globals start '
+i=. ((#a){.each d)i.<a
+d=. }.i}.d
+a=. '// globals end '
+i=. ((#a){.each d)i.<a
+d=. i{.d
+d=. ('/'~:;{.each d)#d
+d=. dltb each d
+d=. (0~:;#each d)#d
+d=. (;d i. each ' ')}.each d
+d=. (;d i.each '['){.each d
+d=. (;d i.each '='){.each d
+d=. (;d i.each ';'){.each d
+d=. dltb each d
+d=. /:~d
+)

@@ -663,7 +663,7 @@ typedef struct{
 
 
 
-typedef struct {AF valencefns[2];A fgh[3];union { D lD; void *lvp[2]; I lI; I4 lI4[4]; I lclr[2]; AF lfns[2];} localuse;I4 flag;UI4 flag2; RANK2T lrr; RANKT mr; C id; C lc;} V;  // two cachelines exactly
+typedef struct {AF valencefns[2];A fgh[3];union { D lD; void *lvp[2]; I lI; I4 lI4[4]; I lclr[2]; AF lfns[2];} localuse;I4 flag;UI4 flag2; RANK2T lrr; RANKT mr; C id; C lc;} V;  // two cachelines exactly in 64-bit
 // the localuse fields is not freed or counted for space, as the f/g/h fields are.  It is for local optimizations only.  We put if first so that the rest of
 // the block, which is used more, is in a single cacheline.  Local uses are:
 // for ATOMIC2 ops, pointer to the adocv block
@@ -764,6 +764,10 @@ typedef struct {AF valencefns[2];A fgh[3];union { D lD; void *lvp[2]; I lI; I4 l
 #define VF2USESITEMCOUNT2W  ((I)(((I)1)<<VF2USESITEMCOUNT2WX))
 #define VF2USESITEMCOUNT2AX 19   // This verb can make use of an item count stored in m.  Monad case only
 #define VF2USESITEMCOUNT2A  ((I)(((I)1)<<VF2USESITEMCOUNT2AX))
+
+// layout of primitive, in the primtbl.  It is a memory header (shape 0) followed by a V
+typedef struct {I memhdr[AKXR(0)/SZI]; V primvb;} PRIM;  // two cachelines exactly in 64-bit
+
 
 
 

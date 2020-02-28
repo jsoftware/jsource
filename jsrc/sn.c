@@ -6,7 +6,7 @@
 #include "j.h"
 
 // validate fullname (possibly locative).  s->name, n=length.  Returns 1 if name valid, 0 if not
-B jtvnm(J jt,I n,C*s){C c,t;I j;
+B jtvnm(J jt,I n,C *s){C c,t;I j;
 // obsolete  if(!(n))R 0;  // error if empty string
  s=n==0?ctype+1:s;  // if empty string, point to erroneous string (we will fetch s[0] and s[-1]) 
  c=s[0];    // c = first char of name

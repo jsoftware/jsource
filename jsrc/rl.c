@@ -80,13 +80,13 @@ static F1(jtlshape){I r,*s;
 
 static F1(jtlchar){A y;B b,p=1,r1;C c,d,*u,*v;I j,k,m,n;
  RZ(w);
- m=AN(alp); n=AN(w); j=n-m; r1=1==AR(w); u=v=CAV(w); d=*v;
- if(0<=j&&r1&&!memcmp(v+j,AV(alp),m)){ 
+ m=AN(ds(CALP)); n=AN(w); j=n-m; r1=1==AR(w); u=v=CAV(w); d=*v;
+ if(0<=j&&r1&&!memcmp(v+j,AV(ds(CALP)),m)){ 
   if(!j)R cstr("a.");
   RZ(y=lchar(1==j?scc(*v):str(j,v)));
   R lp(y)?over(cstr("a.,~"),y):over(y,cstr(",a."));
  }
- if(r1&&m==n&&(y=icap(ne(w,alp)))&&m>AN(y)){
+ if(r1&&m==n&&(y=icap(ne(w,ds(CALP))))&&m>AN(y)){
   if(1==AN(y))RZ(y=head(y));
   R over(over(cstr("a. "),lcpx(lnum(y))),over(cstr("}~"),lchar(from(y,w))));
  }
@@ -94,7 +94,7 @@ static F1(jtlchar){A y;B b,p=1,r1;C c,d,*u,*v;I j,k,m,n;
  DQ(n, c=*v++; j+=c==CQUOTE; b&=c==d; p&=(C)(c-32)<(C)(127-32);); 
  if(b){n=1; j=MIN(3,j);}
  if(!p){
-  k=(UC)d; RZ(y=indexof(alp,w));
+  k=(UC)d; RZ(y=indexof(ds(CALP),w));
   if(r1&&n<m&&(!k||k==m-n)&&equ(y,apv(n,k,1L)))R over(thorn1(sc(d?-n:n)),cstr("{.a."));
   RZ(y=lnum(y));
   R lp(y)?over(cstr("a.{~"),y):over(y,cstr("{a.")); 
@@ -107,7 +107,7 @@ static F1(jtlchar){A y;B b,p=1,r1;C c,d,*u,*v;I j,k,m,n;
 
 static F1(jtlbox){A p,*v,*vv,*wv,x,y;B b=0;I n;
  RZ(w);
- if(equ(ace,w)&&B01&AT(AAV0(w)))R cstr("a:");
+ if(equ(ds(CACE),w)&&B01&AT(AAV0(w)))R cstr("a:");
  n=AN(w); wv=AAV(w); 
  DO(n, x=wv[i]; if(BOX&AT(x)){b=1; break;}); b|=1==n;
  GATV0(y,BOX,n+n-(1^b),1); v=vv=AAV(y);

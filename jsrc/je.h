@@ -890,9 +890,9 @@ extern D        xdouble(X);
 
 
 extern A        a0j1;
-extern A        ace;
+// obsolete extern A        ds(CACE);
 extern A        ainf;
-extern A        alp;
+// obsolete extern A        ds(CALP);
 extern A        aqq;
 extern A        asgnlocsimp;  // points to block with ASGN+ASGNLOCAL+ASGTONNAME
 extern A        asgngloname;  // points to block with ASGN+ASGNTONAME
@@ -901,7 +901,7 @@ extern A        asgnforcegloname;  // points to block with ASGN+ASGNTONAME  but 
 extern UC       bit[];
 extern C        breakdata;
 extern A        chr[];
-extern C        ctype[];
+extern C  ctype[];
 extern double dzero;
 extern A        imax;
 extern D        inf;
@@ -922,7 +922,8 @@ extern A        onehalf;
 extern D        pf;
 extern A        pie;            /* "pi" name conflict                      */
 extern I        prokey;
-extern A        pst[];
+// obsolete extern A        pst[];
+extern PRIM     primtab[];
 extern UI4      shortrange[3][4];
 extern I        v00[2];
 // obsolete extern C        wtype[];

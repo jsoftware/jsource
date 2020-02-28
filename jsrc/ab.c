@@ -105,7 +105,7 @@ DF2(jtbitwisechar){DECLFG;A*p,x,y,z;B b;I j,m,n,zn;AHDR2FN* ado;
  RZ(a&&w);
  x=a;
  y=w;
- if((-AN(a)&-AN(w)&-(AT(a)&AT(w))&LIT)>=0)R from(df2(z,indexof(alp,a),indexof(alp,w),fs),alp);  // empty or not LIT
+ if((-AN(a)&-AN(w)&-(AT(a)&AT(w))&LIT)>=0)R from(df2(z,indexof(ds(CALP),a),indexof(ds(CALP),w),fs),ds(CALP));  // empty or not LIT
  b=AR(a)<=AR(w); zn=AN(b?w:a); m=AN(b?a:w); n=zn/m;
  ASSERTAGREE(AS(a),AS(w),MIN(AR(a),AR(w)));
  j=i0(VAV(fs)->fgh[1])-16;
@@ -132,7 +132,7 @@ B jtbitwisecharamp(J jt,UC*t,I n,UC*wv,UC*zv){I p;UC c,i,j,*pv,s[256];AHDR2FN* a
  else if(i==255  ){c=j; ado=(AHDR2FN*)bw1011II;}
  else R 0;
  pv=(UC*)&p; DO(SZI, pv[i]=c;);
- ado((I)(256/SZI),(I)1,AV(alp),pv,s,jt); if(memcmp(s,t,256L))R 0;
+ ado((I)(256/SZI),(I)1,AV(ds(CALP)),pv,s,jt); if(memcmp(s,t,256L))R 0;
  ado((n+SZI-1)>>LGSZI,(I)1,wv,pv,zv,jt); zv[n]=0;
  R 1;
 }  // kludge this should be scrapped in favor of wordlong ops
@@ -151,8 +151,8 @@ static AHDRRFN* bwinsI[16]={(AHDRRFN*)bw0000insI,(AHDRRFN*)bw0001insI,(AHDRRFN*)
 DF1(jtbitwiseinsertchar){A fs,z;I d,j,n,r,wn,wr,zatoms;UC*u,*v,*wv,x,*zv;AHDRRFN* ado;
  RZ(w&&self);
  wr=AR(w); wn=AN(w); SETIC(w,n); z=VAV(self)->fgh[0]; fs=VAV(z)->fgh[0];
-// obsolete  if(!(wn&&SZI<n&&LIT&AT(w)))R from(df1(z,indexof(alp,w),fs),alp);
- if((-(wn)&(SZI-n)&SGNIF(AT(w),LITX))>=0)R from(df1(z,indexof(alp,w),fs),alp);  // revert if not wn!=0 & n>SZI & LIT
+// obsolete  if(!(wn&&SZI<n&&LIT&AT(w)))R from(df1(z,indexof(ds(CALP),w),fs),ds(CALP));
+ if((-(wn)&(SZI-n)&SGNIF(AT(w),LITX))>=0)R from(df1(z,indexof(ds(CALP),w),fs),ds(CALP));  // revert if not wn!=0 & n>SZI & LIT
  PROD(d,wr-1,AS(w)+1); zatoms=d; wv=CAV(w); j=i0(VAV(fs)->fgh[1])-16; ado=(AHDRRFN*)bwinsC[j];  // d=#atoms in an item of a cell.  There is only 1 cell here (rank _)
  if(1==wr)switch(j){   // d==1 here
   case  0: R scc(0);

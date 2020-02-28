@@ -423,7 +423,7 @@ F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;I flag,flag2=0,mode=-1,p,r;V*u,*v;
   flag = ((FAV(a)->flag&v->flag)&VASGSAFE)+((v->flag&VJTFLGOK1)*((VJTFLGOK2+VJTFLGOK1)/VJTFLGOK1));
   if(c==CFORK||c==CAMP){
    if(c==CFORK)d=ID(v->fgh[2]);
-   if(CIOTA==ID(v->fgh[1])&&(!d||d==CLEFT||d==CRIGHT)&&equ(alp,v->fgh[0])){  // a.&i. or (a. i. ][)
+   if(CIOTA==ID(v->fgh[1])&&(!d||d==CLEFT||d==CRIGHT)&&equ(ds(CALP),v->fgh[0])){  // a.&i. or (a. i. ][)
     u=FAV(a); d=u->id;
     if(d==CLT||d==CLE||d==CEQ||d==CNE||d==CGE||d==CGT){f2=jtcharfn2; flag&=~VJTFLGOK2;}
    }

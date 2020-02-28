@@ -16,14 +16,14 @@ static A jtistd1(J jt,A z,A ind){A*iv,j,*jv,x;I d,i,n,r,*s;
  if(AN(ind)&&!(BOX&AT(ind))){ASSERT(NUMERIC&AT(ind),EVINDEX); RZ(ind=every(ind,0L,jtright1));}
  s=AS(z); n=AN(ind); iv=AAV(ind); 
  ASSERT(n<=AR(z),EVINDEX);
- DQ(n, x=iv[i]; if(!equ(x,ace))break;--n;);
+ DQ(n, x=iv[i]; if(!equ(x,ds(CACE)))break;--n;);
  GATV0(j,BOX,n,1); jv=AAV(j);
  for(i=0;i<n;++i){
   x=iv[i]; d=s[i];
   if(BOX&AT(x)){
    ASSERT(!AR(x),EVINDEX); 
    x=AAV0(x); r=AR(x);
-   RZ(jv[i]=!AN(x)&&1==r?ace:less(IX(d),pind(d,x)));
+   RZ(jv[i]=!AN(x)&&1==r?ds(CACE):less(IX(d),pind(d,x)));
   }else {RZ(x=pind(d,x)); jv[i]=x;}  // INCORP not needed probably, since this use is transient
  }
  R j;
@@ -37,7 +37,7 @@ static A jtastd1(J jt,A a,A z,A ind){A*iv,q,r,s,s1,*sv,x;B b;I ar,*as,d,j,m,n,*r
  GATV0(r,INT,zr,1); rv= AV(r);
  GATV0(s,BOX,zr,1); sv=AAV(s);
  m=0; j=n;
- DO(n, x=iv[i]; b=x==ace; m+=rv[i]=b?1:AR(x); RZ(sv[i]=b?sc(zs[i]):shape(x));); 
+ DO(n, x=iv[i]; b=x==ds(CACE); m+=rv[i]=b?1:AR(x); RZ(sv[i]=b?sc(zs[i]):shape(x));); 
  DQ(zr-n, rv[j]=1; RZ(sv[j]=sc(zs[j])); ++j;);
  d=m+zr-n; ASSERT(ar<=d,EVRANK);
  RZ(s1=raze(s)); s1v=AV(s1);
@@ -56,7 +56,7 @@ static A jtssel(J jt,A z,A ind){A a,*iv,p,q,x,y;B*b;I*av,c,i,j,m,n,*u,*v,*yv;P*z
  for(i=0;i<n;++i){
   j=av[i]; if(j>=AN(ind))break;
   x=iv[j];
-  if(x!=ace){
+  if(x!=ds(CACE)){
    u=yv+i; DO(m, v[i]=b[i]?*u:-1; u+=c;);
    RZ(p=eps(q,1<AR(x)?ravel(x):x)); b=BAV(p);
  }}
@@ -76,10 +76,10 @@ static B jtipart(J jt,A z,A ind,A*i1,A*i2){A*iv,p,*pv,q,*qv,x;B*b;I c,d,n;P*zp;
 static A jtdcube(J jt,A z,A i2){A*iv,x,y;I i,m,n,*s;P*zp;D rkblk[16];
  n=AN(i2); iv=AAV(i2); 
  zp=PAV(z); x=SPA(zp,x); s=1+AS(x);
- m=1; y=iv[n-1]; if(y==ace)RZ(y=IX(s[n-1]));
+ m=1; y=iv[n-1]; if(y==ds(CACE))RZ(y=IX(s[n-1]));
  for(i=n-2;0<=i;--i){
   m*=s[1+i]; x=iv[i];
-  A t; RZ(t=tymes(sc(m),x==ace?IX(s[i]):x));
+  A t; RZ(t=tymes(sc(m),x==ds(CACE)?IX(s[i]):x));
   RZ(y=ATOMIC2(jt,t,y,rkblk,0L, RMAX,CPLUS));
  }
  R y;
@@ -91,7 +91,7 @@ static A jtscuba(J jt,A z,A i1,B u){A*iv,q=0,x;I c,d,j,n,*s,*v;P*zp;
  iv=AAV(i1);  s=AS(z); zp=PAV(z); x=SPA(zp,a); v=AV(x);
  for(j=n-1;0<=j;--j){
   x=iv[j];
-  if(x==ace)RZ(x=IX(s[v[j]]))else{if(1<AR(x))RZ(x=ravel(x)); if(u)RZ(x=nub(x));}
+  if(x==ds(CACE))RZ(x=IX(s[v[j]]))else{if(1<AR(x))RZ(x=ravel(x)); if(u)RZ(x=nub(x));}
   c=AN(x); 
   if(q){d=*AS(q); RZ(q=stitch(repeat(sc(d),x),reitem(sc(c*d),q)));}
   else RZ(q=reshape(v2(c,1L),x));

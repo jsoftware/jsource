@@ -571,6 +571,6 @@ F2(jtfmt22){A z;I mode,r,j;
  R *AS(z)?razeh(z):lamin1(z);
 } /* 8!:2 dyad */
 
-F1(jtfmt01){RZ(w); RETF(fmt02(AR(w)?reshape(sc(*(AS(w)+AR(w)-1)),ace):ace,w));} /* 8!:0 monad */
-F1(jtfmt11){RZ(w); RETF(fmt12(AR(w)?reshape(sc(*(AS(w)+AR(w)-1)),ace):ace,w));} /* 8!:1 monad */
-F1(jtfmt21){RZ(w); RETF(fmt22(AR(w)?reshape(sc(*(AS(w)+AR(w)-1)),ace):ace,w));} /* 8!:2 monad */
+F1(jtfmt01){RZ(w); RETF(fmt02(AR(w)?reshape(sc(*(AS(w)+AR(w)-1)),ds(CACE)):ds(CACE),w));} /* 8!:0 monad */
+F1(jtfmt11){RZ(w); RETF(fmt12(AR(w)?reshape(sc(*(AS(w)+AR(w)-1)),ds(CACE)):ds(CACE),w));} /* 8!:1 monad */
+F1(jtfmt21){RZ(w); RETF(fmt22(AR(w)?reshape(sc(*(AS(w)+AR(w)-1)),ds(CACE)):ds(CACE),w));} /* 8!:2 monad */

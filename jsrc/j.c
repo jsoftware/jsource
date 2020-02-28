@@ -19,8 +19,8 @@ C   breakdata=0;
 double dzero=0.0;   // used by gemm
 D   inf=0;                /* _                                    */
 D   infm=0;               /* __                                   */
-A   ace=0;                /* a:                                   */
-A   alp=0;                /* a.                                   */
+// obsolete A   ds(CACE)=0;                /* a:                                   */
+// obsolete A   ds(CALP)=0;                /* a.                                   */
 A   ainf=0;               /* _                                    */
 A   iv0=0;                /* ,0   also extended integer 0                                */
 A   iv1=0;                /* ,1   also extended integer 1                                */
@@ -46,7 +46,8 @@ dcomplex zone={1.0,0.0};  // used gy gemm
 dcomplex zzero={0.0,0.0};
 A   zpath=0;              /* default locale search path           */
 uint64_t g_cpuFeatures;   // blis
-A   pst[256]={0};
+// obsolete A   pst[256]={0};
+PRIM primtab[256];         // inits to 0
 A   chr[256]={0};         /* scalar for each character, or 0      */
 UC  hwaes=0;              // hardware aes support
 UC  hwfma=0;              // blis cpu tuning

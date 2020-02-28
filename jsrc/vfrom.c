@@ -385,7 +385,7 @@ static A jtafi(J jt,I n,A w){A x;
  if((-AN(w)&SGNIF(AT(w),BOXX))>=0)R pind(n,w);   // empty or not boxed
  ASSERT(!AR(w),EVINDEX);  // if boxed, must be an atom
  x=AAV0(w);
- R AN(x)?less(IX(n),pind(n,x)):ace;   // complementary
+ R AN(x)?less(IX(n),pind(n,x)):ds(CACE);   // complementary
 }
 
 // general boxed a
@@ -416,13 +416,13 @@ static F2(jtafrom){PROLOG(0073);A c,ind,p=0,q,*v,y=w;B bb=1;I acr,ar,i=0,j,m,n,p
   ys=AS(y); DO(pr, *ys++=1;); MCISH(ys,s+i,wcr-i);
   AN(y)=prod(AR(y),AS(y));
  }
- // take remaining axes 2 at a time, properly handling omitted axes (ace).  First time through p is set if there has been no error
+ // take remaining axes 2 at a time, properly handling omitted axes (ds(CACE)).  First time through p is set if there has been no error
  for(;i<n;i+=2){
-  j=1+i; if(!p)p=afi(s[i],v[i]); q=j<n?afi(s[j],v[j]):ace; if(!(p&&q))break;  // pq are 0 if error.  Result of ace=axis in full
-  if(p!=ace&&q!=ace){y=afrom2(p,q,y,wcr-i);}
+  j=1+i; if(!p)p=afi(s[i],v[i]); q=j<n?afi(s[j],v[j]):ds(CACE); if(!(p&&q))break;  // pq are 0 if error.  Result of ds(CACE)=axis in full
+  if(p!=ds(CACE)&&q!=ds(CACE)){y=afrom2(p,q,y,wcr-i);}
   else{
-   if(q==ace){q=p; j=i;}
-   if(q!=ace)y=IRS2(q,y,0L,AR(q),wcr-j,jtifrom,w);
+   if(q==ds(CACE)){q=p; j=i;}
+   if(q!=ds(CACE))y=IRS2(q,y,0L,AR(q),wcr-j,jtifrom,w);
   }
   RZ(y); p=0;
  }
@@ -521,7 +521,7 @@ static F2(jtmapx){A z1,z2,z3;
  R every2(z3,w,0L,jtmapx);
 }
 
-F1(jtmap){R mapx(ace,w);}
+F1(jtmap){R mapx(ds(CACE),w);}
 
 // extract the single box a from w and open it.  Don't mark it no-inplace.  If w is not boxed, it had better be an atom, and we return it after auditing the index
 static F2(jtquicksel){I index;

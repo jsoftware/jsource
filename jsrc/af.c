@@ -172,7 +172,7 @@ static A jtfixa(J jt,A a,A w){A f,g,h,wf,x,y,z=w;V*v;I aa[AKXR(0)/SZI+1]={AKXR(0
 // On internal calls, self is an integer whose value contains flags.  Otherwise zeroionei is used
 DF1(jtfix){PROLOG(0005);A z;
  RZ(w);
- RZ(jt->fxpath=rifvs(reshape(sc(jt->fxi=(I)255),ace))); jt->fxpv=AAV(jt->fxpath);  // for stopping infinite recursions
+ RZ(jt->fxpath=rifvs(reshape(sc(jt->fxi=(I)255),ds(CACE)))); jt->fxpv=AAV(jt->fxpath);  // for stopping infinite recursions
  if(LIT&AT(w)){ASSERT(1>=AR(w),EVRANK); RZ(w=nfs(AN(w),CAV(w)));}
  // only verbs/noun can get in through the parser, but internally we also vet adv/conj
  ASSERT(AT(w)&NAME+VERB+ADV+CONJ,EVDOMAIN);

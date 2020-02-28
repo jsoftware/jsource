@@ -226,7 +226,7 @@ F1(jtjdir){PROLOG(0102);A z,fn,*zv;I j=0,n=32;HANDLE fh; WIN32_FIND_DATAW f; C f
   } while (FindNextFileW(fh,&f));
   FindClose(fh);
  }
- z=j?ope(j<n?vec(BOX,j,zv):z):reshape(v2(0L,5L),ace);
+ z=j?ope(j<n?vec(BOX,j,zv):z):reshape(v2(0L,5L),ds(CACE));
  EPILOG(z);
 }
 
@@ -350,7 +350,7 @@ F1(jtjdir){PROLOG(0103);A*v,z,*zv;C*dir,*pat,*s,*x;I j=0,n=32;DIR*DP;struct dire
  RZ(w=str0(vslit(!AR(w)&&BOX&AT(w)?ope(w):w)));
  s=CAV(w);
  if(x=strrchr(s,'/')){dir=s==x?(C*)"/":s; pat=x+1; *x=0;}else{dir="."; pat=s;}
- if(NULL==(DP=opendir(dir)))R reshape(v2(0L,6L),ace);
+ if(NULL==(DP=opendir(dir)))R reshape(v2(0L,6L),ds(CACE));
  /*
   * SYSV and BSD have different return types for sprintf(),
   * so we use less efficient but portable code.
@@ -365,7 +365,7 @@ F1(jtjdir){PROLOG(0103);A*v,z,*zv;C*dir,*pat,*s,*x;I j=0,n=32;DIR*DP;struct dire
   f=readdir(DP);
  }
  closedir(DP);
- z=j?ope(j<n?vec(BOX,j,zv):z):reshape(v2(0L,6L),ace);
+ z=j?ope(j<n?vec(BOX,j,zv):z):reshape(v2(0L,6L),ds(CACE));
  EPILOG(z);
 }
 

@@ -267,7 +267,7 @@ static A jtjstd(J jt,A w,A ind,I *cellframelen){A j=0,k,*v,x;I b;I d,i,n,r,*u,wr
   v=AAV(ind);   // now ind is a atom/list of boxes, one per axis
   ASSERT(1>=r,EVINDEX);  // not a table
   ASSERT(n<=wr,EVINDEX);  // not too many axes
-  DQ(n, if(!equ(ace,v[i]))break; --n;);  // discard trailing (boxed) empty axes
+  DQ(n, if(!equ(ds(CACE),v[i]))break; --n;);  // discard trailing (boxed) empty axes
   j=zeroionei[0];  // init list to a single 0 offset
   for(i=0;i<n;++i){  // for each axis, grow the cartesian product of the specified offsets
    x=v[i]; d=ws[i];

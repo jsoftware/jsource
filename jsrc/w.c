@@ -191,7 +191,7 @@ A jtenqueue(J jt,A a,A w,I env){A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl;UC c;
  for(i=0;i<n;i++,x++){  // for each word
   wl=u[1]-u[0]; wi=u[0]+s; u+=2; c=e=*wi; p=ctype[(UC)c]; b=0;   // wi=first char, wl=length, c=e=first char, p=type of first char, b='no inflections'
   if(1<wl){d=*(wi+wl-1); if(b=((p!=C9)&(d==CESC1))|(d==CESC2))e=spellin(wl,wi);}  // if word has >1 character, is 9--. or ---:, convert to pseudocharacter
-  if(BETWEENO(c,32,128)&&(y=ds(e))){
+  if(BETWEENO(c,32,128)&&AK(y=ds(e))){
    // If first char is ASCII, see if the form including inflections is a primitive;
    // if so, that is the word to put into the queue.  No need to copy it
    // Since the address of the shared primitive block is used, we can use that to compare against to identify the primitive later
@@ -379,7 +379,7 @@ F1(jtfsmvfya){PROLOG(0099);A a,*av,m,s,x,z,*zv;I an,c,e,f,ijrd[4],k,p,q,*sv,*v;
  ASSERT(1>=AR(m),EVRANK);
  if(!c&&1==AR(m)){   /* m is empty; w must be integer vector */  }
  else if(NUMERIC&AT(m)){
-  ASSERT(c==AN(alp),EVLENGTH);
+  ASSERT(c==AN(ds(CALP)),EVLENGTH);
   RZ(m=vi(m)); v=AV(m); DO(c, k=v[i]; ASSERT((UI)k<(UI)q,EVINDEX););
  }else ASSERT(BOX&AT(m),EVDOMAIN);
  GAT0(z,BOX,4,1); zv=AAV(z);
@@ -406,7 +406,7 @@ static A jtfsm0(J jt,A a,A w,C chka){PROLOG(0100);A*av,m,s,x,w0=w;B b;I c,f,*ijr
   ASSERT((UI)(r-AR(w))<=(UI)1,EVRANK);  // items of m must match rank of w, or the entire w (which will be treated as a single input)
   GATV0(x,INT,1+k,1); v=AV(x); v[k]=c; mv=AAV(m);  // x will hold translated column numbers.  Install 'not found' value at the end
   DO(c, j=i; t=mv[i]; if((-r&((r^AR(t))-1))<0)DQ(AS(t)[0], *v++=j;) else *v++=j;);  // go through m; for each box, install index for that box for each item in that box.
-  if(b){RZ(m=from(indexof(y,alp),x)); v=AV(m); DO(AN(alp), k=v[i]; ASSERT((UI)k<(UI)q,EVINDEX););}  // for ASCII input, translate & check size
+  if(b){RZ(m=from(indexof(y,ds(CALP)),x)); v=AV(m); DO(AN(ds(CALP)), k=v[i]; ASSERT((UI)k<(UI)q,EVINDEX););}  // for ASCII input, translate & check size
   else {ASSERT(q>c,EVINDEX); RZ(w=from(indexof(y,w),x));}  // # columns of machine must be at least c+1; look up the rest
  }
  A z=fsmdo(f,s,m,ijrd,w,w0);

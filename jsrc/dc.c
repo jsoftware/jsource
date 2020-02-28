@@ -37,7 +37,7 @@ F1(jtdbcall){A y,*yv,z,zz,*zv;DC si,s0=0;I c=9,m=0,*s;
  GATV0(z,BOX,m*c,2); s=AS(z); s[0]=m; s[1]=c;  // allocate result, install shape
  si=jt->sitop; zv=AAV(z);
  while(si){if(DCCALL==si->dctype){RZ(drow(si,s0,zv)); zv+=c;} s0=si; si=si->dclnk;}  // create one row for each CALL, in z
- RZ(y=from(scind(IRS1(z,0L,1L,jthead,zz)),over(snl(mtv),ace)));  // get script index for each line of stack; then fetch the name, or a: if no name
+ RZ(y=from(scind(IRS1(z,0L,1L,jthead,zz)),over(snl(mtv),ds(CACE))));  // get script index for each line of stack; then fetch the name, or a: if no name
  yv=AAV(y); zv=5+AAV(z);
  DQ(m, *zv=incorp(*yv); yv++; zv+=c;);  // copy the script names into column 5
  RETF(z);

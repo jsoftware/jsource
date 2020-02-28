@@ -197,7 +197,7 @@ A jtrank1ex0(J jt,AD * RESTRICT w,A fs,AF f1){F1PREFIP;PROLOG(0041);A z,virtw;
   }else{
    // If we are executing a BOXATOP on a single cell, we know the result is going to be an atomic box.  We don't bother executing the verb at all then.
    // jmf.ijs unknowingly takes advantage of this fact, and would crash if executed on an empty cell
-   z=ace;  // cell 'returned' a:
+   z=ds(CACE);  // cell 'returned' a:
   }
   GA(zz,AT(z),0L,AR(w)+AR(z),0L); zzs=AS(zz); MCISH(zzs,AS(w),AR(w)); MCISH(zzs+AR(w),AS(z),AR(z));
  }
@@ -518,7 +518,7 @@ A jtrank2ex0(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,AF f2){F2PREFIP;PROLOG(00
    if(jt->jerr){if(EMSK(jt->jerr)&EXIGENTERROR)RZ(z); z=num[0]; RESETERR;}  // use 0 as result if error encountered
   }else{
    // If we are executing a BOXATOP on a single cell, we know the result is going to be an atomic box.  We don't bother executing the verb at all then.
-   z=ace;  // cell 'returned' a:
+   z=ds(CACE);  // cell 'returned' a:
   }
   GA(zz,AT(z),0L,ar+AR(z),0L); zzs=AS(zz); MCISH(zzs,as,ar); MCISH(zzs+ar,AS(z),AR(z));  // allocate result, copy frame and shape
  }

@@ -7,7 +7,7 @@
 #include "w.h"
 
 
-static C spell[3][72]={
+static const C spell[3][72]={
  '=',     '<',     '>',     '_',     '+',     '*',     '-',     '%',
  '^',     '$',     '~',     '|',     '.',     ':',     ',',     ';',
  '#',     '@',     '/',     CBSLASH, '[',     ']',     '{',     '}',
@@ -39,7 +39,7 @@ static C spell[3][72]={
  CFCONS,  CFCONS,  CFCONS,  CFCONS,  CFCONS,  CFCO,    CZCO,    0,
 };
 
-static C sp3[4][9]={
+static const C sp3[4][9]={
  CFETCH, CEMEND, CPDERIV, CUNDCO, CFDOTDOT, CFDOTCO, CFCODOT, CFCOCO, 0,
  '{',    '}',    'p',     '&',    'F',      'F',     'F',     'F',    0,
  CESC2,  CESC2,  CESC1,   CESC1,  CESC1,    CESC1,   CESC2,   CESC2,  0,

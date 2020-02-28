@@ -250,15 +250,15 @@ AHDR2(tymesIB,I,I,B){I u;
 
 // BD multiply, using clear/copy
 AHDR2(tymesBD,D,B,D){
- if(n-1==0)  DQ(m, D *yv=&dzero; yv=*x?y:yv; *z++=*yv; x++; y++; )
+ if(n-1==0)  DQ(m, D *yv=(D*)&dzero; yv=*x?y:yv; *z++=*yv; x++; y++; )
  else if(n-1<0){n=~n; DQ(m, B u=*x++; if(u){if(z!=y)MC(z,y,n*sizeof(D));}else{memset(z,0,n*sizeof(D));} z+=n; y+=n;)}
- else DQ(m, DQ(n, D *yv=&dzero; yv=*x?y:yv; *z++=*yv; x++;) ++y;)
+ else DQ(m, DQ(n, D *yv=(D*)&dzero; yv=*x?y:yv; *z++=*yv; x++;) ++y;)
 }
 
 // DB multiply, using clear/copy
 AHDR2(tymesDB,D,D,B){
- if(n-1==0)  DQ(m, D *yv=&dzero; yv=*y?x:yv; *z++=*yv; x++; y++; )
- else if(n-1<0)DQ(m, DQC(n, D *yv=&dzero; yv=*y?x:yv; *z++=*yv; y++;) ++x;)
+ if(n-1==0)  DQ(m, D *yv=(D*)&dzero; yv=*y?x:yv; *z++=*yv; x++; y++; )
+ else if(n-1<0)DQ(m, DQC(n, D *yv=(D*)&dzero; yv=*y?x:yv; *z++=*yv; y++;) ++x;)
  else DQ(m, B v=*y++; if(v){if(z!=x)MC(z,x,n*sizeof(D));}else{memset(z,0,n*sizeof(D));} z+=n; x+=n;)
 }
 

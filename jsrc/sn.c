@@ -8,7 +8,7 @@
 // validate fullname (possibly locative).  s->name, n=length.  Returns 1 if name valid, 0 if not
 B jtvnm(J jt,I n,C *s){C c,t;I j;
 // obsolete  if(!(n))R 0;  // error if empty string
- s=n==0?ctype+1:s;  // if empty string, point to erroneous string (we will fetch s[0] and s[-1]) 
+ s=n==0?(C*)ctype+1:s;  // if empty string, point to erroneous string (we will fetch s[0] and s[-1]) 
  c=s[0];    // c = first char of name
 // obsolete  if((ctype[(UC)c]&~CA)!=0)R 0;   // first char must be alphabetic
  t=ctype[(UC)c]; t|=t>>3;   // decode char type; move 'numeric' to 'error'.  We accumulate error in LSB of t
@@ -47,7 +47,7 @@ B vlocnm(I n,C*s){
  R accummask==C9;   // if there are any alphabetics, give error
 }    /* validate locale name: 1 if locale-name OK, 0 if error */
 
-static C argnames[7]={'m','n','u','v','x','y',0};
+static const C argnames[7]={'m','n','u','v','x','y',0};
 // s-> a string of length n.  Make a NAME block for the name.  It might not be valid; use our best efforts then.  We ALWAYS look at the first and last character, even if length is 0
 // Possible errors: EVILNAME, EVLIMIT (if name too long), or memory error
 A jtnfs(J jt,I n,C*s){A z;C f,*t;I m,p;NM*zv;
@@ -142,7 +142,7 @@ static SYMWALK(jtnlxxx, A,BOX,20,1, jt->workareas.namelist.nla[*((UC*)NAV(d->nam
        SYMWALK(jtnlsym, A,BOX,20,1, jt->workareas.namelist.nla[*((UC*)NAV(d->name)->s)],
     RZ(*zv++=rifvs(sfn(SFNSIMPLEONLY,d->name))) )
 
-static I nlmask[] = {NOUN,ADV,CONJ,VERB, MARK,MARK,SYMB,MARK};
+static const I nlmask[] = {NOUN,ADV,CONJ,VERB, MARK,MARK,SYMB,MARK};
 
 static F1(jtnlx){A z=mtv;B b;I m=0,*v,x;
  RZ(w=vi(w)); v=AV(w); 

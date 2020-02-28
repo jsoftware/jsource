@@ -99,12 +99,12 @@ static B jtatomic(J jt,C m,A w){A f,g;B ax,ay,vf,vg;C c,id;V*v;
  // CFCONS should not be atomic.  But who would use it by itself?  It must be part of
  // some compound, so we will pretend it's atomic.  It's too much trouble to add an 'atomic result'
  // type, and tests rely on 1: being treated as atomic.  It's been this way a long time.
- static C atomic12[]={CMIN, CLE, CMAX, CGE, CPLUS, CPLUSCO, CSTAR, CSTARCO, CMINUS, CDIV, CROOT, 
+ static const C atomic12[]={CMIN, CLE, CMAX, CGE, CPLUS, CPLUSCO, CSTAR, CSTARCO, CMINUS, CDIV, CROOT, 
      CEXP, CLOG, CSTILE, CBANG, CLEFT, CRIGHT, CJDOT, CCIRCLE, CRDOT, CHGEOM, CFCONS, 0};
  // atomic monad-only
- static C atomic1[]={CNOT, CHALVE, 0};
+ static const C atomic1[]={CNOT, CHALVE, 0};
  // atomic dyad-only
- static C atomic2[]={CEQ, CLT, CGT, CPLUSDOT, CSTARDOT, CNE, 0};
+ static const C atomic2[]={CEQ, CLT, CGT, CPLUSDOT, CSTARDOT, CNE, 0};
  RZ(w&&VERB&AT(w));
  v=FAV(w); id=v->id;
  if(strchr(atomic12,id)||strchr(1==m?atomic1:atomic2,id))R 1;

@@ -1415,7 +1415,7 @@ CDPROC int _stdcall JInt64R(J jt, long b);
 #endif
 
 // procedures in jlib.h
-static void* jfntaddr[]={
+static const void* jfntaddr[]={
 JDo,
 JErrorTextM,
 JFree,
@@ -1445,7 +1445,7 @@ JInt64R,
 #endif
 };
 
-static C* jfntnm[]={
+static const C* jfntnm[]={
 "JDo",
 "JErrorTextM",
 "JFree",

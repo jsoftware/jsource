@@ -14,9 +14,9 @@ A   asgnlocsimp;          // =. flagged as LOCAL+NAME
 A   asgngloname;          // =: flagged as NAME
 A   asgnforceglo;         // =. flagged as ()  = global
 A   asgnforcegloname;     // =. flagged as NAME  = global
-UC  bit[8]={(UC)0x80, (UC)0x40, (UC)0x20, (UC)0x10, (UC)0x08, (UC)0x04, (UC)0x02, (UC)0x01};
+const UC  bit[8]={(UC)0x80, (UC)0x40, (UC)0x20, (UC)0x10, (UC)0x08, (UC)0x04, (UC)0x02, (UC)0x01};
 C   breakdata=0;
-double dzero=0.0;   // used by gemm
+const double dzero=0.0;   // used by gemm
 D   inf=0;                /* _                                    */
 D   infm=0;               /* __                                   */
 // obsolete A   ds(CACE)=0;                /* a:                                   */
@@ -42,8 +42,8 @@ A   pie=0;                /* o.1                                  */
 Q   zeroQ={0,0};          /* 0r1                                  */
 DX  zeroDX={0,0,0};       /* 0                                    */
 Z   zeroZ={0,0};          /* 0j0                                  */
-dcomplex zone={1.0,0.0};  // used gy gemm
-dcomplex zzero={0.0,0.0};
+const dcomplex zone={1.0,0.0};  // used gy gemm
+const dcomplex zzero={0.0,0.0};
 A   zpath=0;              /* default locale search path           */
 uint64_t g_cpuFeatures;   // blis
 // obsolete A   pst[256]={0};
@@ -71,7 +71,7 @@ UC  hwfma=0;              // blis cpu tuning
 #endif
 #endif
 
-char jeversion[]= "je9!:14 j"jversion"/j"bits""hw"/"jplatform"/"jtype"/"jlicense"/"jbuilder"/"__DATE__"T"__TIME__;
+const char jeversion[]= "je9!:14 j"jversion"/j"bits""hw"/"jplatform"/"jtype"/"jlicense"/"jbuilder"/"__DATE__"T"__TIME__;
 
 F1(jtversq){
  char m[1000];char d[21]; char months[] = "Jan01Feb02Mar03Apr04May05Jun06Jul07Aug08Sep09Oct10Nov11Dec12"; C* p; C* q;

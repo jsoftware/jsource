@@ -73,7 +73,7 @@ PT cases[] = {
 
 // Tables to convert parsing type to mask of matching parse-table rows for each of the stack positions
 // the AND of these gives the matched row (the end-of-table row is always matched)
-// static US ptcol[4][10] = {
+// static const US ptcol[4][10] = {
 //     PN     PA     PC     PV     PM     PNM    PL     PR     PS     PSN
 // { 0x2BE, 0x23E, 0x200, 0x23E, 0x27F, 0x280, 0x37F, 0x200, 0x27F, 0x27F},
 // { 0x37C, 0x340, 0x340, 0x37B, 0x200, 0x200, 0x200, 0x200, 0x280, 0x280},
@@ -83,7 +83,7 @@ PT cases[] = {
 // Remove bits 8-9
 // Distinguish PSN from PS by not having PSN in stack[3] support line 0 (OK since it must be preceded by NAME and thus will run line 7)
 // Put something distictive into LPAR that can be used to create line 8
-static UI4 ptcol[] = {
+static const UI4 ptcol[] = {
 0xBE7CC1DF,  // PN
 0x7F8000C9,  // PS
 0x7F0000C9,  // PM

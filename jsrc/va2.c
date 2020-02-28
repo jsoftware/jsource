@@ -14,7 +14,7 @@
 #define VIPID (VIPI0+VIPOKW)  // inplace D, and I if I is same length as D: I is left arg
 #define VIPDI (VIP0I+VIPOKA)  // inplace D, and I if I is same length as D: I is right arg
 
-static VA va[]={
+static const VA va[]={
 /* non-atomic functions      */ {
  {{0,0}, {0,0}, {0,0},                                /* BB BI BD              */
   {0,0}, {0,0}, {0,0},                                /* IB II ID              */
@@ -351,7 +351,7 @@ static VA va[]={
 };
 
 
-static UC vaptr[256]={
+static const UC vaptr[256]={
    0,  0,  0,  0,  0,  0,  0,  0,    0,  0,  0,  0,  0,  0,  0,  0, /* 0 */
 // C0  C1          ^D                    TAB LF          CR         
    1,  2,  3,  4,  5,  6,  7,  8,    9, 10, 11, 12, 13, 14, 15, 16, /* 1 */
@@ -403,7 +403,7 @@ void va2primsetup(A w){
  xlatedid += (((((I)0x80<<(VA2LT-VA2NE))|((I)0x80<<(VA2EQ-VA2NE))|((I)0x80<<(VA2GT-VA2NE))|((I)0x80<<(VA2LE-VA2NE))|((I)0x80<<(VA2GE-VA2NE))|((I)0x80<<(VA2NE-VA2NE)))>>shiftamt)&0x80)&REPSGN(~shiftamt);
  FAV(w)->lc=xlatedid;  // save primitive number for use in ssing and monads
  xlatedid=(xlatedid&0x7f)>VA2CIRCLE?0:xlatedid;  // if this op is monad-only, don't set dyad info & flags
- FAV(w)->localuse.lvp[0]=(xlatedid?&va[xlatedid&0x7f]:0);  // point to the line, or 0 if invalid
+ FAV(w)->localuse.lvp[0]=(xlatedid?(VA*)&va[xlatedid&0x7f]:0);  // point to the line, or 0 if invalid
  if(xlatedid)FAV(w)->flag |= VISATOMIC2;  // indicate that localuse contains AV pointer
 }
 
@@ -459,7 +459,7 @@ printf("va2a: indexes="); spt=SPA(PAV(a),i); DO(AN(spt), printf(" %d",IAV(spt)[i
 }
 #endif
 // repair routines for 
-static VF repairip[4] = {plusBIO, plusIIO, minusBIO, minusIIO};
+static const VF repairip[4] = {plusBIO, plusIIO, minusBIO, minusIIO};
 
 #if 0
       // choose the non-in-place argument
@@ -1078,7 +1078,7 @@ static A jtsumattymes(J jt, A a, A w, I b, I t, I m, I n, I nn, I r, I *s, I zn)
  RETF(z);
 }    /* a +/@:* w for non-scalar a and w */
 
-static C sumbf[]={CSTARDOT,CMIN,CSTAR,CPLUSDOT,CMAX,CEQ,CNE,CSTARCO,CPLUSCO,CLT,CLE,CGT,CGE};  // verbs that support +/@:g
+static const C sumbf[]={CSTARDOT,CMIN,CSTAR,CPLUSDOT,CMAX,CEQ,CNE,CSTARCO,CPLUSCO,CLT,CLE,CGT,CGE};  // verbs that support +/@:g
 
 #define SUMBFLOOPW(BF)     \
  {DO(q, memset(tv,C0,p); DO(255, DO(dw,tv[i]+=BF(*u,*v); ++u; ++v;);); DO(zn,zv[i]+=tu[i];));  \
@@ -1241,7 +1241,7 @@ static AHDR2(zeroF,B,void,void){memset(z,C0,m*(n^REPSGN(n)));}
 static AHDR2(oneF,B,void,void){memset(z,C1,m*(n^REPSGN(n)));}
 
 // table of routines to handle = ~:
-static VF eqnetbl[2][16] = {
+static const VF eqnetbl[2][16] = {
 //    11        12        14        BX        21        22        24       x       41        42        44        x      x      x      SB      INHOMO  // char len of aw, or HOMO SB BX
 { (VF)eqCC, (VF)eqCS, (VF)eqCU, (VF)eqAA, (VF)eqSC, (VF)eqSS, (VF)eqSU, (VF)0, (VF)eqUC, (VF)eqUS, (VF)eqUU, (VF)0, (VF)0, (VF)0, (VF)eqII, (VF)zeroF },
 { (VF)neCC, (VF)neCS, (VF)neCU, (VF)neAA, (VF)neSC, (VF)neSS, (VF)neSU, (VF)0, (VF)neUC, (VF)neUS, (VF)neUU, (VF)0, (VF)0, (VF)0, (VF)neII, (VF)oneF },

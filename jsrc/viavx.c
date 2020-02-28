@@ -1595,7 +1595,7 @@ static CR condrange2(US *s,I n,I min,I max,I maxrange){CR ret;I i;US x;
 #define FNTBLBOXSSORT 26  // boxes, handled by sorting and binary search
 #define FNTBLREVERSE 27  // where the reversed hashes start
 #define FNTBLSIZE 54  // number of functions - before the second half
-static AF fntbl[]={
+static const AF fntbl[]={
 // US tables
  jtioc,jtioc,jtioc,jtioc,jtioi,jtioi,jtioi,jtioi,  // bool, INT
  jtiod,jtioc0,jtiod1,jtioc01,jtio12,jtio22,jtio42,jtioi1,   // FL (then small-range, then ONEINT)
@@ -1626,7 +1626,7 @@ static AF fntbl[]={
  0,jtiowz02,0,jtiowz012   // CMPX
 
 };
-static S fnflags[]={  // 0 values reserved for small-range.  They turn off booladj
+static const S fnflags[]={  // 0 values reserved for small-range.  They turn off booladj
  IIMODFULL,IIMODFULL,IIMODFULL,IIMODFULL,IIMODFULL,IIMODFULL,IIMODFULL,IIMODFULL,  // bool, INT
  IIMODFULL,IIMODFULL,IIMODFULL,IIMODFULL,0,0,0,IIMODFULL,   // FL (then small-range, then ONEINT)
  IIMODFULL,IIMODFULL,IIMODFULL,IIMODFULL,   // CMPX

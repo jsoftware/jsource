@@ -133,7 +133,7 @@ D tod(void){R(D)clock()/CLOCKS_PER_SEC;}
 
 typedef LARGE_INTEGER LI;
 
-static D qpm=4294967296.0;  /* 2^32 */
+static const D qpm=4294967296.0;  /* 2^32 */
 
 D qpf(void){LI n; QueryPerformanceFrequency(&n); R n.LowPart+qpm*n.HighPart;}
 
@@ -226,7 +226,6 @@ F1(jtpmarea1){R pmarea2(vec(B01,2L,&zeroZ),w);}
 
 F2(jtpmarea2){A x;B a0,a1,*av;C*v;I an,n=0,s=sizeof(PM),s0=sizeof(PM0),wn;PM0*u;
  RZ(a&&w);
- ASSERT(prokey, EVDOMAIN);
  RZ(a=cvt(B01,a)); 
  an=AN(a);
  ASSERT(1>=AR(a),EVRANK);

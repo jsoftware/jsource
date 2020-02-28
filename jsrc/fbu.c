@@ -38,7 +38,7 @@ static I extrawidth(C4 w){
 // These are the characters listed as having East Asian width of F or H.
 // Characters with width A (ambiguous) are given the same status as the neighboring characters
 // In the array, a number in range 0-10ffff starts an interval; 1xxxxxx ends an interval.  Singletons use 0-10ffff
-static UINT  widechars[] = {
+static const UINT  widechars[] = {
 0x1100, 0x100115F, // Hangul - note the first value is wired into jttwidthf16 below
 0x231A, 0x100231B, // Hourglass
 0x2329, 0x100232A, // Angle Brackets

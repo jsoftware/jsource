@@ -112,7 +112,7 @@ static AHDR1(oneB,C,C){memset(z,C1,n); R EVOK;}
 #define VIP (VIPOKW)   // inplace is OK
 #define VIP64 ((VIPOKW*(sizeof(I)==sizeof(D))))  // inplace if D is same length as I
 
-static UA va1tab[]={
+static const UA va1tab[]={
  /* <. */ {{{ 0,VB}, {  0,VI}, {floorDI,VI+VIP64}, {floorZ,VZ}, {  0,VX}, {floorQ,VX}}},
  /* >. */ {{{ 0,VB}, {  0,VI}, { ceilDI,VI+VIP64}, { ceilZ,VZ}, {  0,VX}, { ceilQ,VX}}},
  /* +  */ {{{ 0,VB}, {  0,VI}, {    0,VD}, { cjugZ,VZ}, {  0,VX}, {   0,VQ}}},
@@ -155,7 +155,7 @@ static A jtva1s(J jt,A w,A self,I cv,VA1F ado){A e,x,z,ze,zx;B c;I n,oprc,t,zt;P
 // if the verb is atomic, we fill in the lc field with the index to the va row for the verb
 void va1primsetup(A w){
  UC xlatedid = (UC)FAV(w)->lc&0x7f;  // see which VA2 type it is
- if(xlatedid>=VA2MIN)FAV(w)->localuse.lvp[1]=&va1tab[xlatedid-VA2MIN];  // if there is a va1 function, install it
+ if(xlatedid>=VA2MIN)FAV(w)->localuse.lvp[1]=(UA*)&va1tab[xlatedid-VA2MIN];  // if there is a va1 function, install it
 }
 
 static A jtva1(J jt,A w,A self){A z;I cv,n,t,wt,zt;VA1F ado;

@@ -18,7 +18,7 @@
 // For each Type, the length of a data-item of that type.  The order
 // here is by number of trailing 0s in the (32-bit) type; aka the bit-number index.
 // Example: LITX is 1, so location 1 contains sizeof(C)
-static UC typesizes[] = {
+static const UC typesizes[] = {
 B01SIZE, LITSIZE, INTSIZE, FLSIZE, CMPXSIZE, BOXSIZE, XNUMSIZE, RATSIZE,
 -1,           -1, SB01SIZE, SLITSIZE, SINTSIZE, SFLSIZE, SCMPXSIZE, SBOXSIZE,
 SBTSIZE, C2TSIZE, C4TSIZE, XDSIZE, XZSIZE, ASGNSIZE, MARKSIZE, NAMESIZE,
@@ -28,11 +28,11 @@ SYMBSIZE, CONWSIZE, LPARSIZE, INTSIZE, INTSIZE, INTSIZE, RPARSIZE,-1,  // note A
 // Priority is
 // B01 LIT C2T C4T INT BOX XNUM RAT SBT FL CMPX
 // For sparse types, we encode here the corresponding dense type
-static UC typepriority[] = {   // convert type bit to priority
+static const UC typepriority[] = {   // convert type bit to priority
 0, 1, 4, 9, 10, 5, 6, 7,  // B01-RAT
 0, 0, 0, 1, 4, 9, 10, 5,  // x x SB01-SBOX
 8, 2, 3};  // SBT C2T C4T
-static UC prioritytype[] = {  // Convert priority to type bit
+static const UC prioritytype[] = {  // Convert priority to type bit
 B01X, LITX, C2TX, C4TX, INTX, BOXX, XNUMX, RATX, SBTX, FLX, CMPXX};
 
 // create name block for xyuvmn
@@ -56,18 +56,14 @@ global memory is distinct between tasks but is shared between threads
 
 JE support for multiple tasks is good
 
-JE support for threads has problems
- unix globinit is not thread-safe
- there are a few globals not handled in globinit or that
-  are not constants and they need to be found and sorted out
+JE support for threads has a few problems
+ there are a few global constants not handled in globinit
+ they need to be found and sorted out
+
  global storage that changes after globinit is a bad bug waiting to happen
 
-storage belonging to a task or thread should be be rooted in the J structure
+storage belonging to a task or thread MUST be be in the J structure
 there are only a few globals that have storage not in J
-
-global storage should be initialized in globinit()
-this is thread-safe in windows - called from dllmain
-not currently thread-safe in unix, but could be (at least is all in one spot)
 */
 
 // globals 

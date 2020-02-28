@@ -6,7 +6,7 @@
 #include "j.h"
 
 
-C ctype[256]={
+const C ctype[256]={
 CX, CX, CX, CX, CX, CX, CX, CX, CX, CS, CX, CX, CX, CX, CX, CX, /*CX                  */
 CX, CX, CX, CX, CX, CX, CX, CX, CX, CX, CX, CX, CX, CX, CX, CX, /* 1                  */
 CS, CX, CX, CX, CX, CX, CX, CQ, CX, CX, CX, CX, CX, CX, CD, CX, /* 2  !"#$%&'()*+,-./ */

@@ -6,8 +6,8 @@
 #include "j.h"
 
 
-static Z zj={0,1};
-static Z z1={1,0};
+static const Z zj={0,1};
+static const Z z1={1,0};
 
 static D hypoth(D u,D v){D p,q,t; MMM(u,v); R INF(p)?inf:p?(t=q/p,p*sqrt(1+t*t)):0;}
 

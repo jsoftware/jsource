@@ -23,7 +23,7 @@
 #include "x.h"
 #undef num
 #include "cpuinfo.h"
-static UC hwsha1=0,hwsha2=0,hwssse3=0,hwsse41=0,hwavx=0,hwavx2=0;
+// static UC hwsha1=0,hwsha2=0,hwssse3=0,hwsse41=0,hwavx=0,hwavx2=0;
 
 #include "openssl/sha/openssl.h"
 #include "openssl/sha/md4.h"

@@ -62,7 +62,7 @@ CREBLOCKVEC1I(iv1,INT,1)     /* ,1   also extended integer 1                    
 CREBLOCKVEC2I(mtm,B01)    /* ,0   also extended integer 0                                */
 // obsolete I   liln=0;               /* 1 iff little endian                  */
 D   jnan=NAN;               /* _.                                   */
-C   minus0[8]={0};        /* the abominable minus 0               */
+// obsolete C   minus0[8]={0};        /* the abominable minus 0               */
 A   mnuvxynam[6]={0,0,0,0,0,0};   // name blocks for all arg names
 // obsolete A   numv[NUMMAX-NUMMIN+1]={0};
 I Bnum[22][9-SY_64] = {  // the numbers we keep at hand.  0 and 1 are B01, the rest INT; but the first 2 are integer forms of 0 and 1

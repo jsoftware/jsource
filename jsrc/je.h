@@ -939,7 +939,7 @@ extern I Biv1[];
 #define iv1 ((A)&Biv1)
 extern D        jnan;           /* "nan" name conflict under Solaris       */
 // obsolete extern I        liln;
-extern C        minus0[];
+// obsolete extern C        minus0[];
 extern A        mnuvxynam[6];
 extern void     moveparseinfotosi(J);
 // obsolete extern A        numv[];

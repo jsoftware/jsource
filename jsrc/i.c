@@ -119,7 +119,7 @@ B jtglobinit(J jt){A x,y;/* obsolete D*d;*/A *oldpushx=jt->tnextpushp;
  RZ(mnuvxynam[5]=makename("y"));
 // obsolete  zeroQ.n =iv0; zeroQ.d =iv1;
 // obsolete  zeroDX.e=0;     zeroDX.x=iv0;
- memset(minus0,C0,8L); minus0[C_LE?7:0]='\200';
+// obsolete  memset(minus0,C0,8L); minus0[C_LE?7:0]='\200';
  // can be left at initial value v00[0]=v00[1]=0;   // vector 0 0, for rank
  pf=qpf();
  pinit();

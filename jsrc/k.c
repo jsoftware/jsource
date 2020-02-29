@@ -439,16 +439,18 @@ A jtpcvt(J jt,I t,A w){A y;B b;RANK2T oqr=jt->ranks;
 }    /* convert w to type t, if possible, otherwise just return w */
 
 #if !C_CRC32C
-F1(jtcvt0){I n,t,*u,*v,z0,z1;
+F1(jtcvt0){I n,t,*v,z0,z1;D *u;
  RZ(w);
  t=AT(w); n=AN(w); 
  if(n&&t&FL+CMPX){
-  if(t&CMPX)n+=n; u=AV(w); v=(I*)minus0; z0=z1=*v;
-#if SY_64
-             DQ(n, if(z0==*u            )*u=0;        ++u; ); 
-#else
-  z1=*(1+v); DQ(n, if(z0==u[0]&&z1==u[1])u[0]=u[1]=0; u+=2;);
-#endif
+  if(t&CMPX)n+=n; u=DAV(w);
+// obsolete  v=(I*)&m0; z0=z1=*v;
+  DQ(n, if(*u==0.0)*u=0.0;        ++u; ); 
+// obsolete #if SY_64
+// obsolete             DQ(n, if(z0==*u            )*u=0;        ++u; ); 
+// obsolete#else
+// obsolete  z1=*(1+v); DQ(n, if(z0==u[0]&&z1==u[1])u[0]=u[1]=0; u+=2;);
+// obsolete#endif
  }
  R w;
 }    /* convert -0 to 0 in place */

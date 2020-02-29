@@ -924,8 +924,6 @@ extern A        pie;            /* "pi" name conflict                      */
 // obsolete extern A        pst[];
 extern PRIM     primtab[];
 extern const UI4      shortrange[3][4];
-extern I        v00[2];
-// obsolete extern C        wtype[];
 extern A        zeroionei[2];
 extern Z        zeroZ;
 extern const dcomplex zone;

@@ -31,7 +31,7 @@ A   numv[NUMMAX-NUMMIN+1]={0};
 A   zeroionei[2]={0,0};   // integer 0 and 1
 A   numvr[3]={0,0};       // float 0,1,2
 A   imax=0;               // IMAX as atom
-I   v00[2]={0,0};         // vector value to use for rank 0 0
+//I   v00[2]={0,0};         // vector value to use for rank 0 0
 A   onehalf;      //  0.5 (float)
 D   pf=0;                 /* performance frequency                */
 A   pie=0;                /* o.1                                  */
@@ -47,6 +47,7 @@ UC  hwfma=0;              // blis cpu tuning
 // globals end
 
 // global const start -  do not need globinit
+//!      I   v00[2]={0,0};         // vector value to use for rank 0 0
 const UC  bit[8]={(UC)0x80, (UC)0x40, (UC)0x20, (UC)0x10, (UC)0x08, (UC)0x04, (UC)0x02, (UC)0x01};
 const double dzero=0.0;   // used by gemm
 const dcomplex zone={1.0,0.0};  // used gy gemm

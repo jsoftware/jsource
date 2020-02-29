@@ -92,3 +92,14 @@ d=. (;d i.each ';'){.each d
 d=. dltb each d
 d=. /:~d
 )
+
+repa=: 3 : 0
+echo 'getglobinit-.getglobals'
+>(getglobinit'')-.getglobals''
+)
+
+repb=: 3 : 0
+echo 'getglobals-getgloobinit'
+>(getglobals'')-.getglobinit''
+)
+

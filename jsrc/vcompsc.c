@@ -101,7 +101,7 @@
  static F2(f){I an,*av,n,q,r,wn,*wv,x,y;                                             \
   an=AN(a); av=AV(a);                                                                         \
   wn=AN(w); wv=AV(w); n=1; n=AR(a)?an:n; n=AR(w)?wn:n;                      \
-  if((q=(n-1)>>LGSZI)<0)R zeroionei[0]; r=((n-1)&(SZI-1));  /* # first bytes to do minus 1 */                                                                           \
+  if((q=(n-1)>>LGSZI)<0)R zeroionei(0); r=((n-1)&(SZI-1));  /* # first bytes to do minus 1 */                                                                           \
   I i=q;                                                                       \
   if     (!AR(a)){ASSIGNX(av); wv+=q; y=(F(x,*wv))&(((I)0x100<<(r<<3))-1); while(1){if(y)JNDB3; if(--i<0)break; y=F(x,*--wv);} }  \
   else if(!AR(w)){ASSIGNX(wv); av+=q; y=(F(*av,x))&(((I)0x100<<(r<<3))-1); while(1){if(y)JNDB3; if(--i<0)break; y=F(*--av,x);} }  \

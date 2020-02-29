@@ -67,7 +67,7 @@ F2(jtqhash12){F2PREFIP; I hsiz; UI crc;
   crc=-1;  // where we accumulate CRC
   I lpct=AN(w)<<((AT(w)>>RATX)&1);  // number of component values
   A *av=AAV(w);  // pointer to subvalues
-  DQ(lpct, crc=CRC32L(crc,i0(jtqhash12(jt,zeroionei[0],*av++)));)  // recur
+  DQ(lpct, crc=CRC32L(crc,i0(jtqhash12(jt,zeroionei(0),*av++)));)  // recur
  }
 #if SY_64
  if(hsiz)crc=(crc*(UI)hsiz)>>32;   // convert hash to user's range

@@ -371,8 +371,8 @@ static XF2(jtxbinp){PROLOG(0098);D m;I i,n;X c,d,p,q,r,s;
  RZ(d=xminus(w,a)); s=1==xcompare(a,d)?d:a; RE(n=xint(s));
  m=xdouble(w);
  if(m<=IMAX){
-  RZ(p=less(ravel(factor(apv(n,(I)m,-1L))),zeroionei[0]));
-  RZ(q=less(ravel(factor(apv(n,1L,   1L))),zeroionei[0]));
+  RZ(p=less(ravel(factor(apv(n,(I)m,-1L))),zeroionei(0)));
+  RZ(q=less(ravel(factor(apv(n,1L,   1L))),zeroionei(0)));
   c=over(p,q);
   d=repeat(v2(AN(p),AN(q)),v2(1L,-1L));
   A z=xev1(repeat(ev2(c,d,"+//."),nub(c)),"*/");

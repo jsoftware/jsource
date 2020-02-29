@@ -377,19 +377,19 @@ void jtsetleakcode(J jt, I code) {
 
 F1(jtleakblockread){
 #if LEAKSNIFF
-if(!leakblock)R num[0];
+if(!leakblock)R num(0);
 R vec(INT,2*leaknbufs,IAV(leakblock));
 #else
-R num[0];
+R num(0);
 #endif
 }
 F1(jtleakblockreset){
 #if LEAKSNIFF
 leakcode = 0;
 leaknbufs = 0;
-R num[0];
+R num(0);
 #else
-R num[0];
+R num(0);
 #endif
 }
 

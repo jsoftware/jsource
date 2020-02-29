@@ -69,7 +69,7 @@ static DF1(jtinsert){A hs,*hv,z;I hfx,j,m,n;A *old;
  RZ(w);
  SETIC(w,n); j=n-1; hs=FAV(self)->fgh[2]; m=AN(hs); hfx=j%m; hv=AAV(hs);  // m cannot be 0
  if(!n)R df1(z,w,iden(*hv));
- RZ(z=from(num[-1],w));
+ RZ(z=from(num(-1),w));
  old=jt->tnextpushp;
  --m; DQ(n-1, --j; --hfx; hfx=(hfx<0)?m:hfx; RZ(z=CALL2(FAV(hv[hfx])->valencefns[1],from(sc(j),w),z,hv[hfx])); z=gc(z,old);)
  RETF(z);
@@ -119,7 +119,7 @@ static B jtatomic(J jt,C m,A w){A f,g;B ax,ay,vf,vg;C c,id;V*v;
   case CQQ:    R ax||atomic(m,f);
   case CFORK:  R (CCAP==ID(f)?atomic(1,g):atomic(m,f)&&atomic(2,g))&&atomic(m,v->fgh[2]);
   case CHOOK:  R atomic(2,f)&&atomic(1,g);
-  case CTILDE: R NAME&AT(f)?atomic(m,fix(f,zeroionei[0])):atomic(2,f);
+  case CTILDE: R NAME&AT(f)?atomic(m,fix(f,zeroionei(0))):atomic(2,f);
   case CFIT:   R atomic(m,f);
   case CAMP:   
    if(vf&&vg)R atomic(m,f)&&atomic(1,g);
@@ -133,7 +133,7 @@ static A jtgjoin(J jt,C c,A a,A w){A f,z,z1;
  RZ(a&&w);
  ASSERT(1>=(AR(a)|AR(w)),EVRANK);  // both ranks<2
  ASSERT((((AN(a)-1)|-(BOX&AT(a)))&((AN(w)-1)|-(BOX&AT(w))))<0,EVDOMAIN);  // both boxed or empty
- RZ(f=qq(atop(ds(CBOX),ds(CCOMMA)),zeroionei[0]));  // f = <@,"0
+ RZ(f=qq(atop(ds(CBOX),ds(CCOMMA)),zeroionei(0)));  // f = <@,"0
  R df2(z,box(spellout(c)),df2(z1,a,w,f),f);   // gerund: (<c) <@,"0 a <@,"0 w
 }
 
@@ -147,7 +147,7 @@ static DF1(jtcase1a){F1PREFIP;A g,h,*hv,k,t,u,w0=w,x,y,*yv,z;B b;I r,*xv;V*sv;
  sv=FAV(self); g=sv->fgh[1];
  // Calculate v y.  If v is atomic, apply v y, else v"0 y
  if(atomic(1,g))RZ(df1(k,w,g))
- else{RZ(df1(k,w,qq(g,zeroionei[0]))); ASSERT(((AR(k)^AR(w))|(AN(k)^AN(w)))==0,EVRANK);}
+ else{RZ(df1(k,w,qq(g,zeroionei(0)))); ASSERT(((AR(k)^AR(w))|(AN(k)^AN(w)))==0,EVRANK);}
  if(B01&AT(k)){
   // v produced a binary list.  Pull out the operands for u[0] and u[1], operate on them individually,
   // and interleave the results
@@ -318,7 +318,7 @@ A jtgadv(J jt,A w,C id){A hs;I n;
  ASSERT(1>=AR(w),EVRANK);
  ASSERT(n&&n<=3,EVLENGTH);  // verify 1-3 gerunds
  ASSERT(BOX&AT(w),EVDOMAIN);
- RZ(hs=fxeach(3==n?w:behead(reshape(num[4],w))));   // convert to v0`v0`v0, v1`v0`v1, or v0`v1`v2; convert each gerund to verb
+ RZ(hs=fxeach(3==n?w:behead(reshape(num(4),w))));   // convert to v0`v0`v0, v1`v0`v1, or v0`v1`v2; convert each gerund to verb
  // hs is a BOX array, but its elements are ARs
  // The derived verb is ASGSAFE if all the components are; it has gerund left-operand; and it supports inplace operation on the dyad
  // Also set the LSB flags to indicate whether v0 is u@[ or u@]

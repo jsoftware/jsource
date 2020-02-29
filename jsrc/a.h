@@ -57,4 +57,4 @@
 // obsolete #define SCALARFN(id,w)  (id==ID(w)&&!lr(w)&&!rr(w))
 
 // TRUE if v is c!.0.  This is used for detecting use of special code.  We detect only the case where the 0 was hardcoded as 0
-#define FIT0(c,v)       (CFIT==v->id&&v->fgh[1]==num[0]&&c==ID(v->fgh[0]))
+#define FIT0(c,v)       (CFIT==v->id&&v->fgh[1]==num(0)&&c==ID(v->fgh[0]))

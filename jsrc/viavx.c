@@ -1649,7 +1649,7 @@ static const S fnflags[]={  // 0 values reserved for small-range.  They turn off
 #define OVERHEADSHAPES 100  // checking shapes, types, etc costs this many compares
 
 // mode indicates the type of operation, defined in j.h
-A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z=mtv;
+A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z;fauxblockINT(zfaux,1,0);
     I ac,acr,af,ak,an,ar,*as,at,datamin,f,f1,k,klg,n,r,*s,t,th,wc,wcr,wf,wk,wn,wr,*ws,wt,zn;UI c,m,p;
  RZ(a&&w);
  // ?r=rank of argument, ?cr=rank the verb is applied at, ?f=length of frame, ?s->shape, ?t=type, ?n=#atoms
@@ -1686,7 +1686,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z=mtv;
     case IEPS:    GATV(z,B01,zn,f+f0,s); if(af)MCISH(f+AS(z),ws+wf,f0); memset(BAV(z),C0,zn); R z;
     case ILESS:                              RCA(w);
     case IIFBEPS:                            R mtv;
-    case IANYEPS: case IALLEPS: case II0EPS: R num[0];
+    case IANYEPS: case IALLEPS: case II0EPS: R num(0);
     case ISUMEPS:                            R sc(0L);
     case II1EPS:  case IJ1EPS:               R sc(witems);
     case IJ0EPS:                             R sc(witems-1);
@@ -1743,9 +1743,10 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z=mtv;
   if(((th-1)|(TYPESXOR(t,wt)-1))>=0)RZ(w=t&XNUM?xcvt(XMEXMT,w):cvt(t,w))
  }
 
- // Allocate the result area
- switch(mode&(IPHCALC|IIOPMSK)){I q;  // prehash passes through
-  case IIDOT: 
+ // Allocate the result area.  NOTE that some of the routines, like small-range, always store at least one result; so we have to point z somewhere harmless before launching them. if we are prehashing
+ switch(mode&(IPHCALC|IIOPMSK)){I q;
+  default:      fauxINT(z,zfaux,1,0) break;   // if prehashed, we must create an area that can hold at least one stored result
+  case IIDOT:
   case IICO:    GATV(z,INT,zn,f+f1,     s); if(af)MCISH(f+AS(z),ws+wf,f1); break;
   case INUBSV:  GATV(z,B01,zn,f+f1+!acr,s); if(af)MCISH(f+AS(z),ws+wf,f1); if(!acr)AS(z)[AR(z)-1]=1; break;
   case INUB:    q=m+1; GA(z,t,mult(q,aii(a)),MAX(1,wr),ws); AS(z)[0]=q; break;  // +1 because we speculatively overwrite.  Was MIN(m,p) but we don't have the range yet
@@ -1772,10 +1773,10 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z=mtv;
   // in that case the search always fails
   case IIDOT:   R reshape(shape(z),sc(n?m:0  ));
   case IICO:    R reshape(shape(z),sc(n?m:m-1));
-  case INUBSV:  R reshape(shape(z),take(sc(m),num[1]));
+  case INUBSV:  R reshape(shape(z),take(sc(m),num(1)));
   case INUB:    AN(z)=0; *AS(z)=m?1:0; R z;
   case ILESS:   if(m)AN(z)=*AS(z)=0; else MC(AV(z),AV(w),AN(w)<<klg); R z;
-  case IEPS:    R reshape(shape(z),num[m&&(!n||th)]);
+  case IEPS:    R reshape(shape(z),num(m&&(!n||th)));
   case INUBI:   R m?iv0:mtv;
   // th<0 means that the result of e. would have rank>1 and would never compare against either 0 or 1
   case II0EPS:  R sc(n&&zn?0L        :witems         );
@@ -1783,8 +1784,8 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z=mtv;
   case IJ0EPS:  R sc(n&&zn?MAX(0,witems-1):witems         );
   case IJ1EPS:  R sc(n&&zn?witems         :MAX(0,witems-1));
   case ISUMEPS: R sc(n?0L        :c         );  // must include shape of w
-  case IANYEPS: R num[!n];
-  case IALLEPS: R num[!(c&&n)];
+  case IANYEPS: R num(!n);
+  case IALLEPS: R num(!(c&&n));
   case IIFBEPS: R n?mtv :IX(c);
  }}
 
@@ -2098,7 +2099,7 @@ F1(jtnubind0){A z;
 F1(jtsclass){A e,x,xy,y,z;I c,j,m,n,*v;P*p;
  RZ(w);
  // If w is scalar, return 1 1$1
- if(!AR(w))R reshape(v2(1L,1L),num[1]);
+ if(!AR(w))R reshape(v2(1L,1L),num(1));
  SETIC(w,n);   // n=#items of y
  RZ(x=indexof(w,w));   // x = i.~ y
  // if w is dense, return ((x = i.n) # x) =/ x
@@ -2112,9 +2113,9 @@ F1(jtsclass){A e,x,xy,y,z;I c,j,m,n,*v;P*p;
  GASPARSE(z,SB01,1,2,(I*)0);  v=AS(z); v[0]=1+m; v[1]=n;
  p=PAV(z); 
  SPB(p,a,v2(0L,1L));
- SPB(p,e,num[0]);
+ SPB(p,e,num(0));
  SPB(p,i,xy);
- SPB(p,x,reshape(sc(c),num[1]));
+ SPB(p,x,reshape(sc(c),num(1)));
  R z;
 }
 

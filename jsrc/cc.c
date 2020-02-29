@@ -40,12 +40,12 @@ static DF2(jtcut02){F2PREFIP;A fs,q,qq,*qv,z,zz=0;I*as,c,e,i,ii,j,k,m,n,*u,*ws;P
 
  I wr=AR(w);  // rank of w
  RZ(a=vib(a));  // audit for valid integers
- if(1>=AR(a))RZ(a=lamin2(zeroionei[0],a));   // default list to be lengths starting at origin
+ if(1>=AR(a))RZ(a=lamin2(zeroionei(0),a));   // default list to be lengths starting at origin
  as=AS(a); m=AR(a)-2; PROD(n,m,as); c=as[1+m]; u=AV(a);  // n = # 2-cells in a, c = #axes of subarray given, m is index of next-last axis of a, u->1st atom of a
  ASSERT((-(as[m]^2)|(wr-c))>=0,EVLENGTH);    // shapes must end with 2,c where c does not exceed rank of r
  if(!n){  /* empty result; figure out result type */
   z=CALL1(f1,w,fs);
-  if(z==0)z=zeroionei[0];  // use zero as fill result if error
+  if(z==0)z=zeroionei(0);  // use zero as fill result if error
   GA(zz,AT(z),n,m+AR(z),0); I *zzs=AS(zz); I *zs=AS(z); 
   MCISH(zzs,as,m) MCISH(zzs+m,zs,AR(z)) // move in frame of a followed by shape of result-cell
   RETF(zz);
@@ -172,10 +172,10 @@ static DF2(jtcut2bx){A*av,b,t,x,*xv,y,*yv;B*bv;I an,bn,i,j,m,p,q,*u,*v,*ws;
  for(i=0;i<an;++i){
   b=av[i]; bn=AN(b); m=ws[i];
   ASSERT(1>=AR(b),EVRANK);
-  if(!bn&&m){xv[i]=num[0]; RZ(yv[i]=sc(m));}
+  if(!bn&&m){xv[i]=num(0); RZ(yv[i]=sc(m));}
   else{
    if(!(B01&AT(b)))RZ(b=cvt(B01,b));
-   if(!AR(b)){if(*BAV(b)){RZ(xv[i]=IX(m)); RZ(yv[i]=reshape(sc(m),num[0<q]));}else xv[i]=yv[i]=mtv; continue;}
+   if(!AR(b)){if(*BAV(b)){RZ(xv[i]=IX(m)); RZ(yv[i]=reshape(sc(m),num(0<q)));}else xv[i]=yv[i]=mtv; continue;}
    ASSERT(bn==m,EVLENGTH);
    bv=BAV(b); p=0; DO(bn, p+=bv[i];); 
    GATV0(t,INT,p,1); u=AV(t); xv[i]=t;
@@ -230,7 +230,7 @@ static DF2(jtcut2bx){A*av,b,t,x,*xv,y,*yv;B*bv;I an,bn,i,j,m,p,q,*u,*v,*ws;
    }                                                                         \
    /* note: fall through */                                                  \
   default:                                                                   \
-   if(!m){y=reitem(zeroionei[0],w); R iota(over(zeroionei[0],shape(h?df1(z,y,*hv):CALL1(f1,y,fs))));}                            \
+   if(!m){y=reitem(zeroionei(0),w); R iota(over(zeroionei(0),shape(h?df1(z,y,*hv):CALL1(f1,y,fs))));}                            \
    GATV0(z,BOX,m,1); za=AAV(z); j=0;                                          \
    if(h){EACHC(GA(y,t,d*c,r,s); AS(y)[0]=d; MC(AV(y),v1,d*k); A Zz; RZ (df1(Zz,y,hv[j])); j=(1+j)%hn; rifv(Zz); *za++=Zz;); \
    }else{EACHC(GA(y,t,d*c,r,s); AS(y)[0]=d; MC(AV(y),v1,d*k); A Zz; RZ(Zz = CALL1(f1,y,fs)); rifv(Zz); *za++=Zz; ); \
@@ -272,10 +272,10 @@ static A jtsely(J jt,A y,I r,I i,I j){A z;I c,*s,*v;
 static DF2(jtcut2sx){PROLOG(0024);DECLF;A h=0,*hv,y,yy;B b,neg,pfx,*u,*v;C id;I d,e,hn,m,n,p,t,yn,*yu,*yv;P*ap;V*vf;
  PREF2(jtcut2sx);
  SETIC(w,n); t=AT(w); m=sv->localuse.lI; neg=0>m; pfx=m==1||m==-1; b=neg&&pfx;  // m = n from u;.n
- RZ(a=a==mark?eps(w,take(num[pfx?1:-1],w)):DENSE&AT(a)?sparse1(a):a);
+ RZ(a=a==mark?eps(w,take(num(pfx?1:-1),w)):DENSE&AT(a)?sparse1(a):a);
  ASSERT(n==*AS(a),EVLENGTH);
  ap=PAV(a);
- if(!(equ(num[0],SPA(ap,e))&&AN(SPA(ap,a))))R cut2(cvt(B01,a),w,self); 
+ if(!(equ(num(0),SPA(ap,e))&&AN(SPA(ap,a))))R cut2(cvt(B01,a),w,self); 
  vf=VAV(fs);
  if(VGERL&sv->flag){h=sv->fgh[2]; hv=AAV(h); hn=AN(h); id=0;}else id=vf->id; 
  y=SPA(ap,i); yn=AN(y); yv=AV(y); u=v=BAV(SPA(ap,x)); e=m=0;
@@ -352,7 +352,7 @@ static DF2(jtcut2sx){PROLOG(0024);DECLF;A h=0,*hv,y,yy;B b,neg,pfx,*u,*v;C id;I 
 static C*jtidenv0(J jt,A a,A w,V*sv,I zt,A*zz){A fs,y,z;
  *zz=0; 
  fs=sv->fgh[0];
- RE(df1(y,num[0],iden(VAV(fs)->fgh[0])));
+ RE(df1(y,num(0),iden(VAV(fs)->fgh[0])));
  if(TYPESLT(zt,AT(y))){*zz=df1(z,cut2(a,w,cut(ds(CBOX),sv->fgh[1])),amp(fs,ds(COPE))); R 0;}  // fgh still has the original A, OK to use
  if(TYPESGT(zt,AT(y)))RE(y=cvt(zt,y)); 
  R CAV(y);
@@ -526,7 +526,7 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;
    // monadic forms.  If we can handle the type/length here, leave it; otherwise convert to Boolean.
    // If w is Boolean, we have to pretend it's LIT so we use the correct fret value rather than hardwired 1
    if((((wt&(B01|LIT|INT|FL|C2T|C4T|SBT))-1)|(k-1)|(((BW==32&&wt&FL&&k==SZD)-1)&((k&-k&(2*SZI-1))-k)))>=0){a=w; ak=k; at=(wt+B01)&~B01;  // monadic forms: if w is an immediate type we can handle, and the length is a machine-word length, use w unchanged
-   }else{RZ(a=n?eps(w,take(num[pfx?1:-1],w)):mtv); ak=1; at=B01;}  // any other w, replace by w e. {.w (or {: w).  Set ak to the length of a cell of a, in bytes.  Empty cells of w go through here to convert to list
+   }else{RZ(a=n?eps(w,take(num(pfx?1:-1),w)):mtv); ak=1; at=B01;}  // any other w, replace by w e. {.w (or {: w).  Set ak to the length of a cell of a, in bytes.  Empty cells of w go through here to convert to list
   }
   {I x; ASSERT(n==SETIC(a,x),EVLENGTH);}
 
@@ -731,9 +731,9 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;
 
   }else{
    // No frets.  Apply the operand to 0 items; return (0,$result) $ result (or $,'' if error on fill-cell).  The call is non-inplaceable
-   RZ(z=reitem(zeroionei[0],w));  // create 0 items of the type of w
+   RZ(z=reitem(zeroionei(0),w));  // create 0 items of the type of w
    UC d=jt->uflags.us.cx.cx_c.db; jt->uflags.us.cx.cx_c.db=0; zz=CALL1(f1,z,fs); jt->uflags.us.cx.cx_c.db=d; if(EMSK(jt->jerr)&EXIGENTERROR)RZ(zz); RESETERR;
-   RZ(zz=reshape(over(zeroionei[0],shape(zz?zz:mtv)),zz?zz:zeroionei[0]));
+   RZ(zz=reshape(over(zeroionei(0),shape(zz?zz:mtv)),zz?zz:zeroionei(0)));
   }
  }
  EPILOG(zz);
@@ -793,7 +793,7 @@ DF2(jtrazecut2){A fs,gs,y,z=0;B b; I neg,pfx;C id,sep,*u,*v,*wv,*zv;I d,k,m=0,wi
   if(AT(a)&SB01)RZ(a=cvt(B01,a));
   v=CAV(a); sep=C1;
  }else if(((AR(w)-2)&-(wt&IS1BYTE))<0){a=w; v=CAV(a); sep=v[(wi-1)&(pfx-1)];}  // monad.  Create char list of frets: here if 1-byte list/atom
- else{RZ(a=wi?eps(w,take(num[(pfx<<1)-1],w)):mtv); v=CAV(a); sep=C1;}   // here if other types/shapes
+ else{RZ(a=wi?eps(w,take(num((pfx<<1)-1),w)):mtv); v=CAV(a); sep=C1;}   // here if other types/shapes
  // v-> byte list of frets, sep is the fret char
  ASSERT(wi==SETIC(a,r),EVLENGTH);
  r=MAX(1,AR(w)); s=AS(w); wv=CAV(w); d=aii(w); k=d<<bplg(wt);  // d=#atoms in an item of w
@@ -881,7 +881,7 @@ static DF2(jttess2){A z,zz=0,virtw,strip;I n,rs[3],cellatoms,cellbytes,vmv,hmv,v
   // the tessellation lacking the first two axes.  Unfortunately this differs considerably between ;.3 and ;._3
   // The ;._3 cut is pretty efficient, moving the data only once per pair of axes added.  The ;.3 cut creates argument cells, which
   // is inefficient; but that case will be very rare
-  next2=qq(amp(drop(v2(0,2),a),cut(ds((((4-axisct)|n)<0)?CRIGHT:CBOX),sc(n^256^(inrecursion>>1)))),num[-2]);  // RIGHT if n<0 or axisct>4
+  next2=qq(amp(drop(v2(0,2),a),cut(ds((((4-axisct)|n)<0)?CRIGHT:CBOX),sc(n^256^(inrecursion>>1)))),num(-2));  // RIGHT if n<0 or axisct>4
   if(n<0){
    // ;._3, the more usual and faster case
    // we will recur on ((0 2}.x)&(];.n)"_2 to build up _2-cells of the final result.  To save a smidgen, we will suppress the final
@@ -904,9 +904,9 @@ static DF2(jttess2){A z,zz=0,virtw,strip;I n,rs[3],cellatoms,cellbytes,vmv,hmv,v
   }else{
    // ;.3.  The cells coming out of the lower tessellations may have dissimilar shape so we have to box them
    // If the next level is the last, it becomes (0 2}.x)&(<;.n)"_2  - adding one boxing level.  Otherwise use ] instead of < above
-   next2=qq(amp(drop(v2(0,2),a),cut(ds(CBOX),sc(n^256^(inrecursion>>1)))),num[-2]);
+   next2=qq(amp(drop(v2(0,2),a),cut(ds(CBOX),sc(n^256^(inrecursion>>1)))),num(-2));
    // collect the components that contribute to a single input-to-u, one box for each : (<@:>"2)@:(0 1&|:)@:next2
-   next2=atco(atco(qq(atco(ds(CBOX),ds(COPE)),num[2]),amp(v2(0,1),ds(CCANT))),next2);
+   next2=atco(atco(qq(atco(ds(CBOX),ds(COPE)),num(2)),amp(v2(0,1),ds(CCANT))),next2);
    if(!inrecursion){
     // at the top level, add on u@>
     next2=atco(atop(fs,ds(COPE)),next2);
@@ -1019,7 +1019,7 @@ static DF2(jttess2){A z,zz=0,virtw,strip;I n,rs[3],cellatoms,cellbytes,vmv,hmv,v
      RZ(opcell=take((hkeep-hsz)>=0?sc(vkeep):v2(vkeep,hkeep),virtw));
     }
     if(state&STATEREFLECTY)RZ(opcell=reverse(opcell));  // reverse vertical
-    if(state&STATEREFLECTX)RZ(opcell=df1(z,opcell,qq(ds(CREV),num[-1])));  // reverse horizontal
+    if(state&STATEREFLECTX)RZ(opcell=df1(z,opcell,qq(ds(CREV),num(-1))));  // reverse horizontal
    }
    // execute the verb on the cell and assemble results
    RZ(z=CALL1(f1,opcell,fs)); 

@@ -61,7 +61,7 @@ static const C*qq=">)}]";
 
 static F1(jtfmtbfc){A*u,z;B t;C c,p,q,*s,*wv;I i,j,m,n;
  RZ(w); 
- if((C2T+C4T)&AT(w))RZ(w=uco2(num[5],w))
+ if((C2T+C4T)&AT(w))RZ(w=uco2(num(5),w))
  ASSERT(1>=AR(w),EVDOMAIN);
  n=AN(w); wv=CAV(w); t=0; m=1; j=0;
  for(i=0;i<n;++i){
@@ -135,7 +135,7 @@ static F1(jtfmtparse){A x,z,*zv;B ml[2+NMODVALS],mod,t;C c,*cu="srqpnmdbijklc",*
  w=AAV0(w); n=AN(w);
  GAT0(z,BOX,1+NMODVALS,1); zv=AAV(z); 
  DO(NMODVALS, zv[1+i]=mtv;);
- if(n&&(C2T+C4T)&AT(w))RZ(w=uco2(num[5],w));
+ if(n&&(C2T+C4T)&AT(w))RZ(w=uco2(num(5),w));
  ASSERT(1>=AR(w),EVRANK);
  ASSERT(!n||LIT&AT(w),EVDOMAIN); 
  wv=CAV(w); n1=1+n; t=c=0; fb=0; mi=-1; memset(ml,C1,sizeof(ml));
@@ -526,7 +526,7 @@ static A jtfmtxi(J jt, A a, A w, I mode, I *omode){I lvl;
  RZ(a&&w); *omode=0;
  if(SPARSE&AT(w)) RZ(w=denseit(w));
  if(!AN(w))       RZ(w=reshape(shape(w),chr[' ']));
- if(JCHAR&AT(w))  R df1(a,w,qq(atop(ds(CBOX),ds(CCOMMA)),num[1]));
+ if(JCHAR&AT(w))  R df1(a,w,qq(atop(ds(CBOX),ds(CCOMMA)),num(1)));
  ASSERT(1>=AR(a), EVRANK); 
  ASSERT(!AN(a) || JCHAR+BOX&AT(a), EVDOMAIN);
  if(JCHAR&AT(a)||!AN(a)) RZ(a=fmtbfc(a));
@@ -538,7 +538,7 @@ static A jtfmtxi(J jt, A a, A w, I mode, I *omode){I lvl;
   ASSERT(1>=lvl, EVDOMAIN);
   DO(AN(w), x=wv[i]; ASSERT(1>=AR(x),EVRANK); if(AN(x)){ASSERT(AT(x)&JCHAR+NUMERIC,EVDOMAIN);
       ASSERT(!(AR(x)&&AT(x)&NUMERIC),EVRANK);});
-  A z; R df2(z,reitem(shape(w),a),w,amp(foreign(num[8],num[0]), ds(COPE)));
+  A z; R df2(z,reitem(shape(w),a),w,amp(foreign(num(8),num(0)), ds(COPE)));
  } else {
   if(XNUM+RAT+CMPX&AT(w))RZ(w=cvt(FL,w));
   *omode=mode;
@@ -556,7 +556,7 @@ F2(jtfmt12){A z;I mode,r,j;
  RZ(z=fmtxi(a,w,1,&mode));
  if(mode==1)R z;
  r=AR(z);
- A t; df1(t,cant1(2==r?z:reshape(v2(1L,SETIC(z,j)),z)), qq(atco(ds(CBOX),ds(COPE)),num[1]));
+ A t; df1(t,cant1(2==r?z:reshape(v2(1L,SETIC(z,j)),z)), qq(atco(ds(CBOX),ds(COPE)),num(1)));
  R ravel(t);
 } /* 8!:1 dyad */
 
@@ -566,7 +566,7 @@ F2(jtfmt22){A z;I mode,r,j;
  RZ(z=fmtxi(a,w,2,&mode));
  if(mode==2)R z;
  r=AR(z);
- A t; df1(t,cant1(2==r?z:reshape(v2(1L,SETIC(z,j)),z)), qq(atco(ds(CBOX),ds(COPE)),num[1]));
+ A t; df1(t,cant1(2==r?z:reshape(v2(1L,SETIC(z,j)),z)), qq(atco(ds(CBOX),ds(COPE)),num(1)));
  RZ(z=ravel(t));
  R *AS(z)?razeh(z):lamin1(z);
 } /* 8!:2 dyad */

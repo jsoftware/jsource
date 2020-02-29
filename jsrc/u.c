@@ -272,10 +272,10 @@ A jtodom(J jt,I r,I n,I* RESTRICT s){A z;I m,mn,*u,*zv;
 
 F1(jtrankle){R!w||AR(w)?w:ravel(w);}
 
-A jtsc(J jt,I k)     {A z; if((k^REPSGN(k))<=NUMMAX)R (k&~1?num:zeroionei)[k]; GAT0(z,INT, 1,0); *IAV(z)=k;     RETF(z);}  // always return I
-A jtscib(J jt,I k)   {A z; if((k^REPSGN(k))<=NUMMAX)R num[k]; GAT0(z,INT, 1,0); *IAV(z)=k;     RETF(z);}  // return b if 0 or 1, else I
+A jtsc(J jt,I k)     {A z; if((k^REPSGN(k))<=NUMMAX){z=num(k); z=k&~1?z:zeroionei(k); R z;} GAT0(z,INT, 1,0); *IAV(z)=k;     RETF(z);}  // always return I
+A jtscib(J jt,I k)   {A z; if((k^REPSGN(k))<=NUMMAX)R num(k); GAT0(z,INT, 1,0); *IAV(z)=k;     RETF(z);}  // return b if 0 or 1, else I
 A jtsc4(J jt,I t,I v){A z; GA(z,t,   1,0,0); *IAV(z)=v;     RETF(z);}  // return scalar with a given I-length type (numeric or box)
-A jtscb(J jt,B b)    {R num[b];}   // A block for boolean
+A jtscb(J jt,B b)    {R num(b);}   // A block for boolean
 A jtscc(J jt,C c)    {A z; GAT0(z,LIT, 1,0); *CAV(z)=c;     RETF(z);}  // create scalar character
 A jtscf(J jt,D x)    {A z; GAT0(z,FL,  1,0); *DAV(z)=x;     RETF(z);}   // scalar float
 A jtscx(J jt,X x)    {A z; GAT0(z,XNUM,1,0); *XAV(z)=ca(x); RETF(z);}  // scalar extended
@@ -376,7 +376,7 @@ F1(jtvi){RZ(w); R INT&AT(w)?w:cvt(INT,w);}
 F1(jtvib){A z;D d,e,*wv;I i,n,*zv;
  RZ(w);
  if(AT(w)&INT)R RETARG(w);  // handle common non-failing cases quickly: INT and boolean
- if(AT(w)&B01){if(!AR(w))R zeroionei[BAV(w)[0]]; R cvt(INT,w);}
+ if(AT(w)&B01){if(!AR(w))R zeroionei(BAV(w)[0]); R cvt(INT,w);}
  if(w==ainf)R imax;  // sentence words of _ always use the same block, so catch that too
  I p=-IMAX,q=IMAX;
  RANK2T oqr=jt->ranks; RESETRANK;

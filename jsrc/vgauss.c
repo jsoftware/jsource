@@ -41,7 +41,7 @@ static F1(jtdetr){A z;I c,e,g=1,i,j,k,r,*s;Q d,p,*u,*v,*x;
  for(j=0;j<r;++j){
   v=QAV(w); 
   e=-1; u=v+c*j+j; DO(r-j, if(XDIG(u->n)){e=i+j; break;} u+=c;);  /* find pivot row */
-  if(0>e)R cvt(RAT,num[0]);
+  if(0>e)R cvt(RAT,num(0));
   x=v+c*j;
   if(j!=e){u=v+c*e; DO(c, Q t1=u[i]; u[i]=x[i]; x[i]=t1;); g=-g;}  /* interchange rows e and j */
   i=XDIG(x[j].n); if(i==XPINF||i==XNINF)R mark;

@@ -47,7 +47,7 @@ static F1(jttine){V*v; R w&&jt->tmonad&&(v=FAV(w),CP==v->fgh[0]&&RT==v->fgh[2])?
 static I tvi(A w){A x;I i,z=-1;V*v;
  if(w&&VERB&AT(w)){
   v=FAV(w);
-  if(CQQ==v->id&&num[-1]==v->fgh[1]){
+  if(CQQ==v->id&&num(-1)==v->fgh[1]){
    x=v->fgh[0]; 
    if(!AR(x)&&INT&AT(x)){i=*AV(x)-TC; z=0<=i&&i<NTTAB?i:-1;}
  }}
@@ -62,7 +62,7 @@ static F1(jtswapc){C c;
  R strchr(ctab,c)?w:c==CLT?ds(CGT):c==CGT?ds(CLT):c==CLE?ds(CGE):c==CGE?ds(CLE):swap(w);
 }    /* w~ or equivalent */
 
-TACT(jtvmonad){A fs;TA y,z={num[1],0};V*v;
+TACT(jtvmonad){A fs;TA y,z={num(1),0};V*v;
  y=stack[e]; fs=stack[b].a;
  if(!y.t)df1(z.a,y.a,fs);
  else{
@@ -84,7 +84,7 @@ static I jtdcase(J jt,I xi,V*v){
 /* 4   [: f  t  */
 /* 5   s  f  t  */
 
-TACT(jtvdyad){A fs,sf,xt,yt;B xl,xr,yl,yr;I xi=-1,yi=-1;TA x,y,z={num[1],0};V*u=0,*v=0;
+TACT(jtvdyad){A fs,sf,xt,yt;B xl,xr,yl,yr;I xi=-1,yi=-1;TA x,y,z={num(1),0};V*u=0,*v=0;
  fs=stack[e-1].a; x=stack[b]; y=stack[e]; sf=swapc(fs);
  if(xt=tine(x.t)){xi=tvi(x.t); u=FAV(xt); if(0>xi&&CFORK==u->id){xi=tvi(u->fgh[0]); if(0>xi)xi=tvi(u->fgh[2]);}}
  if(yt=tine(y.t)){yi=tvi(y.t); v=FAV(yt); if(0>yi&&CFORK==v->id){yi=tvi(v->fgh[0]); if(0>yi)yi=tvi(v->fgh[2]);}}
@@ -161,7 +161,7 @@ TACT(jtvis){A ea,et,n,t;I j;TA*u,z={0,0};
  ea=stack[e].a; et=stack[e].t;
  symbisdel(n,ea,jt->locsyms);
  ++jt->ttabi; u->a=t; u->t=et?et:cfn(ea);
- z.a=ea;  z.t=jt->tsubst?qq(sc(TC+j),num[-1]):et;
+ z.a=ea;  z.t=jt->tsubst?qq(sc(TC+j),num(-1)):et;
  R z;
 }
 
@@ -169,7 +169,7 @@ static TACT(jtvmove){A t;TA*u,x,z;
  x=stack[MAX(0,e)];
  if(!(NAME&AT(x.a))||ASGN&AT(stack[b].a))R x;
  z.a=nameref(x.a); z.t=0; t=sfn(0,x.a); u=jt->ttab;
- DO(jt->ttabi, if(equ(t,u->a)){z.t=jt->tsubst&&jt->ttabi0<=i?qq(sc(TC+i),num[-1]):u->t; break;} ++u;);
+ DO(jt->ttabi, if(equ(t,u->a)){z.t=jt->tsubst&&jt->ttabi0<=i?qq(sc(TC+i),num(-1)):u->t; break;} ++u;);
  R z;
 }
 
@@ -229,10 +229,10 @@ F1(jtvtrans){PROLOG(0053);A local,y,z=0;B tmonad,tsubst;I c,i;TA ttab[NTTAB],*tt
   RZ(y=vtokens(w));
   jt->ttab=ttab; jt->ttabi=jt->ttabi0=c;
   RZ(jt->locsyms=stcreate(2,40,0L,0L));  // not necessary to set global pointers
-  IS(mnuvxynam[5],num[1]); if(!jt->tmonad)IS(mnuvxynam[4],num[1]); 
+  IS(mnuvxynam[5],num(1)); if(!jt->tmonad)IS(mnuvxynam[4],num(1)); 
   jt->tsubst=0==i;
   z=tparse(y); RESETERR;
-  if(i&&!z)z=colon(num[4-jt->tmonad],w);
+  if(i&&!z)z=colon(num(4-jt->tmonad),w);
  }
  jt->locsyms=local; jt->tmonad=tmonad; jt->ttab=ttab0; jt->tsubst=tsubst;
  EPILOG(z);

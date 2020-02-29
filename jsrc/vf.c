@@ -23,16 +23,16 @@ F2(jtsetfv){A q=jt->fill;I t;
 F1(jtfiller){A z; RZ(w); GA(z,AT(w),1,0,0); fillv(AT(w),1L,CAV(z)); R z;}
 
 // move n fills of type t to *v
-void jtfillv(J jt,I t,I n,C*v){I k=bpnoun(t);
+void jtfillv(J jt,I t,I n,C*v){I k=bpnoun(t);A afill;
  switch(CTTZ(t)){
  case RATX: mvc(n*k,v,k,&zeroQ); break;
- case XNUMX: mvc(n*k,v,k,&iv0); break;
+ case XNUMX: afill=iv0; mvc(n*k,v,k,&afill); break;
  case B01X: case BITX: case INTX: case FLX: case CMPXX: case XDX: case XZX: case SB01X: case SFLX: case SCMPXX: case SBTX:
   memset(v,C0,k*n); break;
  case LITX: memset(v,' ',n); break;
  case C2TX: {US x=32; mvc(n*k,v,k,&x); break;}
  case C4TX: {C4 x=32; mvc(n*k,v,k,&x); break;}
- default: mvc(n*k,v,k,&mtv);
+ default: afill=mtv; mvc(n*k,v,k,&afill); break;
  }
 }
 
@@ -139,7 +139,7 @@ static F1(jtrevsp){A a,q,x,y,z;I c,f,k,m,n,r,*v,wr;P*wp,*zp;
 F1(jtreverse){A z;C*wv,*zv;I f,k,m,n,nk,r,*v,*ws,wt,wr;
  RZ(w);
  if(SPARSE&AT(w))R revsp(w);
- if(jt->fill)R rotate(num[-1],w);  // rank is set
+ if(jt->fill)R rotate(num(-1),w);  // rank is set
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r;  // no RESETRANK - we don't call any primitive from here on
  if(!(r&&AN(w))){R RETARG(w);}  // no atoms or reversing atoms - keep input unchanged
  wt=AT(w); ws=AS(w); wv=CAV(w);
@@ -275,7 +275,7 @@ F2(jtexpand){A z;B*av;C*wv,*wx,*zv;I an,*au,i,k,p,wc,wk,wn,wt,zn;
  if(!(B01&AT(a)))RZ(a=cvt(B01,a));
  ASSERT(1==AR(a),EVRANK);
  RZ(w=setfv(w,w)); 
- if(!AR(w))R from(a,take(num[-2],w));  // atomic w, use a { _2 {. w
+ if(!AR(w))R from(a,take(num(-2),w));  // atomic w, use a { _2 {. w
  av=BAV(a); an=AN(a); au=(I*)av;
  ASSERT(bsum(an,av)==AS(w)[0],EVLENGTH);  // each item of w must be used exactly once
  wv=CAV(w); wn=AN(w); wc=aii(w); wt=AT(w); k=bpnoun(wt); wk=k*wc; wx=wv+wk*AS(w)[0];  // k=bytes/atom, wk=bytes/item, wx=end+1 of area

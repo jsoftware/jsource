@@ -13,7 +13,7 @@ static REPF(jtrepzdx){A p,q,x;P*wp;
  RZ(a&&w);
  if(SPARSE&AT(w)){wp=PAV(w); x=SPA(wp,e);}
  else x=jt->fill&&AN(jt->fill)?jt->fill:filler(w);
- RZ(p=repeat(ravel(rect(a)),ravel(stitch(IX(wcr?*(wf+AS(w)):1),num[-1]))));
+ RZ(p=repeat(ravel(rect(a)),ravel(stitch(IX(wcr?*(wf+AS(w)):1),num(-1)))));
  RZ(IRS2(w,x,0L,wcr,0L,jtover,q));
  R IRS2(p,q,0L,1L,wcr+!wcr,jtfrom,x);
 }    /* (dense complex) # (dense or sparse) */
@@ -24,7 +24,7 @@ static REPF(jtrepzsx){A q,x,y;I c,d,j,k=-1,m,p=0,*qv,*xv,*yv;P*ap;
  if(!AN(SPA(ap,a)))R repzdx(ravel(x),w,wf,wcr);
  y=SPA(ap,i); yv=AV(y);
  RZ(x=cvt(INT,vec(FL,2*m,AV(x)))); xv=AV(x);
- if(equ(num[0],SPA(ap,e))){
+ if(equ(num(0),SPA(ap,e))){
   k=c=*(wf+AS(w));
   if(!wf&&SPARSE&AT(w)){A a,y;I m,n,q,*v;P*wp;
    wp=PAV(w); a=SPA(wp,a);
@@ -221,7 +221,7 @@ static REPF(jtrep1d){A z;C*wv,*zv;I c,k,m,n,p=0,q,t,*ws,zk,zn;
 static B jtrep1sa(J jt,A a,I*c,I*d){A x;B b;I*v;
  b=1&&AT(a)&CMPX;
  if(b)RZ(x=rect(a)) else x=a; 
- if(AR(a)){ASSERT(equ(num[1],aslash(CSTARDOT,le(zeroionei[0],ravel(x)))),EVDOMAIN); RZ(x=aslash(CPLUS,x));} 
+ if(AR(a)){ASSERT(equ(num(1),aslash(CSTARDOT,le(zeroionei(0),ravel(x)))),EVDOMAIN); RZ(x=aslash(CPLUS,x));} 
  if(!(INT&AT(x)))RZ(x=cvt(INT,x));
  v=AV(x); *c=v[0]; *d=b?v[1]:0;
  ASSERT(0<=*c&&0<=*d,EVDOMAIN);

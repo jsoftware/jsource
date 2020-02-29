@@ -176,7 +176,7 @@ F2(jttsit2){A z;D t;I n;
  R scf(n?t/(n*pf):0);
 }
 
-F1(jttsit1){R tsit2(num[1],w);}
+F1(jttsit1){R tsit2(num(1),w);}
 
 #ifdef _WIN32
 #define sleepms(i) Sleep(i)
@@ -219,7 +219,7 @@ static F1(jtpmfree){A x,y;C*c;I m;PM*v;PM0*u;
         y=v->loc;  if(y&&NAME&AT(y)&&AN(y)==*AS(y))fa(y); ++v;);
   fa(w);
  }
- R num[1];
+ R num(1);
 }    /* free old data area */
 
 F1(jtpmarea1){R pmarea2(vec(B01,2L,&zeroZ),w);}

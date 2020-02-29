@@ -130,7 +130,7 @@ static PSTK* jtpparen(J jt,PSTK *stack){
  R stack+2;  // advance stack pointer to result
 }
 
-static F2(jtisf){RZ(symbis(onm(a),CALL1(jt->pre,w,0L),jt->symb)); R num[0];} 
+static F2(jtisf){RZ(symbis(onm(a),CALL1(jt->pre,w,0L),jt->symb)); R num(0);} 
 
 static PSTK* jtis(J jt,PSTK *stack){B ger=0;C *s;
   A asgblk=stack[1].a; I asgt=AT(asgblk); A v=stack[2].a, n=stack[0].a;  // value and name

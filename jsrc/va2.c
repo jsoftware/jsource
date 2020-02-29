@@ -1126,8 +1126,8 @@ static A jtsumatgbool(J jt,A a,A w,C id){A t,z;B* RESTRICTI av,* RESTRICTI wv;I 
 DF2(jtfslashatg){A fs,gs,y,z;B b,sb=0;C*av,c,d,*wv;I ak,an,ar,*as,at,m,
      n,nn,r,rs,*s,t,wk,wn,wr,*ws,wt,yt,zn,zt;VA2 adocv,adocvf;
  RZ(a&&w&&self);
- an=AN(a); ar=AR(a); as=AS(a); at=an?AT(a):B01;
- wn=AN(w); wr=AR(w); ws=AS(w); wt=wn?AT(w):B01;
+ an=AN(a); ar=AR(a); as=AS(a); at=AT(a); at=an?at:B01;
+ wn=AN(w); wr=AR(w); ws=AS(w); wt=AT(w); wt=wn?wt:B01;
  b=ar<=wr; r=b?wr:ar; rs=b?ar:wr; s=b?ws:as; nn=r?s[0]:1;  // b='w has higher rank'; r=higher rank rs=lower rank s->longer shape  nn=#items in longer-shape arg
  ASSERTAGREE(as,ws,MIN(ar,wr));
  {I isfork=CFORK==FAV(self)->id; fs=FAV(self)->fgh[0+isfork]; gs=FAV(self)->fgh[1+isfork];}   // b=0 if @:, 1 if fork; take fs,gs accordingly
@@ -1225,17 +1225,17 @@ DF2(jtresidue){F2PREFIP; RZ(a&&w); I intmod; if(!((AT(a)|AT(w))&(NOUN&~INT)|AR(a
 #define IPSHIFTWA (jt = (J)(intptr_t)(((I)jt+JTINPLACEW)&-JTINPLACEA))
 
 // We use the right type of singleton so that we engage AVX loops
-#define SETCONPTR A* conptr=num; conptr=AT(w)&INT?zeroionei:conptr; conptr=AT(w)&FL?numvr:conptr;  // for 0 or 1 only
-#define SETCONPTR2 A* conptr=num; conptr=AT(w)&FL?numvr:conptr;   // used for 2, when the only options are INT/FL
+#define SETCONPTR(n) A conptr=num(n); A conptr2=zeroionei(n); A conptr3=numvr(n); conptr=AT(w)&INT?conptr2:conptr; conptr=AT(w)&FL?conptr3:conptr;  // for 0 or 1 only
+#define SETCONPTR2(n) A conptr=num(n); A conptr3=numvr(n); conptr=AT(w)&FL?conptr3:conptr;   // used for 2, when the only options are INT/FL
 
-F1(jtnot   ){RZ(w); SETCONPTR R AT(w)&B01+SB01?eq(num[0],w):minus(conptr[1],w);}
-F1(jtnegate){RZ(w); SETCONPTR R minus(conptr[0],w);}
-F1(jtdecrem){RZ(w); SETCONPTR IPSHIFTWA; R minus(w,conptr[1]);}
-F1(jtincrem){RZ(w); SETCONPTR R plus(conptr[1],w);}
-F1(jtduble ){RZ(w); SETCONPTR2 R tymes(conptr[2],w);}
+F1(jtnot   ){RZ(w); SETCONPTR(1) R AT(w)&B01+SB01?eq(num(0),w):minus(conptr,w);}
+F1(jtnegate){RZ(w); SETCONPTR(0) R minus(conptr,w);}
+F1(jtdecrem){RZ(w); SETCONPTR(1) IPSHIFTWA; R minus(w,conptr);}
+F1(jtincrem){RZ(w); SETCONPTR(1) R plus(conptr,w);}
+F1(jtduble ){RZ(w); SETCONPTR2(2) R tymes(conptr,w);}
 F1(jtsquare){RZ(w); R tymes(w,w);}   // leave inplaceable in w only  ?? never inplaces
-F1(jtrecip ){RZ(w); SETCONPTR R divide(conptr[1],w);}
-F1(jthalve ){RZ(w); if(!(AT(w)&XNUM+RAT))R tymes(onehalf,w); IPSHIFTWA; R divide(w,num[2]);} 
+F1(jtrecip ){RZ(w); SETCONPTR(1) R divide(conptr,w);}
+F1(jthalve ){RZ(w); if(!(AT(w)&XNUM+RAT))R tymes(onehalf,w); IPSHIFTWA; R divide(w,num(2));} 
 
 static AHDR2(zeroF,B,void,void){memset(z,C0,m*(n^REPSGN(n)));}
 static AHDR2(oneF,B,void,void){memset(z,C1,m*(n^REPSGN(n)));}

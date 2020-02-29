@@ -511,7 +511,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define DQUC(n,stm)      {I i=-2-(I)(n);  do{stm}while(--i>=0);}  // i runs from n-1 downto 0, always at least once
 #define ds(c)            (A)&primtab[(UC)(c)]
 // see if value of x is the atom v.  Do INT/B01/FL here, subroutine for exotic cases
-#define EQINTATOM(x,v)  ( (AR(x)==0) && ((AT(x)&(INT+B01)) ? (((*IAV0(x))&(((AT(x)&B01)<<8)-1))==(v)) : (AT(x)&FL) ? *DAV0(x)==(D)(v) : 0!=equ(num[v],x))  )
+#define EQINTATOM(x,v)  ( (AR(x)==0) && ((AT(x)&(INT+B01)) ? (((*IAV0(x))&(((AT(x)&B01)<<8)-1))==(v)) : (AT(x)&FL) ? *DAV0(x)==(D)(v) : 0!=equ(num(v),x))  )
 #if USECSTACK
 #define FDEPDEC(d)
 #define FDEPINC(d)

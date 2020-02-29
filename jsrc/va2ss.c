@@ -375,7 +375,7 @@ A jtssingleton(J jt, A a,A w,A self,RANK2T awr,RANK2T ranks){A z;
  compareresult:
  ziv&=1;  // Since we are writing into num[], invest 1 instruction to make sure we don't have an invalid boolean
  // If we did not inplace a result block, return num[ziv].  To avoid a misbranch, we store the value and type into num[], which is OK since they never change what's there already
- aiv=(I)(num[ziv]); z=z?z:(A)aiv;
+ aiv=(I)(num(ziv)); z=z?z:(A)aiv;
  SSSTORE((B)ziv,z,B01,B) R z;
 
  circleresult: ;

@@ -278,7 +278,7 @@ tblockcase:
    if(ci->canend&2)tpop(old);else z=gc(z,old);   // 2 means previous B can't be the result
    parseline(t);
    // Check for assert.  Since this is only for T-blocks we tolerate the test (rather than duplicating code)
-   if(ci->type==CASSERT&&jt->assert&&t&&!(NOUN&AT(t)&&all1(eq(num[1],t))))t=pee(line,ci,EVASSERT,gsfctdl<<(BW-2),callframe);  // if assert., signal post-execution error if result not all 1s.  May go into debug; sets to result after debug
+   if(ci->type==CASSERT&&jt->assert&&t&&!(NOUN&AT(t)&&all1(eq(num(1),t))))t=pee(line,ci,EVASSERT,gsfctdl<<(BW-2),callframe);  // if assert., signal post-execution error if result not all 1s.  May go into debug; sets to result after debug
    if(t){ti=i,++i;  // if no error, continue on
     if((UI)i<(UI)n&&!(((cwtype=(ci=i+cw)->type)^CDO)+jt->cxspecials))goto docase;  // avoid indirect-branch overhead on the likely case
    }else if((gsfctdl&16)&&DB1&jt->uflags.us.cx.cx_c.db)ti=i,i=debugnewi(i+1,thisframe,self);  // if coming out of debug with error: go to new line (there had better be one)
@@ -603,7 +603,7 @@ static B jtsent12c(J jt,A w,A*m,A*d){C*p,*q,*r,*s,*x;A z;
   while(CLF!=*x++);
  }
  if(x==s)q=r=s;
- A zc=cut(ds(CBOX),num[-2]);
+ A zc=cut(ds(CBOX),num(-2));
  *m=df1(z,str(q-p,p),zc);
  *d=df1(z,str(s-r,r),zc);
  R *m&&*d;
@@ -803,7 +803,7 @@ F2(jtcolon){A d,h,*hv,m;B b;C*s;I flag=VFLAGNONE,n,p;
   R fdef(0,CCOLON,VERB,xv1,xv2,a,w,0L,((FAV(a)->flag&FAV(w)->flag)&VASGSAFE),mr(a),lr(w),rr(w));  // derived verb is ASGSAFE if both parents are 
  }
  RE(n=i0(a));  // m : n; set n=type of result
- if(equ(w,num[0])){RZ(w=colon0(mark)); if(!n)R w;}
+ if(equ(w,num(0))){RZ(w=colon0(mark)); if(!n)R w;}
  if((C2T+C4T)&AT(w))RZ(w=cvt(LIT,w));
  if(10<n){s=CAV(w); p=AN(w); if(p&&CLF==s[p-1])RZ(w=str(p-1,s));}
  else{
@@ -836,10 +836,10 @@ F2(jtcolon){A d,h,*hv,m;B b;C*s;I flag=VFLAGNONE,n,p;
  }
 
  switch(n){
-  case 1:  R fdef(0,CCOLON, ADV,  b?xop1:xadv,0L,    num[n],0L,h, flag, RMAX,RMAX,RMAX);
-  case 2:  R fdef(0,CCOLON, CONJ, 0L,b?jtxop2:jtxdefn, num[n],0L,h, flag, RMAX,RMAX,RMAX);
-  case 3:  R fdef(0,CCOLON, VERB, xn1,jtxdefn,       num[n],0L,h, flag, RMAX,RMAX,RMAX);
-  case 4:  R fdef(0,CCOLON, VERB, xn1,jtxdefn,       num[n],0L,h, flag, RMAX,RMAX,RMAX);
+  case 1:  R fdef(0,CCOLON, ADV,  b?xop1:xadv,0L,    num(n),0L,h, flag, RMAX,RMAX,RMAX);
+  case 2:  R fdef(0,CCOLON, CONJ, 0L,b?jtxop2:jtxdefn, num(n),0L,h, flag, RMAX,RMAX,RMAX);
+  case 3:  R fdef(0,CCOLON, VERB, xn1,jtxdefn,       num(n),0L,h, flag, RMAX,RMAX,RMAX);
+  case 4:  R fdef(0,CCOLON, VERB, xn1,jtxdefn,       num(n),0L,h, flag, RMAX,RMAX,RMAX);
   case 13: R vtrans(w);
   default: ASSERT(0,EVDOMAIN);
 }}

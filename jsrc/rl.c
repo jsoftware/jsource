@@ -170,15 +170,15 @@ static F1(jtlnum){A b,d,t,*v,y;B p;I n;
  n=AN(w);
  if(7<n||1<n&&1<AR(w)){
   // see if we can use a clever encoding
-  d=minus(from(num[1],t),b=from(num[0],t));
+  d=minus(from(num(1),t),b=from(num(0),t));
   p=equ(t,plus(b,tymes(d,IX(n))));
   if(p){
-   if(equ(d,num[0]))R over(lsh(w),lnum1(b));
+   if(equ(d,num(0)))R over(lsh(w),lnum1(b));
    GAT0(y,BOX,6,1); v=AAV(y); v[0]=v[1]=v[2]=v[3]=mtv;
-   if(p=!(equ(b,sc(n-1))&&equ(d,num[-1]))){
-    if     (!equ(b,num[0]   )){v[0]=lnum1(b); v[1]=spellout(CPLUS);}
-    if     ( equ(d,num[-1])) v[1]=spellout(CMINUS);
-    else if(!equ(d,num[1]    )){v[2]=lnum1(d); v[3]=spellout(CSTAR);}
+   if(p=!(equ(b,sc(n-1))&&equ(d,num(-1)))){
+    if     (!equ(b,num(0)   )){v[0]=lnum1(b); v[1]=spellout(CPLUS);}
+    if     ( equ(d,num(-1))) v[1]=spellout(CMINUS);
+    else if(!equ(d,num(1)    )){v[2]=lnum1(d); v[3]=spellout(CSTAR);}
    }
    v[4]=spellout(CIOTA); v[5]=thorn1(p?shape(w):negate(shape(w)));
    RE(y); R raze(y);
@@ -242,10 +242,10 @@ static F1(jtlnoun){I t;
  if(!AN(w))R lnoun0(w);
  switch(CTTZ(t)){
   case LITX: R lchar(w);
-  case C2TX: R over(cstr("u: "),lnum(uco2(num[3],w)));
-  case C4TX: R over(cstr("10&u: "),lnum(uco2(num[3],w)));
+  case C2TX: R over(cstr("u: "),lnum(uco2(num(3),w)));
+  case C4TX: R over(cstr("10&u: "),lnum(uco2(num(3),w)));
   case BOXX: R lbox(w);
-  case SBTX: R over(cstr("s: "),lbox(sb2(num[5],w)));
+  case SBTX: R over(cstr("s: "),lbox(sb2(num(5),w)));
   default:  R lnum(w);
 }}
 
@@ -303,7 +303,7 @@ static F2(jtlinsert){A*av,f,g,h,t,t0,t1,t2,*u,y;B b,ft,gt,ht;C c,id;I n;V*v;
 }}
 
 static F1(jtlcolon){A*v,x,y;C*s,*s0;I m,n;
- RZ(y=unparsem(num[1],w));
+ RZ(y=unparsem(num(1),w));
  n=AN(y); v=AAV(y); RZ(x=lrr(VAV(w)->fgh[0]));
  if(2>n||2==n&&1==AN(v[0])&&':'==*CAV(v[0])){
   if(!n)R over(x,str(5L," : \'\'"));

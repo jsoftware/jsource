@@ -1180,7 +1180,7 @@ F1(jtcderx){I t;C buf[1024];
 F1(jtmema){I k; RE(k=i0(w)); R sc((I)MALLOC(k));} /* ce */
      /* 15!:3  memory allocate */
 
-F1(jtmemf){I k; RE(k=i0(w)); FREE((void*)k); R num[0];}
+F1(jtmemf){I k; RE(k=i0(w)); FREE((void*)k); R num(0);}
      /* 15!:4  memory free */
 
 F1(jtmemr){C*u;I m,n,t,*v;US*us;C4*c4;
@@ -1237,7 +1237,7 @@ F2(jtmemu2) { RETF(ca(w)); }  // dyad - force copy willy-nilly
 F1(jtgh15){A z;I k; RE(k=i0(w)); RZ(z=gah(k,0L)); ACINCR(z); R sc((I)z);}
      /* 15!:8  get header */
 
-F1(jtfh15){I k; RE(k=i0(w)); fh((A)k); R num[0];}
+F1(jtfh15){I k; RE(k=i0(w)); fh((A)k); R num(0);}
      /* 15!:9  free header */
 
 F1(jtdllsymset){RZ(w); R (A)i0(w);}      /* do some validation here */
@@ -1380,7 +1380,7 @@ F1(jtcdlibl){
  ASSERT(LIT&AT(w),EVDOMAIN);
  ASSERT(1>=AR(w),EVRANK);
  ASSERT(AN(w),EVLENGTH);
- if(!jt->cdarg)R num[0];
+ if(!jt->cdarg)R num(0);
  R sc((I)cdlookupl(CAV(w)));
 }    /* 15!:20 return library handle */
 

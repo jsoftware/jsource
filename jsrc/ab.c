@@ -88,7 +88,7 @@ BITWISE(jtbitwiserotate,UI,BWROT   )
 BITWISE(jtbitwiseshift, UI,BWSHIFT )
 BITWISE(jtbitwiseshifta,I, BWSHIFTA)
 
-DF1(jtbitwise1){R CALL2(FAV(self)->valencefns[1],zeroionei[0],w,self);}   // inplaceable - don't touch jt
+DF1(jtbitwise1){R CALL2(FAV(self)->valencefns[1],zeroionei(0),w,self);}   // inplaceable - don't touch jt
 
 
 static AHDR2FN* bwC[16]={(AHDR2FN*)bw0000CC,(AHDR2FN*)bw0001CC,(AHDR2FN*)bw0010CC,(AHDR2FN*)bw0011CC, (AHDR2FN*)bw0100CC,(AHDR2FN*)bw0101CC,(AHDR2FN*)bw0110CC,(AHDR2FN*)bw0111CC,

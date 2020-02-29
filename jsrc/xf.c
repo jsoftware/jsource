@@ -238,10 +238,10 @@ F1(jtjmkdir){A y,z;
  ASSERT(AT(w)&BOX,EVDOMAIN);
  RZ(y=str0(vslit(AAV0(w))));
 #if (SYS & SYS_UNIX)
- R mkdir(CAV(y),0775)?jerrno():num[1];
+ R mkdir(CAV(y),0775)?jerrno():num(1);
 #else
  RZ(z=toutf16x(y)); USAV(z)[AN(z)]=0;  // install termination
- R _wmkdir(USAV(z))?jerrno():num[1];
+ R _wmkdir(USAV(z))?jerrno():num(1);
 #endif
 }
 
@@ -251,15 +251,15 @@ F1(jtjferase){A y,fn;US*s;I h;
  if(h) {RZ(y=str0(fname(sc(h))))} else ASSERT(y=vslit(AAV0(w)),EVFNUM);
  if(h)RZ(jclose(sc(h)));
 #if (SYS&SYS_UNIX)
- A y0=str0(y); R !unlink(CAV(y0))||!rmdir(CAV(y0))?num[1]:jerrno();
+ A y0=str0(y); R !unlink(CAV(y0))||!rmdir(CAV(y0))?num(1):jerrno();
 #else
  RZ(fn=toutf16x(y)); USAV(fn)[AN(fn)]=0;  // install termination
  s=USAV(fn);
 // #if SY_WIN32 && !SY_WINCE
 #if 0
- R !_wunlink(s)||!_wrmdir(s)||!rmdir2(jt, (wchar_t*)s)?num[1]:jerrno();
+ R !_wunlink(s)||!_wrmdir(s)||!rmdir2(jt, (wchar_t*)s)?num(1):jerrno();
 #else
- R !_wunlink(s)||!_wrmdir(s)?num[1]:jerrno();
+ R !_wunlink(s)||!_wrmdir(s)?num(1):jerrno();
 #endif
 #endif
 }    /* erase file or directory */
@@ -299,20 +299,20 @@ F1(jtjgetenv){
 #if (SYS & SYS_UNIX)
  {
   C*s;
-  R(s=getenv(CAV(toutf8x(w))))?cstr(s):num[0]; // toutf8x has trailing nul
+  R(s=getenv(CAV(toutf8x(w))))?cstr(s):num(0); // toutf8x has trailing nul
  }
 #else
  {
   A z; US* us;
   RZ(z=toutf16x(toutf8(w))); USAV(z)[AN(z)]=0;  // install termination
   us=_wgetenv(USAV(z));
-  if(!us)R num[0];
+  if(!us)R num(0);
   GATV0(z,C2T,wcslen(us),1);
   MC(USAV(z),us,2*wcslen(us));
   R toutf8(z);
  }
 #endif
- R num[0];
+ R num(0);
 }
 
 F1(jtjgetpid){

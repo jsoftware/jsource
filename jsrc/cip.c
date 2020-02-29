@@ -396,7 +396,7 @@ static I cachedmmultx(J jt,D* av,D* wv,D* zv,I m,I n,I pnom,I pstored,I flgs){D 
       /*if((a3rem|a3rem-1)<1)scaf to disable*/if(!(flgs&FLGZFIRST)){
 #define ACCZ(r,c) z##r##c=_mm256_load_pd(zilblock+NPAR*(2*r+c));
         ACCZ(0,0); ACCZ(0,1); ACCZ(1,0); ACCZ(1,1); ACCZ(2,0); ACCZ(2,1); ACCZ(3,0); ACCZ(3,1);
-      }else z31 = z30 = z21 = z20 = z11 = z10 = z01 = z00 = _mm256_setzero_pd();  // scaf use xor
+      }else z31 = z30 = z21 = z20 = z11 = z10 = z01 = z00 = _mm256_setzero_pd();
 
 // we might want to prefetch a anyway in case a row is a multiple of a cache line
 #if 0   // needed if a gets bigger than L2.  Since we don't allow m to exceed 512, a cannot exceed m*CACHEHEIGHT Ds which fits in L2.  z similarly
@@ -719,8 +719,8 @@ I cachedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){D c[(CACHEHEIGHT+1)*CAC
 F2(jtpdt){PROLOG(0038);A z;I ar,at,i,m,n,p,p1,t,wr,wt;
  RZ(a&&w);
  // ?r = rank, ?t = type (but set Boolean type for an empty argument)
- ar=AR(a); at=AN(a)?AT(a):B01;
- wr=AR(w); wt=AN(w)?AT(w):B01;
+ ar=AR(a); at=AT(a); at=AN(a)?at:B01;
+ wr=AR(w); wt=AT(w); wt=AN(w)?wt:B01;
  if((at|wt)&SPARSE)R pdtsp(a,w);  // Transfer to sparse code if either arg sparse
  if((at|wt)&XNUM+RAT)R df2(z,a,w,atop(slash(ds(CPLUS)),qq(ds(CSTAR),v2(1L,AR(w)))));  // On indirect numeric, execute as +/@(*"(1,(wr)))
  if(B01&(at|wt)&&TYPESNE(at,wt)&&((ar-1)|(wr-1)|(AN(a)-1)|(AN(w)-1))>=0)R pdtby(a,w);   // If exactly one arg is boolean, handle separately
@@ -1033,12 +1033,12 @@ static A jtipbx(J jt,A a,A w,C c,C d){A g=0,x0,x1,z;B*av,*av0,b,*v0,*v1,*zv;C c0
   case CGE:                             c0=IPBXNW; c1=IPBX1;  break;
   case CPLUSCO:                         c0=IPBXNW; c1=IPBX0;  break;
   case CSTARCO:                         c0=IPBX1;  c1=IPBXNW; break;
-  default: c0=c1=-1; g=ds(d); RZ(df2(x0,num[0],w,g)); RZ(df2(x1,num[0],w,g)); break;
+  default: c0=c1=-1; g=ds(d); RZ(df2(x0,num(0),w,g)); RZ(df2(x1,num(0),w,g)); break;
  }
  // Set up x0 to be the argument to use for y if the atom of x is 0: 0, 1, y, -.y
  // Set up x1 to be the arg if xatom is 1
- if(!g)RZ(x0=c0==IPBX0?reshape(sc(n),num[0]):c0==IPBX1?reshape(sc(c==CNE?AN(w):n),num[1]):c0==IPBXW?w:not(w));
- if(!g)RZ(x1=c1==IPBX0?reshape(sc(n),num[0]):c1==IPBX1?reshape(sc(c==CNE?AN(w):n),num[1]):c1==IPBXW?w:not(w));
+ if(!g)RZ(x0=c0==IPBX0?reshape(sc(n),num(0)):c0==IPBX1?reshape(sc(c==CNE?AN(w):n),num(1)):c0==IPBXW?w:not(w));
+ if(!g)RZ(x1=c1==IPBX0?reshape(sc(n),num(0)):c1==IPBX1?reshape(sc(c==CNE?AN(w):n),num(1)):c1==IPBXW?w:not(w));
  // av->a arg, zv->result, v0->input for 0, v1->input for 1
  av0=BAV(a); zv=BAV(z); v0=BAV(x0); v1=BAV(x1);
 
@@ -1083,7 +1083,7 @@ static DF2(jtdotprod){A fs,gs;C c,d;I r;V*sv;
 
 static F1(jtminors){A d,z;
  RZ(d=apvwr(3L,-1L,1L)); *AV(d)=0;
- R drop(d,df2(z,num[1],w,bsdot(ds(CLEFT))));  // 0 0 1 }. 1 [\. w 
+ R drop(d,df2(z,num(1),w,bsdot(ds(CLEFT))));  // 0 0 1 }. 1 [\. w 
 }
 
 static DF1(jtdet){DECLFG;A h=sv->fgh[2];I c,r,*s;

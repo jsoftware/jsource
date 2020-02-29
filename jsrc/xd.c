@@ -244,7 +244,7 @@ F2(jtjfatt2){A y,fn;F f;U x;
  RE(x=attu(a));
  RE(f=stdf(w)); if(f){RZ(y=fname(sc((I)f)))} else ASSERT(y=vslit(AAV0(w)),EVFNUM)
  RZ(fn=toutf16x(y)); USAV(fn)[AN(fn)]=0;  // install termination
- if(SetFileAttributesW(USAV(fn), x)) R num[1];
+ if(SetFileAttributesW(USAV(fn), x)) R num(1);
  jsignal(EVFNAME); R 0;
 }
 

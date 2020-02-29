@@ -473,13 +473,13 @@ F2(jtintdiv){A z;B b,flr;I an,ar,*as,*av,c,d,j,k,m,n,p,p1,r,*s,wn,wr,*ws,*wv,*zv
 }    /* <.@% or >.@% on integers */
 
 
-static F2(jtweight){RZ(a&&w); A z; R df1(z,behead(over(AR(w)?w:reshape(a,w),num[1])),bsdot(slash(ds(CSTAR))));}  // */\. }. (({:$a)$w),1
+static F2(jtweight){RZ(a&&w); A z; R df1(z,behead(over(AR(w)?w:reshape(a,w),num(1))),bsdot(slash(ds(CSTAR))));}  // */\. }. (({:$a)$w),1
 
 F1(jtbase1){A z;B*v;I c,m,n,p,r,*s,t,*x;
  RZ(w);
  n=AN(w); t=AT(w); r=AR(w); s=AS(w); c=AS(w)[r-1]; c=r?c:1;
  ASSERT(t&DENSE,EVNONCE);
- if(((c-BW)&SGNIF(t,B01X))>=0)R pdt(w,weight(sc(c),t&RAT+XNUM?cvt(XNUM,num[2]):num[2]));  // 
+ if(((c-BW)&SGNIF(t,B01X))>=0)R pdt(w,weight(sc(c),t&RAT+XNUM?cvt(XNUM,num(2)):num(2)));  // 
  CPROD1(n,m,r-1,s);
  GATV(z,INT,m,r?r-1:0,s); x=AV(z); v=BAV(w);
  if(c)DQ(m, p=0; DQ(c, p=2*p+*v++;); *x++=p;)
@@ -505,19 +505,19 @@ F1(jtabase1){A d,z;B*zv;I c,n,p,r,t,*v;UI x;
  ASSERT(t&DENSE,EVNONCE);
  // Result has rank one more than the input.  If there are no atoms,
  // return (($w),0)($,)w; if Boolean, return (($w),1)($,)w
- if((-n&SGNIFNOT(t,B01X))>=0)R reshape(over(shape(w),num[n!=0]),w);
+ if((-n&SGNIFNOT(t,B01X))>=0)R reshape(over(shape(w),num(n!=0)),w);
  if(!(t&INT)){
   // Not integer.  Calculate # digits-1 as d = 2 <.@^. >./ | , w  
-  df2(d,num[2],maximum(zeroionei[1],aslash(CMAX,mag(ravel(w)))),atop(ds(CFLOOR),ds(CLOG)));
+  df2(d,num(2),maximum(zeroionei(1),aslash(CMAX,mag(ravel(w)))),atop(ds(CFLOOR),ds(CLOG)));
   // Calculate z = ((1+d)$2) #: w
-  RZ(z=abase2(reshape(increm(d),num[2]),w));
+  RZ(z=abase2(reshape(increm(d),num(2)),w));
   // If not float, result is exact or complex; either way, keep it
   if(!(t&FL))R z;
   // If float, see if we had one digit too many (could happen, if the log was too close to an integer)
   // calculate that as (0 = >./ ({."1 z)).  If so, return }."1 z ,  otherwise z
   // But we can't delete a digit if any of the values were negative - all are significant then
   // We also can't delete a digit if there is only 1 digit in the numbers
-  if(AS(z)[AR(z)-1]<=1 || i0(aslash(CPLUSDOT,ravel(lt(w,zeroionei[0])))))R z;
+  if(AS(z)[AR(z)-1]<=1 || i0(aslash(CPLUSDOT,ravel(lt(w,zeroionei(0))))))R z;
   if(0==i0(aslash(CMAX,ravel(IRS1(z,0L,1L,jthead,d)))))R IRS1(z,0L,1L,jtbehead,d);
   RETF(z);
  }

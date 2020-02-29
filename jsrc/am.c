@@ -244,7 +244,7 @@ A jtcelloffset(J jt,AD * RESTRICT w,AD * RESTRICT ind){A z;
 // Result *cellframelen gives the number of axes of w that have been boiled down to indices in the result
 static A jtjstd(J jt,A w,A ind,I *cellframelen){A j=0,k,*v,x;I b;I d,i,n,r,*u,wr,*ws;D rkblk[16];
  wr=AR(w); ws=AS(w); b=-AN(ind)&SGNIF(AT(ind),BOXX);  // b<0 = indexes are boxed and nonempty
- if(!wr){x=from(ind,zeroionei[0]); *cellframelen=0; R x;}  // if w is an atom, the best you can get is indexes of 0.  No axes are used
+ if(!wr){x=from(ind,zeroionei(0)); *cellframelen=0; R x;}  // if w is an atom, the best you can get is indexes of 0.  No axes are used
  if((b&-AR(ind))<0){   // array of boxed indexes
   RE(aindex(ind,w,0L,&j));  // see if the boxes are homogeneous
   if(!j){  // if not...
@@ -268,7 +268,7 @@ static A jtjstd(J jt,A w,A ind,I *cellframelen){A j=0,k,*v,x;I b;I d,i,n,r,*u,wr
   ASSERT(1>=r,EVINDEX);  // not a table
   ASSERT(n<=wr,EVINDEX);  // not too many axes
   DQ(n, if(!equ(ds(CACE),v[i]))break; --n;);  // discard trailing (boxed) empty axes
-  j=zeroionei[0];  // init list to a single 0 offset
+  j=zeroionei(0);  // init list to a single 0 offset
   for(i=0;i<n;++i){  // for each axis, grow the cartesian product of the specified offsets
    x=v[i]; d=ws[i];
    if((-AN(x)&SGNIF(AT(x),BOXX))<0){   // notempty and boxed

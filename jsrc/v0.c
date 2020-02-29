@@ -55,10 +55,10 @@ static F2(jtcfrz){A z;B b=0,p;I j,n;Z c,d,*t,*u,*v;
 static F1(jtcfr){A c,r,*wv;I t;
  ASSERT((-AR(w)&-(AN(w)^2))>=0,EVLENGTH);
  wv=AAV(w); 
- if(AR(w)){c=wv[0]; r=wv[1];}else{c=num[1]; r=wv[0];}
+ if(AR(w)){c=wv[0]; r=wv[1];}else{c=num(1); r=wv[0];}
  ASSERT(((AR(c)-1)&(AR(r)-2))<0,EVRANK);
  ASSERT((-(NUMERIC&AT(c))&((AN(r)-1)|-(NUMERIC&AT(r))))<0,EVDOMAIN);
- t=AN(r)?AT(r):B01; if(t&B01+INT)t=XNUM; t=maxtyped(t,AT(c));
+ t=AT(r); t=AN(r)?t:B01; if(t&B01+INT)t=XNUM; t=maxtyped(t,AT(c));
  if(TYPESNE(t,AT(c)))RZ(c=cvt(t,c));
  if(TYPESNE(t,AT(r)))RZ(r=cvt(t,r));
  AF tf; tf=(AF)jtcfrd; tf=t&CMPX?(AF)jtcfrz:tf; tf=t&XNUM?(AF)jtcfrx:tf; tf=t&RAT?(AF)jtcfrq:tf;
@@ -226,13 +226,13 @@ static F1(jtrfc){A r,w1;I m=0,n,t;
  n=AN(w); t=AT(w);  // n=#coeffs, t=type
  if(n){
   ASSERT(t&(DENSE&NUMERIC),EVDOMAIN);  // coeffs must be dense numeric
-  RZ(r=jico2(ne(w,num[0]),num[1])); m=AV(r)[0]; m=(m==n)?0:m;  // r=block for index of last nonzero; m=degree of polynomial (but 0 if all zeros)
-  ASSERT(m||equ(num[0],head(w)),EVDOMAIN);  // error if unsolvable constant polynomial
+  RZ(r=jico2(ne(w,num(0)),num(1))); m=AV(r)[0]; m=(m==n)?0:m;  // r=block for index of last nonzero; m=degree of polynomial (but 0 if all zeros)
+  ASSERT(m||equ(num(0),head(w)),EVDOMAIN);  // error if unsolvable constant polynomial
  }
  // switch based on degree of polynomial
  switch(m){
-  case 0:  R link(num[0],mtv);  // degree 0 - return 0;''
-  case 1:  r=ravel(negate(aslash(CDIV,take(num[2],w)))); break;  // linear - return solution, whatever its type
+  case 0:  R link(num(0),mtv);  // degree 0 - return 0;''
+  case 1:  r=ravel(negate(aslash(CDIV,take(num(2),w)))); break;  // linear - return solution, whatever its type
   default: if(t&CMPX)r=rfcz(m,w);  // higher order - if complex, go straight to complex solutions
            else{RZ(rfcq(m,w,&r,&w1)); if(m>AN(r))r=over(r,rfcz(m-AN(r),w1));} // otherwise, find rational solutions in r, and residual polynomial in w1.
             // if there are residual (complex) solutions, go find them
@@ -254,7 +254,7 @@ F1(jtpoly1){A c,e,x;
  ASSERT(2==*(1+AS(x)),EVLENGTH);
  RZ(IRS1(x,0L,1L,jthead,c));  // c = {."1>y = list of coefficients
  RZ(IRS1(x,0L,1L,jttail,e));  // e = {:"1>y = list of exponents
- ASSERT(equ(e,floor1(e))&&all1(le(num[0],e)),EVDOMAIN);  // insist on nonnegative integral exponents
+ ASSERT(equ(e,floor1(e))&&all1(le(num(0),e)),EVDOMAIN);  // insist on nonnegative integral exponents
  R evc(c,e,"x y}(1+>./y)$0");  // evaluate c 2 : 'x y}(1+>./y)$0' e
 }
 
@@ -299,10 +299,10 @@ F2(jtpoly2){F2PREFIP;A c,za;I b;D*ad,d,p,*x,u,*z;I an,at,j,t,n,wt;Z*az,e,q,*wz,y
  ASSERT(!(at&SPARSE),EVNONCE);  // sparse polynomial not supported
  ASSERT((-an&((at&NUMERIC+BOX)-1))>=0,EVDOMAIN);
  ASSERT((-n&((wt&NUMERIC+BOX)-1))>=0,EVDOMAIN);
- if(!an)R reshape(shape(w),num[0]);  // if empty a, return all 0s
+ if(!an)R reshape(shape(w),num(0));  // if empty a, return all 0s
  if(b){A*av=AAV(a); 
   ASSERT(2>=an,EVLENGTH);
-  c=1==an?num[1]:av[0]; a=av[1!=an]; // c=mplr, a=roots
+  c=1==an?num(1):av[0]; a=av[1!=an]; // c=mplr, a=roots
   if((an^1)+(AR(a)^2)==0)R poly2a(a,w);  // if coeff is 1 and exponent-list is a table, go do multinomial
   an=AN(a); at=AT(a);
   ASSERT(NUMERIC&(at|AT(c)),EVDOMAIN);

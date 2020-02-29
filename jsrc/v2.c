@@ -233,7 +233,7 @@ static F1(jtxprimetest){A z;B*b,rat;I d,j,q,n,*pv,*v,wn,wt,*yv;X r,*wv,x,xmaxint
 static F1(jtprimetest){A x;I t;
  RZ(w);
  t=AT(w);
- if((UI)SGNIF(t,B01X)>=(UI)AN(w))R reshape(shape(w),num[0]);  // AN is 0, or t is boolean
+ if((UI)SGNIF(t,B01X)>=(UI)AN(w))R reshape(shape(w),num(0));  // AN is 0, or t is boolean
  switch(CTTZ(t)){
   default:             ASSERT(0,EVDOMAIN);
   case INTX:            R iprimetest(w);
@@ -247,7 +247,7 @@ static F1(jtprimetest){A x;I t;
 static F1(jtnextprime){A b,fs,x,y;B*bv;I k,n,*xv,*yv;X*wv;
  RZ(w);
  n=AN(w);
- if((UI)SGNIF(AT(w),B01X)>=(UI)AN(w))R reshape(shape(w),num[2]);
+ if((UI)SGNIF(AT(w),B01X)>=(UI)AN(w))R reshape(shape(w),num(2));
  ASSERT(NUMERIC&AT(w),EVDOMAIN);
  RZ(fs=eval("2&+^:(0&p:)^:_"));
  GATV(x,INT,n,AR(w),AS(w)); xv=AV(x);
@@ -373,15 +373,15 @@ static A jtqco2x(J jt,I m,A w){A y;I c,*dv,i,*pv,*yv;X d,q,r,x;
 
 F2(jtqco2){A q,y,z;B b,bb,xt;I c,j,k,m,*qv,wn,wr,*yv,*zv;
  RZ(a&&w);
- wn=AN(w); wr=AR(w); b=all1(lt(a,zeroionei[0])); xt=1&&AT(w)&XNUM+RAT;
+ wn=AN(w); wr=AR(w); b=all1(lt(a,zeroionei(0))); xt=1&&AT(w)&XNUM+RAT;
  if(AR(a)||wr&&(b||xt))R rank2ex0(a,w,0L,jtqco2);
  if(!b&&xt){RE(m=i0(vib(a))); if(BETWEENO(m,0,1229))R qco2x(m,w);}  /* 1229=p:^:_1 XBASE */
  RZ(q=factor(w)); qv=AV(q);
  if(b)RZ(a=negate(a));
  bb=equ(a,ainf);
  if(b&bb){ /* __ q: w */
-  RZ(y=ne(q,curtail(over(zeroionei[0],q))));
-  R lamin2(repeat(y,q),df1(z,y,cut(ds(CPOUND),zeroionei[1])));
+  RZ(y=ne(q,curtail(over(zeroionei(0),q))));
+  R lamin2(repeat(y,q),df1(z,y,cut(ds(CPOUND),zeroionei(1))));
  }
  RZ(y=vi(plt(q))); yv=AV(y);
  k=-1; DO(AN(y), if(k<yv[i])k=yv[i];); ++k;

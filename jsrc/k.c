@@ -182,7 +182,7 @@ static KF1(jtQfromX){X*v=XAV(w),*x=(X*)yv; DQ(AN(w), *x++=*v++; *x++=iv1;); R 1;
 
 static KF1(jtQfromD){B neg,recip;D c,d,t,*wv;I e,i,n,*v;Q q,*x;S*tv;
  if(!(w))R 0;
- n=AN(w); wv=DAV(w); x=(Q*)yv; tv=3*liln+(S*)&t;
+ n=AN(w); wv=DAV(w); x=(Q*)yv; tv=3*C_LE+(S*)&t;
  for(i=0;i<n;++i){
   t=wv[i]; 
   ASSERT(!_isnan(t),EVNAN);
@@ -279,7 +279,7 @@ B jtccvt(J jt,I tflagged,A w,A*y){A d;I n,r,*s,wt; void *wv,*yv;I t=tflagged&~NO
   // Handle sparse
   switch((t&SPARSE?2:0)+(AT(w)&SPARSE?1:0)){I t1;P*wp,*yp;
   case 1: RZ(w=denseit(w)); break;  // sparse to dense
-  case 2: RZ(*y=sparseit(cvt(DTYPE(t),w),IX(r),cvt(DTYPE(t),num[0]))); R 1;  // dense to sparse; convert type first (even if same dtype)
+  case 2: RZ(*y=sparseit(cvt(DTYPE(t),w),IX(r),cvt(DTYPE(t),num(0)))); R 1;  // dense to sparse; convert type first (even if same dtype)
   case 3: // sparse to sparse
    t1=DTYPE(t);
    GASPARSE(*y,t,1,r,s); yp=PAV(*y); wp=PAV(w);

@@ -70,9 +70,9 @@ static F1(jtqrr){PROLOG(0067);A a1,q,q0,q1,r,r0,r1,t,*tv,t0,t1,y,z;I m,n,p,*s;
  m=n>>1; I tom=(0x01222100>>((n&7)<<2))&3; m=(m+tom<n)?m+tom:m;  // Minimize number of wasted multiply slots, processing in batches of 4
  if(1>=n){  // just 1 col
   t=norm(ravel(w));  // norm of col 
-  ASSERT(!AN(w)||!equ(t,num[0]),EVDOMAIN);  // norm must not be 0 unless column is empty
+  ASSERT(!AN(w)||!equ(t,num(0)),EVDOMAIN);  // norm must not be 0 unless column is empty
   RZ(q=tymes(w,recip(t)));
-  R link(2>AR(q)?table(q):q,reshape(v2(n,n),p?t:num[1]));
+  R link(2>AR(q)?table(q):q,reshape(v2(n,n),p?t:num(1)));
  }
  // construe w as w0 w1 w0t w1t
  RZ(t0=qrr(take(v2(p,m),w)));  // find QR of w0 pxm   w0t
@@ -133,7 +133,7 @@ RZ(w);
    // Use a faux-virtual block to take the norm of w, so that we leave w inplaceable for when we normalize it in place
    fauxvirtual(q0,virtwq0,w,1,ACUC1); AS(q0)[0]=cl; AN(q0)=cl;  // kludge use sumattymesprod to create a table result directly
    A t; RZ(t=norm(q0));  // norm of row
-   ASSERT(!equ(t,num[0]),EVDOMAIN);  // norm must not be 0
+   ASSERT(!equ(t,num(0)),EVDOMAIN);  // norm must not be 0
    A z; RZ(z=tymesA(w,recip(t))); verifyinplace(w,z);
    RZ(t=table(t)); realizeifvirtual(t); R t; // this is real, so it is also the adjoint of L
   }

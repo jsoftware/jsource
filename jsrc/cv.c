@@ -44,8 +44,8 @@ static DF1(jtfitpp1){DECLFG;A z;C d[8],*s=3+jt->pp;
  RETF(z);
 }
 
-static DF1(jtfitf1){V*sv=FAV(self); A z; R df1(z,  w,fit(fix(sv->fgh[0],zeroionei[0]),sv->fgh[1]));}
-static DF2(jtfitf2){V*sv=FAV(self); A z; R df2(z,a,w,fit(fix(sv->fgh[0],zeroionei[0]),sv->fgh[1]));}
+static DF1(jtfitf1){V*sv=FAV(self); A z; R df1(z,  w,fit(fix(sv->fgh[0],zeroionei(0)),sv->fgh[1]));}
+static DF2(jtfitf2){V*sv=FAV(self); A z; R df2(z,a,w,fit(fix(sv->fgh[0],zeroionei(0)),sv->fgh[1]));}
 
 // Fit conjunction u!.n
 // Preserve IRS1/IRS2 from u in result verb (exception: CEXP)
@@ -67,7 +67,7 @@ F2(jtfit){A f;C c;I k,l,m,r;V*sv;
    ASSERT(AT(w)&NUMERIC,EVDOMAIN);
    R CDERIV(CFIT,0L,jtfitpoly2,0L, m,l,r);   // CPOLY has no VIRS
   case CPOWOP:  // support for #^:_1!.n
-   if(sv->fgh[1]!=num[-1])R fitct(a,w,0);
+   if(sv->fgh[1]!=num(-1))R fitct(a,w,0);
    f=sv->fgh[0]; c=ID(f);
    if(c==CPOUND){ASSERT(!AR(w),EVRANK); R CDERIV(CFIT,0,jtfitfill2,VFLAGNONE,m,l,r);}  // CPOWOP has no VIRS
    ASSERT(c==CAMP,EVDOMAIN);

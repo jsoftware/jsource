@@ -20,7 +20,7 @@ F2(jtfixrecursive){A f,g,y;
  RZ(a&&w);
  I ai=*IAV0(a);
  RZ(y=lrep(w)); 
- if(((I)1<<ai)&0xa)RZ(f=colon(num[3],                over(y,cstr(" y")) ));  // 1 or 3
- if(((I)1<<ai)&0xc)RZ(g=colon(num[4],over(cstr("x "),over(y,cstr(" y")))));  // 2 or 3
+ if(((I)1<<ai)&0xa)RZ(f=colon(num(3),                over(y,cstr(" y")) ));  // 1 or 3
+ if(((I)1<<ai)&0xc)RZ(g=colon(num(4),over(cstr("x "),over(y,cstr(" y")))));  // 2 or 3
  R ai==3?colon(f,g):ai==1?f:g;
 }

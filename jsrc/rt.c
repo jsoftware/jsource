@@ -133,7 +133,7 @@ static F1(jttrr){PROLOG(0058);A hs,s,t,*x,z;B ex,xop;C id;I fl,*hv,m;V*v;
  if(evoke(w)){RZ(w=sfne(w)); RETF((AT(w)&FUNC?jttrr:jttleaf)(jt,w));}
  GATV0(t,BOX,m,1); x=AAV(t);
  if(0<m)RZ(x[0]=rifvs(fl&VGERL?treach(fxeach(fs)):trr(fs)));
- if(1<m)RZ(x[1]=rifvs(fl&VGERR?treach(fxeach(gs)):ex?trr(unparsem(num[0],w)):trr(gs)));
+ if(1<m)RZ(x[1]=rifvs(fl&VGERR?treach(fxeach(gs)):ex?trr(unparsem(num(0),w)):trr(gs)));
  if(2<m)RZ(x[2]=rifvs(trr(hs)));
  s=xop?spellout('0'):fl&VDDOP?(hv=AV(hs),over(thorn1(sc(hv[0])),over(spellout(id),thorn1(sc(hv[1]))))):spellout(id);
  z=troot(s,graft(ope(t)));

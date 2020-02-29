@@ -48,7 +48,7 @@ void setftype(C*v,OSType type,OSType crea){C p[256];FInfo f;
 
 #define SEEKLEAK 0
 static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;B xt=jt->tostdout;DC d,xd=jt->dcs;
- if(equ(w,num[1]))R mtm;
+ if(equ(w,num(1)))R mtm;
  RZ(w=vs(w));
  // Handle locking.  Global glock has lock status for higher levels.  We see if this text is locked; if so, we mark lock status for this level
  // We do not inherit the lock from higher levels, per the original design
@@ -81,7 +81,7 @@ static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;B xt=jt->tostdout;DC d,xd=jt
   debz();
  FDEPDEC(1);  // ASSERT OK now
  jt->uflags.us.cx.cx_c.glock=oldk; // pop lock status
- if(3==ce){z=num[jt->jerr==0]; RESETERR; R z;}else RNE(mtm);
+ if(3==ce){z=num(jt->jerr==0); RESETERR; R z;}else RNE(mtm);
 }
 
 static F1(jtaddscriptname){I i;
@@ -106,7 +106,7 @@ static A jtlinf(J jt,A a,A w,C ce,B tso){A x,y,z;B lk=0;C*s;I i=-1,n,oldi=jt->sl
  }
  RZ(x=jfread(w));
  // Remove UTF8 BOM if present - commented out pending resolution.  Other BOMs should not occur
- // if(!memcmp(CAV(x),"\357\273\277",3L))RZ(x=drop(num[3],x))
+ // if(!memcmp(CAV(x),"\357\273\277",3L))RZ(x=drop(num(3),x))
  // if this is a new file, record it in the list of scripts
  RZ(y=fullname(AAV0(w)));
  A scripti; RZ(scripti=jtaddscriptname(jt,y)); i=IAV(scripti)[0];

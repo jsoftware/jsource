@@ -214,7 +214,7 @@ static SF(jtsortc2){A y,z;B up;I i,p,*yv;US j,k,*wv,*v;
  DO(p, yv[i]=0;);
  for(i=0;i<m;++i){
   DQ(n, ++yv[*wv++];);
-  if(C2T&AT(w)||!liln){
+  if(C2T&AT(w)||!C_LE){
    if(up){j=0;         DQ(p,                DQ(yv[j], *v++=j;); yv[j]=0;           ++j;);}
    else  {j=(US)(p-1); DQ(p,                DQ(yv[j], *v++=j;); yv[j]=0;           --j;);}
   }else{

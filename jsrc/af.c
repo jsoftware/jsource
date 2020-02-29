@@ -156,7 +156,7 @@ static A jtfixa(J jt,A a,A w){A f,g,h,wf,x,y,z=w;V*v;I aa[AKXR(0)/SZI+1]={AKXR(0
     }
     jt->fxpv[jt->fxi++]=mtv;
     RE(z);
-    ASSERT(TYPESEQ(AT(w),AT(z))||AT(w)&AT(z)&NOUN,EVDOMAIN);
+    ASSERT(TYPESEQ(AT(w),AT(z))||(AT(w)&NOUN&&AT(z)&NOUN),EVDOMAIN);
     R z;
    }else R df1(z,REFIXA(2,f),wf);
 // bug ^: and m} should process gerund args
@@ -176,7 +176,7 @@ DF1(jtfix){PROLOG(0005);A z;
  if(LIT&AT(w)){ASSERT(1>=AR(w),EVRANK); RZ(w=nfs(AN(w),CAV(w)));}
  // only verbs/noun can get in through the parser, but internally we also vet adv/conj
  ASSERT(AT(w)&NAME+VERB+ADV+CONJ,EVDOMAIN);
- self=AT(self)&NOUN?self:zeroionei[0];  // default to 0 if noun not given
+ self=AT(self)&NOUN?self:zeroionei(0);  // default to 0 if noun not given
  RZ(z=fixa(self,AT(w)&VERB+ADV+CONJ?w:symbrdlock(w)));  // name comes from string a
  // Once a node has been fixed, it doesn't need to be looked at ever again.  This applies even if the node itself carries a name.  To indicate this
  // we set VFIX.  We only do so if the node has descendants (or a name).  We also turn off VNAMED, which is set in named explicit definitions (I don't

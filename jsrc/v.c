@@ -9,9 +9,9 @@
 F1(jttally ){A z; I k; RZ(w); z=sc(SETIC(w,k));            RETF(AT(w)&XNUM+RAT?xco1(z):z);}
 F1(jtshapex){A z; RZ(w); z=vec(INT,AR(w),AS(w)); RETF(AT(w)&XNUM+RAT?xco1(z):z);}
 F1(jtshape){RZ(w); R vec(INT,AR(w),AS(w));}
-F1(jtisempty){RZ(w); if(AT(w)&SPARSE)R eps(zeroionei[0],shape(w)); R num[AN(w)==0];}
-F1(jtisnotempty){RZ(w); if(AT(w)&SPARSE)R not(eps(zeroionei[0],shape(w))); R num[AN(w)!=0];}
-F1(jtisitems){RZ(w); R num[!AR(w)|!!AS(w)[0]];}
+F1(jtisempty){RZ(w); if(AT(w)&SPARSE)R eps(zeroionei(0),shape(w)); R num(AN(w)==0);}
+F1(jtisnotempty){RZ(w); if(AT(w)&SPARSE)R not(eps(zeroionei(0),shape(w))); R num(AN(w)!=0);}
+F1(jtisitems){RZ(w); R num(!AR(w)|!!AS(w)[0]);}
 F1(jtrank){F1PREFIP; RZ(w); R sc(AR(w));}
 F1(jtnatoms){F1PREFIP; A z; RZ(w); if(AT(w)&SPARSE)R df1(z,shape(w),slash(ds(CPLUS))); R sc(AN(w));}
 
@@ -110,7 +110,7 @@ F1(jtiota){A z;I m,n,*v;
 F1(jtjico1){A y,z;B b;D d,*v;I c,m,n; 
  F1RANK(0,jtjico1,0);
  RZ(y=cvt(FL,rect(w))); v=DAV(y); d=*v;  // convert to complex, d=real part of value
- RE(m=v[1]?i0(cvt(INT,tail(y))):i0(tymes(mag(w),num[2])));  // m=#steps: imaginary part if nonzero; otherwise 2*|w
+ RE(m=v[1]?i0(cvt(INT,tail(y))):i0(tymes(mag(w),num(2))));  // m=#steps: imaginary part if nonzero; otherwise 2*|w
  ASSERT(0<m||!m&&0==d,EVDOMAIN);  // error if imag part was negative, or 0 unless d is also 0
  n=(I)jround(d); b=FFIEQ(d,n); c=(2*ABS(n))/(m?m:1);   // try as integer
  if(b&&m*c==2*ABS(n))z=apv(1+m,-n,0>d?-c:c);  // if integer works, use it

@@ -6,10 +6,10 @@
 #include "j.h"
 
 
-F1(jtbehead ){F1PREFIP; R jtdrop(jtinplace,zeroionei[1],    w);}
-F1(jtcurtail){F1PREFIP; R jtdrop(jtinplace,num[-1],w);}
+F1(jtbehead ){F1PREFIP; R jtdrop(jtinplace,zeroionei(1),    w);}
+F1(jtcurtail){F1PREFIP; R jtdrop(jtinplace,num(-1),w);}
 
-F1(jtshift1){R drop(num[-1],over(num[1],w));}
+F1(jtshift1){R drop(num(-1),over(num(1),w));}
 
 static A jttk0(J jt,B b,A a,A w){A z;I k,m=0,n,p,r,*s,*u;
  r=AR(w); n=AN(a); u=AV(a); 
@@ -187,10 +187,10 @@ F1(jthead){I wcr,wf,wr;
    RETF(z);
   }else{
    // rank not 0, or non-virtualable type, or cell is an atom.  Use from.  Note that jt->ranks is still set, so this may produce multiple cells
-   // left rank is garbage, but since zeroionei[0] is an atom it doesn't matter
-   RETF(jtfrom(jtinplace,zeroionei[0],w));  // could call jtfromi directly for non-sparse w
+   // left rank is garbage, but since zeroionei(0) is an atom it doesn't matter
+   RETF(jtfrom(jtinplace,zeroionei(0),w));  // could call jtfromi directly for non-sparse w
   }
- }else{RETF(SPARSE&AT(w)?irs2(num[0],take(num[ 1],w),0L,0L,wcr,jtfrom):rsh0(w));  // cell of w is empty - create a cell of fills  jt->ranks is still set for use in take.  Left rank is garbage, but that's OK
+ }else{RETF(SPARSE&AT(w)?irs2(num(0),take(num( 1),w),0L,0L,wcr,jtfrom):rsh0(w));  // cell of w is empty - create a cell of fills  jt->ranks is still set for use in take.  Left rank is garbage, but that's OK
  }
 }
 
@@ -198,6 +198,6 @@ F1(jttail){I wcr,wf,wr;
  F1PREFIP;
  RZ(w);
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr;  // no RESETRANK: rank is passed into from/take/rsh0.  Left rank is garbage but that's OK
- R !wcr||*(wf+AS(w))?jtfrom(jtinplace,num[-1],w) :  // scaf should generate virtual block here for speed
-     SPARSE&AT(w)?irs2(num[0],take(num[-1],w),0L,0L,wcr,jtfrom):rsh0(w);
+ R !wcr||*(wf+AS(w))?jtfrom(jtinplace,num(-1),w) :  // scaf should generate virtual block here for speed
+     SPARSE&AT(w)?irs2(num(0),take(num(-1),w),0L,0L,wcr,jtfrom):rsh0(w);
 }

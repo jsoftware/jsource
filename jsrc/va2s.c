@@ -107,7 +107,7 @@ static I zcount(A ay,A wy,B ab,B wb){I c,d,i,j,m,n,*u,*v,yc;
 static A jtvaspeq(J jt,A a,A w,C id,VF ado,I cv,I t,I zt,I f,I r){A ae,ax,ay,we,wx,wy,z,za,ze,zx,zy;
      B ab=1,wb=1;C*aev,*axv,*wev,*wxv,*zxv;I ak,c,d,i,j,m,n,*u,*v,wk,xc,yc,zk,*zyv;P*zp;
  RZ(vaspeqprep(a,w,t,f,r,&ae,&ay,&ax,&we,&wy,&wx,&za));
- if(id==CSTAR||id==CSTARDOT){ab=!equ(ae,num[0]); wb=!equ(we,num[0]);} 
+ if(id==CSTAR||id==CSTARDOT){ab=!equ(ae,num(0)); wb=!equ(we,num(0));} 
  v=AS(ay); m=v[0]; yc=v[1]; xc=aii(ax); n=*AS(wy);
  aev=CAV(ae); axv=CAV(ax); ak=xc<<bplg(AT(ax));
  wev=CAV(we); wxv=CAV(wx); wk=xc<<bplg(AT(wx));

@@ -162,7 +162,7 @@ F1(jtwords){A t,*x,z;C*s;I k,n,*y;
 
 
 static A jtconstr(J jt,I n,C*s){A z;C b,c,p,*t,*x;I m=0;
- p=0; t=s; DQ(n-2, c=*++t; b=c==CQUOTE; m+=(b^1)|p; p=((b^1)|p)^1;);
+ p=0; t=s; DQ(n-2, c=*++t; b=c==CQUOTE; m+=(b^1)|p; p=((b^1)|p)^1;);  // should just take half the # '
  if(0==m)R aqq; else if(1==m&&(z=chr[(UC)s[1]]))R z;
  GATV0(z,LIT,m,1!=m); x=CAV(z);
  p=0; t=s; DQ(n-2, *x=c=*++t; b=c==CQUOTE; x+=(b^1)|p; p=((b^1)|p)^1;);  // This may overstore by 1 character but that's OK because LIT types have allocated space at the end

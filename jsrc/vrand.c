@@ -64,7 +64,7 @@ F1(jtlcg_test){A x;I n=1597,*v;
  ASSERTSYS(v[1594]==2028614953L, "lcg_test 1594");
  ASSERTSYS(v[1595]==1481135299L, "lcg_test 1595");
  ASSERTSYS(v[1596]==1958017916L, "lcg_test 1596");
- R num[1];
+ R num(1);
 }
 
 
@@ -127,7 +127,7 @@ F1(jtgb_test){I j=jt->rng;
  DQ(133, gb_next(););
  ASSERTSYS(gb_unif_rand(0x55555555L)==748103812,"gb_test 1");
  RZ(rngselects(sc(j)));
- R num[1];
+ R num(1);
 }
 
 
@@ -269,7 +269,7 @@ F1(jtmt_test){I j=jt->rng;UI init[4]={0x12345ULL, 0x23456ULL, 0x34567ULL, 0x4567
  x=mt_next();
  ASSERTSYS(x== 994412663058993407ULL, "mt_test64 1");
  RZ(rngselects(sc(j)));
- R num[1];
+ R num(1);
 }
 #else
 F1(jtmt_test){I j=jt->rng;UI init[4]={0x123, 0x234, 0x345, 0x456},x;
@@ -282,7 +282,7 @@ F1(jtmt_test){I j=jt->rng;UI init[4]={0x123, 0x234, 0x345, 0x456},x;
  x=mt_next();
  ASSERTSYS(x==3460025646UL, "mt_test32 1");
  RZ(rngselects(sc(j)));
- R num[1];
+ R num(1);
 }
 #endif
 
@@ -340,7 +340,7 @@ F1(jtdx_test){I j=jt->rng,x;
  x=dx_next(); ASSERTSYS(x== 238300266UL, "dx_test 3");
  x=dx_next(); ASSERTSYS(x==1495348915UL, "dx_test 4");
  RZ(rngselects(sc(j)));
- R num[1];
+ R num(1);
 }
 
 
@@ -415,7 +415,7 @@ F1(jtmr_test){I j=jt->rng,x;
  x=mr_next(); ASSERTSYS(x==(I) 762439568UL, "mr_test 48");
  x=mr_next(); ASSERTSYS(x==(I)3245142153UL, "mr_test 49");
  RZ(rngselects(sc(j)));
- R num[1];
+ R num(1);
 }
 
 
@@ -460,7 +460,7 @@ B jtrnginit(J jt){
  jt->rngM[3]=SY_64?0:2147483648UL;  /*   %   _1+2^31 */  /* fudge; should be _1+2^31 */
  jt->rngM[4]=SY_64?0:4294967087UL;  /*   % _209+2^32 */
  jt->rngI0[GBI]=54;
- rngselects(num[2]); 
+ rngselects(num(2)); 
  R 1;
 }
 
@@ -502,7 +502,7 @@ F1(jtrngstateq){A x=0,z,*zv;D*u=0;I n;UI*v;
  switch(jt->rng){
   case SMI: 
    GAT0(z,BOX,9,1); zv=AAV(z);
-   RZ(*zv++=num[0]);
+   RZ(*zv++=num(0));
    RZ(*zv++=rifvs(sc(jt->rngI0[GBI]))); RZ(*zv++=rifvs(vec(INT,GBN,jt->rngV0[GBI])));
    RZ(*zv++=rifvs(sc(jt->rngI0[MTI]))); RZ(*zv++=rifvs(vec(INT,MTN,jt->rngV0[MTI])));
    RZ(*zv++=rifvs(sc(jt->rngI0[DXI]))); RZ(*zv++=rifvs(vec(INT,DXN,jt->rngV0[DXI])));
@@ -1030,7 +1030,7 @@ DF2(jtrollkx){FXSDECL; RZ(a&&w&&self);        FXSDO; z=rollk(a,w,self); FXSOD; R
 static F1(jtroll){A z;D rl=jt->rl;static D dm=16807,p=2147483647L;I c,n,*v,*x;
  RZ(w);
  n=AN(w); v=AV(w);
- RZ(z=reshape(shape(w),num[2])); x=AV(z);
+ RZ(z=reshape(shape(w),num(2))); x=AV(z);
  if(ICMP(v,x,n))
   DQ(n, c=*v++; ASSERT(0<c,EVDOMAIN); rl=fmod(rl*dm,p); *x++=(I)jfloor(rl*c/p);)
  else{B*x;D q=p/2;

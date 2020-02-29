@@ -151,7 +151,7 @@ F1(jtdbstackz){A y,z;
  RE(dbstack(w)); 
  RZ(y=str(jt->etxn,jt->etx)); 
  jt->etxn=0; 
- R df1(z,y,cut(ds(CLEFT),num[-2]));
+ R df1(z,y,cut(ds(CLEFT),num(-2)));
 }    /* 13!:18  SI stack as result */
 
 

@@ -86,7 +86,7 @@ static DF2(jtfolkcomp){F2PREFIP;DECLFGH;PROLOG(0034);A z;AF f;
  if(f){
   I postflags=jt->workareas.compsc.postflags;
   z=f(jt,a,w,self);
-  if(z){if(postflags&2){z=num[(IAV(z)[0]!=(AR(a)>=AR(w)?AN(a):AN(w)))^(postflags&1)];}}
+  if(z){if(postflags&2){z=num((IAV(z)[0]!=AN(AR(a)>=AR(w)?a:w))^(postflags&1));}}
  }else if(cap(fs))CAP2 else FOLK2;
  EPILOG(z);
 }
@@ -98,7 +98,7 @@ static DF2(jtfolkcomp0){F2PREFIP;DECLFGH;PROLOG(0035);A z;AF f;
  if(f){
   I postflags=jt->workareas.compsc.postflags;
   z=f(jt,a,w,self);
-  if(z){if(postflags&2){z=num[(IAV(z)[0]!=(AR(a)>=AR(w)?AN(a):AN(w)))^(postflags&1)];}}
+  if(z){if(postflags&2){z=num((IAV(z)[0]!=AN(AR(a)>=AR(w)?a:w))^(postflags&1));}}
  }else if(cap(fs))CAP2 else FOLK2;
  POPCCT  //  bug: if we RZd early we leave ct unpopped
  EPILOG(z);
@@ -150,7 +150,7 @@ A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I
   case CAT:    /* <"1@[ { ] */
    if(gi==CLBRACE&&hi==CRIGHT){                                   
     p=fv->fgh[0]; q=fv->fgh[1]; 
-    if(CLEFT==ID(q)&&CQQ==ID(p)&&(v=VAV(p),x=v->fgh[0],CLT==ID(x)&&v->fgh[1]==num[1])){f2=jtsfrom; flag &=~(VJTFLGOK2);}
+    if(CLEFT==ID(q)&&CQQ==ID(p)&&(v=VAV(p),x=v->fgh[0],CLT==ID(x)&&v->fgh[1]==num(1))){f2=jtsfrom; flag &=~(VJTFLGOK2);}
    }
  }
  switch(fi==CCAP?gi:hi){
@@ -179,7 +179,7 @@ A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I
                 }
  }
  if(0<=m){
-  v=4<=m?hv:fv; b=CFIT==v->id&&v->fgh[1]==num[0];
+  v=4<=m?hv:fv; b=CFIT==v->id&&v->fgh[1]==num(0);
   switch(b?ID(v->fgh[0]):v->id){
    case CEQ:   f2=b?jtfolkcomp0:jtfolkcomp; flag|=0+8*m; flag &=~(VJTFLGOK1|VJTFLGOK2); break;
    case CNE:   f2=b?jtfolkcomp0:jtfolkcomp; flag|=1+8*m; flag &=~(VJTFLGOK1|VJTFLGOK2); break;
@@ -271,7 +271,7 @@ static DF1(jthkindexofmaxmin){I z=0;
 static DF2(jthklvl2){
  F2RANK(0,RMAX,jthklvl2,self);
  I comparand; RE(comparand=i0(a));  // get value to compare against
- RETF(num[((VAV(self)->flag>>VFHKLVLGTX)&1)^levelle(w,comparand-(VAV(self)->flag&VFHKLVLDEC))]);  // decrement for < or >:; complement for > >:
+ RETF(num(((VAV(self)->flag>>VFHKLVLGTX)&1)^levelle(w,comparand-(VAV(self)->flag&VFHKLVLDEC))));  // decrement for < or >:; complement for > >:
 }
 
 F2(jthook){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE;V*u,*v;

@@ -1195,7 +1195,7 @@ static CR condrange2(US *s,I n,I min,I max,I maxrange){CR ret;I i;US x;
 
 #define MAXBYTEBOOL 65536  // if p exceeds this, we switch over to packed bits
 
-A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B mk=w==mark,th;
+A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z;B mk=w==mark,th;fauxblockINT(zfaux,1,0);
     I ac,acr,af,ak,an,ar,*as,at,datamin,f,f1,k,k1,n,r,*s,t,wc,wcr,wf,wk,wn,wr,*ws,wt,zn;UI c,m,p;
  RZ(a&&w);
  // ?r=rank of argument, ?cr=rank the verb is applied at, ?f=length of frame, ?s->shape, ?t=type, ?n=#atoms
@@ -1273,6 +1273,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B mk=w==mark
 
  // Allocate the result area
  if(!mk)switch(mode&IIOPMSK){I q;
+  default:      fauxINT(z,zfaux,1,0) break;   // if prehashed, we must create an area that can hold at least one stored result
   case IIDOT: 
   case IICO:    GATV(z,INT,zn,f+f1,     s); if(af)MCISH(f+AS(z),ws+wf,f1); break;
   case INUBSV:  GATV(z,B01,zn,f+f1+!acr,s); if(af)MCISH(f+AS(z),ws+wf,f1); if(!acr)*(AS(z)+AR(z)-1)=1; break;

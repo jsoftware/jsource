@@ -9,7 +9,7 @@
 #include <math.h>
 #pragma warning(disable : 4056)  // negative infinity overflow
 
-// globals start - set by globinit at dll initialization
+// globals start - set by globinit in initialization
 struct Bd2 {I hdr[AKXR(0)/SZI]; D v[2];};
 #define CREBLOCKATOMV2(name,t,v1,v2) struct Bd2 B##name={{AKXR(0),(t)&TRAVERSIBLE,0,(t),ACPERMANENT,1,0},{v1,v2}};
 CREBLOCKATOMV2(a0j1,CMPX,0.0,1.0)  // 0j1
@@ -50,11 +50,8 @@ CREBLOCKATOMI(imax,INT,IMAX)  // max positive value
 // obsolete  GA(x,ASGN, 1,1,0     ); ACX(x); *CAV(x)=CASGN; asgnforceglo=x;  // =. converted to global
 // obsolete const UC  bit[8]={(UC)0x80, (UC)0x40, (UC)0x20, (UC)0x10, (UC)0x08, (UC)0x04, (UC)0x02, (UC)0x01};
 C   breakdata=0;
-const double dzero=0.0;   // used by gemm
 D   inf=INFINITY;                /* _                                    */
 D   infm=-INFINITY;               /* __                                   */
-// obsolete A   ds(CACE)=0;                /* a:                                   */
-// obsolete A   ds(CALP)=0;                /* a.                                   */
 // obsolete A   iv0=0;                /* ,0   also extended integer 0                                */
 // obsolete A   iv1=0;                /* ,1   also extended integer 1                                */
 #define CREBLOCKVEC1I(name,t,v) I B##name[9]={(7+1)*SZI,(t)&TRAVERSIBLE,0,(t),ACPERMANENT,1,1,1,(v)};
@@ -82,23 +79,27 @@ struct Bd1 Bnumvr[3] = {  // floating-point 0, 1, and 2, used for constants
 };
 // obsolete A   zeroionei[2]={0,0};   // integer 0 and 1
 // obsolete A   numvr[3]={0,0};       // float 0,1,2
-I   v00[2]={0,0};         // vector value to use for rank 0 0
+//I   v00[2]={0,0};         // vector value to use for rank 0 0
 D   pf=0;                 /* performance frequency                */
 Q   zeroQ={iv0,iv1};          /* 0r1                                  */
 DX  zeroDX={0,0,iv1};       /* 0                                    */
 Z   zeroZ={0,0};          /* 0j0                                  */
-const dcomplex zone={1.0,0.0};  // used gy gemm
-const dcomplex zzero={0.0,0.0};
 A   zpath=0;              /* default locale search path           */
 uint64_t g_cpuFeatures;   // blis
-// obsolete A   pst[256]={0};
 PRIM primtab[256];         // inits to 0
 A   chr[256]={0};         /* scalar for each character, or 0      */
 UC  hwaes=0;              // hardware aes support
 UC  hwfma=0;              // blis cpu tuning
-// obsolete C   wtype[256]={0};
-
 // globals end
+
+// global const start -  do not need globinit
+//!      I   v00[2]={0,0};         // vector value to use for rank 0 0
+const UC  bit[8]={(UC)0x80, (UC)0x40, (UC)0x20, (UC)0x10, (UC)0x08, (UC)0x04, (UC)0x02, (UC)0x01};
+const double dzero=0.0;   // used by gemm
+const dcomplex zone={1.0,0.0};  // used gy gemm
+const dcomplex zzero={0.0,0.0};
+// global const end 
+
 
 #if SY_64
 #define bits "64"

@@ -112,7 +112,7 @@ static void jtseecall(J jt,DC d){A a;
 }    /* display function line */
 
 // display error-message line
-static void jtdhead(J jt,C k,DC d){static C s[]="    "; 
+static void jtdhead(J jt,C k,DC d){C s[]="    "; 
  *s=d&&d->dcsusp?'*':'|'; 
  ep(k+1L,s);
 }    /* preface stack display line */

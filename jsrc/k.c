@@ -439,7 +439,7 @@ A jtpcvt(J jt,I t,A w){A y;B b;RANK2T oqr=jt->ranks;
 }    /* convert w to type t, if possible, otherwise just return w */
 
 #if !C_CRC32C
-F1(jtcvt0){I n,t,*v,z0,z1;D *u;
+F1(jtcvt0){I n,t/* obsolete ,*v,z0,z1*/;D *u;
  RZ(w);
  t=AT(w); n=AN(w); 
  if(n&&t&FL+CMPX){

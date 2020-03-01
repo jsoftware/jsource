@@ -443,17 +443,17 @@ static XF1(jtxpi){A e;B p;I i,n,n1,sk;X a,b,c,d,*ev,k,f,m,q,s,s0,t;
  R rifvsdebug(xdiv(xtymes(k,w),xtymes(f,q),jt->xmode));
 }    /* Chudnovsky Bros. */
 
-APFX( plusXX, X,X,X, xplus )
-APFX(minusXX, X,X,X, xminus)
-APFX(tymesXX, X,X,X, xtymes)
-APFX(  divXX, X,X,X, XDIV  )
-APFX(  remXX, X,X,X, xrem  )
-APFX(  gcdXX, X,X,X, xgcd  )
-APFX(  lcmXX, X,X,X, xlcm  )
-APFX(  minXX, X,X,X, XMIN  )
-APFX(  maxXX, X,X,X, XMAX  )
-APFX(  powXX, X,X,X, xpow  )
-APFX(  binXX, X,X,X, xbin  )
+APFX( plusXX, X,X,X, xplus ,,HDR1JERR)
+APFX(minusXX, X,X,X, xminus,,HDR1JERR)
+APFX(tymesXX, X,X,X, xtymes,,HDR1JERR)
+APFX(  divXX, X,X,X, XDIV  ,,HDR1JERR)
+APFX(  remXX, X,X,X, xrem  ,,HDR1JERR)
+APFX(  gcdXX, X,X,X, xgcd  ,,HDR1JERR)
+APFX(  lcmXX, X,X,X, xlcm  ,,HDR1JERR)
+APFX(  minXX, X,X,X, XMIN  ,,HDR1JERR)
+APFX(  maxXX, X,X,X, XMAX  ,,HDR1JERR)
+APFX(  powXX, X,X,X, xpow  ,,HDR1JERR)
+APFX(  binXX, X,X,X, xbin  ,,HDR1JERR)
 
 AMON( sgnX, X,X, *z=  rifvsdebug(xsgn(*x));)
 AMONPS(sqrtX, X,X, , *z= rifvsdebug(xsqrt(*x)); , HDR1JERR)

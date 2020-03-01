@@ -468,7 +468,7 @@ F1(jtrngselectq){ASSERTMTV(w); R sc(jt->rng);}
 
 static B jtrngga(J jt,I i,UI**vv){
  if(vv[i]){jt->rngv=vv[i]; jt->rngi=jt->rngI[i];}
- else{A x;I n,t;VF f; 
+ else{A x;I n,t;void(*f)(); 
   switch(i){
    case GBI: t=INT; n=GBN; f=jtgb_init; break;
    case MTI: t=INT; n=MTN; f=jtmt_init; break;

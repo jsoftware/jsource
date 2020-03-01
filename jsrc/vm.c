@@ -31,26 +31,26 @@ D jtpospow(J jt,D x,D y){
 #define POWII(u,v)  intpow((D)u,v)
 #define POWID(u,v)  pospow((D)u,v)
 
-APFX(powBI, D,B,I, POWBX )
-APFX(powBD, D,B,D, POWBX )
-APFX(powIB, I,I,B, POWXB )
-APFX(powII, D,I,I, POWII )
-APFX(powID, D,I,D, POWID )
-APFX(powDB, D,D,B, POWXB )
-APFX(powDI, D,D,I, intpow)
-APFX(powDD, D,D,D, pospow)
-APFX(powZZ, Z,Z,Z, zpow  )
+APFX(powBI, D,B,I, POWBX ,,R EVOK;)
+APFX(powBD, D,B,D, POWBX ,,R EVOK;)
+APFX(powIB, I,I,B, POWXB ,,R EVOK;)
+APFX(powII, D,I,I, POWII ,,HDR1JERR)
+APFX(powID, D,I,D, POWID ,,HDR1JERR)
+APFX(powDB, D,D,B, POWXB ,,R EVOK;)
+APFX(powDI, D,D,I, intpow,,HDR1JERR)
+APFX(powDD, D,D,D, pospow,,HDR1JERR)
+APFX(powZZ, Z,Z,Z, zpow  ,,HDR1JERR)
 
-ANAN(cirZZ, Z,Z,Z, zcir  )
+APFX(cirZZ, Z,Z,Z, zcir  ,NAN0;,HDR1JERRNAN)
 
-static void jtcirx(J jt,I n,I k,D*z,D*y){D p,t;
+static I jtcirx(J jt,I n,I k,D*z,D*y){D p,t;
  NAN0;
  switch(k){
-  default: ASSERTW(0,EWIMAG);
-  case  0: DQ(n, t=*y++; ASSERTW( -1.0<=t&&t<=1.0, EWIMAG ); *z++=sqrt(1.0-t*t);); break;
-  case  1: DQ(n, t=*y++; ASSERTW(-THMAX<t&&t<THMAX,EVLIMIT); *z++=sin(t););        break;
-  case  2: DQ(n, t=*y++; ASSERTW(-THMAX<t&&t<THMAX,EVLIMIT); *z++=cos(t););        break;
-  case  3: DQ(n, t=*y++; ASSERTW(-THMAX<t&&t<THMAX,EVLIMIT); *z++=tan(t););        break;
+  default: ASSERTWR(0,EWIMAG);
+  case  0: DQ(n, t=*y++; ASSERTWR( -1.0<=t&&t<=1.0, EWIMAG ); *z++=sqrt(1.0-t*t);); break;
+  case  1: DQ(n, t=*y++; ASSERTWR(-THMAX<t&&t<THMAX,EVLIMIT); *z++=sin(t););        break;
+  case  2: DQ(n, t=*y++; ASSERTWR(-THMAX<t&&t<THMAX,EVLIMIT); *z++=cos(t););        break;
+  case  3: DQ(n, t=*y++; ASSERTWR(-THMAX<t&&t<THMAX,EVLIMIT); *z++=tan(t););        break;
   case  4: DQ(n, t=*y++;                                     *z++=t<-1e8?-t:1e8<t?t:sqrt(t*t+1.0););       break;
   case  5: DQ(n, t=*y++;                                     *z++=t<-EMAX2?infm:EMAX2<t?inf:sinh(t););     break;
   case  6: DQ(n, t=*y++;                                     *z++=t<-EMAX2||    EMAX2<t?inf:cosh(t););     break;
@@ -58,34 +58,36 @@ static void jtcirx(J jt,I n,I k,D*z,D*y){D p,t;
   case  7: DQ(n, t=*y++;                                     *z++=t<-TMAX?-1:TMAX<t?1:(1.0-exp(-2*t))/(1.0+exp(-2*t)););           break;
 // NaN bug in android asin()  _1 o. _1
 #if defined(ANDROID) && (defined(__aarch32__)||defined(__arm__)||defined(__aarch64__))
-  case -1: DQ(n, t=*y++; ASSERTW( -1.0<=t&&t<=1.0, EWIMAG ); *z++=asin(t););NAN0;  break;
+  case -1: DQ(n, t=*y++; ASSERTWR( -1.0<=t&&t<=1.0, EWIMAG ); *z++=asin(t););NAN0;  break;
 #else
-  case -1: DQ(n, t=*y++; ASSERTW( -1.0<=t&&t<=1.0, EWIMAG ); *z++=asin(t););       break;
+  case -1: DQ(n, t=*y++; ASSERTWR( -1.0<=t&&t<=1.0, EWIMAG ); *z++=asin(t););       break;
 #endif
-  case -2: DQ(n, t=*y++; ASSERTW( -1.0<=t&&t<=1.0, EWIMAG ); *z++=acos(t););       break;
+  case -2: DQ(n, t=*y++; ASSERTWR( -1.0<=t&&t<=1.0, EWIMAG ); *z++=acos(t););       break;
   case -3: DQ(n,                                             *z++=atan(*y++););    break;
-  case -4: DQ(n, t=*y++; ASSERTW(t<=-1.0||1.0<=t,  EWIMAG ); *z++=t<-1e8||1e8<t?t:t==-1?0:(t+1)*sqrt((t-1)/(t+1));); break;
+  case -4: DQ(n, t=*y++; ASSERTWR(t<=-1.0||1.0<=t,  EWIMAG ); *z++=t<-1e8||1e8<t?t:t==-1?0:(t+1)*sqrt((t-1)/(t+1));); break;
   case -5: p=log(2.0); 
            DQ(n, t=*y++; *z++=1.0e8<t?p+log(t):-7.8e3>t?-(p+log(-t)):log(t+sqrt(t*t+1.0)););               break;
   case -6: p=log(2.0); 
-           DQ(n, t=*y++; ASSERTW(          1.0<=t, EWIMAG ); *z++=1.0e8<t?p+log(t):log(t+sqrt(t*t-1.0));); break;
-  case -7: DQ(n, t=*y++; ASSERTW( -1.0<=t&&t<=1.0, EWIMAG ); *z++=0.5*log((1.0+t)/(1.0-t)););              break;
+           DQ(n, t=*y++; ASSERTWR(          1.0<=t, EWIMAG ); *z++=1.0e8<t?p+log(t):log(t+sqrt(t*t-1.0));); break;
+  case -7: DQ(n, t=*y++; ASSERTWR( -1.0<=t&&t<=1.0, EWIMAG ); *z++=0.5*log((1.0+t)/(1.0-t)););              break;
   case  9: DQ(n,         *z++=*y++;);           break;    
   case 10: DQ(n, t=*y++; *z++=ABS(t););         break;
   case 11: DQ(n,         *z++=0.0;);            break;
   case 12: DQ(n,         *z++=0<=*y++?0.0:PI;); break;
  }
- NAN1V;
+// obsolete NAN1V;
+ ASSERTWR(!NANTEST,EVNAN);
+ R EVOK;
 }
 
-AHDR2(cirBD,D,B,D){ASSERTW(n<=1&&1==m,EWIMAG); n^=REPSGN(n); cirx(n,   (I)*x,z,y);}
-AHDR2(cirID,D,I,D){ASSERTW(n<=1&&1==m,EWIMAG); n^=REPSGN(n); cirx(n,   *x,z,y);}
+AHDR2(cirBD,D,B,D){ASSERTWR(n<=1&&1==m,EWIMAG); n^=REPSGN(n); R cirx(n,   (I)*x,z,y);}
+AHDR2(cirID,D,I,D){ASSERTWR(n<=1&&1==m,EWIMAG); n^=REPSGN(n); R cirx(n,   *x,z,y);}
 
 AHDR2(cirDD,D,D,D){I k=(I)jround(*x);
- ASSERTW(k==*x,EVDOMAIN); 
- ASSERTW(n<=1&&1==m,EWIMAG); // if more than one value, 
+ ASSERTWR(k==*x,EVDOMAIN); 
+ ASSERTWR(n<=1&&1==m,EWIMAG); // if more than one x value, retry as general case
  n^=REPSGN(n);   // convert complementary n to nonneg
- cirx(n,k,z,y);
+ R cirx(n,k,z,y);
 }
 
 

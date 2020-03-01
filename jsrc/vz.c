@@ -243,7 +243,7 @@ ZF2(jtzcir){D r;I x;Z z;
  z=zeroZ;
  r=u.re;
  x=(I)jround(r);
- ZASSERT(BETWEENC(x,-12,12)&&FFEQ(x,r)&&!u.im,EVDOMAIN);
+ ZASSERT(BETWEENC(x,-12,12)&&FFEQ(x,r)&&!u.im,EVDOMAIN);  // x must be integer
  switch(x){
   default: ZASSERT(0,EVDOMAIN);
   case  0: R zsqrt(ztymes(zplus(z1,v),zminus(z1,v)));

@@ -6,10 +6,11 @@
 #include "j.h"
 #include "ve.h"
 
-
+#if 0  // not yet implemented
 DXF2(jtdxplus){DX z=zeroDX;
  R z;
 }
 
 
 APFX(plusDX, DX,DX,DX, dxplus )
+#endif

@@ -6,8 +6,8 @@
 #include "j.h"
 
 
-static APFX(maxC, UC,UC,UC, MAX)
-static APFX(minC, UC,UC,UC, MIN)
+static APFX(maxC, UC,UC,UC, MAX,, R EVOK;)
+static APFX(minC, UC,UC,UC, MIN,, R EVOK;)
 
 static AIFX(ltC,  B, UC,UC, <  )
 static AIFX(leC,  B, UC,UC, <= )

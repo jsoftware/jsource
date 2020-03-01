@@ -420,12 +420,12 @@ A jtcvz(J jt,I cv,A w){I t;
 //  t is the argument type
 //  action routine is stored in *ado, flags in *cv.  If no action routine, *ado=0
 #define VA2F(fname,ptr,fp,fm,ft)   \
- static VA2 fname##EWOV[] = { {ft,VD} , {fp,VD}, {fm,VD}, {0,0} }; \
- VA2 jt##fname(J jt,A self,I t){  \
+ static VARPS fname##EWOV[] = { {ft,VD} , {fp,VD}, {fm,VD}, {0,0} }; \
+ VARPS jt##fname(J jt,A self,I t){  \
   if(!(jt->jerr>=EWOV)){  /* normal case, starting the op */                        \
    t&=(NUMERIC+SBT)&(~SPARSE); t=FAV(self)->flag&VISATOMIC2?t:0;   /* t=0 is not numeric or not atomic fn */  \
    I tx=t>>INTX; if(t>FL){tx>>=(XNUMX-INTX); tx=t>RAT?3:tx; tx+=3;}  /* index of type */  \
-   VA2 *ra=((VA*)(FAV(self)->localuse.lvp[0]))->ptr+tx; ra=t?ra:fname##EWOV+3;  /* point to return slot */  \
+   VARPS *ra=((VA*)(FAV(self)->localuse.lvp[0]))->ptr+tx; ra=t?ra:fname##EWOV+3;  /* point to return slot */  \
    R *ra;   /* return the routine address/flags */  \
   }else{ /* here to recover from integer overflow */ \
    jt->jerr=0;                                 \
@@ -654,8 +654,9 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
 
   // The compiler thinks that because ak/wk/zk are used in the loop they should reside in registers.  We do better to keep a and w in registers.  So we
   // force the compiler to spill aawwzk by using address arithmetic.
-  {
-   {C *av=CAV(a); C *wv=CAV(w); C *zv=CAV(z);   // point to the data
+  {I rc=EVOK;
+   {  // lowest rc from the executed sections
+    C *av=CAV(a); C *wv=CAV(w); C *zv=CAV(z);  // point to the data
     // Call the action routines: nf,mf, etc must be preserved in case of repair
 #if 0   // obsolete
     if(nf-1==0){I i=mf; do{((AHDR2FN*)adocv.f)(n,m,av,wv,zv,jt); if(!--i)break; av+=awzk[0]; wv+=awzk[1]; zv+=awzk[2];}while(1);}  // if the short cell is not repeated, loop over the frame
@@ -664,12 +665,13 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
 #else
    // mf has the total number of calls.  nf is 1 less than the number of calls with a repeated cell.  aawwzk[1,3] have 0 in a repeated argument
     // note: the compiler unrolls this call loop.  Would be nice to suppress that.  All it seems to save is one lousy vzeroupper
-   I i=mf; I jj=nf; while(1){((AHDR2FN*)adocv.f)(n,m,av,wv,zv,jt); if(!--i)break; zv+=aawwzk[4]; I jj1=--jj; jj=jj<0?nf:jj; av+=aawwzk[1+REPSGN(jj1)]; wv+=aawwzk[3+REPSGN(jj1)];}  // jj1 is -1 on the last inner iter, where we use outer incr
+   I i=mf; I jj=nf; while(1){I lrc=((AHDR2FN*)adocv.f)(n,m,av,wv,zv,jt); rc=lrc<rc?lrc:rc; if(rc==EWOVIP+EWOVIPMULII)break; if(!--i)break; zv+=aawwzk[4]; I jj1=--jj; jj=jj<0?nf:jj; av+=aawwzk[1+REPSGN(jj1)]; wv+=aawwzk[3+REPSGN(jj1)];}  // jj1 is -1 on the last inner iter, where we use outer incr
+if(jt->jerr)SEGFAULT  // scaf
 #endif
    }
    // The work has been done.  If there was no error, check for optional conversion-if-possible or -if-necessary
-   if(!jt->jerr){RETF(!((I)jtinplace&VRI+VRD)?z:cvz((I)jtinplace,z));  // normal return is here.  The rest is error recovery
-   }else if(jt->jerr-EWOVIP>=0){A zz;C *zzv;I zzk;
+   if(rc==EVOK){RETF(!((I)jtinplace&VRI+VRD)?z:cvz((I)jtinplace,z));  // normal return is here.  The rest is error recovery
+   }else if(rc-EWOVIP>=0){A zz;C *zzv;I zzk;
     // Here for overflow that can be corrected in place
     // If the original result block cannot hold the D result, allocate a separate result area
     if(sizeof(D)==sizeof(I)){zz=z; MODBLOCKTYPE(zz,FL); zzk=aawwzk[4];   // shape etc are already OK
@@ -677,7 +679,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
     // restore pointers to beginning of arguments
     zzv=CAV(zz);  // point to new-result data
     // Set up pointers etc for the overflow handling.  Set b=1 if w is taken for the x argument to repair
-    if(jt->jerr==EWOVIP+EWOVIPMULII){D *zzvd=(D*)zzv; I *zvi=IAV(z);
+    if(rc==EWOVIP+EWOVIPMULII){D *zzvd=(D*)zzv; I *zvi=IAV(z);
      // Multiply repair.  We have to convert all the pre-overflow results to float, and then finish the multiplies
      DQ(jt->mulofloloc, *zzvd++=(D)*zvi++;);  // convert the multiply results to float
      // Now repeat the processing.  Unlike with add/subtract overflow, we have to match up all the argument atoms
@@ -693,9 +695,9 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
 #endif
      }
     } else {   // not multiply repair, but something else to do inplace
-     adocv.f = repairip[(jt->jerr-EWOVIP)&3];   // fetch ep from table
-     I nipw = ((z!=w) & (jt->jerr-EWOVIP)) ^ (((jt->jerr-EWOVIP)>>2) & 1);  // nipw from z!=w if bits2,0==01; 1 if 10; 0 if 00
-// obsolete      switch(jt->jerr-EWOVIP){
+     adocv.f = repairip[(rc-EWOVIP)&3];   // fetch ep from table
+     I nipw = ((z!=w) & (rc-EWOVIP)) ^ (((rc-EWOVIP)>>2) & 1);  // nipw from z!=w if bits2,0==01; 1 if 10; 0 if 00
+// obsolete      switch(rc-EWOVIP){
 // obsolete      case EWOVIPPLUSII:
 // obsolete       // choose the non-in-place argument
 // obsolete       adocv.f=(VF)plusIIO; nipw = z!=w; break; // if w not repeated, select it for not-in-place
@@ -733,9 +735,10 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
 #endif
      }
     }
-    RESETERR
     R zz;  // Return the result after overflow has been corrected
    }
+   // retry required, not inplaceable.  Signal the error to the caller
+   jt->jerr=(UC)rc;
   }
  }else{z=vasp(a,w,FAV(self)->id,adocv.f,adocv.cv,atype(adocv.cv),rtype(adocv.cv),mf,aawwzk[0],nf,aawwzk[1],fr>>RANKTX,(RANKT)fr); if(!jt->jerr)R z;}  // handle sparse arrays separately.  at this point ak/wk/mf/nf hold acr/wcr/af/wf
  R 0;  // return to the caller, who will retry any retryable errors
@@ -1171,9 +1174,10 @@ DF2(jtfslashatg){A fs,gs,y,z;B b,sb=0;C*av,c,d,*wv;I ak,an,ar,*as,at,m,
  }else{A z1;B p=0;C*yv,*zu,*zv;  // general f/@:g.  Do not run g on entire y; instead run one cell at a time
   av=CAV(a)+ak*(nn-1); wv=CAV(w)+wk*(nn-1); yv=CAV(y); zv=CAV(z);
   GA(z1,zt,zn,r-1,1+s); zu=CAV(z1);  // allocate ping-pong output area for f/
-  ((AHDR2FN*)adocv.f)(n,m,av,wv,zv,jt);  // create first result-cell of g
-  DQ(nn-1, av-=ak; wv-=wk; ((AHDR2FN*)adocv.f)(n,m,av,wv,yv,jt); ((AHDR2FN*)adocvf.f)((I)1,zn,yv,p?zu:zv,p?zv:zu,jt); p^=1;);  // p==1 means result goes to ping buffer zv
-  if(NEVM<jt->jerr){jt->jerr=0; df1(z,df2(y,a,w,gs),fs);}else z=p?z1:z;  // if overflow, revert to old-fashioned way.  If p points to ping, prev result went to pong, make pong the result
+  I rc;  // accumulate error returns
+  rc=((AHDR2FN*)adocv.f)(n,m,av,wv,zv,jt);  // create first result-cell of g
+  DQ(nn-1, av-=ak; wv-=wk; I lrc; lrc=((AHDR2FN*)adocv.f)(n,m,av,wv,yv,jt); lrc=((AHDR2FN*)adocvf.f)((I)1,zn,yv,p?zu:zv,p?zv:zu,jt); rc=lrc<rc?lrc:rc; p^=1;);  // p==1 means result goes to ping buffer zv
+  if(NEVM<(rc&255)){df1(z,df2(y,a,w,gs),fs);}else{if(rc&255)jsignal(rc); z=p?z1:z;}  // if overflow, revert to old-fashioned way.  If p points to ping, prev result went to pong, make pong the result
  }
  RE(0); RETF(z);
 }    /* a f/@:g w where f and g are atomic*/
@@ -1237,8 +1241,8 @@ F1(jtsquare){RZ(w); R tymes(w,w);}   // leave inplaceable in w only  ?? never in
 F1(jtrecip ){RZ(w); SETCONPTR(1) R divide(conptr,w);}
 F1(jthalve ){RZ(w); if(!(AT(w)&XNUM+RAT))R tymes(onehalf,w); IPSHIFTWA; R divide(w,num(2));} 
 
-static AHDR2(zeroF,B,void,void){memset(z,C0,m*(n^REPSGN(n)));}
-static AHDR2(oneF,B,void,void){memset(z,C1,m*(n^REPSGN(n)));}
+static AHDR2(zeroF,B,void,void){memset(z,C0,m*(n^REPSGN(n)));R EVOK;}
+static AHDR2(oneF,B,void,void){memset(z,C1,m*(n^REPSGN(n)));R EVOK;}
 
 // table of routines to handle = ~:
 static const VF eqnetbl[2][16] = {

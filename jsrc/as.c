@@ -294,7 +294,7 @@ static DF1(jtsscan){A y,z;I d,f,m,n,r,t,wn,wr,*ws,wt;
  if(((n-2)|(wn-1))<0){if(vaid(FAV(y)->fgh[0])){R r?RETARG(w):reshape(over(shape(w),num(1)),w);}else R IRS1(w,self,r,jtsuffix,z);}  // if empty arg, or just 1 cell in selected axis, convert to f/\ which handles the short arg 
 
    // note that the above line always takes the r==0 case
- VA2 adocv = vasfx(FAV(y)->fgh[0],wt);  // analyze f
+ VARPS adocv = vasfx(FAV(y)->fgh[0],wt);  // analyze f
  if(!adocv.f)R IRSIP1(w,self,r,jtssg,z);   // if not supported atomically, go do general suffix
  if((t=atype(adocv.cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));
  if(ASGNINPLACESGN(SGNIF((I)jtinplace,JTINPLACEWX)&SGNIF(adocv.cv,VIPOKWX),w))z=w; else GA(z,rtype(adocv.cv),wn,wr,ws);
@@ -348,18 +348,21 @@ static DF2(jtofxassoc){A f,i,j,p,s,x,z;C id,*zv;I c,d,k,kc,m,r,t;V*v;VA2 adocv;
  // run it.
  //
  // If we modify this code to use this path for other associative verbs, we would need to check the type of (p f s)
- if(!TYPESEQ(AT(p),AT(s))){jt->jerr=EWOV;} else {I klg;  // simulate overflow if different precisions - will convert everything to float
+ I rc;  // return code from execution of verb
+ if(!TYPESEQ(AT(p),AT(s))){rc=EWOV;} else {I klg;  // simulate overflow if different precisions - will convert everything to float
   r=AR(p); c=aii(p); t=AT(p); klg=bplg(t); kc=c<<klg;
   adocv=var(x,t,t); // analyze the u operand
   ASSERTSYS(adocv.f,"ofxassoc");  // scaf
   GA(z,t,c*(1+d),r,AS(p)); AS(z)[0]=1+d; zv=CAV(z);  // allocate result assuming no overflow
   MC(zv,     AV(s),          kc);                     // first cell is {.s, i. e. all but the first infix
-  if(1<d)((AHDR2FN*)adocv.f)((I)1,c*(d-1),AV(p),kc+CAV(s),zv+kc,jt);  /* (}:p) f (}.s), with result stored into the result area */  // don't call with 0 length!
+  if(1<d)rc=((AHDR2FN*)adocv.f)((I)1,c*(d-1),AV(p),kc+CAV(s),zv+kc,jt);  /* (}:p) f (}.s), with result stored into the result area */  // don't call with 0 length!
   MC(zv+kc*d,CAV(p)+kc*(d-1),kc);                     // last cell is {:p, i. e. all but the last infix
   // If there was overflow on the ado, we have to redo the operation as a float.
   // We also have to redo if the types of p and s were different (for example, if one overflowed to float and the other didn't)
  }
- if(jt->jerr>=EWOV){RESETERR; R ofxassoc(a,cvt(FL,w),self);}else R z;
+ if(rc>=EWOV){/* obsolete RESETERR;*/ R ofxassoc(a,cvt(FL,w),self);}
+ if(rc)jsignal(rc);  // if there was an error, signal it
+ R z;
 }    /* a f/\. w where f is an atomic associative fn */
 
 static DF1(jtiota1rev){I j; SETIC(w,j); R apv(j,j,-1L);}

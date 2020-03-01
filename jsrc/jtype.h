@@ -130,8 +130,9 @@ struct AD {
 typedef struct {A a,t;}TA;
 typedef A                (*AF)();
 typedef UI               (*UF)();
-typedef void             (*VF)();
+typedef I                (*VF)();  // action verb fir atomic dyad
 typedef I                (*VA1F)();  // action verb for atomic monad
+typedef void             (*VARPSF)();  // action verb for atomic reduce/prefix/suffix routine
 typedef B                (*CMP)();    /* comparison function in sort     */
 typedef A                  X;
 typedef struct {X n,d;}    Q;
@@ -802,3 +803,4 @@ typedef struct {
 // Info for calling an atomic verb
 typedef struct {VF f;I cv;} VA2;  // for dyads
 typedef struct {VA1F f;I cv;} VA1;  // for monads
+typedef struct {VARPSF f;I cv;} VARPS;  // for reduce/prefix/suffix

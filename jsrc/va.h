@@ -3,7 +3,7 @@
 /*                                                                         */
 /* Verbs: Macros and Defined Constants for Atomic (Scalar) Verbs           */
 
-typedef struct {VA2 p2[13];VA2 pins[7];VA2 ppfx[7];VA2 psfx[7];} VA;
+typedef struct {VA2 p2[13];VARPS pins[7];VARPS ppfx[7];VARPS psfx[7];} VA;
 typedef struct {VA1 p1[6];} UA;
 
                                     /*   cv - control vector               */
@@ -147,19 +147,20 @@ typedef struct {VA1 p1[6];} UA;
 #define BW1111(x,y)     (-1)
 
 typedef I AHDR1FN(JST * RESTRICT jt,I n,void* z,void* x);
-typedef void AHDR2FN(I n,I m,void* RESTRICTI x,void* RESTRICTI y,void* RESTRICTI z,J jt);
-typedef void AHDRPFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);
+typedef I AHDR2FN(I n,I m,void* RESTRICTI x,void* RESTRICTI y,void* RESTRICTI z,J jt);
+typedef void AHDRPFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);  // these 3 must be the same for now, for VARPS
 typedef void AHDRRFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);
 typedef void AHDRSFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);
 
 #define AHDR1(f,Tz,Tx)          I f(JST * RESTRICT jt,I n,Tz* z,Tx* x)   // must match VA1F, AHDR1FN
 #define AMON(f,Tz,Tx,stmt)      AHDR1(f,Tz,Tx){DQ(n, {stmt} ++z; ++x;); R EVOK;}
 #define AMONPS(f,Tz,Tx,prefix,stmt,suffix)      AHDR1(f,Tz,Tx){prefix DQ(n, {stmt} ++z; ++x;) suffix}
-#define HDR1JERR I rc=jt->jerr; R rc?rc:EVOK;   // translate no error to no-error value
+#define HDR1JERR I rc=jt->jerr; jt->jerr=0; R rc?rc:EVOK;   // translate no error to no-error value
+#define HDR1JERRNAN I rc=jt->jerr; rc=NANTEST?EVNAN:rc; jt->jerr=0; R rc?rc:EVOK;   // translate no error to no-error value
 
 
 
-#define AHDR2(f,Tz,Tx,Ty)       void f(I n,I m,Tx* RESTRICTI x,Ty* RESTRICTI y,Tz* RESTRICTI z,J jt)  // must match VF, AHDR2FN
+#define AHDR2(f,Tz,Tx,Ty)       I f(I n,I m,Tx* RESTRICTI x,Ty* RESTRICTI y,Tz* RESTRICTI z,J jt)  // must match VF, AHDR2FN
 #define AHDRP(f,Tz,Tx)          void f(I d,I n,I m,Tx* RESTRICTI x,Tz* RESTRICTI z,J jt)
 #define AHDRR(f,Tz,Tx)          void f(I d,I n,I m,Tx* RESTRICTI x,Tz* RESTRICTI z,J jt)
 #define AHDRS(f,Tz,Tx)          void f(I d,I n,I m,Tx* RESTRICTI x,Tz* RESTRICTI z,J jt)
@@ -221,22 +222,61 @@ typedef void AHDRSFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);
   if(n-1==0)  DQ(m,               *z++=*x++ symb *y++; )   \
   else if(n-1<0)DQ(m, u=*x++; DQC(n, *z++=u    symb *y++;))   \
   else      DQ(m, v=*y++; DQ(n, *z++=*x++ symb v;   ));  \
+  R EVOK; \
  }
 
+#if 0 // obsolete
 #define AOVF(f,Tz,Tx,Ty,fvv,f1v,fv1)  \
  AHDR2(f,I,I,I){C er=0;I u,v,*x1,*y1,*z1;                                       \
   if(n-1==0)  {fvv(m,z,x,y); RER;}                                                \
   else if(n-1<0){z1=z; y1=y; n=~n; DQ(m, u=*x++; f1v(n,z,u,y); RER; z=z1+=n; y=y1+=n;);}  \
   else      {z1=z; x1=x; DQ(m, v=*y++; fv1(n,z,x,v); RER; z=z1+=n; x=x1+=n;);}  \
  }
+#endif
 
-#define APFX(f,Tz,Tx,Ty,pfx)   \
+// suff must return the correct result
+#define APFX(f,Tz,Tx,Ty,pfx,pref,suff)   \
  AHDR2(f,Tz,Tx,Ty){Tx u;Ty v;                                  \
+  pref \
   if(n-1==0)  DQ(m,               *z++=pfx(*x,*y); x++; y++; )   \
   else if(n-1<0)DQ(m, u=*x++; DQC(n, *z++=pfx( u,*y);      y++;))   \
   else      DQ(m, v=*y++; DQ(n, *z++=pfx(*x, v); x++;     ));  \
+  suff \
  }
 
+// commute=bit0 = commutative, bit1 set if incomplete y must be filled with 0 (to avoid isub oflo), bit2 set if incomplete x must be filled with i (for fdiv NaN) 
+#define primop256(name,commute,pref,zzop,suff) \
+AHDR2(name,D,D,D){ \
+ __m256d xx,yy,zz; \
+ __m256i endmask; /* length mask for the last word */ \
+ _mm256_zeroupper(VOIDARG); \
+   /* will be removed except for divide */ \
+ pref \
+ if(n-1==0){ \
+  /* vector-to-vector, no repetitions */ \
+  endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-m)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
+  DQ((m-1)>>LGNPAR, xx=_mm256_loadu_pd(x); yy=_mm256_loadu_pd(y); zzop; _mm256_storeu_pd(z, zz); x+=NPAR; y+=NPAR; z+=NPAR;) \
+  /* runout, using mask */ \
+  xx=_mm256_maskload_pd(x,endmask); yy=_mm256_maskload_pd(y,endmask); if(commute&4)xx=_mm256_blendv_pd(_mm256_set1_pd(1.0),xx,_mm256_castsi256_pd(endmask)); zzop; _mm256_maskstore_pd(z, endmask, zz); \
+ }else{ \
+  if(!(commute&1)&&n-1<0){n=~n; \
+   /* atom+vector */ \
+   endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-n)&(NPAR-1)))); \
+   DQ(m, xx=_mm256_set1_pd(*x); ++x; \
+     DQ((n-1)>>LGNPAR, yy=_mm256_loadu_pd(y); zzop; _mm256_storeu_pd(z, zz); y+=NPAR; z+=NPAR;)  yy=_mm256_maskload_pd(y,endmask); if(commute&4)xx=_mm256_blendv_pd(_mm256_set1_pd(1.0),xx,_mm256_castsi256_pd(endmask)); zzop; _mm256_maskstore_pd(z, endmask, zz); \
+     y+=((n-1)&(NPAR-1))+1; z+=((n-1)&(NPAR-1))+1;) \
+  }else{ \
+   /* vector+atom */ \
+   if(commute&1){I taddr=(I)x^(I)y; x=n<0?y:x; y=(D*)((I)x^taddr); n^=REPSGN(n);}; endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-n)&(NPAR-1)))); \
+   DQ(m, yy=_mm256_set1_pd(*y); ++y; \
+     DQ((n-1)>>LGNPAR, xx=_mm256_loadu_pd(x); zzop; _mm256_storeu_pd(z, zz); x+=NPAR; z+=NPAR;)  xx=_mm256_maskload_pd(x,endmask); if(commute&2)yy=_mm256_blendv_pd(_mm256_castsi256_pd(endmask),yy,_mm256_castsi256_pd(endmask)); zzop; _mm256_maskstore_pd(z, endmask, zz); \
+     x+=((n-1)&(NPAR-1))+1; z+=((n-1)&(NPAR-1))+1;) \
+  } \
+ } \
+ suff \
+}
+
+#if 0 // obsolete
 #define ANAN(f,Tz,Tx,Ty,pfx)   \
  AHDR2(f,Tz,Tx,Ty){Tx u;Ty v;                                  \
   NAN0;                                                        \
@@ -245,6 +285,7 @@ typedef void AHDRSFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);
   else      DQ(m, v=*y++; DQ(n, *z++=pfx(*x, v); x++;     ));  \
   NAN1V;                                                       \
  }
+#endif
 
 /* Embedded visual tools v3.0 fails perform the z++ on all wince platforms. -KBI */
 #if SY_WINCE
@@ -260,6 +301,7 @@ typedef void AHDRSFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);
   if(n-1==0)  DQ(m, u=(D)*x++;       v=(D)*y++; *z=pfx(u,v); z++; )    \
   else if(n-1<0)DQ(m, u=(D)*x++; DQC(n, v=(D)*y++; *z=pfx(u,v); z++;))    \
   else      DQ(m, v=(D)*y++; DQ(n, u=(D)*x++; *z=pfx(u,v); z++;));   \
+  R EVOK; \
  }
 #endif
 // support intolerant comparisons explicitly
@@ -274,6 +316,7 @@ typedef void AHDRSFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);
    else if(n-1<0)DQ(m, u=(D)*x++; DQC(n, v=(D)*y++; *z=u pfx0 v; z++;))    \
    else      DQ(m, v=(D)*y++; DQ(n, u=(D)*x++; *z=u pfx0 v; z++;));   \
   } \
+  R EVOK; \
  }
 
 
@@ -311,6 +354,7 @@ AHDR2(f,void,void,void){ I u,v;       \
    u=*(I*)x; u=pfx(u,v); STOREBYTES(z,u,(-n)&(SZI-1)); x=(I*)((UC*)x+(((n-1)&(SZI-1))+1)); z=(I*)((UC*)z+(((n-1)&(SZI-1))+1)); \
   ) \
  } \
+ R EVOK; \
 }
 
 #if C_AVX&&SY_64
@@ -350,6 +394,7 @@ AHDR2(f,void,void,void){ I u,v;       \
    u=*(I*)x; u=pfx(u,v); STOREBYTES(z,u,(-n)&(SZI-1)); x=(I*)((UC*)x+(((n-1)&(SZI-1))+1)); z=(I*)((UC*)z+(((n-1)&(SZI-1))+1)); \
   ) \
  } \
+ R EVOK; \
 }
 
 #if C_AVX2

@@ -140,7 +140,7 @@ DF2(jtpolymult){A f,g,y,z;B b=0;C*av,c,d,*wv;I at,i,j,k,m,m1,n,p,t,wt,zn;V*v;
    er=0; PMLOOP(I,I,INT, TYMESF(x), ACCUMF);
 */
   // here for +//.@(*/)
-  {A a1,y;I*aa,i,*u,*ww=(I*)wv,*v,*yv,*zv;VA2 adocv,adocvsum;
+  {A a1,y;I*aa,i,*u,*ww=(I*)wv,*v,*yv,*zv;VA2 adocv; VARPS adocvsum;
    b=1;
    adocv=var(ds(CSTAR),at,wt); adocvsum=vains(ds(CPLUS),wt);
    GATV0(a1,INT,m,1); aa=AV(a1); u=m+(I*)av; DO(m, aa[i]=*--u;);
@@ -149,11 +149,12 @@ DF2(jtpolymult){A f,g,y,z;B b=0;C*av,c,d,*wv;I at,i,j,k,m,m1,n,p,t,wt,zn;V*v;
    for(i=0;i<zn;++i){
     j=MIN(i,m1); u=aa+m1-j; v=ww+i-j;
     p=MIN(1+i,zn-i); p=MIN(p,k);
-    ((AHDR2FN*)adocv.f)((I)1,p,u,v,yv,jt); ((AHDRRFN*)adocvsum.f)((I)1,p,(I)1,yv,zv,jt);
+    I rc=((AHDR2FN*)adocv.f)((I)1,p,u,v,yv,jt); if(rc)jsignal(rc); ((AHDRRFN*)adocvsum.f)((I)1,p,(I)1,yv,zv,jt);
     ++zv;
    }
    if(EWOV<=jt->jerr){RESETERR; PMLOOP(I,D,FL, x=*u--*(D)*v++, x+=*u--*(D)*v++);}  // erroneous fa(z) removed; any error >= EWOV will be an overflow
-  break;}
+  break;
+  }
  }
  if(t&FL+CMPX)NAN1; RE(0);
  if(!b)R obqfslash(df2(z,a,w,g),f);

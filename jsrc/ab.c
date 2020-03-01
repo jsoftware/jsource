@@ -10,22 +10,22 @@
 #include "ar.h"
 
 
-APFX(bw0000II, UI,UI,UI, BW0000)       static APFX(bw0000CC, UC,UC,UC, BW0000)
-APFX(bw0001II, UI,UI,UI, BW0001)       static APFX(bw0001CC, UC,UC,UC, BW0001)
-APFX(bw0010II, UI,UI,UI, BW0010)       static APFX(bw0010CC, UC,UC,UC, BW0010)
-APFX(bw0011II, UI,UI,UI, BW0011)       static APFX(bw0011CC, UC,UC,UC, BW0011)
-APFX(bw0100II, UI,UI,UI, BW0100)       static APFX(bw0100CC, UC,UC,UC, BW0100)
-APFX(bw0101II, UI,UI,UI, BW0101)       static APFX(bw0101CC, UC,UC,UC, BW0101)
-APFX(bw0110II, UI,UI,UI, BW0110)       static APFX(bw0110CC, UC,UC,UC, BW0110)
-APFX(bw0111II, UI,UI,UI, BW0111)       static APFX(bw0111CC, UC,UC,UC, BW0111)
-APFX(bw1000II, UI,UI,UI, BW1000)       static APFX(bw1000CC, UC,UC,UC, BW1000)
-APFX(bw1001II, UI,UI,UI, BW1001)       static APFX(bw1001CC, UC,UC,UC, BW1001)
-APFX(bw1010II, UI,UI,UI, BW1010)       static APFX(bw1010CC, UC,UC,UC, BW1010)
-APFX(bw1011II, UI,UI,UI, BW1011)       static APFX(bw1011CC, UC,UC,UC, BW1011)
-APFX(bw1100II, UI,UI,UI, BW1100)       static APFX(bw1100CC, UC,UC,UC, BW1100)
-APFX(bw1101II, UI,UI,UI, BW1101)       static APFX(bw1101CC, UC,UC,UC, BW1101)
-APFX(bw1110II, UI,UI,UI, BW1110)       static APFX(bw1110CC, UC,UC,UC, BW1110)
-APFX(bw1111II, UI,UI,UI, BW1111)       static APFX(bw1111CC, UC,UC,UC, BW1111)
+APFX(bw0000II, UI,UI,UI, BW0000,, R EVOK;)       static APFX(bw0000CC, UC,UC,UC, BW0000,, R EVOK;)
+APFX(bw0001II, UI,UI,UI, BW0001,, R EVOK;)       static APFX(bw0001CC, UC,UC,UC, BW0001,, R EVOK;)
+APFX(bw0010II, UI,UI,UI, BW0010,, R EVOK;)       static APFX(bw0010CC, UC,UC,UC, BW0010,, R EVOK;)
+APFX(bw0011II, UI,UI,UI, BW0011,, R EVOK;)       static APFX(bw0011CC, UC,UC,UC, BW0011,, R EVOK;)
+APFX(bw0100II, UI,UI,UI, BW0100,, R EVOK;)       static APFX(bw0100CC, UC,UC,UC, BW0100,, R EVOK;)
+APFX(bw0101II, UI,UI,UI, BW0101,, R EVOK;)       static APFX(bw0101CC, UC,UC,UC, BW0101,, R EVOK;)
+APFX(bw0110II, UI,UI,UI, BW0110,, R EVOK;)       static APFX(bw0110CC, UC,UC,UC, BW0110,, R EVOK;)
+APFX(bw0111II, UI,UI,UI, BW0111,, R EVOK;)       static APFX(bw0111CC, UC,UC,UC, BW0111,, R EVOK;)
+APFX(bw1000II, UI,UI,UI, BW1000,, R EVOK;)       static APFX(bw1000CC, UC,UC,UC, BW1000,, R EVOK;)
+APFX(bw1001II, UI,UI,UI, BW1001,, R EVOK;)       static APFX(bw1001CC, UC,UC,UC, BW1001,, R EVOK;)
+APFX(bw1010II, UI,UI,UI, BW1010,, R EVOK;)       static APFX(bw1010CC, UC,UC,UC, BW1010,, R EVOK;)
+APFX(bw1011II, UI,UI,UI, BW1011,, R EVOK;)       static APFX(bw1011CC, UC,UC,UC, BW1011,, R EVOK;)
+APFX(bw1100II, UI,UI,UI, BW1100,, R EVOK;)       static APFX(bw1100CC, UC,UC,UC, BW1100,, R EVOK;)
+APFX(bw1101II, UI,UI,UI, BW1101,, R EVOK;)       static APFX(bw1101CC, UC,UC,UC, BW1101,, R EVOK;)
+APFX(bw1110II, UI,UI,UI, BW1110,, R EVOK;)       static APFX(bw1110CC, UC,UC,UC, BW1110,, R EVOK;)
+APFX(bw1111II, UI,UI,UI, BW1111,, R EVOK;)       static APFX(bw1111CC, UC,UC,UC, BW1111,, R EVOK;)
 
 /* see below */                        /* see below */
 REDUCEPFX(bw0001insI, UI,UI, BW0001, bw0001II, bw0001II)   static REDUCEPFX(bw0001insC, UC,UC, BW0001, bw0001CC, bw0001CC)
@@ -110,9 +110,9 @@ DF2(jtbitwisechar){DECLFG;A*p,x,y,z;B b;I j,m,n,zn;AHDR2FN* ado;
  ASSERTAGREE(AS(a),AS(w),MIN(AR(a),AR(w)));
  j=i0(VAV(fs)->fgh[1])-16;
  GATV(z,LIT,zn,MAX(AR(a),AR(w)),AS(b?w:a));   // d is fixed; was d==SZI?LIT:C2T; would need GA then
- if(1==n)                 {ado=(AHDR2FN*)bwI[j]; m=(m+SZI-1)>>LGSZI;}
- else if((-AR(a)&-AR(w)&-(n&(SZI-1)))>=0){ado=(AHDR2FN*)bwI[j]; n=(n+SZI-1)>>LGSZI; p=b?&x:&y; A zz; RZ(*p=IRS2(sc(SZI),*p,0L,0L,0L,jtrepeat,zz));} // a atom, w atom, or multiple of SZI
- else                      ado=(AHDR2FN*)bwC[j];
+ if(1==n)                 {ado=bwI[j]; m=(m+SZI-1)>>LGSZI;}
+ else if((-AR(a)&-AR(w)&-(n&(SZI-1)))>=0){ado=bwI[j]; n=(n+SZI-1)>>LGSZI; p=b?&x:&y; A zz; RZ(*p=IRS2(sc(SZI),*p,0L,0L,0L,jtrepeat,zz));} // a atom, w atom, or multiple of SZI
+ else                      ado=bwC[j];
  n^=-b; n=(n==~1)?1:n;  // encode b flag in sign of n
  ado(n,m,AV(x),AV(y),AV(z),jt); 
  *(zn+CAV(z))=0;

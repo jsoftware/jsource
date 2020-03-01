@@ -292,7 +292,7 @@ static A jtredsp1a(J jt,C id,A z,A e,I n,I r,I*s){A t;B b,p=0;D d=1;
    R !p==*BAV(e)&&b!=(n&1)?not(z):z;
 }}   /* f/w on sparse vector w, post processing */
 
-static A jtredsp1(J jt,A w,A self,C id,VF ado,I cv,I f,I r,I zt){A e,x,z;I m,n;P*wp;
+static A jtredsp1(J jt,A w,A self,C id,VARPSF ado,I cv,I f,I r,I zt){A e,x,z;I m,n;P*wp;
  RZ(w);
  wp=PAV(w); e=SPA(wp,e); x=SPA(wp,x); n=AN(x); m=*AS(w);
  GA(z,zt,1,0,0);
@@ -307,14 +307,14 @@ DF1(jtredravel){A f,x,z;I n;P*wp;
  if(!(SPARSE&AT(w)))R reduce(jtravel(jtinplace,w),f);
  wp=PAV(w); x=SPA(wp,x); n=AN(x);
  while(1){  // Loop to handle restart on overflow
-  VA2 adocv = vains(FAV(f)->fgh[0],AT(x));
+  VARPS adocv = vains(FAV(f)->fgh[0],AT(x));
   ASSERT(adocv.f,EVNONCE);
   GA(z,rtype(adocv.cv),1,0,0);
   if(n)((AHDRRFN*)adocv.f)((I)1,n,(I)1,AV(x),AV(z),jt);  // mustn't adocv on empty
   if(jt->jerr<EWOV){RE(0); R redsp1a(vaid(FAV(f)->fgh[0]),z,SPA(wp,e),n,AR(w),AS(w));}
 }}  /* f/@, w */
 
-static A jtredspd(J jt,A w,A self,C id,VF ado,I cv,I f,I r,I zt){A a,e,x,z,zx;I c,m,n,*s,t,*v,wr,*ws,xf,xr;P*wp,*zp;
+static A jtredspd(J jt,A w,A self,C id,VARPSF ado,I cv,I f,I r,I zt){A a,e,x,z,zx;I c,m,n,*s,t,*v,wr,*ws,xf,xr;P*wp,*zp;
  RZ(w);
  ASSERT(strchr(fca,id),EVNONCE);
  wp=PAV(w); a=SPA(wp,a); e=SPA(wp,e); x=SPA(wp,x); s=AS(x);
@@ -384,7 +384,7 @@ static B jtredspse(J jt,C id,I wm,I xt,A e,A zx,A sn,A*ze,A*zzx){A b;B nz;I t,zt
  R 1;
 }
 
-static A jtredsps(J jt,A w,A self,C id,VF ado,I cv,I f,I r,I zt){A a,a1,e,sn,x,x1=0,y,z,zx,zy;B*pv;
+static A jtredsps(J jt,A w,A self,C id,VARPSF ado,I cv,I f,I r,I zt){A a,a1,e,sn,x,x1=0,y,z,zx,zy;B*pv;
      C*xv,*xxv,*zv;I*dv,i,m,n,*qv,*sv,*v,wr,xk,xt,wm,*ws,xc,yc,yr,*yu,*yv,zk;P*wp,*zp;
  RZ(w);
  ASSERT(strchr(fca,id),EVNONCE);
@@ -424,7 +424,7 @@ static DF1(jtreducesp){A a,g,z;B b;I f,n,r,*v,wn,wr,*ws,wt,zt;P*wp;
  g=VAV(self)->fgh[0];
  if(!n)R red0(w,self);  // red0 uses ranks, and resets them
  C id=vaid(g);
- VA2 adocv = vains(g,wt);
+ VARPS adocv = vains(g,wt);
  if(2==n&&!(adocv.f&&strchr(fca,id))){
   A x; IRS2(num(0),w,0L,0,r,jtfrom,x); A y; IRS2(num(1),w,0L,0,r,jtfrom,y);
   R df2(z,x,y,g);  // rank has been reset for this call
@@ -529,7 +529,7 @@ static DF1(jtreduce){A z;I d,f,m,n,r,t,wn,wr,*ws,wt,zt;
   // are no atoms written
 
   // Normal processing for multiple items.  Get the routine & flags to process it
-  VA2 adocv = vains(FAV(self)->fgh[0],wt);
+  VARPS adocv = vains(FAV(self)->fgh[0],wt);
   // If there is no special routine, go perform general reduce
   if(!adocv.f)R redg(w,self);  // jt->ranks is still set.  redg will clear the ranks
   // Here for primitive reduce handled by special code.

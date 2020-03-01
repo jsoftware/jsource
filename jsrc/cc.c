@@ -673,7 +673,7 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;
 // scaf should take this under BOXATOP?
   case CSLASH:
    {
-   VA2 adocv = vains(FAV(fs)->fgh[0],wt);  // qualify the operation, returning action routine and conversion info
+   VARPS adocv = vains(FAV(fs)->fgh[0],wt);  // qualify the operation, returning action routine and conversion info
    if(adocv.f){C*z0=0,*zc;I t,zk,zt;  // if the operation is a primitive that we can  apply / to...
     zt=rtype(adocv.cv);
     GA(zz,zt,m*wcn,r,AS(w)); AS(zz)[0]=m; 
@@ -778,7 +778,7 @@ static A jtpartfscan(J jt,A a,A w,I cv,B pfx,C id,C ie){A z=0;B*av;I m,n,zt;
 // NOTE: if there are no cuts, this routine produces different results from the normal routine if the operation is one we recognise.
 //  This routine produces an extra axis, as if the shape of the boxed result were preserved even when there are no boxed results
 DF2(jtrazecut2){A fs,gs,y,z=0;B b; I neg,pfx;C id,sep,*u,*v,*wv,*zv;I d,k,m=0,wi,p,q,r,*s,wt;
-    V *vv;VA2 adocv;
+    V *vv;VARPS adocv;
  RZ(a&&w);
  gs=FAV(self)->fgh[1+(CFORK==FAV(self)->id)]; vv=VAV(gs); y=vv->fgh[0]; fs=VAV(y)->fgh[1];  // self is ;@:(<@(f/\);.1)     gs  gs is <@(f/\);.1   y is <@(f/\)  fs is   f/\  ...
  p=SETIC(w,wi); wt=AT(w); k=vv->localuse.lI; neg=0>k; pfx=k==1||k==-1; b=neg&&pfx;

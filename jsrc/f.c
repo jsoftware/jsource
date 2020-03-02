@@ -65,7 +65,7 @@ static FMTF(jtfmtD,D){B q;C buf[1+WD],c,*t;D x=*v;I k=0;
 
 static FMTF(jtfmtZ,Z){fmtD(s,&v->re); if(v->im){I k=strlen(s); *(k+s)='j'; fmtD(1+k+s,&v->im);}}
 
-static void thcase(I t,I*wd,void((**fmt)())){
+static void thcase(I t,I*wd,FMTFUN *fmt){
  switch(CTTZ(t)){
   case CMPXX: *wd=WZ; *fmt=jtfmtZ; break;
   case FLX:   *wd=WD; *fmt=jtfmtD; break;
@@ -130,7 +130,7 @@ static F1(jtthb){A z;B*x;C*y;I c,m,n,p,r,*s;
  RETF(z);
 }
 
-static F1(jtthn){A d,t,z;C*tv,*x,*y,*zv;I c,*dv,k,m,n,p,r,*s,wd;VF fmt;
+static F1(jtthn){A d,t,z;C*tv,*x,*y,*zv;I c,*dv,k,m,n,p,r,*s,wd;FMTFUN fmt;
  n=AN(w); r=AR(w); s=AS(w);
  thcase(AT(w),&wd,&fmt);
  GATV0(t,LIT,wd*(1+n),1); tv=CAV(t);

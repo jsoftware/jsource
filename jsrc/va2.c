@@ -665,8 +665,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
 #else
    // mf has the total number of calls.  nf is 1 less than the number of calls with a repeated cell.  aawwzk[1,3] have 0 in a repeated argument
     // note: the compiler unrolls this call loop.  Would be nice to suppress that.  All it seems to save is one lousy vzeroupper
-   I i=mf; I jj=nf; while(1){I lrc=((AHDR2FN*)adocv.f)(n,m,av,wv,zv,jt); rc=lrc<rc?lrc:rc; if(rc==EWOVIP+EWOVIPMULII)break; if(!--i)break; zv+=aawwzk[4]; I jj1=--jj; jj=jj<0?nf:jj; av+=aawwzk[1+REPSGN(jj1)]; wv+=aawwzk[3+REPSGN(jj1)];}  // jj1 is -1 on the last inner iter, where we use outer incr
-if(jt->jerr)SEGFAULT  // scaf
+   I i=mf; I jj=nf; while(1){I lrc=((AHDR2FN*)adocv.f)(n,m,av,wv,zv,jt); rc=lrc<rc?lrc:rc; if(!--i)break; zv+=aawwzk[4]; I jj1=--jj; jj=jj<0?nf:jj; av+=aawwzk[1+REPSGN(jj1)]; wv+=aawwzk[3+REPSGN(jj1)];}  // jj1 is -1 on the last inner iter, where we use outer incr
 #endif
    }
    // The work has been done.  If there was no error, check for optional conversion-if-possible or -if-necessary
@@ -681,6 +680,7 @@ if(jt->jerr)SEGFAULT  // scaf
     // Set up pointers etc for the overflow handling.  Set b=1 if w is taken for the x argument to repair
     if(rc==EWOVIP+EWOVIPMULII){D *zzvd=(D*)zzv; I *zvi=IAV(z);
      // Multiply repair.  We have to convert all the pre-overflow results to float, and then finish the multiplies
+     jt->mulofloloc = ~jt->mulofloloc;  // convert the complement count back to the real number of items processed
      DQ(jt->mulofloloc, *zzvd++=(D)*zvi++;);  // convert the multiply results to float
      // Now repeat the processing.  Unlike with add/subtract overflow, we have to match up all the argument atoms
      {C *av=CAV(a); C *wv=CAV(w);

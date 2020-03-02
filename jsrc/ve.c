@@ -196,13 +196,12 @@ AHDR2(minusIB,I,I,B){I u;I v;I w;I oflo=0;
 }
 
 // II multiply, in double precision
-AHDR2(tymesII,I,I,I){DPMULDECLS I u;I v;/* obsolete if(jt->jerr)R;*/ I *zi=z;   // could use a side channel to avoid having main loop look at rc
+AHDR2(tymesII,I,I,I){DPMULDECLS I u;I v; if(jt->mulofloloc<0)R EWOVIP+EWOVIPMULII; I *zi=z;   // could use a side channel to avoid having main loop look at rc
  if(n-1==0)  DQ(m, u=*x; v=*y; DPMUL(u,v,z, goto oflo;) z++; x++; y++; )
  else if(n-1<0)DQ(m, u=*x; DQC(n, v=*y; DPMUL(u,v,z, goto oflo;) z++; y++;) x++;)
  else      DQ(m, v=*y; DQ(n, u=*x; DPMUL(u,v,z, goto oflo;) z++; x++;) y++;)
- I rc=EVOK;
-exit: jt->mulofloloc += z-zi; R rc;
-oflo: rc=EWOVIP+EWOVIPMULII; *x=u; *y=v; goto exit;  // back out the last store, in case it's in-place; gcc stores before overflow
+ jt->mulofloloc += z-zi; R EVOK;
+oflo: *x=u; *y=v; jt->mulofloloc = ~(jt->mulofloloc + z-zi);R EWOVIP+EWOVIPMULII;  // back out the last store, in case it's in-place; gcc stores before overflow
 }
 
 // BI multiply, using clear/copy

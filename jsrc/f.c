@@ -24,6 +24,8 @@ extern I stringdisplaywidth(J jt, I c2, void*src, I nsrc); // display width of a
 #define WI          12L
 #endif
 
+typedef void ((*FMTFUN)());
+
 #define WD          (9L+NPP)
 #define WZ          (WD+WD)
 #define FMTF(f,T)   void f(J jt,C*s,T*v)
@@ -72,7 +74,7 @@ static void thcase(I t,I*wd,void((**fmt)())){
 
 // copy numeric string to error line.  Values in w, n/s = len/addr of output buffer
 // negative n means 'decorate the result to show precision'
-I jtthv(J jt,A w,I n,C*s){A t;B ov=0;C buf[WZ],*x,*y=s;I k,n4=n-4,p,wd,wn,wt;VF fmt;
+I jtthv(J jt,A w,I n,C*s){A t;B ov=0;C buf[WZ],*x,*y=s;I k,n4=n-4,p,wd,wn,wt;FMTFUN fmt;
  RZ(w&&n);
  wn=AN(w); wt=AT(w); x=CAV(w); thcase(wt,&wd,&fmt);
  switch(CTTZNOFLAG(wt)){

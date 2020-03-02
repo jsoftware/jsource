@@ -737,8 +737,8 @@ if(jt->jerr)SEGFAULT  // scaf
     }
     R zz;  // Return the result after overflow has been corrected
    }
-   // retry required, not inplaceable.  Signal the error to the caller
-   jt->jerr=(UC)rc;
+   // retry required, not inplaceable.  Signal the error code to the caller.  If the error is not retryable, set the error message
+   if(rc<=NEVM)jsignal(rc);else jt->jerr=(UC)rc;
   }
  }else{z=vasp(a,w,FAV(self)->id,adocv.f,adocv.cv,atype(adocv.cv),rtype(adocv.cv),mf,aawwzk[0],nf,aawwzk[1],fr>>RANKTX,(RANKT)fr); if(!jt->jerr)R z;}  // handle sparse arrays separately.  at this point ak/wk/mf/nf hold acr/wcr/af/wf
  R 0;  // return to the caller, who will retry any retryable errors
@@ -1200,6 +1200,7 @@ DF2(jtatomic2){A z;
   z=jtssingleton(jtinplace,a,w,self,(RANK2T)awr,selfranks);
   if(z||jt->jerr<=NEVM)RETF(z);  // normal return, or non-retryable error
   // if retryable error, fall through.  The retry will not be through the singleton code
+  jtinplace=(J)((I)jtinplace|JTRETRY);  // indicate that we are retrying the operation.  We must, because jt->jerr is set with the retry code
  }
  // while it's convenient, check for empty result
  jtinplace=(J)((I)jtinplace+(((SGNTO0(awm1)))<<JTEMPTYX));

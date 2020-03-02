@@ -161,5 +161,5 @@ static Z jtbinzz(J jt,Z x,Z y){B id,ix,iy;D rd,rx,ry;Z d;
 }}
 
 
-APFX(binDD, D,D,D, bindd,,HDR1JERR)
-APFX(binZZ, Z,Z,Z, binzz,,HDR1JERR)
+APFX(binDD, D,D,D, bindd,NAN0;,HDR1JERRNAN)
+APFX(binZZ, Z,Z,Z, binzz,NAN0;,HDR1JERRNAN)

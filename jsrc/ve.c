@@ -42,7 +42,7 @@ primop256(maxDD,1,,zz=_mm256_max_pd(xx,yy),R EVOK;)
 primop256(tymesDD,1,D *zsav=z;NAN0;,zz=_mm256_mul_pd(xx,yy),if(NANTEST){z=zsav; DQ(n*m, if(_isnan(*z))*z=0.0; ++z;)} R EVOK;)
 // div can fail from 0%0 (which we turn to 0) or inf%inf (which we fail)
 primop256(divDD,4,D *zsav=z; D *xsav=x; D *ysav=y; I nsav=n;NAN0;,zz=_mm256_div_pd(xx,yy),
-  if(NANTEST){z=zsav; xsav=zsav==ysav?xsav:ysav; m*=n; n=(nsav^SGNIF(zsav==ysav,0))>=0?n:1; nsav=--n; DQ(m, if(_isnan(*z)){ASSERTWR(*xsav!=0,EVNAN); *z=0.0;} ++z; --n; xsav-=REPSGN(n); n=n<0?nsav:n;)} R EVOK;)
+  if(NANTEST){z=zsav; xsav=zsav==ysav?xsav:ysav; m*=n; n=(nsav^SGNIF(zsav==ysav,0))>=0?n:1; nsav=--n; DQ(m, if(_isnan(*z)){ASSERTWR(*xsav==0,EVNAN); *z=0.0;} ++z; --n; xsav-=REPSGN(n); n=n<0?nsav:n;)} R EVOK;)
 
 #if 0 // obsolete 
 // * and % have special requirements

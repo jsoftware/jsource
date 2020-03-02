@@ -16,8 +16,8 @@ static A jthparm(J jt,A j,A f,A h){A z;
 
 static A jthgv(J jt,B b,I n,A w,A self){A c,d,e,h,*hv,j,y;V*sv=FAV(self);
  RZ(j=IX(n)); h=sv->fgh[2]; hv=AAV(h);
- c=hparm(j,sv->fgh[0],hv[0]);
- d=hparm(j,sv->fgh[1],hv[1]);
+ RZ(c=hparm(j,sv->fgh[0],hv[0]));
+ RZ(d=hparm(j,sv->fgh[1],hv[1]));
  e=shift1(divide(w,apv(n,1L,1L)));
  switch((VERB&AT(sv->fgh[0])?2:0)+(VERB&AT(sv->fgh[1])?1:0)){
   case 0: y=ascan(CSTAR,divide(tymes(c,e),d)); break;

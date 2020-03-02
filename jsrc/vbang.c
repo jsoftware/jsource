@@ -55,11 +55,10 @@ static Z jtzgauss(J jt,D n,Z z){D d=1/n;Z p,t;
  DQ((I)n, p=ztymes(p,zgrecur(t)); t.re+=d;);
  R p;
 }    /* Abramowitz & Stegun, 6.1.20 */
-
+ 
+static D c[]={1.0, 1.0/12, 1.0/288, -139.0/51840, -571.0/2488320};
 static Z jtzstirling(J jt,Z z){Z p,q;
- static D c[]={1.0, 1.0/12, 1.0/288, -139.0/51840, -571.0/2488320},
-  e=2.718281828459045235360287;
- p=ztymes(zsqrt(zdiv(zrj0(2*PI),z)),zpow(zdiv(z,zrj0(e)),z));
+ p=ztymes(zsqrt(zdiv(zrj0(2*PI),z)),zpow(zdiv(z,zrj0(2.718281828459045235360287)),z));
  q=zhorner(5L,c,zdiv(z1,z));
  R ztymes(p,q);
 }    /* Abramowitz & Stegun, 6.1.37 */

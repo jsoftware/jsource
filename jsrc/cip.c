@@ -264,6 +264,7 @@ I blockedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I pnom,I pstored,I flgs){
 #define OPWIDTH ((I)1<<OPWIDTHX)  // width of outer-product block
 #define CACHEWIDTH 64  // width of resident cache block (in D atoms)
 #define CACHEHEIGHT 16  // height of resident cache block
+static D missingrow[CACHEHEIGHT]={1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
 // Floating-point matrix multiply, hived off to a subroutine to get fresh register allocation
 // *zv=*av * *wv, with *cv being a cache-aligned region big enough to hold CACHEWIDTH*CACHEHEIGHT floats
 // a is shape mxp, w is shape pxn.  Result is 0 if OK, 1 if fatal error
@@ -329,7 +330,6 @@ static I cachedmmultx(J jt,D* av,D* wv,D* zv,I m,I n,I pnom,I pstored,I flgs){D 
    }
    // scaf could skip leading 16x8s for uppertri w, if that doesn't foul z
    for(;a2rem>0;a2rem-=OPHEIGHT,a2base0+=OPHEIGHT*pstored,z2base+=OPHEIGHT*n){  // a2rem is the number of lines left in the entire column of a
-   static D missingrow[CACHEHEIGHT]={1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
     // Prepare for the 4x16 block of a (4x32 if cmplx)
     // If a row of a is off the end of the data, we mustn't fetch it - repeat a row instead so it won't give NaN error on multiplying by infinity
     // The result is in (*cvx)[component][row][col]  where col is the column number in a 0-15, row is the row 0-3,
@@ -570,6 +570,7 @@ I cachedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){
 #define OPWIDTH 4  // width of outer-product block
 #define CACHEWIDTH 64  // width of resident cache block (in D atoms)
 #define CACHEHEIGHT 16  // height of resident cache block
+static D missingrow[CACHEHEIGHT]={1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
 // Floating-point matrix multiply, hived off to a subroutine to get fresh register allocation
 // *zv=*av * *wv, with *cv being a cache-aligned region big enough to hold CACHEWIDTH*CACHEHEIGHT floats
 // a is shape mxp, w is shape pxn.  Result is 0 if OK, 1 if overflow
@@ -608,7 +609,6 @@ I cachedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){D c[(CACHEHEIGHT+1)*CAC
    // process each 2x16 section of a against the 16x64 cache block
    D *a2base0=a1base; D* w2base=w1base; I a2rem=m; D* z2base=z1base; D* c2base=cvw;
    for(;a2rem>0;a2rem-=OPHEIGHT,a2base0+=OPHEIGHT*p,z2base+=OPHEIGHT*n){
-    static D missingrow[CACHEHEIGHT]={1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
     // Prepare for the 2x16 block of a (2x32 if flgs)
     // If the second row of a is off the end of the data, we mustn't fetch it - switch the pointer to a row of 1s so it won't give NaN error on multiplying by infinity
     D *a2base1 = (a2rem>1)?a2base0+p:missingrow;

@@ -3,6 +3,17 @@
 /*                                                                         */
 /* Atomic Verbs                                                            */
 
+// shorthands for inplacing
+#define VIP (VIPOKA+VIPOKW)   // inplace everything
+#define VIPI0 ((VIPOKA*(sizeof(I)==sizeof(D))))  // inplace left arg if D is same length as I
+#define VIP0I ((VIPOKW*(sizeof(I)==sizeof(D))))  // inplace right arg if D is same length as I
+#define VIPID (VIPI0+VIPOKW)  // inplace D, and I if I is same length as D: I is left arg
+#define VIPDI (VIP0I+VIPOKA)  // inplace D, and I if I is same length as D: I is right arg
+
+#define VIPW (VIPOKW)   // inplace is OK
+#define VIP64 ((VIPOKW*(sizeof(I)==sizeof(D))))  // inplace monad if D is same length as I
+
+
 
 #define ADECL1  AHDR1
 #define ADECL2  AHDR2

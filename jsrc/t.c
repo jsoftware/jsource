@@ -4,6 +4,8 @@
 /* Table of Primitive Symbols                                              */
 
 #include "j.h"
+#include "ve.h"
+#include "vcomp.h"
 
 
 C ctype[256]={
@@ -25,6 +27,77 @@ CX, CX, CX, CX, CX, CX, CX, CX, CX, CX, CX, CX, CX, CX, CX, CX, /* e            
 CX, CX, CX, CX, CX, CX, CX, CX, CX, CX, CX, CX, CX, CX, CX, CX, /* f                  */
 };
 /*   1   2   3   4   5   6   7   8   9   a   b   c   d   e   f   */
+
+extern const UA va1tab[];
+
+extern const VA va[];
+
+
+
+static const UC vaptr[256]={
+   0,  0,  0,  0,  0,  0,  0,  0,    0,  0,  0,  0,  0,  0,  0,  0, /* 0 */
+// C0  C1          ^D                    TAB LF          CR         
+   1,  2,  3,  4,  5,  6,  7,  8,    9, 10, 11, 12, 13, 14, 15, 16, /* 1 */
+// <-----------------------bitwise functions -------------------->
+   0, VA2CBANG,  0,  0,  0, VA2CDIV,  0,  0,    0,  0, VA2CSTAR, VA2CPLUS,  0, VA2CMINUS,  0,  0, /* 2 */
+//     !   "   #   $   %   &   '     (   )   *   +   ,   -   .   /  
+   0,  0,  0,  0,  0,  0,  0,  0,    0,  0,  0,  0, VA2CLT, VA2CEQ, VA2CGT,  0, /* 3 */
+// NOUN    HOOK FK ADVF                      :   ;   <   =   >   ?  
+   0,  0,  0,  0,  0,  0,  0,  0,    0,  0,  0,  0,  0,  0,  0,  0, /* 4 */
+// @                                                                
+   0,  0,  0,  0,  0,  0,  0,  0,    0,  0,  0,  0,  0,  0, VA2CEXP,  0, /* 5 */
+//                                               [   \   ]   ^   _  
+   0,  0,  0,  0,  0,  0,  0,  0,    0,  0,  0,  0,  0,  0,  0,  0, /* 6 */
+// `                                                                
+   0,  0,  0,  0,  0,  0,  0,  0,    0,  0,  0,  0, VA2CSTILE,  0,  0,  0, /* 7 */
+//                                               {   |   }   ~      
+   0,  0, VA2CMIN, VA2CLE, VA2CMAX, VA2CGE,  0,  0,   VA2CPLUSDOT, VA2CPLUSCO, VA2CSTARDOT, VA2CSTARCO,  0,  0,  0,  VA1CROOT, /* 8 */
+// =.  =:  <.  <:  >.  >:  _.        +.  +:  *.  *:  -.  -:  %.  %: 
+   VA1CLOG,  0,  0,  0,  0, VA2CNE,  0,  0,    0,  0,  0,  0,  0,  0,  0,  0, /* 9 */
+// ^.  ^:  $.  $:  ~.  ~:  |.  |:    ..  .:  :.  ::  ,.  ,:  ;.  ;: 
+   0,  0,  0,  0,  0,  0,  0,  0,    0,  0,  0,  0,  0,  0,  0,  0, /* a */
+// #.  #:  !.  !:  /.  /:  \.  \:    [.  [:  ].  ]:  {.  {:  }.  }: 
+   0,  0,  0,  0,  0,  0,  0,  0,    0,  0,  0,  0,  0,  0,  0,  0, /* b */
+// ".  ":  `.  `:  @.  @:  &.  &:    ?.  ?:  a.  A.  a:  b.  c.     
+   0,  0,  0,  0,  0,  0,  0,  0,    0,  0,  0,  0,  0,  0,  0,  0, /* c */
+// C.  d.  D.  D:  e.  E.  f.  F:    H.  i.  i:  I.  I:  j.  L.  L: 
+   0,  0,  0, VA2CCIRCLE,  0,  0,  0,  0,    0,  0,  0,  0,  0,  0,  0,  0, /* d */
+// m.  M.  n.  o.  p.  p:  Q:  q:    r.  s:  S:  t.  t:  T.  u.  u: 
+   0,  0,  0,  0,  0,  0,  0,  0,    0,  0,  0,  0,  0,  0,  0,  0, /* e */
+// v.  x.  x:  y.                    0:  }ip }cs {:: {:: }:: &.: p..
+   0,  0,  0,  0,  0,  0,  0,  0,    0,  0,  0,  0,  0,  0,  0,  0, /* f */
+// ,ip                                                           FF  
+  };   /* index in va[] for each ID */
+/*   1   2   3   4   5   6   7     8   9   a   b   c   d   e   f   */
+
+// return atomic2 ID for the verb w.  If w is b., look for its u operand and return the appropriate 
+static C jtvaid(J jt,A w){A x;C c;I k;V*v;
+ v=FAV(w); c=v->id;
+ if(c==CBDOT){x=v->fgh[1]; if(INT&AT(x)&&!AR(x)&&(k=*AV(x),(k&-16)==16))c=(C)k;}
+ R vaptr[(UC)c]?c:0;
+}
+
+// prepare a primitive atomic verb for lookups using var()
+// if the verb is atomic, we fill in the h field with a pointer to the va row for the verb
+void va2primsetup(A w){
+ UC xlatedid = vaptr[(UC)FAV(w)->id];  // see which line it is
+ // If the id is a comparison operator, turn on the MSB flag bit
+ I shiftamt=xlatedid-VA2CNE;
+ xlatedid += (((((I)0x80<<(VA2CLT-VA2CNE))|((I)0x80<<(VA2CEQ-VA2CNE))|((I)0x80<<(VA2CGT-VA2CNE))|((I)0x80<<(VA2CLE-VA2CNE))|((I)0x80<<(VA2CGE-VA2CNE))|((I)0x80<<(VA2CNE-VA2CNE)))>>shiftamt)&0x80)&REPSGN(~shiftamt);
+ FAV(w)->lc=xlatedid;  // save primitive number for use in ssing and monads
+ xlatedid=(xlatedid&0x7f)>VA2CCIRCLE?0:xlatedid;  // if this op is monad-only, don't set dyad info & flags
+ FAV(w)->localuse.lvp[0]=(xlatedid?(VA*)&va[xlatedid&0x7f]:0);  // point to the line, or 0 if invalid
+ if(xlatedid)FAV(w)->flag |= VISATOMIC2;  // indicate that localuse contains AV pointer
+}
+
+
+// prepare a primitive atomic verb for lookups using var()
+// if the verb is atomic, we fill in the lc field with the index to the va row for the verb
+void va1primsetup(A w){
+ UC xlatedid = (UC)FAV(w)->lc&0x7f;  // see which VA2 type it is
+ if(xlatedid>=VA2CMIN)FAV(w)->localuse.lvp[1]=(UA*)&va1tab[xlatedid-VA2CMIN];  // if there is a va1 function, install it
+}
+
 
 static B jtpdef(J jt,I id,I t,AF f1,AF f2,I m,I l,I r,I flag){A z;V*v;
 // obsolete  GAT0(z,BOX,(VERBSIZE+SZI-1)>>LGSZI,0);   // use BOX so it will all be cleared
@@ -61,9 +134,16 @@ static const C alp[256]={0x00,0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x0a,
 0xe0,0xe1,0xe2,0xe3,0xe4,0xe5,0xe6,0xe7,0xe8,0xe9,0xea,0xeb,0xec,0xed,0xee,0xef,0xf0,0xf1,0xf2,0xf3,0xf4,0xf5,0xf6,0xf7,0xf8,0xf9,0xfa,0xfb,0xfc,0xfd,0xfe,0xff};
 
 #if 0  // to init statically we need to bring in the va2init/va1init
-#define PRIMALL(id,t,f0,f1,rm,rl,rr,vflg,vflg2,an,ar) \
- {{AKXR(0),(t)&TRAVERSIBLE,0,(t),ACPERMANENT,(an),(ar)},{{f0,f1},{0,0,0},0,(vflg),(vflg2),(RANKT)rm,(RANK2T)((rl<<RANKTX)+rr),id,0}}
-#define PRIMACV(id,t,f0,f1,rm,rl,rr,vflg,vflg2) PRIMALL(id,t,f0,f1,rm,rl,rr,vflg,vflg2,an,ar,(VERBSIZE+SZI-1)>>LGSZI,0)
+typedef struct {AF valencefns[2];A fgh[3];union { D lD; void *lvp[2]; I lI; I4 lI4[4]; I lclr[2]; AF lfns[2];} localuse;I4 flag;UI4 flag2; RANK2T lrr; RANKT mr; C id; C lc;} V;  // two cachelines exactly in 64-bit
+
+#define PRIMALL(id,t,f0,f1,va2,va1,rm,rl,rr,vflg,vflg2,an,ar,lc) \
+ [id]={{AKXR(0),(t)&TRAVERSIBLE,0,(t),ACPERMANENT,(an),(ar)},{{f0,f1},{0,0,0},{.lfns=(AF)(va2),(AF)(va1) },(vflg),(vflg2),(RANK2T)((rl<<RANKTX)+rr),(RANKT)rm,id,lc}}
+#define PRIMACV(id,t,f0,f1,rm,rl,rr,vflg,vflg2) PRIMALL(id,t,f0,f1,0,0,rm,rl,rr,vflg,vflg2,(VERBSIZE+SZI-1)>>LGSZI,0,0)
+#define PRIMATOMIC2(id,t,f0,f1,rm,rl,rr,vflg,vflg2) PRIMALL(id,t,f0,f1,va+VA2##id,0,rm,rl,rr,VISATOMIC2|(vflg),vflg2,(VERBSIZE+SZI-1)>>LGSZI,0, \
+ VA2##id+0x80*(id==CLT||id==CGT||id==CLE||id==CGE||id==CEQ||id==CNE))
+PRIM primtab2[256] = {
+ PRIMATOMIC2(CLT,    VERB, jtbox,     jtatomic2,     RMAX,0,   0   ,VASGSAFE|VFUSEDOK2|VIRS1|VIRS2|VJTFLGOK2,0)  // alias CLT
+};
 #endif
 
 B jtpinit(J jt){

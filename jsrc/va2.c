@@ -7,14 +7,8 @@
 #include "ve.h"
 #include "vcomp.h"
 
-// shorthands for inplacing
-#define VIP (VIPOKA+VIPOKW)   // inplace everything
-#define VIPI0 ((VIPOKA*(sizeof(I)==sizeof(D))))  // inplace left arg if D is same length as I
-#define VIP0I ((VIPOKW*(sizeof(I)==sizeof(D))))  // inplace right arg if D is same length as I
-#define VIPID (VIPI0+VIPOKW)  // inplace D, and I if I is same length as D: I is left arg
-#define VIPDI (VIP0I+VIPOKA)  // inplace D, and I if I is same length as D: I is right arg
 
-static const VA va[]={
+const VA va[]={
 /* non-atomic functions      */ {
  {{0,0}, {0,0}, {0,0},                                /* BB BI BD              */
   {0,0}, {0,0}, {0,0},                                /* IB II ID              */
@@ -349,63 +343,6 @@ static const VA va[]={
  {{0,0}},
  {{0,0}} }
 };
-
-
-static const UC vaptr[256]={
-   0,  0,  0,  0,  0,  0,  0,  0,    0,  0,  0,  0,  0,  0,  0,  0, /* 0 */
-// C0  C1          ^D                    TAB LF          CR         
-   1,  2,  3,  4,  5,  6,  7,  8,    9, 10, 11, 12, 13, 14, 15, 16, /* 1 */
-// <-----------------------bitwise functions -------------------->
-   0, VA2OUTOF,  0,  0,  0, VA2DIV,  0,  0,    0,  0, VA2MULT, VA2PLUS,  0, VA2MINUS,  0,  0, /* 2 */
-//     !   "   #   $   %   &   '     (   )   *   +   ,   -   .   /  
-   0,  0,  0,  0,  0,  0,  0,  0,    0,  0,  0,  0, VA2LT, VA2EQ, VA2GT,  0, /* 3 */
-// NOUN    HOOK FK ADVF                      :   ;   <   =   >   ?  
-   0,  0,  0,  0,  0,  0,  0,  0,    0,  0,  0,  0,  0,  0,  0,  0, /* 4 */
-// @                                                                
-   0,  0,  0,  0,  0,  0,  0,  0,    0,  0,  0,  0,  0,  0, VA2POW,  0, /* 5 */
-//                                               [   \   ]   ^   _  
-   0,  0,  0,  0,  0,  0,  0,  0,    0,  0,  0,  0,  0,  0,  0,  0, /* 6 */
-// `                                                                
-   0,  0,  0,  0,  0,  0,  0,  0,    0,  0,  0,  0, VA2RESIDUE,  0,  0,  0, /* 7 */
-//                                               {   |   }   ~      
-   0,  0, VA2MIN, VA2LE, VA2MAX, VA2GE,  0,  0,   VA2GCD, VA2NOR, VA2LCM, VA2NAND,  0,  0,  0,  VA1ROOT, /* 8 */
-// =.  =:  <.  <:  >.  >:  _.        +.  +:  *.  *:  -.  -:  %.  %: 
-   VA1LOG,  0,  0,  0,  0, VA2NE,  0,  0,    0,  0,  0,  0,  0,  0,  0,  0, /* 9 */
-// ^.  ^:  $.  $:  ~.  ~:  |.  |:    ..  .:  :.  ::  ,.  ,:  ;.  ;: 
-   0,  0,  0,  0,  0,  0,  0,  0,    0,  0,  0,  0,  0,  0,  0,  0, /* a */
-// #.  #:  !.  !:  /.  /:  \.  \:    [.  [:  ].  ]:  {.  {:  }.  }: 
-   0,  0,  0,  0,  0,  0,  0,  0,    0,  0,  0,  0,  0,  0,  0,  0, /* b */
-// ".  ":  `.  `:  @.  @:  &.  &:    ?.  ?:  a.  A.  a:  b.  c.     
-   0,  0,  0,  0,  0,  0,  0,  0,    0,  0,  0,  0,  0,  0,  0,  0, /* c */
-// C.  d.  D.  D:  e.  E.  f.  F:    H.  i.  i:  I.  I:  j.  L.  L: 
-   0,  0,  0, VA2CIRCLE,  0,  0,  0,  0,    0,  0,  0,  0,  0,  0,  0,  0, /* d */
-// m.  M.  n.  o.  p.  p:  Q:  q:    r.  s:  S:  t.  t:  T.  u.  u: 
-   0,  0,  0,  0,  0,  0,  0,  0,    0,  0,  0,  0,  0,  0,  0,  0, /* e */
-// v.  x.  x:  y.                    0:  }ip }cs {:: {:: }:: &.: p..
-   0,  0,  0,  0,  0,  0,  0,  0,    0,  0,  0,  0,  0,  0,  0,  0, /* f */
-// ,ip                                                           FF  
-  };   /* index in va[] for each ID */
-/*   1   2   3   4   5   6   7     8   9   a   b   c   d   e   f   */
-
-// return atomic2 ID for the verb w.  If w is b., look for its u operand and return the appropriate 
-static C jtvaid(J jt,A w){A x;C c;I k;V*v;
- v=FAV(w); c=v->id;
- if(c==CBDOT){x=v->fgh[1]; if(INT&AT(x)&&!AR(x)&&(k=*AV(x),(k&-16)==16))c=(C)k;}
- R vaptr[(UC)c]?c:0;
-}
-
-// prepare a primitive atomic verb for lookups using var()
-// if the verb is atomic, we fill in the h field with a pointer to the va row for the verb
-void va2primsetup(A w){
- UC xlatedid = vaptr[(UC)FAV(w)->id];  // see which line it is
- // If the id is a comparison operator, turn on the MSB flag bit
- I shiftamt=xlatedid-VA2NE;
- xlatedid += (((((I)0x80<<(VA2LT-VA2NE))|((I)0x80<<(VA2EQ-VA2NE))|((I)0x80<<(VA2GT-VA2NE))|((I)0x80<<(VA2LE-VA2NE))|((I)0x80<<(VA2GE-VA2NE))|((I)0x80<<(VA2NE-VA2NE)))>>shiftamt)&0x80)&REPSGN(~shiftamt);
- FAV(w)->lc=xlatedid;  // save primitive number for use in ssing and monads
- xlatedid=(xlatedid&0x7f)>VA2CIRCLE?0:xlatedid;  // if this op is monad-only, don't set dyad info & flags
- FAV(w)->localuse.lvp[0]=(xlatedid?(VA*)&va[xlatedid&0x7f]:0);  // point to the line, or 0 if invalid
- if(xlatedid)FAV(w)->flag |= VISATOMIC2;  // indicate that localuse contains AV pointer
-}
 
 A jtcvz(J jt,I cv,A w){I t;
  t=AT(w);

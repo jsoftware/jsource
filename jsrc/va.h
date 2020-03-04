@@ -166,45 +166,45 @@ typedef void AHDRSFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);
 #define AHDRS(f,Tz,Tx)          void f(I d,I n,I m,Tx* RESTRICTI x,Tz* RESTRICTI z,J jt)
 
 // value in vaptr[]
-#define VA2B0 1
-#define VA2B1 2
-#define VA2B2 3
-#define VA2B3 4
-#define VA2B4 5
-#define VA2B5 6
-#define VA2B6 7
-#define VA2B7 8
-#define VA2B8 9
-#define VA2B9 10
-#define VA2BA 11
-#define VA2BB 12
-#define VA2BC 13
-#define VA2BD 14
-#define VA2BE 15
-#define VA2BF 16
-#define VA2NE 17 // 35
-#define VA2DIV 18
-#define VA2NOR 19 // 32
-#define VA2GCD 20 // 31
-#define VA2MINUS 21
-#define VA2LT 22
-#define VA2EQ 23
-#define VA2GT 24
-#define VA2LCM 25 // 33
-#define VA2NAND 26 // 34
-#define VA2GE 27 // 30
-#define VA2LE 28
+#define VA2CBW0000 1
+#define VA2CBW0001 2
+#define VA2CBW0010 3
+#define VA2CBW0011 4
+#define VA2CBW0100 5
+#define VA2CBW0101 6
+#define VA2CBW0110 7
+#define VA2CBW0111 8
+#define VA2CBW1000 9
+#define VA2CBW1001 10
+#define VA2CBW1010 11
+#define VA2CBW1011 12
+#define VA2CBW1100 13
+#define VA2CBW1101 14
+#define VA2CBW1110 15
+#define VA2CBW1111 16
+#define VA2CNE 17 // 35
+#define VA2CDIV 18
+#define VA2CPLUSCO 19 // 32
+#define VA2CPLUSDOT 20 // 31
+#define VA2CMINUS 21
+#define VA2CLT 22
+#define VA2CEQ 23
+#define VA2CGT 24
+#define VA2CSTARDOT 25 // 33
+#define VA2CSTARCO 26 // 34
+#define VA2CGE 27 // 30
+#define VA2CLE 28
 // the following are in the same order in va1
-#define VA2MIN 29 // 27
-#define VA2MAX 30 // 29
-#define VA2PLUS 31 // 20
-#define VA2MULT 32 // 19
-#define VA2POW 33 // 25
-#define VA2RESIDUE 34 // 26
-#define VA2OUTOF 35 // 17
-#define VA2CIRCLE 36
-#define VA1ROOT 37
-#define VA1LOG 38
+#define VA2CMIN 29 // 27
+#define VA2CMAX 30 // 29
+#define VA2CPLUS 31 // 20
+#define VA2CSTAR 32 // 19
+#define VA2CEXP 33 // 25
+#define VA2CSTILE 34 // 26
+#define VA2CBANG 35 // 17
+#define VA2CCIRCLE 36
+#define VA1CROOT 37
+#define VA1CLOG 38
 
 
 /*

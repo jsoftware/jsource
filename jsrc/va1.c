@@ -109,21 +109,19 @@ static AMONPS(absZ,   D,Z, , *z=zmag(*x); , HDR1JERR)
 static AHDR1(oneB,C,C){memset(z,C1,n); R EVOK;}
 
 
-#define VIP (VIPOKW)   // inplace is OK
-#define VIP64 ((VIPOKW*(sizeof(I)==sizeof(D))))  // inplace if D is same length as I
-
-static const UA va1tab[]={
+const UA va1tab[]={
  /* <. */ {{{ 0,VB}, {  0,VI}, {floorDI,VI+VIP64}, {floorZ,VZ}, {  0,VX}, {floorQ,VX}}},
  /* >. */ {{{ 0,VB}, {  0,VI}, { ceilDI,VI+VIP64}, { ceilZ,VZ}, {  0,VX}, { ceilQ,VX}}},
  /* +  */ {{{ 0,VB}, {  0,VI}, {    0,VD}, { cjugZ,VZ}, {  0,VX}, {   0,VQ}}},
- /* *  */ {{{ 0,VB}, { sgnI,VI+VIP}, {   sgnD,VI+VIP64}, {  sgnZ,VZ}, { sgnX,VX}, {  sgnQ,VX}}},
- /* ^  */ {{{expB,VD}, { expI,VD}, {   expD,VD+VIP}, {  expZ,VZ}, { expX,VX}, {  expD,VD+VDD}}},
- /* |  */ {{{ 0,VB}, { absI,VI+VIP}, {   absD,VD+VIP}, {  absZ,VD}, { absX,VX}, {  absQ,VQ}}},
+ /* *  */ {{{ 0,VB}, { sgnI,VI+VIPW}, {   sgnD,VI+VIP64}, {  sgnZ,VZ}, { sgnX,VX}, {  sgnQ,VX}}},
+ /* ^  */ {{{expB,VD}, { expI,VD}, {   expD,VD+VIPW}, {  expZ,VZ}, { expX,VX}, {  expD,VD+VDD}}},
+ /* |  */ {{{ 0,VB}, { absI,VI+VIPW}, {   absD,VD+VIPW}, {  absZ,VD}, { absX,VX}, {  absQ,VQ}}},
  /* !  */ {{{oneB,VB}, {factI,VD}, {  factD,VD}, { factZ,VZ}, {factX,VX}, { factQ,VX}}},
  /* o. */ {{{  0L,0L}, {   0L,0L}, {     0L,0L}, {    0L,0L}, { pixX,VX}, {    0L,0L}}}, // others handled as dyads
- /* %: */ {{{ 0,VB}, {sqrtI,VD}, {  sqrtD,VD+VIP}, { sqrtZ,VZ}, {sqrtX,VX}, { sqrtQ,VQ}}},
+ /* %: */ {{{ 0,VB}, {sqrtI,VD}, {  sqrtD,VD+VIPW}, { sqrtZ,VZ}, {sqrtX,VX}, { sqrtQ,VQ}}},
  /* ^. */ {{{logB,VD}, { logI,VD}, {   logD,VD}, {  logZ,VZ}, { logX,VX}, { logQD,VD}}},
 };
+
 
 static A jtva1(J,A,A);
 
@@ -151,13 +149,6 @@ static A jtva1s(J jt,A w,A self,I cv,VA1F ado){A e,x,z,ze,zx;B c;I n,oprc,t,zt;P
 
 #define VA1CASE(e,f) (10*(e)+(f))
 
-// prepare a primitive atomic verb for lookups using var()
-// if the verb is atomic, we fill in the lc field with the index to the va row for the verb
-void va1primsetup(A w){
- UC xlatedid = (UC)FAV(w)->lc&0x7f;  // see which VA2 type it is
- if(xlatedid>=VA2MIN)FAV(w)->localuse.lvp[1]=(UA*)&va1tab[xlatedid-VA2MIN];  // if there is a va1 function, install it
-}
-
 static A jtva1(J jt,A w,A self){A z;I cv,n,t,wt,zt;VA1F ado;
  UA *u=(UA *)FAV(self)->localuse.lvp[1];
  RZ(w);F1PREFIP;
@@ -173,18 +164,18 @@ static A jtva1(J jt,A w,A self){A z;I cv,n,t,wt,zt;VA1F ado;
   ado=p->f; cv=p->cv;
  }else{
   I m=REPSGN((wt&XNUM+RAT)-1);   // -1 if not XNUM/RAT
-  switch(VA1CASE(jt->jerr,FAV(self)->lc-VA2MIN)){
+  switch(VA1CASE(jt->jerr,FAV(self)->lc-VA2CMIN)){
    default:     R 0;  // unknown type - error must have come from previous verb
    // all these cases are needed because sparse code may fail over to them
-   case VA1CASE(EWOV,  VA2MIN-VA2MIN): cv=VD;       ado=floorD;               break;
-   case VA1CASE(EWOV,  VA2MAX-VA2MIN): cv=VD;       ado=ceilD;                break;
-   case VA1CASE(EWOV,  VA2RESIDUE-VA2MIN): cv=VD+VDD;   ado=absD;                 break;
-   case VA1CASE(EWIRR, VA1ROOT-VA2MIN): cv=VD+VDD;   ado=sqrtD;                break;
-   case VA1CASE(EWIRR, VA2POW-VA2MIN): cv=VD+VDD;   ado=expD;                 break;
-   case VA1CASE(EWIRR, VA2OUTOF-VA2MIN): cv=VD+VDD;   ado=factD;                break;
-   case VA1CASE(EWIRR, VA1LOG-VA2MIN): cv=VD+(VDD&m); ado=m?(VA1F)logD:(VA1F)logXD; break;
-   case VA1CASE(EWIMAG,VA1ROOT-VA2MIN): cv=VZ+VZZ;   ado=sqrtZ;                break;  // this case remains because singleton code fails over to it
-   case VA1CASE(EWIMAG,VA1LOG-VA2MIN): cv=VZ+(VZZ&m); ado=m?(VA1F)logZ:wt&XNUM?(VA1F)logXZ:(VA1F)logQZ; break;   // singleton code fails over to this too
+   case VA1CASE(EWOV,  VA2CMIN-VA2CMIN): cv=VD;       ado=floorD;               break;
+   case VA1CASE(EWOV,  VA2CMAX-VA2CMIN): cv=VD;       ado=ceilD;                break;
+   case VA1CASE(EWOV,  VA2CSTILE-VA2CMIN): cv=VD+VDD;   ado=absD;                 break;
+   case VA1CASE(EWIRR, VA1CROOT-VA2CMIN): cv=VD+VDD;   ado=sqrtD;                break;
+   case VA1CASE(EWIRR, VA2CEXP-VA2CMIN): cv=VD+VDD;   ado=expD;                 break;
+   case VA1CASE(EWIRR, VA2CBANG-VA2CMIN): cv=VD+VDD;   ado=factD;                break;
+   case VA1CASE(EWIRR, VA1CLOG-VA2CMIN): cv=VD+(VDD&m); ado=m?(VA1F)logD:(VA1F)logXD; break;
+   case VA1CASE(EWIMAG,VA1CROOT-VA2CMIN): cv=VZ+VZZ;   ado=sqrtZ;                break;  // this case remains because singleton code fails over to it
+   case VA1CASE(EWIMAG,VA1CLOG-VA2CMIN): cv=VZ+(VZZ&m); ado=m?(VA1F)logZ:wt&XNUM?(VA1F)logXZ:(VA1F)logQZ; break;   // singleton code fails over to this too
   }
   RESETERR;
  }

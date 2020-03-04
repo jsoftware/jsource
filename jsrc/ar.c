@@ -303,7 +303,7 @@ static A jtredsp1(J jt,A w,A self,C id,VARPSF ado,I cv,I f,I r,I zt){A e,x,z;I m
 DF1(jtredravel){A f,x,z;I n;P*wp;
  F1PREFIP;
  RZ(w);
- f=FAV(self)->fgh[0];  // f from f/
+ f=FAV(self)->fgh[0];  // f/
  if(!(SPARSE&AT(w)))R reduce(jtravel(jtinplace,w),f);
  wp=PAV(w); x=SPA(wp,x); n=AN(x);
  while(1){  // Loop to handle restart on overflow
@@ -311,8 +311,10 @@ DF1(jtredravel){A f,x,z;I n;P*wp;
   ASSERT(adocv.f,EVNONCE);
   GA(z,rtype(adocv.cv),1,0,0);
   if(n)((AHDRRFN*)adocv.f)((I)1,n,(I)1,AV(x),AV(z),jt);  // mustn't adocv on empty
-  if(jt->jerr<EWOV){RE(0); R redsp1a(vaid(FAV(f)->fgh[0]),z,SPA(wp,e),n,AR(w),AS(w));}
-}}  /* f/@, w */
+// obsolete   if(jt->jerr<EWOV){RE(0); R redsp1a(vaid(FAV(f)->fgh[0]),z,SPA(wp,e),n,AR(w),AS(w));}
+  if(jt->jerr<EWOV){RE(0); R redsp1a(FAV(FAV(f)->fgh[0])->id,z,SPA(wp,e),n,AR(w),AS(w));}  // since f has an insert fn, its id must be OK
+ }
+}  /* f/@, w */
 
 static A jtredspd(J jt,A w,A self,C id,VARPSF ado,I cv,I f,I r,I zt){A a,e,x,z,zx;I c,m,n,*s,t,*v,wr,*ws,xf,xr;P*wp,*zp;
  RZ(w);
@@ -421,9 +423,10 @@ static DF1(jtreducesp){A a,g,z;B b;I f,n,r,*v,wn,wr,*ws,wt,zt;P*wp;
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r;  // no RESETRANK
  wn=AN(w); ws=AS(w); n=r?ws[f]:1;
  wt=AT(w); wt=wn?DTYPE(wt):B01;
- g=VAV(self)->fgh[0];
+ g=VAV(self)->fgh[0];  // g is the f in f/
  if(!n)R red0(w,self);  // red0 uses ranks, and resets them
- C id=vaid(g);
+// obsolete C id=vaid(g);
+ C id; if(AT(g)&VERB){id=FAV(g)->id; id=FAV(g)->flag&VISATOMIC2?id:0;}else id=0;
  VARPS adocv = vains(g,wt);
  if(2==n&&!(adocv.f&&strchr(fca,id))){
   A x; IRS2(num(0),w,0L,0,r,jtfrom,x); A y; IRS2(num(1),w,0L,0,r,jtfrom,y);

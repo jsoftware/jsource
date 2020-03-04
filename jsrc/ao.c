@@ -35,13 +35,13 @@ static DF1(jtoblique){A x,y,z;I m,n,r;D rkblk[16];
   DO(m1, v=ww+(k+=n); u=v+n1*MIN(m-i-2,n1); init; while(v<=(u-=n1))expr; *zz++=x;);  \
  }
 
-// Derived verb for f//. y
+// Derived verb for f//. y for atomic f
 static DF1(jtobqfslash){A y,z;B b=0,p;C er,id,*wv;I c,d,k,m,m1,mn,n,n1,r,*s,wt;
  RZ(w);
  r=AR(w); s=AS(w); wt=AT(w); wv=CAV(w);
 // obsolete  if(!(AN(w)&&1<r&&DENSE&wt))R oblique(w,self);  // revert to default if rank<2, empty, or sparse
  if((-AN(w)&(1-r)&-(DENSE&wt))>=0)R oblique(w,self);  // revert to default if rank<2, empty, or sparse.  This implies m/n below are non0
- y=FAV(self)->fgh[0]; y=VAV(y)->fgh[0]; id=vaid(y);
+ y=FAV(self)->fgh[0]; y=FAV(y)->fgh[0]; id=FAV(y)->id/* obsolete vaid(y) */;
  m=s[0]; m1=m-1;
  n=s[1]; n1=n-1; mn=m*n; d=m+n-1; PROD(c,r-2,2+s);
 // obsolete  if(1==m||1==n){GA(z,wt,AN(w),r-1,1+s); AS(z)[0]=d; MC(AV(z),wv,AN(w)<<bplg(wt)); R z;}
@@ -104,16 +104,19 @@ static DF1(jtobqfslash){A y,z;B b=0,p;C er,id,*wv;I c,d,k,m,m1,mn,n,n1,r,*s,wt;
    expr0; DQ(p-1, expr;); *zv++=x;           \
  }}
 
-DF2(jtpolymult){A f,g,y,z;B b=0;C*av,c,d,*wv;I at,i,j,k,m,m1,n,p,t,wt,zn;V*v;
+DF2(jtpolymult){A f,g,z;B b=0;C*av,c,d,*wv;I at,i,j,k,m,m1,n,p,t,wt,zn;V*v;
  RZ(a&&w&&self);
  ASSERT(!((AT(a)|AT(w))&SPARSE),EVNONCE);
  m=AN(a); n=AN(w); m1=m-1; zn=m+n-1; k=MIN(m,n);
  at=AT(a); wt=AT(w); t=maxtyped(at,wt);
  if(TYPESNE(t,at))RZ(a=cvt(t,a)); at=AT(a); av=CAV(a);
  if(TYPESNE(t,wt))RZ(w=cvt(t,w)); wt=AT(w); wv=CAV(w);
- v=FAV(self);  // f//. 
- f=v->fgh[0]; y=FAV(f)->fgh[0]; y=VAV(y)->fgh[0]; c=vaid(y);  // f/, then f
- g=v->fgh[1]; y=VAV(g)->fgh[0];              d=vaid(y);   // g taken from g/
+ v=FAV(self);  // f//. @ (g/)
+// obsolete  f=v->fgh[0]; y=FAV(f)->fgh[0]; y=FAV(y)->fgh[0]; c=vaid(y);  //
+// obsolete  g=v->fgh[1]; y=FAV(g)->fgh[0];              d=vaid(y);   // g taken from g/
+ f=v->fgh[0]; g=v->fgh[1];
+ c=FAV(FAV(FAV(f)->fgh[0])->fgh[0])->id;   // id of f     f//. f/ f
+ d=FAV(FAV(g)->fgh[0])->id;   // id of g     g/ g
 // obsolete  if(!(m&&1==AR(a)&&n&&1==AR(w)))R obqfslash(df2(z,a,w,g),f);  // if empty, or not lists, do general code.  Never happens.
 // obsolete  if(!(m&&1>=AR(a)&&n&&1>=AR(w)))R obqfslash(df2(z,a,w,g),f);  // if empty, or not lists, do general code.  Never happens.
  if((-m&(AR(a)-2)&-n&(AR(w)-2))>=0)R obqfslash(df2(z,a,w,g),f);  // if empty, or not atoms/lists, do general code.  Never happens.
@@ -149,7 +152,7 @@ DF2(jtpolymult){A f,g,y,z;B b=0;C*av,c,d,*wv;I at,i,j,k,m,m1,n,p,t,wt,zn;V*v;
    for(i=0;i<zn;++i){
     j=MIN(i,m1); u=aa+m1-j; v=ww+i-j;
     p=MIN(1+i,zn-i); p=MIN(p,k);
-    I rc=((AHDR2FN*)adocv.f)((I)1,p,u,v,yv,jt); if(rc)jsignal(rc); ((AHDRRFN*)adocvsum.f)((I)1,p,(I)1,yv,zv,jt);
+    I rc=((AHDR2FN*)adocv.f)((I)1,p,u,v,yv,jt); if(rc&255)jsignal(rc); ((AHDRRFN*)adocvsum.f)((I)1,p,(I)1,yv,zv,jt);
     ++zv;
    }
    if(EWOV<=jt->jerr){RESETERR; PMLOOP(I,D,FL, x=*u--*(D)*v++, x+=*u--*(D)*v++);}  // erroneous fa(z) removed; any error >= EWOV will be an overflow
@@ -298,7 +301,9 @@ static DF2(jtkeyslash){PROLOG(0012);A b,q,x,z=0;B bb,*bv,pp=0;C d;I at,*av0,c,n,
  at=AT(a); av0=AV(a); SETIC(a,n); 
  wt=AT(w); wv0=AV(w); wr=AR(w);
  ASSERT(n==SETIC(w,m),EVLENGTH);
- x=FAV(self)->fgh[0]; d=vaid(VAV(x)->fgh[0]); if(B01&wt){d=d==CMAX?CPLUSDOT:d; d=(d==CMIN)|(d==CSTAR)?CSTARDOT:d;}
+// obsolete x=; d=vaid(VAV(x)->fgh[0]);
+ d=FAV(FAV(self)->fgh[0])->id;  // self is f//.   get  f/   then f
+ if(B01&wt){d=d==CMAX?CPLUSDOT:d; d=(d==CMIN)|(d==CSTAR)?CSTARDOT:d;}
  if(!(AN(a)&&AN(w)&&at&DENSE&&
      (wt&B01&&(d==CEQ||d==CPLUSDOT||d==CSTARDOT||d==CNE||d==CPLUS)||
      wt&SBT&&(d==CMIN||d==CMAX)||
@@ -601,7 +606,8 @@ F1(jtsldot){A h=0;AF f1=jtoblique,f2;C c,d,e;I flag=0;V*v;
  v=VAV(w);
  switch(ID(w)){  // no default for f2: every path must set it
   case CPOUND: f2=jtkeytally; break;
-  case CSLASH: f2=jtkeyslash; if(vaid(v->fgh[0]))f1=jtobqfslash; break;
+// obsolete   case CSLASH: f2=jtkeyslash; if(vaid(v->fgh[0]))f1=jtobqfslash; break;
+  case CSLASH: f2=jtkey; if(AT(v->fgh[0])&VERB&&FAV(v->fgh[0])->flag&VISATOMIC2){f2=jtkeyslash; f1=jtobqfslash;} break;  // f//.  if f is atomic2
   case CFORK:  if(v->valencefns[0]==(AF)jtmean){f2=jtkeymean; break;}
                c=ID(v->fgh[0]); d=ID(v->fgh[1]); e=ID(v->fgh[2]); 
                if(((c^e)==(CHEAD^CPOUND))&&d==CCOMMA&&(c==CHEAD||c==CPOUND)){f2=jtkeyheadtally; break;}

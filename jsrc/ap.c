@@ -542,7 +542,8 @@ static DF1(jtpscan){A y,z;I d,f,m,n,r,t,wn,wr,*ws,wt;
  y=FAV(self)->fgh[0]; // y is the verb u, which is f/
  // If there are 0 or 1 items, or w is empty, return the input unchanged, except: if rank 0, return (($w),1)($,)w - if atomic op, do it right here, otherwise call the routine to get the shape of result cell
 // obsolete  if(2>n||!wn){if(vaid(FAV(y)->fgh[0])){R r?RETARG(w):reshape(over(shape(w),num(1)),w);}else R IRS1(w,self,r,jtinfixprefix1,z);}
- if(((1-n)&-wn)>=0){if(vaid(FAV(y)->fgh[0])){R r?RETARG(w):reshape(over(shape(w),num(1)),w);}else R IRS1(w,self,r,jtinfixprefix1,z);}  // n<2 or wn=0
+// obsolete  if(((1-n)&-wn)>=0){if(vaid(FAV(y)->fgh[0])){R r?RETARG(w):reshape(over(shape(w),num(1)),w);}else SEGFAULT /* obsolete  R IRS1(w,self,r,jtinfixprefix1,z); scaf*/}  // n<2 or wn=0
+ if(((1-n)&-wn)>=0){R r?RETARG(w):reshape(over(shape(w),num(1)),w);}  // n<2 or wn=0
  VARPS adocv = vapfx(FAV(y)->fgh[0],wt);  // fetch info for f/\ and this type of arg
  if(!adocv.f)R IRS1(w,self,r,jtinfixprefix1,z);  // if there is no special function for this type, do general reduce
  if((t=atype(adocv.cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));  // convert input if necessary
@@ -789,10 +790,11 @@ F1(jtbslash){AF f1=jtinfixprefix1,f2=jtinfixprefix2;V*v;I flag=FAV(ds(CBSLASH))-
    f2=jtinfixd; break;
   case CFORK:  
    if(v->valencefns[0]==(AF)jtmean)f2=jtmovavg; break;
-  case CSLASH: ;
+  case CSLASH: ;  // never gerund/ which is coded as GRCO
    A u=v->fgh[0];  // the u in u/\ y
    if(AT(u)&VERB)flag |= (FAV(u)->flag >> (VIRS2X-VFSCANIRSX)) & VFSCANIRS;  // indic if we should use {: f }: for 2 /\ y
-   f2=jtmovfslash; if(vaid(u)){f1=jtpscan; flag|=VASGSAFE|VJTFLGOK1;} break;
+// obsolete    f2=jtmovfslash; if(vaid(u)){f1=jtpscan; flag|=VASGSAFE|VJTFLGOK1;} break;
+   f2=jtmovfslash; if(FAV(u)->flag&VISATOMIC2){f1=jtpscan; flag|=VASGSAFE|VJTFLGOK1;} break;
   default:
    flag |= VJTFLGOK1|VJTFLGOK2; break; // The default u\ looks at WILLBEOPENED
  }

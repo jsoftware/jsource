@@ -126,7 +126,7 @@ static A jtvaspeq(J jt,A a,A w,C id,VF ado,I cv,I t,I zt,I f,I r){A ae,ax,ay,we,
  else if(ab&&n>j){c=n-j; ICPY(zyv,v,c*yc); I lrc=((AHDR2FN*)ado)(~(c*xc),(I)1,aev,wxv,zxv,jt); rc=lrc<rc?lrc:rc;}
  GA(ze,zt,1,0,0); I lrc=((AHDR2FN*)ado)((I)1,(I)1,aev,wev,AV(ze),jt); rc=lrc<rc?lrc:rc;
 // obsolete RE(0);
- ASSERT(rc==EVOK,rc);
+ ASSERT((rc&255)==0,rc);
  if(cv&VRI+VRD){A e,x; RZ(e=cvz(cv,ze)); RZ(x=cvz(cv,zx)); if(TYPESEQ(AT(e),AT(x))){ze=e; zx=x;}}
  GASPARSE(z,STYPE(AT(zx)),1,AR(a),AS(a));
  zp=PAV(z); 

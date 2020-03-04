@@ -826,7 +826,7 @@ extern A        jttokens(J,A,I);
 extern B        jtunlk(J,I);
 extern A        jtv2(J,I,I);
 extern A        jtva2s(J,A,A,C,VF,I,I,I,I,I);
-extern C        jtvaid(J,A);
+// obsolate extern C        jtvaid(J,A);
 extern VARPS      jtvains(J,A,I);
 extern VARPS      jtvapfx(J,A,I);
 extern VA2      jtvar(J,A,I,I);

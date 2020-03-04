@@ -742,7 +742,7 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;
 
 static DF1(jtcut1){R cut2(mark,w,self);}
 
-
+#if 0   // never executed
 #define PSCASE(id,zt,wt)    ((id)+256*(zt)+1024*(wt))
 #define PSLOOP(Tz,Tw,F,v0)      \
     {B*u;Tw* RESTRICT wv;Tz s=v0,x,* RESTRICT zv;                   \
@@ -773,15 +773,17 @@ static A jtpartfscan(J jt,A a,A w,I cv,B pfx,C id,C ie){A z=0;B*av;I m,n,zt;
  }
  R z;
 }    /* [: ; <@(ie/\);.k  on vector w */
+#endif
 
-// ;@((<@(f/\));._2 _1 1 2) when  f is atomic   also @: but only when no rank loop required
+// ;@((<@(f/\));._2 _1 1 2) when  f is atomic   also @: but only when no rank loop required  also \. for \
+// also [: ; (<@(f/\));._2 _1 1 2)  when no rank loop required
 // NOTE: if there are no cuts, this routine produces different results from the normal routine if the operation is one we recognise.
 //  This routine produces an extra axis, as if the shape of the boxed result were preserved even when there are no boxed results
 DF2(jtrazecut2){A fs,gs,y,z=0;B b; I neg,pfx;C id,sep,*u,*v,*wv,*zv;I d,k,m=0,wi,p,q,r,*s,wt;
     V *vv;VARPS adocv;
  RZ(a&&w);
  gs=FAV(self)->fgh[1+(CFORK==FAV(self)->id)]; vv=VAV(gs); y=vv->fgh[0]; fs=VAV(y)->fgh[1];  // self is ;@:(<@(f/\);.1)     gs  gs is <@(f/\);.1   y is <@(f/\)  fs is   f/\  ...
- p=SETIC(w,wi); wt=AT(w); k=vv->localuse.lI; neg=0>k; pfx=k==1||k==-1; b=neg&&pfx;
+ p=SETIC(w,wi); wt=AT(w); k=vv->localuse.lI; neg=0>k; pfx=k==1||k==-1; b=neg&&pfx;   // p,wi is # items of w; 
  id=FAV(fs)->id;  // fs is f/id   where id is \ \.
   // if f is atomic/\ or atomic /\., set ado and cv with info for the operation
  if(id==CBSLASH)adocv = vapfx(FAV(FAV(fs)->fgh[0])->fgh[0],wt);   // FAV(fs)->fgh[0] is f/    FAV(FAV(fs)->fgh[0])->fgh[0] is f
@@ -801,7 +803,8 @@ DF2(jtrazecut2){A fs,gs,y,z=0;B b; I neg,pfx;C id,sep,*u,*v,*wv,*zv;I d,k,m=0,wi
  I t,zk,zt;                     /* atomic function f/\ or f/\. */
  if((t=atype(adocv.cv))&&TYPESNE(t,wt)){RZ(w=cvt(t,w)); wv=CAV(w);}
  zt=rtype(adocv.cv); zk=d<<bplg(zt);
- if(1==r&&!neg&&B01&AT(a)&&p==wi&&v[(wi-1)&(pfx-1)]){RE(z=partfscan(a,w,adocv.cv,(B)pfx,id,vaid(VAV(fs)->fgh[0]))); if(z)R z;}
+// ?? vaid(VAV(fs)->fgh[0]) is always /, so this does nothing
+// unused if(1==r&&!neg&&B01&AT(a)&&p==wi&&v[(wi-1)&(pfx-1)]){RE(z=partfscan(a,w,adocv.cv,(B)pfx,id,vaid(VAV(fs)->fgh[0]))); if(z)SEGFAULT /* scaf  R z;*/}
  GA(z,zt,AN(w),r,s); zv=CAV(z); // allocate size of w, which is as big as it can get if there are no discarded items
  while(p){I n;
   if(u=memchr(v+pfx,sep,p-pfx))u+=pfx^1; else{if(!pfx)break; u=v+p;}

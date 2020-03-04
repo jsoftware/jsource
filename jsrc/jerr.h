@@ -61,6 +61,7 @@
 #define EWOVFLOOR0      52   // minor oflo in <./>., can be left as INT
 #define EWOVFLOOR1      53   // major oflo in <./>., must be converted to FL
 #define EVOK            256  // error code used to mean 'no error' in cases where we have to take the minimum of returned errors
+#define EVOKCLEANUP     512  // no error, but there is cleanup work to do
 
 // Exigent errors are those errors that must not be ignored if they happen during execution on a fill-cell
 #define EMSK(x) (((I)1)<<((x)-1))

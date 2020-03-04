@@ -388,7 +388,7 @@ static const UC vaptr[256]={
 /*   1   2   3   4   5   6   7     8   9   a   b   c   d   e   f   */
 
 // return atomic2 ID for the verb w.  If w is b., look for its u operand and return the appropriate 
-C jtvaid(J jt,A w){A x;C c;I k;V*v;
+static C jtvaid(J jt,A w){A x;C c;I k;V*v;
  v=FAV(w); c=v->id;
  if(c==CBDOT){x=v->fgh[1]; if(INT&AT(x)&&!AR(x)&&(k=*AV(x),(k&-16)==16))c=(C)k;}
  R vaptr[(UC)c]?c:0;
@@ -672,6 +672,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
    if(rc==EVOK){RETF(!((I)jtinplace&VRI+VRD)?z:cvz((I)jtinplace,z));  // normal return is here.  The rest is error recovery
    }else if(rc-EWOVIP>=0){A zz;C *zzv;I zzk;
     // Here for overflow that can be corrected in place
+// not yet    if(rc==EVOKCLEANUP){jt->mulofloloc=0; RETF(z);}  // if multiply that did not overflow, clear the oflo position for next time, and return
     // If the original result block cannot hold the D result, allocate a separate result area
     if(sizeof(D)==sizeof(I)){zz=z; MODBLOCKTYPE(zz,FL); zzk=aawwzk[4];   // shape etc are already OK
     }else{GATV(zz,FL,AN(z),AR(z),AS(z)); zzk=aawwzk[4]*(sizeof(D)/sizeof(I));}
@@ -680,8 +681,8 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
     // Set up pointers etc for the overflow handling.  Set b=1 if w is taken for the x argument to repair
     if(rc==EWOVIP+EWOVIPMULII){D *zzvd=(D*)zzv; I *zvi=IAV(z);
      // Multiply repair.  We have to convert all the pre-overflow results to float, and then finish the multiplies
-     jt->mulofloloc = ~jt->mulofloloc;  // convert the complement count back to the real number of items processed
-     DQ(jt->mulofloloc, *zzvd++=(D)*zvi++;);  // convert the multiply results to float
+     jt->mulofloloc = ~jt->mulofloloc;  // make length positive
+     DQ(jt->mulofloloc, *zzvd++=(D)*zvi++;);  // convert the multiply results to float.  mulofloloc is known negative, and must be complemented
      // Now repeat the processing.  Unlike with add/subtract overflow, we have to match up all the argument atoms
      {C *av=CAV(a); C *wv=CAV(w);
 #if 0
@@ -694,6 +695,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
       I i=mf; I jj=nf; while(1){tymesIIO(n,m,(I*)av,(I*)wv,(D*)zzv,jt); if(!--i)break; zzv+=zzk; I jj1=--jj; jj=jj<0?nf:jj; av+=aawwzk[1+REPSGN(jj1)]; wv+=aawwzk[3+REPSGN(jj1)];}  // jj1 is -1 on the last inner iter, where we use outer incr
 #endif
      }
+// not yet     jt->mulofloloc=0;  // reinit for next time
     } else {   // not multiply repair, but something else to do inplace
      adocv.f = repairip[(rc-EWOVIP)&3];   // fetch ep from table
      I nipw = ((z!=w) & (rc-EWOVIP)) ^ (((rc-EWOVIP)>>2) & 1);  // nipw from z!=w if bits2,0==01; 1 if 10; 0 if 00
@@ -1176,7 +1178,7 @@ DF2(jtfslashatg){A fs,gs,y,z;B b,sb=0;C*av,c,d,*wv;I ak,an,ar,*as,at,m,
   GA(z1,zt,zn,r-1,1+s); zu=CAV(z1);  // allocate ping-pong output area for f/
   I rc;  // accumulate error returns
   rc=((AHDR2FN*)adocv.f)(n,m,av,wv,zv,jt);  // create first result-cell of g
-  DQ(nn-1, av-=ak; wv-=wk; I lrc; lrc=((AHDR2FN*)adocv.f)(n,m,av,wv,yv,jt); lrc=((AHDR2FN*)adocvf.f)((I)1,zn,yv,p?zu:zv,p?zv:zu,jt); rc=lrc<rc?lrc:rc; p^=1;);  // p==1 means result goes to ping buffer zv
+  DQ(nn-1, av-=ak; wv-=wk; I lrc; lrc=((AHDR2FN*)adocv.f)(n,m,av,wv,yv,jt); rc=lrc<rc?lrc:rc; lrc=((AHDR2FN*)adocvf.f)((I)1,zn,yv,p?zu:zv,p?zv:zu,jt); rc=lrc<rc?lrc:rc; p^=1;);  // p==1 means result goes to ping buffer zv
   if(NEVM<(rc&255)){df1(z,df2(y,a,w,gs),fs);}else{if(rc&255)jsignal(rc); z=p?z1:z;}  // if overflow, revert to old-fashioned way.  If p points to ping, prev result went to pong, make pong the result
  }
  RE(0); RETF(z);

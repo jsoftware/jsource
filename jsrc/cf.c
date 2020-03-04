@@ -158,7 +158,8 @@ A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I
   case CQRYDOT: if(hi==CDOLLAR||hi==CPOUND){f2=jtrollkx; flag &=~(VJTFLGOK2);} break;
   case CICAP:   if(fi==CCAP){if(hi==CNE)f1=jtnubind; else if(FIT0(CNE,hv)){f1=jtnubind0; flag &=~(VJTFLGOK1);}} break;
   case CSLASH:  c=ID(gv->fgh[0]); m=-1; m=c==CPLUS?4:m; m=c==CPLUSDOT?5:m; m=c==CSTARDOT?6:m; 
-                if(fi==CCAP&&vaid(gv->fgh[0])&&vaid(h)){f2=jtfslashatg; flag &=~(VJTFLGOK2);}
+// obsolete                 if(fi==CCAP&&vaid(gv->fgh[0])&&vaid(h)){f2=jtfslashatg; flag &=~(VJTFLGOK2);}
+                if(fi==CCAP&&FAV(gv->fgh[0])->flag&FAV(h)->flag&VISATOMIC2){f2=jtfslashatg; flag &=~(VJTFLGOK2);}
                 break;
   case CFCONS:  if(hi==CFCONS){x=hv->fgh[2]; j=*BAV(x); m=-1; m=gi==CIOTA?j:m; m=gi==CICO?2+j:m; m=B01&AT(x)?m:-1;} break;
   case CRAZE:   if(hi==CCUT){
@@ -176,7 +177,7 @@ A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I
                   }
                  }
 
-                }
+                } break;
  }
  if(0<=m){
   v=4<=m?hv:fv; b=CFIT==v->id&&v->fgh[1]==num(0);

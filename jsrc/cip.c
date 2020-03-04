@@ -1071,12 +1071,14 @@ static A jtipbx(J jt,A a,A w,C c,C d){A g=0,x0,x1,z;B*av,*av0,b,*v0,*v1,*zv;C c0
  R z;
 }    /* a f/ . g w  where a and w are nonempty and a is boolean */
 
-static DF2(jtdotprod){A fs,gs;C c,d;I r;V*sv;
+static DF2(jtdotprod){A fs,gs;C c;I r;V*sv;
  RZ(a&&w&&self);
  sv=FAV(self); fs=sv->fgh[0]; gs=sv->fgh[1];  // op is fs . gs
- if((SGNIF(AT(a)&AT(w),B01X)&-AN(a)&-AN(w)&-(d=vaid(gs)))<0&&CSLASH==ID(fs)&&  // fs is c/
-     (c=vaid(FAV(fs)->fgh[0]),c==CSTARDOT||c==CPLUSDOT||c==CNE))R ipbx(a,w,c,d);  // [+.*.~:]/ . boolean
- r=lr(gs);   // left rank of v
+// obsolete  if((SGNIF(AT(a)&AT(w),B01X)&-AN(a)&-AN(w)&-(d=vaid(gs)))<0&&CSLASH==ID(fs)&&  // fs is c/
+// obsolete      (c=vaid(FAV(fs)->fgh[0]),c==CSTARDOT||c==CPLUSDOT||c==CNE))R ipbx(a,w,c,d);  // [+.*.~:]/ . boolean
+ if((SGNIF(AT(a)&AT(w),B01X)&-AN(a)&-AN(w)&-(FAV(gs)->flag&VISATOMIC2))<0&&CSLASH==ID(fs)&&  // fs is c/
+     (c=FAV(FAV(fs)->fgh[0])->id,c==CSTARDOT||c==CPLUSDOT||c==CNE))R ipbx(a,w,c,FAV(gs)->id);  // [+.*.~:]/ . boolean
+r=lr(gs);   // left rank of v
  A z; R df2(z,a,w,atop(fs,qq(gs,v2(r==RMAX?r:1+r,RMAX))));  // inner product according to the Dic
 }
 

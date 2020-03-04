@@ -204,7 +204,7 @@ F2(jtatop){A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=0,m=-1
     }
    }
    break;
-  case CSLDOT:  if(d==CSLASH&&CSLASH==ID(av->fgh[0])){f2=jtpolymult; flag&=~VJTFLGOK2;} break;
+  case CSLDOT:  if(d==CSLASH&&AT(wv->fgh[0])&VERB&&FAV(wv->fgh[0])->flag&VISATOMIC2 && CSLASH==ID(av->fgh[0])&&AT(FAV(av->fgh[0])->fgh[0])&VERB&&FAV(FAV(av->fgh[0])->fgh[0])->flag&VISATOMIC2){f2=jtpolymult; flag&=~VJTFLGOK2;} break;  // f//.@(g/) for atomic fg
   case CQQ:     if(d==CTHORN&&CEXEC==ID(av->fgh[0])&&av->fgh[1]==num(0)){f1=jtdigits10; flag&=~VJTFLGOK1;} break;  // "."0@":
   case CEXP:    if(d==CCIRCLE){f1=jtexppi; flag&=~VJTFLGOK1;} break;
   case CAMP:
@@ -259,8 +259,9 @@ F2(jtatco){A f,g;AF f1=on1cell,f2=jtupon2cell;B b=0;C c,d,e;I flag, flag2=0,j,m=
   case CQRYDOT: if(d==CDOLLAR||d==CPOUND){f2=jtrollkx; flag&=~VJTFLGOK2;} break;
   case CICAP:   if(d==CNE){f1=jtnubind; flag&=~VJTFLGOK1;} else if(FIT0(CNE,wv)){f1=jtnubind0; flag&=~VJTFLGOK1;} break;
   case CAMP:    if(g==num(0)||g==num(1)){j=*BAV(g); m=-1; m=e==CIOTA?j:m; m=e==CICO?2+j:m;} break;
-  case CSLASH:  
-   if(vaid(f)&&vaid(w)){f2=jtfslashatg; flag&=~VJTFLGOK2;}
+  case CSLASH:  //  f/@g where f is not a gerund
+// obsolete   if(vaid(f)&&vaid(w)){f2=jtfslashatg; flag&=~VJTFLGOK2;}
+   if(FAV(f)->flag&FAV(w)->flag&VISATOMIC2){f2=jtfslashatg; flag&=~VJTFLGOK2;}
    if(d==CCOMMA){f1=jtredravel; } else if(d==CDOLLAR&&FAV(av->fgh[0])->id==CSTAR){f1=jtnatoms;} else {m=-1; m=e==CPLUS?4:m; m=e==CPLUSDOT?5:m; m=e==CSTARDOT?6:m;}
    break;
   case CPOUND:  if(d==CCOMMA)f1=jtnatoms; if(d==CDOLLAR)f1=jtrank; break;

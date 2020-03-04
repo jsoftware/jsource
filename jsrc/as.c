@@ -291,7 +291,8 @@ static DF1(jtsscan){A y,z;I d,f,m,n,r,t,wn,wr,*ws,wt;
  wn=AN(w); wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; ws=AS(w); RESETRANK;
  PROD(m,f,ws); PROD1(d,r-1,f+ws+1); n=r?ws[f]:1;  // will not be used if WN==0, so PROD ok.  n is # items along the selected rank
  y=FAV(self)->fgh[0]; // y is f/
- if(((n-2)|(wn-1))<0){if(vaid(FAV(y)->fgh[0])){R r?RETARG(w):reshape(over(shape(w),num(1)),w);}else R IRS1(w,self,r,jtsuffix,z);}  // if empty arg, or just 1 cell in selected axis, convert to f/\ which handles the short arg 
+// obsolete  if(((n-2)|(wn-1))<0){if(vaid(FAV(y)->fgh[0])){R r?RETARG(w):reshape(over(shape(w),num(1)),w);}else R IRS1(w,self,r,jtsuffix,z);}  // if empty arg, or just 1 cell in selected axis, convert to f/\ which handles the short arg 
+ if(((n-2)|(wn-1))<0){if(FAV(FAV(y)->fgh[0])->flag&VISATOMIC2){R r?RETARG(w):reshape(over(shape(w),num(1)),w);}else R IRS1(w,self,r,jtsuffix,z);}  // if empty arg, or just 1 cell in selected axis, convert to f/\ which handles the short arg 
 
    // note that the above line always takes the r==0 case
  VARPS adocv = vasfx(FAV(y)->fgh[0],wt);  // analyze f
@@ -373,7 +374,7 @@ F1(jtbsdot){A f;AF f1=jtsuffix,f2=jtoutfix;I flag=FAV(ds(CBSDOT))->flag;C id;V*v
  v=FAV(w);  // verb info for w
  switch(v->id){
   case CPOUND: f1=jtiota1rev; break;
-  case CSLASH:
+  case CSLASH:  // f/, but not when f is a gerund
    f1=jtsscan; flag|=VJTFLGOK1;
    f=v->fgh[0]; id=ID(f); if(id==CBDOT){f=VAV(f)->fgh[1]; if(INT&AT(f)&&!AR(f))id=(C)*AV(f);}
    switch(id){

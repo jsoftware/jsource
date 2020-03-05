@@ -3,12 +3,12 @@ NB. 7!:6 ----------------------------------------------------------------
 
 (7!:6 <'') -: 7!:6 <'base'
 
-spn=: 3 : '>.&.(2&^.) 64 >. (16+k*7+1+1)+#y [ k=.IF64{4 8'   NB. space needed for a name
+spn=: 3 : '>.&.(2&^.) 64 >. (16+k*7+1)+(k-1)+#y [ k=.IF64{4 8'   NB. space needed for a name
 NB. 8   sizeof(NM)
 NB. 2   MS struct (no longer used)
 NB. 7   header words
 NB. 1   shape (no alignment needed)
-NB. 1   trailing 0 pad - full word because B01 ops need it, will round up
+NB. 1   trailing 0 pad - full word-1 because B01 ops need it, will round up
 NB. #y  letters in the name
 
 spl=: 4 : 0   NB. space needed for locale y with hash table size x

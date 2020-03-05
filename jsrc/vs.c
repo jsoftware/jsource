@@ -35,7 +35,7 @@ B jtscheck(J jt,A w){A a,e,x,y;I k1,k2,r,*s,t;P*p;D rkblk[16];
  R 1;
 }    /* assertions on sparse array w */
 
-static A jtselm(J jt,I t){R t&NUMERIC?cvt(t,num(0)):t&BOX?ds(CACE):chr[' '];}
+static A jtselm(J jt,I t){R t&NUMERIC?cvt(t,num(0)):t&BOX?ds(CACE):chrspace;}
 
 A jtpaxis(J jt,I r,A a){A y,z;B*b;I j,*u,*v;
  RZ(a);

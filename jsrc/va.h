@@ -203,6 +203,14 @@ typedef void AHDRSFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);
 #define VA2CSTILE 34 // 26
 #define VA2CBANG 35 // 17
 #define VA2CCIRCLE 36
+#define VA1CMIN 29 // 27
+#define VA1CMAX 30 // 29
+#define VA1CPLUS 31 // 20
+#define VA1CSTAR 32 // 19
+#define VA1CEXP 33 // 25
+#define VA1CSTILE 34 // 26
+#define VA1CBANG 35 // 17
+#define VA1CCIRCLE 36
 #define VA1CROOT 37
 #define VA1CLOG 38
 

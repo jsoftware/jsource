@@ -726,6 +726,7 @@ typedef struct {AF valencefns[2];A fgh[3];union { D lD; void *lvp[2]; I lI; I4 l
 #define VFUSEDOK2  ((I)(1L<<30))    // this block can be executed by passing in another block (containing rank) whose fgh[0] points to the native block for this primitive
 
 // bits in flag2:
+#define VF2NONE 0
 // bit 0 unused
 #define VF2BOXATOP1X      1   // This verb is one of  <  <@f   <@:f   <&f   <&:f    f&.>  f&.:>
 #define VF2BOXATOP1     ((I)(((I)1)<<VF2BOXATOP1X))
@@ -767,7 +768,7 @@ typedef struct {AF valencefns[2];A fgh[3];union { D lD; void *lvp[2]; I lI; I4 l
 #define VF2USESITEMCOUNT2A  ((I)(((I)1)<<VF2USESITEMCOUNT2AX))
 
 // layout of primitive, in the primtbl.  It is a memory header (shape 0) followed by a V
-typedef struct {I memhdr[AKXR(0)/SZI]; V primvb;} PRIM;  // two cachelines exactly in 64-bit
+typedef struct {I memhdr[AKXR(0)/SZI]; union { V primvb; I primint; } prim; } PRIM;  // two cachelines exactly in 64-bit
 
 
 

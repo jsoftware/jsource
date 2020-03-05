@@ -77,7 +77,7 @@ static void jtdisp(J jt,A w){B b=1&&AT(w)&NAME+NUMERIC;
  case BOXX:
   if(!(AT(w)&BOXMULTIASSIGN)){eputs(" a:"+!jt->nflag); break;}
   // If this is an array of names, turn it back into a character string with spaces between
-  else{w=curtail(raze(every2(every(w,0,jtsfn0),chr[' '],0,jtover)));}  // }: (string&.> names) ,&.> ' '  then fall through to display it
+  else{w=curtail(raze(every2(every(w,0,jtsfn0),chrspace,0,jtover)));}  // }: (string&.> names) ,&.> ' '  then fall through to display it
  case LITX:  eputq(w);                break;
  case NAMEX: ep(AN(w),NAV(w)->s);     break;
  case LPARX: eputc('(');              break;

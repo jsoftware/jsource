@@ -645,6 +645,7 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;
   pd0=a;  // &first block of frets
   pd=CUTFRETFRETS(a);  // &first fret
   CUTFRETCHAIN(a)=0;  // indicate only 1 block in use.  Note this overlaps with AK & thus cannot be set until pd extracted
+  // NOTE!!! is the operation is retried, m must be restored into CUTFRETCOUNT
   v1=wv;  // we always start with the first cell
      // CUTFRETEND in input block is set by caller
   pfx=1; neg=0;  // This is a ;.1 cut
@@ -683,7 +684,10 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;
     if((t=atype(adocv.cv))&&TYPESNE(t,wt)){RZ(w=cvt(t,w)); wv=CAV(w);}
     EACHCUT(if(d)((AHDRRFN*)adocv.f)(wcn,d,(I)1,v1,zc,jt); else{if(!z0){z0=idenv0(a,w,FAV(self),zt,&z); // compared to normal reduces, c means d and d means n
         if(!z0){if(z)R z; else break;}} mvc(zk,zc,atomsize,z0);} zc+=zk;);
-    if(jt->jerr)R jt->jerr>=EWOV?cut2(a,w,self):0; else R adocv.cv&VRI+VRD?cvz(adocv.cv,zz):zz;
+    if(jt->jerr){
+     if(FAV(self)->id!=CCUT)CUTFRETCOUNT(a)=m;  // if we are going to retry, we have to reset the # frets indicator which has been destroyed
+     R jt->jerr>=EWOV?cut2(a,w,self):0;
+    }else R adocv.cv&VRI+VRD?cvz(adocv.cv,zz):zz;
     break;
     }
   }

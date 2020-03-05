@@ -926,7 +926,11 @@ extern I Bimax[];
 extern I Bmark[];
 #define mark ((A)&Bmark)
 extern C        breakdata;
-extern A        chr[];
+// obsolete extern A        chr[];
+extern I Bchrcolon[];
+#define chrcolon ((A)&Bchrcolon)
+extern I Bchrspace[];
+#define chrspace ((A)&Bchrspace)
 extern C  ctype[];
 extern const double dzero;
 extern D        inf;

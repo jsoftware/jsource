@@ -161,13 +161,13 @@ F2(jtunparsem){A h,*hv,dc,ds,mc,ms,z,*zu,*zv;I dn,m,mn,n,p;V*wv;
   if(m)mn=1+((CW*)AV(mc)+m-1)->source;
   if(n)dn=1+((CW*)AV(dc)+n-1)->source;
   GATV0(z,BOX,p+mn+dn,1); zu=zv=AAV(z);
-  RZ(zv=unparse1a(m,hv,   zv)); if(p)RZ(*zv++=chr[':']);
+  RZ(zv=unparse1a(m,hv,   zv)); if(p)RZ(*zv++=chrcolon);
   RZ(zv=unparse1a(n,hv+HN,zv));
   ASSERTSYS(AN(z)==zv-zu,"unparsem zn");
  }else{
   mn=AN(ms); dn=AN(ds);
   GATV0(z,BOX,p+mn+dn,1); zv=AAV(z);
-  ICPY(zv,AAV(ms),mn); zv+=mn; if(p)RZ(*zv++=chr[':']);
+  ICPY(zv,AAV(ms),mn); zv+=mn; if(p)RZ(*zv++=chrcolon);
   ICPY(zv,AAV(ds),dn);
  }
  if(a==num(0)){RZ(z=ope(z)); if(1==AR(z))z=table(z);}

@@ -256,7 +256,7 @@ static A jtlsymb(J jt,C c,A w){A t;C buf[20],d,*s;I*u;V*v=FAV(w);
   RZ(t=str(s-buf,buf)); 
  }else RZ(t=spella(w));
  d=cf(t);
- R d==CESC1||d==CESC2?over(chr[' '],t):t;
+ R d==CESC1||d==CESC2?over(chrspace,t):t;
 }
 
 static B laa(A a,A w){C c,d;
@@ -296,10 +296,10 @@ static F2(jtlinsert){A*av,f,g,h,t,t0,t1,t2,*u,y;B b,ft,gt,ht;C c,id;I n;V*v;
   default:
    t0=CALL2(jt->lcp,ft||NOUN&AT(fs)&&!(VGERL&v->flag)&&lp(f),f,0);
    t1=lsymb(id,w);
-   y=over(t0,laa(t0,t1)?over(chr[' '],t1):t1);
+   y=over(t0,laa(t0,t1)?over(chrspace,t1):t1);
    if(1==n)R y;
    t2=lcpx(g);
-   R over(y,laa(y,t2)?over(chr[' '],t2):t2);
+   R over(y,laa(y,t2)?over(chrspace,t2):t2);
 }}
 
 static F1(jtlcolon){A*v,x,y;C*s,*s0;I m,n;

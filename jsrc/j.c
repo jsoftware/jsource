@@ -44,6 +44,8 @@ CREBLOCKATOMI(asgnforcegloname,ASGN+ASGNTONAME,CASGN)  // =. converted to global
 CREBLOCKATOMI(asgnforceglo,ASGN,CASGN)  // =. converted to global
 CREBLOCKATOMI(mark,MARK,0)  // parser mark, also used generally as a special value
 CREBLOCKATOMI(imax,INT,IMAX)  // max positive value
+CREBLOCKATOMI(chrcolon,LIT,':')  // the one character
+CREBLOCKATOMI(chrspace,LIT,' ')  // the one character
 // obsolete  GA(x,ASGN+ASGNLOCAL+ASGNTONAME, 1,1,0     ); ACX(x); *CAV(x)=CASGN; asgnlocsimp=x;
 // obsolete  GA(x,ASGN+ASGNTONAME, 1,1,0     ); ACX(x); *CAV(x)=CGASGN; asgngloname=x;
 // obsolete  GA(x,ASGN+ASGNTONAME, 1,1,0     ); ACX(x); *CAV(x)=CASGN; asgnforcegloname=x;  // =. converted to global+NAME
@@ -86,8 +88,8 @@ DX  zeroDX={0,0,iv1};       /* 0                                    */
 Z   zeroZ={0,0};          /* 0j0                                  */
 A   zpath=0;              /* default locale search path           */
 uint64_t g_cpuFeatures;   // blis
-PRIM primtab[256];         // inits to 0
-A   chr[256]={0};         /* scalar for each character, or 0      */
+// obsolete PRIM primtab[256];         // inits to 0
+// obsolete A   chr[256]={0};         /* scalar for each character, or 0   should be removed   */
 UC  hwaes=0;              // hardware aes support
 UC  hwfma=0;              // blis cpu tuning
 // globals end

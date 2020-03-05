@@ -525,7 +525,7 @@ static A jtfmtallcol(J jt, A a, A w, I mode) {A *a1v,base,fb,len,strs,*u,v,x;
 static A jtfmtxi(J jt, A a, A w, I mode, I *omode){I lvl;
  RZ(a&&w); *omode=0;
  if(SPARSE&AT(w)) RZ(w=denseit(w));
- if(!AN(w))       RZ(w=reshape(shape(w),chr[' ']));
+ if(!AN(w))       RZ(w=reshape(shape(w),chrspace));
  if(JCHAR&AT(w))  R df1(a,w,qq(atop(ds(CBOX),ds(CCOMMA)),num(1)));
  ASSERT(1>=AR(a), EVRANK); 
  ASSERT(!AN(a) || JCHAR+BOX&AT(a), EVDOMAIN);

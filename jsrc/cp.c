@@ -138,7 +138,7 @@ static DF2(jtpinf12){PROLOG(0340);A z;  // no reason to inplace, since w must be
 #define DIST(i,x)  if(i==e){v=CAV(x); \
                      while(k<m&&i==(e=nv[jv[k]])){MC(zv+c*jv[k],v,c); ++k;}}
 
-// u^:n w where n is not empty and is either an array or a negative atom
+// u^:n w where n is not empty and is either an array or a negative atom (which will abort to ply1)
 static DF1(jtply1s){DECLFG;A hs,j,y,y1,z;C*v,*zv;I c,e,i,*jv,k,m,n,*nv,r,*s,t,zn;
  RZ(w);
  hs=sv->fgh[2]; m=AN(hs); nv=AV(hs); 
@@ -262,7 +262,7 @@ DF2(jtpowop){A hs;B b;V*v;
  I m=AN(hs); // m=#atoms of n; n=1st atom; r=n has rank>0
  // If not special case, fall through to handle general case
  b=0; if(m&&AT(w)&FL+CMPX)RE(b=!all0(eps(w,over(ainf,scf(infm)))));   // set b if n is nonempty FL or CMPX array containing _ or __ kludge should just use hs
- b|=!m; B nonnegatom=!AR(w)&&0<=IAV(hs)[0]; I flag=FAV(a)->flag&((~b&nonnegatom)<<VJTFLGOK1X);  // flags for (empty or contains _/__), (scalar n>=0); if the latter, keep the inplace flag
+ b|=!m; B nonnegatom=!AR(w)&&0<=IAV(hs)[0]; I flag=FAV(a)->flag&((~b&nonnegatom)<<VJTFLGOK1X);  // b is (empty or contains _/__), (scalar n>=0); if the latter, keep the inplace flag
  R fdef(0,CPOWOP,VERB, b?jtply1:nonnegatom?jtfpown:jtply1s,jtply2, a,w,hs,   // Create derived verb: special cases for , 
     flag|VFLAGNONE, RMAX,RMAX,RMAX);
  // no reason to inplace this, since it has to keep the old value to check for changes

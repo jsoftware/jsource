@@ -91,8 +91,8 @@ static A jtlr2(J jt,B left,A a,A w){A z;C*v;I acr,af,ar,k,n,of,*os,r,*s,t,
  RETF(z);
 } 
 
-F2(jtleft2 ){F2PREFIP;if(jt->ranks==(RANK2T)~0)RETF(a); RETF(lr2(1,a,w));}
-F2(jtright2){F2PREFIP;if(jt->ranks==(RANK2T)~0)RETF(w); RETF(lr2(0,a,w));}
+F2(jtleft2 ){F2PREFIP;if(jt->ranks==(RANK2T)~0)RETARG(a); RETF(lr2(1,a,w));}
+F2(jtright2){F2PREFIP;if(jt->ranks==(RANK2T)~0)RETARG(w); RETF(lr2(0,a,w));}
 
 F1(jtright1){RETF(w);}
 
@@ -122,11 +122,11 @@ F1(jtjico1){A y,z;B b;D d,*v;I c,m,n;
 DF1(jtnum1){RZ(   w&&self); R FAV(self)->fgh[2];}
 DF2(jtnum2){RZ(a&&w&&self); R FAV(self)->fgh[2];}
 
-F2(jtfromr  ){RZ(a&&w); A z; R IRS2(a,w,0, RMAX,1L,jtfrom  ,z);} // no agreement check because left rank is infinite - no frame
-F2(jtrepeatr){RZ(a&&w); A z; R IRS2(a,w,0, RMAX,1L,jtrepeat,z);}
+F2(jtfromr  ){RZ(a&&w); A z; R IRS2(a,w,0, RMAX,1L,jtfrom  ,z);} // no agreement check because left rank is infinite - no frame  {"_ 1
+F2(jtrepeatr){RZ(a&&w); A z; R IRS2(a,w,0, RMAX,1L,jtrepeat,z);}  // #"_ 1
 
-A jttaker(J jt,I n,A w){RZ(w); A a,z; RZ(a=sc(n)); R IRS2(a,w,0, RMAX,1L,jttake,z);}
-A jtdropr(J jt,I n,A w){RZ(w); A a,z; RZ(a=sc(n)); R IRS2(a,w,0, RMAX,1L,jtdrop,z);}
+A jttaker(J jt,I n,A w){RZ(w); A a,z; RZ(a=sc(n)); R IRS2(a,w,0, RMAX,1L,jttake,z);}  // n {."1 w
+A jtdropr(J jt,I n,A w){RZ(w); A a,z; RZ(a=sc(n)); R IRS2(a,w,0, RMAX,1L,jtdrop,z);}  // n }."1 w
 
 F1(jticap){A a,e;I n;P*p;
  F1RANK(1,jticap,0);

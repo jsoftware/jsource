@@ -10,7 +10,7 @@
 
 
 static REPF(jtrepzdx){A p,q,x;P*wp;
- RZ(a&&w);
+ RZ(a&&w);F2PREFIP;
  if(SPARSE&AT(w)){wp=PAV(w); x=SPA(wp,e);}
  else x=jt->fill&&AN(jt->fill)?jt->fill:filler(w);
  RZ(p=repeat(ravel(rect(a)),ravel(stitch(IX(wcr?*(wf+AS(w)):1),num(-1)))));
@@ -19,7 +19,7 @@ static REPF(jtrepzdx){A p,q,x;P*wp;
 }    /* (dense complex) # (dense or sparse) */
 
 static REPF(jtrepzsx){A q,x,y;I c,d,j,k=-1,m,p=0,*qv,*xv,*yv;P*ap;
- RZ(a&&w);
+ RZ(a&&w);F2PREFIP;
  ap=PAV(a); x=SPA(ap,x); m=AN(x);
  if(!AN(SPA(ap,a)))R repzdx(ravel(x),w,wf,wcr);
  y=SPA(ap,i); yv=AV(y);
@@ -136,7 +136,7 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
 }    /* (dense boolean)#"r (dense or sparse) */
 
 static REPF(jtrepbsx){A ai,c,d,e,g,q,x,wa,wx,wy,y,y1,z,zy;B*b;I*dv,*gv,j,m,n,*u,*v,*v0;P*ap,*wp,*zp;
- RZ(a&&w);
+ RZ(a&&w);F2PREFIP;
  ap=PAV(a); e=SPA(ap,e); 
  y=SPA(ap,i); u=AV(y);
  x=SPA(ap,x); n=AN(x); b=BAV(x);
@@ -169,7 +169,7 @@ static REPF(jtrepbsx){A ai,c,d,e,g,q,x,wa,wx,wy,y,y1,z,zy;B*b;I*dv,*gv,j,m,n,*u,
 }    /* (sparse boolean) #"r (dense or sparse) */
 
 static REPF(jtrepidx){A y;I j,m,p=0,*v,*x;
- RZ(a&&w);
+ RZ(a&&w);F2PREFIP;
  RZ(a=vi(a)); x=AV(a);
  m=*AS(a);
  DO(m, ASSERT(0<=x[i],EVDOMAIN); p+=x[i]; ASSERT(0<=p,EVLIMIT););
@@ -179,7 +179,7 @@ static REPF(jtrepidx){A y;I j,m,p=0,*v,*x;
 }    /* (dense  integer) #"r (dense or sparse) */
 
 static REPF(jtrepisx){A e,q,x,y;I c,j,m,p=0,*qv,*xv,*yv;P*ap;
- RZ(a&&w);
+ RZ(a&&w);F2PREFIP;
  ap=PAV(a); e=SPA(ap,e); 
  y=SPA(ap,i); yv=AV(y);
  x=SPA(ap,x); if(!(INT&AT(x)))RZ(x=cvt(INT,x)); xv=AV(x);
@@ -196,7 +196,7 @@ static REPF(jtrepisx){A e,q,x,y;I c,j,m,p=0,*qv,*xv,*yv;P*ap;
 
 
 static REPF(jtrep1d){A z;C*wv,*zv;I c,k,m,n,p=0,q,t,*ws,zk,zn;
- RZ(a&&w);
+ RZ(a&&w);F2PREFIP;
  t=AT(a); m=AN(a); ws=AS(w); n=wcr?ws[wf]:1;  // n=length of item axis in input.  If atom, is repeated to length of a
  if(t&CMPX){
   if(wcr)R repzdx(from(apv(n,0L,0L),a),w,                wf,wcr);
@@ -229,7 +229,7 @@ static B jtrep1sa(J jt,A a,I*c,I*d){A x;B b;I*v;
 }    /* process a in a#"0 w */
 
 static REPF(jtrep1s){A ax,e,x,y,z;B*b;I c,d,cd,j,k,m,n,p,q,*u,*v,wr,*ws;P*wp,*zp;
- RZ(a&&w);
+ RZ(a&&w);F2PREFIP;
  if(AT(a)&SCMPX)R rep1d(denseit(a),w,wf,wcr);
  RE(rep1sa(a,&c,&d)); cd=c+d;
  if(DENSE&AT(w))R rep1d(d?jdot2(sc(c),sc(d)):sc(c),w,wf,wcr);  // here if dense w
@@ -271,22 +271,32 @@ static REPF(jtrep1s){A ax,e,x,y,z;B*b;I c,d,cd,j,k,m,n,p,q,*u,*v,wr,*ws;P*wp,*zp
  R z;
 }    /* scalar #"r sparse   or  sparse #"0 (dense or sparse) */
 
-
+A (*reptab[])() = {jtrepisx,jtrepidx,jtrepbsx,jtrepbdx,jtrep1s,jtrep1d,jtrepzsx,jtrepzdx};
 F2(jtrepeat){A z;I acr,ar,wcr,wf,wr;
  RZ(a&&w);F2PREFIP;
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
- wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK; 
+ wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK;
+I adense=-(AT(a)&DENSE);  // sign set if a is dense
+I att=SGNTO0(-(AT(a)&B01+SB01))+((UI)(-(AT(a)&CMPX+SCMPX))>>(BW-1-1));  // 0 if INT/FL 1 if B01 3 if CMPX
+ att=(-acr&-wcr)>=0?2:att;  // override with 2 if either a or w is an atom
+ adense&=(-acr&-wcr)|-(AT(w)&DENSE);  // if a or w is an atom, require both a and w dense
+ A (*repfn)() = reptab[2*att+SGNTO0(adense)];  // fetch address to call
+
  // special case: if a is atomic 1, and cells of w are not atomic.  a=0 is fast in the normal path
- if(wcr&&!ar&&AT(a)&(B01|INT)) {I aval = AT(a)&B01?(I)BAV(a)[0]:IAV(a)[0];  // no fast support for float
+// obsolete  if(wcr&&!ar&&AT(a)&(B01|INT)) {I aval = AT(a)&B01?(I)BAV(a)[0]:IAV(a)[0];  // no fast support for float
+ if(((-wcr)&(ar-1)&(-AT(a)&(B01|INT)))<0){I aval = IAV(a)[0]&((SGNIF(AT(a),INTX)>>(BW-1-1))+1);  // no fast support for float; take all of INT, or 1 bit of B01
   if(!(aval&-2LL)){  // 0 or 1
    if(aval==1)R RETARG(w);   // 1 # y, return y
    if(!(AT(w)&SPARSE)){GA(z,AT(w),0,AR(w),0); MCISH(AS(z),AS(w),AR(w)) AS(z)[wf]=0; RETF(z);}  // 0 # y, return empty
   }
  }
  if(((1-acr)|(acr-ar))<0)R rank2ex(a,w,0L,MIN(1,acr),wcr,acr,wcr,jtrepeat);  // loop if multiple cells of a
- ASSERT(!acr||!wcr||(AS(a)[0]==AS(w)[wf]),EVLENGTH);
- if(!acr||!wcr){RZ(z=!((AT(a)|AT(w))&SPARSE)?rep1d(a,w,wf,wcr):rep1s(a,w,wf,wcr)); RETF(z);}   // a is atom, or w is an atom and a has rank <= 1
- if(AT(a)&B01 +SB01 ){RZ(z=AT(a)&DENSE?repbdx(a,w,wf,wcr):repbsx(a,w,wf,wcr)); RETF(z);}
- if(AT(a)&CMPX+SCMPX){RZ(z=AT(a)&DENSE?repzdx(a,w,wf,wcr):repzsx(a,w,wf,wcr)); RETF(z);}
- /* integer */    {RZ(z=AT(a)&DENSE?repidx(a,w,wf,wcr):repisx(a,w,wf,wcr)); RETF(z);}
+// obsolete  ASSERT(!acr||!wcr||(AS(a)[0]==AS(w)[wf]),EVLENGTH);
+ ASSERT((-acr&-wcr)>=0||(AS(a)[0]==AS(w)[wf]),EVLENGTH);
+// obsolete  if(!acr||!wcr){RZ(z=!((AT(a)|AT(w))&SPARSE)?rep1d(a,w,wf,wcr):rep1s(a,w,wf,wcr)); RETF(z);}   // a is atom, or w is an atom and a has rank <= 1
+// obsolete  if((-acr&-wcr)>=0){RZ(z=!((AT(a)|AT(w))&SPARSE)?rep1d(a,w,wf,wcr):rep1s(a,w,wf,wcr)); RETF(z);}   // a is atom, or w is an atom and a has rank <= 1
+// obsolete  if(AT(a)&B01 +SB01 ){RZ(z=AT(a)&DENSE?repbdx(a,w,wf,wcr):repbsx(a,w,wf,wcr)); RETF(z);}
+// obsolete  if(AT(a)&CMPX+SCMPX){RZ(z=AT(a)&DENSE?repzdx(a,w,wf,wcr):repzsx(a,w,wf,wcr)); RETF(z);}
+// obsolete  /* integer or float */    {RZ(z=AT(a)&DENSE?repidx(a,w,wf,wcr):repisx(a,w,wf,wcr)); RETF(z);}
+ RETF((*repfn)(jtinplace,a,w,wf,wcr));
 }    /* a#"r w main control */

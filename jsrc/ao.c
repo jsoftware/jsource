@@ -244,7 +244,7 @@ static DF2(jtkey){F2PREFIP;PROLOG(0009);A frets,wperm,z;
  CUTFRETCOUNT(frets)=fretp-CUTFRETFRETS(frets)+nfrets;  // # frets is #bytes stored, minus the length of the extended encodings
  CUTFRETEND(frets)=(I)fretp;   // pointer to end+1 of data
  // wperm is always inplaceable.  If u is inplaceable, make the call to cut inplaceable
- // We pass the self pointer for /. into cut, as it uses that fact to interpret a
+ // We pass the self pointer for /. into cut, as it uses the id therein to interpret a
  z=jtcut2((J)(intptr_t)((I)jt+((FAV(self)->flag&VGERL)?0:(FAV(FAV(self)->fgh[0])->flag>>(VJTFLGOK1X-JTINPLACEWX))&JTINPLACEW)),frets,wperm,self);
  POPCCT
  EPILOG(z);

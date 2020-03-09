@@ -43,7 +43,7 @@ static REPF(jtrepzsx){A q,x,y;I c,d,j,k=-1,m,p=0,*qv,*xv,*yv;P*ap;
  ASSERT(0,EVNONCE);
 }    /* (sparse complex) #"r (dense or sparse) */
 
-
+#if 0  // obsolete 
 #define REPB(T)  \
  {T*u,*v=(T*)zv;                                                    \
   for(i=0;i<c;++i){                                                 \
@@ -67,7 +67,7 @@ static REPF(jtrepzsx){A q,x,y;I c,d,j,k=-1,m,p=0,*qv,*xv,*yv;P*ap;
    }                                                                \
    if(r){B*c=(B*)iv; DO(r, if(c[i])*v++=u[i];);}                      \
  }}
-
+#endif
 static REPF(jtrepbdx){A z;I c,k,m,p;
  // wf and wcr are set
  RZ(a&&w);F2PREFIP;

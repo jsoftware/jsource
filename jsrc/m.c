@@ -99,9 +99,14 @@ B jtmeminit(J jt){I k,m=MLEN;
 }
 
 // Audit all memory chains to detect overrun
+#if SY_64
+#define AUDITFILL ||(UI4)AFHRH(Wx)!=Wx->fill
+#else
+#define AUDITFILL 
+#endif
 void jtauditmemchains(J jt){
 #if MEMAUDIT&16
-I Wi,Wj;A Wx,prevWx=0; if(jt->peekdata){for(Wi=PMINL;Wi<=PLIML;++Wi){Wj=0; Wx=(jt->mfree[-PMINL+Wi].pool); while(Wx){if(FHRHPOOLBIN(AFHRH(Wx))!=(Wi-PMINL)||(UI4)AFHRH(Wx)!=Wx->fill||Wj>0x10000000)SEGFAULT prevWx=Wx; Wx=AFCHAIN(Wx); ++Wj;}}}
+I Wi,Wj;A Wx,prevWx=0; if(jt->peekdata){for(Wi=PMINL;Wi<=PLIML;++Wi){Wj=0; Wx=(jt->mfree[-PMINL+Wi].pool); while(Wx){if(FHRHPOOLBIN(AFHRH(Wx))!=(Wi-PMINL)AUDITFILL||Wj>0x10000000)SEGFAULT prevWx=Wx; Wx=AFCHAIN(Wx); ++Wj;}}}
 #endif
 }
 
@@ -950,7 +955,7 @@ if((I)jt&3)SEGFAULT
    ASSERT(z=MALLOC(n),EVWSFULL);
 #endif
    AFHRH(z) = (US)FHRHSYSJHDR(1+blockx);    // Save the size of the allocation so we know how to free it and how big it was
-#if MEMAUDIT&17
+#if MEMAUDIT&17 && SY_64
    z->fill=(UI4)AFHRH(z);
 #endif
    jt->mfreegenallo=mfreeb+=n;    // mfreegenallo is the byte count allocated for large blocks

@@ -3,7 +3,6 @@
 /*                                                                         */
 /* Global Definitions                                                      */
 
-
 #ifndef SYS // include js.h only once - dtoa.c
 #include "js.h"
 #endif

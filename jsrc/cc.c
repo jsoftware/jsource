@@ -677,7 +677,13 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;
    VARPS adocv = vains(FAV(fs)->fgh[0],wt);  // qualify the operation, returning action routine and conversion info
    if(adocv.f){C*z0=0,*zc;I t,zk,zt;  // if the operation is a primitive that we can  apply / to...
     zt=rtype(adocv.cv);
+#if SY_64
     GA(zz,zt,m*wcn,r,AS(w)); AS(zz)[0]=m; 
+#else
+    // plusinsI writes past the end of its result area if d==1 and there is overflow (normally that would be OK and would be converted to D inplace).  Here it overruns the buffer,
+    // so we allocate one extra word just in case
+    GA(zz,zt,m*wcn+1,r,AS(w)); AS(zz)[0]=m; AN(zz)=m*wcn;
+#endif
     if(!AN(zz))R zz;  // don't run function on empty arg
     I atomsize=bpnoun(zt);
     zc=CAV(zz); zk=wcn*atomsize;

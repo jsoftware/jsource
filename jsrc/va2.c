@@ -600,8 +600,10 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
     else if(nf-1<0){I im=mf; do{I in=~nf; do{((AHDR2FN*)adocv.f)(n,m,av,wv,zv,jt); wv+=awzk[1]; zv+=awzk[2];}while(--in); av+=awzk[0];}while(--im);} // if right frame is longer, repeat cells of a
     else         {I im=mf; do{I in=nf; do{((AHDR2FN*)adocv.f)(n,m,av,wv,zv,jt); av+=awzk[0]; zv+=awzk[2];}while(--in); wv+=awzk[1];}while(--im);}  // if left frame is longer, repeat cells of w
 #else
-   // mf has the total number of calls.  nf is 1 less than the number of calls with a repeated cell.  aawwzk[1,3] have 0 in a repeated argument
-    // note: the compiler unrolls this call loop.  Would be nice to suppress that.  All it seems to save is one lousy vzeroupper
+     // mf has the total number of calls.  nf is 1 less than the number of calls with a repeated cell.  aawwzk[0,1] are the cell-size of a for the outer loop, aawwzk[2,3] are for w;
+     // but aawwzk[1,3] have 0 in a repeated argument.  aawwzk[1,3] are added for each inner iteration, aawwzk[0,2] at the end of an inner cycle
+     // m is the number of outer loops the caller will run
+     // n is the number of times the inner-loop atom is repeated for each outer loop: n=1 means no inner loop needed; n>1 means each atom of y is repeated n times; n<0 means each atom of x is repeated ~n times.  n*m cannot=0. 
    I i=mf; I jj=nf; while(1){I lrc=((AHDR2FN*)adocv.f)(n,m,av,wv,zv,jt); rc=lrc<rc?lrc:rc; if(!--i)break; zv+=aawwzk[4]; I jj1=--jj; jj=jj<0?nf:jj; av+=aawwzk[1+REPSGN(jj1)]; wv+=aawwzk[3+REPSGN(jj1)];}  // jj1 is -1 on the last inner iter, where we use outer incr
 #endif
    }

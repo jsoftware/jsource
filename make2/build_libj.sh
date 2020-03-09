@@ -66,7 +66,11 @@ LDOPENMP=" -fopenmp "
 if [ -z "${compiler##*gcc*}" ] || [ -z "${CC##*gcc*}" ]; then
 LDOPENMP32=" -l:libgomp.so.1 "    # gcc
 else
+if [ -f /etc/redhat-release ] ; then
+LDOPENMP32=" -l:libomp.so "     # clang
+else
 LDOPENMP32=" -l:libomp.so.5 "     # clang
+fi
 fi
 fi
 fi

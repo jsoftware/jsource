@@ -5,6 +5,16 @@
 
 #include "j.h"
 
+#define ZZDEFN
+#define ZZFLAGWORD state
+#include "result.h"
+#define ZZFLAGARRAYWX 10  // w has multiple cells and must advance between iterations
+#define ZZFLAGARRAYW (((I)1)<<ZZFLAGARRAYWX)
+#define ZZFLAGARRAYAX 11  // w has multiple cells and must advance between iterations
+#define ZZFLAGARRAYA (((I)1)<<ZZFLAGARRAYAX)
+#define ZZFLAGISDYADX 12 // set if dyad call - MUST BE THE HIGHEST BIT
+#define ZZFLAGISDYAD (((I)1)<<ZZFLAGISDYADX)
+
 
 // Bivalent entry point.
 // self is a cyclic iterator
@@ -19,14 +29,58 @@ static DF2(jtexeccyclicgerund){  // call is w,self or a,w,self
  ++nexttoexec; nexttoexec=AN(FAV(self)->fgh[2])==nexttoexec?0:nexttoexec; FAV(self)->localuse.lI=nexttoexec; // cyclically advance exec pointer
  w=ismonad?vbtoexec:w; R (*fntoexec)(jtinplace,a,w,vbtoexec);  // vector to the function, as a,vbtoexec or a,w,vbtoexec as appropriate
 }
+// similar, for executing m@.v.  This for I selectors
+static DF2(jtexecgerundcellI){  // call is w,self or a,w,self
+ // find the real self, valence-dependent
+ RZ(w);
+ F2PREFIP;
+ I ismonad=(AT(w)>>VERBX)&1; self=ismonad?w:self;
+ I nexttoexec=FAV(self)->localuse.lI;
+ I gerx=IAV(FAV(self)->fgh[1])[nexttoexec];
+ gerx+=REPSGN(gerx)&AN(FAV(self)->fgh[2]);
+ ASSERT(BETWEENO(gerx,0,AN(FAV(self)->fgh[2])),EVINDEX);
+ A vbtoexec=AAV(FAV(self)->fgh[2])[gerx]; AF fntoexec=FAV(vbtoexec)->valencefns[1-ismonad]; ASSERT(fntoexec,EVDOMAIN); // get fn to exec
+ ++nexttoexec; FAV(self)->localuse.lI=nexttoexec; // cyclically advance exec pointer
+ w=ismonad?vbtoexec:w; R (*fntoexec)(jtinplace,a,w,vbtoexec);  // vector to the function, as a,vbtoexec or a,w,vbtoexec as appropriate
+}
+// This for B selectors
+static DF2(jtexecgerundcellB){  // call is w,self or a,w,self
+ // find the real self, valence-dependent
+ RZ(w);
+ F2PREFIP;
+ I ismonad=(AT(w)>>VERBX)&1; self=ismonad?w:self;
+ I nexttoexec=FAV(self)->localuse.lI;
+ I gerx=BAV(FAV(self)->fgh[1])[nexttoexec];
+ gerx+=REPSGN(gerx)&AN(FAV(self)->fgh[2]);
+ ASSERT(BETWEENO(gerx,0,AN(FAV(self)->fgh[2])),EVINDEX);
+ A vbtoexec=AAV(FAV(self)->fgh[2])[gerx]; AF fntoexec=FAV(vbtoexec)->valencefns[1-ismonad]; ASSERT(fntoexec,EVDOMAIN); // get fn to exec
+ ++nexttoexec; FAV(self)->localuse.lI=nexttoexec; // cyclically advance exec pointer
+ w=ismonad?vbtoexec:w; R (*fntoexec)(jtinplace,a,w,vbtoexec);  // vector to the function, as a,vbtoexec or a,w,vbtoexec as appropriate
+}
 
 // w is a verb that refers to a cyclic gerund which is stored in h.
+// z is a place to build a clone
 // Result is a clone that is used to hold which gerund is next to execute
 // the gerund must not be empty
-A jtcreatecycliciterator(J jt, A w){A z;
- // Create the clone, point it to come to the execution point, set the next-verb number to 0
- RZ(z=ca(w)); FAV(z)->valencefns[0]=FAV(z)->valencefns[1]=jtexeccyclicgerund; FAV(z)->localuse.lI=0;
- // clear the BOXATOP flags for this iterator
+A jtcreatecycliciterator(J jt, A z, A w){
+ // Create the (skeletal) clone, point it to come to the execution point, set the next-verb number to 0
+ AC(z)=ACPERMANENT; AT(z)=VERB; A gerund=FAV(z)->fgh[2]=FAV(w)->fgh[2]; FAV(z)->mr=FAV(w)->mr; FAV(z)->valencefns[0]=FAV(z)->valencefns[1]=jtexeccyclicgerund; FAV(z)->localuse.lI=0;
+// obsolete  // clear the BOXATOP flags for this iterator  scaf should set if all gerunds are BOXATOP
+// obsolete  // set BOXATOP if all BOXATOP flags are set; clear ATOPOPEN always since they can't coexist
+// obsolete  UI4 flg2=VF2BOXATOP1|VF2BOXATOP2; DO(AN(gerund), flg2 &= FAV(AAV(gerund)[i])->flag2&(VF2BOXATOP1|VF2BOXATOP2);)
+ FAV(z)->flag2=0;
+ R z;
+}
+// Similar, but also install the list of gerund results that will select the verb to run
+static A jtcreategerunditerator(J jt, A z, A w, A r){  // z is result area, w is gerunds, r is selector list
+ // Convert the selectors to integer/boolean
+ if(!(AT(r)&(INT|B01)))RZ(r=cvt(INT,r));
+ // Create the (skeletal) clone, point it to come to the execution point, set the next-verb number to 0
+ AC(z)=ACPERMANENT; AT(z)=VERB; FAV(z)->fgh[2]=FAV(w)->fgh[2]; FAV(z)->fgh[1]=r; FAV(z)->mr=FAV(w)->mr;
+ FAV(z)->valencefns[0]=FAV(z)->valencefns[1]=AT(r)&INT?jtexecgerundcellI:jtexecgerundcellB; FAV(z)->localuse.lI=0;
+// obsolete  // clear the BOXATOP flags for this iterator  scaf should set if all gerunds are BOXATOP
+// obsolete  // set BOXATOP if all BOXATOP flags are set; clear ATOPOPEN always since they can't coexist
+// obsolete  UI4 flg2=VF2BOXATOP1|VF2BOXATOP2; DO(AN(gerund), flg2 &= FAV(AAV(gerund)[i])->flag2&(VF2BOXATOP1|VF2BOXATOP2);)
  FAV(z)->flag2=0;
  R z;
 }
@@ -93,19 +147,20 @@ F2(jtevger){A hs;I k;
 
 F2(jttie){RZ(a&&w); R over(VERB&AT(a)?arep(a):a,VERB&AT(w)?arep(w):w);}
 
-
+// We want to know whether the verb w can guarantee that it will return the same shape it is given, if all
+// executions of all verbs have the same shape
 static B jtatomic(J jt,C m,A w){A f,g;B ax,ay,vf,vg;C c,id;V*v;
  // char types that are atomic both dyad and monad
  // CFCONS should not be atomic.  But who would use it by itself?  It must be part of
  // some compound, so we will pretend it's atomic.  It's too much trouble to add an 'atomic result'
  // type, and tests rely on 1: being treated as atomic.  It's been this way a long time.
  static const C atomic12[]={CMIN, CLE, CMAX, CGE, CPLUS, CPLUSCO, CSTAR, CSTARCO, CMINUS, CDIV, CROOT, 
-     CEXP, CLOG, CSTILE, CBANG, CLEFT, CRIGHT, CJDOT, CCIRCLE, CRDOT, CHGEOM, CFCONS, 0};
+     CEXP, CLOG, CSTILE, CBANG, CLEFT, CRIGHT, CJDOT, CCIRCLE, CRDOT, CHGEOM,/* obsolete  CFCONS,*/ 0};
  // atomic monad-only
  static const C atomic1[]={CNOT, CHALVE, 0};
  // atomic dyad-only
  static const C atomic2[]={CEQ, CLT, CGT, CPLUSDOT, CSTARDOT, CNE, 0};
- RZ(w&&VERB&AT(w));
+ RZ(w&&VERB&AT(w));  // if not a verb (including if a name), fail
  v=FAV(w); id=v->id;
  if(strchr(atomic12,id)||strchr(1==m?atomic1:atomic2,id))R 1;
  f=v->fgh[0]; vf=f&&VERB&AT(f); ax=f&&NOUN&AT(f)&&!AR(f);
@@ -116,6 +171,7 @@ static B jtatomic(J jt,C m,A w){A f,g;B ax,ay,vf,vg;C c,id;V*v;
   case CUNDER:
   case CUNDCO: R atomic(m,f)&&atomic(1,g);
   case CAMPCO: R atomic(m,f)&&atomic(1,g);
+// obsolete   case CQQ:    R ax||atomic(m,f);
   case CQQ:    R ax||atomic(m,f);
   case CFORK:  R (CCAP==ID(f)?atomic(1,g):atomic(m,f)&&atomic(2,g))&&atomic(m,v->fgh[2]);
   case CHOOK:  R atomic(2,f)&&atomic(1,g);
@@ -158,12 +214,12 @@ static DF1(jtcase1a){F1PREFIP;A g,h,*hv,k,t,u,w0=w,x,y,*yv,z;B b;I r,*xv;V*sv;
  }else{
   // v produced non-binary. apply k u/. y and shuffle the results to their proper positions
   RZ(u=nub(k));
-  RZ(df2(y,k,w,sldot(gjoin(CATCO,box(scc(CBOX)),from(u,sv->fgh[0]))))); yv=AAV(y);
+  RZ(df2(y,k,w,sldot(gjoin(CATCO,box(scc(CBOX)),from(u,sv->fgh[0]))))); yv=AAV(y);  // for each selected gerund, create AR of <@:ger   apply as k <@:ger/. w
   b=0; DO(AN(y), if(b=!AR(yv[i]))break;);
-  if(b){
+  if(b){  // if there is a verb that returned a scalar...
    RZ(df2(x,k,w,sldot(ds(CPOUND)))); xv=AV(x);
    y=rifvs(y); yv=AAV(y);   // mustn't install into virtual
-   DO(AN(y), if(!AR(yv[i])){RZ(z=reshape(sc(xv[i]),yv[i])); INSTALLBOXNF(y,yv,i,z);});
+   DO(AN(y), if(!AR(yv[i])){RZ(z=reshape(sc(xv[i]),yv[i])); INSTALLBOXNF(y,yv,i,z);});  // ...replicate it
   }
   RZ(z=from(grade1(grade1(k)),raze(grade2(y,u))));
  }
@@ -189,6 +245,164 @@ static DF1(jtcase1){A h,*hv;B b;I r,wr;V*sv;
  if(b){R case1a(w,self);}   // atomic: go there
  if(r>=wr){R jtcase1b(jtinplace,w,self);}  // If there is only 1 cell, execute on it, keeping inplaceability
  R rank1ex(w,self,r,jtcase1b);  // Otherwise loop over the cells (perforce not inplace)
+}
+
+// m@.:v y.  Execute the verbs at high rank if the operands are large
+// Bivalent entry point: called as (jt,w,self) or (jt,a,w,self)
+static DF2(jtcasei1){A vres,z;I gerit[128/SZI],ZZFLAGWORD;
+ RZ(a&&w);
+ F1PREFIP; PROLOG(997);
+ // see if we were called as monad or dyad.  If monad, fix up w and self
+ ZZFLAGWORD=AT(w)&VERB?ZZFLAGWILLBEOPENED|ZZFLAGCOUNTITEMS:ZZFLAGWILLBEOPENED|ZZFLAGCOUNTITEMS|ZZFLAGISDYAD;  // we collect the results on the cells, but we don't assemble into a result.  To signal this, we force BOXATOP and set WILLBEOPENED
+ self=AT(w)&VERB?w:self; w=AT(w)&VERB?a:w;  // if monad, a==w
+ I wr=AR(w); I ar=AR(a); I mr=MAX(wr,ar);    // ranks, and max rank  // obsolete  r=(RANKT)jt->ranks; r=wr<r?wr:r; r=MIN(r,FAV(self)->mr);   // scaf turn off IRS
+ // Execute v at infinite rank
+ vres=FAV(self)->fgh[1];   // temp: verb to execute
+ RZ(vres=(FAV(vres)->valencefns[ZZFLAGWORD>>ZZFLAGISDYADX])(jt,a,ZZFLAGWORD&ZZFLAGISDYAD?w:vres,vres));  // execute v at infinite rank, not inplace
+ // Now vres is the array of selectors into the gerund.  There should be one for each cell of the input.  Check that
+ // The rank of the result must be no more than the larger rank
+ I vr=AR(vres);  // rank of selectors
+ ASSERT(mr>=vr,EVRANK);  // cell must not be bigger than the whole
+ ASSERTAGREE(AS(vres),AS(w),MIN(vr,wr));  // shapes must match
+ if(ZZFLAGWORD&ZZFLAGISDYAD)ASSERTAGREE(AS(vres),AS(a),MIN(vr,ar));   // if dyad, check both
+ I ncells; PROD(ncells,AR(vres),AS(vres));  // number of result cells
+ I nar=AN(FAV(self)->fgh[2]);  // number of ARs in the gerund
+ wr-=vr; wr=wr+vr?wr:IMIN;  // now wr is the rank of a cell of w (negative if repetition required in w), or IMIN if w was an atom
+ ar-=vr; ar=ar+vr?ar:IMIN;  // same for a
+ A zz=0;  // output area
+ // We can run our trimmed-down rank loop here if there is no repetition of cells, OR if one atom is repeated over the entire other argument;
+ // that is, if each cell-rank is positive, 0 or IMIN.  We also make sure there are enough results to make the processing worthwhile
+ // Since the larger cell-rank must not be negative, we can look only at the smaller
+ mr=MIN(ar,wr); // the smaller
+ if(((-mr|~mr)&((AT(w)&SPARSE)-1)&(2*nar-ncells))<0){  // if mr is IMIN or nonneg, and there are enough results compared to # gerunds, reduce # verb executions.  Sparse doesn't do this.
+  // Make sure the results are integer or boolean
+  if(!(AT(vres)&(B01|INT)))RZ(vres=cvt(INT,vres));
+  // grade the results, as a list
+  A gradepm; RZ(gradepm=grade1(ravel(vres)));
+  // decide how many result boxes to allocate based on min/max result - it's a byte or an int
+  I bmsk=-((AT(vres)>>(INTX-1))&2)+1;  // mask for getting valid bits from vres
+  I bsiz=AT(vres)&B01?1:SZI;  // size of element of vres
+  I minx=*(I*)(CAV(vres)+IAV(gradepm)[0]*bsiz)&bmsk;   // smallest result
+  I maxx=*(I*)(CAV(vres)+IAV(gradepm)[AN(gradepm)-1]*bsiz)&bmsk;  // largest result
+  ASSERT(minx>=-nar&&maxx<nar,EVINDEX);  // verify that the results are in range
+  I numres= maxx - minx + 1;  // max possible # of selectors
+  // get sorted input order - as long as it wasn't an atom, which we will have to repeat 
+  A sortw,sorta;
+  // Now we construe the input as a list of ar/wr-cells.  If rank is neg, the input was an atom: don't reshape
+  if(wr>=0){
+   RZ(w=jtredcatcell(jtinplace,w,wr));
+   RZ(sortw=from(gradepm,w));
+   jtinplace=(J)((I)jtinplace|JTINPLACEW);   // now that we have a copy of the input, we can inplace it
+   ZZFLAGWORD|=ZZFLAGARRAYW;  // indicate that virtw must be updated between iterations
+  }else{
+   sortw=w;
+   jtinplace=(J)((I)jtinplace&~JTINPLACEW);   // if we have a repeated atom, we MSUT NOT inplace it
+  }
+  // create a virtual block for the input(s).
+  A virtw,virta; fauxblock(virtwfaux); fauxblock(virtafaux);
+  I virtr=(wr|REPSGN(wr))+1;   // rank of a list of cells, or 0 if original arg was an atom
+  fauxvirtual(virtw,virtwfaux,sortw,virtr,ACUC1|ACINPLACE) MCISH(AS(virtw),AS(w),virtr); AN(virtw)=1;  // in case atom, set AN to 1
+  // Create the size of a cell in atoms.  If the original argument was an atom (?r=IMAX), use 0 for the cellsize so that the cell is repeated
+  I wck,ack; PROD(wck,virtr-1,AS(sortw)+1);  // number of atoms in a cell of w
+  I ak,wk=bp(AT(w)); wk&=REPSGN(~wr);  // size of atom of k, but 0 if w is an atom (so we don't advance)
+  if(ZZFLAGWORD&ZZFLAGISDYAD){   // if we need to repeat for a
+   if(ar>=0){
+    RZ(a=jtredcatcell(jtinplace,a,ar));
+    RZ(sorta=from(gradepm,a));
+    jtinplace=(J)((I)jtinplace|JTINPLACEA);
+   }else{
+    sorta=a;
+    jtinplace=(J)((I)jtinplace&~JTINPLACEA);
+    ZZFLAGWORD|=ZZFLAGARRAYA;
+   }
+   virtr=(ar|REPSGN(ar))+1;   // rank of a list of cells, or 0 if original arg was an atom
+   fauxvirtual(virta,virtafaux,sorta,virtr,ACUC1|ACINPLACE) MCISH(AS(virta),AS(a),virtr); AN(virta)=1;
+   PROD(ack,virtr-1,AS(sorta)+1);  // number of atoms in a cell of w
+   ak=bp(AT(a)); ak&=REPSGN(~ar);  // size of atom of k, but 0 if w is an atom (so we don't advance)
+  }else{virta=virtw; ak=0;}  // if monad, set a=w, and make the addition to AK(a) harmless
+#define ZZDECL
+#define ZZASSUMEBOXATOP 1
+#include "result.h"
+  ZZPARMSNOFS(1,numres)
+#define ZZINSTALLFRAME(optr) *optr++=zzncells;
+
+  // for each value of selector...
+  I blkstart=0;   // start and end+1 of grade
+  I *gradev=IAV(gradepm);  // base of grade vector
+  I graden=AN(gradepm);  // number of result cells
+  do{
+   // blkstart is the beginning index of the next block.
+   I currres=*(I*)(CAV(vres)+gradev[blkstart]*bsiz)&bmsk;  // the result value for this block
+   // binary search through results to find length of block
+   I srchlo=blkstart, srchhi=graden;  // srchlo is in the block, srchhi is not
+   while(srchlo<srchhi-1){  // search until we have found the last point in the block (at srchlo).  srchhi may not be a valid index
+    I probex=(srchlo+srchhi)>>1;  // ignore overflow, can't happen
+    I proberes=*(I*)(CAV(vres)+gradev[probex]*bsiz)&bmsk;  // fetch next look
+    srchlo=proberes==currres?probex:srchlo; srchhi=proberes==currres?srchhi:probex;  // move the correct end 
+   }
+   currres+=REPSGN(currres)&nar;  // convert currres to nonnegative form
+   // fill in the virtual block for this block
+   if(ZZFLAGWORD&ZZFLAGARRAYW){  // if w is not a repeated atom...
+    AS(virtw)[0]=srchhi-blkstart; AN(virtw)=AS(virtw)[0]*wck;
+    AC(virtw)=ACUC1|ACINPLACE;   // in case we created a virtual block from it, restore inplaceability to the UNINCORPABLE block (not if atom, which is never inplaceable)
+   }
+   if(ZZFLAGWORD&ZZFLAGARRAYA){  // if a is not a repeated atom...
+    AS(virta)[0]=srchhi-blkstart; AN(virta)=AS(virta)[0]*ack;
+    AC(virta)=ACUC1|ACINPLACE;   // in case we created a virtual block from it, restore inplaceability to the UNINCORPABLE block (not if atom, which is never inplaceable)
+   }
+  //  pull the function for the value, execute on the value (ASSUMEBOXATOP, WILLBEOPENED, COUNTITEMS)
+   A fs=AAV(FAV(self)->fgh[2])[currres];  // fetch the gerund to execute
+   RZ(z=(FAV(fs)->valencefns[ZZFLAGWORD>>ZZFLAGISDYADX])(jtinplace,virta,ZZFLAGWORD&ZZFLAGISDYAD?virtw:fs,fs));  // execute gerund at infinite rank, inplace
+
+#define ZZBODY  // assemble results
+#include "result.h"
+
+   //  verify input itemcount is a prefix of result-shape
+   ASSERT(AR(z)&&AS(z)[0]==srchhi-blkstart,EVRANK);  // must have the right item count
+   blkstart=srchhi;  // advance for next block
+   AK(virtw)+=AN(virtw)*wk;  // advance over bytes just processed (but don't move if argument is an atom)
+   AK(virta)+=AN(virta)*ak;  // for a too
+  }while(blkstart<graden);  // loop till we have processed all results
+  I nblkscreated=zzboxp-AAV(zz);
+  if(ZZFLAGWORD&ZZFLAGCOUNTITEMS){
+   // The items of the results had a uniform size and type.  We can skip collecting them together, and just move the items from the boxes to their
+   // final resting place
+   // get the size of each item
+   I itemk; PROD(itemk,AR(AAV(zz)[0])-1,AS(AAV(zz)[0])+1); I zk=itemk<<bplg(AT(AAV(zz)[0]));  // get # atoms/cell, #bytes/cell
+   // allocate result area (inplace if possible)  scaf
+   GA(z,AT(AAV(zz)[0]),ncells*itemk,AR(AAV(zz)[0]),AS(AAV(zz)[0])); AS(z)[0]=ncells; // one cell per input item
+   C *zv=CAV(z);  // pointer to output block
+   // for each (actual) result block
+   I blkx=0, *agrade=gradev;  // running index of block in zz, and dest index in gradev
+   do{
+    // move values into result
+    A thisblk=AAV(zz)[blkx];  // the block we are going to move
+    I blkitemct=AS(thisblk)[0];  // number of cells
+    C *resptr=CAV(thisblk);  // running input pointer
+    if(zk==SZI){DQ(blkitemct, *(I*)(zv+zk* *agrade)=*(I*)resptr; resptr+=zk; ++agrade;)   // copy words - could use scatter
+    }else{DQ(blkitemct, memcpy(zv+zk* *agrade,resptr,zk); resptr+=zk; ++agrade;)  // copy blocks
+    }
+    ++blkx;  // advance to next input block
+   }while(blkx!=nblkscreated);  // loop till all blocks processed
+   zz=z;  // all moved -- switch to the shuffled output
+  }else{
+   // inhomogeneous types or shapes.  Instantiate the entire result and then shuffle it into place
+   // first, install the actual number of boxes of result, which might differ from the calculated maximum
+   AN(zz)=AS(zz)[0]=nblkscreated;  // # valid boxes
+   zz=from(grade1(gradepm),raze(zz));  // create inverse grading permutation, then use it to shuffle razed results
+  }
+  // If the original input had structure, rearrange the result to match it
+  if(vr>1)RZ(zz=reitem(shape(vres),zz));
+ }else{
+  // If there are too few values to justify the sort, create an indirect iterator for them and run it
+  RZ(z=jtcreategerunditerator(jt,(A)&gerit,self,vres));
+  if(ZZFLAGWORD&ZZFLAGISDYAD){
+   zz=rank2ex(a,w,z,MAX(ar,0),MAX(wr,0),MAX(ar,0),MAX(wr,0),FAV(z)->valencefns[1]);  // Execute on all cells
+  }else{
+   zz=rank1ex(w,z,wr,FAV(z)->valencefns[0]);  // Execute on all cells
+  }
+ }
+ EPILOG(zz);
 }
 
 // x m@.v y.  Run v (not inplace); select the "BOX" containing the verb to run; run it, inplacing as called for in the input
@@ -223,6 +437,17 @@ F2(jtagenda){I flag;
  flag = VASGSAFE&FAV(w)->flag; A* avbv = AAV(avb); DQ(AN(avb), flag &= FAV(*avbv)->flag; ++avbv;);  // Don't increment inside FAV!
  R fdef(0,CATDOT,VERB, jtcase1,jtcase2, a,w,avb, flag+((VGERL|VJTFLGOK1|VJTFLGOK2)|FAV(ds(CATDOT))->flag), mr(w),lr(w),rr(w));
 }
+
+F2(jtagendai){I flag;
+ RZ(a&&w)
+ ASSERT(AT(w)&VERB,EVDOMAIN);  // m@.:v only
+ // verb v.  Create a "BOX" type holding the verb form of each gerund
+ A avb; RZ(avb = fxeachv(1L,a));
+  // Calculate ASGSAFE from all of the verbs (both a and w), provided the user can handle it
+ flag = VASGSAFE&FAV(w)->flag; A* avbv = AAV(avb); DQ(AN(avb), flag &= FAV(*avbv)->flag; ++avbv;);  // Don't increment inside FAV!
+ R fdef(0,CATDOTCO,VERB, jtcasei1,jtcase2, a,w,avb, flag+((VGERL|VJTFLGOK1|VJTFLGOK2)|FAV(ds(CATDOTCO))->flag), RMAX, RMAX, RMAX);
+}
+
 
 // When u^:gerund is encountered, we replace it with a verb that comes to one of these.
 // This creates several names:

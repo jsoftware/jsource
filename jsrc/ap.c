@@ -345,7 +345,7 @@ static DF2(jtginfix){A h,*hv,x,z,*zv;I d,m,n;
 #define STATESLASH2 ((I)1<<STATESLASH2X)
 
 // prefix and infix: prefix if a is mark
-static DF2(jtinfixprefix2){F2PREFIP;PROLOG(00202);A fs;
+static DF2(jtinfixprefix2){F2PREFIP;PROLOG(00202);A fs;I cger[128/SZI];
    I wt;
  
  RZ(w);
@@ -368,16 +368,16 @@ static DF2(jtinfixprefix2){F2PREFIP;PROLOG(00202);A fs;
  if(!(VGERL&FAV(self)->flag)){
   // not gerund: OK to test fs
   fs=FAV(self)->fgh[0];  // the verb we will execute
-  V *vf=FAV(fs);  // if verb, point to its u operand
-  if(vf->mr>=AR(w)){
-   // we are going to execute f without any lower rank loop.  Thus we can use the BOXATOP etc flags here.  These flags are used only if we go through the full assemble path
-   state = vf->flag2>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // Don't touch fs yet, since we might not loop
-   state &= ~(vf->flag2>>(VF2ATOPOPEN1X-ZZFLAGBOXATOPX));  // We don't handle &.> here; ignore it
-   state &= ZZFLAGBOXATOP;  // we want just the one bit, BOXATOP1 & ~ATOPOPEN1
-   state |= (-state) & (I)jtinplace & (ZZFLAGWILLBEOPENED|ZZFLAGCOUNTITEMS); // remember if this verb is followed by > or ; - only if we BOXATOP, to avoid invalid flag setting at assembly
-  }
  }else{
-  RZ(fs=createcycliciterator(self));  // use a verb that cycles through the gerunds.
+  RZ(fs=createcycliciterator((A)&cger, self));  // use a verb that cycles through the gerunds.
+ }
+ V *vf=FAV(fs);  // if verb, point to its u operand
+ if(vf->mr>=AR(w)){
+  // we are going to execute f without any lower rank loop.  Thus we can use the BOXATOP etc flags here.  These flags are used only if we go through the full assemble path
+  state = vf->flag2>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // Don't touch fs yet, since we might not loop
+  state &= ~(vf->flag2>>(VF2ATOPOPEN1X-ZZFLAGBOXATOPX));  // We don't handle &.> here; ignore it
+  state &= ZZFLAGBOXATOP;  // we want just the one bit, BOXATOP1 & ~ATOPOPEN1
+  state |= (-state) & (I)jtinplace & (ZZFLAGWILLBEOPENED|ZZFLAGCOUNTITEMS); // remember if this verb is followed by > or ; - only if we BOXATOP, to avoid invalid flag setting at assembly
  }
  AF f1=FAV(fs)->valencefns[0];  // point to the action routine now that we have handled gerunds
 

@@ -49,7 +49,6 @@
 
 #define ZZFAUXCELLSHAPEMAXRANK 4  // we reserve a faux A block on the stack big enough to handle results of this rank
 
-
 // Set up initial frame info.  The names are used to save variables and to push these names into registers
 // THIS MUST NOT BE EXECUTED UNTIL YOU HAVE COMMITTED TO THE RESULT LOOP!
 // If the function was marked as BOXATOP, we will do the boxing in the loop.  We wait until here to replace the <@f with a straight call to f, because
@@ -57,7 +56,7 @@
 // Where f is depends on whether the modifier is f@:g or ([: g h)
 #define ZZPARMSNOFS(framelen,ncells) zzframelen=(framelen); zzncells=(ncells);
 #define ZZPARMS(framelen,ncells,valence) ZZPARMSNOFS(framelen,ncells)  \
- if(ZZFLAGWORD&ZZFLAGBOXATOP){fs=FAV(fs)->fgh[1+((FAV(fs)->flag2>>VF2ISCCAPX)&1)]; f##valence=FAV(fs)->valencefns[valence-1];}  // if BOXATOP, we must look back into the verb
+ if(!ZZASSUMEBOXATOP&&ZZFLAGWORD&ZZFLAGBOXATOP){fs=FAV(fs)->fgh[1+((FAV(fs)->flag2>>VF2ISCCAPX)&1)]; f##valence=FAV(fs)->valencefns[valence-1];}  // if BOXATOP, we must look back into the verb
 
 // user must define ZZINSTALLFRAME(optr) to move frame into optr++ (don't forget to increment optr!)
 
@@ -89,6 +88,10 @@
  A *zzold;  // place to tpop to between executions
 #define ZZPOPNEVER 0  // user defines as 1 to force us to NEVER tpop in the loop
 #endif
+#ifndef ZZASSUMEBOXATOP  // set to cause us to put the result of the user's function into the result without boxing
+#define ZZASSUMEBOXATOP 0
+#endif
+
 #undef ZZDECL
 #endif
 
@@ -102,7 +105,7 @@
 do{
  if(zz){  // if we have allocated the result area, we are into normal processing
   // Normal case: not first time.  Move verb result to its resting place, unless the type/shape has changed
-  if(!(ZZFLAGWORD&ZZFLAGBOXATOP)){  // is forced-boxed result?  If so, just move in the box
+  if(!(ZZASSUMEBOXATOP||ZZFLAGWORD&ZZFLAGBOXATOP)){  // is forced-boxed result?  If so, just move in the box
    // not forced-boxed.  Move the result cell into the result area unless the shape changes
    // first check the shape
    I zt=AT(z); I zzt=AT(zz); I zr=AR(z); I zzr=AR(zz); I * RESTRICT zs=AS(z); I * RESTRICT zzs=AS(zz)+zzframelen; I zexprank=zzr-zzframelen;
@@ -282,7 +285,7 @@ do{
   // Get the rank/type to allocate for the presumed result
   // Get the type to allocate
   I natoms=AN(z);  // number of atoms per result cell
-  I zzt=AT(z); I zzr=AR(z); zzt=(ZZFLAGWORD&ZZFLAGBOXATOP)?BOX:zzt; zzr=(ZZFLAGWORD&ZZFLAGBOXATOP)?0:zzr; natoms=(ZZFLAGWORD&ZZFLAGBOXATOP)?1:natoms;
+  I zzt=AT(z); I zzr=AR(z); zzt=(ZZASSUMEBOXATOP||ZZFLAGWORD&ZZFLAGBOXATOP)?BOX:zzt; zzr=(ZZASSUMEBOXATOP||ZZFLAGWORD&ZZFLAGBOXATOP)?0:zzr; natoms=(ZZASSUMEBOXATOP||ZZFLAGWORD&ZZFLAGBOXATOP)?1:natoms;
   // If result is sparse, allocate 0 atoms; later, change the allocation to something that will never match a result (viz a list with negative shape)
   zzr=(zzt&SPARSE)?1:zzr; natoms=(zzt&SPARSE)?0:natoms;
   zzcelllen=natoms<<bplg(zzt);  // number of bytes in one cell.
@@ -299,13 +302,13 @@ do{
   // Remember the point before which we allocated zz.  This will be the free-back-to point, unless we require boxes later
   zzold=jt->tnextpushp;  // pop back to AFTER where we allocated our result and argument blocks
 #endif
-  // Install frame by running user's routine.  zzs must be left pointing to the cell-shape
+  // Install result frame by running user's routine.  zzs must be left pointing to the cell-shape
   ZZINSTALLFRAME(zzs)
   // Install the result shape.  If we encounter a sparse result,  We are going to have to box all the results and open them.  If the sparse result is the first,
   // we are going to have a situation where nothing can ever get moved into zz, so we have to come up with a plausible zz to make that happen.  We create a zz with negative shape
   is = AS(z); zzt=-(zzt&SPARSE); DQ(zzr, *zzs++=zzt|*is++;);    // copy result shape; but if SPARSE, make it negative to guarantee miscompare
   // Set up the pointers/sizes for the rest of the operation
-  zzboxp=AAV(zz); zzboxp=ZZFLAGWORD&ZZFLAGBOXATOP?zzboxp:0;  // zzboxp=0 normally (to count stores), but for BOXATOP is the store pointer
+  zzboxp=AAV(zz); zzboxp=ZZASSUMEBOXATOP||ZZFLAGWORD&ZZFLAGBOXATOP?zzboxp:0;  // zzboxp=0 normally (to count stores), but for BOXATOP is the store pointer
 #if !ZZSTARTATEND  // going forwards
   zzcellp=0;  // init output offset in zz to 0
 #else
@@ -340,6 +343,7 @@ do{
 #undef ZZSTARTATEND
 #undef ZZPOPNEVER
 #undef ZZINSTALLFRAME
+#undef ZZASSUMEBOXATOP
 
 #undef ZZEXIT
 #endif

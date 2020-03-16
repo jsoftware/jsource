@@ -54,7 +54,7 @@ F1(jtimmea){A t,z,z1;
 }
 
 static A jtcex(J jt,A w,AF f,A self){A z; RE(w); z=f(jt,w,self); RESETERR; R z;}
-     /* conditional execute */
+     /* conditional execute - return 0 if error */
 
 // convert the gerund (i.e  AR) in w into a verb
 F1(jtexg){A*v,*wv,x,y,z;I n;
@@ -65,7 +65,7 @@ F1(jtexg){A*v,*wv,x,y,z;I n;
  if(VERB&AT(w))R w;
  ASSERT(BOX&AT(w),EVDOMAIN);
  GATV0(z,BOX,n,1); v=AAV(z);
- DO(n, x=wv[i]; RZ(*v++=(y=cex(x,jtfx,0L))?y:exg(x)););
+ DO(n, x=wv[i]; RZ(*v++=(y=cex(x,jtfx,0L))?y:exg(x)););  // if the AR can be converted to an A, do so; otherwise it should be a list of ARs, recur on each
  R parse(z);
 }
 

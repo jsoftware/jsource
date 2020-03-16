@@ -305,7 +305,7 @@ F2(jthook){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE;V*u,*v;
   case BD(NOUN,CONJ):
   case BD(VERB,CONJ):
    f1=tvc; id=ID(w);
-   if(BOX&AT(a)&&(id==CATDOT||id==CGRAVE||id==CGRCO)&&gerexact(a))flag+=VGERL;
+   if(BOX&AT(a)&&(id==CATDOT||id==CATDOTCO||id==CGRAVE||id==CGRCO)&&gerexact(a))flag+=VGERL;
    break;
   case BD(CONJ,NOUN):
   case BD(CONJ,VERB):

@@ -37,7 +37,7 @@ A jtrank1ex(J jt,AD * RESTRICT w,A fs,I rr,AF f1){F1PREFIP;PROLOG(0041);A z,virt
  // if its rank is not less than the outer rank (we would simply ignore it), but we don't bother.  If its rank is smaller we can't ignore it because assembly might affect
  // the order of fill.  But if f is BOXATOP, there will be no fill, and we can safely use the smaller rank
  if(fs&&FAV(fs)->flag2&VF2BOXATOP1){
-  I mr=FAV(fs)->mr; mr=rr<mr?rr:mr;   // obsolete efr(rr,mr,rr);
+  I mr=FAV(fs)->mr; rr=rr<mr?rr:mr;   // obsolete efr(rr,mr,rr);   scaf should be rr=
   state = (FAV(fs)->flag2&VF2BOXATOP1)>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // If this is BOXATOP, set so for loop.  Don't touch fs yet, since we might not loop
   state &= ~((FAV(fs)->flag2&VF2ATOPOPEN1)>>(VF2ATOPOPEN1X-ZZFLAGBOXATOPX));  // We don't handle &.> here; ignore it
   // if we are using the BOXATOP from f, we can also use the raze flags.  Set these only if BOXATOP to prevent us from incorrectly
@@ -589,15 +589,15 @@ static DF2(cons2){V*sv=FAV(self);
 }
 
 // cyclic-gerund verbs create an iterator from the gerund and pass that into rank processing, looping over cells
-static DF1(cycr1){V*sv=FAV(self);
+static DF1(cycr1){V*sv=FAV(self);I cger[128/SZI];
  RZ(w);
- RZ(self=createcycliciterator(self));  // fill in an iterator for this gerund
+ RZ(self=createcycliciterator((A)&cger, self));  // fill in an iterator for this gerund
  I mr; efr(mr,AR(w),(I)sv->localuse.lI4[0]);
  R rank1ex(w,self,mr,FAV(self)->valencefns[0]);  // callback is to the cyclic-execution function
 }
-static DF2(cycr2){V*sv=FAV(self);
+static DF2(cycr2){V*sv=FAV(self);I cger[128/SZI];
  RZ(a&&w);
- RZ(self=createcycliciterator(self));  // fill in an iterator for this gerund
+ RZ(self=createcycliciterator((A)&cger, self));  // fill in an iterator for this gerund
  I lr2,rr2; efr(lr2,AR(a),(I)sv->localuse.lI4[1]); efr(rr2,AR(w),(I)sv->localuse.lI4[2]);
  R rank2ex(a,w,self,lr2,rr2,lr2,rr2,FAV(self)->valencefns[1]);  // callback is to the cyclic-execution function
 }

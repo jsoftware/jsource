@@ -155,6 +155,7 @@
 #define CGRDOT     (C)'\262'       /* 178 262 b2 `.                           */
 #define CGRCO      (C)'\263'       /* 179 263 b3 `:                           */
 #define CATDOT     (C)'\264'       /* 180 264 b4 @.                           */
+#define CATDOTCO   (C)'\277'       /* 191 277 bf @.                           */
 #define CUNDER     (C)'\266'       /* 182 266 b6 &.                           */
 #define CQRYDOT    (C)'\270'       /* 184 270 b8 ?.                           */
 #define CQRYCO     (C)'\271'       /* 185 271 b9 ?:                           */
@@ -164,7 +165,6 @@
 #define CACE       (C)'\274'       /* 188 274 bc a:                           */
 #define CBDOT      (C)'\275'       /* 189 275 bd b.                           */
 #define CCDOT      (C)'\276'       /* 190 276 be c.                           */
-// 191 free
 #define CCYCLE     (C)'\300'       /* 192 300 c0 C.                           */
 #define CEPS       (C)'\304'       /* 196 304 c4 e.                           */
 #define CEBAR      (C)'\305'       /* 197 305 c5 E.                           */

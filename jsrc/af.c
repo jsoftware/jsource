@@ -20,7 +20,7 @@ static B jtselfq(J jt,A w){A hs,*u;V*v;
  switch(v->id){
   case CSELF:  
    R 1;
-  case CATDOT:
+  case CATDOT: case CATDOTCO:
   case CGRCO:
    if(hs=v->fgh[2]){u=AAV(hs); DO(AN(hs), if(selfq(u[i]))R 1;);}
    R 0;
@@ -47,7 +47,7 @@ B jthasimploc(J jt,A w){A hs,*u;V*v;
    if(!(thisnameinfo->flag&NMIMPLOC))R 0; // not NMDOT
    if(!(stabent = probelocal(thisname)))R 0;  // assigned value does not exist
    R 1;
-  case CATDOT:
+  case CATDOT: case CATDOTCO:
   case CGRCO:
    if(hs=v->fgh[2]){u=AAV(hs); DO(AN(hs), if(hasimploc(u[i]))R 1;);}
    R 0;
@@ -104,7 +104,7 @@ static A jtfixa(J jt,A a,A w){A f,g,h,wf,x,y,z=w;V*v;I aa[AKXR(0)/SZI+1]={AKXR(0
    f=REFIXA(2,f); g=REFIXA(1,g); R hook(f,g);
   case CFORK:
    f=REFIXA(na,f); g=REFIXA(ID(f)==CCAP?1:2,g); h=REFIXA(na,h); R folk(f,g,h);  // f first in case it's [:
-  case CATDOT:
+  case CATDOT: case CATDOTCO:
   case CGRCO:
    RZ(f=every(every2(sc(aif|na),h,0L,jtfixa),0L,jtaro)); // full A block required for call
    RZ(g=REFIXA(na,g));

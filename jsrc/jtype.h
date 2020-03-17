@@ -602,7 +602,7 @@ typedef struct {
  // 11 words here; 7 words of header (we allocate no shape); 2 words of memory-allocation header; so this block is 20 words after the
  // memory allocation, and thus is on the same 256-bit boundary as the allocation.
  union {   // We index into the data with varying strides, depending on the range of the data
-  UC UC[1];  // cannot have union of 
+  UC UC[1];  // cannot have union of empty vectors
   US US[1];
   UI4 UI4[1];
   UI UI[1];
@@ -667,14 +667,14 @@ typedef struct{
 typedef struct {AF valencefns[2];A fgh[3];union { D lD; void *lvp[2]; I lI; I4 lI4[4]; I lclr[2]; AF lfns[2];} localuse;I4 flag;UI4 flag2; RANK2T lrr; RANKT mr; C id; C lc;} V;  // two cachelines exactly in 64-bit
 // the localuse fields are not freed or counted for space, as the f/g/h fields are.  It is for local optimizations only.  We put if first so that the rest of
 // the block, which is used more, is in a single cacheline.  Local uses are:
-// for ATOMIC ops, pointer to the VA/UA block for adocv [dyad then monad]
+// for ATOMIC ops, lvp[] is pointer to the VA/UA block for adocv [dyad then monad]
 // for name references, lvp[0] is pointer to last resolution
 // for FIT conj, the CCT data
 // for RANK conj, lI4[0-2] has the signed ranks
 // for Fold final operator, lfns[1] has pointer to the dyadic EP of the handler (xdefn or unquote)
 // For cyclic iterators, lI has the index of the next gerund to execute
-// for u;.n, lI holds n.  u/. also goes through this code
-// for reductions (u/ u/\ u/\.) lvp[0] points to the VA block for u
+// for u;.n, lvp[0] holds n.  u/. also goes through this code
+// for reductions (u/ u/\ u/\.) lvp[1] points to the VA block for u
 
 // lc is a local-use byte.  Used in atomic dyads to indicate which singleton function to execute
 // in the derived function from fold, lc has the original id byte of the fold op
@@ -774,6 +774,17 @@ typedef struct {I memhdr[AKXR(0)/SZI]; union { V primvb; I primint; } prim; } PR
 
 
 
+// Info for calling an atomic verb
+typedef struct {VF f;I cv;} VA2;  // for dyads
+typedef struct {VA1F f;I cv;} VA1;  // for monads
+typedef struct {VARPSF f;I cv;} VARPS;  // for reduce/prefix/suffix
+
+typedef struct {I nprec; VARPS actrtns[];} VARPSA;
+// obsolete typedef struct {VA2 p2[13];VARPS pins[7];VARPS ppfx[7];VARPS psfx[7];} VA;
+typedef struct {VA2 p2[13];VARPSA *rps;} VA;
+typedef struct {VA1 p1[6];} UA;
+
+
 typedef struct {DX re;DX im;} ZX;
 
 /* extended complex                                                        */
@@ -800,9 +811,3 @@ typedef struct {
   US  nvrtop;           /* top of nvr stack; # valid entries               */
   US  nvrotop;          // previous top of nvr stack
  } PFRAME;  // these are stacked en bloc
-
-
-// Info for calling an atomic verb
-typedef struct {VF f;I cv;} VA2;  // for dyads
-typedef struct {VA1F f;I cv;} VA1;  // for monads
-typedef struct {VARPSF f;I cv;} VARPS;  // for reduce/prefix/suffix

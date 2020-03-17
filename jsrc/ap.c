@@ -544,7 +544,7 @@ static DF1(jtpscan){A y,z;I d,f,m,n,r,t,wn,wr,*ws,wt;
 // obsolete  if(2>n||!wn){if(vaid(FAV(y)->fgh[0])){R r?RETARG(w):reshape(over(shape(w),num(1)),w);}else R IRS1(w,self,r,jtinfixprefix1,z);}
 // obsolete  if(((1-n)&-wn)>=0){if(vaid(FAV(y)->fgh[0])){R r?RETARG(w):reshape(over(shape(w),num(1)),w);}else SEGFAULT /* obsolete  R IRS1(w,self,r,jtinfixprefix1,z); scaf*/}  // n<2 or wn=0
  if(((1-n)&-wn)>=0){R r?RETARG(w):reshape(over(shape(w),num(1)),w);}  // n<2 or wn=0
- VARPS adocv = vapfx(FAV(y)->fgh[0],wt);  // fetch info for f/\ and this type of arg
+ VARPS adocv; varps(adocv,self,wt,1);  // fetch info for f/\ and this type of arg
  if(!adocv.f)R IRS1(w,self,r,jtinfixprefix1,z);  // if there is no special function for this type, do general reduce
  if((t=atype(adocv.cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));  // convert input if necessary
  // if inplaceable, reuse the input area for the result
@@ -762,7 +762,8 @@ static DF2(jtmovfslash){A x,z;B b;C id,*wv,*zv;I d,m,m0,p,t,wk,wt,zi,zk,zt;
   case CBW0110:  if(wt&    INT   )R movbwneeq(m,w,self,0); break;
  }
  VARPS adocv;
- if(!ds(id) || !(adocv = vains(ds(id),wt)).f)R jtinfixprefix2(jt,a,w,self);  // if no special routine for insert, do general case
+// obsolete  if(!ds(id) || !(adocv = vains(ds(id),wt)).f)R jtinfixprefix2(jt,a,w,self);  // if no special routine for insert, do general case
+ varps(adocv,self,wt,0); if(!adocv.f)R jtinfixprefix2(jt,a,w,self);  // if no special routine for insert, do general case
  if(m0>=0){zi=MAX(0,1+p-m);}else{zi=1+(p-1)/m; zi=(p==0)?p:zi;}  // zi = # result cells
  d=aii(w); b=0>m0&&zi*m!=p;   // b='has shard'
  zt=rtype(adocv.cv); RESETRANK;
@@ -778,7 +779,7 @@ static DF2(jtmovfslash){A x,z;B b;C id,*wv,*zv;I d,m,m0,p,t,wk,wt,zi,zk,zt;
 
 static DF1(jtiota1){I j; R apv(SETIC(w,j),1L,1L);}
 
-F1(jtbslash){AF f1=jtinfixprefix1,f2=jtinfixprefix2;V*v;I flag=FAV(ds(CBSLASH))->flag;
+F1(jtbslash){A f;AF f1=jtinfixprefix1,f2=jtinfixprefix2;V*v;I flag=FAV(ds(CBSLASH))->flag;
 ;
  RZ(w);
  if(NOUN&AT(w))R fdef(0,CBSLASH,VERB, jtinfixprefix1,jtinfixprefix2, w,0L,fxeachv(1L,w), VGERL|flag, RMAX,0L,RMAX);
@@ -798,7 +799,10 @@ F1(jtbslash){AF f1=jtinfixprefix1,f2=jtinfixprefix2;V*v;I flag=FAV(ds(CBSLASH))-
   default:
    flag |= VJTFLGOK1|VJTFLGOK2; break; // The default u\ looks at WILLBEOPENED
  }
- R ADERIV(CBSLASH,f1,f2,flag,RMAX,0L,RMAX);
+ RZ(f=ADERIV(CBSLASH,f1,f2,flag,RMAX,0L,RMAX));
+ // Fill in the lvp[1] field: with 0 if not f/\; with the lookup field for f/ if f/\  
+ FAV(f)->localuse.lvp[1]=v->id==CSLASH?v->localuse.lvp[1]:0;  // f is nonnull if f/\  
+ R f;
 }
 
 A jtascan(J jt,C c,A w){RZ(w); A z; R df1(z,w,bslash(slash(ds(c))));}

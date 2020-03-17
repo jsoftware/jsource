@@ -29,7 +29,7 @@ CX, CX, CX, CX, CX, CX, CX, CX, CX, CX, CX, CX, CX, CX, CX, CX, /* f            
 /*   1   2   3   4   5   6   7   8   9   a   b   c   d   e   f   */
 
 extern const UA va1tab[];
-extern const VA va[];
+extern VA va[];
 #if 0  // obsolete 
 static const UC vaptr[256]={
    0,  0,  0,  0,  0,  0,  0,  0,    0,  0,  0,  0,  0,  0,  0,  0, /* 0 */

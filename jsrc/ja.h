@@ -1240,10 +1240,12 @@
 #define va1s(x0,x1,x2,x3)           jtva1s(jt,(x0),(x1),(x2),(x3))
 #define va2(x,y,z)                  jtva2(jt,(x),(y),(z))
 #define vaid(x)                     jtvaid(jt,(x))
-#define vains(x0,x1)                jtvains(jt,(x0),(x1))
-#define vapfx(x0,x1)                jtvapfx(jt,(x0),(x1))
+// obsolete #define vains(x0,x1)                jtvains(jt,(x0),(x1))
+// obsolete #define vapfx(x0,x1)                jtvapfx(jt,(x0),(x1))
 #define var(x0,x1,x2)               jtvar(jt,(x0),(x1),(x2))
-#define vasfx(x0,x1)                jtvasfx(jt,(x0),(x1))
+// obsolete #define vasfx(x0,x1)                jtvasfx(jt,(x0),(x1))
+// fetch adocv for an rps function (i. e. f/ f/\ f/\.) in self.  rps is 0-2 for / /\ /\.   t is the type of the input.  Assign result to z, which is a VARPS
+#define varps(z,self,t,rps) {VARPSA *rpsa=FAV(self)->localuse.lvp[1]; I tmax=rpsa->nprec; if(jt->jerr<EWOV){I zc=CTTZI(t); zc=zc>tmax?tmax:zc; z=rpsa->actrtns[(tmax+1)*(rps)+zc];}else{jt->jerr=0; z=rpsa->actrtns[3*(tmax+1)+(rps)];}  }
 #define vasp(x0,x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,x11,x12)     jtvasp(jt,(x0),(x1),(x2),(x3),(x4),(x5),(x6),(x7),(x8),(x9),(x10),(x11),(x12))
 #define vasp0(x0,x1,x2,x3,x4,x5)                            jtvasp0(jt,(x0),(x1),(x2),(x3),(x4),(x5))
 #define vaspc(x0,x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,x11,x12)    jtvaspc(jt,(x0),(x1),(x2),(x3),(x4),(x5),(x6),(x7),(x8),(x9),(x10),(x11),(x12))

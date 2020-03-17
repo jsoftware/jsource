@@ -305,9 +305,10 @@ DF1(jtredravel){A f,x,z;I n;P*wp;
  RZ(w);
  f=FAV(self)->fgh[0];  // f/
  if(!(SPARSE&AT(w)))R reduce(jtravel(jtinplace,w),f);
+ // The rest is sparse
  wp=PAV(w); x=SPA(wp,x); n=AN(x);
  while(1){  // Loop to handle restart on overflow
-  VARPS adocv = vains(FAV(f)->fgh[0],AT(x));
+  VARPS adocv; varps(adocv,f,AT(x),0);
   ASSERT(adocv.f,EVNONCE);
   GA(z,rtype(adocv.cv),1,0,0);
   if(n)((AHDRRFN*)adocv.f)((I)1,n,(I)1,AV(x),AV(z),jt);  // mustn't adocv on empty
@@ -427,7 +428,7 @@ static DF1(jtreducesp){A a,g,z;B b;I f,n,r,*v,wn,wr,*ws,wt,zt;P*wp;
  if(!n)R red0(w,self);  // red0 uses ranks, and resets them
 // obsolete C id=vaid(g);
  C id; if(AT(g)&VERB){id=FAV(g)->id; id=FAV(g)->flag&VISATOMIC2?id:0;}else id=0;
- VARPS adocv = vains(g,wt);
+ VARPS adocv; varps(adocv,self,wt,0);
  if(2==n&&!(adocv.f&&strchr(fca,id))){
   A x; IRS2(num(0),w,0L,0,r,jtfrom,x); A y; IRS2(num(1),w,0L,0,r,jtfrom,y);
   R df2(z,x,y,g);  // rank has been reset for this call
@@ -532,7 +533,7 @@ static DF1(jtreduce){A z;I d,f,m,n,r,t,wn,wr,*ws,wt,zt;
   // are no atoms written
 
   // Normal processing for multiple items.  Get the routine & flags to process it
-  VARPS adocv = vains(FAV(self)->fgh[0],wt);
+  VARPS adocv; varps(adocv,self,wt,0);
   // If there is no special routine, go perform general reduce
   if(!adocv.f)R redg(w,self);  // jt->ranks is still set.  redg will clear the ranks
   // Here for primitive reduce handled by special code.
@@ -700,7 +701,10 @@ F1(jtslash){A h;AF f1;C c;V*v;I flag=0;
   default: f1=jtreduce; flag=(v->flag&VJTFLGOK2)>>(VJTFLGOK2X-VJTFLGOK1X); break;  // monad is inplaceable if the dyad for u is
  }
  RZ(h=qq(w,v2(lr(w),RMAX)));  // create the rank compound to use if dyad
- R fdef(0,CSLASH,VERB, f1,jtoprod, w,0L,h, flag|FAV(ds(CSLASH))->flag, RMAX,RMAX,RMAX);
+ RZ(h=fdef(0,CSLASH,VERB, f1,jtoprod, w,0L,h, flag|FAV(ds(CSLASH))->flag, RMAX,RMAX,RMAX));
+ // set lvp[1] to point to the VARPSA block for w if w is atomic dyad; otherwise to the null VARPSA block
+ FAV(h)->localuse.lvp[1]=v->flag&VISATOMIC2?((VA*)v->localuse.lvp[0])->rps:&rpsnull;
+ R h;
 }
 
 A jtaslash (J jt,C c,    A w){RZ(   w); A z; R df1(z,  w,   slash(ds(c))     );}

@@ -295,7 +295,7 @@ static DF1(jtsscan){A y,z;I d,f,m,n,r,t,wn,wr,*ws,wt;
  if(((n-2)|(wn-1))<0){if(FAV(FAV(y)->fgh[0])->flag&VISATOMIC2){R r?RETARG(w):reshape(over(shape(w),num(1)),w);}else R IRS1(w,self,r,jtsuffix,z);}  // if empty arg, or just 1 cell in selected axis, convert to f/\ which handles the short arg 
 
    // note that the above line always takes the r==0 case
- VARPS adocv = vasfx(FAV(y)->fgh[0],wt);  // analyze f
+ VARPS adocv; varps(adocv,self,wt,2);  // analyze f - get suffix routine
  if(!adocv.f)R IRSIP1(w,self,r,jtssg,z);   // if not supported atomically, go do general suffix
  if((t=atype(adocv.cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));
  if(ASGNINPLACESGN(SGNIF((I)jtinplace,JTINPLACEWX)&SGNIF(adocv.cv,VIPOKWX),w))z=w; else GA(z,rtype(adocv.cv),wn,wr,ws);
@@ -384,5 +384,8 @@ F1(jtbsdot){A f;AF f1=jtsuffix,f2=jtoutfix;I flag=FAV(ds(CBSDOT))->flag;C id;V*v
     case CBW0000: case CBW0001: case CBW0011: case CBW0101:  case CBW0111: case CBW1111: 
      f2=jtofxassoc;
  }}
- R ADERIV(CBSDOT,f1,f2,flag,RMAX,0,RMAX);
+ RZ(f=ADERIV(CBSDOT,f1,f2,flag,RMAX,0,RMAX));
+ // Fill in the lvp[1] field: with 0 if not f/\; with the lookup field for f/ if f/\  
+ FAV(f)->localuse.lvp[1]=v->id==CSLASH?v->localuse.lvp[1]:0;  // f is nonnull if f/\  
+ R f;
 }

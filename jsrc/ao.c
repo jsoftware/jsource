@@ -145,7 +145,8 @@ DF2(jtpolymult){A f,g,z;B b=0;C*av,c,d,*wv;I at,i,j,k,m,m1,n,p,t,wt,zn;V*v;
   // here for +//.@(*/)
   {A a1,y;I*aa,i,*u,*ww=(I*)wv,*v,*yv,*zv;VA2 adocv; VARPS adocvsum;
    b=1;
-   adocv=var(ds(CSTAR),at,wt); adocvsum=vains(ds(CPLUS),wt);
+   adocv=var(ds(CSTAR),at,wt); varps(adocvsum,FAV(f)->fgh[0],wt,0);  // get sum routine from f/, which is +/
+// obsolete adocvsum=vains(ds(CPLUS),wt);
    GATV0(a1,INT,m,1); aa=AV(a1); u=m+(I*)av; DO(m, aa[i]=*--u;);
    GATV0(y,INT,MIN(m,n),1); yv=AV(y);
    GATV0(z,INT,zn,1); zv=AV(z);

@@ -828,11 +828,11 @@ extern A        jttokens(J,A,I);
 extern B        jtunlk(J,I);
 extern A        jtv2(J,I,I);
 extern A        jtva2s(J,A,A,C,VF,I,I,I,I,I);
-// obsolate extern C        jtvaid(J,A);
-extern VARPS      jtvains(J,A,I);
-extern VARPS      jtvapfx(J,A,I);
+// obsolete extern C        jtvaid(J,A);
+// obsolete extern VARPS      jtvains(J,A,I);
+// obsolete extern VARPS      jtvapfx(J,A,I);
 extern VA2      jtvar(J,A,I,I);
-extern VARPS      jtvasfx(J,A,I);
+// obsolete extern VARPS      jtvasfx(J,A,I);
 extern A        jtvasp(J,A,A,C,VF,I,I,I,I,I,I,I,I,I);
 extern B        jtvc1(J,I,US*);
 extern A        jtvci(J,I);
@@ -973,6 +973,7 @@ extern A        zpath;
 /* cpu feature */
 extern UC       hwaes;
 extern UC       hwfma;
+extern VARPSA rpsnull;
 #if (SYS & SYS_ATARIST+SYS_ATT3B1)
 extern int      memcmp();       /* C library fn                            */
 extern D        strtod();       /* C library fn                            */

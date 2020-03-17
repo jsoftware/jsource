@@ -162,7 +162,7 @@ DF2(jtrazecut0){A z;C*wv,*zv;I ar,*as,(*av)[2],j,k,m,n,wt;
 
 static DF2(jtcut2bx){A*av,b,t,x,*xv,y,*yv;B*bv;I an,bn,i,j,m,p,q,*u,*v,*ws;
  RZ(a&&w&&self);
- q=FAV(self)->localuse.lI;  // fetch the n in the original u;.n
+ q=(I)FAV(self)->localuse.lvp[0];  // fetch the n in the original u;.n
  an=AN(a); av=AAV(a);  ws=AS(w);
  ASSERT(an<=AR(w),EVLENGTH);
  GATV0(x,BOX,an,1); xv=AAV(x);  // could be faux
@@ -269,7 +269,7 @@ static A jtsely(J jt,A y,I r,I i,I j){A z;I c,*s,*v;
 
 static DF2(jtcut2sx){PROLOG(0024);DECLF;A h=0,*hv,y,yy;B b,neg,pfx,*u,*v;C id;I d,e,hn,m,n,p,t,yn,*yu,*yv;P*ap;V*vf;
  PREF2(jtcut2sx);
- SETIC(w,n); t=AT(w); m=sv->localuse.lI; neg=0>m; pfx=m==1||m==-1; b=neg&&pfx;  // m = n from u;.n
+ SETIC(w,n); t=AT(w); m=(I)sv->localuse.lvp[0]; neg=0>m; pfx=m==1||m==-1; b=neg&&pfx;  // m = n from u;.n
  RZ(a=a==mark?eps(w,take(num(pfx?1:-1),w)):DENSE&AT(a)?sparse1(a):a);
  ASSERT(n==*AS(a),EVLENGTH);
  ap=PAV(a);
@@ -510,7 +510,7 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[12
 
  // Time to find the frets.  If a is the impossible type INT+LIT, a contains the frets already, in the single buffer (that means we are acting on behalf of Key /.)
  if(FAV(self)->id==CCUT){   // see if we are acting on behalf of /.  Fall through if not
-  pfx=FAV(self)->localuse.lI; neg=SGNTO0(pfx); pfx&=1;  // neg=cut type is _1/_2; pfx=cut type is 1/_1
+  pfx=(I)FAV(self)->localuse.lvp[0]; neg=SGNTO0(pfx); pfx&=1;  // neg=cut type is _1/_2; pfx=cut type is 1/_1
   if(a!=mark){  // dyadic forms
    if(((AN(a)-1)&(-n))<0){  // empty x, do one call on the entire w if y is non-empty
     R CALL1(f1,w,fs);
@@ -671,7 +671,7 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[12
 // scaf should take this under BOXATOP?
   case CSLASH:
    {
-   VARPS adocv = vains(FAV(fs)->fgh[0],wt);  // qualify the operation, returning action routine and conversion info
+   VARPS adocv; varps(adocv,fs,wt,0);  // qualify the operation, returning action routine and conversion info
    if(adocv.f){C*z0=0,*zc;I t,zk,zt;  // if the operation is a primitive that we can  apply / to...
     zt=rtype(adocv.cv);
 #if SY_64
@@ -790,11 +790,12 @@ DF2(jtrazecut2){A fs,gs,y,z=0;B b; I neg,pfx;C id,sep,*u,*v,*wv,*zv;I d,k,m=0,wi
     V *vv;VARPS adocv;
  RZ(a&&w);
  gs=FAV(self)->fgh[1+(CFORK==FAV(self)->id)]; vv=VAV(gs); y=vv->fgh[0]; fs=VAV(y)->fgh[1];  // self is ;@:(<@(f/\);.1)     gs  gs is <@(f/\);.1   y is <@(f/\)  fs is   f/\  ...
- p=SETIC(w,wi); wt=AT(w); k=vv->localuse.lI; neg=0>k; pfx=k==1||k==-1; b=neg&&pfx;   // p,wi is # items of w; 
+ p=SETIC(w,wi); wt=AT(w); k=(I)vv->localuse.lvp[0]; neg=0>k; pfx=k==1||k==-1; b=neg&&pfx;   // p,wi is # items of w; 
  id=FAV(fs)->id;  // fs is f/id   where id is \ \.
   // if f is atomic/\ or atomic /\., set ado and cv with info for the operation
- if(id==CBSLASH)adocv = vapfx(FAV(FAV(fs)->fgh[0])->fgh[0],wt);   // FAV(fs)->fgh[0] is f/    FAV(FAV(fs)->fgh[0])->fgh[0] is f
- else           adocv = vasfx(FAV(FAV(fs)->fgh[0])->fgh[0],wt); 
+// obsolete  if(id==CBSLASH)adocv = vapfx(FAV(FAV(fs)->fgh[0])->fgh[0],wt);   // FAV(fs)->fgh[0] is f/    FAV(FAV(fs)->fgh[0])->fgh[0] is f
+// obsolete  else           adocv = vasfx(FAV(FAV(fs)->fgh[0])->fgh[0],wt); 
+ varps(adocv,fs,wt,1+(id!=CBSLASH));   // fs is f/\  type 1 is f/\ 2 is f/\.
  if(SPARSE&AT(w)||!adocv.f)R jtspecialatoprestart(jt,a,w,self);  // if sparse w or nonatomic function, do it the long way
  if(a!=mark){   // dyadic case
   if((-AN(a)&((AR(a)^1)-1)&-(AT(a)&B01+SB01))>=0)R jtspecialatoprestart(jt,a,w,self);  // if a is not nonempty boolean list, do it the long way.  This handles ;@: when a has rank>1
@@ -867,7 +868,7 @@ static DF2(jttess2){A z,zz=0,virtw,strip;I n,rs[3],cellatoms,cellbytes,vmv,hmv,v
 #define ZZFLAGWORD state
  I state;
  RZ(a=tesa(a,w));   // expand x to canonical form, with trailing axes-in-full deleted
- n=FAV(self)->localuse.lI; state=(~n)&STATETAKE;  // n=op type (as in u;.n); set TAKE bit if code=3: we will shorten out-of-bounds args
+ n=(I)FAV(self)->localuse.lvp[0]; state=(~n)&STATETAKE;  // n=op type (as in u;.n); set TAKE bit if code=3: we will shorten out-of-bounds args
  I wr=AR(w); I wt=AT(w); // rank of w, type of w
  I *as=AS(a), *av=IAV(a), axisct=as[1];  // a-> shape of a, axisct=# axes in a, av->mv/size area
  // get shape of final result
@@ -1080,6 +1081,6 @@ F2(jtcut){A h=0,z;I flag=0,k;
  default:         ASSERT(0,EVDOMAIN);
  }
  RZ(z);
- FAV(z)->localuse.lI=k;  // remember the integer form of the cut selector
+ FAV(z)->localuse.lvp[0]=(void *)k;  // remember the integer form of the cut selector
  R z;
 }

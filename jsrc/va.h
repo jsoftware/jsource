@@ -3,9 +3,6 @@
 /*                                                                         */
 /* Verbs: Macros and Defined Constants for Atomic (Scalar) Verbs           */
 
-typedef struct {VA2 p2[13];VARPS pins[7];VARPS ppfx[7];VARPS psfx[7];} VA;
-typedef struct {VA1 p1[6];} UA;
-
                                     /*   cv - control vector               */
 #define VIPOKWX         0      // This routine can put its result over W
 #define VIPOKW          (1<<VIPOKWX)

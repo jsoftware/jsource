@@ -10,14 +10,14 @@
 #include "result.h"
 
 
-#define SUFFIXPFX(f,Tz,Tx,pfx,vecfn)  \
+#define SUFFIXPFX(f,Tz,Tx,pfx,vecfn,retstmt)  \
  AHDRS(f,Tz,Tx){I i;Tz v;                                     \
   x+=m*d*n; z+=m*d*n;                                              \
   if(d==1)DQ(m, *--z=v=    *--x; DQ(n-1, --x; --z; *z=v=pfx(*x,v);))  \
   else{for(i=0;i<m;++i){                                              \
    DQ(d, *--z=    *--x;);                                        \
    DQ(n-1, Tz *y=z; z-=d; x-=d; vecfn(1,d,x,y,z,jt););                     \
- }}}
+ }}retstmt}
 
 #define SUFFIXNAN(f,Tz,Tx,pfx,vecfn)  \
  AHDRS(f,Tz,Tx){I i;Tz v;                                      \
@@ -28,7 +28,7 @@
    DQ(d, *--z=    *--x;);                                        \
    DQ(n-1, Tz *y=z; z-=d; x-=d; vecfn(1,d,x,y,z,jt););                     \
   }}                                                                   \
-  NAN1V;                                                              \
+  R NANTEST?EVNAN:EVOK;                                                              \
  }
 
 #define SUFFICPFX(f,Tz,Tx,pfx)  \
@@ -38,18 +38,18 @@
   else{for(i=0;i<m;++i){                                              \
    y=z; DQ(d, *--z=(Tz)*--x;);                                        \
    DQ(n-1, DQ(d, --x; --y; --z; *z=pfx(*x,*y);));                     \
- }}}
+ }}R EVOK;}
 
 #define SUFFIXOVF(f,Tz,Tx,fs1,fvv)  \
  AHDRS(f,I,I){C er=0;I i,*xx,*y,*zz;                      \
   xx=x+=m*d*n; zz=z+=m*d*n;                              \
   if(d==1){                                                 \
    if(1==n)DQ(m, *--z=*--x;)                                \
-   else    DQ(m, z=zz-=d*n; x=xx-=d*n; fs1(n,z,x); RER;)        \
+   else    DQ(m, z=zz-=d*n; x=xx-=d*n; fs1(n,z,x);)        \
   }else{for(i=0;i<m;++i){                                   \
    DQ(d, *--zz=*--xx;);                                     \
-   DQ(n-1, x=xx-=d; y=zz; z=zz-=d; fvv(d,z,x,y); RER;);     \
- }}}
+   DQ(n-1, x=xx-=d; y=zz; z=zz-=d; fvv(d,z,x,y););     \
+ }}R EVOK;}
 
 #if SY_ALIGN
 #define SUFFIXBFXLOOP(T,pfx)  \
@@ -61,11 +61,11 @@
 #define SUFFIXBFX(f,pfx,ipfx,spfx,bpfx,vexp)  \
  AHDRP(f,B,B){B v,* RESTRICT y;I q;                                        \
   x+=m*d*n; z+=m*d*n;                                           \
-  if(1==d){DQ(m, *--z=v=*--x; DQ(n-1, --x; --z; *z=v=vexp;)); R;}  \
-  if(0==(d&(sizeof(UI  )-1))){SUFFIXBFXLOOP(UI,   pfx); R;}              \
-  if(0==(d&(sizeof(UI4)-1))){SUFFIXBFXLOOP(UINT,ipfx); R;}              \
-  if(0==(d&(sizeof(US  )-1))){SUFFIXBFXLOOP(US,  spfx); R;}              \
-  DQ(m, y=z; DQ(d, *--z=*--x;); DQ(n-1, DQ(d, --x; --y; --z; *z=bpfx(*x,*y);)));  \
+  if(1==d){DQ(m, *--z=v=*--x; DQ(n-1, --x; --z; *z=v=vexp;)); R EVOK;}  \
+  if(0==(d&(sizeof(UI  )-1))){SUFFIXBFXLOOP(UI,   pfx); R EVOK;}              \
+  if(0==(d&(sizeof(UI4)-1))){SUFFIXBFXLOOP(UINT,ipfx); R EVOK;}              \
+  if(0==(d&(sizeof(US  )-1))){SUFFIXBFXLOOP(US,  spfx); R EVOK;}              \
+  DQ(m, y=z; DQ(d, *--z=*--x;); DQ(n-1, DQ(d, --x; --y; --z; *z=bpfx(*x,*y);)));R EVOK;  \
  }
 #else
 #define SUFFIXBFX(f,pfx,ipfx,spfx,bpfx,vexp)  \
@@ -105,7 +105,7 @@ SUFFICPFX( plussfxO, D, I, PLUS  )
 SUFFICPFX(minussfxO, D, I, MINUS )
 SUFFICPFX(tymessfxO, D, I, TYMES )
 
-SUFFIXPFX( plussfxB, I, B, PLUS, plusBI  )
+SUFFIXPFX( plussfxB, I, B, PLUS, plusBI, R EVOK;  )
 AHDRS(plussfxD,D,D){I i;
  NAN0;
  x+=m*d*n; z+=m*d*n;
@@ -116,56 +116,56 @@ AHDRS(plussfxD,D,D){I i;
   )
  }else{
   for(i=0;i<m;++i){
-   DQ(d, *--z=    *--x;);                                        \
-   DQ(n-1, D *y=z; z-=d; x-=d; plusDD(1,d,x,y,z,jt););                     \
+   DQ(d, *--z=    *--x;);
+   DQ(n-1, D *y=z; z-=d; x-=d; plusDD(1,d,x,y,z,jt););
   }
  }
- NAN1V;
+ R NANTEST?EVNAN:EVOK;
 }
 SUFFIXNAN( plussfxZ, Z, Z, zplus, plusZZ )
-SUFFIXPFX( plussfxX, X, X, xplus, plusXX )
-SUFFIXPFX( plussfxQ, Q, Q, qplus, plusQQ )
+SUFFIXPFX( plussfxX, X, X, xplus, plusXX, HDR1JERR; )
+SUFFIXPFX( plussfxQ, Q, Q, qplus, plusQQ, HDR1JERR; )
 
-SUFFIXPFX(minussfxB, I, B, MINUS, minusBI )
+SUFFIXPFX(minussfxB, I, B, MINUS, minusBI, R EVOK; )
 SUFFIXNAN(minussfxD, D, D, MINUS, minusDD )
 SUFFIXNAN(minussfxZ, Z, Z, zminus, minusZZ)
 
-SUFFIXPFX(tymessfxD, D, D, TYMES, tymesDD )
-SUFFIXPFX(tymessfxZ, Z, Z, ztymes, tymesZZ)
-SUFFIXPFX(tymessfxX, X, X, xtymes, tymesXX)
-SUFFIXPFX(tymessfxQ, Q, Q, qtymes, tymesQQ)
+SUFFIXPFX(tymessfxD, D, D, TYMES, tymesDD , R EVOK;)
+SUFFIXPFX(tymessfxZ, Z, Z, ztymes, tymesZZ, R EVOK;)
+SUFFIXPFX(tymessfxX, X, X, xtymes, tymesXX, R EVOK;)
+SUFFIXPFX(tymessfxQ, Q, Q, qtymes, tymesQQ, R EVOK;)
 
 SUFFIXNAN(  divsfxD, D, D, DIV, divDD   )
 SUFFIXNAN(  divsfxZ, Z, Z, zdiv, divZZ  )
 
-SUFFIXPFX(  maxsfxI, I, I, MAX, maxII   )
-SUFFIXPFX(  maxsfxD, D, D, MAX, maxDD   )
-SUFFIXPFX(  maxsfxX, X, X, XMAX, maxXX  )
-SUFFIXPFX(  maxsfxQ, Q, Q, QMAX, maxQQ  )
-SUFFIXPFX(  maxsfxS, SB,SB,SBMAX, maxSS )
+SUFFIXPFX(  maxsfxI, I, I, MAX, maxII   ,R EVOK;)
+SUFFIXPFX(  maxsfxD, D, D, MAX, maxDD   ,R EVOK;)
+SUFFIXPFX(  maxsfxX, X, X, XMAX, maxXX  ,R EVOK;)
+SUFFIXPFX(  maxsfxQ, Q, Q, QMAX, maxQQ  ,R EVOK;)
+SUFFIXPFX(  maxsfxS, SB,SB,SBMAX, maxSS ,R EVOK;)
 
-SUFFIXPFX(  minsfxI, I, I, MIN, minII  )
-SUFFIXPFX(  minsfxD, D, D, MIN, minDD  )
-SUFFIXPFX(  minsfxX, X, X, XMIN, minXX  )
-SUFFIXPFX(  minsfxQ, Q, Q, QMIN, minQQ  )
-SUFFIXPFX(  minsfxS, SB,SB,SBMIN, minSS )
+SUFFIXPFX(  minsfxI, I, I, MIN, minII  ,R EVOK;)
+SUFFIXPFX(  minsfxD, D, D, MIN, minDD  ,R EVOK;)
+SUFFIXPFX(  minsfxX, X, X, XMIN, minXX  ,R EVOK;)
+SUFFIXPFX(  minsfxQ, Q, Q, QMIN, minQQ  ,R EVOK;)
+SUFFIXPFX(  minsfxS, SB,SB,SBMIN, minSS ,R EVOK;)
 
-SUFFIXPFX(bw0000sfxI, UI,UI, BW0000, bw0000II)
-SUFFIXPFX(bw0001sfxI, UI,UI, BW0001, bw0001II)
-SUFFIXPFX(bw0010sfxI, UI,UI, BW0010, bw0010II)
-SUFFIXPFX(bw0011sfxI, UI,UI, BW0011, bw0011II)
-SUFFIXPFX(bw0100sfxI, UI,UI, BW0100, bw0100II)
-SUFFIXPFX(bw0101sfxI, UI,UI, BW0101, bw0101II)
-SUFFIXPFX(bw0110sfxI, UI,UI, BW0110, bw0110II)
-SUFFIXPFX(bw0111sfxI, UI,UI, BW0111, bw0111II)
-SUFFIXPFX(bw1000sfxI, UI,UI, BW1000, bw1000II)
-SUFFIXPFX(bw1001sfxI, UI,UI, BW1001, bw1001II)
-SUFFIXPFX(bw1010sfxI, UI,UI, BW1010, bw1010II)
-SUFFIXPFX(bw1011sfxI, UI,UI, BW1011, bw1011II)
-SUFFIXPFX(bw1100sfxI, UI,UI, BW1100, bw1100II)
-SUFFIXPFX(bw1101sfxI, UI,UI, BW1101, bw1101II)
-SUFFIXPFX(bw1110sfxI, UI,UI, BW1110, bw1110II)
-SUFFIXPFX(bw1111sfxI, UI,UI, BW1111, bw1111II)
+SUFFIXPFX(bw0000sfxI, UI,UI, BW0000, bw0000II,R EVOK;)
+SUFFIXPFX(bw0001sfxI, UI,UI, BW0001, bw0001II,R EVOK;)
+SUFFIXPFX(bw0010sfxI, UI,UI, BW0010, bw0010II,R EVOK;)
+SUFFIXPFX(bw0011sfxI, UI,UI, BW0011, bw0011II,R EVOK;)
+SUFFIXPFX(bw0100sfxI, UI,UI, BW0100, bw0100II,R EVOK;)
+SUFFIXPFX(bw0101sfxI, UI,UI, BW0101, bw0101II,R EVOK;)
+SUFFIXPFX(bw0110sfxI, UI,UI, BW0110, bw0110II,R EVOK;)
+SUFFIXPFX(bw0111sfxI, UI,UI, BW0111, bw0111II,R EVOK;)
+SUFFIXPFX(bw1000sfxI, UI,UI, BW1000, bw1000II,R EVOK;)
+SUFFIXPFX(bw1001sfxI, UI,UI, BW1001, bw1001II,R EVOK;)
+SUFFIXPFX(bw1010sfxI, UI,UI, BW1010, bw1010II,R EVOK;)
+SUFFIXPFX(bw1011sfxI, UI,UI, BW1011, bw1011II,R EVOK;)
+SUFFIXPFX(bw1100sfxI, UI,UI, BW1100, bw1100II,R EVOK;)
+SUFFIXPFX(bw1101sfxI, UI,UI, BW1101, bw1101II,R EVOK;)
+SUFFIXPFX(bw1110sfxI, UI,UI, BW1110, bw1110II,R EVOK;)
+SUFFIXPFX(bw1111sfxI, UI,UI, BW1111, bw1111II,R EVOK;)
 
 
 static DF1(jtsuffix){DECLF;I r;
@@ -299,8 +299,8 @@ static DF1(jtsscan){A y,z;I d,f,m,n,r,t,wn,wr,*ws,wt;
  if(!adocv.f)R IRSIP1(w,self,r,jtssg,z);   // if not supported atomically, go do general suffix
  if((t=atype(adocv.cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));
  if(ASGNINPLACESGN(SGNIF((I)jtinplace,JTINPLACEWX)&SGNIF(adocv.cv,VIPOKWX),w))z=w; else GA(z,rtype(adocv.cv),wn,wr,ws);
- ((AHDRSFN*)adocv.f)(d,n,m,AV(w),AV(z),jt);
- if(jt->jerr)R jt->jerr>=EWOV?IRS1(w,self,r,jtsscan,z):0; else R adocv.cv&VRI+VRD?cvz(adocv.cv,z):z;
+ I rc=((AHDRSFN*)adocv.f)(d,n,m,AV(w),AV(z),jt);
+ if(rc&255){jsignal(rc); R jt->jerr>=EWOV?IRS1(w,self,r,jtsscan,z):0;} else R adocv.cv&VRI+VRD?cvz(adocv.cv,z):z;
 }    /* f/\."r w main control */
 
 

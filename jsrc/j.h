@@ -833,7 +833,7 @@ extern unsigned int __cdecl _clearfp (void);
 // In the original JE many verbs returned a clone of the input, i. e. R ca(w).  We have changed these to avoid the clone, but we preserve the memory in case we need to go back
 #define RCA(w)          R w
 #define RE(exp)         {if((exp),jt->jerr)R 0;}
-#define RER             {if(er){jt->jerr=er; R;}}
+// obsolete #define RER             {if(er){jt->jerr=er; R;}}
 #define RESETERR        {jt->etxn=jt->jerr=0;}
 #define RESETRANK       (jt->ranks=(RANK2T)~0)
 #define RNE(exp)        {R jt->jerr?0:(exp);}

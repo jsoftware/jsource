@@ -102,14 +102,14 @@ static void vdone(I m,I n,B*x,B*z,B pc){B b;I q,r;UC*u;UI s,*y;
 
 #define REDUCEBFX(f,pfx,ipfx,spfx,bpfx,vdo)  \
  AHDRP(f,B,B){B*y=0;I j,q;                       \
-  if(d==1){vdo; R;}                                \
+  if(d==1){vdo; R EVOK;}                                \
   x+=m*d*n; z+=m*d;                           \
   if(1==n)DQ(d, *--z=*--x;)                        \
   else if(0==d%sizeof(UI  ))RBFXLOOP(UI,   pfx)    \
   else if(0==d%sizeof(UINT))RBFXLOOP(UINT,ipfx)    \
   else if(0==d%sizeof(US  ))RBFXLOOP(US,  spfx)    \
   else                      RBFXODDSIZE(pfx,bpfx)  \
- }  /* non-commutative */
+ R EVOK;}  /* non-commutative */
 
 REDUCECFX(  eqinsB, EQ,  IEQ,  SEQ,  BEQ,  vdone(m,n,x,z,(B)(n&1)))
 REDUCECFX(  neinsB, NE,  INE,  SNE,  BNE,  vdone(m,n,x,z,1       ))
@@ -194,7 +194,7 @@ AHDRR(plusinsD,D,D){I i;D* RESTRICT y;
     DQ(n-2,    plusDD(1,d,x,z,z,jt); x-=d; );
    }
   }
-  NAN1V;
+  R NANTEST?EVNAN:EVOK;
 }
 
 REDUCENAN( plusinsZ, Z, Z, zplus, plusZZ )
@@ -296,7 +296,7 @@ static A jtredsp1(J jt,A w,A self,C id,VARPSF ado,I cv,I f,I r,I zt){A e,x,z;I m
  RZ(w);
  wp=PAV(w); e=SPA(wp,e); x=SPA(wp,x); n=AN(x); m=*AS(w);
  GA(z,zt,1,0,0);
- if(n){((AHDRRFN*)ado)(1L,n,1L,AV(x),AV(z),jt); RE(0); if(m==n)R z;}
+ if(n){I rc=((AHDRRFN*)ado)(1L,n,1L,AV(x),AV(z),jt); if(255&rc)jsignal(rc); RE(0); if(m==n)R z;}
  R redsp1a(id,z,e,n,AR(w),AS(w));
 }    /* f/"r w for sparse vector w */
 
@@ -307,13 +307,14 @@ DF1(jtredravel){A f,x,z;I n;P*wp;
  if(!(SPARSE&AT(w)))R reduce(jtravel(jtinplace,w),f);
  // The rest is sparse
  wp=PAV(w); x=SPA(wp,x); n=AN(x);
+ I rc=EVOK;
  while(1){  // Loop to handle restart on overflow
   VARPS adocv; varps(adocv,f,AT(x),0);
   ASSERT(adocv.f,EVNONCE);
   GA(z,rtype(adocv.cv),1,0,0);
-  if(n)((AHDRRFN*)adocv.f)((I)1,n,(I)1,AV(x),AV(z),jt);  // mustn't adocv on empty
+  if(n)rc=((AHDRRFN*)adocv.f)((I)1,n,(I)1,AV(x),AV(z),jt);  // mustn't adocv on empty
 // obsolete   if(jt->jerr<EWOV){RE(0); R redsp1a(vaid(FAV(f)->fgh[0]),z,SPA(wp,e),n,AR(w),AS(w));}
-  if(jt->jerr<EWOV){RE(0); R redsp1a(FAV(FAV(f)->fgh[0])->id,z,SPA(wp,e),n,AR(w),AS(w));}  // since f has an insert fn, its id must be OK
+  rc&=255; if(rc)jsignal(rc); if(rc<EWOV){if(rc)R0; R redsp1a(FAV(FAV(f)->fgh[0])->id,z,SPA(wp,e),n,AR(w),AS(w));}  // since f has an insert fn, its id must be OK
  }
 }  /* f/@, w */
 
@@ -324,7 +325,7 @@ static A jtredspd(J jt,A w,A self,C id,VARPSF ado,I cv,I f,I r,I zt){A a,e,x,z,z
  xr=r; v=AV(a); DO(AN(a), if(f<v[i])--xr;); xf=AR(x)-xr;
  m=prod(xf,s); c=m?AN(x)/m:0; n=s[xf];
  GA(zx,zt,AN(x)/n,AR(x)-1,s); MCISH(xf+AS(zx),1+xf+s,xr-1); 
- ((AHDRRFN*)ado)(c/n,n,m,AV(x),AV(zx),jt); RE(0);
+ I rc=((AHDRRFN*)ado)(c/n,n,m,AV(x),AV(zx),jt); if(255&rc)jsignal(rc); RE(0);
  switch(id){
   case CPLUS: if(!equ(e,num(0)))RZ(e=tymes(e,sc(n))); break; 
   case CSTAR: if(!equ(e,num(1) )&&!equ(e,num(0)))RZ(e=expn2(e,sc(n))); break;
@@ -403,7 +404,7 @@ static A jtredsps(J jt,A w,A self,C id,VARPSF ado,I cv,I f,I r,I zt){A a,a1,e,sn
  for(i=0;i<m;++i){A y;B*p1;C*u;I*vv;
   p1=1+(B*)memchr(pv,C1,yr); n=p1-pv; if(sn)sv[i]=wm-n; pv=p1;
   vv=qv?yv+yc**v:yv; DO(yc-1, *yu++=vv[dv[i]];);
-  if(1<n){if(qv){u=xxv; DO(n, MC(u,xv+xk*v[i],xk); u+=xk;);} ((AHDRRFN*)ado)(xc,n,1L,qv?xxv:xv,zv,jt); RE(0);}
+  if(1<n){if(qv){u=xxv; DO(n, MC(u,xv+xk*v[i],xk); u+=xk;);} I rc=((AHDRRFN*)ado)(xc,n,1L,qv?xxv:xv,zv,jt); if(255&rc)jsignal(rc); RE(0);}
   else   if(zk==xk)MC(zv,qv?xv+xk**v:xv,xk);
   else   {if(!x1)GA(x1,xt,xc,1,0); MC(AV(x1),qv?xv+xk**v:xv,xk); RZ(y=cvt(zt,x1)); MC(zv,AV(y),zk);}
   zv+=zk; if(qv)v+=n; else{xv+=n*xk; yv+=n*yc;}
@@ -551,11 +552,11 @@ static DF1(jtreduce){A z;I d,f,m,n,r,t,wn,wr,*ws,wt,zt;
   // Convert inputs if needed 
   if((t=atype(adocv.cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));
   // call the selected reduce routine.
-  ((AHDRRFN*)adocv.f)(d,n,m,AV(w),AV(z),jt);
+  I rc=((AHDRRFN*)adocv.f)(d,n,m,AV(w),AV(z),jt);
   // if return is EWOV, it's an integer overflow and we must restart, after restoring the ranks
   // EWOV1 means that there was an overflow on a single result, which was calculated accurately and stored as a D.  So in that case all we
   // have to do is change the type of the result.
-  if(jt->jerr)if(jt->jerr==EWOV1){RESETERR;AT(z)=FL;RETF(z);}else {RETF(jt->jerr>=EWOV?IRS1(w,self,r,jtreduce,z):0);} else {RETF(adocv.cv&VRI+VRD?cvz(adocv.cv,z):z);}
+  if(255&rc){if(jt->jerr==EWOV1){/* obsoleteRESETERR;*/AT(z)=FL;RETF(z);}else {jsignal(rc); RETF(rc>=EWOV?IRS1(w,self,r,jtreduce,z):0);}} else {RETF(adocv.cv&VRI+VRD?cvz(adocv.cv,z):z);}
 
   // special cases:
  }else if(n==1)R head(w);    // reduce on single items - ranks are still set

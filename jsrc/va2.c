@@ -13,144 +13,145 @@
 // if there are integer-overflow routine, they comes after the others, in the order rps
 VARPSA rpsnull = {0, {0}};
 
-static VARPSA rpsbw0000 = {INTX+1 , { {(VARPSF)bw0000insI,VI+VII}, {0}, {(VARPSF)bw0000insI,VI}, {0} ,
-                             {(VARPSF)bw0000pfxI,VI+VII}, {0,0}, {(VARPSF)bw0000pfxI,VI}, {0,0} , 
-                             {(VARPSF)bw0000sfxI,VI+VII}, {0}, {(VARPSF)bw0000sfxI,VI}, {0} , 
+static VARPSA rpsbw0000 = {INTX+1 , { {(VARPSF)bw0000insI,VI+VII}, {0}, {(VARPSF)bw0000insI,VI},
+                             {(VARPSF)bw0000pfxI,VI+VII}, {0,0}, {(VARPSF)bw0000pfxI,VI},
+                             {(VARPSF)bw0000sfxI,VI+VII}, {0}, {(VARPSF)bw0000sfxI,VI},
                              }};
-static VARPSA rpsbw0001 = {INTX+1 , { {(VARPSF)bw0001insI,VI+VII}, {0}, {(VARPSF)bw0001insI,VI}, {0} ,
-                             {(VARPSF)bw0001pfxI,VI+VII}, {0,0}, {(VARPSF)bw0001pfxI,VI}, {0,0} , 
-                             {(VARPSF)bw0001sfxI,VI+VII}, {0}, {(VARPSF)bw0001sfxI,VI}, {0} , 
+static VARPSA rpsbw0001 = {INTX+1 , { {(VARPSF)bw0001insI,VI+VII}, {0}, {(VARPSF)bw0001insI,VI},
+                             {(VARPSF)bw0001pfxI,VI+VII}, {0,0}, {(VARPSF)bw0001pfxI,VI},
+                             {(VARPSF)bw0001sfxI,VI+VII}, {0}, {(VARPSF)bw0001sfxI,VI},
                              }};
-static VARPSA rpsbw0010 = {INTX+1 , { {(VARPSF)bw0010insI,VI+VII}, {0}, {(VARPSF)bw0010insI,VI}, {0} ,
-                             {0,0}, {0,0}, {0,0}, {0,0} , 
-                             {(VARPSF)bw0010sfxI,VI+VII}, {0}, {(VARPSF)bw0010sfxI,VI}, {0} , 
+static VARPSA rpsbw0010 = {INTX+1 , { {(VARPSF)bw0010insI,VI+VII}, {0}, {(VARPSF)bw0010insI,VI},
+                             {0,0}, {0,0}, {0,0},
+                             {(VARPSF)bw0010sfxI,VI+VII}, {0}, {(VARPSF)bw0010sfxI,VI},
                              }};
-static VARPSA rpsbw0011 = {INTX+1 , { {(VARPSF)bw0011insI,VI+VII}, {0}, {(VARPSF)bw0011insI,VI}, {0} ,
-                             {(VARPSF)bw0011pfxI,VI+VII}, {0,0}, {(VARPSF)bw0011pfxI,VI}, {0,0} , 
-                             {(VARPSF)bw0011sfxI,VI+VII}, {0}, {(VARPSF)bw0011sfxI,VI}, {0} , 
+static VARPSA rpsbw0011 = {INTX+1 , { {(VARPSF)bw0011insI,VI+VII}, {0}, {(VARPSF)bw0011insI,VI},
+                             {(VARPSF)bw0011pfxI,VI+VII}, {0,0}, {(VARPSF)bw0011pfxI,VI},
+                             {(VARPSF)bw0011sfxI,VI+VII}, {0}, {(VARPSF)bw0011sfxI,VI},
                              }};
-static VARPSA rpsbw0100 = {INTX+1 , { {(VARPSF)bw0100insI,VI+VII}, {0}, {(VARPSF)bw0100insI,VI}, {0} ,
-                             {0,0}, {0,0}, {0,0}, {0,0} , 
-                             {(VARPSF)bw0100sfxI,VI+VII}, {0}, {(VARPSF)bw0100sfxI,VI}, {0} , 
+static VARPSA rpsbw0100 = {INTX+1 , { {(VARPSF)bw0100insI,VI+VII}, {0}, {(VARPSF)bw0100insI,VI},
+                             {0,0}, {0,0}, {0,0},
+                             {(VARPSF)bw0100sfxI,VI+VII}, {0}, {(VARPSF)bw0100sfxI,VI},
                              }};
-static VARPSA rpsbw0101 = {INTX+1 , { {(VARPSF)bw0101insI,VI+VII}, {0}, {(VARPSF)bw0101insI,VI}, {0} ,
-                             {(VARPSF)bw0101pfxI,VI+VII}, {0,0}, {(VARPSF)bw0101pfxI,VI}, {0,0} , 
-                             {(VARPSF)bw0101sfxI,VI+VII}, {0}, {(VARPSF)bw0101sfxI,VI}, {0} , 
+static VARPSA rpsbw0101 = {INTX+1 , { {(VARPSF)bw0101insI,VI+VII}, {0}, {(VARPSF)bw0101insI,VI},
+                             {(VARPSF)bw0101pfxI,VI+VII}, {0,0}, {(VARPSF)bw0101pfxI,VI},
+                             {(VARPSF)bw0101sfxI,VI+VII}, {0}, {(VARPSF)bw0101sfxI,VI},
                              }};
-static VARPSA rpsbw0110 = {INTX+1 , { {(VARPSF)bw0110insI,VI+VII}, {0}, {(VARPSF)bw0110insI,VI}, {0} ,
-                             {(VARPSF)bw0110pfxI,VI+VII}, {0,0}, {(VARPSF)bw0110pfxI,VI}, {0,0} , 
-                             {(VARPSF)bw0110sfxI,VI+VII}, {0}, {(VARPSF)bw0110sfxI,VI}, {0} , 
+static VARPSA rpsbw0110 = {INTX+1 , { {(VARPSF)bw0110insI,VI+VII}, {0}, {(VARPSF)bw0110insI,VI},
+                             {(VARPSF)bw0110pfxI,VI+VII}, {0,0}, {(VARPSF)bw0110pfxI,VI},
+                             {(VARPSF)bw0110sfxI,VI+VII}, {0}, {(VARPSF)bw0110sfxI,VI},
                              }};
-static VARPSA rpsbw0111 = {INTX+1 , { {(VARPSF)bw0111insI,VI+VII}, {0}, {(VARPSF)bw0111insI,VI}, {0} ,
-                             {(VARPSF)bw0111pfxI,VI+VII}, {0,0}, {(VARPSF)bw0111pfxI,VI}, {0,0} , 
-                             {(VARPSF)bw0111sfxI,VI+VII}, {0}, {(VARPSF)bw0111sfxI,VI}, {0} , 
+static VARPSA rpsbw0111 = {INTX+1 , { {(VARPSF)bw0111insI,VI+VII}, {0}, {(VARPSF)bw0111insI,VI},
+                             {(VARPSF)bw0111pfxI,VI+VII}, {0,0}, {(VARPSF)bw0111pfxI,VI},
+                             {(VARPSF)bw0111sfxI,VI+VII}, {0}, {(VARPSF)bw0111sfxI,VI},
                              }};
-static VARPSA rpsbw1000 = {INTX+1 , { {(VARPSF)bw1000insI,VI+VII}, {0}, {(VARPSF)bw1000insI,VI}, {0} ,
-                             {0,0}, {0,0}, {0,0}, {0,0} , 
-                             {(VARPSF)bw1000sfxI,VI+VII}, {0}, {(VARPSF)bw1000sfxI,VI}, {0} , 
+static VARPSA rpsbw1000 = {INTX+1 , { {(VARPSF)bw1000insI,VI+VII}, {0}, {(VARPSF)bw1000insI,VI},
+                             {0,0}, {0,0}, {0,0},
+                             {(VARPSF)bw1000sfxI,VI+VII}, {0}, {(VARPSF)bw1000sfxI,VI},
                              }};
-static VARPSA rpsbw1001 = {INTX+1 , { {(VARPSF)bw1001insI,VI+VII}, {0}, {(VARPSF)bw1001insI,VI}, {0} ,
-                             {(VARPSF)bw1001pfxI,VI+VII}, {0,0}, {(VARPSF)bw1001pfxI,VI}, {0,0} , 
-                             {(VARPSF)bw1001sfxI,VI+VII}, {0}, {(VARPSF)bw1001sfxI,VI}, {0} , 
+static VARPSA rpsbw1001 = {INTX+1 , { {(VARPSF)bw1001insI,VI+VII}, {0}, {(VARPSF)bw1001insI,VI},
+                             {(VARPSF)bw1001pfxI,VI+VII}, {0,0}, {(VARPSF)bw1001pfxI,VI},
+                             {(VARPSF)bw1001sfxI,VI+VII}, {0}, {(VARPSF)bw1001sfxI,VI},
                              }};
-static VARPSA rpsbw1010 = {INTX+1 , { {(VARPSF)bw1010insI,VI+VII}, {0}, {(VARPSF)bw1010insI,VI}, {0} ,
-                             {0,0}, {0,0}, {0,0}, {0,0} , 
-                             {(VARPSF)bw1010sfxI,VI+VII}, {0}, {(VARPSF)bw1010sfxI,VI}, {0} , 
+static VARPSA rpsbw1010 = {INTX+1 , { {(VARPSF)bw1010insI,VI+VII}, {0}, {(VARPSF)bw1010insI,VI},
+                             {0,0}, {0,0}, {0,0},
+                             {(VARPSF)bw1010sfxI,VI+VII}, {0}, {(VARPSF)bw1010sfxI,VI},
                              }};
-static VARPSA rpsbw1011 = {INTX+1 , { {(VARPSF)bw1011insI,VI+VII}, {0}, {(VARPSF)bw1011insI,VI}, {0} ,
-                             {0,0}, {0,0}, {0,0}, {0,0} , 
-                             {(VARPSF)bw1011sfxI,VI+VII}, {0}, {(VARPSF)bw1011sfxI,VI}, {0} , 
+static VARPSA rpsbw1011 = {INTX+1 , { {(VARPSF)bw1011insI,VI+VII}, {0}, {(VARPSF)bw1011insI,VI},
+                             {0,0}, {0,0}, {0,0},
+                             {(VARPSF)bw1011sfxI,VI+VII}, {0}, {(VARPSF)bw1011sfxI,VI},
                              }};
-static VARPSA rpsbw1100 = {INTX+1 , { {(VARPSF)bw1100insI,VI+VII}, {0}, {(VARPSF)bw1100insI,VI}, {0} ,
-                             {0,0}, {0,0}, {0,0}, {0,0} , 
-                             {(VARPSF)bw1100sfxI,VI+VII}, {0}, {(VARPSF)bw1100sfxI,VI}, {0} , 
+static VARPSA rpsbw1100 = {INTX+1 , { {(VARPSF)bw1100insI,VI+VII}, {0}, {(VARPSF)bw1100insI,VI},
+                             {0,0}, {0,0}, {0,0},
+                             {(VARPSF)bw1100sfxI,VI+VII}, {0}, {(VARPSF)bw1100sfxI,VI},
                              }};
-static VARPSA rpsbw1101 = {INTX+1 , { {(VARPSF)bw1101insI,VI+VII}, {0}, {(VARPSF)bw1101insI,VI}, {0} ,
-                             {0,0}, {0,0}, {0,0}, {0,0} , 
-                             {(VARPSF)bw1101sfxI,VI+VII}, {0}, {(VARPSF)bw1101sfxI,VI}, {0} , 
+static VARPSA rpsbw1101 = {INTX+1 , { {(VARPSF)bw1101insI,VI+VII}, {0}, {(VARPSF)bw1101insI,VI},
+                             {0,0}, {0,0}, {0,0},
+                             {(VARPSF)bw1101sfxI,VI+VII}, {0}, {(VARPSF)bw1101sfxI,VI},
                              }};
-static VARPSA rpsbw1110 = {INTX+1 , { {(VARPSF)bw1110insI,VI+VII}, {0}, {(VARPSF)bw1110insI,VI}, {0} ,
-                             {0,0}, {0,0}, {0,0}, {0,0} , 
-                             {(VARPSF)bw1110sfxI,VI+VII}, {0}, {(VARPSF)bw1110sfxI,VI}, {0} , 
+static VARPSA rpsbw1110 = {INTX+1 , { {(VARPSF)bw1110insI,VI+VII}, {0}, {(VARPSF)bw1110insI,VI},
+                             {0,0}, {0,0}, {0,0},
+                             {(VARPSF)bw1110sfxI,VI+VII}, {0}, {(VARPSF)bw1110sfxI,VI},
                              }};
-static VARPSA rpsbw1111 = {INTX+1 , { {(VARPSF)bw1111insI,VI+VII}, {0}, {(VARPSF)bw1111insI,VI}, {0} ,
-                             {(VARPSF)bw1111pfxI,VI+VII}, {0,0}, {(VARPSF)bw1111pfxI,VI}, {0,0} , 
-                             {(VARPSF)bw1111sfxI,VI+VII}, {0}, {(VARPSF)bw1111sfxI,VI}, {0} , 
+static VARPSA rpsbw1111 = {INTX+1 , { {(VARPSF)bw1111insI,VI+VII}, {0}, {(VARPSF)bw1111insI,VI},
+                             {(VARPSF)bw1111pfxI,VI+VII}, {0,0}, {(VARPSF)bw1111pfxI,VI},
+                             {(VARPSF)bw1111sfxI,VI+VII}, {0}, {(VARPSF)bw1111sfxI,VI},
                              }};
 
-static VARPSA rpsne = {B01X+1 , { {(VARPSF)neinsB,VB}, {0},
-                         {(VARPSF)nepfxB,VB}, {0},
-                         {(VARPSF)nesfxB,VB}, {0},
+static VARPSA rpsne = {B01X+1 , { {(VARPSF)neinsB,VB},
+                         {(VARPSF)nepfxB,VB},
+                         {(VARPSF)nesfxB,VB},
                          }};
-static VARPSA rpsnor = {B01X+1 , { {(VARPSF)norinsB,VB}, {0},
-                         {(VARPSF)norpfxB,VB}, {0},
-                         {(VARPSF)norsfxB,VB}, {0},
+static VARPSA rpsnor = {B01X+1 , { {(VARPSF)norinsB,VB},
+                         {(VARPSF)norpfxB,VB},
+                         {(VARPSF)norsfxB,VB},
                          }};
-static VARPSA rpsor = {B01X+1 , { {(VARPSF)orinsB,VB}, {0},
-                         {(VARPSF)orpfxB,VB}, {0},
-                         {(VARPSF)orsfxB,VB}, {0},
+static VARPSA rpsor = {B01X+1 , { {(VARPSF)orinsB,VB},
+                         {(VARPSF)orpfxB,VB},
+                         {(VARPSF)orsfxB,VB},
                          }};
-static VARPSA rpseq = {B01X+1 , { {(VARPSF)eqinsB,VB}, {0},
-                         {(VARPSF)eqpfxB,VB}, {0},
-                         {(VARPSF)eqsfxB,VB}, {0},
+static VARPSA rpseq = {B01X+1 , { {(VARPSF)eqinsB,VB},
+                         {(VARPSF)eqpfxB,VB},
+                         {(VARPSF)eqsfxB,VB},
                          }};
-static VARPSA rpsand = {B01X+1 , { {(VARPSF)andinsB,VB}, {0},
-                         {(VARPSF)andpfxB,VB}, {0},
-                         {(VARPSF)andsfxB,VB}, {0},
+static VARPSA rpsand = {B01X+1 , { {(VARPSF)andinsB,VB},
+                         {(VARPSF)andpfxB,VB},
+                         {(VARPSF)andsfxB,VB},
                          }};
-static VARPSA rpsnand = {B01X+1 , { {(VARPSF)nandinsB,VB}, {0},
-                         {(VARPSF)nandpfxB,VB}, {0},
-                         {(VARPSF)nandsfxB,VB}, {0},
+static VARPSA rpsnand = {B01X+1 , { {(VARPSF)nandinsB,VB},
+                         {(VARPSF)nandpfxB,VB},
+                         {(VARPSF)nandsfxB,VB},
                          }};
-static VARPSA rpsge = {B01X+1 , { {(VARPSF)geinsB,VB}, {0},
-                         {(VARPSF)gepfxB,VB}, {0},
-                         {(VARPSF)gesfxB,VB}, {0},
+static VARPSA rpsge = {B01X+1 , { {(VARPSF)geinsB,VB},
+                         {(VARPSF)gepfxB,VB},
+                         {(VARPSF)gesfxB,VB},
                          }};
-static VARPSA rpsle = {B01X+1 , { {(VARPSF)leinsB,VB}, {0},
-                         {(VARPSF)lepfxB,VB}, {0},
-                         {(VARPSF)lesfxB,VB}, {0},
+static VARPSA rpsle = {B01X+1 , { {(VARPSF)leinsB,VB},
+                         {(VARPSF)lepfxB,VB},
+                         {(VARPSF)lesfxB,VB},
                          }};
-static VARPSA rpsgt = {B01X+1 , { {(VARPSF)gtinsB,VB}, {0},
-                         {(VARPSF)gtpfxB,VB}, {0},
-                         {(VARPSF)gtsfxB,VB}, {0},
+static VARPSA rpsgt = {B01X+1 , { {(VARPSF)gtinsB,VB},
+                         {(VARPSF)gtpfxB,VB},
+                         {(VARPSF)gtsfxB,VB},
                          }};
-static VARPSA rpslt = {B01X+1 , { {(VARPSF)ltinsB,VB}, {0},
-                         {(VARPSF)ltpfxB,VB}, {0},
-                         {(VARPSF)ltsfxB,VB}, {0},
+static VARPSA rpslt = {B01X+1 , { {(VARPSF)ltinsB,VB},
+                         {(VARPSF)ltpfxB,VB},
+                         {(VARPSF)ltsfxB,VB},
                          }};
-static VARPSA rpsdiv = {CMPXX+1 , { {(VARPSF)divinsD,VD+VDD}, {0}, {(VARPSF)divinsD,VD+VDD}, {(VARPSF)divinsD,VD}, {(VARPSF)divinsZ,VZ}, {0},
-                          {(VARPSF)divpfxD,VD+VDD}, {0}, {(VARPSF)divpfxD,VD+VDD}, {(VARPSF)divpfxD,VD}, {(VARPSF)divpfxZ,VZ}, {0},
-                          {(VARPSF)divsfxD,VD+VDD}, {0}, {(VARPSF)divsfxD,VD+VDD}, {(VARPSF)divsfxD,VD}, {(VARPSF)divsfxZ,VZ}, {0},
+
+static VARPSA rpsdiv = {CMPXX+1 , { {(VARPSF)divinsD,VD+VDD}, {0}, {(VARPSF)divinsD,VD+VDD}, {(VARPSF)divinsD,VD}, {(VARPSF)divinsZ,VZ},
+                          {(VARPSF)divpfxD,VD+VDD}, {0}, {(VARPSF)divpfxD,VD+VDD}, {(VARPSF)divpfxD,VD}, {(VARPSF)divpfxZ,VZ},
+                          {(VARPSF)divsfxD,VD+VDD}, {0}, {(VARPSF)divsfxD,VD+VDD}, {(VARPSF)divsfxD,VD}, {(VARPSF)divsfxZ,VZ},
                          }};
 
 static VARPSA rpsminus = {RATX+1 , {
-{(VARPSF)minusinsB,VI}, {0}, {(VARPSF)minusinsI,VI}, {(VARPSF)minusinsD,VD}, {(VARPSF)minusinsZ,VZ},        {0}, {0}, {0}, {0}, 
-{(VARPSF)minuspfxB,VI}, {0}, {(VARPSF)minuspfxI,VI}, {(VARPSF)minuspfxD,VD+VIPOKW}, {(VARPSF)minuspfxZ,VZ}, {0}, {(VARPSF)minuspfxX,VX}, {(VARPSF)minuspfxQ,VQ}, {0},
-{(VARPSF)minussfxB,VI}, {0}, {(VARPSF)minussfxI,VI}, {(VARPSF)minussfxD,VD+VIPOKW}, {(VARPSF)minussfxZ,VZ},  {0}, {0}, {0}, {0},
+{(VARPSF)minusinsB,VI}, {0}, {(VARPSF)minusinsI,VI}, {(VARPSF)minusinsD,VD}, {(VARPSF)minusinsZ,VZ},        {0}, {0}, {0},
+{(VARPSF)minuspfxB,VI}, {0}, {(VARPSF)minuspfxI,VI}, {(VARPSF)minuspfxD,VD+VIPOKW}, {(VARPSF)minuspfxZ,VZ}, {0}, {(VARPSF)minuspfxX,VX}, {(VARPSF)minuspfxQ,VQ},
+{(VARPSF)minussfxB,VI}, {0}, {(VARPSF)minussfxI,VI}, {(VARPSF)minussfxD,VD+VIPOKW}, {(VARPSF)minussfxZ,VZ},  {0}, {0}, {0},
 {(VARPSF)minusinsO,VD},{(VARPSF)minuspfxO,VD},{(VARPSF)minussfxO,VD},  // integer-overflow routines
 }};
 static VARPSA rpsplus = {RATX+1 , {
-{(VARPSF)plusinsB,VI}, {0}, {(VARPSF)plusinsI,VI}, {(VARPSF)plusinsD,VD}, {(VARPSF)plusinsZ,VZ},        {0}, {0}, {0}, {0}, 
-{(VARPSF)pluspfxB,VI}, {0}, {(VARPSF)pluspfxI,VI}, {(VARPSF)pluspfxD,VD+VIPOKW}, {(VARPSF)pluspfxZ,VZ}, {0}, {(VARPSF)pluspfxX,VX}, {(VARPSF)pluspfxQ,VQ}, {0},
-{(VARPSF)plussfxB,VI}, {0}, {(VARPSF)plussfxI,VI}, {(VARPSF)plussfxD,VD+VIPOKW}, {(VARPSF)plussfxZ,VZ}, {0}, {(VARPSF)plussfxX,VX}, {(VARPSF)plussfxQ,VQ}, {0},
+{(VARPSF)plusinsB,VI}, {0}, {(VARPSF)plusinsI,VI}, {(VARPSF)plusinsD,VD}, {(VARPSF)plusinsZ,VZ},        {0}, {0}, {0},
+{(VARPSF)pluspfxB,VI}, {0}, {(VARPSF)pluspfxI,VI}, {(VARPSF)pluspfxD,VD+VIPOKW}, {(VARPSF)pluspfxZ,VZ}, {0}, {(VARPSF)pluspfxX,VX}, {(VARPSF)pluspfxQ,VQ},
+{(VARPSF)plussfxB,VI}, {0}, {(VARPSF)plussfxI,VI}, {(VARPSF)plussfxD,VD+VIPOKW}, {(VARPSF)plussfxZ,VZ}, {0}, {(VARPSF)plussfxX,VX}, {(VARPSF)plussfxQ,VQ},
 {(VARPSF)plusinsO,VD},{(VARPSF)pluspfxO,VD},{(VARPSF)plussfxO,VD},  // integer-overflow routines
 }};
 static VARPSA rpstymes = {RATX+1 , {
-{(VARPSF)andinsB,VB}, {0}, {(VARPSF)tymesinsI,VI}, {(VARPSF)tymesinsD,VD}, {(VARPSF)tymesinsZ,VZ},        {0}, {0}, {0}, {0}, 
-{(VARPSF)andpfxB,VB}, {0}, {(VARPSF)tymespfxI,VI}, {(VARPSF)tymespfxD,VD+VIPOKW}, {(VARPSF)tymespfxZ,VZ}, {0}, {(VARPSF)tymespfxX,VX}, {(VARPSF)tymespfxQ,VQ}, {0},
-{(VARPSF)andsfxB,VB}, {0}, {(VARPSF)tymessfxI,VI}, {(VARPSF)tymessfxD,VD+VIPOKW}, {(VARPSF)tymessfxZ,VZ}, {0}, {(VARPSF)tymessfxX,VX}, {(VARPSF)tymessfxQ,VQ}, {0},
+{(VARPSF)andinsB,VB}, {0}, {(VARPSF)tymesinsI,VI}, {(VARPSF)tymesinsD,VD}, {(VARPSF)tymesinsZ,VZ},        {0}, {0}, {0},
+{(VARPSF)andpfxB,VB}, {0}, {(VARPSF)tymespfxI,VI}, {(VARPSF)tymespfxD,VD+VIPOKW}, {(VARPSF)tymespfxZ,VZ}, {0}, {(VARPSF)tymespfxX,VX}, {(VARPSF)tymespfxQ,VQ},
+{(VARPSF)andsfxB,VB}, {0}, {(VARPSF)tymessfxI,VI}, {(VARPSF)tymessfxD,VD+VIPOKW}, {(VARPSF)tymessfxZ,VZ}, {0}, {(VARPSF)tymessfxX,VX}, {(VARPSF)tymessfxQ,VQ},
 {(VARPSF)tymesinsO,VD},{(VARPSF)tymespfxO,VD},{(VARPSF)tymessfxO,VD},  // integer-overflow routines
 }};
 
 static VARPSA rpsmin = {SBTX+1 , {
-{(VARPSF)andinsB,VB}, {0}, {(VARPSF)mininsI,VI}, {(VARPSF)mininsD,VD}, {(VARPSF)mininsD,VD+VDD}, {0}, {(VARPSF)mininsX,VX}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {(VARPSF)mininsS,VSB}, {0},
-{(VARPSF)andpfxB,VB}, {0}, {(VARPSF)minpfxI,VI+VIPOKW}, {(VARPSF)minpfxD,VD+VIPOKW}, {(VARPSF)minpfxD,VD+VDD}, {0}, {(VARPSF)minpfxX,VX}, {(VARPSF)minpfxQ,VQ}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {(VARPSF)minpfxS,VSB}, {0},
-{(VARPSF)andsfxB,VB}, {0}, {(VARPSF)minsfxI,VI+VIPOKW}, {(VARPSF)minsfxD,VD+VIPOKW}, {(VARPSF)minsfxD,VD+VDD}, {0}, {(VARPSF)minsfxX,VX}, {(VARPSF)minsfxQ,VQ}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {(VARPSF)minsfxS,VSB}, {0},
+{(VARPSF)andinsB,VB}, {0}, {(VARPSF)mininsI,VI}, {(VARPSF)mininsD,VD}, {(VARPSF)mininsD,VD+VDD}, {0}, {(VARPSF)mininsX,VX}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {(VARPSF)mininsS,VSB},
+{(VARPSF)andpfxB,VB}, {0}, {(VARPSF)minpfxI,VI+VIPOKW}, {(VARPSF)minpfxD,VD+VIPOKW}, {(VARPSF)minpfxD,VD+VDD}, {0}, {(VARPSF)minpfxX,VX}, {(VARPSF)minpfxQ,VQ}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {(VARPSF)minpfxS,VSB},
+{(VARPSF)andsfxB,VB}, {0}, {(VARPSF)minsfxI,VI+VIPOKW}, {(VARPSF)minsfxD,VD+VIPOKW}, {(VARPSF)minsfxD,VD+VDD}, {0}, {(VARPSF)minsfxX,VX}, {(VARPSF)minsfxQ,VQ}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {(VARPSF)minsfxS,VSB},
 }};
 static VARPSA rpsmax = {SBTX+1 , {
-{(VARPSF)orinsB,VB}, {0}, {(VARPSF)maxinsI,VI}, {(VARPSF)maxinsD,VD}, {(VARPSF)maxinsD,VD+VDD}, {0}, {(VARPSF)maxinsX,VX}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {(VARPSF)maxinsS,VSB}, {0},
-{(VARPSF)orpfxB,VB}, {0}, {(VARPSF)maxpfxI,VI+VIPOKW}, {(VARPSF)maxpfxD,VD+VIPOKW}, {(VARPSF)maxpfxD,VD+VDD}, {0}, {(VARPSF)maxpfxX,VX}, {(VARPSF)maxpfxQ,VQ}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {(VARPSF)maxpfxS,VSB}, {0},
-{(VARPSF)orsfxB,VB}, {0}, {(VARPSF)maxsfxI,VI+VIPOKW}, {(VARPSF)maxsfxD,VD+VIPOKW}, {(VARPSF)maxsfxD,VD+VDD}, {0}, {(VARPSF)maxsfxX,VX}, {(VARPSF)maxsfxQ,VQ}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {(VARPSF)maxsfxS,VSB}, {0},
+{(VARPSF)orinsB,VB}, {0}, {(VARPSF)maxinsI,VI}, {(VARPSF)maxinsD,VD}, {(VARPSF)maxinsD,VD+VDD}, {0}, {(VARPSF)maxinsX,VX}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {(VARPSF)maxinsS,VSB},
+{(VARPSF)orpfxB,VB}, {0}, {(VARPSF)maxpfxI,VI+VIPOKW}, {(VARPSF)maxpfxD,VD+VIPOKW}, {(VARPSF)maxpfxD,VD+VDD}, {0}, {(VARPSF)maxpfxX,VX}, {(VARPSF)maxpfxQ,VQ}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {(VARPSF)maxpfxS,VSB},
+{(VARPSF)orsfxB,VB}, {0}, {(VARPSF)maxsfxI,VI+VIPOKW}, {(VARPSF)maxsfxD,VD+VIPOKW}, {(VARPSF)maxsfxD,VD+VDD}, {0}, {(VARPSF)maxsfxX,VX}, {(VARPSF)maxsfxQ,VQ}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {(VARPSF)maxsfxS,VSB},
 }};
 
 

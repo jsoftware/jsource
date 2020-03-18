@@ -21,13 +21,13 @@
 #define DIVPZ(b,r,u,v)    if(b)r=zdiv(u,v); else r=ztymes(u,v);
 
 // Don't RESTRICT y since function may be called inplace
-#define PREFIXPFX(f,Tz,Tx,pfx,vecfn)  \
+#define PREFIXPFX(f,Tz,Tx,pfx,vecfn,retstmt)  \
  AHDRP(f,Tz,Tx){I i;Tz v;                                 \
   if(d==1)DQ(m, *z++=v=    *x++; DQ(n-1, *z=v=pfx(v,*x); ++z; ++x;))  \
   else{for(i=0;i<m;++i){                                              \
    DO(d, z[i]=    x[i];); x+=d;                                        \
    DQ(n-1, vecfn(1,d,z,x,z+d,jt); z+=d; x+=d; ); z+=d;                     \
- }}}  /* for associative functions only */
+ }}retstmt}  /* for associative functions only */
 
 #define PREFIXNAN(f,Tz,Tx,pfx,vecfn)  \
  AHDRP(f,Tz,Tx){I i;Tz v;                                \
@@ -37,7 +37,7 @@
    MC(z,x,d*sizeof(Tx)); x+=d;                                        \
    DQ(n-1, vecfn(1,d,z,x,z+d,jt); z+=d; x+=d; ); z+=d;                     \
   }}                                                                   \
-  NAN1V;                                                              \
+  R NANTEST?EVNAN:EVOK;                                                             \
  }   /* for associative functions only */
 
 #define PREFICPFX(f,Tz,Tx,pfx)  \
@@ -46,15 +46,15 @@
   else{for(i=0;i<m;++i){                                              \
    y=z; DQ(d, *z++=(Tz)*x++;);                                        \
    DQ(n-1, DQ(d, *z=pfx(*y,*x); ++z; ++x; ++y;));                     \
- }}}  /* for associative functions only */
+ }}R EVOK;}  /* for associative functions only */
 
-#define PREFIXALT(f,Tz,Tx,pfx)  \
+#define PREFIXALT(f,Tz,Tx,pfx,retstmt)  \
  AHDRP(f,Tz,Tx){B b;I i;Tz v,* y;                                                 \
   if(d==1)DQ(m, *z++=v=    *x++; b=0; DQ(n-1, b^=1; pfx(b,*z,v,*x); v=*z; ++z; ++x;))  \
   else{for(i=0;i<m;++i){                                                               \
    y=z; DQ(d, *z++=    *x++;); b=0;                                                    \
    DQ(n-1, b^=1; DQ(d, pfx(b,*z,*y,*x); ++z; ++x; ++y;));                              \
- }}}
+ }}retstmt}
 
 #define PREALTNAN(f,Tz,Tx,pfx)  \
  AHDRP(f,Tz,Tx){B b;I i;Tz v,* y;                                                 \
@@ -64,7 +64,7 @@
    y=z; DQ(d, *z++=    *x++;); b=0;                                                    \
    DQ(n-1, b^=1; DQ(d, pfx(b,*z,*y,*x); ++z; ++x; ++y;));                              \
   }}                                                                                    \
-  NAN1V;                                                                               \
+  R NANTEST?EVNAN:EVOK;                                                                               \
  }
 
 #define PREFICALT(f,Tz,Tx,pfx)  \
@@ -73,17 +73,17 @@
   else{for(i=0;i<m;++i){                                                               \
    y=z; DQ(d, *z++=(Tz)*x++;); b=0;                                                    \
    DQ(n-1, b^=1; DQ(d, pfx(b,*z,*y,*x); ++z; ++x; ++y;));                              \
- }}}
+ }}R EVOK;}
 
 #define PREFIXOVF(f,Tz,Tx,fp1,fvv)  \
- AHDRP(f,I,I){C er=0;I i,*xx=x,* y,*zz=z;                      \
+ AHDRP(f,I,I){I i,*xx=x,* y,*zz=z;                      \
   if(d==1){                                                         \
    if(1==n)DQ(m, *z++=*x++;)                                        \
-   else {I c=d*n;    DQ(m, fp1(n,z,x); RER; z=zz+=c; x=xx+=c;) }               \
+   else {I c=d*n;    DQ(m, fp1(n,z,x); z=zz+=c; x=xx+=c;) }               \
   }else{for(i=0;i<m;++i){                                           \
    y=z; DQ(d, *z++=*x++;); zz=z; xx=x;                              \
-   DQ(n-1, fvv(d,z,y,x); RER; x=xx+=d; y=zz; z=zz+=d;);             \
- }}}
+   DQ(n-1, fvv(d,z,y,x); x=xx+=d; y=zz; z=zz+=d;);             \
+ }}R EVOK;}
 
   
 #if SY_ALIGN
@@ -91,7 +91,7 @@
  {T* xx=(T*)x,* yy,* zz=(T*)z;  \
   q=d/sizeof(T);             \
   DQ(m, yy=zz; DQ(q, *zz++=*xx++;); DQ(n-1, DQ(q, *zz++=pfx(*yy,*xx); ++xx; ++yy;)));  \
- }
+ R EVOK;}
 
 #define PREFIXBFX(f,pfx,ipfx,spfx,bpfx,vexp)          \
  AHDRP(f,B,B){B* y;I j,q;                        \
@@ -100,7 +100,7 @@
   else if(0==(d&(sizeof(UINT)-1)))PREFIXBFXLOOP(UINT,ipfx)  \
   else if(0==(d&(sizeof(US  )-1)))PREFIXBFXLOOP(US,  spfx)  \
   else DQ(m, y=z; DQ(d, *z++=*x++;); DQ(n-1, DQ(d, *z++=bpfx(*y,*x); ++x; ++y;)));  \
- }    /* f/\"r z for boolean associative atomic function f */
+  R EVOK;}    /* f/\"r z for boolean associative atomic function f */
 #else
 #define PREFIXBFX(f,pfx,ipfx,spfx,bpfx,vexp)          \
  AHDRP(f,B,B){B*tv;I i,q,r,t,*xi,*yi,*zi;                      \
@@ -143,8 +143,8 @@ static B jtpscanlt(J jt,I m,I d,I n,B*z,B*x,B p){A t;B*v;I i;
  R 1;
 }    /* f/\"1 w for < and <: */
 
-AHDRP(ltpfxB,B,B){pscanlt(m,d,n,z,x,C1);}
-AHDRP(lepfxB,B,B){pscanlt(m,d,n,z,x,C0);}
+AHDRP(ltpfxB,B,B){pscanlt(m,d,n,z,x,C1);R EVOK;}
+AHDRP(lepfxB,B,B){pscanlt(m,d,n,z,x,C0);R EVOK;}
 
 
 static B jtpscangt(J jt,I m,I d,I n,B*z,B*x,B a,B pp,B pa,B ps){
@@ -166,10 +166,10 @@ static B jtpscangt(J jt,I m,I d,I n,B*z,B*x,B a,B pp,B pa,B ps){
  R 1;
 }    /* f/\"1 w for > >: +: *: */
 
-AHDRP(  gtpfxB,B,B){pscangt(m,d,n,z,x,C0,C1,C0,C0);}
-AHDRP(  gepfxB,B,B){pscangt(m,d,n,z,x,C1,C0,C1,C1);}
-AHDRP( norpfxB,B,B){pscangt(m,d,n,z,x,C1,C0,C1,C0);}
-AHDRP(nandpfxB,B,B){pscangt(m,d,n,z,x,C0,C1,C0,C1);}
+AHDRP(  gtpfxB,B,B){pscangt(m,d,n,z,x,C0,C1,C0,C0);R EVOK;}
+AHDRP(  gepfxB,B,B){pscangt(m,d,n,z,x,C1,C0,C1,C1);R EVOK;}
+AHDRP( norpfxB,B,B){pscangt(m,d,n,z,x,C1,C0,C1,C0);R EVOK;}
+AHDRP(nandpfxB,B,B){pscangt(m,d,n,z,x,C0,C1,C0,C1);R EVOK;}
 
 
 PREFIXOVF( pluspfxI, I, I,  PLUSP, PLUSVV)
@@ -178,18 +178,18 @@ PREFIXOVF(tymespfxI, I, I, TYMESP,TYMESVV)
 AHDRP(minuspfxI,I,I){C er=0;I i,j,n1=n-1,*xx=x,*y,*zz=z;
  if(1==d){
   if(1==n)DQ(m, *z++=*x++;)
-  else    DQ(m, MINUSP(n,z,x); RER; z=zz+=d*n; x=xx+=d*n;);
+  else    DQ(m, MINUSP(n,z,x); z=zz+=d*n; x=xx+=d*n;);
  }else for(i=0;i<m;++i){                               
   y=z; DQ(d, *z++=*x++;); zz=z; xx=x; j=0;
-  DQ(n1, MINUSVV(d,z,y,x); RER; x=xx+=d; y=zz; z=zz+=d; if(n1<=++j)break;
-          PLUSVV(d,z,y,x); RER; x=xx+=d; y=zz; z=zz+=d; if(n1<=++j)break;);
-}}
+  DQ(n1, MINUSVV(d,z,y,x); x=xx+=d; y=zz; z=zz+=d; if(n1<=++j)break;
+          PLUSVV(d,z,y,x); x=xx+=d; y=zz; z=zz+=d; if(n1<=++j)break;);
+}R EVOK;}
 
 PREFICPFX( pluspfxO, D, I,  PLUS   )
 PREFICPFX(tymespfxO, D, I,  TYMES  )
 PREFICALT(minuspfxO, D, I,  MINUSPA)
 
-PREFIXPFX( pluspfxB, I, B,  PLUS, plusIB   )
+PREFIXPFX( pluspfxB, I, B,  PLUS, plusIB , R EVOK; )
 AHDRP(pluspfxD,D,D){I i;
  NAN0;
  if(d==1){
@@ -198,51 +198,51 @@ AHDRP(pluspfxD,D,D){I i;
     DQ(n3, t0+=*x++; *z++ =t0+t12; t1+=*x++; t01=t0+t1; *z++ =t01+t2; t2+=*x++; *z++ =t2+t01; t12=t1+t2;)
   )
  }else{
-  for(i=0;i<m;++i){                                              \
-   MC(z,x,d*sizeof(D)); x+=d;                                        \
-   DQ(n-1, plusDD(1,d,z,x,z+d,jt); z+=d; x+=d;); z+=d;                    \
+  for(i=0;i<m;++i){                                              
+   MC(z,x,d*sizeof(D)); x+=d; 
+   DQ(n-1, plusDD(1,d,z,x,z+d,jt); z+=d; x+=d;); z+=d;
   }
  }
- NAN1V;
+ R NANTEST?EVNAN:EVOK;
 }   /* for associative functions only */
 PREFIXNAN( pluspfxZ, Z, Z,  zplus, plusZZ  )
-PREFIXPFX( pluspfxX, X, X,  xplus, plusXX  )
-PREFIXPFX( pluspfxQ, Q, Q,  qplus, plusQQ  )
+PREFIXPFX( pluspfxX, X, X,  xplus, plusXX ,HDR1JERR; )
+PREFIXPFX( pluspfxQ, Q, Q,  qplus, plusQQ ,HDR1JERR; )
 
-PREFIXPFX(tymespfxD, D, D,  TYMES, tymesDD  )
-PREFIXPFX(tymespfxZ, Z, Z,  ztymes, tymesZZ )
-PREFIXPFX(tymespfxX, X, X,  xtymes, tymesXX )
-PREFIXPFX(tymespfxQ, Q, Q,  qtymes, tymesQQ )
+PREFIXPFX(tymespfxD, D, D,  TYMES, tymesDD ,R EVOK;  )
+PREFIXPFX(tymespfxZ, Z, Z,  ztymes, tymesZZ ,R EVOK;)
+PREFIXPFX(tymespfxX, X, X,  xtymes, tymesXX ,R EVOK;)
+PREFIXPFX(tymespfxQ, Q, Q,  qtymes, tymesQQ ,R EVOK;)
 
-PREFIXALT(minuspfxB, I, B,  MINUSPA)
+PREFIXALT(minuspfxB, I, B,  MINUSPA, R EVOK;)
 PREALTNAN(minuspfxD, D, D,  MINUSPA)
 PREALTNAN(minuspfxZ, Z, Z,  MINUSPZ)
-PREFIXALT(minuspfxX, X, X,  MINUSPX)
-PREFIXALT(minuspfxQ, Q, Q,  MINUSPQ)
+PREFIXALT(minuspfxX, X, X,  MINUSPX, HDR1JERR;)
+PREFIXALT(minuspfxQ, Q, Q,  MINUSPQ, HDR1JERR;)
 
 PREALTNAN(  divpfxD, D, D,  DIVPA  )
 PREALTNAN(  divpfxZ, Z, Z,  DIVPZ  )
 
-PREFIXPFX(  maxpfxI, I, I,  MAX , maxII   )
-PREFIXPFX(  maxpfxD, D, D,  MAX , maxDD   )
-PREFIXPFX(  maxpfxX, X, X,  XMAX, maxXX   )
-PREFIXPFX(  maxpfxQ, Q, Q,  QMAX, maxQQ   )
-PREFIXPFX(  maxpfxS, SB,SB, SBMAX, maxSS  )
+PREFIXPFX(  maxpfxI, I, I,  MAX , maxII   ,R EVOK;)
+PREFIXPFX(  maxpfxD, D, D,  MAX , maxDD   ,R EVOK;)
+PREFIXPFX(  maxpfxX, X, X,  XMAX, maxXX   ,R EVOK;)
+PREFIXPFX(  maxpfxQ, Q, Q,  QMAX, maxQQ   ,R EVOK;)
+PREFIXPFX(  maxpfxS, SB,SB, SBMAX, maxSS  ,R EVOK;)
 
-PREFIXPFX(  minpfxI, I, I,  MIN, minII    )
-PREFIXPFX(  minpfxD, D, D,  MIN, minDD    )
-PREFIXPFX(  minpfxX, X, X,  XMIN, minXX   )
-PREFIXPFX(  minpfxQ, Q, Q,  QMIN, minQQ   )
-PREFIXPFX(  minpfxS, SB,SB, SBMIN, minSS  )
+PREFIXPFX(  minpfxI, I, I,  MIN, minII    ,R EVOK;)
+PREFIXPFX(  minpfxD, D, D,  MIN, minDD    ,R EVOK;)
+PREFIXPFX(  minpfxX, X, X,  XMIN, minXX   ,R EVOK;)
+PREFIXPFX(  minpfxQ, Q, Q,  QMIN, minQQ   ,R EVOK;)
+PREFIXPFX(  minpfxS, SB,SB, SBMIN, minSS  ,R EVOK;)
 
-PREFIXPFX(bw0000pfxI, UI,UI, BW0000, bw0000II)
-PREFIXPFX(bw0001pfxI, UI,UI, BW0001, bw0001II)
-PREFIXPFX(bw0011pfxI, UI,UI, BW0011, bw0011II)
-PREFIXPFX(bw0101pfxI, UI,UI, BW0101, bw0101II)
-PREFIXPFX(bw0110pfxI, UI,UI, BW0110, bw0110II)
-PREFIXPFX(bw0111pfxI, UI,UI, BW0111, bw0111II)
-PREFIXPFX(bw1001pfxI, UI,UI, BW1001, bw1001II)
-PREFIXPFX(bw1111pfxI, UI,UI, BW1111, bw1111II)
+PREFIXPFX(bw0000pfxI, UI,UI, BW0000, bw0000II,R EVOK;)
+PREFIXPFX(bw0001pfxI, UI,UI, BW0001, bw0001II,R EVOK;)
+PREFIXPFX(bw0011pfxI, UI,UI, BW0011, bw0011II,R EVOK;)
+PREFIXPFX(bw0101pfxI, UI,UI, BW0101, bw0101II,R EVOK;)
+PREFIXPFX(bw0110pfxI, UI,UI, BW0110, bw0110II,R EVOK;)
+PREFIXPFX(bw0111pfxI, UI,UI, BW0111, bw0111II,R EVOK;)
+PREFIXPFX(bw1001pfxI, UI,UI, BW1001, bw1001II,R EVOK;)
+PREFIXPFX(bw1111pfxI, UI,UI, BW1111, bw1111II,R EVOK;)
 
 // This old prefix support is needed for sparse matrices
 
@@ -546,11 +546,12 @@ static DF1(jtpscan){A y,z;I d,f,m,n,r,t,wn,wr,*ws,wt;
  if(((1-n)&-wn)>=0){R r?RETARG(w):reshape(over(shape(w),num(1)),w);}  // n<2 or wn=0
  VARPS adocv; varps(adocv,self,wt,1);  // fetch info for f/\ and this type of arg
  if(!adocv.f)R IRS1(w,self,r,jtinfixprefix1,z);  // if there is no special function for this type, do general reduce
+ // Here is the fast special reduce for +/ etc
  if((t=atype(adocv.cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));  // convert input if necessary
  // if inplaceable, reuse the input area for the result
  if(ASGNINPLACESGN(SGNIF((I)jtinplace,JTINPLACEWX)&SGNIF(adocv.cv,VIPOKWX),w))z=w; else GA(z,rtype(adocv.cv),wn,wr,ws);
- ((AHDRPFN*)adocv.f)(d,n,m,AV(w),AV(z),jt);
- if(jt->jerr)R (jt->jerr>=EWOV)?IRS1(w,self,r,jtpscan,z):0; else R adocv.cv&VRI+VRD?cvz(adocv.cv,z):z;
+ I rc=((AHDRPFN*)adocv.f)(d,n,m,AV(w),AV(z),jt);
+ if(255&rc){jsignal(rc); R (rc>=EWOV)?IRS1(w,self,r,jtpscan,z):0;} else R adocv.cv&VRI+VRD?cvz(adocv.cv,z):z;
 }    /* f/\"r w atomic f main control */
 
 static DF2(jtinfixd){A fs,z;C*x,*y;I c=0,d,k,m,n,p,q,r,*s,wr,*ws,wt,zc; 
@@ -772,9 +773,10 @@ static DF2(jtmovfslash){A x,z;B b;C id,*wv,*zv;I d,m,m0,p,t,wk,wt,zi,zk,zt;
  if((t=atype(adocv.cv))&&TYPESNE(t,wt)){RZ(w=cvt(t,w)); wt=AT(w);}
  zv=CAV(z); zk=d<<bplg(zt); 
  wv=CAV(w); wk=(0<=m0?d:d*m)<<bplg(wt);
- DQ(zi-b, ((AHDRPFN*)adocv.f)(d,m,(I)1,wv,zv,jt); zv+=zk; wv+=wk;);
- if(b)((AHDRPFN*)adocv.f)(d,p-m*(zi-1),(I)1,wv,zv,jt);
- if(jt->jerr>=EWOV){RESETERR; R movfslash(a,cvt(FL,w),self);}else R z;
+ I rc=EVOK;
+ DQ(zi-b, I lrc=((AHDRPFN*)adocv.f)(d,m,(I)1,wv,zv,jt); rc=lrc<rc?lrc:rc; zv+=zk; wv+=wk;);
+ if(b){I lrc=((AHDRPFN*)adocv.f)(d,p-m*(zi-1),(I)1,wv,zv,jt); rc=lrc<rc?lrc:rc;}
+ if(255&rc){jsignal(rc); if(rc>=EWOV){RESETERR; R movfslash(a,cvt(FL,w),self);}R0;}else R z;
 }    /* a f/\w */
 
 static DF1(jtiota1){I j; R apv(SETIC(w,j),1L,1L);}

@@ -385,7 +385,7 @@ F1(jtbsdot){A f;AF f1=jtsuffix,f2=jtoutfix;I flag=FAV(ds(CBSDOT))->flag;C id;V*v
      f2=jtofxassoc;
  }}
  RZ(f=ADERIV(CBSDOT,f1,f2,flag,RMAX,0,RMAX));
- // Fill in the lvp[1] field: with 0 if not f/\; with the lookup field for f/ if f/\  
- FAV(f)->localuse.lvp[1]=v->id==CSLASH?v->localuse.lvp[1]:0;  // f is nonnull if f/\  
+ // Fill in the lvp[1] field: with 0 if not f/\; with the lookup field for f/ if f/\ .
+ FAV(f)->localuse.lvp[1]=v->id==CSLASH?v->localuse.lvp[1]:0;  // f is nonnull if f/\ .
  R f;
 }

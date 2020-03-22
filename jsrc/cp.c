@@ -4,6 +4,15 @@
 /* Conjunctions: Power Operator ^: and Associates                          */
 
 #include "j.h"
+#define ZZDEFN
+#include "result.h"
+#define STATEPOSITIVEPOWX 11
+#define STATEPOSITIVEPOW (((I)1)<<STATEPOSITIVEPOWX)
+#define STATEINFINITEPOWX 12
+#define STATEINFINITEPOW (((I)1)<<STATEINFINITEPOWX)
+#define STATENEEDNEWPOWX 13
+#define STATENEEDNEWPOW (((I)1)<<STATENEEDNEWPOWX)
+#define ZZFLAGWORD state
 
 
 static DF1(jtpowseqlim){PROLOG(0039);A x,y,z,*zv;I i,n;
@@ -58,6 +67,7 @@ static DF2(jtindexseqlim2){
  R 1==AR(a)&&AT(a)&INT&&AT(w)&B01+INT?tclosure(a,w):powseqlim(w,amp(ds(CFROM),a));
 }    /* a {~^:(<_) w */
 
+// u^:(<n) If n negative, take inverse of u; if v infinite, go to routine that checks for no change.  Otherwise convert to u^:(i.|n) and restart
 static DF1(jtpowseq){A fs,gs,x;I n=IMAX;V*sv;
  RZ(w);
  sv=FAV(self); fs=sv->fgh[0]; gs=sv->fgh[1];
@@ -69,21 +79,22 @@ static DF1(jtpowseq){A fs,gs,x;I n=IMAX;V*sv;
  R df1(gs,w,powop(fs,IX(n),0));
 }    /* f^:(<n) w */
 
-// u^:n w where n is nonnegative integer atom (but never 0 or 1, which are handled as special cases)
+// u^:n w where n is nonnegative finite integer atom (but never 0 or 1, which are handled as special cases)
 static DF1(jtfpown){A fs,z;AF f1;I n;V*sv;A *old;
  RZ(w);
  F1PREFIP;
  sv=FAV(self);
- n=*AV(sv->fgh[2]);
+ n=AV(sv->fgh[2])[0];
  fs=sv->fgh[0]; f1=FAV(fs)->valencefns[0];
  z=w; 
  old=jt->tnextpushp; 
- DQ(n, JBREAK0; RZ(z=CALL1IP(f1,z,fs)); z=gc(z,old);); 
+ DQ(n, JBREAK0; RZ(z=CALL1IP(f1,z,fs)); z=gc(z,old);); // could force inplace after the first?
  RETF(z);
 // }
 }
 
-// u^:n w where n is any array or scalar infinity or negative
+// general u^:n w where n is any array or finite atom.  If atom, it will be negative
+#if 0  // obsolete
 static DF1(jtply1){PROLOG(0040);DECLFG;A b,hs,j,*xv,y,z;B*bv,q;I i,k,m,n,*nv,p=0;AD * RESTRICT x;A *old;  // RESTRICT on x fails in VS2013
  hs=sv->fgh[2]; m=AN(hs); 
  RZ(y=ravel(hs)); RZ(y=from(j=grade1(y),y)); nv=AV(y);  // j is grading permutation of y; y is sorted powers
@@ -115,6 +126,89 @@ static DF1(jtply1){PROLOG(0040);DECLFG;A b,hs,j,*xv,y,z;B*bv,q;I i,k,m,n,*nv,p=0
  }}
  z=ope(reshape(shape(hs),from(grade1(j),x))); EPILOG(z);
 }
+#else
+static DF1(jtply1){PROLOG(0040);DECLFG;A zz=0;
+#define ZZWILLBEOPENEDNEVER 1  // can't honor willbeopened because the results are recycled as inputs
+#define ZZPOPNEVER 1  // can't pop the inputs - 
+#define ZZDECL
+#include "result.h"
+ I state=0;  // flags for result.h
+ // p =. ~. sn=.(gn=./:,n) { ,n   which gives the list of distinct powers
+ A n=sv->fgh[2]; A rn; RZ(rn=ravel(n));  // n is powers, rn is ravel of n
+ A gn; RZ(gn=grade1(rn)); A p; RZ(p=nub(from(gn,rn)));  // gn is grade of power, p is sorted list of unique powers we want
+ // find index of first nonneg power, remember, set scan pointer, set direction forward.  Set current power to 0.  Indic read of power needed
+ I *pv=IAV(p); I np=AN(p);  // base of array of powers, and the number of them
+ A z=w;  // the next input/previous result
+ I zpow=0;  // The power corresponding to the value in z
+ I pscan; for(pscan=0;pscan<np&&pv[pscan]<0;++pscan);  // scan pointer through powers, initialized to point to first nonnegative
+ I pscan0=pscan;  // remember where the positive scan started
+ state|=STATEPOSITIVEPOW|STATENEEDNEWPOW;  // start in positive direction
+ // remember if there is an infinite power in this direction
+ state|=(pv[np-1]==IMAX)<<STATEINFINITEPOWX;   // infinities are now +/- IMAX
+ ZZPARMS(1,np,1)
+#define ZZINSTALLFRAME(optr) *optr++=np;
+ // loop for each result power:
+ I neededpow;  // the next power we are looking for
+ A invfs; if(pv[0]<0)RZ(invfs=inv(fs));   // if there is an inverse, look it up outside the loop so we don't free it
+ A *stkfreept=jt->tnextpushp;  // stack-free pointer: we will free non-result values back to this point
+ while(1){
+  // pscan points to the next power to read - could be out of bounds.  But we might not be reading yet
+  // If read of power needed:
+  if(state&STATENEEDNEWPOW){
+   if(!BETWEENO(pscan,0,np)){
+    // No new power this direction; switch direction if currently moving positive
+    if(state&STATEPOSITIVEPOW){
+     if((pscan=pscan0-1)>=0){  // start on first negative power.  If there is one.
+      state&=~(STATEPOSITIVEPOW|STATEINFINITEPOW);  // start in negative direction
+      state|=(pv[0]==-IMAX)<<STATEINFINITEPOWX;  // set if there is a __ power
+      z=w;  // start back on the initial arg
+      zpow=0;  // reset the power corresponding to z
+      fs=invfs; f1=FAV(fs)->valencefns[0];  // switch over to the inverse function
+     }
+    }
+    if(!BETWEENO(pscan,0,np))break;  // when we exhaust the powers, quit the loop
+   }
+   neededpow=pv[pscan]; pscan+=state&STATEPOSITIVEPOW?1:-1; state&=~STATENEEDNEWPOW;  // take next power; advance to following; set no power needed till this consumed
+  }
+  if((neededpow^REPSGN(neededpow))<=(zpow^REPSGN(neededpow))){  // check for closer to 0, based on direction
+   // desired power<=current power, store result and indic power needed.  z has the value to use as result
+#define ZZBODY
+#include "result.h"
+   state|=STATENEEDNEWPOW;   // once we store a power we need the next one
+  }else{  // don't execute the verb willy-nilly because the store we just made may be the last  (we could check pscan and execute if we know another power is needed - but don't execute if zpow is infinite)
+   // else execute verb, increment current power.  If there is an infinite power, see if result matches input, set current power to infinite if so
+   A oldz=z; RZ(z=CALL1(f1,z,fs));  // run the verb
+   zpow+=state&STATEPOSITIVEPOW?1:-1;  // increment the power corresponding to z
+   if(state&STATEINFINITEPOW){if(equ(oldz,z))zpow=state&STATEPOSITIVEPOW?IMAX:-IMAX;}  // if no change, make z apply to everything.  Don't check unless _ power given
+   if(!(zpow&7)){
+    // Since we are not popping inside the loop (because each result must be reused even after its values have been moved), we
+    // have to pop explicitly.  We protect the components of the overall result and the most recent result
+    // We do this only occasionally
+    JBREAK0;  // while we're waiting, check for attention interrupt
+    if(!gc3(&z,&zz,zzbox?&zzbox:0,stkfreept))R0; // free old unused blocks
+    if(zzbox){
+     // zzbox is normally NONrecursive and we add boxes to it as they come in.  Protecting it has made it recursive, which will
+     // cause a double-free if we add another box to it.  So we have to go through it and make it nonrecursive again.  We don't have to do it recursively.
+     // This is regrettable, but rare.  If we cared, we could save the whole gc3() call any time the result is going to be stored in zzbox, since there's
+     // nothing else to free; but that's not worth it.
+     AFLAG(zzbox)&=~BOX; DQ(AN(zzbox), if(AAV(zzbox)[i])tpush(AAV(zzbox)[i]);)  // mark zzbox nonrecursive; for each child, replace the implied free with an explicit one on the stack
+    }
+   } 
+  }
+ }
+ // collect result
+#define ZZEXIT
+#include "result.h"
+ // Now zz has the result
+ // if (there is a negative power) p =. (nnegs }. p) , |. nnegs {. p to match the order in which results were stored
+ if(pscan0){A sneg; RZ(sneg=sc(pscan0)); RZ(p=apip(drop(sneg,p),reverse(take(sneg,p))));}
+ // result is ($n) $ (p i. ,n) { result - avoid the reshape if n is a list, and avoid the from if (p i. ,n) is an index vector
+ RZ(p=indexof(p,rn));  // for each input power, the position of its executed result
+ if(!equ(IX(np),p))RZ(zz=from(p,zz));  // order result-cells in order of the input powers
+ if(AR(n)!=1)zz=reshape(shape(n),zz);  // if n is an arry, use its shape
+ EPILOG(zz);
+}
+#endif
 
 // u^:_ w  Bivalent, called as w,fs or a,w,fs
 static DF2(jtpinf12){PROLOG(0340);A z;  // no reason to inplace, since w must be preserved for comparison, & a for reuse
@@ -135,6 +229,7 @@ static DF2(jtpinf12){PROLOG(0340);A z;  // no reason to inplace, since w must be
  }
 }
 
+#if 0 // obsolete 
 #define DIST(i,x)  if(i==e){v=CAV(x); \
                      while(k<m&&i==(e=nv[jv[k]])){MC(zv+c*jv[k],v,c); ++k;}}
 
@@ -145,7 +240,7 @@ static DF1(jtply1s){DECLFG;A hs,j,y,y1,z;C*v,*zv;I c,e,i,*jv,k,m,n,*nv,r,*s,t,zn
  RZ(j=grade1(ravel(hs))); jv=AV(j); e=nv[*jv];  // e=lowest power
  if(!e&&!nv[jv[m-1]])R reshape(over(shape(hs),shape(w)),w);  // all powers 0
  RZ(y=y1=CALL1(f1,w,fs)); t=AT(y); r=AR(y);
- if(0>e||t&BOX)R ply1(w,self);
+ if(0>e||t&BOX)R ply1(w,self);  // negative or boxed power - go to general case
  if(!e){
   if(HOMO(t,AT(w)))RZ(w=pcvt(t,w));
   if(!(TYPESEQ(t,AT(w))&&AN(y)==AN(w)&&(r==AR(w)||1>=r&&1>=AR(w))))R ply1(w,self);
@@ -162,6 +257,7 @@ static DF1(jtply1s){DECLFG;A hs,j,y,y1,z;C*v,*zv;I c,e,i,*jv,k,m,n,*nv,r,*s,t,zn
  }
  RETF(z);
 }    /* f^:n w, non-negative finite n, well-behaved f */
+#endif
 
 static DF1(jtinv1){F1PREFIP;DECLFG;A z; RZ(w);A i; RZ(i=inv((fs))); FDEPINC(1);  z=(FAV(i)->valencefns[0])(FAV(i)->flag&VJTFLGOK1?jtinplace:jt,w,i);       FDEPDEC(1); RETF(z);}  // was invrecur(fix(fs))
 static DF1(jtinvh1){F1PREFIP;DECLFGH;A z; RZ(w);    FDEPINC(1); z=(FAV(hs)->valencefns[0])(jtinplace,w,hs);        FDEPDEC(1); RETF(z);}
@@ -242,8 +338,10 @@ DF2(jtpowop){A hs;B b;V*v;
 //    ASSERT(self,EVDOMAIN);  // If gerund returns gerund, error.  This check is removed pending further design
   R gconj(a,w,CPOWOP);  // create the derived verb for [v0`]v1`v2
  }
- // unboxed n.
+ // fall through for unboxed n.
  RZ(hs=vib(w));   // hs=n coerced to integer
+ AF f1=jtply1;  // default routine for general array.  no reason to inplace this, since it has to keep the old value to check for changes
+ I flag=0;  // flags for the verb we build
  if(!AR(w)){  // input is an atom
   // Handle the 4 important cases: atomic _1 (inverse), 0 (nop), 1 (execute u), and _ (converge/do while)
   if(!(IAV(hs)[0]&~1))R a=IAV(hs)[0]?a:ds(CRIGHT);  //  u^:0 is like ],  u^:1 is like u 
@@ -251,19 +349,21 @@ DF2(jtpowop){A hs;B b;V*v;
    if(IAV(hs)[0]<0){  // u^:_1
     // if there are no names, calculate the monadic inverse and save it in h.  Inverse of the dyad, or the monad if there are names,
     // must wait until we get arguments
-    A h=0; AF f1=jtinv1; if(nameless(a)){if(h=inv(a)){f1=jtinvh1;}else{f1=jtinverr; RESETERR}} // h must be valid for free.  If no names in w, take the inverse.  If it doesn't exist, fail the monad but keep the dyad going
-    I flag = (FAV(a)->flag&VASGSAFE) + (h?FAV(h)->flag&VJTFLGOK1:VJTFLGOK1);  // inv1 inplaces and calculates ip for next step; invh has ip from inverse
+    A h=0; f1=jtinv1; if(nameless(a)){if(h=inv(a)){f1=jtinvh1;}else{f1=jtinverr; RESETERR}} // h must be valid for free.  If no names in w, take the inverse.  If it doesn't exist, fail the monad but keep the dyad going
+    flag = (FAV(a)->flag&VASGSAFE) + (h?FAV(h)->flag&VJTFLGOK1:VJTFLGOK1);  // inv1 inplaces and calculates ip for next step; invh has ip from inverse
     R fdef(0,CPOWOP,VERB,(AF)(f1),jtinv2,a,w,h,flag,RMAX,RMAX,RMAX);
    }else{  // u^:_
     R fdef(0,CPOWOP,VERB,jtpinf12,jtpinf12,a,w,0,VFLAGNONE,RMAX,RMAX,RMAX);
    }
   }
+  if(IAV(hs)[0]>=0){f1=jtfpown; flag=FAV(a)->flag&VJTFLGOK1;}  // if nonneg atom, go to special routine for that, which supports inplace
  }
- I m=AN(hs); // m=#atoms of n; n=1st atom; r=n has rank>0
  // If not special case, fall through to handle general case
- b=0; if(m&&AT(w)&FL+CMPX)RE(b=!all0(eps(w,over(ainf,scf(infm)))));   // set b if n is nonempty FL or CMPX array containing _ or __ kludge should just use hs
- b|=!m; B nonnegatom=!AR(w)&&0<=IAV(hs)[0]; I flag=FAV(a)->flag&((~b&nonnegatom)<<VJTFLGOK1X);  // b is (empty or contains _/__), (scalar n>=0); if the latter, keep the inplace flag
- R fdef(0,CPOWOP,VERB, b?jtply1:nonnegatom?jtfpown:jtply1s,jtply2, a,w,hs,   // Create derived verb: special cases for , 
-    flag|VFLAGNONE, RMAX,RMAX,RMAX);
- // no reason to inplace this, since it has to keep the old value to check for changes
+ I m=AN(hs); // m=#atoms of n; n=1st atom; r=n has rank>0
+ ASSERT(m,EVDOMAIN);  // empty power is error
+// obsolete  b=0; if(m&&AT(w)&FL+CMPX)RE(b=!all0(eps(w,over(ainf,scf(infm)))));   // set b if n is nonempty FL or CMPX array containing _ or __ kludge should just use hs
+// obsolete  b|=!m; B nonnegatom=!AR(w)&&0<=IAV(hs)[0]; I flag=FAV(a)->flag&((~b&nonnegatom)<<VJTFLGOK1X);  // b is (empty or contains _/__), (scalar n>=0); if the latter, keep the inplace flag
+// obsolete  R fdef(0,CPOWOP,VERB, b?jtply1:nonnegatom?jtfpown:jtply1/*obsolete s*/,jtply2, a,w,hs,   // scaf Create derived verb: special cases pown (nonneg noninfinite atom), ply1s (nonempty not containing infinity)
+// obsolete     flag|VFLAGNONE, RMAX,RMAX,RMAX);
+ R fdef(0,CPOWOP,VERB, f1,jtply2, a,w,hs,flag, RMAX,RMAX,RMAX);   // Create derived verb: pass in integer powers as h
 }

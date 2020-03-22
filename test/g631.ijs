@@ -49,6 +49,32 @@ NB. unaligned memory access
 (,:'bbbbb') -: (,3) }.&> ,<'aa bbbbb'
 11111 22222 33333 555555 -: ". 36 37 38 31 }.&> 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa 11111'; 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa 22222'; 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa 33333'; 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa 555555'
 
+
+NB. x u&.(a:`v) y  and  x u&.(v`:a:) y -----------------------------------------------------------
+
+'domain error' -: +&.(a:`^.) etx i. 5
+'domain error' -: +&.(^.`a:) etx i. 5
+'domain error' -: ex '+&.(^.`^.)'
+'domain error' -: ex '+&.(a:`a:)'
+'domain error' -: ex '+&.(^.`a:`a:)'
+'domain error' -: ex '+&.(^.`1) etx'
+'domain error' -: ex '+&.(1`^.) etx'
+'domain error' -: ex '+&.(,. ^.`a:)'
+(^ 1 + ^. y) -: 1 +&.(a:`^.) y =: i. 5
+(^ 1 + ^. x) -: (x =: i. 5) +&.(^.`a:) 1
+(^ x + ^. y) -: (x =: 1 2) +&.(a:`^.) y =: i. 2 5
+(x <@(+"1 >)"1 0 y) -: (x =: 1 2) +"1&.(a:`>) y =: <"2 i. 5 2
+(x <@(+"1 2 >)"1 0 y) -: (x =: 1 2) +"1 2&.(a:`>) y =: <"2 i. 2 5
+(x <@(+"1 2 >)"1 0 y) -: (x =: 1 2) +"1 2&.(a:`>) y =: (<"2 i. 2 5) ,. (<"2 i. 2 7)
+
+0 0 0 -: +&.(a:`^.) b. 0
+0 1 0 -: p.&.(a:`^.) b. 0
+0 0 1 -: +"1&.(^.`a:) b. 0
+_ _ _ -: +&.:(a:`^.) b. 0
+
+
+
+
 4!:55 ;:'t1 totient x y '
 
 

@@ -192,7 +192,7 @@ static A jtmerge2(J jt,A a,A w,A ind,I cellframelen){F2PREFIP;A z;I t;
 
 // Convert list/table of indexes to a list of cell offsets (the number of the atom starting the cell)
 // w has rank > 0.  Result has shape }:$ind
-// This is used by m} and <"1@[ { ]  which have different specs when ind is a list.  Here we follow the spec for m}, in which
+// This is used by ind} and <"1@[ { ]  which have different specs when ind is a list.  Here we follow the spec for m}, in which
 // a list ind is treated like a table with rows of length 1
 // The indexes are audited for validity and negative values
 // This is like pind/aindex1 followed by pdt, but done in registers and without worrying about checks for overflow, since the result

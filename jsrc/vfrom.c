@@ -345,7 +345,7 @@ static B jtaindex1(J jt,A a,A w,I wf,A*ind){A z;I c,i,k,n,t,*v,*ws;
  }
  *ind=z;
  R 1;
-}    /* verify that <"1 a is valid for (<"1 a){w */
+}    /* verify that <"1 a is valid for (<"1 a){w - used only for sparse matrices */
 
 static A jtafrom2(J jt,A p,A q,A w,I r){A z;C*wv,*zv;I d,e,j,k,m,n,pn,pr,* RESTRICT pv,
   qn,qr,* RESTRICT qv,* RESTRICT s,wf,wr,* RESTRICT ws,zn;

@@ -675,6 +675,7 @@ typedef struct {AF valencefns[2];A fgh[3];union { D lD; void *lvp[2]; I lI; I4 l
 // For cyclic iterators, lI has the index of the next gerund to execute
 // for u;.n, lvp[0] holds n.  u/. also goes through this code
 // for reductions (u/ u/\ u/\.) lvp[1] points to the VA block for u
+// for u&.[:]v, lvp[0] points to the verb whose inverse is needed
 
 // lc is a local-use byte.  Used in atomic dyads to indicate which singleton function to execute
 // in the derived function from fold, lc has the original id byte of the fold op
@@ -692,8 +693,10 @@ typedef struct {AF valencefns[2];A fgh[3];union { D lD; void *lvp[2]; I lI; I4 l
 #define VFHKLVLDEC      (((I)1)<<VFHKLVLDECX)
 #define VFHKLVLGTX      1   // (in (compare L.) hooks) set for < and <: to indicate complement of result of levelle needed
 #define VFHKLVLGT       (((I)1)<<VFHKLVLGTX)
-#define VFSCANIRSX     0   // (in u/\) set if u supports IRD2
+#define VFSCANIRSX     0   // (in u/\) set if u supports IRS2
 #define VFSCANIRS      (((I)1)<<VFSCANIRSX)
+#define VFUNDERHASINVX  0  // (in u&.[:]v set if h has the inverse already added
+#define VFUNDERHASINV      (((I)1)<<VFUNDERHASINVX)
 
 
 // bits 8 and above are available for all functions:

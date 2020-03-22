@@ -338,6 +338,7 @@ f =: 3 : 0"0 '123'
 )
 ('abc11d' , 'abc22d' ,: 'abc33d') -: f
 
+NB. Remember, 9!:53 has different effects on explicit sentences vs console!
 NB. Create unsafe name
 1: 4!:55 ;:'unsafename undefinedname'
 unsafename =: undefinedname

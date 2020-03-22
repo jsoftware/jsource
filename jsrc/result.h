@@ -79,7 +79,7 @@
  I zzframelen;  // length of frame of result.
  I zzfauxcellshape[ZZFAUXCELLSHAPEMAXRANK+1+2];  // will be zzcellshape for ranks < 4.  We reserve space only for AN and AS, and don't touch anything earlier.  1 is to leave 1 spare at the end, 2 is the length of AN and AR
 #ifndef ZZWILLBEOPENEDNEVER
-#define ZZWILLBEOPENEDNEVER 0
+#define ZZWILLBEOPENEDNEVER 0  // user sets to 1 if WILLBEOPENED is not honored
 #endif
 #ifndef ZZSTARTATEND
 #define ZZSTARTATEND 0  // user defines as 1 to build result starting at the end

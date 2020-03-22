@@ -253,7 +253,8 @@ c=: ; (i.1+r) <"1@comb&.>r=:#$d
 
 a1=: a2=: 1 $. 10 ; 0 ; 0
 f=: (3 : 'a1=: 8 $. a1')^:(e.&2) [ (3 : 'a2=: 8 $. a2')^:(e.&1)
-'domain error' -: f etx 1 2
+NB. obsolete 'domain error' -: f etx 1 2
+2 10 -: $ f etx 1 2
 
 1 0 -: $ ,: 1 $. i. i. 0
 

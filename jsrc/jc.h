@@ -155,6 +155,8 @@
 #define CGRDOT     (C)'\262'       /* 178 262 b2 `.                           */
 #define CGRCO      (C)'\263'       /* 179 263 b3 `:                           */
 #define CATDOT     (C)'\264'       /* 180 264 b4 @.                           */
+#define CATCO      (C)'\265'       /* 181 265 b5 @:                           */
+#define CAMPCO     (C)'\267'       /* 183 267 b7 &:                           */
 #define CATDOTCO   (C)'\277'       /* 191 277 bf @.                           */
 #define CUNDER     (C)'\266'       /* 182 266 b6 &.                           */
 #define CQRYDOT    (C)'\270'       /* 184 270 b8 ?.                           */

@@ -68,7 +68,20 @@ C spellin(I n,C*s){C c,d,p=*s,*t;I j;
    // invalid inflection, return 0
    R 0;
 }}
-
+#if 0
+// *s is a string with length n representing a primitive.  Convert the primitive to
+// a 1-byte pseudocharacter number.  Return value of 0 means error.  This is called to audit ARs & thus must work with unverified input
+C spellin(I n,C*s){
+ C p=s[0];
+ if(n<2){p=p<128?p:0; R p;  // single char; should be in range 0-127, 0 otherwise
+ }else if(n==2){
+  // inflected char.  The inflections must be '.' or ':'.  Collect them
+  I inf=-1; 
+ }else{
+  // doubly-inflected.  Rare.  
+ }
+}
+#endif
 void spellit(C c,C*s){C*q;I k;
  s[1]=s[2]=0;
  if((UC)c<=127) s[0]=c;

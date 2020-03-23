@@ -185,7 +185,7 @@ static DF1(jtply1){PROLOG(0040);DECLFG;A zz=0;
     // have to pop explicitly.  We protect the components of the overall result and the most recent result
     // We do this only occasionally
     JBREAK0;  // while we're waiting, check for attention interrupt
-    if(!gc3(&z,&zz,zzbox?&zzbox:0,stkfreept))R0; // free old unused blocks
+    if(!gc3(&z,zz?&zz:0,zzbox?&zzbox:0,stkfreept))R0; // free old unused blocks
     if(zzbox){
      // zzbox is normally NONrecursive and we add boxes to it as they come in.  Protecting it has made it recursive, which will
      // cause a double-free if we add another box to it.  So we have to go through it and make it nonrecursive again.  We don't have to do it recursively.

@@ -289,7 +289,7 @@ testbvs=: 2 : 0  NB. boolean vector scalar
 
 NB. test that special code is invoked by looking at space used
 NB. Space may not match exactly because sc() sometimes consumes 0 bytes
-SPTOLER =: IGNOREIFFVI@:((IF64 { 64 128)&>:) 
+SPTOLER =: (IGNOREIFFVI ((IF64 { 64 128)&>:))
 
 testsp=: 2 : 0
  if. 'I.'-: 5!:5 <'u' do. 1 return. end.
@@ -413,6 +413,7 @@ testc=: 2 : 0  NB. character
  assert. (u xa v yy) -: xa f      yy
  assert. (u xa v ya) -: xa f      ya
  if. -.'I.'-: 5!:5 <'u' do.
+ 6!:5 dbq''
   assert. (SPTOLER >./ - <./) t=: ".4#,:'sp ''xx (u f.)@:(v f.) yy'' [ xx=: ,~xx [ yy=: ,~yy' 
   assert. (SPTOLER >./ - <./) t=: ".4#,:'sp ''xx f yy''    [ xx=: ,~xx [ yy=: ,~yy'
  end.

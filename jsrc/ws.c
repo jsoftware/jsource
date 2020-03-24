@@ -101,7 +101,7 @@ static US spellouttab[128] = {
 [CASGN   -128]=(UC)'='+DOT0,       [CGASGN  -128]=(UC)'='+CO0,       [CFLOOR  -128]=(UC)'<'+DOT0,
 [CLE     -128]=(UC)'<'+CO0,       [CCEIL   -128]=(UC)'>'+DOT0,       [CGE     -128]=(UC)'>'+CO0,       
 [CUSDOT  -128]=(UC)'_'+DOT0,       [CPLUSDOT-128]=(UC)'+'+DOT0,       [CPLUSCO -128]=(UC)'+'+CO0,       [CSTARDOT-128]=(UC)'*'+DOT0,       
-[CSTARCO -128]=(UC)'*'+CO0,       [CNOT    -128]=(UC)'-'+DOT0,       [CHALVE  -128]=(UC)'-'+CO0,       
+[CSTARCO -128]=(UC)'*'+CO0,       [CNOT    -128]=(UC)'-'+DOT0,       
 [CMATCH  -128]=(UC)'-'+CO0,       [CDOMINO -128]=(UC)'%'+DOT0,       [CSQRT   -128]=(UC)'%'+CO0,
 [CLOG    -128]=(UC)'^'+DOT0,       [CPOWOP  -128]=(UC)'^'+CO0,       [CSPARSE -128]=(UC)'$'+DOT0,       [CSELF   -128]=(UC)'$'+CO0,       
 [CNUB    -128]=(UC)'~'+DOT0,       [CNE     -128]=(UC)'~'+CO0,       [CREV    -128]=(UC)'|'+DOT0,

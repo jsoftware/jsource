@@ -28,15 +28,19 @@
 #define VRESMSK         (VB|VI|VD|VZ|VX|VQ|VSB)  // mask for result-type
 #define VRD             (SLIT<<VRESX)// convert result to D if possible - unused code point
 #define VRI             (SBOX<<VRESX)// convert result to I if possible - unused code point
-// bits VRESX+8 9 10 12 13 14 are free
+// bits VRESX+8 9 10 12 13 are free
+#define VXCHASVTYPEX    26  // set if there is forced conversion to XNUM
+#define VXCHASVTYPE     ((I)1<<VXCHASVTYPEX)
 #define VXCVTYPEX       29          // bit position for VX conversion type
 #define VXCVTYPEMSK     ((I)3<<VXCVTYPEX)  // mask for bit-positions hold XNUM conversion type
-#define VXX             (Vxx|((I)XMEXACT<<VXCVTYPEX))  // exact conversion
-#define VXEQ            (Vxx|((I)XMEXMT<<VXCVTYPEX))   /* convert to XNUM for = ~:            */
-#define VXCF            (Vxx|((I)XMCEIL<<VXCVTYPEX))   /* convert to XNUM ceiling/floor       */
-#define VXFC            (Vxx|((I)XMFLR<<VXCVTYPEX))  /* convert to XNUM floor/ceiling       */
+#define VXX             (Vxx|VXCHASVTYPE|((I)XMEXACT<<VXCVTYPEX))  // exact conversion
+#define VXEQ            (Vxx|VXCHASVTYPE|((I)XMEXMT<<VXCVTYPEX))   /* convert to XNUM for = ~:            */
+#define VXCF            (Vxx|VXCHASVTYPE|((I)XMCEIL<<VXCVTYPEX))   /* convert to XNUM ceiling/floor       */
+#define VXFC            (Vxx|VXCHASVTYPE|((I)XMFLR<<VXCVTYPEX))  /* convert to XNUM floor/ceiling       */
 #define VCANHALTX       31    // This routine can generate an error after it has started
 #define VCANHALT        ((I)1<<VCANHALTX)
+#define VARGCVTMSKF     (VXCHASVTYPE|VXCVTYPEMSK)  // mask for type to pass into XCVT, includes XNUM override
+#define VFRCEXMT        (VXCHASVTYPE|((I)XMEXMT<<VXCVTYPEX))   // set in arg to cvt() to do rounding for = ~:, if the conversion happens to be to XNUM
 
 // Extract the argument-conversion type from cv coming from the table
 #define atype(x) (((x)&VARGMSK)>>VARGX)

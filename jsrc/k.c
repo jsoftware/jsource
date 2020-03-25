@@ -7,6 +7,7 @@
 #include "vcomp.h"
 
 #define KF1(f)          B f(J jt,A w,void*yv)
+#define KF2(f)          B f(J jt,A w,void*yv,I mode)
 #define CVCASE(a,b)     (((a)<<3)+(b))   // The main cases fit in low 8 bits of mask
 
 #if 0  // for bit types
@@ -126,8 +127,9 @@ static KF1(jtXfromI){B b;I c,d,i,j,n,r,u[XIDIG],*v;X*x;
  R !jt->jerr;
 }
 
-static X jtxd1(J jt,D p){PROLOG(0052);A t;D d,e=tfloor(p),q,r;I m,*u;
- switch(jt->xmode){
+static X jtxd1(J jt,D p, I mode){PROLOG(0052);A t;D d,e=tfloor(p),q,r;I m,*u;
+// obsolete  switch(jt->xmode){
+ switch(mode){
   case XMFLR:   p=e;                            break;
   case XMCEIL:  p=jceil(p);                      break;
   case XMEXACT: ASSERT(TEQ(p,e),EVDOMAIN); p=e; break;
@@ -145,7 +147,7 @@ static X jtxd1(J jt,D p){PROLOG(0052);A t;D d,e=tfloor(p),q,r;I m,*u;
  EPILOG(z);
 }
 
-static KF1(jtXfromD){D*v=DAV(w);X*x=(X*)yv; DO(AN(w), x[i]=rifvsdebug(xd1(v[i]));); R !jt->jerr;}
+static KF2(jtXfromD){D*v=DAV(w);X*x=(X*)yv; DO(AN(w), x[i]=rifvsdebug(xd1(v[i],mode));); R !jt->jerr;}
 
 static KF1(jtBfromX){A q;B*x;I e;X*v;
  v=XAV(w); x=(B*)yv;
@@ -180,7 +182,7 @@ static KF1(jtDfromX){D d,*x=(D*)yv,dm,dp;I c,i,n,*v,wn;X p,*wv;
 
 static KF1(jtQfromX){X*v=XAV(w),*x=(X*)yv; DQ(AN(w), *x++=*v++; *x++=iv1;); R 1;}
 
-static KF1(jtQfromD){B neg,recip;D c,d,t,*wv;I e,i,n,*v;Q q,*x;S*tv;
+static KF2(jtQfromD){B neg,recip;D c,d,t,*wv;I e,i,n,*v;Q q,*x;S*tv;
  if(!(w))R 0;
  n=AN(w); wv=DAV(w); x=(Q*)yv; tv=3*C_LE+(S*)&t;
  for(i=0;i<n;++i){
@@ -191,12 +193,12 @@ static KF1(jtQfromD){B neg,recip;D c,d,t,*wv;I e,i,n,*v;Q q,*x;S*tv;
   else if(t==0.0)q.n=iv0;
   else if(1.1102230246251565e-16<t&&t<9.007199254740992e15){
    d=jround(1/dgcd(1.0,t)); c=jround(d*t); 
-   q.n=xd1(c); q.d=xd1(d); q=qstd(q);
+   q.n=xd1(c,mode); q.d=xd1(d,mode); q=qstd(q);
   }else{
    if(recip=1>t)t=1.0/t;
    e=(I)(0xfff0&*tv); e>>=4; e-=1023;
-   if(recip){q.d=xtymes(xd1(t/pow(2.0,e-53.0)),xpow(xc(2L),xc(e-53))); q.n=ca(iv1);}
-   else     {q.n=xtymes(xd1(t/pow(2.0,e-53.0)),xpow(xc(2L),xc(e-53))); q.d=ca(iv1);}
+   if(recip){q.d=xtymes(xd1(t/pow(2.0,e-53.0),mode),xpow(xc(2L),xc(e-53))); q.n=ca(iv1);}
+   else     {q.n=xtymes(xd1(t/pow(2.0,e-53.0),mode),xpow(xc(2L),xc(e-53))); q.d=ca(iv1);}
   }
   q.n=rifvsdebug(q.n); q.d=rifvsdebug(q.d);
   if(neg){v=AV(q.n); DQ(AN(q.n), *v=-*v; ++v;);}
@@ -269,10 +271,10 @@ static B jtDXfI(J jt,I p,A w,DX*x){A y;I b,c,d,dd,e,i,m,n,q,r,*wv,*yv;
  R !jt->jerr;
 } */    /* most significant digit last, decimal point before last digit */
 
-// Convert the data in w to the type t.  A new buffer is always created (with a
+// Convert the data in w to the type t.  w and t must be noun types.  A new buffer is always created (with a
 // copy of the data if w is already of the right type), and returned in *y.  Result is
 // 0 if error, 1 if success.  If the conversion loses precision, error is returned
-B jtccvt(J jt,I tflagged,A w,A*y){A d;I n,r,*s,wt; void *wv,*yv;I t=tflagged&~NOUNCVTVALIDCT;
+B jtccvt(J jt,I tflagged,A w,A*y){A d;I n,r,*s,wt; void *wv,*yv;I t=tflagged&NOUN;
  if(!(w))R 0;
  r=AR(w); s=AS(w);
  if((t|AT(w))&SPARSE){
@@ -292,7 +294,7 @@ B jtccvt(J jt,I tflagged,A w,A*y){A d;I n,r,*s,wt; void *wv,*yv;I t=tflagged&~NO
  }
  // Now known to be non-sparse
  n=AN(w); wt=AT(w);
- // If type is already correct, return a clone - used to force a copy
+ // If type is already correct, return a clone - used to force a copy.  Should get rid of this kludge
  if(TYPESEQ(t,wt)){RZ(*y=ca(w)); R 1;}
  // else if(n&&t&JCHAR){ASSERT(HOMO(t,wt),EVDOMAIN); RZ(*y=uco1(w)); R 1;}
  // Kludge on behalf of result assembly: we want to be able to stop converting after the valid cells.  If NOUNCVTVALIDCT is set in the type,
@@ -351,13 +353,13 @@ B jtccvt(J jt,I tflagged,A w,A*y){A d;I n,r,*s,wt; void *wv,*yv;I t=tflagged&~NO
   case CVCASE(CMPXX, INTX): {Z*x = (Z*)yv; I*v = wv; DQ(n, x++->re = (D)*v++;); } R 1;
   case CVCASE(B01X, FLX): R BfromD(w, yv);
   case CVCASE(INTX, FLX): R IfromD(w, yv);
-  case CVCASE(XNUMX, FLX): R XfromD(w, yv);
-  case CVCASE(RATX, FLX): R QfromD(w, yv);
+  case CVCASE(XNUMX, FLX): R XfromD(w, yv, (jt->xmode&REPSGN(SGNIFNOT(tflagged,XCVTXNUMORIDEX)))|(tflagged>>XCVTXNUMCVX));
+  case CVCASE(RATX, FLX): R QfromD(w, yv, (jt->xmode&REPSGN(SGNIFNOT(tflagged,XCVTXNUMORIDEX)))|(tflagged>>XCVTXNUMCVX));
   case CVCASE(CMPXX, FLX): R ZfromD(w, yv);
   case CVCASE(B01X, CMPXX): GATV(d, FL, n, r, s); if(!(DfromZ(w, AV(d))))R 0; R BfromD(d, yv);
   case CVCASE(INTX, CMPXX): GATV(d, FL, n, r, s); if(!(DfromZ(w, AV(d))))R 0; R IfromD(d, yv);
-  case CVCASE(XNUMX, CMPXX): GATV(d, FL, n, r, s); if(!(DfromZ(w, AV(d))))R 0; R XfromD(d, yv);
-  case CVCASE(RATX, CMPXX): GATV(d, FL, n, r, s); if(!(DfromZ(w, AV(d))))R 0; R QfromD(d, yv);
+  case CVCASE(XNUMX, CMPXX): GATV(d, FL, n, r, s); if(!(DfromZ(w, AV(d))))R 0; R XfromD(d, yv, (jt->xmode&REPSGN(SGNIFNOT(tflagged,XCVTXNUMORIDEX)))|(tflagged>>XCVTXNUMCVX));
+  case CVCASE(RATX, CMPXX): GATV(d, FL, n, r, s); if(!(DfromZ(w, AV(d))))R 0; R QfromD(d, yv, (jt->xmode&REPSGN(SGNIFNOT(tflagged,XCVTXNUMORIDEX)))|(tflagged>>XCVTXNUMCVX));
   case CVCASE(FLX, CMPXX): R DfromZ(w, yv);
   case CVCASE(B01X, XNUMX): R BfromX(w, yv);
   case CVCASE(INTX, XNUMX): R IfromX(w, yv);
@@ -456,9 +458,9 @@ F1(jtcvt0){I n,t/* obsolete ,*v,z0,z1*/;D *u;
 }    /* convert -0 to 0 in place */
 #endif
 
-// convert to xnum, using conversion type in m.  Old conversion type is stacked
-A jtxcvt(J jt,I m,A w){A z;I old=jt->xmode; jt->xmode=m; z=cvt(XNUM,w); jt->xmode=old; R z;}
-
+// obsolete // convert to xnum, using conversion type in m.  Old conversion type is stacked
+// obsolete A jtxcvt(J jt,I m,A w){A z;I old=jt->xmode; jt->xmode=m; z=cvt(XNUM,w); jt->xmode=old; R z;}
+// obsolete 
 F1(jtxco1){RZ(w); ASSERT(AT(w)&DENSE,EVNONCE); R cvt(AT(w)&B01+INT+XNUM?XNUM:RAT,w);}
 
 F2(jtxco2){A z;B b;I j,n,r,*s,t,*wv,*zu,*zv;

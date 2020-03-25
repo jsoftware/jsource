@@ -823,8 +823,7 @@ DF2(jtrazecut2){A fs,gs,y,z=0;B b; I neg,pfx;C id,sep,*u,*v,*wv,*zv;I d,k,m=0,wi
   if(n=q-neg){  // number of items in this section
    I rc=EVOK;
    if(d)rc=((AHDRPFN*)adocv.f)(d,n,(I)1,wv+k*(b+wi-p),zv,jt);  // do the prefix, but not if items empty
-   if(rc&255) // scaf
-{jsignal(rc); R rc>=EWOV?razecut2(a,w,self):0;}  // if overflow, restart the whole thing with conversion to float
+   if(rc&255){jsignal(rc); R rc>=EWOV?razecut2(a,w,self):0;}  // if overflow, restart the whole thing with conversion to float
    m+=n; zv+=n*zk; 
   }
   p-=q; v=u;  

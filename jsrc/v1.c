@@ -122,8 +122,10 @@ static B jtmatchsub(J jt,I af,I wf,I m,I n,A a,A w,B* RESTRICT x,B b1){B b;C*av,
  // If the types mismatch, convert as needed to the common (unsafe) type calculated earlier
  if(at!=wt) {
   t=maxtypedne(at,wt);
-  if(at!=t)RZ(a=t&XNUM?xcvt(XMEXMT,a):cvt(t,a));
-  if(wt!=t)RZ(w=t&XNUM?xcvt(XMEXMT,w):cvt(t,w));
+  if(at!=t)RZ(a=cvt(t|VFRCEXMT,a));
+  if(wt!=t)RZ(w=cvt(t|VFRCEXMT,w));
+// obsolete   if(at!=t)RZ(a=t&XNUM?xcvt(XMEXMT,a):cvt(t,a));
+// obsolete   if(wt!=t)RZ(w=t&XNUM?xcvt(XMEXMT,w):cvt(t,w));
  }
  // If a has no frame, it might be the shorter frame and therefore repeated; but in that case
  // m will be 1 (1 cell in shorter frame).  So it is safe to increment each address by c in the compare loops

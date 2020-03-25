@@ -1739,8 +1739,10 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z;fauxblockINT(zfaux,1,0)
  if(TYPESEQ(at,wt)){th=1;
  }else{
   th=HOMONE(at,wt); /* noavx jt->min=0; */  // are args compatible?
-  if(((th-1)|(TYPESXOR(t,at)-1))>=0)RZ(a=t&XNUM?xcvt(XMEXMT,a):cvt(t,a))  // convert if th and TYPESXOR both nonzero
-  if(((th-1)|(TYPESXOR(t,wt)-1))>=0)RZ(w=t&XNUM?xcvt(XMEXMT,w):cvt(t,w))
+// obsolete   if(((th-1)|(TYPESXOR(t,at)-1))>=0)RZ(a=t&XNUM?xcvt(XMEXMT,a):cvt(t,a))  // convert if th and TYPESXOR both nonzero
+// obsolete   if(((th-1)|(TYPESXOR(t,wt)-1))>=0)RZ(w=t&XNUM?xcvt(XMEXMT,w):cvt(t,w))
+  if(((th-1)|(TYPESXOR(t,at)-1))>=0)RZ(a=cvt(t|VFRCEXMT,a))  // convert if th and TYPESXOR both nonzero
+  if(((th-1)|(TYPESXOR(t,wt)-1))>=0)RZ(w=cvt(t|VFRCEXMT,w))
  }
 
  // Allocate the result area.  NOTE that some of the routines, like small-range, always store at least one result; so we have to point z somewhere harmless before launching them. if we are prehashing

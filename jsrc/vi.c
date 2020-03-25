@@ -1268,8 +1268,10 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z;B mk=w==mark,th;
  th=HOMO(at,wt); jt->min=0;  // are args compatible? clear return values from irange
  // Indicate if float args need to be canonicalized for -0.  should do this in the hash
  I cvtsneeded = 0;  // 1 means convert a, 2 means convert w
- if(th&&TYPESNE(t,at))RZ(a=t&XNUM?xcvt(XMEXMT,a):cvt(t,a)) else if(t&FL+CMPX      )cvtsneeded=1;
- if(th&&TYPESNE(t,wt))RZ(w=t&XNUM?xcvt(XMEXMT,w):cvt(t,w)) else if(t&FL+CMPX&&a!=w)cvtsneeded|=2;
+// obsolete  if(th&&TYPESNE(t,at))RZ(a=t&XNUM?xcvt(XMEXMT,a):cvt(t,a)) else if(t&FL+CMPX      )cvtsneeded=1;
+// obsolete  if(th&&TYPESNE(t,wt))RZ(w=t&XNUM?xcvt(XMEXMT,w):cvt(t,w)) else if(t&FL+CMPX&&a!=w)cvtsneeded|=2;
+ if(th&&TYPESNE(t,at))RZ(a=cvt(t|VFRCEXMT,a)) else if(t&FL+CMPX      )cvtsneeded=1;
+ if(th&&TYPESNE(t,wt))RZ(w=cvt(t|VFRCEXMT,w)) else if(t&FL+CMPX&&a!=w)cvtsneeded|=2;
 
  // Allocate the result area
  if(mk){fauxINT(z,zfaux,1,0)} // if prehashed, we must create an area that can hold at least one stored result

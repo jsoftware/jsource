@@ -296,6 +296,7 @@ typedef I SI;
 #define CONWSIZE sizeof(CW)
 #define LPARX 26
 #define LPAR            ((I)1L<<LPARX)    /* I  left  parenthesis            */
+// note: bit 26 used as flag to cvt() see below
 #define LPARSIZE sizeof(I)
 #define VERBX 27
 #define VERB            ((I)1L<<VERBX)      /* V  verb                         */
@@ -321,13 +322,18 @@ typedef I SI;
 #define ASGNTONAME      ((I)1L<<CONWX)     // set when assignment is to name    aliases with CONW
 // NOTE: The parser assumes that CONW always means ASGNTONAME, so don't use it in any parseable type (such as NAME, NOUN)
 // ** NOUN types can have the following informational bits set
-#define NOUNCVTVALIDCT  ((I)1L<<SYMBX)     // Flag for jtcvt: if set, convert only the #atoms given in the parameter   Aliases with SYMB
+#define NOUNCVTVALIDCT  ((I)1L<<SYMBX)     // Flag for jtcvt arg only: if set, convert only the #atoms given in the parameter   Aliases with SYMB
 // ** NAME type can have the following information flags set
 #define NAMEBYVALUE     ((I)1L<<SYMBX)     // set if the name is one of x x. m m. etc that is always passed by value, never by name   Aliases with SYMB
 // BOX type can have the following informational flags set
 #define BOXMULTIASSIGN  ((I)1L<<MARKX)     // set for the target of a direct multiple assignment (i. e. 'x y' =.), which is stored as a boxed list whose contents are NAMEs    aliases with MARK
 // Restriction: CONW must be reserved for use as ASGNTONAME because of how parser tests for it
 // Restriction: MARK must be reserved for use as BOXMULTIASSIGN because of how parser tests for it
+// NOTE!! bits 26,29-30 are used in the call to cvt() (arg only) to override the convsion type for XNUMs
+#define XCVTXNUMORIDEX  LPARX   // in cvt(), indicates that forced precision for result is present
+#define XCVTXNUMORIDE   ((I)1<<XCVTXNUMORIDEX)   // in cvt(), indicates that forced precision for result is present
+#define XCVTXNUMCVX     CONJX
+#define XCVTXNUMCV      ((I)3<<XCVTXNUMCVX)  // in cvt(), the precision for xnum (if XCVTXNUMORIDE is set)
 
 // Planned coding to save bits in type
 // Uses bits 24-27 eg

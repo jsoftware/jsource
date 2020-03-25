@@ -843,7 +843,7 @@ extern A        jtvger2(J,C,A,A);
 extern A        jtvirtual(J,AD * RESTRICT,I,I);
 extern B        jtvnm(J,I,C*);
 extern void     jtwri(J,I,C*,I,C*);
-extern A        jtxcvt(J,I,A);
+// obsolete extern A        jtxcvt(J,I,A);
 extern B        jtxlinit(J);
 extern B        jtxoinit(J);
 extern B        jtxsinit(J);

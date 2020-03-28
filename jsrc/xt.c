@@ -41,7 +41,7 @@
 #endif
 
 
-F1(jtsp){ASSERTMTV(w); R sc(spbytesinuse());}
+F1(jtsp){ASSERTMTV(w); R sc(spbytesinuse());}  //  7!:0
 
 F1(jtspit){A z;I k; 
  F1RANK(1,jtspit,0); 

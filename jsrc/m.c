@@ -84,6 +84,7 @@ I allosize(A y) {
 B jtmeminit(J jt){I k,m=MLEN;
  if(jt->tstackcurr==0){  // meminit gets called twice.  Alloc the block only once
   jt->tstackcurr=(A*)MALLOC(NTSTACK+NTSTACKBLOCK);  // save address of first allocation
+  jt->malloctotal = NTSTACK+NTSTACKBLOCK;
   jt->tnextpushp = (A*)(((I)jt->tstackcurr+NTSTACKBLOCK)&(-NTSTACKBLOCK));  // get address of aligned block AFTER the first word
   *jt->tnextpushp++=0;  // blocks chain to blocks, allocations to allocations.  0 in first block indicates end.  We will never try to go past the first allo, so no chain needed
  }
@@ -163,8 +164,10 @@ B jtspfree(J jt){I i;A p;
     if(FHRHISROOTALLOFREE(AFHRH(baseblock))){ // Free fully-unused base blocks;
 #if 1 || ALIGNTOCACHE   // with short headers, always align to cache bdy
      FREECHK(((I**)baseblock)[-1]);  // If aligned, the word before the block points to the original block address
+     jt->malloctotal-=PSIZE+CACHELINESIZE;  // return storage+bdy
 #else
      FREECHK(baseblock);
+     jt->malloctotal-=PSIZE;  // return storage
 #endif
     }else{AFHRH(baseblock) = virginbase;}   // restore the count to 0 in the rest
     p=np;   //  step to next base block
@@ -802,6 +805,7 @@ A* jttg(J jt, A *pushp){     // Filling last slot; must allocate next page.
     jt->tnextpushp = --pushp;  // back up the push pointer to the last valid location
     ASSERT(0,EVWSFULL);   // fail
    }
+   jt->malloctotal += NTSTACK+NTSTACKBLOCK;  // add to toal allocated
    // chain previous allocation to the new one
    *v = (A)jt->tstackcurr;   // backchain old buffers to new, including bias
    jt->tstackcurr = (A*)v;    // set new buffer as the one to use, biased so we can index it from pushx
@@ -858,7 +862,8 @@ void jttpop(J jt,A *old){A *endingtpushp;
    // There is no way two allocations could back up so as to make the end of one exactly the beginning of the other
    if((A*)np!=pushp-1){
     // if there is another block in this allocation, step to it.  Otherwise:
-    if(jt->tstacknext)FREECHK(jt->tstacknext);   // We will set the block we are vacating as the next-to-use.  We can have only 1 such; if there is one already, free it
+    if(jt->tstacknext){FREECHK(jt->tstacknext); jt->malloctotal-=NTSTACK+NTSTACKBLOCK;}   // account for malloc'd memory
+  // We will set the block we are vacating as the next-to-use.  We can have only 1 such; if there is one already, free it
     jt->tstacknext=jt->tstackcurr;  // save the next-to-use, after removing bias
     jt->tstackcurr=(A*)jt->tstackcurr[0];   // back up to the previous block
    }
@@ -917,17 +922,20 @@ if((I)jt&3)SEGFAULT
     if(FHRHPOOLBIN(AFHRH(z))!=(1+blockx-PMINL))SEGFAULT  // verify block has correct size
     if(!(z->fill==(UI4)AFHRH(z)))SEGFAULT  // fill should duplicate h
 #endif
-   }else{A u,chn; US hrh;                    // small block, but chain is empty.  Alloc PSIZE and split it into blocks
+   }else{A u,chn; US hrh; I nt=jt->malloctotal;                   // small block, but chain is empty.  Alloc PSIZE and split it into blocks
 #if 1 || ALIGNTOCACHE   // with smaller headers, always align pool allo to cache bdy
     // align the buffer list on a cache-line boundary
     I *v;
     ASSERT(v=MALLOC(PSIZE+CACHELINESIZE),EVWSFULL);
     z=(A)(((I)v+CACHELINESIZE)&-CACHELINESIZE);   // get cache-aligned section
     ((I**)z)[-1] = v;   // save address of entire allocation in the word before the aligned section
+    nt += PSIZE+CACHELINESIZE;  // add to total allocated
 #else
     // allocate without alignment
     ASSERT(av=MALLOC(PSIZE),EVWSFULL);
+    nt += PSIZE;  // add to total allocated
 #endif
+    {I ot=jt->malloctotalhwmk; ot=ot>nt?ot:nt; jt->malloctotal=nt; jt->malloctotalhwmk=ot;}
     // split the allocation into blocks.  Chain them together, and flag the base.  We chain them in ascending order (the order doesn't matter), but
     // we visit them in back-to-front order so the first-allocated headers are in cache
 #if MEMAUDIT&17 && BW==64
@@ -942,7 +950,7 @@ if((I)jt&3)SEGFAULT
     jt->mfreegenallo+=PSIZE;   // ...add them to the total bytes allocated
    }
    jt->mfree[-PMINL+1+blockx].ballo=mfreeb+=n;
-  } else {  // here for non-pool allocs...
+  } else { I nt=jt->malloctotal;  // here for non-pool allocs...
    mfreeb=jt->mfreegenallo;    // bytes in large allocations
 #if ALIGNTOCACHE
    // Allocate the block, and start it on a cache-line boundary
@@ -950,10 +958,13 @@ if((I)jt&3)SEGFAULT
    ASSERT(v=MALLOC(n+CACHELINESIZE),EVWSFULL);
    z=(MS *)(((I)v+CACHELINESIZE)&-CACHELINESIZE);   // get cache-aligned section
    ((I**)z)[-1] = v;    // save address of original allocation
+   nt += n+CACHELINESIZE;
 #else
    // Allocate without alignment
    ASSERT(z=MALLOC(n),EVWSFULL);
+   nt += n;
 #endif
+   {I ot=jt->malloctotalhwmk; ot=ot>nt?ot:nt; jt->malloctotal=nt; jt->malloctotalhwmk=ot;}
    AFHRH(z) = (US)FHRHSYSJHDR(1+blockx);    // Save the size of the allocation so we know how to free it and how big it was
 #if MEMAUDIT&17 && SY_64
    z->fill=(UI4)AFHRH(z);
@@ -1068,8 +1079,10 @@ if((I)jt&3)SEGFAULT
 #endif
 #if ALIGNTOCACHE
   FREECHK(((I**)w)[-1]);  // point to initial allocation and free it
+  jt->malloctotal-=allocsize+CACHELINESIZE;
 #else
   FREECHK(w);  // point to initial allocation and free it
+  jt->malloctotal-=allocsize;
 #endif
   jt->mfreegenallo = mfreeb-allocsize;
  }

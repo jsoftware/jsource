@@ -135,6 +135,8 @@ typedef struct {
 // 3 words free
  I    filler[3];
 // --- end cache line 7
+ I    malloctotal;    // net total of malloc/free performed in m.c only
+ I    malloctotalhwmk;  // highest value since most recent 7!:1
 #if C_AVX&&SY_64
  I validitymask[8]; // -1, -1, -1, -1, 0, 0, 0, 0   used to prepare for mask load/store
 #endif

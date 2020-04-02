@@ -43,6 +43,9 @@
 
 F1(jtsp){ASSERTMTV(w); R sc(spbytesinuse());}  //  7!:0
 
+F1(jtsphwmk){ASSERTMTV(w); I hwmk=jt->malloctotalhwmk; jt->malloctotalhwmk=jt->malloctotal; R sc(hwmk);
+}
+
 F1(jtspit){A z;I k; 
  F1RANK(1,jtspit,0); 
  jt->bytesmax=k=spstarttracking();  // start keeping track of bytesmax

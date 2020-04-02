@@ -144,6 +144,7 @@ F2(jtforeign){I p,q;
   case XC(6,17):  R CDERIV(CIBEAM, jtiso8601toe,jtiso8601toe,  VASGSAFE,RMAX,RMAX,RMAX);
 
   case XC(7,0):   R CDERIV(CIBEAM, jtsp,         0,            VASGSAFE,RMAX,RMAX,RMAX);
+  case XC(7,1):   R CDERIV(CIBEAM, jtsphwmk,     0,            VASGSAFE,RMAX,RMAX,RMAX);
   case XC(7,2):   R CDERIV(CIBEAM, jtspit,       0,            VFLAGNONE,1,   RMAX,RMAX);
   case XC(7,3):   R CDERIV(CIBEAM, jtspcount,    0,            VASGSAFE,RMAX,RMAX,RMAX);
   case XC(7,5):   R CDERIV(CIBEAM, jtspfor,      0,            VASGSAFE,0,   RMAX,RMAX);

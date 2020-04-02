@@ -317,6 +317,7 @@ extern F1(jtsparse1);
 extern F1(jtspcount);
 extern F1(jtspfor);
 extern F1(jtspforloc);
+extern F1(jtsphwmk);
 extern F1(jtspit);
 extern F1(jtsqroot);
 extern F1(jtsquare);

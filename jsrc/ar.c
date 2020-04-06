@@ -100,6 +100,7 @@ static void vdone(I m,I n,B*x,B*z,B pc){B b;I q,r;UC*u;UI s,*y;
 
 #endif
 
+// no errors possible here
 #define REDUCEBFX(f,pfx,ipfx,spfx,bpfx,vdo)  \
  AHDRP(f,B,B){B*y=0;I j,q;                       \
   if(d==1){vdo; R EVOK;}                                \
@@ -189,9 +190,9 @@ AHDRR(plusinsD,D,D){I i;D* RESTRICT y;
   }
   else if(1==n){if(sizeof(D)!=sizeof(D)){DQ(n, *z++=    *x++;)}else{MC((C*)z,(C*)x,d*sizeof(D));}}
   else{z+=(m-1)*d; x+=(m*n-1)*d;
-   for(i=0;i<m;++i,z-=d){
-    y=x; x-=d; plusDD(1,d,x,y,z,jt); x-=d;
-    DQ(n-2,    plusDD(1,d,x,z,z,jt); x-=d; );
+   for(i=0;i<m;++i,z-=d){I rc;
+    y=x; x-=d; if(255&(rc=plusDD(1,d,x,y,z,jt)))R rc; x-=d;
+    DQ(n-2,    if(255&(rc=plusDD(1,d,x,z,z,jt)))R rc; x-=d; );
    }
   }
   R NANTEST?EVNAN:EVOK;

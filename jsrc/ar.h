@@ -14,9 +14,9 @@
   if(d==1){x += m*n; z+=m; DQ(m, v=*--x; DQ(n-1, --x; v=pfx(*x,v);); *--z=v;)}  \
   else if(1==n){if(sizeof(Tz)!=sizeof(Tx)){DQ(d, *z++=    *x++;)}else{MC((C*)z,(C*)x,d*sizeof(Tz));}}          \
   else{z+=(m-1)*d; x+=(m*n-1)*d;                                        \
-   for(i=0;i<m;++i,z-=d){                                    \
-    Tx* RESTRICT y=x; x-=d; vecfn1(1,d,x,y,z,jt); x-=d;        \
-    DQ(n-2,    vecfnn(1,d,x,z,z,jt); x-=d;);        \
+   for(i=0;i<m;++i,z-=d){I rc;                                    \
+    Tx* RESTRICT y=x; x-=d; if(255&(rc=vecfn1(1,d,x,y,z,jt)))R rc; x-=d;        \
+    DQ(n-2,    if(255&(rc=vecfnn(1,d,x,z,z,jt)))R rc; x-=d;);        \
   }}R EVOK;}
 
 // used on idempotent verbs, using 2 accumulators
@@ -51,9 +51,9 @@
   if(d==1){x += m*n; z+=m; DQ(m, v=*--x; DQ(n-1, --x; v=pfx(*x,v);); *--z=v;)}  \
   else if(1==n){if(sizeof(Tz)!=sizeof(Tx)){DQ(n, *z++=    *x++;)}else{MC((C*)z,(C*)x,d*sizeof(Tz));}}          \
   else{z+=(m-1)*d; x+=(m*n-1)*d;                                        \
-   for(i=0;i<m;++i,z-=d){                                    \
-    Tx* RESTRICT y=x; x-=d; vecfn(1,d,x,y,z,jt); x-=d;        \
-    DQ(n-2,    vecfn(1,d,x,z,z,jt); x-=d;);        \
+   for(i=0;i<m;++i,z-=d){I rc;                                    \
+    Tx* RESTRICT y=x; x-=d; if(255&(rc=vecfn(1,d,x,y,z,jt)))R rc; x-=d;        \
+    DQ(n-2,    if(255&(rc=vecfn(1,d,x,z,z,jt)))R rc; x-=d;);        \
   }}                                                               \
   R NANTEST?EVNAN:EVOK;                                                          \
 }

@@ -11,6 +11,7 @@
 
 
 // handle fork, with support for in-place operations
+#if 0 // obsolete
 #define FOLK1 {PUSHZOMB; A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW));  \
 /* If any result equals protw, it must not be inplaced: if original w is inplaceable, protw will not match anything */ \
 /* the call to h is not inplaceable, but it may allow WILLOPEN and USESITEMCOUNT */ \
@@ -28,8 +29,6 @@ A hx; RZ(hx=(h2)((J)(intptr_t)(((I)jt) + ((-((FAV(hs)->flag>>VJTFLGOK2X)&(I )(a!
 A fx; RZ(fx=(f2)((J)(intptr_t)(((I)jt) + ((-((FAV(fs)->flag>>VJTFLGOK2X)&JTINPLACEW)) & (((I)jtinplace&(JTINPLACEA*(I )(hx!=a)+(I )(hx!=w))) + ((FAV(gs)->flag2>>(VF2WILLOPEN2AX-VF2WILLOPEN1X)) & VF2WILLOPEN1+VF2USESITEMCOUNT1)))),a,w,fs)); \
 /* The call to g is inplaceable if g allows it, UNLESS fx or hx is the same as disallowed y.  Pass in WILLOPEN from the input */ \
 POPZOMB; RZ(z=(g2)((J)(intptr_t)((((I)jtinplace&(~(JTINPLACEA+JTINPLACEW)))|(((I )(fx!=protw)&(I )(fx!=prota))*JTINPLACEA+((I )(hx!=protw)&(I )(hx!=prota)*JTINPLACEW)))&(FAV(gs)->flag&VJTFLGOK2?~0:~JTFLAGMSK)),fx,hx,gs));}
-
-// similar for cap, but now we can inplace the call to h
 #define CAP1 {PUSHZOMB; A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); \
 A hx; RZ(hx=(h1)((J)(intptr_t)(((I)jtinplace&(~(JTWILLBEOPENED+JTCOUNTITEMS))) + ((-((FAV(hs)->flag>>VJTFLGOK1X)&JTINPLACEW)) & FAV(gs)->flag2 & JTWILLBEOPENED+JTCOUNTITEMS)),w,hs));  /* inplace g.  jtinplace is set for g */ \
 /* inplace gx unless it is protected */ \
@@ -44,6 +43,40 @@ A hx; RZ(hx=(h2)((J)(intptr_t)(((I)jtinplace&(~(JTWILLBEOPENED+JTCOUNTITEMS))) +
 POPZOMB; jtinplace=(J)(intptr_t)(((I)jtinplace&~(JTINPLACEW))+(((I )(hx!=prota)&(I )(hx!=protw))*JTINPLACEW));  \
 jtinplace=FAV(gs)->flag&VJTFLGOK1?jtinplace:jt; \
 RZ(z=(g1)(jtinplace,hx,gs));}
+#else
+#define FOLK1 {PUSHZOMB; A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW));  \
+/* If any result equals protw, it must not be inplaced: if original w is inplaceable, protw will not match anything */ \
+/* the call to h is not inplaceable, but it may allow WILLOPEN and USESITEMCOUNT */ \
+A hx; RZ(hx=(h1)((J)(intptr_t)(((I)jt) + (REPSGN(SGNIF(FAV(hs)->flag,VJTFLGOK1X)) & (FAV(gs)->flag2>>(VF2WILLOPEN2WX-VF2WILLOPEN1X)) & VF2WILLOPEN1+VF2USESITEMCOUNT1)),w,hs)); \
+/* the call to f is inplaceable if the caller allowed inplacing, and f is inplaceable, and the hx is NOT the same as y.  Here only the LSB of jtinplace is used */ \
+A fx; RZ(fx=(f1)((J)(intptr_t)(((I)jt) + (REPSGN(SGNIF(FAV(fs)->flag,VJTFLGOK1X)) & (((I)jtinplace&(I )(hx!=w)) + ((FAV(gs)->flag2>>(VF2WILLOPEN2AX-VF2WILLOPEN1X)) & VF2WILLOPEN1+VF2USESITEMCOUNT1)))),w,fs)); \
+/* The call to g is inplaceable if g allows it, UNLESS fx or hx is the same as disallowed y.  Pass in WILLOPEN from the input */ \
+POPZOMB; RZ(z=(g2)((J)(intptr_t)((((I)jtinplace&(~(JTINPLACEA+JTINPLACEW)))|((I )(fx!=protw)*JTINPLACEA+(I )(hx!=protw)*JTINPLACEW))&(FAV(gs)->flag&VJTFLGOK2?~0:~JTFLAGMSK)),fx,hx,gs));}
+
+#define FOLK2 {PUSHZOMB; A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)(intptr_t)((I)a+((I)jtinplace&JTINPLACEA)); \
+/* the call to h is not inplaceable, but it may allow WILLOPEN and USESITEMCOUNT.  Inplace h if f is x@], but not if a==w  Actually we turn off all flags here if a==w, for comp ease */ \
+A hx; RZ(hx=(h2)((J)(intptr_t)(((I)jt) + ((-((FAV(hs)->flag>>VJTFLGOK2X)&(I )(a!=w))) & (((I)jtinplace&sv->flag&(VFATOPL|VFATOPR)) + ((FAV(gs)->flag2>>(VF2WILLOPEN2WX-VF2WILLOPEN1X)) & VF2WILLOPEN1+VF2USESITEMCOUNT1)))),a,w,hs)); \
+/* If any result equals protw/prota, it must not be inplaced: if original w/a is inplaceable, protw/prota will not match anything */ \
+/* the call to f is inplaceable if the caller allowed inplacing, and f is inplaceable; but only where hx is NOT the same as x or y.  Both flags in jtinplace are used */ \
+A fx; RZ(fx=(f2)((J)(intptr_t)(((I)jt) + (REPSGN(SGNIF(FAV(fs)->flag,VJTFLGOK2X)) & (((I)jtinplace&(JTINPLACEA*(I )(hx!=a)+(I )(hx!=w))) + ((FAV(gs)->flag2>>(VF2WILLOPEN2AX-VF2WILLOPEN1X)) & VF2WILLOPEN1+VF2USESITEMCOUNT1)))),a,w,fs)); \
+/* The call to g is inplaceable if g allows it, UNLESS fx or hx is the same as disallowed y.  Pass in WILLOPEN from the input */ \
+POPZOMB; RZ(z=(g2)((J)(intptr_t)((((I)jtinplace&(~(JTINPLACEA+JTINPLACEW)))|(((I )(fx!=protw)&(I )(fx!=prota))*JTINPLACEA+((I )(hx!=protw)&(I )(hx!=prota)*JTINPLACEW)))&(FAV(gs)->flag&VJTFLGOK2?~0:~JTFLAGMSK)),fx,hx,gs));}
+// similar for cap, but now we can inplace the call to h
+#define CAP1 {PUSHZOMB; A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); \
+A hx; RZ(hx=(h1)((J)(intptr_t)(((I)jtinplace&(~(JTWILLBEOPENED+JTCOUNTITEMS))) + (REPSGN(SGNIF(FAV(hs)->flag,VJTFLGOK1X)) & FAV(gs)->flag2 & JTWILLBEOPENED+JTCOUNTITEMS)),w,hs));  /* inplace g.  jtinplace is set for g */ \
+/* inplace gx unless it is protected */ \
+POPZOMB; \
+jtinplace=(J)(intptr_t)(((I)jtinplace&~(JTINPLACEW))+((I )(hx!=protw)*JTINPLACEW));  \
+jtinplace=FAV(gs)->flag&VJTFLGOK1?jtinplace:jt; \
+RZ(z=(g1)(jtinplace,hx,gs));}
+
+#define CAP2 {PUSHZOMB; A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)(intptr_t)((I)a+((I)jtinplace&JTINPLACEA)); \
+A hx; RZ(hx=(h2)((J)(intptr_t)(((I)jtinplace&(~(JTWILLBEOPENED+JTCOUNTITEMS))) + (REPSGN(SGNIF(FAV(hs)->flag,VJTFLGOK1X)) & FAV(gs)->flag2 & JTWILLBEOPENED+JTCOUNTITEMS)),a,w,hs));  /* inplace g */ \
+/* inplace gx unless it is protected */ \
+POPZOMB; jtinplace=(J)(intptr_t)(((I)jtinplace&~(JTINPLACEW))+(((I )(hx!=prota)&(I )(hx!=protw))*JTINPLACEW));  \
+jtinplace=FAV(gs)->flag&VJTFLGOK1?jtinplace:jt; \
+RZ(z=(g1)(jtinplace,hx,gs));}
+#endif
 
 
 
@@ -64,7 +97,7 @@ static B jtcap(J jt,A x){V*v;L *l;
 // This generally follows the logic for CAP, but with dyad g
 static DF1(jtnvv1){F1PREFIP;DECLFGH;PROLOG(0032);
 PUSHZOMB; A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW));
-A hx; RZ(hx=(h1)((J)(intptr_t)(((I)jtinplace&(~(JTWILLBEOPENED+JTCOUNTITEMS))) + ((-((FAV(hs)->flag>>VJTFLGOK1X)&JTINPLACEW)) & FAV(gs)->flag2 & JTWILLBEOPENED+JTCOUNTITEMS)),w,hs));  /* inplace g.  jtinplace is set for g */
+A hx; RZ(hx=(h1)((J)(intptr_t)(((I)jtinplace&(~(JTWILLBEOPENED+JTCOUNTITEMS))) + (REPSGN(SGNIF(FAV(hs)->flag,VJTFLGOK1X)) & (FAV(gs)->flag2>>(VF2WILLOPEN2WX-VF2WILLOPEN1X)) & JTWILLBEOPENED+JTCOUNTITEMS)),w,hs));  /* inplace g.  jtinplace is set for g */
 /* inplace gx unless it is protected */
 POPZOMB;
 jtinplace=(J)(intptr_t)(((I)jtinplace&~(JTINPLACEA+JTINPLACEW))+((I )(hx!=protw)*JTINPLACEW)); 
@@ -73,7 +106,7 @@ A z; RZ(z=(g2)(jtinplace,fs,hx,gs));
 EPILOG(z);}
 static DF2(jtnvv2){F1PREFIP;DECLFGH;PROLOG(0033);
 PUSHZOMB; A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)(intptr_t)((I)a+((I)jtinplace&JTINPLACEA));
-A hx; RZ(hx=(h2)((J)(intptr_t)(((I)jtinplace&(~(JTWILLBEOPENED+JTCOUNTITEMS))) + ((-((FAV(hs)->flag>>VJTFLGOK2X)&JTINPLACEW)) & FAV(gs)->flag2 & JTWILLBEOPENED+JTCOUNTITEMS)),a,w,hs));  /* inplace g */
+A hx; RZ(hx=(h2)((J)(intptr_t)(((I)jtinplace&(~(JTWILLBEOPENED+JTCOUNTITEMS))) + (REPSGN(SGNIF(FAV(hs)->flag,VJTFLGOK2X)) & (FAV(gs)->flag2>>(VF2WILLOPEN2WX-VF2WILLOPEN1X)) & JTWILLBEOPENED+JTCOUNTITEMS)),a,w,hs));  /* inplace g */
 /* inplace gx unless it is protected */
 POPZOMB; jtinplace=(J)(intptr_t)(((I)jtinplace&~(JTINPLACEA+JTINPLACEW))+(((I )(hx!=prota)&(I )(hx!=protw))*JTINPLACEW));
 jtinplace=FAV(gs)->flag&VJTFLGOK2?jtinplace:jt;
@@ -203,9 +236,10 @@ static DF1(taa){TDECL; A z,t; df1(t,w,fs); ASSERT(!t||AT(t)&NOUN+VERB,EVSYNTAX);
 static DF1(tvc){TDECL; A z; R df2(z,fs,w,gs);}  /* also nc */
 static DF1(tcv){TDECL; A z; R df2(z,w,gs,fs);}  /* also cn */
 
+#if 0  // obsolete
 CS1IP(static,jthook1, \
 {PUSHZOMB; A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); \
-A gx; RZ(gx=(g1)((J)(intptr_t)(((I)jt + (FAV(fs)->flag2 & JTWILLBEOPENED+JTCOUNTITEMS)) & (FAV(gs)->flag&VJTFLGOK1?~0:~JTFLAGMSK)),w,gs));  /* cannot inplace g.  jtinplace is always set */ \
+A gx; RZ(gx=(g1)((J)(intptr_t)(((I)jt + (FAV(fs)->flag2 & JTWILLBEOPENED+JTCOUNTITEMS)) & (FAV(gs)->flag&VJTFLGOK1?~0:~JTFLAGMSK)),w,gs));  /* cannot inplace g.  jtinplace is always set */
 /* inplace gx unless it is protected */ \
 POPZOMB; \
 jtinplace=(J)(intptr_t)(((I)jtinplace&~(JTINPLACEA+JTINPLACEW)) + (JTINPLACEA*((I)jtinplace&JTINPLACEW)) + ((gx!=protw)*JTINPLACEW)); \
@@ -213,17 +247,42 @@ jtinplace=FAV(fs)->flag&VJTFLGOK2?jtinplace:jt; \
 A z; RZ(z=(f2)(jtinplace,w,gx,fs)); \
 EPILOG(z);} \
 , 0111)
+#else
+// obsolete A gx; RZ(gx=(g1)((J)(intptr_t)(((I)jt + (FAV(fs)->flag2 & JTWILLBEOPENED+JTCOUNTITEMS)) & (FAV(gs)->flag&VJTFLGOK1?~0:~JTFLAGMSK)),w,gs));  /* cannot inplace g.  jtinplace is always set */
+CS1IP(static,jthook1, \
+{PUSHZOMB; A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); \
+A gx; RZ(gx=(g1)((J)(intptr_t)(((I)jt + ((FAV(fs)->flag2>>(VF2WILLOPEN2WX-VF2WILLOPEN1X)) & (VF2WILLOPEN1+VF2USESITEMCOUNT1) & REPSGN(SGNIF(FAV(gs)->flag,VJTFLGOK1X))))),w,gs));  /* cannot inplace g.  jtinplace is always set */ \
+/* inplace gx unless it is protected */ \
+POPZOMB; \
+jtinplace=(J)(intptr_t)(((I)jtinplace&~(JTINPLACEA+JTINPLACEW)) + (JTINPLACEA*((I)jtinplace&JTINPLACEW)) + ((gx!=protw)*JTINPLACEW)); \
+jtinplace=FAV(fs)->flag&VJTFLGOK2?jtinplace:jt; \
+A z; RZ(z=(f2)(jtinplace,w,gx,fs)); \
+EPILOG(z);} \
+, 0111)
+#endif
 
+#if 0  // obsolete
 CS2IP(static,jthook2, \
 {PUSHZOMB; A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)(intptr_t)((I)a+((I)jtinplace&JTINPLACEA)); \
-A gx; RZ(gx=(g1)((J)(intptr_t)((((I)jtinplace&((I )(a!=w)|~(JTWILLBEOPENED+JTCOUNTITEMS+JTINPLACEA+JTINPLACEW))) + (FAV(fs)->flag2 & JTWILLBEOPENED+JTCOUNTITEMS)) & (FAV(gs)->flag&VJTFLGOK1?~0:~JTFLAGMSK)),w,gs));  /* inplace g unless a=w.  jtinplace is always set */ \
+A gx; RZ(gx=(g1)((J)(intptr_t)((((I)jtinplace&((I )(a!=w)|~(JTWILLBEOPENED+JTCOUNTITEMS+JTINPLACEA+JTINPLACEW))) + (FAV(fs)->flag2 & JTWILLBEOPENED+JTCOUNTITEMS)) & (FAV(gs)->flag&VJTFLGOK1?~0:~JTFLAGMSK)),w,gs));  /* inplace g unless a=w.  jtinplace is always set */
 /* inplace gx unless it is protected */ \
 POPZOMB; jtinplace=(J)(intptr_t)(((I)jtinplace&~(JTINPLACEW))+(((I )(gx!=prota)&(I )(gx!=protw))*JTINPLACEW)); \
 jtinplace=FAV(fs)->flag&VJTFLGOK2?jtinplace:jt; \
 A z;RZ(z=(f2)(jtinplace,a,gx,fs)); \
 EPILOG(z);} \
 , 0112)
-
+#else
+// obsolete A gx; RZ(gx=(g1)((J)(intptr_t)((((I)jtinplace&((I )(a!=w)|~(JTWILLBEOPENED+JTCOUNTITEMS+JTINPLACEA+JTINPLACEW))) + (FAV(fs)->flag2 & JTWILLBEOPENED+JTCOUNTITEMS)) & (FAV(gs)->flag&VJTFLGOK1?~0:~JTFLAGMSK)),w,gs));  /* inplace g unless a=w.  jtinplace is always set */
+CS2IP(static,jthook2, \
+{PUSHZOMB; A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)(intptr_t)((I)a+((I)jtinplace&JTINPLACEA)); \
+A gx; RZ(gx=(g1)((J)(intptr_t)((I)jt + ((((I)jtinplace&((a!=w)<<JTINPLACEWX)) + ((FAV(fs)->flag2>>(VF2WILLOPEN2WX-VF2WILLOPEN1X)) & JTWILLBEOPENED+JTCOUNTITEMS)) & REPSGN(SGNIF(FAV(gs)->flag,VJTFLGOK1X)))),w,gs));  /* inplace g unless a=w.  jtinplace is always set */ \
+/* inplace gx unless it is protected */ \
+POPZOMB; jtinplace=(J)(intptr_t)(((I)jtinplace&~(JTINPLACEW))+(((I )(gx!=prota)&(I )(gx!=protw))*JTINPLACEW)); \
+jtinplace=FAV(fs)->flag&VJTFLGOK2?jtinplace:jt; \
+A z;RZ(z=(f2)(jtinplace,a,gx,fs)); \
+EPILOG(z);} \
+, 0112)
+#endif
 
 static DF1(jthkiota){DECLFG;A a,e;I n;P*p;
  RZ(w);

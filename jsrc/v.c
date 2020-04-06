@@ -28,7 +28,7 @@ F1(jtravel){A a,c,q,x,y,y0,z;B*b;I f,j,m,r,*u,*v,*yv;P*wp,*zp;
    // the number of atoms
    AR(w)=(RANKT)(1+f); AS(w)[f]=m; RETF(w);  // if virtual inplace, notify the originator
   }
-  // Not inplaceable.  Create a (noninplace) virtual copy, but not if NJA memory
+  // Not inplaceable.  Create a (noninplace) virtual copy, but not if NJA memory  NJAwhy
   if(!(AFLAG(w)&(AFNJA))){RZ(z=virtual(w,0,1+f)); AN(z)=AN(w); MCISH(AS(z),AS(w),f) AS(z)[f]=m; RETF(z);}
 
   // If we have to allocate a new block, do so

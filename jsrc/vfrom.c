@@ -427,7 +427,7 @@ static F2(jtafrom){PROLOG(0073);A c,ind,p=0,q,*v,y=w;B bb=1;I acr,ar,i=0,j,m,n,p
   RZ(y); p=0;
  }
  // We have to make sure that a virtual NJA block does not become the result, because x,y and x u}y allow modifying those even when the usecount is 1.  Realize in that case
- RE(y); if(AFLAG(y)&AFNJA)RZ(y=ca(y));   EPILOG(y);   // If the result is NJA, it must be virtual.
+ RE(y); if(AFLAG(y)&AFNJA){SEGFAULT RZ(y=ca(y));}   EPILOG(y);   // If the result is NJA, it must be virtual.  NJAwhy can it happen?  scaf
 }    /* a{"r w for boxed index a */
 
 F2(jtfrom){I at;A z;

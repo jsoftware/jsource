@@ -524,7 +524,7 @@ RESTRICTF A jtvirtual(J jtip, AD *RESTRICT w, I offset, I r){AD* RESTRICT z;
  }else{
   // not self-virtual block: allocate a new one
   RZ(z=gafv(SZI*(NORMAH+r)-1));  // allocate the block
-  AFLAG(z)=AFVIRTUAL;  // flags: not recursive, not UNINCORPABLE
+  AFLAG(z)=AFVIRTUAL;  // flags: not recursive, not UNINCORPABLE, not NJA
   AC(z)=ACUC1; AT(z)=t; AK(z)=(CAV(w)-(C*)z)+offset; AR(z)=(RANKT)r;  // virtual, not inplaceable
   // If w is inplaceable and inplacing is enabled, we could transfer the inplaceability to the new virtual block.  We choose not to, because we have already picked up
   // virtual-in-place cases above.  The main case would be an inplaceable UNINCORPABLE block, which might be worth the trouble.

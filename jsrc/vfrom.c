@@ -72,7 +72,7 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wk,wn,wr,*ws,zn;
   // Also m: #wcr-cells in w 
   PROD(m,wf,ws); zn=k*m;  RE(zn=mult(an,zn));
 // correct  if(((zn-2)|-(wf|(wflag&(AFNJA))))>=0){  // zn>1 and not (frame or NJA)
-  if(((zn-2)|(wr-2)|-(wf|(wflag&(AFNJA))))>=0){  // zn>1 and not (frame or NJA) and rank>1.  Don't take the time creating a virtual block for a list.  User should use ;.0 for that
+  if(((zn-2)|(wr-2)|-(wf|(wflag&(AFNJA))))>=0){  // zn>1 and not (frame or NJA) and rank>1.  Don't take the time creating a virtual block for a list.  User should use ;.0 for that  NJAwhy
    // result is more than one atom and does not come from multiple cells.  Perhaps it should be virtual.  See if the indexes are consecutive
    I index0 = av[0]; index0+=REPSGN(index0)&p;  // index of first item
    // check the last item before checking the middle.
@@ -427,7 +427,7 @@ static F2(jtafrom){PROLOG(0073);A c,ind,p=0,q,*v,y=w;B bb=1;I acr,ar,i=0,j,m,n,p
   RZ(y); p=0;
  }
  // We have to make sure that a virtual NJA block does not become the result, because x,y and x u}y allow modifying those even when the usecount is 1.  Realize in that case
- RE(y); if(AFLAG(y)&AFNJA){SEGFAULT RZ(y=ca(y));}   EPILOG(y);   // If the result is NJA, it must be virtual.  NJAwhy can it happen?  scaf
+ RE(y); if(AFLAG(y)&AFNJA){RZ(y=ca(y));}   EPILOG(y);   // If the result is NJA, it must be virtual.  NJAwhy can it happen?  scaf
 }    /* a{"r w for boxed index a */
 
 F2(jtfrom){I at;A z;
@@ -437,7 +437,7 @@ F2(jtfrom){I at;A z;
  if(!((AT(a)|AT(w))&(SPARSE))){
   // if INT|FL atom { INT|FL array, and no frame, just pluck the value.  If a is inplaceable and not unincorpable, use it
   // If we turn the result to BOX it will have the original flags, i. e. it will be nonrecursive.  Thus fa will not free the contents, which do not have incremented usecount (and are garbage on error)
-  if(SY_64&&!((AT(a)&(NOUN&~(B01|INT|FL)))+(AT(w)&(NOUN&~(INT|FL|BOX)))+AR(a)+(SGNTO0((((RANKT)jt->ranks-AR(w))|(AR(w)-1))))+(AFLAG(w)&AFNJA))){
+  if(SY_64&&!((AT(a)&(NOUN&~(B01|INT|FL)))+(AT(w)&(NOUN&~(INT|FL|BOX)))+AR(a)+(SGNTO0((((RANKT)jt->ranks-AR(w))|(AR(w)-1))))+(AFLAG(w)&AFNJA))){   // NJAwhy
    I av;  // selector value
    if(AT(a)&(B01|INT)){av=BIV0(a);  // INT index
    }else{  // FL index

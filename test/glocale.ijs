@@ -233,6 +233,18 @@ f =: 0&".&.> y =: 18!:3 ''
 18!:55 e
 18!:55 >f
 
+NB. Make sure path is freed when locale destroyed
+before =. 00 + 00
+after =. 00 + 00
+before =. 7!:0 ''
+1: 18!:3 <'a'
+('a';'a';'a';'a';'a';'a';'a';'a';'a';'a';'a') 18!:2 <'a'
+18!:55 <'a'
+after  =. 7!:0 ''
+64 >: after - before
+4!:55 ;:'after before'
+
+
 'domain error'    -: lpath etx 'abc'
 'domain error'    -: lpath etx 2 3.4
 'domain error'    -: lpath etx 2 3j4

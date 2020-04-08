@@ -289,7 +289,7 @@ tblockcase:
   case CDO:
 docase:
    // do. here is one following if., elseif., or while. .  It always follows a T block, and skips the
-   // following B block if the condition is false.  Set b to 1 iff the condition is true
+   // following B block if the condition is false.
    //  Start by assuming condition is true; set to move to the next line then
    ++i;
    // Quick true cases are: nonexistent t; empty t; direct numeric t with low byte nonzero.  This gets most of the true.  We add in char types cause it's free (they are always true)

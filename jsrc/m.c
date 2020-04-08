@@ -440,7 +440,7 @@ static void freesymb(J jt, A w){I j,wn=AN(w); LX k,kt,* RESTRICT wv=LXAV0(w);
   // we know there will be no allocations during the free process.
  // First, free the path and name (in the SYMLINFO block), and then free the SYMLINFO block itself
  if(!(AR(w)&LLOCALTABLE)&&(k=wv[SYMLINFO])){  // for local symbol tables, LINFO is not a hashchain; and it might have had an error in allocation
-  fr(LOCPATH(w));
+  fa(LOCPATH(w));   // block is recursive; must fa() to free sublevels
   fr(LOCNAME(w));
   // clear the data fields   kludge but this is how it was done (should be done in symnew)
   jtsympv[k].name=0;jtsympv[k].val=0;jtsympv[k].sn=0;jtsympv[k].flag=0;
@@ -1103,7 +1103,7 @@ RESTRICTF A jtgah(J jt,I r,A w){A z;
  R z;
 }    /* allocate header */ 
 
-// clone w, returning the address of the cloned area.  If w is boxed relative it must be RELOCATED later
+// clone w, returning the address of the cloned area.  Result is NOT recursive
 F1(jtca){A z;I t;P*wp,*zp;
  RZ(w);
  t=AT(w);

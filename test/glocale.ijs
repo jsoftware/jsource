@@ -242,8 +242,18 @@ before =. 7!:0 ''
 18!:55 <'a'
 after  =. 7!:0 ''
 64 >: after - before
-4!:55 ;:'after before'
 
+before =. 00 + 00
+after =. 00 + 00
+before =. 7!:0 ''
+1: l =. 18!:3 ''
+(l,l,l,l,l,l,l,l,l,l,l,l,l) 18!:2 l
+18!:55 l
+4!:55 <'l'
+after  =. 7!:0 ''
+64 >: after - before
+
+4!:55 ;:'after before'
 
 'domain error'    -: lpath etx 'abc'
 'domain error'    -: lpath etx 2 3.4

@@ -426,7 +426,8 @@ typedef I SI;
 #define AFNJA           ((I)1<<AFNJAX)
 #define AFNVRX          8
 #define AFNVR           ((I)1<<AFNVRX)  // This value is on the parser's execution stack, and must not be freed until it is removed
-#define AFUNIFORMITEMSX 16      // matches SBTX
+// the spacing of VIRTUALBOXED->UNIFORMITEMS must match ZZFLAGWILLBEOPENED->ZZCOUNTITEMS
+#define AFUNIFORMITEMSX 22     // matches MARK
 #define AFUNIFORMITEMS  ((I)1<<AFUNIFORMITEMSX)  // It is known that this boxed array has contents whose items are of uniform shape and type
 #define AFNVRUNFREEDX   18
 #define AFNVRUNFREED    ((I)1<<AFNVRUNFREEDX)  // This value does NOT need to be freed by the parser, even though it was stacked
@@ -435,9 +436,11 @@ typedef I SI;
                                  // m field points to the start of the block containing the actual data.  A VIRTUAL block cannot be incorporated into another block, and it
                                  // cannot be assigned, unless it is 'realized' by creating another block and copying the data.  We realize whenever we call ra() on the block,
                                  // except during the EPILOG, where we don't realize the block unless the real block is about to be freed.
-#define AFUNINCORPABLEX 19      // matches XDX
+#define AFUNINCORPABLEX 16      // matches SBTX
 #define AFUNINCORPABLE  ((I)1<<AFUNINCORPABLEX)  // (used in result.h) this block is a virtual block used for subarray tracking and must not
                                 // ever be put into a boxed array, even if WILLBEOPENED is set, because it changes
+#define AFVIRTUALBOXEDX 19   // matches XDX
+#define AFVIRTUALBOXED  ((I)1<<AFVIRTUALBOXEDX)  // this block (created in result.h) is an array that is about to be opened, and thus may contain virtual blocks as elements
 #define AFUPPERTRIX 30      // matches RPAR
 #define AFUPPERTRI  ((I)1<<AFUPPERTRIX)  // (used in cip.c) This is an upper-triangular matrix
 

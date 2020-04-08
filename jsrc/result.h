@@ -327,11 +327,12 @@ do{
 #ifdef ZZEXIT
  // result is now in zz, which must not be 0
  // if ZZFLAGCOUNTITEMS is still set, we got through assembly with all boxed homogeneous. Mark the result.
- // Any bypass path to here must clear ZZFLAGCOUNTITEMS.   
- AFLAG(zz)|=(ZZFLAGWORD&ZZFLAGCOUNTITEMS)<<(AFUNIFORMITEMSX-ZZFLAGCOUNTITEMSX);
+ // Any bypass path to here must clear ZZFLAGCOUNTITEMS.  Same with WILLBEOPENED, which turns into AFVIRTUALBOXED
+ AFLAG(zz)|=(ZZFLAGWORD&(ZZFLAGWILLBEOPENED|ZZFLAGCOUNTITEMS))<<(AFUNIFORMITEMSX-ZZFLAGCOUNTITEMSX);
 
   // If WILLBEOPENED is set, there is no reason to EPILOG.  We didn't have any wrecks, we didn't allocate any blocks, and we kept the
-  // result as a nonrecursive block.
+  // result as a nonrecursive block.  In fact, we must avoid EPILOG because that would increment the usecount of the contents and apply the death warrant; then
+  // when the block was finally freed the backer would leak, because the check for the backer is applied only in tpop
  if(ZZFLAGWORD&ZZFLAGWILLBEOPENED){RETF(zz);}  // no need to set NOSMREL either, or check for inhomogeneous results
 
  ASSERT((ZZFLAGWORD&(ZZFLAGHASUNBOX|ZZFLAGHASBOX))!=(ZZFLAGHASUNBOX|ZZFLAGHASBOX),EVDOMAIN);  // if there is a mix of boxed and non-boxed results, fail

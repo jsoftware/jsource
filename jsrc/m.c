@@ -807,7 +807,7 @@ A* jttg(J jt, A *pushp){     // Filling last slot; must allocate next page.
     jt->tnextpushp = --pushp;  // back up the push pointer to the last valid location
     ASSERT(0,EVWSFULL);   // fail
    }
-   jt->malloctotal += NTSTACK+NTSTACKBLOCK;  // add to toal allocated
+   jt->malloctotal += NTSTACK+NTSTACKBLOCK;  // add to total allocated
    // chain previous allocation to the new one
    *v = (A)jt->tstackcurr;   // backchain old buffers to new, including bias
    jt->tstackcurr = (A*)v;    // set new buffer as the one to use, biased so we can index it from pushx

@@ -249,12 +249,33 @@ C* _stdcall JGetR(J jt){
 }
 
 /* socket protocol CMDGET name */
-A _stdcall JGetA(J jt, I n, C* name){A x,z;
+// Return the binary rep of the given name
+// We MALLOC a return block so that we don't lose J memory.  We reuse the block for successive calls, or maybe free it,
+// so the user must save it before re-calling.  This is a kludge - the user should pass in the address/length of the block to use - but
+// it preserves the interface
+// If the pointer to the name is NULL we just free the block
+A _stdcall JGetA(J jt, I n, C* name){A x,z=0;
+ if(name==0){if(jt->iomalloc){FREE(jt->iomalloc); jt->malloctotal -= jt->iomalloclen; jt->iomalloc=0; jt->iomalloclen=0;} R 0;}
  jt->jerr=0;
- if(!(x=symbrdlock(nfs(n,name)))){ jsignal(EVILNAME); R 0;}
- if(FUNC&AT(x)){ jsignal(EVDOMAIN); R 0;}
- z=binrep1(x);
- R z;
+ A *old=jt->tnextpushp;
+ if(!(x=symbrdlock(nfs(n,name)))){ jsignal(EVILNAME);  // look up the name, error if invalid
+ }else if(FUNC&AT(x)){ jsignal(EVDOMAIN);   // verify the value is not adv/verb/conj
+ }else{
+  // name is OK; get the binary rep
+  if(z=binrep1(x)){
+   // bin rep was found.  Transfer it to MALLOC memory.  It is a LIT array
+   // we transfer the whole thing, header and all.  Fortunately it is relocatable
+   I replen = &CAV(z)[AN(z)] - (C*)z;  // length from start of z to end+1 of data
+   // See if we can reuse the block.  We can, if it is big enough.  But if it is twice as big as the return value, don't.  Watch for overflow!
+   if(jt->iomalloc && (jt->iomalloclen < replen || (jt->iomalloclen>>1) > replen)){FREE(jt->iomalloc); jt->malloctotal -= jt->iomalloclen; jt->iomalloc=0;}  // free block if not reusable
+   if(!jt->iomalloc){if(jt->iomalloc=MALLOC(replen)){jt->malloctotal += replen; jt->iomalloclen = replen;}}  // allocate block if needed, and account for its space
+   if(jt->iomalloc){memcpy(jt->iomalloc,z,replen); z=(A)replen;  // normal case: block exists, move the data, set the return address to the malloc block
+   }else{jt->iomalloclen=0; z=0;}   // if unable to allocate, return error and indicate block is empty
+  }
+ }
+ // z has the result, which is in MALLOC memory if it exists.  Free any J memory we used
+ tpop(old);
+ R z;   // return the allocated (or reused) area
 }
 
 /* socket protocol CMDSET */
@@ -317,7 +338,7 @@ void _stdcall JSMX(J jt, void* out, void* wd, void* in, void* poll, I opts)
  }
 }
 
-C* _stdcall JGetLocale(J jt){return getlocale(jt);}
+C* _stdcall JGetLocale(J jt){A *old=jt->tnextpushp; C* z=getlocale(jt); tpop(old); R z;}
 
 A _stdcall Jga(J jt, I t, I n, I r, I*s){A z;
  z=ga(t, n, r, s);
@@ -439,16 +460,21 @@ int valid(C* psrc, C* psnk)
 
 int _stdcall JGetM(J jt, C* name, I* jtype, I* jrank, I* jshape, I* jdata)
 {
- A a; char gn[256];
- if(strlen(name) >= sizeof(gn)){ jsignal(EVILNAME); return EVILNAME;}
- if(valid(name, gn)){ jsignal(EVILNAME); return EVILNAME;}
- if(!(a=symbrdlock(nfs(strlen(gn),gn)))){ jsignal(EVDOMAIN); R EVDOMAIN;}
- if(FUNC&AT(a)){ jsignal(EVDOMAIN); R EVDOMAIN;}
- *jtype = AT(a);
- *jrank = AR(a);
- *jshape = (I)AS(a);
- *jdata = (I)AV(a);
- return 0;
+ A a; char gn[256]; int z;
+ A *old=jt->tnextpushp;
+ if(strlen(name) >= sizeof(gn)){ jsignal(z=EVILNAME);
+ }else if(valid(name, gn)){ jsignal(z=EVILNAME);
+ }else if(!(a=symbrdlock(nfs(strlen(gn),gn)))){ jsignal(z=EVDOMAIN);
+ }else if(FUNC&AT(a)){ jsignal(z=EVDOMAIN);
+ }else{
+  *jtype = AT(a);
+  *jrank = AR(a);
+  *jshape = (I)AS(a);
+  *jdata = (I)AV(a);
+  z=0;  // good return
+ }
+ tpop(old);
+ return z;
 }
 
 static int setterm(J jt, C* name, I* jtype, I* jrank, I* jshape, I* jdata)

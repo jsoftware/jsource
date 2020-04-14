@@ -338,7 +338,15 @@ void _stdcall JSMX(J jt, void* out, void* wd, void* in, void* poll, I opts)
  }
 }
 
-C* _stdcall JGetLocale(J jt){A *old=jt->tnextpushp; C* z=getlocale(jt); tpop(old); R z;}
+// return pointer to string name of current locale, or 0 if error
+C* _stdcall JGetLocale(J jt){
+ A *old=jt->tnextpushp;  // set free-back-to point
+ if(jt->iomalloc)FREE(jt->iomalloc);  // free old block if any
+ C* z=getlocale(jt);  // get address of string to return
+ if(jt->iomalloc=MALLOC(strlen(z)))strcpy(jt->iomalloc,z);  // allocate & copy
+ tpop(old);  // free allocated blocks
+ R jt->iomalloc;  // return pointer to string
+}
 
 A _stdcall Jga(J jt, I t, I n, I r, I*s){A z;
  z=ga(t, n, r, s);

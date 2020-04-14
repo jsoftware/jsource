@@ -269,7 +269,7 @@ A _stdcall JGetA(J jt, I n, C* name){A x,z=0;
    // See if we can reuse the block.  We can, if it is big enough.  But if it is twice as big as the return value, don't.  Watch for overflow!
    if(jt->iomalloc && (jt->iomalloclen < replen || (jt->iomalloclen>>1) > replen)){FREE(jt->iomalloc); jt->malloctotal -= jt->iomalloclen; jt->iomalloc=0;}  // free block if not reusable
    if(!jt->iomalloc){if(jt->iomalloc=MALLOC(replen)){jt->malloctotal += replen; jt->iomalloclen = replen;}}  // allocate block if needed, and account for its space
-   if(jt->iomalloc){memcpy(jt->iomalloc,z,replen); z=(A)replen;  // normal case: block exists, move the data, set the return address to the malloc block
+   if(jt->iomalloc){memcpy(jt->iomalloc,z,replen); z=(A)jt->iomalloc;  // normal case: block exists, move the data, set the return address to the malloc block
    }else{jt->iomalloclen=0; z=0;}   // if unable to allocate, return error and indicate block is empty
   }
  }
@@ -341,9 +341,9 @@ void _stdcall JSMX(J jt, void* out, void* wd, void* in, void* poll, I opts)
 // return pointer to string name of current locale, or 0 if error
 C* _stdcall JGetLocale(J jt){
  A *old=jt->tnextpushp;  // set free-back-to point
- if(jt->iomalloc)FREE(jt->iomalloc);  // free old block if any
+ if(jt->iomalloc){FREE(jt->iomalloc); jt->malloctotal -= jt->iomalloclen; jt->iomalloc=0; jt->iomalloclen=0;}  // free old block if any
  C* z=getlocale(jt);  // get address of string to return
- if(jt->iomalloc=MALLOC(strlen(z)))strcpy(jt->iomalloc,z);  // allocate & copy
+ if(jt->iomalloc=MALLOC(1+strlen(z))){jt->malloctotal += 1+strlen(z); jt->iomalloclen = 1+strlen(z); strcpy(jt->iomalloc,z); }  // allocate & copy, and account for its space
  tpop(old);  // free allocated blocks
  R jt->iomalloc;  // return pointer to string
 }

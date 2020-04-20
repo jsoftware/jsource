@@ -65,7 +65,7 @@ static B jtforinit(J jt,CDATA*cv,A t){A x;C*s,*v;I k;
  R 1;
 }    /* for. do. end. initializations */
 
-// A for. block is ending.   free what needs to be freed.  Don't delete any names
+// A for. block is ending.   free the text string "xyz_index" (if saved) and the iteration array, Don't delete any names
 static B jtunstackcv(J jt,CDATA*cv){
  if(cv->x){fa(cv->x);}
  fa(cv->t); 
@@ -377,7 +377,8 @@ dobblock:
    }
    ++cv->j;  // step to first (or next) iteration
    if(cv->x){A x;  // assign xyz and xyz_index for for_xyz.
-    symbisdel(nfs(6+cv->k,cv->xv),x=sc(cv->j),  locsym);  // Assign line number.  since there is no sentence, take deletion off nvr stack
+    if(!(ci->canend&2))BZ(z=rat(z));   // if z might be the result, protect it over the possible frees during this assignment
+    symbisdel(nfs(6+cv->k,cv->xv),x=sc(cv->j),  locsym);  // Assign iteration number.  since there is no sentence, take deletion off nvr stack
     symbisdel(nfs(  cv->k,cv->iv),cv->j<cv->n?from(x,cv->t):mtv,locsym);
    }
    if(cv->j<cv->n){  // if there are more iterations to do...

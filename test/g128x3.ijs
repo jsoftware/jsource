@@ -96,6 +96,54 @@ b=: 32 ?@$ 2
 'length error' -: (34;56;3)     f etx 'xyz'
 'length error' -: (b;_1;3)      f etx 'xyz'
 
+NB. base64
+
+f =: 3!:10
+'domain error' -: f etx 2 3 4
+'domain error' -: f etx 2 3 4x
+'domain error' -: f etx 2 3.4
+'domain error' -: f etx 2 3j4
+'domain error' -: f etx 2 3r4
+'domain error' -: f etx 2 3;4
+'domain error' -: f etx s:@<"0 'abc'
+'domain error' -: f etx u: 'abc'
+'domain error' -: f etx 10&u: 'abc'
+
+'' -: 3!:10 ''
+'Zg==' -: 3!:10 'f'
+'Zg==' -: 3!:10 ,'f'
+'Zm8=' -: 3!:10 'fo'
+'Zm9v' -: 3!:10 'foo'
+'Zm9vYg==' -: 3!:10 'foob'
+'Zm9vYmE=' -: 3!:10 'fooba'
+'Zm9vYmFy' -: 3!:10 'foobar'
+
+f =: 3!:11
+'domain error' -: f etx 2 3 4
+'domain error' -: f etx 2 3 4x
+'domain error' -: f etx 2 3.4
+'domain error' -: f etx 2 3j4
+'domain error' -: f etx 2 3r4
+'domain error' -: f etx 2 3;4
+'domain error' -: f etx s:@<"0 'abc'
+'domain error' -: f etx u: 'abc'
+'domain error' -: f etx 10&u: 'abc'
+'domain error' -: 3!:11 etx 'a'
+'domain error' -: 3!:11 etx ',a'
+
+(3!:11 '') -:  ''
+(3!:11 'Zg==') -: ,'f'
+(3!:11 'Zm8=') -:  'fo'
+(3!:11 'Zm9v') -:  'foo'
+(3!:11 'Zm9vYg==') -:  'foob'
+(3!:11 'Zm9vYmE=') -:  'fooba'
+(3!:11 'Zm9vYmFy') -:  'foobar'
+
+(-:   3!:11 @: (3!:10)) a. {~ 50 37 ?@$ 256
+(-:   3!:11 @: (3!:10)) a. {~ 35 36 ?@$ 256
+(-:   3!:11 @: (3!:10)) a. {~ 41 35 ?@$ 256
+
+
 
 4!:55 ;:'b bitand bitshift bitshifts bitxor crc crcbyte crcpoly crcpolyb crcpolyi crctbl'
 4!:55 ;:'crctblb crctbli'

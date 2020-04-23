@@ -243,8 +243,8 @@ PRIM primtab[256] = {
  /*  `. */       /* undefined */
  /*  `: */  PRIMACV(CGRCO,   CONJ, jtdomainerr1, jtevger,  0,   0,   0   ,VFLAGNONE,VF2NONE),
  /*  @  */  PRIMACV(CAT,     CONJ, jtdomainerr1, jtatop,   0,   0,   0   ,VFLAGNONE,VF2NONE),
- /*  @. */  PRIMACV(CATDOT,  CONJ, jtdomainerr1, jtagenda, 0,   0,   0   ,VIRS1,VF2NONE),
- /*  @. */  PRIMACV(CATDOTCO, CONJ, jtdomainerr1, jtagendai, 0,   0,   0   ,VFLAGNONE,VF2NONE),
+ /*  @. */  PRIMACV(CATDOT,  CONJ, jtdomainerr1, jtagendai, 0,   0,   0   ,VFLAGNONE,VF2NONE),
+// obsolete  /*  @.: */  PRIMACV(CATDOTCO, CONJ, jtdomainerr1, jtagendai, 0,   0,   0   ,VFLAGNONE,VF2NONE),
  /*  @: */  PRIMACV(CATCO,   CONJ, jtdomainerr1, jtatco,   0,   0,   0   ,VFLAGNONE,VF2NONE),
  /*  &  */  PRIMACV(CAMP,    CONJ, jtdomainerr1, jtamp,    0,   0,   0   ,VFLAGNONE,VF2NONE),
  /*  &. */  PRIMACV(CUNDER,  CONJ, jtdomainerr1, jtunder,  0,   0,   0   ,VFLAGNONE,VF2NONE),

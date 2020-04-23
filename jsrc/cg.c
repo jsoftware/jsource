@@ -147,6 +147,7 @@ F2(jtevger){A hs;I k;
 
 F2(jttie){RZ(a&&w); R over(VERB&AT(a)?arep(a):a,VERB&AT(w)?arep(w):w);}
 
+#if 0  // obsolete
 // We want to know whether the verb w can guarantee that it will return the same shape it is given, if all
 // executions of all verbs have the same shape
 static B jtatomic(J jt,C m,A w){A f,g;B ax,ay,vf,vg;C c,id;V*v;
@@ -246,14 +247,16 @@ static DF1(jtcase1){A h,*hv;B b;I r,wr;V*sv;
  if(r>=wr){R jtcase1b(jtinplace,w,self);}  // If there is only 1 cell, execute on it, keeping inplaceability
  R rank1ex(w,self,r,jtcase1b);  // Otherwise loop over the cells (perforce not inplace)
 }
+#endif
 
 // m@.:v y.  Execute the verbs at high rank if the operands are large
 // Bivalent entry point: called as (jt,w,self) or (jt,a,w,self)
-static DF2(jtcasei1){A vres,z;I gerit[128/SZI],ZZFLAGWORD;
+static DF2(jtcasei12){A vres,z;I gerit[128/SZI],ZZFLAGWORD;
  RZ(a&&w);
  F1PREFIP; PROLOG(997);
  // see if we were called as monad or dyad.  If monad, fix up w and self
  ZZFLAGWORD=AT(w)&VERB?ZZFLAGWILLBEOPENED|ZZFLAGCOUNTITEMS:ZZFLAGWILLBEOPENED|ZZFLAGCOUNTITEMS|ZZFLAGISDYAD;  // we collect the results on the cells, but we don't assemble into a result.  To signal this, we force BOXATOP and set WILLBEOPENED
+ jtinplace=(J)((I)jtinplace&(a==w?-4:-1));  // Don't allow inplacing if a==w dyad
  self=AT(w)&VERB?w:self; w=AT(w)&VERB?a:w;  // if monad, a==w
  I wr=AR(w); I ar=AR(a); I mr=MAX(wr,ar);    // ranks, and max rank  // obsolete  r=(RANKT)jt->ranks; r=wr<r?wr:r; r=MIN(r,FAV(self)->mr);   // scaf turn off IRS
  // Execute v at infinite rank
@@ -262,149 +265,162 @@ static DF2(jtcasei1){A vres,z;I gerit[128/SZI],ZZFLAGWORD;
  // Now vres is the array of selectors into the gerund.  There should be one for each cell of the input.  Check that
  // The rank of the result must be no more than the larger rank
  I vr=AR(vres);  // rank of selectors
- ASSERT(mr>=vr,EVRANK);  // cell must not be bigger than the whole
- ASSERTAGREE(AS(vres),AS(w),MIN(vr,wr));  // shapes must match
- if(ZZFLAGWORD&ZZFLAGISDYAD)ASSERTAGREE(AS(vres),AS(a),MIN(vr,ar));   // if dyad, check both
- I ncells; PROD(ncells,AR(vres),AS(vres));  // number of result cells
- I nar=AN(FAV(self)->fgh[2]);  // number of ARs in the gerund
- wr-=vr; wr=wr+vr?wr:IMIN;  // now wr is the rank of a cell of w (negative if repetition required in w), or IMIN if w was an atom
- ar-=vr; ar=ar+vr?ar:IMIN;  // same for a
- A zz=0;  // output area
- // We can run our trimmed-down rank loop here if there is no repetition of cells, OR if one atom is repeated over the entire other argument;
- // that is, if each cell-rank is positive, 0 or IMIN.  We also make sure there are enough results to make the processing worthwhile
- // Since the larger cell-rank must not be negative, we can look only at the smaller
- mr=MIN(ar,wr); // the smaller
- if(((-mr|~mr)&((AT(w)&SPARSE)-1)&(2*nar-ncells))<0){  // if mr is IMIN or nonneg, and there are enough results compared to # gerunds, reduce # verb executions.  Sparse doesn't do this.
-  // Make sure the results are integer or boolean
-  if(!(AT(vres)&(B01|INT)))RZ(vres=cvt(INT,vres));
-  // grade the results, as a list
-  A gradepm; RZ(gradepm=grade1(ravel(vres)));
-  // decide how many result boxes to allocate based on min/max result - it's a byte or an int
-  I bmsk=-((AT(vres)>>(INTX-1))&2)+1;  // mask for getting valid bits from vres
-  I bsiz=AT(vres)&B01?1:SZI;  // size of element of vres
-  I minx=*(I*)(CAV(vres)+IAV(gradepm)[0]*bsiz)&bmsk;   // smallest result
-  I maxx=*(I*)(CAV(vres)+IAV(gradepm)[AN(gradepm)-1]*bsiz)&bmsk;  // largest result
-  ASSERT(minx>=-nar&&maxx<nar,EVINDEX);  // verify that the results are in range
-  I numres= maxx - minx + 1;  // max possible # of selectors
-  // get sorted input order - as long as it wasn't an atom, which we will have to repeat 
-  A sortw,sorta;
-  // Now we construe the input as a list of ar/wr-cells.  If rank is neg, the input was an atom: don't reshape
-  if(wr>=0){
-   RZ(w=jtredcatcell(jtinplace,w,wr));
-   RZ(sortw=from(gradepm,w));
-   jtinplace=(J)((I)jtinplace|JTINPLACEW);   // now that we have a copy of the input, we can inplace it
-   ZZFLAGWORD|=ZZFLAGARRAYW;  // indicate that virtw must be updated between iterations
-  }else{
-   sortw=w;
-   jtinplace=(J)((I)jtinplace&~JTINPLACEW);   // if we have a repeated atom, we MSUT NOT inplace it
-  }
-  // create a virtual block for the input(s).
-  A virtw,virta; fauxblock(virtwfaux); fauxblock(virtafaux);
-  I virtr=(wr|REPSGN(wr))+1;   // rank of a list of cells, or 0 if original arg was an atom
-  fauxvirtual(virtw,virtwfaux,sortw,virtr,ACUC1|ACINPLACE) MCISH(AS(virtw),AS(w),virtr); AN(virtw)=1;  // in case atom, set AN to 1
-  // Create the size of a cell in atoms.  If the original argument was an atom (?r=IMAX), use 0 for the cellsize so that the cell is repeated
-  I wck,ack; PROD(wck,virtr-1,AS(sortw)+1);  // number of atoms in a cell of w
-  I ak,wk=bp(AT(w)); wk&=REPSGN(~wr);  // size of atom of k, but 0 if w is an atom (so we don't advance)
-  if(ZZFLAGWORD&ZZFLAGISDYAD){   // if we need to repeat for a
-   if(ar>=0){
-    RZ(a=jtredcatcell(jtinplace,a,ar));
-    RZ(sorta=from(gradepm,a));
-    jtinplace=(J)((I)jtinplace|JTINPLACEA);
+ if(vr!=0){
+  // The verb is not applied at maximum rank.  Do the full processing
+  ASSERT(mr>=vr,EVRANK);  // cell must not be bigger than the whole
+  ASSERTAGREE(AS(vres),AS(w),MIN(vr,wr));  // shapes must match
+  if(ZZFLAGWORD&ZZFLAGISDYAD)ASSERTAGREE(AS(vres),AS(a),MIN(vr,ar));   // if dyad, check both
+  I ncells; PROD(ncells,AR(vres),AS(vres));  // number of result cells
+  I nar=AN(FAV(self)->fgh[2]);  // number of ARs in the gerund
+  wr-=vr; wr=wr+vr?wr:IMIN;  // now wr is the rank of a cell of w (negative if repetition required in w), or IMIN if w was an atom
+  ar-=vr; ar=ar+vr?ar:IMIN;  // same for a
+  A zz=0;  // output area
+  // We can run our trimmed-down rank loop here if there is no repetition of cells, OR if one atom is repeated over the entire other argument;
+  // that is, if each cell-rank is positive, 0 or IMIN.  We also make sure there are enough results to make the processing worthwhile
+  // Since the larger cell-rank must not be negative, we can look only at the smaller
+  mr=MIN(ar,wr); // the smaller
+  if(((-mr|~mr)&((AT(w)&SPARSE)-1)&(2*nar-ncells))<0){  // if mr is IMIN or nonneg, and there are enough results compared to # gerunds, reduce # verb executions.  Sparse doesn't do this.
+   // Make sure the results are integer or boolean
+   if(!(AT(vres)&(B01|INT)))RZ(vres=cvt(INT,vres));
+   // grade the results, as a list
+   A gradepm; RZ(gradepm=grade1(ravel(vres)));
+   // decide how many result boxes to allocate based on min/max result - it's a byte or an int
+   I bmsk=-((AT(vres)>>(INTX-1))&2)+1;  // mask for getting valid bits from vres
+   I bsiz=AT(vres)&B01?1:SZI;  // size of element of vres
+   I minx=*(I*)(CAV(vres)+IAV(gradepm)[0]*bsiz)&bmsk;   // smallest result
+   I maxx=*(I*)(CAV(vres)+IAV(gradepm)[AN(gradepm)-1]*bsiz)&bmsk;  // largest result
+   ASSERT(minx>=-nar&&maxx<nar,EVINDEX);  // verify that the results are in range
+   I numres= maxx - minx + 1;  // max possible # of selectors
+   // get sorted input order - as long as it wasn't an atom, which we will have to repeat
+   A sortw,sorta; J jtinplaceorig=jtinplace;   // remember inplacing for original args
+   jtinplace = jt;  // clear inplaceability for new args
+   // Now we construe the input as a list of ar/wr-cells.  If rank is neg, the input was an atom: don't reshape
+   // from here on we have w always, and optional a.  But we call a always, with optional w.  That's OK, because we set up
+   // omitted a to point to w and not to modify it.
+   if(wr>=0){
+    RZ(w=jtredcatcell(jtinplaceorig,w,wr));  // inplaceability of original w
+    RZ(sortw=from(gradepm,w));
+    jtinplace=(J)((I)jtinplace|(SGNTO0(AC(sortw))<<JTINPLACEWX));   // if we have a copy of the input, we can inplace it
+    ZZFLAGWORD|=ZZFLAGARRAYW;  // indicate that virtw must be updated between iterations
    }else{
-    sorta=a;
-    jtinplace=(J)((I)jtinplace&~JTINPLACEA);
-    ZZFLAGWORD|=ZZFLAGARRAYA;
+    sortw=w;
+    jtinplace=(J)((I)jtinplace&~JTINPLACEW);   // if we have a repeated atom, we MUST NOT inplace it
    }
-   virtr=(ar|REPSGN(ar))+1;   // rank of a list of cells, or 0 if original arg was an atom
-   fauxvirtual(virta,virtafaux,sorta,virtr,ACUC1|ACINPLACE) MCISH(AS(virta),AS(a),virtr); AN(virta)=1;
-   PROD(ack,virtr-1,AS(sorta)+1);  // number of atoms in a cell of w
-   ak=bp(AT(a)); ak&=REPSGN(~ar);  // size of atom of k, but 0 if w is an atom (so we don't advance)
-  }else{virta=virtw; ak=0;}  // if monad, set a=w, and make the addition to AK(a) harmless
+   // create a virtual block for the input(s).
+   A virtw,virta; fauxblock(virtwfaux); fauxblock(virtafaux);
+   I virtr=(wr|REPSGN(wr))+1;   // rank of a list of cells, or 0 if original arg was an atom
+   fauxvirtual(virtw,virtwfaux,sortw,virtr,ACUC1|ACINPLACE) MCISH(AS(virtw),AS(w),virtr); AN(virtw)=1;  // in case atom, set AN to 1
+   // Create the size of a cell in atoms.  If the original argument was an atom (?r=IMAX), use 0 for the cellsize so that the cell is repeated
+   I wck,ack; PROD(wck,virtr-1,AS(sortw)+1);  // number of atoms in a cell of w
+   I ak,wk=bp(AT(w)); wk&=REPSGN(~wr);  // size of atom of k, but 0 if w is an atom (so we don't advance)
+   if(ZZFLAGWORD&ZZFLAGISDYAD){   // if we need to repeat for a
+    if(ar>=0){
+     RZ(a=jtredcatcell((J)((I)jt|(((I)jtinplaceorig>>(JTINPLACEAX-JTINPLACEWX))&JTINPLACEW)),a,ar));  // move inplaceability of original a to w
+     RZ(sorta=from(gradepm,a));
+     jtinplace=(J)((I)jtinplace|(SGNTO0(AC(sorta))<<JTINPLACEAX));
+     ZZFLAGWORD|=ZZFLAGARRAYA;
+    }else{
+     sorta=a;
+     jtinplace=(J)((I)jtinplace&~JTINPLACEA);
+    }
+    virtr=(ar|REPSGN(ar))+1;   // rank of a list of cells, or 0 if original arg was an atom
+    fauxvirtual(virta,virtafaux,sorta,virtr,ACUC1|ACINPLACE) MCISH(AS(virta),AS(a),virtr); AN(virta)=1;
+    PROD(ack,virtr-1,AS(sorta)+1);  // number of atoms in a cell of w
+    ak=bp(AT(a)); ak&=REPSGN(~ar);  // size of atom of k, but 0 if w is an atom (so we don't advance)
+   }else{virta=virtw; ak=0;}  // if monad, set a=w, and make the addition to AK(a) harmless
 #define ZZDECL
 #define ZZASSUMEBOXATOP 1
 #include "result.h"
-  ZZPARMSNOFS(1,numres)
-#define ZZINSTALLFRAME(optr) *optr++=zzncells;
+   ZZPARMSNOFS(1,numres)
+#define ZZINSTALLFRAME(optr) *optr++=zzncells;  
 
-  // for each value of selector...
-  I blkstart=0;   // start and end+1 of grade
-  I *gradev=IAV(gradepm);  // base of grade vector
-  I graden=AN(gradepm);  // number of result cells
-  do{
-   // blkstart is the beginning index of the next block.
-   I currres=*(I*)(CAV(vres)+gradev[blkstart]*bsiz)&bmsk;  // the result value for this block
-   // binary search through results to find length of block
-   I srchlo=blkstart, srchhi=graden;  // srchlo is in the block, srchhi is not
-   while(srchlo<srchhi-1){  // search until we have found the last point in the block (at srchlo).  srchhi may not be a valid index
-    I probex=(srchlo+srchhi)>>1;  // ignore overflow, can't happen
-    I proberes=*(I*)(CAV(vres)+gradev[probex]*bsiz)&bmsk;  // fetch next look
-    srchlo=proberes==currres?probex:srchlo; srchhi=proberes==currres?srchhi:probex;  // move the correct end 
-   }
-   currres+=REPSGN(currres)&nar;  // convert currres to nonnegative form
-   // fill in the virtual block for this block
-   if(ZZFLAGWORD&ZZFLAGARRAYW){  // if w is not a repeated atom...
-    AS(virtw)[0]=srchhi-blkstart; AN(virtw)=AS(virtw)[0]*wck;
-    AC(virtw)=ACUC1|ACINPLACE;   // in case we created a virtual block from it, restore inplaceability to the UNINCORPABLE block (not if atom, which is never inplaceable)
-   }
-   if(ZZFLAGWORD&ZZFLAGARRAYA){  // if a is not a repeated atom...
-    AS(virta)[0]=srchhi-blkstart; AN(virta)=AS(virta)[0]*ack;
-    AC(virta)=ACUC1|ACINPLACE;   // in case we created a virtual block from it, restore inplaceability to the UNINCORPABLE block (not if atom, which is never inplaceable)
-   }
-  //  pull the function for the value, execute on the value (ASSUMEBOXATOP, WILLBEOPENED, COUNTITEMS)
-   A fs=AAV(FAV(self)->fgh[2])[currres];  // fetch the gerund to execute
-   RZ(z=(FAV(fs)->valencefns[ZZFLAGWORD>>ZZFLAGISDYADX])(jtinplace,virta,ZZFLAGWORD&ZZFLAGISDYAD?virtw:fs,fs));  // execute gerund at infinite rank, inplace
+   // for each value of selector...
+   I blkstart=0;   // start and end+1 of grade
+   I *gradev=IAV(gradepm);  // base of grade vector
+   I graden=AN(gradepm);  // number of result cells
+   do{
+    // blkstart is the beginning index of the next block.
+    I currres=*(I*)(CAV(vres)+gradev[blkstart]*bsiz)&bmsk;  // the result value for this block
+    // binary search through results to find length of block
+    I srchlo=blkstart, srchhi=graden;  // srchlo is in the block, srchhi is not
+    while(srchlo<srchhi-1){  // search until we have found the last point in the block (at srchlo).  srchhi may not be a valid index
+     I probex=(srchlo+srchhi)>>1;  // ignore overflow, can't happen
+     I proberes=*(I*)(CAV(vres)+gradev[probex]*bsiz)&bmsk;  // fetch next look
+     srchlo=proberes==currres?probex:srchlo; srchhi=proberes==currres?srchhi:probex;  // move the correct end 
+    }
+    currres+=REPSGN(currres)&nar;  // convert currres to nonnegative form
+    // fill in the virtual block for this block
+    if(ZZFLAGWORD&ZZFLAGARRAYW){  // if w is not a repeated atom...
+     AS(virtw)[0]=srchhi-blkstart; AN(virtw)=AS(virtw)[0]*wck;
+     AC(virtw)=ACUC1|ACINPLACE;   // in case we created a virtual block from it, restore inplaceability to the UNINCORPABLE block (not if atom, which is never inplaceable)
+    }
+    if(ZZFLAGWORD&ZZFLAGARRAYA){  // if a is not a repeated atom...
+     AS(virta)[0]=srchhi-blkstart; AN(virta)=AS(virta)[0]*ack;
+     AC(virta)=ACUC1|ACINPLACE;   // in case we created a virtual block from it, restore inplaceability to the UNINCORPABLE block (not if atom, which is never inplaceable)
+    }
+   //  pull the function for the value, execute on the value (ASSUMEBOXATOP, WILLBEOPENED, COUNTITEMS)
+    A fs=AAV(FAV(self)->fgh[2])[currres];  // fetch the gerund to execute
+    RZ(z=(FAV(fs)->valencefns[ZZFLAGWORD>>ZZFLAGISDYADX])(jtinplace,virta,ZZFLAGWORD&ZZFLAGISDYAD?virtw:fs,fs));  // execute gerund at infinite rank, inplace
 
 #define ZZBODY  // assemble results
 #include "result.h"
 
-   //  verify input itemcount is a prefix of result-shape
-   ASSERT(AR(z)&&AS(z)[0]==srchhi-blkstart,EVRANK);  // must have the right item count
-   blkstart=srchhi;  // advance for next block
-   AK(virtw)+=AN(virtw)*wk;  // advance over bytes just processed (but don't move if argument is an atom)
-   AK(virta)+=AN(virta)*ak;  // for a too
-  }while(blkstart<graden);  // loop till we have processed all results
-  I nblkscreated=zzboxp-AAV(zz);
-  if(ZZFLAGWORD&ZZFLAGCOUNTITEMS){
-   // The items of the results had a uniform size and type.  We can skip collecting them together, and just move the items from the boxes to their
-   // final resting place
-   // get the size of each item
-   I itemk; PROD(itemk,AR(AAV(zz)[0])-1,AS(AAV(zz)[0])+1); I zk=itemk<<bplg(AT(AAV(zz)[0]));  // get # atoms/cell, #bytes/cell
-   // allocate result area (inplace if possible)  scaf
-   GA(z,AT(AAV(zz)[0]),ncells*itemk,AR(AAV(zz)[0]),AS(AAV(zz)[0])); AS(z)[0]=ncells; // one cell per input item
-   C *zv=CAV(z);  // pointer to output block
-   // for each (actual) result block
-   I blkx=0, *agrade=gradev;  // running index of block in zz, and dest index in gradev
-   do{
-    // move values into result
-    A thisblk=AAV(zz)[blkx];  // the block we are going to move
-    I blkitemct=AS(thisblk)[0];  // number of cells
-    C *resptr=CAV(thisblk);  // running input pointer
-    if(zk==SZI){DQ(blkitemct, *(I*)(zv+zk* *agrade)=*(I*)resptr; resptr+=zk; ++agrade;)   // copy words - could use scatter
-    }else{DQ(blkitemct, memcpy(zv+zk* *agrade,resptr,zk); resptr+=zk; ++agrade;)  // copy blocks
-    }
-    ++blkx;  // advance to next input block
-   }while(blkx!=nblkscreated);  // loop till all blocks processed
-   zz=z;  // all moved -- switch to the shuffled output
+    //  verify input itemcount is a prefix of result-shape
+    ASSERT(AR(z)&&AS(z)[0]==srchhi-blkstart,EVRANK);  // must have the right item count
+    blkstart=srchhi;  // advance for next block
+    AK(virtw)+=AN(virtw)*wk;  // advance over bytes just processed (but don't move if argument is an atom)
+    AK(virta)+=AN(virta)*ak;  // for a too
+   }while(blkstart<graden);  // loop till we have processed all results
+   I nblkscreated=zzboxp-AAV(zz);
+   if(ZZFLAGWORD&ZZFLAGCOUNTITEMS){
+    // The items of the results had a uniform size and type.  We can skip collecting them together, and just move the items from the boxes to their
+    // final resting place
+    // get the size of each item
+    I itemk; PROD(itemk,AR(AAV(zz)[0])-1,AS(AAV(zz)[0])+1); I zk=itemk<<bplg(AT(AAV(zz)[0]));  // get # atoms/cell, #bytes/cell
+    // allocate result area (inplace if possible)  scaf
+    GA(z,AT(AAV(zz)[0]),ncells*itemk,AR(AAV(zz)[0]),AS(AAV(zz)[0])); AS(z)[0]=ncells; // one cell per input item
+    C *zv=CAV(z);  // pointer to output block
+    // for each (actual) result block
+    I blkx=0, *agrade=gradev;  // running index of block in zz, and dest index in gradev
+    do{
+     // move values into result
+     A thisblk=AAV(zz)[blkx];  // the block we are going to move
+     I blkitemct=AS(thisblk)[0];  // number of cells
+     C *resptr=CAV(thisblk);  // running input pointer
+     if(zk==SZI){DQ(blkitemct, *(I*)(zv+zk* *agrade)=*(I*)resptr; resptr+=zk; ++agrade;)   // copy words - could use scatter
+     }else{DQ(blkitemct, memcpy(zv+zk* *agrade,resptr,zk); resptr+=zk; ++agrade;)  // copy blocks
+     }
+     ++blkx;  // advance to next input block
+    }while(blkx!=nblkscreated);  // loop till all blocks processed
+    zz=z;  // all moved -- switch to the shuffled output
+   }else{
+    // inhomogeneous types or shapes.  Instantiate the entire result and then shuffle it into place
+    // first, install the actual number of boxes of result, which might differ from the calculated maximum
+    AN(zz)=AS(zz)[0]=nblkscreated;  // # valid boxes
+    zz=from(grade1(gradepm),raze(zz));  // create inverse grading permutation, then use it to shuffle razed results
+   }
+   // If the original input had structure, rearrange the result to match it
+   if(vr>1)RZ(zz=reitem(shape(vres),zz));
   }else{
-   // inhomogeneous types or shapes.  Instantiate the entire result and then shuffle it into place
-   // first, install the actual number of boxes of result, which might differ from the calculated maximum
-   AN(zz)=AS(zz)[0]=nblkscreated;  // # valid boxes
-   zz=from(grade1(gradepm),raze(zz));  // create inverse grading permutation, then use it to shuffle razed results
+   // If there are too few values to justify the sort, create an indirect iterator for them and run it
+   RZ(z=jtcreategerunditerator(jt,(A)&gerit,self,vres));
+   if(ZZFLAGWORD&ZZFLAGISDYAD){
+    zz=rank2ex(a,w,z,MAX(ar,0),MAX(wr,0),MAX(ar,0),MAX(wr,0),FAV(z)->valencefns[1]);  // Execute on all cells
+   }else{
+    zz=rank1ex(w,z,MAX(wr,0),FAV(z)->valencefns[0]);  // Execute on all cells
+   }
   }
-  // If the original input had structure, rearrange the result to match it
-  if(vr>1)RZ(zz=reitem(shape(vres),zz));
+  EPILOG(zz);
  }else{
-  // If there are too few values to justify the sort, create an indirect iterator for them and run it
-  RZ(z=jtcreategerunditerator(jt,(A)&gerit,self,vres));
-  if(ZZFLAGWORD&ZZFLAGISDYAD){
-   zz=rank2ex(a,w,z,MAX(ar,0),MAX(wr,0),MAX(ar,0),MAX(wr,0),FAV(z)->valencefns[1]);  // Execute on all cells
-  }else{
-   zz=rank1ex(w,z,wr,FAV(z)->valencefns[0]);  // Execute on all cells
-  }
+  // There was only 1 cell in the result.  Apply the selected verb, inplace if possible
+  I vx=i0(vres); RE(0);  // fetch index of gerund
+  vx+=REPSGN(vx)&AN(FAV(self)->fgh[2]); ASSERT(BETWEENO(vx,0,AN(FAV(self)->fgh[2])),EVINDEX);
+  A ger=AAV(FAV(self)->fgh[2])[vx];  // the selected gerund
+  R (FAV(ger)->valencefns[state>>ZZFLAGISDYADX])(FAV(ger)->flag&VJTFLGOK1?jtinplace:jt,a,state&ZZFLAGISDYAD?w:ger,ger);  // inplace if the verb can handle it
  }
- EPILOG(zz);
 }
 
+#if 0
 // x m@.v y.  Run v (not inplace); select the "BOX" containing the verb to run; run it, inplacing as called for in the input
 static DF2(jtcase2){A u;V*sv;
  F2PREFIP;PREF2(jtcase2);
@@ -414,6 +430,7 @@ static DF2(jtcase2){A u;V*sv;
 // obsolete  R jtdf2(FAV(*AAV(u))->flag&VJTFLGOK2?jtinplace:jt,a,w,*AAV(u));  // inplace if the verb can handle it
  R (FAV(*AAV(u))->valencefns[1])(FAV(*AAV(u))->flag&VJTFLGOK2?jtinplace:jt,a,w,*AAV(u));  // inplace if the verb can handle it
 }
+#endif
 
 // @.n
 static F2(jtgerfrom){A*av,*v,z;I n;
@@ -428,6 +445,7 @@ static F2(jtgerfrom){A*av,*v,z;I n;
   R z;
 }}
 
+#if 0   // obsolete
 F2(jtagenda){I flag;
  RZ(a&&w)
  if(NOUN&AT(w))R exg(gerfrom(w,a));
@@ -437,15 +455,16 @@ F2(jtagenda){I flag;
  flag = VASGSAFE&FAV(w)->flag; A* avbv = AAV(avb); DQ(AN(avb), flag &= FAV(*avbv)->flag; ++avbv;);  // Don't increment inside FAV!
  R fdef(0,CATDOT,VERB, jtcase1,jtcase2, a,w,avb, flag+((VGERL|VJTFLGOK1|VJTFLGOK2)|FAV(ds(CATDOT))->flag), mr(w),lr(w),rr(w));
 }
+#endif
 
 F2(jtagendai){I flag;
  RZ(a&&w)
- ASSERT(AT(w)&VERB,EVDOMAIN);  // m@.:v only
+ if(NOUN&AT(w))R exg(gerfrom(w,a));  // noun form, as before
  // verb v.  Create a "BOX" type holding the verb form of each gerund
  A avb; RZ(avb = fxeachv(1L,a));
   // Calculate ASGSAFE from all of the verbs (both a and w), provided the user can handle it
  flag = VASGSAFE&FAV(w)->flag; A* avbv = AAV(avb); DQ(AN(avb), flag &= FAV(*avbv)->flag; ++avbv;);  // Don't increment inside FAV!
- R fdef(0,CATDOTCO,VERB, jtcasei1,jtcase2, a,w,avb, flag+((VGERL|VJTFLGOK1|VJTFLGOK2)|FAV(ds(CATDOTCO))->flag), RMAX, RMAX, RMAX);
+ R fdef(0,CATDOT,VERB, jtcasei12,jtcasei12, a,w,avb, flag+((VGERL|VJTFLGOK1|VJTFLGOK2)|FAV(ds(CATDOT))->flag), RMAX, RMAX, RMAX);
 }
 
 

@@ -599,21 +599,22 @@ static A jtredcatsp(J jt,A w,A z,I r){A a,q,x,y;B*b;I c,d,e,f,j,k,m,n,n1,p,*u,*v
  R z;
 }    /* ,/"r w for sparse w, 2<r */
 
-// ,&.:(<"r)  run together all axes above the last r
+// ,&.:(<"r)  run together all axes above the last r.  r must not exceed AR(w)-1
 // w must not be sparse or empty
 A jtredcatcell(J jt,A w,I r){A z;
  RZ(w);F1PREFIP;
- if(r>=AR(w)+1)R RETARG(w);  // if only 1 axis left to run together, return the input
- if(!(ASGNINPLACESGN(SGNIF((I)jtinplace,JTINPLACEWX)&(-r),w) && !(AFLAG(w)&AFUNINCORPABLE))){  // inplace allowed, usecount is right
+ I wr=AR(w);  // get original rank, which may change if we inplace into the same block
+ if(r>=wr-1)R RETARG(w);  // if only 1 axis left to run together, return the input
+ if((ASGNINPLACESGN(SGNIF((I)jtinplace,JTINPLACEWX)&(-r),w) && !(AFLAG(w)&AFUNINCORPABLE))){  // inplace allowed, usecount is right
   // operation is loosely inplaceable.  Just shorten the shape to frame,(#atoms in cell).  We do this here rather than relying on
   // the self-virtual-block code in virtual() because we can do it for indirect types also, since we know we are not changing
   // the number of atoms
-  z=w;  // inplace it
+  z=w; AR(z)=(RANKT)(r+1);  // inplace it, install new rank
  }else{
   RZ(z=virtual(w,0,r+1)); AN(z)=AN(w);   // create virtual block
  }
- I m; PROD(m,AR(w)-r,AS(w));   // # cells being strung together
- AS(z)[0]=m; MCISH(AS(z)+1,AS(w)+AR(w)-r,r);  // install # cells and then shift the last r axes back 
+ I m; PROD(m,wr-r,AS(w));   // # cells being strung together
+ AS(z)[0]=m; MCISH(AS(z)+1,AS(w)+wr-r,r);  // install # cells and then shift the last r axes back 
  R z;
 }
 

@@ -1483,7 +1483,7 @@ F2(jtcdproc2){C*proc;FARPROC f;HMODULE h;
  proc=CAV(w);
  RE(h=(HMODULE)i0(a));
  if(!h){I k=-1;
-  DO(sizeof(jfntnm)/sizeof(C*), if(!strcmp(jfntnm[i],proc)){k=i; break;});
+  DO(sizeof(jfntnm)/sizeof(C*), if(((I)strlen(jfntnm[i])==AN(w))&&!strncmp(jfntnm[i],proc,AN(w))){k=i; break;});
   f=(k==-1)?(FARPROC)0:(FARPROC)jfntaddr[k];
  }else{
 #if SY_WIN32 && !SY_WINCE

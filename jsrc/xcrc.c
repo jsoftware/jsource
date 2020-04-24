@@ -87,7 +87,7 @@ F1(jttobase64){
  I n3=AN(w)/3; I ne=AN(w)%3;
  I zn=n3+SGNTO0(-ne);  // total # result 4-byte groups
  // Allocate result
- A z; GAT0(z,LIT,zn<<2,1); UI4 *zv=UI4AV(z);  // result block, pointer into it
+ A z; GATV0(z,LIT,zn<<2,1); UI4 *zv=UI4AV(z);  // result block, pointer into it
  C *wv=CAV(w);  // input pointer
  // Handle each 3-byte group, producing a 4-byte result.  We load 3 bytes at a time, so we may read into the padding area, but never
  // past the valid allocation.  We don't worry about load alignment
@@ -148,7 +148,7 @@ F1(jtfrombase64){
  if((wn&3)==3 && CAV(w)[wn-1]=='=')--wn;  // discard trailing = at boundary
  ASSERT((wn&3)!=1,EVDOMAIN);  // cannot have remnant of 1 char
  // Allocate result
- A z; GAT0(z,LIT,(wn>>2)*3 + (((wn&3)+1)>>1),1);  // 3 bytes per full set, plus 0, 1, or 2
+ A z; GATV0(z,LIT,(wn>>2)*3 + (((wn&3)+1)>>1),1);  // 3 bytes per full set, plus 0, 1, or 2
  // process the input in full 4-byte groups.  We may overread the input AND overwrite the result, but we will always stay in the padding area,
  // which is OK because we allocated the result here
  UI4 *wv4=UI4AV(w); C *zv=CAV(z);  // write result as bytes, to avoid requiring heroic action in the write combiners

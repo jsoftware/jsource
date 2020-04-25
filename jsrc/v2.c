@@ -259,7 +259,7 @@ static F1(jtnextprime){A b,fs,x,y;B*bv;I k,n,*xv,*yv;X*wv;
  if(AT(w)&FL+RAT)RZ(w=cvt(XNUM,floor1(       w )));
  if(AT(w)&CMPX  )RZ(w=cvt(XNUM,floor1(cvt(FL,w))));
  GATV(b,B01,n,AR(w),AS(w)); bv=BAV(b); wv=XAV(w);
- DQ(n, y=*wv++; yv=AV(y); *bv++=0<yv[AN(y)-1]; *xv++=(*yv&1)+1;);
+ DQ(n, y=*wv++; yv=AV(y); *bv++=0<yv[AN(y)-1]; k=*yv; *xv++=AN(y)==1&&2>k?2-k:(k&1)+1; );
  R rank1ex0(tymes(b,plus(w,x)),fs,FAV(fs)->valencefns[0]);
 }
 

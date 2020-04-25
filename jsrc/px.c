@@ -22,8 +22,8 @@
 
 A jteval(J jt,C*s){R parse(tokens(cstr(s),1+(AN(jt->locsyms)>1)));}
 
-A jtev1(J jt,    A w,C*s){A z; R df1(z,  w,eval(s));}
-A jtev2(J jt,A a,A w,C*s){A z; R df2(z,a,w,eval(s));}
+A jtev1(J jt,    A w,C*s){A z; R df1(z,  w,eval(s));}  // parse *s and apply to w
+A jtev2(J jt,A a,A w,C*s){A z; R df2(z,a,w,eval(s));}  // parse *s and apply to a and w
 A jteva(J jt,    A w,C*s){A z; R df1(z,  w,colon(num(1),   cstr(s)));}
 A jtevc(J jt,A a,A w,C*s){A z; R df2(z,a,w,colon(num(2),cstr(s)));}
 

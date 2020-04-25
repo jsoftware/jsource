@@ -397,7 +397,7 @@ static DF2(jtcasei12){A vres,z;I gerit[128/SZI],ZZFLAGWORD;
     // inhomogeneous types or shapes.  Instantiate the entire result and then shuffle it into place
     // first, install the actual number of boxes of result, which might differ from the calculated maximum
     AN(zz)=AS(zz)[0]=nblkscreated;  // # valid boxes
-    zz=from(grade1(gradepm),raze(zz));  // create inverse grading permutation, then use it to shuffle opened results
+    zz=ev2(gradepm,zz,"(/:~   >@:;@:((<\"_1)&.>))");  // (> ; <"_1&.> zz) /: gradepm
    }
    // If the original input had structure, rearrange the result to match it
    if(vr>1)RZ(zz=reitem(shape(vres),zz));

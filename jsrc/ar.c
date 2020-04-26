@@ -748,8 +748,8 @@ DF2(jtfold){
  A foldconj; I step;
  for(step=0;step<2;++step){
   switch(step){  // try the startup, from the bottom up
-  case 1: eval("load'dev/fold'");  // fall through
-  case 0: if((foldconj=nameref(nfs(7,"Fold_j_")))&&AT(foldconj)&CONJ)goto found;  // there is always a ref, but it may be to [:
+  case 1: eval("load'~addons/dev/fold/foldr.ijs'");  // fall through
+  case 0: if((foldconj=nameref(nfs(8,"Foldr_j_")))&&AT(foldconj)&CONJ)goto found;  // there is always a ref, but it may be to [:
   }
   RESETERR;  // if we loop back, clear errors
  }

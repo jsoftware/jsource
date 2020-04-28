@@ -604,6 +604,7 @@ extern A virtifnonip(J jt, I ipok, A buf);
 extern A        jtassembleresults(J,I, A, A,A*,I,I,I,A,I,I,I);
 extern void     audittstack(J);
 extern I        cachedmmult(J,D*,D*,D*,I,I,I,I);
+extern void     copyTT(void *, void *, I, I,I);
 extern A        jtac1(J,AF);
 extern A        jtac2(J,AF);
 extern B        jtadd2(J,F,F,C*);

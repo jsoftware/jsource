@@ -482,6 +482,12 @@ static A jtgetnewpd(J jt, UC* pd, A pd0){A new;
  R pd0;  // return address of data in the new block
 }
 
+// copy n atoms of type wt to type zt
+void copyTT(void *zv, void *wv, I n, I zt, I wt){
+  if(TYPESEQ(zt,wt))MC(zv,wv,n<<bplg(zt));
+  else if(zt&INT){I *targ=zv; B *src=wv; DQ(n, *targ++ = *src++;)}  // B01-> int promotion
+  else {D *targ=zv; I *src=wv; DQ(n, *targ++ = (D)*src++;)}
+}
 
 DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[128/SZI];
      I ak,at,wcn,d,k,m=0,n,r,wt,*zi;I d1[32]; A pd0; UC *pd, *pdend;  // Don't make d1 too big - it fill lots of stack space
@@ -686,7 +692,7 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[12
     zc=CAV(zz); zk=wcn*atomsize;
     if((t=atype(adocv.cv))&&TYPESNE(t,wt)){RZ(w=cvt(t,w)); wv=CAV(w);}
     I rc=EVOK;   // accumulate error code
-    EACHCUT(if(d){ I lrc=((AHDRRFN*)adocv.f)(wcn,d,(I)1,v1,zc,jt); rc=lrc<rc?lrc:rc;} else{if(!z0){z0=idenv0(a,w,FAV(self),zt,&z); // compared to normal reduces, c means d and d means n
+    EACHCUT(if(d>1){ I lrc=((AHDRRFN*)adocv.f)(wcn,d,(I)1,v1,zc,jt); rc=lrc<rc?lrc:rc;} else if(d==1){copyTT(zc,v1,wcn,zt,wt);} else{if(!z0){z0=idenv0(a,w,FAV(self),zt,&z); // compared to normal reduces, c means d and d means n
         if(!z0){if(z)R z; else{rc=jt->jerr; break;}}} mvc(zk,zc,atomsize,z0);} zc+=zk;
     );
     if(255&rc){

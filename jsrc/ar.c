@@ -105,8 +105,8 @@ static void vdone(I m,I n,B*x,B*z,B pc){B b;I q,r;UC*u;UI s,*y;
  AHDRP(f,B,B){B*y=0;I j,q;                       \
   if(d==1){vdo; R EVOK;}                                \
   x+=m*d*n; z+=m*d;                           \
-  if(1==n)DQ(d, *--z=*--x;)                        \
-  else if(0==d%sizeof(UI  ))RBFXLOOP(UI,   pfx)    \
+/* obsolete   if(1==n)DQ(d, *--z=*--x;)              */          \
+  if(0==d%sizeof(UI  ))RBFXLOOP(UI,   pfx)    \
   else if(0==d%sizeof(UINT))RBFXLOOP(UINT,ipfx)    \
   else if(0==d%sizeof(US  ))RBFXLOOP(US,  spfx)    \
   else                      RBFXODDSIZE(pfx,bpfx)  \
@@ -188,7 +188,7 @@ AHDRR(plusinsD,D,D){I i;D* RESTRICT y;
                        DQ(n>>2, v0=PLUS(*--x,v0); v1=PLUS(*--x,v1); v2=PLUS(*--x,v2); v3=PLUS(*--x,v3);); v0+=v1; v2+=v3;*--z=v0+v2;)
 #endif
   }
-  else if(1==n){if(sizeof(D)!=sizeof(D)){DQ(n, *z++=    *x++;)}else{MC((C*)z,(C*)x,d*sizeof(D));}}
+// obsolete  else if(1==n){if(sizeof(D)!=sizeof(D)){DQ(n, *z++=    *x++;)}else{MC((C*)z,(C*)x,d*sizeof(D));}}
   else{z+=(m-1)*d; x+=(m*n-1)*d;
    for(i=0;i<m;++i,z-=d){I rc;
     y=x; x-=d; if(255&(rc=plusDD(1,d,x,y,z,jt)))R rc; x-=d;
@@ -519,9 +519,8 @@ static B jtreduce2(J jt,A w,C id,I f,I r,A*zz){A z=0;B b=0,btab[258],*zv;I c,d,m
  R 1;
 }    /* f/"r for dense w over an axis of length 2 */
 
-static DF1(jtreduce){A z;I d,f,m,n,r,t,wn,wr,*ws,wt,zt;
+static DF1(jtreduce){A z;I d,f,m,n,r,t,wr,*ws,zt;
  RZ(w);F1PREFIP;
- wn=AN(w); wt=AT(w); wt=wn?wt:B01;   // Treat empty as Boolean type
  if(SPARSE&AT(w))R reducesp(w,self);  // If sparse, go handle it
  wr=AR(w); ws=AS(w);
  // Create  r: the effective rank; f: length of frame; n: # items in a CELL of w
@@ -533,6 +532,7 @@ static DF1(jtreduce){A z;I d,f,m,n,r,t,wn,wr,*ws,wt,zt;
   // n=0.  But we have handled that case above.  If n is not 0, there may be other zeros in the shape that allow
   // an overflow when an infix of the shape is multiplied; but that won't matter because the other 0 will guarantee that there
   // are no atoms written
+  I wt=AT(w); wt=AN(w)?wt:B01;   // Treat empty as Boolean type
 
   // Normal processing for multiple items.  Get the routine & flags to process it
   VARPS adocv; varps(adocv,self,wt,0);

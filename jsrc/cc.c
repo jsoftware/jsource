@@ -858,7 +858,7 @@ static F2(jttesa){A x;I*av,ac,c,d,k,r,*s,t,*u,*v;
  RZ(a&&w);
  t=AT(a);
  RZ(a=vib(a));    // convert a to integer (possibly with infinities)
- r=AR(a); s=AS(a); ac=c=r?s[r-1]:1; av=AV(a); d=AR(w);  // r = rank of x; s->shape of x; c=#axes specd in x, av->data; d=rank of w
+ r=AR(a); s=AS(a); SHAPEN(a,r-1,c); /* obsolete c=r?s[r-1]:1;*/ ac=c; av=AV(a); d=AR(w);  // r = rank of x; s->shape of x; c=#axes specd in x, av->data; d=rank of w
  ASSERT(d>=c&&(2>r||2==s[0]),EVLENGTH);  // x must not be bigger than called for by rank of w, and must be a list or 2-item table
  if(2<=r)DO(c, ASSERT(0<=av[i],EVDOMAIN););  // if movement vector given, it must be nonnegative
  if(2==r&&t&INT){RETF(a);}  // if we can use a as given, return a as is
@@ -998,7 +998,8 @@ static DF2(jttess2){A z,zz=0,virtw,strip;I n,rs[3],cellatoms,cellbytes,vmv,hmv,v
   vtrc=vsz-vlrc;  // number of lines to copy in top half
   DQ(vtrc, I sh=sdataend-(svb+vds1-lrchsiz); sh=(sh>=0)?0:sh; sh+=vds1-lrchsiz; sh=(sh<0)?0:sh; MC(dvb,svb,sh); svb+=vss1; dvb+=vds1;);  // copies to dest are all sequential; sequential rows of src
   // copy the bottom-left part of the first cell, and of all cells if the cells overlap (i. e. vds!=0) (length vds1-lrchsiz)
-  DQ(vds?rs[0]:1, C *svb1=svb; DQ(vlrc, I sh=sdataend-(svb1+vds1-lrchsiz); sh=(sh>=0)?0:sh; sh+=vds1-lrchsiz; sh=(sh<0)?0:sh; MC(dvb,svb1,sh); svb1+=vss1; dvb+=vds1;); svb+=vss;);  // sequential to dest; hop to cells of src
+  I looppct=rs[0]; looppct=vds?looppct:1;
+  DQ(looppct, C *svb1=svb; DQ(vlrc, I sh=sdataend-(svb1+vds1-lrchsiz); sh=(sh>=0)?0:sh; sh+=vds1-lrchsiz; sh=(sh<0)?0:sh; MC(dvb,svb1,sh); svb1+=vss1; dvb+=vds1;); svb+=vss;);  // sequential to dest; hop to cells of src
   // advance the horiz pointers, which now point to the top-left of the top cell, to the top-left of the top-right area of that cell
   svh+=(vds1-lrchsiz); dvh+=(vds1-lrchsiz);
  }

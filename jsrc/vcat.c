@@ -321,7 +321,7 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;I ak,k,p,*u,*v,wk,wm,wn;
    // Calculate k, the size of an atom of a; ak, the number of bytes in a; wm, the number of result-items in w
    // (this will be 1 if w has to be rank-extended, otherwise the number of items in w); wk, the number of bytes in
    // items of w (after its conversion to the precision of a)
-   k=bpnoun(AT(a)); ak=k*an; wm=AR(a)==AR(w)?AS(w)[0]:1; wn=wm*aii(a); wk=k*wn;  // We don't need this yet but we start the computation early
+   k=bpnoun(AT(a)); ak=k*an; wm=AS(w)[0]; wm=AR(a)==AR(w)?wm:1; wn=wm*aii(a); wk=k*wn;  // We don't need this yet but we start the computation early
    // For each axis to compare, see if a is bigger/equal/smaller than w; OR into p
    p=0; DQ(naxes, p |= *u++-*v++;);
    // Now p<0 if ANY axis of a needs extension - can't inplace then

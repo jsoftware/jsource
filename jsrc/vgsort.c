@@ -407,7 +407,7 @@ F2(jtgr2){F2PREFIP;PROLOG(0076);A z=0;I acr,api,d,f,m,n,*s,t,wcr;
  if(a==w&&acr==wcr&&wcr>0&&AN(a)&&t&(B01+LIT+C2T+C4T+INT+FL+CMPX)){  // tests after the first almost always succeed
   // f = length of frame of w; s->shape of w; m=#cells; n=#items in each cell;
   // d = #bytes in an item of a cell of w
-  f=AR(w)-wcr; s=AS(w); PROD(m,f,s); n=(AR(w))?s[f]:1; PROD(api,wcr-1,1+f+s);
+  f=AR(w)-wcr; s=AS(w); PROD(m,f,s); SETICFR(w,f,AR(w),n); /* obsolete n=(AR(w))?s[f]:1;*/ PROD(api,wcr-1,1+f+s);
   d=api<<bplg(t);
    // There are special types supported, but for very short sorts we should just skip the checking and go do a sort-in-place.
    // Test that threshold here

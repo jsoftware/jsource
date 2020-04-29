@@ -531,22 +531,23 @@ static DF1(jtinfixprefix1){F1PREFIP;
 }
 
 //  f/\"r y    w is y, fs is in self
-static DF1(jtpscan){A y,z;I d,f,m,n,r,t,wn,wr,*ws,wt;
+static DF1(jtpscan){A z;I f,n,r,t,wn,wr,*ws,wt;
  RZ(w);F1PREFIP;
  wt=AT(w);   // get type of w
  if(SPARSE&wt)R scansp(w,self,jtpscan);  // if sparse, go do it separately
  // wn = #atoms in w, wr=rank of w, r=effective rank, f=length of frame, ws->shape of w
  wn=AN(w); wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; RESETRANK; f=wr-r; ws=AS(w);
  // m = #cells, c=#atoms/cell, n = #items per cell
- PROD(m,f,ws); PROD1(d,r-1,ws+f+1); n=r?ws[f]:1;  // wn=0 doesn't matter
- y=FAV(self)->fgh[0]; // y is the verb u, which is f/
+ SETICFR(w,f,r,n);  // wn=0 doesn't matter
+// obsolete  y=FAV(self)->fgh[0]; // y is the verb u, which is f/
  // If there are 0 or 1 items, or w is empty, return the input unchanged, except: if rank 0, return (($w),1)($,)w - if atomic op, do it right here, otherwise call the routine to get the shape of result cell
 // obsolete  if(2>n||!wn){if(vaid(FAV(y)->fgh[0])){R r?RETARG(w):reshape(over(shape(w),num(1)),w);}else R IRS1(w,self,r,jtinfixprefix1,z);}
 // obsolete  if(((1-n)&-wn)>=0){if(vaid(FAV(y)->fgh[0])){R r?RETARG(w):reshape(over(shape(w),num(1)),w);}else SEGFAULT /* obsolete  R IRS1(w,self,r,jtinfixprefix1,z); scaf*/}  // n<2 or wn=0
  if(((1-n)&-wn)>=0){R r?RETARG(w):reshape(over(shape(w),num(1)),w);}  // n<2 or wn=0
  VARPS adocv; varps(adocv,self,wt,1);  // fetch info for f/\ and this type of arg
- if(!adocv.f)R IRS1(w,self,r,jtinfixprefix1,z);  // if there is no special function for this type, do general reduce
+ if(!adocv.f)R IRS1(w,self,r,jtinfixprefix1,z);  // if there is no special function for this type, do general scan
  // Here is the fast special reduce for +/ etc
+ I d,m; PROD(m,f,ws); PROD1(d,r-1,ws+f+1);   // m=#scans, d=#atoms in a cell of each scan
  if((t=atype(adocv.cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));  // convert input if necessary
  // if inplaceable, reuse the input area for the result
  if(ASGNINPLACESGN(SGNIF((I)jtinplace,JTINPLACEWX)&SGNIF(adocv.cv,VIPOKWX),w))z=w; else GA(z,rtype(adocv.cv),wn,wr,ws);

@@ -10,7 +10,7 @@
 extern uint64_t g_cpuFeatures;
 
 #include <string.h>
-#ifdef _MSC_VER
+#ifdef _WIN32
 #define strncasecmp _strnicmp
 #define strcasecmp _stricmp
 #endif

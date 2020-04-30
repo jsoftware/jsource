@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 #include <string.h>
-#if defined(__ARM_NEON) || defined(_MSC_VER)
+#if defined(__ARM_NEON) || defined(_WIN32)
 #include <arm_neon.h>
 #endif
 /* GCC and LLVM Clang, but not Apple Clang */
@@ -23,7 +23,7 @@
 #define AES_RKSIZE      272
 
 typedef struct {
-#ifdef _MSC_VER
+#ifdef _WIN32
   __declspec(align(16)) uint8_t  rk[AES_RKSIZE];
 #else
   uint8_t __attribute__ ((aligned (16))) rk[AES_RKSIZE];
@@ -235,7 +235,7 @@ static void block_finalize(block_state* self)
 int aes_arm(I decrypt,I mode,UC *key,I keyn,UC* ivec,UC* out,I len)
 {
   block_state self;
-#ifdef _MSC_VER
+#ifdef _WIN32
   __declspec(align(16)) uint8_t rk_tmp[AES_RKSIZE];
 #else
   uint8_t __attribute__ ((aligned (16))) rk_tmp[AES_RKSIZE];

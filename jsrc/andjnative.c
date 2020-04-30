@@ -2,7 +2,7 @@
 #include "jeload.h"
 #include "com_jsoftware_j_JInterface.h"
 #include <stdint.h>
-#ifdef _MSC_VER
+#ifdef MMSC_VER
 #pragma warning(disable: 4244)
 #else
 #include <strings.h>
@@ -283,7 +283,7 @@ JNIEXPORT void JNICALL Java_com_jsoftware_j_JInterface_JSetEnv
   LOGD("JSetEnv");
   const char* key =  (*env)->GetStringUTFChars(env, jkey, 0);
   const char* val =  (*env)->GetStringUTFChars(env, jval, 0);
-#ifdef _MSC_VER
+#ifdef MMSC_VER
   _putenv_s(key,val);
 #else
   setenv(key,val,0);

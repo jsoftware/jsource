@@ -1,6 +1,13 @@
 #ifndef __ARM_ARCH_H__
 #define __ARM_ARCH_H__
 
+#if defined(_MSC_VER) && !defined(__clang__)
+#undef MMSC_VER
+#define MMSC_VER
+#else
+#undef MMSC_VER
+#endif
+
 #if !defined(__ARM_ARCH__)
 # if defined(__CC_ARM)
 #  if __TARGET_ARCH_THUMB
@@ -55,7 +62,7 @@
 #  else
 #   error "unsupported ARM architecture"
 #  endif
-# elif defined(_MSC_VER)
+# elif defined(MMSC_VER)
 #  define __ARMEL__
 #  if defined(_M_ARM)
 #   define __ARM_ARCH__ _M_ARM

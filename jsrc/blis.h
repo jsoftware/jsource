@@ -1,6 +1,13 @@
 #ifndef  _BLIS_HEADER
 #define  _BLIS_HEADER
 
+#if defined(_MSC_VER) && !defined(__clang__)
+#undef MMSC_VER
+#define MMSC_VER
+#else
+#undef MMSC_VER
+#endif
+
 /* simplified blis header */
 
 #define BLIS_DRIVER_GENERIC     0
@@ -14,7 +21,7 @@
 
 /* msvc does not define __SSE2__ */
 #if !defined(__SSE2__)
-#if defined(_MSC_VER)
+#if defined(MMSC_VER)
 #if _M_IX86_FP==2
 #define __SSE2__ 1
 #include <xmmintrin.h>   /* header file for _mm_prefetch() */
@@ -22,7 +29,7 @@
 #endif
 #endif
 
-#if defined(_MSC_VER)  // SY_WIN32
+#if defined(_WIN32) && !defined(__MINGW32__)  // SY_WIN32
 #ifndef PREFETCH
 #define PREFETCH(x) _mm_prefetch((x),_MM_HINT_T0)
 #define PREFETCH2(x) _mm_prefetch((x),_MM_HINT_T1)   // prefetch into L2 cache but not L1

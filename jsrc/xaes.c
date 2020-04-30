@@ -10,7 +10,7 @@
 #include "aes-c.h"
 
 #include <string.h>
-#ifdef _MSC_VER
+#ifdef _WIN32
 #define strncasecmp _strnicmp
 #define strcasecmp _stricmp
 #endif

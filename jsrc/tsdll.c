@@ -17,7 +17,7 @@ typedef unsigned int uc;
 typedef unsigned short wc;
 typedef unsigned int uc;
 #endif
-#ifdef _MSC_VER
+#ifdef _WIN32
 #define CDPROC
 #elif defined(__GNUC__)
 #define CDPROC __attribute__ ((visibility ("default")))
@@ -27,7 +27,7 @@ typedef unsigned int uc;
 #include <math.h>
 #include <complex.h>
 #undef I
-#ifdef _MSC_VER
+#ifdef _WIN32
 typedef _Fcomplex float_complex;
 typedef _Dcomplex double_complex;
 #else
@@ -80,7 +80,7 @@ CDPROC I       _stdcall xbasic(I*     a,  I     b, I*     c) sum
 CDPROC D       _stdcall dbasic(D*     a,  D     b, D*     c) sum
 CDPROC F       _stdcall fbasic(F*     a,  F     b, F*     c) sum
 
-#ifdef _MSC_VER
+#ifdef _WIN32
 #define dsum {a[0]=_DCOMPLEX_(creal(b[0])+creal(c[0])+creal(c[1]), cimag(b[0])+cimag(c[0])+cimag(c[1])); return cabs(a[0]);}
 #define fsum {a[0]=_FCOMPLEX_(crealf(b[0])+crealf(c[0])+crealf(c[1]), cimagf(b[0])+cimagf(c[0])+cimagf(c[1])); return cabsf(a[0]);}
 #else

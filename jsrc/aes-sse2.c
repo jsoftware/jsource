@@ -11,7 +11,7 @@
 #define XOR _mm_xor_si128
 
 typedef struct {
-#ifdef _MSC_VER
+#ifndef __clang__
   __declspec(align(16)) uint32_t w[60]; //Key Schedule (16byte align)
 #else
   uint32_t __attribute__ ((aligned (16))) w[60]; //Key Schedule (16byte align)
@@ -23,7 +23,7 @@ typedef struct {
 #define  Nb  4u
 #define  Nbb  Nb*4
 
-#ifndef _MSC_VER
+#ifdef __clang__
 typedef union __attribute__ ((aligned (16))) s_m128i {
   signed char m128i_i8[16];
   int16_t m128i_i16[8];
@@ -86,7 +86,7 @@ void block_init(block_state* self, const uint8_t Key[], int cNk)
 //==============================================================
 __m128i mul(__m128i data, uint8_t n)
 {
-#ifdef _MSC_VER
+#ifndef __clang__
   __declspec(align(16)) static const unsigned __int16 _FF00[8] = {0xFF00,0xFF00,0xFF00,0xFF00, 0xFF00,0xFF00,0xFF00,0xFF00};
   __declspec(align(16)) static const unsigned __int16 _00FF[8] = {0x00FF,0x00FF,0x00FF,0x00FF, 0x00FF,0x00FF,0x00FF,0x00FF};
   __declspec(align(16)) static const unsigned __int16 _011B[8] = {0x011B,0x011B,0x011B,0x011B, 0x011B,0x011B,0x011B,0x011B};
@@ -314,7 +314,7 @@ __m128i Cipher(block_state* self, __m128i data)
 __m128i SubBytes(__m128i data)
 {
 // table transform SIMD command unavailable ?
-#ifdef _MSC_VER
+#ifndef __clang__
   data.m128i_u32[0] = SubWord(data.m128i_u32[0]);
   data.m128i_u32[1] = SubWord(data.m128i_u32[1]);
   data.m128i_u32[2] = SubWord(data.m128i_u32[2]);
@@ -338,7 +338,7 @@ __m128i SubBytes(__m128i data)
 //==============================================================
 __m128i ShiftRows(__m128i data)
 {
-#ifdef _MSC_VER
+#ifndef __clang__
   __declspec(align(16)) static const uint32_t mask0[4] = {0x000000FF,0x000000FF,0x000000FF,0x000000FF};
   __declspec(align(16)) static const uint32_t mask1[4] = {0x0000FF00,0x0000FF00,0x0000FF00,0x0000FF00};
   __declspec(align(16)) static const uint32_t mask2[4] = {0x00FF0000,0x00FF0000,0x00FF0000,0x00FF0000};
@@ -446,7 +446,7 @@ __m128i InvCipher(block_state* self, __m128i data)
 //==============================================================
 __m128i InvShiftRows(__m128i data)
 {
-#ifdef _MSC_VER
+#ifndef __clang__
   __declspec(align(16)) static const uint32_t mask0[4] = {0x000000FF,0x000000FF,0x000000FF,0x000000FF};
   __declspec(align(16)) static const uint32_t mask1[4] = {0x0000FF00,0x0000FF00,0x0000FF00,0x0000FF00};
   __declspec(align(16)) static const uint32_t mask2[4] = {0x00FF0000,0x00FF0000,0x00FF0000,0x00FF0000};
@@ -481,7 +481,7 @@ __m128i InvShiftRows(__m128i data)
 __m128i InvSubBytes(__m128i data)
 {
 // table transform SIMD command unavailable ?
-#ifdef _MSC_VER
+#ifndef __clang__
   data.m128i_u32[0] = InvSubWord(data.m128i_u32[0]);
   data.m128i_u32[1] = InvSubWord(data.m128i_u32[1]);
   data.m128i_u32[2] = InvSubWord(data.m128i_u32[2]);

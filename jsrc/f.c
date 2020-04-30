@@ -123,7 +123,7 @@ A z;UC*x;C*y;I c,i,m,n,p,q,r,r1,*s; n=AN(w); r=AR(w); s=AS(w);
 
 static F1(jtthb){A z;B*x;C*y;I c,m,n,p,r,*s;
  n=AN(w); r=AR(w); s=AS(w);
- c=r?s[r-1]:1; m=n/c; p=2*c-1;
+ /* obsolete c=r?s[r-1]:1;*/ SHAPEN(w,r-1,c); m=n/c; p=2*c-1;
  GATV(z,LIT,m*p,r+!r,s); AS(z)[AR(z)-1]=p; 
  x=BAV(w); y=CAV(z);
  DQ(m, DQ(c-1, *y++=*x++?'1':'0'; *y++=' ';); *y++=*x++?'1':'0';);
@@ -278,7 +278,7 @@ static A jtthdx1(J jt,DX y){A x,z;B b;C*s,s1[2+XBASEN],s2[20];I e,n,p,p1,p2,*v;
 
 static F1(jtthxqe){A d,t,*tv,*v,y,z;C*zv;I c,*dv,m,n,p,r,*s,*wv;
  n=AN(w); r=AR(w); s=AS(w); wv=AV(w);
- c=r?s[r-1]:1; m=n/c;
+ /* obsolete c=r?s[r-1]:1; */ SHAPEN(w,r-1,c); m=n/c;
  GATV0(t,BOX,n,1); tv=AAV(t);
  RZ(d=apvwr(c,1L,0L)); dv=AV(d); v=tv;
  switch(CTTZ(AT(w))){
@@ -311,9 +311,9 @@ static B jtrc(J jt,A w,A*px,A*py, I *t){A*v,x,y;I j=0,k=0,maxt=0,r,*s,xn,*xv,yn,
  // r = rank of w, s->shape of w, v->values
  r=AR(w); s=AS(w); v=AAV(w);
  // xn = #rows in 2-cell of joined table, x=vector of (xn+1) 0s, xv->data for vector
- xn=1<r?s[r-2]:1; RZ(*px=x=apvwr(xn,0L,0L)); xv=AV(x);
+ /* obsolete xn=1<r?s[r-2]:1;*/ SHAPEN(w,r-2,xn); RZ(*px=x=apvwr(xn,0L,0L)); xv=AV(x);
  // yn = #rows in 2-cell of joined table, y=vector of (yn+1) 0s, v->data for vector
- yn=  r?s[r-1]:1; RZ(*py=y=apvwr(yn,0L,0L)); yv=AV(y);
+ /* obsolete yn=  r?s[r-1]:1; */ SHAPEN(w,r-1,yn); RZ(*py=y=apvwr(yn,0L,0L)); yv=AV(y);
  // for each atom of w, include height/width in the appropriate row/column cells, and take maximum of types
  DQ(AN(w), maxt=MAX(maxt,UNSAFE(AT(*v))); s=AS(*v++); xv[j]=MAX(xv[j],s[0]); yv[k]=MAX(yv[k],s[1]); if(++k==yn){k=0; if(++j==xn)j=0;});
  // Add 1 to each max width/height to account for the boxing character before that position
@@ -476,7 +476,8 @@ F1(jtmat){A z;B b=0;C*v,*x;I c,k,m=1,p,q,qc,r,*s,t,zn;
  // r=rank of w, s->shape, v->characters, t=type
  r=AR(w); s=AS(w); v=CAV(w); t=AT(w);
  // set (q,c) to the shape of a 2-cell of the input
- q=1<r?s[r-2]:1; c=r?s[r-1]:1;
+// obsolete  q=1<r?s[r-2]:1; c=r?s[r-1]:1;
+ SHAPEN(w,r-2,q); SHAPEN(w,r-1,c);
  // set b=1 if there are 0 2-cells
  DO(r-2, if(!s[i]){b=1; break;});
  // calculate m=# 2-cells, and k=# blank lines to be added
@@ -724,7 +725,8 @@ static A jtjprx(J jt,I ieol,I maxlen,I lb,I la,A w){A y,z;B ch;C e,eov[2],*v,x,*
  if(ieol){m=2; eov[0]=CCR; eov[1]=CLF;}else{m=1; eov[0]=CLF; eov[1]=0;}
  // q=#lines in a 2-cell, c=#chars in a row, n=#2-cells, nq=total # lines (without spacing)
  // if w is empty the values could overflow.  In that case, just display nothing
- q=1<r?s[r-2]:1; c=r?s[r-1]:1; nq=prod(r-1,s); if(jt->jerr){RESETERR z=str(m+1,eov); RZ(z=caro(z)); CAV(z)[m]=0; AN(z)=AS(z)[0]=m; R z;}
+// obsolete  q=1<r?s[r-2]:1; c=r?s[r-1]:1;
+ SHAPEN(y,r-2,q); SHAPEN(y,r-1,c); nq=prod(r-1,s); if(jt->jerr){RESETERR z=str(m+1,eov); RZ(z=caro(z)); CAV(z)[m]=0; AN(z)=AS(z)[0]=m; R z;}
  // c1=#characters to put out per line, lba=max # lines to put out
  c1=MIN(c,maxlen); lba=(D)lb+la;
  // calculate p=total # lines of spacing needed, as sum of (#k-cells-1) for k>=2

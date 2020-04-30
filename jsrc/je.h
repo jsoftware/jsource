@@ -956,6 +956,7 @@ extern void     moveparseinfotosi(J);
 extern I Bnum[][9-SY_64];
 #define zeroionei(n) ((A)(Bnum+(n)))
 #define num(n) ((A)(Bnum+2+(n)-NUMMIN))
+#define I1mem (Bnum[1][8-SY_64])  // 1 stored in memory
 // obsolete extern A        numvr[3];
 extern struct Bd1 Bnumvr[];
 #define numvr(n) ((A)(Bnumvr+(n)))

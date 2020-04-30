@@ -1678,8 +1678,8 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z;fauxblockINT(zfaux,1,0)
   if(0>f1||ICMP(as+af+1,ws+wf+f1,r)){I f0,*v;
    // Dyad where shape of an item of a does not match shape of a cell of w.  Return appropriate not-found
    if(((af-wf)&-af)<0){f1+=wf-af; wf=af;}  // see below for discussion about long frame in w
-   I witems = wr>r?ws[0]:1;  // # items of w, in case we are doing i.&0 eg on result of e., which will have that many items
-   m=acr?as[af]:1; f0=MAX(0,f1); RE(zn=mult(prod(f,s),prod(f0,ws+wf)));
+   I witems=ws[0]; witems=wr>r?witems:1;  // # items of w, in case we are doing i.&0 eg on result of e., which will have that many items
+   SETICFR(a,af,acr,m); /* obsolete m=acr?as[af]:1;*/ f0=MAX(0,f1); RE(zn=mult(prod(f,s),prod(f0,ws+wf)));
    switch(mode&IIOPMSK){
     case IIDOT:  
     case IICO:    GATV(z,INT,zn,f+f0,s); if(af)MCISH(f+AS(z),ws+wf,f0); v=AV(z); DQ(zn, *v++=m;); R z;
@@ -1714,7 +1714,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z;fauxblockINT(zfaux,1,0)
  // m=target axis length, n=target item # atoms
  // c # target items in a left-arg cell, which may include multiple right-arg cells
  // k=target item # bytes, h->hash table or to 0   z=result   p=size of hashtable
- m=acr?as[af]:1; t=(mode&IPHCALC)?at:maxtyped(at,wt); klg=bplg(t);   // m=length of target axis; the common type; klg=lg of #bytes/atom of common type
+ SETICFR(a,af,acr,m); /* obsolete m=acr?as[af]:1;*/ t=(mode&IPHCALC)?at:maxtyped(at,wt); klg=bplg(t);   // m=length of target axis; the common type; klg=lg of #bytes/atom of common type
  // Now that we have audited the shape of the cells of a/w to make sure they have commensurate items, we need to revise
  // the frame of w if it has the longer frame.  This can happen only where IRS is supported, namely ~: i. i: e. .
  // For those verbs, we get the effect of repeating a cell of a by having a macrocell of w, which is then broken into target-cell sizes.
@@ -1725,7 +1725,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z;fauxblockINT(zfaux,1,0)
   PROD1(n,acr-1,as+af+1); k=n<<klg; // n=number of atoms in a target item; k=number of bytes in a target item
   PROD(ac,af,as); PROD(wc,wf,ws); PROD1(c,MAX(f1,-1),ws+wf);  // ?c=#cells in a & w;  c=#target items (and therefore #result values) in a result-cell.  -1 so we don't fetch outside the shape
   RE(zn=mult(af?ac:wc,c));   // #results is results/cell * number of cells; number of cells comes from ac if a has frame, otherwise w.  If both have frame, a's must be longer, use it
-  ak=(acr?as[af]*k:k)&REPSGN(1-ac); wk=(c*k)&REPSGN(1-wc);   // # bytes in a cell, but 0 if there are 0 or 1 cells
+  ak=(/*obsolete acr?as[af]*k:k*/m*k)&REPSGN(1-ac); wk=(c*k)&REPSGN(1-wc);   // # bytes in a cell, but 0 if there are 0 or 1 cells
   if(!af)c=zn;   // if af=0, wc may be >1 if there is w-frame.  In that case, #result/a-cell must include the # w-cells.  This has been included in zn
  }else{
   // An argument is empty.  We must beware of overflow in counting cells.  Just do it the old slow way
@@ -1768,7 +1768,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z;fauxblockINT(zfaux,1,0)
 
  // Create result for empty/inhomogeneous arguments
  if((((I)m-1)|(n-1)|(zn-1)|(th-1))<0){  // if one of those is 0...
-  I witems = wr>r?ws[0]:1;  // # items of w, in case we are doing i.&0 eg on result of e., which will have that many items
+  I witems; SETICFR(w,0,wr>r,witems); /* obsolete = wr>r?ws[0]:1;*/  // # items of w, in case we are doing i.&0 eg on result of e., which will have that many items
   switch(mode&(IIOPMSK|IPHCALC)){  // prehash passes through
   // If empty argument or result, or inhomogeneous arguments, return an appropriate empty or not-found
   // We also handle the case of i.&0@:e. when the rank of w is more than 1 greater than the rank of a cell of a;

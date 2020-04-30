@@ -59,13 +59,15 @@ F2(jtnouninfo2){A z;
 static I bsize(J jt,B d,B tb,I t,I n,I r,I*s){I c,k,m,w,z;
  w=WS(d);
  z=BH(d)+w*r;
+#if 0  // obsolete
  if(t&BIT){
   c=r?s[r-1]:1; m=c?n/c:0; 
   R z+w*m*((c+w*BB-1)/(w*BB));
  }else{
-  k=t&INT+SBT+BOX+XNUM?w:t&RAT?w+w:bp(t); 
-  R z+((n*k+(tb&&t&LAST0)+w-1)&(-w));
-}}   /* size in byte of binary representation */
+#endif
+ k=t&INT+SBT+BOX+XNUM?w:t&RAT?w+w:bp(t); 
+ R z+((n*k+(tb&&t&LAST0)+w-1)&(-w));
+}   /* size in byte of binary representation */
 
 
 /* n:  # of words                */

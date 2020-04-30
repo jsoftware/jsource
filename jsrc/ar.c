@@ -524,7 +524,7 @@ static DF1(jtreduce){A z;I d,f,m,n,r,t,wr,*ws,zt;
  if(SPARSE&AT(w))R reducesp(w,self);  // If sparse, go handle it
  wr=AR(w); ws=AS(w);
  // Create  r: the effective rank; f: length of frame; n: # items in a CELL of w
- r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; n=r?ws[f]:1;  // no RESETRANK
+ r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; SETICFR(w,f,r,n);  // no RESETRANK obsolete n=r?ws[f]:1;  // no RESETRANK
  // Handle the special cases: neutrals, single items
  if(n>1){
   // Normal case, >1 item.
@@ -638,7 +638,7 @@ DF1(jtredcat){A z;B b;I f,r,*s,*v,wr;
 
 static DF1(jtredsemi){I f,n,r,*s,wr;
  RZ(w);
- wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; s=AS(w); n=r?s[f]:1;  // let the rank run into tail   n=#items  in a cell of w
+ wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; s=AS(w); SETICFR(w,f,r,n); /* obsolete n=r?s[f]:1;*/  // let the rank run into tail   n=#items  in a cell of w
  if(2>n){ASSERT(n,EVDOMAIN); R tail(w);}  // rank still set
  if(BOX&AT(w))R jtredg(jt,w,self);  // the old way failed because it did not mimic scalar replication; revert to the long way.  ranks are still set
  else{A z; R IRS1(w,0L,r-1,jtbox,z);}  // unboxed, just box the cells
@@ -647,7 +647,8 @@ static DF1(jtredsemi){I f,n,r,*s,wr;
 static DF1(jtredstitch){A c,y;I f,n,r,*s,*v,wr;
  RZ(w);
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; RESETRANK;
- s=AS(w); n=r?s[f]:1;
+ s=AS(w); SETICFR(w,f,r,n);
+// obsolete n=r?s[f]:1;
  ASSERT(n,EVDOMAIN);
  if(1==n)R IRS1(w,0L,r,jthead,y);
  if(1==r){if(2==n)R RETARG(w); A z1,z2,z3; RZ(IRS2(num(-2),w,0L,0L,1L,jtdrop,z1)); RZ(IRS2(num(-2),w,0L,0L,1L,jttake,z2)); R IRS2(z1,z2,0L,1L,0L,jtover,z3);}
@@ -676,7 +677,8 @@ static DF1(jtredstiteach){A*wv,y;I n,p,r,t;
 static DF1(jtredcateach){A*u,*v,*wv,x,*xv,z,*zv;I f,m,mn,n,r,wr,*ws,zm,zn;I n1=0,n2=0;
  RZ(w);
  wr=AR(w); ws=AS(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; RESETRANK;
- n=r?ws[f]:1;
+ SETICFR(w,f,r,n);
+// obsolete  n=r?ws[f]:1;
  if(!r||1>=n)R reshape(repeat(ne(sc(f),IX(wr)),shape(w)),n?w:ds(CACE));
  if(!(BOX&AT(w)))R df1(z,cant2(sc(f),w),qq(ds(CBOX),zeroionei(1)));
 // bug: ,&.>/ y does scalar replication wrong

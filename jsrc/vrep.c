@@ -197,7 +197,7 @@ static REPF(jtrepisx){A e,q,x,y;I c,j,m,p=0,*qv,*xv,*yv;P*ap;
 
 static REPF(jtrep1d){A z;C*wv,*zv;I c,k,m,n,p=0,q,t,*ws,zk,zn;
  RZ(a&&w);F2PREFIP;
- t=AT(a); m=AN(a); ws=AS(w); n=wcr?ws[wf]:1;  // n=length of item axis in input.  If atom, is repeated to length of a
+ t=AT(a); m=AN(a); ws=AS(w); SETICFR(w,wf,wcr,n); /* obsolete n=wcr?ws[wf]:1;*/  // n=length of item axis in input.  If atom, is repeated to length of a
  if(t&CMPX){
   if(wcr)R repzdx(from(apv(n,0L,0L),a),w,                wf,wcr);
   else{A za; RZ(za=apv(m,0L,0L)); R repzdx(a,IRS2(za,w,0L,1L,0L,jtfrom,z),wf,1L );}

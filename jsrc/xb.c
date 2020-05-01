@@ -56,7 +56,7 @@ F2(jtnouninfo2){A z;
 #define BU              (C_LE ? 1 : 0)
 
 
-static I bsize(J jt,B d,B tb,I t,I n,I r,I*s){I c,k,m,w,z;
+static I bsize(J jt,B d,B tb,I t,I n,I r,I*s){I k,w,z;
  w=WS(d);
  z=BH(d)+w*r;
 #if 0  // obsolete

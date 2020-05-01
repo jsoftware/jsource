@@ -175,6 +175,9 @@
 #define constr(x,y)                 jtconstr(jt,(x),(y))
 #define convert0(x0,x1,x2,x3)       jtconvert0(jt,(x0),(x1),(x2),(x3)) 
 #define conword(x,y)                jtconword(jt,(x),(y))
+#if !SY_64
+#define copyTT(x,y,z,v,w)           jtcopyTT(jt,(x),(y),(z),(v),(w))
+#endif
 #define cpa(x,y)                    jtcpa(jt,(x),(y))
 #define cps(x)                      jtcps(jt,(x))
 #define crc2(x,y)                   jtcrc2(jt,(x),(y))

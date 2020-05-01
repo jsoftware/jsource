@@ -483,7 +483,11 @@ static A jtgetnewpd(J jt, UC* pd, A pd0){A new;
 }
 
 // copy n atoms of type wt to type zt
+#if SY_64
 void copyTT(void *zv, void *wv, I n, I zt, I wt){
+#else
+void jtcopyTT(J jt, void *zv, void *wv, I n, I zt, I wt){
+#endif
   if(TYPESEQ(zt,wt))MC(zv,wv,n<<bplg(zt));
   else if(zt&INT){I *targ=zv; B *src=wv; DQ(n, *targ++ = *src++;)}  // B01-> int promotion
   else {D *targ=zv; I *src=wv; DQ(n, *targ++ = (D)*src++;)}

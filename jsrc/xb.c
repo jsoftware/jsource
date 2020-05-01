@@ -6,6 +6,9 @@
 #include "j.h"
 #include "x.h"
 
+#ifdef MMSC_VER
+#pragma warning(disable: 4101)
+#endif
 
 F1(jtstype){RZ(w); R sc(AT(w)&-AT(w));}
      /* 3!:0 w */

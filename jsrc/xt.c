@@ -6,7 +6,7 @@
 #ifdef _WIN32
 #include <windows.h>
 #include <winbase.h>
-#ifdef _MSC_VER
+#ifndef __MINGW32__
 #include <time.h>
 #else
 #include <sys/time.h>

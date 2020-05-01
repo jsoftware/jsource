@@ -1,7 +1,7 @@
 /* Copyright 1990-2007, Jsoftware Inc.  All rights reserved.               */
 /* Licensed use only. Any other use is in violation of copyright.          */
 
-CDPROC J _stdcall JInit();                         /* init instance */
+CDPROC J _stdcall JInit(void);                         /* init instance */
 CDPROC void _stdcall JSM(J jt, void*callbacks[]);  /* set callbacks */
 CDPROC void _stdcall JSMX(J jt, void*, void*, void*, void*, I);
 CDPROC int _stdcall JDo(J jt,C*);                  /* run sentence */

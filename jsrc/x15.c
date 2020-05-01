@@ -43,7 +43,7 @@ otherwise the regs may be used and the parameter lost.
 #include <windows.h>
 #include <windowsx.h>
 #define FIXWINUTF8 // possibly should not be defined for MINGW32
-#ifndef _MSC_VER
+#ifdef __MINGW32__
 #ifndef _stdcall
 #define _stdcall __stdcall
 #define _cdecl __cdecl
@@ -59,7 +59,7 @@ typedef unsigned char       BYTE;
 #include <wchar.h>
 #include <complex.h>
 #undef I
-#ifdef _MSC_VER
+#ifdef _WIN32
 typedef _Fcomplex float_complex;
 typedef _Dcomplex double_complex;
 #else
@@ -655,7 +655,7 @@ static void convertdown(I*pi,I n,C t){
   case 's': {short*pt=(short*)pi;             DO(n, pt[i]=(short)pi[i];);} break;
   case 'i': {int  *pt=(int  *)pi;             DO(n, pt[i]=(int)  pi[i];);} break;
   case 'f': {float*pt=(float*)pi;D*pd=(D*)pi; DO(n, pt[i]=(float)pd[i];);} break;
-#ifdef _MSC_VER
+#ifdef _WIN32
   case 'z': {float_complex*pt=(float_complex*)pi;D*pd=(D*)pi; DO(n, pt[i]=_FCOMPLEX_((float)pd[2*i],(float)pd[1+2*i]););} break;
 #else
   case 'z': {float_complex*pt=(float_complex*)pi;D*pd=(D*)pi; DO(n, pt[i]=(float)pd[2*i]+_Complex_I*(float)pd[1+2*i];);} break;
@@ -1395,7 +1395,7 @@ F1(jtcdproc1){CCT*cc;
  R sc((I)cc->fp);
 }    /* 15!:21 return proc address */
 
-#ifdef _MSC_VER
+#ifdef MMSC_VER
 #pragma warning(disable: 4276)
 #endif
 

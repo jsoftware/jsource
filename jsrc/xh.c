@@ -18,7 +18,7 @@
 #endif
 #include <stdint.h>
 
-#ifdef _MSC_VER
+#ifdef MMSC_VER
 #define mktemp _mktemp
 #define unlink _unlink
 #endif
@@ -69,7 +69,7 @@ F1(jthost){A z;
  GATV0(t,LIT,n+5+L_tmpnam+1,1); s=CAV(t);  // +1 for trailing nul
  fn=5+n+s; MC(s,AV(w),n);
  MC(n+s,"   > ",5L);
-#ifdef _MSC_VER
+#ifdef MMSC_VER
  strcpy(fn,"tmp.XXXXXX");
  {A fz; mktemp(fn);
   RZ(fz=toutf16x(t));
@@ -126,7 +126,7 @@ F1(jthostne){
 #else
  {
   I b;
-#ifdef _MSC_VER
+#ifdef MMSC_VER
   A fz;
   RZ(fz=toutf16x(w));
   b=_wsystem(USAV(fz));

@@ -63,7 +63,7 @@ define one of the following in the build as required
 #endif
 #endif
 
-#ifdef _MSC_VER
+#if defined(_WIN32) && !defined(__MINGW32__)
 #ifdef SY_GETTOD
 #undef SY_GETTOD
 #endif

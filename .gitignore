@@ -25,6 +25,7 @@ jsrc/jversion.h
 *.sln
 *.vcxproj
 !*.template
+!*19.*
 
 # mac
 .DS_Store

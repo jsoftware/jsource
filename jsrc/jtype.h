@@ -9,7 +9,7 @@
 #define _stdcall      
 #endif
 
-#ifdef _MSC_VER
+#ifdef _WIN32
 #define CDPROC
 #elif defined(__GNUC__)
 #define CDPROC __attribute__ ((visibility ("default")))

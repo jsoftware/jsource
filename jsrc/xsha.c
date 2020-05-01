@@ -11,19 +11,19 @@
 #include <sys/types.h>
 #endif
 
-#ifndef BYTE_ORDER
-#if defined(_MSC_VER) || defined(__MINGW32__)
-#define LITTLE_ENDIAN 1234
-#define BIG_ENDIAN    4321
-#define BYTE_ORDER LITTLE_ENDIAN
-#endif
-#endif
-
 #include "j.h"
 #include "x.h"
 #undef num
 #include "cpuinfo.h"
 // static UC hwsha1=0,hwsha2=0,hwssse3=0,hwsse41=0,hwavx=0,hwavx2=0;
+
+#ifndef BYTE_ORDER
+#if defined(MMSC_VER)
+#define LITTLE_ENDIAN 1234
+#define BIG_ENDIAN    4321
+#define BYTE_ORDER LITTLE_ENDIAN
+#endif
+#endif
 
 #include "openssl/sha/openssl.h"
 #include "openssl/sha/md4.h"

@@ -1,7 +1,14 @@
 #define USE_UTF8
 
+#if defined(_MSC_VER) && !defined(__clang__)
+#undef MMSC_VER
+#define MMSC_VER
+#else
+#undef MMSC_VER
+#endif
+
 #ifdef _WIN32
-#ifdef _MSC_VER
+#ifdef MMSC_VER
 #pragma warning(disable: 4244 4267)
 #define inline __inline
 #else
@@ -129,7 +136,7 @@
 #else
 /* Microsoft headers don't like old POSIX names */
 #define strdup _strdup
-#if defined(_MSC_VER) && _MSC_VER < 1900
+#if defined(MMSC_VER) && _MSC_VER < 1900
 #define snprintf _snprintf
 #endif
 #endif
@@ -1014,7 +1021,7 @@ donedigits:
 /*#define DEBUG_REFRESHLINE*/
 
 #ifdef DEBUG_REFRESHLINE
-#ifdef _MSC_VER
+#ifdef MMSC_VER
 #define DRL(ARGS, ...) fprintf(dfh, ARGS)
 #else
 #define DRL(ARGS...) fprintf(dfh, ARGS)
@@ -1043,7 +1050,7 @@ static void DRL_STR(const char *str)
     }
 }
 #else
-#ifdef _MSC_VER
+#ifdef MMSC_VER
 #define DRL(...)
 #else
 #define DRL(ARGS...)

@@ -1,6 +1,13 @@
 #ifndef CPU_INFO_H
 #define CPU_INFO_H
 
+#if defined(_MSC_VER) && !defined(__clang__)
+#undef MMSC_VER
+#define MMSC_VER
+#else
+#undef MMSC_VER
+#endif
+
 #include <stdint.h>
 
 extern void cpuInit(void);

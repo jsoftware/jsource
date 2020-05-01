@@ -9,7 +9,7 @@
  #define JDLLNAME "j.dll"
  #define filesep '\\'
  #define filesepx "\\"
- #ifdef _MSC_VER
+ #ifdef MMSC_VER
  #define strcasecmp _stricmp
  #endif
 #else

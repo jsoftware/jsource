@@ -1,4 +1,5 @@
 #include "cpuinfo.h"
+
 #if defined(TARGET_OS_IPHONE)||defined(TARGET_OS_IOS)||defined(TARGET_OS_TV)||defined(TARGET_OS_WATCH)
 #define TARGET_IOSDEVICE 1
 #endif
@@ -108,11 +109,12 @@ static int vendorIsIntel = 0, vendorIsAMD = 0;
 
 uint32_t OPENSSL_ia32cap_P[4];
 
-#ifdef _WIN32
+#ifdef MMSC_VER
 #include <windows.h>
 extern void __cpuid(int CPUInfo[4], int InfoType);
 #define x86_cpuid(x,y) __cpuid(y,x)
 #else
+#ifndef _WIN32
 #include <string.h>
 #include <sys/utsname.h>
 #if defined(__x86_64__)||defined(__i386__)
@@ -121,13 +123,16 @@ extern void __cpuid(int CPUInfo[4], int InfoType);
 #endif
 #endif
 #endif
+#endif
 
 #if defined(__x86_64__)||defined(__i386__)||defined(_M_X64)||defined(_M_IX86)
 static int check_xcr0_ymm()
 {
   uint32_t xcr0;
-#if defined(_MSC_VER)
+#if defined(MMSC_VER)
   xcr0 = (uint32_t)_xgetbv(0);  /* min VS2010 SP1 compiler is required */
+#elif defined(_WIN32) && defined(__clang__)
+  return 1;                     /* no _xgetbv() in clang-cl */
 #else
   __asm__ ("xgetbv" : "=a" (xcr0) : "c" (0) : "%edx" );
 #endif
@@ -135,8 +140,8 @@ static int check_xcr0_ymm()
 }
 #endif
 
-#ifndef _WIN32
-#ifndef ANDROID
+#ifndef MMSC_VER
+#if !defined(ANDROID) && !defined(_WIN32)
 static __inline int
 get_cpuid_count (unsigned int __level, unsigned int __count,
                  unsigned int *__eax, unsigned int *__ebx,

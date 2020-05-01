@@ -3,6 +3,17 @@
 /*                                                                         */
 /* Global Definitions                                                      */
 
+#if defined(__clang_major__) && !defined(__clang__)
+#error need workaround by define __clang__ in preprocessor macro
+#endif
+
+#if defined(_MSC_VER) && !defined(__clang__)
+#undef MMSC_VER
+#define MMSC_VER
+#else
+#undef MMSC_VER
+#endif
+
 #ifndef SYS // include js.h only once - dtoa.c
 #include "js.h"
 #endif
@@ -66,7 +77,7 @@
 #endif
 
 #if SY_WIN32
-#if defined(_MSC_VER) && !defined(OLECOM)
+#if defined(_WIN32) && !defined(OLECOM)
 #define OLECOM
 #endif
 #endif
@@ -79,7 +90,7 @@
 #define FMTI04          "%04lli"
 #define FMTI05          "%05lli"
 
-#if defined(_MSC_VER)  // SY_WIN32
+#if defined(MMSC_VER)  // SY_WIN32
 #define strtoI         _strtoi64
 #else
 #define strtoI          strtoll
@@ -177,7 +188,7 @@
 // but normally something like *z = *x + *y will not cause trouble because there is no reason to refetch an input after
 // the result has been written.  On 32-bit machines, registers are so short that sometimes the compilers refetch an input
 // after writing to *z, so we don't turn RESTRICT on for 32-bit
-#if defined(_MSC_VER)  // SY_WIN32
+#if defined(_WIN32) && !defined(__MINGW32__) // SY_WIN32
 // RESTRICT is an attribute of a pointer, and indicates that no other pointer points to the same area
 #define RESTRICT __restrict
 // RESTRICTF is an attribute of a function, and indicates that the object returned by the function is not aliased with any other object
@@ -211,7 +222,7 @@ extern unsigned int __cdecl _clearfp (void);
 #endif
 
 #if SY_64
-#if defined(_MSC_VER)  // SY_WIN32
+#if defined(MMSC_VER)  // SY_WIN32
 // RESTRICTI (for in-place) is used for things like *z++=*x++ - *y++;  Normally you wouldn't store to a z unless you were done reading
 // the x and y, so it would be safe to get the faster loop that RESTRICT generates, even though strictly speaking if x or y is the
 // same address as z the terms of the RESTRICT are violated.  But on 32-bit machines, registers are so tight that sometimes *z is used
@@ -243,7 +254,7 @@ extern unsigned int __cdecl _clearfp (void);
 
 // disable C_USEMULTINTRINSIC if un-available
 #if C_USEMULTINTRINSIC
-#if !defined(_MSC_VER)
+#if !defined(MMSC_VER)
 #if defined(__clang__)
 #if !__has_builtin(__builtin_smull_overflow)
 #undef C_USEMULTINTRINSIC
@@ -281,7 +292,7 @@ extern unsigned int __cdecl _clearfp (void);
 
 /* msvc does not define __SSE2__ */
 #if !defined(__SSE2__)
-#if defined(_MSC_VER)
+#if defined(MMSC_VER)
 #if _M_IX86_FP==2
 #define __SSE2__ 1
 #include <xmmintrin.h>   /* header file for _mm_prefetch() */
@@ -725,7 +736,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define MUL_ACC(addend,mplr1,mplr2) _mm256_add_pd(addend , _mm256_mul_pd(mplr1,mplr2))
 #endif
 #define NAN0            (_clearfp())
-#if defined(_MSC_VER) && _MSC_VER==1800 && !SY_64 // bug in some versions of VS 2013
+#if defined(MMSC_VER) && _MSC_VER==1800 && !SY_64 // bug in some versions of VS 2013
 #define NAN1            {if(_SW_INVALID&_statusfp()){_clearfp();jsignal(EVNAN); R 0;}}
 #define NAN1V           {if(_SW_INVALID&_statusfp()){_clearfp();jsignal(EVNAN); R  ;}}
 #define NANTEST         (_SW_INVALID&_statusfp())
@@ -1007,7 +1018,7 @@ extern unsigned int __cdecl _clearfp (void);
 // If CTTZ is not defined, the default routine defined in u.c will be used.  You can look there
 // for the complete spec for CTTZ and CTTZZ.
 
-#if defined(_MSC_VER)  // SY_WIN32
+#if defined(MMSC_VER)  // SY_WIN32
 #include <intrin.h>
 #define CTTZ(w) _tzcnt_u32((UINT)(w))
 #if SY_64
@@ -1020,7 +1031,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define CTTZZ(w) ((w)==0 ? 32 : CTTZ(w))
 #endif
 
-#ifdef _MSC_VER
+#ifdef MMSC_VER
 #define NOINLINE __declspec(noinline)
 #else
 #define NOINLINE __attribute__((noinline))
@@ -1144,7 +1155,7 @@ static inline UINT _clearfp(void){int r=fetestexcept(FE_ALL_EXCEPT);
 #if SY_64
 
 #if C_USEMULTINTRINSIC
-#if defined(_MSC_VER)  // SY_WIN32
+#if defined(MMSC_VER)  // SY_WIN32
 #define DPMULDECLS
 // DPMUL: *z=x*y, execute s if overflow
 #define DPMUL(x,y,z,s) {I _l,_h; *z=_l=_mul128(x,y,&_h); if(_h+(SGNTO0(_l)))s}
@@ -1168,7 +1179,7 @@ static inline UINT _clearfp(void){int r=fetestexcept(FE_ALL_EXCEPT);
 #else  // 32-bit
 
 #if C_USEMULTINTRINSIC
-#if defined(_MSC_VER)  // SY_WIN32
+#if defined(MMSC_VER)  // SY_WIN32
 // optimizer can't handle this #define SPDPADD(addend, sumlo, sumhi) {C c; c=_addcarry_u32(0,addend,sumlo,&sumlo); _addcarry_u32(c,0,sumhi,&sumhi);}
 #define DPMULDECLS unsigned __int64 _p;
 #define DPMUL(x,y,z,s) _p = __emul(x,y); *z=(I)_p; if((_p+0x80000000U)>0xFFFFFFFFU)s
@@ -1192,7 +1203,7 @@ static inline UINT _clearfp(void){int r=fetestexcept(FE_ALL_EXCEPT);
 
 // define single+double-precision integer add
 #if SY_64
-#if defined(_MSC_VER)  // SY_WIN32
+#if defined(MMSC_VER)  // SY_WIN32
 #define SPDPADD(addend, sumlo, sumhi) {C c; c=_addcarry_u64(0,addend,sumlo,&sumlo); _addcarry_u64(c,0,sumhi,&sumhi);}
 #endif
 #endif
@@ -1231,7 +1242,7 @@ static __forceinline void aligned_free(void *ptr) {
 }
 
 // Create (x&y) where x and y are signed, so we can test for overflow.
-#if defined(_MSC_VER)  // SY_WIN32
+#if defined(MMSC_VER)  // SY_WIN32
 #define XANDY(x,y) ((x)&(y))
 #else
 #define XANDY(x,y) ((I)((UI)(x)&(UI)(y)))
@@ -1259,7 +1270,7 @@ static __forceinline void aligned_free(void *ptr) {
 // The following definitions are used only in builds for the AVX instruction set
 // 64-bit Atom cpu in android has hardware crc32c but not AVX
 #if C_CRC32C && (defined(_M_X64) || defined(__x86_64__))
-#if defined(_MSC_VER)  // SY_WIN32
+#if defined(MMSC_VER)  // SY_WIN32
 // Visual Studio definitions
 #define CRC32(x,y) _mm_crc32_u32(x,y)  // takes UI4, returns UI4
 #define CRC32L(x,y) _mm_crc32_u64(x,y)  // takes UI, returns UI (top 32 bits 0)
@@ -1302,7 +1313,7 @@ __ai float64x2_t vreinterpretq_f64_u64(uint64x2_t __p0) {
 #else   /* android with hardware crc32 */
 #define VOIDARG void
 #define _mm256_zeroupper(x)
-#ifdef _MSC_VER
+#ifdef MMSC_VER
 typedef union __declspec(align(16)) __m128i {
    __int8 m128i_i8[16];
    __int16 m128i_i16[8];

@@ -47,6 +47,13 @@
 #include "openssl.h"
 #include "sha.h"
 
+#if defined(_MSC_VER) && !defined(__clang__)
+#undef MMSC_VER
+#define MMSC_VER
+#else
+#undef MMSC_VER
+#endif
+
 #if defined(__i386) || defined(__i386__) || defined(_M_IX86) || \
     defined(__x86_64) || defined(_M_AMD64) || defined(_M_X64) || \
     defined(__s390__) || defined(__s390x__) || \
@@ -441,7 +448,7 @@ static const SHA_LONG64 K512[80] = {
                                 : "r"(*((const SHA_LONG64 *)(&(x))))); ret; })
 #    endif
 #   endif
-#  elif defined(_MSC_VER)
+#  elif defined(MMSC_VER)
 #   if defined(_WIN64)         /* applies to both IA-64 and AMD64 */
 #    pragma intrinsic(_rotr64)
 #    define ROTR(a,n)    _rotr64((a),n)

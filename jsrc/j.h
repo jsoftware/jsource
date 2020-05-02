@@ -7,6 +7,11 @@
 #error need workaround by define __clang__ in preprocessor macro
 #endif
 
+// ms vc++ defined _MSC_VER but clang-cl also defined _MSC_VER
+// clang-cl doesn't emulate ms vc++ good enough
+// and it breaks program logic previously guarded by _MSC_VER
+// MMSC_VER means the real ms vc++ excluding clang-cl
+// use MMSC_VER instead of _MSC_VER throughout JE source
 #if defined(_MSC_VER) && !defined(__clang__)
 #undef MMSC_VER
 #define MMSC_VER

@@ -8,6 +8,9 @@ jsrc/jversion.h
 *.so
 !asm/*.o
 
+# temp scripts used for debugging
+*makevs/jdll/*.ijs
+
 # windows - most output files go to %userprofile%\jbld\jout
 # some end up in the project folder and are marked here
 # sometimes entire project subfolders are created that should not be in repo
@@ -22,10 +25,9 @@ jsrc/jversion.h
 # following files are in repo for vs2013
 # but are not pushed to avoid getting unwanted user specific changes
 # clone will have to copy from .template files to work
-*.sln
-*.vcxproj
+*.sln*
+*.vcxproj*
 !*.template
-!*19.*
 
 # mac
 .DS_Store

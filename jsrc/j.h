@@ -1292,6 +1292,7 @@ static __forceinline void aligned_free(void *ptr) {
 #elif defined(__aarch64__)||defined(_M_ARM64)
 #define VOIDARG void
 #define _mm256_zeroupper(x)
+#define _mm_setzero_si128() vdupq_n_s16(0)
 typedef int64x2_t __m128i;
 typedef float64x2_t __m128d;
 #define _mm_set1_epi32_ vdupq_n_s64

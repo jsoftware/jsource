@@ -7,6 +7,11 @@
 #error need workaround by define __clang__ in preprocessor macro
 #endif
 
+// ms vc++ defined _MSC_VER but clang-cl also defined _MSC_VER
+// clang-cl doesn't emulate ms vc++ good enough
+// and it breaks program logic previously guarded by _MSC_VER
+// MMSC_VER means the real ms vc++ excluding clang-cl
+// use MMSC_VER instead of _MSC_VER throughout JE source
 #if defined(_MSC_VER) && !defined(__clang__)
 #undef MMSC_VER
 #define MMSC_VER
@@ -1292,6 +1297,7 @@ static __forceinline void aligned_free(void *ptr) {
 #elif defined(__aarch64__)||defined(_M_ARM64)
 #define VOIDARG void
 #define _mm256_zeroupper(x)
+#define _mm_setzero_si128() vdupq_n_s16(0)
 typedef int64x2_t __m128i;
 typedef float64x2_t __m128d;
 #define _mm_set1_epi32_ vdupq_n_s64

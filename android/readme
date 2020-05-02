@@ -2,7 +2,7 @@
 
 $ cd jni
 $ ln -sf ../../jsrc .
-$ ln -sf ../../hostdefs.
+$ ln -sf ../../hostdefs .
 $ ln -sf ../../netdefs .
 $ ln -sf ../../../../src/pcre .
 $ ln -sf ../../../../src/pcre2 .

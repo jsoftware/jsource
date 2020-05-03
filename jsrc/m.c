@@ -654,7 +654,12 @@ I jtgc3(J jt,A *x,A *y,A *z,A* old){
 }
 
 // This routine handles the recursion for ra().  ra() itself does the top level, this routine handles the contents
+// FIXME: clang-cl optimize jtra will crash extended integer
+#if defined(_WIN32) && defined(__clang__)
+I __attribute__((optnone)) jtra(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
+#else
 I jtra(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
+#endif
  if(t&BOX){AD* np;
   // boxed.  Loop through each box, recurring if called for.  Two passes are intertwined in the loop
   A* RESTRICT wv=AAV(wd);  // pointer to box pointers

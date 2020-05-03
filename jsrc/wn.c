@@ -9,6 +9,15 @@
 #include <stdlib.h>
 #endif
 
+void dumpw(A w){   // scaf
+  printf("w(%p)={\nk: %llx\nf: %llx\nm: %llx\nt: %llx\nc: %llx\nn: %llx\nr: %d\n",w,(I)AK(w),AFLAG(w),AM(w),AT(w),AC(w),AN(w),AR(w));
+  if(AN(w)>0){
+    A *av=AAV(w);
+    printf("AAV[%llx]=%p\n",0ll,av[0]);
+  }
+  printf("}\n");
+}
+
 #define NUMH(f)  B f(J jt,I n,C*s,void*vv)
 
 /* numd    floating point number (double)                      */
@@ -288,7 +297,7 @@ I strtoint(C* in, C** out) {
   if((UI)dig<=(UI)9){  // numeric digit.  Accept it and check for overflow
    if(res >= 1+IMAX/10) R 0;  // fail if this will overflow for sure.  res could be IMIN
    res = res * 10 + dig; // accept the digit.  This may overflow, but that's not fatal yet if it overflows to IMIN
-   if(-(I)res > 0)R 0;  // If result overflowed to neg, fail.  We allow IMIN to continue on, representing IMAX+1
+   if((I)((UI)0-res) > 0)R 0;  // If result overflowed to neg, fail.  We allow IMIN to continue on, representing IMAX+1
    continue;
   }
   if(*in==C0 || *in=='.')break;  // end-of-field or end-of-integer part: exit

@@ -409,7 +409,7 @@ typedef I SI;
 #define ACUC1           (ACUSECOUNT*1) // <= this is usecount==1; > is UC>1
 #define ACINCR(a)       if(!ACISPERM(AC(a)))(AC(a)=(AC(a)+1)&~ACINPLACE)
 #define ACX(a)          {AC(a)=ACPERMANENT;}
-#define ACISPERM(c)     (((c)+(c))<0)  // is PERMANENT bit set?
+#define ACISPERM(c)     ((I)((UI)(c)+(UI)(c))<0)  // is PERMANENT bit set?
 #define ASGNINPLACE(w)  (ACIPISOK(w) || AC(w)==1&&jt->assignsym&&jt->assignsym->val==w&&!(AFLAG(w)&AFRO)&&notonupperstack(w))  // OK to inplace ordinary operation
 // same, but s is an expression that is neg if it's OK to inplace
 #define ASGNINPLACESGN(s,w)  (((s)&AC(w))<0 || ((s)&(AC(w)-2))<0 &&jt->assignsym&&jt->assignsym->val==w&&!(AFLAG(w)&AFRO)&&notonupperstack(w))  // OK to inplace ordinary operation

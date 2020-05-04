@@ -41,11 +41,11 @@
  * inappropriate for platforms which don't support it, most notably
  * 16-bit platforms.
  */
-#include <stdlib.h>
-#include <string.h>
 
-#include "openssl.h"
-#include "sha.h"
+/* clang-cl */
+#if defined(__clang__) && !defined(__GNUC__)
+#define __GNUC__ 5
+#endif
 
 #if defined(_MSC_VER) && !defined(__clang__)
 #undef MMSC_VER
@@ -53,6 +53,12 @@
 #else
 #undef MMSC_VER
 #endif
+
+#include <stdlib.h>
+#include <string.h>
+
+#include "openssl.h"
+#include "sha.h"
 
 #if defined(__i386) || defined(__i386__) || defined(_M_IX86) || \
     defined(__x86_64) || defined(_M_AMD64) || defined(_M_X64) || \

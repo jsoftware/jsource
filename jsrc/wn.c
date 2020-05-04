@@ -9,15 +9,6 @@
 #include <stdlib.h>
 #endif
 
-void dumpw(A w){   // scaf
-  printf("w(%p)={\nk: %llx\nf: %llx\nm: %llx\nt: %llx\nc: %llx\nn: %llx\nr: %d\n",w,(I)AK(w),AFLAG(w),AM(w),AT(w),AC(w),AN(w),AR(w));
-  if(AN(w)>0){
-    A *av=AAV(w);
-    printf("AAV[%llx]=%p\n",0ll,av[0]);
-  }
-  printf("}\n");
-}
-
 #define NUMH(f)  B f(J jt,I n,C*s,void*vv)
 
 /* numd    floating point number (double)                      */

@@ -131,8 +131,6 @@ static int check_xcr0_ymm()
   uint32_t xcr0;
 #if defined(MMSC_VER)
   xcr0 = (uint32_t)_xgetbv(0);  /* min VS2010 SP1 compiler is required */
-#elif defined(_WIN32) && defined(__clang__)
-  return 1;                     /* no _xgetbv() in clang-cl */
 #else
   __asm__ ("xgetbv" : "=a" (xcr0) : "c" (0) : "%edx" );
 #endif

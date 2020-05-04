@@ -1,6 +1,11 @@
 #ifndef CPU_INFO_H
 #define CPU_INFO_H
 
+/* clang-cl */
+#if defined(__clang__) && !defined(__GNUC__)
+#define __GNUC__ 5
+#endif
+
 #if defined(_MSC_VER) && !defined(__clang__)
 #undef MMSC_VER
 #define MMSC_VER

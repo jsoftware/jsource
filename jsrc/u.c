@@ -138,7 +138,9 @@ I CTTZI(I w){
     R t - (w & 1);
 }
 #else
-#define CTTZI CTTZ   // On 32-bit machines, I is same as long
+// #define CTTZI CTTZ   // On 32-bit machines, I is same as long
+// j.h declares CTTZI as extern function
+I CTTZI(I w){R CTTZ(w);}
 #endif
 #endif
 

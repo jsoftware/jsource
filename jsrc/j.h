@@ -7,6 +7,11 @@
 #error need workaround by define __clang__ in preprocessor macro
 #endif
 
+/* clang-cl */
+#if defined(__clang__) && !defined(__GNUC__)
+#define __GNUC__ 5
+#endif
+
 // ms vc++ defined _MSC_VER but clang-cl also defined _MSC_VER
 // clang-cl doesn't emulate ms vc++ good enough
 // and it breaks program logic previously guarded by _MSC_VER
@@ -193,7 +198,7 @@
 // but normally something like *z = *x + *y will not cause trouble because there is no reason to refetch an input after
 // the result has been written.  On 32-bit machines, registers are so short that sometimes the compilers refetch an input
 // after writing to *z, so we don't turn RESTRICT on for 32-bit
-#if defined(_WIN32) && !defined(__MINGW32__) // SY_WIN32
+#if defined(MMSC_VER)
 // RESTRICT is an attribute of a pointer, and indicates that no other pointer points to the same area
 #define RESTRICT __restrict
 // RESTRICTF is an attribute of a function, and indicates that the object returned by the function is not aliased with any other object

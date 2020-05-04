@@ -50,7 +50,7 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
-    <PlatformToolset>v120_xp</PlatformToolset>
+    <PlatformToolset>ClangCL</PlatformToolset>
     <UseOfMfc>false</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
@@ -415,7 +415,7 @@
       <HeaderFileName />
     </Midl>
     <ClCompile>
-      <AdditionalOptions>-O2 -fno-strict-aliasing -maes -fno-strict-aliasing -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-incompatible-pointer-types -Wno-char-subscripts -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor</AdditionalOptions>
+      <AdditionalOptions>-maes -fno-strict-aliasing -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-incompatible-pointer-types -Wno-char-subscripts -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor</AdditionalOptions>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
@@ -430,6 +430,7 @@
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
+      <OmitFramePointers>true</OmitFramePointers>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -466,7 +467,7 @@
       </HeaderFileName>
     </Midl>
     <ClCompile>
-      <AdditionalOptions>-O2 -fno-strict-aliasing -maes -mavx -fno-strict-aliasing -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-incompatible-pointer-types -Wno-char-subscripts -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor</AdditionalOptions>
+      <AdditionalOptions>-maes -fno-strict-aliasing -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-incompatible-pointer-types -Wno-char-subscripts -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor</AdditionalOptions>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
@@ -482,6 +483,7 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <EnableEnhancedInstructionSet>AdvancedVectorExtensions</EnableEnhancedInstructionSet>
       <IntrinsicFunctions>true</IntrinsicFunctions>
+      <OmitFramePointers>true</OmitFramePointers>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -518,7 +520,7 @@
       </HeaderFileName>
     </Midl>
     <ClCompile>
-      <AdditionalOptions>-O2 -fno-strict-aliasing -maes -mavx -mavx2 -fno-strict-aliasing -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-incompatible-pointer-types -Wno-char-subscripts -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor</AdditionalOptions>
+      <AdditionalOptions>-maes -fno-strict-aliasing -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-incompatible-pointer-types -Wno-char-subscripts -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor</AdditionalOptions>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
@@ -534,6 +536,7 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <IntrinsicFunctions>true</IntrinsicFunctions>
+      <OmitFramePointers>true</OmitFramePointers>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -570,7 +573,7 @@
       </HeaderFileName>
     </Midl>
     <ClCompile>
-      <AdditionalOptions>-O2 -fno-strict-aliasing -maes -mavx -mavx2 -fno-strict-aliasing -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-incompatible-pointer-types -Wno-char-subscripts -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor</AdditionalOptions>
+      <AdditionalOptions>-maes -fno-strict-aliasing -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-incompatible-pointer-types -Wno-char-subscripts -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor</AdditionalOptions>
       <Optimization>Disabled</Optimization>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
@@ -624,8 +627,8 @@
       </HeaderFileName>
     </Midl>
     <ClCompile>
-      <AdditionalOptions>-O2 -fno-strict-aliasing -maes -mavx -mavx2 -fno-strict-aliasing -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-incompatible-pointer-types -Wno-char-subscripts -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor</AdditionalOptions>
-      <Optimization>Disabled</Optimization>
+      <AdditionalOptions>-maes -fno-strict-aliasing -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-incompatible-pointer-types -Wno-char-subscripts -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor</AdditionalOptions>
+      <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <PreprocessorDefinitions>C_NA=0;C_AVX=1;C_AVX2=1;NDEBUG;WIN32;_WINDOWS;_JDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -723,8 +726,8 @@
       <HeaderFileName />
     </Midl>
     <ClCompile>
-      <AdditionalOptions>-O2 -fno-strict-aliasing -maes -fno-strict-aliasing -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-incompatible-pointer-types -Wno-char-subscripts -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor</AdditionalOptions>
-      <Optimization>Disabled</Optimization>
+      <AdditionalOptions>-maes -fno-strict-aliasing -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-incompatible-pointer-types -Wno-char-subscripts -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor</AdditionalOptions>
+      <Optimization>MaxSpeed</Optimization>
       <PreprocessorDefinitions>C_NA=0;_DEBUG;WIN32;_WINDOWS;_JDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -737,6 +740,8 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <OmitFramePointers>true</OmitFramePointers>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -973,6 +978,9 @@
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <FloatingPointExceptions>false</FloatingPointExceptions>
       <EnableEnhancedInstructionSet>NoExtensions</EnableEnhancedInstructionSet>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <OmitFramePointers>true</OmitFramePointers>
+      <AdditionalOptions>-maes -fno-strict-aliasing -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-incompatible-pointer-types -Wno-char-subscripts -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>

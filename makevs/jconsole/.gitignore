@@ -1,0 +1,4 @@
+# template folder files are in repo
+!*.sln
+!*.vcxproj
+!*.vcxproj.user

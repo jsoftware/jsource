@@ -1,0 +1,9 @@
+GNU Wget 1.10.2
+
+Copyright (C) 2005 Free Software Foundation, Inc.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+Originally written by Hrvoje Niksic <hniksic@xemacs.org>.

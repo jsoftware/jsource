@@ -743,7 +743,7 @@
     </ResourceCompile>
     <Link>
       <AdditionalOptions>/machine:AMD64 %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>winasm64.obj;..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <ModuleDefinitionFile>..\..\dllsrc\jdll.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>

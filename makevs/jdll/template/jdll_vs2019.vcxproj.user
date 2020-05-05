@@ -8,7 +8,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug64|x64'">
     <LocalDebuggerCommand>$(userprofile)\jbld\j64\bin\jconsole.exe</LocalDebuggerCommand>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
-    <LocalDebuggerCommandArguments>-lib $(userprofile)\jbld\jout\$(ProjectName)\$(Platform)\$(Configuration)\j.dll</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>-lib $(userprofile)\jbld\jout\$(ProjectName)\$(Platform)\$(Configuration)\$(projectname).dll</LocalDebuggerCommandArguments>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug64avx|x64'">
     <LocalDebuggerCommand>$(userprofile)\jbld\j64\bin\jconsole.exe</LocalDebuggerCommand>

@@ -165,6 +165,7 @@
     <OutDir>$(userprofile)\jbld\jout\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(userprofile)\jbld\jout\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <LinkIncremental>false</LinkIncremental>
+    <TargetName>tsdll</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Midl>

@@ -54,7 +54,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
-    <PlatformToolset>v120_xp</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <UseOfMfc>false</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug64|x64'" Label="Configuration">
@@ -69,22 +69,22 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release64avx|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
-    <PlatformToolset>v120_xp</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <UseOfMfc>false</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release64avx2|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
-    <PlatformToolset>v120_xp</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <UseOfMfc>false</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug64avx|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
-    <PlatformToolset>v120_xp</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <UseOfMfc>false</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug64avx2|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
-    <PlatformToolset>v120_xp</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <UseOfMfc>false</UseOfMfc>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
@@ -134,41 +134,49 @@
     <OutDir>$(userprofile)\jbld\jout\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(userprofile)\jbld\jout\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <LinkIncremental>false</LinkIncremental>
+    <TargetName>j</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release64avx|x64'">
     <OutDir>$(userprofile)\jbld\jout\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(userprofile)\jbld\jout\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <LinkIncremental>false</LinkIncremental>
+    <TargetName>j</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release64avx2|x64'">
     <OutDir>$(userprofile)\jbld\jout\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(userprofile)\jbld\jout\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <LinkIncremental>false</LinkIncremental>
+    <TargetName>j</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug64avx|x64'">
     <OutDir>$(userprofile)\jbld\jout\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(userprofile)\jbld\jout\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <LinkIncremental>false</LinkIncremental>
+    <TargetName>J</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug64avx2|x64'">
     <OutDir>$(userprofile)\jbld\jout\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(userprofile)\jbld\jout\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <LinkIncremental>false</LinkIncremental>
+    <TargetName>j</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug64|x64'">
     <OutDir>$(userprofile)\jbld\jout\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(userprofile)\jbld\jout\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <LinkIncremental>true</LinkIncremental>
+    <TargetName>j</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>$(userprofile)\jbld\jout\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(userprofile)\jbld\jout\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <LinkIncremental>false</LinkIncremental>
+    <TargetName>j</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <OutDir>$(userprofile)\jbld\jout\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(userprofile)\jbld\jout\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <LinkIncremental>true</LinkIncremental>
+    <TargetName>j</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(Platform)\$(Configuration)\</OutDir>
@@ -205,8 +213,8 @@
     </ResourceCompile>
     <Link>
       <AdditionalOptions>/machine:AMD64 %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>winasm64.obj;..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>.\Release64\j.dll</OutputFile>
+      <AdditionalDependencies>..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>.\Release64\$(projectname).dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <ModuleDefinitionFile>..\..\dllsrc\jdll.def</ModuleDefinitionFile>
       <ProgramDatabaseFile>.\Release64/j.pdb</ProgramDatabaseFile>
@@ -251,8 +259,8 @@
     </ResourceCompile>
     <Link>
       <AdditionalOptions>/machine:AMD64 %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>winasm64.obj;..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>.\Release64\j.dll</OutputFile>
+      <AdditionalDependencies>..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>.\Release64\$(projectname).dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <ModuleDefinitionFile>..\..\dllsrc\jdll.def</ModuleDefinitionFile>
       <ProgramDatabaseFile>.\Release64/j.pdb</ProgramDatabaseFile>
@@ -297,8 +305,8 @@
     </ResourceCompile>
     <Link>
       <AdditionalOptions>/machine:AMD64 %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>winasm64.obj;..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>.\Release64\j.dll</OutputFile>
+      <AdditionalDependencies>..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>.\Release64\$(projectname).dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <ModuleDefinitionFile>..\..\dllsrc\jdll.def</ModuleDefinitionFile>
       <ProgramDatabaseFile>.\Release64/j.pdb</ProgramDatabaseFile>
@@ -343,8 +351,8 @@
     </ResourceCompile>
     <Link>
       <AdditionalOptions>/machine:AMD64 %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>winasm64.obj;..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>.\Release64\j.dll</OutputFile>
+      <AdditionalDependencies>..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>.\Release64\$(projectname).dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <ModuleDefinitionFile>..\..\dllsrc\jdll.def</ModuleDefinitionFile>
       <ProgramDatabaseFile>.\Release64/j.pdb</ProgramDatabaseFile>
@@ -389,8 +397,8 @@
     </ResourceCompile>
     <Link>
       <AdditionalOptions>/machine:AMD64 %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>winasm64.obj;..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>.\Release64\j.dll</OutputFile>
+      <AdditionalDependencies>..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>.\Release64\$(projectname).dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <ModuleDefinitionFile>..\..\dllsrc\jdll.def</ModuleDefinitionFile>
       <ProgramDatabaseFile>.\Release64/j.pdb</ProgramDatabaseFile>
@@ -437,7 +445,7 @@
     </ResourceCompile>
     <Link>
       <AdditionalOptions>/machine:AMD64 %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>winasm64.obj;..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <ModuleDefinitionFile>..\..\dllsrc\jdll.def</ModuleDefinitionFile>
       <ProgramDatabaseFile>$(outdir)\j.pdb</ProgramDatabaseFile>
@@ -452,7 +460,7 @@
       <OutputFile>.\Release64/jdll.bsc</OutputFile>
     </Bscmake>
     <PostBuildEvent>
-      <Command>copy $(outdir)$(projectname).dll $(userprofile)\jbld\j64\bin\j.dll</Command>
+      <Command>copy $(outdir)$(targetname).dll $(userprofile)\jbld\j64\bin\$j.$(projectname).dll</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release64avx|x64'">
@@ -490,7 +498,7 @@
     </ResourceCompile>
     <Link>
       <AdditionalOptions>/machine:AMD64 %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>winasm64.obj;..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <ModuleDefinitionFile>..\..\dllsrc\jdll.def</ModuleDefinitionFile>
       <ProgramDatabaseFile>$(outdir)\j.pdb</ProgramDatabaseFile>
@@ -505,7 +513,7 @@
       <OutputFile>.\Release64/jdll.bsc</OutputFile>
     </Bscmake>
     <PostBuildEvent>
-      <Command>copy $(outdir)\j.dll $(userprofile)\jbld\j64\bin\javx.dll</Command>
+      <Command>copy $(outdir)$(targetname).dll $(userprofile)\jbld\j64\bin\javx.$(projectname).dll</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release64avx2|x64'">
@@ -543,7 +551,7 @@
     </ResourceCompile>
     <Link>
       <AdditionalOptions>/machine:AMD64 %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>winasm64.obj;..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <ModuleDefinitionFile>..\..\dllsrc\jdll.def</ModuleDefinitionFile>
       <ProgramDatabaseFile>$(outdir)\j.pdb</ProgramDatabaseFile>
@@ -558,7 +566,7 @@
       <OutputFile>.\Release64/jdll.bsc</OutputFile>
     </Bscmake>
     <PostBuildEvent>
-      <Command>copy $(outdir)\j.dll $(userprofile)\jbld\j64\bin\javx2.dll</Command>
+      <Command>copy $(outdir)j.dll $(userprofile)\jbld\j64\bin\javx2.$(projectname).dll</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug64avx|x64'">
@@ -577,7 +585,7 @@
       <Optimization>Disabled</Optimization>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <PreprocessorDefinitions>C_NA=0;C_AVX=1;C_AVX2=1;NDEBUG;WIN32;_WINDOWS;_JDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>C_NA=0;C_AVX=1;C_AVX2=0;NDEBUG;WIN32;_WINDOWS;_JDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -596,7 +604,7 @@
     </ResourceCompile>
     <Link>
       <AdditionalOptions>/machine:AMD64 %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>winasm64.obj;..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <ModuleDefinitionFile>..\..\dllsrc\jdll.def</ModuleDefinitionFile>
       <ProgramDatabaseFile>$(outdir)\j.pdb</ProgramDatabaseFile>
@@ -651,7 +659,7 @@
     </ResourceCompile>
     <Link>
       <AdditionalOptions>/machine:AMD64 %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>winasm64.obj;..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <ModuleDefinitionFile>..\..\dllsrc\jdll.def</ModuleDefinitionFile>
       <ProgramDatabaseFile>$(outdir)\j.pdb</ProgramDatabaseFile>
@@ -684,7 +692,7 @@
       <AdditionalOptions>/Wp64  %(AdditionalOptions)</AdditionalOptions>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;WIN32;_WINDOWS;_JDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <MinimalRebuild>true</MinimalRebuild>
+      <MinimalRebuild>false</MinimalRebuild>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <PrecompiledHeaderOutputFile>.\Debug64/jdll.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>.\Debug64/</AssemblerListingLocation>
@@ -701,8 +709,8 @@
     </ResourceCompile>
     <Link>
       <AdditionalOptions>/machine:AMD64 %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>winasm64.obj;..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>.\Debug64\j.dll</OutputFile>
+      <AdditionalDependencies>..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>.\Debug64\$(projectname).dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <ModuleDefinitionFile>..\..\dllsrc\jdll.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -730,7 +738,6 @@
       <AdditionalOptions> %(AdditionalOptions)</AdditionalOptions>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>C_NA=0;_DEBUG;WIN32;_WINDOWS;_JDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <MinimalRebuild>true</MinimalRebuild>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <PrecompiledHeaderOutputFile>$(outdir)\jdll.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>$(outdir)</AssemblerListingLocation>
@@ -747,7 +754,7 @@
     </ResourceCompile>
     <Link>
       <AdditionalOptions>/machine:AMD64 %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>winasm64.obj;..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>..\..\openssl-asm\keccak1600-x86_64-nasm.o;..\..\openssl-asm\sha1-x86_64-nasm.o;..\..\openssl-asm\sha256-x86_64-nasm.o;..\..\openssl-asm\sha512-x86_64-nasm.o;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <ModuleDefinitionFile>..\..\dllsrc\jdll.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -812,7 +819,7 @@
       <OutputFile>.\release/jdll.bsc</OutputFile>
     </Bscmake>
     <PostBuildEvent>
-      <Command>copy $(outdir)\j.dll $(userprofile)\jbld\j32\bin\j.dll</Command>
+      <Command>copy $(outdir)j.dll $(userprofile)\jbld\j32\bin\j.$(projectname).dll</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='j32|Win32'">
@@ -860,7 +867,7 @@
       <OutputFile>.\release/jdll.bsc</OutputFile>
     </Bscmake>
     <PostBuildEvent>
-      <Command>copy $(outdir)\j.dll $(userprofile)\jbld\j32\bin\j.dll</Command>
+      <Command>copy $(outdir)j.dll.dll $(userprofile)\jbld\j32\bin\$(projectname).dll</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -892,7 +899,7 @@
     </ResourceCompile>
     <Link>
       <AdditionalDependencies>..\..\openssl-asm\keccak1600-mmx-nasm.o;..\..\openssl-asm\sha1-586-nasm.o;..\..\openssl-asm\sha256-586-nasm.o;..\..\openssl-asm\sha512-586-nasm.o;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>.\release\j.dll</OutputFile>
+      <OutputFile>.\release\$(projectname).dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <ModuleDefinitionFile>..\..\dllsrc\jdll.def</ModuleDefinitionFile>
       <ProgramDatabaseFile>.\release/j.pdb</ProgramDatabaseFile>
@@ -937,7 +944,7 @@
     </ResourceCompile>
     <Link>
       <AdditionalDependencies>..\..\openssl-asm\keccak1600-mmx-nasm.o;..\..\openssl-asm\sha1-586-nasm.o;..\..\openssl-asm\sha256-586-nasm.o;..\..\openssl-asm\sha512-586-nasm.o;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>.\release\j.dll</OutputFile>
+      <OutputFile>.\release\$(projectname).dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <ModuleDefinitionFile>..\..\dllsrc\jdll.def</ModuleDefinitionFile>
       <ProgramDatabaseFile>.\release/j.pdb</ProgramDatabaseFile>
@@ -964,7 +971,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>C_64=0;C_NA=0;_DEBUG;WIN32;_WINDOWS;_JDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <MinimalRebuild>true</MinimalRebuild>
+      <MinimalRebuild>false</MinimalRebuild>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <PrecompiledHeaderOutputFile>$(outdir)\jdll.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>$(outdir)</AssemblerListingLocation>
@@ -1015,7 +1022,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;WIN32;_WINDOWS;_JDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <MinimalRebuild>true</MinimalRebuild>
+      <MinimalRebuild>false</MinimalRebuild>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <PrecompiledHeaderOutputFile>.\debug/jdll.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>.\debug/</AssemblerListingLocation>
@@ -1032,7 +1039,7 @@
     </ResourceCompile>
     <Link>
       <AdditionalDependencies>..\..\openssl-asm\keccak1600-mmx-nasm.o;..\..\openssl-asm\sha1-586-nasm.o;..\..\openssl-asm\sha256-586-nasm.o;..\..\openssl-asm\sha512-586-nasm.o;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>.\debug\j.dll</OutputFile>
+      <OutputFile>.\debug\$(projectname).dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <ModuleDefinitionFile>..\..\dllsrc\jdll.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>

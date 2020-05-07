@@ -164,6 +164,7 @@
     <OutDir>$(userprofile)\jbld\jout\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(userprofile)\jbld\jout\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <LinkIncremental>false</LinkIncremental>
+    <TargetName>jconsole</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(Platform)\$(Configuration)\</OutDir>
@@ -372,7 +373,7 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <OutputFile>$(outdir)$(projectname).exe</OutputFile>
+      <OutputFile>$(outdir)$(targetname).exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <ProgramDatabaseFile>$(outdir)\jconsole.pdb</ProgramDatabaseFile>
       <SubSystem>Console</SubSystem>

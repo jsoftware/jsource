@@ -456,7 +456,7 @@
       <OutputFile>.\Release64/jdll.bsc</OutputFile>
     </Bscmake>
     <PostBuildEvent>
-      <Command>copy $(outdir)$(projectname).dll $(userprofile)\jbld\j64\bin\j.$(projectname).dll</Command>
+      <Command>copy $(outdir)$(targetname).dll $(userprofile)\jbld\j64\bin\j.$(projectname).dll</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release64avx|x64'">

@@ -2,7 +2,7 @@
 <Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug64|x64'">
     <LocalDebuggerCommand>$(userprofile)\jbld\j64\bin\jconsole</LocalDebuggerCommand>
-    <LocalDebuggerCommandArguments>-lib $(userprofile)\jbld\jout\$(ProjectName)\$(Platform)\$(Configuration)\$(projectname).dll</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>-lib $(userprofile)\jbld\jout\$(ProjectName)\$(Platform)\$(Configuration)\$(targetname).dll</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release64|x64'">

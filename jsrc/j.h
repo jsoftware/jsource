@@ -9,7 +9,11 @@
 
 /* clang-cl */
 #if defined(__clang__) && !defined(__GNUC__)
-#define __GNUC__ 5
+#define __GNUC__ 4
+#undef __GNUC_MINOR__
+#define __GNUC_MINOR__ 2
+#undef __GNUC_PATCHLEVEL__
+#define __GNUC_PATCHLEVEL__ 1
 #endif
 
 // ms vc++ defined _MSC_VER but clang-cl also defined _MSC_VER

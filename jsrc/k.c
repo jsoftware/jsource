@@ -165,8 +165,8 @@ static KF1(jtIfromX){I a,i,m,n,*u,*x;X c,p,q,*v;
  R 1;
 }
 
-static KF1(jtDfromX){D d,*x=(D*)yv,dm,dp;I c,i,n,*v,wn;X p,*wv;
- dp=1.7976931348623157e308; dm=-dp;
+static KF1(jtDfromX){D d,*x=(D*)yv/*,dm,dp*/;I c,i,n,*v,wn;X p,*wv;
+// dp=1.7976931348623157e308; dm=-dp;
  wn=AN(w); wv=XAV(w);
  for(i=0;i<wn;++i){
   p=wv[i]; n=AN(p); v=AV(p)+n-1; c=*v;

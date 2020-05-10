@@ -60,7 +60,7 @@ a=. fread each basep,each'/',each inuse
 b=. fread each tmplp,each'/',each inuse
 d=. (a~:b)#inuse
 if. #d do.
- echo LF,'template files that do no match base files'
+ echo LF,'template files that do not match base files'
  echo ' ',.>d
 else.
  echo LF,'template files match base files'

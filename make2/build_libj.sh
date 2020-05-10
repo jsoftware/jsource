@@ -77,7 +77,16 @@ fi
 
 if [ -z "${compiler##*gcc*}" ] || [ -z "${CC##*gcc*}" ]; then
 # gcc
-common="$OPENMP -Werror -fPIC -O2 -fvisibility=hidden -fwrapv -fno-strict-aliasing -Wextra -Wno-unused-parameter -Wno-sign-compare -Wno-clobbered -Wno-empty-body -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-type-limits"
+common="$OPENMP -fPIC -O2 -fvisibility=hidden -fno-strict-aliasing  \
+ -Wextra \
+ -Wno-clobbered \
+ -Wno-empty-body \
+ -Wno-parentheses \
+ -Wno-pointer-sign \
+ -Wno-sign-compare \
+ -Wno-type-limits \
+ -Wno-unused-parameter \
+ -Wno-unused-value "
 GNUC_MAJOR=$(echo __GNUC__ | $CC -E -x c - | tail -n 1)
 GNUC_MINOR=$(echo __GNUC_MINOR__ | $CC -E -x c - | tail -n 1)
 if [ $GNUC_MAJOR -ge 5 ] ; then
@@ -96,22 +105,32 @@ if [ $GNUC_MAJOR -ge 8 ] ; then
 common="$common -Wno-cast-function-type"
 fi
 else
-# clang 3.4
-common="$OPENMP -Werror -fPIC -O2 -fvisibility=hidden -fwrapv -fno-strict-aliasing -Wextra -Wno-consumed -Wuninitialized -Wno-unused-parameter -Wsign-compare -Wno-empty-body -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wunsequenced -Wno-string-plus-int -Wtautological-constant-out-of-range-compare"
-# clang 3.8
-CLANG_MAJOR=$(echo __clang_major__ | $CC -E -x c - | tail -n 1)
-CLANG_MINOR=$(echo __clang_minor__ | $CC -E -x c - | tail -n 1)
-if [ $CLANG_MAJOR -eq 3 ] && [ $CLANG_MINOR -ge 8 ] ; then
-common="$common -Wno-pass-failed"
-else
-if [ $CLANG_MAJOR -ge 4 ] ; then
-common="$common -Wno-pass-failed"
-fi
-fi
-# clang 10
-if [ $CLANG_MAJOR -ge 10 ] ; then
-common="$common -Wno-implicit-float-conversion"
-fi
+# clang
+common="$OPENMP -fPIC -O2 -fvisibility=hidden -fno-strict-aliasing \
+ -Werror -Wextra -Wno-unknown-warning-option \
+ -Wsign-compare \
+ -Wtautological-constant-out-of-range-compare \
+ -Wuninitialized \
+ -Wno-char-subscripts \
+ -Wno-consumed \
+ -Wno-delete-non-abstract-non-virtual-dtor \
+ -Wno-empty-body \
+ -Wno-implicit-float-conversion \
+ -Wno-implicit-int-float-conversion \
+ -Wno-incompatible-pointer-types \
+ -Wno-int-in-bool-context \
+ -Wno-missing-braces \
+ -Wno-parentheses \
+ -Wno-pass-failed \
+ -Wno-pointer-sign \
+ -Wno-string-plus-int \
+ -Wno-unknown-pragmas \
+ -Wno-unsequenced \
+ -Wno-unused-function \
+ -Wno-unused-parameter \
+ -Wno-unused-value \
+ -Wno-unused-variable "
+
 fi
 
 NO_SHA_ASM="${NO_SHA_ASM:=0}"

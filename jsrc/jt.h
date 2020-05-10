@@ -103,9 +103,7 @@ typedef struct {
  UC   prioritytype[11];  // type bit for the priority types
  UC   typepriority[19];  // priority value for the noun types
 // end cache line 4.  10 bytes carry over.  next cache line is junk; we don't expect to use these types much
-#if 0
  B    nflag;            /* 1 if space required before name                 */
-#endif
  B    sesm;             /* whether there is a session manager              */
  B    tmonad;           /* tacit translator: 1 iff monad         >          */
  B    tsubst;           /* tacit translator           >                     */

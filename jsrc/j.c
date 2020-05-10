@@ -149,7 +149,7 @@ F1(jtversq){
  sprintf(p + strlen(p), "%i", _MSC_FULL_VER);
 #elif defined(__GNUC__)
  strcat(p, " gcc-");
- sprintf(p + strlen(p), "%i", __GNUC__;
+ sprintf(p + strlen(p), "%i", __GNUC__);
  strcat(p, "-");
  sprintf(p + strlen(p), "%i", __GNUC_MINOR__);
 #endif

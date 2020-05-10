@@ -78,7 +78,7 @@ fi
 if [ -z "${compiler##*gcc*}" ] || [ -z "${CC##*gcc*}" ]; then
 # gcc
 common="$OPENMP -fPIC -O2 -fvisibility=hidden -fno-strict-aliasing  \
- -Wextra \
+ -Werror -Wextra \
  -Wno-clobbered \
  -Wno-empty-body \
  -Wno-parentheses \

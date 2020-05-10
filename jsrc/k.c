@@ -470,7 +470,8 @@ F2(jtxco2){A z;B b;I j,n,r,*s,t,*wv,*zu,*zv;
  RE(j=i0(a));
  switch(j){
   case -2: R aslash1(CDIV,w);
-  case -1: b=jt->xco; jt->xco=1; z=bcvt(1,w); jt->xco=b; R z;
+  case -1: R bcvt(1,w);
+// obsolete  b=jt->xco; jt->xco=1; z=bcvt(1,w); jt->xco=b; R z;
   case  1: R xco1(w);
   case  2: 
    if(!(t&RAT))RZ(w=cvt(RAT,w));

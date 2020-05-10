@@ -27,7 +27,8 @@ windows the global data that needs scrutiny is in the 0003: section.
 
 
 typedef struct {
-// The first 2 cache lines is the hottest real estate in J, because they can be referenced with 
+// The first 2 cache lines is the hottest real estate in J, because they can be referenced with
+// $=must be a per-thread variable
 // single-byte displacement.  Put your heaviest-used items here
  C*   adbreak;			/* must be first! ad mapped shared file break flag */
  C*   adbreakr;         // read location: same as adbreak, except that when we are ignoring interrupts it points to 0
@@ -36,7 +37,7 @@ typedef struct {
  I    shapesink[2];     // garbage area used as load/store targets of operations we don't want to branch around
 // things needed by name lookup (unquote)
  I    modifiercounter;  // incremented whenever anything happens that could alter modifier lookup: assignment/deletion of a modifier, or any change to locales or path
- UI4  ranks;            // low half: rank of w high half: rank of a  for IRS
+ UI4  ranks;            // low half: rank of w high half: rank of a  for IRS $
  union {
   UI4 ui4;    // all 4 flags at once, access as ui4
   struct {
@@ -57,19 +58,19 @@ typedef struct {
     } uq_c;        // accessing as bytes
    } uq;   // flags needed only by unquote
   } us;   // access as US
- } uflags;
- A    locsyms;  // local symbol table, or dummy empty symbol table if none
+ } uflags;   // $
+ A    locsyms;  // local symbol table, or dummy empty symbol table if none  $
 // ----- end of cache line 0
 // things needed by parsing
- PFRAME parserstackframe;  // 4 words
- A    global;           /* global symbol table                           */
- A    sf;               /* for $:                                          */
- A    zombieval;        // value of assignsym, if it can be reused
- L    *assignsym;       // symbol-table entry for the symbol about to be assigned
+ PFRAME parserstackframe;  // 4 words  $
+ A    global;           /* global symbol table   $                        */
+ A    sf;               /* for $:     $                                     */
+ A    zombieval;        // value of assignsym, if it can be reused   $
+ L    *assignsym;       // symbol-table entry for the symbol about to be assigned   $
 // ----- end of cache line 1
- A*   nvrav;            /* AAV(jt->nvra)                                   */
- UI4  nvran;            // number of atoms in nvrav
- I4   slisti;           /* index into slist of current script              */
+ A*   nvrav;            /* AAV(jt->nvra)      $                             */
+ UI4  nvran;            // number of atoms in nvrav    $
+ I4   slisti;           /* index into slist of current script     $         */
  A    stloc;            /* locales symbol table                            */
  A    fill;             // fill     stuck here as filler
 // things needed for memory allocation
@@ -82,31 +83,35 @@ typedef struct {
  }    mfree[-PMINL+PLIML+1];      // pool info.  Use struct to keep cache footprint small
 // --- end of cache line 3. 1 words carries over
 // things needed by executing explicit defs
- A    curname;          // current name, an A block containing an NM
- UI   cstackmin;        // red warning for C stack pointer
- UI   qtstackinit;      // jqt front-end C stack pointer
- I4   callstacknext;           /* named fn calls: current depth                   */
- I4   fcalln;           /* named fn calls: maximum permissible depth       */
- B    asgn;             /* 1 iff last operation on this line is assignment */
- B    stch;             /* enable setting of changed bit                   */
- UC   jerr;             /* error number (0 means no error)                 */
- C    asgzomblevel;     // 0=do not assign zombie name before final assignment; 1=allow premature assignment of complete result; 2=allow premature assignment even of incomplete result
+ A    curname;          // current name, an A block containing an NM   $
+ UI   cstackmin;        // red warning for C stack pointer    $
+ UI   qtstackinit;      // jqt front-end C stack pointer    $
+ I4   callstacknext;           /* named fn calls: current depth      $             */
+ I4   fcalln;           /* named fn calls: maximum permissible depth     $  */
+ B    asgn;             /* 1 iff last operation on this line is assignment  $  */
+ B    stch;             /* enable setting of changed bit       $            */
+ UC   jerr;             /* error number (0 means no error)      $           */
+ C    asgzomblevel;     // 0=do not assign zombie name before final assignment; 1=allow premature assignment of complete result; 2=allow premature assignment even of incomplete result   $
  B    assert;           /* 1 iff evaluate assert. statements               */
- B    foldrunning;      // 1 if fold is running (allows Z:)
- UC   jerr1;            /* last non-zero jerr                              */
- C    cxspecials;       // 1 if special testing needed in cx loop (pm or debug)
- B    iepdo;            /* 1 iff do iep                                    */
+ B    foldrunning;      // 1 if fold is running (allows Z:)    $
+ UC   jerr1;            /* last non-zero jerr    $                          */
+ C    cxspecials;       // 1 if special testing needed in cx loop (pm or debug)    $
+ B    iepdo;            /* 1 iff do iep    $                                */
  C    dbss;             /* single step mode                                */
  B    pmrec;            /* perf. monitor: 0 entry/exit; 1 all              */
- B    tostdout;         /* 1 if output to stdout                           */
+ B    tostdout;         /* 1 if output to stdout       $                    */
  UC   prioritytype[11];  // type bit for the priority types
  UC   typepriority[19];  // priority value for the noun types
 // end cache line 4.  10 bytes carry over.  next cache line is junk; we don't expect to use these types much
+#if 0
  B    nflag;            /* 1 if space required before name                 */
+#endif
  B    sesm;             /* whether there is a session manager              */
- B    tmonad;           /* tacit translator: 1 iff monad                   */
- B    tsubst;           /* tacit translator                                */
+ B    tmonad;           /* tacit translator: 1 iff monad         >          */
+ B    tsubst;           /* tacit translator           >                     */
+#if 0
  B    xco;              /* 1 iff doing x: conversion                       */
+#endif
  UC   dbuser;           /* user-entered value for db                       */
  A    flkd;             /* file lock data: number, index, length           */
  I    flkn;             /* file lock count                                 */
@@ -118,15 +123,15 @@ typedef struct {
  void *dtoa;             /* use internally by dtoa.c                        */
  I    bytes;            /* bytes currently in use                          */
  I    bytesmax;         /* high-water mark of "bytes"                      */
- I    mulofloloc;       // index of the result at which II multiply overflow occurred
- D    fuzz;             /* fuzz (sometimes set to 0)                       */
- C    fillv0[sizeof(Z)];/* default fill value                              */
- C*   fillv;            /* fill value                                      */
+ I    mulofloloc;       // index of the result at which II multiply overflow occurred   $
+ D    fuzz;             /* fuzz (sometimes set to 0)    $                   */
+ C    fillv0[sizeof(Z)];/* default fill value     $                         */
+ C*   fillv;            /* fill value     $                                 */
  C    typesizes[32];    // the length of an allocated item of each type
 // --- end cache line 6.  24 bytes carry over.  next cache line is junk; we don't expect to use these types much
- B    thornuni;         /* 1 iff ": allowed to produce C2T result          */
- B    jprx;             /* 1 iff ": for jprx (jconsole output)             */
- C    unicodex78;       /* 1 iff disallow numeric argument for 7 8 u:      */
+ B    thornuni;         /* 1 iff ": allowed to produce C2T result    >      */
+ B    jprx;             /* 1 iff ": for jprx (jconsole output)       >      */
+ C    unicodex78;       /* 1 iff disallow numeric argument for 7 8 u:  >    */
  B    retcomm;          /* 1 iff retain comments and redundant spaces      */
  UC   seclev;           /* security level                                  */
 // 3 bytes here
@@ -154,8 +159,8 @@ typedef struct {
  I    dgemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for float matrix product.  _1 means 'never'
  I    zgemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for complex matrix product.  _1 means 'never'
  A    implocref[2];     // references to 'u.'~ and 'v.'~, marked as implicit locatives
- I4   parsercalls;      /* # times parser was called                       */
- I4   nthreads;  // number of threads to use, or 0 if we haven't checked
+ I4   parsercalls;      /* # times parser was called     $                  */
+ I4   nthreads;  // number of threads to use, or 0 if we haven't checked     $
  A*   tstacknext;       // if not 0, points to the recently-used tstack buffer, whose chain field points to tstacknext
  A*   tstackcurr;       // current allocation, holding NTSTACK bytes+1 block for alignment.  First entry points to next-lower allocation
  D    cct;               /* complementary comparison tolerance                            */

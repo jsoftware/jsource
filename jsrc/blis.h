@@ -1,6 +1,11 @@
 #ifndef  _BLIS_HEADER
 #define  _BLIS_HEADER
 
+/* clang-cl */
+#if defined(__clang__) && !defined(__GNUC__)
+#define __GNUC__ 5
+#endif
+
 #if defined(_MSC_VER) && !defined(__clang__)
 #undef MMSC_VER
 #define MMSC_VER
@@ -29,7 +34,7 @@
 #endif
 #endif
 
-#if defined(_WIN32) && !defined(__MINGW32__)  // SY_WIN32
+#if defined(MMSC_VER)
 #ifndef PREFETCH
 #define PREFETCH(x) _mm_prefetch((x),_MM_HINT_T0)
 #define PREFETCH2(x) _mm_prefetch((x),_MM_HINT_T1)   // prefetch into L2 cache but not L1

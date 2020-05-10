@@ -62,18 +62,18 @@ xp support will be dropped in the next year or so
 
 2. examples use powershell, but command prompt works as well
 
-3. examples and bars assume gitdev\jsource is the jsource folder
+3. examples and bars assume git\jsource is the jsource folder
 
 4. jbld hardwired as build folder
 
 5. create jbld folder
-...> gitdev\jsource\makevs\install.bat
+...> git\jsource\makevs\install.bat
 
 you can copy any later gitdev jlibrary changes to jbld with
-...> gitdev\jsource\makevs\copy_jlibrary.bat
+...> git\jsource\makevs\copy_jlibrary.bat
 
 6. create .sln and .vcxproj files from templates
-...> gitdev\jsource\makevs\template.bat gitdev
+...> git\jsource\makevs\template.bat git
 
 7. edit jsrc\jversion.h as appropriate for 9!:14 result
 jsrc\jversion-x.h is template for this file
@@ -88,7 +88,7 @@ j64
 
 1. build jconsole.exe
 start VS
-open project gitdev\jsource\makevs\jconsole\jconsole.sln
+open project git\jsource\makevs\jconsole\jconsole.sln
 
 build|configuration manager - release64 x64 (configuration - platform)
 build|clean solution
@@ -106,7 +106,7 @@ start powershell
    i.5
    9!:14''
 ...
-   testpath=:'gitdev/jsource/test/'
+   testpath=:'git/jsource/test/'
    load testpath,'tsu.ijs'
    RUN ddall NB. takes a few minutes to validate system and report problems
 

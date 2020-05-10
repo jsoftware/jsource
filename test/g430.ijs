@@ -572,7 +572,7 @@ a =: 1e4 $ 'abc'
 (7!:2 '; 40 <\ a') > 1.2 * 7!:2 '40 ]@;@:(<\) a'  NB. smaller because boxes contain (cloned) virtual blocks
 (; 40 <\ a) -: 40 ]@;@:(<\) a
 
-((10) 6!:2 '_3 ,&]/\ a') > 1.5 * (10) 6!:2 '_2 ,&]/\ a'  NB. special code for dyad
+THRESHOLD +. ((10) 6!:2 '_3 ,&]/\ a') > 1.5 * (10) 6!:2 '_2 ,&]/\ a'  NB. special code for dyad
 
 a =: i. 1000 1000
 (7!:2 '; 2 (<@{.\) a') > 1.5 * 7!:2 '2 ;@:(<@{.\) a'

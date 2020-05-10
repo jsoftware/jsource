@@ -17,9 +17,14 @@ jsrc/jversion.h
 *.sdf
 *.opensdf
 *.suo
-**/jconsole/**/
-**/jdll/**/
-**/tsdll/**/
+**/jconsole/.vs/
+**/jdll/**/.vs/
+**/tsdll/**/.vs/
+
+# following are no longer required and prevent template folders
+# **/jconsole/**/
+# **/jdll/**/
+# **/tsdll/**/
 
 # windows - need to run with different versions of vs
 # following files are in repo for vs2013
@@ -51,4 +56,3 @@ release
 # build folders
 bin/
 make2/
-jlibrary/

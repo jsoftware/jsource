@@ -137,5 +137,21 @@ F1(jtversq){
  strcat(p,"-");
  strncat(p,d + 4,2);
  strcat(p,d+11);
+#if defined(__clang__)
+ strcat(p, " clang-");
+ sprintf(p + strlen(p), "%i", __clang_major__);
+ strcat(p, "-");
+ sprintf(p + strlen(p), "%i", __clang_minor__);
+ strcat(p, "-");
+ sprintf(p + strlen(p), "%i", __clang_patchlevel__);
+#elif defined(_MSC_FULL_VER)
+ strcat(p, " ms-");
+ sprintf(p + strlen(p), "%i", _MSC_FULL_VER);
+#elif defined(__GNUC__)
+ strcat(p, " gcc-");
+ sprintf(p + strlen(p), "%i", __GNUC__);
+ strcat(p, "-");
+ sprintf(p + strlen(p), "%i", __GNUC_MINOR__);
+#endif
  R cstr(m);
 }

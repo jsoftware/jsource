@@ -23,7 +23,12 @@
 #define BLI_DGEMM bli_dgemm_int_6x8
 #define BLI_ZGEMM bli_zgemm_int_3x4
 #else
+/* clang-cl need /Arch:AVX2 to build */
+#if C_AVX2 || !(defined(_WIN32) && defined(__clang__))
 #define MM256_FMADD_PD(a,b,c) _mm256_fmadd_pd(a,b,c)
+#else
+#define MM256_FMADD_PD(a,b,c) _mm256_add_pd(_mm256_mul_pd(a,b),c)
+#endif
 #define BLI_DGEMM bli_dgemm2_int_6x8
 #define BLI_ZGEMM bli_zgemm2_int_3x4
 #endif

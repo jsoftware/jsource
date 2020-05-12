@@ -1,7 +1,7 @@
 18!:4 <'z'
 3 : 0 ''
 
-JLIB=: '9.01.21'
+JLIB=: '9.02.01'
 
 notdef=. 0: ~: 4!:0 @ <
 hostpathsep=: ('/\'{~6=9!:12'')&(I. @ (e.&'/\')@] })
@@ -1896,7 +1896,7 @@ f=. jpath '~addons/docs/help/',y
 if. fexist ({.~ i:&'#') f do.
   browse file2url f
 else.
-  f=. 'http://www.jsoftware.com/docs/help', '901'
+  f=. 'http://www.jsoftware.com/docs/help', '902'
   browse f,'/',y
 end.
 )

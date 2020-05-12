@@ -1,4 +1,4 @@
-#define jversion   "901"
+#define jversion   "902"
 #ifdef _WIN32
 #define jplatform "windows"  // windows/linux/darwin/raspberry/android/...
 #elif defined(RASPI)

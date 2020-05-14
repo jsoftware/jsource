@@ -162,6 +162,7 @@ static __inline__ void x86_cpuid(unsigned int func, unsigned int values[4])
   /* this means we can't use "=b" for the second output register */
   __asm__ __volatile__ ( \
                          "push %%ebx\n"
+                         "xor %%ecx,%%ecx\n"
                          "cpuid\n" \
                          "mov %%ebx, %1\n"
                          "pop %%ebx\n"
@@ -181,6 +182,7 @@ static __inline__ void x86_cpuid(unsigned int func, unsigned int values[4])
   /* this means we can't use "=b" for the second output register */
   __asm__ __volatile__ ( \
                          "push %%rbx\n"
+                         "xor %%ecx,%%ecx\n"
                          "cpuid\n" \
                          "mov %%rbx, %1\n"
                          "pop %%rbx\n"

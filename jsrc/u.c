@@ -327,7 +327,7 @@ if (n0 >= 16) {
 __m128i zeros=_mm_setzero_si128();
 __m128i ones=_mm_set1_epi8(1);
 __m128i ffs=_mm_set1_epi8(0xffu);
- _mm_storeu_si128((__m128i *)p,_mm_and_si128(_mm_xor_si128(_mm_cmpeq_epi8(_mm_load_si128((__m128i*)q),zeros),ffs),ones));
+ _mm_storeu_si128((__m128i *)p,_mm_and_si128(_mm_xor_si128(_mm_cmpeq_epi8(_mm_loadu_si128((__m128i*)q),zeros),ffs),ones));
  n0-=16;p+=16;q+=16;
 }
 #if defined(__clang__)
@@ -351,7 +351,7 @@ n0-=mis;
 while(mis--)*p++=!!(*q++);
 }
 while (n0 >= 16) {
- _mm_storeu_si128((__m128i *)p,_mm_and_si128(_mm_xor_si128(_mm_cmpeq_epi8(_mm_load_si128((__m128i*)q),zeros),ffs),ones));
+ _mm_storeu_si128((__m128i *)p,_mm_and_si128(_mm_xor_si128(_mm_cmpeq_epi8(_mm_loadu_si128((__m128i*)q),zeros),ffs),ones));
  n0-=16;p+=16;q+=16;
 }
 #if defined(__clang__)

@@ -511,7 +511,7 @@ dobblock:
  RETF(z);
 }
 
-
+// execution of u : v, selecting the version of self to use based on  valence
 static DF1(xv1){A z; R df1(z,  w,FAV(self)->fgh[0]);}
 static DF2(xv2){A z; R df2(z,a,w,FAV(self)->fgh[1]);}
 

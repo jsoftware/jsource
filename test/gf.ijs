@@ -54,11 +54,35 @@ lr   =: 1 : '5!:5 <''x'''
 sgn  =: *
 dec  =: <:
 inc  =: >:
-fact =: 1:`(* $:@<:)@.*
-fact1=: 1:`(* $:@dec)@.sgn
+fact =: 1:`(* $:@<:)@.*"0
+fact1=: 1:`(* $:@dec)@.sgn"0
 
-'1:`(* $:@<:)@.*' -: fact      f. lr
-'1:`(* $:@<:)@.*' -: fact1     f. lr
+NB. Verify that f. verbs are functionally equivalent, without checking reps
+(fact i. 5) -: (fact f. i. 5)
+(fact i. 5) -: (fact1 i. 5)
+(fact1 i. 5) -: (fact1 f. i. 5)
+(fact@>: i. 5) -: (fact@>: f. i. 5)
+(fact@>: i. 5) -: (fact1@>: i. 5)
+(fact1@>: i. 5) -: (fact1@>: f. i. 5)
+(>:@fact i. 5) -: (>:@fact f. i. 5)
+(>:@fact i. 5) -: (>:@fact1 i. 5)
+(>:@fact1 i. 5) -: (>:@fact1 f. i. 5)
+(fact@>: : (+ fact)  i. 5) -: (fact@>: : (+ fact) f. i. 5)
+((>: i. 5) fact@>: : (+ fact)  i. 5) -: ((>: i. 5) fact@>: : (+ fact) f. i. 5)
+((>: i. 5) fact@>: : (+ fact)  i. 5) -: ((>: i. 5) fact1@>: : (+ fact1) i. 5)
+((>: i. 5) fact1@>: : (+ fact1)  i. 5) -: ((>: i. 5) fact1@>: : (+ fact1) f. i. 5)
+
+'1:`(* $:@<:)@.*"0' -: fact      f. lr
+'1:`(* $:@<:)@.*"0' -: fact1     f. lr
+
+   s =: 4 : 0
+0
+0
+)
+i =: 0&$: : s
+'domain error' -: ex 'i&> b. 1'  NB. used to hang
+
+1: 0 : 0
 '>:@(3 : ''1:`(* $:@<:)@.* y'' :(4 : ''x 1:`(* $:@<:)@.* y''))' -: inc@fact  f. lr
 '3 : ''1:`(* $:@<:)@.* y'' :(4 : ''x 1:`(* $:@<:)@.* y'')&.<:'  -: fact&.dec f. lr
 
@@ -74,7 +98,7 @@ eq=: 2 : 0
  g=: y f.
  assert. (5!:1 <'f') -: 5!:1 <'g'
  1
-)
+))
 
 >:@ s          eq (>:@ ambi       )
 >:@:s          eq (>:@:ambi       )
@@ -91,11 +115,13 @@ s & *:@>:      eq (monad& *:@>:   )
 *& s           eq (* & monad      )
 NB. illegal *&.s           eq (* &.monad      )
 *&:s           eq (* &:monad      )
+)
 'domain error' -: ex '*&.$:'
 'domain error' -: ex '*&.i.'
 'domain error' -: ex '*&.:$:'
 'domain error' -: ex '*&.:i.'
 
+1: 0 : 0
 s : +          eq (monad : +      )
 * : s          eq (*     : dyad   )
 
@@ -130,6 +156,7 @@ s"2@*:         eq (monad"2@*:   )
 s"2@*:@>:      eq (monad"2@*:@>:)
 s"2~           eq (dyad"2~      )
 (s"2 >: )      eq (dyad"2 >:    )
+)
 
 C=: 0:`0:`1:`($:&<: + ($: <:)) @. ([: #. <:,0<[)
 f=: (C +:)"0 f.

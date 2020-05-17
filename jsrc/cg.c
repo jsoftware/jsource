@@ -416,7 +416,7 @@ static DF2(jtcasei12){A vres,z;I gerit[128/SZI],ZZFLAGWORD;
   I vx=i0(vres); RE(0);  // fetch index of gerund
   vx+=REPSGN(vx)&AN(FAV(self)->fgh[2]); ASSERT(BETWEENO(vx,0,AN(FAV(self)->fgh[2])),EVINDEX);
   A ger=AAV(FAV(self)->fgh[2])[vx];  // the selected gerund
-  R (FAV(ger)->valencefns[state>>ZZFLAGISDYADX])(FAV(ger)->flag&VJTFLGOK1?jtinplace:jt,a,state&ZZFLAGISDYAD?w:ger,ger);  // inplace if the verb can handle it
+  R (FAV(ger)->valencefns[state>>ZZFLAGISDYADX])(FAV(ger)->flag&(((state>>ZZFLAGISDYADX)+1)<<VJTFLGOK1X)?jtinplace:jt,a,state&ZZFLAGISDYAD?w:ger,ger);  // inplace if the verb can handle it
  }
 }
 

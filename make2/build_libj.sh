@@ -81,6 +81,7 @@ common="$OPENMP -fPIC -O2 -fvisibility=hidden -fno-strict-aliasing  \
  -Werror -Wextra \
  -Wno-clobbered \
  -Wno-empty-body \
+ -Wno-format-overflow \
  -Wno-parentheses \
  -Wno-pointer-sign \
  -Wno-sign-compare \

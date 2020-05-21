@@ -300,7 +300,7 @@ static DF2(jtcasei12){A vres,z;I gerit[128/SZI],ZZFLAGWORD;
    if(wr>=0){
     RZ(w=jtredcatcell(jtinplaceorig,w,wr));  // inplaceability of original w
     RZ(sortw=from(gradepm,w));
-    jtinplace=(J)((I)jtinplace|(SGNTO0(AC(sortw))<<JTINPLACEWX));   // if we have a copy of the input, we can inplace it
+    jtinplace=(J)((I)jtinplace|(SGNTO0(AC(sortw))<<JTINPLACEWX));   // if we have a copy of the input, we can inplace it.  Could also inplace if original inplaceable
     ZZFLAGWORD|=ZZFLAGARRAYW;  // indicate that virtw must be updated between iterations
    }else{
     sortw=w;

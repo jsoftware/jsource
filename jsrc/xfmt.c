@@ -362,13 +362,7 @@ static F2(jtfmtprecomp) {A*as,base,fb,len,strs,*u,z;B*bits,*bw;D dtmp,*dw;
          else if(mPQ) (*iv)+=nPQ;
         } else {
 #if SY_64
-/* kludge for gcc */
-#if defined(__GNUC__) && !defined(__clang__)
-         volatile UI w0=(UI)ABS(*iw);
-         if (w0           < 10000000000L) *iv=2+!!d+d+  1;
-#else
-         if ((UI)ABS(*iw) < 10000000000L) *iv=2+!!d+d+  1;
-#endif
+         if ((((UI)*iw)^(UI)REPSGN(*iw))-(UI)REPSGN(*iw) < 10000000000L) *iv=2+!!d+d+  1;  // (UI)ABS(*iw) without signed arithmetic
          else                         *iv=2+!!d+d+  2;
 #else
          *iv=2+!!d+d+  1;

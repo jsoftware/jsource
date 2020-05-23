@@ -227,7 +227,6 @@ typedef struct {
 #endif
 #endif 
  C*   capture;          /* capture output for python->J etc.               */
- UI   capturemax;       /* size of capture buffer allocated                */
  I    dlllasterror;     /* DLL stuff                                       */
  I    etxn;             /* strlen(etx)                                     */
  I    etxn1;            /* last non-zero etxn                              */

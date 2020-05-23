@@ -338,10 +338,21 @@ empty 4!:7 si_sn [ this2=: 'this2' [ si_sn=: 4!:7 ] 4!:6 sn=. 'scriptname',":?1e
 sn-:>(4!:4 <'this2'){4!:3 ''
 si_g4x=(4!:4 <'this2'){4!:8 ''
 
+NB. delete a name on same line as when it is reassigned
+3 : 0 ''
+bgn =. 7!:0''
+for_i. i.4 do.
+ dat=: 1e7$' '
+ 4!:55<'dat1' [ dat=. dat1 [ 4!:55<'dat' [ dat1=. dat
+ 4!:55<'dat'
+end.
+10000 > (7!:0'') - bgn
+)
+
 
 
 4!:55 ;:'a ab_cd abc abc__ abc_z_ abcd '
-4!:55 ;:'advx alpha b beta c ces conjx erase f'
+4!:55 ;:'advx alpha b beta c ces conjx dat erase f'
 4!:55 ;:'g gamma jnc jnc_z_ jnl jnl_z_ nm nounx plus scind si_g4x si_sn sn sum '
 4!:55 ;:'sum__ sum_z_ t ttt this1 this2 v verbx x y '
 

@@ -211,7 +211,7 @@ end.
 if. _1=r do. 0;~sdsockerror'' else. 0;r end.
 )
 
-sdcleanup=: 3 : '0[(sdclose ::0:@] shutdownJ@(;&2)"0)^:(*@#) SOCKETS_jsocket_'
+sdcleanup=: 3 : '0[(sdclose ::0:"0@[ shutdownJ@(;&2)"0)^:(*@#)SOCKETS_jsocket_'
 sdinit=: 3 : 0
 if. 0=nc<'SOCKETS_jsocket_' do. 0 return. end.
 SOCKETS_jsocket_=: ''

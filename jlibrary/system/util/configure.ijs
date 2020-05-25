@@ -19,6 +19,8 @@ RecentMax
 XDiff
 Editor
 Editor_nox
+TermEmu
+TermEmu_nox
 RGBSEQ
 )
 
@@ -75,6 +77,15 @@ elseif. MemoryLimit<_ do.
 end.
 9!:37 Output
 0!:100 ;(}:,'_j_=:',]) each <;.2 jdefs
+nox=. (UNAME-:'Linux') *. (0;'') e.~ <2!:5 'DISPLAY'
+TermEmu_j_=: nox{::TermEmu_j_;TermEmu_nox_j_
+if. (UNAME-:'Linux') *. 0 = #TermEmu_j_ do.
+  TermEmu_j_=: TermEmu_nox_j_=: dflttermemu_j_''
+end.
+PDFReader_j_=: nox{::PDFReader_j_;PDFReader_nox_j_
+if. 0 = #PDFReader_j_ do.
+  PDFReader_j_=: PDFReader_nox_j_=: dfltpdfreader_j_''
+end.
 EMPTY
 )
 

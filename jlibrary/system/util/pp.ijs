@@ -16,13 +16,13 @@ arguments=: 'm n u v x y'
 t=. '= < <. <: > >. >: _: + +. +: * *. *: - -. -: % %. %: ^ ^.'
 t=. t,' $ $. $: ~. ~: | |. |: , ,. ,: ; ;: # #. #: ! /: \: [ [: ]'
 t=. t,' { {. {: {:: }. }: ". ": ? ?.'
-t=. t,' A. c. C. e. E. i. i: I. j. L. o. p. p: q: r. s: u: x:'
+t=. t,' A. c. C. e. E. i. i: I. j. L. o. p. p: q: r. s: u: x: Z:'
 t=. t,' _9: _8: _7: _6: _5: _4: _3: _2: _1:'
 t=. t,' 0: 1: 2: 3: 4: 5: 6: 7: 8: 9:'
 verbs=: t
 
 t=. '^: . .. .: :  :. :: ;. !. !: " ` `: @ @. @: & &. &: &.:'
-t=. t,' d. D. D: H. L: S: T.'
+t=. t,' d. D. D: F. F.. F.: F: F:. F:: H. L: S: T.'
 conjunctions=: t
 
 t=. 'assert. break. case. catch. catchd. catcht. continue. do.'
@@ -190,8 +190,8 @@ end.
 
 in;bgn;<<txt,com
 )
-words=: 7&u:&.>@:;:@(8&u:) :: ]
-words1=: 7&u:&.>@:;:@(8&u:) :: 0:
+words=: 7&u:&.>@:;:@(8&u:) :: ]`]@.(2 131072 262144 -.@e.~ 3!:0)
+words1=: 7&u:&.>@:;:@(8&u:) :: 0:`0:@.(2 131072 262144 -.@e.~ 3!:0)
 f=. #~ (=&' ') *: 1: |. notquotes *. '=:'&E. +. '=.'&E.
 noblankbefore=: f f. ^: _
 
@@ -230,7 +230,7 @@ else.
 end.
 )
 pplint=: 3 : 0
-dat=. ucp y
+dat=. y
 
 'fmt wid rms exp sel'=. Format_j_
 if. wid=0 do. spc=. TAB else. spc=. wid#' ' end.
@@ -313,7 +313,7 @@ dat=. nouns nounx } dat
 dat=. ; dat ,each LF
 dat=. (- -.iftermLF) }. dat
 
-utf8 dat
+dat
 )
 ppval=: 3 : 0
 dat=. words each y

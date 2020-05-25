@@ -51,7 +51,7 @@ if. 6>+/v='/' do.
   r=. 'Engine: ',v
   f=. 'www.jsoftware.com'
 else.
-  'a b c d e f g'=. <;._1 '/',v
+  'a b c d e f g'=. 7 {. <;._1 '/',v
   r=. 'Engine: ', a,'/',b,'/',c
   r=. r,LF,(toupper {.d),(}.d),': ',e,'/',g
 end.

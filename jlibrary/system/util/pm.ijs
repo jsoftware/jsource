@@ -252,7 +252,7 @@ bgn=. lns = _1
 end=. lns = _2
 hit=. ind = ndx
 msk=. 1 < bgn usage end
-her=. 2 >: bgn usage end
+her =. 1 = +/\ bgn - end
 bgn=. msk *. bgn
 end=. msk *. end
 

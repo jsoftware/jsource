@@ -1,7 +1,7 @@
 18!:4 <'z'
 3 : 0 ''
 
-JLIB=: '9.02.01'
+JLIB=: '9.02.03'
 
 notdef=. 0: ~: 4!:0 @ <
 hostpathsep=: ('/\'{~6=9!:12'')&(I. @ (e.&'/\')@] })
@@ -1991,8 +1991,7 @@ elseif. IFIOS do.
   jh '<a href="',(file2url cmd),'"</a>'
   EMPTY return.
 end.
-nox=. (UNAME-:'Linux') *. (0;'') e.~ <2!:5 'DISPLAY'
-PDFReader=. nox{::PDFReader_j_;PDFReader_nox_j_
+PDFReader=. PDFReader_j_
 select. UNAME
 case. 'Win' do.
   ShellExecute=. 'shell32 ShellExecuteW > i x *w *w *w *w i'&cd
@@ -2007,9 +2006,6 @@ case. 'Win' do.
 case. 'Android' do.
   android_exec_host 'android.intent.action.VIEW';(utf8 ('file://'&,)@abspath^:(-.@isURL) cmd);'application/pdf';0
 case. do.
-  if. 0 = #PDFReader do.
-    PDFReader=. dfltpdfreader''
-  end.
   PDFReader=. dquote PDFReader
   cmd=. PDFReader,' ',(dquote cmd),' &'
   try.
@@ -2025,30 +2021,31 @@ case. do.
 end.
 EMPTY
 )
+
+linux_pdfreader=: <;._2]0 :0
+xdg-open
+evince
+kpdf
+xpdf
+okular
+acroread
+)
 dfltpdfreader=: verb define
 select. UNAME
+case. 'Android' do. ''
 case. 'Win' do. ''
 case. 'Darwin' do. 'open'
 case. do.
-  try.
-    2!:0'which xdg-open 2>/dev/null'
-    'xdg-open' return. catch. end.
-  try.
-    2!:0'which evince 2>/dev/null'
-    'evince' return. catch. end.
-  try.
-    2!:0'which kpdf 2>/dev/null'
-    'kpdf' return. catch. end.
-  try.
-    2!:0'which xpdf 2>/dev/null'
-    'xpdf' return. catch. end.
-  try.
-    2!:0'which okular 2>/dev/null'
-    'okular' return. catch. end.
-  try.
-    2!:0'which acroread 2>/dev/null'
-    'acroread' return. catch. end.
-  '' return.
+  nox=. (UNAME-:'Linux') *. (0;'') e.~ <2!:5 'DISPLAY'
+  if. ((UNAME-:'Linux') > nox) *. ''-: te=. nox{::PDFReader_j_;PDFReader_nox_j_ do.
+    for_t. linux_pdfreader do.
+      try. 2!:0'which ',(>t),' 2>/dev/null'
+        te=. >t
+        break.
+      catch. end.
+    end.
+  end.
+  te
 end.
 )
 Folder=: ''
@@ -2238,6 +2235,18 @@ if. UNAME-:'Android' do.
 end.
 editor=. (Editor_j_;Editor_nox_j_){::~ nox=. (UNAME-:'Linux') *. (0;'') e.~ <2!:5 'DISPLAY'
 if. 0=#editor do. EMPTY return. end.
+nox=. (UNAME-:'Linux') *. (0;'') e.~ <2!:5 'DISPLAY'
+if. (UNAME-:'Linux')>nox do.
+  if. 1 e. r=. 'term' E. editor do.
+    if. '-e ' -: 3{. editor=. dlb (}.~ i.&' ') ({.I.r)}.editor do.
+      editor=. TermEmu, (('gnome-terminal'-:TermEmu){::' -e ';' -- '), dlb 3}.editor
+    else.
+      editor=. TermEmu, ' ', editor
+    end.
+  else.
+    editor=. TermEmu, (('gnome-terminal'-:TermEmu){::' -e ';' -- '), editor
+  end.
+end.
 if. 1 e. '%f' E. editor do.
   cmd=. editor stringreplace~ '%f';(dquote >@fboxname file);'%l';(":>:row)
 else.
@@ -2248,7 +2257,7 @@ try.
     if. x do.
       2!:1 cmd
     else.
-      2!:1 cmd, (0=nox+.(1 -.@e. 'term' E. editor)*.(1 e. '/vi' E. editor)+.'vi'-:2{.editor)#' &'
+      2!:1 cmd, (0=nox)#' 1>/dev/null &'
     end.
   else.
     (x{0 _1) fork_jtask_ cmd
@@ -2261,6 +2270,33 @@ end.
 EMPTY
 )
 
+linux_terminal=: <;._2]0 :0
+x-terminal-emulator
+gnome-terminal
+mate-terminal
+konsole
+urxvt
+rxvt
+lxterminal
+xfce4-terminal
+eterm
+terminator
+terminology
+st
+xterm
+)
+dflttermemu=: verb define
+nox=. (UNAME-:'Linux') *. (0;'') e.~ <2!:5 'DISPLAY'
+if. ((UNAME-:'Linux') > nox) *. ''-: te=. nox{::TermEmu_j_;TermEmu_nox_j_ do.
+  for_t. linux_terminal do.
+    try. 2!:0'which ',(>t),' 2>/dev/null'
+      te=. >t
+      break.
+    catch. end.
+  end.
+end.
+te
+)
 viewimage=: 3 : 0
 if. -. isURL cmd=. dltb y do.
   if. -.fexist cmd do. EMPTY return. end.

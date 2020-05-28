@@ -75,7 +75,7 @@ if. IFUNIX do.
       2!:0'which curl 2>/dev/null'
       IFCURL=. 1 catch. end.
   end.
-  if. IFCURL>IFWGET do.
+  if. IFCURL do.
     HTTPCMD=: 'curl -L -o %O --stderr %L -f -s -S %U'
   elseif. IFWGET do.
     if. 'Android'-:UNAME do. nc=. ''
@@ -874,7 +874,7 @@ echo LF,'ALL DONE!',LF,'exit this J session and start new session with double cl
 i.0 0
 )
 shortcut=: 3 : 0
-try. ".UNAME,' y' catchd. echo 'create ',y,' launch icon failed' end. 
+try. ".UNAME,' y' catchd. echo 'create ',y,' launch icon failed' end.
 )
 
 defaults=: 3 : 0
@@ -905,7 +905,7 @@ Winx=: 3 : 0
 select. y
 case.'jc' do.
  win'jc' ;'jconsole';'jgray.ico';LIB
-case. 'jhs' do. 
+case. 'jhs' do.
  win'jhs';'jconsole';'jblue.ico';LIB,A
 case. 'jqt' do.
  win'jqt';'jqt'     ;'jgreen.ico';LIB
@@ -956,9 +956,8 @@ create it with: sudo update-alternatives --config x-terminal-emulator
 )
 
 get_terminal=: 3 : 0
-t=. 'x-terminal-emulator'
-if. 0=shell :: 0:'which ',t do. echo lter end.
-t
+if. 0=#TermEmu_j_ do. echo lter end.
+TermEmu_j_
 )
 
 Linux=: 3 : 0
@@ -970,7 +969,7 @@ Linuxx=: 3 : 0
 select. y
 case.'jc' do.
  linux'jc' ;'jconsole';'jgray.png';LIB
-case. 'jhs' do. 
+case. 'jhs' do.
  linux'jhs';'jconsole';'jblue.png';LIB,A
 case. 'jqt' do.
  linux'jqt';'jqt'     ;'jgreen.png';LIB
@@ -985,7 +984,7 @@ linux=: 3 : 0
 n=. type,N
 f=. L,type,N,DS
 c=. hostpathsep jpath '~bin/',bin
-rh=. 1<#fread '/etc/redhat-release' 
+rh=. 1<#fread '/etc/redhat-release'
 if. rh do.
  if. type-:'jqt' do.
   e=. c
@@ -996,7 +995,11 @@ else.
  if. type-:'jqt' do.
   e=. '"',c,'"'
  else.
-  e=. '<T> -e "\"<C>\"<A>"'rplc '<T>';(get_terminal'');'<C>';c;'<A>';arg
+  if. 'gnome-terminal' -: TermEmu=. get_terminal'' do.
+   e=. '<T> -- "\"<C>\"<A>"'rplc '<T>';TermEmu;'<C>';c;'<A>';arg
+  else.
+   e=. '<T> -e "\"<C>\"<A>"'rplc '<T>';TermEmu;'<C>';c;'<A>';arg
+  end.
  end.
 end.
 
@@ -1042,7 +1045,7 @@ Darwinx=: 3 : 0
 select. y
 case.'jc' do.
  darwin'jc' ;'jconsole';'jgray.icns';LIB
-case. 'jhs' do. 
+case. 'jhs' do.
  darwin'jhs';'jconsole';'jblue.icns';LIB,A
 case. 'jqt' do.
  darwin'jqt';'jqt'     ;'jgreen.icns';LIB
@@ -1073,7 +1076,7 @@ r fwrite f,'/Contents/MacOS/apprun'
 2!:0'chmod -R +x ',f
 )
 
-new_launch=: 0 : 0 
+new_launch=: 0 : 0
 #!/bin/sh
 echo '#!/bin/sh' > "<COM>"
 echo '"<C>" <A>' >> "<COM>"
@@ -1610,6 +1613,20 @@ msg=. (+/ 2 1 * IFWIN,'Darwin'-:UNAME) pick 'jqt.sh';'the jqt icon';'jqt.cmd'
 if. '/usr/share/j/' -: 13{. jpath'~install' do. msg=. 'jqt' end.
 smoutput 'Exit and restart J using ',msg
 )
+qt_ldd_test=: 3 : 0
+if. '/usr/share/j/' -: 13{. jpath'~install' do.
+  d=. <;._2 hostcmd_jpacman_ 'ldd /usr/bin/jqt-9.02'
+  d=. d,<;._2 hostcmd_jpacman_ 'ldd ',y,'/libjqt.so.9.02'
+else.
+  d=. <;._2 hostcmd_jpacman_ 'ldd ',jpath'~bin/jqt'
+  d=. d,<;._2 hostcmd_jpacman_ 'ldd ',jpath'~bin/libjqt.so'
+end.
+b=. d#~;+./each (<'not found') E. each d
+if. #b do.
+  echo'jqt dependencies not found - jqt will not start until these are resolved'
+  echo >~.b
+end.
+)
 do_getqtbin=: 3 : 0
 
 bin=. 'JQt ',(((y-:'slim')#'slim ')),'binaries.'
@@ -1617,7 +1634,9 @@ smoutput 'Installing ',bin,'..'
 if. 'Linux'-:UNAME do.
   if. IFRASPI do.
     z=. 'jqt-',((y-:'slim') pick 'raspi';'raspislim'),'-',(IF64 pick '32';'64'),'.tar.gz'
-  else.
+  elseif. 0 [ fexist '/etc/redhat-release' do.
+    z=. 'jqt-',((y-:'slim') pick 'rhel7';'rhel7slim'),'-',(IF64 pick '32';'64'),'.tar.gz'
+  elseif. do.
     z=. 'jqt-',((y-:'slim') pick 'linux';'slim'),'-',(IF64 pick 'x86';'x64'),'.tar.gz'
   end.
   z1=. 'libjqt.so'
@@ -1650,7 +1669,9 @@ else.
       end.
       echo 'install libjqt.so to ',d1
       hostcmd_jpacman_ 'rm -f /usr/bin/jqt'
-      hostcmd_jpacman_ 'cd ',(dquote jpath '~temp'),' && tar --no-same-owner --no-same-permissions -xzf ',(dquote p), ' && chmod 755 jqt && mv jqt /usr/bin/jqt-9.02 && chmod 644 libjqt.so && mv libjqt.so ',d1,'/libjqt.so.9.02 && ldconfig'
+      echo 'cd ',(dquote jpath '~temp'),' && tar --no-same-owner --no-same-permissions -xzf ',(dquote p), ' && chmod 755 jqt && mv jqt /usr/bin/jqt-9.02 && cp libjqt.so ',d1,'/libjqt.so.9.02 && chmod 755 ',d1,'/libjqt.so.9.02 && ldconfig'
+      hostcmd_jpacman_ 'cd ',(dquote jpath '~temp'),' && tar --no-same-owner --no-same-permissions -xzf ',(dquote p), ' && chmod 755 jqt && mv jqt /usr/bin/jqt-9.02 && cp libjqt.so ',d1,'/libjqt.so.9.02 && chmod 755 ',d1,'/libjqt.so.9.02 && ldconfig'
+      echo 'update-alternatives --install /usr/bin/jqt jqt /usr/bin/jqt-9.02 902'
       hostcmd_jpacman_ 'update-alternatives --install /usr/bin/jqt jqt /usr/bin/jqt-9.02 902'
     else.
       hostcmd_jpacman_ 'cd ',(dquote d),' && tar xzf ',(dquote p)
@@ -1667,7 +1688,12 @@ else.
   m=. m,'check that you have write permission for: ',LF,fhs{::(jpath '~bin');'/usr/bin'
 end.
 smoutput m
-if. 'Linux'-:UNAME do. return. end.
+if. 'Linux'-:UNAME do.
+  qt_ldd_test d1
+  smoutput 'If libjqt cannot be loaded, see this guide for installing the Qt library'
+  smoutput 'https://code.jsoftware.com/wiki/Guides/Linux_Installation'
+  return.
+end.
 
 tgt=. jpath IFWIN{::'~install/Qt';'~bin/Qt5Core.dll'
 y=. (*#y){::0;y

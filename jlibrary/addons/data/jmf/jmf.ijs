@@ -103,6 +103,7 @@ if. IFUNIX do.
   c_read=: 'read x i * x' api
   c_write=: 'write x i * x' api
   c_lseek=: 'lseek x i x i' api
+  c_ftruncate=: 'ftruncate i i x' api
   c_mmap=: 'mmap * * x i i i x' api
   c_munmap=: 'munmap i * x' api
 
@@ -152,7 +153,7 @@ else.
 end.
 
 if. _1 = 4!:0<'mappings' do.
-  mappings=: i.0 8
+  mappings=: i.0 10
 end.
 empty''
 )
@@ -418,11 +419,9 @@ row=. ({."1 mappings)i.n
 if. row=#mappings do. 1 return. end.
 m=. row{mappings
 4!:55 ::] n
-'sn fh mh fad had'=. 5{.2}.m
+'sn fh mh fad had jmf ts'=. (MAPSN,MAPFH,MAPMH,MAPADDRESS,MAPHEADER,MAPJMF,,MAPFSIZE){m
 
 if. *./(-.x),(0=#sn),1~:getHADC had do. 2 return. end.
-
-jmf=. fad = had
 if. -.jmf do. freehdr had end.
 if. _1=newsize do.
   free fh,mh,fad
@@ -431,8 +430,12 @@ else.
   totsize=. newsize + jmf*HS
   free _1,mh,fad
   if. IFUNIX do.
-    c_lseek fh;(<:totsize);SEEK_SET
-    c_write fh;(,0{a.);0+1
+    if. totsize>ts do.
+      c_lseek fh;(<:totsize);SEEK_SET
+      c_write fh;(,0{a.);0+1
+    elseif. totsize<ts do.
+      c_ftruncate fh;totsize
+    end.
     if. jmf do.
       c_lseek fh;(SZI*2);SEEK_SET
       c_write fh;(,newsize);SZI

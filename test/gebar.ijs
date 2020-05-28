@@ -94,6 +94,21 @@ NB. a.    (ebar -: E.) 'a'
 'a'   (ebar -: E.) 'b'
 'aaa' (ebar -: E.) 50$'aaa'
 
+NB. Verify long strings, and matches all over
+
+NB. x is len of x, y is len of y
+NB. install some random occurrences of x into y, then verify
+f =. 4 : 0"0
+ystg =. y (] {~ (?@# #)) 'abcdefghij'
+xstg =. x (] {~ (?@# #)) 'abcdefgh'
+randpos =. 2 ?@$ y - x
+ystg =. (xstg,xstg) (, randpos +/ i.x)} ystg
+xstg (ebar -: E.) ystg
+)
+(30 + 1000 ?@$ 10) f 5000 + 1000 ?@$ 100
+
+2 f 64 + 2000 ?@$ 10
+
 NB. literal2
 adot3=: /:~ (#adot1){.~.(u:'ABCabc'),adot1,u: (#adot1)?65536
 ebar =: 4 : 0
@@ -260,6 +275,6 @@ olim =: 9!:20''
 (0 $~ 8e6 % IF64 { 4 8) -: (0 3e6 * 2 - IF64)  E. i. 8e6 % IF64 { 4 8 [ 'If this fails, you need ''9!:21 olim'' to restore memory allocation size'
 9!:21 olim
 
-4!:55 ;:'adot1 adot2 sdot0 adot3 adot4 adot5 g ebar i j m n s t x y G jtree joinroutes olim '
+4!:55 ;:'adot1 adot2 sdot0 adot3 adot4 adot5 f g ebar i j m n s t x y G jtree joinroutes olim '
 randfini''
 

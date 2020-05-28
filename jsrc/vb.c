@@ -103,8 +103,104 @@ static I jtebarprep(J jt,A a,A w,A*za,A*zw,I*zc){I ar,at,m,n,t,wr,wt,memlimit;CR
     if   (k==p){for(i=0;i<m&&u[i]==v[k+i];++i); ZFUNC;             } \
    }
 
+#if C_AVX2
+// fast scanner.  wn must not be 0, an must be > 1
+// type>>56 is 0 (E.), 1 (+/@E.), 2 (I.@E.), 3 (i.&1@E.), 4(+./@E.)
+// parameter and return interpretation depend on function
+static A jtebar1C(J jt, C *av, C *wv, I an, I wn, C* zv, I type, A z){
+ // Init 32-byte copies of the first character to match
+ __m128i zero = _mm_setzero_si128();
+ __m256i a0 = _mm256_broadcastb_epi8(_mm_insert_epi8(zero, av[0], 0));
+ __m256i a1 = _mm256_broadcastb_epi8(_mm_insert_epi8(zero, av[1], 0));
+ // figure endpoint for fast search: 32 bytes before end if an <=32; 
+ // if an > 32, we will skip the final section if the endpoint is end-an+1: no match possible if wv=wvend
+ I temp = an - 1; temp = temp <32?32: temp;   // back up 32 bytes, or n-1, whichever is greater
+ C *wvend = wv + wn - temp;
+ // Load the search string - up to 32 bytes of it - into a register.  Don't overfetch end of buffer
+ temp = 31; temp = an<temp?an:temp;  // length of valid data, max 31.  If any byte of an 8-byte section is valid, we can fetch the whole section
+ __m256i a32 = _mm256_maskload_epi64((__int64*) av, _mm256_loadu_si256((__m256i*)(jt->validitymask + (3 - (temp >> 3)))));
+ // Load the mask of bits that must be set to declare a match on the whole string
+ temp = 32; temp = an<temp?an:temp; I fullmatchmsk = type + (UI4)(-(1LL<<temp));  // high-order 1 bits past the part that needs to be 1s in the mask - max length is 32  top 32 bits 0
+ // We put type into fullmatchmsk to save a register
+ // scan full 31-byte sections until we hit one containing the first 2 characters
+ C *wv0=wv;  // save initial pointer, to get index to match
+ while(wv<wvend){
+  // read in 32 bytes
+  __m256i ws = _mm256_loadu_si256((__m256i*)wv);  // 32 bytes of w
+  // see if the first 2 characters are matched in sequence
+  UI4 match0 = _mm256_movemask_epi8(_mm256_cmpeq_epi8(a0, ws)); UI4 match1 = _mm256_movemask_epi8(_mm256_cmpeq_epi8(a1, ws));
+  UI4 matchmsk = match0&(match1>>1);
+  if(!matchmsk){
+   // no match (presumed the normal case: skip to next 31-byte section
+   wv += 31;
+  }else{
+   // match.  Refetch it and see if it matches the entire search string
+   wv += CTTZI(matchmsk);  // advance to possible match
+   if(wv < wvend){   // if there are enough bytes left to try fetching
+    ws = _mm256_loadu_si256((__m256i*)wv);  // fetch the string, in which the first 2 bytes match
+    match0 = _mm256_movemask_epi8(_mm256_cmpeq_epi8(a32, ws));
+    // if the search string is longer than 32 bytes, finish the comparison
+    DQ(an-32, match0=av[32+i]==wv[32+i]?match0:0;)
+    // output the result if any; advance 1 byte to continue search for start characters
+    match0 = ((fullmatchmsk|match0)+1)>>32;  // if all bits =, produce a 1.  match0 has garbage in top 8 bits
+    // perform the action based on the input type (now in fullmatchmsk)
+    if((fullmatchmsk>>56)<1){zv[wv-wv0] = (C)match0;  // E.
+    }else if((fullmatchmsk>>56)==1){zv+=match0&1;   // +/@E.
+    }else if((fullmatchmsk>>56)<3){     // I.@E.  extend if needed; always write result to avoid misbranch
+     if((I*)zv==IAV(z)+AN(z)){I m=AN(z); RZ(z=ext(0,z)); zv=(C*)(m+IAV(z));} *(I*)zv=wv-wv0; zv=(C*)((I*)zv+(match0&1));
+    }else{ if(match0&1)if((fullmatchmsk>>56)==3)R sc(wv-wv0);  // i.&1@:E.
+    else R num(1);  // +./@E.
+    }
+    wv += 1;
+   }
+  }
+ }
+ // There is one trailing section of 0<length<=32.  Process it without fetching out of bounds
+ // If an>32, there is no need to look
+ if(an<=32){
+  // This is like the loop above, but we avoid overfetch and exit the loop when out of data.  We crawl through the match positions
+  wvend=wv0+wn-an+1;  // first inadmissible position
+  while(wv<wvend){
+   // read in valid bytes to end of string
+   __m256i ws = _mm256_maskload_epi64((__int64*) wv, _mm256_loadu_si256((__m256i*)(jt->validitymask + (3 - ((wv0+wn-wv-1) >> 3)))));  // bytes of w
+   // see if the first 2 characters are matched in sequence
+   UI4 match0 = _mm256_movemask_epi8(_mm256_cmpeq_epi8(a0, ws)); UI4 match1 = _mm256_movemask_epi8(_mm256_cmpeq_epi8(a1, ws));
+   UI4 matchmsk = match0&(match1>>1);
+   if(matchmsk&1){
+    // match on 1st char.  See if it all matches in this position
+    match0 = _mm256_movemask_epi8(_mm256_cmpeq_epi8(a32, ws));
+    // output the result if any; advance 1 byte to continue search for start characters
+    match0 = ((fullmatchmsk|match0)+1)>>32;  // if all bits =, produce a 1
+    // perform the action based on the input type (now in fullmatchmsk)
+    if((fullmatchmsk>>56)<1){zv[wv-wv0] = (C)match0;  // E.
+    }else if((fullmatchmsk>>56)==1){zv+=match0&1;   // +/@E.
+    }else if((fullmatchmsk>>56)<3){     // I.@E.  extend if needed; always write result to avoid misbranch
+     if((I*)zv==IAV(z)+AN(z)){I m=AN(z); RZ(z=ext(0,z)); zv=(C*)(m+IAV(z));} *(I*)zv=wv-wv0; zv=(C*)((I*)zv+(match0&1));
+    }else{ if(match0&1)if((fullmatchmsk>>56)==3)R sc(wv-wv0);  // i.&1@:E.
+    else R num(1);  // +./@E.
+    }
+    matchmsk &= ~1;  // turn off the match we have processed
+   }
+   if(!matchmsk)break;  // no 1st-char matches anywhere - must break because CTTZ fails
+   // advance to next possible match
+   wv += CTTZI(matchmsk);  // advance to possible match
+  }
+ }
+ // Return with value appropriate for function
+ if((fullmatchmsk>>56)<1){R 0;  // E.
+ }else if((fullmatchmsk>>56)==1){R sc((I)zv);   // +/@E.
+ }else if((fullmatchmsk>>56)<3){AN(z)=AS(z)[0]=(I*)zv-IAV(z); R z;     // I.@E.  install actual item count
+ }else if((fullmatchmsk>>56)==3){R sc(wn);  // i.&1@:E.
+ }else{R num(0);  // +./@E.
+ }
+}
+#endif
+
 F2(jtebar){PROLOG(0065);A y,z;B*zv;C*av,*wv;I c,d,i,k=0,m,n,p,*yv;
  RZ(a&&w);
+ ASSERT(!((AT(a) | AT(w)) & SPARSE), EVNONCE);
+ ASSERT((AR(a) == AR(w)) || (AR(a) + (AR(w) ^ 1)) == 0, EVRANK);
+ if(AN(a)==1)R eq(reshape(mtv,a),w);  // if a is a singleton, just revert to =
  RE(d=ebarprep(a,w,&a,&w,&c));
  av=CAV(a); m=AN(a);
  wv=CAV(w); n=AN(w); p=n-m;
@@ -114,8 +210,11 @@ F2(jtebar){PROLOG(0065);A y,z;B*zv;C*av,*wv;I c,d,i,k=0,m,n,p,*yv;
   case -3: R df2(z,shape(a),w,cut(amp(a,ds(CMATCH)),num(3)));
   case -4: R ebarvec(a,w);
  }
- GATV0(z,B01,n,AR(w)); zv=BAV(z); memset(zv,C0,n);
- GATV0(y,INT,d,1); yv= AV(y); DO(d, yv[i]=1+m;); 
+ GATV0(z,B01,n,AR(w)); zv=BAV(z); memset(zv,m==0,n); if((-m&-n)>=0)R z;  // if x empty, return all 1s
+#if C_AVX2
+ if(AT(w)&LIT+B01){jtebar1C(jt, av,wv, m,n,zv,0,0); R z;}
+#endif
+ GATV0(y,INT,d,1); yv= AV(y); DO(d, yv[i]=1+m;);
  switch(CTTZ(AT(w))){
   case INTX: if(c)EBLOOP(I, u[i]-c,v[k+m]-c, zv[k]=i==m) 
             else EBLOOP(I, u[i],  v[k+m],   zv[k]=i==m); break;
@@ -124,7 +223,10 @@ F2(jtebar){PROLOG(0065);A y,z;B*zv;C*av,*wv;I c,d,i,k=0,m,n,p,*yv;
   case C2TX:      EBLOOP(US,u[i],  v[k+m],   zv[k]=i==m); break;
   case C4TX: if(c)EBLOOP(C4,u[i]-c,v[k+m]-c, zv[k]=i==m) 
             else EBLOOP(C4,u[i],  v[k+m],   zv[k]=i==m); break;
-  default:       EBLOOP(UC,u[i],  v[k+m],   zv[k]=i==m);
+#if !C_AVX2  
+default:
+            EBLOOP(UC,u[i],  v[k+m],   zv[k]=i==m);
+#endif
  }
  EPILOG(z);
 }    /* Daniel M. Sunday, CACM 1990 8, 132-142 */
@@ -132,6 +234,7 @@ F2(jtebar){PROLOG(0065);A y,z;B*zv;C*av,*wv;I c,d,i,k=0,m,n,p,*yv;
 
 F2(jti1ebar){A y;C*av,*wv;I c,d,i,k=0,m,n,p,*yv;
  RZ(a&&w);
+
  RE(d=ebarprep(a,w,&a,&w,&c));
  av=CAV(a); m=AN(a);
  wv=CAV(w); n=AN(w); p=n-m;
@@ -139,7 +242,10 @@ F2(jti1ebar){A y;C*av,*wv;I c,d,i,k=0,m,n,p,*yv;
   case -1: R sc(n);
   case -4: R indexof(ebarvec(a,w),num(1));
  }
- GATV0(y,INT,d,1); yv=AV(y); DO(d, yv[i]=1+m;); 
+#if C_AVX2
+ if(AT(w)&LIT+B01)R jtebar1C(jt, av,wv, m,n,0,3LL<<56,0);
+#endif
+ GATV0(y,INT,d,1); yv= AV(y); DO(d, yv[i]=1+m;);
  switch(CTTZ(AT(w))){
   case INTX: if(c)EBLOOP(I, u[i]-c,v[k+m]-c, if(i==m)R sc(k)) 
             else EBLOOP(I, u[i],  v[k+m],   if(i==m)R sc(k)); break;
@@ -148,7 +254,10 @@ F2(jti1ebar){A y;C*av,*wv;I c,d,i,k=0,m,n,p,*yv;
   case C2TX:      EBLOOP(US,u[i],  v[k+m],   if(i==m)R sc(k)); break;
   case C4TX: if(c)EBLOOP(C4,u[i]-c,v[k+m]-c, if(i==m)R sc(k)) 
             else EBLOOP(C4,u[i],  v[k+m],   if(i==m)R sc(k)); break;
-  default:       EBLOOP(UC,u[i],  v[k+m],   if(i==m)R sc(k));
+#if !C_AVX2  
+default:
+       EBLOOP(UC,u[i],  v[k+m],   if(i==m)R sc(k));
+#endif
  }
  R sc(n);
 }    /* a (E. i. 1:) w where a and w are atoms or lists */
@@ -162,7 +271,11 @@ F2(jtsumebar){A y;C*av,*wv;I c,d,i,k=0,m,n,p,*yv,z=0;
   case -1: R num(0);
   case -4: R aslash(CPLUS,ebarvec(a,w));
  }
- GATV0(y,INT,d,1); yv=AV(y); DO(d, yv[i]=1+m;); 
+ if((-m&-n)>=0){R sc(n);}  // empty argument.  If m, it matches everywhere, so use n; if n, it's 0, use it
+#if C_AVX2
+ if(AT(w)&LIT+B01)R jtebar1C(jt, av,wv, m,n,0,1LL<<56,0);
+#endif
+ GATV0(y,INT,d,1); yv= AV(y); DO(d, yv[i]=1+m;);
  switch(CTTZ(AT(w))){
   case INTX: if(c)EBLOOP(I, u[i]-c,v[k+m]-c, if(i==m)++z) 
             else EBLOOP(I, u[i],  v[k+m],   if(i==m)++z); break;
@@ -171,7 +284,10 @@ F2(jtsumebar){A y;C*av,*wv;I c,d,i,k=0,m,n,p,*yv,z=0;
   case C2TX:      EBLOOP(US,u[i],  v[k+m],   if(i==m)++z); break;
   case C4TX: if(c)EBLOOP(C4,u[i]-c,v[k+m]-c, if(i==m)++z) 
             else EBLOOP(C4,u[i],  v[k+m],   if(i==m)++z); break;
-  default:       EBLOOP(UC,u[i],  v[k+m],   if(i==m)++z);
+#if !C_AVX2  
+default:
+       EBLOOP(UC,u[i],  v[k+m],   if(i==m)++z);
+#endif
  }
  R sc(z);
 }    /* a ([: +/ E.) w where a and w are atoms or lists */
@@ -185,7 +301,11 @@ F2(jtanyebar){A y;C*av,*wv;I c,d,i,k=0,m,n,p,*yv;
   case -1: R num(0);
   case -4: R aslash(CPLUSDOT,ebarvec(a,w));
  }
- GATV0(y,INT,d,1); yv=AV(y); DO(d, yv[i]=1+m;); 
+ if((-m&-n)>=0){R num(SGNTO0(-n));}  // empty argument.  If m, it matches everywhere, so use n; if n, it's 0, use it - 0/1 only
+#if C_AVX2
+ if(AT(w)&LIT+B01)R jtebar1C(jt, av,wv, m,n,0,4LL<<56,0);
+#endif
+ GATV0(y,INT,d,1); yv= AV(y); DO(d, yv[i]=1+m;);
  switch(CTTZ(AT(w))){
   case INTX: if(c)EBLOOP(I, u[i]-c,v[k+m]-c, if(i==m)R num(1)) 
             else EBLOOP(I, u[i],  v[k+m],   if(i==m)R num(1)); break;
@@ -194,7 +314,10 @@ F2(jtanyebar){A y;C*av,*wv;I c,d,i,k=0,m,n,p,*yv;
   case C2TX:      EBLOOP(US,u[i],  v[k+m],   if(i==m)R num(1)); break;
   case C4TX: if(c)EBLOOP(C4,u[i]-c,v[k+m]-c, if(i==m)R num(1)) 
             else EBLOOP(C4,u[i],  v[k+m],   if(i==m)R num(1)); break;
-  default:       EBLOOP(UC,u[i],  v[k+m],   if(i==m)R num(1));
+#if !C_AVX2  
+default:
+       EBLOOP(UC,u[i],  v[k+m],   if(i==m)R num(1));
+#endif
  }
  R num(0);
 }    /* a ([: +./ E.) w where a and w are atoms or lists */
@@ -211,8 +334,15 @@ F2(jtifbebar){A y,z;C*av,*wv;I c,d,i,k=0,m,n,p,*yv,*zu,*zv;
   case -1: R mtv;
   case -4: R icap(ebarvec(a,w));
  }
+ if((-m&-n)>=0){R icap(ebar(a,w));}  // empty argument.
  GATV0(z,INT,MAX(22,n>>7),1); zv=AV(z); zu=zv+AN(z);
- GATV0(y,INT,d,1); yv=AV(y); DO(d, yv[i]=1+m;); 
+#if C_AVX2
+ if(AT(w)&LIT+B01){
+   if(m==1){R icap(ebar(a,w));}  // if a is 1 char, we can't use the fast code.  Other forms are checked in vcompsc
+   R jtebar1C(jt, av,wv, m,n,IAV(z),2LL<<56,z);
+ }
+#endif
+ GATV0(y,INT,d,1); yv= AV(y); DO(d, yv[i]=1+m;);
  switch(CTTZ(AT(w))){
   case INTX: if(c)EBLOOP(I, u[i]-c,v[k+m]-c, if(i==m)IFB1)
             else EBLOOP(I, u[i],  v[k+m],   if(i==m)IFB1); break;
@@ -221,7 +351,10 @@ F2(jtifbebar){A y,z;C*av,*wv;I c,d,i,k=0,m,n,p,*yv,*zu,*zv;
   case C2TX:      EBLOOP(US,u[i],  v[k+m],   if(i==m)IFB1); break;
   case C4TX: if(c)EBLOOP(C4,u[i]-c,v[k+m]-c, if(i==m)IFB1)
             else EBLOOP(C4,u[i],  v[k+m],   if(i==m)IFB1); break;
-  default:       EBLOOP(UC,u[i],  v[k+m],   if(i==m)IFB1);
+#if !C_AVX2  
+default:
+       EBLOOP(UC,u[i],  v[k+m],   if(i==m)IFB1);
+#endif
  }
  AN(z)=*AS(z)=zv-AV(z);
  RETF(z);

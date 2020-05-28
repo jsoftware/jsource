@@ -189,7 +189,7 @@ A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I
  switch(fi==CCAP?gi:hi){
   case CQUERY:  if(hi==CDOLLAR||hi==CPOUND){f2=jtrollk; flag &=~(VJTFLGOK2);}  break;
   case CQRYDOT: if(hi==CDOLLAR||hi==CPOUND){f2=jtrollkx; flag &=~(VJTFLGOK2);} break;
-  case CICAP:   if(fi==CCAP){if(hi==CNE)f1=jtnubind; else if(FIT0(CNE,hv)){f1=jtnubind0; flag &=~(VJTFLGOK1);}} break;
+  case CICAP:   if(fi==CCAP){if(hi==CNE)f1=jtnubind; else if(FIT0(CNE,hv)){f1=jtnubind0; flag &=~(VJTFLGOK1);}}else if(hi==CEBAR){f2=jtifbebar; flag&=~VJTFLGOK2;} break;
   case CSLASH:  c=ID(gv->fgh[0]); m=-1; m=c==CPLUS?4:m; m=c==CPLUSDOT?5:m; m=c==CSTARDOT?6:m; 
 // obsolete                 if(fi==CCAP&&vaid(gv->fgh[0])&&vaid(h)){f2=jtfslashatg; flag &=~(VJTFLGOK2);}
                 if(fi==CCAP&&FAV(gv->fgh[0])->flag&FAV(h)->flag&VISATOMIC2){f2=jtfslashatg; flag &=~(VJTFLGOK2);}
@@ -256,8 +256,8 @@ A gx; RZ(gx=(g1)((J)(intptr_t)(((I)jt + ((FAV(fs)->flag2>>(VF2WILLOPEN2WX-VF2WIL
 POPZOMB; \
 jtinplace=(J)(intptr_t)(((I)jtinplace&~(JTINPLACEA+JTINPLACEW)) + (JTINPLACEA*((I)jtinplace&JTINPLACEW)) + ((gx!=protw)*JTINPLACEW)); \
 jtinplace=FAV(fs)->flag&VJTFLGOK2?jtinplace:jt; \
-A z; RZ(z=(f2)(jtinplace,w,gx,fs)); \
-EPILOG(z);} \
+RZ(z=(f2)(jtinplace,w,gx,fs)); \
+} \
 , 0111)
 #endif
 
@@ -279,14 +279,14 @@ A gx; RZ(gx=(g1)((J)(intptr_t)((I)jt + ((((I)jtinplace&((a!=w)<<JTINPLACEWX)) + 
 /* inplace gx unless it is protected */ \
 POPZOMB; jtinplace=(J)(intptr_t)(((I)jtinplace&~(JTINPLACEW))+(((I )(gx!=prota)&(I )(gx!=protw))*JTINPLACEW)); \
 jtinplace=FAV(fs)->flag&VJTFLGOK2?jtinplace:jt; \
-A z;RZ(z=(f2)(jtinplace,a,gx,fs)); \
-EPILOG(z);} \
+RZ(z=(f2)(jtinplace,a,gx,fs)); \
+} \
 , 0112)
 #endif
 
 static DF1(jthkiota){DECLFG;A a,e;I n;P*p;
  RZ(w);
- SETIC(w,n);
+ SETIC(w,n);\
  if(SB01&AT(w)&&1==AR(w)){
   p=PAV(w); a=SPA(p,a); e=SPA(p,e); 
   R *BAV(e)||equ(mtv,a) ? repeat(w,IX(n)) : repeat(SPA(p,x),ravel(SPA(p,i)));

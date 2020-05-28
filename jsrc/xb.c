@@ -132,6 +132,7 @@ static A jtbreps(J jt,B b,B d,A w){A q,y,z,*zv;C*v;I c=0,kk,m,n;P*wp;
 
 A jtbrep(J jt,B b,B d,A w){A q,*wv,y,z,*zv;C*u,*v;I e,klg,kk,m,n,t;
  RZ(w);
+ PROLOG(800);
  e=n=AN(w); t=UNSAFE(AT(w)); u=CAV(w); klg=bplg(t); kk=WS(d);
  if(t&SPARSE)R breps(b,d,w);
  GATV0(y,LIT,bsize(jt,d,1,t,n,AR(w),AS(w)),1);
@@ -151,13 +152,15 @@ A jtbrep(J jt,B b,B d,A w){A q,*wv,y,z,*zv;C*u,*v;I e,klg,kk,m,n,t;
    memset((CAV(y)+AN(y))-suffsize,C0,suffsize);   // clear suffix
    MC(v,u,n<<klg); R y;}      // copy the valid part of the data
  }
+ // Here for non-DIRECT values.  These recur through the boxes
  if(t&RAT){e+=n; GATV0(q,XNUM,e,1); MC(AV(q),u,n<<klg);}
  else     RZ(q=1<AR(w)?ravel(w):w);
  m=AN(y); wv=AAV(w); 
  GATV0(z,BOX,1+e,1); zv=AAV(z); 
  *zv++=y;
  DO(e, RZ(*zv++=q=brep(b,d,wv[i])); RZ(mvw(v+i*kk,(C*)&m,1L,b,BU,d,SY_64)); m+=AN(q););
- R raze(z);
+ z=raze(z);
+ EPILOG(z);
 }    /* b iff reverse the bytes; d iff 64-bit */
 
 static A jthrep(J jt,B b,B d,A w){A y,z;C c,*hex="0123456789abcdef",*u,*v;I n,s[2];

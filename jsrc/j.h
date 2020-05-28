@@ -516,7 +516,6 @@ extern unsigned int __cdecl _clearfp (void);
 #define CALL1IP(f,w,fs)   ((f)(jtinplace,    (w),(A)(fs)))
 #define CALL2IP(f,a,w,fs) ((f)(jtinplace,(a),(w),(A)(fs)))
 #define RETARG(z)       (z)   // These places were ca(z) in the original JE
-#define CLEARZOMBIE     {jt->assignsym=0; jt->zombieval=0;}  // Used when we know there shouldn't be an assignsym, just in case
 #define CALLSTACKRESET  {jt->callstacknext=0; jt->uflags.us.uq.uq_c.pmctrbstk &= ~PMCTRBSTKREQD;} // establish initial conditions for things that might not get processed off the stack.  The last things stacked may never be popped
 #define DF1(f)          A f(J jt,    A w,A self)
 #define DF2(f)          A f(J jt,A a,A w,A self)
@@ -832,12 +831,14 @@ extern unsigned int __cdecl _clearfp (void);
 // by the next-higher-level function.  Thus, when X calls Y inside PROLOG/EPILOG, the result of Y (which is an A block), has the same viability as any other GA executed in X
 // (unless its usecount is > 1 because it was assigned elsewhere)
 #define PROLOG(x)       A *_ttop=jt->tnextpushp
+#define PROLOGNOTREQ(x)   // if nothing is allocated, we don't really need PROLOG
 #define EPILOGNORET(z) (gc(z,_ttop))   // protect z and return its address
 #define EPILOG(z)       RETF(EPILOGNORET(z))   // z is the result block
 #define EPILOGNOVIRT(z)       R rifvsdebug((gc(z,_ttop)))   // use this when the repercussions of allowing virtual result are too severe
 #define EPILOGZOMB(z)       if(!gc3(&(z),0L,0L,_ttop))R0; RETF(z);   // z is the result block.  Use this if z may contain inplaceable contents that would free prematurely
 // Routines that do little except call a function that does PROLOG/EPILOG have EPILOGNULL as a placeholder
 #define EPILOGNULL(z)   R z
+#define EPILOGNOTREQ(z)   R z  // used if originak JE had needless EPILOG
 // Routines that do not return A
 #define EPILOG0         tpop(_ttop)
 // Routines that modify the comparison tolerance must stack it
@@ -850,6 +851,7 @@ extern unsigned int __cdecl _clearfp (void);
 // When we push, we are about to execute verbs before the last one, and an inplacement there would lead to the name's being assigned with invalid
 // data.  So, we clear the inplace variables if we don't want to allow that: if the user set zomblevel=0, or if there is no local symbol table
 // (which means the user is fooling around at the keyboard & performance is not as important as transparency)
+#define CLEARZOMBIE     {jt->assignsym=0; jt->zombieval=0;}  // Used when we know there shouldn't be an assignsym, just in case
 #define PUSHZOMB L*savassignsym = jt->assignsym; A savzombval; if(savassignsym){savzombval=jt->zombieval; if(((jt->asgzomblevel-1)|((AN(jt->locsyms)-2)))<0){CLEARZOMBIE}}  // test is (jt->asgzomblevel==0||AN(jt->locsyms)<2)
 #define POPZOMB if(savassignsym){jt->assignsym=savassignsym;jt->zombieval=savzombval;}
 #define R               return

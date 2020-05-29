@@ -60,6 +60,7 @@ F2(jtnouninfo2){A z;
 
 // d & tb are something from the user
 // t, n, r, s are from w (or INT if sparse)
+// size is rounded to even # words
 static I bsize(J jt,B d,B tb,I t,I n,I r,I*s){I k,w,z;
  w=WS(d);
  z=BH(d)+w*r;
@@ -74,6 +75,7 @@ static I bsize(J jt,B d,B tb,I t,I n,I r,I*s){I k,w,z;
 }   /* size in byte of binary representation, rounded up to even # words */
 
 // like bsize, but recursive.  Add up the size of this block and the sizes of the descendants
+// size is rounded to even # words
 static I bsizer(J jt,B d,B tb,A w){A *wv=AAV(w);
  I totalsize = bsize(jt,d,tb,AT(w),AN(w),AR(w),AS(w));
  if(AT(w)&DIRECT)R totalsize;
@@ -83,6 +85,7 @@ static I bsizer(J jt,B d,B tb,A w){A *wv=AAV(w);
 }
 
 
+#define MVCS(a,b,c,d)  (8*(a)+4*(b)+2*(c)+(d))
 
 /* n:  # of words                */
 /* v:  ptr to result             */
@@ -91,9 +94,6 @@ static I bsizer(J jt,B d,B tb,A w){A *wv=AAV(w);
 /* bu: 1 iff u is little-endian  */
 /* dv: 1 iff v is 64-bit         */
 /* du: 1 iff u is 64-bit         */
-
-#define MVCS(a,b,c,d)  (8*(a)+4*(b)+2*(c)+(d))
-
 static B jtmvw(J jt,C*v,C*u,I n,B bv,B bu,B dv,B du){C c;
  switch((dv?8:0)+(du?4:0)+(bv?2:0)+bu){
   case MVCS(0,0,0,0): MC(v,u,n*4);                             break;
@@ -116,6 +116,7 @@ static B jtmvw(J jt,C*v,C*u,I n,B bv,B bu,B dv,B du){C c;
  R 1;
 }    /* move n words from u to v */
 
+// move the header, return new move point
 static C*jtbrephdrq(J jt,B b,B d,A w,C *q){I f,r;I extt = UNSAFE(AT(w));
  /* obsolete q=(A)AV(y);*/ r=AR(w); f=0;
  RZ(mvw(BF(d,q),(C*)&f,    1L,b,BU,d,SY_64)); *q=d?(b?0xe3:0xe2):(b?0xe1:0xe0);
@@ -126,6 +127,7 @@ static C*jtbrephdrq(J jt,B b,B d,A w,C *q){I f,r;I extt = UNSAFE(AT(w));
  R BV(d,q,r);
 }
 
+// move the header for block w to the preallocated block y
 static C*jtbrephdr(J jt,B b,B d,A w,A y){R jtbrephdrq(jt,b,d,w,CAV(y));}
 
 static A jtbreps(J jt,B b,B d,A w){A q,y,z,*zv;C*v;I c=0,kk,m,n;P*wp;
@@ -144,15 +146,15 @@ static A jtbreps(J jt,B b,B d,A w){A q,y,z,*zv;C*v;I c=0,kk,m,n;P*wp;
 }    /* 3!:1 w for sparse w */
 
 
-C* jtbrepfill(J jt,B b,B d,A w,C *zv){A q,y,z;I e,klg,kk,m;
+C* jtbrepfill(J jt,B b,B d,A w,C *zv){I klg,kk;
  C *origzv=zv;  // remember start of block
- zv=jtbrephdrq(jt,b,d,w,zv);
+ zv=jtbrephdrq(jt,b,d,w,zv);   // fill in the header, advance pointer to after it
  C* u=CAV(w);  // input pointer
  I n=AN(w);  // #input atoms
  I t=AT(w);  // input type
  klg=bplg(t); kk=WS(d);
  if(t&DIRECT){
-  I blksize=bsizer(jt,d,1,w);
+  I blksize=bsizer(jt,d,1,w);  // get size of this block
   switch(CTTZ(t)){
   case SBTX:
   case INTX:  RZ(mvw(zv,u,n,  b,BU,d,SY_64)); break;
@@ -184,18 +186,18 @@ C* jtbrepfill(J jt,B b,B d,A w,C *zv){A q,y,z;I e,klg,kk,m;
  n<<=(t>>RATX)&1;  // if RAT, double the number of indirects
  C* zvx=zv; zv += n*kk;  // save start of index, step over index
  // move in the blocks: first the offset, then the data
- DO(n, I offset=zv-origzv; RZ(mvw(zvx,(C*)&offset,1L,b,BU,d,SY_64)); zvx+=kk; zv=jtbrepfill(jt,b,d,wv[i],zv);)
+ DO(n, I offset=zv-origzv; RZ(mvw(zvx,(C*)&offset,1L,b,BU,d,SY_64)); zvx+=kk; RZ(zv=jtbrepfill(jt,b,d,wv[i],zv));)
  R zv;
 }    /* b iff reverse the bytes; d iff 64-bit */
 
-
-A jtbrep(J jt,B b,B d,A w){A q,*wv,y,z,*zv;I  m,t;
+// main entry point for brep.  First calculate the size by a (recursive) call; allocate; then make a (recursive) call to fill in the block
+A jtbrep(J jt,B b,B d,A w){A y;I t;
  RZ(w);
  t=UNSAFE(AT(w)); 
- if(t&SPARSE)R breps(b,d,w);
- GATV0(y,LIT,bsizer(jt,d,1,w),1);
- jtbrepfill(jt,b,d,w,CAV(y));
- R y;
+ if(t&SPARSE)R breps(b,d,w);  // sparse separately
+ GATV0(y,LIT,bsizer(jt,d,1,w),1);   // allocate entire result
+ RZ(jtbrepfill(jt,b,d,w,CAV(y)));   // fill it
+ R y;  // return it
 }
 
 static A jthrep(J jt,B b,B d,A w){A y,z;C c,*hex="0123456789abcdef",*u,*v;I n,s[2];

@@ -414,6 +414,11 @@ x=: 0 1 0;'abc';3;4.5 6;7j8 9 10;(<1 2 3;4.5);1 2 3x;3r4 5r6
 'length error' -: unbin etx (IF64{_5 _9)}.binrep 4 5$s:@<"0 'sesquipedalian'
 'length error' -: unbin etx (IF64{_5 _9)}.binrep 3 4 5
 
+NB. 3!:1 working space --------------------------------------------------
+x=: 2 2$ ('a'); ('b'); ('c') ;< 5#<(1e6#'d');(1e6#'e')
+x-:unbin binrep x
+(2*7!:5<'x') > 7!:2'binrep x'
+
 NB. 3!:2 decoding pre-601 data ------------------------------------------
 
 Indirect=: 32 64 128,<.2^10+i.6  NB. indirect types

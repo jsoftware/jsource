@@ -118,7 +118,11 @@ static A jtebar1C(J jt, C *av, C *wv, I an, I wn, C* zv, I type, A z){
  C *wvend = wv + wn - temp;
  // Load the search string - up to 32 bytes of it - into a register.  Don't overfetch end of buffer
  temp = 31; temp = an<temp?an:temp;  // length of valid data, max 31.  If any byte of an 8-byte section is valid, we can fetch the whole section
+#ifdef MMSC_VER
  __m256i a32 = _mm256_maskload_epi64((__int64*) av, _mm256_loadu_si256((__m256i*)(jt->validitymask + (3 - (temp >> 3)))));
+#else
+ __m256i a32 = _mm256_maskload_epi64((long long const *) av, _mm256_loadu_si256((__m256i*)(jt->validitymask + (3 - (temp >> 3)))));
+#endif
  // Load the mask of bits that must be set to declare a match on the whole string
  temp = 32; temp = an<temp?an:temp; I fullmatchmsk = type + (UI4)(-(1LL<<temp));  // high-order 1 bits past the part that needs to be 1s in the mask - max length is 32  top 32 bits 0
  // We put type into fullmatchmsk to save a register
@@ -162,7 +166,11 @@ static A jtebar1C(J jt, C *av, C *wv, I an, I wn, C* zv, I type, A z){
   wvend=wv0+wn-an+1;  // first inadmissible position
   while(wv<wvend){
    // read in valid bytes to end of string
+#ifdef MMSC_VER
    __m256i ws = _mm256_maskload_epi64((__int64*) wv, _mm256_loadu_si256((__m256i*)(jt->validitymask + (3 - ((wv0+wn-wv-1) >> 3)))));  // bytes of w
+#else
+   __m256i ws = _mm256_maskload_epi64((long long const *) wv, _mm256_loadu_si256((__m256i*)(jt->validitymask + (3 - ((wv0+wn-wv-1) >> 3)))));  // bytes of w
+#endif
    // see if the first 2 characters are matched in sequence
    UI4 match0 = _mm256_movemask_epi8(_mm256_cmpeq_epi8(a0, ws)); UI4 match1 = _mm256_movemask_epi8(_mm256_cmpeq_epi8(a1, ws));
    UI4 matchmsk = match0&(match1>>1);
@@ -339,7 +347,7 @@ F2(jtifbebar){A y,z;C*av,*wv;I c,d,i,k=0,m,n,p,*yv,*zu,*zv;
 #if C_AVX2
  if(AT(w)&LIT+B01){
    if(m==1){R icap(ebar(a,w));}  // if a is 1 char, we can't use the fast code.  Other forms are checked in vcompsc
-   R jtebar1C(jt, av,wv, m,n,IAV(z),2LL<<56,z);
+   R jtebar1C(jt, av,wv, m,n,CAV(z),2LL<<56,z);
  }
 #endif
  GATV0(y,INT,d,1); yv= AV(y); DO(d, yv[i]=1+m;);

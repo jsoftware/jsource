@@ -58,7 +58,8 @@ F2(jtnouninfo2){A z;
 #define BV(d,a,r)       (BS(d,a)+((r)<<LGWS(d)))     /* value                           */
 #define BU              (C_LE ? 1 : 0)
 
-
+// d & tb are something from the user
+// t, n, r, s are from w (or INT if sparse)
 static I bsize(J jt,B d,B tb,I t,I n,I r,I*s){I k,w,z;
  w=WS(d);
  z=BH(d)+w*r;
@@ -70,7 +71,17 @@ static I bsize(J jt,B d,B tb,I t,I n,I r,I*s){I k,w,z;
 #endif
  k=t&INT+SBT+BOX+XNUM?w:t&RAT?w+w:bp(t); 
  R z+((n*k+(tb&&t&LAST0)+w-1)&(-w));
-}   /* size in byte of binary representation */
+}   /* size in byte of binary representation, rounded up to even # words */
+
+// like bsize, but recursive.  Add up the size of this block and the sizes of the descendants
+static I bsizer(J jt,B d,B tb,A w){A *wv=AAV(w);
+ I totalsize = bsize(jt,d,tb,AT(w),AN(w),AR(w),AS(w));
+ if(AT(w)&DIRECT)R totalsize;
+ I nchildren = AN(w); nchildren<<=((AT(w)>>RATX)&1);  // # subblocks
+ DO(nchildren, totalsize+=bsizer(jt,d,tb,wv[i]);)
+ R totalsize;
+}
+
 
 
 /* n:  # of words                */
@@ -105,15 +116,17 @@ static B jtmvw(J jt,C*v,C*u,I n,B bv,B bu,B dv,B du){C c;
  R 1;
 }    /* move n words from u to v */
 
-static C*jtbrephdr(J jt,B b,B d,A w,A y){A q;I f,r;I extt = UNSAFE(AT(w));
- q=(A)AV(y); r=AR(w); f=0;
- RZ(mvw(BF(d,q),(C*)&f,    1L,b,BU,d,SY_64)); *CAV(y)=d?(b?0xe3:0xe2):(b?0xe1:0xe0);
+static C*jtbrephdrq(J jt,B b,B d,A w,C *q){I f,r;I extt = UNSAFE(AT(w));
+ /* obsolete q=(A)AV(y);*/ r=AR(w); f=0;
+ RZ(mvw(BF(d,q),(C*)&f,    1L,b,BU,d,SY_64)); *q=d?(b?0xe3:0xe2):(b?0xe1:0xe0);
  RZ(mvw(BT(d,q),(C*)&extt,1L,b,BU,d,SY_64));
  RZ(mvw(BN(d,q),(C*)&AN(w),1L,b,BU,d,SY_64));
  RZ(mvw(BR(d,q),(C*)&r,1L,b,BU,d,SY_64));  // r is an I
  RZ(mvw(BS(d,q),(C*) AS(w),r, b,BU,d,SY_64));
  R BV(d,q,r);
 }
+
+static C*jtbrephdr(J jt,B b,B d,A w,A y){R jtbrephdrq(jt,b,d,w,CAV(y));}
 
 static A jtbreps(J jt,B b,B d,A w){A q,y,z,*zv;C*v;I c=0,kk,m,n;P*wp;
  wp=PAV(w);
@@ -130,38 +143,60 @@ static A jtbreps(J jt,B b,B d,A w){A q,y,z,*zv;C*v;I c=0,kk,m,n;P*wp;
  R raze(z);
 }    /* 3!:1 w for sparse w */
 
-A jtbrep(J jt,B b,B d,A w){A q,*wv,y,z,*zv;C*u,*v;I e,klg,kk,m,n,t;
- RZ(w);
- PROLOG(800);
- e=n=AN(w); t=UNSAFE(AT(w)); u=CAV(w); klg=bplg(t); kk=WS(d);
- if(t&SPARSE)R breps(b,d,w);
- GATV0(y,LIT,bsize(jt,d,1,t,n,AR(w),AS(w)),1);
- v=brephdr(b,d,w,y);
- if(t&DIRECT)switch(CTTZ(t)){
+
+C* jtbrepfill(J jt,B b,B d,A w,C *zv){A q,y,z;I e,klg,kk,m;
+ C *origzv=zv;  // remember start of block
+ zv=jtbrephdrq(jt,b,d,w,zv);
+ C* u=CAV(w);  // input pointer
+ I n=AN(w);  // #input atoms
+ I t=AT(w);  // input type
+ klg=bplg(t); kk=WS(d);
+ if(t&DIRECT){
+  I blksize=bsizer(jt,d,1,w);
+  switch(CTTZ(t)){
   case SBTX:
-  case INTX:  RZ(mvw(v,u,n,  b,BU,d,SY_64)); R y;
-  case FLX:   RZ(mvw(v,u,n,  b,BU,1,1    )); R y;
-  case CMPXX: RZ(mvw(v,u,n+n,b,BU,1,1    )); R y;
+  case INTX:  RZ(mvw(zv,u,n,  b,BU,d,SY_64)); break;
+  case FLX:   RZ(mvw(zv,u,n,  b,BU,1,1    )); break;
+  case CMPXX: RZ(mvw(zv,u,n+n,b,BU,1,1    )); break;
   default:
    // 1- and 2-byte C4T types, all of which have LAST0.  We need to clear the last
    // bytes, because the datalength is rounded up in bsize, and thus there are
    // up to 3 words at the end of y that will not be copied to.  We clear them to
    // 0 to provide repeatable results.
    // Make sure there is a zero byte if the string is empty
-   {I suffsize = MIN(4*SZI,(CAV(y)+AN(y))-(C*)v);  // len of area to clear to 0 
-   memset((CAV(y)+AN(y))-suffsize,C0,suffsize);   // clear suffix
-   MC(v,u,n<<klg); R y;}      // copy the valid part of the data
+   {I suffsize = MIN(4*SZI,origzv+blksize-zv);  // len of area to clear to 0 
+   memset((origzv+blksize)-suffsize,C0,suffsize);   // clear suffix
+   MC(zv,u,n<<klg); break;}      // copy the valid part of the data
+  }
+  R origzv+blksize;  // return next output position
  }
  // Here for non-DIRECT values.  These recur through the boxes
- if(t&RAT){e+=n; GATV0(q,XNUM,e,1); MC(AV(q),u,n<<klg);}
- else     RZ(q=1<AR(w)?ravel(w):w);
- m=AN(y); wv=AAV(w); 
- GATV0(z,BOX,1+e,1); zv=AAV(z); 
- *zv++=y;
- DO(e, RZ(*zv++=q=brep(b,d,wv[i])); RZ(mvw(v+i*kk,(C*)&m,1L,b,BU,d,SY_64)); m+=AN(q););
- z=raze(z);
- EPILOG(z);
+// obsolete if(t&RAT){e+=n; GATV0(q,XNUM,e,1); MC(AV(q),u,n<<klg);}
+// obsolete  else     RZ(q=1<AR(w)?ravel(w):w);
+// obsolete  m=AN(y); wv=AAV(w); 
+// obsolete  GATV0(z,BOX,1+e,1); zv=AAV(z); 
+// obsolete  *zv++=y;
+// obsolete  DO(e, RZ(*zv++=q=brep(b,d,wv[i])); RZ(mvw(v+i*kk,(C*)&m,1L,b,BU,d,SY_64)); m+=AN(q););
+// obsolete  z=raze(z);
+ // we have already written the header for the indirect block.  Skip over the indirect pointers; they will be replaced by
+ // offsets to each block
+ A *wv=AAV(w); 
+ n<<=(t>>RATX)&1;  // if RAT, double the number of indirects
+ C* zvx=zv; zv += n*kk;  // save start of index, step over index
+ // move in the blocks: first the offset, then the data
+ DO(n, I offset=zv-origzv; RZ(mvw(zvx,(C*)&offset,1L,b,BU,d,SY_64)); zvx+=kk; zv=jtbrepfill(jt,b,d,wv[i],zv);)
+ R zv;
 }    /* b iff reverse the bytes; d iff 64-bit */
+
+
+A jtbrep(J jt,B b,B d,A w){A q,*wv,y,z,*zv;I  m,t;
+ RZ(w);
+ t=UNSAFE(AT(w)); 
+ if(t&SPARSE)R breps(b,d,w);
+ GATV0(y,LIT,bsizer(jt,d,1,w),1);
+ jtbrepfill(jt,b,d,w,CAV(y));
+ R y;
+}
 
 static A jthrep(J jt,B b,B d,A w){A y,z;C c,*hex="0123456789abcdef",*u,*v;I n,s[2];
  RZ(y=brep(b,d,w));

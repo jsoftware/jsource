@@ -60,7 +60,7 @@ F2(jtnouninfo2){A z;
 
 // d & tb are something from the user
 // t, n, r, s are from w (or INT if sparse)
-// size is rounded to even # words
+// size is rounded to integral # words
 static I bsize(J jt,B d,B tb,I t,I n,I r,I*s){I k,w,z;
  w=WS(d);
  z=BH(d)+w*r;
@@ -75,7 +75,7 @@ static I bsize(J jt,B d,B tb,I t,I n,I r,I*s){I k,w,z;
 }   /* size in byte of binary representation, rounded up to even # words */
 
 // like bsize, but recursive.  Add up the size of this block and the sizes of the descendants
-// size is rounded to even # words
+// size is rounded to integral # words
 static I bsizer(J jt,B d,B tb,A w){A *wv=AAV(w);
  I totalsize = bsize(jt,d,tb,AT(w),AN(w),AR(w),AS(w));
  if(AT(w)&DIRECT)R totalsize;
@@ -154,7 +154,7 @@ C* jtbrepfill(J jt,B b,B d,A w,C *zv){I klg,kk;
  I t=AT(w);  // input type
  klg=bplg(t); kk=WS(d);
  if(t&DIRECT){
-  I blksize=bsizer(jt,d,1,w);  // get size of this block
+  I blksize=bsizer(jt,d,1,w);  // get size of this block (never needs recursion)
   switch(CTTZ(t)){
   case SBTX:
   case INTX:  RZ(mvw(zv,u,n,  b,BU,d,SY_64)); break;
@@ -185,7 +185,8 @@ C* jtbrepfill(J jt,B b,B d,A w,C *zv){I klg,kk;
  A *wv=AAV(w); 
  n<<=(t>>RATX)&1;  // if RAT, double the number of indirects
  C* zvx=zv; zv += n*kk;  // save start of index, step over index
- // move in the blocks: first the offset, then the data
+ // move in the blocks: first the offset, writing over the indirect block, then the data
+ // the offsets are all relative to the start of the block, which is origzv
  DO(n, I offset=zv-origzv; RZ(mvw(zvx,(C*)&offset,1L,b,BU,d,SY_64)); zvx+=kk; RZ(zv=jtbrepfill(jt,b,d,wv[i],zv));)
  R zv;
 }    /* b iff reverse the bytes; d iff 64-bit */

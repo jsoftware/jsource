@@ -326,7 +326,7 @@ AF jtatcompf(J jt,A a,A w,A self){I m;
   // Other types have a chance only if they are equal types; fetch from the appropriate table then
   if((AT(a)&AT(w)&(LIT+C2T+C4T+SBT))){R (AT(a)&LIT?atcompC:AT(a)&C2T?atcompUS:AT(a)&C4T?atcompC4:atcompSB)[6*search+comp];}
   R 0;
- }else{  // e./E.
+ }else{  // E. (6) or e. (7)
   jt->workareas.compsc.postflags=0;
   if((AR(a)|AR(w))>1){if(!(m&1)||AR(a)>(AR(w)?AR(w):1))R0;}  // some rank > 1, fail if E. or e. returns rank>1
   if(((m&1)|(AN(a)-1))==0)R 0;  // E. when a is a singleton - no need for the full E. treatment

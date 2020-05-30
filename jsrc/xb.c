@@ -58,6 +58,9 @@ F2(jtnouninfo2){A z;
 #define BV(d,a,r)       (BS(d,a)+((r)<<LGWS(d)))     /* value                           */
 #define BU              (C_LE ? 1 : 0)
 
+static A jtbrep(J jt,B b,B d,A w);  // forward declaration
+static A jthrep(J jt,B b,B d,A w);
+
 // d & tb are something from the user
 // t, n, r, s are from w (or INT if sparse)
 // size is rounded to integral # words
@@ -146,7 +149,7 @@ static A jtbreps(J jt,B b,B d,A w){A q,y,z,*zv;C*v;I c=0,kk,m,n;P*wp;
 }    /* 3!:1 w for sparse w */
 
 
-C* jtbrepfill(J jt,B b,B d,A w,C *zv){I klg,kk;
+static C* jtbrepfill(J jt,B b,B d,A w,C *zv){I klg,kk;
  C *origzv=zv;  // remember start of block
  zv=jtbrephdrq(jt,b,d,w,zv);   // fill in the header, advance pointer to after it
  C* u=CAV(w);  // input pointer
@@ -192,7 +195,7 @@ C* jtbrepfill(J jt,B b,B d,A w,C *zv){I klg,kk;
 }    /* b iff reverse the bytes; d iff 64-bit */
 
 // main entry point for brep.  First calculate the size by a (recursive) call; allocate; then make a (recursive) call to fill in the block
-A jtbrep(J jt,B b,B d,A w){A y;I t;
+static A jtbrep(J jt,B b,B d,A w){A y;I t;
  RZ(w);
  t=UNSAFE(AT(w)); 
  if(t&SPARSE)R breps(b,d,w);  // sparse separately
@@ -201,6 +204,7 @@ A jtbrep(J jt,B b,B d,A w){A y;I t;
  R y;  // return it
 }
 
+#if 0
 static A jthrep(J jt,B b,B d,A w){A y,z;C c,*hex="0123456789abcdef",*u,*v;I n,s[2];
  RZ(y=brep(b,d,w));
  n=AN(y); s[0]=n>>LGWS(d); s[1]=2*WS(d); 
@@ -209,6 +213,26 @@ static A jthrep(J jt,B b,B d,A w){A y,z;C c,*hex="0123456789abcdef",*u,*v;I n,s[
  DQ(n, c=*u++; *v++=hex[(c&0xf0)>>4]; *v++=hex[c&0x0f];); 
  RETF(z);
 }
+#else
+static A jthrep(J jt,B b,B d,A w){A y;C c,*hex="0123456789abcdef",*u,*v;I n,s[2],t;
+ RZ(w);
+ t=UNSAFE(AT(w)); 
+ if(t&SPARSE){A z;  // sparse separately
+  RZ(y=breps(b,d,w));
+  n=AN(y); s[0]=n>>LGWS(d); s[1]=2*WS(d); 
+  GATVR(z,LIT,2*n,2,s);  
+  u=CAV(y); v=CAV(z); 
+  DQ(n, c=*u++; *v++=hex[(c&0xf0)>>4]; *v++=hex[c&0x0f];); 
+  RETF(z);
+ }
+ n=bsizer(jt,d,1,w); s[0]=n>>LGWS(d); s[1]=2*WS(d); 
+ GATVR(y,LIT,2*n,2,s);   // allocate entire result
+ RZ(jtbrepfill(jt,b,d,w,n+CAV(y)));   // fill brep starting from the middle of buffer
+ u=n+CAV(y); v=CAV(y); 
+ DQ(n, c=*u++; *v++=hex[(c&0xf0)>>4]; *v++=hex[c&0x0f];);   // in-place translation to hex
+ R y;  // return it
+}
+#endif
 
 F1(jtbinrep1){RZ(w); ASSERT(NOUN&AT(w),EVDOMAIN); R brep(BU,SY_64,w);}  /* 3!:1 w */
 F1(jthexrep1){RZ(w); ASSERT(NOUN&AT(w),EVDOMAIN); R hrep(BU,SY_64,w);}  /* 3!:3 w */

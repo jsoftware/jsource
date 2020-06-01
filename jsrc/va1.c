@@ -94,13 +94,9 @@ static AMON(absD,   D,D, *z= ABS(*x);)
 static AMON(sqrtZ,  Z,Z, *z=zsqrt(*x);)
 
 static AMON(expB,   D,B, *z=*x?2.71828182845904523536:1;)
-static AMON(expI,   D,I, *z=*x<EMIN?0.0:EMAX<*x?inf:exp((D)*x);)
-static AMON(expD,   D,D, *z=*x<EMIN?0.0:EMAX<*x?inf:exp(   *x);)
 static AMONPS(expZ, Z,Z, , *z=zexp(*x); , HDR1JERR)
 
 static AMON(logB,   D,B, *z=*x?0:infm;)
-static AMON(logI,   D,I, ASSERTWR(0<=*x,EWIMAG); *z=log((D)*x);)
-static AMON(logD,   D,D, ASSERTWR(0<=*x,EWIMAG); *z=log(   *x);)
 static AMON(logZ,   Z,Z, *z=zlog(*x);)
 
 static AMONPS(absI,   I,I, I vtot=0; , I val=*x; val=(val^REPSGN(val))-REPSGN(val); vtot |= val; *z=val; , R vtot<0?EWOV:EVOK;)
@@ -108,6 +104,7 @@ static AMONPS(absZ,   D,Z, , *z=zmag(*x); , HDR1JERR)
 
 static AHDR1(oneB,C,C){memset(z,C1,n); R EVOK;}
 
+extern AHDR1FN expI, expD, logI, logD;
 
 const UA va1tab[]={
  /* <. */ {{{ 0,VB}, {  0,VI}, {floorDI,VI+VIP64}, {floorZ,VZ}, {  0,VX}, {floorQ,VX}}},

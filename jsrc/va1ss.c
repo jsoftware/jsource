@@ -84,14 +84,14 @@ A jtssingleton1(J jt, A w,A self){A z;
     jt->jerr=EWIMAG; R 0;   // otherwise fall through to normal code, returning complex
 
 
- case SSINGCASE(VA2CSTILE-VA2CMIN,SSINGENC(B01)): SSSTORENV(SSRDB(w),z,INT,I) R z;   // return INT rather than normal B01
+ case SSINGCASE(VA2CSTILE-VA2CMIN,SSINGENC(B01)): SSSTORENV(SSRDB(w),z,B01,B) R z;
  case SSINGCASE(VA2CSTILE-VA2CMIN,SSINGENC(INT)):
     wiv = SSRDI(w); wiv=(I)((UI)(wiv^REPSGN(wiv))-(UI)REPSGN(wiv)); if(wiv>=0){SSSTORENV(wiv,z,INT,I)}else SSSTORE(-(D)IMIN,z,FL,D) R z;
  case SSINGCASE(VA2CSTILE-VA2CMIN,SSINGENC(FL)):
     wdv = SSRDD(w); wdv=ABS(wdv); SSSTORENVFL(wdv,z,FL,D) R z;
 
 
- case SSINGCASE(VA2CBANG-VA2CMIN,SSINGENC(B01)): SSSTORENV(1,z,INT,I) R z;   // return INT rather than normal B01
+ case SSINGCASE(VA2CBANG-VA2CMIN,SSINGENC(B01)): SSSTORENV(1,z,B01,B) R z;
  case SSINGCASE(VA2CBANG-VA2CMIN,SSINGENC(INT)):
     SSSTORE(dgamma(1.0+(D)SSRDI(w)),z,FL,D) RE(0) R z;
  case SSINGCASE(VA2CBANG-VA2CMIN,SSINGENC(FL)):

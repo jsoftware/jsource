@@ -5,7 +5,7 @@
 
 #include "j.h"
 #include "ve.h"
-//#define SLEEF C_AVX2
+#define SLEEF C_AVX2
 
 #if SLEEF
 #include "..\..\sleef-3.X\build\include\sleef.h"
@@ -47,6 +47,8 @@ APFX(powDI, D,D,I, intpow,,HDR1JERR)
 APFX(powDD, D,D,D, pospow,,HDR1JERR)
 APFX(powZZ, Z,Z,Z, zpow  ,,HDR1JERR)
 
+
+
 APFX(cirZZ, Z,Z,Z, zcir  ,NAN0;,HDR1JERRNAN)
 
 // Call SLEEF with no checking
@@ -54,7 +56,7 @@ APFX(cirZZ, Z,Z,Z, zcir  ,NAN0;,HDR1JERRNAN)
  , \
  u=sleeffn(u); \
  , \
- })
+ )}
 
 
 // Call SLEEF after checking symmetric 2-sided limits.  If comp is not true everywhere, signal err, else call sleeffn
@@ -65,7 +67,7 @@ APFX(cirZZ, Z,Z,Z, zcir  ,NAN0;,HDR1JERRNAN)
  ASSERTWR(_mm256_movemask_pd(_mm256_cmp_pd(_mm256_and_pd(u,absmask), thmax,comp))==0,err); \
  u=sleeffn(u); \
  , \
- })
+ )}
 
 // Call SLEEF after checking limits, but calculate the value to use then
 #define TRIGCLAMP(limit,decls,comp,argmod,sleeffn,resultmod)  {AVXATOMLOOP( \
@@ -78,8 +80,32 @@ APFX(cirZZ, Z,Z,Z, zcir  ,NAN0;,HDR1JERRNAN)
  u=sleeffn(u); \
  resultmod \
  , \
- })
+ )}
 
+#if SLEEF
+AHDR1(expD,D,D) {  AVXATOMLOOP(
+ ,
+ u=Sleef_expd4_u10avx2(u);
+ ,
+ R EVOK;
+ )
+}
+AHDR1(logD,D,D) {  AVXATOMLOOP(
+ __m256d zero; zero=_mm256_setzero_pd();
+ ,
+ ASSERTWR(_mm256_movemask_pd(_mm256_cmp_pd(u, zero,_CMP_LT_OQ))==0,EWIMAG);
+ u=Sleef_logd4_u10avx2(u);
+ ,
+ R EVOK;
+ )
+}
+
+#else
+AMON(expD,   D,D, *z=*x<EMIN?0.0:EMAX<*x?inf:exp(   *x);)
+AMON(logD,   D,D, ASSERTWR(0<=*x,EWIMAG); *z=log(   *x);)
+#endif
+AMON(expI,   D,I, *z=*x<EMIN?0.0:EMAX<*x?inf:exp((D)*x);)
+AMON(logI,   D,I, ASSERTWR(0<=*x,EWIMAG); *z=log((D)*x);)
 
 static I jtcirx(J jt,I n,I k,D*z,D*x){D p,t;
  NAN0;

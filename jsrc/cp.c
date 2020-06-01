@@ -264,7 +264,8 @@ static DF1(jtinvh1){F1PREFIP;DECLFGH;A z; RZ(w);    FDEPINC(1); z=(FAV(hs)->vale
 static DF2(jtinv2){DECLFG;A z; RZ(a&&w); FDEPINC(1); df1(z,w,inv(amp(a,fs))); FDEPDEC(1); STACKCHKOFL RETF(z);}  // the CHKOFL is to avoid tail recursion, which prevents a recursion loop from being broken
 static DF1(jtinverr){F1PREFIP;ASSERT(0,EVDOMAIN);}  // used for uninvertible monads
 
-static CS2(jtply2,  df1(z,w,powop(amp(a,fs),gs,0)),0107)  // dyad adds x to make x&u, and then reinterpret the compound.  We could interpret u differently now that it has been changed (x {~^:a: y)
+// old static CS2(jtply2, df1(z,w,powop(amp(a,fs),gs,0)),0107)  // dyad adds x to make x&u, and then reinterpret the compound.  We could interpret u differently now that it has been changed (x {~^:a: y)
+DF2(jtply2){PROLOG(107);DECLFG;A z, zz; PREF2(jtply2); z=(df1(zz,w,powop(amp(a,fs),gs,0))); EPILOG(z);}
 
 static DF1(jtpowg1){A z,h=FAV(self)->fgh[2]; R df1(z,  w,*AAV(h));}
 static DF2(jtpowg2){A z,h=FAV(self)->fgh[2]; R df2(z,a,w,*AAV(h));}

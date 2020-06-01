@@ -33,7 +33,9 @@ F1(jtexec1){A z;
  if(AT(w)&NAME){z=nameref(w);  // the case ".@'name' which is the fastest way to refer to a deferred name
  }else{
   F1RANK(1,jtexec1,0);
+  A savself = jt->sf;  // in case we are in a recursion, preserve the restart point
   STACKCHKOFL FDEPINC(1); z=parse(tokens(vs(w),1+(AN(jt->locsyms)>1))); jt->asgn=0; FDEPDEC(1);
+  jt->sf=savself;
  }
  RETF(z&&!(AT(z)&NOUN)?mtv:z);  // if non-noun result, return empty $0
 }

@@ -37,7 +37,7 @@ static I intforD(J jt, D d){D q;I z;
  ASSERT(d==q || FFIEQ(d,q),EVDOMAIN);
  // too-large values don't convert, handle separately
  if(d<(D)IMIN){ASSERT(d>=IMIN*(1+FUZZ),EVDOMAIN); z=IMIN;}  // if tolerantly < IMIN, error; else take IMIN
- else if(d>=-(D)IMIN){ASSERT(d<=IMAX*(1+FUZZ),EVDOMAIN); z=IMAX;}  // if tolerantly > IMAX, error; else take IMAX
+ else if(d>=-(D)IMIN){ASSERT(d<=-(IMIN*(1+FUZZ)),EVDOMAIN); z=IMAX;}  // if tolerantly > IMAX, error; else take IMAX
  R z;
 }
 

@@ -919,7 +919,7 @@ static I*jtconvert0(J jt,I zt,I*v,I wt,C*u){D p,q;I k=0;US s;C4 s4;
   if(!(p==q || FFIEQ(p,q)))R 0;  // must equal int, possibly out of range.  Exact equality is common enough to test for
   // out-of-range values don't convert, handle separately
   if(p<(D)IMIN){if(!(p>=IMIN*(1+FUZZ)))R 0; rq=IMIN;}  // if tolerantly < IMIN, error; else take IMIN
-  else if(p>=-(D)IMIN){if(!(p<=IMAX*(1+FUZZ)))R 0; rq=IMAX;}  // if tolerantly > IMAX, error; else take IMAX
+  else if(p>=-(D)IMIN){if(!(p<=-(IMIN*(1+FUZZ))))R 0; rq=IMAX;}  // if tolerantly > IMAX, error; else take IMAX
   *v=rq;
 #else
    p=*(D*)u; q=jfloor(p);

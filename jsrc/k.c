@@ -88,7 +88,7 @@ static KF1(jtIfromD){D p,q,*v;I i,k=0,n,*x;
   if(!(p==q || FIEQ(p,q)))R 0;  // must equal int, possibly out of range
   // out-of-range values don't convert, handle separately
   if(p<(D)IMIN){if(!(p>=IMIN*(1+jt->fuzz)))R 0; rq=IMIN;}  // if tolerantly < IMIN, error; else take IMIN
-  else if(p>=-(D)IMIN){if(!(p<=IMAX*(1+jt->fuzz)))R 0; rq=IMAX;}  // if tolerantly > IMAX, error; else take IMAX
+  else if(p>=-(D)IMIN){if(!(p<=-(D)IMIN*(1+jt->fuzz)))R 0; rq=IMAX;}  // if tolerantly > IMAX, error; else take IMAX
   *x++=rq;
  }
 #else
@@ -429,7 +429,7 @@ F1(jticvt){A z;D*v,x;I i,n,*u;
  n=AN(w); v=DAV(w);
  GATV(z,INT,n,AR(w),AS(w)); u=AV(z);
  for(i=0;i<n;++i){
-  x=*v++; if(x<IMIN||IMAX<x)R w;  // if conversion will fail, skip it
+  x=*v++; if(x<IMIN||-(D)IMIN<x)R w;  // if conversion will fail, skip it
   *u++=(I)x;
  }
  R z;

@@ -139,7 +139,7 @@ ZF1(jtzlog){ZF1DECL;
 
 ZF2(jtzpow){ZF2DECL;D m;I n;
  if(!a&&!b){z.re=d?0:0>c?inf:!c; z.im=0; R z;}
- if(!d&&IMIN<c&&c<=IMAX&&(n=(I)jfloor(c),c==n)){
+ if(!d&&IMIN<c&&c<=-(D)IMIN&&(n=(I)jfloor(c),c==n)){
   if(0>n){u=zdiv(z1,u); n=-n;}
   z=z1;
   while(n){if(1&n)z=ztymes(z,u); u=ztymes(u,u); n>>=1;}

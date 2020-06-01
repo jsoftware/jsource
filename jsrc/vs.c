@@ -74,7 +74,7 @@ static A jtsparse1a(J jt,A s,A a,A e,A y,A x){A z;B*b;I an,*av,et,r,*sv,t,*v;P*p
  ASSERT(!AR(e),EVRANK);   // e must be an atom
  et=AT(e);
  ASSERT(!(et&LIT+BOX),EVNONCE);  // e must be numeric
- ASSERT(STYPE(et),EVDOMAIN);  // e must be dense
+ ASSERT(STYPE(et)!=0,EVDOMAIN);  // e must be dense
  RZ(b=bfi(r,a,0));
  if(y==mark){
   GAT0(y,INT,0L,2L); v=AS(y); v[0]=0; v[1]=an;
@@ -128,7 +128,7 @@ A jtsparseit(J jt,A w,A a,A e){PROLOG(0091);A ax,c,x,y,z;B b,*cv;I cm,cn,m,n,r,*
  RZ(w&&a&&e);
  r=AR(w); t=AT(w); wn=AN(w); n=AN(a);
  ASSERT(!(t&LIT+BOX),EVNONCE);  // must not be LIT or BOX
- ASSERT(STYPE(t),EVDOMAIN);  // w must be dense
+ ASSERT(STYPE(t)!=0,EVDOMAIN);  // w must be dense
  if(!r){ASSERT(!AN(a),EVINDEX); R ca(w);}
  RZ(z=sparse1a(shape(w),a,e,mark,mark)); p=PAV(z);
  RZ(ax=paxis(r,a));
@@ -342,7 +342,7 @@ F2(jtsparse2){A*av,q=0;B b;I j,k,t,*v;P*p;
   case -1: ASSERT(!q,EVDOMAIN); R sparsen1(w);
   case 2:
    if(AR(a)){j=v[1]; ASSERT(q&&(1==j||2==j),EVDOMAIN); R 1==j?axbytes(q,w):axtally(q,w);}
-   if(q)R reaxis(q,w); else if(b)R rat(SPA(p,a)); else{ASSERT(STYPE(t),EVDOMAIN); R IX(AR(w));}
+   if(q)R reaxis(q,w); else if(b)R rat(SPA(p,a)); else{ASSERT(STYPE(t)!=0,EVDOMAIN); R IX(AR(w));}
   case 3:  R q?rezero(q,w):rat(SPA(p,e));  // ? there rat()s don't protect anything?  SPA is as permanent as w
   case 4:  ASSERT(!q,EVDOMAIN); R rat(SPA(p,i)); 
   case 5:  ASSERT(!q,EVDOMAIN); R rat(SPA(p,x));

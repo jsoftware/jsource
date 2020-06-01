@@ -5,6 +5,12 @@
 
 #include "j.h"
 #include "ve.h"
+//#define SLEEF C_AVX2
+
+#if SLEEF
+#include "..\..\sleef-3.X\build\include\sleef.h"
+#endif
+
 
 D jtintpow(J jt,D x,I n){D r=1;
  if(0>n){x=1/x; if(n==IMIN){r=x; n=IMAX;} else n=-n;}  // kludge use r=x; n=-1-n;
@@ -43,37 +49,111 @@ APFX(powZZ, Z,Z,Z, zpow  ,,HDR1JERR)
 
 APFX(cirZZ, Z,Z,Z, zcir  ,NAN0;,HDR1JERRNAN)
 
-static I jtcirx(J jt,I n,I k,D*z,D*y){D p,t;
+// Call SLEEF with no checking
+#define TRIGUNLIM(sleeffn)  {AVXATOMLOOP( \
+ , \
+ u=sleeffn(u); \
+ , \
+ })
+
+
+// Call SLEEF after checking symmetric 2-sided limits.  If comp is not true everywhere, signal err, else call sleeffn
+#define TRIGSYMM(limit,comp,err,sleeffn)  {AVXATOMLOOP( \
+ __m256d thmax; thmax=_mm256_set1_pd(limit); \
+ __m256d absmask; absmask=_mm256_castsi256_pd(_mm256_set1_epi64x(0x7fffffffffffffff)); \
+ , \
+ ASSERTWR(_mm256_movemask_pd(_mm256_cmp_pd(_mm256_and_pd(u,absmask), thmax,comp))==0,err); \
+ u=sleeffn(u); \
+ , \
+ })
+
+// Call SLEEF after checking limits, but calculate the value to use then
+#define TRIGCLAMP(limit,decls,comp,argmod,sleeffn,resultmod)  {AVXATOMLOOP( \
+ __m256d thmax; thmax=_mm256_set1_pd(limit); \
+ decls \
+ __m256d absmask; absmask=_mm256_castsi256_pd(_mm256_set1_epi64x(0x7fffffffffffffff)); \
+ , \
+ __m256d outofbounds = _mm256_cmp_pd(u, thmax,comp); \
+ argmod \
+ u=sleeffn(u); \
+ resultmod \
+ , \
+ })
+
+
+static I jtcirx(J jt,I n,I k,D*z,D*x){D p,t;
  NAN0;
  switch(k){
-  default: ASSERTWR(0,EWIMAG);
-  case  0: DQ(n, t=*y++; ASSERTWR( -1.0<=t&&t<=1.0, EWIMAG ); *z++=sqrt(1.0-t*t);); break;
-  case  1: DQ(n, t=*y++; ASSERTWR(-THMAX<t&&t<THMAX,EVLIMIT); *z++=sin(t););        break;
-  case  2: DQ(n, t=*y++; ASSERTWR(-THMAX<t&&t<THMAX,EVLIMIT); *z++=cos(t););        break;
-  case  3: DQ(n, t=*y++; ASSERTWR(-THMAX<t&&t<THMAX,EVLIMIT); *z++=tan(t););        break;
-  case  4: DQ(n, t=*y++;                                     *z++=t<-1e8?-t:1e8<t?t:sqrt(t*t+1.0););       break;
-  case  5: DQ(n, t=*y++;                                     *z++=t<-EMAX2?infm:EMAX2<t?inf:sinh(t););     break;
-  case  6: DQ(n, t=*y++;                                     *z++=t<-EMAX2||    EMAX2<t?inf:cosh(t););     break;
-// math library tanh is slooooow  case  7: DQ(n, t=*y++;                                     *z++=t<-TMAX?-1:TMAX<t?1:tanh(t););           break;
-  case  7: DQ(n, t=*y++;                                     *z++=t<-TMAX?-1:TMAX<t?1:(1.0-exp(-2*t))/(1.0+exp(-2*t)););           break;
-// NaN bug in android asin()  _1 o. _1
-#if defined(ANDROID) && (defined(__aarch32__)||defined(__arm__)||defined(__aarch64__))
-  case -1: DQ(n, t=*y++; ASSERTWR( -1.0<=t&&t<=1.0, EWIMAG ); *z++=asin(t););NAN0;  break;
+ default: ASSERTWR(0,EWIMAG);
+ case  0: DQ(n, t=*x++; ASSERTWR(ABS(t)<=1.0, EWIMAG ); *z++=sqrt(1.0-t*t);); break;
+ case  1: ;
+#if SLEEF
+TRIGSYMM(THMAX,_CMP_GT_OQ,EVLIMIT,Sleef_sind4_u35avx2)
 #else
-  case -1: DQ(n, t=*y++; ASSERTWR( -1.0<=t&&t<=1.0, EWIMAG ); *z++=asin(t););       break;
+   DQ(n, t=*x++; ASSERTWR(ABS(t)<THMAX,EVLIMIT); *z++=sin(t););
 #endif
-  case -2: DQ(n, t=*y++; ASSERTWR( -1.0<=t&&t<=1.0, EWIMAG ); *z++=acos(t););       break;
-  case -3: DQ(n,                                             *z++=atan(*y++););    break;
-  case -4: DQ(n, t=*y++; ASSERTWR(t<=-1.0||1.0<=t,  EWIMAG ); *z++=t<-1e8||1e8<t?t:t==-1?0:(t+1)*sqrt((t-1)/(t+1));); break;
-  case -5: p=log(2.0); 
-           DQ(n, t=*y++; *z++=1.0e8<t?p+log(t):-7.8e3>t?-(p+log(-t)):log(t+sqrt(t*t+1.0)););               break;
-  case -6: p=log(2.0); 
-           DQ(n, t=*y++; ASSERTWR(          1.0<=t, EWIMAG ); *z++=1.0e8<t?p+log(t):log(t+sqrt(t*t-1.0));); break;
-  case -7: DQ(n, t=*y++; ASSERTWR( -1.0<=t&&t<=1.0, EWIMAG ); *z++=0.5*log((1.0+t)/(1.0-t)););              break;
-  case  9: DQ(n,         *z++=*y++;);           break;    
-  case 10: DQ(n, t=*y++; *z++=ABS(t););         break;
-  case 11: DQ(n,         *z++=0.0;);            break;
-  case 12: DQ(n,         *z++=0<=*y++?0.0:PI;); break;
+   break;
+ case  2:  ;
+#if SLEEF
+TRIGSYMM(THMAX,_CMP_GT_OQ,EVLIMIT,Sleef_cosd4_u35avx2)
+#else
+ DQ(n, t=*x++; ASSERTWR(ABS(t)<THMAX,EVLIMIT); *z++=cos(t););
+#endif
+ break;
+ case  3:  ;
+#if SLEEF
+ TRIGSYMM(THMAX,_CMP_GT_OQ,EVLIMIT,Sleef_tand4_u35avx2)
+#else
+ DQ(n, t=*x++; ASSERTWR(ABS(t)<THMAX,EVLIMIT); *z++=tan(t););       
+#endif
+ break;
+ case  4: DQ(n, t=*x++;                                     *z++=t<-1e8?-t:1e8<t?t:sqrt(t*t+1.0););       break;
+ case  5: DQ(n, t=*x++;                                     *z++=t<-EMAX2?infm:EMAX2<t?inf:sinh(t););     break;
+ case  6: DQ(n, t=*x++;                                     *z++=t<-EMAX2||    EMAX2<t?inf:cosh(t););     break;
+ case  7: ;
+#if SLEEF
+ TRIGUNLIM(Sleef_tanhd4_u35avx2)
+ NAN0;  // SLEEF gives the correct answer but may raise a NaN flag
+#else
+// math library tanh is slooooow  case  7: DQ(n, t=*x++;                                     *z++=t<-TMAX?-1:TMAX<t?1:tanh(t););           break;
+ DQ(n, t=*x++;                                     *z++=t<-TMAX?-1:TMAX<t?1:(1.0-exp(-2*t))/(1.0+exp(-2*t)););
+#endif
+ break;
+ case -1: ;
+#if SLEEF
+  TRIGSYMM(1.0,_CMP_GT_OQ,EWIMAG,Sleef_asind4_u35avx2)
+#else
+  DQ(n, t=*x++; ASSERTWR( -1.0<=t&&t<=1.0, EWIMAG ); *z++=asin(t););
+#if defined(ANDROID) && (defined(__aarch32__)||defined(__arm__)||defined(__aarch64__))
+// NaN bug in android asin()  _1 o. _1
+NAN0;
+#endif
+#endif
+ break;
+ case -2: ;
+#if SLEEF
+  TRIGSYMM(1.0,_CMP_GT_OQ,EWIMAG,Sleef_acosd4_u35avx2)
+#else
+  DQ(n, t=*x++; ASSERTWR( -1.0<=t&&t<=1.0, EWIMAG ); *z++=acos(t););
+#endif
+  break;
+ case -3: ;
+#if SLEEF
+  TRIGUNLIM(Sleef_atand4_u35avx2)
+#else
+  DQ(n,                                             *z++=atan(*x++););
+#endif
+  break;
+ case -4: DQ(n, t=*x++; ASSERTWR(t<=-1.0||1.0<=t,  EWIMAG ); *z++=t<-1e8||1e8<t?t:t==-1?0:(t+1)*sqrt((t-1)/(t+1));); break;
+ case -5: p=log(2.0); 
+           DQ(n, t=*x++; *z++=1.0e8<t?p+log(t):-7.8e3>t?-(p+log(-t)):log(t+sqrt(t*t+1.0)););               break;
+ case -6: p=log(2.0); 
+           DQ(n, t=*x++; ASSERTWR(          1.0<=t, EWIMAG ); *z++=1.0e8<t?p+log(t):log(t+sqrt(t*t-1.0));); break;
+ case -7: DQ(n, t=*x++; ASSERTWR( -1.0<=t&&t<=1.0, EWIMAG ); *z++=0.5*log((1.0+t)/(1.0-t)););              break;
+ case  9: DQ(n,         *z++=*x++;);           break;    
+ case 10: DQ(n, t=*x++; *z++=ABS(t););         break;
+ case 11: DQ(n,         *z++=0.0;);            break;
+ case 12: DQ(n,         *z++=0<=*x++?0.0:PI;); break;
  }
 // obsolete NAN1V;
  ASSERTWR(!NANTEST,EVNAN);

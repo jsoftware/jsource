@@ -780,6 +780,7 @@ extern unsigned int __cdecl _clearfp (void);
  u=_mm256_maskload_pd(x,endmask); \
  loopbody \
  _mm256_maskstore_pd(z, endmask, u); \
+ x+=((n-1)&(NPAR-1))+1; z+=((n-1)&(NPAR-1))+1; \
  postloop
 
 // Dyadic version.  v is right argument, u is still result

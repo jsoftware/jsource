@@ -30,7 +30,7 @@ D jtpospow(J jt,D x,D y){
  if(y== inf){ASSERT(-1<x,EVDOMAIN); R 0.0;}
  jt->jerr=EWIMAG;
  R 0;
-}    /* x^y where x and y are real and x is non-negative */
+}    /* x^y where x and y are real */
 
 #define POWXB(u,v)  (v?u:1)
 #define POWBX(u,v)  (u?1.0:v<0?inf:!v)
@@ -43,8 +43,6 @@ APFX(powIB, I,I,B, POWXB ,,R EVOK;)
 APFX(powII, D,I,I, POWII ,,HDR1JERR)
 APFX(powID, D,I,D, POWID ,,HDR1JERR)
 APFX(powDB, D,D,B, POWXB ,,R EVOK;)
-APFX(powDI, D,D,I, intpow,,HDR1JERR)
-APFX(powDD, D,D,D, pospow,,HDR1JERR)
 APFX(powZZ, Z,Z,Z, zpow  ,,HDR1JERR)
 
 
@@ -100,9 +98,63 @@ AHDR1(logD,D,D) {  AVXATOMLOOP(
  )
 }
 
+AHDR2(powDI,D,D,I) {I v;
+  if(n-1==0)  DQ(m,               *z++=intpow(*x,*y); x++; y++; )
+  else if(n-1<0)DQ(m, D u=*x++; DQC(n, *z++=intpow( u,*y);      y++;))
+  else{  // repeated exponent: use parallel instructions
+   DQ(m, v=*y++;  // for each exponent
+    AVXATOMLOOP(  // build result in u, which is also the input
+     __m256d one = _mm256_set1_pd(1.0);
+
+    ,
+     __m256d upow;
+     UI rempow;  // power left to take
+     if(v>=0){  // positive power
+      upow=u; u = one;   // init result to 1 before powers
+      rempow=v;
+     }else{  // negative power, take recip of u and complement the power
+      upow = u = _mm256_div_pd(one,u);  // start power at -1
+      rempow=~v;  // subtract one from pos pow since we start with recip (avoids IMIN problem)
+     }
+     while(rempow){if(rempow&1)u=_mm256_mul_pd(u,upow); upow=_mm256_mul_pd(upow,upow); rempow>>=1;}
+    ,
+    )
+   )
+  }      
+  HDR1JERR
+}
+
+AHDR2(powDD,D,D,D) {D v;
+  if(n-1==0) DQ(m, *z++=pospow(*x,*y); x++; y++; )
+  else if(n-1<0)DQ(m, D u=*x++; DQC(n, *z++=pospow( u,*y); y++;))
+  else{  // repeated exponent: use parallel instructions
+   DQ(m, v=*y++;  // for each exponent
+    if(v==0){DQ(n, *z++=1.0;) x+=n;}
+    else if(ABS(v)==inf){DQ(n, D u=*x++; ASSERT(u>=0,EWIMAG); if(u==1.0)*z=1.0; else{D vv = u>1.0?v:-v;*z=v>0?inf:0.0;} ++z;)}
+    else{
+     AVXATOMLOOP(  // build result in u, which is also the input
+       __m256d zero = _mm256_setzero_pd();
+       __m256d vv = _mm256_set1_pd(v);  // 4 copies of exponent
+      ,
+       ASSERTWR(_mm256_movemask_pd(_mm256_cmp_pd(u, zero,_CMP_LT_OQ))==0,EWIMAG);
+       u=Sleef_log2d4_u35avx2(u);
+       u=_mm256_mul_pd(u,vv);
+       u=Sleef_exp2d4_u35avx2(u);
+      ,
+     )
+    )
+   }
+  }      
+  HDR1JERR
+}
+
+
 #else
 AMON(expD,   D,D, *z=*x<EMIN?0.0:EMAX<*x?inf:exp(   *x);)
 AMON(logD,   D,D, ASSERTWR(0<=*x,EWIMAG); *z=log(   *x);)
+APFX(powDI, D,D,I, intpow,,HDR1JERR)
+APFX(powDD, D,D,D, pospow,,HDR1JERR)
+
 #endif
 AMON(expI,   D,I, *z=*x<EMIN?0.0:EMAX<*x?inf:exp((D)*x);)
 AMON(logI,   D,I, ASSERTWR(0<=*x,EWIMAG); *z=log((D)*x);)

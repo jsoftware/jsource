@@ -5,7 +5,7 @@
 
 #include "j.h"
 #include "ve.h"
-#define SLEEF C_AVX2
+//#define SLEEF C_AVX2
 
 #if SLEEF
 #include "..\..\sleef-3.X\build\include\sleef.h"

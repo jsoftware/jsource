@@ -8,6 +8,8 @@ linux     implies intel
 darwin    implies intel
 raspberry implies linux/arm
 
+NOTE: This uses clang/llvm. If on Debian you'll also need libedit-dev (libedit-devel on Fedora)
+
 **************************************************************************
 # commands are assumed to run in ~ and depend on jvars.sh
 

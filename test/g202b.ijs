@@ -100,6 +100,11 @@ test"0 ] 10^i.4
 0 2 4 9 10 12 _1 -: (2 0 4 0 9 0 0 0 0 10 12 0 _1 {~^:a: 0)
 0 2 4 -: (2 0 4 0 9 0 0 0 0 10 12 0 _1 {~^:(<3) 0)
 
+(1 0$0) -: {&1 2 3^:a: $0
+
+'limit error' -: {&1 2 3 0 4^:a: etx 0
+'limit error' -: {&1 2 3 0 4^:a: etx 0 1
+
 4!:55 ;:'boxed_rec f indexlim r randomfile rec rec1 spleak'
 4!:55 ;:'test x x2288 y2288'
 

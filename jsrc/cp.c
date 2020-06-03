@@ -29,27 +29,28 @@ static DF1(jtpowseqlim){PROLOG(0039);A x,y,z,*zv;I i,n;
  EPILOG(z);
 }    /* f^:(<_) w */
 
-static F2(jttclosure){A z;B b;I an,*av,c,d,i,wn,wr,wt,*wv,*zu,*zv,*zz;
+// AR(a) is 1 and AN(w)!=0
+static F2(jttclosure){A z;I an,*av,c,d,i,wn,wr,wt,*wv,*zv,*zz;
  RZ(a&&w);
  wt=AT(w); wn=AN(w); wr=AR(w);
  if(B01&wt)RZ(w=cvt(INT,w)); wv=AV(w);
  av=AV(a); an=AN(a);
- RZ(z=exta(INT,1+wr,wn,20L)); 
+ RZ(z=exta(INT,1+wr,wn,20L));   // init the expanding result area
  zv=AV(z); zz=zv+AN(z);
- if(1==wn){   // kludge having separate cases for wn==1 seems overkill
-  *zv++=c=*wv; d=1+c;
-  while(c!=d){
-   if(zv==zz){i=zv-AV(z); RZ(z=ext(0,z)); zv=AV(z)+i; zz=AV(z)+AN(z);}
-   d=c; if((UI)c>=(UI)an){c+=an; ASSERT((UI)c<(UI)an,EVINDEX);} *zv++=c=av[c];
-  }
+ if(1==wn){   // just 1 result, which will be a list
+  *zv++=c=*wv;  // store first selection
+  do{
+   if(zv==zz){i=zv-AV(z); ASSERT(i<=an,EVLIMIT) RZ(z=ext(0,z)); zv=AV(z)+i; zz=AV(z)+AN(z);}  // if we have more results than items in a, there must be a cycle - quit
+   d=c; if((UI)c>=(UI)an){c+=an; ASSERT((UI)c<(UI)an,EVINDEX);} *zv++=c=av[c];  // d is prev selection, c is next.  Store c
+  }while(c!=d);  // stop when we get a repeated value (normal exit)
   d=(zv-AV(z))-1;
- }else{
-  ICPY(zv,wv,wn); zu=zv; zv+=wn;
-  while(1){
-   if(zv==zz){i=zv-AV(z); RZ(z=ext(0,z)); zv=AV(z)+i; zz=AV(z)+AN(z); zu=zv-wn;}
-   b=1; DQ(wn, d=c=*zu++; if((UI)c>=(UI)an){c+=an; ASSERT((UI)c<(UI)an,EVINDEX);} *zv++=c=av[c]; if(c!=d)b=0;);
-   if(b)break;
-  }
+ }else{  // multiple starting points.  Each cell of result has one successor for each starting point.
+  ICPY(zv,wv,wn); zv+=wn;
+  I resultdiff;
+  do{
+   if(zv==zz){i=zv-AV(z); ASSERT(i<=an*wn,EVLIMIT) RZ(z=ext(0,z)); zv=AV(z)+i; zz=AV(z)+AN(z);}  // break if there is a cycle
+   resultdiff=0; DQ(wn, d=c=zv[-wn]; if((UI)c>=(UI)an){c+=an; ASSERT((UI)c<(UI)an,EVINDEX);} *zv++=c=av[c]; resultdiff|=c^d;);  // set diff if not a steady state
+  }while(resultdiff);
   d=(zv-AV(z))/wn-1;
  }
  AS(z)[0]=d; AN(z)=d*wn; MCISH(1+AS(z),AS(w),wr); 
@@ -59,12 +60,12 @@ static F2(jttclosure){A z;B b;I an,*av,c,d,i,wn,wr,wt,*wv,*zu,*zv,*zz;
 static DF1(jtindexseqlim1){A fs;
  RZ(w); 
  fs=FAV(self)->fgh[0];  // {&x
- R AT(w)&B01+INT?tclosure(FAV(fs)->fgh[1],w):powseqlim(w,fs);
+ R AN(w)&&AT(w)&B01+INT?tclosure(FAV(fs)->fgh[1],w):powseqlim(w,fs);
 }    /* {&x^:(<_) w */
 
 static DF2(jtindexseqlim2){
  RZ(a&&w);
- R 1==AR(a)&&AT(a)&INT&&AT(w)&B01+INT?tclosure(a,w):powseqlim(w,amp(ds(CFROM),a));
+ R 1==AR(a)&&AT(a)&INT&&AN(w)&&AT(w)&B01+INT?tclosure(a,w):powseqlim(w,amp(ds(CFROM),a));
 }    /* a {~^:(<_) w */
 
 // u^:(<n) If n negative, take inverse of u; if v infinite, go to routine that checks for no change.  Otherwise convert to u^:(i.|n) and restart

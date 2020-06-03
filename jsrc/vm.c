@@ -99,53 +99,52 @@ AHDR1(logD,D,D) {  AVXATOMLOOP(
 }
 
 AHDR2(powDI,D,D,I) {I v;
-  if(n-1==0)  DQ(m,               *z++=intpow(*x,*y); x++; y++; )
-  else if(n-1<0)DQ(m, D u=*x++; DQC(n, *z++=intpow( u,*y);      y++;))
-  else{  // repeated exponent: use parallel instructions
-   DQ(m, v=*y++;  // for each exponent
-    AVXATOMLOOP(  // build result in u, which is also the input
-     __m256d one = _mm256_set1_pd(1.0);
-
-    ,
-     __m256d upow;
-     UI rempow;  // power left to take
-     if(v>=0){  // positive power
-      upow=u; u = one;   // init result to 1 before powers
-      rempow=v;
-     }else{  // negative power, take recip of u and complement the power
-      upow = u = _mm256_div_pd(one,u);  // start power at -1
-      rempow=~v;  // subtract one from pos pow since we start with recip (avoids IMIN problem)
-     }
-     while(rempow){if(rempow&1)u=_mm256_mul_pd(u,upow); upow=_mm256_mul_pd(upow,upow); rempow>>=1;}
-    ,
-    )
+ if(n-1==0)  DQ(m,               *z++=intpow(*x,*y); x++; y++; )
+ else if(n-1<0)DQ(m, D u=*x++; DQC(n, *z++=intpow( u,*y);      y++;))
+ else{  // repeated exponent: use parallel instructions
+  DQ(m, v=*y++;  // for each exponent
+   AVXATOMLOOP(  // build result in u, which is also the input
+    __m256d one = _mm256_set1_pd(1.0);
+   ,
+    __m256d upow;
+    UI rempow;  // power left to take
+    if(v>=0){  // positive power
+     upow=u; u = one;   // init result to 1 before powers
+     rempow=v;
+    }else{  // negative power, take recip of u and complement the power
+     upow = u = _mm256_div_pd(one,u);  // start power at -1
+     rempow=~v;  // subtract one from pos pow since we start with recip (avoids IMIN problem)
+    }
+    while(rempow){if(rempow&1)u=_mm256_mul_pd(u,upow); upow=_mm256_mul_pd(upow,upow); rempow>>=1;}
+   ,
    )
-  }      
-  HDR1JERR
+  )
+ }      
+ HDR1JERR
 }
 
 AHDR2(powDD,D,D,D) {D v;
-  if(n-1==0) DQ(m, *z++=pospow(*x,*y); x++; y++; )
-  else if(n-1<0)DQ(m, D u=*x++; DQC(n, *z++=pospow( u,*y); y++;))
-  else{  // repeated exponent: use parallel instructions
-   DQ(m, v=*y++;  // for each exponent
-    if(v==0){DQ(n, *z++=1.0;) x+=n;}
-    else if(ABS(v)==inf){DQ(n, D u=*x++; ASSERT(u>=0,EWIMAG); if(u==1.0)*z=1.0; else{D vv = u>1.0?v:-v;*z=v>0?inf:0.0;} ++z;)}
-    else{
-     AVXATOMLOOP(  // build result in u, which is also the input
-       __m256d zero = _mm256_setzero_pd();
-       __m256d vv = _mm256_set1_pd(v);  // 4 copies of exponent
-      ,
-       ASSERTWR(_mm256_movemask_pd(_mm256_cmp_pd(u, zero,_CMP_LT_OQ))==0,EWIMAG);
-       u=Sleef_log2d4_u35avx2(u);
-       u=_mm256_mul_pd(u,vv);
-       u=Sleef_exp2d4_u35avx2(u);
-      ,
-     )
+ if(n-1==0) DQ(m, *z++=pospow(*x,*y); x++; y++; )
+ else if(n-1<0)DQ(m, D u=*x++; DQC(n, *z++=pospow( u,*y); y++;))
+ else{  // repeated exponent: use parallel instructions
+  DQ(m, v=*y++;  // for each exponent
+   if(v==0){DQ(n, *z++=1.0;) x+=n;}
+   else if(ABS(v)==inf){DQ(n, D u=*x++; ASSERT(u>=0,EWIMAG); if(u==1.0)*z=1.0; else{D vv = u>1.0?v:-v;*z=v>0?inf:0.0;} ++z;)}
+   else{
+    AVXATOMLOOP(  // build result in u, which is also the input
+      __m256d zero = _mm256_setzero_pd();
+      __m256d vv = _mm256_set1_pd(v);  // 4 copies of exponent
+     ,
+      ASSERTWR(_mm256_movemask_pd(_mm256_cmp_pd(u, zero,_CMP_LT_OQ))==0,EWIMAG);
+      u=Sleef_log2d4_u35avx2(u);
+      u=_mm256_mul_pd(u,vv);
+      u=Sleef_exp2d4_u35avx2(u);
+     ,
     )
-   }
-  }      
-  HDR1JERR
+   )
+  }
+ }      
+ HDR1JERR
 }
 
 
@@ -262,8 +261,10 @@ F2(jtlogar2){A z;I t;
 F2(jtroot){A z;I t;
  RZ(a&&w);
  RE(t=maxtype(AT(a),AT(w)));
- if(!(t&XNUM))R expn2(cvt(t,w),recip(cvt(t,a)));
- z=rank2ex0(cvt(XNUM,a),cvt(XNUM,w),0L,jtxroota);
+ A ma=a; if(TYPESNE(t,AT(a)))RZ(ma=cvt(t,a));
+ A mw=w; if(TYPESNE(t,AT(w)))RZ(mw=cvt(t,w));
+ if(!(t&XNUM))R expn2(mw,recip(ma));  // not inplaceable - could be IMAG
+ z=rank2ex0(ma,mw,0L,jtxroota);
  switch(jt->jerr){
   case EWIMAG: RESETERR; R expn2(cvt(CMPX,w),recip(cvt(CMPX,a)));
   case EWRAT: 

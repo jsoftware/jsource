@@ -488,21 +488,24 @@ static F1(jtkeytallysp){PROLOG(0015);A b,e,q,x,y,z;I c,d,j,k,*u,*v;P*p;
 }    /* x #/.y , sparse x */
 
 #define KEYTALLY(T)     {T*u;                             \
-                         u=(T*)av; DQ(n, ++*(qv+*u++););  \
-                         u=(T*)av; DQ(n, v=qv+*u++; if(*v){*zv++=*v; *v=0; if(s==++j)break;});}
+                         u=(T*)av; I npart=0; DQ(n, I *ta=qv+*u++; I t=*ta; *ta=t+1; npart+=SGNTO0(t-1););  \
+                         GATV0(z,INT,npart,1); zv=AV(z);  /* output area: one per bucket */ \
+                         u=(T*)av; I tally; do{v=qv+*u++; tally=*v; *v=0; *zv=tally; tally=SGNTO0(-tally); zv+=tally;}while(npart-=tally);}
+// obsolete                          u=(T*)av; DQ(n, v=qv+*u++; if(*v){*zv++=*v; *v=0; if(s==++j)break;});}
 
 static DF2(jtkeytally){PROLOG(0016);A q;I at,*av,j=0,k,n,r,s,*qv,*u,*v;
  RZ(a&&w);
  SETIC(a,n); at=AT(a); av=AV(a);
  ASSERT(n==SETIC(w,k),EVLENGTH);
- if(!AN(a))R vec(INT,n?1:0,&n);
+ if(!AN(a))R vec(INT,n?1:0,&n);  // handle case of empties
  if(at&SPARSE)R keytallysp(a);
  CRT rng = keyrs(a,MAX(2*n,65536)); at=rng.type; r=rng.minrange.min; s=rng.minrange.range;
  if((-n&SGNIF(at,B01X)&(AR(a)-2))<0){B*b=(B*)av; k=bsum(n,b); R BETWEENO(k,1,n)?v2(*b?k:n-k,*b?n-k:k):vci(n);}  // nonempty rank<2 boolean a, just add the 1s
  if(s){A z;I*zv;
-  GATV0(z,INT,s,1); zv=AV(z);
-  GATV0(q,INT,s,1); qv=AV(q)-r;
-  u=qv+r; DQ(s, *u++=0;);
+  // small-range case with s buckets.
+// obsolete  GATV0(z,INT,s,1); zv=AV(z);  // output area: one per bucket
+  GATV0(q,INT,s,1); qv=AV(q)-r;   // biased start of area where we count occurrences
+  u=qv+r; DQ(s, *u++=0;);   // clear the counters to 0
   switch(CTTZ(at)){
    case LITX: KEYTALLY(UC); break;
    case C2TX: KEYTALLY(US); break;
@@ -510,15 +513,19 @@ static DF2(jtkeytally){PROLOG(0016);A q;I at,*av,j=0,k,n,r,s,*qv,*u,*v;
    case SBTX: KEYTALLY(SB); break;
    case INTX: KEYTALLY(I ); break;
   }
-  AN(z)=*AS(z)=j;
+// obsolete   AN(z)=*AS(z)=s-j;   // see how many different values there actually were
   EPILOG(z);
  }
- RZ(q=indexof(a,a)); realizeifvirtual(q);
+ // here when small-range not applicable
+ RZ(q=indexof(a,a)); realizeifvirtual(q);   // self-classify the atoms of a
  if(!AR(q))R iv1; 
  v=qv=AV(q);
- u=qv; DQ(n, ++*(qv+*u++););
- u=qv; DO(n, k=*u++; if(i<k){j+=*v++=k-i; if(n==j)break;});
- *AS(q)=AN(q)=v-qv;
+// obsolete  u=qv; DQ(n, ++*(qv+*u++););
+ u=qv; I npart=0; DO(n, I tu=*u++; ++*(qv+tu); npart+=REPSGN(tu-i)+1;);   // total each different value in its first occurrence, by adding to the index; so result is (index+#higher-or-equal values mapped to it)
+ *AS(q)=AN(q)=npart;
+// obsolete  u=qv; DO(n, k=*u++; if(i<k){j+=*v++=k-i; if(n==j)break;});
+ u=qv; I tally; I indx=0; I *vend=v+npart; do{tally=*u++-indx; *v=tally; ++indx; tally=REPSGN(tally); v+=tally+1;}while(v!=vend);  // calc tally in each slot, which is never 0
+// obsolete  *AS(q)=AN(q)=v-qv;
  EPILOG(q);
 }    /* x #/.y main control & dense x */
 

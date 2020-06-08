@@ -1,0 +1,30 @@
+^C:\GIT\SLEEF-3.X\BUILD\CMAKEFILES\8C03031A1EF2E95BBED273DBE55AF6AD\RENAMEAVX2.H.RULE
+setlocal
+echo Generating renameavx2.h: mkrename "finz_" "4" "8" "avx2"
+if %errorlevel% neq 0 goto :cmEnd
+..\..\bin\mkrename.exe "finz_" "4" "8" "avx2" > C:/git/sleef-3.X/build/src/libm/include/renameavx2.h
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\GIT\SLEEF-3.X\BUILD\CMAKEFILES\EE8D02A2ADA386E4837BABD35296452C\RENAMEAVX2.H_GENERATED.RULE
+setlocal
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\GIT\SLEEF-3.X\SRC\LIBM\CMAKELISTS.TXT
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/git/sleef-3.X -BC:/git/sleef-3.X/build --check-stamp-file C:/git/sleef-3.X/build/src/libm/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

@@ -621,11 +621,11 @@ static DF2(jtkeyheadtally){PROLOG(0017);A f,q,x,y,z;B b;I at,*av,k,n,r,*qv,*u,*v
   // build the result table, containing integers.  The table holds frequency and index of the value
   I npart;  // number of result values
   switch(CTTZ(at)){
+   case INTX: KEYHEADBUILD(I ); break;
    case LITX: KEYHEADBUILD(UC); break;
    case C2TX: KEYHEADBUILD(US); break;
    case C4TX: KEYHEADBUILD(C4); break;
    case SBTX: KEYHEADBUILD(SB); break;
-   case INTX: KEYHEADBUILD(I ); break;
   }
   // replace the head indexes with the value there
   if(wt&INT)KEYHEADFILL(I,I,0)
@@ -693,6 +693,7 @@ static DF2(jtkeyheadtally){PROLOG(0017);A f,q,x,y,z;B b;I at,*av,k,n,r,*qv,*u,*v
    I *zv; I skipmsk;
    GATV0(z,wt&FL?FL:INT,2*npart,2); AS(z)[0]=npart; AS(z)[1]=2; I *u0=u=qv;
    // move values from q to z.  If an encountered count is negative, don't advance the output pointer, but skip that many slots of input
+
 #define KEYHEADFILLGEN(Tw,Tz) \
    {Tz *zv=AV(z);  /* output scan pointer */ \
    Tw *wv=AV(w);  /* start of w list */ \
@@ -705,6 +706,7 @@ static DF2(jtkeyheadtally){PROLOG(0017);A f,q,x,y,z;B b;I at,*av,k,n,r,*qv,*u,*v
     zv+=skipmsk*2; u+=skipmsk; /* advance if there was no skip */ \
    }while(npart-=skipmsk);  /* loop till all non-skips have been written */ \
    }
+
    if(wt&INT)KEYHEADFILLGEN(I,I)
    else if(wt&FL)KEYHEADFILLGEN(D,D)
    else KEYHEADFILLGEN(B,I)

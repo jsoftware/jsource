@@ -1,0 +1,22 @@
+^C:\GIT\SLEEF-3.X\BUILD\CMAKEFILES\CCD494F1512D848BE8163BA5C4A8CEE9\DISPAVX.C.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -E copy C:/git/sleef-3.X/src/libm/dispavx.c.org C:/git/sleef-3.X/build/src/libm/dispavx.c
+if %errorlevel% neq 0 goto :cmEnd
+..\..\bin\mkdisp.exe 4 8 __m256d __m256 __m128i avx fma4 avx2 >> C:/git/sleef-3.X/build/src/libm/dispavx.c
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\GIT\SLEEF-3.X\SRC\LIBM\CMAKELISTS.TXT
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/git/sleef-3.X -BC:/git/sleef-3.X/build --check-stamp-file C:/git/sleef-3.X/build/src/libm/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

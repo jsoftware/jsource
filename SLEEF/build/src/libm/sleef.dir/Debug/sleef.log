@@ -1,0 +1,7 @@
+﻿  Building Custom Rule C:/git/sleef-3.X/src/libm/CMakeLists.txt
+  sleefdp.c
+  sleefsp.c
+  rempitab.c
+  Generating Code...
+     Creating library C:/git/sleef-3.X/build/lib/sleef.lib and object C:/git/sleef-3.X/build/lib/sleef.exp
+  sleef.vcxproj -> C:\git\sleef-3.X\build\bin\sleef.dll

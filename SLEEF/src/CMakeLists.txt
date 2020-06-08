@@ -1,0 +1,22 @@
+include_directories("common")
+include_directories("arch")
+
+add_subdirectory("libm")
+if (BUILD_TESTS)
+  add_subdirectory("libm-tester")
+endif()
+add_subdirectory("common")
+
+if (BUILD_DFT AND NOT MINGW)
+  add_subdirectory("dft")
+  if (BUILD_TESTS)
+    add_subdirectory("dft-tester")
+  endif()
+endif()
+
+if (BUILD_QUAD)
+  add_subdirectory("quad")
+  if (BUILD_TESTS)
+    add_subdirectory("quad-tester")
+  endif()
+endif()

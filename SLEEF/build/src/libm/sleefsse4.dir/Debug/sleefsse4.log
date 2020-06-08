@@ -1,0 +1,5 @@
+﻿  Building Custom Rule C:/git/sleef-3.X/src/libm/CMakeLists.txt
+  sleefsimdsp.c
+  sleefsimddp.c
+  Generating Code...
+  sleefsse4.vcxproj -> C:\git\sleef-3.X\build\src\libm\sleefsse4.dir\Debug\sleefsse4.lib

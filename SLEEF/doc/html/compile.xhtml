@@ -1,0 +1,327 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1 plus MathML 2.0//EN" "http://www.w3.org/Math/DTD/mathml2/xhtml-math11-f.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=0.4"/>
+<meta name="google" content="notranslate" />
+<link rel="canonical" href="https://sleef.org/compile.xhtml" />
+<link rel="icon" href="favicon.png" />
+<link rel="stylesheet" type="text/css" href="texlike.css"/>
+<link rel="stylesheet" type="text/css" href="sleef.css"/>
+<title>SLEEF Documentation</title>
+</head>
+<body translate="no" class="notranslate">
+<h1>SLEEF Documentation - Compiling and installing the library</h1>
+
+<h2>Table of contents</h2>
+
+<ul class="none" style="font-family: arial, sansserif; padding-left: 0.5cm;">
+  <li><a class="underlined" href="index.xhtml">Introduction</a></li>
+  <li>&nbsp;</li>
+  <li><a class="underlined" href="compile.xhtml">Compiling and installing the library</a></li>
+    <ul class="disc">
+      <li><a href="compile.xhtml#cmake">About CMake</a></li>
+      <li><a href="compile.xhtml#linux">Compiling and installing library on Linux</a></li>
+      <li><a href="compile.xhtml#debian">Installing library on Debian and Ubuntu</a></li>
+      <li><a href="compile.xhtml#MSVC">Compiling library with Microsoft Visual C++</a></li>
+      <li><a href="compile.xhtml#hello">Compiling and running "Hello SLEEF"</a></li>
+      <li><a href="compile.xhtml#import">Importing SLEEF into your project</a></li>
+    </ul>
+  <li>&nbsp;</li>
+  <li><a class="underlined" href="purec.xhtml">Math library reference</a></li>
+  <li><a class="underlined" href="dft.xhtml">DFT library reference</a></li>
+  <li><a class="underlined" href="misc.xhtml">Other tools included in the package</a></li>
+  <li><a class="underlined" href="benchmark.xhtml">Benchmark results</a></li>
+  <li><a class="underlined" href="additional.xhtml">Additional notes</a></li>
+</ul>
+
+<h2 id="cmake">About CMake</h2>
+
+<p class="noindent">
+<a class="underlined" href="http://www.cmake.org/">CMake</a> is an open-source and
+cross-platform building tool for software packages that provides easy
+managing of multiple build systems at a time. It works by allowing the
+developer to specify build parameters and rules in a simple text file
+that cmake then processes to generate project files for the actual
+native build tools (e.g. UNIX Makefiles, Microsoft Visual Studio,
+Apple XCode, etc). That means you can easily maintain multiple
+separate builds for one project and manage cross-platform hardware and
+software complexity.
+</p>
+
+<p>
+If you are not already familiar with cmake, please refer to the
+<a class="underlined" href="https://cmake.org/documentation/">official documentation</a>
+or
+the <a class="underlined" href="https://cmake.org/Wiki/CMake#Basic_Introductions">basic
+introductions in the wiki</a> (recommended).
+</p>
+
+<p>
+Before using CMake you will need to install/build the binaries on your
+system.  Most systems have cmake already installed or provided by the
+standard package manager. If that is not the case for you, please
+<a class="underlined" href="https://cmake.org/download/">download</a> and install now.
+For building SLEEF, version 3.4.3 is the minimum required.
+</p>
+
+<h3>Quick start</h3>
+
+<p class="noindent">
+1. Make sure cmake is available on the command-line. The command below
+should display a version number greater than or equal to 3.4.3.
+</p>
+<pre class="command">$ cmake --version</pre>
+
+<p class="noindent">
+2. Download the tar from
+the <a class="underlined" href="https://sourceforge.net/projects/sleef/files/">software
+repository</a> or checkout out the source code from
+the <a class="underlined" href="https://github.com/shibatch/sleef">GitHub repository</a>.
+</p>
+<pre class="command">$ git clone https://github.com/shibatch/sleef</pre>
+
+<p class="noindent">
+3. Make a separate directory to create an out-of-source build. SLEEF does not
+allow for in-tree builds.
+</p>
+<pre class="command">$ cd sleef
+$ mkdir build &amp;&amp; cd build</pre>
+
+<p class="noindent">
+4. Run cmake to configure your project and generate the system to build it:
+</p>
+<pre class="command">$ cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+	-DCMAKE_INSTALL_PREFIX=../my-sleef-install \
+	..</pre>
+
+<p class="noindent">
+This flag configures an optimised libsleef shared library build with
+basic debug info.  By default, cmake will autodetect your system
+platform and configure the build using the default parameters. You can
+control and modify these parameters by setting variables when running
+cmake. See the list of <a class="underlined"
+href="#build-customization">options and variables</a> for customizing
+your build.
+</p>
+
+<p>
+NOTE: On <b style="font-weight: bold;">Windows</b>, you need to use a specific generator like this:
+`cmake -G"Visual Studio 15 2017 Win64" ..` specifying the Visual
+Studio version and targeting specifically `Win64` (to support
+compilation of AVX/AVX2) Check `cmake -G` to get a full list of
+supported Visual Studio project generators.  This generator will
+create a proper solution `SLEEF.sln` under the build directory.  You
+can still use `cmake --build .` to build without opening Visual
+Studio.
+</p>
+
+<p class="noindent" style="margin-top: 1em;">
+5. Now that you have the build files created by cmake, proceed from the top
+of the build directory:
+</p>
+<pre class="command">$ make</pre>
+
+<p class="noindent">
+6. Install the library under ../my-sleef/install by running:
+</p>
+<pre class="command">$ make install</pre>
+
+<p class="noindent">
+7. You can execute the tests by running:
+</p>
+<pre class="command">$ make test</pre>
+
+<h3 id="build-customization">Build customization</h3>
+
+<p class="noindent">
+Variables dictate how the build is generated; options are defined and undefined,
+respectively, on the cmake command line like this:
+</p>
+<ul style="margin-top: 1em; margin-bottom: 1em;">
+  <li>cmake -DVARIABLE=&lt;value&gt; &lt;cmake-build-dir&gt;</li>
+  <li>cmake -UVARIABLE &lt;cmake-build-dir&gt;</li>
+</ul>
+<p class="noindent">
+Build configurations allow a project to be built in different ways for debug,
+optimized, or any other special set of flags.
+</p>
+
+<h4>CMake Variables</h4>
+
+<ul style="margin-top: 1em; margin-bottom: 1em;">
+  <li>`CMAKE_BUILD_TYPE`: By default, CMake supports the following configuration:</li>
+  <ul>
+    <li>`Release`: Basic optimizations are turned on. This is the default setting.</li>
+    <li>`Debug`: Basic debug flags are turned on. Optimization is disabled.</li>
+    <li>`MinSizeRel`: Builds the smallest (but not fastest) object code</li>
+    <li>`RelWithDebInfo`: Builds optimized code with debug information as well</li>
+  </ul>
+  <li style="margin-top: 1em;">`CMAKE_INSTALL_PREFIX` : The prefix it
+  uses when running `make install`. Defaults to /usr/local on
+  GNU/Linux and MacOS. Defaults to C:/Program Files on Windows.</li>
+  <li style="margin-top: 1em;">`CMAKE_C_FLAGS_RELEASE` : The
+  optimization options used by the compiler.</li>
+  <li style="margin-top: 1em;">`BUILD_TESTS` : Avoid building testing
+  tools if set to FALSE</li>
+  <li style="margin-top: 1em;">`BUILD_GNUABI_LIBS` : Avoid building
+  libraries with GNU ABI if set to FALSE</li>
+  <li style="margin-top: 1em;">`BUILD_DFT` : Avoid building DFT
+  libraries if set to FALSE</li>
+  <li style="margin-top: 1em;">`BUILD_SHARED_LIBS` : Static libs are
+  built if set to FALSE</li>
+  <li style="margin-top: 1em;">`SLEEFDFT_MAXBUTWIDTH` : This variable
+  specifies the maximum length of combined butterfly block used in the
+  DFT. Setting this value to 7 makes DFT faster but compilation takes
+  more time and the library size will be larger.</li>
+</ul>
+
+<h2 id="linux">Compiling and installing library on Linux</h2>
+
+<p class="noindent">
+  In order to build the library, you need to install libmpfr and
+  OpenMP(libmpfr is only required to build the tester, and it is not
+  linked to the library). Please change the directory to sleef-3.X and
+  run the following commands.
+
+  <pre class="command">$ mkdir build
+$ cd build
+$ cmake -DCMAKE_INSTALL_PREFIX=/usr ..
+$ make
+$ make test
+$ sudo make install</pre>
+</p>
+  
+<p class="noindent">
+  In order to uninstall the libraries and headers, run the following command.
+
+  <pre class="command" style="margin-top: 1em;">$ sudo xargs rm -v &lt; install_manifest.txt</pre>
+</p>
+
+<h2 id="debian">Installing library on Debian and Ubuntu</h2>
+
+<p class="noindent">
+  If you are using Debian 10(Buster), Ubuntu 18.04(Bionic) or later,
+  then you can install the library through apt-get. The DFT library
+  will not be installed.
+
+  <pre class="command">$ sudo apt-get update
+$ sudo apt-get install libsleef-dev</pre>
+</p>
+
+<h2 id="MSVC">Compiling library with Microsoft Visual C++</h2>
+
+<p class="noindent">
+  You need Visual Studio 2017. Open developer command prompt for
+  VS2017, change directory to sleef-3.X, and then run the following
+  commands.
+  
+  <pre class="command">D:\sleef-3.X> mkdir build
+D:\sleef-3.X> cd build
+D:\sleef-3.X\build> cmake -G"Visual Studio 15 2017 Win64" ..
+D:\sleef-3.X\build> cmake --build . --config Release -- /maxcpucount:1</pre>
+
+  Note that parallel build is not supported on MSVC.
+</p>
+
+<h2 id="hello">Compiling and running "Hello SLEEF"</h2>
+
+<p class="noindent">
+  Now, let's try compiling the <a class="underlined"
+  href="hellox86.c">source code shown in Fig. 2.1</a>.
+</p>
+
+<pre class="code">
+<code>#include &lt;stdio.h&gt;</code>
+<code>#include &lt;x86intrin.h&gt;</code>
+<code>#include &lt;sleef.h&gt;</code>
+<code></code>
+<code>int main(int argc, char **argv) {</code>
+<code>  double a[] = {2, 10};</code>
+<code>  double b[] = {3, 20};</code>
+<code></code>
+<code>  __m128d va, vb, vc;</code>
+<code>  </code>
+<code>  va = _mm_loadu_pd(a);</code>
+<code>  vb = _mm_loadu_pd(b);</code>
+<code></code>
+<code>  vc = Sleef_powd2_u10(va, vb);</code>
+<code></code>
+<code>  double c[2];</code>
+<code></code>
+<code>  _mm_storeu_pd(c, vc);</code>
+<code></code>
+<code>  printf("pow(%g, %g) = %g\n", a[0], b[0], c[0]);</code>
+<code>  printf("pow(%g, %g) = %g\n", a[1], b[1], c[1]);</code>
+<code>}</code>
+</pre>
+<p style="text-align:center;">
+  Fig. 2.1: <a href="hellox86.c">Source code for testing</a>
+</p>
+
+
+
+<p style="margin-top: 2cm;">
+  Fig.2.2 shows typical commands for compiling and executing the hello
+  code on Linux computers.
+</p>
+
+<pre class="command" style="margin-top: 2.0em; margin-bottom: 0.5cm;">$ gcc hellox86.c -o hellox86 -lsleef
+$ ./hellox86
+pow(2, 3) = 8
+pow(10, 20) = 1e+20
+$ &block;</pre>
+<p style="text-align:center;">
+  Fig. 2.2: Commands for compiling and executing hellox86.c
+</p>
+
+<p style="margin-top: 2cm;">
+  You may need to set LD_LIBRARY_PATH environment variable
+  appropriately. If you are trying to execute the program on Mac OSX
+  or Windows, try copying the DLLs to the current directory.
+</p>
+
+<h2 id="import">Importing SLEEF into your project</h2>
+
+
+<p class="noindent">
+  Below is an example <a class="underlined"
+  href="CMakeLists.txt">CMakeLists.txt</a> for compiling the above
+  hellox86.c. CMake will automatically download SLEEF from GitHub
+  repository, and thus there is no need to include SLEEF in your
+  software package. If you prefer importing SLEEF as a submodule in
+  git, you can use SOURCE_DIR option instead of GIT_REPOSITORY option
+  for ExternalProject_Add.
+</p>
+
+<pre class="code">
+<code>cmake_minimum_required(VERSION 3.4.3)</code>
+<code>include(ExternalProject)</code>
+<code>find_package(Git REQUIRED)</code>
+<code></code>
+<code>ExternalProject_Add(libsleef</code>
+<code>  GIT_REPOSITORY https://github.com/shibatch/sleef</code>
+<code>  CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/contrib</code>
+<code>)</code>
+<code></code>
+<code>include_directories(${CMAKE_BINARY_DIR}/contrib/include)</code>
+<code>link_directories(${CMAKE_BINARY_DIR}/contrib/lib)</code>
+<code></code>
+<code>add_executable(hellox86 hellox86.c)</code>
+<code>add_dependencies(hellox86 libsleef)</code>
+<code>target_link_libraries(hellox86 sleef)</code>
+</pre>
+<p style="text-align:center;">
+  Fig. 2.3: <a href="CMakeLists.txt">Example CMakeLists.txt</a>
+</p>
+
+<p class="footer">
+  Copyright &copy; <!--YEAR--> SLEEF Project.<br/>
+  SLEEF is open-source software and is distributed under the Boost Software License, Version 1.0.
+</p>
+
+<!--TEST-->
+
+</body>
+</html>

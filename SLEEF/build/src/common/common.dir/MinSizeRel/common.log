@@ -1,0 +1,3 @@
+﻿  common.c
+C:\git\sleef-3.X\src\common\common.c(22): warning C4700: uninitialized local variable 't' used
+  common.vcxproj -> C:\git\sleef-3.X\build\src\common\common.dir\MinSizeRel\common.lib

@@ -5,9 +5,10 @@
 
 #include "j.h"
 #include "ve.h"
+// obsolete #define SLEEF C_AVX2
 #if SLEEF
 #ifdef _WIN32
-#include "..\..\sleef-3.X\build\include\sleef.h"
+#include "..\SLEEF\build\include\sleef.h"
 #else
 #include "../sleef/include/sleef.h"
 #endif

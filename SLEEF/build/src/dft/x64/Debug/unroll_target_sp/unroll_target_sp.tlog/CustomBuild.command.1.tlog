@@ -1,0 +1,32 @@
+^C:\GIT\SLEEF-3.X\BUILD\CMAKEFILES\581F795C1D88FB7B5570346CCE82075D\UNROLL_0_PURECSP.C.RULE
+setlocal
+cd C:\git\sleef-3.X\build\src\dft
+if %errorlevel% neq 0 goto :cmEnd
+C:
+if %errorlevel% neq 0 goto :cmEnd
+C:\git\sleef-3.X\build\bin\mkunroll.exe float purecsp sse2sp avxsp avx2sp avx512fsp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\GIT\SLEEF-3.X\BUILD\CMAKEFILES\0389090C4A66C91D3AFD8DA3190AD3B8\UNROLL_TARGET_SP.RULE
+setlocal
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\GIT\SLEEF-3.X\SRC\DFT\CMAKELISTS.TXT
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/git/sleef-3.X -BC:/git/sleef-3.X/build --check-stamp-file C:/git/sleef-3.X/build/src/dft/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

@@ -1,0 +1,202 @@
+^C:\GIT\SLEEF-3.X\BUILD\CMAKEFILES\430F55D323296AE03F79E009B48C3079\SLEEF.H.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -E copy C:/git/sleef-3.X/src/libm/sleeflibm_header.h.org C:/git/sleef-3.X/build/include/sleef.h
+if %errorlevel% neq 0 goto :cmEnd
+echo Generating sleef.h: mkrename "cinz_" "2" "4" "__m128d" "__m128" "__m128i" "__m128i" "__SSE2__"
+if %errorlevel% neq 0 goto :cmEnd
+..\..\bin\mkrename.exe "cinz_" "2" "4" "__m128d" "__m128" "__m128i" "__m128i" "__SSE2__" >> C:/git/sleef-3.X/build/include/sleef.h
+if %errorlevel% neq 0 goto :cmEnd
+echo Generating sleef.h: mkrename "cinz_" "2" "4" "__m128d" "__m128" "__m128i" "__m128i" "__SSE2__" "sse2"
+if %errorlevel% neq 0 goto :cmEnd
+..\..\bin\mkrename.exe "cinz_" "2" "4" "__m128d" "__m128" "__m128i" "__m128i" "__SSE2__" "sse2" >> C:/git/sleef-3.X/build/include/sleef.h
+if %errorlevel% neq 0 goto :cmEnd
+echo Generating sleef.h: mkrename "cinz_" "2" "4" "__m128d" "__m128" "__m128i" "__m128i" "__SSE2__" "sse4"
+if %errorlevel% neq 0 goto :cmEnd
+..\..\bin\mkrename.exe "cinz_" "2" "4" "__m128d" "__m128" "__m128i" "__m128i" "__SSE2__" "sse4" >> C:/git/sleef-3.X/build/include/sleef.h
+if %errorlevel% neq 0 goto :cmEnd
+echo Generating sleef.h: mkrename "cinz_" "4" "8" "__m256d" "__m256" "__m128i" "struct { __m128i x, y; }" "__AVX__"
+if %errorlevel% neq 0 goto :cmEnd
+..\..\bin\mkrename.exe "cinz_" "4" "8" "__m256d" "__m256" "__m128i" "struct { __m128i x, y; }" "__AVX__" >> C:/git/sleef-3.X/build/include/sleef.h
+if %errorlevel% neq 0 goto :cmEnd
+echo Generating sleef.h: mkrename "cinz_" "4" "8" "__m256d" "__m256" "__m128i" "struct { __m128i x, y; }" "__AVX__" "avx"
+if %errorlevel% neq 0 goto :cmEnd
+..\..\bin\mkrename.exe "cinz_" "4" "8" "__m256d" "__m256" "__m128i" "struct { __m128i x, y; }" "__AVX__" "avx" >> C:/git/sleef-3.X/build/include/sleef.h
+if %errorlevel% neq 0 goto :cmEnd
+echo Generating sleef.h: mkrename "finz_" "4" "8" "__m256d" "__m256" "__m128i" "struct { __m128i x, y; }" "__AVX__" "fma4"
+if %errorlevel% neq 0 goto :cmEnd
+..\..\bin\mkrename.exe "finz_" "4" "8" "__m256d" "__m256" "__m128i" "struct { __m128i x, y; }" "__AVX__" "fma4" >> C:/git/sleef-3.X/build/include/sleef.h
+if %errorlevel% neq 0 goto :cmEnd
+echo Generating sleef.h: mkrename "finz_" "4" "8" "__m256d" "__m256" "__m128i" "__m256i" "__AVX__" "avx2"
+if %errorlevel% neq 0 goto :cmEnd
+..\..\bin\mkrename.exe "finz_" "4" "8" "__m256d" "__m256" "__m128i" "__m256i" "__AVX__" "avx2" >> C:/git/sleef-3.X/build/include/sleef.h
+if %errorlevel% neq 0 goto :cmEnd
+echo Generating sleef.h: mkrename "finz_" "2" "4" "__m128d" "__m128" "__m128i" "__m128i" "__SSE2__" "avx2128"
+if %errorlevel% neq 0 goto :cmEnd
+..\..\bin\mkrename.exe "finz_" "2" "4" "__m128d" "__m128" "__m128i" "__m128i" "__SSE2__" "avx2128" >> C:/git/sleef-3.X/build/include/sleef.h
+if %errorlevel% neq 0 goto :cmEnd
+echo Generating sleef.h: mkrename "finz_" "8" "16" "__m512d" "__m512" "__m256i" "__m512i" "__AVX512F__"
+if %errorlevel% neq 0 goto :cmEnd
+..\..\bin\mkrename.exe "finz_" "8" "16" "__m512d" "__m512" "__m256i" "__m512i" "__AVX512F__" >> C:/git/sleef-3.X/build/include/sleef.h
+if %errorlevel% neq 0 goto :cmEnd
+echo Generating sleef.h: mkrename "finz_" "8" "16" "__m512d" "__m512" "__m256i" "__m512i" "__AVX512F__" "avx512f"
+if %errorlevel% neq 0 goto :cmEnd
+..\..\bin\mkrename.exe "finz_" "8" "16" "__m512d" "__m512" "__m256i" "__m512i" "__AVX512F__" "avx512f" >> C:/git/sleef-3.X/build/include/sleef.h
+if %errorlevel% neq 0 goto :cmEnd
+echo Generating sleef.h: mkrename "cinz_" "8" "16" "__m512d" "__m512" "__m256i" "__m512i" "__AVX512F__" "avx512fnofma"
+if %errorlevel% neq 0 goto :cmEnd
+..\..\bin\mkrename.exe "cinz_" "8" "16" "__m512d" "__m512" "__m256i" "__m512i" "__AVX512F__" "avx512fnofma" >> C:/git/sleef-3.X/build/include/sleef.h
+if %errorlevel% neq 0 goto :cmEnd
+echo Generating sleef.h: mkrename "cinz_" "1" "1" "double" "float" "int32_t" "int32_t" "__STDC__" "purec"
+if %errorlevel% neq 0 goto :cmEnd
+..\..\bin\mkrename.exe "cinz_" "1" "1" "double" "float" "int32_t" "int32_t" "__STDC__" "purec" >> C:/git/sleef-3.X/build/include/sleef.h
+if %errorlevel% neq 0 goto :cmEnd
+echo Generating sleef.h: mkrename "finz_" "1" "1" "double" "float" "int32_t" "int32_t" "FP_FAST_FMA" "purecfma"
+if %errorlevel% neq 0 goto :cmEnd
+..\..\bin\mkrename.exe "finz_" "1" "1" "double" "float" "int32_t" "int32_t" "FP_FAST_FMA" "purecfma" >> C:/git/sleef-3.X/build/include/sleef.h
+if %errorlevel% neq 0 goto :cmEnd
+type C:\git\sleef-3.X\src\libm\sleeflibm_footer.h.org >> C:/git/sleef-3.X/build/include/sleef.h
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\GIT\SLEEF-3.X\BUILD\CMAKEFILES\8C03031A1EF2E95BBED273DBE55AF6AD\RENAMEAVX512F.H.RULE
+setlocal
+echo Generating renameavx512f.h: mkrename "finz_" "8" "16" "avx512f"
+if %errorlevel% neq 0 goto :cmEnd
+..\..\bin\mkrename.exe "finz_" "8" "16" "avx512f" > C:/git/sleef-3.X/build/src/libm/include/renameavx512f.h
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\GIT\SLEEF-3.X\BUILD\CMAKEFILES\8C03031A1EF2E95BBED273DBE55AF6AD\RENAMEAVX512FNOFMA.H.RULE
+setlocal
+echo Generating renameavx512fnofma.h: mkrename "cinz_" "8" "16" "avx512fnofma"
+if %errorlevel% neq 0 goto :cmEnd
+..\..\bin\mkrename.exe "cinz_" "8" "16" "avx512fnofma" > C:/git/sleef-3.X/build/src/libm/include/renameavx512fnofma.h
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\GIT\SLEEF-3.X\BUILD\CMAKEFILES\8C03031A1EF2E95BBED273DBE55AF6AD\RENAMEAVX2.H.RULE
+setlocal
+echo Generating renameavx2.h: mkrename "finz_" "4" "8" "avx2"
+if %errorlevel% neq 0 goto :cmEnd
+..\..\bin\mkrename.exe "finz_" "4" "8" "avx2" > C:/git/sleef-3.X/build/src/libm/include/renameavx2.h
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\GIT\SLEEF-3.X\BUILD\CMAKEFILES\8C03031A1EF2E95BBED273DBE55AF6AD\RENAMEAVX2128.H.RULE
+setlocal
+echo Generating renameavx2128.h: mkrename "finz_" "2" "4" "avx2128"
+if %errorlevel% neq 0 goto :cmEnd
+..\..\bin\mkrename.exe "finz_" "2" "4" "avx2128" > C:/git/sleef-3.X/build/src/libm/include/renameavx2128.h
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\GIT\SLEEF-3.X\BUILD\CMAKEFILES\8C03031A1EF2E95BBED273DBE55AF6AD\RENAMEFMA4.H.RULE
+setlocal
+echo Generating renamefma4.h: mkrename "finz_" "4" "8" "fma4"
+if %errorlevel% neq 0 goto :cmEnd
+..\..\bin\mkrename.exe "finz_" "4" "8" "fma4" > C:/git/sleef-3.X/build/src/libm/include/renamefma4.h
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\GIT\SLEEF-3.X\BUILD\CMAKEFILES\8C03031A1EF2E95BBED273DBE55AF6AD\RENAMEAVX.H.RULE
+setlocal
+echo Generating renameavx.h: mkrename "cinz_" "4" "8" "avx"
+if %errorlevel% neq 0 goto :cmEnd
+..\..\bin\mkrename.exe "cinz_" "4" "8" "avx" > C:/git/sleef-3.X/build/src/libm/include/renameavx.h
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\GIT\SLEEF-3.X\BUILD\CMAKEFILES\8C03031A1EF2E95BBED273DBE55AF6AD\RENAMESSE4.H.RULE
+setlocal
+echo Generating renamesse4.h: mkrename "cinz_" "2" "4" "sse4"
+if %errorlevel% neq 0 goto :cmEnd
+..\..\bin\mkrename.exe "cinz_" "2" "4" "sse4" > C:/git/sleef-3.X/build/src/libm/include/renamesse4.h
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\GIT\SLEEF-3.X\BUILD\CMAKEFILES\8C03031A1EF2E95BBED273DBE55AF6AD\RENAMESSE2.H.RULE
+setlocal
+echo Generating renamesse2.h: mkrename "cinz_" "2" "4" "sse2"
+if %errorlevel% neq 0 goto :cmEnd
+..\..\bin\mkrename.exe "cinz_" "2" "4" "sse2" > C:/git/sleef-3.X/build/src/libm/include/renamesse2.h
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\GIT\SLEEF-3.X\BUILD\CMAKEFILES\8C03031A1EF2E95BBED273DBE55AF6AD\RENAMEPUREC_SCALAR.H.RULE
+setlocal
+echo Generating renamepurec_scalar.h: mkrename "cinz_" "1" "1" "purec"
+if %errorlevel% neq 0 goto :cmEnd
+..\..\bin\mkrename.exe "cinz_" "1" "1" "purec" > C:/git/sleef-3.X/build/src/libm/include/renamepurec_scalar.h
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\GIT\SLEEF-3.X\BUILD\CMAKEFILES\8C03031A1EF2E95BBED273DBE55AF6AD\RENAMEPURECFMA_SCALAR.H.RULE
+setlocal
+echo Generating renamepurecfma_scalar.h: mkrename "finz_" "1" "1" "purecfma"
+if %errorlevel% neq 0 goto :cmEnd
+..\..\bin\mkrename.exe "finz_" "1" "1" "purecfma" > C:/git/sleef-3.X/build/src/libm/include/renamepurecfma_scalar.h
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\GIT\SLEEF-3.X\BUILD\CMAKEFILES\EE8D02A2ADA386E4837BABD35296452C\HEADERS.RULE
+setlocal
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\GIT\SLEEF-3.X\SRC\LIBM\CMAKELISTS.TXT
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/git/sleef-3.X -BC:/git/sleef-3.X/build --check-stamp-file C:/git/sleef-3.X/build/src/libm/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

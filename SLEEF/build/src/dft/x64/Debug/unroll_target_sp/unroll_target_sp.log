@@ -1,0 +1,2 @@
+﻿  Generating unroll_0_purecsp.c;unroll_2_purecsp.c;unroll_0_sse2sp.c;unroll_2_sse2sp.c;unroll_0_avxsp.c;unroll_2_avxsp.c;unroll_0_avx2sp.c;unroll_2_avx2sp.c;unroll_0_avx512fsp.c;unroll_2_avx512fsp.c
+  Building Custom Rule C:/git/sleef-3.X/src/dft/CMakeLists.txt

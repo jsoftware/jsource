@@ -1,0 +1,3 @@
+﻿  Building Custom Rule C:/git/sleef-3.X/src/dft/CMakeLists.txt
+  dftcommon.c
+  dftcommon_obj.vcxproj -> C:\git\sleef-3.X\build\src\dft\dftcommon_obj.dir\Debug\dftcommon_obj.lib

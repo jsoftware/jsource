@@ -1,0 +1,96 @@
+Performing C SOURCE FILE Test COMPILER_SUPPORTS_FLOAT128 failed with the following output:
+Change Dir: C:/git/sleef-3.X/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/MSBuild/Current/Bin/MSBuild.exe cmTC_f4adf.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.6.0+5ff7b0c9e for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.26.28805 for x64
+  src.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D COMPILER_SUPPORTS_FLOAT128 /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_f4adf.dir\Debug\\" /Fd"cmTC_f4adf.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue "C:\git\sleef-3.X\build\CMakeFiles\CMakeTmp\src.c"
+C:\git\sleef-3.X\build\CMakeFiles\CMakeTmp\src.c(2,27): error C2065: '__float128': undeclared identifier [C:\git\sleef-3.X\build\CMakeFiles\CMakeTmp\cmTC_f4adf.vcxproj]
+C:\git\sleef-3.X\build\CMakeFiles\CMakeTmp\src.c(2,27): error C2146: syntax error: missing ';' before identifier 'r' [C:\git\sleef-3.X\build\CMakeFiles\CMakeTmp\cmTC_f4adf.vcxproj]
+C:\git\sleef-3.X\build\CMakeFiles\CMakeTmp\src.c(2,29): error C2065: 'r': undeclared identifier [C:\git\sleef-3.X\build\CMakeFiles\CMakeTmp\cmTC_f4adf.vcxproj]
+
+
+Source file was:
+
+  int main() { __float128 r = 1;
+  }
+Performing C SOURCE FILE Test COMPILER_SUPPORTS_WEAK_ALIASES failed with the following output:
+Change Dir: C:/git/sleef-3.X/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/MSBuild/Current/Bin/MSBuild.exe cmTC_ff730.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.6.0+5ff7b0c9e for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.26.28805 for x64
+  src.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D COMPILER_SUPPORTS_WEAK_ALIASES /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /openmp /Fo"cmTC_ff730.dir\Debug\\" /Fd"cmTC_ff730.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue "C:\git\sleef-3.X\build\CMakeFiles\CMakeTmp\src.c"
+C:\git\sleef-3.X\build\CMakeFiles\CMakeTmp\src.c(10,23): error C2061: syntax error: identifier '__attribute__' [C:\git\sleef-3.X\build\CMakeFiles\CMakeTmp\cmTC_ff730.vcxproj]
+C:\git\sleef-3.X\build\CMakeFiles\CMakeTmp\src.c(10,23): error C2059: syntax error: ';' [C:\git\sleef-3.X\build\CMakeFiles\CMakeTmp\cmTC_ff730.vcxproj]
+C:\git\sleef-3.X\build\CMakeFiles\CMakeTmp\src.c(10,42): error C2143: syntax error: missing ')' before ',' [C:\git\sleef-3.X\build\CMakeFiles\CMakeTmp\cmTC_ff730.vcxproj]
+C:\git\sleef-3.X\build\CMakeFiles\CMakeTmp\src.c(12,13): warning C4013: 'g' undefined; assuming extern returning int [C:\git\sleef-3.X\build\CMakeFiles\CMakeTmp\cmTC_ff730.vcxproj]
+
+
+Source file was:
+
+#if defined(__CYGWIN__)
+#define EXPORT __stdcall __declspec(dllexport)
+#else
+#define EXPORT
+#endif
+  EXPORT int f(int a) {
+   return a + 2;
+  }
+  EXPORT int g(int a) __attribute__((weak, alias("f")));
+  int main(void) {
+    return g(2);
+  }
+Performing C SOURCE FILE Test COMPILER_SUPPORTS_BUILTIN_MATH failed with the following output:
+Change Dir: C:/git/sleef-3.X/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/MSBuild/Current/Bin/MSBuild.exe cmTC_7c002.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.6.0+5ff7b0c9e for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.26.28805 for x64
+  src.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D COMPILER_SUPPORTS_BUILTIN_MATH /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /openmp /Fo"cmTC_7c002.dir\Debug\\" /Fd"cmTC_7c002.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue "C:\git\sleef-3.X\build\CMakeFiles\CMakeTmp\src.c"
+C:\git\sleef-3.X\build\CMakeFiles\CMakeTmp\src.c(3,31): warning C4013: '__builtin_sqrt' undefined; assuming extern returning int [C:\git\sleef-3.X\build\CMakeFiles\CMakeTmp\cmTC_7c002.vcxproj]
+C:\git\sleef-3.X\build\CMakeFiles\CMakeTmp\src.c(4,31): warning C4013: '__builtin_sqrtf' undefined; assuming extern returning int [C:\git\sleef-3.X\build\CMakeFiles\CMakeTmp\cmTC_7c002.vcxproj]
+C:\git\sleef-3.X\build\CMakeFiles\CMakeTmp\src.c(4,3): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data [C:\git\sleef-3.X\build\CMakeFiles\CMakeTmp\cmTC_7c002.vcxproj]
+src.obj : error LNK2019: unresolved external symbol __builtin_sqrt referenced in function main [C:\git\sleef-3.X\build\CMakeFiles\CMakeTmp\cmTC_7c002.vcxproj]
+src.obj : error LNK2019: unresolved external symbol __builtin_sqrtf referenced in function main [C:\git\sleef-3.X\build\CMakeFiles\CMakeTmp\cmTC_7c002.vcxproj]
+C:\git\sleef-3.X\build\CMakeFiles\CMakeTmp\Debug\cmTC_7c002.exe : fatal error LNK1120: 2 unresolved externals [C:\git\sleef-3.X\build\CMakeFiles\CMakeTmp\cmTC_7c002.vcxproj]
+
+
+Source file was:
+
+  int main(void) {
+    double a = __builtin_sqrt (2);
+    float  b = __builtin_sqrtf(2);
+  }
+Performing C SOURCE FILE Test COMPILER_SUPPORTS_SYS_GETRANDOM failed with the following output:
+Change Dir: C:/git/sleef-3.X/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/MSBuild/Current/Bin/MSBuild.exe cmTC_8d741.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=16.0 /v:m && Microsoft (R) Build Engine version 16.6.0+5ff7b0c9e for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Microsoft (R) C/C++ Optimizing Compiler Version 19.26.28805 for x64
+  src.c
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D WIN32 /D _WINDOWS /D COMPILER_SUPPORTS_SYS_GETRANDOM /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /openmp /Fo"cmTC_8d741.dir\Debug\\" /Fd"cmTC_8d741.dir\Debug\vc142.pdb" /Gd /TC /errorReport:queue "C:\git\sleef-3.X\build\CMakeFiles\CMakeTmp\src.c"
+C:\git\sleef-3.X\build\CMakeFiles\CMakeTmp\src.c(3,10): fatal error C1083: Cannot open include file: 'unistd.h': No such file or directory [C:\git\sleef-3.X\build\CMakeFiles\CMakeTmp\cmTC_8d741.vcxproj]
+
+
+Source file was:
+
+#define _GNU_SOURCE
+#include <unistd.h>
+#include <sys/syscall.h>
+#include <linux/random.h>
+  int main(void) {
+    int i;
+    syscall(SYS_getrandom, &i, sizeof(i), 0);
+  }

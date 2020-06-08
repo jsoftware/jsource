@@ -134,6 +134,15 @@ common="$OPENMP -fPIC -O2 -fvisibility=hidden -fno-strict-aliasing \
 
 fi
 
+if [ -z "${j64x##*64avx*}" ]; then
+USE_SLEEF="${USE_SLEEF:=0}"
+else
+USE_SLEEF=0
+fi
+if [ $USE_SLEEF -eq 1 ] ; then
+common="$common -DSLEEF=1"
+fi
+
 NO_SHA_ASM="${NO_SHA_ASM:=0}"
 
 if [ $NO_SHA_ASM -ne 0 ] ; then
@@ -205,6 +214,7 @@ LDFLAGS=" -shared -Wl,-soname,libj.so -m32 -lm -ldl $LDOPENMP32 $LDTHREAD"
 OBJS_AESNI=" aes-ni.o "
 SRC_ASM="${SRC_ASM_LINUX32}"
 GASM_FLAGS="-m32"
+LIBSLEEF=../../../../sleef/lib/linux32/libsleef.a
 ;;
 
 linux_j64) # linux intel 64bit nonavx
@@ -214,6 +224,7 @@ LDFLAGS=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP $LDTHREAD"
 OBJS_AESNI=" aes-ni.o "
 SRC_ASM="${SRC_ASM_LINUX}"
 GASM_FLAGS=""
+LIBSLEEF=../../../../sleef/lib/linux/libsleef.a
 ;;
 
 linux_j64avx) # linux intel 64bit avx
@@ -225,6 +236,7 @@ OBJS_FMA=" gemm_int-fma.o "
 OBJS_AESNI=" aes-ni.o "
 SRC_ASM="${SRC_ASM_LINUX}"
 GASM_FLAGS=""
+LIBSLEEF=../../../../sleef/lib/linux/libsleef.a
 ;;
 
 linux_j64avx2) # linux intel 64bit avx2
@@ -236,6 +248,7 @@ OBJS_FMA=" gemm_int-fma.o "
 OBJS_AESNI=" aes-ni.o "
 SRC_ASM="${SRC_ASM_LINUX}"
 GASM_FLAGS=""
+LIBSLEEF=../../../../sleef/lib/linux/libsleef.a
 ;;
 
 raspberry_j32) # linux raspbian arm
@@ -244,6 +257,7 @@ CFLAGS="$common -marm -march=armv6 -mfloat-abi=hard -mfpu=vfp -DRASPI "
 LDFLAGS=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP $LDTHREAD"
 SRC_ASM="${SRC_ASM_RASPI32}"
 GASM_FLAGS=""
+LIBSLEEF=../../../../sleef/lib/raspberry32/libsleef.a
 ;;
 
 raspberry_j64) # linux arm64
@@ -253,6 +267,7 @@ LDFLAGS=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP $LDTHREAD"
 OBJS_AESARM=" aes-arm.o "
 SRC_ASM="${SRC_ASM_RASPI}"
 GASM_FLAGS=""
+LIBSLEEF=../../../../sleef/lib/raspberry/libsleef.a
 ;;
 
 darwin_j32) # darwin x86
@@ -262,6 +277,7 @@ LDFLAGS=" -dynamiclib -lm -ldl $LDOPENMP $LDTHREAD -m32 $macmin"
 OBJS_AESNI=" aes-ni.o "
 SRC_ASM="${SRC_ASM_MAC32}"
 GASM_FLAGS="-m32 $macmin"
+LIBSLEEF=../../../../sleef/lib/darwin32/libsleef.a
 ;;
 
 darwin_j64) # darwin intel 64bit nonavx
@@ -271,6 +287,7 @@ LDFLAGS=" -dynamiclib -lm -ldl $LDOPENMP $LDTHREAD $macmin"
 OBJS_AESNI=" aes-ni.o "
 SRC_ASM="${SRC_ASM_MAC}"
 GASM_FLAGS="$macmin"
+LIBSLEEF=../../../../sleef/lib/darwin/libsleef.a
 ;;
 
 darwin_j64avx) # darwin intel 64bit
@@ -282,6 +299,7 @@ OBJS_FMA=" gemm_int-fma.o "
 OBJS_AESNI=" aes-ni.o "
 SRC_ASM="${SRC_ASM_MAC}"
 GASM_FLAGS="$macmin"
+LIBSLEEF=../../../../sleef/lib/darwin/libsleef.a
 ;;
 
 darwin_j64avx2) # darwin intel 64bit
@@ -293,6 +311,7 @@ OBJS_FMA=" gemm_int-fma.o "
 OBJS_AESNI=" aes-ni.o "
 SRC_ASM="${SRC_ASM_MAC}"
 GASM_FLAGS="$macmin"
+LIBSLEEF=../../../../sleef/lib/darwin/libsleef.a
 ;;
 
 windows_j32) # windows x86
@@ -319,6 +338,7 @@ OBJS_AESNI=" aes-ni.o "
 SRC_ASM="${SRC_ASM_WIN32}"
 OBJS_ASM="${OBJS_ASM_WIN32}"
 GASM_FLAGS=""
+LIBSLEEF=../../../../sleef/lib/win32/libsleef.a
 ;;
 
 windows_j64) # windows intel 64bit nonavx
@@ -341,6 +361,7 @@ OBJS_AESNI=" aes-ni.o "
 SRC_ASM="${SRC_ASM_WIN}"
 OBJS_ASM="${OBJS_ASM_WIN}"
 GASM_FLAGS=""
+LIBSLEEF=../../../../sleef/lib/win/libsleef.a
 ;;
 
 windows_j64avx) # windows intel 64bit avx
@@ -365,6 +386,7 @@ OBJS_AESNI=" aes-ni.o "
 SRC_ASM="${SRC_ASM_WIN}"
 OBJS_ASM="${OBJS_ASM_WIN}"
 GASM_FLAGS=""
+LIBSLEEF=../../../../sleef/lib/win/libsleef.a
 ;;
 
 windows_j64avx2) # windows intel 64bit avx
@@ -389,12 +411,17 @@ OBJS_AESNI=" aes-ni.o "
 SRC_ASM="${SRC_ASM_WIN}"
 OBJS_ASM="${OBJS_ASM_WIN}"
 GASM_FLAGS=""
+LIBSLEEF=../../../../sleef/lib/win/libsleef.a
 ;;
 
 *)
 echo no case for those parameters
 exit
 esac
+
+if [ $USE_SLEEF -ne 1 ] ; then
+LIBSLEEF=
+fi
 
 echo "CFLAGS=$CFLAGS"
 
@@ -405,7 +432,7 @@ fi
 mkdir -p ../bin/$jplatform/$j64x
 mkdir -p obj/$jplatform/$j64x/
 cp makefile-libj obj/$jplatform/$j64x/.
-export CFLAGS LDFLAGS TARGET CFLAGS_SIMD GASM_FLAGS DLLOBJS LIBJDEF LIBJRES OBJS_FMA OBJS_AESNI OBJS_AESARM OBJS_ASM SRC_ASM jplatform j64x
+export CFLAGS LDFLAGS TARGET CFLAGS_SIMD GASM_FLAGS DLLOBJS LIBJDEF LIBJRES LIBSLEEF OBJS_FMA OBJS_AESNI OBJS_AESARM OBJS_ASM SRC_ASM jplatform j64x
 cd obj/$jplatform/$j64x/
 make -f makefile-libj
 cd -

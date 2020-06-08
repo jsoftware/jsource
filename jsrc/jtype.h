@@ -728,9 +728,9 @@ typedef struct {AF valencefns[2];A fgh[3];union { D lD; void *lvp[2]; I lI; I4 l
 #define VTRY1           (I)0x400000      /* monad contains try.             */
 #define VTRY2           (I)0x800000      /* dyad  contains try.             */
 #define VDDOP           (I)0x1000000     /* 24 derived from a derived operator */
-#define VJTFLGOK1X    25    // 25 monad can handle in-place args
+#define VJTFLGOK1X    25    // 25 monad can handle flags in jt
 #define VJTFLGOK1     (((I)1)<<VJTFLGOK1X)
-#define VJTFLGOK2X    26    // 26 dyad can handle in-place args
+#define VJTFLGOK2X    26    // 26 dyad can  handle flags in jt
 #define VJTFLGOK2     (((I)1)<<VJTFLGOK2X)
 #define VASGSAFEX     27
 #define VASGSAFE      (((I)1)<<VASGSAFEX)     // does not alter locale/path

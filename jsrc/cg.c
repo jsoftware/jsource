@@ -360,7 +360,8 @@ static DF2(jtcasei12){A vres,z;I gerit[128/SZI],ZZFLAGWORD;
     }
    //  pull the function for the value, execute on the value (ASSUMEBOXATOP, WILLBEOPENED, COUNTITEMS)
     A fs=AAV(FAV(self)->fgh[2])[currres];  // fetch the gerund to execute
-    RZ(z=(FAV(fs)->valencefns[ZZFLAGWORD>>ZZFLAGISDYADX])(jtinplace,virta,ZZFLAGWORD&ZZFLAGISDYAD?virtw:fs,fs));  // execute gerund at infinite rank, inplace
+    RZ(z=(FAV(fs)->valencefns[ZZFLAGWORD>>ZZFLAGISDYADX])((J)((REPSGN(SGNIF(FAV(fs)->flag,(ZZFLAGWORD>>ZZFLAGISDYADX)+VJTFLGOK1X))|~JTFLAGMSK)&(I)jtinplace),
+     virta,ZZFLAGWORD&ZZFLAGISDYAD?virtw:fs,fs));  // execute gerund at infinite rank, inplace
 
 #define ZZBODY  // assemble results
 #include "result.h"
@@ -407,7 +408,7 @@ static DF2(jtcasei12){A vres,z;I gerit[128/SZI],ZZFLAGWORD;
    if(ZZFLAGWORD&ZZFLAGISDYAD){
     zz=rank2ex(a,w,z,MAX(ar,0),MAX(wr,0),MAX(ar,0),MAX(wr,0),FAV(z)->valencefns[1]);  // Execute on all cells
    }else{
-    zz=rank1ex(w,z,MAX(wr,0),FAV(z)->valencefns[0]);  // Execute on all cells
+    zz=rank1ex(w,z,MAX(wr,0),FAV(z)->valencefns[0]);  // Execute on all cells8
    }
   }
   EPILOG(zz);
@@ -416,7 +417,7 @@ static DF2(jtcasei12){A vres,z;I gerit[128/SZI],ZZFLAGWORD;
   I vx=i0(vres); RE(0);  // fetch index of gerund
   vx+=REPSGN(vx)&AN(FAV(self)->fgh[2]); ASSERT(BETWEENO(vx,0,AN(FAV(self)->fgh[2])),EVINDEX);
   A ger=AAV(FAV(self)->fgh[2])[vx];  // the selected gerund
-  R (FAV(ger)->valencefns[state>>ZZFLAGISDYADX])(FAV(ger)->flag&(((state>>ZZFLAGISDYADX)+1)<<VJTFLGOK1X)?jtinplace:jt,a,state&ZZFLAGISDYAD?w:ger,ger);  // inplace if the verb can handle it
+  R (FAV(ger)->valencefns[state>>ZZFLAGISDYADX])((J)((REPSGN(SGNIF(FAV(ger)->flag,(state>>ZZFLAGISDYADX)+VJTFLGOK1X))|~JTFLAGMSK)&(I)jtinplace),a,state&ZZFLAGISDYAD?w:ger,ger);  // inplace if the verb can handle it
  }
 }
 

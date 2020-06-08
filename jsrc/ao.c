@@ -487,11 +487,20 @@ static F1(jtkeytallysp){PROLOG(0015);A b,e,q,x,y,z;I c,d,j,k,*u,*v;P*p;
  EPILOG(z);
 }    /* x #/.y , sparse x */
 
+#if 0  // obsolete
 #define KEYTALLY(T)     {T*u;                             \
                          u=(T*)av; I npart=0; DQ(n, I *ta=qv+*u++; I t=*ta; *ta=t+1; npart+=SGNTO0(t-1););  \
                          GATV0(z,INT,npart,1); zv=AV(z);  /* output area: one per bucket */ \
                          u=(T*)av; I tally; do{v=qv+*u++; tally=*v; *v=0; *zv=tally; tally=SGNTO0(-tally); zv+=tally;}while(npart-=tally);}
 // obsolete                          u=(T*)av; DQ(n, v=qv+*u++; if(*v){*zv++=*v; *v=0; if(s==++j)break;});}
+#else
+// Create total # of each type in av[]; npart is #distinct values.  Counters are ainitialized to -1
+#define KEYTALLY(T) { \
+ T *u;  u=(T*)av; npart=0; DQ(n, I *ta=qv+*u++; I t=*ta; I firstinc=SGNTO0(t); *ta=t+firstinc+1; npart+=firstinc;); \
+ GATV0(z,INT,npart,1); zv=AV(z);  /* output area: one per bucket */ \
+ u=(T*)av; I tally; do{v=qv+*u++; tally=*v; *v=-1; *zv=tally; tally=SGNTO0(-tally); zv+=tally;}while(npart-=tally); \
+ }
+#endif
 
 static DF2(jtkeytally){PROLOG(0016);A q;I at,*av,j=0,k,n,r,s,*qv,*u,*v;
  RZ(a&&w);
@@ -505,7 +514,8 @@ static DF2(jtkeytally){PROLOG(0016);A q;I at,*av,j=0,k,n,r,s,*qv,*u,*v;
   // small-range case with s buckets.
 // obsolete  GATV0(z,INT,s,1); zv=AV(z);  // output area: one per bucket
   GATV0(q,INT,s,1); qv=AV(q)-r;   // biased start of area where we count occurrences
-  u=qv+r; DQ(s, *u++=0;);   // clear the counters to 0
+  u=qv+r; DQ(s, *u++=-1;);   // clear the counters to -1
+  I npart;  // number of result values
   switch(CTTZ(at)){
    case LITX: KEYTALLY(UC); break;
    case C2TX: KEYTALLY(US); break;
@@ -513,40 +523,85 @@ static DF2(jtkeytally){PROLOG(0016);A q;I at,*av,j=0,k,n,r,s,*qv,*u,*v;
    case SBTX: KEYTALLY(SB); break;
    case INTX: KEYTALLY(I ); break;
   }
+
 // obsolete   AN(z)=*AS(z)=s-j;   // see how many different values there actually were
   EPILOG(z);
  }
  // here when small-range not applicable
- RZ(q=indexof(a,a)); realizeifvirtual(q);   // self-classify the atoms of a
- if(!AR(q))R iv1; 
- v=qv=AV(q);
+ RZ(q=indexof(a,a)); /* obsolete realizeifvirtual(q);*/   // self-classify the atoms of a
+// obsolete if(!AR(q))R iv1; 
+// obsolete  v=
+ qv=AV(q);
 // obsolete  u=qv; DQ(n, ++*(qv+*u++););
- u=qv; I npart=0; DO(n, I tu=*u++; ++*(qv+tu); npart+=REPSGN(tu-i)+1;);   // total each different value in its first occurrence, by adding to the index; so result is (index+#higher-or-equal values mapped to it)
- *AS(q)=AN(q)=npart;
+// obsolete  u=qv; I npart=0; DO(n, I tu=*u++; ++*(qv+tu); npart+=REPSGN(tu-i)+1;);   // total each different value in its first occurrence, by adding to the index; so result is (index+#higher-or-equal values mapped to it)
+ u=qv; I npart=0;  // scan pointer for slots; number of unique values
+ I *chn=qv;  // pointer to first of the most recent string of consecutive misses.  The value stored there is -(#misses)
+ do{
+  I ux=*u;  // fetch index for slot being analyzed
+  I* acux=&qv[ux];  // address of contents at ux: pointer to the value being incremented
+  I cux=*acux;  // value being incremented
+  cux=acux==u?0:cux;  // if this is the first time encountering this slot, remove the index value so count starts at 0
+  *chn=chn-u;  // chn points to previous miss position, which is u if the previous slot was not a miss.  In case u is a miss, store # consecutive misses (neg)
+  *acux=cux+1;   // increment the total count.  If previous slot was not a miss, and this also, this overwrites the write to the chain
+  ++u;  // advance to next slot
+  chn=--cux<0?u:chn;  // move chain if the current slot is not a miss
+  npart+=SGNTO0(cux);  // if not a miss, increment count of unique values
+ }while(--n);  // n is gone now
+ A z;I *zv; I skipmsk;
+ GATV0(z,INT,npart,1); zv=AV(z);  /* output area: one per bucket */
+ u=qv;
+ // move values from q to z.  If an encountered count is negative, don't advance the output pointer, but skip that many slots of input
+ do{
+  I tally=*u; *zv=tally;  // presumptively move one value
+  skipmsk=REPSGN(tally);  // ~0 if this is a skip
+  u-=skipmsk&tally;  // if neg, skip by the count given
+  ++skipmsk;  // now skipmsk is 1 if no skip, 0 if skip
+  zv+=skipmsk; u+=skipmsk; // advance if there was no skip
+ }while(npart-=skipmsk);  // loop till all non-skips have been written
+ EPILOG(z);
+
+// obsolete  *AS(q)=AN(q)=npart;
 // obsolete  u=qv; DO(n, k=*u++; if(i<k){j+=*v++=k-i; if(n==j)break;});
- u=qv; I tally; I indx=0; I *vend=v+npart; do{tally=*u++-indx; *v=tally; ++indx; tally=REPSGN(tally); v+=tally+1;}while(v!=vend);  // calc tally in each slot, which is never 0
+// obsolete  u=qv; I tally; I indx=0; I *vend=v+npart; do{tally=*u++-indx; *v=tally; ++indx; tally=REPSGN(tally); v+=tally+1;}while(v!=vend);  // calc tally in each slot, which is never 0
 // obsolete  *AS(q)=AN(q)=v-qv;
- EPILOG(q);
+// obsolete  EPILOG(q);
 }    /* x #/.y main control & dense x */
 
-
+#if 0 // obsolete
 #define KEYHEADTALLY(Tz,Ta,Tw,exp0,exp1)  \
  {Ta*u;Tw*wv=(Tw*)AV(w);Tz*zz=(Tz*)zv;    \
   u=(Ta*)av; DQ(n, ++*(qv+*u++););        \
   u=(Ta*)av; DO(n, v=qv+*u++; if(*v){*zz++=exp0; *zz++=exp1; k+=*v; if(n==k)break; *v=0;}); \
   AN(z)=zz-(Tz*)zv;                       \
  }
+#endif
 
-static DF2(jtkeyheadtally){PROLOG(0017);A f,q,x,y,z;B b;I at,*av,k,n,r,s,*qv,*u,*v,wt,*zv;
+// npart is #distinct values.  Counters are initialized to -1
+// Each row has the type of the final result (Tw) but what is stored in it is actually two INTs: frequency and original slot#.
+// The order depends on b, which is the index the tally should be stored to
+#define KEYHEADBUILD(Ta) { \
+ Ta *u;  u=(Ta*)av; npart=0; DQ(n, I *ta=qv+*u++; I t=*ta; I firstinc=SGNTO0(t); *ta=t+firstinc+1; npart+=firstinc;); \
+ GATV0(z,wt&FL?FL:INT,2*npart,2); zv=AV(z); AS(z)[0]=npart; AS(z)[1]=2; I zinc=wt&FL?(SZD*2):(SZI*2);   /* output area: one per bucket */ \
+ u=(Ta*)av; I tally; I headx=0; I i=npart; do{v=qv+*u++; tally=*v; *v=-1; zv[b^1]=headx++; zv[b]=tally; tally=REPSGN(-tally); zv=(I*)((I)zv+(tally&zinc));}while(i+=tally); \
+ }
+
+// process the result of the above.  If the type of w is FL (case 1), we must convert the frequency to FL.
+#define KEYHEADFILL(Tw,Tz,casen) { \
+ Tz *optr=(Tz*)AV(z); Tw *wv=AV(w); \
+ DQ(npart, I *iptr=(I*)optr; Tz head=wv[iptr[b^1]]; if(casen==1)optr[b]=iptr[b]; optr[b^1]=head; optr+=2;) \
+}
+
+
+static DF2(jtkeyheadtally){PROLOG(0017);A f,q,x,y,z;B b;I at,*av,k,n,r,*qv,*u,*v,wt,*zv;
  RZ(a&&w);
  SETIC(a,n); wt=AT(w);
  ASSERT(n==SETIC(w,k),EVLENGTH);
 // obsolete  ASSERT(!n||wt&NUMERIC,EVDOMAIN);
  ASSERT((-n&((wt&NUMERIC)-1))>=0,EVDOMAIN); // OK if n=0 or numeric w
- if(SPARSE&AT(a)||1<AR(w)||!n||!AN(a))R key(a,w,self);
- CRT rng = keyrs(a,MAX(2*n,65536)); at=rng.type; r=rng.minrange.min; s=rng.minrange.range;
+ if(SPARSE&AT(a)||1<AR(w)||!n||!AN(a))R key(a,w,self);  // if sparse or w has rank>1 or a has no cells or no stoms, revert
  av=AV(a); 
- f=FAV(self)->fgh[0]; f=VAV(f)->fgh[0]; b=CHEAD==ID(f);
+ f=FAV(self)->fgh[0]; f=VAV(f)->fgh[0]; b=CHEAD==ID(f);  // b is 1 for {.,#  0 for #,{.  i. e. index of tally
+ CRT rng = keyrs(a,MAX(2*n,65536)); at=rng.type; r=rng.minrange.min; I s=rng.minrange.range;
  if(at&B01&&1>=AR(a)){B*p=(B*)av;I i,j,m;  // first special case: boolean list/atom
 // obsolete   c=d=p;
   if(*p){i=0; B *d=(B*)memchr(p,C0,n); j=d-p; j=d?j:0;} // i=index of first 1, j=index of first 0 (0 if not found)
@@ -560,10 +615,25 @@ static DF2(jtkeyheadtally){PROLOG(0017);A f,q,x,y,z;B b;I at,*av,k,n,r,s,*qv,*u,
   RZ(x=w=from(x,w)); x=b?x:y; y=b?y:w; R stitch(x,y);
  }
 // obsolete  if(at&LIT+C2T+C4T+INT+SBT&&wt&B01+INT+FL&&s){  // second special case: small-range
- if((-(at&LIT+C2T+C4T+INT+SBT)&-(wt&B01+INT+FL)&-s)<0){  // second special case: small-range on integral x
-  GA(z,wt&FL?FL:INT,2*s,2,0); zv=AV(z);
-  GATV0(q,INT,s,1); qv=AV(q)-r;
-  u=qv+r; DQ(s, *u++=0;); k=0;
+ if((-(at&LIT+C2T+C4T+INT+SBT)&-(wt&B01+INT+FL)&-s)<0){  // second special case: small-range on integral x when w is a compatible type
+  GATV0(q,INT,s,1); qv=AV(q)-r;  // allocate the frequency table
+  u=qv+r; DQ(s, *u++=-1;);  // initialize frequencies to -1
+  // build the result table, containing integers.  The table holds frequency and index of the value
+  I npart;  // number of result values
+  switch(CTTZ(at)){
+   case LITX: KEYHEADBUILD(UC); break;
+   case C2TX: KEYHEADBUILD(US); break;
+   case C4TX: KEYHEADBUILD(C4); break;
+   case SBTX: KEYHEADBUILD(SB); break;
+   case INTX: KEYHEADBUILD(I ); break;
+  }
+  // replace the head indexes with the value there
+  if(wt&INT)KEYHEADFILL(I,I,0)
+  else if(wt&FL)KEYHEADFILL(D,D,1)
+  else KEYHEADFILL(B,I,0)
+#if 0  // obsolete
+  GA(z,wt&FL?FL:INT,2*s,2,0); zv=AV(z);  // output area is INT/FL depending on w
+ k=0;
   r=0; r=at&C2T?3:r; r=at&INT?6:r; r=at&C4T?9:r; r=at&SBT?12:r; 
   switch(15*b+r+((wt>>INTX)&3)){
    case  0: KEYHEADTALLY(I,UC,B,*v,   wv[i]); break;
@@ -598,9 +668,49 @@ static DF2(jtkeyheadtally){PROLOG(0017);A f,q,x,y,z;B b;I at,*av,k,n,r,s,*qv,*u,
    case 29: KEYHEADTALLY(D,SB,D,wv[i],(D)*v); break;
   }
   *AS(z)=AN(z)>>1; *(1+AS(z))=2;
- }else{  // no special processing
+#endif
+ }else{  // must self-classify a
   RZ(q=indexof(a,a));
-  x=repeat(eq(q,IX(n)),w); y=keytally(q,q,0L); z=stitch(b?x:y,b?y:x);
+  // if w is compatible with INT (i. e. is B01+INT+FL list), scan the self-classify result 
+  if(wt&B01+INT+FL){
+   // obsolete  v=
+   qv=AV(q);
+// obsolete  u=qv; DQ(n, ++*(qv+*u++););
+// obsolete  u=qv; I npart=0; DO(n, I tu=*u++; ++*(qv+tu); npart+=REPSGN(tu-i)+1;);   // total each different value in its first occurrence, by adding to the index; so result is (index+#higher-or-equal values mapped to it)
+   u=qv; I npart=0;  // scan pointer for slots; number of unique values
+   I *chn=qv;  // pointer to first of the most recent string of consecutive misses.  The value stored there is -(#misses)
+   do{
+    I ux=*u;  // fetch index for slot being analyzed
+    I* acux=&qv[ux];  // address of contents at ux: pointer to the value being incremented
+    I cux=*acux;  // value being incremented
+    cux=acux==u?0:cux;  // if this is the first time encountering this slot, remove the index value so count starts at 0
+    *chn=chn-u;  // chn points to previous miss position, which is u if the previous slot was not a miss.  In case u is a miss, store # consecutive misses (neg)
+    *acux=cux+1;   // increment the total count.  If previous slot was not a miss, and this also, this overwrites the write to the chain
+    ++u;  // advance to next slot
+    chn=--cux<0?u:chn;  // move chain if the current slot is not a miss
+    npart+=SGNTO0(cux);  // if not a miss, increment count of unique values
+   }while(--n);  // n is gone now
+   I *zv; I skipmsk;
+   GATV0(z,wt&FL?FL:INT,2*npart,2); AS(z)[0]=npart; AS(z)[1]=2; I *u0=u=qv;
+   // move values from q to z.  If an encountered count is negative, don't advance the output pointer, but skip that many slots of input
+#define KEYHEADFILLGEN(Tw,Tz) \
+   {Tz *zv=AV(z);  /* output scan pointer */ \
+   Tw *wv=AV(w);  /* start of w list */ \
+   do{ \
+    I tally=*u; zv[b]=tally;  /* presumptively move one count... */ \
+    zv[b^1]=wv[u-u0];  /* ...and headvalue */ \
+    skipmsk=REPSGN(tally);  /* ~0 if this is a skip */ \
+    u-=skipmsk&tally;  /* if neg, skip by the count given */ \
+    ++skipmsk;  /* now skipmsk is 1 if no skip, 0 if skip */ \
+    zv+=skipmsk*2; u+=skipmsk; /* advance if there was no skip */ \
+   }while(npart-=skipmsk);  /* loop till all non-skips have been written */ \
+   }
+   if(wt&INT)KEYHEADFILLGEN(I,I)
+   else if(wt&FL)KEYHEADFILLGEN(D,D)
+   else KEYHEADFILLGEN(B,I)
+  }else{  // no special processing
+   x=repeat(eq(q,IX(n)),w); y=keytally(q,q,0L); z=stitch(b?x:y,b?y:x);  // (((i.~a) = i. # a) # w) ,. (#/.~ i.~ a)   for ({. , #)
+  }
  }
  EPILOG(z);
 }    /* x ({.,#)/.y or x (#,{.)/.y */

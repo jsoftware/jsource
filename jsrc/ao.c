@@ -541,7 +541,8 @@ static DF2(jtkeytally){PROLOG(0016);A q;I at,*av,j=0,k,n,r,s,*qv,*u,*v;
   I* acux=&qv[ux];  // address of contents at ux: pointer to the value being incremented
   I cux=*acux;  // value being incremented
   cux=acux==u?0:cux;  // if this is the first time encountering this slot, remove the index value so count starts at 0
-  *chn=chn-u;  // chn points to previous miss position, which is u if the previous slot was not a miss.  In case u is a miss, store # consecutive misses (neg)
+  *chn=(I)chn-(I)u;  // chn points to previous miss position, which is u if the previous slot was not a miss.  In case u is a miss, store # consecutive misses (neg)
+       // OK to use byte distance, since it can't span more than half the address space
   *acux=cux+1;   // increment the total count.  If previous slot was not a miss, and this also, this overwrites the write to the chain
   ++u;  // advance to next slot
   chn=--cux<0?u:chn;  // move chain if the current slot is not a miss
@@ -554,7 +555,7 @@ static DF2(jtkeytally){PROLOG(0016);A q;I at,*av,j=0,k,n,r,s,*qv,*u,*v;
  do{
   I tally=*u; *zv=tally;  // presumptively move one value
   skipmsk=REPSGN(tally);  // ~0 if this is a skip
-  u-=skipmsk&tally;  // if neg, skip by the count given
+  u=(I*)((I)u-(skipmsk&tally));  // if neg, skip by the count given - it's in bytes
   ++skipmsk;  // now skipmsk is 1 if no skip, 0 if skip
   zv+=skipmsk; u+=skipmsk; // advance if there was no skip
  }while(npart-=skipmsk);  // loop till all non-skips have been written
@@ -581,8 +582,8 @@ static DF2(jtkeytally){PROLOG(0016);A q;I at,*av,j=0,k,n,r,s,*qv,*u,*v;
 // The order depends on b, which is the index the tally should be stored to
 #define KEYHEADBUILD(Ta) { \
  Ta *u;  u=(Ta*)av; npart=0; DQ(n, I *ta=qv+*u++; I t=*ta; I firstinc=SGNTO0(t); *ta=t+firstinc+1; npart+=firstinc;); \
- GATV0(z,wt&FL?FL:INT,2*npart,2); zv=AV(z); AS(z)[0]=npart; AS(z)[1]=2; I zinc=wt&FL?(SZD*2):(SZI*2);   /* output area: one per bucket */ \
- u=(Ta*)av; I tally; I headx=0; I i=npart; do{v=qv+*u++; tally=*v; *v=-1; zv[b^1]=headx++; zv[b]=tally; tally=REPSGN(-tally); zv=(I*)((I)zv+(tally&zinc));}while(i+=tally); \
+ GATV0(z,wt&FL?FL:INT,2*npart,2); zv=IAV(z)+b; I bc=1-(b<<1); AS(z)[0]=npart; AS(z)[1]=2; I zinc=wt&FL?(SZD*2):(SZI*2);   /* output area: one per bucket offset zv to offset of tally */ \
+ u=(Ta*)av; I tally; I headx=0; I i=npart; do{v=qv+*u++; tally=*v; *v=-1; zv[bc]=headx++; zv[0]=tally; tally=REPSGN(-tally); zv=(I*)((I)zv+(tally&zinc));}while(i+=tally); \
  }
 
 // process the result of the above.  If the type of w is FL (case 1), we must convert the frequency to FL.
@@ -592,7 +593,7 @@ static DF2(jtkeytally){PROLOG(0016);A q;I at,*av,j=0,k,n,r,s,*qv,*u,*v;
 }
 
 
-static DF2(jtkeyheadtally){PROLOG(0017);A f,q,x,y,z;B b;I at,*av,k,n,r,*qv,*u,*v,wt,*zv;
+static DF2(jtkeyheadtally){PROLOG(0017);A f,q,x,y,z;I b;I at,*av,k,n,r,*qv,*u,*v,wt,*zv;
  RZ(a&&w);
  SETIC(a,n); wt=AT(w);
  ASSERT(n==SETIC(w,k),EVLENGTH);
@@ -684,7 +685,7 @@ static DF2(jtkeyheadtally){PROLOG(0017);A f,q,x,y,z;B b;I at,*av,k,n,r,*qv,*u,*v
     I* acux=&qv[ux];  // address of contents at ux: pointer to the value being incremented
     I cux=*acux;  // value being incremented
     cux=acux==u?0:cux;  // if this is the first time encountering this slot, remove the index value so count starts at 0
-    *chn=chn-u;  // chn points to previous miss position, which is u if the previous slot was not a miss.  In case u is a miss, store # consecutive misses (neg)
+    *chn=(I)chn-(I)u;  // chn points to previous miss position, which is u if the previous slot was not a miss.  In case u is a miss, store # consecutive misses (neg).  Can't overflow, even as bytes
     *acux=cux+1;   // increment the total count.  If previous slot was not a miss, and this also, this overwrites the write to the chain
     ++u;  // advance to next slot
     chn=--cux<0?u:chn;  // move chain if the current slot is not a miss
@@ -697,11 +698,12 @@ static DF2(jtkeyheadtally){PROLOG(0017);A f,q,x,y,z;B b;I at,*av,k,n,r,*qv,*u,*v
 #define KEYHEADFILLGEN(Tw,Tz) \
    {Tz *zv=AV(z);  /* output scan pointer */ \
    Tw *wv=AV(w);  /* start of w list */ \
+   zv+=b; I bc=1-(b<<1);  /* advance zv to point to tally slot, bc the  distance to the head */ \
    do{ \
-    I tally=*u; zv[b]=tally;  /* presumptively move one count... */ \
-    zv[b^1]=wv[u-u0];  /* ...and headvalue */ \
+    I tally=*u; zv[0]=tally;  /* presumptively move one count... */ \
+    zv[bc]=wv[u-u0];  /* ...and headvalue */ \
     skipmsk=REPSGN(tally);  /* ~0 if this is a skip */ \
-    u-=skipmsk&tally;  /* if neg, skip by the count given */ \
+    u=(I*)((I)u-(skipmsk&tally));  /* if neg, skip by the count given - it's in bytes */ \
     ++skipmsk;  /* now skipmsk is 1 if no skip, 0 if skip */ \
     zv+=skipmsk*2; u+=skipmsk; /* advance if there was no skip */ \
    }while(npart-=skipmsk);  /* loop till all non-skips have been written */ \

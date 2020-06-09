@@ -90,10 +90,12 @@ F2(jtforeign){I p,q;
   case XC(2,1):   R SDERIV(CIBEAM, jthostne,     0,            VASGSAFE,1,   RMAX,RMAX);
   case XC(2,2):   R SDERIV(CIBEAM, jthostio,     0,            VASGSAFE,1,   RMAX,RMAX);
   case XC(2,3):   R SDERIV(CIBEAM, jtjwait,      0,            VASGSAFE,0,   RMAX,RMAX);
+// (2,4) reserved for messages from host OS
   case XC(2,5):   R SDERIV(CIBEAM, jtjgetenv,    0,            VASGSAFE,1,   RMAX,RMAX);
   case XC(2,6):   R SDERIV(CIBEAM, jtjgetpid,    0,            VASGSAFE,1,   RMAX,RMAX);
   case XC(2,7):   R SDERIV(CIBEAM, jtjgetx,      0,            VASGSAFE,1,   RMAX,RMAX);
   case XC(2,8):   R SDERIV(CIBEAM, jtcerrno,     0,            VASGSAFE,RMAX,RMAX,RMAX);
+// (2,9) reserved for messages from host OS
   case XC(2,55):  R CDERIV(CIBEAM,jtjoff,0,VASGSAFE,RMAX,0,0);
 
   case XC(3,0):   R CDERIV(CIBEAM, jtstype,      0,            VASGSAFE,RMAX,RMAX,RMAX);

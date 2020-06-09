@@ -51,7 +51,7 @@ A hx; RZ(hx=(h1)((J)(intptr_t)(((I)jt) + (REPSGN(SGNIF(FAV(hs)->flag,VJTFLGOK1X)
 /* the call to f is inplaceable if the caller allowed inplacing, and f is inplaceable, and the hx is NOT the same as y.  Here only the LSB of jtinplace is used */ \
 A fx; RZ(fx=(f1)((J)(intptr_t)(((I)jt) + (REPSGN(SGNIF(FAV(fs)->flag,VJTFLGOK1X)) & (((I)jtinplace&(I )(hx!=w)) + ((FAV(gs)->flag2>>(VF2WILLOPEN2AX-VF2WILLOPEN1X)) & VF2WILLOPEN1+VF2USESITEMCOUNT1)))),w,fs)); \
 /* The call to g is inplaceable if g allows it, UNLESS fx or hx is the same as disallowed y.  Pass in WILLOPEN from the input */ \
-POPZOMB; RZ(z=(g2)((J)(intptr_t)((((I)jtinplace&(~(JTINPLACEA+JTINPLACEW)))|((I )(fx!=protw)*JTINPLACEA+(I )(hx!=protw)*JTINPLACEW))&(FAV(gs)->flag&VJTFLGOK2?~0:~JTFLAGMSK)),fx,hx,gs));}
+POPZOMB; RZ(z=(g2)((J)(intptr_t)((((I)jtinplace&(~(JTINPLACEA+JTINPLACEW)))|((I )(fx!=protw)*JTINPLACEA+(I )(hx!=protw)*JTINPLACEW))&(REPSGN(SGNIF(FAV(gs)->flag,VJTFLGOK2X))|~JTFLAGMSK)),fx,hx,gs));}
 
 #define FOLK2 {PUSHZOMB; A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)(intptr_t)((I)a+((I)jtinplace&JTINPLACEA)); \
 /* the call to h is not inplaceable, but it may allow WILLOPEN and USESITEMCOUNT.  Inplace h if f is x@], but not if a==w  Actually we turn off all flags here if a==w, for comp ease */ \
@@ -60,7 +60,7 @@ A hx; RZ(hx=(h2)((J)(intptr_t)(((I)jt) + ((-((FAV(hs)->flag>>VJTFLGOK2X)&(I )(a!
 /* the call to f is inplaceable if the caller allowed inplacing, and f is inplaceable; but only where hx is NOT the same as x or y.  Both flags in jtinplace are used */ \
 A fx; RZ(fx=(f2)((J)(intptr_t)(((I)jt) + (REPSGN(SGNIF(FAV(fs)->flag,VJTFLGOK2X)) & (((I)jtinplace&(JTINPLACEA*(I )(hx!=a)+(I )(hx!=w))) + ((FAV(gs)->flag2>>(VF2WILLOPEN2AX-VF2WILLOPEN1X)) & VF2WILLOPEN1+VF2USESITEMCOUNT1)))),a,w,fs)); \
 /* The call to g is inplaceable if g allows it, UNLESS fx or hx is the same as disallowed y.  Pass in WILLOPEN from the input */ \
-POPZOMB; RZ(z=(g2)((J)(intptr_t)((((I)jtinplace&(~(JTINPLACEA+JTINPLACEW)))|(((I )(fx!=protw)&(I )(fx!=prota))*JTINPLACEA+((I )(hx!=protw)&(I )(hx!=prota)*JTINPLACEW)))&(FAV(gs)->flag&VJTFLGOK2?~0:~JTFLAGMSK)),fx,hx,gs));}
+POPZOMB; RZ(z=(g2)((J)(intptr_t)((((I)jtinplace&(~(JTINPLACEA+JTINPLACEW)))|(((I )(fx!=protw)&(I )(fx!=prota))*JTINPLACEA+((I )(hx!=protw)&(I )(hx!=prota)*JTINPLACEW)))&(REPSGN(SGNIF(FAV(gs)->flag,VJTFLGOK2X))|~JTFLAGMSK)),fx,hx,gs));}
 // similar for cap, but now we can inplace the call to h
 #define CAP1 {PUSHZOMB; A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); \
 A hx; RZ(hx=(h1)((J)(intptr_t)(((I)jtinplace&(~(JTWILLBEOPENED+JTCOUNTITEMS))) + (REPSGN(SGNIF(FAV(hs)->flag,VJTFLGOK1X)) & FAV(gs)->flag2 & JTWILLBEOPENED+JTCOUNTITEMS)),w,hs));  /* inplace g.  jtinplace is set for g */ \

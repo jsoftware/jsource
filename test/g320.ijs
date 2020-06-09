@@ -541,6 +541,16 @@ test=: 4 : '((n,x)$''x'') (,"1 -: cat"1) (n,y)$''y'''
 
 test"0/~i.20
 
+NB. read-only (AVRO) not modified
+xx =: i. 3
+xx =: >: xx
+0 1 2 -: i. 3
+3 : 0 ''
+xx =. i. 3
+xx =. >: xx
+0 1 2 -: i. 3
+)
+
 4!:55 ;:'adot1 adot2 sdot0 cat f n r t test x xx y yy'
 randfini''
 

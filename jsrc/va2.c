@@ -656,8 +656,10 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
   // The ordering here assumes that jtinplace will usually be set
 // alternative  if(((I)jtinplace&1) && (AC(w)<ACUC1 || AC(w)==ACUC1&&jt->assignsym&&jt->assignsym->val==w&&!(adocv.cv&VCANHALT && jt->asgzomblevel<2))){z=w; if(TYPESNE(AT(w),zt))MODBLOCKTYPE(z,zt)  //  Uses JTINPLACEW==1
 // alternative  }else if(((I)jtinplace&2) && (AC(a)<ACUC1 || AC(a)==ACUC1&&jt->assignsym&&jt->assignsym->val==a&&!(adocv.cv&VCANHALT && jt->asgzomblevel<2))){z=a; if(TYPESNE(AT(a),zt))MODBLOCKTYPE(z,zt)  //  Uses JTINPLACEA==2
-  if( (SGNIF(jtinplace,JTINPLACEWX)&AC(w))<0 || ((SGNIF(jtinplace,JTINPLACEWX)&(AC(w)-2))<0)&&jt->assignsym&&jt->assignsym->val==w/* no longer &&!((I)jtinplace&VCANHALT && jt->asgzomblevel<2)*/){z=w; I zt=rtype((I)jtinplace); if(TYPESNE(AT(w),zt))MODBLOCKTYPE(z,zt)  //  Uses JTINPLACEW==1
-  }else if( (SGNIF(jtinplace,JTINPLACEAX)&AC(a))<0 || ((SGNIF(jtinplace,JTINPLACEAX)&(AC(a)-2))<0)&&jt->assignsym&&jt->assignsym->val==a/* no longer &&!((I)jtinplace&VCANHALT && jt->asgzomblevel<2)*/){z=a; I zt=rtype((I)jtinplace); if(TYPESNE(AT(a),zt))MODBLOCKTYPE(z,zt)  //  Uses JTINPLACEA==2
+// obsolete  if( (SGNIF(jtinplace,JTINPLACEWX)&AC(w))<0 || ((SGNIF(jtinplace,JTINPLACEWX)&(AC(w)-2))<0)&&jt->assignsym&&jt->assignsym->val==w/* no longer &&!((I)jtinplace&VCANHALT && jt->asgzomblevel<2)*/){z=w; I zt=rtype((I)jtinplace); if(TYPESNE(AT(w),zt))MODBLOCKTYPE(z,zt)  //  Uses JTINPLACEW==1
+// obsolete   }else if( (SGNIF(jtinplace,JTINPLACEAX)&AC(a))<0 || ((SGNIF(jtinplace,JTINPLACEAX)&(AC(a)-2))<0)&&jt->assignsym&&jt->assignsym->val==a/* no longer &&!((I)jtinplace&VCANHALT && jt->asgzomblevel<2)*/){z=a; I zt=rtype((I)jtinplace); if(TYPESNE(AT(a),zt))MODBLOCKTYPE(z,zt)  //  Uses JTINPLACEA==2
+  if(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX),w)){z=w; I zt=rtype((I)jtinplace); if(TYPESNE(AT(w),zt))MODBLOCKTYPE(z,zt)  //  Uses JTINPLACEW==1
+  }else if(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEAX),a)){z=a; I zt=rtype((I)jtinplace); if(TYPESNE(AT(a),zt))MODBLOCKTYPE(z,zt)  //  Uses JTINPLACEA==2
   }else{GA(z,rtype((I)jtinplace),zn,(RANKT)fr+(fr>>RANKTX),0); MCISH(AS(z),sf,fr>>RANKTX); MCISH(AS(z)+(fr>>RANKTX),s,(RANKT)fr);} 
   // s, fr, and sf ARE NOT USED FROM HERE ON in this branch to reduce register pressure.
   if(!zn)RETF(z);  // If the result is empty, the allocated area says it all

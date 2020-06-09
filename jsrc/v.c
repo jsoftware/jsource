@@ -96,6 +96,7 @@ F2(jtright2){F2PREFIP;if(jt->ranks==(RANK2T)~0)RETARG(w); RETF(lr2(0,a,w));}
 
 F1(jtright1){RETF(w);}
 
+// i. y
 F1(jtiota){A z;I m,n,*v;
  F1RANK(1,jtiota,0);
  if(AT(w)&XNUM+RAT)R cvt(XNUM,iota(vi(w)));

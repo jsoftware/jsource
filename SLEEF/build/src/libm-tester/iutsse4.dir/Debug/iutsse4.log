@@ -1,6 +1,0 @@
-﻿  Building Custom Rule C:/git/sleef-3.X/src/libm-tester/CMakeLists.txt
-  iutsimd.c
-  iutsimdmain.c
-  testerutil.c
-  Generating Code...
-  iutsse4.vcxproj -> C:\git\sleef-3.X\build\bin\iutsse4.exe

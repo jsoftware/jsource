@@ -1,6 +1,0 @@
-﻿  Building Custom Rule C:/git/sleef-3.X/src/libm-tester/CMakeLists.txt
-  iutsimd.c
-  iutsimdmain.c
-  testerutil.c
-  Generating Code...
-  iutypurecfma_scalar.vcxproj -> C:\git\sleef-3.X\build\bin\iutypurecfma_scalar.exe

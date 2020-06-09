@@ -1,3 +1,0 @@
-﻿  Generating include/renameavx512f.h
-  Generating renameavx512f.h: mkrename "finz_" "8" "16" "avx512f"
-  Building Custom Rule C:/git/sleef-3.X/src/libm/CMakeLists.txt

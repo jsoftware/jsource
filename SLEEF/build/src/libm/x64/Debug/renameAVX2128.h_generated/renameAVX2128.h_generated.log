@@ -1,3 +1,0 @@
-﻿  Generating include/renameavx2128.h
-  Generating renameavx2128.h: mkrename "finz_" "2" "4" "avx2128"
-  Building Custom Rule C:/git/sleef-3.X/src/libm/CMakeLists.txt

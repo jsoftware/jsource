@@ -1,2 +1,0 @@
-#define MAXBUTWIDTH 4
-

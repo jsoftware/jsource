@@ -1,5 +1,0 @@
-﻿  Building Custom Rule C:/git/sleef-3.X/src/libm/CMakeLists.txt
-  sleefsimdsp.c
-  sleefsimddp.c
-  Generating Code...
-  sleefdetavx512f.vcxproj -> C:\git\sleef-3.X\build\src\libm\sleefdetavx512f.dir\MinSizeRel\sleefdetavx512f.lib

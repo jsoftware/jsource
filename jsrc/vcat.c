@@ -45,7 +45,8 @@ static A jtovs0(J jt,B p,I r,A a,A w){A a1,e,q,x,y,z;B*b;I at,*av,c,d,j,k,f,m,n,
  }
  GASPARSE(z,STYPE(t),1,zr,ws); 
  if(r)++*(f+AS(z)); else *(wr+AS(z))=2;
- zp=PAV(z); SPB(zp,a,caro(ifb(zr,b))); SPB(zp,e,e); SPB(zp,i,y); SPB(zp,x,x);  // avoid readonly
+ A bvec=ifb(zr,b); makewritable(bvec)  // avoid readonly
+ zp=PAV(z); SPB(zp,a,bvec); SPB(zp,e,e); SPB(zp,i,y); SPB(zp,x,x);
  R z;
 }    /* a,"r w (0=p) or w,"r a (1=p) where a is scalar and w is sparse */
 
@@ -65,7 +66,7 @@ static F2(jtovs){A ae,ax,ay,q,we,wx,wy,x,y,z,za,ze;B*ab,*wb,*zb;I acr,ar,*as,at,
  ap=PAV(a); RZ(ab=bfi(r,SPA(ap,a),1)); ae=SPA(ap,e); at=AT(ae);
  wp=PAV(w); RZ(wb=bfi(r,SPA(wp,a),1)); we=SPA(wp,e); wt=AT(we);
  ASSERT(equ(ae,we),EVNONCE);
- GATV0(q,B01,r,1); zb=BAV(q); DO(r, zb[i]=ab[i]||wb[i];); RZ(za=caro(ifb(r,zb))); c=AN(za);  // avoid readonly
+ GATV0(q,B01,r,1); zb=BAV(q); DO(r, zb[i]=ab[i]||wb[i];); za=ifb(r,zb); makewritable(za) c=AN(za);  // avoid readonly
  GATV0(q,INT,r,1); zs= AV(q); DO(r, zs[i]=MAX(as[i],ws[i]););
  DO(r, if(zb[i]>ab[i]){RZ(a=reaxis(za,a)); break;});
  DO(r, if(zb[i]>wb[i]){RZ(w=reaxis(za,w)); break;});
@@ -337,7 +338,7 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;I ak,k,p,*u,*v,wk,wm,wn;
      // item of the result, and it is extended to the size of a corresponding cell of a.  The extra
      // rank is implicit in the shape of a.
      // The take relies on the fill value
-     if(p){RZ(h=caro(vec(INT,AR(w),AS(a)+AR(a)-AR(w)))); if(AR(a)==AR(w))AV(h)[0]=AS(w)[0]; RZ(w=take(h,w));}
+     if(p){h=vec(INT,AR(w),AS(a)+AR(a)-AR(w)); makewritable(h); if(AR(a)==AR(w))AV(h)[0]=AS(w)[0]; RZ(w=take(h,w));}
      av=ak+CAV(a); wv=CAV(w);   // av->end of a data, wv->w data
      // If an item of a is higher-rank than the entire w (except when w is an atom, which gets replicated),
      // copy fill to the output area.  Start the copy after the area that will be filled in by w

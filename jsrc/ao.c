@@ -528,7 +528,7 @@ static DF2(jtkeytally){PROLOG(0016);A q;I at,*av,j=0,k,n,r,s,*qv,*u,*v;
   EPILOG(z);
  }
  // here when small-range not applicable
- RZ(q=indexof(a,a)); /* obsolete realizeifvirtual(q);*/   // self-classify the atoms of a
+ RZ(q=indexof(a,a)); makewritable(q) /* obsolete realizeifvirtual(q);*/   // self-classify the atoms of a
 // obsolete if(!AR(q))R iv1; 
 // obsolete  v=
  qv=AV(q);
@@ -671,7 +671,7 @@ static DF2(jtkeyheadtally){PROLOG(0017);A f,q,x,y,z;I b;I at,*av,k,n,r,*qv,*u,*v
   *AS(z)=AN(z)>>1; *(1+AS(z))=2;
 #endif
  }else{  // must self-classify a
-  RZ(q=indexof(a,a));
+  RZ(q=indexof(a,a)); makewritable(q)
   // if w is compatible with INT (i. e. is B01+INT+FL list), scan the self-classify result 
   if(wt&B01+INT+FL){
    // obsolete  v=

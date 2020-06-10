@@ -129,6 +129,8 @@
 #define cap(x)                      jtcap(jt,(x))
 #define car(x)                      jtcar(jt,(x))
 #define caro(x)                     jtcaro(jt,(x))
+// if we ensured that setting AFRO always removed inplaceability, we could simplify this test
+#define makewritable(x)             RZ(x=(AC(x)<(AFLAG(x)<<((BW-1)-AFROX)))?x:ca(x))  // OK if AC is 0x8..1 and AFRO is 0
 #define case1a(x,y)                 jtcase1a(jt,(x),(y))
 #define casev(x)                    jtcasev(jt,(x))
 #define catalog(x)                  jtcatalog(jt,(x)) 

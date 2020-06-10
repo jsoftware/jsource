@@ -44,7 +44,7 @@ F1(jtravel){A a,c,q,x,y,y0,z;B*b;I f,j,m,r,*u,*v,*yv;P*wp,*zp;
  if(memchr(b+f,C1,r)){
   if(memchr(b+f,C0,r)){memset(b+f,C1,r); RZ(w=reaxis(ifb(AR(w),b),w)); wp=PAV(w); x=SPA(wp,x);}
   else RZ(x=ca(SPA(wp,x)));
-  RZ(a=caro(ifb(1+f,b)));   // avoid readonly block
+  a=ifb(1+f,b); makewritable(a)   // avoid readonly block
   GATV0(c,INT,r,1L); v=r+AV(c); j=AR(w); m=1; DQ(r, *--v=m; m*=AS(w)[--j];);
   y0=SPA(wp,i); v=AS(y0); m=v[0]; I n=v[1];
   RZ(q=pdt(dropr(n-r,y0),c));

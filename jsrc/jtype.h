@@ -410,18 +410,23 @@ typedef I SI;
 #define ACINCR(a)       if(!ACISPERM(AC(a)))(AC(a)=(AC(a)+1)&~ACINPLACE)
 #define ACX(a)          {AC(a)=ACPERMANENT;}
 #define ACISPERM(c)     ((I)((UI)(c)+(UI)(c))<0)  // is PERMANENT bit set?
-#define ASGNINPLACE(w)  (ACIPISOK(w) || AC(w)==1&&jt->assignsym&&jt->assignsym->val==w&&!(AFLAG(w)&AFRO)&&notonupperstack(w))  // OK to inplace ordinary operation
+// obsolete #define ASGNINPLACE(w)  (ACIPISOK(w) || AC(w)==1&&jt->assignsym&&jt->assignsym->val==w&&!(AFLAG(w)&AFRO)&&notonupperstack(w))  // OK to inplace ordinary operation
 // same, but s is an expression that is neg if it's OK to inplace
-#define ASGNINPLACESGN(s,w)  (((s)&AC(w))<0 || ((s)&(AC(w)-2))<0 &&jt->assignsym&&jt->assignsym->val==w&&!(AFLAG(w)&AFRO)&&notonupperstack(w))  // OK to inplace ordinary operation
-#define ASGNINPLACESGNNJA(s,w)  ( ((s)&AC(w))<0 || (((s)&(AC(w)-2))<0||(((s)&(AC(w)-3)&SGNIF(AFLAG(w),AFNJAX))<0))&&jt->assignsym&&jt->assignsym->val==w&&!(AFLAG(w)&AFRO)&&notonupperstack(w))  // OK to inplace ordinary operation
+// obsolete #define ASGNINPLACESGN(s,w)  (((s)&AC(w))<0 || ((s)&(AC(w)-2))<0 &&jt->assignsym&&jt->assignsym->val==w&&!(AFLAG(w)&AFRO)&&notonupperstack(w))  // OK to inplace ordinary operation
+// obsolete #define ASGNINPLACESGNNJA(s,w)  ( ((s)&AC(w))<0 || (((s)&(AC(w)-2))<0||(((s)&(AC(w)-3)&SGNIF(AFLAG(w),AFNJAX))<0))&&jt->assignsym&&jt->assignsym->val==w&&!(AFLAG(w)&AFRO)&&notonupperstack(w))  // OK to inplace ordinary operation
+#define ASGNINPLACESGN(s,w)  (((s)&AC(w))<0 || ((s)&(AC(w)-2))<0 &&jt->assignsym&&jt->assignsym->val==w&&(!(AFLAG(w)&AFRO+AFNVR)||(!(AFLAG(w)&AFRO)&&notonupperstack(w))))  // OK to inplace ordinary operation
+#define ASGNINPLACESGNNJA(s,w)  ( ((s)&AC(w))<0 || (((s)&(AC(w)-2))<0||(((s)&(AC(w)-3)&SGNIF(AFLAG(w),AFNJAX))<0))&&jt->assignsym&&jt->assignsym->val==w&&(!(AFLAG(w)&AFRO+AFNVR)||(!(AFLAG(w)&AFRO)&&notonupperstack(w))))  // OK to inplace ordinary operation
 // define virtreqd and set it to 0 to start   scaf no LIT B01 C2T etc
 // This is used in apip.  We must ALWAYS allow inplacing for NJA types, but for ordinary inplacing we don't bother if the number of atoms of w pushes a over a power-of-2 boundary
+// We don't try to help the non-NVR case because NJAs will always be globals and thus have NVR set
+// obsolete #define EXTENDINPLACENJA(a,w)  ( ((AC(a)&(((AN(a)+AN(w))^AN(a))-AN(a)))<0) || (AC(a)==1||(AC(a)==2&&AFLAG(a)&AFNJA))&&((jt->assignsym&&jt->assignsym->val==a&&!(AFLAG(a)&AFRO))||(!jt->assignsym&&(virtreqd=1,!(AFLAG(a)&(AFRO|AFVIRTUAL)))))&&notonupperstack(a))  // OK to inplace ordinary operation
 #define EXTENDINPLACENJA(a,w)  ( ((AC(a)&(((AN(a)+AN(w))^AN(a))-AN(a)))<0) || (AC(a)==1||(AC(a)==2&&AFLAG(a)&AFNJA))&&((jt->assignsym&&jt->assignsym->val==a&&!(AFLAG(a)&AFRO))||(!jt->assignsym&&(virtreqd=1,!(AFLAG(a)&(AFRO|AFVIRTUAL)))))&&notonupperstack(a))  // OK to inplace ordinary operation
 
 /* Values for AFLAG(x) field of type A                                     */
 // the flags defined here must be mutually exclusive with TRAVERSIBLE
 
 #define AFRO            (I)1            /* read only; can't change data    */
+#define AFROX           0            /* read only; can't change data    */
 #define AFNJAX          1            /* non-J alloc; i.e. mem mapped    */
 #define AFNJA           ((I)1<<AFNJAX)
 #define AFNVRX          8

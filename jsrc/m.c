@@ -1105,7 +1105,7 @@ RESTRICTF A jtgah(J jt,I r,A w){A z;
  R z;
 }    /* allocate header */ 
 
-// clone w, returning the address of the cloned area.  Result is NOT recursive
+// clone w, returning the address of the cloned area.  Result is NOT recursive, not AFRO, not virtual
 F1(jtca){A z;I t;P*wp,*zp;
  RZ(w);
  t=AT(w);

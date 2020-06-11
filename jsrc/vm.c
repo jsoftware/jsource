@@ -5,13 +5,44 @@
 
 #include "j.h"
 #include "ve.h"
-// obsolete #define SLEEF C_AVX2
+// obsolete #define SLEEF 1
 #if SLEEF
+#define SLEEF_STATIC_LIBS
 #ifdef _WIN32
-#include "..\SLEEF\build\include\sleef.h"
+#include "..\SLEEF\include\sleef.h"
 #else
 #include "../sleef/include/sleef.h"
 #endif
+
+// Define entry points to use for the architectures of interest
+#if C_AVX2
+#define Sleef_expd4 Sleef_expd4_u10avx2
+#define Sleef_logd4 Sleef_logd4_u10avx2
+#define Sleef_log2d4 Sleef_log2d4_u35avx2
+#define Sleef_exp2d4 Sleef_exp2d4_u35avx2
+#define Sleef_sind4 Sleef_sind4_u35avx2
+#define Sleef_cosd4 Sleef_cosd4_u35avx2
+#define Sleef_tand4 Sleef_tand4_u35avx2
+#define Sleef_tanhd4 Sleef_tanhd4_u35avx2
+#define Sleef_asind4 Sleef_asind4_u35avx2
+#define Sleef_acosd4 Sleef_acosd4_u35avx2
+#define Sleef_atand4 Sleef_atand4_u35avx2
+#define IGNORENAN
+#elif C_AVX
+#define Sleef_expd4 Sleef_expd4_u10avx
+#define Sleef_logd4 Sleef_logd4_u10avx
+#define Sleef_log2d4 Sleef_log2d4_u35avx
+#define Sleef_exp2d4 Sleef_exp2d4_u35avx
+#define Sleef_sind4 Sleef_sind4_u35avx
+#define Sleef_cosd4 Sleef_cosd4_u35avx
+#define Sleef_tand4 Sleef_tand4_u35avx
+#define Sleef_tanhd4 Sleef_tanhd4_u35avx
+#define Sleef_asind4 Sleef_asind4_u35avx
+#define Sleef_acosd4 Sleef_acosd4_u35avx
+#define Sleef_atand4 Sleef_atand4_u35avx
+#define IGNORENAN NAN0;  // some of these functions produce NaN along the way
+#endif
+
 #endif
 
 
@@ -86,7 +117,7 @@ APFX(cirZZ, Z,Z,Z, zcir  ,NAN0;,HDR1JERRNAN)
 #if SLEEF
 AHDR1(expD,D,D) {  AVXATOMLOOP(
  ,
- u=Sleef_expd4_u10avx2(u);
+ u=Sleef_expd4(u);
  ,
  R EVOK;
  )
@@ -95,7 +126,7 @@ AHDR1(logD,D,D) {  AVXATOMLOOP(
  __m256d zero; zero=_mm256_setzero_pd();
  ,
  ASSERTWR(_mm256_movemask_pd(_mm256_cmp_pd(u, zero,_CMP_LT_OQ))==0,EWIMAG);
- u=Sleef_logd4_u10avx2(u);
+ u=Sleef_logd4(u);
  ,
  R EVOK;
  )
@@ -139,9 +170,9 @@ AHDR2(powDD,D,D,D) {D v;
       __m256d vv = _mm256_set1_pd(v);  // 4 copies of exponent
      ,
       ASSERTWR(_mm256_movemask_pd(_mm256_cmp_pd(u, zero,_CMP_LT_OQ))==0,EWIMAG);
-      u=Sleef_log2d4_u35avx2(u);
+      u=Sleef_log2d4(u);
       u=_mm256_mul_pd(u,vv);
-      u=Sleef_exp2d4_u35avx2(u);
+      u=Sleef_exp2d4(u);
      ,
     )
    )
@@ -168,21 +199,23 @@ static I jtcirx(J jt,I n,I k,D*z,D*x){D p,t;
  case  0: DQ(n, t=*x++; ASSERTWR(ABS(t)<=1.0, EWIMAG ); *z++=sqrt(1.0-t*t);); break;
  case  1: ;
 #if SLEEF
-TRIGSYMM(THMAX,_CMP_GT_OQ,EVLIMIT,Sleef_sind4_u35avx2)
+TRIGSYMM(THMAX,_CMP_GT_OQ,EVLIMIT,Sleef_sind4)
+IGNORENAN
 #else
    DQ(n, t=*x++; ASSERTWR(ABS(t)<THMAX,EVLIMIT); *z++=sin(t););
 #endif
    break;
  case  2:  ;
 #if SLEEF
-TRIGSYMM(THMAX,_CMP_GT_OQ,EVLIMIT,Sleef_cosd4_u35avx2)
+TRIGSYMM(THMAX,_CMP_GT_OQ,EVLIMIT,Sleef_cosd4)
+IGNORENAN
 #else
  DQ(n, t=*x++; ASSERTWR(ABS(t)<THMAX,EVLIMIT); *z++=cos(t););
 #endif
  break;
  case  3:  ;
 #if SLEEF
- TRIGSYMM(THMAX,_CMP_GT_OQ,EVLIMIT,Sleef_tand4_u35avx2)
+ TRIGSYMM(THMAX,_CMP_GT_OQ,EVLIMIT,Sleef_tand4)
 #else
  DQ(n, t=*x++; ASSERTWR(ABS(t)<THMAX,EVLIMIT); *z++=tan(t););       
 #endif
@@ -192,7 +225,7 @@ TRIGSYMM(THMAX,_CMP_GT_OQ,EVLIMIT,Sleef_cosd4_u35avx2)
  case  6: DQ(n, t=*x++;                                     *z++=t<-EMAX2||    EMAX2<t?inf:cosh(t););     break;
  case  7: ;
 #if SLEEF
- TRIGUNLIM(Sleef_tanhd4_u35avx2)
+ TRIGUNLIM(Sleef_tanhd4)
  NAN0;  // SLEEF gives the correct answer but may raise a NaN flag
 #else
 // math library tanh is slooooow  case  7: DQ(n, t=*x++;                                     *z++=t<-TMAX?-1:TMAX<t?1:tanh(t););           break;
@@ -201,7 +234,7 @@ TRIGSYMM(THMAX,_CMP_GT_OQ,EVLIMIT,Sleef_cosd4_u35avx2)
  break;
  case -1: ;
 #if SLEEF
-  TRIGSYMM(1.0,_CMP_GT_OQ,EWIMAG,Sleef_asind4_u35avx2)
+  TRIGSYMM(1.0,_CMP_GT_OQ,EWIMAG,Sleef_asind4)
 #else
   DQ(n, t=*x++; ASSERTWR( -1.0<=t&&t<=1.0, EWIMAG ); *z++=asin(t););
 #if defined(ANDROID) && (defined(__aarch32__)||defined(__arm__)||defined(__aarch64__))
@@ -212,14 +245,14 @@ NAN0;
  break;
  case -2: ;
 #if SLEEF
-  TRIGSYMM(1.0,_CMP_GT_OQ,EWIMAG,Sleef_acosd4_u35avx2)
+  TRIGSYMM(1.0,_CMP_GT_OQ,EWIMAG,Sleef_acosd4)
 #else
   DQ(n, t=*x++; ASSERTWR( -1.0<=t&&t<=1.0, EWIMAG ); *z++=acos(t););
 #endif
   break;
  case -3: ;
 #if SLEEF
-  TRIGUNLIM(Sleef_atand4_u35avx2)
+  TRIGUNLIM(Sleef_atand4)
 #else
   DQ(n,                                             *z++=atan(*x++););
 #endif

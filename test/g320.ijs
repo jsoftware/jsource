@@ -549,6 +549,9 @@ xx =: i. 3
 xx =: 2 + xx
 0 1 2 -: i. 3
 xx =: i. 3
+xx =: xx + 2
+0 1 2 -: i. 3
+xx =: i. 3
 xx =: | xx
 0 1 2 -: i. 3
 3 : 0 ''
@@ -557,6 +560,9 @@ xx =. >: xx
 assert. 0 1 2 -: i. 3
 xx =. i. 3
 xx =. 2 + xx
+assert. 0 1 2 -: i. 3
+xx =. i. 3
+xx =. xx + 2
 assert. 0 1 2 -: i. 3
 xx =. i. 3
 xx =. | xx
@@ -570,6 +576,9 @@ xx =: i. 1
 xx =: 2 + xx
 (,0) -: i. 1
 xx =: i. 1
+xx =: xx + 2
+(,0) -: i. 1
+xx =: i. 1
 xx =: | xx
 (,0) -: i. 1
 3 : 0 ''
@@ -580,9 +589,13 @@ xx =. i. 1
 xx =. 2 + xx
 assert. (,0) -: i. 1
 xx =. i. 1
+xx =. xx + 2
+assert. (,0) -: i. 1
+xx =. i. 1
 xx =. | xx
 (,0) -: i. 1
 )
+
 
 4!:55 ;:'adot1 adot2 sdot0 cat f n r t test x xx y yy'
 randfini''

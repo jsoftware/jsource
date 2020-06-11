@@ -89,7 +89,7 @@ I jtaii(J jt,A w){I m; PROD1(m,AR(w)-1,1+AS(w)); R m;}
 A jtapv(J jt,I n,I b,I m){A z;
  // see if we can use the canned ascending integers
  if(m==1 && b>=IOTAVECBEGIN && b+n<=IOTAVECLEN+IOTAVECBEGIN) {
-  GAT0(z,INT,0,1); AS(z)[0]=n; AN(z)=n; AK(z)=(C*)(jt->iotavec+b-IOTAVECBEGIN)-(C*)z; AC(z)=ACUC1; AFLAG(z)=AFRO;  // mark block readonly
+  GAT0(z,INT,0,1); AS(z)[0]=n; AN(z)=n; AK(z)=(C*)(jt->iotavec+b-IOTAVECBEGIN)-(C*)z; AC(z)=ACUC1; AFLAG(z)=AFRO;  // mark block readonly and not inplaceable
   R z;
  }
  R apvwr(n,b,m);

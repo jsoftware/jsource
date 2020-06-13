@@ -588,7 +588,7 @@ static DF2(jtkeytally){PROLOG(0016);A q;I at,*av,j=0,k,n,r,s,*qv,*u,*v;
 
 // process the result of the above.  If the type of w is FL (case 1), we must convert the frequency to FL.
 #define KEYHEADFILL(Tw,Tz,casen) { \
- Tz *optr=(Tz*)AV(z); Tw *wv=AV(w); \
+ Tz *optr=(Tz*)AV(z); Tw *wv=(Tw*)AV(w); \
  DQ(npart, I *iptr=(I*)optr; Tz head=wv[iptr[b^1]]; if(casen==1)optr[b]=iptr[b]; optr[b^1]=head; optr+=2;) \
 }
 
@@ -696,8 +696,8 @@ static DF2(jtkeyheadtally){PROLOG(0017);A f,q,x,y,z;I b;I at,*av,k,n,r,*qv,*u,*v
    // move values from q to z.  If an encountered count is negative, don't advance the output pointer, but skip that many slots of input
 
 #define KEYHEADFILLGEN(Tw,Tz) \
-   {Tz *zv=AV(z);  /* output scan pointer */ \
-   Tw *wv=AV(w);  /* start of w list */ \
+   {Tz *zv=(Tz*)AV(z);  /* output scan pointer */ \
+   Tw *wv=(Tw*)AV(w);  /* start of w list */ \
    zv+=b; I bc=1-(b<<1);  /* advance zv to point to tally slot, bc the  distance to the head */ \
    do{ \
     I tally=*u; zv[0]=tally;  /* presumptively move one count... */ \

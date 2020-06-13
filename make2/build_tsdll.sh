@@ -97,7 +97,6 @@ common="$OPENMP -fPIC -O2 -fvisibility=hidden -fno-strict-aliasing \
  -Wno-empty-body \
  -Wno-implicit-float-conversion \
  -Wno-implicit-int-float-conversion \
- -Wno-incompatible-pointer-types \
  -Wno-int-in-bool-context \
  -Wno-missing-braces \
  -Wno-parentheses \

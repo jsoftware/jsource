@@ -84,7 +84,8 @@ common="$common -Wno-implicit-float-conversion"
 fi
 fi
 
-if [ -z "${$1##*64avx*}" ]; then
+j64x=$1
+if [ -z "${j64x##*64avx*}" ]; then
 USE_SLEEF="${USE_SLEEF:=0}"
 else
 USE_SLEEF=0

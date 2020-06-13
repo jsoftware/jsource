@@ -143,9 +143,7 @@ typedef struct {
  I    malloctotalhwmk;  // highest value since most recent 7!:1
  void * iomalloc;   // address of block, if any, allocated in io.c to be returned to the FE
  I    iomalloclen;   // length of the allocated block (in case we can reuse it)
-#if C_AVX&&SY_64
  I validitymask[8]; // -1, -1, -1, -1, 0, 0, 0, 0   used to prepare for mask load/store
-#endif
 // --- end cache line 7/8
 #if 0 // used only for direct locale numbering
  I*   numlocdelqh;      // head of deleted queue, waiting for realloc

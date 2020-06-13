@@ -44,15 +44,21 @@ static I intforD(J jt, D d){D q;I z;
 #define SSINGCASE(id,subtype) (9*(id)+(subtype))   // encode case/args into one branch value
 A jtssingleton(J jt, A a,A w,A self,RANK2T awr,RANK2T ranks){A z;
  F2PREFIP;
+ // Get the address of an inplaceable assignment, if any
+ L *asym = jt->assignsym; asym=asym?asym:(L*)(jt->validitymask+4); asym=(L*)asym->val; // pending assignment if any; if non0, fetch address of value (otherwise 0)
  I aiv=FAV(self)->lc;   // temp, but start as function #
+ I caseno=(aiv&0x7f)-VA2CBW1111; caseno=caseno<0?0:caseno;
+ caseno=SSINGCASE(caseno,SSINGENC(AT(a),AT(w)));  // start calculating case early
  // Allocate the result area
  {
   // Calculate inplaceability for a and w.  Result must be 0 or 1
   // Inplaceable if: count=1 and zombieval, or count<0, PROVIDED the arg is inplaceable and the block is not UNINCORPABLE
 // obsolete   I aipok = ((((AC(a)-1)|((I)a^(I)jt->zombieval))==0)|(SGNTO0(AC(a)))) & ((UI)jtinplace>>JTINPLACEAX) & ~(AFLAG(a)>>AFUNINCORPABLEX);
 // obsolete   I wipok = ((((AC(w)-1)|((I)w^(I)jt->zombieval))==0)|(SGNTO0(AC(w)))) & ((UI)jtinplace>>JTINPLACEWX) & ~(AFLAG(w)>>AFUNINCORPABLEX);
-  I aipok = ((((AC(a)-1)|((I)a^(I)jt->zombieval))==0)|(SGNTO0(AC(a)))) & ((UI)jtinplace>>JTINPLACEAX) & !(AFLAG(a)&AFUNINCORPABLE+AFRO+AFNVR);
-  I wipok = ((((AC(w)-1)|((I)w^(I)jt->zombieval))==0)|(SGNTO0(AC(w)))) & ((UI)jtinplace>>JTINPLACEWX) & !(AFLAG(w)&AFUNINCORPABLE+AFRO+AFNVR);
+// obsolete   I aipok = ((((AC(a)-1)|((I)a^(I)jt->zombieval))==0)|(SGNTO0(AC(a)))) & ((UI)jtinplace>>JTINPLACEAX) & !(AFLAG(a)&AFUNINCORPABLE+AFRO+AFNVR);
+// obsolete   I wipok = ((((AC(w)-1)|((I)w^(I)jt->zombieval))==0)|(SGNTO0(AC(w)))) & ((UI)jtinplace>>JTINPLACEWX) & !(AFLAG(w)&AFUNINCORPABLE+AFRO+AFNVR);
+  I aipok = ((((AC(a)-1)|((I)a^(I)asym))==0)|(SGNTO0(AC(a)))) & ((UI)jtinplace>>JTINPLACEAX) & !(AFLAG(a)&AFUNINCORPABLE+AFRO+AFNVR);
+  I wipok = ((((AC(w)-1)|((I)w^(I)asym))==0)|(SGNTO0(AC(w)))) & ((UI)jtinplace>>JTINPLACEWX) & !(AFLAG(w)&AFUNINCORPABLE+AFRO+AFNVR);
   z=0;
   // find or allocate the result area
   if(awr==0){  // both atoms
@@ -71,8 +77,9 @@ A jtssingleton(J jt, A a,A w,A self,RANK2T awr,RANK2T ranks){A z;
 
  I wiv,ziv;D adv,wdv,zdv;
  // Huge switch statement to handle every case.  Lump all the booleans together at 0
- aiv=(aiv&0x7f)-VA2CBW1111; aiv=aiv<0?0:aiv;
- switch(SSINGCASE(aiv,SSINGENC(AT(a),AT(w)))){
+// obsolete aiv=(aiv&0x7f)-VA2CBW1111; aiv=aiv<0?0:aiv;
+// obsolete  switch(SSINGCASE(aiv,SSINGENC(AT(a),AT(w)))){
+ switch(caseno){
  default: ASSERTSYS(0,"ssing");
  case SSINGCASE(VA2CPLUS-VA2CBW1111,SSINGBB): SSSTORENV(SSRDB(a)+SSRDB(w),z,INT,I) R z;  // NV because B01 is never virtual inplace
  case SSINGCASE(VA2CPLUS-VA2CBW1111,SSINGBD): SSSTORENV(SSRDB(a)+SSRDD(w),z,FL,D) R z;

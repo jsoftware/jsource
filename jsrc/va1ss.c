@@ -20,18 +20,22 @@
 #define SSINGCASE(id,subtype) (3*(id)+(subtype))   // encode case/args into one branch value
 A jtssingleton1(J jt, A w,A self){A z;
  F2PREFIP;
+ // Get the address of an inplaceable assignment, if any
+ L *asym = jt->assignsym; asym=asym?asym:(L*)(jt->validitymask+4); asym=(L*)asym->val; // pending assignment if any; if non0, fetch address of value (otherwise 0)
  I wiv=FAV(self)->lc;   // temp, but start as function #
+ wiv = SSINGCASE(wiv-VA2CMIN,SSINGENC(AT(w)));
  // Allocate the result area
  {
   // Calculate inplaceability for a and w.
   // Inplaceable if: count=1 and zombieval, or count<0, PROVIDED the arg is inplaceable and the block is not UNINCORPABLE
-  I wipok = ((((AC(w)-1)|((I)w^(I)jt->zombieval))==0)|(SGNTO0(AC(w)))) & ((UI)jtinplace>>JTINPLACEWX) & !(AFLAG(w)&AFUNINCORPABLE+AFRO+AFNVR);
+// obsolete   I wipok = ((((AC(w)-1)|((I)w^(I)jt->zombieval))==0)|(SGNTO0(AC(w)))) & ((UI)jtinplace>>JTINPLACEWX) & !(AFLAG(w)&AFUNINCORPABLE+AFRO+AFNVR);
+  I wipok = ((((AC(w)-1)|((I)w^(I)asym))==0)|(SGNTO0(AC(w)))) & ((UI)jtinplace>>JTINPLACEWX) & !(AFLAG(w)&AFUNINCORPABLE+AFRO+AFNVR);
   if(wipok){ z=w; } else {GATV(z, FL, 1, AR(w), AS(w));}
  }
 
  D wdv;
  // Huge switch statement to handle every case.
- switch(SSINGCASE(wiv-VA2CMIN,SSINGENC(AT(w)))){
+ switch(wiv){
 
  case SSINGCASE(VA2CMIN-VA2CMIN,SSINGENC(B01)): 
  case SSINGCASE(VA2CMIN-VA2CMIN,SSINGENC(INT)): R w;

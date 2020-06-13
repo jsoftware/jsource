@@ -845,16 +845,15 @@ extern unsigned int __cdecl _clearfp (void);
 // Routines that modify the comparison tolerance must stack it
 #define PUSHCCT(value) D cctstack = jt->cct; jt->cct=(value);   // declare the stacked value where it can be popped
 #define POPCCT jt->cct=cctstack;
-// Compounds push zombie to begin with and restore before the last operation, which can execute in place.
-// zombieval is used as a way of flagging reusable blocks.  They are reused only if they are marked as inplaceable; in other words,
-// zombieval+AC=1 is an alternative to AC<0.  We could try to overwrite the zombieval during final assignment, even if it is
-// not an argument, but this seems to be more trouble than it's worth, so we don't bother detecting final assignment.
 // When we push, we are about to execute verbs before the last one, and an inplacement there would lead to the name's being assigned with invalid
 // data.  So, we clear the inplace variables if we don't want to allow that: if the user set zomblevel=0, or if there is no local symbol table
 // (which means the user is fooling around at the keyboard & performance is not as important as transparency)
-#define CLEARZOMBIE     {jt->assignsym=0; jt->zombieval=0;}  // Used when we know there shouldn't be an assignsym, just in case
-#define PUSHZOMB L*savassignsym = jt->assignsym; A savzombval; if(savassignsym){savzombval=jt->zombieval; if(((jt->asgzomblevel-1)|((AN(jt->locsyms)-2)))<0){CLEARZOMBIE}}  // test is (jt->asgzomblevel==0||AN(jt->locsyms)<2)
-#define POPZOMB if(savassignsym){jt->assignsym=savassignsym;jt->zombieval=savzombval;}
+// obsolete #define CLEARZOMBIE     {jt->assignsym=0; jt->zombieval=0;}  // Used when we know there shouldn't be an assignsym, just in case
+// obsolete #define PUSHZOMB L*savassignsym = jt->assignsym; A savzombval; if(savassignsym){savzombval=jt->zombieval; if(((jt->asgzomblevel-1)|((AN(jt->locsyms)-2)))<0){CLEARZOMBIE}}  // test is (jt->asgzomblevel==0||AN(jt->locsyms)<2)
+// obsolete #define POPZOMB if(savassignsym){jt->assignsym=savassignsym;jt->zombieval=savzombval;}
+#define CLEARZOMBIE     {jt->assignsym=0;}  // Used when we know there shouldn't be an assignsym, just in case
+#define PUSHZOMB L*savassignsym = jt->assignsym; if(savassignsym){if(((jt->asgzomblevel-1)|((AN(jt->locsyms)-2)))<0){CLEARZOMBIE}}  // test is (jt->asgzomblevel==0||AN(jt->locsyms)<2)
+#define POPZOMB {jt->assignsym=savassignsym;}
 #define R               return
 #if FINDNULLRET   // When we return 0, we should always have an error code set.  trap if not
 #define R0 {if(jt->jerr)R A0;else SEGFAULT}

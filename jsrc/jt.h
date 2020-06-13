@@ -65,8 +65,9 @@ typedef struct {
  PFRAME parserstackframe;  // 4 words  $
  A    global;           /* global symbol table   $                        */
  A    sf;               /* for $:     $                                     */
- A    zombieval;        // value of assignsym, if it can be reused   $
+// obsolete  A    zombieval;        // value of assignsym, if it can be reused   $
  L    *assignsym;       // symbol-table entry for the symbol about to be assigned   $
+ A    symb;             /* symbol table for assignment       $              */
 // ----- end of cache line 1
  A*   nvrav;            /* AAV(jt->nvra)      $                             */
  UI4  nvran;            // number of atoms in nvrav    $
@@ -184,7 +185,6 @@ typedef struct {
 #endif
 
 // unordered symbols follow
- A    symb;             /* symbol table for assignment                     */
 #if !C_CRC32C
  I    hin;              /* used in dyad i. & i:                            */
  I*   hiv;              /* used in dyad i. & i:                            */

@@ -290,9 +290,7 @@ static A virthook(J jtip, A f, A g){
 #define EPZ(x) if(!(x)){FP}   // exit parser if x==0
 
 #if 0  // keep for commentary
-// In-place operations
-//
-// An in-place operation requires an inplaceable argument, which is marked as LSB of AC=0,
+// An in-place operation requires an inplaceable argument, which is marked as AC<0,
 // Blocks are born non-inplaceable; they need to be marked inplaceable by the creator.
 // Blocks that are assigned are marked not-inplaceable.
 // But an in-placeable argument is not enough;
@@ -303,8 +301,7 @@ static A virthook(J jtip, A f, A g){
 // but it can be inplaceable when passed into +/.
 //
 // By setting the inplaceable flag in a result, a verb warrants that the block does not contain and is not contained in
-// any other block.  Whether to traverse to do this is an open issue, deferred for the time being because only
-// direct blocks are marked inplaceable now.
+// any other block.
 //
 // The 2 LSBs of jt are set to indicate inplaceability of arguments.  The caller sets them when e
 // has no further use for the argument AND e knows that the callee can handle in-place arguments.
@@ -328,79 +325,19 @@ static A virthook(J jtip, A f, A g){
 //
 // The first rule is to have no truck with inplacing unless the execution is known to be locative-safe,
 // i. e. will not change locale, path, or any name that might go into a locative.  This is marked by a
-// flag in the verb.  For the nonce, we use the in-placeable flag as a proxy for this.
+// flag ASGSAFE in the verb.
 
-// To accommodate the issues, we take a two-step approach:
-// 1. Any assignment to a name is resolved to an address when the copula is encountered and there
+// Any assignment to a name is resolved to an address when the copula is encountered and there
 //  is only one execution on the stack.  This resolution will always succeed for a local assignment to a name.
 //  For a global assignment to a locative, it may fail, or may resolve to an address that is different from
 //  the correct address after the execution.  The address of the L block for the symbol to be assigned is stored in jt->assignsym.
-// 2. For local assignment that qualifies for in-place operation (see below), the address of the A block
-//  for the value of the reassignable argument is stored in jt->zombieval.
 //
 // [As a time-saving maneuver, we store jt->assignsym even if the name is not in-placeable because of its type or usecount.
 // We can use jt->assignsym to avoid re-looking-up the name.]
 //
-// This gives two levels of inplace operations:
-// 1. loose - if jt->assignsym is set, the (necessarily inplaceable) verb may choose to perform an in-place
+// If jt->assignsym is set, the (necessarily inplaceable) verb may choose to perform an in-place
 // operation.  It will check usecounts and addresses to decide whether to do this, and it bears the responsibility
-// of worrying about names on the stack.
-// 2. strict - if jt->zombieval is set, the caller warrants that it is safe to overwrite jt->zombieval and
-// assign it to the result.  This will be set only for local assignments to a simplename.
-
-// Note that if jt->zombieval is set, any argument that is equal to jt->zombieval will be
-// ipso facto inplaceable, and moreover the usecount in such
-// an argument WILL NOT be set because it came from evaluating a name.  So, a verb supporting inplace
-// operation must check for (jtinplace&1 && ACIPISOK(w)||jt->zombiesym==w) for example
-// if it wants to inplace the w argument.
-
-// Prep for in-place assignments.
-// If the top-of-stack is ASGN, we will peek into the queue to get the symbol-table entry for the
-// name about to be assigned.  jt->zombieval will point to the A block for the assignee
-// provided:
-//  usecount==1
-//  DIRECT type
-//  stack will be empty after the current execution
-//  The verb supports in-place ops
-//  local assignment
-//  not assigning to a locative
-// It is 0 otherwise.  When zombieval is set, the data block for
-// the assignee may be used as a free block.  zombieval must be cleared:
-//  when the assignment is performed
-//  if an error is encountered (preventing the assignment)
-// Set zombieval if current assignment can be in-place.  w is the end of the execution that will produce the result to assign
-// There must be a local symbol table if we have the ASGN indicating local/simple
-// Set assignsym for any final execution that assigns to a name.  queue[m-1] is the name to be assigned.  We use this only if the verb is known to be locale-safe, so it's OK
-// to precalculate the assignment target.  The probe for a locale name will never fail, because we will have preallocated the name.
-//  A verb, such as a derived hook, might support inplaceability but one of its components could be locale-unsafe; example (, unsafeverb h)
-// We set zombieval whenever the local value is to be reassigned, regardless of usecount.  Users of zombieval must check AC==1 before using it.  zombieval
-// is used only as an alternative way of detecting inplaceable usecount, not as a way of reusing a non-argument block during final assignment.
-#define IPSETZOMB(w,v) {L *s; if(PTISASGNNAME(stack[0])&&PTISM(stack[(w)+1])&&(FAV(stack[v].a)->flag&VASGSAFE) \
-   &&(s=AT(stack[0].a)&ASGNLOCAL?probelocal(queue[m-1]):probeisquiet(queue[m-1]))){jt->assignsym=s; if(s->val&&AT(stack[0].a)&ASGNLOCAL)jt->zombieval=s->val;}}
-
-// In-place operands
-// An operand is in-placeable if:
-//  usecount==1 with inplaceable bit
-//  DIRECT type (implied for now - we don't inplace otherwise)
-//  the verb supports in-place ops
-// We set the jt bits to indicate inplaceability.  Since the parser never reuses an argument, all bits will
-// be set if the callee can handle inplaceing.
-// NOTE that in name =: x i} name, the zombieval will be set but the name operand will NOT have an inplaceable usecount.  The action routine
-// should check the operand addresses when zombieval/assignsym is set.  Inplaceable arguments are ignored by functions that do
-// not handle inplace operations.
-
-// w here is the index of the last word of the execution. 
-// aa  is the index of the left argument.  v is the verb.  zomb is 1 if it is OK to set assignsym/zombieval
-#define DFSIP1(v,w,zomb) if(FAV(stack[v].a)->flag&VJTFLGOK1){if(zomb)IPSETZOMB(w,v) y=jtdfs1((J)(intptr_t)((I)jt|JTINPLACEW),stack[w].a,stack[v].a);}else{y=dfs1(stack[w].a,stack[v].a);}
-#define DFSIP2(aa,v,w) if(FAV(stack[v].a)->flag&VJTFLGOK2){IPSETZOMB(w,v) y=jtdfs2((J)(intptr_t)((I)jt|(JTINPLACEW+JTINPLACEA)),stack[aa].a,stack[w].a,stack[v].a);}else{y=dfs2(stack[aa].a,stack[w].a,stack[v].a);}
-// Storing the result
-// We store the result into the stack and move the token-number for it.  
-// we pass in the stack index of the verb, and infer the operands from that
-// z=result stack index, a/w=stack index of argument(s), t=source for token number
-#define STOY(z,tok) {stack[z].t=stack[tok].t; EPZ(stack[z].a=y)}
-
-// Closing up the stack
-#define SM(to,from) stack[to]=stack[from]
+// of worrying about names on the stack.  Note that local names are not put onto the stack, so absence of AFNVR suffices for them.
 #endif
 A* jtextnvr(J jt){ASSERT(jt->parserstackframe.nvrtop<32000,EVLIMIT); RZ(jt->nvra = ext(1, jt->nvra)); jt->nvran=(UI4)AN(jt->nvra); jt->nvrav = AAV(jt->nvra); R jt->nvrav;}
 
@@ -620,10 +557,10 @@ rdglob: ;
         s=((FAV(fs)->flag&(FAV(stack[1].a)->flag|((~pmask)<<(VASGSAFEX-1))))&VASGSAFE)?s:0;
         // It is OK to remember the address of the symbol being assigned, because anything that might conceivably create a new symbol (and thus trigger
         // a relocation of the symbol table) is marked as not ASGSAFE
-        if(s){
-         jt->assignsym=s;  // remember the symbol being assigned.  It may have no value yet, but that's OK - save the lookup
-         A sval=s->val; sval=AT(stack[0].a)&ASGNLOCAL?sval:0; jt->zombieval=sval;  // Remember the value, whether it exists or not.  We have to avoid private/public puns
-        }
+// obsolete         if(s){
+        jt->assignsym=s;  // remember the symbol being assigned.  It may have no value yet, but that's OK - save the lookup
+// obsolete          A sval=s->val; sval=AT(stack[0].a)&ASGNLOCAL?sval:0; jt->zombieval=sval;  // Remember the value, whether it exists or not.  We have to avoid private/public puns
+// obsolete         }
        }
        jt=(J)(intptr_t)((I)jt+(pline|1));   // set bit 0, and bit 1 if dyadic
       }

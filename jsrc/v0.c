@@ -289,18 +289,21 @@ static F2(jtpoly2a){A c,e,x;I m;D rkblk[16];
 }    /* multinomial: (<c,.e0,.e1,.e2) p. <x0,x1,x2, left argument opened */
 
 // x p. y    Supports IRS on the y argument; supports inplace
-F2(jtpoly2){F2PREFIP;A c,za;I b;D*ad,d,p,*x,u,*z;I an,at,j,t,n,wt;Z*az,e,q,*wz,y,*zz;
+DF2(jtpoly2){F2PREFIP;A c,za;I b;D*ad,d,p,*x,u,*z;I an,at,j,t,n,wt;Z*az,e,q,*wz,y,*zz;
  RZ(a&&w);
  { RANK2T jtr=jt->ranks;I acr=jtr>>RANKTX; acr=AR(a)<acr?AR(a):acr; RESETRANK; // cell-rank of a
-   if(((1-acr)|(acr-AR(a)))<0){R rank2ex(a,w,0L,MIN(acr,1),0,acr,MIN(AR(w),jtr&RMAX),jtpoly2);}  // loop if multiple cells
+   if(((1-acr)|(acr-AR(a)))<0){R rank2ex(a,w,self,MIN(acr,1),0,acr,MIN(AR(w),jtr&RMAX),jtpoly2);}  // loop if multiple cells of a
  }
- an=AN(a); at=AT(a); b=BOX&at;   // b if mplr/roots form; otherwise coeff
+ an=AN(a); at=AT(a); b=BOX&at;   // b if mplr/roots form or multinomial; otherwise coeff
  n=AN(w); wt=AT(w);
  ASSERT(!(at&SPARSE),EVNONCE);  // sparse polynomial not supported
- ASSERT((-an&((at&NUMERIC+BOX)-1))>=0,EVDOMAIN);
- ASSERT((-n&((wt&NUMERIC+BOX)-1))>=0,EVDOMAIN);
- if(!an)R reshape(shape(w),num(0));  // if empty a, return all 0s
+// obsolete  ASSERT((-an&((at&NUMERIC+BOX)-1))>=0,EVDOMAIN);
+ ASSERT((-an&-(at&NUMERIC+BOX))<0,EVDOMAIN);  // error if degree<0 
+ // if we are applying f@:p, revert if not sum-of-powers form
+ I postfn=FAV(self)->flag&VFATOPPOLY;  //  index of function to apply after p. 0=none 1=^
+// obsolete  if(!an)R reshape(shape(w),num(!!postfn));  // if degree 0, return all 0s, or 1s if ^@:p.
  if(b){A*av=AAV(a); 
+  if(postfn)R jtupon2cell(jt,a,w,self);  // revert if ^@:p.   must do before a is modified
   ASSERT(2>=an,EVLENGTH);
   c=1==an?num(1):av[0]; a=av[1!=an]; // c=mplr, a=roots
   if((an^1)+(AR(a)^2)==0)R poly2a(a,w);  // if coeff is 1 and exponent-list is a table, go do multinomial
@@ -309,7 +312,7 @@ F2(jtpoly2){F2PREFIP;A c,za;I b;D*ad,d,p,*x,u,*z;I an,at,j,t,n,wt;Z*az,e,q,*wz,y
   ASSERT(!AR(c),EVRANK);
   ASSERT(1>=AR(a),EVRANK); if(!AR(a))RZ(a=ravel(a));  // treat atomic a as list
  }
- t=maxtyped(at,wt); if(b)t=maxtyped(t,AT(c)); if(!(t&XNUM+RAT))t=maxtyped(t,FL);
+ t=maxtyped(at,wt); if(b)t=maxtyped(t,AT(c)); if(!(t&XNUM+RAT))t=maxtyped(t,FL);  // promote B01/INT to FL
  if(TYPESNE(t,at))RZ(a=cvt(t,a)); ad=DAV(a); az=ZAV(a);
  if(TYPESNE(t,wt)){RZ(w=cvt(t,w)); jtinplace=(J)(intptr_t)((I)jtinplace|JTINPLACEW);} x=DAV(w); wz=ZAV(w);
  if(b){
@@ -323,6 +326,7 @@ F2(jtpoly2){F2PREFIP;A c,za;I b;D*ad,d,p,*x,u,*z;I an,at,j,t,n,wt;Z*az,e,q,*wz,y
  if(t&FL+CMPX){
         DO(t&FL?an:an+an, u=ad[i]; if(fabs(u)==inf){j=1; break;}); 
  }
+ if((-postfn&((-b)|(1-(an^2))|((t&FL)-1)))<0)R jtupon2cell(jt,a,w,self);  // revert if ^@:p. but not powers (postfn not 0, and a boxed or degree not 1 or 2 or type not FL).  an is final here
  // if we are going to use the fast loop here, allocate space for it.  Inplace if possible
  b=b?3:b;
  if(((j-1)&((t&XNUM+RAT+SPARSE)-1))<0){
@@ -330,6 +334,7 @@ F2(jtpoly2){F2PREFIP;A c,za;I b;D*ad,d,p,*x,u,*z;I an,at,j,t,n,wt;Z*az,e,q,*wz,y
   if(n==0)RETF(za);  // don't run the copy loop if 0 atoms in result
   z=DAV(za); zz=ZAV(za);
   b+=(t>>FLX)&3; // must be FL/CMPX, add 1 or 2
+ }else{ if(postfn)R jtupon2cell(jt,a,w,self);  // revert if there is a postfn, and we are using the eval path.  type must be FL
  }
  switch(b){
  // coeffs: d/e are not set
@@ -341,6 +346,19 @@ F2(jtpoly2){F2PREFIP;A c,za;I b;D*ad,d,p,*x,u,*z;I an,at,j,t,n,wt;Z*az,e,q,*wz,y
    
   case 1: mvc(n*sizeof(D),z,sizeof(D),ad); break;
   case 2:
+#if SLEEF
+   if(postfn)
+   {AVXATOMLOOPPIPE(
+    __m256d a0;__m256d t0;  t0=_mm256_set1_pd(ad[1]);
+    a0=_mm256_set1_pd(ad[0]);
+,
+    zt=MUL_ACC(a0,u,t0);
+,
+    u=Sleef_expd4(zu);
+,
+   )NAN0; }
+   else
+#endif
    {AVXATOMLOOP(
     __m256d a0;__m256d t0;  t0=_mm256_set1_pd(ad[1]);
     a0=_mm256_set1_pd(ad[0]);
@@ -349,6 +367,19 @@ F2(jtpoly2){F2PREFIP;A c,za;I b;D*ad,d,p,*x,u,*z;I an,at,j,t,n,wt;Z*az,e,q,*wz,y
 ,
    )} break;
   case 3:
+#if SLEEF
+   if(postfn)
+   {AVXATOMLOOPPIPE(
+    __m256d a0;__m256d a1;__m256d t0;__m256d t; t0=_mm256_set1_pd(ad[2]);
+    a1=_mm256_set1_pd(ad[1]); a0=_mm256_set1_pd(ad[0]);
+,
+    t=t0; t=MUL_ACC(a1,u,t); zt=MUL_ACC(a0,u,t);
+,
+    u=Sleef_expd4(zu);
+,
+   )NAN0; }
+   else
+#endif
    {AVXATOMLOOP(
     __m256d a0;__m256d a1;__m256d t0;__m256d t;  t0=_mm256_set1_pd(ad[2]);
     a1=_mm256_set1_pd(ad[1]); a0=_mm256_set1_pd(ad[0]);

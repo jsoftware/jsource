@@ -783,6 +783,24 @@ extern unsigned int __cdecl _clearfp (void);
  x+=((n-1)&(NPAR-1))+1; z+=((n-1)&(NPAR-1))+1; \
  postloop
 
+// version that pipelines one read ahead.  Input to loopbody2 is zu; result of loopbody1 is in zt
+#define AVXATOMLOOPPIPE(preloop,loopbody1,loopbody2,postloop) \
+ __m256i endmask;  __m256d u, zt, zu; \
+ _mm256_zeroupper(VOIDARG); \
+ endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-n)&(NPAR-1))));  /* mask for 0 1 2 3 4 5 is xxxx 0001 0011 0111 1111 0001 */ \
+ preloop \
+ I i=(n-1)>>LGNPAR;  /* # loops for 0 1 2 3 4 5 is x 0 0 0 0 1 */ \
+ if(i>0){u=_mm256_loadu_pd(x); x+=NPAR; loopbody1 \
+ while(--i>=0){ u=_mm256_loadu_pd(x); x+=NPAR; \
+  zu=zt; loopbody1 loopbody2 \
+  _mm256_storeu_pd(z, u); z+=NPAR; \
+ } zu=zt; loopbody2 _mm256_storeu_pd(z, u); z+=NPAR;} \
+ u=_mm256_maskload_pd(x,endmask); \
+ loopbody1 zu=zt; loopbody2 \
+ _mm256_maskstore_pd(z, endmask, u); \
+ x+=((n-1)&(NPAR-1))+1; z+=((n-1)&(NPAR-1))+1; \
+ postloop
+
 // Dyadic version.  v is right argument, u is still result
 #define AVXATOMLOOP2(preloop,loopbody,postloop) \
  __m256i endmask;  __m256d u,v; \
@@ -1018,6 +1036,48 @@ extern unsigned int __cdecl _clearfp (void);
 #include "vdx.h"  
 #include "a.h"
 #include "s.h"
+// obsolete #define SLEEF C_AVX2|| C_AVX
+#if SLEEF
+#define SLEEF_STATIC_LIBS
+#ifdef _WIN32
+#include "..\SLEEF\include\sleef.h"
+#else
+#include "../sleef/include/sleef.h"
+#endif
+
+// Define entry points to use for the architectures of interest
+#if C_AVX2
+#define Sleef_expd4 Sleef_expd4_u10avx2
+#define Sleef_logd4 Sleef_logd4_u10avx2
+#define Sleef_log2d4 Sleef_log2d4_u35avx2
+#define Sleef_exp2d4 Sleef_exp2d4_u35avx2
+#define Sleef_sind4 Sleef_sind4_u35avx2
+#define Sleef_cosd4 Sleef_cosd4_u35avx2
+#define Sleef_tand4 Sleef_tand4_u35avx2
+#define Sleef_tanhd4 Sleef_tanhd4_u35avx2
+#define Sleef_asind4 Sleef_asind4_u35avx2
+#define Sleef_acosd4 Sleef_acosd4_u35avx2
+#define Sleef_atand4 Sleef_atand4_u35avx2
+#define IGNORENAN
+#elif C_AVX
+#define Sleef_expd4 Sleef_expd4_u10avx
+#define Sleef_logd4 Sleef_logd4_u10avx
+#define Sleef_log2d4 Sleef_log2d4_u35avx
+#define Sleef_exp2d4 Sleef_exp2d4_u35avx
+#define Sleef_sind4 Sleef_sind4_u35avx
+#define Sleef_cosd4 Sleef_cosd4_u35avx
+#define Sleef_tand4 Sleef_tand4_u35avx
+#define Sleef_tanhd4 Sleef_tanhd4_u35avx
+#define Sleef_asind4 Sleef_asind4_u35avx
+#define Sleef_acosd4 Sleef_acosd4_u35avx
+#define Sleef_atand4 Sleef_atand4_u35avx
+#define IGNORENAN NAN0;  // some of these functions produce NaN along the way
+#endif
+
+#endif
+
+
+
 
 // CTTZ(w) counts trailing zeros in low 32 bits of w.  Result is undefined if w is 0.
 // CTTZZ(w) does the same, but returns 32 if w is 0

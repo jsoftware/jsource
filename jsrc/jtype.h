@@ -709,8 +709,12 @@ typedef struct {AF valencefns[2];A fgh[3];union { D lD; void *lvp[2]; I lI; I4 l
 #define VFHKLVLGT       (((I)1)<<VFHKLVLGTX)
 #define VFSCANIRSX     0   // (in u/\) set if u supports IRS2
 #define VFSCANIRS      (((I)1)<<VFSCANIRSX)
-#define VFUNDERHASINVX  0  // (in u&.[:]v set if h has the inverse already added
+#define VFUNDERHASINVX  0  // (in u&.[:]v) set if h has the inverse already added
 #define VFUNDERHASINV      (((I)1)<<VFUNDERHASINVX)
+#define VFATOPPOLYX  0  // (in p.) the function to run after p.  0=none, 1=^
+#define VFATOPPOLY      (((I)3)<<VFATOPPOLYX)
+#define VFATOPPOLYNONE  0
+#define VFATOPPOLYEXP  1
 
 
 // bits 8 and above are available for all functions:

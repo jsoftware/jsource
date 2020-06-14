@@ -245,22 +245,25 @@ F2(jtatop){A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=0,m=-1
 // u@:v
 F2(jtatco){A f,g;AF f1=on1cell,f2=jtupon2cell;B b=0;C c,d,e;I flag, flag2=0,j,m=-1;V*av,*wv;
  ASSERTVV(a,w);
- av=FAV(a); c=av->id; f=av->fgh[0]; g=av->fgh[1]; e=ID(f); 
+ av=FAV(a); c=av->id; f=av->fgh[0]; g=av->fgh[1]; e=ID(f);   /// c=op for a, d=op for w   if a is r&s, f is r and e is its id; and g is s
  wv=FAV(w); d=wv->id;
  // Set flag with ASGSAFE status from f/g; keep INPLACE? in sync with f1,f2.  But we can turn off inplacing that is not supported by v, which may
  // save a few tests during execution and is vital for handling <@v, where we may execute v directly without going through @ and therefore mustn't inplace
  // unless v can handle it
  flag = ((av->flag&wv->flag)&VASGSAFE)+(wv->flag&(VJTFLGOK1|VJTFLGOK2));
  switch(c){
-  case CBOX:    flag2 |= (VF2BOXATOP1|VF2BOXATOP2); break;  // mark this as <@f 
-  case CNOT:    if(d==CMATCH){f2=jtnotmatch; flag+=VIRS2; flag&=~VJTFLGOK2;} break;
-  case CGRADE:  if(d==CGRADE){f1=jtranking; flag+=VIRS1; flag&=~VJTFLGOK1;} break;
-  case CCEIL:   f1=jtonf1; f2=jtuponf2; flag=VCEIL; flag&=~(VJTFLGOK1|VJTFLGOK2); break;
-  case CFLOOR:  f1=jtonf1; f2=jtuponf2; flag=VFLR; flag&=~(VJTFLGOK1|VJTFLGOK2); break;
-  case CQUERY:  if(d==CDOLLAR||d==CPOUND){f2=jtrollk; flag&=~VJTFLGOK2;}  break;
-  case CQRYDOT: if(d==CDOLLAR||d==CPOUND){f2=jtrollkx; flag&=~VJTFLGOK2;} break;
-  case CICAP:   if(d==CNE){f1=jtnubind; flag&=~VJTFLGOK1;} else if(FIT0(CNE,wv)){f1=jtnubind0; flag&=~VJTFLGOK1;}else if(d==CEBAR){f2=jtifbebar; flag&=~VJTFLGOK2;} break;
-  case CAMP:    if(g==num(0)||g==num(1)){j=*BAV(g); m=-1; m=e==CIOTA?j:m; m=e==CICO?2+j:m;} break;
+  case CBOX:    flag2 |= (VF2BOXATOP1|VF2BOXATOP2); break;  // mark this as <@f
+#if SLEEF
+  case CEXP:    if(d==CPOLY){f2=jtpoly2; flag+=VIRS2+(VFATOPPOLYEXP<<VFATOPPOLYX);} break;   // ^@:p.
+#endif
+  case CNOT:    if(d==CMATCH){f2=jtnotmatch; flag+=VIRS2; flag&=~VJTFLGOK2;} break;  // x -.@:-: y
+  case CGRADE:  if(d==CGRADE){f1=jtranking; flag+=VIRS1; flag&=~VJTFLGOK1;} break;  // /:@:/: y
+  case CCEIL:   f1=jtonf1; f2=jtuponf2; flag=VCEIL; flag&=~(VJTFLGOK1|VJTFLGOK2); break;  // [x] >.@:g y
+  case CFLOOR:  f1=jtonf1; f2=jtuponf2; flag=VFLR; flag&=~(VJTFLGOK1|VJTFLGOK2); break;  // [x] <.@:g y
+  case CQUERY:  if(d==CDOLLAR||d==CPOUND){f2=jtrollk; flag&=~VJTFLGOK2;}  break;  // x ?@:# y or x ?@:$ y
+  case CQRYDOT: if(d==CDOLLAR||d==CPOUND){f2=jtrollkx; flag&=~VJTFLGOK2;} break;  // x ?.@:# y or x ?.@:$ y
+  case CICAP:   if(d==CNE){f1=jtnubind; flag&=~VJTFLGOK1;} else if(FIT0(CNE,wv)){f1=jtnubind0; flag&=~VJTFLGOK1;}else if(d==CEBAR){f2=jtifbebar; flag&=~VJTFLGOK2;} break;  // I.@:~: y  I.@:(~:!.0) y  x I.@:E. y
+  case CAMP:    if(g==num(0)||g==num(1)){j=*BAV(g); m=-1; m=e==CIOTA?j:m; m=e==CICO?2+j:m;} break;  // i.@0/1@:g    i:@0/1@:g
   case CSLASH:  //  f/@g where f is not a gerund
 // obsolete   if(vaid(f)&&vaid(w)){f2=jtfslashatg; flag&=~VJTFLGOK2;}
    if(FAV(f)->flag&FAV(w)->flag&VISATOMIC2){f2=jtfslashatg; flag&=~VJTFLGOK2;}
@@ -304,10 +307,9 @@ F2(jtatco){A f,g;AF f1=on1cell,f2=jtupon2cell;B b=0;C c,d,e;I flag, flag2=0,j,m=
  // Copy the open/raze status from v into u@v
  flag2 |= wv->flag2&(VF2WILLOPEN1|VF2WILLOPEN2W|VF2WILLOPEN2A|VF2USESITEMCOUNT1|VF2USESITEMCOUNT2W|VF2USESITEMCOUNT2A);
 
-
- // Install the flags to indicate that this function starts out with a rank loop, and thus can be subsumed into a higher rank loop
- // This is appropriate even though we elide the loop
- flag2|=(f1==on1cell)<<VF2RANKATOP1X;  flag2|=(f2==jtupon2cell)<<VF2RANKATOP2X; 
+// obsolete  // Install the flags to indicate that this function starts out with a rank loop, and thus can be subsumed into a higher rank loop
+// obsolete  // This is appropriate even though we elide the loop
+// obsolete  flag2|=(f1==on1cell)<<VF2RANKATOP1X;  flag2|=(f2==jtupon2cell)<<VF2RANKATOP2X; 
  R fdef(flag2,CATCO,VERB, f1,f2, a,w,0L, flag, RMAX,RMAX,RMAX);
 }
 

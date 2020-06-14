@@ -5,46 +5,6 @@
 
 #include "j.h"
 #include "ve.h"
-// obsolete #define SLEEF 1
-#if SLEEF
-#define SLEEF_STATIC_LIBS
-#ifdef _WIN32
-#include "..\SLEEF\include\sleef.h"
-#else
-#include "../sleef/include/sleef.h"
-#endif
-
-// Define entry points to use for the architectures of interest
-#if C_AVX2
-#define Sleef_expd4 Sleef_expd4_u10avx2
-#define Sleef_logd4 Sleef_logd4_u10avx2
-#define Sleef_log2d4 Sleef_log2d4_u35avx2
-#define Sleef_exp2d4 Sleef_exp2d4_u35avx2
-#define Sleef_sind4 Sleef_sind4_u35avx2
-#define Sleef_cosd4 Sleef_cosd4_u35avx2
-#define Sleef_tand4 Sleef_tand4_u35avx2
-#define Sleef_tanhd4 Sleef_tanhd4_u35avx2
-#define Sleef_asind4 Sleef_asind4_u35avx2
-#define Sleef_acosd4 Sleef_acosd4_u35avx2
-#define Sleef_atand4 Sleef_atand4_u35avx2
-#define IGNORENAN
-#elif C_AVX
-#define Sleef_expd4 Sleef_expd4_u10avx
-#define Sleef_logd4 Sleef_logd4_u10avx
-#define Sleef_log2d4 Sleef_log2d4_u35avx
-#define Sleef_exp2d4 Sleef_exp2d4_u35avx
-#define Sleef_sind4 Sleef_sind4_u35avx
-#define Sleef_cosd4 Sleef_cosd4_u35avx
-#define Sleef_tand4 Sleef_tand4_u35avx
-#define Sleef_tanhd4 Sleef_tanhd4_u35avx
-#define Sleef_asind4 Sleef_asind4_u35avx
-#define Sleef_acosd4 Sleef_acosd4_u35avx
-#define Sleef_atand4 Sleef_atand4_u35avx
-#define IGNORENAN NAN0;  // some of these functions produce NaN along the way
-#endif
-
-#endif
-
 
 D jtintpow(J jt,D x,I n){D r=1;
  if(0>n){x=1/x; if(n==IMIN){r=x; n=IMAX;} else n=-n;}  // kludge use r=x; n=-1-n;

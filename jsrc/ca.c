@@ -88,7 +88,7 @@ RZ(z=(f1)(jtinplace,gx,fs));} \
 ,0113)
 
 // obsolete RZ(gx=(g2)((J)(intptr_t)(((I)jtinplace&(~(JTWILLBEOPENED+JTCOUNTITEMS))) + ((-((FAV(gs)->flag>>VJTFLGOK2X)&JTINPLACEW)) & FAV(fs)->flag2 & VF2WILLOPEN1+VF2USESITEMCOUNT1)),a,w,gs));  /* inplace g */
-CS2IP(,jtupon2, \
+CS2IP(,,jtupon2, \
 {PUSHZOMB; A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)(intptr_t)((I)a+((I)jtinplace&JTINPLACEA)); A gx; \
 RZ(gx=(g2)((J)(intptr_t)(((I)jtinplace&(~(JTWILLBEOPENED+JTCOUNTITEMS))) + (REPSGN(SGNIF(FAV(gs)->flag,VJTFLGOK2X)) & FAV(fs)->flag2 & VF2WILLOPEN1+VF2USESITEMCOUNT1)),a,w,gs));  /* inplace g */ \
 /* inplace gx unless it is protected */ \
@@ -107,7 +107,7 @@ static DF2(onconst2){DECLFG;R (f1)(jt,gs,fs);}
 
 // x u&v y
 // We don't bother passing WILLOPEN from u into v, since it's rarely used.  We do pass WILLOPEN into u.
-CS2IP(static,on2, \
+CS2IP(static,static,on2, \
  A ga;A gw;PUSHZOMB; \
  /* here for execution on a single cell */ \
  A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)(intptr_t)((I)a+((I)jtinplace&JTINPLACEA)); \

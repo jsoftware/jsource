@@ -273,7 +273,7 @@ EPILOG(z);} \
 , 0112)
 #else
 // obsolete A gx; RZ(gx=(g1)((J)(intptr_t)((((I)jtinplace&((I )(a!=w)|~(JTWILLBEOPENED+JTCOUNTITEMS+JTINPLACEA+JTINPLACEW))) + (FAV(fs)->flag2 & JTWILLBEOPENED+JTCOUNTITEMS)) & (FAV(gs)->flag&VJTFLGOK1?~0:~JTFLAGMSK)),w,gs));  /* inplace g unless a=w.  jtinplace is always set */
-CS2IP(static,jthook2, \
+CS2IP(static,static,jthook2, \
 {PUSHZOMB; A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)(intptr_t)((I)a+((I)jtinplace&JTINPLACEA)); \
 A gx; RZ(gx=(g1)((J)(intptr_t)((I)jt + ((((I)jtinplace&((a!=w)<<JTINPLACEWX)) + ((FAV(fs)->flag2>>(VF2WILLOPEN2WX-VF2WILLOPEN1X)) & JTWILLBEOPENED+JTCOUNTITEMS)) & REPSGN(SGNIF(FAV(gs)->flag,VJTFLGOK1X)))),w,gs));  /* inplace g unless a=w.  jtinplace is always set */ \
 /* inplace gx unless it is protected */ \

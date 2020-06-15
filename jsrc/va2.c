@@ -791,7 +791,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
 #define SUMATLOOP2(ti,to,oneprod2,oneprod1) \
   {ti * RESTRICT av=avp,* RESTRICT wv=wvp; to * RESTRICT zv=zvp; \
    _mm256_zeroupper(VOIDARG); \
-   __m256i endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-dplen)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
+   __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-dplen)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
    __m256d acc000; __m256d acc010; __m256d acc100; __m256d acc110; \
    __m256d acc001; __m256d acc011; __m256d acc101; __m256d acc111; \
    DQ(nfro, I jj=nfri; ti *ov0=it&BOX?av:wv; \
@@ -917,7 +917,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
  _mm256_zeroupper(VOIDARG); \
  /* +/ vectors */ \
  __m256d idreg=_mm256_setzero_pd(); \
- endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-dplen)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
+ endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-dplen)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
  __m256d acc0=idreg; __m256d acc1=idreg; __m256d acc2=idreg; __m256d acc3=idreg; \
  DQ((dplen-1)>>(2+LGNPAR), \
   acc0=MUL_ACC(acc0,_mm256_loadu_pd(av),_mm256_loadu_pd(wv)); \

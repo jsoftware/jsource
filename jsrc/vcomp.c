@@ -109,7 +109,7 @@ AHDR2(name,B,D,D){ \
   cct=_mm256_set1_pd(jt->cct); \
   if(n-1==0){ \
    /* vector-to-vector, no repetitions */ \
-   endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-m)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
+   endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-m)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
    DQ((m-1)>>LGNPAR, \
      u=_mm256_loadu_pd(x);v=_mm256_loadu_pd(y); \
      eq=_mm256_xor_pd(_mm256_cmp_pd(u,_mm256_mul_pd(v,cct),_CMP_GT_OQ),_mm256_cmp_pd(v,_mm256_mul_pd(u,cct),_CMP_LE_OQ)); \
@@ -124,7 +124,7 @@ AHDR2(name,B,D,D){ \
   }else{ \
    if(n-1<0){n=~n; \
     /* atom+vector */ \
-    endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-n)&(NPAR-1)))); \
+    endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1)))); \
     DQ(m, u=_mm256_set1_pd(*x); ++x; \
       ctop=_mm256_mul_pd(u,cct); \
       DQ((n-1)>>LGNPAR, \
@@ -140,7 +140,7 @@ AHDR2(name,B,D,D){ \
       y+=((n-1)&(NPAR-1))+1; z+=((n-1)&(NPAR-1))+1;) \
    }else{ \
     /* vector+atom */ \
-    endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-n)&(NPAR-1)))); \
+    endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1)))); \
     DQ(m, v=_mm256_set1_pd(*y); ++y; \
       ctop=_mm256_mul_pd(v,cct); \
       DQ((n-1)>>LGNPAR, \
@@ -159,7 +159,7 @@ AHDR2(name,B,D,D){ \
  }else{ \
   if(n-1==0){ \
    /* vector-to-vector, no repetitions */ \
-   endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-m)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
+   endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-m)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
    DQ((m-1)>>LGNPAR, \
      u=_mm256_loadu_pd(x);v=_mm256_loadu_pd(y); \
      eq=intolres; \
@@ -172,7 +172,7 @@ AHDR2(name,B,D,D){ \
   }else{ \
    if(n-1<0){n=~n; \
     /* atom+vector */ \
-    endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-n)&(NPAR-1)))); \
+    endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1)))); \
     DQ(m,; u=_mm256_set1_pd(*x); ++x; \
       DQ((n-1)>>LGNPAR, \
         v=_mm256_loadu_pd(y); \
@@ -185,7 +185,7 @@ AHDR2(name,B,D,D){ \
       y+=((n-1)&(NPAR-1))+1; z+=((n-1)&(NPAR-1))+1;) \
    }else{ \
     /* vector+atom */ \
-    endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-n)&(NPAR-1)))); \
+    endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1)))); \
     DQ(m, v=_mm256_set1_pd(*y); ++y; \
       DQ((n-1)>>LGNPAR, \
         u=_mm256_loadu_pd(x); \
@@ -217,7 +217,7 @@ AHDR2(name,B,I,I){ \
  _mm256_zeroupper(VOIDARG); \
  if(n-1==0){ \
   /* vector-to-vector, no repetitions */ \
-  endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-m)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
+  endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-m)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
   DQ((m-1)>>LGNPAR, \
     u=_mm256_loadu_si256((__m256i*)x);v=_mm256_loadu_si256((__m256i*)y); \
     eq=result; \
@@ -230,7 +230,7 @@ AHDR2(name,B,I,I){ \
  }else{ \
   if(n-1<0){n=~n; \
    /* atom+vector */ \
-   endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-n)&(NPAR-1)))); \
+   endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1)))); \
    DQ(m,; u=_mm256_set1_epi64x(*x); ++x; \
      DQ((n-1)>>LGNPAR, \
        v=_mm256_loadu_si256((__m256i*)y); \
@@ -243,7 +243,7 @@ AHDR2(name,B,I,I){ \
      y+=((n-1)&(NPAR-1))+1; z+=((n-1)&(NPAR-1))+1;) \
   }else{ \
    /* vector+atom */ \
-   endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-n)&(NPAR-1)))); \
+   endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1)))); \
    DQ(m, v=_mm256_set1_epi64x(*y); ++y; \
      DQ((n-1)>>LGNPAR, \
        u=_mm256_loadu_si256((__m256i*)x); \

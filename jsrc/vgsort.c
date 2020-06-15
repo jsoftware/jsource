@@ -245,8 +245,6 @@ static SF(jtsorti1){A x,y,z;I*wv;I i,*xv,*zv;void *yv;
  R z;
 }    /* w grade"r w on large-range integers */
 
-static const I validitymask[12]={-1, -1, -1, -1, 0, 0, 0, 0, -1, -1, -1, -1};  // allows inverted mask
-
 // sort a single integer list using quicksort without misprediction, inplace
 #define SORTQCOND C_AVX2&&SY_64
 #define SORTQNAME sortiq1

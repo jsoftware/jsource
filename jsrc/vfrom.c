@@ -110,7 +110,7 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wk,wn,wr,*ws,zn;
      *x=v[j];  // just move the one value
     }else{
      __m256i lanestride=_mm256_mul_epu32(wstride,_mm256_set_epi64x(3,2,1,0));  // each lane accesses a different cell
-     endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-m)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */
+     endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-m)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */
      v+=j;  // advance base pointer to the column we are fetching
      wstride=_mm256_slli_epi64(wstride,LGNPAR);  // repurpose wstride to be stride between groups of 4 cells
      DQ((m-1)>>LGNPAR, _mm256_storeu_si256((__m256i*)x, _mm256_i64gather_epi64(v,lanestride,SZI)); lanestride=_mm256_add_epi64(lanestride,wstride);  x+=NPAR;)
@@ -119,7 +119,7 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wk,wn,wr,*ws,zn;
     }
    }else{  // Normal case: a list of indexes for each cell
     I *avv; // input pointer
-    endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-an)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */
+    endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-an)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */
     DQ(m, avv=av;  // init input pointer to start of a
       DQ((an-1)>>LGNPAR,
         __m256i indexes=_mm256_loadu_si256((__m256i*)avv);  // fetch a block of indexes

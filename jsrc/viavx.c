@@ -1048,21 +1048,21 @@ static void jtiosc(J jt,I mode,I n,I asct,I wsct,I ac,I wc,A a,A w,A z){I j,p,q;
   SCDO(BOXX,A,!equ(x,av[j]));
 #if C_AVX&&SY_64
   // The instruction set is too quirky to do this with macros
-   case IOSCCASE(XDX,0,IIDOT): {D *wv=(D*)v; D*av=(D*)u; __m256i endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-asct)&(NPAR-1)))); 
+   case IOSCCASE(XDX,0,IIDOT): {D *wv=(D*)v; D*av=(D*)u; __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-asct)&(NPAR-1)))); 
       DQ(ac, 
        DQ(wsct, __m256d x=_mm256_set1_pd(*wv); D*avv=av; D*avend=av+((asct-1)&(-(I)NPAR)); int cmps; 
         while(1){if(avv==avend)break; if(cmps=_mm256_movemask_pd(_mm256_cmp_pd(x,_mm256_loadu_pd(avv),_CMP_EQ_OQ)))goto fnd001; avv+=NPAR;} 
         cmps=_mm256_movemask_pd(_mm256_and_pd(_mm256_castsi256_pd (endmask),_mm256_cmp_pd(x,_mm256_maskload_pd(avv,endmask),_CMP_EQ_OQ))); 
 fnd001: ; I res=(avv-av)+CTTZ(cmps); res=(cmps==0)?asct:res; *(I*)zv=res; zv=(I*)zv+1;      wv+=q;);
       av+=p; wv=(1==wc)?(D*)v:wv;);} break; 
-   case IOSCCASE(XDX,0,IICO): {D *wv=(D*)v; D*av=(D*)u; __m256i endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-asct)&(NPAR-1)))); 
+   case IOSCCASE(XDX,0,IICO): {D *wv=(D*)v; D*av=(D*)u; __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-asct)&(NPAR-1)))); 
       DQ(ac, 
        DQ(wsct, __m256d x=_mm256_set1_pd(*wv); D*avend=av; D*avv=av+((asct-1)&(-(I)NPAR)); int cmps;  
         if(cmps=_mm256_movemask_pd(_mm256_and_pd(_mm256_castsi256_pd (endmask),_mm256_cmp_pd(x,_mm256_maskload_pd(avv,endmask),_CMP_EQ_OQ))))goto fnd002; 
         while(1){if(avv==avend)break; avv-=NPAR; if(cmps=_mm256_movemask_pd(_mm256_cmp_pd(x,_mm256_loadu_pd(avv),_CMP_EQ_OQ)))goto fnd002;} 
 fnd002: ; unsigned long temp; CTLZI(cmps,temp); I res=(avv-av)+temp; res=(cmps==0)?asct:res; *(I*)zv=res; zv=(I*)zv+1;      wv+=q;);
       av+=p; wv=(1==wc)?(D*)v:wv;);} break; 
-   case IOSCCASE(XDX,0,IEPS): {D *wv=(D*)v; D*av=(D*)u; __m256i endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-asct)&(NPAR-1)))); 
+   case IOSCCASE(XDX,0,IEPS): {D *wv=(D*)v; D*av=(D*)u; __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-asct)&(NPAR-1)))); 
       DQ(ac, 
        DQ(wsct, __m256d x=_mm256_set1_pd(*wv); D*avv=av; D*avend=av+((asct-1)&(-(I)NPAR)); int cmps; 
         while(1){if(avv==avend)break; if(cmps=_mm256_movemask_pd(_mm256_cmp_pd(x,_mm256_loadu_pd(avv),_CMP_EQ_OQ)))goto fnd003; avv+=NPAR;} 
@@ -1070,7 +1070,7 @@ fnd002: ; unsigned long temp; CTLZI(cmps,temp); I res=(avv-av)+temp; res=(cmps==
 fnd003: *(C*)zv=SGNTO0(-cmps); zv=(C*)zv+1;      wv+=q;); 
       av+=p; wv=(1==wc)?(D*)v:wv;);} break; 
 
-   case IOSCCASE(FLX,0,IIDOT): {D *wv=(D*)v; D*av=(D*)u; __m256i endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-asct)&(NPAR-1))));
+   case IOSCCASE(FLX,0,IIDOT): {D *wv=(D*)v; D*av=(D*)u; __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-asct)&(NPAR-1))));
       __m256d cct=_mm256_set1_pd(jt->cct);
       DQ(ac, 
        DQ(wsct, __m256d x=_mm256_set1_pd(*wv); __m256d y; __m256d tolx=_mm256_mul_pd(x,cct); D*avv=av; D*avend=av+((asct-1)&(-(I)NPAR)); int cmps; 
@@ -1078,7 +1078,7 @@ fnd003: *(C*)zv=SGNTO0(-cmps); zv=(C*)zv+1;      wv+=q;);
         y=_mm256_maskload_pd(avv,endmask); cmps=_mm256_movemask_pd(_mm256_and_pd(_mm256_castsi256_pd (endmask),_mm256_xor_pd(_mm256_cmp_pd(x,_mm256_mul_pd(cct,y),_CMP_GT_OQ),_mm256_cmp_pd(tolx,y,_CMP_GE_OQ)))); 
 fnd021: ; I res=(avv-av)+CTTZ(cmps); res=(cmps==0)?asct:res; *(I*)zv=res; zv=(I*)zv+1;      wv+=q;);
       av+=p; wv=(1==wc)?(D*)v:wv;);} break; 
-   case IOSCCASE(FLX,0,IICO): {D *wv=(D*)v; D*av=(D*)u; __m256i endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-asct)&(NPAR-1)))); 
+   case IOSCCASE(FLX,0,IICO): {D *wv=(D*)v; D*av=(D*)u; __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-asct)&(NPAR-1)))); 
       __m256d cct=_mm256_set1_pd(jt->cct);
       DQ(ac, 
        DQ(wsct, __m256d x=_mm256_set1_pd(*wv); __m256d y; __m256d tolx=_mm256_mul_pd(x,cct); D*avend=av; D*avv=av+((asct-1)&(-(I)NPAR)); int cmps;  
@@ -1086,7 +1086,7 @@ fnd021: ; I res=(avv-av)+CTTZ(cmps); res=(cmps==0)?asct:res; *(I*)zv=res; zv=(I*
         while(1){if(avv==avend)break; avv-=NPAR; y=_mm256_loadu_pd(avv); if(cmps=_mm256_movemask_pd(_mm256_xor_pd(_mm256_cmp_pd(x,_mm256_mul_pd(cct,y),_CMP_GT_OQ),_mm256_cmp_pd(tolx,y,_CMP_GE_OQ))))goto fnd022;} 
 fnd022: ; unsigned long temp; CTLZI(cmps,temp); I res=(avv-av)+temp; res=(cmps==0)?asct:res; *(I*)zv=res; zv=(I*)zv+1;      wv+=q;);
       av+=p; wv=(1==wc)?(D*)v:wv;);} break; 
-   case IOSCCASE(FLX,0,IEPS): {D *wv=(D*)v; D*av=(D*)u; __m256i endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-asct)&(NPAR-1)))); 
+   case IOSCCASE(FLX,0,IEPS): {D *wv=(D*)v; D*av=(D*)u; __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-asct)&(NPAR-1)))); 
       __m256d cct=_mm256_set1_pd(jt->cct);
       DQ(ac, 
        DQ(wsct, __m256d x=_mm256_set1_pd(*wv); __m256d y; __m256d tolx=_mm256_mul_pd(x,cct); D*avv=av; D*avend=av+((asct-1)&(-(I)NPAR)); int cmps; 
@@ -1101,21 +1101,21 @@ fnd023: *(C*)zv=SGNTO0(-cmps); zv=(C*)zv+1;      wv+=q;);
 
 
 #if C_AVX2&&SY_64
-   case IOSCCASE(INTX,0,IIDOT): {I *wv=(I*)v; I*av=(I*)u; __m256i endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-asct)&(NPAR-1)))); 
+   case IOSCCASE(INTX,0,IIDOT): {I *wv=(I*)v; I*av=(I*)u; __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-asct)&(NPAR-1)))); 
       DQ(ac, 
        DQ(wsct, __m256i x=_mm256_set1_epi64x(*wv); I*avv=av; I*avend=av+((asct-1)&(-(I)NPAR)); int cmps; 
         while(1){if(avv==avend)break; if(cmps=_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_cmpeq_epi64(x,_mm256_loadu_si256((__m256i*)avv)))))goto fnd011; avv+=NPAR;} 
         cmps=_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_and_si256(endmask,_mm256_cmpeq_epi64(x,_mm256_maskload_epi64(avv,endmask))))); 
 fnd011: ; I res=(avv-av)+CTTZ(cmps); res=(cmps==0)?asct:res; *(I*)zv=res; zv=(I*)zv+1;      wv+=q;);
       av+=p; wv=(1==wc)?(I*)v:wv;);} break; 
-   case IOSCCASE(INTX,0,IICO): {I *wv=(I*)v; I*av=(I*)u; __m256i endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-asct)&(NPAR-1)))); 
+   case IOSCCASE(INTX,0,IICO): {I *wv=(I*)v; I*av=(I*)u; __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-asct)&(NPAR-1)))); 
       DQ(ac, 
        DQ(wsct, __m256i x=_mm256_set1_epi64x(*wv); I*avend=av; I*avv=av+((asct-1)&(-(I)NPAR)); int cmps;  
         if(cmps=_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_and_si256(endmask,_mm256_cmpeq_epi64(x,_mm256_maskload_epi64(avv,endmask))))))goto fnd012; 
         while(1){if(avv==avend)break; avv-=NPAR; if(cmps=_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_cmpeq_epi64(x,_mm256_loadu_si256((__m256i*)avv)))))goto fnd012;} 
 fnd012: ; unsigned long temp; CTLZI(cmps,temp); I res=(avv-av)+temp; res=(cmps==0)?asct:res; *(I*)zv=res; zv=(I*)zv+1;      wv+=q;);
       av+=p; wv=(1==wc)?(I*)v:wv;);} break; 
-   case IOSCCASE(INTX,0,IEPS): {I *wv=(I*)v; I*av=(I*)u; __m256i endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-asct)&(NPAR-1)))); 
+   case IOSCCASE(INTX,0,IEPS): {I *wv=(I*)v; I*av=(I*)u; __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-asct)&(NPAR-1)))); 
       DQ(ac, 
        DQ(wsct, __m256i x=_mm256_set1_epi64x(*wv); I*avv=av; I*avend=av+((asct-1)&(-(I)NPAR)); int cmps; 
         while(1){if(avv==avend)break; if(cmps=_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_cmpeq_epi64(x,_mm256_loadu_si256((__m256i*)avv)))))goto fnd013; avv+=NPAR;} 
@@ -1424,14 +1424,10 @@ static IOFXW(Z,UI4,jtiowz02, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&wv[n*hj],2*n
 static IOFXWS(jtio42w,I,US)  static IOFXWS(jtio44w,I,UI4)  // INT-sized items, using small/large hashtable
 
 // Routine to find range of an array of I
-// The return is a CR struct holding max and range+1.  But if the range+1 is >= maxrange,
+// The return is a CR struct holding max and range+1.  But if the range+1 is > maxrange,
 // we abort and return 0 range.
 // min and max are initial values for min/max
 #if 1
-// We keep this version, using CMOV, because on Ivy Bridge CMOVs execute at one per clock (latency 2) and thus cannot update a
-// single min/max every 2 cycles - and there is no other way to update faster than one per clock.  On Broadwell, CMOVs execute 2
-// per clock with latency 1 and thus just can update both min and max each clock with 2 copies.  This is faster than taken branches
-// which retire only 0.5 branches per clock
 #define ASSESSBLOCKSIZE 64  // every so many inputs, check for range too large
 CR condrange(I *s,I n,I min,I max,I maxrange){CR ret;I i,min0,min1,max0,max1;I x;
  // Unroll loop once to keep the compares rolling
@@ -1464,6 +1460,68 @@ CR condrange(I *s,I n,I min,I max,I maxrange){CR ret;I i,min0,min1,max0,max1;I x
  R ret;
 fail: ret.min=ret.range=0; R ret;
 }
+#if 0
+ if(!n)goto fail;
+ nqw=(n-1)>>LGNPAR;  // number of full qwords
+ __m256i min0, min1, max0, max1;
+ __m256i maxmask = _mm256_loadu_si256((__m256i const *)(validitymask+6));  // 0 0 ffff ffff for sign switching
+ __m256i endmask= _mm256_loadu_si256((__m256i const *)(validitymask+((-n)&(NPAR-1))));
+ min0=_mm256_set1_epi64x(min); max0=_mm256_set1_epi64x(max);
+ if(nqw--){
+  // read the last batch into min/max1
+  min1 = max1 = _mm256_loadu_si256((__m256i const *)s+(nqw<<LGNPAR));
+  I batchsize = 4;  // number of batches to read before checking for range exceeded
+  while(nqw>0){
+   I compn=batchsize; compn=compn>nqw?nqw:compn;  // number to read before combining values
+   nqw-=compn;  // decr for all the reads we will make
+   do{
+    __m256i temp = _mm256_loadu_si256((__m256i const *)s); s+=NPAR;  // read next batch & advance
+    min0 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(min0),_mm256_castsi256_pd(temp),_mm256_castsi256_pd(_mm256_cmpgt_epi64(min0,temp))));  // if min>temp, take temp
+    max0 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(temp),_mm256_castsi256_pd(max0),_mm256_castsi256_pd(_mm256_cmpgt_epi64(max0,temp))));  // if max>temp, take max
+    if(!--compn)break;
+    temp = _mm256_loadu_si256((__m256i const *)s); s+=NPAR;  // read next batch & advance
+    min1 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(min1),_mm256_castsi256_pd(temp),_mm256_castsi256_pd(_mm256_cmpgt_epi64(min1,temp))));  // if min>temp, take temp
+    max1 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(temp),_mm256_castsi256_pd(max1),_mm256_castsi256_pd(_mm256_cmpgt_epi64(max1,temp))));  // if max>temp, take max
+   }while(--compn);
+   if(nqw==0)break;  // all batches read, read the remnant and finish
+   // more batches to read.  Check for early exit
+   // combine the 8 mins into one, and the 8 maxes.  Take the difference & see if it exceeds max allowable range
+   min0 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(min0),_mm256_castsi256_pd(min1),_mm256_castsi256_pd(_mm256_cmpgt_epi64(min0,min1))));  // if min>temp, take temp
+   max0 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(max1),_mm256_castsi256_pd(max0),_mm256_castsi256_pd(_mm256_cmpgt_epi64(max0,max1))));  // if max>temp, take max
+   min1 = _mm256_permute2x128_si256(min0,max0,0x09);  // now min1 has low 2 values of max0 in the high part, and the high 2 values of min0 in the low part
+   max1 = _mm256_castpd_si256(_mm256_blend_pd(_mm256_castsi256_pd(min0),_mm256_castsi256_pd(max0),0xc));  // max1 has low 2 values of min0 in the low part, top 2 values of max0 in the high part
+   // Top 2 values of min/max 1 are from max, low 2 are from min.  Do min/max compares simultaneously, comparing as if for min and then changing the sign for the top 2 values
+   min1 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(min1),_mm256_castsi256_pd(max1),_mm256_castsi256_pd(_mm256_xor_si256(maxmask,_mm256_cmpgt_epi64(min1,max1)))));  // if min>max, take max; unless switched
+   // Now min1 is mina minb maxa maxb.  Swap in lane and finish the min and max compares
+   max1 = _mm256_castpd_si256(_mm256_permute_pd(_mm256_castsi256_pd(max1),0x5));  // minb mina maxb maxa
+   min1 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(min1),_mm256_castsi256_pd(max1),_mm256_castsi256_pd(_mm256_xor_si256(maxmask,_mm256_cmpgt_epi64(min1,max1)))));  // if min>max, take max; unless switched
+   if((UI)(_mm256_extract_epi64(min1,2)-_mm256_extract_epi64(min1,0)>=(UI)maxrange)goto fail;  // abort if range limit exceeded
+   // the check above takes 20 cycles.  Increase the batchsize up to ~1000 cycles
+   //  Now the values in min/max 0/1 are all scrambled, but the min is somewhere in min0 and the max is somewhere in max0, and min1/max1 contain all valid values
+   batchsize<<=2; batchsize=batchsize>?:batchsize;
+  }
+  s+=NPAR;  // skip over the last batch, previously read
+ }else{min1=min0; max1=max0;}
+ // append the last section, 1-4 longs
+ __m256i temp = _mm256_maskload_epi64(s,endmask); s+=NPAR;  // read valid values
+ min0 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(min0),_mm256_castsi256_pd(temp),_mm256_castsi256_pd(_mm256_and_si256(_mm256_cmpgt_epi64(min0,temp),endmask))));  // if min>temp, take temp
+ max0 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(max0),_mm256_castsi256_pd(temp),_mm256_castsi256_pd(_mm256_and_si256(_mm256_cmpgt_epi64(temp,max0).endmask))));  // if max>temp, take max
+ // make final combination
+ // combine the 8 mins into one, and the 8 maxes.  Take the difference & see if it exceeds max allowable range
+ min0 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(min0),_mm256_castsi256_pd(min1),_mm256_castsi256_pd(_mm256_cmpgt_epi64(min0,min1))));  // if min>temp, take temp
+ max0 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(max1),_mm256_castsi256_pd(max0),_mm256_castsi256_pd(_mm256_cmpgt_epi64(max0,max1))));  // if max>temp, take max
+ min1 = _mm256_permute2x128_si256(min0,max0,0x09);  // now min1 has low 2 values of max0 in the high part, and the high 2 values of min0 in the low part
+ max1 = _mm256_castpd_si256(_mm256_blend_pd(_mm256_castsi256_pd(min0),_mm256_castsi256_pd(max0),0xc));  // max1 has low 2 values of min0 in the low part, top 2 values of max0 in the high part
+ // Top 2 values of min/max 1 are from max, low 2 are from min.  Do min/max compares simultaneously, comparing as if for min and then changing the sign for the top 2 values
+ min1 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(min1),_mm256_castsi256_pd(max1),_mm256_castsi256_pd(_mm256_xor_si256(maxmask,_mm256_cmpgt_epi64(min1,max1)))));  // if min>max, take max; unless switched
+ // Now min1 is mina minb maxa maxb.  Swap in lane and finish the min and max compares
+ max1 = _mm256_castpd_si256(_mm256_permute_pd(_mm256_castsi256_pd(max1),0x5));  // minb mina maxb maxa
+ min1 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(min1),_mm256_castsi256_pd(max1),_mm256_castsi256_pd(_mm256_xor_si256(maxmask,_mm256_cmpgt_epi64(min1,max1)))));  // if min>max, take max; unless switched
+ I rmin = _mm256_extract_epi64(min1,0); I rmax = (_mm256_extract_epi64(min1,2); if((UI)(rmax-rmin)>=(UI)maxrange)goto fail;
+ ret.min=rmin; ret.range=rmax-rmin+1;  // because the tests succeed, this will give the proper range
+ R ret;
+fail: ret.min=ret.range=0; R ret;
+#endif
 // Same for 4-bytes types, such as C4T
 CR condrange4(C4 *s,I n,I min,I max,I maxrange){CR ret;I i; C4 min0,min1,max0,max1;C4 x;
  // Unroll loop once to keep the compares rolling

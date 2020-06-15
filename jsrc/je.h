@@ -941,6 +941,7 @@ extern I Bchrcolon[];
 #define chrcolon ((A)&Bchrcolon)
 extern I Bchrspace[];
 #define chrspace ((A)&Bchrspace)
+extern const I validitymask[];
 extern C  ctype[];
 extern const double dzero;
 extern D        inf;

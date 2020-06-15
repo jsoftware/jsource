@@ -162,7 +162,7 @@ REDUCCPFX(tymesinsO, D, I, TYMESO)
  _mm256_zeroupper(VOIDARG); \
   /* prim/ vectors */ \
   __m256d idreg=_mm256_set1_pd(identity); \
-  endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-n)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
+  endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
   DQ(m, __m256d acc0=idreg; __m256d acc1=idreg; __m256d acc2=idreg; __m256d acc3=idreg; \
    DQ((n-1)>>(2+LGNPAR), acc0=prim(acc0,_mm256_loadu_pd(x)); acc1=prim(acc1,_mm256_loadu_pd(x+NPAR)); acc2=prim(acc2,_mm256_loadu_pd(x+2*NPAR)); acc3=prim(acc3,_mm256_loadu_pd(x+3*NPAR)); x+=4*NPAR; ) \
    if((n-1)&((4-1)<<LGNPAR)){acc0=prim(acc0,_mm256_loadu_pd(x));\

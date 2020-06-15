@@ -156,7 +156,7 @@ I blockedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I pnom,I pstored,I flgs){
   }
   // handle the remnant, which is never empty (to avoid branch misprediction)
   __m256i mask;  // horizontal mask for w values
-  mask=_mm256_loadu_si256((__m256i*)(jt->validitymask+3-((nrem-1)&(NPAR-1))));  // nrem { x 1 2 3 4 x x x
+  mask=_mm256_loadu_si256((__m256i*)(validitymask+3-((nrem-1)&(NPAR-1))));  // nrem { x 1 2 3 4 x x x
   __m256d w0=_mm256_maskload_pd(wv1,mask), w1=_mm256_maskload_pd(wv1+n,mask);
   z00=_mm256_mul_pd(a00,w0); z00=MUL_ACC(z00,a01,w1); z10=_mm256_mul_pd(a10,w0); z10=MUL_ACC(z10,a11,w1);
   if(flgs&FLGWMINUSZ){WMZ(0,0) WMZ(1,0)}  // handle WMINUSZ, used for next-to-last bit of %.
@@ -223,7 +223,7 @@ I blockedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I pnom,I pstored,I flgs){
   wv+=nrem&-NPAR; zv+=nrem&-NPAR;  // restore pointer to the unprocessed data
   // Get the mask for the w columns
   __m256i mask;  // horizontal mask for w values
-  mask=_mm256_loadu_si256((__m256i*)(jt->validitymask+4-(nrem&(NPAR-1))));  // a3rem { 4 3 2 1 0 0 0 0
+  mask=_mm256_loadu_si256((__m256i*)(validitymask+4-(nrem&(NPAR-1))));  // a3rem { 4 3 2 1 0 0 0 0
 
   I mrem=m;  // number of rows of a left
   D *av1=av;  // scan pointer through a values, by cols then by rows, i. e. incrementing
@@ -451,8 +451,8 @@ static I cachedmmultx(J jt,D* av,D* wv,D* zv,I m,I n,I pnom,I pstored,I flgs){D 
        } else {
         __m256i mask0, mask1;  // horizontal masks for w values, if needed
         I nvalids=0x048cdef0>>(a3rem<<2);  // 4 bits: f1f0 l1l0 where f10 is the offset to use for first 4 values, l10 if offset-1 for last 4.  Offset0=4 words, 1=3 words, 2-2 words, 3=1 word.  Can't have 0 words for f, can for l
-        mask0=_mm256_loadu_si256((__m256i*)(jt->validitymask+(nvalids&0x3)));  // a3rem { 4 3 2 1 0 0 0 0
-        mask1=_mm256_loadu_si256((__m256i*)(jt->validitymask+1+((nvalids>>2)&0x3)));  // a3rem { 4 4 4 4 4 3 2 1
+        mask0=_mm256_loadu_si256((__m256i*)(validitymask+(nvalids&0x3)));  // a3rem { 4 3 2 1 0 0 0 0
+        mask1=_mm256_loadu_si256((__m256i*)(validitymask+1+((nvalids>>2)&0x3)));  // a3rem { 4 4 4 4 4 3 2 1
         _mm256_maskstore_pd(z3base,mask0,z00); _mm256_maskstore_pd(z3base+NPAR,mask1,z01);
         if(a2rem>1){_mm256_maskstore_pd(z3base+n,mask0,z10); _mm256_maskstore_pd(z3base+n+NPAR,mask1,z11);}
         if(a2rem>2){_mm256_maskstore_pd(z3base+2*n,mask0,z20); _mm256_maskstore_pd(z3base+2*n+NPAR,mask1,z21);}
@@ -509,8 +509,8 @@ static I cachedmmultx(J jt,D* av,D* wv,D* zv,I m,I n,I pnom,I pstored,I flgs){D 
          if(a5rem>1){_mm256_storeu_pd(z4base+n,z10r); _mm256_storeu_pd(z4base+n+NPAR,z11r);}
         } else {
          __m256i mask0, mask1;  // horizontal masks for w values, if needed
-         mask0=_mm256_loadu_si256((__m256i*)(jt->validitymask+((0x00001234>>(a3rem<<2))&0x7)));  // a3rem { 4 3 2 1 0 0 0 0
-         mask1=_mm256_loadu_si256((__m256i*)(jt->validitymask+((0x12344444>>(a3rem<<2))&0x7)));  // a3rem { 4 4 4 4 4 3 2 1
+         mask0=_mm256_loadu_si256((__m256i*)(validitymask+((0x00001234>>(a3rem<<2))&0x7)));  // a3rem { 4 3 2 1 0 0 0 0
+         mask1=_mm256_loadu_si256((__m256i*)(validitymask+((0x12344444>>(a3rem<<2))&0x7)));  // a3rem { 4 4 4 4 4 3 2 1
          _mm256_maskstore_pd(z4base,mask0,z00r); _mm256_maskstore_pd(z4base+NPAR,mask1,z01r);
          if(a5rem>1){_mm256_maskstore_pd(z4base+n,mask0,z10r); _mm256_maskstore_pd(z4base+n+NPAR,mask1,z11r);}
         }

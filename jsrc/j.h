@@ -500,7 +500,7 @@ extern unsigned int __cdecl _clearfp (void);
 // verify that shapes *x and *y match for l axes, with no mispredicted branches
 #if C_AVX&&SY_64
 #define ASSERTAGREE(x,y,l) {D *aaa=(D*)(x), *aab=(D*)(y); I aai=4-(l); \
- do{__m256i endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+(aai>=0?aai:0))); \
+ do{__m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+(aai>=0?aai:0))); \
   endmask=_mm256_castpd_si256(_mm256_xor_pd(_mm256_maskload_pd(aaa,endmask),_mm256_maskload_pd(aab,endmask))); \
   ASSERT(_mm256_testz_si256(endmask,endmask),EVLENGTH); if(aai>=0)break; aaa+=NPAR; aab+=(SGNTO0(aai))<<LGNPAR; aai+=NPAR; /* prevent compiler from doing address offset */\
  }while(aai<4); }  // the test at end is to prevent the compiler from duplicating the loop.  It is almost never executed.
@@ -650,8 +650,8 @@ extern unsigned int __cdecl _clearfp (void);
 // Name comparison using wide instructions.   Run stmt if the names match
 #define IFCMPNAME(name,string,len,stmt) \
  if((name)->m==(len)){  /* compare len.  todo should we also compare hash first? */ \
-  __m256i readmask=_mm256_loadu_si256((__m256i*)(jt->validitymask+(((-len)>>LGSZI)&(NPAR-1)))); /* the words we read */ \
-  __m256i endmask=_mm256_loadu_si256((__m256i*)((C*)jt->validitymask+((-(len))&((NPAR*SZI)-1))));  /* the valid bytes */\
+  __m256i readmask=_mm256_loadu_si256((__m256i*)(validitymask+(((-len)>>LGSZI)&(NPAR-1)))); /* the words we read */ \
+  __m256i endmask=_mm256_loadu_si256((__m256i*)((C*)validitymask+((-(len))&((NPAR*SZI)-1))));  /* the valid bytes */\
   __m256d accumdiff=_mm256_xor_pd(_mm256_castsi256_pd(readmask),_mm256_castsi256_pd(readmask)); /* will hold total xor result */ \
   D *in0=(D*)((name)->s), *in1=(D*)(string); \
   DQ(((len)-1)>>(LGNPAR+LGSZI), \
@@ -724,7 +724,7 @@ extern unsigned int __cdecl _clearfp (void);
 // For AVX, we can profitably use the MASKMOV instruction to do all the  testing
 #if C_AVX&&SY_64
 #define MCISH(dest,src,n) {D *_d=(D*)(dest), *_s=(D*)(src); I _n=-(I)(n); \
- do{_n+=NPAR; __m256i endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+(_n>=0?_n:0))); \
+ do{_n+=NPAR; __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+(_n>=0?_n:0))); \
   _mm256_maskstore_pd(_d,endmask,_mm256_maskload_pd(_s,endmask)); \
   if(_n>=0)break; _d+=NPAR; _s+=NPAR;  /* prevent compiler from calculating offsets */ \
  }while(_n<4); }  // the test at end is to prevent the compiler from duplicating the loop.  It is almost never executed.
@@ -770,7 +770,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define AVXATOMLOOP(preloop,loopbody,postloop) \
  __m256i endmask;  __m256d u; \
  _mm256_zeroupper(VOIDARG); \
- endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-n)&(NPAR-1))));  /* mask for 0 1 2 3 4 5 is xxxx 0001 0011 0111 1111 0001 */ \
+ endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1))));  /* mask for 0 1 2 3 4 5 is xxxx 0001 0011 0111 1111 0001 */ \
  preloop \
  I i=(n-1)>>LGNPAR;  /* # loops for 0 1 2 3 4 5 is x 0 0 0 0 1 */ \
  while(--i>=0){ u=_mm256_loadu_pd(x); \
@@ -787,7 +787,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define AVXATOMLOOPPIPE(preloop,loopbody1,loopbody2,postloop) \
  __m256i endmask;  __m256d u, zt, zu; \
  _mm256_zeroupper(VOIDARG); \
- endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-n)&(NPAR-1))));  /* mask for 0 1 2 3 4 5 is xxxx 0001 0011 0111 1111 0001 */ \
+ endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1))));  /* mask for 0 1 2 3 4 5 is xxxx 0001 0011 0111 1111 0001 */ \
  preloop \
  I i=(n-1)>>LGNPAR;  /* # loops for 0 1 2 3 4 5 is x 0 0 0 0 1 */ \
  if(i>0){u=_mm256_loadu_pd(x); x+=NPAR; loopbody1 \
@@ -805,7 +805,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define AVXATOMLOOP2(preloop,loopbody,postloop) \
  __m256i endmask;  __m256d u,v; \
  _mm256_zeroupper(VOIDARG); \
- endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-n)&(NPAR-1))));  /* mask for 0 1 2 3 4 5 is xxxx 0001 0011 0111 1111 0001 */ \
+ endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1))));  /* mask for 0 1 2 3 4 5 is xxxx 0001 0011 0111 1111 0001 */ \
  preloop \
  I i=(n-1)>>LGNPAR;  /* # loops for 0 1 2 3 4 5 is x 0 0 0 0 1 */ \
  while(--i>=0){ u=_mm256_loadu_pd(x); v=_mm256_loadu_pd(y); \

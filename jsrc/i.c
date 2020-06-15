@@ -219,9 +219,6 @@ jt->assert = 1;
  jt->baselocalehash=(UI4)nmhash(sizeof(jt->baselocale),jt->baselocale);
  RESETRANK;  // init both ranks to RMAX
  DO(IOTAVECLEN, jt->iotavec[i]=i+IOTAVECBEGIN;)  // init our vector of ascending integers
-#if C_AVX&&SY_64
- memset(&jt->validitymask[0],-1,4*sizeof(I)); memset(&jt->validitymask[4],0,4*sizeof(I));  // -1, -1, -1, -1, 0, 0, 0, 0   used to prepare for mask load/store
-#endif
   // Init for u./v.
  A uimp=ca(mnuvxynam[2]); NAV(uimp)->flag|=NMIMPLOC;  // create the name for u.
  jt->implocref[0] = fdef(0,CTILDE,VERB, 0,0, uimp,0L,0L, 0, RMAX,RMAX,RMAX);  //create 'u.'~

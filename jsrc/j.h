@@ -1036,14 +1036,10 @@ extern unsigned int __cdecl _clearfp (void);
 #include "vdx.h"  
 #include "a.h"
 #include "s.h"
-// obsolete #define SLEEF C_AVX2|| C_AVX
+// obsolete #define SLEEF C_AVX2 || C_AVX
 #if SLEEF
 #define SLEEF_STATIC_LIBS
-#ifdef _WIN32
-#include "..\SLEEF\include\sleef.h"
-#else
 #include "../sleef/include/sleef.h"
-#endif
 
 // Define entry points to use for the architectures of interest
 #if C_AVX2

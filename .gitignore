@@ -20,6 +20,9 @@ jsrc/jversion.h
 **/jconsole/.vs/
 **/jdll/**/.vs/
 **/tsdll/**/.vs/
+*.ilk
+*.pdb
+*.exp
 
 # following are no longer required and prevent template folders
 # **/jconsole/**/

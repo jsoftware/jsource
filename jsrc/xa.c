@@ -93,14 +93,14 @@ F1(jtieps){
  R mtm;
 }
 
-F1(jtoutparmq){A z;D*u,x;I*v;
+F1(jtoutparmq){A z;D*u;I*v;
  ASSERTMTV(w);
  if(IMAX==jt->outmaxlen||IMAX==jt->outmaxbefore||IMAX==jt->outmaxafter){
   GAT0(z,FL, 4,1); u=DAV(z);
   u[0]=(D)jt->outeol;
-  x=(D)jt->outmaxlen;    u[1]=x==-(D)IMIN?inf:x;
-  x=(D)jt->outmaxbefore; u[2]=x==-(D)IMIN?inf:x;
-  x=(D)jt->outmaxafter;  u[3]=x==-(D)IMIN?inf:x;
+  u[1]=jt->outmaxlen==IMAX?inf:(D)jt->outmaxlen;
+  u[2]=jt->outmaxbefore==IMAX?inf:(D)jt->outmaxbefore;
+  u[3]=jt->outmaxafter==IMAX?inf:(D)jt->outmaxafter;
  }else{
   GAT0(z,INT,4,1); v= AV(z);
   v[0]=jt->outeol;

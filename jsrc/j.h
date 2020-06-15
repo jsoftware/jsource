@@ -99,6 +99,8 @@
 #if SY_64
 #define IMAX            9223372036854775807LL
 #define IMIN            (~9223372036854775807LL)   /* ANSI C LONG_MIN is  -LONG_MAX */
+#define FLIMAX          9223372036854775296.     // largest FL value that can be converted to I
+#define FLIMIN          ((D)IMIN)  // smallest FL value that can be converted to I
 #define FMTI            "%lli"
 #define FMTI02          "%02lli"
 #define FMTI04          "%04lli"
@@ -113,6 +115,8 @@
 #else
 #define IMAX            2147483647L
 #define IMIN            (~2147483647L)   /* ANSI C LONG_MIN is  -LONG_MAX */
+#define FLIMAX          ((D)IMAX+0.4)     // largest FL value that can be converted to I
+#define FLIMIN          ((D)IMIN)  // smallest FL value that can be converted to I
 #define FMTI            "%li"
 #define FMTI02          "%02li"
 #define FMTI04          "%04li"

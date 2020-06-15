@@ -188,7 +188,7 @@ I jti0(J jt,A w){RZ(w);
   // if an atom is tolerantly equal to integer,  there's a good chance it is exactly equal.
   // infinities will always round to themselves
   ASSERT(d==e || FFIEQ(d,e),EVDOMAIN);
-  cval=d<(D)-IMAX?-IMAX:cval; cval=d>=-(D)IMIN?IMAX:cval;
+  cval=d<(D)-IMAX?-IMAX:cval; cval=d>=FLIMAX?IMAX:cval;
   ASSERT(!AR(w),EVRANK);
   R cval;  // too-large values don't convert, handle separately
  }
@@ -393,7 +393,7 @@ F1(jtvib){A z;D d,e,*wv;I i,n,*zv;
    // if an atom is tolerantly equal to integer,  there's a good chance it is exactly equal.
    // infinities will always round to themselves
    ASSERT(d==e || FFIEQ(d,e),EVDOMAIN);
-   cval=d<(D)-IMAX?-IMAX:cval; cval=d>=-(D)IMIN?IMAX:cval; zv[i]=cval;  // too-large values don't convert, handle separately
+   cval=d<(D)-IMAX?-IMAX:cval; cval=d>=FLIMAX?IMAX:cval; zv[i]=cval;  // too-large values don't convert, handle separately
    }
    break;
   case XNUM:

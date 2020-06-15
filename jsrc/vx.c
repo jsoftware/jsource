@@ -370,7 +370,7 @@ XF1(jtxfact){I n;
 static XF2(jtxbinp){PROLOG(0098);D m;I i,n;X c,d,p,q,r,s;
  RZ(d=xminus(w,a)); s=1==xcompare(a,d)?d:a; RE(n=xint(s));
  m=xdouble(w);
- if(m<=-(D)IMIN){
+ if(m<=FLIMAX){
   RZ(p=less(ravel(factor(apv(n,(I)m,-1L))),zeroionei(0)));
   RZ(q=less(ravel(factor(apv(n,1L,   1L))),zeroionei(0)));
   c=over(p,q);

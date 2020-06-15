@@ -215,7 +215,7 @@ F1(jtpmctr){D x;I q;
  RE(q=i0(w));
  ASSERT(jt->pma,EVDOMAIN);
  x=q+(D)jt->pmctr;
- ASSERT(IMIN<=x&&x<-(D)IMIN,EVDOMAIN);
+ ASSERT(IMIN<=x&&x<FLIMAX,EVDOMAIN);
  jt->pmctr=q=(I)x; jt->cxspecials=1; jt->uflags.us.uq.uq_c.pmctrbstk&=~PMCTRBPMON; jt->uflags.us.uq.uq_c.pmctrbstk|=q?PMCTRBPMON:0;  // tell cx and unquote to look for pm
  R sc(q);
 }    /* add w to pmctr */
@@ -349,7 +349,7 @@ F1(jttlims){D d;
  if(!(FL&AT(w)))RZ(w=cvt(FL,w));
  d=*DAV(w);
  ASSERT(0<=d,EVDOMAIN);
- ASSERT(-(D)IMIN>1000*d,EVLIMIT);
+ ASSERT(FLIMAX>1000*d,EVLIMIT);
  jt->timelimit=(UI)(1000*d);
  R mtm;
 }

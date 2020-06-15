@@ -732,7 +732,7 @@ static A jtjprx(J jt,I ieol,I maxlen,I lb,I la,A w){A y,z;B ch;C e,eov[2],*v,x,*
  // calculate p=total # lines of spacing needed, as sum of (#k-cells-1) for k>=2
  p=2<r?2-r:0; h=1; DO(r-2, if(s[i]){h*=s[i]; p+=h;}else{p=0; break;});
  // Set h = max#lines to output, the smaller of (the # before spacing) and (the number we allow)
- h=lba<-(D)IMIN?lb+la:IMAX; h=MIN(nq,h);
+ h=lba<FLIMAX?lb+la:IMAX; h=MIN(nq,h);
  // zn=# characters in result string.  Start with enough for '...\n', plus '\n' for each line of spacing,
  // plus, for each line, the max length:
  //   if character type, max line length + '\n' + room for '...\n' to continue the line till all characters are displayed

@@ -28,16 +28,19 @@ mkdir_j_ jpath ptemp
 stdout=: ptemp,'/stdout.txt'
 stderr=: ptemp,'/stderr.txt'
 psh=:    ptemp,'/build.sh'
-suffix=: '.so'
 clean=: './clean.sh' NB. set clean=: '' to avoid compiles
 
 3 : 0'' 
 if. UNAME-:'Linux' do.
  platform=: 'linux'
+ compiler=: 'clang-8'
+ suffix=: '.so'
  terminal=: 'x-terminal-emulator -e '
 else.
- platform=; 'darwin'
- terminal=: 'terminal '
+ platform=: 'darwin'
+ compiler=: 'clang'
+ suffix=: '.dylib'
+ terminal=: ''
 end.
 )
 
@@ -64,15 +67,15 @@ target=../jlibrary/bin/TARGETSUFFIX
 echo $target
 cd MAKE2
 jplatform=PLATFORM
-CC=clang-8
+CC=COMPILER
 export CC
 CLEAN
 j64x=j64TYPE ./build_libj.sh  
-cp ../bin/$jplatform/j64TYPE/libj.so $target
+cp ../bin/$jplatform/j64TYPE/libjSUFFIX $target
 echo done
 )
 
-same=: 'SUFFIX';suffix;'PLATFORM';'linux';'MAKE2';pmake2;'CLEAN';clean
+same=: 'SUFFIX';suffix;'PLATFORM';platform;'MAKE2';pmake2;'CLEAN';clean;'COMPILER';compiler
 shlibj    =: shtemplate rplc 'TARGET';'libj'    ;'TYPE';''    ;same
 shlibjavx =: shtemplate rplc 'TARGET';'libjavx' ;'TYPE';'avx' ;same
 shlibjavx2=: shtemplate rplc 'TARGET';'libjavx2';'TYPE';'avx2';same
@@ -81,21 +84,21 @@ shcommon=: }:0 : 0 rplc 'MAKE2';pmake2
 target=../jlibrary/bin/TARGET
 echo $target
 cd MAKE2
-jplatform=linux
-CC=clang-8
+jplatform=PLATFORM
+CC=COMPILER
 export CC
 ./clean.sh
 rm -f $target
 )
 
-shjconsole=: (0 : 0 rplc 'COMMON';shcommon) rplc 'TARGET';'jconsole'
+shjconsole=: (0 : 0 rplc 'COMMON';shcommon) rplc 'TARGET';'jconsole';same
 COMMON
 j64x=j64 ./build_jconsole.sh  
 cp ../bin/$jplatform/j64/jconsole $target 
 echo done
 )
 
-shlibtsdll=: (0 : 0 rplc 'COMMON';shcommon) rplc 'SUFFIX';suffix;'TARGET';'libtsdll',suffix
+shlibtsdll=: (0 : 0 rplc 'COMMON';shcommon) rplc 'TARGET';'libtsdll';same
 COMMON
 j64x=j64 ./build_tsdll.sh  
 cp ../bin/$jplatform/j64/libtsdllSUFFIX $target
@@ -134,6 +137,12 @@ run=: 3 : 0
 t=. terminal,pmake2,'/../jlibrary/bin/jconsole -lib ',y,suffix,' ',ptemp,'/run.ijs'
 fork_jtask_ t
 )
+
+runmac=: 3 : 0
+t=. terminal,pmake2,'/../jlibrary/bin/jconsole -lib ',y,suffix,' ',ptemp,'/run.ijs'
+fork_jtask_ t
+)
+
 
 runtests=: 3 : 0
 t=. pmake2,'/../jlibrary/bin/jconsole -lib ',y,suffix,' ',ptemp,'/runddall.ijs'

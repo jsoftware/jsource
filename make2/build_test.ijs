@@ -3,6 +3,9 @@ manage building/testing J releases/betas from J
 uses make2 sh script to build binaries
 all binaries are copied to git/jlibrary/bin with qualified names (e.g. libjavx2.so)
 
+
+!!! this J script is NOT ignored by gitignore - changes will be pushed
+
    build'jconsole'
    build'libtsdll'
    build'libj'    NB. 'libjavx' 'libjavx2'
@@ -46,15 +49,15 @@ t fwrite ptemp,'/run.ijs' NB. script to load tsu.ijs
 
 rt=. 0 : 0
 
-runpacman''
-runjd''
 RUN ddall
 echo LF,'failed: ',":#RBAD''
 echo RBAD''
+runpacman''
+runjd''
 exit''
 )
 
-(t,rt,')') fwrite ptemp,'/runtests.ijs'
+(t,rt) fwrite ptemp,'/runtests.ijs'
 
 shtemplate=: 0 : 0
 target=../jlibrary/bin/TARGETSUFFIX
@@ -133,12 +136,7 @@ fork_jtask_ t
 )
 
 runtests=: 3 : 0
-t=. terminal,pmake2,'/../jlibrary/bin/jconsole -lib ',y,suffix,' ',ptemp,'/runtests.ijs'
-fork_jtask_ t
-)
-
-runtests=: 3 : 0
-t=. pmake2,'/../jlibrary/bin/jconsole -lib ',y,suffix,' ',ptemp,'/runtests.ijs'
+t=. pmake2,'/../jlibrary/bin/jconsole -lib ',y,suffix,' ',ptemp,'/runddall.ijs'
 spawn_jtask_ t
 )
 

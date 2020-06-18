@@ -59,6 +59,7 @@ release
 # build folders
 bin/
 make2/
+~make2/build_test.ijs
 /makevs/jdll/template/jdll_vs2019_clang.vcxproj
 /jlibrary/addons
 /jlibrary/system

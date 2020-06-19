@@ -1,26 +1,36 @@
 man=: 0 : 0
 manage building/testing J releases/betas from J
-uses make2 sh script to build binaries
-all binaries are copied to git/jlibrary/bin with qualified names (e.g. libjavx2.so)
 
-
-!!! this J script is NOT ignored by gitignore - changes will be pushed
-
+build uses make2 for linux/macos
+JE binaries are copied to git/jlibrary/bin with qualified names (e.g. libjavx2.so)
    build'jconsole'
    build'libtsdll'
    build'libj'    NB. 'libjavx' 'libjavx2'
    build_all''    NB. build all
-   
+
+windows builds done with vs2019
+
+fork - linux/macos/windows   
    run'libj'      NB. 'libjavx' 'libjavx2'
-   runtests'libj' NB. 'libjavx' 'libjavx2'
-   runtests_all'' NB. tests on all
+   
+spawn - linux/macos/windows   
+   runit LIB       ;FILE
+   runit 'libj'    ;'rundd.ijs'
+   runit 'libjavx2';'rundd.ijs'
+   
+   runit 'libj'    ;'runpm.ijs' NB. pacman
+   runit 'libj'    ;'runjd.ijs' NB. jd
+   
+   runit_all''   NB. ddall/pacman/jd on all - written to file
 )   
 
 load'~addons/misc/miscutils/utils.ijs'
 
 build_test=: 3 : '' NB. for whichscript
 
-pmake2=: (t i:'/'){.t=. ;whichscript'build_test' NB. path to make2 folder
+t=. ;whichscript'build_test'
+t=. (t i:'/'){.t
+pmake2=: '/make2',~(t i:'/'){.t
 ptemp=:  jpath'~temp/jbuild'
 
 mkdir_j_ jpath ptemp
@@ -51,16 +61,24 @@ t=. 'load''',pmake2,'/../test/tsu.ijs'''
 t fwrite ptemp,'/run.ijs' NB. script to load tsu.ijs
 
 rt=. 0 : 0
-
 RUN ddall
 echo LF,'failed: ',":#RBAD''
 echo RBAD''
+exit''
+)
+(t,LF,rt) fwrite ptemp,'/rundd.ijs'
+
+rt=. 0 : 0
 runpacman''
+exit''
+)
+(t,LF,rt) fwrite ptemp,'/runpm.ijs'
+
+rt=. 0 : 0
 runjd''
 exit''
 )
-
-(t,rt) fwrite ptemp,'/runtests.ijs'
+(t,LF,rt) fwrite ptemp,'/runjd.ijs'
 
 shtemplate=: 0 : 0
 target=../jlibrary/bin/TARGETSUFFIX
@@ -91,7 +109,7 @@ export CC
 rm -f $target
 )
 
-shjconsole=: (0 : 0 rplc 'COMMON';shcommon) rplc 'TARGET';'jconsole';same
+shjconsole=: (0 : 0 rplc 'COMMON';shcommon) rplc 'TARGET';'jconsole';'SUFFIX';'';'PLATFORM';platform;'MAKE2';pmake2;'CLEAN';clean;'COMPILER';compiler
 COMMON
 j64x=j64 ./build_jconsole.sh  
 cp ../bin/$jplatform/j64/jconsole $target 
@@ -145,28 +163,52 @@ else.
 end.
 )
 
-runmac=: 3 : 0
-t=. terminal,pmake2,'/../jlibrary/bin/jconsole -lib ',y,suffix,' ',ptemp,'/run.ijs'
-fork_jtask_ t
+runit=: 3 : 0
+'LIB FILE'=: y
+t=. pmake2,'/../jlibrary/bin/jconsole -lib LIBSUFFIX ',ptemp,'/FILE'
+t=. t rplc 'LIB';LIB;'SUFFIX';suffix;'FILE';FILE
+a=. LF,~(80#'*'),;' ',~each y
+LF,a,spawn_jtask_ t 
 )
 
-
-runtests=: 3 : 0
-t=. pmake2,'/../jlibrary/bin/jconsole -lib ',y,suffix,' ',ptemp,'/runddall.ijs'
+rundd=: 3 : 0
+t=. pmake2,'/../jlibrary/bin/jconsole -lib ',y,'SUFFIX ',ptemp,'/runddall.ijs'
 spawn_jtask_ t
 )
 
-runtests_all=: 3 : 0
-t=. LF,LF,80#'*'
-echo runtests'libj'
-echo t
-echo runtests'libjavx'
-echo t
-echo runtests'libjavx2'
-i.0 0
+report=: ptemp,'/report.txt'
+
+runit_all=: 3 : 0
+report fwrite~ ''
+report fappend~runit'libj'    ;'rundd.ijs'
+report fappend~runit'libjavx' ;'rundd.ijs'
+report fappend~runit'libjavx2';'rundd.ijs'
+
+report fappend~runit'libj'    ;'runpm.ijs'
+report fappend~runit'libjavx' ;'runpm.ijs'
+report fappend~runit'libjavx2';'runpm.ijs'
+
+report fappend~runit'libj'    ;'runjd.ijs'
+report fappend~runit'libjavx' ;'runjd.ijs'
+report fappend~runit'libjavx2';'runjd.ijs'
+
+r=. fread report
+echo 'fread report'
 )
 
-NB. macos stuff
+
+check_report=: 3 : 0
+r=. <;._2 fread report
+t=. 'failed: 0'
+'ddall failures' assert 3=+/;(<t)=(#t){.each r
+
+t=. 'Done.'
+'runpacman failures' assert 3=+/;(<t)=(#t){.each r
+
+t=. '0 failed'
+'runjd failures' assert 3=+/;(<t)=(#t){.each r
+i.0 0
+)
 
 macrun=: 0 : 0
 #!/bin/sh

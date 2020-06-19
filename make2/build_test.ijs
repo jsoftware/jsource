@@ -40,7 +40,7 @@ else.
  platform=: 'darwin'
  compiler=: 'clang'
  suffix=: '.dylib'
- terminal=: ''
+ terminal=: 'open '
 end.
 )
 
@@ -81,7 +81,7 @@ shlibjavx =: shtemplate rplc 'TARGET';'libjavx' ;'TYPE';'avx' ;same
 shlibjavx2=: shtemplate rplc 'TARGET';'libjavx2';'TYPE';'avx2';same
 
 shcommon=: }:0 : 0 rplc 'MAKE2';pmake2
-target=../jlibrary/bin/TARGET
+target=../jlibrary/bin/TARGETSUFFIX
 echo $target
 cd MAKE2
 jplatform=PLATFORM
@@ -134,8 +134,15 @@ build each 'jconsole';'libtsdll';'libj';'libjavx';'libjavx2'
 
 NB. run libj or libjavx or libjavx2
 run=: 3 : 0
-t=. terminal,pmake2,'/../jlibrary/bin/jconsole -lib ',y,suffix,' ',ptemp,'/run.ijs'
-fork_jtask_ t
+if. UNAME-:'Linux' do.
+ t=. terminal,pmake2,'/../jlibrary/bin/jconsole -lib ',y,suffix,' ',ptemp,'/run.ijs'
+ fork_jtask_ t
+else.
+ pmac=. ptemp,'/macrun.command'
+ (macrun rplc 'LIB';y)fwrite pmac
+ spawn_jtask_ 'chmod +x ',pmac
+ fork_jtask_'open ',pmac
+end.
 )
 
 runmac=: 3 : 0
@@ -157,4 +164,11 @@ echo runtests'libjavx'
 echo t
 echo runtests'libjavx2'
 i.0 0
+)
+
+NB. macos stuff
+
+macrun=: 0 : 0
+#!/bin/sh
+/users/eric/git/jsource/jlibrary/bin/jconsole  -lib LIB.dylib git/jsource/test/tsu.ijs
 )

@@ -87,6 +87,8 @@ cd MAKE2
 jplatform=PLATFORM
 CC=COMPILER
 export CC
+USE_SLEEF=1
+export USE_SLEEF
 CLEAN
 j64x=j64TYPE ./build_libj.sh  
 cp ../bin/$jplatform/j64TYPE/libjSUFFIX $target

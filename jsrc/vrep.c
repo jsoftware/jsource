@@ -284,7 +284,7 @@ I att=SGNTO0(-(AT(a)&B01+SB01))+((UI)(-(AT(a)&CMPX+SCMPX))>>(BW-1-1));  // 0 if 
 
  // special case: if a is atomic 1, and cells of w are not atomic.  a=0 is fast in the normal path
 // obsolete  if(wcr&&!ar&&AT(a)&(B01|INT)) {I aval = AT(a)&B01?(I)BAV(a)[0]:IAV(a)[0];  // no fast support for float
- if(((-wcr)&(ar-1)&(-AT(a)&(B01|INT)))<0){I aval = IAV(a)[0]&((SGNIF(AT(a),INTX)>>(BW-1-1))+1);  // no fast support for float; take all of INT, or 1 bit of B01
+ if(((-wcr)&(ar-1)&(-(AT(a)&(B01|INT))))<0){I aval = BIV0(a);  // no fast support for float; take all of INT, or 1 bit of B01
   if(!(aval&-2LL)){  // 0 or 1
    if(aval==1)R RETARG(w);   // 1 # y, return y
    if(!(AT(w)&SPARSE)){GA(z,AT(w),0,AR(w),0); MCISH(AS(z),AS(w),AR(w)) AS(z)[wf]=0; RETF(z);}  // 0 # y, return empty

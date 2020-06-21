@@ -733,6 +733,7 @@ extern B        jtlocdestroy(J,A);
 extern I        jtmaxtype(J,I,I);
 extern B        jtmeminit(J);
 extern void     jtmf(J, A);
+extern A        jtmkwris(J, A);
 extern I        jtmult(J,I,I);
 extern A        jtnamerefacv(J, A, L*);
 extern A        jtnfs(J,I,C*);

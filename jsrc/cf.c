@@ -232,6 +232,7 @@ A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I
  R fdef(flag2,CFORK,VERB, f1,f2, f,g,h, flag, RMAX,RMAX,RMAX);
 }
 
+// Handlers for to  handle w (aa), w (vc), w (cv)
 static DF1(taa){TDECL; A z,t; df1(t,w,fs); ASSERT(!t||AT(t)&NOUN+VERB,EVSYNTAX); R df1(z,t,gs);}
 static DF1(tvc){TDECL; A z; R df2(z,fs,w,gs);}  /* also nc */
 static DF1(tcv){TDECL; A z; R df2(z,w,gs,fs);}  /* also cn */

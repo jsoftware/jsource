@@ -893,6 +893,7 @@ F1(jtrat){RZ(w); ras(w); tpush(w); R w;}  // recursive.  w can be zero only if e
 
 A jtras(J jt, AD * RESTRICT w) { RZ(w); realizeifvirtual(w); ra(w); R w; }  // subroutine version of ra() to save space
 A jtrifvs(J jt, AD * RESTRICT w) { RZ(w); realizeifvirtual(w); R w; }  // subroutine version of rifv() to save space and be an rvalue
+A jtmkwris(J jt, AD * RESTRICT w) { RZ(w); makewritable(w); R w; }  // subroutine version of makewritable() to save space and be an rvalue
 
 #if MEMAUDIT&8
 static I lfsr = 1;  // holds varying memory pattern

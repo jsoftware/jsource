@@ -5,10 +5,13 @@
 
 #include "j.h"
 #include "vcomp.h"
+#include "ve.h"
 
 
 static B jtmatchsub(J,I,I,I,I,A,A,B* RESTRICT,B);
 static F2(jtmatchs);
+
+#if !C_AVX2
 
 #define MCS(q,af,wf)  ((((q>1)+(q>0))<<2)+(af?2:0)+(wf?1:0))
 // set *x++ to b1 if *u=*v, b0 otherwise
@@ -41,6 +44,7 @@ static F2(jtmatchs);
 // returning the first one as the result (nothing special about first, could be any one)
 // This is a generalized version of the INNERT macro below
 // If we get here, we know that at least one of the arguments has a frame
+// m=#cells of shorter frame, n=#times a cell of shorter frame must be repeated
 static B eqv(I af,I wf,I m,I n,I k,C*av,C*wv,B* RESTRICT x,B b1){B b,* RESTRICT xx=x;I mn=m*n,q;
   // select a comparison loop based on the size of the data area.  It's all about the fastest way to compare bytes
  if     (0==(k&(SZI-1))  )EQV(I)
@@ -55,6 +59,203 @@ static B eqv(I af,I wf,I m,I n,I k,C*av,C*wv,B* RESTRICT x,B b1){B b,* RESTRICT 
  }
  R xx[0];
 }    /* what memcmp should have been */
+
+#else
+static AHDR2FN* compfn[4][2] = {{(AHDR2FN*)neCC, (AHDR2FN*)eqCC} , {(AHDR2FN*)neSS, (AHDR2FN*)eqSS} , {(AHDR2FN*)neUU, (AHDR2FN*)eqUU} , {(AHDR2FN*)neII, (AHDR2FN*)eqII} };
+static B eqv(I af,I wf,I m,I n,I k,C* RESTRICT av,C* RESTRICT wv,B* RESTRICT z,B b1){
+ // Handle the special cases where the number of bytes to compare is a standard type.  Vector to the routine for comparing the type
+ if(k==((k&-k)&(2*SZI-1))){
+  // length is 1, 2, 4, or 8.  There's a routine for that, for = or ~:
+  compfn[CTTZI(k)][b1](n,m,wv,av,z,0);  // no jt for these routines.  Swap wv/av because n is positive, which will mean repeat the first arg
+  R 0;  // return value immaterial
+}
+ I n0=(k+(SZI-1))>>LGSZI;  // number of Is to process; later, # repeat count in inner loop
+ __m256i u,v;
+ _mm256_zeroupper(VOIDARG);
+ // prep for each compare loop
+ __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n0)&(NPAR-1))));  /* mask for 0 1 2 3 4 5 is xxxx 0001 0011 0111 1111 0001 */
+ __m256i tailmask = _mm256_loadu_si256((__m256i*)((C*)validitymask+NPAR*SZI+((-k)&(NPAR*SZI-1))));  // ff for the trailing invalid bytes of last compare, all 0 if n is 00000, 1 0 if 00001
+ I i0=(n0-1)>>LGNPAR;  /* # loops for 0 1 2 3 4 5 is x 0 0 0 0 1 */
+ b1^=1;  // change success value to failure value
+ // loop for each result
+ // loop promotion: if cells of a are not repeated, modify loop counts to do outer loop once and inner loop for each rep
+ I ka;  // amount to add to av in inner loop: k if the cells of a are not repeated, 0 if they are
+ n0=m; ka=n==1?k:0; m=n==1?1:m; n=n==1?n0:n;  // move outer loop info to inner if inner loop not needed
+ do{  // outer loop, for each unique cell of a
+  n0=n;
+  do{  // inner loop, for each repeat of a
+   I *x=(I*)av, *y=(I*)wv;  // init arg pointers to start of cell
+   B b=b1;  // init store value to compare failure
+   __m256i allmatches =_mm256_cmpeq_epi8(endmask,endmask); // accumuland for compares init to all 1
+   if(i0){
+    I i = i0;  // inner loop size
+    switch(i0&3){
+    loopback:
+    case 0: u=_mm256_loadu_si256 ((__m256i*)x); v=_mm256_loadu_si256 ((__m256i*)y); allmatches=_mm256_and_si256(allmatches,_mm256_cmpeq_epi8(u,v)); x+=NPAR; y+=NPAR;
+    case 3: u=_mm256_loadu_si256 ((__m256i*)x); v=_mm256_loadu_si256 ((__m256i*)y); allmatches=_mm256_and_si256(allmatches,_mm256_cmpeq_epi8(u,v)); x+=NPAR; y+=NPAR;
+    case 2: u=_mm256_loadu_si256 ((__m256i*)x); v=_mm256_loadu_si256 ((__m256i*)y); allmatches=_mm256_and_si256(allmatches,_mm256_cmpeq_epi8(u,v)); x+=NPAR; y+=NPAR;
+    case 1: u=_mm256_loadu_si256 ((__m256i*)x); v=_mm256_loadu_si256 ((__m256i*)y); allmatches=_mm256_and_si256(allmatches,_mm256_cmpeq_epi8(u,v)); x+=NPAR; y+=NPAR;
+     if(i0<=4)goto oneloop;  // if we don't have to loop here, avoid the data-dependent branch and fold the comparisons into the last batch 
+     if(~_mm256_movemask_epi8(allmatches))goto fail;  // if searches are long, kick out when there is a miscompare
+     if((i-=4)>0)goto loopback;
+    }
+oneloop:;
+   }
+   u=_mm256_maskload_epi64(x,endmask); v=_mm256_maskload_epi64(y,endmask); 
+   b ^= 0==~_mm256_movemask_epi8(_mm256_and_si256(allmatches,_mm256_or_si256(tailmask,_mm256_cmpeq_epi8(u,v))));  // no miscompares, switch failure value to success
+fail:
+   *z++=b;  // store one result
+   wv += k; av+= ka;  // advance w always, and a if original m was 1
+  }while(--n0);
+  av += k;  // advance a, only needed if a was repeated
+ }while(--m);
+
+ R 0;  // return value not used - results stored in *z
+}
+// memcmpne: test for inequality, not caring about order, for exact inputs
+// We use AVX2 instructions always, so this might be a little slower for repeat matches on short inputs; but it avoids misbranches
+I memcmpne(void *s, void *t, I l){
+ if(l==0)R 1;  // loops require nonempty arrays
+ // fetch the load mask for the last block: the words to load, including any trailing fragment
+ // fetch the mask of valid bytes in the last batch fetched, maybe less than the load mask
+ I *x=s, *y=t;  // access the arguments as doubles
+ I n=(l+(SZI-1))>>LGSZD;  // number of Ds to process
+ __m256i u,v;
+ _mm256_zeroupper(VOIDARG);
+ __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1))));  // mask for 0 1 2 3 4 5 is xxxx 0001 0011 0111 1111 0001
+ __m256i tailmask = _mm256_loadu_si256((__m256i*)((C*)validitymask+NPAR*SZI+((-l)&(NPAR*SZI-1))));  // ff for the trailing invalid bytes of last compare, all 0 if n is 00000, 1 0 if 00001
+ I i=(n-1)>>LGNPAR;  /* # loops for 0 1 2 3 4 5 is x 0 0 0 0 1 */
+ if(i){
+#if 1  // the long version is noticeably faster - 10% or so
+  __m256i allmatches =_mm256_cmpeq_epi8(endmask,endmask); // accumuland for compares init to all 1
+  switch(i&3){
+  loopback:
+  case 0: u=_mm256_loadu_si256 ((__m256i*)x); v=_mm256_loadu_si256 ((__m256i*)y); allmatches=_mm256_and_si256(allmatches,_mm256_cmpeq_epi8(u,v)); x+=NPAR; y+=NPAR;
+  case 3: u=_mm256_loadu_si256 ((__m256i*)x); v=_mm256_loadu_si256 ((__m256i*)y); allmatches=_mm256_and_si256(allmatches,_mm256_cmpeq_epi8(u,v)); x+=NPAR; y+=NPAR;
+  case 2: u=_mm256_loadu_si256 ((__m256i*)x); v=_mm256_loadu_si256 ((__m256i*)y); allmatches=_mm256_and_si256(allmatches,_mm256_cmpeq_epi8(u,v)); x+=NPAR; y+=NPAR;
+  case 1: u=_mm256_loadu_si256 ((__m256i*)x); v=_mm256_loadu_si256 ((__m256i*)y); allmatches=_mm256_and_si256(allmatches,_mm256_cmpeq_epi8(u,v)); x+=NPAR; y+=NPAR;
+   if(~_mm256_movemask_epi8(allmatches))R 1;
+   if((i-=4)>0)goto loopback;
+  }
+#else
+  do{
+  u=_mm256_loadu_si256 ((__m256i*)x); v=_mm256_loadu_si256 ((__m256i*)y); if(~_mm256_movemask_epi8(_mm256_cmpeq_epi8(u,v)))R 1; x+=NPAR; y+=NPAR;
+  }while((i-=1)>0);
+#endif
+ }
+
+ u=_mm256_maskload_epi64(x,endmask); v=_mm256_maskload_epi64(y,endmask); 
+ R 0!=~_mm256_movemask_epi8(_mm256_or_si256(tailmask,_mm256_cmpeq_epi8(u,v)));  // no miscompares, compare equal
+}
+
+// memcmpnefl: test for inequality, not caring about order, for float inputs, possibly with tolerance
+// We use AVX2 instructions always, so this might be a little slower for repeat matches on short inputs; but it avoids misbranches
+// l is # atoms (D) to process
+I memcmpnefl(void *s, void *t, I l, J jt){
+ if(l==0)R 1;  // loops require nonempty arrays
+ // fetch the load mask for the last block: the words to load, including any trailing fragment
+ // fetch the mask of valid bytes in the last batch fetched, maybe less than the load mask
+ D *x=s, *y=t;  // access the arguments as doubles
+ __m256d u,v;
+ _mm256_zeroupper(VOIDARG);
+ __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-l)&(NPAR-1))));  // mask for 0 1 2 3 4 5 is xxxx 0001 0011 0111 1111 0001
+ I i=(l-1)>>LGNPAR;  /* # loops for 0 1 2 3 4 5 is x 0 0 0 0 1 */
+ if(jt->cct==1.0){
+  // intolerant comparison
+  if(i){
+   __m256d allmatches =_mm256_castsi256_pd(_mm256_cmpeq_epi8(endmask,endmask)); // accumuland for compares init to all 1
+   switch(i&3){
+   loopback:
+   case 0: u=_mm256_loadu_pd(x); v=_mm256_loadu_pd(y); allmatches=_mm256_and_pd(allmatches,_mm256_cmp_pd(u,v,_CMP_EQ_OQ)); x+=NPAR; y+=NPAR;
+   case 3: u=_mm256_loadu_pd(x); v=_mm256_loadu_pd(y); allmatches=_mm256_and_pd(allmatches,_mm256_cmp_pd(u,v,_CMP_EQ_OQ)); x+=NPAR; y+=NPAR;
+   case 2: u=_mm256_loadu_pd(x); v=_mm256_loadu_pd(y); allmatches=_mm256_and_pd(allmatches,_mm256_cmp_pd(u,v,_CMP_EQ_OQ)); x+=NPAR; y+=NPAR;
+   case 1: u=_mm256_loadu_pd(x); v=_mm256_loadu_pd(y); allmatches=_mm256_and_pd(allmatches,_mm256_cmp_pd(u,v,_CMP_EQ_OQ)); x+=NPAR; y+=NPAR;
+    if(0xf!=_mm256_movemask_pd(allmatches))R 1;
+    if((i-=4)>0)goto loopback;
+   }
+  }
+  u=_mm256_maskload_pd(x,endmask); v=_mm256_maskload_pd(y,endmask); 
+  R 0xf!=_mm256_movemask_pd(_mm256_cmp_pd(u,v,_CMP_EQ_OQ));  // no miscompares, compare equal
+ }
+ // tolerant comparison
+ __m256d cct=_mm256_set1_pd(jt->cct);
+ if(i){
+  do{
+   u=_mm256_loadu_pd(x); v=_mm256_loadu_pd(y); x+=NPAR; y+=NPAR;
+   if(0xf!=_mm256_movemask_pd(_mm256_xor_pd(_mm256_cmp_pd(u,_mm256_mul_pd(v,cct),_CMP_GT_OQ),_mm256_cmp_pd(v,_mm256_mul_pd(u,cct),_CMP_LE_OQ))))R 1;
+  }while(--i>0);
+ }
+ u=_mm256_maskload_pd(x,endmask); v=_mm256_maskload_pd(y,endmask); 
+ R 0xf!=_mm256_movemask_pd(_mm256_xor_pd(_mm256_cmp_pd(u,_mm256_mul_pd(v,cct),_CMP_GT_OQ),_mm256_cmp_pd(v,_mm256_mul_pd(u,cct),_CMP_LE_OQ)));
+}
+
+static B eqvfl(I af,I wf,I m,I n,I k,D* RESTRICT av,D* RESTRICT wv,B* RESTRICT z,B b1,J jt){
+ // Handle the special cases where the number of bytes to compare is a standard type.  Vector to the routine for comparing the type
+ if(k==1){
+  // individual floats.  call the routine for that
+  (b1?eqDD:neDD)(n,m,wv,av,z,jt);  // Swap wv/av because n is positive, which will mean repeat the first arg
+  R 0;  // return value immaterial
+ }
+ __m256d u,v;
+ _mm256_zeroupper(VOIDARG);
+ // prep for each compare loop
+ __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-k)&(NPAR-1))));  // mask for 0 1 2 3 4 5 is xxxx 0001 0011 0111 1111 0001
+ I i0=(k-1)>>LGNPAR;  /* # loops for 0 1 2 3 4 5 is x 0 0 0 0 1 */
+ b1^=1;  // change success value to failure value
+ // loop for each result
+ // loop promotion: if cells of a are not repeated, modify loop counts to do outer loop once and inner loop for each rep
+ I ka;  // amount to add to av in inner loop: k if the cells of a are not repeated, 0 if they are
+ I n0=m; ka=n==1?k:0; m=n==1?1:m; n=n==1?n0:n;  // move outer loop info to inner if inner loop not needed
+ do{  // outer loop, for each unique cell of a
+  n0=n;  // inner loop count
+  do{  // inner loop, for each repeat of a
+   D *x=av, *y=wv;  // init arg pointers to start of cell
+   B b=b1;  // init store value to compare failure
+
+ if(jt->cct==1.0){
+  // intolerant comparison
+  __m256d allmatches =_mm256_castsi256_pd(_mm256_cmpeq_epi8(endmask,endmask)); // accumuland for compares init to all 1
+  if(i0){
+   I i = i0;  // inner loop size
+   switch(i&3){
+   loopback:
+   case 0: u=_mm256_loadu_pd(x); v=_mm256_loadu_pd(y); allmatches=_mm256_and_pd(allmatches,_mm256_cmp_pd(u,v,_CMP_EQ_OQ)); x+=NPAR; y+=NPAR;
+   case 3: u=_mm256_loadu_pd(x); v=_mm256_loadu_pd(y); allmatches=_mm256_and_pd(allmatches,_mm256_cmp_pd(u,v,_CMP_EQ_OQ)); x+=NPAR; y+=NPAR;
+   case 2: u=_mm256_loadu_pd(x); v=_mm256_loadu_pd(y); allmatches=_mm256_and_pd(allmatches,_mm256_cmp_pd(u,v,_CMP_EQ_OQ)); x+=NPAR; y+=NPAR;
+   case 1: u=_mm256_loadu_pd(x); v=_mm256_loadu_pd(y); allmatches=_mm256_and_pd(allmatches,_mm256_cmp_pd(u,v,_CMP_EQ_OQ)); x+=NPAR; y+=NPAR;
+    if(i0<=4)goto oneloop;  // if we don't have to loop here, avoid the data-dependent branch and fold the comparisons into the last batch 
+    if(0xf!=_mm256_movemask_pd(allmatches))goto fail;
+    if((i-=4)>0)goto loopback;
+   }
+  }
+oneloop:
+  u=_mm256_maskload_pd(x,endmask); v=_mm256_maskload_pd(y,endmask); 
+  b ^= 0xf==_mm256_movemask_pd(_mm256_and_pd(allmatches,_mm256_cmp_pd(u,v,_CMP_EQ_OQ)));  // no miscompares, compare equal
+ }else{
+  // tolerant comparison
+  __m256d cct=_mm256_set1_pd(jt->cct);
+  if(i0){
+   I i = i0;  // inner loop size
+   do{  // unfortunately it's probably not worth checking for lengths 5-8 & we will have a misbranch whenever length > 4
+    u=_mm256_loadu_pd(x); v=_mm256_loadu_pd(y); x+=NPAR; y+=NPAR;
+    if(0xf!=_mm256_movemask_pd(_mm256_xor_pd(_mm256_cmp_pd(u,_mm256_mul_pd(v,cct),_CMP_GT_OQ),_mm256_cmp_pd(v,_mm256_mul_pd(u,cct),_CMP_LE_OQ))))goto fail;
+   }while(--i>0);
+  }
+  u=_mm256_maskload_pd(x,endmask); v=_mm256_maskload_pd(y,endmask); 
+  b ^= 0xf==_mm256_movemask_pd(_mm256_xor_pd(_mm256_cmp_pd(u,_mm256_mul_pd(v,cct),_CMP_GT_OQ),_mm256_cmp_pd(v,_mm256_mul_pd(u,cct),_CMP_LE_OQ)));
+ }
+
+fail:
+   *z++=b;  // store one result
+   wv += k; av+= ka;  // advance w always, and a if original m was 1
+  }while(--n0);
+  av += k;  // advance a, only needed if a was repeated
+ }while(--m);
+
+ R 0;  // return value not used - results stored in *z
+}
+
+#endif
 
 // Return 1 if a and w match, 0 if not
 B jtequ(J jt,A a,A w){A x;
@@ -101,6 +302,7 @@ static B jteqf(J jt,A a,A w){A p,q;V*u=FAV(a),*v=FAV(w);
 // match two values, returning b1 if match, 1^b1 if no match.  If the values are functions, that's all we return.  If the values are nouns, we
 // store the match value(s) in *x.  x may be 0, if af and wf are 0 and m and n are 1.  In this case we don't store anything.
 // but return the match status.  We use this when comparing boxed arrays or functions
+// For recursive calls, x=0, af=wf=0, and m=n=1.  If there is frame, arguments have been exchanged so that a has the shorter frame, i. e. af<=wf, and a will be repeated
 // b1 is the value to use for 'match' - 1 normally, but 0 for top level of -.@-:
 // m=#cells of shorter frame, n=#times a cell of shorter frame must be repeated
 // the comparands may not be sparse
@@ -134,14 +336,42 @@ static B jtmatchsub(J jt,I af,I wf,I m,I n,A a,A w,B* RESTRICT x,B b1){B b;C*av,
  // do the comparison, leaving the last result in b
  switch(CTTZ(t)){
   // Take the case of no frame quickly, because it happens on each recursion and also in much user code
- default:   c <<= bplg(t); if(af|wf){b = eqv(af,wf,m,n,c,av,wv,x,b1);}else{b = (!!memcmp(av,wv,c))^b1; if(x)x[0]=b;} break; // change c to number of bytes in cell
- case FLX:   if(1.0!=jt->cct)INNERT(D,TEQ)else INNERT(D,DEQCT0) break;
- case CMPXX: if(1.0!=jt->cct)INNERT(Z,zeq)else INNERT(Z,ZEQCT0) break;
+ default:
+// obsolete    c <<= bplg(t); if(af|wf){b = eqv(af,wf,m,n,c,av,wv,x,b1);}else{b = (!!memcmp(av,wv,c))^b1; if(x)x[0]=b;} break; // change c to number of bytes in cell
+  c <<= bplg(t);
+  if(!x){
+#if C_AVX2
+   R memcmpne(av,wv,c)^b1;   // single call, thus not stored - return it immediately
+#else
+  R !!memcmp(av,wv,c)^b1;   // single call, thus not stored - return it immediately
+#endif
+  }else{
+   R eqv(af,wf,m,n,c,av,wv,x,b1);  // stored version loops & stores
+  }
+  break;
+ case CMPXX: if(1.0!=jt->cct){INNERT(Z,zeq) break;}  // tolerant, must use complex distance
+#if C_AVX2
+  c*=2;   // intolerant: treat as 2 floats, fall through
+#else
+  INNERT(Z,ZEQCT0) break;
+#endif
+ case FLX:
+#if C_AVX2
+  if(!x){
+   R memcmpnefl(av,wv,c,jt)^b1;   // single call, thus not stored - return it immediately
+  }else{
+   R eqvfl(af,wf,m,n,c,(D*)av,(D*)wv,x,b1,jt);  // stored version loops & stores
+  }
+#else
+   if(1.0!=jt->cct)INNERT(D,TEQ)else INNERT(D,DEQCT0)
+#endif
+  break;
  case XNUMX: INNERT(X,equ); break;
  case RATX:  INNERT(Q,EQQ); break;
  case BOXX:
    INNERT(A,EQA); break;
- } R b;
+ }
+ R b;
 }
 
 static F2(jtmatchs){A ae,ax,p,q,we,wx,x;B*b,*pv,*qv;D d;I acr,an=0,ar,c,j,k,m,n,r,*s,*v,wcr,wn=0,wr;P*ap,*wp;
@@ -170,29 +400,39 @@ static F2(jtmatchs){A ae,ax,p,q,we,wx,x;B*b,*pv,*qv;D d;I acr,an=0,ar,c,j,k,m,n,
 }    /* a -:"r w on sparse arrays */
 
 
-F2(jtmatch){A z;I af,f,m,n,mn,*s,wf;
+// x -:"r y or x -.@-:"r y depending on LSB of jt
+F2(jtmatch){A z;I af,m,n,mn,wf;
+ B eqis1 = ((I)jt&1)^1; jt=(J)((I)jt&~1);
  RZ(a&&w);
+ I isatoms = (-AN(a))&(-AN(w));  // neg if both args have atoms
  if(SPARSE&(AT(a)|AT(w)))R matchs(a,w);
  af=AR(a)-(I)(jt->ranks>>RANKTX); af=af<0?0:af; wf=AR(w)-(I)((RANKT)jt->ranks); wf=wf<0?0:wf; RESETRANK;
+ // exchange a and w as needed to ensure a has the shorter frame, i. e. is the repeated argument
+ {A ta=a; I ti=af; I afhi=af-wf; a=afhi>=0?w:a; w=afhi>=0?ta:w; af=afhi>=0?wf:af; wf=afhi>=0?ti:wf;} 
  // If either operand is empty return without any comparisons.  In this case we have to worry that the
  // number of cells may overflow, even if there are no atoms
- if(((-AN(a))&(-AN(w)))>=0){B b; I p;  // AN(a) is 0 or AN(w) is 0
+ if(isatoms>=0){B b; I p;  // AN(a) is 0 or AN(w) is 0
   // no atoms.  The shape of the result is the length of the longer frame.  See how many cells that is
-  if(af>wf){f=af; s=AS(a); RE(mn = prod(af,AS(a)));}else{f=wf; s=AS(w); RE(mn = prod(wf,AS(w)));}
-  // The result for each cell is 1 if the cell-shapes are the same
+// obsolete   if(af>wf){f=af; s=AS(a); RE(mn = prod(af,AS(a)));}else{f=wf; s=AS(w); RE(mn = prod(wf,AS(w)));}
+  RE(mn = prod(wf,AS(w)));
+  // The compare for each cell is 1 if the cell-shapes are the same
   p=AR(a)-af; b=p==(AR(w)-wf)&&!ICMP(af+AS(a),wf+AS(w),p);   // b =  shapes are the same
   // Allocate & return result
-  GATV(z,B01,mn,f,s); memset(BAV(z),b,mn); R z;
+  GATV(z,B01,mn,wf,AS(w)); memset(BAV(z),b^eqis1^1,mn); R z;
  }
- // There are atoms.
+ // There are atoms.  If there is only 1 cell to compare, do it quickly
+ if(wf==0)R num(matchsub(0,0,1,1,a,w,0,eqis1));
+ // Otherwise we are doing match with rank.  Set up for the repetition in matchsub
  // Create m: #cells in shorter (i. e. common) frame  n: # times cell of shorter frame is repeated
- if(af>wf){f=af; s=AS(a); PROD(m,wf,s); PROD(n,af-wf,wf+s);}
- else     {f=wf; s=AS(w); PROD(m,af,s); PROD(n,wf-af,af+s);}
+// obsolete if(af>wf){f=af; s=AS(a); PROD(m,wf,s); PROD(n,af-wf,wf+s);}
+// obsolete  else     {f=wf; s=AS(w); PROD(m,af,s); PROD(n,wf-af,af+s);}
+ PROD(m,af,AS(w)); PROD(n,wf-af,AS(w)+af);
  mn=m*n;  // total number of matches to do, i. e. # results
- GATV(z,B01,mn,f,s); matchsub(af,wf,m,n,a,w,BAV(z),C1);
+ GATV(z,B01,mn,wf,AS(w)); matchsub(af,wf,m,n,a,w,BAV(z),eqis1);
  RETF(z);
 }    /* a -:"r w */
 
+#if 0 // obsolete
 F2(jtnotmatch){A z;I af,f,m,n,mn,*s,wf;
  RZ(a&&w);
  if(SPARSE&(AT(a)|AT(w)))R matchs(a,w);
@@ -214,4 +454,7 @@ F2(jtnotmatch){A z;I af,f,m,n,mn,*s,wf;
  mn=m*n;  // total number of matches to do, i. e. # results
  GATV(z,B01,mn,f,s); matchsub(af,wf,m,n,a,w,BAV(z),C0);
  RETF(z);
-}    /* a -.@-:"r w */
+}
+#else
+F2(jtnotmatch){R jtmatch((J)((I)jt+1),a,w);}   /* a -.@-:"r w */
+#endif

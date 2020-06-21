@@ -207,7 +207,7 @@ typedef I SI;
 
 #define AAV0(w) AAV(w)[0]
 #if C_LE
-#define BIV0(w) (IAV(w)[0]&(1-(AT(w)>>1)))  // the first (presumably only) value in w, when w is an INT or B01 type
+#define BIV0(w) (IAV(w)[0]&(1-((AT(w)&INT)>>(INTX-1))))  // the first (presumably only) value in w, when w is an INT or B01 type
 #endif
 
 /* Types for AT(x) field of type A                                         */

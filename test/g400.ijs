@@ -136,6 +136,9 @@ l1 =: (9999#1),0
 l0 =: 0 (0}) l1
 ((1000) 6!:2 'l0 # i. 10000') (> 1.25&*)&(-&((1000) 6!:2 'i. 10000')) ((1000) 6!:2 'l1 # i. 10000')  NB. occasionally miscompares
 
+10000 > 7!:2 '1 # l0' [ l0 =: i. 100 100   NB. Verify 1 # y does not copy
+10000 > 7!:2 '01 # l0' [ l0 =: i. 100 100   NB. Verify 1 # y does not copy
+
 NB. NaN related tests
 (2#_1e6 _1e6)    -: _1e6 _1e6 _1e6 _1e6
 (3 2$_834524)    -: 1 0 1 0 1 # 5 2$_834524

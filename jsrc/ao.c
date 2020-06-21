@@ -191,7 +191,7 @@ static DF2(jtkey){F2PREFIP;PROLOG(0009);A frets,wperm,z;
  RZ(a&&w);
  {I t1,t2; ASSERT(SETIC(a,t1)==SETIC(w,t2),EVLENGTH);}  // verify agreement
  if(SPARSE&AT(a))R keysp(a,w,self);  // if sparse, go handle it
- RZ(a=indexof(a,a));  rifv(a); // self-classify the input using ct set before this verb; we are going to modify a, so make sure it's not virtual
+ RZ(a=indexof(a,a));  makewritable(a); // self-classify the input using ct set before this verb; we are going to modify a, so make sure it's not virtual
  PUSHCCT(jt->cctdefault);  // now that partitioning is over, reset ct for the executions of u
  // Allocate the area for the reordered copy of the input.  Do these calls early to free up registers for the main loop
  GA(wperm,AT(w),AN(w),AR(w),AS(w)); // Note we could avoid initialization of indirect types, since we are filling it all

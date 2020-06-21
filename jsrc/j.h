@@ -816,7 +816,7 @@ extern unsigned int __cdecl _clearfp (void);
   loopbody \
   _mm256_storeu_pd(z, u); x+=NPAR; y+=NPAR; z+=NPAR; \
  } \
- u=_mm256_maskload_pd(x,endmask); \
+ u=_mm256_maskload_pd(x,endmask); v=_mm256_maskload_pd(y,endmask); \
  loopbody \
  _mm256_maskstore_pd(z, endmask, u); \
  postloop

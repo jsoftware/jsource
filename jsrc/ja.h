@@ -131,6 +131,7 @@
 #define caro(x)                     jtcaro(jt,(x))
 // if we ensured that setting AFRO always removed inplaceability, we could simplify this test
 #define makewritable(x)             RZ(x=(AC(x)<(AFLAG(x)<<((BW-1)-AFROX)))?x:ca(x))  // OK if AC is 0x8..1 and AFRO is 0
+#define mkwris(x)                   jtmkwris(jt,x)
 #define case1a(x,y)                 jtcase1a(jt,(x),(y))
 #define casev(x)                    jtcasev(jt,(x))
 #define catalog(x)                  jtcatalog(jt,(x)) 
@@ -854,7 +855,7 @@
 #define qtymes(x,y)                 jtqtymes(jt,(x),(y))
 // Handle top level of ra().  Increment usecount.  Set usecount recursive usecount if recursible type; recur on contents if original usecount is not recursive
 // We can have an inplaceable but recursible block, if it was gc'd or created that way
-// ra() DOES NOT realize a virtual block, so that it can be used in places where virtual blocks are not possible
+// ra() DOES NOT realize a virtual block, so that it can be used in places where virtual blocks are not possible.  ras() does include rifv
 #if MEMAUDIT&2
 #define ra(x)                       {I c=AC(x); if(!ACISPERM(c)){I tt=AT(x); FLAGT flg=AFLAG(x); if((tt^flg)&TRAVERSIBLE){AFLAG(x)=flg|=(tt&RECURSIBLE); if(tt&RECURSIBLE&&!(flg&(AFNJA))&&AC(x)>=2&&AC(x)<0x3000000000000000)SEGFAULT jtra(jt,(x),tt);}; AC(x)=(c+1)&~ACINPLACE;}}
 // If this is a recursible type, make it recursible if it isn't already, by traversing the descendants.  This is like raising the usecount by 0.

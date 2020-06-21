@@ -157,7 +157,7 @@ F1(jtwords){A t,*x,z;C*s;I k,n,*y;
  s=CAV(w); y=AV(t); n=*y++; n=0>n?-n:n;
  GATV0(z,BOX,n,1); x=AAV(z);
  DQ(n, k=*y++; RZ(*x++=rifvs(str(*y++-k,s+k))););
- RETF(z);  // always boxed chars, and not relative
+ RETF(z);  // always boxed chars
 }
 
 

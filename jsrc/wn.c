@@ -75,7 +75,7 @@ static NUMH(jtnumx){A y;B b,c;C d;I j,k,m,*yv;X*v;
  n-=b+c; if(!(m=(n+XBASEN-1)/XBASEN))R 0; k=n-XBASEN*(m-1);
  GATV0(y,INT,m,1); yv=m+AV(y);
  DQ(m, j=0; DQ(k, I dig=*s++; if(!BETWEENC(dig,'0','9'))R 0; j=10*j+(dig-'0');); *--yv=b?-j:j; k=XBASEN;);
- if(!(*v=yv[m-1]?y:rifvs(xstd(y))))R 0;  // this stores into the extended result
+ if(!(*v=yv[m-1]?y:mkwris(xstd(y))))R 0;  // this stores into the extended result
  R 1;
 }
 
@@ -221,7 +221,7 @@ static I jtnumcase(J jt,I n,C*s){B e;C c;I ret;
 A jtconnum(J jt,I n,C*s){PROLOG(0101);A y,z;B (*f)(J,I,C*,void*),p=1;C c,*v;I d=0,e,k,m,t,*yv;
  if(1==n)                {if(k=s[0]-'0',(UI)k<=(UI)9)R num( k); else R ainf;}  // single digit - a number or _
  else if(2==n&&CSIGN==*s){if(k=s[1]-'0',(UI)k<=(UI)9)R num(-k);}
- RZ(y=str(1+n,s)); rifvs(y); s=v=CAV(y); s[n]=0;  // s->null-terminated string in new copy, which we will modify
+ RZ(y=str(1+n,s)); mkwris(y); s=v=CAV(y); s[n]=0;  // s->null-terminated string in new copy, which we will modify
  GATV0(y,INT,1+n,1); yv=AV(y);  // allocate area for start/end positions
  C bcvtmask=0;  // bit 1 set to suppress B01, bit 2 to suppress INT
  DO(n, c=*v; c=c==CSIGN?'-':c; c=(c==CTAB)|(c==' ')?C0:c; *v++=c; B b=C0==c; bcvtmask=bcvtmask|(4*(c=='.')+2*((p|b)^1)); yv[d]=i; d+=p^b; p=b;);  // replace _ with -, whitespace with \0; and record start and end positions
@@ -413,7 +413,7 @@ F2(jtexec2){A z;B b,p;C d,*v;I at,c,i,k,m,n,r,*s;
  I fillreqd=0;  // will be <0 if lines have different lengths
  if(!r||*(AS(w)+r-1)){    // skip the count if y is atom, or the last axis of y has dimension 0.   Nothing to count.
   // Calculate w ,"1 0 ' '   to end each (or only) line with delimiter
-  {A t; RZ(w=IRS2(w,chrspace,0L,1L,0L,jtover,t)); realizeifvirtual(w);}  // New w will be created
+  {A t; RZ(w=IRS2(w,chrspace,0L,1L,0L,jtover,t)); makewritable(w);}  // New w will be created
   v=CAV(w); r=AR(w); s=AS(w); n=s[r-1]; m=prod(r-1,s);  // v->data, m = #lists, n = length of each list
   for(i=0;i<m;++i){I j;
    // b is set when the current character is significant (i. e. not whitespace); p when the previous character was significant

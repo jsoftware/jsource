@@ -12,7 +12,9 @@
 #if (defined(__GNUC__) || defined(__CLANG__)) && !defined(__INTEL_COMPILER)
 #define CONST const
 #else
+#ifndef CONST
 #define CONST
+#endif
 #endif
 
 #if defined(__AVX2__) || defined(__aarch64__) || defined(__arm__) || defined(__powerpc64__)

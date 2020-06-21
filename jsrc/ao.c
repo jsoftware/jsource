@@ -6,6 +6,10 @@
 #include "j.h"
 // TODO: remove idiv from keymean
 
+#ifdef MMSC_VER
+#pragma warning(disable: 4244)
+#endif
+
 // This is the derived verb for f/. y
 static DF1(jtoblique){A x,y,z;I m,n,r;D rkblk[16];
  RZ(w);
@@ -691,7 +695,7 @@ static DF2(jtkeyheadtally){PROLOG(0017);A f,q,x,y,z;I b;I at,*av,k,n,r,*qv,*u,*v
     chn=--cux<0?u:chn;  // move chain if the current slot is not a miss
     npart+=SGNTO0(cux);  // if not a miss, increment count of unique values
    }while(--n);  // n is gone now
-   I *zv; I skipmsk;
+   /* I *zv; */ I skipmsk;
    GATV0(z,wt&FL?FL:INT,2*npart,2); AS(z)[0]=npart; AS(z)[1]=2; I *u0=u=qv;
    // move values from q to z.  If an encountered count is negative, don't advance the output pointer, but skip that many slots of input
 

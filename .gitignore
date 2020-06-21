@@ -60,3 +60,6 @@ release
 bin/
 make2/
 /makevs/jdll/template/jdll_vs2019_clang.vcxproj
+/jlibrary/addons
+/jlibrary/system
+

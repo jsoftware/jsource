@@ -1,3 +1,10 @@
+make folder build utils deprecated
+
+make2 folder has current utils
+jsource/script/build_test.ijs uses make2 utils
+
+**************************************************************************
+
 how to build/test j32/64/j64avx/j64avx2 for linux/darwin/raspberry/...
 
 $jplatform (set by jvars.sh) determines compiler/link flags

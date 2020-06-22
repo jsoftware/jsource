@@ -157,9 +157,9 @@ F1(jtversq){
 #endif
  
 #if SLEEF
- strcat(p,"/C_SLEEF=1");
+ strcat(p,"/SLEEF=1");
 #else
- strcat(p,"/C_SLEEF=0");
+ strcat(p,"/SLEEF=0");
 #endif
  R cstr(m);
 }

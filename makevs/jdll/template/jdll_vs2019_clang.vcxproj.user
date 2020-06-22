@@ -20,4 +20,9 @@
     <LocalDebuggerCommandArguments>-lib $(userprofile)\jbld\jout\$(ProjectName)\$(Platform)\$(Configuration)\$(targetname).dll</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LocalDebuggerCommand>$(userprofile)\jbld\j32\bin\jconsole</LocalDebuggerCommand>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+    <LocalDebuggerCommandArguments>-lib $(userprofile)\jbld\jout\$(ProjectName)\$(Platform)\$(Configuration)\$(targetname).dll</LocalDebuggerCommandArguments>
+  </PropertyGroup>
 </Project>

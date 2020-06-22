@@ -27,7 +27,7 @@ echo 0 : 0
 usage:
    template_status 'jconsole'
    template_status 'jdll'
-   template_statues 'tsdll'
+   template_status 'tsdll'
 )   
 
 vspath=: jpath'git/jsource/makevs/'

@@ -395,6 +395,7 @@ typedef I SI;
 
 #define HOMO(s,t)       (TYPESEQ((s),(t)) || HOMONE((s),(t)) )
 #define HOMONE(s,t)     ( !(((s)|(t))&(BOX|SBT|JCHAR|MARK)) || !(((s)|(t))&(BOX|SBT|NUMERIC|MARK)) )   // if known to be not equal.  One arg may be MARK (in indexofsub) but must show non-HOMO
+#define NEGIFHOMO(s,t)  ( (((s)^(t))-1) | ((((s)|(t))&(BOX|SBT|JCHAR|MARK))-1) | ((((s)|(t))&(BOX|SBT|NUMERIC|MARK))-1) )
 #define STYPE(t)        (((t)&(B01|LIT|INT|FL|CMPX|BOX))<<(SB01X-B01X))
 #define DTYPE(t)        (((t)&(SB01|SLIT|SINT|SFL|SCMPX|SBOX))>>(SB01X-B01X))
 

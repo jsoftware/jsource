@@ -511,6 +511,15 @@ extern unsigned int __cdecl _clearfp (void);
 #else
 #define ASSERTAGREE(x,y,l) {I *aaa=(x), *aab=(y), aai=(l)-1; do{aab=aai<0?aaa:aab; ASSERT(aaa[aai]==aab[aai],EVLENGTH); --aai; aab=aai<0?aaa:aab; ASSERT(aaa[aai]==aab[aai],EVLENGTH); --aai;}while(aai>=0); }
 #endif
+#if C_AVX2&&SY_64  // scaf
+#define TESTDISAGREE(r,x,y,l) {I *aaa=(I*)(x), *aab=(I*)(y); I aai=4-(l); r=0; \
+ do{__m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+(aai>=0?aai:0))); \
+  r|=0xf^_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_cmpeq_epi64(_mm256_maskload_epi64(aaa,endmask),_mm256_maskload_epi64(aab,endmask)))); \
+  if(aai>=0)break; aaa+=NPAR; aab+=(SGNTO0(aai))<<LGNPAR; aai+=NPAR; /* prevent compiler from doing address offset */\
+ }while(aai<4); }  // the test at end is to prevent the compiler from duplicating the loop.  It is almost never executed.
+#else
+#define TESTDISAGREE(r,x,y,l) {I *aaa=(x), *aab=(y), aai=(l)-1; r=0; do{aab=aai<0?aaa:aab; r|=aaa[aai]!=aab[aai]; --aai; aab=aai<0?aaa:aab; r|=aaa[aai]!=aab[aai]; --aai;}while(aai>=0); }
+#endif
 #define ASSERTAGREESEGFAULT(x,y,l) {I *aaa=(x), *aab=(y), aai=(l)-1; do{aab=aai<0?aaa:aab; if(aaa[aai]!=aab[aai])SEGFAULT --aai; aab=aai<0?aaa:aab; if(aaa[aai]!=aab[aai])SEGFAULT --aai;}while(aai>=0); }
 // BETWEENx requires that lo be <= hi
 #define BETWEENC(x,lo,hi) ((UI)((x)-(lo))<=(UI)((hi)-(lo)))   // x is in [lo,hi]
@@ -836,7 +845,8 @@ extern unsigned int __cdecl _clearfp (void);
 #endif
 #endif
 // PROD multiplies a list of numbers, where the product is known not to overflow a signed int (for example, it might be part of the shape of a dense array)
-#define PROD(result,length,ain) {I _i=(length)-1; result=(ain)[_i]; result=_i<0?1:result; do{--_i; I _r=(ain)[_i]*result; result=_i<0?result:_r;}while(_i>0);} 
+#define PROD(result,length,ain) {I *_zzt=(ain); I _i=(length)-1; _zzt=_i<0?iotavec-IOTAVECBEGIN+1:_zzt; result=*_zzt; do{++_zzt; --_i; _zzt=_i<0?iotavec-IOTAVECBEGIN+1:_zzt; result*=*_zzt;}while(_i>0);} 
+// obsolete #define PROD(result,length,ain) {I _i=(length)-1; result=(ain)[_i]; result=_i<0?1:result; do{--_i; I _r=(ain)[_i]*result; result=_i<0?result:_r;}while(_i>0);} 
 #define PROD1(result,length,ain) PROD(result,length,ain)  // scaf
 // CPROD is to be used to create a test testing #atoms.  Because empty arrays can have cells that have too many atoms, we can't use PROD if
 // we don't know that the array isn't empty or will be checked later

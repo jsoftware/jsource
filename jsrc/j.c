@@ -89,6 +89,7 @@ Q   zeroQ={iv0,iv1};          /* 0r1                                  */
 DX  zeroDX={0,0,iv1};       /* 0                                    */
 Z   zeroZ={0,0};          /* 0j0                                  */
 A   zpath=0;              /* default locale search path           */
+I   iotavec[IOTAVECLEN];  // return values for i. small
 uint64_t g_cpuFeatures;   // blis
 // obsolete PRIM primtab[256];         // inits to 0
 // obsolete A   chr[256]={0};         /* scalar for each character, or 0   should be removed   */

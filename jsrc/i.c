@@ -135,6 +135,8 @@ B jtglobinit(J jt){A x,y;/* obsolete D*d;*/A *oldpushx=jt->tnextpushp;
 #endif
  // take all the permanent blocks off the tpop stack so that we don't decrement their usecount.  All blocks allocated here must be permanent
  jt->tnextpushp=oldpushx;
+ DO(IOTAVECLEN, iotavec[i]=i+IOTAVECBEGIN;)  // init our vector of ascending integers
+
  R 1;
 }
 
@@ -218,7 +220,6 @@ jt->assert = 1;
  MC(jt->baselocale,"base",sizeof(jt->baselocale));   // establish value & hash of "base"
  jt->baselocalehash=(UI4)nmhash(sizeof(jt->baselocale),jt->baselocale);
  RESETRANK;  // init both ranks to RMAX
- DO(IOTAVECLEN, jt->iotavec[i]=i+IOTAVECBEGIN;)  // init our vector of ascending integers
   // Init for u./v.
  A uimp=ca(mnuvxynam[2]); NAV(uimp)->flag|=NMIMPLOC;  // create the name for u.
  jt->implocref[0] = fdef(0,CTILDE,VERB, 0,0, uimp,0L,0L, 0, RMAX,RMAX,RMAX);  //create 'u.'~

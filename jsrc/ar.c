@@ -590,7 +590,7 @@ static A jtredcatsp(J jt,A w,A z,I r){A a,q,x,y;B*b;I c,d,e,f,j,k,m,n,n1,p,*u,*v
   GATV0(q,INT,xr,1); v=AV(q); 
   if(1!=k){*v++=0; *v++=k; e=0; DQ(xr-1, ++e; if(e!=k)*v++=e;); RZ(x=cant2(q,x));}
   v=AV(q); u=AS(x); *v=u[0]*u[1]; MCISH(1+v,2+u,xr-1); RZ(x=reshape(vec(INT,xr-1,v),x));
-  e=ws[f+c]; RZ(y=repeat(sc(e),y)); v=j+AV(y);
+  e=ws[f+c]; RZ(y=repeat(sc(e),y)); RZ(y=mkwris(y)); v=j+AV(y);
   if(c)DO(m, k=p**v; DO(e, *v=k+  i; v+=n;);)
   else DO(m, k=  *v; DO(e, *v=k+p*i; v+=n;);); 
   RZ(q=grade1(y)); RZ(y=from(q,y)); RZ(x=from(q,x));

@@ -138,6 +138,8 @@ l0 =: 0 (0}) l1
 
 10000 > 7!:2 '1 # l0' [ l0 =: i. 100 100   NB. Verify 1 # y does not copy
 10000 > 7!:2 '01 # l0' [ l0 =: i. 100 100   NB. Verify 1 # y does not copy
+10000 > 7!:2 'l1 # l0' [ l1 =: 1 #~ # l0 =: i. 100 100   NB. Verify (all 1) # y does not copy
+10000 > 7!:2 'l1 # l0' [ l1 =: 1 #~ # l0 =: i. 10000   NB. Verify (all 1) # y does not copy
 
 NB. NaN related tests
 (2#_1e6 _1e6)    -: _1e6 _1e6 _1e6 _1e6

@@ -75,6 +75,7 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
  m=AN(a);
  void *zvv; void *wvv=voidAV(w); I n=0; // pointer to output area; pointer to input data; number of prefix bytes to skip in first cell
  p=bsum(m,BAV(a));  // p=# 1s in result, i. e. length of result item axis
+ if(m==p)RETF(w);  // if all the bits are 1, we can return very quickly.  It's rare, but so cheap to test for.
  PROD(c,wf,AS(w)); PROD(k,wcr-1,AS(w)+wf+1); // c=#cells, k=#atoms per item of cell
  I zn=c*k*p;  // zn=#atoms in result
  k<<=bplg(AT(w));   // k is now # bytes/cell
@@ -89,7 +90,6 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
   zvv=voidAV(z);  // point to the output area
  }else{
   z=w; // inplace
-  if(m==p)R z;  // if all the bits are 1, we can return very quickly.  It's rare, but so cheap to test for.
   AN(z)=zn;  // Install the correct atom count
   // see how many leading values of the result are already in position.  We don't need to copy them in the first cell
   UI *avv=IAV(a); for(;n<(m>>LGSZI);++n)if(avv[n]!=VALIDBOOLEAN)break;
@@ -159,7 +159,7 @@ static REPF(jtrepbsx){A ai,c,d,e,g,q,x,wa,wx,wy,y,y1,z,zy;B*b;I*dv,*gv,j,m,n,*u,
  GATV0(ai,INT,m,1); v=AV(ai); DO(n, if(!*b++)*v++=u[i];);
  RZ(g=grade1(over(ai,repeat(q,y1)))); gv=AV(g);
  GATV0(d,INT,AN(y1),1); dv=AV(d); j=0; DO(AN(g), if(m>gv[i])++j; else dv[gv[i]-m]=j;);
- RZ(zy=repeat(q,wy)); v=AV(zy)+*AV(c); m=*(1+AS(zy)); DO(*AS(zy), *v-=dv[i]; v+=m;);
+ RZ(zy=mkwris(repeat(q,wy))); v=AV(zy)+*AV(c); m=*(1+AS(zy)); DO(*AS(zy), *v-=dv[i]; v+=m;);
  zp=PAV(z);
  SPB(zp,a,ca(wa));
  SPB(zp,e,SPA(wp,e));
@@ -240,7 +240,7 @@ static REPF(jtrep1s){A ax,e,x,y,z;B*b;I c,d,cd,j,k,m,n,p,q,*u,*v,wr,*ws;P*wp,*zp
  if(wcr&&b[wf]){    /* along sparse axis */
   u=AS(y); p=u[0]; q=u[1]; u=AV(y);
   RZ(x=repeat(sc(c),x));
-  RZ(y=repeat(sc(c),y));
+  RZ(y=mkwris(repeat(sc(c),y)));
   if(p&&1<c){
    j=0; DO(wf, j+=b[i];); v=j+AV(y);
    if(AN(ax)==1+j){u+=j; DO(p, m=cd**u; u+=q; DO(c, *v=m+i; v+=q;););}

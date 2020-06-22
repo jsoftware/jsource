@@ -8,7 +8,7 @@
 #include "ve.h"
 
 
-static B jtmatchsub(J,I,I,I,I,A,A,B* RESTRICT,B);
+static B jtmatchsub(J,A,A,B* RESTRICT,I,I,I,I,I);
 static F2(jtmatchs);
 
 #if !C_AVX2
@@ -71,7 +71,7 @@ static B eqv(I af,I wf,I m,I n,I k,C* RESTRICT av,C* RESTRICT wv,B* RESTRICT z,B
 }
  I n0=(k+(SZI-1))>>LGSZI;  // number of Is to process; later, # repeat count in inner loop
  __m256i u,v;
- _mm256_zeroupper(VOIDARG);
+// obsolete  _mm256_zeroupper(VOIDARG);
  // prep for each compare loop
  __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n0)&(NPAR-1))));  /* mask for 0 1 2 3 4 5 is xxxx 0001 0011 0111 1111 0001 */
  __m256i tailmask = _mm256_loadu_si256((__m256i*)((C*)validitymask+NPAR*SZI+((-k)&(NPAR*SZI-1))));  // ff for the trailing invalid bytes of last compare, all 0 if n is 00000, 1 0 if 00001
@@ -115,13 +115,13 @@ fail:
 // memcmpne: test for inequality, not caring about order, for exact inputs
 // We use AVX2 instructions always, so this might be a little slower for repeat matches on short inputs; but it avoids misbranches
 I memcmpne(void *s, void *t, I l){
- if(l==0)R 1;  // loops require nonempty arrays
+ if(l==0)R 0;  // loops require nonempty arrays - empties compare equal
  // fetch the load mask for the last block: the words to load, including any trailing fragment
  // fetch the mask of valid bytes in the last batch fetched, maybe less than the load mask
  I *x=s, *y=t;  // access the arguments as doubles
  I n=(l+(SZI-1))>>LGSZD;  // number of Ds to process
  __m256i u,v;
- _mm256_zeroupper(VOIDARG);
+// obsolete  _mm256_zeroupper(VOIDARG);
  __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1))));  // mask for 0 1 2 3 4 5 is xxxx 0001 0011 0111 1111 0001
  __m256i tailmask = _mm256_loadu_si256((__m256i*)((C*)validitymask+NPAR*SZI+((-l)&(NPAR*SZI-1))));  // ff for the trailing invalid bytes of last compare, all 0 if n is 00000, 1 0 if 00001
  I i=(n-1)>>LGNPAR;  /* # loops for 0 1 2 3 4 5 is x 0 0 0 0 1 */
@@ -152,12 +152,12 @@ I memcmpne(void *s, void *t, I l){
 // We use AVX2 instructions always, so this might be a little slower for repeat matches on short inputs; but it avoids misbranches
 // l is # atoms (D) to process
 I memcmpnefl(void *s, void *t, I l, J jt){
- if(l==0)R 1;  // loops require nonempty arrays
+ if(l==0)R 0;  // loops require nonempty arrays
  // fetch the load mask for the last block: the words to load, including any trailing fragment
  // fetch the mask of valid bytes in the last batch fetched, maybe less than the load mask
  D *x=s, *y=t;  // access the arguments as doubles
  __m256d u,v;
- _mm256_zeroupper(VOIDARG);
+// obsolete  _mm256_zeroupper(VOIDARG);
  __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-l)&(NPAR-1))));  // mask for 0 1 2 3 4 5 is xxxx 0001 0011 0111 1111 0001
  I i=(l-1)>>LGNPAR;  /* # loops for 0 1 2 3 4 5 is x 0 0 0 0 1 */
  if(jt->cct==1.0){
@@ -197,7 +197,7 @@ static B eqvfl(I af,I wf,I m,I n,I k,D* RESTRICT av,D* RESTRICT wv,B* RESTRICT z
   R 0;  // return value immaterial
  }
  __m256d u,v;
- _mm256_zeroupper(VOIDARG);
+// obsolete  _mm256_zeroupper(VOIDARG);
  // prep for each compare loop
  __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-k)&(NPAR-1))));  // mask for 0 1 2 3 4 5 is xxxx 0001 0011 0111 1111 0001
  I i0=(k-1)>>LGNPAR;  /* # loops for 0 1 2 3 4 5 is x 0 0 0 0 1 */
@@ -262,7 +262,7 @@ B jtequ(J jt,A a,A w){A x;
  RZ(a&&w);F2PREFIP;  // allow inplace request - it has no effect
  if(a==w)R 1;
  if(SPARSE&(AT(a)|AT(w))&&AR(a)&&AR(w)){RZ(x=matchs(a,w)); R*BAV(x);}
- R matchsub(0L,0L,1L,1L,a,w,0,C1);  // don't check level - it takes too long for big arrays
+ R ((B (*)())jtmatchsub)(jt,a,w,0);  // don't check level - it takes too long for big arrays
 }
 
 // Return 1 if a and w match intolerantly, 0 if not
@@ -274,13 +274,13 @@ B jtequ0(J jt,A a,A w){
 // Test for equality of functions, 1 if they match.  To match, the functions must have the same pseudocharacter and fgh
 static B jteqf(J jt,A a,A w){A p,q;V*u=FAV(a),*v=FAV(w);
  if(TYPESXOR(AT(a),AT(w))+(u->id^v->id))R 0;   // must match on type and id
- p=u->fgh[0]; q=v->fgh[0]; if(!((p==q||p&&q&&matchsub(0L,0L,1L,1L,p,q,0,C1))))R 0;
- p=u->fgh[1]; q=v->fgh[1]; if(!((p==q||p&&q&&matchsub(0L,0L,1L,1L,p,q,0,C1))))R 0;
- p=u->fgh[2]; q=v->fgh[2];    R (p==q||p&&q&&matchsub(0L,0L,1L,1L,p,q,0,C1));
+ p=u->fgh[0]; q=v->fgh[0]; if(!((p==q||p&&q&&((B (*)())jtmatchsub)(jt,p,q,0))))R 0;
+ p=u->fgh[1]; q=v->fgh[1]; if(!((p==q||p&&q&&((B (*)())jtmatchsub)(jt,p,q,0))))R 0;
+ p=u->fgh[2]; q=v->fgh[2];    R (p==q||p&&q&&((B (*)())jtmatchsub)(jt,p,q,0));
 }
 
 // compare function for boxes.  Do a test on the single contents of the box.  Reset comparison direction to normal.
-#define EQA(a,w)  (a==w||matchsub(0L,0L,1L,1L,a,w,0,C1))
+#define EQA(a,w)  (a==w||((B (*)())jtmatchsub)(jt,a,w,0))
 // compare rationals
 #define EQQ(a,w)  (equ(a.n,w.n)&&equ(a.d,w.d))
 
@@ -289,10 +289,10 @@ static B jteqf(J jt,A a,A w){A p,q;V*u=FAV(a),*v=FAV(w);
 // x[] is result array.  This can be 0 if we are doing a comparison inside a box, in which case
 // we don't store the result.  In any case, b holds the result of the last comparison
 #define INNERT(T,f)                  \
- {T* RESTRICT u=(T*)av,* RESTRICT v=(T*)wv;   /* u->a data, v->w data */           \
-  if(1==n)      DO(m,       b=b1; DO(c, if(!f(u[i],v[i])){b^=1; break;}); if(x)x[j++]=b; u+=c; v+=c;)  \
-  else if(af>wf)DO(m, DO(n, b=b1; DO(c, if(!f(u[i],v[i])){b^=1; break;}); x[j++]=b; u+=c;); v+=c;)  \
-  else          DO(m, DO(n, b=b1; DO(c, if(!f(u[i],v[i])){b^=1; break;}); x[j++]=b; v+=c;); u+=c;)  \
+ {T* RESTRICT u=(T*)av,* RESTRICT v=(T*)wv; m=x==0?1:m; n=x==0?1:n;  /* u->a data, v->w data */           \
+  if(1==n){      DO(m,       B b=b1; DO(c, if(!f(u[i],v[i])){b^=1; break;}); if(!x)R b^b1^1; x[j++]=b; u+=c; v+=c;)}  \
+  else if(af>wf)DO(m, DO(n, B b=b1; DO(c, if(!f(u[i],v[i])){b^=1; break;}); x[j++]=b; u+=c;); v+=c;)  \
+  else          DO(m, DO(n, B b=b1; DO(c, if(!f(u[i],v[i])){b^=1; break;}); x[j++]=b; v+=c;); u+=c;)  \
  }
 
 // compare functions for float/complex intolerant comparison
@@ -306,21 +306,42 @@ static B jteqf(J jt,A a,A w){A p,q;V*u=FAV(a),*v=FAV(w);
 // b1 is the value to use for 'match' - 1 normally, but 0 for top level of -.@-:
 // m=#cells of shorter frame, n=#times a cell of shorter frame must be repeated
 // the comparands may not be sparse
-static B jtmatchsub(J jt,I af,I wf,I m,I n,A a,A w,B* RESTRICT x,B b1){B b;C*av,*wv;I at,c,j=0,p,q,t,wt;
+// arguments after x may be omitted if x==0, and are then assumed to be 0 0 1 1 1
+static B jtmatchsub(J jt,A a,A w,B* RESTRICT x,I af,I wf,I m,I n,I b1){C*av,*wv;I at,c,j=0,t,wt;
  // we tested for a==w before the call, to save on call overhead (usually)
  // m*n cannot be 0.  If this is a recursive call, m=n=1; while if it is the first call, empty m/n were handled at the top level
- p=AR(a)-af; at=UNSAFE(AT(a));
- q=AR(w)-wf; wt=UNSAFE(AT(w)); 
+ af=x==0?0:af; wf=x==0?0:wf; // default af/wf if not given
+ {
+ I af2=af; I wf2=wf; af2=x==0?0:af2; wf2=x==0?0:wf2;
+ I p=AR(a)-af2; at=UNSAFE(AT(a));
+ I q=AR(w)-wf2; wt=UNSAFE(AT(w)); 
  // p=cell-rank of a; q=cell-rank of w; ?t=type;
  // c=#atoms in a cell, b is 1 if rank or cell-shape mismatches, or if cells are not empty and types are incompatible
  // We know that either there is no frame or both arguments are nonempty (Empty arguments with frame can happen only at the top level
  // and were handled there).
- if(!(b=p!=q)){if(!(b=!!ICMP(af+AS(a),wf+AS(w),p))){PROD(c,p,af+AS(a)); b=c&&!HOMO(at,wt);}}  // b='mismatch'
- // If we know the result - either they mismatch, or the cell is empty, or the buffers are identical - return all success/failure
- if(b||!c||a==w){if(x)memset(x,b^b1,m*n); R b^b1;}
+ // Do all the tests for miscompare and combine the results at the end
+ // We assume the caller checked for a==w and handled it, so we don't.
+ I rankdiff=p^q;  // see if ranks differ
+ p=q<p?q:p; I shapediff; TESTDISAGREE(shapediff,af2+AS(a),wf2+AS(w),p); // now p is smaller rank; see if shapes differ
+// obsolete  q=a!=w;   // now q=0 if args are identical & therefore don't need to be compared
+ PROD(c,p,af2+AS(a));  // get c=length of a cell in atoms
+ p=NEGIFHOMO(at,wt);  // now p= neg if homogeneous args
+ if(((rankdiff-1)&(shapediff-1)&(-c)&p)>=0){  // skip compare if rank differ, or if shapes differ, or if inhomo, or if empty; not checking for identical args
+  // create result, !b1 if there was a difference in shape or inhomo, b1 otherwise// obsolete 
+  p=1^SGNTO0((rankdiff-1)&(shapediff-1)&((c-1)|p));  // p=1 if error, =no match  ignore inhomo error if empty
+  if(x)memset(x,p^b1,m*n);else b1=1; R p^b1;  // write 'err0r' if writing enabled; return false
+ }
+ }
+// obsolete  if(!(b=p!=q)){if(!(b=!!ICMP(af+AS(a),wf+AS(w),p))){PROD(c,p,af+AS(a)); b=c&&!HOMO(at,wt);}}  // b='mismatch'
+// obsolete  // If we know the result - either they mismatch, or the cell is empty, or the buffers are identical - return all success/failure
+// obsolete  if(b||!c||a==w){if(x)memset(x,b^b1,m*n);else b1=1; R b^b1;}
+
+
+
+
  // If we're comparing functions, return that result
  t=at;  //  in case types identical, pick one
- if(t&FUNC)R (!eqf(a,w))^b1;  // true value, but switch if return is not 'match'
+ if(t&FUNC)R (!eqf(a,w))^(x==0?1:b1);  // true value, but switch if return is not 'match'
  // If the types mismatch, convert as needed to the common (unsafe) type calculated earlier
  if(at!=wt) {
   t=maxtypedne(at,wt);
@@ -341,9 +362,10 @@ static B jtmatchsub(J jt,I af,I wf,I m,I n,A a,A w,B* RESTRICT x,B b1){B b;C*av,
   c <<= bplg(t);
   if(!x){
 #if C_AVX2
-   R memcmpne(av,wv,c)^b1;   // single call, thus not stored - return it immediately
+   R memcmpne(av,wv,c)^1;   // single call, thus not stored - return it immediately
 #else
-  R !!memcmp(av,wv,c)^b1;   // single call, thus not stored - return it immediately
+  
+  R !memcmp(av,wv,c);   // single call, thus not stored - return it immediately
 #endif
   }else{
    R eqv(af,wf,m,n,c,av,wv,x,b1);  // stored version loops & stores
@@ -358,7 +380,7 @@ static B jtmatchsub(J jt,I af,I wf,I m,I n,A a,A w,B* RESTRICT x,B b1){B b;C*av,
  case FLX:
 #if C_AVX2
   if(!x){
-   R memcmpnefl(av,wv,c,jt)^b1;   // single call, thus not stored - return it immediately
+   R memcmpnefl(av,wv,c,jt)^1;   // single call, thus not stored - return it immediately
   }else{
    R eqvfl(af,wf,m,n,c,(D*)av,(D*)wv,x,b1,jt);  // stored version loops & stores
   }
@@ -371,7 +393,7 @@ static B jtmatchsub(J jt,I af,I wf,I m,I n,A a,A w,B* RESTRICT x,B b1){B b;C*av,
  case BOXX:
    INNERT(A,EQA); break;
  }
- R b;
+ R 0;  // Return value matters only for single compare (x=0); we have returned already in that case
 }
 
 static F2(jtmatchs){A ae,ax,p,q,we,wx,x;B*b,*pv,*qv;D d;I acr,an=0,ar,c,j,k,m,n,r,*s,*v,wcr,wn=0,wr;P*ap,*wp;
@@ -402,10 +424,10 @@ static F2(jtmatchs){A ae,ax,p,q,we,wx,x;B*b,*pv,*qv;D d;I acr,an=0,ar,c,j,k,m,n,
 
 // x -:"r y or x -.@-:"r y depending on LSB of jt
 F2(jtmatch){A z;I af,m,n,mn,wf;
- B eqis1 = ((I)jt&1)^1; jt=(J)((I)jt&~1);
+ I eqis0 = (I)jt&1; jt=(J)((I)jt&~1);
  RZ(a&&w);
  I isatoms = (-AN(a))&(-AN(w));  // neg if both args have atoms
- if(SPARSE&(AT(a)|AT(w)))R matchs(a,w);
+ if(SPARSE&(AT(a)|AT(w)))R ne(num(eqis0),matchs(a,w));
  af=AR(a)-(I)(jt->ranks>>RANKTX); af=af<0?0:af; wf=AR(w)-(I)((RANKT)jt->ranks); wf=wf<0?0:wf; RESETRANK;
  // exchange a and w as needed to ensure a has the shorter frame, i. e. is the repeated argument
  {A ta=a; I ti=af; I afhi=af-wf; a=afhi>=0?w:a; w=afhi>=0?ta:w; af=afhi>=0?wf:af; wf=afhi>=0?ti:wf;} 
@@ -418,17 +440,18 @@ F2(jtmatch){A z;I af,m,n,mn,wf;
   // The compare for each cell is 1 if the cell-shapes are the same
   p=AR(a)-af; b=p==(AR(w)-wf)&&!ICMP(af+AS(a),wf+AS(w),p);   // b =  shapes are the same
   // Allocate & return result
-  GATV(z,B01,mn,wf,AS(w)); memset(BAV(z),b^eqis1^1,mn); R z;
+  GATV(z,B01,mn,wf,AS(w)); memset(BAV(z),b^eqis0,mn); R z;
  }
  // There are atoms.  If there is only 1 cell to compare, do it quickly
- if(wf==0)R num(matchsub(0,0,1,1,a,w,0,eqis1));
+ if(wf==0)R num((a==w||((B (*)())jtmatchsub)(jt,a,w,0))^eqis0);
  // Otherwise we are doing match with rank.  Set up for the repetition in matchsub
  // Create m: #cells in shorter (i. e. common) frame  n: # times cell of shorter frame is repeated
 // obsolete if(af>wf){f=af; s=AS(a); PROD(m,wf,s); PROD(n,af-wf,wf+s);}
 // obsolete  else     {f=wf; s=AS(w); PROD(m,af,s); PROD(n,wf-af,af+s);}
  PROD(m,af,AS(w)); PROD(n,wf-af,AS(w)+af);
  mn=m*n;  // total number of matches to do, i. e. # results
- GATV(z,B01,mn,wf,AS(w)); matchsub(af,wf,m,n,a,w,BAV(z),eqis1);
+ GATV(z,B01,mn,wf,AS(w)); matchsub(a,w,BAV(z),af,wf,m,n,eqis0^1);  // matchsub stores, and we ignore the result
+ // We do not check for a==w here & thus will compare them
  RETF(z);
 }    /* a -:"r w */
 

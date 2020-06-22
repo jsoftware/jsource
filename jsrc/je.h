@@ -981,10 +981,12 @@ extern Z        zeroZ;
 extern const dcomplex zone;
 extern const dcomplex zzero;
 extern A        zpath;
+extern I iotavec[IOTAVECLEN];  // ascending integers, starting at IOTAVECBEGIN
 /* cpu feature */
 extern UC       hwaes;
 extern UC       hwfma;
 extern VARPSA rpsnull;
+
 #if (SYS & SYS_ATARIST+SYS_ATT3B1)
 extern int      memcmp();       /* C library fn                            */
 extern D        strtod();       /* C library fn                            */

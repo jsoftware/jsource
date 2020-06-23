@@ -84,8 +84,10 @@ static B eqv(I af,I wf,I m,I n,I k,C* RESTRICT av,C* RESTRICT wv,B* RESTRICT z,B
  do{  // outer loop, for each unique cell of a
   n0=n;
   do{  // inner loop, for each repeat of a
-   I *x=(I*)av, *y=(I*)wv;  // init arg pointers to start of cell
    B b=b1;  // init store value to compare failure
+   // compare 8 bytes to give a fast out for early miscompares - to help with the case where all compares fail early
+   if((-(*(I*)av!=*(I*)wv)&(7-k))<0)goto fail;  // this repeatedly fetches *av: better than testing ka?
+   I *x=(I*)av, *y=(I*)wv;  // init arg pointers to start of cell
    __m256i allmatches =_mm256_cmpeq_epi8(endmask,endmask); // accumuland for compares init to all 1
    if(i0){
     I i = i0;  // inner loop size
@@ -310,26 +312,27 @@ static B jteqf(J jt,A a,A w){A p,q;V*u=FAV(a),*v=FAV(w);
 static B jtmatchsub(J jt,A a,A w,B* RESTRICT x,I af,I wf,I m,I n,I b1){C*av,*wv;I at,c,j=0,t,wt;
  // we tested for a==w before the call, to save on call overhead (usually)
  // m*n cannot be 0.  If this is a recursive call, m=n=1; while if it is the first call, empty m/n were handled at the top level
- af=x==0?0:af; wf=x==0?0:wf; // default af/wf if not given
  {
- I af2=af; I wf2=wf; af2=x==0?0:af2; wf2=x==0?0:wf2;
- I p=AR(a)-af2; at=UNSAFE(AT(a));
- I q=AR(w)-wf2; wt=UNSAFE(AT(w)); 
+ af&=(-(x!=0)); wf&=(-(x!=0));   // if x not given, use defaults for af, wf
+ I p=AR(a)-af;
+ I q=AR(w)-wf; 
  // p=cell-rank of a; q=cell-rank of w; ?t=type;
  // c=#atoms in a cell, b is 1 if rank or cell-shape mismatches, or if cells are not empty and types are incompatible
  // We know that either there is no frame or both arguments are nonempty (Empty arguments with frame can happen only at the top level
  // and were handled there).
  // Do all the tests for miscompare and combine the results at the end
  // We assume the caller checked for a==w and handled it, so we don't.
- I rankdiff=p^q;  // see if ranks differ
- p=q<p?q:p; I shapediff; TESTDISAGREE(shapediff,af2+AS(a),wf2+AS(w),p); // now p is smaller rank; see if shapes differ
+ I shapediff=p;  // see if ranks differ
+ p=q<p?q:p; q^=shapediff; TESTDISAGREE(shapediff,af+AS(a),wf+AS(w),p); // now p is smaller rank; q=ranks differ; shapediff=shapes differ
+ shapediff|=q;  // shapes or ranks differ
+ PROD(c,p,af+AS(a));  // get c=length of a cell in atoms
 // obsolete  q=a!=w;   // now q=0 if args are identical & therefore don't need to be compared
- PROD(c,p,af2+AS(a));  // get c=length of a cell in atoms
+ at=UNSAFE(AT(a)); wt=UNSAFE(AT(w));   // save types, now that register pressure is over
  p=NEGIFHOMO(at,wt);  // now p= neg if homogeneous args
- if(((rankdiff-1)&(shapediff-1)&(-c)&p)>=0){  // skip compare if rank differ, or if shapes differ, or if inhomo, or if empty; not checking for identical args
+ if(((shapediff-1)&(-c)&p)>=0){  // skip compare if rank differ, or if shapes differ, or if inhomo, or if empty; not checking for identical args
   // create result, !b1 if there was a difference in shape or inhomo, b1 otherwise// obsolete 
-  p=1^SGNTO0((rankdiff-1)&(shapediff-1)&((c-1)|p));  // p=1 if error, =no match  ignore inhomo error if empty
-  if(x)memset(x,p^b1,m*n);else b1=1; R p^b1;  // write 'err0r' if writing enabled; return false
+  p=1^SGNTO0((shapediff-1)&((c-1)|p));  // p=1 if error, =no match  ignore inhomo error if empty
+  if(x)memset(x,p^b1,m*n);else b1=1; R p^b1;  // write 'error' if writing enabled; return false
  }
  }
 // obsolete  if(!(b=p!=q)){if(!(b=!!ICMP(af+AS(a),wf+AS(w),p))){PROD(c,p,af+AS(a)); b=c&&!HOMO(at,wt);}}  // b='mismatch'

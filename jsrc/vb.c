@@ -143,10 +143,10 @@ static A jtebar1C(J jt, C *av, C *wv, I an, I wn, C* zv, I type, A z){
    if(wv < wvend){   // if there are enough bytes left to try fetching
     ws = _mm256_loadu_si256((__m256i*)wv);  // fetch the string, in which the first 2 bytes match
     match0 = _mm256_movemask_epi8(_mm256_cmpeq_epi8(a32, ws));
-    // if the search string is longer than 32 bytes, finish the comparison
-    DQ(an-32, match0=av[32+i]==wv[32+i]?match0:0;)
     // output the result if any; advance 1 byte to continue search for start characters
     match0 = ((fullmatchmsk|match0)+1)>>32;  // if all bits =, produce a 1.  match0 has garbage in top 8 bits
+    // if the search string is longer than 32 bytes, finish the comparison
+    if(match0)DQ(an-32, if(av[32+i]!=wv[32+i]){match0=0; break;})  // testing match0 is questionable but it will predict well
     // perform the action based on the input type (now in fullmatchmsk)
     if((fullmatchmsk>>56)<1){zv[wv-wv0] = (C)match0;  // E.
     }else if((fullmatchmsk>>56)==1){zv+=match0&1;   // +/@E.

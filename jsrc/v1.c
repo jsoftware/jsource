@@ -7,6 +7,9 @@
 #include "vcomp.h"
 #include "ve.h"
 
+#ifdef MMSC_VER
+#pragma warning(disable: 4244)
+#endif
 
 static B jtmatchsub(J,A,A,B* RESTRICT,I,I,I,I,I);
 static F2(jtmatchs);

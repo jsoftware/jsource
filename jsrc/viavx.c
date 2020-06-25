@@ -44,7 +44,22 @@ static void ctmask(J jt){
  }else{jt->ctmask = ~0LL;}
 }    /* 1 iff significant wrt comparison tolerance */
 
-#if C_AVX&&SY_64
+#if C_AVX2&&SY_64
+static void fillwords(__m256i* storeptr, UI4 storeval, I nstores){
+ if(nstores==0)return;
+ __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-nstores)&(NPAR-1))));  // mask for 0 1 2 3 4 5 is xxxx 0001 0011 0111 1111 0001
+ __m256i store256=_mm256_set1_epi32(storeval);
+ I n4=(nstores-1)>>LGNPAR;  // # full stores
+ if(n4){
+  if(n4&1)goto l1;
+lp:
+   _mm256_storeu_si256 (storeptr, store256); storeptr++;
+l1:_mm256_storeu_si256 (storeptr, store256); storeptr++;
+   if((n4-=2)>0)goto lp;  // loop must be >= 1 cycle
+ }
+ _mm256_maskstore_epi64 (storeptr, endmask,store256);  // finish the last long stores
+}
+#elif C_AVX&&SY_64
 // fill 64-bit words with the 32-bit value in storeval
 static __forceinline void fillwords(__m128i* storeptr, UI4 storeval, I nstores){
  // use 128-bit moves because 256-bit ops have a warmup time on Ivy Bridge.  Eventually convert this to 256-bit stores
@@ -564,13 +579,14 @@ static B jteqa0(J jt,I n,A*u,A*v,I c,I d){PUSHCCT(1.0) B res=1; DQ(n, if(!equ(*u
 // The main search routine, given a, w, mode, etc, for datatypes with no comparison tolerance
 
 // if there is not a prehashed hashtable, we clear the hashtable and fill it from a, then hash & check each item of w
-#define IOFX(T,TH,f,hash,exp,stride)   \
+#define IOFX(T,TH,f,setup,hash,exp,stride)   \
  IOF(f){I acn=ak/sizeof(T),cn=k/sizeof(T),l,p,  \
         wcn=wk/sizeof(T),*zv=AV(z);T* RESTRICT av=(T*)AV(a),* RESTRICT wv=(T*)AV(w);I md; TH * RESTRICT hv; \
         IH *hh=IHAV(h); p=hh->datarange;  hv=hh->data.TH;  \
  \
   __m128i vp, vpstride;   /* v for hash/v for search; stride for each */ \
   _mm256_zeroupper(VOIDARG);  \
+  setup \
   vp=_mm_set1_epi32_(0);  /* to avoid warnings */ \
   md=mode&IIOPMSK;   /* clear upper flags including REFLEX bit */                                            \
     /* look for IIDOT/IICO/INUBSV/INUB/INUBI - we set IIMODREFLEX if one of those is set */ \
@@ -609,7 +625,23 @@ static __forceinline I fcmp0(D* a, D* w, I n){
  DQ(n, if(a[i]!=w[i])R 1;);
  R 0;
 }
-
+#if C_AVX2
+#define COMPSETUP \
+ __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1))));  // mask for 0 1 2 3 4 5 is xxxx 0001 0011 0111 1111 0001
+#define COMPCALL(a) icmpeq(v,(a)+n*hj,n,endmask)
+static __forceinline I icmpeq(I *x, I *y, I n, __m256i endmask) {
+ __m256i u,v;
+ I i=(n-1)>>LGNPAR;  /* # loops for 0 1 2 3 4 5 is x 0 0 0 0 1 */
+ while(--i>=0){
+  u=_mm256_loadu_si256 ((__m256i*)x); v=_mm256_loadu_si256 ((__m256i*)y); if(~_mm256_movemask_epi8(_mm256_cmpeq_epi8(u,v)))R 1; x+=NPAR; y+=NPAR;
+  }
+ u=_mm256_maskload_epi64(x,endmask); v=_mm256_maskload_epi64(y,endmask); 
+// obsolete  R 0!=~_mm256_movemask_epi8(_mm256_or_si256(tailmask,_mm256_cmpeq_epi8(u,v)));  // no miscompares, compare equal
+ R 0!=~_mm256_movemask_epi8(_mm256_cmpeq_epi8(u,v));  // no miscompares, compare equal
+}
+#else
+#define COMPSETUP
+#define COMPCALL(a) icmpeq(v,(a)+n*hj,n)
 // Return nonzero if *a!=*w
 static __forceinline I icmpeq(I *a, I *w, I n) {
  if(n)do{
@@ -618,41 +650,42 @@ static __forceinline I icmpeq(I *a, I *w, I n) {
  }while(1);
  R n;
 }
+#endif
 
 // jtioa* BOX
 // jtiox  XNUM
 // jtioq  RAT
-// jtioi1 k=SZI, INT/SBT/char/bool not small-range
-// jtioi  INT array
-// jtioc  k=any, bool (must be list of em)/char/INT/SBT
+// jtioi1 k==SZI, INT/SBT/char/bool not small-range
+// jtioi  list of >1 INT
+// jtioc  k!=SZI, bool (must be list of em)/char/INT/SBT
 // jtioc01 intolerant FL atom
 // jtioc0 intolerant FL array
 // jtioz01 intolerant CMPX atom
 // jtioz0 intolerant CMPX array
 
-static IOFX(A,US,jtioax1,hia(1.0,*v),!equ(*v,av[hj]),1  )  /* boxed exact 1-element item */   
-static IOFX(A,US,jtioau, hiau(*v),  !equ(*v,av[hj]),1  )  /* boxed uniform type         */
-static IOFX(X,US,jtiox,  hix(v),            !eqx(n,v,av+n*hj),               cn)  /* extended integer           */   
-static IOFX(Q,US,jtioq,  hiq(v),            !eqq(n,v,av+n*hj),               cn)  /* rational number            */   
-static IOFX(C,US,jtioc,  hic(k,(UC*)v),     memcmpne(v,av+k*hj,k),             cn)  /* boolean, char, or integer  */
-static IOFX(I,US,jtioi,  hici(n,v),            icmpeq(v,av+n*hj,n),          cn  )  // INT array, not float
-static IOFX(I,US,jtioi1,  hici1(v),           *v!=av[hj],                    1 )  // len=8, not float
-static IOFX(D,US,jtioc01, hic01((UIL*)v),    *v!=av[hj],                      1) // float atom
-static IOFX(Z,US,jtioz01, hic0(2,(UIL*)v),    (v[0].re!=av[hj].re)||(v[0].im!=av[hj].im), 1) // complex atom
-static IOFX(D,US,jtioc0, hic0(n,(UIL*)v),    fcmp0(v,&av[n*hj],n),           cn) // float array
-static IOFX(Z,US,jtioz0, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n),  cn) // complex array
+static IOFX(A,US,jtioax1,,hia(1.0,*v),!equ(*v,av[hj]),1  )  /* boxed exact 1-element item */   
+static IOFX(A,US,jtioau,, hiau(*v),  !equ(*v,av[hj]),1  )  /* boxed uniform type         */
+static IOFX(X,US,jtiox,,  hix(v),            !eqx(n,v,av+n*hj),               cn)  /* extended integer           */   
+static IOFX(Q,US,jtioq,,  hiq(v),            !eqq(n,v,av+n*hj),               cn)  /* rational number            */   
+static IOFX(C,US,jtioc,,  hic(k,(UC*)v),     memcmpne(v,av+k*hj,k),             cn)  /* boolean, char, or integer  */
+static IOFX(I,US,jtioi,COMPSETUP,  hici(n,v),            COMPCALL(av),          cn  )  // INT array, not float
+static IOFX(I,US,jtioi1,,  hici1(v),           *v!=av[hj],                    1 )  // len=8, not float
+static IOFX(D,US,jtioc01,, hic01((UIL*)v),    *v!=av[hj],                      1) // float atom
+static IOFX(Z,US,jtioz01,, hic0(2,(UIL*)v),    (v[0].re!=av[hj].re)||(v[0].im!=av[hj].im), 1) // complex atom
+static IOFX(D,US,jtioc0,, hic0(n,(UIL*)v),    fcmp0(v,&av[n*hj],n),           cn) // float array
+static IOFX(Z,US,jtioz0,, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n),  cn) // complex array
 
-static IOFX(A,UI4,jtioax12,hia(1.0,*v),!equ(*v,av[hj]),1  )  /* boxed exact 1-element item */   
-static IOFX(A,UI4,jtioau2, hiau(*v),  !equ(*v,av[hj]),1  )  /* boxed uniform type         */
-static IOFX(X,UI4,jtiox2,  hix(v),            !eqx(n,v,av+n*hj),               cn)  /* extended integer           */   
-static IOFX(Q,UI4,jtioq2,  hiq(v),            !eqq(n,v,av+n*hj),               cn)  /* rational number            */   
-static IOFX(C,UI4,jtioc2,  hic(k,(UC*)v),     memcmpne(v,av+k*hj,k),             cn)  /* boolean, char, or integer  */
-static IOFX(I,UI4,jtioi2,  hici(n,v),            icmpeq(v,av+n*hj,n),          cn  )  // INT array, not float
-static IOFX(I,UI4,jtioi12,  hici1(v),           *v!=av[hj],                    1 )  // len=8, not float
-static IOFX(D,UI4,jtioc012, hic01((UIL*)v),    *v!=av[hj],                      1) // float atom
-static IOFX(Z,UI4,jtioz012, hic0(2,(UIL*)v),    (v[0].re!=av[hj].re)||(v[0].im!=av[hj].im), 1) // complex atom
-static IOFX(D,UI4,jtioc02, hic0(n,(UIL*)v),    fcmp0(v,&av[n*hj],n),           cn) // float array
-static IOFX(Z,UI4,jtioz02, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n),  cn) // complex array
+static IOFX(A,UI4,jtioax12,,hia(1.0,*v),!equ(*v,av[hj]),1  )  /* boxed exact 1-element item */   
+static IOFX(A,UI4,jtioau2,, hiau(*v),  !equ(*v,av[hj]),1  )  /* boxed uniform type         */
+static IOFX(X,UI4,jtiox2,,  hix(v),            !eqx(n,v,av+n*hj),               cn)  /* extended integer           */   
+static IOFX(Q,UI4,jtioq2,,  hiq(v),            !eqq(n,v,av+n*hj),               cn)  /* rational number            */   
+static IOFX(C,UI4,jtioc2,,  hic(k,(UC*)v),     memcmpne(v,av+k*hj,k),             cn)  /* boolean, char, or integer  */
+static IOFX(I,UI4,jtioi2,COMPSETUP,  hici(n,v),            COMPCALL(av),          cn  )  // INT array, not float
+static IOFX(I,UI4,jtioi12,,  hici1(v),           *v!=av[hj],                    1 )  // len=8, not float
+static IOFX(D,UI4,jtioc012,, hic01((UIL*)v),    *v!=av[hj],                      1) // float atom
+static IOFX(Z,UI4,jtioz012,, hic0(2,(UIL*)v),    (v[0].re!=av[hj].re)||(v[0].im!=av[hj].im), 1) // complex atom
+static IOFX(D,UI4,jtioc02,, hic0(n,(UIL*)v),    fcmp0(v,&av[n*hj],n),           cn) // float array
+static IOFX(Z,UI4,jtioz02,, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n),  cn) // complex array
 
 
 // ********************* second class: tolerant comparisons, possibly boxed **********************
@@ -1295,13 +1328,14 @@ static I jtutype(J jt,A w,I c){A*wv,x;I m,t;
 // same, traversing a from back to front
 #define XDQWA(T,TH,TZ,zptr,hash,exp,stride,zvalue,earlyexit) XSEARCH(T,TH,a,w,hash,exp,(-(stride)),XDOWFOUND(TZ,zptr,zvalue,earlyexit),{},2,cn*(asct-1), (i=asct-1;i>1;--i) ,0)
 
-#define IOFXW(T,TH,f,hash,exp,stride)   \
+#define IOFXW(T,TH,f,setup,hash,exp,stride)   \
  IOF(f){I acn=ak/sizeof(T),cn=k/sizeof(T),l,p,  \
         wcn=wk/sizeof(T);T* RESTRICT av=(T*)AV(a),* RESTRICT wv=(T*)AV(w);I md; TH * RESTRICT hv; \
         IH *hh=IHAV(h); p=hh->datarange;  hv=hh->data.TH;  \
  \
   __m128i vp, vpstride;   /* v for hash/v for search; stride for each */ \
   _mm256_zeroupper(VOIDARG);  \
+  setup \
   vp=_mm_setzero_si128();  /* to avoid warnings */ \
   md=mode&IIOPMSK;   /* clear upper flags including REFLEX bit */  \
   A indtbl; GATV0(indtbl,INT,((asct*sizeof(TH)+SZI)>>LGSZI),0); TH * RESTRICT indtdd=TH##AV(indtbl); \
@@ -1319,29 +1353,29 @@ static I jtutype(J jt,A w,I c){A*wv,x;I m,t;
   R h;                                                                               \
  }
 
-static IOFXW(A,US,jtiowax1,hia(1.0,*v),!equ(*v,wv[hj]),1  )  /* boxed exact 1-element item */   
-static IOFXW(A,US,jtiowau, hiau(*v),  !equ(*v,wv[hj]),1  )  /* boxed uniform type         */
-static IOFXW(X,US,jtiowx,  hix(v),            !eqx(n,v,wv+n*hj),               cn)  /* extended integer           */   
-static IOFXW(Q,US,jtiowq,  hiq(v),            !eqq(n,v,wv+n*hj),               cn)  /* rational number            */   
-static IOFXW(C,US,jtiowc,  hic(k,(UC*)v),     memcmpne(v,wv+k*hj,k),             cn)  /* boolean, char, or integer  */
-static IOFXW(I,US,jtiowi,  hici(n,v),            icmpeq(v,wv+n*hj,n),          cn  )  // INT array, not float
-static IOFXW(I,US,jtiowi1,  hici1(v),           *v!=wv[hj],                    1 )  // len=8, not float
-static IOFXW(D,US,jtiowc01, hic01((UIL*)v),    *v!=wv[hj],                      1) // float atom
-static IOFXW(Z,US,jtiowz01, hic0(2,(UIL*)v),    (v[0].re!=wv[hj].re)||(v[0].im!=wv[hj].im), 1) // complex atom
-static IOFXW(D,US,jtiowc0, hic0(n,(UIL*)v),    fcmp0(v,&wv[n*hj],n),           cn) // float array
-static IOFXW(Z,US,jtiowz0, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&wv[n*hj],2*n),  cn) // complex array
+static IOFXW(A,US,jtiowax1,,hia(1.0,*v),!equ(*v,wv[hj]),1  )  /* boxed exact 1-element item */   
+static IOFXW(A,US,jtiowau,, hiau(*v),  !equ(*v,wv[hj]),1  )  /* boxed uniform type         */
+static IOFXW(X,US,jtiowx,,  hix(v),            !eqx(n,v,wv+n*hj),               cn)  /* extended integer           */   
+static IOFXW(Q,US,jtiowq,,  hiq(v),            !eqq(n,v,wv+n*hj),               cn)  /* rational number            */   
+static IOFXW(C,US,jtiowc,,  hic(k,(UC*)v),     memcmpne(v,wv+k*hj,k),             cn)  /* boolean, char, or integer  */
+static IOFXW(I,US,jtiowi,COMPSETUP,  hici(n,v),            COMPCALL(wv),          cn  )  // INT array, not float
+static IOFXW(I,US,jtiowi1,,  hici1(v),           *v!=wv[hj],                    1 )  // len=8, not float
+static IOFXW(D,US,jtiowc01,, hic01((UIL*)v),    *v!=wv[hj],                      1) // float atom
+static IOFXW(Z,US,jtiowz01,, hic0(2,(UIL*)v),    (v[0].re!=wv[hj].re)||(v[0].im!=wv[hj].im), 1) // complex atom
+static IOFXW(D,US,jtiowc0,, hic0(n,(UIL*)v),    fcmp0(v,&wv[n*hj],n),           cn) // float array
+static IOFXW(Z,US,jtiowz0,, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&wv[n*hj],2*n),  cn) // complex array
 
-static IOFXW(A,UI4,jtiowax12,hia(1.0,*v),!equ(*v,wv[hj]),1  )  /* boxed exact 1-element item */   
-static IOFXW(A,UI4,jtiowau2, hiau(*v),  !equ(*v,wv[hj]),1  )  /* boxed uniform type         */
-static IOFXW(X,UI4,jtiowx2,  hix(v),            !eqx(n,v,wv+n*hj),               cn)  /* extended integer           */   
-static IOFXW(Q,UI4,jtiowq2,  hiq(v),            !eqq(n,v,wv+n*hj),               cn)  /* rational number            */   
-static IOFXW(C,UI4,jtiowc2,  hic(k,(UC*)v),     memcmpne(v,wv+k*hj,k),             cn)  /* boolean, char, or integer  */
-static IOFXW(I,UI4,jtiowi2,  hici(n,v),            icmpeq(v,wv+n*hj,n),          cn  )  // INT array, not float
-static IOFXW(I,UI4,jtiowi12,  hici1(v),           *v!=wv[hj],                    1 )  // len=8, not float
-static IOFXW(D,UI4,jtiowc012, hic01((UIL*)v),    *v!=wv[hj],                      1) // float atom
-static IOFXW(Z,UI4,jtiowz012, hic0(2,(UIL*)v),    (v[0].re!=wv[hj].re)||(v[0].im!=wv[hj].im), 1) // complex atom
-static IOFXW(D,UI4,jtiowc02, hic0(n,(UIL*)v),    fcmp0(v,&wv[n*hj],n),           cn) // float array
-static IOFXW(Z,UI4,jtiowz02, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&wv[n*hj],2*n),  cn) // complex array
+static IOFXW(A,UI4,jtiowax12,,hia(1.0,*v),!equ(*v,wv[hj]),1  )  /* boxed exact 1-element item */   
+static IOFXW(A,UI4,jtiowau2,, hiau(*v),  !equ(*v,wv[hj]),1  )  /* boxed uniform type         */
+static IOFXW(X,UI4,jtiowx2,,  hix(v),            !eqx(n,v,wv+n*hj),               cn)  /* extended integer           */   
+static IOFXW(Q,UI4,jtiowq2,,  hiq(v),            !eqq(n,v,wv+n*hj),               cn)  /* rational number            */   
+static IOFXW(C,UI4,jtiowc2,,  hic(k,(UC*)v),     memcmpne(v,wv+k*hj,k),             cn)  /* boolean, char, or integer  */
+static IOFXW(I,UI4,jtiowi2,COMPSETUP,  hici(n,v),            COMPCALL(wv),          cn  )  // INT array, not float
+static IOFXW(I,UI4,jtiowi12,,  hici1(v),           *v!=wv[hj],                    1 )  // len=8, not float
+static IOFXW(D,UI4,jtiowc012,, hic01((UIL*)v),    *v!=wv[hj],                      1) // float atom
+static IOFXW(Z,UI4,jtiowz012,, hic0(2,(UIL*)v),    (v[0].re!=wv[hj].re)||(v[0].im!=wv[hj].im), 1) // complex atom
+static IOFXW(D,UI4,jtiowc02,, hic0(n,(UIL*)v),    fcmp0(v,&wv[n*hj],n),           cn) // float array
+static IOFXW(Z,UI4,jtiowz02,, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&wv[n*hj],2*n),  cn) // complex array
 
 
 // *************************** seventh class: small-range processing of w ***********************
@@ -1629,9 +1663,9 @@ static CR condrange2(US *s,I n,I min,I max,I maxrange){CR ret;I i;US x;
 // jtioa* BOX
 // jtiox  XNUM
 // jtioq  RAT
-// jtioi  k=SZI, INT/SBT/char/bool not small-range
-// jtioi1  INT array
-// jtioc  k=any, bool (must be list of em)/char/INT/SBT
+// jtioi1 k==SZI, INT/SBT/char/bool not small-range
+// jtioi  list of >1 INT
+// jtioc  k!=SZI, bool (must be list of em)/char/INT/SBT
 // jtioc01 intolerant FL atom
 // jtioc0 intolerant FL array
 // jtioz01 intolerant CMPX atom
@@ -1862,7 +1896,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z;fauxblockINT(zfaux,1,0)
  if(((((-(wc^1))&(-(wc^ac)))|SGNIFNOT(mode,IIOREPSX))>=0)&&(((((I)m-11)|(zn-8)|((I)m+zn-41))<0))){  // wc==1 or ac, IOREPS, small enough operation   TUNE
     // this will not choose sequential search enough when the cells are large (comparisons then are cheap because of early exit)
   jtiosc(jt,mode,n,m,c,ac,wc,a,w,z); // simple sequential search without hashing
- }else{I b=1.0==jt->cct;  // b means 'intolerant comparison'
+ }else{// obsolete I b=1.0==jt->cct;  // b means 'intolerant comparison'
 // jtioa* BOX
 // jtiox  XNUM
 // jtioq  RAT
@@ -1883,14 +1917,14 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z;fauxblockINT(zfaux,1,0)
   // we allocate 4 extra entries to make sure we can write a quadword at the end, and to ensure there are sentinels
 
 // testing#define HASHFACTOR 6.0  // multiple of p over m, found empirically
-  I fnx=-1; // we haven't figured it out yet
+  I fnx=-2 + (1.0==jt->cct); // we haven't figured it out yet.  fnx is -2 for tolerant, -1 for intolerant
   // p>>booladj is the number of hashtable entries we need.  booladj is 0 for full hash, 3 if we just need one byte-encoded boolean per input value, 5 if just one bit per input value
   UI booladj=(mode&(IIOPMSK&~(IIDOT^IICO)))?5:0;  // boolean allowed when not i./i:
   p=0;  // indicate we haven't come up with the table size yet.  It depends on reverse and small-range decisions
-  if((b-1)&t&BOX+FL+CMPX)ctmask(jt);   // calculate ctmask if comparison is tolerant and there might be floats
+  if((fnx+1)&t&BOX+FL+CMPX)ctmask(jt);   // calculate ctmask if comparison is tolerant and there might be floats
 
   if(t&BOX+XNUM+RAT){
-   if(t&BOX){I t1; fnx=b&&(1<n||usebs(a,ac,m))?FNTBLBOXSSORT:1<n?FNTBLBOXARRAY:b?FNTBLBOXINTOLERANT:
+   if(t&BOX){I t1; fnx=(fnx&1)&&(1<n||usebs(a,ac,m))?FNTBLBOXSSORT:1<n?FNTBLBOXARRAY:(fnx&1)?FNTBLBOXINTOLERANT:
              (t1=utype(a,ac))&&((mode&IPHCALC)||a==w||TYPESEQ(t1,utype(w,wc)))?FNTBLBOXUNIFORM:FNTBLBOXUNKNOWN;
    }else fnx=CTTZ(t)+(FNTBLXNUM-XNUMX);
   }else if(1==k)           {p=t&B01?2:256;datamin=0; mode|=IIMODFULL; fnx=FNTBLSMALL1;}   // 1-byte ops, just use small-range code: checking takes too much time
@@ -1936,7 +1970,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z;fauxblockINT(zfaux,1,0)
       }else{fnx=FNTBLONEINT;}  // select integer hashing if range too big...
      }else{fnx=FNTBLONEINT;}   // ... or some other 8-byte length (not float, though)
     }else{  // it's a hash
-     fnx=((t&CMPX+FL+INT))+((n==1)?2:0)+b;  // index: CMPX/FL/n==1/intolerant
+     fnx=((t&CMPX+FL+INT))+((n==1)?2:0)+fnx+2;  // index: CMPX/FL/n==1/intolerant (~fnx is 1 for tolerant, 0 for intolerant; fnx+2 is the reverse)
     }
    }
   }

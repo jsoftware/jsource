@@ -148,8 +148,8 @@ static void jtfmt1(J jt,B e,I m,I d,C*s,I t,C*wv){D y;
   case RATX:  fmtq(e,m,d,s,t,(Q*)wv);          break;
   default:
    y=*(D*)wv; y=y?y:0.0;  /* -0 to 0 */
-   if     (!memcmp(wv,&inf, SZD))strcpy(jt->th2buf,e?"  _" :' '==*s?" _" :"_" );
-   else if(!memcmp(wv,&infm,SZD))strcpy(jt->th2buf,e?" __" :' '==*s?" __":"__");
+   if     (!memcmpne(wv,&inf, SZD))strcpy(jt->th2buf,e?"  _" :' '==*s?" _" :"_" );
+   else if(!memcmpne(wv,&infm,SZD))strcpy(jt->th2buf,e?" __" :' '==*s?" __":"__");
    else if(_isnan(*(D*)wv)      )strcpy(jt->th2buf,e?"  _.":' '==*s?" _.":"_.");
    else sprintf(jt->th2buf,s,y);
 }}   /* format one number */

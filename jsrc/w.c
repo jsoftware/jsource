@@ -175,7 +175,7 @@ static A jtconstr(J jt,I n,C*s){A z;C b,c,p,*t,*x;I m=0;
 #define TVERB(i,c)  (v[i]==ds(c))  // true if this word is the given verb
 #define TRBRACE(i)  TVERB(i,CRBRACE)  // true if given word is }
 #define TAIA(i,j)   (TASGN(1) && TNAME(j) && AN(v[i])==AN(v[j]) && TNAME(i) && \
-                        !memcmp(NAV(v[i])->s,NAV(v[j])->s,AN(v[i])))
+                        !memcmpne(NAV(v[i])->s,NAV(v[j])->s,AN(v[i])))
   // true if the two words are names, word 1 is assignment, and the names are equal
 
 // Convert text sentence to a sequence of words to be the queue for parsing
@@ -249,7 +249,7 @@ A jtenqueue(J jt,A a,A w,I env){A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl;UC c;
     GAT0(z1,BOX,4,1); x=AAV(z1);   // Allocate the sentence, point to its data
     GATV0(y,BOX,m+3,1); yv=AAV(y);   // Allocate the argument
     c=-1; k=AN(v[0]); s=NAV(v[0])->s;   // get length and address of abc
-    j=4; DO(m, yv[i]=p=v[j]; j+=2; if(AN(p)==k&&!memcmp(s,NAV(p)->s,k))c=i;);  // move name into argument, remember if matched abc
+    j=4; DO(m, yv[i]=p=v[j]; j+=2; if(AN(p)==k&&!memcmpne(s,NAV(p)->s,k))c=i;);  // move name into argument, remember if matched abc
     yv[m]=v[2]; RZ(yv[m+1]=rifvs(sc(c))); yv[m+2]=z;    // add the 3 ending elements
     x[0]=v[0]; x[1]=v[1]; x[2]=ds(CCASEV); x[3]=y;  // build the sentence
     RETF(z1);  // that's what we'll execute

@@ -634,7 +634,7 @@ static IOFX(A,US,jtioax1,hia(1.0,*v),!equ(*v,av[hj]),1  )  /* boxed exact 1-elem
 static IOFX(A,US,jtioau, hiau(*v),  !equ(*v,av[hj]),1  )  /* boxed uniform type         */
 static IOFX(X,US,jtiox,  hix(v),            !eqx(n,v,av+n*hj),               cn)  /* extended integer           */   
 static IOFX(Q,US,jtioq,  hiq(v),            !eqq(n,v,av+n*hj),               cn)  /* rational number            */   
-static IOFX(C,US,jtioc,  hic(k,(UC*)v),     memcmp(v,av+k*hj,k),             cn)  /* boolean, char, or integer  */
+static IOFX(C,US,jtioc,  hic(k,(UC*)v),     memcmpne(v,av+k*hj,k),             cn)  /* boolean, char, or integer  */
 static IOFX(I,US,jtioi,  hici(n,v),            icmpeq(v,av+n*hj,n),          cn  )  // INT array, not float
 static IOFX(I,US,jtioi1,  hici1(v),           *v!=av[hj],                    1 )  // len=8, not float
 static IOFX(D,US,jtioc01, hic01((UIL*)v),    *v!=av[hj],                      1) // float atom
@@ -646,7 +646,7 @@ static IOFX(A,UI4,jtioax12,hia(1.0,*v),!equ(*v,av[hj]),1  )  /* boxed exact 1-el
 static IOFX(A,UI4,jtioau2, hiau(*v),  !equ(*v,av[hj]),1  )  /* boxed uniform type         */
 static IOFX(X,UI4,jtiox2,  hix(v),            !eqx(n,v,av+n*hj),               cn)  /* extended integer           */   
 static IOFX(Q,UI4,jtioq2,  hiq(v),            !eqq(n,v,av+n*hj),               cn)  /* rational number            */   
-static IOFX(C,UI4,jtioc2,  hic(k,(UC*)v),     memcmp(v,av+k*hj,k),             cn)  /* boolean, char, or integer  */
+static IOFX(C,UI4,jtioc2,  hic(k,(UC*)v),     memcmpne(v,av+k*hj,k),             cn)  /* boolean, char, or integer  */
 static IOFX(I,UI4,jtioi2,  hici(n,v),            icmpeq(v,av+n*hj,n),          cn  )  // INT array, not float
 static IOFX(I,UI4,jtioi12,  hici1(v),           *v!=av[hj],                    1 )  // len=8, not float
 static IOFX(D,UI4,jtioc012, hic01((UIL*)v),    *v!=av[hj],                      1) // float atom
@@ -1323,7 +1323,7 @@ static IOFXW(A,US,jtiowax1,hia(1.0,*v),!equ(*v,wv[hj]),1  )  /* boxed exact 1-el
 static IOFXW(A,US,jtiowau, hiau(*v),  !equ(*v,wv[hj]),1  )  /* boxed uniform type         */
 static IOFXW(X,US,jtiowx,  hix(v),            !eqx(n,v,wv+n*hj),               cn)  /* extended integer           */   
 static IOFXW(Q,US,jtiowq,  hiq(v),            !eqq(n,v,wv+n*hj),               cn)  /* rational number            */   
-static IOFXW(C,US,jtiowc,  hic(k,(UC*)v),     memcmp(v,wv+k*hj,k),             cn)  /* boolean, char, or integer  */
+static IOFXW(C,US,jtiowc,  hic(k,(UC*)v),     memcmpne(v,wv+k*hj,k),             cn)  /* boolean, char, or integer  */
 static IOFXW(I,US,jtiowi,  hici(n,v),            icmpeq(v,wv+n*hj,n),          cn  )  // INT array, not float
 static IOFXW(I,US,jtiowi1,  hici1(v),           *v!=wv[hj],                    1 )  // len=8, not float
 static IOFXW(D,US,jtiowc01, hic01((UIL*)v),    *v!=wv[hj],                      1) // float atom
@@ -1335,7 +1335,7 @@ static IOFXW(A,UI4,jtiowax12,hia(1.0,*v),!equ(*v,wv[hj]),1  )  /* boxed exact 1-
 static IOFXW(A,UI4,jtiowau2, hiau(*v),  !equ(*v,wv[hj]),1  )  /* boxed uniform type         */
 static IOFXW(X,UI4,jtiowx2,  hix(v),            !eqx(n,v,wv+n*hj),               cn)  /* extended integer           */   
 static IOFXW(Q,UI4,jtiowq2,  hiq(v),            !eqq(n,v,wv+n*hj),               cn)  /* rational number            */   
-static IOFXW(C,UI4,jtiowc2,  hic(k,(UC*)v),     memcmp(v,wv+k*hj,k),             cn)  /* boolean, char, or integer  */
+static IOFXW(C,UI4,jtiowc2,  hic(k,(UC*)v),     memcmpne(v,wv+k*hj,k),             cn)  /* boolean, char, or integer  */
 static IOFXW(I,UI4,jtiowi2,  hici(n,v),            icmpeq(v,wv+n*hj,n),          cn  )  // INT array, not float
 static IOFXW(I,UI4,jtiowi12,  hici1(v),           *v!=wv[hj],                    1 )  // len=8, not float
 static IOFXW(D,UI4,jtiowc012, hic01((UIL*)v),    *v!=wv[hj],                      1) // float atom

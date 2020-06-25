@@ -897,7 +897,11 @@ extern void     va1primsetup(A);
 extern void     va2primsetup(A);
 extern B        vlocnm(I,C*);
 extern D        xdouble(X);
-
+#if C_AVX2
+extern I        memcmpne(void*, void*, I);
+#else
+#define memcmpne(s,t,l) (!!memcmp((s),(t),(l)))
+#endif
 
 struct Bd1 {I hdr[AKXR(0)/SZI]; D v[1];};
 struct Bd2;

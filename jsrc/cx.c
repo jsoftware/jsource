@@ -634,7 +634,7 @@ static void jtcalclocalbuckets(J jt, A t, LX *actstv, I actstn){LX k;
   // of the number of items compared before the match.  If we get no match, the bucket index is the number
   // of items compared (= the number of items in the chain)
   for(k=actstv[tn->bucket];k;++compcount,k=(jt->sympv)[k].next){  // k chases the chain of symbols in selected bucket
-   if(tn->m==NAV((jt->sympv)[k].name)->m&&!memcmp(tn->s,NAV((jt->sympv)[k].name)->s,tn->m)){compcount=~compcount; break;}
+   if(tn->m==NAV((jt->sympv)[k].name)->m&&!memcmpne(tn->s,NAV((jt->sympv)[k].name)->s,tn->m)){compcount=~compcount; break;}
   }
   tn->bucketx=compcount;
  }

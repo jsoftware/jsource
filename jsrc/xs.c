@@ -102,7 +102,7 @@ static A jtlinf(J jt,A a,A w,C ce,B tso){A x,y,z;B lk=0;C*s;I i=-1,n,oldi=jt->sl
  if(jt->seclev){
   y=AAV0(w); n=AN(y); s=CAV(y); 
   ASSERT(LIT&AT(y),EVDOMAIN); 
-  ASSERT(3<n&&!memcmp(s+n-3,".js",3L)||4<n&&!memcmp(s+n-4,".ijs",4L),EVSECURE);
+  ASSERT(3<n&&!memcmpne(s+n-3,".js",3L)||4<n&&!memcmpne(s+n-4,".ijs",4L),EVSECURE);
  }
  RZ(x=jfread(w));
  // Remove UTF8 BOM if present - commented out pending resolution.  Other BOMs should not occur

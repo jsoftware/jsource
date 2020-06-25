@@ -707,14 +707,14 @@ static B jtcdinit(J jt){A x;
 static CCT*jtcdlookup(J jt,A a){C*s;CCT*pv;I an,hn,*hv,j,k;UC*av;
  hn=AN(jt->cdhash); hv=AV(jt->cdhash); pv=(CCT*)AV(jt->cdarg); s=CAV(jt->cdstr);
  an=AN(a); av=UAV(a); j=hic(an,av)%hn;
- while(0<=(k=hv[j])){if(an==pv[k].an&&!memcmp(av,s+pv[k].ai,an))R k+pv; if((j=(j+1))==hn)j=0;}
+ while(0<=(k=hv[j])){if(an==pv[k].an&&!memcmpne(av,s+pv[k].ai,an))R k+pv; if((j=(j+1))==hn)j=0;}
  R 0;
 }
 
 static HMODULE jtcdlookupl(J jt,C*av){C*s;CCT*pv;I an,hn,*hv,j,k;
  hn=AN(jt->cdhashl); hv=AV(jt->cdhashl); pv=(CCT*)AV(jt->cdarg); s=CAV(jt->cdstr);
  an=strlen(av); j=hic(an,av)%hn;
- while(0<=(k=hv[j])){if(an==pv[k].ln&&!memcmp(av,s+pv[k].li,an))R pv[k].h; if((j=(j+1))==hn)j=0;}
+ while(0<=(k=hv[j])){if(an==pv[k].ln&&!memcmpne(av,s+pv[k].li,an))R pv[k].h; if((j=(j+1))==hn)j=0;}
  R 0;
 }
 

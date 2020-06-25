@@ -48,8 +48,8 @@ static FMTF(jtfmtI,I){I x=*v;
 }
 
 static FMTF(jtfmtD,D){B q;C buf[1+WD],c,*t;D x=*v;I k=0;
- if(!memcmp(v,&inf, SZD)){strcpy(s,"_" ); R;}  // require exact bitmatch
- if(!memcmp(v,&infm,SZD)){strcpy(s,"__"); R;}
+ if(!memcmpne(v,&inf, SZD)){strcpy(s,"_" ); R;}  // require exact bitmatch
+ if(!memcmpne(v,&infm,SZD)){strcpy(s,"__"); R;}
  if(_isnan(*v)          ){strcpy(s,"_."); R;}
 // x=*v; x=x==*(D*)minus0?0.0:x;  /* -0 to 0*/
  x=*v; x=x==(-1)*0.0?0.0:x;  /* -0 to 0*/

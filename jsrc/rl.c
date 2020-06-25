@@ -81,7 +81,7 @@ static F1(jtlshape){I r,*s;
 static F1(jtlchar){A y;B b,p=1,r1;C c,d,*u,*v;I j,k,m,n;
  RZ(w);
  m=AN(ds(CALP)); n=AN(w); j=n-m; r1=1==AR(w); u=v=CAV(w); d=*v;
- if(0<=j&&r1&&!memcmp(v+j,AV(ds(CALP)),m)){ 
+ if(0<=j&&r1&&!memcmpne(v+j,AV(ds(CALP)),m)){ 
   if(!j)R cstr("a.");
   RZ(y=lchar(1==j?scc(*v):str(j,v)));
   R lp(y)?over(cstr("a.,~"),y):over(y,cstr(",a."));

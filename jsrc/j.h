@@ -657,26 +657,26 @@ extern unsigned int __cdecl _clearfp (void);
 #define SHAPEN(w,s,targ) (targ=AS(w)[s], targ=(s)<0?1:targ)
 // Item count
 #define SETIC(w,targ)   (targ=AS(w)[0], targ=AR(w)?targ:1)  //   (AR(w) ? *AS(w) : 1L)
-#define ICMP(z,w,n)     memcmp((z),(w),(n)*SZI)
+#define ICMP(z,w,n)     memcmpne((z),(w),(n)*SZI)
 #define ICPY(z,w,n)     memcpy((z),(w),(n)*SZI)
-#if C_AVX&&SY_64
-// Name comparison using wide instructions.   Run stmt if the names match
-#define IFCMPNAME(name,string,len,stmt) \
- if((name)->m==(len)){  /* compare len.  todo should we also compare hash first? */ \
-  __m256i readmask=_mm256_loadu_si256((__m256i*)(validitymask+(((-len)>>LGSZI)&(NPAR-1)))); /* the words we read */ \
-  __m256i endmask=_mm256_loadu_si256((__m256i*)((C*)validitymask+((-(len))&((NPAR*SZI)-1))));  /* the valid bytes */\
-  __m256d accumdiff=_mm256_xor_pd(_mm256_castsi256_pd(readmask),_mm256_castsi256_pd(readmask)); /* will hold total xor result */ \
-  D *in0=(D*)((name)->s), *in1=(D*)(string); \
-  DQ(((len)-1)>>(LGNPAR+LGSZI), \
-    accumdiff=_mm256_or_pd(_mm256_xor_pd(_mm256_loadu_pd(in0),_mm256_loadu_pd(in1)),accumdiff); \
-    in0+=NPAR; in1+=NPAR; \
-  ) \
-  accumdiff=_mm256_or_pd(_mm256_and_pd(_mm256_castsi256_pd(endmask),_mm256_xor_pd(_mm256_maskload_pd(in0,readmask),_mm256_maskload_pd(in1,readmask))),accumdiff); \
-  if(_mm256_testz_si256(_mm256_castpd_si256(accumdiff),_mm256_castpd_si256(accumdiff)))stmt \
- }
-#else
-#define IFCMPNAME(name,string,len,stmt) if((name)->m==(len) && !memcmp((name)->s,string,len))stmt
-#endif
+// obsolete #if C_AVX&&SY_64
+// obsolete // Name comparison using wide instructions.   Run stmt if the names match
+// obsolete #define IFCMPNAME(name,string,len,stmt) \
+// obsolete  if((name)->m==(len)){  /* compare len.  todo should we also compare hash first? */ \
+// obsolete   __m256i readmask=_mm256_loadu_si256((__m256i*)(validitymask+(((-len)>>LGSZI)&(NPAR-1)))); /* the words we read */ \
+// obsolete   __m256i endmask=_mm256_loadu_si256((__m256i*)((C*)validitymask+((-(len))&((NPAR*SZI)-1))));  /* the valid bytes */\
+// obsolete   __m256d accumdiff=_mm256_xor_pd(_mm256_castsi256_pd(readmask),_mm256_castsi256_pd(readmask)); /* will hold total xor result */ \
+// obsolete   D *in0=(D*)((name)->s), *in1=(D*)(string); \
+// obsolete   DQ(((len)-1)>>(LGNPAR+LGSZI), \
+// obsolete     accumdiff=_mm256_or_pd(_mm256_xor_pd(_mm256_loadu_pd(in0),_mm256_loadu_pd(in1)),accumdiff); \
+// obsolete     in0+=NPAR; in1+=NPAR; \
+// obsolete   ) \
+// obsolete   accumdiff=_mm256_or_pd(_mm256_and_pd(_mm256_castsi256_pd(endmask),_mm256_xor_pd(_mm256_maskload_pd(in0,readmask),_mm256_maskload_pd(in1,readmask))),accumdiff); \
+// obsolete   if(_mm256_testz_si256(_mm256_castpd_si256(accumdiff),_mm256_castpd_si256(accumdiff)))stmt \
+// obsolete  }
+// obsolete #else
+#define IFCMPNAME(name,string,len,stmt) if((name)->m==(len) && !memcmpne((name)->s,string,len))stmt
+// obsolete #endif
 
 // Mark a block as incorporated by removing its inplaceability.  The blocks that are tested for incorporation are ones that are allocated by partitioning, and they will always start out as inplaceable
 // If a block is virtual, it must be realized before it can be incorporated.  realized blocks always start off inplaceable

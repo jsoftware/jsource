@@ -352,7 +352,7 @@ static A jtopes(J jt,I zt,A cs,A w){A a,d,e,sh,t,*wv,x,x1,y,y1,z;B*b;C*xv;I an,*
   }
   for(j=wr-1;j;--j)if(dv[j]==zs[j]){dv[j]=0; ++dv[j-1];}else break;
   v=AV(y1); DQ(m1, ICPY(yv,dv,wr); ICPY(yv+yc-k,v,k); yv+=yc; v+=k;); 
-  if(memcmp(1+AS(x1),1+s,SZI*c)){*s=m1; povtake(jt,sh,x1,xv);} else MC(xv,AV(x1),m1*xk);
+  if(memcmpne(1+AS(x1),1+s,SZI*c)){*s=m1; povtake(jt,sh,x1,xv);} else MC(xv,AV(x1),m1*xk);
   ++dv[wr-1]; xv+=m1*xk; p+=m1;
  }
  SPB(zp,x,p==m?x:take(sc(p),x));

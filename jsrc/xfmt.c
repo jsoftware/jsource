@@ -306,8 +306,8 @@ static F2(jtfmtprecomp) {A*as,base,fb,len,strs,*u,z;B*bits,*bw;D dtmp,*dw;
     d=ib[1];
     dtmp=ABS(*dw);    
     if(d==-1) *bits |= BITSe*(TNE(0,dtmp) && (TLT(dtmp,1e-9)||TLT(2e9,dtmp)));
-    *bits |= BITS_ *!memcmp(dw, &inf , SZD)+ 
-             BITS__*!memcmp(dw, &infm, SZD)+
+    *bits |= BITS_ *!memcmpne(dw, &inf , SZD)+ 
+             BITS__*!memcmpne(dw, &infm, SZD)+
              BITS_d*_isnan(*dw); 
     if(d==-1) *iv = dpone(*bits,*dw);
     else *bits |= BITSz*(TEQ(*dw, 0) || (!(*bits&BITSf+BITSe) && TLT(dtmp, npwrs[d]/2)));

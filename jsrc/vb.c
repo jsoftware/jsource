@@ -26,7 +26,7 @@ static F2(jtebarmat){A ya,yw,z;B b,*zv;C*au,*av,*u,*v,*v0,*wu,*wv;I*as,c,i,k,m,n
  GATVR(z,B01,AN(w),2,ws); zv=BAV(z); memset(zv,C0,AN(z));
  if(t&B01+LIT+C2T+C4T+INT+SBT||1.0==jt->cct&&t&FL+CMPX)
   for(i=0;i<m;++i){
-   DO(n, u=av; b=1; DO(si,                         if(memcmp(u,v,s)){b=0; break;} u+=s; v+=r;); v=v0+=k; zv[i]=b;);
+   DO(n, u=av; b=1; DO(si,                         if(memcmpne(u,v,s)){b=0; break;} u+=s; v+=r;); v=v0+=k; zv[i]=b;);
    zv+=c; v=v0=wv+=r;
  }else{
   GA(ya,t,sj,1,0); au=CAV(ya);
@@ -45,7 +45,7 @@ static F2(jtebarvec){A y,z;B*zv;C*av,*wv,*yv;I an,k,n,s,t,wn;
  t=AT(w); k=bpnoun(t); s=k*an;
  GATV0(z,B01,wn,AR(w)?1:0); zv=BAV(z); 
  if((-an&(an-wn))<0)memset(zv+n,C0,wn-n); else memset(zv,C0,wn);
- if(t&B01+LIT+C2T+C4T+INT+SBT||1.0==jt->cct&&t&FL+CMPX)DO(n, zv[i]=!memcmp(av,wv,s); wv+=k;)
+ if(t&B01+LIT+C2T+C4T+INT+SBT||1.0==jt->cct&&t&FL+CMPX)DO(n, zv[i]=!memcmpne(av,wv,s); wv+=k;)
  else{GA(y,t,an,AR(a),0); yv=CAV(y); DO(n, MC(yv,wv,s); zv[i]=equ(a,y); wv+=k;);}
  RETF(z);
 }    /* E. on vector arguments */
@@ -132,7 +132,7 @@ static A jtebar1C(J jt, C *av, C *wv, I an, I wn, C* zv, I type, A z){
   // read in 32 bytes
   __m256i ws = _mm256_loadu_si256((__m256i*)wv);  // 32 bytes of w
   // see if the first 2 characters are matched in sequence
-  UI4 match0 = _mm256_movemask_epi8(_mm256_cmpeq_epi8(a0, ws)); UI4 match1 = _mm256_movemask_epi8(_mm256_cmpeq_epi8(a1, ws));
+  I4 match0 = _mm256_movemask_epi8(_mm256_cmpeq_epi8(a0, ws)); UI4 match1 = _mm256_movemask_epi8(_mm256_cmpeq_epi8(a1, ws));
   UI4 matchmsk = match0&(match1>>1);
   if(!matchmsk){
    // no match (presumed the normal case: skip to next 31-byte section
@@ -144,9 +144,9 @@ static A jtebar1C(J jt, C *av, C *wv, I an, I wn, C* zv, I type, A z){
     ws = _mm256_loadu_si256((__m256i*)wv);  // fetch the string, in which the first 2 bytes match
     match0 = _mm256_movemask_epi8(_mm256_cmpeq_epi8(a32, ws));
     // output the result if any; advance 1 byte to continue search for start characters
-    match0 = ((fullmatchmsk|match0)+1)>>32;  // if all bits =, produce a 1.  match0 has garbage in top 8 bits
+    match0 = ((I4)fullmatchmsk|match0)==(I4)~0;  // if all bits =, produce a 1.  match0 has garbage in top 8 bits
     // if the search string is longer than 32 bytes, finish the comparison
-    if(match0)DQ(an-32, if(av[32+i]!=wv[32+i]){match0=0; break;})  // testing match0 is questionable but it will predict well
+    if((-match0&(32-an))<0)match0=1^memcmpne(av+32,wv+32,an-32);
     // perform the action based on the input type (now in fullmatchmsk)
     if((fullmatchmsk>>56)<1){zv[wv-wv0] = (C)match0;  // E.
     }else if((fullmatchmsk>>56)==1){zv+=match0&1;   // +/@E.
@@ -172,13 +172,13 @@ static A jtebar1C(J jt, C *av, C *wv, I an, I wn, C* zv, I type, A z){
    __m256i ws = _mm256_maskload_epi64((long long const *) wv, _mm256_loadu_si256((__m256i*)(validitymask + (3 - ((wv0+wn-wv-1) >> 3)))));  // bytes of w
 #endif
    // see if the first 2 characters are matched in sequence
-   UI4 match0 = _mm256_movemask_epi8(_mm256_cmpeq_epi8(a0, ws)); UI4 match1 = _mm256_movemask_epi8(_mm256_cmpeq_epi8(a1, ws));
+   I4 match0 = _mm256_movemask_epi8(_mm256_cmpeq_epi8(a0, ws)); UI4 match1 = _mm256_movemask_epi8(_mm256_cmpeq_epi8(a1, ws));
    UI4 matchmsk = match0&(match1>>1);
    if(matchmsk&1){
     // match on 1st char.  See if it all matches in this position
     match0 = _mm256_movemask_epi8(_mm256_cmpeq_epi8(a32, ws));
     // output the result if any; advance 1 byte to continue search for start characters
-    match0 = ((fullmatchmsk|match0)+1)>>32;  // if all bits =, produce a 1
+    match0 = ((I4)fullmatchmsk|match0)==(I4)~0;  // if all bits =, produce a 1.  match0 has garbage in top 8 bits
     // perform the action based on the input type (now in fullmatchmsk)
     if((fullmatchmsk>>56)<1){zv[wv-wv0] = (C)match0;  // E.
     }else if((fullmatchmsk>>56)==1){zv+=match0&1;   // +/@E.

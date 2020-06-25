@@ -6,6 +6,9 @@
 #include "j.h"
 #include "ve.h"
 
+#ifdef MMSC_VER
+#pragma warning(disable: 4244)
+#endif
 
 BPFX( andBB, AND ,BAND, AND, BAND, _mm256_and_pd(u256,v256) , , )    
 BPFX(  orBB, OR  ,BOR,  OR,  BOR, _mm256_or_pd(u256,v256) , , )    

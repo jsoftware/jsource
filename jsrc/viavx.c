@@ -45,7 +45,8 @@ static void ctmask(J jt){
 }    /* 1 iff significant wrt comparison tolerance */
 
 #if C_AVX2&&SY_64
-static void fillwords(__m256i* storeptr, UI4 storeval, I nstores){
+static void fillwords(void* x, UI4 storeval, I nstores){
+ __m256i* storeptr = (__m256i*)x;
  if(nstores==0)return;
  __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-nstores)&(NPAR-1))));  // mask for 0 1 2 3 4 5 is xxxx 0001 0011 0111 1111 0001
  __m256i store256=_mm256_set1_epi32(storeval);
@@ -57,11 +58,12 @@ lp:
 l1:_mm256_storeu_si256 (storeptr, store256); storeptr++;
    if((n4-=2)>0)goto lp;  // loop must be >= 1 cycle
  }
- _mm256_maskstore_epi64 (storeptr, endmask,store256);  // finish the last long stores
+ _mm256_maskstore_epi64 ((I*)storeptr, endmask,store256);  // finish the last long stores
 }
 #elif C_AVX&&SY_64
 // fill 64-bit words with the 32-bit value in storeval
-static __forceinline void fillwords(__m128i* storeptr, UI4 storeval, I nstores){
+static __forceinline void fillwords(void* x, UI4 storeval, I nstores){
+ __m128i* storeptr = (__m128i*)x;
  // use 128-bit moves because 256-bit ops have a warmup time on Ivy Bridge.  Eventually convert this to 256-bit stores
  __m128i store128; store128=_mm_set1_epi32_(storeval);
  DQ(nstores>>1, _mm_storeu_si128 (storeptr, store128); storeptr++;)

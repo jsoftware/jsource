@@ -285,7 +285,7 @@ B jtequ(J jt,A a,A w){A x;
  RZ(a&&w);F2PREFIP;  // allow inplace request - it has no effect
  if(a==w)R 1;
  if(SPARSE&(AT(a)|AT(w))&&AR(a)&&AR(w)){RZ(x=matchs(a,w)); R*BAV(x);}
- R ((B (*)())jtmatchsub)(jt,a,w,0);  // don't check level - it takes too long for big arrays
+ R ((B (*)())jtmatchsub)(jt,a,w,0   ,0,0,1,1,1);  // don't check level - it takes too long for big arrays
 }
 
 // Return 1 if a and w match intolerantly, 0 if not
@@ -297,13 +297,13 @@ B jtequ0(J jt,A a,A w){
 // Test for equality of functions, 1 if they match.  To match, the functions must have the same pseudocharacter and fgh
 static B jteqf(J jt,A a,A w){A p,q;V*u=FAV(a),*v=FAV(w);
  if(TYPESXOR(AT(a),AT(w))+(u->id^v->id))R 0;   // must match on type and id
- p=u->fgh[0]; q=v->fgh[0]; if(!((p==q||p&&q&&((B (*)())jtmatchsub)(jt,p,q,0))))R 0;
- p=u->fgh[1]; q=v->fgh[1]; if(!((p==q||p&&q&&((B (*)())jtmatchsub)(jt,p,q,0))))R 0;
- p=u->fgh[2]; q=v->fgh[2];    R (p==q||p&&q&&((B (*)())jtmatchsub)(jt,p,q,0));
+ p=u->fgh[0]; q=v->fgh[0]; if(!((p==q||p&&q&&((B (*)())jtmatchsub)(jt,p,q,0   ,0,0,1,1,1))))R 0;
+ p=u->fgh[1]; q=v->fgh[1]; if(!((p==q||p&&q&&((B (*)())jtmatchsub)(jt,p,q,0   ,0,0,1,1,1))))R 0;
+ p=u->fgh[2]; q=v->fgh[2];    R (p==q||p&&q&&((B (*)())jtmatchsub)(jt,p,q,0   ,0,0,1,1,1));
 }
 
 // compare function for boxes.  Do a test on the single contents of the box.  Reset comparison direction to normal.
-#define EQA(a,w)  (a==w||((B (*)())jtmatchsub)(jt,a,w,0))
+#define EQA(a,w)  (a==w||((B (*)())jtmatchsub)(jt,a,w,0   ,0,0,1,1,1))
 // compare rationals
 #define EQQ(a,w)  (equ(a.n,w.n)&&equ(a.d,w.d))
 
@@ -467,7 +467,7 @@ F2(jtmatch){A z;I af,m,n,mn,wf;
   GATV(z,B01,mn,wf,AS(w)); memset(BAV(z),b^eqis0,mn); R z;
  }
  // There are atoms.  If there is only 1 cell to compare, do it quickly
- if(wf==0)R num((a==w||((B (*)())jtmatchsub)(jt,a,w,0))^eqis0);
+ if(wf==0)R num((a==w||((B (*)())jtmatchsub)(jt,a,w,0   ,0,0,1,1,1))^eqis0);
  // Otherwise we are doing match with rank.  Set up for the repetition in matchsub
  // Create m: #cells in shorter (i. e. common) frame  n: # times cell of shorter frame is repeated
 // obsolete if(af>wf){f=af; s=AS(a); PROD(m,wf,s); PROD(n,af-wf,wf+s);}

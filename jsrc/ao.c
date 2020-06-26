@@ -307,7 +307,8 @@ static DF2(jtkeyslash){PROLOG(0012);A b,q,x,z=0;B bb,*bv,pp=0;C d;I at,*av0,c,n,
  wt=AT(w); wv0=AV(w); wr=AR(w);
  ASSERT(n==SETIC(w,m),EVLENGTH);
 // obsolete x=; d=vaid(VAV(x)->fgh[0]);
- d=FAV(FAV(self)->fgh[0])->id;  // self is f//.   get  f/   then f
+ d=FAV(FAV(FAV(self)->fgh[0])->fgh[0])->id;  // self is f//.   get  f/   then f  then id of f
+d=0;  // scaf temporarily disable this until we decide it's worthwhile (and works - currently + has an overflow problem)
  if(B01&wt){d=d==CMAX?CPLUSDOT:d; d=(d==CMIN)|(d==CSTAR)?CSTARDOT:d;}
  if(!(AN(a)&&AN(w)&&at&DENSE&&
      (wt&B01&&(d==CEQ||d==CPLUSDOT||d==CSTARDOT||d==CNE||d==CPLUS)||
@@ -320,7 +321,7 @@ static DF2(jtkeyslash){PROLOG(0012);A b,q,x,z=0;B bb,*bv,pp=0;C d;I at,*av0,c,n,
  if(bb){
   GATV0(b,B01,s,  1); bv=BAV(b); memset(bv,C1,s); bv-=r;
   GA(q,zt, s*c,1,0); qv0=AV(q);
- }else{RZ(x=indexof(a,a)); xv=AV(x); m=0; u=xv; DO(n, *u=i==*u?m++:xv[*u]; ++u;);}
+ }else{RZ(x=indexof(a,a)); makewritable(x); xv=AV(x); m=0; u=xv; DO(n, *u=i==*u?m++:xv[*u]; ++u;);}  // kludge should remove misbranch
  GA(z,zt,m*c,wr,AS(w)); AS(z)[0]=m; zv0=AV(z);
  if(wt&FL)NAN0;
  PUSHCCT(jt->cctdefault)
@@ -341,7 +342,8 @@ static DF2(jtkeyslash){PROLOG(0012);A b,q,x,z=0;B bb,*bv,pp=0;C d;I at,*av0,c,n,
   case KCASE(17,      INTX): KACC(*v&y,     UI,UI,-1  ); break;
   case KCASE(22,      INTX): KACC(*v^y,     UI,UI,0   ); break;
   case KCASE(23,      INTX): KACC(*v|y,     UI,UI,0   ); break;
-  case KCASE(25,      INTX): KACC(~(*v^y),  UI,UI,-1  );
+  case KCASE(25,      INTX): KACC(~(*v^y),  UI,UI,-1  ); break;
+// kludge this fails for other boolean values
  }
  POPCCT
  if(wt&FL)NAN1;
@@ -733,7 +735,7 @@ F1(jtsldot){A h=0;AF f1=jtoblique,f2;C c,d,e;I flag=0;V*v;
  switch(ID(w)){  // no default for f2: every path must set it
   case CPOUND: f2=jtkeytally; break;
 // obsolete   case CSLASH: f2=jtkeyslash; if(vaid(v->fgh[0]))f1=jtobqfslash; break;
-  case CSLASH: f2=jtkey; if(AT(v->fgh[0])&VERB&&FAV(v->fgh[0])->flag&VISATOMIC2){f2=jtkeyslash; f1=jtobqfslash;} break;  // f//.  if f is atomic2
+  case CSLASH: f2=jtkey; if(AT(v->fgh[0])&VERB&&FAV(v->fgh[0])->flag&VISATOMIC2){/*scaf f2=jtkeyslash;*/ f1=jtobqfslash;} break;  // f//.  if f is atomic2
   case CFORK:  if(v->valencefns[0]==(AF)jtmean){f2=jtkeymean; break;}
                c=ID(v->fgh[0]); d=ID(v->fgh[1]); e=ID(v->fgh[2]); 
                if(((c^e)==(CHEAD^CPOUND))&&d==CCOMMA&&(c==CHEAD||c==CPOUND)){f2=jtkeyheadtally; break;}

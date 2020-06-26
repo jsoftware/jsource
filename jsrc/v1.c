@@ -11,6 +11,13 @@
 #pragma warning(disable: 4244)
 #endif
 
+// To reduce parameter overhead, we call matchsub with trailing parameters omitted if x==0.  This is fine for clang.  In MSVC, the parameter area
+// is used as a workarea by the routine, and thus omitting the parms makes for a segfault.
+#if defined(__clang__)
+#define MATCHSUBDEFAULTS
+#else
+#define MATCHSUBDEFAULTS ,0,0,1,1,1
+#endif
 static B jtmatchsub(J,A,A,B* RESTRICT,I,I,I,I,I);
 static F2(jtmatchs);
 
@@ -285,7 +292,7 @@ B jtequ(J jt,A a,A w){A x;
  RZ(a&&w);F2PREFIP;  // allow inplace request - it has no effect
  if(a==w)R 1;
  if(SPARSE&(AT(a)|AT(w))&&AR(a)&&AR(w)){RZ(x=matchs(a,w)); R*BAV(x);}
- R ((B (*)())jtmatchsub)(jt,a,w,0   ,0,0,1,1,1);  // don't check level - it takes too long for big arrays
+ R ((B (*)())jtmatchsub)(jt,a,w,0   MATCHSUBDEFAULTS);  // don't check level - it takes too long for big arrays
 }
 
 // Return 1 if a and w match intolerantly, 0 if not
@@ -297,13 +304,15 @@ B jtequ0(J jt,A a,A w){
 // Test for equality of functions, 1 if they match.  To match, the functions must have the same pseudocharacter and fgh
 static B jteqf(J jt,A a,A w){A p,q;V*u=FAV(a),*v=FAV(w);
  if(TYPESXOR(AT(a),AT(w))+(u->id^v->id))R 0;   // must match on type and id
- p=u->fgh[0]; q=v->fgh[0]; if(!((p==q||p&&q&&((B (*)())jtmatchsub)(jt,p,q,0   ,0,0,1,1,1))))R 0;
- p=u->fgh[1]; q=v->fgh[1]; if(!((p==q||p&&q&&((B (*)())jtmatchsub)(jt,p,q,0   ,0,0,1,1,1))))R 0;
- p=u->fgh[2]; q=v->fgh[2];    R (p==q||p&&q&&((B (*)())jtmatchsub)(jt,p,q,0   ,0,0,1,1,1));
+ p=u->fgh[0]; q=v->fgh[0]; if(!((p==q||p&&q&&((B (*)())jtmatchsub)(jt,p,q,0   MATCHSUBDEFAULTS))))R 0;
+ p=u->fgh[1]; q=v->fgh[1]; if(!((p==q||p&&q&&((B (*)())jtmatchsub)(jt,p,q,0   MATCHSUBDEFAULTS))))R 0;
+ p=u->fgh[2]; q=v->fgh[2];    R (p==q||p&&q&&((B (*)())jtmatchsub)(jt,p,q,0   MATCHSUBDEFAULTS));
 }
 
 // compare function for boxes.  Do a test on the single contents of the box.  Reset comparison direction to normal.
-#define EQA(a,w)  (a==w||((B (*)())jtmatchsub)(jt,a,w,0   ,0,0,1,1,1))
+#define EQA(a,w) \
+ ((-(a!=w)&((AN(a)^AN(w))-1))>=0?(a==w):((B (*)())jtmatchsub)(jt,a,w,0   MATCHSUBDEFAULTS))
+// obsolete   (a==w||((B (*)())jtmatchsub)(jt,a,w,0   MATCHSUBDEFAULTS))
 // compare rationals
 #define EQQ(a,w)  (equ(a.n,w.n)&&equ(a.d,w.d))
 
@@ -312,10 +321,10 @@ static B jteqf(J jt,A a,A w){A p,q;V*u=FAV(a),*v=FAV(w);
 // x[] is result array.  This can be 0 if we are doing a comparison inside a box, in which case
 // we don't store the result.  In any case, b holds the result of the last comparison
 #define INNERT(T,f)                  \
- {T* RESTRICT u=(T*)av,* RESTRICT v=(T*)wv; m=x==0?1:m; n=x==0?1:n;  /* u->a data, v->w data */           \
-  if(1==n){      DO(m,       B b=b1; DO(c, if(!f(u[i],v[i])){b^=1; break;}); if(!x)R b^b1^1; x[j++]=b; u+=c; v+=c;)}  \
-  else if(af>wf)DO(m, DO(n, B b=b1; DO(c, if(!f(u[i],v[i])){b^=1; break;}); x[j++]=b; u+=c;); v+=c;)  \
-  else          DO(m, DO(n, B b=b1; DO(c, if(!f(u[i],v[i])){b^=1; break;}); x[j++]=b; v+=c;); u+=c;)  \
+ {T* RESTRICT u=(T*)av,* RESTRICT v=(T*)wv; I m0=m, n0=n; m0=x==0?1:m0; n0=x==0?1:n0;  /* u->a data, v->w data */           \
+  if(1==n0){      DO(m0,       B b=b1; DO(c, if(!f(u[i],v[i])){b^=1; break;}); if(!x)R b^b1^1; x[j++]=b; u+=c; v+=c;)}  \
+  else if(af>wf)DO(m0, DO(n0, B b=b1; DO(c, if(!f(u[i],v[i])){b^=1; break;}); x[j++]=b; u+=c;); v+=c;)  \
+  else          DO(m0, DO(n0, B b=b1; DO(c, if(!f(u[i],v[i])){b^=1; break;}); x[j++]=b; v+=c;); u+=c;)  \
  }
 
 // compare functions for float/complex intolerant comparison
@@ -467,7 +476,11 @@ F2(jtmatch){A z;I af,m,n,mn,wf;
   GATV(z,B01,mn,wf,AS(w)); memset(BAV(z),b^eqis0,mn); R z;
  }
  // There are atoms.  If there is only 1 cell to compare, do it quickly
- if(wf==0)R num((a==w||((B (*)())jtmatchsub)(jt,a,w,0   ,0,0,1,1,1))^eqis0);
+// obsolete  if(wf==0)R num((a==w||((B (*)())jtmatchsub)(jt,a,w,0   MATCHSUBDEFAULTS))^eqis0);
+ if(wf==0){
+ I nocall = (-(a!=w)&((AN(a)^AN(w))-1));
+ R num((nocall>=0?SGNTO0(nocall)+(a==w):((B (*)())jtmatchsub)(jt,a,w,0   MATCHSUBDEFAULTS))^eqis0);  // SGNTO0 to prevent misbranch
+ }
  // Otherwise we are doing match with rank.  Set up for the repetition in matchsub
  // Create m: #cells in shorter (i. e. common) frame  n: # times cell of shorter frame is repeated
 // obsolete if(af>wf){f=af; s=AS(a); PROD(m,wf,s); PROD(n,af-wf,wf+s);}

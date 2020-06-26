@@ -54,6 +54,15 @@
 #include <sys/types.h>
 #endif
 
+// likely/unlikely support
+#if defined(__clang__) || defined(__GNUC__)
+#define likely(x) __builtin_expect((x),1)
+#define unlikely(x) __builtin_expect((x),0)
+#else
+#define likely(x) (x)
+#define unlikely(x) (x)
+#endif
+
 #if 1
 #include <stdint.h>
 #include <float.h>
@@ -494,19 +503,19 @@ extern unsigned int __cdecl _clearfp (void);
 
 #define A0              0   // a nonexistent A-block
 #define ABS(a)          (0<=(a)?(a):-(a))
-#define ASSERT(b,e)     {if(!(b)){jsignal(e); R 0;}}
-#define ASSERTD(b,s)    {if(!(b)){jsigd((s)); R 0;}}
+#define ASSERT(b,e)     {if(unlikely(!(b))){jsignal(e); R 0;}}
+#define ASSERTD(b,s)    {if(unlikely(!(b))){jsigd((s)); R 0;}}
 #define ASSERTMTV(w)    {RZ(w); ASSERT(1==AR(w),EVRANK); ASSERT(!AN(w),EVLENGTH);}
-#define ASSERTN(b,e,nm) {if(!(b)){jt->curname=(nm); jsignal(e); R 0;}}  // set name for display (only if error)
-#define ASSERTSYS(b,s)  {if(!(b)){fprintf(stderr,"system error: %s : file %s line %d\n",s,__FILE__,__LINE__); jsignal(EVSYSTEM); jtwri(jt,MTYOSYS,"",(I)strlen(s),s); R 0;}}
-#define ASSERTW(b,e)    {if(!(b)){if((e)<=NEVM)jsignal(e); else jt->jerr=(e); R;}}
-#define ASSERTWR(c,e)   {if(!(c)){R e;}}
+#define ASSERTN(b,e,nm) {if(unlikely(!(b))){jt->curname=(nm); jsignal(e); R 0;}}  // set name for display (only if error)
+#define ASSERTSYS(b,s)  {if(unlikely(!(b))){fprintf(stderr,"system error: %s : file %s line %d\n",s,__FILE__,__LINE__); jsignal(EVSYSTEM); jtwri(jt,MTYOSYS,"",(I)strlen(s),s); R 0;}}
+#define ASSERTW(b,e)    {if(unlikely(!(b))){if((e)<=NEVM)jsignal(e); else jt->jerr=(e); R;}}
+#define ASSERTWR(c,e)   {if(unlikely(!(c))){R e;}}
 // verify that shapes *x and *y match for l axes, with no mispredicted branches
 #if C_AVX&&SY_64
 #define ASSERTAGREE(x,y,l) {D *aaa=(D*)(x), *aab=(D*)(y); I aai=4-(l); \
  do{__m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+(aai>=0?aai:0))); \
   endmask=_mm256_castpd_si256(_mm256_xor_pd(_mm256_maskload_pd(aaa,endmask),_mm256_maskload_pd(aab,endmask))); \
-  ASSERT(_mm256_testz_si256(endmask,endmask),EVLENGTH); if(aai>=0)break; aaa+=NPAR; aab+=(SGNTO0(aai))<<LGNPAR; aai+=NPAR; /* prevent compiler from doing address offset */\
+  ASSERT(_mm256_testz_si256(endmask,endmask),EVLENGTH); if(likely(aai>=0))break; aaa+=NPAR; aab+=(SGNTO0(aai))<<LGNPAR; aai+=NPAR; /* prevent compiler from doing address offset */\
  }while(aai<4); }  // the test at end is to prevent the compiler from duplicating the loop.  It is almost never executed.
 #else
 #define ASSERTAGREE(x,y,l) {I *aaa=(x), *aab=(y), aai=(l)-1; do{aab=aai<0?aaa:aab; ASSERT(aaa[aai]==aab[aai],EVLENGTH); --aai; aab=aai<0?aaa:aab; ASSERT(aaa[aai]==aab[aai],EVLENGTH); --aai;}while(aai>=0); }
@@ -739,7 +748,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define MCISH(dest,src,n) {D *_d=(D*)(dest), *_s=(D*)(src); I _n=-(I)(n); \
  do{_n+=NPAR; __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+(_n>=0?_n:0))); \
   _mm256_maskstore_pd(_d,endmask,_mm256_maskload_pd(_s,endmask)); \
-  if(_n>=0)break; _d+=NPAR; _s+=NPAR;  /* prevent compiler from calculating offsets */ \
+  if(likely(_n>=0))break; _d+=NPAR; _s+=NPAR;  /* prevent compiler from calculating offsets */ \
  }while(_n<4); }  // the test at end is to prevent the compiler from duplicating the loop.  It is almost never executed.
 #else
 #define MCISH(dest,src,n) {I *_d=(I*)(dest); I *_s=(I*)(src); I _n=1-(n); _d=_n>0?jt->shapesink:_d; _s=_n>0?_d:_s; *_d=*_s; do{_s+=SGNTO0(_n); _d+=SGNTO0(_n); *_d=*_s;}while(++_n<0);}  // use for copies of shape, optimized for no branch when n<3.
@@ -753,7 +762,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define MIN(a,b)        ((a)<(b)?(a):(b))
 #define MLEN            (SY_64?63:31)
 // change the type of the inplaceable block z to t.  We know or assume that the type is being changed.  If the block is UNINCORPABLE (& therefore virtual), replace it with a clone first.  z is an lvalue
-#define MODBLOCKTYPE(z,t)  {if(AFLAG(z)&AFUNINCORPABLE){RZ(z=clonevirtual(z));} AT(z)=(t);}
+#define MODBLOCKTYPE(z,t)  {if(unlikely(AFLAG(z)&AFUNINCORPABLE)){RZ(z=clonevirtual(z));} AT(z)=(t);}
 #define MODIFIABLE(x)   (x)   // indicates that we modify the result, and it had better not be read-only
 // define multiply-add
 #if C_AVX2
@@ -896,12 +905,12 @@ extern unsigned int __cdecl _clearfp (void);
 #define SGNTO0(x) ((UI)(x)>>(BW-1))  // move sign bit to bit 0, clear other bits
 // In the original JE many verbs returned a clone of the input, i. e. R ca(w).  We have changed these to avoid the clone, but we preserve the memory in case we need to go back
 #define RCA(w)          R w
-#define RE(exp)         {if((exp),jt->jerr)R 0;}
+#define RE(exp)         {if(unlikely(((exp),jt->jerr)))R 0;}
 // obsolete #define RER             {if(er){jt->jerr=er; R;}}
 #define RESETERR        {jt->etxn=jt->jerr=0;}
 #define RESETRANK       (jt->ranks=(RANK2T)~0)
 #define RNE(exp)        {R jt->jerr?0:(exp);}
-#define RZ(exp)         {if(!(exp))R0}
+#define RZ(exp)         {if(unlikely(!(exp)))R0}
 // RETF is the normal function return.  For debugging we hook into it
 #if AUDITEXECRESULTS && (FORCEVIRTUALINPUTS==2)
 #define RETF(exp)       A ZZZz = (exp); auditblock(ZZZz,1,1); ZZZz = virtifnonip(jt,0,ZZZz); R ZZZz

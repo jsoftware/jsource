@@ -320,8 +320,13 @@ extern unsigned int __cdecl _clearfp (void);
 /* msvc does not define __SSE2__ */
 #if !defined(__SSE2__)
 #if defined(MMSC_VER)
-#if _M_IX86_FP==2
+#if (defined(_M_AMD64) || defined(_M_X64))
 #define __SSE2__ 1
+#include <emmintrin.h>
+#include <xmmintrin.h>   /* header file for _mm_prefetch() */
+#elif _M_IX86_FP==2
+#define __SSE2__ 1
+#include <emmintrin.h>
 #include <xmmintrin.h>   /* header file for _mm_prefetch() */
 #endif
 #endif
@@ -767,8 +772,10 @@ extern unsigned int __cdecl _clearfp (void);
 // define multiply-add
 #if C_AVX2
 #define MUL_ACC(addend,mplr1,mplr2) _mm256_fmadd_pd(mplr1,mplr2,addend)
-#else
+#elif C_AVX
 #define MUL_ACC(addend,mplr1,mplr2) _mm256_add_pd(addend , _mm256_mul_pd(mplr1,mplr2))
+#else
+#define MUL_ACC(addend,mplr1,mplr2) _mm_add_pd(addend , _mm_mul_pd(mplr1,mplr2))
 #endif
 #define NAN0            (_clearfp())
 #if defined(MMSC_VER) && _MSC_VER==1800 && !SY_64 // bug in some versions of VS 2013
@@ -837,6 +844,160 @@ extern unsigned int __cdecl _clearfp (void);
  u=_mm256_maskload_pd(x,endmask); v=_mm256_maskload_pd(y,endmask); \
  loopbody \
  _mm256_maskstore_pd(z, endmask, u); \
+ postloop
+
+#elif defined(__SSE2__)
+
+#if defined( MMSC_VER )
+    #define __EMU_M256_ALIGN( a ) __declspec(align(a))
+    #define __emu_inline          __forceinline
+    #define __emu_int64_t         __int64
+#else
+    #define __EMU_M256_ALIGN( a ) __attribute__((__aligned__(a)))
+    #define __emu_inline          __inline __attribute__((__always_inline__))
+    #define __emu_int64_t         long long
+#endif
+#if defined( MMSC_VER )
+static __emu_inline __m128d __emu_mm_maskload_pd(double const *a, __m128i mask) {
+    const size_t size_type = sizeof( double );
+    const size_t size = sizeof( __m128d ) / size_type;
+    __EMU_M256_ALIGN(32) double res[ 2 ];           // double res[ size ];  is a c99 feature unavailable in msvc
+    const __emu_int64_t* p_mask = (const __emu_int64_t*)&mask;
+    size_t i = 0;
+    __emu_int64_t sign_bit = 1;
+    sign_bit <<= (8*size_type - 1);
+    for ( ; i < size; ++i )
+        res[ i ] = (sign_bit & *(p_mask + i)) ? *(a+i) : 0;
+    return (*(__m128d*)&res);
+}
+
+static __emu_inline void __emu_mm_maskstore_pd(double *a, __m128i mask, __m128d data) {
+    const size_t size_type = sizeof( double );
+    const size_t size = sizeof( __m128d ) / sizeof( double );
+    double* p_data = (double*)&data;
+    const __emu_int64_t* p_mask = (const __emu_int64_t*)&mask;
+    size_t i = 0;
+    __emu_int64_t sign_bit = 1;
+    sign_bit <<= (8*size_type - 1);
+    for ( ; i < size; ++i )
+        if ( *(p_mask + i ) & sign_bit)
+            *(a + i) = *(p_data + i);
+}
+
+#else
+#define __emu_maskload_impl( name, vec_type, mask_vec_type, type, mask_type ) \
+static __emu_inline vec_type  name(type const *a, mask_vec_type mask) {   \
+    const size_t size_type = sizeof( type );                          \
+    const size_t size = sizeof( vec_type ) / size_type;               \
+    __EMU_M256_ALIGN(32) type res[ size ];                            \
+    const mask_type* p_mask = (const mask_type*)&mask;                \
+    size_t i = 0;                                                     \
+    mask_type sign_bit = 1;                                           \
+    sign_bit <<= (8*size_type - 1);                                   \
+    for ( ; i < size; ++i )                                           \
+        res[ i ] = (sign_bit & *(p_mask + i)) ? *(a+i) : 0;           \
+    return (*(vec_type*)&res);                                        \
+}
+
+#define __emu_maskstore_impl( name, vec_type, mask_vec_type, type, mask_type ) \
+static __emu_inline void  name(type *a, mask_vec_type mask, vec_type data) { \
+    const size_t size_type = sizeof( type );                          \
+    const size_t size = sizeof( vec_type ) / sizeof( type );          \
+    type* p_data = (type*)&data;                                      \
+    const mask_type* p_mask = (const mask_type*)&mask;                \
+    size_t i = 0;                                                     \
+    mask_type sign_bit = 1;                                           \
+    sign_bit <<= (8*size_type - 1);                                   \
+    for ( ; i < size; ++i )                                           \
+        if ( *(p_mask + i ) & sign_bit)                               \
+            *(a + i) = *(p_data + i);                                 \
+}
+
+__emu_maskload_impl( __emu_mm_maskload_pd, __m128d, __m128i, double, __emu_int64_t );
+__emu_maskstore_impl( __emu_mm_maskstore_pd, __m128d, __m128i, double, __emu_int64_t );
+#endif
+
+#ifdef MMSC_VER
+static __emu_inline __m128d __emu_mm_cmp_pd(__m128d m1, __m128d m2, int predicate) {
+/*
+#define _CMP_EQ          0
+#define _CMP_LT          1
+#define _CMP_LE          2
+#define _CMP_UNORD       3
+#define _CMP_NEQ         4
+#define _CMP_NLT         5
+#define _CMP_NLE         6
+#define _CMP_ORD         7
+*/
+    switch (predicate) {
+    case 0: return _mm_cmpeq_pd(m1,m2);
+    case 1: return _mm_cmplt_pd(m1,m2);
+    case 2: return _mm_cmple_pd(m1,m2);
+    case 3: return _mm_cmpunord_pd(m1,m2);
+    case 4: return _mm_cmpneq_pd(m1,m2);
+    case 5: return _mm_cmpge_pd(m1,m2);
+    case 6: return _mm_cmpgt_pd(m1,m2);
+    case 7: return _mm_cmpord_pd(m1,m2);
+    default: *(volatile size_t*)0 = 0;
+    }
+}
+#else
+#define __emu_mm_cmp_pd(m1, m2, predicate) \
+({ \
+    __m128 res_ = (m1), m2_ = (m2); \
+    if ( 7 < (unsigned)predicate ) __asm__ __volatile__ ( "ud2" : : : "memory" ); /* not supported yet */ \
+    __asm__ ( "cmppd %[pred_], %[m2_], %[res_]" : [res_] "+x" (res_) : [m2_] "xm" (m2_), [pred_] "i" (predicate) ); \
+    res_; })
+#endif
+
+#define NPAR ((I)(sizeof(__m128)/sizeof(D))) // number of Ds processed in parallel
+#define LGNPAR 1  // no good automatic way to do this
+// loop for atomic parallel ops.  // fixed: n is #atoms (never 0), x->input, z->result, u=input atom2 and result
+#define AVXATOMLOOP(preloop,loopbody,postloop) \
+ __m128i endmask;  __m128d u; \
+ endmask = _mm_loadu_si128((__m128i*)(validitymask+((-n)&(NPAR-1))));  /* mask for 0 1 2 3 4 5 is xx 01 11 01 11 01 */ \
+ preloop \
+ I i=(n-1)>>LGNPAR;  /* # loops for 0 1 2 3 4 5 is x 1 0 1 0 1 */ \
+ while(--i>=0){ u=_mm_loadu_pd(x); \
+  loopbody \
+  _mm_storeu_pd(z, u); x+=NPAR; z+=NPAR; \
+ } \
+ u=__emu_mm_maskload_pd(x,endmask); \
+ loopbody \
+ __emu_mm_maskstore_pd(z, endmask, u); \
+ x+=((n-1)&(NPAR-1))+1; z+=((n-1)&(NPAR-1))+1; \
+ postloop
+
+// version that pipelines one read ahead.  Input to loopbody2 is zu; result of loopbody1 is in zt
+#define AVXATOMLOOPPIPE(preloop,loopbody1,loopbody2,postloop) \
+ __m128i endmask;  __m128d u, zt, zu; \
+ endmask = _mm_loadu_si128((__m128i*)(validitymask+((-n)&(NPAR-1))));  /* mask for 0 1 2 3 4 5 is xx 01 11 01 11 01 */ \
+ preloop \
+ I i=(n-1)>>LGNPAR;  /* # loops for 0 1 2 3 4 5 is x 1 0 1 0 1 */ \
+ if(i>0){u=_mm_loadu_pd(x); x+=NPAR; loopbody1 \
+ while(--i>=0){ u=_mm_loadu_pd(x); x+=NPAR; \
+  zu=zt; loopbody1 loopbody2 \
+  _mm_storeu_pd(z, u); z+=NPAR; \
+ } zu=zt; loopbody2 _mm_storeu_pd(z, u); z+=NPAR;} \
+ u=__emu_mm_maskload_pd(x,endmask); \
+ loopbody1 zu=zt; loopbody2 \
+ __emu_mm_maskstore_pd(z, endmask, u); \
+ x+=((n-1)&(NPAR-1))+1; z+=((n-1)&(NPAR-1))+1; \
+ postloop
+
+// Dyadic version.  v is right argument, u is still result
+#define AVXATOMLOOP2(preloop,loopbody,postloop) \
+ __m128i endmask;  __m128d u,v; \
+ endmask = _mm_loadu_si128((__m128i*)(validitymask+((-n)&(NPAR-1))));  /* mask for 0 1 2 3 4 5 is xx 01 11 01 11 01 */ \
+ preloop \
+ I i=(n-1)>>LGNPAR;  /* # loops for 0 1 2 3 4 5 is x 1 0 1 0 1 */ \
+ while(--i>=0){ u=_mm_loadu_pd(x); v=_mm_loadu_pd(y); \
+  loopbody \
+  _mm_storeu_pd(z, u); x+=NPAR; y+=NPAR; z+=NPAR; \
+ } \
+ u=__emu_mm_maskload_pd(x,endmask); v=__emu_mm_maskload_pd(y,endmask); \
+ loopbody \
+ __emu_mm_maskstore_pd(z, endmask, u); \
  postloop
 #endif
 
@@ -1090,6 +1251,19 @@ extern unsigned int __cdecl _clearfp (void);
 #define Sleef_asind4 Sleef_asind4_u35avx
 #define Sleef_acosd4 Sleef_acosd4_u35avx
 #define Sleef_atand4 Sleef_atand4_u35avx
+#define IGNORENAN NAN0;  // some of these functions produce NaN along the way
+#elif defined(__SSE2__)
+#define Sleef_expd4 Sleef_expd2_u10
+#define Sleef_logd4 Sleef_logd2_u10
+#define Sleef_log2d4 Sleef_log2d2_u35
+#define Sleef_exp2d4 Sleef_exp2d2_u35
+#define Sleef_sind4 Sleef_sind2_u35
+#define Sleef_cosd4 Sleef_cosd2_u35
+#define Sleef_tand4 Sleef_tand2_u35
+#define Sleef_tanhd4 Sleef_tanhd2_u35
+#define Sleef_asind4 Sleef_asind2_u35
+#define Sleef_acosd4 Sleef_acosd2_u35
+#define Sleef_atand4 Sleef_atand2_u35
 #define IGNORENAN NAN0;  // some of these functions produce NaN along the way
 #endif
 

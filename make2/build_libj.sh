@@ -133,10 +133,12 @@ common="$OPENMP -fPIC -O2 -fvisibility=hidden -fno-strict-aliasing \
 
 fi
 
-if [ -z "${j64x##*64avx*}" ]; then
-USE_SLEEF="${USE_SLEEF:=0}"
-else
+if [ -z "${jplatform##*raspberry*}" ]; then
 USE_SLEEF=0
+elif [ -z "${j64x##*32*}" ]; then
+USE_SLEEF=0
+else
+USE_SLEEF="${USE_SLEEF:=0}"
 fi
 if [ $USE_SLEEF -eq 1 ] ; then
 common="$common -DSLEEF=1"

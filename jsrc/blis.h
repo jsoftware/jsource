@@ -27,8 +27,13 @@
 /* msvc does not define __SSE2__ */
 #if !defined(__SSE2__)
 #if defined(MMSC_VER)
-#if _M_IX86_FP==2
+#if (defined(_M_AMD64) || defined(_M_X64))
 #define __SSE2__ 1
+#include <emmintrin.h>
+#include <xmmintrin.h>   /* header file for _mm_prefetch() */
+#elif _M_IX86_FP==2
+#define __SSE2__ 1
+#include <emmintrin.h>
 #include <xmmintrin.h>   /* header file for _mm_prefetch() */
 #endif
 #endif

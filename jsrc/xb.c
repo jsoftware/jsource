@@ -481,7 +481,7 @@ static I eft(I n,UI* e,UI* t)
   // Calculate day from YMD.  Bias from day# of 20000101, accounting for leap-years from year 0 to that date.  Note 20000101 is NOT in a leapyear - it is in year 1999 here
   // The bias includes: subtracting 1 from day#; subtracting 1 from month#; Jan/Feb of 1999; Gregorian leapyears up to 2000
   I temp=(I)(365*Y + 30*M + D) - 730531;  // day# from epoch - can be negative
-  // Combine everythine into one # and store
+  // Combine everything into one # and store
  	e[i]=(NANOS*24LL*60LL*60LL)*temp + (NANOS*3600LL)*hh + (NANOS*60LL)*mm + NANOS*ss;  // eschew Horner's Rule because of multiply latency
 	}
 #endif

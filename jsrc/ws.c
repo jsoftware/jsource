@@ -98,6 +98,28 @@ static C spellintab3[][4] = {
 #define DOT1 0x7000
 #define CO1 0xe000
 static US spellouttab[128] = {
+#if 0
+[C0]=(UC)'\000', [C1]=(UC)'\001',
+// 2-3 free
+[COFF]=(UC)'\004',
+// 5-8 free
+[CTAB]=(UC)'\011', [CLF]=(UC)'\012',
+// 11-12 free
+[CCR]=(UC)'\015', 
+// 14-15 free
+//[CBW0000]=(UC)'\020', [CBW0001]=(UC)'\021',[CBW0010]=(UC)'\022',[CBW0011]=(UC)'\023',[CBW0100]=(UC)'\024',[CBW0101]=(UC)'\025',[CBW0110]=(UC)'\026',[CBW0111]=(UC)'\027',
+//[CBW1000]=(UC)'\030',[CBW1001]=(UC)'\031',[CBW1010]=(UC)'\032',[CBW1011]=(UC)'\033',[CBW1100]=(UC)'\034',[CBW1101]=(UC)'\035',[CBW1110]=(UC)'\036',[CBW1111]=(UC)'\037',
+[CBANG]=(UC)'!',[CQQ]=(UC)'\042',[CPOUND]=(UC)'#',[CDOLLAR]=(UC)'$',[CDIV]=(UC)'%',[CAMP]=(UC)'&',[CQUOTE]=(UC)'\047',[CLPAR]=(UC)'(',
+[CRPAR]=(UC)')',[CSTAR]=(UC)'*',[CPLUS]=(UC)'+',[CCOMMA]=(UC)',',[CMINUS]=(UC)'-',[CDOT]=(UC)'.',[CSLASH]=(UC)'/',
+[CNOUN]=(UC)'0', ['1']=(UC)'1', [CHOOK]=(UC)'2',[CFORK]=(UC)'3',[CADVF]=(UC)'4', ['5']=(UC)'5',  ['6']=(UC)'6',  ['7']=(UC)'7', 
+ ['8']=(UC)'8',  ['9']=(UC)'9',  ['1']=(UC)'1', [CCOLON]=(UC)':',[CSEMICO]=(UC)';',[CLT]=(UC)'<',[CEQ]=(UC)'=',[CGT]=(UC)'>',[CQUERY]=(UC)'?',
+[CAT]=(UC)'@', 
+[CLEFT]=(UC)'[',[CBSLASH]=(UC)'\\',[CRIGHT]=(UC)']',[CEXP]=(UC)'^',[CINF]=(UC)'_',
+[CGRAVE]=(UC)'`', 
+[CLBRACE]=(UC)'{',[CSTILE]=(UC)'|',[CRBRACE]=(UC)'}',[CTILDE]=(UC)'~',
+// 127 free
+#endif
+// remove the -128s when we bring in the table
 [CASGN   -128]=(UC)'='+DOT0,       [CGASGN  -128]=(UC)'='+CO0,       [CFLOOR  -128]=(UC)'<'+DOT0,
 [CLE     -128]=(UC)'<'+CO0,       [CCEIL   -128]=(UC)'>'+DOT0,       [CGE     -128]=(UC)'>'+CO0,       
 [CUSDOT  -128]=(UC)'_'+DOT0,       [CPLUSDOT-128]=(UC)'+'+DOT0,       [CPLUSCO -128]=(UC)'+'+CO0,       [CSTARDOT-128]=(UC)'*'+DOT0,       

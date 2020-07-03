@@ -1094,6 +1094,9 @@ static __emu_inline __m128d __emu_mm_cmp_pd(__m128d m1, __m128d m2, int predicat
 #endif
 #define SBSV(x)         (jt->sbsv+(I)(x))
 #define SBUV(x)         (jt->sbuv+(I)(x))
+// Find the index of a byte in a list of up to BW bytes.  x is the byte, list is a word containing bytes in order.  Result (must be UI) is index of first matched byte, or BW-1 if no match
+#define SEARCHBYTE(x,list,result) (result=(UI)x*0x0101010101010101, result^=list, result=(~result)&(result-0x0101010101010101), \
+    result>>=7, result&=0x0101010101010101, result=CTTZI(result|0x8000000000000000), result=(result+1)>>3;)
 #define SEGFAULT        {*(volatile I*)0 = 0;}
 #define SGN(a)          ((I )(0<(a))-(I )(0>(a)))
 #define SMAX            65535

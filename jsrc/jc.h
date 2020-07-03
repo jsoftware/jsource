@@ -49,6 +49,7 @@
 #define CPOUND     (C)'#'          /*  35 043 23                              */
 #define CDOLLAR    (C)'$'          /*  36 044 24                              */
 #define CDIV       (C)'%'          /*  37 045 25                              */
+#define CAMP       (C)'&'          /*  38 046 26                              */
 #define CQUOTE     (C)'\047'       /*  39 047 27     single quote             */
 #define CLPAR      (C)'('          /*  40 050 28                              */
 #define CRPAR      (C)')'          /*  41 051 29                              */
@@ -59,11 +60,9 @@
 #define CDOT       (C)'.'          /*  46 056 2e                              */
 #define CSLASH     (C)'/'          /*  47 057 2f                              */
 #define CNOUN      (C)'0'          /*  48 060 30                              */
-// 49 free
 #define CHOOK      (C)'2'          /*  50 062 32                              */
 #define CFORK      (C)'3'          /*  51 063 33                              */
 #define CADVF      (C)'4'          /*  52 064 34     bonded conjunction       */
-// 53-57 free
 #define CCOLON     (C)':'          /*  58 072 3a                              */
 #define CSEMICO    (C)';'          /*  59 073 3b                              */
 #define CRAZE      (C)';'          /*  59 073 3b                              */
@@ -73,7 +72,7 @@
 #define COPE       (C)'>'          /*  62 076 3e                              */
 #define CGT        (C)'>'          /*  62 076 3e                              */
 #define CQUERY     (C)'?'          /*  63 077 3f                              */
-// 65-90 free
+#define CAT        (C)'@'          /*  64 100 40                              */
 #define CLEFT      (C)'['          /*  91 133 5b                              */
 #define CBSLASH    (C)'\134'       /*  92 134 5c \   backslash                */
 #define CRIGHT     (C)']'          /*  93 135 5d                              */
@@ -81,11 +80,6 @@
 #define CSIGN      (C)'_'          /*  95 137 5f     minus sign               */
 #define CINF       (C)'_'          /*  95 137 5f     infinity                 */
 #define CGRAVE     (C)'`'          /*  96 140 60                              */
-// 97-122 free
-#define CAT        (C)'@'          /*  64 100 40                              */
-#define CAMP       (C)'&'          /*  38 046 26                              */
-#define CATCO      (C)'\265'       /* 181 265 b5 @:                           */
-#define CAMPCO     (C)'\267'       /* 183 267 b7 &:                           */
 
 #define CLBRACE    (C)'{'          /* 123 173 7b                              */
 #define CFROM      (C)'{'          /* 123 173 7b                              */

@@ -374,6 +374,7 @@ static I hashallo(IH * RESTRICT hh,UI p,UI m,I md){
     switch(md){                                                                       \
     case IIDOT:   if(b){          XDO(hash,exp,inc,*zv++=m==hj?(hv[j]=i):hj);}       \
                   else XDO(hash,exp,inc,*zv++=hj);                           break;  \
+    case IFORKEY:   XDO(hash,exp,inc,if(m==hj){hv[j]=i;*zv++=i+1;}else{++zv[hj-i];*zv++=i;});       \
     case IICO:    if(b){zi=zv+=c; XDQ(hash,exp,dec,*--zi=m==hj?(hv[j]=i):hj);}       \
                   else XDO(hash,exp,inc,*zv++=hj);                           break;  \
     case INUBSV:       XDO(hash,exp,inc,*zb++=m==hj?(hv[j]=i,1):0);          break;  \
@@ -494,6 +495,7 @@ static IOFX(I,jtioi,  hicw(v),           *v!=av[hj],                      ++v,  
    v=wv;                                                                                   \
    switch(md){                                                                                   \
     case IIDOT:        TDO(FXY,FYY,expa,expw,*zv++=MIN(il,ir));                          break;  \
+    case IFORKEY:      TDO(FXY,FYY,expa,expw,il=MIN(il,ir);*zv=il;zv[il-i]++;++zv;);                          break;  \
     case IICO:  zv+=c; TDQ(FXY,FYY,expa,expw,*--zv=m==il?ir:m==ir?il:MAX(il,ir)); zv+=c; break;  \
     case INUBSV:       TDO(FXY,FYY,expa,expw,*zb++=i==MIN(il,ir));                       break;  \
     case INUB:         TMV(FXY,FYY,expa,expw,i==MIN(il,ir));                 ZCSHAPE;    break;  \
@@ -895,6 +897,7 @@ static IOFSMALLRANGE(jtio42,I,US)  static IOFSMALLRANGE(jtio44,I,UI4)  // 4-byte
  {T*v0=(T*)v,*wv=(T*)v,x; \
   switch(mode){                     \
    case IIDOT: {T*av=(T*)u+m; DQ(ac, DQ(c, x=(xe); j=-m;   while(j<0 &&(exp))++j; *zv++=j+m;       wv+=q;); av+=p; if(1==wc)wv=v0;);} break;  \
+   case IFORKEY: {T*av=(T*)u+m; DQ(ac, DQ(c, x=(xe); j=-m;   while(j<0 &&(exp))++j; *zv=j+=m; zv[j-i]++; zv++;      wv+=q;); av+=p; if(1==wc)wv=v0;);} break;  \
    case IICO:  {T*av=(T*)u; DQ(ac, DQ(c, x=(xe); j=m-1; while(0<=j&&(exp))--j; *zv++=0>j?m:j; wv+=q;); av+=p; if(1==wc)wv=v0;);} break;  \
    case IEPS:  {T*av=(T*)u+m; DQ(ac, DQ(c, x=(xe); j=-m;   while(j<0 &&(exp))++j; *zb++=j<0;     wv+=q;); av+=p; if(1==wc)wv=v0;);} break;  \
  }}
@@ -962,7 +965,7 @@ static A jtnodupgrade(J jt,A a,I acr,I ac,I acn,I ad,I n,I m,B b,B bk){A*av,h,*u
 #define BSLOOPAA(hiinc,zstmti,zstmt1,zstmt0)  \
  {A* RESTRICT u=av,* RESTRICT v;I* RESTRICT hi=hv,p,q;             \
   p=*hiinc; u=av+n*p; zstmti;  /* u->first result value, install result for that value to index itself */      \
-  DQ(m-1, q=*hiinc; v=av+n*q; if(eqa(n,u,v,0,0))zstmt1; else{u=v; zstmt0;}); /* 
+  DQ(m-1, q=*hiinc; v=av+n*q; if(eqa(n,u,v,0,0)){zstmt1;} else{u=v; zstmt0;}); /* 
    q is input element# that will have result index i, v->it; if *u=*v, v is a duplicate: map the result back to u (index=p)
    if *u!=*p, advance u/p to v/q and use q as the result index */ \
  }
@@ -1018,6 +1021,7 @@ static IOF(jtiobs){A*av,h=*hp,*wv,y;B b,bk,*yb,*zb;C*zc;I acn,*hu,*hv,l,m1,md,s,
    case INUB:         BSLOOPAA(hi++,yb[p]=1,yb[q]=0,yb[q]=1  ); DO(m, if(yb[i]){MC(zc,av+i*n,k); zc+=k;}); ZCSHAPE; break;
    case INUBI:        BSLOOPAA(hi++,yb[p]=1,yb[q]=0,yb[q]=1  ); DO(m, if(yb[i])*zi++=i;);                  ZISHAPE; break;
   }else switch(md){  // searches, by binary search
+   case IFORKEY:      BSLOOPAA(hi++,zv[p]=p+1,zv[q]=p;zv[p]++,zv[q]=(p=q)+1); zv+=m;     break;
    case IIDOT:        BSLOOPAW(*zv++=-2==q?hu[j]:m);                       break;
    case IICO:         BSLOOPAW(*zv++=-2==q?hu[j]:m);                       break;
    case IEPS:         BSLOOPAW(*zb++=-2==q);                               break;
@@ -1327,7 +1331,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z;B mk=w==mark,th;
  // The cost of such a search is (4 inst per loop) and the expected number of loops is half of
  // m*number of results.  The cost of small-range hashing is at best 8 cycles per atom added to the table and 5 cycles per lookup.
  // (full hashing is considerably more expensive)
- if(1==acr&&(1==wc||ac==wc)&&a!=w&&!mk&&((D)m*(D)zn<(4*m)+2.5*(D)zn)&&(mode==IIDOT||mode==IICO||mode==IEPS)){
+ if(1==acr&&(1==wc||ac==wc)&&a!=w&&!mk&&((D)m*(D)zn<(4*m)+2.5*(D)zn)&&(mode==IIDOT||mode==IICO||mode==IEPS||mode==IFORKEY)){
   jtiosc(jt,mode,m,c,ac,wc,a,w,z); // simple sequential search without hashing.
  }else{B b=1.0==jt->cct;I t1;
   AF fn=0; // we haven't figured it out yet

@@ -387,6 +387,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define IANYEPS         12
 #define IALLEPS         13
 #define IIFBEPS         14
+#define IFORKEY         15  // special key support: like i.~, but add # values mapped to the index
 #define IIMODFIELD      0x70  // bits used to indicate processing options
 #define IIMODPACK       0x10  // modifier for type.  (small-range search except i./i:) In IIDOT/IICO, indicates reflexive application.  In others, indicates that the
                               // bitmask should be stored as packed bits rather than bytes
@@ -398,10 +399,11 @@ extern unsigned int __cdecl _clearfp (void);
 #define IIMODBITS       0x80  // set if the hash field stores bits rather than indexes.  Used only for small-range and not i./i:.  IIMODPACK qualifies this, indicating that the bits are packed
 #define IIMODFORCE0X    8
 #define IIMODFORCE0     (((I)1)<<IIMODFORCE0X)  // set to REQUIRE a (non-bit) allocation to reset to offset 0 and clear
-#define IPHCALC         0x200   // set when we are calculating a prehashed table
+#define IPHCALCX        9
+#define IPHCALC         (((I)1)<<IPHCALCX)   // set when we are calculating a prehashed table
 #define IINOTALLOCATED  0x400  // internal flag, set when the block has not been allocated
 #define IIOREPSX        11
-#define IIOREPS         (((I)1)<<IIOREPSX)  // internal flag, set if mode is i./i:/e., but not if prehashing
+#define IIOREPS         (((I)1)<<IIOREPSX)  // internal flag, set if mode is i./i:/e./key, but not if prehashing
 #define IREVERSED       0x1000   // set if we have decided to reverse the hash in a small-range situation
 #define IPHOFFSET       0x2000              /* offset for prehashed versions - set when we are using a prehashed table   */
 #define IPHIDOT         (IPHOFFSET+IIDOT)
@@ -1094,9 +1096,9 @@ static __emu_inline __m128d __emu_mm_cmp_pd(__m128d m1, __m128d m2, int predicat
 #endif
 #define SBSV(x)         (jt->sbsv+(I)(x))
 #define SBUV(x)         (jt->sbuv+(I)(x))
-// Find the index of a byte in a list of up to BW bytes.  x is the byte, list is a word containing bytes in order.  Result (must be UI) is index of first matched byte, or BW-1 if no match
-#define SEARCHBYTE(x,list,result) (result=(UI)x*0x0101010101010101, result^=list, result=(~result)&(result-0x0101010101010101), \
-    result>>=7, result&=0x0101010101010101, result=CTTZI(result|0x8000000000000000), result=(result+1)>>3;)
+//obsolete // Find the index of a byte in a list of up to BW bytes.  x is the byte, list is a word containing bytes in order.  Result (must be UI) is index of first matched byte, or BW-1 if no match
+//obsolete #define SEARCHBYTE(x,list,result) (result=(UI)x*0x0101010101010101, result^=list, result=(~result)&(result-0x0101010101010101), \
+//obsolete     result>>=7, result&=0x0101010101010101, result=CTTZI(result|0x8000000000000000), result=(result+1)>>3;)
 #define SEGFAULT        {*(volatile I*)0 = 0;}
 #define SGN(a)          ((I )(0<(a))-(I )(0>(a)))
 #define SMAX            65535

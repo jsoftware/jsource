@@ -460,7 +460,8 @@ static B jteqa0(J jt,I n,A*u,A*v,I c,I d){PUSHCCT(1.0) B res=1; DQ(n, if(!equ(*u
  z    result
 */
 
-#define IOF(f)     A f(J jt,I mode,I asct,I n,I wsct,I k,I ac,I wc,I ak,I wk,A a,A w,A h,A z)
+#define IOF(f)     A f(J jt,I mode,I n,I asct,I wsct,I ac,I wc,A a,A w,A z,I k,I ak,I wk,A h)  // asct/wsct go by m and c
+//J jt,I mode,I n,I asct,I wsct,I ac,I wc,A a,A w,A z
 // variables used in IOF routines:
 // h=A for hashtable, hv->hashtable data, p=#entries in table, pm=unsigned p, used for converting hash to bucket#
 // acn,wcn=#atoms in cell of a,w
@@ -600,6 +601,7 @@ static B jteqa0(J jt,I n,A*u,A*v,I c,I d){PUSHCCT(1.0) B res=1; DQ(n, if(!equ(*u
    switch(md){                                                                       \
     /* i.~ - one-pass operation.  Fill in the table and result as we go */ \
    case IIDOT|IIMODREFLEX: { XDOP(T,TH,hash,exp,stride,{*zv++=hj;},{*zv++=i;},1);} break;      \
+   case IFORKEY: { XDOP(T,TH,hash,exp,stride,{++zv[hj-i]; *zv++=hj;},{*zv++=i+1;},1);} break;      \
    case IICO|IIMODREFLEX: {I *zi=zv+=wsct; XDQP(T,TH,hash,exp,stride,{*--zi=hj;},{*--zi=i;},1) } break;      \
     /* normal i./i: - use the table */ \
    case IICO: \
@@ -836,6 +838,7 @@ static IOFX(Z,UI4,jtioz02,, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n)
     /* when we are searching up, we can stop the second search when it gets past the index found in the first search */ \
     case IIDOT: {T * RESTRICT v=wv; I j, hj; I * RESTRICT zi=zv; TDOXY(T,TH,FXY,expa,expw,{},hj>=il,il=hj;,*zi++=il;); zv=zi; } break;  \
     case IIDOT|IIMODREFLEX: {T * RESTRICT v=wv; I j, hj; I * RESTRICT zi=zv; TDOXY(T,TH,FYY,expa,expw,{},hj>=il,il=hj;,*zi++=il;); zv=zi; } break;  \
+    case IFORKEY: {T * RESTRICT v=wv; I j, hj; I * RESTRICT zi=zv; TDOXY(T,TH,FYY,expa,expw,{},hj>=il,il=hj;,*zi=il;zv[il]++;++zi;); zv=zi; } break;  \
     case IICO:  {T * RESTRICT v=wv; I j, hj; I * RESTRICT zi; zi=zv+=wsct; TDQXY(T,TH,FXY,expa,expw,{},hj==asct,il=il==asct?hj:il;il=hj>il?hj:il;,*--zi=il;);} break;  \
     case IICO|IIMODREFLEX:  {T * RESTRICT v=wv; I j, hj; I * RESTRICT zi; zi=zv+=wsct; TDQXY(T,TH,FYY,expa,expw,{},hj==asct,il=il==asct?hj:il;il=hj>il?hj:il;,*--zi=il;);} break;  \
     case INUBSV|IIMODREFLEX:{T * RESTRICT v=wv; I j, hj; B * RESTRICT zb=(B*)zv; TDOXY(T,TH,FYY,expa,expw,{},hj>=il,il=hj;,*zb++=i==il;); zv=(I*)zb;} break;  /* zv must keep running */  \
@@ -1049,18 +1052,20 @@ static IOFSMALLRANGE(jtio42,I,US)  static IOFSMALLRANGE(jtio44,I,UI4)  // 4/8-by
 
 // ******************* fourth class: sequential comparison ***************************************
 
-#define IOSCCASE(bit,multi,mode) ((8*(multi)+(bit))*3+((mode)&3))
+#define IOSCCASE(bit,multi,mode) ((8*(multi)+(bit))*4+((mode)&3))
 
 // xe is the expression for reading one comparand, exp is the expression for 'no match between x and av[j]')
 // loop through storing the index at which a match was found
 #define SCDO(bit,T,exp)  \
    case IOSCCASE(bit,0,IIDOT): {T*v0=(T*)v,*wv=(T*)v,x; T*av=(T*)u+asct; DQ(ac, DQ(wsct, x=*wv; j=-asct;   while(j<0 &&(exp))++j; *(I*)zv=j+=asct; zv=(I*)zv+1;       wv+=q;); av+=p; if(1==wc)wv=v0;);} break;  \
+   case IOSCCASE(bit,0,IFORKEY): {T*v0=(T*)v,*wv=(T*)v,x; T*av=(T*)u+asct; DQ(ac, DO(wsct, x=*wv; j=-asct;   while(j<0 &&(exp))++j; *(I*)zv=j+=asct; ((I*)zv)[j-i]++; zv=(I*)zv+1;       wv+=q;); av+=p; if(1==wc)wv=v0;);} break;  \
    case IOSCCASE(bit,0,IICO):  {T*v0=(T*)v,*wv=(T*)v,x; T*av=(T*)u; DQ(ac, DQ(wsct, x=*wv; j=asct-1; while(0<=j&&(exp))--j; *(I*)zv=(j=0>j?asct:j); zv=(I*)zv+1; wv+=q;); av+=p; if(1==wc)wv=v0;);} break;  \
    case IOSCCASE(bit,0,IEPS):  {T*v0=(T*)v,*wv=(T*)v,x; T*av=(T*)u+asct; DQ(ac, DQ(wsct, x=*wv; j=-asct;   while(j<0 &&(exp))++j; *(C*)zv=SGNTO0(j); zv=(C*)zv+1;     wv+=q;); av+=p; if(1==wc)wv=v0;);} break;
 
 // same but the cells have n atoms, each of which is compared.  comparands are wv[jj] and avv[jj]
 #define SCDON(bit,T,exp)  \
    case IOSCCASE(bit,1,IIDOT): {T*v0=(T*)v,*wv=(T*)v; T*av=(T*)u; DQ(ac, DQ(wsct, j=-asct;   T*avv=av; do{I jj=n-1; T* wvv=wv; do{if(exp)break;}while(--jj>=0); if(jj<0)break; avv+=n;}while(++j<0);   *(I*)zv=j+=asct; zv=(I*)zv+1;       wv+=q;); av+=p; if(1==wc)wv=v0;);} break;  \
+   case IOSCCASE(bit,1,IFORKEY): {T*v0=(T*)v,*wv=(T*)v; T*av=(T*)u; DQ(ac, DQ(wsct, j=-asct;   T*avv=av; do{I jj=n-1; T* wvv=wv; do{if(exp)break;}while(--jj>=0); if(jj<0)break; avv+=n;}while(++j<0);   *(I*)zv=j+=asct; ((I*)zv)[j-i]++; zv=(I*)zv+1;       wv+=q;); av+=p; if(1==wc)wv=v0;);} break;  \
    case IOSCCASE(bit,1,IICO):  {T*v0=(T*)v,*wv=(T*)v; T*av=(T*)u; DQ(ac, DQ(wsct, j=asct-1;  T*avv=av+asct*n; do{avv-=n; I jj=n-1; T* wvv=wv; do{if(exp)break;}while(--jj>=0); if(jj<0)break;}while(--j>=0);     *(I*)zv=(j=0>j?asct:j); zv=(I*)zv+1; wv+=q;); av+=p; if(1==wc)wv=v0;);} break;  \
    case IOSCCASE(bit,1,IEPS):  {T*v0=(T*)v,*wv=(T*)v; T*av=(T*)u; DQ(ac, DQ(wsct, j=-asct;   T*avv=av; do{I jj=n-1; T* wvv=wv; do{if(exp)break;}while(--jj>=0); if(jj<0)break; avv+=n;}while(++j<0);    *(C*)zv=SGNTO0(j); zv=(C*)zv+1;     wv+=q;); av+=p; if(1==wc)wv=v0;);} break;
 
@@ -1090,6 +1095,13 @@ static void jtiosc(J jt,I mode,I n,I asct,I wsct,I ac,I wc,A a,A w,A z){I j,p,q;
         cmps=_mm256_movemask_pd(_mm256_and_pd(_mm256_castsi256_pd (endmask),_mm256_cmp_pd(x,_mm256_maskload_pd(avv,endmask),_CMP_EQ_OQ))); 
 fnd001: ; I res=(avv-av)+CTTZ(cmps); res=(cmps==0)?asct:res; *(I*)zv=res; zv=(I*)zv+1;      wv+=q;);
       av+=p; wv=(1==wc)?(D*)v:wv;);} break; 
+   case IOSCCASE(XDX,0,IFORKEY): {D *wv=(D*)v; D*av=(D*)u; __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-asct)&(NPAR-1)))); 
+      DQ(ac, 
+       DO(wsct, __m256d x=_mm256_set1_pd(*wv); D*avv=av; D*avend=av+((asct-1)&(-(I)NPAR)); int cmps; 
+        while(1){if(avv==avend)break; if(cmps=_mm256_movemask_pd(_mm256_cmp_pd(x,_mm256_loadu_pd(avv),_CMP_EQ_OQ)))goto fnd004; avv+=NPAR;} 
+        cmps=_mm256_movemask_pd(_mm256_and_pd(_mm256_castsi256_pd (endmask),_mm256_cmp_pd(x,_mm256_maskload_pd(avv,endmask),_CMP_EQ_OQ))); 
+fnd004: ; I res=(avv-av)+CTTZ(cmps); res=(cmps==0)?asct:res; *(I*)zv=res; ((I*)zv)[res-i]++; zv=(I*)zv+1;      wv+=q;);
+      av+=p; wv=(1==wc)?(D*)v:wv;);} break; 
    case IOSCCASE(XDX,0,IICO): {D *wv=(D*)v; D*av=(D*)u; __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-asct)&(NPAR-1)))); 
       DQ(ac, 
        DQ(wsct, __m256d x=_mm256_set1_pd(*wv); D*avend=av; D*avv=av+((asct-1)&(-(I)NPAR)); int cmps;  
@@ -1112,6 +1124,14 @@ fnd003: *(C*)zv=SGNTO0(-cmps); zv=(C*)zv+1;      wv+=q;);
         while(1){if(avv==avend)break; y=_mm256_loadu_pd(avv); if(cmps=_mm256_movemask_pd(_mm256_xor_pd(_mm256_cmp_pd(x,_mm256_mul_pd(cct,y),_CMP_GT_OQ),_mm256_cmp_pd(tolx,y,_CMP_GE_OQ))))goto fnd021; avv+=NPAR;} 
         y=_mm256_maskload_pd(avv,endmask); cmps=_mm256_movemask_pd(_mm256_and_pd(_mm256_castsi256_pd (endmask),_mm256_xor_pd(_mm256_cmp_pd(x,_mm256_mul_pd(cct,y),_CMP_GT_OQ),_mm256_cmp_pd(tolx,y,_CMP_GE_OQ)))); 
 fnd021: ; I res=(avv-av)+CTTZ(cmps); res=(cmps==0)?asct:res; *(I*)zv=res; zv=(I*)zv+1;      wv+=q;);
+      av+=p; wv=(1==wc)?(D*)v:wv;);} break; 
+   case IOSCCASE(FLX,0,IFORKEY): {D *wv=(D*)v; D*av=(D*)u; __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-asct)&(NPAR-1))));
+      __m256d cct=_mm256_set1_pd(jt->cct);
+      DQ(ac, 
+       DO(wsct, __m256d x=_mm256_set1_pd(*wv); __m256d y; __m256d tolx=_mm256_mul_pd(x,cct); D*avv=av; D*avend=av+((asct-1)&(-(I)NPAR)); int cmps; 
+        while(1){if(avv==avend)break; y=_mm256_loadu_pd(avv); if(cmps=_mm256_movemask_pd(_mm256_xor_pd(_mm256_cmp_pd(x,_mm256_mul_pd(cct,y),_CMP_GT_OQ),_mm256_cmp_pd(tolx,y,_CMP_GE_OQ))))goto fnd024; avv+=NPAR;} 
+        y=_mm256_maskload_pd(avv,endmask); cmps=_mm256_movemask_pd(_mm256_and_pd(_mm256_castsi256_pd (endmask),_mm256_xor_pd(_mm256_cmp_pd(x,_mm256_mul_pd(cct,y),_CMP_GT_OQ),_mm256_cmp_pd(tolx,y,_CMP_GE_OQ)))); 
+fnd024: ; I res=(avv-av)+CTTZ(cmps); res=(cmps==0)?asct:res; *(I*)zv=res; ((I*)zv)[res-i]++; zv=(I*)zv+1;      wv+=q;);
       av+=p; wv=(1==wc)?(D*)v:wv;);} break; 
    case IOSCCASE(FLX,0,IICO): {D *wv=(D*)v; D*av=(D*)u; __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-asct)&(NPAR-1)))); 
       __m256d cct=_mm256_set1_pd(jt->cct);
@@ -1142,6 +1162,13 @@ fnd023: *(C*)zv=SGNTO0(-cmps); zv=(C*)zv+1;      wv+=q;);
         while(1){if(avv==avend)break; if(cmps=_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_cmpeq_epi64(x,_mm256_loadu_si256((__m256i*)avv)))))goto fnd011; avv+=NPAR;} 
         cmps=_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_and_si256(endmask,_mm256_cmpeq_epi64(x,_mm256_maskload_epi64(avv,endmask))))); 
 fnd011: ; I res=(avv-av)+CTTZ(cmps); res=(cmps==0)?asct:res; *(I*)zv=res; zv=(I*)zv+1;      wv+=q;);
+      av+=p; wv=(1==wc)?(I*)v:wv;);} break; 
+   case IOSCCASE(INTX,0,IFORKEY): {I *wv=(I*)v; I*av=(I*)u; __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-asct)&(NPAR-1)))); 
+      DQ(ac, 
+       DO(wsct, __m256i x=_mm256_set1_epi64x(*wv); I*avv=av; I*avend=av+((asct-1)&(-(I)NPAR)); int cmps; 
+        while(1){if(avv==avend)break; if(cmps=_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_cmpeq_epi64(x,_mm256_loadu_si256((__m256i*)avv)))))goto fnd014; avv+=NPAR;} 
+        cmps=_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_and_si256(endmask,_mm256_cmpeq_epi64(x,_mm256_maskload_epi64(avv,endmask))))); 
+fnd014: ; I res=(avv-av)+CTTZ(cmps); res=(cmps==0)?asct:res; *(I*)zv=res; ((I*)zv)[res-i]++; zv=(I*)zv+1;      wv+=q;);
       av+=p; wv=(1==wc)?(I*)v:wv;);} break; 
    case IOSCCASE(INTX,0,IICO): {I *wv=(I*)v; I*av=(I*)u; __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-asct)&(NPAR-1)))); 
       DQ(ac, 
@@ -1219,7 +1246,7 @@ static A jtnodupgrade(J jt,A a,I acr,I ac,I acn,I ad,I n,I asct,I md,I bk){A*av,
 #define BSLOOPAA(hiinc,zstmti,zstmt1,zstmt0)  \
  {A* RESTRICT u=av,* RESTRICT v;I* RESTRICT hi=hv,p,q;             \
   p=*hi; hi+=(hiinc); u=av+n*p; zstmti;  /* u->first result value, install result for that value to index itself */      \
-  DQ(asct-1, q=*hi; hi+=(hiinc); v=av+n*q; if(((hiinc>0&&v>u)||(hiinc<0&&v<u))&&eqa(n,u,v,0,0))zstmt1; else{u=v; zstmt0;}); /* 
+  DQ(asct-1, q=*hi; hi+=(hiinc); v=av+n*q; if(((hiinc>0&&v>u)||(hiinc<0&&v<u))&&eqa(n,u,v,0,0)){zstmt1;} else{u=v; zstmt0;}); /* 
    q is input element# that will have result index i, v->it; if *u=*v, v is a duplicate: map the result back to u (index=p)
    if *u!=*p, advance u/p to v/q and use q as the result index */ \
  }
@@ -1277,6 +1304,7 @@ static IOF(jtiobs){A*av,*wv,y;B *yb,*zb;C*zc;I acn,*hu,*hv,l,m1,md,s,wcn,*zi,*zv
   switch(md){
    // self-indexes
    case IIDOT|IIMODREFLEX:        BSLOOPAA(1,zv[p]=p,zv[q]=p,zv[q]=p=q); zv+=asct;     break;
+   case IFORKEY:      BSLOOPAA(1,zv[p]=p+1,zv[q]=p;zv[p]++,zv[q]=(p=q)+1); zv+=asct;     break;
    case IICO|IIMODREFLEX:         BSLOOPAA(-1,zv[p]=p,zv[q]=p,zv[q]=p=q); zv+=asct;     break;
    case INUBSV|IIMODREFLEX:       BSLOOPAA(1,zb[p]=1,zb[q]=0,zb[q]=1  ); zb+=asct;     break;
    case INUB|IIMODREFLEX:         BSLOOPAA(1,yb[p]=1,yb[q]=0,yb[q]=1  ); DO(asct, if(yb[i]){MC(zc,av+i*n,k); zc+=k;}); ZCSHAPE; break;
@@ -1661,6 +1689,7 @@ static CR condrange2(US *s,I n,I min,I max,I maxrange){CR ret;I i;US x;
 }
 #endif
 
+
 // This is the routine that analyzes the input, allocates result area and hashtable, and vectors to the correct action routine
 // jtioa* BOX
 // jtiox  XNUM
@@ -1679,6 +1708,7 @@ static CR condrange2(US *s,I n,I min,I max,I maxrange){CR ret;I i;US x;
 // Table to look up routine from index
 // 0-11, 16-19 are hashes for various types, calculated by bit-twisting
 // 32-51 are reverse hashes (i. e hash w, look up items of a)
+#define FNTABLEPREFIX 1  // number of leading entries used for special types
 #define FNTBLSMALL1 12  // small-range, 1-byte items
 #define FNTBLSMALL2 13  // small-range, 1-byte items
 #define FNTBLSMALL4 14  // small-range, 1-byte items
@@ -1693,6 +1723,8 @@ static CR condrange2(US *s,I n,I min,I max,I maxrange){CR ret;I i;US x;
 #define FNTBLREVERSE 27  // where the reversed hashes start
 #define FNTBLSIZE 54  // number of functions - before the second half
 static const AF fntbl[]={
+// prefix: routines used without hashtables, flags, etc
+ jtiosc,  // sequential comparison (-1)
 // US tables
  jtioc,jtioc,jtioc,jtioc,jtioi,jtioi,jtioi,jtioi,  // bool, INT
  jtiod,jtioc0,jtiod1,jtioc01,jtio12,jtio22,jtio42,jtioi1,   // FL (then small-range, then ONEINT)
@@ -1746,8 +1778,8 @@ static const S fnflags[]={  // 0 values reserved for small-range.  They turn off
 #define OVERHEADSHAPES 100  // checking shapes, types, etc costs this many compares
 
 // mode indicates the type of operation, defined in j.h
-A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z;fauxblockINT(zfaux,1,0);
-    I ac,acr,af,ak,an,ar,*as,at,datamin,f,f1,k,klg,n,r,*s,t,th,wc,wcr,wf,wk,wn,wr,*ws,wt,zn;UI c,m,p;
+A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
+    I ac,acr,af,ak,an,ar,*as,at,datamin,f,f1,k,klg,n,r,*s,t,wc,wcr,wf,wk,wn,wr,*ws,wt,zn;UI c,m,p;
  RZ(a&&w);
  // ?r=rank of argument, ?cr=rank the verb is applied at, ?f=length of frame, ?s->shape, ?t=type, ?n=#atoms
  // prehash is set if w argument is omitted (we are just prehashing the a arg)
@@ -1760,19 +1792,19 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z;fauxblockINT(zfaux,1,0)
 
  if(w==mark){mode |= IPHCALC; f=af; s=as; r=acr-1; f1=wcr-r;}  // if w is omitted (for prehashing), use info from a
  else{  // w is given.  See if we need to abort owing to shapes.
-  mode |= IIOREPS&((((((I)1)<<IIDOT)|(((I)1)<<IICO)|(((I)1)<<IEPS))<<IIOREPSX)>>mode);  // remember if i./i:/e. (and not prehash)
+  mode |= IIOREPS&((((((I)1)<<IIDOT)|(((I)1)<<IICO)|(((I)1)<<IEPS)|(((I)1)<<IFORKEY))<<IIOREPSX)>>mode);  // remember if i./i:/e./key (and not prehash)
   // TUNE  From testing 8/2019 on SkylakeX, sequential search wins if an<=10 or wn<=7, or an+wn<=40
   if((((an-11)|(wn-8)|(an+wn-41))<0)&&((ar^1)+TYPESXOR(at,wt))==0&&(((1-wr)|SGNIFNOT(mode,IIOREPSX)|(-((acr^1)|(wr^wcr)|((at|wt)&SPARSE)))|(an-1)|(wn-1))>=0)){
    // Fast path for (vector i./i:/e. atom or short vector) - if not prehashing.  Do sequential search
    I zt=(mode&IEPS)?B01:INT;  // the result type depends on the operation.  The test relies on the fact that EPS does not overlap IDOT or ICO
-   GA(z,zt,wn,wr,ws);
+   A z; GA(z,zt,wn,wr,ws);
    jtiosc(jt,mode,1,an,wn,1,1,a,w,z); // simple sequential search without hashing.
    RETF(z);
   }
   // ?r=rank of argument, ?cr=rank the verb is applied at, ?f=length of frame, ?s->shape, ?t=type, ?n=#atoms
   // prehash is set if w argument is omitted (we are just prehashing the a arg)
   f=af?af:wf; s=af?as:ws; r=acr?acr-1:0; f1=wcr-r;  // see below
-  if(0>f1||ICMP(as+af+1,ws+wf+f1,r)){I f0,*v;
+  if(0>f1||ICMP(as+af+1,ws+wf+f1,r)){I f0,*v;A z;
    // Dyad where shape of an item of a does not match shape of a cell of w.  Return appropriate not-found
    if(((af-wf)&-af)<0){f1+=wf-af; wf=af;}  // see below for discussion about long frame in w
    I witems=ws[0]; witems=wr>r?witems:1;  // # items of w, in case we are doing i.&0 eg on result of e., which will have that many items
@@ -1833,71 +1865,35 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z;fauxblockINT(zfaux,1,0)
  }
 
  // Convert dissimilar types
- if(TYPESEQ(at,wt)){th=1;
+ I fnx;  // function to use, set below
+ if(TYPESEQ(at,wt)){fnx=0;
  }else{
-  th=HOMONE(at,wt); /* noavx jt->min=0; */  // are args compatible?
+  fnx=HOMONE(at,wt)?0:-2; /* noavx jt->min=0; */  // are args compatible?  -2 if not.  MARK is inhomo
 // obsolete   if(((th-1)|(TYPESXOR(t,at)-1))>=0)RZ(a=t&XNUM?xcvt(XMEXMT,a):cvt(t,a))  // convert if th and TYPESXOR both nonzero
 // obsolete   if(((th-1)|(TYPESXOR(t,wt)-1))>=0)RZ(w=t&XNUM?xcvt(XMEXMT,w):cvt(t,w))
-  if(((th-1)|(TYPESXOR(t,at)-1))>=0)RZ(a=cvt(t|VFRCEXMT,a))  // convert if th and TYPESXOR both nonzero
-  if(((th-1)|(TYPESXOR(t,wt)-1))>=0)RZ(w=cvt(t|VFRCEXMT,w))
+  if((fnx|(TYPESXOR(t,at)-1))>=0)RZ(a=cvt(t|VFRCEXMT,a))  // convert if homo and TYPESXOR both nonzero
+  if((fnx|(TYPESXOR(t,wt)-1))>=0)RZ(w=cvt(t|VFRCEXMT,w))
+  fnx=mode&IPHCALC?0:fnx;  // if prehash, ignore the in homo
  }
 
- // Allocate the result area.  NOTE that some of the routines, like small-range, always store at least one result; so we have to point z somewhere harmless before launching them. if we are prehashing
- switch(mode&(IPHCALC|IIOPMSK)){I q;
-  default:      fauxINT(z,zfaux,1,0) break;   // if prehashed, we must create an area that can hold at least one stored result
-  case IIDOT:
-  case IICO:    GATV(z,INT,zn,f+f1,     s); if(af)MCISH(f+AS(z),ws+wf,f1); break;
-  case INUBSV:  GATV(z,B01,zn,f+f1+!acr,s); if(af)MCISH(f+AS(z),ws+wf,f1); if(!acr)AS(z)[AR(z)-1]=1; break;
-  case INUB:    q=m+1; GA(z,t,mult(q,aii(a)),MAX(1,wr),ws); AS(z)[0]=q; break;  // +1 because we speculatively overwrite.  Was MIN(m,p) but we don't have the range yet
-  case ILESS:   GA(z,t,AN(w),MAX(1,wr),ws); break;
-  case IEPS:    GATV(z,B01,zn,f+f1,     s); if(af)MCISH(f+AS(z),ws+wf,f1); break;
-  case INUBI:   q=m+1; GATV0(z,INT,q,1); break;  // +1 because we speculatively overwrite  Was MIN(m,p) but we don't have the range yet
-  // (e. i. 0:) and friends don't do anything useful if e. produces rank > 1.  The search for 0/1 always fails
-  case II0EPS: case II1EPS: case IJ0EPS: case IJ1EPS:
-                if(wr>MAX(ar,1))R sc(wr>r?ws[0]:1); GAT0(z,INT,1,0); break;
-  // ([: I. e.) ([: +/ e.) ([: +./ e.) ([: *./ e.) come here only if e. produces rank 0 or 1.
-  case IIFBEPS: GATV0(z,INT,c+1,1); break;  // +1 because we speculatively overwrite
-  case IANYEPS: case IALLEPS:
-                GAT0(z,B01,1,0); break;
-  case ISUMEPS:
-                GAT0(z,INT,1,0); break;
- }
-
- // Create result for empty/inhomogeneous arguments
- if((((I)m-1)|(n-1)|(zn-1)|(th-1))<0){  // if one of those is 0...
-  I witems; SETICFR(w,0,wr>r,witems); /* obsolete = wr>r?ws[0]:1;*/  // # items of w, in case we are doing i.&0 eg on result of e., which will have that many items
-  switch(mode&(IIOPMSK|IPHCALC)){  // prehash passes through
-  // If empty argument or result, or inhomogeneous arguments, return an appropriate empty or not-found
-  // We also handle the case of i.&0@:e. when the rank of w is more than 1 greater than the rank of a cell of a;
-  // in that case the search always fails
-  case IIDOT:   R reshape(shape(z),sc(n?m:0  ));
-  case IICO:    R reshape(shape(z),sc(n?m:m-1));
-  case INUBSV:  R reshape(shape(z),take(sc(m),num(1)));
-  case INUB:    AN(z)=0; *AS(z)=m?1:0; R z;
-  case ILESS:   if(m)AN(z)=*AS(z)=0; else MC(AV(z),AV(w),AN(w)<<klg); R z;
-  case IEPS:    R reshape(shape(z),num(m&&(!n||th)));
-  case INUBI:   R m?iv0:mtv;
-  // th<0 means that the result of e. would have rank>1 and would never compare against either 0 or 1
-  case II0EPS:  R sc(n&&zn?0L        :witems         );
-  case II1EPS:  R sc(n&&zn?witems         :0L        );
-  case IJ0EPS:  R sc(n&&zn?MAX(0,witems-1):witems         );
-  case IJ1EPS:  R sc(n&&zn?witems         :MAX(0,witems-1));
-  case ISUMEPS: R sc(n?0L        :c         );  // must include shape of w
-  case IANYEPS: R num(!n);
-  case IALLEPS: R num(!(c&&n));
-  case IIFBEPS: R n?mtv :IX(c);
- }}
-
-
- // Choose the function to use for performing the operation
- // See if we should simply do sequential search.    We do this only for i./i:/e., only when w-cells match with a-cells or w has a single repeated cell
+ // fnx is -2 if inhomo args, 0 otherwise
+ fnx|=REPSGN(SGNIFNOT(mode,IPHCALCX)&(((I)m-1)|(n-1)|(zn-1)));  // fnx is -2 if inhomo and not empty, -1 if empty, 0 otherwise
+    // but if precalc, we leave fnx at 0
+ // Choose the function to use for performing the operation, in 'fnx'
+ // fnx starts negative and is set to nonnegative when we know what function to use.
+ // While fnx is negative, bit 0 means 'intolerant comparison'
+ // If fnx is still negative at the end of the function search, it means either 'sequential search' (-1),
+ // 'empty' (-2), or 'inhomo' (-3)
+ // See if we should simply do sequential search.    We do this only for i./i:/e./key, only when w-cells match with a-cells or w has a single repeated cell
  // The cost of such a search is (4 inst per loop, at 1/2 cycle each) and the expected number of loops is half of
  // m*number of results.  The cost of small-range hashing is at best 10 cycles per atom added to the table and 8 cycles per lookup.
  // (full hashing is considerably more expensive); also a fair amount of time for range-checking and table-clearing, and further testing here
  // Here we just use the empirical observations that worked for atoms  TUNE
- if(((((-(wc^1))&(-(wc^ac)))|SGNIFNOT(mode,IIOREPSX))>=0)&&(((((I)m-11)|(zn-8)|((I)m+zn-41))<0))){  // wc==1 or ac, IOREPS, small enough operation   TUNE
+ if((((((-(wc^1))&(-(wc^ac)))|SGNIFNOT(mode,IIOREPSX))&~fnx)>=0) &&   // wc==1 or ac and IOREPS, or empty/inhomo
+          (((((I)m-11)|(zn-8)|((I)m+zn-41)|fnx)<0))){  //  small enough operation, or  empty/inhomo   TUNE
     // this will not choose sequential search enough when the cells are large (comparisons then are cheap because of early exit)
-  jtiosc(jt,mode,n,m,c,ac,wc,a,w,z); // simple sequential search without hashing
+  fnx-=1;  // now fnx is -3 for inhomo, -2 for empty, -1 for sequential.  This is ready for lookup.
+//  jtiosc(jt,mode,n,m,c,ac,wc,a,w,z); // simple sequential search without hashing
  }else{// obsolete I b=1.0==jt->cct;  // b means 'intolerant comparison'
 // jtioa* BOX
 // jtiox  XNUM
@@ -1919,7 +1915,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z;fauxblockINT(zfaux,1,0)
   // we allocate 4 extra entries to make sure we can write a quadword at the end, and to ensure there are sentinels
 
 // testing#define HASHFACTOR 6.0  // multiple of p over m, found empirically
-  I fnx=-2 + (1.0==jt->cct); // we haven't figured it out yet.  fnx is -2 for tolerant, -1 for intolerant
+  fnx=-2 + (1.0==jt->cct); // we haven't figured it out yet.  fnx is -2 for tolerant, -1 for intolerant
   // p>>booladj is the number of hashtable entries we need.  booladj is 0 for full hash, 3 if we just need one byte-encoded boolean per input value, 5 if just one bit per input value
   UI booladj=(mode&(IIOPMSK&~(IIDOT^IICO)))?5:0;  // boolean allowed when not i./i:
   p=0;  // indicate we haven't come up with the table size yet.  It depends on reverse and small-range decisions
@@ -1980,7 +1976,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z;fauxblockINT(zfaux,1,0)
    // We know which type of hashing to use, and now we need to decide between forward and reverse hashing.  We use reverse hashing if the
    // type we have selected supports it, and if w is much shorter than a.  The operation must be i./i:/e., and we must not be prehashing
    p=m;
-   if(((m>>1)>c) && (mode&IIOREPS) && fntbl[fnx+FNTBLREVERSE]){p=c; fnx+=FNTBLREVERSE;}
+   if(((m>>1)>c) && (mode&IIOREPS) && fntbl[FNTABLEPREFIX+fnx+FNTBLREVERSE]){p=c; fnx+=FNTBLREVERSE;}
    // set p based on the length of the argument being hashed
    if((SGNIF(t,B01X)&(k-(BW-1)))<0){p=MIN(p,(UI)((I)1)<<k);}  // Get max # different possible values to hash; the number of items, but less than that for short booleans
    // Find the best hash size, based on empirical studies.  Allow at least 3x hashentries per input value; if that's less than the size of the small hash, go to the limit of
@@ -2078,19 +2074,69 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z;fauxblockINT(zfaux,1,0)
    // Pass the min/range into the action routine, using result values in the hashtable
    hh=IHAV(h); hh->datamin=datamin; hh->datarange=p;  // max will be inferred
   }else{h = (A)acr;}  // if there is no hashtable, pass in acr using the h field.  This is for sorted boxes
-
-  // Call the routine to perform the operation
-  RZ(h=fntbl[fnx](jt,mode,m,n,c,k,ac,wc,ak,wk,a,w,h,z));
-  if((mode&IPHCALC)){A x,*zv;I*xv;
-   // If w was omitted (indicating prehashing), return the information for that special case
-   // result is an array of 3 boxes, containing (info vector),(hashtable),(mask of hashed bytes if applicable)
-   // The caller must ras() this result to protect it, if it is going to be saved
-   GAT0(z,BOX,2,1); zv=AAV(z);
-   GAT0(x,INT,6,1); xv=AV(x);
-   xv[0]=mode; xv[1]=n; xv[2]=k; /* noavx xv[3]=jt->min; */ xv[4]=(I)fntbl[fnx]; /* xv[5]=ztypefromitype[mode&IIOPMSK]; */
-   zv[0]=x; zv[1]=rifvs(h);
-  }
  }  // end of 'not sequential comparison' which means we may need a hashtable
+
+ // Allocate the result area.  NOTE that some of the routines, like small-range, always store at least one result; so we have to point z somewhere harmless before launching them. if we are prehashing
+ A z;
+ switch(mode&(IPHCALC|IIOPMSK)){I q;
+  default:      fauxINT(z,zfaux,1,0) break;   // if prehashed, we must create an area that can hold at least one stored result
+  case IIDOT: case IFORKEY:
+  case IICO:    GATV(z,INT,zn,f+f1,     s); if(af)MCISH(f+AS(z),ws+wf,f1); break;
+  case INUBSV:  GATV(z,B01,zn,f+f1+!acr,s); if(af)MCISH(f+AS(z),ws+wf,f1); if(!acr)AS(z)[AR(z)-1]=1; break;
+  case INUB:    q=m+1; GA(z,t,mult(q,aii(a)),MAX(1,wr),ws); AS(z)[0]=q; break;  // +1 because we speculatively overwrite.  Was MIN(m,p) but we don't have the range yet
+  case ILESS:   GA(z,t,AN(w),MAX(1,wr),ws); break;
+  case IEPS:    GATV(z,B01,zn,f+f1,     s); if(af)MCISH(f+AS(z),ws+wf,f1); break;
+  case INUBI:   q=m+1; GATV0(z,INT,q,1); break;  // +1 because we speculatively overwrite  Was MIN(m,p) but we don't have the range yet
+  // (e. i. 0:) and friends don't do anything useful if e. produces rank > 1.  The search for 0/1 always fails
+  case II0EPS: case II1EPS: case IJ0EPS: case IJ1EPS:
+                if(wr>MAX(ar,1))R sc(wr>r?ws[0]:1); GAT0(z,INT,1,0); break;
+  // ([: I. e.) ([: +/ e.) ([: +./ e.) ([: *./ e.) come here only if e. produces rank 0 or 1.
+  case IIFBEPS: GATV0(z,INT,c+1,1); break;  // +1 because we speculatively overwrite
+  case IANYEPS: case IALLEPS:
+                GAT0(z,B01,1,0); break;
+  case ISUMEPS:
+                GAT0(z,INT,1,0); break;
+ }
+
+ // Create result for empty/inhomogeneous arguments, & return
+ if(fnx<-1){  // if empty (-2) or inhomo (-3), create the result immediately
+  I witems; SETICFR(w,0,wr>r,witems); /* obsolete = wr>r?ws[0]:1;*/  // # items of w, in case we are doing i.&0 eg on result of e., which will have that many items
+  switch(mode&(IIOPMSK)){  // if PHCALC, we never got here
+  // If empty argument or result, or inhomogeneous arguments, return an appropriate empty or not-found
+  // We also handle the case of i.&0@:e. when the rank of w is more than 1 greater than the rank of a cell of a;
+  // in that case the search always fails
+  case IIDOT:   R reshape(shape(z),sc(n?m:0  ));
+  case IICO:    R reshape(shape(z),sc(n?m:m-1));
+  case INUBSV:  R reshape(shape(z),take(sc(m),num(1)));
+  case INUB:    AN(z)=0; *AS(z)=m?1:0; R z;
+  case ILESS:   if(m)AN(z)=*AS(z)=0; else MC(AV(z),AV(w),AN(w)<<klg); R z;
+  case IEPS:    R reshape(shape(z),num(m&&(!n||(~fnx&1))));  // ~fnx&1 is true if homo
+  case INUBI:   R m?iv0:mtv;
+  // th<0 means that the result of e. would have rank>1 and would never compare against either 0 or 1
+  case II0EPS:  R sc(n&&zn?0L        :witems         );
+  case II1EPS:  R sc(n&&zn?witems         :0L        );
+  case IJ0EPS:  R sc(n&&zn?MAX(0,witems-1):witems         );
+  case IJ1EPS:  R sc(n&&zn?witems         :MAX(0,witems-1));
+  case ISUMEPS: R sc(n?0L        :c         );  // must include shape of w
+  case IANYEPS: R num(!n);
+  case IALLEPS: R num(!(c&&n));
+  case IIFBEPS: R n?mtv :IX(c);
+  }
+ }
+
+ // Call the routine to perform the operation
+ RZ(h=fntbl[FNTABLEPREFIX+fnx](jt,mode,n,m,c,ac,wc,a,w,z,k,ak,wk,h));
+//  RZ(h=fntbl[fnx](jt,mode,n,m,c,ac,wc,a,w,z,k,ak,wk,h));
+
+ if(unlikely((mode&IPHCALC))){A x,*zv;I*xv;
+  // If w was omitted (indicating prehashing), return the information for that special case
+  // result is an array of 3 boxes, containing (info vector),(hashtable),(mask of hashed bytes if applicable)
+  // The caller must ras() this result to protect it, if it is going to be saved
+  GAT0(z,BOX,2,1); zv=AAV(z);
+  GAT0(x,INT,6,1); xv=AV(x);
+  xv[0]=mode; xv[1]=n; xv[2]=k; /* noavx xv[3]=jt->min; */ xv[4]=(I)fntbl[FNTABLEPREFIX+fnx]; /* xv[5]=ztypefromitype[mode&IIOPMSK]; */
+  zv[0]=x; zv[1]=rifvs(h);
+ }
  EPILOG(z);
 }    /* a i."r w main control */
 
@@ -2129,7 +2175,7 @@ A jtindexofprehashed(J jt,A a,A w,A hs){A h,*hv,x,z;AF fn;I ar,*as,at,c,f1,k,m,m
  // convert type of w if needed
  if(TYPESNE(t,wt))RZ(w=cvt(t,w))
  // call the action routine
- RZ(fn(jt,mode+IPHOFFSET,m,n,c,k,(I)1,(I)1,(I)0,(I)0,a,w,h,z))
+ RZ(fn(jt,mode+IPHOFFSET,n,m,c,(I)1,(I)1,a,w,z,k,(I)0,(I)0,h))
  R z;
 }
 

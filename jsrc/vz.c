@@ -4,6 +4,7 @@
 /* Verbs: Complex-Valued Scalar Functions                                  */
 
 #include "j.h"
+#include "vcomp.h"
 
 
 static const Z zj={0,1};
@@ -60,7 +61,9 @@ ZF1(jtznegate){R zminus(zeroZ,v);}
 D zmag(Z v){R hypoth(v.re,v.im);}
 
 B jtzeq(J jt,Z u,Z v){D a=u.re,b=u.im,c=v.re,d=v.im,p,q;
- if(a==c&&b==d)R 1;
+// obsolete if(a==c&&b==d)R 1;
+ if(a==c&&TEQ(b,d))R 1;  // fast check for equality - also picks up cases where one component is infinite
+ if(b==d&&TEQ(a,c))R 1;
  if(ZEZ(u)||ZEZ(v)||1.0==jt->cct||(0>a!=0>c&&0>b!=0>d))R 0;
  if(ZOV(u)||ZOV(v)){a/=2; b/=2; c/=2; d/=2;}
  if(ZUN(u)||ZUN(v)){a*=2; b*=2; c*=2; d*=2;}

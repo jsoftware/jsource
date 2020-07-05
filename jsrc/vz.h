@@ -15,6 +15,9 @@
 /* EMIN:   smallest number where 0<^EMIN; _1074*^.2     */
 /* EMAX2:  largest  number where _>cosh EMAX2; EMAX+^.2 */
 /* TMAX:   smallest number where 1=tanh TMAX            */
+
+#define OFLOMAX 1e306  // larger than this must be reduced to avoid oflo in hypoth
+#define UFLOMIN 1e-305  // smaller than this must be increased to avoid uflo in hypoth
                    
 #define ZF1DECL         Z z;D zr=0.0,zi=0.0,a=v.re,b=v.im
 #define ZF2DECL         Z z;D zr=0.0,zi=0.0,a=u.re,b=u.im,c=v.re,d=v.im
@@ -30,8 +33,8 @@
 #define ZEZ(v)          (!((v).re||(v).im))
 #define ZINF(v)         (inf==(v).re||inf==(v).im||infm==(v).re||infm==(v).im)
 #define ZCJ(u,v)        ((u).re==(v).re && (u).im==-(v).im)
-#define ZOV(v)          (ABS((v).re)> OVERFLOW||ABS((v).im)> OVERFLOW)
-#define ZUN(v)          (ABS((v).re)<UNDERFLOW||ABS((v).im)<UNDERFLOW)
+#define ZOV(v)          (ABS((v).re)> OFLOMAX||ABS((v).im)> OFLOMAX)
+#define ZUN(v)          (ABS((v).re)<UFLOMIN||ABS((v).im)<UFLOMIN)
 #define ZRE(x,y)        (TYMES((x).re,(y).re)-TYMES((x).im,(y).im))
 #define ZIM(x,y)        (TYMES((x).re,(y).im)+TYMES((x).im,(y).re))
 

@@ -98,7 +98,7 @@ APFX(gtQQ, B,Q,Q, QGT,, R EVOK;)
 APFX(gtSS, B,SB,SB, SBGT,, R EVOK;)
 
 // 
-#if C_AVX2&&SY_64
+#if (C_AVX2&&SY_64) || EMU_AVX2
 #define primcmpD256(name,tolres,intolres,decls) \
 AHDR2(name,B,D,D){ \
  __m256i endmask; /* length mask for the last word */ \

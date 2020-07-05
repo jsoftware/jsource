@@ -6,6 +6,8 @@
 #ifndef __SLEEF_H__
 #define __SLEEF_H__
 
+#define SLEEF_STATIC_LIBS
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -40,12 +42,14 @@
 #define IMPORT
 #endif // #if (defined(__MINGW32__) || defined(__MINGW64__) || defined(__CYGWIN__) || defined(_MSC_VER)) && !defined(SLEEF_STATIC_LIBS)
 
+#if !defined(__EMU_M256_AVXIMMINTRIN_EMU_H__)
 #if (defined(__GNUC__) || defined(__CLANG__)) && (defined(__i386__) || defined(__x86_64__))
 #include <x86intrin.h>
 #endif
 
 #if (defined(_MSC_VER))
 #include <intrin.h>
+#endif
 #endif
 
 #if defined(__ARM_NEON__) || defined(__ARM_NEON)
@@ -4434,6 +4438,68 @@ IMPORT void *Sleef_finz_getPtrf1_purecfma(int);
 #endif
 #ifdef __cplusplus
 }
+#endif
+
+// Define entry points to use for the architectures of interest
+#if C_AVX2
+#define Sleef_expd4 Sleef_expd4_u10avx2
+#define Sleef_logd4 Sleef_logd4_u10avx2
+#define Sleef_log2d4 Sleef_log2d4_u35avx2
+#define Sleef_exp2d4 Sleef_exp2d4_u35avx2
+#define Sleef_sind4 Sleef_sind4_u35avx2
+#define Sleef_cosd4 Sleef_cosd4_u35avx2
+#define Sleef_tand4 Sleef_tand4_u35avx2
+#define Sleef_tanhd4 Sleef_tanhd4_u35avx2
+#define Sleef_asind4 Sleef_asind4_u35avx2
+#define Sleef_acosd4 Sleef_acosd4_u35avx2
+#define Sleef_atand4 Sleef_atand4_u35avx2
+#define IGNORENAN
+#elif C_AVX
+#define Sleef_expd4 Sleef_expd4_u10avx
+#define Sleef_logd4 Sleef_logd4_u10avx
+#define Sleef_log2d4 Sleef_log2d4_u35avx
+#define Sleef_exp2d4 Sleef_exp2d4_u35avx
+#define Sleef_sind4 Sleef_sind4_u35avx
+#define Sleef_cosd4 Sleef_cosd4_u35avx
+#define Sleef_tand4 Sleef_tand4_u35avx
+#define Sleef_tanhd4 Sleef_tanhd4_u35avx
+#define Sleef_asind4 Sleef_asind4_u35avx
+#define Sleef_acosd4 Sleef_acosd4_u35avx
+#define Sleef_atand4 Sleef_atand4_u35avx
+#define IGNORENAN NAN0;  // some of these functions produce NaN along the way
+#elif EMU_AVX
+#define __EMU_M256_SLEEF_IMPL_M1( type, func , ud ) \
+static __emu_inline __emu##type Sleef_##func##d4( __emu##type m256_param1 ) \
+{   __emu##type res; \
+    res.__emu_m128[0] = Sleef_##func##d2##ud( m256_param1.__emu_m128[0] ); \
+    res.__emu_m128[1] = Sleef_##func##d2##ud( m256_param1.__emu_m128[1] ); \
+    return ( res ); \
+}
+__EMU_M256_SLEEF_IMPL_M1( __m256d, exp, _u10 );
+__EMU_M256_SLEEF_IMPL_M1( __m256d, log, _u10 );
+__EMU_M256_SLEEF_IMPL_M1( __m256d, log2, _u35 );
+__EMU_M256_SLEEF_IMPL_M1( __m256d, exp2, _u35 );
+__EMU_M256_SLEEF_IMPL_M1( __m256d, sin, _u35 );
+__EMU_M256_SLEEF_IMPL_M1( __m256d, cos, _u35 );
+__EMU_M256_SLEEF_IMPL_M1( __m256d, tan, _u35 );
+__EMU_M256_SLEEF_IMPL_M1( __m256d, tanh, _u35 );
+__EMU_M256_SLEEF_IMPL_M1( __m256d, asin, _u35 );
+__EMU_M256_SLEEF_IMPL_M1( __m256d, acos, _u35 );
+__EMU_M256_SLEEF_IMPL_M1( __m256d, atan, _u35 );
+#define IGNORENAN NAN0;  // some of these functions produce NaN along the way
+#elif defined(__SSE2__)
+#define Sleef_expd4 Sleef_expd2_u10
+#define Sleef_logd4 Sleef_logd2_u10
+#define Sleef_log2d4 Sleef_log2d2_u35
+#define Sleef_exp2d4 Sleef_exp2d2_u35
+#define Sleef_sind4 Sleef_sind2_u35
+#define Sleef_cosd4 Sleef_cosd2_u35
+#define Sleef_tand4 Sleef_tand2_u35
+#define Sleef_tanhd4 Sleef_tanhd2_u35
+#define Sleef_asind4 Sleef_asind2_u35
+#define Sleef_acosd4 Sleef_acosd2_u35
+#define Sleef_atand4 Sleef_atand2_u35
+#define IGNORENAN NAN0;  // some of these functions produce NaN along the way
 #endif
 
 #undef IMPORT

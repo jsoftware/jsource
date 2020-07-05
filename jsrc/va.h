@@ -366,7 +366,7 @@ AHDR2(f,void,void,void){ I u,v;       \
  R EVOK; \
 }
 
-#if C_AVX&&SY_64
+#if (C_AVX&&SY_64) || EMU_AVX
 #define BPFX(f,pfx,bpfx,pfyx,bpfyx,fuv,decls,decls256)  \
 AHDR2(f,void,void,void){ I u,v;       \
  decls  \

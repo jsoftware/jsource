@@ -21,7 +21,7 @@
 static B jtmatchsub(J,A,A,B* RESTRICT,I,I,I,I,I);
 static F2(jtmatchs);
 
-#if !C_AVX2
+#if !C_AVX2 && !EMU_AVX2
 
 #define MCS(q,af,wf)  ((((q>1)+(q>0))<<2)+(af?2:0)+(wf?1:0))
 // set *x++ to b1 if *u=*v, b0 otherwise
@@ -394,7 +394,7 @@ static B jtmatchsub(J jt,A a,A w,B* RESTRICT x,I af,I wf,I m,I n,I b1){C*av,*wv;
 // obsolete    c <<= bplg(t); if(af|wf){b = eqv(af,wf,m,n,c,av,wv,x,b1);}else{b = (!!memcmp(av,wv,c))^b1; if(x)x[0]=b;} break; // change c to number of bytes in cell
   c <<= bplg(t);
   if(!x){
-#if C_AVX2
+#if C_AVX2 || EMU_AVX2
    R memcmpne(av,wv,c)^1;   // single call, thus not stored - return it immediately
 #else
   
@@ -405,13 +405,13 @@ static B jtmatchsub(J jt,A a,A w,B* RESTRICT x,I af,I wf,I m,I n,I b1){C*av,*wv;
   }
   break;
  case CMPXX: if(1.0!=jt->cct){INNERT(Z,zeq) break;}  // tolerant, must use complex distance
-#if C_AVX2
+#if C_AVX2 || EMU_AVX2
   c*=2;   // intolerant: treat as 2 floats, fall through
 #else
   INNERT(Z,ZEQCT0) break;
 #endif
  case FLX:
-#if C_AVX2
+#if C_AVX2 || EMU_AVX2
   if(!x){
    R memcmpnefl(av,wv,c,jt)^1;   // single call, thus not stored - return it immediately
   }else{

@@ -57,7 +57,7 @@ static AMONPS(sgnZ,   Z,Z, , if((1.0-jt->cct)>zmag(*x))*z=zeroZ; else *z=ztrend(
 
 static AMON(sqrtI,  D,I, ASSERTWR(0<=*x,EWIMAG); *z=sqrt((D)*x);)
 
-#if C_AVX&&SY_64
+#if (C_AVX&&SY_64) || EMU_AVX
 AHDR1(sqrtD,D,D){
  AVXATOMLOOP(
  __m256d zero; zero=_mm256_setzero_pd();

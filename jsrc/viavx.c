@@ -44,7 +44,7 @@ static void ctmask(J jt){
  }else{jt->ctmask = ~0LL;}
 }    /* 1 iff significant wrt comparison tolerance */
 
-#if C_AVX2&&SY_64
+#if (C_AVX2&&SY_64) || EMU_AVX2
 static void fillwords(void* x, UI4 storeval, I nstores){
  __m256i* storeptr = (__m256i*)x;
  if(nstores==0)return;
@@ -60,7 +60,7 @@ l1:_mm256_storeu_si256 (storeptr, store256); storeptr++;
  }
  _mm256_maskstore_epi64 ((I*)storeptr, endmask,store256);  // finish the last long stores
 }
-#elif C_AVX&&SY_64
+#elif (C_AVX&&SY_64) || EMU_AVX
 // fill 64-bit words with the 32-bit value in storeval
 static __forceinline void fillwords(void* x, UI4 storeval, I nstores){
  __m128i* storeptr = (__m128i*)x;
@@ -89,7 +89,7 @@ static I hashallo(IH * RESTRICT hh,UI p,UI asct,I md){
   // ~. ~: I.@~. -.   all prefer the table to be complemented and thus initialized to 1.
   // REVERSED types always initialize to 1, whether packed or not
   // this is a kludge - the initialization value should be passed in by the caller, in asct
-#if !(C_AVX&&SY_64)
+#if !((C_AVX&&SY_64) || EMU_AVX)
   memset(hh->data.UC,md&IREVERSED?(md&IIMODPACK?255:1):((md&(IIMODPACK+IIOPMSK))<=INUBI),p);
 #else
   UI4 fillval = md&IREVERSED?(md&IIMODPACK?255:1):((md&(IIMODPACK+IIOPMSK))<=INUBI); fillval|=fillval<<8; fillval|=fillval<<16;
@@ -165,7 +165,7 @@ static I hashallo(IH * RESTRICT hh,UI p,UI asct,I md){
   // so it is safe to overfill with fullword stores
   UI storeval=asct; if(hh->hashelelgsize==1)storeval |= storeval<<16;  // Pad store value to 64 bits, dropping excess on smaller machines
   I nstores=((p<<hh->hashelelgsize)+SZI-1)>>LGSZI;  // get count of partially-filled words
-#if !(C_AVX&&SY_64)
+#if !((C_AVX&&SY_64) || EMU_AVX)
   if(SZI>4)storeval |= storeval<<(32%BW);
   I i; for(i=0;i<nstores;++i){hh->data.UI[i]=storeval;}  // fill them all
 #else
@@ -491,7 +491,7 @@ static B jteqa0(J jt,I n,A*u,A*v,I c,I d){PUSHCCT(1.0) B res=1; DQ(n, if(!equ(*u
 
 // Calculate the hash slot.  The hash calculation (input parm) relies on the name v and produces the name j.  We have moved v to an xmm register to reduce register pressure
 // here, so extract its parts for use as needed
-#if C_AVX
+#if C_AVX || EMU_AVX
 #define HASHSLOTP(T,hash) v=(T*)_mm_extract_epi64(vp,0); j=((hash)*(UIL)(p))>>32;
 #elif defined(__aarch64__)
 #define HASHSLOTP(T,hash) v=(T*)vgetq_lane_s64(vp,0); j=((hash)*(UIL)(p))>>32;
@@ -509,7 +509,7 @@ static B jteqa0(J jt,I n,A*u,A*v,I c,I d){PUSHCCT(1.0) B res=1; DQ(n, if(!equ(*u
 // only if the hash search does not find a match.  If (store) is 2, the entry that we found is cleared, by setting it to maxcount+1, when we find a match.
 // When (store)=2, we also ignore hash entries containing maxcount+1, treating them as failed compares
 // Independent of (store), (fstmt) is executed if the item is found in the hash table, and (nfstmt) is executed if it is not found.
-#if C_AVX
+#if C_AVX || EMU_AVX
 #define FINDP(T,TH,hsrc,name,exp,fstmt,nfstmt,store) do{if(hj==hsrc##sct){ \
   if(store==1)hv[name]=(TH)i; nfstmt break;}  /* this is the not-found case */ \
   if((store!=2||hj<hsrc##sct)&&(v=(T*)_mm_extract_epi64(vp,1),!(exp))){if(store==2)hv[name]=(TH)(hsrc##sct+1); fstmt break;} /* found */ \
@@ -536,7 +536,7 @@ static B jteqa0(J jt,I n,A*u,A*v,I c,I d){PUSHCCT(1.0) B res=1; DQ(n, if(!equ(*u
 // q+2 is being calculated).
 // The (fstmt,nfstmt,store) arguments indicate what to do when a match/notmatch is resolved.
 // (loopctl) give the stride through the input array, the control for the main loop, and the index of the last value.  These values differ for forward and reverse scans through the input.
-#if C_AVX
+#if C_AVX || EMU_AVX
 #define XSEARCH(T,TH,src,hsrc,hash,exp,stride,fstmt,nfstmt,store,vpofst,loopctl,finali) \
  {I i, j, hj; T *v; vp=_mm_insert_epi64(vp,(I)(src##v+vpofst),0); vpstride = _mm_insert_epi64(vp,(stride)*(I)sizeof(T),0); vp=_mm_shuffle_epi32(vp,0x44); vpstride=_mm_insert_epi64(vpstride,0LL,1); \
  HASHSLOTP(T,hash) if(src##sct>1){I j1,j2; vp=_mm_add_epi64(vp,vpstride); j1=j; HASHSLOTP(T,hash) hj=hv[j1]; vp=_mm_add_epi64(vp,vpstride); vpstride=_mm_shuffle_epi32(vpstride,0x44); \
@@ -565,7 +565,7 @@ static B jteqa0(J jt,I n,A*u,A*v,I c,I d){PUSHCCT(1.0) B res=1; DQ(n, if(!equ(*u
 #define XDQP(T,TH,hash,exp,stride,fstmt,nfstmt,reflex) XSEARCH(T,TH,w,a,hash,exp,(-(stride)),fstmt,nfstmt,reflex,cn*(wsct-1), (i=wsct-1;i>1;--i) ,0)
 
 // special lookup routines to move the data rather than store its index, used for nub/less
-#if C_AVX
+#if C_AVX || EMU_AVX
 #define XMVP(T,TH,hash,exp,stride,reflex)      \
  if(k==SZI){XDOP(T,TH,hash,exp,stride,{},{*(I*)zc=*(I*)_mm_extract_epi64(vp,1); zc+=SZI;},reflex); }  \
  else      {XDOP(T,TH,hash,exp,stride,{},{MC(zc,(C*)_mm_extract_epi64(vp,1),k); zc+=k;},reflex); }
@@ -629,7 +629,7 @@ static __forceinline I fcmp0(D* a, D* w, I n){
  DQ(n, if(a[i]!=w[i])R 1;);
  R 0;
 }
-#if C_AVX2
+#if C_AVX2 || EMU_AVX2
 #define COMPSETUP \
  __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1))));  // mask for 0 1 2 3 4 5 is xxxx 0001 0011 0111 1111 0001
 #define COMPCALL(a) icmpeq(v,(a)+n*hj,n,endmask)
@@ -731,7 +731,7 @@ static IOFX(Z,UI4,jtioz02,, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n)
 // the other is in the same interval; we XOR to preserve the neighbor
 //
 // At the end of this calculation il contains the index of a match, or asct if no match.
-#if C_AVX
+#if C_AVX || EMU_AVX
 #define SETXVAL  xval=_mm_set1_pd(*(D*)v); xnew=_mm_mul_pd(xval,tltr); xrot=_mm_permute_pd(xnew,0x1); xnew=_mm_xor_pd(xnew,xval); xnew=_mm_xor_pd(xnew,xrot); dx=_mm_extract_epi64(_mm_castpd_si128(xnew),0);
 #elif defined(__aarch64__)
 #define SETXVAL  xval=vdupq_n_f64(*(D*)v); xnew=vmulq_f64(xval,tltr); xrot=vcombine_f64(vget_high_f64(xnew), vget_low_f64(xnew)); xnew=vreinterpretq_f64_u64(veorq_u64(vreinterpretq_u64_f64(xnew),vreinterpretq_u64_f64(xval))); xnew=vreinterpretq_f64_u64(veorq_u64(vreinterpretq_u64_f64(xnew),vreinterpretq_u64_f64(xrot))); dx=vgetq_lane_u64(vreinterpretq_u64_f64(xnew),0);
@@ -804,7 +804,7 @@ static IOFX(Z,UI4,jtioz02,, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n)
  }
 
 
-#if C_AVX
+#if C_AVX || EMU_AVX
 #define SETXNEW  __m128d tltr; tltr=_mm_set_pd(tl,tr); xnew=xrot=xval=_mm_sub_pd(tltr,tltr);
 #elif defined(__aarch64__)
 #define SETXNEW  __m128d tltr=tltr; tltr=vsetq_lane_f64(tl,tltr,1); tltr=vsetq_lane_f64(tr,tltr,0); xnew=xrot=xval=vsubq_f64(tltr,tltr);
@@ -1086,7 +1086,7 @@ static void jtiosc(J jt,I mode,I n,I asct,I wsct,I ac,I wc,A a,A w,A z){I j,p,q;
   SCDO(RATX,Q,!QEQ(x, av[j]));
   SCDO(SBTX,SB,x!=av[j]      );
   SCDO(BOXX,A,!equ(x,av[j]));
-#if C_AVX&&SY_64
+#if (C_AVX&&SY_64) || EMU_AVX
   // The instruction set is too quirky to do this with macros
    case IOSCCASE(XDX,0,IIDOT): {D *wv=(D*)v; D*av=(D*)u; __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-asct)&(NPAR-1)))); 
       DQ(ac, 
@@ -1155,7 +1155,7 @@ fnd023: *(C*)zv=SGNTO0(-cmps); zv=(C*)zv+1;      wv+=q;);
 #endif
 
 
-#if C_AVX2&&SY_64
+#if (C_AVX2&&SY_64) || EMU_AVX2
    case IOSCCASE(INTX,0,IIDOT): {I *wv=(I*)v; I*av=(I*)u; __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-asct)&(NPAR-1)))); 
       DQ(ac, 
        DQ(wsct, __m256i x=_mm256_set1_epi64x(*wv); I*avv=av; I*avend=av+((asct-1)&(-(I)NPAR)); int cmps; 
@@ -1493,7 +1493,7 @@ static IOFXWS(jtio42w,I,US)  static IOFXWS(jtio44w,I,UI4)  // INT-sized items, u
 // we abort and return 0 range.
 // min and max are initial values for min/max
 #if 1
-#if C_AVX2
+#if C_AVX2 || EMU_AVX2
 CR condrange(I *s,I n,I min,I max,I maxrange){CR ret;
  if(!n)goto fail;
  I nqw=(n-1)>>LGNPAR;  // number of full qwords

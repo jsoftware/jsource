@@ -100,7 +100,7 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wk,wn,wr,*ws,zn;
  wv=CAV(w); zv=CAV(z); SETJ(*av);
   switch(k){
   case sizeof(I):
-#if C_AVX2
+#if C_AVX2 || EMU_AVX2
   {__m256i endmask; /* length mask for the last word */ 
    _mm256_zeroupper(VOIDARG);
    __m256i wstride=_mm256_set1_epi64x(p);  // atoms between cells

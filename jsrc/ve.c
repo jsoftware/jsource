@@ -33,7 +33,7 @@ AHDR2(plusIB,I,I,B){I u;I v;I oflo=0;
  R oflo?EWOVIP+EWOVIPPLUSIB:EVOK;
 }
 
-#if C_AVX&&SY_64
+#if (C_AVX&&SY_64) || EMU_AVX
 // D + D, never 0 times
 primop256(plusDD,1,NAN0;,zz=_mm256_add_pd(xx,yy),R NANTEST?EVNAN:EVOK;)
 primop256(minusDD,0,NAN0;,zz=_mm256_sub_pd(xx,yy),R NANTEST?EVNAN:EVOK;)
@@ -139,7 +139,7 @@ APFX(tymesDD, D,D,D, TYMESDD,,R EVOK;)
 APFX(  divDD, D,D,D, DIV,NAN0;,ASSERTWR(!NANTEST,EVNAN); R EVOK;)
 #endif
 
-#if C_AVX2&&SY_64
+#if (C_AVX2&&SY_64) || EMU_AVX2
 primop256(plusII,1,__m256d oflo=_mm256_setzero_pd();,
  zz=_mm256_castsi256_pd(_mm256_add_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy))); oflo=_mm256_or_pd(oflo,_mm256_andnot_pd(_mm256_xor_pd(xx,yy),_mm256_xor_pd(xx,zz)));,
  R _mm256_movemask_pd(oflo)?EWOVIP+EWOVIPPLUSII:EVOK;)

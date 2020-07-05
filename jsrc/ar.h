@@ -31,7 +31,7 @@
   }}R EVOK;}
 
 // used on idempotent verbs, using 4 accumulators but using the 256-bit instructions if available
-#if C_AVX&&SY_64
+#if (C_AVX&&SY_64) || EMU_AVX
 #define REDUCEPFXIDEM2PRIM256(f,Tz,Tx,pfx,vecfn,prim,identity)  \
  AHDRR(f,Tz,Tx){I i;                              \
   if(d==1){redprim256rk1(prim,identity)}  \

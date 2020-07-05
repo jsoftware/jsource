@@ -66,7 +66,7 @@ CREBLOCKVEC2I(mtm,B01)    /* ,0   also extended integer 0                       
 D   jnan=NAN;               /* _.                                   */
 // obsolete C   minus0[8]={0};        /* the abominable minus 0               */
 A   mnuvxynam[6]={0,0,0,0,0,0};   // name blocks for all arg names
-#if defined(__SSE2__)&&!C_AVX
+#if IMI_AVX
 const I validitymask[12]={-1, -1, 0, 0, -1, -1, 0, 0, -1, -1, 0, 0};  // for __m128d
 #else
 const I validitymask[12]={-1, -1, -1, -1, 0, 0, 0, 0, -1, -1, -1, -1};  // allows inverted mask

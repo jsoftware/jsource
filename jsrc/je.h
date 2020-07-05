@@ -897,7 +897,7 @@ extern void     va1primsetup(A);
 extern void     va2primsetup(A);
 extern B        vlocnm(I,C*);
 extern D        xdouble(X);
-#if C_AVX2
+#if C_AVX2 || EMU_AVX2
 extern I        memcmpne(void*, void*, I);
 #else
 #define memcmpne(s,t,l) (!!memcmp((s),(t),(l)))

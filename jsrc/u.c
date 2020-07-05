@@ -304,7 +304,7 @@ A jtvec(J jt,I t,I n,void*v){A z; GA(z,t,n,1,0); MC(AV(z),v,n<<bplg(t)); RETF(z)
 #pragma push_options
 #pragma optimize ("unroll-loops")
 #endif
-#if C_AVX2&&SY_64
+#if (C_AVX2&&SY_64) || EMU_AVX2
 A jtvecb01(J jt,I t,I n,void*v){A z; GA(z,t,n,1,0);if(t&B01){C*p=(C*)AV(z),*q=v; 
 __m256i zeros=_mm256_setzero_si256();
 __m256i ones=_mm256_set1_epi8(1);

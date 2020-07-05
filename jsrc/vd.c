@@ -95,7 +95,7 @@ static F1(jtqrr){PROLOG(0067);A a1,q,q0,q1,r,r0,r1,t,*tv,t0,t1,y,z;I m,n,p,*s;
 // q is the ADJOINT of the original q matrix
 // result is adjoint of the L in LQ decomp, therefore upper-triangular
 static F1(jtltqip){PROLOG(0067);A l0,l1,y,z;
-#if C_AVX
+#if C_AVX || EMU_AVX
  D ipa[8], *ipv;
 #endif
 RZ(w);
@@ -103,7 +103,7 @@ RZ(w);
  I rw=AS(w)[0]; I cl=AS(w)[1];  // # rows, # columns
   // handle case of 2 rows
  if(rw<=2) {
-#if C_AVX
+#if C_AVX || EMU_AVX
   if(rw==2 && AT(w)&FL){
    // We calculate the 2-row case rather than recurring to handle the rows individually, because we can keep the multipliers busy
    // Let Pij be the inner product of row i and row j.  Then
@@ -145,7 +145,7 @@ RZ(w);
  RZ(l0=jtltqip(jt,q0));  // form q0 in place, return l0
  A q1; fauxblock(virtwq1);  fauxvirtual(q1,virtwq1,w,2,ACUC1|ACINPLACE); AK(q1)+=(m*cl)<<bplg(AT(w)); AS(q1)[0]=rw-m; AS(q1)[1]=cl; AN(q1)=(rw-m)*cl; 
  // calculate w1 - (w1 q0*) q0
-#if C_AVX
+#if C_AVX || EMU_AVX
  if(AT(w)&FL && (m<50 || m*m*cl<(64*64*64))){
   // floating-point w that isn't larger than L2 cache.  (1) use inner-products to calculate w1 q0* (2) use blockedmmult to calculate final product
   if((m*(rw-m))>(int)(sizeof(ipa)/sizeof(ipa[0]))){

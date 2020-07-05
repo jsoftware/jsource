@@ -28,6 +28,117 @@
 #undef MMSC_VER
 #endif
 
+#ifndef EMU_AVX
+#define EMU_AVX 0
+#endif
+#ifndef IMI_AVX
+#define IMI_AVX 0
+#endif
+#if defined(MMSC_VER)
+#undef EMU_AVX
+#define EMU_AVX 0
+#endif
+#if EMU_AVX
+#undef IMI_AVX
+#define IMI_AVX 0
+#endif
+#undef EMU_AVX2
+#define EMU_AVX2 0
+
+/* msvc does not define __SSE2__ */
+#if !defined(__SSE2__)
+#if defined(MMSC_VER)
+#if (defined(_M_AMD64) || defined(_M_X64))
+#define __SSE2__ 1
+#elif _M_IX86_FP==2
+#define __SSE2__ 1
+#endif
+#endif
+#endif
+
+#if defined(__i386__) || defined(__x86_64__) || defined(_M_X64) || defined(_M_IX86)
+#ifndef C_AVX2
+#define C_AVX2 0
+#endif
+
+#if C_AVX2
+#if !C_AVX
+#undef C_AVX
+#define C_AVX 1
+#endif
+#endif
+#endif
+
+#if C_AVX
+#if (defined(__GNUC__) || defined(__CLANG__)) && (defined(__i386__) || defined(__x86_64__))
+#include <immintrin.h>
+#endif
+#if (defined(_MSC_VER))
+#include <intrin.h>
+#endif
+#if C_AVX2
+#undef EMU_AVX2
+#define EMU_AVX2 0
+#else
+#undef EMU_AVX2
+#define EMU_AVX2 1
+#include <stdint.h>
+#include <string.h>
+#include "avx2intrin-emu.h"
+#endif
+#undef EMU_AVX
+#define EMU_AVX 0
+#undef IMI_AVX
+#define IMI_AVX 0
+
+#elif defined(__SSE2__)
+#if EMU_AVX
+#undef EMU_AVX2
+#define EMU_AVX2 1   // test avx2 emulation
+#include <stdint.h>
+#include <string.h>
+#include "avxintrin-emu.h"
+#elif IMI_AVX
+#if SLEEF
+#include "../sleef/include/sleef.h"
+#endif
+#include "imi_sse2_avx.h"
+#else
+#include <emmintrin.h>
+#endif
+#define _CMP_EQ          0
+#define _CMP_LT          1
+#define _CMP_LE          2
+#define _CMP_UNORD       3
+#define _CMP_NEQ         4
+#define _CMP_NLT         5
+#define _CMP_NLE         6
+#define _CMP_ORD         7
+#undef _CMP_EQ_OQ
+#undef _CMP_GE_OQ
+#undef _CMP_GT_OQ
+#undef _CMP_LE_OQ
+#undef _CMP_LT_OQ
+#undef _CMP_NEQ_OQ
+#define _CMP_EQ_OQ _CMP_EQ
+#define _CMP_GE_OQ _CMP_NLT
+#define _CMP_GT_OQ _CMP_NLE
+#define _CMP_LE_OQ _CMP_LE
+#define _CMP_LT_OQ _CMP_LT
+#define _CMP_NEQ_OQ _CMP_NEQ
+#endif
+
+#if defined(__aarch64__)||defined(_M_ARM64)
+#include <arm_neon.h>
+#endif
+
+#undef VOIDARG
+#define VOIDARG
+
+#if SLEEF
+#include "../sleef/include/sleef.h"
+#endif
+
 #ifndef SYS // include js.h only once - dtoa.c
 #include "js.h"
 #endif
@@ -294,44 +405,6 @@ extern unsigned int __cdecl _clearfp (void);
 #endif
 #endif
 
-#if defined(__i386__) || defined(__x86_64__) || defined(_M_X64) || defined(_M_IX86)
-#ifndef C_AVX2
-#define C_AVX2 0
-#endif
-
-#if C_AVX2
-#if !C_AVX
-#undef C_AVX
-#define C_AVX 1
-#endif
-#endif
-
-#if C_AVX
-#include <immintrin.h>
-#elif __SSE2__
-#include <emmintrin.h>
-#endif
-#endif
-
-#if defined(__aarch64__)||defined(_M_ARM64)
-#include <arm_neon.h>
-#endif
-
-/* msvc does not define __SSE2__ */
-#if !defined(__SSE2__)
-#if defined(MMSC_VER)
-#if (defined(_M_AMD64) || defined(_M_X64))
-#define __SSE2__ 1
-#include <emmintrin.h>
-#include <xmmintrin.h>   /* header file for _mm_prefetch() */
-#elif _M_IX86_FP==2
-#define __SSE2__ 1
-#include <emmintrin.h>
-#include <xmmintrin.h>   /* header file for _mm_prefetch() */
-#endif
-#endif
-#endif
-
 #define NALP            256             /* size of alphabet                */
 #define NETX            2000            /* size of error display buffer    */
 #define NPP             20              /* max value for quad pp           */
@@ -474,7 +547,6 @@ extern unsigned int __cdecl _clearfp (void);
 #define DCACHED_THRES  (64*64*64)    // when m*n*p less than this use blocked; when higher, use cached
 
 
-
 // Debugging options
 
 // Use MEMAUDIT to sniff out errant memory alloc/free
@@ -516,7 +588,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define ASSERTW(b,e)    {if(unlikely(!(b))){if((e)<=NEVM)jsignal(e); else jt->jerr=(e); R;}}
 #define ASSERTWR(c,e)   {if(unlikely(!(c))){R e;}}
 // verify that shapes *x and *y match for l axes, with no mispredicted branches
-#if C_AVX&&SY_64
+#if (C_AVX&&SY_64) || EMU_AVX
 #define ASSERTAGREE(x,y,l) {D *aaa=(D*)(x), *aab=(D*)(y); I aai=4-(l); \
  do{__m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+(aai>=0?aai:0))); \
   endmask=_mm256_castpd_si256(_mm256_xor_pd(_mm256_maskload_pd(aaa,endmask),_mm256_maskload_pd(aab,endmask))); \
@@ -612,7 +684,7 @@ extern unsigned int __cdecl _clearfp (void);
 // General shape copy, branchless when rank<3  AS[0] is always written: #atoms if rank=1, 0 if rank=0.  Used in jtga(), which uses the 0 in AS[0] as a pun for nullptr
 #define GACOPYSHAPEG(name,type,atoms,rank,shaape)  {I *_d=AS(name); I *_s=(shaape); _s=_s?_s:_d; I cp=*_s; I _r=1-(rank); cp&=REPSGN(_r); cp=_r==0?(atoms):cp; _s=_r==0?_d:_s; *_d=cp; do{_s+=SGNTO0(_r); _d+=SGNTO0(_r); *_d=*_s;}while(++_r<0);}
 // Use when shape is known to be present but rank is not SDT.  One value is always written to shape
-#if C_AVX&SY_64
+#if (C_AVX&&SY_64) || EMU_AVX
 #define GACOPYSHAPE(name,type,atoms,rank,shaape) MCISH(AS(name),shaape,rank)
 #else
 // in this version one value is always written to shape
@@ -749,7 +821,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define MCISds(dest,src,n) {I _n=~(n); while((_n-=REPSGN(_n))<0)*dest++=*src++;}  // ...this when both
 // Copy shapes.  Optimized for length <2, to eliminate branches then
 // For AVX, we can profitably use the MASKMOV instruction to do all the  testing
-#if C_AVX&&SY_64
+#if (C_AVX&&SY_64) || EMU_AVX
 #define MCISH(dest,src,n) {D *_d=(D*)(dest), *_s=(D*)(src); I _n=-(I)(n); \
  do{_n+=NPAR; __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+(_n>=0?_n:0))); \
   _mm256_maskstore_pd(_d,endmask,_mm256_maskload_pd(_s,endmask)); \
@@ -772,7 +844,7 @@ extern unsigned int __cdecl _clearfp (void);
 // define multiply-add
 #if C_AVX2
 #define MUL_ACC(addend,mplr1,mplr2) _mm256_fmadd_pd(mplr1,mplr2,addend)
-#elif C_AVX
+#elif C_AVX || EMU_AVX || IMI_AVX
 #define MUL_ACC(addend,mplr1,mplr2) _mm256_add_pd(addend , _mm256_mul_pd(mplr1,mplr2))
 #else
 #define MUL_ACC(addend,mplr1,mplr2) _mm_add_pd(addend , _mm_mul_pd(mplr1,mplr2))
@@ -792,16 +864,23 @@ extern unsigned int __cdecl _clearfp (void);
 // #define NAN1T           {if(_SW_INVALID&_clearfp()){fprintf(stderr,"nan error: file %s line %d\n",__FILE__,__LINE__);jsignal(EVNAN);     }}
 #endif
 
-#if C_AVX&&SY_64
+#if (C_AVX&&SY_64) || EMU_AVX || IMI_AVX
 #define NPAR ((I)(sizeof(__m256)/sizeof(D))) // number of Ds processed in parallel
+#if (C_AVX&&SY_64) || EMU_AVX
 #define LGNPAR 2  // no good automatic way to do this
+#else
+#define LGNPAR 1  // IMI_AVX is 128 bit
+#endif
 // loop for atomic parallel ops.  // fixed: n is #atoms (never 0), x->input, z->result, u=input atom4 and result
+//                                                                                  __SSE2__    atom2
 #define AVXATOMLOOP(preloop,loopbody,postloop) \
  __m256i endmask;  __m256d u; \
  _mm256_zeroupper(VOIDARG); \
  endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1))));  /* mask for 0 1 2 3 4 5 is xxxx 0001 0011 0111 1111 0001 */ \
+                                                         /* __SSE2__ mask for 0 1 2 3 4 5 is xx 01 11 01 11 01 */ \
  preloop \
  I i=(n-1)>>LGNPAR;  /* # loops for 0 1 2 3 4 5 is x 0 0 0 0 1 */ \
+            /* __SSE2__ # loops for 0 1 2 3 4 5 is x 1 0 1 0 1 */ \
  while(--i>=0){ u=_mm256_loadu_pd(x); \
   loopbody \
   _mm256_storeu_pd(z, u); x+=NPAR; z+=NPAR; \
@@ -846,159 +925,6 @@ extern unsigned int __cdecl _clearfp (void);
  _mm256_maskstore_pd(z, endmask, u); \
  postloop
 
-#elif defined(__SSE2__)
-
-#if defined( MMSC_VER )
-    #define __EMU_M256_ALIGN( a ) __declspec(align(a))
-    #define __emu_inline          __forceinline
-    #define __emu_int64_t         __int64
-#else
-    #define __EMU_M256_ALIGN( a ) __attribute__((__aligned__(a)))
-    #define __emu_inline          __inline __attribute__((__always_inline__))
-    #define __emu_int64_t         long long
-#endif
-#if defined( MMSC_VER )
-static __emu_inline __m128d __emu_mm_maskload_pd(double const *a, __m128i mask) {
-    const size_t size_type = sizeof( double );
-    const size_t size = sizeof( __m128d ) / size_type;
-    __EMU_M256_ALIGN(32) double res[ 2 ];           // double res[ size ];  is a c99 feature unavailable in msvc
-    const __emu_int64_t* p_mask = (const __emu_int64_t*)&mask;
-    size_t i = 0;
-    __emu_int64_t sign_bit = 1;
-    sign_bit <<= (8*size_type - 1);
-    for ( ; i < size; ++i )
-        res[ i ] = (sign_bit & *(p_mask + i)) ? *(a+i) : 0;
-    return (*(__m128d*)&res);
-}
-
-static __emu_inline void __emu_mm_maskstore_pd(double *a, __m128i mask, __m128d data) {
-    const size_t size_type = sizeof( double );
-    const size_t size = sizeof( __m128d ) / sizeof( double );
-    double* p_data = (double*)&data;
-    const __emu_int64_t* p_mask = (const __emu_int64_t*)&mask;
-    size_t i = 0;
-    __emu_int64_t sign_bit = 1;
-    sign_bit <<= (8*size_type - 1);
-    for ( ; i < size; ++i )
-        if ( *(p_mask + i ) & sign_bit)
-            *(a + i) = *(p_data + i);
-}
-
-#else
-#define __emu_maskload_impl( name, vec_type, mask_vec_type, type, mask_type ) \
-static __emu_inline vec_type  name(type const *a, mask_vec_type mask) {   \
-    const size_t size_type = sizeof( type );                          \
-    const size_t size = sizeof( vec_type ) / size_type;               \
-    __EMU_M256_ALIGN(32) type res[ size ];                            \
-    const mask_type* p_mask = (const mask_type*)&mask;                \
-    size_t i = 0;                                                     \
-    mask_type sign_bit = 1;                                           \
-    sign_bit <<= (8*size_type - 1);                                   \
-    for ( ; i < size; ++i )                                           \
-        res[ i ] = (sign_bit & *(p_mask + i)) ? *(a+i) : 0;           \
-    return (*(vec_type*)&res);                                        \
-}
-
-#define __emu_maskstore_impl( name, vec_type, mask_vec_type, type, mask_type ) \
-static __emu_inline void  name(type *a, mask_vec_type mask, vec_type data) { \
-    const size_t size_type = sizeof( type );                          \
-    const size_t size = sizeof( vec_type ) / sizeof( type );          \
-    type* p_data = (type*)&data;                                      \
-    const mask_type* p_mask = (const mask_type*)&mask;                \
-    size_t i = 0;                                                     \
-    mask_type sign_bit = 1;                                           \
-    sign_bit <<= (8*size_type - 1);                                   \
-    for ( ; i < size; ++i )                                           \
-        if ( *(p_mask + i ) & sign_bit)                               \
-            *(a + i) = *(p_data + i);                                 \
-}
-
-__emu_maskload_impl( __emu_mm_maskload_pd, __m128d, __m128i, double, __emu_int64_t );
-__emu_maskstore_impl( __emu_mm_maskstore_pd, __m128d, __m128i, double, __emu_int64_t );
-#endif
-
-#ifdef MMSC_VER
-static __emu_inline __m128d __emu_mm_cmp_pd(__m128d m1, __m128d m2, int predicate) {
-/*
-#define _CMP_EQ          0
-#define _CMP_LT          1
-#define _CMP_LE          2
-#define _CMP_UNORD       3
-#define _CMP_NEQ         4
-#define _CMP_NLT         5
-#define _CMP_NLE         6
-#define _CMP_ORD         7
-*/
-    switch (predicate) {
-    case 0: return _mm_cmpeq_pd(m1,m2);
-    case 1: return _mm_cmplt_pd(m1,m2);
-    case 2: return _mm_cmple_pd(m1,m2);
-    case 3: return _mm_cmpunord_pd(m1,m2);
-    case 4: return _mm_cmpneq_pd(m1,m2);
-    case 5: return _mm_cmpge_pd(m1,m2);
-    case 6: return _mm_cmpgt_pd(m1,m2);
-    case 7: return _mm_cmpord_pd(m1,m2);
-    default: *(volatile size_t*)0 = 0;
-    }
-}
-#else
-#define __emu_mm_cmp_pd(m1, m2, predicate) \
-({ \
-    __m128 res_ = (m1), m2_ = (m2); \
-    if ( 7 < (unsigned)predicate ) __asm__ __volatile__ ( "ud2" : : : "memory" ); /* not supported yet */ \
-    __asm__ ( "cmppd %[pred_], %[m2_], %[res_]" : [res_] "+x" (res_) : [m2_] "xm" (m2_), [pred_] "i" (predicate) ); \
-    res_; })
-#endif
-
-#define NPAR ((I)(sizeof(__m128)/sizeof(D))) // number of Ds processed in parallel
-#define LGNPAR 1  // no good automatic way to do this
-// loop for atomic parallel ops.  // fixed: n is #atoms (never 0), x->input, z->result, u=input atom2 and result
-#define AVXATOMLOOP(preloop,loopbody,postloop) \
- __m128i endmask;  __m128d u; \
- endmask = _mm_loadu_si128((__m128i*)(validitymask+((-n)&(NPAR-1))));  /* mask for 0 1 2 3 4 5 is xx 01 11 01 11 01 */ \
- preloop \
- I i=(n-1)>>LGNPAR;  /* # loops for 0 1 2 3 4 5 is x 1 0 1 0 1 */ \
- while(--i>=0){ u=_mm_loadu_pd(x); \
-  loopbody \
-  _mm_storeu_pd(z, u); x+=NPAR; z+=NPAR; \
- } \
- u=__emu_mm_maskload_pd(x,endmask); \
- loopbody \
- __emu_mm_maskstore_pd(z, endmask, u); \
- x+=((n-1)&(NPAR-1))+1; z+=((n-1)&(NPAR-1))+1; \
- postloop
-
-// version that pipelines one read ahead.  Input to loopbody2 is zu; result of loopbody1 is in zt
-#define AVXATOMLOOPPIPE(preloop,loopbody1,loopbody2,postloop) \
- __m128i endmask;  __m128d u, zt, zu; \
- endmask = _mm_loadu_si128((__m128i*)(validitymask+((-n)&(NPAR-1))));  /* mask for 0 1 2 3 4 5 is xx 01 11 01 11 01 */ \
- preloop \
- I i=(n-1)>>LGNPAR;  /* # loops for 0 1 2 3 4 5 is x 1 0 1 0 1 */ \
- if(i>0){u=_mm_loadu_pd(x); x+=NPAR; loopbody1 \
- while(--i>=0){ u=_mm_loadu_pd(x); x+=NPAR; \
-  zu=zt; loopbody1 loopbody2 \
-  _mm_storeu_pd(z, u); z+=NPAR; \
- } zu=zt; loopbody2 _mm_storeu_pd(z, u); z+=NPAR;} \
- u=__emu_mm_maskload_pd(x,endmask); \
- loopbody1 zu=zt; loopbody2 \
- __emu_mm_maskstore_pd(z, endmask, u); \
- x+=((n-1)&(NPAR-1))+1; z+=((n-1)&(NPAR-1))+1; \
- postloop
-
-// Dyadic version.  v is right argument, u is still result
-#define AVXATOMLOOP2(preloop,loopbody,postloop) \
- __m128i endmask;  __m128d u,v; \
- endmask = _mm_loadu_si128((__m128i*)(validitymask+((-n)&(NPAR-1))));  /* mask for 0 1 2 3 4 5 is xx 01 11 01 11 01 */ \
- preloop \
- I i=(n-1)>>LGNPAR;  /* # loops for 0 1 2 3 4 5 is x 1 0 1 0 1 */ \
- while(--i>=0){ u=_mm_loadu_pd(x); v=_mm_loadu_pd(y); \
-  loopbody \
-  _mm_storeu_pd(z, u); x+=NPAR; y+=NPAR; z+=NPAR; \
- } \
- u=__emu_mm_maskload_pd(x,endmask); v=__emu_mm_maskload_pd(y,endmask); \
- loopbody \
- __emu_mm_maskstore_pd(z, endmask, u); \
- postloop
 #endif
 
 #define NUMMAX          9    // largest number represented in num[]
@@ -1223,55 +1149,6 @@ static __emu_inline __m128d __emu_mm_cmp_pd(__m128d m1, __m128d m2, int predicat
 #include "vdx.h"  
 #include "a.h"
 #include "s.h"
-// obsolete #define SLEEF C_AVX2 || C_AVX
-#if SLEEF
-#define SLEEF_STATIC_LIBS
-#include "../sleef/include/sleef.h"
-
-// Define entry points to use for the architectures of interest
-#if C_AVX2
-#define Sleef_expd4 Sleef_expd4_u10avx2
-#define Sleef_logd4 Sleef_logd4_u10avx2
-#define Sleef_log2d4 Sleef_log2d4_u35avx2
-#define Sleef_exp2d4 Sleef_exp2d4_u35avx2
-#define Sleef_sind4 Sleef_sind4_u35avx2
-#define Sleef_cosd4 Sleef_cosd4_u35avx2
-#define Sleef_tand4 Sleef_tand4_u35avx2
-#define Sleef_tanhd4 Sleef_tanhd4_u35avx2
-#define Sleef_asind4 Sleef_asind4_u35avx2
-#define Sleef_acosd4 Sleef_acosd4_u35avx2
-#define Sleef_atand4 Sleef_atand4_u35avx2
-#define IGNORENAN
-#elif C_AVX
-#define Sleef_expd4 Sleef_expd4_u10avx
-#define Sleef_logd4 Sleef_logd4_u10avx
-#define Sleef_log2d4 Sleef_log2d4_u35avx
-#define Sleef_exp2d4 Sleef_exp2d4_u35avx
-#define Sleef_sind4 Sleef_sind4_u35avx
-#define Sleef_cosd4 Sleef_cosd4_u35avx
-#define Sleef_tand4 Sleef_tand4_u35avx
-#define Sleef_tanhd4 Sleef_tanhd4_u35avx
-#define Sleef_asind4 Sleef_asind4_u35avx
-#define Sleef_acosd4 Sleef_acosd4_u35avx
-#define Sleef_atand4 Sleef_atand4_u35avx
-#define IGNORENAN NAN0;  // some of these functions produce NaN along the way
-#elif defined(__SSE2__)
-#define Sleef_expd4 Sleef_expd2_u10
-#define Sleef_logd4 Sleef_logd2_u10
-#define Sleef_log2d4 Sleef_log2d2_u35
-#define Sleef_exp2d4 Sleef_exp2d2_u35
-#define Sleef_sind4 Sleef_sind2_u35
-#define Sleef_cosd4 Sleef_cosd2_u35
-#define Sleef_tand4 Sleef_tand2_u35
-#define Sleef_tanhd4 Sleef_tanhd2_u35
-#define Sleef_asind4 Sleef_asind2_u35
-#define Sleef_acosd4 Sleef_acosd2_u35
-#define Sleef_atand4 Sleef_atand2_u35
-#define IGNORENAN NAN0;  // some of these functions produce NaN along the way
-#endif
-
-#endif
-
 
 
 
@@ -1291,7 +1168,8 @@ static __emu_inline __m128d __emu_mm_cmp_pd(__m128d m1, __m128d m2, int predicat
 // for the complete spec for CTTZ and CTTZZ.
 
 #if defined(MMSC_VER)  // SY_WIN32
-#include <intrin.h>
+// do not include intrin.h
+// #include <intrin.h>
 #define CTTZ(w) _tzcnt_u32((UINT)(w))
 #if SY_64
 #define CTTZI(w) _tzcnt_u64((UI)(w))
@@ -1523,10 +1401,8 @@ static __forceinline void aligned_free(void *ptr) {
 #if !defined(C_CRC32C)
 #define C_CRC32C 0
 #endif
-#if (SY_64 && C_AVX)
-#ifdef C_CRC32C
+#if (C_AVX&&SY_64) || EMU_AVX
 #undef C_CRC32C
-#endif
 #define C_CRC32C 1
 #endif
 
@@ -1542,6 +1418,7 @@ static __forceinline void aligned_free(void *ptr) {
 // The following definitions are used only in builds for the AVX instruction set
 // 64-bit Atom cpu in android has hardware crc32c but not AVX
 #if C_CRC32C && (defined(_M_X64) || defined(__x86_64__))
+#if C_AVX || defined(ANDROID)
 #if defined(MMSC_VER)  // SY_WIN32
 // Visual Studio definitions
 #define CRC32(x,y) _mm_crc32_u32(x,y)  // takes UI4, returns UI4
@@ -1551,17 +1428,25 @@ static __forceinline void aligned_free(void *ptr) {
 #define CRC32(x,y) __builtin_ia32_crc32si(x,y)  // returns UI4
 #define CRC32L(x,y) __builtin_ia32_crc32di(x,y)  // returns UI
 #endif
+#elif EMU_AVX
+extern uint64_t crc32csb8(uint64_t crc, uint64_t value);
+extern uint32_t crc32csb4(uint32_t crc, uint32_t value);
+#define CRC32(x,y)  crc32csb4(x,y) // returns UI4
+#define CRC32L(x,y) crc32csb8(x,y) // returns UI
+#endif
 #define CRC32LL CRC32L                 // takes UIL (8 bytes), return UI
 #endif
 
 
 // platform-dependent stuff for AVX
 #if C_CRC32C  // these definitions don't work without AVX
-#if C_AVX&&SY_64
+#if (C_AVX&&SY_64) || EMU_AVX
+#undef VOIDARG
 #define VOIDARG
 #define _mm_set1_epi32_ _mm_set1_epi32   // msvc does not allow redefine intrinsic
 
 #elif defined(__aarch64__)||defined(_M_ARM64)
+#undef VOIDARG
 #define VOIDARG void
 #define _mm256_zeroupper(x)
 #define _mm_setzero_si128() vdupq_n_s16(0)
@@ -1584,7 +1469,9 @@ __ai float64x2_t vreinterpretq_f64_u64(uint64x2_t __p0) {
 #endif /* clang */
 
 #else   /* android with hardware crc32 */
+#undef VOIDARG
 #define VOIDARG void
+#undef _mm256_zeroupper
 #define _mm256_zeroupper(x)
 #ifdef MMSC_VER
 typedef union __declspec(align(16)) __m128i {
@@ -1664,3 +1551,6 @@ static __forceinline __m128i _mm_set1_epi32_(int a) {
 
 #endif  /* !C_AVX */
 #endif  // C_CRC32C
+
+// for debugging
+#define dump_m256i(a,b) {fprintf(stderr,"%s %lli %lli %lli %lli \n", a, ((I*)(&b))[0], ((I*)(&b))[1], ((I*)(&b))[2], ((I*)(&b))[3]);}

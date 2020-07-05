@@ -181,7 +181,7 @@ AHDRR(plusinsD,D,D){I i;D* RESTRICT y;
   NAN0;
   // latency of add is 4, so use 4 accumulators
   if(d==1){
-#if C_AVX&&SY_64
+#if (C_AVX&&SY_64) || EMU_AVX
    redprim256rk1(_mm256_add_pd,0.0)
 #else
    x += m*n; z+=m; DQ(m, D v0=0.0; D v1=0.0; if(((n+1)&3)==0)v1=*--x; D v2=0.0; if(n&2)v2=*--x; D v3=0.0; if(n&3)v3=*--x;

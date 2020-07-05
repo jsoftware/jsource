@@ -123,6 +123,7 @@ common="$OPENMP -fPIC -O2 -fvisibility=hidden -fno-strict-aliasing \
  -Wno-parentheses \
  -Wno-pass-failed \
  -Wno-pointer-sign \
+ -Wno-sometimes-uninitialized \
  -Wno-string-plus-int \
  -Wno-unknown-pragmas \
  -Wno-unsequenced \
@@ -142,6 +143,26 @@ USE_SLEEF="${USE_SLEEF:=0}"
 fi
 if [ $USE_SLEEF -eq 1 ] ; then
 common="$common -DSLEEF=1"
+fi
+
+if [ -z "${jplatform##*raspberry*}" ]; then
+USE_EMU_AVX=0
+elif [ -z "${j64x##*32*}" ]; then
+USE_EMU_AVX=0
+else
+USE_EMU_AVX="${USE_EMU_AVX:=0}"
+fi
+if [ $USE_EMU_AVX -eq 1 ] ; then
+common="$common -DEMU_AVX=1"
+fi
+
+if [ -z "${jplatform##*raspberry*}" ]; then
+USE_IMI_AVX=0
+else
+USE_IMI_AVX="${USE_IMI_AVX:=0}"
+fi
+if [ $USE_IMI_AVX -eq 1 ] ; then
+common="$common -DIMI_AVX=1"
 fi
 
 NO_SHA_ASM="${NO_SHA_ASM:=0}"
@@ -220,7 +241,7 @@ LIBSLEEF=../../../../sleef/lib/linux32/libsleef.a
 
 linux_j64) # linux intel 64bit nonavx
 TARGET=libj.so
-CFLAGS="$common "
+CFLAGS="$common -msse3 -msse4.2 "
 LDFLAGS=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP $LDTHREAD"
 OBJS_AESNI=" aes-ni.o "
 SRC_ASM="${SRC_ASM_LINUX}"

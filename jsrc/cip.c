@@ -101,7 +101,7 @@ l1:
  goto l1;
 }
 #endif
-#if C_AVX && defined(PREFETCH)
+#if (C_AVX || EMU_AVX) && defined(PREFETCH)
 // blocked multiply, processing vertical mx16 strips of y.  Good when y has few rows
 // *av is mxp, *wv is pxn, *zv is mxn
 // flgs is 0 for float, 1 for complex, i. e. lg2(# values per atom), 2 for upper-tri, 4 for INT.  If FLGCMP is set, n and p are even, and give the lengths of the arguments in values
@@ -536,6 +536,7 @@ static I cachedmmultx(J jt,D* av,D* wv,D* zv,I m,I n,I pnom,I pstored,I flgs){D 
 // Result is 0 if error, which must be NaN error
 // For historical reason (i. e. to match the non-AVX2 version) n and p have been multiplied by 2 for complex multiplies
 I cachedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){
+// TODO: bug when EMU_AVX
  int rc=1,i;
  I blocksize,nblocks,(*fn)();  // loop controls
  if(((((50-m)&(50-n)&(16-p)&(DCACHED_THRES-m*n*p))|SGNIF(flgs,FLGCMPX))&SGNIFNOT(flgs,FLGWMINUSZX))>=0){  // blocked for small arrays in either dimension (after threading); not if CMP; force if WMINUSZ (can't be both)
@@ -941,7 +942,7 @@ time1 ,&(x,y)"0 ((256 1e20 1e20 65536 > x*y) # 0 1 2 3) +/ lens
 #endif
 #else
    // not single column.  Choose the algorithm to use
-#if C_AVX && defined(PREFETCH)
+#if (C_AVX || EMU_AVX) && defined(PREFETCH)
     smallprob=0;  // never use Dic method; but used to detect pick up NaN errors
     D *av=DAV(a), *wv=DAV(w), *zv=DAV(z);  //  pointers to sections
     I flgs=((AFLAG(a)>>(AFUPPERTRIX-FLGAUTRIX))&FLGAUTRI)|((AFLAG(w)>>(AFUPPERTRIX-FLGWUTRIX))&FLGWUTRI);  // flags from a or w

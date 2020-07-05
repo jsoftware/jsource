@@ -106,7 +106,7 @@ static I jtebarprep(J jt,A a,A w,A*za,A*zw,I*zc){I ar,at,m,n,t,wr,wt,memlimit;CR
     if   (k==p){for(i=0;i<m&&u[i]==v[k+i];++i); ZFUNC;             } \
    }
 
-#if C_AVX2
+#if C_AVX2 || EMU_AVX2
 // fast scanner.  wn must not be 0, an must be > 1
 // type>>56 is 0 (E.), 1 (+/@E.), 2 (I.@E.), 3 (i.&1@E.), 4(+./@E.)
 // parameter and return interpretation depend on function
@@ -222,7 +222,7 @@ F2(jtebar){PROLOG(0065);A y,z;B*zv;C*av,*wv;I c,d,i,k=0,m,n,p,*yv;
   case -4: R ebarvec(a,w);
  }
  GATV0(z,B01,n,AR(w)); zv=BAV(z); memset(zv,m==0,n); if((-m&-n)>=0)R z;  // if x empty, return all 1s
-#if C_AVX2
+#if C_AVX2 || EMU_AVX2
  if(AT(w)&LIT+B01){jtebar1C(jt, av,wv, m,n,zv,0,0); R z;}
 #endif
  GATV0(y,INT,d,1); yv= AV(y); DO(d, yv[i]=1+m;);
@@ -234,7 +234,7 @@ F2(jtebar){PROLOG(0065);A y,z;B*zv;C*av,*wv;I c,d,i,k=0,m,n,p,*yv;
   case C2TX:      EBLOOP(US,u[i],  v[k+m],   zv[k]=i==m); break;
   case C4TX: if(c)EBLOOP(C4,u[i]-c,v[k+m]-c, zv[k]=i==m) 
             else EBLOOP(C4,u[i],  v[k+m],   zv[k]=i==m); break;
-#if !C_AVX2  
+#if !C_AVX2 && !EMU_AVX2
 default:
             EBLOOP(UC,u[i],  v[k+m],   zv[k]=i==m);
 #endif
@@ -253,7 +253,7 @@ F2(jti1ebar){A y;C*av,*wv;I c,d,i,k=0,m,n,p,*yv;
   case -1: R sc(n);
   case -4: R indexof(ebarvec(a,w),num(1));
  }
-#if C_AVX2
+#if C_AVX2 || EMU_AVX2
  if(AT(w)&LIT+B01)R jtebar1C(jt, av,wv, m,n,0,3LL<<56,0);
 #endif
  GATV0(y,INT,d,1); yv= AV(y); DO(d, yv[i]=1+m;);
@@ -265,7 +265,7 @@ F2(jti1ebar){A y;C*av,*wv;I c,d,i,k=0,m,n,p,*yv;
   case C2TX:      EBLOOP(US,u[i],  v[k+m],   if(i==m)R sc(k)); break;
   case C4TX: if(c)EBLOOP(C4,u[i]-c,v[k+m]-c, if(i==m)R sc(k)) 
             else EBLOOP(C4,u[i],  v[k+m],   if(i==m)R sc(k)); break;
-#if !C_AVX2  
+#if !C_AVX2 && !EMU_AVX2
 default:
        EBLOOP(UC,u[i],  v[k+m],   if(i==m)R sc(k));
 #endif
@@ -283,7 +283,7 @@ F2(jtsumebar){A y;C*av,*wv;I c,d,i,k=0,m,n,p,*yv,z=0;
   case -4: R aslash(CPLUS,ebarvec(a,w));
  }
  if((-m&-n)>=0){R sc(n);}  // empty argument.  If m, it matches everywhere, so use n; if n, it's 0, use it
-#if C_AVX2
+#if C_AVX2 || EMU_AVX2
  if(AT(w)&LIT+B01)R jtebar1C(jt, av,wv, m,n,0,1LL<<56,0);
 #endif
  GATV0(y,INT,d,1); yv= AV(y); DO(d, yv[i]=1+m;);
@@ -295,7 +295,7 @@ F2(jtsumebar){A y;C*av,*wv;I c,d,i,k=0,m,n,p,*yv,z=0;
   case C2TX:      EBLOOP(US,u[i],  v[k+m],   if(i==m)++z); break;
   case C4TX: if(c)EBLOOP(C4,u[i]-c,v[k+m]-c, if(i==m)++z) 
             else EBLOOP(C4,u[i],  v[k+m],   if(i==m)++z); break;
-#if !C_AVX2  
+#if !C_AVX2 && !EMU_AVX2
 default:
        EBLOOP(UC,u[i],  v[k+m],   if(i==m)++z);
 #endif
@@ -313,7 +313,7 @@ F2(jtanyebar){A y;C*av,*wv;I c,d,i,k=0,m,n,p,*yv;
   case -4: R aslash(CPLUSDOT,ebarvec(a,w));
  }
  if((-m&-n)>=0){R num(SGNTO0(-n));}  // empty argument.  If m, it matches everywhere, so use n; if n, it's 0, use it - 0/1 only
-#if C_AVX2
+#if C_AVX2 || EMU_AVX2
  if(AT(w)&LIT+B01)R jtebar1C(jt, av,wv, m,n,0,4LL<<56,0);
 #endif
  GATV0(y,INT,d,1); yv= AV(y); DO(d, yv[i]=1+m;);
@@ -325,7 +325,7 @@ F2(jtanyebar){A y;C*av,*wv;I c,d,i,k=0,m,n,p,*yv;
   case C2TX:      EBLOOP(US,u[i],  v[k+m],   if(i==m)R num(1)); break;
   case C4TX: if(c)EBLOOP(C4,u[i]-c,v[k+m]-c, if(i==m)R num(1)) 
             else EBLOOP(C4,u[i],  v[k+m],   if(i==m)R num(1)); break;
-#if !C_AVX2  
+#if !C_AVX2 && !EMU_AVX2
 default:
        EBLOOP(UC,u[i],  v[k+m],   if(i==m)R num(1));
 #endif
@@ -347,7 +347,7 @@ F2(jtifbebar){A y,z;C*av,*wv;I c,d,i,k=0,m,n,p,*yv,*zu,*zv;
  }
  if((-m&-n)>=0){R icap(ebar(a,w));}  // empty argument.
  GATV0(z,INT,MAX(22,n>>7),1); zv=AV(z); zu=zv+AN(z);
-#if C_AVX2
+#if C_AVX2 || EMU_AVX2
  if(AT(w)&LIT+B01){
    if(m==1){R icap(ebar(a,w));}  // if a is 1 char, we can't use the fast code.  Other forms are checked in vcompsc
    R jtebar1C(jt, av,wv, m,n,CAV(z),2LL<<56,z);

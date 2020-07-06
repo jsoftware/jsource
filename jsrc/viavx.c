@@ -592,8 +592,8 @@ static B jteqa0(J jt,I n,A*u,A*v,I c,I d){PUSHCCT(1.0) B res=1; DQ(n, if(!equ(*u
   setup \
   vp=_mm_set1_epi32_(0);  /* to avoid warnings */ \
   md=mode&IIOPMSK;   /* clear upper flags including REFLEX bit */                                            \
-    /* look for IIDOT/IICO/INUBSV/INUB/INUBI - we set IIMODREFLEX if one of those is set */ \
-  if(!(((uintptr_t)a^(uintptr_t)w)|(ac^wc)))md|=IIMODREFLEX&((((1<<IIDOT)|(1<<IICO)|(1<<INUBSV)|(1<<INUB)|(1<<INUBI))<<IIMODREFLEXX)>>md);  /* remember if this is reflexive, which doesn't prehash */  \
+    /* look for IIDOT/IICO/INUBSV/INUB/INUBI/IFORKEY - we set IIMODREFLEX if one of those is set */ \
+  if(!(((uintptr_t)a^(uintptr_t)w)|(ac^wc)))md|=IIMODREFLEX&((((1<<IIDOT)|(1<<IICO)|(1<<INUBSV)|(1<<INUB)|(1<<INUBI)|(1<<IFORKEY))<<IIMODREFLEXX)>>md);  /* remember if this is reflexive, which doesn't prehash */  \
   if(w==mark){wsct=0;}   /* if prehashing, turn off the second half */                          \
   for(l=0;l<ac;++l,av+=acn,wv+=wcn){                                                 \
    /* zv progresses through the result - for those versions that support IRS */ \
@@ -601,7 +601,7 @@ static B jteqa0(J jt,I n,A*u,A*v,I c,I d){PUSHCCT(1.0) B res=1; DQ(n, if(!equ(*u
    switch(md){                                                                       \
     /* i.~ - one-pass operation.  Fill in the table and result as we go */ \
    case IIDOT|IIMODREFLEX: { XDOP(T,TH,hash,exp,stride,{*zv++=hj;},{*zv++=i;},1);} break;      \
-   case IFORKEY: { XDOP(T,TH,hash,exp,stride,{++zv[hj-i]; *zv++=hj;},{*zv++=i+1;},1);} break;      \
+   case IFORKEY|IIMODREFLEX: { XDOP(T,TH,hash,exp,stride,{++zv[hj-i]; *zv++=hj;},{*zv++=i+1;},1);} break;      \
    case IICO|IIMODREFLEX: {I *zi=zv+=wsct; XDQP(T,TH,hash,exp,stride,{*--zi=hj;},{*--zi=i;},1) } break;      \
     /* normal i./i: - use the table */ \
    case IICO: \
@@ -825,7 +825,7 @@ static IOFX(Z,UI4,jtioz02,, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n)
   __m128d xval, xnew, xrot; SETXNEW \
   vp=_mm_setzero_si128();  /* to avoid warnings */ \
   md=mode&IIOPMSK;   /* clear upper flags including REFLEX bit */                            \
-  if(!(((uintptr_t)a^(uintptr_t)w)|(ac^wc)))md|=(IIMODREFLEX&((((1<<IIDOT)|(1<<IICO)|(1<<INUBSV)|(1<<INUB)|(1<<INUBI))<<IIMODREFLEXX)>>md));  /* remember if this is reflexive, which doesn't prehash */  \
+  if(!(((uintptr_t)a^(uintptr_t)w)|(ac^wc)))md|=(IIMODREFLEX&((((1<<IIDOT)|(1<<IICO)|(1<<INUBSV)|(1<<INUB)|(1<<INUBI)|(1<<IFORKEY))<<IIMODREFLEXX)>>md));  /* remember if this is reflexive, which doesn't prehash */  \
   jx=0;                                                                     \
   for(;ac>0;av+=acn,wv+=wcn,--ac){                                                             \
    if(!(mode&IPHOFFSET)){  /* if we are not using a prehashed table */                                        \
@@ -838,7 +838,7 @@ static IOFX(Z,UI4,jtioz02,, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n)
     /* when we are searching up, we can stop the second search when it gets past the index found in the first search */ \
     case IIDOT: {T * RESTRICT v=wv; I j, hj; I * RESTRICT zi=zv; TDOXY(T,TH,FXY,expa,expw,{},hj>=il,il=hj;,*zi++=il;); zv=zi; } break;  \
     case IIDOT|IIMODREFLEX: {T * RESTRICT v=wv; I j, hj; I * RESTRICT zi=zv; TDOXY(T,TH,FYY,expa,expw,{},hj>=il,il=hj;,*zi++=il;); zv=zi; } break;  \
-    case IFORKEY: {T * RESTRICT v=wv; I j, hj; I * RESTRICT zi=zv; TDOXY(T,TH,FYY,expa,expw,{},hj>=il,il=hj;,*zi=il;zv[il]++;++zi;); zv=zi; } break;  \
+    case IFORKEY|IIMODREFLEX: {T * RESTRICT v=wv; I j, hj; I * RESTRICT zi=zv; TDOXY(T,TH,FYY,expa,expw,{},hj>=il,il=hj;,*zi=il;zv[il]++;++zi;); zv=zi; } break;  \
     case IICO:  {T * RESTRICT v=wv; I j, hj; I * RESTRICT zi; zi=zv+=wsct; TDQXY(T,TH,FXY,expa,expw,{},hj==asct,il=il==asct?hj:il;il=hj>il?hj:il;,*--zi=il;);} break;  \
     case IICO|IIMODREFLEX:  {T * RESTRICT v=wv; I j, hj; I * RESTRICT zi; zi=zv+=wsct; TDQXY(T,TH,FYY,expa,expw,{},hj==asct,il=il==asct?hj:il;il=hj>il?hj:il;,*--zi=il;);} break;  \
     case INUBSV|IIMODREFLEX:{T * RESTRICT v=wv; I j, hj; B * RESTRICT zb=(B*)zv; TDOXY(T,TH,FYY,expa,expw,{},hj>=il,il=hj;,*zb++=i==il;); zv=(I*)zb;} break;  /* zv must keep running */  \
@@ -1291,9 +1291,9 @@ static IOF(jtiobs){A*av,*wv,y;B *yb,*zb;C*zc;I acn,*hu,*hv,l,m1,md,s,wcn,*zi,*zv
  zi=zv=AV(z); zb=(B*)zv; zc=(C*)zv;
  // If a has not been sorted already, sort it
  if(!(mode&IPHOFFSET)){  // if we are not using a presorted table...
-  // look for IIDOT/IICO/INUBSV/INUB/INUBI - we set IIMODREFLEX if one of those is set.  They don't remove dups.
+  // look for IIDOT/IICO/INUBSV/INUB/INUBI/IFORKEY - we set IIMODREFLEX if one of those is set.  They don't remove dups.
   // we don't set REFLEX if there is a prehash, because the prehash always removes dups, and we would be left missing some values
-  if(!(((uintptr_t)a^(uintptr_t)w)|(ac^wc)))md+=IIMODREFLEX&((((1<<IIDOT)|(1<<IICO)|(1<<INUBSV)|(1<<INUB)|(1<<INUBI))<<IIMODREFLEXX)>>md);
+  if(!(((uintptr_t)a^(uintptr_t)w)|(ac^wc)))md+=IIMODREFLEX&((((1<<IIDOT)|(1<<IICO)|(1<<INUBSV)|(1<<INUB)|(1<<INUBI)|(1<<IFORKEY))<<IIMODREFLEXX)>>md);
   RZ(h=nodupgrade(a,(I)h,ac,acn,0,n,asct,md,bk));   // h is used to pass in acr
  }
  if(w==mark)R h;
@@ -1304,7 +1304,7 @@ static IOF(jtiobs){A*av,*wv,y;B *yb,*zb;C*zc;I acn,*hu,*hv,l,m1,md,s,wcn,*zi,*zv
   switch(md){
    // self-indexes
    case IIDOT|IIMODREFLEX:        BSLOOPAA(1,zv[p]=p,zv[q]=p,zv[q]=p=q); zv+=asct;     break;
-   case IFORKEY:      BSLOOPAA(1,zv[p]=p+1,zv[q]=p;zv[p]++,zv[q]=(p=q)+1); zv+=asct;     break;
+   case IFORKEY|IIMODREFLEX:      BSLOOPAA(1,zv[p]=p+1,zv[q]=p;zv[p]++,zv[q]=(p=q)+1); zv+=asct;     break;
    case IICO|IIMODREFLEX:         BSLOOPAA(-1,zv[p]=p,zv[q]=p,zv[q]=p=q); zv+=asct;     break;
    case INUBSV|IIMODREFLEX:       BSLOOPAA(1,zb[p]=1,zb[q]=0,zb[q]=1  ); zb+=asct;     break;
    case INUB|IIMODREFLEX:         BSLOOPAA(1,yb[p]=1,yb[q]=0,yb[q]=1  ); DO(asct, if(yb[i]){MC(zc,av+i*n,k); zc+=k;}); ZCSHAPE; break;
@@ -1724,7 +1724,7 @@ static CR condrange2(US *s,I n,I min,I max,I maxrange){CR ret;I i;US x;
 #define FNTBLSIZE 54  // number of functions - before the second half
 static const AF fntbl[]={
 // prefix: routines used without hashtables, flags, etc
- jtiosc,  // sequential comparison (-1)
+ (AF)jtiosc,  // sequential comparison (-1) - we pass in extra args
 // US tables
  jtioc,jtioc,jtioc,jtioc,jtioi,jtioi,jtioi,jtioi,  // bool, INT
  jtiod,jtioc0,jtiod1,jtioc01,jtio12,jtio22,jtio42,jtioi1,   // FL (then small-range, then ONEINT)
@@ -1796,7 +1796,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
   // TUNE  From testing 8/2019 on SkylakeX, sequential search wins if an<=10 or wn<=7, or an+wn<=40
   if((((an-11)|(wn-8)|(an+wn-41))<0)&&((ar^1)+TYPESXOR(at,wt))==0&&(((1-wr)|SGNIFNOT(mode,IIOREPSX)|(-((acr^1)|(wr^wcr)|((at|wt)&SPARSE)))|(an-1)|(wn-1))>=0)){
    // Fast path for (vector i./i:/e. atom or short vector) - if not prehashing.  Do sequential search
-   I zt=(mode&IEPS)?B01:INT;  // the result type depends on the operation.  The test relies on the fact that EPS does not overlap IDOT or ICO
+   I zt=((mode&IIOPMSK)==IEPS)?B01:INT;  // the result type depends on the operation.
    A z; GA(z,zt,wn,wr,ws);
    jtiosc(jt,mode,1,an,wn,1,1,a,w,z); // simple sequential search without hashing.
    RETF(z);
@@ -1925,7 +1925,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
    if(t&BOX){I t1; fnx=(fnx&1)&&(1<n||usebs(a,ac,m))?FNTBLBOXSSORT:1<n?FNTBLBOXARRAY:(fnx&1)?FNTBLBOXINTOLERANT:
              (t1=utype(a,ac))&&((mode&IPHCALC)||a==w||TYPESEQ(t1,utype(w,wc)))?FNTBLBOXUNIFORM:FNTBLBOXUNKNOWN;
    }else fnx=CTTZ(t)+(FNTBLXNUM-XNUMX);
-  }else if(1==k)           {p=t&B01?2:256;datamin=0; mode|=IIMODFULL; fnx=FNTBLSMALL1;}   // 1-byte ops, just use small-range code: checking takes too much time
+  }else if(1==k){p=t&B01?2:256;datamin=0; mode|=IIMODFULL; fnx=FNTBLSMALL1;}   // 1-byte ops, just use small-range code: checking takes too much time
   else{
    // We might switch over to small-range mode, if the sizes are right.  See how big the hash table would be for full hashing
    // figure out whether we should use small-range matching or hashing.  We use small-range code if:
@@ -1972,22 +1972,29 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
     }
    }
   }
+  I fmods = fnflags[fnx];  // fetch flags for this type.  This will be simplified when we finish tolerant hash. -1 means old hash, -2 means no hash
   if(!p){  // If we selected small-range hashing, we have decided everything by analyzing the input; keep that.  Otherwise choose m or c depending on fwd/reverse hash
    // We know which type of hashing to use, and now we need to decide between forward and reverse hashing.  We use reverse hashing if the
    // type we have selected supports it, and if w is much shorter than a.  The operation must be i./i:/e., and we must not be prehashing
    p=m;
-   if(((m>>1)>c) && (mode&IIOREPS) && fntbl[FNTABLEPREFIX+fnx+FNTBLREVERSE]){p=c; fnx+=FNTBLREVERSE;}
+   if(((m>>1)>c) && (mode&IIOREPS) && fntbl[FNTABLEPREFIX+fnx+FNTBLREVERSE]){
+    p=c; fnx+=FNTBLREVERSE;
+    fmods = fnflags[fnx];  // refetch flags
+   }
    // set p based on the length of the argument being hashed
    if((SGNIF(t,B01X)&(k-(BW-1)))<0){p=MIN(p,(UI)((I)1)<<k);}  // Get max # different possible values to hash; the number of items, but less than that for short booleans
    // Find the best hash size, based on empirical studies.  Allow at least 3x hashentries per input value; if that's less than the size of the small hash, go to the limit of
    // the small hash.  But not more than 10 hashtable entries per input (to save time clearing)
    {UI op=p*10; op=p>=SMALLHASHMAX/10?IMAX-5:op; p=p>(IMAX-5)/3?(IMAX-5)/3:p; p*=3; p=p<SMALLHASHMAX?SMALLHASHMAX:p; p=p>op?op:p;}
+  }else if((mode&IIOPMSK)==IFORKEY){
+   // We are processing on behalf of key, and we decided to do small-range processing.  Key can do better by
+   // creating and processing the small-range table itself, so we will let it do that.  We return a special short block (LSB=1)
+   // that indicates the length of the key (AN) and the start and range of the keys (AK and AM)
+   A z; GAT0(z,INT,1,0); AN(z)=k; AK(z)=datamin; AM(z)=p;  // allocate and return
+   RETF((A)((I)z+1));  // return the tagged address
   }
 // testing  p = (UI)MIN(IMAX-5,(HASHFACTOR*p));  // length we will use for hashtable, if small-range not used
 
-
-
-  I fmods = fnflags[fnx];  // fetch flags for this type.  This will be simplified when we finish tolerant hash. -1 means old hash, -2 means no hash
   // if a hashtable will be needed, allocate it.  It is NOT initialized
   // the hashtable is INT unless we have selected small-range hashing AND we are not looking for the index with i. or i:; then boolean is enough
   if(fmods>=0){IH * RESTRICT hh;
@@ -2106,6 +2113,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
   // We also handle the case of i.&0@:e. when the rank of w is more than 1 greater than the rank of a cell of a;
   // in that case the search always fails
   case IIDOT:   R reshape(shape(z),sc(n?m:0  ));
+  case IFORKEY: R reshape(shape(z),take(sc(m),sc(m)));  // all 0 but the first has the total count
   case IICO:    R reshape(shape(z),sc(n?m:m-1));
   case INUBSV:  R reshape(shape(z),take(sc(m),num(1)));
   case INUB:    AN(z)=0; *AS(z)=m?1:0; R z;

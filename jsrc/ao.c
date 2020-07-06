@@ -191,20 +191,23 @@ static DF2(jtkeysp){PROLOG(0008);A b,by,e,q,x,y,z;I j,k,n,*u,*v;P*p;
 }
 
 // a u/. w.  Self-classify a, then rearrange w and call cut
-static DF2(jtkey){F2PREFIP;PROLOG(0009);A frets,wperm,z;
+static DF2(jtkey){F2PREFIP;PROLOG(0009);A frets,wperm,ai,z;I nitems;
  RZ(a&&w);
- {I t1,t2; ASSERT(SETIC(a,t1)==SETIC(w,t2),EVLENGTH);}  // verify agreement
+ {I t2; ASSERT(SETIC(a,nitems)==SETIC(w,t2),EVLENGTH);}  // verify agreement.  nitems is # items of a
  if(SPARSE&AT(a))R keysp(a,w,self);  // if sparse, go handle it
- RZ(a=indexof(a,a));  makewritable(a); // self-classify the input using ct set before this verb; we are going to modify a, so make sure it's not virtual
+// obsolete  RZ(a=indexof(a,a));  // self-classify the input using ct set before this verb; we are going to modify a, so make sure it's not virtual
+ RZ(ai=indexofsub(IFORKEY,a,a));  // self-classify the input using ct set before this verb
+ // indexofsub has 2 returns: most of the time, it returns a normal i.-family result, but with each slot holding the index PLUS the number of values
+ // mapped to that index.  If processing determines that small-range lookup would be best, indexofsub doesn't do it, but instead returns a block giving the size, min value, and range.
+ // We then allocate and run the small-range table and use it to rearrange the input.  The small-range variant is signaled by the LSB of the result
+ // of indexofsub being set.
  PUSHCCT(jt->cctdefault);  // now that partitioning is over, reset ct for the executions of u
+
  // Allocate the area for the reordered copy of the input.  Do these calls early to free up registers for the main loop
  GA(wperm,AT(w),AN(w),AR(w),AS(w)); // Note we could avoid initialization of indirect types, since we are filling it all
  I celllen; PROD1(celllen,AR(w)-1,AS(w)+1); celllen <<= bplg(AT(w));  // length of a cell of w, in bytes
- I nitems=AN(a);
  I nfrets=0;  // We will accumulate # frets found
- UC *fretp;  // pointer to where frets are built
 
- // pass through the input, incrementing each reference
  // If y is inplaceable we can probably use it to store the frets, since it is copied sequentially.  The requirements are:
  // The fret area must start at least 5 bytes before the data in y, to leave space for the first fret before the first cell of y is moved (i. e. rank>0 for 64-bit, >1 for 32-bit)
  // The cells must be at least 5 bytes long so that the frets don't overrun them
@@ -212,37 +215,90 @@ static DF2(jtkey){F2PREFIP;PROLOG(0009);A frets,wperm,z;
  // The cells must be DIRECT type so that it is OK to write garbage over them
  // We are taking advantage here of the fact that the shape comes before the cells in a standard GA noun
  // We don't have to worry about a==w because a has already been modified
+// scaf kludge when we get # frets from indexofsub, allocate the # frets needed
  if((I)jtinplace&(I )((AFLAG(w)&(AFVIRTUAL|AFNJA))==0)&((UI)((-(I )(AT(w)&DIRECT))&AC(w)&(4-celllen)&((I )(SZI==4)-AR(w)))>>(BW-1-JTINPLACEWX)))frets=w; else GATV0(frets,LIT,nitems,0);   // 1 byte per fret is adequate
- I *av=IAV(a);  // av->a data
- {I *av2, *avend=av+nitems; for(av2=av;av2!=avend;++av2)++av[*av2];}  // first time the root of the partition points to & increments itself
- // Now each item av[i] is either (1) smaller than i, which means that it is extending a previous key; or (2) greater than i, which
- // means it starts a new partition whose length is a[i]-i.  Process the values in order, creating partitions as they come up, and
- // moving the data for each input value in turn, reading in order and scatter-writing.
- fretp=CUTFRETFRETS(frets);  // Place where we will store the fret-lengths.  They are 1 byte normally, or 5 bytes for groups longer than 254
- I i; I nextpartitionx;  // loop index, address of place to store next partition
- I * RESTRICT wv=IAV(w);   // source & target pointers
- for(i=0, nextpartitionx=(I)IAV(wperm);i<nitems;++i){
-  I * RESTRICT partitionptr;  // pointer to where output will go
-  I avvalue=av[i];  // fetch partition length/index
-  if(avvalue<i){  // this value extends its partition
-   partitionptr=(I*)av[avvalue];  // addr of end of selected partition
-  }else{
-   // start of new partition.  Figure out the length; out new partition; replace length with starting pointer; Use length to advance partition pointer
-   avvalue-=i;  // length of partition
-   if(avvalue<255)*fretp++ = (UC)avvalue; else{*fretp++ = 255; *(UI4*)fretp=(UI4)avvalue; fretp+=SZUI4; nfrets-=SZUI4;}
-   partitionptr=(I*)nextpartitionx;  // copy this item's data to the start of the partition
-   nextpartitionx+=avvalue*celllen;  // reserve output space for the partition
-   avvalue=i;   // shift meaning of avvalue from length to index, where the partition pointer will be stored
+ UC *fretp=CUTFRETFRETS(frets);  // Place where we will store the fret-lengths.  They are 1 byte normally, or 5 bytes for groups longer than 254
+
+ if(!((I)ai&1)){
+  // NOT small-range processing: go through the index+size table to create the frets and reordered data for passing to cut
+  makewritable(ai);  // we modify the size+index info to be running endptrs into the reorder area
+  // pass through the input, incrementing each reference
+  I *av=IAV(ai);  // av->a data
+ #if 0  // obsolete
+  {I *av2, *avend=av+nitems; for(av2=av;av2!=avend;++av2)++av[*av2];}  // first time the root of the partition points to & increments itself
+ #endif
+  // Now each item av[i] is either (1) smaller than i, which means that it is extending a previous key; or (2) greater than i, which
+  // means it starts a new partition whose length is a[i]-i.  Process the values in order, creating partitions as they come up, and
+  // moving the data for each input value in turn, reading in order and scatter-writing.
+  I i; I nextpartitionx;  // loop index, address of place to store next partition
+  I * RESTRICT wv=IAV(w);   // source & target pointers
+  for(i=0, nextpartitionx=(I)IAV(wperm);i<nitems;++i){
+   I * RESTRICT partitionptr;  // pointer to where output will go
+   I avvalue=av[i];  // fetch partition length/index
+   if(avvalue<i){  // this value extends its partition
+    partitionptr=(I*)av[avvalue];  // addr of end of selected partition
+   }else{
+    // start of new partition.  Figure out the length; out new partition; replace length with starting pointer; Use length to advance partition pointer
+    avvalue-=i;  // length of partition
+    if(avvalue<255)*fretp++ = (UC)avvalue; else{*fretp++ = 255; *(UI4*)fretp=(UI4)avvalue; fretp+=SZUI4; nfrets-=SZUI4;}
+    partitionptr=(I*)nextpartitionx;  // copy this item's data to the start of the partition
+    nextpartitionx+=avvalue*celllen;  // reserve output space for the partition
+    avvalue=i;   // shift meaning of avvalue from length to index, where the partition pointer will be stored
+   }
+
+   // copy the data to the end of its partition and advance the partition pointer
+   if(celllen<MEMCPYTUNELOOP) {  // copy by hand if that's faster (0 len OK)
+    I n=celllen; while((n-=SZI)>=0){*partitionptr++=*wv++;}
+      // move full words.  Must not overwrite the area, since we are scatter-writing.
+    if(n&(SZI-1)){STOREBYTES(partitionptr,*wv,-n); partitionptr = (I*)((C*)partitionptr+SZI+n); wv = (I*)((C*)wv+SZI+n);}  // Use test because this code is repeated
+   }else{MC(partitionptr,wv,celllen); partitionptr = (I*)((C*)partitionptr+celllen); wv = (I*)((C*)wv+celllen);}
+
+   av[avvalue]=(I)partitionptr;  // store updated end-of-partition after move
   }
+ }else{I *av;  // running pointer through the inputs
+  // indexofsub detected that small-range processing is in order.  Information about the range is secreted in fields of a
+  ai=(A)((I)ai-1); I k=AN(ai); I datamin=AK(ai); I p=AM(ai);  // get size of an item, smallest item, range+1
+  // allocate a tally area and clear it
+  A ftbl; GATV0(ftbl,INT,p,1); I *ftblv=IAV(ftbl); memset(ftblv,0,p<<LGSZI);
+  // pass through the inputs, counting the negative of the number of slots mapped to each index
+  I valmsk=(UI)~0LL>>(((-k)&(SZI-1))<<LGBB);  // mask to leave the k lowest bytes valid
+  ftblv-=datamin;  // bias starting addr so that values hit the table
+  av=IAV(a); DQ(nitems, ftblv[*av&valmsk]--; av=(I*)((I)av+k);)   // build (negative) frequency table
 
-  // copy the data to the end of its partition and advance the partition pointer
-  if(celllen<MEMCPYTUNELOOP) {  // copy by hand if that's faster (0 len OK)
-   I n=celllen; while((n-=SZI)>=0){*partitionptr++=*wv++;}
-     // move full words.  Must not overwrite the area, since we are scatter-writing.
-   if(n&(SZI-1)){STOREBYTES(partitionptr,*wv,-n); partitionptr = (I*)((C*)partitionptr+SZI+n); wv = (I*)((C*)wv+SZI+n);}  // Use test because this code is repeated
-  }else{MC(partitionptr,wv,celllen); partitionptr = (I*)((C*)partitionptr+celllen); wv = (I*)((C*)wv+celllen);}
+  // pass through the inputs again.  If we encounter a negative value, allocate the next fret.  Copy the next item and advance
+  // that partition's fret pointer
+  // Now each item ftblv[av[i]] is either (1) nonnegative, which means that it is extending a previous key; or (2) negative, which
+  // means it starts a new partition whose length is -ftblv[av[i]].  Process the values in order, creating partitions as they come up, and
+  // moving the data for each input value in turn, reading in order and scatter-writing.
 
-  av[avvalue]=(I)partitionptr;  // store updated end-of-partition after move
+  I i; I nextpartitionx;  // loop index, index of place to store next partition
+  I * RESTRICT wv=IAV(w);   // source pointer
+  C * RESTRICT wpermv=CAV(wperm);  // addr of output area
+  for(av=IAV(a), i=nitems, nextpartitionx=0;i;--i){
+   I partitionndx;  // index of where thisoutput will go
+   I *slotaddr=&ftblv[*av&valmsk];  // the slot in the table we are processing
+   I avvalue=*slotaddr;  // fetch input value, mask to valid portion, fetch partition length/index
+   if(avvalue>=0){  // this value extends its partition
+    partitionndx=avvalue;  // index of current value in selected partition
+   }else{
+    // start of new partition.  Figure out the length; out new partition; replace length with starting pointer; Use length to advance partition pointer
+    avvalue= -avvalue;  // length of partition
+    if(avvalue<255)*fretp++ = (UC)avvalue; else{*fretp++ = 255; *(UI4*)fretp=(UI4)avvalue; fretp+=SZUI4; nfrets-=SZUI4;}
+    partitionndx=nextpartitionx;  // copy this item's data to the start of the partition
+    nextpartitionx+=avvalue;  // reserve output space for the partition
+   }
+
+   I *partitionptr=(I*)(wpermv+partitionndx*celllen);  // place to copy next input to
+   // copy the data to the end of its partition and advance the partition pointer
+   if(celllen<MEMCPYTUNELOOP) {  // copy by hand if that's faster (0 len OK)
+    I n=celllen; while((n-=SZI)>=0){*partitionptr++=*wv++;}
+      // move full words.  Must not overwrite the area, since we are scatter-writing.
+    if(n&(SZI-1)){STOREBYTES(partitionptr,*wv,-n); wv = (I*)((C*)wv+SZI+n);}  // Use test because this code is repeated
+   }else{MC(partitionptr,wv,celllen); wv = (I*)((C*)wv+celllen);}
+
+   *slotaddr=partitionndx+1;  // store updated next-in-partition after move
+   av=(I*)((I)av+k);  // advance to next input value
+  }
  }
 
  // Frets are calculated and w is reordered.  Call cut to finish the job.  We have to store the count and length of the frets

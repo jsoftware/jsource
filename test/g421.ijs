@@ -18,6 +18,7 @@ prefix =: 1 : '>:@,.@i.@# x@{. ]'
 suffix =: 1 : ',.@i.@#    x@}. ]'
 
 key    =: 1 : '=@[ x@# ]'
+key0   =: 1 : '=!.0@[ x@# ]'
 
 osub   =: >@]`(>@[ >@:{ ]) @. (*@#@])
 oind   =: (+/&i./ </.&, i.)@(2&{.)@(,&1 1)@$
@@ -240,6 +241,31 @@ a=:x{~?11 3$#x=:(1=?70$3)<;.1 ?70$110
 k (</. -: < key) a      [ k=:?11$4
 k (]/. -: ] key) a      [ k=:?11$4
 
+NB. Check different types of key-searches
+NB. Intolerant
+a=:?120 5$110
+k (</.  -: < key) a     [ k=:(#a)?@$1e8
+k (</.  -: < key) a     [ k=:a. {~ ((#a),2)?@$#a.
+k (</.  -: < key) a     [ k=:a. {~ ((#a),3)?@$#a.
+k (</.  -: < key) a     [ k=:a. {~ ((#a),4)?@$#a.
+k (</.  -: < key) a     [ k=:a. {~ ((#a),5)?@$#a.
+k (</.  -: < key) a     [ k=:4 u: (#a)?@$65536
+k (</.  -: < key) a     [ k=:10 u: (#a)?@$1e6
+k (</.!.0  -: < key0) a [ k=:0.5+(#a)?@$1e8
+k (</.!.0  -: < key0) a [ k=:j.~ (#a)?@$1e8
+NB. Tolerant
+k (</.  -: < key) a     [ k=:(#a)?@$0
+k (</.  -: < key) a     [ k=:j.~ (#a)?@$0
+NB. Small-range
+k (</.  -: < key) a     [ k=:(#a)?@$100
+k (</.  -: < key) a     [ k=:_1000 + (#a)?@$100
+k (</.  -: < key) a     [ k=:1000 + (#a)?@$100
+NB. Boxed
+k (</.  -: < key) a     [ k=:('abc' ;~ ])&.> 1000 + (#a)?@$100
+NB. Sequential
+a=:?10 5$110
+k (</.  -: < key) a     [ k=:(#a)?@$100
+
 NB. Verify inplacing
 NB. We can't reliably check the sizes because the call to i. allocates memory; also there are differences dep. type of result of u/.
 NB. IF64 = '(0: + 0:/.~) +: a' (> 10000&+)&(7!:2) '0:/.~ +: a' [ a =: 10000 ?@$ 400   NB. The right side inplaces (64-bit only)
@@ -355,7 +381,7 @@ NB. Type of empty result
 2 -: 3!:0 ] 5 ]\ 'abc'
 
 4!:55 ;:'a adot1 adot2 sdot0 base bs bsd conv conv1 em en eq iind infix k '
-4!:55 ;:'kay key n ob oind omask osub outfix pconv pconv1 prefix pru x yx yy'
+4!:55 ;:'kay key key0 n ob oind omask osub outfix pconv pconv1 prefix pru x yx yy'
 4!:55 ;:'s sd seg suffix t test xx ' 
 randfini''
 

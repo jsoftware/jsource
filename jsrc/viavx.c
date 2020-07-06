@@ -1724,35 +1724,35 @@ static CR condrange2(US *s,I n,I min,I max,I maxrange){CR ret;I i;US x;
 #define FNTBLSIZE 54  // number of functions - before the second half
 static const AF fntbl[]={
 // prefix: routines used without hashtables, flags, etc
- jtiosc,  // sequential comparison (-1)
+ (AF)jtiosc,  // sequential comparison (-1)
 // US tables
- jtioc,jtioc,jtioc,jtioc,jtioi,jtioi,jtioi,jtioi,  // bool, INT
- jtiod,jtioc0,jtiod1,jtioc01,jtio12,jtio22,jtio42,jtioi1,   // FL (then small-range, then ONEINT)
- jtioz,jtioz0,jtioz1,jtioz01,   // CMPX
+ (AF)jtioc,(AF)jtioc,(AF)jtioc,(AF)jtioc,(AF)jtioi,(AF)jtioi,(AF)jtioi,(AF)jtioi,  // bool, INT
+ (AF)jtiod,(AF)jtioc0,(AF)jtiod1,(AF)jtioc01,(AF)jtio12,(AF)jtio22,(AF)jtio42,(AF)jtioi1,   // FL (then small-range, then ONEINT)
+ (AF)jtioz,(AF)jtioz0,(AF)jtioz1,(AF)jtioz01,   // CMPX
 
- jtioa,jtioax1,jtioau,jtioa1,  // atomic types
- jtiox,jtioq,
- jtiobs,
+ (AF)jtioa,(AF)jtioax1,(AF)jtioau,(AF)jtioa1,  // atomic types
+ (AF)jtiox,(AF)jtioq,
+ (AF)jtiobs,
  
- jtiowc,jtiowc,jtiowc,jtiowc,jtiowi,jtiowi,jtiowi,jtiowi,  // bool, INT
- 0,jtiowc0,0,jtiowc01,0,0,jtio42w,jtiowi1,   // FL (then small-range, then ONEINT)
- 0,jtiowz0,0,jtiowz01,   // CMPX
+ (AF)jtiowc,(AF)jtiowc,(AF)jtiowc,(AF)jtiowc,(AF)jtiowi,(AF)jtiowi,(AF)jtiowi,(AF)jtiowi,  // bool, INT
+ 0,(AF)jtiowc0,0,(AF)jtiowc01,0,0,(AF)jtio42w,(AF)jtiowi1,   // FL (then small-range, then ONEINT)
+ 0,(AF)jtiowz0,0,(AF)jtiowz01,   // CMPX
  0,0,0,0,
  0,0,
  0,
 
 // UI4 tables
- jtioc2,jtioc2,jtioc2,jtioc2,jtioi2,jtioi2,jtioi2,jtioi2,  // bool, INT
- jtiod2,jtioc02,jtiod12,jtioc012,jtio14,jtio24,jtio44,jtioi12,   // FL (then small-range, then ONEINT)
- jtioz2,jtioz02,jtioz12,jtioz012,   // CMPX
+ (AF)jtioc2,(AF)jtioc2,(AF)jtioc2,(AF)jtioc2,(AF)jtioi2,(AF)jtioi2,(AF)jtioi2,(AF)jtioi2,  // bool, INT
+ (AF)jtiod2,(AF)jtioc02,(AF)jtiod12,(AF)jtioc012,(AF)jtio14,(AF)jtio24,(AF)jtio44,(AF)jtioi12,   // FL (then small-range, then ONEINT)
+ (AF)jtioz2,(AF)jtioz02,(AF)jtioz12,(AF)jtioz012,   // CMPX
 
- jtioa2,jtioax12,jtioau2,jtioa12,  // atomic types
- jtiox2,jtioq2,
- jtiobs,
+ (AF)jtioa2,(AF)jtioax12,(AF)jtioau2,(AF)jtioa12,  // atomic types
+ (AF)jtiox2,(AF)jtioq2,
+ (AF)jtiobs,
 
- jtiowc2,jtiowc2,jtiowc2,jtiowc2,jtiowi2,jtiowi2,jtiowi2,jtiowi2,  // bool, INT
- 0,jtiowc02,0,jtiowc012,0,0,jtio44w,jtiowi12,   // FL (then small-range, then ONEINT)
- 0,jtiowz02,0,jtiowz012   // CMPX
+ (AF)jtiowc2,(AF)jtiowc2,(AF)jtiowc2,(AF)jtiowc2,(AF)jtiowi2,(AF)jtiowi2,(AF)jtiowi2,(AF)jtiowi2,  // bool, INT
+ 0,(AF)jtiowc02,0,(AF)jtiowc012,0,0,(AF)jtio44w,(AF)jtiowi12,   // FL (then small-range, then ONEINT)
+ 0,(AF)jtiowz02,0,(AF)jtiowz012   // CMPX
 
 };
 static const S fnflags[]={  // 0 values reserved for small-range.  They turn off booladj

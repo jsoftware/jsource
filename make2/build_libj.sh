@@ -241,7 +241,7 @@ LIBSLEEF=../../../../sleef/lib/linux32/libsleef.a
 
 linux_j64) # linux intel 64bit nonavx
 TARGET=libj.so
-CFLAGS="$common -msse3 -msse4.2 "
+CFLAGS="$common -msse3 "
 LDFLAGS=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP $LDTHREAD"
 OBJS_AESNI=" aes-ni.o "
 SRC_ASM="${SRC_ASM_LINUX}"
@@ -304,7 +304,7 @@ LIBSLEEF=../../../../sleef/lib/darwin32/libsleef.a
 
 darwin_j64) # darwin intel 64bit nonavx
 TARGET=libj.dylib
-CFLAGS="$common $macmin"
+CFLAGS="$common $macmin -msse3 "
 LDFLAGS=" -dynamiclib -lm -ldl $LDOPENMP $LDTHREAD $macmin"
 OBJS_AESNI=" aes-ni.o "
 SRC_ASM="${SRC_ASM_MAC}"
@@ -369,7 +369,7 @@ if [ $jolecom -eq 1 ] ; then
 DOLECOM="-DOLECOM"
 fi
 TARGET=j.dll
-CFLAGS="$common $DOLECOM -D_FILE_OFFSET_BITS=64 -D_JDLL "
+CFLAGS="$common -msse3 $DOLECOM -D_FILE_OFFSET_BITS=64 -D_JDLL "
 LDFLAGS=" -shared -Wl,--enable-stdcall-fixup -lm -static-libgcc -static-libstdc++ $LDOPENMP $LDTHREAD"
 if [ $jolecom -eq 1 ] ; then
 DLLOBJS=" jdll.o jdllcomx.o "

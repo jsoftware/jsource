@@ -125,6 +125,16 @@ static __emu_inline __emu__m256i __emu_mm256_slli_epi64 ( __emu__m256i a, int im
     return A.emu__m256i;
 }
 
+static __emu_inline __emu__m256i __emu_mm256_srli_epi64 ( __emu__m256i a, int imm )
+{
+    __emv__m256i A;
+    __emv__m256i av;
+    av.emu__m256i = a;
+    A.__emu_m128[0] = _mm_srli_epi64( av.__emu_m128[0], imm);
+    A.__emu_m128[1] = _mm_srli_epi64( av.__emu_m128[1], imm);
+    return A.emu__m256i;
+}
+
 __EMU_M256_IMPL_M2( __m256i, cmpgt_epi64 );
 __EMU_M256_IMPL_M2( __m256i, add_epi64 );
 __EMU_M256_IMPL_M2( __m256i, sub_epi64 );
@@ -135,6 +145,7 @@ __EMU_M256_IMPL_M2( __m256, add_ps );
 __EMU_M256_IMPL_M2( __m256i, cmpeq_epi8 );
 __EMU_M256_IMPL_M2( __m256i, cmpeq_epi64 );
 __EMU_M256_IMPL_M2( __m256i, mul_epu32 );
+__EMU_M256_IMPL_M2( __m256i, sub_epi8 );
 __EMU_M256_128_IMPL_M2( __m256i, and_si  );
 __EMU_M256_128_IMPL_M2( __m256i, xor_si  );
 __EMU_M256_128_IMPL_M2( __m256i, or_si  );
@@ -266,7 +277,9 @@ __emu_maskstore_impl( __emu_mm256_maskstore_epi64, __emu__m256i, __emu__m256i, _
 #undef _mm256_or_si256
 #undef _mm256_permute2x128_si256
 #undef _mm256_slli_epi64
+#undef _mm256_srli_epi64
 #undef _mm256_sub_epi64
+#undef _mm256_sub_epi8
 #undef _mm256_xor_si256
 
 #define _mm256_add_epi64 __emu_mm256_add_epi64
@@ -285,7 +298,9 @@ __emu_maskstore_impl( __emu_mm256_maskstore_epi64, __emu__m256i, __emu__m256i, _
 #define _mm256_or_si256 __emu_mm256_or_si256
 #define _mm256_permute2x128_si256 __emu_mm256_permute2x128_si256
 #define _mm256_slli_epi64 __emu_mm256_slli_epi64
+#define _mm256_srli_epi64 __emu_mm256_srli_epi64
 #define _mm256_sub_epi64 __emu_mm256_sub_epi64
+#define _mm256_sub_epi8 __emu_mm256_sub_epi8
 #define _mm256_xor_si256 __emu_mm256_xor_si256
 
 #endif /* __EMU_M256AVX2_NOMAP */

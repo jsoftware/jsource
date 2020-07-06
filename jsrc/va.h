@@ -332,14 +332,14 @@ AHDR2(name,D,D,D){ \
 // n and m are never 0.
 #if 0 // waiting till me learn how to XCTL
 static void f##1(J jt,I m,void* RESTRICTI z,void* RESTRICTI x,void* RESTRICTI y){I u,v; \
- if(C_AVX&&SY_64){__m256i u256,v256; \
+ if((C_AVX&&SY_64)||EMU_AVX){__m256i u256,v256; \
   __m256i bool256=_mm256_set1_epi64x(0x0101010101010101); /* valid boolean bits */ \
   __m256i workarea; workarea=_mm256_xor_si256(bool256,bool256); /* temp, init to avoid warning */ \
   DQ((m-1)>>(LGSZI+LGNPAR), u256=_mm256_loadu_si256((__m256i*)x); v256=_mm256_loadu_si256((__m256i*)y); \
    _mm256_storeu_si256((__m256i*)z, fuv); x=(C*)x+NPAR*SZI; y=(C*)y+NPAR*SZI; z=(C*)z+NPAR*SZI; \
   ) \
  } \
- DQ(((m-1)>>LGSZI)&(C_AVX&&SY_64?(NPAR-1):-1), u=*(I*)x; v=*(I*)y; *(I*)z=pfx(u,v); x=(C*)x+SZI; y=(C*)y+SZI; z=(C*)z+SZI;);           \
+ DQ(((m-1)>>LGSZI)&(((C_AVX&&SY_64)||EMU_AVX)?(NPAR-1):-1), u=*(I*)x; v=*(I*)y; *(I*)z=pfx(u,v); x=(C*)x+SZI; y=(C*)y+SZI; z=(C*)z+SZI;);           \
  u=*(I*)x; v=*(I*)y; u=pfx(u,v); STOREBYTES(z,u,(-m)&(SZI-1));  \
 }
 #endif
@@ -406,7 +406,7 @@ AHDR2(f,void,void,void){ I u,v;       \
  R EVOK; \
 }
 
-#if C_AVX2
+#if C_AVX2 || EMU_AVX2
 #define BPFXAVX2(f,pfx,bpfx,pfyx,bpfyx,fuv,decls,decls256) BPFX(f,pfx,bpfx,pfyx,bpfyx,fuv,decls,decls256)
 #else
 #define BPFXAVX2(f,pfx,bpfx,pfyx,bpfyx,fuv,decls,decls256) BPFXNOAVX(f,pfx,bpfx,pfyx,bpfyx,fuv,decls,decls256)

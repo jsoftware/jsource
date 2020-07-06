@@ -362,7 +362,7 @@ F2(jtifbebar){A y,z;C*av,*wv;I c,d,i,k=0,m,n,p,*yv,*zu,*zv;
   case C2TX:      EBLOOP(US,u[i],  v[k+m],   if(i==m)IFB1); break;
   case C4TX: if(c)EBLOOP(C4,u[i]-c,v[k+m]-c, if(i==m)IFB1)
             else EBLOOP(C4,u[i],  v[k+m],   if(i==m)IFB1); break;
-#if !C_AVX2  
+#if !C_AVX2 && !EMU_AVX2
 default:
        EBLOOP(UC,u[i],  v[k+m],   if(i==m)IFB1);
 #endif

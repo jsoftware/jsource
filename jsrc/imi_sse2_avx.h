@@ -157,7 +157,7 @@ static __emu_inline __m128d __emu_mm_cmp_pd(__m128d m1, __m128d m2, int predicat
 #else
 #define __emu_mm_cmp_pd(m1, m2, predicate) \
 ({ \
-    __m128 res_ = (m1), m2_ = (m2); \
+    __m128d res_ = (m1), m2_ = (m2); \
     if ( 7 < (unsigned)predicate ) __asm__ __volatile__ ( "ud2" : : : "memory" ); /* not supported yet */ \
     __asm__ ( "cmppd %[pred_], %[m2_], %[res_]" : [res_] "+x" (res_) : [m2_] "xm" (m2_), [pred_] "i" (predicate) ); \
     res_; })

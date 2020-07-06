@@ -145,18 +145,16 @@ if [ $USE_SLEEF -eq 1 ] ; then
 common="$common -DSLEEF=1"
 fi
 
-if [ -z "${jplatform##*raspberry*}" ]; then
-USE_EMU_AVX=0
-elif [ -z "${j64x##*32*}" ]; then
+if [ -z "${j64x##*32*}" ]; then
 USE_EMU_AVX=0
 else
-USE_EMU_AVX="${USE_EMU_AVX:=0}"
+USE_EMU_AVX="${USE_EMU_AVX:=1}"
 fi
 if [ $USE_EMU_AVX -eq 1 ] ; then
 common="$common -DEMU_AVX=1"
 fi
 
-if [ -z "${jplatform##*raspberry*}" ]; then
+if [ -z "${j64x##*32*}" ] && [ -z "${jplatform##*raspberry*}" ]; then
 USE_IMI_AVX=0
 else
 USE_IMI_AVX="${USE_IMI_AVX:=0}"

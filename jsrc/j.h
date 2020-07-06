@@ -491,7 +491,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define IPHALLEPS       (IPHOFFSET+IALLEPS)
 #define IPHIFBEPS       (IPHOFFSET+IIFBEPS)
 
-#if C_AVX || EMU_AVX
+#if C_AVX   // _mm_round_pd requires sse4.1
 #define jceil(x) _mm_cvtsd_f64(_mm_round_pd(_mm_set1_pd(x),(_MM_FROUND_TO_POS_INF |_MM_FROUND_NO_EXC)))
 #define jfloor(x) _mm_cvtsd_f64(_mm_round_pd(_mm_set1_pd(x),(_MM_FROUND_TO_NEG_INF |_MM_FROUND_NO_EXC)))
 #define jround(x) _mm_cvtsd_f64(_mm_round_pd(_mm_set1_pd(x),(_MM_FROUND_TO_NEAREST_INT |_MM_FROUND_NO_EXC)))

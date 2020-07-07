@@ -190,7 +190,8 @@ A jtenqueue(J jt,A a,A w,I env){A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl;UC c;
    // beginning-of-list pointer v, to start of list of output pointers
  for(i=0;i<n;i++,x++){  // for each word
   wl=u[1]-u[0]; wi=u[0]+s; u+=2; c=e=*wi; p=ctype[(UC)c]; b=0;   // wi=first char, wl=length, c=e=first char, p=type of first char, b='no inflections'
-  if(1<wl){d=*(wi+wl-1); if(b=((p!=C9)&(d==CESC1))|(d==CESC2))e=spellin(wl,wi);}  // if word has >1 character, is 9--. or ---:, convert to pseudocharacter
+// obsolete   if(1<wl){d=*(wi+wl-1); if(b=((p!=C9)&(d==CESC1))|(d==CESC2))e=spellin(wl,wi);}  // if word has >1 character, is 9--. or ---:, convert to pseudocharacter
+  if(wl==1||(b=((p!=C9)&(wi[wl-1]==CESC1))|(wi[wl-1]==CESC2)))e=spellin(wl,wi);  // if word has 1 character, or is a--. or ---:, convert to pseudocharacter
   if(BETWEENO(c,32,128)&&AK(y=ds(e))){
    // If first char is ASCII, see if the form including inflections is a primitive;
    // if so, that is the word to put into the queue.  No need to copy it

@@ -69,6 +69,7 @@ static C spellin1(I n,C*s){C c,d,p=*s,*t;I j;
    R 0;
 }}
 #endif
+#if 0 // obsolete
 static C spellintab2[128-0x20][2] = {
 ['='-0x20]={CASGN,CGASGN},      ['<'-0x20]={CFLOOR,CLE},        ['>'-0x20]={CCEIL,CGE},         ['_'-0x20]={0,CFCONS},          ['+'-0x20]={CPLUSDOT,CPLUSCO},  ['*'-0x20]={CSTARDOT,CSTARCO},  
 ['-'-0x20]={CNOT,CMATCH},       ['%'-0x20]={CDOMINO,CROOT},     ['^'-0x20]={CLOG,CPOWOP},       ['$'-0x20]={CSPARSE,CSELF},     ['~'-0x20]={CNUB,CNE},          ['|'-0x20]={CREV,CCANT},        
@@ -83,6 +84,26 @@ static C spellintab2[128-0x20][2] = {
 ['1'-0x20]={0,CFCONS},          ['2'-0x20]={0,CFCONS},          ['3'-0x20]={0,CFCONS},          ['4'-0x20]={0,CFCONS},          ['5'-0x20]={0,CFCONS},          ['6'-0x20]={0,CFCONS},          
 ['7'-0x20]={0,CFCONS},          ['8'-0x20]={0,CFCONS},          ['9'-0x20]={0,CFCONS},          ['F'-0x20]={CFDOT,CFCO},        ['Z'-0x20]={0,CZCO},
 };
+#else
+// These are the codes for each char that can present as a primitive.  Alphabetics cannot unless inflected.  Numerics can in inflected with :
+// OR when they are generated internally, where 0 2 3 4 are used as primitives for invisible modifiers (noun, hook, fork, adv)
+static C spellintab2[128-0x20][3] = {
+['='-0x20]={CEQ,CASGN,CGASGN},      ['<'-0x20]={CLT,CFLOOR,CLE},        ['>'-0x20]={CGT,CCEIL,CGE},         ['_'-0x20]={CINF,0,CFCONS},          ['+'-0x20]={CPLUS,CPLUSDOT,CPLUSCO},  ['*'-0x20]={CSTAR,CSTARDOT,CSTARCO},  
+['-'-0x20]={CMINUS,CNOT,CMATCH},       ['%'-0x20]={CDIV,CDOMINO,CROOT},     ['^'-0x20]={CEXP,CLOG,CPOWOP},       ['$'-0x20]={CDOLLAR,CSPARSE,CSELF},     ['~'-0x20]={CTILDE,CNUB,CNE},          ['|'-0x20]={CSTILE,CREV,CCANT},        
+['.'-0x20]={CDOT,CEVEN,CODD},        [':'-0x20]={CCOLON,COBVERSE,CADVERSE}, [','-0x20]={CCOMMA,CCOMDOT,CLAMIN},    [';'-0x20]={CSEMICO,CCUT,CWORDS},       ['#'-0x20]={CPOUND,CBASE,CABASE},      ['@'-0x20]={CAT,CATDOT,CATCO},      
+['/'-0x20]={CSLASH,CSLDOT,CGRADE},     ['\\'-0x20]={CBSLASH,CBSDOT,CDGRADE},['['-0x20]={CLEFT,CLEV,CCAP},         [']'-0x20]={CRIGHT,CDEX,CIDA},         ['{'-0x20]={CLBRACE,CTAKE,CTAIL},       ['}'-0x20]={CRBRACE,CDROP,CCTAIL},      
+['`'-0x20]={CGRAVE,CGRDOT,CGRCO},      ['\"'-0x20]={CQQ,CEXEC,CTHORN},      ['&'-0x20]={CAMP,CUNDER,CAMPCO},     ['!'-0x20]={CBANG,CFIT,CIBEAM},       ['?'-0x20]={CQUERY,CQRYDOT,CQRYCO},
+['('-0x20]={CLPAR,0,0},    [')'-0x20]={CRPAR,0,0},    
+
+['a'-0x20]={0,CALP,CACE},        ['A'-0x20]={0,CATOMIC,0},         ['b'-0x20]={0,CBDOT,0},           ['c'-0x20]={0,CCDOT,0},           ['C'-0x20]={0,CCYCLE,0},          
+['e'-0x20]={0,CEPS,0},            ['E'-0x20]={0,CEBAR,0},           ['f'-0x20]={0,CFIX,0},            ['H'-0x20]={0,CHGEOM,0},          ['i'-0x20]={0,CIOTA,CICO},        ['I'-0x20]={0,CICAP,0},           
+['j'-0x20]={0,CJDOT,0},           ['L'-0x20]={0,CLDOT,CLCAPCO},     ['m'-0x20]={0,CMDOT,0},           ['M'-0x20]={0,CMCAP,0},           ['n'-0x20]={0,CNDOT,0},           ['o'-0x20]={0,CCIRCLE,0},         
+['p'-0x20]={0,CPOLY,CPCO},        ['q'-0x20]={0,0,CQCO},            ['r'-0x20]={0,CRDOT,0},           ['s'-0x20]={0,0,CSCO},            ['S'-0x20]={0,0,CSCAPCO},         ['t'-0x20]={0,CTDOT,CTCO},        
+['T'-0x20]={0,CTCAP,0},           ['u'-0x20]={0,CUDOT,CUCO},        ['v'-0x20]={0,CVDOT,0},           ['x'-0x20]={0,CXDOT,CXCO},        ['y'-0x20]={0,CYDOT,0},           ['0'-0x20]={CNOUN,0,CFCONS},          
+['1'-0x20]={0,0,CFCONS},          ['2'-0x20]={CHOOK,0,CFCONS},      ['3'-0x20]={CFORK,0,CFCONS},      ['4'-0x20]={CADVF,0,CFCONS},      ['5'-0x20]={0,0,CFCONS},          ['6'-0x20]={0,0,CFCONS},          
+['7'-0x20]={0,0,CFCONS},          ['8'-0x20]={0,0,CFCONS},          ['9'-0x20]={0,0,CFCONS},          ['F'-0x20]={0,CFDOT,CFCO},        ['Z'-0x20]={0,0,CZCO},
+};
+#endif
 static C spellintab3[][4] = {
 /* err */ {0, 0, 0, 0},
 /* { */ {0, 0, 0, CFETCH},
@@ -97,8 +118,8 @@ static C spellintab3[][4] = {
 #define CO0 0xe00
 #define DOT1 0x7000
 #define CO1 0xe000
-static US spellouttab[128] = {
-#if 0
+static US spellouttab[256] = {
+#if 1
 [C0]=(UC)'\000', [C1]=(UC)'\001',
 // 2-3 free
 [COFF]=(UC)'\004',
@@ -109,60 +130,59 @@ static US spellouttab[128] = {
 // 14-15 free
 //[CBW0000]=(UC)'\020', [CBW0001]=(UC)'\021',[CBW0010]=(UC)'\022',[CBW0011]=(UC)'\023',[CBW0100]=(UC)'\024',[CBW0101]=(UC)'\025',[CBW0110]=(UC)'\026',[CBW0111]=(UC)'\027',
 //[CBW1000]=(UC)'\030',[CBW1001]=(UC)'\031',[CBW1010]=(UC)'\032',[CBW1011]=(UC)'\033',[CBW1100]=(UC)'\034',[CBW1101]=(UC)'\035',[CBW1110]=(UC)'\036',[CBW1111]=(UC)'\037',
-[CBANG]=(UC)'!',[CQQ]=(UC)'\042',[CPOUND]=(UC)'#',[CDOLLAR]=(UC)'$',[CDIV]=(UC)'%',[CAMP]=(UC)'&',[CQUOTE]=(UC)'\047',[CLPAR]=(UC)'(',
+[CBANG]=(UC)'!',[CQQ]=(UC)'\"',[CPOUND]=(UC)'#',[CDOLLAR]=(UC)'$',[CDIV]=(UC)'%',[CAMP]=(UC)'&',[CQUOTE]=(UC)'\'',[CLPAR]=(UC)'(',
 [CRPAR]=(UC)')',[CSTAR]=(UC)'*',[CPLUS]=(UC)'+',[CCOMMA]=(UC)',',[CMINUS]=(UC)'-',[CDOT]=(UC)'.',[CSLASH]=(UC)'/',
 [CNOUN]=(UC)'0', ['1']=(UC)'1', [CHOOK]=(UC)'2',[CFORK]=(UC)'3',[CADVF]=(UC)'4', ['5']=(UC)'5',  ['6']=(UC)'6',  ['7']=(UC)'7', 
- ['8']=(UC)'8',  ['9']=(UC)'9',  ['1']=(UC)'1', [CCOLON]=(UC)':',[CSEMICO]=(UC)';',[CLT]=(UC)'<',[CEQ]=(UC)'=',[CGT]=(UC)'>',[CQUERY]=(UC)'?',
+ ['8']=(UC)'8',  ['9']=(UC)'9', [CCOLON]=(UC)':',[CSEMICO]=(UC)';',[CLT]=(UC)'<',[CEQ]=(UC)'=',[CGT]=(UC)'>',[CQUERY]=(UC)'?',
 [CAT]=(UC)'@', 
 [CLEFT]=(UC)'[',[CBSLASH]=(UC)'\\',[CRIGHT]=(UC)']',[CEXP]=(UC)'^',[CINF]=(UC)'_',
 [CGRAVE]=(UC)'`', 
 [CLBRACE]=(UC)'{',[CSTILE]=(UC)'|',[CRBRACE]=(UC)'}',[CTILDE]=(UC)'~',
 // 127 free
 #endif
-// remove the -128s when we bring in the table
-[CASGN   -128]=(UC)'='+DOT0,       [CGASGN  -128]=(UC)'='+CO0,       [CFLOOR  -128]=(UC)'<'+DOT0,
-[CLE     -128]=(UC)'<'+CO0,       [CCEIL   -128]=(UC)'>'+DOT0,       [CGE     -128]=(UC)'>'+CO0,       
-[CUSDOT  -128]=(UC)'_'+DOT0,       [CPLUSDOT-128]=(UC)'+'+DOT0,       [CPLUSCO -128]=(UC)'+'+CO0,       [CSTARDOT-128]=(UC)'*'+DOT0,       
-[CSTARCO -128]=(UC)'*'+CO0,       [CNOT    -128]=(UC)'-'+DOT0,       
-[CMATCH  -128]=(UC)'-'+CO0,       [CDOMINO -128]=(UC)'%'+DOT0,       [CSQRT   -128]=(UC)'%'+CO0,
-[CLOG    -128]=(UC)'^'+DOT0,       [CPOWOP  -128]=(UC)'^'+CO0,       [CSPARSE -128]=(UC)'$'+DOT0,       [CSELF   -128]=(UC)'$'+CO0,       
-[CNUB    -128]=(UC)'~'+DOT0,       [CNE     -128]=(UC)'~'+CO0,       [CREV    -128]=(UC)'|'+DOT0,
-[CCANT   -128]=(UC)'|'+CO0,       [CEVEN   -128]=(UC)'.'+DOT0,       [CODD    -128]=(UC)'.'+CO0,       [COBVERSE-128]=(UC)':'+DOT0,       
-[CADVERSE-128]=(UC)':'+CO0,       [CCOMDOT -128]=(UC)','+DOT0,       [CLAMIN  -128]=(UC)','+CO0,       [CCUT    -128]=(UC)';'+DOT0,       
-[CWORDS  -128]=(UC)';'+CO0,       [CBASE   -128]=(UC)'#'+DOT0,       [CABASE  -128]=(UC)'#'+CO0,       [CFIT    -128]=(UC)'!'+DOT0,       
-[CIBEAM  -128]=(UC)'!'+CO0,       [CSLDOT  -128]=(UC)'/'+DOT0,       [CGRADE  -128]=(UC)'/'+CO0,       [CBSDOT  -128]=(UC)'\\'+DOT0,       
-[CDGRADE -128]=(UC)'\\'+CO0,      [CLEV    -128]=(UC)'['+DOT0,       [CCAP    -128]=(UC)'['+CO0,       [CDEX    -128]=(UC)']'+DOT0,       
-[CIDA    -128]=(UC)']'+CO0,       [CHEAD   -128]=(UC)'{'+DOT0,       [CTAIL   -128]=(UC)'{'+CO0,       
-[CBEHEAD -128]=(UC)'}'+DOT0,       [CCTAIL  -128]=(UC)'}'+CO0,       [CEXEC   -128]=(UC)'"'+DOT0,       
-[CTHORN  -128]=(UC)'"'+CO0,       [CGRDOT  -128]=(UC)'`'+DOT0,       [CGRCO   -128]=(UC)'`'+CO0,       [CATDOT  -128]=(UC)'@'+DOT0,       
-[CATCO   -128]=(UC)'@'+CO0,       [CAMPCO  -128]=(UC)'&'+CO0,       [CATDOTCO-128]=(UC)'@'+DOT0,       [CUNDER  -128]=(UC)'&'+DOT0,       
-[CQRYDOT -128]=(UC)'?'+DOT0,       [CQRYCO  -128]=(UC)'?'+CO0,       [CALP    -128]=(UC)'a'+DOT0,       [CATOMIC -128]=(UC)'A'+DOT0,       
-[CACE    -128]=(UC)'a'+CO0,       [CBDOT   -128]=(UC)'b'+DOT0,       [CCDOT   -128]=(UC)'c'+DOT0,       [CCYCLE  -128]=(UC)'C'+DOT0,       
-[CEPS    -128]=(UC)'e'+DOT0,       [CEBAR   -128]=(UC)'E'+DOT0,       [CFIX    -128]=(UC)'f'+DOT0,       [CFCAPCO -128]=(UC)'F'+CO0,       
-[CHGEOM  -128]=(UC)'H'+DOT0,       [CIOTA   -128]=(UC)'i'+DOT0,       [CICO    -128]=(UC)'i'+CO0,       [CICAP   -128]=(UC)'I'+DOT0,       
-[CICAPCO -128]=(UC)'I'+CO0,       [CJDOT   -128]=(UC)'j'+DOT0,       [CLDOT   -128]=(UC)'L'+DOT0,       [CLCAPCO -128]=(UC)'L'+CO0,       
-[CMDOT   -128]=(UC)'m'+DOT0,       [CMCAP   -128]=(UC)'M'+DOT0,       [CNDOT   -128]=(UC)'n'+DOT0,       [CCIRCLE -128]=(UC)'o'+DOT0,       
-[CPOLY   -128]=(UC)'p'+DOT0,       [CPCO    -128]=(UC)'p'+CO0,       [CQCAPCO -128]=(UC)'Q'+CO0,       [CQCO    -128]=(UC)'q'+CO0,       
-[CRDOT   -128]=(UC)'r'+DOT0,       [CSCO    -128]=(UC)'s'+CO0,       [CSCAPCO -128]=(UC)'S'+CO0,       [CTDOT   -128]=(UC)'t'+DOT0,       
-[CTCO    -128]=(UC)'t'+CO0,       [CTCAP   -128]=(UC)'T'+DOT0,       [CUDOT   -128]=(UC)'u'+DOT0,       [CVDOT   -128]=(UC)'v'+DOT0,       
-[CUCO    -128]=(UC)'u'+CO0,       [CXDOT   -128]=(UC)'x'+DOT0,       [CXCO    -128]=(UC)'x'+CO0,       [CYDOT   -128]=(UC)'y'+DOT0,       
-[CFCONS  -128]=(UC)'0'+CO0,       [CAMIP   -128]=(UC)'}',             [CCASEV  -128]=(UC)'}',             [CFETCH  -128]=(UC)'{'+CO0+CO1,
-[CMAP    -128]=(UC)'{'+CO0+CO1,[CEMEND  -128]=(UC)'}'+CO0+CO1,[CUNDCO  -128]=(UC)'&'+DOT0+CO1,[CPDERIV -128]=(UC)'p'+DOT0+DOT1,
-[CFDOT   -128]=(UC)'F'+DOT0,       [CFDOTCO -128]=(UC)'F'+DOT0+CO1,[CFDOTDOT-128]=(UC)'F'+DOT0+DOT1,[CZCO    -128]=(UC)'Z'+CO0,       
-[CFCO    -128]=(UC)'F'+CO0,       [CFCOCO  -128]=(UC)'F'+CO0+CO1,[CFCODOT -128]=(UC)'F'+CO0+DOT1,       
+[CASGN   ]=(UC)'='+DOT0,       [CGASGN  ]=(UC)'='+CO0,       [CFLOOR  ]=(UC)'<'+DOT0,
+[CLE     ]=(UC)'<'+CO0,       [CCEIL   ]=(UC)'>'+DOT0,       [CGE     ]=(UC)'>'+CO0,       
+[CUSDOT  ]=(UC)'_'+DOT0,       [CPLUSDOT]=(UC)'+'+DOT0,       [CPLUSCO ]=(UC)'+'+CO0,       [CSTARDOT]=(UC)'*'+DOT0,       
+[CSTARCO ]=(UC)'*'+CO0,       [CNOT    ]=(UC)'-'+DOT0,       
+[CMATCH  ]=(UC)'-'+CO0,       [CDOMINO ]=(UC)'%'+DOT0,       [CSQRT   ]=(UC)'%'+CO0,
+[CLOG    ]=(UC)'^'+DOT0,       [CPOWOP  ]=(UC)'^'+CO0,       [CSPARSE ]=(UC)'$'+DOT0,       [CSELF   ]=(UC)'$'+CO0,       
+[CNUB    ]=(UC)'~'+DOT0,       [CNE     ]=(UC)'~'+CO0,       [CREV    ]=(UC)'|'+DOT0,
+[CCANT   ]=(UC)'|'+CO0,       [CEVEN   ]=(UC)'.'+DOT0,       [CODD    ]=(UC)'.'+CO0,       [COBVERSE]=(UC)':'+DOT0,       
+[CADVERSE]=(UC)':'+CO0,       [CCOMDOT ]=(UC)','+DOT0,       [CLAMIN  ]=(UC)','+CO0,       [CCUT    ]=(UC)';'+DOT0,       
+[CWORDS  ]=(UC)';'+CO0,       [CBASE   ]=(UC)'#'+DOT0,       [CABASE  ]=(UC)'#'+CO0,       [CFIT    ]=(UC)'!'+DOT0,       
+[CIBEAM  ]=(UC)'!'+CO0,       [CSLDOT  ]=(UC)'/'+DOT0,       [CGRADE  ]=(UC)'/'+CO0,       [CBSDOT  ]=(UC)'\\'+DOT0,       
+[CDGRADE ]=(UC)'\\'+CO0,      [CLEV    ]=(UC)'['+DOT0,       [CCAP    ]=(UC)'['+CO0,       [CDEX    ]=(UC)']'+DOT0,       
+[CIDA    ]=(UC)']'+CO0,       [CHEAD   ]=(UC)'{'+DOT0,       [CTAIL   ]=(UC)'{'+CO0,       
+[CBEHEAD ]=(UC)'}'+DOT0,       [CCTAIL  ]=(UC)'}'+CO0,       [CEXEC   ]=(UC)'"'+DOT0,       
+[CTHORN  ]=(UC)'"'+CO0,       [CGRDOT  ]=(UC)'`'+DOT0,       [CGRCO   ]=(UC)'`'+CO0,       [CATDOT  ]=(UC)'@'+DOT0,       
+[CATCO   ]=(UC)'@'+CO0,       [CAMPCO  ]=(UC)'&'+CO0,       [CATDOTCO]=(UC)'@'+DOT0,       [CUNDER  ]=(UC)'&'+DOT0,       
+[CQRYDOT ]=(UC)'?'+DOT0,       [CQRYCO  ]=(UC)'?'+CO0,       [CALP    ]=(UC)'a'+DOT0,       [CATOMIC ]=(UC)'A'+DOT0,       
+[CACE    ]=(UC)'a'+CO0,       [CBDOT   ]=(UC)'b'+DOT0,       [CCDOT   ]=(UC)'c'+DOT0,       [CCYCLE  ]=(UC)'C'+DOT0,       
+[CEPS    ]=(UC)'e'+DOT0,       [CEBAR   ]=(UC)'E'+DOT0,       [CFIX    ]=(UC)'f'+DOT0,       [CFCAPCO ]=(UC)'F'+CO0,       
+[CHGEOM  ]=(UC)'H'+DOT0,       [CIOTA   ]=(UC)'i'+DOT0,       [CICO    ]=(UC)'i'+CO0,       [CICAP   ]=(UC)'I'+DOT0,       
+[CICAPCO ]=(UC)'I'+CO0,       [CJDOT   ]=(UC)'j'+DOT0,       [CLDOT   ]=(UC)'L'+DOT0,       [CLCAPCO ]=(UC)'L'+CO0,       
+[CMDOT   ]=(UC)'m'+DOT0,       [CMCAP   ]=(UC)'M'+DOT0,       [CNDOT   ]=(UC)'n'+DOT0,       [CCIRCLE ]=(UC)'o'+DOT0,       
+[CPOLY   ]=(UC)'p'+DOT0,       [CPCO    ]=(UC)'p'+CO0,       [CQCAPCO ]=(UC)'Q'+CO0,       [CQCO    ]=(UC)'q'+CO0,       
+[CRDOT   ]=(UC)'r'+DOT0,       [CSCO    ]=(UC)'s'+CO0,       [CSCAPCO ]=(UC)'S'+CO0,       [CTDOT   ]=(UC)'t'+DOT0,       
+[CTCO    ]=(UC)'t'+CO0,       [CTCAP   ]=(UC)'T'+DOT0,       [CUDOT   ]=(UC)'u'+DOT0,       [CVDOT   ]=(UC)'v'+DOT0,       
+[CUCO    ]=(UC)'u'+CO0,       [CXDOT   ]=(UC)'x'+DOT0,       [CXCO    ]=(UC)'x'+CO0,       [CYDOT   ]=(UC)'y'+DOT0,       
+[CFCONS  ]=(UC)'0'+CO0,       [CAMIP   ]=(UC)'}',             [CCASEV  ]=(UC)'}',             [CFETCH  ]=(UC)'{'+CO0+CO1,
+[CMAP    ]=(UC)'{'+CO0+CO1,[CEMEND  ]=(UC)'}'+CO0+CO1,[CUNDCO  ]=(UC)'&'+DOT0+CO1,[CPDERIV ]=(UC)'p'+DOT0+DOT1,
+[CFDOT   ]=(UC)'F'+DOT0,       [CFDOTCO ]=(UC)'F'+DOT0+CO1,[CFDOTDOT]=(UC)'F'+DOT0+DOT1,[CZCO    ]=(UC)'Z'+CO0,       
+[CFCO    ]=(UC)'F'+CO0,       [CFCOCO  ]=(UC)'F'+CO0+CO1,[CFCODOT ]=(UC)'F'+CO0+DOT1,       
    };
 // *s is a string with length n representing a primitive.  Convert the primitive to
 // a 1-byte pseudocharacter number.  Return value of 0 means error.  This is called to audit ARs & thus must work with unverified input
 C spellin(I n,C*s){
  C p=s[0];  // fetch the base character.  Must be displayable ASCII
  if(n<3){
-  // 1- and 2-byte strings, with no branches.  The dominant case
-  C *bp=(C*)&spellintab2[p-0x20];  // base address of 2-byte chars
-  I inf=1-n;  // will hold inflections: init to 0 for 1-bytes, -1 for 2-byte: this will be the value for invalid inflections
-  inf=s[n-1]==CESC1?0:inf; inf=s[n-1]==CESC2?1:inf;  // .=0, :=1
-  bp+=inf; bp=n==1?s:bp;  // point bp to the inflected char, or the input byte if 1-byte char
-  bp=BETWEENO((C)inf|p,0x20,0x80)?bp:(C*)&spellintab2;  // if inflection error, or not ASCII graphic, point to SP hole (error)
-  R *bp;  // return the character
+  // 1- and 2-byte strings, with no data-dependent branches.  The dominant case
+// obsolete   C *bp=(C*)&spellintab2[p-0x20];  // base address of 1-2-byte chars
+  I inf=-1;  // will hold inflections: init to 0 for 1-bytes, -1 for 2-byte: this will be the value for invalid inflections
+  inf=s[n-1]==CESC1?1:inf; inf=s[n-1]==CESC2?2:inf; inf&=1-n;  // no inflection=0, .=1, :=2, erroneous inflection=-1 
+// obsolete   bp+=inf; /* obsolete bp=n==1?s:bp;*/  // point bp to the inflected char, or the input byte if 1-byte char
+  R BETWEENO((C)inf|p,0x20,0x80)?spellintab2[p-0x20][inf]:0;  // if inflection error, or not ASCII graphic, return 0 (error)
+// obsolete   R *bp;  // return the character
  }
  // 3-byte characters.  Rare, so handle individually.  Most likely these will be names that are being checked to see if they are primitives
  if(p!='_'){
@@ -190,7 +210,8 @@ static void spellit1(C c,C*s){C*q;I k;
 }    /* spell out ID c in s */
 #endif
 void spellit(UC c,UC *s){
- I spell=spellouttab[c&127]; spell=c&128?spell:c; // Fetch inf2/inf1 graphic in case inflected; if not inflected, use the char itself, with inflections 0
+// obsolete  I spell=spellouttab[c&127]; spell=c&128?spell:c; // Fetch inf2/inf1 graphic in case inflected; if not inflected, use the char itself, with inflections 0
+ I spell=spellouttab[c]; // Fetch inf2/inf1 graphic
  s[0]=(C)spell; s[1]=(C)(0xe9700>>((spell>>8)&0xf)); s[2]=(C)(0xe9700>>(spell>>12));   // 0011101(0) 0010111(0) 00000000  for NUL . :, with overlap
 }
 

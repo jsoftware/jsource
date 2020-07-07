@@ -246,7 +246,7 @@ static SF(jtsorti1){A x,y,z;I*wv;I i,*xv,*zv;void *yv;
 }    /* w grade"r w on large-range integers */
 
 // sort a single integer list using quicksort without misprediction, inplace
-#define SORTQCOND ((C_AVX2&&SY_64) || EMU_AVX)
+#define SORTQCOND ((C_AVX2&&SY_64) || EMU_AVX2)
 #define SORTQNAME sortiq1
 #define SORTQTYPE I
 #define SORTQSCOPE

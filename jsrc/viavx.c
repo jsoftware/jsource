@@ -1071,7 +1071,7 @@ static IOFSMALLRANGE(jtio42,I,US)  static IOFSMALLRANGE(jtio44,I,UI4)  // 4/8-by
 
 // ac is # outer cells of a, asct=#items in 1 inner cell, wc is #outer search cells, wsct is #items to search for per outer cell
 // n is #atoms in a cell
-static void jtiosc(J jt,I mode,I n,I asct,I wsct,I ac,I wc,A a,A w,A z){I j,p,q; void *u,*v,*zv;
+static A jtiosc(J jt,I mode,I n,I asct,I wsct,I ac,I wc,A a,A w,A z){I j,p,q; void *u,*v,*zv;
  p=ac>1?asct:0; q=REPSGN(1-(wc|wsct)); p*=n; q&=n;  // q=1<wc||1<wsct; number of atoms to move between repeats
  zv=voidAV(z); u=voidAV(a); v=voidAV(w);
  // Create a pseudotype 19 (=XDX) for intolerant comparison.  This puns on XDX-FLX==16
@@ -1204,7 +1204,8 @@ fnd013: *(C*)zv=SGNTO0(-cmps); zv=(C*)zv+1;      wv+=q;);
   SCDON(FLX,D, !TCMPEQ(jt->cct,wvv[jj],avv[jj]));
   default:  jsignal(EVSYSTEM);
  }
-}    /* right argument cell is scalar; only for modes IIDOT IICO IEPS */
+ R (A)1;  // return non-error indic
+}    /* right argument cell is scalar; only for modes IIDOT IICO IEPS IFORKEY */
 
 
 // ***************** fifth class: boxed arguments ************************
@@ -1724,7 +1725,7 @@ static CR condrange2(US *s,I n,I min,I max,I maxrange){CR ret;I i;US x;
 #define FNTBLSIZE 54  // number of functions - before the second half
 static const AF fntbl[]={
 // prefix: routines used without hashtables, flags, etc
- (AF)jtiosc,  // sequential comparison (-1) - we pass in extra args
+ jtiosc,  // sequential comparison (-1) - we pass in extra args
 // US tables
  jtioc,jtioc,jtioc,jtioc,jtioi,jtioi,jtioi,jtioi,  // bool, INT
  jtiod,jtioc0,jtiod1,jtioc01,jtio12,jtio22,jtio42,jtioi1,   // FL (then small-range, then ONEINT)

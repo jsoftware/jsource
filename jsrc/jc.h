@@ -66,13 +66,18 @@
 #define CCOLON     (C)':'          /*  58 072 3a                              */
 #define CSEMICO    (C)';'          /*  59 073 3b                              */
 #define CRAZE      (C)';'          /*  59 073 3b                              */
-#define CBOX       (C)'<'          /*  60 074 3c                              */
-#define CLT        (C)'<'          /*  60 074 3c                              */
-#define CEQ        (C)'='          /*  61 075 3d                              */
-#define COPE       (C)'>'          /*  62 076 3e                              */
-#define CGT        (C)'>'          /*  62 076 3e                              */
 #define CQUERY     (C)'?'          /*  63 077 3f                              */
 #define CAT        (C)'@'          /*  64 100 40                              */
+// overlaying A-Z:
+// comparisons, in order = ~: < > <: >:
+#define CEQ        (C)'A'          //  65 081 41 =
+#define CNE        (C)'B'          //  66 082 42 ~:
+#define CBOX       (C)'C'          //  67 083 43 <
+#define CLT        (C)'C'          //  67 083 43
+#define COPE       (C)'D'          //  68 084 44 >
+#define CGT        (C)'D'          //  68 084 44 <:
+#define CLE        (C)'E'          //  69 085 45 >:
+#define CGE        (C)'F'          //  70 086 46
 #define CLEFT      (C)'['          /*  91 133 5b                              */
 #define CBSLASH    (C)'\134'       /*  92 134 5c \   backslash                */
 #define CRIGHT     (C)']'          /*  93 135 5d                              */
@@ -92,10 +97,8 @@
 #define CGASGN     (C)'\201'       /* 129 201 81 =:                           */
 #define CFLOOR     (C)'\202'       /* 130 202 82 <.                           */
 #define CMIN       (C)'\202'       /* 130 202 82 <.                           */
-#define CLE        (C)'\203'       /* 131 203 83 <:                           */
 #define CCEIL      (C)'\204'       /* 132 204 84 >.                           */
 #define CMAX       (C)'\204'       /* 132 204 84 >.                           */
-#define CGE        (C)'\205'       /* 133 205 85 >:                           */
 #define CUSDOT     (C)'\206'       /* 134 206 86 _.                           */
 // 135 free
 #define CPLUSDOT   (C)'\210'       /* 136 210 88 +.                           */
@@ -114,7 +117,6 @@
 #define CSPARSE    (C)'\222'       /* 146 222 92 $.                           */
 #define CSELF      (C)'\223'       /* 147 223 93 $:                           */
 #define CNUB       (C)'\224'       /* 148 224 94 ~.                           */
-#define CNE        (C)'\225'       /* 149 225 95 ~:                           */
 #define CREV       (C)'\226'       /* 150 226 96 |.                           */
 #define CROT       (C)'\226'       /* 150 226 96 |.                           */
 #define CCANT      (C)'\227'       /* 151 227 97 |:                           */

@@ -15,7 +15,7 @@ if. IFWIN do.
 else.
  n=. 'libtsdll.',;(UNAME-:'Darwin'){'so';'dylib'
 end. 
-if. UNAME-:'Android' do.
+if. IFJA *. UNAME-:'Android' do.
  LIBTSDLL=: (({.~ i:&'/') LIBFILE),'/',n,' '
 else.
  LIBTSDLL=: jpath'~bin/',n,' '

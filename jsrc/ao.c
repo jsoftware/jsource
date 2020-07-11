@@ -29,7 +29,7 @@ static DF1(jtoblique){A x,y,z;I m,n,r;D rkblk[16];
 }
 
 
-#define OBQCASE(t,id)    ((t)+(9*(id)))
+#define OBQCASE(t,id)    ((t)+(11*(id)))
 
 #define OBQLOOP(Tw,Tz,zt,init,expr)  \
  {Tw* RESTRICT u,*v,*ww=(Tw*)wv;Tz x,* RESTRICT zz;                  \
@@ -495,7 +495,7 @@ F1(jtgroup){PROLOG(0014);A c,d,x,z,*zv;I**cu,*cv,*dv,j,k,m,n,t,*u,*v,*wv,zn=0;CR
  if(SPARSE&AT(w))RZ(w=denseit(w));
  SETIC(w,n); t=AT(w); k=n?aii(w)<<bplg(t):0;
  if(!AN(w)){GATV0(z,BOX,n?1:0,1); if(n)RZ(*AAV(z)=IX(n)); R z;}
- if(2>=k){rng.range=shortrange[t&(B01+LIT)][k]; rng.min = 0;}
+ if(2>=k){rng.range=shortrange[t&(B01+LIT)][k]; rng.min = 0;}  // kludge scaf use shift
 // obsolete  else if(k==sizeof(C4)&&t&C4T){rng=condrange4(C4AV(w),n,-1,0,2*n);}
 // obsolete  else if(k==SZI&&t&INT+SBT){rng=condrange(AV(w),n,IMAX,IMIN,2*n);}
  else if(((k^sizeof(C4))+(t&(NOUN&~C4T)))==0){rng=condrange4(C4AV(w),n,-1,0,2*n);}

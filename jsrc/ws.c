@@ -111,7 +111,6 @@ static C spellintab3[][4] = {
 /* p */ {CPDERIV, 0, 0, 0},
 /* & */ {0, CUNDCO, 0, 0},
 /* F */ {CFDOTDOT, CFDOTCO, CFCODOT, CFCOCO},
-/* @ */ {0, CATDOTCO, 0, 0},
 };
 // The spelling is encoded (littleendian) as (graphic) followed by 4 bits of inflection1 followed by 4 bits of inflection2: 0000=NUL 0111=. 1110=:
 #define DOT0 0x700
@@ -120,20 +119,20 @@ static C spellintab3[][4] = {
 #define CO1 0xe000
 static US spellouttab[256] = {
 #if 1
-[C0]=(UC)'\000', [C1]=(UC)'\001',
+// obsolete [C0]=(UC)'\000', [C1]=(UC)'\001',
 // 2-3 free
-[COFF]=(UC)'\004',
+// obsolete [COFF]=(UC)'\004',
 // 5-8 free
-[CTAB]=(UC)'\011', [CLF]=(UC)'\012',
+// obsolete [CTAB]=(UC)'\011', [CLF]=(UC)'\012',
 // 11-12 free
-[CCR]=(UC)'\015', 
+// obsolete [CCR]=(UC)'\015', 
 // 14-15 free
 //[CBW0000]=(UC)'\020', [CBW0001]=(UC)'\021',[CBW0010]=(UC)'\022',[CBW0011]=(UC)'\023',[CBW0100]=(UC)'\024',[CBW0101]=(UC)'\025',[CBW0110]=(UC)'\026',[CBW0111]=(UC)'\027',
 //[CBW1000]=(UC)'\030',[CBW1001]=(UC)'\031',[CBW1010]=(UC)'\032',[CBW1011]=(UC)'\033',[CBW1100]=(UC)'\034',[CBW1101]=(UC)'\035',[CBW1110]=(UC)'\036',[CBW1111]=(UC)'\037',
-[CBANG]=(UC)'!',[CQQ]=(UC)'\"',[CPOUND]=(UC)'#',[CDOLLAR]=(UC)'$',[CDIV]=(UC)'%',[CAMP]=(UC)'&',[CQUOTE]=(UC)'\'',[CLPAR]=(UC)'(',
+[CBANG]=(UC)'!',[CQQ]=(UC)'\"',[CPOUND]=(UC)'#',[CDOLLAR]=(UC)'$',[CDIV]=(UC)'%',[CAMP]=(UC)'&',[CLPAR]=(UC)'(',
 [CRPAR]=(UC)')',[CSTAR]=(UC)'*',[CPLUS]=(UC)'+',[CCOMMA]=(UC)',',[CMINUS]=(UC)'-',[CDOT]=(UC)'.',[CSLASH]=(UC)'/',
-[CNOUN]=(UC)'0', ['1']=(UC)'1', [CHOOK]=(UC)'2',[CFORK]=(UC)'3',[CADVF]=(UC)'4', ['5']=(UC)'5',  ['6']=(UC)'6',  ['7']=(UC)'7', 
- ['8']=(UC)'8',  ['9']=(UC)'9', [CCOLON]=(UC)':',[CSEMICO]=(UC)';',[CLT]=(UC)'<',[CEQ]=(UC)'=',[CGT]=(UC)'>',[CQUERY]=(UC)'?',
+[CNOUN]=(UC)'0', [CHOOK]=(UC)'2',[CFORK]=(UC)'3',[CADVF]=(UC)'4',
+[CCOLON]=(UC)':',[CSEMICO]=(UC)';',[CLT]=(UC)'<',[CEQ]=(UC)'=',[CGT]=(UC)'>',[CQUERY]=(UC)'?',
 [CAT]=(UC)'@', 
 [CLEFT]=(UC)'[',[CBSLASH]=(UC)'\\',[CRIGHT]=(UC)']',[CEXP]=(UC)'^',[CINF]=(UC)'_',
 [CGRAVE]=(UC)'`', 
@@ -155,7 +154,7 @@ static US spellouttab[256] = {
 [CIDA    ]=(UC)']'+CO0,       [CHEAD   ]=(UC)'{'+DOT0,       [CTAIL   ]=(UC)'{'+CO0,       
 [CBEHEAD ]=(UC)'}'+DOT0,       [CCTAIL  ]=(UC)'}'+CO0,       [CEXEC   ]=(UC)'"'+DOT0,       
 [CTHORN  ]=(UC)'"'+CO0,       [CGRDOT  ]=(UC)'`'+DOT0,       [CGRCO   ]=(UC)'`'+CO0,       [CATDOT  ]=(UC)'@'+DOT0,       
-[CATCO   ]=(UC)'@'+CO0,       [CAMPCO  ]=(UC)'&'+CO0,       [CATDOTCO]=(UC)'@'+DOT0,       [CUNDER  ]=(UC)'&'+DOT0,       
+[CATCO   ]=(UC)'@'+CO0,       [CAMPCO  ]=(UC)'&'+CO0,        [CUNDER  ]=(UC)'&'+DOT0,       
 [CQRYDOT ]=(UC)'?'+DOT0,       [CQRYCO  ]=(UC)'?'+CO0,       [CALP    ]=(UC)'a'+DOT0,       [CATOMIC ]=(UC)'A'+DOT0,       
 [CACE    ]=(UC)'a'+CO0,       [CBDOT   ]=(UC)'b'+DOT0,       [CCDOT   ]=(UC)'c'+DOT0,       [CCYCLE  ]=(UC)'C'+DOT0,       
 [CEPS    ]=(UC)'e'+DOT0,       [CEBAR   ]=(UC)'E'+DOT0,       [CFIX    ]=(UC)'f'+DOT0,       [CFCAPCO ]=(UC)'F'+CO0,       

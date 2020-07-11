@@ -514,7 +514,7 @@ A jtgconj(J jt,A a,A w,C id){A hs,y;B na;I n;
  ASSERT(1>=AR(y),EVRANK);
  ASSERT((n&-2)==2,EVLENGTH);  // length is 2 or 3
  ASSERT(BOX&AT(y),EVDOMAIN);
- RZ(hs=fxeach(3==n?y:link(scc(CLEFT),y)));
+ RZ(hs=fxeach(3==n?y:link(scc(CLBKTC),y)));
  R fdef(0,id,VERB, na?jtgcl1:jtgcr1,na?jtgcl2:jtgcr2, a,w,hs, na?VGERL:VGERR, RMAX,RMAX,RMAX);
 }
 

@@ -55,7 +55,8 @@ static F1(jtltiea){A t,*v,*wv,x,y;B b;C c;I n;
  n=AN(w); wv=AAV(w);  RZ(t=spellout(CGRAVE));
  GATV0(y,BOX,n+n,1); v=AAV(y);
  DO(n, *v++=i?t:mtv; x=wv[i]; c=ID(x); RZ(x=lrr(x)); 
-     b=(C)(c-CHOOK)<=(C)(CFORK-CHOOK)||i&&lp(x); RZ(*v++=CALL2(jt->lcp,b,x,0)););
+ // obsolete     b=(C)(c-CHOOK)<=(C)(CFORK-CHOOK)||i&&lp(x); RZ(*v++=CALL2(jt->lcp,b,x,0)););
+     b=BETWEENC(c,CHOOK,CFORK)||i&&lp(x); RZ(*v++=CALL2(jt->lcp,b,x,0)););
  R raze(y);
 }
 
@@ -65,7 +66,8 @@ static F1(jtltieb){A pt,t,*v,*wv,x,y;B b;C c,*s;I n;
  GATV0(y,BOX,n+n,1); v=AAV(y);
  if(1>=n)x=mtv; else{GATV0(x,LIT,n-2,1); s=CAV(x); DQ(n-2, *s++='(';);}
  DO(n, x=i==1?t:x; x=i>1?pt:x; *v++=x; x=wv[i]; c=ID(x); RZ(x=lrr(x)); 
-     b=(C)(c-CHOOK)<=(C)(CFORK-CHOOK)||i&&lp(x); RZ(*v++=CALL2(jt->lcp,b,x,0)););
+ // obsolete      b=(C)(c-CHOOK)<=(C)(CFORK-CHOOK)||i&&lp(x); RZ(*v++=CALL2(jt->lcp,b,x,0)););
+     b=BETWEENC(c,CHOOK,CFORK)||i&&lp(x); RZ(*v++=CALL2(jt->lcp,b,x,0)););
  R raze(y);
 }
 

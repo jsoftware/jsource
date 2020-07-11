@@ -74,7 +74,7 @@ F1(jtbdot){A b,h=0;I j=0,n,*v;
   case 34: R fdef(0,CBDOT,VERB, jtbitwise1,jtbitwiseshifta, 0L,w,0L, VASGSAFE|VJTFLGOK2, 0L,0L,0L);
   // The code uses a VERB with id CBDOT to stand for the derived verb of m b. .  This is used for spellout and for inverses, so we retain it.
   // We copy the other information from the verb that executes the function.  This contains pointers to the routines, and to the function table
-  default: {A z=ca(ds(j)); RZ(z); FAV(z)->fgh[1]=w; FAV(z)->id=CBDOT; RETF(z);}  // use g field not f to avoid interfering with atomic2
+  default: {A z=ca(ds(j-16+CBW0000)); RZ(z); FAV(z)->fgh[1]=w; FAV(z)->id=CBDOT; RETF(z);}  // use g field not f to avoid interfering with atomic2
  }
 }
 

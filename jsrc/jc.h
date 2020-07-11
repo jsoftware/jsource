@@ -14,198 +14,266 @@
 #define CC         3            /* colon                                   */
 #define CQ         15            /* quote                                   */
 
-#define CESC1      (C)'.'          /*  46 056 2e     1st escape char          */
-#define CESC2      (C)':'          /*  58 072 3a     2nd escape char          */
-
-#define C0         (C)'\000'       /*   0 000 00                              */
-#define C1         (C)'\001'       /*   1 001 01                              */
-// 2-3 free
+// Character names
 #define COFF       (C)'\004'       /*   4 004 04     ctrl d                   */
-// 5-8 free
 #define CTAB       (C)'\011'       /*   9 011 09     tab                      */
 #define CLF        (C)'\012'       /*  10 012 0a     line feed                */
-// 11-12 free
 #define CCR        (C)'\015'       /*  13 015 0d     carriage return          */
-// 14-15 free
-#define CBW0000    (C)'\020'       /*  16 020 10     bitwise fns              */
-#define CBW0001    (C)'\021'       /*  17 021 11                              */
-#define CBW0010    (C)'\022'       /*  18 022 12                              */
-#define CBW0011    (C)'\023'       /*  19 023 13                              */
-#define CBW0100    (C)'\024'       /*  20 024 14                              */
-#define CBW0101    (C)'\025'       /*  21 025 15                              */
-#define CBW0110    (C)'\026'       /*  22 026 16                              */
-#define CBW0111    (C)'\027'       /*  23 027 17                              */
-#define CBW1000    (C)'\030'       /*  24 030 18                              */
-#define CBW1001    (C)'\031'       /*  25 031 19                              */
-#define CBW1010    (C)'\032'       /*  26 032 1a                              */
-#define CBW1011    (C)'\033'       /*  27 033 1b                              */
-#define CBW1100    (C)'\034'       /*  28 034 1c                              */
-#define CBW1101    (C)'\035'       /*  29 035 1d                              */
-#define CBW1110    (C)'\036'       /*  30 036 1e                              */
-#define CBW1111    (C)'\037'       /*  31 037 1f                              */
-// 32 free
-#define CBANG      (C)'!'          /*  33 041 21                              */
-#define CQQ        (C)'\042'       /*  34 042 22     double quote             */
-#define CPOUND     (C)'#'          /*  35 043 23                              */
-#define CDOLLAR    (C)'$'          /*  36 044 24                              */
-#define CDIV       (C)'%'          /*  37 045 25                              */
-#define CAMP       (C)'&'          /*  38 046 26                              */
-#define CQUOTE     (C)'\047'       /*  39 047 27     single quote             */
-#define CLPAR      (C)'('          /*  40 050 28                              */
-#define CRPAR      (C)')'          /*  41 051 29                              */
-#define CSTAR      (C)'*'          /*  42 052 2a                              */
-#define CPLUS      (C)'+'          /*  43 053 2b                              */
-#define CCOMMA     (C)','          /*  44 054 2c                              */
-#define CMINUS     (C)'-'          /*  45 055 2d                              */
-#define CDOT       (C)'.'          /*  46 056 2e                              */
-#define CSLASH     (C)'/'          /*  47 057 2f                              */
-#define CNOUN      (C)'0'          /*  48 060 30                              */
-#define CHOOK      (C)'2'          /*  50 062 32                              */
-#define CFORK      (C)'3'          /*  51 063 33                              */
-#define CADVF      (C)'4'          /*  52 064 34     bonded conjunction       */
-#define CCOLON     (C)':'          /*  58 072 3a                              */
-#define CSEMICO    (C)';'          /*  59 073 3b                              */
-#define CRAZE      (C)';'          /*  59 073 3b                              */
-#define CQUERY     (C)'?'          /*  63 077 3f                              */
-#define CAT        (C)'@'          /*  64 100 40                              */
-// overlaying A-Z:
-// comparisons, in order = ~: < > <: >:
-#define CEQ        (C)'A'          //  65 081 41 =
-#define CNE        (C)'B'          //  66 082 42 ~:
-#define CBOX       (C)'C'          //  67 083 43 <
-#define CLT        (C)'C'          //  67 083 43
-#define COPE       (C)'D'          //  68 084 44 >
-#define CGT        (C)'D'          //  68 084 44 <:
-#define CLE        (C)'E'          //  69 085 45 >:
-#define CGE        (C)'F'          //  70 086 46
-#define CLEFT      (C)'['          /*  91 133 5b                              */
-#define CBSLASH    (C)'\134'       /*  92 134 5c \   backslash                */
-#define CRIGHT     (C)']'          /*  93 135 5d                              */
-#define CEXP       (C)'^'          /*  94 136 5e                              */
-#define CSIGN      (C)'_'          /*  95 137 5f     minus sign               */
-#define CINF       (C)'_'          /*  95 137 5f     infinity                 */
-#define CGRAVE     (C)'`'          /*  96 140 60                              */
+#define CQUOTE     (C)'\''   // '
+#define C0         (C)'\000'       /*   0 000 00                              */
+#define C1         (C)'\001'       /*   1 001 01                              */
+#define CESC1      (C)'.'  //     1st escape char
+#define CESC2      (C)':'  //     2nd escape char
+#define CLBKTC     (C)'['
+#define CGRAVEC    (C)'`'
+#define CSIGN      (C)'_'  //  minus sign
 
-#define CLBRACE    (C)'{'          /* 123 173 7b                              */
-#define CFROM      (C)'{'          /* 123 173 7b                              */
-#define CSTILE     (C)'|'          /* 124 174 7c                              */
-#define CRBRACE    (C)'}'          /* 125 175 7d                              */
-#define CAMEND     (C)'}'          /* 125 175 7d                              */
-#define CTILDE     (C)'~'          /* 126 176 7e                              */
+// Internal IDs
+// Affinities:
+// oblique  + comp, min/max B0001 B0110 B0111
+
+// used
+// = ~: < <: > >: -: e. I. i: ~. * <. >. | +. *. #: -. x: /. $. E. ^ p. ^: # {. {: , ,. ,: ; |. $ ": C. ~
+// inverses + * - % %: ^ ^. j. r. { :: p.. x: |. o. $. #: i. ": ~ s: u: |: p: q: !. # ^: , #. A. C. }. %. . " \ !: b. p.
+//  add on   +. *. \: ;: ! $. &. FORK & @ &: @: / :: \. ;. HOOK
+// iden   , . %. C. { / + - | ~: < > +. j. r. * % ^ %: ! = >: <: *. >. <. &. @ b.
+// / /. @ & : ADVF HOOK FORK @. `: !: u. v. ~ ::
+// < -. /: / # * >. <. I. ? ?. ; /. " ^ & 
+// < ^ -. /: >. <. ? ?. I. & / # * ;
+// # $ {. {: , [ ] < @ @: & &:
+// # [ ] , FORK /
+//  # / FORK
+// , ,. ; &.
+// < /: / >. <. ;
+// # $ {. {: /
+// /. # #: i. i: {
+// + * = ~: - %
+// ? ?. I. / 0: ;
+// + * = ~:
+// > FORK &
+// + * j. ,: ; , ^
+// u. v. ~ : @. `:
+// $: @. `:
+// [: / & FORK @
+// <. * *. >. +. = ~: < <: > >: *: +: 
+// <.  >. = ~: < <: > >:
+// + +. * *. >. <. = ~:
+// e. E.   put these after comparatives
+
+// Current primitive order:
+// fills with inverses to populate the area near 0
+// !. ^: #. }: }. \ !: p. ^. |. o. |:
+// seldom-used verbs
+// -. ? ?. I. 0:
+// structural
+// &. ,. ,: [ ] , ;
+// the heart of the order: arithmetic
+// j. *: +: /: ^ % - * +. *. +
+// comparison
+// = ~: <: >: <  > e. E.   <. >.
+// modifiers (must start at '0'
+// NOUN / HOOK FORK ADVF [: & @ &: @:  @.
+// seldom-used verbs
+// $: `: : ~ u. v.
+// more structural
+// {. {:   # $ /. :: "   #: i. i: {   -: ~.
+// verbs with inverses
+// p.. x: ": s: u:    \: ;: $. \. ;. A .p: q:
+// verbs with identities
+// . %. C. | r. %: ! b.
+
+// 0 reserved for 'invalid'
+#define CFIT       (C)0x03  // !.
+#define CPOWOP     (C)0x04  // ^:
+#define CBASE      (C)0x05  // #.
+#define CBEHEAD    (C)0x06  // }.
+#define CDROP      (C)0x06  // }.
+#define CCTAIL     (C)0x07  // }:
+#define CBSLASH    (C)0x08  // \   backslash
+#define CIBEAM     (C)0x09  // !:
+#define CPOLY      (C)0x0a  // p.
+#define CLOG       (C)0x0b  // ^.
+#define CREV       (C)0x0c  // |.
+#define CROT       (C)0x0c  // |.
+#define CCIRCLE    (C)0x0d  // o.
+#define CCANT      (C)0x0e  // |:
+#define CNOT       (C)0x0f  // -.
+#define CLESS      (C)0x0f  // -.
+#define CICAP      (C)0x10  // I.
+#define CQUERY     (C)0x11  //
+#define CQRYDOT    (C)0x12  // ?.
+#define CFCONS     (C)0x13  // 0: 1: 2: etc.
+#define CUNDER     (C)0x14  // &.
+#define CCOMDOT    (C)0x15  // ,.
+#define CLAMIN     (C)0x16  // ,:
+#define CLEFT      (C)0x17  //
+#define CRIGHT     (C)0x18  //
+#define CCOMMA     (C)0x19  //
+#define CSEMICO    (C)0x1a  //
+#define CRAZE      (C)0x1a  //
+#define CJDOT      (C)0x1b  // j.
+#define CSTARCO    (C)0x1c  // *:
+#define CPLUSCO    (C)0x1d  // +:
+#define CGRADE     (C)0x1e  // /:
+#define CEXP       (C)0x1f  //
+#define CDIV       (C)0x20  //
+#define CMINUS     (C)0x21  //
+#define CSTAR      (C)0x22  //
+#define CPLUSDOT   (C)0x23  // +.
+#define CSTARDOT   (C)0x24  // *.
+#define CPLUS      (C)0x25  //
+#define CEQ        (C)0x26 // =
+#define CNE        (C)0x27 // ~:
+#define CLE        (C)0x28 // <:
+#define CGE        (C)0x29 // >:
+#define CBOX       (C)0x2a // <
+#define CLT        (C)0x2a // <
+#define COPE       (C)0x2b // >
+#define CGT        (C)0x2b // >
+#define CEPS       (C)0x2c  // e.
+#define CEBAR      (C)0x2d  // E.
+#define CMIN       (C)0x2e  // <.
+#define CFLOOR     (C)0x2e  // <.
+#define CMAX       (C)0x2f  // >.
+#define CCEIL      (C)0x2f  // >.
+#define CNOUN      (C)0x30  // '0' - used in AR for noun
+#define CSLASH     (C)0x31  // /
+#define CHOOK      (C)0x32  // '2' - used in AR for hook
+#define CFORK      (C)0x33  // '3' - used in AR for fork
+#define CADVF      (C)0x34  // '4' - used in AR for bonded conjunction AC or CA
+#define CCAP       (C)0x35  // [:
+#define CAMP       (C)0x36  // &
+#define CAT        (C)0x37  // @
+#define CAMPCO     (C)0x38  // &:
+#define CATCO      (C)0x39  // @:
+#define CATDOT     (C)0x3a  // @.
+#define CSELF      (C)0x3b  // $:
+#define CGRCO      (C)0x3c  // `:
+#define CCOLON     (C)0x3d  //
+#define CUDOT      (C)0x3e  // u.  must be paired v.
+#define CVDOT      (C)0x3f  // v.
+#define CTILDE     (C)0x40  //
+#define CTAIL      (C)0x41  // {:
+#define CTAKE      (C)0x42  // {.
+#define CHEAD      (C)0x42  // {.
+#define CPOUND     (C)0x43  //
+#define CDOLLAR    (C)0x44  //
+#define CSLDOT     (C)0x45  // /.
+#define CADVERSE   (C)0x46  // ::
+#define CQQ        (C)0x47  //     double quote
+#define CABASE     (C)0x48  // #:
+#define CIOTA      (C)0x49  // i.
+#define CICO       (C)0x4a  // i:
+#define CLBRACE    (C)0x4b  // {
+#define CFROM      (C)0x4b  // {
+#define CHALVE     (C)0x4c  // -:
+#define CMATCH     (C)0x4c  // -:
+#define CNUB       (C)0x4d  // ~.
+#define CPDERIV    (C)0x4e  // p..
+#define CXCO       (C)0x4f  // x:
+#define CTHORN     (C)0x50  // ":
+#define CSCO       (C)0x51  // s:
+#define CUCO       (C)0x52  // u:
+#define CDGRADE    (C)0x53  // \:
+#define CWORDS     (C)0x54  // ;:
+#define CSPARSE    (C)0x55  // $.
+#define CBSDOT     (C)0x56  // \.
+#define CCUT       (C)0x57  // ;.
+#define CATOMIC    (C)0x58  // A.
+#define CPCO       (C)0x59  // p:
+#define CQCO       (C)0x5a  // q:
+#define CDOT       (C)0x5b  //
+#define CDOMINO    (C)0x5c  // %.
+#define CCYCLE     (C)0x5d  // C.
+#define CSTILE     (C)0x5e  // |
+#define CRDOT      (C)0x5f  // r.
+#define CSQRT      (C)0x60  // %:
+#define CROOT      (C)0x60  // %:
+#define CBANG      (C)0x61  // !
+#define CBDOT      (C)0x62  // b.
+
+
+
+
+
+
+
+#define CGRAVE     (C)0x67 // `
+#define CUNDCO     (C)'\356'       /* 238 356 ee &.:                          */
+
+
+
+
+
+#define CINF       (C)0x68  //  infinity
+
+#define CRBRACE    (C)0x6d  // }
+#define CAMEND     (C)0x6d  // }
 // 127 free
-#define CASGN      (C)'\200'       /* 128 200 80 =.                           */
-#define CGASGN     (C)'\201'       /* 129 201 81 =:                           */
-#define CFLOOR     (C)'\202'       /* 130 202 82 <.                           */
-#define CMIN       (C)'\202'       /* 130 202 82 <.                           */
-#define CCEIL      (C)'\204'       /* 132 204 84 >.                           */
-#define CMAX       (C)'\204'       /* 132 204 84 >.                           */
-#define CUSDOT     (C)'\206'       /* 134 206 86 _.                           */
+#define CBW0000    (C)0x70  // bitwise
+#define CBW0001    (C)0x71  // bitwise
+#define CBW0010    (C)0x72  // bitwise
+#define CBW0011    (C)0x73  // bitwise
+#define CBW0100    (C)0x74  // bitwise
+#define CBW0101    (C)0x75  // bitwise
+#define CBW0110    (C)0x76  // bitwise
+#define CBW0111    (C)0x77  // bitwise
+#define CBW1000    (C)0x78  // bitwise
+#define CBW1001    (C)0x79  // bitwise
+#define CBW1010    (C)0x7a  // bitwise
+#define CBW1011    (C)0x7b  // bitwise
+#define CBW1100    (C)0x7c  // bitwise
+#define CBW1101    (C)0x7d  // bitwise
+#define CBW1110    (C)0x7e  // bitwise
+#define CBW1111    (C)0x7f  // bitwise
+
+#define CASGN      (C)0x80       /* 128 200 80 =.                           */
+#define CGASGN     (C)0x81       /* 129 201 81 =:                           */
+
+
+#define CUSDOT     (C)0x6c  // _.
 // 135 free
-#define CPLUSDOT   (C)'\210'       /* 136 210 88 +.                           */
-#define CPLUSCO    (C)'\211'       /* 137 211 89 +:                           */
-#define CSTARDOT   (C)'\212'       /* 138 212 8a *.                           */
-#define CSTARCO    (C)'\213'       /* 139 213 8b *:                           */
-#define CNOT       (C)'\214'       /* 140 214 8c -.                           */
-#define CLESS      (C)'\214'       /* 140 214 8c -.                           */
-#define CHALVE     (C)'\215'       /* 141 215 8d -:                           */
-#define CMATCH     (C)'\215'       /* 141 215 8d -:                           */
-#define CDOMINO    (C)'\216'       /* 142 216 8e %.                           */
-#define CSQRT      (C)'\217'       /* 143 217 8f %:                           */
-#define CROOT      (C)'\217'       /* 143 217 8f %:                           */
-#define CLOG       (C)'\220'       /* 144 220 90 ^.                           */
-#define CPOWOP     (C)'\221'       /* 145 221 91 ^:                           */
-#define CSPARSE    (C)'\222'       /* 146 222 92 $.                           */
-#define CSELF      (C)'\223'       /* 147 223 93 $:                           */
-#define CNUB       (C)'\224'       /* 148 224 94 ~.                           */
-#define CREV       (C)'\226'       /* 150 226 96 |.                           */
-#define CROT       (C)'\226'       /* 150 226 96 |.                           */
-#define CCANT      (C)'\227'       /* 151 227 97 |:                           */
+
+
+
 #define CEVEN      (C)'\230'       /* 152 230 98 ..                           */
 #define CODD       (C)'\231'       /* 153 231 99 .:                           */
 #define COBVERSE   (C)'\232'       /* 154 232 9a :.                           */
-#define CADVERSE   (C)'\233'       /* 155 233 9b ::                           */
-#define CCOMDOT    (C)'\234'       /* 156 234 9c ,.                           */
-#define CLAMIN     (C)'\235'       /* 157 235 9d ,:                           */
-#define CCUT       (C)'\236'       /* 158 236 9e ;.                           */
-#define CWORDS     (C)'\237'       /* 159 237 9f ;:                           */
-#define CBASE      (C)'\240'       /* 160 240 a0 #.                           */
-#define CABASE     (C)'\241'       /* 161 241 a1 #:                           */
-#define CFIT       (C)'\242'       /* 162 242 a2 !.                           */
-#define CIBEAM     (C)'\243'       /* 163 243 a3 !:                           */
-#define CSLDOT     (C)'\244'       /* 164 244 a4 /.                           */
-#define CGRADE     (C)'\245'       /* 165 245 a5 /:                           */
-#define CBSDOT     (C)'\246'       /* 166 246 a6 \.                           */
-#define CDGRADE    (C)'\247'       /* 167 247 a7 \:                           */
 #define CLEV       (C)'\250'       /* 168 250 a8 [.                           */
-#define CCAP       (C)'\251'       /* 169 251 a9 [:                           */
 #define CDEX       (C)'\252'       /* 170 252 aa ].                           */
 #define CIDA       (C)'\253'       /* 171 253 ab ]:                           */
-#define CHEAD      (C)'\254'       /* 172 254 ac {.                           */
-#define CTAKE      (C)'\254'       /* 172 254 ac {.                           */
-#define CTAIL      (C)'\255'       /* 173 255 ad {:                           */
-#define CBEHEAD    (C)'\256'       /* 174 256 ae }.                           */
-#define CDROP      (C)'\256'       /* 174 256 ae }.                           */
-#define CCTAIL     (C)'\257'       /* 175 257 af }:                           */
 #define CEXEC      (C)'\260'       /* 176 260 b0 ".                           */
-#define CTHORN     (C)'\261'       /* 177 261 b1 ":                           */
 #define CGRDOT     (C)'\262'       /* 178 262 b2 `.                           */
-#define CGRCO      (C)'\263'       /* 179 263 b3 `:                           */
-#define CATDOT     (C)'\264'       /* 180 264 b4 @.                           */
-#define CATCO      (C)'\265'       /* 181 265 b5 @:                           */
-#define CAMPCO     (C)'\267'       /* 183 267 b7 &:                           */
-#define CATDOTCO   (C)'\277'       /* 191 277 bf @.                           */
-#define CUNDER     (C)'\266'       /* 182 266 b6 &.                           */
-#define CQRYDOT    (C)'\270'       /* 184 270 b8 ?.                           */
-#define CQRYCO     (C)'\271'       /* 185 271 b9 ?:                           */
+#define CLPAR      (C)0x6a  // (
+#define CRPAR      (C)0x6b  // )
 
 #define CALP       (C)'\272'       /* 186 272 ba a.                           */
-#define CATOMIC    (C)'\273'       /* 187 273 bb A.                           */
 #define CACE       (C)'\274'       /* 188 274 bc a:                           */
-#define CBDOT      (C)'\275'       /* 189 275 bd b.                           */
 #define CCDOT      (C)'\276'       /* 190 276 be c.                           */
-#define CCYCLE     (C)'\300'       /* 192 300 c0 C.                           */
-#define CEPS       (C)'\304'       /* 196 304 c4 e.                           */
-#define CEBAR      (C)'\305'       /* 197 305 c5 E.                           */
 #define CFIX       (C)'\306'       /* 198 306 c6 f.                           */
 #define CFCAPCO    (C)'\307'       /* 199 307 c7 F:                           */
 #define CHGEOM     (C)'\310'       /* 200 310 c8 H.                           */
-#define CIOTA      (C)'\311'       /* 201 311 c9 i.                           */
-#define CICO       (C)'\312'       /* 202 312 ca i:                           */
-#define CICAP      (C)'\313'       /* 203 313 cb I.                           */
 #define CICAPCO    (C)'\314'       /* 204 314 cc I:                           */
-#define CJDOT      (C)'\315'       /* 205 315 cd j.                           */
 #define CLDOT      (C)'\316'       /* 206 316 ce L.                           */
 #define CLCAPCO    (C)'\317'       /* 207 317 cf L:                           */
 #define CMDOT      (C)'\320'       /* 208 320 d0 m.                           */
 #define CMCAP      (C)'\321'       /* 209 321 d1 M.                           */
 #define CNDOT      (C)'\322'       /* 210 322 d2 n.                           */
-#define CCIRCLE    (C)'\323'       /* 211 323 d3 o.                           */
-#define CPOLY      (C)'\324'       /* 212 324 d4 p.                           */
-#define CPCO       (C)'\325'       /* 213 325 d5 p:                           */
 #define CQCAPCO    (C)'\326'       /* 214 326 d6 Q:                           */
-#define CQCO       (C)'\327'       /* 215 327 d7 q:                           */
-#define CRDOT      (C)'\330'       /* 216 330 d8 r.                           */
-#define CSCO       (C)'\331'       /* 217 331 d9 s:                           */
 #define CSCAPCO    (C)'\332'       /* 218 332 da S:                           */
 #define CTDOT      (C)'\333'       /* 219 333 db t.                           */
 #define CTCO       (C)'\334'       /* 220 334 dc t:                           */
 #define CTCAP      (C)'\335'       /* 221 335 dd T.                           */
-#define CUDOT      (C)'\336'       /* 222 336 de u.                           */
-#define CVDOT      (C)'\337'       /* 223 337 df v.                           */
-#define CUCO       (C)'\340'       /* 224 340 e0 u:                           */
 #define CXDOT      (C)'\341'       /* 225 341 e1 x.                           */
-#define CXCO       (C)'\342'       /* 226 342 e2 x:                           */
 #define CYDOT      (C)'\343'       /* 227 343 e3 y.                           */
 // 228-231 free
+#define CQRYCO     (C)'\271'       /* 185 271 b9 ?:                           */
 
-#define CFCONS     (C)'\350'       /* 232 350 e8 0: 1: 2: etc.                */
 #define CAMIP      (C)'\351'       /* 233 351 e9 }   amend in place           */
 #define CCASEV     (C)'\352'       /* 234 352 ea }   case in place            */
 #define CFETCH     (C)'\353'       /* 235 353 eb {::                          */
 #define CMAP       (C)'\354'       /* 236 354 ec {::                          */
 #define CEMEND     (C)'\355'       /* 237 355 ed }::                          */
-#define CUNDCO     (C)'\356'       /* 238 356 ee &.:                          */
-#define CPDERIV    (C)'\357'       /* 239 357 ef p..                          */
 #define CFDOT      (C)'\360'       // 240 360 f0 F.  the ID codes are used as flags
 #define CFDOTCO    (C)'\361'       // 241 361 f1 F.:
 #define CFDOTDOT   (C)'\362'       // 242 362 f2 F..

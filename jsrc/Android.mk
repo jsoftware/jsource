@@ -6,31 +6,31 @@ LOCAL_MODULE_FILENAME    := libj
 
 # ndk r21 : OpenMP is now available as a dynamic library (and this is the new default behavior, so link with -static-openmp if you want to stick with the static runtime)
 ifeq ($(TARGET_ARCH_ABI),arm64-v8a)
-  LOCAL_CFLAGS := -DC_CRC32C=1 -DEMU_AVX=1 -fPIC -Os -fvisibility=hidden -fwrapv -Werror -Wno-string-plus-int -Wno-empty-body -Wno-parentheses -Wno-pointer-sign -Wno-logical-op-parentheses -Wno-unused-value -Wno-null-dereference -Wno-type-limits -Wno-pass-failed -D_FORTIFY_SOURCE=2 -Werror=fortify-source -fno-strict-aliasing -march=armv8-a+crc+crypto
+  LOCAL_CFLAGS := -DC_CRC32C=1 -DEMU_AVX=1 -DSLEEF=1 -DENABLE_ADVSIMD -fPIC -Os -fvisibility=hidden -fwrapv -Werror -Wno-string-plus-int -Wno-empty-body -Wno-parentheses -Wno-pointer-sign -Wno-logical-op-parentheses -Wno-unused-value -Wno-null-dereference -Wno-type-limits -Wno-pass-failed -D_FORTIFY_SOURCE=2 -Werror=fortify-source -fno-strict-aliasing -march=armv8-a+crc+crypto -Wno-sign-compare -DDORENAME -I../sleef/src/arch -I../sleef/src/common
   LOCAL_ARM_NEON := true
   LOCAL_CFLAGS += -fopenmp
   LOCAL_LDFLAGS += -fopenmp -static-openmp
 endif
 ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
-  LOCAL_CFLAGS := -fPIC -Os -fvisibility=hidden -fwrapv -Werror -Wno-string-plus-int -Wno-empty-body -Wno-parentheses -Wno-pointer-sign -Wno-logical-op-parentheses -Wno-unused-value -Wno-null-dereference -Wno-type-limits -Wno-pass-failed -D_FORTIFY_SOURCE=2 -Werror=fortify-source -fno-strict-aliasing -mfloat-abi=softfp -march=armv7-a
+  LOCAL_CFLAGS := -DENABLE_VECEXT -fPIC -Os -fvisibility=hidden -fwrapv -Werror -Wno-string-plus-int -Wno-empty-body -Wno-parentheses -Wno-pointer-sign -Wno-logical-op-parentheses -Wno-unused-value -Wno-null-dereference -Wno-type-limits -Wno-pass-failed -D_FORTIFY_SOURCE=2 -Werror=fortify-source -fno-strict-aliasing -mfloat-abi=softfp -march=armv7-a -Wno-sign-compare -DDORENAME -I../sleef/src/arch -I../sleef/src/common
   LOCAL_ARM_MODE := thumb
   LOCAL_ARM_NEON := true
 # LOCAL_CFLAGS += -fopenmp
 # LOCAL_LDFLAGS += -fopenmp -static-openmp
 endif
 ifeq ($(TARGET_ARCH_ABI),armeabi)
-  LOCAL_CFLAGS := -fPIC -Os -fvisibility=hidden -fwrapv -Werror -Wno-string-plus-int -Wno-empty-body -Wno-parentheses -Wno-pointer-sign -Wno-logical-op-parentheses -Wno-unused-value -Wno-null-dereference -Wno-type-limits -fno-strict-aliasing -mfloat-abi=softfp -march=armv5te
+  LOCAL_CFLAGS := -DENABLE_VECEXT -fPIC -Os -fvisibility=hidden -fwrapv -Werror -Wno-string-plus-int -Wno-empty-body -Wno-parentheses -Wno-pointer-sign -Wno-logical-op-parentheses -Wno-unused-value -Wno-null-dereference -Wno-type-limits -fno-strict-aliasing -mfloat-abi=softfp -march=armv5te -Wno-sign-compare -DDORENAME -I../sleef/src/arch -I../sleef/src/common
   LOCAL_ARM_MODE := arm
   LOCAL_CFLAGS += -fopenmp
   LOCAL_LDFLAGS += -fopenmp
 endif
 ifeq ($(TARGET_ARCH),x86_64)
-  LOCAL_CFLAGS := -DC_CRC32C=1 -DEMU_AVX=1 -fPIC -Os -fvisibility=hidden -fwrapv -Werror -Wno-string-plus-int -Wno-empty-body -Wno-parentheses -Wno-pointer-sign -Wno-logical-op-parentheses -Wno-unused-value -Wno-null-dereference -Wno-type-limits -Wno-pass-failed -D_FORTIFY_SOURCE=2 -Werror=fortify-source -fno-strict-aliasing -march=x86-64 -mtune=intel -msse4.2 -mpopcnt -fno-stack-protector
+  LOCAL_CFLAGS := -DC_CRC32C=1 -DEMU_AVX=1 -DSLEEF=1 -DENABLE_SSE2 -fPIC -Os -fvisibility=hidden -fwrapv -Werror -Wno-string-plus-int -Wno-empty-body -Wno-parentheses -Wno-pointer-sign -Wno-logical-op-parentheses -Wno-unused-value -Wno-null-dereference -Wno-type-limits -Wno-pass-failed -D_FORTIFY_SOURCE=2 -Werror=fortify-source -fno-strict-aliasing -march=x86-64 -mtune=intel -msse4.2 -mpopcnt -fno-stack-protector -Wno-sign-compare -DDORENAME -I../sleef/src/arch -I../sleef/src/common
   LOCAL_CFLAGS += -fopenmp
   LOCAL_LDFLAGS += -fopenmp -static-openmp
 endif
 ifeq ($(TARGET_ARCH),x86)
-  LOCAL_CFLAGS := -fPIC -Os -fvisibility=hidden -fwrapv -Werror -Wno-string-plus-int -Wno-empty-body -Wno-parentheses -Wno-pointer-sign -Wno-logical-op-parentheses -Wno-unused-value -Wno-null-dereference -Wno-type-limits -Wno-pass-failed -D_FORTIFY_SOURCE=2 -Werror=fortify-source -fno-strict-aliasing -march=i686 -mtune=intel -mssse3 -mfpmath=sse -fno-stack-protector
+  LOCAL_CFLAGS := -DIMI_AVX=1 -DSLEEF=1 -DENABLE_SSE2 -fPIC -Os -fvisibility=hidden -fwrapv -Werror -Wno-string-plus-int -Wno-empty-body -Wno-parentheses -Wno-pointer-sign -Wno-logical-op-parentheses -Wno-unused-value -Wno-null-dereference -Wno-type-limits -Wno-pass-failed -D_FORTIFY_SOURCE=2 -Werror=fortify-source -fno-strict-aliasing -march=i686 -mtune=intel -mssse3 -mfpmath=sse -fno-stack-protector -Wno-sign-compare -DDORENAME -I../sleef/src/arch -I../sleef/src/common
   LOCAL_CFLAGS += -fopenmp
   LOCAL_LDFLAGS += -fopenmp -static-openmp
 endif
@@ -44,7 +44,11 @@ LOCAL_SRC_FILES := a.c ab.c aes-c.c aes-arm.c aes-sse2.c af.c ai.c am.c am1.c am
 	blis/gemm_c-ref.c blis/gemm_int-aarch64.c blis/gemm_int-avx.c blis/gemm_int-fma.c blis/gemm_int-sse2.c blis/gemm_vec-ref.c \
   openssl/sha/keccak1600.c openssl/sha/md4_dgst.c openssl/sha/md4_one.c openssl/sha/md5_dgst.c \
   openssl/sha/md5_one.c openssl/sha/openssl-util.c openssl/sha/sha1_one.c openssl/sha/sha256.c \
-  openssl/sha/sha3.c openssl/sha/sha512.c
+  openssl/sha/sha3.c openssl/sha/sha512.c \
+  ../sleef/src/common/arraymap.c \
+  ../sleef/src/common/common.c \
+  ../sleef/src/libm/rempitab.c \
+  ../sleef/src/libm/sleefsimddp.c
 
 ifeq ($(TARGET_ARCH_ABI),arm64-v8a)
 LOCAL_ASMFLAGS += -f elf64 -X gnu -D LINUX

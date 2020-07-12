@@ -12,7 +12,19 @@ ifeq (1,${USE_IMI_AVX})
 FIMIAVX= /DIMI_AVX=1
 endif
 ifeq (1,${USE_SLEEF})
-FSLEEF= /DSLEEF=1
+ifeq (1,${x64})
+ifeq (1,${JAVX2})
+FSLEEF= /DSLEEF=1 /DENABLE_AVX2 /DSLEEF_STATIC_LIBS /DDORENAME -I../../sleef/src/common -I../../sleef/src/arch
+else
+ifeq (1,${JAVX})
+FSLEEF= /DSLEEF=1 /DENABLE_AVX /DSLEEF_STATIC_LIBS /DDORENAME -I../../sleef/src/common -I../../sleef/src/arch
+else
+FSLEEF= /DSLEEF=1 /DENABLE_SSE2 /DSLEEF_STATIC_LIBS /DDORENAME -I../../sleef/src/common -I../../sleef/src/arch
+endif
+endif
+else
+FSLEEF= /DSLEEF=1 /DENABLE_SSE2 /DSLEEF_STATIC_LIBS /DDORENAME -I../../sleef/src/common -I../../sleef/src/arch
+endif
 endif
 ifeq (1,${DEBUG})
 FDEBUG = /FS /Zi /DDEBUG=1
@@ -205,7 +217,11 @@ endif
 endif
 
 ifeq (1,${USE_SLEEF})
-LIBSLEEF= ../../sleef/lib/windows/sleef.lib
+OBJS_SLEEF= \
+ ../../sleef/src/common/arraymap.o \
+ ../../sleef/src/common/common.o \
+ ../../sleef/src/libm/rempitab.o \
+ ../../sleef/src/libm/sleefsimddp.o
 endif
 
 DEF= ../../dllsrc/jdll.def
@@ -238,8 +254,8 @@ else
 TARGET= j32.dll
 endif
 
-$(TARGET) : $(OBJS) $(SRC_ASM) $(OBJS_ASM) $(ASM) $(LIBSLEEF) jdll.res
-	$(LD) /NOLOGO /DEF:$(DEF) $(FLAGS) /out:$@ $(OBJS) $(SRC_ASM) $(OBJS_ASM) $(ASM) $(LIBSLEEF) jdll.res ole32.lib advapi32.lib oleaut32.lib
+$(TARGET) : $(OBJS) $(SRC_ASM) $(OBJS_ASM) $(OBJS_SLEEF) $(ASM) jdll.res
+	$(LD) /NOLOGO /DEF:$(DEF) $(FLAGS) /out:$@ $(OBJS) $(SRC_ASM) $(OBJS_ASM) $(OBJS_SLEEF) $(ASM) jdll.res ole32.lib advapi32.lib oleaut32.lib
 
 jdll.res : $(RCS)
 	$(RC) /L 0x409 /D_USING_V110_SDK71_ -R -FO$@ $(RCS)
@@ -247,6 +263,6 @@ jdll.res : $(RCS)
 all: $(TARGET)
 
 clean:
-	rm -f *.lib *.exp *.res *.ilk *.pdb $(OBJS) $(SRC_ASM)
+	rm -f *.lib *.exp *.res *.ilk *.pdb $(OBJS) $(OBJS_SLEEF) $(SRC_ASM)
 
 .PHONY: all clean

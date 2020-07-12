@@ -275,11 +275,11 @@ static double private_mem[PRIVATE_mem], *pmem_next = private_mem;
 extern "C" {
 #endif
 
-#ifndef CONST
+#ifndef CONSTANT
 #ifdef KR_headers
-#define CONST /* blank */
+#define CONSTANT /* blank */
 #else
-#define CONST const
+#define CONSTANT const
 #endif
 #endif
 
@@ -660,9 +660,9 @@ d2a_multadd
  static Bigint *
 d2a_s2b
 #ifdef KR_headers
- (s, nd0, nd, y9) CONST char *s; int nd0, nd; ULong y9;
+ (s, nd0, nd, y9) CONSTANT char *s; int nd0, nd; ULong y9;
 #else
- (struct dtoa_info *d2a, CONST char *s, int nd0, int nd, ULong y9)
+ (struct dtoa_info *d2a, CONSTANT char *s, int nd0, int nd, ULong y9)
 #endif
 {
  Bigint *b;
@@ -1448,7 +1448,7 @@ ratio
  }
 #endif
 
- static CONST double
+ static CONSTANT double
 tens[] = {
   1e0, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9,
   1e10, 1e11, 1e12, 1e13, 1e14, 1e15, 1e16, 1e17, 1e18, 1e19,
@@ -1458,10 +1458,10 @@ tens[] = {
 #endif
   };
 
- static CONST double
+ static CONSTANT double
 #ifdef IEEE_Arith
 bigtens[] = { 1e16, 1e32, 1e64, 1e128, 1e256 };
-static CONST double tinytens[] = { 1e-16, 1e-32, 1e-64, 1e-128,
+static CONSTANT double tinytens[] = { 1e-16, 1e-32, 1e-64, 1e-128,
 #ifdef Avoid_Underflow
   9007199254740992.*9007199254740992.e-256
   /* = 2^106 * 1e-53 */
@@ -1476,11 +1476,11 @@ static CONST double tinytens[] = { 1e-16, 1e-32, 1e-64, 1e-128,
 #else
 #ifdef IBM
 bigtens[] = { 1e16, 1e32, 1e64 };
-static CONST double tinytens[] = { 1e-16, 1e-32, 1e-64 };
+static CONSTANT double tinytens[] = { 1e-16, 1e-32, 1e-64 };
 #define n_bigtens 3
 #else
 bigtens[] = { 1e16, 1e32 };
-static CONST double tinytens[] = { 1e-16, 1e-32 };
+static CONSTANT double tinytens[] = { 1e-16, 1e-32 };
 #define n_bigtens 2
 #endif
 #endif
@@ -1504,11 +1504,11 @@ match
 #ifdef KR_headers
  (sp, t) char **sp, *t;
 #else
- (CONST char **sp, char *t)
+ (CONSTANT char **sp, char *t)
 #endif
 {
  int c, d;
- CONST char *s = *sp;
+ CONSTANT char *s = *sp;
 
  while(d = *t++) {
   if ((c = *++s) >= 'A' && c <= 'Z')
@@ -1524,20 +1524,20 @@ match
  static void
 hexnan
 #ifdef KR_headers
- (rvp, sp) double *rvp; CONST char **sp;
+ (rvp, sp) double *rvp; CONSTANT char **sp;
 #else
- (double *rvp, CONST char **sp)
+ (double *rvp, CONSTANT char **sp)
 #endif
 {
  ULong c, x[2];
- CONST char *s;
+ CONSTANT char *s;
  int havedig, udx0, xshift;
 
  x[0] = x[1] = 0;
  havedig = xshift = 0;
  udx0 = 1;
  s = *sp;
- while(c = *(CONST unsigned char*)++s) {
+ while(c = *(CONSTANT unsigned char*)++s) {
   if (c >= '0' && c <= '9')
    c -= '0';
   else if (c >= 'a' && c <= 'f')
@@ -1579,9 +1579,9 @@ hexnan
  double
 strtod
 #ifdef KR_headers
- (s00, se) CONST char *s00; char **se;
+ (s00, se) CONSTANT char *s00; char **se;
 #else
- (void *jt, CONST char *s00, char **se)
+ (void *jt, CONSTANT char *s00, char **se)
 #endif
 {
 #ifdef Avoid_Underflow
@@ -1589,7 +1589,7 @@ strtod
 #endif
  int bb2, bb5, bbe, bd2, bd5, bbbits, bs2, c, dsign,
    e, e1, esign, i, j, k, nd, nd0, nf, nz, nz0, sign;
- CONST char *s, *s0, *s1;
+ CONSTANT char *s, *s0, *s1;
  double aadj, aadj1, adj, rv, rv0;
  Long L;
  ULong y, z;
@@ -1601,7 +1601,7 @@ strtod
  int rounding;
 #endif
 #ifdef USE_LOCALE
- CONST char *s2;
+ CONSTANT char *s2;
 #endif
 
  sign = nz0 = nz = 0;

@@ -278,8 +278,8 @@ static F2(jtlinsert){A*av,f,g,h,t,t0,t1,t2,*u,y;B b,ft,gt,ht;C c,id;I n;V*v;
  b=id==CCOLON&&VXOP&v->flag;
  I fndx=(id==CBDOT)&&!v->fgh[0]; A fs=v->fgh[fndx]; A gs=v->fgh[fndx^1];  // In verb for m b., if f is empty look to g for the left arg.  It would be nice to be more general
 // ?t tells whether () is needed around the f/g/h component
- if(1<=n){f=av[0]; t=fs; c=ID(t); ft=c==CHOOK||c==CFORK||c==CADVF||(b||id==CFORK)&&NOUN&AT(t)&&lp(f);}  // f: () if it's hook fork && or noun left end of nvv or n (op)
- if(2<=n){g=av[1]; t=gs; c=ID(t); gt=VERB&AT(w)    ?c==CHOOK||c==CFORK:lp(g);}
+ if(1<=n){f=av[0]; t=fs; c=ID(t); ft=BETWEENC(c,CHOOK,CADVF)||(b||id==CFORK)&&NOUN&AT(t)&&lp(f);}  // f: () if it's hook fork && or noun left end of nvv or n (op)
+ if(2<=n){g=av[1]; t=gs; c=ID(t); gt=VERB&AT(w)    ?BETWEENC(c,CHOOK,CFORK):lp(g);}
  if(3<=n){h=av[2]; t=v->fgh[2]; c=ID(t); ht=VERB&AT(w)&&!b?c==CHOOK          :lp(h);}
  switch(!b?id:2==n?CHOOK:CFORK){
   case CADVF:

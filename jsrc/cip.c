@@ -1023,7 +1023,8 @@ static A jtipbx(J jt,A a,A w,C c,C d){A g=0,x0,x1,z;B*av,*av0,b,*v0,*v1,*zv;C c0
  // m=#1-cells of a, n=# bytes in 1-cell of w, p=length of individual inner product creating an atom
  ana=!!AR(a); wc=AR(w)?n:0; q=(n-1)>>LGSZI; r=(-n)&(SZI-1);  // ana = 1 if a is not atomic; wc = stride between items of w; q=#fullwords to proc, r=#bytes of last one NOT to proc
  // Set c0 & c1 to classify the g operation
- switch(B01&AT(w)?d:0){
+#if !SY_64 // obsolete
+ switch(B01&AT(w)?d:0){  // scaf use shift
   case CEQ:                             c0=IPBXNW; c1=IPBXW;  break;
   case CNE:                             c0=IPBXW;  c1=IPBXNW; break;
   case CPLUSDOT: case CMAX:             c0=IPBXW;  c1=IPBX1;  break;
@@ -1040,6 +1041,21 @@ static A jtipbx(J jt,A a,A w,C c,C d){A g=0,x0,x1,z;B*av,*av0,b,*v0,*v1,*zv;C c0
  // Set up x1 to be the arg if xatom is 1
  if(!g)RZ(x0=c0==IPBX0?reshape(sc(n),num(0)):c0==IPBX1?reshape(sc(c==CNE?AN(w):n),num(1)):c0==IPBXW?w:not(w));
  if(!g)RZ(x1=c1==IPBX0?reshape(sc(n),num(0)):c1==IPBX1?reshape(sc(c==CNE?AN(w):n),num(1)):c1==IPBXW?w:not(w));
+#else
+ // See if we can use special techniques
+#define Q9(f,c0,c1) ((I)(((c1)<<2)+(c0))<<(((f)-CSTARCO)<<2))
+#define PMSK Q9(CSTARCO,IPBX1,IPBXNW)+Q9(CPLUSCO,IPBXNW,IPBX0)+Q9(CSTAR,IPBX0,IPBXW)+Q9(CPLUS,0,0)+Q9(CPLUSDOT,IPBXW,IPBX1)+Q9(CSTARDOT,IPBX0,IPBXW)+Q9(CEQ,IPBXNW,IPBXW)+Q9(CNE,IPBXW,IPBXNW)+Q9(CLT,IPBXW,IPBX0)+Q9(CLE,IPBX1,IPBXW)+Q9(CGE,IPBXNW,IPBX1)+Q9(CGT,IPBX0,IPBXNW)+Q9(CEBAR,0,0)+Q9(CEPS,0,0)+Q9(CMIN,IPBX0,IPBXW)+Q9(CMAX,IPBXW,IPBX1)
+ I pmsk=0; pmsk=BETWEENC(d,CSTARCO,CMAX)?PMSK:pmsk; pmsk&=-(B01&AT(w));
+ c0=(pmsk>>((d-CSTARCO)<<2))&3; c1=(pmsk>>(((d-CSTARCO)<<2)+2))&3;  // get control bits if known fn, (0,0) if unknown
+ // create x0 and x1, the result of (g 0) and (g 1).  If we know the function we can avoid invoking g sometimes
+ if(c0+c1==0){
+  // unsupported g.  Set c0/c1 to invalid and execute g to find x0/x1
+  c0=c1=-1; g=ds(d); RZ(df2(x0,num(0),w,g)); RZ(df2(x1,num(0),w,g));
+ }else{
+  RZ(x0=c0==IPBX0?reshape(sc(n),num(0)):c0==IPBX1?reshape(sc(c==CNE?AN(w):n),num(1)):c0==IPBXW?w:not(w));
+  RZ(x1=c1==IPBX0?reshape(sc(n),num(0)):c1==IPBX1?reshape(sc(c==CNE?AN(w):n),num(1)):c1==IPBXW?w:not(w));
+ }
+ #endif
  // av->a arg, zv->result, v0->input for 0, v1->input for 1
  av0=BAV(a); zv=BAV(z); v0=BAV(x0); v1=BAV(x1);
 

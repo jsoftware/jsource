@@ -198,7 +198,8 @@ static F1(jtinvamp){A f,ff,g,h,x,y;B nf,ng;C c,d,*yv;I n;V*u,*v;
    if(ng&&equ(x,num(1))&&equ(f,eval("i.\"1")))R hook(ds(CFROM),ds(CEQ));
    break;
   case CBSLASH:
-   if(nf&&(n=i0(x),0>n)&&(d=ID(u->fgh[0]),d==CLEFT||d==CRIGHT))R slash(ds(CCOMMA));
+// obsolete    if(nf&&(n=i0(x),0>n)&&(d=ID(u->fgh[0]),d==CLEFT||d==CRIGHT))R slash(ds(CCOMMA));
+   if(nf&&(n=i0(x),0>n)&&(d=ID(u->fgh[0]),(d&-2)==CLEFT))R slash(ds(CCOMMA));  // LEFT || RIGHT
    break;
   case CIBEAM:
    x=FAV(h)->fgh[0]; y=FAV(h)->fgh[1];
@@ -225,24 +226,37 @@ static F1(jtinvamp){A f,ff,g,h,x,y;B nf,ng;C c,d,*yv;I n;V*u,*v;
  ASSERT(0,EVDOMAIN);
 }
 
-static const C invf[2][29] = {
- CDIV,   CPLUS,  CMINUS,  CLEFT,   CRIGHT,  CREV,    CCANT,   CPOLY, 
- CNOT,   CGRADE, CCYCLE,  CDOMINO, COPE,    CBOX,    CLOG,    CEXP,
- CGE,    CLE,    CHALVE,  CPLUSCO, CSQRT,   CSTARCO, CHEAD,   CLAMIN,
- CABASE, CBASE,  CTHORN,  CEXEC,   0,
- CDIV,   CPLUS,  CMINUS,  CLEFT,   CRIGHT,  CREV,    CCANT,   CPOLY,
- CNOT,   CGRADE, CCYCLE,  CDOMINO, CBOX,    COPE,    CEXP,    CLOG,
- CLE,    CGE,    CPLUSCO, CHALVE,  CSTARCO, CSQRT,   CLAMIN,  CHEAD,  
- CBASE,  CABASE, CEXEC,   CTHORN,  0 
+// obsolete static const C invf[2][29] = {
+// obsolete  CDIV,   CPLUS,  CMINUS,  CLEFT,   CRIGHT,  CREV,    CCANT,   CPOLY, 
+// obsolete  CNOT,   CGRADE, CCYCLE,  CDOMINO, COPE,    CBOX,    CLOG,    CEXP,
+// obsolete  CGE,    CLE,    CHALVE,  CPLUSCO, CSQRT,   CSTARCO, CHEAD,   CLAMIN,
+// obsolete  CABASE, CBASE,  CTHORN,  CEXEC,   0,
+// obsolete  CDIV,   CPLUS,  CMINUS,  CLEFT,   CRIGHT,  CREV,    CCANT,   CPOLY,
+// obsolete  CNOT,   CGRADE, CCYCLE,  CDOMINO, CBOX,    COPE,    CEXP,    CLOG,
+// obsolete  CLE,    CGE,    CPLUSCO, CHALVE,  CSTARCO, CSQRT,   CLAMIN,  CHEAD,  
+// obsolete  CBASE,  CABASE, CEXEC,   CTHORN,  0 
+// obsolete };
+// obsolete 
+// simpleinv[i] is the inverse function for function i
+static const C simpleinv[128] = {
+[CDIV&127]=CDIV, [CPLUS&127]=CPLUS, [CMINUS&127]=CMINUS, [CLEFT&127]=CLEFT, [CRIGHT&127] =CRIGHT , [CREV&127] =CREV , [CCANT&127]=CCANT, [CPOLY&127]=CPOLY,
+[CNOT&127]=CNOT, [CGRADE&127]=CGRADE, [CCYCLE&127] =CCYCLE , [CDOMINO&127]=CDOMINO, [COPE&127] =CBOX , [CBOX&127]=COPE, [CLOG&127] =CEXP , [CEXP&127]=CLOG,
+[CGE&127]=CLE, [CLE&127]=CGE, [CHALVE&127]=CPLUSCO, [CPLUSCO&127]=CHALVE, [CSQRT&127]=CSTARCO, [CSTARCO&127]=CSQRT, [CHEAD&127]=CLAMIN, [CLAMIN&127] =CHEAD ,
+[CABASE&127]=CBASE, [CBASE&127]=CABASE, [CTHORN&127]=CEXEC, [CEXEC&127]=CTHORN,
 };
 
 // Return inverse of monad w.  recur is a recursion indicator, always forced to 0 for the initial call, and
 // set to 1 here for recursive calls
-A jtinv(J jt, A w, I recur){A f,ff,g;B b,nf,ng,vf,vg;C id,*s;I p,q;V*v;
+A jtinv(J jt, A w, I recur){A f,ff,g;B b,nf,ng,vf,vg;C id;I p,q;V*v;
  RZ(w); STACKCHKOFL  // make sure we don't have a recursion loop through inv
  ASSERT(VERB&AT(w),EVDOMAIN); 
  id=ID(w); v=FAV(w);  // id=pseudochar for w, v->verb info
- if(s=strchr(invf[0],id))R ds(invf[1][s-invf[0]]);   // quickly handle verbs that have primitive inverses
+#define simpleinvvalues(w) CCM(w,CDIV)+CCM(w,CPLUS)+CCM(w,CMINUS)+CCM(w,CLEFT)+CCM(w,CRIGHT)+CCM(w,CREV)+CCM(w,CCANT)+CCM(w,CPOLY)+ \
+ CCM(w,CNOT)+CCM(w,CGRADE)+CCM(w,CCYCLE)+CCM(w,CDOMINO)+CCM(w,COPE)+CCM(w,CLOG)+CCM(w,CBOX)+CCM(w,CEXP)+ \
+ CCM(w,CGE)+CCM(w,CLE)+CCM(w,CHALVE)+CCM(w,CPLUSCO)+CCM(w,CSQRT)+CCM(w,CSTARCO)+CCM(w,CHEAD)+CCM(w,CLAMIN)+ \
+ CCM(w,CABASE)+CCM(w,CBASE)+CCM(w,CTHORN)+CCM(w,CEXEC)
+ CCMWDS(simpleinv) CCMCAND(simpleinv,cand,id) if(CCMSGN(cand,id)<0)R ds(simpleinv[id&127]);
+// obsolete  if(s=strchr(invf[0],id))R ds(invf[1][s-invf[0]]);   // quickly handle verbs that have primitive inverses  kludge scaf faster
  // in case id indicates a modifier, set (f|g) to the operand, n? if it is a noun or name, v? if it is a verb
  f=v->fgh[0]; nf=f&&AT(f)&NOUN+NAME; vf=f&&!nf;
  g=v->fgh[1]; ng=g&&AT(g)&NOUN+NAME; vg=g&&!ng;
@@ -309,7 +323,8 @@ A jtinv(J jt, A w, I recur){A f,ff,g;B b,nf,ng,vf,vg;C id,*s;I p,q;V*v;
    if(3==p&&3==q)R foreign(f,num(2));
    break;
   case CHOOK:
-   if(CFROM==ID(f)&&CEQ==ID(g))R eval("i.\"1&1");
+// obsolete   if(CFROM==ID(f)&&CEQ==ID(g))R eval("i.\"1&1");
+    if(BOTHEQ8(ID(f),ID(g),CFROM,CEQ))R eval("i.\"1&1");
    break;
  }
  // Failure - no inverse found.  If there are names in w, try fixing w and try on that.
@@ -362,16 +377,27 @@ F1(jtiden){A f,g,x=0;V*u,*v;
     case CPLUS:            x=num(0);
    }
    break;
-  case CBDOT:
-   switch(i0(g)){
-    case 25:    x=num(-1); break;
-    case  2: case  4: case  5: case  6: case  7:
-    case 18: case 20: case 21: case 22: case 23:
-                x=num(0); break;
-    case  1: case  9: case 11: case 13: case 17: 
-    case 27: case 29:
-                x=num(1);
- }}
+  case CBDOT: ;  // canned inverses for (bt b.)
+   I bt=i0(g);
+#define INVM1 BMK(25)
+#define INV0 (BMK(2)+BMK(4)+BMK(5)+BMK(6)+BMK(7)+BMK(18)+BMK(20)+BMK(21)+BMK(22)+BMK(23))
+#define INV1 (BMK(1)+BMK(9)+BMK(11)+BMK(13)+BMK(17)+BMK(27)+BMK(29))
+   if(bt<32&&((INVM1|INV0|INV1)&(1LL<<bt))){I bi;
+    bi=-1; bi=INV0&(1LL<<bt)?0:bi; bi=INV1&(1LL<<bt)?1:bi;
+    x=num(bi);
+   }
+   break;
+  }
+// obsolete    switch(i0(g)){
+// obsolete     case 25:    x=num(-1); break;
+// obsolete     case  2: case  4: case  5: case  6: case  7:
+// obsolete     case 18: case 20: case 21: case 22: case 23:
+// obsolete                 x=num(0); break;
+// obsolete     case  1: case  9: case 11: case 13: case 17: 
+// obsolete     case 27: case 29:
+// obsolete                 x=num(1);
+// obsolete   }
+// obsolete  }
  ASSERT(x,EVDOMAIN);
  R folk(x,swap(ds(CDOLLAR)),atop(ds(CBEHEAD),ds(CDOLLAR)));
 }

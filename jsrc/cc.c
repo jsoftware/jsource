@@ -221,7 +221,7 @@ static DF2(jtcut2bx){A*av,b,t,x,*xv,y,*yv;B*bv;I an,bn,i,j,m,p,q,*u,*v,*ws;
    EACHC(GA(y,t,d*c,r,s); AS(y)[0]=d; MC(AV(y),v1,d*k); *za++=y;);             \
    R z;                                                                      \
   case CAT: case CATCO: case CAMP: case CAMPCO:                              \
-   if(CBOX==ID(vf->fgh[0])&&(id1=ID(vf->fgh[1]),id1==CBEHEAD||id1==CCTAIL)){           \
+   if(CBOX==ID(vf->fgh[0])&&(id1=ID(vf->fgh[1]),((id1&~1)==CBEHEAD))){           \
     GA(z,m?BOX:B01,m,1,0); za=AAV(z);                                        \
     EACHC(d=d?d-1:0; GA(y,t,d*c,r,s); AS(y)[0]=d; MC(AV(y),id1==CBEHEAD?v1+k:v1,d*k); *za++=y;);               \
     R z;                                                                     \
@@ -278,7 +278,7 @@ static DF2(jtcut2sx){PROLOG(0024);DECLF;A h=0,*hv,y,yy;B b,neg,pfx,*u,*v;C id;I 
  if(VGERL&sv->flag){h=sv->fgh[2]; hv=AAV(h); hn=AN(h); id=0;}else id=vf->id; 
  y=SPA(ap,i); yn=AN(y); yv=AV(y); u=v=BAV(SPA(ap,x)); e=m=0;
  GATV0(yy,INT,yn+1,1); yu=AV(yy); *yu++=p=pfx?n:-1;
- switch(pfx+(I )(id==CLEFT||id==CRIGHT||id==CCOMMA?2:0)){
+ switch(pfx+(I )(((id&~1)==CLEFT)||id==CCOMMA?2:0)){  // [ ] ,
   case 0:          DQ(yn, if(*v){++m;      *yu++=  yv[v-u];              } ++v;); break;
   case 1: v+=yn-1; DQ(yn, if(*v){++m;      *yu++=  yv[v-u];              } --v;); break;
   case 2:          DQ(yn, if(*v){++m; d=p; *yu++=p=yv[v-u]; e=MAX(e,p-d);} ++v;); break;

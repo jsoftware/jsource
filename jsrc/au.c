@@ -121,10 +121,11 @@ I boxat(A x, I m, I l, I r){C c;V*v;
 I atoplr(A w){
  if(!w)R 0;
  V *v=FAV(w);     // v->verb info, c=id of w
- C id = v->id;if(v->id==CAT||v->id==CATCO)id = FAV(v->fgh[1])->id;
- switch(id){
-  case CLEFT: R JTINPLACEW;   // ...@[  ok to inplace W
-  case CRIGHT: R JTINPLACEA;   // ...@]  ok to inplace A
- }
- R 0;   // both args in use
+ C id = v->id;if((v->id&-2)==CATCO)id = FAV(v->fgh[1])->id;  // @ @:
+ R (id-(CLEFT-1)) & REPSGN((CLEFT-1)-(I)id) & REPSGN((I)id-(CRIGHT+1));  // LEFT->1, RIGHT->2 punning with JINPLACEW/A; but 0 if not LEFT or RIGHT
+// obsolete  switch(id){
+// obsolete   case CLEFT: R JTINPLACEW;   // ...@[  ok to inplace W
+// obsolete   case CRIGHT: R JTINPLACEA;   // ...@]  ok to inplace A
+// obsolete  }
+// obsolete  R 0;   // both args in use
 }

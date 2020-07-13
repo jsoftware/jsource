@@ -105,64 +105,64 @@
 #define CFCONS     (C)0x13  // 0: 1: 2: etc.
 #define CUNDER     (C)0x14  // &.
 #define CCOMDOT    (C)0x15  // ,.
-#define CLAMIN     (C)0x16  // ,:
-#define CLEFT      (C)0x17  //
-#define CRIGHT     (C)0x18  //
+#define CLEFT      (C)0x16  // [   must be paired with CRIGHT
+#define CRIGHT     (C)0x17  // }
+#define CLAMIN     (C)0x18  // ,:
 #define CCOMMA     (C)0x19  //
 #define CSEMICO    (C)0x1a  //
 #define CRAZE      (C)0x1a  //
 #define CJDOT      (C)0x1b  // j.
-#define CSTARCO    (C)0x1c  // *:
-#define CPLUSCO    (C)0x1d  // +:
-#define CGRADE     (C)0x1e  // /:
-#define CEXP       (C)0x1f  //
-#define CDIV       (C)0x20  //
-#define CMINUS     (C)0x21  //
+#define CGRADE     (C)0x1c  // /:
+#define CEXP       (C)0x1d  //
+#define CDIV       (C)0x1e  //
+#define CMINUS     (C)0x1f  //
+#define CSTARCO    (C)0x20  // *:  20-2f used in cip.c
+#define CPLUSCO    (C)0x21  // +:
 #define CSTAR      (C)0x22  //
-#define CPLUSDOT   (C)0x23  // +.
-#define CSTARDOT   (C)0x24  // *.
-#define CPLUS      (C)0x25  //
-#define CEQ        (C)0x26 // =
+#define CPLUS      (C)0x23  // + +. *. must stay in order.  Low digit is combining type-1
+#define CPLUSDOT   (C)0x24  // +.
+#define CSTARDOT   (C)0x25  // *.
+#define CEQ        (C)0x26 // =   must be paired with ~:  = through e. are in the order used by comparison combination
 #define CNE        (C)0x27 // ~:
-#define CLE        (C)0x28 // <:
-#define CGE        (C)0x29 // >:
-#define CBOX       (C)0x2a // <
-#define CLT        (C)0x2a // <
+#define CLT        (C)0x28 // <
+#define CBOX       (C)0x28 // <
+#define CLE        (C)0x29 // <:
+#define CGE        (C)0x2a // >:
 #define COPE       (C)0x2b // >
 #define CGT        (C)0x2b // >
-#define CEPS       (C)0x2c  // e.
-#define CEBAR      (C)0x2d  // E.
+#define CEBAR      (C)0x2c  // E.  must pair with e.
+#define CEPS       (C)0x2d  // e.
 #define CMIN       (C)0x2e  // <.
 #define CFLOOR     (C)0x2e  // <.
 #define CMAX       (C)0x2f  // >.
 #define CCEIL      (C)0x2f  // >.
 #define CNOUN      (C)0x30  // '0' - used in AR for noun
 #define CSLASH     (C)0x31  // /
-#define CHOOK      (C)0x32  // '2' - used in AR for hook
+#define CHOOK      (C)0x32  // '2' - used in AR for hook  is paired with ADVF 2 distant
 #define CFORK      (C)0x33  // '3' - used in AR for fork
 #define CADVF      (C)0x34  // '4' - used in AR for bonded conjunction AC or CA
 #define CCAP       (C)0x35  // [:
-#define CAMP       (C)0x36  // &
-#define CAT        (C)0x37  // @
-#define CAMPCO     (C)0x38  // &:
-#define CATCO      (C)0x39  // @:
+#define CAMPCO     (C)0x36  // &:  must be paired with &
+#define CAMP       (C)0x37  // &  must be CFORK^4
+#define CATCO      (C)0x38  // @:  must be paired with @
+#define CAT        (C)0x39  // @
 #define CATDOT     (C)0x3a  // @.
 #define CSELF      (C)0x3b  // $:
 #define CGRCO      (C)0x3c  // `:
 #define CCOLON     (C)0x3d  //
 #define CUDOT      (C)0x3e  // u.  must be paired v.
 #define CVDOT      (C)0x3f  // v.
-#define CTILDE     (C)0x40  //
-#define CTAIL      (C)0x41  // {:
-#define CTAKE      (C)0x42  // {.
-#define CHEAD      (C)0x42  // {.
-#define CPOUND     (C)0x43  //
-#define CDOLLAR    (C)0x44  //
+#define CTAIL      (C)0x40  // {:
+#define CTAKE      (C)0x41  // {.
+#define CHEAD      (C)0x41  // {.
+#define CPOUND     (C)0x42  // #  must pair with $
+#define CDOLLAR    (C)0x43  // $
+#define CTILDE     (C)0x44  //
 #define CSLDOT     (C)0x45  // /.
 #define CADVERSE   (C)0x46  // ::
 #define CQQ        (C)0x47  //     double quote
-#define CABASE     (C)0x48  // #:
-#define CIOTA      (C)0x49  // i.
+#define CIOTA      (C)0x48  // i. i. and i: must be 2 apart.  low digit is combining code
+#define CABASE     (C)0x49  // #:
 #define CICO       (C)0x4a  // i:
 #define CLBRACE    (C)0x4b  // {
 #define CFROM      (C)0x4b  // {

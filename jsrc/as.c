@@ -327,7 +327,7 @@ static AS2(jtoutfix, eachl(omask(a,w),w,atop(fs,ds(CPOUND))),0117)
 static DF2(jtofxinv){A f,fs,z;C c;I t;V*v;
  F2RANK(0,RMAX,jtofxinv,self);
  fs=FAV(self)->fgh[0]; f=FAV(fs)->fgh[0]; v=FAV(f); c=v->id; t=AT(w);  // self = f/\. fs = f/  f = f  v = verb info for f
- if(!(c==CPLUS||c==CBDOT&&t&INT||(c==CEQ||c==CNE)&&t&B01))R outfix(a,w,self);  // if not +/\. or m b./\. or =/\. or ~:/\.
+ if(!(c==CPLUS||c==CBDOT&&t&INT||((c&-2)==CEQ)&&t&B01))R outfix(a,w,self);  // if not +/\. or m b./\. or =/\. or ~:/\.
  A z0,z1; z=irs2(df1(z0,w,fs),df2(z1,a,w,bslash(fs)),c==CPLUS?ds(CMINUS):f, RMAX,-1L,jtatomic2);
  if(jt->jerr==EVNAN){RESETERR; R outfix(a,w,self);}else R z;
 }    /* a f/\. w where f has an "undo" */
@@ -377,13 +377,18 @@ F1(jtbsdot){A f;AF f1=jtsuffix,f2=jtoutfix;I flag=FAV(ds(CBSDOT))->flag;C id;V*v
   case CSLASH:  // f/, but not when f is a gerund
    f1=jtsscan; flag|=VJTFLGOK1;
    f=v->fgh[0]; id=ID(f); if(id==CBDOT){f=VAV(f)->fgh[1]; if(INT&AT(f)&&!AR(f))id=(C)*AV(f);}
-   switch(id){
-    case CPLUS:   case CEQ:     case CNE:     case CBW0110:  case CBW1001:               
-     f2=jtofxinv;   break;
-    case CSTAR:   case CMAX:    case CMIN:    case CPLUSDOT: case CSTARDOT: 
-    case CBW0000: case CBW0001: case CBW0011: case CBW0101:  case CBW0111: case CBW1111: 
-     f2=jtofxassoc;
- }}
+#define xinvvalues(w) CCM(w,CPLUS)+CCM(w,CEQ)+CCM(w,CNE)+CCM(w,CBW0110)+CCM(w,CBW1001)
+   {CCMWDS(xinv) CCMCAND(xinv,cand,id) f2=CCMTST(cand,id)<0)?jtofxinv:f2;}
+#define xassocvalues(w) CCM(w,CSTAR)+CCM(w,CMAX)+CCM(w,CMIN)+CCM(w,CPLUSDOT)+CCM(w,CSTARDOT)+CCM(w,CBW0000)+CCM(w,CBW0001)+CCM(w,CBW0011)+CCM(w,CBW0101)+CCM(w,CBW0111)+CCM(w,CBW1111)
+   {CCMWDS(xassoc) CCMCAND(xassoc,cand,id) f2=CCMTST(cand,id)<0)?jtofxassoc:f2;}
+// obsolete    switch(id){
+// obsolete     case CPLUS:   case CEQ:     case CNE:     case CBW0110:  case CBW1001:               
+// obsolete      f2=jtofxinv;   break;
+// obsolete     case CSTAR:   case CMAX:    case CMIN:    case CPLUSDOT: case CSTARDOT: 
+// obsolete     case CBW0000: case CBW0001: case CBW0011: case CBW0101:  case CBW0111: case CBW1111: 
+// obsolete      f2=jtofxassoc;
+// obsolete    }
+  }
  RZ(f=ADERIV(CBSDOT,f1,f2,flag,RMAX,0,RMAX));
  // Fill in the lvp[1] field: with 0 if not f/\; with the lookup field for f/ if f/\ .
  FAV(f)->localuse.lvp[1]=v->id==CSLASH?v->localuse.lvp[1]:0;  // f is nonnull if f/\ .

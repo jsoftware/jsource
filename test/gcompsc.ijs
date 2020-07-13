@@ -293,29 +293,29 @@ SPTOLER =: (IGNOREIFFVI ((IF64 { 64 128)&>:))
 
 testsp=: 2 : 0
  if. 'I.'-: 5!:5 <'u' do. 1 return. end.
- expression=:  4#,:'sp ''x (u f.)@:(v f.) y'' [ x=. ,~x [ y=. ,~y'
- assert. (SPTOLER >./ - <./) ".expression [ x=. xb [ y=. yb
- assert. (SPTOLER >./ - <./) ".expression [ x=. xb [ y=. yi
- assert. (SPTOLER >./ - <./) ".expression [ x=. xb [ y=. yd
- assert. (SPTOLER >./ - <./) ".expression [ x=. xi [ y=. yb
- assert. (SPTOLER >./ - <./) ".expression [ x=. xi [ y=. yi
- assert. (SPTOLER >./ - <./) ".expression [ x=. xi [ y=. yd
- assert. (SPTOLER >./ - <./) ".expression [ x=. xd [ y=. yb
- assert. (SPTOLER >./ - <./) ".expression [ x=. xd [ y=. yi
- assert. (SPTOLER >./ - <./) ".expression [ x=. xd [ y=. yd
- assert. (SPTOLER >./ - <./) ".expression [ x=. xs [ y=. ys
+ expression=:  4#,:'sp ''xx (u f.)@:(v f.) yy'' [ xx=. ,~xx [ yy=. ,~yy'
+ assert. (SPTOLER >./ - <./) ".expression [ xx=. xb [ yy=. yb
+ assert. (SPTOLER >./ - <./) ".expression [ xx=. xb [ yy=. yi
+ assert. (SPTOLER >./ - <./) ".expression [ xx=. xb [ yy=. yd
+ assert. (SPTOLER >./ - <./) ".expression [ xx=. xi [ yy=. yb
+ assert. (SPTOLER >./ - <./) ".expression [ xx=. xi [ yy=. yi
+ assert. (SPTOLER >./ - <./) ".expression [ xx=. xi [ yy=. yd
+ assert. (SPTOLER >./ - <./) ".expression [ xx=. xd [ yy=. yb
+ assert. (SPTOLER >./ - <./) ".expression [ xx=. xd [ yy=. yi
+ assert. (SPTOLER >./ - <./) ".expression [ xx=. xd [ yy=. yd
+ assert. (SPTOLER >./ - <./) ".expression [ xx=. xs [ yy=. ys
  f=: u ftab v
- expression=:  4#,:'sp ''x f y'' [ x=. ,~x [ y=. ,~y'
- assert. (SPTOLER >./ - <./) ".expression [ x=. xb [ y=. yb
- assert. (SPTOLER >./ - <./) ".expression [ x=. xb [ y=. yi
- assert. (SPTOLER >./ - <./) ".expression [ x=. xb [ y=. yd
- assert. (SPTOLER >./ - <./) ".expression [ x=. xi [ y=. yb
- assert. (SPTOLER >./ - <./) ".expression [ x=. xi [ y=. yi
- assert. (SPTOLER >./ - <./) ".expression [ x=. xi [ y=. yd
- assert. (SPTOLER >./ - <./) ".expression [ x=. xd [ y=. yb
- assert. (SPTOLER >./ - <./) ".expression [ x=. xd [ y=. yi
- assert. (SPTOLER >./ - <./) ".expression [ x=. xd [ y=. yd
- assert. (SPTOLER >./ - <./) ".expression [ x=. xs [ y=. ys
+ expression=:  4#,:'sp ''xx f yy'' [ xx=. ,~xx [ yy=. ,~yy'
+ assert. (SPTOLER >./ - <./) ".expression [ xx=. xb [ yy=. yb
+ assert. (SPTOLER >./ - <./) ".expression [ xx=. xb [ yy=. yi
+ assert. (SPTOLER >./ - <./) ".expression [ xx=. xb [ yy=. yd
+ assert. (SPTOLER >./ - <./) ".expression [ xx=. xi [ yy=. yb
+ assert. (SPTOLER >./ - <./) ".expression [ xx=. xi [ yy=. yi
+ assert. (SPTOLER >./ - <./) ".expression [ xx=. xi [ yy=. yd
+ assert. (SPTOLER >./ - <./) ".expression [ xx=. xd [ yy=. yb
+ assert. (SPTOLER >./ - <./) ".expression [ xx=. xd [ yy=. yi
+ assert. (SPTOLER >./ - <./) ".expression [ xx=. xd [ yy=. yd
+ assert. (SPTOLER >./ - <./) ".expression [ xx=. xs [ yy=. ys
  1
 )
 

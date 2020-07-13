@@ -612,12 +612,28 @@ extern unsigned int __cdecl _clearfp (void);
 // BETWEENx requires that lo be <= hi
 #define BETWEENC(x,lo,hi) ((UI)((x)-(lo))<=(UI)((hi)-(lo)))   // x is in [lo,hi]
 #define BETWEENO(x,lo,hi) ((UI)((x)-(lo))<(UI)((hi)-(lo)))   // x is in [lo,hi)
+#define BMK(x) (1LL<<(x))  // bit number x
+// test for equality of 2 8-bit values simultaneously
+#define BOTHEQ8(x,y,X,Y) ( ((US)(C)(x)<<8)+(US)(C)(y) == ((US)(C)(X)<<8)+(US)(C)(Y) )
 #define CALL1(f,w,fs)   ((f)(jt,    (w),(A)(fs)))
 #define CALL2(f,a,w,fs) ((f)(jt,(a),(w),(A)(fs)))
 #define CALL1IP(f,w,fs)   ((f)(jtinplace,    (w),(A)(fs)))
 #define CALL2IP(f,a,w,fs) ((f)(jtinplace,(a),(w),(A)(fs)))
 #define RETARG(z)       (z)   // These places were ca(z) in the original JE
 #define CALLSTACKRESET  {jt->callstacknext=0; jt->uflags.us.uq.uq_c.pmctrbstk &= ~PMCTRBSTKREQD;} // establish initial conditions for things that might not get processed off the stack.  The last things stacked may never be popped
+// see if a character matches one of many.  Example in ai.c
+// create mask for the bit, if any, in word w for value.  Reverse order: 0=MSB
+#define CCM(w,value) (((value)>>LGBW)==(w)?1LL<<(BW-1-((value)&BW-1)):0)
+// user creates #define nm##values(w) CCM(w,value0)+CCM(w,value1)+...
+// create 8 mask values, nm##0 to nm##7, for the given values.
+#define CCMWD(nm,wd) I nm##wd=nm##values(wd);
+#define CCMWDS(nm) CCMWD(nm,0); CCMWD(nm,1); CCMWD(nm,2); CCMWD(nm,3); CCMWD(nm,4); CCMWD(nm,5); CCMWD(nm,6); CCMWD(nm,7);
+// Create the comparand for the test value, it the given cand name
+#define  CCMCAND1(nm,cand,tval,w) cand=nm##w&&((UI)tval>>LGBW)==w?nm##w:cand;
+#define CCMCAND(nm,cand,tval) I cand=0; CCMCAND1(nm,cand,tval,0); CCMCAND1(nm,cand,tval,1); CCMCAND1(nm,cand,tval,2); CCMCAND1(nm,cand,tval,3); CCMCAND1(nm,cand,tval,4); CCMCAND1(nm,cand,tval,5); CCMCAND1(nm,cand,tval,6); CCMCAND1(nm,cand,tval,7)
+// set the sign bit to the selected bit of the mask
+#define CCMSGN(cand,tval) (cand<<(tval&(BW-1)))   // set sign bit if value found
+#define CCMTST(cand,tval) (cand&(1LL<<(~tval&(BW-1)))  // test true is value found
 #define DF1(f)          A f(J jt,    A w,A self)
 #define DF2(f)          A f(J jt,A a,A w,A self)
 #define DO(n,stm)       {I i=0,_n=(n); for(;i<_n;i++){stm}}  // i runs from 0 to n-1

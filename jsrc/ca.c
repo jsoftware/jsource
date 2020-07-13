@@ -191,8 +191,8 @@ F2(jtatop){A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=0,m=-1
   case CCEIL:   f1=jtonf1; f2=jtuponf2; flag+=VCEIL; flag&=~(VJTFLGOK1|VJTFLGOK2); break;
   case CFLOOR:  f1=jtonf1; f2=jtuponf2; flag+=VFLR; flag&=~(VJTFLGOK1|VJTFLGOK2);  break;
   case CICAP:   if(d==CNE){f1=jtnubind; flag&=~VJTFLGOK1;} else if(FIT0(CNE,wv)){f1=jtnubind0; flag&=~VJTFLGOK1;}else if(d==CEBAR){f2=jtifbebar; flag&=~VJTFLGOK2;} break;
-  case CQUERY:  if(d==CDOLLAR||d==CPOUND){f2=jtrollk; flag&=~VJTFLGOK2;} break;
-  case CQRYDOT: if(d==CDOLLAR||d==CPOUND){f2=jtrollkx; flag&=~VJTFLGOK2;} break;
+  case CQUERY:  if((d&-2)==CPOUND){f2=jtrollk; flag&=~VJTFLGOK2;} break;  // # $
+  case CQRYDOT: if((d&-2)==CPOUND){f2=jtrollkx; flag&=~VJTFLGOK2;} break;  // # $
   case CRAZE:  // detect ;@(<@(f/\));.
    if(d==CCUT&&boxatop(w)){  // w is <@g;.k
     if((((I)1)<<(wv->localuse.lI+3))&0x36) { // fetch k (cut type); bits are 3 2 1 0 _1 _2 _3; is 1/2-cut?
@@ -217,15 +217,29 @@ F2(jtatop){A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=0,m=-1
   }
  }
  // special cases of v
- if(d==CEBAR||d==CEPS||(b=FIT0(CEPS,wv))){
-  f=av->fgh[0]; g=av->fgh[1]; e=ID(f); if(b)d=ID(wv->fgh[0]);
-  if(c==CSLASH){m=-1; m=e==CPLUS?4:m; m=e==CPLUSDOT?5:m; m=e==CSTARDOT?6:m;}
-  else if(c==CAMP&&(g==num(0)||g==num(1))){j=*BAV(g); m=-1; m=e==CIOTA?j:m; m=e==CICO?2+j:m;}
-  switch(0<=m?d:-1){
-   case CEBAR: f2=b?atcomp0:atcomp; flag+=6+8*m; flag&=~VJTFLGOK2; break;
-   case CEPS:  f2=b?atcomp0:atcomp; flag+=7+8*m; flag&=~VJTFLGOK2; break;
-  }
+ // comparison combinations
+ // we calculate m for the combining operator: i.&0 (0), i.&1 (1), i:&0 (2), i:&1 (3),, +/ (4), +,/ (5), *./ (6)  [formerly I. was 7]
+ // m is (u char code + n)&7 where n is 0, but 1 in i&1 types.  We set n to -1 if there is no comparison operator
+ // cd comes from the comparison operator, here e. (6) E. (7)
+ // comparison flag is cd+8*m
+ C cd=d;  // local copy of id of w
+ if(((d&~1)==CEBAR)||(d==CFIT&&(cd=FAV(wv->fgh[0])->id)==CEPS)&&wv->localuse.lD==1.0){I n=-1;
+  I cb=0;  // will be the id of the combining operator
+  if(c==CSLASH){cb=FAV(av->fgh[0])->id; n=BETWEENC(cb,CPLUS,CSTARDOT)?0:n; cb+=1;}  // +/@ set cb to id of + +. *., plus 1 to match code for combining op
+  else if(c==CAMP){cb=FAV(av->fgh[0])->id; A cr=av->fgh[1]; cr=(cb&~2)==CIOTA?cr:0; n=cr==num(0)?0:n; n=cr==num(1)?1:n;} // i.&0  already has combining op, set n if 0 or 1
+  f2=n>=0?atcomp:f2; f2=(REPSGN(~n)&d)==CFIT?atcomp0:f2;  // if valid comparison type, switch to it
+  flag+=((6+(cd&1))+8*((cb+n)&7))&REPSGN(~n); flag&=REPSGN(n)|~VJTFLGOK2;  // only if n>=0, set comp type & clear FLGOK2
  }
+
+// obsolete  if((d&-2)==CEPS||(b=FIT0(CEPS,wv))){
+// obsolete   f=av->fgh[0]; g=av->fgh[1]; e=ID(f); if(b)d=ID(wv->fgh[0]);
+// obsolete   if(c==CSLASH){m=-1; m=e==CPLUS?4:m; m=e==CPLUSDOT?5:m; m=e==CSTARDOT?6:m;}
+// obsolete   else if(c==CAMP&&(g==num(0)||g==num(1))){j=*BAV(g); m=-1; m=e==CIOTA?j:m; m=e==CICO?2+j:m;}
+// obsolete   switch(0<=m?d:-1){
+// obsolete    case CEBAR: f2=b?atcomp0:atcomp; flag+=6+8*m; flag&=~VJTFLGOK2; break;
+// obsolete    case CEPS:  f2=b?atcomp0:atcomp; flag+=7+8*m; flag&=~VJTFLGOK2; break;
+// obsolete   }
+// obsolete  }
  if(d==COPE&&!(flag2&VF2BOXATOP1))flag2|=VF2ATOPOPEN1;  // @>, but not <@> which would be confused with &.>
  if(d==CCOMMA&&av->valencefns[0]==jtisitems)f1=jtisnotempty;  // *@#@,
 
@@ -243,7 +257,7 @@ F2(jtatop){A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=0,m=-1
 }
 
 // u@:v
-F2(jtatco){A f,g;AF f1=on1cell,f2=jtupon2cell;B b=0;C c,d,e;I flag, flag2=0,j,m=-1;V*av,*wv;
+F2(jtatco){A f,g;AF f1=on1cell,f2=jtupon2cell;C c,d,e;I flag, flag2=0,m=-1;V*av,*wv;
  ASSERTVV(a,w);
  av=FAV(a); c=av->id; f=av->fgh[0]; g=av->fgh[1]; e=ID(f);   /// c=op for a, d=op for w   if a is r&s, f is r and e is its id; and g is s
  wv=FAV(w); d=wv->id;
@@ -260,20 +274,25 @@ F2(jtatco){A f,g;AF f1=on1cell,f2=jtupon2cell;B b=0;C c,d,e;I flag, flag2=0,j,m=
   case CGRADE:  if(d==CGRADE){f1=jtranking; flag+=VIRS1; flag&=~VJTFLGOK1;} break;  // /:@:/: y
   case CCEIL:   f1=jtonf1; f2=jtuponf2; flag=VCEIL; flag&=~(VJTFLGOK1|VJTFLGOK2); break;  // [x] >.@:g y
   case CFLOOR:  f1=jtonf1; f2=jtuponf2; flag=VFLR; flag&=~(VJTFLGOK1|VJTFLGOK2); break;  // [x] <.@:g y
-  case CQUERY:  if(d==CDOLLAR||d==CPOUND){f2=jtrollk; flag&=~VJTFLGOK2;}  break;  // x ?@:# y or x ?@:$ y
-  case CQRYDOT: if(d==CDOLLAR||d==CPOUND){f2=jtrollkx; flag&=~VJTFLGOK2;} break;  // x ?.@:# y or x ?.@:$ y
+  case CQUERY:  if((d&~1)==CPOUND){f2=jtrollk; flag&=~VJTFLGOK2;}  break;  // x ?@:# y or x ?@:$ y
+  case CQRYDOT: if((d&~1)==CPOUND){f2=jtrollkx; flag&=~VJTFLGOK2;} break;  // x ?.@:# y or x ?.@:$ y
   case CICAP:   if(d==CNE){f1=jtnubind; flag&=~VJTFLGOK1;} else if(FIT0(CNE,wv)){f1=jtnubind0; flag&=~VJTFLGOK1;}else if(d==CEBAR){f2=jtifbebar; flag&=~VJTFLGOK2;} break;  // I.@:~: y  I.@:(~:!.0) y  x I.@:E. y
-  case CAMP:    if(g==num(0)||g==num(1)){j=*BAV(g); m=-1; m=e==CIOTA?j:m; m=e==CICO?2+j:m;} break;  // i.@0/1@:g    i:@0/1@:g
+// obsolete   case CAMP:    if(g==num(0)||g==num(1)){I j; j=*BAV(g); m=-1; m=e==CIOTA?j:m; m=e==CICO?2+j:m;} break;  
+  case CAMP:    {m=(e&~2)==CIOTA?e:m; I j=-1; j=g==num(0)?0:j;  j=g==num(1)?1:j; m|=j; break;}   // i.@0/1@:g    i:@0/1@:g
+// obsolete  if(g==num(0)||g==num(1)){I j; j=*BAV(g); m=-1; m=e==CIOTA?j:m; m=e==CICO?2+j:m;} break;  // i.@0/1@:g    i:@0/1@:g
   case CSLASH:  //  f/@g where f is not a gerund
 // obsolete   if(vaid(f)&&vaid(w)){f2=jtfslashatg; flag&=~VJTFLGOK2;}
    if(FAV(f)->flag&FAV(w)->flag&VISATOMIC2){f2=jtfslashatg; flag&=~VJTFLGOK2;}
-   if(d==CCOMMA){f1=jtredravel; } else if(d==CDOLLAR&&FAV(av->fgh[0])->id==CSTAR){f1=jtnatoms;} else {m=-1; m=e==CPLUS?4:m; m=e==CPLUSDOT?5:m; m=e==CSTARDOT?6:m;}
+   if(d==CCOMMA){f1=jtredravel;}
+   else if(d==CDOLLAR&&FAV(av->fgh[0])->id==CSTAR){f1=jtnatoms;}
+// obsolete    else {m=-1; m=e==CPLUS?4:m; m=e==CPLUSDOT?5:m; m=e==CSTARDOT?6:m;}
+   else {e+=1; m=BETWEENC(e,CPLUS+1,CSTARDOT+1)?e:m;}  // +/@: +./@: */.*   m holds combination op, or -1 if no comparison
    break;
   case CPOUND:  if(d==CCOMMA)f1=jtnatoms; if(d==CDOLLAR)f1=jtrank; break; //  #@:,
   case CSTAR:   if(d==CPOUND)f1=jtisitems; break;  // *@:#
 
   case CSEMICO:  // u@:(v;.k)
-   if(d==CCUT){
+   if(d==CCUT){I j;
     j=wv->localuse.lI;   // cut type
     if(CBOX==ID(wv->fgh[0])&&!j){f2=jtrazecut0; flag&=~VJTFLGOK2;}  // detect ;@:(<;.0), used for substring extraction
     else if(boxatop(w)){  // w is <@g;.j   detect ;@:(<@(f/\);._2 _1 1 2
@@ -289,21 +308,36 @@ F2(jtatco){A f,g;AF f1=on1cell,f2=jtupon2cell;B b=0;C c,d,e;I flag, flag2=0,j,m=
     }
    }
  }
+// e has been destroyed
+
+// obsolete  if(0<=m){
+// obsolete   b=d==CFIT&&wv->fgh[1]==num(0);
+// obsolete   switch(b?ID(wv->fgh[0]):d){
+// obsolete    case CEQ:   f2=b?atcomp0:atcomp; flag+=0+8*m; flag&=~VJTFLGOK2; break;
+// obsolete    case CNE:   f2=b?atcomp0:atcomp; flag+=1+8*m; flag&=~VJTFLGOK2; break;
+// obsolete    case CLT:   f2=b?atcomp0:atcomp; flag+=2+8*m; flag&=~VJTFLGOK2; break;
+// obsolete    case CLE:   f2=b?atcomp0:atcomp; flag+=3+8*m; flag&=~VJTFLGOK2; break;
+// obsolete    case CGE:   f2=b?atcomp0:atcomp; flag+=4+8*m; flag&=~VJTFLGOK2; break;
+// obsolete    case CGT:   f2=b?atcomp0:atcomp; flag+=5+8*m; flag&=~VJTFLGOK2; break;
+// obsolete    case CEBAR: f2=b?atcomp0:atcomp; flag+=6+8*m; flag&=~VJTFLGOK2; break;
+// obsolete // Bug in special code for f@:e. when rank of e. result > 1
+// obsolete //   case CEPS:  f2=b?atcomp0:atcomp; flag+=7+8*m; flag&=~VJTFLGOK2; break;
+// obsolete    case CEPS:  f2=b?atcomp0:atcomp; flag+=7+8*m; flag&=~VJTFLGOK2; break;
+// obsolete   }
+// obsolete  }
+// obsolete 
+ // comparison combinations
  if(0<=m){
-  b=d==CFIT&&wv->fgh[1]==num(0);
-  switch(b?ID(wv->fgh[0]):d){
-   case CEQ:   f2=b?atcomp0:atcomp; flag+=0+8*m; flag&=~VJTFLGOK2; break;
-   case CNE:   f2=b?atcomp0:atcomp; flag+=1+8*m; flag&=~VJTFLGOK2; break;
-   case CLT:   f2=b?atcomp0:atcomp; flag+=2+8*m; flag&=~VJTFLGOK2; break;
-   case CLE:   f2=b?atcomp0:atcomp; flag+=3+8*m; flag&=~VJTFLGOK2; break;
-   case CGE:   f2=b?atcomp0:atcomp; flag+=4+8*m; flag&=~VJTFLGOK2; break;
-   case CGT:   f2=b?atcomp0:atcomp; flag+=5+8*m; flag&=~VJTFLGOK2; break;
-   case CEBAR: f2=b?atcomp0:atcomp; flag+=6+8*m; flag&=~VJTFLGOK2; break;
-// Bug in special code for f@:e. when rank of e. result > 1
-//   case CEPS:  f2=b?atcomp0:atcomp; flag+=7+8*m; flag&=~VJTFLGOK2; break;
-   case CEPS:  f2=b?atcomp0:atcomp; flag+=7+8*m; flag&=~VJTFLGOK2; break;
+  // the left side is a comparison combiner.  See if the right is a comparison
+  e=d;  // repurpose e as comparison op
+  e=d==CFIT&&wv->localuse.lD==1.0?FAV(wv->fgh[0])->id:e;  // e is the comparison op
+  if(BETWEENC(e,CEQ,CEPS)){
+   // valid comparison combination.  m is the combiner, e is the comparison
+   f2=d==CFIT?atcomp0:atcomp;  // if valid comparison type, switch to it
+   flag+=(e-CEQ)+8*(m&7); flag&=~VJTFLGOK2;  // set comp type & clear FLGOK2
   }
  }
+
  // Copy the open/raze status from v into u@v
  flag2 |= wv->flag2&(VF2WILLOPEN1|VF2WILLOPEN2W|VF2WILLOPEN2A|VF2USESITEMCOUNT1|VF2USESITEMCOUNT2W|VF2USESITEMCOUNT2A);
 
@@ -320,8 +354,8 @@ F2(jtampco){AF f1=on1cell;C c,d;I flag,flag2=0;V*wv;
  // Set flag wfith ASGSAFE status from f/g; keep INPLACE? in sync with f1,f2.  Inplace only if monad v can handle it
  flag = ((FAV(a)->flag&wv->flag)&VASGSAFE)+((wv->flag&VJTFLGOK1)*((VJTFLGOK2+VJTFLGOK1)/VJTFLGOK1));
  if(c==CBOX){flag2 |= VF2BOXATOP1;}  // mark this as <@f - monad only
- else if(c==CSLASH&&d==CCOMMA)         {f1=jtredravel; }
- else if(c==CRAZE&&d==CCUT&&boxatop(w)){  // w is <@g;.k    detect ;&:(<@(f/\));._2 _1 1 2
+ else if(BOTHEQ8(c,d,CSLASH,CCOMMA))         {f1=jtredravel; }
+ else if(BOTHEQ8(c,d,CRAZE,CCUT)&&boxatop(w)){  // w is <@g;.k    detect ;&:(<@(f/\));._2 _1 1 2
   if((((I)1)<<(wv->localuse.lI+3))&0x36) { // fetch k (cut type); bits are 3 2 1 0 _1 _2 _3; is 1/2-cut?
    A wf=wv->fgh[0]; V *wfv=FAV(wf); A g=wfv->fgh[1]; V *gv=FAV(g);  // w is <@g;.k  find g
    if((I)(((gv->id^CBSLASH)-1)|((gv->id^CBSDOT)-1))<0) {  // g is gf\ or gf\.
@@ -332,7 +366,7 @@ F2(jtampco){AF f1=on1cell;C c,d;I flag,flag2=0;V*wv;
    }
   }
  }
- else if(c==CGRADE&&d==CGRADE)         {f1=jtranking;  flag&=~VJTFLGOK1;flag+=VIRS1;}
+ else if(BOTHEQ8(c,d,CGRADE,CGRADE))         {f1=jtranking;  flag&=~VJTFLGOK1;flag+=VIRS1;}
 
  // Copy the monad open/raze status from v into u&:v
  flag2 |= wv->flag2&(VF2WILLOPEN1|VF2USESITEMCOUNT1);
@@ -427,11 +461,13 @@ F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;I flag,flag2=0,mode=-1,p,r;V*u,*v;
   v=FAV(w); c=v->id; r=v->mr;   // c=pseudochar for v
   // Set flag with ASGSAFE status from f/g; keep INPLACE? in sync with f1,f2.  To save tests later, inplace only if monad v can handle it
   flag = ((FAV(a)->flag&v->flag)&VASGSAFE)+((v->flag&VJTFLGOK1)*((VJTFLGOK2+VJTFLGOK1)/VJTFLGOK1));
-  if(c==CFORK||c==CAMP){
+// obsolete   if(c==CFORK||c==CAMP){
+  if((c&~4)==CFORK){   // FORK &
    if(c==CFORK)d=ID(v->fgh[2]);
-   if(CIOTA==ID(v->fgh[1])&&(!d||d==CLEFT||d==CRIGHT)&&equ(ds(CALP),v->fgh[0])){  // a.&i. or (a. i. ][)
+   if(CIOTA==ID(v->fgh[1])&&(!d||((d&~1)==CLEFT)&&equ(ds(CALP),v->fgh[0]))){  // a.&i. or (a. i. ][)
     u=FAV(a); d=u->id;
-    if(d==CLT||d==CLE||d==CEQ||d==CNE||d==CGE||d==CGT){f2=jtcharfn2; flag&=~VJTFLGOK2;}
+// obsolete     if(d==CLT||d==CLE||d==CEQ||d==CNE||d==CGE||d==CGT){f2=jtcharfn2; flag&=~VJTFLGOK2;}
+    if(BETWEENC(d,CEQ,CGT)){f2=jtcharfn2; flag&=~VJTFLGOK2;}  // any comparison
    }
   }
   switch(ID(a)){   // if we matched the a.&i. code above, a must be a. and its ID will be 0

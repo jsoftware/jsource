@@ -695,7 +695,11 @@ typedef struct {AF valencefns[2];A fgh[3];union { D lD; void *lvp[2]; I lI; I4 l
 // lc is a local-use byte.  Used in atomic dyads to indicate which singleton function to execute
 // in the derived function from fold, lc has the original id byte of the fold op
 
-#define ID(f)           (f&&FUNC&AT(f)?FAV(f)->id:C0)
+// id must be in the last word  so that we can use validitymask to point to it
+
+
+// obsolete #define ID(f)           (f&&FUNC&AT(f)?FAV(f)->id:C0)
+#define ID(f)  FAV(AT(f?f:(A)(validitymask+12))&FUNC?f:(A)validitymask)->id  // can be branchless, if compiler can manage it
 #define VFLAGNONE 0L
 #define VRTNNONE ((A)0)
   

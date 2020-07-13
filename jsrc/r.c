@@ -19,7 +19,7 @@ static F1(jtdrr){PROLOG(0055);A df,dg,hs,*x,z;B b,ex,xop;C c,id;I fl,*hv,m;V*v;
  hs=v->fgh[2]; if(id==CBOX)gs=0;  // ignore gs field in BOX, there to simulate BOXATOP
  if(fl&VXOPCALL)R drr(hs);
  xop=1&&VXOP&fl; ex=id==CCOLON&&hs&&!xop;
- b=id==CHOOK||id==CADVF; c=id==CFORK;
+ b=BETWEENC(id,CHOOK,CADVF); c=id==CFORK; b&=1^c;  // HOOK ADVF, and FORK
  m=!!fs+(gs||ex);
  if(!m)R spella(w);
  if(evoke(w))R drr(sfne(w));  // turn nameref into string or verb; then take rep

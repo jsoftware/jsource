@@ -320,7 +320,7 @@ DF2(jtpowop){A hs;B b;V*v;
  ASSERT(AT(a)&VERB,EVDOMAIN);  // u must be a verb
  if(AT(w)&VERB){
   // u^:v.  Create derived verb to handle it.
-  v=FAV(a); b=(v->id==CAT||v->id==CATCO)&&ID(v->fgh[1])==CRIGHT;  // detect u@]^:v
+  v=FAV(a); b=((v->id&~1)==CATCO)&&ID(v->fgh[1])==CRIGHT;  // detect u@]^:v  (or @:)
   // The action routines are inplaceable; take ASGSAFE from u and v, inplaceability from u
   R CDERIV(CPOWOP,jtpowv1cell,b?jtpowv2acell:jtpowv2cell,(v->flag&FAV(w)->flag&VASGSAFE)+(v->flag&(VJTFLGOK1|VJTFLGOK2)), RMAX,RMAX,RMAX);
  }

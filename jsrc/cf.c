@@ -152,8 +152,9 @@ A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I
   // assigned to a name, which will protects values inside it.
   ACIPNO(f);  // This justifies keeping the result ASGSAFE
   f1=jtnvv1;
-  if(((AT(f)^B01)|AR(f)|BAV0(f)[0])==0&&gi==CEPS&&hi==CDOLLAR)f1=jtisempty;  // 0 e. $, accepting only boolean 0
-  if(LIT&AT(f)&&1==AR(f)&&gi==CTILDE&&CFROM==ID(gv->fgh[0])&&hi==CFORK){
+  if(((AT(f)^B01)|AR(f)|BAV0(f)[0])==0&&BOTHEQ8(gi,hi,CEPS,CDOLLAR))f1=jtisempty;  // 0 e. $, accepting only boolean 0
+// obsolete   if(LIT&AT(f)&&1==AR(f)&&gi==CTILDE&&CFROM==ID(gv->fgh[0])&&hi==CFORK){
+  if(LIT&AT(f)&&1==AR(f)&&BOTHEQ8(gi,hi,CTILDE,CFORK)&&CFROM==ID(gv->fgh[0])){
    x=hv->fgh[0];
    if(LIT&AT(x)&&1==AR(x)&&CIOTA==ID(hv->fgh[1])&&CRIGHT==ID(hv->fgh[2])){f1=jtcharmapa;  flag &=~(VJTFLGOK1);}  // (N {~ N i, ])
   }
@@ -171,30 +172,32 @@ A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I
  }
  switch(fi){
   case CCAP:   if(gi==CBOX)flag2|=VF2BOXATOP1|VF2BOXATOP2|VF2ISCCAP; f1=jtcork1; f2=jtcork2;
-   if(gi==CSLASH&&hi==CDOLLAR&&FAV(gv->fgh[0])->id==CSTAR){f1=jtnatoms;}  // [: */ $
-   if(gi==CPOUND){if(hi==CCOMMA){f1=jtnatoms;}else if(hi==CDOLLAR){f1=jtrank;}}  // [: # ,   [: # $
+   if(BOTHEQ8(gi,hi,CSLASH,CDOLLAR)&&FAV(gv->fgh[0])->id==CSTAR){f1=jtnatoms;}  // [: */ $
+// obsolete    if(gi==CPOUND){if(hi==CCOMMA){f1=jtnatoms;}else if(hi==CDOLLAR){f1=jtrank;}}  // [: # ,   [: # $
+   if(gi==CPOUND){f1=hi==CCOMMA?jtnatoms:f1; f1=hi==CDOLLAR?jtrank:f1;}  // [: # ,   [: # $
                break; /* [: g h */
-  case CSLASH: if(gi==CDIV&&hi==CPOUND&&CPLUS==ID(fv->fgh[0])){f1=jtmean; flag|=VIRS1; flag &=~(VJTFLGOK1);} break;  /* +/%# */
+  case CSLASH: if(BOTHEQ8(gi,hi,CDIV,CPOUND)&&CPLUS==ID(fv->fgh[0])){f1=jtmean; flag|=VIRS1; flag &=~(VJTFLGOK1);} break;  /* +/%# */
   case CAMP:   /* x&i.     { y"_ */
   case CFORK:  /* (x i. ]) { y"_ */
    if(hi==CQQ&&(y=hv->fgh[0],LIT&AT(y)&&1==AR(y))&&equ(ainf,hv->fgh[1])&&
        (x=fv->fgh[0],LIT&AT(x)&&1==AR(x))&&CIOTA==ID(fv->fgh[1])&&
        (fi==CAMP||CRIGHT==ID(fv->fgh[2]))){f1=jtcharmapb; flag &=~(VJTFLGOK1);} break;
   case CAT:    /* <"1@[ { ] */
-   if(gi==CLBRACE&&hi==CRIGHT){                                   
+   if(BOTHEQ8(gi,hi,CLBRACE,CRIGHT)){                                   
     p=fv->fgh[0]; q=fv->fgh[1]; 
     if(CLEFT==ID(q)&&CQQ==ID(p)&&(v=VAV(p),x=v->fgh[0],CLT==ID(x)&&v->fgh[1]==num(1))){f2=jtsfrom; flag &=~(VJTFLGOK2);}
    }
  }
  switch(fi==CCAP?gi:hi){
-  case CQUERY:  if(hi==CDOLLAR||hi==CPOUND){f2=jtrollk; flag &=~(VJTFLGOK2);}  break;
-  case CQRYDOT: if(hi==CDOLLAR||hi==CPOUND){f2=jtrollkx; flag &=~(VJTFLGOK2);} break;
+  case CQUERY:  if((hi&~1)==CPOUND){f2=jtrollk; flag &=~(VJTFLGOK2);}  break;  // # $
+  case CQRYDOT: if((hi&~1)==CPOUND){f2=jtrollkx; flag &=~(VJTFLGOK2);} break;  // # $
   case CICAP:   if(fi==CCAP){if(hi==CNE)f1=jtnubind; else if(FIT0(CNE,hv)){f1=jtnubind0; flag &=~(VJTFLGOK1);}}else if(hi==CEBAR){f2=jtifbebar; flag&=~VJTFLGOK2;} break;
-  case CSLASH:  c=ID(gv->fgh[0]); m=-1; m=c==CPLUS?4:m; m=c==CPLUSDOT?5:m; m=c==CSTARDOT?6:m; 
+  case CSLASH:  c=ID(gv->fgh[0])+1; m=-1;m=BETWEENC(c,CPLUS+1,CSTARDOT+1)?c:m;
 // obsolete                 if(fi==CCAP&&vaid(gv->fgh[0])&&vaid(h)){f2=jtfslashatg; flag &=~(VJTFLGOK2);}
                 if(fi==CCAP&&FAV(gv->fgh[0])->flag&FAV(h)->flag&VISATOMIC2){f2=jtfslashatg; flag &=~(VJTFLGOK2);}
                 break;
-  case CFCONS:  if(hi==CFCONS){x=hv->fgh[2]; j=*BAV(x); m=-1; m=gi==CIOTA?j:m; m=gi==CICO?2+j:m; m=B01&AT(x)?m:-1;} break;
+// obsolete   case CFCONS:  if(hi==CFCONS){x=hv->fgh[2]; j=*BAV(x); m=-1; m=gi==CIOTA?j:m; m=gi==CICO?2+j:m; m=B01&AT(x)?m:-1;} break;
+  case CFCONS:  if(hi==CFCONS){x=hv->fgh[2]; m=gi+BAV(x)[0]; m=(UI)(B01&AT(x))>((UI)(gi&~2)-CIOTA)?m:-1;} break;  // x-> constant; must be boolean, and i./i:
   case CRAZE:   if(hi==CCUT){
                  j=hv->localuse.lI;
                  if(CBOX==ID(hv->fgh[0])&&!j){f2=jtrazecut0; flag &=~(VJTFLGOK2);}
@@ -212,19 +215,35 @@ A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I
 
                 } break;
  }
+// obsolete  if(0<=m){
+// obsolete  v=4<=m?hv:fv; b=CFIT==v->id&&v->fgh[1]==num(0);
+// obsolete  switch(b?ID(v->fgh[0]):v->id){
+// obsolete   case CEQ:   f2=b?jtfolkcomp0:jtfolkcomp; flag|=0+8*m; flag &=~(VJTFLGOK1|VJTFLGOK2); break;
+// obsolete   case CNE:   f2=b?jtfolkcomp0:jtfolkcomp; flag|=1+8*m; flag &=~(VJTFLGOK1|VJTFLGOK2); break;
+// obsolete   case CLT:   f2=b?jtfolkcomp0:jtfolkcomp; flag|=2+8*m; flag &=~(VJTFLGOK1|VJTFLGOK2); break;
+// obsolete   case CLE:   f2=b?jtfolkcomp0:jtfolkcomp; flag|=3+8*m; flag &=~(VJTFLGOK1|VJTFLGOK2); break;
+// obsolete   case CGE:   f2=b?jtfolkcomp0:jtfolkcomp; flag|=4+8*m; flag &=~(VJTFLGOK1|VJTFLGOK2); break;
+// obsolete   case CGT:   f2=b?jtfolkcomp0:jtfolkcomp; flag|=5+8*m; flag &=~(VJTFLGOK1|VJTFLGOK2); break;
+// obsolete   case CEBAR: f2=b?jtfolkcomp0:jtfolkcomp; flag|=6+8*m; flag &=~(VJTFLGOK1|VJTFLGOK2); break;
+// obsolete   case CEPS:  f2=b?jtfolkcomp0:jtfolkcomp; flag|=7+8*m; flag &=~(VJTFLGOK1|VJTFLGOK2); break;
+// obsolete  }
+// obsolete }
+// obsolete
+
+ // comparison combinations
  if(0<=m){
-  v=4<=m?hv:fv; b=CFIT==v->id&&v->fgh[1]==num(0);
-  switch(b?ID(v->fgh[0]):v->id){
-   case CEQ:   f2=b?jtfolkcomp0:jtfolkcomp; flag|=0+8*m; flag &=~(VJTFLGOK1|VJTFLGOK2); break;
-   case CNE:   f2=b?jtfolkcomp0:jtfolkcomp; flag|=1+8*m; flag &=~(VJTFLGOK1|VJTFLGOK2); break;
-   case CLT:   f2=b?jtfolkcomp0:jtfolkcomp; flag|=2+8*m; flag &=~(VJTFLGOK1|VJTFLGOK2); break;
-   case CLE:   f2=b?jtfolkcomp0:jtfolkcomp; flag|=3+8*m; flag &=~(VJTFLGOK1|VJTFLGOK2); break;
-   case CGE:   f2=b?jtfolkcomp0:jtfolkcomp; flag|=4+8*m; flag &=~(VJTFLGOK1|VJTFLGOK2); break;
-   case CGT:   f2=b?jtfolkcomp0:jtfolkcomp; flag|=5+8*m; flag &=~(VJTFLGOK1|VJTFLGOK2); break;
-   case CEBAR: f2=b?jtfolkcomp0:jtfolkcomp; flag|=6+8*m; flag &=~(VJTFLGOK1|VJTFLGOK2); break;
-   case CEPS:  f2=b?jtfolkcomp0:jtfolkcomp; flag|=7+8*m; flag &=~(VJTFLGOK1|VJTFLGOK2); break;
+  // m has information about the comparison combiner.  See if the right is a comparison
+  V *cv=(m&=7)>=4?hv:fv;  // cv point to comp in comp i. 0:  or [: +/ comp
+  I d=cv->id;  // comparison op
+  I e=d; e=d==CFIT&&cv->localuse.lD==1.0?FAV(cv->fgh[0])->id:e;  // comparison op, possibly from fit
+  if(BETWEENC(e,CEQ,CEPS)){
+   // valid comparison combination.  m is the combiner, e is the comparison
+   f2=d==CFIT?jtfolkcomp0:jtfolkcomp;  // valid comparison type: switch to it
+   flag+=(e-CEQ)+8*m; flag &=~(VJTFLGOK1|VJTFLGOK2);;  // set comp type & clear FLGOK1 & 2
   }
  }
+
+
 
  // If this fork is not a special form, set the flags to indicate whether the f verb does not use an
  // argument.  In that case h can inplace the unused aegument.
@@ -355,7 +374,8 @@ F2(jthook){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE;V*u,*v;
     case CPOUND:  if(COMPOSE(d)&&e==CIOTA&&CPOUND==ID(v->fgh[1])){f1=jthkiota; flag &=~VJTFLGOK1;} break;
     case CABASE:  if(COMPOSE(d)&&e==CIOTA&&CSLASH==ID(v->fgh[1])&&CSTAR==ID(FAV(v->fgh[1])->fgh[0])){f1=jthkodom; flag &=~VJTFLGOK1;} break;
     case CIOTA:   
-    case CICO:    if(d==CSLASH&&(e==CMAX||e==CMIN)){f1=jthkindexofmaxmin; flag &=~VJTFLGOK1;} break;
+// obsolete     case CICO:    if(d==CSLASH&&(e==CMAX||e==CMIN)){f1=jthkindexofmaxmin; flag &=~VJTFLGOK1;} break;
+    case CICO:    if(BOTHEQ8(d,(e&~1),CSLASH,CMIN)){f1=jthkindexofmaxmin; flag &=~VJTFLGOK1;} break;  // >./ <./
     case CFROM:   if(d==CGRADE){f2=jtordstati; flag &=~VJTFLGOK2;} else if(d==CTILDE&&e==CGRADE){f2=jtordstat; flag &=~VJTFLGOK2;}
    }
    // Return the derived verb

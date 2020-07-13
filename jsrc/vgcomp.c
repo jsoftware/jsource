@@ -49,7 +49,8 @@ I jtcompare(J jt,A a,A w){C*av,*wv;I ar,an,*as,at,c,d,j,m,t,wn,wr,*ws,wt;
   RZ(w=take(s,w));
  }
  m=MIN(an,wn); 
- if(t&XNUM+RAT&&(at&FL+CMPX||wt&FL+CMPX)){A p,q;B*u,*v;  // indirect type vs flt/complex: create boolean vector for each value in turn
+// obsolete if(t&XNUM+RAT&&(at&FL+CMPX||wt&FL+CMPX)){A p,q;B*u,*v;  // indirect type vs flt/complex: create boolean vector for each value in turn
+ if(t&XNUM+RAT&&((at|wt)&FL+CMPX)){A p,q;B*u,*v;  // indirect type vs flt/complex: create boolean vector for each value in turn
   RZ(p=lt(a,w)); u=BAV(p);
   RZ(q=gt(a,w)); v=BAV(q);
   DO(m, if(u[i]|v[i])R (u[i]?1:-1)*jt->workareas.compare.complt;);

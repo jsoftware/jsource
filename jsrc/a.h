@@ -8,8 +8,9 @@
 #define GINSERT         (I)3
 #define GTRAIN          (I)6
 
-#define COMPOSE(c)  (((c)==CAT)|((c)==CATCO)|((c)==CAMP)|((c)==CAMPCO))
-#define COMPOSECO(c)  (((c)==CATCO)|((c)==CAMPCO))
+// obsolete #define COMPOSE(c)  (((c)==CAT)|((c)==CATCO)|((c)==CAMP)|((c)==CAMPCO))
+#define COMPOSE(c)  (BETWEENC((c),CAMPCO,CAT))   // &: & @: @ 
+// obsolete #define COMPOSECO(c)  (((c)==CATCO)|((c)==CAMPCO))
 
 #define CONJCASE(a,w)   (2*!(VERB&AT(a))+!(VERB&AT(w)))
 #define NN              3               /* NOUN NOUN                       */
@@ -56,5 +57,5 @@
 
 // obsolete #define SCALARFN(id,w)  (id==ID(w)&&!lr(w)&&!rr(w))
 
-// TRUE if v is c!.0.  This is used for detecting use of special code.  We detect only the case where the 0 was hardcoded as 0
-#define FIT0(c,v)       (CFIT==v->id&&v->fgh[1]==num(0)&&c==ID(v->fgh[0]))
+// TRUE if v is c!.0.  This is used for detecting use of special code.
+#define FIT0(c,v)       (CFIT==v->id&&c==ID(v->fgh[0])&&v->localuse.lD==1.0)

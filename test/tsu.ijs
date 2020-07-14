@@ -173,6 +173,10 @@ SystemFolders_j_=: tmp (<t,1)}SystemFolders_j_
 ''
 )
 
+NB. comparisons
+neareq =: = +. *.&(0 = *!.1e_12)  NB. tolerant comparison, even against 0
+nearmt =: +/@,@:neareq
+
 NB. ebi extensions
 
 RSET=: 4 : '(x)=: y'

@@ -623,7 +623,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define CALLSTACKRESET  {jt->callstacknext=0; jt->uflags.us.uq.uq_c.pmctrbstk &= ~PMCTRBSTKREQD;} // establish initial conditions for things that might not get processed off the stack.  The last things stacked may never be popped
 // see if a character matches one of many.  Example in ai.c
 // create mask for the bit, if any, in word w for value.  Reverse order: 0=MSB
-#define CCM(w,value) (((value)>>LGBW)==(w)?1LL<<(BW-1-((value)&BW-1)):0)
+#define CCM(w,value) ((I)(((value)>>LGBW)==(w)?1LL<<(BW-1-((value)&BW-1)):0))
 // user creates #define nm##values(w) CCM(w,value0)+CCM(w,value1)+...
 // create 8 mask values, nm##0 to nm##7, for the given values.
 #define CCMWD(nm,wd) I nm##wd=nm##values(wd);
@@ -1204,7 +1204,7 @@ extern unsigned int __cdecl _clearfp (void);
 #else
 #define NOINLINE __attribute__((noinline))
 #ifndef __forceinline
-#define __forceinline inline
+#define __forceinline inline __attribute__((__always_inline__))
 #endif
 #endif
 #ifdef __MINGW32__

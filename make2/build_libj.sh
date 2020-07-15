@@ -134,29 +134,29 @@ common="$OPENMP -fPIC -O2 -fvisibility=hidden -fno-strict-aliasing \
 
 fi
 
-if [ -z "${jplatform##*raspberry*}" ]; then
-USE_SLEEF=0
-elif [ -z "${j64x##*32*}" ]; then
+USE_SLEEF_SRC="${USE_SLEEF_SRC:=1}"
+
+if [ -z "${j64x##*32*}" ] && [ -z "${jplatform##*raspberry*}" ]; then
 USE_SLEEF=0
 else
-USE_SLEEF="${USE_SLEEF:=0}"
+USE_SLEEF="${USE_SLEEF:=1}"
 fi
 if [ $USE_SLEEF -eq 1 ] ; then
 common="$common -DSLEEF=1"
+else
+USE_SLEEF_SRC=0
 fi
 
-if [ -z "${jplatform##*raspberry*}" ]; then
-USE_EMU_AVX=0
-elif [ -z "${j64x##*32*}" ]; then
+if [ -z "${j64x##*32*}" ]; then
 USE_EMU_AVX=0
 else
-USE_EMU_AVX="${USE_EMU_AVX:=0}"
+USE_EMU_AVX="${USE_EMU_AVX:=1}"
 fi
 if [ $USE_EMU_AVX -eq 1 ] ; then
 common="$common -DEMU_AVX=1"
 fi
 
-if [ -z "${jplatform##*raspberry*}" ]; then
+if [ -z "${j64x##*32*}" ] && [ -z "${jplatform##*raspberry*}" ]; then
 USE_IMI_AVX=0
 else
 USE_IMI_AVX="${USE_IMI_AVX:=0}"
@@ -236,6 +236,7 @@ LDFLAGS=" -shared -Wl,-soname,libj.so -m32 -lm -ldl $LDOPENMP32 $LDTHREAD"
 OBJS_AESNI=" aes-ni.o "
 SRC_ASM="${SRC_ASM_LINUX32}"
 GASM_FLAGS="-m32"
+FLAGS_SLEEF=" -DENABLE_SSE2 "
 LIBSLEEF=../../../../sleef/lib/linux32/libsleef.a
 ;;
 
@@ -246,6 +247,7 @@ LDFLAGS=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP $LDTHREAD"
 OBJS_AESNI=" aes-ni.o "
 SRC_ASM="${SRC_ASM_LINUX}"
 GASM_FLAGS=""
+FLAGS_SLEEF=" -DENABLE_SSE2 "
 LIBSLEEF=../../../../sleef/lib/linux/libsleef.a
 ;;
 
@@ -258,6 +260,7 @@ OBJS_FMA=" gemm_int-fma.o "
 OBJS_AESNI=" aes-ni.o "
 SRC_ASM="${SRC_ASM_LINUX}"
 GASM_FLAGS=""
+FLAGS_SLEEF=" -DENABLE_AVX "
 LIBSLEEF=../../../../sleef/lib/linux/libsleef.a
 ;;
 
@@ -270,6 +273,7 @@ OBJS_FMA=" gemm_int-fma.o "
 OBJS_AESNI=" aes-ni.o "
 SRC_ASM="${SRC_ASM_LINUX}"
 GASM_FLAGS=""
+FLAGS_SLEEF=" -DENABLE_AVX2 "
 LIBSLEEF=../../../../sleef/lib/linux/libsleef.a
 ;;
 
@@ -279,6 +283,7 @@ CFLAGS="$common -marm -march=armv6 -mfloat-abi=hard -mfpu=vfp -DRASPI "
 LDFLAGS=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP $LDTHREAD"
 SRC_ASM="${SRC_ASM_RASPI32}"
 GASM_FLAGS=""
+FLAGS_SLEEF=" -DENABLE_VECEXT "    # ENABLE_NEON32 single precision, useless
 LIBSLEEF=../../../../sleef/lib/raspberry32/libsleef.a
 ;;
 
@@ -289,6 +294,7 @@ LDFLAGS=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP $LDTHREAD"
 OBJS_AESARM=" aes-arm.o "
 SRC_ASM="${SRC_ASM_RASPI}"
 GASM_FLAGS=""
+FLAGS_SLEEF=" -DENABLE_ADVSIMD "
 LIBSLEEF=../../../../sleef/lib/raspberry/libsleef.a
 ;;
 
@@ -299,6 +305,7 @@ LDFLAGS=" -dynamiclib -lm -ldl $LDOPENMP $LDTHREAD -m32 $macmin"
 OBJS_AESNI=" aes-ni.o "
 SRC_ASM="${SRC_ASM_MAC32}"
 GASM_FLAGS="-m32 $macmin"
+FLAGS_SLEEF=" -DENABLE_SSE2 "
 LIBSLEEF=../../../../sleef/lib/darwin32/libsleef.a
 ;;
 
@@ -309,6 +316,7 @@ LDFLAGS=" -dynamiclib -lm -ldl $LDOPENMP $LDTHREAD $macmin"
 OBJS_AESNI=" aes-ni.o "
 SRC_ASM="${SRC_ASM_MAC}"
 GASM_FLAGS="$macmin"
+FLAGS_SLEEF=" -DENABLE_SSE2 "
 LIBSLEEF=../../../../sleef/lib/darwin/libsleef.a
 ;;
 
@@ -321,6 +329,7 @@ OBJS_FMA=" gemm_int-fma.o "
 OBJS_AESNI=" aes-ni.o "
 SRC_ASM="${SRC_ASM_MAC}"
 GASM_FLAGS="$macmin"
+FLAGS_SLEEF=" -DENABLE_AVX "
 LIBSLEEF=../../../../sleef/lib/darwin/libsleef.a
 ;;
 
@@ -333,6 +342,7 @@ OBJS_FMA=" gemm_int-fma.o "
 OBJS_AESNI=" aes-ni.o "
 SRC_ASM="${SRC_ASM_MAC}"
 GASM_FLAGS="$macmin"
+FLAGS_SLEEF=" -DENABLE_AVX2 "
 LIBSLEEF=../../../../sleef/lib/darwin/libsleef.a
 ;;
 
@@ -360,6 +370,7 @@ OBJS_AESNI=" aes-ni.o "
 SRC_ASM="${SRC_ASM_WIN32}"
 OBJS_ASM="${OBJS_ASM_WIN32}"
 GASM_FLAGS=""
+FLAGS_SLEEF=" -DENABLE_SSE2 "
 LIBSLEEF=../../../../sleef/lib/win32/libsleef.a
 ;;
 
@@ -383,6 +394,7 @@ OBJS_AESNI=" aes-ni.o "
 SRC_ASM="${SRC_ASM_WIN}"
 OBJS_ASM="${OBJS_ASM_WIN}"
 GASM_FLAGS=""
+FLAGS_SLEEF=" -DENABLE_SSE2 "
 LIBSLEEF=../../../../sleef/lib/win/libsleef.a
 ;;
 
@@ -408,6 +420,7 @@ OBJS_AESNI=" aes-ni.o "
 SRC_ASM="${SRC_ASM_WIN}"
 OBJS_ASM="${OBJS_ASM_WIN}"
 GASM_FLAGS=""
+FLAGS_SLEEF=" -DENABLE_AVX "
 LIBSLEEF=../../../../sleef/lib/win/libsleef.a
 ;;
 
@@ -433,6 +446,7 @@ OBJS_AESNI=" aes-ni.o "
 SRC_ASM="${SRC_ASM_WIN}"
 OBJS_ASM="${OBJS_ASM_WIN}"
 GASM_FLAGS=""
+FLAGS_SLEEF=" -DENABLE_AVX2 "
 LIBSLEEF=../../../../sleef/lib/win/libsleef.a
 ;;
 
@@ -441,7 +455,17 @@ echo no case for those parameters
 exit
 esac
 
-if [ $USE_SLEEF -ne 1 ] ; then
+if [ $USE_SLEEF -eq 1 ] ; then
+if [ $USE_SLEEF_SRC -eq 1 ] ; then
+OBJS_SLEEF=" \
+ ../../../../sleef/src/common/arraymap.o \
+ ../../../../sleef/src/common/common.o \
+ ../../../../sleef/src/libm/rempitab.o \
+ ../../../../sleef/src/libm/sleefsimddp.o \
+ "
+LIBSLEEF=
+fi
+else
 LIBSLEEF=
 fi
 
@@ -454,7 +478,7 @@ fi
 mkdir -p ../bin/$jplatform/$j64x
 mkdir -p obj/$jplatform/$j64x/
 cp makefile-libj obj/$jplatform/$j64x/.
-export CFLAGS LDFLAGS TARGET CFLAGS_SIMD GASM_FLAGS DLLOBJS LIBJDEF LIBJRES LIBSLEEF OBJS_FMA OBJS_AESNI OBJS_AESARM OBJS_ASM SRC_ASM jplatform j64x
+export CFLAGS LDFLAGS TARGET CFLAGS_SIMD GASM_FLAGS FLAGS_SLEEF DLLOBJS LIBJDEF LIBJRES LIBSLEEF OBJS_FMA OBJS_AESNI OBJS_AESARM OBJS_SLEEF OBJS_ASM SRC_ASM jplatform j64x
 cd obj/$jplatform/$j64x/
 make -f makefile-libj
 cd -

@@ -68,10 +68,12 @@ D   jnan=NAN;               /* _.                                   */
 A   mnuvxynam[6]={0,0,0,0,0,0};   // name blocks for all arg names
 // NOTE: for fetching IDs we use the validitymask as a safe place to fetch 0s from.  We know that
 // validitymask[15] will be 0 and we use validitymask[12] to represent a non-function and validitymask[0] to represent an ID of 0
-#if IMI_AVX
-const I validitymask[16]={-1, -1, 0, 0, -1, -1, 0, 0, -1, -1, 0, 0,0,0,0,0};  // for __m128d
-#else
+#if !SY_64
+const long long validitymask[16]={-1, -1, 0, 0, -1, -1, 0, 0, -1, -1, 0, 0,0,0,0,0};  // maskload expect s64x2 mask
+#elif C_AVX || EMU_AVX || EMU_AVX2
 const I validitymask[16]={-1, -1, -1, -1, 0, 0, 0, 0, -1, -1, -1, -1,0,0,0,0};  // allows inverted mask
+#else
+const I validitymask[16]={-1, -1, 0, 0, -1, -1, 0, 0, -1, -1, 0, 0,0,0,0,0};  // native ss2/neon register is s64x2
 #endif
 
 // obsolete A   numv[NUMMAX-NUMMIN+1]={0};

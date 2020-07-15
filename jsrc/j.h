@@ -56,6 +56,14 @@
 #endif
 #endif
 
+// for debugging
+#define NANTEST0        (fetestexcept(FE_INVALID))  // test but does not clear
+#define dump_m128i(a,x) {__m128i _b=x;fprintf(stderr,"%s %li %li %li %li \n", a, ((long*)(&_b))[0], ((long*)(&_b))[1], ((long*)(&_b))[2], ((long*)(&_b))[3]);}
+#define dump_m128i64(a,x) {__m128i _b=x;fprintf(stderr,"%s %lli %lli \n", a, ((long long*)(&_b))[0], ((long long*)(&_b))[1]);}
+#define dump_m256i(a,x) {__m256i _b=x;fprintf(stderr,"%s %lli %lli %lli %lli \n", a, ((long long*)(&_b))[0], ((long long*)(&_b))[1], ((long long*)(&_b))[2], ((long long*)(&_b))[3]);}
+#define dump_m256d(a,x) {__m256d _b=x;fprintf(stderr,"%s %f %f %f %f \n", a, ((double*)(&_b))[0], ((double*)(&_b))[1], ((double*)(&_b))[2], ((double*)(&_b))[3]);}
+#define dump_m128d(a,x) {__m128d _b=x;fprintf(stderr,"%s %f %f \n", a, ((double*)(&_b))[0], ((double*)(&_b))[1]);}
+
 #if defined(__i386__) || defined(__x86_64__) || defined(_M_X64) || defined(_M_IX86)
 #ifndef C_AVX2
 #define C_AVX2 0
@@ -129,7 +137,17 @@
 #endif
 
 #if defined(__aarch64__)||defined(_M_ARM64)
+#if EMU_AVX
+#undef EMU_AVX2
+#define EMU_AVX2 1   // test avx2 emulation
+#include <stdint.h>
+#include <string.h>
+#include "sse2neon.h"
+#include "sse2neon2.h"
+#include "avxintrin-neon.h"
+#else
 #include <arm_neon.h>
+#endif
 #endif
 
 #undef VOIDARG
@@ -167,8 +185,12 @@
 
 // likely/unlikely support
 #if defined(__clang__) || defined(__GNUC__)
+#ifndef likely
 #define likely(x) __builtin_expect((x),1)
+#endif
+#ifndef unlikely
 #define unlikely(x) __builtin_expect((x),0)
+#endif
 #else
 #define likely(x) (x)
 #define unlikely(x) (x)
@@ -583,6 +605,8 @@ extern unsigned int __cdecl _clearfp (void);
 #define A0              0   // a nonexistent A-block
 #define ABS(a)          (0<=(a)?(a):-(a))
 #define ASSERT(b,e)     {if(unlikely(!(b))){jsignal(e); R 0;}}
+// version for debugging
+// #define ASSERT(b,e)     {if(unlikely(!(b))){fprintf(stderr,"error code: %i : file %s line %d\n",(int)(e),__FILE__,__LINE__); jsignal(e); R 0;}}
 #define ASSERTD(b,s)    {if(unlikely(!(b))){jsigd((s)); R 0;}}
 #define ASSERTMTV(w)    {RZ(w); ASSERT(1==AR(w),EVRANK); ASSERT(!AN(w),EVLENGTH);}
 #define ASSERTN(b,e,nm) {if(unlikely(!(b))){jt->curname=(nm); jsignal(e); R 0;}}  // set name for display (only if error)
@@ -860,7 +884,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define MODBLOCKTYPE(z,t)  {if(unlikely(AFLAG(z)&AFUNINCORPABLE)){RZ(z=clonevirtual(z));} AT(z)=(t);}
 #define MODIFIABLE(x)   (x)   // indicates that we modify the result, and it had better not be read-only
 // define multiply-add
-#if C_AVX2
+#if C_AVX2 || (EMU_AVX  && (defined(__aarch64__)||defined(_M_ARM64)))
 #define MUL_ACC(addend,mplr1,mplr2) _mm256_fmadd_pd(mplr1,mplr2,addend)
 #elif C_AVX || EMU_AVX || IMI_AVX
 #define MUL_ACC(addend,mplr1,mplr2) _mm256_add_pd(addend , _mm256_mul_pd(mplr1,mplr2))
@@ -1466,6 +1490,7 @@ extern uint32_t crc32csb4(uint32_t crc, uint32_t value);
 #elif defined(__aarch64__)||defined(_M_ARM64)
 #undef VOIDARG
 #define VOIDARG void
+#if !EMU_AVX && !EMU_AVX2
 #define _mm256_zeroupper(x)
 #define _mm_setzero_si128() vdupq_n_s16(0)
 typedef int64x2_t __m128i;
@@ -1485,6 +1510,7 @@ __ai float64x2_t vreinterpretq_f64_u64(uint64x2_t __p0) {
   return __ret;
 }
 #endif /* clang */
+#endif
 
 #else   /* android with hardware crc32 */
 #undef VOIDARG
@@ -1569,6 +1595,3 @@ static __forceinline __m128i _mm_set1_epi32_(int a) {
 
 #endif  /* !C_AVX */
 #endif  // C_CRC32C
-
-// for debugging
-#define dump_m256i(a,b) {fprintf(stderr,"%s %lli %lli %lli %lli \n", a, ((I*)(&b))[0], ((I*)(&b))[1], ((I*)(&b))[2], ((I*)(&b))[3]);}

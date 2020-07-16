@@ -67,40 +67,6 @@ static F2(jtpdtby){A z;B b,*u,*v,*wv;C er=0;I at,m,n,p,t,wt,zk;
      DQ(nn, if(*u++){vi=(UI*)v; d=ti; DQ(nw, *d+++=*vi++;);} v+=n;);  \
      x=zv; c=tc; DQ(n, *x+++=*c++;);
 
-#if 0&&C_NA    // scaf  asm function no longer used, and no longer defined in C
-/*
-*** from asm64noovf.c
-C asminnerprodx(I m,I*z,I u,I*y)
-{
- I i=-1,t;
-l1:
- ++i;
- if(i==m) return 0;
- t= u FTIMES y[i];
- ov(t)
- t= t FPLUS z[i];
- ov(t)
- z[i]=t;
- goto l1;
-}
-*/
-
-C asminnerprodx(I m,I*z,I u,I*y)
-{
- I i=-1,t,p;DI tdi;
-l1:
- ++i;
- if(i==m) return 0;
- tdi = u * (DI)y[i];
- t=(I)tdi;
- if (tdi<IMIN||IMAX<tdi) R EWOV;
- p=0>t;
- t= t + z[i];
- if (p==0>z[i]&&p!=0>t) R EWOV;
- z[i]=t;
- goto l1;
-}
-#endif
 #if (C_AVX || EMU_AVX) && defined(PREFETCH)
 // blocked multiply, processing vertical mx16 strips of y.  Good when y has few rows
 // *av is mxp, *wv is pxn, *zv is mxn
@@ -172,7 +138,6 @@ I blockedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I pnom,I pstored,I flgs){
   D *zv1=zv;  // output pointer down the column
   D *wvtri=wv;  // pointer to first row to process - advanced if AUTRI
   I ptri=pnom;  // ptri is length of an inner product, which goes down as we advance through upper-tri a
-// obsolete   I avtri=0;  // number of a values to skip at the start of a line, to get over the zeros
   for(--mrem;mrem>0;mrem-=2){  // bias mrem down 1, so <=0 if no pairs; do each pair
    // create 2x16 section of result
    I prem=ptri-wskips;  // number of cols of a/rows of w to be accumulated into one 2x16 result.  May go negative.
@@ -275,11 +240,6 @@ static I cachedmmultx(J jt,D* av,D* wv,D* zv,I m,I n,I pnom,I pstored,I flgs){D 
  D zt[((MAXAROWS+OPHEIGHT)&(-OPHEIGHT))*CACHEWIDTH+5*CACHELINESIZE/SZD];
  D *zblock=(D*)(((I)zt+5*CACHELINESIZE-1)&(-CACHELINESIZE));  // cache-aligned area to hold z values
  NAN0;  // see if we hit any errors during this block
-#if 0  // obsolete
- {A zt; I zlen=;  // big enough to hold a cache-aligned stripe
-  GATV0(zt,FL,zlen,1); zblock=(D*)(((I)DAV(zt)+5*CACHELINESIZE-1)&(-CACHELINESIZE));  // take aligned section
- }
-#endif
 
  // m is # 1-cells of a
  // n is # values in an item of w (and result)
@@ -322,7 +282,6 @@ static I cachedmmultx(J jt,D* av,D* wv,D* zv,I m,I n,I pnom,I pstored,I flgs){D 
    // process each 4x16 (or 32) section of a against the 16x64 cache block
    D *a2base0=a1base; D* w2base=w1base; I a2rem=m; D* z2base=z1base; D* c2base=cvw;
    // if a is upper-triangular, we can stop when the top index of a exceeds the bottommost index of w.
-// obsolete    if(flgs&FLGAUTRI){I bottomlen=w1rem-CACHEHEIGHT; bottomlen=bottomlen>=0?bottomlen:0; a2rem-=bottomlen; newrowsct=((a2rem-1)&(CACHEHEIGHT-1))+1;}else newrowsct=0;
    if(flgs&FLGAUTRI){
     // see where the validity of a expires (at a distance, based on w position, from the actual bottom of the full a); clamp #rows to process; see how many are new rows that must be initialized
     I fullrem=(pnom>>(flgs&FLGCMP))-(w1rem-CACHEHEIGHT); fullrem=fullrem<0?0:fullrem; a2rem=a2rem>fullrem?fullrem:a2rem; newrowsct1=a2rem-preva2rem+1; preva2rem=a2rem;
@@ -1091,8 +1050,6 @@ static A jtipbx(J jt,A a,A w,C c,C d){A g=0,x0,x1,z;B*av,*av0,b,*v0,*v1,*zv;C c0
 static DF2(jtdotprod){A fs,gs;C c;I r;V*sv;
  RZ(a&&w&&self);
  sv=FAV(self); fs=sv->fgh[0]; gs=sv->fgh[1];  // op is fs . gs
-// obsolete  if((SGNIF(AT(a)&AT(w),B01X)&-AN(a)&-AN(w)&-(d=vaid(gs)))<0&&CSLASH==ID(fs)&&  // fs is c/
-// obsolete      (c=vaid(FAV(fs)->fgh[0]),c==CSTARDOT||c==CPLUSDOT||c==CNE))R ipbx(a,w,c,d);  // [+.*.~:]/ . boolean
  if((SGNIF(AT(a)&AT(w),B01X)&-AN(a)&-AN(w)&-(FAV(gs)->flag&VISATOMIC2))<0&&CSLASH==ID(fs)&&  // fs is c/
      (c=FAV(FAV(fs)->fgh[0])->id,c==CSTARDOT||c==CPLUSDOT||c==CNE))R ipbx(a,w,c,FAV(gs)->id);  // [+.*.~:]/ . boolean
 r=lr(gs);   // left rank of v

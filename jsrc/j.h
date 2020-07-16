@@ -157,6 +157,14 @@
 #include "../sleef/include/sleef.h"
 #endif
 
+#if defined(_OPENMP)
+#include <omp.h>
+#else
+typedef int omp_int_t;
+static inline omp_int_t omp_get_thread_num() { return 0;}
+static inline omp_int_t omp_get_max_threads() { return 1;}
+#endif
+
 #ifndef SYS // include js.h only once - dtoa.c
 #include "js.h"
 #endif
@@ -1443,7 +1451,7 @@ static __forceinline void aligned_free(void *ptr) {
 #if !defined(C_CRC32C)
 #define C_CRC32C 0
 #endif
-#if (C_AVX&&SY_64) || EMU_AVX
+#if (C_AVX&&SY_64) || defined(__aarch64__) || defined(_M_ARM64) || EMU_AVX
 #undef C_CRC32C
 #define C_CRC32C 1
 #endif

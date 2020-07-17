@@ -5,6 +5,10 @@
 
 #include "j.h"
 #include "ve.h"
+#if defined(__GNUC__) && !((C_AVX&&SY_64) || EMU_AVX)
+static int64_t m7f = 0x7fffffffffffffffLL;
+#define COMMA ,
+#endif
 
 D jtintpow(J jt,D x,I n){D r=1;
  if(0>n){x=1/x; if(n==IMIN){r=x; n=IMAX;} else n=-n;}  // kludge use r=x; n=-1-n;
@@ -52,7 +56,7 @@ APFX(cirZZ, Z,Z,Z, zcir  ,NAN0;,HDR1JERRNAN)
 
 
 // Call SLEEF after checking symmetric 2-sided limits.  If comp is not true everywhere, signal err, else call sleeffn
-#if (C_AVX&&SY_64) || EMU_AVX || IMI_AVX
+#if (C_AVX&&SY_64) || EMU_AVX
 #define TRIGSYMM(limit,comp,err,sleeffn)  {AVXATOMLOOP( \
  __m256d thmax; thmax=_mm256_set1_pd(limit); \
  __m256d absmask; absmask=_mm256_castsi256_pd(_mm256_set1_epi64x(0x7fffffffffffffff)); \
@@ -74,6 +78,31 @@ APFX(cirZZ, Z,Z,Z, zcir  ,NAN0;,HDR1JERRNAN)
  resultmod \
  , \
  )}
+
+#elif defined(__GNUC__)   // vector extension
+
+#define TRIGSYMM(limit,comp,err,sleeffn)  {AVXATOMLOOP( \
+ float64x2_t thmax={limit COMMA limit}; \
+ float64x2_t absmask={*(D *)&m7f COMMA *(D *)&m7f}; \
+ , \
+ ASSERTSYS(comp==_CMP_GT_OQ,"vec_any only _CMP_GT_OQ support"); \
+ ASSERTWR(vec_any_si128(((*(int64x2_t*)&u) & (*(int64x2_t*)&absmask)) > thmax)==0,err); \
+ u=sleeffn(u); \
+ , \
+ )}
+
+// Call SLEEF after checking limits, but calculate the value to use then
+#define TRIGCLAMP(limit,decls,comp,argmod,sleeffn,resultmod)  {AVXATOMLOOP( \
+ float64x2_t thmax={limit COMMA limit}; \
+ decls \
+ D absmask={*(D *)&m7f COMMA *(D *)&m7f}; \
+ , \
+ float64x2_t outofbounds = _mm256_cmp_pd(u, thmax,comp); \
+ argmod \
+ u=sleeffn(u); \
+ resultmod \
+ , \
+ )}
 #endif
 
 #if SLEEF
@@ -85,7 +114,7 @@ AHDR1(expD,D,D) {  AVXATOMLOOP(
  )
 }
 
-#if (C_AVX&&SY_64) || EMU_AVX || IMI_AVX
+#if (C_AVX&&SY_64) || EMU_AVX
 AHDR1(logD,D,D) {  AVXATOMLOOP(
  __m256d zero; zero=_mm256_setzero_pd();
  ,
@@ -136,6 +165,65 @@ AHDR2(powDD,D,D,D) {D v;
       ASSERTWR(_mm256_movemask_pd(_mm256_cmp_pd(u, zero,_CMP_LT_OQ))==0,EWIMAG);
       u=Sleef_log2d4(u);
       u=_mm256_mul_pd(u,vv);
+      u=Sleef_exp2d4(u);
+     ,
+    )
+   )
+  }
+ }      
+ HDR1JERR
+}
+#elif defined(__GNUC__)   // vector extension
+AHDR1(logD,D,D) {  AVXATOMLOOP(
+ float64x2_t zero={0.0 COMMA 0.0};
+ ,
+ ASSERTWR(vec_any_si128(u<zero)==0,EWIMAG);
+ u=Sleef_logd4(u);
+ ,
+ R EVOK;
+ )
+}
+
+AHDR2(powDI,D,D,I) {I v;
+ if(n-1==0)  DQ(m,               *z++=intpow(*x,*y); x++; y++; )
+ else if(n-1<0)DQ(m, D u=*x++; DQC(n, *z++=intpow( u,*y);      y++;))
+ else{  // repeated exponent: use parallel instructions
+  DQ(m, v=*y++;  // for each exponent
+   AVXATOMLOOP(  // build result in u, which is also the input
+    float64x2_t one = {1.0 COMMA 1.0};
+   ,
+    float64x2_t upow;
+    UI rempow;  // power left to take
+    if(v>=0){  // positive power
+     upow=u; u = one;   // init result to 1 before powers
+     rempow=v;
+    }else{  // negative power, take recip of u and complement the power
+     upow = u = one/u;  // start power at -1
+     rempow=~v;  // subtract one from pos pow since we start with recip (avoids IMIN problem)
+    }
+    while(rempow){if(rempow&1)u=u*upow; upow=upow*upow; rempow>>=1;}
+   ,
+   )
+  )
+ }      
+ HDR1JERR
+}
+
+AHDR2(powDD,D,D,D) {D v;
+ if(n-1==0) DQ(m, *z++=pospow(*x,*y); x++; y++; )
+ else if(n-1<0)DQ(m, D u=*x++; DQC(n, *z++=pospow( u,*y); y++;))
+ else{  // repeated exponent: use parallel instructions
+  DQ(m, v=*y++;  // for each exponent
+   if(v==0){DQ(n, *z++=1.0;) x+=n;}
+   else if(ABS(v)==inf){DQ(n, D u=*x++; ASSERT(u>=0,EWIMAG); if(u==1.0)*z=1.0; else{D vv = u>1.0?v:-v;*z=v>0?inf:0.0;} ++z;)}
+   else{
+    AVXATOMLOOP(  // build result in u, which is also the input
+      float64x2_t zero = {0.0 COMMA 0.0};
+      float64x2_t vv = {v COMMA v};  // 4 copies of exponent  (2 if __SSE2__)
+     ,
+      ASSERTWR(vec_any_si128(u<zero)==0,EWIMAG);
+      u=Sleef_log2d4(u);
+      u=u*vv;
       u=Sleef_exp2d4(u);
      ,
     )

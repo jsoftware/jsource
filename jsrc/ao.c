@@ -614,6 +614,9 @@ static DF2(jtkeytally){PROLOG(0016);A q;I at,*av,j=0,k,n,r,s,*qv,*u,*v;
  GATV0(z,INT,npart,1); zv=AV(z);  /* output area: one per bucket */
  u=qv;
  // move values from q to z.  If an encountered count is negative, don't advance the output pointer, but skip that many slots of input
+ // to avoid a carried dependency over the input values, we use a branch to decide what to do.  After the beginning it will alternate skips and moves,
+ // which the branch predictor will lock onto
+#if 0 // obsolete 
  do{
   I tally=*u; *zv=tally;  // presumptively move one value
   skipmsk=REPSGN(tally);  // ~0 if this is a skip
@@ -621,6 +624,20 @@ static DF2(jtkeytally){PROLOG(0016);A q;I at,*av,j=0,k,n,r,s,*qv,*u,*v;
   ++skipmsk;  // now skipmsk is 1 if no skip, 0 if skip
   zv+=skipmsk; u+=skipmsk; // advance if there was no skip
  }while(npart-=skipmsk);  // loop till all non-skips have been written
+#else
+ do{
+  I tally=*u;
+  if(tally<0){
+   // it's a skip
+   u=(I*)((I)u-tally);  // if neg, skip by the count given - it's in bytes
+   tally=*u;  // only one skip in a row
+  }
+  // here it's not a skip - move the result 
+  *zv++=tally;  // presumptively move one value
+  ++u; // advance to next value/skip
+ }while(--npart);  // loop till all non-skips have been written
+#endif
+
  EPILOG(z);
 
 // obsolete  *AS(q)=AN(q)=npart;
@@ -757,19 +774,31 @@ static DF2(jtkeyheadtally){PROLOG(0017);A f,q,x,y,z;I b;I at,*av,k,n,r,*qv,*u,*v
    GATV0(z,wt&FL?FL:INT,2*npart,2); AS(z)[0]=npart; AS(z)[1]=2; I *u0=u=qv;
    // move values from q to z.  If an encountered count is negative, don't advance the output pointer, but skip that many slots of input
 
+// we chase the chain using a branch to avoid the carried dependency.  After a startup phase the skip will almost always be taken
 #define KEYHEADFILLGEN(Tw,Tz) \
    {Tz *zv=(Tz*)AV(z);  /* output scan pointer */ \
    Tw *wv=(Tw*)AV(w);  /* start of w list */ \
    zv+=b; I bc=1-(b<<1);  /* advance zv to point to tally slot, bc the  distance to the head */ \
    do{ \
+    I tally=*u; \
+    if(tally<0){ \
+     u=(I*)((I)u-tally);  /* if neg, skip by the count given - it's in bytes */ \
+     tally=*u;  /* only one skip in a row */ \
+    } \
+    zv[0]=tally; zv[bc]=wv[u-u0];  /* move tally and head */ \
+    zv+=2; ++u; /* advance to next value/skip */ \
+   }while(--npart); \
+   }
+
+#if 0  // obsolete
     I tally=*u; zv[0]=tally;  /* presumptively move one count... */ \
     zv[bc]=wv[u-u0];  /* ...and headvalue */ \
     skipmsk=REPSGN(tally);  /* ~0 if this is a skip */ \
     u=(I*)((I)u-(skipmsk&tally));  /* if neg, skip by the count given - it's in bytes */ \
     ++skipmsk;  /* now skipmsk is 1 if no skip, 0 if skip */ \
     zv+=skipmsk*2; u+=skipmsk; /* advance if there was no skip */ \
-   }while(npart-=skipmsk);  /* loop till all non-skips have been written */ \
-   }
+   }while(npart-=skipmsk);  /* loop till all non-skips have been written */
+#endif
 
    if(wt&INT)KEYHEADFILLGEN(I,I)
    else if(wt&FL)KEYHEADFILLGEN(D,D)

@@ -617,19 +617,24 @@ static float NOOPTIMIZE altcallf(ALTCALLF fp,I*d,I cnt,DoF*dd,I dcnt){float r;
 /* alternate - whether to use alternate calling convention */
 
 static void docall(FARPROC fp, I*d, I cnt, DoF* dd, I dcnt, C zl, I*v, B alternate){
- if(strchr("cwubsilx*n",zl)){I r;
+#define vdresvalues(w) CCM(w,'c')+CCM(w,'w')+CCM(w,'u')+CCM(w,'b')+CCM(w,'s')+CCM(w,'i')+CCM(w,'l')+CCM(w,'x')+CCM(w,'*')+CCM(w,'n')
+ CCMWDS(vdres) CCMCAND(vdres,cand,zl)   // see if zl is one of the direct results, which can be moved into the result directly
+// obsolete  if(s=strchr(invf[0],id))R ds(invf[1][s-invf[0]]);   // quickly handle verbs that have primitive inverses  kludge scaf faster
+
+// obsolete  if(strchr("cwubsilx*n",zl)){I r;
+ if(CCMTST(cand,zl)){I r;
   r= alternate ? altcalli((ALTCALLI)fp,d,cnt,dd,dcnt) : stdcalli((STDCALLI)fp,d,cnt,dd,dcnt);
-  switch(zl){
-   case 'c': *(C*)v=(C)r;  break;
-   case 'w': *(US*)v=(US)r;break;
-   case 'u': *(C4*)v=(C4)r;break;
-   case 'b': *v=(I)(BYTE)r;break;
-   case 's': *v=(I)(S)r;   break;
-   case 'i': *v=(I)(int)r; break;
-   case 'l':
-   case 'x':
-   case '*': *v=r;         break;
-   case 'n': *v=0;         break;
+  switch(zl&0x1f){   // kludge scaf could do this with shift
+   case 'c'&0x1f: *(C*)v=(C)r;  break;
+   case 'w'&0x1f: *(US*)v=(US)r;break;
+   case 'u'&0x1f: *(C4*)v=(C4)r;break;
+   case 'b'&0x1f: *v=(I)(BYTE)r;break;
+   case 's'&0x1f: *v=(I)(S)r;   break;
+   case 'i'&0x1f: *v=(I)(int)r; break;
+   case 'l'&0x1f:
+   case 'x'&0x1f:
+   case '*'&0x1f: *v=r;         break;
+   case 'n'&0x1f: *v=0;         break;
   }}
  else
 #if !SY_64 && !defined(__arm__)
@@ -788,7 +793,7 @@ static CCT*jtcdload(J jt,CCT*cc,C*lib,C*proc){B ha=0;FARPROC f;HMODULE h;
  R cc;
 }
 
-static I cdjtype(C c){R c=='c'?LIT:c=='w'?C2T:c=='u'?C4T:(c=='j'||c=='z')?CMPX:(c=='f'||c=='d')?FL:c?INT:0;}
+static I cdjtype(C c){R c=='c'?LIT:c=='w'?C2T:c=='u'?C4T:(c=='j'||c=='z')?CMPX:(c=='f'||c=='d')?FL:c?INT:0;}  // kludge scaf use tables or shifts
      /* J type from type letter */
 
 /* See "Calling DLLs" chapter in J User Manual                  */
@@ -851,10 +856,21 @@ static CCT*jtcdparse(J jt,A a,I empty){C c,lib[NPATH],*p,proc[NPATH],*s,*s0;CCT*
   CDASSERT(*s,DEDEC);
   cc->zl=c=*s++; cc->zt=cdjtype(c);
  }
- CDASSERT(strchr("cwubsilxfd*n",c),DEDEC);
+ // verify that result is a valid type
+#define vresvalues(w) CCM(w,'c')+CCM(w,'w')+CCM(w,'u')+CCM(w,'b')+CCM(w,'s')+CCM(w,'i')+CCM(w,'l')+CCM(w,'x')+CCM(w,'f')+CCM(w,'d')+CCM(w,'*')+CCM(w,'n')
+ CCMWDS(vres) CCMCAND(vres,cand,c)  // see if zl is one of the allowed types
+ CDASSERT(CCMTST(cand,c),DEDEC);
+// obsolete  CDASSERT(strchr("cwubsilxfd*n",c),DEDEC);
  CDASSERT(SY_64||'l'!=c,DEDEC);
- if(c=='*' && *s && strchr("cwubsilxfdzj",*s)) ++s;
- CDASSERT(!*s||*s==' ',DEDEC);
+ // if result is * followed by valid arg type, ratify it by advancing the pointer over the type (otherwise fail in next test)
+#define vargtvalues(w) CCM(w,'c')+CCM(w,'w')+CCM(w,'u')+CCM(w,'b')+CCM(w,'s')+CCM(w,'i')+CCM(w,'l')+CCM(w,'x')+CCM(w,'f')+CCM(w,'d')+CCM(w,'z')+CCM(w,'j')
+ CCMWDS(vargt)  // set up for comparisons against list of bytes
+ if(c=='*' && *s){
+  CCMCAND(vargt,cand,*s) s+=SGNTO0(CCMSGN(cand,*s)); // if *s is valid, skip over it
+// obsolete   if(strchr("cwubsilxfdzj",*s)) ++s;
+ }
+// obsolete  CDASSERT(!*s||*s==' ',DEDEC);
+ CDASSERT((*s&~' ')==0,DEDEC);  // 0 or SP
 #ifdef C_CD_NODF // platform does not support f result
  CDASSERT(cc->zl!='f',DEDEC)
 #endif
@@ -868,7 +884,8 @@ static CCT*jtcdparse(J jt,A a,I empty){C c,lib[NPATH],*p,proc[NPATH],*s,*s0;CCT*
   CDASSERT(i||'1'!=cc->cc||'x'==c||'*'==c&&(!*s||' '==*s),der);  // verify result type is allowed
   if('*'==c||'&'==c){cc->star[i]=1+(I )('&'==c); c=*s++; if(!c)break; if(' '==c)continue;}
   cc->tletter[i]=c;
-  CDASSERT(strchr("cwubsilxfdzj",c),der);
+  CCMCAND(vargt,cand,c) CDASSERT(CCMTST(cand,c),der);  // vrgt defined above,list of valid arg bytes
+// obsolete   CDASSERT(strchr("cwubsilxfdzj",c),der);
   CDASSERT((c!='z'&&c!='j')||cc->star[i],der);
   if('l'==c){CDASSERT(SY_64,der); cc->tletter[i]='x';}
 #ifdef C_CD_NODF // platform does not support f or d args

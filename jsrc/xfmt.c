@@ -101,9 +101,12 @@ static I jtdpone(J jt, B bits, D w){D t;
 static B jtwidthdp(J jt, A a, I *w, I *d){I n,x,y; C *v;
  RZ(a&&w&&d);
  RZ(a=ca(a)); n=AN(a); v=CAV(a); v[n]=0;  // null-terminate the string, which is safe since we have made a copy here
- DQ(n, if(!strchr("0123456789.", *v)) *v=' '; v++;);
+#define digdotvalues(w) CCM(w,'0')+CCM(w,'1')+CCM(w,'2')+CCM(w,'3')+CCM(w,'4')+CCM(w,'5')+CCM(w,'6')+CCM(w,'7')+CCM(w,'8')+CCM(w,'9')+CCM(w,'.')
+ CCMWDS(digdot)
+// obsolete  DQ(n, if(!strchr("0123456789.", *v)) *v=' '; v++;);
+ DQ(n, C vv=*v; CCMCAND(digdot,cand,vv) vv=CCMTST(cand,vv)?vv:' '; *v=vv; v++;);  // replace non-digits with SP
 
- x=strspn(CAV(a), " "          ); AK(a)+=x;AN(a)-=x;AS(a)[0]=x;
+ x=strspn(CAV(a), " "          ); AK(a)+=x;AN(a)-=x;AS(a)[0]=x;  // kludge scaf look at strspn - since we have replaced every non digit with space we could do better
  x=strspn(CAV(a), "0123456789.");
  ASSERT(AN(a)-x==(I)strspn(x+CAV(a), " "), EVDOMAIN);
  AN(a)=AS(a)[0]=x;

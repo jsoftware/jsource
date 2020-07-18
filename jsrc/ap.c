@@ -162,7 +162,7 @@ static B jtpscanlt(J jt,I m,I d,I n,B*z,B*x,B p){A t;B*v;I i;
    }
    I *ziv=zivc; I *xiv=xivc;  // scan pointers down the column
    I k,nunstored=(-d)&(SZI-1);  // number of bytes to 
-   I livelane=VALIDBOOLEAN>>(nunstored<<LGSZI);  // 1 bit if lane has NOT been finished - indicate the unstored lanes are finished to begin with
+   I livelane=VALIDBOOLEAN>>(nunstored<<LGBB);  // 1 bit if lane has NOT been finished - indicate the unstored lanes are finished to begin with
    for(k=n;k>0;--k){I xi=*xiv;  // if writing in place, must fetch before store
     I storeval=npp^((xi^npp)&livelane);  // xi^npp=1 if we have found the match in this column.  If that is 1 in a live lane, write p to the lane, otherwise ~p
     STOREBYTES(ziv,storeval,nunstored);  // store the modifiable part of the result - don't overwrite!
@@ -246,7 +246,7 @@ static B jtpscangt(J jt,I m,I d,I n,B*z,B*x,I apas){
    }
    I *ziv=zivc; I *xiv=xivc;  // scan pointers down the column
    I k,nunstored=(-d)&(SZI-1);  // number of bytes to 
-   I livelane=VALIDBOOLEAN>>(nunstored<<LGSZI);  // 1 bit if lane has NOT been finished - indicate the unstored lanes are finished to begin with
+   I livelane=VALIDBOOLEAN>>(nunstored<<LGBB);  // 1 bit if lane has NOT been finished - indicate the unstored lanes are finished to begin with
    I hit=0, posthit;  // 1 bit is this lane is encountering a for the first time this cycle, or did so last cycle
    I storeval=pp;  // init to store (alternating) lead byte
    for(k=n;k>0;--k){I xi=*xiv;  // if writing in place, must fetch before store

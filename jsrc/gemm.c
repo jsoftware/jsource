@@ -5,9 +5,6 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#if _OPENMP
-#include <omp.h>
-#endif
  
 #include "j.h"
 #include "gemm.h"

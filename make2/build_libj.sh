@@ -135,8 +135,8 @@ common="$OPENMP -fPIC -O2 -fvisibility=hidden -fno-strict-aliasing \
 fi
 
 USE_SLEEF_SRC="${USE_SLEEF_SRC:=1}"
-
 if [ -z "${j64x##*32*}" ] && [ -z "${jplatform##*raspberry*}" ]; then
+# USE_SLEEF="${USE_SLEEF:=1}"
 USE_SLEEF=0
 else
 USE_SLEEF="${USE_SLEEF:=1}"
@@ -154,15 +154,6 @@ USE_EMU_AVX="${USE_EMU_AVX:=1}"
 fi
 if [ $USE_EMU_AVX -eq 1 ] ; then
 common="$common -DEMU_AVX=1"
-fi
-
-if [ -z "${j64x##*32*}" ] && [ -z "${jplatform##*raspberry*}" ]; then
-USE_IMI_AVX=0
-else
-USE_IMI_AVX="${USE_IMI_AVX:=0}"
-fi
-if [ $USE_IMI_AVX -eq 1 ] ; then
-common="$common -DIMI_AVX=1"
 fi
 
 NO_SHA_ASM="${NO_SHA_ASM:=0}"

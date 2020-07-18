@@ -6,25 +6,23 @@ FAVX= /DC_AVX=1 /arch:AVX
 !endif
 !endif
 !if "1"=="$(USE_OPENMP)"
-FOPENMP= /openmp
+FOPENMP= -Xclang -fopenmp
+# FOPENMP= /openmp
+OBJS_OPENMP=../../openmp/obj/windows/libomp.lib
 !endif
-!if "1"=="$(USE_IMI_AVX)"
-FIMIAVX= /DIMI_AVX=1
-!endif
-!if "1"=="$(USE_SLEEF)"
 !if "1"=="$(x64)"
+USE_SLEEF=1
 !if "1"=="$(JAVX2)"
-FSLEEF= /DSLEEF=1 /DENABLE_AVX2 /DSLEEF_STATIC_LIBS /DDORENAME -I../../sleef/src/common -I../../sleef/src/arch
-else
+FSLEEF= /DSLEEF=1 /DENABLE_AVX2 /DSLEEF_STATIC_LIBS /DDORENAME=1 -I../../sleef/src/common -I../../sleef/src/arch
+!else
 !if "1"=="$(JAVX)"
-FSLEEF= /DSLEEF=1 /DENABLE_AVX /DSLEEF_STATIC_LIBS /DDORENAME -I../../sleef/src/common -I../../sleef/src/arch
+FSLEEF= /DSLEEF=1 /DENABLE_AVX /DSLEEF_STATIC_LIBS /DDORENAME=1 -I../../sleef/src/common -I../../sleef/src/arch
 !else
-FSLEEF= /DSLEEF=1 /DENABLE_SSE2 /DSLEEF_STATIC_LIBS /DDORENAME -I../../sleef/src/common -I../../sleef/src/arch
+FSLEEF= /DSLEEF=1 /DENABLE_SSE2 /DSLEEF_STATIC_LIBS /DDORENAME=1 -I../../sleef/src/common -I../../sleef/src/arch
 !endif
 !endif
 !else
-FSLEEF= /DSLEEF=1 /DENABLE_SSE2 /DSLEEF_STATIC_LIBS /DDORENAME -I../../sleef/src/common -I../../sleef/src/arch
-!endif
+USE_SLEEF=0
 !endif
 !if "1"=="$(DEBUG)"
 FDEBUG = /FS /Zi /DDEBUG=1
@@ -32,13 +30,15 @@ LDEBUG = /DEBUG
 !endif
 
 !if "1"=="$(x64)"
-CFLAGS= $(FDEBUG) /D_JDLL /DC_NA=0 $(FAVX) $(FAVX2) $(FOPENMP) ${FIMIAVX} $(FSLEEF) /WX /W3 /Ot /Ob1 /GS /Zc:strictStrings /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT
+CF1= -maes -msse3 -fno-strict-aliasing -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-char-subscripts -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor
+CFLAGS= $(FDEBUG) /D_JDLL /DC_NA=0 $(FAVX) $(FAVX2) $(FOPENMP) $(FSLEEF) /WX /W3 /Ot /Ob1 /GS /Zc:strictStrings /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
 FLAGS= $(LDEBUG) /DLL /MACHINE:X64 /SUBSYSTEM:WINDOWS,5.02
 ASMFLAGS= /Cx
 !else
+CF1= -fno-strict-aliasing -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-char-subscripts -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor
 # /Og fail g310r
 # /Oy crash ]^:_"1[0
-CFLAGS= $(FDEBUG) /D_JDLL $(FOPENMP) ${FIMIAVX} $(FSLEEF) /WX /W3 /Ot /Ob1 /Oy- /GS /Zc:strictStrings /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT
+CFLAGS= $(FDEBUG) /D_JDLL $(FOPENMP) /WX /W3 /Ot /Ob1 /Oy- /GS /Zc:strictStrings /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
 FLAGS= $(LDEBUG) /DLL /MACHINE:X86 /SUBSYSTEM:WINDOWS,5.01
 ASMFLAGS= /Cx /coff
 !endif
@@ -254,8 +254,8 @@ TARGET= j.dll
 TARGET= j32.dll
 !endif
 
-$(TARGET) : $(OBJS) $(SRC_ASM) $(OBJS_ASM) $(OBJS_SLEEF) $(ASM) jdll.res
-	$(LD) /NOLOGO /DEF:$(DEF) $(FLAGS) /out:$@ $(OBJS) $(SRC_ASM) $(OBJS_ASM) $(OBJS_SLEEF) $(ASM) jdll.res ole32.lib advapi32.lib oleaut32.lib
+$(TARGET) : $(OBJS) $(SRC_ASM) $(OBJS_ASM) $(OBJS_SLEEF) $(OBJS_OPENMP) $(ASM) jdll.res
+	$(LD) /NOLOGO /DEF:$(DEF) $(FLAGS) /out:$@ $(OBJS) $(SRC_ASM) $(OBJS_ASM) $(OBJS_SLEEF) $(OBJS_OPENMP) $(ASM) jdll.res ole32.lib advapi32.lib oleaut32.lib
 
 jdll.res : $(RCS)
 	$(RC) /L 0x409 /D_USING_V110_SDK71_ -R -FO$@ $(RCS)

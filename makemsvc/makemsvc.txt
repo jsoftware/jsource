@@ -2,49 +2,43 @@ how to build windows binaries using command line
 **************************************************************************
 general:
 
-1. Visual Studio Express 2013 for Windows Desktop
-you are urged to use vs2013 (doesn't have to be express) if possible
-vs2012 is ok, but vs2015 has problems and is best avoided for now
+1. Visual Studio Express 2019 for Windows Desktop with clang support
 
-in theory the _xp platform toolset binaries run on xp (but not tested)
-xp support will be dropped in the next year or so
+2. examples assume gitdev\jsource is the jsource folder
 
-2. examples use powershell, but works command prompt as well
+3. jbld hardwired as build folder
 
-3. examples assume gitdev\jsource is the jsource folder
-
-4. jbld hardwired as build folder
-
-5. create jbld folder
+4. create jbld folder
 ...> gitdev\jsource\makemsvc\install.bat gitdev
 
-6. edit jsrc\jversion.h as appropriate for 9!:14 result
+5. edit jsrc\jversion.h as appropriate for 9!:14 result
 jsrc\jversion-x.h is template for this file
 
-7. copy binaries to release folder
+6. copy binaries to release folder
 ...>release.bat
 
 **************************************************************************
 j64
 
-0. start powershell and cd to this folder
-run the batch file vcvarsx86_amd64.bat in vs2013 vc\bin\x86_amd64 folder
+0. from the windows start menu bar, choose
+x64 Native Tools Command Prompt for VS 2019
+and then cd to the makemsvc folder
 
 1. build jconsole.exe
 cd jconsole
-nmake -f makefile.win x64=1 clean
-nmake -f makefile.win x64=1
+nmake -f makefile.win CC=clang-cl x64=1 clean
+nmake -f makefile.win CC=clang-cl x64=1
 cd ..
 
 2. build j.dll
-same as for jconsole but cd into jdll. add JAVX or JAVX2 flag as needed
+same as for jconsole but cd into jdll. add JAVX or JAVX2 and OpenMP flag as needed
 cd jdll
-nmake -f makefile.win x64=1 JAVX2=1 clean
-nmake -f makefile.win x64=1 JAVX2=1
-nmake -f makefile.win x64=1 JAVX=1 clean
-nmake -f makefile.win x64=1 JAVX=1
-nmake -f makefile.win x64=1 clean
-nmake -f makefile.win x64=1
+nmake -f makefile.win CC=clang-cl x64=1 JAVX2=1 USE_OPENMP=1 clean
+nmake -f makefile.win CC=clang-cl x64=1 JAVX2=1 USE_OPENMP=1
+nmake -f makefile.win CC=clang-cl x64=1 JAVX=1 USE_OPENMP=1 clean
+nmake -f makefile.win CC=clang-cl x64=1 JAVX=1 USE_OPENMP=1
+nmake -f makefile.win CC=clang-cl x64=1 USE_OPENMP=1 clean
+nmake -f makefile.win CC=clang-cl x64=1 USE_OPENMP=1
 cd ..
 
 3. build tsdll.dll -  used in test suite to validate cd
@@ -66,13 +60,14 @@ start powershell
 **************************************************************************
 j32
 
-0. start powershell and cd to this folder
-run the batch file vcvars32.bat in vs2013 vc\bin folder
+0. from the windows start menu bar, choose
+x86 Native Tools Command Prompt for VS 2019
+and then cd to the makemsvc folder
 
 1. build jconsole.exe
 cd jconsole
-nmake -f makefile.win clean
-nmake -f makefile.win
+nmake -f makefile.win CC=clang-cl clean
+nmake -f makefile.win CC=clang-cl
 cd ..
 
 2. build j.dll

@@ -31,16 +31,9 @@
 #ifndef EMU_AVX
 #define EMU_AVX 0
 #endif
-#ifndef IMI_AVX
-#define IMI_AVX 0
-#endif
 #if defined(MMSC_VER)
 #undef EMU_AVX
 #define EMU_AVX 0
-#endif
-#if EMU_AVX
-#undef IMI_AVX
-#define IMI_AVX 0
 #endif
 #undef EMU_AVX2
 #define EMU_AVX2 0
@@ -96,8 +89,6 @@
 #endif
 #undef EMU_AVX
 #define EMU_AVX 0
-#undef IMI_AVX
-#define IMI_AVX 0
 
 #elif defined(__SSE2__)
 #if EMU_AVX
@@ -106,14 +97,6 @@
 #include <stdint.h>
 #include <string.h>
 #include "avxintrin-emu.h"
-#elif IMI_AVX
-#if SLEEF
-#include "../sleef/include/sleef.h"
-#endif
-#include "imi_sse2_avx.h"
-#else
-#include <emmintrin.h>
-#endif
 #define _CMP_EQ          0
 #define _CMP_LT          1
 #define _CMP_LE          2
@@ -134,6 +117,9 @@
 #define _CMP_LE_OQ _CMP_LE
 #define _CMP_LT_OQ _CMP_LT
 #define _CMP_NEQ_OQ _CMP_NEQ
+#else
+#include <emmintrin.h>
+#endif
 #endif
 
 #if defined(__aarch64__)||defined(_M_ARM64)
@@ -150,11 +136,30 @@
 #endif
 #endif
 
+#if defined(__arm__)
+#if defined(__ARM_NEON)
+#include <arm_neon.h>
+typedef double float64x2_t __attribute__ ((vector_size (16)));
+#else
+#include <stdint.h>
+typedef int64_t int64x2_t __attribute__ ((vector_size (16)));
+typedef double float64x2_t __attribute__ ((vector_size (16)));
+#endif
+#endif
+
 #undef VOIDARG
 #define VOIDARG
 
 #if SLEEF
 #include "../sleef/include/sleef.h"
+#endif
+
+#if defined(_OPENMP)
+#include <omp.h>
+#else
+typedef int omp_int_t;
+static inline omp_int_t omp_get_thread_num() { return 0;}
+static inline omp_int_t omp_get_max_threads() { return 1;}
 #endif
 
 #ifndef SYS // include js.h only once - dtoa.c
@@ -886,9 +891,9 @@ extern unsigned int __cdecl _clearfp (void);
 // define multiply-add
 #if C_AVX2 || (EMU_AVX  && (defined(__aarch64__)||defined(_M_ARM64)))
 #define MUL_ACC(addend,mplr1,mplr2) _mm256_fmadd_pd(mplr1,mplr2,addend)
-#elif C_AVX || EMU_AVX || IMI_AVX
+#elif C_AVX || EMU_AVX
 #define MUL_ACC(addend,mplr1,mplr2) _mm256_add_pd(addend , _mm256_mul_pd(mplr1,mplr2))
-#else
+#elif defined(__SSE2__)
 #define MUL_ACC(addend,mplr1,mplr2) _mm_add_pd(addend , _mm_mul_pd(mplr1,mplr2))
 #endif
 #define NAN0            (_clearfp())
@@ -906,13 +911,9 @@ extern unsigned int __cdecl _clearfp (void);
 // #define NAN1T           {if(_SW_INVALID&_clearfp()){fprintf(stderr,"nan error: file %s line %d\n",__FILE__,__LINE__);jsignal(EVNAN);     }}
 #endif
 
-#if (C_AVX&&SY_64) || EMU_AVX || IMI_AVX
-#define NPAR ((I)(sizeof(__m256)/sizeof(D))) // number of Ds processed in parallel
 #if (C_AVX&&SY_64) || EMU_AVX
+#define NPAR ((I)(sizeof(__m256d)/sizeof(D))) // number of Ds processed in parallel
 #define LGNPAR 2  // no good automatic way to do this
-#else
-#define LGNPAR 1  // IMI_AVX is 128 bit
-#endif
 // loop for atomic parallel ops.  // fixed: n is #atoms (never 0), x->input, z->result, u=input atom4 and result
 //                                                                                  __SSE2__    atom2
 #define AVXATOMLOOP(preloop,loopbody,postloop) \
@@ -938,8 +939,10 @@ extern unsigned int __cdecl _clearfp (void);
  __m256i endmask;  __m256d u, zt, zu; \
  _mm256_zeroupper(VOIDARG); \
  endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1))));  /* mask for 0 1 2 3 4 5 is xxxx 0001 0011 0111 1111 0001 */ \
+                                                         /* __SSE2__ mask for 0 1 2 3 4 5 is xx 01 11 01 11 01 */ \
  preloop \
  I i=(n-1)>>LGNPAR;  /* # loops for 0 1 2 3 4 5 is x 0 0 0 0 1 */ \
+            /* __SSE2__ # loops for 0 1 2 3 4 5 is x 1 0 1 0 1 */ \
  if(i>0){u=_mm256_loadu_pd(x); x+=NPAR; loopbody1 \
  while(--i>=0){ u=_mm256_loadu_pd(x); x+=NPAR; \
   zu=zt; loopbody1 loopbody2 \
@@ -956,8 +959,10 @@ extern unsigned int __cdecl _clearfp (void);
  __m256i endmask;  __m256d u,v; \
  _mm256_zeroupper(VOIDARG); \
  endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1))));  /* mask for 0 1 2 3 4 5 is xxxx 0001 0011 0111 1111 0001 */ \
+                                                         /* __SSE2__ mask for 0 1 2 3 4 5 is xx 01 11 01 11 01 */ \
  preloop \
  I i=(n-1)>>LGNPAR;  /* # loops for 0 1 2 3 4 5 is x 0 0 0 0 1 */ \
+            /* __SSE2__ # loops for 0 1 2 3 4 5 is x 1 0 1 0 1 */ \
  while(--i>=0){ u=_mm256_loadu_pd(x); v=_mm256_loadu_pd(y); \
   loopbody \
   _mm256_storeu_pd(z, u); x+=NPAR; y+=NPAR; z+=NPAR; \
@@ -965,6 +970,115 @@ extern unsigned int __cdecl _clearfp (void);
  u=_mm256_maskload_pd(x,endmask); v=_mm256_maskload_pd(y,endmask); \
  loopbody \
  _mm256_maskstore_pd(z, endmask, u); \
+ postloop
+
+#elif defined(__GNUC__)   // vector extension
+
+#if !(defined(__aarch64__)||defined(__arm__))
+typedef int64_t int64x2_t __attribute__ ((vector_size (16),aligned(16)));
+typedef double float64x2_t __attribute__ ((vector_size (16),aligned(16)));
+#endif
+#define dump_int64x2(a,x) {int64x2_t _b=x;fprintf(stderr,"%s %lli %lli \n", a, ((long long*)(&_b))[0], ((long long*)(&_b))[1]);}
+#define dump_float64x2(a,x) {float64x2_t _b=x;fprintf(stderr,"%s %f %f \n", a, ((double*)(&_b))[0], ((double*)(&_b))[1]);}
+
+static inline __attribute__((__always_inline__)) int vec_any_si128(int64x2_t mask)
+{
+   return (mask[0] & 0x8000000000000000)||(mask[1] & 0x8000000000000000);
+}
+
+static inline __attribute__((__always_inline__)) float64x2_t vec_maskload_pd(double const* mem_addr, int64x2_t mask)
+{
+   float64x2_t ret={0.0,0.0};
+   int i;
+
+    for (i=0; i<2; i++){
+      if (mask[i] & 0x8000000000000000){
+        ret[i] = *(mem_addr + i);
+      }
+    }
+    return ret;
+}
+
+static inline __attribute__((__always_inline__)) void vec_maskstore_pd(double * mem_addr, int64x2_t  mask, float64x2_t a)
+{
+   int i;
+    for (i=0; i<2; i++){
+      if (mask[i] & 0x8000000000000000)
+        *(mem_addr + i) = a[i];
+    }
+}
+
+static inline __attribute__((__always_inline__)) int64x2_t vec_loadu_si128(int64x2_t const * a)
+{
+   int64x2_t ret;
+   memcpy(&ret, (int64_t *)a, 2*sizeof(int64_t));  // must cast pointer otherwise segment 
+   return ret;
+}
+
+static inline __attribute__((__always_inline__)) float64x2_t vec_loadu_pd(double const * a)
+{
+   float64x2_t ret;
+   memcpy(&ret, a, 2*sizeof(double));
+   return ret;
+}
+
+static inline __attribute__((__always_inline__)) void vec_storeu_pd(double * mem_addr, float64x2_t a)
+{
+   memcpy(mem_addr, &a , 2*sizeof(double));
+}
+
+#define NPAR ((I)(sizeof(float64x2_t)/sizeof(D))) // number of Ds processed in parallel
+#define LGNPAR 1  // 128-bit no good automatic way to do this
+// loop for atomic parallel ops.  // fixed: n is #atoms (never 0), x->input, z->result, u=input atom4 and result
+//                                                                                  __SSE2__    atom2
+#define AVXATOMLOOP(preloop,loopbody,postloop) \
+ int64x2_t endmask;  float64x2_t u; \
+ endmask = vec_loadu_si128((int64x2_t*)(validitymask+((-n)&(NPAR-1))));  /* mask for 0 1 2 3 4 5 is xx 01 11 01 11 01 */ \
+ preloop \
+ I i=(n-1)>>LGNPAR;  /* # loops for 0 1 2 3 4 5 is x 0 0 0 0 1 */ \
+            /* __SSE2__ # loops for 0 1 2 3 4 5 is x 1 0 1 0 1 */ \
+ while(--i>=0){ u=vec_loadu_pd(x); \
+  loopbody \
+  vec_storeu_pd(z, u); x+=NPAR; z+=NPAR; \
+ } \
+ u=vec_maskload_pd(x,endmask); \
+ loopbody \
+ vec_maskstore_pd(z, endmask, u); \
+ x+=((n-1)&(NPAR-1))+1; z+=((n-1)&(NPAR-1))+1; \
+ postloop
+
+// version that pipelines one read ahead.  Input to loopbody2 is zu; result of loopbody1 is in zt
+#define AVXATOMLOOPPIPE(preloop,loopbody1,loopbody2,postloop) \
+ int64x2_t endmask;  float64x2_t u, zt, zu; \
+ endmask = vec_loadu_si128((int64x2_t*)(validitymask+((-n)&(NPAR-1))));  /* mask for 0 1 2 3 4 5 is xx 01 11 01 11 01 */ \
+ preloop \
+ I i=(n-1)>>LGNPAR;  /* # loops for 0 1 2 3 4 5 is x 0 0 0 0 1 */ \
+            /* __SSE2__ # loops for 0 1 2 3 4 5 is x 1 0 1 0 1 */ \
+ if(i>0){u=*(float64x2_t *)(x); x+=NPAR; loopbody1 \
+ while(--i>=0){ u=vec_loadu_pd(x); x+=NPAR; \
+  zu=zt; loopbody1 loopbody2 \
+  vec_storeu_pd(z, u); z+=NPAR; \
+ } zu=zt; loopbody2 vec_storeu_pd(z, u); z+=NPAR;} \
+ u=vec_maskload_pd(x,endmask); \
+ loopbody1 zu=zt; loopbody2 \
+ vec_maskstore_pd(z, endmask, u); \
+ x+=((n-1)&(NPAR-1))+1; z+=((n-1)&(NPAR-1))+1; \
+ postloop
+
+// Dyadic version.  v is right argument, u is still result
+#define AVXATOMLOOP2(preloop,loopbody,postloop) \
+ int64x2_t endmask;  float64x2_t u,v; \
+ endmask = vec_loadu_si128((int64x2_t*)(validitymask+((-n)&(NPAR-1))));  /* mask for 0 1 2 3 4 5 is xx 01 11 01 11 01 */ \
+ preloop \
+ I i=(n-1)>>LGNPAR;  /* # loops for 0 1 2 3 4 5 is x 0 0 0 0 1 */ \
+            /* __SSE2__ # loops for 0 1 2 3 4 5 is x 1 0 1 0 1 */ \
+ while(--i>=0){ u=vec_loadu_pd(x); v=vec_loadu_pd(y); \
+  loopbody \
+  vec_storeu_pd(z, u); x+=NPAR; y+=NPAR; z+=NPAR; \
+ } \
+ u=_mm_maskload_pd(x,endmask); v=_mm_maskload_pd(y,endmask); \
+ loopbody \
+ _mm_maskstore_pd(z, endmask, u); \
  postloop
 
 #endif
@@ -1443,7 +1557,7 @@ static __forceinline void aligned_free(void *ptr) {
 #if !defined(C_CRC32C)
 #define C_CRC32C 0
 #endif
-#if (C_AVX&&SY_64) || EMU_AVX
+#if (C_AVX&&SY_64) || defined(__aarch64__) || defined(_M_ARM64) || EMU_AVX
 #undef C_CRC32C
 #define C_CRC32C 1
 #endif

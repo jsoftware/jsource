@@ -130,29 +130,65 @@ PREFIXBFX( nepfxB, NE, INE, SNE, BNE, {B b=0; DQ(n, *z++=b^=  *x++;);})
 PREFIXBFX( eqpfxB, EQ, IEQ, SEQ, BEQ, {B b=1; DQ(n, *z++=b=b==*x++;);})
 
 
-// m is */frame, n is #cells, d is length of each cell, p is 0 for <, 1 for  <:   kludge wordwide is much faster
+// m is */frame, n is #cells, d is length of each cell, p is 1 for <, 0 for <:
+// the result is ~p until we hit an input=p; then p thereafter
 static B jtpscanlt(J jt,I m,I d,I n,B*z,B*x,B p){A t;B*v;I i;
- memset(z,!p,m*n*d); 
+ memset(z,p^1,m*n*d); 
  if(1==d)DQ(m, if(v=memchr(x,p,n))*(z+(v-x))=p; z+=n; x+=n;)
  else{
+#if 0 // obsolete
   GATV0(t,B01,d,1); v=BAV(t);
   for(i=0;i<m;++i){
    memset(v,C1,d);
    DQ(n, DO(d, if(v[i]&&p==x[i]){v[i]=0; z[i]=p;};); z+=d; x+=d;); 
- }}
+  }
+#else
+  I *xiv0=(I*)x, *ziv0=(I*)z;  // word-long pointers running through each cell
+  I npp; REPLBYTETOW(p^1,npp);  // one copy of p in each lane
+  I nw=(d-1)>>LGSZI;  // number of words to process before the last
+  for(i=0;i<m;++i){I j;
+   I *xivc=xiv0, *zivc=ziv0;  // head of columns
+   // process (up to) word-wide strips top to bottom, till every lane has been touched
+   for(j=nw;j>0;--j){I k;
+    I *ziv=zivc; I *xiv=xivc;  // scan pointers down the column
+    I livelane=VALIDBOOLEAN;  // 1 bit if lane has NOT been finished
+    for(k=n;k>0;--k){I xi=*xiv;  // if writing in place, must fetch before store
+     *ziv=npp^((xi^npp)&livelane);  // xi^npp=1 if we have found the match in this column.  If that is 1 in a live lane, write p to the lane, otherwise ~p
+     livelane=livelane&~(xi^npp);
+     if(livelane==0)break;  // when all lanes have been found, stop the column
+     ziv=(I*)((I)ziv+d);  xiv=(I*)((I)xiv+d);  // advance to next row in column 
+    }
+    zivc=(I*)((I)zivc+SZI);  xivc=(I*)((I)xivc+SZI);  // advance to next row in column 
+   }
+   I *ziv=zivc; I *xiv=xivc;  // scan pointers down the column
+   I k,nunstored=(-d)&(SZI-1);  // number of bytes to 
+   I livelane=VALIDBOOLEAN>>(nunstored<<LGSZI);  // 1 bit if lane has NOT been finished - indicate the unstored lanes are finished to begin with
+   for(k=n;k>0;--k){I xi=*xiv;  // if writing in place, must fetch before store
+    I storeval=npp^((xi^npp)&livelane);  // xi^npp=1 if we have found the match in this column.  If that is 1 in a live lane, write p to the lane, otherwise ~p
+    STOREBYTES(ziv,storeval,nunstored);  // store the modifiable part of the result - don't overwrite!
+    livelane=livelane&~(xi^npp);  // if we wrote to the lane, mark it dead
+    if(livelane==0)break;  // when all lanes have been found, stop the column
+    ziv=(I*)((I)ziv+d);  xiv=(I*)((I)xiv+d);  // advance to next row in column 
+   }
+   xiv0=(I*)((I)xiv0+n*d); ziv0=(I*)((I)ziv0+n*d);  // advance to next cell
+  }
+#endif
+ }
  R 1;
-}    /* f/\"1 w for < and <: */
+}    /* f/\"r w for < and <: */
 
 AHDRP(ltpfxB,B,B){pscanlt(m,d,n,z,x,C1);R EVOK;}
 AHDRP(lepfxB,B,B){pscanlt(m,d,n,z,x,C0);R EVOK;}
 
-
+#if 0  // obsolete
+// result is alternating pp,~pp,... till a is encountered; then one atom from pa,~pa (as if started from 0), then one atom from ~ps,ps,... repeated
 static B jtpscangt(J jt,I m,I d,I n,B*z,B*x,B a,B pp,B pa,B ps){
   A t;B b,*cc="\000\001\000",e,*p=cc+pp,*v;B*u;I i,j;
  if(d==1)for(i=0;i<m;++i){
   if(v=memchr(x,a,n)){
    j=v-x; b=j&1; 
-   mvc(j,z,2L,p); memset(z+j,b!=ps,n-j); *(z+j)=b^pa;
+// obsolete    mvc(j,z,2L,p); memset(z+j,b!=ps,n-j); *(z+j)=b^pa;
+   mvc(j,z,2L,p); memset(z+j,b^ps,n-j); *(z+j)=b^pa;
   }else mvc(n,z,2L,p);
   z+=n; x+=n;
  }else{
@@ -162,15 +198,75 @@ static B jtpscangt(J jt,I m,I d,I n,B*z,B*x,B a,B pp,B pa,B ps){
    DO(n, j=i; DO(d, if(u[i])z[i]='1'==u[i]; else 
      if(a==x[i]){b=j&1; z[i]=b^pa; u[i]=b^ps?'1':'0';}else z[i]=e;);
     e^=1; z+=d; x+=d;); 
- }}
+  }
+ }
  R 1;
-}    /* f/\"1 w for > >: +: *: */
+}    /* f/\"r w for > >: +: *: */
 
 AHDRP(  gtpfxB,B,B){pscangt(m,d,n,z,x,C0,C1,C0,C0);R EVOK;}
 AHDRP(  gepfxB,B,B){pscangt(m,d,n,z,x,C1,C0,C1,C1);R EVOK;}
 AHDRP( norpfxB,B,B){pscangt(m,d,n,z,x,C1,C0,C1,C0);R EVOK;}
 AHDRP(nandpfxB,B,B){pscangt(m,d,n,z,x,C0,C1,C0,C1);R EVOK;}
+#else
+// result is alternating pp,~pp,... till a is encountered; then one atom from pa,~pa (as if started from 0), then one atom from ~ps,ps,... repeated
+static B jtpscangt(J jt,I m,I d,I n,B*z,B*x,I apas){
+ I a=apas&1, pp=(apas>>1)&1, pa=(apas>>2)&1, ps=apas>>3;  // extract values from mask
+ if(d==1){I i;
+  for(i=0;i<m;++i){
+   A t;B b,*cc="\000\001\000",e,*p=cc+pp,*v;B*u;I i,j;
+   if(v=memchr(x,a,n)){
+    j=v-x; b=j&1; 
+// obsolete    mvc(j,z,2L,p); memset(z+j,b!=ps,n-j); *(z+j)=b^pa;
+    mvc(j,z,2L,p); memset(z+j,b^ps,n-j); *(z+j)=b^pa;
+   }else mvc(n,z,2L,p);
+   z+=n; x+=n;
+  }
+ }else{I i;
+  REPLBYTETOW(a^1,a); REPLBYTETOW(pp,pp); REPLBYTETOW(pa,pa); REPLBYTETOW(ps,ps);   // expand data to all lanes.  a is COMPLEMENT of input a
+  ps^=pa; pa^=pp;  // we write pp,!pp,... in hit state, we write pa (alternating), i. e. we XOR with (pa^pp).  In posthit and later, we write ps alternating frozen, i. e. we XOR with pa^ps
+  I *xiv0=(I*)x, *ziv0=(I*)z;  // word-long pointers running through each cell
+  I nw=(d-1)>>LGSZI;  // number of words to process before the last
+  for(i=0;i<m;++i){I j;
+   I *xivc=xiv0, *zivc=ziv0;  // head of columns
+   // process (up to) word-wide strips top to bottom, till every lane has been touched
+   for(j=nw;j>0;--j){I k;
+    I *ziv=zivc; I *xiv=xivc;  // scan pointers down the column
+    I livelane=VALIDBOOLEAN;  // 1 bit if lane has NOT been finished
+    I hit=0, posthit;  // 1 bit is this lane is encountering a for the first time this cycle, or did so last cycle
+    I storeval=pp;  // init to store (alternating) lead byte
+    for(k=n;k>0;--k){I xi=*xiv;  // if writing in place, must fetch before store
+     // calculate the state to apply to this, after the new byte has been inspected: live, hit, hit1, or none if older
+     posthit=hit; hit=(xi^a)&livelane; livelane&=~hit;  // xi^a=1 if we have found the match in this column, because a was complemented
+     storeval^=(hit&pa) ^ (posthit&ps);  // apply the adjustments needed for hit & posthit state.  After that, no change
+     *ziv=storeval;   // write out the value
+     storeval^=livelane;  // complement the value for any lane still in the lead (alternating) phase
+     ziv=(I*)((I)ziv+d);  xiv=(I*)((I)xiv+d);  // advance to next row in column 
+    }
+    zivc=(I*)((I)zivc+SZI);  xivc=(I*)((I)xivc+SZI);  // advance to next row in column 
+   }
+   I *ziv=zivc; I *xiv=xivc;  // scan pointers down the column
+   I k,nunstored=(-d)&(SZI-1);  // number of bytes to 
+   I livelane=VALIDBOOLEAN>>(nunstored<<LGSZI);  // 1 bit if lane has NOT been finished - indicate the unstored lanes are finished to begin with
+   I hit=0, posthit;  // 1 bit is this lane is encountering a for the first time this cycle, or did so last cycle
+   I storeval=pp;  // init to store (alternating) lead byte
+   for(k=n;k>0;--k){I xi=*xiv;  // if writing in place, must fetch before store
+    posthit=hit; hit=(xi^a)&livelane; livelane&=~hit;  // xi^a=1 if we have found the match in this column, because a was complemented
+    storeval^=(hit&pa) ^ (posthit&ps);  // apply the adjustments needed for hit & posthit state.  After that, no change
+    STOREBYTES(ziv,storeval,nunstored);  // store the modifiable part of the result - don't overwrite!
+    storeval^=livelane;  // complement the value for any lane still in the lead (alternating) phase
+    ziv=(I*)((I)ziv+d);  xiv=(I*)((I)xiv+d);  // advance to next row in column 
+   }
+   xiv0=(I*)((I)xiv0+n*d); ziv0=(I*)((I)ziv0+n*d);  // advance to next cell
+  }
+ }
+ R 1;
+}    /* f/\"r w for > >: +: *: */
 
+AHDRP(  gtpfxB,B,B){pscangt(m,d,n,z,x,0x2);R EVOK;}
+AHDRP(  gepfxB,B,B){pscangt(m,d,n,z,x,0xd);R EVOK;}
+AHDRP( norpfxB,B,B){pscangt(m,d,n,z,x,0x5);R EVOK;}
+AHDRP(nandpfxB,B,B){pscangt(m,d,n,z,x,0xa);R EVOK;}
+#endif
 
 PREFIXOVF( pluspfxI, I, I,  PLUSP, PLUSVV)
 PREFIXOVF(tymespfxI, I, I, TYMESP,TYMESVV)

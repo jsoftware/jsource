@@ -833,7 +833,7 @@
 #define probenum(x,y)               jtprobenum(jt,(x),(y))  
 #define prod(x,y)                   jtprod(jt,(x),(y))
 #define pscan(x,y)                  jtpscan(jt,(x),(y))
-#define pscangt(x0,x1,x2,x3,x4,x5,x6,x7,x8)         jtpscangt(jt,(x0),(x1),(x2),(x3),(x4),(x5),(x6),(x7),(x8))
+#define pscangt(x0,x1,x2,x3,x4,x5)         jtpscangt(jt,(x0),(x1),(x2),(x3),(x4),(x5))
 #define pscanlt(x0,x1,x2,x3,x4,x5)  jtpscanlt(jt,(x0),(x1),(x2),(x3),(x4),(x5))
 #define qbin(x,y)                   jtqbin(jt,(x),(y))
 #define qco2(x,y)                   jtqco2(jt,(x),(y))

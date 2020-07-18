@@ -66,7 +66,8 @@ common="$OPENMP -fPIC -O2 -fvisibility=hidden -fno-strict-aliasing  \
  -Wno-sign-compare \
  -Wno-type-limits \
  -Wno-unused-parameter \
- -Wno-unused-value "
+ -Wno-unused-value \
+ -Wno-format-overflow"
 GNUC_MAJOR=$(echo __GNUC__ | $CC -E -x c - | tail -n 1)
 GNUC_MINOR=$(echo __GNUC_MINOR__ | $CC -E -x c - | tail -n 1)
 if [ $GNUC_MAJOR -ge 5 ] ; then

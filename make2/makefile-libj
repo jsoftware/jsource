@@ -173,8 +173,8 @@ $(OBJS_FMA) : CFLAGS_FMA := -mfma
 $(OBJS_AESNI) : CFLAGS_AESNI := -maes
 $(OBJS_AESARM) : CFLAGS_AESARM := -march=armv8-a+crc+crypto
 $(OBJS_SLEEF) : CFLAGS_SLEEF := $(FLAGS_SLEEF) -DSLEEF_STATIC_LIBS -DNDEBUG -DDORENAME=1 -Wno-sign-compare -ffp-contract=off -fno-math-errno -fno-trapping-math -I../../../../sleef/src/arch -I../../../../sleef/src/common
-$(ODIR)/$(TARGET) : $(OBJS) $(OBJS_FMA) $(OBJS_AESNI) $(OBJS_AESARM) $(OBJS_SLEEF) $(SRC_ASM) $(DLLOBJS) $(LIBJRES) $(LIBSLEEF)
-	$(CC) -o $@ $(OBJS) $(OBJS_FMA) $(OBJS_AESNI) $(OBJS_AESARM) $(OBJS_SLEEF) $(OBJS_ASM) $(SRC_ASM) $(DLLOBJS) $(LIBJDEF) $(LIBJRES) $(LIBSLEEF) $(LDFLAGS)
+$(ODIR)/$(TARGET) : $(OBJS) $(OBJS_FMA) $(OBJS_AESNI) $(OBJS_AESARM) $(OBJS_SLEEF) $(SRC_ASM) $(DLLOBJS) $(LIBJRES)
+	$(CC) -o $@ $(OBJS) $(OBJS_FMA) $(OBJS_AESNI) $(OBJS_AESARM) $(OBJS_SLEEF) $(OBJS_ASM) $(SRC_ASM) $(DLLOBJS) $(LIBJDEF) $(LIBJRES) $(LDFLAGS)
 
 $(LIBJRES): jdll.rc
 	$(WINDRES) -o$@ $^

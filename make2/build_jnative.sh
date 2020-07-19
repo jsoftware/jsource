@@ -116,7 +116,7 @@ case $jplatform\_$j64x in
 
 linux_j32)
 TARGET=libjnative.so
-CFLAGS="$common -m32 -I$JAVA_HOME/include -I$JAVA_HOME/include/linux "
+CFLAGS="$common -m32 -msse2 -mfpmath=sse -I$JAVA_HOME/include -I$JAVA_HOME/include/linux "
 LDFLAGS=" -shared -Wl,-soname,libjnative.so  -m32 "
 ;;
 linux_j64)
@@ -146,7 +146,7 @@ LDFLAGS=" -shared -Wl,-soname,libjnative.so "
 ;;
 darwin_j32)
 TARGET=libjnative.dylib
-CFLAGS="$common -m32 $macmin -I$JAVA_HOME/include -I$JAVA_HOME/include/darwin "
+CFLAGS="$common -m32 -msse2 -mfpmath=sse $macmin -I$JAVA_HOME/include -I$JAVA_HOME/include/darwin "
 LDFLAGS=" -m32 $macmin -dynamiclib "
 ;;
 darwin_j64)

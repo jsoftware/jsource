@@ -912,13 +912,18 @@ extern unsigned int __cdecl _clearfp (void);
 #endif
 
 #if (C_AVX&&SY_64) || EMU_AVX
+// j64avx gcc _mm256_zeroupper -O2 failed SLEEF for expression % /\ ^:_1 ,: 1 2 3  => 1 2 0
+// upper half of all YMM registers clear AFTER loading endmask
+// ??? is_mm256_zeroupper really needed
+// -mavx or /arch:AVX should already generate VEX encoded for SSE instructions
+#define _mm256_zeroupperx(x)
 #define NPAR ((I)(sizeof(__m256d)/sizeof(D))) // number of Ds processed in parallel
 #define LGNPAR 2  // no good automatic way to do this
 // loop for atomic parallel ops.  // fixed: n is #atoms (never 0), x->input, z->result, u=input atom4 and result
 //                                                                                  __SSE2__    atom2
 #define AVXATOMLOOP(preloop,loopbody,postloop) \
  __m256i endmask;  __m256d u; \
- _mm256_zeroupper(VOIDARG); \
+ _mm256_zeroupperx(VOIDARG); \
  endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1))));  /* mask for 0 1 2 3 4 5 is xxxx 0001 0011 0111 1111 0001 */ \
                                                          /* __SSE2__ mask for 0 1 2 3 4 5 is xx 01 11 01 11 01 */ \
  preloop \
@@ -937,7 +942,7 @@ extern unsigned int __cdecl _clearfp (void);
 // version that pipelines one read ahead.  Input to loopbody2 is zu; result of loopbody1 is in zt
 #define AVXATOMLOOPPIPE(preloop,loopbody1,loopbody2,postloop) \
  __m256i endmask;  __m256d u, zt, zu; \
- _mm256_zeroupper(VOIDARG); \
+ _mm256_zeroupperx(VOIDARG); \
  endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1))));  /* mask for 0 1 2 3 4 5 is xxxx 0001 0011 0111 1111 0001 */ \
                                                          /* __SSE2__ mask for 0 1 2 3 4 5 is xx 01 11 01 11 01 */ \
  preloop \
@@ -957,7 +962,7 @@ extern unsigned int __cdecl _clearfp (void);
 // Dyadic version.  v is right argument, u is still result
 #define AVXATOMLOOP2(preloop,loopbody,postloop) \
  __m256i endmask;  __m256d u,v; \
- _mm256_zeroupper(VOIDARG); \
+ _mm256_zeroupperx(VOIDARG); \
  endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1))));  /* mask for 0 1 2 3 4 5 is xxxx 0001 0011 0111 1111 0001 */ \
                                                          /* __SSE2__ mask for 0 1 2 3 4 5 is xx 01 11 01 11 01 */ \
  preloop \
@@ -1025,6 +1030,17 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_loadu_pd(double
 static inline __attribute__((__always_inline__)) void vec_storeu_pd(double * mem_addr, float64x2_t a)
 {
    memcpy(mem_addr, &a , 2*sizeof(double));
+}
+
+static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x2_t a, float64x2_t b)
+{
+   int64x2_t a1,b1;
+   float64x2_t ret;
+   memcpy(&a1, &a, 2*sizeof(double));
+   memcpy(&b1, &b, 2*sizeof(double));
+   a1 &= b1;
+   memcpy(&ret, &a1, 2*sizeof(double));
+   return ret;
 }
 
 #define NPAR ((I)(sizeof(float64x2_t)/sizeof(D))) // number of Ds processed in parallel

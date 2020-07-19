@@ -228,7 +228,11 @@ typedef union {
 #define UNLIKELY(condition) __builtin_expect(!!(condition), 0)
 #define RESTRICT __restrict__
 
-#define INLINE __attribute__((always_inline))
+#if defined (__clang__)
+#define INLINE inline __attribute__((always_inline))
+#else
+#define INLINE inline
+#endif
 
 #ifndef __arm__
 #define ALIGNED(x) __attribute__((aligned(x)))

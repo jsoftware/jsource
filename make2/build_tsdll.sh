@@ -156,7 +156,7 @@ LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm -ldl"
 
 darwin_j32) # darwin x86
 TARGET=libtsdll.dylib
-CFLAGS="$common -m32 $macmin"
+CFLAGS="$common -m32 -msse2 -mfpmath=sse $macmin"
 LDFLAGS=" -dynamiclib -lm -ldl -m32 $macmin"
 ;;
 

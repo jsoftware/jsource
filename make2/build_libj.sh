@@ -291,7 +291,7 @@ LIBSLEEF=../../../../sleef/lib/raspberry/libsleef.a
 
 darwin_j32) # darwin x86
 TARGET=libj.dylib
-CFLAGS="$common -m32 $macmin"
+CFLAGS="$common -m32 -msse2 -mfpmath=sse $macmin"
 LDFLAGS=" -dynamiclib -lm -ldl $LDOPENMP $LDTHREAD -m32 $macmin"
 OBJS_AESNI=" aes-ni.o "
 SRC_ASM="${SRC_ASM_MAC32}"

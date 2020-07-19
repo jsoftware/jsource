@@ -125,7 +125,7 @@ fi
 case $jplatform\_$j64x in
 
 linux_j32)
-CFLAGS="$common -m32"
+CFLAGS="$common -m32 -msse2 -mfpmath=sse "
 LDFLAGS=" -m32 -ldl $LDTHREAD"
 ;;
 linux_j64)
@@ -149,7 +149,7 @@ CFLAGS="$common -march=armv8-a+crc -DRASPI"
 LDFLAGS=" -ldl $LDTHREAD"
 ;;
 darwin_j32)
-CFLAGS="$common -m32 $macmin"
+CFLAGS="$common -m32 -msse2 -mfpmath=sse $macmin"
 LDFLAGS=" -ldl $LDTHREAD -m32 $macmin "
 ;;
 #-mmacosx-version-min=10.5

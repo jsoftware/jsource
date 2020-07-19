@@ -353,7 +353,7 @@ static __emu_inline int _mm_testnzc_si128_REF( __m128i a, __m128i b)
 /** \SSE3{SSE2,_mm_addsub_ps} */
 static __emu_inline __m128 _mm_addsub_ps_REF(__m128 a, __m128 b)
 {
-    const static __m128 const_addSub_ps_neg  = { -1, 1, -1, 1 };
+    static __m128 const const_addSub_ps_neg  = { -1, 1, -1, 1 };
 
     b = _mm_mul_ps( b, const_addSub_ps_neg );
     a = _mm_add_ps( a, b   );
@@ -363,7 +363,7 @@ static __emu_inline __m128 _mm_addsub_ps_REF(__m128 a, __m128 b)
 /** \SSE3{SSE2,_mm_addsub_pd} */
 static __emu_inline __m128d _mm_addsub_pd_REF(__m128d a, __m128d b)
 {
-    const static __m128d const_addSub_pd_neg = { -1, 1 };
+    static __m128d const const_addSub_pd_neg = { -1, 1 };
 
     b = _mm_mul_pd( b, const_addSub_pd_neg );
     a = _mm_add_pd( a, b   );

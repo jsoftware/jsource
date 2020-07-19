@@ -57,33 +57,23 @@ echo "compiler=$compiler"
 if [ -z "${compiler##*gcc*}" ] || [ -z "${CC##*gcc*}" ]; then
 # gcc
 common="$OPENMP -fPIC -O2 -fvisibility=hidden -fno-strict-aliasing  \
- -Werror -Wextra \
+ -Werror -Wextra -Wno-unknown-warning-option \
+ -Wno-cast-function-type \
  -Wno-clobbered \
  -Wno-empty-body \
  -Wno-format-overflow \
+ -Wno-implicit-fallthrough \
+ -Wno-maybe-uninitialized \
+ -Wno-missing-field-initializers \
  -Wno-parentheses \
  -Wno-pointer-sign \
+ -Wno-shift-negative-value \
  -Wno-sign-compare \
  -Wno-type-limits \
+ -Wno-uninitialized \
  -Wno-unused-parameter \
  -Wno-unused-value "
-GNUC_MAJOR=$(echo __GNUC__ | $CC -E -x c - | tail -n 1)
-GNUC_MINOR=$(echo __GNUC_MINOR__ | $CC -E -x c - | tail -n 1)
-if [ $GNUC_MAJOR -ge 5 ] ; then
-common="$common -Wno-maybe-uninitialized"
-else
-common="$common -DC_NOMULTINTRINSIC -Wno-uninitialized"
-fi
-if [ $GNUC_MAJOR -ge 6 ] ; then
-common="$common -Wno-shift-negative-value"
-fi
-# alternatively, add comment /* fall through */
-if [ $GNUC_MAJOR -ge 7 ] ; then
-common="$common -Wno-implicit-fallthrough"
-fi
-if [ $GNUC_MAJOR -ge 8 ] ; then
-common="$common -Wno-cast-function-type"
-fi
+
 else
 # clang
 common="$OPENMP -fPIC -O2 -fvisibility=hidden -fno-strict-aliasing \

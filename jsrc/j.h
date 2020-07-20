@@ -97,6 +97,9 @@
 #include <stdint.h>
 #include <string.h>
 #include "avxintrin-emu.h"
+#else
+#include <emmintrin.h>
+#endif
 #define _CMP_EQ          0
 #define _CMP_LT          1
 #define _CMP_LE          2
@@ -117,9 +120,6 @@
 #define _CMP_LE_OQ _CMP_LE
 #define _CMP_LT_OQ _CMP_LT
 #define _CMP_NEQ_OQ _CMP_NEQ
-#else
-#include <emmintrin.h>
-#endif
 #endif
 
 #if defined(__aarch64__)||defined(_M_ARM64)

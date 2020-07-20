@@ -7,22 +7,25 @@ FAVX= /DC_AVX=1 /arch:AVX
 !endif
 !if "1"=="$(USE_OPENMP)"
 FOPENMP= -Xclang -fopenmp
-# FOPENMP= /openmp
-OBJS_OPENMP=../../openmp/obj/windows/libomp.lib
-!endif
 !if "1"=="$(x64)"
+OBJS_OPENMP=../../openmp/obj/windows/libomp.lib
+!else
+OBJS_OPENMP=../../openmp/obj/windows/libomp32.lib
+!endif
+!endif
 USE_SLEEF=1
+!if "1"=="$(x64)"
 !if "1"=="$(JAVX2)"
 FSLEEF= /DSLEEF=1 /DENABLE_AVX2 /DSLEEF_STATIC_LIBS /DDORENAME=1 -I../../sleef/src/common -I../../sleef/src/arch
 !else
 !if "1"=="$(JAVX)"
-FSLEEF= /DSLEEF=1 /DENABLE_AVX /DSLEEF_STATIC_LIBS /DDORENAME=1 -I../../sleef/src/common -I../../sleef/src/arch
+FSLEEF= /DSLEEF=1 /DENABLE_AVX1 /DSLEEF_STATIC_LIBS /DDORENAME=1 -I../../sleef/src/common -I../../sleef/src/arch
 !else
 FSLEEF= /DSLEEF=1 /DENABLE_SSE2 /DSLEEF_STATIC_LIBS /DDORENAME=1 -I../../sleef/src/common -I../../sleef/src/arch
 !endif
 !endif
 !else
-USE_SLEEF=0
+FSLEEF= /DSLEEF=1 /DENABLE_SSE2 /DSLEEF_STATIC_LIBS /DDORENAME=1 -I../../sleef/src/common -I../../sleef/src/arch
 !endif
 !if "1"=="$(DEBUG)"
 FDEBUG = /FS /Zi /DDEBUG=1
@@ -31,14 +34,14 @@ LDEBUG = /DEBUG
 
 !if "1"=="$(x64)"
 CF1= -maes -msse3 -fno-strict-aliasing -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-char-subscripts -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor
-CFLAGS= $(FDEBUG) /D_JDLL /DC_NA=0 $(FAVX) $(FAVX2) $(FOPENMP) $(FSLEEF) /WX /W3 /Ot /Ob1 /GS /Zc:strictStrings /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
+CFLAGS= $(FDEBUG) /D_JDLL /DC_NA=0 /DEMU_AVX=1 $(FAVX) $(FAVX2) $(FOPENMP) $(FSLEEF) /WX /W3 /O2 /GS /Zc:strictStrings /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
 FLAGS= $(LDEBUG) /DLL /MACHINE:X64 /SUBSYSTEM:WINDOWS,5.02
 ASMFLAGS= /Cx
 !else
 CF1= -m32 -maes -msse2 -fno-strict-aliasing -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-char-subscripts -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor
 # /Og fail g310r
 # /Oy crash ]^:_"1[0
-CFLAGS= $(FDEBUG) /D_JDLL $(FOPENMP) /WX /W3 /Ot /Ob1 /Oy- /GS /Zc:strictStrings /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
+CFLAGS= $(FDEBUG) /D_JDLL $(FOPENMP) $(FSLEEF) /WX /W3 /O2 /GS /Zc:strictStrings /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
 FLAGS= $(LDEBUG) /DLL /MACHINE:X86 /SUBSYSTEM:WINDOWS,5.01
 ASMFLAGS= /Cx /coff
 !endif
@@ -263,6 +266,6 @@ jdll.res : $(RCS)
 all: $(TARGET)
 
 clean:
-	erase /q *.lib *.exp *.res *.ilk *.pdb ..\..\jsrc\*.o ..\..\jsrc\blis\*.o ..\..\jsrc\openssl\*.o ..\..\dllsrc\*.o ..\..\sleef\src\common\*.o ..\..\sleef\src\libm\*.o
+	erase /q *.lib *.exp *.res *.ilk *.pdb ..\..\jsrc\*.o ..\..\jsrc\blis\*.o ..\..\jsrc\openssl\sha\*.o ..\..\dllsrc\*.o ..\..\sleef\src\common\*.o ..\..\sleef\src\libm\*.o
 
 .PHONY: all clean

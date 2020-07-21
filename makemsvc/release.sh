@@ -1,21 +1,21 @@
+#!/bin/sh
 
-git=..
-jbld=.
+# copy windows binaries from makemsvc to jlibrary/bin
 
-mkdir -p $git/release/windows/j32
-rm -f $git/release/windows/j32/jconsole.exe
-rm -f $git/release/windows/j32/j.dll
-rm -f $git/release/windows/j32/tsdll.dll
+cd "`dirname "$0"`"
 
-cp $jbld/jconsole/jconsole32.exe $git/release/windows/j32/jconsole.exe
-cp $jbld/jdll/j32.dll            $git/release/windows/j32/j.dll
-cp $jbld/tsdll/tsdll32.dll       $git/release/windows/j32/tsdll.dll
+S=.
+A=../jlibrary/bin
+B=../jlibrary/bin32
 
-mkdir -p $git/release/windows/j64
-rm -f $git/release/windows/j64/jconsole.exe
-rm -f $git/release/windows/j64/j.dll
-rm -f $git/release/windows/j64/tsdll.dll
+cp $S/jconsole/jconsole.exe $A/.
+cp $S/jconsole/jconsole32.exe $B/jconsole.exe
 
-cp $jbld/jconsole/jconsole.exe   $git/release/windows/j64/jconsole.exe
-cp $jbld/jdll/j.dll              $git/release/windows/j64/j.dll
-cp $jbld/tsdll/tsdll.dll         $git/release/windows/j64/tsdll.dll
+cp $S/jdll/javx.dll $A/javx.dll
+cp $S/jdll/javx2.dll $A/javx2.dll
+cp $S/jdll/j.dll $A/j-nonavx.dll
+cp $S/jdll/javx2.dll $A/j.dll
+cp $S/jdll/j32.dll $B/j.dll
+
+cp $S/tsdll/tsdll.dll $A/.
+cp $S/tsdll/tsdll32.dll $B/tsdll.dll

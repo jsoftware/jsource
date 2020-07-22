@@ -6,16 +6,16 @@ general:
 
 2. examples assume gitdev\jsource is the jsource folder
 
-3. jbld hardwired as build folder
-
-4. create jbld folder
-...> gitdev\jsource\makemsvc\install.bat gitdev
-
-5. edit jsrc\jversion.h as appropriate for 9!:14 result
+3. edit jsrc\jversion.h as appropriate for 9!:14 result
 jsrc\jversion-x.h is template for this file
 
-6. copy binaries to release folder
-...>release.bat
+**************************************************************************
+clang-cl
+
+add the path of clang-cl.exe that you selected to %PATH% using windows control panel.
+the 64-bit version of clang-cl is recommanded.
+eg, 
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\Llvm\x64\bin
 
 **************************************************************************
 j64
@@ -44,19 +44,6 @@ cd ..
 3. build tsdll.dll -  used in test suite to validate cd
 same as for jconsole but cd into tsdll
 
-4. run test suite
-copy jconsole.exe to jbld\j64\bin\jconsole.exe
-similarly for j.dll and tsdll.dll
-
-start powershell
-...>jbld\j64\bin\jconsole.exe
-   i.5
-   9!:14''
-...
-   testpath=:'gitdev/jsource/test/'
-   load testpath,'tsu.ijs'
-   RUN ddall NB. takes a few minutes to validate system and report problems
-
 **************************************************************************
 j32
 
@@ -76,15 +63,19 @@ same as for jconsole but cd into jdll
 3. build tsdll.dll -  used in test suite to validate cd
 same as for jconsole but cd into tsdll
 
-4. run test suite
-copy jconsole32.exe to jbld\j32\bin\jconsole.exe
-similarly for j32.dll and tsdll32.dll
+**************************************************************************
+run test suite
 
-start powershell
-...>jbld\j32\bin\jconsole.exe
-   i.5
-   9!:14''
-...
-   testpath=:'gitdev/jsource/test/'
-   load testpath,'tsu.ijs'
-   RUN ddall NB. takes a few minutes to validate system and report problems
+1. copy binaries to jlibrary/bin folder
+.\release.bat
+
+2. cd the jlibrary/bin or jlibrary/bin32 folder and run depending on the cpu architecture
+ avx2 / x86
+.\jconsole.exe ..\..\test/tsu.ijs
+ avx
+.\jconsole.exe -lib libjavx.so ..\..\test\tsu.ijs
+ nonavx
+.\jconsole. -lib libj-nonavx.so ..\..\test\tsu.ijs
+
+ and follow instructions there
+

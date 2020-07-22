@@ -51,6 +51,9 @@
 #ifndef __EMU_M256_AVXIMMINTRIN_EMU_H__
 #define __EMU_M256_AVXIMMINTRIN_EMU_H__
 
+// for memset
+#include <string.h>
+
 #ifdef __GNUC__
 
 #ifdef __SSE__
@@ -353,7 +356,7 @@ static __emu_inline int _mm_testnzc_si128_REF( __m128i a, __m128i b)
 /** \SSE3{SSE2,_mm_addsub_ps} */
 static __emu_inline __m128 _mm_addsub_ps_REF(__m128 a, __m128 b)
 {
-    const static __m128 const_addSub_ps_neg  = { -1, 1, -1, 1 };
+    static __m128 const const_addSub_ps_neg  = { -1, 1, -1, 1 };
 
     b = _mm_mul_ps( b, const_addSub_ps_neg );
     a = _mm_add_ps( a, b   );
@@ -363,7 +366,7 @@ static __emu_inline __m128 _mm_addsub_ps_REF(__m128 a, __m128 b)
 /** \SSE3{SSE2,_mm_addsub_pd} */
 static __emu_inline __m128d _mm_addsub_pd_REF(__m128d a, __m128d b)
 {
-    const static __m128d const_addSub_pd_neg = { -1, 1 };
+    static __m128d const const_addSub_pd_neg = { -1, 1 };
 
     b = _mm_mul_pd( b, const_addSub_pd_neg );
     a = _mm_add_pd( a, b   );
@@ -479,6 +482,79 @@ static __emu_inline __emu_int64_t _mm_extract_epi64_REF( __m128i a, const int nd
     __m128i A;
     A = a;
     return A[ndx & 0x1];
+}
+
+//__m128i _mm_shuffle_epi8( __m128i a, __m128i mask);
+/**  \SSSE3{Reference,_mm_shuffle_epi8} */
+static __emu_inline __m128i _mm_shuffle_epi8_REF (__m128i a, __m128i mask)
+{
+ __m128i ret;
+ int8_t A[16], MSK[16], B[16];
+ memcpy(A,&a,16);
+ memcpy(MSK,&mask,16);
+// full unroll is faster
+ B[0]  = (MSK[0]  & 0x80) ? 0 : A[(MSK[0]  & 0xf)];
+ B[1]  = (MSK[1]  & 0x80) ? 0 : A[(MSK[1]  & 0xf)];
+ B[2]  = (MSK[2]  & 0x80) ? 0 : A[(MSK[2]  & 0xf)];
+ B[3]  = (MSK[3]  & 0x80) ? 0 : A[(MSK[3]  & 0xf)];
+ B[4]  = (MSK[4]  & 0x80) ? 0 : A[(MSK[4]  & 0xf)];
+ B[5]  = (MSK[5]  & 0x80) ? 0 : A[(MSK[5]  & 0xf)];
+ B[6]  = (MSK[6]  & 0x80) ? 0 : A[(MSK[6]  & 0xf)];
+ B[7]  = (MSK[7]  & 0x80) ? 0 : A[(MSK[7]  & 0xf)];
+ B[8]  = (MSK[8]  & 0x80) ? 0 : A[(MSK[8]  & 0xf)];
+ B[9]  = (MSK[9]  & 0x80) ? 0 : A[(MSK[9]  & 0xf)];
+ B[10] = (MSK[10] & 0x80) ? 0 : A[(MSK[10] & 0xf)];
+ B[11] = (MSK[11] & 0x80) ? 0 : A[(MSK[11] & 0xf)];
+ B[12] = (MSK[12] & 0x80) ? 0 : A[(MSK[12] & 0xf)];
+ B[13] = (MSK[13] & 0x80) ? 0 : A[(MSK[13] & 0xf)];
+ B[14] = (MSK[14] & 0x80) ? 0 : A[(MSK[14] & 0xf)];
+ B[15] = (MSK[15] & 0x80) ? 0 : A[(MSK[15] & 0xf)];
+
+ memcpy(&ret,B,16);
+ return ret;
+}
+
+#define SSP_SATURATION(a, pos_limit, neg_limit) (a>pos_limit) ? pos_limit : ((a<neg_limit)?neg_limit:a)
+
+/** \SSSE3{Reference,_mm_maddubs_epi16} */
+static __emu_inline __m128i _mm_maddubs_epi16_REF( __m128i a,  __m128i b)
+{
+ __m128i ret;
+ uint8_t A[16];
+ int8_t B[16];
+ int16_t C[8];
+ int tmp[8];
+
+ memcpy(A,&a,16);
+ memcpy(B,&b,16);
+
+ // a is 8 bit unsigned integer, b is signed integer
+ tmp[0] = A[0] * B[0] +  A[1] * B[1];
+ C[0] = (int16_t)(SSP_SATURATION(tmp[0], 32767, -32768));
+
+ tmp[1] = A[2] * B[2] +  A[3] * B[3];
+ C[1] = (int16_t)(SSP_SATURATION(tmp[1], 32767, -32768));
+
+ tmp[2] = A[4] * B[4] +  A[5] * B[5];
+ C[2] = (int16_t)(SSP_SATURATION(tmp[2], 32767, -32768));
+
+ tmp[3] = A[6] * B[6] +  A[7] * B[7];
+ C[3] = (int16_t)(SSP_SATURATION(tmp[3], 32767, -32768));
+
+ tmp[4] = A[8] * B[8] +  A[9] * B[9];
+ C[4] = (int16_t)(SSP_SATURATION(tmp[4], 32767, -32768));
+
+ tmp[5] = A[10] * B[10] +  A[11] * B[11];
+ C[5] = (int16_t)(SSP_SATURATION(tmp[5], 32767, -32768));
+
+ tmp[6] = A[12] * B[12] +  A[13] * B[13];
+ C[6] = (int16_t)(SSP_SATURATION(tmp[6], 32767, -32768));
+
+ tmp[7] = A[14] * B[14] +  A[15] * B[15];
+ C[7] = (int16_t)(SSP_SATURATION(tmp[7], 32767, -32768));
+
+ memcpy(&ret,C,16);
+ return ret;
 }
 
 /** \AVX{Reference,_mm256_extract_epi64} */
@@ -1558,6 +1634,11 @@ __emu_maskstore_impl( __emu_mm256_maskstore_epi64, __emu__m256i, __emu__m256i, _
 #define _mm_extract_epi64 _mm_extract_epi64_REF
 #define _mm_insert_epi64 _mm_insert_epi64_REF
 #define _mm_insert_epi8 _mm_insert_epi8_REF
+#endif
+
+#if !defined (__SSSE3__)
+#define _mm_shuffle_epi8 _mm_shuffle_epi8_REF
+#define _mm_maddubs_epi16 _mm_maddubs_epi16_REF
 #endif
 
 #define _mm256_extract_epi64 __emu_mm256_extract_epi64

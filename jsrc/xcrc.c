@@ -6,6 +6,16 @@
 #include "j.h"
 #include "x.h"
 
+#include "../base64/include/libbase64.h"
+#if C_AVX2
+#define B64CODEC BASE64_FORCE_AVX2
+#elif C_AVX
+#define B64CODEC BASE64_FORCE_AVX
+#elif defined(__aarch64__)
+#define B64CODEC BASE64_FORCE_NEON64
+#else
+#define B64CODEC BASE64_FORCE_PLAIN
+#endif
 
 // Calculate byte-at-a-time CRC table in *crctab, and return the starting value as the result
 static UINT jtcrcvalidate(J jt,A w, UINT* crctab){A*wv;B*v;I m;UINT p,x,z=-1;
@@ -89,6 +99,7 @@ F1(jttobase64){
  // Allocate result
  A z; GATV0(z,LIT,zn<<2,1); UI4 *zv=UI4AV(z);  // result block, pointer into it
  C *wv=CAV(w);  // input pointer
+#if 0
  // Handle each 3-byte group, producing a 4-byte result.  We load 3 bytes at a time, so we may read into the padding area, but never
  // past the valid allocation.  We don't worry about load alignment
  for(;n3;--n3){
@@ -120,6 +131,11 @@ F1(jttobase64){
   // stuff '=' over the last chars as needed
   if(ne>=1){((C*)zv)[-1]='=';if(ne==1){((C*)zv)[-2]='=';}}
  }
+#else
+size_t zlen=AN(z);
+base64_encode(wv, AN(w), CAV(z), &zlen, B64CODEC );
+ASSERT((I)zlen==AN(z),EVDOMAIN);  // make sure length agreed
+#endif
  R z;
 
 }
@@ -147,6 +163,7 @@ F1(jtfrombase64){
  A z; GATV0(z,LIT,(wn>>2)*3 + (((wn&3)+1)>>1),1);  // 3 bytes per full set, plus 0, 1, or 2
  // process the input in full 4-byte groups.  We may overread the input AND overwrite the result, but we will always stay in the padding area,
  // which is OK because we allocated the result here
+#if 0
  UI4 *wv4=UI4AV(w); C *zv=CAV(z);  // write result as bytes, to avoid requiring heroic action in the write combiners
  for(wn-=3;wn>0;wn-=4){  // for each block of 4, not counting an incomplete last one
   // translate the UTF8 via table lookup.  We could avoid the table reads if we didn't feel the need to validate the input
@@ -164,6 +181,11 @@ F1(jtfrombase64){
   *zv++ = (C)((ba<<2) + (bb>>4));
   if(wn>2)*zv++ = (C)((bb<<4) + (bc>>2));
  }
+#else
+size_t zlen=AN(z);
+int rc=base64_decode(CAV(w), AN(w), CAV(z), &zlen, B64CODEC );
+ASSERT(rc==1&&(I)zlen==AN(z),EVDOMAIN);  // make sure no invalid input bytes
+#endif
  R z;
 }
   // the 3 bytes are characters AAAAABB BBBBCCCC CCDDDDDD in bits

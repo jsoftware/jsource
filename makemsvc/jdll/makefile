@@ -1,17 +1,20 @@
 ifeq (1,${JAVX2})
-FAVX2= /DC_AVX=1 /DC_AVX2=1 /arch:AVX2
+FAVX2= /DC_AVX=1 /DC_AVX2=1 /arch:AVX2 -DHAVE_AVX2=1
 else
 ifeq (1,${JAVX})
-FAVX= /DC_AVX=1 /arch:AVX
+FAVX= /DC_AVX=1 /arch:AVX -DHAVE_SSSE3=1 -DHAVE_AVX=1
 endif
 endif
 ifeq (1,${USE_OPENMP})
 FOPENMP= -Xclang -fopenmp
-# FOPENMP= /openmp
-OBJS_OPENMP=../../openmp/obj/windows/libomp.lib
-endif
 ifeq (1,${x64})
+OBJS_OPENMP=../../openmp/obj/windows/libomp.lib
+else
+OBJS_OPENMP=../../openmp/obj/windows/libomp32.lib
+endif
+endif
 USE_SLEEF=1
+ifeq (1,${x64})
 ifeq (1,${JAVX2})
 FSLEEF= /DSLEEF=1 /DENABLE_AVX2 /DSLEEF_STATIC_LIBS /DDORENAME=1 -I../../sleef/src/common -I../../sleef/src/arch
 else
@@ -22,7 +25,7 @@ FSLEEF= /DSLEEF=1 /DENABLE_SSE2 /DSLEEF_STATIC_LIBS /DDORENAME=1 -I../../sleef/s
 endif
 endif
 else
-USE_SLEEF=0
+FSLEEF= /DSLEEF=1 /DENABLE_SSE2 /DSLEEF_STATIC_LIBS /DDORENAME=1 -I../../sleef/src/common -I../../sleef/src/arch
 endif
 ifeq (1,${DEBUG})
 FDEBUG = /FS /Zi /DDEBUG=1
@@ -31,14 +34,14 @@ endif
 
 ifeq (1,${x64})
 CF1= -maes -msse3 -fno-strict-aliasing -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-char-subscripts -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor
-CFLAGS= $(FDEBUG) /D_JDLL /DC_NA=0 $(FAVX) $(FAVX2) $(FOPENMP) $(FSLEEF) /WX /W3 /Ot /Ob1 /GS /Zc:strictStrings /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
+CFLAGS= ${FDEBUG} /D_JDLL /DC_NA=0 /DEMU_AVX=1 ${FAVX} ${FAVX2} ${FOPENMP} ${FSLEEF} /WX /W3 /O2 /GS /Zc:strictStrings /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT ${CF1}
 FLAGS= ${LDEBUG} /DLL /MACHINE:X64 /SUBSYSTEM:WINDOWS,5.02
 ASMFLAGS= /Cx
 else
-CF1= -fno-strict-aliasing -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-char-subscripts -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor
+CF1= -m32 -maes -msse2 -fno-strict-aliasing -Wno-parentheses -Wno-unused-variable -Wno-pointer-sign -Wno-missing-braces -Wno-char-subscripts -Wno-unused-value -Wno-unused-function -Wno-empty-body -Wno-sometimes-uninitialized -Wno-string-plus-int -Wno-unknown-pragmas -Wno-delete-non-abstract-non-virtual-dtor
 # /Og fail g310r
 # /Oy crash ]^:_"1[0
-CFLAGS= $(FDEBUG) /D_JDLL $(FOPENMP) /WX /W3 /Ot /Ob1 /Oy- /GS /Zc:strictStrings /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT $(CF1)
+CFLAGS= ${FDEBUG} /D_JDLL ${FOPENMP} ${FSLEEF} /WX /W3 /O2 /GS /Zc:strictStrings /D_USING_V110_SDK71_ /D_CRT_SECURE_NO_WARNINGS /MT ${CF1}
 FLAGS= ${LDEBUG} /DLL /MACHINE:X86 /SUBSYSTEM:WINDOWS,5.01
 ASMFLAGS= /Cx /coff
 endif
@@ -196,7 +199,17 @@ OBJS=  \
  ../../jsrc/openssl/sha/sha1_one.o \
  ../../jsrc/openssl/sha/sha256.o \
  ../../jsrc/openssl/sha/sha3.o \
- ../../jsrc/openssl/sha/sha512.o
+ ../../jsrc/openssl/sha/sha512.o \
+ ../../base64/lib/arch/avx2/codec.o \
+ ../../base64/lib/arch/generic/codec.o \
+ ../../base64/lib/arch/neon64/codec.o \
+ ../../base64/lib/arch/ssse3/codec.o \
+ ../../base64/lib/arch/sse41/codec.o \
+ ../../base64/lib/arch/sse42/codec.o \
+ ../../base64/lib/arch/avx/codec.o \
+ ../../base64/lib/lib.o \
+ ../../base64/lib/codec_choose.o \
+ ../../base64/lib/tables/tables.o
 
 ifdef NO_SHA_ASM
 CFLAGS1= /DNO_SHA_ASM

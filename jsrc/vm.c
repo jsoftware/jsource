@@ -86,7 +86,7 @@ APFX(cirZZ, Z,Z,Z, zcir  ,NAN0;,HDR1JERRNAN)
  float64x2_t absmask={*(D *)&m7f COMMA *(D *)&m7f}; \
  , \
  ASSERTSYS(comp==_CMP_GT_OQ,"vec_any only _CMP_GT_OQ support"); \
- ASSERTWR(vec_any_si128(((*(int64x2_t*)&u) & (*(int64x2_t*)&absmask)) > thmax)==0,err); \
+ ASSERTWR(vec_any_si128(vec_and_pd(u, absmask) > thmax)==0,err); \
  u=sleeffn(u); \
  , \
  )}

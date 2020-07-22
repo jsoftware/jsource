@@ -6,7 +6,7 @@ LOCAL_MODULE_FILENAME    := libj
 
 # ndk r21 : OpenMP is now available as a dynamic library (and this is the new default behavior, so link with -static-openmp if you want to stick with the static runtime)
 ifeq ($(TARGET_ARCH_ABI),arm64-v8a)
-  LOCAL_CFLAGS := -DC_CRC32C=1 -DEMU_AVX=1 -DSLEEF=1 -DENABLE_ADVSIMD -fPIC -Os -fvisibility=hidden -fwrapv -Werror -Wno-string-plus-int -Wno-empty-body -Wno-parentheses -Wno-pointer-sign -Wno-logical-op-parentheses -Wno-unused-value -Wno-null-dereference -Wno-type-limits -Wno-pass-failed -D_FORTIFY_SOURCE=2 -Werror=fortify-source -fno-strict-aliasing -march=armv8-a+crc+crypto -Wno-sign-compare -DDORENAME -I../sleef/src/arch -I../sleef/src/common
+  LOCAL_CFLAGS := -DC_CRC32C=1 -DEMU_AVX=1 -DSLEEF=1 -DENABLE_ADVSIMD -DHAVE_NEON64=1 -fPIC -Os -fvisibility=hidden -fwrapv -Werror -Wno-string-plus-int -Wno-empty-body -Wno-parentheses -Wno-pointer-sign -Wno-logical-op-parentheses -Wno-unused-value -Wno-null-dereference -Wno-type-limits -Wno-pass-failed -D_FORTIFY_SOURCE=2 -Werror=fortify-source -fno-strict-aliasing -march=armv8-a+crc+crypto -Wno-sign-compare -DDORENAME -I../sleef/src/arch -I../sleef/src/common
   LOCAL_ARM_NEON := true
   LOCAL_CFLAGS += -fopenmp
   LOCAL_LDFLAGS += -fopenmp -static-openmp
@@ -19,13 +19,13 @@ ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
 # LOCAL_LDFLAGS += -fopenmp -static-openmp
 endif
 ifeq ($(TARGET_ARCH_ABI),armeabi)
-  LOCAL_CFLAGS := -DENABLE_VECEXT -fPIC -Os -fvisibility=hidden -fwrapv -Werror -Wno-string-plus-int -Wno-empty-body -Wno-parentheses -Wno-pointer-sign -Wno-logical-op-parentheses -Wno-unused-value -Wno-null-dereference -Wno-type-limits -fno-strict-aliasing -mfloat-abi=softfp -march=armv5te -Wno-sign-compare -DDORENAME -I../sleef/src/arch -I../sleef/src/common
+  LOCAL_CFLAGS := -std=c99 -Wno-unknown-warning-option -DENABLE_VECEXT -fPIC -Os -fvisibility=hidden -fwrapv -Werror -Wno-string-plus-int -Wno-empty-body -Wno-parentheses -Wno-pointer-sign -Wno-logical-op-parentheses -Wno-unused-value -Wno-null-dereference -Wno-type-limits -fno-strict-aliasing -mfloat-abi=softfp -march=armv5te -Wno-sign-compare -DDORENAME -I../sleef/src/arch -I../sleef/src/common
   LOCAL_ARM_MODE := arm
   LOCAL_CFLAGS += -fopenmp
   LOCAL_LDFLAGS += -fopenmp
 endif
 ifeq ($(TARGET_ARCH),x86_64)
-  LOCAL_CFLAGS := -DC_CRC32C=1 -DEMU_AVX=1 -DSLEEF=1 -DENABLE_SSE2 -fPIC -Os -fvisibility=hidden -fwrapv -Werror -Wno-string-plus-int -Wno-empty-body -Wno-parentheses -Wno-pointer-sign -Wno-logical-op-parentheses -Wno-unused-value -Wno-null-dereference -Wno-type-limits -Wno-pass-failed -D_FORTIFY_SOURCE=2 -Werror=fortify-source -fno-strict-aliasing -march=x86-64 -mtune=intel -msse4.2 -mpopcnt -fno-stack-protector -Wno-sign-compare -DDORENAME -I../sleef/src/arch -I../sleef/src/common
+  LOCAL_CFLAGS := -DC_CRC32C=1 -DEMU_AVX=1 -DSLEEF=1 -DENABLE_SSE2 -DHAVE_SSSE3=1 -DHAVE_SSE42=1 -fPIC -Os -fvisibility=hidden -fwrapv -Werror -Wno-string-plus-int -Wno-empty-body -Wno-parentheses -Wno-pointer-sign -Wno-logical-op-parentheses -Wno-unused-value -Wno-null-dereference -Wno-type-limits -Wno-pass-failed -D_FORTIFY_SOURCE=2 -Werror=fortify-source -fno-strict-aliasing -march=x86-64 -mtune=intel -msse4.2 -mpopcnt -fno-stack-protector -Wno-sign-compare -DDORENAME -I../sleef/src/arch -I../sleef/src/common
   LOCAL_CFLAGS += -fopenmp
   LOCAL_LDFLAGS += -fopenmp -static-openmp
 endif
@@ -45,6 +45,16 @@ LOCAL_SRC_FILES := a.c ab.c aes-c.c aes-arm.c aes-sse2.c af.c ai.c am.c am1.c am
   openssl/sha/keccak1600.c openssl/sha/md4_dgst.c openssl/sha/md4_one.c openssl/sha/md5_dgst.c \
   openssl/sha/md5_one.c openssl/sha/openssl-util.c openssl/sha/sha1_one.c openssl/sha/sha256.c \
   openssl/sha/sha3.c openssl/sha/sha512.c \
+  ../base64/lib/arch/avx2/codec.c \
+  ../base64/lib/arch/generic/codec.c \
+  ../base64/lib/arch/neon64/codec.c \
+  ../base64/lib/arch/ssse3/codec.c \
+  ../base64/lib/arch/sse41/codec.c \
+  ../base64/lib/arch/sse42/codec.c \
+  ../base64/lib/arch/avx/codec.c \
+  ../base64/lib/lib.c \
+  ../base64/lib/codec_choose.c \
+  ../base64/lib/tables/tables.c \
   ../sleef/src/common/arraymap.c \
   ../sleef/src/common/common.c \
   ../sleef/src/libm/rempitab.c \

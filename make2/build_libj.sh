@@ -78,33 +78,23 @@ fi
 if [ -z "${compiler##*gcc*}" ] || [ -z "${CC##*gcc*}" ]; then
 # gcc
 common="$OPENMP -fPIC -O2 -fvisibility=hidden -fno-strict-aliasing  \
- -Werror -Wextra \
+ -Werror -Wextra -Wno-unknown-warning-option \
+ -Wno-cast-function-type \
  -Wno-clobbered \
  -Wno-empty-body \
  -Wno-format-overflow \
+ -Wno-implicit-fallthrough \
+ -Wno-maybe-uninitialized \
+ -Wno-missing-field-initializers \
  -Wno-parentheses \
  -Wno-pointer-sign \
+ -Wno-shift-negative-value \
  -Wno-sign-compare \
  -Wno-type-limits \
+ -Wno-uninitialized \
  -Wno-unused-parameter \
  -Wno-unused-value "
-GNUC_MAJOR=$(echo __GNUC__ | $CC -E -x c - | tail -n 1)
-GNUC_MINOR=$(echo __GNUC_MINOR__ | $CC -E -x c - | tail -n 1)
-if [ $GNUC_MAJOR -ge 5 ] ; then
-common="$common -Wno-maybe-uninitialized"
-else
-common="$common -DC_NOMULTINTRINSIC -Wno-uninitialized"
-fi
-if [ $GNUC_MAJOR -ge 6 ] ; then
-common="$common -Wno-shift-negative-value"
-fi
-# alternatively, add comment /* fall through */
-if [ $GNUC_MAJOR -ge 7 ] ; then
-common="$common -Wno-implicit-fallthrough"
-fi
-if [ $GNUC_MAJOR -ge 8 ] ; then
-common="$common -Wno-cast-function-type"
-fi
+
 else
 # clang
 common="$OPENMP -fPIC -O2 -fvisibility=hidden -fno-strict-aliasing \
@@ -214,6 +204,19 @@ OBJS_ASM_WIN32=" \
 
 fi
 
+OBJS_BASE64=" \
+  ../../../../base64/lib/arch/avx2/codec.o \
+  ../../../../base64/lib/arch/generic/codec.o \
+  ../../../../base64/lib/arch/neon64/codec.o \
+  ../../../../base64/lib/arch/ssse3/codec.o \
+  ../../../../base64/lib/arch/sse41/codec.o \
+  ../../../../base64/lib/arch/sse42/codec.o \
+  ../../../../base64/lib/arch/avx/codec.o \
+  ../../../../base64/lib/lib.o \
+  ../../../../base64/lib/codec_choose.o \
+  ../../../../base64/lib/tables/tables.o \
+"
+
 case $jplatform\_$j64x in
 
 linux_j32) # linux x86
@@ -228,7 +231,7 @@ OBJS_AESNI=" aes-ni.o "
 SRC_ASM="${SRC_ASM_LINUX32}"
 GASM_FLAGS="-m32"
 FLAGS_SLEEF=" -DENABLE_SSE2 "
-LIBSLEEF=../../../../sleef/lib/linux32/libsleef.a
+FLAGS_BASE64=""
 ;;
 
 linux_j64) # linux intel 64bit nonavx
@@ -239,7 +242,7 @@ OBJS_AESNI=" aes-ni.o "
 SRC_ASM="${SRC_ASM_LINUX}"
 GASM_FLAGS=""
 FLAGS_SLEEF=" -DENABLE_SSE2 "
-LIBSLEEF=../../../../sleef/lib/linux/libsleef.a
+FLAGS_BASE64=""
 ;;
 
 linux_j64avx) # linux intel 64bit avx
@@ -252,7 +255,7 @@ OBJS_AESNI=" aes-ni.o "
 SRC_ASM="${SRC_ASM_LINUX}"
 GASM_FLAGS=""
 FLAGS_SLEEF=" -DENABLE_AVX "
-LIBSLEEF=../../../../sleef/lib/linux/libsleef.a
+FLAGS_BASE64=" -DHAVE_SSSE3=1 -DHAVE_AVX=1 "
 ;;
 
 linux_j64avx2) # linux intel 64bit avx2
@@ -265,7 +268,7 @@ OBJS_AESNI=" aes-ni.o "
 SRC_ASM="${SRC_ASM_LINUX}"
 GASM_FLAGS=""
 FLAGS_SLEEF=" -DENABLE_AVX2 "
-LIBSLEEF=../../../../sleef/lib/linux/libsleef.a
+FLAGS_BASE64=" -DHAVE_AVX2=1 "
 ;;
 
 raspberry_j32) # linux raspbian arm
@@ -275,7 +278,7 @@ LDFLAGS=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP $LDTHREAD"
 SRC_ASM="${SRC_ASM_RASPI32}"
 GASM_FLAGS=""
 FLAGS_SLEEF=" -DENABLE_VECEXT "    # ENABLE_NEON32 single precision, useless
-LIBSLEEF=../../../../sleef/lib/raspberry32/libsleef.a
+FLAGS_BASE64=""
 ;;
 
 raspberry_j64) # linux arm64
@@ -286,18 +289,18 @@ OBJS_AESARM=" aes-arm.o "
 SRC_ASM="${SRC_ASM_RASPI}"
 GASM_FLAGS=""
 FLAGS_SLEEF=" -DENABLE_ADVSIMD "
-LIBSLEEF=../../../../sleef/lib/raspberry/libsleef.a
+FLAGS_BASE64=" -DHAVE_NEON64=1 "
 ;;
 
 darwin_j32) # darwin x86
 TARGET=libj.dylib
-CFLAGS="$common -m32 $macmin"
+CFLAGS="$common -m32 -msse2 -mfpmath=sse $macmin"
 LDFLAGS=" -dynamiclib -lm -ldl $LDOPENMP $LDTHREAD -m32 $macmin"
 OBJS_AESNI=" aes-ni.o "
 SRC_ASM="${SRC_ASM_MAC32}"
 GASM_FLAGS="-m32 $macmin"
 FLAGS_SLEEF=" -DENABLE_SSE2 "
-LIBSLEEF=../../../../sleef/lib/darwin32/libsleef.a
+FLAGS_BASE64=""
 ;;
 
 darwin_j64) # darwin intel 64bit nonavx
@@ -308,7 +311,7 @@ OBJS_AESNI=" aes-ni.o "
 SRC_ASM="${SRC_ASM_MAC}"
 GASM_FLAGS="$macmin"
 FLAGS_SLEEF=" -DENABLE_SSE2 "
-LIBSLEEF=../../../../sleef/lib/darwin/libsleef.a
+FLAGS_BASE64=""
 ;;
 
 darwin_j64avx) # darwin intel 64bit
@@ -321,7 +324,7 @@ OBJS_AESNI=" aes-ni.o "
 SRC_ASM="${SRC_ASM_MAC}"
 GASM_FLAGS="$macmin"
 FLAGS_SLEEF=" -DENABLE_AVX "
-LIBSLEEF=../../../../sleef/lib/darwin/libsleef.a
+FLAGS_BASE64=" -DHAVE_SSSE3=1 -DHAVE_AVX=1 "
 ;;
 
 darwin_j64avx2) # darwin intel 64bit
@@ -334,7 +337,7 @@ OBJS_AESNI=" aes-ni.o "
 SRC_ASM="${SRC_ASM_MAC}"
 GASM_FLAGS="$macmin"
 FLAGS_SLEEF=" -DENABLE_AVX2 "
-LIBSLEEF=../../../../sleef/lib/darwin/libsleef.a
+FLAGS_BASE64=" -DHAVE_AVX2=1 "
 ;;
 
 windows_j32) # windows x86
@@ -362,7 +365,7 @@ SRC_ASM="${SRC_ASM_WIN32}"
 OBJS_ASM="${OBJS_ASM_WIN32}"
 GASM_FLAGS=""
 FLAGS_SLEEF=" -DENABLE_SSE2 "
-LIBSLEEF=../../../../sleef/lib/win32/libsleef.a
+FLAGS_BASE64=""
 ;;
 
 windows_j64) # windows intel 64bit nonavx
@@ -386,7 +389,7 @@ SRC_ASM="${SRC_ASM_WIN}"
 OBJS_ASM="${OBJS_ASM_WIN}"
 GASM_FLAGS=""
 FLAGS_SLEEF=" -DENABLE_SSE2 "
-LIBSLEEF=../../../../sleef/lib/win/libsleef.a
+FLAGS_BASE64=""
 ;;
 
 windows_j64avx) # windows intel 64bit avx
@@ -412,7 +415,7 @@ SRC_ASM="${SRC_ASM_WIN}"
 OBJS_ASM="${OBJS_ASM_WIN}"
 GASM_FLAGS=""
 FLAGS_SLEEF=" -DENABLE_AVX "
-LIBSLEEF=../../../../sleef/lib/win/libsleef.a
+FLAGS_BASE64=" -DHAVE_SSSE3=1 -DHAVE_AVX=1 "
 ;;
 
 windows_j64avx2) # windows intel 64bit avx
@@ -438,7 +441,7 @@ SRC_ASM="${SRC_ASM_WIN}"
 OBJS_ASM="${OBJS_ASM_WIN}"
 GASM_FLAGS=""
 FLAGS_SLEEF=" -DENABLE_AVX2 "
-LIBSLEEF=../../../../sleef/lib/win/libsleef.a
+FLAGS_BASE64=" -DHAVE_AVX2=1 "
 ;;
 
 *)
@@ -454,10 +457,7 @@ OBJS_SLEEF=" \
  ../../../../sleef/src/libm/rempitab.o \
  ../../../../sleef/src/libm/sleefsimddp.o \
  "
-LIBSLEEF=
 fi
-else
-LIBSLEEF=
 fi
 
 echo "CFLAGS=$CFLAGS"
@@ -469,7 +469,7 @@ fi
 mkdir -p ../bin/$jplatform/$j64x
 mkdir -p obj/$jplatform/$j64x/
 cp makefile-libj obj/$jplatform/$j64x/.
-export CFLAGS LDFLAGS TARGET CFLAGS_SIMD GASM_FLAGS FLAGS_SLEEF DLLOBJS LIBJDEF LIBJRES LIBSLEEF OBJS_FMA OBJS_AESNI OBJS_AESARM OBJS_SLEEF OBJS_ASM SRC_ASM jplatform j64x
+export CFLAGS LDFLAGS TARGET CFLAGS_SIMD GASM_FLAGS FLAGS_SLEEF FLAGS_BASE64 DLLOBJS LIBJDEF LIBJRES OBJS_BASE64 OBJS_FMA OBJS_AESNI OBJS_AESARM OBJS_SLEEF OBJS_ASM SRC_ASM jplatform j64x
 cd obj/$jplatform/$j64x/
 make -f makefile-libj
 cd -

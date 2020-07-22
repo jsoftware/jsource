@@ -19,4 +19,5 @@ echo "entering `pwd`"
 find ../jsrc -name "*.o" -type f -delete
 find ../dllsrc -name "*.o" -type f -delete
 find ../sleef/src -name "*.o" -type f -delete
+find ../base64 -name "*.o" -type f -delete
 find obj -name "*.o" -type f -delete || true

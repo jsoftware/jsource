@@ -1,8 +1,8 @@
 ifeq (1,${JAVX2})
-FAVX2= /DC_AVX=1 /DC_AVX2=1 /arch:AVX2
+FAVX2= /DC_AVX=1 /DC_AVX2=1 /arch:AVX2 -DHAVE_AVX2=1
 else
 ifeq (1,${JAVX})
-FAVX= /DC_AVX=1 /arch:AVX
+FAVX= /DC_AVX=1 /arch:AVX -DHAVE_SSSE3=1 -DHAVE_AVX=1
 endif
 endif
 ifeq (1,${USE_OPENMP})
@@ -199,7 +199,17 @@ OBJS=  \
  ../../jsrc/openssl/sha/sha1_one.o \
  ../../jsrc/openssl/sha/sha256.o \
  ../../jsrc/openssl/sha/sha3.o \
- ../../jsrc/openssl/sha/sha512.o
+ ../../jsrc/openssl/sha/sha512.o \
+ ../../base64/lib/arch/avx2/codec.o \
+ ../../base64/lib/arch/generic/codec.o \
+ ../../base64/lib/arch/neon64/codec.o \
+ ../../base64/lib/arch/ssse3/codec.o \
+ ../../base64/lib/arch/sse41/codec.o \
+ ../../base64/lib/arch/sse42/codec.o \
+ ../../base64/lib/arch/avx/codec.o \
+ ../../base64/lib/lib.o \
+ ../../base64/lib/codec_choose.o \
+ ../../base64/lib/tables/tables.o
 
 ifdef NO_SHA_ASM
 CFLAGS1= /DNO_SHA_ASM

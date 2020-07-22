@@ -518,7 +518,7 @@ copy $(outdir)$(targetname).dll $(userprofile)\jbld\j64\bin\j.dll</Command>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <PreprocessorDefinitions>__clang__=1;C_NA=0;C_AVX=1;EMU_AVX=1;ENABLE_AVX;SLEEF=1;SLEEF_STATIC_LIBS;DORENAME=1;NDEBUG;WIN32;_WINDOWS;_JDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>__clang__=1;C_NA=0;C_AVX=1;HAVE_SSSE3=1;HAVE_AVX=1;EMU_AVX=1;ENABLE_AVX;SLEEF=1;SLEEF_STATIC_LIBS;DORENAME=1;NDEBUG;WIN32;_WINDOWS;_JDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\sleef\src\arch\;..\..\sleef\src\common\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -575,7 +575,7 @@ copy $(outdir)$(targetname).dll $(userprofile)\jbld\j64\bin\javx.dll</Command>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <PreprocessorDefinitions>__clang__=1;C_NA=0;C_AVX=1;C_AVX2=1;EMU_AVX=1;ENABLE_AVX2;SLEEF=1;SLEEF_STATIC_LIBS;DORENAME=1;NDEBUG;WIN32;_WINDOWS;_JDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>__clang__=1;C_NA=0;C_AVX=1;C_AVX2=1;HAVE_AVX2=1;EMU_AVX=1;ENABLE_AVX2;SLEEF=1;SLEEF_STATIC_LIBS;DORENAME=1;NDEBUG;WIN32;_WINDOWS;_JDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\sleef\src\arch\;..\..\sleef\src\common\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -632,7 +632,7 @@ copy $(outdir)$(targetname).dll $(userprofile)\jbld\j64\bin\javx2.dll</Command>
       <Optimization>Disabled</Optimization>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <PreprocessorDefinitions>__clang__=1;C_NA=0;C_AVX=1;EMU_AVX=1;ENABLE_AVX;SLEEF=1;SLEEF_STATIC_LIBS;DORENAME=1;DEBUG;WIN32;_WINDOWS;_JDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>__clang__=1;C_NA=0;C_AVX=1;HAVE_SSSE3=1;HAVE_AVX=1;EMU_AVX=1;ENABLE_AVX;SLEEF=1;SLEEF_STATIC_LIBS;DORENAME=1;DEBUG;WIN32;_WINDOWS;_JDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\sleef\src\arch\;..\..\sleef\src\common\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -688,7 +688,7 @@ copy $(outdir)$(targetname).dll $(userprofile)\jbld\j64\bin\javx2.dll</Command>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
-      <PreprocessorDefinitions>C_NA=0;__clang__=1;C_AVX=1;C_AVX2=1;EMU_AVX=1;ENABLE_AVX2;SLEEF=1;SLEEF_STATIC_LIBS;DORENAME=1;NDEBUG;WIN32;_WINDOWS;_JDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>C_NA=0;__clang__=1;C_AVX=1;C_AVX2=1;HAVE_AVX2=1;EMU_AVX=1;ENABLE_AVX2;SLEEF=1;SLEEF_STATIC_LIBS;DORENAME=1;NDEBUG;WIN32;_WINDOWS;_JDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\sleef\src\arch\;..\..\sleef\src\common\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -1303,6 +1303,16 @@ copy $(outdir)$(targetname).dll $(userprofile)\jbld\j64\bin\javx2.dll</Command>
     <ClCompile Include="..\..\sleef\src\common\common.c" />
     <ClCompile Include="..\..\sleef\src\libm\rempitab.c" />
     <ClCompile Include="..\..\sleef\src\libm\sleefsimddp.c" />
+    <ClCompile Include="..\..\base64\lib\arch\avx2\codec.c" />
+    <ClCompile Include="..\..\base64\lib\arch\generic\codec.c" />
+    <ClCompile Include="..\..\base64\lib\arch\neon64\codec.c" />
+    <ClCompile Include="..\..\base64\lib\arch\ssse3\codec.c" />
+    <ClCompile Include="..\..\base64\lib\arch\sse41\codec.c" />
+    <ClCompile Include="..\..\base64\lib\arch\sse42\codec.c" />
+    <ClCompile Include="..\..\base64\lib\arch\avx\codec.c" />
+    <ClCompile Include="..\..\base64\lib\lib.c" />
+    <ClCompile Include="..\..\base64\lib\codec_choose.c" />
+    <ClCompile Include="..\..\base64\lib\tables\tables.c" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\dllsrc\jdll.def" />

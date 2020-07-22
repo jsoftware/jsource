@@ -374,7 +374,7 @@ static I hashallo(IH * RESTRICT hh,UI p,UI m,I md){
     switch(md){                                                                       \
     case IIDOT:   if(b){          XDO(hash,exp,inc,*zv++=m==hj?(hv[j]=i):hj);}       \
                   else XDO(hash,exp,inc,*zv++=hj);                           break;  \
-    case IFORKEY:   XDO(hash,exp,inc,if(m==hj){hv[j]=i;*zv++=i+1;}else{++zv[hj-i];*zv++=hj;}); break;      \
+    case IFORKEY: {I nuniq=0;   XDO(hash,exp,inc,if(m==hj){++nuniq; hv[j]=i;*zv++=i+1;}else{++zv[hj-i];*zv++=hj;}); AM(h)=nuniq; break;}      \
     case IICO:    if(b){zi=zv+=c; XDQ(hash,exp,dec,*--zi=m==hj?(hv[j]=i):hj);}       \
                   else XDO(hash,exp,inc,*zv++=hj);                           break;  \
     case INUBSV:       XDO(hash,exp,inc,*zb++=m==hj?(hv[j]=i,1):0);          break;  \
@@ -495,7 +495,7 @@ static IOFX(I,jtioi,  hicw(v),           *v!=av[hj],                      ++v,  
    v=wv;                                                                                   \
    switch(md){                                                                                   \
     case IIDOT:        TDO(FXY,FYY,expa,expw,*zv++=MIN(il,ir));                          break;  \
-    case IFORKEY:      TDO(FXY,FYY,expa,expw,il=MIN(il,ir);*zv=il;zv[il-i]++;++zv;);     break;  \
+    case IFORKEY:{I nuniq=0; TDO(FXY,FYY,expa,expw,il=MIN(il,ir);nuniq+=(il-i==0);*zv=il;zv[il-i]++;++zv;); AM(h)=nuniq;     break;}  \
     case IICO:  zv+=c; TDQ(FXY,FYY,expa,expw,*--zv=m==il?ir:m==ir?il:MAX(il,ir)); zv+=c; break;  \
     case INUBSV:       TDO(FXY,FYY,expa,expw,*zb++=i==MIN(il,ir));                       break;  \
     case INUB:         TMV(FXY,FYY,expa,expw,i==MIN(il,ir));                 ZCSHAPE;    break;  \
@@ -897,7 +897,7 @@ static IOFSMALLRANGE(jtio42,I,US)  static IOFSMALLRANGE(jtio44,I,UI4)  // 4-byte
  {T*v0=(T*)v,*wv=(T*)v,x; \
   switch(mode){                     \
    case IIDOT: {T*av=(T*)u+m; DQ(ac, DQ(c, x=(xe); j=-m;   while(j<0 &&(exp))++j; *zv++=j+m;       wv+=q;); av+=p; if(1==wc)wv=v0;);} break;  \
-   case IFORKEY: {T*av=(T*)u+m; DQ(ac, DQ(c, x=(xe); j=-m;   while(j<0 &&(exp))++j; *zv=j+=m; zv[j-i]++; zv++;      wv+=q;); av+=p; if(1==wc)wv=v0;);} break;  \
+   case IFORKEY: {T*av=(T*)u+m; I nuniq=0; DQ(ac, DQ(c, x=(xe); j=-m;   while(j<0 &&(exp))++j; *zv=j+=m; nuniq+=(j-i)==0; zv[j-i]++; zv++;      wv+=q;); AM(z)=nuniq; av+=p; if(1==wc)wv=v0;); } break;  \
    case IICO:  {T*av=(T*)u; DQ(ac, DQ(c, x=(xe); j=m-1; while(0<=j&&(exp))--j; *zv++=0>j?m:j; wv+=q;); av+=p; if(1==wc)wv=v0;);} break;  \
    case IEPS:  {T*av=(T*)u+m; DQ(ac, DQ(c, x=(xe); j=-m;   while(j<0 &&(exp))++j; *zb++=j<0;     wv+=q;); av+=p; if(1==wc)wv=v0;);} break;  \
  }}
@@ -1017,7 +1017,7 @@ static IOF(jtiobs){A*av,h=*hp,*wv,y;B b,bk,*yb,*zb;C*zc;I acn,*hu,*hv,l,m1,md,s,
   if(b)switch(md){  // self-indexes
    case IIDOT:        BSLOOPAA(hi++,zv[p]=p,zv[q]=p,zv[q]=p=q); zv+=m;     break;
    case IICO:         BSLOOPAA(hi--,zv[p]=p,zv[q]=p,zv[q]=p=q); zv+=m;     break;
-   case IFORKEY:      BSLOOPAA(hi++,zv[p]=p+1,zv[q]=p;zv[p]++,zv[q]=(p=q)+1); zv+=m;     break;
+   case IFORKEY:{I nuniq=0; BSLOOPAA(hi++,++nuniq;zv[p]=p+1,zv[q]=p;zv[p]++,++nuniq;zv[q]=(p=q)+1); zv+=m; AM(h)=nuniq;     break;}
    case INUBSV:       BSLOOPAA(hi++,zb[p]=1,zb[q]=0,zb[q]=1  ); zb+=m;     break;
    case INUB:         BSLOOPAA(hi++,yb[p]=1,yb[q]=0,yb[q]=1  ); DO(m, if(yb[i]){MC(zc,av+i*n,k); zc+=k;}); ZCSHAPE; break;
    case INUBI:        BSLOOPAA(hi++,yb[p]=1,yb[q]=0,yb[q]=1  ); DO(m, if(yb[i])*zi++=i;);                  ZISHAPE; break;
@@ -1306,7 +1306,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z;B mk=w==mark,th;
   // We also handle the case of i.&0@:e. when the rank of w is more than 1 greater than the rank of a cell of a;
   // in that case the search always fails
   case IIDOT:   R reshape(shape(z),sc(n?m:0  ));
-  case IFORKEY: R reshape(shape(z),take(sc(m),sc(m)));  // all 0 but the first has the total count
+  case IFORKEY: {z=reshape(shape(z),take(sc(m),sc(m))); RZ(z=mkwris(z)); AM(z)=!!m; R z;}  // all 0 but the first has the total count
   case IICO:    R reshape(shape(z),sc(n?m:m-1));
   case INUBSV:  R reshape(shape(z),take(sc(m),num(1)));
   case INUB:    AN(z)=0; *AS(z)=m?1:0; R z;
@@ -1507,6 +1507,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z;B mk=w==mark,th;
 
   // Call the routine to perform the operation
   RZ(fn(jt,mode,m,n,c,k,acr,wcr,ac,wc,ak,wk,a,w,&h,z));
+  AM(z)=AM(h); // in case IFORKEY, return the # frets
   if(mk){A x,*zv;I*xv,ztype;
    // If w was omitted (indicating prehashing), return the information for that special case
    // result is an array of 3 boxes, containing (info vector),(hashtable),(mask of hashed bytes if applicable)

@@ -133,7 +133,7 @@ static X jtxd1(J jt,D p, I mode){PROLOG(0052);A t;D d,e=tfloor(p),q,r;I m,*u;
   case XMFLR:   p=e;                            break;
   case XMCEIL:  p=jceil(p);                      break;
   case XMEXACT: ASSERT(TEQ(p,e),EVDOMAIN); p=e; break;
-  case XMEXMT:  if(!TEQ(p,e))R vec(INT,0L,&m);
+  case XMEXMT:  if(!TEQ(p,e))R vec(INT,0L,&iotavec[-IOTAVECBEGIN]);
  }
  if(p== inf)R vci(XPINF);
  if(p==-inf)R vci(XNINF);

@@ -496,6 +496,7 @@ void jtcopyTT(J jt, void *zv, void *wv, I n, I zt, I wt){
 DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[128/SZI];
      I ak,at,wcn,d,k,m=0,n,r,wt,*zi;I d1[32]; A pd0; UC *pd, *pdend;  // Don't make d1 too big - it fill lots of stack space
  PREF2(jtcut2);
+ // a may have come from /., in which case it is incompletely filled in.  We look at the type, but nothing else
  if((SGNIF(AT(a),SB01X)|-(AT(w)&SPARSE))<0)R cut2sx(a,w,self);
 #define ZZFLAGWORD state
  I state=0;  // init flags, including zz flags
@@ -518,7 +519,7 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[12
  }
  AF f1=FAV(fs)->valencefns[0];  // point to the action routine now that we have handled gerunds
 
- // Time to find the frets.  If a is the impossible type INT+LIT, a contains the frets already, in the single buffer (that means we are acting on behalf of Key /.)
+ // Time to find the frets.  If we are acting on behalf of Key /., freat are already in the single buffer
  if(FAV(self)->id==CCUT){   // see if we are acting on behalf of /.  Fall through if not
   pfx=(I)FAV(self)->localuse.lvp[0]; neg=SGNTO0(pfx); pfx&=1;  // neg=cut type is _1/_2; pfx=cut type is 1/_1
   if(a!=mark){  // dyadic forms
@@ -1075,7 +1076,7 @@ static DF2(jttess2){A z,zz=0,virtw,strip;I n,rs[3],cellatoms,cellbytes,vmv,hmv,v
 
 static DF1(jttess1){A s;I m,r,*v;
  RZ(w);
- r=AR(w); RZ(s=shape(w)); mkwris(s); v=AV(s);
+ r=AR(w); RZ(s=shape(w)); RZ(s=mkwris(s)); v=AV(s);
  m=IMAX; DO(r, if(m>v[i])m=v[i];); DO(r, v[i]=m;);  // Get length of long axis; set all axes to that length in a arg to cut
  R tess2(s,w,self);
 }

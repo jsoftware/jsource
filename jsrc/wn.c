@@ -221,7 +221,7 @@ static I jtnumcase(J jt,I n,C*s){B e;C c;I ret;
 A jtconnum(J jt,I n,C*s){PROLOG(0101);A y,z;B (*f)(J,I,C*,void*),p=1;C c,*v;I d=0,e,k,m,t,*yv;
  if(1==n)                {if(k=s[0]-'0',(UI)k<=(UI)9)R num( k); else R ainf;}  // single digit - a number or _
  else if(2==n&&CSIGN==*s){if(k=s[1]-'0',(UI)k<=(UI)9)R num(-k);}
- RZ(y=str(1+n,s)); mkwris(y); s=v=CAV(y); s[n]=0;  // s->null-terminated string in new copy, which we will modify
+ RZ(y=mkwris(str(1+n,s))); s=v=CAV(y); s[n]=0;  // s->null-terminated string in new copy, which we will modify
  GATV0(y,INT,1+n,1); yv=AV(y);  // allocate area for start/end positions
  C bcvtmask=0;  // bit 1 set to suppress B01, bit 2 to suppress INT
  DO(n, c=*v; c=c==CSIGN?'-':c; c=(c==CTAB)|(c==' ')?C0:c; *v++=c; B b=C0==c; bcvtmask=bcvtmask|(4*(c=='.')+2*((p|b)^1)); yv[d]=i; d+=p^b; p=b;);  // replace _ with -, whitespace with \0; and record start and end positions

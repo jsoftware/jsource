@@ -720,6 +720,10 @@ typedef struct {AF valencefns[2];A fgh[3];union { D lD; void *lvp[2]; I lI; I4 l
 #define VFATOPPOLY      (((I)3)<<VFATOPPOLYX)
 #define VFATOPPOLYNONE  0
 #define VFATOPPOLYEXP  1
+#define VFKEYSLASHTX  0  // (in f/.) set if f is u/ where u is one of + <. >., indicating which types are OK for atoms (can't handle int ovfl)
+#define VFKEYSLASHT      (((I)(2*FL-1))<<VFKEYSLASHTX)
+#define VFKEYSLASHFX  (FLX+1)  // (in f/.) function coded for, 0=<. 1=>. 2=+
+#define VFKEYSLASHF      (((I)3)<<VFKEYSLASHFX)
 
 
 // bits 8 and above are available for all functions:

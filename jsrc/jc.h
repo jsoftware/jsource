@@ -251,11 +251,11 @@
 #define CNDOT      (C)'\322'       /* 210 322 d2 n.                           */
 #define CQCAPCO    (C)'\326'       /* 214 326 d6 Q:                           */
 #define CSCAPCO    (C)'\332'       /* 218 332 da S:                           */
-#define CTDOT      (C)'\333'       /* 219 333 db t.                           */
-#define CTCO       (C)'\334'       /* 220 334 dc t:                           */
-#define CTCAP      (C)'\335'       /* 221 335 dd T.                           */
-#define CXDOT      (C)'\341'       /* 225 341 e1 x.                           */
-#define CYDOT      (C)'\343'       /* 227 343 e3 y.                           */
+// obsolete #define CTDOT      (C)'\333'       /* 219 333 db t.                           */
+// obsolete #define CTCO       (C)'\334'       /* 220 334 dc t:                           */
+// obsolete #define CTCAP      (C)'\335'       /* 221 335 dd T.                           */
+// obsolete #define CXDOT      (C)'\341'       /* 225 341 e1 x.                           */
+// obsolete #define CYDOT      (C)'\343'       /* 227 343 e3 y.                           */
 // 228-231 free
 #define CQRYCO     (C)'\271'       /* 185 271 b9 ?:                           */
 

@@ -465,7 +465,7 @@ static DF2(jtinfixprefix2){F2PREFIP;PROLOG(00202);A fs;I cger[128/SZI];
   // not gerund: OK to test fs
   fs=FAV(self)->fgh[0];  // the verb we will execute
  }else{
-  RZ(fs=createcycliciterator((A)&cger, self));  // use a verb that cycles through the gerunds.
+  RZ(fs=createcycliciterator((A)&cger, self));  // use a verb that cycles through the gerunds.  NOTE cger is incompletely filled in & must be read with FAV()
  }
  V *vf=FAV(fs);  // if verb, point to its u operand
  if(vf->mr>=AR(w)){
@@ -531,7 +531,7 @@ static DF2(jtinfixprefix2){F2PREFIP;PROLOG(00202);A fs;I cger[128/SZI];
   // check for special case of 2 u/\ y; if found, set new function and allocate a second virtual argument
   // NOTE: gerund/ is encoded as `:, so we can be sure id==SLASH does not have gerund
   fauxblock(virtafaux); fauxblock(virtwfaux);
-  if(((VAV(fs)->id^CSLASH)|((ilnabs|(wi&(SGNTO0(ilnval))))^2))){   // char==/ and (ilnabs==2, but not if input array is odd and ilnval is neg)
+  if(((FAV(fs)->id^CSLASH)|((ilnabs|(wi&(SGNTO0(ilnval))))^2))){   // char==/ and (ilnabs==2, but not if input array is odd and ilnval is neg)
    // normal case, infix/prefix.  Allocate a virtual block
    fauxvirtual(virtw,virtwfaux,w,vr,ACUC1);
 

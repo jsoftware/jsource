@@ -510,7 +510,7 @@ static DF2(jtkey){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
 }    /* a f/. w for dense x & w */
 
 #if 0
-// a </. w.  Self-classify a, then rearrange w and call cut
+// a </. w.
 static DF2(jtkeybox){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
  RZ(a&&w);
  {I t2; ASSERT(SETIC(a,nitems)==SETIC(w,t2),EVLENGTH);}  // verify agreement.  nitems is # items of a
@@ -534,7 +534,6 @@ static DF2(jtkeybox){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
    // boxes will be in AAV(z), in order.  Details discussed in jtbox().  Because we have to EPILOG the result, it will be ra'd there along with its descendants.  We set usecount to 0 until the EPILOG
    A *pushxsave = jt->tnextpushp; jt->tnextpushp=AAV(z);  // save tstack info before allocation
    A y;  // name under which noxes are allocated
-   DQ(n, GAE(y,t,m,r,f+ws,break); /* obsolete AFLAG(y)=newflags;*/ AC(y)=ACUC1; MC(CAV(y),wv,k); wv+=k;);   // allocate, but don't grow the tstack.  Set usecount of cell to 1.  Put allocated addr into *jt->tnextpushp++
 
   // pass through the input, incrementing each reference
   I *av=IAV(ai);  // av->a data
@@ -568,6 +567,7 @@ static DF2(jtkeybox){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
   // restore the allocation system
   jt->tnextpushp=pushxsave;   // restore tstack pointer
   if(!y){AFLAG(z)=BOX; ASSERT(0,EVWSFULL);}  // if we broke out on allocation failure, fail.  Mark z recursive so when it is freed so will its contents be
+
  }else{I *av;  // running pointer through the inputs
   // indexofsub detected that small-range processing is in order.  Information about the range is secreted in fields of a
   ai=(A)((I)ai-1); I k=AN(ai); I datamin=AK(ai); I p=AM(ai);  // get size of an item, smallest item, range+1
@@ -615,7 +615,6 @@ static DF2(jtkeybox){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
   }
  }
 
- // Frets are calculated and w is reordered.  Call cut to finish the job.  We have to store the count and length of the frets
  POPCCT
  EPILOG(z);
 }    /* a f/. w for dense x & w */

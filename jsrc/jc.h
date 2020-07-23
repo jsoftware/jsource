@@ -15,18 +15,19 @@
 #define CQ         15            /* quote                                   */
 
 // Character names
+#define C0         (C)'\000'       /*   0 000 00                              */
+#define C1         (C)'\001'       /*   1 001 01                              */
 #define COFF       (C)'\004'       /*   4 004 04     ctrl d                   */
 #define CTAB       (C)'\011'       /*   9 011 09     tab                      */
 #define CLF        (C)'\012'       /*  10 012 0a     line feed                */
 #define CCR        (C)'\015'       /*  13 015 0d     carriage return          */
 #define CQUOTE     (C)'\''   // '
-#define C0         (C)'\000'       /*   0 000 00                              */
-#define C1         (C)'\001'       /*   1 001 01                              */
 #define CESC1      (C)'.'  //     1st escape char
 #define CESC2      (C)':'  //     2nd escape char
 #define CLBKTC     (C)'['
 #define CGRAVEC    (C)'`'
 #define CSIGN      (C)'_'  //  minus sign
+#define CFF        (C)'\377'       /* 255 377 ff                              */
 
 // Internal IDs
 // Affinities:
@@ -37,7 +38,7 @@
 // inverses + * - % %: ^ ^. j. r. { :: p.. x: |. o. $. #: i. ": ~ s: u: |: p: q: !. # ^: , #. A. C. }. %. . " \ !: b. p.
 //  add on   +. *. \: ;: ! $. &. FORK & @ &: @: / :: \. ;. HOOK
 // iden   , . %. C. { / + - | ~: < > +. j. r. * % ^ %: ! = >: <: *. >. <. &. @ b.
-// / /. @ & : ADVF HOOK FORK @. `: !: u. v. ~ ::
+// / /. @ & &: &. &.: ADVF HOOK FORK @. `: !: u. v. ~ :: :.
 // < -. /: / # * >. <. I. ? ?. ; /. " ^ & 
 // < ^ -. /: >. <. ? ?. I. & / # * ;
 // # $ {. {: , [ ] < @ @: & &:
@@ -179,37 +180,28 @@
 #define CSPARSE    (C)0x55  // $.
 #define CBSDOT     (C)0x56  // \.
 #define CCUT       (C)0x57  // ;.
-#define CATOMIC    (C)0x58  // A.
-#define CPCO       (C)0x59  // p:
-#define CQCO       (C)0x5a  // q:
-#define CDOT       (C)0x5b  //
-#define CDOMINO    (C)0x5c  // %.
-#define CCYCLE     (C)0x5d  // C.
-#define CSTILE     (C)0x5e  // |
-#define CRDOT      (C)0x5f  // r.
-#define CSQRT      (C)0x60  // %:
-#define CROOT      (C)0x60  // %:
-#define CBANG      (C)0x61  // !
-#define CBDOT      (C)0x62  // b.
-
-
-
-
-
-
+#define CUNDCO     (C)0x58  // &.:
+#define COBVERSE   (C)0x59  // :.
+#define CATOMIC    (C)0x5a  // A.
+#define CPCO       (C)0x5b  // p:
+#define CQCO       (C)0x5c  // q:
+#define CDOT       (C)0x5d  //
+#define CDOMINO    (C)0x5e  // %.
+#define CCYCLE     (C)0x5f  // C.
+#define CSTILE     (C)0x60  // |
+#define CRDOT      (C)0x61  // r.
+#define CSQRT      (C)0x62  // %:
+#define CROOT      (C)0x62  // %:
+#define CBANG      (C)0x63  // !
+#define CBDOT      (C)0x64  // b.
 
 #define CGRAVE     (C)0x67 // `
-#define CUNDCO     (C)'\356'       /* 238 356 ee &.:                          */
-
-
-
-
-
 #define CINF       (C)0x68  //  infinity
 
+#define CUSDOT     (C)0x6c  // _.
 #define CRBRACE    (C)0x6d  // }
 #define CAMEND     (C)0x6d  // }
-// 127 free
+
 #define CBW0000    (C)0x70  // bitwise
 #define CBW0001    (C)0x71  // bitwise
 #define CBW0010    (C)0x72  // bitwise
@@ -229,23 +221,21 @@
 
 #define CASGN      (C)0x80       /* 128 200 80 =.                           */
 #define CGASGN     (C)0x81       /* 129 201 81 =:                           */
+#define CLPAR      (C)0x82  // (
+#define CRPAR      (C)0x83  // )
 
 
-#define CUSDOT     (C)0x6c  // _.
 // 135 free
 
 
 
-#define CEVEN      (C)'\230'       /* 152 230 98 ..                           */
-#define CODD       (C)'\231'       /* 153 231 99 .:                           */
-#define COBVERSE   (C)'\232'       /* 154 232 9a :.                           */
-#define CLEV       (C)'\250'       /* 168 250 a8 [.                           */
-#define CDEX       (C)'\252'       /* 170 252 aa ].                           */
-#define CIDA       (C)'\253'       /* 171 253 ab ]:                           */
+// obsolete #define CEVEN      (C)'\230'       /* 152 230 98 ..                           */
+// obsolete #define CODD       (C)'\231'       /* 153 231 99 .:                           */
+// obsolete #define CLEV       (C)'\250'       /* 168 250 a8 [.                           */
+// obsolete #define CDEX       (C)'\252'       /* 170 252 aa ].                           */
+// obsolete #define CIDA       (C)'\253'       /* 171 253 ab ]:                           */
 #define CEXEC      (C)'\260'       /* 176 260 b0 ".                           */
 #define CGRDOT     (C)'\262'       /* 178 262 b2 `.                           */
-#define CLPAR      (C)0x6a  // (
-#define CRPAR      (C)0x6b  // )
 
 #define CALP       (C)'\272'       /* 186 272 ba a.                           */
 #define CACE       (C)'\274'       /* 188 274 bc a:                           */
@@ -281,6 +271,4 @@
 #define CFCO       (C)'\364'       // 244 364 f4 F:
 #define CFCOCO     (C)'\365'       // 245 365 f5 F::
 #define CFCODOT    (C)'\366'       // 246 366 f6 F:.
-// 240-254 free
-
-#define CFF        (C)'\377'       /* 255 377 ff                              */
+#define CCYCITER   (C)0xf7  // cyclic iterator

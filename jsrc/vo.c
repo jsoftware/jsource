@@ -42,7 +42,7 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
   ws=AS(w); I t=AT(w);
   CPROD(AN(w),n,f,ws); CPROD(AN(w),m,r,f+ws);
   k=m<<bplg(t); wv=CAV(w);
-  GATV(z,BOX,n,f,ws); zv=AAV(z); 
+  GATV(z,BOX,n,f,ws); if(n==0)RETF(z); zv=AAV(z); // could avoid filling with 0 if we modified AN after error, or cleared after *tnextpushp
    // The case of interest: non-relative w.  We have allocated the result; now we allocate a block for each cell of w and copy
    // the w values to the new block.  We set NOSMREL in the top block and the new ones if w is boxed or NOSMREL.  
    // If w is DIRECT, we make the result block recursive and increment the count of the others (we do so here because it saves a traversal of the new blocks
@@ -60,6 +60,7 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
    A *pushxsave = jt->tnextpushp; jt->tnextpushp=zv;  // save tstack info before allocation
    DQ(n, GAE(y,t,m,r,f+ws,break); /* obsolete AFLAG(y)=newflags;*/ AC(y)=ACUC1; MC(CAV(y),wv,k); wv+=k;);   // allocate, but don't grow the tstack.  Set usecount of cell to 1.  Put allocated addr into *jt->tnextpushp++
    jt->tnextpushp=pushxsave;   // restore tstack pointer
+   ASSERT(y,EVWSFULL);  // if we broke out an allocation failure, fail.  Since the block is recursive, when it is tpop()d it will recur to delete contents
   }else{/* obsolete AFLAG(z) = newflags; */DO(n, GA(y,t,m,r,f+ws);/* obsolete  AFLAG(y)=newflags;*/ MC(CAV(y),wv,k); wv+=k; zv[i]=y;); } // indirect w; don't set recursible, which might be expensive
  }
  RETF(z);

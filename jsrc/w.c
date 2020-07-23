@@ -120,7 +120,7 @@ F1(jtwordil){A z;I s,i,m,n,nv,*x;UC*v;
   // we need to overwrite the previous numeric.  Decrement the pointer by 2 before writing.  This runs while the state-fetch is happening and is fast enough to allow
   // the store addresses to be calculated before the next fetch
 // obsolete   x=(I*)((I)x-(((((prevs>>1)&6)+currc)&16)>>(3-LGSZI)));  // add 6 to currc if followon numeric, then add that to char code.  This produces carry to 16 for CX/CS/CQ.
-  currc+=16-CX; currc&=16; prevs=2*prevs+1; currc&=prevs;   // set currc to 16 iff CX/CS/CQ; move 'foolowon numeric' flag to bit 4; combine
+  currc+=16-CX; currc&=16; prevs=2*prevs+1; currc&=prevs;   // set currc to 16 iff CX/CS/CQ; move 'followon numeric' flag to bit 4; combine
    // the +1 is to trick the compiler.  Without it it moves the &16 onto prevs, but prevs is the critical path
   x=(I*)((I)x-(currc>>(3-LGSZI)));  // subtract from x, to move x back 2 positions if coming out of followon numeric with a number
 // obsolete   x-=(((prevs&currc)>>3)&(currc&1))<<1;  // state bit 3 is set in followon numeric; bits 3 and 0 of char class are set in CX/CS/CQ

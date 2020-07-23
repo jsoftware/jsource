@@ -4,7 +4,6 @@
 /* Adverbs: Oblique and Key                                                */
 
 #include "j.h"
-// TODO: remove idiv from keymean
 
 #ifdef MMSC_VER
 #pragma warning(disable: 4244)
@@ -202,65 +201,106 @@ static DF2(jtkey){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
  // We then allocate and run the small-range table and use it to rearrange the input.  The small-range variant is signaled by the LSB of the result
  // of indexofsub being set.
  PUSHCCT(jt->cctdefault);  // now that partitioning is over, reset ct for the executions of u
- I cellatoms; PROD1(cellatoms,AR(w)-1,AS(w)+1);   // length of a cell of w, in atoms
+ I cellatoms; PROD(cellatoms,AR(w)-1,AS(w)+1);   // length of a cell of w, in atoms
  // if this is a supported f//., handle it without calling cut.  We can take it if the flag says f//. and the rank is >1 or the type is one we can do cheaply: B01/INT/FL 
- if(unlikely(SZI==SZD&&FAV(self)->flag&VFKEYSLASHT)){  // f//. where f is + >. <.   Implementation requires SZI==SZD
+ if(unlikely(SZI==SZD&&FAV(self)->flag&VFKEYSLASHT)){  // f//. where f is + >. <. mean   Implementation requires SZI==SZD
   if((((AR(w)-2)|((AT(w)&CMPX+XNUM+RAT)-1))&((AT(w)&FAV(self)->flag&VFKEYSLASHT)-1))>=0){  // rank>=2 and extended, or type we can handle locally  flag is B01+INT+FL for <. >., B01+FL for +  (we don't handle int ovfl)
    // We are going to handle the //. locally
+   A freq;  // for mean, save frequencies here
+   I keyslashfn=(FAV(self)->flag>>VFKEYSLASHFX)&3; // 0-3 for <. >. + mean
    // Figure out the type of result, and which routine will handle the operation
-   I zt=AT(w); zt=zt<((FAV(self)->flag&INT)^INT)?INT:zt;  // INT is clear only for +; in that case, promote B01 to FL
+   I ztoride=(0x0e010000>>((4*keyslashfn+((AT(w)>>INTX)&3))<<1))&3;  // z type override. 00=none, 01=B to I 10=B to FL 11=I to FL  bits are opFI, values are (0) 0 3 2 (0) 0 x 1 (0) 0 0 0 (0) 0 0 0
+   ztoride=AT(w)&FL+INT+B01?ztoride:0;  // no override for other types
+   I zt=AT(w)^(((((INT+FL)<<12)+((B01+FL)<<8)+((B01+INT)<<4))>>(ztoride<<2))&0xf);  // switch result precision as needed
    I celllen = cellatoms<<bplg(zt);  // length of a cell of z, in bytes
-#define RTNCASE(r,t) (r)*4+(((t)>>INTX)&3)
+#define RTNCASE(r,t) ((r)*4+(((t)>>INTX)&3))
    I routineid; VA2 adocv;   // case index to use 
    if(AR(w)<=1){
     // partitions have rank 1, so operations are on atoms.  set the index
-    routineid=RTNCASE((FAV(self)->flag&VFKEYSLASHF)>>VFKEYSLASHFX,zt);  // case index if this is an atom
+    routineid=RTNCASE(keyslashfn,zt) ^ ztoride; // min, max are normal.  + is B01 (BtoI) or FL.  mean is B01 (BtoF), INT (ItoF), or FL
+// obsolete     routineid=RTNCASE((FAV(self)->flag&VFKEYSLASHF)>>VFKEYSLASHFX,zt);  // case index if this is an atom
    }else{
     // partitions are arrays.  Operate on them in the output area
-    routineid=zt==AT(w)?3:7;  // special case index for action routine: 3 for normal, 7 to expand B01 to I on the initial move
-    adocv=var(FAV(FAV(self)->fgh[0])->fgh[0],AT(w),zt);  // get dyadic action routine for f out of f//.
+    routineid=RTNCASE(ztoride,INT+FL);  // special case index for action routine: 3 for normal (for <. >.), 7 for BtoI (for +), 11 for BtoF (for mean), 15 for ItoF (for mean) 17 = FL mean 16 for other mean e. g. INTX
+    I meanrtn=16+((zt>>FLX)&1);  // 17 if FL result, 16 if not
+    routineid=keyslashfn==routineid?meanrtn:routineid;  // 'other mean': only way they can be = is if both are 3.  Switch to 16/17, which differ in type of freq result
+    A accfn=FAV(FAV(self)->fgh[0])->fgh[0]; accfn=keyslashfn==3?ds(CPLUS):accfn;
+    adocv=var(accfn,AT(w),zt);  // get dyadic action routine for f out of f//. or (+/%#)/. for the given arguments
    }
    
    if(!((I)ai&1)){
     // not smallrange processing.  ai has combined fret/frequency information
     I nfrets=AM(ai);  // before we possibly clone it, extract # frets found
     makewritable(ai);  // we modify the size+index info to be running endptrs into the reorder area
-    // allocate the result area
+    // allocate the result area(s)
     GA(z,zt,nfrets*cellatoms,AR(w),AS(w)); AS(z)[0]=nfrets; RZ(AN(z));  // avoid calls with empty args
+    if(unlikely(keyslashfn==3)){
+     GA(freq,zt&FL?FL:INT,nfrets,1,0);  // allocate place for divisor - INT if result may be XNUM/RAT
+    }
     // loop through the index, copying the first value and operating on the others
-    void *nextpartition=voidAV(z);  // place where next partition will be started
     I indexx, indexn;  // index into the ai data, length of ai data
     I *ai0=IAV(ai);  // base of index table
     void *wv;  // current argument item
 
-#define KSLGLP(wincr,zincr,npwvinit,pwvupd) \
+#define KSLGLP(wincr,zincr,pwvinit,pwvupd) \
+ {void *nextpartition=voidAV(z);  /* place where next partition will be started */ \
  for(indexx=0, indexn=AN(ai), wv=voidAV(w); indexx!=indexn;++indexx, wv=(C*)wv+(wincr)){ \
      I nextx=ai0[indexx];  /* result of classifier for next item */ \
      if(nextx>=indexx){ \
       /* new partition.  Allocate it sequentially, move the data to be the initial result value, and replace the index with the pointer to the partition */ \
-      npwvinit  /* move the data in */ \
       ai0[indexx]=(I)nextpartition;  /* save start point for partition */ \
+      void *partition=nextpartition; \
+      pwvinit  /* move the data in */ \
       nextpartition=(C*)nextpartition+(zincr);  /* step up to next output position */ \
      }else{ \
       /* continuing a partition.  Point to the data and operate on it */ \
       void *partition=(void *)ai0[nextx];  /* partition we are extending */ \
       pwvupd \
      } \
-    }
+    } \
+ }
+#define KSLGLPMEAN(wincr,zincr,pwvinit,pwvupd,freqt) \
+ {I nextpartition=0;  /* index where next partition will be started */ \
+ freqt *fv0=(freqt *)voidAV(freq); \
+ void *zv0=voidAV(z); \
+ for(indexx=0, indexn=AN(ai), wv=voidAV(w); indexx!=indexn;++indexx, wv=(C*)wv+(wincr)){ \
+     I nextx=ai0[indexx];  /* result of classifier for next item */ \
+     if(nextx>=indexx){ \
+      /* new partition.  Allocate it sequentially, move the data to be the initial result value, and replace the index with the pointer to the partition */ \
+      ai0[indexx]=nextpartition;  /* index of partition */ \
+      void *partition=(void *)((C*)zv0+nextpartition*(zincr));  /* partition we are extending */ \
+      pwvinit  /* move the data in */ \
+      fv0[nextpartition]=1; /* init freq to 1 */ \
+      nextpartition++;  /* step up to next output position */ \
+     }else{ \
+      /* continuing a partition.  Point to the data and operate on it */ \
+      fv0[ai0[nextx]]++; \
+      void *partition=(void *)((C*)zv0+ai0[nextx]*(zincr));  /* partition we are extending */ \
+      pwvupd \
+     } \
+    } \
+ }
     switch(routineid){
-    case 3: {I rc; KSLGLP(celllen,celllen,MC(nextpartition,wv,celllen);,ASSERT(EVOK==(rc=((AHDR2FN*)adocv.f)(1,cellatoms,wv,partition,partition,jt)),rc)) break;}
-    case 7: {I rc; KSLGLP(cellatoms,celllen,DO(cellatoms, ((I*)nextpartition)[i]=((C*)wv)[i];),ASSERT(EVOK==(rc=((AHDR2FN*)adocv.f)(1,cellatoms,wv,partition,partition,jt)),rc)) break;}
-    case RTNCASE(2,INT): KSLGLP(1,SZD,*(I*)nextpartition=*(B*)wv;,*(I*)partition+=*(B*)wv;) break;  // +  the input is B01 but the result is INT
-    case RTNCASE(2,FL): NAN0; KSLGLP(SZD,SZD,*(D*)nextpartition=*(D*)wv;,*(D*)partition+=*(D*)wv;) NAN1 break;
-    case RTNCASE(0,B01): KSLGLP(1,1,*(C*)nextpartition=*(C*)wv;,*(C*)partition&=*(B*)wv;) break;  // <.
-    case RTNCASE(0,INT): KSLGLP(SZI,SZI,*(I*)nextpartition=*(I*)wv;,I p0=*(I*)partition; I w0=*(I*)wv; p0=p0<w0?p0:w0;  *(I*)partition=p0;) break;  // <.
-    case RTNCASE(0,FL): KSLGLP(SZD,SZD,*(D*)nextpartition=*(D*)wv;,D *p0=partition; p0=*(D*)partition<*(D*)wv?p0:wv;*(D*)partition=*p0;) break;  // <.
-    case RTNCASE(1,B01): KSLGLP(1,1,*(C*)nextpartition=*(C*)wv;,*(C*)partition|=*(B*)wv;) break;  // <.
-    case RTNCASE(1,INT): KSLGLP(SZI,SZI,*(I*)nextpartition=*(I*)wv;,I p0=*(I*)partition; I w0=*(I*)wv; p0=p0>w0?p0:w0;  *(I*)partition=p0;) break;  // >.
-    case RTNCASE(1,FL): KSLGLP(SZD,SZD,*(D*)nextpartition=*(D*)wv;,D *p0=partition; p0=*(D*)partition>*(D*)wv?p0:wv;*(D*)partition=*p0;) break;  // >.
+    case 3: {I rc; KSLGLP(celllen,celllen,MC(partition,wv,celllen);,ASSERT(EVOK==(rc=((AHDR2FN*)adocv.f)(1,cellatoms,wv,partition,partition,jt)),rc)) break;}  // <. >.
+    case 7: {I rc; KSLGLP(cellatoms,celllen,DO(cellatoms, ((I*)partition)[i]=((C*)wv)[i];),ASSERT(EVOK==(rc=((AHDR2FN*)adocv.f)(1,cellatoms,wv,partition,partition,jt)),rc)) break;}  // + B01
+    case 11: {I rc; KSLGLPMEAN(cellatoms,celllen,DO(cellatoms, ((D*)partition)[i]=((B*)wv)[i];),ASSERT(EVOK==(rc=((AHDR2FN*)adocv.f)(1,cellatoms,wv,partition,partition,jt)),rc),D) break;}  // mean B01
+    case 15: {I rc; KSLGLPMEAN(celllen,celllen,DO(cellatoms, ((D*)partition)[i]=((I*)wv)[i];),ASSERT(EVOK==(rc=((AHDR2FN*)adocv.f)(1,cellatoms,wv,partition,partition,jt)),rc),D) break;}  // mean INT
+    case 16: {I rc; KSLGLPMEAN(celllen,celllen,MC(partition,wv,celllen);,ASSERT(EVOK==(rc=((AHDR2FN*)adocv.f)(1,cellatoms,wv,partition,partition,jt)),rc),I) break;}  // mean for XNUM/RAT
+    case 17: {I rc; KSLGLPMEAN(celllen,celllen,MC(partition,wv,celllen);,ASSERT(EVOK==(rc=((AHDR2FN*)adocv.f)(1,cellatoms,wv,partition,partition,jt)),rc),D) break;}  // mean for FL
+    case RTNCASE(0,B01): KSLGLP(1,1,*(C*)partition=*(C*)wv;,*(C*)partition&=*(B*)wv;) break;  // <.
+    case RTNCASE(0,INT): KSLGLP(SZI,SZI,*(I*)partition=*(I*)wv;,I p0=*(I*)partition; I w0=*(I*)wv; p0=p0<w0?p0:w0;  *(I*)partition=p0;) break;  // <.
+    case RTNCASE(0,FL): KSLGLP(SZD,SZD,*(D*)partition=*(D*)wv;,D *p0=partition; p0=*(D*)partition<*(D*)wv?p0:wv;*(D*)partition=*p0;) break;  // <.
+    case RTNCASE(1,B01): KSLGLP(1,1,*(C*)partition=*(C*)wv;,*(C*)partition|=*(B*)wv;) break;  // <.
+    case RTNCASE(1,INT): KSLGLP(SZI,SZI,*(I*)partition=*(I*)wv;,I p0=*(I*)partition; I w0=*(I*)wv; p0=p0>w0?p0:w0;  *(I*)partition=p0;) break;  // >.
+    case RTNCASE(1,FL): KSLGLP(SZD,SZD,*(D*)partition=*(D*)wv;,D *p0=partition; p0=*(D*)partition>*(D*)wv?p0:wv;*(D*)partition=*p0;) break;  // >.
+    case RTNCASE(2,B01): KSLGLP(1,SZI,*(I*)partition=*(B*)wv;,*(I*)partition+=*(B*)wv;) break;  // +  the input is B01 but the result is INT
+    case RTNCASE(2,FL): NAN0; KSLGLP(SZD,SZD,*(D*)partition=*(D*)wv;,*(D*)partition+=*(D*)wv;) NAN1 break;
+    case RTNCASE(3,B01): NAN0; KSLGLPMEAN(1,SZD,*(D*)partition=*(B*)wv;,*(D*)partition+=*(B*)wv;,D) NAN1 break;
+    case RTNCASE(3,INT): NAN0; KSLGLPMEAN(SZI,SZD,*(D*)partition=*(I*)wv;,*(D*)partition+=*(I*)wv;,D) NAN1 break;
+    case RTNCASE(3,FL): NAN0; KSLGLPMEAN(SZD,SZD,*(D*)partition=*(D*)wv;,*(D*)partition+=*(D*)wv;,D) NAN1 break;
     }
    }else{
-    // small-range processing
+    // small-range processing of f//.
     // indexofsub detected that small-range processing is in order.  Information about the range is secreted in fields of a
     ai=(A)((I)ai-1); I k=AN(ai); I datamin=AK(ai); I p=AM(ai);  // get size of an item in bytes, smallest item, range+1
     // allocate a tally area and clear it to ~0
@@ -270,39 +310,77 @@ static DF2(jtkey){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
     ftblv-=datamin;  // bias starting addr so that values hit the table
     I nparts=0;  // number of partitions in the result
     I *av=IAV(a); DQ(nitems, void * of=ftblv[*av&valmsk]; ftblv[*av&valmsk]=0; nparts+=(I)of&1; av=(I*)((I)av+k);)   // count partitions and set pointers there to 0
-    // allocate the result area
+    // allocate the result area(s)
     GA(z,zt,nparts*cellatoms,AR(w),AS(w)); AS(z)[0]=nparts; RZ(AN(z));  // avoid calls with empty args
+    if(unlikely(keyslashfn==3)){
+     GA(freq,zt&FL?FL:INT,nparts,1,0);  // allocate place for divisor - INT if result may be XNUM/RAT
+    }
     // pass through the inputs again, accumulating the result.  First time we encounter a partition, initialize its pointer and the result cell
     // loop through the index, copying the first value and operating on the others
     void *nextpartition=voidAV(z);  // place where next partition will be started
     void *wv;  // current argument item
 
-#define KSLSRLP(wincr,zincr,npwvinit,pwvupd) \
+#define KSLSRLP(wincr,zincr,pwvinit,pwvupd) \
+ {void *nextpartition=voidAV(z);  /* place where next partition will be started */ \
  for(av=IAV(a), wv=voidAV(w); nitems; av=(I*)((I)av+k), wv=(C*)wv+(wincr),--nitems){ \
      void *partition=ftblv[*av&valmsk];  /* partition address, or 0 if not allocated */ \
      if(!partition){ \
       /* new partition.  Allocate it sequentially, move the data to be the initial result value, and replace the index with the pointer to the partition */ \
-      npwvinit  /* move the data in */ \
       ftblv[*av&valmsk]=nextpartition;  /* save start point for partition */ \
+      partition = nextpartition; \
+      pwvinit  /* move the data in */ \
       nextpartition=(C*)nextpartition+(zincr);  /* step up to next output position */ \
      }else{ \
       /* continuing a partition.  Point to the data and operate on it */ \
       pwvupd \
      } \
-    }
+    } \
+ }
+#define KSLSRLPMEAN(wincr,zincr,pwvinit,pwvupd,freqt) \
+ {I nextpartition=1;  /* index where next partition will be started - can't be 0 */ \
+ freqt *fv0=(freqt *)(CAV(freq)-SZI);  /* bias to match nextpartition */ \
+ void *zv0=(void *)(CAV(z)-(zincr)); \
+ for(av=IAV(a), wv=voidAV(w); nitems; av=(I*)((I)av+k), wv=(C*)wv+(wincr),--nitems){ \
+     I partitionx=(I)ftblv[*av&valmsk];  /* partition index, or 0 if not allocated */ \
+     if(!partitionx){ \
+      /* new partition.  Allocate it sequentially, move the data to be the initial result value, and replace the index with the pointer to the partition */ \
+      partitionx=nextpartition; \
+      ftblv[*av&valmsk]=(void *)partitionx;  /* save start point for partition */ \
+      fv0[partitionx]=1; \
+      void *partition=(void *)((C*)zv0+partitionx*(zincr));  /* partition we are extending */ \
+      pwvinit  /* move the data in */ \
+      ++nextpartition;  /* step up to next output position */ \
+     }else{ \
+      /* continuing a partition.  Point to the data and operate on it */ \
+      fv0[partitionx]++; \
+      void *partition=(void *)((C*)zv0+partitionx*(zincr));  /* partition we are extending */ \
+      pwvupd \
+     } \
+    } \
+ }
+
     switch(routineid){
-    case 3: {I rc; KSLSRLP(celllen,celllen,MC(nextpartition,wv,celllen);,ASSERT(EVOK==(rc=((AHDR2FN*)adocv.f)(1,cellatoms,wv,partition,partition,jt)),rc)) break;}
-    case 7: {I rc; KSLSRLP(cellatoms,celllen,DO(cellatoms, ((I*)nextpartition)[i]=((C*)wv)[i];),ASSERT(EVOK==(rc=((AHDR2FN*)adocv.f)(1,cellatoms,wv,partition,partition,jt)),rc)) break;}
-    case RTNCASE(2,INT): KSLSRLP(1,SZD,*(I*)nextpartition=*(B*)wv;,*(I*)partition+=*(B*)wv;) break;  // +  the input is B01 but the result is INT
-    case RTNCASE(2,FL): NAN0; KSLSRLP(SZD,SZD,*(D*)nextpartition=*(D*)wv;,*(D*)partition+=*(D*)wv;) NAN1 break;
-    case RTNCASE(0,B01): KSLSRLP(1,1,*(C*)nextpartition=*(C*)wv;,*(C*)partition&=*(B*)wv;) break;  // <.
-    case RTNCASE(0,INT): KSLSRLP(SZI,SZI,*(I*)nextpartition=*(I*)wv;,I p0=*(I*)partition; I w0=*(I*)wv; p0=p0<w0?p0:w0;  *(I*)partition=p0;) break;  // <.
-    case RTNCASE(0,FL): KSLSRLP(SZD,SZD,*(D*)nextpartition=*(D*)wv;,D *p0=partition; p0=*(D*)partition<*(D*)wv?p0:wv;*(D*)partition=*p0;) break;  // <.
-    case RTNCASE(1,B01): KSLSRLP(1,1,*(C*)nextpartition=*(C*)wv;,*(C*)partition|=*(B*)wv;) break;  // <.
-    case RTNCASE(1,INT): KSLSRLP(SZI,SZI,*(I*)nextpartition=*(I*)wv;,I p0=*(I*)partition; I w0=*(I*)wv; p0=p0>w0?p0:w0;  *(I*)partition=p0;) break;  // >.
-    case RTNCASE(1,FL): KSLSRLP(SZD,SZD,*(D*)nextpartition=*(D*)wv;,D *p0=partition; p0=*(D*)partition>*(D*)wv?p0:wv;*(D*)partition=*p0;) break;  // >.
+    case 3: {I rc; KSLSRLP(celllen,celllen,MC(partition,wv,celllen);,ASSERT(EVOK==(rc=((AHDR2FN*)adocv.f)(1,cellatoms,wv,partition,partition,jt)),rc)) break;}  // <. >.
+    case 7: {I rc; KSLSRLP(cellatoms,celllen,DO(cellatoms, ((I*)partition)[i]=((C*)wv)[i];),ASSERT(EVOK==(rc=((AHDR2FN*)adocv.f)(1,cellatoms,wv,partition,partition,jt)),rc)) break;}  // + B01
+    case 11: {I rc; KSLSRLPMEAN(cellatoms,celllen,DO(cellatoms, ((D*)partition)[i]=((B*)wv)[i];),ASSERT(EVOK==(rc=((AHDR2FN*)adocv.f)(1,cellatoms,wv,partition,partition,jt)),rc),D) break;}  // mean B01
+    case 15: {I rc; KSLSRLPMEAN(celllen,celllen,DO(cellatoms, ((D*)partition)[i]=((I*)wv)[i];),ASSERT(EVOK==(rc=((AHDR2FN*)adocv.f)(1,cellatoms,wv,partition,partition,jt)),rc),D) break;}  // mean INT
+    case 16: {I rc; KSLSRLPMEAN(celllen,celllen,MC(partition,wv,celllen);,ASSERT(EVOK==(rc=((AHDR2FN*)adocv.f)(1,cellatoms,wv,partition,partition,jt)),rc),I) break;}  // mean for XNUM/RAT
+    case 17: {I rc; KSLSRLPMEAN(celllen,celllen,MC(partition,wv,celllen);,ASSERT(EVOK==(rc=((AHDR2FN*)adocv.f)(1,cellatoms,wv,partition,partition,jt)),rc),D) break;}  // mean for FL
+    case RTNCASE(0,B01): KSLSRLP(1,1,*(C*)partition=*(C*)wv;,*(C*)partition&=*(B*)wv;) break;  // <.
+    case RTNCASE(0,INT): KSLSRLP(SZI,SZI,*(I*)partition=*(I*)wv;,I p0=*(I*)partition; I w0=*(I*)wv; p0=p0<w0?p0:w0;  *(I*)partition=p0;) break;  // <.
+    case RTNCASE(0,FL): KSLSRLP(SZD,SZD,*(D*)partition=*(D*)wv;,D *p0=partition; p0=*(D*)partition<*(D*)wv?p0:wv;*(D*)partition=*p0;) break;  // <.
+    case RTNCASE(1,B01): KSLSRLP(1,1,*(C*)partition=*(C*)wv;,*(C*)partition|=*(B*)wv;) break;  // <.
+    case RTNCASE(1,INT): KSLSRLP(SZI,SZI,*(I*)partition=*(I*)wv;,I p0=*(I*)partition; I w0=*(I*)wv; p0=p0>w0?p0:w0;  *(I*)partition=p0;) break;  // >.
+    case RTNCASE(1,FL): KSLSRLP(SZD,SZD,*(D*)partition=*(D*)wv;,D *p0=partition; p0=*(D*)partition>*(D*)wv?p0:wv;*(D*)partition=*p0;) break;  // >.
+    case RTNCASE(2,B01): KSLSRLP(1,SZD,*(I*)partition=*(B*)wv;,*(I*)partition+=*(B*)wv;) break;  // +  the input is B01 but the result is INT
+    case RTNCASE(2,FL): NAN0; KSLSRLP(SZD,SZD,*(D*)partition=*(D*)wv;,*(D*)partition+=*(D*)wv;) NAN1 break;
+    case RTNCASE(3,B01): NAN0; KSLSRLPMEAN(1,SZD,*(D*)partition=*(B*)wv;,*(D*)partition+=*(B*)wv;,D) NAN1 break;
+    case RTNCASE(3,INT): NAN0; KSLSRLPMEAN(SZI,SZD,*(D*)partition=*(I*)wv;,*(D*)partition+=*(I*)wv;,D) NAN1 break;
+    case RTNCASE(3,FL): NAN0; KSLSRLPMEAN(SZD,SZD,*(D*)partition=*(D*)wv;,*(D*)partition+=*(D*)wv;,D) NAN1 break;
     }
    }
+   // Finally, if this was mean, divide the total by the frequency
+   if(unlikely(((FAV(self)->flag&VFKEYSLASHF)>>VFKEYSLASHFX)==3)){z=divideAW(z,freq);}  // always inplaceable
    EPILOG(z);
   }
  }
@@ -431,6 +509,121 @@ static DF2(jtkey){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
  EPILOG(z);
 }    /* a f/. w for dense x & w */
 
+#if 0
+// a </. w.  Self-classify a, then rearrange w and call cut
+static DF2(jtkeybox){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
+ RZ(a&&w);
+ {I t2; ASSERT(SETIC(a,nitems)==SETIC(w,t2),EVLENGTH);}  // verify agreement.  nitems is # items of a
+ if(SPARSE&AT(a))R keysp(a,w,self);  // if sparse, go handle it
+// obsolete  RZ(a=indexof(a,a));  // self-classify the input using ct set before this verb; we are going to modify a, so make sure it's not virtual
+ RZ(ai=indexofsub(IFORKEY,a,a));   // self-classify the input using ct set before this verb
+ // indexofsub has 2 returns: most of the time, it returns a normal i.-family result, but with each slot holding the index PLUS the number of values
+ // mapped to that index.  If processing determines that small-range lookup would be best, indexofsub doesn't do it, but instead returns a block giving the size, min value, and range.
+ // We then allocate and run the small-range table and use it to rearrange the input.  The small-range variant is signaled by the LSB of the result
+ // of indexofsub being set.
+ PUSHCCT(jt->cctdefault);  // now that partitioning is over, reset ct for the executions of u
+ I cellatoms; PROD(cellatoms,AR(w)-1,AS(w)+1);   // length of a cell of w, in atoms
+ I celllen = cellatoms<<bplg(AT(w));  // length of a cell of w, in bytes
+
+ if(!((I)ai&1)){
+  // NOT small-range processing: go through the index+size table to create the frets and reordered data for passing to cut
+  I nboxes=AM(ai);  //fetch # frets before we possibly clone ai
+  makewritable(ai);  // we modify the size+index info to be running endptrs into the reorder area
+  // allocate the result, which will be recursive, and set up to fill it with blocks off the tstack
+  GATV0(z,BOX,nboxes,1); if(nboxes==0)RETF(z); // allocate result, and exit if empty for comp ease below
+   // boxes will be in AAV(z), in order.  Details discussed in jtbox().  Because we have to EPILOG the result, it will be ra'd there along with its descendants.  We set usecount to 0 until the EPILOG
+   A *pushxsave = jt->tnextpushp; jt->tnextpushp=AAV(z);  // save tstack info before allocation
+   A y;  // name under which noxes are allocated
+   DQ(n, GAE(y,t,m,r,f+ws,break); /* obsolete AFLAG(y)=newflags;*/ AC(y)=ACUC1; MC(CAV(y),wv,k); wv+=k;);   // allocate, but don't grow the tstack.  Set usecount of cell to 1.  Put allocated addr into *jt->tnextpushp++
+
+  // pass through the input, incrementing each reference
+  I *av=IAV(ai);  // av->a data
+  // Now each item av[i] is either (1) smaller than i, which means that it is extending a previous key; or (2) greater than i, which
+  // means it starts a new partition whose length is a[i]-i.  Process the values in order, creating partitions as they come up, and
+  // moving the data for each input value in turn, reading in order and scatter-writing.
+  I i;   // loop index
+  I * RESTRICT wv=IAV(w);   // source pointer, advanced item by item
+  for(i=0;i<nitems;++i){
+   I * RESTRICT partitionptr;  // pointer to where output will go
+   I avvalue=av[i];  // fetch partition length/index
+   if(avvalue<i){  // this value extends its partition
+    partitionptr=(I*)av[avvalue];  // addr of end of selected partition
+   }else{
+    // start of new partition.  Figure out the length; out new partition; replace length with starting pointer; Use length to advance partition pointer
+    avvalue-=i;  // length of partition
+    GAE(y,t,m,r,f+ws,break); AC(y)=0; // allocate a region for the boxed data and set usecount to 0 since it is not on the tstack.  EPILOG will raise it to 1
+    partitionptr=IAV(y);  // start of partition: in the data area of the block
+    avvalue=i;   // shift meaning of avvalue from length to index, where the partition pointer will be stored
+   }
+
+   // copy the data to the end of its partition and advance the partition pointer
+   if(celllen<MEMCPYTUNELOOP) {  // copy by hand if that's faster (0 len OK)
+    I n=celllen; while((n-=SZI)>=0){*partitionptr++=*wv++;}
+      // move full words.  Must not overwrite the area, since we are scatter-writing.
+    if(n&(SZI-1)){STOREBYTES(partitionptr,*wv,-n); partitionptr = (I*)((C*)partitionptr+SZI+n); wv = (I*)((C*)wv+SZI+n);}  // Use test because this code is repeated
+   }else{MC(partitionptr,wv,celllen); partitionptr = (I*)((C*)partitionptr+celllen); wv = (I*)((C*)wv+celllen);}
+
+   av[avvalue]=(I)partitionptr;  // store updated end-of-partition after move
+  }
+  // restore the allocation system
+  jt->tnextpushp=pushxsave;   // restore tstack pointer
+  if(!y){AFLAG(z)=BOX; ASSERT(0,EVWSFULL);}  // if we broke out on allocation failure, fail.  Mark z recursive so when it is freed so will its contents be
+ }else{I *av;  // running pointer through the inputs
+  // indexofsub detected that small-range processing is in order.  Information about the range is secreted in fields of a
+  ai=(A)((I)ai-1); I k=AN(ai); I datamin=AK(ai); I p=AM(ai);  // get size of an item, smallest item, range+1
+  // allocate a tally area and clear it.  Could use narrower table perhaps
+  A ftbl; GATV0(ftbl,INT,p,1); I *ftblv=IAV(ftbl); memset(ftblv,0,p<<LGSZI);
+  // pass through the inputs, counting the negative of the number of slots mapped to each index
+  I valmsk=(UI)~0LL>>(((-k)&(SZI-1))<<LGBB);  // mask to leave the k lowest bytes valid
+  ftblv-=datamin;  // bias starting addr so that values hit the table
+  nfrets=nitems;  // initialize fret counter, decremented for each non-fret
+  av=IAV(a); DQ(nitems, I tval=ftblv[*av&valmsk]; ftblv[*av&valmsk]=tval-1; nfrets-=SGNTO0(tval); av=(I*)((I)av+k);)   // build (negative) frequency table; sub 1 for each non-fret
+
+  // pass through the inputs again.  If we encounter a negative value, allocate the next fret.  Copy the next item and advance
+  // that partition's fret pointer
+  // Now each item ftblv[av[i]] is either (1) nonnegative, which means that it is extending a previous key; or (2) negative, which
+  // means it starts a new partition whose length is -ftblv[av[i]].  Process the values in order, creating partitions as they come up, and
+  // moving the data for each input value in turn, reading in order and scatter-writing.
+
+  I i; I nextpartitionx;  // loop index, index of place to store next partition
+  I * RESTRICT wv=IAV(w);   // source pointer
+  C * RESTRICT wpermv=CAV(wperm);  // addr of output area
+  for(av=IAV(a), i=nitems, nextpartitionx=0;i;--i){
+   I partitionndx;  // index of where this output will go
+   I *slotaddr=&ftblv[*av&valmsk];  // the slot in the table we are processing
+   I avvalue=*slotaddr;  // fetch input value, mask to valid portion, fetch partition length/index
+   if(avvalue>=0){  // this value extends its partition
+    partitionndx=avvalue;  // index of current value in selected partition
+   }else{
+    // start of new partition.  Figure out the length; out new partition; replace length with starting pointer; Use length to advance partition pointer
+    avvalue= -avvalue;  // length of partition
+    if(avvalue<255)*fretp++ = (UC)avvalue; else{*fretp++ = 255; *(UI4*)fretp=(UI4)avvalue; fretp+=SZUI4;}
+    partitionndx=nextpartitionx;  // copy this item's data to the start of the partition
+    nextpartitionx+=avvalue;  // reserve output space for the partition
+   }
+
+   I *partitionptr=(I*)(wpermv+partitionndx*celllen);  // place to copy next input to
+   // copy the data to the end of its partition and advance the partition pointer
+   if(celllen<MEMCPYTUNELOOP) {  // copy by hand if that's faster (0 len OK)
+    I n=celllen; while((n-=SZI)>=0){*partitionptr++=*wv++;}
+      // move full words.  Must not overwrite the area, since we are scatter-writing.
+    if(n&(SZI-1)){STOREBYTES(partitionptr,*wv,-n); wv = (I*)((C*)wv+SZI+n);}  // Use test because this code is repeated
+   }else{MC(partitionptr,wv,celllen); wv = (I*)((C*)wv+celllen);}
+
+   *slotaddr=partitionndx+1;  // store updated next-in-partition after move
+   av=(I*)((I)av+k);  // advance to next input value
+  }
+ }
+
+ // Frets are calculated and w is reordered.  Call cut to finish the job.  We have to store the count and length of the frets
+ POPCCT
+ EPILOG(z);
+}    /* a f/. w for dense x & w */
+#endif
+
+
+
+#if 0  // obsolete 
 typedef struct {   // return struct from jtkeyrs
  CR minrange;  // detected min/range
  I type;  // pseudotype to use
@@ -450,7 +643,6 @@ static CRT jtkeyrs(J jt,A a,UI maxrange){I ac; CRT res;
  R res;
 }
 
-#if 0  // obsolete 
 #define KCASE(d,t)          (t+5*d)
 #define KACC1(F,Ta)  \
  {Ta*u;                                                          \
@@ -527,7 +719,6 @@ d=0;  // scaf temporarily disable this until we decide it's worthwhile (and work
  *AS(z)=m; AN(z)=m*c; if(pp)RZ(z=pcvt(INT,z));
  EPILOG(z);
 }    /* x f//.y */
-#endif
 
 #define KMCASE(ta,tw)  (4*ta+tw) // (ta+65536*tw)
 #define KMACC(Ta,Tw) \
@@ -602,6 +793,7 @@ static DF2(jtkeymean){PROLOG(0013);A p,q,x,z;D d,*qv,*vv,*zv;I at,*av,c,j,m=0,n,
  if(wt&FL)NAN1;
  EPILOG(z);
 }    /* x (+/%#)/.y */
+#endif
 
 
 #define GRPCD(T)            {T*v=(T*)wv; DO(n, j=*v++; if(0<=dv[j])++cv[j]; else{dv[j]=i; cv[j]=1; ++zn;});}
@@ -1049,10 +1241,11 @@ F1(jtsldot){A h=0;AF f1=jtoblique,f2;C c,d,e;I flag=0;V*v;
     }
 
    } break; 
-  case CFORK:  if(v->valencefns[0]==(AF)jtmean){f2=jtkeymean; break;}
-               c=ID(v->fgh[0]); d=ID(v->fgh[1]); e=ID(v->fgh[2]); 
-               if(((c^e)==(CHEAD^CPOUND))&&d==CCOMMA&&(c==CHEAD||c==CPOUND)){f2=jtkeyheadtally; break;}
-               // otherwise fall through to...
+  case CFORK:  if(v->valencefns[0]==(AF)jtmean){/* obsolete f2=jtkeymean*/flag+=(3<<VFKEYSLASHFX)+((FL+INT+B01)<<VFKEYSLASHTX);  // (+/%#)/., treated as f//.
+               }else{c=ID(v->fgh[0]); d=ID(v->fgh[1]); e=ID(v->fgh[2]); 
+                if(((c^e)==(CHEAD^CPOUND))&&d==CCOMMA&&(c==CHEAD||c==CPOUND)){f2=jtkeyheadtally; break;}
+               }
+               // otherwise (including keymean) fall through to...
   default: f2=jtkey; flag |= (FAV(w)->flag&VASGSAFE)|VJTFLGOK2;  // pass through ASGSAFE.  jtkey can handle inplace
  }
  R fdef(0,CSLDOT,VERB, f1,f2, w,0L,h, flag, RMAX,RMAX,RMAX);

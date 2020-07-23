@@ -68,7 +68,7 @@ A jtcreatecycliciterator(J jt, A z, A w){
 // obsolete  // clear the BOXATOP flags for this iterator  scaf should set if all gerunds are BOXATOP
 // obsolete  // set BOXATOP if all BOXATOP flags are set; clear ATOPOPEN always since they can't coexist
 // obsolete  UI4 flg2=VF2BOXATOP1|VF2BOXATOP2; DO(AN(gerund), flg2 &= FAV(AAV(gerund)[i])->flag2&(VF2BOXATOP1|VF2BOXATOP2);)
- FAV(z)->flag2=0;
+ FAV(z)->flag2=0; FAV(z)->id=CCYCITER;   // clear flags, and give this verb a proper id so it can be checked for
  R z;
 }
 // Similar, but also install the list of gerund results that will select the verb to run

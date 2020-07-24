@@ -483,7 +483,7 @@
 #define gri1(x0,x1,x2,x3,x4)        jtgri1(jt,(x0),(x1),(x2),(x3),(x4))
 #define gru(x0,x1,x2,x3,x4)         jtgru(jt,(x0),(x1),(x2),(x3),(x4))
 #define gru1(x0,x1,x2,x3,x4)        jtgru1(jt,(x0),(x1),(x2),(x3),(x4))
-#define group(x)                    jtgroup(jt,(x))
+// obsolete #define group(x)                    jtgroup(jt,(x))
 #define grs(x0,x1,x2,x3,x4)         jtgrs(jt,(x0),(x1),(x2),(x3),(x4))
 #define grx(x0,x1,x2,x3,x4)         jtgrx(jt,(x0),(x1),(x2),(x3),(x4))
 #define gt(x,y)                     jtatomic2(jt,(x),(y),ds(CGT))     

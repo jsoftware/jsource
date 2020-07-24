@@ -1167,6 +1167,7 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x
 #define RE(exp)         {if(unlikely(((exp),jt->jerr)))R 0;}
 // obsolete #define RER             {if(er){jt->jerr=er; R;}}
 #define RESETERR        {jt->etxn=jt->jerr=0;}
+#define RESETERRANDMSG  {jt->etxn1=jt->etxn=jt->jerr=0;}
 #define RESETRANK       (jt->ranks=(RANK2T)~0)
 #define RNE(exp)        {R jt->jerr?0:(exp);}
 #define RZ(exp)         {if(unlikely(!(exp)))R0}

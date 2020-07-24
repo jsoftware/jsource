@@ -173,7 +173,7 @@ static DF2(jtkey);
 
 static DF2(jtkeysp){PROLOG(0008);A b,by,e,q,x,y,z;I j,k,n,*u,*v;P*p;
  RZ(a&&w);
- SETIC(a,n); 
+ {I t2; ASSERT(SETIC(a,n)==SETIC(w,t2),EVLENGTH);}  // verify agreement.  n is # items of a
  RZ(q=indexof(a,a)); p=PAV(q); 
  x=SPA(p,x); u=AV(x);
  y=SPA(p,i); v=AV(y);
@@ -192,8 +192,8 @@ static DF2(jtkeysp){PROLOG(0008);A b,by,e,q,x,y,z;I j,k,n,*u,*v;P*p;
 // a u/. w.  Self-classify a, then rearrange w and call cut
 static DF2(jtkey){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
  RZ(a&&w);
- {I t2; ASSERT(SETIC(a,nitems)==SETIC(w,t2),EVLENGTH);}  // verify agreement.  nitems is # items of a
  if(SPARSE&AT(a))R keysp(a,w,self);  // if sparse, go handle it
+ {I t2; ASSERT(SETIC(a,nitems)==SETIC(w,t2),EVLENGTH);}  // verify agreement.  nitems is # items of a
 // obsolete  RZ(a=indexof(a,a));  // self-classify the input using ct set before this verb; we are going to modify a, so make sure it's not virtual
  RZ(ai=indexofsub(IFORKEY,a,a));   // self-classify the input using ct set before this verb
  // indexofsub has 2 returns: most of the time, it returns a normal i.-family result, but with each slot holding the index PLUS the number of values
@@ -437,14 +437,14 @@ static DF2(jtkey){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
     avvalue=i;   // shift meaning of avvalue from length to index, where the partition pointer will be stored
    }
 
+   av[avvalue]=(I)partitionptr+celllen;  // store updated end-of-partition after move
    // copy the data to the end of its partition and advance the partition pointer
    if(celllen<MEMCPYTUNELOOP) {  // copy by hand if that's faster (0 len OK)
     I n=celllen; while((n-=SZI)>=0){*partitionptr++=*wv++;}
       // move full words.  Must not overwrite the area, since we are scatter-writing.
-    if(n&(SZI-1)){STOREBYTES(partitionptr,*wv,-n); partitionptr = (I*)((C*)partitionptr+SZI+n); wv = (I*)((C*)wv+SZI+n);}  // Use test because this code is repeated
-   }else{MC(partitionptr,wv,celllen); partitionptr = (I*)((C*)partitionptr+celllen); wv = (I*)((C*)wv+celllen);}
+    if(n&(SZI-1)){STOREBYTES(partitionptr,*wv,-n); wv = (I*)((C*)wv+SZI+n);}  // Use test because this code is repeated
+   }else{MC(partitionptr,wv,celllen); wv = (I*)((C*)wv+celllen);}
 
-   av[avvalue]=(I)partitionptr;  // store updated end-of-partition after move
   }
  }else{I *av;  // running pointer through the inputs
   // indexofsub detected that small-range processing is in order.  Information about the range is secreted in fields of a
@@ -487,6 +487,7 @@ static DF2(jtkey){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
    }
 
    I *partitionptr=(I*)(wpermv+partitionndx*celllen);  // place to copy next input to
+   *slotaddr=partitionndx+1;  // store updated next-in-partition after move
    // copy the data to the end of its partition and advance the partition pointer
    if(celllen<MEMCPYTUNELOOP) {  // copy by hand if that's faster (0 len OK)
     I n=celllen; while((n-=SZI)>=0){*partitionptr++=*wv++;}
@@ -494,7 +495,6 @@ static DF2(jtkey){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
     if(n&(SZI-1)){STOREBYTES(partitionptr,*wv,-n); wv = (I*)((C*)wv+SZI+n);}  // Use test because this code is repeated
    }else{MC(partitionptr,wv,celllen); wv = (I*)((C*)wv+celllen);}
 
-   *slotaddr=partitionndx+1;  // store updated next-in-partition after move
    av=(I*)((I)av+k);  // advance to next input value
   }
  }
@@ -509,12 +509,27 @@ static DF2(jtkey){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
  EPILOG(z);
 }    /* a f/. w for dense x & w */
 
-#if 0
-// a </. w.
-static DF2(jtkeybox){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
+// bivalent entry point: a </. w   or  (<./ i.@#) w
+static DF2(jtkeybox){PROLOG(0009);A ai,z=0;I nitems;
  RZ(a&&w);
- {I t2; ASSERT(SETIC(a,nitems)==SETIC(w,t2),EVLENGTH);}  // verify agreement.  nitems is # items of a
- if(SPARSE&AT(a))R keysp(a,w,self);  // if sparse, go handle it
+ if(SPARSE&AT(a))R (AT(w)&NOUN?(AF)jtkeysp:(AF)jthook1cell)(jt,a,w,self);  // if sparse, go handle it
+ SETIC(a,nitems);   // nitems is # items in a and w
+ I cellatoms, celllen;  // number of atoms in an item of w, and the number of bytes therein.  celllen is negative for the monad
+ if(likely(AT(w)&NOUN)){
+  // dyad: <./
+  I t2; ASSERT(nitems==SETIC(w,t2),EVLENGTH);  // verify agreement
+  PROD(cellatoms,AR(w)-1,AS(w)+1);   // length of a cell of w, in atoms
+  celllen=cellatoms<<bplg(AT(w));  // length of a cell of w, in bytes
+ }else{
+  // monad: (<./ i.@#) .  Create a suitable w and switch to it
+  cellatoms=1; celllen=-1;  // len and flag of cells from the synthetic index vector
+  struct AD fauxw;
+  // Fill in enough of fauxw to stand in for the vector.  We need type=INT and rank=1, and the shape needs to be a fetchable address but the value doesn't matter.
+  // The data address returned by IAV needs to be 0
+  w=&fauxw;  // switch to synthetic w
+  AK(w)=-(I)w; AT(w)=INT; AR(w)=1;
+ }
+ // Note: self is invalid from here on
 // obsolete  RZ(a=indexof(a,a));  // self-classify the input using ct set before this verb; we are going to modify a, so make sure it's not virtual
  RZ(ai=indexofsub(IFORKEY,a,a));   // self-classify the input using ct set before this verb
  // indexofsub has 2 returns: most of the time, it returns a normal i.-family result, but with each slot holding the index PLUS the number of values
@@ -522,18 +537,18 @@ static DF2(jtkeybox){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
  // We then allocate and run the small-range table and use it to rearrange the input.  The small-range variant is signaled by the LSB of the result
  // of indexofsub being set.
  PUSHCCT(jt->cctdefault);  // now that partitioning is over, reset ct for the executions of u
- I cellatoms; PROD(cellatoms,AR(w)-1,AS(w)+1);   // length of a cell of w, in atoms
- I celllen = cellatoms<<bplg(AT(w));  // length of a cell of w, in bytes
 
+ A *pushxsave;  // place to save the tpop stack when we hijack it
+  A y;  // name under which boxes are allocated
  if(!((I)ai&1)){
   // NOT small-range processing: go through the index+size table to create the frets and reordered data for passing to cut
   I nboxes=AM(ai);  //fetch # frets before we possibly clone ai
   makewritable(ai);  // we modify the size+index info to be running endptrs into the reorder area
   // allocate the result, which will be recursive, and set up to fill it with blocks off the tstack
   GATV0(z,BOX,nboxes,1); if(nboxes==0)RETF(z); // allocate result, and exit if empty for comp ease below
-   // boxes will be in AAV(z), in order.  Details discussed in jtbox().  Because we have to EPILOG the result, it will be ra'd there along with its descendants.  We set usecount to 0 until the EPILOG
-   A *pushxsave = jt->tnextpushp; jt->tnextpushp=AAV(z);  // save tstack info before allocation
-   A y;  // name under which noxes are allocated
+  // boxes will be in AAV(z), in order.  Details discussed in jtbox().  Because we have to EPILOG the result, it will be ra'd there along with its descendants.  We set usecount to 0 until the EPILOG
+  pushxsave = jt->tnextpushp; jt->tnextpushp=AAV(z);  // save tstack info before allocation
+  // **** MUST NOT FAIL FROM HERE UNTIL THE END, WHERE THE ALLOCATION SYSTEM CAN BE RESTORED ****
 
   // pass through the input, incrementing each reference
   I *av=IAV(ai);  // av->a data
@@ -550,76 +565,92 @@ static DF2(jtkeybox){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
    }else{
     // start of new partition.  Figure out the length; out new partition; replace length with starting pointer; Use length to advance partition pointer
     avvalue-=i;  // length of partition
-    GAE(y,t,m,r,f+ws,break); AC(y)=0; // allocate a region for the boxed data and set usecount to 0 since it is not on the tstack.  EPILOG will raise it to 1
+    GAE(y,AT(w),cellatoms*avvalue,MAX(AR(w),1),AS(w),break); AC(y)=0; AS(y)[0]=avvalue; // allocate a region for the boxed data and set usecount to 0 since it is not on the tstack.  EPILOG will raise it to 1
     partitionptr=IAV(y);  // start of partition: in the data area of the block
     avvalue=i;   // shift meaning of avvalue from length to index, where the partition pointer will be stored
    }
 
-   // copy the data to the end of its partition and advance the partition pointer
-   if(celllen<MEMCPYTUNELOOP) {  // copy by hand if that's faster (0 len OK)
-    I n=celllen; while((n-=SZI)>=0){*partitionptr++=*wv++;}
-      // move full words.  Must not overwrite the area, since we are scatter-writing.
-    if(n&(SZI-1)){STOREBYTES(partitionptr,*wv,-n); partitionptr = (I*)((C*)partitionptr+SZI+n); wv = (I*)((C*)wv+SZI+n);}  // Use test because this code is repeated
-   }else{MC(partitionptr,wv,celllen); partitionptr = (I*)((C*)partitionptr+celllen); wv = (I*)((C*)wv+celllen);}
-
-   av[avvalue]=(I)partitionptr;  // store updated end-of-partition after move
-  }
-  // restore the allocation system
-  jt->tnextpushp=pushxsave;   // restore tstack pointer
-  if(!y){AFLAG(z)=BOX; ASSERT(0,EVWSFULL);}  // if we broke out on allocation failure, fail.  Mark z recursive so when it is freed so will its contents be
-
- }else{I *av;  // running pointer through the inputs
-  // indexofsub detected that small-range processing is in order.  Information about the range is secreted in fields of a
-  ai=(A)((I)ai-1); I k=AN(ai); I datamin=AK(ai); I p=AM(ai);  // get size of an item, smallest item, range+1
-  // allocate a tally area and clear it.  Could use narrower table perhaps
-  A ftbl; GATV0(ftbl,INT,p,1); I *ftblv=IAV(ftbl); memset(ftblv,0,p<<LGSZI);
-  // pass through the inputs, counting the negative of the number of slots mapped to each index
-  I valmsk=(UI)~0LL>>(((-k)&(SZI-1))<<LGBB);  // mask to leave the k lowest bytes valid
-  ftblv-=datamin;  // bias starting addr so that values hit the table
-  nfrets=nitems;  // initialize fret counter, decremented for each non-fret
-  av=IAV(a); DQ(nitems, I tval=ftblv[*av&valmsk]; ftblv[*av&valmsk]=tval-1; nfrets-=SGNTO0(tval); av=(I*)((I)av+k);)   // build (negative) frequency table; sub 1 for each non-fret
-
-  // pass through the inputs again.  If we encounter a negative value, allocate the next fret.  Copy the next item and advance
-  // that partition's fret pointer
-  // Now each item ftblv[av[i]] is either (1) nonnegative, which means that it is extending a previous key; or (2) negative, which
-  // means it starts a new partition whose length is -ftblv[av[i]].  Process the values in order, creating partitions as they come up, and
-  // moving the data for each input value in turn, reading in order and scatter-writing.
-
-  I i; I nextpartitionx;  // loop index, index of place to store next partition
-  I * RESTRICT wv=IAV(w);   // source pointer
-  C * RESTRICT wpermv=CAV(wperm);  // addr of output area
-  for(av=IAV(a), i=nitems, nextpartitionx=0;i;--i){
-   I partitionndx;  // index of where this output will go
-   I *slotaddr=&ftblv[*av&valmsk];  // the slot in the table we are processing
-   I avvalue=*slotaddr;  // fetch input value, mask to valid portion, fetch partition length/index
-   if(avvalue>=0){  // this value extends its partition
-    partitionndx=avvalue;  // index of current value in selected partition
-   }else{
-    // start of new partition.  Figure out the length; out new partition; replace length with starting pointer; Use length to advance partition pointer
-    avvalue= -avvalue;  // length of partition
-    if(avvalue<255)*fretp++ = (UC)avvalue; else{*fretp++ = 255; *(UI4*)fretp=(UI4)avvalue; fretp+=SZUI4;}
-    partitionndx=nextpartitionx;  // copy this item's data to the start of the partition
-    nextpartitionx+=avvalue;  // reserve output space for the partition
+   if(celllen>=0) {
+     av[avvalue]=(I)partitionptr+celllen;  // store updated end-of-partition after move
+     // copy the data to the end of its partition and advance the partition pointer
+     if(celllen<MEMCPYTUNELOOP) {  // copy by hand if that's faster (0 len OK)
+      I n=celllen; while((n-=SZI)>=0){*partitionptr++=*wv++;}
+        // move full words.  Must not overwrite the area, since we are scatter-writing.
+      if(n&(SZI-1)){STOREBYTES(partitionptr,*wv,-n); wv = (I*)((C*)wv+SZI+n);}  // Use test because this code is repeated
+     }else{MC(partitionptr,wv,celllen); wv = (I*)((C*)wv+celllen);}
+   }else{  // flag for (<./ i.@#)
+     *partitionptr=(I)wv;   // store wv itself, which is the index vector
+     wv=(I*)((I)wv+1);  // advance index vector
+     av[avvalue]=(I)partitionptr+SZI;  // store updated end-of-partition after move
    }
 
-   I *partitionptr=(I*)(wpermv+partitionndx*celllen);  // place to copy next input to
-   // copy the data to the end of its partition and advance the partition pointer
-   if(celllen<MEMCPYTUNELOOP) {  // copy by hand if that's faster (0 len OK)
-    I n=celllen; while((n-=SZI)>=0){*partitionptr++=*wv++;}
-      // move full words.  Must not overwrite the area, since we are scatter-writing.
-    if(n&(SZI-1)){STOREBYTES(partitionptr,*wv,-n); wv = (I*)((C*)wv+SZI+n);}  // Use test because this code is repeated
-   }else{MC(partitionptr,wv,celllen); wv = (I*)((C*)wv+celllen);}
+  }
+ }else{I *av;  // running pointer through the inputs
+  // indexofsub detected that small-range processing is in order.  Information about the range is secreted in fields of ai
+  ai=(A)((I)ai-1); I k=AN(ai); I datamin=AK(ai); I p=AM(ai);  // get size of an item, smallest item, range+1
+  // allocate a tally area and clear it.  Could use narrower table perhaps
+  A ftbl; GATV0(ftbl,INT,p,1); I *ftblv=IAV(ftbl);
+  // pass through the inputs, counting the number of slots mapped to each index
+  // This is tricky, because we want the slot to hold either the number of slots (i. e. size of box) or the next address to store into for the slot.
+  // But the address can be anything - ah, but not quite.  The address can't be inside an allocated block, for example it can't be inside a.
+  // So we initialize the table to the address of the start of the data of a, and any number in the range (a,AN(a)+a] will be known to hold a count, not a pointer
+  // NOTE that we know the items of a are not empty, so the prohibited address space is big enough
+  I freqminval=(I)voidAV(a)+1;  // values from here to here+nitems-1 are frequencies
+  {I mm=freqminval-1; mvc(p<<LGSZI,ftblv,SZI,&mm);}  // init table to '0' values
+  I valmsk=(UI)~0LL>>(((-k)&(SZI-1))<<LGBB);  // mask to leave the k lowest bytes valid
+  ftblv-=datamin;  // bias starting addr so that values hit the table
+  I nboxes=0;  // initialize fret counter, incremented for each fret
+  av=IAV(a); DQ(nitems, I tval=ftblv[*av&valmsk]; ftblv[*av&valmsk]=++tval; nboxes+=tval==freqminval; av=(I*)((I)av+k);)   // build (negative) frequency table; sub 1 for each non-fret
+  // allocate the result, which will be recursive, and set up to fill it with blocks off the tstack
+  GATV0(z,BOX,nboxes,1); if(nboxes==0)RETF(z); // allocate result, and exit if empty for comp ease below
+  // boxes will be in AAV(z), in order.  Details discussed in jtbox().  Because we have to EPILOG the result, it will be ra'd there along with its descendants.  We set usecount to 0 until the EPILOG
+  pushxsave = jt->tnextpushp; jt->tnextpushp=AAV(z);  // save tstack info before allocation
+  // **** MUST NOT FAIL FROM HERE UNTIL THE END, WHERE THE ALLOCATION SYSTEM CAN BE RESTORED ****
+  // pass through the inputs again.  If we encounter a frequency value, allocate the next box.  Copy the next item and advance
+  // that partition's pointer
 
-   *slotaddr=partitionndx+1;  // store updated next-in-partition after move
+  I i; // loop index
+  I * RESTRICT wv=IAV(w);   // source pointer
+  for(av=IAV(a), i=nitems;i;--i){
+   I *partitionptr;  // recipient of next cell
+   I *slotaddr=&ftblv[*av&valmsk];  // the slot in the table we are processing
+   I avvalue=*slotaddr;  // fetch partition length/pointer
+   if((UI)(avvalue-freqminval)>=(UI)nitems){  // this value extends its partition
+    partitionptr=(I*)avvalue;  // load into the address in the slot
+   }else{
+    // start of new partition.  Figure out the length; out new partition; replace length with starting pointer; Use length to advance partition pointer
+    avvalue=avvalue-freqminval+1;  // length of partition
+    GAE(y,AT(w),cellatoms*avvalue,MAX(AR(w),1),AS(w),break); AC(y)=0; AS(y)[0]=avvalue; // allocate a region for the boxed data and set usecount to 0 since it is not on the tstack.  EPILOG will raise it to 1
+    partitionptr=(I*)IAV(y);  // start the data for the partition at the beginning of the allocated box's data
+   }
+
+   // copy the data to the end of its partition and advance the partition pointer
+   if(celllen>=0) {
+     *slotaddr=(I)partitionptr+celllen;  // store updated end-of-partition after move
+     // copy the data to the end of its partition and advance the partition pointer
+     if(celllen<MEMCPYTUNELOOP) {  // copy by hand if that's faster (0 len OK)
+      I n=celllen; while((n-=SZI)>=0){*partitionptr++=*wv++;}
+        // move full words.  Must not overwrite the area, since we are scatter-writing.
+      if(n&(SZI-1)){STOREBYTES(partitionptr,*wv,-n); wv = (I*)((C*)wv+SZI+n);}  // Use test because this code is repeated
+     }else{MC(partitionptr,wv,celllen); wv = (I*)((C*)wv+celllen);}
+   }else{  // flag for (<./ i.@#)
+     *slotaddr=(I)partitionptr+SZI;  // store updated end-of-partition after move
+     *partitionptr=(I)wv;   // store wv itself, which is the index vector
+     wv=(I*)((I)wv+1);  // advance index vector
+   }
+
    av=(I*)((I)av+k);  // advance to next input value
   }
  }
-
+ // restore the allocation system
+ jt->tnextpushp=pushxsave;   // restore tstack pointer
+ if(!y){AFLAG(z)=BOX; ASSERT(0,EVWSFULL);}  // if we broke out on allocation failure, fail.  Mark z recursive so when it is freed so will its contents be
  POPCCT
  EPILOG(z);
-}    /* a f/. w for dense x & w */
-#endif
+}    // a <./ w
 
+// indexed by [chartype][k]
+const UI4 shortrange[3][4] = {{0,65536,65536,0}, {0,2,258,0}, {0,256,65536,0}};  // C2T, B01, LIT
 
 
 #if 0  // obsolete 
@@ -792,15 +823,12 @@ static DF2(jtkeymean){PROLOG(0013);A p,q,x,z;D d,*qv,*vv,*zv;I at,*av,c,j,m=0,n,
  if(wt&FL)NAN1;
  EPILOG(z);
 }    /* x (+/%#)/.y */
-#endif
 
 
 #define GRPCD(T)            {T*v=(T*)wv; DO(n, j=*v++; if(0<=dv[j])++cv[j]; else{dv[j]=i; cv[j]=1; ++zn;});}
 #define GRPIX(T,asgn,j,k)   {T*v=(T*)wv; DO(n, j=asgn; if(m>=j)*cu[k]++=i; \
                                  else{GATV0(x,INT,cv[k],1); *zv++=x; u=AV(x); *u++=m=j; cu[k]=u;})}
 
-// indexed by [chartype][k]
-const UI4 shortrange[3][4] = {{0,65536,65536,0}, {0,2,258,0}, {0,256,65536,0}};  // C2T, B01, LIT
 
 F1(jtgroup){PROLOG(0014);A c,d,x,z,*zv;I**cu,*cv,*dv,j,k,m,n,t,*u,*v,*wv,zn=0;CR rng;
  RZ(w);
@@ -843,6 +871,7 @@ F1(jtgroup){PROLOG(0014);A c,d,x,z,*zv;I**cu,*cv,*dv,j,k,m,n,t,*u,*v,*wv,zn=0;CR
  EPILOG(z);
 }    /* (</. i.@#) w */
 
+#endif
 
 static DF2(jtkeytally);
 
@@ -1239,7 +1268,8 @@ F1(jtsldot){A h=0;AF f1=jtoblique,f2;C c,d,e;I flag=0;V*v;
      flag += (((((2<<VFKEYSLASHFX)+((FL+B01)<<VFKEYSLASHTX))<<16) + (((1<<VFKEYSLASHFX)+((FL+INT+B01)<<VFKEYSLASHTX))<<8) + ((0<<VFKEYSLASHFX)+((FL+INT+B01)<<VFKEYSLASHTX))) >> (op<<3)) & (VFKEYSLASHT+VFKEYSLASHF);   // get flag bits
     }
 
-   } break; 
+   } break;
+  case CBOX: f2=jtkeybox; break;  // </.
   case CFORK:  if(v->valencefns[0]==(AF)jtmean){/* obsolete f2=jtkeymean*/flag+=(3<<VFKEYSLASHFX)+((FL+INT+B01)<<VFKEYSLASHTX);  // (+/%#)/., treated as f//.
                }else{c=ID(v->fgh[0]); d=ID(v->fgh[1]); e=ID(v->fgh[2]); 
                 if(((c^e)==(CHEAD^CPOUND))&&d==CCOMMA&&(c==CHEAD||c==CPOUND)){f2=jtkeyheadtally; break;}

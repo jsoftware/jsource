@@ -380,6 +380,27 @@ NB. Type of empty result
 1 -: 3!:0 ] 5 0:\ 'abc'
 2 -: 3!:0 ] 5 ]\ 'abc'
 
+NB. x </. y
+NB. Tested as part of ob above
+NB. Check for memory loss
+a =: 7!:0''
+b =: 7!:0''
+a =: 7!:0 ''
+1: a. </. i. 256
+b =: 7!:0''
+b <: 512 + a  NB. Don't know where the 256 goes on assignment
+1: </.~ i. 256
+b =: 7!:0''
+b <: 512 + a
+c =: a. </. i. 256
+4!:55<'c'
+b =: 7!:0''
+b <: 512 + a
+c =: </.~ i. 256
+4!:55<'c'
+b =: 7!:0''
+b <: 512 + a
+
 4!:55 ;:'a adot1 adot2 sdot0 base bs bsd conv conv1 em en eq iind infix k '
 4!:55 ;:'kay key key0 n ob oind omask osub outfix pconv pconv1 prefix pru x yx yy'
 4!:55 ;:'s sd seg suffix t test xx ' 

@@ -42,8 +42,9 @@
 #define CS2(f,exp,x)      DF2(f){PROLOG(x);DECLFG;A z; PREF2(f); z=(exp); EPILOG(z);}
 // implied rank loops.  If the arg has frame, loop over the cells.  f##cell operates on a single cell with no rank check
 // inplaceability is passed through
-#define CS1IP(class,f,exp,x) static DF1(f##cell){F1PREFIP;DECLFG;A z;PROLOG(x); exp; EPILOG(z);} class DF1(f){PREF1(f##cell); R f##cell(jt,w,self);}
-#define CS2IP(cellclass, class,f,exp,x) cellclass DF2(f##cell){F2PREFIP;DECLFG;A z;PROLOG(x); exp; EPILOG(z);} class DF2(f){PREF2(f##cell); R f##cell(jt,a,w,self);}
+#define CS1IP(lpclass,f,exp,x) CS1IPext(lpclass,static,f,exp,x)
+#define CS1IPext(lpclass,cellclass,f,exp,x) cellclass DF1(f##cell){F1PREFIP;DECLFG;A z;PROLOG(x); exp; EPILOG(z);} lpclass DF1(f){PREF1(f##cell); R f##cell(jt,w,self);}
+#define CS2IP(cellclass,class,f,exp,x) cellclass DF2(f##cell){F2PREFIP;DECLFG;A z;PROLOG(x); exp; EPILOG(z);} class DF2(f){PREF2(f##cell); R f##cell(jt,a,w,self);}
 
 
 

@@ -20,6 +20,7 @@
 //   Sebastian Pop <spop@amazon.com>
 //   Developer Ecosystem Engineering <DeveloperEcosystemEngineering@apple.com>
 //   Danila Kutenin <danilak@google.com>
+//   François Turban (JishinMaster) <francois.turban@gmail.com>
 
 /*
  * sse2neon is freely redistributable under the MIT License.
@@ -61,6 +62,27 @@
 
 #include <stdint.h>
 #include <stdlib.h>
+
+/* Architecture-specific build options */
+/* FIXME: #pragma GCC push_options is only available on GCC */
+#if defined(__GNUC__)
+#if defined(__arm__) && __ARM_ARCH == 7
+/* According to ARM C Language Extensions Architecture specification,
+ * __ARM_NEON is defined to a value indicating the Advanced SIMD (NEON)
+ * architecture supported.
+ */
+#if !defined(__ARM_NEON) || !defined(__ARM_NEON__)
+#error "You must enable NEON instructions (e.g. -mfpu=neon) to use SSE2NEON."
+#endif
+#pragma GCC push_options
+#pragma GCC target("fpu=neon")
+#elif defined(__aarch64__)
+#pragma GCC push_options
+#pragma GCC target("+simd")
+#else
+#error "Unsupported target. Must be either ARMv7-A+NEON or ARMv8-A."
+#endif
+#endif
 
 #include <arm_neon.h>
 
@@ -180,6 +202,11 @@ typedef int64x2_t __m128i; /* 128-bit vector containing integers */
 #define vreinterpret_s16_m64i(x) vreinterpret_s16_s64(x)
 #define vreinterpret_s32_m64i(x) vreinterpret_s32_s64(x)
 #define vreinterpret_s64_m64i(x) (x)
+
+#if defined(__aarch64__)
+#define vreinterpretq_m128d_s64(x) vreinterpretq_f64_s64(x)
+#define vreinterpretq_s64_m128d(x) vreinterpretq_s64_f64(x)
+#endif
 
 // A struct is defined in this header file called 'SIMDVec' which can be used
 // by applications which attempt to access the contents of an _m128 struct
@@ -567,6 +594,14 @@ FORCE_INLINE __m128i _mm_set_epi64x(int64_t i1, int64_t i2)
     return vreinterpretq_m128i_s64(vld1q_s64(data));
 }
 
+// Returns the __m128i structure with its two 64-bit integer values
+// initialized to the values of the two 64-bit integers passed in.
+// https://msdn.microsoft.com/en-us/library/dk2sdw0h(v=vs.120).aspx
+FORCE_INLINE __m128i _mm_set_epi64(__m64 i1, __m64 i2)
+{
+    return _mm_set_epi64x((int64_t) i1, (int64_t) i2);
+}
+
 // Stores four single-precision, floating-point values.
 // https://msdn.microsoft.com/en-us/library/vstudio/s3h4ay6y(v=vs.100).aspx
 FORCE_INLINE void _mm_store_ps(float *p, __m128 a)
@@ -601,6 +636,26 @@ FORCE_INLINE void _mm_store_ss(float *p, __m128 a)
 {
     vst1q_lane_f32(p, vreinterpretq_f32_m128(a), 0);
 }
+
+/* FIXME: Add A32 implementation */
+#if defined(__aarch64__)
+// Stores two double-precision to 16-byte aligned memory, floating-point values.
+// https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=store_pd&expand=2549,223,3320,3398,5642,5581
+FORCE_INLINE void _mm_store_pd(double *p, __m128d a)
+{
+    vst1q_f64(p, (__m128d)(a));
+}
+#endif
+
+/* FIXME: Add A32 implementation */
+// Stores two double-precision to unaligned memory, floating-point values.
+// https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=storeu_pd&expand=2549,223,3320,3398,5642
+#if defined(__aarch64__)
+FORCE_INLINE void _mm_storeu_pd(double *p, __m128d a)
+{
+    vst1q_f64(p, (__m128d)(a));
+}
+#endif
 
 // Reads the lower 64 bits of b and stores them into the lower 64 bits of a.
 // https://msdn.microsoft.com/en-us/library/hhwf428f%28v=vs.90%29.aspx
@@ -705,6 +760,31 @@ FORCE_INLINE __m128d _mm_load_sd(const double *p)
     const float *fp = (const float *) p;
     float ALIGN_STRUCT(16) data[4] = {fp[0], fp[1], 0, 0};
     return vld1q_f32(data);
+#endif
+}
+
+// Loads two double-precision from 16-byte aligned memory, floating-point
+// values.
+// https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=load_pd&expand=2549,223,3320
+FORCE_INLINE __m128d _mm_load_pd(const double *p)
+{
+#if defined(__aarch64__)
+    return (__m128d)(vld1q_f64(p));
+#else
+    const float *fp = (const float *) p;
+    float ALIGN_STRUCT(16) data[4] = {fp[0], fp[1], fp[2], fp[3]};
+    return vld1q_f32(data);
+#endif
+}
+
+// Loads two double-precision from unaligned memory, floating-point values.
+// https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=loadu_pd&expand=2549,223,3320,3398
+FORCE_INLINE __m128d _mm_loadu_pd(const double *p)
+{
+#if defined(__aarch64__)
+    return (__m128d)(vld1q_f64(p));
+#else
+    return _mm_load_pd(p);
 #endif
 }
 
@@ -1007,20 +1087,17 @@ FORCE_INLINE __m128 _mm_shuffle_ps_2032(__m128 a, __m128 b)
 // NEON does not support a general purpose permute intrinsic
 // Selects four specific single-precision, floating-point values from a and b,
 // based on the mask i.
+//
+// C equivalent:
+//   __m128 _mm_shuffle_ps_default(__m128 a, __m128 b,
+//                                 __constrange(0, 255) int imm) {
+//       __m128 ret;
+//       ret[0] = a[imm        & 0x3];   ret[1] = a[(imm >> 2) & 0x3];
+//       ret[2] = b[(imm >> 4) & 0x03];  ret[3] = b[(imm >> 6) & 0x03];
+//       return ret;
+//   }
+//
 // https://msdn.microsoft.com/en-us/library/vstudio/5f0858x0(v=vs.100).aspx
-#if 0 /* C version */
-FORCE_INLINE __m128 _mm_shuffle_ps_default(__m128 a,
-                                           __m128 b,
-                                           __constrange(0, 255) int imm)
-{
-    __m128 ret;
-    ret[0] = a[imm & 0x3];
-    ret[1] = a[(imm >> 2) & 0x3];
-    ret[2] = b[(imm >> 4) & 0x03];
-    ret[3] = b[(imm >> 6) & 0x03];
-    return ret;
-}
-#endif
 #define _mm_shuffle_ps_default(a, b, imm)                                  \
     __extension__({                                                        \
         float32x4_t ret;                                                   \
@@ -1211,9 +1288,9 @@ FORCE_INLINE __m128i _mm_shuffle_epi8(__m128i a, __m128i b)
     int8x16_t ret;
     // %e and %f represent the even and odd D registers
     // respectively.
-    __asm__(
-        "    vtbl.8  %e[ret], {%e[tbl], %f[tbl]}, %e[idx]\n"
-        "    vtbl.8  %f[ret], {%e[tbl], %f[tbl]}, %f[idx]\n"
+    __asm__ __volatile__(
+        "vtbl.8  %e[ret], {%e[tbl], %f[tbl]}, %e[idx]\n"
+        "vtbl.8  %f[ret], {%e[tbl], %f[tbl]}, %f[idx]\n"
         : [ret] "=&w"(ret)
         : [tbl] "w"(tbl), [idx] "w"(idx_masked));
     return vreinterpretq_m128i_s8(ret);
@@ -1226,18 +1303,14 @@ FORCE_INLINE __m128i _mm_shuffle_epi8(__m128i a, __m128i b)
 #endif
 }
 
-#if 0 /* C version */
-FORCE_INLINE __m128i _mm_shuffle_epi32_default(__m128i a,
-                                               __constrange(0, 255) int imm)
-{
-    __m128i ret;
-    ret[0] = a[imm & 0x3];
-    ret[1] = a[(imm >> 2) & 0x3];
-    ret[2] = a[(imm >> 4) & 0x03];
-    ret[3] = a[(imm >> 6) & 0x03];
-    return ret;
-}
-#endif
+// C equivalent:
+//   __m128i _mm_shuffle_epi32_default(__m128i a,
+//                                     __constrange(0, 255) int imm) {
+//       __m128i ret;
+//       ret[0] = a[imm        & 0x3];   ret[1] = a[(imm >> 2) & 0x3];
+//       ret[2] = a[(imm >> 4) & 0x03];  ret[3] = a[(imm >> 6) & 0x03];
+//       return ret;
+//   }
 #define _mm_shuffle_epi32_default(a, imm)                                   \
     __extension__({                                                         \
         int32x4_t ret;                                                      \
@@ -2389,6 +2462,33 @@ FORCE_INLINE __m128i _mm_maddubs_epi16(__m128i _a, __m128i _b)
     return vreinterpretq_m128i_s16(vqaddq_s16(prod1, prod2));
 }
 
+// Computes the fused multiple add product of 32-bit floating point numbers.
+//
+// Return Value
+// Multiplies A and B, and adds C to the temporary result before returning it.
+// https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=_mm_fmadd&expand=2549
+FORCE_INLINE __m128 _mm_fmadd_ps(__m128 a, __m128 b, __m128 c)
+{
+#if defined(__aarch64__)
+    return vreinterpretq_m128_f32(vfmaq_f32(vreinterpretq_f32_m128(c),
+                                            vreinterpretq_f32_m128(b),
+                                            vreinterpretq_f32_m128(a)));
+#else
+    return _mm_add_ps(_mm_mul_ps(a, b), c);
+#endif
+}
+
+// Alternatively add and subtract packed single-precision (32-bit)
+// floating-point elements in a to/from packed elements in b, and store the
+// results in dst.
+//
+// https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=addsub_ps&expand=2549,223
+FORCE_INLINE __m128 _mm_addsub_ps(__m128 a, __m128 b)
+{
+    __m128 mask = {-1.0f, 1.0f, -1.0f, 1.0f};
+    return _mm_fmadd_ps(b, mask, a);
+}
+
 // Computes the absolute difference of the 16 unsigned 8-bit integers from a
 // and the 16 unsigned 8-bit integers from b.
 //
@@ -2462,10 +2562,14 @@ FORCE_INLINE __m128 _mm_rcp_ps(__m128 in)
 // https://msdn.microsoft.com/en-us/library/vstudio/8z67bwwk(v=vs.100).aspx
 FORCE_INLINE __m128 _mm_sqrt_ps(__m128 in)
 {
+#if defined(__aarch64__)
+    return vreinterpretq_m128_f32(vsqrtq_f32(vreinterpretq_f32_m128(in)));
+#else
     float32x4_t recipsq = vrsqrteq_f32(vreinterpretq_f32_m128(in));
     float32x4_t sq = vrecpeq_f32(recipsq);
     // ??? use step versions of both sqrt and recip for better accuracy?
     return vreinterpretq_m128_f32(sq);
+#endif
 }
 
 // Computes the approximation of the square root of the scalar single-precision
@@ -2485,6 +2589,16 @@ FORCE_INLINE __m128 _mm_sqrt_ss(__m128 in)
 FORCE_INLINE __m128 _mm_rsqrt_ps(__m128 in)
 {
     return vreinterpretq_m128_f32(vrsqrteq_f32(vreinterpretq_f32_m128(in)));
+}
+
+// Compute the approximate reciprocal square root of the lower single-precision
+// (32-bit) floating-point element in a, store the result in the lower element
+// of dst, and copy the upper 3 packed elements from a to the upper elements of
+// dst.
+// https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=_mm_rsqrt_ss
+FORCE_INLINE __m128 _mm_rsqrt_ss(__m128 in)
+{
+    return vsetq_lane_f32(vgetq_lane_f32(_mm_rsqrt_ps(in), 0), in, 0);
 }
 
 // Computes the maximums of the four single-precision, floating-point values of
@@ -2594,6 +2708,24 @@ FORCE_INLINE __m128i _mm_min_epi32(__m128i a, __m128i b)
 {
     return vreinterpretq_m128i_s32(
         vminq_s32(vreinterpretq_s32_m128i(a), vreinterpretq_s32_m128i(b)));
+}
+
+// Compare packed unsigned 32-bit integers in a and b, and store packed maximum
+// values in dst.
+// https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=_mm_max_epu32
+FORCE_INLINE __m128i _mm_max_epu32(__m128i a, __m128i b)
+{
+    return vreinterpretq_m128i_u32(
+        vmaxq_u32(vreinterpretq_u32_m128i(a), vreinterpretq_u32_m128i(b)));
+}
+
+// Compare packed unsigned 32-bit integers in a and b, and store packed minimum
+// values in dst.
+// https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=_mm_max_epu32
+FORCE_INLINE __m128i _mm_min_epu32(__m128i a, __m128i b)
+{
+    return vreinterpretq_m128i_u32(
+        vminq_u32(vreinterpretq_u32_m128i(a), vreinterpretq_u32_m128i(b)));
 }
 
 // Multiplies the 8 signed 16-bit integers from a by the 8 signed 16-bit
@@ -3296,6 +3428,31 @@ FORCE_INLINE __m128i _mm_loadu_si128(const __m128i *p)
     return vreinterpretq_m128i_s32(vld1q_s32((const int32_t *) p));
 }
 
+/* FIXME: Add A32 implementation */
+#if defined(__aarch64__)
+FORCE_INLINE __m128 _mm_cvtpd_ps(__m128d a)
+{
+    __m64 tmp = vcvtx_f32_f64((float64x2_t) a);
+    return (__m128) _mm_set_epi64(tmp, tmp);
+}
+#endif
+
+/* FIXME: Add A32 implementation */
+#if defined(__aarch64__)
+FORCE_INLINE __m128d _mm_cvtps_pd(__m128 a)
+{
+    return (__m128d) vcvt_high_f64_f32((float32x4_t) a);
+}
+#endif
+
+/* FIXME: Add A32 implementation */
+#if defined(__aarch64__)
+FORCE_INLINE __m128i _mm_castpd_si128(__m128d a)
+{
+    return vreinterpretq_m128i_s64(vreinterpretq_s64_m128d(a));
+}
+#endif
+
 // _mm_lddqu_si128 functions the same as _mm_loadu_si128.
 #define _mm_lddqu_si128 _mm_loadu_si128
 
@@ -3669,6 +3826,18 @@ FORCE_INLINE __m128i _mm_minpos_epu16(__m128i a)
 #define _mm_alignr_epi8(a, b, c) \
     ((__m128i) vextq_s8((int8x16_t)(b), (int8x16_t)(a), (c)))
 
+// Compute the bitwise AND of 128 bits (representing integer data) in a and b,
+// and set ZF to 1 if the result is zero, otherwise set ZF to 0. Compute the
+// itwise NOT of a and then AND with b, and set CF to 1 if the result is zero,
+// otherwise set CF to 0. Return the ZF value.
+// https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=_mm_testz_si128
+FORCE_INLINE int _mm_testz_si128(__m128i a, __m128i b)
+{
+    int64x2_t s64 =
+        vandq_s64(vreinterpretq_s64_m128i(a), vreinterpretq_s64_m128i(b));
+    return !(vgetq_lane_s64(s64, 0) | vgetq_lane_s64(s64, 1));
+}
+
 // Extracts the selected signed or unsigned 8-bit integer from a and zero
 // extends.
 // FORCE_INLINE int _mm_extract_epi8(__m128i a, __constrange(0,16) int imm)
@@ -3949,7 +4118,50 @@ FORCE_INLINE __m128i _mm_clmulepi64_si128(__m128i _a, __m128i _b, const int imm)
     }
 }
 
-#if !defined(__ARM_FEATURE_CRYPTO) && defined(__aarch64__)
+#if !defined(__ARM_FEATURE_CRYPTO)
+/* clang-format off */
+#define SSE2NEON_AES_DATA(w)                                           \
+    {                                                                  \
+        w(0x63), w(0x7c), w(0x77), w(0x7b), w(0xf2), w(0x6b), w(0x6f), \
+        w(0xc5), w(0x30), w(0x01), w(0x67), w(0x2b), w(0xfe), w(0xd7), \
+        w(0xab), w(0x76), w(0xca), w(0x82), w(0xc9), w(0x7d), w(0xfa), \
+        w(0x59), w(0x47), w(0xf0), w(0xad), w(0xd4), w(0xa2), w(0xaf), \
+        w(0x9c), w(0xa4), w(0x72), w(0xc0), w(0xb7), w(0xfd), w(0x93), \
+        w(0x26), w(0x36), w(0x3f), w(0xf7), w(0xcc), w(0x34), w(0xa5), \
+        w(0xe5), w(0xf1), w(0x71), w(0xd8), w(0x31), w(0x15), w(0x04), \
+        w(0xc7), w(0x23), w(0xc3), w(0x18), w(0x96), w(0x05), w(0x9a), \
+        w(0x07), w(0x12), w(0x80), w(0xe2), w(0xeb), w(0x27), w(0xb2), \
+        w(0x75), w(0x09), w(0x83), w(0x2c), w(0x1a), w(0x1b), w(0x6e), \
+        w(0x5a), w(0xa0), w(0x52), w(0x3b), w(0xd6), w(0xb3), w(0x29), \
+        w(0xe3), w(0x2f), w(0x84), w(0x53), w(0xd1), w(0x00), w(0xed), \
+        w(0x20), w(0xfc), w(0xb1), w(0x5b), w(0x6a), w(0xcb), w(0xbe), \
+        w(0x39), w(0x4a), w(0x4c), w(0x58), w(0xcf), w(0xd0), w(0xef), \
+        w(0xaa), w(0xfb), w(0x43), w(0x4d), w(0x33), w(0x85), w(0x45), \
+        w(0xf9), w(0x02), w(0x7f), w(0x50), w(0x3c), w(0x9f), w(0xa8), \
+        w(0x51), w(0xa3), w(0x40), w(0x8f), w(0x92), w(0x9d), w(0x38), \
+        w(0xf5), w(0xbc), w(0xb6), w(0xda), w(0x21), w(0x10), w(0xff), \
+        w(0xf3), w(0xd2), w(0xcd), w(0x0c), w(0x13), w(0xec), w(0x5f), \
+        w(0x97), w(0x44), w(0x17), w(0xc4), w(0xa7), w(0x7e), w(0x3d), \
+        w(0x64), w(0x5d), w(0x19), w(0x73), w(0x60), w(0x81), w(0x4f), \
+        w(0xdc), w(0x22), w(0x2a), w(0x90), w(0x88), w(0x46), w(0xee), \
+        w(0xb8), w(0x14), w(0xde), w(0x5e), w(0x0b), w(0xdb), w(0xe0), \
+        w(0x32), w(0x3a), w(0x0a), w(0x49), w(0x06), w(0x24), w(0x5c), \
+        w(0xc2), w(0xd3), w(0xac), w(0x62), w(0x91), w(0x95), w(0xe4), \
+        w(0x79), w(0xe7), w(0xc8), w(0x37), w(0x6d), w(0x8d), w(0xd5), \
+        w(0x4e), w(0xa9), w(0x6c), w(0x56), w(0xf4), w(0xea), w(0x65), \
+        w(0x7a), w(0xae), w(0x08), w(0xba), w(0x78), w(0x25), w(0x2e), \
+        w(0x1c), w(0xa6), w(0xb4), w(0xc6), w(0xe8), w(0xdd), w(0x74), \
+        w(0x1f), w(0x4b), w(0xbd), w(0x8b), w(0x8a), w(0x70), w(0x3e), \
+        w(0xb5), w(0x66), w(0x48), w(0x03), w(0xf6), w(0x0e), w(0x61), \
+        w(0x35), w(0x57), w(0xb9), w(0x86), w(0xc1), w(0x1d), w(0x9e), \
+        w(0xe1), w(0xf8), w(0x98), w(0x11), w(0x69), w(0xd9), w(0x8e), \
+        w(0x94), w(0x9b), w(0x1e), w(0x87), w(0xe9), w(0xce), w(0x55), \
+        w(0x28), w(0xdf), w(0x8c), w(0xa1), w(0x89), w(0x0d), w(0xbf), \
+        w(0xe6), w(0x42), w(0x68), w(0x41), w(0x99), w(0x2d), w(0x0f), \
+        w(0xb0), w(0x54), w(0xbb), w(0x16)                             \
+    }
+/* clang-format on */
+
 // In the absence of crypto extensions, implement aesenc using regular neon
 // intrinsics instead. See:
 // https://www.workofard.com/2017/01/accelerated-aes-for-the-arm64-linux-kernel/
@@ -3958,29 +4170,12 @@ FORCE_INLINE __m128i _mm_clmulepi64_si128(__m128i _a, __m128i _b, const int imm)
 // for more information Reproduced with permission of the author.
 FORCE_INLINE __m128i _mm_aesenc_si128(__m128i EncBlock, __m128i RoundKey)
 {
-    static const uint8_t crypto_aes_sbox[256] = {
-        0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b,
-        0xfe, 0xd7, 0xab, 0x76, 0xca, 0x82, 0xc9, 0x7d, 0xfa, 0x59, 0x47, 0xf0,
-        0xad, 0xd4, 0xa2, 0xaf, 0x9c, 0xa4, 0x72, 0xc0, 0xb7, 0xfd, 0x93, 0x26,
-        0x36, 0x3f, 0xf7, 0xcc, 0x34, 0xa5, 0xe5, 0xf1, 0x71, 0xd8, 0x31, 0x15,
-        0x04, 0xc7, 0x23, 0xc3, 0x18, 0x96, 0x05, 0x9a, 0x07, 0x12, 0x80, 0xe2,
-        0xeb, 0x27, 0xb2, 0x75, 0x09, 0x83, 0x2c, 0x1a, 0x1b, 0x6e, 0x5a, 0xa0,
-        0x52, 0x3b, 0xd6, 0xb3, 0x29, 0xe3, 0x2f, 0x84, 0x53, 0xd1, 0x00, 0xed,
-        0x20, 0xfc, 0xb1, 0x5b, 0x6a, 0xcb, 0xbe, 0x39, 0x4a, 0x4c, 0x58, 0xcf,
-        0xd0, 0xef, 0xaa, 0xfb, 0x43, 0x4d, 0x33, 0x85, 0x45, 0xf9, 0x02, 0x7f,
-        0x50, 0x3c, 0x9f, 0xa8, 0x51, 0xa3, 0x40, 0x8f, 0x92, 0x9d, 0x38, 0xf5,
-        0xbc, 0xb6, 0xda, 0x21, 0x10, 0xff, 0xf3, 0xd2, 0xcd, 0x0c, 0x13, 0xec,
-        0x5f, 0x97, 0x44, 0x17, 0xc4, 0xa7, 0x7e, 0x3d, 0x64, 0x5d, 0x19, 0x73,
-        0x60, 0x81, 0x4f, 0xdc, 0x22, 0x2a, 0x90, 0x88, 0x46, 0xee, 0xb8, 0x14,
-        0xde, 0x5e, 0x0b, 0xdb, 0xe0, 0x32, 0x3a, 0x0a, 0x49, 0x06, 0x24, 0x5c,
-        0xc2, 0xd3, 0xac, 0x62, 0x91, 0x95, 0xe4, 0x79, 0xe7, 0xc8, 0x37, 0x6d,
-        0x8d, 0xd5, 0x4e, 0xa9, 0x6c, 0x56, 0xf4, 0xea, 0x65, 0x7a, 0xae, 0x08,
-        0xba, 0x78, 0x25, 0x2e, 0x1c, 0xa6, 0xb4, 0xc6, 0xe8, 0xdd, 0x74, 0x1f,
-        0x4b, 0xbd, 0x8b, 0x8a, 0x70, 0x3e, 0xb5, 0x66, 0x48, 0x03, 0xf6, 0x0e,
-        0x61, 0x35, 0x57, 0xb9, 0x86, 0xc1, 0x1d, 0x9e, 0xe1, 0xf8, 0x98, 0x11,
-        0x69, 0xd9, 0x8e, 0x94, 0x9b, 0x1e, 0x87, 0xe9, 0xce, 0x55, 0x28, 0xdf,
-        0x8c, 0xa1, 0x89, 0x0d, 0xbf, 0xe6, 0x42, 0x68, 0x41, 0x99, 0x2d, 0x0f,
-        0xb0, 0x54, 0xbb, 0x16};
+#if defined(__aarch64__)
+/* X Macro trick. See https://en.wikipedia.org/wiki/X_Macro */
+#define SSE2NEON_AES_H0(x) (x)
+    static const uint8_t crypto_aes_sbox[256] =
+        SSE2NEON_AES_DATA(SSE2NEON_AES_H0);
+#undef SSE2NEON_AES_H0
     static const uint8_t shift_rows[] = {0x0, 0x5, 0xa, 0xf, 0x4, 0x9,
                                          0xe, 0x3, 0x8, 0xd, 0x2, 0x7,
                                          0xc, 0x1, 0x6, 0xb};
@@ -4006,19 +4201,101 @@ FORCE_INLINE __m128i _mm_aesenc_si128(__m128i EncBlock, __m128i RoundKey)
 
     //  add round key
     return vreinterpretq_m128i_u8(w) ^ RoundKey;
+
+#else /* ARMv7-A NEON implementation */
+#define SSE2NEON_AES_B2W(b0, b1, b2, b3)                                       \
+    (((uint32_t)(b3) << 24) | ((uint32_t)(b2) << 16) | ((uint32_t)(b1) << 8) | \
+     (b0))
+#define SSE2NEON_AES_F2(x) ((x << 1) ^ (((x >> 7) & 1) * 0x011b /* WPOLY */))
+#define SSE2NEON_AES_F3(x) (SSE2NEON_AES_F2(x) ^ x)
+#define SSE2NEON_AES_U0(p) \
+    SSE2NEON_AES_B2W(SSE2NEON_AES_F2(p), p, p, SSE2NEON_AES_F3(p))
+#define SSE2NEON_AES_U1(p) \
+    SSE2NEON_AES_B2W(SSE2NEON_AES_F3(p), SSE2NEON_AES_F2(p), p, p)
+#define SSE2NEON_AES_U2(p) \
+    SSE2NEON_AES_B2W(p, SSE2NEON_AES_F3(p), SSE2NEON_AES_F2(p), p)
+#define SSE2NEON_AES_U3(p) \
+    SSE2NEON_AES_B2W(p, p, SSE2NEON_AES_F3(p), SSE2NEON_AES_F2(p))
+    static const uint32_t ALIGN_STRUCT(16) aes_table[4][256] = {
+        SSE2NEON_AES_DATA(SSE2NEON_AES_U0),
+        SSE2NEON_AES_DATA(SSE2NEON_AES_U1),
+        SSE2NEON_AES_DATA(SSE2NEON_AES_U2),
+        SSE2NEON_AES_DATA(SSE2NEON_AES_U3),
+    };
+#undef SSE2NEON_AES_B2W
+#undef SSE2NEON_AES_F2
+#undef SSE2NEON_AES_F3
+#undef SSE2NEON_AES_U0
+#undef SSE2NEON_AES_U1
+#undef SSE2NEON_AES_U2
+#undef SSE2NEON_AES_U3
+
+    uint32_t x0 = _mm_cvtsi128_si32(EncBlock);
+    uint32_t x1 = _mm_cvtsi128_si32(_mm_shuffle_epi32(EncBlock, 0x55));
+    uint32_t x2 = _mm_cvtsi128_si32(_mm_shuffle_epi32(EncBlock, 0xAA));
+    uint32_t x3 = _mm_cvtsi128_si32(_mm_shuffle_epi32(EncBlock, 0xFF));
+
+    __m128i out = _mm_set_epi32(
+        (aes_table[0][x3 & 0xff] ^ aes_table[1][(x0 >> 8) & 0xff] ^
+         aes_table[2][(x1 >> 16) & 0xff] ^ aes_table[3][x2 >> 24]),
+        (aes_table[0][x2 & 0xff] ^ aes_table[1][(x3 >> 8) & 0xff] ^
+         aes_table[2][(x0 >> 16) & 0xff] ^ aes_table[3][x1 >> 24]),
+        (aes_table[0][x1 & 0xff] ^ aes_table[1][(x2 >> 8) & 0xff] ^
+         aes_table[2][(x3 >> 16) & 0xff] ^ aes_table[3][x0 >> 24]),
+        (aes_table[0][x0 & 0xff] ^ aes_table[1][(x1 >> 8) & 0xff] ^
+         aes_table[2][(x2 >> 16) & 0xff] ^ aes_table[3][x3 >> 24]));
+
+    return _mm_xor_si128(out, RoundKey);
+#endif
 }
-#elif defined(__ARM_FEATURE_CRYPTO)
+
+// Emits the Advanced Encryption Standard (AES) instruction aeskeygenassist.
+// This instruction generates a round key for AES encryption. See
+// https://kazakov.life/2017/11/01/cryptocurrency-mining-on-ios-devices/
+// for details.
+//
+// https://msdn.microsoft.com/en-us/library/cc714138(v=vs.120).aspx
+FORCE_INLINE __m128i _mm_aeskeygenassist_si128(__m128i key, const int rcon)
+{
+#define SSE2NEON_AES_H0(x) (x)
+    static const uint8_t sbox[256] = SSE2NEON_AES_DATA(SSE2NEON_AES_H0);
+#undef SSE2NEON_AES_H0
+    uint32_t X1 = _mm_cvtsi128_si32(_mm_shuffle_epi32(key, 0x55));
+    uint32_t X3 = _mm_cvtsi128_si32(_mm_shuffle_epi32(key, 0xFF));
+    for (int i = 0; i < 4; ++i) {
+        ((uint8_t *) &X1)[i] = sbox[((uint8_t *) &X1)[i]];
+        ((uint8_t *) &X3)[i] = sbox[((uint8_t *) &X3)[i]];
+    }
+    return _mm_set_epi32(((X3 >> 8) | (X3 << 24)) ^ rcon, X3,
+                         ((X1 >> 8) | (X1 << 24)) ^ rcon, X1);
+}
+#undef SSE2NEON_AES_DATA
+
+#else /* __ARM_FEATURE_CRYPTO */
 // Implements equivalent of 'aesenc' by combining AESE (with an empty key) and
-// AESMC and then manually applying the real key as an xor operation This
+// AESMC and then manually applying the real key as an xor operation. This
 // unfortunately means an additional xor op; the compiler should be able to
-// optimise this away for repeated calls however See
+// optimize this away for repeated calls however. See
 // https://blog.michaelbrase.com/2018/05/08/emulating-x86-aes-intrinsics-on-armv8-a
 // for more details.
-inline __m128i _mm_aesenc_si128(__m128i a, __m128i b)
+FORCE_INLINE __m128i _mm_aesenc_si128(__m128i a, __m128i b)
 {
     return vreinterpretq_m128i_u8(
         vaesmcq_u8(vaeseq_u8(vreinterpretq_u8_m128i(a), vdupq_n_u8(0))) ^
         vreinterpretq_u8_m128i(b));
+}
+
+FORCE_INLINE __m128i _mm_aeskeygenassist_si128(__m128i a, const int rcon)
+{
+    a = vaeseq_u8(a, (__m128i){});  // AESE does ShiftRows and SubBytes on A
+    __m128i dest = (uint8x16_t){    // @Bill typecast (uint8x16_t)
+        // Undo ShiftRows step from AESE and extract X1 and X3
+        a[0x4], a[0x1], a[0xE], a[0xB],  // SubBytes(X1)
+        a[0x1], a[0xE], a[0xB], a[0x4],  // ROT(SubBytes(X1))
+        a[0xC], a[0x9], a[0x6], a[0x3],  // SubBytes(X3)
+        a[0x9], a[0x6], a[0x3], a[0xC],  // ROT(SubBytes(X3))
+    };
+    return dest ^ (__m128i)((uint32x4_t){0, rcon, 0, rcon});
 }
 #endif
 
@@ -4146,6 +4423,10 @@ FORCE_INLINE uint64_t _mm_crc32_u64(uint64_t crc, uint64_t v)
 #if defined(__GNUC__) || defined(__clang__)
 #pragma pop_macro("ALIGN_STRUCT")
 #pragma pop_macro("FORCE_INLINE")
+#endif
+
+#if defined(__GNUC__)
+#pragma GCC pop_options
 #endif
 
 #endif

@@ -515,6 +515,7 @@ DF2(jtkeybox){PROLOG(0009);A ai,z=0;I nitems;
  if(SPARSE&AT(a))R (AT(w)&NOUN?(AF)jtkeysp:(AF)jthook1cell)(jt,a,w,self);  // if sparse, go handle it
  SETIC(a,nitems);   // nitems is # items in a and w
  I cellatoms, celllen;  // number of atoms in an item of w, and the number of bytes therein.  celllen is negative for the monad
+ struct AD fauxw;  // needed only for (</. i.@#) but must stay in scope
  if(likely(AT(w)&NOUN)){
   // dyad: <./
   I t2; ASSERT(nitems==SETIC(w,t2),EVLENGTH);  // verify agreement
@@ -523,7 +524,6 @@ DF2(jtkeybox){PROLOG(0009);A ai,z=0;I nitems;
  }else{
   // monad: (<./ i.@#) .  Create a suitable w and switch to it
   cellatoms=1; celllen=-1;  // len and flag of cells from the synthetic index vector
-  struct AD fauxw;
   // Fill in enough of fauxw to stand in for the vector.  We need type=INT and rank=1, and the shape needs to be a fetchable address but the value doesn't matter.
   // The data address returned by IAV needs to be 0
   w=&fauxw;  // switch to synthetic w

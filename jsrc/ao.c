@@ -510,7 +510,7 @@ static DF2(jtkey){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
 }    /* a f/. w for dense x & w */
 
 // bivalent entry point: a </. w   or  (<./ i.@#) w
-static DF2(jtkeybox){PROLOG(0009);A ai,z=0;I nitems;
+DF2(jtkeybox){PROLOG(0009);A ai,z=0;I nitems;
  RZ(a&&w);
  if(SPARSE&AT(a))R (AT(w)&NOUN?(AF)jtkeysp:(AF)jthook1cell)(jt,a,w,self);  // if sparse, go handle it
  SETIC(a,nitems);   // nitems is # items in a and w

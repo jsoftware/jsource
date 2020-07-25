@@ -629,10 +629,11 @@ extern unsigned int __cdecl _clearfp (void);
 #define ASSERTAGREE(x,y,l) {I *aaa=(x), *aab=(y), aai=(l)-1; do{aab=aai<0?aaa:aab; ASSERT(aaa[aai]==aab[aai],EVLENGTH); --aai; aab=aai<0?aaa:aab; ASSERT(aaa[aai]==aab[aai],EVLENGTH); --aai;}while(aai>=0); }
 #endif
 #if C_AVX2&&SY_64  // scaf
+// set r nonzero if shapes disagree
 #define TESTDISAGREE(r,x,y,l) {I *aaa=(I*)(x), *aab=(I*)(y); I aai=4-(l); r=0; \
  do{__m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+(aai>=0?aai:0))); \
   r|=0xf^_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_cmpeq_epi64(_mm256_maskload_epi64(aaa,endmask),_mm256_maskload_epi64(aab,endmask)))); \
-  if(aai>=0)break; aaa+=NPAR; aab+=(SGNTO0(aai))<<LGNPAR; aai+=NPAR; /* prevent compiler from doing address offset */\
+  if(likely(aai>=0))break; aaa+=NPAR; aab+=(SGNTO0(aai))<<LGNPAR; aai+=NPAR; /* prevent compiler from doing address offset */\
  }while(aai<4); }  // the test at end is to prevent the compiler from duplicating the loop.  It is almost never executed.
 #else
 #define TESTDISAGREE(r,x,y,l) {I *aaa=(x), *aab=(y), aai=(l)-1; r=0; do{aab=aai<0?aaa:aab; r|=aaa[aai]!=aab[aai]; --aai; aab=aai<0?aaa:aab; r|=aaa[aai]!=aab[aai]; --aai;}while(aai>=0); }

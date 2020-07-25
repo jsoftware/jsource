@@ -1791,7 +1791,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
  // NOTE: from here on we may add modifiers to mode, indicating FULL/BITS/PACK etc.  These flags are needed in the action routine, and must be
  // preserved if the resulting hashtable is saved as part of a prehash.  They are not valid on input to this routine.
 
- if(w==mark){mode |= IPHCALC; f=af; s=as; r=acr-1; f1=wcr-r;}  // if w is omitted (for prehashing), use info from a
+ if(unlikely(w==mark)){mode |= IPHCALC; f=af; s=as; r=acr-1; f1=wcr-r;}  // if w is omitted (for prehashing), use info from a
  else{  // w is given.  See if we need to abort owing to shapes.
   mode |= IIOREPS&((((((I)1)<<IIDOT)|(((I)1)<<IICO)|(((I)1)<<IEPS)|(((I)1)<<IFORKEY))<<IIOREPSX)>>mode);  // remember if i./i:/e./key (and not prehash)
   // TUNE  From testing 8/2019 on SkylakeX, sequential search wins if an<=10 or wn<=7, or an+wn<=40
@@ -1802,10 +1802,13 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
    jtiosc(jt,mode,1,an,wn,1,1,a,w,z); // simple sequential search without hashing.
    RETF(z);
   }
+
   // ?r=rank of argument, ?cr=rank the verb is applied at, ?f=length of frame, ?s->shape, ?t=type, ?n=#atoms
   // prehash is set if w argument is omitted (we are just prehashing the a arg)
-  f=af?af:wf; s=af?as:ws; r=acr?acr-1:0; f1=wcr-r;  // see below
-  if(0>f1||ICMP(as+af+1,ws+wf+f1,r)){I f0,*v;A z;
+  f=af?af:wf; s=af?as:ws; r=acr?acr-1:0; f1=wcr-r;  // see below.  f1<0 here means cell of w has rank smaller than the item of a-cell, thus there are no matches possible
+  I f1clamp=REPSGN(f1); I disagree; TESTDISAGREE(disagree,as+af+1,ws+wf+(~f1clamp&f1),r)
+// obsolete   if(0>f1||ICMP(as+af+1,ws+wf+f1,r)){I f0,*v;A z;
+  if(unlikely(f1clamp<disagree)){I f0,*v;A z;   // true if f1<0 OR disagree!=0
    // Dyad where shape of an item of a does not match shape of a cell of w.  Return appropriate not-found
    if(((af-wf)&-af)<0){f1+=wf-af; wf=af;}  // see below for discussion about long frame in w
    I witems=ws[0]; witems=wr>r?witems:1;  // # items of w, in case we are doing i.&0 eg on result of e., which will have that many items
@@ -1827,7 +1830,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
  // f is len of frame of a (or of w if a has no frame); s->shape of a (or of w is a has no frame)
  // r is rank of an item of a cell of a (i. e. rank of a target item), f1 is len of frame of A CELL OF w with respect to target cells, in
  // other words the frame of the results each cell of w will produce
- if((at|wt)&SPARSE){A z;
+ if(unlikely((at|wt)&SPARSE)){A z;
   // Handle sparse arguments
   mode &= IIOPMSK;  // remove flags before going to sparse code
   if(1>=acr)R af?sprank2(a,w,0L,acr,RMAX,jtindexof):wt&SPARSE?iovxs(mode,a,w):iovsd(mode,a,w);
@@ -1849,8 +1852,8 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
  // the frame of w if it has the longer frame.  This can happen only where IRS is supported, namely ~: i. i: e. .
  // For those verbs, we get the effect of repeating a cell of a by having a macrocell of w, which is then broken into target-cell sizes.
  // We do this only if af!=0, because we have already set up to repeat cells of a if af=0
- if(((af-wf)&-af)<0){f1+=wf-af; wf=af;}  // wf>af & af>0
- if(((an-1)|(wn-1))>=0){
+ if(unlikely(((af-wf)&-af)<0)){f1+=wf-af; wf=af;}  // wf>af & af>0
+ if(likely(((an-1)|(wn-1))>=0)){
   // Neither arg is empty.  We can safely count the number of cells
   PROD1(n,acr-1,as+af+1); k=n<<klg; // n=number of atoms in a target item; k=number of bytes in a target item
   PROD(ac,af,as); PROD(wc,wf,ws); PROD1(c,MAX(f1,-1),ws+wf);  // ?c=#cells in a & w;  c=#target items (and therefore #result values) in a result-cell.  -1 so we don't fetch outside the shape
@@ -1867,7 +1870,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
 
  // Convert dissimilar types
  I fnx;  // function to use, set below
- if(TYPESEQ(at,wt)){fnx=0;
+ if(likely(TYPESEQ(at,wt))){fnx=0;
  }else{
   fnx=HOMONE(at,wt)?0:-2; /* noavx jt->min=0; */  // are args compatible?  -2 if not.  MARK is inhomo
 // obsolete   if(((th-1)|(TYPESXOR(t,at)-1))>=0)RZ(a=t&XNUM?xcvt(XMEXMT,a):cvt(t,a))  // convert if th and TYPESXOR both nonzero
@@ -1890,8 +1893,8 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
  // m*number of results.  The cost of small-range hashing is at best 10 cycles per atom added to the table and 8 cycles per lookup.
  // (full hashing is considerably more expensive); also a fair amount of time for range-checking and table-clearing, and further testing here
  // Here we just use the empirical observations that worked for atoms  TUNE
- if((((((-(wc^1))&(-(wc^ac)))|SGNIFNOT(mode,IIOREPSX))&~fnx)>=0) &&   // wc==1 or ac and IOREPS, or empty/inhomo
-          (((((I)m-11)|(zn-8)|((I)m+zn-41)|fnx)<0))){  //  small enough operation, or  empty/inhomo   TUNE
+ if((((((I)m-11)|(zn-8)|((I)m+zn-41)|fnx)<0)) && (((((-(wc^1))&(-(wc^ac)))|SGNIFNOT(mode,IIOREPSX))&~fnx)>=0)){   // wc==1 or ac and IOREPS, or empty/inhomo
+          //  small enough operation, or  empty/inhomo   test size first because partially checked already & failed TUNE
     // this will not choose sequential search enough when the cells are large (comparisons then are cheap because of early exit)
   fnx-=1;  // now fnx is -3 for inhomo, -2 for empty, -1 for sequential.  This is ready for lookup.
 //  jtiosc(jt,mode,n,m,c,ac,wc,a,w,z); // simple sequential search without hashing
@@ -1920,13 +1923,13 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
   // p>>booladj is the number of hashtable entries we need.  booladj is 0 for full hash, 3 if we just need one byte-encoded boolean per input value, 5 if just one bit per input value
   UI booladj=(mode&(IIOPMSK&~(IIDOT^IICO)))?5:0;  // boolean allowed when not i./i:
   p=0;  // indicate we haven't come up with the table size yet.  It depends on reverse and small-range decisions
-  if((fnx+1)&t&BOX+FL+CMPX)ctmask(jt);   // calculate ctmask if comparison is tolerant and there might be floats
+  if(unlikely((fnx+1)&t&BOX+FL+CMPX))ctmask(jt);   // calculate ctmask if comparison is tolerant and there might be floats
 
-  if(t&BOX+XNUM+RAT){
+  if(unlikely(t&BOX+XNUM+RAT)){
    if(t&BOX){I t1; fnx=(fnx&1)&&(1<n||usebs(a,ac,m))?FNTBLBOXSSORT:1<n?FNTBLBOXARRAY:(fnx&1)?FNTBLBOXINTOLERANT:
              (t1=utype(a,ac))&&((mode&IPHCALC)||a==w||TYPESEQ(t1,utype(w,wc)))?FNTBLBOXUNIFORM:FNTBLBOXUNKNOWN;
    }else fnx=CTTZ(t)+(FNTBLXNUM-XNUMX);
-  }else if(1==k){p=t&B01?2:256;datamin=0; mode|=IIMODFULL; fnx=FNTBLSMALL1;}   // 1-byte ops, just use small-range code: checking takes too much time
+  }else if(unlikely(1==k)){p=t&B01?2:256;datamin=0; mode|=IIMODFULL; fnx=FNTBLSMALL1;}   // 1-byte ops, just use small-range code: checking takes too much time
   else{
    // We might switch over to small-range mode, if the sizes are right.  See how big the hash table would be for full hashing
    // figure out whether we should use small-range matching or hashing.  We use small-range code if:
@@ -1935,7 +1938,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
    //  where length of rangecell=4 for i. or i:, 1/8 otherwise, length of hashcell=4
    // result is p (the length of hashtable, as # of entries), datamin (the minimum value found, if small-range)
    // If the allocated range includes all the possible values for the input, set IIMODFULL to indicate that fact
-   if(2==k){
+   if(unlikely(2==k)){
     // if the actual range of the data exceeds p, we revert to hashing.  All 2-byte types are exact
     CR crres = condrange2(USAV(a),(AN(a)<<klg)>>LGSZS,-1,0,MIN((UI)(IMAX-5)>>booladj,3*m)<<booladj);   // get the range
     if(crres.range){
@@ -1950,9 +1953,9 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
       fnx=FNTBLSMALL2;  // This qualifies for small-range processing
     }
    }
-   if(fnx<0){  // if we don't have it yet, it will be a hash or small-range integers.  Decide which one
+   if(likely(fnx<0)){  // if we don't have it yet, it will be a hash or small-range integers.  Decide which one
     if((k&~(t&FL))==SZI){  // non-float, might be INT or SBT, or characters.  FL has -0 problem   requires SZI==FL
-     if(t&INT+SBT){I fnprov;A rangearg; UI rangearglen;  // same here, for I types
+     if(likely(t&INT+SBT)){I fnprov;A rangearg; UI rangearglen;  // same here, for I types
       // small-range processing is a possibility, but we need to decide whether we are going to do a reversed hash, so we will
       // know which range to check.  For i./i:, we reverse if c is much shorter than m; for e., we have to consider whether
       // the forward has will benefit from bits mode, so we have to estimate the size of each hash table
@@ -1983,11 +1986,11 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
     fmods = fnflags[fnx];  // refetch flags
    }
    // set p based on the length of the argument being hashed
-   if((SGNIF(t,B01X)&(k-(BW-1)))<0){p=MIN(p,(UI)((I)1)<<k);}  // Get max # different possible values to hash; the number of items, but less than that for short booleans
+   if(unlikely((SGNIF(t,B01X)&(k-(BW-1)))<0)){p=MIN(p,(UI)((I)1)<<k);}  // Get max # different possible values to hash; the number of items, but less than that for short booleans
    // Find the best hash size, based on empirical studies.  Allow at least 3x hashentries per input value; if that's less than the size of the small hash, go to the limit of
    // the small hash.  But not more than 10 hashtable entries per input (to save time clearing)
    {UI op=p*10; op=p>=SMALLHASHMAX/10?IMAX-5:op; p=p>(IMAX-5)/3?(IMAX-5)/3:p; p*=3; p=p<SMALLHASHMAX?SMALLHASHMAX:p; p=p>op?op:p;}
-  }else if((mode&IIOPMSK)==IFORKEY){
+  }else if(unlikely((mode&IIOPMSK)==IFORKEY)){
    // We are processing on behalf of key, and we decided to do small-range processing.  Key can do better by
    // creating and processing the small-range table itself, so we will let it do that.  We return a special short block (LSB=1)
    // that indicates the length of the key (AN) and the start and range of the keys (AK and AM)
@@ -1999,7 +2002,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
   // if a hashtable will be needed, allocate it.  It is NOT initialized
   // the hashtable is INT unless we have selected small-range hashing AND we are not looking for the index with i. or i:; then boolean is enough
   if(fmods>=0){IH * RESTRICT hh;
-   if(fmods){mode |= fmods; if(fmods&IIMODFULL)booladj=0;}   // If IMODFULL is required, bring it in; if not small-range, turn off bit mode
+   if(unlikely(fmods)){mode |= fmods; if(fmods&IIMODFULL)booladj=0;}   // If IMODFULL is required, bring it in; if not small-range, turn off bit mode
 
    // make sure we have a hashtable of the requisite size.  p has the number of entries, booladj indicates whether they are 1 bit each.
    // if the #entries fits in a US, use the short table.  But bits always use the long table
@@ -2008,14 +2011,14 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
    // be spent range-checking w) and BASE0 (which clears the hashtable, at a cost of 1 cycle per 2/4 entries, or 4x that if we use fast instructions)
    // First check FULL, which is always the right decision if possible - except for self-classify which assumes FULL, or prehash which doesn't go through w at all
    // Don't bother to check if the decision has already been made (this will be set for full hashes, which ignore this bit and require FORCE0)
-   if(a!=w&&!(mode&(IIMODFULL|IPHCALC|IREVERSED))){CR crres;
+   if(unlikely(a!=w&&!(mode&(IIMODFULL|IPHCALC|IREVERSED)))){CR crres;
     // We can get here only if IIMODFULL is off, which happens only if fmods is 0, which means we are doing a forward small-range hash.  In addition, the
     // number of bytes in an item will be 2 or SZI.  We must convert the # atoms to a # of 2- or SZI-sized pieces
     I allowrange;  // where we will build the max allowed range of w
-    if(h=jt->idothash1){allowrange=IHAV(h)->datasize>>IHAV(h)->hashelelgsize;}else{allowrange=0;}  // current max capacity of large hash
+    if(likely((h=jt->idothash1)!=0)){allowrange=IHAV(h)->datasize>>IHAV(h)->hashelelgsize;}else{allowrange=0;}  // current max capacity of large hash
     // always allow a little bit larger than the range of a, to make sure we expand the hashtable if a little more would be enough.
     // but never increase the range if that would exceed the L2 cache - just pay the 4 instructions
-    if(k==2){
+    if(unlikely(k==2)){
      allowrange=MIN(MAX(L2CACHESIZE>>LGSZUS,(I)p),MAX(allowrange,(I)(p+(p>>3))));  // allowed range, with expansion
      crres = condrange2(USAV(w),(AN(w)<<klg)>>LGSZS,datamin,datamin+p-1,allowrange);
     }else{
@@ -2024,7 +2027,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
     }
     if(crres.range){datamin=crres.min; p=crres.range; mode |= IIMODFULL;}
    }  
-   if(p<=(SMALLHASHMAX-1) && booladj==0 && ((mode&IREVERSED)?c:m)<65535){  // range must fit into address; hash index+1 must fit into the 16-bit entry
+   if(p<=(SMALLHASHMAX-1) && booladj==0 && ((mode&IREVERSED)?c:m)<65535){  // range must fit into address; hash index+1 must fit into the 16-bit entry   scaf combine
       // (the +1 is in case we do reversed hash where we invalidate by writing m+1; shouldn't have small hash if m=65535, but take no chances)
     // using the short table.  Allocate it if it hasn't been allocated yet, or if this is prehashing, where we will build a separate table.
     // It would be nice to use the main table for m&i. to avoid having to clear a custom table, since m&i. may never get assigned to a name;
@@ -2037,21 +2040,23 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
 #else
     mode |= IIMODFORCE0;
 #endif
-    if((mode&IPHCALC)||!(h=jt->idothash0)){
+    // we can use the small table.  See if there already is one we can use, otherwise allocate one
+// obsolete    if((mode&IPHCALC)||!(h=jt->idothash0)){
+    if(unlikely((REPSGN(SGNIFNOT(mode,IPHCALCX))&(I)(h=jt->idothash0))==0)){   // precalc, or  small table doesn't exist
      GATV0(h,INT,((SMALLHASHMAX*sizeof(US)+SZI+(SZI-1))>>LGSZI),0);  // size too big for GAT
      // Fill in the header
      hh=IHAV(h);  // point to the header
      hh->datasize=allosize(h)-sizeof(IH);  // number of bytes in data area
      hh->hashelelgsize=1;  // hash entries are 2 bytes long
      hh->currenthi = hh->previousindexend = 0;  // This is the minimum need to initialize when FORCE0 is set
-     if(!(mode&IPHCALC)){ras(h); jt->idothash0=h;}  // If not prehashing a table, save this and protect against removal.
+     if(likely(!(mode&IPHCALC))){ras(h); jt->idothash0=h;}  // If not prehashing a table, save this and protect against removal.
     }
    }else{
     // using the long table.  Use the current one if it is long enough; otherwise allocate a new one
     // First, make a decision for Boolean tables.  If the table will be Boolean, decide whether to use packed bits
     // or bytes, and represent that information in mode and booladj.
     ASSERT((UI)m<=(UI)(UI4)-1,EVLIMIT);  // there must not be more items than we can distinguish with different hash indexes
-    if(booladj){if(p>MAXBYTEBOOL){mode|=IIMODPACK|IIMODBITS;}else{mode|=IIMODBITS;booladj=5-3;}  // set MODBITS as a flag to hashallo
+    if(unlikely(booladj)){if(unlikely(p>MAXBYTEBOOL)){mode|=IIMODPACK|IIMODBITS;}else{mode|=IIMODBITS;booladj=5-3;}  // set MODBITS as a flag to hashallo
     }else{
 #if 0  // now that we have wide instructions, it always makes sense to clear the allocated area
      // If the sizes are such that we should clear this table to save 3 clocks per atom of w, say so.  The clearing is done in hashallo.  Only for non-bits.
@@ -2062,9 +2067,10 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
     }
     I psizeinbytes = ((p>>booladj)+4)*sizeof(UI4);   // Get length of table in bytes.  We add 4 to the request:
          // for small-range to round up to an even word of an I, and possibly padding leading/trailing bytes; for hashing, we need a sentinel at the beginning and the end
-    if((mode&IPHCALC)||!((h=jt->idothash1) && IHAV(h)->datasize >= psizeinbytes)){
+    if(unlikely((mode&IPHCALC)||!((h=jt->idothash1) && IHAV(h)->datasize >= psizeinbytes))){  // scaf combine
      // if we have to reallocate, free the old one
-     if(!(mode&IPHCALC)&&h){fr(h); jt->idothash1=0;}  // free old, and clear pointer in case of allo error
+// obsolete      if(!(mode&IPHCALC)&&h){fr(h); jt->idothash1=0;}  // free old, and clear pointer in case of allo error  // scaf combine
+     if(unlikely(REPSGN(SGNIFNOT(mode,IPHCALCX))&(I)h)){fr(h); jt->idothash1=0;}  // free old, and clear pointer in case of allo error
      // allocate the new one and fill it in
      GATV0(h,INT,(psizeinbytes+sizeof(IH)+(SZI-1))>>LGSZI,0);
      // Fill in the header
@@ -2074,17 +2080,20 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
      hh->currenthi = hh->previousindexend = 0;  // This is the minimum need to initialize when FORCE0 is set
      // If the hash size is moderate, there is a gain to be had by preserving it between searches (it will already be in cache).  On the other hand,
      // it would be a shame to tie up vast amounts of memory waiting for a large search.  To compromise, we keep the buffer unless it is much bigger than the L3 cache
-     if(!(mode&IPHCALC)&&hh->datasize<5*L3CACHESIZE){ras(h); jt->idothash1=h;}  // If not prehashing a table, save this and protect against removal
+// obsolete      if(!(mode&IPHCALC)&&hh->datasize<5*L3CACHESIZE){ras(h); jt->idothash1=h;}  // If not prehashing a table, save this and protect against removal
+     if(likely((SGNIFNOT(mode,IPHCALCX)&(hh->datasize-5*L3CACHESIZE))<0)){ras(h); jt->idothash1=h;}  // If not prehashing a table, save this and protect against removal if not prehash and table not huge
     }
     // switch the routine pointer to the big table
     fnx+=FNTBLSIZE;
    }
    // Pass the min/range into the action routine, using result values in the hashtable
    hh=IHAV(h); hh->datamin=datamin; hh->datarange=p;  // max will be inferred
-  }else{h = (A)acr;}  // if there is no hashtable, pass in acr using the h field.  This is for sorted boxes
+  }else{h = (A)acr;}  // if there is no hashtable, pass in acr using the h field.  This is for sorted boxes only
  }  // end of 'not sequential comparison' which means we may need a hashtable
 
- // Allocate the result area.  NOTE that some of the routines, like small-range, always store at least one result; so we have to point z somewhere harmless before launching them. if we are prehashing
+ AF ifn=fntbl[FNTABLEPREFIX+fnx];  // get an early start fetching the function we will call
+
+ // Allocate the result area.  NOTE that some of the routines, like small-range, always store at least one result; so we have to point z somewhere harmless before launching them. If we are prehashing we skip this.
  A z;
  switch(mode&(IPHCALC|IIOPMSK)){I q;
   default:      fauxINT(z,zfaux,1,0) break;   // if prehashed, we must create an area that can hold at least one stored result
@@ -2107,7 +2116,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
  }
 
  // Create result for empty/inhomogeneous arguments, & return
- if(fnx<-1){  // if empty (-2) or inhomo (-3), create the result immediately
+ if(unlikely(fnx<-1)){  // if empty (-2) or inhomo (-3), create the result immediately
   I witems; SETICFR(w,0,wr>r,witems); /* obsolete = wr>r?ws[0]:1;*/  // # items of w, in case we are doing i.&0 eg on result of e., which will have that many items
   switch(mode&(IIOPMSK)){  // if PHCALC, we never got here
   // If empty argument or result, or inhomogeneous arguments, return an appropriate empty or not-found
@@ -2134,7 +2143,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
  }
 
  // Call the routine to perform the operation
- RZ(h=fntbl[FNTABLEPREFIX+fnx](jt,mode,n,m,c,ac,wc,a,w,z,k,ak,wk,h));
+ RZ(h=ifn(jt,mode,n,m,c,ac,wc,a,w,z,k,ak,wk,h));
 //  RZ(h=fntbl[fnx](jt,mode,n,m,c,ac,wc,a,w,z,k,ak,wk,h));
  // If the call was IFORKEY, the number of partitions was stored in AM(h).  Move it to AM(z) whence it will re returned.
  AM(z)=AM(h);  // just copy willy-nilly

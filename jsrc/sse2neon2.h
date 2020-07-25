@@ -70,18 +70,6 @@ FORCE_INLINE __m128d _mm_mul_pd(__m128d a, __m128d b)
     return vmulq_f64(a, b);
 }
 
-FORCE_INLINE __m128i _mm_castpd_si128(__m128d a)
-{
-    __m128i res;
-    res = vreinterpretq_m128i_s32(vreinterpretq_s32_f64(a));
-    return res;
-}
-
-FORCE_INLINE void _mm_storeu_pd (double* mem_addr, __m128d a)
-{
-    vst1q_f64(mem_addr, a);
-}
-
 // Reads the lower 64 bits of b and stores them into the lower 64 bits of a.
 FORCE_INLINE void _mm_storel_pd(double * mem_addr, __m128d a)
 {

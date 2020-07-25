@@ -1270,9 +1270,6 @@ FORCE_INLINE __m256d _mm256_blendv_pd(__m256d a, __m256d b, __m256d mask)
 {
     __m256d result_m256d;
     uint64x2_t vect_flag[2];
-// bug
-//    vect_flag[0] = vcgeq_f64(mask.vect_f64[0], vdupq_n_f64(0));
-//    vect_flag[1] = vcgeq_f64(mask.vect_f64[1], vdupq_n_f64(0));
     vect_flag[0] = vcgeq_s64((int64x2_t)mask.vect_f64[0], vdupq_n_s64(0));
     vect_flag[1] = vcgeq_s64((int64x2_t)mask.vect_f64[1], vdupq_n_s64(0));
     result_m256d.vect_f64[0] = vbslq_f64(vect_flag[0], a.vect_f64[0], b.vect_f64[0]);
@@ -1284,9 +1281,6 @@ FORCE_INLINE __m256 _mm256_blendv_ps(__m256 a, __m256 b, __m256 mask)
 {
     __m256 result_m256;
     uint32x4_t vect_flag[2];
-// bug
-//    vect_flag[0] = vcgeq_f32(mask.vect_f32[0], vdupq_n_f32(0));
-//    vect_flag[1] = vcgeq_f32(mask.vect_f32[1], vdupq_n_f32(0));
     vect_flag[0] = vcgeq_s32((int32x4_t)mask.vect_f32[0], vdupq_n_s32(0));
     vect_flag[1] = vcgeq_s32((int32x4_t)mask.vect_f32[1], vdupq_n_s32(0));
     result_m256.vect_f32[0] = vbslq_f32(vect_flag[0], a.vect_f32[0], b.vect_f32[0]);

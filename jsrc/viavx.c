@@ -9,8 +9,11 @@
 #include "vcomp.h"
 
 // platforms with hardware crc32c
-#if C_CRC32C
+#if C_CRC32C && SY_64
 
+#if !(C_AVX || EMU_AVX)
+#error need avx or emulation to work
+#endif
 
 /* Floating point (type D) byte order:               */
 /* Archimedes              3 2 1 0 7 6 5 4           */
@@ -60,12 +63,12 @@ l1:_mm256_storeu_si256 (storeptr, store256); storeptr++;
  }
  _mm256_maskstore_epi64 ((I*)storeptr, endmask,store256);  // finish the last long stores
 }
-#elif (C_AVX&&SY_64) || EMU_AVX
+#else
 // fill 64-bit words with the 32-bit value in storeval
 static __forceinline void fillwords(void* x, UI4 storeval, I nstores){
  __m128i* storeptr = (__m128i*)x;
  // use 128-bit moves because 256-bit ops have a warmup time on Ivy Bridge.  Eventually convert this to 256-bit stores
- __m128i store128; store128=_mm_set1_epi32_(storeval);
+ __m128i store128; store128=_mm_set1_epi32(storeval);
  DQ(nstores>>1, _mm_storeu_si128 (storeptr, store128); storeptr++;)
  if(nstores&1)_mm_storel_epi64 (storeptr, store128);  // If there is an odd word, store it
 }
@@ -89,12 +92,8 @@ static I hashallo(IH * RESTRICT hh,UI p,UI asct,I md){
   // ~. ~: I.@~. -.   all prefer the table to be complemented and thus initialized to 1.
   // REVERSED types always initialize to 1, whether packed or not
   // this is a kludge - the initialization value should be passed in by the caller, in asct
-#if !((C_AVX&&SY_64) || EMU_AVX)
-  memset(hh->data.UC,md&IREVERSED?(md&IIMODPACK?255:1):((md&(IIMODPACK+IIOPMSK))<=INUBI),p);
-#else
   UI4 fillval = md&IREVERSED?(md&IIMODPACK?255:1):((md&(IIMODPACK+IIOPMSK))<=INUBI); fillval|=fillval<<8; fillval|=fillval<<16;
   fillwords((__m128i*)hh->data.UI, fillval, p>>LGSZI);  // fill 64-bit words with 32-bit values
-#endif
   // If the invalid area grows, update the invalid hwmk, and also the partition
   p >>= hh->hashelelgsize;  // convert p to hash index 
   if(p>hh->invalidhi){
@@ -165,12 +164,7 @@ static I hashallo(IH * RESTRICT hh,UI p,UI asct,I md){
   // so it is safe to overfill with fullword stores
   UI storeval=asct; if(hh->hashelelgsize==1)storeval |= storeval<<16;  // Pad store value to 64 bits, dropping excess on smaller machines
   I nstores=((p<<hh->hashelelgsize)+SZI-1)>>LGSZI;  // get count of partially-filled words
-#if !((C_AVX&&SY_64) || EMU_AVX)
-  if(SZI>4)storeval |= storeval<<(32%BW);
-  I i; for(i=0;i<nstores;++i){hh->data.UI[i]=storeval;}  // fill them all
-#else
   fillwords((__m128i*)hh->data.UI, (UI4)storeval, nstores);  // fill 64-bit words with 32-bit values
-#endif
   // Clear everything past the first allocation to 0, indicating 'not touched yet'.  But we can elide this if it is already 0, which we can tell by
   // examining the partition pointer and the right-hand index.  This is important if FORCE0 was set for i."r: we will repeatedly reset the base, and
   // we need to avoid clearing the whole buffer for any time after the first.
@@ -491,13 +485,7 @@ static B jteqa0(J jt,I n,A*u,A*v,I c,I d){PUSHCCT(1.0) B res=1; DQ(n, if(!equ(*u
 
 // Calculate the hash slot.  The hash calculation (input parm) relies on the name v and produces the name j.  We have moved v to an xmm register to reduce register pressure
 // here, so extract its parts for use as needed
-#if C_AVX || EMU_AVX
 #define HASHSLOTP(T,hash) v=(T*)_mm_extract_epi64(vp,0); j=((hash)*(UIL)(p))>>32;
-#elif defined(__aarch64__)
-#define HASHSLOTP(T,hash) v=(T*)vgetq_lane_s64(vp,0); j=((hash)*(UIL)(p))>>32;
-#else
-#define HASHSLOTP(T,hash) v=(T*)SSEREGI(vp)[0]; j=((hash)*(UIL)(p))>>32;
-#endif
 // Conditionally insert a new value into the hash table.  The initial value of hj (the table scan pointer) has been fetched.  name is the name holding the slot to be added
 // (it will be j, j1, or j2 depending on where we are in the processing pipeline),
 // exp is a comparison expression meaning 'mismatch' that returns 0 if the data indexed by the slot is equal to *v (the expression will use *v as the new value, and hj as the index into the
@@ -509,25 +497,11 @@ static B jteqa0(J jt,I n,A*u,A*v,I c,I d){PUSHCCT(1.0) B res=1; DQ(n, if(!equ(*u
 // only if the hash search does not find a match.  If (store) is 2, the entry that we found is cleared, by setting it to maxcount+1, when we find a match.
 // When (store)=2, we also ignore hash entries containing maxcount+1, treating them as failed compares
 // Independent of (store), (fstmt) is executed if the item is found in the hash table, and (nfstmt) is executed if it is not found.
-#if C_AVX || EMU_AVX
 #define FINDP(T,TH,hsrc,name,exp,fstmt,nfstmt,store) do{if(hj==hsrc##sct){ \
   if(store==1)hv[name]=(TH)i; nfstmt break;}  /* this is the not-found case */ \
   if((store!=2||hj<hsrc##sct)&&(v=(T*)_mm_extract_epi64(vp,1),!(exp))){if(store==2)hv[name]=(TH)(hsrc##sct+1); fstmt break;} /* found */ \
   if(--name<0)name+=p; hj=hv[name]; /* miscompare, nust continue search */ \
   }while(1);
-#elif defined(__aarch64__)
-#define FINDP(T,TH,hsrc,name,exp,fstmt,nfstmt,store) do{if(hj==hsrc##sct){ \
-  if(store==1)hv[name]=(TH)i; nfstmt break;}  /* this is the not-found case */ \
-  if((store!=2||hj<hsrc##sct)&&(v=(T*)vgetq_lane_s64(vp,1),!(exp))){if(store==2)hv[name]=(TH)(hsrc##sct+1); fstmt break;} /* found */ \
-  if(--name<0)name+=p; hj=hv[name]; /* miscompare, nust continue search */ \
-  }while(1);
-#else
-#define FINDP(T,TH,hsrc,name,exp,fstmt,nfstmt,store) do{if(hj==hsrc##sct){ \
-  if(store==1)hv[name]=(TH)i; nfstmt break;}  /* this is the not-found case */ \
-  if((store!=2||hj<hsrc##sct)&&(v=(T*)SSEREGI(vp)[1],!(exp))){if(store==2)hv[name]=(TH)(hsrc##sct+1); fstmt break;} /* found */ \
-  if(--name<0)name+=p; hj=hv[name]; /* miscompare, nust continue search */ \
-  }while(1);
-#endif
 
 // Traverse the hash table for one argument.  (src) indicates which argument, a or w, we are looping through; (hsrc) indicates which argument provided the hash table.
 // For each item we do HASHSLOT folowed by FINDP, and adjust the (v) values (both stored in xmm variable vp) to keep track
@@ -536,25 +510,11 @@ static B jteqa0(J jt,I n,A*u,A*v,I c,I d){PUSHCCT(1.0) B res=1; DQ(n, if(!equ(*u
 // q+2 is being calculated).
 // The (fstmt,nfstmt,store) arguments indicate what to do when a match/notmatch is resolved.
 // (loopctl) give the stride through the input array, the control for the main loop, and the index of the last value.  These values differ for forward and reverse scans through the input.
-#if C_AVX || EMU_AVX
 #define XSEARCH(T,TH,src,hsrc,hash,exp,stride,fstmt,nfstmt,store,vpofst,loopctl,finali) \
  {I i, j, hj; T *v; vp=_mm_insert_epi64(vp,(I)(src##v+vpofst),0); vpstride = _mm_insert_epi64(vp,(stride)*(I)sizeof(T),0); vp=_mm_shuffle_epi32(vp,0x44); vpstride=_mm_insert_epi64(vpstride,0LL,1); \
  HASHSLOTP(T,hash) if(src##sct>1){I j1,j2; vp=_mm_add_epi64(vp,vpstride); j1=j; HASHSLOTP(T,hash) hj=hv[j1]; vp=_mm_add_epi64(vp,vpstride); vpstride=_mm_shuffle_epi32(vpstride,0x44); \
  for loopctl {j2=j1; j1=j; HASHSLOTP(T,hash) PREFETCH((C*)&hv[j]); FINDP(T,TH,hsrc,j2,exp,fstmt,nfstmt,store); vp=_mm_add_epi64(vp,vpstride); hj=hv[j1];} \
  FINDP(T,TH,hsrc,j1,exp,fstmt,nfstmt,store); vp=_mm_add_epi64(vp,vpstride);} hj=hv[j]; i=finali; FINDP(T,TH,hsrc,j,exp,fstmt,nfstmt,store); }
-#elif defined(__aarch64__)
-#define XSEARCH(T,TH,src,hsrc,hash,exp,stride,fstmt,nfstmt,store,vpofst,loopctl,finali) \
- {I i, j, hj; T *v; vp=vsetq_lane_s64((I)(src##v+vpofst),vp,0); vpstride = vsetq_lane_s64((stride)*(I)sizeof(T),vp,0); vp=vdupq_n_s64(vgetq_lane_s64(vp,0)); vpstride=vsetq_lane_s64(0LL,vpstride,1); \
- HASHSLOTP(T,hash) if(src##sct>1){I j1,j2; vp=vaddq_s64(vp,vpstride); j1=j; HASHSLOTP(T,hash) hj=hv[j1]; vp=vaddq_s64(vp,vpstride); vpstride=vdupq_n_s64(vgetq_lane_s64(vpstride,0));  \
- for loopctl {j2=j1; j1=j; HASHSLOTP(T,hash) PREFETCH((C*)&hv[j]); FINDP(T,TH,hsrc,j2,exp,fstmt,nfstmt,store); vp=vaddq_s64(vp,vpstride); hj=hv[j1];} \
- FINDP(T,TH,hsrc,j1,exp,fstmt,nfstmt,store); vp=vaddq_s64(vp,vpstride);} hj=hv[j]; i=finali; FINDP(T,TH,hsrc,j,exp,fstmt,nfstmt,store); }
-#else
-#define XSEARCH(T,TH,src,hsrc,hash,exp,stride,fstmt,nfstmt,store,vpofst,loopctl,finali) \
- {I i, j, hj; T *v; SSEREGI(vp)[0]=(I)(src##v+vpofst); SSEREGI(vpstride)[0] = (stride)*(I)sizeof(T); SSEREGI(vp)[1]=SSEREGI(vp)[0]; SSEREGI(vpstride)[1]=0LL; \
- HASHSLOTP(T,hash) if(src##sct>1){I j1,j2; SSEREGI(vp)[0]+=SSEREGI(vpstride)[0]; SSEREGI(vp)[1]+=SSEREGI(vpstride)[1]; j1=j; HASHSLOTP(T,hash) hj=hv[j1]; SSEREGI(vp)[0]+=SSEREGI(vpstride)[0]; SSEREGI(vp)[1]+=SSEREGI(vpstride)[1]; SSEREGI(vpstride)[1]=SSEREGI(vpstride)[0]; \
- for loopctl {j2=j1; j1=j; HASHSLOTP(T,hash) PREFETCH((C*)&hv[j]); FINDP(T,TH,hsrc,j2,exp,fstmt,nfstmt,store); SSEREGI(vp)[0]+=SSEREGI(vpstride)[0]; SSEREGI(vp)[1]+=SSEREGI(vpstride)[1]; hj=hv[j1];} \
- FINDP(T,TH,hsrc,j1,exp,fstmt,nfstmt,store); SSEREGI(vp)[0]+=SSEREGI(vpstride)[0]; SSEREGI(vp)[1]+=SSEREGI(vpstride)[1];} hj=hv[j]; i=finali; FINDP(T,TH,hsrc,j,exp,fstmt,nfstmt,store); }
-#endif
 
 // Traverse a in forward direction, adding values to the hash table
 #define XDOAP(T,TH,hash,exp,stride) XSEARCH(T,TH,a,a,hash,exp,stride,{},{},1,0, (i=0;i<asct-2;++i) ,asct-1)
@@ -565,19 +525,9 @@ static B jteqa0(J jt,I n,A*u,A*v,I c,I d){PUSHCCT(1.0) B res=1; DQ(n, if(!equ(*u
 #define XDQP(T,TH,hash,exp,stride,fstmt,nfstmt,reflex) XSEARCH(T,TH,w,a,hash,exp,(-(stride)),fstmt,nfstmt,reflex,cn*(wsct-1), (i=wsct-1;i>1;--i) ,0)
 
 // special lookup routines to move the data rather than store its index, used for nub/less
-#if C_AVX || EMU_AVX
 #define XMVP(T,TH,hash,exp,stride,reflex)      \
  if(k==SZI){XDOP(T,TH,hash,exp,stride,{},{*(I*)zc=*(I*)_mm_extract_epi64(vp,1); zc+=SZI;},reflex); }  \
  else      {XDOP(T,TH,hash,exp,stride,{},{MC(zc,(C*)_mm_extract_epi64(vp,1),k); zc+=k;},reflex); }
-#elif defined(__aarch64__)
-#define XMVP(T,TH,hash,exp,stride,reflex)      \
- if(k==SZI){XDOP(T,TH,hash,exp,stride,{},{*(I*)zc=*(I*)vgetq_lane_s64(vp,1); zc+=SZI;},reflex); }  \
- else      {XDOP(T,TH,hash,exp,stride,{},{MC(zc,(C*)vgetq_lane_s64(vp,1),k); zc+=k;},reflex); }
-#else
-#define XMVP(T,TH,hash,exp,stride,reflex)      \
- if(k==SZI){XDOP(T,TH,hash,exp,stride,{},{*(I*)zc=*(I*)SSEREGI(vp)[1]; zc+=SZI;},reflex); }  \
- else      {XDOP(T,TH,hash,exp,stride,{},{MC(zc,(C*)SSEREGI(vp)[1],k); zc+=k;},reflex); }
-#endif
 
 // The main search routine, given a, w, mode, etc, for datatypes with no comparison tolerance
 
@@ -590,7 +540,7 @@ static B jteqa0(J jt,I n,A*u,A*v,I c,I d){PUSHCCT(1.0) B res=1; DQ(n, if(!equ(*u
   __m128i vp, vpstride;   /* v for hash/v for search; stride for each */ \
   _mm256_zeroupper(VOIDARG);  \
   setup \
-  vp=_mm_set1_epi32_(0);  /* to avoid warnings */ \
+  vp=_mm_set1_epi32(0);  /* to avoid warnings */ \
   md=mode&IIOPMSK;   /* clear upper flags including REFLEX bit */                                            \
     /* look for IIDOT/IICO/INUBSV/INUB/INUBI/IFORKEY - we set IIMODREFLEX if one of those is set */ \
   if(!(((uintptr_t)a^(uintptr_t)w)|(ac^wc)))md|=IIMODREFLEX&((((1<<IIDOT)|(1<<IICO)|(1<<INUBSV)|(1<<INUB)|(1<<INUBI)|(1<<IFORKEY))<<IIMODREFLEXX)>>md);  /* remember if this is reflexive, which doesn't prehash */  \
@@ -731,20 +681,7 @@ static IOFX(Z,UI4,jtioz02,, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n)
 // the other is in the same interval; we XOR to preserve the neighbor
 //
 // At the end of this calculation il contains the index of a match, or asct if no match.
-#if C_AVX || EMU_AVX
 #define SETXVAL  xval=_mm_set1_pd(*(D*)v); xnew=_mm_mul_pd(xval,tltr); xrot=_mm_permute_pd(xnew,0x1); xnew=_mm_xor_pd(xnew,xval); xnew=_mm_xor_pd(xnew,xrot); dx=_mm_extract_epi64(_mm_castpd_si128(xnew),0);
-#elif defined(__aarch64__)
-#define SETXVAL  xval=vdupq_n_f64(*(D*)v); xnew=vmulq_f64(xval,tltr); xrot=vcombine_f64(vget_high_f64(xnew), vget_low_f64(xnew)); xnew=vreinterpretq_f64_u64(veorq_u64(vreinterpretq_u64_f64(xnew),vreinterpretq_u64_f64(xval))); xnew=vreinterpretq_f64_u64(veorq_u64(vreinterpretq_u64_f64(xnew),vreinterpretq_u64_f64(xrot))); dx=vgetq_lane_u64(vreinterpretq_u64_f64(xnew),0);
-#else
-#define SETXVAL  \
-   HASHSLOT(HIDUMSKSV(dx,v)) jx=j; \
-   SSEREGD(xval)[0]=SSEREGD(xval)[1]=*(D*)v; \
-   SSEREGD(xnew)[0]=SSEREGD(xval)[0]*SSEREGD(tltr)[0]; SSEREGD(xnew)[1]=SSEREGD(xval)[1]*SSEREGD(tltr)[1]; \
-   SSEREGD(xrot)[0]=SSEREGD(xnew)[1]; SSEREGD(xrot)[1]=SSEREGD(xnew)[0]; \
-   SSEREGDI(xnew)[0]^=SSEREGDI(xval)[0]; SSEREGDI(xnew)[1]^=SSEREGDI(xval)[1]; \
-   SSEREGDI(xnew)[0]^=SSEREGDI(xrot)[0]; SSEREGDI(xnew)[1]^=SSEREGDI(xrot)[1]; \
-   dx=SSEREGDI(xnew)[0];
-#endif
 #define TFINDXYT(TH,expa,expw,fstmt0,endtest1,fstmt1)  \
  {UIL dx; x=*(D*)v;                                                                            \
   HASHSLOT(HIDUMSKSV(dx,v)) jx=j; \
@@ -804,16 +741,7 @@ static IOFX(Z,UI4,jtioz02,, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n)
  }
 
 
-#if C_AVX || EMU_AVX
 #define SETXNEW  __m128d tltr; tltr=_mm_set_pd(tl,tr); xnew=xrot=xval=_mm_sub_pd(tltr,tltr);
-#elif defined(__aarch64__)
-#define SETXNEW  __m128d tltr=tltr; tltr=vsetq_lane_f64(tl,tltr,1); tltr=vsetq_lane_f64(tr,tltr,0); xnew=xrot=xval=vsubq_f64(tltr,tltr);
-#else
-#define SETXNEW  __m128d tltr; \
-   SSEREGD(tltr)[0]=tr; SSEREGD(tltr)[1]=tl; \
-   SSEREGD(xnew)[0]=SSEREGD(xrot)[0]=SSEREGD(xval)[0]=0.0; \
-   SSEREGD(xnew)[1]=SSEREGD(xrot)[1]=SSEREGD(xval)[1]=0.0;
-#endif
 // Do the operation.  Build a hash for a except when self-index
 #define IOFT(T,TH,f,hash,FXY,FYY,expa,expw)   \
  IOF(f){I acn=ak/sizeof(T),  \

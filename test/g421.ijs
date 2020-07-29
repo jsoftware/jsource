@@ -401,7 +401,7 @@ c =: </.~ i. 256
 b =: 7!:0''
 b <: 512 + a
 
-4!:55 ;:'a adot1 adot2 sdot0 base bs bsd conv conv1 em en eq iind infix k '
+4!:55 ;:'a adot1 adot2 sdot0 b base bs bsd conv conv1 em en eq iind infix k '
 4!:55 ;:'kay key key0 n ob oind omask osub outfix pconv pconv1 prefix pru x yx yy'
 4!:55 ;:'s sd seg suffix t test xx ' 
 randfini''

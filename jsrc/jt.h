@@ -67,7 +67,8 @@ typedef struct {
  A    sf;               /* for $:     $                                     */
 // obsolete  A    zombieval;        // value of assignsym, if it can be reused   $
  L    *assignsym;       // symbol-table entry for the symbol about to be assigned   $
- A    symb;             /* symbol table for assignment       $              */
+// obsolete  A    symb;             /* symbol table for assignment       $              */
+ D    cct;               // complementary comparison tolerance
 // ----- end of cache line 1
  A*   nvrav;            /* AAV(jt->nvra)      $                             */
  UI4  nvran;            // number of atoms in nvrav    $
@@ -108,7 +109,7 @@ typedef struct {
  B    sesm;             /* whether there is a session manager              */
  B    tmonad;           /* tacit translator: 1 iff monad         >          */
  B    tsubst;           /* tacit translator           >                     */
-#if 0
+#if 0  // obsolete 
  B    xco;              /* 1 iff doing x: conversion                       */
 #endif
  UC   dbuser;           /* user-entered value for db                       */
@@ -160,7 +161,6 @@ typedef struct {
  I4   nthreads;  // number of threads to use, or 0 if we haven't checked     $
  A*   tstacknext;       // if not 0, points to the recently-used tstack buffer, whose chain field points to tstacknext
  A*   tstackcurr;       // current allocation, holding NTSTACK bytes+1 block for alignment.  First entry points to next-lower allocation
- D    cct;               /* complementary comparison tolerance                            */
  D    cctdefault;        /* default complementary comparison tolerance                    */
  UIL  ctmask;           /* 1 iff significant wrt ct; for i. and i:         */
  A    idothash0;        // 2-byte hash table for use by i.
@@ -256,7 +256,7 @@ typedef struct {
  PM*  pmv;              /* perf. monitor: (PM*)(sizeof(PM0)+CAV(pma))      */
  I    pos[2];           /* boxed output x-y positioning                    */
  C    pp[8];            /* print precision                                 */
- AF   pre;              /* preface function for assignment                 */
+// obsolete  AF   pre;              /* preface function for assignment                 */
  A    p4792;            // pointer to p: i. 4792, filled in on first use
  I    redefined;        /* symbol table entry of redefined explicit defn   */
  I    sbfillfactor;     /* SB for binary tree                              */

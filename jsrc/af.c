@@ -57,7 +57,7 @@ B jthasimploc(J jt,A w){A hs,*u;V*v;
  R 0;
 }
 
-A jtfixa(J,A,A);
+static A jtfixa(J,A,A);
 EVERYSELF(arofixaself,jtaro,jtfixa,0)  // create A block to be used in every to call jtfixa (dyad) or jtaro (monad)
 
 // fix the verb w (could be a name if name+noun, or during debug).

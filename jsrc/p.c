@@ -7,6 +7,7 @@
 #include "p.h"
 #include <stdint.h>
 
+#define RECURSIVERESULTS 0  // set to shake out nonrecursive results
 
 #define PARSERSTKALLO (490*sizeof(PSTK))  // number of stack entries to allocate, when we allocate, in bytes
 
@@ -112,6 +113,10 @@ static const UI4 ptcol[] = {
 
 static PSTK* jtpfork(J jt,PSTK *stack){
  A y=folk(stack[1].a,stack[2].a,stack[3].a);  // create the fork
+#if RECURSIVERESULTS
+if(y&&(AT(y)&NOUN)&&((AT(y)^AFLAG(y))&RECURSIBLE))
+  SEGFAULT  // stop if nonrecursive noun result detected
+#endif
  RZ(y);  // if error, return 0 stackpointer
  stack[3].t = stack[1].t; stack[3].a = y;  // take err tok from f; save result; no need to set parsertype, since it didn't change
  stack[2]=stack[0]; R stack+2;  // close up stack & return
@@ -119,6 +124,10 @@ static PSTK* jtpfork(J jt,PSTK *stack){
 
 static PSTK* jtphook(J jt,PSTK *stack){
  A y=hook(stack[1].a,stack[2].a);  // create the hook
+#if RECURSIVERESULTS
+if(y&&(AT(y)&NOUN)&&((AT(y)^AFLAG(y))&RECURSIBLE))
+  SEGFAULT  // stop if nonrecursive noun result detected
+#endif
  RZ(y);  // if error, return 0 stackpointer
  PTFROMTYPE(stack[2].pt,AT(y)) stack[2].t = stack[1].t; stack[2].a = y;  // take err tok from f; save result
  stack[1]=stack[0]; R stack+1;  // close up stack & return
@@ -130,7 +139,9 @@ static PSTK* jtpparen(J jt,PSTK *stack){
  R stack+2;  // advance stack pointer to result
 }
 
-static F2(jtisf){RZ(symbis(onm(a),CALL1(jt->pre,w,0L),jt->symb)); R num(0);} 
+// obsolete static F2(jtisf){RZ(symbis(onm(a),CALL1(jt->pre,w,0L),jt->symb)); R num(0);}
+// multiple assignment.  self has parms.  ABACK(self) is the symbol table to assign to, valencefns[0] is preconditioning routine to open value or convert it to AR
+static DF2(jtisf){RZ(symbis(onm(a),CALL1(FAV(self)->valencefns[0],w,0L),ABACK(self))); R num(0);} 
 
 static PSTK* jtis(J jt,PSTK *stack){B ger=0;C *s;
   A asgblk=stack[1].a; I asgt=AT(asgblk); A v=stack[2].a, n=stack[0].a;  // value and name
@@ -177,11 +188,17 @@ static PSTK* jtis(J jt,PSTK *stack){B ger=0;C *s;
    ASSERT(AN(n)||(AR(v)&&!AS(v)[0]),EVILNAME);  // error if namelist empty or multiple assignment to no names, if there is something to be assigned
    // otherwise, if it's an assignment to an atomic computed name, convert the string to a name and do the single assignment
    if(!AR(n))symbis(onm(n),v,symtab);
-   // otherwise it's multiple assignment (could have just 1 name to assign, if it is AR assignment).
-   // Verify rank 1.  For each lhs-rhs pair, do the assignment (in jtisf).
-   // if it is AR assignment, apply jtfxx to each assignand, to convert AR to internal form
-   // if not AR assignment, just open each box of rhs and assign
-   else {ASSERT(1==AR(n),EVRANK); ASSERT(AT(v)&NOUN,EVDOMAIN); jt->symb=symtab; jt->pre=ger?jtfxx:jtope; rank2ex(n,v,0L,0,AR(v)-1<0?0:AR(v)-1,0,AR(v)-1<0?0:AR(v)-1,jtisf);}
+   else {
+    // otherwise it's multiple assignment (could have just 1 name to assign, if it is AR assignment).
+    // Verify rank 1.  For each lhs-rhs pair, do the assignment (in jtisf).
+    // if it is AR assignment, apply jtfxx to each assignand, to convert AR to internal form
+    // if not AR assignment, just open each box of rhs and assign
+    ASSERT(1==AR(n),EVRANK); ASSERT(AT(v)&NOUN,EVDOMAIN);
+// obsolete     jt->symb=symtab; jt->pre=ger?jtfxx:jtope;
+    // create faux fs to pass args to the multiple-assignment function, in AM and valencefns
+    PRIM asgfs; ABACK((A)&asgfs)=symtab; FAV((A)&asgfs)->flag2=0; FAV((A)&asgfs)->valencefns[0]=ger?jtfxx:jtope;   // pass in the symtab to assign, and whether w must be converted from AR.  flag2 must be 0 to satisfy rank2ex
+    rank2ex(n,v,(A)&asgfs,0,AR(v)-1<0?0:AR(v)-1,0,AR(v)-1<0?0:AR(v)-1,jtisf);
+   }
   }
  }
 retstack:  // return, but 0 if error
@@ -581,6 +598,10 @@ rdglob: ;
       y=(*actionfn)(jt,arg1,arg2,fs);
       jt=(J)(intptr_t)((I)jt&~JTFLAGMSK);
       // jt is OK again
+#if RECURSIVERESULTS
+if(y&&(AT(y)&NOUN)&&((AT(y)^AFLAG(y))&RECURSIBLE))
+  SEGFAULT  // stop if nonrecursive noun result detected
+#endif
 #if MEMAUDIT&0x10
       auditmemchains();  // trap here while we still point to the action routine
 #endif
@@ -595,6 +616,10 @@ rdglob: ;
       stack[pline-2]=stack[0]; // close up the stack
       stack=stack+pline-2;  // advance stackpointer to position before result 1 2
       A y=(*actionfn)(jt,arg1,arg2,fs);
+#if RECURSIVERESULTS
+if(y&&(AT(y)&NOUN)&&((AT(y)^AFLAG(y))&RECURSIBLE))
+  SEGFAULT  // stop if nonrecursive noun result detected
+#endif
 #if MEMAUDIT&0x10
       auditmemchains();  // trap here while we still point to the action routine
 #endif

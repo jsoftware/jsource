@@ -682,6 +682,8 @@ extern unsigned int __cdecl _clearfp (void);
 #define ds(c)            (A)&primtab[(UC)(c)]
 // see if value of x is the atom v.  Do INT/B01/FL here, subroutine for exotic cases
 #define EQINTATOM(x,v)  ( (AR(x)==0) && ((AT(x)&(INT+B01)) ? (((*IAV0(x))&(((AT(x)&B01)<<8)-1))==(v)) : (AT(x)&FL) ? *DAV0(x)==(D)(v) : 0!=equ(num(v),x))  )
+// define self block used in every/every2.  It is the self for the f in f&.>, and contains only function pointers and an optional param in AK
+#define EVERYSELF(name,f0,f1,akparm) PRIMSHORT name={{akparm,0,0,0,0,0,0},{f0,f1}};
 #if USECSTACK
 #define FDEPDEC(d)
 #define FDEPINC(d)

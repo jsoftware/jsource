@@ -500,13 +500,14 @@ F1(jtmat){A z;B b=0;C*v,*x;I c,k,m=1,p,q,qc,r,*s,t,zn;
 
 // Convert 1 box to character array, then to character table
 static F1(jtmatth1){R mat(thorn1main(w));}
+static EVERYSELF(matth1self,jtmatth1,0,0)
 
 // Format boxed array.  Result is table of characters, with space-changing characters (like BS, CR) converted to spaces
 static F1(jtthbox){A z;static UC ctrl[]=" \001\002\003\004\005\006\007   \013\014 ";
  // Format the contents of each box; form into a table.  every returns an array of boxes,
  // with the same shape as w, where the contents have been replaced by a table of characters
  // Then call enframe to assemble all the tables into the result table
- RZ(z=enframe(every(w,0L,jtmatth1)));
+ RZ(z=enframe(every(w,(A)&matth1self)));
  // Go through each byte of the result, replacing ASCII codes 0, 8, 9, 10, and 13
  // (NUL, BS, TAB, LF, CR) with space
  // Three versions of replacement, depending on datatype of the array

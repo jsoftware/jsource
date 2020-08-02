@@ -7,8 +7,9 @@
 #include "ve.h"
 
 
-static A jteverysp(J jt,A w,A fs,AF f1){A*wv,x,z,*zv;P*wp,*zp;
+static A jteverysp(J jt,A w,A fs){A*wv,x,z,*zv;P*wp,*zp;
  RZ(w);
+ AF f1=FAV(fs)->valencefns[0];
  ASSERT(SBOX&AT(w),EVNONCE);
  RZ(z=ca(w));
  wp=PAV(w); x=SPA(wp,x); wv=AAV(x);
@@ -25,9 +26,12 @@ static A jteverysp(J jt,A w,A fs,AF f1){A*wv,x,z,*zv;P*wp,*zp;
 // Does not inplace; if we modify it to inplace, we must make sure to turn off inplacing of contents of x/y if the arg itself is not inplaceable
 // We keep this around because it is used for internal calls.  Most (not all, especially calls for jtfx) have fs==0, which we could check for in rank1ex0 and treat as &.>
 // It is also the recursion mechanism for L: and S:; that would require looking at a special flag during ex0 to treat that as &.>
-A jtevery(J jt,A w,A fs,AF f1){A*wv,x,z,*zv;
+// The fs argument is the verb to be applied to each cell, thus descibes the f in f&.> .  For certain calls, like L: S:, it may be incomplete having just
+// enought to execute the specific routine.  All we look at here is the valencefn to call
+A jtevery(J jt,A w,A fs){A*wv,x,z,*zv;
  RZ(w);
- if(SPARSE&AT(w))R everysp(w,fs,f1);
+ if(SPARSE&AT(w))R everysp(w,fs);
+ AF f1=FAV(fs)->valencefns[0];
  GATV(z,BOX,AN(w),AR(w),AS(w));
  I natoms=AN(w); if(!natoms)R z;  // exit if no result atoms
  zv=AAV(z);
@@ -42,9 +46,10 @@ A jtevery(J jt,A w,A fs,AF f1){A*wv,x,z,*zv;
  R z;
 }
 
-A jtevery2(J jt,A a,A w,A fs,AF f2){A*av,*wv,x,z,*zv;
+A jtevery2(J jt,A a,A w,A fs){A*av,*wv,x,z,*zv;
 // todo kludge should rewrite with single flag word
  RZ(a&&w); 
+ AF f2=FAV(fs)->valencefns[1];
  // Get the number of atoms, and the number of times to repeat the short side.
  // The repetition is the count of the surplus frame.
  I rpti;  // number of times short frame must be repeated
@@ -103,8 +108,8 @@ static DF2(jtunderh2){F2PREFIP;DECLFGH; R (FAV(hs)->valencefns[1])(jtinplace,a,w
 static DF1(jtundco1){F1PREFIP;DECLFG;A fullf; RZ(fullf=atop(inv(sv->localuse.lvp[0]),sv->fgh[2])); R (FAV(fullf)->valencefns[0])(FAV(fullf)->flag&VJTFLGOK1?jtinplace:jt,w,fullf);}
 static DF2(jtundco2){F2PREFIP;DECLFG;A fullf; RZ(fullf=atop(inv(sv->localuse.lvp[0]),sv->fgh[2])); R (FAV(fullf)->valencefns[1])(FAV(fullf)->flag&VJTFLGOK2?jtinplace:jt,a,w,fullf);}
 
-// u&.> main entry point.  Does not support inplacing.
-static DF2(jteach2){DECLF; R every2(a,w,fs,f2);}
+// obsolete // u&.> main entry point.  Does not support inplacing.
+// obsolete static DF2(jteach2){DECLF; R every2(a,w,fs,f2);}
 // versions for rank 0 (including each).  Passes inplaceability through
 // if there is only one cell, process it through under[h]1, which understands this type; if more, loop through
 static DF1(jtunder10){R jtrank1ex0(jt,w,self,jtunder1);}  // pass inplaceability through

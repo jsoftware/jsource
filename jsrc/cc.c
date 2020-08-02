@@ -13,7 +13,8 @@
 
 
 static DF1(jtcut01){DECLF;A h,x,z;
- RZ(x=from(box(every(negate(shape(w)),0L,jtiota)),w));
+// obsolete  RZ(x=from(box(every(negate(shape(w)),0L,jtiota)),w));
+ RZ(x=from(box(every(negate(shape(w)),ds(CIOTA))),w));
  if(VGERL&sv->flag){h=sv->fgh[2]; R df1(z,x,*AAV(h));}else R CALL1(f1,x,fs);
 }    /* f;.0 w */
 

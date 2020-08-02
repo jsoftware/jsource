@@ -97,10 +97,14 @@ A jtfxeachv(J jt,I r,A w){A*wv,x,z,*zv;I n;
  R z;
 }
 
+// self blocks to pass into every and thence into jtfx.  AK holds the parm into jtfx
+PRIM jtfxself[2]={ {{0,0,0,0,0,0,0},{{{jtfx,0},{0,0,0},0,0,0,0,0,0,0}}} , {{1,0,0,0,0,0,0},{{{jtfx,0},{0,0,0},0,0,0,0,0,0,0}}}};
+
 // run jtfx on each box in w, turning AR into an A block
-F1(jtfxeach){RETF(every(w,0L,jtfx));}
-// run jtfx on each box in w, EXCEPT on nouns, which we return as is
-F1(jtfxeachacv){RETF(every(w,w,jtfx));}  // the second w is just any nonzero
+// self is a parm passed through to jtfx, coming from jtfxself above.  if AK(self) is nonzero, we return nouns as is
+DF1(jtfxeach){RETF(every(w,self));}
+// obsolete // run jtfx on each box in w, EXCEPT on nouns, which we return as is
+// obsolete F1(jtfxeachacv){RETF(every(w,w,jtfx));}  // the second w is just any nonzero
 
 static DF1(jtcon1){A h,*hv,*x,z;V*sv;
  PREF1(jtcon1);
@@ -514,7 +518,7 @@ A jtgconj(J jt,A a,A w,C id){A hs,y;B na;I n;
  ASSERT(1>=AR(y),EVRANK);
  ASSERT((n&-2)==2,EVLENGTH);  // length is 2 or 3
  ASSERT(BOX&AT(y),EVDOMAIN);
- RZ(hs=fxeach(3==n?y:link(scc(CLBKTC),y)));
+ RZ(hs=fxeach(3==n?y:link(scc(CLBKTC),y),(A)&jtfxself[0]));
  R fdef(0,id,VERB, na?jtgcl1:jtgcr1,na?jtgcl2:jtgcr2, a,w,hs, na?VGERL:VGERR, RMAX,RMAX,RMAX);
 }
 
@@ -563,7 +567,7 @@ A jtgadv(J jt,A w,C id){A hs;I n;
  ASSERT(1>=AR(w),EVRANK);
  ASSERT(n&&n<=3,EVLENGTH);  // verify 1-3 gerunds
  ASSERT(BOX&AT(w),EVDOMAIN);
- RZ(hs=fxeach(3==n?w:behead(reshape(num(4),w))));   // convert to v0`v0`v0, v1`v0`v1, or v0`v1`v2; convert each gerund to verb
+ RZ(hs=fxeach(3==n?w:behead(reshape(num(4),w)),(A)(&jtfxself[0])));   // convert to v0`v0`v0, v1`v0`v1, or v0`v1`v2; convert each gerund to verb
  // hs is a BOX array, but its elements are ARs
  // The derived verb is ASGSAFE if all the components are; it has gerund left-operand; and it supports inplace operation on the dyad
  // Also set the LSB flags to indicate whether v0 is u@[ or u@]

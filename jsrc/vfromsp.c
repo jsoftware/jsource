@@ -117,7 +117,7 @@ A jtfrombsn(J jt,A ind,A w,I wf){A a,j1,p,q,x,x1,y,y1,ys,z;C*xu,*xuu,*xv;
 
 static A jtfrombs1(J jt,A ind,A w,I wf){A*iv,x,y,z;I j,m,n,wr,wcr;
  RZ(ind&&w);
- if(!(BOX&AT(ind))){ASSERT(!AN(ind)||NUMERIC&AT(ind),EVINDEX); RZ(ind=every(ind,0L,jtright1));}
+ if(!(BOX&AT(ind))){ASSERT(!AN(ind)||NUMERIC&AT(ind),EVINDEX); RZ(ind=every(ind,ds(CRIGHT)));}
  n=AN(ind); iv=AAV(ind);  wr=AR(w); wcr=wr-wf;
  ASSERT(1>=AR(ind),EVRANK);
  ASSERT(n<=wr-wf,EVLENGTH);

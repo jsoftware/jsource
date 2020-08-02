@@ -234,10 +234,10 @@ typedef struct {
  A*   fxpv;             /* f. AAV(fxpath)                                  */
  A    iep;              /* immediate execution phrase                      */
  AF   lcp;              /* linear representation paren function            */
- I    lleft;            /* positive finite left    level                   */
- I    lmon;             /* positive finite monadic level                   */
+// obsolete  I    lleft;            /* positive finite left    level                   */
+// obsolete  I    lmon;             /* positive finite monadic level                   */
  I    locsize[2];       /* size indices for named and numbered locales     */
- I    lright;           /* positive finite right   level                   */
+// obsolete  I    lright;           /* positive finite right   level                   */
  A    ltext;            /* linear representation text                      */
  AF   ltie;             /* linear representation tie   function            */
  I    min;              /* the r result from irange                        */
@@ -270,7 +270,7 @@ typedef struct {
  A    sbu;              /* SB data for each unique symbol                  */
  I    sbun;             /* SB cardinality                                  */
  SBU* sbuv;             /* SB points to ravel of sbu                       */
- A    sca;              // S: result vector  rank=1 AN=#elements AS[0]=#used
+// obsolete  A    sca;              // S: result vector  rank=1 AN=#elements AS[0]=#used
  int  sdinited;         /* sockets                                         */
  A    slist;            /* files used in right arg to 0!:                  */
  A    sclist;           /* slisti when items of slist were added           */

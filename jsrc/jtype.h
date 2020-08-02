@@ -148,6 +148,7 @@ typedef I SI;
 /* Fields of type A                                                        */
 
 #define AK(x)           ((x)->kchain.k)        /* offset of ravel wrt x           */
+#define AKASA(x)        ((x)->kchain.chain)       // the AK field for synthetic self blocks
 #define AKGST(x)        ((x)->kchain.globalst)        // global symbol table for this local symbol table
 #define AFLAG(x)        ((x)->flag)     /* flag                            */
 #define AM(x)           ((x)->mback.m)        /* Max # bytes in ravel            */
@@ -800,6 +801,8 @@ typedef struct {AF valencefns[2];A fgh[3];union { D lD; void *lvp[2]; I lI; I4 l
 
 // layout of primitive, in the primtbl.  It is a memory header (shape 0) followed by a V
 typedef struct {I memhdr[AKXR(0)/SZI]; union { V primvb; I primint; } prim; } PRIM;  // two cachelines exactly in 64-bit
+// Level (L: and S:) code build self blocks for every on the C stack.  every looks only at the function pointers, so these can be short to save stack space
+typedef struct {I memhdr[AKXR(0)/SZI]; AF fptrs[2]; } PRIMSHORT;   // the mem hdr gets filled in, plus the function pointers
 
 
 

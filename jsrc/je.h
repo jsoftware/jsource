@@ -117,8 +117,9 @@ extern F1(jtfrombase64);
 extern F1(jtfsmvfya);
 extern F1(jtfullname);
 extern DF1(jtfx);
-extern F1(jtfxeach);
-extern F1(jtfxeachacv);
+extern DF1(jtfxeach);
+// obsolete extern F1(jtfxeachacv);
+extern PRIM jtfxself[2];
 extern F1(jtfxx);
 extern F1(jtgaussdet);
 extern F1(jtgausselm);
@@ -673,8 +674,8 @@ extern A        jtev2(J,A,A,C*);
 extern A        jteva(J,A,C*);
 extern A        jteval(J,C*);
 extern A        jtevc(J,A,A,C*);
-extern A        jtevery(J,A,A,AF);
-extern A        jtevery2(J,A,A,A,AF);
+extern A        jtevery(J,A,A);
+extern A        jtevery2(J,A,A,A);
 extern A        jtext(J,B,A);
 extern A        jtexta(J,I,I,I,I);
 extern A*       jtextnvr(J);
@@ -995,6 +996,7 @@ extern I iotavec[IOTAVECLEN];  // ascending integers, starting at IOTAVECBEGIN
 extern UC       hwaes;
 extern UC       hwfma;
 extern VARPSA rpsnull;
+extern PRIMSHORT sfn0overself;
 
 #if (SYS & SYS_ATARIST+SYS_ATT3B1)
 extern int      memcmp();       /* C library fn                            */

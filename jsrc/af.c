@@ -57,6 +57,8 @@ B jthasimploc(J jt,A w){A hs,*u;V*v;
  R 0;
 }
 
+A jtfixa(J,A,A);
+EVERYSELF(arofixaself,jtaro,jtfixa,0)  // create A block to be used in every to call jtfixa (dyad) or jtaro (monad)
 
 // fix the verb w (could be a name if name+noun, or during debug).
 // a is flags to handle lower recursions:
@@ -106,7 +108,7 @@ static A jtfixa(J jt,A a,A w){A f,g,h,wf,x,y,z=w;V*v;I aa[AKXR(0)/SZI+1]={AKXR(0
    f=REFIXA(na,f); g=REFIXA(ID(f)==CCAP?1:2,g); h=REFIXA(na,h); R folk(f,g,h);  // f first in case it's [:
   case CATDOT:
   case CGRCO:
-   RZ(f=every(every2(sc(aif|na),h,0L,jtfixa),0L,jtaro)); // full A block required for call
+   RZ(f=every(every2(sc(aif|na),h,(A)&arofixaself),(A)&arofixaself)); // full A block required for call
    RZ(g=REFIXA(na,g));
    R df2(z,f,g,wf);
   case CIBEAM:

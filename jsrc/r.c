@@ -6,6 +6,8 @@
 #include "j.h"
 #include "w.h"
 
+F1(jtdrr);
+EVERYSELF(drrself,jtdrr,0,0)
 
 static F1(jtdrr){PROLOG(0055);A df,dg,hs,*x,z;B b,ex,xop;C c,id;I fl,*hv,m;V*v;
  RZ(w);
@@ -23,8 +25,8 @@ static F1(jtdrr){PROLOG(0055);A df,dg,hs,*x,z;B b,ex,xop;C c,id;I fl,*hv,m;V*v;
  m=!!fs+(gs||ex);
  if(!m)R spella(w);
  if(evoke(w))R drr(sfne(w));  // turn nameref into string or verb; then take rep
- if(fs)RZ(df=fl&VGERL?every(fxeach(fs),0L,jtdrr):drr(fs));
- if(gs)RZ(dg=fl&VGERR?every(fxeach(gs),0L,jtdrr):drr(gs));
+ if(fs)RZ(df=fl&VGERL?every(fxeach(fs,(A)&jtfxself[0]),(A)&drrself):drr(fs));
+ if(gs)RZ(dg=fl&VGERR?every(fxeach(gs,(A)&jtfxself[0]),(A)&drrself):drr(gs));
  if(ex)RZ(dg=unparsem(num(0),w));
  m+=!b&&!xop||hs&&xop;
  GATV0(z,BOX,m,1); x=AAV(z);

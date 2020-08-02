@@ -341,8 +341,10 @@ static DF1(jtlrr){A hs,t,*tv;C id;I fl,m;V*v;
  GATV0(t,BOX,m,1); tv=AAV(t);
  if(2<m)RZ(tv[2]=lrr(hs));
  // for top-level of gerund (indicated by self!=0), any noun type could not have come from an AR, so return it as is
- if(1<m)RZ(tv[1]=fl&VGERR?CALL1(jt->ltie,self?fxeachacv(gs):fxeach(gs),0L):lrr(gs));
- if(0<m)RZ(tv[0]=fl&VGERL?CALL1(jt->ltie,self?fxeachacv(fs):fxeach(fs),0L):lrr(fs));
+// obsolete  if(1<m)RZ(tv[1]=fl&VGERR?CALL1(jt->ltie,self?fxeachacv(gs):fxeach(gs),0L):lrr(gs));
+// obsolete  if(0<m)RZ(tv[0]=fl&VGERL?CALL1(jt->ltie,self?fxeachacv(fs):fxeach(fs),0L):lrr(fs));
+ if(1<m)RZ(tv[1]=fl&VGERR?CALL1(jt->ltie,fxeach(gs,(A)&jtfxself[!!self]),0L):lrr(gs));
+ if(0<m)RZ(tv[0]=fl&VGERL?CALL1(jt->ltie,fxeach(fs,(A)&jtfxself[!!self]),0L):lrr(fs));
  R linsert(t,w);
 }
 

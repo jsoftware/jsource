@@ -64,6 +64,7 @@ static void jtdspell(J jt,C id,A w){C c,s[5];
 }}
 
 static F1(jtsfn0){R sfn(0,w);}  // return string form of full name for a NAME block
+EVERYSELF(sfn0overself,jtsfn0,jtover,0)
 
 static void jtdisp(J jt,A w){B b=1&&AT(w)&NAME+NUMERIC;
  if(b&&jt->nflag)eputc(' ');
@@ -77,7 +78,7 @@ static void jtdisp(J jt,A w){B b=1&&AT(w)&NAME+NUMERIC;
  case BOXX:
   if(!(AT(w)&BOXMULTIASSIGN)){eputs(" a:"+!jt->nflag); break;}
   // If this is an array of names, turn it back into a character string with spaces between
-  else{w=curtail(raze(every2(every(w,0,jtsfn0),chrspace,0,jtover)));}  // }: (string&.> names) ,&.> ' '  then fall through to display it
+  else{w=curtail(raze(every2(every(w,(A)&sfn0overself),chrspace,(A)&sfn0overself)));}  // }: (string&.> names) ,&.> ' '  then fall through to display it
  case LITX:  eputq(w);                break;
  case NAMEX: ep(AN(w),NAV(w)->s);     break;
  case LPARX: eputc('(');              break;

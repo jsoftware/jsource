@@ -511,14 +511,17 @@ F2(jtsfrom){
  A z; RETF(from(IRS1(a,0L,1L,jtbox,z),w));
 }    /* (<"1 a){w */
 
+F2(jtmapx);
+static EVERYSELF(mapxself,0,jtmapx,0)
+
 static F2(jtmapx){A z1,z2,z3;
  RZ(a&&w);
  if(!(BOX&AT(w)))R ope(a);
- RZ(z1=catalog(every(shape(w),0L,jtiota)));  // create index list of each box
+ RZ(z1=catalog(every(shape(w),ds(CIOTA))));  // create index list of each box
  IRS1(z1,0,0,jtbox,z2);
- RZ(z2=every2(a,z2,0L,jtover));
+ RZ(z2=every2(a,z2,(A)&sfn0overself));
  IRS1(z2,0,0,jtbox,z3);
- R every2(z3,w,0L,jtmapx);
+ R every2(z3,w,(A)&mapxself);
 }
 
 F1(jtmap){R mapx(ds(CACE),w);}

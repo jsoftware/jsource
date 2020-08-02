@@ -823,6 +823,8 @@ extern unsigned int __cdecl _clearfp (void);
 #define INCORP(z)       {if(AFLAG(z)&AFVIRTUAL)RZ((z)=realize(z)); ACIPNO(z); }
 // same, but for nonassignable argument
 #define INCORPNA(z)     incorp(z)
+// use to incorporate into a known-recursive box.  We raise the usecount of z
+#define INCORPRA(z)       {if(AFLAG(z)&AFVIRTUAL)RZ((z)=realize(z)); ra(z); }
 // Tests for whether a result incorporates its argument.  The originator, who is going to check this, always marks the argument inplaceable,
 // and we signal incorporation either by returning the argument itself or by marking it non-inplaceable (if we box it)
 #define WASINCORP1(z,w)    ((z)==(w)||0<=AC(w))

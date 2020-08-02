@@ -499,7 +499,7 @@ L* jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;L*e;
    xaf=AFLAG(x); xt=AT(x); // if assigned, get the actual flags
  } else {xaf = AFNVRUNFREED; xt=0;}   // If name is not assigned, indicate that it is not read-only or memory-mapped.  Also set 'impossible' code of unfreed+not NVR
  if(!(AFNJA&xaf)){
-  // If we are assigning the same data block that's already there, don't bother with changing use counts or checking for relative
+  // If we are assigning the same data block that's already there, don't bother with changing use counts
   // addressing - if there was any, it should have been fixed when the original assignment was made.
   // It is possible that a name in an upper execution refers to the block, but we can't do anything about that.
   if(x!=w){

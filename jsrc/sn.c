@@ -122,7 +122,7 @@ F1(jtnc){A*wv,x,y,z;I i,n,t,*zv;L*v;
  ASSERT(!n||BOX&AT(w),EVDOMAIN);   // verify boxed input (unless empty)
  GATV(z,INT,n,AR(w),AS(w)); zv=AV(z);   // Allocate z=result, same shape as input; zv->first result
  for(i=0;i<n;++i){   // for each name...
-  RE(y=stdnm(wv[i]));  // point to (the possibly relative) name, audit for validity
+  RE(y=stdnm(wv[i]));  // point to name, audit for validity
   if(y){if(v=syrd(y)){x=v->val; t=AT(x);}else{x=0; if(jt->jerr){y=0; RESETERR;}}}  // If valid, see if the name is defined
   // syrd can fail if a numbered locative is retrograde.  Call that an invalid name, rather than an error, here; thus the RESETERR
   // kludge: if the locale is not defined, syrd will create it.  Better to use a version/parameter to syrd to control that?

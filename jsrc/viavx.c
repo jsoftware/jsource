@@ -402,11 +402,11 @@ static B jteqq(J jt,I n,Q*u,Q*v){DQ(n, if(!QEQ(*u,*v))R 0; ++u; ++v;); R 1;}
 static B jeqd(I n,D*u,D*v,D cct){DQ(n, if(!TCMPEQ(cct,*u,*v))R 0; ++u; ++v;); R 1;}
 static B jteqz(J jt,I n,Z*u,Z*v){DQ(n, if(!zeq(*u,*v))R 0; ++u; ++v;); R 1;}
 
-// test a subset of two boxed arrays for match.  u/v point to pointers to contents, c and d are the relative flags
+// test a subset of two boxed arrays for match.  u/v point to pointers to contents
 // We test n subboxes
-static B jteqa(J jt,I n,A*u,A*v,I c,I d){DQ(n, if(!equ(*u,*v))R 0; ++u; ++v;); R 1;}
+static B jteqa(J jt,I n,A*u,A*v){DQ(n, if(!equ(*u,*v))R 0; ++u; ++v;); R 1;}
 // same but intolerant (used for write probes)
-static B jteqa0(J jt,I n,A*u,A*v,I c,I d){PUSHCCT(1.0) B res=1; DQ(n, if(!equ(*u,*v)){res=0;break;}; ++u; ++v;); POPCCT R res;}
+static B jteqa0(J jt,I n,A*u,A*v){PUSHCCT(1.0) B res=1; DQ(n, if(!equ(*u,*v)){res=0;break;}; ++u; ++v;); POPCCT R res;}
 
 
 /*
@@ -801,7 +801,7 @@ static IOFT(D,US,jtiod, HIDMSK(v), TFINDXYT,TFINDY1T,fcmp0(v,av+n*hj,n  ), !jeqd
 // FL atom
 static IOFT(D,US,jtiod1,HIDMSK(v), TFINDXYT,TFINDY1T,*v!=av[hj],                       !TCMPEQ(tl,x,av[hj] )                 )
 // boxed array with more than 1 box
-static IOFT(A,US,jtioa, hia(1.0,*v),TFINDBX,TFINDBY,!eqa(n,v,av+n*hj,0,0),          !eqa(n,v,av+n*hj,0,0)          )
+static IOFT(A,US,jtioa, hia(1.0,*v),TFINDBX,TFINDBY,!eqa(n,v,av+n*hj),          !eqa(n,v,av+n*hj)          )
 // singleton box
 static IOFT(A,US,jtioa1,hia(1.0,*v),TFINDBX,TFINDBY,!equ(*v,av[hj]),!equ(*v,av[hj]))
 
@@ -813,7 +813,7 @@ static IOFT(D,UI4,jtiod2, HIDMSK(v), TFINDXYT,TFINDY1T,fcmp0(v,av+n*hj,n  ), !je
 // FL atom
 static IOFT(D,UI4,jtiod12,HIDMSK(v), TFINDXYT,TFINDY1T,*v!=av[hj],                       !TCMPEQ(tl,x,av[hj] )                 )
 // boxed array with more than 1 box
-static IOFT(A,UI4,jtioa2, hia(1.0,*v),TFINDBX,TFINDBY,!eqa(n,v,av+n*hj,0,0),          !eqa(n,v,av+n*hj,0,0)          )
+static IOFT(A,UI4,jtioa2, hia(1.0,*v),TFINDBX,TFINDBY,!eqa(n,v,av+n*hj),          !eqa(n,v,av+n*hj)          )
 // singleton box
 static IOFT(A,UI4,jtioa12,hia(1.0,*v),TFINDBX,TFINDBY,!equ(*v,av[hj]),!equ(*v,av[hj]))
 
@@ -1161,8 +1161,8 @@ static A jtnodupgrade(J jt,A a,I acr,I ac,I acn,I ad,I n,I asct,I md,I bk){A*av,
   // don't bother with testing equality if q<index of u (for ascending; reverse for descending)
   // if the list was shortened, replace the last position with -(length of shortened list).  This will be detected
   // and complemented to give (length of list)-1.  0 is OK too, indicating a 1-element list
-  if(bk){hu=--hi; DQ(asct-1, q=*hi--; v=av+n*q; if((u<v)||!eqa(n,u,v,0,0)){u=v; *hu--=q;}); m1=hv-hu; if(asct>m1)hv[1-asct]=-m1;}
-  else  {hu=++hi; DQ(asct-1, q=*hi++; v=av+n*q; if((v<u)||!eqa(n,u,v,0,0)){u=v; *hu++=q;}); m1=hu-hv; if(asct>m1)hv[asct-1]=-m1;}
+  if(bk){hu=--hi; DQ(asct-1, q=*hi--; v=av+n*q; if((u<v)||!eqa(n,u,v)){u=v; *hu--=q;}); m1=hv-hu; if(asct>m1)hv[1-asct]=-m1;}
+  else  {hu=++hi; DQ(asct-1, q=*hi++; v=av+n*q; if((v<u)||!eqa(n,u,v)){u=v; *hu++=q;}); m1=hu-hv; if(asct>m1)hv[asct-1]=-m1;}
  }
  R h;
 } 
@@ -1175,7 +1175,7 @@ static A jtnodupgrade(J jt,A a,I acr,I ac,I acn,I ad,I n,I asct,I md,I bk){A*av,
 #define BSLOOPAA(hiinc,zstmti,zstmt1,zstmt0)  \
  {A* RESTRICT u=av,* RESTRICT v;I* RESTRICT hi=hv,p,q;             \
   p=*hi; hi+=(hiinc); u=av+n*p; zstmti;  /* u->first result value, install result for that value to index itself */      \
-  DQ(asct-1, q=*hi; hi+=(hiinc); v=av+n*q; if(((hiinc>0&&v>u)||(hiinc<0&&v<u))&&eqa(n,u,v,0,0)){zstmt1;} else{u=v; zstmt0;}); /* 
+  DQ(asct-1, q=*hi; hi+=(hiinc); v=av+n*q; if(((hiinc>0&&v>u)||(hiinc<0&&v<u))&&eqa(n,u,v)){zstmt1;} else{u=v; zstmt0;}); /* 
    q is input element# that will have result index i, v->it; if *u=*v, v is a duplicate: map the result back to u (index=p)
    if *u!=*p, advance u/p to v/q and use q as the result index */ \
  }

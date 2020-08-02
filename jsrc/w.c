@@ -182,6 +182,7 @@ static A jtconstr(J jt,I n,C*s){A z;C b,c,p,*t,*x;I m=0;
 // a holds the result of wordil, which is an integer list of word index & end+1: (# words),(i0,e0),(i1,e1)...
 // w holds the string text of the sentence
 // env is the environment for which this is being parsed: 0=tacit translator, 1=keyboard/immex with no locals, 2=for explicit defn
+// result is a list of parsable words, with types right.  The result is input only to parsing, never to verbs, and thus may be nonrecursive
 A jtenqueue(J jt,A a,A w,I env){A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl;UC c;
  RZ(a&&w);
  s=CAV(w); u=AV(a); n=*u++; n=REPSGN(n)^n;  // point s to start of string; set u as running pointer pointer in a; fetch # words;
@@ -279,6 +280,7 @@ A jtenqueue(J jt,A a,A w,I env){A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl;UC c;
 
 // env is the environment: 0=tacit translator, 1=keyboard/immex with no local symbol, 2=explicit definition running
 A jttokens(J jt,A w,I env){R enqueue(wordil(w),w,env);}
+// enqueue produces nonrecursive result, and so does tokens.  This is OK because the result is always parsed and is never an argument to a verb
 
 
 #define CHKJ(j)             ASSERT(0<=(j),EVINDEX);

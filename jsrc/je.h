@@ -312,7 +312,7 @@ extern F1(jtsignum);
 extern F1(jtsiinfo);
 extern F1(jtslash);
 extern F1(jtsldot);
-extern F1(jtsmmblks);
+// obsolete extern F1(jtsmmblks);
 extern F1(jtsnl);
 extern F1(jtsp);
 extern F1(jtsparse1);

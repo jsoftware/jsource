@@ -376,7 +376,6 @@ static C*jtidenv0(J jt,A a,A w,V*sv,I zt,A*zz){A fs,y,z;
 /* u    ptr to a for next    cut         */
 /* v    ptr to a for current cut         */
 /* v1   ptr to w for current cut         */
-/* wd   non0 iff w is relative              */
 
 // the values are 1 byte, either 8 bits or 1 bit
 #define FRETLOOPBYTE(decl,compI,comp) \

@@ -138,7 +138,7 @@ static B jteqz(J jt,I n,Z*u,Z*v){DQ(n, if(!zeq(*u,*v))R 0; ++u; ++v;); R 1;}
 
 // test a subset of two boxed arrays for match.  u/v point to pointers to contants, c and d are the relative flags
 // We test n subboxes
-static B jteqa(J jt,I n,A*u,A*v,I c,I d){DQ(n, if(!equ(*u,*v))R 0; ++u; ++v;); R 1;}
+static B jteqa(J jt,I n,A*u,A*v){DQ(n, if(!equ(*u,*v))R 0; ++u; ++v;); R 1;}
 
 /*
  mode one of the following:
@@ -526,7 +526,7 @@ static IOFT(D,jtiod, THASHA, TFINDXY,TFINDYY,memcmp(v,av+n*hj,n*  sizeof(D)), !e
 // should use macro for teq
 static IOFT(D,jtiod1,THASHA, TFINDXY,TFINDY1,x!=av[hj],                       !TEQ(x,av[hj] )                 )
 // boxed array with more than 1 box
-static IOFT(A,jtioa, THASHBX,TFINDBX,TFINDBX,!eqa(n,v,av+n*hj,0,0),          !eqa(n,v,av+n*hj,0,0)          )
+static IOFT(A,jtioa, THASHBX,TFINDBX,TFINDBX,!eqa(n,v,av+n*hj),          !eqa(n,v,av+n*hj)          )
 // singleton box
 static IOFT(A,jtioa1,THASHBX,TFINDBX,TFINDBX,!equ(*v,av[hj]),!equ(*v,av[hj]))
 
@@ -950,8 +950,8 @@ static A jtnodupgrade(J jt,A a,I acr,I ac,I acn,I ad,I n,I m,B b,B bk){A*av,h,*u
   // should not bother with testing equality if q<index of u (for ascending; reverse for descending)
   // if the list was shortened, replace the last position with 1-(length of shortened list).  This will be detected
   // and the sign changed to give (length of list)-1.  0 is OK too, indicating a 1-element list
-  if(bk){hu=--hi; DQ(m-1, q=*hi--; v=av+n*q; if(!eqa(n,u,v,0,0)){u=v; *hu--=q;}); m1=hv-hu; if(m>m1)hv[1-m]=1-m1;}
-  else  {hu=++hi; DQ(m-1, q=*hi++; v=av+n*q; if(!eqa(n,u,v,0,0)){u=v; *hu++=q;}); m1=hu-hv; if(m>m1)hv[m-1]=1-m1;}
+  if(bk){hu=--hi; DQ(m-1, q=*hi--; v=av+n*q; if(!eqa(n,u,v)){u=v; *hu--=q;}); m1=hv-hu; if(m>m1)hv[1-m]=1-m1;}
+  else  {hu=++hi; DQ(m-1, q=*hi++; v=av+n*q; if(!eqa(n,u,v)){u=v; *hu++=q;}); m1=hu-hv; if(m>m1)hv[m-1]=1-m1;}
  }
  R h;
 } 
@@ -965,7 +965,7 @@ static A jtnodupgrade(J jt,A a,I acr,I ac,I acn,I ad,I n,I m,B b,B bk){A*av,h,*u
 #define BSLOOPAA(hiinc,zstmti,zstmt1,zstmt0)  \
  {A* RESTRICT u=av,* RESTRICT v;I* RESTRICT hi=hv,p,q;             \
   p=*hiinc; u=av+n*p; zstmti;  /* u->first result value, install result for that value to index itself */      \
-  DQ(m-1, q=*hiinc; v=av+n*q; if(eqa(n,u,v,0,0)){zstmt1;} else{u=v; zstmt0;}); /* 
+  DQ(m-1, q=*hiinc; v=av+n*q; if(eqa(n,u,v)){zstmt1;} else{u=v; zstmt0;}); /* 
    q is input element# that will have result index i, v->it; if *u=*v, v is a duplicate: map the result back to u (index=p)
    if *u!=*p, advance u/p to v/q and use q as the result index */ \
  }

@@ -3,6 +3,7 @@
 /*                                                                         */
 /* Memory-Mapped Boxed Arrays                                              */
 
+#if 0
 #include "j.h"
 
 
@@ -276,3 +277,4 @@ F1(jtsmmblks){A x,y,z;I n,t,*v,*zv;
 
 A relocate(I m,A w){A1*wv; RZ(w); AFLAG(w)|=AFREL; wv=A1AV(w); DO(AN(w), wv[i]+=m;); R w;}
      /* add m to the addresses in w; works in place */
+#endif

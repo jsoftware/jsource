@@ -308,8 +308,8 @@
 #define eputs(x)                    jteputs(jt,(x))
 #define eputv(x)                    jteputv(jt,(x))
 #define eq(x,y)                     jtatomic2(jt,(x),(y),ds(CEQ))     
-#define eqa(x0,x1,x2,x3,x4)         jteqa(jt,(x0),(x1),(x2),(x3),(x4))
-#define eqa0(x0,x1,x2,x3,x4)        jteqa0(jt,(x0),(x1),(x2),(x3),(x4))
+#define eqa(x0,x1,x2)               jteqa(jt,(x0),(x1),(x2))
+#define eqa0(x0,x1,x2)              jteqa0(jt,(x0),(x1),(x2))
 #define eqd(x,y,z)                  jteqd(jt,(x),(y),(z))
 #define eqf(x,y)                    jteqf(jt,(x),(y))
 #define eqq(x,y,z)                  jteqq(jt,(x),(y),(z))
@@ -366,7 +366,7 @@
 #define fauxblockINT(z,n,r) I z[(AKXR(r)>>LGSZI)+(n)]   // define a block, big enough to hold n atoms at rank r, for use in fauxINT
 // Allocate an INT block. z is the zvalue to hold the result; v is the fauxblock to use if n INTs will fit in the fauxblock, which has rank r
 // shape is not filled in, except when rank is 1; therefore shape will be 0 in any call to GATV
-// scaf We should mark the blocks as NJA for good form, but that messes up relative processing.  Revisit when all trace of boxed mmas has been expunged
+// scaf We should mark the blocks as NJA for good form?
 #define fauxINT(z,v,n,r) {if(AKXR(r)+(n)*SZI<=(I)sizeof(v)){z=(A)(v); AK(z)=AKXR(r); AFLAG(z)=0/*AFNJA*/; AT(z)=INT; AC(z)=ACUC1; AN(z)=(n); AR(z)=(RANKT)(r); if(r==1)AS(z)[0]=(n);}else{GATV0(z,INT,(n),(r));}}
 // v is a block declared by fauxblock, w is the source data, r is the rank.  offset is assumed 0.  c is the initial value for AC.  If the rank is small enough, we use the fauxblock, otherwise
 // we allocate a block.  We assume that the caller will fill in AN, AS.  Block must be marked UNINCORPABLE so it will not free its backer if freed, and so it will not be in-place virtualed

@@ -311,7 +311,7 @@ static void auditsimverify0(A w){
   if(AT(w)&BOX){
    I n=AN(w); I af=AFLAG(w);
    A* RESTRICT wv=AAV(w);  // pointer to box pointers
-   I wrel = af&AFNJA?(I)w:0;  // If relative, add wv[] to wd; otherwise wv[] is a direct pointer
+   I wrel = af&AFNJA?(I)w:0;  // If NJA, add wv[] to wd; otherwise wv[] is a direct pointer
    if((af&AFNJA)||n==0)R;  // no processing if not J-managed memory (rare)
    DO(n, auditsimverify0((A)(intptr_t)((I)wv[i]+(I)wrel)););
   }else if(AT(w)&FUNC) {V* RESTRICT v=VAV(w);
@@ -339,7 +339,7 @@ static void auditsimdelete(A w){I delct;
   if(AT(w)&BOX){
    I n=AN(w); I af=AFLAG(w);
    A* RESTRICT wv=AAV(w);  // pointer to box pointers
-   I wrel = af&AFNJA?(I)w:0;  // If relative, add wv[] to wd; othewrwise wv[] is a direct pointer
+   I wrel = af&AFNJA?(I)w:0;  // If NJA, add wv[] to wd; othewrwise wv[] is a direct pointer
    if((af&AFNJA)||n==0)R;  // no processing if not J-managed memory (rare)
    DO(n, auditsimdelete((A)(intptr_t)((I)wv[i]+(I)wrel)););
   }else if(AT(w)&FUNC) {V* RESTRICT v=VAV(w);
@@ -362,7 +362,7 @@ static void auditsimreset(A w){I delct;
   if(AT(w)&BOX){
    I n=AN(w); I af=AFLAG(w);
    A* RESTRICT wv=AAV(w);  // pointer to box pointers
-   I wrel = af&AFNJA?(I)w:0;  // If relative, add wv[] to wd; othewrwise wv[] is a direct pointer
+   I wrel = af&AFNJA?(I)w:0;  // If NJA, add wv[] to wd; othewrwise wv[] is a direct pointer
    if((af&AFNJA)||n==0)R;  // no processing if not J-managed memory (rare)
    DO(n, auditsimreset((A)(intptr_t)((I)wv[i]+(I)wrel)););
   }else if(AT(w)&FUNC) {V* RESTRICT v=VAV(w);
@@ -1126,7 +1126,7 @@ F1(jtca){A z;I t;P*wp,*zp;
 // clone block only if it is read-only
 F1(jtcaro){ if(AFLAG(w)&AFRO)RETF(ca(w)); RETF(w); }
 
-// clone recursive.  The result is not relative, even if w is
+// clone recursive.
 F1(jtcar){A*u,*wv,z;I n;P*p;V*v;
  RZ(z=ca(w));
  n=AN(w);

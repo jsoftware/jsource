@@ -806,10 +806,10 @@ F2(jtcolon){A d,h,*hv,m;B b;C*s;I flag=VFLAGNONE,n,p;
   R fdef(0,CCOLON,VERB,xv1,xv2,a,w,0L,((FAV(a)->flag&FAV(w)->flag)&VASGSAFE),mr(a),lr(w),rr(w));  // derived verb is ASGSAFE if both parents are 
  }
  RE(n=i0(a));  // m : n; set n=type of result
- if(equ(w,num(0))){RZ(w=colon0(mark)); if(!n)R w;}
+ if(equ(w,num(0))){RZ(w=colon0(mark)); if(!n)R w;}   // if m : 0, read up to the ) .  If 0 : 0, return the string unedited
  if((C2T+C4T)&AT(w))RZ(w=cvt(LIT,w));
  if(10<n){s=CAV(w); p=AN(w); if(p&&CLF==s[p-1])RZ(w=str(p-1,s));}
- else{
+ else{  // not tacit translator - preparse the body
   RZ(BOX&AT(w)?sent12b(w,&m,&d):sent12c(w,&m,&d)); INCORP(m); INCORP(d);  // get monad & dyad parts; we are incorporating them into hv[]
   if(4==n){if((-AN(m)&(AN(d)-1))<0)d=m; m=mtv;}  //  for 4 :, make the single def given the dyadic one
   GAT0(h,BOX,2*HN,1); hv=AAV(h);
@@ -818,7 +818,8 @@ F2(jtcolon){A d,h,*hv,m;B b;C*s;I flag=VFLAGNONE,n,p;
    RE(b=preparse(d,hv+HN,hv+HN+1)); if(b)flag|=VTRY2; hv[2+HN]=jt->retcomm?d:mtv;
   }
  }
- if(!n)RCA(w);  // noun - return it
+ if(!n){ra0(w); RCA(w);}  // noun - return it.  Since this is a noun result, we make sure it is recursive usecount
+ // Non-noun results cannot become inputs to verbs, so we do not force them to be recursive
  if(n<=2){  // adv/conj
   I fndflag=xop(h);   // 4=mnuv 2=x 1=y
   b=fndflag>4;   // set if there is mnuv and xy
@@ -845,4 +846,5 @@ F2(jtcolon){A d,h,*hv,m;B b;C*s;I flag=VFLAGNONE,n,p;
   case 4:  R fdef(0,CCOLON, VERB, xn1,jtxdefn,       num(n),0L,h, flag, RMAX,RMAX,RMAX);
   case 13: R vtrans(w);
   default: ASSERT(0,EVDOMAIN);
-}}
+ }
+}

@@ -6,7 +6,7 @@
 #include "j.h"
 #include "w.h"
 
-F1(jtdrr);
+static F1(jtdrr);
 EVERYSELF(drrself,jtdrr,0,0)
 
 static F1(jtdrr){PROLOG(0055);A df,dg,hs,*x,z;B b,ex,xop;C c,id;I fl,*hv,m;V*v;

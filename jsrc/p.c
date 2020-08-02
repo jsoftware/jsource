@@ -7,7 +7,9 @@
 #include "p.h"
 #include <stdint.h>
 
-#define RECURSIVERESULTS 0  // set to shake out nonrecursive results
+#define RECURSIVERESULTSCHECK // if(y&&(AT(y)&NOUN)&&!(AFLAG(y)&AFVIRTUAL)&&((AT(y)^AFLAG(y))&RECURSIBLE))
+//  SEGFAULT  // stop if nonrecursive noun result detected
+
 
 #define PARSERSTKALLO (490*sizeof(PSTK))  // number of stack entries to allocate, when we allocate, in bytes
 
@@ -113,10 +115,7 @@ static const UI4 ptcol[] = {
 
 static PSTK* jtpfork(J jt,PSTK *stack){
  A y=folk(stack[1].a,stack[2].a,stack[3].a);  // create the fork
-#if RECURSIVERESULTS
-if(y&&(AT(y)&NOUN)&&((AT(y)^AFLAG(y))&RECURSIBLE))
-  SEGFAULT  // stop if nonrecursive noun result detected
-#endif
+RECURSIVERESULTSCHECK
  RZ(y);  // if error, return 0 stackpointer
  stack[3].t = stack[1].t; stack[3].a = y;  // take err tok from f; save result; no need to set parsertype, since it didn't change
  stack[2]=stack[0]; R stack+2;  // close up stack & return
@@ -124,10 +123,7 @@ if(y&&(AT(y)&NOUN)&&((AT(y)^AFLAG(y))&RECURSIBLE))
 
 static PSTK* jtphook(J jt,PSTK *stack){
  A y=hook(stack[1].a,stack[2].a);  // create the hook
-#if RECURSIVERESULTS
-if(y&&(AT(y)&NOUN)&&((AT(y)^AFLAG(y))&RECURSIBLE))
-  SEGFAULT  // stop if nonrecursive noun result detected
-#endif
+RECURSIVERESULTSCHECK
  RZ(y);  // if error, return 0 stackpointer
  PTFROMTYPE(stack[2].pt,AT(y)) stack[2].t = stack[1].t; stack[2].a = y;  // take err tok from f; save result
  stack[1]=stack[0]; R stack+1;  // close up stack & return
@@ -598,10 +594,7 @@ rdglob: ;
       y=(*actionfn)(jt,arg1,arg2,fs);
       jt=(J)(intptr_t)((I)jt&~JTFLAGMSK);
       // jt is OK again
-#if RECURSIVERESULTS
-if(y&&(AT(y)&NOUN)&&((AT(y)^AFLAG(y))&RECURSIBLE))
-  SEGFAULT  // stop if nonrecursive noun result detected
-#endif
+RECURSIVERESULTSCHECK
 #if MEMAUDIT&0x10
       auditmemchains();  // trap here while we still point to the action routine
 #endif
@@ -616,10 +609,7 @@ if(y&&(AT(y)&NOUN)&&((AT(y)^AFLAG(y))&RECURSIBLE))
       stack[pline-2]=stack[0]; // close up the stack
       stack=stack+pline-2;  // advance stackpointer to position before result 1 2
       A y=(*actionfn)(jt,arg1,arg2,fs);
-#if RECURSIVERESULTS
-if(y&&(AT(y)&NOUN)&&((AT(y)^AFLAG(y))&RECURSIBLE))
-  SEGFAULT  // stop if nonrecursive noun result detected
-#endif
+RECURSIVERESULTSCHECK
 #if MEMAUDIT&0x10
       auditmemchains();  // trap here while we still point to the action routine
 #endif

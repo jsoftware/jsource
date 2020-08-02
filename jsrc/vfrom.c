@@ -511,7 +511,7 @@ F2(jtsfrom){
  A z; RETF(from(IRS1(a,0L,1L,jtbox,z),w));
 }    /* (<"1 a){w */
 
-F2(jtmapx);
+static F2(jtmapx);
 static EVERYSELF(mapxself,0,jtmapx,0)
 
 static F2(jtmapx){A z1,z2,z3;

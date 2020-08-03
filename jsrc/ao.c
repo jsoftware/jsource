@@ -233,7 +233,7 @@ static DF2(jtkey){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
     I nfrets=AM(ai);  // before we possibly clone it, extract # frets found
     makewritable(ai);  // we modify the size+index info to be running endptrs into the reorder area
     // allocate the result area(s)
-    GA(z,zt,nfrets*cellatoms,AR(w),AS(w)); AS(z)[0]=nfrets; RZ(AN(z));  // avoid calls with empty args
+    GA(z,zt,nfrets*cellatoms,AR(w),AS(w)); AS(z)[0]=nfrets; if(AN(z)==0)R z;  // avoid calls with empty args
     if(unlikely(keyslashfn==3)){
      GA(freq,zt&FL?FL:INT,nfrets,1,0);  // allocate place for divisor - INT if result may be XNUM/RAT
     }
@@ -311,7 +311,7 @@ static DF2(jtkey){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
     I nparts=0;  // number of partitions in the result
     I *av=IAV(a); DQ(nitems, void * of=ftblv[*av&valmsk]; ftblv[*av&valmsk]=0; nparts+=(I)of&1; av=(I*)((I)av+k);)   // count partitions and set pointers there to 0
     // allocate the result area(s)
-    GA(z,zt,nparts*cellatoms,AR(w),AS(w)); AS(z)[0]=nparts; RZ(AN(z));  // avoid calls with empty args
+    GA(z,zt,nparts*cellatoms,AR(w),AS(w)); AS(z)[0]=nparts; if(AN(z)==0)R z;  // avoid calls with empty args
     if(unlikely(keyslashfn==3)){
      GA(freq,zt&FL?FL:INT,nparts,1,0);  // allocate place for divisor - INT if result may be XNUM/RAT
     }

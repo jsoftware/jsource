@@ -135,7 +135,7 @@ static F2(jtovg){A s,z;C*x;I ar,*as,c,k,m,n,r,*sv,t,wr,*ws,zn;
  GA(z,AT(a),zn,r,sv); AS(z)[0]=m+n; x=CAV(z); k=bpnoun(AT(a));
  RZ(x=ovgmove(k,c,m,s,a,x,z));
  RZ(x=ovgmove(k,c,n,s,w,x,z));
- RETF(z);
+ ra00(z,AT(z)); RETF(z);
 }    /* a,w general case for dense array with the same type; jt->ranks=~0 */
 
 #if 0  // obsolete 
@@ -218,7 +218,9 @@ F2(jtover){A z;C*zv;I replct,framect,acr,af,ar,*as,k,ma,mw,p,q,r,t,wcr,wf,wr,*ws
     I klg=bplg(t); I alen=AN(a)<<klg; I wlen=AN(w)<<klg;
     GA(z,t,AN(a)+AN(w),lr,AS(l)); AS(z)[0]=si; C *x=CAV(z);  // install # items after copying shape
     MC(x,CAV(a),alen); MC(x+alen,CAV(w),wlen);
-    RETF(z);
+    // make sure the result is recursive if possible.  If the input(s) are inplaceable, we could transfer ownership of the blocks by making the
+    // input nonrecursive
+    ra00(z,t); RETF(z);
    }
   }
  }
@@ -243,7 +245,7 @@ F2(jtover){A z;C*zv;I replct,framect,acr,af,ar,*as,k,ma,mw,p,q,r,t,wcr,wf,wr,*ws
  // copy in the data, creating the result in order (to avoid page thrashing and to make best use of write buffers)
  // scalar replication is required for any arg whose rank is 0 and yet its length is >1.  Choose the copy routine based on that
  moveawtbl[SGNTO0((acr-1)&(1-ma))*2+(SGNTO0(((wcr-1)&(1-mw))))](CAV(z),CAV(a),CAV(w),replct*framect,k,ma*k,mw*k,(wf>=af)?replct:1,(wf>=af)?1:replct);
- RETF(z);
+ ra00(z,t); RETF(z);  // make recursive
 }    /* overall control, and a,w and a,"r w for cell rank <: 2 */
 
 F2(jtstitch){/* obsolete B sp2;*/I ar,wr; A z;

@@ -101,6 +101,7 @@ struct AD {
   I m;  // Multi-use field. (1) For NJA/SMM blocks, size of allocation. (2) for blocks coming out of a COUNTITEMS verb, holds the number of items in the
         // raze of the noun (if the types are identical) (3) for SYMB tables for explicit definitions, the address of the calling symbol table (4) for the block
         // holding the amend offsets in x u} y, the number of axes of y that are built into the indexes in u (5) for name references, the value of jt->modifiercount when the name was last looked up
+        // (6) in the return from wordil, holds the number of words if any final NB. is discarded
   A back; // For VIRTUAL blocks, points to backing block
 
 } mback;
@@ -680,7 +681,7 @@ typedef struct{
 
 
 
-typedef struct {AF valencefns[2];A fgh[3];union { D lD; void *lvp[2]; I lI; I4 lI4[4]; I lclr[2]; AF lfns[2];} localuse;I4 flag;UI4 flag2; RANK2T lrr; RANKT mr; C id; C lc;} V;  // two cachelines exactly in 64-bit
+typedef struct {AF valencefns[2];A fgh[3];union { D lD; void *lvp[2]; I lI; I4 lI4[4]; I lclr[2]; AF lfns[2]; struct {I parm; AF func;} lpf; } localuse;I4 flag;UI4 flag2; RANK2T lrr; RANKT mr; C id; C lc;} V;  // two cachelines exactly in 64-bit
 // the localuse fields are not freed or counted for space, as the f/g/h fields are.  It is for local optimizations only.  We put if first so that the rest of
 // the block, which is used more, is in a single cacheline.  Local uses are:
 // for ATOMIC ops, lvp[] is pointer to the VA/UA block for adocv [dyad then monad]
@@ -689,9 +690,10 @@ typedef struct {AF valencefns[2];A fgh[3];union { D lD; void *lvp[2]; I lI; I4 l
 // for RANK conj, lI4[0-2] has the signed ranks
 // for Fold final operator, lfns[1] has pointer to the dyadic EP of the handler (xdefn or unquote)
 // For cyclic iterators, lI has the index of the next gerund to execute
-// for u;.n, lvp[0] holds n.  u/. also goes through this code
+// for u;.n where n is nonzero, lvp[0] holds n.  u/. also goes through this code
 // for reductions (u/ u/\ u/\.) lvp[1] points to the VA block for u
 // for u&.[:]v, lvp[0] points to the verb whose inverse is needed
+// for x <;.0 y  and  x (<;.0~ -~/"2)~ y, lpf.parm is ~0 for first, 0 for second, and func points to failover routine
 
 // lc is a local-use byte.  Used in atomic dyads to indicate which singleton function to execute
 // in the derived function from fold, lc has the original id byte of the fold op

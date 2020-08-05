@@ -26,7 +26,7 @@
 typedef struct {C new,effect;} ST;
 #define SE(s,e) {s,e}
 #else
-#if 0
+#if 0// obsolete 
 // bits 0-2 and 7 of the state are flags: 0=!EI 1=state is SS 2=EI|EN 7=state is S9  6=state is comment
 #define E0              1  // no action
 #define EI              4    // end of previous word - emit
@@ -62,13 +62,13 @@ static const ST state[SZ+1][16]={
 };
 
 // w points to a string A-block
-// result is word index & length; z is (# words),(i0,l0),(i1,l1),...
+// result is word index & length; z is (# words),(i0,end0+1),(i1,end1+1),...
 // (# words) is negated if the last word is NB.
 F1(jtwordil){A z;I s,i,m,n,nv,*x;UC*v;
  RZ(w);  // if no string, could be empty line from keyboard; return null A in that case
  nv=0;    // set not creating numeric constant
- n=AN(w); v=UAV(w); GATV0(z,INT,1+n+n,1); x=1+AV(z);  // get count of characters n and address v;
-  // allocate absolute worst-case output area (each char is 1 word, plus 1 for count); point x to output indexes
+ n=AN(w); v=UAV(w); GATV0(z,INT,n+n,3); x=AV(z); AS(z)[1]=2; AS(z)[2]=1;  // get count of characters n and address v; turn into suitable shape for ;.0 (x 2 1)
+  // allocate absolute worst-case output area (each char is 1 word); point x to output indexes
 #if 0  // obsolete 
  s=SS; // init state (after space)
  for(i=0;i<n;++i){   // run the state machine
@@ -121,7 +121,7 @@ F1(jtwordil){A z;I s,i,m,n,nv,*x;UC*v;
   // the store addresses to be calculated before the next fetch
 // obsolete   x=(I*)((I)x-(((((prevs>>1)&6)+currc)&16)>>(3-LGSZI)));  // add 6 to currc if followon numeric, then add that to char code.  This produces carry to 16 for CX/CS/CQ.
   currc+=16-CX; currc&=16; prevs=2*prevs+1; currc&=prevs;   // set currc to 16 iff CX/CS/CQ; move 'followon numeric' flag to bit 4; combine
-   // the +1 is to trick the compiler.  Without it it moves the &16 onto prevs, but prevs is the critical path
+  // the +1 is to trick the compiler.  Without it it moves the &16 onto prevs, but prevs is the critical path
   x=(I*)((I)x-(currc>>(3-LGSZI)));  // subtract from x, to move x back 2 positions if coming out of followon numeric with a number
 // obsolete   x-=(((prevs&currc)>>3)&(currc&1))<<1;  // state bit 3 is set in followon numeric; bits 3 and 0 of char class are set in CX/CS/CQ
   // do two stores, and advance over any that are to be emitted.  0, 1, or 2 may be emitted (0 when the state has no action, 1 when the
@@ -129,17 +129,18 @@ F1(jtwordil){A z;I s,i,m,n,nv,*x;UC*v;
   x[0]=i; x[1]=i; x+=s&3;
  }
  if((s>>4)==SQ){jsignal3(EVOPENQ,w,x[-1]); R 0;}  // error if open quote
- // force an EI at the end, as if with a space.  We don't increment x because we are about to calculate the number of slots in x and we have to decrement x by 1 to
- // take away the first slot which is the count.  If the line ends without a token being open (spaces perhaps) this will be half of a field and will be shifted away
+ // force an EI at the end, as if with a space.  We will owe one increment of x, repaid when we calxculate m.
+ //  If the line ends without a token being open (spaces perhaps) this will be half of a field and will be shifted away
 // obsolete  x=(I*)((I)x-(((((s>>1)&6)+CS)&16)>>(3-LGSZI)));     // as above, for final state
  x=(I*)((I)x-(((s<<1)&16)>>(3-LGSZI)));    // same as above, with CS as the character
  *x=i;
 #endif
 #endif
 // obsolete  m=x-AV(z); *AV(z)=s==SZ||s==SNZ?-(m>>1):(m>>1);  // Calculate & install count; if last field is NB., make count negative
- m=(x-AV(z))>>1; I isnb=REPSGN((I)(SE(SNZ,0)-1)-s); *AV(z)=(m^isnb)-isnb;  // Calculate & install count; if last field is NB., make count negative
+// obsolete  m=(x-AV(z))>>1; I isnb=REPSGN((I)(SE(SNZ,0)-1)-s); *AV(z)=(m^isnb)-isnb;  // Calculate & install count; if last field is NB., make count negative
+ m=((x-AV(z))+1)>>1; AS(z)[0]=m; AM(z)=m+REPSGN((I)(SE(SNZ,0)-1)-s); // Calculate & install count; if last field is NB., make count negative
  R z;
-}    /* word index & end+1; z is (# words),(i0,e0),(i1,e1),... */
+}    /* word index & end+1; z is m 2 1$(i0,e0),(i1,e1),... AM(z) is # words not including final NB */
 
 /* locals in wordil:                                            */
 /* i:  index of current character being scanned                 */
@@ -150,14 +151,15 @@ F1(jtwordil){A z;I s,i,m,n,nv,*x;UC*v;
 /* x:  ptr to current element of z being computed               */
 /* z:  result; maximum of n pairs                               */
 
-F1(jtwords){A t,*x,z;C*s;I k,n,*y;
+DF1(jtwords){A t,*x,z;C*s;I k,n,*y;
  F1RANK(1,jtwords,0);
- RZ(w=vs(w));
- RZ(t=wordil(w));
- s=CAV(w); y=AV(t); n=*y++; n=0>n?-n:n;
- GATV0(z,BOX,n,1); x=AAV(z);
- DQ(n, k=*y++; RZ(*x++=rifvs(str(*y++-k,s+k))););
- RETF(z);  // always boxed chars
+ RZ(w=vs(w));  // convert w to LIT if it's not already
+// obsolete  RZ(t=wordil(w));
+ R jtboxcut0(jt,wordil(w),w,self);
+// obsolete  s=CAV(w); y=AV(t); n=*y++; n=0>n?-n:n;
+// obsolete  GATV0(z,BOX,n,1); x=AAV(z);
+// obsolete  DQ(n, k=*y++; RZ(*x++=rifvs(str(*y++-k,s+k))););
+// obsolete  RETF(z);  // always boxed chars
 }
 
 
@@ -179,14 +181,16 @@ static A jtconstr(J jt,I n,C*s){A z;C b,c,p,*t,*x;I m=0;
   // true if the two words are names, word 1 is assignment, and the names are equal
 
 // Convert text sentence to a sequence of words to be the queue for parsing
-// a holds the result of wordil, which is an integer list of word index & end+1: (# words),(i0,e0),(i1,e1)...
+// a holds the result of wordil, which is an integer list of word index & end+1: (i0,e0),(i1,e1)...  # words not including final NB. is in AM
 // w holds the string text of the sentence
 // env is the environment for which this is being parsed: 0=tacit translator, 1=keyboard/immex with no locals, 2=for explicit defn
 // result is a list of parsable words, with types right.  The result is input only to parsing, never to verbs, and thus may be nonrecursive
 A jtenqueue(J jt,A a,A w,I env){A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl;UC c;
  RZ(a&&w);
- s=CAV(w); u=AV(a); n=*u++; n=REPSGN(n)^n;  // point s to start of string; set u as running pointer pointer in a; fetch # words;
-    // if negative (meaning last word is NB.), discard the NB. from the count; step u to point to first (i0,l0) pair
+ s=CAV(w); u=AV(a);
+ n=AM(a);  // get # words not including any final NB.
+// obsolete  n=*u++; n=REPSGN(n)^n;  // point s to start of string; set u as running pointer pointer in a; fetch # words;
+// obsolete     // if negative (meaning last word is NB.), discard the NB. from the count; step u to point to first (i0,l0) pair
  GATV0(z,BOX,n,1); x=v=AAV(z);   //  allocate list of words; set running word pointer x, and static
    // beginning-of-list pointer v, to start of list of output pointers
  for(i=0;i<n;i++,x++){  // for each word

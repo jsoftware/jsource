@@ -265,6 +265,43 @@ k (</.  -: < key) a     [ k=:('abc' ;~ ])&.> 1000 + (#a)?@$100
 NB. Sequential
 a=:?10 5$110
 k (</.  -: < key) a     [ k=:(#a)?@$100
+NB. Arrays
+a=:?10 5$110
+k (</.  -: < key) a     [ k=:((#a),2)?@$100
+k (</.  -: < key) a     [ k=:((#a),2)?@$2
+k (</.  -: < key) a     [ k=: 'ab' {~ ((#a),2)?@$2
+k (</.  -: < key) a     [ k=:a. {~ ((#a),2)?@$100
+
+NB. Intolerant
+a=:?120 5$110
+k (<@]/.  -: <@] key) a     [ k=:(#a)?@$1e8
+k (<@]/.  -: <@] key) a     [ k=:a. {~ ((#a),2)?@$#a.
+k (<@]/.  -: <@] key) a     [ k=:a. {~ ((#a),3)?@$#a.
+k (<@]/.  -: <@] key) a     [ k=:a. {~ ((#a),4)?@$#a.
+k (<@]/.  -: <@] key) a     [ k=:a. {~ ((#a),5)?@$#a.
+k (<@]/.  -: <@] key) a     [ k=:4 u: (#a)?@$65536
+k (<@]/.  -: <@] key) a     [ k=:10 u: (#a)?@$1e6
+k (<@]/.!.0  -: <@] key0) a [ k=:0.5+(#a)?@$1e8
+k (<@]/.!.0  -: <@] key0) a [ k=:j.~ (#a)?@$1e8
+NB. Tolerant
+k (<@]/.  -: <@] key) a     [ k=:(#a)?@$0
+k (<@]/.  -: <@] key) a     [ k=:j.~ (#a)?@$0
+NB. Small-range
+k (<@]/.  -: <@] key) a     [ k=:(#a)?@$100
+k (<@]/.  -: <@] key) a     [ k=:_1000 + (#a)?@$100
+k (<@]/.  -: <@] key) a     [ k=:1000 + (#a)?@$100
+NB. Boxed
+k (<@]/.  -: <@] key) a     [ k=:('abc' ;~ ])&.> 1000 + (#a)?@$100
+NB. Sequential
+a=:?10 5$110
+k (<@]/.  -: <@] key) a     [ k=:(#a)?@$100
+NB. Arrays
+a=:?10 5$110
+k (<@]/.  -: <@] key) a     [ k=:((#a),2)?@$100
+k (<@]/.  -: <@] key) a     [ k=:((#a),2)?@$2
+k (<@]/.  -: <@] key) a     [ k=: 'ab' {~ ((#a),2)?@$2
+k (<@]/.  -: <@] key) a     [ k=:a. {~ ((#a),2)?@$100
+
 
 NB. Verify inplacing
 NB. We can't reliably check the sizes because the call to i. allocates memory; also there are differences dep. type of result of u/.

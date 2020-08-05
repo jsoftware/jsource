@@ -133,6 +133,48 @@ DF2(jtspecialatoprestart){
   R a==mark?(sv->id==CFORK?jtcork1:on1)(jt,w,self) : (sv->id==CFORK?jtcork2:jtupon2)(jt,a,w,self);  // figure out the default routine that should process the compound, and transfer to it
 }
 
+// x <;.0 y  and  x (<;.0~ -~/"2)~ y   where _2 { $x is 1 (i. e. 1 dimension of selection)  localuse distinguishes the two cases (relative vs absolute length)
+// We go for minimum overhead in the box allocation and copy
+DF2(jtboxcut0){A z;
+ RZ(a&&w);
+ // NOTE: this routine is called from jtwords.  In that case, self comes from jtwords and is set up with the parm for x (<;.0~ -~/"2)~ y but with no failover routine.
+ // Thus, the preliminary tests must not cause a failover.  They don't, because the inputs from jtwords are known to be well-formed
+ // We require a have rank >=2, not sparse
+ if(((1-(I)AR(a))&(((AT(a)|AT(w))&SPARSE)-1))>=0)R (FAV(self)->localuse.lpf.func)(a,w,self);
+ // Shape of a must end 2 1 - a one-dimensional selection
+ if((AS(a)[AR(a)-2]^2)|(AS(a)[AR(a)-1]^1))R (FAV(self)->localuse.lpf.func)(a,w,self);
+ // it is a (set of) one-dimensional selection
+ // a must be integral
+ RZ(a=vib(a));  // make a integer
+ I f=AR(a)-2;  // frame of result
+
+ // This code follows the discussion in jtbox
+ I t=AT(w); I wr=AR(w); I wi; SETIC(w,wi);   // rank of w, #items of w
+ I resatoms; PROD(resatoms,f,AS(a)); I cellsize; PROD(cellsize,wr-1,AS(w)+1);
+ I k=bplg(t); C *wv=CAV(w);  // k is length of an atom of w
+ // allocate the result area
+ GATV(z,BOX,resatoms,f,AS(a)); AFLAG(z) = BOX; if(resatoms==0)RETF(z);  // could avoid filling with 0 if we modified AN after error, or cleared after *tnextpushp
+  // We have allocated the result; now we allocate a block for each cell of w and copy
+  // the w values to the new block.
+  // Make result inplaceable and recursive
+ A *pushxsave = jt->tnextpushp; jt->tnextpushp=AAV(z);  // save tstack info before allocation
+ A y;
+ // Step through each block: fetch start/end; verify both positive and inrange; calc size of block; alloc and move; make block recursive
+ I *av=IAV(a);  // pointer to first start/length pair
+ I rellength=(I)FAV(self)->localuse.lpf.parm;  // 0 for start/length, ~0 for start/end+1
+ wr=wr==0?1:wr;   // We use this rank to allocate the boxes - we always create arrays
+ DQ(resatoms,
+   I start=av[0]; I endorlen=av[1]; if((start|endorlen)<0)R (FAV(self)->localuse.lfns[1])(a,w,self);  // verify positive indexes - failover if not
+   endorlen-=start&rellength; ASSERT(BETWEENC(start+endorlen,0,wi),EVINDEX);  // get length; verify substring in bounds endorlen is length now
+   I substratoms=endorlen*cellsize;
+   GAE(y,t,substratoms,wr,AS(w),break); AS(y)[0]=endorlen; MC(CAV(y),wv+start*(cellsize<<k),substratoms<<k); AC(y)=ACUC1; if(t&RECURSIBLE){AFLAG(y)=t; jtra(jt,y,t);}
+   av+=2;
+ );   // allocate, but don't grow the tstack.  Set usecount of cell to 1 since z is recursive usecount and y is not on the stack.  ra0() if recursible.  Put allocated addr into *jt->tnextpushp++.  
+ jt->tnextpushp=pushxsave;   // restore tstack pointer
+ ASSERT(y,EVWSFULL);  // if we broke out an allocation failure, fail.  Since the block is recursive, when it is tpop()d it will recur to delete contents
+ RETF(z);  // return the recursive block
+}
+
 
 // a ;@:(<;.0) w where a has one column.  We allocate a single area and copy in the items
 // if we encounter a reversal, we abort

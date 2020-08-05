@@ -135,16 +135,17 @@ static const C alp[256]={0x00,0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x0a,
 #if 1
 
 #define PRIMNOUN(id,t,an,ar,val) [id]={{AKXR(ar),(t)&TRAVERSIBLE,0,(t),ACPERMANENT,(an),(ar)} , {.primint=val} }
-#define PRIMALL(id,t,f0,f1,f,g,h,va2,va1,rm,rl,rr,vflg,vflg2,an,ar,lc) \
- [id]={{AKXR(ar),(t)&TRAVERSIBLE,0,(t),ACPERMANENT,(an),(ar)},{{{f0,f1},{f,g,h},{.lfns=(AF)(va2),(AF)(va1) },(vflg),(vflg2),(RANK2T)((rl<<RANKTX)+rr),(RANKT)rm,id,lc}}}
-#define PRIMACV(id,t,f0,f1,rm,rl,rr,vflg,vflg2) PRIMALL(id,t,f0,f1,0,0,0,0,0,rm,rl,rr,vflg,vflg2,(VERBSIZE+SZI-1)>>LGSZI,0,0)
-#define PRIMATOMIC2(id,t,f0,f1,rm,rl,rr,vflg,vflg2) PRIMALL(id,t,f0,f1,0,0,0,va+VA2##id,0,rm,rl,rr,VISATOMIC2|(vflg),vflg2,(VERBSIZE+SZI-1)>>LGSZI,0, \
+#define PRIMALL(id,t,f0,f1,f,g,h,initpm1,initpm2,rm,rl,rr,vflg,vflg2,an,ar,lc) \
+ [id]={{AKXR(ar),(t)&TRAVERSIBLE,0,(t),ACPERMANENT,(an),(ar)},{{{f0,f1},{f,g,h},{initpm1,initpm2},(vflg),(vflg2),(RANK2T)((rl<<RANKTX)+rr),(RANKT)rm,id,lc}}}
+#define PRIMACV(id,t,f0,f1,rm,rl,rr,vflg,vflg2) PRIMALL(id,t,f0,f1,0,0,0,.lfns=(AF)0,(AF)0,rm,rl,rr,vflg,vflg2,(VERBSIZE+SZI-1)>>LGSZI,0,0)
+#define PRIMACVPARM(id,t,f0,f1,rm,rl,rr,vflg,vflg2,initpm1,initpm2) PRIMALL(id,t,f0,f1,0,0,0,initpm1,initpm2,rm,rl,rr,vflg,vflg2,(VERBSIZE+SZI-1)>>LGSZI,0,0)
+#define PRIMATOMIC2(id,t,f0,f1,rm,rl,rr,vflg,vflg2) PRIMALL(id,t,f0,f1,0,0,0,.lfns=(AF)(va+VA2##id),(AF)0,rm,rl,rr,VISATOMIC2|(vflg),vflg2,(VERBSIZE+SZI-1)>>LGSZI,0, \
  VA2##id+0x80*(id==CLT||id==CGT||id==CLE||id==CGE||id==CEQ||id==CNE))
-#define PRIMATOMIC2g(id,t,f0,f1,rm,rl,rr,vflg,vflg2,g) PRIMALL(id,t,f0,f1,0,g,0,va+VA2##id,0,rm,rl,rr,VISATOMIC2|(vflg),vflg2,(VERBSIZE+SZI-1)>>LGSZI,0, \
+#define PRIMATOMIC2g(id,t,f0,f1,rm,rl,rr,vflg,vflg2,g) PRIMALL(id,t,f0,f1,0,g,0,.lfns=(AF)(va+VA2##id),(AF)0,rm,rl,rr,VISATOMIC2|(vflg),vflg2,(VERBSIZE+SZI-1)>>LGSZI,0, \
  VA2##id+0x80*(id==CLT||id==CGT||id==CLE||id==CGE||id==CEQ||id==CNE))
-#define PRIMATOMIC1(id,t,f0,f1,rm,rl,rr,vflg,vflg2) PRIMALL(id,t,f0,f1,0,0,0,0,va1tab+VA1##id-VA1CMIN,rm,rl,rr,vflg,vflg2,(VERBSIZE+SZI-1)>>LGSZI,0, \
+#define PRIMATOMIC1(id,t,f0,f1,rm,rl,rr,vflg,vflg2) PRIMALL(id,t,f0,f1,0,0,0,.lfns=(AF)0,(AF)(va1tab+VA1##id-VA1CMIN),rm,rl,rr,vflg,vflg2,(VERBSIZE+SZI-1)>>LGSZI,0, \
  VA1##id+0x80*(id==CLT||id==CGT||id==CLE||id==CGE||id==CEQ||id==CNE))
-#define PRIMATOMIC12(id,t,f0,f1,rm,rl,rr,vflg,vflg2) PRIMALL(id,t,f0,f1,0,0,0,va+VA2##id,va1tab+VA1##id-VA1CMIN,rm,rl,rr,VISATOMIC2|(vflg),vflg2,(VERBSIZE+SZI-1)>>LGSZI,0, \
+#define PRIMATOMIC12(id,t,f0,f1,rm,rl,rr,vflg,vflg2) PRIMALL(id,t,f0,f1,0,0,0,.lfns=(AF)(va+VA2##id),(AF)(va1tab+VA1##id-VA1CMIN),rm,rl,rr,VISATOMIC2|(vflg),vflg2,(VERBSIZE+SZI-1)>>LGSZI,0, \
  VA2##id+0x80*(id==CLT||id==CGT||id==CLE||id==CGE||id==CEQ||id==CNE))
 
 PRIM primtab[256] = {
@@ -211,9 +212,10 @@ PRIM primtab[256] = {
  /*  ,  */  PRIMACV(CCOMMA,  VERB, jtravel,   jtapip,   RMAX,RMAX,RMAX,VASGSAFE|VIRS1|VIRS2|VJTFLGOK1|VJTFLGOK2,VF2NONE),
  /*  ,. */  PRIMACV(CCOMDOT, VERB, jttable,   jtstitch, RMAX,RMAX,RMAX,VASGSAFE|VIRS1|VJTFLGOK1,VF2NONE),
  /*  ,: */  PRIMACV(CLAMIN,  VERB, jtlamin1,  jtlamin2, RMAX,RMAX,RMAX,VASGSAFE|VIRS1|VIRS2,VF2NONE),
- /*    */  PRIMACV(CSEMICO, VERB, jtraze,    jtlink,   RMAX,RMAX,RMAX,VASGSAFE,VF2WILLOPEN1|VF2USESITEMCOUNT1),
- /*  . */  PRIMACV(CCUT,    CONJ, jtdomainerr1,        jtcut,    0,   0,   0   ,VFLAGNONE,VF2NONE),
- /*  : */  PRIMACV(CWORDS,  VERB, jtwords,   jtfsm,    1,   RMAX,RMAX,VASGSAFE,VF2NONE),
+ /*  ;  */  PRIMACV(CSEMICO, VERB, jtraze,    jtlink,   RMAX,RMAX,RMAX,VASGSAFE,VF2WILLOPEN1|VF2USESITEMCOUNT1),
+ /*  ;. */  PRIMACV(CCUT,    CONJ, jtdomainerr1,        jtcut,    0,   0,   0   ,VFLAGNONE,VF2NONE),
+// obsolete /*  ;: */  PRIMACV(CWORDS,  VERB, jtwords,   jtfsm,    1,   RMAX,RMAX,VASGSAFE,VF2NONE),
+ /*  ;: */  PRIMACVPARM(CWORDS,  VERB, jtwords,   jtfsm,    1,   RMAX,RMAX,VASGSAFE,VF2NONE,.lpf=~0,0),  // parms are passed through to jtboxcut0
  /*  #  */  PRIMACV(CPOUND,  VERB, jttally,   jtrepeat, RMAX,1,   RMAX,VASGSAFE|VIRS2|VJTFLGOK2,VF2NONE),
  /*  #. */  PRIMACV(CBASE,   VERB, jtbase1,   jtbase2,  1,   1,   1   ,VASGSAFE,VF2NONE),
  /*  #: */  PRIMACV(CABASE,  VERB, jtabase1,  jtabase2, RMAX,1,   0   ,VASGSAFE,VF2NONE),

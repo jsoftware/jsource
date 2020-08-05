@@ -42,7 +42,7 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
   ws=AS(w); I t=AT(w);
   CPROD(AN(w),n,f,ws); CPROD(AN(w),m,r,f+ws);
   k=m<<bplg(t); wv=CAV(w);
-  GATV(z,BOX,n,f,ws); if(n==0)RETF(z); zv=AAV(z); // could avoid filling with 0 if we modified AN after error, or cleared after *tnextpushp
+  GATV(z,BOX,n,f,ws); AFLAG(z) = BOX; if(n==0)RETF(z);  // Recursive result; could avoid filling with 0 if we modified AN after error, or cleared after *tnextpushp
    // We have allocated the result; now we allocate a block for each cell of w and copy
    // the w values to the new block.
 // obsolete    // If w is DIRECT, we make the result block recursive and increment the count of the others (we do so here because it saves a traversal of the new blocks
@@ -51,13 +51,12 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
 
 // obsolete   if(t&DIRECT){
 // obsolete    // Direct w.
-  AFLAG(z) = BOX;  // Make result inplaceable and recursive
   // Since we are making the result recursive, we can save a lot of overhead by NOT putting the cells onto the tstack.  As we have marked the result as
   // recursive, it will free up the cells when it is deleted.  We want to end up with the usecount in the cells being 1, not inplaceable.  The result itself will be
   // inplaceable with a free on the tstack.
   // To avoid the tstack overhead, we switch the tpush pointer to our data area, so that blocks are filled in as they are allocated, with nothing put
   // onto the real tpop stack.  If we hit an error, that's OK, because whatever we did get allocated will be freed when the result block is freed.  We use GAE so that we don't abort on error
-  A *pushxsave = jt->tnextpushp; jt->tnextpushp=zv;  // save tstack info before allocation
+  A *pushxsave = jt->tnextpushp; jt->tnextpushp=AAV(z);  // save tstack info before allocation
   DQ(n, GAE(y,t,m,r,f+ws,break); MC(CAV(y),wv,k); wv+=k; AC(y)=ACUC1; if(t&RECURSIBLE){AFLAG(y)=t; jtra(jt,y,t);});   // allocate, but don't grow the tstack.  Set usecount of cell to 1.  ra0() if recursible.  Put allocated addr into *jt->tnextpushp++
   jt->tnextpushp=pushxsave;   // restore tstack pointer
   ASSERT(y,EVWSFULL);  // if we broke out an allocation failure, fail.  Since the block is recursive, when it is tpop()d it will recur to delete contents

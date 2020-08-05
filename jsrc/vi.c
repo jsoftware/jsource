@@ -897,7 +897,7 @@ static IOFSMALLRANGE(jtio42,I,US)  static IOFSMALLRANGE(jtio44,I,UI4)  // 4-byte
  {T*v0=(T*)v,*wv=(T*)v,x; \
   switch(mode){                     \
    case IIDOT: {T*av=(T*)u+m; DQ(ac, DQ(c, x=(xe); j=-m;   while(j<0 &&(exp))++j; *zv++=j+m;       wv+=q;); av+=p; if(1==wc)wv=v0;);} break;  \
-   case IFORKEY: {T*av=(T*)u+m; I nuniq=0; DQ(ac, DQ(c, x=(xe); j=-m;   while(j<0 &&(exp))++j; *zv=j+=m; nuniq+=(j-i)==0; zv[j-i]++; zv++;      wv+=q;); AM(z)=nuniq; av+=p; if(1==wc)wv=v0;); } break;  \
+   case IFORKEY: {T*av=(T*)u+m; I nuniq=0; DQ(ac, DO(c, x=(xe); j=-m;   while(j<0 &&(exp))++j; *zv=j+=m; nuniq+=(j-i)==0; zv[j-i]++; zv++;      wv+=q;); AM(z)=nuniq; av+=p; if(1==wc)wv=v0;); } break;  \
    case IICO:  {T*av=(T*)u; DQ(ac, DQ(c, x=(xe); j=m-1; while(0<=j&&(exp))--j; *zv++=0>j?m:j; wv+=q;); av+=p; if(1==wc)wv=v0;);} break;  \
    case IEPS:  {T*av=(T*)u+m; DQ(ac, DQ(c, x=(xe); j=-m;   while(j<0 &&(exp))++j; *zb++=j<0;     wv+=q;); av+=p; if(1==wc)wv=v0;);} break;  \
  }}

@@ -993,7 +993,7 @@ static IOFSMALLRANGE(jtio42,I,US)  static IOFSMALLRANGE(jtio44,I,UI4)  // 4/8-by
 // same but the cells have n atoms, each of which is compared.  comparands are wv[jj] and avv[jj]
 #define SCDON(bit,T,exp)  \
    case IOSCCASE(bit,1,IIDOT): {T*v0=(T*)v,*wv=(T*)v; T*av=(T*)u; DQ(ac, DQ(wsct, j=-asct;   T*avv=av; do{I jj=n-1; T* wvv=wv; do{if(exp)break;}while(--jj>=0); if(jj<0)break; avv+=n;}while(++j<0);   *(I*)zv=j+=asct; zv=(I*)zv+1;       wv+=q;); av+=p; if(1==wc)wv=v0;);} break;  \
-   case IOSCCASE(bit,1,IFORKEY): {T*v0=(T*)v,*wv=(T*)v; I nuniq=0; T*av=(T*)u; DQ(ac, DQ(wsct, j=-asct;   T*avv=av; do{I jj=n-1; T* wvv=wv; do{if(exp)break;}while(--jj>=0); if(jj<0)break; avv+=n;}while(++j<0);   *(I*)zv=j+=asct; nuniq+=(j-i)==0; ((I*)zv)[j-i]++; zv=(I*)zv+1;       wv+=q;); AM(z)=nuniq; av+=p; if(1==wc)wv=v0;);} break;  \
+   case IOSCCASE(bit,1,IFORKEY): {T*v0=(T*)v,*wv=(T*)v; I nuniq=0; T*av=(T*)u; DQ(ac, DO(wsct, j=-asct;   T*avv=av; do{I jj=n-1; T* wvv=wv; do{if(exp)break;}while(--jj>=0); if(jj<0)break; avv+=n;}while(++j<0);  *(I*)zv=j+=asct; nuniq+=(j-i)==0; ((I*)zv)[j-i]++; zv=(I*)zv+1;       wv+=q;); AM(z)=nuniq; av+=p; if(1==wc)wv=v0;);} break;  \
    case IOSCCASE(bit,1,IICO):  {T*v0=(T*)v,*wv=(T*)v; T*av=(T*)u; DQ(ac, DQ(wsct, j=asct-1;  T*avv=av+asct*n; do{avv-=n; I jj=n-1; T* wvv=wv; do{if(exp)break;}while(--jj>=0); if(jj<0)break;}while(--j>=0);     *(I*)zv=(j=0>j?asct:j); zv=(I*)zv+1; wv+=q;); av+=p; if(1==wc)wv=v0;);} break;  \
    case IOSCCASE(bit,1,IEPS):  {T*v0=(T*)v,*wv=(T*)v; T*av=(T*)u; DQ(ac, DQ(wsct, j=-asct;   T*avv=av; do{I jj=n-1; T* wvv=wv; do{if(exp)break;}while(--jj>=0); if(jj<0)break; avv+=n;}while(++j<0);    *(C*)zv=SGNTO0(j); zv=(C*)zv+1;     wv+=q;); av+=p; if(1==wc)wv=v0;);} break;
 

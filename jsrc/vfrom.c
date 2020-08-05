@@ -151,7 +151,7 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wk,wn,wr,*ws,zn;
    else IFROMLOOP2((k+SZI-1)>>LGSZI,MVMC)
    break;
   }
- RETF(z);
+ ra00(z,AT(z)); RETF(z);  // make result recursive
 }    /* a{"r w for numeric a */
 
 #define BSET(x,y0,y1,y2,y3)     *x++=y0; *x++=y1; *x++=y2; *x++=y3;
@@ -265,7 +265,7 @@ static F2(jtbfrom){A z;B*av,*b;C*wv,*zv;I acr,an,ar,k,m,p,q,r,*u=0,wcr,wf,wk,wn,
    else DQ(m, b=av; DQ(an, MC(zv,wv+k**b++,k); zv+=k;); wv+=wk;);
 #endif
  }
- RETF(z);
+ ra00(z,AT(z)); RETF(z);   // make result recursive
 }    /* a{"r w for boolean a */
 
 // a is array whose 1-cells are index lists, w is array
@@ -363,24 +363,26 @@ static A jtafrom2(J jt,A p,A q,A w,I r){A z;C*wv,*zv;I d,e,j,k,m,n,pn,pr,* RESTR
  wv=CAV(w); zv=CAV(z); 
  switch(k=d<<bplg(AT(w))){   // k=*bytes in a _2-cell of a cell of w
 #define INNER2(T) {T* RESTRICT v=(T*)wv,* RESTRICT x=(T*)zv;   \
-   DO(m, DO(pn, j=e*pv[i]; DO(qn, *x++=v[j+qv[i]];         )); v+=n;); R z;}  // n=#_2-cells in a cell of w
-  case sizeof(I): INNER2(I);
-  case sizeof(C): INNER2(C);
-  case sizeof(S): INNER2(S);
+   DO(m, DO(pn, j=e*pv[i]; DO(qn, *x++=v[j+qv[i]];         )); v+=n;);} break; // n=#_2-cells in a cell of w.
+ case sizeof(I): INNER2(I);
+ case sizeof(C): INNER2(C);
+ case sizeof(S): INNER2(S);
 #if SY_64
-  case sizeof(I4): INNER2(I4);
+ case sizeof(I4): INNER2(I4);
 #endif
 #if !SY_64 && SY_WIN32
-  case sizeof(D): if(AT(w)&FL)INNER2(D);
-   // copy only echt floats using floating-point moves.  Otherwise fall through to...
+ case sizeof(D): if(AT(w)&FL)INNER2(D);
+  // copy only echt floats using floating-point moves.  Otherwise fall through to...
 #endif
-  default:        {C* RESTRICT v=wv,* RESTRICT x=zv-k;n=k*n;   // n=#bytes in a cell of w
-   DO(m, DO(pn, j=e*pv[i]; DO(qn, MC(x+=k,v+k*(j+qv[i]),k);)); v+=n;); R z;}
- }   /* (<p;q){"r w  for positive integer arrays p,q */
-}
+ default:        {C* RESTRICT v=wv,* RESTRICT x=zv-k;n=k*n;   // n=#bytes in a cell of w
+  DO(m, DO(pn, j=e*pv[i]; DO(qn, MC(x+=k,v+k*(j+qv[i]),k);)); v+=n;);} break;
+ }
+ ra00(z,AT(z));
+ RETF(z);   // return block, recursive
+}   /* (<p;q){"r w  for positive integer arrays p,q */
 
 // n is length of axis, w is doubly-unboxed selector
-// result is list of selectors - complementary if w is boxed
+// result is list of selectors - complementary if w is boxed, with a: standing for axis taken in full
 static A jtafi(J jt,I n,A w){A x;
  if((-AN(w)&SGNIF(AT(w),BOXX))>=0)R pind(n,w);   // empty or not boxed
  ASSERT(!AR(w),EVINDEX);  // if boxed, must be an atom
@@ -427,7 +429,8 @@ static F2(jtafrom){PROLOG(0073);A c,ind,p=0,q,*v,y=w;B bb=1;I acr,ar,i=0,j,m,n,p
   RZ(y); p=0;
  }
  // We have to make sure that a virtual NJA block does not become the result, because x,y and x u}y allow modifying those even when the usecount is 1.  Realize in that case
- RE(y); if(AFLAG(y)&AFNJA){RZ(y=ca(y));}   EPILOG(y);   // If the result is NJA, it must be virtual.  NJAwhy can it happen?  scaf
+ RE(y); if(AFLAG(y)&AFNJA){RZ(y=ca(y));}
+ EPILOG(y);   // If the result is NJA, it must be virtual.  NJAwhy can it happen?  scaf
 }    /* a{"r w for boxed index a */
 
 F2(jtfrom){I at;A z;
@@ -446,10 +449,10 @@ F2(jtfrom){I at;A z;
    }
    I wr1=AR(w)-1;
    if(wr1<=0){  // w is atom or list, result is atom
-    // Get the area to use for the result: the input if possible, else an INT atom
+    // Get the area to use for the result: the a input if possible, else an INT atom
     if((SGNIF(jtinplace,JTINPLACEAX)&AC(a)&SGNIFNOT(AFLAG(a),AFUNINCORPABLEX))<0)z=a; else{GAT0(z,INT,1,0)}
     // Move the value and transfer the block-type
-    I j; AT(z)=AT(w); SETNDX(j,av,AN(w)); IAV(z)[0]=IAV(w)[j];
+    I j; AT(z)=AT(w); SETNDX(j,av,AN(w)); IAV(z)[0]=IAV(w)[j]; ra00(z,AT(z));  // make result recursive
    }else{
     // rank of w > 1, return virtual cell
     I *ws=AS(w);  // shape of w
@@ -465,7 +468,7 @@ F2(jtfrom){I at;A z;
    fn=jtifrom; fn=at&BOX?jtafrom:fn; fn=at&(AN(a)!=1)?jtbfrom:fn; jtinplace=fn!=jtifrom?jt:jtinplace;
    z=(*fn)(jtinplace,a,w);
   }
- }else if(!((AT(a)|AT(w))&(NOUN&~SPARSE))){z=fromss(a,w);}
+ }else if(!((AT(a)|AT(w))&(NOUN&~SPARSE))){z=fromss(a,w);}  // sparse cases
  else if(AT(w)&SPARSE){z=at&BOX?frombs(a,w) : fromis(a,w);}
  else{z=fromsd(a,w);}
  RETF(z);
@@ -500,7 +503,7 @@ F2(jtsfrom){
      }
      break;
     }
-    RETF(z);
+    ra00(z,AT(z)); RETF(z);   // make result recursive
    }
   }
  }else{A ind;
@@ -541,7 +544,7 @@ F2(jtfetch){A*av, z;I n;F2PREFIP;
    RZ(z=jtquicksel(jt,a,w));  // fetch selected box, opened.  If not a box, just return w
    // Inplaceability depends on the context.  If the overall operand is either noninplaceable or in a noninplaceable context, we must
    // protect the value we fetch (the overall operand would matter only if it was flagged without a ra())
-   if((AC(w)&SGNIF(jtinplace,JTINPLACEWX))>=0)ACIPNO(z); RETF(z);   // turn off inplace if w not inplaceable, or jt not inplaceable
+   if((AC(w)&SGNIF(jtinplace,JTINPLACEWX))>=0)ACIPNO(z); ra00(z,AT(z)); RETF(z);   // turn off inplace if w not inplaceable, or jt not inplaceable.  Make result recursive
   }
   RZ(a=box(a));  // if not special case, box any unboxed a
  }
@@ -550,5 +553,5 @@ F2(jtfetch){A*av, z;I n;F2PREFIP;
  DO(n, A next=av[i]; if(((AT(z)>>BOXX)&1)>=(2*(AR(next)+(AT(next)&BOX))+AR(z))){RZ(z=jtquicksel(jt,next,z))}  // next is unboxed atom, z is boxed atom or list, use fast indexing  AR(next)==0 && !(AT(next)&BOX) && (AR(z)==0 || (AR(z)==1 && AT(z)&BOX))
       else{RZ(z=afrom(box(next),z)); ASSERT(((i+1-n)&-AR(z))>=0,EVRANK); if(((AR(z)-1)&SGNIF(AT(z),BOXX))<0)RZ(z=ope(z));}  // Rank must be 0 unless last; open if boxed atom
    );
- if((AC(w)&SGNIF(jtinplace,JTINPLACEWX))>=0)ACIPNO(z); RETF(z);   // Mark the box as non-inplaceable, as above
+ if((AC(w)&SGNIF(jtinplace,JTINPLACEWX))>=0)ACIPNO(z); ra00(z,AT(z)); RETF(z);   // Mark the box as recursive, non-inplaceable, as above
 }

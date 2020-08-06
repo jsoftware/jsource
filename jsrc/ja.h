@@ -877,6 +877,7 @@
 #define rankingb(x0,x1,x2,x3,x4,x5) jtrankingb(jt,(x0),(x1),(x2),(x3),(x4),(x5))
 // ras does rifv followed by ra
 #define ras(x)                      ((x) = jtras(jt,x))
+#define ra00s(x)                    ((x) = jtra00s(jt,x))
 #define rat(x)                      jtrat(jt,(x))
 #define ravel(x)                    jtravel(jt,(x))   
 #define ravelW(x)                   jtravel((J)((I)jt|JTINPLACEW),(x))   

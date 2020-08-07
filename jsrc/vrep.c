@@ -286,10 +286,8 @@ I att=SGNTO0(-(AT(a)&B01+SB01))+((UI)(-(AT(a)&CMPX+SCMPX))>>(BW-1-1));  // 0 if 
 // obsolete  if(wcr&&!ar&&AT(a)&(B01|INT)) {I aval = AT(a)&B01?(I)BAV(a)[0]:IAV(a)[0];  // no fast support for float
  if(((-wcr)&(ar-1)&(-(AT(a)&(B01|INT))))<0){I aval = BIV0(a);  // no fast support for float; take all of INT, or 1 bit of B01
   if(!(aval&-2LL)){  // 0 or 1
-// obsolete    if(aval==1)R RETARG(w);   // 1 # y, return y
-// obsolete    if(!(AT(w)&SPARSE)){GA(z,AT(w),0,AR(w),0); MCISH(AS(z),AS(w),AR(w)) AS(z)[wf]=0; RETF(z);}  // 0 # y, return empty
-   if(aval==1)R RETARG(w);   // 1 # y, return y - no need to make recursive: if it was valid as input, it's valid as result
-   if(!(AT(w)&SPARSE)){GA(z,AT(w),0,AR(w),0); MCISH(AS(z),AS(w),AR(w)) AS(z)[wf]=0; ra00(z,AT(w)); RETF(z);}  // 0 # y, return recursive empty
+   if(aval==1)R RETARG(w);   // 1 # y, return y
+   if(!(AT(w)&SPARSE)){GA(z,AT(w),0,AR(w),0); MCISH(AS(z),AS(w),AR(w)) AS(z)[wf]=0; RETF(z);}  // 0 # y, return empty
   }
  }
  if(((1-acr)|(acr-ar))<0)R rank2ex(a,w,0L,MIN(1,acr),wcr,acr,wcr,jtrepeat);  // loop if multiple cells of a
@@ -300,7 +298,5 @@ I att=SGNTO0(-(AT(a)&B01+SB01))+((UI)(-(AT(a)&CMPX+SCMPX))>>(BW-1-1));  // 0 if 
 // obsolete  if(AT(a)&B01 +SB01 ){RZ(z=AT(a)&DENSE?repbdx(a,w,wf,wcr):repbsx(a,w,wf,wcr)); RETF(z);}
 // obsolete  if(AT(a)&CMPX+SCMPX){RZ(z=AT(a)&DENSE?repzdx(a,w,wf,wcr):repzsx(a,w,wf,wcr)); RETF(z);}
 // obsolete  /* integer or float */    {RZ(z=AT(a)&DENSE?repidx(a,w,wf,wcr):repisx(a,w,wf,wcr)); RETF(z);}
-// obsolete  RETF((*repfn)(jtinplace,a,w,wf,wcr));
- RZ(z=(*repfn)(jtinplace,a,w,wf,wcr));
- ra00(z,AT(z)); RETF(z);   // make result recursive 
+ RETF((*repfn)(jtinplace,a,w,wf,wcr));
 }    /* a#"r w main control */

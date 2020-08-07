@@ -349,8 +349,7 @@ static A jtlocale(J jt,B b,A w){A g=0,*wv,y;
 }    /* last locale (symbol table) from boxed locale names; 0 if none or error.  if b=1, create locale */
 
 F1(jtlocpath1){AD * RESTRICT g; AD * RESTRICT z; F1RANK(0,jtlocpath1,0); ASSERT(vlocnl(1,w),EVDOMAIN); RZ(g=locale(1,w));
-// obsolete  g=LOCPATH(g); RZ(z=ca(g)); DO(AN(g), A t; RZ(t=ca(AAV(g)[i])); AS(t)[0]=AN(t); AAV(z)[i]=t;) R z;
- g=LOCPATH(g); RZ(z=ca(g)); DO(AN(g), A t; RZ(t=ca(AAV(g)[i])); AS(t)[0]=AN(t); AAV(z)[i]=t;) ra00(z,BOX); R z;
+ g=LOCPATH(g); RZ(z=ca(g)); DO(AN(g), A t; RZ(t=ca(AAV(g)[i])); AS(t)[0]=AN(t); AAV(z)[i]=t;) R z;
 }
  // for paths, the shape holds the bucketx.  We must create a new copy that has the shape restored
      /* 18!:2  query locale path */

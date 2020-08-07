@@ -244,7 +244,7 @@ F2(jtreshape){A z;B filling;C*wv,*zv;I acr,ar,c,k,m,n,p,q,r,*s,t,* RESTRICT u,wc
  zv=CAV(z); wv=CAV(w); 
  if(filling)DQ(c, mvc(q,zv,q,wv); mvc(p-q,q+zv,k,jt->fillv); zv+=p; wv+=q;)
  else DQ(c, mvc(p,zv,q,wv); zv+=p; wv+=q;);
- ra00(z,t); RETF(z);
+ RETF(z);
 }    /* a ($,)"r w */
 
 F2(jtreitem){A y,z;I acr,an,ar,r,*v,wcr,wr;

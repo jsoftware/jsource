@@ -2149,7 +2149,7 @@ F1(jtnubsieve){
 F1(jtnub){ 
  RZ(w);
  if(SPARSE&AT(w)||AFLAG(w)&AFNJA)R repeat(nubsieve(w),w); 
- A z; RZ(z=indexofsub(INUB,w,w)); ra00(z,AT(z)); RETF(z);
+ R indexofsub(INUB,w,w);
 }    /* ~.w */
 
 // x -. y.  does not have IRS
@@ -2163,9 +2163,8 @@ F2(jtless){A x=w;I ar,at,k,r,*s,wr,*ws,wt;
 // if nothing special (like sparse, or incompatible types, or x requires conversion) do the fast way; otherwise (-. x e. y) # y
 // obsolete  R !(at&SPARSE)&&HOMO(at,wt)&&TYPESEQ(at,maxtyped(at,wt))&&!(AFLAG(a)&AFNJA)?indexofsub(ILESS,x,a):
 // obsolete      repeat(not(eps(a,x)),a);
- A z;
- if(!(at&SPARSE)&&HOMO(at,wt)&&TYPESEQ(at,maxtyped(at,wt))&&!(AFLAG(a)&AFNJA)){RZ(z=indexofsub(ILESS,x,a)); ra00(z,AT(z)); RETF(z);}
- else R repeat(not(eps(a,x)),a);
+ R !(at&SPARSE)&&HOMO(at,wt)&&TYPESEQ(at,maxtyped(at,wt))&&!(AFLAG(a)&AFNJA)?indexofsub(ILESS,x,a):
+     repeat(not(eps(a,x)),a);
 }    /* a-.w */
 
 // x e. y

@@ -304,6 +304,8 @@ k (<@]/.  -: <@] key) a     [ k=:((#a),2)?@$2
 k (<@]/.  -: <@] key) a     [ k=: 'ab' {~ ((#a),2)?@$2
 k (<@]/.  -: <@] key) a     [ k=:a. {~ ((#a),2)?@$100
 
+NB. small arguments and x with rank > 1
+(,3) -: (3 2$1) +//. i.3    NB. don't crash
 
 NB. Verify inplacing
 NB. We can't reliably check the sizes because the call to i. allocates memory; also there are differences dep. type of result of u/.

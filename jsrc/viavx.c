@@ -2149,7 +2149,7 @@ F1(jtnubsieve){
 F1(jtnub){ 
  RZ(w);
  if(SPARSE&AT(w)||AFLAG(w)&AFNJA)R repeat(nubsieve(w),w); 
- R indexofsub(INUB,w,w);
+ A z; RZ(z=indexofsub(INUB,w,w)); ra00(z,AT(z)); RETF(z);
 }    /* ~.w */
 
 // x -. y.  does not have IRS
@@ -2161,8 +2161,11 @@ F2(jtless){A x=w;I ar,at,k,r,*s,wr,*ws,wt;
  // if w's rank is larger than that of a cell of a, reheader w to look like a list of such cells
  if((-wr&-(r^wr))<0){RZ(x=virtual(w,0,r)); AN(x)=AN(w); s=AS(x); ws=AS(w); k=ar>wr?0:1+wr-r; *s=prod(k,ws); MCISH(1+s,k+ws,r-1);}  // bug: should test for error on the prod()  use fauxvirtual here
 // if nothing special (like sparse, or incompatible types, or x requires conversion) do the fast way; otherwise (-. x e. y) # y
- R !(at&SPARSE)&&HOMO(at,wt)&&TYPESEQ(at,maxtyped(at,wt))&&!(AFLAG(a)&AFNJA)?indexofsub(ILESS,x,a):
-     repeat(not(eps(a,x)),a);
+// obsolete  R !(at&SPARSE)&&HOMO(at,wt)&&TYPESEQ(at,maxtyped(at,wt))&&!(AFLAG(a)&AFNJA)?indexofsub(ILESS,x,a):
+// obsolete      repeat(not(eps(a,x)),a);
+ A z;
+ if(!(at&SPARSE)&&HOMO(at,wt)&&TYPESEQ(at,maxtyped(at,wt))&&!(AFLAG(a)&AFNJA)){RZ(z=indexofsub(ILESS,x,a)); ra00(z,AT(z)); RETF(z);}
+ else R repeat(not(eps(a,x)),a);
 }    /* a-.w */
 
 // x e. y

@@ -19,8 +19,9 @@ B jtxsinit(J jt){A x;
  R 1;
 }
 
-F1(jtsnl){ASSERTMTV(w); R vec(BOX,jt->slistn,AAV(jt->slist));}
-     /* 4!:3  list of script names */
+// obsolete F1(jtsnl){ASSERTMTV(w); R vec(BOX,jt->slistn,AAV(jt->slist));}
+F1(jtsnl){ASSERTMTV(w); A z; RZ(z=vec(BOX,jt->slistn,AAV(jt->slist))); ra00(z,BOX); RETF(z);}  // make result recursive
+      /* 4!:3  list of script names */
 
 F1(jtscnl){ASSERTMTV(w); R vec(INT,jt->slistn,AAV(jt->sclist));}
      /* 4!:8  list of script indices which loaded slist */

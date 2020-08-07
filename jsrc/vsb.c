@@ -475,7 +475,7 @@ static F1(jtsbbox){A z,*zv;C*s;I n;SB*v;SBU*u;
  ASSERT(!n||SBT&AT(w),EVDOMAIN);
  GATV(z,BOX,n,AR(w),AS(w)); zv=AAV(z);
  DO(n, u=SBUV(*v++); s=SBSV(u->i); RZ(*zv++=rifvs(SBC4&u->flag?vec(C4T,u->n>>2,s):SBC2&u->flag?vec(C2T,u->n>>1,s):str(u->n,s))););
- R z;
+ R ra00s(z);
 }    /* boxed strings for symbol array w */
 
 #define C2FSB(zv,u,q,m,c)  \
@@ -722,7 +722,7 @@ static F1(jtsbgetdata){A z,*zv;
  RZ(zv[5]=rifvs(sc(ROOT)));
  RZ(zv[6]=rifvs(sc(FILLFACTOR)));
  RZ(zv[7]=rifvs(sc(GAP)));
- R z;
+ R ra00s(z);
 }
 
 F2(jtsb2){A z;I j,k,n;

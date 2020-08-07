@@ -151,7 +151,7 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wk,wn,wr,*ws,zn;
    else IFROMLOOP2((k+SZI-1)>>LGSZI,MVMC)
    break;
   }
- ra00(z,AT(z)); RETF(z);  // make result recursive
+  RETF(z);
 }    /* a{"r w for numeric a */
 
 #define BSET(x,y0,y1,y2,y3)     *x++=y0; *x++=y1; *x++=y2; *x++=y3;
@@ -265,7 +265,7 @@ static F2(jtbfrom){A z;B*av,*b;C*wv,*zv;I acr,an,ar,k,m,p,q,r,*u=0,wcr,wf,wk,wn,
    else DQ(m, b=av; DQ(an, MC(zv,wv+k**b++,k); zv+=k;); wv+=wk;);
 #endif
  }
- ra00(z,AT(z)); RETF(z);   // make result recursive
+ RETF(z);
 }    /* a{"r w for boolean a */
 
 // a is array whose 1-cells are index lists, w is array
@@ -377,8 +377,7 @@ static A jtafrom2(J jt,A p,A q,A w,I r){A z;C*wv,*zv;I d,e,j,k,m,n,pn,pr,* RESTR
  default:        {C* RESTRICT v=wv,* RESTRICT x=zv-k;n=k*n;   // n=#bytes in a cell of w
   DO(m, DO(pn, j=e*pv[i]; DO(qn, MC(x+=k,v+k*(j+qv[i]),k);)); v+=n;);} break;
  }
- ra00(z,AT(z));
- RETF(z);   // return block, recursive
+ RETF(z);   // return block
 }   /* (<p;q){"r w  for positive integer arrays p,q */
 
 // n is length of axis, w is doubly-unboxed selector
@@ -452,7 +451,7 @@ F2(jtfrom){I at;A z;
     // Get the area to use for the result: the a input if possible, else an INT atom
     if((SGNIF(jtinplace,JTINPLACEAX)&AC(a)&SGNIFNOT(AFLAG(a),AFUNINCORPABLEX))<0)z=a; else{GAT0(z,INT,1,0)}
     // Move the value and transfer the block-type
-    I j; AT(z)=AT(w); SETNDX(j,av,AN(w)); IAV(z)[0]=IAV(w)[j]; ra00(z,AT(z));  // make result recursive
+    I j; AT(z)=AT(w); SETNDX(j,av,AN(w)); IAV(z)[0]=IAV(w)[j];
    }else{
     // rank of w > 1, return virtual cell
     I *ws=AS(w);  // shape of w
@@ -503,7 +502,7 @@ F2(jtsfrom){
      }
      break;
     }
-    ra00(z,AT(z)); RETF(z);   // make result recursive
+    RETF(z);
    }
   }
  }else{A ind;
@@ -544,7 +543,7 @@ F2(jtfetch){A*av, z;I n;F2PREFIP;
    RZ(z=jtquicksel(jt,a,w));  // fetch selected box, opened.  If not a box, just return w
    // Inplaceability depends on the context.  If the overall operand is either noninplaceable or in a noninplaceable context, we must
    // protect the value we fetch (the overall operand would matter only if it was flagged without a ra())
-   if((AC(w)&SGNIF(jtinplace,JTINPLACEWX))>=0)ACIPNO(z); ra00(z,AT(z)); RETF(z);   // turn off inplace if w not inplaceable, or jt not inplaceable.  Make result recursive
+   if((AC(w)&SGNIF(jtinplace,JTINPLACEWX))>=0)ACIPNO(z); RETF(z);   // turn off inplace if w not inplaceable, or jt not inplaceable.
   }
   RZ(a=box(a));  // if not special case, box any unboxed a
  }
@@ -553,5 +552,5 @@ F2(jtfetch){A*av, z;I n;F2PREFIP;
  DO(n, A next=av[i]; if(((AT(z)>>BOXX)&1)>=(2*(AR(next)+(AT(next)&BOX))+AR(z))){RZ(z=jtquicksel(jt,next,z))}  // next is unboxed atom, z is boxed atom or list, use fast indexing  AR(next)==0 && !(AT(next)&BOX) && (AR(z)==0 || (AR(z)==1 && AT(z)&BOX))
       else{RZ(z=afrom(box(next),z)); ASSERT(((i+1-n)&-AR(z))>=0,EVRANK); if(((AR(z)-1)&SGNIF(AT(z),BOXX))<0)RZ(z=ope(z));}  // Rank must be 0 unless last; open if boxed atom
    );
- if((AC(w)&SGNIF(jtinplace,JTINPLACEWX))>=0)ACIPNO(z); ra00(z,AT(z)); RETF(z);   // Mark the box as recursive, non-inplaceable, as above
+ if((AC(w)&SGNIF(jtinplace,JTINPLACEWX))>=0)ACIPNO(z); RETF(z);   // Mark the box as non-inplaceable, as above
 }

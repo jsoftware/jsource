@@ -271,6 +271,8 @@ k (</.  -: < key) a     [ k=:((#a),2)?@$100
 k (</.  -: < key) a     [ k=:((#a),2)?@$2
 k (</.  -: < key) a     [ k=: 'ab' {~ ((#a),2)?@$2
 k (</.  -: < key) a     [ k=:a. {~ ((#a),2)?@$100
+NB. small arguments and x with rank > 1
+(,3) -: (3 2$1) +//. i.3    NB. don't crash
 
 NB. Intolerant
 a=:?120 5$110

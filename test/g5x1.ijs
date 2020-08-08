@@ -58,12 +58,12 @@ fvv =: * : +
 
 one  =: 1
 two  =: 2
-adv  =: 1 : a=:,:'x/'
-conj =: 2 : c=:,:'x&y'
+adv  =: 1 : a=:,:'u/'
+conj =: 2 : c=:,:'u&v'
 (ar <'adv' ) -: <(,':');<ar ;:'one a'
 (ar <'conj') -: <(,':');<ar ;:'two c'
 
-tv  =: 2 : '(ar <''x'') -: <,y'
+tv  =: 2 : '(ar <''u'') -: <,v'
 
 =  tv '='
 <  tv '<'

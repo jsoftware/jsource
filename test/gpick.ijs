@@ -12,7 +12,7 @@ mapp=: 4 : 'if. boxed y do. (<"0 x,&.><"0 cat y) mapp&.> y else. >x end.'
 sz  =: 3 : '>spread_temp'
 si  =: 3 : 'y [ spread_temp=:$0'
 sc  =: 3 : '0: spread_temp=:spread_temp,<y'
-S   =: 2 : 'sz@(sc@x L: y)&si'
+S   =: 2 : 'sz@(sc@u L: v)&si'
 
 t=: 5!:2 <'pick'
 

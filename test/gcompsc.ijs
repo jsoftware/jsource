@@ -14,15 +14,15 @@ NB.    = ~: < <: >: > E. e.
 sp=: 7!:2
 
 ftab=: 2 : 0   
- select. x 2 2 0 1 0 1    NB. detect what x is by applying it
-  case. 2           do. y i. 0:
-  case. 3           do. y i. 1:
-  case. 4           do. y i: 0:
-  case. 5           do. y i: 1:
-  case. 6           do. [: + / y
-  case. 1           do. [: +./ y
-  case. 0           do. [: *./ y
-  case. 0 0 1 1 3 5 do. [: I. y
+ select. u 2 2 0 1 0 1    NB. detect what x is by applying it
+  case. 2           do. v i. 0:
+  case. 3           do. v i. 1:
+  case. 4           do. v i: 0:
+  case. 5           do. v i: 1:
+  case. 6           do. [: + / v
+  case. 1           do. [: +./ v
+  case. 0           do. [: *./ v
+  case. 0 0 1 1 3 5 do. [: I. v
  end.
 )
 

@@ -7,7 +7,7 @@ NB. test failed on small ct
 ct   =: 9!:18''
 9!:19[2^_40
 
-insert =: 1 : '{. ` ({. x $:@}.) @. (1&<@#)'     NB. one or more items
+insert =: 1 : '{. ` ({. u $:@}.) @. (1&<@#)'     NB. one or more items
 
 (= /t) -: = insert t=: 20 ?@$ 2
 (< /t) -: < insert t
@@ -135,7 +135,7 @@ NB. symbol
 
 NB. ,/ ------------------------------------------------------------------
 
-insert =: 1 : '{. ` ({. x $:@}.) @. (1&<@#)'     NB. one or more items
+insert =: 1 : '{. ` ({. u $:@}.) @. (1&<@#)'     NB. one or more items
 
 (,/t) -: ,insert t=:7
 (,/t) -: ,insert t=:'abc'

@@ -530,7 +530,7 @@ a=: /\.(&+)("1)
 test2 <'a'     
 a=: (/\.)(+&)("1 _)
 
-c=: 2 : '%&y@(+&y -&x ])'
+c=: 2 : '%&v@(+&v -&u ])'
 test2 <'c'
 
 test2 <'test1'
@@ -629,7 +629,7 @@ trtil   =: trx`(leaf@oarg@>@{.@oarg) @. ((<,'0')&=@{.@>@{.@oarg)
 trcase  =: (leaf@oarg)`trgl`trgl`trg`trtil`trx @. ((;:'0@.`:4~')&i.@{.)
 tr      =: leaf`trcase @. boxed
 
-rep     =: 2 : 'x & (((# i.@#)@,@y@])})'
+rep     =: 2 : 'u & (((# i.@#)@,@v@])})'
 right   =: (5{boxc) rep (e.&(9{boxc) *. shr"1@(e.&dash))
 cross   =: (4{boxc) rep (e.&(5{boxc) *. shl"1@(e.&dash))
 left    =: (3{boxc) rep (e.&(9{boxc) *. shl"1@(e.&dash))
@@ -653,20 +653,20 @@ base   =: 1&>.@-@[ * i.@em
 iind   =: base ,. |@[ <. en - base
 seg    =: ((+i.)/@[ { ])"1 _
 
-infix  =: 1 : '(iind  x@seg ])"0 _'
-outfix =: 1 : '(omask x@#   ])"0 _'
-prefix =: 1 : '>:@,.@i.@# x@{. ]'
-suffix =: 1 : ',.@i.@#    x@}. ]'
+infix  =: 1 : '(iind  u@seg ])"0 _'
+outfix =: 1 : '(omask u@#   ])"0 _'
+prefix =: 1 : '>:@,.@i.@# u@{. ]'
+suffix =: 1 : ',.@i.@#    u@}. ]'
 
-key    =: 1 : '=@[ x@# ]'
+key    =: 1 : '=@[ u@# ]'
 
 osub   =: >@]`(>@[ >@:{ ]) @. (*@#@])
 oind   =: (+/&i./ </.&, i.)@(2&{.)@(,&1 1)@$
-ob     =: 1 : 'oind x@osub"0 1 ,@(<"_2)'
+ob     =: 1 : 'oind u@osub"0 1 ,@(<"_2)'
 
-bs     =: 1 : '(x prefix) : (x infix )'
-bsd    =: 1 : '(x suffix) : (x outfix)'
-sd     =: 1 : '(x ob    ) : (x key   )'
+bs     =: 1 : '(u prefix) : (u infix )'
+bsd    =: 1 : '(u suffix) : (u outfix)'
+sd     =: 1 : '(u ob    ) : (u key   )'
 
 test2"0 ;:'en em kay omask'
 test2"0 ;:'base iind seg'

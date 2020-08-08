@@ -44,7 +44,7 @@ trnoun  =: leaf @ lr @ oarg
 trcase  =: trnoun`trgl`trgl`trg`trtil`trx @. ((;:'0@.`:4~')&i.@{.)
 tr      =: leaf`trcase @. boxed
 
-rep     =: 2 : 'x & ((# i.@#)@,@y@]})'
+rep     =: 2 : 'u & ((# i.@#)@,@v@]})'
 right   =: (5{boxc) rep (e.&(9{boxc) *. shr"1@(e.&dash))
 cross   =: (4{boxc) rep (e.&(5{boxc) *. shl"1@(e.&dash))
 left    =: (3{boxc) rep (e.&(9{boxc) *. shl"1@(e.&dash))
@@ -55,7 +55,7 @@ tree    =: connect @ > @ (,.&.>/) @ ('0'&root ; ]) @ (tr@>@ar)
 
 
 jtr  =: 5!:4
-test=: 1 : '(jtr -: tree) <''x'''
+test=: 1 : '(jtr -: tree) <''u'''
 
 +             test
 +.            test
@@ -94,14 +94,14 @@ NB. +`-`*`:0  test
 
 a =. /
 (jtr -: tree) <'a'
-a =. 1 : 'x/\'
+a =. 1 : 'u/\'
 (jtr -: tree) <'a'
-inv =. 1 : 'x^: _'
+inv =. 1 : 'u^: _'
 (jtr -: tree) <'inv'
 
 c =. &
 (jtr -: tree) <'c'
-ip =. 2 : 'x @ (y"1 _)'
+ip =. 2 : 'u @ (v"1 _)'
 (jtr -: tree) <'ip'
 
 

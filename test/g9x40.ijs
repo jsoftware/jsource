@@ -67,7 +67,7 @@ f=: 4 : t=: 0 : 0
 
 f=: 1 : t=: 0 : 0
  assert. 2|2{6!:0 ''   NB. only on odd numbered days
- x/
+ u/
 )
 
 (5!:1 <'f') -: < (,':');<(nn 1),nn ];._2 t

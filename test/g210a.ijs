@@ -6,7 +6,7 @@ NB. and malloc does not always fail gracefully.
 NB. Other tests fail because they try to grab the entire result array
 NB. at the outset, and fail with a limit error or an out of memory.
 
-test  =: 1 : '<@(x etx) e. (''out of memory'';''limit error'')"_'
+test  =: 1 : '<@(u etx) e. (''out of memory'';''limit error'')"_'
 
 m     =: <. 2^IF64{16 32
 m2    =: <. m%2

@@ -70,7 +70,7 @@ s1=: sdot0{~?(1+?(1+?3)#4)$#sdot0
 (((}:$b),3)$10&u:'xyz') -: a (10&u:'xyz')"1 b
 
 dr =: 5!:2
-rk =: 1 : ('f=. +"x'; '>2{dr<''f''')
+rk =: 1 : ('f=. +"u'; '>2{dr<''f''')
 
 0 0 0 -: + rk
 2 _ 2 -: %. rk
@@ -254,8 +254,8 @@ cshape=: <@msh {.&.> ]
 asm   =: > @ cshape @ crank
 
 rank  =: 2 : 0
- 'mm ll rr'=.3&$&.|.y
- ([: asm [: x&.> mm&cells) : ([: asm ll&cells@[ (lag x&.> rag) rr&cells@])
+ 'mm ll rr'=.3&$&.|.v
+ ([: asm [: u&.> mm&cells) : ([: asm ll&cells@[ (lag u&.> rag) rr&cells@])
 )
 
 x=: ?2 3$1e6

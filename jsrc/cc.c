@@ -136,13 +136,13 @@ DF2(jtspecialatoprestart){
 // x <;.0 y  and  x (<;.0~ -~/"2)~ y   where _2 { $x is 1 (i. e. 1 dimension of selection)  localuse distinguishes the two cases (relative vs absolute length)
 // We go for minimum overhead in the box allocation and copy
 DF2(jtboxcut0){A z;
- RZ(a&&w);
+ RZ(a&&w);F2PREFIP;
  // NOTE: this routine is called from jtwords.  In that case, self comes from jtwords and is set up with the parm for x (<;.0~ -~/"2)~ y but with no failover routine.
  // Thus, the preliminary tests must not cause a failover.  They don't, because the inputs from jtwords are known to be well-formed
  // We require a have rank >=2, not sparse
- if(((1-(I)AR(a))&(((AT(a)|AT(w))&SPARSE)-1))>=0)R (FAV(self)->localuse.lpf.func)(a,w,self);
+ if(((1-(I)AR(a))&(((AT(a)|AT(w))&SPARSE)-1))>=0)R (FAV(self)->localuse.lpf.func)(jtinplace,a,w,self);
  // Shape of a must end 2 1 - a one-dimensional selection
- if((AS(a)[AR(a)-2]^2)|(AS(a)[AR(a)-1]^1))R (FAV(self)->localuse.lpf.func)(a,w,self);
+ if((AS(a)[AR(a)-2]^2)|(AS(a)[AR(a)-1]^1))R (FAV(self)->localuse.lpf.func)(jtinplace,a,w,self);
  // it is a (set of) one-dimensional selection
  // a must be integral
  RZ(a=vib(a));  // make a integer
@@ -158,14 +158,15 @@ DF2(jtboxcut0){A z;
   // the w values to the new block.
   // Make result inplaceable and recursive
  A *pushxsave = jt->tnextpushp; jt->tnextpushp=AAV(z);  // save tstack info before allocation
+ // MUST NOT FAIL UNTIL tstack restored
  A y;
  // Step through each block: fetch start/end; verify both positive and inrange; calc size of block; alloc and move; make block recursive
  I *av=IAV(a);  // pointer to first start/length pair
- I rellength=(I)FAV(self)->localuse.lpf.parm;  // 0 for start/length, ~0 for start/end+1
+ I abslength=(I)FAV(self)->localuse.lpf.parm;  // 0 for start/length, ~0 for start/end+1
  wr=wr==0?1:wr;   // We use this rank to allocate the boxes - we always create arrays
  DQ(resatoms,
-   I start=av[0]; I endorlen=av[1]; if((start|endorlen)<0)R (FAV(self)->localuse.lfns[1])(a,w,self);  // verify positive indexes - failover if not
-   endorlen-=start&rellength; ASSERT(BETWEENC(start+endorlen,0,wi),EVINDEX);  // get length; verify substring in bounds endorlen is length now
+   I start=av[0]; I endorlen=av[1]; if((start|endorlen)<0){jt->tnextpushp=pushxsave; R (FAV(self)->localuse.lfns[1])(jtinplace,a,w,self);}  // verify positive indexes - failover if not
+   endorlen+=start&abslength; endorlen=endorlen>wi?wi:endorlen; endorlen-=start;  // get length; verify substring in bounds endorlen is length now
    I substratoms=endorlen*cellsize;
    GAE(y,t,substratoms,wr,AS(w),break); AS(y)[0]=endorlen; MC(CAV(y),wv+start*(cellsize<<k),substratoms<<k); AC(y)=ACUC1; if(t&RECURSIBLE){AFLAG(y)=t; jtra(jt,y,t);}
    av+=2;
@@ -1132,13 +1133,18 @@ F2(jtcut){A h=0,z;I flag=0,k;
  RE(k=i0(w));
  if(NOUN&AT(a)){flag=VGERL; RZ(h=fxeachv(1L,a)); ASSERT(-2<=k&&k<=2,EVNONCE);}
  switch(k){
- case 0:          z=fdef(0,CCUT,VERB, jtcut01,jtcut02, a,w,h, flag|VJTFLGOK2, RMAX,2L,RMAX); break;
+ case 0:          if(FAV(a)->id==CBOX){   // <;.0
+  RZ(z=fdef(0,CCUT,VERB, jtcut01,jtboxcut0, a,w,h, flag|VJTFLGOK2, RMAX,2L,RMAX));
+  FAV(z)->localuse.lpf.parm=~0; FAV(z)->localuse.lpf.func=jtcut02;  // store parms to specify start/len format
+  R z;
+  }
+  z=fdef(0,CCUT,VERB, jtcut01,jtcut02, a,w,h, flag|VJTFLGOK2, RMAX,2L,RMAX); break;
  case 1: case -1:
  case 2: case -2: if(!(NOUN&AT(a)))flag=VJTFLGOK2+VJTFLGOK1; z=fdef(0,CCUT,VERB, jtcut1, jtcut2,  a,w,h, flag, RMAX,1L,RMAX); break;
  case 3: case -3: case 259: case -259: z=fdef(0,CCUT,VERB, jttess1,jttess2, a,w,h, flag, RMAX,2L,RMAX); break;
  default:         ASSERT(0,EVDOMAIN);
  }
  RZ(z);
- FAV(z)->localuse.lvp[0]=(void *)k;  // remember the integer form of the cut selector
+ FAV(z)->localuse.lvp[0]=(void *)k;  // remember the integer form of the cut selector  This is saved for all cases EXCEPT jtboxcut0.  0-cut will not look at it
  R z;
 }

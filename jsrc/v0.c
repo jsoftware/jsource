@@ -255,7 +255,7 @@ F1(jtpoly1){A c,e,x;
  RZ(IRS1(x,0L,1L,jthead,c));  // c = {."1>y = list of coefficients
  RZ(IRS1(x,0L,1L,jttail,e));  // e = {:"1>y = list of exponents
  ASSERT(equ(e,floor1(e))&&all1(le(num(0),e)),EVDOMAIN);  // insist on nonnegative integral exponents
- R evc(c,e,"x y}(1+>./y)$0");  // evaluate c 2 : 'x y}(1+>./y)$0' e
+ R evc(c,e,"u v}(1+>./v)$0");  // evaluate c 2 : 'u v}(1+>./v)$0' e
 }
 
 

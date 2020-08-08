@@ -215,7 +215,7 @@ PRIM primtab[256] = {
  /*  ;  */  PRIMACV(CSEMICO, VERB, jtraze,    jtlink,   RMAX,RMAX,RMAX,VASGSAFE,VF2WILLOPEN1|VF2USESITEMCOUNT1),
  /*  ;. */  PRIMACV(CCUT,    CONJ, jtdomainerr1,        jtcut,    0,   0,   0   ,VFLAGNONE,VF2NONE),
 // obsolete /*  ;: */  PRIMACV(CWORDS,  VERB, jtwords,   jtfsm,    1,   RMAX,RMAX,VASGSAFE,VF2NONE),
- /*  ;: */  PRIMACVPARM(CWORDS,  VERB, jtwords,   jtfsm,    1,   RMAX,RMAX,VASGSAFE,VF2NONE,.lpf=~0,0),  // parms are passed through to jtboxcut0
+ /*  ;: */  PRIMACVPARM(CWORDS,  VERB, jtwords,   jtfsm,    1,   RMAX,RMAX,VASGSAFE,VF2NONE,.lpf=0,0),  // parms are passed through to jtboxcut0
  /*  #  */  PRIMACV(CPOUND,  VERB, jttally,   jtrepeat, RMAX,1,   RMAX,VASGSAFE|VIRS2|VJTFLGOK2,VF2NONE),
  /*  #. */  PRIMACV(CBASE,   VERB, jtbase1,   jtbase2,  1,   1,   1   ,VASGSAFE,VF2NONE),
  /*  #: */  PRIMACV(CABASE,  VERB, jtabase1,  jtabase2, RMAX,1,   0   ,VASGSAFE,VF2NONE),

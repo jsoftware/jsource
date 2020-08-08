@@ -18,10 +18,10 @@ ar =: 5!:1
 ((ar <'a') fx) -: a =: 4 0 5 $ ^0j1*?3 4 5$100
 ((ar <'a') fx) -: a =: 5 0   $ +&.>?4 3$100
 
-tv   =: 1 : '=/(ar<''x'') fx `(x f.)'
+tv   =: 1 : '=/(ar<''u'') fx `(u f.)'
 eq   =: ar&<@[ -: ar&<@]
-eachh=: 1 : 'x f.&.>'
-pow  =: 2 : ('i=.>:y'; 't=.]'; 'while. i=.<:i do. t=.x&t f. end.')
+eachh=: 1 : 'u f.&.>'
+pow  =: 2 : ('i=.>:v'; 't=.]'; 'while. i=.<:i do. t=.u&t f. end.')
 
 +             tv
 +/ . *        tv

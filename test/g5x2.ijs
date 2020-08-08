@@ -53,14 +53,14 @@ bxcase       test
 (br -: brep) <'test'
 a =: /
 (br -: brep) <'a'
-a =: 1 : 'x/\'
+a =: 1 : 'u/\'
 (br -: brep) <'a'
-inv =: 1 : 'x^:_'
+inv =: 1 : 'u^:_'
 (br -: brep) <'inv'
 
 c =: &
 (br -: brep) <'c'
-ip =: 2 : 'x@ (y"(0 _1"1 _))'
+ip =: 2 : 'u@ (v"(0 _1"1 _))'
 (br -: brep) <'ip'
 
 a =: i.3 4
@@ -92,12 +92,12 @@ fvv =: * : +
 (br <'f12') -: (3;,':'),<>n12
 (br <'fvv') -: ;:'* : +'
 
-adv  =: 1 : 'x/f.'  
-conj =: 2 : 'x&y f.' 
-(br <'adv' ) -: (1;,':'),<,:'x/f.'  
-(br <'conj') -: (2;,':'),<,:'x&y f.'
+adv  =: 1 : 'u/f.'  
+conj =: 2 : 'u&v f.' 
+(br <'adv' ) -: (1;,':'),<,:'u/f.'  
+(br <'conj') -: (2;,':'),<,:'u&v f.'
 
-t=:'i=.0'; 't=.]'; 'while. y>i do.'; 'i=.1+i'; 't=.x@t f.'; 'end.'
+t=:'i=.0'; 't=.]'; 'while. v>i do.'; 'i=.1+i'; 't=.u@t f.'; 'end.'
 pow =: 2 : t 
 (br <'pow') -: (2;,':'),<>t
 
@@ -117,7 +117,7 @@ f=:o. pow 3
 r=:(<'o.'),(<,'@'),<r
 (br <'f') -: r
 
-tv =: 2 : '(br <''x'') -: ,<,y' 
+tv =: 2 : '(br <''u'') -: ,<,v' 
 =  tv '='
 <  tv '<'
 <. tv '<.'

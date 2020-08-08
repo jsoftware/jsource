@@ -94,12 +94,12 @@ NB. H. verb arguments ---------------------------------------------------
 
 X     =: +/ . *
 eterm =: (i.@[ ^~ ]) % !@i.@[
-rf    =: 1 : '(,x)"_ ^!.1/ i.@['
-coeff =: 2 : 'x rf %&(*/) y rf'
-prf   =: 1 : '[: */ (,x)"_ ^!.1/ ]'   NB. product of rising factorials
-H     =: 2 : '(x % y)@i.@[ X eterm'   NB. u H  v  models  u H. v
-H1    =: 2 : 'x coeff y X eterm'      NB. m H1 n  models  m H. n  
-H2    =: 2 : '(x prf) H. (y prf)'     NB. m H2 n  models  m H. n
+rf    =: 1 : '(,u)"_ ^!.1/ i.@['
+coeff =: 2 : 'u rf %&(*/) v rf'
+prf   =: 1 : '[: */ (,u)"_ ^!.1/ ]'   NB. product of rising factorials
+H     =: 2 : '(u % v)@i.@[ X eterm'   NB. u H  v  models  u H. v
+H1    =: 2 : 'u coeff v X eterm'      NB. m H1 n  models  m H. n  
+H2    =: 2 : '(u prf) H. (v prf)'     NB. m H2 n  models  m H. n
 
 1 -: ] H. >: 1
 
@@ -159,9 +159,9 @@ h7 =: ^.@(+ >:&.*:) % ]
 
 NB. Abramowitz & Stegun 15.1.8
 
-f8 =: 1 : '^&(-x)@-.'
-g8 =: 1 : 'x H. ($0)'
-h8 =: 1 : '(x,1) H. 1'
+f8 =: 1 : '^&(-u)@-.'
+g8 =: 1 : 'u H. ($0)'
+h8 =: 1 : '(u,1) H. 1'
 
 (a f8 -: a g8) x=:0.01*_50+?40$100 [ a=.0.1*?50
 (a f8 -: a h8) x
@@ -180,9 +180,9 @@ h8 =: 1 : '(x,1) H. 1'
 
 NB. Abramowitz & Stegun 15.1.13
 
-f13 =: 1 : '(0 1r2+x)H.(1+2*x)'
-g13 =: 1 : '(2^2*x)"_ * (1: + %:@-.) ^ (_2*x)"_'
-h13 =: 1 : '%:@-. * (1 1r2+x) H. (1+2*x)'
+f13 =: 1 : '(0 1r2+u)H.(1+2*u)'
+g13 =: 1 : '(2^2*u)"_ * (1: + %:@-.) ^ (_2*u)"_'
+h13 =: 1 : '%:@-. * (1 1r2+u) H. (1+2*u)'
 
 (0.2 f13 -: 0.2 g13) x=:0.001*_990+?40$1981
 (0.2 f13 -: 0.2 h13) x
@@ -193,8 +193,8 @@ h13 =: 1 : '%:@-. * (1 1r2+x) H. (1+2*x)'
 
 NB. Abramowitz & Stegun 15.1.14
 
-f14 =: 1 : '(x,1r2+x) H. (2*x)'     
-g14 =: 1 : '(2^_1+2*x)"_ * %@%:@-. * >:@%:@-. ^ (1-2*x)"_'
+f14 =: 1 : '(u,1r2+u) H. (2*u)'     
+g14 =: 1 : '(2^_1+2*u)"_ * %@%:@-. * >:@%:@-. ^ (1-2*u)"_'
 
 (0.2 f14 -: 0.2 g14) x=:0.001*_990+?40$1981
 (2   f14 -: 2   g14) x
@@ -205,8 +205,8 @@ NB. Abramowitz & Stegun 15.1.17
 
 sin =: 1&o.
 cos =: 2&o.
-f17 =: 1 : '(x,-x) H. 1r2 @ (*:@sin)'
-g17 =: 1 : 'cos @ ((2*x)&*)'
+f17 =: 1 : '(u,-u) H. 1r2 @ (*:@sin)'
+g17 =: 1 : 'cos @ ((2*u)&*)'
 
 *./ 1e_14>| (0.4 f17 - 0.4 g17) x=:0.001*_1000+?40$2001
 *./ 1e_14>| (1   f17 - 1   g17) x
@@ -215,7 +215,7 @@ g17 =: 1 : 'cos @ ((2*x)&*)'
 
 NB. modified Bessel fn of various orders; A&S Table 9.8, 9.9, 9.10
 
-Bessel =: 1 : '(($0) H. (x+1) * ^&(-:x) % (!x)"_)@:*:@:-:'
+Bessel =: 1 : '(($0) H. (u+1) * ^&(-:u) % (!u)"_)@:*:@:-:'
 
 f0 =: 0 Bessel * ^@-
 1e_10 > | 1            - f0 0

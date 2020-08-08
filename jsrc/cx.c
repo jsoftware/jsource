@@ -135,8 +135,9 @@ DF2(jtxdefn){PROLOG(0048);
  {A *hv;  // will hold pointer to the precompiled parts
   V *sv=FAV(self); I sflg=sv->flag;   // fetch flags, which are the same even if VXOP is set
   A u,v;  // pointers to args
-  // If this is adv/conj, it must be (1/2 : n) executed with no x or y.  Set uv then
+  // If this is adv/conj, it must be (1/2 : n) executed with no x or y.  Set uv then, and undefine x/y
   u=AT(self)&ADV+CONJ?a:0; v=AT(self)&ADV+CONJ?w:0;
+// saved for next rev   a=AT(self)&ADV+CONJ?0:a; w=AT(self)&ADV+CONJ?0:w;
   if(!(jt->uflags.us.cx.cx_us | (sflg&(VLOCK|VXOP|VTRY1|VTRY2)))){
    // Normal case of verbs. Read the info for the parsed definition, including control table and number of lines
    LINE(sv);
@@ -824,6 +825,8 @@ F2(jtcolon){A d,h,*hv,m;B b;C*s;I flag=VFLAGNONE,n,p;
   I fndflag=xop(h);   // 4=mnuv 2=x 1=y
   b=fndflag>4;   // set if there is mnuv and xy
   if(b)flag|=VXOPR;   // if this def refers to xy, set VXOPR
+// saved for next rev   ASSERT(!BETWEENC(fndflag,1,3),EVNONCE);  // scaf
+if(BETWEENC(fndflag,1,3))printf("******************* x/y without u/v/m/n *********************");
   // if there is only one valence defined, that will be the monad.  Swap it over to the dyad in two cases: (1) it is a conjunction with uv only: the operands will be the two verbs;
   // (2) it is an operator with a reference to x
   if(((-AN(m))&(AN(d)-1)&(((fndflag-5)&(1-n))|(5-fndflag)))<0){A*u=hv,*v=hv+HN,x; DQ(HN, x=*u; *u++=*v; *v++=x;);}  // if not, it executes on uv only; if conjunction, make the default the 'dyad' by swapping monad/dyad

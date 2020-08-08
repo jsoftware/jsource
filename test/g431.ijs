@@ -16,20 +16,20 @@ base   =: 1&>.@-@[ * i.@em
 iind   =: base ,. |@[ <. en - base
 seg    =: ((+i.)/@[ { ])"1 _
 
-infix  =: 1 : '(iind  x@seg ])"0 _'
-outfix =: 1 : '(omask x@#   ])"0 _'
-prefix =: 1 : '>:@,.@i.@# x@{. ]'
-suffix =: 1 : ',.@i.@#    x@}. ]'
+infix  =: 1 : '(iind  u@seg ])"0 _'
+outfix =: 1 : '(omask u@#   ])"0 _'
+prefix =: 1 : '>:@,.@i.@# u@{. ]'
+suffix =: 1 : ',.@i.@#    u@}. ]'
 
-key    =: 1 : '=@[ x@# ]'
+key    =: 1 : '=@[ u@# ]'
 
 osub   =: >@]`(>@[ >@:{ ]) @. (*@#@])
 oind   =: (+/&i./ </.&, i.)@(2&{.)@(,&1 1)@$
-ob     =: 1 : 'oind x@osub"0 1 ,@(<"_2)'
+ob     =: 1 : 'oind u@osub"0 1 ,@(<"_2)'
 
-bs     =: 1 : '(x prefix) : (x infix )'
-bsd    =: 1 : '(x suffix) : (x outfix)'
-sd     =: 1 : '(x ob    ) : (x key   )'
+bs     =: 1 : '(u prefix) : (u infix )'
+bsd    =: 1 : '(u suffix) : (u outfix)'
+sd     =: 1 : '(u ob    ) : (u key   )'
 
 
 NB. f\.y ----------------------------------------------------------------

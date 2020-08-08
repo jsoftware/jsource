@@ -28,9 +28,9 @@ fac =: 3 : 0
 )
 
 conj =: 2 : 0
- if. 1=x do. y=.*:@y else. y=.%:@y end.
+ if. 1=u do. v=.*:@v else. v=.%:@v end.
  %glob
- y/
+ v/
 )
 
 h  =: 3 : 'y h1 2'

@@ -135,7 +135,7 @@ static F1(jtinvamp){A f,ff,g,h,x,y;B nf,ng;C c,d,*yv;I n;V*u,*v;
    R amp(sc(-(1^(-n))),h);
   case CCANT:    
    ASSERT(nf,EVDOMAIN); 
-   R obverse(eva(x,"] |:~ x C.^:_1 i.@#@$"),w);
+   R obverse(eva(x,"] |:~ u C.^:_1 i.@#@$"),w);
   case CPCO:
    if(nf){
     RE(n=i0(x));
@@ -170,11 +170,11 @@ static F1(jtinvamp){A f,ff,g,h,x,y;B nf,ng;C c,d,*yv;I n;V*u,*v;
   case CBASE:   
    if(!nf)break;
    R AR(x) ? amp(x,ds(CABASE)) : 
-    obverse(evc(x,mag(x),"$&x@>:@(y&(<.@^.))@(1&>.)@(>./)@:|@, #: ]"),w);
+    obverse(evc(x,mag(x),"$&u@>:@(v&(<.@^.))@(1&>.)@(>./)@:|@, #: ]"),w);
   case CATOMIC:
    if(ng){ASSERT(equ(x,nub(x)),EVDOMAIN); R obverse(atop(f,amp(x,ds(CIOTA))),w);}  // fall through to common obverse (?)
   case CCYCLE:
-   if(nf&&AR(x)<=(c==CCYCLE))R obverse(eva(w,"/:@x@(i.@#) { ]"),w); break;
+   if(nf&&AR(x)<=(c==CCYCLE))R obverse(eva(w,"/:@u@(i.@#) { ]"),w); break;
   case CDROP:
    if(!(nf&&1>=AR(x)))break;
    RZ(x=cvt(INT,x));

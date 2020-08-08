@@ -272,7 +272,7 @@ b=: 0 1 0
 
 NB. x m}y and x u}y -----------------------------------------------------
 
-ia =. 1 : 'x@(i.@$@])'
+ia =. 1 : 'u@(i.@$@])'
 f  =. '_'&((' '&= # i.@#)@,@]})
 h  =. e.&' ' {"0 1 ,"0&'_'
 
@@ -299,7 +299,7 @@ h1  =. e.&(s:@<"0 ' ') {"0 1 ,"0&(s:@<"0 '_')
 (f1 -: h1) s:@<"0 'Cogito, ergo sum.'
 (f1 -: h1) 2 3 4$s:@<"0 'Now is the time, all good mean, to ergo sum.'
 
-C =. 2 : 'x & ((#i.@#)@,@y@] })'
+C =. 2 : 'u & ((#i.@#)@,@v@] })'
 
 (f -: '_' C (' '&=)) 'Cogito, ergo sum.'
 (f -: '_' C (' '&=)) 2 3 4$'Now is the time, all good mean, to ergo sum.'

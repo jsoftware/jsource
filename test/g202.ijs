@@ -94,9 +94,9 @@ y=: 'asdf'
 NB. ^: Newton's Method --------------------------------------------------
 
 eps =: 1e_8&*@+ 0&=
-Da  =: 1 : '[ %~ + -&x ]'      NB. secant slope adverb with absolute diff.
-D   =: 1 : 'eps x Da ]'        NB. secant slope adverb with relative diff.
-Nt  =: 1 : '- x % x D'         NB. one iteration of Newton's method
+Da  =: 1 : '[ %~ + -&u ]'      NB. secant slope adverb with absolute diff.
+D   =: 1 : 'eps u Da ]'        NB. secant slope adverb with relative diff.
+Nt  =: 1 : '- u % u D'         NB. one iteration of Newton's method
 
 *./ 1e_6 > | 3 - 3&* D 4 5 6
 *./ 1e_6 > | (2&^ D 4 5 6) - (^.2)*2^4 5 6
@@ -114,11 +114,11 @@ NB. ^:_1 ----------------------------------------------------------------
 
 ar   =: 5!:1
 lr   =: 5!:5
-inv  =: 1 : 'x^:_1'
-test =: 2 : '((x b._1)-:lr<''y'') *. (y b._1)-:lr<''x''' 
-f_g  =: 2 : ('f=.y :.x f.'; '((x b._1)-:lr<''y'') +. (x b._1)-:lr<''f''')
-eq   =: 2 : '(ar<''x'') -: (ar<''y'')'
-testx=: 2 : '(x b._1)-:lr<''y''' 
+inv  =: 1 : 'u^:_1'
+test =: 2 : '((u b._1)-:lr<''v'') *. (v b._1)-:lr<''u''' 
+f_g  =: 2 : ('f=.v :.u f.'; '((u b._1)-:lr<''v'') +. (u b._1)-:lr<''f''')
+eq   =: 2 : '(ar<''u'') -: (ar<''v'')'
+testx=: 2 : '(u b._1)-:lr<''v''' 
 
 <  test >
 <: test >:
@@ -173,8 +173,8 @@ g=: 3!:2
 i     -: {&m ^:_1 (i=: ?3 2$#m) { m=:?5 3$1000
 (i{m) -: m&i.^:_1 (i=: ?3 2$#m) [ m=:?5 3$1000
 
-([ -: m&#.    inv @ (m&#.    )) x=:1,?7$m [ m=:2+?7
-([ -: (4$m)&#:inv @ ((4$m)&#:)) x=:  ?m^4 [ m=:2+?7
+([ -: mm&#.    inv @ (mm&#.    )) x=:1,?7$mm [ mm=:2+?7
+([ -: (4$mm)&#:inv @ ((4$mm)&#:)) x=:  ?mm^4 [ mm=:2+?7
 
 (-: f^:_1 @ f=:p:) x=:?5$100
 (-: f^:_1 @ f=:+.) x=:j./_50+?2 10$100
@@ -316,7 +316,7 @@ y=: (<"0 (1 2 3 2 3 1)) ,. (2 1 3 2 1 3 # i.#2 1 3 2 1 3)</. i. 12
 
 
 4!:55 ;:'a adot1 adot2 sdot0 b c D Da Nt Expand ar cap eps eq f f1 f2 f_g '
-4!:55 ;:'g h hi i id inv lr m minus n p plus '
+4!:55 ;:'g h hi i id inv lr m mm minus n p plus '
 4!:55 ;:'t test testx times x y '
 randfini''
 

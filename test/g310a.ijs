@@ -5,7 +5,7 @@ jnc   =: 4!:0
 verb  =: 3&= @ jnc
 boxed =: 32&=  @ type
 open  =: 32&~: @ type
-inv   =: 1 : 'x^: _1'
+inv   =: 1 : 'u^: _1'
 
 pow=: 2 : 0
  assert. verb <'u'

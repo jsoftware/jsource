@@ -566,7 +566,7 @@ static I jtxop(J jt,A w){I i,k;
      }  // 'name is not empty'
     } // 'is name'
     if(AT(w)&VERB){
-      if((FAV(w)->id&-2)==CUDOT)fndflag|=4;
+      if((FAV(w)->id&-2)==CUDOT)fndflag|=4;  // u./v.
     }
     // exit if we have seen enough: mnuv plus x.  No need to wait for y.  If we have seen only y, keep looking for x
     if(fndflag>=4+2)R fndflag;
@@ -826,7 +826,7 @@ F2(jtcolon){A d,h,*hv,m;B b;C*s;I flag=VFLAGNONE,n,p;
   b=fndflag>4;   // set if there is mnuv and xy
   if(b)flag|=VXOPR;   // if this def refers to xy, set VXOPR
 // saved for next rev   ASSERT(!BETWEENC(fndflag,1,3),EVNONCE);  // scaf
-if(BETWEENC(fndflag,1,3))printf("******************* x/y without u/v/m/n *********************");
+if(BETWEENC(fndflag,1,3))jfwrite(str(129,"************ Old-style definition encountered.  It will be invalid after the beta period.\nIt has x/y without u/v/m/n **********\n"),num(2));
   // if there is only one valence defined, that will be the monad.  Swap it over to the dyad in two cases: (1) it is a conjunction with uv only: the operands will be the two verbs;
   // (2) it is an operator with a reference to x
   if(((-AN(m))&(AN(d)-1)&(((fndflag-5)&(1-n))|(5-fndflag)))<0){A*u=hv,*v=hv+HN,x; DQ(HN, x=*u; *u++=*v; *v++=x;);}  // if not, it executes on uv only; if conjunction, make the default the 'dyad' by swapping monad/dyad

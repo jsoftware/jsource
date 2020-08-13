@@ -175,7 +175,7 @@ PRIM primtab[256] = {
  /*  =  */  PRIMATOMIC2(CEQ,     VERB, jtsclass,  jtatomic2,     RMAX,0,   0   ,VFUSEDOK2|VASGSAFE|VIRS2|VJTFLGOK2,VF2NONE),
  /*  =. */       /* see above */
  /*  =: */       /* see above */
- /*  <  */  PRIMATOMIC2g(CLT,    VERB, jtbox,     jtatomic2,     RMAX,0,   0   ,VASGSAFE|VFUSEDOK2|VIRS1|VIRS2|VJTFLGOK2,VF2BOXATOP1,ds(CRIGHT)),  // alias CLT
+ /*  <  */  PRIMATOMIC2g(CLT,    VERB, jtbox,     jtatomic2,     RMAX,0,   0   ,VASGSAFE|VFUSEDOK2|VIRS1|VIRS2|VJTFLGOK1|VJTFLGOK2,VF2BOXATOP1,ds(CRIGHT)),  // alias CLT
  /*  <. */  PRIMATOMIC12(CMIN,  VERB, jtatomic1,  jtatomic2,0,   0,   0   ,VISATOMIC1|VFUSEDOK2|VIRS2|VASGSAFE|VJTFLGOK1|VJTFLGOK2,VF2NONE),  // alias CMIN
  /*  <: */  PRIMATOMIC2(CLE,     VERB, jtdecrem,  jtatomic2,     0,   0,   0   ,VISATOMIC1|VFUSEDOK2|VIRS2|VASGSAFE|VJTFLGOK1|VJTFLGOK2,VF2NONE),
  /*  >  */  PRIMATOMIC2(CGT,    VERB, jtope,     jtatomic2,     0,   0,   0   ,VFUSEDOK2|VASGSAFE|VIRS2|VJTFLGOK2,VF2WILLOPEN1),  // alias CGT
@@ -212,7 +212,7 @@ PRIM primtab[256] = {
  /*  ,  */  PRIMACV(CCOMMA,  VERB, jtravel,   jtapip,   RMAX,RMAX,RMAX,VASGSAFE|VIRS1|VIRS2|VJTFLGOK1|VJTFLGOK2,VF2NONE),
  /*  ,. */  PRIMACV(CCOMDOT, VERB, jttable,   jtstitch, RMAX,RMAX,RMAX,VASGSAFE|VIRS1|VJTFLGOK1,VF2NONE),
  /*  ,: */  PRIMACV(CLAMIN,  VERB, jtlamin1,  jtlamin2, RMAX,RMAX,RMAX,VASGSAFE|VIRS1|VIRS2,VF2NONE),
- /*  ;  */  PRIMACV(CSEMICO, VERB, jtraze,    jtlink,   RMAX,RMAX,RMAX,VASGSAFE,VF2WILLOPEN1|VF2USESITEMCOUNT1),
+ /*  ;  */  PRIMACV(CSEMICO, VERB, jtraze,    jtlink,   RMAX,RMAX,RMAX,VASGSAFE,VF2WILLOPEN1|VJTFLGOK2|VF2USESITEMCOUNT1),
  /*  ;. */  PRIMACV(CCUT,    CONJ, jtdomainerr1,        jtcut,    0,   0,   0   ,VFLAGNONE,VF2NONE),
 // obsolete /*  ;: */  PRIMACV(CWORDS,  VERB, jtwords,   jtfsm,    1,   RMAX,RMAX,VASGSAFE,VF2NONE),
  /*  ;: */  PRIMACVPARM(CWORDS,  VERB, jtwords,   jtfsm,    1,   RMAX,RMAX,VASGSAFE,VF2NONE,.lpf=0,0),  // parms are passed through to jtboxcut0

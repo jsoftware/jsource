@@ -413,6 +413,7 @@ typedef I SI;
 #define ACINCR(a)       if(!ACISPERM(AC(a)))(AC(a)=(AC(a)+1)&~ACINPLACE)
 #define ACX(a)          {AC(a)=ACPERMANENT;}
 #define ACISPERM(c)     ((I)((UI)(c)+(UI)(c))<0)  // is PERMANENT bit set?
+#define SGNIFPRIVATABLE(c) ((c)+ACPERMANENT)  // sign is set if this block is OK in a PRIVATE boxed noun
 // obsolete #define ASGNINPLACE(w)  (ACIPISOK(w) || AC(w)==1&&jt->assignsym&&jt->assignsym->val==w&&!(AFLAG(w)&AFRO)&&notonupperstack(w))  // OK to inplace ordinary operation
 // same, but s is an expression that is neg if it's OK to inplace
 // obsolete #define ASGNINPLACESGN(s,w)  (((s)&AC(w))<0 || ((s)&(AC(w)-2))<0 &&jt->assignsym&&jt->assignsym->val==w&&!(AFLAG(w)&AFRO)&&notonupperstack(w))  // OK to inplace ordinary operation
@@ -449,6 +450,9 @@ typedef I SI;
                                 // ever be put into a boxed array, even if WILLBEOPENED is set, because it changes
 #define AFVIRTUALBOXEDX 19   // matches XDX
 #define AFVIRTUALBOXED  ((I)1<<AFVIRTUALBOXEDX)  // this block (created in result.h) is an array that is about to be opened, and thus may contain virtual blocks as elements
+#define AFPRIVATEX      23  // matches NAME
+#define AFPRIVATE  ((I)1<<AFPRIVATEX)  // meaningful only for BOX type.  This block's contents were made entirely of inplaceable or PERMANENT values, and thus can be
+   // inplaced by &.> .  If any of the contents are taken out, the PRIVATE flag must be cleared.  MUST BE GREATER THAN ANY DIRECT FLAG
 #define AFUPPERTRIX 30      // matches RPAR
 #define AFUPPERTRI  ((I)1<<AFUPPERTRIX)  // (used in cip.c) This is an upper-triangular matrix
 

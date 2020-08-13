@@ -165,8 +165,11 @@ DF2(jtboxcut0){A z;
  I abslength=(I)FAV(self)->localuse.lpf.parm;  // 0 for start/length, ~0 for start/end+1
  wr=wr==0?1:wr;   // We use this rank to allocate the boxes - we always create arrays
  DQ(resatoms,
-   I start=av[0]; I endorlen=av[1]; if((start|endorlen)<0){jt->tnextpushp=pushxsave; R (FAV(self)->localuse.lfns[1])(jtinplace,a,w,self);}  // verify positive indexes - failover if not
-   endorlen+=start&abslength; endorlen=endorlen>wi?wi:endorlen; endorlen-=start;  // get length; verify substring in bounds endorlen is length now
+   I start=av[0]; I endorlen=av[1];
+   if(!(BETWEENO(start,0,wi))){jt->tnextpushp=pushxsave; R (FAV(self)->localuse.lfns[1])(jtinplace,a,w,self);}  // verify start in range - failover if not
+   endorlen+=start&abslength;  // convert len to end+1 form
+   endorlen=endorlen>wi?wi:endorlen; endorlen-=start;  // get length; limit length, convert back to true length
+   if(endorlen<0){jt->tnextpushp=pushxsave; R (FAV(self)->localuse.lfns[1])(jtinplace,a,w,self);}  // failover if len negative.  Overflow is not a practical possibility
    I substratoms=endorlen*cellsize;
    GAE(y,t,substratoms,wr,AS(w),break); AS(y)[0]=endorlen; MC(CAV(y),wv+start*(cellsize<<k),substratoms<<k); AC(y)=ACUC1; if(t&RECURSIBLE){AFLAG(y)=t; jtra(jt,y,t);}
    av+=2;

@@ -26,14 +26,15 @@ I levelle(A w,I l){
 F1(jtlevel1){RZ(w); R sc(level(w));}
 
 F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws; 
- RZ(w); I wt=AT(w); FLAGT waf=AFLAG(w);
+ RZ(w);F1PREFIP;I wt=AT(w); FLAGT waf=AFLAG(w);
  ASSERT(!(SPARSE&wt),EVNONCE);
 // obsolete  FLAGT newflags = 0;
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r;   // no RESETRANK because we call no primitives
  if(!f){
   // single box: fast path.  Allocate a scalar box and point it to w.  Mark w as incorporated.  Make all results recursive
-// obsolete  // DO NOT take potentially expensive pass through w to find recursibility, because it may never be needed if this result expires without being assigned
-  GAT0(z,BOX,1,0); AFLAG(z)=BOX; INCORPRA(w); *(AAV(z))=w;
+  // DO NOT take potentially expensive pass through w to find recursibility, because it may never be needed if this result expires without being assigned
+  // If the input is inplaceable in an inplaceable context, mark the result as PRIVATE
+  GAT0(z,BOX,1,0); AFLAG(z)=BOX+((SGNTO0(AC(w))&((I)jtinplace>>JTINPLACEWX))<<AFPRIVATEX); INCORPRA(w); *(AAV(z))=w;
 // obsolete   if((waf&RECURSIBLE)||(wt&DIRECT)){newflags|=BOX; ACINCR(w);}  // if w is recursible or direct, mark new box recursible and correspondingly incr usecount of w.  We do this because w is already in cache now.
 // obsolete   if((((waf&RECURSIBLE)-1)&((wt&DIRECT)-1))>=0){/* obsolete newflags|=BOX; */AFLAG(z)=BOX; ACINCR(w);}  // if w is recursible or direct, mark new box recursible and correspondingly incr usecount of w.  We do this because w is already in cache now.
 // obsolete   AFLAG(z) = newflags;  // set NOSMREL if w is not boxed, or known to contain no relatives
@@ -42,9 +43,11 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
   ws=AS(w); I t=AT(w);
   CPROD(AN(w),n,f,ws); CPROD(AN(w),m,r,f+ws);
   k=m<<bplg(t); wv=CAV(w);
-  GATV(z,BOX,n,f,ws); AFLAG(z) = BOX; if(n==0)RETF(z);  // Recursive result; could avoid filling with 0 if we modified AN after error, or cleared after *tnextpushp
-   // We have allocated the result; now we allocate a block for each cell of w and copy
-   // the w values to the new block.
+  // Since we are allocating the new boxes, the result will ipso facto be PRIVATE, as long as w is DIRECT.  If w is not DIRECT, we can be PRIVATE if we ensure that
+  // w is PRIVATE inplaceable, but we don't bother to do that because 
+  GATV(z,BOX,n,f,ws); AFLAG(z) = BOX+((-(t&DIRECT))&AFPRIVATE); if(n==0)RETF(z);  // Recursive result; could avoid filling with 0 if we modified AN after error, or cleared after *tnextpushp
+  // We have allocated the result; now we allocate a block for each cell of w and copy the w values to the new block.  Since we are copying contents of w, it must lose PRIVATE status
+  AFLAG(w)&=~AFPRIVATE;
 // obsolete    // If w is DIRECT, we make the result block recursive and increment the count of the others (we do so here because it saves a traversal of the new blocks
 // obsolete    // if the result block is assigned).  If w is indirect, we just leave everything nonrecursive to avoid traversing w, because
 // obsolete    // that will prove unnecessary if this result is not assigned.
@@ -68,7 +71,7 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
 F1(jtboxopen){RZ(w); if((-AN(w)&-(AT(w)&BOX+SBOX))>=0){w = box(w);} R w;}
 
 F2(jtlink){
-RZ(a&&w);
+RZ(a&&w);F2PREF;
 #if FORCEVIRTUALINPUTS
  // to allow mapped-boxed tests to run, we detect when the virtual block being realized is at offset 0 from its
  // base block, and has the same atomsct/rank/shape.  Then we just return the base block, since the virtual block

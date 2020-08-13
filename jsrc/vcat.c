@@ -190,7 +190,7 @@ static void moveawSV(C *zv,C *av,C *wv,I c,I k,I ma,I mw,I arptreset,I wrptreset
 int (*p[4]) (int x, int y);
 static void(*moveawtbl[])() = {moveawVV,moveawVS,moveawSV};
 F2(jtover){A z;C*zv;I replct,framect,acr,af,ar,*as,k,ma,mw,p,q,r,t,wcr,wf,wr,*ws,zn;
- RZ(a&&w);
+ RZ(a&&w);F2PREFIP;
  UI jtr=jt->ranks;//  fetch early
  if(SPARSE&(AT(a)|AT(w))){R ovs(a,w);}  // if either arg is sparse, switch to sparse code
  if(AT(a)!=(t=AT(w))){t=maxtypedne(AT(a)|(AN(a)==0),t|(AN(w)==0)); t&=-t; if(!TYPESEQ(t,AT(a))){RZ(a=cvt(t,a));} else {RZ(w=cvt(t,w));}}  // convert args to compatible precisions, changing a and w if needed.  Treat empty arg as boolean
@@ -217,12 +217,18 @@ F2(jtover){A z;C*zv;I replct,framect,acr,af,ar,*as,k,ma,mw,p,q,r,t,wcr,wf,wr,*ws
     I si=AS(s)[0]; si=ar==wr?si:1; si+=AS(l)[0]; si=lr==0?2:si; lr=lr==0?1:lr; ASSERT(si>=0,EVLIMIT);  // get short item count; adjust to 1 if lower rank; add long item count; check for overflow; adjust if atom+atom
     I klg=bplg(t); I alen=AN(a)<<klg; I wlen=AN(w)<<klg;
     GA(z,t,AN(a)+AN(w),lr,AS(l)); AS(z)[0]=si; C *x=CAV(z);  // install # items after copying shape
+    // if both arguments are private and inplaceable in inplaceable context, inherit that into the result
+    I aflg=AFLAG(a), wflg=AFLAG(w);
+    AFLAG(z)|=aflg&wflg&(((a!=w)&((I)jtinplace>>JTINPLACEWX)&((I)jtinplace>>JTINPLACEAX))<<AFPRIVATEX);  // both args
+    // Turn off privatability in the arguments, since we are copying from them
+    AFLAG(a)=aflg&~AFPRIVATE; AFLAG(w)=wflg&~AFPRIVATE; 
     MC(x,CAV(a),alen); MC(x+alen,CAV(w),wlen);
     RETF(z);
    }
   }
  }
  // dissimilar items, or there is frame.
+ AFLAG(a)&=~AFPRIVATE; AFLAG(w)&=~AFPRIVATE;   // Since aw contents are escaping, clear PRIVATE bit for them 
  p=as[ar-1];   // p=len of last axis of cell.  Always safe to fetch first 
  q=ws[wr-1];   //  q=len of last axis of cell
  r=MAX(acr,wcr); r=(r==0)?1:r;  // r=cell-rank, or 1 if both atoms.
@@ -243,7 +249,7 @@ F2(jtover){A z;C*zv;I replct,framect,acr,af,ar,*as,k,ma,mw,p,q,r,t,wcr,wf,wr,*ws
  // copy in the data, creating the result in order (to avoid page thrashing and to make best use of write buffers)
  // scalar replication is required for any arg whose rank is 0 and yet its length is >1.  Choose the copy routine based on that
  moveawtbl[SGNTO0((acr-1)&(1-ma))*2+(SGNTO0(((wcr-1)&(1-mw))))](CAV(z),CAV(a),CAV(w),replct*framect,k,ma*k,mw*k,(wf>=af)?replct:1,(wf>=af)?1:replct);
- RETF(z);  // make recursive
+ RETF(z);
 }    /* overall control, and a,w and a,"r w for cell rank <: 2 */
 
 F2(jtstitch){/* obsolete B sp2;*/I ar,wr; A z;
@@ -363,5 +369,5 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;I ak,k,p,*u,*v,wk,wm,wn;
    }
   }
  }
- R(over(a,w));  // if there was trouble, failover to non-in-place code
+ R(jtover(jtinplace,a,w));  // if there was trouble, failover to non-in-place code
 }    /* append in place if possible */

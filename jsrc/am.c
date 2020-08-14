@@ -84,7 +84,7 @@ F1(jtcasev){A b,*u,*v,w1,x,y,z;B*bv,p,q;I*aa,c,*iv,j,m,n,r,*s,t;
  else{   // slow case
   if(!(INT&AT(b)))RZ(b=cvt(INT,b));  // convert pqr to int if it's not already
   iv=AV(b);    // iv points to the input pqr
-  fauxINT(x,aafaux,m,1)  aa=AV(x); DO(m, aa[i]=(I)AV(u[i]););  // create x, which is a list of pointers to the values of the names
+  fauxINT(b,aafaux,m,1)  aa=AV(b); DO(m, aa[i]=(I)AV(u[i]););  // create b, which is a list of pointers to the values of the names
  }
  // Check to see if we can modify in-place.  We can do so only if abc was one of the two names on the right, and we have the
  // fast (no-error) case; and of course if the use-count is only 1.  But if the assignment is local, we also have to make

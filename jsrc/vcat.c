@@ -192,7 +192,7 @@ static void(*moveawtbl[])() = {moveawVV,moveawVS,moveawSV};
 F2(jtover){A z;C*zv;I replct,framect,acr,af,ar,*as,k,ma,mw,p,q,r,t,wcr,wf,wr,*ws,zn;
  RZ(a&&w);F2PREFIP;
  UI jtr=jt->ranks;//  fetch early
- if(SPARSE&(AT(a)|AT(w))){R ovs(a,w);}  // if either arg is sparse, switch to sparse code
+ if(unlikely(SPARSE&(AT(a)|AT(w)))){R ovs(a,w);}  // if either arg is sparse, switch to sparse code
  if(AT(a)!=(t=AT(w))){t=maxtypedne(AT(a)|(AN(a)==0),t|(AN(w)==0)); t&=-t; if(!TYPESEQ(t,AT(a))){RZ(a=cvt(t,a));} else {RZ(w=cvt(t,w));}}  // convert args to compatible precisions, changing a and w if needed.  Treat empty arg as boolean
  ar=AR(a); wr=AR(w);
  acr=jtr>>RANKTX; acr=ar<acr?ar:acr; af=ar-acr;  // acr=rank of cell, af=len of frame, as->shape
@@ -217,18 +217,18 @@ F2(jtover){A z;C*zv;I replct,framect,acr,af,ar,*as,k,ma,mw,p,q,r,t,wcr,wf,wr,*ws
     I si=AS(s)[0]; si=ar==wr?si:1; si+=AS(l)[0]; si=lr==0?2:si; lr=lr==0?1:lr; ASSERT(si>=0,EVLIMIT);  // get short item count; adjust to 1 if lower rank; add long item count; check for overflow; adjust if atom+atom
     I klg=bplg(t); I alen=AN(a)<<klg; I wlen=AN(w)<<klg;
     GA(z,t,AN(a)+AN(w),lr,AS(l)); AS(z)[0]=si; C *x=CAV(z);  // install # items after copying shape
-    // if both arguments are private and inplaceable in inplaceable context, inherit that into the result
-    I aflg=AFLAG(a), wflg=AFLAG(w);
-    AFLAG(z)|=aflg&wflg&(((a!=w)&((I)jtinplace>>JTINPLACEWX)&((I)jtinplace>>JTINPLACEAX))<<AFPRIVATEX);  // both args
-    // Turn off privatability in the arguments, since we are copying from them
-    AFLAG(a)=aflg&~AFPRIVATE; AFLAG(w)=wflg&~AFPRIVATE; 
     MC(x,CAV(a),alen); MC(x+alen,CAV(w),wlen);
+    // We extracted from a and w, so mark them (or the backer if virtual) non-pristine.  If both were pristine and inplaceable, transfer its pristine status to the result
+    // if they were boxed nonempty, a and w have not been changed.  Otherwise the PRISTINE flag doesn't matter.
+    // If a and w are the same, we mustn't mark the result pristine!  It has repetitions
+    I aflg=AFLAG(a), wflg=AFLAG(w); AFLAG(z)|=aflg&wflg&((a!=w)&(SGNTO0(AC(a)&AC(w))&((I)jtinplace>>JTINPLACEAX)&((I)jtinplace>>JTINPLACEWX))<<AFPRISTINEX);  // pass PRISTINE status through if possible
+    if(unlikely(aflg&AFVIRTUAL)){a=ABACK(a); aflg=AFLAG(a);} AFLAG(a)=aflg&~AFPRISTINE; if(unlikely(wflg&AFVIRTUAL)){w=ABACK(w); wflg=AFLAG(w);} AFLAG(w)=wflg&~AFPRISTINE;  // make inputs non-PRISTINE
     RETF(z);
    }
   }
  }
- // dissimilar items, or there is frame.
- AFLAG(a)&=~AFPRIVATE; AFLAG(w)&=~AFPRIVATE;   // Since aw contents are escaping, clear PRIVATE bit for them 
+ // dissimilar items, or there is frame.  Mark the inputs non-pristine; leave the result non-pristine, since we don't know whether it has repetitions
+ {A awback=a; I awflg=AFLAG(a); if(unlikely(awflg&AFVIRTUAL)){awback=ABACK(a); awflg=AFLAG(awback);} AFLAG(awback)=awflg&~AFPRISTINE; awback=w; awflg=AFLAG(w); if(unlikely(awflg&AFVIRTUAL)){awback=ABACK(w); awflg=AFLAG(awback);} AFLAG(awback)=awflg&~AFPRISTINE;}  // make inputs non-PRISTINE
  p=as[ar-1];   // p=len of last axis of cell.  Always safe to fetch first 
  q=ws[wr-1];   //  q=len of last axis of cell
  r=MAX(acr,wcr); r=(r==0)?1:r;  // r=cell-rank, or 1 if both atoms.
@@ -253,23 +253,24 @@ F2(jtover){A z;C*zv;I replct,framect,acr,af,ar,*as,k,ma,mw,p,q,r,t,wcr,wf,wr,*ws
 }    /* overall control, and a,w and a,"r w for cell rank <: 2 */
 
 F2(jtstitch){/* obsolete B sp2;*/I ar,wr; A z;
- RZ(a&&w);
+ RZ(a&&w);F2PREFIP;
  ar=AR(a); wr=AR(w); // obsolete sp2=(SPARSE&(AT(a)|AT(w)))&&2>=ar&&2>=wr;
 // obsolete  ASSERT(!ar||!wr||*AS(a)==*AS(w),EVLENGTH);  // always OK to fetch s[0]
  ASSERT((-ar&-wr&-(AS(a)[0]^AS(w)[0]))>=0,EVLENGTH);  // a or w scalar, or same # items    always OK to fetch s[0]
- if((((SPARSE&(AT(a)|AT(w)))-1)&(2-ar)&(2-wr))>=0)R IRS2(a,w,0L,(ar-1)&RMAX,(wr-1)&RMAX,jtover,z);  // not sparse or rank>2
+ if(likely((((SPARSE&(AT(a)|AT(w)))-1)&(2-ar)&(2-wr))>=0))R IRSIP2(a,w,0L,(ar-1)&RMAX,(wr-1)&RMAX,jtover,z);  // not sparse or rank>2
  R stitchsp2(a,w);  // sparse rank <=2 separately
 }
 
 F1(jtlamin1){A x;I* RESTRICT s,* RESTRICT v,wcr,wf,wr; 
- RZ(w);
+ RZ(w);F1PREFIP;
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; RESETRANK; wf=wr-wcr;
  fauxblockINT(wfaux,4,1); fauxINT(x,wfaux,1+wr,1) v=AV(x);
  s=AS(w); MCISH(v,s,wf); v[wf]=1; MCISH(v+wf+1,s+wf,wcr);  // frame, 1, shape - the final shape
- R reshape(x,w);
+ R jtreshape(jtinplace,x,w);
 }    /* ,:"r w */
 
 F2(jtlamin2){A z;I ar,p,q,wr;
+ // Because we don't support inplacing here, the inputs & results will be marked non-pristine.  That's OK because scalar replication might have happened.
  RZ(a&&w); 
  ar=AR(a); p=jt->ranks>>RANKTX; p=ar<p?ar:p;
  wr=AR(w); q=(RANKT)jt->ranks; q=wr<q?wr:q; RESETRANK;
@@ -338,6 +339,8 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;I ak,k,p,*u,*v,wk,wm,wn;
      // We have passed all the tests.  Inplacing is OK.
      // If w must change precision, do.  This is where we catch domain errors.
      if(TYPESGT(AT(a),AT(w)))RZ(w=cvt(AT(a),w));
+     // result is pristine if a and w both are, and they are not the same block, and there is no fill, and w is inplaceable (of course we know a is)
+     I wprist = (((a!=w)&((I)jtinplace>>JTINPLACEWX)&SGNTO0(AC(w)))<<AFPRISTINEX) & AFLAG(w);  // set if w qualifies as pristine
      // If the items of w must be padded to the result item-size, do so.
      // If the items of w are items of the result, we simply extend each to the shape of
      // an item of a, leaving the number of items unchanged.  Otherwise, the whole of w becomes an
@@ -349,7 +352,8 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;I ak,k,p,*u,*v,wk,wm,wn;
      // If an item of a is higher-rank than the entire w (except when w is an atom, which gets replicated),
      // copy fill to the output area.  Start the copy after the area that will be filled in by w
      I wlen = k*AN(w); // the length in bytes of the data in w
-     if((-AR(w)&(1+AR(w)-AR(a)))<0){RZ(setfv(a,w)); mvc(wk-wlen,av+wlen,k,jt->fillv);}
+     if((-AR(w)&(1+AR(w)-AR(a)))<0){RZ(setfv(a,w)); mvc(wk-wlen,av+wlen,k,jt->fillv); wprist=0;}  // fill removes pristine status
+     AFLAG(a)&=wprist|~AFPRISTINE;  // clear pristine flag in a if w is not also
      // Copy in the actual data, replicating if w is atomic
      if(AR(w))MC(av,wv,wlen); else mvc(wk,av,k,wv);
      // The data has been copied.  Now adjust the result block to match.  If the operation is virtual extension we have to allocate a new block for the result

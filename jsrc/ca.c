@@ -101,6 +101,11 @@ RZ(z=(f1)(jtinplace,gx,fs));} \
 static DF1(jton10){R jtrank1ex0(jt,w,self,on1cell);}  // pass inplaceability through
 static DF2(jtupon20){R jtrank2ex0(jt,a,w,self,jtupon2cell);}  // pass inplaceability through
 
+// special lightweight case for u@[ and u@].
+static DF1(onright1){F1PREFIP; R (FAV(FAV(self)->fgh[0])->valencefns[0])(jtinplace,w,FAV(self)->fgh[0]);}  // pass straight through.  All we do here is set self.  Leave inplaceability unchanged
+static DF2(onleft2){F2PREFIP; R (FAV(FAV(self)->fgh[0])->valencefns[0])((J)(((I)jtinplace&~(JTINPLACEA+JTINPLACEW))+(((I)jtinplace&JTINPLACEA)>>(JTINPLACEAX-JTINPLACEWX))),a,FAV(self)->fgh[0]);}  // move inplaceable a to w
+static DF2(onright2){F2PREFIP; R (FAV(FAV(self)->fgh[0])->valencefns[0])((J)((I)jtinplace&~JTINPLACEA),w,FAV(self)->fgh[0]);}  // keep inplaceable w
+
 // u@n
 static DF1(onconst1){DECLFG;R (f1)(jt,gs,fs);}
 static DF2(onconst2){DECLFG;R (f1)(jt,gs,fs);}
@@ -176,6 +181,10 @@ F2(jtatop){A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=0,m=-1
   R fdef(0,CAT,VERB, onconst1,onconst2, a,w,h, VFLAGNONE, RMAX,RMAX,RMAX);
  }
  wv=FAV(w); d=wv->id;
+ if((d&~1)==CLEFT){
+  // the very common case u@] and u@[.  Take ASGSAFE and inplaceability from u.  No IRS.  Vector the monad straight to u; vector the dyad to our routine that shuffles args and inplace bits
+  R fdef(0,CAT,VERB, onright1,d&1?onright2:onleft2, a,w,0, (av->flag&VASGSAFE)+(av->flag&VJTFLGOK1)*((VJTFLGOK2+VJTFLGOK1)/VJTFLGOK1), RMAX,RMAX,RMAX);
+ }
  // Set flag with ASGSAFE status from f/g; keep INPLACE? in sync with f1,f2.  But we can turn off inplacing that is not supported by v, which may
  // save a few tests during execution and is vital for handling <@v, where we may execute v directly without going through @ and therefore mustn't inplace
  // unless v can handle it
@@ -261,6 +270,10 @@ F2(jtatco){A f,g;AF f1=on1cell,f2=jtupon2cell;C c,d,e;I flag, flag2=0,m=-1;V*av,
  ASSERTVV(a,w);
  av=FAV(a); c=av->id; f=av->fgh[0]; g=av->fgh[1]; e=ID(f);   /// c=op for a, d=op for w   if a is r&s, f is r and e is its id; and g is s
  wv=FAV(w); d=wv->id;
+ if((d&~1)==CLEFT){
+  // the very common case u@:] and u@:[.  Take ASGSAFE and inplaceability from u.  No IRS.  Vector the monad straight to u; vector the dyad to our routine that shuffles args and inplace bits
+  R fdef(0,CATCO,VERB, onright1,d&1?onright2:onleft2, a,w,0, (av->flag&VASGSAFE)+(av->flag&VJTFLGOK1)*((VJTFLGOK2+VJTFLGOK1)/VJTFLGOK1), RMAX,RMAX,RMAX);
+ }
  // Set flag with ASGSAFE status from f/g; keep INPLACE? in sync with f1,f2.  But we can turn off inplacing that is not supported by v, which may
  // save a few tests during execution and is vital for handling <@v, where we may execute v directly without going through @ and therefore mustn't inplace
  // unless v can handle it
@@ -453,7 +466,7 @@ F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;I flag,flag2=0,mode=-1,p,r;V*u,*v;
   if(0<=mode){
    if(b){PUSHCCT(1.0) h=indexofsub(mode,w,mark); POPCCT f1=ixfixedright0; flag&=~VJTFLGOK1;}
    else {            h=indexofsub(mode,w,mark);             f1=ixfixedright ; flag&=~VJTFLGOK1;}
-}
+  }
   R fdef(0,CAMP,VERB, f1,with2, a,w,h, flag, RMAX,RMAX,RMAX);
  case VV:
   // u&v

@@ -133,7 +133,7 @@ static DF1(jtply1){PROLOG(0040);DECLFG;A zz=0;
 #define ZZPOPNEVER 1  // can't pop the inputs - 
 #define ZZDECL
 #include "result.h"
- I state=0;  // flags for result.h
+ I state=ZZFLAGINITSTATE;  // flags for result.h
  // p =. ~. sn=.(gn=./:,n) { ,n   which gives the list of distinct powers
  A n=sv->fgh[2]; A rn; RZ(rn=ravel(n));  // n is powers, rn is ravel of n
  A gn; RZ(gn=grade1(rn)); A p; RZ(p=nub(from(gn,rn)));  // gn is grade of power, p is sorted list of unique powers we want
@@ -341,6 +341,8 @@ DF2(jtpowop){A hs;B b;V*v;
   R gconj(a,w,CPOWOP);  // create the derived verb for [v0`]v1`v2
  }
  // fall through for unboxed n.
+ // handle the very important case of scalar   int/boolean   n of 0/1
+ if(likely(((AR(w)-1)&(-(AT(w)&B01+INT))&(((UI)BIV0(w)>>1)-1))<0))R a=BIV0(w)?a:ds(CRIGHT);  //  u^:0 is like ],  u^:1 is like u   AR(w)==0 and B01|INT and BAV0=0 or 1
  RZ(hs=vib(w));   // hs=n coerced to integer
  AF f1=jtply1;  // default routine for general array.  no reason to inplace this, since it has to keep the old value to check for changes
  I flag=0;  // flags for the verb we build

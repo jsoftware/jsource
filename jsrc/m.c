@@ -504,6 +504,7 @@ A jtincorp(J jt, A w) {RZ(w); INCORP(w); R w;}
 // allocate a virtual block, given the backing block
 // offset is offset in atoms from start of w; r is rank
 // result block is never inplaceable, never recursible, virtual.  Can return 0 if allocation error
+// result is PRISTINE iff the backer is
 // This is inplaceable, and we inplace the w block.  'Inplaceable' here includes being the target of jt->assignsym
 // We fill in everything but AN and AS, which are done in the caller
 // You should be wary of making an NJA block virtual, because with a usecount of 1 it might be inplaced by the code for x,y or x u}y
@@ -524,7 +525,6 @@ RESTRICTF A jtvirtual(J jtip, AD *RESTRICT w, I offset, I r){AD* RESTRICT z;
  }else{
   // not self-virtual block: allocate a new one
   RZ(z=gafv(SZI*(NORMAH+r)-1));  // allocate the block
-  AFLAG(z)=AFVIRTUAL;  // flags: not recursive, not UNINCORPABLE, not NJA
   AC(z)=ACUC1; AT(z)=t; AK(z)=(CAV(w)-(C*)z)+offset; AR(z)=(RANKT)r;  // virtual, not inplaceable
   // If w is inplaceable and inplacing is enabled, we could transfer the inplaceability to the new virtual block.  We choose not to, because we have already picked up
   // virtual-in-place cases above.  The main case would be an inplaceable UNINCORPABLE block, which might be worth the trouble.
@@ -533,6 +533,7 @@ RESTRICTF A jtvirtual(J jtip, AD *RESTRICT w, I offset, I r){AD* RESTRICT z;
    ACIPNO(w);  // turn off inplacing
    w=ABACK(w);  // if w is itself virtual, use its original backer.  Otherwise we would have trouble knowing when the backer for z is freed.  Backer is never virtual
   }
+  AFLAG(z)=AFVIRTUAL|(AFLAG(w)&AFPRISTINE);  // flags: not recursive, not UNINCORPABLE, not NJA, with PRISTINE inherited from backer
   ABACK(z)=w;   // set the pointer to the base: w or its base
   ra(w);   // ensure that the backer is not deleted while it is a backer.  This means that all backers are RECURSIBLE
   R z;
@@ -543,11 +544,12 @@ RESTRICTF A jtvirtual(J jtip, AD *RESTRICT w, I offset, I r){AD* RESTRICT z;
 // realize a virtual block (error if not virtual)
 // allocate a new block, copy the data to it.  result is address of new block; can be 0 if allocation failure
 // only non-sparse nouns can be virtual
-// If the input is not virtual, just return it
+// Mark the backing block non-PRISTINE
 A jtrealize(J jt, A w){A z; I t;
 // allocate a block of the correct type and size.  Copy the shape
  RZ(w);
  t=AT(w);
+ AFLAG(ABACK(w))&=~AFPRISTINE;  // clear PRISTINE in the backer, since its contents are escaping
  GA(z,t,AN(w),AR(w),AS(w));
  // new block is not VIRTUAL, not RECURSIBLE
 // copy the contents.
@@ -1111,7 +1113,7 @@ RESTRICTF A jtgah(J jt,I r,A w){A z;
 F1(jtca){A z;I t;P*wp,*zp;
  RZ(w);
  t=AT(w);
- if(t&SPARSE){
+ if(unlikely(t&SPARSE)){
   GASPARSE(z,t,AN(w),AR(w),AS(w))
   wp=PAV(w); zp=PAV(z);
   SPB(zp,a,ca(SPA(wp,a)));

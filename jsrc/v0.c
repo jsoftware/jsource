@@ -329,12 +329,12 @@ DF2(jtpoly2){F2PREFIP;A c,za;I b;D*ad,d,p,*x,u,*z;I an,at,j,t,n,wt;Z*az,e,q,*wz,
  if((-postfn&((-b)|(1-(an^2))|((t&FL)-1)))<0)R jtupon2cell(jt,a,w,self);  // revert if ^@:p. but not powers (postfn not 0, and a boxed or degree not 1 or 2 or type not FL).  an is final here
  // if we are going to use the fast loop here, allocate space for it.  Inplace if possible
  b=b?3:b;
- if(((j-1)&((t&XNUM+RAT+SPARSE)-1))<0){
+ if(likely(((j-1)&((t&XNUM+RAT+SPARSE)-1))<0)){
   if(ASGNINPLACESGN(SGNIF((I)jtinplace,JTINPLACEWX),w))za=w;else{GA(za,t,AN(w),AR(w),AS(w));}
   if(n==0)RETF(za);  // don't run the copy loop if 0 atoms in result
   z=DAV(za); zz=ZAV(za);
   b+=(t>>FLX)&3; // must be FL/CMPX, add 1 or 2
- }else{ if(postfn)R jtupon2cell(jt,a,w,self);  // revert if there is a postfn, and we are using the eval path.  type must be FL
+ }else{if(postfn)R jtupon2cell(jt,a,w,self);  // revert if there is a postfn, and we are using the eval path.  type must be FL
  }
  switch(b){
  // coeffs: d/e are not set

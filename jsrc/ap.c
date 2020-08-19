@@ -436,6 +436,8 @@ static DF2(jtginfix){A h,*hv,x,z,*zv;I d,m,n;
   R reshape(over(zeroionei(0),shape(x)),x);
 }}
 
+// *** start of non-sparse code ***
+
 #define STATEISPREFIX 0x2000  // this is prefix rather than infix
 #define STATESLASH2X 14  // f is f'/ and x is 2
 #define STATESLASH2 ((I)1<<STATESLASH2X)
@@ -447,7 +449,7 @@ static DF2(jtinfixprefix2){F2PREFIP;PROLOG(00202);A fs;I cger[128/SZI];
  RZ(w);
  PREF2IP(jtinfixprefix2);  // handle rank loop if needed
  wt=AT(w);
- if(wt&SPARSE){
+ if(unlikely(wt&SPARSE)){
   // Use the old-style non-virtual code for sparse types
   switch(((VAV(self)->flag&VGERL)>>(VGERLX-1)) + (a==mark)) {  // 2: is gerund  1: is prefix
   case (0+0): R jtinfix(jt,a,w,self);
@@ -458,7 +460,7 @@ static DF2(jtinfixprefix2){F2PREFIP;PROLOG(00202);A fs;I cger[128/SZI];
  }
  // Not sparse.  Calculate the # result items
 #define ZZFLAGWORD state
- I state=0;  // init flags, including zz flags
+ I state=ZZFLAGINITSTATE;  // init flags, including zz flags
 
  // If the verb is a gerund, it comes in through h, otherwise the verb comes through f.  Set up for the two cases
  if(!(VGERL&FAV(self)->flag)){
@@ -470,7 +472,7 @@ static DF2(jtinfixprefix2){F2PREFIP;PROLOG(00202);A fs;I cger[128/SZI];
  V *vf=FAV(fs);  // if verb, point to its u operand
  if(vf->mr>=AR(w)){
   // we are going to execute f without any lower rank loop.  Thus we can use the BOXATOP etc flags here.  These flags are used only if we go through the full assemble path
-  state = vf->flag2>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // Don't touch fs yet, since we might not loop
+  state |= vf->flag2>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // Don't touch fs yet, since we might not loop
   state &= ~(vf->flag2>>(VF2ATOPOPEN1X-ZZFLAGBOXATOPX));  // We don't handle &.> here; ignore it
   state &= ZZFLAGBOXATOP;  // we want just the one bit, BOXATOP1 & ~ATOPOPEN1
   state |= (-state) & (I)jtinplace & (ZZFLAGWILLBEOPENED|ZZFLAGCOUNTITEMS); // remember if this verb is followed by > or ; - only if we BOXATOP, to avoid invalid flag setting at assembly
@@ -565,7 +567,7 @@ static DF2(jtinfixprefix2){F2PREFIP;PROLOG(00202);A fs;I cger[128/SZI];
 #define ZZBODY  // assemble results
 #include "result.h"
 
-   // advance input pointer for next cell.  We keep the same virtual block because it can't be incorporated into anything
+   // advance input pointer for next cell.  We keep the same virtual block(s) because it can't be incorporated into anything
    // We can't advance until after the assembly code has run, in case the verb returned the virtual block as its result
 
    // calculate the amount of data unprocessed after the result we just did.  If there is none, we're finished
@@ -630,7 +632,7 @@ static DF1(jtinfixprefix1){F1PREFIP;
 static DF1(jtpscan){A z;I f,n,r,t,wn,wr,*ws,wt;
  RZ(w);F1PREFIP;
  wt=AT(w);   // get type of w
- if(SPARSE&wt)R scansp(w,self,jtpscan);  // if sparse, go do it separately
+ if(unlikely(SPARSE&wt))R scansp(w,self,jtpscan);  // if sparse, go do it separately
  // wn = #atoms in w, wr=rank of w, r=effective rank, f=length of frame, ws->shape of w
  wn=AN(w); wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; RESETRANK; f=wr-r; ws=AS(w);
  // m = #cells, c=#atoms/cell, n = #items per cell
@@ -652,7 +654,7 @@ static DF1(jtpscan){A z;I f,n,r,t,wn,wr,*ws,wt;
 }    /* f/\"r w atomic f main control */
 
 static DF2(jtinfixd){A fs,z;C*x,*y;I c=0,d,k,m,n,p,q,r,*s,wr,*ws,wt,zc; 
- F2RANK(0,RMAX,jtinfixd,self);
+ F2RANKW(0,RMAX,jtinfixd,self);
  wr=AR(w); ws=AS(w); wt=AT(w); SETIC(w,n);
  RE(m=i0(vib(a))); if(m==IMAX){m=n+1;} p=m==IMIN?IMAX:ABS(m);
  if(0>m){p=MIN(p,n); d=p?(n+p-1)/p:0;}else{ASSERT(IMAX-1>n-m,EVDOMAIN); d=MAX(0,1+n-m);}

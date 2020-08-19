@@ -240,7 +240,7 @@ static F1(jtlnoun0){A s,x;B r1;
 static F1(jtlnoun){I t;
  RZ(w);
  t=AT(w);
- if(t&SPARSE)R lsparse(w);
+ if(unlikely(t&SPARSE))R lsparse(w);
  if(!AN(w))R lnoun0(w);
  switch(CTTZ(t)){
   case LITX: R lchar(w);

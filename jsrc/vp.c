@@ -141,5 +141,6 @@ F2(jtadot2){A m,p;I n;
  if(!AR(w)){RZ(vi(a)); RCA(w);}
  RZ(p=dfr(vi(abase2(apv(n,n,-1L),a))));
  R equ(w,IX(n))?p:from(p,w);
+ // pristinity unchanged
 }
 

@@ -52,14 +52,16 @@ static A jtmerge1(J jt,A w,A ind){A z;B*b;C*wc,*zc;D*wd,*zd;I c,it,j,k,m,r,*s,t,
   default: if(it&B01)DO(c,         MC(zc,wc+k*(i+c*(I)*b++),k); zc+=k;)
            else      DO(c, MINDEX; MC(zc,wc+k*(i+c*j     ),k); zc+=k;); break;
  }
+ // We modified w which is now not pristine.
+ I awflg=AFLAG(w); if(unlikely(awflg&AFVIRTUAL)){w=ABACK(w); awflg=AFLAG(w);} AFLAG(w)=awflg&~AFPRISTINE;
  R z;
 }
 
-#define CASE2Z(T)  {T*xv=(T*)AV(x),*yv=(T*)AV(y),*zv=(T*)AV(z); DO(n, zv[i]=(bv[i]?yv:xv)[i];); R z;}
-#define CASE2X(T)  {T*xv=(T*)AV(x),*yv=(T*)AV(y);               DO(n, if( bv[i])xv[i]=yv[i];);   R x;}
-#define CASE2Y(T)  {T*xv=(T*)AV(x),*yv=(T*)AV(y);               DO(n, if(!bv[i])yv[i]=xv[i];);   R y;}
+#define CASE2Z(T)  {T*xv=(T*)AV(x),*yv=(T*)AV(y),*zv=(T*)AV(z); DO(n, zv[i]=(bv[i]?yv:xv)[i];); break;}
+#define CASE2X(T)  {T*xv=(T*)AV(x),*yv=(T*)AV(y);               DO(n, if( bv[i])xv[i]=yv[i];); z=x; break;}
+#define CASE2Y(T)  {T*xv=(T*)AV(x),*yv=(T*)AV(y);               DO(n, if(!bv[i])yv[i]=xv[i];);  z=y; break;}
 #define CASENZ(T)  {T*zv=(T*)AV(z); DO(n, j=iv[i]; if(0>j){j+=m; ASSERT(0<=j,EVINDEX);}else ASSERT(j<m,EVINDEX);  \
-                       zv[i]=*(i+(T*)aa[j]);); R z;}
+                       zv[i]=*(i+(T*)aa[j]);); break;}
 
 // Handle the case statement abc =: pqr} x,...,y,:z, with in-place operation if pqr is Boolean and abc appears on the right
 F1(jtcasev){A b,*u,*v,w1,x,y,z;B*bv,p,q;I*aa,c,*iv,j,m,n,r,*s,t;
@@ -113,6 +115,9 @@ F1(jtcasev){A b,*u,*v,w1,x,y,z;B*bv,p,q;I*aa,c,*iv,j,m,n,r,*s,t;
   case 28: CASENZ(US); case 29: CASENZ(C4); case 30: CASENZ(I);
   default: ASSERTSYS(0,"casev");
  }
+ // Mark all the inputs as nonpristine
+ DO(m, w=u[i]; I awflg=AFLAG(w); if(unlikely(awflg&AFVIRTUAL)){w=ABACK(w); awflg=AFLAG(w);} AFLAG(w)=awflg&~AFPRISTINE;)
+ RETF(z);
 }   /* z=:b}x0,x1,x2,...,x(m-2),:x(m-1) */
 
 // Handle a ind} w after indices have been converted to integer atoms, dense
@@ -297,9 +302,11 @@ static A jtjstd(J jt,A w,A ind,I *cellframelen){A j=0,k,*v,x;I b;I d,i,n,r,*u,wr
 static DF2(jtamendn2){F2PREFIP;PROLOG(0007);A e,z; B b;I atd,wtd,t,t1;P*p;
  AD * RESTRICT ind=VAV(self)->fgh[0];
  RZ(a&&w&&ind);
- if(!((AT(w)|AT(ind))&SPARSE)){
+ if(likely(!((AT(w)|AT(ind))&SPARSE))){
   I cellframelen; ind=jstd(w,ind,&cellframelen);   // convert indexes to cell indexes; remember how many were converted
   z=jtmerge2(jtinplace,AT(a)&SPARSE?denseit(a):a,w,ind,cellframelen);  //  dense a if needed; dense amend
+  // We modified w which is now not pristine.
+  I awflg=AFLAG(w); if(unlikely(awflg&AFVIRTUAL)){w=ABACK(w); awflg=AFLAG(w);} AFLAG(w)=awflg&~AFPRISTINE;
   EPILOG(z);
  }
  // Otherwise, w is sparse
@@ -319,7 +326,7 @@ static DF2(jtamendn2){F2PREFIP;PROLOG(0007);A e,z; B b;I atd,wtd,t,t1;P*p;
  if(ip){ASSERT(!(AFRO&AFLAG(w)),EVRO); z=w;}else RZ(z=cvt(t1,w));
  // call the routine to handle the sparse amend
  p=PAV(z); e=SPA(p,e); b=!AR(a)&&equ(a,e);
- p=PAV(a); if(AT(a)&SPARSE&&!equ(e,SPA(p,e))){RZ(a=denseit(a)); }
+ p=PAV(a); if(unlikely(AT(a)&SPARSE&&!equ(e,SPA(p,e)))){RZ(a=denseit(a)); }
  if(AT(ind)&NUMERIC||!AR(ind))z=(b?jtam1e:AT(a)&SPARSE?jtam1sp:jtam1a)(jt,a,z,AT(ind)&NUMERIC?box(ind):ope(ind),ip);
  else{RE(aindex(ind,z,0L,(A*)&ind)); ASSERT(ind,EVNONCE); z=(b?jtamne:AT(a)&SPARSE?jtamnsp:jtamna)(jt,a,z,ind,ip);}  // A* for the #$&^% type-checking
  EPILOGZOMB(z);   // do the full push/pop since sparse in-place has zombie elements in z
@@ -331,7 +338,10 @@ static DF2(amccv2){F2PREFIP;DECLF;
  RZ(a&&w); 
  ASSERT(DENSE&AT(w),EVNONCE);  // u} not supported for sparse
  A x;RZ(x=pind(AN(w),CALL2(f2,a,w,fs)));
- R jtmerge2(jtinplace,a,w,x,AR(w));   // The atoms of x include all axes of w, since we are addressing atoms
+ A z=jtmerge2(jtinplace,a,w,x,AR(w));   // The atoms of x include all axes of w, since we are addressing atoms
+ // We modified w which is now not pristine.
+ I awflg=AFLAG(w); if(unlikely(awflg&AFVIRTUAL)){w=ABACK(w); awflg=AFLAG(w);} AFLAG(w)=awflg&~AFPRISTINE;
+ RETF(z);
 }
 
 

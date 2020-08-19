@@ -224,7 +224,7 @@ REDUCEPFX(  mininsS, SB,SB,SBMIN, minSS, minSS )
 
 static DF1(jtred0){DECLF;A x,z;I f,r,wr,*s;
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; RESETRANK; s=AS(w);
- if(AT(w)&DENSE){GA(x,AT(w),0L,r,f+s);}else{GASPARSE(x,AT(w),1,r,f+s);}
+ if(likely(AT(w)&DENSE)){GA(x,AT(w),0L,r,f+s);}else{GASPARSE(x,AT(w),1,r,f+s);}
  R reitem(vec(INT,f,s),lamin1(df1(z,x,(AT(w)&SBT)?idensb(fs):iden(fs))));
 }    /* f/"r w identity case */
 
@@ -240,7 +240,7 @@ static DF1(jtredg){F1PREFIP;PROLOG(0020);DECLF;AD * RESTRICT a;I i,k,n,r,wr;A *o
  n=AS(w)[0]; // n=#cells
  // Allocate virtual block for the running x argument.
  A origw=w; I origwc=AC(w);  // save inplaceability of the original w
- fauxblock(virtafaux); fauxvirtual(a,virtafaux,w,r-1,ACUC1|ACINPLACE);  // allocate UNINCORPORABLE block, allow inplacing (only if jtinplace determines that the backer is inplaceable)
+ fauxblock(virtafaux); fauxvirtual(a,virtafaux,w,r-1,ACUC1/* obsolete |ACINPLACE*/);  // allocate UNINCORPORABLE block
  old=jt->tnextpushp; // save stack mark for subsequent frees.  We keep the a argument over the calls, but allow the w to be deleted
  // w will hold the result from the iterations.  Init to value of last cell
  // Since there are multiple cells, w may be in a virtual block; but we don't rely on that.
@@ -305,7 +305,7 @@ DF1(jtredravel){A f,x,z;I n;P*wp;
  F1PREFIP;
  RZ(w);
  f=FAV(self)->fgh[0];  // f/
- if(!(SPARSE&AT(w)))R reduce(jtravel(jtinplace,w),f);
+ if(likely(!(SPARSE&AT(w))))R reduce(jtravel(jtinplace,w),f);
  // The rest is sparse
  wp=PAV(w); x=SPA(wp,x); n=AN(x);
  I rc=EVOK;
@@ -521,7 +521,7 @@ static B jtreduce2(J jt,A w,C id,I f,I r,A*zz){A z=0;B b=0,btab[258],*zv;I c,d,m
 
 static DF1(jtreduce){A z;I d,f,m,n,r,t,wr,*ws,zt;
  RZ(w);F1PREFIP;
- if(SPARSE&AT(w))R reducesp(w,self);  // If sparse, go handle it
+ if(unlikely(SPARSE&AT(w)))R reducesp(w,self);  // If sparse, go handle it
  wr=AR(w); ws=AS(w);
  // Create  r: the effective rank; f: length of frame; n: # items in a CELL of w
  r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; SETICFR(w,f,r,n);  // no RESETRANK obsolete n=r?ws[f]:1;  // no RESETRANK
@@ -625,7 +625,7 @@ DF1(jtredcat){A z;B b;I f,r,*s,*v,wr;
  b=1==r&&1==s[f];  // special case: ,/ on last axis which has length 1: in that case, the rules say the axis disappears (because of the way ,/ works on length-1 lists)
  if(2>r&&!b)RCA(w);  // in all OTHER cases, result=input for ranks<2
  // use virtual block (possibly self-virtual) for all cases except sparse
- if(!(SPARSE&AT(w))){
+ if(likely(!(SPARSE&AT(w)))){
   RZ(z=jtvirtual(jtinplace,w,0,wr-1)); AN(z)=AN(w); // Allocate the block.  Then move in AN and shape
   I *zs=AS(z); MCISH(zs,s,f); if(!b){RE(zs[f]=mult(s[f],s[f+1])); MCISH(zs+f+1,s+f+2,r-2);}
   R z;
@@ -654,7 +654,7 @@ static DF1(jtredstitch){A c,y;I f,n,r,*s,*v,wr;
  if(1==r){if(2==n)R RETARG(w); A z1,z2,z3; RZ(IRS2(num(-2),w,0L,0L,1L,jtdrop,z1)); RZ(IRS2(num(-2),w,0L,0L,1L,jttake,z2)); R IRS2(z1,z2,0L,1L,0L,jtover,z3);}
  if(2==r)R IRS1(w,0L,2L,jtcant1,y);
  RZ(c=apvwr(wr,0L,1L)); v=AV(c); v[f]=f+1; v[f+1]=f; RZ(y=cant2(c,w));  // transpose last 2 axes
- if(SPARSE&AT(w)){A x;
+ if(unlikely(SPARSE&AT(w))){A x;
   GATV0(x,INT,f+r-1,1); v=AV(x); MCISH(v,AS(y),f+1);
   RE(v[f+1]=mult(s[f],s[f+2])); MCISH(v+f+2,s+3+f,r-3);
   RETF(reshape(x,y));

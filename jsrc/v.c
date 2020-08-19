@@ -9,17 +9,17 @@
 F1(jttally ){A z; I k; RZ(w); z=sc(SETIC(w,k));            RETF(AT(w)&XNUM+RAT?xco1(z):z);}  //  # y
 F1(jtshapex){A z; RZ(w); z=vec(INT,AR(w),AS(w)); RETF(AT(w)&XNUM+RAT?xco1(z):z);}
 F1(jtshape){RZ(w); R vec(INT,AR(w),AS(w));}  // $ y
-F1(jtisempty){RZ(w); if(AT(w)&SPARSE)R eps(zeroionei(0),shape(w)); R num(AN(w)==0);}  // 0 e. $
-F1(jtisnotempty){RZ(w); if(AT(w)&SPARSE)R not(eps(zeroionei(0),shape(w))); R num(AN(w)!=0);}  // *@#@,
+F1(jtisempty){RZ(w); if(unlikely(AT(w)&SPARSE))R eps(zeroionei(0),shape(w)); R num(AN(w)==0);}  // 0 e. $
+F1(jtisnotempty){RZ(w); if(unlikely(AT(w)&SPARSE))R not(eps(zeroionei(0),shape(w))); R num(AN(w)!=0);}  // *@#@,
 F1(jtisitems){RZ(w); R num(!AR(w)|!!AS(w)[0]);}   // *@#   *@:#
 F1(jtrank){F1PREFIP; RZ(w); R sc(AR(w));}  // #@$
-F1(jtnatoms){F1PREFIP; A z; RZ(w); if(AT(w)&SPARSE)R df1(z,shape(w),slash(ds(CPLUS))); R sc(AN(w));}   // */@$  #@,
+F1(jtnatoms){F1PREFIP; A z; RZ(w); if(unlikely(AT(w)&SPARSE))R df1(z,shape(w),slash(ds(CPLUS))); R sc(AN(w));}   // */@$  #@,
 
 // ,y and ,"r y - producing virtual blocks
 F1(jtravel){A a,c,q,x,y,y0,z;B*b;I f,j,m,r,*u,*v,*yv;P*wp,*zp;
  F1PREFIP; RZ(w); 
  r=(RANKT)jt->ranks; r=AR(w)<r?AR(w):r; f=AR(w)-r; // r=effective rank (jt->rank is effective rank from irs1), f=frame
- if(!(AT(w)&SPARSE)){
+ if(likely(!(AT(w)&SPARSE))){
   if(r==1)R RETARG(w);  // if we are enfiling 1-cells, there's nothing to do, return the input (note: AN of sparse array is always 1)
   CPROD(AN(w),m,r,f+AS(w));   // m=#atoms in cell
   if(ASGNINPLACESGN(SGNIF((I)jtinplace,JTINPLACEWX)&(-r),w) && !(AFLAG(w)&AFUNINCORPABLE)){  // inplace allowed, rank not 0 (so shape will fit), usecount is right
@@ -31,7 +31,8 @@ F1(jtravel){A a,c,q,x,y,y0,z;B*b;I f,j,m,r,*u,*v,*yv;P*wp,*zp;
   // Not inplaceable.  Create a (noninplace) virtual copy, but not if NJA memory  NJAwhy
   if(!(AFLAG(w)&(AFNJA))){RZ(z=virtual(w,0,1+f)); AN(z)=AN(w); MCISH(AS(z),AS(w),f) AS(z)[f]=m; RETF(z);}
 
-  // If we have to allocate a new block, do so
+  // If we have to allocate a new block, do so.  In that rare case, revoke pristinity of w
+  AFLAG(w)&=~AFPRISTINE;
   GA(z,AT(w),AN(w),1+f,AS(w)); AS(z)[f]=m;   // allocate result area, shape=frame+1 more to hold size of cell; fill in shape
   MC(AV(z),AV(w),AN(w)<<bplg(AT(w))); RETF(z); // if dense, move the data and relocate it as needed
  }
@@ -61,38 +62,45 @@ F1(jtravel){A a,c,q,x,y,y0,z;B*b;I f,j,m,r,*u,*v,*yv;P*wp,*zp;
 
 F1(jttable){A z,zz;I r,wr;
  RZ(w);F1PREFIP;
+ // We accept the pristine calculations from ravel
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r;  // r=rank to use
  RZ(IRSIP1(w,0L,r-1<0?0:r-1,jtravel,z));  // perform ravel on items
  R r?z:IRSIP1(z,0L,0L,jtravel,zz);  // If we are raveling atoms, do it one more time on atoms
 } // ,."r y
 
-// ] [ and ]"n ["n, dyadic
+// ]"n, dyadic - also ["n, implemented as ] with ranks switched
 // length error has already been detected, in irs
-static A jtlr2(J jt,B left,A a,A w){A z;C*v;I acr,af,ar,k,n,of,*os,r,*s,t,
-  wcr,wf,wr,zn;
+static A jtlr2(J jt,RANK2T ranks,A a,A w){I acr,af,ar,wcr,wf,wr;
  RZ(a&&w);
  // ?r=rank of ? arg; ?cr= verb-rank for that arg; ?f=frame for ?; ?s->shape
  // We know that jt->rank is nonzero, because the caller checked it
- ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr; af=ar-acr;
- wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr;  wf=wr-wcr;  // RESETRANK not required because we call no primitives from here on,. 
+ ar=AR(a); acr=ranks>>RANKTX; acr=ar<acr?ar:acr; af=ar-acr;
+ wr=AR(w); wcr=(RANKT)ranks; wcr=wr<wcr?wr:wcr;  wf=wr-wcr;
  // Cells of the shorter-frame argument are repeated.  If the shorter- (or equal-)-frame argument
  // is the one being discarded (eg (i. 10 10) ["0 i. 10), the replication doesn't matter, and we
- // simply keep the surviving argument intact.  We can do this because we have no PROLOG
- if(left){if(af>=wf){RETF(a);} os=AS(w); r=acr; s=af+AS(a); t=AT(a); v=CAV(a); n=AN(a); of=wf; }
- else    {if(wf>=af){RETF(w);} os=AS(a); r=wcr; s=wf+AS(w); t=AT(w); v=CAV(w); n=AN(w); of=af; }
- // If the cells of the surviving arg must be replicated, do so
- // r=cell-rank, s->cell-shape, t=type, v->data, n=#atoms   of surviving arg
- // of=frame os->shape   of non-surviving arg
- // Now get size of cell of survivor, and #cells in the other (necessarily longer) frame.
- // The product of these is the number of atoms of the result
- RE(zn=mult(prod(of,os),prod(r,s)));  // #cells in non-survivor * #atoms in cell of survivor
- GA(z,t,zn,of+r,os); MCISH(of+AS(z),s,r); // allocate result; copy in nonsurviving frame+shape; overwrite cell-shape from survivor
- k=bpnoun(t); mvc(k*zn,AV(z),k*n,v);   // get #bytes/atom, copy&replicate cells
- RETF(z);
+ // simply keep the surviving argument intact.
+ if(wf>=af)RETF(w);  // no replication - quick out
+ RESETRANK; RETF(reitem(vec(INT,af-wf,AS(a)),lamin1(w)));  // could use virtual block, but this case is so rare...
+// obsolete  if(left){if(af>=wf){RETF(a);} os=AS(w); r=acr; s=af+AS(a); t=AT(a); v=CAV(a); n=AN(a); of=wf; }
+// obsolete  else    {if(wf>=af){RETF(w);} os=AS(a); r=wcr; s=wf+AS(w); t=AT(w); v=CAV(w); n=AN(w); of=af; }
+// obsolete  // If the cells of the surviving arg must be replicated, do so
+// obsolete  // r=cell-rank, s->cell-shape, t=type, v->data, n=#atoms   of surviving arg
+// obsolete  // of=frame os->shape   of non-surviving arg
+// obsolete  // Now get size of cell of survivor, and #cells in the other (necessarily longer) frame.
+// obsolete  // The product of these is the number of atoms of the result
+// obsolete  RE(zn=mult(prod(af,AS(a)),prod(wcr,wf+AS(w))));  // #cells in non-survivor * #atoms in cell of survivor
+// obsolete  GA(z,t,zn,of+r,os); MCISH(of+AS(z),s,r); // allocate result; copy in nonsurviving frame+shape; overwrite cell-shape from survivor
+// obsolete  k=bpnoun(AT(w)); GA(z,AT(w),zn,af+wcr,AS(a)); MCISH(af+AS(z),wf+AS(w),wcr); // allocate result; copy in nonsurviving frame+shape; overwrite cell-shape from survivor
+// obsolete  mvc(k*zn,AV(z),k*AN(w),CAV(w));   // get #bytes/atom, copy&replicate cells
+// obsolete  // Mark the source input non-pristine; leave the result non-pristine, since it has repetitions
+// obsolete  {A awback=w; I awflg=AFLAG(w); if(unlikely(awflg&AFVIRTUAL)){awback=ABACK(w); awflg=AFLAG(awback);} AFLAG(awback)=awflg&~AFPRISTINE;}  // make input non-PRISTINE
+// obsolete  RETF(z);
 } 
 
-F2(jtleft2 ){F2PREFIP;if(jt->ranks==(RANK2T)~0)RETARG(a); RETF(lr2(1,a,w));}
-F2(jtright2){F2PREFIP;if(jt->ranks==(RANK2T)~0)RETARG(w); RETF(lr2(0,a,w));}
+// obsolete F2(jtleft2 ){F2PREFIP;if(jt->ranks==(RANK2T)~0)RETARG(a); RETF(lr2(1,a,w));}
+// obsolete F2(jtright2){F2PREFIP;if(jt->ranks==(RANK2T)~0)RETARG(w); RETF(lr2(0,a,w));}
+F2(jtleft2 ){F2PREFIP;RANK2T jtr=jt->ranks; if(jtr==(RANK2T)~0)RETARG(a); RETF(lr2((jtr<<RMAXX)|(jtr>>RMAXX),w,a));}  // swap a & w, and their ranks
+F2(jtright2){F2PREFIP;RANK2T jtr=jt->ranks; if(jtr==(RANK2T)~0)RETARG(w); RETF(lr2(jtr,a,w));}
 
 F1(jtright1){RETF(w);}
 

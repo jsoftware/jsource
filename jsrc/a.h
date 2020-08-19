@@ -12,11 +12,12 @@
 #define COMPOSE(c)  (BETWEENC((c),CAMPCO,CAT))   // &: & @: @ 
 // obsolete #define COMPOSECO(c)  (((c)==CATCO)|((c)==CAMPCO))
 
-#define CONJCASE(a,w)   (2*!(VERB&AT(a))+!(VERB&AT(w)))
-#define NN              3               /* NOUN NOUN                       */
-#define NV              2               /* NOUN VERB                       */
-#define VN              1               /* VERB NOUN                       */
-#define VV              0               /* VERB VERB                       */
+#define CONJCASET(at,wt) ((((at)>>(VERBX-1))+((wt)>>VERBX))&3)
+#define CONJCASE(a,w)   CONJCASET(AT(a),AT(w)) // obsolete (2*!(VERB&AT(a))+!(VERB&AT(w)))
+#define NN              CONJCASET(NOUN,NOUN)               /* NOUN NOUN                       */
+#define NV              CONJCASET(NOUN,VERB)               /* NOUN VERB                       */
+#define VN              CONJCASET(VERB,NOUN)               /* VERB NOUN                       */
+#define VV              CONJCASET(VERB,VERB)               /* VERB VERB                       */
 
 #define DECLF            V* RESTRICT sv=FAV(self); AD * RESTRICT fs=sv->fgh[0];  \
                         AF f1=fs?FAV(fs)->valencefns[0]:0,f2=fs?FAV(fs)->valencefns[1]:0

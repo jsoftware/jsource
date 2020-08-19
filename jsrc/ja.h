@@ -370,8 +370,9 @@
 #define fauxINT(z,v,n,r) {if(AKXR(r)+(n)*SZI<=(I)sizeof(v)){z=(A)(v); AK(z)=AKXR(r); AFLAG(z)=0/*AFNJA*/; AT(z)=INT; AC(z)=ACUC1; AN(z)=(n); AR(z)=(RANKT)(r); if(r==1)AS(z)[0]=(n);}else{GATV0(z,INT,(n),(r));}}
 // v is a block declared by fauxblock, w is the source data, r is the rank.  offset is assumed 0.  c is the initial value for AC.  If the rank is small enough, we use the fauxblock, otherwise
 // we allocate a block.  We assume that the caller will fill in AN, AS.  Block must be marked UNINCORPABLE so it will not free its backer if freed, and so it will not be in-place virtualed
-#define fauxvirtual(z,v,w,r,c) {if(r<=4){z=ABACK(w); AK((A)(v))=(CAV(w)-(C*)(v)); AT((A)(v))=AT(w); AR((A)(v))=(RANKT)r; AFLAG((A)(v))=AFVIRTUAL|AFUNINCORPABLE/*|AFNJA*/; z=AFLAG(w)&AFVIRTUAL?z:w; ABACK((A)(v))=z; z=(A)(v);} \
-                              else{RZ(z=virtual(w,0,r)); AFLAG(z)|=AFUNINCORPABLE;}  AC(z)=(c);}
+// PRISTINE is inherited from the backer (this is already done in virtual())
+#define fauxvirtual(z,v,w,r,c) {if(r<=4){z=ABACK(w); AK((A)(v))=(CAV(w)-(C*)(v)); AT((A)(v))=AT(w); AR((A)(v))=(RANKT)r; z=AFLAG(w)&AFVIRTUAL?z:w; AFLAG((A)(v))=AFVIRTUAL|AFUNINCORPABLE|(AFLAG(z)&AFPRISTINE)/* obsolete |AFNJA*/; ABACK((A)(v))=z; z=(A)(v); AC(z)=(c);} \
+                              else{RZ(z=virtual(w,0,r)); AFLAG(z)|=AFUNINCORPABLE; if((c)!=ACUC1)AC(z)=(c);} }
 #define fdef(x0,x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,x11)     jtfdef(jt,(x0),(x1),(x2),(x3),(x4),(x5),(x6),(x7),(x8),(x9),(x10),(x11))
 #if !USECSTACK
 #define fdep(x)                     jtfdep(jt,(x))

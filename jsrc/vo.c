@@ -9,7 +9,7 @@
 I level(A w){A*wv;I d,j;
  if((-AN(w)&-(AT(w)&BOX+SBOX))>=0)R 0;
  d=0; wv=AAV(w);
- DO(AN(w), j=level(wv[i]); d=d<j?j:d;);
+ DQ(AN(w), j=level(wv[i]); d=d<j?j:d;);
  R 1+d;
 }
 
@@ -33,21 +33,22 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
  if(!f){
   // single box: fast path.  Allocate a scalar box and point it to w.  Mark w as incorporated.  Make all results recursive
   // DO NOT take potentially expensive pass through w to find recursibility, because it may never be needed if this result expires without being assigned
-  // If the input is inplaceable in an inplaceable context, mark the result as PRIVATE
-  GAT0(z,BOX,1,0); AFLAG(z)=BOX+((SGNTO0(AC(w))&((I)jtinplace>>JTINPLACEWX))<<AFPRIVATEX); INCORPRA(w); *(AAV(z))=w;
+  // If the input is DIRECT and inplaceable in an inplaceable context, mark the result as PRISTINE
+  GAT0(z,BOX,1,0); AFLAG(z)=BOX+((-(wt&DIRECT))&((SGNTO0(AC(w))&((I)jtinplace>>JTINPLACEWX))<<AFPRISTINEX)); INCORPRA(w); *(AAV(z))=w;
 // obsolete   if((waf&RECURSIBLE)||(wt&DIRECT)){newflags|=BOX; ACINCR(w);}  // if w is recursible or direct, mark new box recursible and correspondingly incr usecount of w.  We do this because w is already in cache now.
 // obsolete   if((((waf&RECURSIBLE)-1)&((wt&DIRECT)-1))>=0){/* obsolete newflags|=BOX; */AFLAG(z)=BOX; ACINCR(w);}  // if w is recursible or direct, mark new box recursible and correspondingly incr usecount of w.  We do this because w is already in cache now.
 // obsolete   AFLAG(z) = newflags;  // set NOSMREL if w is not boxed, or known to contain no relatives
  } else {
   // <"r
-  ws=AS(w); I t=AT(w);
+  ws=AS(w);
   CPROD(AN(w),n,f,ws); CPROD(AN(w),m,r,f+ws);
-  k=m<<bplg(t); wv=CAV(w);
+  k=m<<bplg(wt); wv=CAV(w);
   // Since we are allocating the new boxes, the result will ipso facto be PRIVATE, as long as w is DIRECT.  If w is not DIRECT, we can be PRIVATE if we ensure that
   // w is PRIVATE inplaceable, but we don't bother to do that because 
-  GATV(z,BOX,n,f,ws); AFLAG(z) = BOX+((-(t&DIRECT))&AFPRIVATE); if(n==0)RETF(z);  // Recursive result; could avoid filling with 0 if we modified AN after error, or cleared after *tnextpushp
-  // We have allocated the result; now we allocate a block for each cell of w and copy the w values to the new block.  Since we are copying contents of w, it must lose PRIVATE status
-  AFLAG(w)&=~AFPRIVATE;
+  // If the input is DIRECT, mark the result as PRISTINE
+  GATV(z,BOX,n,f,ws); AFLAG(z) = BOX+((-(wt&DIRECT))&AFPRISTINE); if(n==0)RETF(z);  // Recursive result; could avoid filling with 0 if we modified AN after error, or cleared after *tnextpushp
+  // We have allocated the result; now we allocate a block for each cell of w and copy the w values to the new block.  Since we are copying contents of w, it must lose PRISTINE status is it is boxed
+  AFLAG(w)&=~AFPRISTINE;
 // obsolete    // If w is DIRECT, we make the result block recursive and increment the count of the others (we do so here because it saves a traversal of the new blocks
 // obsolete    // if the result block is assigned).  If w is indirect, we just leave everything nonrecursive to avoid traversing w, because
 // obsolete    // that will prove unnecessary if this result is not assigned.
@@ -60,7 +61,7 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
   // To avoid the tstack overhead, we switch the tpush pointer to our data area, so that blocks are filled in as they are allocated, with nothing put
   // onto the real tpop stack.  If we hit an error, that's OK, because whatever we did get allocated will be freed when the result block is freed.  We use GAE so that we don't abort on error
   A *pushxsave = jt->tnextpushp; jt->tnextpushp=AAV(z);  // save tstack info before allocation
-  DQ(n, GAE(y,t,m,r,f+ws,break); MC(CAV(y),wv,k); wv+=k; AC(y)=ACUC1; if(t&RECURSIBLE){AFLAG(y)=t; jtra(jt,y,t);});   // allocate, but don't grow the tstack.  Set usecount of cell to 1.  ra0() if recursible.  Put allocated addr into *jt->tnextpushp++
+  DQ(n, GAE(y,wt,m,r,f+ws,break); MC(CAV(y),wv,k); wv+=k; AC(y)=ACUC1; if(wt&RECURSIBLE){AFLAG(y)=wt; jtra(jt,y,wt);});   // allocate, but don't grow the tstack.  Set usecount of cell to 1.  ra0() if recursible.  Put allocated addr into *jt->tnextpushp++
   jt->tnextpushp=pushxsave;   // restore tstack pointer
   ASSERT(y,EVWSFULL);  // if we broke out an allocation failure, fail.  Since the block is recursive, when it is tpop()d it will recur to delete contents
 // obsolete   }else{/* obsolete AFLAG(z) = newflags; */DO(n, GA(y,t,m,r,f+ws);/* obsolete  AFLAG(y)=newflags;*/ MC(CAV(y),wv,k); wv+=k; zv[i]=y;); } // indirect w; don't set recursible, which might be expensive
@@ -71,7 +72,7 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
 F1(jtboxopen){RZ(w); if((-AN(w)&-(AT(w)&BOX+SBOX))>=0){w = box(w);} R w;}
 
 F2(jtlink){
-RZ(a&&w);F2PREF;
+RZ(a&&w);F2PREFIP;
 #if FORCEVIRTUALINPUTS
  // to allow mapped-boxed tests to run, we detect when the virtual block being realized is at offset 0 from its
  // base block, and has the same atomsct/rank/shape.  Then we just return the base block, since the virtual block
@@ -86,7 +87,7 @@ RZ(a&&w);F2PREF;
   I i; for(i=AR(a)-1; i>=0&&AS(a)[i]==AS(ABACK(a))[i];--i); if(i<0)a = ABACK(a);
  }
 #endif
- if((-AN(w)&SGNIF(AT(w),BOXX))>=0){w = box(w);} R over(box(a),w);  // box empty or unboxed w, join to boxed a
+ if((-AN(w)&SGNIF(AT(w),BOXX))>=0){w = box(w);} R jtover(jtinplace,box(a),w);  // box empty or unboxed w, join to boxed a
 }
 
 // Calculate the value to use for r arg of copyresultcell: bit 0=ra() flag, next 15=rank requiring fill, higher=-(#leading axes of 1)
@@ -394,7 +395,7 @@ F1(jtope){PROLOG(0080);A cs,*v,y,z;I nonh;C*x;I i,n,*p,q=RMAX,r=0,*s,t=0,te=0,*u
  fauxblockINT(csfaux,4,1); fauxINT(cs,csfaux,r,1) u=AV(cs); DO(r-q, u[i]=1;); p=u+r-q; DO(q, p[i]=0;);
  // find the shape of a result-cell
  DO(n, y=v[i]; s=AS(y); p=u+r-AR(y); DO(AR(y),p[i]=MAX(p[i],s[i]);););
- if(t&SPARSE)RZ(z=opes(t,cs,w))
+ if(unlikely(t&SPARSE))RZ(z=opes(t,cs,w))
  else{I klg; I m;
   RE(m=prod(r,u)); RE(zn=mult(n,m)); klg=bplg(t); q=m<<klg;
   // Allocate result area & copy in shape (= frame followed by result-cell shape)
@@ -482,7 +483,8 @@ F1(jtraze){A*v,y,z,* RESTRICT zv;C* RESTRICT zu;I *wws,d,i,klg,m=0,n,r=1,t=0,te=
  n=AN(w); v=AAV(w);  // n=#,w  v->w data
  if(!n)R mtv;   // if empty operand, return boolean empty
  if(!(BOX&AT(w)))R ravel(w);   // if not boxed, just return ,w
- if(1==n){RZ(z=*v); R AR(z)?z:ravel(z);}  // if just 1 box, return its contents - except ravel if atomic
+ if(1==n){RZ(z=*v); I awflg=AFLAG(w); if(unlikely(awflg&AFVIRTUAL)){w=ABACK(w); awflg=AFLAG(w);} AFLAG(w)=awflg&~AFPRISTINE; R AR(z)?z:ravel(z);}  // if just 1 box, return its contents - except ravel if atomic.  Since these contents are excaping via a pointer, w must lose pristinity
+ // If there is more than 1 box w can remain pristine, because the (necessarily DIRECT) contents are copied to a new block
  // scan the boxes to create the following values:
  // m = total # items in contents; aim=#atoms per item;  r = maximum rank of contents
  // t = OR of types of nonempty blocks, te = OR of types of empties

@@ -21,7 +21,7 @@ static DF1(jtcut01){DECLF;A h,x,z;
 static DF2(jtcut02){F2PREFIP;A fs,q,qq,*qv,z,zz=0;I*as,c,e,i,ii,j,k,m,n,*u,*ws;PROLOG(876);I cger[128/SZI];
  RZ(a&&w);
 #define ZZFLAGWORD state
- I state=0;  // init flags, including zz flags
+ I state=ZZFLAGINITSTATE;  // init flags, including zz flags
 
 
  if(!(VGERL&FAV(self)->flag)){
@@ -31,7 +31,7 @@ static DF2(jtcut02){F2PREFIP;A fs,q,qq,*qv,z,zz=0;I*as,c,e,i,ii,j,k,m,n,*u,*ws;P
  }
  if(FAV(fs)->mr>=AR(w)){
   // we are going to execute f without any lower rank loop.  Thus we can use the BOXATOP etc flags here.  These flags are used only if we go through the full assemble path
-  state = (FAV(fs)->flag2&VF2BOXATOP1)>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // Don't touch fs yet, since we might not loop
+  state |= (FAV(fs)->flag2&VF2BOXATOP1)>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // Don't touch fs yet, since we might not loop
   state &= ~((FAV(fs)->flag2&VF2ATOPOPEN1)>>(VF2ATOPOPEN1X-ZZFLAGBOXATOPX));  // We don't handle &.> here; ignore it
   state |= (-state) & (I)jtinplace & (ZZFLAGWILLBEOPENED|ZZFLAGCOUNTITEMS); // remember if this verb is followed by > or ; - only if we BOXATOP, to avoid invalid flag setting at assembly
  }
@@ -140,7 +140,7 @@ DF2(jtboxcut0){A z;
  // NOTE: this routine is called from jtwords.  In that case, self comes from jtwords and is set up with the parm for x (<;.0~ -~/"2)~ y but with no failover routine.
  // Thus, the preliminary tests must not cause a failover.  They don't, because the inputs from jtwords are known to be well-formed
  // We require a have rank >=2, not sparse
- if(((1-(I)AR(a))&(((AT(a)|AT(w))&SPARSE)-1))>=0)R (FAV(self)->localuse.lpf.func)(jtinplace,a,w,self);
+ if(unlikely(((1-(I)AR(a))&(((AT(a)|AT(w))&SPARSE)-1))>=0))R (FAV(self)->localuse.lpf.func)(jtinplace,a,w,self);
  // Shape of a must end 2 1 - a one-dimensional selection
  if((AS(a)[AR(a)-2]^2)|(AS(a)[AR(a)-1]^1))R (FAV(self)->localuse.lpf.func)(jtinplace,a,w,self);
  // it is a (set of) one-dimensional selection
@@ -190,7 +190,7 @@ DF2(jtrazecut0){A z;C*wv,*zv;I ar,*as,(*av)[2],j,k,m,n,wt;
  // we need rank of a>2 (otherwise why bother?), rank of w>0, w not sparse, a not empty, w not empty (to make item-size easier)
  if((((ar-3)|(-(wt&SPARSE))|(AR(w)-1)|(AN(a)-1)))<0)R jtspecialatoprestart(jt,a,w,self);
  // the 1-cells of a must be 2x1
- if((as[ar-2]^2)|(as[ar-1]^1))R jtspecialatoprestart(jt,a,w,self);
+ if(unlikely((as[ar-2]^2)|(as[ar-1]^1)))R jtspecialatoprestart(jt,a,w,self);
  n=AS(w)[0]; m=AN(a)>>1;  // number of items of w, number of w-items in result
  // pass through a, counting result items.  abort if there is a reversal - too rare to bother with in the fast path
  RZ(a=vib(a)); av=(I(*)[2])AV(a); I nitems=0;
@@ -543,9 +543,9 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[12
      I ak,at,wcn,d,k,m=0,n,r,wt,*zi;I d1[32]; A pd0; UC *pd, *pdend;  // Don't make d1 too big - it fill lots of stack space
  PREF2(jtcut2);
  // a may have come from /., in which case it is incompletely filled in.  We look at the type, but nothing else
- if((SGNIF(AT(a),SB01X)|-(AT(w)&SPARSE))<0)R cut2sx(a,w,self);
+ if(unlikely((SGNIF(AT(a),SB01X)|-(AT(w)&SPARSE))<0))R cut2sx(a,w,self);
 #define ZZFLAGWORD state
- I state=0;  // init flags, including zz flags
+ I state=ZZFLAGINITSTATE;  // init flags, including zz flags
 
  SETIC(w,n); wt=AT(w);   // n=#items of w; wt=type of w
  r=MAX(1,AR(w)); wv=CAV(w); wcn=aii(w); k=wcn<<bplg(wt);   // r=rank>.1, s->w shape, wv->w data, wcn=#atoms in cell of w, k=#bytes in cell of w;
@@ -559,7 +559,7 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[12
  }
  if(FAV(fs)->mr>=r){
   // we are going to execute f without any lower rank loop.  Thus we can use the BOXATOP etc flags here.  These flags are used only if we go through the full assemble path
-  state = (FAV(fs)->flag2&VF2BOXATOP1)>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // Don't touch fs yet, since we might not loop
+  state |= (FAV(fs)->flag2&VF2BOXATOP1)>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // Don't touch fs yet, since we might not loop
   state &= ~((FAV(fs)->flag2&VF2ATOPOPEN1)>>(VF2ATOPOPEN1X-ZZFLAGBOXATOPX));  // We don't handle &.> here; ignore it
   state |= (-state) & (I)jtinplace & (ZZFLAGWILLBEOPENED|ZZFLAGCOUNTITEMS); // remember if this verb is followed by > or ; - only if we BOXATOP, to avoid invalid flag setting at assembly
  }
@@ -761,7 +761,7 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[12
   if(m){
    // There are cells.  Run the result loop over them
    // Allocate the virtual block we will use for arguments
-   A virtw; fauxblock(virtwfaux); fauxvirtual(virtw,virtwfaux,w,r,ACUC1|ACINPLACE);  // allocate UNINCORPORABLE block
+   A virtw; fauxblock(virtwfaux); fauxvirtual(virtw,virtwfaux,w,r,ACUC1/* obsolete |ACINPLACE*/);  // allocate UNINCORPORABLE block
    // Copy in the shape of a cell.  The number of cells in a subarray will depend on d
    MCISH(AS(virtw)+1,AS(w)+1,r-1);
    // Set the offset to the first data
@@ -929,7 +929,7 @@ static DF2(jttess2){A z,zz=0,virtw,strip;I n,rs[3],cellatoms,cellbytes,vmv,hmv,v
 #define ZZFLAGWORD state
  I state;
  RZ(a=tesa(a,w));   // expand x to canonical form, with trailing axes-in-full deleted
- n=(I)FAV(self)->localuse.lvp[0]; state=(~n)&STATETAKE;  // n=op type (as in u;.n); set TAKE bit if code=3: we will shorten out-of-bounds args
+ n=(I)FAV(self)->localuse.lvp[0]; state=ZZFLAGINITSTATE|((~n)&STATETAKE);  // n=op type (as in u;.n); set TAKE bit if code=3: we will shorten out-of-bounds args
  I wr=AR(w); I wt=AT(w); // rank of w, type of w
  I *as=AS(a), *av=IAV(a), axisct=as[1];  // a-> shape of a, axisct=# axes in a, av->mv/size area
  // get shape of final result

@@ -12,7 +12,7 @@
 #define ZZFLAGARRAYW (((I)1)<<ZZFLAGARRAYWX)
 #define ZZFLAGARRAYAX 11  // w has multiple cells and must advance between iterations
 #define ZZFLAGARRAYA (((I)1)<<ZZFLAGARRAYAX)
-#define ZZFLAGISDYADX 12 // set if dyad call - MUST BE THE HIGHEST BIT
+#define ZZFLAGISDYADX 22 // set if dyad call - MUST BE THE HIGHEST BIT
 #define ZZFLAGISDYAD (((I)1)<<ZZFLAGISDYADX)
 
 
@@ -259,7 +259,7 @@ static DF2(jtcasei12){A vres,z;I gerit[128/SZI],ZZFLAGWORD;
  RZ(a&&w);
  F1PREFIP; PROLOG(997);
  // see if we were called as monad or dyad.  If monad, fix up w and self
- ZZFLAGWORD=AT(w)&VERB?ZZFLAGWILLBEOPENED|ZZFLAGCOUNTITEMS:ZZFLAGWILLBEOPENED|ZZFLAGCOUNTITEMS|ZZFLAGISDYAD;  // we collect the results on the cells, but we don't assemble into a result.  To signal this, we force BOXATOP and set WILLBEOPENED
+ ZZFLAGWORD=AT(w)&VERB?ZZFLAGINITSTATE|ZZFLAGWILLBEOPENED|ZZFLAGCOUNTITEMS:ZZFLAGINITSTATE|ZZFLAGWILLBEOPENED|ZZFLAGCOUNTITEMS|ZZFLAGISDYAD;  // we collect the results on the cells, but we don't assemble into a result.  To signal this, we force BOXATOP and set WILLBEOPENED
  jtinplace=(J)((I)jtinplace&(a==w?-4:-1));  // Don't allow inplacing if a==w dyad
  self=AT(w)&VERB?w:self; w=AT(w)&VERB?a:w;  // if monad, a==w
  I wr=AR(w); I ar=AR(a); I mr=MAX(wr,ar);    // ranks, and max rank  // obsolete  r=(RANKT)jt->ranks; r=wr<r?wr:r; r=MIN(r,FAV(self)->mr);   // scaf turn off IRS
@@ -313,7 +313,7 @@ static DF2(jtcasei12){A vres,z;I gerit[128/SZI],ZZFLAGWORD;
    // create a virtual block for the input(s).
    A virtw,virta; fauxblock(virtwfaux); fauxblock(virtafaux);
    I virtr=(wr|REPSGN(wr))+1;   // rank of a list of cells, or 0 if original arg was an atom
-   fauxvirtual(virtw,virtwfaux,sortw,virtr,ACUC1|ACINPLACE) MCISH(AS(virtw),AS(w),virtr); AN(virtw)=1;  // in case atom, set AN to 1
+   fauxvirtual(virtw,virtwfaux,sortw,virtr,ACUC1/* obsolete |ACINPLACE*/) MCISH(AS(virtw),AS(w),virtr); AN(virtw)=1;  // in case atom, set AN to 1
    // Create the size of a cell in atoms.  If the original argument was an atom (?r=IMAX), use 0 for the cellsize so that the cell is repeated
    I wck,ack; PROD(wck,virtr-1,AS(sortw)+1);  // number of atoms in a cell of w
    I ak,wk=bp(AT(w)); wk&=REPSGN(~wr);  // size of atom of k, but 0 if w is an atom (so we don't advance)
@@ -328,7 +328,7 @@ static DF2(jtcasei12){A vres,z;I gerit[128/SZI],ZZFLAGWORD;
      jtinplace=(J)((I)jtinplace&~JTINPLACEA);
     }
     virtr=(ar|REPSGN(ar))+1;   // rank of a list of cells, or 0 if original arg was an atom
-    fauxvirtual(virta,virtafaux,sorta,virtr,ACUC1|ACINPLACE) MCISH(AS(virta),AS(a),virtr); AN(virta)=1;
+    fauxvirtual(virta,virtafaux,sorta,virtr,ACUC1/* obsolete |ACINPLACE*/) MCISH(AS(virta),AS(a),virtr); AN(virta)=1;
     PROD(ack,virtr-1,AS(sorta)+1);  // number of atoms in a cell of w
     ak=bp(AT(a)); ak&=REPSGN(~ar);  // size of atom of k, but 0 if w is an atom (so we don't advance)
    }else{virta=virtw; ak=0;}  // if monad, set a=w, and make the addition to AK(a) harmless

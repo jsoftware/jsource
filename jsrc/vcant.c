@@ -75,7 +75,7 @@ static F2(jtcanta){A m,s,t,z;C*wv,*zv;I*av,j,*mv,r,*sv,*tv,wf,wr,*ws,zn,zr,ms[4]
   ASSERT(axislenres!=~0UL,EVINDEX);  // abort if there is no input axis as source for this result axis
   zn*=(I)axislenres; sv[j]=(I)axislenres; mv[j]=axislenin*cellsizeb;  // accumulate result: axis len multiplies * cells, smallest goes to sv, total stride to mv
  }
- if(SPARSE&AT(w)){GASPARSE(z,AT(w),1,zr,sv); R cants(a,w,z);}  // if sparse, go to sparse transpose code.
+ if(unlikely(SPARSE&AT(w))){GASPARSE(z,AT(w),1,zr,sv); R cants(a,w,z);}  // if sparse, go to sparse transpose code.
  GA(z,AT(w),zn,zr,sv); if(!zn)R z;  // allocate result.  If result is empty, return it now
  // now run the transpose
  zv=CAV(z); wv=CAV(w);
@@ -97,23 +97,27 @@ static F2(jtcanta){A m,s,t,z;C*wv,*zv;I*av,j,*mv,r,*sv,*tv,wf,wr,*ws,zn,zr,ms[4]
 }    /* dyadic transpose in APL\360, a f"(1,r) w where 1>:#$a  */
 
 F1(jtcant1){I r; 
- RZ(w); 
+ RZ(w); F1PREFIP;
  r=(RANKT)jt->ranks; r=AR(w)<r?AR(w):r;   // no RESETRANK; we pass the rank of w on
- A z=canta(apv(r,r-1,-1L),w);  // rank is set
- RZ(z);  RETF(z);
+ A z=canta(apv(r,r-1,-1L),w); RZ(z);  // rank is set
+ // We extracted from w, so mark it (or its backer if virtual) non-pristine.  If w was pristine and inplaceable, transfer its pristine status to the result
+ I awflg=AFLAG(w); AFLAG(z)|=awflg&((SGNTO0(AC(w))&((I)jtinplace>>JTINPLACEWX))<<AFPRISTINEX); if(unlikely(awflg&AFVIRTUAL)){w=ABACK(w); awflg=AFLAG(w);} AFLAG(w)=awflg&~AFPRISTINE;
+ RETF(z);
 }    /* |:"r w */
 
 F2(jtcant2){A*av,p,t,y;I j,k,m,n,*pv,q,r,*v;
- RZ(a&&w);
+ RZ(a&&w); F2PREFIP;
  r=(RANKT)jt->ranks; r=AR(w)<r?AR(w):r; 
  q=jt->ranks>>RANKTX; q=AR(a)<q?AR(a):q; RESETRANK;
- if(((q-2)&(AR(a)-q-1))>=0)R rank2ex(a,w,0L,MIN(q,1),r,q,r,jtcant2);  // rank loop on a
+ if(((q-2)&(AR(a)-q-1))>=0){t=rank2ex(a,w,0L,MIN(q,1),r,q,r,jtcant2); I awflg=AFLAG(w); if(unlikely(awflg&AFVIRTUAL)){w=ABACK(w); awflg=AFLAG(w);} AFLAG(w)=awflg&~AFPRISTINE; RETF(t);} // rank loop on a.  Loses pristinity
  if(BOX&AT(a)){
   RZ(y=pfill(r,t=raze(a))); v=AV(y);
   GATV0(p,INT,AN(y),1); pv=AV(p);
   m=AN(a); n=AN(t); av=AAV(a); 
   j=0; DO(r-n,pv[*v++]=j++;); DO(m, k=AN(av[i]); DQ(k,pv[*v++]=j;); j+=(k!=0););
  }else RZ(p=pinv(pfill(r,a)));
- A z; IRS2(p,w,0L,1L,r,jtcanta,z);  // Set rank for w is in canta.  p is now INT type.  No need to check agreement since a has rank 1
+ A z; IRS2(p,w,0L,1L,r,jtcanta,z); RZ(z);  // Set rank for w is in canta.  p is now INT type.  No need to check agreement since a has rank 1
+ // We extracted from w, so mark it (or its backer if virtual) non-pristine.  If w was pristine and inplaceable, transfer its pristine status to the result
+ I awflg=AFLAG(w); AFLAG(z)|=awflg&((SGNTO0(AC(w))&((I)jtinplace>>JTINPLACEWX))<<AFPRISTINEX); if(unlikely(awflg&AFVIRTUAL)){w=ABACK(w); awflg=AFLAG(w);} AFLAG(w)=awflg&~AFPRISTINE;
  RETF(z);
 }    /* a|:"r w main control */ 

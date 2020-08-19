@@ -88,6 +88,8 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
     // no overflow possible unless a is empty; nothing  moved then, and zn is 0
   GA(z,AT(w),zn,AR(w),0); MCISH(AS(z),AS(w),AR(w)) // allocate result
   zvv=voidAV(z);  // point to the output area
+  // pristine status can be transferred to the result, because we know we are not repeating any cells
+  AFLAG(z)|=AFLAG(w)&((SGNTO0(AC(w))&((I)jtinplace>>JTINPLACEWX))<<AFPRISTINEX);  // result pristine if innplaceable input was
  }else{
   z=w; // inplace
   AN(z)=zn;  // Install the correct atom count
@@ -172,9 +174,9 @@ static REPF(jtrepidx){A y;I j,m,p=0,*v,*x;
  RZ(a&&w);F2PREFIP;
  RZ(a=vi(a)); x=AV(a);
  m=*AS(a);
- DO(m, ASSERT(0<=x[i],EVDOMAIN); p+=x[i]; ASSERT(0<=p,EVLIMIT););
+ DO(m, ASSERT(0<=x[i],EVDOMAIN); p+=x[i]; ASSERT(0<=p,EVLIMIT););  // add up total # result slots
  GATV0(y,INT,p,1); v=AV(y); 
- DO(m, j=i; DQ(x[j], *v++=j;););
+ DO(m, j=i; DQ(x[j], *v++=j;););  // fill index vector with all the indexes
  A z; R IRS2(y,w,0L,1L,wcr,jtfrom,z);
 }    /* (dense  integer) #"r (dense or sparse) */
 
@@ -290,7 +292,7 @@ I att=SGNTO0(-(AT(a)&B01+SB01))+((UI)(-(AT(a)&CMPX+SCMPX))>>(BW-1-1));  // 0 if 
    if(!(AT(w)&SPARSE)){GA(z,AT(w),0,AR(w),0); MCISH(AS(z),AS(w),AR(w)) AS(z)[wf]=0; RETF(z);}  // 0 # y, return empty
   }
  }
- if(((1-acr)|(acr-ar))<0)R rank2ex(a,w,0L,MIN(1,acr),wcr,acr,wcr,jtrepeat);  // loop if multiple cells of a
+ if(((1-acr)|(acr-ar))<0){z=rank2ex(a,w,0L,MIN(1,acr),wcr,acr,wcr,jtrepeat); I awflg=AFLAG(w); if(unlikely(awflg&AFVIRTUAL)){w=ABACK(w); awflg=AFLAG(w);} AFLAG(w)=awflg&~AFPRISTINE; RETF(z);}  // multiple cells - must losr pristinity  // loop if multiple cells of a
 // obsolete  ASSERT(!acr||!wcr||(AS(a)[0]==AS(w)[wf]),EVLENGTH);
  ASSERT((-acr&-wcr)>=0||(AS(a)[0]==AS(w)[wf]),EVLENGTH);
 // obsolete  if(!acr||!wcr){RZ(z=!((AT(a)|AT(w))&SPARSE)?rep1d(a,w,wf,wcr):rep1s(a,w,wf,wcr)); RETF(z);}   // a is atom, or w is an atom and a has rank <= 1
@@ -298,5 +300,8 @@ I att=SGNTO0(-(AT(a)&B01+SB01))+((UI)(-(AT(a)&CMPX+SCMPX))>>(BW-1-1));  // 0 if 
 // obsolete  if(AT(a)&B01 +SB01 ){RZ(z=AT(a)&DENSE?repbdx(a,w,wf,wcr):repbsx(a,w,wf,wcr)); RETF(z);}
 // obsolete  if(AT(a)&CMPX+SCMPX){RZ(z=AT(a)&DENSE?repzdx(a,w,wf,wcr):repzsx(a,w,wf,wcr)); RETF(z);}
 // obsolete  /* integer or float */    {RZ(z=AT(a)&DENSE?repidx(a,w,wf,wcr):repisx(a,w,wf,wcr)); RETF(z);}
- RETF((*repfn)(jtinplace,a,w,wf,wcr));
+ z=(*repfn)(jtinplace,a,w,wf,wcr);
+ // mark w not pristine, since we pulled from it
+ I awflg=AFLAG(w); if(unlikely(awflg&AFVIRTUAL)){w=ABACK(w); awflg=AFLAG(w);} AFLAG(w)=awflg&~AFPRISTINE;
+ RETF(z);
 }    /* a#"r w main control */

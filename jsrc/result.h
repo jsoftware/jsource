@@ -19,7 +19,7 @@
 
 //********** defines *******************
 #ifdef ZZDEFN
-// make sure these don't overlap with the definitions in cr.c
+// make sure these don't overlap with the definitions in cr.c.  Note dependence below on AFPRISTINE
 #define ZZFLAGNOPOPX 0 // set to suppress tpop
 #define ZZFLAGNOPOP (((I)1)<<ZZFLAGNOPOPX)
 #define ZZFLAGBOXATOPX 1 // set if u is <@f - must not be above JTWILLBEOPENED and JTCOUNTITEMS
@@ -46,6 +46,12 @@
 #define ZZFLAGATOPOPEN2W (((I)1)<<ZZFLAGATOPOPEN2WX)
 #define ZZFLAGATOPOPEN2AX 9 // set if v is f@> for a
 #define ZZFLAGATOPOPEN2A (((I)1)<<ZZFLAGATOPOPEN2AX)
+#define ZZFLAGPRISTINEX AFPRISTINEX  // 21 set if the result is PRISTINE, i. e. boxed and made up entirely of DIRECT inplaceable results
+#define ZZFLAGPRISTINE AFPRISTINE
+
+
+// The caller should set the initial state to ZZFLAGINITSTATE
+#define ZZFLAGINITSTATE ZZFLAGPRISTINE
 
 #define ZZFAUXCELLSHAPEMAXRANK 4  // we reserve a faux A block on the stack big enough to handle results of this rank
 
@@ -105,8 +111,16 @@
 do{
  if(zz){  // if we have allocated the result area, we are into normal processing
   // Normal case: not first time.  Move verb result to its resting place, unless the type/shape has changed
+
+  // The original result z has now either been incorporated into zz or its items have been copied.  In either case, that makes z non-PRISTINE.
+  I zzzaflag;  // we save AFLAG(z) for its PRISTINE flag.  We have to clear PRISTINE before the tpop, so here is convenient.  We just need the one flag for a short while
+  {I aflg=AFLAG(z); zzzaflag=aflg; if(aflg&BOX){A awbase=z; if(unlikely(aflg&AFVIRTUAL)){awbase=ABACK(z); aflg=AFLAG(awbase);} AFLAG(awbase)=aflg&~AFPRISTINE;}}   // since it will be repeated, run the test
+
   if(!(ZZASSUMEBOXATOP||ZZFLAGWORD&ZZFLAGBOXATOP)){  // is forced-boxed result?  If so, just move in the box
    // not forced-boxed.  Move the result cell into the result area unless the shape changes
+   // Whether the shape changes or not, if z was originally pristine inplaceable, all its boxes must be unique and we can inherit them into a pristine result.
+   // It won't matter whether the boxes go through wreck processing or not, since any fill is framing fill and not a repeated cell.  Otherwise clear pristinity
+   ZZFLAGWORD&=((AC(z)>>(BW-AFPRISTINEX))&zzzaflag)|~ZZFLAGPRISTINE;
    // first check the shape
    I zt=AT(z); I zzt=AT(zz); I zr=AR(z); I zzr=AR(zz); I * RESTRICT zs=AS(z); I * RESTRICT zzs=AS(zz)+zzframelen; I zexprank=zzr-zzframelen;
    // The main result must be recursive if boxed, because it has to get through EPILOG.  To avoid having to pass through the result issuing
@@ -118,7 +132,7 @@ do{
      // change in rank/shape: fail
    zexprank=(zexprank!=zr)?-1:zexprank;  // if zexprank!=zr, make zexprank negative to make sure loop doesn't overrun the smaller shape
    DO(zexprank, zexprank+=zs[i]^zzs[i];)  // if shapes don't match, set zexprank
-   if(!((zt&SPARSE) + (zexprank^zr))){  // if there was no wreck...
+   if(likely(!((zt&SPARSE) + (zexprank^zr)))){  // if there was no wreck...
     // rank/shape did not change.  What about the type?
     if(TYPESNE(zt,zzt)){
      // The type changed.  Convert the types to match.
@@ -155,7 +169,7 @@ do{
     }
     // The result area and the new result now have identical shapes and precisions (or compatible precisions and are empty).  Move the cells
     if(zzcelllen){  // questionable
-     // Here there are cells to move
+     // Here there are cells to move.
      if(AFLAG(zz)&RECURSIBLE){
       // The result being built is recursive.  It has recursive count, so we have to increment the usecount of any blocks we add.
       // And, we want to remove the blocks from the source so that we can free the source block immediately.  We get a small edge by handling here the special case when z is recursive inplaceable:
@@ -184,9 +198,10 @@ do{
     }
 #if !ZZPOPNEVER
     if(!(ZZFLAGWORD&ZZFLAGNOPOP))tpop(zzold);  // Now that we have copied to the output area, free what the verb allocated
+    // **** z may have been destroyed and must not be used from here on ****
 #endif
    }else{  // there was a wreck
-    if(zt&SPARSE){
+    if(unlikely(zt&SPARSE)){
      // we encountered a sparse result.  Ecch.  We are going to have to box all the results and open them.  Remember that fact
      ZZFLAGWORD|=ZZFLAGUSEOPEN;
     }
@@ -239,6 +254,8 @@ do{
   }else{
    // forced-boxed result.  Must not be sparse.  The result box is recursive to begin with, unless WILLBEOPENED is set
    ASSERT(!(AT(z)&SPARSE),EVNONCE);
+   // If z is DIRECT inplaceable, it must be unique and we can inherit them into a pristine result.  Otherwise clear pristinity
+   ZZFLAGWORD&=((AC(z)>>(BW-AFPRISTINEX))&((AT(z)&DIRECT)-1))|~ZZFLAGPRISTINE;
    if(ZZWILLBEOPENEDNEVER||!(ZZFLAGWORD&ZZFLAGWILLBEOPENED)) {  // scaf it might be better to allow the virtual to be stored in the main result, and realize it only for the looparound z
     // normal case where we are creating the result box.  Must incorp the result
     realizeifvirtual(z); ra(z);   // Since we are moving the result into a recursive box, we must ra() it.  This plus rifv=INCORP
@@ -339,6 +356,8 @@ do{
  if(ZZFLAGWORD&ZZFLAGBOXALLO){
   RZ(zz=assembleresults(ZZFLAGWORD,zz,zzbox,zzboxp,zzcellp,zzcelllen,zzresultpri,zzcellshape,zzncells,zzframelen,-ZZSTARTATEND));  // inhomogeneous results: go assemble them
  }
+ // assemly may have added framing fill but it didn't repeat any cells.  If we thought the result was pristine, it is
+ AFLAG(zz)|=ZZFLAGWORD&ZZFLAGPRISTINE;
 #undef ZZFLAGWORD
 #undef ZZWILLBEOPENEDNEVER
 #undef ZZSTARTATEND

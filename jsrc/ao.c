@@ -192,7 +192,7 @@ static DF2(jtkeysp){PROLOG(0008);A b,by,e,q,x,y,z;I j,k,n,*u,*v;P*p;
 // a u/. w.  Self-classify a, then rearrange w and call cut
 static DF2(jtkey){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
  RZ(a&&w);
- if(SPARSE&AT(a))R keysp(a,w,self);  // if sparse, go handle it
+ if(unlikely(SPARSE&AT(a)))R keysp(a,w,self);  // if sparse, go handle it
  {I t2; ASSERT(SETIC(a,nitems)==SETIC(w,t2),EVLENGTH);}  // verify agreement.  nitems is # items of a
 // obsolete  RZ(a=indexof(a,a));  // self-classify the input using ct set before this verb; we are going to modify a, so make sure it's not virtual
  RZ(ai=indexofsub(IFORKEY,a,a));   // self-classify the input using ct set before this verb
@@ -512,7 +512,7 @@ static DF2(jtkey){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
 // bivalent entry point: a </. w   or  (<./ i.@#) w
 DF2(jtkeybox){PROLOG(0009);A ai,z=0;I nitems;
  RZ(a&&w);
- if(SPARSE&AT(a))R (AT(w)&NOUN?(AF)jtkeysp:(AF)jthook1cell)(jt,a,w,self);  // if sparse, go handle it
+ if(unlikely(SPARSE&AT(a)))R (AT(w)&NOUN?(AF)jtkeysp:(AF)jthook1cell)(jt,a,w,self);  // if sparse, go handle it
  SETIC(a,nitems);   // nitems is # items in a and w
  I cellatoms, celllen;  // number of atoms in an item of w, and the number of bytes therein.  celllen is negative for the monad
  struct AD fauxw;  // needed only for (</. i.@#) but must stay in scope
@@ -909,7 +909,7 @@ static DF2(jtkeytally){PROLOG(0016);A z,q;I at,j,k,n,r,s,*qv,*u,*v;
  SETIC(a,n); at=AT(a);
  ASSERT(n==SETIC(w,k),EVLENGTH);
  if(!AN(a))R vec(INT,!!n,&AS(a)[0]);  // handle case of empties - a must have rank, so use AS[0] as  proxy for n
- if(at&SPARSE)R keytallysp(a);
+ if(unlikely(at&SPARSE))R keytallysp(a);
 // obsolete CRT rng = keyrs(a,MAX(2*n,65536)); at=rng.type; r=rng.minrange.min; s=rng.minrange.range;
  if((-n&SGNIF(at,B01X)&(AR(a)-2))<0){B*b=BAV(a); k=bsum(n,b); R BETWEENO(k,1,n)?v2(*b?k:n-k,*b?n-k:k):vci(n);}  // nonempty rank<2 boolean a, just add the 1s
  A ai;  // result from classifying a
@@ -1051,8 +1051,9 @@ static DF2(jtkeyheadtally){PROLOG(0017);A f,q,x,y,z;I b;I at,*av,k,n,r,*qv,*u,*v
  ASSERT(n==SETIC(w,k),EVLENGTH);
 // obsolete  ASSERT(!n||wt&NUMERIC,EVDOMAIN);
  ASSERT((-n&((wt&NUMERIC)-1))>=0,EVDOMAIN); // OK if n=0 or numeric w
- if(SPARSE&AT(a)||1<AR(w)||!n||!AN(a))R key(a,w,self);  // if sparse or w has rank>1 or a has no cells or no stoms, revert
- av=AV(a); 
+// obsolete  if(SPARSE&AT(a)||1<AR(w)||!n||!AN(a))R key(a,w,self);  // if sparse or w has rank>1 or a has no cells or no stoms, revert
+ if(unlikely((((SPARSE&AT(a))-1)&((I)AR(w)-2)&(-n)&(-AN(a)))>=0))R key(a,w,self);  // if sparse or w has rank>1 or a has no cells or no atoms, revert
+ av=AV(a);
  f=FAV(self)->fgh[0]; f=VAV(f)->fgh[0]; b=CHEAD==ID(f);  // b is 1 for {.,#  0 for #,{.  i. e. index of tally
 // obsolete  CRT rng = keyrs(a,MAX(2*n,65536)); at=rng.type; r=rng.minrange.min; I s=rng.minrange.range;
  if(AT(a)&B01&&1>=AR(a)){B*p=(B*)av;I i,j,m;  // first special case: boolean list/atom
@@ -1130,7 +1131,7 @@ static DF2(jtkeyheadtally){PROLOG(0017);A f,q,x,y,z;I b;I at,*av,k,n,r,*qv,*u,*v
    }else{  // FL
     D *wv=DAV(w); D *zv=DAV(z); while(1){I a0=*av++; if(a0-i>=0){zv[b]=(D)(a0-i); zv[1-b]=wv[i]; if(--nparts==0)break; zv+=2;} ++i;}
    }
-#if 0
+#if 0  // obsolete
 // obsolete  if(at&LIT+C2T+C4T+INT+SBT&&wt&B01+INT+FL&&s){  // second special case: small-range
  if((-(at&LIT+C2T+C4T+INT+SBT)&-(wt&B01+INT+FL)&-s)<0){  // second special case: small-range on integral x when w is a compatible type
   GATV0(q,INT,s,1); qv=AV(q)-r;  // allocate the frequency table

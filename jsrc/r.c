@@ -53,13 +53,13 @@ F1(jtaro){A fs,gs,hs,s,*u,*x,y,z;B ex,xop;C id;I*hv,m;V*v;
   if(evoke(w)){RZ(w=sfne(w)); if(FUNC&AT(w))w=aro(w); R w;}  // keep nameref as a string, UNLESS it is NMDOT, in which case use the (f.'d) verb value
  }
  GAT0(z,BOX,2,1); x=AAV(z);
- if(NOUN&AT(w)){RZ(x[0]=rifvs(ravel(scc(CNOUN)))); if(AT(w)&NAME)RZ(w=sfn(0,w)); x[1]=INCORPNA(w); RETF(z);}  // if name, must be ".@'name', format name as string
+ if(NOUN&AT(w)){RZ(x[0]=rifvs(ravel(scc(CNOUN)))); if(AT(w)&NAME)RZ(w=sfn(0,w)); RZ(x[1]=INCORPNA(w)); RETF(z);}  // if name, must be ".@'name', format name as string
  GATV0(y,BOX,m,1); u=AAV(y);
  if(0<m)RZ(u[0]=rifvs(aro(fs)));
  if(1<m)RZ(u[1]=rifvs(aro(ex?unparsem(num(0),w):xop?hs:gs)));
  if(2<m)RZ(u[2]=rifvs(aro(hs)));
  s=xop?aro(gs):VDDOP&v->flag?(hv=AV(hs),aro(foreign(sc(hv[0]),sc(hv[1])))):spellout(id);
- RZ(x[0]=rifvs(s)); x[1]=INCORPNA(y);
+ RZ(x[0]=rifvs(s)); RZ(x[1]=INCORPNA(y));
  R z;
 }
 

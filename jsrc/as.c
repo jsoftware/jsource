@@ -206,7 +206,7 @@ static DF1(jtssg){F1PREFIP;PROLOG(0020);A a,z;I i,k,n,r,wr;
  A fs=FAV(FAV(self)->fgh[0])->fgh[0]; AF f2=FAV(fs)->valencefns[1]; // self = f/\.   FAV(self)->fgh[0] = f/  FAV(FAV(self)->fgh[0])->fgh[0] = f   fetch dyad for f
  // Set BOXATOP if appropriate.  Since {:y is always the last cell, BOXATOP is allowed only when the rank of w is 1, meaning that
  // {:y is a single box, just like the other results.  Also require that w be boxed, lest we make the first z-cell invalid
- state = REPSGN(wr-2)&(AT(w)>>(BOXX-ZZFLAGBOXATOPX))&((FAV(fs)->flag2&VF2BOXATOP2)>>(VF2BOXATOP2X-ZZFLAGBOXATOPX));  // If rank OK, extract flag.  Rank cannot be 0.  Don't touch fs yet, since we might not loop
+ state = ZZFLAGINITSTATE|(REPSGN(wr-2)&(AT(w)>>(BOXX-ZZFLAGBOXATOPX))&((FAV(fs)->flag2&VF2BOXATOP2)>>(VF2BOXATOP2X-ZZFLAGBOXATOPX)));  // If rank OK, extract flag.  Rank cannot be 0.  Don't touch fs yet, since we might not loop
  state &= ~((FAV(fs)->flag2&VF2ATOPOPEN2W)>>(VF2ATOPOPEN2WX-ZZFLAGBOXATOPX));  // We don't handle &.> here; ignore it
 
  // We cannot honor WILLBEOPENED, because the same box that goes into the result must also be released into the next application of f.
@@ -287,7 +287,7 @@ A jtscansp(J jt,A w,A self,AF sf){A e,ee,x,z;B*b;I f,m,j,r,t,wr;P*wp,*zp;
 static DF1(jtsscan){A y,z;I d,f,m,n,r,t,wn,wr,*ws,wt;
  RZ(w);F1PREFIP;
  wt=AT(w);
- if(SPARSE&wt)R scansp(w,self,jtsscan);
+ if(unlikely(SPARSE&wt))R scansp(w,self,jtsscan);
  wn=AN(w); wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; ws=AS(w); RESETRANK;
  PROD(m,f,ws); PROD1(d,r-1,f+ws+1); I *nn=&ws[f]; nn=r?nn:&I1mem; n=*nn; /* obsolete n=r?ws[f]:1;*/  // will not be used if WN==0, so PROD ok.  n is # items along the selected rank
  y=FAV(self)->fgh[0]; // y is f/
@@ -325,7 +325,7 @@ static DF2(jtgoutfix){A h,*hv,x,z,*zv;I m,n;
 static AS2(jtoutfix, eachl(omask(a,w),w,atop(fs,ds(CPOUND))),0117)
 
 static DF2(jtofxinv){A f,fs,z;C c;I t;V*v;
- F2RANK(0,RMAX,jtofxinv,self);
+ F2RANKW(0,RMAX,jtofxinv,self);
  fs=FAV(self)->fgh[0]; f=FAV(fs)->fgh[0]; v=FAV(f); c=v->id; t=AT(w);  // self = f/\. fs = f/  f = f  v = verb info for f
  if(!(c==CPLUS||c==CBDOT&&t&INT||((c&-2)==CEQ)&&t&B01))R outfix(a,w,self);  // if not +/\. or m b./\. or =/\. or ~:/\.
  A z0,z1; z=irs2(df1(z0,w,fs),df2(z1,a,w,bslash(fs)),c==CPLUS?ds(CMINUS):f, RMAX,-1L,jtatomic2);
@@ -333,7 +333,7 @@ static DF2(jtofxinv){A f,fs,z;C c;I t;V*v;
 }    /* a f/\. w where f has an "undo" */
 
 static DF2(jtofxassoc){A f,i,j,p,s,x,z;C id,*zv;I c,d,k,kc,m,r,t;V*v;VA2 adocv;
- F2RANK(0,RMAX,jtofxassoc,self);
+ F2RANKW(0,RMAX,jtofxassoc,self);
  SETIC(w,m); RE(k=i0(a)); c=ABS(k);  // m = # items in w; k is value of a; c is # items per suffix
  f=FAV(self)->fgh[0]; x=FAV(f)->fgh[0]; v=FAV(x); id=CBDOT==v->id?(C)*AV(v->fgh[1]):v->id;  // self = f/\. f = f/  x = f  v = verb info for f
  if(k==IMIN||m<=c||id==CSTARDOT&&!(B01&AT(w)))R outfix(a,w,self);  // if there is not >1 outfix, do general code which handles empties

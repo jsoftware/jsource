@@ -1606,8 +1606,10 @@ F2(jtless){A x=w;I ar,at,k,r,*s,wr,*ws,wt;
  // if w's rank is larger than that of a cell of a, reheader w to look like a list of such cells.  The number of atoms stays the same
  if(wr&&r!=wr){RZ(x=virtual(w,0,r)); AN(x)=AN(w); s=AS(x); ws=AS(w); k=ar>wr?0:1+wr-r; *s=prod(k,ws); MCISH(1+s,k+ws,r-1);}  // bug: should test for error on the prod()
  // if nothing special (like sparse, or incompatible types, or x requires conversion) do the fast way; otherwise (-. x e. y) # y
- R !(at&SPARSE)&&HOMO(at,wt)&&TYPESEQ(at,maxtype(at,wt))&&!(AFLAG(a)&AFNJA)?indexofsub(ILESS,x,a):
-     repeat(not(eps(a,x)),a);
+ RZ(x=!(at&SPARSE)&&HOMO(at,wt)&&TYPESEQ(at,maxtype(at,wt))&&!(AFLAG(a)&AFNJA)?indexofsub(ILESS,x,a):
+     repeat(not(eps(a,x)),a));
+ // We extracted from a, so mark it non-pristine.  If a was pristine and inplaceable, transfer its pristine status to the result
+ I af=AFLAG(a); AFLAG(x)|=af&((SGNTO0(AC(a))&((I)jtinplace>>JTINPLACEAX))<<AFPRISTINEX); if(unlikely(af&AFVIRTUAL)){a=ABACK(a); af=AFLAG(a);} AFLAG(a)=af&~AFPRISTINE;
 }    /* a-.w */
 
 // x e. y

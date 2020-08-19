@@ -293,23 +293,18 @@ docase:
    // following B block if the condition is false.
    //  Start by assuming condition is true; set to move to the next line then
    ++i;
-   // Quick true cases are: nonexistent t; empty t; direct numeric t with low byte nonzero.  This gets most of the true.  We add in char types cause it's free (they are always true)
-   if(t&&AN(t)&&(-(AT(t)&(B01|LIT|INT|FL|CMPX|C2T|C4T))&-((I)CAV(t)[0]))>=0){I nexti=ci->go;  // C cond is false if (type direct) and (value not 0).  J cond is true then
+   // Quick true cases are: nonexistent t; empty t; direct numeric t with low byte nonzero.  This gets most of the true.  We add in char types and BOX cause it's free (they are always true)
+   if(t&&AN(t)&&(-(AT(t)&(B01|LIT|INT|FL|CMPX|C2T|C4T|BOX))&-((I)CAV(t)[0]))>=0){I nexti=ci->go;  // C cond is false if (type direct) and (value not 0).  J cond is true then
     // here the type is indirect or the low byte is 0.  We must compare more
     while(1){  // 2 loops if sparse
-     if(AT(t)&B01){i=nexti; break;}  // if boolean, there's no more to compare, it's false
-     else{
-      // Now go through the types.  INT is by far the likeliest after B01
-      if(AT(t)&INT)i=IAV(t)[0]?i:nexti;
-      else if(AT(t)&FL)i=DAV(t)[0]?i:nexti;
-      else if(AT(t)&CMPX)i=DAV(t)[0]||DAV(t)[1]?i:nexti;
-      else if(AT(t)&(RAT|XNUM))i=1<AN(XAV(t)[0])||IAV(XAV(t)[0])[0]?i:nexti;
-      else if(AT(t)&B01)i=BAV(t)[0]?i:nexti;  // must be sparse
-      else if(!(AT(t)&NOUN)){CHECKNOUN}  // will take error
-      // other types test true, which is how i is set
-      if(!(SPARSE&AT(t)))break;
-      BZ(t=denseit(t)); if(AN(t)==0)break;  // convert sparse to dense - this could make the length go to 0, in which case true
-     }
+     if(AT(t)&INT+B01){i=BIV0(t)?i:nexti; break;} // INT and B01 are most common
+     if(AT(t)&FL){i=DAV(t)[0]?i:nexti; break;}
+     if(AT(t)&CMPX){i=DAV(t)[0]||DAV(t)[1]?i:nexti; break;}
+     if(AT(t)&(RAT|XNUM)){i=1<AN(XAV(t)[0])||IAV(XAV(t)[0])[0]?i:nexti; break;}
+     if(!(AT(t)&NOUN)){CHECKNOUN}  // will take error
+     // other types test true, which is how i is set
+     if(!(SPARSE&AT(t)))break;
+     BZ(t=denseit(t)); if(AN(t)==0)break;  // convert sparse to dense - this could make the length go to 0, in which case true
     }
    }
    t=0;  // Indicate no T block, now that we have processed it

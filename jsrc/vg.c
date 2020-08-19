@@ -738,8 +738,13 @@ F1(jtgr1){PROLOG(0075);A z;I c,f,ai,m,n,r,*s,t,wn,wr,zn;
 
 F1(jtgrade1 ){A z;GBEGIN(-1); RZ(   w); z=SPARSE&AT(w)?grd1sp(  w):gr1(  w); GEND RETF(z);}
 F1(jtdgrade1){A z;GBEGIN( 1); RZ(   w); z=SPARSE&AT(w)?grd1sp(  w):gr1(  w); GEND RETF(z);}
-F2(jtgrade2 ){F2PREFIP;A z;GBEGIN(-1); RZ(a&&w); z=SPARSE&AT(w)?grd2sp(a,w):jtgr2(jtinplace,a,w); GEND RETF(z);}
-F2(jtdgrade2){F2PREFIP;A z;GBEGIN( 1); RZ(a&&w); z=SPARSE&AT(w)?grd2sp(a,w):jtgr2(jtinplace,a,w); GEND RETF(z);}
+// Since grade2 pulls from a, mark a as non-pristine.  But since there can be no repeats, transfer a's pristinity to result
+F2(jtgrade2 ){F2PREFIP;A z;GBEGIN(-1); RZ(a&&w); RZ(z=SPARSE&AT(w)?grd2sp(a,w):jtgr2(jtinplace,a,w)); GEND
+ I awflg=AFLAG(a); AFLAG(z)|=awflg&((SGNTO0(AC(a))&((I)jtinplace>>JTINPLACEAX))<<AFPRISTINEX); if(unlikely(awflg&AFVIRTUAL)){a=ABACK(a); awflg=AFLAG(a);} AFLAG(a)=awflg&~AFPRISTINE;
+ RETF(z);}
+F2(jtdgrade2){F2PREFIP;A z;GBEGIN( 1); RZ(a&&w); RZ(z=SPARSE&AT(w)?grd2sp(a,w):jtgr2(jtinplace,a,w)); GEND
+ I awflg=AFLAG(a); AFLAG(z)|=awflg&((SGNTO0(AC(a))&((I)jtinplace>>JTINPLACEAX))<<AFPRISTINEX); if(unlikely(awflg&AFVIRTUAL)){a=ABACK(a); awflg=AFLAG(a);} AFLAG(a)=awflg&~AFPRISTINE;
+ RETF(z);}
 
 
 #define OSGT(i,j) (u[i]>u[j])

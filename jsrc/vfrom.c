@@ -8,22 +8,25 @@
 
 F1(jtcatalog){PROLOG(0072);A b,*wv,x,z,*zv;C*bu,*bv,**pv;I*cv,i,j,k,m=1,n,p,*qv,r=0,*s,t=0,*u;
  F1RANK(1,jtcatalog,0);
- if((-AN(w)&-(AT(w)&BOX+SBOX))>=0)R box(w);
+ if((-AN(w)&-(AT(w)&BOX+SBOX))>=0)R box(w);   // empty or unboxed, just box it
  n=AN(w); wv=AAV(w); 
- DO(n, x=wv[i]; if(AN(x)){p=AT(x); t=t?t:p; ASSERT(HOMO(t,p),EVDOMAIN); RE(t=maxtype(t,p));});  // use vector maxtype
- t=t?t:B01; k=bpnoun(t);
- GA(b,t,n,1,0);      bv=CAV(b);
- GATV0(x,INT,n,1);    qv=AV(x);
- GATV0(x,BOX,n,1);    pv=(C**)AV(x);
- RZ(x=apvwr(n,0L,0L)); cv=AV(x);
- DO(n, x=wv[i]; if(TYPESNE(t,AT(x)))RZ(x=cvt(t,x)); r+=AR(x); qv[i]=p=AN(x); RE(m=mult(m,p)); pv[i]=CAV(x););
- GATV0(z,BOX,m,r);    zv=AAV(z); s=AS(z); 
- DO(n, x=wv[i]; u=AS(x); DQ(AR(x),*s++=*u++;););
- for(i=0;i<m;i++){
+ DO(n, x=wv[i]; if(AN(x)){p=AT(x); t=t?t:p; ASSERT(HOMO(t,p),EVDOMAIN); RE(t=maxtype(t,p));});  // use vector maxtype; establish type of result
+ t=t?t:B01; k=bpnoun(t);  // if all empty, use boolean for result
+ GA(b,t,n,1,0);      bv=CAV(b);  // allocate place to build each item of result - one atom from each box.  bv->item 0
+ GATV0(x,INT,n,1);    qv=AV(x);   // allocate vector of max-indexes for each box - only the address is used  qv->max-index 0
+ GATV0(x,BOX,n,1);    pv=(C**)AV(x);  // allocate vector of pointers to each box's data  pv->box-data-base 0
+ RZ(x=apvwr(n,0L,0L)); cv=AV(x);   // allocate vector of current indexes, init to 0  cv->current-index 0
+ DO(n, x=wv[i]; if(TYPESNE(t,AT(x)))RZ(x=cvt(t,x)); r+=AR(x); qv[i]=p=AN(x); RE(m=mult(m,p)); pv[i]=CAV(x););  // fill in *qv and *pv; calculate r=+/ #@$@> w, m=*/ */@$@> w
+ GATV0(z,BOX,m,r);    zv=AAV(z); s=AS(z);   // allocate result area
+ // There is no need to turn off pristinity of w, because nothing was copied out by pointer (everything was copied & then cloned)
+ // The result is certainly pristine if it is DIRECT
+ AFLAG(z)|=(-(t&DIRECT))&AFPRISTINE;  // set result pristine if boxes DIRECT
+ DO(n, x=wv[i]; u=AS(x); DQ(AR(x),*s++=*u++;););   // fill in shape: ; $&.> w
+ for(i=0;i<m;i++){  // fill in each box
   bu=bv-k;
-  DO(n, MC(bu+=k,pv[i]+k*cv[i],k););
-  DO(n, j=n-1-i; if(qv[j]>++cv[j])break; cv[j]=0;);
-  RZ(*zv++=ca(b));
+  DO(n, MC(bu+=k,pv[i]+k*cv[i],k););  // move in each atom  (we could stop after moving the lowest)
+  DO(n, j=n-1-i; if(qv[j]>++cv[j])break; cv[j]=0;);  // increment and roll over the odometer
+  RZ(*zv++=ca(b));  // clone the items and move pointer to the result
  }
  EPILOG(z);
 }
@@ -203,7 +206,7 @@ static F2(jtbfrom){A z;B*av,*b;C*wv,*zv;I acr,an,ar,k,m,p,q,r,*u=0,wcr,wf,wk,wn,
  RZ(a&&w);
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK;
- if(ar>acr)R rank2ex(a,w,0L,acr,wcr,acr,wcr,jtbfrom);  // udr rsnk loop if multiple cells of a
+ if(ar>acr)R rank2ex(a,w,0L,acr,wcr,acr,wcr,jtbfrom);  // use rank loop if multiple cells of a
  an=AN(a); wn=AN(w); ws=AS(w);
  // If a is empty, it needs to simulate execution on a cell of fills.  But that might produce domain error, if w has no
  // items, where 0 { empty is an index error!  In that case, we set wr to 0, in effect making it an atom (since failing exec on fill-cell produces atomic result)
@@ -436,8 +439,8 @@ F2(jtfrom){I at;A z;
  F2PREFIP;
  RZ(a&&w);
  at=AT(a);
- if(!((AT(a)|AT(w))&(SPARSE))){
-  // if INT|FL atom { INT|FL array, and no frame, just pluck the value.  If a is inplaceable and not unincorpable, use it
+ if(likely(!((AT(a)|AT(w))&(SPARSE)))){
+  // if B01|INT|FL atom { INT|FL|BOX array, and no frame, just pluck the value.  If a is inplaceable and not unincorpable, use it
   // If we turn the result to BOX it will have the original flags, i. e. it will be nonrecursive.  Thus fa will not free the contents, which do not have incremented usecount (and are garbage on error)
   if(SY_64&&!((AT(a)&(NOUN&~(B01|INT|FL)))+(AT(w)&(NOUN&~(INT|FL|BOX)))+AR(a)+(SGNTO0((((RANKT)jt->ranks-AR(w))|(AR(w)-1))))+(AFLAG(w)&AFNJA))){   // NJAwhy
    I av;  // selector value
@@ -452,6 +455,8 @@ F2(jtfrom){I at;A z;
     if((SGNIF(jtinplace,JTINPLACEAX)&AC(a)&SGNIFNOT(AFLAG(a),AFUNINCORPABLEX))<0)z=a; else{GAT0(z,INT,1,0)}
     // Move the value and transfer the block-type
     I j; AT(z)=AT(w); SETNDX(j,av,AN(w)); IAV(z)[0]=IAV(w)[j];
+    // Here we transferred an atom out of w.  We must mark w non-pristine.  If it was inplaceable, we can transfer the pristine status.  We overwrite w because it is no longer in use
+    I awflg=AFLAG(w); AFLAG(z)|=awflg&((SGNTO0(AC(w))&((I)jtinplace>>JTINPLACEWX))<<AFPRISTINEX); if(unlikely(awflg&AFVIRTUAL)){w=ABACK(w); awflg=AFLAG(w);} AFLAG(w)=awflg&~AFPRISTINE;
    }else{
     // rank of w > 1, return virtual cell
     I *ws=AS(w);  // shape of w
@@ -460,12 +465,15 @@ F2(jtfrom){I at;A z;
     RZ(z=virtualip(w,j*m,wr1));   // if w is rank 2, could reuse inplaceable a for this virtual block
     // fill in shape and number of atoms.  ar can be anything.
     AN(z)=m; MCISH(AS(z),ws+1,wr1)
+    // When we create a virtual block we do not actually copy anything out of w, so it remains pristine.  The result is not.
    }
   }else{
    // not atom{array.  Process according to type of a
    A (*fn)(J,A,A);
    fn=jtifrom; fn=at&BOX?jtafrom:fn; fn=at&(AN(a)!=1)?jtbfrom:fn; jtinplace=fn!=jtifrom?jt:jtinplace;
    z=(*fn)(jtinplace,a,w);
+   // Here we transferred out of w.  We must mark w non-pristine.  Since there may have been duplicates, we cannot mark z as pristine.  We overwrite w because it is no longer in use
+   I awflg=AFLAG(w); if(unlikely(awflg&AFVIRTUAL)){w=ABACK(w); awflg=AFLAG(w);} AFLAG(w)=awflg&~AFPRISTINE;
   }
  }else if(!((AT(a)|AT(w))&(NOUN&~SPARSE))){z=fromss(a,w);}  // sparse cases
  else if(AT(w)&SPARSE){z=at&BOX?frombs(a,w) : fromis(a,w);}
@@ -536,14 +544,17 @@ static F2(jtquicksel){I index;
 }
 
 F2(jtfetch){A*av, z;I n;F2PREFIP;
- F2RANK(1,RMAX,jtfetch,0);  // body of verb applies to rank-1 a
+ F2RANKW(1,RMAX,jtfetch,0);  // body of verb applies to rank-1 a, and must turn pristine off if used higher, since there may be repetitions
  if(!(BOX&AT(a))){
   // look for the common special case scalar { boxed vector.  This path doesn't run EPILOG
   if(((AT(w)>>BOXX)&1)>=(2*AR(a)+AR(w))){  // a is an atom, w is atom or boxed list   AR(a)==0 && (AR(w)==0 || (AR(w)==1 && AT(w)&BOX))
    RZ(z=jtquicksel(jt,a,w));  // fetch selected box, opened.  If not a box, just return w
    // Inplaceability depends on the context.  If the overall operand is either noninplaceable or in a noninplaceable context, we must
    // protect the value we fetch (the overall operand would matter only if it was flagged without a ra())
-   if((AC(w)&SGNIF(jtinplace,JTINPLACEWX))>=0)ACIPNO(z); RETF(z);   // turn off inplace if w not inplaceable, or jt not inplaceable.
+   if((AC(w)&SGNIF(jtinplace,JTINPLACEWX))>=0)ACIPNO(z);
+   // Since the whole purpose of fetch is to copy one contents by address, we turn off pristinity of w
+   {I awflg=AFLAG(w); if(unlikely(awflg&AFVIRTUAL)){w=ABACK(w); awflg=AFLAG(w);} AFLAG(w)=awflg&~AFPRISTINE;}
+   RETF(z);   // turn off inplace if w not inplaceable, or jt not inplaceable.
   }
   RZ(a=box(a));  // if not special case, box any unboxed a
  }
@@ -552,5 +563,8 @@ F2(jtfetch){A*av, z;I n;F2PREFIP;
  DO(n, A next=av[i]; if(((AT(z)>>BOXX)&1)>=(2*(AR(next)+(AT(next)&BOX))+AR(z))){RZ(z=jtquicksel(jt,next,z))}  // next is unboxed atom, z is boxed atom or list, use fast indexing  AR(next)==0 && !(AT(next)&BOX) && (AR(z)==0 || (AR(z)==1 && AT(z)&BOX))
       else{RZ(z=afrom(box(next),z)); ASSERT(((i+1-n)&-AR(z))>=0,EVRANK); if(((AR(z)-1)&SGNIF(AT(z),BOXX))<0)RZ(z=ope(z));}  // Rank must be 0 unless last; open if boxed atom
    );
- if((AC(w)&SGNIF(jtinplace,JTINPLACEWX))>=0)ACIPNO(z); RETF(z);   // Mark the box as non-inplaceable, as above
+ if((AC(w)&SGNIF(jtinplace,JTINPLACEWX))>=0)ACIPNO(z);
+ // Since the whole purpose of fetch is to copy one contents by address, we turn off pristinity of w
+ {I awflg=AFLAG(w); if(unlikely(awflg&AFVIRTUAL)){w=ABACK(w); awflg=AFLAG(w);} AFLAG(w)=awflg&~AFPRISTINE;}
+ RETF(z);   // Mark the box as non-inplaceable, as above
 }

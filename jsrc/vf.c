@@ -11,18 +11,19 @@
 // if w is not the same type as the fill, convert it.  The user has to handle a.
 F2(jtsetfv){A q=jt->fill;I t;
  RZ(a&&w);
+ q=q?q:mtv;  // if no fill given, use empty vector
  I t2=REPSGN(-AN(w))&AT(w); t=REPSGN(-AN(a))&AT(a); t=t?t:t2;  // ignoring empties, use type of a then w
- if(q&&AN(q)){
-  RE(t=t?maxtype(t,AT(q)):AT(q)); 
-  if(TYPESNE(t,AT(q)))RZ(q=cvt(t,q));
+ if(unlikely(AN(q))){ // fill specified
+  RE(t=t?maxtype(t,AT(q)):AT(q)); // get type needed for fill
+  if(TYPESNE(t,AT(q)))RZ(q=cvt(t,q));  // convert the user's type if needed
   jt->fillv=CAV(q);   // jt->fillv points to the fill atom
  }else{if(!t)t=AT(w); fillv(t,1L,jt->fillv0); jt->fillv=jt->fillv0;}    // empty fill.  move 1 std fill atom to fillv0 and point jt->fillv at it
- R TYPESEQ(t,AT(w))?w:cvt(t,w);  // note if w is boxed this won't change it, so relo is still valid
+ R TYPESEQ(t,AT(w))?w:cvt(t,w);  // note if w is boxed and nonempty this won't change it
 }
 
 F1(jtfiller){A z; RZ(w); GA(z,AT(w),1,0,0); fillv(AT(w),1L,CAV(z)); R z;}
 
-// move n fills of type t to *v
+// move n default fills of type t to *v
 void jtfillv(J jt,I t,I n,C*v){I k=bpnoun(t);A afill;
  switch(CTTZ(t)){
  case RATX: mvc(n*k,v,k,&zeroQ); break;
@@ -92,13 +93,16 @@ static void jtrot(J jt,I m,I d,I n,I atomsize,I p,I*av,C*u,C*v){I dk,e,k,j,r,x,y
    v   target data area      */
 
 F2(jtrotate){A y,z;B b;C*u,*v;I acr,af,ar,*av,d,k,m,n,p,*s,wcr,wf,wn,wr;
- RZ(a&&w);
- if(SPARSE&AT(w))R rotsp(a,w);
+ RZ(a&&w);F2PREFIP;
+ if(unlikely(SPARSE&AT(w)))R rotsp(a,w);
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr; af=ar-acr; p=acr?*(af+AS(a)):1;
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK;
  RZ(a=vi(a));
  // special case: if a is atomic 0, and cells of w are not atomic
  if((wcr!=0)&(((ar|IAV(a)[0])==0)))R RETARG(w);   // 0 |. y, return y
+ // w is going to be replaced.  That makes it non-pristine; but if it is inplaceable it can pass its pristinity to the result, as long as there is no fill
+ I wflg=AFLAG(w); jtinplace=(J)(wflg&(((jt->fill==0)&SGNTO0(AC(w))&((I)jtinplace>>JTINPLACEWX))<<AFPRISTINEX)); A wbase=w; if(unlikely(wflg&AFVIRTUAL)){wbase=ABACK(w); wflg=AFLAG(wbase);} AFLAG(wbase)=wflg&~AFPRISTINE;
+ // now jtinplace is the PRISTINE flag to install into the result
  if(((1-acr)|((-af)&(-acr|(wf-1))))<0)R df2(z,a,w,qq(qq(ds(CROT),v2(1L,RMAX)),v2(acr,wcr)));  // if multiple a-lists per cell, or a has frame and (a cell is not an atom or w has frame) handle rank by using " for it
  if(((wcr-1)&(1-p))<0){RZ(w=reshape(over(shape(w),apv(p,1L,0L)),w)); wr=wcr=p;}  // if cell is an atom, extend it up to #axes being rotated   !wcr && p>1
  ASSERT(((-wcr)&(wcr-p))>=0,EVLENGTH);    // !wcr||p<=wcr  !(wcr&&p>wcr)
@@ -106,6 +110,7 @@ F2(jtrotate){A y,z;B b;C*u,*v;I acr,af,ar,*av,d,k,m,n,p,*s,wcr,wf,wn,wr;
  RZ(w=setfv(w,w)); u=CAV(w); wn=AN(w); s=AS(w); k=bpnoun(AT(w));  // set fill value if given
  GA(z,AT(w),wn,wr,s); v=CAV(z);
  if(!wn)R z;
+ AFLAG(z)|=(I)jtinplace;  // if result is a repeat of the input, and the input is going away, pass on the pristinity
  PROD(m,wf,s); PROD1(d,wr-wf-1,s+wf+1); SETICFR(w,wf,wcr,n); /* obsolete n=wcr?s[wf]:1;*/  // m=#cells of w, n=#items per cell  d=#atoms per item of cell
  rot(m,d,n,k,1>=p?AN(a):1L,av,u,v);
  if(1<p){
@@ -116,7 +121,6 @@ F2(jtrotate){A y,z;B b;C*u,*v;I acr,af,ar,*av,d,k,m,n,p,*s,wcr,wf,wn,wr;
  } 
  RETF(z);
 }    /* a|.!.f"r w */
-
 
 static F1(jtrevsp){A a,q,x,y,z;I c,f,k,m,n,r,*v,wr;P*wp,*zp;
  RZ(w);
@@ -137,9 +141,9 @@ static F1(jtrevsp){A a,q,x,y,z;I c,f,k,m,n,r,*v,wr;P*wp,*zp;
 }    /* |."r w on sparse arrays */
 
 F1(jtreverse){A z;C*wv,*zv;I f,k,m,n,nk,r,*v,*ws,wt,wr;
- RZ(w);
- if(SPARSE&AT(w))R revsp(w);
- if(jt->fill)R rotate(num(-1),w);  // rank is set
+ RZ(w);F1PREFIP;
+ if(unlikely(SPARSE&AT(w)))R revsp(w);
+ if(jt->fill)R rotate(num(-1),w);  // rank is set - not inplaceable because it uses fill
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r;  // no RESETRANK - we don't call any primitive from here on
  if(!(r&&AN(w))){R RETARG(w);}  // no atoms or reversing atoms - keep input unchanged
  wt=AT(w); ws=AS(w); wv=CAV(w);
@@ -147,6 +151,8 @@ F1(jtreverse){A z;C*wv,*zv;I f,k,m,n,nk,r,*v,*ws,wt,wr;
  m=1; DO(f, m*=ws[i];);
  k=bpnoun(wt); v=1+f+ws; DQ(r-1, k*=*v++;); nk=n*k;
  GA(z,wt,AN(w),wr,ws); zv=CAV(z);
+ // w is going to be replaced.  That makes it non-pristine; but if it is inplaceable it can pass its pristinity to the result, as long as there is no fill
+ I wflg=AFLAG(w); AFLAG(z)|=(wflg&((SGNTO0(AC(w))&((I)jtinplace>>JTINPLACEWX))<<AFPRISTINEX)); if(unlikely(wflg&AFVIRTUAL)){w=ABACK(w); wflg=AFLAG(w);} AFLAG(w)=wflg&~AFPRISTINE;
  switch(k){
   default:        {C*s=wv-k,*t; DQ(m, t=s+=nk; DQ(n, MC(zv,t,k); zv+=k; t-=k;););} break;
   case sizeof(C): {C*s=    wv,*t,*u=    zv; DQ(m, t=s+=n; DQ(n, *u++=*--t;););} break;
@@ -216,17 +222,17 @@ F2(jtreshape){A z;B filling;C*wv,*zv;I acr,ar,c,k,m,n,p,q,r,*s,t,* RESTRICT u,wc
  RZ(a&&w);
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; ws=AS(w); RESETRANK;
- if((I )(1<acr)|(I )(acr<ar))R rank2ex(a,w,0L,MIN(acr,1),wcr,acr,wcr,jtreshape);
+ if((I )(1<acr)|(I )(acr<ar)){z=rank2ex(a,w,0L,MIN(acr,1),wcr,acr,wcr,jtreshape); I awflg=AFLAG(w); if(unlikely(awflg&AFVIRTUAL)){w=ABACK(w); awflg=AFLAG(w);} AFLAG(w)=awflg&~AFPRISTINE; RETF(z);}  // multiple cells - must lose pristinity
  // now a is an atom or a list.  w can have any rank
  RZ(a=vip(a)); r=AN(a); u=AV(a);   // r=length of a   u->values of a
- if(SPARSE&AT(w)){RETF(reshapesp(a,w,wf,wcr));}
+ if(unlikely(SPARSE&AT(w))){RETF(reshapesp(a,w,wf,wcr));}
  wn=AN(w); RE(m=prod(r,u)); CPROD(wn,c,wf,ws); CPROD(wn,n,wcr,wf+ws);  // m=*/a (#atoms in result)  c=#cells of w  n=#atoms/cell of w
  ASSERT(n||!m||jt->fill,EVLENGTH);  // error if attempt to extend array of no items to some items without fill
  t=AT(w); filling = 0;
  if(m<=n){  // no wraparound
   if(c==1) {  // if there is only 1 cell of w...
    // If no fill required, we can probably use a virtual result, or maybe even an inplace one.  Check for inplace first.  Mustn't inplace an indirect that shortens the data,
-   // because then who would free the blocks?  (Actually it would be OK if nonrecursive, but we are trying to exterminate those)
+   // because then who would free the blocks?  (Actually it would be OK if nonrecursive, but we are trying to exterminate those).  Since it must be DIRECT, there's no question about PRISTINE, but that would be OK to transfer if inplaceable
    if(ASGNINPLACESGN(SGNIF((I)jtinplace,JTINPLACEWX)&(r-(wcr+1))&((n-(m+1))|-(t&DIRECT)),w)){  //  inplace allowed, just one cell, result rank (an) <= current rank (so rank fits), usecount is right
     // operation is loosely inplaceable.  Copy in the rank, shape, and atom count.
     AR(w)=(RANKT)(r+wf); AN(w)=m; ws+=wf; MCISH(ws,u,r) RETF(w);   // Start the copy after the (unchanged) frame
@@ -242,6 +248,9 @@ F2(jtreshape){A z;B filling;C*wv,*zv;I acr,ar,c,k,m,n,p,q,r,*s,t,* RESTRICT u,wc
  GA(z,t,zn,r+wf,0); s=AS(z); MCISH(s,ws,wf); MCISH(s+wf,u,r);
  if(!zn)R z;
  zv=CAV(z); wv=CAV(w); 
+ // We extracted from w, so mark it (or its backer if virtual) non-pristine.  Note that w was not changed above if it was boxed nonempty.  z is never pristine, since it may have repeats
+ I awflg=AFLAG(w); if(unlikely(awflg&AFVIRTUAL)){w=ABACK(w); awflg=AFLAG(w);} AFLAG(w)=awflg&~AFPRISTINE;
+ // w has been destroyed
  if(filling)DQ(c, mvc(q,zv,q,wv); mvc(p-q,q+zv,k,jt->fillv); zv+=p; wv+=q;)
  else DQ(c, mvc(p,zv,q,wv); zv+=p; wv+=q;);
  RETF(z);
@@ -252,7 +261,7 @@ F2(jtreitem){A y,z;I acr,an,ar,r,*v,wcr,wr;
  RZ(a&&w);
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; r=wcr-1; RESETRANK;
- if((I )(1<acr)|(I )(acr<ar))R rank2ex(a,w,0L,MIN(acr,1),wcr,acr,wcr,jtreitem);  // We handle only single operations here, where a has rank<2
+ if((I )(1<acr)|(I )(acr<ar)){z=rank2ex(a,w,0L,MIN(acr,1),wcr,acr,wcr,jtreitem); I awflg=AFLAG(w); if(unlikely(awflg&AFVIRTUAL)){w=ABACK(w); awflg=AFLAG(w);} AFLAG(w)=awflg&~AFPRISTINE; RETF(z);}  // multiple cells - must lose pristinity  // We handle only single operations here, where a has rank<2
  // acr<=ar; ar<=acr; therefore ar==acr here
  fauxblockINT(yfaux,4,1);
  if(1>=wcr)y=a;  // y is atom or list: $ is the same as ($,)
@@ -281,6 +290,8 @@ F2(jtexpand){A z;B*av;C*wv,*wx,*zv;I an,*au,i,k,p,wc,wk,wn,wt,zn;
  wv=CAV(w); wn=AN(w); wc=aii(w); wt=AT(w); k=bpnoun(wt); wk=k*wc; wx=wv+wk*AS(w)[0];  // k=bytes/atom, wk=bytes/item, wx=end+1 of area
  RE(zn=mult(an,wc));
  GA(z,wt,zn,AR(w),AS(w)); AS(z)[0]=an; zv=CAV(z);
+ // We extracted from w, so mark it (or its backer if virtual) non-pristine.  Note that w was not changed above if it was boxed nonempty.  z is never pristine, since it may have repeats
+ I wflg=AFLAG(w); if(unlikely(wflg&AFVIRTUAL)){w=ABACK(w); wflg=AFLAG(w);} AFLAG(w)=wflg&~AFPRISTINE;
  switch(wk){
   case sizeof(C): EXPAND(C); break;
   case sizeof(S): EXPAND(S); break;

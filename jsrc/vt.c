@@ -52,7 +52,7 @@ static F2(jttks){PROLOG(0092);A a1,q,x,y,z;B b,c;I an,m,r,*s,*u,*v;P*wp,*zp;
 // general take routine.  a is result frame followed by signed take values i. e. shape of result, w is array
 static F2(jttk){PROLOG(0093);A y,z;B b=0;C*yv,*zv;I c,d,dy,dz,e,i,k,m,n,p,q,r,*s,t,*u;
  n=AN(a); u=AV(a); r=AR(w); s=AS(w); t=AT(w);
- if(t&SPARSE)R tks(a,w);
+ if(unlikely(t&SPARSE))R tks(a,w);
  DO(n, if(!u[i]){b=1; break;}); if(!b)DO(r-n, if(!s[n+i]){b=1; break;});  // if empty take, or take from empty cell, set b
  if(((b-1)&AN(w))==0)R tk0(b,a,w);   // this handles empty w, so PROD OK below   b||!AN(w)
  k=bpnoun(t); z=w; c=q=1;  // c will be #cells for this axis
@@ -77,11 +77,16 @@ static F2(jttk){PROLOG(0093);A y,z;B b=0;C*yv,*zv;I c,d,dy,dz,e,i,k,m,n,p,q,r,*s
 F2(jttake){A s;I acr,af,ar,n,*v,wcr,wf,wr;
  F2PREFIP;
  RZ(a&&w); I wt = AT(w);  // wt=type of w
- if(SPARSE&AT(a))RZ(a=denseit(a));
- if(!(SPARSE&wt))RZ(w=setfv(w,w)); 
+ if(unlikely(SPARSE&AT(a)))RZ(a=denseit(a));
+ if(likely(!(SPARSE&wt)))RZ(w=setfv(w,w)); 
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr; af=ar-acr;  // ?r=rank, ?cr=cell rank, ?f=length of frame
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK; 
- if(((af-1)&(acr-2))>=0)R rank2ex(a,w,0L,MIN(acr,1),wcr,acr,wcr,jttake);  // if multiple x values, loop over them  af>0 or acr>1
+ if(((af-1)&(acr-2))>=0){
+  s=rank2ex(a,w,0L,MIN(acr,1),wcr,acr,wcr,jttake);  // if multiple x values, loop over them  af>0 or acr>1
+  // We extracted from w, so mark it (or its backer if virtual) non-pristine.  There may be replication (if there was fill), so we don't pass pristinity through  We overwrite w because it is no longer in use
+  I awflg=AFLAG(w); if(unlikely(awflg&AFVIRTUAL)){w=ABACK(w); awflg=AFLAG(w);} AFLAG(w)=awflg&~AFPRISTINE;
+  RETF(s);
+ }
  // canonicalize x
  n=AN(a);    // n = #axes in a
  ASSERT(BETWEENC(n,1,wcr),EVLENGTH);  // if y is not atomic, a must not have extra axes  wcr==0 is always true
@@ -115,6 +120,7 @@ F2(jttake){A s;I acr,af,ar,n,*v,wcr,wf,wr;
    // fill in shape.  Note that s and w may be the same block, so ws is destroyed
    I* RESTRICT ss=AS(s); ss[0]=tkabs; DO(wr-1, ss[i+1]=ws[i+1];);  // shape of virtual matches shape of w except for #items
    AN(s)=tkabs*wcellsize;  // install # atoms
+   // virtual block does not affect pristinity of w
    RETF(s);
   }
  }
@@ -124,7 +130,10 @@ F2(jttake){A s;I acr,af,ar,n,*v,wcr,wf,wr;
   if(!wcr){DO(n,v[i]=1;); RZ(w=reshape(s,w));}  // if w is an atom, change it to a singleton of rank #$a
   MCISH(v,AV(a),n);   // whether w was an atom or not, replace the axes of w-cell with values from a.  This leaves s with the final shape of the result
  }
- R tk(s,w);  // go do the general take/drop
+ s=tk(s,w);  // go do the general take/drop
+ // We extracted from w, so mark it (or its backer if virtual) non-pristine.  There may be replication (if there was fill), so we don't pass pristinity through  We overwrite w because it is no longer in use
+ I awflg=AFLAG(w); if(unlikely(awflg&AFVIRTUAL)){w=ABACK(w); awflg=AFLAG(w);} AFLAG(w)=awflg&~AFPRISTINE;
+ RETF(s);
 }
 
 F2(jtdrop){A s;I acr,af,ar,d,m,n,*u,*v,wcr,wf,wr;
@@ -134,7 +143,12 @@ F2(jtdrop){A s;I acr,af,ar,d,m,n,*u,*v,wcr,wf,wr;
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK; I wt=AT(w);
  // special case: if a is atomic 0, and cells of w are not atomic
  if((-wcr&(ar-1))<0&&(IAV(a)[0]==0))R RETARG(w);   // 0 }. y, return y
- if(((af-1)&(acr-2))>=0)R rank2ex(a,w,0L,MIN(acr,1),wcr,acr,wcr,jtdrop);  // if multiple x values, loop over them  af>0 or acr>1
+ if(((af-1)&(acr-2))>=0){
+  s=rank2ex(a,w,0L,MIN(acr,1),wcr,acr,wcr,jtdrop);  // if multiple x values, loop over them  af>0 or acr>1
+  // We extracted from w, so mark it (or its backer if virtual) non-pristine.  There may be replication, so we don't pass pristinity through  We overwrite w because it is no longer in use
+  I awflg=AFLAG(w); if(unlikely(awflg&AFVIRTUAL)){w=ABACK(w); awflg=AFLAG(w);} AFLAG(w)=awflg&~AFPRISTINE;
+  RETF(s);
+ }
  n=AN(a); u=AV(a);     // n=#axes to drop, u->1st axis
  // virtual case: scalar a
 // correct if(!(ar|wf|(SPARSE&wt)|!wcr|(AFLAG(w)&(AFNJA)))){  // if there is only 1 take axis, w has no frame and is not atomic
@@ -153,6 +167,7 @@ F2(jtdrop){A s;I acr,af,ar,d,m,n,*u,*v,wcr,wf,wr;
   // fill in shape.  s and w may be the same block, so ws is destroyed
   I* RESTRICT ss=AS(s); ss[0]=remlen; DO(wr-1, ss[i+1]=ws[i+1];);  // shape of virtual matches shape of w except for #items
   AN(s)=remlen*wcellsize;  // install # atoms
+  // virtual block does not affect pristinity
   RETF(s);
  }
 
@@ -160,7 +175,10 @@ F2(jtdrop){A s;I acr,af,ar,d,m,n,*u,*v,wcr,wf,wr;
  fauxblockINT(sfaux,4,1);
  if(wcr){ASSERT(n<=wcr,EVLENGTH);RZ(s=shape(w)); v=wf+AV(s); DO(n, d=u[i]; m=v[i]; m=d<0?m:-m; m+=d; v[i]=m&=REPSGN(m^d););}  // nonatomic w-cell: s is (w frame),(values of a clamped to within size), then convert to equivalent take
  else{fauxINT(s,sfaux,wr+n,1) v=AV(s); MCISH(v,AS(w),wf); v+=wf; DO(n, v[i]=!u[i];); RZ(w=reshape(s,w));}  // atomic w-cell: reshape w-cell  to result-cell shape, with axis length 0 or 1 as will be in result
- R tk(s,w);
+ RZ(s=tk(s,w));
+ // We extracted from w, so mark it (or its backer if virtual) non-pristine.  If w was pristine and inplaceable, transfer its pristine status to the result.  We overwrite w because it is no longer in use
+ I awflg=AFLAG(w); AFLAG(s)|=awflg&((SGNTO0(AC(w))&((I)jtinplace>>JTINPLACEWX))<<AFPRISTINEX); if(unlikely(awflg&AFVIRTUAL)){w=ABACK(w); awflg=AFLAG(w);} AFLAG(w)=awflg&~AFPRISTINE;
+ RETF(s);
 }
 
 
@@ -171,6 +189,7 @@ static F1(jtrsh0){A x,y;I wcr,wf,wr,*ws;
  RZ(x=vec(INT,wr-1,ws)); MCISH(wf+AV(x),ws+wf+1,wcr-1);
  RZ(w=setfv(w,w)); GA(y,AT(w),1,0,0); MC(AV(y),jt->fillv,bp(AT(w)));
  R reshape(x,y);
+ // not pristine
 }
 
 F1(jthead){I wcr,wf,wr;
@@ -186,12 +205,13 @@ F1(jthead){I wcr,wf,wr;
    I zn; PROD(zn,wcr,AS(w)+1) MCISH(AS(z),AS(w)+1,wcr) AN(z)=zn;  // Since z and w may be the same, the copy destroys AS(w).  So calc zn first.  copy shape of CELL of w into z
    RETF(z);
   }else{
-   // rank not 0, or non-virtualable type, or cell is an atom.  Use from.  Note that jt->ranks is still set, so this may produce multiple cells
+   // frame not 0, or non-virtualable type, or cell is an atom.  Use from.  Note that jt->ranks is still set, so this may produce multiple cells
    // left rank is garbage, but since zeroionei(0) is an atom it doesn't matter
    RETF(jtfrom(jtinplace,zeroionei(0),w));  // could call jtfromi directly for non-sparse w
   }
  }else{RETF(SPARSE&AT(w)?irs2(num(0),take(num( 1),w),0L,0L,wcr,jtfrom):rsh0(w));  // cell of w is empty - create a cell of fills  jt->ranks is still set for use in take.  Left rank is garbage, but that's OK
  }
+ // pristinity from the called verb
 }
 
 F1(jttail){I wcr,wf,wr;
@@ -200,4 +220,5 @@ F1(jttail){I wcr,wf,wr;
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr;  // no RESETRANK: rank is passed into from/take/rsh0.  Left rank is garbage but that's OK
  R !wcr||*(wf+AS(w))?jtfrom(jtinplace,num(-1),w) :  // scaf should generate virtual block here for speed
      SPARSE&AT(w)?irs2(num(0),take(num(-1),w),0L,0L,wcr,jtfrom):rsh0(w);
+ // pristinity from other verbs
 }

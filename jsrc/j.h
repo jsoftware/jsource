@@ -710,8 +710,10 @@ extern unsigned int __cdecl _clearfp (void);
 #define FPREFIP         J jtinplace=jt; jt=(J)(intptr_t)((I)jt&~JTFLAGMSK)  // turn off all flag bits in jt, leave them in jtinplace
 #define F1PREFIP        FPREFIP
 #define F2PREFIP        FPREFIP
-#define F1RANK(m,f,self)    {RZ(w); if(m<AR(w))if(m==0)R rank1ex0(w,(A)self,f);else R rank1ex(  w,(A)self,(I)m,     f);}  // if there is more than one cell, run rank1ex on them.  m=monad rank, f=function to call for monad cell
+#define F1RANK(m,f,self)    {RZ(w); if(m<AR(w))if(m==0)R rank1ex0(w,(A)self,f);else R rank1ex(  w,(A)self,(I)m,     f);}  // if there is more than one cell, run rank1ex on them.  m=monad rank, f=function to call for monad cell.  Fall through otherwise
 #define F2RANK(l,r,f,self)  {RZ(a&&w); if((I)((l-AR(a))|(r-AR(w)))<0)if((l|r)==0)R rank2ex0(a,w,(A)self,f);else{I lr=MIN((I)l,AR(a)); I rr=MIN((I)r,AR(w)); R rank2ex(a,w,(A)self,lr,rr,lr,rr,f);}}  // If there is more than one cell, run rank2ex on them.  l,r=dyad ranks, f=function to call for dyad cell
+// same, but used when the function may pull an address from w.  In that case, we have to turn pristine off since there may be duplicates in the result
+#define F2RANKW(l,r,f,self)  {RZ(a&&w); A z; if((I)((l-AR(a))|(r-AR(w)))<0){if((l|r)==0)z=rank2ex0(a,w,(A)self,f);else{I lr=MIN((I)l,AR(a)); I rr=MIN((I)r,AR(w)); z=rank2ex(a,w,(A)self,lr,rr,lr,rr,f);} I awflg=AFLAG(w); if(unlikely(awflg&AFVIRTUAL)){w=ABACK(w); awflg=AFLAG(w);} AFLAG(w)=awflg&~AFPRISTINE; RETF(z);}}
 #define F1RANKIP(m,f,self)    {RZ(   w); if(m<AR(w)         )R jtrank1ex(jtinplpace,  w,(A)self,(I)m,     f);}  // if there is more than one cell, run rank1ex on them.  m=monad rank, f=function to call for monad cell
 #define F2RANKIP(l,r,f,self)  {RZ(a&&w); if((I)((l-AR(a))|(r-AR(w)))<0){I lr=MIN((I)l,AR(a)); I rr=MIN((I)r,AR(w)); R jtrank2ex(jtinplace,a,w,(A)self,lr,rr,lr,rr,f);}}  // If there is more than one cell, run rank2ex on them.  l,r=dyad ranks, f=function to call for dyad cell
 // get # of things of size s, rank r to allocate so as to have an odd number of them at least n, after discarding w items of waste.  Try to fill up a full buffer 
@@ -815,16 +817,18 @@ extern unsigned int __cdecl _clearfp (void);
 // obsolete #endif
 
 // Mark a block as incorporated by removing its inplaceability.  The blocks that are tested for incorporation are ones that are allocated by partitioning, and they will always start out as inplaceable
-// If a block is virtual, it must be realized before it can be incorporated.  realized blocks always start off inplaceable
+// If a block is virtual, it must be realized before it can be incorporated.  realized blocks always start off inplaceable and non-pristine
 // z is an lvalue
 // Use INCORPNA if you need to tell the caller that the block e sent you has been incorporated.  If you created the block being incorporated,
 // even by calling a function that returns it, you can be OK just using rifv() or rifvs().  This may leave an incorporated block marked inplaceable,
 // but that's OK as long as you don't pass it to some place where it can become an argument to another function
-#define INCORP(z)       {if(AFLAG(z)&AFVIRTUAL)RZ((z)=realize(z)); ACIPNO(z); }
-// same, but for nonassignable argument
-#define INCORPNA(z)     incorp(z)
+// When a block is incorporated it becomes not pristine, because extractions from the parent may compromise it and we don't want to have to go through recursively to find them
+#define INCORP(z) {I af=AFLAG(z); if(unlikely(af&AFVIRTUAL)){RZ((z)=realize(z))} else{AFLAG(z)=af&~AFPRISTINE;} ACIPNO(z); }
+// same, but for nonassignable argument.  Must remember to check the result for 0
+#define INCORPNA(z) incorp(z)
 // use to incorporate into a known-recursive box.  We raise the usecount of z
-#define INCORPRA(z)       {if(AFLAG(z)&AFVIRTUAL)RZ((z)=realize(z)); ra(z); }
+// obsolete #define INCORPRA(z)       {if(AFLAG(z)&AFVIRTUAL)RZ((z)=realize(z)); ra(z); }
+#define INCORPRA(z) {I af=AFLAG(z); if(unlikely(af&AFVIRTUAL)){RZ((z)=realize(z))} else{AFLAG(z)=af&~AFPRISTINE;} ra(z); }
 // Tests for whether a result incorporates its argument.  The originator, who is going to check this, always marks the argument inplaceable,
 // and we signal incorporation either by returning the argument itself or by marking it non-inplaceable (if we box it)
 #define WASINCORP1(z,w)    ((z)==(w)||0<=AC(w))
@@ -848,13 +852,13 @@ extern unsigned int __cdecl _clearfp (void);
 #define IRS2COMMON(j,a,w,fs,l,r,f2,z) (jt->ranks=(RANK2T)(((((I)AR(a)-(l)>0)?(l):RMAX)<<RANKTX)+(((I)AR(w)-(r)>0)?(r):RMAX)),z=((AF)(f2))(j,(a),(w),(A)(fs)),jt->ranks=(RANK2T)~0,z) // nonneg rank
 #define IRS2(a,w,fs,l,r,f2,z) IRS2COMMON(jt,a,w,fs,l,r,f2,z)
 #define IRSIP2(a,w,fs,l,r,f2,z) IRS2COMMON(jtinplace,a,w,fs,l,r,f2,z)
-#define IRS2AGREE(a,w,fs,l,r,f2,z) {I fl=(I)AR(a)-(l); fl=fl<0?0:fl; I fr=(I)AR(w)-(r); fr=fr<0?0:fr; fl=fr<fl?fr:fl; ASSERTAGREE(AS(a),AS(w),fl) IRS2COMMON(jt,(a),(w),fs,(l),(r),(f2),z); } // nonneg rank
+#define IRS2AGREE(a,w,fs,l,r,f2,z) {I fl=(I)AR(a)-(l); fl=fl<0?0:fl; I fr=(I)AR(w)-(r); fr=fr<0?0:fr; fl=fr<fl?fr:fl; ASSERTAGREE(AS(a),AS(w),fl) IRS2COMMON(jt,(a),(w),fs,(l),(r),(f2),z); } // nonneg rank; check agreement first
 // call to atomic2(), similar to IRS2.  fs is a local block to use to hold the rank (declared as D fs[16]), cxx is the Cxx value of the function to be called
 #define ATOMIC2(jt,a,w,fs,l,r,cxx) (FAV((A)(fs))->fgh[0]=ds(cxx), FAV((A)(fs))->id=CQQ, FAV((A)(fs))->lrr=(RANK2T)((l)<<RANKTX)+(r), jtatomic2(jt,(a),(w),(A)fs))
 
 #define IX(n)           apv((n),0L,1L)
-#define JATTN           {if(*jt->adbreakr){jsignal(EVATTN); R 0;}}
-#define JBREAK0         {if(2<=*jt->adbreakr){jsignal(EVBREAK); R 0;}}
+#define JATTN           {if(unlikely(*jt->adbreakr)){jsignal(EVATTN); R 0;}}
+#define JBREAK0         {if(unlikely(2<=*jt->adbreakr)){jsignal(EVBREAK); R 0;}}
 #define JTIPA           ((J)((I)jt|JTINPLACEA))
 #define JTIPAW          ((J)((I)jt|JTINPLACEA+JTINPLACEW))
 #define JTIPW           ((J)((I)jt|JTINPLACEW))
@@ -907,8 +911,8 @@ extern unsigned int __cdecl _clearfp (void);
 #define NAN1V           {if(_SW_INVALID&_statusfp()){_clearfp();jsignal(EVNAN); R  ;}}
 #define NANTEST         (_SW_INVALID&_statusfp())
 #else
-#define NAN1            {if(_SW_INVALID&_clearfp()){jsignal(EVNAN); R 0;}}
-#define NAN1V           {if(_SW_INVALID&_clearfp()){jsignal(EVNAN); R  ;}}
+#define NAN1            {if(unlikely(_SW_INVALID&_clearfp())){jsignal(EVNAN); R 0;}}
+#define NAN1V           {if(unlikely(_SW_INVALID&_clearfp())){jsignal(EVNAN); R  ;}}
 #define NANTEST         (_SW_INVALID&_clearfp())
 // for debug only
 // #define NAN1            {if(_SW_INVALID&_clearfp()){fprintf(stderr,"nan error: file %s line %d\n",__FILE__,__LINE__);jsignal(EVNAN); R 0;}}
@@ -953,7 +957,7 @@ extern unsigned int __cdecl _clearfp (void);
  preloop \
  I i=(n-1)>>LGNPAR;  /* # loops for 0 1 2 3 4 5 is x 0 0 0 0 1 */ \
             /* __SSE2__ # loops for 0 1 2 3 4 5 is x 1 0 1 0 1 */ \
- if(i>0){u=_mm256_loadu_pd(x); x+=NPAR; loopbody1 \
+ if(likely(i>0)){u=_mm256_loadu_pd(x); x+=NPAR; loopbody1 \
  while(--i>=0){ u=_mm256_loadu_pd(x); x+=NPAR; \
   zu=zt; loopbody1 loopbody2 \
   _mm256_storeu_pd(z, u); z+=NPAR; \
@@ -1123,8 +1127,8 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x
 #define PROD1(result,length,ain) PROD(result,length,ain)  // scaf
 // CPROD is to be used to create a test testing #atoms.  Because empty arrays can have cells that have too many atoms, we can't use PROD if
 // we don't know that the array isn't empty or will be checked later
-#define CPROD(t,z,x,a)if(t)PROD(z,x,a)else RE(z=prod(x,a))
-#define CPROD1(t,z,x,a)if(t)PROD1(z,x,a)else RE(z=prod(x,a))
+#define CPROD(t,z,x,a)if(likely(t))PROD(z,x,a)else RE(z=prod(x,a))
+#define CPROD1(t,z,x,a)if(likely(t))PROD1(z,x,a)else RE(z=prod(x,a))
 // PROLOG/EPILOG are the main means of memory allocation/free.  jt->tstack contains a pointer to every block that is allocated by GATV(i. e. all blocks).
 // GA causes a pointer to the block to be pushed onto tstack.  PROLOG saves a copy of the stack pointer in _ttop, a local variable in its function.  Later, tpop(_ttop)
 // can be executed to free every block that the function allocated, without requiring bookkeeping in the function.  This may be done from time to time in

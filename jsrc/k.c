@@ -277,7 +277,7 @@ static B jtDXfI(J jt,I p,A w,DX*x){A y;I b,c,d,dd,e,i,m,n,q,r,*wv,*yv;
 B jtccvt(J jt,I tflagged,A w,A*y){A d;I n,r,*s,wt; void *wv,*yv;I t=tflagged&NOUN;
  if(!(w))R 0;
  r=AR(w); s=AS(w);
- if((t|AT(w))&SPARSE){
+ if(unlikely((t|AT(w))&SPARSE)){
   // Handle sparse
   switch((t&SPARSE?2:0)+(AT(w)&SPARSE?1:0)){I t1;P*wp,*yp;
   case 1: RZ(w=denseit(w)); break;  // sparse to dense

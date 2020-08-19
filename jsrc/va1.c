@@ -177,7 +177,8 @@ static A jtva1(J jt,A w,A self){A z;I cv,n,t,wt,zt;VA1F ado;
   RESETERR;
  }
  if(ado==0)R w;  // if function is identity, return arg
- if(AT(w)&SPARSE&&n)R va1s(w,self,cv,ado);  // branch off to do sparse
+// obsolete  if(unlikely(AT(w)&SPARSE&&n))R va1s(w,self,cv,ado);  // branch off to do sparse
+ if(unlikely((-(AT(w)&SPARSE)&-n)<0))R va1s(w,self,cv,ado);  // branch off to do sparse
  // from here on is dense va1
  t=atype(cv); zt=rtype(cv);  // extract required type of input and result
  if(UNSAFE(t&~wt)){RZ(w=cvt(t,w)); jtinplace=(J)((I)jtinplace|JTINPLACEW);}  // convert input if necessary; if we converted, converted result is ipso facto inplaceable.  t is usually 0

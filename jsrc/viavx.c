@@ -2140,21 +2140,25 @@ F2(jtjico2){R indexofsub(IICO,a,w);}
 // ~: y
 F1(jtnubsieve){
  RZ(w);
- if(SPARSE&AT(w))R nubsievesp(w); 
+ if(unlikely(SPARSE&AT(w)))R nubsievesp(w); 
  jt->ranks=(RANKT)jt->ranks + ((RANKT)jt->ranks<<RANKTX);  // we process as if dyad; make left rank=right rank
  R indexofsub(INUBSV,w,w); 
 }    /* ~:"r w */
 
 // ~. y  - does not have IRS
 F1(jtnub){ 
- RZ(w);
- if(SPARSE&AT(w)||AFLAG(w)&AFNJA)R repeat(nubsieve(w),w); 
- R indexofsub(INUB,w,w);
+ RZ(w);F1PREFIP;
+// obsolete  if(SPARSE&AT(w)||AFLAG(w)&AFNJA)R repeat(nubsieve(w),w); 
+ if(unlikely(((SPARSE&AT(w)-1)&((AFLAG(w)&AFNJA)-1))>=0))R repeat(nubsieve(w),w);    // sparse or NJA
+ A z; RZ(z=indexofsub(INUB,w,w));
+ // We extracted from w, so mark it (or its backer if virtual) non-pristine.  If w was pristine and inplaceable, transfer its pristine status to the result.  We overwrite w because it is no longer in use
+ I awflg=AFLAG(w); AFLAG(z)|=awflg&((SGNTO0(AC(w))&((I)jtinplace>>JTINPLACEWX))<<AFPRISTINEX); if(unlikely(awflg&AFVIRTUAL)){w=ABACK(w); awflg=AFLAG(w);} AFLAG(w)=awflg&~AFPRISTINE;
+ RETF(z);
 }    /* ~.w */
 
 // x -. y.  does not have IRS
 F2(jtless){A x=w;I ar,at,k,r,*s,wr,*ws,wt;
- RZ(a&&w);
+ RZ(a&&w);F2PREFIP;
  at=AT(a); ar=AR(a); 
  wt=AT(w); wr=AR(w); r=MAX(1,ar);
  if(ar>1+wr)RCA(a);  // if w's rank is smaller than that of a cell of a, nothing can be removed, return a
@@ -2163,8 +2167,11 @@ F2(jtless){A x=w;I ar,at,k,r,*s,wr,*ws,wt;
 // if nothing special (like sparse, or incompatible types, or x requires conversion) do the fast way; otherwise (-. x e. y) # y
 // obsolete  R !(at&SPARSE)&&HOMO(at,wt)&&TYPESEQ(at,maxtyped(at,wt))&&!(AFLAG(a)&AFNJA)?indexofsub(ILESS,x,a):
 // obsolete      repeat(not(eps(a,x)),a);
- R !(at&SPARSE)&&HOMO(at,wt)&&TYPESEQ(at,maxtyped(at,wt))&&!(AFLAG(a)&AFNJA)?indexofsub(ILESS,x,a):
-     repeat(not(eps(a,x)),a);
+ RZ(x=!(at&SPARSE)&&HOMO(at,wt)&&TYPESEQ(at,maxtyped(at,wt))&&!(AFLAG(a)&AFNJA)?indexofsub(ILESS,x,a):
+     repeat(not(eps(a,x)),a));
+ // We extracted from a, so mark it (or its backer if virtual) non-pristine.  If a was pristine and inplaceable, transfer its pristine status to the result
+ I aflg=AFLAG(a); AFLAG(x)|=aflg&((SGNTO0(AC(a))&((I)jtinplace>>JTINPLACEAX))<<AFPRISTINEX); if(unlikely(aflg&AFVIRTUAL)){a=ABACK(a); aflg=AFLAG(a);} AFLAG(a)=aflg&~AFPRISTINE;
+ RETF(x);
 }    /* a-.w */
 
 // x e. y
@@ -2172,7 +2179,7 @@ F2(jteps){I l,r;
  RZ(a&&w);
  l=jt->ranks>>RANKTX; l=AR(a)<l?AR(a):l;
  r=(RANKT)jt->ranks; r=AR(w)<r?AR(w):r; RESETRANK;
- if(SPARSE&(AT(a)|AT(w)))R lt(irs2(w,a,0L,r,l,jtindexof),sc(r?*(AS(w)+AR(w)-r):1));  // for sparse, implement as (# cell of y) > y i. x
+ if(unlikely(SPARSE&(AT(a)|AT(w))))R lt(irs2(w,a,0L,r,l,jtindexof),sc(r?*(AS(w)+AR(w)-r):1));  // for sparse, implement as (# cell of y) > y i. x
  jt->ranks=(RANK2T)((r<<RANKTX)+l);  // swap ranks for subroutine.  Subroutine will reset ranks
  R indexofsub(IEPS,w,a);
 }    /* a e."r w */

@@ -511,7 +511,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
    // If we switch a sparse nonnumeric matrix to boolean, that may be a space problem; but we don't
    // support nonnumeric sparse now
    // if an operand is sparse, replace its type with the corresponding non-sparse type, for purposes of testing operand precisions
-   if((at|wt)&SPARSE){
+   if(unlikely((at|wt)&SPARSE)){
     at=(SPARSE&at)?DTYPE(at):at;
     wt=(SPARSE&wt)?DTYPE(wt):wt;
     jtinplace=0;  // We use jtinplace==0 as a flag meaning 'sparse'

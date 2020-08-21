@@ -645,7 +645,7 @@ static XF1(jtfac_ecm){A tt;I b1,b2,*b1b2,i,m;X a,b,g,q[3];
 }
 
 static F1(jtxfactor){PROLOG(0064);A st,z;B b=0;I k,m;X g,*sv,*sv0,x;
- F1RANK(0,jtxfactor,0);
+ F1RANK(0,jtxfactor,DUMMYSELF);
  if(!(XNUM&AT(w)))RZ(w=cvt(XNUM,w));
  x=*XAV(w); m=XDIG(x);
  ASSERT(m!=XPINF&&m!=XNINF&&0<m,EVDOMAIN);

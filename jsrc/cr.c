@@ -37,7 +37,7 @@ A jtrank1ex(J jt,AD * RESTRICT w,A fs,I rr,AF f1){F1PREFIP;PROLOG(0041);A z,virt
  // RANKONLY verbs were handled in the caller to this routine, but fs might be RANKATOP.  In that case we could include its rank in the loop here,
  // if its rank is not less than the outer rank (we would simply ignore it), but we don't bother.  If its rank is smaller we can't ignore it because assembly might affect
  // the order of fill.  But if f is BOXATOP, there will be no fill, and we can safely use the smaller rank
- if(fs&&FAV(fs)->flag2&VF2BOXATOP1){
+ if(FAV(fs)->flag2&VF2BOXATOP1){
   I mr=FAV(fs)->mr; rr=rr<mr?rr:mr;   // obsolete efr(rr,mr,rr);   scaf should be rr=
   state |= (FAV(fs)->flag2&VF2BOXATOP1)>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // If this is BOXATOP, set so for loop.  Don't touch fs yet, since we might not loop
   state &= ~((FAV(fs)->flag2&VF2ATOPOPEN1)>>(VF2ATOPOPEN1X-ZZFLAGBOXATOPX));  // We don't handle &.> here; ignore it
@@ -125,27 +125,25 @@ A jtrank1ex0(J jt,AD * RESTRICT w,A fs,AF f1){F1PREFIP;PROLOG(0041);A z,virtw;
  if(AN(w)){  // if no cells, go handle fill before we advance over flags
   // Here there are cells to execute on.  Collect ATOP flags
 
-  if(fs){   // calls not from " may not have fs
-   // RANKONLY verbs contain an invalid f1 pointer (it was used to get to a call to here).  We have to step over the RANKONLY to get to what we can execute
-   while(FAV(fs)->flag2&VF2RANKONLY1){fs=FAV(fs)->fgh[0]; f1=FAV(fs)->valencefns[0];}
+  // RANKONLY verbs contain an invalid f1 pointer (it was used to get to a call to here).  We have to step over the RANKONLY to get to what we can execute
+  while(FAV(fs)->flag2&VF2RANKONLY1){fs=FAV(fs)->fgh[0]; f1=FAV(fs)->valencefns[0];}
 
-   while(1){  // loop collecting ATOPs
-    I fstate=(FAV(fs)->flag2&(VF2BOXATOP1|VF2ATOPOPEN1))>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // extract <@ and @> status bits from f
+  while(1){  // loop collecting ATOPs
+   I fstate=(FAV(fs)->flag2&(VF2BOXATOP1|VF2ATOPOPEN1))>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // extract <@ and @> status bits from f
 // obsolete     if(fstate&state||!fstate)break;  // If this f overlaps with old, or it's not just a flag node, we have to stop
-    if((((fstate&state)-1)&-fstate)>=0)break;  // If this f overlaps with old, or it's not just a flag node, we have to stop
-    if(fstate&ZZFLAGATOPOPEN1){
-     // @> &> &.>
-     //  Advance to the f of f@>
-     fs=FAV(fs)->fgh[0]; f1=FAV(fs)->valencefns[0];
-    }else{
-     // <@: <@ <& <&:
-     // Because the outermost rank is 0, <@f by itself is OK; but later, as in (<@f)@>, it is not.  <@:f is.  So check for infinite rank
-     if(state&ZZFLAGATOPOPEN1 && FAV(fs)->mr<RMAX)break;  // not first, and not infinite rank: ignore
-     // Advance fs to the g of <@g
-     fs=FAV(fs)->fgh[1+((FAV(fs)->flag2>>VF2ISCCAPX)&1)]; f1=FAV(fs)->valencefns[0];
-    }
-    state|=fstate;  // We accepted the new f, so take its flags
+   if((((fstate&state)-1)&-fstate)>=0)break;  // If this f overlaps with old, or it's not just a flag node, we have to stop
+   if(fstate&ZZFLAGATOPOPEN1){
+    // @> &> &.>
+    //  Advance to the f of f@>
+    fs=FAV(fs)->fgh[0]; f1=FAV(fs)->valencefns[0];
+   }else{
+    // <@: <@ <& <&:
+    // Because the outermost rank is 0, <@f by itself is OK; but later, as in (<@f)@>, it is not.  <@:f is.  So check for infinite rank
+    if(state&ZZFLAGATOPOPEN1 && FAV(fs)->mr<RMAX)break;  // not first, and not infinite rank: ignore
+    // Advance fs to the g of <@g
+    fs=FAV(fs)->fgh[1+((FAV(fs)->flag2>>VF2ISCCAPX)&1)]; f1=FAV(fs)->valencefns[0];
    }
+   state|=fstate;  // We accepted the new f, so take its flags
   }
 
   A *wav;   // virtwk is offset of virtual block/pointer to next box
@@ -190,7 +188,7 @@ A jtrank1ex0(J jt,AD * RESTRICT w,A fs,AF f1){F1PREFIP;PROLOG(0041);A z,virtw;
   // However, if the error is a non-computational error, like out of memory, it
   // would be wrong to ignore it, because the verb might execute erroneously with no
   // indication that anything unusual happened.  So fail then
-  if(!(fs&&FAV(fs)->flag2&VF2BOXATOP1)){
+  if(!(FAV(fs)->flag2&VF2BOXATOP1)){
    d=jt->uflags.us.cx.cx_c.db; jt->uflags.us.cx.cx_c.db=0; z=CALL1(f1,virtw,fs); jt->uflags.us.cx.cx_c.db=d;   // normal execution on fill-cell
    if(jt->jerr){if(EMSK(jt->jerr)&EXIGENTERROR)RZ(z); z=num(0); RESETERR;}  // use 0 as result if error encountered
   }else{
@@ -239,7 +237,7 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,I lr,I rr,I lcr,I rcr,AF f
  I state=ZZFLAGINITSTATE;  // init flags, including zz flags
 
  // RANKONLY verbs were handled in the caller to this routine, but fs might be RANKATOP.  In that case we can include its rank in the loop here, which will save loop setups
- if(fs&&(I)(((FAV(fs)->flag2&(VF2RANKATOP2|VF2BOXATOP2))-1)|(-((rr^rcr)|(lr^lcr))))>=0){  // prospective new ranks to include
+ if((I)(((FAV(fs)->flag2&(VF2RANKATOP2|VF2BOXATOP2))-1)|(-((rr^rcr)|(lr^lcr))))>=0){  // prospective new ranks to include
   I t=(I)lr(fs); lr=t<lr?t:lr; t=(I)rr(fs); rr=t<rr?t:rr;   // get the ranks if we accept the new cell
 // obsolete   efr(lr,lr,(I)lr(fs)); efr(rr,rr,(I)rr(fs));
   state |= (FAV(fs)->flag2&VF2BOXATOP2)>>(VF2BOXATOP2X-ZZFLAGBOXATOPX);  // If this is BOXATOP, set so for loop.  Don't touch fs yet, since we might not loop
@@ -427,27 +425,25 @@ A jtrank2ex0(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,AF f2){F2PREFIP;PROLOG(00
   // we would have to keep track of whether we passed an ATOPOPEN.  But then we could avoid executing the fill cell any time the is a BOXATOP, even down the stack.  As it is, the only time we
   // elide the execution is when BOXATOP occurs at the first node, i.e. for an each that is not boxed
 
-  if(fs){  // calls not from " will never have special processing
-   // RANKONLY verbs contain an invalid f1 pointer (it was used to get to a call to here).  We have to step over the RANKONLY to get to what we can execute
-   while(FAV(fs)->flag2&VF2RANKONLY2){fs=FAV(fs)->fgh[0]; f2=FAV(fs)->valencefns[1];}
+  // RANKONLY verbs contain an invalid f1 pointer (it was used to get to a call to here).  We have to step over the RANKONLY to get to what we can execute
+  while(FAV(fs)->flag2&VF2RANKONLY2){fs=FAV(fs)->fgh[0]; f2=FAV(fs)->valencefns[1];}
 
-   while(1){  // loop collecting ATOPs
-    I fstate=(FAV(fs)->flag2&(VF2BOXATOP2|VF2ATOPOPEN2A|VF2ATOPOPEN2W))>>(VF2BOXATOP2X-ZZFLAGBOXATOPX);  // extract <@ and @> status bits from f
+  while(1){  // loop collecting ATOPs
+  I fstate=(FAV(fs)->flag2&(VF2BOXATOP2|VF2ATOPOPEN2A|VF2ATOPOPEN2W))>>(VF2BOXATOP2X-ZZFLAGBOXATOPX);  // extract <@ and @> status bits from f
 // obsolete     if(fstate&state||!fstate)break;  // If this f overlaps with old, or it's not a flag-only node, we have to stop
-    if((((fstate&state)-1)&-fstate)>=0)break;  // If this f overlaps with old, or it's not just a flag node, we have to stop
-    if(fstate&ZZFLAGATOPOPEN2W){
-     // @> &> &.>
-     //  Advance to the f of f@>
-     fs=FAV(fs)->fgh[0]; f2=FAV(fs)->valencefns[1];
-    }else{
-     // <@: <@ <& <&:
-     // Because the outermost rank is 0, <@f by itself is OK; but later, as in (<@f)@>, it is not.  <@:f is.  So check for infinite rank
-     if(state&ZZFLAGATOPOPEN2W && FAV(fs)->mr<RMAX)break;  // not first, and not infinite rank: ignore
-     // Advance fs to the g of <@g
-     fs=FAV(fs)->fgh[1+((FAV(fs)->flag2>>VF2ISCCAPX)&1)]; f2=FAV(fs)->valencefns[1];
-    }
-    state|=fstate;  // We accepted the new f, so take its flags
+   if((((fstate&state)-1)&-fstate)>=0)break;  // If this f overlaps with old, or it's not just a flag node, we have to stop
+   if(fstate&ZZFLAGATOPOPEN2W){
+    // @> &> &.>
+    //  Advance to the f of f@>
+    fs=FAV(fs)->fgh[0]; f2=FAV(fs)->valencefns[1];
+   }else{
+    // <@: <@ <& <&:
+    // Because the outermost rank is 0, <@f by itself is OK; but later, as in (<@f)@>, it is not.  <@:f is.  So check for infinite rank
+    if(state&ZZFLAGATOPOPEN2W && FAV(fs)->mr<RMAX)break;  // not first, and not infinite rank: ignore
+    // Advance fs to the g of <@g
+    fs=FAV(fs)->fgh[1+((FAV(fs)->flag2>>VF2ISCCAPX)&1)]; f2=FAV(fs)->valencefns[1];
    }
+   state|=fstate;  // We accepted the new f, so take its flags
   }
 
   // allocate the virtual blocks that we will use for the arguments, and fill in the shape of a cell of each
@@ -509,7 +505,7 @@ A jtrank2ex0(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,AF f2){F2PREFIP;PROLOG(00
   // would be wrong to ignore it, because the verb might execute erroneously with no
   // indication that anything unusual happened.  So fail then
 
-  if(!(fs&&FAV(fs)->flag2&VF2BOXATOP2)){
+  if(!(FAV(fs)->flag2&VF2BOXATOP2)){
    if(!AN(a)){RZ(virta=filler(a));}else{virta = virtual(a,0,0); AN(virta)=1;}  // if there are cells, use first atom; else fill atom
    if(!AN(w)){RZ(virtw=filler(w));}else{virtw = virtual(w,0,0); AN(virtw)=1;}
    d=jt->uflags.us.cx.cx_c.db; jt->uflags.us.cx.cx_c.db=0; z=CALL2(f2,virta,virtw,fs); jt->uflags.us.cx.cx_c.db=d;   // normal execution on fill-cell

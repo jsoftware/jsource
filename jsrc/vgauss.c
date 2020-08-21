@@ -7,7 +7,7 @@
 
 // w is a rational matrix
 F1(jtgausselm){I c,e,i,j,r,r1,*s;Q p,*u,*v,*x;
- F1RANK(2,jtgausselm,0);
+ F1RANK(2,jtgausselm,DUMMYSELF);
  ASSERT(RAT&AT(w),EVNONCE);
  // This routine modifies w in place.  If w is virtual, that causes an error, because the blocks referred to in
  // w are actually in the backer, and the backer has had ra() applied; so blocks in the backer are going to be freed

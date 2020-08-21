@@ -53,7 +53,7 @@ F1(jtsphwmk){
 }
 
 F1(jtspit){A z;I k; 
- F1RANK(1,jtspit,0); 
+ F1RANK(1,jtspit,DUMMYSELF); 
  jt->bytesmax=k=spstarttracking();  // start keeping track of bytesmax
  FDEPINC(1); z=exec1(w); FDEPDEC(1);
  spendtracking();  // end tracking, even if there was an error
@@ -174,7 +174,7 @@ __int64 GetMachineCycleCount()
 F1(jttss){ASSERTMTV(w); R scf(tod()-jt->tssbase);}
 
 F2(jttsit2){A z;D t;I n;
- F2RANK(0,1,jttsit2,0);
+ F2RANK(0,1,jttsit2,DUMMYSELF);
  RE(n=i0(a));
  FDEPINC(1);  // No ASSERTs/returns till the DEPDEC below
  t=qpc(); 

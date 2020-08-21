@@ -106,7 +106,7 @@ F1(jtright1){RETF(w);}
 
 // i. y
 F1(jtiota){A z;I m,n,*v;
- F1RANK(1,jtiota,0);
+ F1RANK(1,jtiota,DUMMYSELF);
  if(AT(w)&XNUM+RAT)R cvt(XNUM,iota(vi(w)));
  RZ(w=vi(w)); n=AN(w); v=AV(w);
  if(1==n){m=*v; R 0>m?apv(-m,-m-1,-1L):IX(m);}
@@ -117,7 +117,7 @@ F1(jtiota){A z;I m,n,*v;
 
 // i: w
 F1(jtjico1){A y,z;B b;D d,*v;I c,m,n; 
- F1RANK(0,jtjico1,0);
+ F1RANK(0,jtjico1,DUMMYSELF);
  RZ(y=cvt(FL,rect(w))); v=DAV(y); d=*v;  // convert to complex, d=real part of value
  RE(m=v[1]?i0(cvt(INT,tail(y))):i0(tymes(mag(w),num(2))));  // m=#steps: imaginary part if nonzero; otherwise 2*|w
  ASSERT(0<m||!m&&0==d,EVDOMAIN);  // error if imag part was negative, or 0 unless d is also 0
@@ -138,7 +138,7 @@ A jttaker(J jt,I n,A w){RZ(w); A a,z; RZ(a=sc(n)); R IRS2(a,w,0, RMAX,1L,jttake,
 A jtdropr(J jt,I n,A w){RZ(w); A a,z; RZ(a=sc(n)); R IRS2(a,w,0, RMAX,1L,jtdrop,z);}  // n }."1 w
 
 F1(jticap){A a,e;I n;P*p;
- F1RANK(1,jticap,0);
+ F1RANK(1,jticap,DUMMYSELF);
  SETIC(w,n);
  if(SB01&AT(w)){
   p=PAV(w); a=SPA(p,a); e=SPA(p,e); 

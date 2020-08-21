@@ -263,7 +263,7 @@ static B jtth2ctrl(J jt,A a,A*ep,A*mp,A*dp,A*sp,I*zkp){A da,ea,ma,s;B b=1,*ev,r,
 
 // x ": y
 F2(jtthorn2){PROLOG(0050);A da,ea,h,ma,s,y,*yv,z;B e,*ev;C*sv,*wv,*zv;I an,c,d,*dv,k,m,*mv,n,r,sk,t,wk,*ws,zk;
- F2RANK(1,RMAX,jtthorn2,0);  // apply rank 1 _
+ F2RANK(1,RMAX,jtthorn2,DUMMYSELF);  // apply rank 1 _
  // From here on the a arg is rank 0 or 1
  an=AN(a); t=AT(w);  // an=#atoms of a, t=type of w
  if(t&BOX)R th2box(a,w);  // If boxed w, go handle as special case

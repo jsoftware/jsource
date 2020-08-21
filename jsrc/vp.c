@@ -14,7 +14,7 @@ static I jtord(J jt,A w){I j,n,*v,z;
 }  // the order of the permutation w: max element of w (could be negative)
 
 F1(jtpinv){I m=-1,n,*v;  // empty perm will set m=0
- F1RANK(1,jtpinv,0);
+ F1RANK(1,jtpinv,DUMMYSELF);
  RZ(w=vi(w));
  n=AN(w); v=AV(w);
  DO(n, I r=v[i]^REPSGN(v[i]); m=r>m?r:m;); ++m;  // take 1s-comp of negative ele#, then find max; add 1 to get #eles
@@ -84,10 +84,10 @@ static A jtdfc(J jt,I n,A w){PROLOG(0082);A b,q,*wv,z;B*bv;I c,j,qn,*qv,*x;
  EPILOG(z);
 }    /* direct from cycle */
 
-F1(jtcdot1){F1RANK(1,jtcdot1,0); R BOX&AT(w)?dfc(ord(raze(w)),w):cfd(w);}
+F1(jtcdot1){F1RANK(1,jtcdot1,DUMMYSELF); R BOX&AT(w)?dfc(ord(raze(w)),w):cfd(w);}
 
 F2(jtcdot2){A p;I k;
- F2RANK(1,RMAX,jtcdot2,0);
+ F2RANK(1,RMAX,jtcdot2,DUMMYSELF);
  SETIC(w,k);
  RZ(p=BOX&AT(a)?dfc(k,a):pfill(k,a));
  R AR(w)?from(p,w):w;
@@ -128,7 +128,7 @@ static F1(jtrfd){A z;I j,k,m,n,r,*s,*x;
 }    /* reduced from direct */
 
 F1(jtadot1){A y;I n;
- F1RANK(1,jtadot1,0);
+ F1RANK(1,jtadot1,DUMMYSELF);
  RZ(y=BOX&AT(w)?cdot1(w):pfill(ord(w),w));
  SETIC(y,n);
  R base2(cvt(XNUM,apv(n,n,-1L)),rfd(y));

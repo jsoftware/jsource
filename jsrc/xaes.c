@@ -38,7 +38,7 @@ F2(jtaes2)
   int n1,padding=1;
   A z,*av,dec;
   UC *out,*key,*iv;
-  F2RANK(1,1,jtaes2,0);  // do rank loop if necessary
+  F2RANK(1,1,jtaes2,DUMMYSELF);  // do rank loop if necessary
   ASSERT(AT(a)&BOX,EVDOMAIN);
   ASSERT(1>=AR(a),EVRANK);
   ASSERT(AN(a)>=3&&AN(a)<=4,EVLENGTH);

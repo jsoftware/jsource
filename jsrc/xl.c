@@ -72,7 +72,7 @@ F1(jtjlocks){A y; ASSERTMTV(w); y=take(sc(jt->flkn),jt->flkd); R grade2(y,y);}
      /* return the locks, a 3-column table of (number,index,length) */
 
 F1(jtjlock){B b;I*v;
- F1RANK(1,jtjlock,0);
+ F1RANK(1,jtjlock,DUMMYSELF);
  RZ(w=vi(w)); 
  ASSERT(LKC==AN(w),EVLENGTH);
  v=AV(w); RE(vfn((F)*v)); ASSERT(0<=v[1]&&0<=v[2],EVDOMAIN); 
@@ -100,7 +100,7 @@ B jtunlk(J jt,I x){I j=0,*v=AV(jt->flkd);
 }    /* unlock all existing locks for file# x */
 
 F1(jtjunlock){
- F1RANK(1,jtjunlock,0); 
+ F1RANK(1,jtjunlock,DUMMYSELF); 
  ASSERT(INT&AT(w),EVDOMAIN); 
  R unlj(i0(indexof(jt->flkd,w))); 
 }    /* w is (number,index,length); unlock the specified region */

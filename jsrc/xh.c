@@ -54,7 +54,7 @@ R cstr("");
 }
 
 F1(jthost){A z;
- F1RANK(1,jthost,0);
+ F1RANK(1,jthost,DUMMYSELF);
  RZ(w=vslit(w));
 // #if SY_WINCE
 #if SY_WINCE || SY_WIN32
@@ -118,7 +118,7 @@ F1(jthost){A z;
 }
 
 F1(jthostne){
- F1RANK(1,jthostne,0);
+ F1RANK(1,jthostne,DUMMYSELF);
  RZ(w=vslit(w));
 // #if SY_WINCE
 #if SY_WINCE || SY_WIN32 || defined(TARGET_IOS)
@@ -160,7 +160,7 @@ F1(jthostio){C*s;A z;F*pz;int fi[2],fo[2],r;int fii[2],foi[2];
  if(pipe(fi)==-1) ASSERT(0,EVFACE);
  if(pipe(fo)==-1){CL(fi); ASSERT(0,EVFACE);}
  fii[0]=fi[0];fii[1]=fi[1];foi[0]=fo[0];foi[1]=fo[1];
- F1RANK(1,jthostio,0);
+ F1RANK(1,jthostio,DUMMYSELF);
  RZ(w=vs(w));
  s=CAV(str0(w)); GAT0(z,INT,3,1); pz=(F*)AV(z);
  if((r=pipe(fii))==-1||pipe(foi)==-1){if(r!=-1)CL(fi); ASSERT(0,EVFACE);}

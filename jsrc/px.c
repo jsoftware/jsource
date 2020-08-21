@@ -32,7 +32,7 @@ F1(jtexec1){A z;
  RZ(w);
  if(AT(w)&NAME){z=nameref(w);  // the case ".@'name' which is the fastest way to refer to a deferred name
  }else{
-  F1RANK(1,jtexec1,0);
+  F1RANK(1,jtexec1,DUMMYSELF);
   A savself = jt->sf;  // in case we are in a recursion, preserve the restart point
   STACKCHKOFL FDEPINC(1); z=parse(tokens(vs(w),1+(AN(jt->locsyms)>1))); jt->asgn=0; FDEPDEC(1);
   jt->sf=savself;
@@ -74,7 +74,7 @@ F1(jtexg){A*v,*wv,x,y,z;I n;
 L* jtjset(J jt,C*name,A x){R symbisdel(nfs((I)strlen(name),name),x,jt->global);}
 
 F2(jtapplystr){PROLOG(0054);A fs,z;
- F2RANK(1,RMAX,jtapplystr,0);
+ F2RANK(1,RMAX,jtapplystr,DUMMYSELF);
  RZ(fs=parse(tokens(vs(a),1+(AN(jt->locsyms)>1))));
  ASSERT(VERB&AT(fs),EVSYNTAX);
  STACKCHKOFL FDEPINC(d=fdep(fs)); z=CALL1(FAV(fs)->valencefns[0],w,fs); FDEPDEC(d);

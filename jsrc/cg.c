@@ -102,6 +102,7 @@ PRIM jtfxself[2]={ {{0,0,0,0,0,0,0},{{{jtfx,0},{0,0,0},0,0,0,0,0,0,0}}} , {{1,0,
 
 // run jtfx on each box in w, turning AR into an A block
 // self is a parm passed through to jtfx, coming from jtfxself above.  if AK(self) is nonzero, we return nouns as is
+// Result claims to be an array of boxes, but each box holds a function
 DF1(jtfxeach){RETF(every(w,self));}
 // obsolete // run jtfx on each box in w, EXCEPT on nouns, which we return as is
 // obsolete F1(jtfxeachacv){RETF(every(w,w,jtfx));}  // the second w is just any nonzero

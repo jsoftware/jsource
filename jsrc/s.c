@@ -548,7 +548,7 @@ L* jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;L*e;
   }
  }
  e->sn=jt->slisti;  // Save the script in which this name was defined
- if(jt->stch&&(m<n||jt->locsyms!=g&&jt->stloc!=g))e->flag|=LCH;  // update 'changed' flag if enabled, and locative or assignment to global namespace
+ if(unlikely(jt->stch)/* obsolete &&(m<n||jt->locsyms!=g&&jt->stloc!=g)*/)e->flag|=LCH;  // update 'changed' flag if enabled - no harm in marking locals too
  R e;   // return the block for the assignment
 }    /* a: name; w: value; g: symbol table */
 

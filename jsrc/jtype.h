@@ -76,6 +76,7 @@ typedef AD *A;
 #define JTINPLACEA      (((I)1)<<JTINPLACEAX)
 // Next flag must match result.h and VF2 flags, and must be above ZZFLAGBOXATOP
 #define JTWILLBEOPENEDX 4   // result of this exec will be opened immediately, so it can contain virtual references to an input to the current verb
+     // Note: this flag MUST NOT equal BOX
 #define JTWILLBEOPENED  (((I)1)<<JTWILLBEOPENEDX)
 #define JTEMPTYX        5  // in va2, this bit indicates the result is empty
 #define JTEMPTY         (((I)1)<<JTEMPTYX)
@@ -415,8 +416,11 @@ typedef I SI;
 #define DTYPE(t)        (((t)&(SB01|SLIT|SINT|SFL|SCMPX|SBOX))>>(SB01X-B01X))
 
 // Flags in the count field of type A
-#define ACINPLACE       (I)((((UI)-1)>>1)^(UI)-1)  // set when this block CAN be used in inplace operations.  Always the sign bit.
-#define ACPERMANENT     ((I)((UI)ACINPLACE>>1))  // next-to-top bit, set in blocks that should never modify the AC field
+#define ACINPLACEX      (BW-1)
+// obsolete #define ACINPLACE       (I)((((UI)-1)>>1)^(UI)-1)  // set when this block CAN be used in inplace operations.  Always the sign bit.
+#define ACINPLACE       ((I)((UI)1<<ACINPLACEX))  // set when this block CAN be used in inplace operations.  Always the sign bit.
+#define ACPERMANENTX    (BW-2)
+#define ACPERMANENT     ((I)1<<ACPERMANENTX)  // next-to-top bit, set in blocks that should never modify the AC field
 #define ACUSECOUNT      (I)1  // lower bits used for usecount
 #define ACIPNO(a)       (AC(a)&=~ACINPLACE)
 #define ACIPYES(a)      (AC(a)|=ACINPLACE)

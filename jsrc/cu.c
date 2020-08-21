@@ -21,35 +21,81 @@ static A jteverysp(J jt,A w,A fs){A*wv,x,z,*zv;P*wp,*zp;
 #define EVERYI(exp)  {RZ(x=exp); INCORP(x); RZ(*zv++=x); ASSERT(!(SPARSE&AT(x)),EVNONCE);}
      /* note: x can be non-noun */
 
-// Routine for internal application of u&.>
-// Does not perform the special functions of rank1ex0, namely creating recursive result and checking for BOXATOP
-// Does not inplace; if we modify it to inplace, we must make sure to turn off inplacing of contents of x/y if the arg itself is not inplaceable
-// We keep this around because it is used for internal calls.
-// It is also the recursion mechanism for L: and S:; that would require looking at a special flag during ex0 to treat that as &.>
-// The self argument is the verb to be applied to each cell, thus descibes the f in f&.> .  For certain calls, like L: S:, it may be incomplete having just
-// enought to execute the specific routine.  All we look at here is the valencefn to call
-DF1(jtevery){A*wv,x,z,*zv;
- RZ(w);
- if(unlikely(SPARSE&AT(w)))R everysp(w,self);
- AF f1=FAV(self)->valencefns[0];
- GATV(z,BOX,AN(w),AR(w),AS(w));
- I natoms=AN(w); if(!natoms)R z;  // exit if no result atoms
- zv=AAV(z);
- A virtw; I boxedw;
+// u&.>, but w may be a gerund, which makes the result a list of functions masquerading as an aray of boxes
+static DF1(jteveryself){R jtevery(jt,w,FAV(self)->fgh[0]);}   // replace u&.> with u and process
+A jtevery(J jt, A w, A fs){A * RESTRICT wv,x,z,* RESTRICT zv;
+ RZ(w);F1PREFIP;
+ if(unlikely(SPARSE&AT(w)))R everysp(w,fs);
+ AF f1=FAV(fs)->valencefns[0];   // pointer to function to call
+ A virtw; I flags;  // flags are: ACINPLACE=pristine result; JTWILLBEOPENED=nonrecursive result; BOX=input was boxed; ACPERMANENT=input was inplaceable pristine, contents can be inplaced
+ flags=ACINPLACE|((I)jtinplace&JTWILLBEOPENED)|(AT(w)&BOX)|((AC(w)>>(ACINPLACEX-ACPERMANENTX))&((I)jtinplace<<(ACPERMANENTX-JTINPLACEWX))&(AFLAG(w)<<(ACPERMANENTX-AFPRISTINEX))&ACPERMANENT);
+ // Get input pointer
  I virtblockw[NORMAH];  // space for a virtual block of rank 0
- if(boxedw=BOX&AT(w))virtw=*(wv=AAV(w));  // if input is boxed, point to first box
+ if(likely(flags&BOX))virtw=*(wv=AAV(w));  // if input is boxed, point to first box
  else{
   // if input is not boxed, use a faux-virtual block to point to the atoms.  Repurpose unneeded wv to hold length
-  fauxvirtual(virtw,virtblockw,w,0,ACUC1); AN(virtw)=1; wv=(A*)bpnoun(AT(w));
+  fauxvirtual(virtw,virtblockw,w,0,ACUC1); AN(virtw)=1; wv=(A*)bpnoun(AT(w));  // note if w has gerunds, it is always boxed & doesn't go through here
  }
- while(1){EVERYI(CALL1(f1,virtw,self)); if(!--natoms)break; if(boxedw)virtw=*++wv;else AK(virtw)+=(I)wv;}  // break to avoid fetching over the end of the input
+ // Allocate result area
+ GATV(z,BOX,AN(w),AR(w),AS(w));
+ AFLAG(z)=(~flags<<(BOXX-JTWILLBEOPENEDX))&BOX;  // if WILLBEOPENED is NOT set, make the result a recursive box
+ I natoms=AN(w); if(!natoms)R z;  // exit if no result atoms
+ zv=AAV(z);
+ // Get jt flags to pass to next level - only the inplacing flag, if the routine can take it.  We enable inplacing to fs if our input w was inplaceable.  To get actual inplacing we also have to make the contents inplaceable
+ jtinplace=(J)((I)jt+((flags>>(ACPERMANENTX-JTINPLACEWX))&(FAV(fs)->flag>>(VJTFLGOK1X-JTINPLACEWX))&JTINPLACEW));
+ while(1){
+  // If the input was pristine, flag the contents as inplaceable UNLESS they are PERMANENT
+  RZ(x=CALL1IP(f1,virtw,fs)); ASSERT(!(SPARSE&AT(x)),EVNONCE); // run the user's verb
+  // If z is DIRECT inplaceable, it must be unique and we can inherit them into a pristine result.  Otherwise clear pristinity
+  if(AT(x)&DIRECT){
+    flags&=SGNIFPRISTINABLE(AC(x))|~ACINPLACE;  // sign bit of flags will hold PRISTINE status of result: 1 if all DIRECT and inplaceable or PERMANENT
+  }else{
+    // not DIRECT.  result must be non-pristine, and we need to turn off pristinity of x since we are going to incorporate it
+    flags&=~ACINPLACE;  // result not pristine
+    {I aflg=AFLAG(x); A awbase=x; if(unlikely(aflg&AFVIRTUAL)){awbase=ABACK(x); aflg=AFLAG(awbase);} AFLAG(awbase)=aflg&~AFPRISTINE;}  // x can never be pristine, since is being incorped
+  }
+  // prepare the result so that it can be incorporated into the overall boxed result
+  if(!(flags&JTWILLBEOPENED)) {
+   // normal case where we are creating the result box.  Must incorp the result
+   realizeifvirtual(x); ra(x);   // Since we are moving the result into a recursive box, we must ra() it.  This plus rifv plus pristine removal=INCORPRA.  We could save some fetches by bundling this code into the RIRECT path
+  } else {
+   // result will be opened.  It is nonrecursive.  description in result.h.  We don't have to realize or ra
+   if(AFLAG(x)&AFUNINCORPABLE){RZ(x=clonevirtual(x));}
+   // since we are adding the block to a NONrecursive boxed result,  we DO NOT have to raise the usecount of the block.  And we don't have to mark the usecount non-inplaceable
+#if 0  // not clear this is worth doing
+   if(ZZFLAGWORD&ZZFLAGCOUNTITEMS){
+    // if the result will be razed next, we will count the items and store that in AM.  We will also ensure that the result boxes' contents have the same type
+    // and item-shape.  If one does not, we turn off special raze processing.  It is safe to take over the AM field in this case, because we know this is WILLBEOPENED and
+    // (1) will never assemble or epilog; (2) will feed directly into a verb that will discard it without doing any usecount modification
+#if !ZZSTARTATEND  // going forwards
+    A result0=AAV(zz)[0];   // fetch pointer to the first 
+#else
+    A result0=AAV(zz)[AN(zz)-1];  // fetch pointer to first value stored, which is in the last position
+#endif
+    I* zs=AS(z); I* ress=AS(result0); I zr=AR(z); I resr=AR(result0); //fetch info
+    I diff=TYPESXOR(AT(z),AT(result0))|(MAX(zr,1)^MAX(resr,1)); resr=(zr>resr)?resr:zr;  DO(resr-1, diff|=zs[i+1]^ress[i+1];)  // see if there is a mismatch.  Fixed loop to avoid misprediction
+    ZZFLAGWORD^=(diff!=0)<<ZZFLAGCOUNTITEMSX;  // turn off bit if so 
+    I nitems=zs[0]; nitems=(zr==0)?1:nitems; AM(zz)+=nitems;  // add new items to count in zz.  zs[0] will never segfault, even if z is empty
+   }
+   // Note: by checking COUNTITEMS inside WILLBEOPENED we suppress support for COUNTITEMS in \. which sets WILLBEOPENEDNEVER.  It would be safe to
+   // count then, because no virtual contents would be allowed.  But we are not sure that the EPILOG is safe, and this path is now off to the side
+#endif
+  }
+  // Store result & advance to next cell
+  *zv++=x;
+  if(!--natoms)break;  // break to avoid fetching over the end of the input
+  if(flags&BOX)virtw=*++wv;else AK(virtw)+=(I)wv;  // advance to next input cell - either by fetching the next box or advancing the virtual pointer to the next atom
+ }
+ // indicate pristinity of result
  R z;
 }
 
-DF2(jtevery2){A*av,*wv,x,z,*zv;
+// u&.>, but w may be a gerund, which makes the result a list of functions masquerading as an aray of boxes
+static DF2(jtevery2self){R jtevery2(jt,a,w,FAV(self)->fgh[0]);}   // replace u&.> with u and process
+A jtevery2(J jt, A a, A w, A fs){A*av,*wv,x,z,*zv;
 // todo kludge should rewrite with single flag word
- RZ(a&&w); 
- AF f2=FAV(self)->valencefns[1];
+ RZ(a&&w);F2PREFIP;
+ AF f2=FAV(fs)->valencefns[1];
  // Get the number of atoms, and the number of times to repeat the short side.
  // The repetition is the count of the surplus frame.
  I rpti;  // number of times short frame must be repeated
@@ -82,9 +128,9 @@ DF2(jtevery2){A*av,*wv,x,z,*zv;
  }
  // Loop for each cell.  Increment the pointer unless the side is being repeated and the repeat-count has not expired.
  // Break in the middle of the loop to avoid fetching out of bounds to get the next address from [aw]v
-// obsolete  I rpt=rpti; while(1){EVERYI(CALL2(f2,virta,virtw,self)); if(!--natoms)break; if(!(flags&2)||(--rpt==0&&(rpt=rpti,1))){if(flags&(BOX<<1))virta=*++av;else AK(virta)+=(I)av;} if(!(flags&1)||(--rpt==0&&(rpt=rpti,1))){if(flags&BOX)virtw=*++wv;else AK(virtw)+=(I)wv;} }
+// obsolete  I rpt=rpti; while(1){EVERYI(CALL2(f2,virta,virtw,fs)); if(!--natoms)break; if(!(flags&2)||(--rpt==0&&(rpt=rpti,1))){if(flags&(BOX<<1))virta=*++av;else AK(virta)+=(I)av;} if(!(flags&1)||(--rpt==0&&(rpt=rpti,1))){if(flags&BOX)virtw=*++wv;else AK(virtw)+=(I)wv;} }
  I rpt=rpti=-rpti; while(1){
-  EVERYI(CALL2(f2,virta,virtw,self)); if(!--natoms)break;
+  EVERYI(CALL2(f2,virta,virtw,fs)); if(!--natoms)break;
   ++rpt; I endrpt=REPSGN(rpt); rpt=rpt==0?rpti:rpt;  // endrpt=0 if end of repeat, otherwise ~0.  Reload rpt at end
   if(!(flags&endrpt&2)){if(flags&(BOX<<1))virta=*++av;else AK(virta)+=(I)av;}  // advance unrepeated arg
   if(!(flags&endrpt&1)){if(flags&BOX)virtw=*++wv;else AK(virtw)+=(I)wv;}
@@ -134,7 +180,7 @@ static DF1(jtunderai1){DECLF;A x,y,z;B b;I j,n,*u,*v;UC f[256],*wv,*zv;
 }    /* f&.(a.&i.) w */
 
 // u&.v
-F2(jtunder){A x,wvb=w;AF f1,f2;B b,b1;C c,uid;I r,gside=-1;V*u,*v;
+F2(jtunder){A x,wvb=w;AF f1,f2;B b,b1;C c,uid;I gside=-1;V*u,*v;
  RZ(a&&w);
  if(AT(w)&BOX){
   // Must be the gerund form.  Extract v and remember which argument it will apply to
@@ -143,26 +189,30 @@ F2(jtunder){A x,wvb=w;AF f1,f2;B b,b1;C c,uid;I r,gside=-1;V*u,*v;
   gside=AN(AAV(w)[0])==0;  // the index to the argument v will act on (or -1 if not gerund)
   wvb=fx(AAV(w)[gside]);  // turn the gerund into a verb
  }
- ASSERTVV(a,wvb);
- c=0; f1=0; f2=0; r=mr(wvb); v=FAV(wvb);
+ ASSERTVV(a,wvb); v=FAV(wvb);
+ c=0; f1=0; f2=0;
  // Set flag with ASGSAFE status of u/v, and inplaceable.  It will stay inplaceable unless we select an uninplaceable processing routine, of we
  // learn that v is uninplaceable.  If v is unknown, keep inplaceable, because we will later evaluate the compound & might be able to inplace then
  I flag = (FAV(a)->flag&v->flag&VASGSAFE) + (VJTFLGOK1|VJTFLGOK2);
  // If v is WILLOPEN, so will the compound be - for all valences
- I flag2=(FAV(wvb)->flag2&(VF2WILLOPEN1|VF2USESITEMCOUNT1))*((VF2WILLOPEN1+VF2WILLOPEN2A+VF2WILLOPEN2W)>>VF2WILLOPEN1X);
- switch(v->id&gside){  // never special if gerund
-  case COPE:  f1=jtunderh10; f2=jtunderh20; flag&=~(VJTFLGOK1|VJTFLGOK2); flag2|=VF2ATOPOPEN1|VF2ATOPOPEN2A|VF2ATOPOPEN2W|VF2BOXATOP1|VF2BOXATOP2; break;   // &.>
-  case CFORK: c=ID(v->fgh[2]); /* fall thru */
-  case CAMP:  
-   u=FAV(a);  // point to a in a&.w.  w is f1&g1 or (f1 g1 h1)
-   if(b1=CSLASH==(uid=u->id)){x=u->fgh[0]; if(AT(x)&VERB){u=FAV(x);uid=u->id;}else uid=0;}   // cases: f&.{f1&g1 or (f1 g1 h1)}  b1=0    f/&.{f1&g1 or (f1 g1 h1)}   b1=1
-   b=CBDOT==uid&&(x=u->fgh[1],(((AR(x)-1)&SGNIF(AT(x),INTX))<0)&&BETWEENC(IAV(x)[0],16,32));   // b if f=m b. where m is atomic int 16<=m<=32
-   if(CIOTA==ID(v->fgh[1])&&(!c|((c&~1)==CLEFT))&&equ(ds(CALP),v->fgh[0])){   // w is  {a.&i.  or  (a. i. ][)}
-    f1=b& b1?jtbitwiseinsertchar:jtunderai1;    // m b./ &. {a.&i.  or  (a. i. ][)}   or  f &. {a.&i.  or  (a. i. ][)}
-    f2=((uid==CMAX)|(uid==CMIN))>b1?(AF)jtcharfn2:f2; f2=b>b1?(AF)jtbitwisechar:f2;   // m b. &. {a.&i.  or  (a. i. ][)}   or  >. &. {a.&i.  or  (a. i. ][)}   or f &. {a.&i.  or  (a. i. ][)}
-    flag&=~(VJTFLGOK1|VJTFLGOK2);   // not perfect, but ok
-   }
+ switch(v->id&gside){  // never special if gerund - this could evaluate to 0 or 1, neither of which is one of these codes
+// obsolete  case COPE:  f1=jtunderh10; f2=jtunderh20; flag&=~(VJTFLGOK1|VJTFLGOK2); flag2|=VF2ATOPOPEN1|VF2ATOPOPEN2A|VF2ATOPOPEN2W|VF2BOXATOP1|VF2BOXATOP2; break;   // &.>
+ case COPE: R fdef(VF2ATOPOPEN1|VF2ATOPOPEN2A|VF2ATOPOPEN2W|VF2BOXATOP1|VF2BOXATOP2|VF2WILLOPEN1|VF2WILLOPEN2A|VF2WILLOPEN2W,CUNDER,VERB,jteveryself,jtevery2self,a,w,0,flag,0,0,0);   // this is the commonest case.  Return fast, avoiding analysis below
+   // The flags are ignored during u&.>, but they can forward through to affect previous verbs.  Also, u&.v"n will be taken over by rank processing
+ case CFORK: c=ID(v->fgh[2]); /* fall thru */
+ case CAMP:  
+  u=FAV(a);  // point to a in a&.w.  w is f1&g1 or (f1 g1 h1)
+  if(b1=CSLASH==(uid=u->id)){x=u->fgh[0]; if(AT(x)&VERB){u=FAV(x);uid=u->id;}else uid=0;}   // cases: f&.{f1&g1 or (f1 g1 h1)}  b1=0    f/&.{f1&g1 or (f1 g1 h1)}   b1=1
+  b=CBDOT==uid&&(x=u->fgh[1],(((AR(x)-1)&SGNIF(AT(x),INTX))<0)&&BETWEENC(IAV(x)[0],16,32));   // b if f=m b. where m is atomic int 16<=m<=32
+  if(CIOTA==ID(v->fgh[1])&&(!c|((c&~1)==CLEFT))&&equ(ds(CALP),v->fgh[0])){   // w is  {a.&i.  or  (a. i. ][)}
+   f1=b&b1?jtbitwiseinsertchar:jtunderai1;    // m b./ &. {a.&i.  or  (a. i. ][)}   or  f &. {a.&i.  or  (a. i. ][)}
+   f2=((uid==CMAX)|(uid==CMIN))>b1?(AF)jtcharfn2:f2; f2=b>b1?(AF)jtbitwisechar:f2;   // m b. &. {a.&i.  or  (a. i. ][)}   or  >. &. {a.&i.  or  (a. i. ][)}   or f &. {a.&i.  or  (a. i. ][)}
+   flag&=~(VJTFLGOK1|VJTFLGOK2);   // not perfect, but ok
+  }
+  break;
  }
+ I flag2=(FAV(wvb)->flag2&(VF2WILLOPEN1|VF2USESITEMCOUNT1))*((VF2WILLOPEN1+VF2WILLOPEN2A+VF2WILLOPEN2W)>>VF2WILLOPEN1X);
+ I r=mr(wvb);
  // Create the standard g^:_1 @ (f & g) to use if we have no special processing (not needed if a.&i., but that's rare)
  // if gerund form, use (f g)"lf mg  for a:`v or (f~ g)~"mg rf for v`a:
  // First, create the part after the inverse

@@ -473,7 +473,7 @@ F1(jtdigits10){A z;B b=0;I c,m,n,*v,*zv,*zv0;X x;
   case XNUMX: x=*XAV(w); n=AN(x); v=AV(x); b=0<=v[n-1]; break;
   case RATX:  x=*XAV(w); n=AN(x); v=AV(x); b=0<=v[n-1]&&equ(iv1,QAV(w)->d);
  }
- if(!b)R rank1ex0(thorn1(w),0L,jtexec1);
+ if(!b)R rank1ex0(thorn1(w),DUMMYSELF,jtexec1);
  m=INT&AT(w)?(SY_64?19:10):XBASEN*AN(x);
  GATV0(z,INT,m,1); zv=zv0=AV(z);
  if(INT&AT(w)){c=*AV(w); *zv++=c%10; while(c/=10)*zv++=c%10;}

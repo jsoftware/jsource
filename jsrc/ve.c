@@ -474,7 +474,7 @@ F2(jtbase2){I ar,*as,at,c,t,wr,*ws,wt;
  ASSERT(!((at|wt)&SPARSE),EVNONCE); t=maxtyped(at,wt);
  if(!(t&at))RZ(a=cvt(t,a));
  if(!(t&wt))RZ(w=cvt(t,w));
- R 1>=ar?pdt(w,weight(sc(c),a)):rank2ex(w,rank2ex(sc(c),a,0L,0L,MIN(ar,1),0L,MIN(ar,1),jtweight),0L,MIN(wr,1),1L,MIN(wr,1),1L,jtpdt);
+ R 1>=ar?pdt(w,weight(sc(c),a)):rank2ex(w,rank2ex(sc(c),a,DUMMYSELF,0L,MIN(ar,1),0L,MIN(ar,1),jtweight),DUMMYSELF,MIN(wr,1),1L,MIN(wr,1),1L,jtpdt);
 }
 
 // #: y

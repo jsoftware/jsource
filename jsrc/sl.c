@@ -393,16 +393,16 @@ static F1(jtloccrenum){C s[20];I k,p;
 
 F1(jtloccre1){
  RZ(w);
- if(AN(w))R rank2ex0(mark,vlocnl(2+1,w),0L,jtloccre);
+ if(AN(w))R rank2ex0(mark,vlocnl(2+1,w),DUMMYSELF,jtloccre);
  ASSERT(1==AR(w),EVRANK);
  R loccrenum(mark);
 }    /* 18!:3  create locale */
 
 F2(jtloccre2){
  RZ(a&&w);
- if(AN(w))R rank2ex0(a,vlocnl(2+1,w),0L,jtloccre);
+ if(AN(w))R rank2ex0(a,vlocnl(2+1,w),DUMMYSELF,jtloccre);
  ASSERT(1==AR(w),EVRANK);
- R rank1ex0(a,0L,jtloccrenum);
+ R rank1ex0(a,DUMMYSELF,jtloccrenum);
 }    /* 18!:3  create locale with specified hash table size */
 
 

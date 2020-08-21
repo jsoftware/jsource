@@ -1186,7 +1186,7 @@ l ((<;.0 -: ]@<@(]"]);.0) , ((<;.0 -: ]@<@(]"]);.0)~ 2 1 $ ,)~) r [ l =. _2 + ((
 l ((<;.0 -: ]@<@(]"]);.0) , ((<;.0 -: ]@<@(]"]);.0)~ 2 1 $ ,)~) r [ l =. _2 + (((5 + ?10),2 1) ?@$ #r) [ r =. 0.5 + i. 10 10 
 
 4!:55 ;:'a adot1 adot2 sdot0 b bb c cut3 cutm3 f f1 f2 f3 f4 f5'
-4!:55 ;:'i1 i2l  m P p q r size t test testw w x y'
+4!:55 ;:'i1 i2 l m P p q r size t test testw w x y'
 4!:55 ;: 'a c'
 randfini''
 

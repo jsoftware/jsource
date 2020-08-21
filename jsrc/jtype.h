@@ -296,17 +296,18 @@ typedef I SI;
 #define CONWX 25
 #define CONW            ((I)1L<<CONWX)    /* CW control word                 */
 #define CONWSIZE sizeof(CW)
-#define LPARX 26
-#define LPAR            ((I)1L<<LPARX)    /* I  left  parenthesis            */
-// note: bit 26 used as flag to cvt() see below
-#define LPARSIZE sizeof(I)
+#define ADVX 26
+#define ADV             ((I)1L<<ADVX)      /* V  adverb                       */
+#define ADVSIZE sizeof(V)
+// NOTE: LPAR is set in an ADV value to indicate that the value is nameless, see below
 #define VERBX 27
 #define VERB            ((I)1L<<VERBX)      /* V  verb                         */
 #define VERBSIZE sizeof(V)  // Note: size of ACV in bp() is INTSIZE because the allocation in fdef() is of INTs
 // NOTE: VERB must be above all NOUN bits because of CONJCASE
-#define ADVX 28
-#define ADV             ((I)1L<<ADVX)      /* V  adverb                       */
-#define ADVSIZE sizeof(V)
+#define LPARX 28
+#define LPAR            ((I)1L<<LPARX)    /* I  left  parenthesis            */
+// note: LPAR used as flag to cvt() see below
+#define LPARSIZE sizeof(I)
 // CONJ must be 1 bit below RPAR, with no parsable type (including any flags that might be set, see below) higher than RPAR
 #define CONJX 29
 #define CONJ            ((I)1L<<CONJX)     /* V  conjunction                  */
@@ -316,6 +317,7 @@ typedef I SI;
 #define RPARSIZE sizeof(I)
 // NOTE maxtype & maybe others require bit 31 to be 0!!
 #define RESVX 31    // reserved so types can be I types
+#define RESV    ((I)1<<RESVX)  // used to hold NOUN status sometimes
 
 #define ASGNX 21
 #define ASGN            ((I)1L<<ASGNX)     /* I  assignment                   */
@@ -328,15 +330,22 @@ typedef I SI;
 #define NOUNCVTVALIDCT  ((I)1L<<SYMBX)     // Flag for jtcvt arg only: if set, convert only the #atoms given in the parameter   Aliases with SYMB
 // ** NAME type can have the following information flags set
 #define NAMEBYVALUE     ((I)1L<<SYMBX)     // set if the name is one of x x. m m. etc that is always passed by value, never by name   Aliases with SYMB
-// BOX type can have the following informational flags set
+// ** BOX type can have the following informational flags set
 #define BOXMULTIASSIGN  ((I)1L<<MARKX)     // set for the target of a direct multiple assignment (i. e. 'x y' =.), which is stored as a boxed list whose contents are NAMEs    aliases with MARK
 // Restriction: CONW must be reserved for use as ASGNTONAME because of how parser tests for it
 // Restriction: MARK must be reserved for use as BOXMULTIASSIGN because of how parser tests for it
-// NOTE!! bits 26,29-30 are used in the call to cvt() (arg only) to override the convsion type for XNUMs
+// ** NOTE!! bits 28-30 are used in the call to cvt() (arg only) to override the convsion type for XNUMs
 #define XCVTXNUMORIDEX  LPARX   // in cvt(), indicates that forced precision for result is present
 #define XCVTXNUMORIDE   ((I)1<<XCVTXNUMORIDEX)   // in cvt(), indicates that forced precision for result is present
 #define XCVTXNUMCVX     CONJX
 #define XCVTXNUMCV      ((I)3<<XCVTXNUMCVX)  // in cvt(), the precision for xnum (if XCVTXNUMORIDE is set)
+// ** ADV type can have the following information flag set
+#define NAMELESSMODX    LPARX
+#define NAMELESSMOD      ((I)3<<NAMELESSMODX)  // set in a modifier to indicate that the value contains no names.  Such values are pushed onto the stack by value to save parsing overhead.
+                             // namelessness is detected only when a modifier is assigned, and is supported only for ADV types because of coding details.  It would be nice to support it
+                             // for CONJ too, but a nameless conj would be either primitive or explicit, and users shouldn't cover primitives.  This feature is mostly for every/each/inv
+
+
 
 // Planned coding to save bits in type
 // Uses bits 24-27 eg
@@ -392,6 +401,9 @@ typedef I SI;
 #define TYPESNE(x,y)    ((x)!=(y))  // types are equal, ignoring NOUNSAFE bits
 #define TYPESLT(x,y)    ((x)<(y))  // type x < type y
 #define TYPESGT(x,y)    ((x)>(y)) // type x > type y
+
+#define PARTOFSPEECHEQ(x,y) (((((x)|(RESV&-((x)&NOUN)))^((y)|(RESV&-((x)&NOUN))))&RESV+CONJ+VERB+ADV)==0)  // using RESV to hold NOUN status, verify parts-of-speech the same
+#define PARTOFSPEECHEQACV(x,y) ((((x)^(y))&RESV+CONJ+VERB+ADV)==0)  // using RESV to hold NOUN status, verify parts-of-speech the same
 
 // Utility: keep the lowest 1 only
 #define LOWESTBIT(x)    ((x)&-(x))

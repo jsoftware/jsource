@@ -508,6 +508,8 @@ L* jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;L*e;
     // It's a pity that we have to do this for ALL assignments, even assignments to uv.  If we don't, a reference to a local modifier may get passed in, and
     // it will still be considered valid even though the local names have disappeared.  Maybe we could avoid this if the local namespace has no defined modifiers - but then we'd have to keep up with that...
     ++jt->modifiercounter;
+    // If we are assigning a adverb value, check to see if it is nameless, and mark the value if it is
+    if(AT(w)&ADV)AT(w)|=(I)nameless(w)<<NAMELESSMODX;
    }
    // Increment the use count of the value being assigned, to reflect the fact that the assigned name will refer to it.
    // This realizes any virtual value, and makes the usecount recursive if the type is recursible

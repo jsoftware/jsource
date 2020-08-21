@@ -18,11 +18,19 @@
 // For each Type, the length of a data-item of that type.  The order
 // here is by number of trailing 0s in the (32-bit) type; aka the bit-number index.
 // Example: LITX is 1, so location 1 contains sizeof(C)
+#define TPSZ(name) [name##X] = name##SIZE
 static const UC typesizes[] = {
+#if 1  // obsolete
+TPSZ(B01), TPSZ(LIT), TPSZ(INT), TPSZ(FL), TPSZ(CMPX), TPSZ(BOX), TPSZ(XNUM), TPSZ(RAT), 
+TPSZ(SB01), TPSZ(SLIT), TPSZ(SINT), TPSZ(SFL), TPSZ(SCMPX), TPSZ(SBOX), TPSZ(SBT), TPSZ(C2T), 
+TPSZ(C4T), TPSZ(ASGN), TPSZ(MARK), TPSZ(NAME), TPSZ(SYMB), TPSZ(CONW), TPSZ(LPAR), TPSZ(RPAR), 
+[ADVX] = INTSIZE, [CONJX] = INTSIZE, [VERBX] = INTSIZE  // note ACV sizes are in INTs
+#else
 B01SIZE, LITSIZE, INTSIZE, FLSIZE, CMPXSIZE, BOXSIZE, XNUMSIZE, RATSIZE,
 -1,           -1, SB01SIZE, SLITSIZE, SINTSIZE, SFLSIZE, SCMPXSIZE, SBOXSIZE,
 SBTSIZE, C2TSIZE, C4TSIZE, XDSIZE, XZSIZE, ASGNSIZE, MARKSIZE, NAMESIZE,
-SYMBSIZE, CONWSIZE, LPARSIZE, INTSIZE, INTSIZE, INTSIZE, RPARSIZE,-1,  // note ACV sizes are in INTs
+SYMBSIZE, CONWSIZE, LPARSIZE, INTSIZE, INTSIZE, INTSIZE, RPARSIZE,-1,
+#endif
 };
 
 // Priority is

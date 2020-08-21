@@ -86,20 +86,19 @@ PT cases[] = {
 // Remove bits 8-9
 // Distinguish PSN from PS by not having PSN in stack[3] support line 0 (OK since it must be preceded by NAME and thus will run line 7)
 // Put something distictive into LPAR that can be used to create line 8
-static const UI4 ptcol[] = {
-0xBE7CC1DF,  // PN
-0x7F8000C9,  // PS
-0x7F0000C9,  // PM
-0x800000C9,  // PNM
-0,    // PX
-0,    // PX
-0x7F000001,  // PL
-0x3E7BE6F9,  // PV
-0x3E40C8C9,  // PA
-0x0040D0C9,  // PC
-0x000000C9  // PR
+static const UI4 ptcol[11] = {  // there are gaps at SYMB and CONW
+[0] = 0xBE7CC1DF,  // PN
+[ASGNX-LASTNOUNX] = 0x7F8000C9,  // PS
+[MARKX-LASTNOUNX] = 0x7F0000C9,  // PM
+[NAMEX-LASTNOUNX] = 0x800000C9,  // PNM
+[LPARX-LASTNOUNX] = 0x7F000001,  // PL
+[VERBX-LASTNOUNX] = 0x3E7BE6F9,  // PV
+[ADVX-LASTNOUNX] = 0x3E40C8C9,  // PA
+[CONJX-LASTNOUNX] = 0x0040D0C9,  // PC
+[RPARX-LASTNOUNX] = 0x000000C9  // PR
 // 0x7F8000C8  // PSN
 };
+
 
 // tests for pt types
 #define PTMARK 0x7F0000C9
@@ -491,19 +490,22 @@ rdglob: ;
           // Following the original parser, we assume this is an error that has been reported earlier.  No ASSERT here, since we must pop nvr stack
         // The name is defined.  If it's a noun, use its value (the common & fast case)
         // Or, for special names (x. u. etc) that are always stacked by value, keep the value
+        // If a modifier has no names in its value, we will stack it by value.  The Dictionary says all modifiers are stacked by value, but
+        // that will make for tough debugging.  We really want to minimize overhead for each/every/inv.
         // Otherwise (normal adv/verb/conj name), replace with a 'name~' reference
-        if((AT(sv)|at)&(NOUN|NAMEBYVALUE)){   // use value if noun or special name
-         y=sv;
+        if((AT(sv)|at)&(NOUN|NAMEBYVALUE|NAMELESSMOD)){   // use value if noun or special name
+         y=sv; at=AT(sv);
         } else {
          if (!(y = namerefacv(y, s)))FP   // Replace other acv with reference
+         at=AT(y);  // refresh the type with the type of the resolved name
         }
        } else {
          // undefined name.  If special x. u. etc, that's fatal; otherwise create a dummy ref to [: (to have a verb)
          if(at&NAMEBYVALUE){jsignal(EVVALUE);FP}  // Report error (Musn't ASSERT: need to pop all stacks) and quit
          if (!(y = namerefacv(y, s)))FP    // this will create a ref to undefined name as verb [:
            // if syrd gave an error, namerefacv may return 0.  This will have previously signaled an error
+         at=AT(y);  // refresh the type with the type of the resolved name
        }
-       at=AT(y);  // refresh the type with the type of the resolved name
 
       }
 

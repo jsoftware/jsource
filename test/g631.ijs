@@ -73,8 +73,31 @@ NB. x u&.(a:`v) y  and  x u&.(v`:a:) y -----------------------------------------
 _ _ _ -: +&.:(a:`^.) b. 0
 
 
+NB. Verify that named adverbs are stacked if the value is nameless
+o =: >
+a =: &.o
+pe =: >: a
+(<5) -: pe <4
+o =: &
+'domain error' -: pe etx <4
+'>:&.o' -: 5!:5 <'pe'
+e =: &.>
+(<5) -: (e =: >:)e <4  NB. If e were stacked by reference, this would fail
+o =: >
+3 : 0 ''
+try.
+a =: &.o
+(a =: >:)a etx <4  NB. fails when a changes part of speech
+0
+catch.
+1
+end.
+)
+a =: &.o
+(<<5) -: (>: a =: &.>)a 4
+a =: &.o
+5 -: (>: a =: &.])a 4   NB. OK to redefine a nameful entity as nameless; the new definition is used both places 
 
-
-4!:55 ;:'t1 totient x y '
+4!:55 ;:'a e o pe t1 totient x y '
 
 

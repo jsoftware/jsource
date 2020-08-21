@@ -202,10 +202,10 @@ F1(jttparse){A*s,t,x;C d;I b,*c,e,i,j,k,m,n;TA*stack;
  do{
   for(i=0;i<NCASES;i++){
    c=cases[i].c; s=(A*)(n+stack); d=1;
-   d=d&&*c++&AT(*s); s+=WTA;
-   d=d&&*c++&AT(*s); s+=WTA;
-   d=d&&*c++&AT(*s); s+=WTA;
-   d=d&&*c++&AT(*s);
+   d=d&&*c++&(AT(*s)&-AT(*s)); s+=WTA;
+   d=d&&*c++&(AT(*s)&-AT(*s)); s+=WTA;
+   d=d&&*c++&(AT(*s)&-AT(*s)); s+=WTA;
+   d=d&&*c++&(AT(*s)&-AT(*s));
    if(d)break;
   }
   if(i<NCASES){

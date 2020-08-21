@@ -24,14 +24,14 @@ static A jteverysp(J jt,A w,A fs){A*wv,x,z,*zv;P*wp,*zp;
 // Routine for internal application of u&.>
 // Does not perform the special functions of rank1ex0, namely creating recursive result and checking for BOXATOP
 // Does not inplace; if we modify it to inplace, we must make sure to turn off inplacing of contents of x/y if the arg itself is not inplaceable
-// We keep this around because it is used for internal calls.  Most (not all, especially calls for jtfx) have fs==0, which we could check for in rank1ex0 and treat as &.>
+// We keep this around because it is used for internal calls.
 // It is also the recursion mechanism for L: and S:; that would require looking at a special flag during ex0 to treat that as &.>
-// The fs argument is the verb to be applied to each cell, thus descibes the f in f&.> .  For certain calls, like L: S:, it may be incomplete having just
+// The self argument is the verb to be applied to each cell, thus descibes the f in f&.> .  For certain calls, like L: S:, it may be incomplete having just
 // enought to execute the specific routine.  All we look at here is the valencefn to call
-A jtevery(J jt,A w,A fs){A*wv,x,z,*zv;
+DF1(jtevery){A*wv,x,z,*zv;
  RZ(w);
- if(SPARSE&AT(w))R everysp(w,fs);
- AF f1=FAV(fs)->valencefns[0];
+ if(unlikely(SPARSE&AT(w)))R everysp(w,self);
+ AF f1=FAV(self)->valencefns[0];
  GATV(z,BOX,AN(w),AR(w),AS(w));
  I natoms=AN(w); if(!natoms)R z;  // exit if no result atoms
  zv=AAV(z);
@@ -42,14 +42,14 @@ A jtevery(J jt,A w,A fs){A*wv,x,z,*zv;
   // if input is not boxed, use a faux-virtual block to point to the atoms.  Repurpose unneeded wv to hold length
   fauxvirtual(virtw,virtblockw,w,0,ACUC1); AN(virtw)=1; wv=(A*)bpnoun(AT(w));
  }
- while(1){EVERYI(CALL1(f1,virtw,fs)); if(!--natoms)break; if(boxedw)virtw=*++wv;else AK(virtw)+=(I)wv;}  // break to avoid fetching over the end of the input
+ while(1){EVERYI(CALL1(f1,virtw,self)); if(!--natoms)break; if(boxedw)virtw=*++wv;else AK(virtw)+=(I)wv;}  // break to avoid fetching over the end of the input
  R z;
 }
 
-A jtevery2(J jt,A a,A w,A fs){A*av,*wv,x,z,*zv;
+DF2(jtevery2){A*av,*wv,x,z,*zv;
 // todo kludge should rewrite with single flag word
  RZ(a&&w); 
- AF f2=FAV(fs)->valencefns[1];
+ AF f2=FAV(self)->valencefns[1];
  // Get the number of atoms, and the number of times to repeat the short side.
  // The repetition is the count of the surplus frame.
  I rpti;  // number of times short frame must be repeated
@@ -82,9 +82,9 @@ A jtevery2(J jt,A a,A w,A fs){A*av,*wv,x,z,*zv;
  }
  // Loop for each cell.  Increment the pointer unless the side is being repeated and the repeat-count has not expired.
  // Break in the middle of the loop to avoid fetching out of bounds to get the next address from [aw]v
-// obsolete  I rpt=rpti; while(1){EVERYI(CALL2(f2,virta,virtw,fs)); if(!--natoms)break; if(!(flags&2)||(--rpt==0&&(rpt=rpti,1))){if(flags&(BOX<<1))virta=*++av;else AK(virta)+=(I)av;} if(!(flags&1)||(--rpt==0&&(rpt=rpti,1))){if(flags&BOX)virtw=*++wv;else AK(virtw)+=(I)wv;} }
+// obsolete  I rpt=rpti; while(1){EVERYI(CALL2(f2,virta,virtw,self)); if(!--natoms)break; if(!(flags&2)||(--rpt==0&&(rpt=rpti,1))){if(flags&(BOX<<1))virta=*++av;else AK(virta)+=(I)av;} if(!(flags&1)||(--rpt==0&&(rpt=rpti,1))){if(flags&BOX)virtw=*++wv;else AK(virtw)+=(I)wv;} }
  I rpt=rpti=-rpti; while(1){
-  EVERYI(CALL2(f2,virta,virtw,fs)); if(!--natoms)break;
+  EVERYI(CALL2(f2,virta,virtw,self)); if(!--natoms)break;
   ++rpt; I endrpt=REPSGN(rpt); rpt=rpt==0?rpti:rpt;  // endrpt=0 if end of repeat, otherwise ~0.  Reload rpt at end
   if(!(flags&endrpt&2)){if(flags&(BOX<<1))virta=*++av;else AK(virta)+=(I)av;}  // advance unrepeated arg
   if(!(flags&endrpt&1)){if(flags&BOX)virtw=*++wv;else AK(virtw)+=(I)wv;}

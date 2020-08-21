@@ -5,7 +5,7 @@
 
 #include "j.h"
 
-#define TC1(t)          (((t>>ADVX)&3)+(t&NOUN?3:0))   // C A V N -> 2 1 0 3
+#define TC1(t)          ((0x20034>>(((t)>>(ADVX-1))&(CONJ+ADV+VERB>>(ADVX-1))))&3)   // C x V A (N) -> 16 x 4 2 0 -> 2 x 3 1 0    10 xx xx xx xx xx 11 01 00   C A V N -> 2 1 3 0
 #define BD(ft,gt)       (4*TC1(ft)+TC1(gt))
 #define TDECL           V*sv=FAV(self);A fs=sv->fgh[0],gs=sv->fgh[1],hs=sv->fgh[2]
 

@@ -152,7 +152,7 @@ F1(jtwordil){A z;I s,i,m,n,nv,*x;UC*v;
 /* z:  result; maximum of n pairs                               */
 
 DF1(jtwords){A t,*x,z;C*s;I k,n,*y;
- F1RANK(1,jtwords,0);
+ F1RANK(1,jtwords,self);
  RZ(w=vs(w));  // convert w to LIT if it's not already
 // obsolete  RZ(t=wordil(w));
  R jtboxcut0(jt,wordil(w),w,self);

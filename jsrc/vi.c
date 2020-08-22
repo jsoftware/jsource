@@ -1592,14 +1592,18 @@ F1(jtnubsieve){
 
 // ~. y  - does not have IRS
 F1(jtnub){ 
- RZ(w);
+ RZ(w);F1PREFIP;
  if(SPARSE&AT(w)||AFLAG(w)&AFNJA)R repeat(nubsieve(w),w); 
- R indexofsub(INUB,w,w);
+// obsolete  R indexofsub(INUB,w,w);
+ A z; RZ(z=indexofsub(INUB,w,w));
+ // We extracted from w, so mark it (or its backer if virtual) non-pristine.  If w was pristine and inplaceable, transfer its pristine status to the result.  We overwrite w because it is no longer in use
+ I awflg=AFLAG(w); AFLAG(z)|=awflg&((SGNTO0(AC(w))&((I)jtinplace>>JTINPLACEWX))<<AFPRISTINEX); if(unlikely(awflg&AFVIRTUAL)){w=ABACK(w); awflg=AFLAG(w);} AFLAG(w)=awflg&~AFPRISTINE;
+ RETF(z);
 }    /* ~.w */
 
 // x -. y.  does not have IRS
 F2(jtless){A x=w;I ar,at,k,r,*s,wr,*ws,wt;
- RZ(a&&w);
+ RZ(a&&w);F2PREFIP;
  at=AT(a); ar=AR(a); 
  wt=AT(w); wr=AR(w); r=MAX(1,ar);
  if(ar>1+wr)RCA(a);  // if w's rank is smaller than that of a cell of a, nothing can be removed, return a
@@ -1610,6 +1614,7 @@ F2(jtless){A x=w;I ar,at,k,r,*s,wr,*ws,wt;
      repeat(not(eps(a,x)),a));
  // We extracted from a, so mark it non-pristine.  If a was pristine and inplaceable, transfer its pristine status to the result
  I af=AFLAG(a); AFLAG(x)|=af&((SGNTO0(AC(a))&((I)jtinplace>>JTINPLACEAX))<<AFPRISTINEX); if(unlikely(af&AFVIRTUAL)){a=ABACK(a); af=AFLAG(a);} AFLAG(a)=af&~AFPRISTINE;
+ RETF(x);
 }    /* a-.w */
 
 // x e. y

@@ -153,10 +153,10 @@ DF2(jtboxcut0){A z;
  I resatoms; PROD(resatoms,f,AS(a)); I cellsize; PROD(cellsize,wr-1,AS(w)+1);
  I k=bplg(t); C *wv=CAV(w);  // k is length of an atom of w
  // allocate the result area
- GATV(z,BOX,resatoms,f,AS(a)); AFLAG(z) = BOX; if(resatoms==0)RETF(z);  // could avoid filling with 0 if we modified AN after error, or cleared after *tnextpushp
+ GATV(z,BOX,resatoms,f,AS(a)); AFLAG(z) = (~(I)jtinplace<<(BOXX-JTWILLBEOPENEDX))&BOX; if(resatoms==0)RETF(z);  // could avoid filling with 0 if we modified AN after error, or cleared after *tnextpushp
   // We have allocated the result; now we allocate a block for each cell of w and copy
   // the w values to the new block.
-  // Make result inplaceable and recursive
+  // Make result inplaceable; if not WILLBEOPENED, make it recursive
  A *pushxsave = jt->tnextpushp; jt->tnextpushp=AAV(z);  // save tstack info before allocation
  // MUST NOT FAIL UNTIL tstack restored
  A y;
@@ -171,11 +171,21 @@ DF2(jtboxcut0){A z;
    endorlen=endorlen>wi?wi:endorlen; endorlen-=start;  // get length; limit length, convert back to true length
    if(endorlen<0){jt->tnextpushp=pushxsave; R (FAV(self)->localuse.lfns[1])(jtinplace,a,w,self);}  // failover if len negative.  Overflow is not a practical possibility
    I substratoms=endorlen*cellsize;
-   GAE(y,t,substratoms,wr,AS(w),break); AS(y)[0]=endorlen; MC(CAV(y),wv+start*(cellsize<<k),substratoms<<k); AC(y)=ACUC1; if(t&RECURSIBLE){AFLAG(y)=t; jtra(jt,y,t);}
+   // Allocate the result box.  If WILLBEOPENED, make it a virtual block.  Otherwise copy the data
+   GAE(y,t,(I)jtinplace&JTWILLBEOPENED?0:substratoms,wr,AS(w),break); AS(y)[0]=endorlen;  // allocate, but don't grow the tstack. Fix up the shape
+   if(!((I)jtinplace&JTWILLBEOPENED)){
+    // Normal case.  Set usecount of cell to 1 since z is recursive usecount and y is not on the stack.  ra0() if recursible.  Put allocated addr into *jt->tnextpushp++.
+    MC(CAV(y),wv+start*(cellsize<<k),substratoms<<k); AC(y)=ACUC1; if(t&RECURSIBLE){AFLAG(y)=t; jtra(jt,y,t);}
+   }else{
+    // WILLBEOPENED case.  We must make the block virtual
+    jtexpostvirtual(jt,y,w,start*(cellsize<<k)); AN(y)=substratoms;
+   }
    av+=2;
- );   // allocate, but don't grow the tstack.  Set usecount of cell to 1 since z is recursive usecount and y is not on the stack.  ra0() if recursible.  Put allocated addr into *jt->tnextpushp++.  
+ );     
  jt->tnextpushp=pushxsave;   // restore tstack pointer
  ASSERT(y,EVWSFULL);  // if we broke out an allocation failure, fail.  Since the block is recursive, when it is tpop()d it will recur to delete contents
+ // The result can be called pristine if the contents are DIRECT and the result is recursive, because it contains all copied data
+ AFLAG(z)|=(-(t&DIRECT))&(AFLAG(z)<<(AFPRISTINEX-BOXX))&AFPRISTINE;
  RETF(z);  // return the recursive block
 }
 

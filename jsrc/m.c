@@ -530,7 +530,7 @@ RESTRICTF A jtvirtual(J jtip, AD *RESTRICT w, I offset, I r){AD* RESTRICT z;
   // virtual-in-place cases above.  The main case would be an inplaceable UNINCORPABLE block, which might be worth the trouble.
   if(wf&AFVIRTUAL){
    // If w is virtual, me must disallow inplacing for it, since it may be at large in the execution and we are creating an alias to it
-   ACIPNO(w);  // turn off inplacing
+   ACIPNO(w);  // turn off inplacing  scaf is this needed? we are aliasing the backer, not w
    w=ABACK(w);  // if w is itself virtual, use its original backer.  Otherwise we would have trouble knowing when the backer for z is freed.  Backer is never virtual
   }
   AFLAG(z)=AFVIRTUAL|(AFLAG(w)&AFPRISTINE);  // flags: not recursive, not UNINCORPABLE, not NJA, with PRISTINE inherited from backer
@@ -540,6 +540,19 @@ RESTRICTF A jtvirtual(J jtip, AD *RESTRICT w, I offset, I r){AD* RESTRICT z;
  }
 }  
 
+// convert a block allocated in the caller to virtual.  The caller got the shape right; we just have to fill in all the other fields, including the data pointer.
+// User still has to fill in AN and AS
+void jtexpostvirtual(J jt,A z,A w,I offset){
+AC(z)=ACUC1; AK(z)=(CAV(w)-(C*)z)+offset; // virtual, not inplaceable
+if(AFLAG(w)&AFVIRTUAL){
+ // If w is virtual, me must disallow inplacing for it, since it may be at large in the execution and we are creating an alias to it
+ ACIPNO(w);  // turn off inplacing
+ w=ABACK(w);  // if w is itself virtual, use its original backer.  Otherwise we would have trouble knowing when the backer for z is freed.  Backer is never virtual
+}
+AFLAG(z)=AFVIRTUAL|(AFLAG(w)&AFPRISTINE);  // flags: not recursive, not UNINCORPABLE, not NJA, with PRISTINE inherited from backer
+ABACK(z)=w;   // set the pointer to the base: w or its base
+ra(w);   // ensure that the backer is not deleted while it is a backer.  This means that all backers are RECURSIBLE
+}
 
 // realize a virtual block (error if not virtual)
 // allocate a new block, copy the data to it.  result is address of new block; can be 0 if allocation failure

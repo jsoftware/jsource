@@ -677,6 +677,7 @@ extern A        jteval(J,C*);
 extern A        jtevc(J,A,A,C*);
 extern DF1(jtevery);
 extern DF2(jtevery2);
+extern void jtexpostvirtual(J,A,A,I);
 extern A        jtext(J,B,A);
 extern A        jtexta(J,I,I,I,I);
 extern A*       jtextnvr(J);

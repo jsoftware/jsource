@@ -1,7 +1,7 @@
 18!:4 <'z'
 3 : 0 ''
 
-JLIB=: '9.02.04'
+JLIB=: '9.02.05'
 
 notdef=. 0: ~: 4!:0 @ <
 hostpathsep=: ('/\'{~6=9!:12'')&(I. @ (e.&'/\')@] })
@@ -197,7 +197,7 @@ y
 )
 apply=: 128!:2
 assert=: 0 0 $ 13!:8^:((0 e. ])`(12"_))
-bind=: 2 : 'x@(y"_)'
+bind=: 2 : 'u@(v"_)'
 boxopen=: <^:(0&(>: L.))
 boxxopen=: <^:((> L.)~ *@#)
 bx=: I.
@@ -377,12 +377,11 @@ EMPTY
 )
 utf8=: 8&u:
 uucp=: u:@(7&u:)
-3 : 0''
-h=. 9!:12''
-subs=. 2 : 'x I. @(e.&y)@]} ]'
-toJ=: (LF subs CR) @: (#~ -.@(CRLF&E.@,))
+toJ=: (LF I.@(CR=])}]) @: (#~ -.@(CRLF&E.@,))
 toCRLF=: 2&}. @: ; @: (((CR&,)&.>)@<;.1@(LF&,)@toJ)
-if. h=5 do.
+
+3 : 0''
+if. 5=9!:12'' do.
   toHOST=: ]
 else.
   toHOST=: toCRLF

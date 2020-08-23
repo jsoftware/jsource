@@ -894,7 +894,7 @@ test=: 4 : 0
  assert. (<   ;. x y) -: (3 : '<    y');.x y
  assert. (<@}.;. x y) -: (3 : '<@}. y');.x y
  assert. (<@}:;. x y) -: (3 : '<@}: y');.x y
- b=. (#y){.(i._2+#y) e. +/\2+?(#y)$10
+ b=: (#y){.(i._2+#y) e. +/\2+?(#y)$10
  assert. (b #   ;. x y) -: b (3 : '#    y');.x y
  assert. (b $   ;. x y) -: b (3 : '$    y');.x y
  assert. (b {.  ;. x y) -: b (3 : '{.   y');.x y
@@ -1153,8 +1153,8 @@ NB. Verify that bare < is as good as BOXATOP
 1 1 -:  $ <@(]"0);.1 'a'   NB. Verify atomic y is analyzed as is rank 1
 
 NB. verify f;.1 in place
-(2.2e6 * 8) > 7!:2 'c +:;.1 +: a' [ c =. 1e6 {. 1 [ a =. 0.5 + i. 1e6  NB. always for FL
-4e4 > | (4 * 16b100000 * IF64 { 3 4) - 7!:2 'c +:;.1 +: a' [ c =. 1e6 {. 1 [ a =. i. 1e6  NB. for INT, only in 64-bit
+(2.2e6 * 8) > 7!:2 'c +:;.1 +: a' [ c =. 1e6 {. 1 [ a =: 0.5 + i. 1e6  NB. always for FL
+4e4 > | (4 * 16b100000 * IF64 { 3 4) - 7!:2 'c +:;.1 +: a' [ c =. 1e6 {. 1 [ a =: i. 1e6  NB. for INT, only in 64-bit
 
 
 NB. Check for premature free of strip block
@@ -1185,8 +1185,20 @@ NB. Failover on sign
 l ((<;.0 -: ]@<@(]"]);.0) , ((<;.0 -: ]@<@(]"]);.0)~ 2 1 $ ,)~) r [ l =. _2 + (((5 + ?10),2 1) ?@$ #r) [ r =. i. 20 20
 l ((<;.0 -: ]@<@(]"]);.0) , ((<;.0 -: ]@<@(]"]);.0)~ 2 1 $ ,)~) r [ l =. _2 + (((5 + ?10),2 1) ?@$ #r) [ r =. 0.5 + i. 10 10 
 
-4!:55 ;:'a adot1 adot2 sdot0 b bb c cut3 cutm3 f f1 f2 f3 f4 f5'
-4!:55 ;:'i1 i2 l m P p q r size t test testw w x y'
+data =: i. 1e6
+intervals =: 3 2 1 $ 0 1000   3000 6000   10000 100000
+a =: b =: ''
+a =: 7!:0''
+10000 > 7!:2 'intervals +/;.0 data'
+100000 < 7!:2 '+/@> intervals <;.0 data'
+10000 > 7!:2 'intervals (+/@> @: (<;.0)) data'  NB. verify WILLBEOPENED causes virtuals
+10000 > 7!:2 'intervals ([: +/&.> <;.0) data'  NB. capped fork too
+b =: 7!:0''
+512 > | a - b  NB. Make sure virtual blocks freed
+
+
+4!:55 ;:'a adot1 adot2 sdot0 b bb c cut3 cutm3 data f f1 f2 f3 f4 f5'
+4!:55 ;:'i1 i2 intervals l m P p q r size t test testw w x y'
 4!:55 ;: 'a c'
 randfini''
 

@@ -97,7 +97,7 @@ refcount=: getHADC
 3 : 0''
 if. IFUNIX do.
   lib=. ' ',~ unxlib 'c'
-  api=. 1 : ('(''',lib,''',x) & cd')
+  api=. 1 : ('(''',lib,''',m) & cd')
   c_open=: 'open i *c i i' api
   c_close=: 'close i i' api
   c_read=: 'read x i * x' api

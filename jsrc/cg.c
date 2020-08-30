@@ -8,11 +8,11 @@
 #define ZZDEFN
 #define ZZFLAGWORD state
 #include "result.h"
-#define ZZFLAGARRAYWX 10  // w has multiple cells and must advance between iterations
+#define ZZFLAGARRAYWX 14  // w has multiple cells and must advance between iterations
 #define ZZFLAGARRAYW (((I)1)<<ZZFLAGARRAYWX)
-#define ZZFLAGARRAYAX 11  // w has multiple cells and must advance between iterations
+#define ZZFLAGARRAYAX 15  // w has multiple cells and must advance between iterations
 #define ZZFLAGARRAYA (((I)1)<<ZZFLAGARRAYAX)
-#define ZZFLAGISDYADX 22 // set if dyad call - MUST BE THE HIGHEST BIT
+#define ZZFLAGISDYADX 22 // set if dyad call - MUST BE THE HIGHEST BIT - 21 is PRISTINE
 #define ZZFLAGISDYAD (((I)1)<<ZZFLAGISDYADX)
 
 
@@ -297,19 +297,23 @@ static DF2(jtcasei12){A vres,z;I gerit[128/SZI],ZZFLAGWORD;
    ASSERT(minx>=-nar&&maxx<nar,EVINDEX);  // verify that the results are in range
    I numres= maxx - minx + 1;  // max possible # of selectors
    // get sorted input order - as long as it wasn't an atom, which we will have to repeat
-   A sortw,sorta; J jtinplaceorig=jtinplace;   // remember inplacing for original args
-   jtinplace = jt;  // clear inplaceability for new args
+   A sortw,sorta;
+// obsolete  J jtinplaceorig=jtinplace;   // remember inplacing for original args
+// obsolete    jtinplace = jt;  // clear inplaceability for new args
    // Now we construe the input as a list of ar/wr-cells.  If rank is neg, the input was an atom: don't reshape
    // from here on we have w always, and optional a.  But we call a always, with optional w.  That's OK, because we set up
    // omitted a to point to w and not to modify it.
    if(wr>=0){
-    RZ(w=jtredcatcell(jtinplaceorig,w,wr));  // inplaceability of original w
+// obsolete     RZ(w=jtredcatcell(jtinplaceorig,w,wr));  // inplaceability of original w
+    RZ(w=jtredcatcell(jtinplace,w,wr));  // inplaceability of original w
     RZ(sortw=from(gradepm,w));
-    jtinplace=(J)((I)jtinplace|(SGNTO0(AC(sortw))<<JTINPLACEWX));   // if we have a copy of the input, we can inplace it.  Could also inplace if original inplaceable
+    // Inplace the virtual block if that is allowed
+    ZZFLAGWORD |= SGNTO0((-(AT(sortw)&TYPEVIPOK))&AC(sortw))<<ZZFLAGVIRTWINPLACEX;
+// obsolete     jtinplace=(J)((I)jtinplace|(SGNTO0(AC(sortw))<<JTINPLACEWX));   // if we have a copy of the input, we can inplace it.  Could also inplace if original inplaceable
     ZZFLAGWORD|=ZZFLAGARRAYW;  // indicate that virtw must be updated between iterations
    }else{
     sortw=w;
-    jtinplace=(J)((I)jtinplace&~JTINPLACEW);   // if we have a repeated atom, we MUST NOT inplace it
+// obsolete     jtinplace=(J)((I)jtinplace&~JTINPLACEW);   // if we have a repeated atom, we MUST NOT inplace it
    }
    // create a virtual block for the input(s).
    A virtw,virta; fauxblock(virtwfaux); fauxblock(virtafaux);
@@ -320,13 +324,15 @@ static DF2(jtcasei12){A vres,z;I gerit[128/SZI],ZZFLAGWORD;
    I ak,wk=bp(AT(w)); wk&=REPSGN(~wr);  // size of atom of k, but 0 if w is an atom (so we don't advance)
    if(ZZFLAGWORD&ZZFLAGISDYAD){   // if we need to repeat for a
     if(ar>=0){
-     RZ(a=jtredcatcell((J)((I)jt|(((I)jtinplaceorig>>(JTINPLACEAX-JTINPLACEWX))&JTINPLACEW)),a,ar));  // move inplaceability of original a to w
+// obsolete      RZ(a=jtredcatcell((J)((I)jt|(((I)jtinplaceorig>>(JTINPLACEAX-JTINPLACEWX))&JTINPLACEW)),a,ar));  // move inplaceability of original a to w
+     RZ(a=jtredcatcell((J)((I)jt|(((I)jtinplace>>(JTINPLACEAX-JTINPLACEWX))&JTINPLACEW)),a,ar));  // move inplaceability of original a to w
      RZ(sorta=from(gradepm,a));
-     jtinplace=(J)((I)jtinplace|(SGNTO0(AC(sorta))<<JTINPLACEAX));
+    ZZFLAGWORD |= SGNTO0((-(AT(sorta)&TYPEVIPOK))&AC(sorta))<<ZZFLAGVIRTAINPLACEX;
+// obsolete      jtinplace=(J)((I)jtinplace|(SGNTO0(AC(sorta))<<JTINPLACEAX));
      ZZFLAGWORD|=ZZFLAGARRAYA;
     }else{
      sorta=a;
-     jtinplace=(J)((I)jtinplace&~JTINPLACEA);
+// obsolete      jtinplace=(J)((I)jtinplace&~JTINPLACEA);
     }
     virtr=(ar|REPSGN(ar))+1;   // rank of a list of cells, or 0 if original arg was an atom
     fauxvirtual(virta,virtafaux,sorta,virtr,ACUC1/* obsolete |ACINPLACE*/) MCISH(AS(virta),AS(a),virtr); AN(virta)=1;
@@ -357,16 +363,20 @@ static DF2(jtcasei12){A vres,z;I gerit[128/SZI],ZZFLAGWORD;
     // fill in the virtual block for this block
     if(ZZFLAGWORD&ZZFLAGARRAYW){  // if w is not a repeated atom...
      AS(virtw)[0]=srchhi-blkstart; AN(virtw)=AS(virtw)[0]*wck;
-     AC(virtw)=ACUC1|ACINPLACE;   // in case we created a virtual block from it, restore inplaceability to the UNINCORPABLE block (not if atom, which is never inplaceable)
+// obsolete      AC(virtw)=ACUC1|ACINPLACE;   // in case we created a virtual block from it, restore inplaceability to the UNINCORPABLE block (not if atom, which is never inplaceable)
+     AC(virtw)=ACUC1 + ((state&ZZFLAGVIRTWINPLACE)<<(ACINPLACEX-ZZFLAGVIRTWINPLACEX));   // in case we created a virtual block from it, restore inplaceability to the UNINCORPABLE block (not if atom, which is never inplaceable)
     }
     if(ZZFLAGWORD&ZZFLAGARRAYA){  // if a is not a repeated atom...
      AS(virta)[0]=srchhi-blkstart; AN(virta)=AS(virta)[0]*ack;
-     AC(virta)=ACUC1|ACINPLACE;   // in case we created a virtual block from it, restore inplaceability to the UNINCORPABLE block (not if atom, which is never inplaceable)
+// obsolete      AC(virta)=ACUC1|ACINPLACE;   // in case we created a virtual block from it, restore inplaceability to the UNINCORPABLE block (not if atom, which is never inplaceable)
+     AC(virta)=ACUC1 + ((state&ZZFLAGVIRTAINPLACE)<<(ACINPLACEX-ZZFLAGVIRTAINPLACEX));   // in case we created a virtual block from it, restore inplaceability to the UNINCORPABLE block (not if atom, which is never inplaceable)
     }
-   //  pull the function for the value, execute on the value (ASSUMEBOXATOP, WILLBEOPENED, COUNTITEMS)
+   //  pull the function for the value, execute on the value with forced attributes (ASSUMEBOXATOP, WILLBEOPENED, COUNTITEMS)
+   // take inplaceability from the selected verb always - we have made the cells inplaceable if possible
     A fs=AAV(FAV(self)->fgh[2])[currres];  // fetch the gerund to execute
-    RZ(z=(FAV(fs)->valencefns[ZZFLAGWORD>>ZZFLAGISDYADX])((J)((REPSGN(SGNIF(FAV(fs)->flag,(ZZFLAGWORD>>ZZFLAGISDYADX)+VJTFLGOK1X))|~JTFLAGMSK)&(I)jtinplace),
-     virta,ZZFLAGWORD&ZZFLAGISDYAD?virtw:fs,fs));  // execute gerund at infinite rank, inplace
+// obsolete     RZ(z=(FAV(fs)->valencefns[ZZFLAGWORD>>ZZFLAGISDYADX])((J)((REPSGN(SGNIF(FAV(fs)->flag,(ZZFLAGWORD>>ZZFLAGISDYADX)+VJTFLGOK1X))|~JTFLAGMSK)&(I)jtinplace),
+    RZ(z=(FAV(fs)->valencefns[ZZFLAGWORD>>ZZFLAGISDYADX])((J)((I)jt+((FAV(fs)->flag>>((ZZFLAGWORD>>ZZFLAGISDYADX)+VJTFLGOK1X))*(((I)1<<(ZZFLAGWORD>>ZZFLAGISDYADX))-1))),
+     virta,ZZFLAGWORD&ZZFLAGISDYAD?virtw:fs,fs));  // execute gerund at infinite rank, inplace from VJTFLGOK1/2 depending on valence
 
 #define ZZBODY  // assemble results
 #include "result.h"

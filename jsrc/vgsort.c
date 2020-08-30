@@ -432,6 +432,15 @@ F2(jtgr2){F2PREFIP;PROLOG(0076);A z=0;I acr,api,d,f,m,n,*s,t,wcr;
   }
  }
  // If not a supported reflexive case, grade w and then select those values from a.  jt->ranks is still set
- if(!z){A t; RZ(t=gr1(w)); IRS2(t,a,0L,1L,acr,jtfrom,z);}  // if inputs agreed, they will agree with w replaced by /:w and rank by 1
+ if(!z){A t;
+  I awflg=AFLAG(a);   // Remember original pristinity of a, before calling from which will clear it
+  RZ(t=gr1(w)); IRS2(t,a,0L,1L,acr,jtfrom,z); RZ(z);
+  // Boxed args will come through here.  Becuase no cell of a is repeated in the result, we know that if a is pristine,
+  // the result will be too, as long as the frames have equal length (and thus must be equal).  If from chose to return virtual z,
+  // a will now be non-inplaceable and z will be virtual but not inplaceable.
+  AFLAG(z)|=awflg&((SGNTO0(AC(a))&((I)jtinplace>>JTINPLACEAX)&(((acr-AR(a))^(wcr-AR(w)))-1))<<AFPRISTINEX);
+  // But the original a certainly loses pristinity.  We rely on from to have done that, if it didn't create a virtual block
+// not needed  if(unlikely(awflg&AFVIRTUAL)){a=ABACK(a); awflg=AFLAG(a);} AFLAG(a)=awflg&~AFPRISTINE;
+ }  // if inputs agreed, they will agree with w replaced by /:w and rank by 1
  EPILOG(z);
 }    /* a grade"r w main control for dense w */

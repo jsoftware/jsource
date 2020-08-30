@@ -87,7 +87,8 @@ RZ(a&&w);F2PREFIP;
   I i; for(i=AR(a)-1; i>=0&&AS(a)[i]==AS(ABACK(a))[i];--i); if(i<0)a = ABACK(a);
  }
 #endif
- if((-AN(w)&SGNIF(AT(w),BOXX))>=0){w = box(w);} R jtover(jtinplace,box(a),w);  // box empty or unboxed w, join to boxed a
+ if((-AN(w)&SGNIF(AT(w),BOXX))>=0){w = jtbox((J)((I)jtinplace&~(JTINPLACEA+JTWILLBEOPENED+JTCOUNTITEMS)),w);}
+ R jtover(jtinplace,jtbox((J)((I)jt+(((I)jtinplace>>JTINPLACEAX)&JTINPLACEW)),a),w);  // box empty or unboxed w, join to boxed a
 }
 
 // Calculate the value to use for r arg of copyresultcell: bit 0=ra() flag, next 15=rank requiring fill, higher=-(#leading axes of 1)
@@ -372,7 +373,8 @@ F1(jtope){PROLOG(0080);A cs,*v,y,z;I nonh;C*x;I i,n,*p,q=RMAX,r=0,*s,t=0,te=0,*u
  RZ(w);
  n=AN(w); v=AAV(w);
  if(!(BOX&(AT(w)&REPSGN(-n))))RCA(w);  // return w if empty or open
- if(!AR(w)){z=*v; ACIPNO(z); R z;}   // scalar box: turn off inplacing if we are using the contents directly
+ if(!AR(w)){z=*v; ACIPNO(z); I awflg=AFLAG(w); if(unlikely(awflg&AFVIRTUAL)){w=ABACK(w); awflg=AFLAG(w);} AFLAG(w)=awflg&~AFPRISTINE; R z;}   // scalar box: turn off inplacing if we are using the contents directly.  Turn off pristine in w since we are pulling an address from it
+ // Here we have an array of boxes.  We will create a new block with the concatenated contents (even if there is only one box), and thus we don't need to turn of pristine in w
  // set q=min rank of contents, r=max rank of contents
  for(i=0;i<n;++i){
   y=v[i]; r=MAX(r,AR(y)); q=MIN(q,AR(y));

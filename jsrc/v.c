@@ -26,15 +26,18 @@ F1(jtravel){A a,c,q,x,y,y0,z;B*b;I f,j,m,r,*u,*v,*yv;P*wp,*zp;
    // operation is loosely inplaceable.  Just shorten the shape to frame,(#atoms in cell).  We do this here rather than relying on
    // the self-virtual-block code in virtual() because we can do it for indirect types also, since we know we are not changing
    // the number of atoms
+   // We preserve pristinity between the input and the output
    AR(w)=(RANKT)(1+f); AS(w)[f]=m; RETF(w);  // if virtual inplace, notify the originator
   }
-  // Not inplaceable.  Create a (noninplace) virtual copy, but not if NJA memory  NJAwhy
+  // Not (self)-inplaceable.  Create a (noninplace) virtual copy, but not if NJA memory  NJAwhy
+  // If rank 0 were the only thing stopping us from inplacing, we could inherit pristinity
   if(!(AFLAG(w)&(AFNJA))){RZ(z=virtual(w,0,1+f)); AN(z)=AN(w); MCISH(AS(z),AS(w),f) AS(z)[f]=m; RETF(z);}
 
   // If we have to allocate a new block, do so.  In that rare case, revoke pristinity of w
-  AFLAG(w)&=~AFPRISTINE;
   GA(z,AT(w),AN(w),1+f,AS(w)); AS(z)[f]=m;   // allocate result area, shape=frame+1 more to hold size of cell; fill in shape
-  MC(AV(z),AV(w),AN(w)<<bplg(AT(w))); RETF(z); // if dense, move the data and relocate it as needed
+  MC(AV(z),AV(w),AN(w)<<bplg(AT(w)));
+  I awflg=AFLAG(w); if(unlikely(awflg&AFVIRTUAL)){w=ABACK(w); awflg=AFLAG(w);} AFLAG(w)=awflg&~AFPRISTINE;
+  RETF(z); // if dense, move the data and relocate it as needed
  }
  // the rest handles sparse matrix enfile
  RESETRANK;   // clear IRS for calls made here

@@ -44,8 +44,12 @@ static A jtlev2(J jt,A a,A w,A self){
 static I jtefflev(J jt,I j,A h,A x){I n,t; n=*(j+AV(h)); R n>=0?n:(t=level(x),MAX(0,n+t));}
 
 // execution of u L: n y.  Create the self to send to the recursion routine
+// L: and S: will be rarely used on pristine blocks, which be definition have all DIRECT contents & would thus be
+// better served by &.> .  Thus, we just mark the inputs as non-pristinable.
 static DF1(jtlcapco1){A z;V*v=FAV(self); 
  RZ(w);
+ I awflg=AFLAG(w); A awback=w; if(unlikely(awflg&AFVIRTUAL)){awback=ABACK(awback); awflg=AFLAG(awback);} AFLAG(awback)=awflg&~AFPRISTINE;
+
  PRIMSHORT shdr; A recurself=(A)&shdr;  // allocate the block we will recur with
 // obsolete   m=jt->lmon; jt->lmon=efflev(0L,v->fgh[2],w); 
 // obsolete   z=lev1(w,self);
@@ -59,6 +63,8 @@ static DF1(jtlcapco1){A z;V*v=FAV(self);
 
 static DF2(jtlcapco2){A z;V*v=FAV(self);
  RZ(a&&w);
+ I awflg=AFLAG(w); A awback=w; if(unlikely(awflg&AFVIRTUAL)){awback=ABACK(awback); awflg=AFLAG(awback);} AFLAG(awback)=awflg&~AFPRISTINE;
+ awflg=AFLAG(a); awback=a; if(unlikely(awflg&AFVIRTUAL)){awback=ABACK(awback); awflg=AFLAG(awback);} AFLAG(awback)=awflg&~AFPRISTINE;
  PRIMSHORT shdr; A recurself=(A)&shdr;  // allocate the block we will recur with
 // obsolete  l=jt->lleft;  jt->lleft =efflev(1L,v->fgh[2],a);
 // obsolete  r=jt->lright; jt->lright=efflev(2L,v->fgh[2],w);
@@ -127,6 +133,7 @@ static DF1(jtscapco1){PROLOG(555);A x,z=0;I m;V*v=FAV(self);
 // obsolete  fa(jt->sca);  // match the ra(), but not necessarily on the same block
 // obsolete  jt->lmon=m; jt->sca=scastk;   // pop level stack
  RZ(w);
+ I awflg=AFLAG(w); A awback=w; if(unlikely(awflg&AFVIRTUAL)){awback=ABACK(awback); awflg=AFLAG(awback);} AFLAG(awback)=awflg&~AFPRISTINE;
  PRIMSHORT shdr; A recurself=(A)&shdr;  // allocate the block we will recur with
  AM(recurself)=(I)v->fgh[0];  // fill in the pointer to u
  FAV(recurself)->valencefns[0]=jtlevs1;  // fill in function pointer
@@ -139,6 +146,7 @@ static DF1(jtscapco1){PROLOG(555);A x,z=0;I m;V*v=FAV(self);
  x=levs1(w,recurself);
  if(x){AT(AKASA(recurself))=BOX; AN(AKASA(recurself))=AS(AKASA(recurself))[0]; z=ope(AKASA(recurself)); AT(AKASA(recurself))=INT;} // if no error, turn the extendable list into a list of boxes (fixing AN), and open it
  fa(AKASA(recurself));  // match the ra(), but not necessarily on the same block
+ // always returns non-pristine
  EPILOG(z);
 }
 
@@ -153,6 +161,8 @@ static DF2(jtscapco2){PROLOG(556);A x,z=0;V*v=FAV(self);
 // obsolete  fa(jt->sca); 
 // obsolete  jt->lleft =l; jt->lright=r; jt->sca=scastk;
  RZ(a&&w);
+ I awflg=AFLAG(w); A awback=w; if(unlikely(awflg&AFVIRTUAL)){awback=ABACK(awback); awflg=AFLAG(awback);} AFLAG(awback)=awflg&~AFPRISTINE;
+ awflg=AFLAG(a); awback=a; if(unlikely(awflg&AFVIRTUAL)){awback=ABACK(awback); awflg=AFLAG(awback);} AFLAG(awback)=awflg&~AFPRISTINE;
  PRIMSHORT shdr; A recurself=(A)&shdr;  // allocate the block we will recur with
  AM(recurself)=(I)v->fgh[0];  // fill in the pointer to u
  FAV(recurself)->valencefns[1]=jtlevs2;  // fill in function pointer
@@ -165,6 +175,7 @@ static DF2(jtscapco2){PROLOG(556);A x,z=0;V*v=FAV(self);
  x=levs2(a,w,recurself);
  if(x){AT(AKASA(recurself))=BOX; AN(AKASA(recurself))=AS(AKASA(recurself))[0]; z=ope(AKASA(recurself)); AT(AKASA(recurself))=INT;} // if no error, turn the extendable list into a list of boxes (fixing AN), and open it
  fa(AKASA(recurself));  // match the ra(), but not necessarily on the same block
+ // always returns non-pristine
  EPILOG(z);
 }
 

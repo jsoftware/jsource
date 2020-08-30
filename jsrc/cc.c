@@ -7,7 +7,7 @@
 #include "vcomp.h"
 #define ZZDEFN
 #include "result.h"
-#define STATENEEDSASSEMBLYX 11
+#define STATENEEDSASSEMBLYX 15
 #define STATENEEDSASSEMBLY (((I)1)<<STATENEEDSASSEMBLYX)
 
 
@@ -177,7 +177,7 @@ DF2(jtboxcut0){A z;
     // Normal case.  Set usecount of cell to 1 since z is recursive usecount and y is not on the stack.  ra0() if recursible.  Put allocated addr into *jt->tnextpushp++.
     MC(CAV(y),wv+start*(cellsize<<k),substratoms<<k); AC(y)=ACUC1; if(t&RECURSIBLE){AFLAG(y)=t; jtra(jt,y,t);}
    }else{
-    // WILLBEOPENED case.  We must make the block virtual
+    // WILLBEOPENED case.  We must make the block virtual so we can avoid the copy
     jtexpostvirtual(jt,y,w,start*(cellsize<<k)); AN(y)=substratoms;
    }
    av+=2;
@@ -720,53 +720,55 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[12
  // process, handling special cases
  zz=0;   // indicate no result from special cases
  switch(id){
-  case CPOUND:
-   GATV0(zz,INT,m,1); zi=AV(zz); EACHCUT(*zi++=d;); 
-   break;
-  case CDOLLAR:
-   GATV0(zz,INT,m,1); zi=AV(zz); EACHCUT(*zi++=d;); A zw=vec(INT,MAX(0,r-1),AS(w)+1);
-   R IRS2(zz,zw,0L,0L,1L,jtover,z);
-  case CHEAD:
-   GA(zz,wt,m*wcn,r,AS(w)); zc=CAV(zz); AS(zz)[0]=m;
-   EACHCUT(if(d)MC(zc,v1,k); else fillv(wt,wcn,zc); zc+=k;);
-   break;
-  case CTAIL:
-   GA(zz,wt,m*wcn,r,AS(w)); zc=CAV(zz); AS(zz)[0]=m;
-   EACHCUT(if(d)MC(zc,v1+k*(d-1),k); else fillv(wt,wcn,zc); zc+=k;);
-   break;
+ case CPOUND:  // quickly calculate #;.n
+  GATV0(zz,INT,m,1); zi=AV(zz); EACHCUT(*zi++=d;); 
+  break;
+ case CDOLLAR:   // calculate as #;.n ,"0 1 }. $ w
+  GATV0(zz,INT,m,1); zi=AV(zz); EACHCUT(*zi++=d;); A zw=vec(INT,MAX(0,r-1),AS(w)+1);  // could use virt block
+  R IRS2(zz,zw,0L,0L,1L,jtover,z);
+ case CTAIL:
+ case CHEAD: ;
+  // remove pristinity from w since a contents is escaping
+  I awflg=AFLAG(w); if(unlikely(awflg&AFVIRTUAL)){w=ABACK(w); awflg=AFLAG(w);} AFLAG(w)=awflg&~AFPRISTINE;   // destroys w
+  GA(zz,wt,m*wcn,r,AS(w)); zc=CAV(zz); AS(zz)[0]=m;
+  EACHCUT(if(d)MC(zc,id==CHEAD?v1:v1+k*(d-1),k); else fillv(wt,wcn,zc); zc+=k;);
+  break;
+// obsolete   GA(zz,wt,m*wcn,r,AS(w)); zc=CAV(zz); AS(zz)[0]=m;
+// obsolete   EACHCUT(if(d)MC(zc,v1+k*(d-1),k); else fillv(wt,wcn,zc); zc+=k;);
+// obsolete   break;
 // scaf MUST CALCULATE e or discard this, which might be better
 // scaf should take this under BOXATOP?
-  case CSLASH:
-   {
-   VARPS adocv; varps(adocv,fs,wt,0);  // qualify the operation, returning action routine and conversion info
-   if(adocv.f){C*z0=0,*zc;I t,zk,zt;  // if the operation is a primitive that we can  apply / to...  z0 will hold a neutral if we have to calculate one
-    zt=rtype(adocv.cv);
+ case CSLASH: ;
+  // no need to turn off pristinity in w, because we handle only DIRECT types here
+  VARPS adocv; varps(adocv,fs,wt,0);  // qualify the operation, returning action routine and conversion info
+  if(adocv.f){C*z0=0,*zc;I t,zk,zt;  // if the operation is a primitive that we can  apply / to...  z0 will hold a neutral if we have to calculate one
+   zt=rtype(adocv.cv);
 #if SY_64
-    GA(zz,zt,m*wcn,r,AS(w)); AS(zz)[0]=m; 
+   GA(zz,zt,m*wcn,r,AS(w)); AS(zz)[0]=m; 
 #else
-    // plusinsI writes past the end of its result area if d==1 and there is overflow (normally that would be OK and would be converted to D inplace).  Here it overruns the buffer,
-    // so we allocate one extra word just in case
-    GA(zz,zt,m*wcn+1,r,AS(w)); AS(zz)[0]=m; AN(zz)=m*wcn;
+   // plusinsI writes past the end of its result area if d==1 and there is overflow (normally that would be OK and would be converted to D inplace).  Here it overruns the buffer,
+   // so we allocate one extra word just in case
+   GA(zz,zt,m*wcn+1,r,AS(w)); AS(zz)[0]=m; AN(zz)=m*wcn;
 #endif
-    if(!AN(zz))R zz;  // don't run function on empty arg
-    I atomsize=bpnoun(zt);
-    zc=CAV(zz); zk=wcn*atomsize;
-    if((t=atype(adocv.cv))&&TYPESNE(t,wt)){RZ(w=cvt(t,w)); wv=CAV(w);}
-    I rc=EVOK;   // accumulate error code
-    EACHCUT(if(d>1){ I lrc=((AHDRRFN*)adocv.f)(wcn,d,(I)1,v1,zc,jt); rc=lrc<rc?lrc:rc;} else if(d==1){copyTT(zc,v1,wcn,zt,wt);} else{if(!z0){z0=idenv0(a,w,FAV(self),zt,&z); // compared to normal reduces, c means d and d means n
-        if(!z0){if(z)R z; else{rc=jt->jerr; break;}}} mvc(zk,zc,atomsize,z0);} zc+=zk;
-    );
-    if(255&rc){
-     jsignal(rc);
-     if(FAV(self)->id!=CCUT)CUTFRETCOUNT(a)=m;  // if we are going to retry, we have to reset the # frets indicator which has been destroyed
-     R rc>=EWOV?cut2(a,w,self):0;
-    }else R adocv.cv&VRI+VRD?cvz(adocv.cv,zz):zz;
-    break;
-    }
+   if(!AN(zz))R zz;  // don't run function on empty arg
+   I atomsize=bpnoun(zt);
+   zc=CAV(zz); zk=wcn*atomsize;
+   if((t=atype(adocv.cv))&&TYPESNE(t,wt)){RZ(w=cvt(t,w)); wv=CAV(w);}
+   I rc=EVOK;   // accumulate error code
+   EACHCUT(if(d>1){ I lrc=((AHDRRFN*)adocv.f)(wcn,d,(I)1,v1,zc,jt); rc=lrc<rc?lrc:rc;} else if(d==1){copyTT(zc,v1,wcn,zt,wt);} else{if(!z0){z0=idenv0(a,w,FAV(self),zt,&z); // compared to normal reduces, c means d and d means n
+       if(!z0){if(z)R z; else{rc=jt->jerr; break;}}} mvc(zk,zc,atomsize,z0);} zc+=zk;
+   );
+   if(255&rc){
+    jsignal(rc);
+    if(FAV(self)->id!=CCUT)CUTFRETCOUNT(a)=m;  // if we are going to retry, we have to reset the # frets indicator which has been destroyed
+    R rc>=EWOV?cut2(a,w,self):0;
+   }else R adocv.cv&VRI+VRD?cvz(adocv.cv,zz):zz;
+   break;
   }
  }
 
  // If we didn't get a result from the special cases, run the normal result loop
+ // NOTE: if zz is set w may have been destroyed
  if(!zz){
   if(m){
    // There are cells.  Run the result loop over them
@@ -776,22 +778,27 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[12
    MCISH(AS(virtw)+1,AS(w)+1,r-1);
    // Set the offset to the first data
    AK(virtw)=v1-(C*)virtw;  // v1 is set to point to starting cell; transfer that info
+   // Make virtw inplaceable if w is.  If &.>, we could perhaps inplace always except if ]&.>
+   state |= (UI)(SGNIF((I)jtinplace,JTINPLACEWX)&~((AT(w)&TYPEVIPOK)-(f1!=jteveryself))&AC(w))>>(BW-1-ZZFLAGVIRTWINPLACEX);   // requires JTINPLACEWX==0.  Single flag bit
+
    // Remove WILLOPEN for the callee.  We use the caller's WILLOPEN status for the result created here
    // Remove inplacing if the verb is not inplaceable, possible because we always set u;. to inplaceable so we can get the WILLBEOPENED flags
-   jtinplace = (J)(intptr_t)((I)jtinplace & (~(JTWILLBEOPENED+JTCOUNTITEMS+JTINPLACEA)) & ((((wt&TYPEVIPOK)!=0)&REPSGN(AC(w))&(FAV(fs)->flag>>(VJTFLGOK1X-JTINPLACEWX)))*JTINPLACEW-(JTINPLACEW<<1)));  // turn off inplacing unless DIRECT and w is inplaceable
+// obsolete    jtinplace = (J)(intptr_t)((I)jtinplace & (~(JTWILLBEOPENED+JTCOUNTITEMS+JTINPLACEA)) & (((((wt&TYPEVIPOK)!=0)|f1==jteveryself)&REPSGN(AC(w))&(FAV(fs)->flag>>(VJTFLGOK1X-JTINPLACEWX)))*JTINPLACEW-(JTINPLACEW<<1)));  // turn off inplacing unless DIRECT and w is inplaceable
+   jtinplace = (J)(intptr_t)(((I)jtinplace & (~(JTWILLBEOPENED+JTCOUNTITEMS+JTINPLACEA+JTINPLACEW))) | (((FAV(fs)->flag>>(VJTFLGOK1X-JTINPLACEWX)))&JTINPLACEW));  // turn off inplacing unless DIRECT and w is inplaceable
 
 #define ZZDECL
 #include "result.h"
    ZZPARMS(1,m,1)
 #define ZZINSTALLFRAME(optr) *optr++=m;
-   I gerundx=0;  // if we have gerunds, this indicates which one we should run next
+// obsolete    I gerundx=0;  // if we have gerunds, this indicates which one we should run next
 
    do{UC *pdend=(UC*)CUTFRETEND(pd0);   /* 1st ele is # eles; get &chain  */
     while(pd<pdend){   /* step to first/next; process each fret.  Quit when pointing to end */
      UI len=*pd++; if(len==255){len=*(UI4*)pd; pd+=SZUI4;} d=len-neg;  /* fetch size, adjust if neg */
      AS(virtw)[0]=d; AN(virtw)=wcn*d; // install the size of the partition into the virtual block, and # atoms
      // call the user's function
-     AC(virtw)=ACUC1|ACINPLACE;   // in case we created a virtual block from it, restore inplaceability to the UNINCORPABLE block
+// obsolete      AC(virtw)=ACUC1|ACINPLACE;   // in case we created a virtual block from it, restore inplaceability to the UNINCORPABLE block
+     AC(virtw)=ACUC1 + ((state&ZZFLAGVIRTWINPLACE)<<(ACINPLACEX-ZZFLAGVIRTWINPLACEX));   // in case we created a virtual block from it, restore inplaceability to the UNINCORPABLE block
      RZ(z=CALL1IP(f1,virtw,fs));  //normal case
 
 #define ZZBODY  // assemble results

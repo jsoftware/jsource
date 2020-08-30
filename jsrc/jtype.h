@@ -382,8 +382,11 @@ typedef I SI;
 // For speedy singletons, there is the additional problem that the operation expects always to write a FL value to the result area, which is OK for any
 // real block but not for an inplaced virtual block, whose virtual data may be shorter than a FL.  The pure solution would be for the singleton code
 // to refrain from modifying a virtual block that is shorter than a FL, but that means we would have to test for it for every arithmetic operation.  Thus
-// we take the alternative, which is to not mark a virtual block inplaceable if it is a type shorter than a FL.  The type must also be DIRECT since we
-// can't keep track of individual usecounts for non-DIRECT blocks.
+// we take the alternative, which is to not mark a virtual block inplaceable if it is a type shorter than a FL.
+//
+// BOX type would be OK, as singleton code doesn't touch it and all usecounts are held in the backer, except for the possibility that the backer is recursive and the virtual block isn't.
+// Places that check TYPEVIPOK make an exception when the block is going to be processed by each or each2, because those routines are guaranteed not to disturb the boxes, but only
+// the first level of contents, and that only when the block is pristine.
 //
 // Note: arithmetic dyads on bytes have similar issues, because the 8-byte-at-a-time operations may execute outside the cell of the array.  We detect
 // those cases inside the atomic-dyad code in va2.c.

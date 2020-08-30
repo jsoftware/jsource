@@ -794,8 +794,8 @@ static CCT*jtcdload(J jt,CCT*cc,C*lib,C*proc){B ha=0;FARPROC f;HMODULE h;
 }
 
 // obsolete static I cdjtype(C c){R c=='c'?LIT:c=='w'?C2T:c=='u'?C4T:(c=='j'||c=='z')?CMPX:(c=='f'||c=='d')?FL:c?INT:0;}  // kludge scaf use tables or shifts
-static I cdjtype(C c){I r=INT; r=c=='c'?LIT:r; r=c=='w'?C2T:r; r=c=='u'?C4T:r; r=(c&(C)~('j'^'z'))=='j'?CMPX:r; r=(c&(C)~('d'^'f'))=='d'?FL:r; r=c==0?0:r; R r;}  // d/f and j/z differ by only 1 bit
      /* J type from type letter */
+static I cdjtype(C c){I r=INT; r=c=='c'?LIT:r; r=c=='w'?C2T:r; r=c=='u'?C4T:r; r=(c&(C)~('j'^'z'))=='j'?CMPX:r; r=(c&(C)~('d'^'f'))=='d'?FL:r; r=c==0?0:r; R r;}  // d/f and j/z differ by only 1 bit
 
 /* See "Calling DLLs" chapter in J User Manual                  */
 /* format of left argument to 15!:0                             */

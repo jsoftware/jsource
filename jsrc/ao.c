@@ -11,7 +11,7 @@
 
 // This is the derived verb for f/. y
 static DF1(jtoblique){A x,y,z;I m,n,r;D rkblk[16];
- RZ(w);
+ RZ(w);F1PREFIP;
  r=AR(w);  // r = rank of w
  // create y= ,/ w - the _2-cells of w arranged in a list (virtual block)
  RZ(y=redcat(w,self)); if(1>=r){m=AN(w); n=1;}else{m=AS(w)[0]; n=AS(w)[1];}
@@ -19,7 +19,7 @@ static DF1(jtoblique){A x,y,z;I m,n,r;D rkblk[16];
  A xm; RZ(xm=IX(m)); A xn; RZ(xn=IX(n));
  RZ(x=ATOMIC2(jt,xm,xn,rkblk,0L,1L,CPLUS)); AR(x)=1; *AS(x)=AN(x);
  // perform x f/. y, which does the requested operation, collecting the identical keys
- RZ(df2(z,x,y,sldot(VAV(self)->fgh[0])));
+ RZ(df2ip(z,x,y,sldot(VAV(self)->fgh[0])));
  // Final tweak: the result should have (0 >. <: +/ 2 {. $y) cells.  It will, as long as
  // m and n are both non0: when one is 0, result has 0 cells (but that cell is the correct result
  // of execution on a fill-cell).  Correct the length of the 0 case, when the result length should be nonzero
@@ -189,7 +189,7 @@ static DF2(jtkeysp){PROLOG(0008);A b,by,e,q,x,y,z;I j,k,n,*u,*v;P*p;
  EPILOG(z);
 }
 
-// a u/. w.  Self-classify a, then rearrange w and call cut
+// a u/. w.  Self-classify a, then rearrange w and call cut.  Includes special cases for f//.
 static DF2(jtkey){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
  RZ(a&&w);
  if(unlikely(SPARSE&AT(a)))R keysp(a,w,self);  // if sparse, go handle it
@@ -408,7 +408,7 @@ static DF2(jtkey){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
   nfrets=AM(ai);  //fetch # frets before we possibly clone ai
   I maxfretsize=(nitems>>8); maxfretsize=maxfretsize<nfrets?nfrets:maxfretsize; maxfretsize=4*maxfretsize+nfrets+1;  // max # bytes needed for frets
   if((UI)maxfretsize<sizeof(localfrets)-NORMAH*SZI){frets=(A)localfrets; AT(frets)=0;} // Cut tests the type field - only
-  else if((I)jtinplace&(I )((AFLAG(w)&(AFVIRTUAL|AFNJA))==0)&((UI)((-(I )(AT(w)&DIRECT))&AC(w)&(4-celllen)&((I )(SZI==4)-AR(w)))>>(BW-1-JTINPLACEWX)))frets=w;
+  else if((I)jtinplace&(I)((AFLAG(w)&(AFVIRTUAL|AFNJA))==0)&((UI)((-(I )(AT(w)&DIRECT))&AC(w)&(4-celllen)&((I )(SZI==4)-AR(w)))>>(BW-1-JTINPLACEWX)))frets=w;
   else GATV0(frets,LIT,maxfretsize,0);   // 1 byte per fret is adequate, since we have padding
   fretp=CUTFRETFRETS(frets);  // Place where we will store the fret-lengths.  They are 1 byte normally, or 5 bytes for groups longer than 254
 
@@ -459,7 +459,7 @@ static DF2(jtkey){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
   // now that we have the number of freats, we can allocate the fret block
   I maxfretsize=(nitems>>8); maxfretsize=maxfretsize<nfrets?nfrets:maxfretsize; maxfretsize=4*maxfretsize+nfrets+1;  // max # bytes needed for frets
   if((UI)maxfretsize<sizeof(localfrets)-NORMAH*SZI){frets=(A)localfrets; AT(frets)=0;} // Cut tests the type field - obly
-  else if((I)jtinplace&(I )((AFLAG(w)&(AFVIRTUAL|AFNJA))==0)&((UI)((-(I )(AT(w)&DIRECT))&AC(w)&(4-celllen)&((I )(SZI==4)-AR(w)))>>(BW-1-JTINPLACEWX)))frets=w;
+  else if((I)jtinplace&(I)((AFLAG(w)&(AFVIRTUAL|AFNJA))==0)&((UI)((-(I)(AT(w)&DIRECT))&AC(w)&(4-celllen)&((I)(SZI==4)-AR(w)))>>(BW-1-JTINPLACEWX)))frets=w;
   else GATV0(frets,LIT,maxfretsize,0);   // 1 byte per fret is adequate, since we have padding
   fretp=CUTFRETFRETS(frets);  // Place where we will store the fret-lengths.  They are 1 byte normally, or 5 bytes for groups longer than 254
 
@@ -503,21 +503,26 @@ static DF2(jtkey){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
  CUTFRETCOUNT(frets)=nfrets;  // # frets is #bytes stored, minus the length of the extended encodings
  CUTFRETEND(frets)=(I)fretp;   // pointer to end+1 of data
  // wperm is always inplaceable.  If u is inplaceable, make the call to cut inplaceable
+ // Transfer pristinity of w to wperm so we can see if it went away, but only if w is pristine inplaceable.  We want to leave
+ // wperm pristine so it can be used, but it's pristine only is w is zombie.  We sacrifice pristinity to inplaceability
+ AFLAG(wperm)|=AFLAG(w)&AFPRISTINE&REPSGN(AC(w)&SGNIF(jtinplace,JTINPLACEWX));
  // We pass the self pointer for /. into cut, as it uses the id therein to interpret a
  z=jtcut2((J)(intptr_t)((I)jt+((FAV(self)->flag&VGERL)?0:(FAV(FAV(self)->fgh[0])->flag>>(VJTFLGOK1X-JTINPLACEWX))&JTINPLACEW)),frets,wperm,self);
+ // If the operation turned off pristinity of wperm, do the same for w.  Remember that pristinity only matters if the block is inplaceable
+ AFLAG(w)&=AFLAG(wperm)|~AFPRISTINE;
  POPCCT
  EPILOG(z);
 }    /* a f/. w for dense x & w */
 
-// bivalent entry point: a </. w   or  (<./ i.@#) w
-DF2(jtkeybox){PROLOG(0009);A ai,z=0;I nitems;
- RZ(a&&w);
+// bivalent entry point: a </. w   or  (</. i.@#) w
+DF2(jtkeybox){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
+ RZ(a&&w);  // we don't neep ip, but all jtkey dyads must support it
  if(unlikely(SPARSE&AT(a)))R (AT(w)&NOUN?(AF)jtkeysp:(AF)jthook1cell)(jt,a,w,self);  // if sparse, go handle it
  SETIC(a,nitems);   // nitems is # items in a and w
  I cellatoms, celllen;  // number of atoms in an item of w, and the number of bytes therein.  celllen is negative for the monad
  struct AD fauxw;  // needed only for (</. i.@#) but must stay in scope
  if(likely(AT(w)&NOUN)){
-  // dyad: <./
+  // dyad: </.
   I t2; ASSERT(nitems==SETIC(w,t2),EVLENGTH);  // verify agreement
   PROD(cellatoms,AR(w)-1,AS(w)+1);   // length of a cell of w, in atoms
   celllen=cellatoms<<bplg(AT(w));  // length of a cell of w, in bytes
@@ -546,7 +551,11 @@ DF2(jtkeybox){PROLOG(0009);A ai,z=0;I nitems;
   makewritable(ai);  // we modify the size+index info to be running endptrs into the reorder area
   // allocate the result, which will be recursive, and set up to fill it with blocks off the tstack
   GATV0(z,BOX,nboxes,1); if(nboxes==0)RETF(z); // allocate result, and exit if empty for comp ease below
-  // boxes will be in AAV(z), in order.  Details discussed in jtbox().  Because we have to EPILOG the result, it will be ra'd there along with its descendants.  We set usecount to 0 until the EPILOG
+  // boxes will be in AAV(z), in order.  Details of hijacking tnextpushp are discussed in jtbox().
+  // We have to do it a little differently here, because when we allocate a block the contents come in piecemeal and we have no
+  // convenient time to INCORPRA the new contents.  So instead we leave the outer box non-recursive, and rely on the EPILOG to make
+  // it recursive, including recurring on the contents of the boxes.  To make this work we install an AC of 0 in the allocated
+  // boxes, because they have no tpop outstanding.  The EPILOG will raise that to 1.
   pushxsave = jt->tnextpushp; jt->tnextpushp=AAV(z);  // save tstack info before allocation
   // **** MUST NOT FAIL FROM HERE UNTIL THE END, WHERE THE ALLOCATION SYSTEM CAN BE RESTORED ****
 
@@ -557,6 +566,7 @@ DF2(jtkeybox){PROLOG(0009);A ai,z=0;I nitems;
   // moving the data for each input value in turn, reading in order and scatter-writing.
   I i;   // loop index
   I * RESTRICT wv=IAV(w);   // source pointer, advanced item by item
+  I wt=AT(w); I yr=MAX(AR(w),1);   // type of cells, and rank
   for(i=0;i<nitems;++i){
    I * RESTRICT partitionptr;  // pointer to where output will go
    I avvalue=av[i];  // fetch partition length/index
@@ -565,7 +575,7 @@ DF2(jtkeybox){PROLOG(0009);A ai,z=0;I nitems;
    }else{
     // start of new partition.  Figure out the length; out new partition; replace length with starting pointer; Use length to advance partition pointer
     avvalue-=i;  // length of partition
-    GAE(y,AT(w),cellatoms*avvalue,MAX(AR(w),1),AS(w),break); AC(y)=0; AS(y)[0]=avvalue; // allocate a region for the boxed data and set usecount to 0 since it is not on the tstack.  EPILOG will raise it to 1
+    GAE(y,wt,cellatoms*avvalue,yr,AS(w),break); AC(y)=0; AS(y)[0]=avvalue; // allocate a region for the boxed data and set usecount to 0 since it is not on the tstack.  EPILOG will raise it to 1
     partitionptr=IAV(y);  // start of partition: in the data area of the block
     avvalue=i;   // shift meaning of avvalue from length to index, where the partition pointer will be stored
    }
@@ -583,7 +593,6 @@ DF2(jtkeybox){PROLOG(0009);A ai,z=0;I nitems;
      wv=(I*)((I)wv+1);  // advance index vector
      av[avvalue]=(I)partitionptr+SZI;  // store updated end-of-partition after move
    }
-
   }
  }else{I *av;  // running pointer through the inputs
   // indexofsub detected that small-range processing is in order.  Information about the range is secreted in fields of ai
@@ -603,7 +612,8 @@ DF2(jtkeybox){PROLOG(0009);A ai,z=0;I nitems;
   av=IAV(a); DQ(nitems, I tval=ftblv[*av&valmsk]; ftblv[*av&valmsk]=++tval; nboxes+=tval==freqminval; av=(I*)((I)av+k);)   // build (negative) frequency table; sub 1 for each non-fret
   // allocate the result, which will be recursive, and set up to fill it with blocks off the tstack
   GATV0(z,BOX,nboxes,1); if(nboxes==0)RETF(z); // allocate result, and exit if empty for comp ease below
-  // boxes will be in AAV(z), in order.  Details discussed in jtbox().  Because we have to EPILOG the result, it will be ra'd there along with its descendants.  We set usecount to 0 until the EPILOG
+  // boxes will be in AAV(z), in order.  Details discussed in jtbox().
+  // We will later make the block recursive usecount, and we will set all the initial usecounts to 1 since they are not on the tpop stack
   pushxsave = jt->tnextpushp; jt->tnextpushp=AAV(z);  // save tstack info before allocation
   // **** MUST NOT FAIL FROM HERE UNTIL THE END, WHERE THE ALLOCATION SYSTEM CAN BE RESTORED ****
   // pass through the inputs again.  If we encounter a frequency value, allocate the next box.  Copy the next item and advance
@@ -611,6 +621,7 @@ DF2(jtkeybox){PROLOG(0009);A ai,z=0;I nitems;
 
   I i; // loop index
   I * RESTRICT wv=IAV(w);   // source pointer
+  I wt=AT(w); I yr=MAX(AR(w),1);   // type of cells, and rank
   for(av=IAV(a), i=nitems;i;--i){
    I *partitionptr;  // recipient of next cell
    I *slotaddr=&ftblv[*av&valmsk];  // the slot in the table we are processing
@@ -620,7 +631,7 @@ DF2(jtkeybox){PROLOG(0009);A ai,z=0;I nitems;
    }else{
     // start of new partition.  Figure out the length; out new partition; replace length with starting pointer; Use length to advance partition pointer
     avvalue=avvalue-freqminval+1;  // length of partition
-    GAE(y,AT(w),cellatoms*avvalue,MAX(AR(w),1),AS(w),break); AC(y)=0; AS(y)[0]=avvalue; // allocate a region for the boxed data and set usecount to 0 since it is not on the tstack.  EPILOG will raise it to 1
+    GAE(y,wt,cellatoms*avvalue,yr,AS(w),break); AC(y)=0; AS(y)[0]=avvalue; // allocate a region for the boxed data and set usecount to 0 since it is not on the tstack.  EPILOG will raise it to 1
     partitionptr=(I*)IAV(y);  // start the data for the partition at the beginning of the allocated box's data
    }
 
@@ -644,7 +655,9 @@ DF2(jtkeybox){PROLOG(0009);A ai,z=0;I nitems;
  }
  // restore the allocation system
  jt->tnextpushp=pushxsave;   // restore tstack pointer
- if(!y){AFLAG(z)=BOX; ASSERT(0,EVWSFULL);}  // if we broke out on allocation failure, fail.  Mark z recursive so when it is freed so will its contents be
+ // Set PRISTINE if w now has DIRECT type (note that w has been switched to INT for (<./ i.@#))
+ AFLAG(z)=(-(AT(w)&DIRECT) & AFPRISTINE);  // maybe pristine
+ ASSERT(y,EVWSFULL);  // if we broke out on allocation failure, fail.
  POPCCT
  EPILOG(z);
 }    // a <./ w
@@ -904,8 +917,8 @@ static F1(jtkeytallysp){PROLOG(0015);A b,e,q,x,y,z;I c,d,j,k,*u,*v;P*p;
  }
 #endif
 
-static DF2(jtkeytally){PROLOG(0016);A z,q;I at,j,k,n,r,s,*qv,*u,*v;
- RZ(a&&w);
+static DF2(jtkeytally){F2PREFIP;PROLOG(0016);A z,q;I at,j,k,n,r,s,*qv,*u,*v;
+ RZ(a&&w);  // we don't neep ip, but all jtkey dyads must support it
  SETIC(a,n); at=AT(a);
  ASSERT(n==SETIC(w,k),EVLENGTH);
  if(!AN(a))R vec(INT,!!n,&AS(a)[0]);  // handle case of empties - a must have rank, so use AS[0] as  proxy for n
@@ -1045,8 +1058,8 @@ static DF2(jtkeytally){PROLOG(0016);A z,q;I at,j,k,n,r,s,*qv,*u,*v;
 #endif
 
 
-static DF2(jtkeyheadtally){PROLOG(0017);A f,q,x,y,z;I b;I at,*av,k,n,r,*qv,*u,*v,wt,*zv;
- RZ(a&&w);
+static DF2(jtkeyheadtally){F2PREFIP;PROLOG(0017);A f,q,x,y,z;I b;I at,*av,k,n,r,*qv,*u,*v,wt,*zv;
+ RZ(a&&w);  // we don't neep ip, but all jtkey dyads must support it
  SETIC(a,n); wt=AT(w);
  ASSERT(n==SETIC(w,k),EVLENGTH);
 // obsolete  ASSERT(!n||wt&NUMERIC,EVDOMAIN);
@@ -1251,17 +1264,17 @@ static DF2(jtkeyheadtally){PROLOG(0017);A f,q,x,y,z;I b;I at,*av,k,n,r,*qv,*u,*v
 }    /* x ({.,#)/.y or x (#,{.)/.y */
 
 
-F1(jtsldot){A h=0;AF f1=jtoblique,f2;C c,d,e;I flag=0;V*v;
+F1(jtsldot){A h=0;AF f1=jtoblique,f2;C c,d,e;I flag=VJTFLGOK1|VJTFLGOK2;V*v;
 // NOTE: u/. is processed using the code for u;.1 and passing the self for /. into the cut verb.  So, the self produced
 // by /. and ;.1 must be the same as far as flags etc.
  RZ(w);
- if(NOUN&AT(w)){flag=VGERL; RZ(h=fxeachv(1L,w));}
+ if(NOUN&AT(w)){flag|=VGERL; RZ(h=fxeachv(1L,w));}
  v=VAV(w);
  switch(ID(w)){  // no default for f2: every path must set it
   case CPOUND: f2=jtkeytally; break;
 // obsolete   case CSLASH: f2=jtkeyslash; if(vaid(v->fgh[0]))f1=jtobqfslash; break;
   case CSLASH: f2=jtkey; if(AT(v->fgh[0])&VERB&&FAV(v->fgh[0])->flag&VISATOMIC2){ // f//.  if f is atomic2
-   /*scaf f2=jtkeyslash;*/ f1=jtobqfslash;
+   /*scaf f2=jtkeyslash;*/ f1=jtobqfslash; flag&=~VJTFLGOK1;
    // dyad f//. is special for f=+ >. <.   we set flags to indicate the operation and the allowed types
 #define keyslashvalues(w)CCM(w,CPLUS)+CCM(w,CMIN)+CCM(w,CMAX)
     CCMWDS(keyslash) CCMCAND(keyslash,cand,FAV(v->fgh[0])->id) if(CCMTST(cand,FAV(v->fgh[0])->id)){
@@ -1276,7 +1289,7 @@ F1(jtsldot){A h=0;AF f1=jtoblique,f2;C c,d,e;I flag=0;V*v;
                 if(((c^e)==(CHEAD^CPOUND))&&d==CCOMMA&&(c==CHEAD||c==CPOUND)){f2=jtkeyheadtally; break;}
                }
                // otherwise (including keymean) fall through to...
-  default: f2=jtkey; flag |= (FAV(w)->flag&VASGSAFE)|VJTFLGOK2;  // pass through ASGSAFE.  jtkey can handle inplace
+  default: f2=jtkey; flag |= (FAV(w)->flag&VASGSAFE);  // pass through ASGSAFE.
  }
  R fdef(0,CSLDOT,VERB, f1,f2, w,0L,h, flag, RMAX,RMAX,RMAX);
 }

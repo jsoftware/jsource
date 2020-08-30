@@ -1930,7 +1930,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
   // if a hashtable will be needed, allocate it.  It is NOT initialized
   // the hashtable is INT unless we have selected small-range hashing AND we are not looking for the index with i. or i:; then boolean is enough
   if(fmods>=0){IH * RESTRICT hh;
-   if(unlikely(fmods)){mode |= fmods; if(fmods&IIMODFULL)booladj=0;}   // If IMODFULL is required, bring it in; if not small-range, turn off bit mode
+   if(fmods){mode |= fmods; if(fmods&IIMODFULL)booladj=0;}   // If IMODFULL is required, bring it in; if not small-range, turn off bit mode   unlikely fails
 
    // make sure we have a hashtable of the requisite size.  p has the number of entries, booladj indicates whether they are 1 bit each.
    // if the #entries fits in a US, use the short table.  But bits always use the long table
@@ -1984,7 +1984,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
     // First, make a decision for Boolean tables.  If the table will be Boolean, decide whether to use packed bits
     // or bytes, and represent that information in mode and booladj.
     ASSERT((UI)m<=(UI)(UI4)-1,EVLIMIT);  // there must not be more items than we can distinguish with different hash indexes
-    if(unlikely(booladj)){if(unlikely(p>MAXBYTEBOOL)){mode|=IIMODPACK|IIMODBITS;}else{mode|=IIMODBITS;booladj=5-3;}  // set MODBITS as a flag to hashallo
+    if(booladj){if(unlikely(p>MAXBYTEBOOL)){mode|=IIMODPACK|IIMODBITS;}else{mode|=IIMODBITS;booladj=5-3;}  // set MODBITS as a flag to hashallo   unlikely fails on single word
     }else{
 #if 0  // now that we have wide instructions, it always makes sense to clear the allocated area
      // If the sizes are such that we should clear this table to save 3 clocks per atom of w, say so.  The clearing is done in hashallo.  Only for non-bits.
@@ -2149,7 +2149,7 @@ F1(jtnubsieve){
 F1(jtnub){ 
  RZ(w);F1PREFIP;
 // obsolete  if(SPARSE&AT(w)||AFLAG(w)&AFNJA)R repeat(nubsieve(w),w); 
- if(unlikely(((SPARSE&AT(w)-1)&((AFLAG(w)&AFNJA)-1))>=0))R repeat(nubsieve(w),w);    // sparse or NJA
+ if(unlikely((((SPARSE&AT(w))-1)&((AFLAG(w)&AFNJA)-1))>=0))R repeat(nubsieve(w),w);    // sparse or NJA
  A z; RZ(z=indexofsub(INUB,w,w));
  // We extracted from w, so mark it (or its backer if virtual) non-pristine.  If w was pristine and inplaceable, transfer its pristine status to the result.  We overwrite w because it is no longer in use
  I awflg=AFLAG(w); AFLAG(z)|=awflg&((SGNTO0(AC(w))&((I)jtinplace>>JTINPLACEWX))<<AFPRISTINEX); if(unlikely(awflg&AFVIRTUAL)){w=ABACK(w); awflg=AFLAG(w);} AFLAG(w)=awflg&~AFPRISTINE;

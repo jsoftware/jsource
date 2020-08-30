@@ -46,6 +46,11 @@
 #define ZZFLAGATOPOPEN2W (((I)1)<<ZZFLAGATOPOPEN2WX)
 #define ZZFLAGATOPOPEN2AX 9 // set if v is f@> for a
 #define ZZFLAGATOPOPEN2A (((I)1)<<ZZFLAGATOPOPEN2AX)
+#define ZZFLAGVIRTWINPLACEX 10 // set if the virtual block for w can be inplaced, based on the iterator context and inplaceability of the input, but ignoring whether the verb inplaces
+#define ZZFLAGVIRTWINPLACE (((I)1)<<ZZFLAGVIRTWINPLACEX)
+#define ZZFLAGVIRTAINPLACEX 11 // set if the virtual block for a can be inplaced, based on the iterator context and inplaceability of the input, but ignoring whether the verb inplaces
+#define ZZFLAGVIRTAINPLACE (((I)1)<<ZZFLAGVIRTAINPLACEX)
+
 #define ZZFLAGPRISTINEX AFPRISTINEX  // 21 set if the result is PRISTINE, i. e. boxed and made up entirely of DIRECT inplaceable results
 #define ZZFLAGPRISTINE AFPRISTINE
 
@@ -112,9 +117,9 @@ do{
  if(zz){  // if we have allocated the result area, we are into normal processing
   // Normal case: not first time.  Move verb result to its resting place, unless the type/shape has changed
 
-  // The original result z has now either been incorporated into zz or its items have been copied.  In either case, that makes z non-PRISTINE.
+  // The original result z will either be incorporated into zz or its items will be copied.  In either case, that makes z non-PRISTINE.
   I zzzaflag;  // we save AFLAG(z) for its PRISTINE flag.  We have to clear PRISTINE before the tpop, so here is convenient.  We just need the one flag for a short while
-  {I aflg=AFLAG(z); zzzaflag=aflg; if(aflg&BOX){A awbase=z; if(unlikely(aflg&AFVIRTUAL)){awbase=ABACK(z); aflg=AFLAG(awbase);} AFLAG(awbase)=aflg&~AFPRISTINE;}}   // since it will be repeated, run the test
+  {I aflg=AFLAG(z); zzzaflag=aflg; if(AT(z)&BOX){A awbase=z; if(unlikely(aflg&AFVIRTUAL)){awbase=ABACK(z); aflg=AFLAG(awbase);} AFLAG(awbase)=aflg&~AFPRISTINE;}}   // since it will be repeated, run the test
 
   if(!(ZZASSUMEBOXATOP||ZZFLAGWORD&ZZFLAGBOXATOP)){  // is forced-boxed result?  If so, just move in the box
    // not forced-boxed.  Move the result cell into the result area unless the shape changes
@@ -134,10 +139,10 @@ do{
    DO(zexprank, zexprank+=zs[i]^zzs[i];)  // if shapes don't match, set zexprank
    if(likely(!((zt&SPARSE) + (zexprank^zr)))){  // if there was no wreck...
     // rank/shape did not change.  What about the type?
-    if(TYPESNE(zt,zzt)){
+    if(unlikely(TYPESNE(zt,zzt))){
      // The type changed.  Convert the types to match.
      zt=maxtypedne(zt,zzt);  // get larger priority
-     if(AN(z)){I zatomct;
+     if(likely(AN(z))){I zatomct;
       // nonempty cells. we must convert the actual data.  See which we have to change
       if(zt==zzt){
        // Here the type of z must change.  Just convert it to type zt
@@ -168,7 +173,7 @@ do{
      }
     }
     // The result area and the new result now have identical shapes and precisions (or compatible precisions and are empty).  Move the cells
-    if(zzcelllen){  // questionable
+    if(zzcelllen){  // questionable - likely fails
      // Here there are cells to move.
      if(AFLAG(zz)&RECURSIBLE){
       // The result being built is recursive.  It has recursive count, so we have to increment the usecount of any blocks we add.
@@ -255,8 +260,8 @@ do{
    // forced-boxed result.  Must not be sparse.  The result box is recursive to begin with, unless WILLBEOPENED is set
    ASSERT(!(AT(z)&SPARSE),EVNONCE);
    // If z is DIRECT inplaceable, it must be unique and we can inherit them into a pristine result.  Otherwise clear pristinity
-   ZZFLAGWORD&=((AC(z)>>(BW-AFPRISTINEX))&((AT(z)&DIRECT)-1))|~ZZFLAGPRISTINE;
-   if(ZZWILLBEOPENEDNEVER||!(ZZFLAGWORD&ZZFLAGWILLBEOPENED)) {  // scaf it might be better to allow the virtual to be stored in the main result, and realize it only for the looparound z
+   ZZFLAGWORD&=((AC(z)>>(BW-AFPRISTINEX))&(-(AT(z)&DIRECT)))|~ZZFLAGPRISTINE;
+   if(likely(ZZWILLBEOPENEDNEVER||!(ZZFLAGWORD&ZZFLAGWILLBEOPENED))) {  // scaf it might be better to allow the virtual to be stored in the main result, and realize it only for the looparound z
     // normal case where we are creating the result box.  Must incorp the result
     realizeifvirtual(z); ra(z);   // Since we are moving the result into a recursive box, we must ra() it.  This plus rifv plus pristine flagging (above) =INCORPRA
     *zzboxp=z;  // install the new box.  zzboxp is ALWAYS a pointer to a box when force-boxed result
@@ -270,7 +275,7 @@ do{
     // since we are adding the block to a NONrecursive boxed result,  we DO NOT have to raise the usecount of the block.  And we can leave the usecount inplaceable.  The only way the inplaceable
     // usecount would be exposed is if the next thing is u&.>, and there it is OK - if the overall argument is inplaceable, the contents would be marked inplaceable anyway
     *zzboxp=z;  // install the new box.  zzboxp is ALWAYS a pointer to a box when force-boxed result
-    if(ZZFLAGWORD&ZZFLAGCOUNTITEMS){
+    if(unlikely(ZZFLAGWORD&ZZFLAGCOUNTITEMS)){
      // if the result will be razed next, we will count the items and store that in AM.  We will also ensure that the result boxes' contents have the same type
      // and item-shape.  If one does not, we turn off special raze processing.  It is safe to take over the AM field in this case, because we know this is WILLBEOPENED and
      // (1) will never assemble or epilog; (2) will feed directly into a verb that will discard it without doing any usecount modification

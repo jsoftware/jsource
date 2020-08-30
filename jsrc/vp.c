@@ -66,6 +66,7 @@ static F1(jtcfd){A b,q,x,z,*zv;B*bv;I c,i,j,n,*qv,*u,*v,zn;
   RZ(zv[i++]=rifvs(vec(INT,u-qv,qv)));
  }
  AN(z)=*AS(z)=zn=i; j=zn-1; DO(zn>>1, x=zv[i]; zv[i]=zv[j]; zv[j]=x; --j;);
+ AFLAG(z)|=AFPRISTINE;  // what we generated is always pristine
  R z;
 }    /* cycle from direct */
 
@@ -108,13 +109,14 @@ F1(jtpparity){A x,y,z;B *u;I i,j,k,m,n,p,r,*s,*v,*zv;
  R z;
 }    /* permutation parity; # interchanges to get i.n */
 
+// reduced form seems to be (>:i.-$y) #: y where y is the permutation number (note there is a redundant 0 at the end)
 static F1(jtdfr){A z;I c,d,i,j,m,n,*v,*x;
  RZ(w);
- n=*(AS(w)+AR(w)-1); PROD(m,AR(w)-1,AS(w)); v=AV(w);
+ n=*(AS(w)+AR(w)-1); PROD(m,AR(w)-1,AS(w)); v=AV(w);  // n=length of each permutation, m=#permutations
  GATV(z,INT,AN(w),AR(w),AS(w)); x=AV(z);
- for(i=0;i<m;++i){
-  DO(n, x[i]=i;);
-  DO(n-1, j=i; c=x[j+v[j]]; DO(1+v[j], d=x[j+i]; x[j+i]=c; c=d;););
+ for(i=0;i<m;++i){   // for each permutation
+  DO(n, x[i]=i;);  // initialize an identity permutation
+  DO(n-1, j=i; c=x[j+v[j]]; DO(1+v[j], d=x[j+i]; x[j+i]=c; c=d;););   // within the length-j suffix of the permutation, right-rotate the first v[j] elements 
   x+=n; v+=n;
  }
  R z;
@@ -140,7 +142,7 @@ F2(jtadot2){A m,p;I n;
  ASSERT(all1(le(negate(m),a))&&all1(lt(a,m)),EVINDEX);
  if(!AR(w)){RZ(vi(a)); RCA(w);}
  RZ(p=dfr(vi(abase2(apv(n,n,-1L),a))));
- R equ(w,IX(n))?p:from(p,w);
- // pristinity unchanged
+ R equ(w,IX(n))?p:from(p,w);  // special case when w is index vector - just return permutation.  Otherwise shuffle items of w
+ // pristinity unchanged here: if w boxed, it was set by {
 }
 

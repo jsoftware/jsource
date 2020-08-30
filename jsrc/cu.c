@@ -21,8 +21,8 @@ static A jteverysp(J jt,A w,A fs){A*wv,x,z,*zv;P*wp,*zp;
 #define EVERYI(exp)  {RZ(x=exp); INCORP(x); RZ(*zv++=x); ASSERT(!(SPARSE&AT(x)),EVNONCE);}
      /* note: x can be non-noun */
 
+DF1(jteveryself){R jtevery(jt,w,FAV(self)->fgh[0]);}   // replace u&.> with u and process
 // u&.>, but w may be a gerund, which makes the result a list of functions masquerading as an aray of boxes
-static DF1(jteveryself){R jtevery(jt,w,FAV(self)->fgh[0]);}   // replace u&.> with u and process
 A jtevery(J jt, A w, A fs){A * RESTRICT wv,x,z,* RESTRICT zv;
  RZ(w);F1PREFIP;RESETRANK;  // we claim to support IRS1 but really there's nothing to do for it
  if(unlikely(SPARSE&AT(w)))R everysp(w,fs);
@@ -45,25 +45,31 @@ A jtevery(J jt, A w, A fs){A * RESTRICT wv,x,z,* RESTRICT zv;
  zv=AAV(z);
  // Get jt flags to pass to next level - only the inplacing flag, if the routine can take it.  We enable inplacing to fs if our input w was inplaceable.  To get actual inplacing we also have to make the contents inplaceable
  jtinplace=(J)((I)jt+((flags>>(ACPERMANENTX-JTINPLACEWX))&(FAV(fs)->flag>>(VJTFLGOK1X-JTINPLACEWX))&JTINPLACEW));
+ // If the verb returns its input block, we will have to turn off pristinity of the arg.  Replace w by its backing block
+ if(AFLAG(w)&AFVIRTUAL)w=ABACK(w);
+ // *** now w has been replaced by its backing block, if it was virtual
  while(1){
   // If the input was pristine inplaceable, flag the contents as inplaceable UNLESS they are PERMANENT
   // If the input is inplaceable, there is no more use for it after this verb.  If it was pristine, every block in it is DIRECT and was either permanent or inplaceable when it was added; so if it's
   // not PERMANENT it is OK to change the usecount to inplaceable.  We must remove inplaceability on the usecount after execution, in case the input block is recursive and the contents now show a count of 2
   // We may create a block with usecount 8..2,  That's OK, because it cannot be fa'd unless it is ra'd first, and the ra will wipe out the inplaceability.  We do need to keep the usecount accurate, though.
-#if 0  // don't try inplacing in boxes yet  scaf
+#if 1  // don't try inplacing in boxes yet  scaf
   AC(virtw)|=(AC(virtw)-(flags&ACPERMANENT))&ACINPLACE;
 #endif
   RZ(x=CALL1IP(f1,virtw,fs)); // run the user's verb
-  // If z is DIRECT inplaceable, it must be unique and we can inherit them into a pristine result.  Otherwise clear pristinity
-  if(AT(x)&DIRECT){
-    flags&=SGNIFPRISTINABLE(AC(x))|~ACINPLACE;  // sign bit of flags will hold PRISTINE status of result: 1 if all DIRECT and inplaceable or PERMANENT
+  // If x is DIRECT inplaceable, it must be unique and we can inherit them into a pristine result.  Otherwise clear pristinity
+  if(AT(x)&DIRECT){   // will predict correctly
+   flags&=SGNIFPRISTINABLE(AC(x))|~ACINPLACE;  // sign bit of flags will hold PRISTINE status of result: 1 if all DIRECT and inplaceable or PERMANENT
+   // If the verb returned its input, that means the input is escaping and the argument block is no longer pristine.  We only need to worry about this when the arg was pristine, which
+   // means that x must be DIRECT.
+   if(unlikely(x==virtw))AFLAG(w)&=~AFPRISTINE;
   }else{
     // not DIRECT.  result must be non-pristine, and we need to turn off pristinity of x since we are going to incorporate it
     flags&=~ACINPLACE;  // result not pristine
     {I aflg=AFLAG(x); A awbase=x; if(unlikely(aflg&AFVIRTUAL)){awbase=ABACK(x); aflg=AFLAG(awbase);} AFLAG(awbase)=aflg&~AFPRISTINE;}  // x can never be pristine, since is being incorped
   }
   // Restore usecount to virtw.  We can't just store back what it was, because it may have been modified in the verb.
-#if 0  // scaf
+#if 1  // scaf
   AC(virtw)&=~ACINPLACE;
 #endif
   ASSERT(!(SPARSE&AT(x)),EVNONCE);
@@ -104,8 +110,8 @@ A jtevery(J jt, A w, A fs){A * RESTRICT wv,x,z,* RESTRICT zv;
  R z;
 }
 
+DF2(jtevery2self){R jtevery2(jt,a,w,FAV(self)->fgh[0]);}   // replace u&.> with u and process
 // u&.>, but w may be a gerund, which makes the result a list of functions masquerading as an aray of boxes
-static DF2(jtevery2self){R jtevery2(jt,a,w,FAV(self)->fgh[0]);}   // replace u&.> with u and process
 A jtevery2(J jt, A a, A w, A fs){A*av,*wv,x,z,*zv;
 // todo kludge should rewrite with single flag word
  RZ(a&&w);F2PREFIP;

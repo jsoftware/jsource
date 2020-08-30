@@ -229,48 +229,62 @@ static DF1(jtred0){DECLF;A x,z;I f,r,wr,*s;
 }    /* f/"r w identity case */
 
 // general reduce.  We inplace the results into the next iteration.  This routine cannot inplace its inputs.
-static DF1(jtredg){F1PREFIP;PROLOG(0020);DECLF;AD * RESTRICT a;I i,k,n,r,wr;A *old;
+static DF1(jtredg){F1PREFIP;PROLOG(0020);DECLF;AD * RESTRICT a;I i,n,r,wr;
  RZ(w);
  ASSERT(DENSE&AT(w),EVNONCE);
  // loop over rank
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; RESETRANK;
  if(r<wr)R rank1ex(w,self,r,jtredg);
  // From here on we are doing a single reduction
- // TODO: should detect &.> and avoid overhead
  n=AS(w)[0]; // n=#cells
  // Allocate virtual block for the running x argument.
- A origw=w; I origwc=AC(w);  // save inplaceability of the original w
  fauxblock(virtafaux); fauxvirtual(a,virtafaux,w,r-1,ACUC1/* obsolete |ACINPLACE*/);  // allocate UNINCORPORABLE block
- old=jt->tnextpushp; // save stack mark for subsequent frees.  We keep the a argument over the calls, but allow the w to be deleted
- // w will hold the result from the iterations.  Init to value of last cell
- // Since there are multiple cells, w may be in a virtual block; but we don't rely on that.
- RZ(w=tail(w)); k=AN(w)<<bplg(AT(w)); // k=length of input cell in bytes
- // Calculate inplaceability for most of the run.  We can inplace the left arg, which is always virtual, if w is direct inplaceable.
- // We can inplace the right arg the first time if it is direct inplaceable, and always after that.  This is subject to approval by the verb u
- // and the input jtinplace.  We turn off WILLBEOPENED status in jtinplace for the callee.
- I inplacelaterw = (FAV(fs)->flag>>(VJTFLGOK2X-JTINPLACEWX)) & JTINPLACEW;  // JTINPLACEW if the verb can handle inplacing
- jtinplace = (J)(intptr_t)(((I)jt) + (JTINPLACEW+JTINPLACEA)*(inplacelaterw&(I)jtinplace&((AT(w)&TYPEVIPOK)!=0)&REPSGN(origwc)));  // inplace left arg, and first right arg, only if w is direct inplaceable, enabled, and verb can take it
+ // wfaux will hold the result from the iterations.  Init to value of last cell
+ // Allocate fauxvirtual arg for the first cell, so it can be inplaceable/pristine if needed (tail returned a virtual block, which messed things up for high rank)
+ fauxblock(virtwfaux); A wfaux; fauxvirtual(wfaux,virtwfaux,w,r-1,ACUC1);  // allocate UNINCORPORABLE block, mark inplaceable - used only once
+   // finish filling the virt block
+ A *old=jt->tnextpushp; // save stack mark for subsequent frees.  We keep the a argument over the calls, but allow the w to be deleted
+// obsolete  RZ(w=tail(w));
  // fill in the shape, offset, and item-count of the virtual block
- AN(a)=AN(w); AK(a)+=(n-2)*k; MCISH(AS(a),AS(w),r-1);  // make the virtual block look like the tail, except for the offset
- // Mark the blocks as inplaceable.  They won't be used as inplaceable unless permitted by jtinplace
+ I k; PROD(k,r-1,AS(w)+1);  // k=#atoms of cell of w
+ AN(wfaux)=k; AN(a)=k;
+ k<<=bplg(AT(w)); // k now=length of input cell in bytes, where it will remain
+ AK(wfaux)+=(n-1)*k; AK(a)+=(n-2)*k; MCISH(AS(wfaux),AS(w)+1,r-1); MCISH(AS(a),AS(w)+1,r-1);  // make the virtual block look like the tail, except for the offset
+ // Calculate inplaceability.  We can inplace the left arg, which is always virtual, if w is inplaceable and (w is direct or fs is &.>)
+ // We include contextual inplaceability (from jtinplace) here because if the block is returned, its pristinity will be checked if it is inplaceable.  Thus
+ // we do not want to call a faux argument inplaceable if it really isn't.  This gives us leeway with jtinplace itself
+ I aipok = (SGNIF((I)jtinplace&(((AT(w)&TYPEVIPOK)!=0)|f2==jtevery2self),JTINPLACEWX)&AC(w))+ACUC1;   // requires JTINPLACEWX==0.  This is 1 or 8..1
+ // We can inplace the right arg the first time if it is direct inplaceable, and always after that (assuming it is an inplaceable result).
+ // and the input jtinplace.  We turn off WILLBEOPENED status in jtinplace for the callee.
+ AC(wfaux)=aipok;   // first cell is inplaceable if second is
+// obsolete  I inplacelaterw = (FAV(fs)->flag>>(VJTFLGOK2X-JTINPLACEWX)) & JTINPLACEW;  // JTINPLACEW if the verb can handle inplacing
+// obsolete  jtinplace = (J)(intptr_t)(((I)jt) + (JTINPLACEW+JTINPLACEA)*(inplacelaterw&(I)jtinplace&(((AT(w)&TYPEVIPOK)!=0)|f2==jtevery2self)&REPSGN(AC(w))));  // inplace left arg, and first right arg, only if w is direct inplaceable, enabled, and verb can take it
+ jtinplace = (J)(intptr_t)(((I)jt) + (JTINPLACEW+JTINPLACEA)*((FAV(fs)->flag>>(VJTFLGOK2X-JTINPLACEWX)) & JTINPLACEW));  // all items are used only once
+
  // We need to free memory in case the called routine leaves it unfreed (that's bad form & we shouldn't expect it), and also to free the result of the
  // previous iteration.  We don't want to free every time, though, because that does ra() on w which could be a costly traversal if it's a nonrecusive recursible type.
  // As a compromise we free every few iterations: at least one per 8 iterations, and at least 8 times through the process
 #define LGMINGCS 3  // lg2 of minimum number of times we call gc
 #define MINGCINTERVAL 8  // max spacing between frees
  I freedist=MIN((n+((1<<LGMINGCS)-1))>>LGMINGCS,MINGCINTERVAL); I freephase=freedist;
- for(i=1;i<n;++i){   // loop through items
-  AC(a)=ACUC1|ACINPLACE;   // in case we created a virtual block from it, restore inplaceability to the UNINCORPABLE block
-  RZ(w=CALL2IP(f2,a,w,fs));
-  if(--freephase==0){w=gc(w,old); freephase=freedist;}   // free the buffers we allocated, except for the result
-  // if w happens to be the same virtual block that we passed in, we have to clone it before we change the pointer
-  if(a==w){RZ(w=virtual(w,0,AR(a))); AN(w)=AN(a); MCISH(AS(w),AS(a),AR(a));}
+// obsolete  for(i=1;i<n;++i){   // loop through items
+ i=n-1; while(1){  // for each cell except the last
+// obsolete   AC(a)=ACUC1|ACINPLACE;   // in case we created a virtual block from it, restore inplaceability to the UNINCORPABLE block
+  AC(a)=aipok;   // in case we created a virtual block from it, restore inplaceability to the UNINCORPABLE block
+  RZ(wfaux=CALL2IP(f2,a,wfaux,fs));
+  if(--i==0)break;   // stop housekeeping after last iteration
+  // if w happens to be the same virtual block that we passed in as x, we have to clone it before we change the pointer
+  if(unlikely(a==wfaux)){RZ(wfaux=virtual(wfaux,0,AR(a))); AN(wfaux)=AN(a); MCISH(AS(wfaux),AS(a),AR(a));}
+  if(--freephase==0){wfaux=gc(wfaux,old); freephase=freedist;}   // free the buffers we allocated, except for the result
   // move to next input cell
   AK(a) -= k;
-  // set larger inplaceability for iterations after the first
-  jtinplace = (J)(intptr_t)((I)jtinplace|inplacelaterw);
+// obsolete   // set larger inplaceability for iterations after the first
+// obsolete   jtinplace = (J)(intptr_t)((I)jtinplace|inplacelaterw);
  }
- EPILOG(w);  // this frees the virtual block, at the least
+ // At the end of all this, it is possible that the result is the original first or last cell, resting in its original virtual block.
+ // In that case, we have to realize it, so that we don't let the fauxvirtual block escape
+ if(unlikely(AFLAG(wfaux)&AFUNINCORPABLE))wfaux=realize(wfaux);
+ EPILOG(wfaux);  // this frees the virtual block, at the least
 }    /* f/"r w for general f and 1<(-r){$w */
 
 

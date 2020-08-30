@@ -192,10 +192,10 @@ static DF1(jtgsuffix){A h,*hv,z,*zv;I m,n,r;
    AK(x)-=k; AK(y)-=k; tpop(old);  \
  }}
 
-static DF1(jtssg){F1PREFIP;PROLOG(0020);A a,z;I i,k,n,r,wr;
+static DF1(jtssg){F1PREFIP;PROLOG(0020);A a,z;I i,n,r,wr;
  RZ(w);
  ASSERT(DENSE&AT(w),EVNONCE);
- // loop over rank
+ // loop over rank - we claim to handle IRS
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; RESETRANK; if(r<wr)R rank1ex(w,self,r,jtssg);
 
  // From here on we are doing a single scan
@@ -214,15 +214,30 @@ static DF1(jtssg){F1PREFIP;PROLOG(0020);A a,z;I i,k,n,r,wr;
 // not checked state |= (-state) & (I)jtinplace & JTCOUNTITEMS; // remember if this verb is followed by ; - only if we BOXATOP, to avoid invalid flag setting at assembly
 #define ZZWILLBEOPENEDNEVER 1
 
- // Allocate virtual block for the running x argument.  UNINCORPABLE, non-inplaceable
+ // Allocate virtual block for the running x argument.  UNINCORPABLE.  Should be inplaceable, but we don't yet
  fauxblock(virtafaux); fauxvirtual(a,virtafaux,w,r-1,ACUC1);
  // z will hold the result from the iterations.  Init to value of last cell
- // Since there are multiple cells, z will be in a virtual block (usually)
- RZ(z=tail(w)); k=AN(z)<<bplg(AT(z)); // k=length of input cell in bytes
+ // Since there are multiple cells, z will be in a virtual block to begin with (usually)
+// obsolete RZ(z=tail(w)); k=AN(z)<<bplg(AT(z)); // k=length of input cell in bytes
+ // Allocate fauxvirtual arg for the first cell, so it can be inplaceable/pristine if needed (tail returned a noninplaceable virtual block, which messed things up for high rank)
+ fauxblock(virtwfaux); fauxvirtual(z,virtwfaux,w,r-1,ACUC1);  // allocate UNINCORPORABLE block, mark inplaceable - used only once
  // fill in the shape, offset, and item-count of the virtual block
- AN(a)=AN(z); AK(a)+=(n-1)*k; MCISH(AS(a),AS(z),r-1);  // make the virtual block look like the tail, except for the offset.  We start out pointing
-   // to the last item; the pointer is unused in the first iteration, and we then back up to the second-last item, which is the first one we
-   // process as a
+ I k; PROD(k,r-1,AS(w)+1);  // k=#atoms of cell of w
+ AN(z)=k; AN(a)=k;
+ k<<=bplg(AT(w)); // k now=length of input cell in bytes, where it will remain
+ AK(z)+=(n-1)*k; AK(a)+=(n-1)*k; MCISH(AS(z),AS(w)+1,r-1); MCISH(AS(a),AS(w)+1,r-1);  // a points to tail; it will be decremented before first use
+// obsolete AN(a)=AN(z); AK(a)+=(n-1)*k; MCISH(AS(a),AS(z),r-1);  // make the virtual block look like the tail, except for the offset.  We start out pointing
+ // Calculate inplaceability.  We can inplace the left arg, which is always virtual, if w is inplaceable and (w is direct or fs is &.>)
+ // We include contextual inplaceability (from jtinplace) here because if the block is returned, its pristinity will be checked if it is inplaceable.  Thus
+ // we do not want to call a faux argument inplaceable if it really isn't.  This gives us leeway with jtinplace itself
+ state |= (UI)(SGNIF((I)jtinplace,JTINPLACEWX)&~((AT(w)&TYPEVIPOK)-(f2!=jtevery2self))&AC(w))>>(BW-1-ZZFLAGVIRTAINPLACEX);   // requires JTINPLACEWX==0.  Single flag bit
+ // We can inplace the right arg the first time if it is direct inplaceable, and always after that (assuming it is an inplaceable result).
+ // and the input jtinplace.  We turn off WILLBEOPENED status in jtinplace for the callee.
+ AC(z)=ACUC1 + ((state&ZZFLAGVIRTAINPLACE)<<(ACINPLACEX-ZZFLAGVIRTAINPLACEX));   // first cell is inplaceable if second is
+ jtinplace = (J)(intptr_t)(((I)jt) + (JTINPLACEW+JTINPLACEA)*((FAV(fs)->flag>>(VJTFLGOK2X-JTINPLACEWX)) & JTINPLACEW));  // all items are used only once
+// obsolete  // Set inplaceability for the running a.  It is inplaceable if w is.  a itself is vistual and cannot be included in a result, but the atoms it points to can be changed & then copied.
+// obsolete  // Inplaceability of fs is already included in the inplaceability of the arguments
+// obsolete  jtinplace = (J)(intptr_t)(((I)jt) + (JTINPLACEA)*((I)jtinplace&(((AT(w)&TYPEVIPOK)!=0)|f2==jtevery2self)&SGNTO0(AC(w))));  // inplace left arg only if w is direct inplaceable, enabled, and verb can take it
 
 #define ZZPOPNEVER 1   // we mustn't TPOP after copying the result atoms, because they are reused.  This will leave the memory used for type-conversions unclaimed.
    // if we implement the annulment of tpop pointers, we should use that to hand-free results that have been converted
@@ -230,7 +245,7 @@ static DF1(jtssg){F1PREFIP;PROLOG(0020);A a,z;I i,k,n,r,wr;
  // to be fed into the next iteration.  This is still a saving, because we can use the same box to point to each successive result.
  // Exception: if the reusable box gets incorporated, it is no longer reusable and must be reallocated.  We will use the original z box,
  // which will NEVER be virtual because it is an atom whenever BOXATOP is set, as the starting pointer to the prev boxed result
- A boxedz = z; z=(state&ZZFLAGBOXATOP)?AAV(z)[0]:z;  // init current pointer for the temp box; if BOXATOP, use >{:y as the first (to-be-boxed) result
+ A boxedz=z; z=AAV(z)[0]; z=(state&ZZFLAGBOXATOP)?z:boxedz;  // init current pointer for the temp box; if BOXATOP, use >{:y as the first (to-be-boxed) result (always safe to fetch 1 value from z)
 
 #define ZZDECL
 #define ZZSTARTATEND 1   // build result from bottom up
@@ -241,7 +256,7 @@ static DF1(jtssg){F1PREFIP;PROLOG(0020);A a,z;I i,k,n,r,wr;
 
  AD * RESTRICT zz=0;
  for(i=0;i<n;++i){   // loop through items, noting that the first is the tail itself
-  if(i){RZ(z=CALL2(f2,a,z,fs));}   // apply the verb to the arguments (except the first time)
+  if(i){RZ(z=CALL2IP(f2,a,z,fs));}   // apply the verb to the arguments (except the first time)
 #define ZZBODY
 #include "result.h"
   // If BOXATOP, we need to reinstate the boxing around z for the next iteration.
@@ -249,12 +264,14 @@ static DF1(jtssg){F1PREFIP;PROLOG(0020);A a,z;I i,k,n,r,wr;
    // If boxedz itself has been incorporated into the result, we have to reallocate it.  We don't need the usual check for z==boxedz, because we know we INCORPed z into
    // the boxed result, so if it was the same as boxedz, the usecount of boxedz was incremented then
    if(!ACIPISOK(boxedz))GAT0(boxedz,BOX,1,0);   // reallocate boxedz if needed
-   AAV(boxedz)[0]=z; z=boxedz;  // point boxedz to the previous result, and make that the new argument for next time
+   ACIPNO(z); AAV(boxedz)[0]=z; z=boxedz;  // incorporate z into boxedz; point boxedz to the previous result, and make that the new argument for next time
   }
   // if result happens to be the same virtual block that we passed in, we have to clone it before we change the pointer
   else if(a==z){RZ(z=virtual(z,0,AR(a))); AN(z)=AN(a); MCISH(AS(z),AS(a),r-1);}
 
   AK(a)-=k;  // back up to next input
+// obsolete   AC(a)=ACUC1|ACINPLACE;   // in case we created a virtual block from it, restore inplaceability to the UNINCORPABLE block
+  AC(a)=ACUC1 + ((state&ZZFLAGVIRTAINPLACE)<<(ACINPLACEX-ZZFLAGVIRTAINPLACEX));   // in case we created a virtual block from it, restore inplaceability to the UNINCORPABLE block
  }
 #define ZZEXIT
 #include "result.h"
@@ -297,6 +314,7 @@ static DF1(jtsscan){A y,z;I d,f,m,n,r,t,wn,wr,*ws,wt;
    // note that the above line always takes the r==0 case
  VARPS adocv; varps(adocv,self,wt,2);  // analyze f - get suffix routine
  if(!adocv.f)R IRSIP1(w,self,r,jtssg,z);   // if not supported atomically, go do general suffix
+ // The rest handles primitives with fast suffix scans
  if((t=atype(adocv.cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));
  if(ASGNINPLACESGN(SGNIF((I)jtinplace,JTINPLACEWX)&SGNIF(adocv.cv,VIPOKWX),w))z=w; else GA(z,rtype(adocv.cv),wn,wr,ws);
  I rc=((AHDRSFN*)adocv.f)(d,n,m,AV(w),AV(z),jt);
@@ -368,15 +386,15 @@ static DF2(jtofxassoc){A f,i,j,p,s,x,z;C id,*zv;I c,d,k,kc,m,r,t;V*v;VA2 adocv;
 
 static DF1(jtiota1rev){I j; SETIC(w,j); R apv(j,j,-1L);}
 
-F1(jtbsdot){A f;AF f1=jtsuffix,f2=jtoutfix;I flag=FAV(ds(CBSDOT))->flag;C id;V*v;
+F1(jtbsdot){A f;AF f1=jtsuffix,f2=jtoutfix;I flag=FAV(ds(CBSDOT))->flag;C id;V*v;  // init flag is IRS1
  RZ(w);
  if(NOUN&AT(w))R fdef(0,CBSLASH,VERB, jtgsuffix,jtgoutfix, w,0L,fxeachv(1L,w), VGERL|VAV(ds(CBSLASH))->flag, RMAX,0L,RMAX);
  v=FAV(w);  // verb info for w
  switch(v->id){
   case CPOUND: f1=jtiota1rev; break;
-  case CSLASH:  // f/, but not when f is a gerund
-   f1=jtsscan; flag|=VJTFLGOK1;
-   f=v->fgh[0]; id=ID(f); if(id==CBDOT){f=VAV(f)->fgh[1]; if(INT&AT(f)&&!AR(f))id=(C)*AV(f);}
+  case CSLASH:  // v is f/, but not when f is a gerund
+   f1=jtsscan;  // code for f/\. - take inplaceability from dyad f
+   f=v->fgh[0]; flag|=(FAV(f)->flag&VJTFLGOK2)>>(VJTFLGOK2X-VJTFLGOK1X); id=ID(f); if(id==CBDOT){f=VAV(f)->fgh[1]; if(INT&AT(f)&&!AR(f))id=(C)*AV(f);}
 #define xinvvalues(w) CCM(w,CPLUS)+CCM(w,CEQ)+CCM(w,CNE)+CCM(w,CBW0110)+CCM(w,CBW1001)
    {CCMWDS(xinv) CCMCAND(xinv,cand,id) f2=CCMTST(cand,id)?jtofxinv:f2;}
 #define xassocvalues(w) CCM(w,CSTAR)+CCM(w,CMAX)+CCM(w,CMIN)+CCM(w,CPLUSDOT)+CCM(w,CSTARDOT)+CCM(w,CBW0000)+CCM(w,CBW0001)+CCM(w,CBW0011)+CCM(w,CBW0101)+CCM(w,CBW0111)+CCM(w,CBW1111)

@@ -96,8 +96,256 @@ end.
 a =: &.o
 (<<5) -: (>: a =: &.>)a 4
 a =: &.o
-5 -: (>: a =: &.])a 4   NB. OK to redefine a nameful entity as nameless; the new definition is used both places 
+5 -: (>: a =: &.])a 4   NB. OK to redefine a nameful entity as nameless; the new definition is used both places
 
-4!:55 ;:'a e o pe t1 totient x y '
+NB. Pristinity and inplacing in u&.>
+
+NB. Verify pristine results produced where appropriate
+NB. Tools for 13!:83:
+isprist =: ([: * 16b200000 (17 b.) 1&{)
+ispristorunbox =: ([: * 16b200000 (17 b.) 1&{) +. 32 ~: [: (17 b. -) 3&{
+isvirt =: [: * 16b20000 (17 b.) 1&{
+isro =: [: * 16b1 (17 b.) 1&{
+countis =: 4&{
+(isro,-.@isprist) 13!:83 i. 20  NB. Short vec is readonly
+(-.@isprist) 13!:83 < i. 20  NB. not prist when boxed
+(-.@isro,-.@isprist) 13!:83 i. 400  NB. Short vec is readonly
+(isprist) 13!:83 < i. 400  NB. prist when boxed
+(isprist) a =: 13!:83 < i. 400
+((0>countis),isprist) a   NB. name can be pristine even if not inplaceable
+(isprist) a =: 13!:83 <"0  i. 5
+
+NB. x is 5!:5 of left arg, y is shape of right arg, u is verb.
+NB. n is (0 if verb produces normal block, 1 if virtual, 2 if self-virtual, 3 if virtual block but not of the input),
+NB.      (1 if verb produces pristine/unboxed block on inplaceable input),
+NB.      (1 if x/y remains pristine or becomes unboxed, 2 if y only, 3 if x only),
+NB.      (1 if result pristine/unboxed on noninplaceable input)
+NB. If y is negative a pristine scalar box is used
+ckprist =: 2 : 0
+boxr =. 0 [ boxs =. y
+if. y < 0 do. boxr =. _ [ boxs =. 1000 end.   NB. scalar box, not RO
+'virt prist wprist rprist' =. 4 {. n
+NB. virt: produces virtual result when applied inplace
+NB. virtnip: produces virtual result when applied not-in-place
+NB. virtprist: produced virtual result leaves pristine set in the arg it came from
+'virt virtnip virtprist' =. virt { _3 ]\ 0 0 0  1 1 1  0 1 1  1 1 0
+NB. Verify taking from a pristine loses its pristinity
+a =: <"boxr i. boxs  NB. Sets prist
+1: u a
+assert. ((virtprist +. wprist) = ispristorunbox) 13!:83 a   NB. Making a virtual does not turn off pristinity in the backer
+NB. Verify pristinity is passed to an only successor but not a shared successor
+assert. ((rprist , virtnip) = ispristorunbox , isvirt) (0: 13!:83@] u) <"boxr i. boxs
+assert. ((prist , virt) = ispristorunbox , isvirt) (u 13!:83@[ 0:) <"boxr i. boxs
+1 return. y
+:
+NB. Verify taking from a pristine loses its pristinity
+boxr =. 0 [ boxs =. y
+if. y < 0 do. boxr =. _ [ boxs =. 1000 end.   NB. scalar box, not RO
+'virt prist wprist rprist' =. 4 {. n
+'virt virtnip virtprist' =. virt { _3 ]\ 0 0 0  1 1 1  0 1 1  1 1 0
+'wpristx wpristy' =. wprist { _2 ]\ 0 0   1 1   0 1   1 0
+xisprist =. isprist 13!:83 ". x
+yisprist =. isprist 13!:83 <"boxr i. boxs
+a =: <"boxr i. boxs  NB. Sets prist
+1: (".x) u a
+assert. ((yisprist *. virtprist +. wpristy) = isprist) 13!:83 a [ 'right'
+a =: ". x  NB. Sets prist
+1: a u <"boxr i. boxs
+assert. ((xisprist *. virtprist +. wpristx) = isprist) 13!:83 a [ 'left'
+NB. Verify pristinity is passed to an only successor but not a shared successor
+assert. ((rprist , virtnip) = ispristorunbox , isvirt) (".x) (0: 13!:83@] u) <"boxr i. boxs
+assert. ((prist , virt) = ispristorunbox , isvirt) (".x) (u 13!:83@[ 0:) <"boxr i. boxs
+1 return. y
+)
+{. ckprist 0 1 ] 5
+{. ckprist 1 1 ] 4 5
+'2' {. ckprist 1 1 ] 5  NB. virtual, and pristine if inplaceable
+'2' {. ckprist 1 1 ] 2 5
+'2 2' {. ckprist 0 0 ] 2 5  NB. complex take does not check pristinity
+}. ckprist 1 1 ] 5
+}. ckprist 1 1 ] 4 5
+'2' }. ckprist 1 1 ] 5
+'2' }. ckprist 1 1 ] 2 5
+'2 2' }. ckprist 0 1 ] 2 5
+}: ckprist 1 1 ] 5
+}: ckprist 1 1 ] 4 5
+{: ckprist 0 1 ] 5  NB. not virtual for atom
+{: ckprist 1 1 ] 4 5   NB. virtual for list
+= ckprist 0 1 1 1 ] 5
+> ckprist 0 1 0 1 ] _1  NB. result exposes a
+> ckprist 0 1 1 1 ] 5  NB. result is unboxed, but doesn't disturb a
++:&.> ckprist 0 1 1 1 ] 5   NB. result is itself pristine
++&.> ckprist 0 1 0 0 ] 5  NB. Result
+NB. dyad doesn't support prist yet '2' +&.> ckprist 0 1 1 ] 5  NB. scaf
+< ckprist 0 0 0 0 ] 5
+<"0 ckprist 0 0 0 0 ] 5
+'4' $ ckprist 1 0 0 0 ] 5   NB. produces virtual not pristine
+'6' $ ckprist 0 0 0 0 ] 5
+'4' $"1 ckprist 0 0 0 0 ] 4 5
+'6' $"1 ckprist 0 0 0 0 ] 4 5
+'4' ($,) ckprist 1 0 0 0 ] 5   NB. produces virtual not pristine
+'6' ($,) ckprist 0 0 0 0 ] 5
+~. ckprist 0 1 0 0 ] 5
+~. ckprist 0 1 0 0 ] 4 5
+|. ckprist 0 1 0 0 ] 5
+|.!.a: ckprist 0 0 0 0 ] 5
+'3' |. ckprist 0 1 0 0 ] 5
+'3' |.!.a: ckprist 0 0 0 0 ] 5
+'3' |."0 ckprist 0 1 0 0 ] 5
+|: ckprist 0 1 1 1 ] 5  NB. On list, this looks like ]
+|: ckprist 0 1 0 0 ] 4 5
+|:"1 ckprist 0 1 1 1 ] 4 5  NB. On list, this looks like ]
+|:"2 ckprist 0 1 0 0 ] 4 5 6
+'(0 ,: 0)' |: ckprist 0 0 0 0 ] 5
+, ckprist 0 1 1 1 ] 5
+, ckprist 2 1 0 0 ] 4 5
+,"1 ckprist 0 1 1 1 ] 4 5
+,"0 ckprist 1 0 0 0 ] 4 5
+'(<"0 i. 5)' , ckprist 0 1 0 ] 5
+'(<i. 1000)' , ckprist 0 1 0 ] _1
+,~ ckprist 0 0 0 ] 5  NB. not pristine when duplicating self
+'(<"0 i. 2 5)' , ckprist 0 1 0 ] 5
+'(<"0 i. 2 6)' , ckprist 0 0 0 ] 5
+,. ckprist 0 1 1 1 ] 4 5
+,. ckprist 1 0 0 0 ] 5
+,."2 ckprist 0 1 1 1 ] 3 4 5
+,."1 ckprist 1 0 0 0 ] 4 5
+'<"0 i. 5' ,. ckprist 0 0 0 0 ] 5  NB. with frame we don't track pristinity - we could
+'<{. i. 1' ,. ckprist 0 1 0 0 ] _1  NB. no frame
+'<"0 i. 5' ,: ckprist 0 0 0 0 ] 5
+'<i. 1000' ,: ckprist 3 0 0 0 ] _1  NB. on atoms, produces virtual result of intermediate value
+,: ckprist 1 0 0 0 ] _1
+,: ckprist 1 0 0 0 ] 4 5
+,: ckprist 1 0 0 0 ] 3 4 5
+,: ckprist 1 0 0 0 ] 5
+'<"0 i. 5' ,: ckprist 0 0 0 0 ] 4 5
+'<"0 i. 4 5' ,: ckprist 0 0 0 0 ] 4 5
+]@]"1 ckprist 0 0 ] 4 5   NB. Not prist because virtual boxed doesn't inplace
+]&.>"1 ckprist 0 1 ] 4 5 NB. exception made for &.>
+]@]"0 ckprist 0 0 ] 4 5 NB. similar, for rankex0
+]&.>"0 ckprist 0 1 ] 4 5
+{.@]"1 ckprist 0 0 0 0 ] 4 5   NB. Goes through from, but block is not marked inplaceable in " because not in TYPEVIPOK
+{.@]"2 ckprist 0 0 0 0 ] 3 4 5  NB. {. produces virtual result which loses pristinity
+'(<"0 i. 4 5)' ,&]"1 ckprist 0 0 0 ] 4 5
+,&]"1~ ckprist 0 0 0 ] 5  NB. not pristine when duplicating self
+'(<"0 i. 2 5)' ,&]"1 ckprist 0 0 0 ] 5
+'(<"0 i. 2 6)' ,&]"1 ckprist 0 0 0 ] 5
+; ckprist 0 1 1 1 ] 4 5  NB. open result
+; ckprist 0 1 0 1 ] _1  NB. one box, its contents escape
+'i. 1000' ; ckprist 0 1  ] _1
+'i. 1000' ; ckprist 0 1  ] 5
+'0' # ckprist 0 0 1 ] 5
+'1' # ckprist 0 1 1 1 ] 5
+'1 0 1 0 1' # ckprist 0 1 ] 5  NB. No repetitions with boolean
+'1 0 2 0 1' # ckprist 0 0 ] 5
+'1 0 2j1 0 1' # ckprist 0 0 ] 5
+];.1 ckprist 0 0 ] 5  NB. Cannot inplace the partition because it's not DIRECT
+]@];.1 ckprist 0 0 ] 5
+]&.>;.1 ckprist 0 0 ] 5  NB. doesn't inplace because w is used internally
+>;.1 ckprist 0 1 1 1 ] 5
+1 0 1 0 1&#;.1 ckprist 0 0 ] 5  NB. Cannot inplace the partition because it's not DIRECT
+1 0 2 0 1&#;.1 ckprist 0 0 ] 5
+'1 0 0 1 0' ]&.>;.1 ckprist 0 1 ] 5  NB. inplaces when &.>
+0:/ ckprist 0 1 1 1 ] 5   NB. result is open; operation never exposes a cell of y
+]/ ckprist 0 0 0 0 ] 5   NB. last cell escapes
+[/ ckprist 0 0 0 0 ] 5   NB. first cell escapes
+(>@]^:((<4)-:]))/ ckprist 0 1 0 1 ] 5  NB. result is open, but a cell of y escapes
+0:/. ckprist 0 1 0 1 ] 5   NB. result is open; operation never exposes a cell of y, but we still have to remove pristinity of noninplaceable block 
+]/. ckprist 0 0 ] 5     NB. Cannot inplace the partition because it's not DIRECT
+[/. ckprist 0 0 ] 5   NB. Cannot inplace the partition because it's not DIRECT
+[&.>/. ckprist 0 1 ] 5   NB. Inplaces with &.>
+(>@]^:((<4)-:]))/. ckprist 0 0  ] 5  NB. partition cannot be inplaced and sometimes returns
+<@0:/\ ckprist 0 0 0 0 ] 5   NB. result is open; operation never exposes a cell of y, but we still have to remove pristinity of noninplaceable block.  f/\ does not inplace anything
+]/\ ckprist 0 0 0 0 ] 5  NB. /\. does not inplace virtw, so the result is not pristine   
+[/\ ckprist 0 0 0 0 ] 5 
+(<@>@]^:((<4)-:]))/\ ckprist 0 0  ] 5  NB. not inplace virtw
+<@0:/\. ckprist 0 0 1 0 ] 5   NB. result is open; operation never exposes a cell of y, but we still have to remove pristinity of noninplaceable block 
+]/\. ckprist 0 0 0 0 ] 5  NB. /\. does not inplace virtw, so the result is not pristine   
+[/\. ckprist 0 0 0 0 ] 5 
+(<@>@]^:((<4)-:]))/\. ckprist 0 0  ] 5  NB. not inplace virtw
+/:~ ckprist 0 1 ] 5  NB. Passes pristinity through 
+/:~ ckprist 3 0 ] 4 5  NB. Creates virtual block but also clears pristinity of a
+\:~ ckprist  0 1 ] 5  NB. This could pass pristinity through 
+\:~ ckprist  0 1 ] 4 5  NB. This could pass pristinity through 
+'<"0 i. 4 3 5' \:"1 ckprist  0 0 2 ] 4 5  NB. Repeated cells - not pristine 
+'<"0 i. 4 5' \:"1 ckprist  0 1 2 ] 4 5  NB. no repeated cells
+'<"0 i. 5 2' ]"0 ckprist 0 0 3 ] 5  NB. x arg ignored - y is marked as repeated
+'<"0 i. 5' ]"0 ckprist 0 1 1 1 ] 5  NB. passes y through unmodified
+'<"0 i. 5' ["0 ckprist 0 1 1 1 ] 5  NB. passes x through unmodified
+'<"0 i. 5' ["0 ckprist 0 0 2 ] 5 2  NB. y arg ignored - x is marked as repeated
+'2' { ckprist 1 1  ] 4 5   NB. virtual+pristine because this goes through virtualip
+'1' { ckprist 1 1  ] 4 5
+'1 3' { ckprist 0 0  ] 4 5   NB. not pristine, because indexes could be repeated
+'<1' { ckprist 3 0  ] 4 5   NB. virtual block but also clears pristine in w (OK)
+'2' A. ckprist 0 0  ] 4 5   NB. result is permutation, which is not virtual
+'1' A. ckprist 0 0  ] 4 5
+'1 3' A. ckprist 0 0  ] 4 5   NB. not pristine, because indexes could be repeated
+'2' C. ckprist 0 0  ] 4 5   NB. result is permutation, which is not virtual
+'1' C. ckprist 0 0  ] 4 5
+'1 3' C. ckprist 0 0  ] 4 5   NB. not pristine, because indexes could be repeated
+isprist 13!:83 C. 0 2 1 4 3  NB. cyclic perm is always created pristine
+'2' {:: ckprist 0 1 0 1 ] 5  NB. fetch 
+-. isprist 13!:83 (2) {:: <"0 i. 5  NB. Result is not boxed
+-. isprist 13!:83 (1;0) {:: (a:;((<<5),<3);3)  NB. Result is not pristine
+] L: 0 ckprist 0 0 ] 5  NB. fauxvirtual block is copied & becomes non-pristine
+] L: 0 ckprist 0 0 ] 4 5
+'<"0 i. 5' ] L: 0 ckprist 0 0 ] 5
+'<"0 i. 4 5' ] L: 0 ckprist 0 0 ] 4 5
++: L: 0 ckprist 0 1 0 1 ] 5
++: L: 0 ckprist 0 1 0 1 ] 4 5
+'<"0 i. 5' + L: 0 ckprist 0 0 ] 5
+'<"0 i. 4 5' + L: 0 ckprist 0 0 ] 4 5
+] S: 0 ckprist 0 1 0 1 ] 5  NB. result is open
+] S: 0 ckprist 0 1 0 1 ] 4 5
+'<"0 i. 5' ] S: 0 ckprist 0 1 0 1 ] 5
+'<"0 i. 4 5' ] S: 0 ckprist 0 1 0 1 ] 4 5
++: S: 0 ckprist  0 1 0 1 ] 5
++: S: 0 ckprist 0 1 0 1 ] 4 5
+'<"0 i. 5' + S: 0 ckprist 0 1 0 1 ] 5
+'<"0 i. 4 5' + S: 0 ckprist 0 1 0 1 ] 4 5
+] S: 0 ckprist 0 1 0 1 ] 5  NB. result is open
+] S: 0 ckprist 0 1 0 1 ] 4 5
+'<"0 i. 5' ] S: 0 ckprist 0 1 0 1 ] 5
+'<"0 i. 4 5' ] S: 0 ckprist 0 1 0 1 ] 4 5
+-. isprist +: S: 0 <"0 i. 5
+-. isprist +: S: 0 <"0 i. 4 5
+-. isprist (<"0 i. 5) + S: 0 <"0 i. 5
+-. isprist (<"0 i. 4 5) + S: 0 <"0 i. 4 5
+-. isprist ] S: 0 <"0 i. 5  NB. result is open
+-. isprist ] S: 0 <"0 i. 4 5
+-. isprist (<"0 i. 5) ] S: 0 <"0 i. 5
+-. isprist (<"0 i. 4 5) ] S: 0 <"0 i. 4 5
+
+NB. n is (0 if verb produces normal block, 1 if virtual, 2 if self-virtual, 3 if virtual block but not of the input),
+NB.      (1 if verb produces pristine/unboxed block on inplaceable input),
+NB.      (1 if x/y remains pristine or becomes unboxed, 2 if y only, 3 if x only),
+NB.      (1 if result pristine/unboxed on noninplaceable input)
+
+NB. Verify pristinity of BOXATOP results
+isprist 13!:83 <@:+:"1 i. 4 5
+isprist 13!:83 <@:+:"1 i. 5
+isprist 13!:83 (i. 5 ) <@:+"1 i. 4 5
+isprist 13!:83 'abcda' </. i. 5   NB. w is permuted before use
+isprist 13!:83 'abcda' <@]/. +: i. 5
+isprist 13!:83 'abcda' <@:+:/. i. 5
+-. isprist 13!:83 (1 0 0 1 0) <;.1 i. 5  NB. i. 5 is not inplaceable
+isprist 13!:83 (1 0 0 1 0) <;.1 +: i. 5
+-. isprist 13!:83 (1 0 0 1 0) <@];._1 i. 5
+isprist 13!:83 (1 0 0 1 0) <@];._1 +: i. 5
+isprist 13!:83 (1 0 0 1 0) <@:+:;._2 i. 5
+-. isprist 13!:83 <;.2 'abcdeabac'   NB. LIT is never inplaceable
+-. isprist 13!:83  <@:];.1 'abcdeabac'
+isprist 13!:83  <@(2&#);.1 'abcdeabac'
+-. isprist 13!:83 <;.2 (3 1 4 1 5 9 2 5 3 1)
+-. isprist 13!:83  <@:];.1 (3 1 4 1 5 9 2 5 3 1)
+isprist 13!:83 <;.2 +: (3 1 4 1 5 9 2 5 3 1)
+isprist 13!:83  <@:];.1 +: (3 1 4 1 5 9 2 5 3 1)
+isprist 13!:83  <@(2&#);.1 (3 1 4 1 5 9 2 5 3 1)
 
 
+NB. Verify inplacing of u&.> on pristine
+'>:&.>' (7!:2@, (< 1.1&*) 7!:2@]) '<"1 i. 100 1000'
+NB. requires dyad '>.&.>/\.' (7!:2@, (< 1.1&*) 7!:2@]) '<"1 i. 100 1000'
+'(10 {. 1) 0:@:>:&.>;.1' (7!:2@, (< 1.05&*) 7!:2@]) '<"1 i. 10 10000'
+
+4!:55 ;:'a ckprist countis e isprist ispristorunbox isro isvirt o pe t1 totient x y '

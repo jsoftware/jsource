@@ -221,13 +221,13 @@ F2(jtover){A z;C*zv;I replct,framect,acr,af,ar,*as,k,ma,mw,p,q,r,t,wcr,wf,wr,*ws
     // We extracted from a and w, so mark them (or the backer if virtual) non-pristine.  If both were pristine and inplaceable, transfer its pristine status to the result
     // if they were boxed nonempty, a and w have not been changed.  Otherwise the PRISTINE flag doesn't matter.
     // If a and w are the same, we mustn't mark the result pristine!  It has repetitions
-    I aflg=AFLAG(a), wflg=AFLAG(w); AFLAG(z)|=aflg&wflg&((a!=w)&(SGNTO0(AC(a)&AC(w))&((I)jtinplace>>JTINPLACEAX)&((I)jtinplace>>JTINPLACEWX))<<AFPRISTINEX);  // pass PRISTINE status through if possible
+    I aflg=AFLAG(a), wflg=AFLAG(w); AFLAG(z)|=aflg&wflg&(((a!=w)&SGNTO0(AC(a)&AC(w))&((I)jtinplace>>JTINPLACEAX)&((I)jtinplace>>JTINPLACEWX))<<AFPRISTINEX);  // pass PRISTINE status through if possible
     if(unlikely(aflg&AFVIRTUAL)){a=ABACK(a); aflg=AFLAG(a);} AFLAG(a)=aflg&~AFPRISTINE; if(unlikely(wflg&AFVIRTUAL)){w=ABACK(w); wflg=AFLAG(w);} AFLAG(w)=wflg&~AFPRISTINE;  // make inputs non-PRISTINE
     RETF(z);
    }
   }
  }
- // dissimilar items, or there is frame.  Mark the inputs non-pristine; leave the result non-pristine, since we don't know whether it has repetitions
+ // dissimilar items, or there is frame.  Mark the inputs non-pristine; leave the result non-pristine, since we don't know whether it has repetitions (we could figure that out)
  {A awback=a; I awflg=AFLAG(a); if(unlikely(awflg&AFVIRTUAL)){awback=ABACK(a); awflg=AFLAG(awback);} AFLAG(awback)=awflg&~AFPRISTINE; awback=w; awflg=AFLAG(w); if(unlikely(awflg&AFVIRTUAL)){awback=ABACK(w); awflg=AFLAG(awback);} AFLAG(awback)=awflg&~AFPRISTINE;}  // make inputs non-PRISTINE
  p=as[ar-1];   // p=len of last axis of cell.  Always safe to fetch first 
  q=ws[wr-1];   //  q=len of last axis of cell
@@ -272,7 +272,7 @@ F1(jtlamin1){A x;I* RESTRICT s,* RESTRICT v,wcr,wf,wr;
 F2(jtlamin2){A z;I ar,p,q,wr;
  // Because we don't support inplacing here, the inputs & results will be marked non-pristine.  That's OK because scalar replication might have happened.
  RZ(a&&w); 
- ar=AR(a); p=jt->ranks>>RANKTX; p=ar<p?ar:p;
+ ar=AR(a); p=jt->ranks>>RANKTX; p=ar<p?ar:p;  // p=cell rank of a, q=cell rank of w
  wr=AR(w); q=(RANKT)jt->ranks; q=wr<q?wr:q; RESETRANK;
  if(p)RZ(a=IRS1(a,0L,p,jtlamin1,z));
  if(q)RZ(w=IRS1(w,0L,q,jtlamin1,z));
@@ -353,7 +353,7 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;I ak,k,p,*u,*v,wk,wm,wn;
      // copy fill to the output area.  Start the copy after the area that will be filled in by w
      I wlen = k*AN(w); // the length in bytes of the data in w
      if((-AR(w)&(1+AR(w)-AR(a)))<0){RZ(setfv(a,w)); mvc(wk-wlen,av+wlen,k,jt->fillv); wprist=0;}  // fill removes pristine status
-     AFLAG(a)&=wprist|~AFPRISTINE;  // clear pristine flag in a if w is not also
+     AFLAG(a)&=wprist|~AFPRISTINE;  // clear pristine flag in a if w is not also (a must not be virtual)
      // Copy in the actual data, replicating if w is atomic
      if(AR(w))MC(av,wv,wlen); else mvc(wk,av,k,wv);
      // The data has been copied.  Now adjust the result block to match.  If the operation is virtual extension we have to allocate a new block for the result
@@ -368,6 +368,8 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;I ak,k,p,*u,*v,wk,wm,wn;
       // virtual extension.  Allocate a virtual block, which will extend past the original block.  Fill in AN and AS for the block
       A oa=a; RZ(a=virtual(a,0,AR(a))); AN(a)=AN(oa)+wn; AS(a)[0]=AS(oa)[0]+wm; MCISH(&AS(a)[1],&AS(oa)[1],AR(oa)-1);
      }
+     // a was inplaceable & thus not virtual, but we must clear pristinity from w wherever it is
+     I awflg=AFLAG(w); if(unlikely(awflg&AFVIRTUAL)){w=ABACK(w); awflg=AFLAG(w);} AFLAG(w)=awflg&~AFPRISTINE;
      RETF(a);
     }
    }

@@ -27,18 +27,26 @@ static DF2(jtfindrange){
  I *av = AV(a);
  CR rng = condrange(AV(w),AN(w),av[0],av[1],av[2]);
  R v2(rng.min,rng.range);
-}
+} // 13!:80
 static DF2(jtfindrange4){
  RZ(a&&w);
  I *av = AV(a);
  CR rng = condrange4(C4AV(w),AN(w),av[0],av[1],av[2]);
  R v2(rng.min,rng.range);
-}
+}  // 13!:81
 static DF2(jtfindrange2){
  RZ(a&&w);
  I *av = AV(a);
  CR rng = condrange2(USAV(w),AN(w),av[0],av[1],av[2]);
  R v2(rng.min,rng.range);
+}  // 13!:82
+
+// 13!:83  Return header info: t, flag, m, type, c, n, r
+static DF1(jthdrinfo){A z;
+ RZ(w);
+ GAT0(z,INT,7,1);
+ IAV(z)[0]=AK(w); IAV(z)[1]=AFLAG(w); IAV(z)[2]=AM(w); IAV(z)[3]=AT(w); IAV(z)[4]=AC(w); IAV(z)[5]=AN(w); IAV(z)[6]=AR(w);
+ R z;
 }
 
 F2(jtforeign){I p,q;
@@ -244,6 +252,7 @@ F2(jtforeign){I p,q;
   case XC(13,80): R CDERIV(CIBEAM, 0,            jtfindrange,  VFLAGNONE,RMAX,RMAX,RMAX);
   case XC(13,81): R CDERIV(CIBEAM, 0,            jtfindrange4, VFLAGNONE,RMAX,RMAX,RMAX);
   case XC(13,82): R CDERIV(CIBEAM, 0,            jtfindrange2, VFLAGNONE,RMAX,RMAX,RMAX);
+  case XC(13,83): R CDERIV(CIBEAM, jthdrinfo,            0, VFLAGNONE,RMAX,RMAX,RMAX);
 
   case XC(15,0):  R SDERIV(CIBEAM, 0,            jtcd,         VASGSAFE|VJTFLGOK2,RMAX,   1L,  1L  );
   case XC(15,1):  R SDERIV(CIBEAM, jtmemr,       0,            VASGSAFE,RMAX,RMAX,RMAX);

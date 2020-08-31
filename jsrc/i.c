@@ -19,7 +19,7 @@
 // here is by number of trailing 0s in the (32-bit) type; aka the bit-number index.
 // Example: LITX is 1, so location 1 contains sizeof(C)
 #define TPSZ(name) [name##X] = name##SIZE
-static const UC typesizes[] = {
+static const UC typesizes[32] = {
 #if 1  // obsolete
 TPSZ(B01), TPSZ(LIT), TPSZ(INT), TPSZ(FL), TPSZ(CMPX), TPSZ(BOX), TPSZ(XNUM), TPSZ(RAT), 
 TPSZ(SB01), TPSZ(SLIT), TPSZ(SINT), TPSZ(SFL), TPSZ(SCMPX), TPSZ(SBOX), TPSZ(SBT), TPSZ(C2T), 

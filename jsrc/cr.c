@@ -11,7 +11,13 @@
 #include "result.h"
 
 // make sure these don't overlap with bits in result.h
-// These bits start where they do to avoid overlap with AFPRISTINE
+#define STATEWNOTEMPTYX 16  // set if a arg has atoms
+#define STATEWNOTEMPTY ((I)1<<STATEWNOTEMPTYX)
+#define STATEANOTEMPTYX 17  // set if a arg has atoms
+#define STATEANOTEMPTY ((I)1<<STATEANOTEMPTYX)
+#define STATEAWNOTEMPTYX 18  // set if a and w args both have atoms
+#define STATEAWNOTEMPTY ((I)1<<STATEAWNOTEMPTYX)
+// These bits start where they do to avoid overlap with AFPRISTINE.  Also, they are above where rank significance is
 #define STATEOUTERREPEATAX 22
 #define STATEOUTERREPEATA (((I)1)<<STATEOUTERREPEATAX)
 #define STATEINNERREPEATWX 23
@@ -49,7 +55,8 @@ A jtrank1ex(J jt,AD * RESTRICT w,A fs,I rr,AF f1){F1PREFIP;PROLOG(0041);A z,virt
  // multiple cells.  Loop through them.
  // Get size of each argument cell in atoms.  If this overflows, there must be a 0 in the frame, & we will have
  // gone through the fill path (& caught the overflow)
- RE(mn=prod(wf,AS(w))); PROD(wcn,rr,AS(w)+wf);   // number of cells, number of atoms in a cell
+// obsolete  RE(mn=prod(wf,AS(w))); PROD(wcn,rr,AS(w)+wf);   // number of cells, number of atoms in a cell
+ CPROD(AN(w),mn,wf,AS(w)); PROD(wcn,rr,AS(w)+wf);   // number of cells, number of atoms in a cell
  // ?cn=number of atoms in a cell, ?k=#bytes in a cell
  wk=wcn<<bplg(AT(w));
 
@@ -263,6 +270,8 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,I lr,I rr,I lcr,I rcr,AF f
 #define ZZFLAGWORD state
  I state=ZZFLAGINITSTATE;  // init flags, including zz flags
 
+ // fetch empty-argument flags
+ state|=(SGNTO0(-AN(a))<<STATEANOTEMPTYX)|(SGNTO0(-AN(w))<<STATEWNOTEMPTYX)|((SGNTO0(-AN(a))&SGNTO0(-AN(w)))<<STATEAWNOTEMPTYX);
  // RANKONLY verbs were handled in the caller to this routine, but fs might be RANKATOP.  In that case we can include its rank in the loop here, which will save loop setups
  if(unlikely((I)(((FAV(fs)->flag2&(VF2RANKATOP2|VF2BOXATOP2))-1)|(-((rr^rcr)|(lr^lcr))))>=0)){  // prospective new ranks to include
   I t=(I)lr(fs); lr=t<lr?t:lr; t=(I)rr(fs); rr=t<rr?t:rr;   // get the ranks if we accept the new cell
@@ -275,16 +284,18 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,I lr,I rr,I lcr,I rcr,AF f
   af=AR(a)-lr; wf=AR(w)-rr;   // frames wrt new innermost cell
  }
 
-
  // Get the length of the outer frames, which are needed only if either "-rank is greater than the verb rank,
  // either argument has frame with respect to the "-ranks, and those frames are not the same length
  aof=AR(a)-lcr; wof=AR(w)-rcr;   // ?of = outer frame
  if(likely(0<=(((lr-lcr)|(rr-rcr))&(-(aof^wof))))){los=0; lof=aof=wof=0; outerframect=outerrptct=1;  // no outer frame unless it's needed
  }else{
   // outerframect is the number of cells in the shorter frame; outerrptct is the number of cells in the residual frame
-  if(aof>=wof){wof=wof<0?0:wof; lof=aof; sof=wof; los=AS(a);}else{aof=aof<0?0:aof;  lof=wof; sof=aof; los=AS(w); state|=STATEOUTERREPEATA;}  // clamp smaller frame at min=0
+// obsolete  if(aof>=wof){wof=wof<0?0:wof; lof=aof; sof=wof; los=AS(a);}else{aof=aof<0?0:aof;  lof=wof; sof=aof; los=AS(w); state|=STATEOUTERREPEATA;}  // clamp smaller frame at min=0
+  // find smaller/larger frame/shape, and indicate if a is the repeated arg (otherwise we assume w)
+  wof=wof<0?0:wof; aof=aof<0?0:aof; lof=aof; sof=wof; los=AS(a); lof=aof-wof<0?wof:lof; sof=aof-wof<0?aof:sof; los=aof-wof<0?AS(w):los; state|=(aof-wof)&STATEOUTERREPEATA;
   ASSERTAGREE(AS(a),AS(w),sof)  // prefixes must agree
-  RE(outerframect=prod(sof,los)); RE(outerrptct=prod(lof-sof,los+sof));  // get # cells in frame, and in unmatched frame
+// obsolete   RE(outerframect=prod(sof,los)); RE(outerrptct=prod(lof-sof,los+sof));  // get # cells in frame, and in unmatched frame
+  CPROD(state&STATEAWNOTEMPTY,outerframect,sof,los); CPROD(state&STATEAWNOTEMPTY,outerrptct,lof-sof,los+sof);  // get # cells in frame, and in unmatched frame
  }
 
  // Now work on inner frames.  Compare frame lengths after discarding outer frames
@@ -312,10 +323,12 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,I lr,I rr,I lcr,I rcr,AF f
   ASSERTAGREE(sis,lis,sif)  // error if frames are not same as prefix
   lis=ew-ea<=0?sis:lis; state|=(ew-ea)&STATEINNERREPEATW;  // make lis the shape pointer for longer; if a is longer, indicate repeating w
  }
- RE(innerrptct=prod(lif-sif,lis+sif));  // number of repetitions per matched-frame cell
- RE(innerframect=prod(sif,lis));   // number of cells in matched frame
+// obsolete  RE(innerrptct=prod(lif-sif,lis+sif));  // number of repetitions per matched-frame cell
+// obsolete  RE(innerframect=prod(sif,lis));   // number of cells in matched frame
+ CPROD(state&STATEAWNOTEMPTY,innerrptct,lif-sif,lis+sif);  // number of repetitions per matched-frame cell
+ CPROD(state&STATEAWNOTEMPTY,innerframect,sif,lis);   // number of cells in matched frame
 
- I an=AN(a), wn=AN(w);  // empty-operand indicators
+// obsolete  I an=AN(a), wn=AN(w);  // empty-operand indicators
  // Migrate loops with count=1 toward the inner to reduce overhead.  We choose not to promote the outer to the inner if both
  // innerframect & innerrptct are 1, on grounds of rarity
  if(innerrptct==1){innerrptct=innerframect; innerframect=1; state &=~(STATEINNERREPEATW|STATEINNERREPEATA);}  // if only one loop needed, make it the inner, with no repeats
@@ -343,7 +356,7 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,I lr,I rr,I lcr,I rcr,AF f
  // See which arguments we can inplace.  The key is that they have to be not repeated.  This means outerrptct=1, and the specified argument not repeated in the inner loop.  Also,
  // a and w mustn't be the same block (one cannot be a virtual of the other unless the backer's usecount disables inplacing)
  fauxblock(virtwfaux); fauxblock(virtafaux); 
- if(likely(mn|an)){
+ if(likely(mn|(state&STATEANOTEMPTY))){
   // OK to inplace an arg if it's not the same as the other, not repeated, correct type (unless &.>), inplaceable usecount
   state |= (UI)(SGNIF((a!=w)&(outerrptct==1),0)&SGNIF((I)jtinplace,JTINPLACEAX)&AC(a)&~(((AT(a)&TYPEVIPOK)-(f2!=jtevery2self))|SGNIF(state,STATEINNERREPEATAX)))>>(BW-1-ZZFLAGVIRTAINPLACEX);   // requires JTINPLACEWX==0.  Single flag bit  sign=0 if (VIPOK or &.>) 
 // obsolete   jtinplace = (J)(intptr_t)((I)jtinplace & (((((AT(a)&TYPEVIPOK)!=0)|f2==jtevery2self)&REPSGN(AC(a)))*JTINPLACEA+~JTINPLACEA));  // turn off inplacing unless DIRECT and a is inplaceable.
@@ -354,7 +367,7 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,I lr,I rr,I lcr,I rcr,AF f
   AC(virta)=ACUC1 + ((state&ZZFLAGVIRTAINPLACE)<<(ACINPLACEX-ZZFLAGVIRTAINPLACEX));
  }else{RZ(virta=reshape(vec(INT,lr,AS(a)+af),filler(a)));}
 
- if(likely(mn|wn)){  // repeat for w
+ if(likely(mn|(state&STATEWNOTEMPTY))){  // repeat for w
   state |= (UI)(SGNIF((a!=w)&(outerrptct==1),0)&SGNIF((I)jtinplace,JTINPLACEWX)&AC(w)&~(((AT(w)&TYPEVIPOK)-(f2!=jtevery2self))|SGNIF(state,STATEINNERREPEATWX)))>>(BW-1-ZZFLAGVIRTWINPLACEX);   // requires JTINPLACEWX==0.  Single flag bit  sign=0 if (VIPOK or &.>) 
 // obsolete   jtinplace = (J)(intptr_t)((I)jtinplace & (((((AT(w)&TYPEVIPOK)!=0)|f2==jtevery2self)&REPSGN(AC(w)))*JTINPLACEW+~JTINPLACEW));  // turn off inplacing unless DIRECT and w is inplaceable.
   fauxvirtual(virtw,virtwfaux,w,rr,ACUC1/* obsolete |ACINPLACE*/) MCISH(AS(virtw),AS(w)+wf,rr); AN(virtw)=wcn;

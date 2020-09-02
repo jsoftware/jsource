@@ -76,7 +76,7 @@ typedef AD *A;
 #define JTINPLACEA      (((I)1)<<JTINPLACEAX)
 // Next flag must match result.h and VF2 flags, and must be above ZZFLAGBOXATOP
 #define JTWILLBEOPENEDX 4   // result of this exec will be opened immediately, so it can contain virtual references to an input to the current verb
-     // Note: this flag MUST NOT equal BOX
+     // Note: this flag MUST NOT equal BOX, or BOX<<1, or 1 or 2
 #define JTWILLBEOPENED  (((I)1)<<JTWILLBEOPENEDX)
 #define JTEMPTYX        5  // in va2, this bit indicates the result is empty
 #define JTEMPTY         (((I)1)<<JTEMPTYX)
@@ -832,11 +832,8 @@ typedef struct {AF valencefns[2];A fgh[3];union { D lD; void *lvp[2]; I lI; I4 l
 
 // layout of primitive, in the primtbl.  It is a memory header (shape 0) followed by a V
 typedef struct {I memhdr[AKXR(0)/SZI]; union { V primvb; I primint; } prim; } PRIM;  // two cachelines exactly in 64-bit
-// Level (L: and S:) code build self blocks for every on the C stack.  every looks only at the function pointers, so these can be short to save stack space
-typedef struct {I memhdr[AKXR(0)/SZI]; AF fptrs[2]; } PRIMSHORT;   // the mem hdr gets filled in, plus the function pointers
-
-
-
+// obsolete // Level (L: and S:) code build self blocks for every on the C stack.  every looks at the function pointers, so these can be short to save stack space
+// obsolete typedef struct {I memhdr[AKXR(0)/SZI]; AF fptrs[2]; } PRIMSHORT;   // the mem hdr gets filled in, plus the function pointers
 
 // Info for calling an atomic verb
 typedef struct {VF f;I cv;} VA2;  // for dyads

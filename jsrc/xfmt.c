@@ -98,13 +98,39 @@ static I jtdpone(J jt, B bits, D w){D t;
  R 9;
 }
 
-static B jtwidthdp(J jt, A a, I *w, I *d){I n,x,y; C *v;
+// scan a for [www[.ddd]}
+// returns 0 if error, and sets *w and *d.  If both omitted, return -1/-1; if only www omitted, error;
+//  if no '.', return -1/www; if both given (even if d empty) return www/ddd
+static B jtwidthdp(J jt, A a, I *w, I *d){
  RZ(a&&w&&d);
+ #if 1
+ #define digdotvalues(w) CCM(w,'0')+CCM(w,'1')+CCM(w,'2')+CCM(w,'3')+CCM(w,'4')+CCM(w,'5')+CCM(w,'6')+CCM(w,'7')+CCM(w,'8')+CCM(w,'9')+CCM(w,'.')
+ CCMWDS(digdot)
+ I remchars=AN(a); C *v=CAV(a);  // number of chars left, pointer to current
+ // advance to first digit/.
+ for(;remchars;++v,--remchars){C vv=*v; CCMCAND(digdot,cand,vv) if(CCMTST(cand,vv))break;}
+ // if none, exit with neither field
+ if(!remchars){*w=*d=-1; R 1;}
+ // if ., error
+ ASSERT(*v!='.',EVDOMAIN);
+ // consume digits, creating w value
+ I t; for(t=0;remchars;++v,--remchars){C vv=*v; if(!BETWEENC(vv,'0','9'))break; t=(vv-'0')+10*t;}
+ *w=*d=t;  // set integer part into both result fields
+ if(remchars&&*v=='.'){
+  // . given. skip it and consume the following digits
+  ++v,--remchars; for(t=0;remchars;++v,--remchars){C vv=*v; if(!BETWEENC(vv,'0','9'))break; t=(vv-'0')+10*t;}
+  *d=t;
+  ASSERT(!remchars,EVDOMAIN);  // ddd, if given, must end the string.  That's how it was done.
+ }else *w=-1;   // flag to indicate omitted d (!)
+ // verify no remaining digits/. in field
+ for(;remchars;++v,--remchars){C vv=*v; CCMCAND(digdot,cand,vv) ASSERT(!CCMTST(cand,vv),EVDOMAIN);}
+#else  // obsolete
  RZ(a=ca(a)); n=AN(a); v=CAV(a); v[n]=0;  // null-terminate the string, which is safe since we have made a copy here
 #define digdotvalues(w) CCM(w,'0')+CCM(w,'1')+CCM(w,'2')+CCM(w,'3')+CCM(w,'4')+CCM(w,'5')+CCM(w,'6')+CCM(w,'7')+CCM(w,'8')+CCM(w,'9')+CCM(w,'.')
  CCMWDS(digdot)
 // obsolete  DQ(n, if(!strchr("0123456789.", *v)) *v=' '; v++;);
- DQ(n, C vv=*v; CCMCAND(digdot,cand,vv) vv=CCMTST(cand,vv)?vv:' '; *v=vv; v++;);  // replace non-digits with SP
+ C *vvv=v; DQ(n, C vv=*vvv; CCMCAND(digdot,cand,vv) vv=CCMTST(cand,vv)?vv:' '; *vvv=vv; vvv++;);  // replace non-digits&. with SP
+ // string now contains digits/., SP, and \0 and is null-terminated
 
  x=strspn(CAV(a), " "          ); AK(a)+=x;AN(a)-=x;AS(a)[0]=x;  // kludge scaf look at strspn - since we have replaced every non digit with space we could do better
  x=strspn(CAV(a), "0123456789.");
@@ -121,7 +147,7 @@ static B jtwidthdp(J jt, A a, I *w, I *d){I n,x,y; C *v;
    y=0; DO(n-x-1, y=(v[x+1+i]-'0')+10*y;); *d=y;
   } else *w=-1;
  } else *w=*d=-1;
-
+#endif
  ASSERT(BETWEENC(*d,-1,9), EVDOMAIN);
  R 1;
 } /* width and decimal places */

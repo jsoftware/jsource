@@ -7,7 +7,7 @@
 #include "p.h"
 #include <stdint.h>
 
-#define RECURSIVERESULTSCHECK 
+#define RECURSIVERESULTSCHECK   // obsolete
 //  if(y&&(AT(y)&NOUN)&&!(AFLAG(y)&AFVIRTUAL)&&((AT(y)^AFLAG(y))&RECURSIBLE))SEGFAULT  // stop if nonrecursive noun result detected
 
 

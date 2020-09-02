@@ -50,7 +50,7 @@ static DF1(jtlcapco1){A z;V*v=FAV(self);
  RZ(w);
  I awflg=AFLAG(w); A awback=w; if(unlikely(awflg&AFVIRTUAL)){awback=ABACK(awback); awflg=AFLAG(awback);} AFLAG(awback)=awflg&~AFPRISTINE;
 
- PRIMSHORT shdr; A recurself=(A)&shdr;  // allocate the block we will recur with
+ PRIM shdr; A recurself=(A)&shdr;  // allocate the block we will recur with
 // obsolete   m=jt->lmon; jt->lmon=efflev(0L,v->fgh[2],w); 
 // obsolete   z=lev1(w,self);
 // obsolete   jt->lmon=m;
@@ -58,6 +58,7 @@ static DF1(jtlcapco1){A z;V*v=FAV(self);
  AM(recurself)=(I)v->fgh[0];  // fill in the pointer to u
  FAV(recurself)->valencefns[0]=jtlev1;  // fill in function pointer
  AT(recurself)=efflev(0L,v->fgh[2],w);  // fill in the trigger level
+ FAV(recurself)->flag=VFLAGNONE;  // fill in the inplaceability flags
  RETF(lev1(w,recurself));
 }
 
@@ -65,7 +66,7 @@ static DF2(jtlcapco2){A z;V*v=FAV(self);
  RZ(a&&w);
  I awflg=AFLAG(w); A awback=w; if(unlikely(awflg&AFVIRTUAL)){awback=ABACK(awback); awflg=AFLAG(awback);} AFLAG(awback)=awflg&~AFPRISTINE;
  awflg=AFLAG(a); awback=a; if(unlikely(awflg&AFVIRTUAL)){awback=ABACK(awback); awflg=AFLAG(awback);} AFLAG(awback)=awflg&~AFPRISTINE;
- PRIMSHORT shdr; A recurself=(A)&shdr;  // allocate the block we will recur with
+ PRIM shdr; A recurself=(A)&shdr;  // allocate the block we will recur with
 // obsolete  l=jt->lleft;  jt->lleft =efflev(1L,v->fgh[2],a);
 // obsolete  r=jt->lright; jt->lright=efflev(2L,v->fgh[2],w);
 // obsolete  z=lev2(a,w,self);
@@ -75,6 +76,7 @@ static DF2(jtlcapco2){A z;V*v=FAV(self);
  AM(recurself)=(I)v->fgh[0];  // fill in the pointer to u
  FAV(recurself)->valencefns[1]=jtlev2;  // fill in function pointer
  AT(recurself)=efflev(1L,v->fgh[2],a); AC(recurself)=efflev(2L,v->fgh[2],w);  // fill in the trigger levels
+ FAV(recurself)->flag=VFLAGNONE;  // fill in the inplaceability flags
  RETF(lev2(a,w,recurself));
 }
 
@@ -134,10 +136,11 @@ static DF1(jtscapco1){PROLOG(555);A x,z=0;I m;V*v=FAV(self);
 // obsolete  jt->lmon=m; jt->sca=scastk;   // pop level stack
  RZ(w);
  I awflg=AFLAG(w); A awback=w; if(unlikely(awflg&AFVIRTUAL)){awback=ABACK(awback); awflg=AFLAG(awback);} AFLAG(awback)=awflg&~AFPRISTINE;
- PRIMSHORT shdr; A recurself=(A)&shdr;  // allocate the block we will recur with
+ PRIM shdr; A recurself=(A)&shdr;  // allocate the block we will recur with
  AM(recurself)=(I)v->fgh[0];  // fill in the pointer to u
  FAV(recurself)->valencefns[0]=jtlevs1;  // fill in function pointer
  AT(recurself)=efflev(0L,v->fgh[2],w);  // fill in the trigger level
+ FAV(recurself)->flag=VFLAGNONE;  // fill in the inplaceability flags
  GAT0(x,INT,54,1); AKASA(recurself)=x; AS(x)[0]=0;    // allocate place to save results & fill into self. this will hold boxes, but it is allocated as INTs so it won't be freed on error.  AS[0] holds # valid results
  // jt->sca will be used to collect results during the execution of the verb.  Since we don't know how many results there will be, jt->sca may be extended
  // in the middle of processing some other verb, and that verb might EPILOG and free the new buffer allocated by the extension.  Thus, we have to ra() the later buffers, and the easiest way to handle
@@ -163,10 +166,11 @@ static DF2(jtscapco2){PROLOG(556);A x,z=0;V*v=FAV(self);
  RZ(a&&w);
  I awflg=AFLAG(w); A awback=w; if(unlikely(awflg&AFVIRTUAL)){awback=ABACK(awback); awflg=AFLAG(awback);} AFLAG(awback)=awflg&~AFPRISTINE;
  awflg=AFLAG(a); awback=a; if(unlikely(awflg&AFVIRTUAL)){awback=ABACK(awback); awflg=AFLAG(awback);} AFLAG(awback)=awflg&~AFPRISTINE;
- PRIMSHORT shdr; A recurself=(A)&shdr;  // allocate the block we will recur with
+ PRIM shdr; A recurself=(A)&shdr;  // allocate the block we will recur with
  AM(recurself)=(I)v->fgh[0];  // fill in the pointer to u
  FAV(recurself)->valencefns[1]=jtlevs2;  // fill in function pointer
  AT(recurself)=efflev(1L,v->fgh[2],a); AC(recurself)=efflev(2L,v->fgh[2],w);  // fill in the trigger levels
+ FAV(recurself)->flag=VFLAGNONE;  // fill in the inplaceability flags
  GAT0(x,INT,54,1); AKASA(recurself)=x; AS(x)[0]=0;    // allocate place to save results & fill into self. this will hold boxes, but it is allocated as INTs so it won't be freed on error.  AS[0] holds # valid results
  // jt->sca will be used to collect results during the execution of the verb.  Since we don't know how many results there will be, jt->sca may be extended
  // in the middle of processing some other verb, and that verb might EPILOG and free the new buffer allocated by the extension.  Thus, we have to ra() the later buffers, and the easiest way to handle

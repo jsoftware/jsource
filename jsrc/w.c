@@ -62,8 +62,8 @@ static const ST state[SZ+1][16]={
 };
 
 // w points to a string A-block
-// result is word index & length; z is (# words),(i0,end0+1),(i1,end1+1),...
-// (# words) is negated if the last word is NB.
+// result is word index & length; z is (i0,end0+1),(i1,end1+1),...
+// AM(z) gives # of words not counting a final comment, ({.$z) - hascomment
 F1(jtwordil){A z;I s,i,m,n,nv,*x;UC*v;
  RZ(w);  // if no string, could be empty line from keyboard; return null A in that case
  nv=0;    // set not creating numeric constant
@@ -181,7 +181,7 @@ static A jtconstr(J jt,I n,C*s){A z;C b,c,p,*t,*x;I m=0;
   // true if the two words are names, word 1 is assignment, and the names are equal
 
 // Convert text sentence to a sequence of words to be the queue for parsing
-// a holds the result of wordil, which is an integer list of word index & end+1: (i0,e0),(i1,e1)...  # words not including final NB. is in AM
+// a MUST BE the result of wordil, which is an integer list of word index & end+1: (i0,e0),(i1,e1)...  # words not including final NB. is in AM(a)
 // w holds the string text of the sentence
 // env is the environment for which this is being parsed: 0=tacit translator, 1=keyboard/immex with no locals, 2=for explicit defn
 // result is a list of parsable words, with types right.  The result is input only to parsing, never to verbs, and thus may be nonrecursive

@@ -522,7 +522,7 @@ F2(jtsfrom){
 }    /* (<"1 a){w */
 
 static F2(jtmapx);
-static EVERYSELF(mapxself,0,jtmapx,0)
+static EVERYFS(mapxself,0,jtmapx,0,VFLAGNONE)
 
 static F2(jtmapx){A z1,z2,z3;
  RZ(a&&w);

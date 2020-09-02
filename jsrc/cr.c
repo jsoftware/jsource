@@ -336,7 +336,6 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,I lr,I rr,I lcr,I rcr,AF f
  // Get size of each argument cell in atoms.  If this overflows, there must be a 0 in the frame, & we will have
  // gone through the fill path (& caught the overflow)
  PROD(acn,lr,AS(a)+af); PROD(wcn,rr,AS(w)+wf);
- // Allocate workarea y? to hold one cell of ?, with uu,vv pointing to the data area y?
  // ?cn=number of atoms in a cell, ?k=#bytes in a cell
  ak=acn<<bplg(AT(a));    // reshape below will catch any overflow
  wk=wcn<<bplg(AT(w));

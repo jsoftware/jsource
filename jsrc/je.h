@@ -1001,7 +1001,7 @@ extern I iotavec[IOTAVECLEN];  // ascending integers, starting at IOTAVECBEGIN
 extern UC       hwaes;
 extern UC       hwfma;
 extern VARPSA rpsnull;
-extern PRIMSHORT sfn0overself;
+extern PRIM sfn0overself;
 
 #if (SYS & SYS_ATARIST+SYS_ATT3B1)
 extern int      memcmp();       /* C library fn                            */

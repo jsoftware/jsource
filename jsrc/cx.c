@@ -638,7 +638,7 @@ static void jtcalclocalbuckets(J jt, A t, LX *actstv, I actstn){LX k;
  }
 }
 
-EVERYSELF(onmself,jtonm,0,0)  // create self to pass into every
+EVERYFS(onmself,jtonm,0,0,VFLAGNONE)  // create self to pass into every
 
 // create local-symbol table for a definition
 //

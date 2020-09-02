@@ -118,7 +118,7 @@ static F1(jttconnect){A*wv,x,y,z;B b,d;C c,*u,*xv,*yv,*zv;I e,i,j,m,n,p,q,zn;
  R z;
 }
 
-EVERYSELF(trrself,jttrr,0,0)
+EVERYFS(trrself,jttrr,0,0,VFLAGNONE)
 
 static F1(jttreach){R troot(scc('0'),graft(ope(every(w,(A)&trrself))));}
 

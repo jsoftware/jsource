@@ -21,6 +21,8 @@ static A jteverysp(J jt,A w,A fs){A*wv,x,z,*zv;P*wp,*zp;
 #define EVERYI(exp)  {RZ(x=exp); INCORP(x); RZ(*zv++=x); ASSERT(!(SPARSE&AT(x)),EVNONCE);}
      /* note: x can be non-noun */
 
+// NOTE: internal calls to every/every2 use a skeletal fs created by the EVERYFS macro.  It fills in only
+// AK, valencefns, and flag.  If these routines use other fields, EVERYFS will need to fill them in
 DF1(jteveryself){R jtevery(jt,w,FAV(self)->fgh[0]);}   // replace u&.> with u and process
 // u&.>, but w may be a gerund, which makes the result a list of functions masquerading as an aray of boxes
 A jtevery(J jt, A w, A fs){A * RESTRICT wv,x,z,* RESTRICT zv;
@@ -28,23 +30,27 @@ A jtevery(J jt, A w, A fs){A * RESTRICT wv,x,z,* RESTRICT zv;
  if(unlikely(SPARSE&AT(w)))R everysp(w,fs);
  AF f1=FAV(fs)->valencefns[0];   // pointer to function to call
  A virtw; I flags;  // flags are: ACINPLACE=pristine result; JTWILLBEOPENED=nonrecursive result; BOX=input was boxed; ACPERMANENT=input was inplaceable pristine, contents can be inplaced
- flags=ACINPLACE|((I)jtinplace&JTWILLBEOPENED)|(AT(w)&BOX)|((AC(w)>>(ACINPLACEX-ACPERMANENTX))&((I)jtinplace<<(ACPERMANENTX-JTINPLACEWX))&(AFLAG(w)<<(ACPERMANENTX-AFPRISTINEX))&ACPERMANENT);
+ // If the result will be immediately unboxed, we create a NONrecursive result and we can store virtual blocks in it.  This echoes what result.h does.
+ flags=ACINPLACE|((I)jtinplace&JTWILLBEOPENED)|(AT(w)&BOX);
+// obsolete  flags=ACINPLACE|((I)jtinplace&JTWILLBEOPENED)|(AT(w)&BOX)|((AC(w)>>(ACINPLACEX-ACPERMANENTX))&((I)jtinplace<<(ACPERMANENTX-JTINPLACEWX))&(AFLAG(w)<<(ACPERMANENTX-AFPRISTINEX))&ACPERMANENT);
  // Get input pointer
  I virtblockw[NORMAH];  // space for a virtual block of rank 0
- if(likely(flags&BOX))virtw=*(wv=AAV(w));  // if input is boxed, point to first box
- else{
+ if(likely(flags&BOX)){virtw=*(wv=AAV(w));  // if input is boxed, point to first box
+  if(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX)&SGNIF(AFLAG(w),AFPRISTINEX),w))flags|=ACPERMANENT;  // indicates inplaceability of boxed contents
+ }else{
   // if input is not boxed, use a faux-virtual block to point to the atoms.  Repurpose unneeded wv to hold length
   fauxvirtual(virtw,virtblockw,w,0,ACUC1); AN(virtw)=1; wv=(A*)bpnoun(AT(w));  // note if w has gerunds, it is always boxed & doesn't go through here
   // If not boxed, can't be pristine
-  flags&=~ACPERMANENT;
  }
  // Allocate result area
  GATV(z,BOX,AN(w),AR(w),AS(w));
  AFLAG(z)=(~flags<<(BOXX-JTWILLBEOPENEDX))&BOX;  // if WILLBEOPENED is NOT set, make the result a recursive box
  I natoms=AN(w); if(!natoms)R z;  // exit if no result atoms
  zv=AAV(z);
- // Get jt flags to pass to next level - only the inplacing flag, if the routine can take it.  We enable inplacing to fs if our input w was inplaceable.  To get actual inplacing we also have to make the contents inplaceable
- jtinplace=(J)((I)jt+((flags>>(ACPERMANENTX-JTINPLACEWX))&(FAV(fs)->flag>>(VJTFLGOK1X-JTINPLACEWX))&JTINPLACEW));
+ // Get jt flags to pass to next level - take them from  fs, so that we always inplace this verb, which will allow us to set pristinity better
+ // We must remove raze flags since we are using them here
+// obsolete jtinplace=(J)((I)jt+((flags>>(ACPERMANENTX-JTINPLACEWX))&(FAV(fs)->flag>>(VJTFLGOK1X-JTINPLACEWX))&JTINPLACEW));
+ jtinplace=(J)((I)jt+((FAV(fs)->flag>>(VJTFLGOK1X-JTINPLACEWX))&JTINPLACEW));
  // If the verb returns its input block, we will have to turn off pristinity of the arg.  Replace w by its backing block
  if(AFLAG(w)&AFVIRTUAL)w=ABACK(w);
  // *** now w has been replaced by its backing block, if it was virtual
@@ -56,7 +62,9 @@ A jtevery(J jt, A w, A fs){A * RESTRICT wv,x,z,* RESTRICT zv;
 #if 1  // don't try inplacing in boxes yet  scaf
   AC(virtw)|=(AC(virtw)-(flags&ACPERMANENT))&ACINPLACE;
 #endif
-  RZ(x=CALL1IP(f1,virtw,fs)); // run the user's verb
+  if(!(x=CALL1IP(f1,virtw,fs))){ // run the user's verb
+   AC(virtw)&=~ACINPLACE; R0;  // make sure we reset the usecounts of the virtual blocks in case of error
+  }
   // If x is DIRECT inplaceable, it must be unique and we can inherit them into a pristine result.  Otherwise clear pristinity
   if(AT(x)&DIRECT){   // will predict correctly
    flags&=SGNIFPRISTINABLE(AC(x))|~ACINPLACE;  // sign bit of flags will hold PRISTINE status of result: 1 if all DIRECT and inplaceable or PERMANENT
@@ -113,6 +121,7 @@ A jtevery(J jt, A w, A fs){A * RESTRICT wv,x,z,* RESTRICT zv;
 DF2(jtevery2self){R jtevery2(jt,a,w,FAV(self)->fgh[0]);}   // replace u&.> with u and process
 // u&.>, but w may be a gerund, which makes the result a list of functions masquerading as an aray of boxes
 A jtevery2(J jt, A a, A w, A fs){A*av,*wv,x,z,*zv;
+#if 0  // obsolete 
 // todo kludge should rewrite with single flag word
  RZ(a&&w);F2PREFIP;
  AF f2=FAV(fs)->valencefns[1];
@@ -157,7 +166,131 @@ A jtevery2(J jt, A a, A w, A fs){A*av,*wv,x,z,*zv;
  }
  R z;
 }
+#else
+ RZ(a&&w);F2PREFIP;
+ AF f2=FAV(fs)->valencefns[1];
+ // Get the number of atoms, and the number of times to repeat the short side.
+ // The repetition is the count of the surplus frame.
+ I rpti;  // number of times short frame must be repeated
+ I natoms;  // total # cells
+ I flags;  // 20=w is boxed 40=a is boxed 1=w is repeated 2=a is repeated
+ // other flags are: ACINPLACE=pristine result; JTWILLBEOPENED=nonrecursive result; BOX=w input was boxed; BOX<<1=a was boxed;
+ //            ACPERMANENT>>1=w input was inplaceable pristine, contents can be inplaced; ACPERMANENT=same for a
+ {
+  I ar=AR(a); I wr=AR(w);
+  I cf=ar; A la=w; cf=ar<wr?cf:wr; la=ar<wr?la:a; I lr=ar+wr-cf;  // #common frame, Ablock with long shape, long rank.
+  PROD(rpti,lr-cf,AS(la)+cf);   // */ excess rank, = # repeats needed of shorter
+  natoms=MAX(AN(a),AN(w)); natoms=rpti==0?rpti:natoms;  // number of atoms.  Beware of empty arg with surplus frame containing 0; if an arg is empty, so is the result
+  flags=(C)(REPSGN(1-rpti)&(SGNTO0(ar-wr)+1));  // if rpti<2, no repeat; otherwise repeat short frame 1 if ar>wr 2 if wr>ar
+  // Verify agreement
+  ASSERTAGREE(AS(a),AS(w),cf);  // frames must agree
+  // Allocate result
+  GATV(z,BOX,natoms,lr,AS(la)); if(!natoms)R z; zv=AAV(z);  // make sure we don't fetch outside empty arg
+ }
+ // If the result will be immediately unboxed, we create a NONrecursive result and we can store virtual blocks in it.  This echoes what result.h does.
+ flags|=ACINPLACE|((I)jtinplace&JTWILLBEOPENED)|(AT(w)&BOX)|((AT(a)&BOX)<<1);
+ AFLAG(z)=(~flags<<(BOXX-JTWILLBEOPENEDX))&BOX;  // if WILLBEOPENED is NOT set, make the result a recursive box
+ A virtw;
+ // Get input pointer
+ I virtblockw[NORMAH];  // space for a virtual block of rank 0
+ if(likely(flags&BOX)){
+  virtw=*(wv=AAV(w));  // if input is boxed, point to first box
+  if(ASGNINPLACESGN(SGNIF((I)jtinplace&~flags,JTINPLACEWX)&SGNIF(AFLAG(w),AFPRISTINEX),w))flags|=(ACPERMANENT>>1);  // indicates inplaceability of boxed contents.  Never if arg repeated
+ }else{
+  // if input is not boxed, use a faux-virtual block to point to the atoms.  Repurpose unneeded wv to hold length
+  fauxvirtual(virtw,virtblockw,w,0,ACUC1); AN(virtw)=1; wv=(A*)bpnoun(AT(w));  // note if w has gerunds, it is always boxed & doesn't go through here
+  // If not boxed, can't be pristine
+ }
+ // repeat for a
+ A virta;
+ I virtblocka[NORMAH];
+ if(likely(flags&(BOX<<1))){
+  virta=*(av=AAV(a));
+  if(ASGNINPLACESGN(SGNIF((I)jtinplace&~flags,JTINPLACEAX)&SGNIF(AFLAG(a),AFPRISTINEX),a))flags|=ACPERMANENT;
+ }else{
+  fauxvirtual(virta,virtblocka,a,0,ACUC1); AN(virta)=1; av=(A*)bpnoun(AT(a));
+ }
+ // Get jt flags to pass to next level - take them from  fs, so that we always inplace this verb, which will allow us to set pristinity better
+ // We must remove raze flags since we are using them here
+ // If the arguments are the same, we turn off inplacing for the function but not for the argument blocks.  It only matters if a block is returned: then
+ // it's OK to treat the return as pristine the arguments are zombie, even if noninplaceable ones
+// obsolete jtinplace=(J)((I)jt+((flags>>(ACPERMANENTX-JTINPLACEWX))&(FAV(fs)->flag>>(VJTFLGOK1X-JTINPLACEWX))&JTINPLACEW));
+ jtinplace=(J)((I)jt+((FAV(fs)->flag>>(VJTFLGOK2X-JTINPLACEWX))&(a!=w))*(JTINPLACEW+JTINPLACEA));
+ // If the verb returns its input block, we will have to turn off pristinity of the arg.  Replace w by its backing block
+ if(AFLAG(w)&AFVIRTUAL)w=ABACK(w);
+ if(AFLAG(a)&AFVIRTUAL)a=ABACK(a);
+ // *** now a & w have been replaced by its backing block, if it was virtual
 
+ I rpt=rpti=-rpti;  // repeat counters
+ while(1){
+  // If the input was pristine inplaceable, flag the contents as inplaceable UNLESS they are PERMANENT
+  // If the input is inplaceable, there is no more use for it after this verb.  If it was pristine, every block in it is DIRECT and was either permanent or inplaceable when it was added; so if it's
+  // not PERMANENT it is OK to change the usecount to inplaceable.  We must remove inplaceability on the usecount after execution, in case the input block is recursive and the contents now show a count of 2
+  // We may create a block with usecount 8..2,  That's OK, because it cannot be fa'd unless it is ra'd first, and the ra will wipe out the inplaceability.  We do need to keep the usecount accurate, though.
+#if 1  // don't try inplacing in boxes yet  scaf
+  AC(virta)|=(AC(virta)-(flags&ACPERMANENT))&ACINPLACE;
+  AC(virtw)|=(AC(virtw)-((flags<<1)&ACPERMANENT))&ACINPLACE;
+#endif
+  if(!(x=CALL2IP(f2,virta,virtw,fs))){; // run the user's verb
+   AC(virtw)&=~ACINPLACE; AC(virta)&=~ACINPLACE; R0;  // make sure usecount restroed on error
+  }
+  // If x is DIRECT inplaceable, it must be unique and we can inherit them into a pristine result.  Otherwise clear pristinity
+  if(AT(x)&DIRECT){   // will predict correctly
+   flags&=SGNIFPRISTINABLE(AC(x))|~ACINPLACE;  // sign bit of flags will hold PRISTINE status of result: 1 if all DIRECT and inplaceable or PERMANENT
+   // If the verb returned its input, that means the input is escaping by address and the argument block is no longer pristine.  We only need to worry about this when the arg was pristine, which
+   // means that x must be DIRECT.
+   if(unlikely(x==virta))AFLAG(a)&=~AFPRISTINE;  // a, w = backers if original a, w were virtual
+   if(unlikely(x==virtw))AFLAG(w)&=~AFPRISTINE;
+  }else{
+    // not DIRECT.  result must be non-pristine, and we need to turn off pristinity of x since we are going to incorporate it
+    flags&=~ACINPLACE;  // result not pristine
+    {I aflg=AFLAG(x); A awbase=x; if(unlikely(aflg&AFVIRTUAL)){awbase=ABACK(x); aflg=AFLAG(awbase);} AFLAG(awbase)=aflg&~AFPRISTINE;}  // x can never be pristine, since is being incorped
+  }
+  // Restore usecount to virta and virtw.  We can't just store back what it was, because it may have been modified in the verb.
+#if 1  // scaf
+  AC(virtw)&=~ACINPLACE; AC(virta)&=~ACINPLACE;
+#endif
+  ASSERT(!(SPARSE&AT(x)),EVNONCE);
+  // prepare the result so that it can be incorporated into the overall boxed result
+  if(!(flags&JTWILLBEOPENED)) {
+   // normal case where we are creating the result box.  Must incorp the result
+   realizeifvirtual(x); ra(x);   // Since we are moving the result into a recursive box, we must ra() it.  This plus rifv plus pristine removal=INCORPRA.  We could save some fetches by bundling this code into the RIRECT path
+  } else {
+   // result will be opened.  It is nonrecursive.  description in result.h.  We don't have to realize or ra
+   if(AFLAG(x)&AFUNINCORPABLE){RZ(x=clonevirtual(x));}
+   // since we are adding the block to a NONrecursive boxed result,  we DO NOT have to raise the usecount of the block.  And we don't have to mark the usecount non-inplaceable
+#if 0  // not clear this is worth doing
+   if(ZZFLAGWORD&ZZFLAGCOUNTITEMS){
+    // if the result will be razed next, we will count the items and store that in AM.  We will also ensure that the result boxes' contents have the same type
+    // and item-shape.  If one does not, we turn off special raze processing.  It is safe to take over the AM field in this case, because we know this is WILLBEOPENED and
+    // (1) will never assemble or epilog; (2) will feed directly into a verb that will discard it without doing any usecount modification
+#if !ZZSTARTATEND  // going forwards
+    A result0=AAV(zz)[0];   // fetch pointer to the first 
+#else
+    A result0=AAV(zz)[AN(zz)-1];  // fetch pointer to first value stored, which is in the last position
+#endif
+    I* zs=AS(z); I* ress=AS(result0); I zr=AR(z); I resr=AR(result0); //fetch info
+    I diff=TYPESXOR(AT(z),AT(result0))|(MAX(zr,1)^MAX(resr,1)); resr=(zr>resr)?resr:zr;  DO(resr-1, diff|=zs[i+1]^ress[i+1];)  // see if there is a mismatch.  Fixed loop to avoid misprediction
+    ZZFLAGWORD^=(diff!=0)<<ZZFLAGCOUNTITEMSX;  // turn off bit if so 
+    I nitems=zs[0]; nitems=(zr==0)?1:nitems; AM(zz)+=nitems;  // add new items to count in zz.  zs[0] will never segfault, even if z is empty
+   }
+   // Note: by checking COUNTITEMS inside WILLBEOPENED we suppress support for COUNTITEMS in \. which sets WILLBEOPENEDNEVER.  It would be safe to
+   // count then, because no virtual contents would be allowed.  But we are not sure that the EPILOG is safe, and this path is now off to the side
+#endif
+  }
+  // Store result & advance to next cell
+  *zv++=x;
+  if(!--natoms)break;
+  ++rpt; I endrpt=REPSGN(rpt); rpt=rpt==0?rpti:rpt;  // endrpt=0 if end of repeat, otherwise ~0.  Reload rpt at end
+  if(!(flags&endrpt&2)){if(flags&(BOX<<1))virta=*++av;else AK(virta)+=(I)av;}  // advance unrepeated arg
+  if(!(flags&endrpt&1)){if(flags&BOX)virtw=*++wv;else AK(virtw)+=(I)wv;}
+ }
+ // indicate pristinity of result
+ AFLAG(z)|=(flags>>(ACINPLACEX-AFPRISTINEX))&AFPRISTINE;   // could synthesize rather than loading from z
+ R z;
+}
+
+#endif
 // apply f2 on items of a or w against the entirety of the other argument.  Pass on rank of f2 to reduce rank nesting
 DF2(jteachl){RZ(a&&w&&self); I lcr=AR(a)-1<0?0:AR(a)-1; I lr=lr(self); lr=lcr<lr?lcr:lr; I rr=rr(self); rr=AR(w)<rr?AR(w):rr; R rank2ex(a,w,self,lr,rr,lcr,AR(w),FAV(self)->valencefns[1]);}
 DF2(jteachr){RZ(a&&w&&self); I rcr=AR(w)-1<0?0:AR(w)-1; I rr=rr(self); rr=rcr<rr?rcr:rr; I lr=lr(self); lr=AR(a)<lr?AR(a):lr; R rank2ex(a,w,self,lr,rr,AR(a),rcr,FAV(self)->valencefns[1]);}
@@ -211,16 +344,17 @@ F2(jtunder){A x,wvb=w;AF f1,f2;B b,b1;C c,uid;I gside=-1;V*u,*v;
  }
  ASSERTVV(a,wvb); v=FAV(wvb);
  c=0; f1=0; f2=0;
- // Set flag with ASGSAFE status of u/v, and inplaceable.  It will stay inplaceable unless we select an uninplaceable processing routine, of we
+ // Set flag with ASGSAFE status of u/v, and inplaceable.  It will stay inplaceable unless we select an uninplaceable processing routine, or we
  // learn that v is uninplaceable.  If v is unknown, keep inplaceable, because we will later evaluate the compound & might be able to inplace then
  I flag = (FAV(a)->flag&v->flag&VASGSAFE) + (VJTFLGOK1|VJTFLGOK2);
  // If v is WILLOPEN, so will the compound be - for all valences
  switch(v->id&gside){  // never special if gerund - this could evaluate to 0 or 1, neither of which is one of these codes
 // obsolete  case COPE:  f1=jtunderh10; f2=jtunderh20; flag&=~(VJTFLGOK1|VJTFLGOK2); flag2|=VF2ATOPOPEN1|VF2ATOPOPEN2A|VF2ATOPOPEN2W|VF2BOXATOP1|VF2BOXATOP2; break;   // &.>
- case COPE: R fdef(VF2WILLOPEN1|VF2WILLOPEN2A|VF2WILLOPEN2W,CUNDER,VERB,jteveryself,jtevery2self,a,w,0,flag|VIRS1,0,0,0);   // this is the commonest case.  Return fast, avoiding analysis below
+ case COPE:
+  R fdef(VF2WILLOPEN1|VF2WILLOPEN2A|VF2WILLOPEN2W,CUNDER,VERB,jteveryself,jtevery2self,a,w,0,flag|VIRS1,0,0,0);   // this is the commonest case.  Return fast, avoiding analysis below
    // We do not expose BOXATOP or ATOPOPEN flags, because we want all u&.> to go through this path & thus we don't want to allow other loops to break in
    // We set VIRS1 just in case a user writes u&.>"n which we can ignore
-   // The flags are ignored during u&.>, but they can forward through to affect previous verbs.  Also, u&.v"n will be taken over by rank processing
+   // The flags are ignored during u&.>, but they can forward through to affect previous verbs.
  case CFORK: c=ID(v->fgh[2]); /* fall thru */
  case CAMP:  
   u=FAV(a);  // point to a in a&.w.  w is f1&g1 or (f1 g1 h1)

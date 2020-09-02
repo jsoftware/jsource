@@ -19,7 +19,7 @@ static DF1(ad1){DECLFG;A z;UC od=jt->uflags.us.cx.cx_c.db;
  RZ(w); 
  jt->uflags.us.cx.cx_c.db=0; z=CALL1(f1,  w,fs); jt->uflags.us.cx.cx_c.db=od;
  if(EVTHROW==jt->jerr)R 0;
- RESETERR;  
+ RESETERR;
  R z?z:AT(gs)&NOUN?gs:CALL1(g1,  w,gs);
 }
 

@@ -175,7 +175,7 @@ assert. ((prist , virt) = ispristorunbox , isvirt) (".x) (u 13!:83@[ 0:) <"boxr 
 > ckprist 0 1 0 1 ] _1  NB. result exposes a
 > ckprist 0 1 1 1 ] 5  NB. result is unboxed, but doesn't disturb a
 +:&.> ckprist 0 1 1 1 ] 5   NB. result is itself pristine
-+&.> ckprist 0 1 0 0 ] 5  NB. Result
++&.> ckprist 0 1 0 0 ] 5  NB. Result is a passthrough, not pristine unless inplace
 NB. dyad doesn't support prist yet '2' +&.> ckprist 0 1 1 ] 5  NB. scaf
 < ckprist 0 0 0 0 ] 5
 <"0 ckprist 0 0 0 0 ] 5
@@ -293,14 +293,15 @@ isprist 13!:83 C. 0 2 1 4 3  NB. cyclic perm is always created pristine
 '<"0 i. 4 5' ] L: 0 ckprist 0 0 ] 4 5
 +: L: 0 ckprist 0 1 0 1 ] 5
 +: L: 0 ckprist 0 1 0 1 ] 4 5
-'<"0 i. 5' + L: 0 ckprist 0 0 ] 5
-'<"0 i. 4 5' + L: 0 ckprist 0 0 ] 4 5
+'<"0 i. 5' + L: 0 ckprist 0 1 0 1 ] 5
+'<"0 i. 4 5' + L: 0 ckprist 0 1 0 1 ] 4 5
 ] S: 0 ckprist 0 1 0 1 ] 5  NB. result is open
 ] S: 0 ckprist 0 1 0 1 ] 4 5
 '<"0 i. 5' ] S: 0 ckprist 0 1 0 1 ] 5
 '<"0 i. 4 5' ] S: 0 ckprist 0 1 0 1 ] 4 5
 +: S: 0 ckprist  0 1 0 1 ] 5
 +: S: 0 ckprist 0 1 0 1 ] 4 5
+<@:+: S: 0 ckprist  0 0 ] 5  NB. S: does not check for pristine result
 '<"0 i. 5' + S: 0 ckprist 0 1 0 1 ] 5
 '<"0 i. 4 5' + S: 0 ckprist 0 1 0 1 ] 4 5
 ] S: 0 ckprist 0 1 0 1 ] 5  NB. result is open
@@ -347,5 +348,9 @@ NB. Verify inplacing of u&.> on pristine
 '>:&.>' (7!:2@, (< 1.1&*) 7!:2@]) '<"1 i. 100 1000'
 NB. requires dyad '>.&.>/\.' (7!:2@, (< 1.1&*) 7!:2@]) '<"1 i. 100 1000'
 '(10 {. 1) 0:@:>:&.>;.1' (7!:2@, (< 1.05&*) 7!:2@]) '<"1 i. 10 10000'
+a =: <"1 i. 100 1000
+5000 > 7!:2 'a =: >:&.> a'
+
+NB. Verify that result loops perform inplacing, including assignment inplacing
 
 4!:55 ;:'a ckprist countis e isprist ispristorunbox isro isvirt o pe t1 totient x y '

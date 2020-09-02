@@ -7,7 +7,7 @@
 #include "w.h"
 
 static F1(jtdrr);
-EVERYSELF(drrself,jtdrr,0,0)
+EVERYFS(drrself,jtdrr,0,0,VFLAGNONE)
 
 static F1(jtdrr){PROLOG(0055);A df,dg,hs,*x,z;B b,ex,xop;C c,id;I fl,*hv,m;V*v;
  RZ(w);

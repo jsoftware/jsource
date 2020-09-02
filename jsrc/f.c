@@ -500,7 +500,7 @@ F1(jtmat){A z;B b=0;C*v,*x;I c,k,m=1,p,q,qc,r,*s,t,zn;
 
 // Convert 1 box to character array, then to character table
 static F1(jtmatth1){R mat(thorn1main(w));}
-static EVERYSELF(matth1self,jtmatth1,0,0)
+static EVERYFS(matth1self,jtmatth1,0,0,VFLAGNONE)
 
 // Format boxed array.  Result is table of characters, with space-changing characters (like BS, CR) converted to spaces
 static F1(jtthbox){A z;static UC ctrl[]=" \001\002\003\004\005\006\007   \013\014 ";

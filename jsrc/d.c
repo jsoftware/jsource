@@ -64,7 +64,7 @@ static void jtdspell(J jt,C id,A w){C c,s[5];
 }}
 
 static F1(jtsfn0){R sfn(0,w);}  // return string form of full name for a NAME block
-EVERYSELF(sfn0overself,jtsfn0,jtover,0)
+EVERYFS(sfn0overself,jtsfn0,jtover,0,VFLAGNONE)
 
 static void jtdisp(J jt,A w){B b=1&&AT(w)&NAME+NUMERIC;
  if(b&&jt->nflag)eputc(' ');

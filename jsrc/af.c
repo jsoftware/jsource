@@ -58,7 +58,7 @@ B jthasimploc(J jt,A w){A hs,*u;V*v;
 }
 
 static A jtfixa(J,A,A);
-EVERYSELF(arofixaself,jtaro,jtfixa,0)  // create A block to be used in every to call jtfixa (dyad) or jtaro (monad)
+EVERYFS(arofixaself,jtaro,jtfixa,0,VFLAGNONE)  // create A block to be used in every to call jtfixa (dyad) or jtaro (monad)
 
 // fix the verb w (could be a name if name+noun, or during debug).
 // a is flags to handle lower recursions:

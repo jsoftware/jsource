@@ -185,7 +185,7 @@ DF2(jtboxcut0){A z;
  jt->tnextpushp=pushxsave;   // restore tstack pointer
  ASSERT(y,EVWSFULL);  // if we broke out an allocation failure, fail.  Since the block is recursive, when it is tpop()d it will recur to delete contents
  // The result can be called pristine if the contents are DIRECT and the result is recursive, because it contains all copied data
- AFLAG(z)|=(-(t&DIRECT))&((I)jtinplace<<(AFPRISTINEX-JTWILLBEOPENEDX))&AFPRISTINE;
+ AFLAG(z)|=(-(t&DIRECT))&(~(I)jtinplace<<(AFPRISTINEX-JTWILLBEOPENEDX))&AFPRISTINE;
  RETF(z);  // return the recursive block
 }
 

@@ -411,7 +411,7 @@ void audittstack(J jt){
  for(ttop=jt->tnextpushp-!!((I)jt->tnextpushp&(NTSTACKBLOCK-1));ttop;){
   // loop through each entry, skipping the first which is a chain
   for(;(I)ttop&(NTSTACKBLOCK-1);ttop--){
-   auditsimverify0(*ttop);
+   if(*ttop)auditsimverify0(*ttop);
   }
   // back up to previous block
   ttop = (A*)*ttop;  // back up to end of previous block, or 0 if last block
@@ -419,14 +419,14 @@ void audittstack(J jt){
  // loop through each block of stack
  for(ttop=jt->tnextpushp-!!((I)jt->tnextpushp&(NTSTACKBLOCK-1));ttop;){
   for(;(I)ttop&(NTSTACKBLOCK-1);ttop--){
-   auditsimdelete(*ttop);
+   if(*ttop)auditsimdelete(*ttop);
   }
   ttop = (A*)*ttop;  // back up to end of previous block, or 0 if last block
  }
  // again to clear the counts
  for(ttop=jt->tnextpushp-!!((I)jt->tnextpushp&(NTSTACKBLOCK-1));ttop;){
   for(;(I)ttop&(NTSTACKBLOCK-1);ttop--){
-   auditsimreset(*ttop);
+   if(*ttop)auditsimreset(*ttop);
   }
   ttop = (A*)*ttop;  // back up to end of previous block, or 0 if last block
  }
@@ -653,8 +653,8 @@ A jtgc (J jt,A w,A* old){
  if(c<0)AC(w) = c;  // restore inplaceability.  Could use AC(w)=(c<0)?c:AC(w) to avoid conditional jump
 #else
  // Since w now has recursive usecounts (except for sparse, which is never inplaceable), we don't have to do a full fa() on a block that is returning
- // inplaceable - we just reset the usecount in the block.
- I cafter=AC(w); if((c&(1-cafter))>=0){tpush(w);} cafter=c<0?c:cafter; AC(w)=cafter;  // push unless was inplaceable and was not on stack; make inplaceable if it was originally
+ // inplaceable - we just reset the usecount in the block.  If the block is returning inplaceable, we must update AM if we tpush
+ I cafter=AC(w); if((c&(1-cafter))>=0){A *amptr=(c<0?(A*)&ABACK(w):(A*)&jt->shapesink); *amptr=(A)jt->tnextpushp; tpush(w);} cafter=c<0?c:cafter; AC(w)=cafter;  // push unless was inplaceable and was not freed during tpop; make inplaceable if it was originally
 #endif
  R w;
 }
@@ -691,18 +691,21 @@ I jtra(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
    np=np0;  // advance to next box
   }
 #else
-  n=1-n;  // convert count to complementary count: 0 for last, <0 before last
-  if(n>0)R 0;  // Can't be mapped boxed; skip everything if no boxes
+// obsolete   n=1-n;  // convert count to complementary count: 0 for last, <0 before last
+// obsolete   if(n>0)R 0;  // Can't be mapped boxed; skip everything if no boxes
+  if(n==0)R 0;  // Can't be mapped boxed; skip everything if no boxes
   np=*wv;  // prefetch first box
-  do{AD* np0;  // n is always <=0 to start.  n here is complementary count, 0 on the last item
-   wv+=SGNTO0(n);   // advance to pointer to next, unless this is the last
-   np0=*wv;  // fetch next box if it exists, otherwise harmless value.  This fetch settles while the ra() is running
+  while(--n>0){AD* np0;  // n is always >0 to start.  Loop for n-1 times
+// obsolete   wv+=SGNTO0(n);   // advance to pointer to next, unless this is the last
+// obsolete    np0=*wv;  // fetch next box if it exists, otherwise harmless value.  This fetch settles while the ra() is running
+   np0=*++wv;  // fetch next box if it exists, otherwise harmless value.  This fetch settles while the ra() is running
 #ifdef PREFETCH
    PREFETCH((C*)np0);   // prefetch the next box while ra() is running
 #endif
    if(np)ra(np);  // increment the box, possibly turning it to recursive
    np=np0;  // advance to next box
-  }while(++n<=0);
+  };
+  if(np)ra(np);  // handle last one
 #endif
  } else if(t&(VERB|ADV|CONJ)){V* RESTRICT v=FAV(wd);
   // ACV.  Recur on each component
@@ -736,18 +739,19 @@ I jtfa(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
    np = np0;  // advance to next box
   }
 #else
-  n=1-n;  // convert count to complementary count: 0 for last, <0 before last
-  if(n>0)R 0;  // Can't be mapped boxed; skip everything if no boxes
+  if(n==0)R 0;  // Can't be mapped boxed; skip everything if no boxes
   np=*wv;  // prefetch first box
-  do{AD* np0;  // n is always <=0 to start.  n here is complementary count, 0 on the last item
-   wv+=SGNTO0(n);   // advance to pointer to next, unless this is the last
-   np0=*wv;  // fetch next box if it exists, otherwise harmless value.  This fetch settles while the ra() is running
+  while(--n>0){AD* np0;  // n is always >0 to start.  Loop for n-1 times
+// obsolete   wv+=SGNTO0(n);   // advance to pointer to next, unless this is the last
+// obsolete    np0=*wv;  // fetch next box if it exists, otherwise harmless value.  This fetch settles while the ra() is running
+   np0=*++wv;  // fetch next box if it exists, otherwise harmless value.  This fetch settles while the ra() is running
 #ifdef PREFETCH
    PREFETCH((C*)np0);   // prefetch the next box while ra() is running
 #endif
    fana(np);  // increment the box, possibly turning it to recursive
    np=np0;  // advance to next box
-  }while(++n<=0);
+  };
+  fana(np);  // increment the box, possibly turning it to recursive
 #endif
  } else if(t&(VERB|ADV|CONJ)){V* RESTRICT v=FAV(wd);
   // ACV.
@@ -765,8 +769,11 @@ I jtfa(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
 // Push wd onto the pop stack, and its descendants, possibly recurring on the descendants
 // Result is new value of jt->tnextpushp, or 0 if error
 // Note: wd CANNOT be virtual
+// tpush, the macro parent of this routine, calls here only if a nonrecursive block is pushed.  This never happens for
+// non-sparse nouns, because they always go through ra() somewhere before the tpush().  Pushing is mostly in gc() and on allocation in ga().
 A *jttpush(J jt,AD* RESTRICT wd,I t,A *pushp){I af=AFLAG(wd); I n=AN(wd);
  if(t&BOX){
+// THIS CODE IS NEVER EXECUTED
   // boxed.  Loop through each box, recurring if called for.
   A* RESTRICT wv=AAV(wd);  // pointer to box pointers
   while(n--){
@@ -858,20 +865,22 @@ void jttpop(J jt,A *old){A *endingtpushp;
    // It is OK to prefetch the next box even on the last pass, because the next pointer IS a pointer to a valid box, or a chain pointer
    // to the previous free block (or 0 at end), all of which is OK to read and then prefetch from
    np0=*pushp;   // point to block for next pass through loop
-   I c=AC(np);  // fetch usecount
-   I flg=AFLAG(np);  // fetch flags
+   if(np){
+    I c=AC(np);  // fetch usecount
 #ifdef PREFETCH
-   PREFETCH((C*)np0);   // prefetch the next box
+    PREFETCH((C*)np0);   // prefetch the next box.  Might be 0; that's no crime
 #endif
-   // We never tpush a PERMANENT block so we needn't check for it.
-   // If count goes to 0: if the usercount is marked recursive, do the recursive fa(), otherwise just free using mf().  If virtual, the backer must be recursive, so fa() it
-   // Otherwise just decrement the count
+    // We never tpush a PERMANENT block so we needn't check for it.
+    // If count goes to 0: if the usercount is marked recursive, do the recursive fa(), otherwise just free using mf().  If virtual, the backer must be recursive, so fa() it
+    // Otherwise just decrement the count
 // obsolete   if(--c<=0){if(AFLAG(np)&AFVIRTUAL){A b=ABACK(np); fana(b);} if(UCISRECUR(np)){fana(np);}else{mf(np);}}else AC(np)=c;  // decrement usecount and either store it back or free the block
-   AC(np)=--c;  // update count & store...
-   if(c<=0){
-    // The block is going to be destroyed.  See if there are further ramifications
-    if(flg&AFVIRTUAL){A b=ABACK(np); fanano0(b);}  // if virtual block going away, reduce usecount in backer.  NOTE that ALL non-faux virtual blocks, even self-virtual ones, are on the tpop stack & get handled here
-    fanapop(np,flg);  // do the recursive POP only if RECURSIBLE block; then free np
+// obsolete     AC(np)=--c;  // update count & store...
+    if(likely(--c<=0)){
+     I flg=AFLAG(np);  // fetch flags
+     // The block is going to be destroyed.  See if there are further ramifications
+     if(flg&AFVIRTUAL){A b=ABACK(np); fanano0(b);}  // if virtual block going away, reduce usecount in backer.  NOTE that ALL non-faux virtual blocks, even self-virtual ones, are on the tpop stack & get handled here
+     fanapop(np,flg);  // do the recursive POP only if RECURSIBLE block; then free np
+    }else AC(np)=c;
    }
    np=np0;  // Advance to next block
   }
@@ -995,7 +1004,7 @@ if((I)jt&3)SEGFAULT
 #if MEMAUDIT&8
   DO((((I)1)<<(1+blockx-LGSZI)), lfsr = (lfsr<<1LL) ^ (lfsr<0?0x1b:0); if(i!=6)((I*)z)[i] = lfsr;);   // fill block with garbage - but not the allocation word
 #endif
-  AFLAG(z)=0; AC(z)=ACUC1|ACINPLACE;  // all blocks are born inplaceable 
+  AFLAG(z)=0; ABACK(z)=(A)pushp; AC(z)=ACUC1|ACINPLACE;  // all blocks are born inplaceable, and point to their deletion entry in tpop
    // we do not attempt to combine the AFLAG write into a 64-bit operation, because as of 2017 Intel processors
    // will properly store-forward any read that is to the same boundary as the write, and we always read the same way we write
   *pushp++=z; if(!((I)pushp&(NTSTACKBLOCK-1)))RZ(pushp=tg(pushp)); jt->tnextpushp=pushp;  // advance to next slot, allocating a new block as needed

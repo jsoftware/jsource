@@ -557,7 +557,7 @@ rdglob: ;
 //     AF actionfn=FAV(fs)->valencefns[(pline&2)>>1];  // the routine we will execute.  It's going to take longer to read this than we can fill before the branch is mispredicted, usually
      // We will be making a bivalent call to the action routine; it will be w,fs,fs for monads and a,w,fs for dyads (with appropriate changes for modifiers).  Fetch those arguments
      // We have fs already.  arg1 will come from position 2 3 1 1 1 depending on stack line; arg2 will come from 1 2 3 2 3
-     if(pmask&0x7){A y;  // lines 0 1 2
+     if(pmask&0x7){A y;  // lines 0 1 2, verb execution
       // Verb execution (in order: V N, V V N, N V N).  We must support inplacing, including assignment in place, and support recursion
       jt->sf=fs;  // push $: stack
       // While we are waiting for the branch address, work on inplacing.  See if the primitive being executed is inplaceable
@@ -600,8 +600,33 @@ RECURSIVERESULTSCHECK
 #if MEMAUDIT&0x10
       auditmemchains();  // trap here while we still point to the action routine
 #endif
+#if MEMAUDIT&0x2
+      audittstack(jt);
+#endif
       EPZ(y);  // fail parse if error
       stackfs[1].a=y;  // save result 2 3 3 2 3; parsetype is unchanged, token# is immaterial
+      // free up inputs that are no longer used.  These will be inputs that are still inplaceable and were not themselves returned by the execution.
+      // We free them right here, and zap their tpop entry to avoid an extra free later.
+      // We free using fanapop, which recurs only on recursive blocks, because that's what the tpop we are replacing does
+      // We can free all DIRECT blocks, and PRISTINE also.  We mustn't free non-PRISTINE boxes because the contents are at large
+      // and might be freed.
+#if 1
+      {
+// obsolete if(AC(y)<0 && AFLAG(y)&BOX && AT(y)&BOX && AC(AAV(y)[0])<2)  // scaf
+// obsolete  {I aaa = 1;} 
+      I c=AC(arg1); c=arg1==y?0:c; if((c&(-(AT(arg1)&DIRECT)|SGNIF(AFLAG(arg1),AFPRISTINEX)))<0){   // inplaceable and not return value.  Can't be virtual.
+        if(*(A*)ABACK(arg1)!=arg1)SEGFAULT
+        *(A*)ABACK(arg1)=0; fanapop(arg1,AFLAG(arg1));
+      }
+      c=AC(arg2); c=arg2==y?0:c; c=arg1==arg2?0:c; if((c&SGNIF(pmask,2)&(-(AT(arg2)&DIRECT)|SGNIF(AFLAG(arg2),AFPRISTINEX)))<0){  // inplaceable, not return value, not same as arg1, dyad.  Safe to check AC even if freed as arg1
+       if(*(A*)ABACK(arg2)!=arg2)SEGFAULT
+       *(A*)ABACK(arg2)=0; fanapop(arg2,AFLAG(arg2));
+      }
+#if MEMAUDIT&0x2
+      audittstack(jt);
+#endif
+      }
+#endif
      }else{
       // Lines 3-4, conj/adv execution.  We must get the parsing type of the result, but we don't need to worry about inplacing or recursion
       AF actionfn=FAV(fs)->valencefns[pline-3];  // the routine we will execute.  It's going to take longer to read this than we can fill before the branch is mispredicted, usually

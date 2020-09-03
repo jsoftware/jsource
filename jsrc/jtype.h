@@ -102,7 +102,9 @@ struct AD {
   I m;  // Multi-use field. (1) For NJA/SMM blocks, size of allocation. (2) for blocks coming out of a COUNTITEMS verb, holds the number of items in the
         // raze of the noun (if the types are identical) (3) for SYMB tables for explicit definitions, the address of the calling symbol table (4) for the block
         // holding the amend offsets in x u} y, the number of axes of y that are built into the indexes in u (5) for name references, the value of jt->modifiercount when the name was last looked up
-        // (6) in the return from wordil, holds the number of words if any final NB. is discarded
+        // (6) in the return from wordil, holds the number of words if any final NB. is discarded; (7) in the result of indexofsub when called for FORKEY, contains the
+        // number of partitiona found;  (8) For all blocks, AM initially holds a pointer to the place in the tpop stack (or hijacked tpop stack) that points back to the allocated block.  This value is guaranteed
+        // to remain valid as long as the block is inplaceable and might possibly return as a result to the parser (in cases 1-7 above, the block cannot become a result to the parser).
   A back; // For VIRTUAL blocks, points to backing block
 
 } mback;

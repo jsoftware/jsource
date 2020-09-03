@@ -1507,7 +1507,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z;B mk=w==mark,th;
 
   // Call the routine to perform the operation
   RZ(fn(jt,mode,m,n,c,k,acr,wcr,ac,wc,ak,wk,a,w,&h,z));
-  AM(z)=AM(h); // in case IFORKEY, return the # frets
+  AM(z)=AM(h);
   if(mk){A x,*zv;I*xv,ztype;
    // If w was omitted (indicating prehashing), return the information for that special case
    // result is an array of 3 boxes, containing (info vector),(hashtable),(mask of hashed bytes if applicable)
@@ -1528,7 +1528,11 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z;B mk=w==mark,th;
    zv[0]=x; zv[1]=rifvs(h); zv[2]=hi;
   }
  }  // end of 'not sequential comparison' which means we need a hashtable
- EPILOG(z);
+ I forkeyresult=AM(z);
+ RZ(z=EPILOGNORET(z));
+ // Since EPILOG may have rewritten AM, and IFORKEY never returns to the parser, we can store the FORKEY result in AM.
+ *((mode&IIOPMSK)==IFORKEY?(I*)&AM(z):(I*)&jt->shapesink)=forkeyresult;
+ RETF(z);
 }    /* a i."r w main control */
 
 // verb to handle compounds like m&i. e.&n .  m/n has already been hashed and the result saved away

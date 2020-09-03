@@ -2073,8 +2073,8 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
  // Call the routine to perform the operation
  RZ(h=ifn(jt,mode,n,m,c,ac,wc,a,w,z,k,ak,wk,h));
 //  RZ(h=fntbl[fnx](jt,mode,n,m,c,ac,wc,a,w,z,k,ak,wk,h));
- // If the call was IFORKEY, the number of partitions was stored in AM(h).  Move it to AM(z) whence it will re returned.
- AM(z)=AM(h);  // just copy willy-nilly
+ // If the call was IFORKEY, the number of partitions was stored in AM(h).  Move it to AM(z) whence it will be returned.
+ I forkeyresult=AM(h);  // save # partitions
 
  if(unlikely((mode&IPHCALC))){A x,*zv;I*xv;
   // If w was omitted (indicating prehashing), return the information for that special case
@@ -2085,7 +2085,10 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
   xv[0]=mode; xv[1]=n; xv[2]=k; /* noavx xv[3]=jt->min; */ xv[4]=(I)fntbl[FNTABLEPREFIX+fnx]; /* xv[5]=ztypefromitype[mode&IIOPMSK]; */
   zv[0]=x; zv[1]=rifvs(h);
  }
- EPILOG(z);
+ RZ(z=EPILOGNORET(z));
+ // Since EPILOG may have rewritten AM, and IFORKEY never returns to the parser, we can store the FORKEY result in AM.
+ *((mode&IIOPMSK)==IFORKEY?(I*)&AM(z):(I*)&jt->shapesink)=forkeyresult;
+ RETF(z);
 }    /* a i."r w main control */
 
 // verb to execute compounds like m&i. e.&n .  m/n has already been hashed and the result saved away

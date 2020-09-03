@@ -114,6 +114,12 @@ countis =: 4&{
 (isprist) a =: 13!:83 < i. 400
 ((0>countis),isprist) a   NB. name can be pristine even if not inplaceable
 (isprist) a =: 13!:83 <"0  i. 5
+isprist 13!:83 ;: 'a b c'   NB. Verbs that produce boxes should produce pristine
+-. isprist 13!:83 (5 6) ; 3 4 5   NB. Verbs that produce boxes should produce pristine
+isprist 13!:83 ] (+: 5 6) ; (+: 3 4 5)
+-. isprist 13!:83 < 5
+isprist 13!:83 < +: 5
+isprist 13!:83 C. 2 3 4 5
 
 NB. x is 5!:5 of left arg, y is shape of right arg, u is verb.
 NB. n is (0 if verb produces normal block, 1 if virtual, 2 if self-virtual, 3 if virtual block but not of the input),

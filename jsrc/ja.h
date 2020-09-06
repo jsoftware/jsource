@@ -351,13 +351,17 @@
 // the current block is being decremented to 0 usecount or does not have recursive usecount
 // fa() audits the tstack, for use outside the usual system.
 // Zczero is ~0 if usecount is going negative, 0 otherwise.  Usecount 1->0, 8..1->8..2, 4..0 unchanged, others decrement
+#define faaction(x, nomfaction) {I Zc=AC(x); AC(x)=Zc=Zc-1+((UI)Zc>>(BW-2)); I tt=AT(x); Zc=REPSGN(Zc-1); if((tt&=TRAVERSIBLE)&(Zc|~AFLAG(x)))jtfa(jt,(x),tt); if(Zc){jtmf(jt,x);} nomfaction}
 // obsolete #define fa(x)                       {if(x){I Zc=AC(x); if(!ACISPERM(Zc)){I tt=AT(x); I Zczero=-(I )(--Zc<=0); if((tt&=TRAVERSIBLE)&(Zczero|~AFLAG(x)))jtfa(jt,(x),tt); if(Zczero){jtmf(jt,x);}else {AC(x)=Zc; if(MEMAUDIT&2)audittstack(jt);}}}}
-#define fa(x)                       {if(x){I Zc=AC(x); AC(x)=Zc=Zc-1+((UI)Zc>>(BW-2)); I tt=AT(x); Zc=REPSGN(Zc-1); if((tt&=TRAVERSIBLE)&(Zc|~AFLAG(x)))jtfa(jt,(x),tt); if(Zc){jtmf(jt,x);}else {if(MEMAUDIT&2)audittstack(jt);}}}
+// obsolete #define fa(x)                       {if(x){I Zc=AC(x); AC(x)=Zc=Zc-1+((UI)Zc>>(BW-2)); I tt=AT(x); Zc=REPSGN(Zc-1); if((tt&=TRAVERSIBLE)&(Zc|~AFLAG(x)))jtfa(jt,(x),tt); if(Zc){jtmf(jt,x);}else {if(MEMAUDIT&2)audittstack(jt);}}}
+#define fa(x)                       {if(x)faaction((x),else {if(MEMAUDIT&2)audittstack(jt);})}
 // Within the tpush/tpop, no need to audit fa, since it was checked on the push
 // obsolete #define fana(x)                     {if(x){I Zc=AC(x); if(!ACISPERM(Zc)){I tt=AT(x); I Zczero=-(I )(--Zc<=0); if((tt&=TRAVERSIBLE)&(Zczero|~AFLAG(x)))jtfa(jt,(x),tt); if(Zczero){jtmf(jt,x);}else {AC(x)=Zc;}}}}
-#define fana(x)                     {if(x){I Zc=AC(x); AC(x)=Zc=Zc-1+((UI)Zc>>(BW-2)); I tt=AT(x); Zc=REPSGN(Zc-1); if((tt&=TRAVERSIBLE)&(Zc|~AFLAG(x)))jtfa(jt,(x),tt); if(Zc){jtmf(jt,x);}}}
+// obsolete #define fana(x)                     {if(x){I Zc=AC(x); AC(x)=Zc=Zc-1+((UI)Zc>>(BW-2)); I tt=AT(x); Zc=REPSGN(Zc-1); if((tt&=TRAVERSIBLE)&(Zc|~AFLAG(x)))jtfa(jt,(x),tt); if(Zc){jtmf(jt,x);}}}
+#define fana(x)                     {if(x)fanano0(x)}
 // when x is known to be valid
-#define fanano0(x)                  {I Zc=AC(x); AC(x)=Zc=Zc-1+((UI)Zc>>(BW-2)); I tt=AT(x); Zc=REPSGN(Zc-1); if((tt&=TRAVERSIBLE)&(Zc|~AFLAG(x)))jtfa(jt,(x),tt); if(Zc){jtmf(jt,x);}}
+// obsolete #define fanano0(x)                  {I Zc=AC(x); AC(x)=Zc=Zc-1+((UI)Zc>>(BW-2)); I tt=AT(x); Zc=REPSGN(Zc-1); if((tt&=TRAVERSIBLE)&(Zc|~AFLAG(x)))jtfa(jt,(x),tt); if(Zc){jtmf(jt,x);}}
+#define fanano0(x)                  faaction((x),)
 // Within tpop, no need to check ACISPERM; Zczero is ~0; and we should recur only if flag indicates RECURSIBLE.  In that case we can reconstruct the type from the flag
 #define fanapop(x,flg)              {if((flg)&RECURSIBLE)jtfa(jt,(x),(flg)&RECURSIBLE); jtmf(jt,x);}
 #define fac_ecm(x)                  jtfac_ecm(jt,(x))

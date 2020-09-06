@@ -191,7 +191,7 @@ static DF1(jtply1){PROLOG(0040);DECLFG;A zz=0;
      // zzbox is normally NONrecursive and we add boxes to it as they come in.  Protecting it has made it recursive, which will
      // cause a double-free if we add another box to it.  So we have to go through it and make it nonrecursive again.  We don't have to do it recursively.
      // This is regrettable, but rare.  If we cared, we could save the whole gc3() call any time the result is going to be stored in zzbox, since there's
-     // nothing else to free; but that's not worth it.  zzbox itself becomes nonrecursive but its descendants remain recursive, which is important becase
+     // nothing else to free; but that's not worth it.  zzbox itself becomes nonrecursive but its descendants remain recursive, which is important because
      // tpop expects recursive contents
      AFLAG(zzbox)&=~BOX; DQ(AN(zzbox), if(AAV(zzbox)[i])tpush(AAV(zzbox)[i]);)  // mark zzbox nonrecursive; for each child, replace the implied free with an explicit one on the stack
     }

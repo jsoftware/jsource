@@ -27,9 +27,9 @@ F1(jtravel){A a,c,q,x,y,y0,z;B*b;I f,j,m,r,*u,*v,*yv;P*wp,*zp;
    // the self-virtual-block code in virtual() because we can do it for indirect types also, since we know we are not changing
    // the number of atoms
    // We preserve pristinity between the input and the output
-   AR(w)=(RANKT)(1+f); AS(w)[f]=m; RETF(w);  // if virtual inplace, notify the originator
+   AR(w)=(RANKT)(1+f); AS(w)[f]=m; RETF(w);
   }
-  // Not (self)-inplaceable.  Create a (noninplace) virtual copy, but not if NJA memory  NJAwhy
+  // Not self-virtual.  Create a (noninplace) virtual copy, but not if NJA memory  NJAwhy
   // If rank 0 were the only thing stopping us from inplacing, we could inherit pristinity
   if(!(AFLAG(w)&(AFNJA))){RZ(z=virtual(w,0,1+f)); AN(z)=AN(w); MCISH(AS(z),AS(w),f) AS(z)[f]=m; RETF(z);}
 

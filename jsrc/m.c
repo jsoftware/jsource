@@ -508,36 +508,58 @@ A jtincorp(J jt, A w) {RZ(w); INCORP(w); R w;}
 // This is inplaceable, and we inplace the w block.  'Inplaceable' here includes being the target of jt->assignsym
 // We fill in everything but AN and AS, which are done in the caller
 // You should be wary of making an NJA block virtual, because with a usecount of 1 it might be inplaced by the code for x,y or x u}y
+// If this code is called with inplacing turned on (* w inplaceable), we assume that w is going to be replaced by the virtual result,
+// and we make the virtual block inplaceable if w was
 RESTRICTF A jtvirtual(J jtip, AD *RESTRICT w, I offset, I r){AD* RESTRICT z;
  J jt=(J)(intptr_t)((I)jtip&~JTFLAGMSK);  // get flag-free pointer to J block
  ASSERT(RMAX>=r,EVLIMIT);
  I t=AT(w);  // type of input
  offset<<=bplg(t);  // length of an atom of t
- I c=AC(w);  // count of input
+// obsolete  I c=AC(w);  // count of input
  I wf=AFLAG(w);  // flags in input
-  // If this is an inplaceable request for an inplaceable DIRECT block, we don't need to create a new virtual block: just modify the offset in the old block.  Make sure the shape fits
-  // if the block is UNINCORPABLE, we don't modify it, because then we would have to check everywhere to see if a parameter block had changed
-  // We could check for assignsym etc, but it's not worth it: all we are saving is allocating one lousy block, usually 64 bytes
- if((SGNIF((I)jtip,JTINPLACEWX) & (-(t&DIRECT)) & (r-(AR(w)+1)) & c & SGNIFNOT(wf,AFUNINCORPABLEX))<0){
+ I wip=SGNIF((I)jtip,JTINPLACEWX)&AC(w);   // sgn if w is inplaceable in inplaceable context
+ // If this is an inplaceable request for an inplaceable DIRECT block, we don't need to create a new virtual block: just modify the offset in the old block.  Make sure the shape fits
+ // if the block is UNINCORPABLE, we don't modify it, because then we would have to check everywhere to see if a parameter block had changed
+ // We could check for assignsym etc, but it's not worth it: all we are saving is allocating one lousy block, usually 64 bytes
+ if((wip & (-(t&DIRECT)) & (r-(AR(w)+1)) & SGNIFNOT(wf,AFUNINCORPABLEX))<0){
   // virtual-in-place.  There's nothing to do but change the pointer and fill in the new rank.  AN and AS are handled in the caller
+  // We leave the usecount unchanged, so the block still shows as inplaceable
   AK(w)+=offset; AR(w)=(RANKT)r;
   R w;
  }else{
   // not self-virtual block: allocate a new one
   RZ(z=gafv(SZI*(NORMAH+r)-1));  // allocate the block
-  AC(z)=ACUC1; AT(z)=t; AK(z)=(CAV(w)-(C*)z)+offset; AR(z)=(RANKT)r;  // virtual, not inplaceable
-  // If w is inplaceable and inplacing is enabled, we could transfer the inplaceability to the new virtual block.  We choose not to, because we have already picked up
-  // virtual-in-place cases above.  The main case would be an inplaceable UNINCORPABLE block, which might be worth the trouble.
-  if(wf&AFVIRTUAL){
-   // If w is virtual, me must raise the count of the backer.
-   // We must also turn off inplacing for w itself.  It might be believed to be inplaceable, but if it is inplaced, the atoms of the backer that
-   // are being virtualed here would also be modified.  We could transfer the inplaceability, as noted above
-   ACIPNO(w);  // turn off inplacing
-   w=ABACK(w);  // if w is itself virtual, use its original backer.  Otherwise we would have trouble knowing when the backer for z is freed.  Backer is never virtual
+  AK(z)=(CAV(w)-(C*)z)+offset;
+  AFLAG(z)=AFVIRTUAL | (wf & ((UI)wip>>(BW-1-AFPRISTINEX)));  // flags: not recursive, not UNINCORPABLE, not NJA.  If w is inplaceable, inherit its PRISTINE status
+  A wback=ABACK(w); A *wtpop=(A*)wback; wback=wf&AFVIRTUAL?wback:w; ABACK(z)=wback;  // wtpop is AM(w) in case it is to be zapped
+  AT(z)=t;
+  AC(z)=wip+ACUC1;   // transfer inplaceability from original block
+  AR(z)=(RANKT)r;
+  if((wip&((wf&(AFVIRTUAL|AFUNINCORPABLE))-1))<0){
+    // w (the old block) is inplaceable and is not UNINCORPABLE.  It must still have an entry on the tpop stack.  Rather than incrementing its
+    // usecount, we can simply remove its tpop entry.  We must also mark the block as uninplaceable, since it is a backer now (might not be necessary,
+    // because to get here we must know that w has been abandoned)
+    // We must ensure that the backer has recursive usecount, as a way of protecting the CONTENTS.  We zap the tpop for the backer itself, but
+    // not for the contents.
+    AC(w)=ACUC1; *wtpop=0;  // zap the tpop for w in lieu of ra() for it
+    if((t^wf)&RECURSIBLE){AFLAG(w)=wf|=(t&RECURSIBLE); jtra(jt,w,t);}  // make w recursive, raising contents if was nonrecurive.  Like ra0()
+// when virtuals can be zapped, use that here
+  }else{
+   // if we can't transfer ownership, must ra the backer.  UNINCORPORABLEs go through here, and must be virtual so the backer, not the indirect block, is raised
+   // We must also remove inplaceability from w, since it too has an alias at large
+   ACIPNO(w); ra(wback);
   }
-  AFLAG(z)=AFVIRTUAL | (wf & ((UI)(SGNIF((I)jtip,JTINPLACEWX) & c)>>(BW-1-AFPRISTINEX)));  // flags: not recursive, not UNINCORPABLE, not NJA.  If w is inplaceable, inherit its PRISTINE status
-  ABACK(z)=w;   // set the pointer to the base: w or its base
-  ra(w);   // ensure that the backer is not deleted while it is a backer.  This means that all backers are RECURSIBLE
+
+  // As a result of the above we can say that all backers must have recursive usecount
+// obsolete   if(wf&AFVIRTUAL){
+// obsolete    // If w is virtual, me must raise the count of the backer.
+// obsolete    // We must also turn off inplacing for w itself.  It might be believed to be inplaceable, but if it is inplaced, the atoms of the backer that
+// obsolete    // are being virtualed here would also be modified.  We could transfer the inplaceability, as noted above
+// obsolete    ACIPNO(w);  // turn off inplacing
+// obsolete    w=ABACK(w);  // if w is itself virtual, use its original backer.  Otherwise we would have trouble knowing when the backer for z is freed.  Backer is never virtual
+// obsolete   }
+// obsolete   ABACK(z)=w;   // set the pointer to the base: w or its base
+// obsolete   ra(w);   // ensure that the backer is not deleted while it is a backer.  This means that all backers are RECURSIBLE
   R z;
  }
 }  
@@ -553,7 +575,7 @@ if(AFLAG(w)&AFVIRTUAL){
 }
 AFLAG(z)=AFVIRTUAL|(AFLAG(w)&AFPRISTINE);  // flags: not recursive, not UNINCORPABLE, not NJA, with PRISTINE inherited from backer
 ABACK(z)=w;   // set the pointer to the base: w or its base
-ra(w);   // ensure that the backer is not deleted while it is a backer.  This means that all backers are RECURSIBLE
+ra(w);   // ensure that the backer is not deleted while it is a backer.
 }
 
 // realize a virtual block (error if not virtual)

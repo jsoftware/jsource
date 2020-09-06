@@ -610,17 +610,22 @@ RECURSIVERESULTSCHECK
       // We free using fanapop, which recurs only on recursive blocks, because that's what the tpop we are replacing does
       // We can free all DIRECT blocks, and PRISTINE also.  We mustn't free non-PRISTINE boxes because the contents are at large
       // and might be freed.
+      // We mustn't free VIRTUAL blocks because they have to be zapped differently.  When we work that out, we will free them here too
 #if 1
       {
 // obsolete if(AC(y)<0 && AFLAG(y)&BOX && AT(y)&BOX && AC(AAV(y)[0])<2)  // scaf
 // obsolete  {I aaa = 1;} 
-      I c=AC(arg1); c=arg1==y?0:c; if((c&(-(AT(arg1)&DIRECT)|SGNIF(AFLAG(arg1),AFPRISTINEX)))<0){   // inplaceable and not return value.  Can't be virtual.
-        if(*(A*)ABACK(arg1)!=arg1)SEGFAULT
+      I c=AC(arg1); c=arg1==y?0:c; if((c&(-(AT(arg1)&DIRECT)|SGNIF(AFLAG(arg1),AFPRISTINEX)))<0){   // inplaceable and not return value.
+       if(!(AFLAG(arg1)&AFVIRTUAL)){  // for now, don't handle virtuals
+        if(*(A*)ABACK(arg1)!=arg1)SEGFAULT  // scaf
         *(A*)ABACK(arg1)=0; fanapop(arg1,AFLAG(arg1));
+       }
       }
       c=AC(arg2); c=arg2==y?0:c; c=arg1==arg2?0:c; if((c&SGNIF(pmask,2)&(-(AT(arg2)&DIRECT)|SGNIF(AFLAG(arg2),AFPRISTINEX)))<0){  // inplaceable, not return value, not same as arg1, dyad.  Safe to check AC even if freed as arg1
-       if(*(A*)ABACK(arg2)!=arg2)SEGFAULT
-       *(A*)ABACK(arg2)=0; fanapop(arg2,AFLAG(arg2));
+       if(!(AFLAG(arg2)&AFVIRTUAL)){  // for now, don't handle virtuals
+        if(*(A*)ABACK(arg2)!=arg2)SEGFAULT   // scaf
+        *(A*)ABACK(arg2)=0; fanapop(arg2,AFLAG(arg2));
+       }
       }
 #if MEMAUDIT&0x2
       audittstack(jt);

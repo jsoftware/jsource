@@ -48,7 +48,7 @@ static I jtefflev(J jt,I j,A h,A x){I n,t; n=*(j+AV(h)); R n>=0?n:(t=level(x),MA
 // better served by &.> .  Thus, we just mark the inputs as non-pristinable.
 static DF1(jtlcapco1){A z;V*v=FAV(self); 
  RZ(w);
- I awflg=AFLAG(w); A awback=w; if(unlikely(awflg&AFVIRTUAL)){awback=ABACK(awback); awflg=AFLAG(awback);} AFLAG(awback)=awflg&~AFPRISTINE;
+ PRISTCLR(w)
 
  PRIM shdr; A recurself=(A)&shdr;  // allocate the block we will recur with
 // obsolete   m=jt->lmon; jt->lmon=efflev(0L,v->fgh[2],w); 
@@ -64,8 +64,8 @@ static DF1(jtlcapco1){A z;V*v=FAV(self);
 
 static DF2(jtlcapco2){A z;V*v=FAV(self);
  RZ(a&&w);
- I awflg=AFLAG(w); A awback=w; if(unlikely(awflg&AFVIRTUAL)){awback=ABACK(awback); awflg=AFLAG(awback);} AFLAG(awback)=awflg&~AFPRISTINE;
- awflg=AFLAG(a); awback=a; if(unlikely(awflg&AFVIRTUAL)){awback=ABACK(awback); awflg=AFLAG(awback);} AFLAG(awback)=awflg&~AFPRISTINE;
+ PRISTCLR(w) PRISTCLRNODCL(a)
+// obsolete  awflg=AFLAG(a); awback=a; if(unlikely(awflg&AFVIRTUAL)){awback=ABACK(awback); awflg=AFLAG(awback);} AFLAG(awback)=awflg&~AFPRISTINE;
  PRIM shdr; A recurself=(A)&shdr;  // allocate the block we will recur with
 // obsolete  l=jt->lleft;  jt->lleft =efflev(1L,v->fgh[2],a);
 // obsolete  r=jt->lright; jt->lright=efflev(2L,v->fgh[2],w);
@@ -135,7 +135,7 @@ static DF1(jtscapco1){PROLOG(555);A x,z=0;I m;V*v=FAV(self);
 // obsolete  fa(jt->sca);  // match the ra(), but not necessarily on the same block
 // obsolete  jt->lmon=m; jt->sca=scastk;   // pop level stack
  RZ(w);
- I awflg=AFLAG(w); A awback=w; if(unlikely(awflg&AFVIRTUAL)){awback=ABACK(awback); awflg=AFLAG(awback);} AFLAG(awback)=awflg&~AFPRISTINE;
+ PRISTCLR(w)
  PRIM shdr; A recurself=(A)&shdr;  // allocate the block we will recur with
  AM(recurself)=(I)v->fgh[0];  // fill in the pointer to u
  FAV(recurself)->valencefns[0]=jtlevs1;  // fill in function pointer
@@ -164,8 +164,8 @@ static DF2(jtscapco2){PROLOG(556);A x,z=0;V*v=FAV(self);
 // obsolete  fa(jt->sca); 
 // obsolete  jt->lleft =l; jt->lright=r; jt->sca=scastk;
  RZ(a&&w);
- I awflg=AFLAG(w); A awback=w; if(unlikely(awflg&AFVIRTUAL)){awback=ABACK(awback); awflg=AFLAG(awback);} AFLAG(awback)=awflg&~AFPRISTINE;
- awflg=AFLAG(a); awback=a; if(unlikely(awflg&AFVIRTUAL)){awback=ABACK(awback); awflg=AFLAG(awback);} AFLAG(awback)=awflg&~AFPRISTINE;
+ PRISTCLR(w) PRISTCLRNODCL(a)
+// obsolete   awflg=AFLAG(a); awback=a; if(unlikely(awflg&AFVIRTUAL)){awback=ABACK(awback); awflg=AFLAG(awback);} AFLAG(awback)=awflg&~AFPRISTINE;
  PRIM shdr; A recurself=(A)&shdr;  // allocate the block we will recur with
  AM(recurself)=(I)v->fgh[0];  // fill in the pointer to u
  FAV(recurself)->valencefns[1]=jtlevs2;  // fill in function pointer

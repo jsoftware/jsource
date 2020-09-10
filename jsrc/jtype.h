@@ -379,6 +379,7 @@ typedef I SI;
 #define TRAVERSIBLE     (BOX|VERB|ADV|CONJ|RAT|XNUM|SB01|SINT|SFL|SCMPX|SLIT|SBOX)
 // Allow recursive usecount in one of these types
 #define RECURSIBLE      (BOX|VERB|ADV|CONJ|RAT|XNUM)
+#define RECURSIBLENOUN  (RECURSIBLE&NOUN)
 // Modifiers that operate on subarrays do so with virtual blocks, and those blocks may be marked as inplaceable if the backing block is inplaceable.
 // The inplaceability applies to the data area, but not necessarily to the block header: if UNINCORPORABLE is set, the header must not be modified (we clone the header in that case)
 // For speedy singletons, there is the additional problem that the operation expects always to write a FL value to the result area, which is OK for any
@@ -466,7 +467,17 @@ typedef I SI;
 #define AFVIRTUAL       ((I)1<<AFVIRTUALX)  // this block is a VIRTUAL block: a subsequence of another block.  The data pointer points to the actual data, and the
                                  // m field points to the start of the block containing the actual data.  A VIRTUAL block cannot be incorporated into another block, and it
                                  // cannot be assigned, unless it is 'realized' by creating another block and copying the data.  We realize whenever we call ra() on the block,
-                                 // except during the EPILOG, where we don't realize the block unless the real block is about to be freed.
+                                 // except during the EPILOG, where we don't realize the block unless the real block is about to be freed.  Like PERMANENT blocks,
+                                 // VIRTUAL blocks are always recursive so that fa() will not recur.  Virtual blocks are always freed from tpop.  Since it cannot be copied or realized,
+                                 // the virtual block always has usecount of ACUC1 or ACUC1+ACINPLACE.  EXCEPTION: for the initial assignment to x/y in an explicit
+                                 // definition, we allow assigning a virtual block, because we know that the block and its backer are allocated in a higher level
+                                 // and can never be freed until the explicit definition finishes.  In this case it is safe to increment the usecount of the virtual block -
+                                 // not to ra() the block, which would try to recur.  It is OK to fa() the block on exit or on reassignment, because that will
+                                 // just decrement the usecount of the nonrecursive block.
+                                 // VIRTUAL blocks are normally not inplaceable (since they are by definition aliased to another block), but the temporary
+                                 // UNINCORPORABLE blocks created by partitioning modifers to track cells may be inplaceable, and a virtual block whose backer
+                                 // has been abandoned may be marked inplaceable as well.
+                                 // NOTE: AFVIRTUALX must be higher than any RECURSIBLENOUN type (for test in result.h)
 #define AFUNINCORPABLEX 16      // matches SBTX
 #define AFUNINCORPABLE  ((I)1<<AFUNINCORPABLEX)  // (used in result.h) this block is a virtual block used for subarray tracking and must not
                                 // ever be put into a boxed array, even if WILLBEOPENED is set, because it changes

@@ -74,7 +74,8 @@ A jtevery(J jt, A w, A fs){A * RESTRICT wv,x,z,* RESTRICT zv;
   }else{
     // not DIRECT.  result must be non-pristine, and we need to turn off pristinity of x since we are going to incorporate it
     flags&=~ACINPLACE;  // result not pristine
-    {I aflg=AFLAG(x); A awbase=x; if(unlikely(aflg&AFVIRTUAL)){awbase=ABACK(x); aflg=AFLAG(awbase);} AFLAG(awbase)=aflg&~AFPRISTINE;}  // x can never be pristine, since is being incorped
+// obsolete     {I aflg=AFLAG(x); A awbase=x; if(unlikely(aflg&AFVIRTUAL)){awbase=ABACK(x); aflg=AFLAG(awbase);} AFLAG(awbase)=aflg&~AFPRISTINE;}  // x can never be pristine, since is being incorped
+    {PRISTCLR(x)}  // x can never be pristine, since is being incorped
   }
   // Restore usecount to virtw.  We can't just store back what it was, because it may have been modified in the verb.
 #if 1  // scaf
@@ -244,7 +245,8 @@ A jtevery2(J jt, A a, A w, A fs){A*av,*wv,x,z,*zv;
   }else{
     // not DIRECT.  result must be non-pristine, and we need to turn off pristinity of x since we are going to incorporate it
     flags&=~ACINPLACE;  // result not pristine
-    {I aflg=AFLAG(x); A awbase=x; if(unlikely(aflg&AFVIRTUAL)){awbase=ABACK(x); aflg=AFLAG(awbase);} AFLAG(awbase)=aflg&~AFPRISTINE;}  // x can never be pristine, since is being incorped
+// obsolete     {I aflg=AFLAG(x); A awbase=x; if(unlikely(aflg&AFVIRTUAL)){awbase=ABACK(x); aflg=AFLAG(awbase);} AFLAG(awbase)=aflg&~AFPRISTINE;}  // x can never be pristine, since is being incorped
+    {PRISTCLR(x)}  // x can never be pristine, since is being incorped
   }
   // Restore usecount to virta and virtw.  We can't just store back what it was, because it may have been modified in the verb.
 #if 1  // scaf

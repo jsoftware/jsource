@@ -84,7 +84,7 @@ F2(jttake){A s;I acr,af,ar,n,*v,wcr,wf,wr;
  if(((af-1)&(acr-2))>=0){
   s=rank2ex(a,w,DUMMYSELF,MIN(acr,1),wcr,acr,wcr,jttake);  // if multiple x values, loop over them  af>0 or acr>1
   // We extracted from w, so mark it (or its backer if virtual) non-pristine.  There may be replication (if there was fill), so we don't pass pristinity through  We overwrite w because it is no longer in use
-  I awflg=AFLAG(w); if(unlikely(awflg&AFVIRTUAL)){w=ABACK(w); awflg=AFLAG(w);} AFLAG(w)=awflg&~AFPRISTINE;
+  PRISTCLRF(w)
   RETF(s);
  }
  // canonicalize x
@@ -132,7 +132,7 @@ F2(jttake){A s;I acr,af,ar,n,*v,wcr,wf,wr;
  }
  s=tk(s,w);  // go do the general take/drop
  // We extracted from w, so mark it (or its backer if virtual) non-pristine.  There may be replication (if there was fill), so we don't pass pristinity through  We overwrite w because it is no longer in use
- I awflg=AFLAG(w); if(unlikely(awflg&AFVIRTUAL)){w=ABACK(w); awflg=AFLAG(w);} AFLAG(w)=awflg&~AFPRISTINE;
+ PRISTCLRF(w)
  RETF(s);
 }
 
@@ -146,7 +146,7 @@ F2(jtdrop){A s;I acr,af,ar,d,m,n,*u,*v,wcr,wf,wr;
  if(((af-1)&(acr-2))>=0){
   s=rank2ex(a,w,DUMMYSELF,MIN(acr,1),wcr,acr,wcr,jtdrop);  // if multiple x values, loop over them  af>0 or acr>1
   // We extracted from w, so mark it (or its backer if virtual) non-pristine.  There may be replication, so we don't pass pristinity through  We overwrite w because it is no longer in use
-  I awflg=AFLAG(w); if(unlikely(awflg&AFVIRTUAL)){w=ABACK(w); awflg=AFLAG(w);} AFLAG(w)=awflg&~AFPRISTINE;
+  PRISTCLRF(w)
   RETF(s);
  }
  n=AN(a); u=AV(a);     // n=#axes to drop, u->1st axis
@@ -177,7 +177,8 @@ F2(jtdrop){A s;I acr,af,ar,d,m,n,*u,*v,wcr,wf,wr;
  else{fauxINT(s,sfaux,wr+n,1) v=AV(s); MCISH(v,AS(w),wf); v+=wf; DO(n, v[i]=!u[i];); RZ(w=reshape(s,w));}  // atomic w-cell: reshape w-cell  to result-cell shape, with axis length 0 or 1 as will be in result
  RZ(s=tk(s,w));
  // We extracted from w, so mark it (or its backer if virtual) non-pristine.  If w was pristine and inplaceable, transfer its pristine status to the result.  We overwrite w because it is no longer in use
- I awflg=AFLAG(w); AFLAG(s)|=awflg&((SGNTO0(AC(w))&((I)jtinplace>>JTINPLACEWX))<<AFPRISTINEX); if(unlikely(awflg&AFVIRTUAL)){w=ABACK(w); awflg=AFLAG(w);} AFLAG(w)=awflg&~AFPRISTINE;
+// obsolete  I awflg=AFLAG(w); AFLAG(s)|=awflg&((SGNTO0(AC(w))&((I)jtinplace>>JTINPLACEWX))<<AFPRISTINEX); if(unlikely(awflg&AFVIRTUAL)){w=ABACK(w); awflg=AFLAG(w);} AFLAG(w)=awflg&~AFPRISTINE;
+ PRISTXFERF(s,w)
  RETF(s);
 }
 

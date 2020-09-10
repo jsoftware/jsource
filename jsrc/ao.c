@@ -396,7 +396,7 @@ static DF2(jtkey){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
  // If y is inplaceable we can probably use it to store the frets, since it is copied sequentially.  The requirements are:
  // The fret area must start at least 5 bytes before the data in y, to leave space for the first fret before the first cell of y is moved (i. e. rank>0 for 64-bit, >1 for 32-bit)
  // The cells must be at least 5 bytes long so that the frets don't overrun them
- // The cells must be in the actual fret area, i. e not virtual or NJA 
+ // The cells must be in the actual fret area (following the shape), i. e not virtual or NJA 
  // The cells must be DIRECT type so that it is OK to write garbage over them
  // We are taking advantage here of the fact that the shape comes before the cells in a standard GA noun
  // We don't have to worry about a==w because a has already been modified
@@ -406,7 +406,7 @@ static DF2(jtkey){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
  if(!((I)ai&1)){
   // NOT small-range processing: go through the index+size table to create the frets and reordered data for passing to cut
   nfrets=AM(ai);  //fetch # frets before we possibly clone ai
-  I maxfretsize=(nitems>>8); maxfretsize=maxfretsize<nfrets?nfrets:maxfretsize; maxfretsize=4*maxfretsize+nfrets+1;  // max # bytes needed for frets
+  I maxfretsize=(nitems>>8); maxfretsize=maxfretsize<nfrets?nfrets:maxfretsize; maxfretsize=4*maxfretsize+nfrets+1;  // max # bytes needed for frets, if some are long
   if((UI)maxfretsize<sizeof(localfrets)-NORMAH*SZI){frets=(A)localfrets; AT(frets)=0;} // Cut tests the type field - only
   else if((I)jtinplace&(I)((AFLAG(w)&(AFVIRTUAL|AFNJA))==0)&((UI)((-(I )(AT(w)&DIRECT))&AC(w)&(4-celllen)&((I )(SZI==4)-AR(w)))>>(BW-1-JTINPLACEWX)))frets=w;
   else GATV0(frets,LIT,maxfretsize,0);   // 1 byte per fret is adequate, since we have padding

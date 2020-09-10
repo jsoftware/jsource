@@ -36,7 +36,7 @@ F1(jtravel){A a,c,q,x,y,y0,z;B*b;I f,j,m,r,*u,*v,*yv;P*wp,*zp;
   // If we have to allocate a new block, do so.  In that rare case, revoke pristinity of w
   GA(z,AT(w),AN(w),1+f,AS(w)); AS(z)[f]=m;   // allocate result area, shape=frame+1 more to hold size of cell; fill in shape
   MC(AV(z),AV(w),AN(w)<<bplg(AT(w)));
-  I awflg=AFLAG(w); if(unlikely(awflg&AFVIRTUAL)){w=ABACK(w); awflg=AFLAG(w);} AFLAG(w)=awflg&~AFPRISTINE;
+  PRISTCLRF(w)
   RETF(z); // if dense, move the data and relocate it as needed
  }
  // the rest handles sparse matrix enfile

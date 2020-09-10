@@ -456,7 +456,8 @@ F2(jtfrom){I at;A z;
     // Move the value and transfer the block-type
     I j; AT(z)=AT(w); SETNDX(j,av,AN(w)); IAV(z)[0]=IAV(w)[j];
     // Here we transferred an atom out of w.  We must mark w non-pristine.  If it was inplaceable, we can transfer the pristine status.  We overwrite w because it is no longer in use
-    I awflg=AFLAG(w); AFLAG(z)|=awflg&((SGNTO0(AC(w))&((I)jtinplace>>JTINPLACEWX))<<AFPRISTINEX); if(unlikely(awflg&AFVIRTUAL)){w=ABACK(w); awflg=AFLAG(w);} AFLAG(w)=awflg&~AFPRISTINE;
+// obsolete     I awflg=AFLAG(w); AFLAG(z)|=awflg&((SGNTO0(AC(w))&((I)jtinplace>>JTINPLACEWX))<<AFPRISTINEX); if(unlikely(awflg&AFVIRTUAL)){w=ABACK(w); awflg=AFLAG(w);} AFLAG(w)=awflg&~AFPRISTINE;
+    PRISTXFERF(z,w)  // this destroys w
    }else{
     // rank of w > 1, return virtual cell
     I *ws=AS(w);  // shape of w
@@ -473,7 +474,7 @@ F2(jtfrom){I at;A z;
    fn=jtifrom; fn=at&BOX?jtafrom:fn; fn=at&(AN(a)!=1)?jtbfrom:fn; jtinplace=fn!=jtifrom?jt:jtinplace;
    z=(*fn)(jtinplace,a,w);
    // Here we transferred out of w.  We must mark w non-pristine.  Since there may have been duplicates, we cannot mark z as pristine.  We overwrite w because it is no longer in use
-   I awflg=AFLAG(w); if(unlikely(awflg&AFVIRTUAL)){w=ABACK(w); awflg=AFLAG(w);} AFLAG(w)=awflg&~AFPRISTINE;
+   PRISTCLRF(w)
   }
  }else if(!((AT(a)|AT(w))&(NOUN&~SPARSE))){z=fromss(a,w);}  // sparse cases
  else if(AT(w)&SPARSE){z=at&BOX?frombs(a,w) : fromis(a,w);}
@@ -553,7 +554,7 @@ F2(jtfetch){A*av, z;I n;F2PREFIP;
    // protect the value we fetch (the overall operand would matter only if it was flagged without a ra())
    if((AC(w)&SGNIF(jtinplace,JTINPLACEWX))>=0)ACIPNO(z);
    // Since the whole purpose of fetch is to copy one contents by address, we turn off pristinity of w
-   {I awflg=AFLAG(w); if(unlikely(awflg&AFVIRTUAL)){w=ABACK(w); awflg=AFLAG(w);} AFLAG(w)=awflg&~AFPRISTINE;}
+   PRISTCLRF(w)
    RETF(z);   // turn off inplace if w not inplaceable, or jt not inplaceable.
   }
   RZ(a=box(a));  // if not special case, box any unboxed a
@@ -565,6 +566,6 @@ F2(jtfetch){A*av, z;I n;F2PREFIP;
    );
  if((AC(w)&SGNIF(jtinplace,JTINPLACEWX))>=0)ACIPNO(z);
  // Since the whole purpose of fetch is to copy one contents by address, we turn off pristinity of w
- {I awflg=AFLAG(w); if(unlikely(awflg&AFVIRTUAL)){w=ABACK(w); awflg=AFLAG(w);} AFLAG(w)=awflg&~AFPRISTINE;}
+ PRISTCLRF(w)
  RETF(z);   // Mark the box as non-inplaceable, as above
 }

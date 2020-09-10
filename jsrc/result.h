@@ -118,8 +118,9 @@ do{
   // Normal case: not first time.  Move verb result to its resting place, unless the type/shape has changed
 
   // The original result z will either be incorporated into zz or its items will be copied.  In either case, that makes z non-PRISTINE.
-  I zzzaflag;  // we save AFLAG(z) for its PRISTINE flag.  We have to clear PRISTINE before the tpop, so here is convenient.  We just need the one flag for a short while
-  {I aflg=AFLAG(z); zzzaflag=aflg; if(AT(z)&BOX){A awbase=z; if(unlikely(aflg&AFVIRTUAL)){awbase=ABACK(z); aflg=AFLAG(awbase);} AFLAG(awbase)=aflg&~AFPRISTINE;}}   // since it will be repeated, run the test
+  I zzzaflag=AFLAG(z);  // we save AFLAG(z) for its PRISTINE flag.  We have to clear PRISTINE before the tpop, so here is convenient.  We just need the one flag for a short while
+// obsolete   if(AT(z)&BOX){A awbase=z; if(unlikely(aflg&AFVIRTUAL)){awbase=ABACK(z); awflg=AFLAG(awbase);} AFLAG(awbase)=awflg&~AFPRISTINE;}   // since it will be repeated, run the test
+  if(AT(z)&BOX){PRISTCLR(z)}   // since it will be repeated, run the test
 
   if(!(ZZASSUMEBOXATOP||ZZFLAGWORD&ZZFLAGBOXATOP)){  // is forced-boxed result?  If so, just move in the box
    // not forced-boxed.  Move the result cell into the result area unless the shape changes
@@ -182,8 +183,9 @@ do{
       // actually have to touch them.  This is a transfer of ownership, and would fail if the new block is not inplaceable: for example, if the block is in a name, with
       // no frees on the tstack, it could have usecount of 1.  Transferring ownership would then leave the block in the name without an owner, and when zz is deleted the
       // name would be corrupted
-      if((AC(z)&(-(AFLAG(z)&RECURSIBLE)))<0){  // if z has AC <0 (inplaceable) and is recursive
-       AFLAG(z)&=~RECURSIBLE;  // mark as nonrecursive, transferring ownership to the new block
+// obsolete       if((AC(z)&(-(AFLAG(z)&RECURSIBLE)))<0){  // if z has AC <0 (inplaceable) and is recursive and not virtual
+      if((AC(z)&(((AFLAG(z)&(RECURSIBLENOUN|AFVIRTUAL))^AFVIRTUAL)+(~(ACINPLACE|AFVIRTUAL))))<0){  // if z has AC <0 (inplaceable) and is recursive and not virtual
+       AFLAG(z)&=~RECURSIBLE;  // mark as nonrecursive, transferring ownership to the new block  (should use zap/fanapop z)
        if(zzcelllen<MEMCPYTUNELOOP){I * RESTRICT d=(I*)(CAV(zz)+zzcellp); I * RESTRICT s=IAV(z); I n=zzcelllen; while((n-=SZI)>=0){*d++=*s++;} if(n&(SZI-1))STOREBYTES(d,*s,-n);}else{MC(CAV(zz)+zzcellp,AV(z),zzcelllen);}
         // move the result-cell to the output.  Must not write outside cell boundaries in case we are going backwards.  Use test on STOREBYTES because this is repeated
       }else{

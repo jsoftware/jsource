@@ -729,7 +729,7 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[12
  case CTAIL:
  case CHEAD: ;
   // remove pristinity from w since a contents is escaping
-  I awflg=AFLAG(w); if(unlikely(awflg&AFVIRTUAL)){w=ABACK(w); awflg=AFLAG(w);} AFLAG(w)=awflg&~AFPRISTINE;   // destroys w
+  PRISTCLRF(w)   // destroys w
   GA(zz,wt,m*wcn,r,AS(w)); zc=CAV(zz); AS(zz)[0]=m;
   EACHCUT(if(d)MC(zc,id==CHEAD?v1:v1+k*(d-1),k); else fillv(wt,wcn,zc); zc+=k;);
   break;

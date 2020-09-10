@@ -221,14 +221,16 @@ F2(jtover){A z;C*zv;I replct,framect,acr,af,ar,*as,k,ma,mw,p,q,r,t,wcr,wf,wr,*ws
     // We extracted from a and w, so mark them (or the backer if virtual) non-pristine.  If both were pristine and inplaceable, transfer its pristine status to the result
     // if they were boxed nonempty, a and w have not been changed.  Otherwise the PRISTINE flag doesn't matter.
     // If a and w are the same, we mustn't mark the result pristine!  It has repetitions
-    I aflg=AFLAG(a), wflg=AFLAG(w); AFLAG(z)|=aflg&wflg&(((a!=w)&SGNTO0(AC(a)&AC(w))&((I)jtinplace>>JTINPLACEAX)&((I)jtinplace>>JTINPLACEWX))<<AFPRISTINEX);  // pass PRISTINE status through if possible
-    if(unlikely(aflg&AFVIRTUAL)){a=ABACK(a); aflg=AFLAG(a);} AFLAG(a)=aflg&~AFPRISTINE; if(unlikely(wflg&AFVIRTUAL)){w=ABACK(w); wflg=AFLAG(w);} AFLAG(w)=wflg&~AFPRISTINE;  // make inputs non-PRISTINE
+// obsolete     I aflg=AFLAG(a), wflg=AFLAG(w); AFLAG(z)|=aflg&wflg&(((a!=w)&SGNTO0(AC(a)&AC(w))&((I)jtinplace>>JTINPLACEAX)&((I)jtinplace>>JTINPLACEWX))<<AFPRISTINEX);
+// obsolete     if(unlikely(aflg&AFVIRTUAL)){a=ABACK(a); aflg=AFLAG(a);} AFLAG(a)=aflg&~AFPRISTINE; if(unlikely(wflg&AFVIRTUAL)){w=ABACK(w); wflg=AFLAG(w);} AFLAG(w)=wflg&~AFPRISTINE;  // 
+    PRISTXFERF2(z,a,w);   // pass PRISTINE status through if possible, make inputs non-PRISTINE
     RETF(z);
    }
   }
  }
  // dissimilar items, or there is frame.  Mark the inputs non-pristine; leave the result non-pristine, since we don't know whether it has repetitions (we could figure that out)
- {A awback=a; I awflg=AFLAG(a); if(unlikely(awflg&AFVIRTUAL)){awback=ABACK(a); awflg=AFLAG(awback);} AFLAG(awback)=awflg&~AFPRISTINE; awback=w; awflg=AFLAG(w); if(unlikely(awflg&AFVIRTUAL)){awback=ABACK(w); awflg=AFLAG(awback);} AFLAG(awback)=awflg&~AFPRISTINE;}  // make inputs non-PRISTINE
+// obsolete  {A awback=a; I awflg=AFLAG(a); if(unlikely(awflg&AFVIRTUAL)){awback=ABACK(a); awflg=AFLAG(awback);} AFLAG(awback)=awflg&~AFPRISTINE; awback=w; awflg=AFLAG(w); if(unlikely(awflg&AFVIRTUAL)){awback=ABACK(w); awflg=AFLAG(awback);} AFLAG(awback)=awflg&~AFPRISTINE;}
+ PRISTCLR(a) PRISTCLRNODCL(w)  // make inputs non-PRISTINE
  p=as[ar-1];   // p=len of last axis of cell.  Always safe to fetch first 
  q=ws[wr-1];   //  q=len of last axis of cell
  r=MAX(acr,wcr); r=(r==0)?1:r;  // r=cell-rank, or 1 if both atoms.
@@ -369,7 +371,7 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;I ak,k,p,*u,*v,wk,wm,wn;
       A oa=a; RZ(a=virtual(a,0,AR(a))); AN(a)=AN(oa)+wn; AS(a)[0]=AS(oa)[0]+wm; MCISH(&AS(a)[1],&AS(oa)[1],AR(oa)-1);
      }
      // a was inplaceable & thus not virtual, but we must clear pristinity from w wherever it is
-     I awflg=AFLAG(w); if(unlikely(awflg&AFVIRTUAL)){w=ABACK(w); awflg=AFLAG(w);} AFLAG(w)=awflg&~AFPRISTINE;
+     PRISTCLRF(w)
      RETF(a);
     }
    }

@@ -488,19 +488,19 @@ static IOFX(I,jtioi,  hicw(v),           *v!=av[hj],                      ++v,  
    if(mode<IPHOFFSET){                                                                           \
     DO(p,hv[i]=m;);                                                                              \
     if(bx||!b){                                                                                  \
-     v=av; PUSHCCT(1.0)                                                                     \
+     v=av; PUSHCCTIF(1.0,!(mode==INUBSV||mode==INUB||mode==INUBI||mode==IFORKEY))                                                                     \
      if(IICO==mode){v+=e; DQ(m, FA(expa); v-=cn;);}else DO(m, FA(expa); v+=cn;);                 \
      POPCCT if(w==mark)break;                                                                \
    }}                                                                                            \
    v=wv;                                                                                   \
    switch(md){                                                                                   \
     case IIDOT:        TDO(FXY,FYY,expa,expw,*zv++=MIN(il,ir));                          break;  \
-    case IFORKEY:{I nuniq=0; TDO(FXY,FYY,expa,expw,il=MIN(il,ir);nuniq+=(il-i==0);*zv=il;zv[il-i]++;++zv;); AM(h)=nuniq;     break;}  \
+    case IFORKEY:{I nuniq=0; TDO(FXY,FYY,expw,expw,il=MIN(il,ir);nuniq+=(il-i==0);*zv=il;zv[il-i]++;++zv;); AM(h)=nuniq;     break;}  \
     case IICO:  zv+=c; TDQ(FXY,FYY,expa,expw,*--zv=m==il?ir:m==ir?il:MAX(il,ir)); zv+=c; break;  \
-    case INUBSV:       TDO(FXY,FYY,expa,expw,*zb++=i==MIN(il,ir));                       break;  \
-    case INUB:         TMV(FXY,FYY,expa,expw,i==MIN(il,ir));                 ZCSHAPE;    break;  \
+    case INUBSV:       TDO(FXY,FYY,expw,expw,*zb++=i==MIN(il,ir));                       break;  \
+    case INUB:         TMV(FXY,FYY,expw,expw,i==MIN(il,ir));                 ZCSHAPE;    break;  \
     case ILESS:        TMV(FXY,FYY,expa,expw,m==il&&m==ir);                  ZCSHAPE;    break;  \
-    case INUBI:        TDO(FXY,FYY,expa,expw,if(i==MIN(il,ir))*zi++=i;);     ZISHAPE;    break;  \
+    case INUBI:        TDO(FXY,FYY,expw,expw,if(i==MIN(il,ir))*zi++=i;);     ZISHAPE;    break;  \
     case IEPS:         TDO(FXY,FYY,expa,expw,*zb++=m>il||m>ir             );             break;  \
     case II0EPS:  s=c; TDO(FXY,FYY,expa,expw,if(m==il&&m==ir){s=i; break;}); *zi++=s;    break;  \
     case II1EPS:  s=c; TDO(FXY,FYY,expa,expw,if(m> il||m> ir){s=i; break;}); *zi++=s;    break;  \
@@ -1332,7 +1332,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z;B mk=w==mark,th;
  // The cost of such a search is (4 inst per loop) and the expected number of loops is half of
  // m*number of results.  The cost of small-range hashing is at best 8 cycles per atom added to the table and 5 cycles per lookup.
  // (full hashing is considerably more expensive)
- if(1==acr&&(1==wc||ac==wc)&&a!=w&&!mk&&((D)m*(D)zn<(4*m)+2.5*(D)zn)&&(mode==IIDOT||mode==IICO||mode==IEPS||mode==IFORKEY)){
+ if(1==acr&&(1==wc||ac==wc)&&a!=w&&!mk&&((D)m*(D)zn<(4*m)+2.5*(D)zn)&&(mode==IIDOT||mode==IICO||mode==IEPS||(mode==IFORKEY&&((0x100000&((UI4*)&jt->cct)[1])>((at|wt)&(FLX|CMPX|BOX)))))){
   jtiosc(jt,mode,m,c,ac,wc,a,w,z); // simple sequential search without hashing.
  }else{B b=1.0==jt->cct;I t1;
   AF fn=0; // we haven't figured it out yet
@@ -1601,7 +1601,8 @@ F1(jtnub){
 // obsolete  R indexofsub(INUB,w,w);
  A z; RZ(z=indexofsub(INUB,w,w));
  // We extracted from w, so mark it (or its backer if virtual) non-pristine.  If w was pristine and inplaceable, transfer its pristine status to the result.  We overwrite w because it is no longer in use
- I awflg=AFLAG(w); AFLAG(z)|=awflg&((SGNTO0(AC(w))&((I)jtinplace>>JTINPLACEWX))<<AFPRISTINEX); if(unlikely(awflg&AFVIRTUAL)){w=ABACK(w); awflg=AFLAG(w);} AFLAG(w)=awflg&~AFPRISTINE;
+// obsolete  I awflg=AFLAG(w); AFLAG(z)|=awflg&((SGNTO0(AC(w))&((I)jtinplace>>JTINPLACEWX))<<AFPRISTINEX); if(unlikely(awflg&AFVIRTUAL)){w=ABACK(w); awflg=AFLAG(w);} AFLAG(w)=awflg&~AFPRISTINE;
+ PRISTXFERF(z,w)
  RETF(z);
 }    /* ~.w */
 
@@ -1617,7 +1618,8 @@ F2(jtless){A x=w;I ar,at,k,r,*s,wr,*ws,wt;
  RZ(x=!(at&SPARSE)&&HOMO(at,wt)&&TYPESEQ(at,maxtype(at,wt))&&!(AFLAG(a)&AFNJA)?indexofsub(ILESS,x,a):
      repeat(not(eps(a,x)),a));
  // We extracted from a, so mark it non-pristine.  If a was pristine and inplaceable, transfer its pristine status to the result
- I af=AFLAG(a); AFLAG(x)|=af&((SGNTO0(AC(a))&((I)jtinplace>>JTINPLACEAX))<<AFPRISTINEX); if(unlikely(af&AFVIRTUAL)){a=ABACK(a); af=AFLAG(a);} AFLAG(a)=af&~AFPRISTINE;
+// obsolete  I af=AFLAG(a); AFLAG(x)|=af&((SGNTO0(AC(a))&((I)jtinplace>>JTINPLACEAX))<<AFPRISTINEX); if(unlikely(af&AFVIRTUAL)){a=ABACK(a); af=AFLAG(a);} AFLAG(a)=af&~AFPRISTINE;
+ PRISTXFERAF(x,a)
  RETF(x);
 }    /* a-.w */
 

@@ -307,7 +307,7 @@ static void auditsimverify0(A w){
  if(AFLAG(w)>>AFAUDITUCX)SEGFAULT   // hang if nonzero count
  if(AFLAG(w)&AFVIRTUAL)auditsimverify0(ABACK(w));  // check backer
  if(AT(w)&(RAT|XNUM)) {A* v=AAV(w);  DQ(AT(w)&RAT?2*AN(w):AN(w), if(*v)auditsimverify0(*v); ++v;)}
- if(UCISRECUR(w)){  // process children
+ if(!(AFLAG(w)&AFVIRTUAL)&&UCISRECUR(w)){  // process children
   if(AT(w)&BOX){
    I n=AN(w); I af=AFLAG(w);
    A* RESTRICT wv=AAV(w);  // pointer to box pointers
@@ -328,14 +328,14 @@ static void auditsimdelete(A w){I delct;
  if(!w)R;
  if(AN(w)==0xdeadbeefdeadbeef||AN(w)==0xfeeefeeefeeefeee)SEGFAULT
  if((delct = ((AFLAG(w)+=AFAUDITUC)>>AFAUDITUCX))>ACUC(w))SEGFAULT   // hang if too many deletes
- if(AFLAG(w)&AFVIRTUAL && AFLAG(w)&RECURSIBLE)SEGFAULT
+ if(AFLAG(w)&AFVIRTUAL && (AT(w)^AFLAG(w))&RECURSIBLE)SEGFAULT   // hang if nonrecursive virtual
  if(delct==ACUC(w)&&AFLAG(w)&AFVIRTUAL){A wb = ABACK(w);
   // we fa() the backer, while we mf() the block itself.  So if the backer is NOT recursive, we have to
   // handle nonrecursive children.  All recursible types will be recursive
-  if(AFLAG(w)&AFVIRTUAL && (AT(wb)^AFLAG(wb))&RECURSIBLE)SEGFAULT
+  if(AFLAG(w)&AFVIRTUAL && (AT(wb)^AFLAG(wb))&RECURSIBLE)SEGFAULT  // backer must be recursive
   auditsimdelete(wb);  // delete backer of virtual block, recursibly
  }
- if(delct==ACUC(w)&&(UCISRECUR(w))){  // we deleted down to 0.  process children
+ if(delct==ACUC(w)&&!(AFLAG(w)&AFVIRTUAL)&&(UCISRECUR(w))){  // we deleted down to 0.  process children
   if(AT(w)&BOX){
    I n=AN(w); I af=AFLAG(w);
    A* RESTRICT wv=AAV(w);  // pointer to box pointers
@@ -358,7 +358,7 @@ static void auditsimreset(A w){I delct;
   auditsimreset(wb);  // reset backer of virtual block
   if(AT(wb)&(RAT|XNUM)) {A* v=AAV(wb);  DQ(AT(wb)&RAT?2*AN(wb):AN(wb), if(*v)auditsimreset(*v); ++v;)}  // reset children
  }
- if(delct==ACUC(w)&&(UCISRECUR(w))){  // if so, recursive reset
+ if(delct==ACUC(w)&&!(AFLAG(w)&AFVIRTUAL)&&(UCISRECUR(w))){  // if so, recursive reset
   if(AT(w)&BOX){
    I n=AN(w); I af=AFLAG(w);
    A* RESTRICT wv=AAV(w);  // pointer to box pointers
@@ -530,7 +530,7 @@ RESTRICTF A jtvirtual(J jtip, AD *RESTRICT w, I offset, I r){AD* RESTRICT z;
   // not self-virtual block: allocate a new one
   RZ(z=gafv(SZI*(NORMAH+r)-1));  // allocate the block
   AK(z)=(CAV(w)-(C*)z)+offset;
-  AFLAG(z)=AFVIRTUAL | (wf & ((UI)wip>>(BW-1-AFPRISTINEX)));  // flags: not recursive, not UNINCORPABLE, not NJA.  If w is inplaceable, inherit its PRISTINE status
+  AFLAG(z)=AFVIRTUAL | (wf & ((UI)wip>>(BW-1-AFPRISTINEX))) | (t&TRAVERSIBLE);  // flags: recursive, not UNINCORPABLE, not NJA.  If w is inplaceable, inherit its PRISTINE status
   A wback=ABACK(w); A *wtpop=(A*)wback; wback=wf&AFVIRTUAL?wback:w; ABACK(z)=wback;  // wtpop is AM(w) in case it is to be zapped
   AT(z)=t;
   AC(z)=wip+ACUC1;   // transfer inplaceability from original block
@@ -573,7 +573,7 @@ if(AFLAG(w)&AFVIRTUAL){
  ACIPNO(w);  // turn off inplacing
  w=ABACK(w);  // if w is itself virtual, use its original backer.  Otherwise we would have trouble knowing when the backer for z is freed.  Backer is never virtual
 }
-AFLAG(z)=AFVIRTUAL|(AFLAG(w)&AFPRISTINE);  // flags: not recursive, not UNINCORPABLE, not NJA, with PRISTINE inherited from backer
+AFLAG(z)=AFVIRTUAL|(AFLAG(w)&AFPRISTINE)|(AT(z)&TRAVERSIBLE);  // flags: recursive, not UNINCORPABLE, not NJA, with PRISTINE inherited from backer
 ABACK(z)=w;   // set the pointer to the base: w or its base
 ra(w);   // ensure that the backer is not deleted while it is a backer.
 }
@@ -620,15 +620,16 @@ A jtgc (J jt,A w,A* old){
  I c=AC(w);  // remember original usecount/inplaceability
  // We want to avoid realizing w if possible, so we handle virtual w separately
  if(AFLAG(w)&(AFVIRTUAL|AFVIRTUALBOXED)){
-  if(AFLAG(w)&AFVIRTUALBOXED)R w;  // We don't disturb VIRTUALBOXED arrays because we know they're going to be opened presently.  The backer might be on the stack.
+  if(AFLAG(w)&AFVIRTUALBOXED)R w;  // We don't disturb VIRTUALBOXED arrays because we know they're going to be opened presently.  The backer(s) might be on the stack.
   // It might be right to just return fast for any virtual block
   if(!(AFLAG(w)&AFUNINCORPABLE)){
    A b=ABACK(w);  // backing block for w.  It is known to be direct or recursible, and had its usecount incremented by w
    // Raise the count of w to protect it.  Since w raised the count of b when w was created, this protects b also.  Afterwards, if
    // b need not be deleted, w can survive as is; but if b is to be deleted, we must realize w.  We don't keep b around because it may be huge
-   // (could look at relative size to make this decision).  Because virtual blocks are never assigned or ra()d, we know that the usecount of w
-   // coming in is 1
-   AC(w)=2;  // protect w from being freed
+   // (could look at relative size to make this decision).  It is possible that the usecount of w is > 1 ONLY if the usecount was raised when
+   // w was assigned to x or y.  In that case we know that the backer is protected somewhere up the stack or in a higher-level named reference that
+   // is either private or on the NVR stack; either way the backer will not go away and we will restore the original usecount below
+   AC(w)=2;  // protect w from being freed.  Safe to use 2, since any higher value implies the backer is protected
    tpop(old);  // delete everything allocated on the stack, except for w and b which were protected
    // if the block backing w must be deleted, we must realize w to protect it; and we must also ra() w to protect its contents.  When this is
    // finished, we have a brand-new w with usecount necessarily 1, so we can make it in-placeable.  Setting the usecount to inplaceable will undo the ra() for the top block only
@@ -637,8 +638,8 @@ A jtgc (J jt,A w,A* old){
                                       // fa the backer to undo the ra when the virtual block was created
    else{
     // if the backing block survives, w can continue as virtual; we must undo the increment above.  If the usecount was changed by the tpop, we must replace
-    // the stack entry.  Otherwise we can keep the stack entry we have, wherever it is, but we must restore the usecount to its original value.  In case we ever want
-    // to have virtual inplaceable blocks (imaginable for rank)
+    // the stack entry.  Otherwise we can keep the stack entry we have, wherever it is, but we must restore the usecount to its original value, which might
+    // include inplaceability
     if(AC(w)<2)tpush1(w);  // if the stack entry for w was removed, restore it
     AC(w)=c;  // restore initial usecount and inplaceability
    }
@@ -900,8 +901,9 @@ void jttpop(J jt,A *old){A *endingtpushp;
     if(likely(--c<=0)){
      I flg=AFLAG(np);  // fetch flags
      // The block is going to be destroyed.  See if there are further ramifications
-     if(flg&AFVIRTUAL){A b=ABACK(np); fanano0(b);}  // if virtual block going away, reduce usecount in backer.  NOTE that ALL non-faux virtual blocks, even self-virtual ones, are on the tpop stack & get handled here
-     fanapop(np,flg);  // do the recursive POP only if RECURSIBLE block; then free np
+     if(flg&AFVIRTUAL){A b=ABACK(np); fanano0(b); mf(np);}  // if virtual block going away, reduce usecount in backer, ignore the flagged recursiveness just free the virt block
+      // NOTE that ALL non-faux virtual blocks, even self-virtual ones, are on the tpop stack & are deleted here
+     else fanapop(np,flg);  // do the recursive POP only if RECURSIBLE block; then free np
     }else AC(np)=c;
    }
    np=np0;  // Advance to next block

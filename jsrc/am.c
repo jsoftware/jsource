@@ -53,7 +53,7 @@ static A jtmerge1(J jt,A w,A ind){A z;B*b;C*wc,*zc;D*wd,*zd;I c,it,j,k,m,r,*s,t,
            else      DO(c, MINDEX; MC(zc,wc+k*(i+c*j     ),k); zc+=k;); break;
  }
  // We modified w which is now not pristine.
- I awflg=AFLAG(w); if(unlikely(awflg&AFVIRTUAL)){w=ABACK(w); awflg=AFLAG(w);} AFLAG(w)=awflg&~AFPRISTINE;
+ PRISTCLRF(w)
  R z;
 }
 
@@ -116,7 +116,7 @@ F1(jtcasev){A b,*u,*v,w1,x,y,z;B*bv,p,q;I*aa,c,*iv,j,m,n,r,*s,t;
   default: ASSERTSYS(0,"casev");
  }
  // Mark all the inputs as nonpristine
- DO(m, w=u[i]; I awflg=AFLAG(w); if(unlikely(awflg&AFVIRTUAL)){w=ABACK(w); awflg=AFLAG(w);} AFLAG(w)=awflg&~AFPRISTINE;)
+ DO(m, w=u[i]; PRISTCLRF(w))
  RETF(z);
 }   /* z=:b}x0,x1,x2,...,x(m-2),:x(m-1) */
 
@@ -306,7 +306,7 @@ static DF2(jtamendn2){F2PREFIP;PROLOG(0007);A e,z; B b;I atd,wtd,t,t1;P*p;
   I cellframelen; ind=jstd(w,ind,&cellframelen);   // convert indexes to cell indexes; remember how many were converted
   z=jtmerge2(jtinplace,AT(a)&SPARSE?denseit(a):a,w,ind,cellframelen);  //  dense a if needed; dense amend
   // We modified w which is now not pristine.
-  I awflg=AFLAG(w); if(unlikely(awflg&AFVIRTUAL)){w=ABACK(w); awflg=AFLAG(w);} AFLAG(w)=awflg&~AFPRISTINE;
+  PRISTCLRF(w)
   EPILOG(z);
  }
  // Otherwise, w is sparse
@@ -340,7 +340,7 @@ static DF2(amccv2){F2PREFIP;DECLF;
  A x;RZ(x=pind(AN(w),CALL2(f2,a,w,fs)));
  A z=jtmerge2(jtinplace,a,w,x,AR(w));   // The atoms of x include all axes of w, since we are addressing atoms
  // We modified w which is now not pristine.
- I awflg=AFLAG(w); if(unlikely(awflg&AFVIRTUAL)){w=ABACK(w); awflg=AFLAG(w);} AFLAG(w)=awflg&~AFPRISTINE;
+ PRISTCLRF(w)
  RETF(z);
 }
 

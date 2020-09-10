@@ -579,7 +579,7 @@ extern unsigned int __cdecl _clearfp (void);
 // Debugging options
 
 // Use MEMAUDIT to sniff out errant memory alloc/free
-#define MEMAUDIT 0x00    // Bitmask for memory audits: 1=check headers 2=full audit of tpush/tpop 4=write garbage to memory before freeing it 8=write garbage to memory after getting it
+#define MEMAUDIT 0x00   // Bitmask for memory audits: 1=check headers 2=full audit of tpush/tpop 4=write garbage to memory before freeing it 8=write garbage to memory after getting it
                      // 16=audit freelist at every alloc/free (starting after you have run 6!:5 (1) to turn it on)
  // 13 (0xD) will verify that there are no blocks being used after they are freed, or freed prematurely.  If you get a wild free, turn on bit 0x2
  // 2 will detect double-frees before they happen, at the time of the erroneous tpush
@@ -715,7 +715,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define F1RANK(m,f,self)    {RZ(w); if(m<AR(w))if(m==0)R rank1ex0(w,(A)self,f);else R rank1ex(  w,(A)self,(I)m,     f);}  // if there is more than one cell, run rank1ex on them.  m=monad rank, f=function to call for monad cell.  Fall through otherwise
 #define F2RANK(l,r,f,self)  {RZ(a&&w); if((I)((l-AR(a))|(r-AR(w)))<0)if((l|r)==0)R rank2ex0(a,w,(A)self,f);else{I lr=MIN((I)l,AR(a)); I rr=MIN((I)r,AR(w)); R rank2ex(a,w,(A)self,lr,rr,lr,rr,f);}}  // If there is more than one cell, run rank2ex on them.  l,r=dyad ranks, f=function to call for dyad cell
 // same, but used when the function may pull an address from w.  In that case, we have to turn pristine off since there may be duplicates in the result
-#define F2RANKW(l,r,f,self)  {RZ(a&&w); A z; if((I)((l-AR(a))|(r-AR(w)))<0){if((l|r)==0)z=rank2ex0(a,w,(A)self,f);else{I lr=MIN((I)l,AR(a)); I rr=MIN((I)r,AR(w)); z=rank2ex(a,w,(A)self,lr,rr,lr,rr,f);} I awflg=AFLAG(w); if(unlikely(awflg&AFVIRTUAL)){w=ABACK(w); awflg=AFLAG(w);} AFLAG(w)=awflg&~AFPRISTINE; RETF(z);}}
+#define F2RANKW(l,r,f,self)  {RZ(a&&w); A z; if((I)((l-AR(a))|(r-AR(w)))<0){if((l|r)==0)z=rank2ex0(a,w,(A)self,f);else{I lr=MIN((I)l,AR(a)); I rr=MIN((I)r,AR(w)); z=rank2ex(a,w,(A)self,lr,rr,lr,rr,f);} PRISTCLRF(w) RETF(z);}}
 #define F1RANKIP(m,f,self)    {RZ(   w); if(m<AR(w)         )R jtrank1ex(jtinplpace,  w,(A)self,(I)m,     f);}  // if there is more than one cell, run rank1ex on them.  m=monad rank, f=function to call for monad cell
 #define F2RANKIP(l,r,f,self)  {RZ(a&&w); if((I)((l-AR(a))|(r-AR(w)))<0){I lr=MIN((I)l,AR(a)); I rr=MIN((I)r,AR(w)); R jtrank2ex(jtinplace,a,w,(A)self,lr,rr,lr,rr,f);}}  // If there is more than one cell, run rank2ex on them.  l,r=dyad ranks, f=function to call for dyad cell
 // get # of things of size s, rank r to allocate so as to have an odd number of them at least n, after discarding w items of waste.  Try to fill up a full buffer 
@@ -1124,6 +1124,26 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x
 #define PACKBITSINTO(p,out) {p|=p>>7LL;p|=p>>14LL;out=(p<<28)|(out>>SZI);}  // pack and shift into out
 #endif
 #endif
+#define PRISTCOMSET(w,flg) awback=(w); if(unlikely(flg&AFVIRTUAL)){awback=ABACK(awback); flg=AFLAG(awback);} AFLAG(awback)=flg&~AFPRISTINE;
+#define PRISTCOMSETF(w,flg) if(unlikely(flg&AFVIRTUAL)){w=ABACK(w); flg=AFLAG(w);} AFLAG(w)=flg&~AFPRISTINE;
+#define PRISTCOMMON(w,exe) awflg=AFLAG(w); exe PRISTCOMSET(w,awflg)
+// same but destroy w
+#define PRISTCOMMONF(w,exe) I awflg=AFLAG(w); exe PRISTCOMSETF(w,awflg)
+#define PRISTCLRNODCL(w) PRISTCOMMON(w,)
+// normal entry points.  clear PRISTINE flag in w (or its backer, if virtual) because we have removed something from it
+#define PRISTCLR(w) I awflg; A awback; PRISTCLRNODCL(w)
+// same, but destroy w in the process
+#define PRISTCLRF(w) PRISTCOMMONF(w,)
+// transfer pristinity of w to z
+#define PRISTXFER(z,w) PRISTCOMMON(w,AFLAG(z)|=awflg&((SGNTO0(AC(w))&((I)jtinplace>>JTINPLACEWX))<<AFPRISTINEX);)
+// transfer pristinity of w to z, destroying w
+#define PRISTXFERF(z,w) PRISTCOMMONF(w,AFLAG(z)|=awflg&((SGNTO0(AC(w))&((I)jtinplace>>JTINPLACEWX))<<AFPRISTINEX);)  // use w bit of jtinplace
+#define PRISTXFERAF(z,a) PRISTCOMMONF(a,AFLAG(z)|=awflg&((SGNTO0(AC(a))&((I)jtinplace>>JTINPLACEAX))<<AFPRISTINEX);)  // use a bit of jtinplace
+// same, but with an added condition (in bit 0)
+#define PRISTXFERFIF(z,w,cond) PRISTCOMMONF(w,AFLAG(z)|=awflg&(((cond)&SGNTO0(AC(w))&((I)jtinplace>>JTINPLACEWX))<<AFPRISTINEX);)
+// transfer pristinity from a AND w to z (not if a==w)
+#define PRISTXFERF2(z,a,w) I aflg=AFLAG(a), wflg=AFLAG(w); AFLAG(z)|=aflg&wflg&(((a!=w)&SGNTO0(AC(a)&AC(w))&((I)jtinplace>>JTINPLACEAX)&((I)jtinplace>>JTINPLACEWX))<<AFPRISTINEX); \
+                           PRISTCOMSETF(a,aflg) PRISTCOMSETF(w,wflg)
 // PROD multiplies a list of numbers, where the product is known not to overflow a signed int (for example, it might be part of the shape of a dense array)
 #define PROD(result,length,ain) {I *_zzt=(ain); I _i=(length)-1; _zzt=_i<0?iotavec-IOTAVECBEGIN+1:_zzt; result=*_zzt; do{++_zzt; --_i; _zzt=_i<0?iotavec-IOTAVECBEGIN+1:_zzt; result*=*_zzt;}while(_i>0);} 
 // obsolete #define PROD(result,length,ain) {I _i=(length)-1; result=(ain)[_i]; result=_i<0?1:result; do{--_i; I _r=(ain)[_i]*result; result=_i<0?result:_r;}while(_i>0);} 
@@ -1156,6 +1176,7 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x
 #define EPILOG0         tpop(_ttop)
 // Routines that modify the comparison tolerance must stack it
 #define PUSHCCT(value) D cctstack = jt->cct; jt->cct=(value);   // declare the stacked value where it can be popped
+#define PUSHCCTIF(value,cond) D cctstack = jt->cct; if(cond)jt->cct=(value);   // declare the stacked value where it can be popped
 #define POPCCT jt->cct=cctstack;
 // When we push, we are about to execute verbs before the last one, and an inplacement there would lead to the name's being assigned with invalid
 // data.  So, we clear the inplace variables if we don't want to allow that: if the user set zomblevel=0, or if there is no local symbol table

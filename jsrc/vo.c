@@ -373,7 +373,7 @@ F1(jtope){PROLOG(0080);A cs,*v,y,z;I nonh;C*x;I i,n,*p,q=RMAX,r=0,*s,t=0,te=0,*u
  RZ(w);
  n=AN(w); v=AAV(w);
  if(!(BOX&(AT(w)&REPSGN(-n))))RCA(w);  // return w if empty or open
- if(!AR(w)){z=*v; ACIPNO(z); I awflg=AFLAG(w); if(unlikely(awflg&AFVIRTUAL)){w=ABACK(w); awflg=AFLAG(w);} AFLAG(w)=awflg&~AFPRISTINE; R z;}   // scalar box: turn off inplacing if we are using the contents directly.  Turn off pristine in w since we are pulling an address from it
+ if(!AR(w)){z=*v; ACIPNO(z); PRISTCLRF(w) R z;}   // scalar box: turn off inplacing if we are using the contents directly.  Turn off pristine in w since we are pulling an address from it
  // Here we have an array of boxes.  We will create a new block with the concatenated contents (even if there is only one box), and thus we don't need to turn of pristine in w
  // set q=min rank of contents, r=max rank of contents
  for(i=0;i<n;++i){
@@ -485,7 +485,7 @@ F1(jtraze){A*v,y,z,* RESTRICT zv;C* RESTRICT zu;I *wws,d,i,klg,m=0,n,r=1,t=0,te=
  n=AN(w); v=AAV(w);  // n=#,w  v->w data
  if(!n)R mtv;   // if empty operand, return boolean empty
  if(!(BOX&AT(w)))R ravel(w);   // if not boxed, just return ,w
- if(1==n){RZ(z=*v); I awflg=AFLAG(w); if(unlikely(awflg&AFVIRTUAL)){w=ABACK(w); awflg=AFLAG(w);} AFLAG(w)=awflg&~AFPRISTINE; R AR(z)?z:ravel(z);}  // if just 1 box, return its contents - except ravel if atomic.  Since these contents are excaping via a pointer, w must lose pristinity
+ if(1==n){RZ(z=*v); PRISTCLRF(w) R AR(z)?z:ravel(z);}  // if just 1 box, return its contents - except ravel if atomic.  Since these contents are excaping via a pointer, w must lose pristinity
  // If there is more than 1 box w can remain pristine, because the (necessarily DIRECT) contents are copied to a new block
  // scan the boxes to create the following values:
  // m = total # items in contents; aim=#atoms per item;  r = maximum rank of contents

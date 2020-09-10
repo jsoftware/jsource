@@ -359,4 +359,22 @@ a =: <"1 i. 100 1000
 
 NB. Verify that result loops perform inplacing, including assignment inplacing
 
-4!:55 ;:'a ckprist countis e isprist ispristorunbox isro isvirt o pe t1 totient x y '
+NB. Virtual blocks passed into explicit definition do not have to be realized
+v1 =: 3 : 'v2 y'
+v2 =: 3 : 'v3 y'
+v3 =: 3 : 0
+4!:55 <'gname'
++/ y
+)
+gname =: 100 100000 $ 4
+10000 > 7!:2 'v1"1 gname'
+v3 =: 3 : 0
+gname =: 100 100000?@$ 8
++/ y
+)
+gname =: 100 100000 $ 4
+(100 # 400000) -: v1"1 gname
+
+
+
+4!:55 ;:'a ckprist countis e isprist ispristorunbox isro isvirt o pe t1 totient v1 v2 v3 x y '

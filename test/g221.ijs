@@ -72,6 +72,29 @@ test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: u: ?5$65536
 test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: 10&u: RAND32 ?5$C4MAX
 test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: s:' miasma chthonic chronic kakistocracy dado'
 
+NB. compatibility of ~. ~: /.
+test =: 3 : 0
+if. -. IF64 do. 1 return. end.  NB. The 32-bit code has the old bug, plus a crash on u/. with lots of tolerant equals
+(+/ #/.~ y) = #y
+assert. (+/ ~: y) = # ~. y
+assert. (#/.~ y) -: 2 -~/\ I. 1 ,~ ~: y
+assert. (~. y) -:!.0 (~: y) # y
+1
+)
+test 1+2e_14*i:3
+test <"0 ] 1+2e_14*i:3
+test 1+2e_14*i:20
+test <"0 ] 1+2e_14*i:20
+test 1+2e_14*(_12 + i. 5 5)
+test <"0 ] 1+2e_14*(_12 + i. 5 5)
+test <"_1 ] a. {~ 20 ?@$ #a.
+test <"_1 ] a. {~ 20 20 ?@$ #a.
+test 2 j.~ 1+2e_14*i:20
+test <"0 ] 2 j.~ 1+2e_14*i:20
+test 2 j. 1+2e_14*i:20
+test <"0 ] 2 j. 1+2e_14*i:20
+
+
 
 4!:55 ;:'b t test xx yy'
 

@@ -375,6 +375,10 @@ gname =: 100 100000?@$ 8
 gname =: 100 100000 $ 4
 (100 # 400000) -: v1"1 gname
 
-
+NB. Check for memory leak of virtual assignment
+a =: 7!:0 ''
+a =: 7!:0 ''
+1: 3 : 'y =. 6' 5 {. i. 20 20
+a > _1000 + 7!:0 ''
 
 4!:55 ;:'a ckprist countis e isprist ispristorunbox isro isvirt o pe t1 totient v1 v2 v3 x y '

@@ -586,6 +586,10 @@ typedef struct {A name,val;US flag;S sn;LX next;} L;
 #define LPERMANENT      (I)8            // This is a permanent entry in a local symbol table; don't delete, just leave val=0
 #define LHASNAME        (I)16      // name is nonnull
 #define LHASVALUE       (I)32     // value is nonnull
+#define LWASABANDONEDX  6
+#define LWASABANDONED   ((I)1<<LWASABANDONEDX)  // set if the name was assigned from an abandoned value, and we DID NOT raise the usecount of the value (we will have changed INPLACE to ACUC1, though).
+                                    // when the name is reassigned or deleted, we must refrain from fa(), and if the value still has AC=ACUC1, we should revert it to inplaceable so that the parser will free it
+                                    // immediately
 // in LINFO entry
 #define LMOD            (I)1          // table has had new entries added (used for local symbol tables only)
 

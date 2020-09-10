@@ -75,9 +75,11 @@ test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: s:' miasma chthonic chronic kaki
 NB. compatibility of ~. ~: /.
 test =: 3 : 0
 if. -. IF64 do. 1 return. end.  NB. The 32-bit code has the old bug, plus a crash on u/. with lots of tolerant equals
-(+/ #/.~ y) = #y
+yy =: y
+assert. (+/ #/.~ y) = #y
+assert. (#/.~ y) =&# ~.y
 assert. (+/ ~: y) = # ~. y
-assert. (#/.~ y) -: 2 -~/\ I. 1 ,~ ~: y
+assert. (#/.~ /:~ y) -: 2 -~/\ I. 1 ,~ ~: /:~ y
 assert. (~. y) -:!.0 (~: y) # y
 1
 )

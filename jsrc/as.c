@@ -267,7 +267,7 @@ static DF1(jtssg){F1PREFIP;PROLOG(0020);A a,z;I i,n,r,wr;
    ACIPNO(z); AAV(boxedz)[0]=z; z=boxedz;  // incorporate z into boxedz; point boxedz to the previous result, and make that the new argument for next time
   }
   // if result happens to be the same virtual block that we passed in, we have to clone it before we change the pointer
-  else if(a==z){RZ(z=virtual(z,0,AR(a))); AN(z)=AN(a); MCISH(AS(z),AS(a),r-1);}
+  else if(unlikely(a==z)){RZ(z=virtual(z,0,AR(a))); AN(z)=AN(a); MCISH(AS(z),AS(a),r-1);}
 
   AK(a)-=k;  // back up to next input
 // obsolete   AC(a)=ACUC1|ACINPLACE;   // in case we created a virtual block from it, restore inplaceability to the UNINCORPABLE block

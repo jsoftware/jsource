@@ -97,7 +97,13 @@ extern void jtsymfreeha(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
    do{
     if(!(jtsympv[k].flag&LPERMANENT))break;
     aprev=&jtsympv[k].next;  // save last item we processed here
-    if(jtsympv[k].val){ortypes|=AT(jtsympv[k].val);fa(jtsympv[k].val); jtsympv[k].val=0;}  // don't clear name
+    if(jtsympv[k].val){
+     ortypes|=AT(jtsympv[k].val);
+     // if the value was abandoned to an explicit definition, we didn't raise the usecount (but we did make it non-inplaceable, so revert that).
+     // other decrement the usecount
+     if(unlikely(jtsympv[k].flag&LWASABANDONED)){jtsympv[k].flag&=~LWASABANDONED; AC(jtsympv[k].val)|=ACINPLACE&(AC(jtsympv[k].val)-2);}else{fa(jtsympv[k].val)};  // if usecount still 1, revert to inplace
+     jtsympv[k].val=0;  // clear value - don't clear name
+    }
     k=jtsympv[k].next;
    }while(k);
    // clear chain in last PERMANENT block
@@ -492,13 +498,14 @@ L* jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;L*e;
    // assignment (ex: (nm =: 3 : '...') y).  There seems to be no ill effect, because VNAMED isn't used much.
  }
  if(jt->uflags.us.cx.cx_c.db)RZ(redef(w,e));  // if debug, check for changes to stack
- x=e->val;   // if x is 0, this name has not been assigned yet; if nonzero, x points to the value
+ x=e->val;   // if x is 0, this name has not been assigned yet; if nonzero, x points to the incumbent value
  I xaf;  // holder for nvr/free flags
  I xt=0;  // If not assigned, use empty type
  if(x){
    xaf=AFLAG(x); xt=AT(x); // if assigned, get the actual flags
  } else {xaf = AFNVRUNFREED; xt=0;}   // If name is not assigned, indicate that it is not read-only or memory-mapped.  Also set 'impossible' code of unfreed+not NVR
  if(!(AFNJA&xaf)){
+  // Normal case of non-memory-mapped assignment.
   // If we are assigning the same data block that's already there, don't bother with changing use counts
   // addressing - if there was any, it should have been fixed when the original assignment was made.
   // It is possible that a name in an upper execution refers to the block, but we can't do anything about that.
@@ -521,17 +528,21 @@ L* jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;L*e;
    // and free it.  If the value is already on the NVR stack and has been deferred-freed, we decrement the usecount here to mark the current free, knowing that the whole block
    // won't be freed till later.  By deferring all deletions we don't have to worry about whether local values are on the stack; and that allows us to avoid putting local values
    // on the NVR stack at all.
-   if(xaf&(AFNVRUNFREED|AFVIRTUAL)){  // x is 0, or virtual, or unfreed on the NVR stack.  Do not fa().  0 is probably the normal case (assignment to unassigned name)
-    if(xaf&AFNVR) {AFLAG(x)=(xaf&=~AFNVRUNFREED);} // If unfreed on the NVR stack, mark as freed on the stack.  It is possible that the value is virtual AND on the
-        // NVR stack, if the name were x/y (BUT because local names are not put onto NVR, this case actually doesn't happen)
-   }else{  // x is non0 and either already marked as freed on the NVR stack or must be put there now
-    if(!(xaf&AFNVR)){
-     // non-nvr value being replaced, must be local.  Defer till end of sentence
+   if(unlikely(xaf&(AFNVRUNFREED/* obsolete |AFVIRTUAL*/))){  // x is 0, or unfreed on the NVR stack.  Do not fa().  0 is probably the normal case (assignment to unassigned name)
+    if(xaf&AFNVR) {AFLAG(x)=(xaf&=~AFNVRUNFREED);} // If unfreed on the NVR stack, mark as to-be-freed on the stack.  This defers the deletion
+    // x=0 case goes through quietly
+   }else{  // x is non0 and either already marked as freed on the NVR stack or must be put there now, or VIRTUAL
+    if(!(xaf&(AFNVR|AFVIRTUAL))){
+     // (1) the value in x is not on the NVR stack.  But it may still be at large in the sentence, because we don't push local names
+     // onto the NVR stack.  So, we defer the deletion until the end of the sentence, by adding the name to the NVR stack.  We could avoid this
+     // if we knew this is a final assignment
+     // (2) the value is not VIRTUAL.  The only way for an assigned value to be VIRTUAL is for it to be an initial assignment to x/y.  Such
+     // an assignment would necessarily have raised the usecount (otherwise we would have gone through the no-fa special case).  So it is safe to fa() immediately
      A *nvrav=jt->nvrav;
-     if((jt->parserstackframe.nvrtop+1U) > jt->nvran)RZ(nvrav=extnvr());  // Extend nvr stack if necessary.  copied from parser
+     if(unlikely((jt->parserstackframe.nvrtop+1U) > jt->nvran))RZ(nvrav=extnvr());  // Extend nvr stack if necessary.  copied from parser
      nvrav[jt->parserstackframe.nvrtop++] = x;   // record the place where the value was protected (i. e. this sentence); it will be freed when this sentence finishes
-     AFLAG(x) |= AFNVR;  // mark the value as protected
-    }else fa(x);  // already NVR+FREED, free again
+     AFLAG(x) |= AFNVR;  // mark the value as protected in NVR stack
+    }else fa(x);  // already NVR+FREED or VIRTUAL, free this time, knowing the real free will happen later   scaf could use fa() version that merely reduces usecount
    }
    e->val=w;   // install the new value
   } else {ACIPNO(w);}  // Set that this value cannot be in-place assigned - needed if the usecount was not incremented above

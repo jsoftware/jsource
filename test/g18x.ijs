@@ -44,7 +44,7 @@ pcheck=: 3 : 0
  assert. (1=#$s) *. 32=type s                  NB. locale name (or '**local**')
  assert. (#p) = (#a),#s
 NB. p has: index,type,flag,sn,next,prev
-NB. Flag is changed,0,LINFO,PERM,hasname,hasvalue
+NB. Flag is changed,0,LINFO,PERM,WASABANDONED,hasname,hasvalue
 
  i=. i.#p
  NB. b=. 0 0 -:"1 ]2 5{"1 p      NB. flag=0 & no prev pointer: empty symbol, on free list

@@ -349,9 +349,10 @@
 #define extnvr()                    jtextnvr(jt)
 // Handle top level of fa(), which decrements use count and decides whether recursion is needed.  We recur if the contents are traversible and
 // the current block is being decremented to 0 usecount or does not have recursive usecount
-// fa() audits the tstack, for use outside the usual system.
+// fa() audits the tstack, for use outside the tpop system.  fadecr does just the decrement (for when AC is known > 1)
 // Zczero is ~0 if usecount is going negative, 0 otherwise.  Usecount 1->0, 8..1->8..2, 4..0 unchanged, others decrement
-#define faaction(x, nomfaction) {I Zc=AC(x); AC(x)=Zc=Zc-1+((UI)Zc>>(BW-2)); I tt=AT(x); Zc=REPSGN(Zc-1); if((tt&=TRAVERSIBLE)&(Zc|~AFLAG(x)))jtfa(jt,(x),tt); if(Zc){jtmf(jt,x);} nomfaction}
+#define fadecr(x) I Zc=AC(x); AC(x)=Zc=Zc-1+((UI)Zc>>(BW-2));  // this does the decrement only, checking for PERMANENT
+#define faaction(x, nomfaction) {fadecr(x) I tt=AT(x); Zc=REPSGN(Zc-1); if((tt&=TRAVERSIBLE)&(Zc|~AFLAG(x)))jtfa(jt,(x),tt); if(Zc){jtmf(jt,x);} nomfaction}
 // obsolete #define fa(x)                       {if(x){I Zc=AC(x); if(!ACISPERM(Zc)){I tt=AT(x); I Zczero=-(I )(--Zc<=0); if((tt&=TRAVERSIBLE)&(Zczero|~AFLAG(x)))jtfa(jt,(x),tt); if(Zczero){jtmf(jt,x);}else {AC(x)=Zc; if(MEMAUDIT&2)audittstack(jt);}}}}
 // obsolete #define fa(x)                       {if(x){I Zc=AC(x); AC(x)=Zc=Zc-1+((UI)Zc>>(BW-2)); I tt=AT(x); Zc=REPSGN(Zc-1); if((tt&=TRAVERSIBLE)&(Zc|~AFLAG(x)))jtfa(jt,(x),tt); if(Zc){jtmf(jt,x);}else {if(MEMAUDIT&2)audittstack(jt);}}}
 #define fa(x)                       {if(x)faaction((x),else {if(MEMAUDIT&2)audittstack(jt);})}
@@ -1212,7 +1213,9 @@
 // Handle top level of tpush().  push the current block, and recur if it is traversible and does not have recursive usecount
 // We can have an inplaceable but recursible block, if it was gc'd.  We never push a PERMANENT block, so that we won't try to free it
 // NOTE that PERMANENT blocks are always marked traversible if they are of traversible type, so we will not recur on them internally
-#define tpush(x)                    {if(!ACISPERM(AC(x))){I tt=AT(x); A *pushp=jt->tnextpushp; *pushp++=(x); if(!((I)pushp&(NTSTACKBLOCK-1))){RZ(pushp=tg(pushp));} if((tt^AFLAG(x))&TRAVERSIBLE)RZ(pushp=jttpush(jt,(x),tt,pushp)); jt->tnextpushp=pushp; if(MEMAUDIT&2)audittstack(jt);}}
+#define tpushcommon(x,suffix) {if(!ACISPERM(AC(x))){I tt=AT(x); A *pushp=jt->tnextpushp; *pushp++=(x); if(!((I)pushp&(NTSTACKBLOCK-1))){RZ(pushp=tg(pushp));} if((tt^AFLAG(x))&TRAVERSIBLE)RZ(pushp=jttpush(jt,(x),tt,pushp)); jt->tnextpushp=pushp; suffix}}
+#define tpush(x)              tpushcommon(x,if(MEMAUDIT&2)audittstack(jt);)
+#define tpushna(x)            tpushcommon(x,)   // suppress audit
 // Internal version, used when the local name pushp is known to hold jt->tnextpushp
 #define tpushi(x)                   {if(!ACISPERM(AC(x))){I tt=AT(x); *pushp++=(x); if(!((I)pushp&(NTSTACKBLOCK-1))){RZ(pushp=tg(pushp));} if((tt^AFLAG(x))&TRAVERSIBLE)RZ(pushp=jttpush(jt,(x),tt,pushp)); }}
 // tpush1 is like tpush, but it does not recur to lower levels.  Used only for virtual block (which cannot be PERMANENT)

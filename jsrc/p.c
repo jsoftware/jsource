@@ -444,15 +444,15 @@ A jtparsea(J jt, A *queue, I m){PSTK * RESTRICT stack;A z,*v;I es;
        // To save some overhead, we inline this and do the analysis in a different order here
        // The important performance case is local names with bucket info.  Pull that out & do it without the call overhead
        // This code is copied from s.c
-       if(NAV(y)->bucket){I bx;
-        if(0 <= (bx = ~NAV(y)->bucketx)){   // negative bucketx (now positive); skip that many items, and then you're at the right place.  This is the path for almost all local symbols
+       if(likely(NAV(y)->bucket)){I bx;
+        if(likely(0 <= (bx = ~NAV(y)->bucketx))){   // negative bucketx (now positive); skip that many items, and then you're at the right place.  This is the path for almost all local symbols
          s = LXAV0(jt->locsyms)[NAV(y)->bucket]+jt->sympv;  // fetch hashchain headptr, point to L for first symbol
          while(bx--){s = s->next+jt->sympv;}  // skip the prescribed number
-         if(s->val==0)goto rdglob;  // if value has not been assigned, ignore it
+         if(unlikely(s->val==0))goto rdglob;  // if value has not been assigned, ignore it
         }else{
          // positive bucketx (now negative); that means skip that many items and then do name search.  This is set for words that were recognized as names but were not detected as assigned-to in the definition.  This is the path for global symbols
          // If no new names have been assigned since the table was created, we can skip this search, since it must fail (this is the path for words in z eg)
-         if(!(AR(jt->locsyms)&LNAMEADDED))goto rdglob;
+         if(likely(!(AR(jt->locsyms)&LNAMEADDED)))goto rdglob;
          // from here on it is rare to find a name - usually they're globals defined elsewhere
          LX lx = LXAV0(jt->locsyms)[NAV(y)->bucket];  // index of first block if any
          I m=NAV(y)->m; C* nm=NAV(y)->s;  // length/addr of name from name block
@@ -600,10 +600,11 @@ RECURSIVERESULTSCHECK
 #if MEMAUDIT&0x10
       auditmemchains();  // trap here while we still point to the action routine
 #endif
+      EPZ(y);  // fail parse if error
 #if MEMAUDIT&0x2
+      if(AC(y)==0 || (AC(y)<0 && AC(y)!=ACINPLACE+ACUC1))SEGFAULT 
       audittstack(jt);
 #endif
-      EPZ(y);  // fail parse if error
       stackfs[1].a=y;  // save result 2 3 3 2 3; parsetype is unchanged, token# is immaterial
       // free up inputs that are no longer used.  These will be inputs that are still inplaceable and were not themselves returned by the execution.
       // We free them right here, and zap their tpop entry to avoid an extra free later.
@@ -646,6 +647,10 @@ RECURSIVERESULTSCHECK
       auditmemchains();  // trap here while we still point to the action routine
 #endif
       EPZ(y);  // fail parse if error
+#if MEMAUDIT&0x2
+      if(AC(y)==0 || (AC(y)<0 && AC(y)!=ACINPLACE+ACUC1))SEGFAULT 
+      audittstack(jt);
+#endif
       PTFROMTYPE(stack[1].pt,AT(y)) stack[1].t=restok; stack[1].a=y;   // save result, move token#, recalc parsetype
      }
     }else{
@@ -656,6 +661,10 @@ RECURSIVERESULTSCHECK
      auditmemchains();  // trap here while we still point to the action routine
 #endif
      if(!stack)FP  // fail if error
+#if MEMAUDIT&0x2
+      if(AC(stack[0].a)==0 || (AC(stack[0].a)<0 && AC(stack[0].a)!=ACINPLACE+ACUC1))SEGFAULT 
+      audittstack(jt);
+#endif
      stack0pt=stack[0].pt;  // bottom of stack was modified, so refresh the type for it (lines 0-6 don't change it)
     }
    }
@@ -680,10 +689,14 @@ failparse:  // If there was an error during execution or name-stacking, exit wit
   // we are through with the result.  If we are returning a noun, free them right away unless they happen to be the very noun we are returning
   v=jt->nvrav+nvrotop;  // point to our region of the nvr area
   UI zcompval = !z||AT(z)&NOUN?0:-1;  // if z is 0, or a noun, immediately free only values !=z.  Otherwise don't free anything
-  DQ(jt->parserstackframe.nvrtop-nvrotop, A vv = *v; I vf = AFLAG(vv); AFLAG(vv) = vf & ~(AFNVR|AFNVRUNFREED); if(!(vf&AFNVRUNFREED))if(((UI)z^(UI)vv)>zcompval){fa(vv);}else{tpush(vv);} ++v;);   // schedule deferred frees.
-  // Still can't return till frame-stack popped
+  DQ(jt->parserstackframe.nvrtop-nvrotop, A vv = *v; I vf = AFLAG(vv); AFLAG(vv) = vf & ~(AFNVR|AFNVRUNFREED); if(!(vf&AFNVRUNFREED))if(((UI)z^(UI)vv)>zcompval){fanano0(vv);}else{tpushna(vv);} ++v;);   // schedule deferred frees.
+    // na so that we don't audit, since audit will relook at this NVR stack
 
+  // Still can't return till frame-stack popped
   jt->parserstackframe = oframe;
+#if MEMAUDIT&0x2
+  audittstack(jt);
+#endif
   // NOW it is OK to return
   R z;  // this is the return point from normal parsing
 

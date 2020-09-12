@@ -16,14 +16,6 @@
 /* the global symbol pool is a type INT matrix                             */
 /* the number of columns is symcol=ceiling(sizeof(L)/sizeof(I))            */
 /* elements are interpreted per type L (see jtype.h)                       */
-/*  A name - A name on LHS of assignment or locale name                    */
-/*  A val  - value        or locale search path                            */
-/*  I sn   - script index                                                  */
-/*  I flag - various flags                                                 */
-/*  I next - pointer to   successor in linked list                         */
-/*  I prev - pointer to predecessor in linked list                         */
-/*           if no predecessor then pointer to hash table entry, and       */
-/*           flag will include LHEAD                                       */
 /* a stack of free entries is kept using the next pointer                  */
 /* jt->symp:     symbol pool array                                         */
 /* jt->sympv:    symbol pool array pointer, (L*)AV(jt->symp)               */
@@ -99,9 +91,9 @@ extern void jtsymfreeha(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
     aprev=&jtsympv[k].next;  // save last item we processed here
     if(jtsympv[k].val){
      ortypes|=AT(jtsympv[k].val);
-     // if the value was abandoned to an explicit definition, we didn't raise the usecount (but we did make it non-inplaceable, so revert that).
-     // other decrement the usecount
-     if(unlikely(jtsympv[k].flag&LWASABANDONED)){jtsympv[k].flag&=~LWASABANDONED; AC(jtsympv[k].val)|=ACINPLACE&(AC(jtsympv[k].val)-2);}else{fa(jtsympv[k].val)};  // if usecount still 1, revert to inplace
+     // if the value was abandoned to an explicit definition, we took usecount 8..1  -> 1 ; revert that.  Can't change an ACPERMANENT!
+     // otherwise decrement the usecount
+     SYMVALFA(jtsympv[k]);
      jtsympv[k].val=0;  // clear value - don't clear name
     }
     k=jtsympv[k].next;
@@ -176,7 +168,11 @@ L* jtprobedel(J jt,I l,C*string,UI4 hash,A g){
   if(!delblockx)R 0;  // if chain empty or ended, not found
   L *sym=jt->sympv+delblockx;
   IFCMPNAME(NAV(sym->name),string,l,     // (1) exact match - if there is a value, use this slot, else say not found
-    {fa(sym->val); sym->val=0; if(!(sym->flag&LPERMANENT)){*asymx=sym->next; fr(sym->name); sym->name=0; sym->flag=0; sym->sn=0; sym->next=jt->sympv[0].next; jt->sympv[0].next=delblockx;} R sym;}
+    {
+     SYMVALFA(*sym); sym->val=0;   // decr usecount in value; remove value from symbol
+     if(!(sym->flag&LPERMANENT)){*asymx=sym->next; fr(sym->name); sym->name=0; sym->flag=0; sym->sn=0; sym->next=jt->sympv[0].next; jt->sympv[0].next=delblockx;}
+     R sym;
+    }
    // if match, bend predecessor around deleted block, return address of match (now deleted but still points to value)
   )
   asymx=&sym->next;   // mismatch - step to next
@@ -206,7 +202,7 @@ L *jtprobelocal(J jt,A a){NM*u;I b,bx;
   if(0 > (bx = ~u->bucketx)){
    // positive bucketx (now negative); that means skip that many items and then do name search.  This is set for words that were recognized as names but were not detected as assigned-to in the definition
    // If no new names have been assigned since the table was created, we can skip this search, since it must fail (this is the path for words in z eg)
-   if(!(AR(jt->locsyms)&LNAMEADDED))R 0;
+   if(likely(!(AR(jt->locsyms)&LNAMEADDED)))R 0;
    LX lx = LXAV0(jt->locsyms)[b];  // index of first block if any
    I m=u->m; C* s=u->s;  // length/addr of name from name block
    while(0>++bx){lx = jt->sympv[lx].next;}
@@ -500,17 +496,24 @@ L* jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;L*e;
  if(jt->uflags.us.cx.cx_c.db)RZ(redef(w,e));  // if debug, check for changes to stack
  x=e->val;   // if x is 0, this name has not been assigned yet; if nonzero, x points to the incumbent value
  I xaf;  // holder for nvr/free flags
- I xt=0;  // If not assigned, use empty type
+ I xt;  // If not assigned, use empty type
  if(x){
-   xaf=AFLAG(x); xt=AT(x); // if assigned, get the actual flags
+   xaf=AFLAG(x); xt=AT(x); // if assigned, get the actual flags, from the name and the old value
+   if(unlikely(e->flag&LWASABANDONED)){
+     // Reassigning an x/y that was abandoned into this execution.  We did not increment the value when we started, so we'd better not decrement now.
+     // However, we did change 8..1 to 1, and if the 1 is still there, we set it back to 8..1 so that the caller can see that the value is unincorporated.
+     // The case where x==w is of interest (it comes up in x =. x , 5).  In that case we will not change the usecount of x/w below, so we have to keep the ABANDONED
+     // status in sync with the usecount.  The best thing is to keep both unchanged, so that we can continue to inplace x
+     AC(x)|=(ACINPLACE&(AC(x)-1-(x!=w)));  // apply ABANDONED: 1 -> 8..1 but only if we are going to replace x; we don't want 8..1 in an active name
+     e->flag&=~((x!=w)<<LWASABANDONEDX);  // turn off abandoned flag after it has been applied, but only if we replace x
+     xaf = AFNVRUNFREED; // ignore other flags; set xaf as if x==0 to avoid any other usecount changes
+   }
  } else {xaf = AFNVRUNFREED; xt=0;}   // If name is not assigned, indicate that it is not read-only or memory-mapped.  Also set 'impossible' code of unfreed+not NVR
  if(!(AFNJA&xaf)){
   // Normal case of non-memory-mapped assignment.
-  // If we are assigning the same data block that's already there, don't bother with changing use counts
-  // addressing - if there was any, it should have been fixed when the original assignment was made.
-  // It is possible that a name in an upper execution refers to the block, but we can't do anything about that.
-  if(x!=w){
-   if((xt|AT(w))&(VERB|CONJ|ADV)){
+  // If we are assigning the same data block that's already there, don't bother with changing use counts or anything else
+  if(likely(x!=w)){
+   if(unlikely((xt|AT(w))&(VERB|CONJ|ADV))){
     // When we assign to, or reassign, a modifier, invalidate all the lookups of modifiers that are extant
     // It's a pity that we have to do this for ALL assignments, even assignments to uv.  If we don't, a reference to a local modifier may get passed in, and
     // it will still be considered valid even though the local names have disappeared.  Maybe we could avoid this if the local namespace has no defined modifiers - but then we'd have to keep up with that...
@@ -528,9 +531,10 @@ L* jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;L*e;
    // and free it.  If the value is already on the NVR stack and has been deferred-freed, we decrement the usecount here to mark the current free, knowing that the whole block
    // won't be freed till later.  By deferring all deletions we don't have to worry about whether local values are on the stack; and that allows us to avoid putting local values
    // on the NVR stack at all.
-   if(unlikely(xaf&(AFNVRUNFREED/* obsolete |AFVIRTUAL*/))){  // x is 0, or unfreed on the NVR stack.  Do not fa().  0 is probably the normal case (assignment to unassigned name)
-    if(xaf&AFNVR) {AFLAG(x)=(xaf&=~AFNVRUNFREED);} // If unfreed on the NVR stack, mark as to-be-freed on the stack.  This defers the deletion
-    // x=0 case goes through quietly
+   // ABANDONED values can never be NVR (which are never inplaceable), so they will be flagged as !NVR,!UNFREED,ABANDONED
+   if(likely(xaf&(AFNVRUNFREED/* obsolete |AFVIRTUAL*/))){  // x is 0, or unfreed on the NVR stack.  Do not fa().  0 is probably the normal case (assignment to unassigned name)
+    if(unlikely(xaf&AFNVR)){AFLAG(x)=(xaf&=~AFNVRUNFREED);} // If unfreed on the NVR stack, mark as to-be-freed on the stack.  This defers the deletion
+    // x=0 case, and LABANDONED case, go through quietly making no change to the usecount of x
    }else{  // x is non0 and either already marked as freed on the NVR stack or must be put there now, or VIRTUAL
     if(!(xaf&(AFNVR|AFVIRTUAL))){
      // (1) the value in x is not on the NVR stack.  But it may still be at large in the sentence, because we don't push local names
@@ -542,12 +546,17 @@ L* jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;L*e;
      if(unlikely((jt->parserstackframe.nvrtop+1U) > jt->nvran))RZ(nvrav=extnvr());  // Extend nvr stack if necessary.  copied from parser
      nvrav[jt->parserstackframe.nvrtop++] = x;   // record the place where the value was protected (i. e. this sentence); it will be freed when this sentence finishes
      AFLAG(x) |= AFNVR;  // mark the value as protected in NVR stack
-    }else fa(x);  // already NVR+FREED or VIRTUAL, free this time, knowing the real free will happen later   scaf could use fa() version that merely reduces usecount
+    }else{
+     // already NVR+FREED or VIRTUAL: free this time, knowing the real free will happen later,  We know usecount>1, but it may be PERMANENT; decrement it if not
+// obsolete      fa(x);
+     fadecr(x)
+    }
    }
    e->val=w;   // install the new value
-  } else {ACIPNO(w);}  // Set that this value cannot be in-place assigned - needed if the usecount was not incremented above
-    // kludge this should not be required, since the incumbent value should never be inplaceable
-   // ra() also removes inplaceability
+  } 
+// obsolete else {if(AC(w)<0)SEGFAULT  /* scaf */ ACIPNO(w);}  // Set that this value cannot be in-place assigned - needed if the usecount was not incremented above
+// obsolete     // kludge this should not be required, since the incumbent value should never be inplaceable
+// obsolete    // ra() also removes inplaceability
  } else {  // x exists, and is either read-only or memory-mapped
   ASSERT(!(AFRO&xaf),EVRO);   // error if read-only value
   if(x!=w){  // replacing name with different mapped data.  If data is the same, just leave it alone

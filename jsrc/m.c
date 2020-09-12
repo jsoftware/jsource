@@ -305,6 +305,7 @@ void jtspendtracking(J jt){I i;
 static void auditsimverify0(A w){
  if(!w)R;
  if(AFLAG(w)>>AFAUDITUCX)SEGFAULT   // hang if nonzero count
+ if(AC(w)==0 || (AC(w)<0 && AC(w)!=ACINPLACE+ACUC1 && AC(w)!=ACINPLACE+2))SEGFAULT 
  if(AFLAG(w)&AFVIRTUAL)auditsimverify0(ABACK(w));  // check backer
  if(AT(w)&(RAT|XNUM)) {A* v=AAV(w);  DQ(AT(w)&RAT?2*AN(w):AN(w), if(*v)auditsimverify0(*v); ++v;)}
  if(!(AFLAG(w)&AFVIRTUAL)&&UCISRECUR(w)){  // process children
@@ -407,6 +408,7 @@ void audittstack(J jt){
 #if BW==64 && MEMAUDIT&2
  if(jt->audittstackdisabled&1)R;
  A *ttop;
+ A *nvrav=jt->nvrav;
  // verify counts start clear
  for(ttop=jt->tnextpushp-!!((I)jt->tnextpushp&(NTSTACKBLOCK-1));ttop;){
   // loop through each entry, skipping the first which is a chain
@@ -416,6 +418,8 @@ void audittstack(J jt){
   // back up to previous block
   ttop = (A*)*ttop;  // back up to end of previous block, or 0 if last block
  }
+ // Process the NVR stack as well
+ DO(jt->parserstackframe.nvrtop, auditsimverify0(nvrav[i]);)
  // loop through each block of stack
  for(ttop=jt->tnextpushp-!!((I)jt->tnextpushp&(NTSTACKBLOCK-1));ttop;){
   for(;(I)ttop&(NTSTACKBLOCK-1);ttop--){
@@ -423,6 +427,7 @@ void audittstack(J jt){
   }
   ttop = (A*)*ttop;  // back up to end of previous block, or 0 if last block
  }
+ DO(jt->parserstackframe.nvrtop, if(!(AFLAG(nvrav[i])&AFNVRUNFREED))auditsimdelete(nvrav[i]);)
  // again to clear the counts
  for(ttop=jt->tnextpushp-!!((I)jt->tnextpushp&(NTSTACKBLOCK-1));ttop;){
   for(;(I)ttop&(NTSTACKBLOCK-1);ttop--){
@@ -430,6 +435,7 @@ void audittstack(J jt){
   }
   ttop = (A*)*ttop;  // back up to end of previous block, or 0 if last block
  }
+ DO(jt->parserstackframe.nvrtop, auditsimreset(nvrav[i]);)
 #endif
 }
 
@@ -450,7 +456,10 @@ static void freesymb(J jt, A w){I j,wn=AN(w); LX k,kt,* RESTRICT wv=LXAV0(w);
  for(j=SYMLINFOSIZE;j<wn;++j){
   // free the chain; kt->last block freed
   if(k=wv[j]){
-   do{kt=k;fr(jtsympv[k].name);fa(jtsympv[k].val);jtsympv[k].name=0;jtsympv[k].val=0;jtsympv[k].sn=0;jtsympv[k].flag=0;k=jtsympv[k].next;}while(k);
+   do{
+    kt=k;fr(jtsympv[k].name);SYMVALFA(jtsympv[k]);    // free name/value
+    jtsympv[k].name=0;jtsympv[k].val=0;jtsympv[k].sn=0;jtsympv[k].flag=0;k=jtsympv[k].next;
+   }while(k);
    // if the chain is not empty, make it the base of the free pool & chain previous pool from it
    jtsympv[kt].next=jtsympv[0].next;jtsympv[0].next=wv[j];
   }

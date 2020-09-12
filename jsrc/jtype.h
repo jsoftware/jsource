@@ -456,6 +456,7 @@ typedef I SI;
 #define AFROX           0            /* read only; can't change data    */
 #define AFNJAX          1            /* non-J alloc; i.e. mem mapped    */
 #define AFNJA           ((I)1<<AFNJAX)
+// Note: bit 4 is LABANDONED which is merged here
 #define AFNVRX          8
 #define AFNVR           ((I)1<<AFNVRX)  // This value is on the parser's execution stack, and must not be freed until it is removed
 // the spacing of VIRTUALBOXED->UNIFORMITEMS must match ZZFLAGWILLBEOPENED->ZZCOUNTITEMS
@@ -581,15 +582,16 @@ typedef struct {A name,val;US flag;S sn;LX next;} L;
 // In all local symbol tables, the first 'hashchain' has the symbol offsets of x/y
 
 #define LCH             (I)1            /* changed since last exec of 4!:5 */
-#define LHEAD           (I)2            /* head pointer (no predecessor)   */
+// obsolete #define LHEAD           (I)2            /* head pointer (no predecessor)   */
 #define LINFO           (I)4            /* locale info                     */
 #define LPERMANENT      (I)8            // This is a permanent entry in a local symbol table; don't delete, just leave val=0
-#define LHASNAME        (I)16      // name is nonnull
-#define LHASVALUE       (I)32     // value is nonnull
-#define LWASABANDONEDX  6
+#define LWASABANDONEDX  4
 #define LWASABANDONED   ((I)1<<LWASABANDONEDX)  // set if the name was assigned from an abandoned value, and we DID NOT raise the usecount of the value (we will have changed INPLACE to ACUC1, though).
                                     // when the name is reassigned or deleted, we must refrain from fa(), and if the value still has AC=ACUC1, we should revert it to inplaceable so that the parser will free it
                                     // immediately
+                                    // This value passes into AFLAGS and must not overlap anything there
+#define LHASNAME        (I)32      // name is nonnull - this value is not used internally; it appears in the result of 18!:31
+#define LHASVALUE       (I)64     // value is nonnull - this value is not used internally; it appears in the result of 18!:31
 // in LINFO entry
 #define LMOD            (I)1          // table has had new entries added (used for local symbol tables only)
 

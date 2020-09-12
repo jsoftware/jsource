@@ -872,6 +872,47 @@ a =:  i: 5000
 60000 < '| a' -&(7!:2) 'a =: | a'
 (| a) -:!.0 (| 15!:15 a) [ a =: (i: 5) , imin,imax,(, 200&*) i: 50
 
+NB. Abandoned inputs become inplaceable in an explicit definition
+f1 =: 3 : 'y =. b 5} y'
+140000 > 7!:2 'f1 131000 # a' [ a =: 'a' [ b =: 'b'
+
+NB. They can be virtual too
+140000 > 7!:2 'f1 }. 131000 # a' [ a =: 'a' [ b =: 'b'
+
+NB. They can be passed through but lose inplaceability at lower levels
+f2 =: 3 : 'f1 y'
+140000 < 7!:2 'f2 131000 # a' [ a =: 'a' [ b =: 'b'
+
+NB. They are reset to inplace on exit
+f3 =: 3 : '5'
+140000 > 7!:2 '(f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a)'
+f3 =: 3 : 0
+y =. b 5} y
+5
+)
+140000 > 7!:2 '(f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a)'
+f3 =: 3 : 0
+y =. 10
+5
+)
+140000 > 7!:2 '(f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a)'
+
+NB. Assignment to self leaves inplaceable
+f3 =: 3 : 0
+y =. y
+5
+)
+140000 > 7!:2 '(f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a)'
+
+NB. Inplaceable result of explicit definition stays inplaceable after exit
+f3 =: 3 : '10000 # a'
+170000 > 7!:2 '(f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a)'
+NB. Even if named
+f3 =: 3 : 'p =. 10000 # a'
+170000 > 7!:2 '(f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a)'
+
+
+
 
 4!:55 ;:'a a1 b f f1 f2 f3 f4 f5 f6 f7 f8 f9 f10 f11 f12 f13 global i ipexp jdlast l0 l1 local max min nmm nb qd t test testa unsafename undefinedname x'
 

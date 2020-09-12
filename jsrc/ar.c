@@ -743,7 +743,7 @@ A sum=reduce(w,FAV(self)->fgh[0]);  // calculate +/"r
 }    // (+/%#)"r w, implemented as +/"r % cell-length
 
 // entry point to execute monad/dyad Fold after the noun arguments are supplied
-static DF2(jtfoldx){
+static DF2(jtfoldx){F2PREFIP;  // this stands in place of jtxdefn, which inplaces
  // see if this is monad or dyad
  I foldflag=((~AT(w))>>(VERBX-3))&8;  // flags: dyad mult fwd rev  if w is not conj, this must be a dyad call
  self=foldflag?self:w; w=foldflag?w:a; a=foldflag?a:mtv; // if monad, it's w self garbage,  move to '' w self

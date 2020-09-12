@@ -116,7 +116,7 @@ static I debugnewi(I i, DC thisframe, A self){
 }
 
 // Processing of explicit definitions, line by line
-DF2(jtxdefn){PROLOG(0048);
+DF2(jtxdefn){F2PREFIP;PROLOG(0048);
  RE(0);
  A *line;   // pointer to the words of the definition.  Filled in by LINE
  I n;  // number of lines in the definition.  Filled in by LINE
@@ -204,22 +204,34 @@ DF2(jtxdefn){PROLOG(0048);
   // has been abandoned, we do not need to raise the usecount here: we can just mark the arg non-inplaceable, usecount 1 and take advantage
   // of assignment in place here - in this case we must flag the name to suppress decrementing the usecount on reassignment or final free.  In
   // both cases we know the block will be freed by the caller.
+  // Virtual abandoned blocks are both cases at once.  That's OK.
   UI4 yxbucks = *(UI4*)LXAV0(locsym);  // get the yx bucket indexes, stored in first hashchain by crelocalsyms
   L *ybuckptr = LXAV0(locsym)[(US)yxbucks]+jt->sympv;  // pointer to sym block for y
   L *xbuckptr = LXAV0(locsym)[yxbucks>>16]+jt->sympv;  // pointer to sym block for x
 // obsolete   if(w){ RZ(ras(w)); ybuckptr->val=w; ybuckptr->sn=jt->slisti;}  // If y given, install it & incr usecount as in assignment.  Include the script index of the modification
-  if(w){ra(w); ybuckptr->val=w; ybuckptr->sn=jt->slisti;}  // If y given, install it & incr usecount as in assignment.  Include the script index of the modification
+  if(w){  // If y given, install it & incr usecount as in assignment.  Include the script index of the modification
+   // If input is abandoned inplace and not the same as x, DO NOT increment usecount, but mark as abandoned and make not-inplace.  Otherwise ra
+   // We can handle an abandoned argument only if it is direct or recursive, since only those values can be assigned to a name
+   if((a!=w)&SGNTO0(AC(w)&(((AT(w)^AFLAG(w))&RECURSIBLE)-1))&((I)jtinplace>>JTINPLACEWX)){
+    ybuckptr->flag=LPERMANENT|LWASABANDONED; AC(w)&=~ACINPLACE;  // remember, blocks from every may be 0x8..2, and we must preserve the usecount then as if we ra()d it
+   }else ra(w);
+   ybuckptr->val=w; ybuckptr->sn=jt->slisti;
+  }
     // for x (if given), slot is from the beginning of hashchain EXCEPT when that collides with y; then follow y's chain
     // We have verified that hardware CRC32 never results in collision, but the software hashes do (needs to be confirmed on ARM CPU hardware CRC32C)
 // obsolete   if(a){ if(!ras(a)&&w){ybuckptr->val=0; fa(w); R0;} if(!C_CRC32C&&xbuckptr==ybuckptr)xbuckptr=xbuckptr->next+jt->sympv; xbuckptr->val=a; xbuckptr->sn=jt->slisti;}
-  if(a){ra(a);  if(!C_CRC32C&&xbuckptr==ybuckptr)xbuckptr=xbuckptr->next+jt->sympv; xbuckptr->val=a; xbuckptr->sn=jt->slisti;}
+  if(a){
+   if((a!=w)&SGNTO0(AC(a)&(((AT(a)^AFLAG(a))&RECURSIBLE)-1))&((I)jtinplace>>JTINPLACEAX)){
+    xbuckptr->flag=LPERMANENT|LWASABANDONED; AC(a)&=~ACINPLACE;
+   }else ra(a);
+   if(!C_CRC32C&&xbuckptr==ybuckptr)xbuckptr=xbuckptr->next+jt->sympv; xbuckptr->val=a; xbuckptr->sn=jt->slisti;
+  }
   // Do the other assignments, which occur less frequently, with IS
   if((I)u|(I)v){
    if(u){(IS(mnuvxynam[2],u)); if(NOUN&AT(u))IS(mnuvxynam[0],u); }  // assign u, and m if u is a noun
    if(v){(IS(mnuvxynam[3],v)); if(NOUN&AT(v))IS(mnuvxynam[1],v); }  // bug errors here must be detected
   }
  }
-
  FDEPINC(1);   // do not use error exit after this point; use BASSERT, BGA, BZ
  // remember tnextpushx.  We will tpop after every sentence to free blocks.  Do this AFTER any memory
  // allocation that has to remain throughout this routine.
@@ -492,7 +504,7 @@ dobblock:
  if((gsfctdl&16)){debz();}   // pair with the deba if we did one
  A prevlocsyms=(A)AM(locsym);  // get symbol table to return to, before we free the old one
  if(!(gsfctdl&8)){
-  // Normal path.  protect the result block and free everything allocated here, possibly including jt->locsyms
+  // Normal path.  protect the result block and free everything allocated here, possibly including jt->locsyms if it was cloned (it is on the stack now)
   z=EPILOGNORET(z);  // protect return value from being freed when the symbol table is.  Must also be before stack cleanup, in case the return value is xyz_index or the like
  }else{
   // Unusual path with an unclosed contruct (e. g. return. from inside for. loop).  We have to free up the for. stack, but the return value might be one of the names
@@ -508,12 +520,17 @@ dobblock:
 
  // If we are using the original local symbol table, clear it (free all values, free non-permanent names) for next use.  We know it hasn't been freed yet
  // We detect original symbol table by rank LSYMINUSE - other symbol tables are assigned rank 0.
- // Cloned symbol tables are still hanging on because of the initial ra() - we kill them off here
  // Tables are born with NAMEADDED off.  It gets set when a name is added.  Setting back to initial state here, we clear NAMEADDED
  if(gsfctdl&32){AR(locsym)=LLOCALTABLE; symfreeha(locsym);}
  // Pop the private-area stack; set no assignment (to call for result display)
  SYMSETLOCAL(prevlocsyms);
  jt->asgn=0;
+ // Now that we have deleted all the local symbols, we can see if we were returning one.
+ // See if EPILOG pushed a pointer to the block we are returning.  If it did, and the usecount we are returning is 1, set this
+ // result as inplaceable and install the address of the tpop stack into AM (as is required for all inplaceable blocks).  The the usecount is inplaceable 1,
+ // we don't do this, because it is possible that the AM slot was inherited from higher up the stack.
+ // Note that we know we are not returning a virtual block here, so it is OK to write to AM
+ if(likely(z!=0))if((_ttop!=jt->tnextpushp)==AC(z)){AC(z)=ACINPLACE|ACUC1; ABACK(z)=(A)_ttop;}  // AC can't be 0
  RETF(z);
 }
 
@@ -521,8 +538,8 @@ dobblock:
 static DF1(xv1){A z; R df1(z,  w,FAV(self)->fgh[0]);}
 static DF2(xv2){A z; R df2(z,a,w,FAV(self)->fgh[1]);}
 
-static DF1(xn1 ){R xdefn(0L,w, self);}  // Transfer monadic xdef to the common code
-static DF1(xadv){R xdefn(w, 0L,self);}
+static DF1(xn1 ){R xdefn(0L,w, self);}  // Transfer monadic xdef to the common code - inplaceable
+static DF1(xadv){R xdefn(w, 0L,self);}  // inplaceable
 
 // Nilad.  See if an anonymous verb needs to be named.  If so, result is the name, otherwise 0
 static F1(jtxopcall){R jt->uflags.us.cx.cx_c.db&&DCCALL==jt->sitop->dctype?jt->sitop->dca:0;}
@@ -533,7 +550,7 @@ static F1(jtxopcall){R jt->uflags.us.cx.cx_c.db&&DCCALL==jt->sitop->dctype?jt->s
 // If we have to add a name for debugging purposes, do so
 // Flag the operator with VOPR, and remove VFIX for it so that the compound can be fixed
 DF2(jtxop2){A ff,x;
- RZ(ff=fdef(0,CCOLON,VERB, xn1,jtxdefn, a,self,w,  (VXOP|VFIX)^FAV(self)->flag, RMAX,RMAX,RMAX));
+ RZ(ff=fdef(0,CCOLON,VERB, xn1,jtxdefn, a,self,w,  (VXOP|VFIX|VJTFLGOK1|VJTFLGOK2)^FAV(self)->flag, RMAX,RMAX,RMAX));
  R (x=xopcall(0))?namerefop(x,ff):ff;
 }
 static DF1(xop1){
@@ -794,7 +811,7 @@ A jtclonelocalsyms(J jt, A a){A z;I j;I an=AN(a); LX *av=LXAV0(a),*zv;
    RZ(l=symnew(zhbase,ztx)); 
    A nm=(jt->sympv)[ahx].name;
    l->name=nm; ras(l->name);  // point symbol table to the name block, and increment its use count accordingly
-   l->flag=(jt->sympv)[ahx].flag|LPERMANENT;  // mark entry as PERMANENT, in case we try to delete the name (as in for_xyz. or 4!:55)
+   l->flag=(jt->sympv)[ahx].flag&(LINFO|LPERMANENT);  // clear all but PERMANENT and INFO, in case we try to delete the name (as in for_xyz. or 4!:55)
    ztx = ztx?(jt->sympv)[ztx].next : *zhbase;  // ztx=index to value we just added.  We avoid address calculation because of the divide.  If we added
       // at head, the added block is the new head; otherwise it's pointed to by previous tail
    ahx = (jt->sympv)[ahx].next;  // advance to next symbol
@@ -848,10 +865,10 @@ if(BETWEENC(fndflag,1,3))jfwrite(str(129,"************ Old-style definition enco
  }
 
  switch(n){
-  case 3:  R fdef(0,CCOLON, VERB, xn1,jtxdefn,       num(n),0L,h, flag, RMAX,RMAX,RMAX);
+  case 3:  R fdef(0,CCOLON, VERB, xn1,jtxdefn,       num(n),0L,h, flag|VJTFLGOK1|VJTFLGOK2, RMAX,RMAX,RMAX);
   case 1:  R fdef(0,CCOLON, ADV,  b?xop1:xadv,0L,    num(n),0L,h, flag, RMAX,RMAX,RMAX);
   case 2:  R fdef(0,CCOLON, CONJ, 0L,b?jtxop2:jtxdefn, num(n),0L,h, flag, RMAX,RMAX,RMAX);
-  case 4:  R fdef(0,CCOLON, VERB, xn1,jtxdefn,       num(n),0L,h, flag, RMAX,RMAX,RMAX);
+  case 4:  R fdef(0,CCOLON, VERB, xn1,jtxdefn,       num(n),0L,h, flag|VJTFLGOK1|VJTFLGOK2, RMAX,RMAX,RMAX);
   case 13: R vtrans(w);
   default: ASSERT(0,EVDOMAIN);
  }

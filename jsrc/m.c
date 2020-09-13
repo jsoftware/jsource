@@ -974,6 +974,7 @@ if((I)jt&3)SEGFAULT
  z=jt->mfree[-PMINL+1+blockx].pool;   // tentatively use head of free list as result - normal case, and even if blockx is out of bounds will not segfault
  if(2>*jt->adbreakr){  // this is JBREAK0, done this way so predicted fallthrough will be true
   A *pushp=jt->tnextpushp;  // start reads for tpush
+
   if(blockx<PLIML){ 
    // small block: allocate from pool
    mfreeb=jt->mfree[-PMINL+1+blockx].ballo; // bytes in pool allocations
@@ -983,7 +984,7 @@ if((I)jt&3)SEGFAULT
 #if MEMAUDIT&1
     if(AFCHAIN(z)&&FHRHPOOLBIN(AFHRH(AFCHAIN(z)))!=(1+blockx-PMINL))SEGFAULT  // reference the next block to verify chain not damaged
     if(FHRHPOOLBIN(AFHRH(z))!=(1+blockx-PMINL))SEGFAULT  // verify block has correct size
-    if(!(z->fill==(UI4)AFHRH(z)))SEGFAULT  // fill should duplicate h
+// obsolete     if(!(z->fill==(UI4)AFHRH(z)))SEGFAULT  // fill should duplicate h
 #endif
    }else{A u,chn; US hrh; I nt=jt->malloctotal;                   // small block, but chain is empty.  Alloc PSIZE and split it into blocks
 #if 1 || ALIGNTOCACHE   // with smaller headers, always align pool allo to cache bdy
@@ -1120,7 +1121,7 @@ if((I)jt&3)SEGFAULT
 #if MEMAUDIT&1
  if(hrh==0 || blockx>(PLIML-PMINL+1))SEGFAULT  // pool number must be valid
 #if MEMAUDIT&17
-  if(!(w->fill==(UI4)hrh))SEGFAULT  // fill should duplicate h
+// obsolete   if(!(w->fill==(UI4)hrh))SEGFAULT  // fill should duplicate h
 #endif
 #endif
  if(FHRHBINISPOOL(blockx)){   // allocated by malloc

@@ -221,10 +221,11 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
     // We have verified that hardware CRC32 never results in collision, but the software hashes do (needs to be confirmed on ARM CPU hardware CRC32C)
 // obsolete   if(a){ if(!ras(a)&&w){ybuckptr->val=0; fa(w); R0;} if(!C_CRC32C&&xbuckptr==ybuckptr)xbuckptr=xbuckptr->next+jt->sympv; xbuckptr->val=a; xbuckptr->sn=jt->slisti;}
   if(a){
+   if(!C_CRC32C&&xbuckptr==ybuckptr)xbuckptr=xbuckptr->next+jt->sympv;
    if((a!=w)&SGNTO0(AC(a)&(((AT(a)^AFLAG(a))&RECURSIBLE)-1))&((I)jtinplace>>JTINPLACEAX)){
     xbuckptr->flag=LPERMANENT|LWASABANDONED; AC(a)&=~ACINPLACE;
    }else ra(a);
-   if(!C_CRC32C&&xbuckptr==ybuckptr)xbuckptr=xbuckptr->next+jt->sympv; xbuckptr->val=a; xbuckptr->sn=jt->slisti;
+   xbuckptr->val=a; xbuckptr->sn=jt->slisti;
   }
   // Do the other assignments, which occur less frequently, with IS
   if((I)u|(I)v){
@@ -530,6 +531,7 @@ dobblock:
  // result as inplaceable and install the address of the tpop stack into AM (as is required for all inplaceable blocks).  The the usecount is inplaceable 1,
  // we don't do this, because it is possible that the AM slot was inherited from higher up the stack.
  // Note that we know we are not returning a virtual block here, so it is OK to write to AM
+
  if(likely(z!=0))if((_ttop!=jt->tnextpushp)==AC(z)){AC(z)=ACINPLACE|ACUC1; ABACK(z)=(A)_ttop;}  // AC can't be 0
  RETF(z);
 }

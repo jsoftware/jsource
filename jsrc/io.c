@@ -344,7 +344,8 @@ C* _stdcall JGetLocale(J jt){
 }
 
 A _stdcall Jga(J jt, I t, I n, I r, I*s){A z;
- z=ga(t, n, r, s);
+ RZ(z=ga(t, n, r, s));
+ AC(z)=ACUC1;  // set nonrecursive usecount so that parser won't free the block prematurely.  This gives the usecount as if the block were 'assigned' by this call
  return z;
 }
 

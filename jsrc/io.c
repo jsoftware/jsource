@@ -206,16 +206,22 @@ DF1(jtwd){A z=0;C*p=0;D*pd;I e,*pi,t;V*sv;
 //   2=result not allocated by jga
 //   4=use smpoll to get last result
 //   8=multithreaded
+// smdowd = function pointer to Jwd, if NULL nothing will be called
   if(SMOPTLOCALE&jt->smoption) {
+// pass locale as parameter of callback
     e=jt->smdowd ? ((dowdtype2)(jt->smdowd))(jt, (int)t, w, &z, getlocale(jt)) : EVDOMAIN;
   } else {
+// front-end will call getlocale() inside callback
     e=jt->smdowd ? ((dowdtype)(jt->smdowd))(jt, (int)t, w, &z) : EVDOMAIN;
   }
   if(!e) R mtm;   // e==0 is MTM
   ASSERT(e<=0,e); // e>=0 is EVDOMAIN etc
-  if(SMOPTPOLL&jt->smoption) RZ(z=(A)((polltype)(jt->smpoll))(jt, (int)t, (int)e));
-  if(SMOPTNOJGA&jt->smoption) z=ca(z);
+  if(SMOPTPOLL&jt->smoption) RZ(z=(A)((polltype)(jt->smpoll))(jt, (int)t, (int)e)); // alternate way to get result aftercallback, but not yet used in any front-end
+  if(SMOPTNOJGA&jt->smoption) z=ca(z);  // front-end promised not to use Jga to allocate memory, but not yet used in any front-end
   if(e==-2){      // e==-2 is lit pairs
+// callback result z is a rank-1 literal array 
+// literal array will be cut into rank-1 box array here using  <;._2 
+// and then reshape into rank-2  ((n%2),2)$
     A x=z; RZ(df1(z,x,cut(ds(CBOX),num(-2))));
     RETF(reshape(v2(AN(z)>>1,2L),z));
   } else {RETF(z);}
@@ -284,14 +290,40 @@ I _stdcall JSetA(J jt,I n,C* name,I dlen,C* d){
 }
 
 /* set jclient callbacks */
+/*
+void* callbacks[] = {Joutput, Jwd, Jinput, unused, smoptions};
+typedef void  (_stdcall * outputtype)(J,int,C*);
+typedef int   (_stdcall * dowdtype)  (J,int, A, A*);
+typedef int   (_stdcall * dowdtype2) (J,int, A, A*, C*);  // pass current locale
+typedef C* (_stdcall * inputtype) (J,C*);
+typedef C* (_stdcall * polltype) (J,int,int);
+*/
+
 void _stdcall JSM(J jt, void* callbacks[])
 {
- jt->smoutput = (outputtype)callbacks[0];
- jt->smdowd = callbacks[1];
- jt->sminput = (inputtype)callbacks[2];
- jt->smpoll = (polltype)callbacks[3];
- jt->sm = 0xff & (I)callbacks[4];
- jt->smoption = ((~0xff) & (UI)callbacks[4]) >> 8;
+ jt->smoutput = (outputtype)callbacks[0];  // callback function for output to J session
+// output type
+// #define MTYOFM  1 /* formatted result array output */
+// #define MTYOER  2 /* error output */
+// #define MTYOLOG  3 /* output log */
+// #define MTYOSYS  4 /* system assertion failure */
+// #define MTYOEXIT 5 /* exit */
+// #define MTYOFILE 6 /* output 1!:2[2 */
+ jt->smdowd = callbacks[1];                // callback function for 11!:x
+ jt->sminput = (inputtype)callbacks[2];    // callback function for input from J session keyboard
+ jt->smpoll = (polltype)callbacks[3];      // callback function for unused
+ jt->sm = 0xff & (I)callbacks[4];          // lowest byte, sm : sessioin manager type
+// smoptions
+// #define SMWIN    0  /* j.exe    Jwdw (Windows) front end */
+// #define SMJAVA   2  /* j.jar    Jwdp (Java) front end */
+// #define SMCON    3  /* jconsole */
+// #define SMQT     4  /* jqt */
+// #define SMJA     5  /* jandroid */
+ jt->smoption = ((~0xff) & (UI)callbacks[4]) >> 8;  // upper bytes, smoption : 
+// #define SMOPTLOCALE 1  /* pass current locale */
+// #define SMOPTNOJGA  2  /* result not allocated by jga */
+// #define SMOPTPOLL   4  /* use smpoll to get last result */
+// #define SMOPTMTH    8  /* multithreaded */
  if(jt->sm==SMJAVA) jt->smoption |= SMOPTMTH;  /* assume java is multithreaded */
  if(SMOPTMTH&jt->smoption){
   jt->cstacktype = 2;

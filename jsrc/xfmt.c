@@ -75,10 +75,10 @@ static F1(jtfmtbfc){A*u,z;B t;C c,p,q,*s,*wv;I i,j,m,n;
  for(i=0;i<n;++i){
   c=wv[i]; 
   if(t){if(c==q)t=0;}
-  else if(c==','){RZ(*u++=rifvs(str(i-j,wv+j))); j=i+1;}
+  else if(c==','){RZ(*u++=incorp(str(i-j,wv+j))); j=i+1;}
   else if(s=strchr(pp,c)){t=1; q=qq[s-pp];}
  }
- RZ(*u=rifvs(str(n-j,wv+j)));
+ RZ(*u=incorp(str(n-j,wv+j)));
  R z;
 } /* format phrases: boxed from char */
 
@@ -180,7 +180,7 @@ static F1(jtfmtparse){A x,z,*zv;B ml[2+NMODVALS],mod,t;C c,*cu="srqpnmdbijklc",*
    d=wv[mi];
    ASSERT(s=strchr(cu,d),EVDOMAIN);
    j=s-cu; ASSERT(ml[j],EVDOMAIN); ml[j]=0; fb|=(I)1<<j; 
-   if(s=strchr(cu1,d)){if(i-mi>3)RZ(zv[s-cu1]=rifvs(str(i-mi-3,wv+mi+2)));}else ASSERT(1==i-mi,EVDOMAIN);
+   if(s=strchr(cu1,d)){if(i-mi>3)RZ(zv[s-cu1]=incorp(str(i-mi-3,wv+mi+2)));}else ASSERT(1==i-mi,EVDOMAIN);
   }
   mi=i;
   if(BETWEENC(c,'0','9')){RZ(widthdp(str(n-i,wv+i),vals,vals+1)); break;} 
@@ -189,9 +189,9 @@ static F1(jtfmtparse){A x,z,*zv;B ml[2+NMODVALS],mod,t;C c,*cu="srqpnmdbijklc",*
   x=zv[NMODVALS]; n=AN(x); cv=CAV(x); MC(subs,cu,5L); memset(ml,C1,5L);
   ASSERT(0==(n&1)&&10>=n,EVDOMAIN);
   DQ(n>>1, ASSERT(s=strchr(cu,*cv++),EVDOMAIN); j=s-cu; ASSERT(ml[j],EVDOMAIN); ml[j]=0; subs[j]=*cv++;);
-  RZ(zv[NMODVALS]=rifvs(str(5L,subs)));
+  RZ(zv[NMODVALS]=incorp(str(5L,subs)));
  }
- vals[2]=fb; RZ(*zv=rifvs(vec(INT,3,vals)));
+ vals[2]=fb; RZ(*zv=incorp(vec(INT,3,vals)));
  R z;
 }
 
@@ -293,10 +293,10 @@ static F2(jtfmtprecomp) {A*as,base,fb,len,strs,*u,z;B*bits,*bw;D dtmp,*dw;
  GATV0(strs,BOX,nf*NMODVALS,2); s=AS(strs); *s++=nf; *s=NMODVALS;
  GATV(len, INT,n,wr,ws); 
  GATV(fb,  B01,n,wr,ws); memset(BAV(fb),C0,n);
- GAT0(z,BOX,4,1); u=AAV(z); *u++=base; *u++=strs; *u++=len; *u++=fb; 
+ GAT0(z,BOX,4,1); u=AAV(z); *u++=incorp(base); *u++=incorp(strs); *u++=incorp(len); *u++=incorp(fb); 
  ib=AV(base); as=AAV(strs); u=AAV(a);
- if(1==nf){MC(ib,AV(*u),SZI*3); memset(ib+3,C0,SZI*nc); MC(as,u+1,SZA*NMODVALS);}
- else DQ(nf, MC(ib,AV(*u),SZI*3); ib[3]=0; ib+=4; MC(as,u+1,SZA*NMODVALS); as+=NMODVALS; u+=1+NMODVALS;);
+ if(1==nf){MC(ib,AV(*u),SZI*3); memset(ib+3,C0,SZI*nc); DO(NMODVALS, *as++=incorp(u[i+1]);)}  // obsolete  MC(as,u+1,SZA*NMODVALS);}
+ else DQ(nf, MC(ib,AV(*u),SZI*3); ib[3]=0; ib+=4; DO(NMODVALS, *as++=incorp(*(u++ +1));) ++u; )  // obsolete MC(as,u+1,SZA*NMODVALS); as+=NMODVALS; u+=1+NMODVALS;);
  bits=BAV(fb);
  switch(CTTZNOFLAG(wt)) {
   case B01X:
@@ -441,7 +441,7 @@ static A jtfmtallcol(J jt, A a, A w, I mode) {A *a1v,base,fb,len,strs,*u,v,x;
     ib+=4; --imod; ib=(imod==0)?AV(base):ib; imod=(imod==0)?nf:imod;
     if(0<ib[0]) GATV0(*a1v, LIT, ib[0], 1)
     else GATV0(*a1v, LIT, *il, 1) 
-    memset(CAV(*a1v), ' ', AN(*a1v)); 
+    incorp(*a1v); memset(CAV(*a1v), ' ', AN(*a1v)); 
     a1v++; il++; 
    );
    break;
@@ -451,8 +451,8 @@ static A jtfmtallcol(J jt, A a, A w, I mode) {A *a1v,base,fb,len,strs,*u,v,x;
    DO(nc,
     if(0<ib[0]) zs[1]=ib[0]; 
     else zs[1]=ib[3+(1<nf?0:i)]; 
-    GATVR(*a1v, LIT, zs[0]*zs[1], 2, zs); 
-    memset(CAV(*a1v), ' ', AN(*a1v)); 
+    GATVR(*a1v, LIT, zs[0]*zs[1], 2, zs);
+    incorp(*a1v); memset(CAV(*a1v), ' ', AN(*a1v)); 
     *cvv++=CAV(*a1v);
     a1v++; if(1<nf) ib+=4; 
    );

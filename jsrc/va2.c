@@ -561,9 +561,9 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
     // repurpose ak/wk/mf/nf to hold acr/wcr/af/wf, which we will pass into vasp.  This allows acr/wcr/af/wf to be block-local
     aawwzk[0]=argranks>>RANKTX; aawwzk[1]=argranks&RANKTMSK; mf=0; nf=0;
    }
-  }else{I af,wf,acr,wcr,q,ak,wk,zk;
+  }else{I af,wf,acr,wcr,q,ak,wk,zk;  // fr, shortr are left/right verb rank here
    // Here, a rank was specified.  That means there must be a frame, according to the IRS rules
-   acr=ranks>>RANKTX; acr=(I)fr<acr?fr:acr; af=fr-acr; PROD(ak,acr,AS(a)+af);  // r=left rank of verb, acr=effective rank, af=left frame, here ak=left #atoms/cell
+   acr=ranks>>RANKTX; acr=(I)fr<acr?fr:acr; af=fr-acr; PROD(ak,acr,AS(a)+af);  // acr=effective rank, af=left frame, here ak=left #atoms/cell
    wcr=(RANKT)ranks; wcr=shortr<wcr?shortr:wcr; wf=shortr-wcr; PROD(wk,wcr,AS(w)+wf); // r=right rank of verb, wcr=effective rank, wf=right frame, here wk=right #atoms/cell
        // note: the prod above can never fail, because it gives the actual # cells of an existing noun
    // Now that we have used the rank info, clear jt->ranks.
@@ -573,7 +573,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
     nf=acr<=wcr; zk=acr<=wcr?wk:ak; m=acr<=wcr?ak:wk; fr=acr<=wcr?wcr:acr; shortr=acr<=wcr?acr:wcr; s=AS(acr<=wcr?w:a)+(acr<=wcr?wf:af); PROD(n,fr-shortr,s+shortr);   // nf='w has long frame'; zk=#atoms in cell with larger rank;
     n^=REPSGN(1-n)&-nf;  // encode 'w has long frame, so a is repeated' as complementary n; but if n<2, leave it alone
     // m=#atoms in cell with shorter rank; n=#times shorter-rank cells must be repeated; r=larger of cell-ranks; s->shape of larger-rank cell
-    // now shortr has the smaller cell-rank, and acr/wcr are free
+    // now shortr has the smaller cell-rank, and acr/wcr are free.  fr has the longer cell-rank
     // if the cell-shapes don't match, that's an agreement error UNLESS the frame contains 0; in that case it counts as
     // 'error executing on the cell of fills' and produces a scalar 0 as the result for that cell, which we handle by changing the result-cell rank to 0
     // Nonce: continue giving the error even when frame contains 0 - remove 1|| in the next line to conform to fill-cell rules

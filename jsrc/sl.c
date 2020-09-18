@@ -349,9 +349,9 @@ static A jtlocale(J jt,B b,A w){A g=0,*wv,y;
 }    /* last locale (symbol table) from boxed locale names; 0 if none or error.  if b=1, create locale */
 
 F1(jtlocpath1){AD * RESTRICT g; AD * RESTRICT z; F1RANK(0,jtlocpath1,DUMMYSELF); ASSERT(vlocnl(1,w),EVDOMAIN); RZ(g=locale(1,w));
- g=LOCPATH(g); RZ(z=ca(g)); DO(AN(g), A t; RZ(t=ca(AAV(g)[i])); AS(t)[0]=AN(t); AAV(z)[i]=t;) R z;
+ g=LOCPATH(g); RZ(z=ca(g)); DO(AN(g), A t; RZ(t=ca(AAV(g)[i])); AS(t)[0]=AN(t); ACIPNO(t); AAV(z)[i]=t;) R z;
 }
- // for paths, the shape holds the bucketx.  We must create a new copy that has the shape restored
+ // for paths, the shape holds the bucketx.  We must create a new copy that has the shape restored, and must incorporate it
      /* 18!:2  query locale path */
 
 F2(jtlocpath2){A g; AD * RESTRICT x;
@@ -443,8 +443,8 @@ F1(jtlocmap){A g,q,x,y,*yv,z,*zv;I c=-1,d,j=0,m,*qv,*xv;
  // split the q result between two boxes
  GATVR(x,INT,m*3,2,AS(q)); xv= AV(x);
  GATV0(y,BOX,m,  1); yv=AAV(y);
- DQ(m, *xv++=d=*qv++; *xv++=j=c==d?1+j:0; *xv++=*qv++; c=d; *yv++=(A)*qv++;);
- GAT0(z,BOX,2,1); zv=AAV(z); zv[0]=x; zv[1]=y;
+ DQ(m, *xv++=d=*qv++; *xv++=j=c==d?1+j:0; *xv++=*qv++; c=d; *yv++=incorp((A)*qv++););
+ GAT0(z,BOX,2,1); zv=AAV(z); zv[0]=incorp(x); zv[1]=incorp(y);
  R z;
 }    /* 18!:30 locale map */
 

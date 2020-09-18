@@ -544,7 +544,7 @@ F2(jtabase2){A z;I an,ar,at,t,wn,wr,wt,zn;
   k=bpnoun(at); u=an*k+CAV(a);
   GA(y,at, 1, 0,0); yv=CAV(y);
   GATV0(z,BOX,an,1); zv=an+AAV(z);
-  DQ(an, MC(yv,u-=k,k); RZ(w=divide(minus(w,*--zv=residue(y,w)),y)););
+  DQ(an, MC(yv,u-=k,k); A tt; RZ(w=divide(minus(w,tt=residue(y,w)),y)); INCORP(tt); *--zv=tt;);
   z=ope(z);
   EPILOG(z);
 }}

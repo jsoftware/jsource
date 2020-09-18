@@ -87,7 +87,7 @@ A jtsprank1(J jt,A w,A fs,I mr,AF f1){PROLOG(0043);A q,wx,wy,wy1,ww,z,ze,zi,*zv;
    k=1+(B*)memchr(wb+j,C1,n-j)-(wb+j);
    ICPY(iv,wv+j*c,wf); iv+=wf;
    RZ(q=apv(k,j,1L)); SPB(wq,i,from(q,wy1)); SPB(wq,x,from(q,wx));
-   RZ(zv[i]=CALL1(f1,ww,fs));
+   RZ(zv[i]=incorp(CALL1(f1,ww,fs)));
    j+=k;
   }
   RZ(z=ope(z));
@@ -118,7 +118,7 @@ static A jtsprank2_0w(J jt,A a,A w,A fs,AF f2,I wf,I wcr){PROLOG(0044);A we,ww,y
  GATV0(zi,INT,f*MAX(1,wm),2); iv=AV(zi); v=AS(zi); v[0]=wm; v[1]=f;
  RE(wj=wk=spradv(wn,wb,wf,wcr,0L,wp,&ww)); j=0;
  while(1){
-  ICPY(iv,wv,f); iv+=f; RZ(zv[j++]=CALL2(f2,a,ww,fs));
+  ICPY(iv,wv,f); iv+=f; RZ(zv[j++]=incorp(CALL2(f2,a,ww,fs)));
   if(wj==wn)break;
   wv+=wk*wc; RE(wk=spradv(wn,wb,wf,wcr,wj,wp,&ww)); wj+=wk;
  }
@@ -137,7 +137,7 @@ static A jtsprank2_a0(J jt,A a,A w,A fs,AF f2,I af,I acr){PROLOG(0045);A aa,ae,y
  GATV0(zi,INT,f*MAX(1,am),2); iv=AV(zi); v=AS(zi); v[0]=am; v[1]=f;
  RE(aj=ak=spradv(an,ab,af,acr,0L,ap,&aa)); j=0;
  while(1){
-  ICPY(iv,av,f); iv+=f; RZ(zv[j++]=CALL2(f2,aa,w,fs));
+  ICPY(iv,av,f); iv+=f; RZ(zv[j++]=incorp(CALL2(f2,aa,w,fs)));
   if(aj==an)break;
   av+=ak*ac; RE(ak=spradv(an,ab,af,acr,aj,ap,&aa)); aj+=ak;
  }
@@ -173,28 +173,28 @@ A jtsprank2(J jt,A a,A w,A fs,I lr,I rr,AF f2){PROLOG(0046);A aa,ae,we,ww,y,zi,z
  RE(wj=wk=spradv(wn,wb,wf,wcr,0L,wp,&ww)); j=s=k=0; u=ii; y=0; v=0;
  if(af==wf)while(av||wv){
   if(av&&wv)DO(f, if(s=av[i]-wv[i])break;) else s=av?-1:1;
-  if     (0==s){RZ(zv[j++]=CALL2(f2,aa,ww,fs)); ICPY(iv,av,f); iv+=g;}
-  else if(0> s){RZ(zv[j++]=CALL2(f2,aa,we,fs)); ICPY(iv,av,f); iv+=g;}
-  else if(0< s){RZ(zv[j++]=CALL2(f2,ae,ww,fs)); ICPY(iv,wv,f); iv+=g;}
+  if     (0==s){RZ(zv[j++]=incorp(CALL2(f2,aa,ww,fs))); ICPY(iv,av,f); iv+=g;}
+  else if(0> s){RZ(zv[j++]=incorp(CALL2(f2,aa,we,fs))); ICPY(iv,av,f); iv+=g;}
+  else if(0< s){RZ(zv[j++]=incorp(CALL2(f2,ae,ww,fs))); ICPY(iv,wv,f); iv+=g;}
   if(0>=s){if(aj==an)av=0; else{av+=ak*ac; RE(ak=spradv(an,ab,af,acr,aj,ap,&aa)); aj+=ak;}}
   if(0<=s){if(wj==wn)wv=0; else{wv+=wk*wc; RE(wk=spradv(wn,wb,wf,wcr,wj,wp,&ww)); wj+=wk;}}
  }else while(av||wv){
   if(av&&wv&&f)DO(f, if(s=av[i]-wv[i])break;) else s=!f?0:av?-1:1;
-  if(b&&0<s||!b&&0>s){RZ(zv[j++]=CALL2(f2,b?ae:aa,b?ww:we,fs)); ICPY(iv,b?wv:av,g); iv+=g; k=m;}
+  if(b&&0<s||!b&&0>s){RZ(zv[j++]=incorp(CALL2(f2,b?ae:aa,b?ww:we,fs))); ICPY(iv,b?wv:av,g); iv+=g; k=m;}
   else if(s){
-   DQ(m, RZ(zv[j++]=y=y?ca(y):CALL2(f2,b?aa:ae,b?we:ww,fs)); ICPY(iv,b?av:wv,f); ICPY(iv+f,u,d); iv+=g; u+=d;); 
+   DQ(m, RZ(zv[j++]=y=incorp(y?ca(y):CALL2(f2,b?aa:ae,b?we:ww,fs))); ICPY(iv,b?av:wv,f); ICPY(iv+f,u,d); iv+=g; u+=d;); 
    u=ii; y=0; v=0;
   }else{
    while(ICMP(f+(b?wv:av),u,d)){
-    RZ(zv[j++]=y=y?ca(y):CALL2(f2,b?aa:ae,b?we:ww,fs)); 
+    RZ(zv[j++]=y=incorp(y?ca(y):CALL2(f2,b?aa:ae,b?we:ww,fs))); 
     ICPY(iv,wv,f); ICPY(iv+f,u,d); iv+=g; u+=d; ++k;
    }
-   RZ(zv[j++]=CALL2(f2,aa,ww,fs)); ICPY(iv,b?wv:av,g); iv+=g; u+=d; ++k;
+   RZ(zv[j++]=incorp(CALL2(f2,aa,ww,fs))); ICPY(iv,b?wv:av,g); iv+=g; u+=d; ++k;
   }
   if     ( b&&0<=s)if(wj==wn)wv=v=0; else{v=wv; wv+=wk*wc; RE(wk=spradv(wn,wb,wf,wcr,wj,wp,&ww)); wj+=wk;}
   else if(!b&&0>=s)if(aj==an)av=v=0; else{v=av; av+=ak*ac; RE(ak=spradv(an,ab,af,acr,aj,ap,&aa)); aj+=ak;}
   if(b&&(!s&&!wv||v&&ICMP(v,wv,f))||!b&&(!s&&!av||v&&ICMP(v,av,f))){
-   DQ(m-k, RZ(zv[j++]=y=y?ca(y):CALL2(f2,b?aa:ae,b?we:ww,fs)); ICPY(iv,b?av:wv,f); ICPY(iv+f,u,d); iv+=g; u+=d;);
+   DQ(m-k, RZ(zv[j++]=y=incorp(y?ca(y):CALL2(f2,b?aa:ae,b?we:ww,fs))); ICPY(iv,b?av:wv,f); ICPY(iv+f,u,d); iv+=g; u+=d;);
    u=ii; y=0; k=0;
   }
   if     ( b&&0>=s&&(!v||ICMP(v,wv,f)))if(aj==an)av=0; else{av+=ak*ac; RE(ak=spradv(an,ab,af,acr,aj,ap,&aa)); aj+=ak;}

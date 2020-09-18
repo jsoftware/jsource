@@ -249,6 +249,16 @@ F1(jtparse){A z;
  R z;
 }
 
+// verify that all box contents are not unincorpable, not virtual unless VIRTUALBOXED is set, and have AC>0
+static void auditboxac(A w){
+  if(!(AT(w)&BOX))R;  // we care only about boxes
+  A *wv; I wn;  // pointer to children, number of children
+  for(wv=AAV(w), wn=AN(w); wn; ++wv, --wn){
+    if(AFLAG(*wv)&AFUNINCORPABLE || (AFLAG(*wv)&AFVIRTUAL && !(AFLAG(w)&AFVIRTUALBOXED)) || AC(*wv)<=0)SEGFAULT
+    auditboxac(*wv);  // recur on children
+  }
+}
+
 #if FORCEVIRTUALINPUTS
 // For wringing out places where virtual blocks are incorporated into results, we make virtual blocks show up all over
 // any noun block that is not in-placeable and enabled for inplacing in jt will be replaced by a virtual block.  Then the audit of the
@@ -590,7 +600,14 @@ rdglob: ;
       // Close up the stack.  For lines 0&2 we don't need two writes, so they are duplicates
       A arg2=stack[pline+1].a;   // 2nd arg, fs or right dyad  1 2 3 (2 3)
       stackfs[0]=stackfs[-1];    // overwrite the verb with the previous cell - 0->1  1->2  1->2
+      // When the args return from the verb, we will check to see if any were inplaceable and unused.  But there is a problem:
+      // the arg may be freed by the verb (if it is inplaceable and gets replaced by a virtual reference).  In this case we can't
+      // rely on *arg[12].  But if the value is inplaceable, the one thing we CAN count on is that it has a tpop slot.  So we will save
+      // the address of the tpop slot IF the arg is inplaceable now.  Then after execution we will pick up again, knowing to quit if the tpop slot
+      // has been zapped.  We keep pointers for a/w rather than 1/2 for branch prediction purposes
+      A *tpopw=(A*)ABACK(arg2); tpopw=(AC(arg2)&((AFLAG(arg2)&(AFVIRTUAL|AFUNINCORPABLE))-1))<0?tpopw:(A*)&validitymask[4];  // point to pointer to arg2 (if it is inplace) - only if dyad
       A arg1=stack[(0x6>>pline)&3].a;   // 1st arg, monad or left dyad  2 3 1 (1 1)   0110  0 1 2 -> 2 3 1   1 11 111
+      A *tpopa=(A*)ABACK(arg1); tpopa=(AC(arg1)&((AFLAG(arg1)&(AFVIRTUAL|AFUNINCORPABLE))-1))<0?tpopa:(A*)&validitymask[4]; tpopw=(pline&2)?tpopw:tpopa; // monad: w fs  dyad: a w   if monad, change to w w  
       stack[pline]=stack[0];  // close up the stack  0->0(NOP)  0->1   0->2
       stack+=(pline>>1)+1;   // finish relocating stack   1 1 2 (1 2)
       y=(*actionfn)(jt,arg1,arg2,fs);
@@ -601,6 +618,9 @@ RECURSIVERESULTSCHECK
       auditmemchains();  // trap here while we still point to the action routine
 #endif
       EPZ(y);  // fail parse if error
+#if AUDITBOXAC
+      auditboxac(y);  // scaf
+#endif
 #if MEMAUDIT&0x2
       if(AC(y)==0 || (AC(y)<0 && AC(y)!=ACINPLACE+ACUC1))SEGFAULT 
       audittstack(jt);
@@ -616,16 +636,22 @@ RECURSIVERESULTSCHECK
       {
 // obsolete if(AC(y)<0 && AFLAG(y)&BOX && AT(y)&BOX && AC(AAV(y)[0])<2)  // scaf
 // obsolete  {I aaa = 1;} 
-      I c=AC(arg1); c=arg1==y?0:c; if((c&(-(AT(arg1)&DIRECT)|SGNIF(AFLAG(arg1),AFPRISTINEX)))<0){   // inplaceable and not return value.
-       if(!(AFLAG(arg1)&AFVIRTUAL)){  // for now, don't handle virtuals
-        if(*(A*)ABACK(arg1)!=arg1)SEGFAULT  // scaf
-        *(A*)ABACK(arg1)=0; fanapop(arg1,AFLAG(arg1));
+      if(arg1=*tpopw){  // if the arg has a place on the stack, look at it to see if the block is still around
+       I c=AC(arg1); c=arg1==y?0:c;
+       if((c&(-(AT(arg1)&DIRECT)|SGNIF(AFLAG(arg1),AFPRISTINEX)))<0){   // inplaceable and not return value.
+        if(!(AFLAG(arg1)&AFVIRTUAL)){  // for now, don't handle virtuals
+         if(*(A*)ABACK(arg1)!=arg1)SEGFAULT  // scaf
+         *tpopw=0; fanapop(arg1,AFLAG(arg1));  // zap the top block; if recursive, fa the contents
+        }
        }
       }
-      c=AC(arg2); c=arg2==y?0:c; c=arg1==arg2?0:c; if((c&SGNIF(pmask,2)&(-(AT(arg2)&DIRECT)|SGNIF(AFLAG(arg2),AFPRISTINEX)))<0){  // inplaceable, not return value, not same as arg1, dyad.  Safe to check AC even if freed as arg1
-       if(!(AFLAG(arg2)&AFVIRTUAL)){  // for now, don't handle virtuals
-        if(*(A*)ABACK(arg2)!=arg2)SEGFAULT   // scaf
-        *(A*)ABACK(arg2)=0; fanapop(arg2,AFLAG(arg2));
+      if(arg2=*tpopa){
+       I c=AC(arg2); c=arg2==y?0:c; c=arg1==arg2?0:c;
+       if((c&(-(AT(arg2)&DIRECT)|SGNIF(AFLAG(arg2),AFPRISTINEX)))<0){  // inplaceable, not return value, not same as arg1, dyad.  Safe to check AC even if freed as arg1
+        if(!(AFLAG(arg2)&AFVIRTUAL)){  // for now, don't handle virtuals
+         if(*(A*)ABACK(arg2)!=arg2)SEGFAULT   // scaf
+         *tpopa=0; fanapop(arg2,AFLAG(arg2));
+        }
        }
       }
 #if MEMAUDIT&0x2

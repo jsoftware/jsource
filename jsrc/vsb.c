@@ -474,7 +474,7 @@ static F1(jtsbbox){A z,*zv;C*s;I n;SB*v;SBU*u;
  n=AN(w); v=SBAV(w);
  ASSERT(!n||SBT&AT(w),EVDOMAIN);
  GATV(z,BOX,n,AR(w),AS(w)); zv=AAV(z);
- DO(n, u=SBUV(*v++); s=SBSV(u->i); RZ(*zv++=rifvs(SBC4&u->flag?vec(C4T,u->n>>2,s):SBC2&u->flag?vec(C2T,u->n>>1,s):str(u->n,s))););
+ DO(n, u=SBUV(*v++); s=SBSV(u->i); RZ(*zv++=incorp(SBC4&u->flag?vec(C4T,u->n>>2,s):SBC2&u->flag?vec(C2T,u->n>>1,s):str(u->n,s))););
  R z;
 }    /* boxed strings for symbol array w */
 
@@ -579,7 +579,7 @@ static A jtsbcheck1(J jt,A una,A sna,A u,A s,A h,A roota,A ff,A gp){PROLOG(0003)
  GATV0(x,B01,c,1); dnv=BAV(x); memset(dnv,C0,c);
  GATV0(x,B01,c,1); upv=BAV(x); memset(upv,C0,c);
  GATV0(x,LIT,c,1); ptv=CAV(x); memset(ptv,C0,c); ptv[0]=1;
- GATV0(x,BOX,c,1); xv=AAV(x); RZ(xv[0]=rifvs(str(uv->n,sv+uv->i)));
+ GATV0(x,BOX,c,1); xv=AAV(x); RZ(xv[0]=incorp(str(uv->n,sv+uv->i)));
  GATV0(y,INT,c,1); yv= AV(y); yv[0]=uv->order;
  for(i=1,v=1+uv;i<c;++i,++v){S c2;I ord,vi,vn;UC*vc;UI k;
   c2=v->flag&SBC2+SBC4;
@@ -597,7 +597,7 @@ static A jtsbcheck1(J jt,A una,A sna,A u,A s,A h,A roota,A ff,A gp){PROLOG(0003)
   j=k%hn; while(i!=hv[j]&&0<=hv[j])j=(1+j)%hn;
   ASSERTD(i==hv[j],"u/h mismatch");
   ASSERTD(BLACK==v->color||RED==v->color,"u color");
-  RZ(xv[i]=rifvs(c2&SBC4?vec(C4T,vn>>2,vc):c2&SBC2?vec(C2T,vn>>1,vc):str(vn,vc)));
+  RZ(xv[i]=incorp(c2&SBC4?vec(C4T,vn>>2,vc):c2&SBC2?vec(C2T,vn>>1,vc):str(vn,vc)));
   yv[i]=ord=v->order;
   j=v->parent; ASSERTD(    BETWEENO(j,0,c)&&2>=++ptv[j],"u parent");                        
   j=v->left;   ASSERTD(!j||BETWEENO(j,0,c)&&1>=++lfv[j]&&     ord>(j+uv)->order ,"u left"       );
@@ -714,14 +714,14 @@ static F1(jtsbtestbox){A*wv,x,z;S c2;I i,m,n;B*zv;
 
 static F1(jtsbgetdata){A z,*zv;
  GAT0(z,BOX,8,1); zv=AAV(z);
- RZ(zv[0]=rifvs(sc(jt->sbun)));
- RZ(zv[1]=rifvs(sc(jt->sbsn)));
- RZ(zv[2]=rifvs(ca(jt->sbu)));
- RZ(zv[3]=rifvs(ca(jt->sbs)));
- RZ(zv[4]=rifvs(ca(jt->sbh)));
- RZ(zv[5]=rifvs(sc(ROOT)));
- RZ(zv[6]=rifvs(sc(FILLFACTOR)));
- RZ(zv[7]=rifvs(sc(GAP)));
+ RZ(zv[0]=incorp(sc(jt->sbun)));
+ RZ(zv[1]=incorp(sc(jt->sbsn)));
+ RZ(zv[2]=incorp(ca(jt->sbu)));
+ RZ(zv[3]=incorp(ca(jt->sbs)));
+ RZ(zv[4]=incorp(ca(jt->sbh)));
+ RZ(zv[5]=incorp(sc(ROOT)));
+ RZ(zv[6]=incorp(sc(FILLFACTOR)));
+ RZ(zv[7]=incorp(sc(GAP)));
  R z;
 }
 

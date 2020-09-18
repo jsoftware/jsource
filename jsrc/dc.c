@@ -9,7 +9,7 @@
 
 static F1(jtdfrep){RZ(w); R NOUN&AT(w)?w:lrep(w);}
 
-static SYMWALK(jtdloc,A,BOX,5,2,1,{RZ(*zv++=rifvs(sfn(0,d->name))); RZ(*zv++=rifvs(dfrep(d->val)));})
+static SYMWALK(jtdloc,A,BOX,5,2,1,{RZ(*zv++=incorp(sfn(0,d->name))); RZ(*zv++=incorp(dfrep(d->val)));})
 
 static B jtdrow(J jt,DC si,DC s0,A*zv){A fs,q,*qv,y,z;C c;
  fs=si->dcf;
@@ -22,7 +22,7 @@ static B jtdrow(J jt,DC si,DC s0,A*zv){A fs,q,*qv,y,z;C c;
  *zv++=num(ADV&AT(fs)?1:CONJ&AT(fs)?2:3);  /* 3 name class               */
  *zv++=incorp(lrep(fs));                           /* 4 linear rep.              */
  *zv++=0;                                  /* 5 script name, filled in later              */
- *zv++=q;                                  /* 6 argument list            */
+ *zv++=incorp(q);                                  /* 6 argument list            */
  if(si->dcloc){RZ(y=dloc(si->dcloc)); RZ(*zv++=incorp(grade2(y,ope(IRS1(y,0L,1L,jthead,z)))));}
  else         RZ(*zv++=incorp(iota(v2(0L,2L))));   /* 7 locals                   */  // empty so cannot be readonly
  c=si->dcsusp||s0&&DCPARSE==s0->dctype&&s0->dcsusp?'*':' ';

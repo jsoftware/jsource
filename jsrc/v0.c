@@ -268,7 +268,7 @@ static A jtmnomx(J jt,I m,A w){A s,*wv,x,z=w,*zv;I i,n,r;
    x=wv[i]; r=AR(x); 
    ASSERT(1>=r,EVRANK); 
    ASSERT(!r||m==AN(x),EVLENGTH); 
-   zv[i]=m<=1?x:reshape(s,x);
+   zv[i]=incorp(m<=1?x:reshape(s,x));
   }
   RE(z); RZ(z=ope(z));
  }

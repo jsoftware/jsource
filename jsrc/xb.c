@@ -140,11 +140,11 @@ static A jtbreps(J jt,B b,B d,A w){A q,y,z,*zv;C*v;I c=0,kk,m,n;P*wp;
  GATV0(y,LIT,bsize(jt,d,1,INT,n,AR(w),AS(w)),1);
  v=brephdr(b,d,w,y);
  RZ(mvw(v,(C*)&c,1L,BU,b,d,SY_64));  /* reserved for flag */
- zv[0]=y; m=AN(y);
- RZ(zv[1]=q=brep(b,d,SPA(wp,a))); RZ(mvw(v+  kk,(C*)&m,1L,b,BU,d,SY_64)); m+=AN(q);
- RZ(zv[2]=q=brep(b,d,SPA(wp,e))); RZ(mvw(v+2*kk,(C*)&m,1L,b,BU,d,SY_64)); m+=AN(q);
- RZ(zv[3]=q=brep(b,d,SPA(wp,i))); RZ(mvw(v+3*kk,(C*)&m,1L,b,BU,d,SY_64)); m+=AN(q);
- RZ(zv[4]=q=brep(b,d,SPA(wp,x))); RZ(mvw(v+4*kk,(C*)&m,1L,b,BU,d,SY_64));
+ zv[0]=incorp(y); m=AN(y);
+ RZ(zv[1]=q=incorp(brep(b,d,SPA(wp,a)))); RZ(mvw(v+  kk,(C*)&m,1L,b,BU,d,SY_64)); m+=AN(q);
+ RZ(zv[2]=q=incorp(brep(b,d,SPA(wp,e)))); RZ(mvw(v+2*kk,(C*)&m,1L,b,BU,d,SY_64)); m+=AN(q);
+ RZ(zv[3]=q=incorp(brep(b,d,SPA(wp,i)))); RZ(mvw(v+3*kk,(C*)&m,1L,b,BU,d,SY_64)); m+=AN(q);
+ RZ(zv[4]=q=incorp(brep(b,d,SPA(wp,x)))); RZ(mvw(v+4*kk,(C*)&m,1L,b,BU,d,SY_64));
  R raze(z);
 }    /* 3!:1 w for sparse w */
 
@@ -290,7 +290,7 @@ static A jtunbinr(J jt,B b,B d,B pre601,I m,A w){A y,z;C*u=(C*)w,*v;I e,j,kk,n,p
    j=vv[i]; 
    ASSERT(BETWEENO(j,0,m),EVINDEX);
    if(i>iv[i])zv[i]=zv[iv[i]];
-   else{while(k<e&&j>=vv[k])++k; zv[i]=rifvs(unbinr(b,d,pre601,k<e?vv[k]-j:m-j,(A)(u+j)));}
+   else{while(k<e&&j>=vv[k])++k; zv[i]=incorp(unbinr(b,d,pre601,k<e?vv[k]-j:m-j,(A)(u+j)));}
  }}else if(unlikely(t&SPARSE)){P*zp=PAV(z);
   j=vv[1]; ASSERT(BETWEENO(j,0,m),EVINDEX); SPB(zp,a,unbinr(b,d,pre601,vv[2]-j,(A)(u+j)));
   j=vv[2]; ASSERT(BETWEENO(j,0,m),EVINDEX); SPB(zp,e,unbinr(b,d,pre601,vv[3]-j,(A)(u+j)));

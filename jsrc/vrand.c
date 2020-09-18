@@ -503,14 +503,14 @@ F1(jtrngstateq){A x=0,z,*zv;D*u=0;I n;UI*v;
   case SMI: 
    GAT0(z,BOX,9,1); zv=AAV(z);
    RZ(*zv++=num(0));
-   RZ(*zv++=rifvs(sc(jt->rngI0[GBI]))); RZ(*zv++=rifvs(vec(INT,GBN,jt->rngV0[GBI])));
-   RZ(*zv++=rifvs(sc(jt->rngI0[MTI]))); RZ(*zv++=rifvs(vec(INT,MTN,jt->rngV0[MTI])));
-   RZ(*zv++=rifvs(sc(jt->rngI0[DXI]))); RZ(*zv++=rifvs(vec(INT,DXN,jt->rngV0[DXI])));
+   RZ(*zv++=incorp(sc(jt->rngI0[GBI]))); RZ(*zv++=incorp(vec(INT,GBN,jt->rngV0[GBI])));
+   RZ(*zv++=incorp(sc(jt->rngI0[MTI]))); RZ(*zv++=incorp(vec(INT,MTN,jt->rngV0[MTI])));
+   RZ(*zv++=incorp(sc(jt->rngI0[DXI]))); RZ(*zv++=incorp(vec(INT,DXN,jt->rngV0[DXI])));
 #if SY_64
-   RZ(*zv++=rifvs(sc(jt->rngI0[MRI]))); RZ(*zv++=rifvs(vec(INT,MRN,jt->rngV0[MRI])));
+   RZ(*zv++=incorp(sc(jt->rngI0[MRI]))); RZ(*zv++=incorp(vec(INT,MRN,jt->rngV0[MRI])));
 #else
    u=(D*)jt->rngV0[MRI]; GAT0(x,INT,MRN,1); v=AV(x); DO(MRN, v[i]=(UI)u[i];);
-   RZ(*zv++=rifvs(sc(jt->rngI0[MRI]))); *zv++=x;
+   RZ(*zv++=incorp(sc(jt->rngI0[MRI]))); *zv++=x;
 #endif
    R z;
   case GBI: n=GBN; v=jt->rngv; break;
@@ -523,7 +523,7 @@ F1(jtrngstateq){A x=0,z,*zv;D*u=0;I n;UI*v;
 #endif
  }
  GAT0(z,BOX,3,1); zv=AAV(z);
- RZ(*zv++=rifvs(sc(jt->rng))); RZ(*zv++=rifvs(sc(jt->rngi))); RZ(*zv++=rifvs(vec(INT,n,v)));
+ RZ(*zv++=incorp(sc(jt->rng))); RZ(*zv++=incorp(sc(jt->rngi))); RZ(*zv++=incorp(vec(INT,n,v)));
  R z;
 }
 

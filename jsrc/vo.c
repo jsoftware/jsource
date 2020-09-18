@@ -373,7 +373,15 @@ F1(jtope){PROLOG(0080);A cs,*v,y,z;I nonh;C*x;I i,n,*p,q=RMAX,r=0,*s,t=0,te=0,*u
  RZ(w);
  n=AN(w); v=AAV(w);
  if(!(BOX&(AT(w)&REPSGN(-n))))RCA(w);  // return w if empty or open
- if(!AR(w)){z=*v; ACIPNO(z); PRISTCLRF(w) R z;}   // scalar box: turn off inplacing if we are using the contents directly.  Turn off pristine in w since we are pulling an address from it
+ if(!AR(w)){
+  // scalar box: Turn off pristine in w since we are pulling an address from it.  Contents must not be inplaceable
+  z=*v;
+#if AUDITBOXAC
+  if(!(AFLAG(w)&AFVIRTUALBOXED)&&AC(z)<0)SEGFAULT
+#endif
+// obsolete   ACIPNO(z);
+  PRISTCLRF(w) R z;
+ }
  // Here we have an array of boxes.  We will create a new block with the concatenated contents (even if there is only one box), and thus we don't need to turn of pristine in w
  // set q=min rank of contents, r=max rank of contents
  for(i=0;i<n;++i){
@@ -403,12 +411,16 @@ F1(jtope){PROLOG(0080);A cs,*v,y,z;I nonh;C*x;I i,n,*p,q=RMAX,r=0,*s,t=0,te=0,*u
   // Allocate result area & copy in shape (= frame followed by result-cell shape)
   GA(z,t,zn,r+AR(w),AS(w)); MCISH(AS(z)+AR(w),u,r); x=CAV(z); fillv(t,zn,x);  // init to a:  fills  bug copy shape could overrun w
   for(i=0;i<n;++i){
-   y=v[i];   // get pointer to contents, relocated if need be
+   y=v[i];   // get pointer to contents
+#if AUDITBOXAC
+   if(!(AFLAG(w)&AFVIRTUALBOXED)&&AC(y)<0)SEGFAULT
+#endif
    if(!nonh)                MC(x,AV(y),AN(y)<<klg);  // homogeneous atomic types: fill only at end, copy the valid part
    else if(TYPESEQ(t,AT(y))&&m==AN(y))MC(x,AV(y),q);   // cell of maximum size: copy it entire
    else if(AN(y))             RZ(povtake(jt,cs,TYPESEQ(t,AT(y))?y:cvt(t,y),x));  // otherwise add fill
    x+=q;
- }}
+  }
+ }
  EPILOG(z);
 }
 

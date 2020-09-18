@@ -138,10 +138,10 @@ F1(jtnc){A*wv,x,y,z;I i,n,t,*zv;L*v;
 
 
 static SYMWALK(jtnlxxx, A,BOX,20,1, jt->workareas.namelist.nla[*((UC*)NAV(d->name)->s)]&&jt->workareas.namelist.nlt&AT(d->val), 
-    RZ(*zv++=rifvs(sfn(SFNSIMPLEONLY,d->name))) )
+    RZ(*zv++=incorp(sfn(SFNSIMPLEONLY,d->name))) )
 
        SYMWALK(jtnlsym, A,BOX,20,1, jt->workareas.namelist.nla[*((UC*)NAV(d->name)->s)],
-    RZ(*zv++=rifvs(sfn(SFNSIMPLEONLY,d->name))) )
+    RZ(*zv++=incorp(sfn(SFNSIMPLEONLY,d->name))) )
 
 static const I nlmask[] = {NOUN,ADV,CONJ,VERB, MARK,MARK,SYMB,MARK};
 
@@ -194,7 +194,7 @@ static A jtnch1(J jt,B b,A w,I*pm,A ch){A*v,x,y;C*s,*yv;LX *e;I i,k,m,p,wn;L*d;
      x=d->name; k=NAV(x)->m;
      GATV0(y,LIT,k+2+p,1); yv=CAV(y); 
      MC(yv,NAV(x)->s,k); MC(1+k+yv,s,p); yv[k]=yv[1+k+p]='_';
-     *v++=y; ++m;
+     *v++=incorp(y); ++m;
    }}
    if(!d->next)break;
    d=d->next+jt->sympv;

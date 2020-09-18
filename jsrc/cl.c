@@ -87,7 +87,7 @@ static DF1(jtscfn){
 // obsolete  if(AS(jt->sca)[0]==AN(jt->sca)){I n=AN(jt->sca); RZ(jt->sca=ext(1,jt->sca)); AS(jt->sca)[0]=n;}  // if current buffer is full, reallocate.  ext resets AS
 // obsolete  AAV(jt->sca)[AS(jt->sca)[0]++]=rifvs(w);  // copy in new result pointer
  if(AS(AKASA(self))[0]==AN(AKASA(self))){I n=AN(AKASA(self)); RZ(AKASA(self)=ext(1,AKASA(self))); AS(AKASA(self))[0]=n;}  // if current buffer is full, reallocate.  ext resets AS
- AAV(AKASA(self))[AS(AKASA(self))[0]++]=rifvs(w);  // copy in new result pointer
+ AAV(AKASA(self))[AS(AKASA(self))[0]++]=incorp(w);  // copy in new result pointer
  R num(0);  // harmless good return
 }
 

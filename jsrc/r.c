@@ -30,9 +30,9 @@ static F1(jtdrr){PROLOG(0055);A df,dg,hs,*x,z;B b,ex,xop;C c,id;I fl,*hv,m;V*v;
  if(ex)RZ(dg=unparsem(num(0),w));
  m+=!b&&!xop||hs&&xop;
  GATV0(z,BOX,m,1); x=AAV(z);
- RZ(x[0]=rifvs(df));
- RZ(x[1]=rifvs(b||c||xop?dg:fl&VDDOP?(hv=AV(hs),link(sc(hv[0]),link(spellout(id),sc(hv[1])))):spellout(id)));
- if(2<m)RZ(x[2]=rifvs(c||xop?drr(hs):dg));
+ RZ(x[0]=incorp(df));
+ RZ(x[1]=incorp(b||c||xop?dg:fl&VDDOP?(hv=AV(hs),link(sc(hv[0]),link(spellout(id),sc(hv[1])))):spellout(id)));
+ if(2<m)RZ(x[2]=incorp(c||xop?drr(hs):dg));
  EPILOG(z);
 }
 
@@ -53,13 +53,13 @@ F1(jtaro){A fs,gs,hs,s,*u,*x,y,z;B ex,xop;C id;I*hv,m;V*v;
   if(evoke(w)){RZ(w=sfne(w)); if(FUNC&AT(w))w=aro(w); R w;}  // keep nameref as a string, UNLESS it is NMDOT, in which case use the (f.'d) verb value
  }
  GAT0(z,BOX,2,1); x=AAV(z);
- if(NOUN&AT(w)){RZ(x[0]=rifvs(ravel(scc(CNOUN)))); if(AT(w)&NAME)RZ(w=sfn(0,w)); RZ(x[1]=INCORPNA(w)); RETF(z);}  // if name, must be ".@'name', format name as string
+ if(NOUN&AT(w)){RZ(x[0]=incorp(ravel(scc(CNOUN)))); if(AT(w)&NAME)RZ(w=sfn(0,w)); RZ(x[1]=INCORPNA(w)); RETF(z);}  // if name, must be ".@'name', format name as string
  GATV0(y,BOX,m,1); u=AAV(y);
- if(0<m)RZ(u[0]=rifvs(aro(fs)));
- if(1<m)RZ(u[1]=rifvs(aro(ex?unparsem(num(0),w):xop?hs:gs)));
- if(2<m)RZ(u[2]=rifvs(aro(hs)));
+ if(0<m)RZ(u[0]=incorp(aro(fs)));
+ if(1<m)RZ(u[1]=incorp(aro(ex?unparsem(num(0),w):xop?hs:gs)));
+ if(2<m)RZ(u[2]=incorp(aro(hs)));
  s=xop?aro(gs):VDDOP&v->flag?(hv=AV(hs),aro(foreign(sc(hv[0]),sc(hv[1])))):spellout(id);
- RZ(x[0]=rifvs(s)); RZ(x[1]=INCORPNA(y));
+ RZ(x[0]=incorp(s)); RZ(x[1]=INCORPNA(y));
  R z;
 }
 
@@ -145,10 +145,10 @@ static A*jtunparse1a(J jt,I m,A*hv,A*zv){A*v,x,y;CW*u;I i,j,k;
  for(i=0;i<m;++i,++u){
   RZ(x=unparse1(u,vec(BOX,u->n,v+u->i),j,y)); 
   k=u->source;
-  if(j<k){if(y)*zv++=y; DQ(k-j-1, *zv++=mtv;);}
+  if(j<k){if(y)*zv++=incorp(y); DQ(k-j-1, *zv++=mtv;);}
   y=x; j=k;
  }
- if(y)*zv++=y;
+ if(y)*zv++=incorp(y);
  DQ(k-j-1, *zv++=mtv;);
  R zv;
 }
@@ -169,8 +169,10 @@ F2(jtunparsem){A h,*hv,dc,ds,mc,ms,z,*zu,*zv;I dn,m,mn,n,p;V*wv;
  }else{
   mn=AN(ms); dn=AN(ds);
   GATV0(z,BOX,p+mn+dn,1); zv=AAV(z);
-  ICPY(zv,AAV(ms),mn); zv+=mn; if(p)RZ(*zv++=chrcolon);
-  ICPY(zv,AAV(ds),dn);
+// obsolete   ICPY(zv,AAV(ms),mn); zv+=mn; if(p)RZ(*zv++=chrcolon);
+// obsolete   ICPY(zv,AAV(ds),dn);
+  DO(mn, *zv++=incorp(AAV(ms)[i]);); if(p)RZ(*zv++=chrcolon);
+  DO(dn, *zv++=incorp(AAV(ds)[i]););
  }
  if(a==num(0)){RZ(z=ope(z)); if(1==AR(z))z=table(z);}
  R z;
@@ -188,9 +190,9 @@ static F2(jtxrep){A h,*hv,*v,x,z,*zv;CW*u;I i,j,n,q[3],*s;V*wv;
  GATV0(z,BOX,3*n,2); s=AS(z); s[0]=n; s[1]=3;
  zv=AAV(z);
  for(i=0;i<n;++i,++u){
-  RZ(*zv++=rifvs(sc(i)));
-  q[0]=u->type; q[1]=u->go; q[2]=u->source; RZ(*zv++=rifvs(vec(INT,3L,q)));
-  RZ(*zv++=rifvs(unparse1(u,vec(BOX,u->n,v+u->i),-1L,0L)));
+  RZ(*zv++=incorp(sc(i)));
+  q[0]=u->type; q[1]=u->go; q[2]=u->source; RZ(*zv++=incorp(vec(INT,3L,q)));
+  RZ(*zv++=incorp(unparse1(u,vec(BOX,u->n,v+u->i),-1L,0L)));
  }
  R z;
 }    /* explicit representation -- h parameter for : definitions */
@@ -202,4 +204,4 @@ F1(jttrx){F1RANK(0,  jttrx,DUMMYSELF); R trep(  symbrdlocknovalerr(nfb(w)));}
 F1(jtlrx){F1RANK(0,  jtlrx,DUMMYSELF); R lrep(  symbrdlocknovalerr(nfb(w)));}
 F1(jtprx){F1RANK(0,  jtprx,DUMMYSELF); R prep(  symbrdlocknovalerr(nfb(w)));}
 
-F2(jtxrx){F2RANK(0,0,jtxrx,DUMMYSELF); R xrep(a,symbrdlock(nfb(w)));}
+F2(jtxrx){F2RANK(0,0,jtxrx,DUMMYSELF); R xrep(a,symbrdlock(nfb(w)));}  // 5!:7

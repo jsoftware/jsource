@@ -949,7 +949,7 @@ static I*jtconvert0(J jt,I zt,I*v,I wt,C*u){D p,q;I k=0;US s;C4 s4;
 }    /* convert a single atom. I from D code adapted from IfromD() in k.c */
 
 // make one call to the DLL.
-// if cc->zbx is true, zv0 points to AAV(z) where z is the block that will hold the list of bozxes that
+// if cc->zbx is true, zv0 points to AAV(z) where z is the block that will hold the list of boxes that
 // will be the result of 15!:0.  z is always nonrecursive
 static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B zbx,lit,star;
     C c,cipt[NCDARGS],*u;FARPROC fp;float f;I cipcount=0,cipn[NCDARGS],*cipv[NCDARGS],cv0[2],
@@ -975,11 +975,11 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
    if(t&&TYPESNE(t,xt)&&!(lit||star&&!xr&&xt&BOX)){x=cvt(xt=t,x); CDASSERT(x,per);}
    // We know that x originated in a box, so it can't be PRISTINE.  But it may have been converted, so we have to
    // make sure that what we install into *zv is not inplaceable.  *zv is never recursive.
-   ACIPNO(x); xv=AV(x); if(zbx)*zv=x;
+   xv=AV(x); if(zbx)*zv=incorp(x);
   }else{
    xv=convert0(t,cv0,wt,u); xt=t; u+=wk;
    CDASSERT(xv,per);
-   if(zbx){GA(y,t,1,0,0); ACIPNO(y); MC(AV(y),xv,bp(t)); *zv=y;}  // must never install inplaceable block
+   if(zbx){GA(y,t,1,0,0); MC(AV(y),xv,bp(t)); *zv=incorp(y);}  // must never install inplaceable block
   }
   // now xv points to the actual arg data for arg i, and an A-block for same has been installed into *zv
   // if wt&BOX only, x is an A-block for arg i
@@ -990,7 +990,7 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
   }else if(star){
    CDASSERT(xr&&(xt&DIRECT),per);                /* pointer can't point at scalar, and it must point to direct values */
    // if type is * (not &), make a safe copy.
-   if(star&1){RZ(x=jtmemu(jtinplace,x)); ACIPNO(x); if(zbx)*zv=x; xv=AV(x);}  // what we install must not be inplaceable
+   if(star&1){RZ(x=jtmemu(jtinplace,x)); if(zbx)*zv=incorp(x); xv=AV(x);}  // what we install must not be inplaceable
    *dv++=(I)xv;                     /* pointer to J array memory     */
    CDASSERT(xt&LIT+C2T+C4T+INT+FL+CMPX,per);
    if(!lit&&(c=='b'||c=='s'||c=='f'||c=='z'||SY_64&&c=='i')){
@@ -1107,7 +1107,7 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
 #endif
 
  DO(cipcount, convertdown(cipv[i],cipn[i],cipt[i]););  /* convert I to s and int and d to f as required */
- if(zbx){GA(x,cc->zt,1,0,0); ACIPNO(x); xv=AV(x); *(A*)zv0=x;}else xv=(I*)zv0;  // must not box an inplaceable
+ if(zbx){GA(x,cc->zt,1,0,0); xv=AV(x); *(A*)zv0=incorp(x);}else xv=(I*)zv0;  // must not box an inplaceable
  if('1'==cc->cc){fp=(FARPROC)*((I)cc->fp+(I*)*(I*)*data); CDASSERT(fp,DEBADFN);}else fp=cc->fp;
  docall(fp, data, dv-data, dd, dcnt, cc->zl, xv, cc->alternate);
 
@@ -1126,6 +1126,7 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
 F2(jtcd){A z;C*tv,*wv,*zv;CCT*cc;I k,m,n,p,q,t,wr,*ws,wt;
  F2PREFIP;
  RZ(a&&w);
+ AFLAG(w)&=~AFPRISTINE;  // we transfer boxes from w to the result, thereby letting them escape.  That makes w non-pristine
  if(!jt->cdarg)RZ(cdinit());
  if(1<AR(a))R rank2ex(a,w,DUMMYSELF,1L,MIN(AR(w),1),1L,MIN(AR(w),1),jtcd);
  wt=AT(w); wr=AR(w); ws=AS(w); m=wr?prod(wr-1,ws):1;

@@ -548,11 +548,15 @@ F2(jtfetch){A*av, z;I n;F2PREFIP;
  F2RANKW(1,RMAX,jtfetch,0);  // body of verb applies to rank-1 a, and must turn pristine off if used higher, since there may be repetitions
  if(!(BOX&AT(a))){
   // look for the common special case scalar { boxed vector.  This path doesn't run EPILOG
-  if(((AT(w)>>BOXX)&1)>=(2*AR(a)+AR(w))){  // a is an atom, w is atom or boxed list   AR(a)==0 && (AR(w)==0 || (AR(w)==1 && AT(w)&BOX))
+  if(((AT(w)>>BOXX)&1)>=(2*AR(a)+AR(w))){  // a is an atom, w is atom or list of boxes   AR(a)==0 && (AR(w)==0 || (AR(w)==1 && AT(w)&BOX))
    RZ(z=jtquicksel(jt,a,w));  // fetch selected box, opened.  If not a box, just return w
-   // Inplaceability depends on the context.  If the overall operand is either noninplaceable or in a noninplaceable context, we must
-   // protect the value we fetch (the overall operand would matter only if it was flagged without a ra())
-   if((AC(w)&SGNIF(jtinplace,JTINPLACEWX))>=0)ACIPNO(z);
+   // if the result is w, leave its inplaceability.  If contents, it will perforce be uninplaceable
+#if AUDITBOXAC
+   if(!(AFLAG(w)&AFVIRTUALBOXED)&&AC(z)<0)SEGFAULT
+#endif
+// obsolete    // Inplaceability depends on the context.  If the overall operand is either noninplaceable or in a noninplaceable context, we must
+// obsolete    // protect the value we fetch (the overall operand would matter only if it was flagged without a ra())
+// obsolete   if((AC(w)&SGNIF(jtinplace,JTINPLACEWX))>=0)ACIPNO(z);
    // Since the whole purpose of fetch is to copy one contents by address, we turn off pristinity of w
    PRISTCLRF(w)
    RETF(z);   // turn off inplace if w not inplaceable, or jt not inplaceable.
@@ -564,7 +568,7 @@ F2(jtfetch){A*av, z;I n;F2PREFIP;
  DO(n, A next=av[i]; if(((AT(z)>>BOXX)&1)>=(2*(AR(next)+(AT(next)&BOX))+AR(z))){RZ(z=jtquicksel(jt,next,z))}  // next is unboxed atom, z is boxed atom or list, use fast indexing  AR(next)==0 && !(AT(next)&BOX) && (AR(z)==0 || (AR(z)==1 && AT(z)&BOX))
       else{RZ(z=afrom(box(next),z)); ASSERT(((i+1-n)&-AR(z))>=0,EVRANK); if(((AR(z)-1)&SGNIF(AT(z),BOXX))<0)RZ(z=ope(z));}  // Rank must be 0 unless last; open if boxed atom
    );
- if((AC(w)&SGNIF(jtinplace,JTINPLACEWX))>=0)ACIPNO(z);
+// obsolete   if((AC(w)&SGNIF(jtinplace,JTINPLACEWX))>=0)ACIPNO(z);
  // Since the whole purpose of fetch is to copy one contents by address, we turn off pristinity of w
  PRISTCLRF(w)
  RETF(z);   // Mark the box as non-inplaceable, as above

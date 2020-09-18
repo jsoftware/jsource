@@ -219,9 +219,10 @@ F1(jtjdir){PROLOG(0102);A z,fn,*zv;I j=0,n=32;HANDLE fh; WIN32_FIND_DATAW f; C f
   do {
    jttoutf8w(jt,fnbuffer,sizeof fnbuffer,f.cFileName);
    name = fnbuffer;
-   if(strcmp(name,".")&&strcmp(name,"..")){  // do not inckude . and .. as results
+   if(strcmp(name,".")&&strcmp(name,"..")){  // do not include . and .. as results
     if(j==n){RZ(z=ext(0,z)); n=AN(z); zv=AAV(z);}  // if result area full, extend
-    RZ(zv[j++]=rifvs(jtdir1(jt,&f,fnbuffer))); 
+    A t; RZ(t=incorp(jtdir1(jt,&f,fnbuffer))); 
+    zv[j++]=t;
    }
   } while (FindNextFileW(fh,&f));
   FindClose(fh);

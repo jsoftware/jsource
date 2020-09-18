@@ -85,7 +85,7 @@ static A jtcreategerunditerator(J jt, A z, A w, A r){  // z is result area, w is
  R z;
 }
 
-// w is a gerund whose max rank is r.  Result is a boxed array of VERBs, one for each gerund, if they are well forrmed
+// w is a gerund whose max rank is r.  Result is a boxed array of VERBs, one for each gerund, if they are well formed
 A jtfxeachv(J jt,I r,A w){A*wv,x,z,*zv;I n;
  RZ(w);
  n=AN(w); wv=AAV(w); 
@@ -93,7 +93,7 @@ A jtfxeachv(J jt,I r,A w){A*wv,x,z,*zv;I n;
  ASSERT(n,EVLENGTH);  // gerund must not be empty
  ASSERT(BOX&AT(w),EVDOMAIN);   // must be boxed
  GATV(z,BOX,n,AR(w),AS(w)); zv=AAV(z);  // allocate one box per gerund
- DO(n, RZ(zv[i]=x=fx(wv[i])); ASSERT(VERB&AT(x),EVDOMAIN););   // create verb, verify it is a verb
+ DO(n, RZ(zv[i]=x=fx(wv[i])); ASSERT(VERB&AT(x),EVDOMAIN););   // create verb, verify it is a verb  No incorporation since it's not a noun
  R z;
 }
 
@@ -111,7 +111,7 @@ static DF1(jtcon1){A h,*hv,*x,z;V*sv;
  PREF1(jtcon1);
  sv=FAV(self); h=sv->fgh[2]; hv=AAV(h);
  GATV(z,BOX,AN(h),AR(h),AS(h)); x=AAV(z);
- DQ(AN(h), RZ(*x++=CALL1(FAV(*hv)->valencefns[0],  w,*hv)); ++hv;);
+ DQ(AN(h), RZ(*x++=incorp(CALL1(FAV(*hv)->valencefns[0],  w,*hv))); ++hv;);
  R ope(z);
 }
 
@@ -119,7 +119,7 @@ static DF2(jtcon2){A h,*hv,*x,z;V*sv;
  PREF2(jtcon2);
  sv=FAV(self); h=sv->fgh[2]; hv=AAV(h);
  GATV(z,BOX,AN(h),AR(h),AS(h)); x=AAV(z);
- DQ(AN(h), RZ(*x++=CALL2(FAV(*hv)->valencefns[1],a,w,*hv)); ++hv;);
+ DQ(AN(h), RZ(*x++=incorp(CALL2(FAV(*hv)->valencefns[1],a,w,*hv))); ++hv;);
  R ope(z);
 }
 
@@ -457,7 +457,7 @@ static F2(jtgerfrom){A*av,*v,z;I n;
   ASSERT(BOX&AT(a),EVDOMAIN);
   n=AN(a); av=AAV(a); 
   GATV0(z,BOX,n,1); v=AAV(z);
-  DO(n, RZ(*v++=gerfrom(av[i],w)););
+  DO(n, RZ(*v++=incorp(gerfrom(av[i],w))););
   R z;
 }}
 

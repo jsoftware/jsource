@@ -53,7 +53,7 @@ static F1(jtgraft){A p,q,t,*u,x,y,z,*zv;C*v;I d,j,k,m,n,*pv,*s,xn,*xv,yn,*yv;
   RE(k=mult(m,yv[j])); GATV0(q,LIT,k,2); s=AS(q); *s=m; *++s=yv[j];
   v=CAV(q); memset(v,' ',AN(q));
   pv[1]=yv[j]; k=j-yn; DO(xn, *pv=xv[i]; RE(v+=pad(p,u[k+=yn],v)););
-  zv[j]=q;
+  zv[j]=incorp(q);
  }
  t=zv[0]; n=yv[0];
  if(1==m)RZ(p=scc(jt->bx[10]))
@@ -64,7 +64,7 @@ static F1(jtgraft){A p,q,t,*u,x,y,z,*zv;C*v;I d,j,k,m,n,*pv,*s,xn,*xv,yn,*yv;
   GATV0(p,LIT,m,1); v=CAV(p); memset(v,' ',m);
   if(1==d)*(v+j)=jt->bx[10]; else{memset(v+j,jt->bx[9],d); *(v+j)=*jt->bx; *(v+k-1)=jt->bx[6];}
  }
- RZ(zv[0]=rifvs(stitch(p,t)));
+ RZ(zv[0]=incorp(stitch(p,t)));
  R z;
 }
 
@@ -91,7 +91,7 @@ static F1(jttleaf){A t,z;C*v;I n,*s;
  n=AN(w);
  GATV0(t,LIT,2+n,2); s=AS(t); s[0]=1; s[1]=2+n;
  v=CAV(t); v[0]=jt->bx[10]; v[1]=' '; MC(2+v,AV(w),n);
- GAT0(z,BOX,1,1); *AAV(z)=t;
+ GAT0(z,BOX,1,1); *AAV(z)=incorp(t);
  R z;
 }
 
@@ -134,9 +134,9 @@ static F1(jttrr){PROLOG(0058);A hs,s,t,*x,z;B ex,xop;C id;I fl,*hv,m;V*v;
  if(!m){RETF(tleaf(spella(w)));}
  if(evoke(w)){RZ(w=sfne(w)); RETF((AT(w)&FUNC?jttrr:jttleaf)(jt,w));}
  GATV0(t,BOX,m,1); x=AAV(t);
- if(0<m)RZ(x[0]=rifvs(fl&VGERL?treach(fxeach(fs,(A)&jtfxself[0])):trr(fs)));
- if(1<m)RZ(x[1]=rifvs(fl&VGERR?treach(fxeach(gs,(A)&jtfxself[0])):ex?trr(unparsem(num(0),w)):trr(gs)));
- if(2<m)RZ(x[2]=rifvs(trr(hs)));
+ if(0<m)RZ(x[0]=incorp(fl&VGERL?treach(fxeach(fs,(A)&jtfxself[0])):trr(fs)));
+ if(1<m)RZ(x[1]=incorp(fl&VGERR?treach(fxeach(gs,(A)&jtfxself[0])):ex?trr(unparsem(num(0),w)):trr(gs)));
+ if(2<m)RZ(x[2]=incorp(trr(hs)));
  s=xop?spellout('0'):fl&VDDOP?(hv=AV(hs),over(thorn1(sc(hv[0])),over(spellout(id),thorn1(sc(hv[1]))))):spellout(id);
  z=troot(s,graft(ope(t)));
  EPILOG(z);

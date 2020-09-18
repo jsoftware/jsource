@@ -102,11 +102,11 @@ static DF2(jtcut02){F2PREFIP;A fs,q,qq,*qv,z,zz=0;I*as,c,e,i,ii,j,k,m,n,*u,*ws;P
      for(i=0;i<c;++i){  // for each axis of the cell of a
       axislen=ws[i]; j=u[i]; e=u[i+c]; k=e; e=REPSGN(e); k^=e; k-=e;  // axislen=length of this axis, j=starting pos, e=sgn(length), k=ABS(length)
       if(j>=0){k=MIN(k,axislen-j); j+=e&(k-1);}else{j+=axislen; k=MIN(k,j+1); j-=(~e)&(k-1);}  // adjust j for negative j; clip endpoint to length of axis; move j to end of interval if reversed
-      ASSERT(k>=0,EVINDEX); RZ(qv[i]=apv(k,j,2*e+1));  // create ascending or descending vector.  The increment is 1 or -1
+      ASSERT(k>=0,EVINDEX); RZ(qv[i]=incorp(apv(k,j,2*e+1)));  // create ascending or descending vector.  The increment is 1 or -1
      }
      break;  // this is the loop exit
     }else{  // we have not allocated the input to {; do so now
-     GATV0(q,BOX,c,1); qv=AAV(q);   // allocate a vector of boxes, which will contain the selectors
+     GATV0(q,BOX,c,1); INCORP(q); qv=AAV(q);   // allocate a vector of boxes, which will contain the selectors
      GAT0(qq,BOX,1,0); *AAV(qq)=q;  // enclose that vector of boxes in a box to pass into {
     }
    }while(1);
@@ -227,14 +227,14 @@ static DF2(jtcut2bx){A*av,b,t,x,*xv,y,*yv;B*bv;I an,bn,i,j,m,p,q,*u,*v,*ws;
  for(i=0;i<an;++i){
   b=av[i]; bn=AN(b); m=ws[i];
   ASSERT(1>=AR(b),EVRANK);
-  if(!bn&&m){xv[i]=num(0); RZ(yv[i]=sc(m));}
+  if(!bn&&m){xv[i]=num(0); RZ(yv[i]=incorp(sc(m)));}
   else{
    if(!(B01&AT(b)))RZ(b=cvt(B01,b));
-   if(!AR(b)){if(*BAV(b)){RZ(xv[i]=IX(m)); RZ(yv[i]=reshape(sc(m),num(0<q)));}else xv[i]=yv[i]=mtv; continue;}
+   if(!AR(b)){if(*BAV(b)){RZ(xv[i]=incorp(IX(m))); RZ(yv[i]=incorp(reshape(sc(m),num(0<q))));}else xv[i]=yv[i]=mtv; continue;}
    ASSERT(bn==m,EVLENGTH);
    bv=BAV(b); p=0; DO(bn, p+=bv[i];); 
-   GATV0(t,INT,p,1); u=AV(t); xv[i]=t;
-   GATV0(t,INT,p,1); v=AV(t); yv[i]=t; j=-1;
+   GATV0(t,INT,p,1); u=AV(t); xv[i]=incorp(t);
+   GATV0(t,INT,p,1); v=AV(t); yv[i]=incorp(t); j=-1;
    if(p)switch(q){
     case  1: DO(bn, if(bv[i]){*u++=i  ; if(0<=j)*v++=i-j  ; j=i;}); *v=bn-j;   break;
     case -1: DO(bn, if(bv[i]){*u++=i+1; if(0<=j)*v++=i-j-1; j=i;}); *v=bn-j-1; break;
@@ -275,20 +275,20 @@ static DF2(jtcut2bx){A*av,b,t,x,*xv,y,*yv;B*bv;I an,bn,i,j,m,p,q,*u,*v,*ws;
    R z;                                                                      \
   case CBOX:                                                                 \
    GA(z,m?BOX:B01,m,1,0); za=AAV(z);                                         \
-   EACHC(GA(y,t,d*c,r,s); AS(y)[0]=d; MC(AV(y),v1,d*k); *za++=y;);             \
+   EACHC(GA(y,t,d*c,r,s); AS(y)[0]=d; MC(AV(y),v1,d*k); *za++=incorp(y););             \
    R z;                                                                      \
   case CAT: case CATCO: case CAMP: case CAMPCO:                              \
    if(CBOX==ID(vf->fgh[0])&&(id1=ID(vf->fgh[1]),((id1&~1)==CBEHEAD))){           \
     GA(z,m?BOX:B01,m,1,0); za=AAV(z);                                        \
-    EACHC(d=d?d-1:0; GA(y,t,d*c,r,s); AS(y)[0]=d; MC(AV(y),id1==CBEHEAD?v1+k:v1,d*k); *za++=y;);               \
+    EACHC(d=d?d-1:0; GA(y,t,d*c,r,s); AS(y)[0]=d; MC(AV(y),id1==CBEHEAD?v1+k:v1,d*k); *za++=incorp(y););               \
     R z;                                                                     \
    }                                                                         \
    /* note: fall through */                                                  \
   default:                                                                   \
    if(!m){y=reitem(zeroionei(0),w); R iota(over(zeroionei(0),shape(h?df1(z,y,*hv):CALL1(f1,y,fs))));}                            \
    GATV0(z,BOX,m,1); za=AAV(z); j=0;                                          \
-   if(h){EACHC(GA(y,t,d*c,r,s); AS(y)[0]=d; MC(AV(y),v1,d*k); A Zz; RZ (df1(Zz,y,hv[j])); j=(1+j)%hn; rifv(Zz); *za++=Zz;); \
-   }else{EACHC(GA(y,t,d*c,r,s); AS(y)[0]=d; MC(AV(y),v1,d*k); A Zz; RZ(Zz = CALL1(f1,y,fs)); rifv(Zz); *za++=Zz; ); \
+   if(h){EACHC(GA(y,t,d*c,r,s); AS(y)[0]=d; MC(AV(y),v1,d*k); A Zz; RZ (df1(Zz,y,hv[j])); j=(1+j)%hn; incorp(Zz); *za++=Zz;); \
+   }else{EACHC(GA(y,t,d*c,r,s); AS(y)[0]=d; MC(AV(y),v1,d*k); A Zz; RZ(Zz = CALL1(f1,y,fs)); incorp(Zz); *za++=Zz; ); \
    }                                                                         \
    z=ope(z);                                                                 \
    EPILOG(z);                                                                \
@@ -363,11 +363,12 @@ static DF2(jtcut2sx){PROLOG(0024);DECLF;A h=0,*hv,y,yy;B b,neg,pfx,*u,*v;C id;I 
      *AS(ww)=(yu[i]-yu[i-1])-neg; 
      SPB(wwp,i,sely(y,qn,p,1+yu[i-1]));
      SPB(wwp,x,selx(x,qn,p));
-     RZ(*za++=zz=h?df1(z0,ww,hv[(i-1)%hn]):CALL1(f1,ww,fs));
+     RZ(zz=h?df1(z0,ww,hv[(i-1)%hn]):CALL1(f1,ww,fs));
      // reallocate ww if it was used, which we detect by seeing the usecount incremented.  This requires that everything that
      // touches a buffer either copy it or rat().  So that ] doesn't have to rat(), we also detect reuse here if the same buffer
      // is returned to us
      p+=q; if(WASINCORP1(zz,ww)){RZ(ww=cps(w)); wwp=PAV(ww);}
+     *za++=incorp(zz);  // mark as incorped after we test for prior incorporation
     }
     break;
    case 1:
@@ -378,24 +379,27 @@ static DF2(jtcut2sx){PROLOG(0024);DECLF;A h=0,*hv,y,yy;B b,neg,pfx,*u,*v;C id;I 
      *AS(ww)=(yu[i-1]-yu[i])-neg; 
      SPB(wwp,i,sely(y,qn,p+q-qn,yu[i]+neg));
      SPB(wwp,x,selx(x,qn,p+q-qn));
-     RZ(*za++=zz=h?df1(z0,ww,hv[(m-i)%hn]):CALL1(f1,ww,fs));
+     RZ(zz=h?df1(z0,ww,hv[(m-i)%hn]):CALL1(f1,ww,fs));
      p+=q; if(WASINCORP1(zz,ww)){RZ(ww=cps(w)); wwp=PAV(ww);}
+     *za++=incorp(zz);  // mark as incorped after we test for prior incorporation
     }
     break;
    case 2:
     for(i=1;i<=m;++i){
      q=yu[i]-yu[i-1]; *AS(ww)=q-neg;
      SPB(wwp,x,irs2(apv(q-neg,p,1L),x,0L,1L,-1L,jtfrom));
-     RZ(*za++=zz=h?df1(z0,ww,hv[(i-1)%hn]):CALL1(f1,ww,fs));
+     RZ(zz=h?df1(z0,ww,hv[(i-1)%hn]):CALL1(f1,ww,fs));
      p+=q; if(WASINCORP1(zz,ww)){RZ(ww=cps(w)); wwp=PAV(ww);}
+     *za++=incorp(zz);  // mark as incorped after we test for prior incorporation
     }
     break;
    case 3:
     for(i=m;i>=1;--i){
      q=yu[i-1]-yu[i]; *AS(ww)=q-neg;
      SPB(wwp,x,irs2(apv(q-neg,p+neg,1L),x,0L,1L,-1L,jtfrom));
-     RZ(*za++=zz=h?df1(z0,ww,hv[(i-1)%hn]):CALL1(f1,ww,fs));
+     RZ(zz=h?df1(z0,ww,hv[(i-1)%hn]):CALL1(f1,ww,fs));
      p+=q; if(WASINCORP1(zz,ww)){RZ(ww=cps(w)); wwp=PAV(ww);}
+     *za++=incorp(zz);  // mark as incorped after we test for prior incorporation
     }
     break;
   }

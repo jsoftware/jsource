@@ -211,6 +211,7 @@ F1(jtqpfreq){ASSERTMTV(w); R scf(pf);}
 
 F1(jtqpctr ){ASSERTMTV(w); R scf(qpc());}
 
+// 6!:13
 F1(jtpmctr){D x;I q;
  RE(q=i0(w));
  ASSERT(jt->pma,EVDOMAIN);
@@ -231,7 +232,7 @@ static F1(jtpmfree){A x,y;C*c;I m;PM*v;PM0*u;
  R num(1);
 }    /* free old data area */
 
-F1(jtpmarea1){R pmarea2(vec(B01,2L,&zeroZ),w);}
+F1(jtpmarea1){R pmarea2(vec(B01,2L,&zeroZ),w);}  // 6!:10
 
 F2(jtpmarea2){A x;B a0,a1,*av;C*v;I an,n=0,s=sizeof(PM),s0=sizeof(PM0),wn;PM0*u;
  RZ(a&&w);
@@ -288,6 +289,7 @@ void jtpmrecord(J jt,A name,A loc,I lc,int val){A x,y;B b;PM*v;PM0*u;
 #endif
 }
 
+// 6!:12
 F1(jtpmunpack){A*au,*av,c,t,x,z,*zv;B*b;D*dv;I*iv,k,k1,m,n,p,q,wn,*wv;PM*v,*v0,*vq;PM0*u;
  RZ(w);
  ASSERT(jt->pma,EVDOMAIN);
@@ -303,18 +305,18 @@ F1(jtpmunpack){A*au,*av,c,t,x,z,*zv;B*b;D*dv;I*iv,k,k1,m,n,p,q,wn,*wv;PM*v,*v0,*
  v0=jt->pmv; vq=q+v0;
  GAT0(z,BOX,1+PMCOL,1); zv=AAV(z);
  GATV0(t,BOX,2*m,1); av=AAV(t); au=m+av;
- v=vq; DO(p, if(b[  i]){RZ(*av++=v->name?rifvs(sfn(0,v->name)):mtv); RZ(*au++=v->loc?rifvs(sfn(0,v->loc)):mtv);} ++v;); 
- v=v0; DO(q, if(b[p+i]){RZ(*av++=v->name?rifvs(sfn(0,v->name)):mtv); RZ(*au++=v->loc?rifvs(sfn(0,v->loc)):mtv);} ++v;); 
+ v=vq; DO(p, if(b[  i]){RZ(*av++=v->name?incorp(sfn(0,v->name)):mtv); RZ(*au++=v->loc?incorp(sfn(0,v->loc)):mtv);} ++v;); 
+ v=v0; DO(q, if(b[p+i]){RZ(*av++=v->name?incorp(sfn(0,v->name)):mtv); RZ(*au++=v->loc?incorp(sfn(0,v->loc)):mtv);} ++v;); 
  RZ(x=indexof(t,t));
  RZ(c=eq(x,IX(SETIC(x,k1))));
- RZ(zv[6]=rifvs(repeat(c,t)));
+ RZ(zv[6]=incorp(repeat(c,t)));
  RZ(x=indexof(repeat(c,x),x)); iv=AV(x);
- RZ(zv[0]=rifvs(vec(INT,m,  iv)));
- RZ(zv[1]=rifvs(vec(INT,m,m+iv)));
- GATV0(t,INT,m,1); zv[2]=t; iv=AV(t); v=vq; DO(p, if(b[i])*iv++=(I)v->val;  ++v;); v=v0; DO(q, if(b[p+i])*iv++=(I)v->val; ++v;);
- GATV0(t,INT,m,1); zv[3]=t; iv=AV(t); v=vq; DO(p, if(b[i])*iv++=v->lc; ++v;); v=v0; DO(q, if(b[p+i])*iv++=v->lc; ++v;);
- GATV0(t,INT,m,1); zv[4]=t; iv=AV(t); v=vq; DO(p, if(b[i])*iv++=v->s;  ++v;); v=v0; DO(q, if(b[p+i])*iv++=v->s;  ++v;); 
- GATV0(t,FL, m,1); zv[5]=t; dv=DAV(t);
+ RZ(zv[0]=incorp(vec(INT,m,  iv)));
+ RZ(zv[1]=incorp(vec(INT,m,m+iv)));
+ GATV0(t,INT,m,1); zv[2]=incorp(t); iv=AV(t); v=vq; DO(p, if(b[i])*iv++=(I)v->val;  ++v;); v=v0; DO(q, if(b[p+i])*iv++=(I)v->val; ++v;);
+ GATV0(t,INT,m,1); zv[3]=incorp(t); iv=AV(t); v=vq; DO(p, if(b[i])*iv++=v->lc; ++v;); v=v0; DO(q, if(b[p+i])*iv++=v->lc; ++v;);
+ GATV0(t,INT,m,1); zv[4]=incorp(t); iv=AV(t); v=vq; DO(p, if(b[i])*iv++=v->s;  ++v;); v=v0; DO(q, if(b[p+i])*iv++=v->s;  ++v;); 
+ GATV0(t,FL, m,1); zv[5]=incorp(t); dv=DAV(t);
 #if SY_WIN32
  v=vq; DO(p, if(b[i]  )*dv++=(((LI*)v->t)->LowPart+qpm*((LI*)v->t)->HighPart)/pf; ++v;);
  v=v0; DO(q, if(b[p+i])*dv++=(((LI*)v->t)->LowPart+qpm*((LI*)v->t)->HighPart)/pf; ++v;);
@@ -325,6 +327,7 @@ F1(jtpmunpack){A*au,*av,c,t,x,z,*zv;B*b;D*dv;I*iv,k,k1,m,n,p,q,wn,*wv;PM*v,*v0,*
  R z;
 }
 
+// 6!:14
 F1(jtpmstats){A x,z;I*zv;PM0*u;
  ASSERTMTV(w);
  GAT0(z,INT,6,1); zv=AV(z);

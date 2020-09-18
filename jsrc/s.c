@@ -125,34 +125,34 @@ F1(jtsympool){A aa,q,x,y,*yv,z,*zv;I i,n,*u,*xv;L*pv;LX j,*v;
  ASSERT(!AN(w),EVLENGTH);
  GAT0(z,BOX,3,1); zv=AAV(z);
  n=*AS(jt->symp); pv=jt->sympv;
- GATV0(x,INT,n*5,2); *AS(x)=n; *(1+AS(x))=5; xv= AV(x); zv[0]=x;
- GATV0(y,BOX,n,  1);                         yv=AAV(y); zv[1]=y;
+ GATV0(x,INT,n*5,2); *AS(x)=n; *(1+AS(x))=5; xv= AV(x); zv[0]=incorp(x);
+ GATV0(y,BOX,n,  1);                         yv=AAV(y); zv[1]=incorp(y);
  for(i=0;i<n;++i,++pv){         /* per pool entry       */
   *xv++=i;   // sym number
   *xv++=(q=pv->val)?LOWESTBIT(AT(pv->val)):0;  // type: only the lowest bit.  Must allow SYMB through
   *xv++=pv->flag+(pv->name?LHASNAME:0)+(pv->val?LHASVALUE:0);  // flag
   *xv++=pv->sn;    
   *xv++=pv->next;
-  RZ(*yv++=(q=pv->name)?rifvs(sfn(SFNSIMPLEONLY,q)):mtv);
+  RZ(*yv++=(q=pv->name)?incorp(sfn(SFNSIMPLEONLY,q)):mtv);
  }
  // Allocate box 3: locale name
- GATV0(y,BOX,n,1); yv=AAV(y); zv[2]=y;
+ GATV0(y,BOX,n,1); yv=AAV(y); zv[2]=incorp(y);
  DO(n, yv[i]=mtv;);
  n=AN(jt->stloc); v=LXAV0(jt->stloc); 
  for(i=0;i<n;++i){  // for each chain-base in locales pool
   for(j=v[i];j;j=(j+jt->sympv)->next){      // j is index to named local entry; process the chain
    x=(j+jt->sympv)->val;  // x->symbol table for locale
-   RZ(yv[j]=yv[LXAV0(x)[0]]=aa=rifvs(sfn(SFNSIMPLEONLY,LOCNAME(x))));  // install name in the entry for the locale
+   RZ(yv[j]=yv[LXAV0(x)[0]]=aa=incorp(sfn(SFNSIMPLEONLY,LOCNAME(x))));  // install name in the entry for the locale
    RZ(q=sympoola(x)); u=AV(q); DO(AN(q), yv[u[i]]=aa;);
   }
  }
  n=jtcountnl(jt);
  for(i=0;i<n;++i)if(x=jtindexnl(jt,i)){   /* per numbered locales */
-  RZ(      yv[LXAV0(x)[0]]=aa=rifvs(sfn(SFNSIMPLEONLY,LOCNAME(x))));
+  RZ(      yv[LXAV0(x)[0]]=aa=incorp(sfn(SFNSIMPLEONLY,LOCNAME(x))));
   RZ(q=sympoola(x)); u=AV(q); DO(AN(q), yv[u[i]]=aa;);
  }
  if(AN(x=jt->locsyms)>1){               /* per local table      */
-  RZ(aa=rifvs(cstr("**local**")));
+  RZ(aa=incorp(cstr("**local**")));
   RZ(q=sympoola(x)); u=AV(q); DO(AN(q), yv[u[i]]=aa;);
  }
  RETF(z);

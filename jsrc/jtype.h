@@ -458,7 +458,7 @@ typedef I SI;
 #define AFNJA           ((I)1<<AFNJAX)
 // Note: bit 4 is LABANDONED which is merged here
 #define AFNVRX          8
-#define AFNVR           ((I)1<<AFNVRX)  // This value is on the parser's execution stack, and must not be freed until it is removed
+#define AFNVR           ((I)1<<AFNVRX)  // This value is on the parser's execution stack, and must not be freed until it is removed.  Stacked values start as NVR+UNFREED
 // the spacing of VIRTUALBOXED->UNIFORMITEMS must match ZZFLAGWILLBEOPENED->ZZCOUNTITEMS
 #define AFUNIFORMITEMSX 22     // matches MARK
 #define AFUNIFORMITEMS  ((I)1<<AFUNIFORMITEMSX)  // It is known that this boxed array has contents whose items are of uniform shape and type

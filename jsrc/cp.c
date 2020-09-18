@@ -17,11 +17,11 @@
 
 static DF1(jtpowseqlim){PROLOG(0039);A x,y,z,*zv;I i,n;
  RZ(w);
- RZ(z=exta(BOX,1L,1L,20L)); zv=AAV(z); *zv++=x=w;
+ RZ(z=exta(BOX,1L,1L,20L)); zv=AAV(z); INCORP(w); *zv++=x=w;
  i=1; n=AN(z);
  while(1){
   if(n==i){RZ(z=ext(0,z)); zv=i+AAV(z); n=AN(z);}
-  A z0; RZ(*zv++=x=df1(z0,y=x,self));
+  A z0; RZ(x=df1(z0,y=x,self)); INCORP(x); *zv++=x;
   if(equ(x,y)){AN(z)=*AS(z)=i; break;}
   ++i;
  }

@@ -574,20 +574,20 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
     n^=REPSGN(1-n)&-nf;  // encode 'w has long frame, so a is repeated' as complementary n; but if n<2, leave it alone
     // m=#atoms in cell with shorter rank; n=#times shorter-rank cells must be repeated; r=larger of cell-ranks; s->shape of larger-rank cell
     // now shortr has the smaller cell-rank, and acr/wcr are free.  fr has the longer cell-rank
+    // if looping required, calculate the strides for input & output.  Needed only if mf or nf>1, but not worth testing, since presumably one will, else why use rank?
+    // zk=result-cell size in bytes; ak,wk=left,right arg-cell size in bytes.  Not needed if not looping
+    ak*=bp(AT(a)); wk*=bp(AT(w));  // calculate early, using bp, to minimize ALU time & allow time for load/mul to settle.  zt may still be settling
     // if the cell-shapes don't match, that's an agreement error UNLESS the frame contains 0; in that case it counts as
     // 'error executing on the cell of fills' and produces a scalar 0 as the result for that cell, which we handle by changing the result-cell rank to 0
     // Nonce: continue giving the error even when frame contains 0 - remove 1|| in the next line to conform to fill-cell rules
 // this shows the fix   if(ICMP(as+af,ws+wf,MIN(acr,wcr))){if(1||zn)ASSERT(0,EVLENGTH)else r = 0;}
     ASSERTAGREE(AS(a)+af, AS(w)+wf, shortr)  // now shortr is free
-    // if looping required, calculate the strides for input & output.  Needed only if mf or nf>1, but not worth testing, since presumably one will, else why use rank?
-    // zk=result-cell size in bytes; ak,wk=left,right arg-cell size in bytes.  Not needed if not looping
-    ak*=bp(AT(a)); wk*=bp(AT(w));  // calculate early, using bp, to minimize ALU time & allow time for load/mul to settle.  zt may still be settling
 // obsolete     awzk[0]=ak; awzk[1]=wk;  // get these values out of registers - the compiler thinks they're needed for a loop
     {aawwzk[0]=ak; ak=af<=wf?0:ak; aawwzk[1]=ak; aawwzk[2]=wk; wk=af<=wf?wk:0; aawwzk[3]=wk;  // set inner cell size for last followed by non-last.  Last is 0 fror a repeated cell
     I f=af<=wf?wf:af; q=af<=wf?af:wf; sf=AS(af<=wf?w:a); /* obsolete mf=af<=wf;*/   // f=#longer frame; q=#shorter frame; sf->shape of arg with longer frame   mf holds -1 if wf is longer   af/wf free
     nf=(adocv.cv>>VIPOKWX) & ((I)(a==w)-1) & ((I)((argranks>>RANKTX)==f+fr)*2 + (I)((argranks&RANKTMSK)==f+fr));  // set inplaceability here: not if addresses equal (in case of retry); only if op supports; only if nonrepeated cell
     jtinplace = (J)(((I)jtinplace&nf)+4*nf+(adocv.cv&-16));  // bits 0-1 of jtinplace are combined input+local; 2-3 just local; 4+ hold adocv.cv; at least one is set to show non-sparse
-    PROD(nf,f-q,q+sf);    // mf=#cells in common frame, nf=#times shorter-frame cell must be repeated.  Not needed if no cells.  First, encode 'wf longer' in sign of nf
+    PROD(nf,f-q,q+sf);    // mf=#cells in common frame, nf=#times shorter-frame cell must be repeated.
     fr+=f<<RANKTX;  // encode f into fr
     }
 #ifdef DPMULD
@@ -595,8 +595,21 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
 #else
     RE(zn=mult(nf,zk)); /* obsolete nf^=REPSGN(1-nf)&-mf; */ PROD(mf,q,sf); RE(zn=mult(mf,zn));  // zn=total # result atoms  (only if non-sparse)
 #endif
+    // Now nf=outer repeated frame  mf=outer common frame  n=inner repeated frame  m=inner common frame
+    //    leading axes --------------------------------------------------------------> trailing axes
+    // loop migration: if the outer loop can be subsumed into the inner loop do that to make the faster inner loops more effective
+    // the cases we see are:
+    // 1: m=1 and n=1: move mf->m, nf->n, and complement n if ak==0 (i. e. x arg is repeated) example:  list *"0 _ atom
+    // 2: n=1 and nf=1: multiply m by mf  example: (shape 4 5) *"1 (shape 4 5 or 1 4 5)
+    if(unlikely(n==SGNTO0(((m-2)|(nf-2))))){  // n==1 && (m==1||nf==1) - ignore 0 in shape, which aborts early
+     // migration is possible
+     m*=mf; n=nf^REPSGN((ak-1)&(1-nf));   // propagate mf and nf down; if n is not 1, complement if ak is 0
+     mf=1;  // no outer loops.  nf immaterial
+    }else{
+     // normal case
+     mf*=nf; --nf; // mf is total # iterations; nf is outer loop repeat count-1
+    }
     zk*=bp(rtype((I)jtinplace));  // now create zk, which is used later than ak/wk.
-    mf*=nf; --nf; // mf is total # iteration; nf is inner loop count-1
     aawwzk[4]=zk;  // move it out of registers
    }else{aawwzk[0]=acr; aawwzk[1]=wcr; mf=af; nf=wf;}  // For sparse, repurpose ak/wk/mf/nf to hold acr/wcr/af/wf, which we will pass into vasp.  This allows acr/wcr/af/wf to be block-local
   }

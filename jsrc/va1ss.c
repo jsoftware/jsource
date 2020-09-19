@@ -21,7 +21,7 @@
 A jtssingleton1(J jt, A w,A self){A z;
  F2PREFIP;
  // Get the address of an inplaceable assignment, if any
- L *asym = jt->assignsym; asym=asym?asym:(L*)(validitymask+4); asym=(L*)asym->val; // pending assignment if any; if non0, fetch address of value (otherwise 0)
+ L *asym = jt->assignsym; asym=asym?asym:(L*)(validitymask+12); asym=(L*)asym->val; // pending assignment if any; if non0, fetch address of value (otherwise 0)
  I wiv=FAV(self)->lc;   // temp, but start as function #
  wiv = SSINGCASE(wiv-VA2CMIN,SSINGENC(AT(w)));
  // Allocate the result area

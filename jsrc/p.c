@@ -594,23 +594,24 @@ rdglob: ;
       // possible before the branch.  Check the generated code on any change of compiler.
       // Since we have half a dozen or so cycles to fill, push the $: stack and close up the execution stack BEFORE we execute the verb.  If we didn't close up the stack, we
       // could avoid having the $: stack by having $: look into the execution stack to find the verb that is being executed.  But overall it is faster to pay the expense of the $:
-      // stack in exchange for being able to fill the time before the misprediction
+      // stack in exchange for being able to fill the time before & after the misprediction
       AF actionfn=FAV(fs)->valencefns[pline>>1];  // the routine we will execute.  It's going to take longer to read this than we can fill before the branch is mispredicted, usually
       // There is no need to set the token number in the result, since it must be a noun and will never be executed
       // Close up the stack.  For lines 0&2 we don't need two writes, so they are duplicates
       A arg2=stack[pline+1].a;   // 2nd arg, fs or right dyad  1 2 3 (2 3)
       stackfs[0]=stackfs[-1];    // overwrite the verb with the previous cell - 0->1  1->2  1->2
+      A arg1=stack[(0x6>>pline)&3].a;   // 1st arg, monad or left dyad  2 3 1 (1 1)   0110  0 1 2 -> 2 3 1   1 11 111
+      stack[pline]=stack[0];  // close up the stack  0->0(NOP)  0->1   0->2
+      stack+=(pline>>1)+1;   // finish relocating stack   1 1 2 (1 2)
       // When the args return from the verb, we will check to see if any were inplaceable and unused.  But there is a problem:
       // the arg may be freed by the verb (if it is inplaceable and gets replaced by a virtual reference).  In this case we can't
       // rely on *arg[12].  But if the value is inplaceable, the one thing we CAN count on is that it has a tpop slot.  So we will save
       // the address of the tpop slot IF the arg is inplaceable now.  Then after execution we will pick up again, knowing to quit if the tpop slot
-      // has been zapped.  We keep pointers for a/w rather than 1/2 for branch prediction purposes
-      A *tpopw=(A*)ABACK(arg2); tpopw=(AC(arg2)&((AFLAG(arg2)&(AFVIRTUAL|AFUNINCORPABLE))-1))<0?tpopw:(A*)&validitymask[4];  // point to pointer to arg2 (if it is inplace) - only if dyad
-      A arg1=stack[(0x6>>pline)&3].a;   // 1st arg, monad or left dyad  2 3 1 (1 1)   0110  0 1 2 -> 2 3 1   1 11 111
-      A *tpopa=(A*)ABACK(arg1); tpopa=(AC(arg1)&((AFLAG(arg1)&(AFVIRTUAL|AFUNINCORPABLE))-1))<0?tpopa:(A*)&validitymask[4]; tpopw=(pline&2)?tpopw:tpopa; // monad: w fs  dyad: a w   if monad, change to w w  
-      stack[pline]=stack[0];  // close up the stack  0->0(NOP)  0->1   0->2
-      stack+=(pline>>1)+1;   // finish relocating stack   1 1 2 (1 2)
-      y=(*actionfn)(jt,arg1,arg2,fs);
+      // has been zapped.  We keep pointers for a/w rather than 1/2 for branch-prediction purposes
+      // This calculation should run to completion while the expected misprediction is being processed
+      A *tpopw=(A*)ABACK(arg2); tpopw=(AC(arg2)&((AFLAG(arg2)&(AFVIRTUAL|AFUNINCORPABLE))-1))<0?tpopw:(A*)&validitymask[15];  // point to pointer to arg2 (if it is inplace) - only if dyad
+      A *tpopa=(A*)ABACK(arg1); tpopa=(AC(arg1)&((AFLAG(arg1)&(AFVIRTUAL|AFUNINCORPABLE))-1))<0?tpopa:(A*)&validitymask[15]; tpopw=(pline&2)?tpopw:tpopa; // monad: w fs  dyad: a w   if monad, change to w w  
+      y=(*actionfn)(jt,arg1,arg2,fs);  // expect pipeline break
       jt=(J)(intptr_t)((I)jt&~JTFLAGMSK);
       // jt is OK again
 RECURSIVERESULTSCHECK

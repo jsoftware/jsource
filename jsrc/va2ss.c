@@ -45,7 +45,7 @@ static I intforD(J jt, D d){D q;I z;
 A jtssingleton(J jt, A a,A w,A self,RANK2T awr,RANK2T ranks){A z;
  F2PREFIP;
  // Get the address of an inplaceable assignment, if any
- L *asym = jt->assignsym; asym=asym?asym:(L*)(validitymask+4); asym=(L*)asym->val; // pending assignment if any; if non0, fetch address of value (otherwise 0)
+ L *asym = jt->assignsym; asym=asym?asym:(L*)(validitymask+12); asym=(L*)asym->val; // pending assignment if any; if non0, fetch address of value (otherwise 0)
  I aiv=FAV(self)->lc;   // temp, but start as function #
  I caseno=(aiv&0x7f)-VA2CBW1111; caseno=caseno<0?0:caseno;
  caseno=SSINGCASE(caseno,SSINGENC(AT(a),AT(w)));  // start calculating case early

@@ -540,7 +540,7 @@ RESTRICTF A jtvirtual(J jtip, AD *RESTRICT w, I offset, I r){AD* RESTRICT z;
   RZ(z=gafv(SZI*(NORMAH+r)-1));  // allocate the block
   AK(z)=(CAV(w)-(C*)z)+offset;
   AFLAG(z)=AFVIRTUAL | (wf & ((UI)wip>>(BW-1-AFPRISTINEX))) | (t&TRAVERSIBLE);  // flags: recursive, not UNINCORPABLE, not NJA.  If w is inplaceable, inherit its PRISTINE status
-  A wback=ABACK(w); A *wtpop=(A*)wback; wback=wf&AFVIRTUAL?wback:w; ABACK(z)=wback;  // wtpop is AM(w) in case it is to be zapped
+  A wback=ABACK(w); A *wtpop=(A*)wback; wback=wf&AFVIRTUAL?wback:w; ABACK(z)=wback;  // wtpop is AZAPLOC(w) in case it is to be zapped
   AT(z)=t;
   AC(z)=wip+ACUC1;   // transfer inplaceability from original block
   AR(z)=(RANKT)r;
@@ -686,7 +686,7 @@ A jtgc (J jt,A w,A* old){
 #else
  // Since w now has recursive usecounts (except for sparse, which is never inplaceable), we don't have to do a full fa() on a block that is returning
  // inplaceable - we just reset the usecount in the block.  If the block is returning inplaceable, we must update AM if we tpush
- I cafter=AC(w); if((c&(1-cafter))>=0){A *amptr=(c<0?(A*)&ABACK(w):(A*)&jt->shapesink); *amptr=(A)jt->tnextpushp; tpush(w);} cafter=c<0?c:cafter; AC(w)=cafter;  // push unless was inplaceable and was not freed during tpop; make inplaceable if it was originally
+ I cafter=AC(w); if((c&(1-cafter))>=0){A **amptr=(c<0?&AZAPLOC(w):(A**)&jt->shapesink); *amptr=jt->tnextpushp; tpush(w);} cafter=c<0?c:cafter; AC(w)=cafter;  // push unless was inplaceable and was not freed during tpop; make inplaceable if it was originally
 #endif
  R w;
 }
@@ -1038,7 +1038,7 @@ if((I)jt&3)SEGFAULT
 #if MEMAUDIT&8
   DO((((I)1)<<(1+blockx-LGSZI)), lfsr = (lfsr<<1LL) ^ (lfsr<0?0x1b:0); if(i!=6)((I*)z)[i] = lfsr;);   // fill block with garbage - but not the allocation word
 #endif
-  AFLAG(z)=0; ABACK(z)=(A)pushp; AC(z)=ACUC1|ACINPLACE;  // all blocks are born inplaceable, and point to their deletion entry in tpop
+  AFLAG(z)=0; AZAPLOC(z)=pushp; AC(z)=ACUC1|ACINPLACE;  // all blocks are born inplaceable, and point to their deletion entry in tpop
    // we do not attempt to combine the AFLAG write into a 64-bit operation, because as of 2017 Intel processors
    // will properly store-forward any read that is to the same boundary as the write, and we always read the same way we write
   *pushp++=z; if(!((I)pushp&(NTSTACKBLOCK-1)))RZ(pushp=tg(pushp)); jt->tnextpushp=pushp;  // advance to next slot, allocating a new block as needed

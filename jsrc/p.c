@@ -609,8 +609,8 @@ rdglob: ;
       // the address of the tpop slot IF the arg is inplaceable now.  Then after execution we will pick up again, knowing to quit if the tpop slot
       // has been zapped.  We keep pointers for a/w rather than 1/2 for branch-prediction purposes
       // This calculation should run to completion while the expected misprediction is being processed
-      A *tpopw=(A*)ABACK(arg2); tpopw=(AC(arg2)&((AFLAG(arg2)&(AFVIRTUAL|AFUNINCORPABLE))-1))<0?tpopw:(A*)&validitymask[15];  // point to pointer to arg2 (if it is inplace) - only if dyad
-      A *tpopa=(A*)ABACK(arg1); tpopa=(AC(arg1)&((AFLAG(arg1)&(AFVIRTUAL|AFUNINCORPABLE))-1))<0?tpopa:(A*)&validitymask[15]; tpopw=(pline&2)?tpopw:tpopa; // monad: w fs  dyad: a w   if monad, change to w w  
+      A *tpopw=AZAPLOC(arg2); tpopw=(AC(arg2)&((AFLAG(arg2)&(AFVIRTUAL|AFUNINCORPABLE))-1))<0?tpopw:(A*)&validitymask[15];  // point to pointer to arg2 (if it is inplace) - only if dyad
+      A *tpopa=AZAPLOC(arg1); tpopa=(AC(arg1)&((AFLAG(arg1)&(AFVIRTUAL|AFUNINCORPABLE))-1))<0?tpopa:(A*)&validitymask[15]; tpopw=(pline&2)?tpopw:tpopa; // monad: w fs  dyad: a w   if monad, change to w w  
       y=(*actionfn)(jt,arg1,arg2,fs);  // expect pipeline break
       jt=(J)(intptr_t)((I)jt&~JTFLAGMSK);
       // jt is OK again
@@ -620,7 +620,7 @@ RECURSIVERESULTSCHECK
 #endif
       EPZ(y);  // fail parse if error
 #if AUDITBOXAC
-      auditboxac(y);  // scaf
+      auditboxac(y);
 #endif
 #if MEMAUDIT&0x2
       if(AC(y)==0 || (AC(y)<0 && AC(y)!=ACINPLACE+ACUC1))SEGFAULT 

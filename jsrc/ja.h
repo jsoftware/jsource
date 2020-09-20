@@ -356,14 +356,14 @@
 // obsolete #define fa(x)                       {if(x){I Zc=AC(x); if(!ACISPERM(Zc)){I tt=AT(x); I Zczero=-(I )(--Zc<=0); if((tt&=TRAVERSIBLE)&(Zczero|~AFLAG(x)))jtfa(jt,(x),tt); if(Zczero){jtmf(jt,x);}else {AC(x)=Zc; if(MEMAUDIT&2)audittstack(jt);}}}}
 // obsolete #define fa(x)                       {if(x){I Zc=AC(x); AC(x)=Zc=Zc-1+((UI)Zc>>(BW-2)); I tt=AT(x); Zc=REPSGN(Zc-1); if((tt&=TRAVERSIBLE)&(Zc|~AFLAG(x)))jtfa(jt,(x),tt); if(Zc){jtmf(jt,x);}else {if(MEMAUDIT&2)audittstack(jt);}}}
 #define fa(x)                       {if(x)faaction((x),else {if(MEMAUDIT&2)audittstack(jt);})}
-// Within the tpush/tpop, no need to audit fa, since it was checked on the push
+// Within the tpush/tpop when we know the usecount has gone to 0, no need to audit fa, since it was checked on the push
 // obsolete #define fana(x)                     {if(x){I Zc=AC(x); if(!ACISPERM(Zc)){I tt=AT(x); I Zczero=-(I )(--Zc<=0); if((tt&=TRAVERSIBLE)&(Zczero|~AFLAG(x)))jtfa(jt,(x),tt); if(Zczero){jtmf(jt,x);}else {AC(x)=Zc;}}}}
 // obsolete #define fana(x)                     {if(x){I Zc=AC(x); AC(x)=Zc=Zc-1+((UI)Zc>>(BW-2)); I tt=AT(x); Zc=REPSGN(Zc-1); if((tt&=TRAVERSIBLE)&(Zc|~AFLAG(x)))jtfa(jt,(x),tt); if(Zc){jtmf(jt,x);}}}
 #define fana(x)                     {if(x)fanano0(x)}
-// when x is known to be valid
+// when x is known to be valid and usecount has gone to 0
 // obsolete #define fanano0(x)                  {I Zc=AC(x); AC(x)=Zc=Zc-1+((UI)Zc>>(BW-2)); I tt=AT(x); Zc=REPSGN(Zc-1); if((tt&=TRAVERSIBLE)&(Zc|~AFLAG(x)))jtfa(jt,(x),tt); if(Zc){jtmf(jt,x);}}
 #define fanano0(x)                  faaction((x),)
-// Within tpop, no need to check ACISPERM; Zczero is ~0; and we should recur only if flag indicates RECURSIBLE.  In that case we can reconstruct the type from the flag
+// Within tpop, no need to check ACISPERM; Zczero is (i. e. usecount has gone to 0) ~0; and we should recur only if flag indicates RECURSIBLE.  In that case we can reconstruct the type from the flag
 #define fanapop(x,flg)              {if((flg)&RECURSIBLE)jtfa(jt,(x),(flg)&RECURSIBLE); jtmf(jt,x);}
 #define fac_ecm(x)                  jtfac_ecm(jt,(x))
 #define facit(x)                    jtfacit(jt,(x))
@@ -874,8 +874,8 @@
 // obsolete #define ra(x)                       {I c=AC(x); if(!ACISPERM(c)){I tt=AT(x); FLAGT flg=AFLAG(x); if((tt^flg)&TRAVERSIBLE){AFLAG(x)=flg|=(tt&RECURSIBLE); jtra(jt,(x),tt);}; AC(x)=(c+1)&~ACINPLACE;}}
 #define ra(x)                       {I c=AC(x); c&=~ACINPLACE; AC(x)=c+=(c>>(BW-2))^1; I tt=AT(x); FLAGT flg=AFLAG(x); if((tt^flg)&TRAVERSIBLE){AFLAG(x)=flg|=(tt&RECURSIBLE); jtra(jt,(x),tt);};}
 // If this is a recursible type, make it recursive if it isn't already, by traversing the descendants.  This is like raising the usecount by 0.  Since we aren't liable to assign the block, we don't have to realize a
-// virtual block unless it is a recursible type.  NOTE that PERMANENT blocks are always marked recursible if they are of recursible type
-#define ra0(x)                      {I tt=AT(x); FLAGT flg=AFLAG(x); if((tt^flg)&RECURSIBLE){if(flg&AFVIRTUAL){RZ((x)=realize(x)); flg=AFLAG(x);} AFLAG(x)=flg|=(tt&RECURSIBLE); jtra(jt,(x),tt);}}
+// virtual block unless it is a recursible type.  NOTE that PERMANENT and VIRTUAL blocks are always marked recursible if they are of recursible type
+#define ra0(x)                      {I tt=AT(x); FLAGT flg=AFLAG(x); if((tt^flg)&RECURSIBLE){if(unlikely(flg&AFVIRTUAL)){RZ((x)=realize(x)); flg=AFLAG(x);} AFLAG(x)=flg|=(tt&RECURSIBLE); jtra(jt,(x),tt);}}
 #endif
 // make this block recursive, used when x has just been allocated & thus is known to be nonrecursive & nonvirtual.  We may know the type t, too (otherwise use AT(x))
 #define ra00(x,tt)                   {if((tt)&RECURSIBLE){AFLAG(x)|=(tt)&RECURSIBLE; jtra(jt,(x),(tt));}}

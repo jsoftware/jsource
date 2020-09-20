@@ -103,10 +103,11 @@ struct AD {
         // raze of the noun (if the types are identical) (3) for SYMB tables for explicit definitions, the address of the calling symbol table (4) for the block
         // holding the amend offsets in x u} y, the number of axes of y that are built into the indexes in u (5) for name references, the value of jt->modifiercount when the name was last looked up
         // (6) in the return from wordil, holds the number of words if any final NB. is discarded; (7) in the result of indexofsub when called for FORKEY, contains the
-        // number of partitiona found;  (8) For all blocks, AM initially holds a pointer to the place in the tpop stack (or hijacked tpop stack) that points back to the allocated block.  This value is guaranteed
-        // to remain valid as long as the block is inplaceable and might possibly return as a result to the parser (in cases 1-7 above, the block cannot become a result to the parser).
+        // number of partitions found; (8) in the self block for y L: n and u S: n, the address of the fs block for u; (9) in the call to jtisf (multiple assignment), holds the
+        // address of the symbol table being assigned to
   A back; // For VIRTUAL blocks, points to backing block
-
+  A *zaploc;  // For all blocks, AM initially holds a pointer to the place in the tpop stack (or hijacked tpop stack) that points back to the allocated block.  This value is guaranteed
+        // to remain valid as long as the block is nonvirtual inplaceable and might possibly return as a result to the parser or result assembly  (in cases under m above, the block cannot become such a result)
 } mback;
  union {
   I t;  // type
@@ -157,6 +158,8 @@ typedef I SI;
 #define AFLAG(x)        ((x)->flag)     /* flag                            */
 #define AM(x)           ((x)->mback.m)        /* Max # bytes in ravel            */
 #define ABACK(x)        ((x)->mback.back)        /* In virtual noun, pointer to backing block            */
+#define AZAPLOC(x)      ((x)->mback.zaploc)    // on allocation, the address of the tstack entry that will free the block
+#define AZAPLOCV(x)     ((A*)((x)->s[(x)->r]))    // for virtual blocks,  the address of the tstack entry that will free the block
 #define AT(x)           ((x)->tproxy.t)        /* Type; one of the #define below  */
 #define AC(x)           ((x)->c)        /* Reference count.                */
 #define AN(x)           ((x)->n)        /* # elements in ravel             */

@@ -290,7 +290,7 @@ F2(jtexpand){A z;B*av;C*wv,*wx,*zv;I an,*au,i,k,p,wc,wk,wn,wt,zn;
  if(!AR(w))R from(a,take(num(-2),w));  // atomic w, use a { _2 {. w
  av=BAV(a); an=AN(a); au=(I*)av;
  ASSERT(bsum(an,av)==AS(w)[0],EVLENGTH);  // each item of w must be used exactly once
- wv=CAV(w); wn=AN(w); wc=aii(w); wt=AT(w); k=bpnoun(wt); wk=k*wc; wx=wv+wk*AS(w)[0];  // k=bytes/atom, wk=bytes/item, wx=end+1 of area
+ wv=CAV(w); wn=AN(w); PROD(wc,AR(w)-1,AS(w)+1) wt=AT(w); k=bpnoun(wt); wk=k*wc; wx=wv+wk*AS(w)[0];  // k=bytes/atom, wk=bytes/item, wx=end+1 of area
  RE(zn=mult(an,wc));
  GA(z,wt,zn,AR(w),AS(w)); AS(z)[0]=an; zv=CAV(z);
  // We extracted from w, so mark it (or its backer if virtual) non-pristine.  Note that w was not changed above if it was boxed nonempty.  z is never pristine, since it may have repeats

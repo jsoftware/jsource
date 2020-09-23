@@ -309,7 +309,7 @@ static F1(jtcps){A z;P*wp,*zp;
 }
 
 static A jtselx(J jt,A x,I r,I i){A z;I c,k;
- c=aii(x); k=c<<bplg(AT(x));
+ PROD(c,AR(x)-1,AS(x)+1) k=c<<bplg(AT(x));
  GA(z,AT(x),r*c,AR(x),AS(x)); AS(z)[0]=r;
  MC(CAV(z),CAV(x)+i*k,r*k);
  R z;
@@ -562,7 +562,7 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[12
  I state=ZZFLAGINITSTATE;  // init flags, including zz flags
 
  SETIC(w,n); wt=AT(w);   // n=#items of w; wt=type of w
- r=MAX(1,AR(w)); wv=CAV(w); wcn=aii(w); k=wcn<<bplg(wt);   // r=rank>.1, s->w shape, wv->w data, wcn=#atoms in cell of w, k=#bytes in cell of w;
+ r=MAX(1,AR(w)); wv=CAV(w); PROD(wcn,AR(w)-1,AS(w)+1) k=wcn<<bplg(wt);   // r=rank>.1, s->w shape, wv->w data, wcn=#atoms in cell of w, k=#bytes in cell of w;
  // If the verb is a gerund, it comes in through h, otherwise the verb comes through f.  Set up for the two cases
  if(!(VGERL&FAV(self)->flag)){
   fs=FAV(self)->fgh[0];  // the verb we will execute
@@ -887,7 +887,7 @@ DF2(jtrazecut2){A fs,gs,y,z=0;B b; I neg,pfx;C id,sep,*u,*v,*wv,*zv;I d,k,m=0,wi
  else{RZ(a=wi?eps(w,take(num((pfx<<1)-1),w)):mtv); v=CAV(a); sep=C1;}   // here if other types/shapes
  // v-> byte list of frets, sep is the fret char
  ASSERT(wi==SETIC(a,r),EVLENGTH);
- r=MAX(1,AR(w)); s=AS(w); wv=CAV(w); d=aii(w); k=d<<bplg(wt);  // d=#atoms in an item of w
+ r=MAX(1,AR(w)); s=AS(w); wv=CAV(w); PROD(d,AR(w)-1,AS(w)+1) k=d<<bplg(wt);  // d=#atoms in an item of w
  if(pfx){u=v+wi; while(u>v&&sep!=*v)++v; p=u-v;}
  I t,zk,zt;                     /* atomic function f/\ or f/\. */
  if((t=atype(adocv.cv))&&TYPESNE(t,wt)){RZ(w=cvt(t,w)); wv=CAV(w);}

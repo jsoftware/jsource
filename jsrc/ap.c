@@ -866,7 +866,8 @@ static DF2(jtmovfslash){A x,z;B b;C id,*wv,*zv;I d,m,m0,p,t,wk,wt,zi,zk,zt;
 // obsolete  if(!ds(id) || !(adocv = vains(ds(id),wt)).f)R jtinfixprefix2(jt,a,w,self);  // if no special routine for insert, do general case
  varps(adocv,self,wt,0); if(!adocv.f)R jtinfixprefix2(jt,a,w,self);  // if no special routine for insert, do general case
  if(m0>=0){zi=MAX(0,1+p-m);}else{zi=1+(p-1)/m; zi=(p==0)?p:zi;}  // zi = # result cells
- d=aii(w); b=0>m0&&zi*m!=p;   // b='has shard'
+// obsolete  d=aii(w); b=0>m0&&zi*m!=p;   // b='has shard'
+ PROD(d,AR(w)-1,AS(w)+1) b=0>m0&&zi*m!=p;   // b='has shard'
  zt=rtype(adocv.cv); RESETRANK;
  GA(z,zt,d*zi,MAX(1,AR(w)),AS(w)); AS(z)[0]=zi;
  if(d*zi==0)RETF(z);  // mustn't call adocv on empty arg!

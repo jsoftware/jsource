@@ -369,7 +369,8 @@ static DF2(jtofxassoc){A f,i,j,p,s,x,z;C id,*zv;I c,d,k,kc,m,r,t;V*v;VA2 adocv;
  // If we modify this code to use this path for other associative verbs, we would need to check the type of (p f s)
  I rc;  // return code from execution of verb
  if(!TYPESEQ(AT(p),AT(s))){rc=EWOV;} else {I klg;  // simulate overflow if different precisions - will convert everything to float
-  r=AR(p); c=aii(p); t=AT(p); klg=bplg(t); kc=c<<klg;
+// obsolete   r=AR(p); c=aii(p); t=AT(p); klg=bplg(t); kc=c<<klg;
+  r=AR(p); PROD(c,AR(p)-1,AS(p)+1) t=AT(p); klg=bplg(t); kc=c<<klg;
   adocv=var(x,t,t); // analyze the u operand
   ASSERTSYS(adocv.f,"ofxassoc");  // scaf
   GA(z,t,c*(1+d),r,AS(p)); AS(z)[0]=1+d; zv=CAV(z);  // allocate result assuming no overflow

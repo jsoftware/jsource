@@ -450,7 +450,7 @@ typedef I SI;
 // This is used in apip.  We must ALWAYS allow inplacing for NJA types, but for ordinary inplacing we don't bother if the number of atoms of w pushes a over a power-of-2 boundary
 // We don't try to help the non-NVR case because NJAs will always be globals and thus have NVR set
 // obsolete #define EXTENDINPLACENJA(a,w)  ( ((AC(a)&(((AN(a)+AN(w))^AN(a))-AN(a)))<0) || (AC(a)==1||(AC(a)==2&&AFLAG(a)&AFNJA))&&((jt->assignsym&&jt->assignsym->val==a&&!(AFLAG(a)&AFRO))||(!jt->assignsym&&(virtreqd=1,!(AFLAG(a)&(AFRO|AFVIRTUAL)))))&&notonupperstack(a))  // OK to inplace ordinary operation
-#define EXTENDINPLACENJA(a,w)  ( ((AC(a)&(((AN(a)+AN(w))^AN(a))-AN(a)))<0) || (AC(a)==1||(AC(a)==2&&AFLAG(a)&AFNJA))&&((jt->assignsym&&jt->assignsym->val==a&&!(AFLAG(a)&AFRO))||(!jt->assignsym&&(virtreqd=1,!(AFLAG(a)&(AFRO|AFVIRTUAL)))))&&notonupperstack(a))  // OK to inplace ordinary operation
+#define EXTENDINPLACENJA(a,w)  ( ((AC(a)&(((AN(a)+AN(w))^AN(a))-AN(a)))<0) || ((((AC(a)-2)&(((AN(a)+AN(w))^AN(a))-AN(a)))<0)||(AC(a)==2&&AFLAG(a)&AFNJA))&&((jt->assignsym&&jt->assignsym->val==a&&!(AFLAG(a)&AFRO))||(!jt->assignsym&&(virtreqd=1,!(AFLAG(a)&(AFRO|AFVIRTUAL)))))&&notonupperstack(a))  // OK to inplace ordinary operation
 
 /* Values for AFLAG(x) field of type A                                     */
 // the flags defined here must be mutually exclusive with TRAVERSIBLE

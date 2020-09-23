@@ -323,7 +323,7 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;I ak,k,p,*u,*v,wk,wm,wn;
 #if BW==64
    if((((an-1)|(ar-1)|(ar-wr)|(at-AT(w))|((I)jt->ranks-(I)(RANK2T)~0))>=0)&&(!jt->fill||(at==AT(jt->fill)))){  // a not empty, a not atomic, ar>=wr, atype >= wtype, no jt->ranks given.  And never if fill specified with a different type
 #else
-   if(((an-1)|(ar-1)|(ar-wr)|(at-wt))>=0&&(jt->ranks==(RANK2T)~0)&&(!jt->fill||(at==AT(jt->fill)))){  // a not empty, a not atomic, ar>=wr, atype >= wtype, no jt->ranks given.  And never if fill specified
+   if(((an-1)|(ar-1)|(ar-wr)|(at-AT(w)))>=0&&(jt->ranks==(RANK2T)~0)&&(!jt->fill||(at==AT(jt->fill)))){  // a not empty, a not atomic, ar>=wr, atype >= wtype, no jt->ranks given.  And never if fill specified
 #endif
     //  Check the item sizes.  Set p<0 if the
     // items of a require fill (ecch - can't go inplace), p=0 if no padding needed, p>0 if items of w require fill
@@ -339,8 +339,8 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;I ak,k,p,*u,*v,wk,wm,wn;
     p=0; DQ(naxes, p |= *u++-*v++;);
     // Now p<0 if ANY axis of a needs extension - can't inplace then
     if(p>=0) {
-     // See if there is room in a to fit w (including trailing pad)
-     if(allosize(a)>=ak+wk+(at&LAST0?SZI:0)){
+     // See if there is room in a to fit w (including trailing pad - but no pad for NJA blocks, to allow appending to the limit)
+     if(allosize(a)>=ak+wk+(REPSGN((-(at&LAST0))&((aflag&AFNJA)-1))&(SZI-1))){    // SZI-1 if LAST0 && !NJA
       // We have passed all the tests.  Inplacing is OK.
       // If w must change precision, do.  This is where we catch domain errors.
       if(unlikely(TYPESGT(at,AT(w))))RZ(w=cvt(at,w));

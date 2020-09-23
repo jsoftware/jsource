@@ -896,8 +896,8 @@ extern unsigned int __cdecl _clearfp (void);
 #define JMC(d,s,l,lbl,bytelen) JMCcommon(d,s,l,lbl,bytelen,endmask,JMCDECL(endmask) JMCSETMASK(endmask,ll,0))  //   0->1111 1->1000 3->1110 bytelen has already been applied here
 #define JMCR(d,s,l,lbl,bytelen,maskname) JMCcommon(d,s,l,lbl,bytelen,maskname,)
 #else
-#define JMC(d,s,l,lbl,bytelen) MC(d,s,l);
-#define JMCR(d,s,l,lbl,bytelen,maskname) MC(d,s,l);
+#define JMC(d,s,l,lbl,bytelen) MC(d,s,bytelen?(l):(l)&-SZI);
+#define JMCR(d,s,l,lbl,bytelen,maskname) MC(d,s,bytelen?(l):(l)&-SZI);
 #define JMCDECL(mskname)
 #define JMCSETMASK(mskname,l,bytelen)
 #endif

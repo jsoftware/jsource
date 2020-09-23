@@ -897,7 +897,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define JMCR(d,s,l,lbl,bytelen,maskname) JMCcommon(d,s,l,lbl,bytelen,maskname,)
 #else
 #define JMC(d,s,l,lbl,bytelen) MC(d,s,l)
-#define JMC(d,s,l,lbl,bytelen,maskname) MC(d,s,l)
+#define JMCR(d,s,l,lbl,bytelen,maskname) MC(d,s,l)
 #define JMCDECL(mskname)
 #define JMCSETMASK(mskname,l,bytelen)
 #endif

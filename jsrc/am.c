@@ -163,7 +163,7 @@ static A jtmerge2(J jt,A a,A w,A ind,I cellframelen){F2PREFIP;A z;I t;
  I cellsize; PROD(cellsize,AR(w)-cellframelen,AS(w)+cellframelen);  // number of atoms per index in ind
  I *iv=AV(ind);  // start of the cell-index array
  if(UCISRECUR(z)){
-  cellsize<<=(t>>RATX);  // RAT has 2 boxes per atom, all others have 1 and are lower
+  cellsize<<=(t>>RATX);  // RAT has 2 boxes per atom, all other recursibles have 1 and are lower
   {A * RESTRICT zv=AAV(z); A *RESTRICT av=(A*)av0; DO(AN(ind), I ix0=iv[i]*cellsize; DQ(cellsize, INSTALLBOXRECUR(zv,ix0,*av); ++ix0; ++av; av=(av==(A*)avn)?(A*)av0:av;))}
  }else{
   if(cellsize<=AN(a)){
@@ -174,15 +174,15 @@ static A jtmerge2(J jt,A a,A w,A ind,I cellframelen){F2PREFIP;A z;I t;
     {C * RESTRICT zv=CAV(z); C *RESTRICT av=(C*)av0; DO(AN(ind), zv[iv[i]]=*av; ++av; av=(av==(C*)avn)?(C*)av0:av;); break;}  // scatter-copy the data, cyclically
    case sizeof(I):  // may include D
     {I * RESTRICT zv=AV(z); I *RESTRICT av=(I*)av0; DO(AN(ind), zv[iv[i]]=*av; ++av; av=(av==(I*)avn)?(I*)av0:av;); break;}  // scatter-copy the data
-   default:
-    // handle small integral number of words with a local loop
-    if(cellsize<MEMCPYTUNELOOP){  // length is not too big (0 is OK).  We must not copy outside cells boundaries here
-     // move full words followed by the remnant.  Must not overwrite the area, since we are scatter-writing
-     C* RESTRICT zv=CAV(z); I *RESTRICT av=(I*)av0; DO(AN(ind), I * RESTRICT d=(I*)(zv+(iv[i]*cellsize)); I n=cellsize; while((n-=SZI)>=0){*d++=*av++;} if(n&(SZI-1)){STOREBYTES(d,*av,-n); av=(I*)((C*)av+SZI+n);} av=av==(I*)avn?(I*)av0:av;);  // use local copy
-      // we test for the STOREBYTES because this is assumed repeated and might well have even length
-    }else{
-     C* RESTRICT zv=CAV(z); C *RESTRICT av=(C*)av0; DO(AN(ind), MC(zv+(iv[i]*cellsize),av,cellsize); av+=cellsize; av=(av==avn)?av0:av;);  // scatter-copy the data, cyclically
-    }
+   default: ;
+// obsolete     // handle small integral number of words with a local loop
+// obsolete     if(cellsize<MEMCPYTUNELOOP){  // length is not too big (0 is OK).  We must not copy outside cells boundaries here
+// obsolete      // move full words followed by the remnant.  Must not overwrite the area, since we are scatter-writing
+// obsolete      C* RESTRICT zv=CAV(z); I *RESTRICT av=(I*)av0; DO(AN(ind), I * RESTRICT d=(I*)(zv+(iv[i]*cellsize)); I n=cellsize; while((n-=SZI)>=0){*d++=*av++;} if(n&(SZI-1)){STOREBYTES(d,*av,-n); av=(I*)((C*)av+SZI+n);} av=av==(I*)avn?(I*)av0:av;);  // use local copy
+// obsolete       // we test for the STOREBYTES because this is assumed repeated and might well have even length
+// obsolete     }else{
+     C* RESTRICT zv=CAV(z); C *RESTRICT av=(C*)av0; JMCDECL(endmask) JMCSETMASK(endmask,cellsize,1) DO(AN(ind), JMCR(zv+(iv[i]*cellsize),av,cellsize,loop1,1,endmask); av+=cellsize; av=(av==avn)?av0:av;);  // scatter-copy the data, cyclically.  Don't overwrite
+// obsolete     }
    }
   }else{
    // the cellsize is bigger than a.  We will have to repeat a within each cell

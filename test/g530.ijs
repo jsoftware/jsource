@@ -674,6 +674,12 @@ IGNOREIFFVI (size1 - 2 * 1000 * IF64{4 8) > 7!:0''  NB. Verify values freed
 4!:55 ;:'a b'
 IGNOREIFFVI (size0 + 1000) > 7!:0''
 
+NB. Verify memcpy routine by replacing one cell of an array
+test =: 3 : 0"0
+a =. (5,y) $ 'a'
+((y#'*') (] , [ , ]) (2,y) $ 'a') -: (y#'*') 2} a 
+)
+test i. 517
 
 NB. Noun & other components of AR
 x =: 5

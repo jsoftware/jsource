@@ -859,6 +859,49 @@ extern unsigned int __cdecl _clearfp (void);
 // call to atomic2(), similar to IRS2.  fs is a local block to use to hold the rank (declared as D fs[16]), cxx is the Cxx value of the function to be called
 #define ATOMIC2(jt,a,w,fs,l,r,cxx) (FAV((A)(fs))->fgh[0]=ds(cxx), FAV((A)(fs))->id=CQQ, FAV((A)(fs))->lrr=(RANK2T)((l)<<RANKTX)+(r), jtatomic2(jt,(a),(w),(A)fs))
 
+// memory copy, for J blocks.  Like memory copy, but knows it can fetch outside the arg boundaries for LIT-type args
+// if bytelen is 1, the arg may be of any length; if 0, must be a multiple of Is and the low bits of length are ignored
+#if C_AVX2
+#define JMCDECL(mskname) __m256i mskname;
+#define JMCSETMASK(mskname,l,bytelen) mskname=_mm256_loadu_si256((__m256i*)(validitymask+((-(((l)-bytelen)>>LGSZI))&(NPAR-1)))); /* 0->1111 1->1000 3->1110 */
+#define JMCcommon(d,s,l,lbl,bytelen,mskname,mskdecl) \
+{ \
+ I ll=(l)-bytelen; \
+ if(likely(!bytelen||ll>=0)){ \
+  void *src=(s); \
+  PREFETCH(src);  /* start bringing in the start of data */  \
+  void *dst=(d); \
+  mskdecl \
+  /* copy the remnants at the end - bytes and Is.  Do this early because they have address conflicts that will take 20 */ \
+  /* cycles to sort out, and we can put that time into the switch and loop branch overhead */ \
+  /* First, the odd bytes if any */ \
+  /* if there is 1 byte to do low bits of ll are 0, which means protect 7 bytes, thus 0->7, 1->6, 7->0 */ \
+  if(bytelen)STOREBYTES((C*)dst+(ll&(-SZI)),*(UI*)((C*)src+(ll&(-SZI))),~ll&(SZI-1));  /* copy remnant, 1-8 bytes. */ \
+  /* copy up till last section */ \
+  if(likely((ll&=(-SZI))>0)){  /* reduce ll by # bytes processed above, 1-8 (if bytelen), 0 if !bytelen (discarding garbage length).  Any left? */ \
+   /* copy last section, 1-4 Is. ll bits 00->4 bytes, 01->3 bytes, etc  */ \
+   ll=(ll-SZI)&(-NPAR*SZI);  /* ll=start of last section, 1-4 Is */ \
+   _mm256_maskstore_epi64((I*)((C*)dst+ll),mskname,_mm256_maskload_epi64((I*)((C*)src+ll),mskname)); \
+   /* copy 128-byte sections, first one being 0, 4, 8, or 12 Is. There could be 0 to do */ \
+   switch((ll>>(LGNPAR+LGSZI))&(4-1)){ \
+   lbl: _mm256_storeu_si256((__m256i*)dst,_mm256_loadu_si256((__m256i*)src)); dst=(C*)dst+NPAR*SZI; src=(C*)src+NPAR*SZI; \
+   case 3: _mm256_storeu_si256((__m256i*)dst,_mm256_loadu_si256((__m256i*)src)); dst=(C*)dst+NPAR*SZI; src=(C*)src+NPAR*SZI; \
+   case 2: _mm256_storeu_si256((__m256i*)dst,_mm256_loadu_si256((__m256i*)src)); dst=(C*)dst+NPAR*SZI; src=(C*)src+NPAR*SZI; \
+   case 1: _mm256_storeu_si256((__m256i*)dst,_mm256_loadu_si256((__m256i*)src)); dst=(C*)dst+NPAR*SZI; src=(C*)src+NPAR*SZI; \
+   case 0: if(likely((ll-=4*NPAR*SZI)>=0))goto lbl; \
+   } \
+  } \
+ } \
+}
+#define JMC(d,s,l,lbl,bytelen) JMCcommon(d,s,l,lbl,bytelen,endmask,JMCDECL(endmask) JMCSETMASK(endmask,ll,0))  //   0->1111 1->1000 3->1110 bytelen has already been applied here
+#define JMCR(d,s,l,lbl,bytelen,maskname) JMCcommon(d,s,l,lbl,bytelen,maskname,)
+#else
+#define JMC(d,s,l,lbl,bytelen) MC(d,s,l)
+#define JMC(d,s,l,lbl,bytelen,maskname) MC(d,s,l)
+#define JMCDECL(mskname)
+#define JMCSETMASK(mskname,l,bytelen)
+#endif
+
 #define IX(n)           apv((n),0L,1L)
 #define JATTN           {if(unlikely(*jt->adbreakr)){jsignal(EVATTN); R 0;}}
 #define JBREAK0         {if(unlikely(2<=*jt->adbreakr)){jsignal(EVBREAK); R 0;}}

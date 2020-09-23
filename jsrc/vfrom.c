@@ -40,14 +40,20 @@ F1(jtcatalog){PROLOG(0072);A b,*wv,x,z,*zv;C*bu,*bv,**pv;I*cv,i,j,k,m=1,n,p,*qv,
   if(1==an){v+=j;   DQ(m,                                    *x++=*v;       v+=p; );}  \
   else              DQ(m, DO(an, SETJ(av[i]);                *x++=v[j];);   v+=p; );   \
  }
-#define MVMC(d,s,l) MC(d,s,l); d=(I*)((C*)d+(l)); s=(I*)((C*)s+(l));
-#define MVLOOP(d,s,l) I n=(l); do{*d++=*s++;}while((n-=SZI)>0); d=(I*)((C*)d+n);
-#define IFROMLOOP2(qexp,mvlp)  \
- {I* RESTRICT u,* RESTRICT v=(I*)wv,* RESTRICT x=(I*)zv;  \
-  q=(qexp); pq=p*k;         \
-  if(1==an){v=(I*)((C*)v+j*k); DQ(m,                     u=v;     mvlp(x,u,k)  v=(I*)((C*)v+pq););}  \
-  else              DQ(m, DO(an, SETJ(av[i]); u=(I*)((C*)v+j*k); mvlp(x,u,k) ); v=(I*)((C*)v+pq););   \
- }
+// obsolete #define MVMC(d,s,l) MC(d,s,l); d=(I*)((C*)d+(l)); s=(I*)((C*)s+(l));
+// obsolete #define MVLOOP(d,s,l) I n=(l); do{*d++=*s++;}while((n-=SZI)>0); d=(I*)((C*)d+n);
+// obsolete #define IFROMLOOP2(qexp,mvlp)  \
+// obsolete  {I* RESTRICT u,* RESTRICT v=(I*)wv,* RESTRICT x=(I*)zv;  \
+// obsolete   q=(qexp); pq=p*k;         \
+// obsolete   if(1==an){v=(I*)((C*)v+j*k); DQ(m,                     u=v;     mvlp(x,u,k)  v=(I*)((C*)v+pq););}  \
+// obsolete   else              DQ(m, DO(an, SETJ(av[i]); u=(I*)((C*)v+j*k); mvlp(x,u,k) ); v=(I*)((C*)v+pq););   \
+// obsolete  }
+// obsolete #define IFROMLOOP2(qexp,mvlp)  \
+// obsolete  {I* RESTRICT u,* RESTRICT v=(I*)wv,* RESTRICT x=(I*)zv;  \
+// obsolete   q=(qexp); pq=p*k;         \
+// obsolete   if(1==an){v=(I*)((C*)v+j*k); DQ(m,                     u=v;     JMC(x,u,k,loop1)  x=(I*)((C*)x+(k)); v=(I*)((C*)v+pq););}  \
+// obsolete   else              DQ(m, DO(an, SETJ(av[i]); u=(I*)((C*)v+j*k); JMC(x,u,k,loop2) ); x=(I*)((C*)x+(k)); v=(I*)((C*)v+pq););   \
+// obsolete  }
 
 // a is not boxed and not boolean (except when a is an atom, which we pass through here to allow a virtual result)
 F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wk,wn,wr,*ws,zn;
@@ -104,6 +110,7 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wk,wn,wr,*ws,zn;
   switch(k){
   case sizeof(I):
 #if C_AVX2 || EMU_AVX2
+  // moving I/D.  Use GATHER instruction.  Future hardware can exploit that.
   {__m256i endmask; /* length mask for the last word */ 
    _mm256_zeroupper(VOIDARG);
    __m256i wstride=_mm256_set1_epi64x(p);  // atoms between cells
@@ -149,9 +156,15 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wk,wn,wr,*ws,zn;
   case sizeof(int):IFROMLOOP(int); break;
 #endif
   default:
-  // cells are not simple items.  We can safely move full words, since there is always extra buffer space at the end of any type that is not a word-multiple
-   if(k<MEMCPYTUNELOOP)IFROMLOOP2((k+SZI-1)>>LGSZI,MVLOOP)
-   else IFROMLOOP2((k+SZI-1)>>LGSZI,MVMC)
+  // cells are not simple types.  We can safely move full words, since there is always extra buffer space at the end of any type that is not a word-multiple
+// obsolete    if(k<MEMCPYTUNELOOP)IFROMLOOP2((k+SZI-1)>>LGSZI,MVLOOP)
+// obsolete    else IFROMLOOP2((k+SZI-1)>>LGSZI,MVMC)
+   {C* RESTRICT u,* RESTRICT v=(C*)wv,* RESTRICT x=(C*)zv;
+    pq=p*k;
+    JMCDECL(endmask) JMCSETMASK(endmask,k+(SZI-1),0) 
+    if(1==an){v+=j*k; DQ(m,                     u=v;     JMCR(x,u,k+(SZI-1),loop1,0,endmask) x+=k; v+=pq;);}
+    else              DQ(m, DO(an, SETJ(av[i]); u=v+j*k; JMCR(x,u,k+(SZI-1),loop2,0,endmask) x+=k;); v+=pq;)
+   }
    break;
   }
   RETF(z);
@@ -366,7 +379,7 @@ static A jtafrom2(J jt,A p,A q,A w,I r){A z;C*wv,*zv;I d,e,j,k,m,n,pn,pr,* RESTR
  wv=CAV(w); zv=CAV(z); 
  switch(k=d<<bplg(AT(w))){   // k=*bytes in a _2-cell of a cell of w
 #define INNER2(T) {T* RESTRICT v=(T*)wv,* RESTRICT x=(T*)zv;   \
-   DO(m, DO(pn, j=e*pv[i]; DO(qn, *x++=v[j+qv[i]];         )); v+=n;);} break; // n=#_2-cells in a cell of w.
+   DQ(m, DO(pn, j=e*pv[i]; DO(qn, *x++=v[j+qv[i]];         )); v+=n;);} break; // n=#_2-cells in a cell of w.
  case sizeof(I): INNER2(I);
  case sizeof(C): INNER2(C);
  case sizeof(S): INNER2(S);
@@ -378,7 +391,9 @@ static A jtafrom2(J jt,A p,A q,A w,I r){A z;C*wv,*zv;I d,e,j,k,m,n,pn,pr,* RESTR
   // copy only echt floats using floating-point moves.  Otherwise fall through to...
 #endif
  default:        {C* RESTRICT v=wv,* RESTRICT x=zv-k;n=k*n;   // n=#bytes in a cell of w
-  DO(m, DO(pn, j=e*pv[i]; DO(qn, MC(x+=k,v+k*(j+qv[i]),k);)); v+=n;);} break;
+  JMCDECL(endmask) JMCSETMASK(endmask,k+(SZI-1),0) 
+// obsolete   DO(m, DO(pn, j=e*pv[i]; DO(qn, MC(x+=k,v+k*(j+qv[i]),k);)); v+=n;);} break;
+  DQ(m, DO(pn, j=e*pv[i]; DO(qn, x+=k; JMCR(x,v+k*(j+qv[i]),k+(SZI-1),loop1,0,endmask);)); v+=n;);} break;
  }
  RETF(z);   // return block
 }   /* (<p;q){"r w  for positive integer arrays p,q */
@@ -501,14 +516,16 @@ F2(jtsfrom){
      {C * RESTRICT zv=CAV(z); C *RESTRICT wv=CAV(w); DQ(AN(ind), *zv++=wv[*iv++];) break;}  // scatter-copy the data
     case sizeof(I):  // may include D
      {I * RESTRICT zv=IAV(z); I *RESTRICT wv=IAV(w); DQ(AN(ind), *zv++=wv[*iv++];) break;}  // scatter-copy the data, 8-byte chunks
-    default:
-     // handle small integral number of words with a local loop
+    default: ;
+// obsolete      // handle small integral number of words with a local loop
      // It is OK to pad to an I boundary, because any block with cells not a multiple of I is padded to an I
-     if(cellsize<MEMCPYTUNELOOP){
-      C* RESTRICT zv=CAV(z); C *RESTRICT wv=CAV(w); DQ(AN(ind), MCIS((I*)zv,(I*)(wv+*iv++*cellsize),(cellsize+SZI-1)>>LGSZI) zv+=cellsize;)  // use local copy
-     }else{
-      C* RESTRICT zv=CAV(z); C *RESTRICT wv=CAV(w); DQ(AN(ind), MC(zv,wv+*iv++*cellsize,(cellsize+SZI-1)&-SZI); zv+=cellsize;)  // use memcpy
-     }
+// obsolete      if(cellsize<MEMCPYTUNELOOP){
+// obsolete       C* RESTRICT zv=CAV(z); C *RESTRICT wv=CAV(w); DQ(AN(ind), MCIS((I*)zv,(I*)(wv+*iv++*cellsize),(cellsize+SZI-1)>>LGSZI) zv+=cellsize;)  // use local copy
+// obsolete      }else{
+// obsolete       C* RESTRICT zv=CAV(z); C *RESTRICT wv=CAV(w); DQ(AN(ind), MC(zv,wv+*iv++*cellsize,(cellsize+SZI-1)&-SZI); zv+=cellsize;)  // use memcpy
+// obsolete      }
+     C* RESTRICT zv=CAV(z); C *RESTRICT wv=CAV(w);     JMCDECL(endmask) JMCSETMASK(endmask,cellsize+(SZI-1),0) 
+     DQ(AN(ind), JMCR(zv,wv+*iv++*cellsize,cellsize+(SZI-1),loop1,0,endmask); zv+=cellsize;)  // use memcpy
      break;
     }
     RETF(z);

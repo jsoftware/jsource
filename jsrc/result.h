@@ -89,6 +89,7 @@
  I zzncells;   // number of cells in the result (input)
  I zzframelen;  // length of frame of result.
  I zzfauxcellshape[ZZFAUXCELLSHAPEMAXRANK+1+2];  // will be zzcellshape for ranks < 4.  We reserve space only for AN and AS, and don't touch anything earlier.  1 is to leave 1 spare at the end, 2 is the length of AN and AR
+ JMCDECL(zzendmask)  // will hold copy mask for copying result cells
 #ifndef ZZWILLBEOPENEDNEVER
 #define ZZWILLBEOPENEDNEVER 0  // user sets to 1 if WILLBEOPENED is not honored
 #endif
@@ -162,6 +163,7 @@ do{
        if(zexpshift>=0){zzcelllen<<=zexpshift; zzcellp<<=zexpshift;}else{zzcelllen>>=-zexpshift; zzcellp>>=-zexpshift;}
        // if the new type is recursible, make sure zz is recursive.  This simplifies logic below
        ra00(zz,zt);  // make recursive if recursible
+       JMCSETMASK(zzendmask,zzcelllen+(ZZSTARTATEND^1)*(SZI-1),ZZSTARTATEND)   // when len changes, reset mask
 #if 0&&!ZZPOPNEVER  // obsolete
        // recalculate whether we can pop the stack.  We can, if the type is DIRECT and zzbox has not been allocated.  We could start zz as B01 (pop OK), then promote to
        // XNUM (pop not OK), then to FL (pop OK again).  It's not vital to be perfect, but then again it's cheap to be
@@ -207,8 +209,9 @@ do{
 // obsolete      if(unlikely((~zzoktozap&~zznoneedrecur)<0))AC(z)=(AC(z)+1)&~ACINPLACE;  // PERMANENT and VIRTUAL always recursive, thus don't do this
 // obsolete      ra00(z,AT(z));  // incr children and bring pointers into cache
     }
-    // copy the cells, which have been raised if needed
-    if(zzcelllen<MEMCPYTUNELOOP){I * RESTRICT d=(I*)(CAV(zz)+zzcellp); I * RESTRICT s=IAV(z); I n=zzcelllen; while((n-=SZI)>=0){*d++=*s++;} if(n&(SZI-1))STOREBYTES(d,*s,-n);}else{MC(CAV(zz)+zzcellp,AV(z),zzcelllen);}
+    // copy the cells, which have been raised if needed.  If we are copying forward, it is OK to copy fullwords
+    JMCR(CAV(zz)+zzcellp,AV(z),zzcelllen+(ZZSTARTATEND^1)*(SZI-1),loop1,ZZSTARTATEND,zzendmask)
+// obsolete     if(zzcelllen<MEMCPYTUNELOOP){I * RESTRICT d=(I*)(CAV(zz)+zzcellp); I * RESTRICT s=IAV(z); I n=zzcelllen; while((n-=SZI)>=0){*d++=*s++;} if(n&(SZI-1))STOREBYTES(d,*s,-n);}else{MC(CAV(zz)+zzcellp,AV(z),zzcelllen);}
     // Release the result now that we have copied its elements.  We do this rather than calling tpop to save the overhead, on the grounds that
     // any routine that allocated memory should have freed it, so the only thing on the tpop stack should be the result.  We do this only if the
     // result was inplaceable: otherwise the block is protected somewhere else and we can't free it.
@@ -356,6 +359,8 @@ do{
   // If result is sparse, allocate 0 atoms; later, change the allocation to something that will never match a result (viz a list with negative shape)
   zzr=(zzt&SPARSE)?1:zzr; natoms=(zzt&SPARSE)?0:natoms;
   zzcelllen=natoms<<bplg(zzt);  // number of bytes in one cell.
+  JMCSETMASK(zzendmask,zzcelllen+(ZZSTARTATEND^1)*(SZI-1),ZZSTARTATEND)   // set mask for JMCR
+
   // # cells in result is passed in as zzncells
   // Get # atoms to allocate
   RE(natoms=mult(natoms,zzncells));

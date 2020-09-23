@@ -391,6 +391,7 @@ static DF2(jtkey){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
  UC *fretp;  // where the frets will be stored
  GA(wperm,AT(w),AN(w),AR(w),AS(w)); // Note we could avoid initialization of indirect types, since we are filling it all
  I celllen = cellatoms<<bplg(AT(w));  // length of a cell of w, in bytes
+ JMCDECL(endmask) JMCSETMASK(endmask,celllen,1)   // set mask for JMCR
  // Once we know the number of frets, we can allocate the fret area.  If the number is small, we can use the canned area on the C stack.
  // The max # bytes needed is 4*((max # partitions of size>=256) clamped at # frets) + #frets
  // If y is inplaceable we can probably use it to store the frets, since it is copied sequentially.  The requirements are:
@@ -438,12 +439,13 @@ static DF2(jtkey){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
    }
 
    av[avvalue]=(I)partitionptr+celllen;  // store updated end-of-partition after move
-   // copy the data to the end of its partition and advance the partition pointer
-   if(celllen<MEMCPYTUNELOOP) {  // copy by hand if that's faster (0 len OK)
-    I n=celllen; while((n-=SZI)>=0){*partitionptr++=*wv++;}
-      // move full words.  Must not overwrite the area, since we are scatter-writing.
-    if(n&(SZI-1)){STOREBYTES(partitionptr,*wv,-n); wv = (I*)((C*)wv+SZI+n);}  // Use test because this code is repeated
-   }else{MC(partitionptr,wv,celllen); wv = (I*)((C*)wv+celllen);}
+// obsolete    // copy the data to the end of its partition and advance the partition pointer
+// obsolete    if(celllen<MEMCPYTUNELOOP) {  // copy by hand if that's faster (0 len OK)
+// obsolete     I n=celllen; while((n-=SZI)>=0){*partitionptr++=*wv++;}
+// obsolete       // move full words.  Must not overwrite the area, since we are scatter-writing.
+// obsolete     if(n&(SZI-1)){STOREBYTES(partitionptr,*wv,-n); wv = (I*)((C*)wv+SZI+n);}  // Use test because this code is repeated
+// obsolete    }else{MC(partitionptr,wv,celllen); wv = (I*)((C*)wv+celllen);}
+   JMCR(partitionptr,wv,celllen,loop1,1,endmask); wv = (I*)((C*)wv+celllen);  // Don't overwrite, since we are scatter-writing
 
   }
  }else{I *av;  // running pointer through the inputs
@@ -488,12 +490,13 @@ static DF2(jtkey){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
 
    I *partitionptr=(I*)(wpermv+partitionndx*celllen);  // place to copy next input to
    *slotaddr=partitionndx+1;  // store updated next-in-partition after move
-   // copy the data to the end of its partition and advance the partition pointer
-   if(celllen<MEMCPYTUNELOOP) {  // copy by hand if that's faster (0 len OK)
-    I n=celllen; while((n-=SZI)>=0){*partitionptr++=*wv++;}
-      // move full words.  Must not overwrite the area, since we are scatter-writing.
-    if(n&(SZI-1)){STOREBYTES(partitionptr,*wv,-n); wv = (I*)((C*)wv+SZI+n);}  // Use test because this code is repeated
-   }else{MC(partitionptr,wv,celllen); wv = (I*)((C*)wv+celllen);}
+   // copy the data to the end of its partition and advance the input pointer
+// obsolete    if(celllen<MEMCPYTUNELOOP) {  // copy by hand if that's faster (0 len OK)
+// obsolete     I n=celllen; while((n-=SZI)>=0){*partitionptr++=*wv++;}
+// obsolete       // move full words.  Must not overwrite the area, since we are scatter-writing.
+// obsolete     if(n&(SZI-1)){STOREBYTES(partitionptr,*wv,-n); wv = (I*)((C*)wv+SZI+n);}  // Use test because this code is repeated
+// obsolete    }else{MC(partitionptr,wv,celllen); wv = (I*)((C*)wv+celllen);}
+   JMCR(partitionptr,wv,celllen,loop2,1,endmask); wv = (I*)((C*)wv+celllen);  // Don't overwrite, since we are scatter-writing
 
    av=(I*)((I)av+k);  // advance to next input value
   }
@@ -534,6 +537,8 @@ DF2(jtkeybox){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
   w=&fauxw;  // switch to synthetic w
   AK(w)=-(I)w; AT(w)=INT; AR(w)=1;
  }
+ JMCDECL(endmask) JMCSETMASK(endmask,celllen,1)   // set mask for JMCR.  Harmless if celllen=-1
+
  // Note: self is invalid from here on
 // obsolete  RZ(a=indexof(a,a));  // self-classify the input using ct set before this verb; we are going to modify a, so make sure it's not virtual
  RZ(ai=indexofsub(IFORKEY,a,a));   // self-classify the input using ct set before this verb
@@ -583,11 +588,13 @@ DF2(jtkeybox){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
    if(celllen>=0) {
      av[avvalue]=(I)partitionptr+celllen;  // store updated end-of-partition after move
      // copy the data to the end of its partition and advance the partition pointer
-     if(celllen<MEMCPYTUNELOOP) {  // copy by hand if that's faster (0 len OK)
-      I n=celllen; while((n-=SZI)>=0){*partitionptr++=*wv++;}
-        // move full words.  Must not overwrite the area, since we are scatter-writing.
-      if(n&(SZI-1)){STOREBYTES(partitionptr,*wv,-n); wv = (I*)((C*)wv+SZI+n);}  // Use test because this code is repeated
-     }else{MC(partitionptr,wv,celllen); wv = (I*)((C*)wv+celllen);}
+// obsolete      if(celllen<MEMCPYTUNELOOP) {  // copy by hand if that's faster (0 len OK)
+// obsolete       I n=celllen; while((n-=SZI)>=0){*partitionptr++=*wv++;}
+// obsolete         // move full words.  Must not overwrite the area, since we are scatter-writing.
+// obsolete       if(n&(SZI-1)){STOREBYTES(partitionptr,*wv,-n); wv = (I*)((C*)wv+SZI+n);}  // Use test because this code is repeated
+// obsolete      }else{MC(partitionptr,wv,celllen); wv = (I*)((C*)wv+celllen);}
+    JMCR(partitionptr,wv,celllen,loop3,1,endmask); wv = (I*)((C*)wv+celllen);  // Don't overwrite, since we are scatter-writing
+
    }else{  // flag for (<./ i.@#)
      *partitionptr=(I)wv;   // store wv itself, which is the index vector
      wv=(I*)((I)wv+1);  // advance index vector
@@ -639,11 +646,12 @@ DF2(jtkeybox){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
    if(celllen>=0) {
      *slotaddr=(I)partitionptr+celllen;  // store updated end-of-partition after move
      // copy the data to the end of its partition and advance the partition pointer
-     if(celllen<MEMCPYTUNELOOP) {  // copy by hand if that's faster (0 len OK)
-      I n=celllen; while((n-=SZI)>=0){*partitionptr++=*wv++;}
-        // move full words.  Must not overwrite the area, since we are scatter-writing.
-      if(n&(SZI-1)){STOREBYTES(partitionptr,*wv,-n); wv = (I*)((C*)wv+SZI+n);}  // Use test because this code is repeated
-     }else{MC(partitionptr,wv,celllen); wv = (I*)((C*)wv+celllen);}
+// obsolete      if(celllen<MEMCPYTUNELOOP) {  // copy by hand if that's faster (0 len OK)
+// obsolete       I n=celllen; while((n-=SZI)>=0){*partitionptr++=*wv++;}
+// obsolete         // move full words.  Must not overwrite the area, since we are scatter-writing.
+// obsolete       if(n&(SZI-1)){STOREBYTES(partitionptr,*wv,-n); wv = (I*)((C*)wv+SZI+n);}  // Use test because this code is repeated
+// obsolete      }else{MC(partitionptr,wv,celllen); wv = (I*)((C*)wv+celllen);}
+     JMCR(partitionptr,wv,celllen,loop4,1,endmask); wv = (I*)((C*)wv+celllen);  // Don't overwrite, since we are scatter-writing
    }else{  // flag for (<./ i.@#)
      *slotaddr=(I)partitionptr+SZI;  // store updated end-of-partition after move
      *partitionptr=(I)wv;   // store wv itself, which is the index vector
@@ -1094,7 +1102,7 @@ static DF2(jtkeyheadtally){F2PREFIP;PROLOG(0017);A f,q,x,y,z;I b;I at,*av,k,n,r,
    ai=(A)((I)ai-1); I k=AN(ai); I datamin=AK(ai); I p=AM(ai);  // get size of an item in bytes, smallest item, range+1
    // allocate a tally area and clear it to 0
    A ftbl; GATV0(ftbl,INT,p,1); I *ftblv=voidAV(ftbl); memset(ftblv,~0,p<<LGSZI);
-  // pass through the inputs, setting ftbl to tally-1, and counting the number of partitions
+   // pass through the inputs, setting ftbl to tally-1, and counting the number of partitions
    I valmsk=(UI)~0LL>>(((-k)&(SZI-1))<<LGBB);  // mask to leave the k lowest bytes valid
    ftblv-=datamin;  // bias starting addr so that values hit the table
    I nparts=0;  // number of partitions in the result
@@ -1261,7 +1269,7 @@ static DF2(jtkeyheadtally){F2PREFIP;PROLOG(0017);A f,q,x,y,z;I b;I at,*av,k,n,r,
   RZ(q=indexof(a,a)); x=repeat(eq(q,IX(n)),w); y=keytally(q,q,0L); z=stitch(b?x:y,b?y:x);  // (((i.~a) = i. # a) # w) ,. (#/.~ i.~ a)   for ({. , #)
  }
  EPILOG(z);
-}    /* x ({.,#)/.y or x (#,{.)/.y */
+}    /* x ({.,#)/.y or x (#,{.)/. y */
 
 
 F1(jtsldot){A h=0;AF f1=jtoblique,f2;C c,d,e;I flag=VJTFLGOK1|VJTFLGOK2;V*v;

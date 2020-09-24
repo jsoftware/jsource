@@ -628,7 +628,7 @@ extern unsigned int __cdecl _clearfp (void);
 #else
 #define ASSERTAGREE(x,y,l) {I *aaa=(x), *aab=(y), aai=(l)-1; do{aab=aai<0?aaa:aab; ASSERT(aaa[aai]==aab[aai],EVLENGTH); --aai; aab=aai<0?aaa:aab; ASSERT(aaa[aai]==aab[aai],EVLENGTH); --aai;}while(aai>=0); }
 #endif
-#if C_AVX2&&SY_64  // scaf
+#if (C_AVX2&&SY_64) || EMU_AVX2 // scaf
 // set r nonzero if shapes disagree
 #define TESTDISAGREE(r,x,y,l) {I *aaa=(I*)(x), *aab=(I*)(y); I aai=4-(l); r=0; \
  do{__m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+(aai>=0?aai:0))); \
@@ -800,7 +800,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define SETIC(w,targ)   (targ=AS(w)[0], targ=AR(w)?targ:1)  //   (AR(w) ? *AS(w) : 1L)
 #define ICMP(z,w,n)     memcmpne((z),(w),(n)*SZI)
 #define ICPY(z,w,n)     memcpy((z),(w),(n)*SZI)
-// obsolete #if C_AVX&&SY_64
+// obsolete #if (C_AVX&&SY_64) || EMU_AVX
 // obsolete // Name comparison using wide instructions.   Run stmt if the names match
 // obsolete #define IFCMPNAME(name,string,len,stmt) \
 // obsolete  if((name)->m==(len)){  /* compare len.  todo should we also compare hash first? */ \
@@ -861,7 +861,7 @@ extern unsigned int __cdecl _clearfp (void);
 
 // memory copy, for J blocks.  Like memory copy, but knows it can fetch outside the arg boundaries for LIT-type args
 // if bytelen is 1, the arg may be of any length; if 0, must be a multiple of Is and the low bits of length are ignored
-#if C_AVX2
+#if C_AVX2 || EMU_AVX2
 #define JMCDECL(mskname) __m256i mskname;
 #define JMCSETMASK(mskname,l,bytelen) mskname=_mm256_loadu_si256((__m256i*)(validitymask+((-(((l)-bytelen)>>LGSZI))&(NPAR-1)))); /* 0->1111 1->1000 3->1110 */
 #define JMCcommon(d,s,l,lbl,bytelen,mskname,mskdecl) \

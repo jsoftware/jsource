@@ -177,6 +177,16 @@ I jdo(J jt, C* lp){I e;A x;
 
 C* getlocale(J jt){A y=locname(mtv); y=*AAV(y); R CAV(str0(y));}
 
+// Front-ends can call any functions exposed by JE, but the callback function for 11!:0 only calls jga to allocate a new literal array for returning result.
+// A front-end knows nothing how J memory pool works and it won't try to free or pop memory itself. This was just a design decision. eg,
+// jqt front-end uses another alternative, it stores result in a static variable and pass its address back to JE so that no jga is needed.
+//
+// The program flow begins with a J script execution of a sentence containing 11!:0 which is implemented by jtwd.
+// but jtwd itself knows nothing about the actual implementation, it just calls the callback function. and then
+// after callback function completed, the callback allocate an literal array inside JE memory pool and fill up the content of array.
+// The array allocated by jga is post processed inside jtwd and becomes the return value of jtwd, ie, the result of calling 11!:0 in J script.
+//
+// This may be confusing because the actual callback functions do not appear anywhere inside JE source.
 DF1(jtwd){A z=0;C*p=0;D*pd;I e,*pi,t;V*sv;
   F1PREFIP;
   F1RANK(1,jtwd,self);

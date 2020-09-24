@@ -63,7 +63,7 @@ I jtprod(J jt,I n,I*v){I z;
  // So we check each number as it is read, and exit early if 0 is encountered.  When we multiply, we suppress
  // the error assertion.  Then, at the end, if the product is 0, it must mean that there was an error, and
  // we report it then.  This way we don't need a separate pass to check for 0.
-if(*v<0)SEGFAULT if(!(z=*v++))R 0; DO(n-1, if(*v<0)SEGFAULT if(!(v[i]))R 0; z=jtmult(0,z,v[i]););  // the 0 to jtmult suppresses error assertion there  scaf
+ if(!(z=*v++))R 0; DO(n-1, if(!(v[i]))R 0; z=jtmult(0,z,v[i]););  // the 0 to jtmult suppresses error assertion there
  ASSERT(z!=0,EVLIMIT)
  R z;
 }

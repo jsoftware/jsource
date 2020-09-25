@@ -4,4 +4,5 @@ j901-release-d
 j901-release-e
 j901-release-e-1
 j902-beta-a
+j902-beta-f
 

@@ -120,7 +120,6 @@ static B jtwidthdp(J jt, A a, I *w, I *d){
   // . given. skip it and consume the following digits
   ++v,--remchars; for(t=0;remchars;++v,--remchars){C vv=*v; if(!BETWEENC(vv,'0','9'))break; t=(vv-'0')+10*t;}
   *d=t;
-  ASSERT(!remchars,EVDOMAIN);  // ddd, if given, must end the string.  That's how it was done.
  }else *w=-1;   // flag to indicate omitted d (!)
  // verify no remaining digits/. in field
  for(;remchars;++v,--remchars){C vv=*v; CCMCAND(digdot,cand,vv) ASSERT(!CCMTST(cand,vv),EVDOMAIN);}

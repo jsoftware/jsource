@@ -57,7 +57,7 @@ F jtjope(J jt,A w,C*mode){A t;F f;I n;static I nf=25; A z;
  ASSERT(BOX&AT(w),EVDOMAIN);
  RZ(t=str0(vslit(AAV0(w))));
  n=AN(t)-1;
- ASSERT(n,EVLENGTH);
+ ASSERT(n!=0,EVLENGTH);
 #if (SYS&SYS_UNIX)
 {
  C* cs=CAV(t);
@@ -135,15 +135,15 @@ F jtstdf(J jt,A w){A y;F f;I n,r,t;
  ASSERT(!AR(w),EVRANK);
  if(BOX&AT(w)){
   y=AAV0(w); t=AT(y); n=AN(y); r=AR(y);
-  if(t&(LIT+C2T+C4T)){ASSERT(1>=r,EVRANK); ASSERT(n,EVLENGTH); R 0;}
+  if(t&(LIT+C2T+C4T)){ASSERT(1>=r,EVRANK); ASSERT(n!=0,EVLENGTH); R 0;}
 /*!
-  if(t&C2T){ASSERT(1>=r,EVRANK); ASSERT(n,EVLENGTH); ASSERT(vc1(n,USAV(y)),EVDOMAIN); R 0;}
+  if(t&C2T){ASSERT(1>=r,EVRANK); ASSERT(n!=0,EVLENGTH); ASSERT(vc1(n,USAV(y)),EVDOMAIN); R 0;}
      vc1 can now be killed off
 */
   if(t&B01+INT)R stdf(y);
   ASSERT(0,EVDOMAIN);
  }
  f=(F)i0(w); 
- ASSERT(f,EVFNUM); 
+ ASSERT(f!=0,EVFNUM); 
  R f;
 }    /* 0 if w is a boxed file name; n if w is integer or boxed integer */

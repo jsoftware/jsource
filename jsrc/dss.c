@@ -27,9 +27,9 @@ static A jtssdo(J jt,A a,A w,C c){DC d,e;I n;
   if(d->dctype==DCCALL)DGOTO(d,-1)    /* terminate each call             */
   d=d->dclnk;
  }
- ASSERT(d,EVDOMAIN);                        /* must have a suspension          */
+ ASSERT(d!=0,EVDOMAIN);                        /* must have a suspension          */
  while(d&&DCCALL!=d->dctype)d=d->dclnk;     /* find topmost call               */
- ASSERT(d,EVDOMAIN);                        /* must have a call                */
+ ASSERT(d!=0,EVDOMAIN);                        /* must have a call                */
  if(a)RE(n=lnumcw(i0(a),d->dcc));           /* source line # to cw line #      */
  jt->dbsusact=SUSSS;
  switch(c){

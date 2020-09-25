@@ -665,7 +665,7 @@ DF2(jtkeybox){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
  jt->tnextpushp=pushxsave;   // restore tstack pointer
  // Set PRISTINE if w now has DIRECT type (note that w has been switched to INT for (<./ i.@#))
  AFLAG(z)=(-(AT(w)&DIRECT) & AFPRISTINE);  // maybe pristine
- ASSERT(y,EVWSFULL);  // if we broke out on allocation failure, fail.
+ ASSERT(y!=0,EVWSFULL);  // if we broke out on allocation failure, fail.
  POPCCT
  EPILOG(z);
 }    // a <./ w

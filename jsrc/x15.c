@@ -782,7 +782,7 @@ static CCT*jtcdload(J jt,CCT*cc,C*lib,C*proc){B ha=0;FARPROC f;HMODULE h;
 #if (SYS & SYS_UNIX)
  f=(FARPROC)dlsym(h,proc);
 #endif
- CDASSERT(f,DEBADFN);
+ CDASSERT(f!=0,DEBADFN);
  cc->fp=f;
  /* assumes the hash table for libraries (jt->cdhashl) is fixed sized */
  /* assumes cc will be cached as entry number jt->cdna                */
@@ -972,13 +972,13 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
    x=wv[i]; xt=AT(x); xn=AN(x); xr=AR(x);
    CDASSERT(!xr||star,per);         /* non-pointers must be scalars */
    lit=star&&xt&LIT&&(c=='b'||c=='s'&&0==(xn&1)||c=='f'&&0==(xn&3));
-   if(t&&TYPESNE(t,xt)&&!(lit||star&&!xr&&xt&BOX)){x=cvt(xt=t,x); CDASSERT(x,per);}
+   if(t&&TYPESNE(t,xt)&&!(lit||star&&!xr&&xt&BOX)){x=cvt(xt=t,x); CDASSERT(x!=0,per);}
    // We know that x originated in a box, so it can't be PRISTINE.  But it may have been converted, so we have to
    // make sure that what we install into *zv is not inplaceable.  *zv is never recursive.
    xv=AV(x); if(zbx)*zv=incorp(x);
   }else{
    xv=convert0(t,cv0,wt,u); xt=t; u+=wk;
-   CDASSERT(xv,per);
+   CDASSERT(xv!=0,per);
    if(zbx){GA(y,t,1,0,0); MC(AV(y),xv,bp(t)); *zv=incorp(y);}  // must never install inplaceable block
   }
   // now xv points to the actual arg data for arg i, and an A-block for same has been installed into *zv
@@ -1108,7 +1108,7 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
 
  DO(cipcount, convertdown(cipv[i],cipn[i],cipt[i]););  /* convert I to s and int and d to f as required */
  if(zbx){GA(x,cc->zt,1,0,0); xv=AV(x); *(A*)zv0=incorp(x);}else xv=(I*)zv0;  // must not box an inplaceable
- if('1'==cc->cc){fp=(FARPROC)*((I)cc->fp+(I*)*(I*)*data); CDASSERT(fp,DEBADFN);}else fp=cc->fp;
+ if('1'==cc->cc){fp=(FARPROC)*((I)cc->fp+(I*)*(I*)*data); CDASSERT(fp!=0,DEBADFN);}else fp=cc->fp;
  docall(fp, data, dv-data, dd, dcnt, cc->zl, xv, cc->alternate);
 
  DO(cipcount, convertup(cipv[i],cipn[i],cipt[i]);); /* convert s and int to I and f to d as required */
@@ -1526,7 +1526,7 @@ F2(jtcdproc2){C*proc;FARPROC f;HMODULE h;
   f=(FARPROC)dlsym(h,proc);
 #endif
  }
- CDASSERT(f,DEBADFN);
+ CDASSERT(f!=0,DEBADFN);
  R sc((I)f);
 }    /* 15!:21 return proc address */
 

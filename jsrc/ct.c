@@ -44,13 +44,13 @@ static A jttayamp(J jt,A w,B nf,A x,A h){A y;B ng=nf^1;I j,n;V*v=FAV(h);
   case CPLUS:  R tpoly(over(x,num(1)));
   case CMINUS: R tpoly(nf?over(x,num(-1)):over(negate(x),num(1)));
   case CSTAR:  R tpoly(over(num(0),x));
-  case CDIV:   ASSERT(ng,EVDOMAIN); R tpoly(over(num(0),recip(x)));
+  case CDIV:   ASSERT(ng!=0,EVDOMAIN); R tpoly(over(num(0),recip(x)));
   case CJDOT:  R tpoly(nf?over(x,a0j1):over(jdot1(x),num(1)));
-  case CPOLY:  ASSERT(nf,EVDOMAIN); R tpoly(BOX&AT(x)?poly1(x):x);
-  case CHGEOM: ASSERT(nf,EVDOMAIN); RE(j=i0(x)); ASSERT(0<=j,EVDOMAIN);
+  case CPOLY:  ASSERT(nf!=0,EVDOMAIN); R tpoly(BOX&AT(x)?poly1(x):x);
+  case CHGEOM: ASSERT(nf!=0,EVDOMAIN); RE(j=i0(x)); ASSERT(0<=j,EVDOMAIN);
                y=IX(j);
                R tpoly(divide(hgcoeff(y,h),fact(y)));
-  case CBANG:  ASSERT(nf,EVDOMAIN); RE(j=i0(x)); ASSERT(0<=j,EVDOMAIN); 
+  case CBANG:  ASSERT(nf!=0,EVDOMAIN); RE(j=i0(x)); ASSERT(0<=j,EVDOMAIN); 
                R tpoly(divide(poly1(box(iota(x))),fact(x)));
   case CEXP:   if(nf)R eva(x,"(^.x)&^ % !");
                RE(n=i0(x));   
@@ -78,7 +78,7 @@ static A jttcoamp(J jt,A w,B nf,A x,A h){I j;V*v=FAV(h);
   case CEXP:   
    if(nf)R amp(logar1(x),ds(CEXP)); break;
   case CHGEOM: 
-   ASSERT(nf,EVDOMAIN); RE(j=i0(x)); ASSERT(0<=j,EVDOMAIN);
+   ASSERT(nf!=0,EVDOMAIN); RE(j=i0(x)); ASSERT(0<=j,EVDOMAIN);
    R tpoly(hgcoeff(IX(j),h));
  }
  R facit(tayamp(w,nf,x,h));
@@ -173,7 +173,7 @@ static F1(jttayatop){A c,d,e,f,ft,g,gt,h;I k,m,n;V*v=FAV(w);
   if(2<n)ft=evc(sc(n-1),ft,"0&=@(x&|) * y@<.@(%&x)");
   R !m?ft:tpoly(1==n?df1(e,f):df1(IX(1+n*(m-1)),ft));
  }
- ASSERT(m,EVDOMAIN);
+ ASSERT(m!=0,EVDOMAIN);
  /* if(2==m&&equ(num(0),head(c)))R folk(tail(c),ds(CSTAR),gt)); */
  h=eval("4 : '+/x*y([:+//.*/)^:(i.#x) 1'");
  R AN(d)?tpoly(df2(c,d,h)):eva(atco(amp(c,h),gt),"[ { x@:(i.@>:@(>./)@,)");
@@ -226,7 +226,7 @@ F1(jttdot){A f,g,h;B nf,ng;C id;V*v;
      case  0:   R tpoly(v2(0L,1L));
      case  1:
       ft=tdot(f); RZ(c=d=coeff(ft)); m=AN(c);
-      ASSERT(m,EVDOMAIN);
+      ASSERT(m!=0,EVDOMAIN);
       RZ(h=eval("4 : '+/x*y([:+//.*/)^:(i.#x) 1'"));
       DQ(n-1, RZ(d=df2(c,d,h)););
       R tpoly(d);

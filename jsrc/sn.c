@@ -55,7 +55,7 @@ A jtnfs(J jt,I n,C*s){A z;C f,*t;I m,p;NM*zv;
  DQ(n, if(' '!=(f=*s))break; ++s; --n;); 
  t=s+n-1;
  DQ(n, if(' '!=*t)break; --t; --n;);
- ASSERT(n,EVILNAME);   // error if name is empty  (? not required since name always valid?
+ ASSERT(n!=0,EVILNAME);   // error if name is empty  (? not required since name always valid?
  // If the name is the special x y.. or x. y. ..., return a copy of the preallocated block for that name (we may have to add flags to it)
 // obsolete  C *nmp;if((1==n)&&(nmp=strchr(argnames,*s))){  // if an argument name
 // obsolete   R ca(mnuvxynam[nmp-argnames]);  // return a clone of the argument block (because flags may be added)

@@ -365,7 +365,7 @@ DF2(jtpowop){A hs;B b;V*v;
  }
  // If not special case, fall through to handle general case
  I m=AN(hs); // m=#atoms of n; n=1st atom; r=n has rank>0
- ASSERT(m,EVDOMAIN);  // empty power is error
+ ASSERT(m!=0,EVDOMAIN);  // empty power is error
 // obsolete  b=0; if(m&&AT(w)&FL+CMPX)RE(b=!all0(eps(w,over(ainf,scf(infm)))));   // set b if n is nonempty FL or CMPX array containing _ or __ kludge should just use hs
 // obsolete  b|=!m; B nonnegatom=!AR(w)&&0<=IAV(hs)[0]; I flag=FAV(a)->flag&((~b&nonnegatom)<<VJTFLGOK1X);  // b is (empty or contains _/__), (scalar n>=0); if the latter, keep the inplace flag
 // obsolete  R fdef(0,CPOWOP,VERB, b?jtply1:nonnegatom?jtfpown:jtply1/*obsolete s*/,jtply2, a,w,hs,   // scaf Create derived verb: special cases pown (nonneg noninfinite atom), ply1s (nonempty not containing infinity)

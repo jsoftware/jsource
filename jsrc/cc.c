@@ -183,7 +183,7 @@ DF2(jtboxcut0){A z;
    av+=2;
  );     
  jt->tnextpushp=pushxsave;   // restore tstack pointer
- ASSERT(y,EVWSFULL);  // if we broke out an allocation failure, fail.  Since the block is recursive, when it is tpop()d it will recur to delete contents
+ ASSERT(y!=0,EVWSFULL);  // if we broke out an allocation failure, fail.  Since the block is recursive, when it is tpop()d it will recur to delete contents
  // The result can be called pristine if the contents are DIRECT and the result is recursive, because it contains all copied data
  AFLAG(z)|=(-(t&DIRECT))&(~(I)jtinplace<<(AFPRISTINEX-JTWILLBEOPENEDX))&AFPRISTINE;
  RETF(z);  // return the recursive block
@@ -260,11 +260,11 @@ static DF2(jtcut2bx){A*av,b,t,x,*xv,y,*yv;B*bv;I an,bn,i,j,m,p,q,*u,*v,*ws;
    A zz,zw; RZ(zw=vec(INT,MAX(0,r-1),1+s)); IRS2(z,zw,0L,0L,1L,jtover,zz); RETF(zz);  \
   case CHEAD:                                                                \
    GA(z,t,m*c,r,s); zc=CAV(z); AS(z)[0]=m;                                     \
-   EACHC(ASSERT(d,EVINDEX); MC(zc,v1,k); zc+=k;);                            \
+   EACHC(ASSERT(d!=0,EVINDEX); MC(zc,v1,k); zc+=k;);                            \
    R z;                                                                      \
   case CTAIL:                                                                \
    GA(z,t,m*c,r,s); zc=CAV(z); AS(z)[0]=m;                                     \
-   EACHC(ASSERT(d,EVINDEX); MC(zc,v1+k*(d-1),k); zc+=k;);                    \
+   EACHC(ASSERT(d!=0,EVINDEX); MC(zc,v1+k*(d-1),k); zc+=k;);                    \
    R z;                                                                      \
   case CCOMMA:                                                               \
   case CLEFT:                                                                \

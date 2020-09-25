@@ -256,13 +256,13 @@ F1(jtminv){PROLOG(0068);A q,y,z;I m,n,*s,t,wr;
 static B jttridiag(J jt,I n,A a,A x){D*av,d,p,*xv;I i,j,n1=n-1;
  av=DAV(a); xv=DAV(x); d=xv[0];
  for(i=j=0;i<n1;++i){
-  ASSERT(d,EVDOMAIN);  
+  ASSERT(d!=0,EVDOMAIN);  
   p=xv[j+2]/d;  
   d=xv[j+3]-=p*xv[j+1]; 
   av[i+1]-=p*av[i]; 
   j+=3;
  }
- ASSERT(d,EVDOMAIN); 
+ ASSERT(d!=0,EVDOMAIN); 
  i=n-1; j=AN(x)-1; av[i]/=d;
  for(i=n-2;i>=0;--i){j-=3; av[i]=(av[i]-xv[j+1]*av[i+1])/xv[j];}
  R 1;

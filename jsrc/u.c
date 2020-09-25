@@ -9,20 +9,6 @@
 
 #if SY_64
 
-#if defined(OBSOLETE)
-static I jtmultold(J jt,I x,I y){B neg;I a,b,c,p,q,qs,r,s,z;static I m=0x00000000ffffffff;
- if(!x||!y)R 0;
- neg=0>x!=0>y;
- if(0>x){x=-x; ASSERT(0<x,EVLIMIT);} p=m&(x>>32); q=m&x;
- if(0>y){y=-y; ASSERT(0<y,EVLIMIT);} r=m&(y>>32); s=m&y;
- ASSERT(!(p&&r),EVLIMIT);
- a=p*s+q*r; qs=q*s; b=m&(qs>>32); c=m&qs;
- ASSERT(2147483648>a+b,EVLIMIT);
- z=c+((a+b)<<32);
- R neg?-z:z;
-}
-#endif
-
 // If jt is 0, don't call jsignal when there is an error
 // Returns x*y, or 0 if there is an error (and in that case jsignal might have been called)
 #ifdef DPMULD
@@ -57,7 +43,9 @@ I jtmult(J jt, I x, I y){I z;I const lm = 0x00000000ffffffffLL; I const hm = 0xf
 }
 #endif
 
+// take the product of n values starting at *v.  Set error if overflow, but NOT if any of the values is 0
 I jtprod(J jt,I n,I*v){I z;
+#if 0 // obsolete
  if(1>n)R 1;
  // We want to make sure that if any of the numbers being multiplied is 0, we return 0 with no error.
  // So we check each number as it is read, and exit early if 0 is encountered.  When we multiply, we suppress
@@ -66,6 +54,18 @@ I jtprod(J jt,I n,I*v){I z;
  if(!(z=*v++))R 0; DO(n-1, if(!(v[i]))R 0; z=jtmult(0,z,v[i]););  // the 0 to jtmult suppresses error assertion there
  ASSERT(z!=0,EVLIMIT)
  R z;
+#else
+ DPMULDDECLS
+ // We generally don't call here unless n>2, so we optimize for that case
+ // We want to make sure that if any of the numbers being multiplied is 0, we return 0 with no error.
+ // So we check each number as it is read, and exit early if 0 is encountered.  When we multiply, we suppress
+ // the error assertion.  Then, at the end, if the product is 0, it must mean that there was an error, and
+ // we report it then.  This way we don't need a separate pass to check for 0.
+ z=1;
+ DQ(n, if(unlikely(*v==0))R 0; DPMULDZ(z,*v,z) ++v;)
+ ASSERT(z!=0,EVLIMIT)
+ R z;
+#endif
 }
 #else
 

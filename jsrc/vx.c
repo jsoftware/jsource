@@ -342,7 +342,7 @@ static XF2(jtxlog2){D c,d,x,y;I an,*av,j,k,m,n,wn,*wv;X p,q;
  wn=AN(w); wv=AV(w); d=(D)wv[wn-1]; if(1<wn)d=wv[wn-2]+d*XBASE;
  if(2<an)R rifvsdebug(xlog2sub(a,w));
  ASSERT(0<=c,EWIMAG);
- if(!c){ASSERT(d,EVDOMAIN); R iv0;}
+ if(!c){ASSERT(d!=0,EVDOMAIN); R iv0;}
  if(!d){ASSERT(0<c,EVDOMAIN); R rifvsdebug(vci(XNINF));}
  ASSERT(0<d,EVDOMAIN);
  if(1==c)R rifvsdebug(1==d?iv0:vci(XPINF));

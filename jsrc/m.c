@@ -244,7 +244,7 @@ F1(jtspforloc){A*wv,x,y,z;C*s;D*v,*zv;I i,j,m,n;L*u;LX *yv,c;
    bucketx=BUCKETXLOC(m,s);
   }
   y=stfind(m,s,bucketx);   // y is the block for the locale
-  ASSERT(y,EVLOCALE);
+  ASSERT(y!=0,EVLOCALE);
   *v=(D)(FHRHSIZE(AFHRH(y)));  // start with the size of the locale block (always a normal block)
   spfor1(LOCPATH(y)); spfor1(LOCNAME(y));  // add in the size of the path and name
   m=AN(y); yv=LXAV0(y); 
@@ -972,7 +972,7 @@ auditmemchains();
 if((I)jt&3)SEGFAULT
 #endif
  z=jt->mfree[-PMINL+1+blockx].pool;   // tentatively use head of free list as result - normal case, and even if blockx is out of bounds will not segfault
- if(2>*jt->adbreakr){  // this is JBREAK0, done this way so predicted fallthrough will be true
+ if(likely(2>*jt->adbreakr)){  // this is JBREAK0, done this way so predicted fallthrough will be true
   A *pushp=jt->tnextpushp;  // start reads for tpush
 
   if(blockx<PLIML){ 
@@ -1053,8 +1053,9 @@ if((I)jt&3)SEGFAULT
   }
 #endif
   // If the user is keeping track of memory high-water mark with 7!:2, figure it out & keep track of it.  Otherwise save the cycles
-  if(!(mfreeb&MFREEBCOUNTING))R z;  // this is a so-far-fruitless attempt to fall through to a return
-  jt->bytes += n; if(jt->bytes>jt->bytesmax)jt->bytesmax=jt->bytes;
+  if(unlikely((mfreeb&MFREEBCOUNTING))){
+   jt->bytes += n; if(jt->bytes>jt->bytesmax)jt->bytesmax=jt->bytes;
+  }
   R z;
  }else{jsignal(EVBREAK); R 0;}  // If there was a break event, take it
 }

@@ -73,7 +73,7 @@ static F1(jttoc2){A z;C*wv,*zv;I n;C4*w4;US*z2;
 static F1(jttoc2e){A z;I m,n,r;
  RZ(w);
  n=AN(w); r=AR(w);
- ASSERT(r,EVRANK);
+ ASSERT(r!=0,EVRANK);
  ASSERT(!n||LIT&AT(w),EVDOMAIN);
  m=*(AS(w)+r-1);
  ASSERT(0==(m&1),EVLENGTH);

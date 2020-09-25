@@ -655,7 +655,7 @@ DF1(jtredcat){A z;B b;I f,r,*s,*v,wr;
 static DF1(jtredsemi){I f,n,r,*s,wr;
  RZ(w);
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; s=AS(w); SETICFR(w,f,r,n); /* obsolete n=r?s[f]:1;*/  // let the rank run into tail   n=#items  in a cell of w
- if(2>n){ASSERT(n,EVDOMAIN); R tail(w);}  // rank still set
+ if(2>n){ASSERT(n!=0,EVDOMAIN); R tail(w);}  // rank still set
  if(BOX&AT(w))R jtredg(jt,w,self);  // the old way failed because it did not mimic scalar replication; revert to the long way.  ranks are still set
  else{A z; R IRS1(w,0L,r-1,jtbox,z);}  // unboxed, just box the cells
 }    /* ;/"r w */
@@ -665,7 +665,7 @@ static DF1(jtredstitch){A c,y;I f,n,r,*s,*v,wr;
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; RESETRANK;
  s=AS(w); SETICFR(w,f,r,n);
 // obsolete n=r?s[f]:1;
- ASSERT(n,EVDOMAIN);
+ ASSERT(n!=0,EVDOMAIN);
  if(1==n)R IRS1(w,0L,r,jthead,y);
  if(1==r){if(2==n)R RETARG(w); A z1,z2,z3; RZ(IRS2(num(-2),w,0L,0L,1L,jtdrop,z1)); RZ(IRS2(num(-2),w,0L,0L,1L,jttake,z2)); R IRS2(z1,z2,0L,1L,0L,jtover,z3);}
  if(2==r)R IRS1(w,0L,2L,jtcant1,y);

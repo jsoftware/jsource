@@ -17,9 +17,9 @@
 #include "p.h"
 #include "w.h"
 
-#define BASSERT(b,e)   {if(!(b)){jsignal(e); i=-1; z=0; continue;}}
+#define BASSERT(b,e)   {if(unlikely(!(b))){jsignal(e); i=-1; z=0; continue;}}
 #define BGATV0(v,t,n,r) BZ(v=ga(t,(I)(n),(I)(r),0))
-#define BZ(e)          if(!(e)){i=-1; z=0; continue;}
+#define BZ(e)          if(unlikely(!(e))){i=-1; z=0; continue;}
 
 // sv->h is the A block for the [2][4] array of saved info for the definition; hv->[4] boxes of info for the current valence;
 // line-> box 0 - tokens; x->box 1 - A block for control words; n=#control words; cw->array of control-word data, a CW struct for each
@@ -51,7 +51,7 @@ typedef struct{I4 d,t,e,b;} TD;  // line numbers of catchd., catcht., end. and t
 
 
 static B jtforinit(J jt,CDATA*cv,A t){A x;C*s,*v;I k;
- ASSERT(t,EVCTRL);
+ ASSERT(t!=0,EVCTRL);
  RZ(ras(t)); cv->t=t;                            /* iteration array     */
  SETIC(t,cv->n);                            /* # of items in t     */
  cv->j=-1;                               /* iteration index     */
@@ -138,14 +138,14 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
   // If this is adv/conj, it must be (1/2 : n) executed with no x or y.  Set uv then, and undefine x/y
   u=AT(self)&ADV+CONJ?a:0; v=AT(self)&ADV+CONJ?w:0;
 // saved for next rev   a=AT(self)&ADV+CONJ?0:a; w=AT(self)&ADV+CONJ?0:w;
-  if(!(jt->uflags.us.cx.cx_us | (sflg&(VLOCK|VXOP|VTRY1|VTRY2)))){
+  if(likely(!(jt->uflags.us.cx.cx_us | (sflg&(VLOCK|VXOP|VTRY1|VTRY2))))){
    // Normal case of verbs. Read the info for the parsed definition, including control table and number of lines
    LINE(sv);
    // Create symbol table for this execution.  If the original symbol table is not in use (rank unflagged), use it;
    // otherwise clone a copy of it.  We have to do this before we create the debug frame
    // This code duplicated below
    locsym=hv[3];  // fetch pointer to preallocated symbol table
-   ASSERT(locsym,EVDOMAIN);  // if the valence is not defined, give valence error
+   ASSERT(locsym!=0,EVDOMAIN);  // if the valence is not defined, give valence error
    if(!(AR(locsym)&LSYMINUSE)){AR(locsym)|=LSYMINUSE;gsfctdl|=32;}  // remember if we are using the original symtab
    else{RZ(locsym=clonelocalsyms(locsym));}
   } else {  // something special required
@@ -154,7 +154,7 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
    // Read the info for the parsed definition, including control table and number of lines
    LINE(sv);
    locsym=hv[3];  // fetch pointer to preallocated symbol table
-   ASSERT(locsym,EVDOMAIN);  // if the valence is not defined, give valence error
+   ASSERT(locsym!=0,EVDOMAIN);  // if the valence is not defined, give valence error
    if(!(AR(locsym)&LSYMINUSE)){AR(locsym)|=LSYMINUSE;gsfctdl|=32;}  // remember if we are using the original symtab
    else{RZ(locsym=clonelocalsyms(locsym));}
 
@@ -390,7 +390,7 @@ dobblock:
   case CDOF:   // do. after for.
    // do. after for. .  If this is first time, initialize the iterator
    if(!cv->t){
-    BASSERT(t,EVCTRL);   // Error if no sentences in T-block
+    BASSERT(t!=0,EVCTRL);   // Error if no sentences in T-block
     CHECKNOUN    // if t is not a noun, signal error on the last line executed in the T block
     BZ(forinit(cv,t)); t=0;
    }
@@ -445,7 +445,7 @@ dobblock:
    // make sure this is a noun, and save it on the stack in cv->t.  Then clear t
    if(!cv->t){
     // This is the first case.  That means the t block has the select. value.  Save it.
-    BASSERT(t,EVCTRL);  // error if select. case.
+    BASSERT(t!=0,EVCTRL);  // error if select. case.
     CHECKNOUN    // if t is not a noun, signal error on the last line executed in the T block
     BZ(ras(t)); cv->t=t; t=0;  // protect t from free while we are comparing with it, save in stack
    }

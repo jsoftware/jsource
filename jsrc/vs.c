@@ -66,7 +66,7 @@ static A jtsparse1a(J jt,A s,A a,A e,A y,A x){A z;B*b;I an,*av,et,r,*sv,t,*v;P*p
  RZ(s&&a&&e);
  RZ(s=vi(s)); r=AN(s); sv=AV(s); 
  ASSERT(1>=AR(s),EVRANK);
- ASSERT(r,EVLENGTH);
+ ASSERT(r!=0,EVLENGTH);
  ASSERT(r<=RMAX,EVLIMIT);
  DO(r, ASSERT(0<=sv[i],EVDOMAIN););
  RZ(a=vaxis(r,a==mark?IX(r):a)); an=AN(a); av=AV(a);
@@ -114,7 +114,7 @@ static A jtsparse1a(J jt,A s,A a,A e,A y,A x){A z;B*b;I an,*av,et,r,*sv,t,*v;P*p
    xv+=k; *AS(x1)=(xv-CAV(x1))/k; AN(x1)=m**AS(x1); x=x1;
  }}
  t=STYPE(AT(x)); 
- ASSERT(t,EVDOMAIN);
+ ASSERT(t!=0,EVDOMAIN);
  GASPARSE(z,t,1,r,sv); p=PAV(z); 
  SPB(p,a,a); 
  SPB(p,e,e); 
@@ -281,7 +281,7 @@ F2(jtrezero){A x,z;I at,t,wt,zt;P*wp,*zp;
  ASSERT(!AR(a),EVRANK);
  ASSERT(HOMO(at,wt),EVDOMAIN);
  RE(t=maxtype(at,wt)); zt=STYPE(t);
- ASSERT(zt,EVDOMAIN);
+ ASSERT(zt!=0,EVDOMAIN);
  GASPARSE(z,zt,1,AR(w),AS(w)); zp=PAV(z);
  SPB(zp,e,TYPESEQ(t,at)?ca(a):cvt(t,a));
  SPB(zp,a,ca(SPA(wp,a)));

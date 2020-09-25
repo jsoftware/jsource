@@ -42,9 +42,9 @@ DF2(jtunquote){A z;
      }
     }
    }
-   ASSERT(stabent,EVVALUE);  // name must be defined
+   ASSERT(stabent!=0,EVVALUE);  // name must be defined
    fs=stabent->val;  // fetch the value of the name
-   ASSERT(fs,EVVALUE); // make sure the name's value is given also
+   ASSERT(fs!=0,EVVALUE); // make sure the name's value is given also
    // Remember the resolved value and the current modifiercounter, UNLESS the name does not permit remembering the lookup
    if(v->localuse.lvp[0]){v->localuse.lvp[0]=fs; AM(self)=jt->modifiercounter;}
    ASSERT(PARTOFSPEECHEQACV(AT(self),AT(fs)),EVDOMAIN);   // make sure its part of speech has not changed since the name was parsed
@@ -55,7 +55,7 @@ DF2(jtunquote){A z;
   jt->curname=thisname=v->fgh[1];  // get the original name
   explocale=0;  // flag no explicit locale
   fs=v->fgh[2];  // point to the actual executable
-  ASSERT(fs,EVVALUE); // make sure the name's value is given also
+  ASSERT(fs!=0,EVVALUE); // make sure the name's value is given also
   ASSERT(TYPESEQ(AT(self),AT(fs)),EVDOMAIN);   // make sure its part of speech has not changed since the name was parsed
   // The pseudo-named function was created under debug mode.  If the same sequence had been parsed outside of debug, it would have been anonymous.  This has
   // implications: anonymous verbs do not push/pop the locale stack.  If PMCTRBSTKREQD is set, ALL functions will push the stack here.  That is bad, because

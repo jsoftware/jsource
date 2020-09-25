@@ -126,15 +126,15 @@ static F1(jtinvamp){A f,ff,g,h,x,y;B nf,ng;C c,d,*yv;I n;V*u,*v;
    if(ff=FAV(h)->fgh[0],VERB&AT(ff))R invamp(amp(nf?ff:x,nf?x:ff));
    else{ff=unname(h); R invamp(amp(nf?x:ff,nf?ff:x));}
   case CSCO:     
-   ASSERT(nf,EVDOMAIN); 
+   ASSERT(nf!=0,EVDOMAIN); 
    RE(n=i0(x)); ASSERT(n&&BETWEENC(n,-6,6),EVDOMAIN);
    R amp(sc(-n),h);
   case CUCO:
-   ASSERT(nf,EVDOMAIN); 
+   ASSERT(nf!=0,EVDOMAIN); 
    RE(n=i0(x)); ASSERT(BETWEENC(n,1,8)&!BETWEENC(n,5,6),EVDOMAIN);
    R amp(sc(-(1^(-n))),h);
   case CCANT:    
-   ASSERT(nf,EVDOMAIN); 
+   ASSERT(nf!=0,EVDOMAIN); 
    R obverse(eva(x,"] |:~ u C.^:_1 i.@#@$"),w);
   case CPCO:
    if(nf){
@@ -157,7 +157,7 @@ static F1(jtinvamp){A f,ff,g,h,x,y;B nf,ng;C c,d,*yv;I n;V*u,*v;
    ASSERT(1==AR(x),EVRANK);
    R fdef(0,CPOWOP,VERB, jtexpandg,0L, w,num(-1),0L, VFLAGNONE, RMAX,0L,0L);
   case CPOUND:
-   ASSERT(nf,EVDOMAIN);
+   ASSERT(nf!=0,EVDOMAIN);
    ASSERT(1==AR(x),EVRANK);
    R fdef(0,CPOWOP,VERB, jtexpandf,0L, w,num(-1),0L, VFLAGNONE, RMAX,0L,0L);
    break;
@@ -215,7 +215,7 @@ static F1(jtinvamp){A f,ff,g,h,x,y;B nf,ng;C c,d,*yv;I n;V*u,*v;
     case 22: case 25:          R w;
     case 19: case 28:          if(ng)R w; break;
     case 21: case 26:          if(nf)R w; break;
-    case 32: case 33: case 34: ASSERT(nf,EVDOMAIN); R amp(negate(x),h);
+    case 32: case 33: case 34: ASSERT(nf!=0,EVDOMAIN); R amp(negate(x),h);
    }
    break;
   case CPOLY:
@@ -398,7 +398,7 @@ F1(jtiden){A f,g,x=0;V*u,*v;
 // obsolete                 x=num(1);
 // obsolete   }
 // obsolete  }
- ASSERT(x,EVDOMAIN);
+ ASSERT(x!=0,EVDOMAIN);
  R folk(x,swap(ds(CDOLLAR)),atop(ds(CBEHEAD),ds(CDOLLAR)));
 }
 
@@ -410,6 +410,6 @@ F1(jtidensb){A f,g,x=0,w0=w;V*v;
   case CMAX:    GATV0(x,SBT,1,0);*SBAV(x)=0; break;
   case CMIN:    GATV0(x,SBT,1,0);*SBAV(x)=jt->sbuv[0].down; break;
  }
- ASSERT(x,EVDOMAIN);
+ ASSERT(x!=0,EVDOMAIN);
  R folk(x,swap(ds(CDOLLAR)),atop(ds(CBEHEAD),ds(CDOLLAR)));
 }

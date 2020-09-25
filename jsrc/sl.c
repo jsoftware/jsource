@@ -287,7 +287,7 @@ static A jtvlocnl(J jt,I b,A w){A*wv,y;C*s;I i,m,n;
   if(((b-2)&(AR(y)-1)&-(AT(y)&(INT|B01)))<0)continue;   // scalar numeric locale is ok
   m=AN(y); s=CAV(y);
   ASSERT(1>=AR(y),EVRANK);
-  ASSERT(m,EVLENGTH);
+  ASSERT(m!=0,EVLENGTH);
   ASSERT(LIT&AT(y),EVDOMAIN);
   ASSERT(((1-b) & (I)((UI)CAV(y)[0]-('9'+1)))>=0,EVDOMAIN);  // numeric locale not allowed except when called for in b
   if(b&1)ASSERTN(vlocnm(m,s),EVILNAME,nfs(m,s));
@@ -421,7 +421,7 @@ F1(jtlocswitch){A g;
 
 F1(jtlocname){A g=jt->global;
  ASSERTMTV(w);
- ASSERT(g,EVLOCALE);
+ ASSERT(g!=0,EVLOCALE);
  R box(sfn(0,LOCNAME(g)));
 }    /* 18!:5  current locale name */
 
@@ -437,7 +437,7 @@ F1(jtlocmap){A g,q,x,y,*yv,z,*zv;I c=-1,d,j=0,m,*qv,*xv;
  RZ(w);
  ASSERT(!AR(w),EVRANK);
  RE(g=equ(w,zeroionei(0))?jt->stloc:equ(w,zeroionei(1))?jt->locsyms:locale(0,w));
- ASSERT(g,EVLOCALE);
+ ASSERT(g!=0,EVLOCALE);
  RZ(q=locmap1(g)); qv=AV(q);
  m=*AS(q);
  // split the q result between two boxes

@@ -138,7 +138,7 @@ F1(jthostne){
   if(jt->sm==SMJAVA&&-1==b) b=-1==system("")?0:-1;
 #endif
   b=!b;
-  ASSERT(b,EVFACE);
+  ASSERT(b!=0,EVFACE);
  }
 #endif
  R mtv;

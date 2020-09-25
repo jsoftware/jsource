@@ -69,7 +69,7 @@ F1(jtarep){R box(aro(w));}
 static DF1(jtfxchar){A y;C c,d,id,*s;I m,n;
  n=AN(w);
  ASSERT(1>=AR(w),EVRANK);  // string must be an atom or list
- ASSERT(n,EVLENGTH);
+ ASSERT(n!=0,EVLENGTH);
  s=CAV(w); c=*(s+n-1);
  DO(n, d=s[i]; ASSERT((C)(d-32)<(C)(127-32),EVSPELL););  // must be all ASCII
  if(((ctype[(UC)*s]&~CA)==0)&&c!=CESC1&&c!=CESC2)R swap(w);  // If name and not control word, treat as name~, create nameref

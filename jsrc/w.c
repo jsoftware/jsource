@@ -406,7 +406,7 @@ static A jtfsm0(J jt,A a,A w,C chka){PROLOG(0100);A*av,m,s,x,w0=w;B b;I c,f,*ijr
   ASSERT(1>=AR(w),EVRANK);
   if(!(B01&AT(w))){RZ(w=w0=vi(w)); v=AV(w); DO(n, k=v[i]; ASSERT((UI)k<(UI)q,EVINDEX););}
  }else if(NUMERIC&AT(m)){  // m is numeric list
-  ASSERT(b,EVDOMAIN);   // w must be ASCII
+  ASSERT(b!=0,EVDOMAIN);   // w must be ASCII
  }else{A*mv,t,y;I j,r;
   ASSERT(BOX&AT(m),EVDOMAIN);  // otherwise m must be boxes
   RZ(y=raze(m)); r=AR(y); k=AS(y)[0];  // y = all the input values run together, k=# input values

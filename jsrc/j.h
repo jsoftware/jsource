@@ -618,25 +618,46 @@ extern unsigned int __cdecl _clearfp (void);
 #define ASSERTSYS(b,s)  {if(unlikely(!(b))){fprintf(stderr,"system error: %s : file %s line %d\n",s,__FILE__,__LINE__); jsignal(EVSYSTEM); jtwri(jt,MTYOSYS,"",(I)strlen(s),s); R 0;}}
 #define ASSERTW(b,e)    {if(unlikely(!(b))){if((e)<=NEVM)jsignal(e); else jt->jerr=(e); R;}}
 #define ASSERTWR(c,e)   {if(unlikely(!(c))){R e;}}
-// verify that shapes *x and *y match for l axes, with no mispredicted branches
+// verify that shapes *x and *y match for l axes using AVX for rank<5, memcmp otherwise
 #if (C_AVX&&SY_64) || EMU_AVX
+
+#if 0 // obsolete
 #define ASSERTAGREE(x,y,l) {D *aaa=(D*)(x), *aab=(D*)(y); I aai=4-(l); \
  do{__m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+(aai>=0?aai:0))); \
   endmask=_mm256_castpd_si256(_mm256_xor_pd(_mm256_maskload_pd(aaa,endmask),_mm256_maskload_pd(aab,endmask))); \
   ASSERT(_mm256_testz_si256(endmask,endmask),EVLENGTH); if(likely(aai>=0))break; aaa+=NPAR; aab+=(SGNTO0(aai))<<LGNPAR; aai+=NPAR; /* prevent compiler from doing address offset */\
  }while(aai<4); }  // the test at end is to prevent the compiler from duplicating the loop.  It is almost never executed.
 #else
+#define ASSERTAGREE(x,y,l) \
+ {D *aaa=(D*)(x), *aab=(D*)(y); I aai=(l); \
+  if(likely(aai<=NPAR)){__m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-aai)); \
+   endmask=_mm256_castpd_si256(_mm256_xor_pd(_mm256_maskload_pd(aaa,endmask),_mm256_maskload_pd(aab,endmask))); \
+   ASSERT(_mm256_testz_si256(endmask,endmask),EVLENGTH); /* result is 1 if all match */ \
+  }else{ASSERT(!memcmp(aaa,aab,aai<<LGSZI),EVLENGTH)} \
+ }
+// set r nonzero if shapes disagree
+#define TESTDISAGREE(r,x,y,l) \
+ {D *aaa=(D*)(x), *aab=(D*)(y); I aai=(l); \
+  if(likely(aai<=NPAR)){__m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-aai)); \
+   endmask=_mm256_castpd_si256(_mm256_xor_pd(_mm256_maskload_pd(aaa,endmask),_mm256_maskload_pd(aab,endmask))); \
+   r=!_mm256_testz_si256(endmask,endmask); /* result is 1 if any mismatch */ \
+  }else{r=memcmp(aaa,aab,aai<<LGSZI)!=0;} \
+ }
+#endif
+#else
 #define ASSERTAGREE(x,y,l) {I *aaa=(x), *aab=(y), aai=(l)-1; do{aab=aai<0?aaa:aab; ASSERT(aaa[aai]==aab[aai],EVLENGTH); --aai; aab=aai<0?aaa:aab; ASSERT(aaa[aai]==aab[aai],EVLENGTH); --aai;}while(aai>=0); }
+#define TESTDISAGREE(r,x,y,l) {I *aaa=(x), *aab=(y), aai=(l)-1; r=0; do{aab=aai<0?aaa:aab; r|=aaa[aai]!=aab[aai]; --aai; aab=aai<0?aaa:aab; r|=aaa[aai]!=aab[aai]; --aai;}while(aai>=0); }
 #endif
 #if (C_AVX2&&SY_64) || EMU_AVX2 // scaf
 // set r nonzero if shapes disagree
+#if 0 // obsolete 
 #define TESTDISAGREE(r,x,y,l) {I *aaa=(I*)(x), *aab=(I*)(y); I aai=4-(l); r=0; \
  do{__m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+(aai>=0?aai:0))); \
   r|=0xf^_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_cmpeq_epi64(_mm256_maskload_epi64(aaa,endmask),_mm256_maskload_epi64(aab,endmask)))); \
   if(likely(aai>=0))break; aaa+=NPAR; aab+=(SGNTO0(aai))<<LGNPAR; aai+=NPAR; /* prevent compiler from doing address offset */\
  }while(aai<4); }  // the test at end is to prevent the compiler from duplicating the loop.  It is almost never executed.
+#endif
 #else
-#define TESTDISAGREE(r,x,y,l) {I *aaa=(x), *aab=(y), aai=(l)-1; r=0; do{aab=aai<0?aaa:aab; r|=aaa[aai]!=aab[aai]; --aai; aab=aai<0?aaa:aab; r|=aaa[aai]!=aab[aai]; --aai;}while(aai>=0); }
 #endif
 #define ASSERTAGREESEGFAULT(x,y,l) {I *aaa=(x), *aab=(y), aai=(l)-1; do{aab=aai<0?aaa:aab; if(aaa[aai]!=aab[aai])SEGFAULT --aai; aab=aai<0?aaa:aab; if(aaa[aai]!=aab[aai])SEGFAULT --aai;}while(aai>=0); }
 // BETWEENx requires that lo be <= hi
@@ -737,7 +758,9 @@ extern unsigned int __cdecl _clearfp (void);
 #define GACOPYSHAPE0(name,type,atoms,rank,shaape) if((rank)==1)AS(name)[0]=(atoms);
 // General shape copy, branchless when rank<3  AS[0] is always written: #atoms if rank=1, 0 if rank=0.  Used in jtga(), which uses the 0 in AS[0] as a pun for nullptr
 // obsolete #define GACOPYSHAPEG(name,type,atoms,rank,shaape)  {I *_d=AS(name); I *_s=(shaape); _s=_s?_s:_d; I cp=*_s; I _r=1-(rank); cp&=REPSGN(_r); cp=_r==0?(atoms):cp; _s=_r==0?_d:_s; *_d=cp; do{_s+=SGNTO0(_r); _d+=SGNTO0(_r); *_d=*_s;}while(++_r<0);}
-#define GACOPYSHAPEG(name,type,atoms,rank,shaape)  {I *_d=AS(name); I *_s=(shaape); _s=_s?_s:_d; I cp=*_s; I _r=-(rank); cp&=REPSGN(_r); cp=++_r==0?(atoms):cp; _s=_r>=0?_d:_s; *_d=cp; do{_s+=SGNTO0(_r); _d+=SGNTO0(_r); *_d=*_s;}while(++_r<0);}
+// obsolete #define GACOPYSHAPEG(name,type,atoms,rank,shaape) {I *_d=AS(name); I *_s=(shaape); _s=_s?_s:_d; I cp=*_s; I _r=-(rank); cp&=REPSGN(_r); cp=++_r==0?(atoms):cp; _s=_r>=0?_d:_s; *_d=cp; do{_s+=SGNTO0(_r); _d+=SGNTO0(_r); *_d=*_s;}while(++_r<0);}
+#define GACOPYSHAPEG(name,type,atoms,rank,shaape) \
+ {I *_d=AS(name); I *_s=(shaape); _s=_s?_s:_d; I cp=*_s; I _r=(rank); cp=_r<1?0:cp; cp=_r==1?(atoms):cp; _s=_r<=1?_d:_s; *_d=cp; ++_d; ++_s; if(likely(_r<3)){*_d=*_s;}else{MC(_d,_s,(_r-1)<<LGSZI);}}
 // Use when shape is known to be present but rank is not SDT.  One value is always written to shape
 #if (C_AVX&&SY_64) || EMU_AVX
 #define GACOPYSHAPE(name,type,atoms,rank,shaape) MCISH(AS(name),shaape,rank)
@@ -748,7 +771,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define GACOPY1(name,type,atoms,rank,shaape) {I *_d=AS(name); *_d=1; I _r=1-(rank); do{_d+=SGNTO0(_r); *_d=1;}while(++_r<0);} // copy all 1s to shape
 #define GA(v,t,n,r,s)   RZ(v=ga(t,(I)(n),(I)(r),(I*)(s)))
 // GAE executes the given expression when there is an error
-#define GAE(v,t,n,r,s,erraction)   if(!(v=ga(t,(I)(n),(I)(r),(I*)(s))))erraction;
+#define GAE(v,t,n,r,s,erraction)   if(unlikely(!(v=ga(t,(I)(n),(I)(r),(I*)(s)))))erraction;
 // When the type and all rank/shape are known at compile time, use GAT.  The compiler precalculates almost everything
 // For best results declare name as: AD* RESTRICT name;  The number of bytes, rounded up with overhead added, must not exceed 2^(PMINL+4)
 #define GATS(name,type,atoms,rank,shaape,size,shapecopier) \
@@ -912,6 +935,9 @@ extern unsigned int __cdecl _clearfp (void);
 #define JTIPEX1S(name,arg,self) jt##name(JTIPW,arg,self)   // like name(arg,self) but inplace
 #define JTIPAEX2(name,arga,argw) jt##name(JTIPA,arga,argw)   // like name(arga,argw) but inplace on a
 #define JTIPAEX2S(name,arga,argw,self) jt##name(JTIPA,arga,argw,self)   // like name(arga,argw,self) but inplace on a
+// given a unique num, define loop begin and end labels
+#define LOOPBEGIN(num) lp##num
+#define LOOPEND(num) lp##num##e
 #define MAX(a,b)        ((a)>(b)?(a):(b))
 #define MC              memcpy
 #define MCL(dest,src,n) memcpy(dest,src,n)  // use when copy is expected to be long
@@ -921,14 +947,23 @@ extern unsigned int __cdecl _clearfp (void);
 #define MCISd(dest,src,n) {I * RESTRICT _s=(src); I _n=~(n); while((_n-=REPSGN(_n))<0)*dest++=*_s++;}  // ... this version when d increments through the loop
 #define MCISs(dest,src,n) {I * RESTRICT _d=(dest); I _n=~(n); while((_n-=REPSGN(_n))<0)*_d++=*src++;}  // ... this when s increments through the loop
 #define MCISds(dest,src,n) {I _n=~(n); while((_n-=REPSGN(_n))<0)*dest++=*src++;}  // ...this when both
-// Copy shapes.  Optimized for length <2, to eliminate branches then
-// For AVX, we can profitably use the MASKMOV instruction to do all the  testing
+// Copy shapes.  Optimized for length <5, subroutine for others
+// For AVX, we can profitably use the MASKLOAD/STORE instruction to do all the  testing
 #if (C_AVX&&SY_64) || EMU_AVX
+#if 0 // obsolete
 #define MCISH(dest,src,n) {D *_d=(D*)(dest), *_s=(D*)(src); I _n=-(I)(n); \
  do{_n+=NPAR; __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+(_n>=0?_n:0))); \
   _mm256_maskstore_pd(_d,endmask,_mm256_maskload_pd(_s,endmask)); \
   if(likely(_n>=0))break; _d+=NPAR; _s+=NPAR;  /* prevent compiler from calculating offsets */ \
  }while(_n<4); }  // the test at end is to prevent the compiler from duplicating the loop.  It is almost never executed.
+#else
+#define MCISH(dest,src,n) \
+ {D *_d=(D*)(dest), *_s=(D*)(src); I _n=(I)(n); \
+  if(likely(_n<=NPAR)){__m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-_n)); \
+   _mm256_maskstore_pd(_d,endmask,_mm256_maskload_pd(_s,endmask)); \
+  }else{MC(_d,_s,_n<<LGSZI);} \
+ }
+#endif
 #else
 #define MCISH(dest,src,n) {I *_d=(I*)(dest); I *_s=(I*)(src); I _n=1-(n); _d=_n>0?jt->shapesink:_d; _s=_n>0?_d:_s; *_d=*_s; do{_s+=SGNTO0(_n); _d+=SGNTO0(_n); *_d=*_s;}while(++_n<0);}  // use for copies of shape, optimized for no branch when n<3.
 #endif
@@ -1187,8 +1222,10 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x
 // transfer pristinity from a AND w to z (not if a==w)
 #define PRISTXFERF2(z,a,w) I aflg=AFLAG(a), wflg=AFLAG(w); AFLAG(z)|=aflg&wflg&(((a!=w)&SGNTO0(AC(a)&AC(w))&((I)jtinplace>>JTINPLACEAX)&((I)jtinplace>>JTINPLACEWX))<<AFPRISTINEX); \
                            PRISTCOMSETF(a,aflg) PRISTCOMSETF(w,wflg)
-// PROD multiplies a list of numbers, where the product is known not to overflow a signed int (for example, it might be part of the shape of a dense array)
-#define PROD(result,length,ain) {I *_zzt=(ain); I _i=(length)-1; _zzt=_i<0?iotavec-IOTAVECBEGIN+1:_zzt; result=*_zzt; do{++_zzt; --_i; _zzt=_i<0?iotavec-IOTAVECBEGIN+1:_zzt; result*=*_zzt;}while(_i>0);} 
+// PROD multiplies a list of numbers, where the product is known not to overflow a signed int (for example, it might be part of the shape of a nonempty dense array)
+// obsolete #define PROD(result,length,ain) {I *_zzt=(ain); I _i=(length)-1; _zzt=_i<0?iotavec-IOTAVECBEGIN+1:_zzt; result=*_zzt; do{++_zzt; --_i; _zzt=_i<0?iotavec-IOTAVECBEGIN+1:_zzt; result*=*_zzt;}while(_i>0);} 
+#define PROD(result,length,ain) {I * RESTRICT _zzt=(ain); I _i=(length); \
+ if(likely(_i<3)){_zzt=_i<=0?iotavec-IOTAVECBEGIN+1:_zzt; result=*_zzt; ++_zzt; _zzt=_i<=1?iotavec-IOTAVECBEGIN+1:_zzt; result*=*_zzt;}else{result=prod(_i,_zzt);} }
 // obsolete #define PROD(result,length,ain) {I _i=(length)-1; result=(ain)[_i]; result=_i<0?1:result; do{--_i; I _r=(ain)[_i]*result; result=_i<0?result:_r;}while(_i>0);} 
 #define PROD1(result,length,ain) PROD(result,length,ain)  // scaf
 // PRODX replaces CPROD.  It is PROD with a test for overflow included.  To save calls to mult, PRODX takes an initial value
@@ -1196,22 +1233,38 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x
 // overflow sets z to the error value of 0; if we see a multiplicand of 0 we stop right away so we can skip the error
 // This is written to be branchless for rank < 3
 #if SY_64
-#define PRODX(z,n,v,init) \
+// I have been unable to make clang produce a simple loop that doesn't end with a backward branch.  So I am going to handle ranks 0-2 here and call a subroutine for the rest
+#if 0
+// This is what I would rather have
+#define PRODXcommon(z,n,v,init,lbl) \
   {DPMULDDECLS z=(init);\
    if(likely(z)){I * RESTRICT mp=(v); I nn=(n); mp=nn>0?mp:iotavec-IOTAVECBEGIN+1; /* obsolete DPMULD(z,*mp,z,z=0;)*/ DPMULDZ(z,*mp,z) \
-    if(likely(*mp!=0LL)){--nn; while(1){++mp; mp=nn>0?mp:iotavec-IOTAVECBEGIN+1; /* obsolete DPMULD(z,*mp,z,z=0;)*/ DPMULDZ(z,*mp,z) if(unlikely(*mp==0LL))break; if(likely(--nn<=0))break;}} \
-    if(unlikely(z==0))ASSERT(nn>0,EVLIMIT) \
+    if(likely(*mp!=0LL)){ \
+     --nn; \
+     LOOPBEGIN(lbl): ++mp; mp=nn>0?mp:iotavec-IOTAVECBEGIN+1; DPMULDZ(z,*mp,z) if(unlikely(*mp==0LL))goto LOOPEND(lbl); --nn; if(unlikely(nn>0)){goto LOOPBEGIN(lbl);} \
+     LOOPEND(lbl): if(unlikely(z==0))ASSERT(nn>0,EVLIMIT) \
+    } \
    } \
   }
-// x*y->z with error if overflow
-#define MULTX(x,y,z) 
+#define PRODX(z,n,v,init) PRODXcommon(z,n,v,init,__COUNTER__)
+#endif
+#define PRODX(z,n,v,init) \
+ {z=(init); I nn=(n); \
+  if(likely(nn<3)){DPMULDDECLS \
+   if(likely(z)){I * RESTRICT mp=(v); mp=nn>0?mp:iotavec-IOTAVECBEGIN+1; DPMULDZ(z,*mp,z) \
+    if(likely(*mp!=0LL)){ ++mp; mp=nn>1?mp:iotavec-IOTAVECBEGIN+1; DPMULDZ(z,*mp,z) if(likely(*mp!=0LL)){ASSERT(z!=0,EVLIMIT)} } \
+   } \
+  }else{DPMULDE(z,prod(nn,v),z) RE(0)} \
+ }
 #else
 #define PRODX(z,n,v,init) RE(z=mult(init,prod(n,v)))
 #endif
 // CPROD is to be used to create a test testing #atoms.  Because empty arrays can have cells that have too many atoms, we can't use PROD if
 // we don't know that the array isn't empty or will be checked later
-#define CPROD(t,z,x,a)if(likely(t))PROD(z,x,a)else RE(z=prod(x,a))
-#define CPROD1(t,z,x,a)if(likely(t))PROD1(z,x,a)else RE(z=prod(x,a))
+// obsolete #define CPROD(t,z,x,a)if(likely(t))PROD(z,x,a)else RE(z=prod(x,a))
+// obsolete #define CPROD1(t,z,x,a)if(likely(t))PROD1(z,x,a)else RE(z=prod(x,a))
+#define CPROD(t,z,x,a) PRODX(z,x,a,1)
+#define CPROD1(t,z,x,a) CPROD(t,z,x,a)
 // PROLOG/EPILOG are the main means of memory allocation/free.  jt->tstack contains a pointer to every block that is allocated by GATV(i. e. all blocks).
 // GA causes a pointer to the block to be pushed onto tstack.  PROLOG saves a copy of the stack pointer in _ttop, a local variable in its function.  Later, tpop(_ttop)
 // can be executed to free every block that the function allocated, without requiring bookkeeping in the function.  This may be done from time to time in

@@ -576,11 +576,11 @@ F1(jtrngseeds){I k,r;
   mt_init_by_array(AV(w),AN(w));
  }else switch(jt->rng){
   // atomic w.  We can use that for any generator.  Choose the current one.
-  case SMI: ASSERT(k,EVDOMAIN); sm_init(k);     break;
+  case SMI: ASSERT(k!=0,EVDOMAIN); sm_init(k);     break;
   case GBI:                     gb_init(k);     break;
   case MTI:                     mt_init((UI)k); break;
-  case DXI: ASSERT(k,EVDOMAIN); dx_init(k);     break;
-  case MRI: ASSERT(k,EVDOMAIN); mr_init(k);
+  case DXI: ASSERT(k!=0,EVDOMAIN); dx_init(k);     break;
+  case MRI: ASSERT(k!=0,EVDOMAIN); mr_init(k);
  }
  jt->rngS[jt->rng]=k;  // Save first value, in case k is atomic
  if(!r&&MTI==jt->rng&&jt->rngseed){fa(jt->rngseed); jt->rngseed=0;}   // If k is atomic, discard jt->rngseed if there is one

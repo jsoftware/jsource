@@ -454,7 +454,7 @@ static F1(jtenframe){A x,y,z;C*zv;I ht,m,n,p,q,t,wd,wdb,wr,xn,*xv,yn,*yv,zn;
  // Same for column widths
  yn=AN(y); yv=AV(y); wd=1; DO(yn, wd+=yv[i]; ASSERT(0<wd,EVLIMIT););
  // p=#atoms in result 2-cell, q=#atoms in 2-cell of w, m=#result 2-cells, zn=#atoms in result
- RE(p=mult(ht,wd)); q=MAX(1,xn*yn); m=n/q; RE(zn=mult(m,p));  // in case 2-cells of w are empty, avoid zerodivide.  zn will be 0 then
+ DPMULDE(ht,wd,p); q=MAX(1,xn*yn); m=n/q; DPMULDE(m,p,zn);  // in case 2-cells of w are empty, avoid zerodivide.  zn will be 0 then
  // Allocate result area, using max type of the children; initialize shape to shape of w with the last 2 dimensions replaced by (ht,wd) of result 2-cell
  GA(z,t,zn,wr,AS(w)); *(AS(z)+wr-2)=ht; *(AS(z)+wr-1)=wd; 
  if(!n)R z;  // If w has 0 cells, return the empty array
@@ -485,16 +485,17 @@ F1(jtmat){A z;B b=0;C*v,*x;I c,k,m=1,p,q,qc,r,*s,t,zn;
  // 1 blank line, thus m-1 blanks, for each rank down to 3.  We just accumulate m and initialize
  // by setting k=-(number of ranks checked), thus accounting for all the -1s at once.
  // It is possible to overflow if the 2-cell is empty but the number of 2-cells overflows.
- if(b)k=m=0; else{k=2<r?2-r:0; DO(r-2, RE(m=mult(m,s[i])); k+=m;);}
+ if(b)k=m=0; else{k=2<r?2-r:0; DO(r-2, DPMULDE(m,s[i],m); k+=m;);}
  // set p=total # lines: number of lines in each 2-cell, plus the added blanks (unless there are no lines to display)
- RE(p=mult(m,q)+k*!!q); RE(zn=mult(p,c));  // zn=total # atoms
+// obsolete  RE(p=mult(m,q)+k*!!q); RE(zn=mult(p,c));  // zn=total # atoms
+ DPMULDE(m,q,p) p+=k*!!q; DPMULDE(p,c,zn);  // zn=total # atoms
  // Allocate the result table, set shape to (p,c); x->data area
  GA(z,t,zn,2,0); *AS(z)=p; *(1+AS(z))=c; x=CAV(z);
  // If the result has gaps, fill the entire result area with fills
  // (this could be better: just copy the gap, as part of ENGAP; check k above in case of leading unit axes)
  if(2<r)fillv(t,zn,x);
  // for each 2-cell, leave a gap if required, then copy in the 2-cell.  Change c to size in bytes; qc=size of 2-cell
- if(zn){c<<=bplg(t); RE(qc=mult(q,c)); DO(m, ENGAP(i*q,r,s,x+=c;); MC(x,v,qc); x+=qc; v+=qc;);}
+ if(zn){c<<=bplg(t); DPMULDE(q,c,qc); DO(m, ENGAP(i*q,r,s,x+=c;); MC(x,v,qc); x+=qc; v+=qc;);}
  R z;
 }
 
@@ -738,7 +739,7 @@ static A jtjprx(J jt,I ieol,I maxlen,I lb,I la,A w){A y,z;B ch;C e,eov[2],*v,x,*
  // plus, for each line, the max length:
  //   if character type, max line length + '\n' + room for '...\n' to continue the line till all characters are displayed
  //   if other type, max truncated line length + '\n' + '...' if line is truncated
- RE(zn=(3+m)+(q?p*m:0)+mult(h,ch?c+m+(3+m)*(1+c/maxlen):c1+m+3*(c1<c)));
+ DPMULDE(h,ch?c+m+(3+m)*(1+c/maxlen):c1+m+3*(c1<c),zn) zn=(3+m)+(q?p*m:0)+zn;
  // If the input was character type, count the number of embedded multiline EOLs, and add a byte for each
  if(ch&&1<m)zn+=countonlines(scaneol,t,v,h,nq,c,lb,la);
  // If the input was character, boxed, or sparse, count the number of bytes that must be added for UTF-8 framing.

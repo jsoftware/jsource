@@ -13,7 +13,8 @@ F1(jtshift1){R drop(num(-1),over(num(1),w));}
 
 static A jttk0(J jt,B b,A a,A w){A z;I k,m=0,n,p,r,*s,*u;
  r=AR(w); n=AN(a); u=AV(a); 
- if(!b){RE(m=prod(n,u)); ASSERT(m>IMIN,EVLIMIT); RE(m=mult(ABS(m),prod(r-n,n+AS(w))));}
+// obsolete  if(!b){RE(m=prod(n,u)); ASSERT(m>IMIN,EVLIMIT); RE(m=mult(ABS(m),prod(r-n,n+AS(w))));}
+ if(!b){PRODX(m,n,u,1) ASSERT(m>IMIN,EVLIMIT); PRODX(m,r-n,n+AS(w),ABS(m))}
  GA(z,AT(w),m,r,AS(w)); 
  s=AS(z); DO(n, p=u[i]; ASSERT(p>IMIN,EVLIMIT); *s++=ABS(p););
  if(m){k=bpnoun(AT(w)); mvc(k*m,AV(z),k,jt->fillv);}
@@ -61,7 +62,7 @@ static F2(jttk){PROLOG(0093);A y,z;B b=0;C*yv,*zv;I c,d,dy,dz,e,i,k,m,n,p,q,r,*s
   c*=q; p=u[i]; q=ABS(p); m=s[i];  // q=length of take can be IMIN out of this   m=length of axis
   if(q!=m){  // if axis unchanged, skip it.  This includes the first axis
    PROD(itemsize,r-i-1,s+i+1);  // size of item of cell
-   RE(d=mult(c*itemsize,q)); GA(y,t,d,r,AS(z)); AS(y)[i]=q;  // this catches q=IMIN: mult error or GA error   d=#cells*itemsize*#taken items
+   DPMULDE(c*itemsize,q,d); GA(y,t,d,r,AS(z)); AS(y)[i]=q;  // this catches q=IMIN: mult error or GA error   d=#cells*itemsize*#taken items
    if(q>m)mvc(k*AN(y),CAV(y),k,jt->fillv);   // overtake - fill the whole area
    itemsize *= k; e=itemsize*MIN(m,q);  //  itemsize=in bytes; e=total bytes moved per item
    dy=itemsize*q; yv=CAV(y);

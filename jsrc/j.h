@@ -1191,6 +1191,23 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x
 #define PROD(result,length,ain) {I *_zzt=(ain); I _i=(length)-1; _zzt=_i<0?iotavec-IOTAVECBEGIN+1:_zzt; result=*_zzt; do{++_zzt; --_i; _zzt=_i<0?iotavec-IOTAVECBEGIN+1:_zzt; result*=*_zzt;}while(_i>0);} 
 // obsolete #define PROD(result,length,ain) {I _i=(length)-1; result=(ain)[_i]; result=_i<0?1:result; do{--_i; I _r=(ain)[_i]*result; result=_i<0?result:_r;}while(_i>0);} 
 #define PROD1(result,length,ain) PROD(result,length,ain)  // scaf
+// PRODX replaces CPROD.  It is PROD with a test for overflow included.  To save calls to mult, PRODX takes an initial value
+// PRODX takes the product of init and v[0..n-1], generating error if overflow, but waiting till the end so no error if there is a 0 in the product
+// overflow sets z to the error value of 0; if we see a multiplicand of 0 we stop right away so we can skip the error
+// This is written to be branchless for rank < 3
+#if SY_64
+#define PRODX(z,n,v,init) \
+  {DPMULDDECLS z=(init);\
+   if(likely(z)){I * RESTRICT mp=(v); I nn=(n); mp=nn>0?mp:iotavec-IOTAVECBEGIN+1; /* obsolete DPMULD(z,*mp,z,z=0;)*/ DPMULDZ(z,*mp,z) \
+    if(likely(*mp!=0LL)){--nn; while(1){++mp; mp=nn>0?mp:iotavec-IOTAVECBEGIN+1; /* obsolete DPMULD(z,*mp,z,z=0;)*/ DPMULDZ(z,*mp,z) if(unlikely(*mp==0LL))break; if(likely(--nn<=0))break;}} \
+    if(unlikely(z==0))ASSERT(nn>0,EVLIMIT) \
+   } \
+  }
+// x*y->z with error if overflow
+#define MULTX(x,y,z) 
+#else
+#define PRODX(z,n,v,init) RE(z=mult(init,prod(n,v)))
+#endif
 // CPROD is to be used to create a test testing #atoms.  Because empty arrays can have cells that have too many atoms, we can't use PROD if
 // we don't know that the array isn't empty or will be checked later
 #define CPROD(t,z,x,a)if(likely(t))PROD(z,x,a)else RE(z=prod(x,a))
@@ -1562,12 +1579,16 @@ static inline UINT _clearfp(void){int r=fetestexcept(FE_ALL_EXCEPT);
 #define DPMUL(x,y,z,s) {I _l,_h; *z=_l=_mul128(x,y,&_h); if(_h+(SGNTO0(_l)))s}
 #define DPMULDDECLS
 #define DPMULD(x,y,z,s) {I _h; z=_mul128(x,y,&_h); if(_h+(SGNTO0(z)))s}
+#define DPMULDZ(x,y,z) DPMULD(x,y,z,z=0;)
+#define DPMULDE(x,y,z)  DPMULD(x,y,z,ASSERT(0,EVLIMIT))
 #define DPUMUL(x,y,z,h) {z=_umul128((x),(y),&(h));}  // product in z and h
 #else
 #define DPMULDECLS
-#define DPMUL(x,y,z,s) if(__builtin_smulll_overflow(x,y,z))s
+#define DPMUL(x,y,z,s) if(unlikely(__builtin_smulll_overflow(x,y,z)))s
 #define DPMULDDECLS
-#define DPMULD(x,y,z,s) if(__builtin_smulll_overflow(x,y,&z))s
+#define DPMULD(x,y,z,s) if(unlikely(__builtin_smulll_overflow(x,y,&z)))s
+#define DPMULDZ(x,y,z) z=__builtin_smulll_overflow(x,y,&z)?0:z;
+#define DPMULDE(x,y,z) ASSERT(!__builtin_smulll_overflow(x,y,&z),EVLIMIT)
 #define DPUMUL(x,y,z,h) {__int128 _t; _t=(__int128)(x)*(__int128)(y); z=(I)_t; h=(I)(_t>>64);}  // product in z and h
 #endif
 #else // C_USEMULTINTRINSIC 0 - use standard-C version (64-bit)
@@ -1575,6 +1596,8 @@ static inline UINT _clearfp(void){int r=fetestexcept(FE_ALL_EXCEPT);
 #define DPMUL(x,y,z,s) {I _l, _x=(x), _y=(y); D _d; _l=_x*_y; _d=(D)_x*(D)_y-(D)_l; *z=_l; _d=ABS(_d); if(_d>1e8)s}  // *z may be the same as x or y
 #define DPMULDDECLS
 #define DPMULD(x,y,z,s) {I _l, _x=(x), _y=(y); D _d; _l=_x*_y; _d=(D)_x*(D)_y-(D)_l; z=_l; _d=ABS(_d); if(_d>1e8)s}
+#define DPMULDZ(x,y,z) DPMULD(x,y,z,z=0;)
+#define DPMULDE(x,y,z)  DPMULD(x,y,z,ASSERT(0,EVLIMIT))
 #endif
 
 #else  // 32-bit
@@ -1598,6 +1621,8 @@ static inline UINT _clearfp(void){int r=fetestexcept(FE_ALL_EXCEPT);
 #define DPMULDDECLS D _p;
 #define DPMULD(x,y,z,s) _p = (D)x*(D)y; z=(I)_p; if(_p>IMAX||_p<IMIN)s
 #endif
+#define DPMULDZ(x,y,z) DPMULD(x,y,z,z=0;)
+#define DPMULDE(x,y,z) RE(z=mult(x,y))
 
 #endif
 // end of multiply builtins

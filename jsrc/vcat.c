@@ -130,8 +130,9 @@ static F2(jtovg){A s,z;C*x;I ar,*as,c,k,m,n,r,*sv,t,wr,*ws,zn;
   DQ(m, --as; --ws; sv[--k]=MAX(*as,*ws);); 
   DO(r-m, sv[i]=MAX(1,sv[i]););
  }
- RE(c=prod(r-1,1+sv)); m=AS(a)[0]; m=r>ar?1:m; n=AS(w)[0]; n=r>wr?1:n; // verify composite item not too big
- RE(zn=mult(c,m+n)); ASSERT(0<=m+n,EVLIMIT);
+// obsolete  RE(c=prod(r-1,1+sv)); m=AS(a)[0]; m=r>ar?1:m; n=AS(w)[0]; n=r>wr?1:n; // verify composite item not too big
+ PRODX(c,r-1,1+sv,1); m=AS(a)[0]; m=r>ar?1:m; n=AS(w)[0]; n=r>wr?1:n; // verify composite item not too big
+ DPMULDE(c,m+n,zn); ASSERT(0<=m+n,EVLIMIT);
  GA(z,AT(a),zn,r,sv); AS(z)[0]=m+n; x=CAV(z); k=bpnoun(AT(a));
  RZ(x=ovgmove(k,c,m,s,a,x,z));
  RZ(x=ovgmove(k,c,n,s,w,x,z));
@@ -244,7 +245,7 @@ F2(jtover){A z;C*zv;I replct,framect,acr,af,ar,*as,k,ma,mw,p,q,r,t,wcr,wf,wr,*ws
  I cc2w=ws[wr-2]; q=wcr?q:1; cc2w=wcr<=1?1:cc2w; mw=cc2w*q; mw=acr>wcr+1?p:mw;  // sim for w;
  I f=(wf>=af)?wf:af; I shortf=(wf>=af)?af:wf; I *s=(wf>=af)?ws:as;
  PROD(replct,f-shortf,s+shortf); PROD(framect,shortf,s);  // Number of cells in a and w; known non-empty shapes
- RE(zn=mult(replct*framect,ma+mw));  // total # atoms in result
+ DPMULDE(replct*framect,ma+mw,zn);  // total # atoms in result
  GA(z,t,zn,f+r,s); zv=CAV(z); s=AS(z)+f+r;   // allocate result; repurpose s to point to END+1 of shape field
  if(2>r)s[-1]=ma+mw; else{s[-1]=acr?p:q; s[-2]=cc2a+cc2w;}  // fill in last 2 atoms of shape
  k=bpnoun(t);   // # bytes per atom of result

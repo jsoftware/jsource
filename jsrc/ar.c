@@ -641,11 +641,13 @@ DF1(jtredcat){A z;B b;I f,r,*s,*v,wr;
  // use virtual block (possibly self-virtual) for all cases except sparse
  if(likely(!(SPARSE&AT(w)))){
   RZ(z=jtvirtual(jtinplace,w,0,wr-1)); AN(z)=AN(w); // Allocate the block.  Then move in AN and shape
-  I *zs=AS(z); MCISH(zs,s,f); if(!b){RE(zs[f]=mult(s[f],s[f+1])); MCISH(zs+f+1,s+f+2,r-2);}
+// obsolete   I *zs=AS(z); MCISH(zs,s,f); if(!b){RE(zs[f]=mult(s[f],s[f+1])); MCISH(zs+f+1,s+f+2,r-2);}
+  I *zs=AS(z); MCISH(zs,s,f); if(!b){DPMULDE(s[f],s[f+1],zs[f]); MCISH(zs+f+1,s+f+2,r-2);}
   R z;
  }else{
   GASPARSE(z,AT(w),AN(w),wr-1,s); 
-  if(!b){v=f+AS(z); RE(*v=mult(s[f],s[1+f])); MCISH(1+v,2+f+s,r-2);}
+// obsolete   if(!b){v=f+AS(z); RE(*v=mult(s[f],s[1+f])); MCISH(1+v,2+f+s,r-2);}
+  if(!b){v=f+AS(z); DPMULDE(s[f],s[1+f],*v); MCISH(1+v,2+f+s,r-2);}
   R redcatsp(w,z,r);
  }
 }    /* ,/"r w */
@@ -670,11 +672,12 @@ static DF1(jtredstitch){A c,y;I f,n,r,*s,*v,wr;
  RZ(c=apvwr(wr,0L,1L)); v=AV(c); v[f]=f+1; v[f+1]=f; RZ(y=cant2(c,w));  // transpose last 2 axes
  if(unlikely(SPARSE&AT(w))){A x;
   GATV0(x,INT,f+r-1,1); v=AV(x); MCISH(v,AS(y),f+1);
-  RE(v[f+1]=mult(s[f],s[f+2])); MCISH(v+f+2,s+3+f,r-3);
+// obsolete   RE(v[f+1]=mult(s[f],s[f+2])); MCISH(v+f+2,s+3+f,r-3);
+  DPMULDE(s[f],s[f+2],v[f+1]); MCISH(v+f+2,s+3+f,r-3);
   RETF(reshape(x,y));
  }else{
   v=AS(y); 
-  RE(v[f+1]=mult(s[f],s[f+2])); MCISH(v+f+2,s+3+f,r-3);
+  DPMULDE(s[f],s[f+2],v[f+1]); MCISH(v+f+2,s+3+f,r-3);
   --AR(y); 
   RETF(y);
 }}   /* ,./"r w */

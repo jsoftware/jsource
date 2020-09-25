@@ -67,7 +67,6 @@ I jtprod(J jt,I n,I*v){I z;
  ASSERT(z!=0,EVLIMIT)
  R z;
 }
-
 #else
 
 I jtmult(J jt,I x,I y){D z=x*(D)y; ASSERT(((z<=IMAX)&&(z>=IMIN))||(z=0,!jt),EVLIMIT); R(I)z;}  // If jt==0, return quiet 0
@@ -259,7 +258,8 @@ void mvc(I m,void*z,I n,void*w){I p=n,r;static I k=sizeof(D);
 
 // odometer, up to the n numbers s[]
 A jtodom(J jt,I r,I n,I* RESTRICT s){A z;I m,mn,*u,*zv;
- RE(m=prod(n,s)); RE(mn=mult(m,n));
+// obsolete  RE(m=prod(n,s)); RE(mn=mult(m,n));
+ PRODX(m,n,s,1) DPMULDE(m,n,mn);
  GATV(z,INT,mn,2==r?2:n,s);
  if(2==r){u=AS(z); u[0]=m; u[1]=n;}
  if(!mn)R z;

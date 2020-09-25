@@ -1129,7 +1129,8 @@ F2(jtcd){A z;C*tv,*wv,*zv;CCT*cc;I k,m,n,p,q,t,wr,*ws,wt;
  AFLAG(w)&=~AFPRISTINE;  // we transfer boxes from w to the result, thereby letting them escape.  That makes w non-pristine
  if(!jt->cdarg)RZ(cdinit());
  if(1<AR(a))R rank2ex(a,w,DUMMYSELF,1L,MIN(AR(w),1),1L,MIN(AR(w),1),jtcd);
- wt=AT(w); wr=AR(w); ws=AS(w); m=wr?prod(wr-1,ws):1;
+// obsolete  wt=AT(w); wr=AR(w); ws=AS(w); m=wr?prod(wr-1,ws):1;
+ wt=AT(w); wr=AR(w); ws=AS(w); PRODX(m,wr-1,ws,1);
  ASSERT(wt&DENSE,EVDOMAIN);
  ASSERT(LIT&AT(a),EVDOMAIN);
  C* enda=&CAV(a)[AN(a)]; C endc=*enda; *enda=0; cc=cdparse(a,0); *enda=endc; RZ(cc); // should do outside rank2 loop?

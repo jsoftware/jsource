@@ -590,11 +590,11 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
     PROD(nf,f-q,q+sf);    // mf=#cells in common frame, nf=#times shorter-frame cell must be repeated.
     fr+=f<<RANKTX;  // encode f into fr
     }
-#ifdef DPMULD
-    { DPMULDDECLS DPMULD(nf,zk,zn,{jsignal(EVLIMIT);R 0;}) /* obsolete nf^=REPSGN(1-nf)&-mf;*/ PROD(mf,q,sf); DPMULD(zn,mf,zn,{jsignal(EVLIMIT);R 0;}) }
-#else
-    RE(zn=mult(nf,zk)); /* obsolete nf^=REPSGN(1-nf)&-mf; */ PROD(mf,q,sf); RE(zn=mult(mf,zn));  // zn=total # result atoms  (only if non-sparse)
-#endif
+// obsolete #ifdef DPMULD
+    { DPMULDE(nf,zk,zn) /* obsolete nf^=REPSGN(1-nf)&-mf;*/ PROD(mf,q,sf); DPMULDE(zn,mf,zn) }
+// obsolete #else
+// obsolete     RE(zn=mult(nf,zk)); /* obsolete nf^=REPSGN(1-nf)&-mf; */ PROD(mf,q,sf); RE(zn=mult(mf,zn));  // zn=total # result atoms  (only if non-sparse)
+// obsolete #endif
     // Now nf=outer repeated frame  mf=outer common frame  n=inner repeated frame  m=inner common frame
     //    leading axes --------------------------------------------------------------> trailing axes
     // loop migration: if the outer loop can be subsumed into the inner loop do that to make the faster inner loops more effective

@@ -469,7 +469,8 @@ F2(jtmatch){A z;I af,m,n,mn,wf;
  if(isatoms>=0){B b; I p;  // AN(a) is 0 or AN(w) is 0
   // no atoms.  The shape of the result is the length of the longer frame.  See how many cells that is
 // obsolete   if(af>wf){f=af; s=AS(a); RE(mn = prod(af,AS(a)));}else{f=wf; s=AS(w); RE(mn = prod(wf,AS(w)));}
-  RE(mn = prod(wf,AS(w)));
+// obsolete   RE(mn = prod(wf,AS(w)));
+  PRODX(mn,wf,AS(w),1)
   // The compare for each cell is 1 if the cell-shapes are the same
   p=AR(a)-af; b=p==(AR(w)-wf)&&!ICMP(af+AS(a),wf+AS(w),p);   // b =  shapes are the same
   // Allocate & return result

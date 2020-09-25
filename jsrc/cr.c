@@ -341,7 +341,8 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,I lr,I rr,I lcr,I rcr,AF f
  wk=wcn<<bplg(AT(w));
 
  // See how many cells are going to be in the result
- RE(mn=mult(mult(outerframect,outerrptct),mult(innerframect,innerrptct)));
+// obsolete  RE(mn=mult(mult(outerframect,outerrptct),mult(innerframect,innerrptct)));
+ DPMULDE(outerframect,outerrptct,mn)  DPMULDE(innerframect,mn,mn)  DPMULDE(innerrptct,mn,mn) 
 
 // obsolete  jtinplace = (J)(intptr_t)((I)jtinplace & (~(JTWILLBEOPENED+JTCOUNTITEMS)) & ~(((I )(a==w)|(I )(outerrptct!=1))*(JTINPLACEA+JTINPLACEW)|(state>>STATEINNERREPEATWX)));  // turn off inplacing if variable is inner-repeated, or any outer repeat, or identical args
 
@@ -350,7 +351,7 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,I lr,I rr,I lcr,I rcr,AF f
  // replace any empty operand with a cell of fills.  (Note that operands can have no atoms and yet the result can have nonempty cells,
  // if the cells are empty but the frame does not contain 0)
  //
- // If an arg is pristine, any cell of it must ipso facto be pristine, aslong as it in inplaceable (& therefore not repeated here)
+ // If an arg is pristine, any cell of it must ipso facto be pristine, as long as it in inplaceable (& therefore not repeated here)
  //
  // See which arguments we can inplace.  The key is that they have to be not repeated.  This means outerrptct=1, and the specified argument not repeated in the inner loop.  Also,
  // a and w mustn't be the same block (one cannot be a virtual of the other unless the backer's usecount disables inplacing)
@@ -377,7 +378,7 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,I lr,I rr,I lcr,I rcr,AF f
  jtinplace = (J)(intptr_t)((I)jtinplace & (~(JTWILLBEOPENED+JTCOUNTITEMS)));
 
  A zz=0;  // place where we will build up the homogeneous result cells
- if(mn){I i0, i1, i2, i3;  // likely fails here
+ if(likely(mn!=0)){I i0, i1, i2, i3;  // likely on single word fails
   // Normal case where there are cells.
   // loop over the matched part of the outer frame
 
@@ -482,7 +483,7 @@ A jtrank2ex0(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,AF f2){F2PREFIP;PROLOG(00
  A zz=0;  // place where we will build up the homogeneous result cells
  fauxblock(virtafaux);  fauxblock(virtwfaux);
 
- if(mn){   // likely fails
+ if(likely(mn!=0)){   // likely fails on single word
   // Collect flags <@ and @> from the nodes.  It would be nice to do this even on empty arguments, but that would complicate our job in coming up with a fill-cell or argument cell, because
   // we would have to keep track of whether we passed an ATOPOPEN.  But then we could avoid executing the fill cell any time the is a BOXATOP, even down the stack.  As it is, the only time we
   // elide the execution is when BOXATOP occurs at the first node, i.e. for an each that is not boxed

@@ -1833,7 +1833,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
   // Neither arg is empty.  We can safely count the number of cells
   PROD1(n,acr-1,as+af+1); k=n<<klg; // n=number of atoms in a target item; k=number of bytes in a target item
   PROD(ac,af,as); PROD(wc,wf,ws); PROD1(c,MAX(f1,-1),ws+wf);  // ?c=#cells in a & w;  c=#target items (and therefore #result values) in a result-cell.  -1 so we don't fetch outside the shape
-  RE(zn=mult(af?ac:wc,c));   // #results is results/cell * number of cells; number of cells comes from ac if a has frame, otherwise w.  If both have frame, a's must be longer, use it
+  DPMULDE(af?ac:wc,c,zn);   // #results is results/cell * number of cells; number of cells comes from ac if a has frame, otherwise w.  If both have frame, a's must be longer, use it
   ak=(/*obsolete acr?as[af]*k:k*/m*k)&REPSGN(1-ac); wk=(c*k)&REPSGN(1-wc);   // # bytes in a cell, but 0 if there are 0 or 1 cells
   if(!af)c=zn;   // if af=0, wc may be >1 if there is w-frame.  In that case, #result/a-cell must include the # w-cells.  This has been included in zn
  }else{
@@ -1978,7 +1978,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
   // if a hashtable will be needed, allocate it.  It is NOT initialized
   // the hashtable is INT unless we have selected small-range hashing AND we are not looking for the index with i. or i:; then boolean is enough
   if(fmods>=0){IH * RESTRICT hh;
-   if(fmods){mode |= fmods; if(fmods&IIMODFULL)booladj=0;}   // If IMODFULL is required, bring it in; if not small-range, turn off bit mode   unlikely fails
+   if(unlikely(fmods!=0)){mode |= fmods; if(fmods&IIMODFULL)booladj=0;}   // If IMODFULL is required, bring it in; if not small-range, turn off bit mode   unlikely fails on single word
 
    // make sure we have a hashtable of the requisite size.  p has the number of entries, booladj indicates whether they are 1 bit each.
    // if the #entries fits in a US, use the short table.  But bits always use the long table
@@ -2032,7 +2032,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
     // First, make a decision for Boolean tables.  If the table will be Boolean, decide whether to use packed bits
     // or bytes, and represent that information in mode and booladj.
     ASSERT((UI)m<=(UI)(UI4)-1,EVLIMIT);  // there must not be more items than we can distinguish with different hash indexes
-    if(booladj){if(unlikely(p>MAXBYTEBOOL)){mode|=IIMODPACK|IIMODBITS;}else{mode|=IIMODBITS;booladj=5-3;}  // set MODBITS as a flag to hashallo   unlikely fails on single word
+    if(unlikely(booladj!=0)){if(unlikely(p>MAXBYTEBOOL)){mode|=IIMODPACK|IIMODBITS;}else{mode|=IIMODBITS;booladj=5-3;}  // set MODBITS as a flag to hashallo   unlikely fails on single word
     }else{
 #if 0  // now that we have wide instructions, it always makes sense to clear the allocated area
      // If the sizes are such that we should clear this table to save 3 clocks per atom of w, say so.  The clearing is done in hashallo.  Only for non-bits.
@@ -2077,7 +2077,8 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
   case IICO:    GATV(z,INT,zn,f+f1,     s); if(af)MCISH(f+AS(z),ws+wf,f1); break;
   case INUBSV:  GATV(z,B01,zn,f+f1+!acr,s); if(af)MCISH(f+AS(z),ws+wf,f1); if(!acr)AS(z)[AR(z)-1]=1; break;
 // obsolete   case INUB:    q=m+1; GA(z,t,mult(q,aii(a)),MAX(1,wr),ws); AS(z)[0]=q; break;  // +1 because we speculatively overwrite.  Was MIN(m,p) but we don't have the range yet
-  case INUB:    PROD(q,AR(a)-1,AS(a)+1) GA(z,t,mult(m+1,aii(a)),MAX(1,wr),ws); AS(z)[0]=m+1; break;  // +1 because we speculatively overwrite.  Was MIN(m,p) but we don't have the range yet
+// obsolete   case INUB:    PROD(q,AR(a)-1,AS(a)+1) GA(z,t,mult(m+1,aii(a)),MAX(1,wr),ws); AS(z)[0]=m+1; break;  // +1 because we speculatively overwrite.  Was MIN(m,p) but we don't have the range yet
+  case INUB:    PRODX(q,AR(a)-1,AS(a)+1,m+1) GA(z,t,q,MAX(1,wr),ws); AS(z)[0]=m+1; break;  // +1 because we speculatively overwrite.  Was MIN(m,p) but we don't have the range yet
   case ILESS:   GA(z,t,AN(w),MAX(1,wr),ws); break;
   case IEPS:    GATV(z,B01,zn,f+f1,     s); if(af)MCISH(f+AS(z),ws+wf,f1); break;
   case INUBI:   q=m+1; GATV0(z,INT,q,1); break;  // +1 because we speculatively overwrite  Was MIN(m,p) but we don't have the range yet
@@ -2152,7 +2153,8 @@ A jtindexofprehashed(J jt,A a,A w,A hs){A h,*hv,x,z;AF fn;I ar,*as,at,c,f1,k,m,m
  wr=AR(w); ws=AS(w); wt=AT(w);
  r=ar?ar-1:0;
  f1=wr-r;
- RE(c=prod(f1,ws));  // c=#cells of w (and result)
+// obsolete  RE(c=prod(f1,ws));  // c=#cells of w (and result)
+ PRODX(c,f1,ws,1);  // c=#cells of w (and result)
  // audit conformance of input shapes.  If there is an error, pass to the main code to get the error result
  // Use c=0 as an error flag
  c &= REPSGN(~(f1|(ar-r)));   // w must have rank big enough to hold a cell of a.  Clear c if f1<0 or r>ar
@@ -2216,7 +2218,8 @@ F2(jtless){A x=w;I ar,at,k,r,*s,wr,*ws,wt;
  wt=AT(w); wr=AR(w); r=MAX(1,ar);
  if(ar>1+wr)RCA(a);  // if w's rank is smaller than that of a cell of a, nothing can be removed, return a
  // if w's rank is larger than that of a cell of a, reheader w to look like a list of such cells
- if((-wr&-(r^wr))<0){RZ(x=virtual(w,0,r)); AN(x)=AN(w); s=AS(x); ws=AS(w); k=ar>wr?0:1+wr-r; *s=prod(k,ws); MCISH(1+s,k+ws,r-1);}  // bug: should test for error on the prod()  use fauxvirtual here
+// obsolete  if((-wr&-(r^wr))<0){RZ(x=virtual(w,0,r)); AN(x)=AN(w); s=AS(x); ws=AS(w); k=ar>wr?0:1+wr-r; *s=prod(k,ws); MCISH(1+s,k+ws,r-1);}  //  use fauxvirtual here
+ if((-wr&-(r^wr))<0){RZ(x=virtual(w,0,r)); AN(x)=AN(w); s=AS(x); ws=AS(w); k=ar>wr?0:1+wr-r; I s0; PRODX(s0,k,ws,1) s[0]=s0; MCISH(1+s,k+ws,r-1);}  //  use fauxvirtual here
 // if nothing special (like sparse, or incompatible types, or x requires conversion) do the fast way; otherwise (-. x e. y) # y
 // obsolete  R !(at&SPARSE)&&HOMO(at,wt)&&TYPESEQ(at,maxtyped(at,wt))&&!(AFLAG(a)&AFNJA)?indexofsub(ILESS,x,a):
 // obsolete      repeat(not(eps(a,x)),a);

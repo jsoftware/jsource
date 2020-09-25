@@ -174,8 +174,9 @@ A jtassembleresults(J jt, I ZZFLAGWORD, A zz, A zzbox, A* zzboxp, I zzcellp, I z
   }
   // Now zz has the type zft
 
-  I natomsresultcell; RE(natomsresultcell=prod(zzcr,zzcs));  // # atoms in actual result-cell.  Could overflow, if there is a mix of tall & wide
-  I natomsresult; RE(natomsresult=mult(natomsresultcell,zzncells));  // number of atoms in result
+// obsolete   I natomsresultcell; RE(natomsresultcell=prod(zzcr,zzcs));  // # atoms in actual result-cell.  Could overflow, if there is a mix of tall & wide
+  I natomsresultcell; PRODX(natomsresultcell,zzcr,zzcs,1);  // # atoms in actual result-cell.  Could overflow, if there is a mix of tall & wide
+  I natomsresult; DPMULDE(natomsresultcell,zzncells,natomsresult);  // number of atoms in result
   // Since we know the result-cell size in zzcellshape must be able to contain a cell of zz, we can test for equal rank and equal number of atoms.
   // But if the cell is empty, we can't rely on # atoms to verify the shape, and then we have to reallocate
   if((((AR(zz)-zzwf)^zzcr) | (natomsresultcell^natomszzcell) | !natomsresultcell)){
@@ -407,7 +408,8 @@ F1(jtope){PROLOG(0080);A cs,*v,y,z;I nonh;C*x;I i,n,*p,q=RMAX,r=0,*s,t=0,te=0,*u
  DO(n, y=v[i]; s=AS(y); p=u+r-AR(y); DO(AR(y),p[i]=MAX(p[i],s[i]);););
  if(unlikely(t&SPARSE))RZ(z=opes(t,cs,w))
  else{I klg; I m;
-  RE(m=prod(r,u)); RE(zn=mult(n,m)); klg=bplg(t); q=m<<klg;
+// obsolete   RE(m=prod(r,u)); RE(zn=mult(n,m)); klg=bplg(t); q=m<<klg;
+  PRODX(m,r,u,1); DPMULDE(n,m,zn); klg=bplg(t); q=m<<klg;
   // Allocate result area & copy in shape (= frame followed by result-cell shape)
   GA(z,t,zn,r+AR(w),AS(w)); MCISH(AS(z)+AR(w),u,r); x=CAV(z); fillv(t,zn,x);  // init to a:  fills  bug copy shape could overrun w
   for(i=0;i<n;++i){
@@ -442,7 +444,8 @@ static A jtrazeg(J jt,A w,I t,I n,I r,A*v,I nonempt){A h,h1,y,z;C*zu;I c=0,i,j,k
   DO(yr, s[j]=MAX(ys[i],s[j]); ++j;);
  }
  // Install the number of result items in s; m=total #result atoms
- *s=c; RE(m=prod(r,s)); PROD(p,r-1,s+1);
+// obsolete  *s=c; RE(m=prod(r,s)); PROD(p,r-1,s+1);
+ *s=c; PRODX(m,r,s,1); PROD(p,r-1,s+1);
  // Now that we know the shape of the result-cell, we can decide, for each box, whether the
  // box contributes to the result, and whether it will be filled.  This matters only if a fill-cell has been specified.
  // If fill has been specified, we include its type in the result-type (a) only if some block gets filled

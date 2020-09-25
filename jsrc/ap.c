@@ -368,7 +368,8 @@ static F2(jtseg){A z;I c,k,m,n,*u,zn;
  RZ(a&&w);
  // The (start,length) had better be integers.  Extract them into m,n
  if(INT&AT(a)){u=AV(a); m=*u; n=*(1+u);} else m=n=0;
- c=aii(w); k=c<<bplg(AT(w)); RE(zn=mult(n,c));  // c=#atoms per item, k=#bytes/item, zn=atoms/infix
+// obsolete  c=aii(w); k=c<<bplg(AT(w)); RE(zn=mult(n,c));  // c=#atoms per item, k=#bytes/item, zn=atoms/infix
+ c=aii(w); k=c<<bplg(AT(w)); DPMULDE(n,c,zn);  // c=#atoms per item, k=#bytes/item, zn=atoms/infix
  GA(z,AT(w),zn,MAX(1,AR(w)),AS(w)); AS(z)[0]=n;  // Allocate array of items, move in shape, override # items
  // Copy the selected items to the new block and return the new block
  MC(AV(z),CAV(w)+m*k,n*k);
@@ -658,7 +659,8 @@ static DF2(jtinfixd){A fs,z;C*x,*y;I c=0,d,k,m,n,p,q,r,*s,wr,*ws,wt,zc;
  wr=AR(w); ws=AS(w); wt=AT(w); SETIC(w,n);
  RE(m=i0(vib(a))); if(m==IMAX){m=n+1;} p=m==IMIN?IMAX:ABS(m);
  if(0>m){p=MIN(p,n); d=p?(n+p-1)/p:0;}else{ASSERT(IMAX-1>n-m,EVDOMAIN); d=MAX(0,1+n-m);}
- if(fs=FAV(self)->fgh[0],CCOMMA==ID(fs)){RE(c=aii(w)); RE(zc=mult(p,c)); r=2;}
+// obsolete  if(fs=FAV(self)->fgh[0],CCOMMA==ID(fs)){RE(c=aii(w)); RE(zc=mult(p,c)); r=2;}
+ if(fs=FAV(self)->fgh[0],CCOMMA==ID(fs)){RE(c=aii(w)); DPMULDE(p,c,zc) r=2;}
  else{if(n)RE(c=aii(w)); zc=p; r=wr?1+wr:2;}
  GA(z,wt,d*p*c,r,0); x=CAV(z); y=CAV(w);
  s=AS(z); *s++=d; *s++=zc; MCISH(s,1+ws,r-2);

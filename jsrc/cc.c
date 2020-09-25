@@ -208,7 +208,8 @@ DF2(jtrazecut0){A z;C*wv,*zv;I ar,*as,(*av)[2],j,k,m,n,wt;
  DO(m, j=av[i][0]; k=av[i][1]; if(k<0)R jtspecialatoprestart(jt,a,w,self); I jj=j+n; jj=(j>=0)?j:jj; ASSERT(((jj^(jj-n))|(k-1))<0,EVINDEX); j=n-jj; k=k>j?j:k; nitems+=k; ASSERT(nitems>=0,EVLIMIT))
  // audits passed and we have counted the items.  Allocate the result and copy
  I wcn; PROD(wcn,AR(w)-1,AS(w)+1);  // number of atoms per cell of w
- I zn; RE(zn=mult(wcn,nitems));  // number of atoms in result
+// obsolete  I zn; RE(zn=mult(wcn,nitems));  // number of atoms in result
+ I zn; DPMULDE(wcn,nitems,zn);  // number of atoms in result
  GA(z,wt,zn,AR(w),AS(w)); AS(z)[0]=nitems; zv=CAV(z);  // allocate a list of items of w, fill in length.  zv is running output pointer
  // copy em in.  We use MC because the strings are probably long and unpredictable - think HTML parsing
  I wcb=wcn<<bplg(wt);  // number of bytes in a cell of w
@@ -268,7 +269,7 @@ static DF2(jtcut2bx){A*av,b,t,x,*xv,y,*yv;B*bv;I an,bn,i,j,m,p,q,*u,*v,*ws;
   case CCOMMA:                                                               \
   case CLEFT:                                                                \
   case CRIGHT:                                                               \
-   e-=e&&neg; RE(d=mult(m*c,e));                                             \
+   e-=e&&neg; DPMULDE(m*c,e,d);                                             \
    GA(z,t,d,id==CCOMMA?2:1+r,s-1); zc=CAV(z); fillv(t,d,zc);                 \
    zs=AS(z); zs[0]=m; zs[1]=id==CCOMMA?e*c:e; ke=k*e;                        \
    EACHC(MC(zc,v1,d*k);  zc+=ke;);                                           \

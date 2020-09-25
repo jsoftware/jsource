@@ -524,7 +524,7 @@ F2(jtabase2){A z;I an,ar,at,t,wn,wr,wt,zn;
   av=an+AV(a); wv=wn+AV(w);
   for(zv=av, d=an;d&&*--zv==1;--d);
   if(d&&*zv==-1){zv=wv; DQ(wn, if(*--zv==IMIN){d=0; break;}) if(!d){RZ(a=cvt(FL,a)); R abase2(a,w);}}
-  RE(zn=mult(an,wn)); GATV(z,INT,zn,1+wr,AS(w)); AS(z)[wr]=an;  // allocate result area
+  DPMULDE(an,wn,zn); GATV(z,INT,zn,1+wr,AS(w)); AS(z)[wr]=an;  // allocate result area
   zv=zn+AV(z);
   if((((2^an)-1)&(av[-2]-1)&-(d=av[-1]))<0){I d1,k;
    // Special case: a is (0,d) where d is positive

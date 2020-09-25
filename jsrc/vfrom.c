@@ -16,7 +16,7 @@ F1(jtcatalog){PROLOG(0072);A b,*wv,x,z,*zv;C*bu,*bv,**pv;I*cv,i,j,k,m=1,n,p,*qv,
  GATV0(x,INT,n,1);    qv=AV(x);   // allocate vector of max-indexes for each box - only the address is used  qv->max-index 0
  GATV0(x,BOX,n,1);    pv=(C**)AV(x);  // allocate vector of pointers to each box's data  pv->box-data-base 0
  RZ(x=apvwr(n,0L,0L)); cv=AV(x);   // allocate vector of current indexes, init to 0  cv->current-index 0
- DO(n, x=wv[i]; if(TYPESNE(t,AT(x)))RZ(x=cvt(t,x)); r+=AR(x); qv[i]=p=AN(x); RE(m=mult(m,p)); pv[i]=CAV(x););  // fill in *qv and *pv; calculate r=+/ #@$@> w, m=*/ */@$@> w
+ DO(n, x=wv[i]; if(TYPESNE(t,AT(x)))RZ(x=cvt(t,x)); r+=AR(x); qv[i]=p=AN(x); DPMULDE(m,p,m); pv[i]=CAV(x););  // fill in *qv and *pv; calculate r=+/ #@$@> w, m=*/ */@$@> w
  GATV0(z,BOX,m,r);    zv=AAV(z); s=AS(z);   // allocate result area
  // There is no need to turn off pristinity of w, because nothing was copied out by pointer (everything was copied & then cloned)
  // The result is certainly pristine if it is DIRECT
@@ -79,7 +79,7 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wk,wn,wr,*ws,zn;
   // For virtual results we need: kn: number of atoms in an item of a cell of w;   
   PROD1(k, wcr-1, ws+wf+1);  // number of atoms in an item of a cell
   // Also m: #wcr-cells in w 
-  PROD(m,wf,ws); zn=k*m;  RE(zn=mult(an,zn));
+  PROD(m,wf,ws); zn=k*m;  DPMULDE(an,zn,zn);
 // correct  if(((zn-2)|-(wf|(wflag&(AFNJA))))>=0){  // zn>1 and not (frame or NJA)
   if(((zn-2)|(wr-2)|-(wf|(wflag&(AFNJA))))>=0){  // zn>1 and not (frame or NJA) and rank>1.  Don't take the time creating a virtual block for a list.  User should use ;.0 for that  NJAwhy
    // result is more than one atom and does not come from multiple cells.  Perhaps it should be virtual.  See if the indexes are consecutive
@@ -230,7 +230,7 @@ static F2(jtbfrom){A z;B*av,*b;C*wv,*zv;I acr,an,ar,k,m,p,q,r,*u=0,wcr,wf,wk,wn,
  // We always need zn, the number of result atoms
  if(wn){
   // If there is data to move, we also need m: #cells of w   k: #bytes in an items of a cell of w   wk: #bytes in a cell of w
-  PROD(m,wf,ws); PROD1(k, wcr-1, ws+wf+1); zn=k*m; k<<=bplg(AT(w)); wk=k*p; RE(zn=mult(an,zn));
+  PROD(m,wf,ws); PROD1(k, wcr-1, ws+wf+1); zn=k*m; k<<=bplg(AT(w)); wk=k*p; DPMULDE(an,zn,zn);
  }else{zn=0;}
  GA(z,AT(w),zn,ar+wr-(I )(0<wcr),0);
  MCISH(AS(z),AS(w),wf); MCISH(&AS(z)[wf],AS(a),ar); if(wcr)MCISH(&AS(z)[wf+ar],1+wf+ws,wcr-1);
@@ -371,7 +371,8 @@ static A jtafrom2(J jt,A p,A q,A w,I r){A z;C*wv,*zv;I d,e,j,k,m,n,pn,pr,* RESTR
  if(AN(w)){
   // Set zn=#atoms of result  d=#atoms in a _2-cell of cell of w
   // e=length of axis corresponding to q  n=#_2-cells in a cell of w   m=#cells of w (frame*size of 2-cell*(# _2-cells = pn*qn))
-  PROD(m,wf,ws); PROD(d,r-2,ws+wf+2); e=ws[1+wf]; n=e*ws[wf]; RE(zn=mult(pn,mult(qn,d*m)));
+// obsolete   PROD(m,wf,ws); PROD(d,r-2,ws+wf+2); e=ws[1+wf]; n=e*ws[wf]; RE(zn=mult(pn,mult(qn,d*m)));
+  PROD(m,wf,ws); PROD(d,r-2,ws+wf+2); e=ws[1+wf]; n=e*ws[wf]; DPMULDE(qn,d*m,zn) DPMULDE(pn,zn,zn);
  }else{zn=0;}
  GA(z,AT(w),zn,wf+pr+qr+r-2,ws);
  s=AS(z)+wf; MCISH(s,AS(p),pr); MCISH(s+pr,AS(q),qr); MCISH(s+pr+qr,ws+wf+2,r-2);
@@ -427,13 +428,15 @@ static F2(jtafrom){PROLOG(0073);A c,ind,p=0,q,*v,y=w;B bb=1;I acr,ar,i=0,j,m,n,p
    p=afi(s[i],v[i]);
    if(!(p&&(((AN(p)^1)-1)&-(AT(p)&NUMERIC))<0))break;  // if 1 selection from numeric axis, do selection here, by adding offset to selected cell
    pr+=AR(p); 
-   RANKT rsav=AR(p); AR(p)=0; m+=i0(p)*prod(wcr-i-1,1+i+s); AR(p)=rsav;  // kludge but easier than creating a fauxvirtual block
+// obsolete    RANKT rsav=AR(p); AR(p)=0; m+=i0(p)*prod(wcr-i-1,1+i+s); AR(p)=rsav;  // kludge but easier than creating a fauxvirtual block
+   RANKT rsav=AR(p); AR(p)=0; I px; PRODX(px,wcr-i-1,1+i+s,i0(p)) m+=px; AR(p)=rsav;  // kludge but easier than creating a fauxvirtual block
   }
  }
  if(i){I*ys;
   RZ(y=virtual(w,m,pr+wcr-i));
   ys=AS(y); DO(pr, *ys++=1;); MCISH(ys,s+i,wcr-i);
-  AN(y)=prod(AR(y),AS(y));
+// obsolete   AN(y)=prod(AR(y),AS(y));
+  I temp; PROD(temp,AR(y),AS(y)); AN(y)=temp;
  }
  // take remaining axes 2 at a time, properly handling omitted axes (ds(CACE)).  First time through p is set if there has been no error
  for(;i<n;i+=2){
@@ -562,7 +565,7 @@ static F2(jtquicksel){I index;
 }
 
 F2(jtfetch){A*av, z;I n;F2PREFIP;
- F2RANKW(1,RMAX,jtfetch,0);  // body of verb applies to rank-1 a, and must turn pristine off if used higher, since there may be repetitions
+ F2RANKW(1,RMAX,jtfetch,DUMMYSELF);  // body of verb applies to rank-1 a, and must turn pristine off if used higher, since there may be repetitions.  Could allow pristine if no frame
  if(!(BOX&AT(a))){
   // look for the common special case scalar { boxed vector.  This path doesn't run EPILOG
   if(((AT(w)>>BOXX)&1)>=(2*AR(a)+AR(w))){  // a is an atom, w is atom or list of boxes   AR(a)==0 && (AR(w)==0 || (AR(w)==1 && AT(w)&BOX))

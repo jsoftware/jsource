@@ -209,8 +209,8 @@ static REPF(jtrep1d){A z;C*wv,*zv;I c,k,m,n,p=0,q,t,*ws,zk,zn;
   RZ(a=vi(a)); x=AV(a); 
   DO(m, ASSERT(0<=x[i],EVDOMAIN); p+=x[i]; ASSERT(0<=p,EVLIMIT););  // p=#items in result
  }
- RE(q=mult(p,n));  // q=length of result item  axis.  +/a copies, each of length n
- RE(zn=mult(p,AN(w)));
+ DPMULDE(p,n,q);  // q=length of result item  axis.  +/a copies, each of length n
+ DPMULDE(p,AN(w),zn);
  GA(z,AT(w),zn,AR(w)+!wcr,0); MCISH(AS(z),AS(w),AR(z)) AS(z)[wf]=q;
  if(!zn)R z;
  wv=CAV(w); zv=CAV(z);

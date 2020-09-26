@@ -362,7 +362,7 @@ static DF2(jtcasei12){A vres,z;I gerit[128/SZI],ZZFLAGWORD;
     currres+=REPSGN(currres)&nar;  // convert currres to nonnegative form
     // fill in the virtual block for this block
     if(ZZFLAGWORD&ZZFLAGARRAYW){  // if w is not a repeated atom...
-     AS(virtw)[0]=srchhi-blkstart; AN(virtw)=AS(virtw)[0]*wck;
+     AS(virtw)[0]=srchhi-blkstart; AN(virtw)=(srchhi-blkstart)*wck;
 // obsolete      AC(virtw)=ACUC1|ACINPLACE;   // in case we created a virtual block from it, restore inplaceability to the UNINCORPABLE block (not if atom, which is never inplaceable)
      AC(virtw)=ACUC1 + ((state&ZZFLAGVIRTWINPLACE)<<(ACINPLACEX-ZZFLAGVIRTWINPLACEX));   // in case we created a virtual block from it, restore inplaceability to the UNINCORPABLE block (not if atom, which is never inplaceable)
     }

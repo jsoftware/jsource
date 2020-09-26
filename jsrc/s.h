@@ -22,7 +22,7 @@
   RZ(w);                                                     \
   n=AN(w); e=SYMLINFOSIZE+LXAV0(w);                                  \
   GATVS(z,(TYPE),(COUNT)*(COL),(1<(COL))?2:1,0,TYPE##SIZE,GACOPYSHAPE0,R 0);                \
-  if(1<(COL)){*AS(z)=(COUNT); *(1+AS(z))=(COL);}             \
+  if(1<(COL)){AS(z)[0]=(COUNT); AS(z)[1]=(COL);}             \
   zv=(T*)AV(z);                                              \
   for(i=1;i<n;++i){                  \
    k=*e++;  /* initial symbol index */  \
@@ -30,12 +30,12 @@
    d=j+jt->sympv;                                            \
    k=d->next;                                                \
    if((d->name)&&(d->val)&&(SELECT)){                        \
-    if(m==*AS(z)){RZ(z=ext(0,z)); zv=(m*(COL))+(T*)AV(z);}   \
+    if(m==AS(z)[0]){RZ(z=ext(0,z)); zv=(m*(COL))+(T*)AV(z);}   \
     {PROCESS;}                                               \
     ++m;                                                     \
   }}}                                                         \
   AN(z)=m*(COL);   \
-  *AS(z)=m;                                   \
+  AS(z)[0]=m;                                   \
   R z;                                                       \
  }
 

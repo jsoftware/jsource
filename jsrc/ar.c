@@ -584,7 +584,7 @@ static DF1(jtreduce){A z;I d,f,m,n,r,t,wr,*ws,zt;
 static A jtredcatsp(J jt,A w,A z,I r){A a,q,x,y;B*b;I c,d,e,f,j,k,m,n,n1,p,*u,*v,wr,*ws,xr;P*wp,*zp;
  ws=AS(w); wr=AR(w); f=wr-r; p=ws[1+f];
  wp=PAV(w); x=SPA(wp,x); y=SPA(wp,i); a=SPA(wp,a); v=AV(a); 
- m=*AS(y); n=AN(a); n1=n-1; xr=AR(x);
+ m=AS(y)[0]; n=AN(a); n1=n-1; xr=AR(x);
  RZ(b=bfi(wr,a,1));
  c=b[f]; d=b[1+f]; if(c&&d)b[f]=0; e=f+!c;
  j=0; DO(n, if(e==v[i]){j=i; break;}); 

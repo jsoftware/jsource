@@ -474,9 +474,9 @@ static B jteqa0(J jt,I n,A*u,A*v){PUSHCCT(1.0) B res=1; DQ(n, if(!equ(*u,*v)){re
 #endif
 
 // Misc code to set the shape once we see how many results there are, used for ~. y and x -. y
-#define ZISHAPE    *AS(z)=AN(z)=zi-zv
-#define ZCSHAPE    *AS(z)=(zc-(C*)zv)/k; AN(z)=n**AS(z)
-#define ZUSHAPE(T) *AS(z)= zu-(T*)zv;    AN(z)=n**AS(z)
+#define ZISHAPE    AS(z)[0]=AN(z)=zi-zv
+#define ZCSHAPE    AS(z)[0]=(zc-(C*)zv)/k; AN(z)=n**AS(z)
+#define ZUSHAPE(T) AS(z)[0]= zu-(T*)zv;    AN(z)=n**AS(z)
 
 
 // *************** first class: intolerant comparisons, unboxed or boxed ***********************
@@ -980,13 +980,13 @@ static IOFT(A,UI4,jtioa12,hia(1.0,*v),TFINDBX,TFINDBY,TFINDBYKEY,!equ(*v,av[hj])
    case IIMODPACK+IIMODFULL+INUBSV: \
    case IIMODPACK+INUBSV:  {SNUBP(B * RESTRICT zv=BAV(z)+l*asct;  ,  zv[zi]=v;) } break; \
    case IIMODFULL+INUB: \
-   case INUB:              {SNUB (T * RESTRICT zv=(T*)AV(z); T *zv0=zv;   ,  *zv=wv[zi]; zv+=v;) *AS(z)=zv-zv0; AN(z)=n*(zv-zv0); } break;  \
+   case INUB:              {SNUB (T * RESTRICT zv=(T*)AV(z); T *zv0=zv;   ,  *zv=wv[zi]; zv+=v;) AS(z)[0]=zv-zv0; AN(z)=n*(zv-zv0); } break;  \
    case IIMODPACK+IIMODFULL+INUB: \
-   case IIMODPACK+INUB:    {SNUBP(T * RESTRICT zv=(T*)AV(z); T *zv0=zv;   ,  *zv=wv[zi]; zv+=v;) *AS(z)=zv-zv0; AN(z)=n*(zv-zv0); } break;  \
+   case IIMODPACK+INUB:    {SNUBP(T * RESTRICT zv=(T*)AV(z); T *zv0=zv;   ,  *zv=wv[zi]; zv+=v;) AS(z)[0]=zv-zv0; AN(z)=n*(zv-zv0); } break;  \
    case IIMODFULL+INUBI: \
-   case INUBI:             {SNUB (I * RESTRICT zv=AV(z); I *zv0=zv;   ,   *zv=zi; zv+=v;) *AS(z)=AN(z)=zv-zv0; } break;  \
+   case INUBI:             {SNUB (I * RESTRICT zv=AV(z); I *zv0=zv;   ,   *zv=zi; zv+=v;) AS(z)[0]=AN(z)=zv-zv0; } break;  \
    case IIMODPACK+IIMODFULL+INUBI: \
-   case IIMODPACK+INUBI:   {SNUBP(I * RESTRICT zv=AV(z); I *zv0=zv;   ,   *zv=zi; zv+=v;) *AS(z)=AN(z)=zv-zv0; } break;  \
+   case IIMODPACK+INUBI:   {SNUBP(I * RESTRICT zv=AV(z); I *zv0=zv;   ,   *zv=zi; zv+=v;) AS(z)[0]=AN(z)=zv-zv0; } break;  \
      /* non-reflexives can benefit from FULL checking.  IIDOT and IICO need full indexes (and thus use BASE0, but no PACK); everything else is Boolean */\
    case IIDOT:             {SDQA(T,Ttype);  SCOZ(T,Ttype,asct);} break;  \
    case IIMODFULL+IIDOT:   {SDQA(T,Ttype);  SCOZF(T,Ttype,asct);} break;  \
@@ -998,7 +998,7 @@ static IOFT(A,UI4,jtioa12,hia(1.0,*v),TFINDBX,TFINDBY,TFINDBYKEY,!equ(*v,av[hj])
    case IIMODBASE0+IIMODFULL+IICO: {SDOA(T,Ttype); SCOZF0(T,Ttype,asct);} break;  \
     /* Boolean indexes from here on.  These must support FULL and PACK */ \
    SMFULLPACKEPS(T,0,IEPS,  (T,0,zv[i]=v;)) /* EPS scans FULL args backwards for cache coherence */ \
-   SMFULLPACK(T,1,ILESS,  DCLZVO(T,0) T *zv0=zv; , (T,1,*zv=mwv[i]; zv+=v;); *AS(z)= zv-zv0; AN(z)=n*(zv-zv0);)  \
+   SMFULLPACK(T,1,ILESS,  DCLZVO(T,0) T *zv0=zv; , (T,1,*zv=mwv[i]; zv+=v;); AS(z)[0]= zv-zv0; AN(z)=n*(zv-zv0);)  \
    SMFULLPACK(T,0,II0EPS, DCLZVO(I,0) I s=wsct; , (T,0,if(!v){s+=i; break;});*zv++=s;)  \
    SMFULLPACK(T,0,II1EPS, DCLZVO(I,0) I s=wsct; , (T,0,if(v){s+=i; break;});*zv++=s; )  \
    SMFULLPACQ(T,0,IJ0EPS, DCLZVQ(I,0) I s=wsct; , (T,0,if(!v){s=i; break;});*zv++=s;)  \
@@ -1006,7 +1006,7 @@ static IOFT(A,UI4,jtioa12,hia(1.0,*v),TFINDBX,TFINDBY,TFINDBYKEY,!equ(*v,av[hj])
    SMFULLPACK(T,0,IANYEPS,DCLZVO(B,0) B s=0; , (T,0,if(v){s=1; break;}); *zv++=s;)  \
    SMFULLPACK(T,0,IALLEPS,DCLZVO(B,0) B s=1; , (T,0,if(!v){s=0; break;}); *zv++=s;)  \
    SMFULLPACK(T,0,ISUMEPS,DCLZVO(I,0) I s=0; , (T,0,s+=v;); *zv++=s;)  \
-   SMFULLPACK(T,0,IIFBEPS,DCLZVO(I,0) I *zv0=zv; , (T,0,*zv=i+wsct; zv+=v;); *AS(z)=AN(z)=zv-zv0;)  \
+   SMFULLPACK(T,0,IIFBEPS,DCLZVO(I,0) I *zv0=zv; , (T,0,*zv=i+wsct; zv+=v;); AS(z)[0]=AN(z)=zv-zv0;)  \
    }  \
   }  \
   R h; \
@@ -2104,8 +2104,8 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
   case IFORKEY: {z=reshape(shape(z),take(sc(m),sc(m))); RZ(z=mkwris(z)); AM(z)=!!m; R z;}  // all 0 but the first has the total count.  Must install # partitions=1 if #items>0
   case IICO:    R reshape(shape(z),sc(n?m:m-1));
   case INUBSV:  R reshape(shape(z),take(sc(m),num(1)));
-  case INUB:    AN(z)=0; *AS(z)=m?1:0; R z;
-  case ILESS:   if(m)AN(z)=*AS(z)=0; else MC(AV(z),AV(w),AN(w)<<klg); R z;
+  case INUB:    AN(z)=0; AS(z)[0]=m?1:0; R z;
+  case ILESS:   if(m)AN(z)=AS(z)[0]=0; else MC(AV(z),AV(w),AN(w)<<klg); R z;
   case IEPS:    R reshape(shape(z),num(m&&(!n||(~fnx&1))));  // ~fnx&1 is true if homo
   case INUBI:   R m?iv0:mtv;
   // th<0 means that the result of e. would have rank>1 and would never compare against either 0 or 1
@@ -2236,7 +2236,7 @@ F2(jteps){I l,r;
  RZ(a&&w);
  l=jt->ranks>>RANKTX; l=AR(a)<l?AR(a):l;
  r=(RANKT)jt->ranks; r=AR(w)<r?AR(w):r; RESETRANK;
- if(unlikely(SPARSE&(AT(a)|AT(w))))R lt(irs2(w,a,0L,r,l,jtindexof),sc(r?*(AS(w)+AR(w)-r):1));  // for sparse, implement as (# cell of y) > y i. x
+ if(unlikely(SPARSE&(AT(a)|AT(w))))R lt(irs2(w,a,0L,r,l,jtindexof),sc(r?AS(w)[AR(w)-r]:1));  // for sparse, implement as (# cell of y) > y i. x
  jt->ranks=(RANK2T)((r<<RANKTX)+l);  // swap ranks for subroutine.  Subroutine will reset ranks
  R indexofsub(IEPS,w,a);
 }    /* a e."r w */
@@ -2267,7 +2267,7 @@ F1(jtsclass){A e,x,xy,y,z;I c,j,m,n,*v;P*p;
  p=PAV(x); e=SPA(p,e); y=SPA(p,i); RZ(xy=stitch(SPA(p,x),y));
  if(n>*AV(e))RZ(xy=over(xy,stitch(e,less(IX(n),y))));
  RZ(xy=grade2(xy,xy)); v=AV(xy);
- c=*AS(xy);
+ c=AS(xy)[0];
  m=j=-1; DQ(c, if(j!=*v){j=*v; ++m;} *v=m; v+=2;);
  GASPARSE(z,SB01,1,2,(I*)0);  v=AS(z); v[0]=1+m; v[1]=n;
  p=PAV(z); 
@@ -2342,7 +2342,7 @@ A jtiocol(J jt,I mode,A a,A w){A h,z;I ar,at,c,d,m,p,t,wr,*ws,wt;void(*fn)();
  RZ(a&&w);
  // require ct!=0   why??
  ASSERT(1.0!=jt->cct,EVNONCE);
- at=AT(a); ar=AR(a); m=*AS(a); c=aii(a);  // a: at=type ar=rank m=#items c=#atoms in an item
+ at=AT(a); ar=AR(a); m=AS(a)[0]; c=aii(a);  // a: at=type ar=rank m=#items c=#atoms in an item
  wt=AT(w); wr=AR(w); ws=AS(w); 
  d=1; DO(1+wr-ar, d*=ws[i];);
  // convert to common type

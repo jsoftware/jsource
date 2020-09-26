@@ -655,7 +655,7 @@ static X jtxrand(J jt,X x){PROLOG(0090);A q,z;B b=1;I j,m,n,*qv,*xv,*zv;
   RZ(z=roll(q)); zv=AV(z);  // roll one value in each Digit position
   DQ(j=m, --j; if(xv[j]!=zv[j]){b=xv[j]<zv[j]; break;});  // MS mismatched Digit tells the tale; if no mismatch, that's too high, keep b=1
  }while(b);  // loop till b=0
- j=m-1; while(0<j&&!zv[j])--j; AN(z)=*AS(z)=++j;  // remove leading 0s from (tail of) result
+ j=m-1; while(0<j&&!zv[j])--j; AN(z)=AS(z)[0]=++j;  // remove leading 0s from (tail of) result
  EPILOG(z);
 }    /* ?x where x is a single strictly positive extended integer */
 
@@ -793,7 +793,7 @@ F2(jtdeal){A z;I at,j,k,m,n,wt,*zv;UI c,s,t,x=jt->rngM[jt->rng];UI sq;
    GMOF2(c,x,s,sq); DO(m, if(s<GMOTHRESH)GMOF2(c,x,s,sq); t=NEXT; if(s)while(s<=t)t=NEXT; s-=sq; j=i+t%c--; k=zv[i]; zv[i]=zv[j]; zv[j]=k;);
   }
   
-  AN(z)=*AS(z)=m;  // lots of wasted space!
+  AN(z)=AS(z)[0]=m;  // lots of wasted space!
  }
  RETF(at&XNUM+RAT||wt&XNUM+RAT?xco1(z):z);
 }
@@ -873,7 +873,7 @@ static X jtxranddot(J jt,X x){PROLOG(0090);A q,z;B b=1;I j,m,n,*qv,*xv,*zv;
   RZ(z=roll(q)); zv=AV(z);  // roll one value in each Digit position
   DQ(j=m, --j; if(xv[j]!=zv[j]){b=xv[j]<zv[j]; break;});  // MS mismatched Digit tells the tale; if no mismatch, that's too high, keep b=1
  }while(b);  // loop till b=0
- j=m-1; while(0<j&&!zv[j])--j; AN(z)=*AS(z)=++j;  // remove leading 0s from (tail of) result
+ j=m-1; while(0<j&&!zv[j])--j; AN(z)=AS(z)[0]=++j;  // remove leading 0s from (tail of) result
  EPILOG(z);
 }    /* ?x where x is a single strictly positive extended integer */
 
@@ -1009,7 +1009,7 @@ static F2(jtdealdot){A h,y,z;I at,d,*hv,i,i1,j,k,m,n,p,q,*v,wt,*yv,*zv;UI c,s,t,
  }}else{
   RZ(z=apvwr(n,0L,1L)); zv=AV(z);
   DO(m, s=GMOF(c,x); t=NEXT; if(s)while(s<=t)t=NEXT; j=i+t%c--; k=zv[i]; zv[i]=zv[j]; zv[j]=k;);
-  AN(z)=*AS(z)=m;
+  AN(z)=AS(z)[0]=m;
  }
  RETF(at&XNUM+RAT||wt&XNUM+RAT?xco1(z):z);
 }

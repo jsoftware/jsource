@@ -293,7 +293,7 @@ A jttokens(J jt,A w,I env){R enqueue(wordil(w),w,env);}
 #define EMIT0c(T,j,i,r,c)   {CHKJ(j); p=(i)-(j); EXTZ(T,1); RZ(*u++=rifvsdebug(str(p,(j)+wv)));}
 #define EMIT0b(T,j,i,r,c)   {CHKJ(j); p=(i)-(j); EXTZ(T,1); RZ(*u++=rifvsdebug(vec(B01,p,(j)+wv)));}
 #define EMIT0x(T,j,i,r,c)   {CHKJ(j); p=(i)-(j); EXTZ(T,1); GA(x,t0,p*wm,wr,AS(w0));  \
-                                *AS(x)=p; MC(AV(x),wv0+wk*(j),wk*p); *u++=x;}
+                                AS(x)[0]=p; MC(AV(x),wv0+wk*(j),wk*p); *u++=x;}
 #define EMIT1(T,j,i,r,c)    {CHKJ(j); p=(i)-(j);            cc=(j)+wv; DQ(p, *u++=*cc++;);}
 #define EMIT1x(T,j,i,r,c)   {CHKJ(j); p=wk*((i)-(j));       MC(u,wv0+j*wk,p); u+=p;}
 #define EMIT2(T,j,i,r,c)    {CHKJ(j); p=(i)-(j); EXTZ(T,2); *u++=(j); *u++=p;}
@@ -325,7 +325,7 @@ A jttokens(J jt,A w,I env){R enqueue(wordil(w),w,env);}
     if((-(r!=vr)&~j)<0)EMIT(T,j,n,r,c);    /*  r!=vr and j>=0 */                                     \
   }}                                                                        \
   if(5==f)u=(T*)zv;                                                         \
-  i=AN(z); AN(z)=j=(u-(T*)AV(z))/zk; *AS(z)=j/(zm); if(i>3*j)RZ(z=ca(z));        \
+  i=AN(z); AN(z)=j=(u-(T*)AV(z))/zk; AS(z)[0]=j/(zm); if(i>3*j)RZ(z=ca(z));        \
  }
 
 static A jtfsmdo(J jt,I f,A s,A m,I*ijrd,A w,A w0){A x,z;C*cc,*wv0;

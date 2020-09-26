@@ -97,7 +97,7 @@ static F1(jttleaf){A t,z;C*v;I n,*s;
 
 static F1(jttconnect){A*wv,x,y,z;B b,d;C c,*u,*xv,*yv,*zv;I e,i,j,m,n,p,q,zn;
  RZ(w);
- n=AN(w); wv=AAV(w); y=*wv; m=*AS(y);
+ n=AN(w); wv=AAV(w); y=wv[0]; m=AS(y)[0];
  e=0; DO(n,e+=*(1+AS(wv[i])););
  RE(zn=mult(m,e)); GATVR(z,LIT,zn,2,AS(y)); AS(z)[1]=e; zv=CAV(z);
  for(i=0;i<n;++i){

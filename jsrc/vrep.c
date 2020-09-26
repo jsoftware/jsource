@@ -146,7 +146,7 @@ static REPF(jtrepbsx){A ai,c,d,e,g,q,x,wa,wx,wy,y,y1,z,zy;B*b;I*dv,*gv,j,m,n,*u,
  if(!*BAV(e)){
   GATV0(q,INT,n,1); v=v0=AV(q); 
   DO(n, if(*b++)*v++=u[i];); 
-  AN(q)=*AS(q)=v-v0; 
+  AN(q)=AS(q)[0]=v-v0; 
   R irs2(q,w,0L,1L,wcr,jtfrom);
  }
  wp=PAV(w);
@@ -157,11 +157,11 @@ static REPF(jtrepbsx){A ai,c,d,e,g,q,x,wa,wx,wy,y,y1,z,zy;B*b;I*dv,*gv,j,m,n,*u,
  RZ(c=indexof(wa,sc(wf)));
  RZ(y1=fromr(c,wy));
  RZ(q=not(eps(y1,ravel(repeat(not(x),y)))));
- m=*AS(a)-m;
+ m=AS(a)[0]-m;
  GATV0(ai,INT,m,1); v=AV(ai); DO(n, if(!*b++)*v++=u[i];);
  RZ(g=grade1(over(ai,repeat(q,y1)))); gv=AV(g);
  GATV0(d,INT,AN(y1),1); dv=AV(d); j=0; DO(AN(g), if(m>gv[i])++j; else dv[gv[i]-m]=j;);
- RZ(zy=mkwris(repeat(q,wy))); v=AV(zy)+*AV(c); m=*(1+AS(zy)); DO(*AS(zy), *v-=dv[i]; v+=m;);
+ RZ(zy=mkwris(repeat(q,wy))); v=AV(zy)+*AV(c); m=AS(zy)[1]; DO(AS(zy)[0], *v-=dv[i]; v+=m;);
  zp=PAV(z);
  SPB(zp,a,ca(wa));
  SPB(zp,e,SPA(wp,e));
@@ -173,7 +173,7 @@ static REPF(jtrepbsx){A ai,c,d,e,g,q,x,wa,wx,wy,y,y1,z,zy;B*b;I*dv,*gv,j,m,n,*u,
 static REPF(jtrepidx){A y;I j,m,p=0,*v,*x;
  RZ(a&&w);F2PREFIP;
  RZ(a=vi(a)); x=AV(a);
- m=*AS(a);
+ m=AS(a)[0];
  DO(m, ASSERT(0<=x[i],EVDOMAIN); p+=x[i]; ASSERT(0<=p,EVLIMIT););  // add up total # result slots
  GATV0(y,INT,p,1); v=AV(y); 
  DO(m, j=i; DQ(x[j], *v++=j;););  // fill index vector with all the indexes

@@ -75,7 +75,7 @@ static F1(jttoc2e){A z;I m,n,r;
  n=AN(w); r=AR(w);
  ASSERT(r!=0,EVRANK);
  ASSERT(!n||LIT&AT(w),EVDOMAIN);
- m=*(AS(w)+r-1);
+ m=AS(w)[r-1];
  ASSERT(0==(m&1),EVLENGTH);
  GATV(z,C2T,n>>1,r,AS(w)); AS(z)[r-1]=m>>1;
  MC(AV(z),AV(w),n);

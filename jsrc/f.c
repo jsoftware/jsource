@@ -134,7 +134,7 @@ static F1(jtthn){A d,t,z;C*tv,*x,*y,*zv;I c,*dv,k,m,n,p,r,*s,wd;FMTFUN fmt;
  n=AN(w); r=AR(w); s=AS(w);
  thcase(AT(w),&wd,&fmt);
  GATV0(t,LIT,wd*(1+n),1); tv=CAV(t);
- if(1>=r){p=thv(w,AN(t),tv); ASSERTSYS(p,"thn"); AN(t)=*AS(t)=p; z=t;} 
+ if(1>=r){p=thv(w,AN(t),tv); ASSERTSYS(p,"thn"); AN(t)=AS(t)[0]=p; z=t;} 
  else{ 
   c=s[r-1]; m=n/c; k=bpnoun(AT(w));
   y=tv-wd; x=CAV(w)-k; 
@@ -456,7 +456,7 @@ static F1(jtenframe){A x,y,z;C*zv;I ht,m,n,p,q,t,wd,wdb,wr,xn,*xv,yn,*yv,zn;
  // p=#atoms in result 2-cell, q=#atoms in 2-cell of w, m=#result 2-cells, zn=#atoms in result
  DPMULDE(ht,wd,p); q=MAX(1,xn*yn); m=n/q; DPMULDE(m,p,zn);  // in case 2-cells of w are empty, avoid zerodivide.  zn will be 0 then
  // Allocate result area, using max type of the children; initialize shape to shape of w with the last 2 dimensions replaced by (ht,wd) of result 2-cell
- GA(z,t,zn,wr,AS(w)); *(AS(z)+wr-2)=ht; *(AS(z)+wr-1)=wd; 
+ GA(z,t,zn,wr,AS(w)); AS(z)[wr-2]=ht; AS(z)[wr-1]=wd; 
  if(!n)R z;  // If w has 0 cells, return the empty array
  // Here w has cells.
  zv=CAV(z);  // zv->result area
@@ -490,7 +490,7 @@ F1(jtmat){A z;B b=0;C*v,*x;I c,k,m=1,p,q,qc,r,*s,t,zn;
 // obsolete  RE(p=mult(m,q)+k*!!q); RE(zn=mult(p,c));  // zn=total # atoms
  DPMULDE(m,q,p) p+=k*!!q; DPMULDE(p,c,zn);  // zn=total # atoms
  // Allocate the result table, set shape to (p,c); x->data area
- GA(z,t,zn,2,0); *AS(z)=p; *(1+AS(z))=c; x=CAV(z);
+ GA(z,t,zn,2,0); AS(z)[0]=p; AS(z)[1]=c; x=CAV(z);
  // If the result has gaps, fill the entire result area with fills
  // (this could be better: just copy the gap, as part of ENGAP; check k above in case of leading unit axes)
  if(2<r)fillv(t,zn,x);

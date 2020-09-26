@@ -225,8 +225,8 @@ static F1(jtpmfree){A x,y;C*c;I m;PM*v;PM0*u;
  if(w){
   c=CAV(w); u=(PM0*)c; v=(PM*)(c+sizeof(PM0)); 
   m=u->wrapped?u->n:u->i; 
-  DQ(m, x=v->name; if(x&&NAME&AT(x)&&AN(x)==*AS(x))fa(x); 
-        y=v->loc;  if(y&&NAME&AT(y)&&AN(y)==*AS(y))fa(y); ++v;);
+  DQ(m, x=v->name; if(x&&NAME&AT(x)&&AN(x)==AS(x)[0])fa(x); 
+        y=v->loc;  if(y&&NAME&AT(y)&&AN(y)==AS(y)[0])fa(y); ++v;);
   fa(w);
  }
  R num(1);

@@ -384,7 +384,7 @@ static A jtifxi(J jt,I m,A w){A z;I d,j,k,n,p,*x;
  p=ABS(m); SETIC(w,n);
  if(m>=0){d=MAX(0,1+n-m);}else{d=1+(n-1)/p; d=(n==0)?n:d;}
  // Allocate result, a dx2 table; install shape
- GATV0(z,INT,2*d,2); *AS(z)=d; *(1+AS(z))=2;
+ GATV0(z,INT,2*d,2); AS(z)[0]=d; AS(z)[1]=2;
  // x->result area; k=stride between infixes; j=starting index (prebiased); copy (index,length) for each infix;
  // repair last length if it runs off the end
  x=AV(z); k=0>m?p:1; j=-k; DQ(d, *x++=j+=k; *x++=p;); if(d)*--x=MIN(p,n-j);
@@ -402,7 +402,7 @@ static DF2(jtinfix){PROLOG(0018);DECLF;A x,z;I m;
  // Create table of infix positions
  RZ(x=ifxi(m,w));
  // If there are infixes, apply fs@:jtseg (ac2 creates an A verb for jtseg)
- if(*AS(x))z=eachl(x,w,atop(fs,ac2(jtseg)));
+ if(AS(x)[0])z=eachl(x,w,atop(fs,ac2(jtseg)));
  else{A s;I r, rr;
   // No infixes.  Create a cell of fills, apply fs to it, add a leading axis of 0 to the result
   // create a block containing the shape of the fill-cell.  The fill-cell is a list of items of y,

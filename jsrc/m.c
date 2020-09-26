@@ -1163,7 +1163,7 @@ RESTRICTF A jtgah(J jt,I r,A w){A z;
  AT(z)=0;
  if(w){
   AT(z)=AT(w); AN(z)=AN(w); AR(z)=(RANKT)r; AK(z)=CAV(w)-(C*)z;
-  if(1==r)*AS(z)=AN(w);
+  if(1==r)AS(z)[0]=AN(w);
  }
  R z;
 }    /* allocate header */ 
@@ -1226,7 +1226,7 @@ B jtspc(J jt){A z; RZ(z=MALLOC(1000)); FREECHK(z); R 1; }
 // the itemcount of the result is set as large as will fit evenly, and the atomcount is adjusted accordingly
 A jtext(J jt,B b,A w){A z;I c,k,m,m1,t;
  RZ(w);                               /* assume AR(w)&&AN(w)    */
- m=*AS(w); PROD(c,AR(w)-1,AS(w)+1); t=AT(w); k=c*bp(t);
+ m=AS(w)[0]; PROD(c,AR(w)-1,AS(w)+1); t=AT(w); k=c*bp(t);
  GA(z,t,2*AN(w)+(AN(w)?0:c),AR(w),0);  // ensure we allocate SOMETHING to make progress
  m1=allosize(z)/k;  // start this divide before the copy
  MC(AV(z),AV(w),AN(w)*bp(t));                 /* copy old contents      */
@@ -1239,7 +1239,7 @@ A jtext(J jt,B b,A w){A z;I c,k,m,m1,t;
 
 A jtexta(J jt,I t,I r,I c,I m){A z;I m1; 
  GA(z,t,m*c,r,0); 
- I k=bp(t); *AS(z)=m1=allosize(z)/(c*k); AN(z)=m1*c;
+ I k=bp(t); AS(z)[0]=m1=allosize(z)/(c*k); AN(z)=m1*c;
  if(2==r)*(1+AS(z))=c;
  if(!(t&DIRECT))memset(AV(z),C0,k*AN(z));
  R z;

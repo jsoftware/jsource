@@ -17,7 +17,7 @@ static DF1(jtoblique){A x,y,z;I m,n,r;D rkblk[16];
  RZ(y=redcat(w,self)); if(1>=r){m=AN(w); n=1;}else{m=AS(w)[0]; n=AS(w)[1];}
  // Create x=+"0 1&i./ 2 {. $y
  A xm; RZ(xm=IX(m)); A xn; RZ(xn=IX(n));
- RZ(x=ATOMIC2(jt,xm,xn,rkblk,0L,1L,CPLUS)); AR(x)=1; *AS(x)=AN(x);
+ RZ(x=ATOMIC2(jt,xm,xn,rkblk,0L,1L,CPLUS)); AR(x)=1; AS(x)[0]=AN(x);
  // perform x f/. y, which does the requested operation, collecting the identical keys
  RZ(df2ip(z,x,y,sldot(VAV(self)->fgh[0])));
  // Final tweak: the result should have (0 >. <: +/ 2 {. $y) cells.  It will, as long as

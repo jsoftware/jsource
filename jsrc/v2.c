@@ -392,7 +392,7 @@ F2(jtqco2){A q,y,z;B b,bb,xt;I c,j,k,m,*qv,wn,wr,*yv,*zv;
  }else{
   GATV(z,INT,wn*m,1+wr,AS(w)); AS(z)[wr]=m; zv=AV(z);
   memset(zv,C0,AN(z)*SZI);
-  j=0; c=*(AS(q)+wr); DQ(wn, DQ(c, if(qv[j]&&m>yv[j])++zv[yv[j]]; ++j;); zv+=m;);
+  j=0; c=AS(q)[wr]; DQ(wn, DQ(c, if(qv[j]&&m>yv[j])++zv[yv[j]]; ++j;); zv+=m;);
   RETF(AT(w)&XNUM+RAT?cvt(XNUM,z):z);
 }}   /* a q: w for array w */
 
@@ -450,7 +450,7 @@ static B jtsmallprimes(J jt,I n,X x,A*zs,X*zx){A s;I i,m,*pv,*sv,*v;X d,q,r;
   x=gc(x,old);
  }
  if(1>xcompare(x,xc(99460729L))&&!(1==AN(x)&&1==XDIG(x))){*v++=xint(x); x=iv1;}
- AN(s)=*AS(s)=v-sv;
+ AN(s)=AS(s)[0]=v-sv;
  RZ(*zs=cvt(XNUM,s)); *zx=x;
  R 1;
 }    /* remove small prime factors */
@@ -527,7 +527,7 @@ static A jtdb1b2(J jt,I n,X w){A t,z;D c,d,lg,n1=(D)n-1,p,r;I m,s[2],*v,*zv;
  lg=log(d); c=log(sqrt(d)); r=exp(sqrt(0.5)+sqrt(c*log(c)))/lg;
  DO(n, c=lg*pow(r,i/n1); p=c*log(c); if(p>=2147483647)break; *v++=(I)jfloor(c); *v++=(I)p;);
  m=(v-zv)>>1; ASSERT(m!=0,EVLIMIT);
- *AS(z)=m; AN(z)=2*m;
+ AS(z)[0]=m; AN(z)=2*m;
  R z;
 }
 

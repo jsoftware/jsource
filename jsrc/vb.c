@@ -367,6 +367,6 @@ default:
        EBLOOP(UC,u[i],  v[k+m],   if(i==m)IFB1);
 #endif
  }
- AN(z)=*AS(z)=zv-AV(z);
+ AN(z)=AS(z)[0]=zv-AV(z);
  RETF(z);
 }    /* a ([: I. E.) w where a and w are atoms or lists */

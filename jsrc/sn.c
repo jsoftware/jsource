@@ -220,7 +220,7 @@ F1(jtnch){A ch;B b;LX *e;I i,m,n;L*d;
   DO(jtcountnl(jt), A loc=jtindexnl(jt,i); if(loc)RZ(ch=nch1(b,loc,&m,ch)););
  }
  jt->stch=b;
- AN(ch)=*AS(ch)=m;
+ AN(ch)=AS(ch)[0]=m;
  R grade2(ch,ope(ch));
 }    /* 4!:5  names changed */
 

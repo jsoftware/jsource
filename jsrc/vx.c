@@ -148,7 +148,7 @@ B jtxdivrem(J jt,X a,X w,X*qz,X*rz){B b,c;I*av,d,j,n,*qv,r,y;X q;
   case 3: DQ(n, --j; d=r*XBASE+av[j]; r=d%y; qv[j]=  d/y ;);            break;
  }
  if(r&&b!=c){--qv[0]; DO(n-1, if(qv[i]>-XBASE)break; qv[i]=0; --qv[1+i];);}
- if(1<n&&!qv[n-1])AN(q)=*AS(q)=n-1;
+ if(1<n&&!qv[n-1])AN(q)=AS(q)[0]=n-1;
  *qz=q; *rz=rifvsdebug(vec(INT,1L,&r)); R 1;
 }    /* (<.a%w),(w|a) where w has a single "digit" and is nonzero */
  
@@ -481,7 +481,7 @@ F1(jtdigits10){A z;B b=0;I c,m,n,*v,*zv,*zv0;X x;
   DQ(n-1, c=*v++; DQ(XBASEN, *zv++=c%10; c/=10;););
   c=*v++; if(c||1==n)*zv++=c%10; while(c/=10)*zv++=c%10;
  }
- AN(z)=*AS(z)=n=zv-zv0; 
+ AN(z)=AS(z)[0]=n=zv-zv0; 
  zv=zv0; v=zv0+n-1; DQ(n>>1, c=*zv; *zv++=*v; *v--=c;); /* reverse in place */
  RETF(z);
 }    /* "."0@": w */

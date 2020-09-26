@@ -23,7 +23,7 @@ F1(jtboxq){ASSERTMTV(w); R ca(jt->bxa);}
 
 F1(jtboxs){A x;
  RZ(w=vs(w));
- ASSERT(11==*AS(w),EVLENGTH);
+ ASSERT(11==AS(w)[0],EVLENGTH);
  x=jt->bxa; RZ(ras(w)); RZ(jt->bxa=w); jt->bx=CAV(jt->bxa); fa(x);
  R mtv;
 }  // box-display characters

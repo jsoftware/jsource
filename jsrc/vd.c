@@ -192,7 +192,7 @@ F1(jtqr){A r,z;D c=inf,d=0,x;I n1,n,*s,wr;
  ASSERT(AT(w)&B01+INT+FL+CMPX,EVDOMAIN);
  wr=AR(w); s=AS(w);
  ASSERT(2>wr||s[0]>=s[1],EVLENGTH);
- RZ(z=qrr(w)); r=*(1+AAV(z)); n=*AS(r); n1=1+n;
+ RZ(z=qrr(w)); r=AAV(z)[1]; n=AS(r)[0]; n1=1+n;
  if(FL&AT(r)){D*v=DAV(r);  DQ(n, x= ABS(*v); if(x<c)c=x; if(x>d)d=x; v+=n1;);}
  else        {Z*v=ZAV(r);  DQ(n, x=zmag(*v); if(x<c)c=x; if(x>d)d=x; v+=n1;);}
  ASSERT(!n||c>d*jt->fuzz,EVDOMAIN);
@@ -275,7 +275,7 @@ static F2(jtmdivsp){A a1,x,y;I at,d,m,n,t,*v,xt;P*wp;
  ASSERT(n==v[1],EVNONCE);
  wp=PAV(w); x=SPA(wp,x); y=SPA(wp,i); a1=SPA(wp,a);
  ASSERT(2==AN(a1),EVNONCE);
- v=AV(y); m=*AS(y);
+ v=AV(y); m=AS(y)[0];
  ASSERT(m==3*n-2,EVNONCE);
  DQ(m, d=*v++; d-=*v++; ASSERT(-1<=d&&d<=1,EVNONCE););
  at=AT(a); xt=AT(x); RE(t=maxtype(at,xt)); RE(t=maxtype(t,FL));

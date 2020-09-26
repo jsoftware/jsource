@@ -269,7 +269,7 @@ static statusEnum insert(J jt, I key) {
 
 static I jtsbextend(J jt,I n,C*s,UI h,I hi){A x;I c,*hv,j,p;SBU*v;
  c=jt->sbun;
- if(c==*AS(jt->sbu)){                   /* extend sbu unique symbols    */
+ if(c==AS(jt->sbu)[0]){                   /* extend sbu unique symbols    */
   RZ(x=ext(1,jt->sbu)); jt->sbu=x; jt->sbuv=(SBU*)AV(x);
  }
  if(AN(jt->sbs)<n+jt->sbsn){            /* extend sbs strings           */
@@ -561,7 +561,7 @@ static A jtsbcheck1(J jt,A una,A sna,A u,A s,A h,A roota,A ff,A gp){PROLOG(0003)
  ASSERTD(0<=g,"gap non-negative");
  ASSERTD(g<f,"gap bounded by ff");
  sv=CAV(s);
- un=*AS(u); uv=(SBU*)AV(u);
+ un=AS(u)[0]; uv=(SBU*)AV(u);
  hn= AN(h); hv=AV(h);
  ASSERTD(2==AR(u),"u matrix");
  ASSERTD(INT&AT(u),"u integer");
@@ -626,7 +626,7 @@ static A jtsbcheck2(J jt,A una,A sna,A u,A s){PROLOG(0000);
  sn=*AV(sna);
  ASSERTD(0<=sn,"sn non-negative");
  sv=CAV(s);
- un=*AS(u); uv=(SBU*)AV(u);
+ un=AS(u)[0]; uv=(SBU*)AV(u);
  ASSERTD(2==AR(u),"u matrix");
  ASSERTD(INT&AT(u),"u integer");
  ASSERTD(*(1+AS(u))==sizeof(SBU)/SZI,"u #columns");

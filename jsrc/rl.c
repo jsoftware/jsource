@@ -203,7 +203,7 @@ static F1(jtlsparse){A a,e,q,t,x,y,z;B ba,be,bn;I j,r,*v;P*p;
   RZ(z=   over(lcpx(lnoun(shape(w))),over(scc(';'),z))         );
  }else RZ(z=lnoun(shape(w))); 
  RZ(z=over(cstr("1$."),z));
- if(bn||!*AS(y))R z;
+ if(bn||!AS(y)[0])R z;
  if(AN(a)){
   RZ(x=lcpx(lnoun(x)));
   RZ(y=1==r?lnoun(ravel(y)):over(cstr("(<\"1)"),lnoun(y)));

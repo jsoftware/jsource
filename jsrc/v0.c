@@ -177,7 +177,7 @@ static B jtrfcq(J jt,I m,A w,A*zz,A*ww){A q,x,y,z;B b;I i,j,wt;Q*qv,rdx,rq,*wv,*
    rq=qminus(rq,q1); while(deflateq(1,m-j,qv,rq)){*zv++=rq; ++j; b=1;}
   }
   // If we found a root, refresh the copies of the complex versions, and account for the roots we have found
-  if(b){AN(q)=*AS(q)=1+m-j; rdx=maxdenom(1+m-j,qv); RZ(y=cvt(CMPX,q)); yv=ZAV(y); i=j;}
+  if(b){AN(q)=AS(q)[0]=1+m-j; rdx=maxdenom(1+m-j,qv); RZ(y=cvt(CMPX,q)); yv=ZAV(y); i=j;}
   else{D c,d;
    // No root found!  Turn over the table and shoot out the lights.  If r is near an axis, push it to the axis.
    c=ABS(r.re); d=ABS(r.im); if(d<EPS*c)r.im=0; if(c<EPS*d)r.re=0;
@@ -188,7 +188,7 @@ static B jtrfcq(J jt,I m,A w,A*zz,A*ww){A q,x,y,z;B b;I i,j,wt;Q*qv,rdx,rq,*wv,*
    // We don't use the roots we find here - we just have to make some progress
    // before the next iteration
  }}
- AN(z)=*AS(z)=j; *zz=z; RZ(*ww=cvt(FL,q));
+ AN(z)=AS(z)[0]=j; *zz=z; RZ(*ww=cvt(FL,q));
  R 1;
 }    /* roots from coefficients, degree m is 2 or more */
 

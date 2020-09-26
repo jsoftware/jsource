@@ -190,7 +190,7 @@ static F1(jtinvamp){A f,ff,g,h,x,y;B nf,ng;C c,d,*yv;I n;V*u,*v;
   case CDOT:
    if(ip(h,CPLUS,CSTAR)){
     ASSERT(2==AR(x),EVRANK);
-    ASSERT(*AS(x)==*(1+AS(x)),EVLENGTH);
+    ASSERT(AS(x)[0]==AS(x)[1],EVLENGTH);
     R nf?amp(ds(CDOMINO),x):amp(h,minv(x));
    }
    break;

@@ -125,7 +125,7 @@ F2(jtaes2)
     n1=out[n-1];
     ASSERT(n1&&n1<=16,EVDOMAIN);
     for(i=n1; i>0; i--)ASSERT(n1==out[n-i],EVDOMAIN);
-    *(AS(z))=AN(z)=n-n1;
+    AS(z)[0]=AN(z)=n-n1;
     memset(out+n-n1,0,n1);
   }
   R z;

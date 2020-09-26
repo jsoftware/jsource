@@ -28,7 +28,7 @@ static A jtcongotoblk(J jt,I n,CW*con){A z;CW*d=con;I i,j,k,*u,*v;
 }    /* compute blocks for goto checking */
 
 static I jtcongotochk(J jt,I i,I j,A x){I k,n,*v;
- n=*AS(x); v=AV(x);
+ n=AS(x)[0]; v=AV(x);
  for(k=0;k<n;++k,v+=2)if(BETWEENO(j,v[0],v[1])&&!BETWEENO(i,v[0],v[1]))R i;
  R -1;
 }    /* i: goto; j: label; return -1 if ok or i if bad */
@@ -418,7 +418,7 @@ B jtpreparse(J jt,A w,A*zl,A*zc){PROLOG(0004);A c,l,*lv,*v,w0,w1,*wv,x,y;B b=0,t
  // Audit control structures and point the go line correctly
  ASSERTCW(    0>(i= conall(n,cv   )),(i+cv)->source);
  // Install the number of words and cws into the return blocks, and return those blocks
- AN(l)=*AS(l)=m; *zl=rifvs(l);
- AN(c)=*AS(c)=n; *zc=rifvs(c);
+ AN(l)=AS(l)[0]=m; *zl=rifvs(l);
+ AN(c)=AS(c)[0]=n; *zc=rifvs(c);
  R try;
 }

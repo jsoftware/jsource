@@ -34,7 +34,7 @@
 static I symcol=(sizeof(L)+SZI-1)/SZI;
 
 B jtsymext(J jt,B b){A x,y;I j,m,n,s[2],*v,xn,yn;L*u;
- if(b){y=jt->symp; j=allosize(y)+NORMAH*SZI; n=*AS(y); yn=AN(y);}  // extract allo size from header (approx)
+ if(b){y=jt->symp; j=allosize(y)+NORMAH*SZI; n=AS(y)[0]; yn=AN(y);}  // extract allo size from header (approx)
  else {            j=((I)1)<<12;            n=1;      yn=0;    }
  m=j<<1;                              /* new size in bytes           */
  m-=SZI*(NORMAH+2);                  /* less array overhead         */
@@ -124,8 +124,8 @@ F1(jtsympool){A aa,q,x,y,*yv,z,*zv;I i,n,*u,*xv;L*pv;LX j,*v;
  ASSERT(1==AR(w),EVRANK); 
  ASSERT(!AN(w),EVLENGTH);
  GAT0(z,BOX,3,1); zv=AAV(z);
- n=*AS(jt->symp); pv=jt->sympv;
- GATV0(x,INT,n*5,2); *AS(x)=n; *(1+AS(x))=5; xv= AV(x); zv[0]=incorp(x);
+ n=AS(jt->symp)[0]; pv=jt->sympv;
+ GATV0(x,INT,n*5,2); AS(x)[0]=n; AS(x)[1]=5; xv= AV(x); zv[0]=incorp(x);
  GATV0(y,BOX,n,  1);                         yv=AAV(y); zv[1]=incorp(y);
  for(i=0;i<n;++i,++pv){         /* per pool entry       */
   *xv++=i;   // sym number

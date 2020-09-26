@@ -76,7 +76,7 @@ F1(jtjlock){B b;I*v;
  RZ(w=vi(w)); 
  ASSERT(LKC==AN(w),EVLENGTH);
  v=AV(w); RE(vfn((F)*v)); ASSERT(0<=v[1]&&0<=v[2],EVDOMAIN); 
- if(jt->flkn==*AS(jt->flkd))RZ(jt->flkd=ext(1,jt->flkd));
+ if(jt->flkn==AS(jt->flkd)[0])RZ(jt->flkd=ext(1,jt->flkd));
  RE(b=dolock(1,(F)v[0],v[1],v[2]));
  if(!b)R num(0);
  ICPY(AV(jt->flkd)+LKC*jt->flkn,v,LKC); ++jt->flkn;

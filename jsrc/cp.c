@@ -22,7 +22,7 @@ static DF1(jtpowseqlim){PROLOG(0039);A x,y,z,*zv;I i,n;
  while(1){
   if(n==i){RZ(z=ext(0,z)); zv=i+AAV(z); n=AN(z);}
   A z0; RZ(x=df1(z0,y=x,self)); INCORP(x); *zv++=x;
-  if(equ(x,y)){AN(z)=*AS(z)=i; break;}
+  if(equ(x,y)){AN(z)=AS(z)[0]=i; break;}
   ++i;
  }
  z=ope(z);

@@ -329,7 +329,7 @@ static DF2(jtcut2sx){PROLOG(0024);DECLF;A h=0,*hv,y,yy;B b,neg,pfx,*u,*v;C id;I 
  PREF2(jtcut2sx);
  SETIC(w,n); t=AT(w); m=(I)sv->localuse.lvp[0]; neg=0>m; pfx=m==1||m==-1; b=neg&&pfx;  // m = n from u;.n
  RZ(a=a==mark?eps(w,take(num(pfx?1:-1),w)):DENSE&AT(a)?sparse1(a):a);
- ASSERT(n==*AS(a),EVLENGTH);
+ ASSERT(n==AS(a)[0],EVLENGTH);
  ap=PAV(a);
  if(!(equ(num(0),SPA(ap,e))&&AN(SPA(ap,a))))R cut2(cvt(B01,a),w,self); 
  vf=VAV(fs);
@@ -907,7 +907,7 @@ DF2(jtrazecut2){A fs,gs,y,z=0;B b; I neg,pfx;C id,sep,*u,*v,*wv,*zv;I d,k,m=0,wi
   }
   p-=q; v=u;  
  }
- *AS(z)=m; AN(z)=m*d; R adocv.cv&VRI+VRD?cvz(adocv.cv,z):z;
+ AS(z)[0]=m; AN(z)=m*d; R adocv.cv&VRI+VRD?cvz(adocv.cv,z):z;
 }   
 
 DF1(jtrazecut1){R razecut2(mark,w,self);}

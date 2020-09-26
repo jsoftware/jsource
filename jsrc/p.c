@@ -138,6 +138,7 @@ static PSTK* jtpparen(J jt,PSTK *stack){
 // multiple assignment.  self has parms.  ABACK(self) is the symbol table to assign to, valencefns[0] is preconditioning routine to open value or convert it to AR
 static DF2(jtisf){RZ(symbis(onm(a),CALL1(FAV(self)->valencefns[0],w,0L),ABACK(self))); R num(0);} 
 
+// assignment, single or multiple
 static PSTK* jtis(J jt,PSTK *stack){B ger=0;C *s;
   A asgblk=stack[1].a; I asgt=AT(asgblk); A v=stack[2].a, n=stack[0].a;  // value and name
  jt->asgn = stack[0].t==1;  // if the word number of the lhs is 1, it's either (noun)=: or name=: or 'value'=: at the beginning of the line; so indicate
@@ -146,19 +147,20 @@ static PSTK* jtis(J jt,PSTK *stack){B ger=0;C *s;
   // Point to the block for the assignment; fetch the assignment pseudochar (=. or =:); choose the starting symbol table
   // depending on which type of assignment (but if there is no local symbol table, always use the global)
   A symtab=jt->locsyms; if(!(asgt&ASGNLOCAL)||AN(jt->locsyms)==1)symtab=jt->global;
-  if(AT(n)&BOXMULTIASSIGN){
+  if(unlikely(AT(n)&BOXMULTIASSIGN)){
    // string assignment, where the NAME blocks have already been computed.  Use them.  The fast case is where we are assigning a boxed list
    if(AN(n)==1)n=AAV(n)[0];  // if there is only 1 name, treat this like simple assignment to first box, fall through
    else{
     // True multiple assignment
-    ASSERT(!AR(v)||AN(n)==AS(v)[0],EVLENGTH);   // v is atom, or length matches n
+// obsolete     ASSERT(!AR(v)||AN(n)==AS(v)[0],EVLENGTH);   // v is atom, or length matches n
+    ASSERT((-(AR(v))&(-(AN(n)^AS(v)[0])))>=0,EVLENGTH);   // v is atom, or length matches n
     if(((AR(v)^1)+(~AT(v)&BOX))==0){A *nv=AAV(n), *vv=AAV(v); DO(AN(n), symbis(nv[i],vv[i],symtab);)}  // v is boxed list
     else {A *nv=AAV(n); DO(AN(n), symbis(nv[i],ope(AR(v)?from(sc(i),v):v),symtab);)}  // repeat atomic v for each name, otherwise select item.  Open in either case
     goto retstack;
    }
   }
   // single assignment or variable assignment
-  if((SGNIF(AT(n),LITX)&(AR(n)-2))<0){
+  if(unlikely((SGNIF(AT(n),LITX)&(AR(n)-2))<0)){
    // lhs is ASCII characters, atom or list.  Convert it to words
    s=CAV(n); ger=CGRAVEC==*s;   // s->1st character; remember if it is `
    RZ(n=words(ger?str(AN(n)-1,1+s):n));  // convert to words (discarding leading ` if present)
@@ -169,7 +171,7 @@ static PSTK* jtis(J jt,PSTK *stack){B ger=0;C *s;
    }
   }
   // if simple assignment to a name (normal case), do it
-  if(NAME&AT(n)){
+  if(likely(NAME&AT(n))){
 #if FORCEVIRTUALINPUTS
    // When forcing everything virtual, there is a problem with jtcasev, which converts its sentence to an inplace special.
    // The problem is that when the result is set to virtual, its backer does not appear in the NVR stack, and when the reassignment is

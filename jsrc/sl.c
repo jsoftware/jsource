@@ -439,7 +439,7 @@ F1(jtlocmap){A g,q,x,y,*yv,z,*zv;I c=-1,d,j=0,m,*qv,*xv;
  RE(g=equ(w,zeroionei(0))?jt->stloc:equ(w,zeroionei(1))?jt->locsyms:locale(0,w));
  ASSERT(g!=0,EVLOCALE);
  RZ(q=locmap1(g)); qv=AV(q);
- m=*AS(q);
+ m=AS(q)[0];
  // split the q result between two boxes
  GATVR(x,INT,m*3,2,AS(q)); xv= AV(x);
  GATV0(y,BOX,m,  1); yv=AAV(y);

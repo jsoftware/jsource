@@ -198,7 +198,7 @@ static F1(jtvfinal){I i;V*u,*v;
 
 F1(jttparse){A*s,t,x;C d;I b,*c,e,i,j,k,m,n;TA*stack;
  RZ(w);
- stack=(TA*)AV(w); n=m=*AS(w)-4;
+ stack=(TA*)AV(w); n=m=AS(w)[0]-4;
  do{
   for(i=0;i<NCASES;i++){
    c=cases[i].c; s=(A*)(n+stack); d=1;

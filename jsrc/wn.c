@@ -411,7 +411,7 @@ F2(jtexec2){A z;B b,p;C d,*v;I at,c,i,k,m,n,r,*s;
  // process each list of the input to see how many numbers it contains.  We will
  // use this to set the shape of the result area
  I fillreqd=0;  // will be <0 if lines have different lengths
- if(!r||*(AS(w)+r-1)){    // skip the count if y is atom, or the last axis of y has dimension 0.   Nothing to count.
+ if(!r||AS(w)[r-1]){    // skip the count if y is atom, or the last axis of y has dimension 0.   Nothing to count.
   // Calculate w ,"1 0 ' '   to end each (or only) line with delimiter
   {A t; RZ(w=IRS2(w,chrspace,0L,1L,0L,jtover,t)); makewritable(w);}  // New w will be created
 // obsolete   v=CAV(w); r=AR(w); s=AS(w); n=s[r-1]; m=prod(r-1,s);  // v->data, m = #lists, n = length of each list

@@ -178,7 +178,7 @@ static A jtth2a(J jt,B e,I m,I d,C*s,I n,I t,I wk,C*wv,B first){PROLOG(0049);A y
  // Set q=nominal length of field: the length given, if m!=0; otheriwse based on type.  p=length of allocated buffer
  q=m?m:t&B01?3:t&INT?12:17; p=n*q;
   // Allocate space for all results; set shape to (n,q); zv->result area
- GATV0(z,LIT,p,2); *AS(z)=n; *(1+AS(z))=q; zv=CAV(z);
+ GATV0(z,LIT,p,2); AS(z)[0]=n; AS(z)[1]=q; zv=CAV(z);
  // If field length is fixed, format the column to that width & return it
  if(m){th2c(e,m,d,s,n,t,wk,wv,m,zv); R z;}
  // Otherwise, field has variable width.  Format the values one by one.
@@ -201,7 +201,7 @@ static A jtth2a(J jt,B e,I m,I d,C*s,I n,I t,I wk,C*wv,B first){PROLOG(0049);A y
  // kludge - this does not conform to Ye Dic, but deployed code may rely on it
  m+=(!first) - b;
  // Allocate final result area, an nxm table of characters.  Install shape
- GATV0(y,LIT,n*m,2); *AS(y)=n; *(1+AS(y))=m;
+ GATV0(y,LIT,n*m,2); AS(y)[0]=n; AS(y)[1]=m;
  // Clear result area to spaces.  Set yv-> first result string, u->first intermediate formatted string
  yv=CAV(y); memset(yv,' ',AN(y));  u=zv;
  // Copy the strings from the formatting area (u->) to the result area (yv->)
@@ -236,7 +236,7 @@ static B jtth2ctrl(J jt,A a,A*ep,A*mp,A*dp,A*sp,I*zkp){A da,ea,ma,s;B b=1,*ev,r,
  GATV0(ea,B01,an,   1); *ep=ea; ev=BAV(ea);  // exponential flag, Boolean list
  GATV0(ma,INT,an,   1); *mp=ma; mv= AV(ma);  // field width, integer list
  GATV0(da,INT,an,   1); *dp=da; dv= AV(da);  // #decimal places, integer list
- GATV0(s, LIT,an*sk,2); *sp=s;  sv=CAV(s); *AS(s)=an; *(1+AS(s))=sk;  // spritf string, set as nx(sk) table
+ GATV0(s, LIT,an*sk,2); *sp=s;  sv=CAV(s); AS(s)[0]=an; AS(s)[1]=sk;  // spritf string, set as nx(sk) table
  // Look at each atom of a
  for(i=0;i<an;++i){
   // Split a into field-width m and #decimal places d, and x as a flag, negative to indicate exponential form

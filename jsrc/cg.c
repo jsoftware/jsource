@@ -588,8 +588,8 @@ A jtgadv(J jt,A w,C id){A hs;I n;
 }
 
 
-static DF1(jtgf1){A z,h=FAV(self)->fgh[2]; R df1(z,  w,*AAV(h));}
-static DF2(jtgf2){A z,h=FAV(self)->fgh[2]; R df2(z,a,w,*AAV(h));}
+static DF1(jtgf1){A z,h=FAV(self)->fgh[2]; R df1(z,  w,AAV(h)[0]);}
+static DF2(jtgf2){A z,h=FAV(self)->fgh[2]; R df2(z,a,w,AAV(h)[0]);}
 
 A jtvger2(J jt,C id,A a,A w){A h,*hv,x;V*v;
  RZ(x=a?a:w);

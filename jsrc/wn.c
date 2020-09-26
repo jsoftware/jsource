@@ -56,7 +56,7 @@ static NUMH(jtnumj){C*t,*ta;D x,y;Z*v;
 }
 
 static NUMH(jtnumi){I neg;I j;
- neg='-'==*s; s+=neg; n-=neg; if(!n)R 0;  // extract & skip sign; exit if no digits
+ neg='-'==s[0]; s+=neg; n-=neg; if(!n)R 0;  // extract & skip sign; exit if no digits
 // obsolete  for(;*s=='0'&&n>1;--n,++s);  // skip leading zeros, as long as there is more than one character
  for(;*s=='0';--n,++s);  // skip leading zeros, even down to nothing, which will be 0 value
  if(!(19>=n))R 0;   // 2^63 is 9223372036854775808.  So a 20-digit input must overflow, and the most a
@@ -70,7 +70,7 @@ static NUMH(jtnumi){I neg;I j;
 
 static NUMH(jtnumx){A y;B b,c;C d;I j,k,m,*yv;X*v;
  v=(X*)vv;
- d=*(s+n-1); b='-'==*s; c='x'==d||'r'==d; s+=b;
+ d=s[n-1]; b='-'==s[0]; c='x'==d||'r'==d; s+=b;
  if('-'==d){if(!(2>=n))R 0; if(!(*v=rifvs(vci(1==n?XPINF:XNINF))))R 0; R 1;}
  n-=b+c; if(!(m=(n+XBASEN-1)/XBASEN))R 0; k=n-XBASEN*(m-1);
  GATV0(y,INT,m,1); yv=m+AV(y);
@@ -106,7 +106,7 @@ static NUMH(jtnumr){C c,*t;I m,p,q;Q*v;
  if(t){
   c=s[n-1]; if(!('r'!=c&&'x'!=c))R 0;
   if(!(numx(n-m-1,s+m+1,&v->d)))R 0;
-  p=*AV(v->n); q=*AV(v->d); 
+  p=AV(v->n)[0]; q=AV(v->d)[0]; 
   if(!(p!=XPINF&&p!=XNINF||q!=XPINF&&q!=XNINF))R 0;
   RE(*v=qstd(*v));
  }

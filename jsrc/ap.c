@@ -408,7 +408,7 @@ static DF2(jtinfix){PROLOG(0018);DECLF;A x,z;I m;
   // create a block containing the shape of the fill-cell.  The fill-cell is a list of items of y,
   // with the number of items being the infix-size if positive, or 0 if negative
   // r = rank of w, rr=rank of list of items of w, s is block for list of length rr; copy shape of r; override #items of infix
-  r=AR(w); rr=MAX(1,r); GATV0(s,INT,rr,1); if(r)MCISH(AV(s),AS(w),r); *AV(s)=0>m?0:m==IMAX?1+SETIC(w,r):m;
+  r=AR(w); rr=MAX(1,r); GATV0(s,INT,rr,1); if(r)MCISH(AV(s),AS(w),r); AV(s)[0]=0>m?0:m==IMAX?1+SETIC(w,r):m;
   // Create fill-cell of shape s; apply u to it
   RZ(df1(x,reshape(s,filler(w)),fs));
   // Prepend leading axis of 0 to the result
@@ -432,7 +432,7 @@ static DF2(jtginfix){A h,*hv,x,z,*zv;I d,m,n;
   DO(n, RZ(zv[i]=df1(h,seg(from(sc(i),x),w),hv[i%d])););
   R ope(z);
  }else{A s;
-  RZ(s=AR(w)?shape(w):ca(iv0)); *AV(s)=ABS(m);
+  RZ(s=AR(w)?shape(w):ca(iv0)); AV(s)[0]=ABS(m);
   RZ(df1(x,reshape(s,filler(w)),*hv));
   R reshape(over(zeroionei(0),shape(x)),x);
 }}
@@ -663,7 +663,7 @@ static DF2(jtinfixd){A fs,z;C*x,*y;I c=0,d,k,m,n,p,q,r,*s,wr,*ws,wt,zc;
  if(fs=FAV(self)->fgh[0],CCOMMA==ID(fs)){RE(c=aii(w)); DPMULDE(p,c,zc) r=2;}
  else{if(n)RE(c=aii(w)); zc=p; r=wr?1+wr:2;}
  GA(z,wt,d*p*c,r,0); x=CAV(z); y=CAV(w);
- s=AS(z); *s++=d; *s++=zc; MCISH(s,1+ws,r-2);
+ s=AS(z); s[0]=d; s[1]=zc; MCISH(s+2,1+ws,r-2);
  k=c<<bplg(wt); 
  if(AN(z)){
   if(m>=0){ q=p*k; DQ(d, MC(x,y,q);    x+=q; y+=k;);
@@ -852,7 +852,7 @@ static DF2(jtmovfslash){A x,z;B b;C id,*wv,*zv;I d,m,m0,p,t,wk,wt,zi,zk,zt;
  if((((2^m)-1)|(m-1)|(p-m))<0)R jtinfixprefix2(jt,a,w,self);  // If m is 0 or 2, or if there is just 1 infix, go to general case
  x=FAV(self)->fgh[0]; x=FAV(x)->fgh[0]; id=ID(x); 
  if(wt&B01){id=id==CMIN?CSTARDOT:id; id=id==CMAX?CPLUSDOT:id;}
- if(id==CBDOT&&(x=VAV(x)->fgh[1],INT&AT(x)&&!AR(x)))id=(C)*AV(x);
+ if(id==CBDOT&&(x=VAV(x)->fgh[1],INT&AT(x)&&!AR(x)))id=(C)AV(x)[0];
  switch(AR(w)&&BETWEENC(m0,0,AS(w)[0])?id:0){
   case CPLUS:    if(wt&B01+INT+FL)R movsumavg(m,w,self,0); break;
   case CMIN:     if(wt&SBT+INT+FL)R movminmax(m,w,self,0); break;

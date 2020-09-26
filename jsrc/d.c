@@ -45,7 +45,7 @@ void jtshowerr(J jt){C b[1+2*NETX],*p,*q,*r;
   *p=0;
 #ifdef ANDROID
   A z=tocesu8(str(strlen(b),b));
-  *(CAV(z)+AN(z))=0;
+  CAV(z)[AN(z)]=0;
   jsto(jt,MTYOER,CAV(z));
 #else
   jsto(jt,MTYOER,b);
@@ -83,7 +83,7 @@ static void jtdisp(J jt,A w){B b=1&&AT(w)&NAME+NUMERIC;
  case NAMEX: ep(AN(w),NAV(w)->s);     break;
  case LPARX: eputc('(');              break;
  case RPARX: eputc(')');              break;
- case ASGNX: dspell(*CAV(w),w);       break;
+ case ASGNX: dspell(CAV(w)[0],w);       break;
  case MARKX:                          break;
  default:   dspell(FAV(w)->id,w);     break;
  }
@@ -114,7 +114,7 @@ static void jtseecall(J jt,DC d){A a;
 
 // display error-message line
 static void jtdhead(J jt,C k,DC d){C s[]="    "; 
- *s=d&&d->dcsusp?'*':'|'; 
+ s[0]=d&&d->dcsusp?'*':'|'; 
  ep(k+1L,s);
 }    /* preface stack display line */
 
@@ -208,7 +208,7 @@ void jtjsignal3(J jt,I e,A w,I j){
 static F2(jtdbsig){I e;
  RE(0);
  if(!AN(w))R mtm;
- RZ(w=vi(w)); e=*AV(w); 
+ RZ(w=vi(w)); e=AV(w)[0]; 
  ASSERT(1<=e,EVDOMAIN);
  ASSERT(e<=255,EVLIMIT);
  if(a||e>NEVM){if(!a)a=mtv; RZ(a=vs(a)); jsig(e,a);} else jsignal(e);

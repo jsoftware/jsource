@@ -350,7 +350,7 @@ F1(jttlims){D d;
  RZ(w);
  ASSERT(!AR(w),EVRANK);
  if(!(FL&AT(w)))RZ(w=cvt(FL,w));
- d=*DAV(w);
+ d=DAV(w)[0];
  ASSERT(0<=d,EVDOMAIN);
  ASSERT(FLIMAX>1000*d,EVLIMIT);
  jt->timelimit=(UI)(1000*d);

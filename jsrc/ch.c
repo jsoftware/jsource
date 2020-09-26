@@ -31,7 +31,7 @@ static A jthgv(J jt,B b,I n,A w,A self){A c,d,e,h,*hv,j,y;V*sv=FAV(self);
 static A jthgd(J jt,B b,I n,A w,A p,A q){A c,d,e,z;D r,s,t,*u,*v,x,*zv;I j,pn,qn;
  RZ(c=cvt(FL,p)); u=DAV(c); pn=AN(c);
  RZ(d=cvt(FL,q)); v=DAV(d); qn=AN(d);
- RZ(e=cvt(FL,w)); x=*DAV(e); r=s=1; t=0; z=0;
+ RZ(e=cvt(FL,w)); x=DAV(e)[0]; r=s=1; t=0; z=0;
  if(b&&2000>n){GATV0(z,FL,1+n,1); zv=DAV(z); *zv++=0; *zv++=1;}
  NAN0;
  for(j=1;j<n&&t!=s&&!_isnan(s);++j){

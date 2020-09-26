@@ -774,21 +774,23 @@ extern unsigned int __cdecl _clearfp (void);
 #define GAE(v,t,n,r,s,erraction)   if(unlikely(!(v=ga(t,(I)(n),(I)(r),(I*)(s)))))erraction;
 // When the type and all rank/shape are known at compile time, use GAT.  The compiler precalculates almost everything
 // For best results declare name as: AD* RESTRICT name;  The number of bytes, rounded up with overhead added, must not exceed 2^(PMINL+4)
-#define GATS(name,type,atoms,rank,shaape,size,shapecopier) \
+#define GATS(name,type,atoms,rank,shaape,size,shapecopier,erraction) \
 { ASSERT(!((rank)&~RMAX),EVLIMIT); \
  I bytes = ALLOBYTES(atoms,rank,size,(type)&LAST0,(type)&NAME); \
  name = jtgaf(jt, ALLOBLOCK(bytes)); \
  I akx=AKXR(rank);   \
- RZ(name);   \
+ if(likely(name!=0)){   \
  AK(name)=akx; AT(name)=(type); AN(name)=atoms;   \
  AR(name)=(RANKT)(rank);     \
  if(!((type)&DIRECT)){if(SY_64){if(rank==0)AS(name)[0]=0; memset((C*)(AS(name)+1),C0,(bytes-32)&-32);}else{memset((C*)name+akx,C0,bytes+1-akx);}}  \
  shapecopier(name,type,atoms,rank,shaape)   \
     \
+ }else{erraction;} \
 }
-#define GAT(name,type,atoms,rank,shaape)  GATS(name,type,atoms,rank,shaape,type##SIZE,GACOPYSHAPE)
-#define GATR(name,type,atoms,rank,shaape)  GATS(name,type,atoms,rank,shaape,type##SIZE,GACOPYSHAPER)
-#define GAT0(name,type,atoms,rank)  GATS(name,type,atoms,rank,0,type##SIZE,GACOPYSHAPE0)
+#define GAT(name,type,atoms,rank,shaape)  GATS(name,type,atoms,rank,shaape,type##SIZE,GACOPYSHAPE,R 0)
+#define GATR(name,type,atoms,rank,shaape)  GATS(name,type,atoms,rank,shaape,type##SIZE,GACOPYSHAPER,R 0)
+#define GAT0(name,type,atoms,rank)  GATS(name,type,atoms,rank,0,type##SIZE,GACOPYSHAPE0,R 0)
+#define GAT0E(name,type,atoms,rank,erraction)  GATS(name,type,atoms,rank,0,type##SIZE,GACOPYSHAPE0,erraction)
 
 // Used when type is known and something else is variable.  ##SIZE must be applied before type is substituted, so we have GATVS to use inside other macros.  Normally use GATV
 // Note: assigns name before assigning the components of the array, so the components had better not depend on name, i. e. no GATV(z,BOX,AN(z),AR(z),AS(z))
@@ -798,7 +800,7 @@ extern unsigned int __cdecl _clearfp (void);
  else{ASSERT(((I)bytes>(I)(atoms)&&(I)(atoms)>=(I)0)&&!((rank)&~RMAX),EVLIMIT)} \
  name = jtgafv(jt, bytes);   \
  I akx=AKXR(rank);   \
- if(name){   \
+ if(likely(name!=0)){   \
   AK(name)=akx; AT(name)=(type); AN(name)=atoms; AR(name)=(RANKT)(rank);     \
   if(!((type)&DIRECT)){if(SY_64){AS(name)[0]=0; memset((C*)(AS(name)+1),C0,(bytes-32)&-32);}else{memset((C*)name+akx,C0,bytes+1-akx);}}  \
   shapecopier(name,type,atoms,rank,shaape)   \
@@ -811,6 +813,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define GATVR(name,type,atoms,rank,shaape) GATVS(name,type,atoms,rank,shaape,type##SIZE,GACOPYSHAPER,R 0)
 #define GATV1(name,type,atoms,rank) GATVS(name,type,atoms,rank,0,type##SIZE,GACOPY1,R 0)  // this version copies 1 to the entire shape
 #define GATV0(name,type,atoms,rank) GATVS(name,type,atoms,rank,0,type##SIZE,GACOPYSHAPE0,R 0)  // shape not written unless rank==1
+#define GATV0E(name,type,atoms,rank,erraction) GATVS(name,type,atoms,rank,0,type##SIZE,GACOPYSHAPE0,erraction)  // shape not written unless rank==1
 // use this version when you are allocating a sparse matrix.  It handles the AS[0] field correctly.  ALL sparse allocations must come through here so that AC is set sorrectly
 #define GASPARSE(n,t,a,r,s) {if((r)==1){GA(n,(t),a,1,0); if(s)AS(n)[0]=(s)[0];}else{GA(n,(t),a,r,s)} AC(n)=ACUC1;}
 

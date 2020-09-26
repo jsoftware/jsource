@@ -62,7 +62,7 @@ F2(jtshasum2)
   n=AN(w);
   v=UAV(w);
   ASSERT(!n||AT(w)&LIT,EVDOMAIN);
-  I s=*AV(a);
+  I s=AV(a)[0];
 
   /*
   1    SHA1

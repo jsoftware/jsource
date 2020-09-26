@@ -32,7 +32,7 @@ F1(jtctq){ASSERTMTV(w); R scf(1.0-jt->cct);}
 
 F1(jtcts){D d;
  ASSERT(!AR(w),EVRANK);
- RZ(w=cvt(FL,w)); d=*DAV(w);
+ RZ(w=cvt(FL,w)); d=DAV(w)[0];
  ASSERT(0<=d,EVDOMAIN); 
  ASSERT(d<=5.820766091e-11,EVDOMAIN);
  jt->cctdefault=jt->cct=1.0-d;

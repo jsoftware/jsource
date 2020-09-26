@@ -15,7 +15,7 @@
 #define XNINF           (I)-99999
 #define XF1(f)          X f(J jt,    X w)
 #define XF2(f)          X f(J jt,X a,X w)
-#define XDIG(a)         (*(AV(a)+AN(a)-1))   /* leading digit              */
+#define XDIG(a)         (AV(a)[AN(a)-1])   /* leading digit              */
 #define XMAX(x,y)       (1==xcompare(x,y)?x:y)
 #define XMIN(x,y)       (1==xcompare(x,y)?y:x)
 #define XDIV(x,y)       xdiv(x,y,jt->xmode)

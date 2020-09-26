@@ -315,7 +315,7 @@ F1(jtunbin){A q;B b,d;C*v;I c,i,k,m,n,r,t;
  m=AN(w);
  ASSERT(m>=8,EVLENGTH);
  q=(A)AV(w);
- switch(*CAV(w)){
+ switch(CAV(w)[0]){
   case (C)0xe0: R unbinr(0,0,0,m,q);
   case (C)0xe1: R unbinr(1,0,0,m,q);
   case (C)0xe2: R unbinr(0,1,0,m,q);

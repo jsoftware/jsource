@@ -46,11 +46,11 @@ static I jtc2j(J jt,B e,I m,C*zv){C c,*s,*t;I k,p;
  t=jt->th2buf; k=strlen(t);
  if(!e&&(s=memchr(t,'-',k))){  /* turn -0 to 0 */
   // Nonexponential field containing '-' (s points to the -)
-  *s=' ';   // blank out the sign
+  s[0]=' ';   // blank out the sign
   // see if there is a significant digit.  If so, install _ sign.  This removes the sign from -0
-  DO(k-(1+s-t), c=s[1+i]; if(c!='0'&&c!='.'){*s=CSIGN; break;});
+  DO(k-(1+s-t), c=s[1+i]; if(c!='0'&&c!='.'){s[0]=CSIGN; break;});
   // If the field was -0 in a field of unknown width, skip over the now-empty sign field
-  if(!m&&' '==*s){++t; --k;}
+  if(!m&&' '==s[0]){++t; --k;}
  }
  // If the field has fixed width and the formatted result doesn't fit, fill result area with ***
  if(m&&m<k)memset(zv,'*',m);
@@ -90,7 +90,7 @@ static B jtfmtx(J jt,B e,I m,I d,C*s,I t,X*wv){B b;C*v=jt->th2buf;I c,n,p,q,*xv;
  else if(m&&m<b+p+d+!!d){memset(v,'*',m); v[m]=0;}
  else{
   if(jt->th2bufn<4+p+d){A s; jt->th2bufn=4+p+d; GATV0(s,LIT,jt->th2bufn,1); v=jt->th2buf=CAV(s);}
-  if(' '==*s)*v++=' '; if(b)*v++='_'; 
+  if(' '==s[0])*v++=' '; if(b)*v++='_'; 
   sprintf(v,FMTI,c); v+=q;
   DQ(n-1, c=*--xv; sprintf(v,FMTI04,b?-c:c); v+=XBASEN;); 
   if(d){*v++='.'; memset(v,'0',d); v[d]=0;}
@@ -116,7 +116,7 @@ static B jtfmtq(J jt,B e,I m,I d,C*s,I t,Q*wv){B b;C*v=jt->th2buf;I c,ex=0,k,n,p
  else if(m&&m<b+d+(I )!!d+(0>ex?1:1+ex)){memset(v,'*',m); v[m]=0;}
  else{
   if(jt->th2bufn<4+p+d){A s; jt->th2bufn=4+p+d; GATV0(s,LIT,jt->th2bufn,1); v=jt->th2buf=CAV(s);}
-  if(' '==*s)*v++=' '; if(b)*v++='_';
+  if(' '==s[0])*v++=' '; if(b)*v++='_';
   if(0>ex){k=-ex-1; DQ(1+MIN(d,k), *v++='0';);}
   sprintf(v,FMTI,c); v+=q;
   DQ(n-1, c=*--xv; sprintf(v,FMTI04,b?-c:c); v+=XBASEN;);
@@ -148,9 +148,9 @@ static void jtfmt1(J jt,B e,I m,I d,C*s,I t,C*wv){D y;
   case RATX:  fmtq(e,m,d,s,t,(Q*)wv);          break;
   default:
    y=*(D*)wv; y=y?y:0.0;  /* -0 to 0 */
-   if     (!memcmpne(wv,&inf, SZD))strcpy(jt->th2buf,e?"  _" :' '==*s?" _" :"_" );
-   else if(!memcmpne(wv,&infm,SZD))strcpy(jt->th2buf,e?" __" :' '==*s?" __":"__");
-   else if(_isnan(*(D*)wv)      )strcpy(jt->th2buf,e?"  _.":' '==*s?" _.":"_.");
+   if     (!memcmpne(wv,&inf, SZD))strcpy(jt->th2buf,e?"  _" :' '==s[0]?" _" :"_" );
+   else if(!memcmpne(wv,&infm,SZD))strcpy(jt->th2buf,e?" __" :' '==s[0]?" __":"__");
+   else if(_isnan(*(D*)wv)      )strcpy(jt->th2buf,e?"  _.":' '==s[0]?" _.":"_.");
    else sprintf(jt->th2buf,s,y);
 }}   /* format one number */
 
@@ -296,7 +296,7 @@ F2(jtthorn2){PROLOG(0050);A da,ea,h,ma,s,y,*yv,z;B e,*ev;C*sv,*wv,*zv;I an,c,d,*
   // r was an atom or a list, we need to change the result from a table to a single list.
   if(2<r||1==n&&2!=r){
    if(!r)r=1;   // change atomic r to a list
-   RZ(h=vec(INT,r,ws)); *(AV(h)+r-1)=*(1+AS(z));  // Create a vector out of the shape of w; replace length of 1-cell with length of a row of result 
+   RZ(h=vec(INT,r,ws)); AV(h)[r-1]=AS(z)[1];  // Create a vector out of the shape of w; replace length of 1-cell with length of a row of result 
    RZ(z=reshape(h,z));   // reshape the result table to that shape
  }}
  EPILOG(z);

@@ -102,7 +102,7 @@ A jtapvwr(J jt,I n,I b,I m){A z;
 
 
 // w must be 0 or an atom equal to 0 or 1.  Result is its value
-B jtb0(J jt,A w){if(!(w))R 0; ASSERT(!AR(w),EVRANK); if(!(B01&AT(w)))RZ(w=cvt(B01,w)); R*BAV(w);}
+B jtb0(J jt,A w){if(!(w))R 0; ASSERT(!AR(w),EVRANK); if(!(B01&AT(w)))RZ(w=cvt(B01,w)); R BAV(w)[0];}
 
 // NOTE: the caller modifies this result inplace, so it must not be shared or readonly
 B*jtbfi(J jt,I n,A w,B p){A t;B* RESTRICT b;I* RESTRICT v;
@@ -170,9 +170,9 @@ I bsum(I n,B*b){I q=(n-1)>>LGSZI,z=0;UI t,*v;
  R z;
 }    /* sum of boolean vector b */
 
-C cf(A w){if(!w)R 0; R*CAV(w);}  // first character in a character array
+C cf(A w){if(!w)R 0; R CAV(w)[0];}  // first character in a character array
 
-C cl(A w){if(!w)R 0; R*(CAV(w)+AN(w)-1);}  // last character in a character array
+C cl(A w){if(!w)R 0; R CAV(w)[AN(w)-1];}  // last character in a character array
 
 // A block for null-terminated C string, with a trailing NUL (which is not included in the AN of the string)
 A jtcstr(J jt,C*s){A z; RZ(z=rifvs(str((I)strlen(s),s))); CAV(z)[AN(z)]=0; R z;}  // used only for initialization, so ensure real string returned.  The string has only the non-NUL, but add a trailing NUL.  There's always room.
@@ -274,13 +274,13 @@ A jtodom(J jt,I r,I n,I* RESTRICT s){A z;I m,mn,*u,*zv;
 
 F1(jtrankle){R!w||AR(w)?w:ravel(w);}
 
-A jtsc(J jt,I k)     {A z; if((k^REPSGN(k))<=NUMMAX){z=num(k); z=k&~1?z:zeroionei(k); R z;} GAT0(z,INT, 1,0); *IAV(z)=k;     RETF(z);}  // always return I
-A jtscib(J jt,I k)   {A z; if((k^REPSGN(k))<=NUMMAX)R num(k); GAT0(z,INT, 1,0); *IAV(z)=k;     RETF(z);}  // return b if 0 or 1, else I
-A jtsc4(J jt,I t,I v){A z; GA(z,t,   1,0,0); *IAV(z)=v;     RETF(z);}  // return scalar with a given I-length type (numeric or box)
+A jtsc(J jt,I k)     {A z; if((k^REPSGN(k))<=NUMMAX){z=num(k); z=k&~1?z:zeroionei(k); R z;} GAT0(z,INT, 1,0); IAV(z)[0]=k;     RETF(z);}  // always return I
+A jtscib(J jt,I k)   {A z; if((k^REPSGN(k))<=NUMMAX)R num(k); GAT0(z,INT, 1,0); IAV(z)[0]=k;     RETF(z);}  // return b if 0 or 1, else I
+A jtsc4(J jt,I t,I v){A z; GA(z,t,   1,0,0); IAV(z)[0]=v;     RETF(z);}  // return scalar with a given I-length type (numeric or box)
 A jtscb(J jt,B b)    {R num(b);}   // A block for boolean
-A jtscc(J jt,C c)    {A z; GAT0(z,LIT, 1,0); *CAV(z)=c;     RETF(z);}  // create scalar character
-A jtscf(J jt,D x)    {A z; GAT0(z,FL,  1,0); *DAV(z)=x;     RETF(z);}   // scalar float
-A jtscx(J jt,X x)    {A z; GAT0(z,XNUM,1,0); *XAV(z)=ca(x); RETF(z);}  // scalar extended
+A jtscc(J jt,C c)    {A z; GAT0(z,LIT, 1,0); CAV(z)[0]=c;     RETF(z);}  // create scalar character
+A jtscf(J jt,D x)    {A z; GAT0(z,FL,  1,0); DAV(z)[0]=x;     RETF(z);}   // scalar float
+A jtscx(J jt,X x)    {A z; GAT0(z,XNUM,1,0); XAV(z)[0]=ca(x); RETF(z);}  // scalar extended
 
 // return A-block for the string *s with length n
 A jtstr(J jt,I n,C*s){A z; GATV0(z,LIT,n,1); MC(AV(z),s,n); RETF(z);}
@@ -292,7 +292,7 @@ F1(jtstr0){A z;C*x;I n; RZ(w); ASSERT(LIT&AT(w),EVDOMAIN); n=AN(w); GATV0(z,LIT,
 A jtv2(J jt,I a,I b){A z;I*x; GAT0(z,INT,2,1); x=AV(z); *x++=a; *x=b; RETF(z);}
 
 // return A-block for singleton integer list whose value is k
-A jtvci(J jt,I k){A z; GAT0(z,INT,1,1); *IAV(z)=k; RETF(z);}
+A jtvci(J jt,I k){A z; GAT0(z,INT,1,1); IAV(z)[0]=k; RETF(z);}
 
 // return A-block for list of type t, length n, and values *v
 // MUST NOT return virtual or fixed block, because we often modify the returned area

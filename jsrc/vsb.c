@@ -540,24 +540,24 @@ static A jtsbcheck1(J jt,A una,A sna,A u,A s,A h,A roota,A ff,A gp){PROLOG(0003)
  RZ(una&&sna&&u&&s&&h);
  ASSERTD(!AR(una),"c atom");            /* cardinality   */
  ASSERTD(INT&AT(una),"c integer");
- c=*AV(una);
+ c=AV(una)[0];
  ASSERTD(0<=c,"c non-negative");
  ASSERTD(!AR(sna),"sn atom");           /* string length */
  ASSERTD(INT&AT(sna),"sn integer");
- sn=*AV(sna); 
+ sn=AV(sna)[0]; 
  ASSERTD(0<=sn,"sn non-negative");
  ASSERTD(!AR(roota),"root atom"); 
  ASSERTD(INT&AT(roota),"root integer");
- r=*AV(roota);
+ r=AV(roota)[0];
  ASSERTD(0<=r,"root non-negative");     /* root          */
  ASSERTD(r<c,"root bounded by c");
  ASSERTD(!AR(ff),"ff atom");            /* fill factor   */
  ASSERTD(INT&AT(ff),"ff integer");
- f=*AV(ff);
+ f=AV(ff)[0];
  ASSERTD(0<=f,"ff non-negative");
  ASSERTD(!AR(gp),"gap atom");           /* gap           */
  ASSERTD(INT&AT(gp),"gap integer");
- g=*AV(gp);
+ g=AV(gp)[0];
  ASSERTD(0<=g,"gap non-negative");
  ASSERTD(g<f,"gap bounded by ff");
  sv=CAV(s);
@@ -617,13 +617,13 @@ static A jtsbcheck2(J jt,A una,A sna,A u,A s){PROLOG(0000);
  if(1==AN(una)){ASSERTD(!AR(una),"c atom");}            /* cardinality    */
  else {ASSERTD(2==AN(una)&&1==AR(una),"c/offset vector");}
  ASSERTD(INT&AT(una),"c integer");
- c=*AV(una);
+ c=AV(una)[0];
  ASSERTD(0<=c,"c non-negative");
  if(2==AN(una)){ASSERTD(0<=(offset=*(1+AV(una))),"offset non-negative");}
  if(!offset){ASSERTD(!offset||offset==jt->sbun,"offset contiguous");}
  ASSERTD(!AR(sna),"sn atom");           /* string length */
  ASSERTD(INT&AT(sna),"sn integer");
- sn=*AV(sna);
+ sn=AV(sna)[0];
  ASSERTD(0<=sn,"sn non-negative");
  sv=CAV(s);
  un=AS(u)[0]; uv=(SBU*)AV(u);
@@ -658,14 +658,14 @@ static F1(jtsbsetdata){A h,s,u,*wv,x;
  ASSERTD(8==AN(w), "arg length");
  wv=AAV(w); 
  RZ(sbcheck1(wv[0],wv[1],wv[2],wv[3],wv[4],wv[5],wv[6],wv[7]));
- jt->sbun=*AV(wv[0]);
- jt->sbsn=*AV(wv[1]);
+ jt->sbun=AV(wv[0])[0];
+ jt->sbsn=AV(wv[1])[0];
  RZ(x=ca(wv[2])); ras(x); u=jt->sbu; jt->sbu=x; jt->sbuv=(SBU*)AV(x);
  RZ(x=ca(wv[3])); ras(x); s=jt->sbs; jt->sbs=x; jt->sbsv=     CAV(x);
  RZ(x=ca(wv[4])); ras(x); h=jt->sbh; jt->sbh=x; jt->sbhv=      AV(x);
- ROOT      =*AV(wv[5]);
- FILLFACTOR=*AV(wv[6]);
- GAP       =*AV(wv[7]);
+ ROOT      =AV(wv[5])[0];
+ FILLFACTOR=AV(wv[6])[0];
+ GAP       =AV(wv[7])[0];
  fa(u); fa(s); fa(h);
  R num(1);
 }
@@ -684,9 +684,9 @@ static F1(jtsbsetdata2){A *wv;I c,i,sn,offset=0;SBU*uv,*v;C*sv;
  if(!AN(w)){resetdata(jt); R num(1); }
  wv=AAV(w); 
  RZ(sbcheck2(wv[0],wv[1],wv[2],wv[3]));
- c=*AV(wv[0]);                         // cardinality
- if(1<AN(wv[0]))offset=*(1+AV(wv[0]));// offset
- sn=*AV(wv[1]);                        // string length
+ c=AV(wv[0])[0];                         // cardinality
+ if(1<AN(wv[0]))offset=AV(wv[0])[1];// offset
+ sn=AV(wv[1])[0];                        // string length
  uv=(SBU*)AV(wv[2]);                   // table of symbols
  sv=CAV(wv[3]);                        // global string table
  if(!offset)resetdata(jt);

@@ -986,7 +986,7 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
   if(star&&!xr&&xt&BOX){           /* scalar boxed integer/boolean scalar is a pointer - NOT memu'd */
    y=AAV0(x);
    CDASSERT(!AR(y)&&AT(y)&B01+INT,per);
-   if(AT(y)&B01){CDASSERT(0==*BAV(y),per); *dv++=0;}else *dv++=*AV(y);
+   if(AT(y)&B01){CDASSERT(0==BAV(y)[0],per); *dv++=0;}else *dv++=AV(y)[0];
   }else if(star){
    CDASSERT(xr&&(xt&DIRECT),per);                /* pointer can't point at scalar, and it must point to direct values */
    // if type is * (not &), make a safe copy.
@@ -1285,8 +1285,8 @@ static I cbold(I n,I *pi){char d[256],*p;A r;I i;
  *p=0;
  r=exec1(cstr(d));
  if(!r||AR(r)) R 0;
- if(INT&AT(r)) R *AV(r);
- if(B01&AT(r)) R *(BYTE*)AV(r);
+ if(INT&AT(r)) R AV(r)[0];
+ if(B01&AT(r)) R ((BYTE*)AV(r))[0];
  R 0;
 }
 
@@ -1294,8 +1294,8 @@ static I cbnew(){A r;
  J jt=cbjt;
  r=exec1(cstr("cdcallback''"));
  if(!r||AR(r)) R 0;
- if(INT&AT(r)) R *AV(r);
- if(B01&AT(r)) R *(BYTE*)AV(r);
+ if(INT&AT(r)) R AV(r)[0];
+ if(B01&AT(r)) R ((BYTE*)AV(r))[0];
  R 0;
 }
 

@@ -80,7 +80,7 @@ static F2(jttroot){A t,x;B b;C*u,*v;I j=0,k=0,m,n,*s;
  m=AN(a); u=CAV(a); b=!m||1==m&&BETWEENC(*u,'0','9');
  GATV0(x,LIT,b?1:4+m,1); v=CAV(x);
  *v=jt->bx[10]; if(!b){v[3+m]=jt->bx[10]; v[1]=v[2+m]=' '; MC(2+v,u,m);}
- t=*AAV(w); s=AS(t); m=*s; n=*(1+s);
+ t=AAV(w)[0]; s=AS(t); m=s[0]; n=s[1];
  u=CAV(t);         DO(m, if(' '!=*u){j=i; break;} u+=n;);
  u=CAV(t)+(m-1)*n; DO(m, if(' '!=*u){k=i; break;} u-=n;);
  R link(center(x,j,k,m),w);
@@ -91,7 +91,7 @@ static F1(jttleaf){A t,z;C*v;I n,*s;
  n=AN(w);
  GATV0(t,LIT,2+n,2); s=AS(t); s[0]=1; s[1]=2+n;
  v=CAV(t); v[0]=jt->bx[10]; v[1]=' '; MC(2+v,AV(w),n);
- GAT0(z,BOX,1,1); *AAV(z)=incorp(t);
+ GAT0(z,BOX,1,1); AAV(z)[0]=incorp(t);
  R z;
 }
 

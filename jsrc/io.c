@@ -36,7 +36,7 @@ void jtwri(J jt,I type,C*p,I m,C*s){C buf[1024],*t=jt->outseq,*v=buf;I c,d,e,n;
   *v=0;
 #ifdef ANDROID
   A z=tocesu8(str(strlen(buf),buf));
-  *(CAV(z)+AN(z))=0;
+  CAV(z)[AN(z)]=0;
   jsto(jt,type,CAV(z));
 #else
   jsto(jt,type,buf);
@@ -52,13 +52,13 @@ static void jtwrf(J jt,I n,C*v,F f){C*u,*x;I j=0,m;
 }}
 
 A jtinpl(J jt,B b,I n,C*s){C c;I k=0;
- if(n&&(c=*(s+n-1),CLF==c||CCR==c))--n;
+ if(n&&(c=s[n-1],CLF==c||CCR==c))--n;
 #if _WIN32
- if(n&&(c=*(s+n-1),CCR==c))--n;
+ if(n&&(c=s[n-1],CCR==c))--n;
 #endif
  ASSERT(!*jt->adbreak,EVINPRUPT);
  if(!b){ /* 1==b means literal input */
-  if(n&&COFF==*(s+n-1))joff(num(0));
+  if(n&&COFF==s[n-1])joff(num(0));
   c=jt->bx[9]; if((UC)c>127)DO(n, if(' '!=s[i]&&c!=s[i]){k=i; break;});
  }
  R str(n-k,s+k);
@@ -175,7 +175,7 @@ I jdo(J jt, C* lp){I e;A x;
 
 #define SZINT             ((I)sizeof(int))
 
-C* getlocale(J jt){A y=locname(mtv); y=*AAV(y); R CAV(str0(y));}
+C* getlocale(J jt){A y=locname(mtv); y=AAV(y)[0]; R CAV(str0(y));}
 
 // Front-ends can call any functions exposed by JE, but the callback function for 11!:0 only calls jga to allocate a new literal array for returning result.
 // A front-end knows nothing how J memory pool works and it won't try to free or pop memory itself. This was just a design decision. eg,

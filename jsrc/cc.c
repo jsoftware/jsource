@@ -15,7 +15,7 @@
 static DF1(jtcut01){DECLF;A h,x,z;
 // obsolete  RZ(x=from(box(every(negate(shape(w)),0L,jtiota)),w));
  RZ(x=from(box(every(negate(shape(w)),ds(CIOTA))),w));
- if(VGERL&sv->flag){h=sv->fgh[2]; R df1(z,x,*AAV(h));}else R CALL1(f1,x,fs);
+ if(VGERL&sv->flag){h=sv->fgh[2]; R df1(z,x,AAV(h)[0]);}else R CALL1(f1,x,fs);
 }    /* f;.0 w */
 
 static DF2(jtcut02){F2PREFIP;A fs,q,qq,*qv,z,zz=0;I*as,c,e,i,ii,j,k,m,n,*u,*ws;PROLOG(876);I cger[128/SZI];
@@ -107,7 +107,7 @@ static DF2(jtcut02){F2PREFIP;A fs,q,qq,*qv,z,zz=0;I*as,c,e,i,ii,j,k,m,n,*u,*ws;P
      break;  // this is the loop exit
     }else{  // we have not allocated the input to {; do so now
      GATV0(q,BOX,c,1); INCORP(q); qv=AAV(q);   // allocate a vector of boxes, which will contain the selectors
-     GAT0(qq,BOX,1,0); *AAV(qq)=q;  // enclose that vector of boxes in a box to pass into {
+     GAT0(qq,BOX,1,0); AAV(qq)[0]=q;  // enclose that vector of boxes in a box to pass into {
     }
    }while(1);
    RZ(z=from(qq,w));
@@ -231,7 +231,7 @@ static DF2(jtcut2bx){A*av,b,t,x,*xv,y,*yv;B*bv;I an,bn,i,j,m,p,q,*u,*v,*ws;
   if(!bn&&m){xv[i]=num(0); RZ(yv[i]=incorp(sc(m)));}
   else{
    if(!(B01&AT(b)))RZ(b=cvt(B01,b));
-   if(!AR(b)){if(*BAV(b)){RZ(xv[i]=incorp(IX(m))); RZ(yv[i]=incorp(reshape(sc(m),num(0<q))));}else xv[i]=yv[i]=mtv; continue;}
+   if(!AR(b)){if(BAV(b)[0]){RZ(xv[i]=incorp(IX(m))); RZ(yv[i]=incorp(reshape(sc(m),num(0<q))));}else xv[i]=yv[i]=mtv; continue;}
    ASSERT(bn==m,EVLENGTH);
    bv=BAV(b); p=0; DO(bn, p+=bv[i];); 
    GATV0(t,INT,p,1); u=AV(t); xv[i]=incorp(t);
@@ -355,7 +355,7 @@ static DF2(jtcut2sx){PROLOG(0024);DECLF;A h=0,*hv,y,yy;B b,neg,pfx,*u,*v;C id;I 
   wp=PAV(w); a=SPA(wp,a); x=SPA(wp,x); y=SPA(wp,i); yv=AV(y); r=*AS(y); c=*(1+AS(y));
   RZ(ww=cps(w)); wwp=PAV(ww);
   GATV0(z,BOX,m,1); za=AAV(z);
-  switch(AN(a)&&*AV(a)?2+pfx:pfx){
+  switch(AN(a)&&AV(a)[0]?2+pfx:pfx){
    case 0:
     p=yu[0]; DO(r, if(p<=yv[c*i]){p=i; break;});
     for(i=1;i<=m;++i){

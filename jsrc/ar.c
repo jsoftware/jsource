@@ -302,7 +302,7 @@ static A jtredsp1a(J jt,C id,A z,A e,I n,I r,I*s){A t;B b,p=0;D d=1;
   case CEQ:      p=1;  /* fall thru */
   case CNE:
    ASSERT(B01&AT(e),EVNONCE); 
-   if(!n)*BAV(z)=p; 
+   if(!n)BAV(z)[0]=p; 
    b=1; DO(r, if(!(s[i]&1)){b=0; break;}); 
    R !p==*BAV(e)&&b!=(n&1)?not(z):z;
 }}   /* f/w on sparse vector w, post processing */
@@ -344,8 +344,8 @@ static A jtredspd(J jt,A w,A self,C id,VARPSF ado,I cv,I f,I r,I zt){A a,e,x,z,z
  switch(id){
   case CPLUS: if(!equ(e,num(0)))RZ(e=tymes(e,sc(n))); break; 
   case CSTAR: if(!equ(e,num(1) )&&!equ(e,num(0)))RZ(e=expn2(e,sc(n))); break;
-  case CEQ:   ASSERT(B01&AT(x),EVNONCE); if(!*BAV(e)&&0==(n&1))e=num(1); break;
-  case CNE:   ASSERT(B01&AT(x),EVNONCE); if( *BAV(e)&&1==(n&1))e=num(0);
+  case CEQ:   ASSERT(B01&AT(x),EVNONCE); if(!BAV(e)[0]&&0==(n&1))e=num(1); break;
+  case CNE:   ASSERT(B01&AT(x),EVNONCE); if( BAV(e)[0]&&1==(n&1))e=num(0);
  }
  if(TYPESNE(AT(e),AT(zx))){t=maxtypene(AT(e),AT(zx)); if(TYPESNE(t,AT(zx)))RZ(zx=cvt(t,zx));}
  wr=AR(w); ws=AS(w);

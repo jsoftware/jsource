@@ -34,7 +34,7 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
   // single box: fast path.  Allocate a scalar box and point it to w.  Mark w as incorporated.  Make all results recursive
   // DO NOT take potentially expensive pass through w to find recursibility, because it may never be needed if this result expires without being assigned
   // If the input is DIRECT and inplaceable in an inplaceable context, mark the result as PRISTINE
-  GAT0(z,BOX,1,0); AFLAG(z)=BOX+((-(wt&DIRECT))&((SGNTO0(AC(w))&((I)jtinplace>>JTINPLACEWX))<<AFPRISTINEX)); INCORPRA(w); *(AAV(z))=w;
+  GAT0(z,BOX,1,0); AFLAG(z)=BOX+((-(wt&DIRECT))&((SGNTO0(AC(w))&((I)jtinplace>>JTINPLACEWX))<<AFPRISTINEX)); INCORPRA(w); AAV(z)[0]=w;
 // obsolete   if((waf&RECURSIBLE)||(wt&DIRECT)){newflags|=BOX; ACINCR(w);}  // if w is recursible or direct, mark new box recursible and correspondingly incr usecount of w.  We do this because w is already in cache now.
 // obsolete   if((((waf&RECURSIBLE)-1)&((wt&DIRECT)-1))>=0){/* obsolete newflags|=BOX; */AFLAG(z)=BOX; ACINCR(w);}  // if w is recursible or direct, mark new box recursible and correspondingly incr usecount of w.  We do this because w is already in cache now.
 // obsolete   AFLAG(z) = newflags;  // set NOSMREL if w is not boxed, or known to contain no relatives
@@ -151,7 +151,7 @@ A jtassembleresults(J jt, I ZZFLAGWORD, A zz, A zzbox, A* zzboxp, I zzcellp, I z
  A* box0=AAV(zzbox)+(startatend&(AN(zzbox)-1));  // address of last valid box pointer, depending on direction of movement
  C* zzcell=CAV(zz)+zzcellp;  // address of last+1 cell moved to zz
 
- if(!(ZZFLAGWORD&ZZFLAGUSEOPEN)){
+ if(likely(!(ZZFLAGWORD&ZZFLAGUSEOPEN))){
   // No sparse results.  We will bypass jtope and move the results into the result area here, with conversion and fill
 
   // Create the fill-cell we will need.  Note: all recursible fills must have the PERMANENT flag set, since we may not increment the usecount
@@ -226,7 +226,7 @@ A jtassembleresults(J jt, I ZZFLAGWORD, A zz, A zzbox, A* zzboxp, I zzcellp, I z
     // Don't convert empties, to make sure we don't have a failure while we are processing boxed results
 // obsolete     if(AN(zzboxcell)&&TYPESNE(zft,AT(zzboxcell))){
     if((-AN(zzboxcell)&-TYPESXOR(zft,AT(zzboxcell)))<0){  // not empty and new type
-     if(!(zzboxcell=cvt(zft,zzboxcell))){
+     if(unlikely(!(zzboxcell=cvt(zft,zzboxcell)))){
       // error during conversion.  THIS IS THE ONLY PLACE WHERE ERROR IS POSSIBLE DURING THE COPY.
       // If zz and zztemp are the same block, and that block is recursive, it may be in an invalid state: values have been copied
       // from zzcell up the the end of the block and are now duplicated.  To fix it, we have to zero out anything was was copied but
@@ -436,7 +436,7 @@ static A jtrazeg(J jt,A w,I t,I n,I r,A*v,I nonempt){A h,h1,y,z;C*zu;I c=0,i,j,k
   // if contents has the same rank as result, it is an array of result-cells, and each item adds
   // to c, the total # items in result; otherwise it is a single cell that will be promoted in rank to
   // become one result-cell.  Error if overflow (should be impossible).  j=#leading length-1 axes that need to be added
-  y=v[i]; yr=AR(y); ys=AS(y); c+=(0==(j=r-yr))?*ys:1; ASSERT(0<=c,EVLIMIT); 
+  y=v[i]; yr=AR(y); ys=AS(y); I nitems=ys[0]; j=r-yr; nitems=j==0?nitems:1; c+= nitems; ASSERT(0<=c,EVLIMIT); 
   if(!yr)continue;   // do not perform rank extension of atoms
   // here we find the max cell size in *(s+1). *s is not used.  The maximum shape is taken
   // over extension axes of length 1, followed by the actual shape of the contents
@@ -562,7 +562,7 @@ F1(jtrazeh){A*wv,y,z;C*xv,*yv,*zv;I c=0,ck,dk,i,k,n,p,r,*s,t;
  if(!AR(w))R ope(w);
  n=AN(w); wv=AAV(w);  y=wv[0]; SETIC(y,p); t=AT(y); k=bpnoun(t);
  DO(n, I l; y=wv[i]; r=AR(y); ASSERT(p==SETIC(y,l),EVLENGTH); ASSERT(r&&r<=2&&TYPESEQ(t,AT(y)),EVNONCE); c+=1==r?1:*(1+AS(y)););
- GA(z,t,p*c,2,0); s=AS(z); *s=p; *(1+s)=c; 
+ GA(z,t,p*c,2,0); s=AS(z); s[0]=p; s[1]=c; 
  zv=CAV(z); ck=c*k;
  for(i=0;i<n;++i){
   y=wv[i]; dk=1==AR(y)?k:k**(1+AS(y)); xv=zv; zv+=dk;

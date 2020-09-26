@@ -30,7 +30,7 @@ static X jtxmodpow(J jt,A a,A w,A h){A ox,z;
  if(!(XNUM&AT(w)))RZ(w=cvt(XNUM,w));
  if(!(XNUM&AT(h)))RZ(h=cvt(XNUM,h));
  ox=jt->xmod; jt->xmod=h;
- GAT0(z,XNUM,1,0); *XAV(z)=xpow(*XAV(a),*XAV(w));
+ GAT0(z,XNUM,1,0); XAV(z)[0]=xpow(XAV(a)[0],XAV(w)[0]);
  jt->xmod=ox;
  RNE(z);
 }
@@ -55,9 +55,9 @@ static DF2(jtmodpow2){A h;B b,c;I at,m,n,wt,x,z;
  if(((AT(h)|at|wt)&XNUM)&&!((at|wt)&(NOUN&~(XNUM+INT)))){A z;
   z=xmodpow(a,w,h); if(!jt->jerr)R z; RESETERR; R residue(h,expn2(a,w)); 
  }
- n=*AV(w);
+ n=AV(w)[0];
  if(!(INT&at&&INT&wt&&0<=n))R residue(h,expn2(a,w));
- m=*AV(h); x=*AV(a);
+ m=AV(h)[0]; x=AV(a)[0];
  if(!m)R expn2(a,w);
  if(XMOD<m||XMOD<-m||m==IMIN||x==IMIN)R cvt(INT,xmodpow(a,w,h));
  if(b=0>m)m=-m;

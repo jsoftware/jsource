@@ -2265,7 +2265,7 @@ F1(jtsclass){A e,x,xy,y,z;I c,j,m,n,*v;P*p;
  if(DENSE&AT(w))R atab(CEQ,repeat(eq(IX(n),x),x),x);
  // if x is sparse... ??
  p=PAV(x); e=SPA(p,e); y=SPA(p,i); RZ(xy=stitch(SPA(p,x),y));
- if(n>*AV(e))RZ(xy=over(xy,stitch(e,less(IX(n),y))));
+ if(n>AV(e)[0])RZ(xy=over(xy,stitch(e,less(IX(n),y))));
  RZ(xy=grade2(xy,xy)); v=AV(xy);
  c=AS(xy)[0];
  m=j=-1; DQ(c, if(j!=*v){j=*v; ++m;} *v=m; v+=2;);

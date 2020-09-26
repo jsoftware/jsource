@@ -314,7 +314,7 @@ static DF1(jthkiota){DECLFG;A a,e;I n;P*p;
  SETIC(w,n);\
  if(SB01&AT(w)&&1==AR(w)){
   p=PAV(w); a=SPA(p,a); e=SPA(p,e); 
-  R *BAV(e)||equ(mtv,a) ? repeat(w,IX(n)) : repeat(SPA(p,x),ravel(SPA(p,i)));
+  R BAV(e)[0]||equ(mtv,a) ? repeat(w,IX(n)) : repeat(SPA(p,x),ravel(SPA(p,i)));
  }
  R B01&AT(w)&&1>=AR(w) ? ifb(n,BAV(w)) : repeat(w,IX(n));
 }    /* special code for (# i.@#) */

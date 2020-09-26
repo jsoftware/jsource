@@ -311,7 +311,7 @@ A jtspellcon(J jt,I c){
 }}
 
 static I jtconword(J jt,I n,C*s){
- if(2<n&&'.'==*(s+n-1))switch(*s){
+ if(2<n&&'.'==s[n-1])switch(*s){
   case 'a': if(!strncmp(s,"assert.",  n))R CASSERT;  break;
   case 'b': if(!strncmp(s,"break.",   n))R CBREAK;   break;
   case 'c': if(!strncmp(s,"case.",    n))R CCASE;    

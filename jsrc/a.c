@@ -45,7 +45,7 @@ static DF1(jtbdot1){R bdot2(num(0),w,self);}
 static DF1(jtbasis1){DECLF;A z;D*x;I j;V*v;
  PREF1(jtbasis1);
  RZ(w=vi(w));
- switch(*AV(w)){
+ switch(AV(w)[0]){
   case 0:
    GAT0(z,FL,3,1); x=DAV(z); v=FAV(fs);
    j=v->mr; x[0]=j<=-RMAX?-inf:j>=RMAX?inf:j;
@@ -133,11 +133,11 @@ static A jtmemoput(J jt,I x,I y,A self,A z){A*cv,h,*hv,q;I *jv,k,m,*mv,*v;
 static I jtint0(J jt,A w){A x;
  if(AR(w))R IMIN;
  if(NUMERIC&AT(w))switch(UNSAFE(AT(w))){
-  case B01: R (I)*BAV(w);
-  case INT: R *AV(w);
+  case B01: R (I)BAV(w)[0];
+  case INT: R AV(w)[0];
  }
  x=pcvt(INT,w); 
- R x&&INT&AT(x)?*AV(x):IMIN; 
+ R x&&INT&AT(x)?AV(x)[0]:IMIN; 
 }
 
 static DF1(jtmemo1){DECLF;A z;I x,y;
@@ -164,7 +164,7 @@ F1(jtmemo){PROLOG(300);A h,*hv,q;I m;V*v;
  ASSERT(VERB&AT(w),EVDOMAIN);
  v=FAV(w); FULLHASHSIZE(30,BOXSIZE,1,0,m);  // m = # items to allocate
  GAT0(h,BOX,3,1); hv=AAV(h);
- GAT0(q,INT,1,0); *AV(q)=0;        hv[0]=q;  // is modified; musn't use sc()
+ GAT0(q,INT,1,0); AV(q)[0]=0;        hv[0]=q;  // is modified; musn't use sc()
  RZ(q=reshape(v2(m,2L),sc(IMIN)));  RZ(hv[1]=mkwris(q));
  GATV0(q,BOX,m,1);                 hv[2]=q;
  EPILOG(fdef(0,CMCAP,VERB,jtmemo1,jtmemo2,w,0L,h,0L,v->mr,lrv(v),rrv(v)));

@@ -18,7 +18,7 @@
 #include "w.h"
 
 #define BASSERT(b,e)   {if(unlikely(!(b))){jsignal(e); i=-1; z=0; continue;}}
-#define BGATV0(v,t,n,r) BZ(v=ga(t,(I)(n),(I)(r),0))
+// obsolete #define BGATV0(v,t,n,r) BZ(v=ga(t,(I)(n),(I)(r),0))
 #define BZ(e)          if(unlikely(!(e))){i=-1; z=0; continue;}
 
 // sv->h is the A block for the [2][4] array of saved info for the definition; hv->[4] boxes of info for the current valence;
@@ -381,7 +381,8 @@ dobblock:
    // if it fills up, double it as required
    if(!r)
     if(gsfctdl&8){I m=AN(cd)/WCD; BZ(cd=ext(1,cd)); cv=(CDATA*)AV(cd)+m-1; r=AN(cd)/WCD-m;}
-    else  {r=9; BGATV0(cd,INT,r*WCD,1); ras(cd); cv=(CDATA*)AV(cd)-1; gsfctdl|=8;}
+    else  {r=9; GAT0E(cd,INT,9*WCD,1,i=-1; z=0; continue); ras(cd); cv=(CDATA*)AV(cd)-1; gsfctdl|=8;}   // 9=r
+
    ++cv; --r; 
    // indicate no t result (test value for select., iteration array for for.) and clear iteration index
    // remember the line number of the for./select.
@@ -608,7 +609,7 @@ static F1(jtcolon0){A l,z;C*p,*q,*s;I m,n;
   m=AN(l); p=q=CAV(l); 
   while(p<q+m&&' '==*p)++p; if(p<q+m&&')'==*p){while(p<q+m&&' '==*++p); if(p>=m+q)break;}  // if ) with nothing else but blanks, stop
   while(AN(z)<=n+m){RZ(z=ext(0,z)); s=CAV(z);}
-  MC(s+n,q,m); n+=m; *(s+n)=CLF; ++n;
+  MC(s+n,q,m); n+=m; s[n]=CLF; ++n;
  }
  R str(n,s);
 }    /* enter nl terminated lines; ) on a line by itself to exit */

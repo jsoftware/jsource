@@ -19,7 +19,7 @@ static A jtfitct(J jt,A a,A w,I cno){V*sv;
  ASSERT(!AR(w),EVRANK);
  sv=FAV(a);
  // Get the tolerance, as a float
- D d; if(w==num(0))d=0.0; else{if(!(AT(w)&FL))RZ(w=cvt(FL,w)); d=*DAV(w);}  // 0 is usual; otherwise it better be FL, but convert in case its value is 0
+ D d; if(w==num(0))d=0.0; else{if(!(AT(w)&FL))RZ(w=cvt(FL,w)); d=DAV(w)[0];}  // 0 is usual; otherwise it better be FL, but convert in case its value is 0
  ASSERT(0<=d&&d<5.82076609134675e-11,EVDOMAIN);  // can't be greater than 2^_34
  A fn = fdef(0,CFIT,VERB,(AF)(jtfitct1),aff2[cno],a,w ,0L,sv->flag&(VIRS1|VIRS2|VJTFLGOK1|VJTFLGOK2|VISATOMIC1),(I)(sv->mr),lrv(sv),rrv(sv));  // preserve INPLACE flags
  RZ(fn); FAV(fn)->localuse.lD = 1.0-d; R fn;  // save the fit value in this verb
@@ -41,7 +41,7 @@ static DF2(jtfitfill2){DECLFG;F2PREFIP;A z; jt->fill=gs; z=CALL2IP(f2,a,w,fs); j
 
 static DF1(jtfitpp1){DECLFG;A z;C d[8],*s=3+jt->pp;
  MC(d,s,8L); 
- sprintf(s,FMTI"g",*AV(gs)); 
+ sprintf(s,FMTI"g",AV(gs)[0]); 
  z=CALL1(f1,w,fs); MC(s,d,8L);
  RETF(z);
 }

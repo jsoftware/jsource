@@ -568,7 +568,7 @@ F1(jtrngseedq){ASSERTMTV(w); R jt->rngseed&&MTI==jt->rng?jt->rngseed:sc(jt->rngS
 // Set the vector of RNG seed info
 F1(jtrngseeds){I k,r; 
  // Force w to integer; k=first value; r=rank
- RZ(w=vi(w)); k=*AV(w); r=AR(w);
+ RZ(w=vi(w)); k=AV(w)[0]; r=AR(w);
  if(r){
   // w is not an atom.  the RNG had better be Mersenne Twister.  Initialize using w, and save the w list
   ASSERT(1==r&&MTI==jt->rng,EVRANK);
@@ -749,7 +749,7 @@ F1(jtroll){A z;B b=0;I m,wt;
  if(!AN(w)){GATV(z,B01,0,AR(w),AS(w)); R z;}
  if(wt&B01)R rollbool(w);
  if(wt&XNUM+RAT)R rollxnum(w);
- RZ(w=vi(w)); m=*AV(w);
+ RZ(w=vi(w)); m=AV(w)[0];
  if(    2==m)RZ(z=roll2   (w,&b));
  if(!b&&0!=m)RZ(z=rollnot0(w,&b));
  if(!b      )RZ(z=rollany (w,&b));
@@ -978,7 +978,7 @@ static F1(jtrolldot){A z;B b=0;I m,wt;
  if(!AN(w)){GATV(z,B01,0,AR(w),AS(w)); R z;}
  if(wt&B01)R rollbool(w);
  if(wt&XNUM+RAT)R rollxnum(w);
- RZ(w=vi(w)); m=*AV(w);
+ RZ(w=vi(w)); m=AV(w)[0];
  if(    2==m)RZ(z=roll2   (w,&b));
  if(!b&&0!=m)RZ(z=rollnot0(w,&b));
  if(!b      )RZ(z=rollany (w,&b));

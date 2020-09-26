@@ -42,11 +42,11 @@ static F1(jtrsort){A t,z;
 static F2(jtcfrz){A z;B b=0,p;I j,n;Z c,d,*t,*u,*v;
  RZ(w=rsort(w)); 
  n=AN(w); u=ZAV(w); 
- GATV0(z,CMPX,1+n,1); v=ZAV(z); *v=c=*ZAV(a); p=!c.im;
+ GATV0(z,CMPX,1+n,1); v=ZAV(z); v[0]=c=ZAV(a)[0]; p=!c.im;
  for(j=0;j<n;++j){
-  d=znegate(u[j]); t=j+v; *(1+t)=*t; 
-  DQ(j, *t=zplus(*(t-1),ztymes(d,*t)); --t;); 
-  *v=ztymes(d,*v);
+  d=znegate(u[j]); t=j+v; t[1]=t[0]; 
+  DQ(j, t[0]=zplus(t[-1],ztymes(d,t[0])); --t;); 
+  v[0]=ztymes(d,v[0]);
   if(p&&d.im)if(b^=1)c=u[j]; else if(p=ZCJ(c,u[j])){t=v; DQ(2+j, t++->im=0.0;);}
  }
  R p>b?cvt(FL,z):z;
@@ -66,7 +66,7 @@ static F1(jtcfr){A c,r,*wv;I t;
 }    /* coefficients from roots */
 
 
-static D jtsummag(J jt,A w){A t=aslash(CPLUS,mag(w)); R t?*DAV(t):0.0;}
+static D jtsummag(J jt,A w){A t=aslash(CPLUS,mag(w)); R t?DAV(t)[0]:0.0;}
 
 /* a is a poly of degree m and x is a root estimate             */
 /* improve root estimate x by applying Newton iteration n times */
@@ -131,7 +131,7 @@ static Z jtlaguerre(J jt,I m,Z*a,Z x){D ax,e;I i,j;Z b,c,d,dx,g,g2,h,p,q,s,sq,y,
 static Q jtmultiple(J jt,D x,Q m){A y;Q q1,q2,q1r2;
  q1r2.n=iv1; q1r2.d=xplus(iv1,iv1);
  QRE(y=cvt(RAT,scf(x)));
- QRE(q1=qplus(q1r2,qtymes(m,*QAV(y))));
+ QRE(q1=qplus(q1r2,qtymes(m,QAV(y)[0])));
  QRE(q2.n=xdiv(q1.n,q1.d,XMFLR)); q2.d=iv1;
  R qdiv(q2,m);
 }    /* nearest multiple of m to x */
@@ -317,7 +317,7 @@ DF2(jtpoly2){F2PREFIP;A c,za;I b;D*ad,d,p,*x,u,*z;I an,at,j,t,n,wt;Z*az,e,q,*wz,
  if(TYPESNE(t,wt)){RZ(w=cvt(t,w)); jtinplace=(J)(intptr_t)((I)jtinplace|JTINPLACEW);} x=DAV(w); wz=ZAV(w);
  if(b){
   // mult/roots: convert and extract the coeff
-  RZ(c=cvt(t,c)); d=*DAV(c); e=*ZAV(c);
+  RZ(c=cvt(t,c)); d=DAV(c)[0]; e=ZAV(c)[0];
  }else{
   // coeffs: discard trailing 0 coeffs (to avoid 0*_ as our first action), extract high-order coeff.  Leave constant coeff always
   for(;an>1;--an){if(t&CMPX?ad[2*(an-1)]||ad[2*(an-1)+1]:ad[an-1])break;}  // stop on nonzero

@@ -800,7 +800,7 @@ F2(jtordstati){A t;I n,wt;
  if(((AR(a)-1)&(4-n)&((1^AR(w))-1)&(-(wt&FL+INT)))>=0)R from(a,grade1(w));
  RZ(t=ordstat(a,w));   // Get the value of the ath order statistic, then look up its index
  I j=0;  // =0 needed to stifle warning
- if(wt&FL){D p=*DAV(t),*v=DAV(w); DO(n, if(p==*v++){j=i; break;});}
- else     {I p=* AV(t),*v= AV(w); DO(n, if(p==*v++){j=i; break;});}
+ if(wt&FL){D p=DAV(t)[0],*v=DAV(w); DO(n, if(p==*v++){j=i; break;});}
+ else     {I p=AV(t)[0],*v= AV(w); DO(n, if(p==*v++){j=i; break;});}
  R sc(j);
 }    /* a {/:w */

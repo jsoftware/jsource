@@ -74,7 +74,7 @@ static DF1(jtpowseq){A fs,gs,x;I n=IMAX;V*sv;
  sv=FAV(self); fs=sv->fgh[0]; gs=sv->fgh[1];
  ASSERT(!AR(gs),EVRANK);
  ASSERT(BOX&AT(gs),EVDOMAIN);
- x=*AAV(gs); if(!AR(x))RE(n=i0(vib(x)));
+ x=AAV(gs)[0]; if(!AR(x))RE(n=i0(vib(x)));
  if(0>n){RZ(fs=inv(fs)); n=-n;}
  if(n==IMAX||1==AR(x)&&!AN(x))R powseqlim(w,fs);
  R df1(gs,w,powop(fs,IX(n),0));
@@ -269,8 +269,8 @@ static DF1(jtinverr){F1PREFIP;ASSERT(0,EVDOMAIN);}  // used for uninvertible mon
 // old static CS2(jtply2, df1(z,w,powop(amp(a,fs),gs,0)),0107)  // dyad adds x to make x&u, and then reinterpret the compound.  We could interpret u differently now that it has been changed (x {~^:a: y)
 DF2(jtply2){PROLOG(107);DECLFG;A z, zz; PREF2(jtply2); z=(df1(zz,w,powop(amp(a,fs),gs,0))); EPILOG(z);}
 
-static DF1(jtpowg1){A z,h=FAV(self)->fgh[2]; R df1(z,  w,*AAV(h));}
-static DF2(jtpowg2){A z,h=FAV(self)->fgh[2]; R df2(z,a,w,*AAV(h));}
+static DF1(jtpowg1){A z,h=FAV(self)->fgh[2]; R df1(z,  w,AAV(h)[0]);}
+static DF2(jtpowg2){A z,h=FAV(self)->fgh[2]; R df2(z,a,w,AAV(h)[0]);}
 
 // When u^:v is encountered, we replace it with a verb that comes to one of these.
 // This creates a verb, jtpowxx, which calls jtdf1 within a PROLOG/EPILOG pair, after creating several names:
@@ -328,11 +328,11 @@ DF2(jtpowop){A hs;B b;V*v;
  // u^:n.  Check for special types.
  if(BOX&AT(w)){A x,y;AF f1,f2;
   // Boxed v.  It could be <n or [v0`]v1`v2 or <''.
-  if(!AR(w)&&(x=*AAV(w),!AR(x)&&NUMERIC&AT(x)||1==AR(x)&&!AN(x))){
+  if(!AR(w)&&(x=AAV(w)[0],!AR(x)&&NUMERIC&AT(x)||1==AR(x)&&!AN(x))){
    // here for <n or <''.  That will be handled by special code.
    f1=jtpowseq; f2=jtply2; v=FAV(a);
    // if u is {&n or {~, and n is <_ or <'', do the tclosure trick
-   if((!AN(x)||FL&AT(x)&&inf==*DAV(x))){
+   if((!AN(x)||FL&AT(x)&&inf==DAV(x)[0])){
     if(CAMP==v->id&&(CFROM==ID(v->fgh[0])&&(y=v->fgh[1],INT&AT(y)&&1==AR(y)))){f1=jtindexseqlim1;}  // {&b^:_ y
     else if(CTILDE==v->id&&CFROM==ID(v->fgh[0])){f2=jtindexseqlim2;}   // x {~^:_ y
    }

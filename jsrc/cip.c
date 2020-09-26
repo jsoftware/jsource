@@ -22,7 +22,7 @@ static A jtipprep(J jt,A a,A w,I zt,I*pm,I*pn,I*pp){A z=mark;I*as,ar,ar1,m,mn,n,
  ar=AR(a); as=AS(a); ar1=ar-1>=0?ar-1:0; PRODX(m,ar1,as,1) *pm=m;  // m=# 1-cells of a.  It could overflow, if there are no atoms
  wr=AR(w); ws=AS(w); wr1=wr-1>=0?wr-1:0; PRODX(n,wr1,ws+1,1) *pn=n; DPMULDE(m,n,mn);  // n=#atoms in item of w; mn = #atoms in result
  I t=AS(w)[0]; p=wr?t:1; t=AS(a)[ar1]; p=ar?t:p; *pp=p;  // if a is an array, the length of a 1-cell; otherwise, the number of items of w
- ASSERT(!(ar&&wr)||p==*ws,EVLENGTH);
+ ASSERT(!(ar&&wr)||p==ws[0],EVLENGTH);
  GA(z,zt,mn,ar1+wr1,0);   // allocate result area
  MCISH(AS(z),      as,ar1);  // Set shape: 1-frame of a followed by shape of item of w
  MCISH(AS(z)+ar1,1+ws,wr1);
@@ -1060,7 +1060,7 @@ r=lr(gs);   // left rank of v
 
 
 static F1(jtminors){A d,z;
- RZ(d=apvwr(3L,-1L,1L)); *AV(d)=0;
+ RZ(d=apvwr(3L,-1L,1L)); AV(d)[0]=0;
  R drop(d,df2(z,num(1),w,bsdot(ds(CLEFT))));  // 0 0 1 }. 1 [\. w 
 }
 
@@ -1070,7 +1070,7 @@ static DF1(jtdet){DECLFG;A h=sv->fgh[2];I c,r,*s;
  A z; if(h&&1<r&&2==s[r-1]&&s[r-2]==s[r-1])R df1(z,w,h);
  F1RANK(2,jtdet,self);
  c=2>r?1:s[1];
- R !c ? df1(z,mtv,slash(gs)) : 1==c ? CALL1(f1,ravel(w),fs) : h && c==*s ? gaussdet(w) : detxm(w,self); 
+ R !c ? df1(z,mtv,slash(gs)) : 1==c ? CALL1(f1,ravel(w),fs) : h && c==s[0] ? gaussdet(w) : detxm(w,self); 
 }
 
 DF1(jtdetxm){A z; R dotprod(IRS1(w,0L,1L,jthead,z),det(minors(w),self),self);}

@@ -54,7 +54,7 @@ F1(jtcrccompile){A h,*hv;UINT z; UINT crctab[256];
 
 DF1(jtcrcfixedleft){A h,*hv;I n;UINT*t,z;UC*v;
  RZ(w);
- h=FAV(self)->fgh[2]; hv=AAV(h); t=(UINT*)AV(hv[0]); z=(UINT)*AV(hv[1]);
+ h=FAV(self)->fgh[2]; hv=AAV(h); t=(UINT*)AV(hv[0]); z=(UINT)AV(hv[1])[0];
  n=AN(w); v=UAV(w);
  ASSERT(!n||AT(w)&LIT+C2T+C4T,EVDOMAIN);
  n=AT(w)&C4T?(4*n):AT(w)&C2T?n+n:n;

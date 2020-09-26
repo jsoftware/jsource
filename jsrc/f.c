@@ -44,7 +44,7 @@ static F1(jtthorn1main);
 
 static FMTF(jtfmtI,I){I x=*v;
  sprintf(s,FMTI,x);
- if('-'==*s)*s=CSIGN;
+ if('-'==s[0])s[0]=CSIGN;
 }
 
 static FMTF(jtfmtD,D){B q;C buf[1+WD],c,*t;D x=*v;I k=0;
@@ -249,7 +249,7 @@ static F1(jtthx1){A z;B b;C*s,s1[2+XBASEN];I n,p,p1,*v;
  sprintf(s1,FMTI,*v); p1=strlen(s1);
  p=p1+XBASEN*(n-1);
  GATV0(z,LIT,p,1); s=CAV(z); 
- MC(s,s1,p1); if(b)*s=CSIGN; s+=p1; 
+ MC(s,s1,p1); if(b)s[0]=CSIGN; s+=p1; 
  DQ(n-1, --v; I j=*v; j=b?-j:j; sprintf(s,FMTI04,j); s+=XBASEN;);
  R z;           
 }
@@ -257,7 +257,7 @@ static F1(jtthx1){A z;B b;C*s,s1[2+XBASEN];I n,p,p1,*v;
 static A jtthq1(J jt,Q y){A c,d,z;B b;C*zv;I m,n=-1;
  RZ(c=thx1(y.n)); m=AN(c);
  d=y.d;
- if(b=1<AN(d)||1!=*AV(d)){RZ(d=thx1(y.d)); n=AN(d);}
+ if(b=1<AN(d)||1!=AV(d)[0]){RZ(d=thx1(y.d)); n=AN(d);}
  GATV0(z,LIT,m+n+1,1); zv=CAV(z);
  MC(zv,AV(c),m); if(b){*(zv+m)='r'; MC(zv+m+1,AV(d),n);}
  R z;
@@ -584,7 +584,7 @@ static F1(jtthorn1main){PROLOG(0001);A z;
   case BOXX:  z=thbox(w);                  break;
   case SBTX:  z=thsb(w);                   break;
   case NAMEX: z=sfn(0,w);                  break;
-  case ASGNX: z=spellout(*CAV(w));         break;
+  case ASGNX: z=spellout(CAV(w)[0]);         break;
   case INTX:  case FLX: case CMPXX:
              z=thn(w);                    break;
   case SB01X: case SINTX: case SFLX: case SCMPXX: case SLITX: case SBOXX:
@@ -867,9 +867,9 @@ static F1(jtjpr1){PROLOG(0002);A z;
  if(AN(z)){
 #ifdef ANDROID
   z=tocesu8(z);
-  *(CAV(z)+AN(z))=0;
+  CAV(z)[AN(z)]=0;
 #endif
-  ASSERTSYS(!*(CAV(z)+AN(z)),"jtjpr1 trailing null byte");
+  ASSERTSYS(!CAV(z)[AN(z)],"jtjpr1 trailing null byte");
   jsto(jt,jt->mtyo==0?MTYOFM:jt->mtyo,CAV(z));
  }
  EPILOG(mtm);

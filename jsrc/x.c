@@ -18,8 +18,8 @@
  fdef(0,id,VERB,f1,   secf2,a,w,v2((I)(f1?f1:jtdomainerr1),(I)(f2?f2:jtdomainerr2)),(flag),(I)m,(I)l,(I)r)
 
 
-static DF1(secf1){F1PREFIP; A h=FAV(self)->fgh[2]; ASSERT(!jt->seclev,EVSECURE); R CALL1IP((AF)*   AV(h) ,  w,self);}
-static DF2(secf2){F2PREFIP; A h=FAV(self)->fgh[2]; ASSERT(!jt->seclev,EVSECURE); R CALL2IP((AF)*(1+AV(h)),a,w,self);}
+static DF1(secf1){F1PREFIP; A h=FAV(self)->fgh[2]; ASSERT(!jt->seclev,EVSECURE); R CALL1IP((AF)AV(h)[0],  w,self);}
+static DF2(secf2){F2PREFIP; A h=FAV(self)->fgh[2]; ASSERT(!jt->seclev,EVSECURE); R CALL2IP((AF)AV(h)[1],a,w,self);}
 
 // undocumented 13!:80 functions, used to test condrange
 static DF2(jtfindrange){

@@ -73,7 +73,7 @@ static QF2(jtqpow){PROLOG(0089);B c;I p,q,s;Q t,z;X d;
  p=XDIG(a.n); q=XDIG(w.n); c=QX1(w.d);
  if(p==XPINF||p==XNINF){
   QASSERT(0<p||q!=XPINF,EVDOMAIN); 
-  z.n=rifvs(vci(!q?1L:0>q?0L:0<p?p:1&(*AV(w.n))?XNINF:XPINF));
+  z.n=rifvs(vci(!q?1L:0>q?0L:0<p?p:1&(AV(w.n)[0])?XNINF:XPINF));
   R z;
  }
  if(q==XPINF||q==XNINF){
@@ -91,7 +91,7 @@ static QF2(jtqpow){PROLOG(0089);B c;I p,q,s;Q t,z;X d;
  }else{X e=d,x2;
   QRE(x2=xc(2L));
   while(XDIG(e)){
-   if(1&*AV(e))QRE(z=qtymes(z,t)); 
+   if(1&AV(e)[0])QRE(z=qtymes(z,t)); 
    QRE(t=qtymes(t,t)); 
    QRE(e=xdiv(e,x2,XMFLR));
  }}

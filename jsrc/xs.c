@@ -53,9 +53,9 @@ static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;B xt=jt->tostdout;DC d,xd=jt
  // Handle locking.  Global glock has lock status for higher levels.  We see if this text is locked; if so, we mark lock status for this level
  // We do not inherit the lock from higher levels, per the original design
  C oldk=jt->uflags.us.cx.cx_c.glock; // incoming lock status
- if((jt->uflags.us.cx.cx_c.glock=(AN(w)&&CFF==*CAV(w)))){
+ if((jt->uflags.us.cx.cx_c.glock=(AN(w)&&CFF==CAV(w)[0]))){
   RZ(w=unlock2(mtm,w));
-  ASSERT(CFF!=*CAV(w),EVDOMAIN);
+  ASSERT(CFF!=CAV(w)[0],EVDOMAIN);
   si=-1; tso=0;  // if locked, keep shtum about internals
  }
  FDEPINC(1);   // No ASSERTs or returns till the FDEPDEC below

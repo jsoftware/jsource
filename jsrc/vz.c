@@ -291,7 +291,7 @@ DF1(jtexppi){A z;B b;D r,th,y;I k;Z*v,t;
   case 2: t.re=-r; t.im= 0; break;
   case 3: t.re= 0; t.im=-r; break;
  }
- GAT0(z,CMPX,1,0); *ZAV(z)=t; R z;
+ GAT0(z,CMPX,1,0); ZAV(z)[0]=t; R z;
 }    /* special code for ^@o. */
 
 

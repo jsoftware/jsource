@@ -204,7 +204,7 @@ static A jtnch1(J jt,B b,A w,I*pm,A ch){A*v,x,y;C*s,*yv;LX *e;I i,k,m,p,wn;L*d;
 }
 
 F1(jtnch){A ch;B b;LX *e;I i,m,n;L*d;
- RZ(w=cvt(B01,w)); ASSERT(!AR(w),EVRANK); b=*BAV(w);
+ RZ(w=cvt(B01,w)); ASSERT(!AR(w),EVRANK); b=BAV(w)[0];
  GAT0(ch,BOX,20,1); m=0;
  if(jt->stch){
   n=AN(jt->stloc); e=SYMLINFOSIZE+LXAV0(jt->stloc);

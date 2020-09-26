@@ -114,7 +114,7 @@ B jtglobinit(J jt){A x,y;/* obsolete D*d;*/A *oldpushx=jt->tnextpushp;
 // obsolete  GA(x,B01, 0,2,&zeroZ); ACX(x);                           mtm        =x;
 // obsolete  GA(x,CMPX,1,0,0     ); ACX(x); d=DAV(x); *d=0; *(1+d)=1; a0j1       =x;
  RZ(y=rifvs(str(1L,"z")));     ACX(y); AS(y)[0]=BUCKETXLOC(1,"z");   // for paths, the shape holds the bucketx
- GA(x,BOX, 1,1,0     ); ACX(x); *AAV(x)=y;                zpath      =x;  AFLAG(zpath) |= (AT(zpath)&TRAVERSIBLE);  // ensure that traversible types in pst are marked traversible, so tpush/ra/fa will not recur on them
+ GA(x,BOX, 1,1,0     ); ACX(x); AAV(x)[0]=y;                zpath      =x;  AFLAG(zpath) |= (AT(zpath)&TRAVERSIBLE);  // ensure that traversible types in pst are marked traversible, so tpush/ra/fa will not recur on them
 // obsolete  GA(x,ASGN+ASGNLOCAL+ASGNTONAME, 1,1,0     ); ACX(x); *CAV(x)=CASGN; asgnlocsimp=x;
 // obsolete  GA(x,ASGN+ASGNTONAME, 1,1,0     ); ACX(x); *CAV(x)=CGASGN; asgngloname=x;
 // obsolete  GA(x,ASGN+ASGNTONAME, 1,1,0     ); ACX(x); *CAV(x)=CASGN; asgnforcegloname=x;  // =. converted to global+NAME

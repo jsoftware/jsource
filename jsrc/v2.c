@@ -213,13 +213,13 @@ static F1(jtxprimetest){A z;B*b,rat;I d,j,q,n,*pv,*v,wn,wt,*yv;X r,*wv,x,xmaxint
  rat=1&&wt&RAT; RZ(xmaxint=xc(2147483647L)); RZ(y=xc(-1L)); yv=AV(y);
  GATV(z,B01,wn,AR(w),AS(w)); b=BAV(z);
  for(j=0;j<wn;++j){
-  x=*wv++; d=*(AV(x)+AN(x)-1); b[j]=1; v=pv;
+  x=*wv++; d=AV(x)[AN(x)-1]; b[j]=1; v=pv;
   if(rat&&xcompare(iv1,*wv++)){b[j]=0; continue;}
   ASSERT(d!=XPINF&&d!=XNINF,EVDOMAIN);
   if(0>=d)b[j]=0;
   else if(1==xcompare(x,xmaxint)){
    A *old=jt->tnextpushp;
-   DQ(100, *yv=*v++; RZ(r=xrem(y,x)); if(!*AV(r)){b[j]=0; break;});
+   DQ(100, *yv=*v++; RZ(r=xrem(y,x)); if(!AV(r)[0]){b[j]=0; break;});
    if(b[j])RE(b[j]=xprimeq(100L,x));
    tpop(old);
   }else{
@@ -290,7 +290,7 @@ static F1(jttotient){A b,x,z;B*bv,p=0;I k,n,t;
   DQ(n, k=*wv++; ASSERT(0<=k,EVDOMAIN); if(k){*bv++=1; *xv++=k;}else{*bv++=0; *xv++=1; p=1;};);
  }else{X*xv,y;
   RZ(x=cvt(XNUM,w)); xv=XAV(x);
-  DO(n, y=xv[i]; k=*(AV(y)+AN(y)-1); ASSERT(0<=k,EVDOMAIN); if(k)*bv++=1; else{*bv++=0; xv[i]=iv1; p=1;});
+  DO(n, y=xv[i]; k=AV(y)[AN(y)-1]; ASSERT(0<=k,EVDOMAIN); if(k)*bv++=1; else{*bv++=0; xv[i]=iv1; p=1;});
  }
  A z0; z=cvt(AT(x),df1(z0,x,eval("(- ~:)&.q:"))); 
  R p?tymesW(b,z):z;
@@ -361,12 +361,12 @@ F2(jtpco2){A z;B*b;I k;
 static A jtqco2x(J jt,I m,A w){A y;I c,*dv,i,*pv,*yv;X d,q,r,x;
  RZ(init4792(jt));
  if(!(XNUM&AT(w)))RZ(w=cvt(XNUM,w));
- x=*XAV(w); pv=AV(jt->p4792); RZ(d=xc(2L)); dv=AV(d);
+ x=XAV(w)[0]; pv=AV(jt->p4792); RZ(d=xc(2L)); dv=AV(d);
  GATV0(y,INT,m,1); yv=AV(y); memset(yv,C0,m*SZI);
  for(i=0;i<m;++i){
   c=0; *dv=pv[i];
-  while(1){RZ(xdivrem(x,d,&q,&r)); if(*AV(r))break; ++c; x=q;}
-  yv[i]=c; if(1==AN(x)&&1==*AV(x))break;
+  while(1){RZ(xdivrem(x,d,&q,&r)); if(AV(r)[0])break; ++c; x=q;}
+  yv[i]=c; if(1==AN(x)&&1==AV(x)[0])break;
  }
  R cvt(XNUM,y);
 }    /* m q: w where 0<:m and p: m is one xdigit and w is a single extended integer */
@@ -461,13 +461,13 @@ static B jtsmallprimes(J jt,I n,X x,A*zs,X*zx){A s;I i,m,*pv,*sv,*v;X d,q,r;
 static B jtxprimeq(J jt,I n,X y){A h,om=jt->xmod;B b;I*dv,i,k,*pv;X d,m,t,x,y1;
  ASSERT(n<=AN(jt->p4792),EVLIMIT);
  pv=AV(jt->p4792);
- GAT0(h,XNUM,1,0); *XAV(h)=y; jt->xmod=h; 
+ GAT0(h,XNUM,1,0); XAV(h)[0]=y; jt->xmod=h; 
  k=0; RZ(t=xc(2L)); RZ(m=y1=xminus(y,iv1)); 
- while(0==(*AV(m)&1)){++k; RZ(m=xdiv(m,t,XMFLR));}
- GAT0(d,INT,1,1); dv=AV(d);
+ while(0==(AV(m)[0]&1)){++k; RZ(m=xdiv(m,t,XMFLR));}
+ GAT0(d,INT,1,1); dv=AV(d);  // could use faux block
  A *old=jt->tnextpushp;
  for(i=0;i<n;++i){
-  *dv=pv[i]; RZ(x=xpow(d,m)); b=1==AN(x)&&1==*AV(x);
+  dv[0]=pv[i]; RZ(x=xpow(d,m)); b=1==AN(x)&&1==AV(x)[0];
   DQ(k*!b, if(!xcompare(x,y1)){b=1; break;} RZ(x=xrem(y,xsq(x))););
   tpop(old);
   if(!b)break;
@@ -523,7 +523,7 @@ static B jtranec(J jt,X w,X*zg,X*za,X*zb,X*zx,X*zy){A mm,t;I*tv;X a,aa,b,bb,g,x,
 
 static A jtdb1b2(J jt,I n,X w){A t,z;D c,d,lg,n1=(D)n-1,p,r;I m,s[2],*v,*zv;
  s[0]=n; s[1]=2; GATVR(z,INT,2*n,2,s); zv=v=AV(z);
- RZ(t=cvt(FL,scx(w))); d=*DAV(t); 
+ RZ(t=cvt(FL,scx(w))); d=DAV(t)[0]; 
  lg=log(d); c=log(sqrt(d)); r=exp(sqrt(0.5)+sqrt(c*log(c)))/lg;
  DO(n, c=lg*pow(r,i/n1); p=c*log(c); if(p>=2147483647)break; *v++=(I)jfloor(c); *v++=(I)p;);
  m=(v-zv)>>1; ASSERT(m!=0,EVLIMIT);
@@ -647,7 +647,7 @@ static XF1(jtfac_ecm){A tt;I b1,b2,*b1b2,i,m;X a,b,g,q[3];
 static F1(jtxfactor){PROLOG(0064);A st,z;B b=0;I k,m;X g,*sv,*sv0,x;
  F1RANK(0,jtxfactor,DUMMYSELF);
  if(!(XNUM&AT(w)))RZ(w=cvt(XNUM,w));
- x=*XAV(w); m=XDIG(x);
+ x=XAV(w)[0]; m=XDIG(x);
  ASSERT(m!=XPINF&&m!=XNINF&&0<m,EVDOMAIN);
  if(1>xcompare(x,xc(2147483647L)))R xco1(factor(sc(xint(x))));
  RZ(smallprimes(1229L,x,&z,&x));
@@ -679,7 +679,7 @@ static F1(test_ecm){A*wv,z;X*ab,n,*zv;
  ASSERT(XNUM&AT(wv[1]),EVDOMAIN); ASSERT(0==AR(wv[1]),EVRANK);
  ASSERT(INT&AT(wv[2]),EVDOMAIN);
  ASSERT(XNUM&AT(wv[3]),EVDOMAIN);
- n=*XAV(wv[1]);
+ n=XAV(wv[1])[0];
  ab=XAV(wv[0]);
  GAT0(z,XNUM,3,1); zv=XAV(z);
  RZ(ecm(n,ab[0],ab[1],i0(wv[2]),XAV(wv[3]),zv));
@@ -696,7 +696,7 @@ static F1(test_ecm_s1){A*wv,z;X*ab,n,*zv;
  ASSERT(XNUM&AT(wv[1]),EVDOMAIN); ASSERT(0==AR(wv[1]),EVRANK);
  ASSERT(INT&AT(wv[2]),EVDOMAIN);
  ASSERT(XNUM&AT(wv[3]),EVDOMAIN);
- n=*XAV(wv[1]);
+ n=XAV(wv[1])[0];
  ab=XAV(wv[0]);
  GAT0(z,XNUM,3,1); zv=XAV(z);
  RZ(ecm_s1(n,ab[0],ab[1],i0(wv[2]),XAV(wv[3]),zv));
@@ -713,7 +713,7 @@ static F1(test_ecm_s2){A*wv,z;I*b1b2;X*ab,n,*zv;
  ASSERT(XNUM&AT(wv[1]),EVDOMAIN); ASSERT(0==AR(wv[1]),EVRANK);
  ASSERT(INT &AT(wv[2]),EVDOMAIN); ASSERT(1==AR(wv[2]),EVRANK); ASSERT(2==AN(wv[0]),EVLENGTH);
  ASSERT(XNUM&AT(wv[3]),EVDOMAIN);
- n=*XAV(wv[1]);
+ n=XAV(wv[1])[0];
  ab=XAV(wv[0]);
  b1b2=AV(wv[2]);
  GAT0(z,XNUM,3,1); zv=XAV(z);
@@ -726,5 +726,5 @@ static F1(test_fac_ecm){
  RZ(init4792(jt));
  ASSERT(!AR(w),EVRANK);
  ASSERT(XNUM&AT(w),EVDOMAIN);
- R scx(fac_ecm(*XAV(w)));
+ R scx(fac_ecm(XAV(w)[0]));
 }

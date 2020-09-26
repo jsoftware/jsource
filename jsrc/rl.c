@@ -129,7 +129,7 @@ static F1(jtlbox){A p,*v,*vv,*wv,x,y;B b=0;I n;
    GATV0(y,LIT,n+AN(x),1); t=CAV(y);
    DO(n, x=wv[i]; *t++=d; MC(t,AV(x),AN(x)); t+=AN(x););
    RZ(y=lchar(y));
-   R over(lshape(w),over(cstr(isdigit(*CAV(y))?"<;.(_1) ":"<;._1 "),y));
+   R over(lshape(w),over(cstr(isdigit(CAV(y)[0])?"<;.(_1) ":"<;._1 "),y));
  }}
  RZ(p=cstr(";"));
  DO(n-1, RZ(*v++=lcpx(lnoun(wv[i]))); *v++=p;);
@@ -307,7 +307,7 @@ static F2(jtlinsert){A*av,f,g,h,t,t0,t1,t2,*u,y;B b,ft,gt,ht;C c,id;I n;V*v;
 static F1(jtlcolon){A*v,x,y;C*s,*s0;I m,n;
  RZ(y=unparsem(num(1),w));
  n=AN(y); v=AAV(y); RZ(x=lrr(VAV(w)->fgh[0]));
- if(2>n||2==n&&1==AN(v[0])&&':'==*CAV(v[0])){
+ if(2>n||2==n&&1==AN(v[0])&&':'==CAV(v[0])[0]){
   if(!n)R over(x,str(5L," : \'\'"));
   y=lrr(v[2==n]);
   if(2==n)y=over(str(5L,"\':\'; "),y);

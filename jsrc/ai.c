@@ -407,8 +407,8 @@ F1(jtidensb){A f,g,x=0,w0=w;V*v;
  v=FAV(w); f=v->fgh[0]; g=v->fgh[1];
  switch(v->id){
   default:      R iden(w0);
-  case CMAX:    GATV0(x,SBT,1,0);*SBAV(x)=0; break;
-  case CMIN:    GATV0(x,SBT,1,0);*SBAV(x)=jt->sbuv[0].down; break;
+  case CMAX:    GATV0(x,SBT,1,0);SBAV(x)[0]=0; break;
+  case CMIN:    GATV0(x,SBT,1,0);SBAV(x)[0]=jt->sbuv[0].down; break;
  }
  ASSERT(x!=0,EVDOMAIN);
  R folk(x,swap(ds(CDOLLAR)),atop(ds(CBEHEAD),ds(CDOLLAR)));

@@ -38,7 +38,7 @@ static F1(jtvtokens){A t,*y,z;I n,*s;TA*x;
  R z;
 }    /* build string sentence into queue suitable for parsing */
 
-static F1(jtcfn){I j; R !AR(w)&&INT&AT(w)&&(j=*AV(w),-9<=j&&j<=9)?FCONS(w):qq(w,ainf);}
+static F1(jtcfn){I j; R !AR(w)&&INT&AT(w)&&(j=AV(w)[0],-9<=j&&j<=9)?FCONS(w):qq(w,ainf);}
      /* constant function with value w */
 
 static F1(jttine){V*v; R w&&jt->tmonad&&(v=FAV(w),CP==v->fgh[0]&&RT==v->fgh[2])?v->fgh[1]:w;}
@@ -49,7 +49,7 @@ static I tvi(A w){A x;I i,z=-1;V*v;
   v=FAV(w);
   if(CQQ==v->id&&num(-1)==v->fgh[1]){
    x=v->fgh[0]; 
-   if(!AR(x)&&INT&AT(x)){i=*AV(x)-TC; z=0<=i&&i<NTTAB?i:-1;}
+   if(!AR(x)&&INT&AT(x)){i=AV(x)[0]-TC; z=0<=i&&i<NTTAB?i:-1;}
  }}
  R z;
 }
@@ -154,7 +154,7 @@ TACT(jtvpunc){R stack[e-1];}
 
 TACT(jtvis){A ea,et,n,t;I j;TA*u,z={0,0};
  n=stack[b].a;
- if(!(NAME&AT(n)&&CASGN==*CAV(stack[1+b].a)))R z;
+ if(!(NAME&AT(n)&&CASGN==CAV(stack[1+b].a)[0]))R z;
  t=sfn(0,n); j=jt->ttabi; u=jt->ttab;
  if(!t||NTTAB==jt->ttabi)R z;
  DQ(j, if(equ(t,u->a))R z; ++u;);

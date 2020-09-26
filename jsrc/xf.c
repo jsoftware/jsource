@@ -171,7 +171,7 @@ static F jtixf(J jt,A w){F f;
   default:  ASSERT(0,EVDOMAIN);
   case B01X: ASSERT(0,EVFNUM);
   case BOXX: ASSERT(2==AN(w),EVLENGTH); f=stdf(head(w)); break; 
-  case INTX: f=(F)*AV(w); ASSERT(2<(UI)f,EVFNUM);
+  case INTX: f=(F)AV(w)[0]; ASSERT(2<(UI)f,EVFNUM);
  }
  R f?vfn(f):f;
 }    /* process index file arg for file number; 0 if a file name */

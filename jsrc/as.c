@@ -353,7 +353,7 @@ static DF2(jtofxinv){A f,fs,z;C c;I t;V*v;
 static DF2(jtofxassoc){A f,i,j,p,s,x,z;C id,*zv;I c,d,k,kc,m,r,t;V*v;VA2 adocv;
  F2RANKW(0,RMAX,jtofxassoc,self);
  SETIC(w,m); RE(k=i0(a)); c=ABS(k);  // m = # items in w; k is value of a; c is # items per suffix
- f=FAV(self)->fgh[0]; x=FAV(f)->fgh[0]; v=FAV(x); id=CBDOT==v->id?(C)*AV(v->fgh[1]):v->id;  // self = f/\. f = f/  x = f  v = verb info for f
+ f=FAV(self)->fgh[0]; x=FAV(f)->fgh[0]; v=FAV(x); id=CBDOT==v->id?(C)AV(v->fgh[1])[0]:v->id;  // self = f/\. f = f/  x = f  v = verb info for f
  if(k==IMIN||m<=c||id==CSTARDOT&&!(B01&AT(w)))R outfix(a,w,self);  // if there is not >1 outfix, do general code which handles empties
  if(-1<=k){d=m-c;     RZ(i=IX(d)); RZ(j=apv(d,c,1L));}
  else     {d=(m-1)/c; RZ(i=apv(d,c-1,c )); RZ(j=apv(d,c,c ));}
@@ -395,7 +395,7 @@ F1(jtbsdot){A f;AF f1=jtsuffix,f2=jtoutfix;I flag=FAV(ds(CBSDOT))->flag;C id;V*v
   case CPOUND: f1=jtiota1rev; break;
   case CSLASH:  // v is f/, but not when f is a gerund
    f1=jtsscan;  // code for f/\. - take inplaceability from dyad f
-   f=v->fgh[0]; flag|=(FAV(f)->flag&VJTFLGOK2)>>(VJTFLGOK2X-VJTFLGOK1X); id=ID(f); if(id==CBDOT){f=VAV(f)->fgh[1]; if(INT&AT(f)&&!AR(f))id=(C)*AV(f);}
+   f=v->fgh[0]; flag|=(FAV(f)->flag&VJTFLGOK2)>>(VJTFLGOK2X-VJTFLGOK1X); id=ID(f); if(id==CBDOT){f=VAV(f)->fgh[1]; if(INT&AT(f)&&!AR(f))id=(C)AV(f)[0];}
 #define xinvvalues(w) CCM(w,CPLUS)+CCM(w,CEQ)+CCM(w,CNE)+CCM(w,CBW0110)+CCM(w,CBW1001)
    {CCMWDS(xinv) CCMCAND(xinv,cand,id) f2=CCMTST(cand,id)?jtofxinv:f2;}
 #define xassocvalues(w) CCM(w,CSTAR)+CCM(w,CMAX)+CCM(w,CMIN)+CCM(w,CPLUSDOT)+CCM(w,CSTARDOT)+CCM(w,CBW0000)+CCM(w,CBW0001)+CCM(w,CBW0011)+CCM(w,CBW0101)+CCM(w,CBW0111)+CCM(w,CBW1111)

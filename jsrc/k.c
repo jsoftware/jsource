@@ -151,7 +151,7 @@ static KF2(jtXfromD){D*v=DAV(w);X*x=(X*)yv; DO(AN(w), x[i]=rifvsdebug(xd1(v[i],m
 
 static KF1(jtBfromX){A q;B*x;I e;X*v;
  v=XAV(w); x=(B*)yv;
- DO(AN(w), q=v[i]; e=*AV(q); if((AN(q)^1)|(e&-2))R 0; x[i]=(B)e;);
+ DO(AN(w), q=v[i]; e=AV(q)[0]; if((AN(q)^1)|(e&-2))R 0; x[i]=(B)e;);
  R 1;
 }
 
@@ -210,7 +210,7 @@ static KF2(jtQfromD){B neg,recip;D c,d,t,*wv;I e,i,n,*v;Q q,*x;S*tv;
 static KF1(jtDfromQ){D d,f,n,*x,xb=(D)XBASE;I cn,i,k,m,nn,pn,qn,r,*v,wn;Q*wv;X c,p,q,x2=0;
  wn=AN(w); wv=QAV(w); x=(D*)yv; nn=308/XBASEN;
  for(i=0;i<wn;++i){
-  p=wv[i].n; pn=AN(p); k=1==pn?*AV(p):0;
+  p=wv[i].n; pn=AN(p); k=1==pn?AV(p)[0]:0;
   q=wv[i].d; qn=AN(q);
   if     (k==XPINF)x[i]=inf;
   else if(k==XNINF)x[i]=infm;

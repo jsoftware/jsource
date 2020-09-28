@@ -4,11 +4,8 @@
 /* Verbs: Macros and Defined Constants for Atomic (Scalar) Verbs           */
 
                                     /*   cv - control vector               */
-#define VIPOKWX         0      // This routine can put its result over W
-#define VIPOKW          (1<<VIPOKWX)
-#define VIPOKAX         1      // This routine can put its result over A
-#define VIPOKA          (1<<VIPOKAX)
-// bits 2-3 kept open for flags in va2
+// bits 0-1 kept open for jtflags
+// bits 2-3 should be forced to 1 for more jtflags; at least leave them open
 #define VARGX           4           // bit position for arg flags
 #define VBB             (B01<<VARGX)         /* convert arguments to B              */
 #define VII             (INT<<VARGX)         /* convert arguments to I              */
@@ -28,7 +25,11 @@
 #define VRESMSK         (VB|VI|VD|VZ|VX|VQ|VSB)  // mask for result-type
 #define VRD             (SLIT<<VRESX)// convert result to D if possible - unused code point
 #define VRI             (SBOX<<VRESX)// convert result to I if possible - unused code point
-// bits VRESX+ 1 7 8 9 10 12 are free
+// bits VRESX+ 1 7 10 12 are free
+#define VIPOKWX         20      // This routine can put its result over W
+#define VIPOKW          (1<<VIPOKWX)
+#define VIPOKAX         21      // This routine can put its result over A
+#define VIPOKA          (1<<VIPOKAX)
 #define VCANHALTX       25    // This routine can generate an error after it has started
 #define VCANHALT        ((I)1<<VCANHALTX)
 #define VXCHASVTYPEX    26  // set if there is forced conversion to XNUM

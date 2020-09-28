@@ -129,6 +129,84 @@ testb=: 3 : 0
 testb"0 ] 22 25
 testb"0 ] 16 17 19 21 23 31
 
+testb=: 3 : 0
+NB. y is a virtual atom.  Check to make sure other compounds realize it.  To be effective, This require raonly to crash if it sees virtual
+t1=.y " _
+1
+)
+testb"0 ] _2 0 2
+3 : 0"0 ] _2 0 2
+t2 =. 5 " y
+1
+)
+3 : 0"0 ] _2 0 2
+t3 =. ":@y
+1
+)
+3 : 0"0 ] _2 0 2
+t4 =. y&+
+1
+)
+3 : 0"0 ] _2 0 2
+t5 =. +&y
+1
+)
+3 : 0"0 ] _2 0 2
+t6 =. +^:y
+1
+)
+3 : 0"0 ] 0 2 22 25
+t7 =. y b. /
+1
+)
+3 : 0"0 ] 0 2 22 25
+t7 =. +
+t7 =. y b. /\.
+1
+)
+3 : 0"0 ] _2 0 2
+t8 =. 0 H. y
+1
+)
+3 : 0"0 ] _2 0 2
+t9 =. y H. 0
+1
+)
+3 : 0"0 ] _2 0 2
+t10 =. + L: y
+1
+)
+3 : 0"0 ] _2 0 2
+t11 =. + S: y
+1
+)
+3 : 0"0 ] _2 0 2
+t12 =. (y + +)
+1
+)
+3 : 0"0 ] _2 0 2
+t13 =. + :: y
+1
+)
+3 : 0"0 ] _2 0 2
+t14 =. + ;. y
+1
+)
+3 : 0"0 ] 1e_15 0
+t1=.=!.y
+1
+)
+3 : 0"0 ] 00 01
+t1=.0!:y
+1
+)
+3 : 0"0 ] 00 01
+t1=.y!:0
+1
+)
+
+
+
 NB. test case of dissimilar prefix and suffix
 NB. J64
 a=: ". ;._2 [ 0 : 0

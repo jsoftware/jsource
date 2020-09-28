@@ -603,6 +603,12 @@ NB. Capped fork
 16000 > 7!:2 '(0:&.> @: (b&(<;.1))) a'
 16000 > 7!:2 'b (0:&.>@:(<;.1)) a'
 
+NB. zapped virtual block - used to corrupt memory
+(;:'def ghi') -: 3 : 0 }. <"1 ] 3 3$'abcdefghi'  NB. zapped virtual block
+3 : 'y=. [:^:0: y' y  NB. passes into verb, comes back, without freeing backer
+)
+
+
 
 4!:55 ;:'a a0 a1 abox adot1 adot2 sdot0 b c copy f f1 f2 f3 f4 g l0 l1 m n siz1200 siz12002 tally x xx y '
 randfini''

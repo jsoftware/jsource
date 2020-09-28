@@ -767,7 +767,7 @@ extern L*       jtprobeisquiet(J, A);
 extern L*       jtprobelocal(J,A);
 extern I        jtprod(J, I, I*);
 extern I        jtqcompare(J,Q,Q);
-extern I        jtra(J,AD* RESTRICT,I);
+extern I        jtra(AD* RESTRICT,I);
 extern A        jtras(J,AD* RESTRICT);
 extern A        jtra00s(J,AD* RESTRICT);
 extern A        jtrank1ex(J,AD * RESTRICT,A,I,AF);

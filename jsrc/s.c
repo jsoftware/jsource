@@ -532,7 +532,7 @@ L* jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;L*e;
    // won't be freed till later.  By deferring all deletions we don't have to worry about whether local values are on the stack; and that allows us to avoid putting local values
    // on the NVR stack at all.
    // ABANDONED values can never be NVR (which are never inplaceable), so they will be flagged as !NVR,!UNFREED,ABANDONED
-   if(likely(xaf&(AFNVRUNFREED/* obsolete |AFVIRTUAL*/))){  // x is 0, or unfreed on the NVR stack.  Do not fa().  0 is probably the normal case (assignment to unassigned name)
+   if(likely(xaf&(AFNVRUNFREED/* obsolete |AFVIRTUAL*/))){  // x is 0, or unfreed on the NVR stack, or abandoned.  Do not fa().  0 is probably the normal case (assignment to unassigned name)
     if(unlikely(xaf&AFNVR)){AFLAG(x)=(xaf&=~AFNVRUNFREED);} // If unfreed on the NVR stack, mark as to-be-freed on the stack.  This defers the deletion
     // x=0 case, and LABANDONED case, go through quietly making no change to the usecount of x
    }else{  // x is non0 and either already marked as freed on the NVR stack or must be put there now, or VIRTUAL
@@ -540,8 +540,8 @@ L* jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;L*e;
      // (1) the value in x is not on the NVR stack.  But it may still be at large in the sentence, because we don't push local names
      // onto the NVR stack.  So, we defer the deletion until the end of the sentence, by adding the name to the NVR stack.  We could avoid this
      // if we knew this is a final assignment
-     // (2) the value is not VIRTUAL.  The only way for an assigned value to be VIRTUAL is for it to be an initial assignment to x/y.  Such
-     // an assignment would necessarily have raised the usecount (otherwise we would have gone through the no-fa special case).  So it is safe to fa() immediately
+     // (2) the value is not VIRTUAL.  The only way for an assigned value to be VIRTUAL is for it to be an initial assignment to x/y.  And to get here
+     // the value must not have been adandoned.  So the usecount was raised on assignment (otherwise we would have gone through the no-fa special case).  So it is safe to fa() immediately then
      A *nvrav=jt->nvrav;
      if(unlikely((jt->parserstackframe.nvrtop+1U) > jt->nvran))RZ(nvrav=extnvr());  // Extend nvr stack if necessary.  copied from parser
      nvrav[jt->parserstackframe.nvrtop++] = x;   // record the place where the value was protected (i. e. this sentence); it will be freed when this sentence finishes

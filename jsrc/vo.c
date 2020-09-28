@@ -61,7 +61,7 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
   // To avoid the tstack overhead, we switch the tpush pointer to our data area, so that blocks are filled in as they are allocated, with nothing put
   // onto the real tpop stack.  If we hit an error, that's OK, because whatever we did get allocated will be freed when the result block is freed.  We use GAE so that we don't abort on error
   A *pushxsave = jt->tnextpushp; jt->tnextpushp=AAV(z);  // save tstack info before allocation
-  DQ(n, GAE(y,wt,m,r,f+ws,break); MC(CAV(y),wv,k); wv+=k; AC(y)=ACUC1; if(wt&RECURSIBLE){AFLAG(y)=wt; jtra(jt,y,wt);});   // allocate, but don't grow the tstack.  Set usecount of cell to 1.  ra0() if recursible.  Put allocated addr into *jt->tnextpushp++
+  DQ(n, GAE(y,wt,m,r,f+ws,break); MC(CAV(y),wv,k); wv+=k; AC(y)=ACUC1; if(wt&RECURSIBLE){AFLAG(y)=wt; jtra(y,wt);});   // allocate, but don't grow the tstack.  Set usecount of cell to 1.  ra0() if recursible.  Put allocated addr into *jt->tnextpushp++
   jt->tnextpushp=pushxsave;   // restore tstack pointer
   ASSERT(y!=0,EVWSFULL);  // if we broke out an allocation failure, fail.  Since the block is recursive, when it is tpop()d it will recur to delete contents
 // obsolete   }else{/* obsolete AFLAG(z) = newflags; */DO(n, GA(y,t,m,r,f+ws);/* obsolete  AFLAG(y)=newflags;*/ MC(CAV(y),wv,k); wv+=k; zv[i]=y;); } // indirect w; don't set recursible, which might be expensive

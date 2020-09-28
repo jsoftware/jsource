@@ -205,15 +205,14 @@ retstack:  // return, but 0 if error
 static PSTK * (*(lines58[]))() = {jtpfork,jtphook,jtis,jtpparen};  // handlers for parse lines 5-8
 
 #if AUDITEXECRESULTS
-// go through a block to make sure that the descendants of a recursive block are all recursive, and that no descendant is virtual.
+// go through a block to make sure that the descendants of a recursive block are all recursive, and that no descendant is virtual/unincorpable
 // Initial call has nonrecurok and virtok both set
 void auditblock(A w, I nonrecurok, I virtok) {
  if(!w)R;
  I nonrecur = (AT(w)&RECURSIBLE) && ((AT(w)^AFLAG(w))&RECURSIBLE);  // recursible type, but not marked recursive
- I virt = (AFLAG(w)&AFVIRTUAL)!=0;  // any virtual
- if(virt)if(AFLAG(ABACK(w))&AFVIRTUAL)SEGFAULT  // make sure backer is valid and not virtual
+ if(AFLAG(w)&AFVIRTUAL && !(AFLAG(w)&AFUNINCORPABLE))if(AFLAG(ABACK(w))&AFVIRTUAL)SEGFAULT  // make sure e real backer is valid and not virtual
  if(nonrecur&&!nonrecurok)SEGFAULT
- if(virt&&!virtok)SEGFAULT
+ if(AFLAG(w)&(AFVIRTUAL|AFUNINCORPABLE)&&!virtok)SEGFAULT
  if(AT(w)==0xdeadbeefdeadbeef)SEGFAULT
  switch(CTTZ(AT(w))){
   case RATX:  
@@ -226,7 +225,9 @@ void auditblock(A w, I nonrecurok, I virtok) {
    }
    break;
   case VERBX: case ADVX:  case CONJX: 
-   {V*v=VAV(w); auditblock(v->fgh[0],nonrecur,0); auditblock(v->fgh[1],nonrecur,0); auditblock(v->fgh[2],nonrecur,0);} break;
+   {V*v=VAV(w); auditblock(v->fgh[0],nonrecur,0);
+    auditblock(v->fgh[1],nonrecur,0);
+    auditblock(v->fgh[2],nonrecur,0);} break;
   case SB01X: case SINTX: case SFLX: case SCMPXX: case SLITX: case SBOXX:
    {P*v=PAV(w);  A x;
    x = SPA(v,a); if(!(AT(x)&DIRECT))SEGFAULT x = SPA(v,e); if(!(AT(x)&DIRECT))SEGFAULT x = SPA(v,i); if(!(AT(x)&DIRECT))SEGFAULT x = SPA(v,x); if(!(AT(x)&DIRECT))SEGFAULT
@@ -251,15 +252,6 @@ F1(jtparse){A z;
  R z;
 }
 
-// verify that all box contents are not unincorpable, not virtual unless VIRTUALBOXED is set, and have AC>0
-static void auditboxac(A w){
-  if(!(AT(w)&BOX))R;  // we care only about boxes
-  A *wv; I wn;  // pointer to children, number of children
-  for(wv=AAV(w), wn=AN(w); wn; ++wv, --wn){
-    if(AFLAG(*wv)&AFUNINCORPABLE || (AFLAG(*wv)&AFVIRTUAL && !(AFLAG(w)&AFVIRTUALBOXED)) || AC(*wv)<=0)SEGFAULT
-    auditboxac(*wv);  // recur on children
-  }
-}
 
 #if FORCEVIRTUALINPUTS
 // For wringing out places where virtual blocks are incorporated into results, we make virtual blocks show up all over
@@ -495,10 +487,10 @@ rdglob: ;
        }
        // end of looking at local/global symbol tables
        // s has the symbol for the name
-       if(s){   // if symbol was defined...
-        A sv;  // pointer to value block for the name
+       if(likely(s!=0)){   // if symbol was defined...
+        A sv = s->val;  // pointer to value block for the name
         
-        if(!(sv = s->val))FP  // symbol table entry, but no value.
+        if(unlikely(sv==0))FP  // symbol table entry, but no value.
           // Following the original parser, we assume this is an error that has been reported earlier.  No ASSERT here, since we must pop nvr stack
         // The name is defined.  If it's a noun, use its value (the common & fast case)
         // Or, for special names (x. u. etc) that are always stacked by value, keep the value
@@ -621,8 +613,8 @@ RECURSIVERESULTSCHECK
       auditmemchains();  // trap here while we still point to the action routine
 #endif
       EPZ(y);  // fail parse if error
-#if AUDITBOXAC
-      auditboxac(y);
+#if AUDITEXECRESULTS
+      auditblock(y,1,1);
 #endif
 #if MEMAUDIT&0x2
       if(AC(y)==0 || (AC(y)<0 && AC(y)!=ACINPLACE+ACUC1))SEGFAULT 
@@ -676,6 +668,9 @@ RECURSIVERESULTSCHECK
       auditmemchains();  // trap here while we still point to the action routine
 #endif
       EPZ(y);  // fail parse if error
+#if AUDITEXECRESULTS
+      auditblock(y,1,1);
+#endif
 #if MEMAUDIT&0x2
       if(AC(y)==0 || (AC(y)<0 && AC(y)!=ACINPLACE+ACUC1))SEGFAULT 
       audittstack(jt);
@@ -687,9 +682,12 @@ RECURSIVERESULTSCHECK
      // It will run its function, and return the new stackpointer to use, with the stack all filled in.  If there is an error, the returned stackpointer will be 0.
      stack=(*lines58[pline-5])(jt,stack);  // run it
 #if MEMAUDIT&0x10
-     auditmemchains();  // trap here while we still point to the action routine
+     auditmemchains();  // trap here while we still have the parseline
 #endif
      if(!stack)FP  // fail if error
+#if AUDITEXECRESULTS
+     if(pline<=6)auditblock(stack[1].a,1,1);  // () and asgn have already been audited
+#endif
 #if MEMAUDIT&0x2
       if(AC(stack[0].a)==0 || (AC(stack[0].a)<0 && AC(stack[0].a)!=ACINPLACE+ACUC1))SEGFAULT 
       audittstack(jt);

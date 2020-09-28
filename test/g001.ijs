@@ -342,6 +342,22 @@ a > 7!:0''
 
 0 = ('=',':') +./@:E. a =. 2 , :: (13!:12@'') '2'  NB. For a while the =. was changed to =:
 
+NB. Test that arithmetic dyads migrate outer loop to inner loop
+p =: 0.5 * i. 10000 [ q =: 0.5
+(p +"0 0"1 _ q) -: (p +"1 _ q)
+((1000) 6!:2 'p + q') > 0.7 * (1000) 6!:2 'p +"1 _ q'
+(p +"0 0"0 _ q) -: (p +"0 _ q)
+((1000) 6!:2 'p + q') > 0.7 * (1000) 6!:2 'p +"0 _ q'
+(p +"0 0"0 0 q) -: (p +"0 0 q)
+((1000) 6!:2 'p + q') > 0.7 * (1000) 6!:2 'p +"0 0 q'
+p =: i. 10000 5 [ q =: i. 10000 5
+(p +"0 0"1 q) -: (p +"1 q)
+((1000) 6!:2 'p + q') > 0.7 * (1000) 6!:2 'p +"1 q'
+p =: i. 10000 5 [ q =: i. 10000
+(p +"0 0"1 0 q) -: (p +"1 0 q)
+((1000) 6!:2 'p + q') > 0.7 * (1000) 6!:2 'p +"1 0 q'
+
+
 4!:55 ;:'Cogito Ich_liebe_dich a a_man aa abc alta b def erase ergo'
 4!:55 ;:'fa fb first global global1 global2 global3'
 4!:55 ;:'ghi global j_k j_k_l j_k_l_m lf local names p pqr q r s second sscript gval_z_'

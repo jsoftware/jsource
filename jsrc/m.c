@@ -551,7 +551,7 @@ RESTRICTF A jtvirtual(J jtip, AD *RESTRICT w, I offset, I r){AD* RESTRICT z;
     // We must ensure that the backer has recursive usecount, as a way of protecting the CONTENTS.  We zap the tpop for the backer itself, but
     // not for the contents.
     AC(w)=ACUC1; *wtpop=0;  // zap the tpop for w in lieu of ra() for it
-    if((t^wf)&RECURSIBLE){AFLAG(w)=wf|=(t&RECURSIBLE); jtra(jt,w,t);}  // make w recursive, raising contents if was nonrecurive.  Like ra0()
+    if((t^wf)&RECURSIBLE){AFLAG(w)=wf|=(t&RECURSIBLE); jtra(w,t);}  // make w recursive, raising contents if was nonrecurive.  Like ra0()
 // when virtuals can be zapped, use that here
   }else{
    // if we can't transfer ownership, must ra the backer.  UNINCORPORABLEs go through here, and must be virtual so the backer, not the indirect block, is raised
@@ -636,13 +636,18 @@ A jtgc (J jt,A w,A* old){
    // Raise the count of w to protect it.  Since w raised the count of b when w was created, this protects b also.  Afterwards, if
    // b need not be deleted, w can survive as is; but if b is to be deleted, we must realize w.  We don't keep b around because it may be huge
    // (could look at relative size to make this decision).  It is possible that the usecount of w is > 1 ONLY if the usecount was raised when
-   // w was assigned to x or y.  In that case we know that the backer is protected somewhere up the stack or in a higher-level named reference that
-   // is either private or on the NVR stack; either way the backer will not go away and we will restore the original usecount below
+   // w was assigned to x or y.
+   // Detecting when the backer is going away is subtle because it may have been zapped in a transfer of ownership and have NO entry to the stack.
+   // In that case, it is totally unmoored and will persist for as long as w does.  We assume that the decision to transfer ownership was made
+   // advisedly and we do not delete hte backer, but leave w alone.  Thus the test for realizing is (backer count changed during tpop) AND
+   // (backer count is now 1)
+   I bc=AC(b);  // backer count before tpop
    AC(w)=2;  // protect w from being freed.  Safe to use 2, since any higher value implies the backer is protected
    tpop(old);  // delete everything allocated on the stack, except for w and b which were protected
    // if the block backing w must be deleted, we must realize w to protect it; and we must also ra() w to protect its contents.  When this is
    // finished, we have a brand-new w with usecount necessarily 1, so we can make it in-placeable.  Setting the usecount to inplaceable will undo the ra() for the top block only
-   if(AC(b)<=1){A origw = w; RZ(w=realize(w)); ra(w); AC(w)=ACUC1|ACINPLACE; fa(b); mf(origw); }  // if b is about to be deleted, get w out of the way.  Since we
+// obsolete    if(AC(b)<=1){A origw = w; RZ(w=realize(w)); ra(w); AC(w)=ACUC1|ACINPLACE; fa(b); mf(origw); }  // if b is about to be deleted, get w out of the way.  Since we
+   if(((AC(b)-2)&(AC(b)-bc))<0){A origw = w; RZ(w=realize(w)); ra(w); AC(w)=ACUC1|ACINPLACE; fa(b); mf(origw); }  // if b is about to be deleted, get w out of the way.  Since we
                                       // raised the usecount of w only, we use mf rather than fa to free just the virtual block
                                       // fa the backer to undo the ra when the virtual block was created
    else{
@@ -702,8 +707,15 @@ I jtgc3(J jt,A *x,A *y,A *z,A* old){
  R 1;  // good return
 }
 
+// subroutine version of ra without rifv to save space
+static A raonlys(AD * RESTRICT w) { RZ(w);
+#if AUDITEXECRESULTS
+ if(AFLAG(w)&(AFVIRTUAL|AFUNINCORPABLE))SEGFAULT
+#endif
+ ra(w); R w; }
+
 // This routine handles the recursion for ra().  ra() itself does the top level, this routine handles the contents
-I jtra(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
+I jtra(AD* RESTRICT wd,I t){I n=AN(wd);
  if(t&BOX){AD* np;
   // boxed.  Loop through each box, recurring if called for.  Two passes are intertwined in the loop
   A* RESTRICT wv=AAV(wd);  // pointer to box pointers
@@ -741,13 +753,13 @@ I jtra(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
 #endif
  } else if(t&(VERB|ADV|CONJ)){V* RESTRICT v=FAV(wd);
   // ACV.  Recur on each component
-  ras(v->fgh[0]); ras(v->fgh[1]); ras(v->fgh[2]);
+  raonlys(v->fgh[0]); raonlys(v->fgh[1]); raonlys(v->fgh[2]);
  } else if(t&(RAT|XNUM|XD)) {A* RESTRICT v=AAV(wd);
   // single-level indirect forms.  handle each block
   DQ(t&RAT?2*n:n, if(*v)ACINCR(*v); ++v;);
  } else if(t&SPARSE){P* RESTRICT v=PAV(wd); A x;
   // all elements of sparse blocks are guaranteed non-virtual, so ra will not reassign them
-  x = SPA(v,a); ras(x);     x = SPA(v,e); ras(x);     x = SPA(v,i); ras(x);     x = SPA(v,x); ras(x);
+  x = SPA(v,a); raonlys(x);     x = SPA(v,e); raonlys(x);     x = SPA(v,i); raonlys(x);     x = SPA(v,x); raonlys(x);
  }
  R 1;
 }

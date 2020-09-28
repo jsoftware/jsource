@@ -18,17 +18,19 @@
 #define VQQ             (RAT<<VARGX)         /* convert arguments to RAT            */
 #define VARGMSK         (VBB|VII|VDD|VZZ|Vxx|VQQ)  // mask for argument requested type
 #define VRESX           12           // bit position for result flags
-#define VB              (B01<<VRESX)/* result type B                       */
-#define VI              (INT<<VRESX)/* result type I                       */
-#define VD              (FL<<VRESX) /* result type D                       */
-#define VZ              (CMPX<<VRESX)/* result type Z                       */
-#define VX              (XNUM<<VRESX)/* result type XNUM                    */
-#define VQ              (RAT<<VRESX) /* result type RAT                     */
-#define VSB             (SBT<<VRESX) /* result type SBT                     */
+#define VB              (B01<<VRESX)/* result type B  bit 12                     */
+#define VI              (INT<<VRESX)/* result type I  bit 14                     */
+#define VD              (FL<<VRESX) /* result type D  bit 15                     */
+#define VZ              (CMPX<<VRESX)/* result type Z bit 16                      */
+#define VX              (XNUM<<VRESX)/* result type XNUM  bit 17                  */
+#define VQ              (RAT<<VRESX) /* result type RAT  bit 18                   */
+#define VSB             (SBT<<VRESX) /* result type SBT bit 28                    */
 #define VRESMSK         (VB|VI|VD|VZ|VX|VQ|VSB)  // mask for result-type
 #define VRD             (SLIT<<VRESX)// convert result to D if possible - unused code point
 #define VRI             (SBOX<<VRESX)// convert result to I if possible - unused code point
-// bits VRESX+8 9 10 12 13 are free
+// bits VRESX+ 1 7 8 9 10 12 are free
+#define VCANHALTX       25    // This routine can generate an error after it has started
+#define VCANHALT        ((I)1<<VCANHALTX)
 #define VXCHASVTYPEX    26  // set if there is forced conversion to XNUM
 #define VXCHASVTYPE     ((I)1<<VXCHASVTYPEX)
 #define VXCVTYPEX       29          // bit position for VX conversion type
@@ -37,8 +39,7 @@
 #define VXEQ            (Vxx|VXCHASVTYPE|((I)XMEXMT<<VXCVTYPEX))   /* convert to XNUM for = ~:            */
 #define VXCF            (Vxx|VXCHASVTYPE|((I)XMCEIL<<VXCVTYPEX))   /* convert to XNUM ceiling/floor       */
 #define VXFC            (Vxx|VXCHASVTYPE|((I)XMFLR<<VXCVTYPEX))  /* convert to XNUM floor/ceiling       */
-#define VCANHALTX       31    // This routine can generate an error after it has started
-#define VCANHALT        ((I)1<<VCANHALTX)
+// bit 31 must not be used - it may be a sign bit, which has a meaning
 #define VARGCVTMSKF     (VXCHASVTYPE|VXCVTYPEMSK)  // mask for type to pass into XCVT, includes XNUM override
 #define VFRCEXMT        (VXCHASVTYPE|((I)XMEXMT<<VXCVTYPEX))   // set in arg to cvt() to do rounding for = ~:, if the conversion happens to be to XNUM
 

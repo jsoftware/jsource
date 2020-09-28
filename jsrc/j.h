@@ -584,10 +584,9 @@ extern unsigned int __cdecl _clearfp (void);
  // 13 (0xD) will verify that there are no blocks being used after they are freed, or freed prematurely.  If you get a wild free, turn on bit 0x2
  // 2 will detect double-frees before they happen, at the time of the erroneous tpush
 
-#define AUDITEXECRESULTS 0   // When set, we go through all execution results to verify recursive and virtual bits are OK
+#define AUDITEXECRESULTS 0  // When set, we go through all execution results to verify recursive and virtual bits are OK
 #define FORCEVIRTUALINPUTS 0  // When 1 set, we make all non-inplaceable noun inputs to executions VIRTUAL.  Tests should still run
                            // When 2 set, make all outputs from RETF() virtual.  Tests for inplacing will fail; that's OK if nothing crashes
-#define AUDITBOXAC 0   // check contents of boxes to make sure they do not contain inplaceables
 // set FINDNULLRET to trap when a routine returns 0 without having set an error message
 #define FINDNULLRET 0
 

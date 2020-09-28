@@ -866,19 +866,19 @@
 // Handle top level of ra().  Increment usecount.  Set usecount recursive usecount if recursible type; recur on contents if original usecount is not recursive
 // We can have an inplaceable but recursible block, if it was gc'd or created that way
 // ra() DOES NOT realize a virtual block, so that it can be used in places where virtual blocks are not possible.  ras() does include rifv
-#if MEMAUDIT&2
+#if 0 // obsolete 
 #define ra(x)                       {I c=AC(x); if(!ACISPERM(c)){I tt=AT(x); FLAGT flg=AFLAG(x); if((tt^flg)&TRAVERSIBLE){AFLAG(x)=flg|=(tt&RECURSIBLE); if(tt&RECURSIBLE&&!(flg&(AFNJA))&&AC(x)>=2&&AC(x)<ACPERMANENT)SEGFAULT jtra(jt,(x),tt);}; AC(x)=(c+1)&~ACINPLACE;}}
 // If this is a recursible type, make it recursible if it isn't already, by traversing the descendants.  This is like raising the usecount by 0.
 #define ra0(x)                      {I tt=AT(x); FLAGT flg=AFLAG(x); if((tt^flg)&RECURSIBLE){if(flg&AFVIRTUAL){RZ((x)=realize(x)); flg=AFLAG(x);} AFLAG(x)=flg|=(tt&RECURSIBLE); if(!(flg&(AFNJA))&&AC(x)>=2&&AC(x)<ACPERMANENT)SEGFAULT jtra(jt,(x),tt);}}
 #else
 // obsolete #define ra(x)                       {I c=AC(x); if(!ACISPERM(c)){I tt=AT(x); FLAGT flg=AFLAG(x); if((tt^flg)&TRAVERSIBLE){AFLAG(x)=flg|=(tt&RECURSIBLE); jtra(jt,(x),tt);}; AC(x)=(c+1)&~ACINPLACE;}}
-#define ra(x)                       {I c=AC(x); c&=~ACINPLACE; AC(x)=c+=(c>>(BW-2))^1; I tt=AT(x); FLAGT flg=AFLAG(x); if((tt^flg)&TRAVERSIBLE){AFLAG(x)=flg|=(tt&RECURSIBLE); jtra(jt,(x),tt);};}
+#define ra(x)                       {I c=AC(x); c&=~ACINPLACE; AC(x)=c+=(c>>(BW-2))^1; I tt=AT(x); FLAGT flg=AFLAG(x); if((tt^flg)&TRAVERSIBLE){AFLAG(x)=flg|=(tt&RECURSIBLE); jtra((x),tt);};}
 // If this is a recursible type, make it recursive if it isn't already, by traversing the descendants.  This is like raising the usecount by 0.  Since we aren't liable to assign the block, we don't have to realize a
 // virtual block unless it is a recursible type.  NOTE that PERMANENT and VIRTUAL blocks are always marked recursible if they are of recursible type
-#define ra0(x)                      {I tt=AT(x); FLAGT flg=AFLAG(x); if((tt^flg)&RECURSIBLE){if(unlikely(flg&AFVIRTUAL)){RZ((x)=realize(x)); flg=AFLAG(x);} AFLAG(x)=flg|=(tt&RECURSIBLE); jtra(jt,(x),tt);}}
+#define ra0(x)                      {I tt=AT(x); FLAGT flg=AFLAG(x); if((tt^flg)&RECURSIBLE){if(unlikely(flg&AFVIRTUAL)){RZ((x)=realize(x)); flg=AFLAG(x);} AFLAG(x)=flg|=(tt&RECURSIBLE); jtra((x),tt);}}
 #endif
 // make this block recursive, used when x has just been allocated & thus is known to be nonrecursive & nonvirtual.  We may know the type t, too (otherwise use AT(x))
-#define ra00(x,tt)                   {if((tt)&RECURSIBLE){AFLAG(x)|=(tt)&RECURSIBLE; jtra(jt,(x),(tt));}}
+#define ra00(x,tt)                   {if((tt)&RECURSIBLE){AFLAG(x)|=(tt)&RECURSIBLE; jtra((x),(tt));}}
 #define ranec(x0,x1,x2,x3,x4,x5)    jtranec(jt,(x0),(x1),(x2),(x3),(x4),(x5))
 #define rank1ex(x0,x1,x2,x3)        jtrank1ex(jt,(x0),(x1),(x2),(x3))
 #define rank1ex0(x0,x1,x2)          jtrank1ex0(jt,(x0),(x1),(x2))

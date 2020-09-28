@@ -200,7 +200,7 @@ do{
      // if unzappable OR recursible nonrecursive, raise children - even if z is UNINCORPABLE or VIRTUAL.  The children are about to be copied
      // We raise only the children, not the base block.  This converts the children to recursive usecount.  We leave the base block nonrecursive if it started
      // that way.  We may zap it later.  By not making the base recursive, we add 1 to the effective usecount of the children
-     jtra(jt,z,AT(z));   // raise children only and make them recursive
+     jtra(z,AT(z));   // raise children only and make them recursive
 // obsolete      if(unlikely(AT(z)&RECURSIBLE))jtra(jt,z,AT(z));   // raise children only and make them recursive
 // obsolete      // ra00 is a convenient way to make the contents recursive and increment their stored usecount before
 // obsolete      // we copy.  But if z is not recursive to start with, it doesn't actually increment the EFFECTIVE usecount of the children.

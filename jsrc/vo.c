@@ -397,7 +397,8 @@ F1(jtope){PROLOG(0080);A cs,*v,y,z;I nonh;C*x;I i,n,*p,q=RMAX,r=0,*s,t=0,te=0,*u
  // The homogeneity flag h is set if max rank is 1 and there is 0 or 1 nonempty type.  In that case fill is 1-dimensional and we just copy into the result area
  nonh = (r&~1) | (t&(t-1));  // non homogeneous if rank is not 0 or 1, or if there is more than 1 bit set in t
  if(t){
-  ASSERT(HOMONE(t,0)||t==BOX||t==SBT,EVDOMAIN);  // no mixed nonempties
+// obsolete  ASSERT(HOMONE(t,0)||t==BOX||t==SBT,EVDOMAIN);  // no mixed nonempties
+  ASSERT((POSIFHOMO(t,0)&-(t^BOX)&-(t^SBT))>=0,EVDOMAIN);  // no mixed nonempties: t is homo num/char or all boxed or all symbol
   ASSERT(!(t&SPARSE&&t&XNUM+RAT),EVDOMAIN);  // don't allow a sparse that requires promotion to indirect
   te=t;  // te holds the type to use
  }
@@ -519,7 +520,8 @@ F1(jtraze){A*v,y,z,* RESTRICT zv;C* RESTRICT zu;I *wws,d,i,klg,m=0,n,r=1,t=0,te=
   // So, we don't check compatibility for empty boxes.
   i=t;  // save indicator of nonempties
   if(t){
-   ASSERT(HOMONE(t,0)||t==BOX||t==SBT,EVDOMAIN);  // no mixed nonempties
+// obsolete    ASSERT(HOMONE(t,0)||t==BOX||t==SBT,EVDOMAIN);  // no mixed nonempties
+   ASSERT((POSIFHOMO(t,0)&-(t^BOX)&-(t^SBT))>=0,EVDOMAIN);  // no mixed nonempties: t is homo num/char or all boxed or all symbol
    te=t;  // te holds the type to use
   }else if(jt->fill){te=AT(jt->fill);}  // all empty: use fill type if given.
   t=te&-te; while(te&=(te-1)){t=maxtypedne(t,te&-te);}  // get highest-priority type

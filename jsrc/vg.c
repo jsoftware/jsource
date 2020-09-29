@@ -787,7 +787,8 @@ F2(jtordstat){A q,t=0;I j,m,m0,m1,n,wt;D *qv;
  I i=NRANDS-1;  // i points to the next random number to draw
  RZ(a&&w);
  n=AN(w); wt=AT(w); RE(j=i0(a));
- if(((AR(a)-1)&(4-n)&((1^AR(w))-1)&(-(wt&FL+INT)))>=0)R from(a,grade2(w,w));  // if not int/float, or short, or list a, do full grade
+// obsolete  if(((4-n)&(AR(a)-1)&((1^AR(w))-1)&(-(wt&FL+INT)))>=0)R from(a,grade2(w,w));  // if not int/float, or short, or list a, do full grade
+ if(((4-n)&((AR(a)|(1^AR(w)))-1)&(-(wt&FL+INT)))>=0)R from(a,grade2(w,w));  // if not int/float, or short, or not (atom a and list w), do full grade
  if((UI)j>=(UI)n){j+=n; ASSERT((UI)j<(UI)n,EVINDEX);}
  // deal a bunch of random floats to provide pivots.  We reuse them if needed
  RZ(df2(q,sc(NRANDS),num(0),atop(ds(CQUERY),ds(CDOLLAR)))); qv=DAV(q);
@@ -797,7 +798,7 @@ F2(jtordstat){A q,t=0;I j,m,m0,m1,n,wt;D *qv;
 F2(jtordstati){A t;I n,wt;
  RZ(a&&w);
  n=AN(w); wt=AT(w);
- if(((AR(a)-1)&(4-n)&((1^AR(w))-1)&(-(wt&FL+INT)))>=0)R from(a,grade1(w));
+ if(((4-n)&((AR(a)|(1^AR(w)))-1)&(-(wt&FL+INT)))>=0)R from(a,grade1(w));
  RZ(t=ordstat(a,w));   // Get the value of the ath order statistic, then look up its index
  I j=0;  // =0 needed to stifle warning
  if(wt&FL){D p=DAV(t)[0],*v=DAV(w); DO(n, if(p==*v++){j=i; break;});}

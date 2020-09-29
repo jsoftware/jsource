@@ -1353,12 +1353,13 @@ VA2 jtvar(J jt,A self,I at,I wt){I t;
   }else{
    // Normal case, but something is nonnumeric.  This will be a domain error except for = and ~:, and a few symbol operations
    VA2 retva2;  retva2.cv=VB; // where we build the return value   cv indicates no input conversion, boolean result
-   I opx=(UC)FAV(self)->id==CNE; if(opx|((UC)FAV(self)->id==CEQ)){I opcode;
+// obsolete   I opx=(UC)FAV(self)->id==CNE; if(opx|((UC)FAV(self)->id==CEQ)){I opcode;
+    if(likely(((UC)FAV(self)->id&~1)==CEQ)){I opcode;  // CEQ or CNE
     // = or ~:, possibly inhomogeneous
-    if(HOMO(at,wt)){
+    if(likely(HOMO(at,wt))){
      opcode=((at>>(C2TX-2))+(wt>>C2TX))|(3*(5&(((t>>(SBTX-(BOXX+2)))+t)>>BOXX))); // bits are a4 a2 w4 w2 if char, 1100 if symbol, 0011 if box.  symbol is 1110, coming from a and symb shift
     }else opcode=15;  // inhomogeneous line
-    retva2.f=eqnetbl[opx][opcode];  // return the comparison
+    retva2.f=eqnetbl[(UC)FAV(self)->id&1][opcode];  // return the comparison
     R retva2;
    }
    // not = ~:, better be a symbol

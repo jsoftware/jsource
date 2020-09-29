@@ -67,7 +67,7 @@ static I jtebarprep(J jt,A a,A w,A*za,A*zw,I*zc){I ar,at,m,n,t,wr,wt,memlimit;CR
  wr=AR(w); wt=AT(w); n=AN(w);
  ASSERT(!((at|wt)&SPARSE),EVNONCE);
  ASSERT(ar==wr||(ar+(wr^1))==0,EVRANK);
- if(m&&n&&!HOMO(at,wt))R -1;
+ if(unlikely(!HOMO(at,wt)))if(m&&n)R -1;
  if(1<wr)R 2==wr?-2:-3;
  t=maxtyped(at|(I )(m==0),wt|(I )(n==0)); t&=-t;  // default missing type to B01; if we select one, discard higher bits
  if(TYPESNE(t,at))RZ(a=cvt(t,a));

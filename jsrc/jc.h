@@ -63,7 +63,7 @@
 
 // Current primitive order:
 // fills with inverses to populate the area near 0
-// !. ^: #. }: }. \ !: p. ^. |. o. |:
+// !. ^: #. }: }. !: p. ^. |. o. |: \
 // seldom-used verbs
 // -. ? ?. I. 0:
 // structural
@@ -79,7 +79,7 @@
 // more structural
 // {. {:   # $ /. :: "   #: i. i: {   -: ~.
 // verbs with inverses
-// p.. x: ": s: u:    \: ;: $. \. ;. A .p: q:
+//  \.p.. x: ": s: u:    \: ;: $. ;. A .p: q:
 // verbs with identities
 // . %. C. | r. %: ! b.
 
@@ -90,14 +90,14 @@
 #define CBEHEAD    (C)0x06  // }.
 #define CDROP      (C)0x06  // }.
 #define CCTAIL     (C)0x07  // }:
-#define CBSLASH    (C)0x08  // \   backslash
-#define CIBEAM     (C)0x09  // !:
-#define CPOLY      (C)0x0a  // p.
-#define CLOG       (C)0x0b  // ^.
-#define CREV       (C)0x0c  // |.
-#define CROT       (C)0x0c  // |.
-#define CCIRCLE    (C)0x0d  // o.
-#define CCANT      (C)0x0e  // |:
+#define CIBEAM     (C)0x08  // !:
+#define CPOLY      (C)0x09  // p.
+#define CLOG       (C)0x0a  // ^.
+#define CREV       (C)0x0b  // |.
+#define CROT       (C)0x0b  // |.
+#define CCIRCLE    (C)0x0c  // o.
+#define CCANT      (C)0x0d  // |:
+#define CBSLASH    (C)0x0e  // \   backslash must be 0x40 from \.
 #define CNOT       (C)0x0f  // -.
 #define CLESS      (C)0x0f  // -.
 #define CICAP      (C)0x10  // I.
@@ -170,15 +170,15 @@
 #define CHALVE     (C)0x4c  // -:
 #define CMATCH     (C)0x4c  // -:
 #define CNUB       (C)0x4d  // ~.
-#define CPDERIV    (C)0x4e  // p..
-#define CXCO       (C)0x4f  // x:
-#define CTHORN     (C)0x50  // ":
-#define CSCO       (C)0x51  // s:
-#define CUCO       (C)0x52  // u:
-#define CDGRADE    (C)0x53  // \:
-#define CWORDS     (C)0x54  // ;:
-#define CSPARSE    (C)0x55  // $.
-#define CBSDOT     (C)0x56  // \.
+#define CBSDOT     (C)0x4e  // \. must be 0x40 from backslash
+#define CPDERIV    (C)0x4f  // p..
+#define CXCO       (C)0x50  // x:
+#define CTHORN     (C)0x51  // ":
+#define CSCO       (C)0x52  // s:
+#define CUCO       (C)0x53  // u:
+#define CDGRADE    (C)0x54  // \:
+#define CWORDS     (C)0x55  // ;:
+#define CSPARSE    (C)0x56  // $.
 #define CCUT       (C)0x57  // ;.
 #define CUNDCO     (C)0x58  // &.:
 #define COBVERSE   (C)0x59  // :.

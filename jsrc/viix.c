@@ -98,13 +98,14 @@ static B jtiixI(J jt,I n,I m,A a,A w,I*zv){A t;B ascend;I*av,j,p,q,*tv,*u,*v,*vv
 // 1111 would not generate spurious accepted cases because only one of them is HOMO.
 #define TT(s,t) (((s)&16)<<3)+(((s)&7)<<4)+(((t)&16)>>1)+((t)&7)
 
-F2(jticap2){A*av,*wv,z;C*uu,*vv;I ar,*as,at,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t,wr,*ws,wt,* RESTRICT zv;I cc;
+F2(jticap2){A*av,*wv,z;C*uu,*vv;I ar,*as,at,b,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t,wr,*ws,wt,* RESTRICT zv;I cc;
  RZ(a&&w);
  ar=AR(a); at=AT(a); as=AS(a); SETIC(a,n); r=ar-1<0?0:ar-1;  // n=length of 1-cell of a, r=frame of a
- wr=AR(w); wt=AT(w); ws=AS(w); I b=(AN(a)-1)|(AN(w)-1);  // b<0 if something is empty
+ wr=AR(w); wt=AT(w); ws=AS(w); // obsolete I b=(AN(a)-1)|(AN(w)-1);  // b<0 if something is empty
  ASSERT(r<=wr,EVRANK);
  ASSERTAGREE(as+ar-r,ws+wr-r,r)
- if(b>=0){ASSERT(HOMO(at,wt),EVDOMAIN); ASSERT(!((at|wt)&SPARSE),EVNONCE); } // if no empties, verify agreement & non-sparse
+// obsolete  if(b>=0){ASSERT(HOMO(at,wt),EVDOMAIN); ASSERT(!((at|wt)&SPARSE),EVNONCE); } // if no empties, verify agreement & non-sparse
+ ASSERT((POSIFHOMO(at,wt)&-AN(a)&-AN(w))>=0,EVDOMAIN); ASSERT(!((at|wt)&SPARSE)/* obsolete &-AN(a)&-AN(w)*/,EVNONCE); // if no empties, verify agreement & non-sparse
  CPROD(AN(w),m,wr-r,ws); CPROD(AN(w),c,r,ws+wr-r);  // m=#atoms in result   c=# atoms in a cell of w
  GATV(z,INT,m,wr-r,ws); zv=AV(z);
  if(((m-1)|(n-1)|(c-1))<0){DQ(m, *zv++=0;); R z;}  // exit with zeros for empty args
@@ -167,7 +168,7 @@ F2(jticap2){A*av,*wv,z;C*uu,*vv;I ar,*as,at,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t,wr,*ws
    for(j=0,cm=c*m;j<cm;j+=c){
     p=0; q=n-1;
     while(p<=q){
-     MID(k,p,q); ck=c*k; b=1; 
+     MID(k,p,q); ck=c*k; I b=1; 
      DO(c, if(cc=compare(av[i+ck],wv[i+j])){b=gt==cc; break;});
      if(b)q=k-1; else p=k+1;
     } 

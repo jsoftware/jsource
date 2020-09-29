@@ -2160,7 +2160,8 @@ A jtindexofprehashed(J jt,A a,A w,A hs){A h,*hv,x,z;AF fn;I ar,*as,at,c,f1,k,m,m
  c &= REPSGN(~(f1|(ar-r)));   // w must have rank big enough to hold a cell of a.  Clear c if f1<0 or r>ar
  if(ICMP(as+ar-r,ws+f1,r))c=0;  // and its shape at that rank must match the shape of a cell of a
  // If there is any error, switch back to the non-prehashed code.  We must remove any command bits from mode, leaving just the operation type
- if(!(m&&n&&c&&HOMO(t,wt)&&UNSAFE(t)>=UNSAFE(wt)))R indexofsub(mode&IIOPMSK,a,w);
+// obsolete  if(!(m&&n&&c&&HOMO(t,wt)&&UNSAFE(t)>=UNSAFE(wt)))R indexofsub(mode&IIOPMSK,a,w);
+ if(unlikely((-m&-n&-c&NEGIFHOMO(t,wt)&(UNSAFE(wt)-(UNSAFE(t)+1)))>=0))R indexofsub(mode&IIOPMSK,a,w);
 
  // allocate enough space for the result, depending on the type of the operation
  switch(mode&IIOPMSK){
@@ -2203,7 +2204,7 @@ F1(jtnubsieve){
 F1(jtnub){ 
  RZ(w);F1PREFIP;
 // obsolete  if(SPARSE&AT(w)||AFLAG(w)&AFNJA)R repeat(nubsieve(w),w); 
- if(unlikely((((SPARSE&AT(w))-1)&((AFLAG(w)&AFNJA)-1))>=0))R repeat(nubsieve(w),w);    // sparse or NJA
+ if(unlikely((SPARSE&AT(w))|(AFLAG(w)&AFNJA)))R repeat(nubsieve(w),w);    // sparse or NJA
  A z; RZ(z=indexofsub(INUB,w,w));
  // We extracted from w, so mark it (or its backer if virtual) non-pristine.  If w was pristine and inplaceable, transfer its pristine status to the result.  We overwrite w because it is no longer in use
 // obsolete  I awflg=AFLAG(w); AFLAG(z)|=awflg&((SGNTO0(AC(w))&((I)jtinplace>>JTINPLACEWX))<<AFPRISTINEX); if(unlikely(awflg&AFVIRTUAL)){w=ABACK(w); awflg=AFLAG(w);} AFLAG(w)=awflg&~AFPRISTINE;
@@ -2220,10 +2221,13 @@ F2(jtless){A x=w;I ar,at,k,r,*s,wr,*ws,wt;
  // if w's rank is larger than that of a cell of a, reheader w to look like a list of such cells
 // obsolete  if((-wr&-(r^wr))<0){RZ(x=virtual(w,0,r)); AN(x)=AN(w); s=AS(x); ws=AS(w); k=ar>wr?0:1+wr-r; *s=prod(k,ws); MCISH(1+s,k+ws,r-1);}  //  use fauxvirtual here
  if((-wr&-(r^wr))<0){RZ(x=virtual(w,0,r)); AN(x)=AN(w); s=AS(x); ws=AS(w); k=ar>wr?0:1+wr-r; I s0; PRODX(s0,k,ws,1) s[0]=s0; MCISH(1+s,k+ws,r-1);}  //  use fauxvirtual here
-// if nothing special (like sparse, or incompatible types, or x requires conversion) do the fast way; otherwise (-. x e. y) # y
+ // if nothing special (like sparse, or incompatible types, or x requires conversion) do the fast way; otherwise (-. x e. y) # y
+ // because LESS allocates a large array to hold all the values, we use the slower, less memory-intensive, version if a is mapped
 // obsolete  R !(at&SPARSE)&&HOMO(at,wt)&&TYPESEQ(at,maxtyped(at,wt))&&!(AFLAG(a)&AFNJA)?indexofsub(ILESS,x,a):
 // obsolete      repeat(not(eps(a,x)),a);
- RZ(x=!(at&SPARSE)&&HOMO(at,wt)&&TYPESEQ(at,maxtyped(at,wt))&&!(AFLAG(a)&AFNJA)?indexofsub(ILESS,x,a):
+// obsolete  RZ(x=!(at&SPARSE)&&HOMO(at,wt)&&TYPESEQ(at,maxtyped(at,wt))&&!(AFLAG(a)&AFNJA)?indexofsub(ILESS,x,a):
+// obsolete      repeat(not(eps(a,x)),a));
+ RZ(x=(NEGIFHOMO(at,wt)&((TYPESXOR(at,maxtyped(at,wt))|(at&SPARSE)|(AFLAG(a)&AFNJA))-1))<0?indexofsub(ILESS,x,a):
      repeat(not(eps(a,x)),a));
  // We extracted from a, so mark it (or its backer if virtual) non-pristine.  If a was pristine and inplaceable, transfer its pristine status to the result
 // obsolete  I aflg=AFLAG(a); AFLAG(x)|=aflg&((SGNTO0(AC(a))&((I)jtinplace>>JTINPLACEAX))<<AFPRISTINEX); if(unlikely(aflg&AFVIRTUAL)){a=ABACK(a); aflg=AFLAG(a);} AFLAG(a)=aflg&~AFPRISTINE;

@@ -618,8 +618,10 @@ extern unsigned int __cdecl _clearfp (void);
 #define ASSERTW(b,e)    {if(unlikely(!(b))){if((e)<=NEVM)jsignal(e); else jt->jerr=(e); R;}}
 #define ASSERTWR(c,e)   {if(unlikely(!(c))){R e;}}
 // verify that shapes *x and *y match for l axes using AVX for rank<5, memcmp otherwise
-#if (C_AVX&&SY_64) || EMU_AVX
-
+#if 0 && ((C_AVX&&SY_64) || EMU_AVX)
+// We would like to use these AVX versions because they generate fewest instructions.  Unfortunately, they
+// modify ymm upper bits, which causes us to issue VZEROUPPER, which in turn causes us to save/restore all of ymm.
+// That's not worth it.  Even the 128-bit MASKLOAD instructions modify ymm upper.
 #if 0 // obsolete
 #define ASSERTAGREE(x,y,l) {D *aaa=(D*)(x), *aab=(D*)(y); I aai=4-(l); \
  do{__m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+(aai>=0?aai:0))); \
@@ -644,8 +646,22 @@ extern unsigned int __cdecl _clearfp (void);
  }
 #endif
 #else
-#define ASSERTAGREE(x,y,l) {I *aaa=(x), *aab=(y), aai=(l)-1; do{aab=aai<0?aaa:aab; ASSERT(aaa[aai]==aab[aai],EVLENGTH); --aai; aab=aai<0?aaa:aab; ASSERT(aaa[aai]==aab[aai],EVLENGTH); --aai;}while(aai>=0); }
-#define TESTDISAGREE(r,x,y,l) {I *aaa=(x), *aab=(y), aai=(l)-1; r=0; do{aab=aai<0?aaa:aab; r|=aaa[aai]!=aab[aai]; --aai; aab=aai<0?aaa:aab; r|=aaa[aai]!=aab[aai]; --aai;}while(aai>=0); }
+#define ASSERTAGREE(x,y,l) \
+ {I *aaa=(x), *aab=(y); I aai=(l); \
+  if(likely(aai<=2)){ \
+   aai-=1; aaa=(aai<0)?&validitymask[1]:aaa; aab=(aai<0)?&validitymask[1]:aab; \
+   ASSERT(((aaa[0]^aab[0])+(aaa[aai]^aab[aai]))==0,EVLENGTH); \
+  }else{ASSERT(!memcmp(aaa,aab,aai<<LGSZI),EVLENGTH)} \
+ }
+#define TESTDISAGREE(r,x,y,l) \
+ {I *aaa=(x), *aab=(y); I aai=(l); \
+  if(likely(aai<=2)){ \
+   aai-=1; aaa=(aai<0)?&validitymask[1]:aaa; aab=(aai<0)?&validitymask[1]:aab; \
+   r=((aaa[0]^aab[0])+(aaa[aai]^aab[aai]))!=0;  \
+  }else{r=memcmp(aaa,aab,aai<<LGSZI)!=0;} \
+ }
+// obsolete #define ASSERTAGREE(x,y,l) {I *aaa=(x), *aab=(y), aai=(l)-1; do{aab=aai<0?aaa:aab; ASSERT(aaa[aai]==aab[aai],EVLENGTH); --aai; aab=aai<0?aaa:aab; ASSERT(aaa[aai]==aab[aai],EVLENGTH); --aai;}while(aai>=0); }
+// obsolete #define TESTDISAGREE(r,x,y,l) {I *aaa=(x), *aab=(y), aai=(l)-1; r=0; do{aab=aai<0?aaa:aab; r|=aaa[aai]!=aab[aai]; --aai; aab=aai<0?aaa:aab; r|=aaa[aai]!=aab[aai]; --aai;}while(aai>=0); }
 #endif
 #if (C_AVX2&&SY_64) || EMU_AVX2 // scaf
 // set r nonzero if shapes disagree
@@ -951,7 +967,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define MCISds(dest,src,n) {I _n=~(n); while((_n-=REPSGN(_n))<0)*dest++=*src++;}  // ...this when both
 // Copy shapes.  Optimized for length <5, subroutine for others
 // For AVX, we can profitably use the MASKLOAD/STORE instruction to do all the  testing
-#if (C_AVX&&SY_64) || EMU_AVX
+#if 0 && ((C_AVX&&SY_64) || EMU_AVX)  // as with xAGREE, using ymm has too much baggage
 #if 0 // obsolete
 #define MCISH(dest,src,n) {D *_d=(D*)(dest), *_s=(D*)(src); I _n=-(I)(n); \
  do{_n+=NPAR; __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+(_n>=0?_n:0))); \
@@ -967,7 +983,14 @@ extern unsigned int __cdecl _clearfp (void);
  }
 #endif
 #else
-#define MCISH(dest,src,n) {I *_d=(I*)(dest); I *_s=(I*)(src); I _n=1-(n); _d=_n>0?jt->shapesink:_d; _s=_n>0?_d:_s; *_d=*_s; do{_s+=SGNTO0(_n); _d+=SGNTO0(_n); *_d=*_s;}while(++_n<0);}  // use for copies of shape, optimized for no branch when n<3.
+#define MCISH(dest,src,n) \
+ {I *_d=(dest), *_s=(src); I _n=(I)(n); \
+  if(likely(_n<=2)){ \
+   _n-=1; _d=(_n<0)?jt->shapesink+1:_d; _s=(_n<0)?jt->shapesink+1:_s; \
+   _d[0]=_s[0]; _d[_n]=_s[_n];  \
+  }else{MC(_d,_s,_n<<LGSZI);} \
+ }
+// obsolete #define MCISH(dest,src,n) {I *_d=(I*)(dest); I *_s=(I*)(src); I _n=1-(n); _d=_n>0?jt->shapesink:_d; _s=_n>0?_d:_s; *_d=*_s; do{_s+=SGNTO0(_n); _d+=SGNTO0(_n); *_d=*_s;}while(++_n<0);}  // use for copies of shape, optimized for no branch when n<3.
 #endif
 #define MCISHd(dest,src,n) {MCISH(dest,src,n) dest+=(n);}  // ... this version when d increments through the loop
 #define MCISHs(dest,src,n) {MCISH(dest,src,n) src+=(n);}

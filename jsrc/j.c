@@ -69,11 +69,11 @@ A   mnuvxynam[6]={0,0,0,0,0,0};   // name blocks for all arg names
 // NOTE: for fetching IDs we use the validitymask as a safe place to fetch 0s from.  We know that
 // validitymask[15] will be 0 and we use &validitymask[12] as an A* with AT of 0 (a non-function) or an L* with val=0; and &validitymask[0] as a V* with ID of 0
 #if !SY_64
-const long long validitymask[16]={-1, -1, 0, 0, -1, -1, 0, 0, -1, -1, 0, 0,0,0,0,0};  // maskload expect s64x2 mask
+long long validitymask[16]={-1, -1, 0, 0, -1, -1, 0, 0, -1, -1, 0, 0,0,0,0,0};  // maskload expect s64x2 mask
 #elif C_AVX || EMU_AVX || EMU_AVX2
-const I validitymask[16]={-1, -1, -1, -1, 0, 0, 0, 0, -1, -1, -1, -1,0,0,0,0};  // allows inverted mask
+I validitymask[16]={-1, -1, -1, -1, 0, 0, 0, 0, -1, -1, -1, -1,0,0,0,0};  // allows inverted mask
 #else
-const I validitymask[16]={-1, -1, 0, 0, -1, -1, 0, 0, -1, -1, 0, 0,0,0,0,0};  // native ss2/neon register is s64x2
+I validitymask[16]={-1, -1, 0, 0, -1, -1, 0, 0, -1, -1, 0, 0,0,0,0,0};  // native ss2/neon register is s64x2
 #endif
 
 // obsolete A   numv[NUMMAX-NUMMIN+1]={0};

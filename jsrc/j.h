@@ -618,7 +618,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define ASSERTW(b,e)    {if(unlikely(!(b))){if((e)<=NEVM)jsignal(e); else jt->jerr=(e); R;}}
 #define ASSERTWR(c,e)   {if(unlikely(!(c))){R e;}}
 // verify that shapes *x and *y match for l axes using AVX for rank<5, memcmp otherwise
-#if 0 && ((C_AVX&&SY_64) || EMU_AVX)
+#if 1 && ((C_AVX&&SY_64) || EMU_AVX)
 // We would like to use these AVX versions because they generate fewest instructions.  Unfortunately, they
 // modify ymm upper bits, which causes us to issue VZEROUPPER, which in turn causes us to save/restore all of ymm.
 // That's not worth it.  Even the 128-bit MASKLOAD instructions modify ymm upper.
@@ -967,7 +967,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define MCISds(dest,src,n) {I _n=~(n); while((_n-=REPSGN(_n))<0)*dest++=*src++;}  // ...this when both
 // Copy shapes.  Optimized for length <5, subroutine for others
 // For AVX, we can profitably use the MASKLOAD/STORE instruction to do all the  testing
-#if 0 && ((C_AVX&&SY_64) || EMU_AVX)  // as with xAGREE, using ymm has too much baggage
+#if 1 && ((C_AVX&&SY_64) || EMU_AVX)  // as with xAGREE, using ymm has too much baggage
 #if 0 // obsolete
 #define MCISH(dest,src,n) {D *_d=(D*)(dest), *_s=(D*)(src); I _n=-(I)(n); \
  do{_n+=NPAR; __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+(_n>=0?_n:0))); \
@@ -1249,7 +1249,8 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x
                            PRISTCOMSETF(a,aflg) PRISTCOMSETF(w,wflg)
 // PROD multiplies a list of numbers, where the product is known not to overflow a signed int (for example, it might be part of the shape of a nonempty dense array)
 // obsolete #define PROD(result,length,ain) {I *_zzt=(ain); I _i=(length)-1; _zzt=_i<0?iotavec-IOTAVECBEGIN+1:_zzt; result=*_zzt; do{++_zzt; --_i; _zzt=_i<0?iotavec-IOTAVECBEGIN+1:_zzt; result*=*_zzt;}while(_i>0);} 
-#define PROD(result,length,ain) {I * RESTRICT _zzt=(ain); I _i=(length); \
+// assign length first so we can sneak some computation into ain in va2
+#define PROD(result,length,ain) {I _i=(length); I * RESTRICT _zzt=(ain); \
  if(likely(_i<3)){_zzt=_i<=0?iotavec-IOTAVECBEGIN+1:_zzt; result=*_zzt; ++_zzt; _zzt=_i<=1?iotavec-IOTAVECBEGIN+1:_zzt; result*=*_zzt;}else{result=prod(_i,_zzt);} }
 // obsolete #define PROD(result,length,ain) {I _i=(length)-1; result=(ain)[_i]; result=_i<0?1:result; do{--_i; I _r=(ain)[_i]*result; result=_i<0?result:_r;}while(_i>0);} 
 #define PROD1(result,length,ain) PROD(result,length,ain)  // scaf

@@ -491,7 +491,7 @@ static VF repairip[4] = {plusBIO, plusIIO, minusBIO, minusIIO};
 // is the pseudocharacter indicating what operation is to be performed.  self is the block for this primitive,
 // ranks are the ranks of the verb, argranks are the ranks of a and w combined into 1 field
 static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ranks,UI argranks){A z;I m,
-     mf,n,nf,shortr,zn;VA2 adocv;UI fr;  // fr will eventually be frame/rank  nf (and mf) change roles during execution
+     mf,n,nf,zn;VA2 adocv;UI fr,shortr;  // fr will eventually be frame/rank  nf (and mf) change roles during execution  fr/shortr use all bits and shift
 #if !SY_64
    I scellf;
 #endif
@@ -547,7 +547,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
     I raminusw=fr-shortr;   // ar-wr, neg if WISLONG
     zn=raminusw<0?zn:an; m=raminusw<0?an:m;  // zn=# atoms in bigger operand, m=#atoms in smaller
 // obsolete t=raminusw<0?w:t;  // t->block with longer frame
-    jtinplace = (J)(((I)jtinplace&3)+(adocv.cv&-16)+12+(raminusw&VIPWCRLONG));  // inplaceability plus routine flags  adocv.cv free scaf the 12 could go into the table
+    jtinplace = (J)(((I)jtinplace&3)+adocv.cv+12+(raminusw&VIPWCRLONG));  // inplaceability plus routine flags  adocv.cv free scaf the 12 could go into the table
 // obsolete     s=AS(t); zn=AN(t);     // atoms, shape of larger frame.  shape first.  The dependency chain is s/r/shortr->n->move data
 // obsolete     s=AS((I)jtinplace&VIPWCRLONG?w:a);
     mf=REPSGN(raminusw);  // mf=-1 if w has longer frame, means cannot inplace a
@@ -575,49 +575,70 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
 // obsolete     aawwzk[0]=argranks>>RANKTX; aawwzk[1]=argranks&RANKTMSK; mf=0; nf=0;
     aawwzk[0]=fr; aawwzk[1]=shortr; fr=shortr>fr?shortr:fr; mf=0; nf=0;
    }
-  }else{I af,wf,acr,wcr,ak,wk;  // fr, shortr are left/right verb rank here
+  }else{I af,wf,ak,wk;UI acr,wcr;  // fr, shortr are left/right verb rank here
    // Here, a rank was specified.  That means there must be a frame, according to the IRS rules
-   acr=ranks>>RANKTX; acr=(I)fr<acr?fr:acr; af=fr-acr; PROD(ak,acr,AS(a)+af);  // acr=effective rank, af=left frame, here ak=left #atoms/cell
-   wcr=(RANKT)ranks; wcr=shortr<wcr?shortr:wcr; wf=shortr-wcr; PROD(wk,wcr,AS(w)+wf); // r=right rank of verb, wcr=effective rank, wf=right frame, here wk=right #atoms/cell
+   acr=ranks>>RANKTX; acr=(I)fr<acr?fr:acr; af=fr-acr;  // acr=effective rank, af=left frame
+   wcr=(RANKT)ranks; wcr=shortr<wcr?shortr:wcr; wf=shortr-wcr; // r=right rank of verb, wcr=effective rank, wf=right frame
        // note: the prod above can never fail, because it gives the actual # cells of an existing noun
    // Now that we have used the rank info, clear jt->ranks.
    // we do this before we generate failures
    // if the frames don't agree, that's always an agreement error
-   if(likely(jtinplace!=0)){  // If not sparse... This block isn't needed for sparse arguments, and may fail on them.  We move it here to reduce register pressure
-    jtinplace = (J)(((I)jtinplace&3)+(adocv.cv&-16)+12+((af-wf)&VIPWFLONG)+((acr-wcr)&VIPWCRLONG));  // inplaceability plus routine flags  adocv.cv free scaf the 12 could go into the table
+   if(likely(jtinplace!=0)){  // If not sparse... This block isn't needed for sparse arguments, and may fail on them.
+// obsolete    jtinplace = (J)(((I)jtinplace&3)+(adocv.cv&-16)+12+((af-wf)&VIPWFLONG)+((acr-wcr)&VIPWCRLONG));  // inplaceability plus routine flags  adocv.cv free scaf the 12 could go into the table
+    jtinplace = (J)((I)jtinplace&3);  // remove all but the inplacing bits
+    jtinplace = (J)((I)jtinplace+adocv.cv+12);  // insert flag bits for routine (always has bits 0-3=0); set bits 2-3 (converted inplacing bits) - could be done in table
+    jtinplace = (J)((I)jtinplace+((af-wf)&VIPWFLONG));  // set flag for 'w has longer frame (wrt verb)'
+    jtinplace = (J)((I)jtinplace+((acr-wcr)&VIPWCRLONG));  // set flag for 'w has longer cell-rank'
+    PROD(ak,acr,(acr+=af<<RANKTX,AS(a)+af)); PROD(wk,wcr,(wcr+=wf<<RANKTX,AS(w)+wf));   // left/right #atoms/cell  acr/wcr now have frame/cellrank af/wf free  length is assigned first
      // jtinplace VIPWFLONG set if wf>af, bit VIPWCRLONG set if wcr>acr
     zn=(I)jtinplace&VIPWCRLONG?wk:ak; m=(I)jtinplace&VIPWCRLONG?ak:wk;   // zn=#atoms in cell with larger rank
     ak<<=bplg(AT(a)); wk<<=bplg(AT(w));  // convert cell sizes to bytes
     aawwzk[0]=ak; aawwzk[2]=wk; ak=((I)jtinplace&VIPWFLONG)?0:ak; wk=((I)jtinplace&VIPWFLONG)?wk:0; aawwzk[1]=ak; aawwzk[3]=wk;  // set inner cell size for last followed by non-last.  Last is 0 for a repeated cell ak/wk free
 // obsolete     awzk[0]=ak; awzk[1]=wk;  // get these values out of registers - the compiler thinks they're needed for a loop
-    shortr=(I)jtinplace&VIPWCRLONG?acr:wcr;  // shorter cell rank
-    fr=(I)jtinplace&VIPWCRLONG?wcr:acr;  // fr is longer cell-rank; acr/wcr free
-    // fr will be (offset to start of cell shape)/(shorter outer frame len)/(longer outer frame len)/(longer outer frame len+longer inner cell len)
-    // on 32-bit systems, the top 2 fields have tp go into names scellf and f
-// obsolete     s=AS((I)jtinplace&VIPWCRLONG?w:a)+scellf;  // s->shape of larger-rank cell
-    PROD(n,fr-shortr,AS((I)jtinplace&VIPWCRLONG?w:a)+((I)jtinplace&VIPWCRLONG?wf:af)+shortr);  // n is #atome in excess frame of inner cells
-    // if the cell-shapes don't match, that's an agreement error UNLESS the frame contains 0; in that case it counts as
-    // 'error executing on the cell of fills' and produces a scalar 0 as the result for that cell, which we handle by changing the result-cell rank to 0
-    // Nonce: continue giving the error even when frame contains 0 - remove 1|| in the next line to conform to fill-cell rules
-// this shows the fix   if(ICMP(as+af,ws+wf,MIN(acr,wcr))){if(1||zn)ASSERT(0,EVLENGTH)else r = 0;}
+    shortr=(I)jtinplace&VIPWCRLONG?acr:wcr; fr=(I)jtinplace&VIPWCRLONG?wcr:acr; // shorter cell frame/rank, longer cell frame/rank
+    shortr&=RANKTMSK;
 #if SY_64
-    fr+=((I)jtinplace&VIPWCRLONG?wf:af)<<(3*RANKTX);  // encode start of cell-shape in the argument where the longer cell-shape resides
+    shortr*=0x10000ffff;
 #else
-    scellf=(I)jtinplace&VIPWCRLONG?wf:af;  // offset is long shape of start of inner cell
+    UI savshortr = shortr; shortr*=0xffff;
 #endif
-    I f=((I)jtinplace&VIPWFLONG)?wf:af; /* sf=AS(af<=wf?w:a); obsolete mf=af<=wf;*/   // f=#longer outer frame
-    fr+=(f<<RANKTX)+f;   // encode f into fr as f|f+fr; switch f to #shorter frame
+    shortr+=fr; acr>>=RANKTX; wcr>>=RANKTX;  // NOW ACR/WCR HAVE BEEN REPURPOSED TO MEAN AF/WF; acr/wcr gone
+      // fr is longer cell-rank
+    // fr will be (offset to start of cell shape)/(shorter outer frame len)/(longer outer frame len)/(longer outer frame len+longer inner cell len)
+    // on 32-bit systems, the top 2 fields have to go into names scellf and f
+    I f=((I)jtinplace&VIPWFLONG)?wcr:acr; /* sf=AS(af<=wf?w:a); obsolete mf=af<=wf;*/   // f=#longer outer frame
 #if SY_64
-    ASSERTAGREE(AS(a)+af, AS(w)+wf, (fr+=(af+wf-f)<<(2*RANKTX),shortr))  // shortr free  af/wf free
+// obsolete     fr+=((I)jtinplace&VIPWCRLONG?wcr:acr)<<(3*RANKTX);  // encode start of cell-shape in the argument where the longer cell-shape resides
+// obsolete     fr=(fr&RANKTMSK)+((fr>>RANKTX)<<(3*RANKTX));  // encode start of cell-shape in the argument where the longer cell-shape resides
+// obsolete     fr=(fr+(fr<<(2*RANKTX)))&(RANKTMSK*0x1000000000001U);  // encode start of cell-shape in the argument where the longer cell-shape resides
+    fr*=0x100000001; fr&=(RANKTMSK*0x1000000000001U);  // encode start of cell-shape in the argument where the longer cell-shape resides
 // obsolete     fr+=(af-f)<<(2*RANKTX);  // encode shorter frame in upper fx
+// obsolete     fr+=(acr+wcr-f)<<(2*RANKTX);
+    f*=0xffffffff00010001; fr+=f; f=(acr+wcr)<<(2*RANKTX); fr+=f;
 #else
-    ASSERTAGREE(AS(a)+af, AS(w)+wf, (f=(af+wf-f),shortr))  // shortr free
-// obsolete     f=af-f;
+// obsolete     scellf=(I)jtinplace&VIPWCRLONG?wcr:acr;  // offset is long shape of start of inner cell
+    scellf=(fr>>RANKTX); fr=(fr&RANKTMSK); // offset is long shape of start of inner cell
+    f=acr+wcr-f;
+    fr+=(f<<RANKTX)+f;   // encode f into fr as f|f+fr; switch f to #shorter frame
 #endif
 // obsolete     I tf=SGNTO0((((argranks>>RANKTX)^fr)&RANKTMSK)-1);  // register pressure, so we break this up.  Bit 0 set if a does not have repeat, i. e argrank==f+fr
 // obsolete     tf=2*tf+SGNTO0(((argranks^fr)&RANKTMSK)-1);  // bits 0-1 set with inplaceability of a/w owing to frame  move this up
     jtinplace=(J)((I)jtinplace&(((((argranks>>RANKTX)^fr)&RANKTMSK)-1)|~VIPOKA));  // disable inplace a if a rank has either repeat, i. e. argrank!=f+fr
     jtinplace=(J)((I)jtinplace&((((argranks^fr)&RANKTMSK)-1)|~VIPOKW));  // disable inplace w if w rank has either repeat, i. e. argrank!=f+fr
+// obsolete     s=AS((I)jtinplace&VIPWCRLONG?w:a)+scellf;  // s->shape of larger-rank cell
+// obsolete     PROD(n,fr-shortr,AS((I)jtinplace&VIPWCRLONG?w:a)+((I)jtinplace&VIPWCRLONG?wcr:acr)+shortr);  // n is #atome in excess frame of inner cells
+// obsolete     PROD(n,(fr&RANKTMSK)-shortr,AS((I)jtinplace&VIPWCRLONG?w:a)+(fr>>RANKTX)+shortr);  // n is #atoms in excess frame of inner cells
+    // if the cell-shapes don't match, that's an agreement error UNLESS the frame contains 0; in that case it counts as
+    // 'error executing on the cell of fills' and produces a scalar 0 as the result for that cell, which we handle by changing the result-cell rank to 0
+    // Nonce: continue giving the error even when frame contains 0 - remove 1|| in the next line to conform to fill-cell rules
+// this shows the fix   if(ICMP(as+af,ws+wf,MIN(acr,wcr))){if(1||zn)ASSERT(0,EVLENGTH)else r = 0;}
+#if SY_64
+    ASSERTAGREE(AS(a)+acr, AS(w)+wcr, shortr>>(2*RANKTX))  // shortr free  af/wf free
+#else
+    ASSERTAGREE(AS(a)+acr, AS(w)+wcr, savshortr)  // shortr free  af/wf free
+// obsolete     f=af-f;
+#endif
+    PROD(n,shortr&RANKTMSK,AS((I)jtinplace&VIPWCRLONG?w:a)+((shortr>>=RANKTX)&RANKTMSK));  // n is #atoms in excess frame of inner cells, length assigned first
 // obsolete     f=af+wf-(fr>>RANKTX); //  free
     n^=REPSGN((1-n)&(I)jtinplace);  // encode 'w has long frame, so a is repeated' as complementary n; but if n<2, leave it alone (uses VIPWCRLONG)
 // obsolete     nf=acr<=wcr;

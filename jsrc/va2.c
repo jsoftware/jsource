@@ -490,13 +490,21 @@ static VF repairip[4] = {plusBIO, plusIIO, minusBIO, minusIIO};
 // All dyadic arithmetic verbs f enter here, and also f"n.  a and w are the arguments, id
 // is the pseudocharacter indicating what operation is to be performed.  self is the block for this primitive,
 // ranks are the ranks of the verb, argranks are the ranks of a and w combined into 1 field
-static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ranks,UI argranks){A z;I m,
-     mf,n,nf,zn;VA2 adocv;UI fr,shortr;  // fr will eventually be frame/rank  nf (and mf) change roles during execution  fr/shortr use all bits and shift
+#if SY_64
+static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allranks){  // allranks is argranks/ranks
+#else
+static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ranks,UI argranks){
+#endif
+ A z;I m,mf,n,nf,zn;VA2 adocv;UI fr,shortr;  // fr will eventually be frame/rank  nf (and mf) change roles during execution  fr/shortr use all bits and shift
 #if !SY_64
    I scellf;
 #endif
  I aawwzk[5];  // a outer/only, a inner, w outer/only, w inner, z
+#if SY_64
+ fr=allranks>>(3*RANKTX); shortr=(allranks>>(2*RANKTX))&RANKTMSK;  // fr,shortr = ar,wr to begin with.  Changes later
+#else
  fr=argranks>>RANKTX; shortr=argranks&RANKTMSK;  // fr,shortr = ar,wr to begin with.  Changes later
+#endif
  F2PREFIP;
  {I at=AT(a);
   I wt=AT(w);
@@ -538,7 +546,11 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
  // Analyze the rank and calculate cell shapes, counts, and sizes.
  // We detect agreement error before domain error
  {//I *as = AS(a); I *ws = AS(w);
+#if SY_64
+  if((allranks&RANK2TMSK)==0){ // rank 0 0 means no outer frames, sets up faster
+#else
   if(ranks==0){ // rank 0 0 means no outer frames, sets up faster
+#endif
    // No rank specified.  Since all these verbs have rank 0, that simplifies quite a bit.  ak/wk/zk are not needed and are garbage
    // n is not needed for sparse, but we start it early to get it finished
    if(likely(jtinplace!=0)){
@@ -577,8 +589,13 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
    }
   }else{I af,wf,ak,wk;UI acr,wcr;  // fr, shortr are left/right verb rank here
    // Here, a rank was specified.  That means there must be a frame, according to the IRS rules
-   acr=ranks>>RANKTX; acr=(I)fr<acr?fr:acr; af=fr-acr;  // acr=effective rank, af=left frame
-   wcr=(RANKT)ranks; wcr=shortr<wcr?shortr:wcr; wf=shortr-wcr; // r=right rank of verb, wcr=effective rank, wf=right frame
+#if SY_64
+  acr=(allranks>>RANKTX)&RANKTMSK; acr=(I)fr<acr?fr:acr; af=fr-acr;  // acr=effective rank, af=left frame
+  wcr=allranks&RANKTMSK; wcr=shortr<wcr?shortr:wcr; wf=shortr-wcr; // r=right rank of verb, wcr=effective rank, wf=right frame  fr/shortr free
+#else
+  acr=ranks>>RANKTX; acr=(I)fr<acr?fr:acr; af=fr-acr;  // acr=effective rank, af=left frame
+  wcr=(RANKT)ranks; wcr=shortr<wcr?shortr:wcr; wf=shortr-wcr; // r=right rank of verb, wcr=effective rank, wf=right frame  fr/shortr free
+#endif
        // note: the prod above can never fail, because it gives the actual # cells of an existing noun
    // Now that we have used the rank info, clear jt->ranks.
    // we do this before we generate failures
@@ -614,7 +631,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
     fr*=0x100000001; fr&=(RANKTMSK*0x1000000000001U);  // encode start of cell-shape in the argument where the longer cell-shape resides
 // obsolete     fr+=(af-f)<<(2*RANKTX);  // encode shorter frame in upper fx
 // obsolete     fr+=(acr+wcr-f)<<(2*RANKTX);
-    f*=0xffffffff00010001; fr+=f; f=(acr+wcr)<<(2*RANKTX); fr+=f;
+    f*=0xffffffff00010001; fr+=f; f=(acr+wcr)<<(2*RANKTX); fr+=f;  // f free
 #else
 // obsolete     scellf=(I)jtinplace&VIPWCRLONG?wcr:acr;  // offset is long shape of start of inner cell
     scellf=(fr>>RANKTX); fr=(fr&RANKTMSK); // offset is long shape of start of inner cell
@@ -623,8 +640,13 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
 #endif
 // obsolete     I tf=SGNTO0((((argranks>>RANKTX)^fr)&RANKTMSK)-1);  // register pressure, so we break this up.  Bit 0 set if a does not have repeat, i. e argrank==f+fr
 // obsolete     tf=2*tf+SGNTO0(((argranks^fr)&RANKTMSK)-1);  // bits 0-1 set with inplaceability of a/w owing to frame  move this up
+#if SY_64
+    jtinplace=(J)((I)jtinplace&(((((allranks>>(3*RANKTX))^fr)&RANKTMSK)-1)|~VIPOKA));  // disable inplace a if a rank has either repeat, i. e. argrank!=f+fr
+    jtinplace=(J)((I)jtinplace&(((((allranks>>(2*RANKTX))^fr)&RANKTMSK)-1)|~VIPOKW));  // disable inplace w if w rank has either repeat, i. e. argrank!=f+fr
+#else
     jtinplace=(J)((I)jtinplace&(((((argranks>>RANKTX)^fr)&RANKTMSK)-1)|~VIPOKA));  // disable inplace a if a rank has either repeat, i. e. argrank!=f+fr
     jtinplace=(J)((I)jtinplace&((((argranks^fr)&RANKTMSK)-1)|~VIPOKW));  // disable inplace w if w rank has either repeat, i. e. argrank!=f+fr
+#endif
 // obsolete     s=AS((I)jtinplace&VIPWCRLONG?w:a)+scellf;  // s->shape of larger-rank cell
 // obsolete     PROD(n,fr-shortr,AS((I)jtinplace&VIPWCRLONG?w:a)+((I)jtinplace&VIPWCRLONG?wcr:acr)+shortr);  // n is #atome in excess frame of inner cells
 // obsolete     PROD(n,(fr&RANKTMSK)-shortr,AS((I)jtinplace&VIPWCRLONG?w:a)+(fr>>RANKTX)+shortr);  // n is #atoms in excess frame of inner cells
@@ -1334,10 +1356,18 @@ DF2(jtatomic2){A z;
  af=af<wf?af:wf;   // now af is short frame
  ASSERTAGREE(AS(a),AS(w),af);  // outermost (or only) agreement check
  // Run the full dyad, retrying if a retryable error is returned
+#if SY_64
+ z=jtva2(jtinplace,a,w,self,(awr<<RANK2TX)+selfranks);  // execute the verb
+#else
  z=jtva2(jtinplace,a,w,self,selfranks,(RANK2T)awr);  // execute the verb
+#endif
  if(likely(z!=0))RETF(z);  // normal case is good return
  if(unlikely(jt->jerr<=NEVM))RETF(z);   // if error is unrecoverable, don't retry
- R jtva2((J)((I)jtinplace|JTRETRY),a,w,self,selfranks,(RANK2T)awr);  // execute the verb; indicate that we are retrying the operation
+#if SY_64
+ R z=jtva2((J)((I)jtinplace|JTRETRY),a,w,self,(awr<<RANK2TX)+selfranks);  // execute the verb
+#else
+ z=jtva2((J)((I)jtinplace|JTRETRY),a,w,self,selfranks,(RANK2T)awr);  // execute the verb
+#endif
 }
 
 DF2(jtexpn2  ){F2PREFIP; RZ(a&&w); if(unlikely(((((I)AR(w)-1)&SGNIF(AT(w),FLX))<0)))if(unlikely(0.5==DAV(w)[0]))R sqroot(a);  R jtatomic2(jtinplace,a,w,self);}  // use sqrt hardware for sqrt.  Only for atomic w. 

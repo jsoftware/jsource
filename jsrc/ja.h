@@ -1259,7 +1259,7 @@
 #define v2(x,y)                     jtv2(jt,(x),(y))
 #define va1(x,y)                    jtva1(jt,(x),(y))
 #define va1s(x0,x1,x2,x3)           jtva1s(jt,(x0),(x1),(x2),(x3))
-#define va2(x,y,z)                  jtva2(jt,(x),(y),(z))
+// obsolete #define va2(x,y,z)                  jtva2(jt,(x),(y),(z))
 #define vaid(x)                     jtvaid(jt,(x))
 // obsolete #define vains(x0,x1)                jtvains(jt,(x0),(x1))
 // obsolete #define vapfx(x0,x1)                jtvapfx(jt,(x0),(x1))

@@ -13,145 +13,145 @@
 // if there are integer-overflow routine, they comes after the others, in the order rps
 VARPSA rpsnull = {0, {0}};
 
-static VARPSA rpsbw0000 = {INTX+1 , { {(VARPSF)bw0000insI,VI+VII}, {0}, {(VARPSF)bw0000insI,VI},
-                             {(VARPSF)bw0000pfxI,VI+VII}, {0,0}, {(VARPSF)bw0000pfxI,VI},
-                             {(VARPSF)bw0000sfxI,VI+VII}, {0}, {(VARPSF)bw0000sfxI,VI},
+static VARPSA rpsbw0000 = {INTX+1 , { {(VARPSF)bw0000insI,VCVTIP+VI+VII}, {0}, {(VARPSF)bw0000insI,VCVTIP+VI},
+                             {(VARPSF)bw0000pfxI,VCVTIP+VI+VII}, {0,0}, {(VARPSF)bw0000pfxI,VCVTIP+VI},
+                             {(VARPSF)bw0000sfxI,VCVTIP+VI+VII}, {0}, {(VARPSF)bw0000sfxI,VCVTIP+VI},
                              }};
-static VARPSA rpsbw0001 = {INTX+1 , { {(VARPSF)bw0001insI,VI+VII}, {0}, {(VARPSF)bw0001insI,VI},
-                             {(VARPSF)bw0001pfxI,VI+VII}, {0,0}, {(VARPSF)bw0001pfxI,VI},
-                             {(VARPSF)bw0001sfxI,VI+VII}, {0}, {(VARPSF)bw0001sfxI,VI},
+static VARPSA rpsbw0001 = {INTX+1 , { {(VARPSF)bw0001insI,VCVTIP+VI+VII}, {0}, {(VARPSF)bw0001insI,VCVTIP+VI},
+                             {(VARPSF)bw0001pfxI,VCVTIP+VI+VII}, {0,0}, {(VARPSF)bw0001pfxI,VCVTIP+VI},
+                             {(VARPSF)bw0001sfxI,VCVTIP+VI+VII}, {0}, {(VARPSF)bw0001sfxI,VCVTIP+VI},
                              }};
-static VARPSA rpsbw0010 = {INTX+1 , { {(VARPSF)bw0010insI,VI+VII}, {0}, {(VARPSF)bw0010insI,VI},
+static VARPSA rpsbw0010 = {INTX+1 , { {(VARPSF)bw0010insI,VCVTIP+VI+VII}, {0}, {(VARPSF)bw0010insI,VCVTIP+VI},
                              {0,0}, {0,0}, {0,0},
-                             {(VARPSF)bw0010sfxI,VI+VII}, {0}, {(VARPSF)bw0010sfxI,VI},
+                             {(VARPSF)bw0010sfxI,VCVTIP+VI+VII}, {0}, {(VARPSF)bw0010sfxI,VCVTIP+VI},
                              }};
-static VARPSA rpsbw0011 = {INTX+1 , { {(VARPSF)bw0011insI,VI+VII}, {0}, {(VARPSF)bw0011insI,VI},
-                             {(VARPSF)bw0011pfxI,VI+VII}, {0,0}, {(VARPSF)bw0011pfxI,VI},
-                             {(VARPSF)bw0011sfxI,VI+VII}, {0}, {(VARPSF)bw0011sfxI,VI},
+static VARPSA rpsbw0011 = {INTX+1 , { {(VARPSF)bw0011insI,VCVTIP+VI+VII}, {0}, {(VARPSF)bw0011insI,VCVTIP+VI},
+                             {(VARPSF)bw0011pfxI,VCVTIP+VI+VII}, {0,0}, {(VARPSF)bw0011pfxI,VCVTIP+VI},
+                             {(VARPSF)bw0011sfxI,VCVTIP+VI+VII}, {0}, {(VARPSF)bw0011sfxI,VCVTIP+VI},
                              }};
-static VARPSA rpsbw0100 = {INTX+1 , { {(VARPSF)bw0100insI,VI+VII}, {0}, {(VARPSF)bw0100insI,VI},
+static VARPSA rpsbw0100 = {INTX+1 , { {(VARPSF)bw0100insI,VCVTIP+VI+VII}, {0}, {(VARPSF)bw0100insI,VCVTIP+VI},
                              {0,0}, {0,0}, {0,0},
-                             {(VARPSF)bw0100sfxI,VI+VII}, {0}, {(VARPSF)bw0100sfxI,VI},
+                             {(VARPSF)bw0100sfxI,VCVTIP+VI+VII}, {0}, {(VARPSF)bw0100sfxI,VCVTIP+VI},
                              }};
-static VARPSA rpsbw0101 = {INTX+1 , { {(VARPSF)bw0101insI,VI+VII}, {0}, {(VARPSF)bw0101insI,VI},
-                             {(VARPSF)bw0101pfxI,VI+VII}, {0,0}, {(VARPSF)bw0101pfxI,VI},
-                             {(VARPSF)bw0101sfxI,VI+VII}, {0}, {(VARPSF)bw0101sfxI,VI},
+static VARPSA rpsbw0101 = {INTX+1 , { {(VARPSF)bw0101insI,VCVTIP+VI+VII}, {0}, {(VARPSF)bw0101insI,VCVTIP+VI},
+                             {(VARPSF)bw0101pfxI,VCVTIP+VI+VII}, {0,0}, {(VARPSF)bw0101pfxI,VCVTIP+VI},
+                             {(VARPSF)bw0101sfxI,VCVTIP+VI+VII}, {0}, {(VARPSF)bw0101sfxI,VCVTIP+VI},
                              }};
-static VARPSA rpsbw0110 = {INTX+1 , { {(VARPSF)bw0110insI,VI+VII}, {0}, {(VARPSF)bw0110insI,VI},
-                             {(VARPSF)bw0110pfxI,VI+VII}, {0,0}, {(VARPSF)bw0110pfxI,VI},
-                             {(VARPSF)bw0110sfxI,VI+VII}, {0}, {(VARPSF)bw0110sfxI,VI},
+static VARPSA rpsbw0110 = {INTX+1 , { {(VARPSF)bw0110insI,VCVTIP+VI+VII}, {0}, {(VARPSF)bw0110insI,VCVTIP+VI},
+                             {(VARPSF)bw0110pfxI,VCVTIP+VI+VII}, {0,0}, {(VARPSF)bw0110pfxI,VCVTIP+VI},
+                             {(VARPSF)bw0110sfxI,VCVTIP+VI+VII}, {0}, {(VARPSF)bw0110sfxI,VCVTIP+VI},
                              }};
-static VARPSA rpsbw0111 = {INTX+1 , { {(VARPSF)bw0111insI,VI+VII}, {0}, {(VARPSF)bw0111insI,VI},
-                             {(VARPSF)bw0111pfxI,VI+VII}, {0,0}, {(VARPSF)bw0111pfxI,VI},
-                             {(VARPSF)bw0111sfxI,VI+VII}, {0}, {(VARPSF)bw0111sfxI,VI},
+static VARPSA rpsbw0111 = {INTX+1 , { {(VARPSF)bw0111insI,VCVTIP+VI+VII}, {0}, {(VARPSF)bw0111insI,VCVTIP+VI},
+                             {(VARPSF)bw0111pfxI,VCVTIP+VI+VII}, {0,0}, {(VARPSF)bw0111pfxI,VCVTIP+VI},
+                             {(VARPSF)bw0111sfxI,VCVTIP+VI+VII}, {0}, {(VARPSF)bw0111sfxI,VCVTIP+VI},
                              }};
-static VARPSA rpsbw1000 = {INTX+1 , { {(VARPSF)bw1000insI,VI+VII}, {0}, {(VARPSF)bw1000insI,VI},
+static VARPSA rpsbw1000 = {INTX+1 , { {(VARPSF)bw1000insI,VCVTIP+VI+VII}, {0}, {(VARPSF)bw1000insI,VCVTIP+VI},
                              {0,0}, {0,0}, {0,0},
-                             {(VARPSF)bw1000sfxI,VI+VII}, {0}, {(VARPSF)bw1000sfxI,VI},
+                             {(VARPSF)bw1000sfxI,VCVTIP+VI+VII}, {0}, {(VARPSF)bw1000sfxI,VCVTIP+VI},
                              }};
-static VARPSA rpsbw1001 = {INTX+1 , { {(VARPSF)bw1001insI,VI+VII}, {0}, {(VARPSF)bw1001insI,VI},
-                             {(VARPSF)bw1001pfxI,VI+VII}, {0,0}, {(VARPSF)bw1001pfxI,VI},
-                             {(VARPSF)bw1001sfxI,VI+VII}, {0}, {(VARPSF)bw1001sfxI,VI},
+static VARPSA rpsbw1001 = {INTX+1 , { {(VARPSF)bw1001insI,VCVTIP+VI+VII}, {0}, {(VARPSF)bw1001insI,VCVTIP+VI},
+                             {(VARPSF)bw1001pfxI,VCVTIP+VI+VII}, {0,0}, {(VARPSF)bw1001pfxI,VCVTIP+VI},
+                             {(VARPSF)bw1001sfxI,VCVTIP+VI+VII}, {0}, {(VARPSF)bw1001sfxI,VCVTIP+VI},
                              }};
-static VARPSA rpsbw1010 = {INTX+1 , { {(VARPSF)bw1010insI,VI+VII}, {0}, {(VARPSF)bw1010insI,VI},
+static VARPSA rpsbw1010 = {INTX+1 , { {(VARPSF)bw1010insI,VCVTIP+VI+VII}, {0}, {(VARPSF)bw1010insI,VCVTIP+VI},
                              {0,0}, {0,0}, {0,0},
-                             {(VARPSF)bw1010sfxI,VI+VII}, {0}, {(VARPSF)bw1010sfxI,VI},
+                             {(VARPSF)bw1010sfxI,VCVTIP+VI+VII}, {0}, {(VARPSF)bw1010sfxI,VCVTIP+VI},
                              }};
-static VARPSA rpsbw1011 = {INTX+1 , { {(VARPSF)bw1011insI,VI+VII}, {0}, {(VARPSF)bw1011insI,VI},
+static VARPSA rpsbw1011 = {INTX+1 , { {(VARPSF)bw1011insI,VCVTIP+VI+VII}, {0}, {(VARPSF)bw1011insI,VCVTIP+VI},
                              {0,0}, {0,0}, {0,0},
-                             {(VARPSF)bw1011sfxI,VI+VII}, {0}, {(VARPSF)bw1011sfxI,VI},
+                             {(VARPSF)bw1011sfxI,VCVTIP+VI+VII}, {0}, {(VARPSF)bw1011sfxI,VCVTIP+VI},
                              }};
-static VARPSA rpsbw1100 = {INTX+1 , { {(VARPSF)bw1100insI,VI+VII}, {0}, {(VARPSF)bw1100insI,VI},
+static VARPSA rpsbw1100 = {INTX+1 , { {(VARPSF)bw1100insI,VCVTIP+VI+VII}, {0}, {(VARPSF)bw1100insI,VCVTIP+VI},
                              {0,0}, {0,0}, {0,0},
-                             {(VARPSF)bw1100sfxI,VI+VII}, {0}, {(VARPSF)bw1100sfxI,VI},
+                             {(VARPSF)bw1100sfxI,VCVTIP+VI+VII}, {0}, {(VARPSF)bw1100sfxI,VCVTIP+VI},
                              }};
-static VARPSA rpsbw1101 = {INTX+1 , { {(VARPSF)bw1101insI,VI+VII}, {0}, {(VARPSF)bw1101insI,VI},
+static VARPSA rpsbw1101 = {INTX+1 , { {(VARPSF)bw1101insI,VCVTIP+VI+VII}, {0}, {(VARPSF)bw1101insI,VCVTIP+VI},
                              {0,0}, {0,0}, {0,0},
-                             {(VARPSF)bw1101sfxI,VI+VII}, {0}, {(VARPSF)bw1101sfxI,VI},
+                             {(VARPSF)bw1101sfxI,VCVTIP+VI+VII}, {0}, {(VARPSF)bw1101sfxI,VCVTIP+VI},
                              }};
-static VARPSA rpsbw1110 = {INTX+1 , { {(VARPSF)bw1110insI,VI+VII}, {0}, {(VARPSF)bw1110insI,VI},
+static VARPSA rpsbw1110 = {INTX+1 , { {(VARPSF)bw1110insI,VCVTIP+VI+VII}, {0}, {(VARPSF)bw1110insI,VCVTIP+VI},
                              {0,0}, {0,0}, {0,0},
-                             {(VARPSF)bw1110sfxI,VI+VII}, {0}, {(VARPSF)bw1110sfxI,VI},
+                             {(VARPSF)bw1110sfxI,VCVTIP+VI+VII}, {0}, {(VARPSF)bw1110sfxI,VCVTIP+VI},
                              }};
-static VARPSA rpsbw1111 = {INTX+1 , { {(VARPSF)bw1111insI,VI+VII}, {0}, {(VARPSF)bw1111insI,VI},
-                             {(VARPSF)bw1111pfxI,VI+VII}, {0,0}, {(VARPSF)bw1111pfxI,VI},
-                             {(VARPSF)bw1111sfxI,VI+VII}, {0}, {(VARPSF)bw1111sfxI,VI},
+static VARPSA rpsbw1111 = {INTX+1 , { {(VARPSF)bw1111insI,VCVTIP+VI+VII}, {0}, {(VARPSF)bw1111insI,VCVTIP+VI},
+                             {(VARPSF)bw1111pfxI,VCVTIP+VI+VII}, {0,0}, {(VARPSF)bw1111pfxI,VCVTIP+VI},
+                             {(VARPSF)bw1111sfxI,VCVTIP+VI+VII}, {0}, {(VARPSF)bw1111sfxI,VCVTIP+VI},
                              }};
 
-static VARPSA rpsne = {B01X+1 , { {(VARPSF)neinsB,VB},
-                         {(VARPSF)nepfxB,VB},
-                         {(VARPSF)nesfxB,VB},
+static VARPSA rpsne = {B01X+1 , { {(VARPSF)neinsB,VCVTIP+VB},
+                         {(VARPSF)nepfxB,VCVTIP+VB},
+                         {(VARPSF)nesfxB,VCVTIP+VB},
                          }};
-static VARPSA rpsnor = {B01X+1 , { {(VARPSF)norinsB,VB},
-                         {(VARPSF)norpfxB,VB},
-                         {(VARPSF)norsfxB,VB},
+static VARPSA rpsnor = {B01X+1 , { {(VARPSF)norinsB,VCVTIP+VB},
+                         {(VARPSF)norpfxB,VCVTIP+VB},
+                         {(VARPSF)norsfxB,VCVTIP+VB},
                          }};
-static VARPSA rpsor = {B01X+1 , { {(VARPSF)orinsB,VB},
-                         {(VARPSF)orpfxB,VB},
-                         {(VARPSF)orsfxB,VB},
+static VARPSA rpsor = {B01X+1 , { {(VARPSF)orinsB,VCVTIP+VB},
+                         {(VARPSF)orpfxB,VCVTIP+VB},
+                         {(VARPSF)orsfxB,VCVTIP+VB},
                          }};
-static VARPSA rpseq = {B01X+1 , { {(VARPSF)eqinsB,VB},
-                         {(VARPSF)eqpfxB,VB},
-                         {(VARPSF)eqsfxB,VB},
+static VARPSA rpseq = {B01X+1 , { {(VARPSF)eqinsB,VCVTIP+VB},
+                         {(VARPSF)eqpfxB,VCVTIP+VB},
+                         {(VARPSF)eqsfxB,VCVTIP+VB},
                          }};
-static VARPSA rpsand = {B01X+1 , { {(VARPSF)andinsB,VB},
-                         {(VARPSF)andpfxB,VB},
-                         {(VARPSF)andsfxB,VB},
+static VARPSA rpsand = {B01X+1 , { {(VARPSF)andinsB,VCVTIP+VB},
+                         {(VARPSF)andpfxB,VCVTIP+VB},
+                         {(VARPSF)andsfxB,VCVTIP+VB},
                          }};
-static VARPSA rpsnand = {B01X+1 , { {(VARPSF)nandinsB,VB},
-                         {(VARPSF)nandpfxB,VB},
-                         {(VARPSF)nandsfxB,VB},
+static VARPSA rpsnand = {B01X+1 , { {(VARPSF)nandinsB,VCVTIP+VB},
+                         {(VARPSF)nandpfxB,VCVTIP+VB},
+                         {(VARPSF)nandsfxB,VCVTIP+VB},
                          }};
-static VARPSA rpsge = {B01X+1 , { {(VARPSF)geinsB,VB},
-                         {(VARPSF)gepfxB,VB},
-                         {(VARPSF)gesfxB,VB},
+static VARPSA rpsge = {B01X+1 , { {(VARPSF)geinsB,VCVTIP+VB},
+                         {(VARPSF)gepfxB,VCVTIP+VB},
+                         {(VARPSF)gesfxB,VCVTIP+VB},
                          }};
-static VARPSA rpsle = {B01X+1 , { {(VARPSF)leinsB,VB},
-                         {(VARPSF)lepfxB,VB},
-                         {(VARPSF)lesfxB,VB},
+static VARPSA rpsle = {B01X+1 , { {(VARPSF)leinsB,VCVTIP+VB},
+                         {(VARPSF)lepfxB,VCVTIP+VB},
+                         {(VARPSF)lesfxB,VCVTIP+VB},
                          }};
-static VARPSA rpsgt = {B01X+1 , { {(VARPSF)gtinsB,VB},
-                         {(VARPSF)gtpfxB,VB},
-                         {(VARPSF)gtsfxB,VB},
+static VARPSA rpsgt = {B01X+1 , { {(VARPSF)gtinsB,VCVTIP+VB},
+                         {(VARPSF)gtpfxB,VCVTIP+VB},
+                         {(VARPSF)gtsfxB,VCVTIP+VB},
                          }};
-static VARPSA rpslt = {B01X+1 , { {(VARPSF)ltinsB,VB},
-                         {(VARPSF)ltpfxB,VB},
-                         {(VARPSF)ltsfxB,VB},
+static VARPSA rpslt = {B01X+1 , { {(VARPSF)ltinsB,VCVTIP+VB},
+                         {(VARPSF)ltpfxB,VCVTIP+VB},
+                         {(VARPSF)ltsfxB,VCVTIP+VB},
                          }};
 
-static VARPSA rpsdiv = {CMPXX+1 , { {(VARPSF)divinsD,VD+VDD}, {0}, {(VARPSF)divinsD,VD+VDD}, {(VARPSF)divinsD,VD}, {(VARPSF)divinsZ,VZ},
-                          {(VARPSF)divpfxD,VD+VDD}, {0}, {(VARPSF)divpfxD,VD+VDD}, {(VARPSF)divpfxD,VD}, {(VARPSF)divpfxZ,VZ},
-                          {(VARPSF)divsfxD,VD+VDD}, {0}, {(VARPSF)divsfxD,VD+VDD}, {(VARPSF)divsfxD,VD}, {(VARPSF)divsfxZ,VZ},
+static VARPSA rpsdiv = {CMPXX+1 , { {(VARPSF)divinsD,VCVTIP+VD+VDD}, {0}, {(VARPSF)divinsD,VCVTIP+VD+VDD}, {(VARPSF)divinsD,VCVTIP+VD}, {(VARPSF)divinsZ,VCVTIP+VZ},
+                          {(VARPSF)divpfxD,VCVTIP+VD+VDD}, {0}, {(VARPSF)divpfxD,VCVTIP+VD+VDD}, {(VARPSF)divpfxD,VCVTIP+VD}, {(VARPSF)divpfxZ,VCVTIP+VZ},
+                          {(VARPSF)divsfxD,VCVTIP+VD+VDD}, {0}, {(VARPSF)divsfxD,VCVTIP+VD+VDD}, {(VARPSF)divsfxD,VCVTIP+VD}, {(VARPSF)divsfxZ,VCVTIP+VZ},
                          }};
 
 static VARPSA rpsminus = {RATX+1 , {
-{(VARPSF)minusinsB,VI}, {0}, {(VARPSF)minusinsI,VI}, {(VARPSF)minusinsD,VD}, {(VARPSF)minusinsZ,VZ},        {0}, {0}, {0},
-{(VARPSF)minuspfxB,VI}, {0}, {(VARPSF)minuspfxI,VI}, {(VARPSF)minuspfxD,VD+VIPOKW}, {(VARPSF)minuspfxZ,VZ}, {0}, {(VARPSF)minuspfxX,VX}, {(VARPSF)minuspfxQ,VQ},
-{(VARPSF)minussfxB,VI}, {0}, {(VARPSF)minussfxI,VI}, {(VARPSF)minussfxD,VD+VIPOKW}, {(VARPSF)minussfxZ,VZ},  {0}, {0}, {0},
-{(VARPSF)minusinsO,VD},{(VARPSF)minuspfxO,VD},{(VARPSF)minussfxO,VD},  // integer-overflow routines
+{(VARPSF)minusinsB,VCVTIP+VI}, {0}, {(VARPSF)minusinsI,VCVTIP+VI}, {(VARPSF)minusinsD,VCVTIP+VD}, {(VARPSF)minusinsZ,VCVTIP+VZ},        {0}, {0}, {0},
+{(VARPSF)minuspfxB,VCVTIP+VI}, {0}, {(VARPSF)minuspfxI,VCVTIP+VI}, {(VARPSF)minuspfxD,VCVTIP+VD+VIPOKW}, {(VARPSF)minuspfxZ,VCVTIP+VZ}, {0}, {(VARPSF)minuspfxX,VCVTIP+VX}, {(VARPSF)minuspfxQ,VCVTIP+VQ},
+{(VARPSF)minussfxB,VCVTIP+VI}, {0}, {(VARPSF)minussfxI,VCVTIP+VI}, {(VARPSF)minussfxD,VCVTIP+VD+VIPOKW}, {(VARPSF)minussfxZ,VCVTIP+VZ},  {0}, {0}, {0},
+{(VARPSF)minusinsO,VCVTIP+VD},{(VARPSF)minuspfxO,VCVTIP+VD},{(VARPSF)minussfxO,VCVTIP+VD},  // integer-overflow routines
 }};
 static VARPSA rpsplus = {RATX+1 , {
-{(VARPSF)plusinsB,VI}, {0}, {(VARPSF)plusinsI,VI}, {(VARPSF)plusinsD,VD}, {(VARPSF)plusinsZ,VZ},        {0}, {0}, {0},
-{(VARPSF)pluspfxB,VI}, {0}, {(VARPSF)pluspfxI,VI}, {(VARPSF)pluspfxD,VD+VIPOKW}, {(VARPSF)pluspfxZ,VZ}, {0}, {(VARPSF)pluspfxX,VX}, {(VARPSF)pluspfxQ,VQ},
-{(VARPSF)plussfxB,VI}, {0}, {(VARPSF)plussfxI,VI}, {(VARPSF)plussfxD,VD+VIPOKW}, {(VARPSF)plussfxZ,VZ}, {0}, {(VARPSF)plussfxX,VX}, {(VARPSF)plussfxQ,VQ},
-{(VARPSF)plusinsO,VD},{(VARPSF)pluspfxO,VD},{(VARPSF)plussfxO,VD},  // integer-overflow routines
+{(VARPSF)plusinsB,VCVTIP+VI}, {0}, {(VARPSF)plusinsI,VCVTIP+VI}, {(VARPSF)plusinsD,VCVTIP+VD}, {(VARPSF)plusinsZ,VCVTIP+VZ},        {0}, {0}, {0},
+{(VARPSF)pluspfxB,VCVTIP+VI}, {0}, {(VARPSF)pluspfxI,VCVTIP+VI}, {(VARPSF)pluspfxD,VCVTIP+VD+VIPOKW}, {(VARPSF)pluspfxZ,VCVTIP+VZ}, {0}, {(VARPSF)pluspfxX,VCVTIP+VX}, {(VARPSF)pluspfxQ,VCVTIP+VQ},
+{(VARPSF)plussfxB,VCVTIP+VI}, {0}, {(VARPSF)plussfxI,VCVTIP+VI}, {(VARPSF)plussfxD,VCVTIP+VD+VIPOKW}, {(VARPSF)plussfxZ,VCVTIP+VZ}, {0}, {(VARPSF)plussfxX,VCVTIP+VX}, {(VARPSF)plussfxQ,VCVTIP+VQ},
+{(VARPSF)plusinsO,VCVTIP+VD},{(VARPSF)pluspfxO,VCVTIP+VD},{(VARPSF)plussfxO,VCVTIP+VD},  // integer-overflow routines
 }};
 static VARPSA rpstymes = {RATX+1 , {
-{(VARPSF)andinsB,VB}, {0}, {(VARPSF)tymesinsI,VI}, {(VARPSF)tymesinsD,VD}, {(VARPSF)tymesinsZ,VZ},        {0}, {0}, {0},
-{(VARPSF)andpfxB,VB}, {0}, {(VARPSF)tymespfxI,VI}, {(VARPSF)tymespfxD,VD+VIPOKW}, {(VARPSF)tymespfxZ,VZ}, {0}, {(VARPSF)tymespfxX,VX}, {(VARPSF)tymespfxQ,VQ},
-{(VARPSF)andsfxB,VB}, {0}, {(VARPSF)tymessfxI,VI}, {(VARPSF)tymessfxD,VD+VIPOKW}, {(VARPSF)tymessfxZ,VZ}, {0}, {(VARPSF)tymessfxX,VX}, {(VARPSF)tymessfxQ,VQ},
-{(VARPSF)tymesinsO,VD},{(VARPSF)tymespfxO,VD},{(VARPSF)tymessfxO,VD},  // integer-overflow routines
+{(VARPSF)andinsB,VCVTIP+VB}, {0}, {(VARPSF)tymesinsI,VCVTIP+VI}, {(VARPSF)tymesinsD,VCVTIP+VD}, {(VARPSF)tymesinsZ,VCVTIP+VZ},        {0}, {0}, {0},
+{(VARPSF)andpfxB,VCVTIP+VB}, {0}, {(VARPSF)tymespfxI,VCVTIP+VI}, {(VARPSF)tymespfxD,VCVTIP+VD+VIPOKW}, {(VARPSF)tymespfxZ,VCVTIP+VZ}, {0}, {(VARPSF)tymespfxX,VCVTIP+VX}, {(VARPSF)tymespfxQ,VCVTIP+VQ},
+{(VARPSF)andsfxB,VCVTIP+VB}, {0}, {(VARPSF)tymessfxI,VCVTIP+VI}, {(VARPSF)tymessfxD,VCVTIP+VD+VIPOKW}, {(VARPSF)tymessfxZ,VCVTIP+VZ}, {0}, {(VARPSF)tymessfxX,VCVTIP+VX}, {(VARPSF)tymessfxQ,VCVTIP+VQ},
+{(VARPSF)tymesinsO,VCVTIP+VD},{(VARPSF)tymespfxO,VCVTIP+VD},{(VARPSF)tymessfxO,VCVTIP+VD},  // integer-overflow routines
 }};
 
 static VARPSA rpsmin = {SBTX+1 , {
-{(VARPSF)andinsB,VB}, {0}, {(VARPSF)mininsI,VI}, {(VARPSF)mininsD,VD}, {(VARPSF)mininsD,VD+VDD}, {0}, {(VARPSF)mininsX,VX}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {(VARPSF)mininsS,VSB},
-{(VARPSF)andpfxB,VB}, {0}, {(VARPSF)minpfxI,VI+VIPOKW}, {(VARPSF)minpfxD,VD+VIPOKW}, {(VARPSF)minpfxD,VD+VDD}, {0}, {(VARPSF)minpfxX,VX}, {(VARPSF)minpfxQ,VQ}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {(VARPSF)minpfxS,VSB},
-{(VARPSF)andsfxB,VB}, {0}, {(VARPSF)minsfxI,VI+VIPOKW}, {(VARPSF)minsfxD,VD+VIPOKW}, {(VARPSF)minsfxD,VD+VDD}, {0}, {(VARPSF)minsfxX,VX}, {(VARPSF)minsfxQ,VQ}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {(VARPSF)minsfxS,VSB},
+{(VARPSF)andinsB,VCVTIP+VB}, {0}, {(VARPSF)mininsI,VCVTIP+VI}, {(VARPSF)mininsD,VCVTIP+VD}, {(VARPSF)mininsD,VCVTIP+VD+VDD}, {0}, {(VARPSF)mininsX,VCVTIP+VX}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {(VARPSF)mininsS,VCVTIP+VSB},
+{(VARPSF)andpfxB,VCVTIP+VB}, {0}, {(VARPSF)minpfxI,VCVTIP+VI+VIPOKW}, {(VARPSF)minpfxD,VCVTIP+VD+VIPOKW}, {(VARPSF)minpfxD,VCVTIP+VD+VDD}, {0}, {(VARPSF)minpfxX,VCVTIP+VX}, {(VARPSF)minpfxQ,VCVTIP+VQ}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {(VARPSF)minpfxS,VCVTIP+VSB},
+{(VARPSF)andsfxB,VCVTIP+VB}, {0}, {(VARPSF)minsfxI,VCVTIP+VI+VIPOKW}, {(VARPSF)minsfxD,VCVTIP+VD+VIPOKW}, {(VARPSF)minsfxD,VCVTIP+VD+VDD}, {0}, {(VARPSF)minsfxX,VCVTIP+VX}, {(VARPSF)minsfxQ,VCVTIP+VQ}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {(VARPSF)minsfxS,VCVTIP+VSB},
 }};
 static VARPSA rpsmax = {SBTX+1 , {
-{(VARPSF)orinsB,VB}, {0}, {(VARPSF)maxinsI,VI}, {(VARPSF)maxinsD,VD}, {(VARPSF)maxinsD,VD+VDD}, {0}, {(VARPSF)maxinsX,VX}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {(VARPSF)maxinsS,VSB},
-{(VARPSF)orpfxB,VB}, {0}, {(VARPSF)maxpfxI,VI+VIPOKW}, {(VARPSF)maxpfxD,VD+VIPOKW}, {(VARPSF)maxpfxD,VD+VDD}, {0}, {(VARPSF)maxpfxX,VX}, {(VARPSF)maxpfxQ,VQ}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {(VARPSF)maxpfxS,VSB},
-{(VARPSF)orsfxB,VB}, {0}, {(VARPSF)maxsfxI,VI+VIPOKW}, {(VARPSF)maxsfxD,VD+VIPOKW}, {(VARPSF)maxsfxD,VD+VDD}, {0}, {(VARPSF)maxsfxX,VX}, {(VARPSF)maxsfxQ,VQ}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {(VARPSF)maxsfxS,VSB},
+{(VARPSF)orinsB,VCVTIP+VB}, {0}, {(VARPSF)maxinsI,VCVTIP+VI}, {(VARPSF)maxinsD,VCVTIP+VD}, {(VARPSF)maxinsD,VCVTIP+VD+VDD}, {0}, {(VARPSF)maxinsX,VCVTIP+VX}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {(VARPSF)maxinsS,VCVTIP+VSB},
+{(VARPSF)orpfxB,VCVTIP+VB}, {0}, {(VARPSF)maxpfxI,VCVTIP+VI+VIPOKW}, {(VARPSF)maxpfxD,VCVTIP+VD+VIPOKW}, {(VARPSF)maxpfxD,VCVTIP+VD+VDD}, {0}, {(VARPSF)maxpfxX,VCVTIP+VX}, {(VARPSF)maxpfxQ,VCVTIP+VQ}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {(VARPSF)maxpfxS,VCVTIP+VSB},
+{(VARPSF)orsfxB,VCVTIP+VB}, {0}, {(VARPSF)maxsfxI,VCVTIP+VI+VIPOKW}, {(VARPSF)maxsfxD,VCVTIP+VD+VIPOKW}, {(VARPSF)maxsfxD,VCVTIP+VD+VDD}, {0}, {(VARPSF)maxsfxX,VCVTIP+VX}, {(VARPSF)maxsfxQ,VCVTIP+VQ}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {(VARPSF)maxsfxS,VCVTIP+VSB},
 }};
 
 
@@ -164,256 +164,256 @@ VA va[]={
   &rpsnull},
 
 /* 10    */ {
- {{(VF)bw0000II,  VI+VII+VIP}, {(VF)bw0000II,  VI+VII+VIP}, {(VF)bw0000II,  VI+VII+VIP}, 
-  {(VF)bw0000II,  VI+VII+VIP}, {(VF)bw0000II,  VI+VIP},     {(VF)bw0000II,  VI+VII+VIP},
-  {(VF)bw0000II,  VI+VII+VIP}, {(VF)bw0000II,  VI+VII+VIP}, {(VF)bw0000II,  VI+VII+VIP},
-  {(VF)bw0000II,  VI+VII+VIP}, {(VF)bw0000II,  VI+VII+VIP}, {(VF)bw0000II,  VI+VII+VIP}, {0,0}}, 
+ {{(VF)bw0000II,VCVTIP+VI+VII+VIP}, {(VF)bw0000II,VCVTIP+VI+VII+VIP}, {(VF)bw0000II,VCVTIP+VI+VII+VIP}, 
+  {(VF)bw0000II,VCVTIP+VI+VII+VIP}, {(VF)bw0000II,VCVTIP+VI+VIP},     {(VF)bw0000II,VCVTIP+VI+VII+VIP},
+  {(VF)bw0000II,VCVTIP+VI+VII+VIP}, {(VF)bw0000II,VCVTIP+VI+VII+VIP}, {(VF)bw0000II,VCVTIP+VI+VII+VIP},
+  {(VF)bw0000II,VCVTIP+VI+VII+VIP}, {(VF)bw0000II,VCVTIP+VI+VII+VIP}, {(VF)bw0000II,VCVTIP+VI+VII+VIP}, {0,0}}, 
   &rpsbw0000},
 
 /* 11    */ {
- {{(VF)bw0001II,  VI+VII+VIP}, {(VF)bw0001II,  VI+VII+VIP}, {(VF)bw0001II,  VI+VII+VIP}, 
-  {(VF)bw0001II,  VI+VII+VIP}, {(VF)bw0001II,  VI+VIP},     {(VF)bw0001II,  VI+VII+VIP},
-  {(VF)bw0001II,  VI+VII+VIP}, {(VF)bw0001II,  VI+VII+VIP}, {(VF)bw0001II,  VI+VII+VIP},
-  {(VF)bw0001II,  VI+VII+VIP}, {(VF)bw0001II,  VI+VII+VIP}, {(VF)bw0001II,  VI+VII+VIP}, {0,0}}, 
+ {{(VF)bw0001II,VCVTIP+VI+VII+VIP}, {(VF)bw0001II,VCVTIP+VI+VII+VIP}, {(VF)bw0001II,VCVTIP+VI+VII+VIP}, 
+  {(VF)bw0001II,VCVTIP+VI+VII+VIP}, {(VF)bw0001II,VCVTIP+VI+VIP},     {(VF)bw0001II,VCVTIP+VI+VII+VIP},
+  {(VF)bw0001II,VCVTIP+VI+VII+VIP}, {(VF)bw0001II,VCVTIP+VI+VII+VIP}, {(VF)bw0001II,VCVTIP+VI+VII+VIP},
+  {(VF)bw0001II,VCVTIP+VI+VII+VIP}, {(VF)bw0001II,VCVTIP+VI+VII+VIP}, {(VF)bw0001II,VCVTIP+VI+VII+VIP}, {0,0}}, 
   &rpsbw0001},
 
 /* 12    */ {
- {{(VF)bw0010II,  VI+VII+VIP}, {(VF)bw0010II,  VI+VII+VIP}, {(VF)bw0010II,  VI+VII+VIP}, 
-  {(VF)bw0010II,  VI+VII+VIP}, {(VF)bw0010II,  VI+VIP},     {(VF)bw0010II,  VI+VII+VIP},
-  {(VF)bw0010II,  VI+VII+VIP}, {(VF)bw0010II,  VI+VII+VIP}, {(VF)bw0010II,  VI+VII+VIP},
-  {(VF)bw0010II,  VI+VII+VIP}, {(VF)bw0010II,  VI+VII+VIP}, {(VF)bw0010II,  VI+VII+VIP}, {0,0}}, 
+ {{(VF)bw0010II,VCVTIP+VI+VII+VIP}, {(VF)bw0010II,VCVTIP+VI+VII+VIP}, {(VF)bw0010II,VCVTIP+VI+VII+VIP}, 
+  {(VF)bw0010II,VCVTIP+VI+VII+VIP}, {(VF)bw0010II,VCVTIP+VI+VIP},     {(VF)bw0010II,VCVTIP+VI+VII+VIP},
+  {(VF)bw0010II,VCVTIP+VI+VII+VIP}, {(VF)bw0010II,VCVTIP+VI+VII+VIP}, {(VF)bw0010II,VCVTIP+VI+VII+VIP},
+  {(VF)bw0010II,VCVTIP+VI+VII+VIP}, {(VF)bw0010II,VCVTIP+VI+VII+VIP}, {(VF)bw0010II,VCVTIP+VI+VII+VIP}, {0,0}}, 
   &rpsbw0010},
 
 /* 13    */ {
- {{(VF)bw0011II,  VI+VII+VIP}, {(VF)bw0011II,  VI+VII+VIP}, {(VF)bw0011II,  VI+VII+VIP}, 
-  {(VF)bw0011II,  VI+VII+VIP}, {(VF)bw0011II,  VI+VIP},     {(VF)bw0011II,  VI+VII+VIP},
-  {(VF)bw0011II,  VI+VII+VIP}, {(VF)bw0011II,  VI+VII+VIP}, {(VF)bw0011II,  VI+VII+VIP},
-  {(VF)bw0011II,  VI+VII+VIP}, {(VF)bw0011II,  VI+VII+VIP}, {(VF)bw0011II,  VI+VII+VIP}, {0,0}}, 
+ {{(VF)bw0011II,VCVTIP+VI+VII+VIP}, {(VF)bw0011II,VCVTIP+VI+VII+VIP}, {(VF)bw0011II,VCVTIP+VI+VII+VIP}, 
+  {(VF)bw0011II,VCVTIP+VI+VII+VIP}, {(VF)bw0011II,VCVTIP+VI+VIP},     {(VF)bw0011II,VCVTIP+VI+VII+VIP},
+  {(VF)bw0011II,VCVTIP+VI+VII+VIP}, {(VF)bw0011II,VCVTIP+VI+VII+VIP}, {(VF)bw0011II,VCVTIP+VI+VII+VIP},
+  {(VF)bw0011II,VCVTIP+VI+VII+VIP}, {(VF)bw0011II,VCVTIP+VI+VII+VIP}, {(VF)bw0011II,VCVTIP+VI+VII+VIP}, {0,0}}, 
   &rpsbw0011},
 
 /* 14    */ {
- {{(VF)bw0100II,  VI+VII+VIP}, {(VF)bw0100II,  VI+VII+VIP}, {(VF)bw0100II,  VI+VII+VIP}, 
-  {(VF)bw0100II,  VI+VII+VIP}, {(VF)bw0100II,  VI+VIP},     {(VF)bw0100II,  VI+VII+VIP},
-  {(VF)bw0100II,  VI+VII+VIP}, {(VF)bw0100II,  VI+VII+VIP}, {(VF)bw0100II,  VI+VII+VIP},
-  {(VF)bw0100II,  VI+VII+VIP}, {(VF)bw0100II,  VI+VII+VIP}, {(VF)bw0100II,  VI+VII+VIP}, {0,0}}, 
+ {{(VF)bw0100II,VCVTIP+VI+VII+VIP}, {(VF)bw0100II,VCVTIP+VI+VII+VIP}, {(VF)bw0100II,VCVTIP+VI+VII+VIP}, 
+  {(VF)bw0100II,VCVTIP+VI+VII+VIP}, {(VF)bw0100II,VCVTIP+VI+VIP},     {(VF)bw0100II,VCVTIP+VI+VII+VIP},
+  {(VF)bw0100II,VCVTIP+VI+VII+VIP}, {(VF)bw0100II,VCVTIP+VI+VII+VIP}, {(VF)bw0100II,VCVTIP+VI+VII+VIP},
+  {(VF)bw0100II,VCVTIP+VI+VII+VIP}, {(VF)bw0100II,VCVTIP+VI+VII+VIP}, {(VF)bw0100II,VCVTIP+VI+VII+VIP}, {0,0}}, 
   &rpsbw0100},
 
 /* 15    */ {
- {{(VF)bw0101II,  VI+VII+VIP}, {(VF)bw0101II,  VI+VII+VIP}, {(VF)bw0101II,  VI+VII+VIP}, 
-  {(VF)bw0101II,  VI+VII+VIP}, {(VF)bw0101II,  VI+VIP},     {(VF)bw0101II,  VI+VII+VIP},
-  {(VF)bw0101II,  VI+VII+VIP}, {(VF)bw0101II,  VI+VII+VIP}, {(VF)bw0101II,  VI+VII+VIP},
-  {(VF)bw0101II,  VI+VII+VIP}, {(VF)bw0101II,  VI+VII+VIP}, {(VF)bw0101II,  VI+VII+VIP}, {0,0}}, 
+ {{(VF)bw0101II,VCVTIP+VI+VII+VIP}, {(VF)bw0101II,VCVTIP+VI+VII+VIP}, {(VF)bw0101II,VCVTIP+VI+VII+VIP}, 
+  {(VF)bw0101II,VCVTIP+VI+VII+VIP}, {(VF)bw0101II,VCVTIP+VI+VIP},     {(VF)bw0101II,VCVTIP+VI+VII+VIP},
+  {(VF)bw0101II,VCVTIP+VI+VII+VIP}, {(VF)bw0101II,VCVTIP+VI+VII+VIP}, {(VF)bw0101II,VCVTIP+VI+VII+VIP},
+  {(VF)bw0101II,VCVTIP+VI+VII+VIP}, {(VF)bw0101II,VCVTIP+VI+VII+VIP}, {(VF)bw0101II,VCVTIP+VI+VII+VIP}, {0,0}}, 
   &rpsbw0101},
 
 /* 16    */ {
- {{(VF)bw0110II,  VI+VII+VIP}, {(VF)bw0110II,  VI+VII+VIP}, {(VF)bw0110II,  VI+VII+VIP}, 
-  {(VF)bw0110II,  VI+VII+VIP}, {(VF)bw0110II,  VI+VIP},     {(VF)bw0110II,  VI+VII+VIP},
-  {(VF)bw0110II,  VI+VII+VIP}, {(VF)bw0110II,  VI+VII+VIP}, {(VF)bw0110II,  VI+VII+VIP},
-  {(VF)bw0110II,  VI+VII+VIP}, {(VF)bw0110II,  VI+VII+VIP}, {(VF)bw0110II,  VI+VII+VIP}, {0,0}}, 
+ {{(VF)bw0110II,VCVTIP+VI+VII+VIP}, {(VF)bw0110II,VCVTIP+VI+VII+VIP}, {(VF)bw0110II,VCVTIP+VI+VII+VIP}, 
+  {(VF)bw0110II,VCVTIP+VI+VII+VIP}, {(VF)bw0110II,VCVTIP+VI+VIP},     {(VF)bw0110II,VCVTIP+VI+VII+VIP},
+  {(VF)bw0110II,VCVTIP+VI+VII+VIP}, {(VF)bw0110II,VCVTIP+VI+VII+VIP}, {(VF)bw0110II,VCVTIP+VI+VII+VIP},
+  {(VF)bw0110II,VCVTIP+VI+VII+VIP}, {(VF)bw0110II,VCVTIP+VI+VII+VIP}, {(VF)bw0110II,VCVTIP+VI+VII+VIP}, {0,0}}, 
   &rpsbw0110},
 
 /* 17    */ {
- {{(VF)bw0111II,  VI+VII+VIP}, {(VF)bw0111II,  VI+VII+VIP}, {(VF)bw0111II,  VI+VII+VIP}, 
-  {(VF)bw0111II,  VI+VII+VIP}, {(VF)bw0111II,  VI+VIP},     {(VF)bw0111II,  VI+VII+VIP},
-  {(VF)bw0111II,  VI+VII+VIP}, {(VF)bw0111II,  VI+VII+VIP}, {(VF)bw0111II,  VI+VII+VIP},
-  {(VF)bw0111II,  VI+VII+VIP}, {(VF)bw0111II,  VI+VII+VIP}, {(VF)bw0111II,  VI+VII+VIP}, {0,0}}, 
+ {{(VF)bw0111II,VCVTIP+VI+VII+VIP}, {(VF)bw0111II,VCVTIP+VI+VII+VIP}, {(VF)bw0111II,VCVTIP+VI+VII+VIP}, 
+  {(VF)bw0111II,VCVTIP+VI+VII+VIP}, {(VF)bw0111II,VCVTIP+VI+VIP},     {(VF)bw0111II,VCVTIP+VI+VII+VIP},
+  {(VF)bw0111II,VCVTIP+VI+VII+VIP}, {(VF)bw0111II,VCVTIP+VI+VII+VIP}, {(VF)bw0111II,VCVTIP+VI+VII+VIP},
+  {(VF)bw0111II,VCVTIP+VI+VII+VIP}, {(VF)bw0111II,VCVTIP+VI+VII+VIP}, {(VF)bw0111II,VCVTIP+VI+VII+VIP}, {0,0}}, 
   &rpsbw0111},
 
 /* 18    */ {
- {{(VF)bw1000II,  VI+VII+VIP}, {(VF)bw1000II,  VI+VII+VIP}, {(VF)bw1000II,  VI+VII+VIP}, 
-  {(VF)bw1000II,  VI+VII+VIP}, {(VF)bw1000II,  VI+VIP},     {(VF)bw1000II,  VI+VII+VIP},
-  {(VF)bw1000II,  VI+VII+VIP}, {(VF)bw1000II,  VI+VII+VIP}, {(VF)bw1000II,  VI+VII+VIP},
-  {(VF)bw1000II,  VI+VII+VIP}, {(VF)bw1000II,  VI+VII+VIP}, {(VF)bw1000II,  VI+VII+VIP}, {0,0}}, 
+ {{(VF)bw1000II,VCVTIP+VI+VII+VIP}, {(VF)bw1000II,VCVTIP+VI+VII+VIP}, {(VF)bw1000II,VCVTIP+VI+VII+VIP}, 
+  {(VF)bw1000II,VCVTIP+VI+VII+VIP}, {(VF)bw1000II,VCVTIP+VI+VIP},     {(VF)bw1000II,VCVTIP+VI+VII+VIP},
+  {(VF)bw1000II,VCVTIP+VI+VII+VIP}, {(VF)bw1000II,VCVTIP+VI+VII+VIP}, {(VF)bw1000II,VCVTIP+VI+VII+VIP},
+  {(VF)bw1000II,VCVTIP+VI+VII+VIP}, {(VF)bw1000II,VCVTIP+VI+VII+VIP}, {(VF)bw1000II,VCVTIP+VI+VII+VIP}, {0,0}}, 
   &rpsbw1000},
 
 /* 19    */ {
- {{(VF)bw1001II,  VI+VII+VIP}, {(VF)bw1001II,  VI+VII+VIP}, {(VF)bw1001II,  VI+VII+VIP}, 
-  {(VF)bw1001II,  VI+VII+VIP}, {(VF)bw1001II,  VI+VIP},     {(VF)bw1001II,  VI+VII+VIP},
-  {(VF)bw1001II,  VI+VII+VIP}, {(VF)bw1001II,  VI+VII+VIP}, {(VF)bw1001II,  VI+VII+VIP},
-  {(VF)bw1001II,  VI+VII+VIP}, {(VF)bw1001II,  VI+VII+VIP}, {(VF)bw1001II,  VI+VII+VIP}, {0,0}}, 
+ {{(VF)bw1001II,VCVTIP+VI+VII+VIP}, {(VF)bw1001II,VCVTIP+VI+VII+VIP}, {(VF)bw1001II,VCVTIP+VI+VII+VIP}, 
+  {(VF)bw1001II,VCVTIP+VI+VII+VIP}, {(VF)bw1001II,VCVTIP+VI+VIP},     {(VF)bw1001II,VCVTIP+VI+VII+VIP},
+  {(VF)bw1001II,VCVTIP+VI+VII+VIP}, {(VF)bw1001II,VCVTIP+VI+VII+VIP}, {(VF)bw1001II,VCVTIP+VI+VII+VIP},
+  {(VF)bw1001II,VCVTIP+VI+VII+VIP}, {(VF)bw1001II,VCVTIP+VI+VII+VIP}, {(VF)bw1001II,VCVTIP+VI+VII+VIP}, {0,0}}, 
   &rpsbw1001},
 
 /* 1a    */ {
- {{(VF)bw1010II,  VI+VII+VIP}, {(VF)bw1010II,  VI+VII+VIP}, {(VF)bw1010II,  VI+VII+VIP}, 
-  {(VF)bw1010II,  VI+VII+VIP}, {(VF)bw1010II,  VI+VIP},     {(VF)bw1010II,  VI+VII+VIP},
-  {(VF)bw1010II,  VI+VII+VIP}, {(VF)bw1010II,  VI+VII+VIP}, {(VF)bw1010II,  VI+VII+VIP},
-  {(VF)bw1010II,  VI+VII+VIP}, {(VF)bw1010II,  VI+VII+VIP}, {(VF)bw1010II,  VI+VII+VIP}, {0,0}}, 
+ {{(VF)bw1010II,VCVTIP+VI+VII+VIP}, {(VF)bw1010II,VCVTIP+VI+VII+VIP}, {(VF)bw1010II,VCVTIP+VI+VII+VIP}, 
+  {(VF)bw1010II,VCVTIP+VI+VII+VIP}, {(VF)bw1010II,VCVTIP+VI+VIP},     {(VF)bw1010II,VCVTIP+VI+VII+VIP},
+  {(VF)bw1010II,VCVTIP+VI+VII+VIP}, {(VF)bw1010II,VCVTIP+VI+VII+VIP}, {(VF)bw1010II,VCVTIP+VI+VII+VIP},
+  {(VF)bw1010II,VCVTIP+VI+VII+VIP}, {(VF)bw1010II,VCVTIP+VI+VII+VIP}, {(VF)bw1010II,VCVTIP+VI+VII+VIP}, {0,0}}, 
   &rpsbw1010},
 
 /* 1b    */ {
- {{(VF)bw1011II,  VI+VII+VIP}, {(VF)bw1011II,  VI+VII+VIP}, {(VF)bw1011II,  VI+VII+VIP}, 
-  {(VF)bw1011II,  VI+VII+VIP}, {(VF)bw1011II,  VI+VIP},     {(VF)bw1011II,  VI+VII+VIP},
-  {(VF)bw1011II,  VI+VII+VIP}, {(VF)bw1011II,  VI+VII+VIP}, {(VF)bw1011II,  VI+VII+VIP},
-  {(VF)bw1011II,  VI+VII+VIP}, {(VF)bw1011II,  VI+VII+VIP}, {(VF)bw1011II,  VI+VII+VIP}, {0,0}}, 
+ {{(VF)bw1011II,VCVTIP+VI+VII+VIP}, {(VF)bw1011II,VCVTIP+VI+VII+VIP}, {(VF)bw1011II,VCVTIP+VI+VII+VIP}, 
+  {(VF)bw1011II,VCVTIP+VI+VII+VIP}, {(VF)bw1011II,VCVTIP+VI+VIP},     {(VF)bw1011II,VCVTIP+VI+VII+VIP},
+  {(VF)bw1011II,VCVTIP+VI+VII+VIP}, {(VF)bw1011II,VCVTIP+VI+VII+VIP}, {(VF)bw1011II,VCVTIP+VI+VII+VIP},
+  {(VF)bw1011II,VCVTIP+VI+VII+VIP}, {(VF)bw1011II,VCVTIP+VI+VII+VIP}, {(VF)bw1011II,VCVTIP+VI+VII+VIP}, {0,0}}, 
   &rpsbw1011},
 
 /* 1c    */ {
- {{(VF)bw1100II,  VI+VII+VIP}, {(VF)bw1100II,  VI+VII+VIP}, {(VF)bw1100II,  VI+VII+VIP}, 
-  {(VF)bw1100II,  VI+VII+VIP}, {(VF)bw1100II,  VI+VIP},     {(VF)bw1100II,  VI+VII+VIP},
-  {(VF)bw1100II,  VI+VII+VIP}, {(VF)bw1100II,  VI+VII+VIP}, {(VF)bw1100II,  VI+VII+VIP},
-  {(VF)bw1100II,  VI+VII+VIP}, {(VF)bw1100II,  VI+VII+VIP}, {(VF)bw1100II,  VI+VII+VIP}, {0,0}}, 
+ {{(VF)bw1100II,VCVTIP+VI+VII+VIP}, {(VF)bw1100II,VCVTIP+VI+VII+VIP}, {(VF)bw1100II,VCVTIP+VI+VII+VIP}, 
+  {(VF)bw1100II,VCVTIP+VI+VII+VIP}, {(VF)bw1100II,VCVTIP+VI+VIP},     {(VF)bw1100II,VCVTIP+VI+VII+VIP},
+  {(VF)bw1100II,VCVTIP+VI+VII+VIP}, {(VF)bw1100II,VCVTIP+VI+VII+VIP}, {(VF)bw1100II,VCVTIP+VI+VII+VIP},
+  {(VF)bw1100II,VCVTIP+VI+VII+VIP}, {(VF)bw1100II,VCVTIP+VI+VII+VIP}, {(VF)bw1100II,VCVTIP+VI+VII+VIP}, {0,0}}, 
   &rpsbw1100},
 
 /* 1d    */ {
- {{(VF)bw1101II,  VI+VII+VIP}, {(VF)bw1101II,  VI+VII+VIP}, {(VF)bw1101II,  VI+VII+VIP}, 
-  {(VF)bw1101II,  VI+VII+VIP}, {(VF)bw1101II,  VI+VIP},     {(VF)bw1101II,  VI+VII+VIP},
-  {(VF)bw1101II,  VI+VII+VIP}, {(VF)bw1101II,  VI+VII+VIP}, {(VF)bw1101II,  VI+VII+VIP},
-  {(VF)bw1101II,  VI+VII+VIP}, {(VF)bw1101II,  VI+VII+VIP}, {(VF)bw1101II,  VI+VII+VIP}, {0,0}}, 
+ {{(VF)bw1101II,VCVTIP+VI+VII+VIP}, {(VF)bw1101II,VCVTIP+VI+VII+VIP}, {(VF)bw1101II,VCVTIP+VI+VII+VIP}, 
+  {(VF)bw1101II,VCVTIP+VI+VII+VIP}, {(VF)bw1101II,VCVTIP+VI+VIP},     {(VF)bw1101II,VCVTIP+VI+VII+VIP},
+  {(VF)bw1101II,VCVTIP+VI+VII+VIP}, {(VF)bw1101II,VCVTIP+VI+VII+VIP}, {(VF)bw1101II,VCVTIP+VI+VII+VIP},
+  {(VF)bw1101II,VCVTIP+VI+VII+VIP}, {(VF)bw1101II,VCVTIP+VI+VII+VIP}, {(VF)bw1101II,VCVTIP+VI+VII+VIP}, {0,0}}, 
   &rpsbw1101},
 
 /* 1e    */ {
- {{(VF)bw1110II,  VI+VII+VIP}, {(VF)bw1110II,  VI+VII+VIP}, {(VF)bw1110II,  VI+VII+VIP}, 
-  {(VF)bw1110II,  VI+VII+VIP}, {(VF)bw1110II,  VI+VIP},     {(VF)bw1110II,  VI+VII+VIP},
-  {(VF)bw1110II,  VI+VII+VIP}, {(VF)bw1110II,  VI+VII+VIP}, {(VF)bw1110II,  VI+VII+VIP},
-  {(VF)bw1110II,  VI+VII+VIP}, {(VF)bw1110II,  VI+VII+VIP}, {(VF)bw1110II,  VI+VII+VIP}, {0,0}}, 
+ {{(VF)bw1110II,VCVTIP+VI+VII+VIP}, {(VF)bw1110II,VCVTIP+VI+VII+VIP}, {(VF)bw1110II,VCVTIP+VI+VII+VIP}, 
+  {(VF)bw1110II,VCVTIP+VI+VII+VIP}, {(VF)bw1110II,VCVTIP+VI+VIP},     {(VF)bw1110II,VCVTIP+VI+VII+VIP},
+  {(VF)bw1110II,VCVTIP+VI+VII+VIP}, {(VF)bw1110II,VCVTIP+VI+VII+VIP}, {(VF)bw1110II,VCVTIP+VI+VII+VIP},
+  {(VF)bw1110II,VCVTIP+VI+VII+VIP}, {(VF)bw1110II,VCVTIP+VI+VII+VIP}, {(VF)bw1110II,VCVTIP+VI+VII+VIP}, {0,0}}, 
   &rpsbw1110},
 
 /* 1f    */ {
- {{(VF)bw1111II,  VI+VII+VIP}, {(VF)bw1111II,  VI+VII+VIP}, {(VF)bw1111II,  VI+VII+VIP}, 
-  {(VF)bw1111II,  VI+VII+VIP}, {(VF)bw1111II,  VI+VIP},     {(VF)bw1111II,  VI+VII+VIP},
-  {(VF)bw1111II,  VI+VII+VIP}, {(VF)bw1111II,  VI+VII+VIP}, {(VF)bw1111II,  VI+VII+VIP},
-  {(VF)bw1111II,  VI+VII+VIP}, {(VF)bw1111II,  VI+VII+VIP}, {(VF)bw1111II,  VI+VII+VIP}, {0,0}}, 
+ {{(VF)bw1111II,VCVTIP+VI+VII+VIP}, {(VF)bw1111II,VCVTIP+VI+VII+VIP}, {(VF)bw1111II,VCVTIP+VI+VII+VIP}, 
+  {(VF)bw1111II,VCVTIP+VI+VII+VIP}, {(VF)bw1111II,VCVTIP+VI+VIP},     {(VF)bw1111II,VCVTIP+VI+VII+VIP},
+  {(VF)bw1111II,VCVTIP+VI+VII+VIP}, {(VF)bw1111II,VCVTIP+VI+VII+VIP}, {(VF)bw1111II,VCVTIP+VI+VII+VIP},
+  {(VF)bw1111II,VCVTIP+VI+VII+VIP}, {(VF)bw1111II,VCVTIP+VI+VII+VIP}, {(VF)bw1111II,VCVTIP+VI+VII+VIP}, {0,0}}, 
   &rpsbw1111},
 
 /* 95 ~: */ {
- {{(VF)neBB,VB+VIP}, {(VF)neBI,VB+VIPOKA}, {(VF)neBD,VB+VIPOKA},
-  {(VF)neIB,VB+VIPOKW}, {(VF)neII,VB}, {(VF)neID,VB},
-  {(VF)neDB,VB+VIPOKW}, {(VF)neDI,VB}, {(VF)neDD,VB}, 
-  {(VF)neZZ,VB+VZZ}, {(VF)neXX,VB+VXEQ}, {(VF)neQQ,VB+VQQ}, {0,0}},
+ {{(VF)neBB,VCVTIP+VB+VIP}, {(VF)neBI,VCVTIP+VB+VIPOKA}, {(VF)neBD,VCVTIP+VB+VIPOKA},
+  {(VF)neIB,VCVTIP+VB+VIPOKW}, {(VF)neII,VCVTIP+VB}, {(VF)neID,VCVTIP+VB},
+  {(VF)neDB,VCVTIP+VB+VIPOKW}, {(VF)neDI,VCVTIP+VB}, {(VF)neDD,VCVTIP+VB}, 
+  {(VF)neZZ,VCVTIP+VB+VZZ}, {(VF)neXX,VCVTIP+VB+VXEQ}, {(VF)neQQ,VCVTIP+VB+VQQ}, {0,0}},
   &rpsne},
 
 /* 25 %  */ {
- {{(VF)divBB,VD}, {(VF)divBI,VD+VIP0I}, {(VF)divBD,VD+VIPOKW},
-  {(VF)divIB,VD+VIPI0}, {(VF)divII,VD+VIPI0+VIP0I}, {(VF)divID,VD+VIPID},
-  {(VF)divDB,VD+VIPOKA}, {(VF)divDI,VD+VIPDI}, {(VF)divDD,VD+VIP+VCANHALT}, 
-  {(VF)divZZ,VZ+VZZ+VIP}, {(VF)divXX,VX+VXX}, {(VF)divQQ,VQ+VQQ}, {0,0}},
+ {{(VF)divBB,VCVTIP+VD}, {(VF)divBI,VCVTIP+VD+VIP0I}, {(VF)divBD,VCVTIP+VD+VIPOKW},
+  {(VF)divIB,VCVTIP+VD+VIPI0}, {(VF)divII,VCVTIP+VD+VIPI0+VIP0I}, {(VF)divID,VCVTIP+VD+VIPID},
+  {(VF)divDB,VCVTIP+VD+VIPOKA}, {(VF)divDI,VCVTIP+VD+VIPDI}, {(VF)divDD,VCVTIP+VD+VIP+VCANHALT}, 
+  {(VF)divZZ,VCVTIP+VZ+VZZ+VIP}, {(VF)divXX,VCVTIP+VX+VXX}, {(VF)divQQ,VCVTIP+VQ+VQQ}, {0,0}},
   &rpsdiv},
 
 /* 89 +: */ {
- {{(VF)norBB,VB+VIP    }, {(VF)norBB,VB+VBB+VIP}, {(VF)norBB,VB+VBB+VIP},
-  {(VF)norBB,VB+VBB+VIP}, {(VF)norBB,VB+VBB+VIP}, {(VF)norBB,VB+VBB+VIP},
-  {(VF)norBB,VB+VBB+VIP}, {(VF)norBB,VB+VBB+VIP}, {(VF)norBB,VB+VBB+VIP}, 
-  {(VF)norBB,VB+VBB+VIP}, {(VF)norBB,VB+VBB+VIP}, {(VF)norBB,VB+VBB+VIP}, {0,0}},
+ {{(VF)norBB,VCVTIP+VB+VIP    }, {(VF)norBB,VCVTIP+VB+VBB+VIP}, {(VF)norBB,VCVTIP+VB+VBB+VIP},
+  {(VF)norBB,VCVTIP+VB+VBB+VIP}, {(VF)norBB,VCVTIP+VB+VBB+VIP}, {(VF)norBB,VCVTIP+VB+VBB+VIP},
+  {(VF)norBB,VCVTIP+VB+VBB+VIP}, {(VF)norBB,VCVTIP+VB+VBB+VIP}, {(VF)norBB,VCVTIP+VB+VBB+VIP}, 
+  {(VF)norBB,VCVTIP+VB+VBB+VIP}, {(VF)norBB,VCVTIP+VB+VBB+VIP}, {(VF)norBB,VCVTIP+VB+VBB+VIP}, {0,0}},
   &rpsnor},
 
 /* 88 +. */ {
- {{(VF)orBB,VB+VIP     }, {(VF)gcdII,VI+VII}, {(VF)gcdDD,VD+VDD+VIP},
-  {(VF)gcdII,VI+VII}, {(VF)gcdII,VI    }, {(VF)gcdDD,VD+VDD+VIP},
-  {(VF)gcdDD,VD+VDD+VIP}, {(VF)gcdDD,VD+VDD+VIP}, {(VF)gcdDD,VD+VIP+VCANHALT}, 
-  {(VF)gcdZZ,VZ+VZZ}, {(VF)gcdXX,VX+VXX}, {(VF)gcdQQ,VQ+VQQ}, {0,0}},
+ {{(VF)orBB,VCVTIP+VB+VIP     }, {(VF)gcdII,VCVTIP+VI+VII}, {(VF)gcdDD,VCVTIP+VD+VDD+VIP},
+  {(VF)gcdII,VCVTIP+VI+VII}, {(VF)gcdII,VCVTIP+VI    }, {(VF)gcdDD,VCVTIP+VD+VDD+VIP},
+  {(VF)gcdDD,VCVTIP+VD+VDD+VIP}, {(VF)gcdDD,VCVTIP+VD+VDD+VIP}, {(VF)gcdDD,VCVTIP+VD+VIP+VCANHALT}, 
+  {(VF)gcdZZ,VCVTIP+VZ+VZZ}, {(VF)gcdXX,VCVTIP+VX+VXX}, {(VF)gcdQQ,VCVTIP+VQ+VQQ}, {0,0}},
   &rpsor},
 
 /* 2d -  */ {
- {{(VF)minusBB,VI    }, {(VF)minusBI,VI+VIPOKW}, {(VF)minusBD,VD+VIPOKW}, 
-  {(VF)minusIB,VI+VIPOKA}, {(VF)minusII,VI+VIP}, {(VF)minusID,VD+VIPID},
-  {(VF)minusDB,VD+VIPOKA    }, {(VF)minusDI,VD+VIPDI    }, {(VF)minusDD,VD+VIP+VCANHALT}, 
-  {(VF)minusZZ,VZ+VZZ+VIP}, {(VF)minusXX,VX+VXX}, {(VF)minusQQ,VQ+VQQ}, {0,0}},
+ {{(VF)minusBB,VCVTIP+VI    }, {(VF)minusBI,VCVTIP+VI+VIPOKW}, {(VF)minusBD,VCVTIP+VD+VIPOKW}, 
+  {(VF)minusIB,VCVTIP+VI+VIPOKA}, {(VF)minusII,VCVTIP+VI+VIP}, {(VF)minusID,VCVTIP+VD+VIPID},
+  {(VF)minusDB,VCVTIP+VD+VIPOKA    }, {(VF)minusDI,VCVTIP+VD+VIPDI    }, {(VF)minusDD,VCVTIP+VD+VIP+VCANHALT}, 
+  {(VF)minusZZ,VCVTIP+VZ+VZZ+VIP}, {(VF)minusXX,VCVTIP+VX+VXX}, {(VF)minusQQ,VCVTIP+VQ+VQQ}, {0,0}},
   &rpsminus},
 
    // For Booleans, VIP means 'inplace if rank not specified and there is no frame'
 /* 3c <  */ {
- {{(VF)ltBB,VB+VIP}, {(VF)ltBI,VB+VIPOKA}, {(VF)ltBD,VB+VIPOKA},
-  {(VF)ltIB,VB+VIPOKW}, {(VF)ltII,VB}, {(VF)ltID,VB},
-  {(VF)ltDB,VB+VIPOKW}, {(VF)ltDI,VB}, {(VF)ltDD,VB}, 
-  {(VF)ltDD,VB+VDD+VIP}, {(VF)ltXX,VB+VXFC}, {(VF)ltQQ,VB+VQQ}, {(VF)ltSS,VB}},
+ {{(VF)ltBB,VCVTIP+VB+VIP}, {(VF)ltBI,VCVTIP+VB+VIPOKA}, {(VF)ltBD,VCVTIP+VB+VIPOKA},
+  {(VF)ltIB,VCVTIP+VB+VIPOKW}, {(VF)ltII,VCVTIP+VB}, {(VF)ltID,VCVTIP+VB},
+  {(VF)ltDB,VCVTIP+VB+VIPOKW}, {(VF)ltDI,VCVTIP+VB}, {(VF)ltDD,VCVTIP+VB}, 
+  {(VF)ltDD,VCVTIP+VB+VDD+VIP}, {(VF)ltXX,VCVTIP+VB+VXFC}, {(VF)ltQQ,VCVTIP+VB+VQQ}, {(VF)ltSS,VCVTIP+VB}},
   &rpslt},
 
 /* 3d =  */ {
- {{(VF)eqBB,VB+VIP}, {(VF)eqBI,VB+VIPOKA}, {(VF)eqBD,VB+VIPOKA},
-  {(VF)eqIB,VB+VIPOKW}, {(VF)eqII,VB}, {(VF)eqID,VB},
-  {(VF)eqDB,VB+VIPOKW}, {(VF)eqDI,VB}, {(VF)eqDD,VB}, 
-  {(VF)eqZZ,VB+VZZ}, {(VF)eqXX,VB+VXEQ}, {(VF)eqQQ,VB+VQQ}, {(VF)eqII,VB}},
+ {{(VF)eqBB,VCVTIP+VB+VIP}, {(VF)eqBI,VCVTIP+VB+VIPOKA}, {(VF)eqBD,VCVTIP+VB+VIPOKA},
+  {(VF)eqIB,VCVTIP+VB+VIPOKW}, {(VF)eqII,VCVTIP+VB}, {(VF)eqID,VCVTIP+VB},
+  {(VF)eqDB,VCVTIP+VB+VIPOKW}, {(VF)eqDI,VCVTIP+VB}, {(VF)eqDD,VCVTIP+VB}, 
+  {(VF)eqZZ,VCVTIP+VB+VZZ}, {(VF)eqXX,VCVTIP+VB+VXEQ}, {(VF)eqQQ,VCVTIP+VB+VQQ}, {(VF)eqII,VCVTIP+VB}},
   &rpseq},
 
 /* 3e >  */ {
- {{(VF)gtBB,VB+VIP}, {(VF)gtBI,VB+VIPOKA}, {(VF)gtBD,VB+VIPOKA},
-  {(VF)gtIB,VB+VIPOKW}, {(VF)gtII,VB}, {(VF)gtID,VB},
-  {(VF)gtDB,VB+VIPOKW}, {(VF)gtDI,VB}, {(VF)gtDD,VB}, 
-  {(VF)gtDD,VB+VDD+VIP}, {(VF)gtXX,VB+VXCF}, {(VF)gtQQ,VB+VQQ}, {(VF)gtSS,VB}},
+ {{(VF)gtBB,VCVTIP+VB+VIP}, {(VF)gtBI,VCVTIP+VB+VIPOKA}, {(VF)gtBD,VCVTIP+VB+VIPOKA},
+  {(VF)gtIB,VCVTIP+VB+VIPOKW}, {(VF)gtII,VCVTIP+VB}, {(VF)gtID,VCVTIP+VB},
+  {(VF)gtDB,VCVTIP+VB+VIPOKW}, {(VF)gtDI,VCVTIP+VB}, {(VF)gtDD,VCVTIP+VB}, 
+  {(VF)gtDD,VCVTIP+VB+VDD+VIP}, {(VF)gtXX,VCVTIP+VB+VXCF}, {(VF)gtQQ,VCVTIP+VB+VQQ}, {(VF)gtSS,VCVTIP+VB}},
   &rpsgt},
 
 /* 8a *. */ {
- {{(VF)andBB,VB+VIP    }, {(VF)lcmII,VI+VII}, {(VF)lcmDD,VD+VDD+VIP},
-  {(VF)lcmII,VI+VII}, {(VF)lcmII,VI    }, {(VF)lcmDD,VD+VDD+VIP},
-  {(VF)lcmDD,VD+VDD+VIP}, {(VF)lcmDD,VD+VDD+VIP}, {(VF)lcmDD,VD+VIP+VCANHALT}, 
-  {(VF)lcmZZ,VZ+VZZ}, {(VF)lcmXX,VX+VXX}, {(VF)lcmQQ,VQ+VQQ}, {0,0}},
+ {{(VF)andBB,VCVTIP+VB+VIP    }, {(VF)lcmII,VCVTIP+VI+VII}, {(VF)lcmDD,VCVTIP+VD+VDD+VIP},
+  {(VF)lcmII,VCVTIP+VI+VII}, {(VF)lcmII,VCVTIP+VI    }, {(VF)lcmDD,VCVTIP+VD+VDD+VIP},
+  {(VF)lcmDD,VCVTIP+VD+VDD+VIP}, {(VF)lcmDD,VCVTIP+VD+VDD+VIP}, {(VF)lcmDD,VCVTIP+VD+VIP+VCANHALT}, 
+  {(VF)lcmZZ,VCVTIP+VZ+VZZ}, {(VF)lcmXX,VCVTIP+VX+VXX}, {(VF)lcmQQ,VCVTIP+VQ+VQQ}, {0,0}},
   &rpsand},
 
 /* 8b *: */ {
- {{(VF)nandBB,VB+VIP},     {(VF)nandBB,VB+VBB+VIP}, {(VF)nandBB,VB+VBB+VIP},
-  {(VF)nandBB,VB+VBB+VIP}, {(VF)nandBB,VB+VBB+VIP}, {(VF)nandBB,VB+VBB+VIP},
-  {(VF)nandBB,VB+VBB+VIP}, {(VF)nandBB,VB+VBB+VIP}, {(VF)nandBB,VB+VBB+VIP}, 
-  {(VF)nandBB,VB+VBB+VIP}, {(VF)nandBB,VB+VBB+VIP}, {(VF)nandBB,VB+VBB+VIP}, {0,0}},
+ {{(VF)nandBB,VCVTIP+VB+VIP},     {(VF)nandBB,VCVTIP+VB+VBB+VIP}, {(VF)nandBB,VCVTIP+VB+VBB+VIP},
+  {(VF)nandBB,VCVTIP+VB+VBB+VIP}, {(VF)nandBB,VCVTIP+VB+VBB+VIP}, {(VF)nandBB,VCVTIP+VB+VBB+VIP},
+  {(VF)nandBB,VCVTIP+VB+VBB+VIP}, {(VF)nandBB,VCVTIP+VB+VBB+VIP}, {(VF)nandBB,VCVTIP+VB+VBB+VIP}, 
+  {(VF)nandBB,VCVTIP+VB+VBB+VIP}, {(VF)nandBB,VCVTIP+VB+VBB+VIP}, {(VF)nandBB,VCVTIP+VB+VBB+VIP}, {0,0}},
   &rpsnand},
 
 /* 85 >: */ {
- {{(VF)geBB,VB+VIP}, {(VF)geBI,VB+VIPOKA}, {(VF)geBD,VB+VIPOKA},
-  {(VF)geIB,VB+VIPOKW}, {(VF)geII,VB}, {(VF)geID,VB},
-  {(VF)geDB,VB+VIPOKW}, {(VF)geDI,VB}, {(VF)geDD,VB}, 
-  {(VF)geDD,VB+VDD+VIP}, {(VF)geXX,VB+VXFC}, {(VF)geQQ,VB+VQQ}, {(VF)geSS,VB}},
+ {{(VF)geBB,VCVTIP+VB+VIP}, {(VF)geBI,VCVTIP+VB+VIPOKA}, {(VF)geBD,VCVTIP+VB+VIPOKA},
+  {(VF)geIB,VCVTIP+VB+VIPOKW}, {(VF)geII,VCVTIP+VB}, {(VF)geID,VCVTIP+VB},
+  {(VF)geDB,VCVTIP+VB+VIPOKW}, {(VF)geDI,VCVTIP+VB}, {(VF)geDD,VCVTIP+VB}, 
+  {(VF)geDD,VCVTIP+VB+VDD+VIP}, {(VF)geXX,VCVTIP+VB+VXFC}, {(VF)geQQ,VCVTIP+VB+VQQ}, {(VF)geSS,VCVTIP+VB}},
   &rpsge},
 
 /* 83 <: */ {
- {{(VF)leBB,VB+VIP}, {(VF)leBI,VB+VIPOKA}, {(VF)leBD,VB+VIPOKA},
-  {(VF)leIB,VB+VIPOKW}, {(VF)leII,VB}, {(VF)leID,VB},
-  {(VF)leDB,VB+VIPOKW}, {(VF)leDI,VB}, {(VF)leDD,VB}, 
-  {(VF)leDD,VB+VDD+VIP}, {(VF)leXX,VB+VXCF}, {(VF)leQQ,VB+VQQ}, {(VF)leSS,VB}},
+ {{(VF)leBB,VCVTIP+VB+VIP}, {(VF)leBI,VCVTIP+VB+VIPOKA}, {(VF)leBD,VCVTIP+VB+VIPOKA},
+  {(VF)leIB,VCVTIP+VB+VIPOKW}, {(VF)leII,VCVTIP+VB}, {(VF)leID,VCVTIP+VB},
+  {(VF)leDB,VCVTIP+VB+VIPOKW}, {(VF)leDI,VCVTIP+VB}, {(VF)leDD,VCVTIP+VB}, 
+  {(VF)leDD,VCVTIP+VB+VDD+VIP}, {(VF)leXX,VCVTIP+VB+VXCF}, {(VF)leQQ,VCVTIP+VB+VQQ}, {(VF)leSS,VCVTIP+VB}},
   &rpsle},
 
 /* 82 <. */ {
- {{(VF)andBB,VB+VIP}, {(VF)minBI,VI+VIPOKW}, {(VF)minBD,VD+VIPOKW},
-  {(VF)minIB,VI+VIPOKA}, {(VF)minII,VI+VIP}, {(VF)minID,VD+VIPID},
-  {(VF)minDB,VD+VIPOKA}, {(VF)minDI,VD+VIPDI}, {(VF)minDD,VD+VIP}, 
-  {(VF)minDD,VD+VDD+VIP}, {(VF)minXX,VX+VXX}, {(VF)minQQ,VQ+VQQ}, {(VF)minSS,VSB}},  // always VIP a forced conversion
+ {{(VF)andBB,VCVTIP+VB+VIP}, {(VF)minBI,VCVTIP+VI+VIPOKW}, {(VF)minBD,VCVTIP+VD+VIPOKW},
+  {(VF)minIB,VCVTIP+VI+VIPOKA}, {(VF)minII,VCVTIP+VI+VIP}, {(VF)minID,VCVTIP+VD+VIPID},
+  {(VF)minDB,VCVTIP+VD+VIPOKA}, {(VF)minDI,VCVTIP+VD+VIPDI}, {(VF)minDD,VCVTIP+VD+VIP}, 
+  {(VF)minDD,VCVTIP+VD+VDD+VIP}, {(VF)minXX,VCVTIP+VX+VXX}, {(VF)minQQ,VCVTIP+VQ+VQQ}, {(VF)minSS,VCVTIP+VSB}},  // always VIP a forced conversion
   &rpsmin},
 
 /* 84 >. */ {
- {{(VF)orBB,VB+VIP}, {(VF)maxBI,VI+VIPOKW}, {(VF)maxBD,VD+VIPOKW},
-  {(VF)maxIB,VI+VIPOKA}, {(VF)maxII,VI+VIP}, {(VF)maxID,VD+VIPID},
-  {(VF)maxDB,VD+VIPOKA}, {(VF)maxDI,VD+VIPDI}, {(VF)maxDD,VD+VIP}, 
-  {(VF)maxDD,VD+VDD+VIP}, {(VF)maxXX,VX+VXX}, {(VF)maxQQ,VQ+VQQ}, {(VF)maxSS,VSB}},
+ {{(VF)orBB,VCVTIP+VB+VIP}, {(VF)maxBI,VCVTIP+VI+VIPOKW}, {(VF)maxBD,VCVTIP+VD+VIPOKW},
+  {(VF)maxIB,VCVTIP+VI+VIPOKA}, {(VF)maxII,VCVTIP+VI+VIP}, {(VF)maxID,VCVTIP+VD+VIPID},
+  {(VF)maxDB,VCVTIP+VD+VIPOKA}, {(VF)maxDI,VCVTIP+VD+VIPDI}, {(VF)maxDD,VCVTIP+VD+VIP}, 
+  {(VF)maxDD,VCVTIP+VD+VDD+VIP}, {(VF)maxXX,VCVTIP+VX+VXX}, {(VF)maxQQ,VCVTIP+VQ+VQQ}, {(VF)maxSS,VCVTIP+VSB}},
   &rpsmax},
 
 /* 2b +  */ {
- {{(VF)plusBB,VI    }, {(VF)plusBI,VI+VIPOKW}, {(VF)plusBD,VD+VIPOKW}, 
-  {(VF)plusIB,VI+VIPOKA}, {(VF)plusII,VI+VIP}, {(VF)plusID,VD+VIPID}, 
-  {(VF)plusDB,VD+VIPOKA    }, {(VF)plusDI,VD+VIPDI    }, {(VF)plusDD,VD+VIP+VCANHALT}, 
-  {(VF)plusZZ,VZ+VZZ+VIP}, {(VF)plusXX,VX+VXX}, {(VF)plusQQ,VQ+VQQ}, {0,0}},
+ {{(VF)plusBB,VCVTIP+VI    }, {(VF)plusBI,VCVTIP+VI+VIPOKW}, {(VF)plusBD,VCVTIP+VD+VIPOKW}, 
+  {(VF)plusIB,VCVTIP+VI+VIPOKA}, {(VF)plusII,VCVTIP+VI+VIP}, {(VF)plusID,VCVTIP+VD+VIPID}, 
+  {(VF)plusDB,VCVTIP+VD+VIPOKA    }, {(VF)plusDI,VCVTIP+VD+VIPDI    }, {(VF)plusDD,VCVTIP+VD+VIP+VCANHALT}, 
+  {(VF)plusZZ,VCVTIP+VZ+VZZ+VIP}, {(VF)plusXX,VCVTIP+VX+VXX}, {(VF)plusQQ,VCVTIP+VQ+VQQ}, {0,0}},
   &rpsplus},
 
 /* 2a *  */ {
- {{(VF)andBB,  VB+VIP}, {(VF)tymesBI,VI+VIPOKW}, {(VF)tymesBD,VD+VIPOKW},
-  {(VF)tymesIB,VI+VIPOKA}, {(VF)tymesII,VI+VIP}, {(VF)tymesID,VD+VIPID},
-  {(VF)tymesDB,VD+VIPOKA}, {(VF)tymesDI,VD+VIPDI}, {(VF)tymesDD,VD+VIP}, 
-  {(VF)tymesZZ,VZ+VZZ+VIP}, {(VF)tymesXX,VX+VXX}, {(VF)tymesQQ,VQ+VQQ}, {0,0}},
+ {{(VF)andBB,VCVTIP+VB+VIP}, {(VF)tymesBI,VCVTIP+VI+VIPOKW}, {(VF)tymesBD,VCVTIP+VD+VIPOKW},
+  {(VF)tymesIB,VCVTIP+VI+VIPOKA}, {(VF)tymesII,VCVTIP+VI+VIP}, {(VF)tymesID,VCVTIP+VD+VIPID},
+  {(VF)tymesDB,VCVTIP+VD+VIPOKA}, {(VF)tymesDI,VCVTIP+VD+VIPDI}, {(VF)tymesDD,VCVTIP+VD+VIP}, 
+  {(VF)tymesZZ,VCVTIP+VZ+VZZ+VIP}, {(VF)tymesXX,VCVTIP+VX+VXX}, {(VF)tymesQQ,VCVTIP+VQ+VQQ}, {0,0}},
   &rpstymes},
 
 /* 5e ^  */ {   // may produce complex numbers
- {{(VF)geBB, VB+VIP}, {(VF)powBI,VD}, {(VF)powBD,VD},
-  {(VF)powIB,VI}, {(VF)powII,VD}, {(VF)powID,VD+VCANHALT},
-  {(VF)powDB,VD}, {(VF)powDI,VD}, {(VF)powDD,VD+VCANHALT}, 
-  {(VF)powZZ,VZ+VZZ}, {(VF)powXX,VX+VXX}, {(VF)powQQ,VQ+VQQ}, {0,0}},
+ {{(VF)geBB,VCVTIP+VB+VIP}, {(VF)powBI,VCVTIP+VD}, {(VF)powBD,VCVTIP+VD},
+  {(VF)powIB,VCVTIP+VI}, {(VF)powII,VCVTIP+VD}, {(VF)powID,VCVTIP+VD+VCANHALT},
+  {(VF)powDB,VCVTIP+VD}, {(VF)powDI,VCVTIP+VD}, {(VF)powDD,VCVTIP+VD+VCANHALT}, 
+  {(VF)powZZ,VCVTIP+VZ+VZZ}, {(VF)powXX,VCVTIP+VX+VXX}, {(VF)powQQ,VCVTIP+VQ+VQQ}, {0,0}},
   &rpsge},
 
 /* 7c |  */ {
- {{(VF)ltBB, VB+VIP    }, {(VF)remII,VI+VII+VIP}, {(VF)remDD,VD+VDD+VIP},
-  {(VF)remII,VI+VII+VIP}, {(VF)remII,VI+VIP    }, {(VF)remID,VI+VCANHALT    },   // remID can 'overflow' if result is nonintegral
-  {(VF)remDD,VD+VDD+VIP}, {(VF)remDD,VD+VDD+VIP}, {(VF)remDD,VD+VIP+VCANHALT}, 
-  {(VF)remZZ,VZ+VZZ}, {(VF)remXX,VX+VXX}, {(VF)remQQ,VQ+VQQ}, {0,0}},
+ {{(VF)ltBB,VCVTIP+VB+VIP    }, {(VF)remII,VCVTIP+VI+VII+VIP}, {(VF)remDD,VCVTIP+VD+VDD+VIP},
+  {(VF)remII,VCVTIP+VI+VII+VIP}, {(VF)remII,VCVTIP+VI+VIP    }, {(VF)remID,VCVTIP+VI+VCANHALT    },   // remID can 'overflow' if result is nonintegral
+  {(VF)remDD,VCVTIP+VD+VDD+VIP}, {(VF)remDD,VCVTIP+VD+VDD+VIP}, {(VF)remDD,VCVTIP+VD+VIP+VCANHALT}, 
+  {(VF)remZZ,VCVTIP+VZ+VZZ}, {(VF)remXX,VCVTIP+VX+VXX}, {(VF)remQQ,VCVTIP+VQ+VQQ}, {0,0}},
   &rpslt},
 
 /* 21 !  */ {
- {{(VF)leBB, VB+VIP            }, {(VF)binDD,VD+VDD+VRI+VIP}, {(VF)binDD,VD+VDD+VIP}, 
-  {(VF)binDD,VD+VDD+VRI+VIP}, {(VF)binDD,VD+VDD+VRI+VIP}, {(VF)binDD,VD+VDD+VIP}, 
-  {(VF)binDD,VD+VDD+VIP    }, {(VF)binDD,VD+VDD+VIP    }, {(VF)binDD,VD+VIP    }, 
-  {(VF)binZZ,VZ+VZZ}, {(VF)binXX,VX+VXX}, {(VF)binQQ,VX+VQQ}, {0,0}}, 
+ {{(VF)leBB,VCVTIP+VB+VIP            }, {(VF)binDD,VCVTIP+VD+VDD+VRI+VIP}, {(VF)binDD,VCVTIP+VD+VDD+VIP}, 
+  {(VF)binDD,VCVTIP+VD+VDD+VRI+VIP}, {(VF)binDD,VCVTIP+VD+VDD+VRI+VIP}, {(VF)binDD,VCVTIP+VD+VDD+VIP}, 
+  {(VF)binDD,VCVTIP+VD+VDD+VIP    }, {(VF)binDD,VCVTIP+VD+VDD+VIP    }, {(VF)binDD,VCVTIP+VD+VIP    }, 
+  {(VF)binZZ,VCVTIP+VZ+VZZ}, {(VF)binXX,VCVTIP+VX+VXX}, {(VF)binQQ,VCVTIP+VX+VQQ}, {0,0}}, 
   &rpsle},
 
 /* d1 o. */ {
- {{(VF)cirDD,VD+VDD}, {(VF)cirDD,VD+VDD}, {(VF)cirBD,VD},
-  {(VF)cirDD,VD+VDD}, {(VF)cirDD,VD+VDD}, {(VF)cirID,VD},
-  {(VF)cirDD,VD+VDD}, {(VF)cirDD,VD+VDD}, {(VF)cirDD,VD}, 
-  {(VF)cirZZ,VZ+VZZ+VRD}, {(VF)cirDD,VD+VDD}, {(VF)cirDD,VD+VDD}, {0,0}},
+ {{(VF)cirDD,VCVTIP+VD+VDD}, {(VF)cirDD,VCVTIP+VD+VDD}, {(VF)cirBD,VCVTIP+VD},
+  {(VF)cirDD,VCVTIP+VD+VDD}, {(VF)cirDD,VCVTIP+VD+VDD}, {(VF)cirID,VCVTIP+VD},
+  {(VF)cirDD,VCVTIP+VD+VDD}, {(VF)cirDD,VCVTIP+VD+VDD}, {(VF)cirDD,VCVTIP+VD}, 
+  {(VF)cirZZ,VCVTIP+VZ+VZZ+VRD}, {(VF)cirDD,VCVTIP+VD+VDD}, {(VF)cirDD,VCVTIP+VD+VDD}, {0,0}},
   &rpsnull},
 };
 
@@ -497,7 +497,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
 #endif
  A z;I m,mf,n,nf,zn;VA2 adocv;UI fr,shortr;  // fr will eventually be frame/rank  nf (and mf) change roles during execution  fr/shortr use all bits and shift
 #if !SY_64
-   I scellf;
+   I scellf=0;  // 0 for no rank
 #endif
  I aawwzk[5];  // a outer/only, a inner, w outer/only, w inner, z
 #if SY_64
@@ -559,14 +559,14 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
     I raminusw=fr-shortr;   // ar-wr, neg if WISLONG
     zn=raminusw<0?zn:an; m=raminusw<0?an:m;  // zn=# atoms in bigger operand, m=#atoms in smaller
 // obsolete t=raminusw<0?w:t;  // t->block with longer frame
-    jtinplace = (J)(((I)jtinplace&3)+adocv.cv+12+(raminusw&VIPWCRLONG));  // inplaceability plus routine flags  adocv.cv free scaf the 12 could go into the table
+    jtinplace = (J)(((I)jtinplace&3)+adocv.cv+(raminusw&VIPWCRLONG));  // inplaceability plus routine flags  adocv.cv free
 // obsolete     s=AS(t); zn=AN(t);     // atoms, shape of larger frame.  shape first.  The dependency chain is s/r/shortr->n->move data
 // obsolete     s=AS((I)jtinplace&VIPWCRLONG?w:a);
     mf=REPSGN(raminusw);  // mf=-1 if w has longer frame, means cannot inplace a
     raminusw=-raminusw;   // now wr-ar
     nf=REPSGN(raminusw);  // nf=-1 if a has longer frame, means cannot inplace w
     raminusw=raminusw&mf; fr+=raminusw; shortr-=raminusw;  // if ar is the longer one, change nothing; otherwise transfer aw-ar from shortr to r.  f (high part of fr) is 0
-    PROD(n,fr-shortr,AS((I)jtinplace&VIPWCRLONG?w:a)+shortr);  // treat the entire operands as one big cell; get the rest of the values needed
+    PRODRNK(n,fr-shortr,AS((I)jtinplace&VIPWCRLONG?w:a)+shortr);  // treat the entire operands as one big cell; get the rest of the values needed
 // obsolete    t=(A)((I)t^((I)a^(I)w)); m=AN(t);  // rank, atoms of shorter frame  m needed for data move
    // notionally we now repurpose fr to be frame/rank, with the frame 0
     shortr=((I)jtinplace>>VIPOKWX);  // only if supported by routine
@@ -587,66 +587,92 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
 // obsolete     aawwzk[0]=argranks>>RANKTX; aawwzk[1]=argranks&RANKTMSK; mf=0; nf=0;
     aawwzk[0]=fr; aawwzk[1]=shortr; fr=shortr>fr?shortr:fr; mf=0; nf=0;
    }
-  }else{I af,wf,ak,wk;UI acr,wcr;  // fr, shortr are left/right verb rank here
+  }else{I ak,wk;UI acr,wcr;  // fr, shortr are left/right verb rank here
    // Here, a rank was specified.  That means there must be a frame, according to the IRS rules
 #if SY_64
-  acr=(allranks>>RANKTX)&RANKTMSK; acr=(I)fr<acr?fr:acr; af=fr-acr;  // acr=effective rank, af=left frame
-  wcr=allranks&RANKTMSK; wcr=shortr<wcr?shortr:wcr; wf=shortr-wcr; // r=right rank of verb, wcr=effective rank, wf=right frame  fr/shortr free
+   acr=(allranks>>RANKTX)&RANKTMSK; acr=(I)fr<acr?fr:acr; acr*=0xfffffffe00000001; fr<<=(2*RANKTX+1); acr+=fr;  // acr=left frame/cellrank
+   wcr=allranks&RANKTMSK; wcr=shortr<wcr?shortr:wcr; wcr*=0xfffffffe00000001; shortr<<=(2*RANKTX+1); wcr+=shortr; // wcr=right frame/cellrank  fr/shortr free
 #else
-  acr=ranks>>RANKTX; acr=(I)fr<acr?fr:acr; af=fr-acr;  // acr=effective rank, af=left frame
-  wcr=(RANKT)ranks; wcr=shortr<wcr?shortr:wcr; wf=shortr-wcr; // r=right rank of verb, wcr=effective rank, wf=right frame  fr/shortr free
+   I af,wf;
+   acr=ranks>>RANKTX; acr=(I)fr<acr?fr:acr; af=fr-acr;  // acr=effective rank, af=left frame
+   wcr=(RANKT)ranks; wcr=shortr<wcr?shortr:wcr; wf=shortr-wcr; // r=right rank of verb, wcr=effective rank, wf=right frame  fr/shortr free
 #endif
-       // note: the prod above can never fail, because it gives the actual # cells of an existing noun
    // Now that we have used the rank info, clear jt->ranks.
    // we do this before we generate failures
    // if the frames don't agree, that's always an agreement error
    if(likely(jtinplace!=0)){  // If not sparse... This block isn't needed for sparse arguments, and may fail on them.
 // obsolete    jtinplace = (J)(((I)jtinplace&3)+(adocv.cv&-16)+12+((af-wf)&VIPWFLONG)+((acr-wcr)&VIPWCRLONG));  // inplaceability plus routine flags  adocv.cv free scaf the 12 could go into the table
     jtinplace = (J)((I)jtinplace&3);  // remove all but the inplacing bits
-    jtinplace = (J)((I)jtinplace+adocv.cv+12);  // insert flag bits for routine (always has bits 0-3=0); set bits 2-3 (converted inplacing bits) - could be done in table
+    jtinplace = (J)((I)jtinplace+adocv.cv);  // insert flag bits for routine (always has bits 0-3=0xc); set bits 2-3 (converted inplacing bits) ado.cv free
+#if SY_64
+    jtinplace = (J)((I)jtinplace+((acr+((I)1<<(2*RANKTX))-wcr)&(VIPWFLONG|VIPWCRLONG)));  // set flag for 'w has longer cell-rank' and 'w has longer frame (wrt verb)'.  The 1 is a carry blocker
+    PRODRNK(ak,acr, AS(a)+(acr>>(2*RANKTX+1))); PRODRNK(wk,wcr,AS(w)+(wcr>>(2*RANKTX+1)));   // left/right #atoms/cell  length is assigned first af free
+       // note: the prod above can never fail, because it gives the actual # cells of an existing noun
+#else
     jtinplace = (J)((I)jtinplace+((af-wf)&VIPWFLONG));  // set flag for 'w has longer frame (wrt verb)'
     jtinplace = (J)((I)jtinplace+((acr-wcr)&VIPWCRLONG));  // set flag for 'w has longer cell-rank'
-    PROD(ak,acr,(acr+=af<<RANKTX,AS(a)+af)); PROD(wk,wcr,(wcr+=wf<<RANKTX,AS(w)+wf));   // left/right #atoms/cell  acr/wcr now have frame/cellrank af/wf free  length is assigned first
+    acr+=af<<RANKTX; wcr+=wf<<RANKTX; //  acr/wcr now have frame/cellrank  bits above 15 are ignored in length  wf free
+    PRODRNK(ak,acr, AS(a)+af); PRODRNK(wk,wcr,AS(w)+(wcr>>RANKTX));   // left/right #atoms/cell  length is assigned first af free
+#endif
      // jtinplace VIPWFLONG set if wf>af, bit VIPWCRLONG set if wcr>acr
-    zn=(I)jtinplace&VIPWCRLONG?wk:ak; m=(I)jtinplace&VIPWCRLONG?ak:wk;   // zn=#atoms in cell with larger rank
+    zn=(I)jtinplace&VIPWCRLONG?wk:ak;    // zn=#atoms in cell with larger rank
+    m=(I)jtinplace&VIPWCRLONG?ak:wk;  // m=#atoms in common inner cell, i. e. the smaller
+    aawwzk[4]=zn<<bplg(rtype((I)jtinplace));  // calc result-cell size and move it out of registers
     ak<<=bplg(AT(a)); wk<<=bplg(AT(w));  // convert cell sizes to bytes
     aawwzk[0]=ak; aawwzk[2]=wk; ak=((I)jtinplace&VIPWFLONG)?0:ak; wk=((I)jtinplace&VIPWFLONG)?wk:0; aawwzk[1]=ak; aawwzk[3]=wk;  // set inner cell size for last followed by non-last.  Last is 0 for a repeated cell ak/wk free
 // obsolete     awzk[0]=ak; awzk[1]=wk;  // get these values out of registers - the compiler thinks they're needed for a loop
-    shortr=(I)jtinplace&VIPWCRLONG?acr:wcr; fr=(I)jtinplace&VIPWCRLONG?wcr:acr; // shorter cell frame/rank, longer cell frame/rank
-    shortr&=RANKTMSK;
+    shortr=(I)jtinplace&VIPWCRLONG?acr:wcr; fr=(I)jtinplace&VIPWCRLONG?wcr:acr; // shortr=frame(short cell)/0/cellrank(short cell)  fr=frame(long cell)/0/cellrank(long cell)
+    shortr&=RANKTMSK;  // cellrank(short cell)
 #if SY_64
-    shortr*=0x10000ffff;
+    shortr*=0x20000ffff;   //   cellrank(short cell)/cellrank(short cell)/-cellrank(short cell)  200000000+10000+ffffffffffffffff
+    shortr+=fr;  // frame(long cell)+cellrank(short cell)/cellrank(short cell)/cellrank(long cell)-cellrank(short cell)
+                 //  offset to excess frame, for calc n  / length for agreement / length for calc n,(# intracell repeats) - final value
+    acr>>=2*RANKTX+1; wcr>>=2*RANKTX+1;  // NOW ACR/WCR HAVE BEEN REPURPOSED TO MEAN AF/WF; acr/wcr gone
 #else
-    UI savshortr = shortr; shortr*=0xffff;
+    // upper component of shortr must be saved in savshortr
+    UI savshortr = shortr+(fr>>RANKTX); shortr*=0xffff;
+    shortr+=fr&RANKTMSK;  // frame(long cell)+cellrank(short cell)/cellrank(short cell)/cellrank(long cell)-cellrank(short cell)
+                 //  offset to excess frame, for calc n  / length for agreement / length for calc n,(# intracell repeats) - final value
+    acr>>=RANKTX; wcr>>=RANKTX;  // NOW ACR/WCR HAVE BEEN REPURPOSED TO MEAN AF/WF; acr/wcr gone
 #endif
-    shortr+=fr; acr>>=RANKTX; wcr>>=RANKTX;  // NOW ACR/WCR HAVE BEEN REPURPOSED TO MEAN AF/WF; acr/wcr gone
-      // fr is longer cell-rank
-    // fr will be (offset to start of cell shape)/(shorter outer frame len)/(longer outer frame len)/(longer outer frame len+longer inner cell len)
+    // fr will be (frame(long cell))  /  (shorter frame len)   /  (longer frame len)                      /   (longer frame len+longer celllen)
+    //  (offset to store cellshape to)  / for #outer cells mf  / length of frame to copy, also to calc nf / ranks that = this have no repeats, can inplace (also used to figure cellen for shape copy)
     // on 32-bit systems, the top 2 fields have to go into names scellf and f
-    I f=((I)jtinplace&VIPWFLONG)?wcr:acr; /* sf=AS(af<=wf?w:a); obsolete mf=af<=wf;*/   // f=#longer outer frame
+    I f=((I)jtinplace&VIPWFLONG)?wcr:acr; /* sf=AS(af<=wf?w:a); obsolete mf=af<=wf;*/   // f=#long frame len
 #if SY_64
 // obsolete     fr+=((I)jtinplace&VIPWCRLONG?wcr:acr)<<(3*RANKTX);  // encode start of cell-shape in the argument where the longer cell-shape resides
 // obsolete     fr=(fr&RANKTMSK)+((fr>>RANKTX)<<(3*RANKTX));  // encode start of cell-shape in the argument where the longer cell-shape resides
 // obsolete     fr=(fr+(fr<<(2*RANKTX)))&(RANKTMSK*0x1000000000001U);  // encode start of cell-shape in the argument where the longer cell-shape resides
-    fr*=0x100000001; fr&=(RANKTMSK*0x1000000000001U);  // encode start of cell-shape in the argument where the longer cell-shape resides
+    fr*=0x8001; fr&=(0xffff000000007fffU);  // encode start of cell-shape in the argument where the longer cell-shape resides  frame(long cell)/0/0/cellrank(long cell)
 // obsolete     fr+=(af-f)<<(2*RANKTX);  // encode shorter frame in upper fx
 // obsolete     fr+=(acr+wcr-f)<<(2*RANKTX);
-    f*=0xffffffff00010001; fr+=f; f=(acr+wcr)<<(2*RANKTX); fr+=f;  // f free
+    f*=0xffffffff00010001; fr+=f; f=(acr+wcr)<<(2*RANKTX); fr+=f;  // cry/-longframe/longframe/longframe   frame(long cell)+cry/-longframe/longframe/longframe+cellrank(long cell) 0 + ffffffff00000000 + 10000 + 1
+        //   frame(long cell)/shortframe/longframe/longframe+cellrank(long cell) - final value   f free
+    // register pressure is excruciating here.  Only one register allowed, and no 64-bit immediates
+    f=fr&RANKTMSK; f^=RANKTMSK; allranks>>=2*RANKTX; allranks^=f; f<<=RANKTX; allranks^= f;  // now allranks has 2 bytes, with 00 indicating OK to inplace  i. e. argrank^f+fr  f free
+    allranks+=(VIPOKRNKA-1)-((1LL<<(2*RANKTX))-1)+(1LL<<RANKTX); // 0x00010000  set VIPOKRNKA  (by carry into 0) if a byte of allranks is 00
+    allranks&=~((VIPOKRNKW<<1)-(1LL<<RANKTX)); allranks+=(VIPOKRNKW-(1LL<<RANKTX))+1;  // 0x3fff0001  set VIPOKRNKW (by carry into 0) if w byte of allranks is 00
+    allranks>>=(VIPOKRNKAX-VIPOKAX); allranks&=~VIPOKW; allranks+=VIPOKW>>1; allranks|=~(VIPOKA+VIPOKW); jtinplace=(J)((I)jtinplace&allranks);  // close up gap betw RNKA and RNKW
+// obsolete     jtinplace=(J)((I)jtinplace&(((((allranks>>(3*RANKTX))^fr)&RANKTMSK)-1)|~VIPOKA));  // disable inplace a if a rank has either repeat,
+// obsolete     jtinplace=(J)((I)jtinplace&(((((allranks>>(2*RANKTX))^fr)&RANKTMSK)-1)|~VIPOKW));  // disable inplace w if w rank has either repeat, i. e. argrank!=f+fr
+    ASSERTAGREE(AS(a)+acr, AS(w)+wcr, (shortr>>RANKTX)&RANKTMSK)  // offset to each cellshape, and cellrank(short cell) 
+    PRODRNK(n,shortr,AS((I)jtinplace&VIPWCRLONG?w:a)+(shortr>>=(2*RANKTX+1)));  // n is #atoms in excess frame of inner cells, length assigned first shortr free
 #else
+    // fr will be (frame(long cell))  /  (shorter frame len)   /  (longer frame len)                      /   (longer frame len+longer celllen)
 // obsolete     scellf=(I)jtinplace&VIPWCRLONG?wcr:acr;  // offset is long shape of start of inner cell
-    scellf=(fr>>RANKTX); fr=(fr&RANKTMSK); // offset is long shape of start of inner cell
-    f=acr+wcr-f;
-    fr+=(f<<RANKTX)+f;   // encode f into fr as f|f+fr; switch f to #shorter frame
+    scellf=(fr>>RANKTX);  // offset is long shape of start of inner cell    frame(long cell)
+    fr&=RANKTMSK;  // longer celllen
+    fr += f<<RANKTX;  // longer frame/longer cellen
+    fr+=f;   // longer frame/longer frame+longer cellen
+    f=acr+wcr-f;  // switch f to #shorter frame  short frame  for much later
+    jtinplace=(J)((I)jtinplace&(((((argranks>>RANKTX)^fr)&RANKTMSK)-1)|~VIPOKA));  // disable inplace a if a rank has either repeat, i. e. argrank!=f+fr
+    jtinplace=(J)((I)jtinplace&((((argranks^fr)&RANKTMSK)-1)|~VIPOKW));  // disable inplace w if w rank has either repeat, i. e. argrank!=f+fr
+    ASSERTAGREE(AS(a)+acr, AS(w)+wcr, (shortr>>RANKTX)&RANKTMSK)   // shortr free  af/wf free
+    PRODRNK(n,shortr,AS((I)jtinplace&VIPWCRLONG?w:a)+savshortr);  // n is #atoms in excess frame of inner cells, length assigned first shortr free
+// obsolete     f=af-f;
 #endif
 // obsolete     I tf=SGNTO0((((argranks>>RANKTX)^fr)&RANKTMSK)-1);  // register pressure, so we break this up.  Bit 0 set if a does not have repeat, i. e argrank==f+fr
 // obsolete     tf=2*tf+SGNTO0(((argranks^fr)&RANKTMSK)-1);  // bits 0-1 set with inplaceability of a/w owing to frame  move this up
-#if SY_64
-    jtinplace=(J)((I)jtinplace&(((((allranks>>(3*RANKTX))^fr)&RANKTMSK)-1)|~VIPOKA));  // disable inplace a if a rank has either repeat, i. e. argrank!=f+fr
-    jtinplace=(J)((I)jtinplace&(((((allranks>>(2*RANKTX))^fr)&RANKTMSK)-1)|~VIPOKW));  // disable inplace w if w rank has either repeat, i. e. argrank!=f+fr
-#else
-    jtinplace=(J)((I)jtinplace&(((((argranks>>RANKTX)^fr)&RANKTMSK)-1)|~VIPOKA));  // disable inplace a if a rank has either repeat, i. e. argrank!=f+fr
-    jtinplace=(J)((I)jtinplace&((((argranks^fr)&RANKTMSK)-1)|~VIPOKW));  // disable inplace w if w rank has either repeat, i. e. argrank!=f+fr
-#endif
 // obsolete     s=AS((I)jtinplace&VIPWCRLONG?w:a)+scellf;  // s->shape of larger-rank cell
 // obsolete     PROD(n,fr-shortr,AS((I)jtinplace&VIPWCRLONG?w:a)+((I)jtinplace&VIPWCRLONG?wcr:acr)+shortr);  // n is #atome in excess frame of inner cells
 // obsolete     PROD(n,(fr&RANKTMSK)-shortr,AS((I)jtinplace&VIPWCRLONG?w:a)+(fr>>RANKTX)+shortr);  // n is #atoms in excess frame of inner cells
@@ -654,15 +680,9 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
     // 'error executing on the cell of fills' and produces a scalar 0 as the result for that cell, which we handle by changing the result-cell rank to 0
     // Nonce: continue giving the error even when frame contains 0 - remove 1|| in the next line to conform to fill-cell rules
 // this shows the fix   if(ICMP(as+af,ws+wf,MIN(acr,wcr))){if(1||zn)ASSERT(0,EVLENGTH)else r = 0;}
-#if SY_64
-    ASSERTAGREE(AS(a)+acr, AS(w)+wcr, shortr>>(2*RANKTX))  // shortr free  af/wf free
-#else
-    ASSERTAGREE(AS(a)+acr, AS(w)+wcr, savshortr)  // shortr free  af/wf free
-// obsolete     f=af-f;
-#endif
-    PROD(n,shortr&RANKTMSK,AS((I)jtinplace&VIPWCRLONG?w:a)+((shortr>>=RANKTX)&RANKTMSK));  // n is #atoms in excess frame of inner cells, length assigned first
+// obsolete       // len is common inner len: cellrank(long cell)-cellrank(short cell)   offset is frame(long cell)+cellrank(short cell) (i. e. loc of excess inner cellrank)  acr wcr free
 // obsolete     f=af+wf-(fr>>RANKTX); //  free
-    n^=REPSGN((1-n)&(I)jtinplace);  // encode 'w has long frame, so a is repeated' as complementary n; but if n<2, leave it alone (uses VIPWCRLONG)
+    n^=REPSGN((1-n)&SGNIF((I)jtinplace,VIPWCRLONGX));  // encode 'w has long frame, so a is repeated' as complementary n; but if n<2, leave it alone
 // obsolete     nf=acr<=wcr;
 // obsolete     jtinplace = (J)(((I)jtinplace)|((ak-1)&ACINPLACE));  // install sign bit if af<=wf ak==0 ACINPLACE just means the sign bit  ak/wk free
     // m=#atoms in cell with shorter rank; n=#times shorter-rank cells must be repeated; r=larger of cell-ranks
@@ -671,7 +691,6 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
     // zk=result-cell size in bytes; ak,wk=left,right arg-cell size in bytes.  Not needed if not looping
     // bits 0-1 of jtinplace are combined input+local; 2-3 just local; 4+ hold adocv.cv; sign set if ak==0. output type is always set to show non-sparse
     // 0-1 are set if operand is inplaceable according to prim & input inplaceability; 2-3 from prim only.  We use 0-1 unless we convert; then we use 2-3
-    aawwzk[4]=zn<<bplg(rtype((I)jtinplace));  // calc result-cell size and move it out of registers
 // obsolete     nf=(C)((RANKT)jtinplace>>VIPOKWX) & (C)((RANKT)(a==w)-1) & ((C)((RANKT)(argranks>>RANKTX)==(RANKT)fr)*2 + (C)((RANKT)(argranks&RANKTMSK)==(RANKT)fr));  // set inplaceability here: not if addresses equal (in case of retry); only if op supports; only if nonrepeated cell
     nf=((I)jtinplace>>VIPOKWX)&3;  // extract inplaceability from operation and ranks
     nf=a==w?0:nf;  // not inplaceable if args identical
@@ -679,10 +698,15 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
     jtinplace = (J)((I)jtinplace&nf);  // bit 2-3=routine/rank/arg inplaceable, 0-1=routine/rank/arg/input inplaceable   nf free
 // obsolete     sf=AS((I)jtinplace<0?w:a);   // get start of longer frame
 #if SY_64
-    f=(fr>>(2*RANKTX))&RANKTMSK;  // recover shorter frame from upper fx
+    f=(fr>>(2*RANKTX))&RANKTMSK;  // recover (shorter frame len) from upper fx
+    PRODRNK(nf,((fr>>RANKTX)-f),f+AS(((I)jtinplace&VIPWFLONG)?w:a));    // nf=#times shorter-frame cell must be repeated;  offset is (shorter frame len), i. e. loc of excess frame
+         // length is (longer frame len)-(shorter frame len)  i. e. length of excess frame
+    PRODRNK(mf,fr>>(2*RANKTX),AS(a));  //  mf=#cells in common frame [either arg ok]   f is (shorter frame len)      f free now
+#else
+    PRODRNK(nf,((fr>>RANKTX)-f),f+AS(((I)jtinplace&VIPWFLONG)?w:a));    // nf=#times shorter-frame cell must be repeated;  offset is (shorter frame len), i. e. loc of excess frame
+         // length is (longer frame len)-(shorter frame len)  i. e. length of excess frame
+    PRODRNK(mf,f,AS(a));  //  mf=#cells in common frame [either arg ok]   f is (shorter frame len)      f free now
 #endif
-    PROD(nf,((fr>>RANKTX)-f)&RANKTMSK,f+AS(((I)jtinplace&VIPWFLONG)?w:a));    // mf=#cells in common frame, nf=#times shorter-frame cell must be repeated.
-    PROD(mf,f,AS(a));  // either arg can be used for short frame  f free now
 // obsolete #ifdef DPMULD
     /* obsolete nf^=REPSGN(1-nf)&-mf;*/
 // obsolete #else
@@ -706,7 +730,12 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
      DPMULDE(nf,mf,mf); --nf; // mf is total # iterations; nf is outer loop repeat count-1
      DPMULDE(zn,mf,zn)  // total # atoms in result
     }
-   }else{fr=acr<wcr?wcr:acr; I f=(af<wf)?wf:af; fr+=(f<<RANKTX)+f; aawwzk[0]=acr; aawwzk[1]=wcr; mf=af; nf=wf;}
+   }else{
+#if SY_64
+    I af=acr>>(2*RANKTX+1), wf=wcr>>(2*RANKTX+1); acr&=RANKTMSK; wcr&=RANKTMSK;   // separate cr and f for sparse
+#endif
+    fr=acr<wcr?wcr:acr; I f=(af<wf)?wf:af; fr+=(f<<RANKTX)+f; aawwzk[0]=acr; aawwzk[1]=wcr; mf=af; nf=wf;
+   }
    // For sparse, repurpose ak/wk/mf/nf to hold acr/wcr/af/wf, which we will pass into vasp.  This allows acr/wcr/af/wf to be block-local
    // Note: this code passed the test suite even when fr was garbage
   }
@@ -771,12 +800,14 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
 // obsolete   }else{GA(z,rtype((I)jtinplace),zn,(RANKT)fr+(fr>>RANKTX),0); MCISH(AS(z),sf,fr>>RANKTX); MCISH(AS(z)+(fr>>RANKTX),s,(RANKT)fr);} 
 // obsolete   }else{GA(z,rtype((I)jtinplace),zn,(RANKT)fr,0); MCISH(AS(z),AS(((I)jtinplace&VIPWFLONG)?w:a),(fr>>RANKTX)&RANKTMSK); MCISH(AS(z)+((fr>>RANKTX)&RANKTMSK),s,(fr&RANKTMSK)-((fr>>RANKTX)&RANKTMSK));} 
 #if SY_64
-#define scell AS((I)jtinplace&VIPWCRLONG?w:a)+(fr>>(3*RANKTX))  // address of start of cell shape
+#define scell AS((I)jtinplace&VIPWCRLONG?w:a)+(fr>>(3*RANKTX))  // address of start of cell shape     shape of long cell+frame(long cell)
 #else
 #define scell AS((I)jtinplace&VIPWCRLONG?w:a)+scellf  // address of start of cell shape
 #endif
+    // fr is (frame(long cell))  /  (shorter frame len)   /  (longer frame len)                      /   (longer frame len+longer celllen)
   }else{GA(z,rtype((I)jtinplace),zn,(RANKT)fr,0); MCISH(AS(z),AS(((I)jtinplace&VIPWFLONG)?w:a),(fr>>RANKTX)&RANKTMSK); MCISH(AS(z)+((fr>>RANKTX)&RANKTMSK),scell,(fr&RANKTMSK)-((fr>>RANKTX)&RANKTMSK));} 
-  // s, fr ARE NOT USED FROM HERE ON in this branch to reduce register pressure.
+//                                                 frame loc     shape of long frame             len of long frame           cellshape loc              cellshape     longer cellen 
+  // fr free
   if(!zn)RETF(z);  // If the result is empty, the allocated area says it all
   // zn  NOT USED FROM HERE ON
 
@@ -1366,7 +1397,7 @@ DF2(jtatomic2){A z;
 #if SY_64
  R z=jtva2((J)((I)jtinplace|JTRETRY),a,w,self,(awr<<RANK2TX)+selfranks);  // execute the verb
 #else
- z=jtva2((J)((I)jtinplace|JTRETRY),a,w,self,selfranks,(RANK2T)awr);  // execute the verb
+ R z=jtva2((J)((I)jtinplace|JTRETRY),a,w,self,selfranks,(RANK2T)awr);  // execute the verb
 #endif
 }
 

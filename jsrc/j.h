@@ -649,14 +649,14 @@ extern unsigned int __cdecl _clearfp (void);
 #define ASSERTAGREE(x,y,l) \
  {I *aaa=(x), *aab=(y); I aai=(l); \
   if(likely(aai<=2)){ \
-   aai-=1; aaa=(aai<0)?&validitymask[1]:aaa; aab=(aai<0)?&validitymask[1]:aab; \
+   aai-=1; aaa=(aai<0)?(I*)&validitymask[1]:aaa; aab=(aai<0)?(I*)&validitymask[1]:aab; \
    ASSERT(((aaa[0]^aab[0])+(aaa[aai]^aab[aai]))==0,EVLENGTH); \
   }else{ASSERT(!memcmp(aaa,aab,aai<<LGSZI),EVLENGTH)} \
  }
 #define TESTDISAGREE(r,x,y,l) \
  {I *aaa=(x), *aab=(y); I aai=(l); \
   if(likely(aai<=2)){ \
-   aai-=1; aaa=(aai<0)?&validitymask[1]:aaa; aab=(aai<0)?&validitymask[1]:aab; \
+   aai-=1; aaa=(aai<0)?(I*)&validitymask[1]:aaa; aab=(aai<0)?(I*)&validitymask[1]:aab; \
    r=((aaa[0]^aab[0])+(aaa[aai]^aab[aai]))!=0;  \
   }else{r=memcmp(aaa,aab,aai<<LGSZI)!=0;} \
  }
@@ -1252,6 +1252,9 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x
 // assign length first so we can sneak some computation into ain in va2
 #define PROD(result,length,ain) {I _i=(length); I * RESTRICT _zzt=(ain); \
  if(likely(_i<3)){_zzt=_i<=0?iotavec-IOTAVECBEGIN+1:_zzt; result=*_zzt; ++_zzt; _zzt=_i<=1?iotavec-IOTAVECBEGIN+1:_zzt; result*=*_zzt;}else{result=prod(_i,_zzt);} }
+// This version ignores bits of length above the low RANKTX bits
+#define PRODRNK(result,length,ain) {I _i=(length); I * RESTRICT _zzt=(ain); \
+ if(likely((US)_i<3)){_zzt=_i&3?_zzt:iotavec-IOTAVECBEGIN+1; result=*_zzt; ++_zzt; _zzt=_i&2?_zzt:iotavec-IOTAVECBEGIN+1; result*=*_zzt;}else{result=prod((US)_i,_zzt);} }
 // obsolete #define PROD(result,length,ain) {I _i=(length)-1; result=(ain)[_i]; result=_i<0?1:result; do{--_i; I _r=(ain)[_i]*result; result=_i<0?result:_r;}while(_i>0);} 
 #define PROD1(result,length,ain) PROD(result,length,ain)  // scaf
 // PRODX replaces CPROD.  It is PROD with a test for overflow included.  To save calls to mult, PRODX takes an initial value

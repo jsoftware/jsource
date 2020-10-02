@@ -508,7 +508,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
  F2PREFIP;
  {I at=AT(a);
   I wt=AT(w);
-  if(!(((I)jtinplace&(JTRETRY|JTEMPTY))+((UNSAFE(at|wt))&(NOUN&~(B01|INT|FL))))){  // no error, bool/int/fl args, no empties
+  if(likely(!(((I)jtinplace&(JTRETRY|JTEMPTY))+((UNSAFE(at|wt))&(NOUN&~(B01|INT|FL)))))){  // no error, bool/int/fl args, no empties
    // Here for the fast and important case, where the arguments are both B01/INT/FL
    VA *vainfo=(VA*)FAV(self)->localuse.lvp[0];  // extract table line from the primitive
    // The index into va is atype*3 + wtype, calculated sneakily.  We test here to avoid the call overhead
@@ -590,7 +590,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
   }else{I ak,wk;UI acr,wcr;  // fr, shortr are left/right verb rank here
    // Here, a rank was specified.  That means there must be a frame, according to the IRS rules
 #if SY_64
-   acr=(allranks>>RANKTX)&RANKTMSK; acr=(I)fr<acr?fr:acr; acr*=0xfffffffe00000001; fr<<=(2*RANKTX+1); acr+=fr;  // acr=left frame/cellrank
+   acr=(allranks>>RANKTX)&RANKTMSK; acr=fr<acr?fr:acr; acr*=0xfffffffe00000001; fr<<=(2*RANKTX+1); acr+=fr;  // acr=left frame/cellrank
    wcr=allranks&RANKTMSK; wcr=shortr<wcr?shortr:wcr; wcr*=0xfffffffe00000001; shortr<<=(2*RANKTX+1); wcr+=shortr; // wcr=right frame/cellrank  fr/shortr free
 #else
    I af,wf;

@@ -268,6 +268,9 @@ NB. dyad doesn't support prist yet '2' +&.> ckprist 0 1 1 ] 5  NB. scaf
 <@0:/\. ckprist 0 0 1 0 ] 5   NB. result is open; operation never exposes a cell of y, but we still have to remove pristinity of noninplaceable block 
 ]/\. ckprist 0 0 0 0 ] 5  NB. /\. does not inplace virtw, so the result is not pristine   
 [/\. ckprist 0 0 0 0 ] 5 
+'2' ]\ ckprist 0 0 0 0 ] 5  NB. Inputs escape, not pristine
+'2' [\ ckprist 0 0 0 0 ] 5
+'2' ,\ ckprist 0 0 0 0 ] 5
 (<@>@]^:((<4)-:]))/\. ckprist 0 0  ] 5  NB. not inplace virtw
 /:~ ckprist 0 1 ] 5  NB. Passes pristinity through 
 /:~ ckprist 3 0 ] 4 5  NB. Creates virtual block but also clears pristinity of a

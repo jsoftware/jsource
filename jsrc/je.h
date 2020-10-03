@@ -954,9 +954,9 @@ extern I Bchrcolon[];
 extern I Bchrspace[];
 #define chrspace ((A)&Bchrspace)
 #if !SY_64
-extern const long long validitymask[];
+extern long long validitymask[];
 #else
-extern const I validitymask[];
+extern I validitymask[];
 #endif
 extern C  ctype[];
 extern const double dzero;

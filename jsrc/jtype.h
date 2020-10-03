@@ -63,6 +63,8 @@ typedef US                 RANKT;
 #define RANKTMSK           (((I)1<<RANKTX)-1)
 #define R2MAX              ((RMAX<<RANKTX)+RMAX)  // max value of a RANK2T
 typedef UI4                RANK2T;  // 2 ranks, (l<<16)|r
+#define RANK2TX            32   // # bits in a RANK2T
+#define RANK2TMSK           0xFFFFFFFFU
 typedef I                  FLAGT;
 typedef UI4                LX;  // index of an L block in jt->sympv
 

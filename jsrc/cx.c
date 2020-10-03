@@ -876,3 +876,30 @@ if(BETWEENC(fndflag,1,3))jfwrite(str(129,"************ Old-style definition enco
   default: ASSERT(0,EVDOMAIN);
  }
 }
+
+// input reader for direct definition
+// Result: list of words (same format as result of wordil(), ready for enqueue()) for one executable line
+// if result 0, it could be because
+//  (1) the line is malformed, containing ). with no previous (. - syntax error has been set
+//  (2) end-of-file when lines are being read from (*infn)() ).  In this case syntax error
+//      has been set IF a DD is being processed when end-of-file occurs
+//  (3) interrupted DD - another line is required to finish the DD.  No error has been set.
+//  (4) infn and linein were both 0 (requesting a flush).  If the buffer was not empty, syntax error has been set
+//
+// Input: A (*infn)(J jt, void *) is the function for reading input.  If it is 0, the single line given in
+//   inline will be processed instead.  If infn is nonzero, inline is passed into infn as an argument.
+//   (*infn) returns the A block for the line, or 0 if end-of-file/error
+// void *linein is an opaque parameter to *infn, or the A for a single input line
+// A *workarea must be unique for each context, and is used to hold buffered data for a context.  (*workarea) must be 0
+//  in the first call for a context.  'context' means a stream of characters.  For example, the user might be
+//  typing lines one at a time from the keyboard while a timer interrupt occasionally loads a script.  These two
+//  streams are distinguished by their context.  Obviously you must be careful not to put (workarea) on the C stack
+//  where it can disappear between calls to ddline.
+//
+// if infn and inline are both 0, the routine flushes its buffered input and sets syntax error if the buffer was not empty.
+// You can use this after (". y) to verify that y was well-formed.
+//
+// This routine always returns complete lines, and never inserts LF.  It may return fewer lines than the user entered, if a DD
+// spans multiple lines.  Each DD is gathered up and converted to a string, which will contain any LFs encountered inside the DD.
+// DDs may be nested.  Each DD is converted to the 5 words ( m : 'ddtext' ) where m is determined from  the context of the DD.
+A ddline(J jt, A (*infn)(J, void *), void *linein, A *workarea);

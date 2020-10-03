@@ -5,7 +5,8 @@
 
                                     /*   cv - control vector               */
 // bits 0-1 kept open for jtflags
-// bits 2-3 should be forced to 1 for more jtflags; at least leave them open
+// bits 2-3 should be forced to 1 jtflags;
+#define VCVTIP          0xc  // bits 2-3 should always be set, indicating that a converted argument can be inplaced
 #define VARGX           4           // bit position for arg flags
 #define VBB             (B01<<VARGX)         /* convert arguments to B              */
 #define VII             (INT<<VARGX)         /* convert arguments to I              */
@@ -19,30 +20,39 @@
 #define VI              (INT<<VRESX)/* result type I  bit 14                     */
 #define VD              (FL<<VRESX) /* result type D  bit 15                     */
 #define VZ              (CMPX<<VRESX)/* result type Z bit 16                      */
-#define VX              (XNUM<<VRESX)/* result type XNUM  bit 17                  */
-#define VQ              (RAT<<VRESX) /* result type RAT  bit 18                   */
+#define VX              (XNUM<<VRESX)/* result type XNUM  bit 18                  */
+#define VQ              (RAT<<VRESX) /* result type RAT  bit 19                   */
 #define VSB             (SBT<<VRESX) /* result type SBT bit 28                    */
 #define VRESMSK         (VB|VI|VD|VZ|VX|VQ|VSB)  // mask for result-type
 #define VRD             (SLIT<<VRESX)// convert result to D if possible - unused code point
 #define VRI             (SBOX<<VRESX)// convert result to I if possible - unused code point
-// bits VRESX+ 1 7 10 12 are free
+// bits VRESX+ 1 10 11 12 are free
+#define VIPWFLONGX     (SY_64?63:17)  // (must be >RANKTX) internal use in va2.  We use sign bit where possible
+#define VIPWFLONG      ((I)1<<VIPWFLONGX)
 #define VIPOKWX         20      // This routine can put its result over W
-#define VIPOKW          (1<<VIPOKWX)
+#define VIPOKW          ((I)1<<VIPOKWX)
 #define VIPOKAX         21      // This routine can put its result over A
-#define VIPOKA          (1<<VIPOKAX)
+#define VIPOKA          ((I)1<<VIPOKAX)
 #define VCANHALTX       25    // This routine can generate an error after it has started
 #define VCANHALT        ((I)1<<VCANHALTX)
 #define VXCHASVTYPEX    26  // set if there is forced conversion to XNUM
 #define VXCHASVTYPE     ((I)1<<VXCHASVTYPEX)
 #define VXCVTYPEX       29          // bit position for VX conversion type
-#define VXCVTYPEMSK     ((I)3<<VXCVTYPEX)  // mask for bit-positions hold XNUM conversion type
+#define VXCVTYPEMSK     ((I)3<<VXCVTYPEX)  // mask for bit-positions hold XNUM conversion type - leave here where they don't overlap noun types
 #define VXX             (Vxx|VXCHASVTYPE|((I)XMEXACT<<VXCVTYPEX))  // exact conversion
 #define VXEQ            (Vxx|VXCHASVTYPE|((I)XMEXMT<<VXCVTYPEX))   /* convert to XNUM for = ~:            */
 #define VXCF            (Vxx|VXCHASVTYPE|((I)XMCEIL<<VXCVTYPEX))   /* convert to XNUM ceiling/floor       */
 #define VXFC            (Vxx|VXCHASVTYPE|((I)XMFLR<<VXCVTYPEX))  /* convert to XNUM floor/ceiling       */
+#define VIPWCRLONGX     31  // internal use in va2, must be sign bit
+#define VIPWCRLONG      ((I)1<<VIPWCRLONGX)
 // bit 31 must not be used - it may be a sign bit, which has a meaning
 #define VARGCVTMSKF     (VXCHASVTYPE|VXCVTYPEMSK)  // mask for type to pass into XCVT, includes XNUM override
 #define VFRCEXMT        (VXCHASVTYPE|((I)XMEXMT<<VXCVTYPEX))   // set in arg to cvt() to do rounding for = ~:, if the conversion happens to be to XNUM
+// upper bits for 64-bit va2
+#define VIPOKRNKWX         30      // filled by va2 if the ranks allow inplacing w
+#define VIPOKRNKW          ((I)1<<VIPOKRNKWX)
+#define VIPOKRNKAX         32      // filled by va2 if the ranks allow inplacing a
+#define VIPOKRNKA          ((I)1<<VIPOKRNKAX)
 
 // Extract the argument-conversion type from cv coming from the table
 #define atype(x) (((x)&VARGMSK)>>VARGX)

@@ -594,7 +594,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
    wcr=allranks&RANKTMSK; wcr=shortr<wcr?shortr:wcr; wcr*=0xfffffffe00000001; shortr<<=(2*RANKTX+1); wcr+=shortr; // wcr=right frame/cellrank  fr/shortr free
 #else
    I af,wf;
-   acr=ranks>>RANKTX; acr=(I)fr<acr?fr:acr; af=fr-acr;  // acr=effective rank, af=left frame
+   acr=ranks>>RANKTX; acr=fr<acr?fr:acr; af=fr-acr;  // acr=effective rank, af=left frame
    wcr=(RANKT)ranks; wcr=shortr<wcr?shortr:wcr; wf=shortr-wcr; // r=right rank of verb, wcr=effective rank, wf=right frame  fr/shortr free
 #endif
    // Now that we have used the rank info, clear jt->ranks.

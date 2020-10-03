@@ -752,7 +752,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define F2RANKcommon(l,r,f,self,extra)  {RZ(a&&w); extra if((I)((l-AR(a))|(r-AR(w)))<0)if((l|r)==0)R rank2ex0(a,w,(A)self,f);else{I lr=MIN((I)l,AR(a)); I rr=MIN((I)r,AR(w)); R rank2ex(a,w,(A)self,lr,rr,lr,rr,f);}}  // If there is more than one cell, run rank2ex on them.  l,r=dyad ranks, f=function to call for dyad cell
 #define F2RANK(l,r,f,self)  F2RANKcommon(l,r,f,self,)
 // same, but used when the function may pull an address from w.  In that case, we have to turn pristine off since there may be duplicates in the result
-#define F2RANKW(l,r,f,self) F2RANKcommon(l,r,f,self,PRISTCLRF(w))
+#define F2RANKW(l,r,f,self) F2RANKcommon(l,r,f,self,PRISTCLR(w))
 #define F1RANKIP(m,f,self)    {RZ(   w); if(m<AR(w)         )R jtrank1ex(jtinplpace,  w,(A)self,(I)m,     f);}  // if there is more than one cell, run rank1ex on them.  m=monad rank, f=function to call for monad cell
 #define F2RANKIP(l,r,f,self)  {RZ(a&&w); if((I)((l-AR(a))|(r-AR(w)))<0){I lr=MIN((I)l,AR(a)); I rr=MIN((I)r,AR(w)); R jtrank2ex(jtinplace,a,w,(A)self,lr,rr,lr,rr,f);}}  // If there is more than one cell, run rank2ex on them.  l,r=dyad ranks, f=function to call for dyad cell
 // get # of things of size s, rank r to allocate so as to have an odd number of them at least n, after discarding w items of waste.  Try to fill up a full buffer 
@@ -1229,7 +1229,7 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x
 #endif
 #endif
 #define PRISTCOMSET(w,flg) awback=(w); if(unlikely(flg&AFVIRTUAL)){awback=ABACK(awback); flg=AFLAG(awback);} AFLAG(awback)=flg&~AFPRISTINE;
-#define PRISTCOMSETF(w,flg) if(unlikely(flg&AFVIRTUAL)){w=ABACK(w); flg=AFLAG(w);} AFLAG(w)=flg&~AFPRISTINE;
+#define PRISTCOMSETF(w,flg) if(unlikely(flg&AFVIRTUAL)){w=ABACK(w); flg=AFLAG(w);} AFLAG(w)=flg&~AFPRISTINE;   // used only at end, when w can be destroyed
 #define PRISTCOMMON(w,exe) awflg=AFLAG(w); exe PRISTCOMSET(w,awflg)
 // same but destroy w
 #define PRISTCOMMONF(w,exe) I awflg=AFLAG(w); exe PRISTCOMSETF(w,awflg)

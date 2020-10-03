@@ -1,7 +1,98 @@
 /* Copyright 1990-2011, Jsoftware Inc.  All rights reserved.               */
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
-/* Input/Output                                                            */
+/*
+Input/Output
+
+io.c implements J Engine interface with the J Front End
+
+overview of jfe and je interface
+
+jfe is a repl (read/execute/print/loop) that uses je as a server
+ jfe reads line from kb
+ jfe calls jdo() in je to execute line
+  je calls jsto() to give string to jfe to print
+  je calls jgets() to get kb input for debug or (1!:2[2) or (n : 0)
+  je jdo() returns
+ jfe loop
+
+je can call jsto()  0 or more times in a single repl loop
+je can call jgets() 0 or more times in a single repl loop
+
+jfe routines (jconsole.c):
+ load je shared library
+ init je (get jt instance)
+ set je callbacks (sm prefix indicates session manager)
+  jt->sminput=input
+  jt->smoutput=output
+
+ input()        - get kb line for jdo() or jt->sminput() result
+ 
+ output(string) - print s from jt->smoutput(type,string) 
+
+je routines (io.c):
+ jdo(line)
+
+ jsto(type,string) - jt->smoutput() to give jfe output
+             
+ jgets() - jt->sminput() callback to get jfe kb input
+            or
+           advl() to get next script line
+
+ jtwri()    - write to file - if file is 2, calls jsto()
+
+ jtjfread() - read file - if file is 1, calls jgets()
+ 
+ jtcolon0() - get defn lines with jgets()
+
+*** je debug
+set je debug stops at jsto() and jgets()
+and continue through various inputs to see the flow
+ 
+*** jfe repl (read/execute/print/loop)
+ s=input()
+ call jdo(s)           ---------> jdo() calls immex(inpl(sentence))
+                                   ... 
+   output(s)           <--------  jsto(type,s) - jt->smoutout(type,s)
+   output returns      ---------> ...
+ ...                   <--------- jdo returns with error code
+ loop
+
+*** repl with write to display (1!:2[2) - echo/smoutput
+ ...
+                                  1:2[2 calls jtwri()
+                                  jsto(type,string)
+   output(s)           <--------- jt->smoutout(type,s)
+   output returns      ---------> ...
+
+*** repl with read from keyboard (1!:1[1)
+ ...
+                                  1:1[1 calls jtjfread()
+   input()             <--------  jt->sminput()
+   input returns line  -------->  ...
+
+*** repl with debug suspension
+ ...
+                                     loop as long as suspended
+                                       call jgets()
+   input()            <---------       call jt->sminput()
+   return line        --------->       call immex(inpl(line)
+                                     loop
+*** n : 0
+similar to debug suspension except jgets() lines added  to defn
+
+*** script load
+jgets() calls advl() - gets line from script in memory
+
+*** jwd (11!:x)
+similar to debug suspension except output/input
+ processed by gui sm
+
+*** JHS nfe (native fron end)
+jt->nfe flag - JE does not use jt->smoutout() and jt->sminput()
+instead it calls J code that provides equivalent services
+JHS routines are J socket code to talk with javascript browser page
+*/
 
 #ifdef _WIN32
 #include <windows.h>

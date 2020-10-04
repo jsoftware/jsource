@@ -1256,6 +1256,8 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x
 // This version ignores bits of length above the low RANKTX bits
 #define PRODRNK(result,length,ain) {I _i=(length); I * RESTRICT _zzt=(ain); \
  if(likely((US)_i<3)){_zzt=_i&3?_zzt:iotavec-IOTAVECBEGIN+1; result=*_zzt; ++_zzt; _zzt=_i&2?_zzt:iotavec-IOTAVECBEGIN+1; result*=*_zzt;}else{result=prod((US)_i,_zzt);} }
+// obsolete #define PRODRNK(result,length,ain) {I _i=(length); I * RESTRICT _zzt=(ain); result=(US)_i; \
+// obsolete  if(likely(result<3)){I *_zzt1=_zzt+1; result=(I)(iotavec-IOTAVECBEGIN+1); _zzt=_i&3?_zzt:(I*)result; _zzt1=_i&2?_zzt1:(I*)result; result=*_zzt**_zzt1;}else{result=prod(result,_zzt);} }
 // obsolete #define PROD(result,length,ain) {I _i=(length)-1; result=(ain)[_i]; result=_i<0?1:result; do{--_i; I _r=(ain)[_i]*result; result=_i<0?result:_r;}while(_i>0);} 
 #define PROD1(result,length,ain) PROD(result,length,ain)  // scaf
 // PRODX replaces CPROD.  It is PROD with a test for overflow included.  To save calls to mult, PRODX takes an initial value

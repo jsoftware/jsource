@@ -489,22 +489,18 @@ static VF repairip[4] = {plusBIO, plusIIO, minusBIO, minusIIO};
 
 // All dyadic arithmetic verbs f enter here, and also f"n.  a and w are the arguments, id
 // is the pseudocharacter indicating what operation is to be performed.  self is the block for this primitive,
-// ranks are the ranks of the verb, argranks are the ranks of a and w combined into 1 field
 #if SY_64
+// allranks is (ranks of a and w),(verb ranks)
 static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,UI allranks){  // allranks is argranks/ranks
 #else
+// ranks are the ranks of the verb, argranks are the ranks of a and w combined into 1 field
 static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ranks,UI argranks){
 #endif
- A z;I m,mf,n,nf,zn;VA2 adocv,*aadocv;UI fr,shortr;  // fr will eventually be frame/rank  nf (and mf) change roles during execution  fr/shortr use all bits and shift
+ A z;I m,mf,n,nf,zn;VA2 adocv,*aadocv;UI fr;  // fr will eventually be frame/rank  nf (and mf) change roles during execution  fr/shortr use all bits and shift
 #if !SY_64
    I scellf=0;  // 0 for no rank
 #endif
  I aawwzk[5];  // a outer/only, a inner, w outer/only, w inner, z
-#if SY_64
- fr=allranks>>(3*RANKTX); shortr=(allranks>>(2*RANKTX))&RANKTMSK;  // fr,shortr = ar,wr to begin with.  Changes later
-#else
- fr=argranks>>RANKTX; shortr=argranks&RANKTMSK;  // fr,shortr = ar,wr to begin with.  Changes later
-#endif
  F2PREFIP;
  {I at=AT(a);
   I wt=AT(w);
@@ -547,6 +543,11 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
  {//I *as = AS(a); I *ws = AS(w);
 #if SY_64
   if((allranks&RANK2TMSK)==0){ // rank 0 0 means no outer frames, sets up faster
+#if SY_64
+ fr=allranks>>(3*RANKTX); UI shortr=(allranks>>(2*RANKTX))&RANKTMSK;  // fr,shortr = ar,wr to begin with.  Changes later
+#else
+ fr=argranks>>RANKTX; UI shortr=argranks&RANKTMSK;  // fr,shortr = ar,wr to begin with.  Changes later
+#endif
 #else
   if(ranks==0){ // rank 0 0 means no outer frames, sets up faster
 #endif
@@ -589,8 +590,25 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
   }else{I ak,wk;UI acr,wcr;  // fr, shortr are left/right verb rank here
    // Here, a rank was specified.  That means there must be a frame, according to the IRS rules
 #if SY_64
-   acr=(allranks>>RANKTX)&RANKTMSK; acr=fr<acr?fr:acr; acr*=0xfffffffe00000001; fr<<=(2*RANKTX+1); acr+=fr;  // acr=left frame/cellrank
-   wcr=allranks&RANKTMSK; wcr=shortr<wcr?shortr:wcr; wcr*=0xfffffffe00000001; shortr<<=(2*RANKTX+1); wcr+=shortr; // wcr=right frame/cellrank  fr/shortr free
+// obsolete I savallranks=allranks;  // scaf
+   {I af,wf;
+    // Heavy register pressure here.  Seemingly trivial changes to allranks cause early spill of a in next-to-last PRODRNK
+    // When this was written with 6 names it barely fit in registers, so I rewrote it with 4 names.  Compiler's ideas about handling allranks fill spare register
+    acr=0; af=allranks>>2*RANKTX;  // allranks = anr/wnr/avr/wvr fr==af=anr/wnr  wcr will hold verbrank
+    wcr=(UI4)allranks; af|=RANKTMSK; af-=wcr; af=((I)af<0)?acr:af; af&=~RANKTMSK;  // fr is 0/0/anr/wnr -> 0/0/anr/ffff -> 0/0/afr/x -> clamp at 0 -> 0/0/afr/0
+    wf=allranks>>2*RANKTX; wcr&=RANKTMSK; wf&=RANKTMSK; wf-=wcr; wf=((I)wf<0)?acr:wf;    // wf is 0/0/anr/wnr -> 0/0/0/anr ->  0/0/0/afr -> clamp at 0
+    acr=allranks>>2*RANKTX; acr-=af; acr-=wf;  // acr = ar/wr/acr/wcr
+    wcr=acr; wcr&=RANKTMSK; wf<<=2*RANKTX+1; wcr|=wf;   // wcr = wfr/0/wcr  final value
+    acr>>=RANKTX; af<<=RANKTX+1; acr|=af;  // acr = afr/0/acr    final value
+// obsolete I wcr2=wcr, acr2=acr; allranks=savallranks; fr=allranks>>(3*RANKTX); wf=(allranks>>(2*RANKTX))&RANKTMSK;  // scaf
+   }
+// obsolete    acr=(allranks>>RANKTX)&RANKTMSK; acr=fr<acr?fr:acr; acr*=0xfffffffe00000001; fr<<=(2*RANKTX+1); acr+=fr;  // acr=left frame/cellrank
+// obsolete    wcr=allranks&RANKTMSK; wcr=shortr<wcr?shortr:wcr; wcr*=0xfffffffe00000001; shortr<<=(2*RANKTX+1); wcr+=shortr; // wcr=right frame/cellrank  fr/shortr free
+// obsolete // don't do it   acr=(allranks>>RANKTX)&RANKTMSK; acr=fr<acr?fr:acr; fr-=acr; fr<<=(2*RANKTX+1); acr+=fr;  // acr=left frame/cellrank
+// obsolete // don't do it   wcr=allranks&RANKTMSK; wcr=shortr<wcr?shortr:wcr; shortr-=wcr; shortr<<=(2*RANKTX+1); wcr+=shortr; // wcr=right frame/cellrank  fr/shortr free
+// obsolete    // you would think that the last 3 stmts on each line should be fr-=acr; fr<<=(2*RANKTX+1); acr+=fr;  but
+// obsolete    // that calculates only acr/wcr before branching to the sparse code, and somehow it ends up using another register and everything goes bad
+// obsolete if(acr!=acr2 || wcr!=wcr2)SEGFAULT
 #else
    I af,wf;
    acr=ranks>>RANKTX; acr=fr<acr?fr:acr; af=fr-acr;  // acr=effective rank, af=left frame
@@ -623,7 +641,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
     ak<<=bplg(AT(a)); wk<<=bplg(AT(w));  // convert cell sizes to bytes
     aawwzk[0]=ak; aawwzk[2]=wk; ak=((I)jtinplace&VIPWFLONG)?0:ak; wk=((I)jtinplace&VIPWFLONG)?wk:0; aawwzk[1]=ak; aawwzk[3]=wk;  // set inner cell size for last followed by non-last.  Last is 0 for a repeated cell ak/wk free
 // obsolete     awzk[0]=ak; awzk[1]=wk;  // get these values out of registers - the compiler thinks they're needed for a loop
-    shortr=(I)jtinplace&VIPWCRLONG?acr:wcr; fr=(I)jtinplace&VIPWCRLONG?wcr:acr; // shortr=frame(short cell)/0/cellrank(short cell)  fr=frame(long cell)/0/cellrank(long cell)
+    I shortr=(I)jtinplace&VIPWCRLONG?acr:wcr; fr=(I)jtinplace&VIPWCRLONG?wcr:acr; // shortr=frame(short cell)/0/cellrank(short cell)  fr=frame(long cell)/0/cellrank(long cell)
     shortr&=RANKTMSK;  // cellrank(short cell)
 #if SY_64
     shortr*=0x20000ffff;   //   cellrank(short cell)/cellrank(short cell)/-cellrank(short cell)  200000000+10000+ffffffffffffffff
@@ -654,10 +672,10 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
     f=fr&RANKTMSK; f^=RANKTMSK; allranks>>=2*RANKTX; allranks^=f; f<<=RANKTX; allranks^= f;  // now allranks has 2 bytes, with 00 indicating OK to inplace  i. e. argrank^f+fr  f free
     allranks+=(VIPOKRNKA-1)-((1LL<<(2*RANKTX))-1)+(1LL<<RANKTX); // 0x00010000  set VIPOKRNKA  (by carry into 0) if a byte of allranks is 00
     allranks&=~((VIPOKRNKW<<1)-(1LL<<RANKTX)); allranks+=(VIPOKRNKW-(1LL<<RANKTX))+1;  // 0x3fff0001  set VIPOKRNKW (by carry into 0) if w byte of allranks is 00
-    allranks>>=(VIPOKRNKAX-VIPOKAX); allranks&=~VIPOKW; allranks+=VIPOKW>>1; allranks|=~(VIPOKA+VIPOKW); jtinplace=(J)((I)jtinplace&allranks);  // close up gap betw RNKA and RNKW
+    allranks>>=(VIPOKRNKAX-VIPOKAX); allranks&=~VIPOKW; allranks+=VIPOKW>>1; allranks|=~(VIPOKA+VIPOKW); jtinplace=(J)((I)jtinplace&allranks);  // close up gap betw RNKA and RNKW  allranks free
 // obsolete     jtinplace=(J)((I)jtinplace&(((((allranks>>(3*RANKTX))^fr)&RANKTMSK)-1)|~VIPOKA));  // disable inplace a if a rank has either repeat,
 // obsolete     jtinplace=(J)((I)jtinplace&(((((allranks>>(2*RANKTX))^fr)&RANKTMSK)-1)|~VIPOKW));  // disable inplace w if w rank has either repeat, i. e. argrank!=f+fr
-    ASSERTAGREE(AS(a)+acr, AS(w)+wcr, (shortr>>RANKTX)&RANKTMSK)  // offset to each cellshape, and cellrank(short cell) 
+    ASSERTAGREE(AS(a)+acr, AS(w)+wcr, (shortr>>RANKTX)&RANKTMSK)  // offset to each cellshape, and cellrank(short cell) acr wcr free but were actually spilled earlier
     PRODRNK(n,shortr,AS((I)jtinplace&VIPWCRLONG?w:a)+(shortr>>=(2*RANKTX+1)));  // n is #atoms in excess frame of inner cells, length assigned first shortr free
 #else
     // fr will be (frame(long cell))  /  (shorter frame len)   /  (longer frame len)                      /   (longer frame len+longer celllen)
@@ -697,7 +715,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
     f=(fr>>(2*RANKTX))&RANKTMSK;  // recover (shorter frame len) from upper fx
     PRODRNK(nf,((fr>>RANKTX)-f),f+AS(((I)jtinplace&VIPWFLONG)?w:a));    // nf=#times shorter-frame cell must be repeated;  offset is (shorter frame len), i. e. loc of excess frame
          // length is (longer frame len)-(shorter frame len)  i. e. length of excess frame
-    PRODRNK(mf,fr>>(2*RANKTX),AS(a));  //  mf=#cells in common frame [either arg ok]   f is (shorter frame len)      f free now
+    PRODRNK(mf,fr>>(2*RANKTX),AS(w));  //  mf=#cells in common frame [either arg ok]   f is (shorter frame len)      f free now
 #else
     PRODRNK(nf,((fr>>RANKTX)-f),f+AS(((I)jtinplace&VIPWFLONG)?w:a));    // nf=#times shorter-frame cell must be repeated;  offset is (shorter frame len), i. e. loc of excess frame
          // length is (longer frame len)-(shorter frame len)  i. e. length of excess frame
@@ -728,6 +746,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
     }
    }else{
 #if SY_64
+// obsolete     I af=acr>>(2*RANKTX+1), wf=wcr>>(2*RANKTX+1); acr&=RANKTMSK; wcr&=RANKTMSK;   // separate cr and f for sparse
     I af=acr>>(2*RANKTX+1), wf=wcr>>(2*RANKTX+1); acr&=RANKTMSK; wcr&=RANKTMSK;   // separate cr and f for sparse
 #endif
     fr=acr<wcr?wcr:acr; I f=(af<wf)?wf:af; fr+=(f<<RANKTX)+f; aawwzk[0]=acr; aawwzk[1]=wcr; mf=af; nf=wf;

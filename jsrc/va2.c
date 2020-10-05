@@ -543,12 +543,9 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
  {//I *as = AS(a); I *ws = AS(w);
 #if SY_64
   if((allranks&RANK2TMSK)==0){ // rank 0 0 means no outer frames, sets up faster
-#if SY_64
- fr=allranks>>(3*RANKTX); UI shortr=(allranks>>(2*RANKTX))&RANKTMSK;  // fr,shortr = ar,wr to begin with.  Changes later
+   fr=allranks>>(3*RANKTX); UI shortr=(allranks>>(2*RANKTX))&RANKTMSK;  // fr,shortr = ar,wr to begin with.  Changes later
 #else
- fr=argranks>>RANKTX; UI shortr=argranks&RANKTMSK;  // fr,shortr = ar,wr to begin with.  Changes later
-#endif
-#else
+  fr=argranks>>RANKTX; UI shortr=argranks&RANKTMSK;  // fr,shortr = ar,wr to begin with.  Changes later
   if(ranks==0){ // rank 0 0 means no outer frames, sets up faster
 #endif
    // No rank specified.  Since all these verbs have rank 0, that simplifies quite a bit.  ak/wk/zk are not needed and are garbage

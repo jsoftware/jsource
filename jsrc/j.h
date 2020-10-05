@@ -1255,9 +1255,14 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x
  if(likely(_i<3)){_zzt=_i<=0?iotavec-IOTAVECBEGIN+1:_zzt; result=*_zzt; ++_zzt; _zzt=_i<=1?iotavec-IOTAVECBEGIN+1:_zzt; result*=*_zzt;}else{result=prod(_i,_zzt);} }
 // This version ignores bits of length above the low RANKTX bits
 #define PRODRNK(result,length,ain) {I _i=(length); I * RESTRICT _zzt=(ain); \
- if(likely((US)_i<3)){_zzt=_i&3?_zzt:iotavec-IOTAVECBEGIN+1; result=*_zzt; ++_zzt; _zzt=_i&2?_zzt:iotavec-IOTAVECBEGIN+1; result*=*_zzt;}else{result=prod((US)_i,_zzt);} }
-// obsolete #define PRODRNK(result,length,ain) {I _i=(length); I * RESTRICT _zzt=(ain); result=(US)_i; \
-// obsolete  if(likely(result<3)){I *_zzt1=_zzt+1; result=(I)(iotavec-IOTAVECBEGIN+1); _zzt=_i&3?_zzt:(I*)result; _zzt1=_i&2?_zzt1:(I*)result; result=*_zzt**_zzt1;}else{result=prod(result,_zzt);} }
+  if(likely((US)_i<3)){_zzt=_i&3?_zzt:iotavec-IOTAVECBEGIN+1; result=*_zzt; ++_zzt; _zzt=_i&2?_zzt:iotavec-IOTAVECBEGIN+1; result*=*_zzt;}else{result=prod((US)_i,_zzt);} }
+// the following would be perfect if the compiler would just do what it's told
+// better #define PRODRNK(result,length,ain) {I _i=(length); I * RESTRICT _zzt=(ain); \
+// better  if(likely((US)_i<3)){result=_zzt[_i-2]; result=_i&1?_i:result; result*=_zzt[_i-1]; result=_i++?result:_i;}else{result=prod((US)_i,_zzt);} }
+// this version uses no extra registers but has 3 cycles extra latency
+#define PRODRNK3REG(z,length,ain) {I _i=(US)(length); I * RESTRICT _zzt=(ain); \
+if(likely(_i<3)){z=_zzt[_i-2]; _i-=2; z=-z; z|=_i; z=-z; z*=_zzt[_i-1]; _i+=3; z=_i&2?z:_i;}else{z=prod(_i,_zzt);} }
+
 // obsolete #define PROD(result,length,ain) {I _i=(length)-1; result=(ain)[_i]; result=_i<0?1:result; do{--_i; I _r=(ain)[_i]*result; result=_i<0?result:_r;}while(_i>0);} 
 #define PROD1(result,length,ain) PROD(result,length,ain)  // scaf
 // PRODX replaces CPROD.  It is PROD with a test for overflow included.  To save calls to mult, PRODX takes an initial value

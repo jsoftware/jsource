@@ -542,7 +542,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
  // We detect agreement error before domain error
  {//I *as = AS(a); I *ws = AS(w);
 #if SY_64
-  if((allranks&RANK2TMSK)==0){ // rank 0 0 means no outer frames, sets up faster
+  if(likely((allranks&RANK2TMSK)==0)){ // rank 0 0 means no outer frames, sets up faster
    fr=allranks>>(3*RANKTX); UI shortr=(allranks>>(2*RANKTX))&RANKTMSK;  // fr,shortr = ar,wr to begin with.  Changes later
 #else
   fr=argranks>>RANKTX; UI shortr=argranks&RANKTMSK;  // fr,shortr = ar,wr to begin with.  Changes later
@@ -840,7 +840,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
      // but aawwzk[1,3] have 0 in a repeated argument.  aawwzk[1,3] are added for each inner iteration, aawwzk[0,2] at the end of an inner cycle
      // m is the number of outer loops the caller will run
      // n is the number of times the inner-loop atom is repeated for each outer loop: n=1 means no inner loop needed; n>1 means each atom of y is repeated n times; n<0 means each atom of x is repeated ~n times.  n*m cannot=0. 
-   I i=mf; I jj=nf; while(1){I lrc=((AHDR2FN*)aadocv->f)(n,m,av,wv,zv,jt); rc=lrc<rc?lrc:rc; if(!--i)break; I jj1=--jj; jj=jj<0?nf:jj; av+=aawwzk[1+REPSGN(jj1)]; wv+=aawwzk[3+REPSGN(jj1)]; zv+=aawwzk[4];}  // jj1 is -1 on the last inner iter, where we use outer incr
+   I i=mf; I jj=nf; lp000: {I lrc=((AHDR2FN*)aadocv->f)(n,m,av,wv,zv,jt); rc=lrc<rc?lrc:rc; if(unlikely(--i)){ I jj1=--jj; jj=jj<0?nf:jj; av+=aawwzk[1+REPSGN(jj1)]; wv+=aawwzk[3+REPSGN(jj1)]; zv+=aawwzk[4]; goto lp000; }}  // jj1 is -1 on the last inner iter, where we use outer incr
 #endif
    }
 

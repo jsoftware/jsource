@@ -1251,17 +1251,16 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x
 // PROD multiplies a list of numbers, where the product is known not to overflow a signed int (for example, it might be part of the shape of a nonempty dense array)
 // obsolete #define PROD(result,length,ain) {I *_zzt=(ain); I _i=(length)-1; _zzt=_i<0?iotavec-IOTAVECBEGIN+1:_zzt; result=*_zzt; do{++_zzt; --_i; _zzt=_i<0?iotavec-IOTAVECBEGIN+1:_zzt; result*=*_zzt;}while(_i>0);} 
 // assign length first so we can sneak some computation into ain in va2
-#define PROD(result,length,ain) {I _i=(length); I * RESTRICT _zzt=(ain); \
- if(likely(_i<3)){_zzt=_i<=0?iotavec-IOTAVECBEGIN+1:_zzt; result=*_zzt; ++_zzt; _zzt=_i<=1?iotavec-IOTAVECBEGIN+1:_zzt; result*=*_zzt;}else{result=prod(_i,_zzt);} }
+// obsolete #define PROD(result,length,ain) {I _i=(length); I * RESTRICT _zzt=(ain); \
+// obsolete  if(likely(_i<3)){_zzt=_i<=0?iotavec-IOTAVECBEGIN+1:_zzt; result=*_zzt; ++_zzt; _zzt=_i<=1?iotavec-IOTAVECBEGIN+1:_zzt; result*=*_zzt;}else{result=prod(_i,_zzt);} }
+#define PROD(z,length,ain) {I _i=(length); I * RESTRICT _zzt=(ain)-2; \
+if(likely(_i<3)){_zzt+=_i; z=(I)&oneone; _zzt=_i>=1?_zzt:(I*)z; z=_i>1?(I)_zzt:z; z=((I*)z)[0]; z*=_zzt[1];}else{z=prod(_i,_zzt+2);} }
 // This version ignores bits of length above the low RANKTX bits
 #define PRODRNK(result,length,ain) {I _i=(length); I * RESTRICT _zzt=(ain); \
   if(likely((US)_i<3)){_zzt=_i&3?_zzt:iotavec-IOTAVECBEGIN+1; result=*_zzt; ++_zzt; _zzt=_i&2?_zzt:iotavec-IOTAVECBEGIN+1; result*=*_zzt;}else{result=prod((US)_i,_zzt);} }
-// the following would be perfect if the compiler would just do what it's told
-// better #define PRODRNK(result,length,ain) {I _i=(length); I * RESTRICT _zzt=(ain); \
-// better  if(likely((US)_i<3)){result=_zzt[_i-2]; result=_i&1?_i:result; result*=_zzt[_i-1]; result=_i++?result:_i;}else{result=prod((US)_i,_zzt);} }
-// this version uses no extra registers but has 3 cycles extra latency
-#define PRODRNK3REG(z,length,ain) {I _i=(US)(length); I * RESTRICT _zzt=(ain); \
-if(likely(_i<3)){z=_zzt[_i-2]; _i-=2; z=-z; z|=_i; z=-z; z*=_zzt[_i-1]; _i+=3; z=_i&2?z:_i;}else{z=prod(_i,_zzt);} }
+// the 3REG version is perfect - too perfect, because the compiler saves a reg and decides to spill acr rather than aaa/aab which are used only in a predictable test
+#define PRODRNK3REG(z,length,ain) {I _i=(length); I * RESTRICT _zzt=(ain)-2; z=(US)_i; \
+if(likely(z<3)){_zzt+=z; z=(I)&oneone; _zzt=_i&3?_zzt:(I*)z; z=_i&2?(I)_zzt:z; z=((I*)z)[0]; z*=_zzt[1];}else{z=prod(z,_zzt+2);} }
 
 // obsolete #define PROD(result,length,ain) {I _i=(length)-1; result=(ain)[_i]; result=_i<0?1:result; do{--_i; I _r=(ain)[_i]*result; result=_i<0?result:_r;}while(_i>0);} 
 #define PROD1(result,length,ain) PROD(result,length,ain)  // scaf

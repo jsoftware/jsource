@@ -107,10 +107,11 @@ UC  hwfma=0;              // blis cpu tuning
 
 // global const start -  do not need globinit
 //!      I   v00[2]={0,0};         // vector value to use for rank 0 0
-const UC  bit[8]={(UC)0x80, (UC)0x40, (UC)0x20, (UC)0x10, (UC)0x08, (UC)0x04, (UC)0x02, (UC)0x01};
+// const UC  bit[8]={(UC)0x80, (UC)0x40, (UC)0x20, (UC)0x10, (UC)0x08, (UC)0x04, (UC)0x02, (UC)0x01};
 const double dzero=0.0;   // used by gemm
 const dcomplex zone={1.0,0.0};  // used gy gemm
 const dcomplex zzero={0.0,0.0};
+I oneone[2]={1,1};  // used by PROD
 // global const end 
 
 

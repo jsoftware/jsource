@@ -995,6 +995,7 @@ extern const UI4      shortrange[3][4];
 extern Z        zeroZ;
 extern const dcomplex zone;
 extern const dcomplex zzero;
+extern I oneone[2];
 extern A        zpath;
 extern I iotavec[IOTAVECLEN];  // ascending integers, starting at IOTAVECBEGIN
 /* cpu feature */

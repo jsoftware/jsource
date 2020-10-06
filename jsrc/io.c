@@ -142,8 +142,13 @@ static void jtwrf(J jt,I n,C*v,F f){C*u,*x;I j=0,m;
   j+=m;
 }}
 
+// input is string *s of length n
+// result is A block for the string
+// if !b (normal except for m : 0), look at the string:
+//   if it contains XOFF (ctrl-D), exit J
+//   if the vertical boxing character is Unicode, discard leading SP or | characters (which might have been error typeout)
 A jtinpl(J jt,B b,I n,C*s){C c;I k=0;
- if(n&&(c=s[n-1],CLF==c||CCR==c))--n;
+ if(n&&(c=s[n-1],CLF==c||CCR==c))--n;  // discard trailing [CR], CRLF, CRCR
 #if _WIN32
  if(n&&(c=s[n-1],CCR==c))--n;
 #endif
@@ -155,6 +160,8 @@ A jtinpl(J jt,B b,I n,C*s){C c;I k=0;
  R str(n-k,s+k);
 }
 
+// s->beginning of input, j is starting index of search, n is #characters
+// result is index just past the end-of-line, which ends after CR, LF, or both
 static I advl(I j,I n,C*s){B b;C c,*v;
  v=j+s; 
  DO(n-j, c=*v++; b=c==CCR; if(b||c==CLF)R j+1+i+(I )(b&&CLF==*v););
@@ -170,24 +177,29 @@ static C* nfeinput(J jt,C* s){A y;
  return CAV(y); /* don't combine with previous line! CAV runs (x) 2 times! */
 }
 
+// type NUL-terminated prompt string p, read 1 line, & return
+// if *p is (C)1 (which comes from m : 0), the request is for unprocessed 'literal input'
+// otherwise processed in inpl
+// Lines may come from a script, in which case return 0 on EOF
 A jtjgets(J jt,C*p){A y;B b;C*v;I j,k,m,n;UC*s;
  *jt->adbreak=0;
- if(b=1==*p)p=""; /* 1 means literal input */
- if(jt->dcs){   // DCSCRIPT debug type
-  ++jt->dcs->dcn; j=jt->dcs->dcix; 
+ if(b=1==*p)p=""; /* 1 means literal input; remember & clear prompt */
+ if(jt->dcs){   // DCSCRIPT debug type - means we are reading from file (or string)  for 0!:x
+  ++jt->dcs->dcn; j=jt->dcs->dcix; // increment line# and fetch current start index
   y=jt->dcs->dcy; n=AN(y); s=UAV(y);
-  if(!(j<n))R 0;
-  jt->dcs->dcj=k=j;
-  jt->dcs->dcix=j=advl(j,n,s);
-  m=j-k; if(m&&32>s[k+m-1])--m; if(m&&32>s[k+m-1])--m;
-  jtwri(jt,MTYOLOG,p,m,k+s);
-  R inpl(b,m,k+s);
+  if(!(j<n))R 0;  // return 0 for EOF
+  jt->dcs->dcj=k=j;  // k=start index
+  jt->dcs->dcix=j=advl(j,n,s);  // j=end+1 index
+  m=j-k; if(m&&32>s[k+m-1])--m; if(m&&32>s[k+m-1])--m;  // m is length; discard trailing control characters (usually CRLF, but not necessarily) ?not needed: done in inpl
+  jtwri(jt,MTYOLOG,p,m,k+s);  // log the input
+  R inpl(b,m,k+s);  // process & return the line
  }
  /* J calls for input in 3 cases:
     debug suspension for normal input
     n : 0 input lines up to terminating )
     1!:1[1 read from keyboard */
- showerr();
+ showerr();  // if there is an error at this point, display it (shouldn't happen)
+ // read from the front end. This is either through the nfe path or via the callback to the FE
  if(jt->nfe)
   // Native Front End
   v=nfeinput(jt,*p?"input_jfe_'      '":"input_jfe_''");
@@ -195,7 +207,7 @@ A jtjgets(J jt,C*p){A y;B b;C*v;I j,k,m,n;UC*s;
   ASSERT(jt->sminput,EVBREAK); 
   v=((inputtype)(jt->sminput))(jt,p);
  }
- R inpl(b,(I)strlen(v),v);
+ R inpl(b,(I)strlen(v),v);  // return A block for string
 }
 
 

@@ -878,28 +878,15 @@ if(BETWEENC(fndflag,1,3))jfwrite(str(129,"************ Old-style definition enco
 }
 
 // input reader for direct definition
-// Result: list of words (same format as result of wordil(), ready for enqueue()) for one executable line
-// if result 0, it could be because
-//  (1) the line is malformed, containing ). with no previous (. - syntax error has been set
-//  (2) end-of-file when lines are being read from (*infn)() ).  In this case syntax error
-//      has been set IF a DD is being processed when end-of-file occurs
-//  (3) interrupted DD - another line is required to finish the DD.  No error has been set.
-//  (4) infn and linein were both 0 (requesting a flush).  If the buffer was not empty, syntax error has been set
+// This is a drop-in for tokens().  It takes a string and env, and returns tokens created by enqueue()
 //
-// Input: A (*infn)(J jt, void *) is the function for reading input.  If it is 0, the single line given in
-//   inline will be processed instead.  If infn is nonzero, inline is passed into infn as an argument.
-//   (*infn) returns the A block for the line, or 0 if end-of-file/error
-// void *linein is an opaque parameter to *infn, or the A for a single input line
-// A *workarea must be unique for each context, and is used to hold buffered data for a context.  (*workarea) must be 0
-//  in the first call for a context.  'context' means a stream of characters.  For example, the user might be
-//  typing lines one at a time from the keyboard while a timer interrupt occasionally loads a script.  These two
-//  streams are distinguished by their context.  Obviously you must be careful not to put (workarea) on the C stack
-//  where it can disappear between calls to ddline.
+// Any DDs found are collected and converted into ( m : string ).  This is done recursively.  If an unterminated
+// DD is found, we call jgets() to get the next line, taking as many lines as needed to leave with a valid line.
+// The string for a DD will contain a trailing LF plus one LF for each LF found inside the DD.
 //
-// if infn and inline are both 0, the routine flushes its buffered input and sets syntax error if the buffer was not empty.
-// You can use this after (". y) to verify that y was well-formed.
+// Bit 2 of env suppresses the call to jgets().  It will be set if it is known that there is no way to get more
+// input, for example if the string comes from (". y) or from an event.  If an unterminated DD is found when bit 2 is set,
+// the call fails with control error
 //
-// This routine always returns complete lines, and never inserts LF.  It may return fewer lines than the user entered, if a DD
-// spans multiple lines.  Each DD is gathered up and converted to a string, which will contain any LFs encountered inside the DD.
-// DDs may be nested.  Each DD is converted to the 5 words ( m : 'ddtext' ) where m is determined from  the context of the DD.
-A ddline(J jt, A (*infn)(J, void *), void *linein, A *workarea);
+// If the call to jgets() returns EOF, indicating end-of-script, that is also a control error
+A jtddtokens(J jt,A w,I env);

@@ -283,6 +283,7 @@ A jtenqueue(J jt,A a,A w,I env){A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl;UC c;
 /* z:  result array of boxed list of words                      */
 
 // env is the environment: 0=tacit translator, 1=keyboard/immex with no local symbol, 2=explicit definition running
+// w is either a string block or a string block that has been processed into words in wordil format, with AM set
 A jttokens(J jt,A w,I env){R enqueue(wordil(w),w,env);}
 // enqueue produces nonrecursive result, and so does tokens.  This is OK because the result is always parsed and is never an argument to a verb
 

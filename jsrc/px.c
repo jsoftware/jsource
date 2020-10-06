@@ -40,18 +40,20 @@ F1(jtexec1){A z;
  RETF(z&&!(AT(z)&NOUN)?mtv:z);  // if non-noun result, return empty $0
 }
 
+// execute w, which is either a string or the boxed words of a string (as if from wordil())
 F1(jtimmex){A z;
- if(!w)R A0;  // if no string, return empty result
+ if(!w)R A0;  // if no string, return error
  AKGST(jt->locsyms)=jt->global; // in case the sentence has operators, set a locale for it
  STACKCHKOFL FDEPINC(1); z=parse(tokens(w,1+(AN(jt->locsyms)>1))); FDEPDEC(1);
  if(z&&!jt->asgn)jpr(z);
  RETF(z);
 }
 
+// execute for assert: check result for all 1
 F1(jtimmea){A t,z,z1;
  z=immex(w); 
  ASSERT(jt->asgn||!z||!(AT(z)&NOUN)||(t=eq(num(1),z),
-     all1(AT(z)&SPARSE?df1(z1,t,atop(slash(ds(CSTARDOT)),ds(CCOMMA))):t)),EVASSERT);
+     all1(AT(z)&SPARSE?df1(z1,t,atop(slash(ds(CSTARDOT)),ds(CCOMMA))):t)),EVASSERT);  // apply *./@, if sparse
  RETF(z);
 }
 

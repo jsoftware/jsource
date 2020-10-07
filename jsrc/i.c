@@ -20,17 +20,10 @@
 // Example: LITX is 1, so location 1 contains sizeof(C)
 #define TPSZ(name) [name##X] = name##SIZE
 static const UC typesizes[32] = {
-#if 1  // obsolete
 TPSZ(B01), TPSZ(LIT), TPSZ(INT), TPSZ(FL), TPSZ(CMPX), TPSZ(BOX), TPSZ(XNUM), TPSZ(RAT), 
 TPSZ(SB01), TPSZ(SLIT), TPSZ(SINT), TPSZ(SFL), TPSZ(SCMPX), TPSZ(SBOX), TPSZ(SBT), TPSZ(C2T), 
 TPSZ(C4T), TPSZ(ASGN), TPSZ(MARK), TPSZ(NAME), TPSZ(SYMB), TPSZ(CONW), TPSZ(LPAR), TPSZ(RPAR), 
 [ADVX] = INTSIZE, [CONJX] = INTSIZE, [VERBX] = INTSIZE  // note ACV sizes are in INTs
-#else
-B01SIZE, LITSIZE, INTSIZE, FLSIZE, CMPXSIZE, BOXSIZE, XNUMSIZE, RATSIZE,
--1,           -1, SB01SIZE, SLITSIZE, SINTSIZE, SFLSIZE, SCMPXSIZE, SBOXSIZE,
-SBTSIZE, C2TSIZE, C4TSIZE, XDSIZE, XZSIZE, ASGNSIZE, MARKSIZE, NAMESIZE,
-SYMBSIZE, CONWSIZE, LPARSIZE, INTSIZE, INTSIZE, INTSIZE, RPARSIZE,-1,
-#endif
 };
 
 // Priority is
@@ -79,55 +72,20 @@ J gjt=0; // JPF debug - convenience debug single process
 
 // thread-safe/one-time initialization of all global constants
 // Use GA for all these initializations, to save space since they're done only once
-B jtglobinit(J jt){A x,y;/* obsolete D*d;*/A *oldpushx=jt->tnextpushp;
-// obsolete  liln=1&&C_LE;
+B jtglobinit(J jt){A x,y;A *oldpushx=jt->tnextpushp;
  MC(jt->typesizes,typesizes,sizeof(jt->typesizes));  // required for ma.  Repeated for each thread in jtinit3
  MC(jt->typepriority,typepriority,sizeof(jt->typepriority));  // may not be needed
  MC(jt->prioritytype,prioritytype,sizeof(jt->prioritytype));  // may not be needed
  jt->adbreakr=jt->adbreak=&breakdata; /* required for ma to work */
  meminit();  /* required for ma to work */
-// obsolete  MC(&inf, XINF,SZD); 
-// obsolete  MC(&jnan,XNAN,SZD);
-// obsolete  infm=-inf;
-// obsolete  DO(-NUMMIN, GA(x,INT,1,0,0); ACX(x); * AV(x)=i+NUMMIN;   num[i+NUMMIN]   =x;);
-// obsolete  DO(NUMMAX-1, GA(x,INT,1,0,0); ACX(x); * AV(x)=i+2;       num[i+2]   =x;);
-// obsolete  DO(sizeof(numvr)/sizeof(numvr[0]), GA(x,FL,1,0,0); ACX(x); *DAV(x)=(D)i;    numvr[i]   =x;);
-// obsolete  GA(x,B01, 1,0,0     ); ACX(x); *BAV(x)=0;                num(0)=x;
-// obsolete  GA(x,B01, 1,0,0     ); ACX(x); *BAV(x)=1;                num(1)=x;
-// obsolete  memset(chr,C0,256*SZI);
-// obsolete  GA(x,LIT, 1,0,0     ); ACX(x); *CAV(x)=' ';              chr[' '   ]=x;
-// obsolete  GA(x,LIT, 1,0,0     ); ACX(x); *CAV(x)=':';              chr[':'   ]=x;
-// obsolete  GA(x,LIT, 1,0,0     ); ACX(x); *CAV(x)='/';              chr['/'   ]=x;
-// obsolete  GA(x,LIT, 1,0,0     ); ACX(x); *CAV(x)='\\';             chr['\\'  ]=x;
-// obsolete  GA(x,LIT, 1,0,0     ); ACX(x); *CAV(x)=CQUOTE;           chr[CQUOTE]=x;
-// obsolete  GA(x,B01, 0,1,0     ); ACX(x);                           mtv        =x;
-// obsolete  GA(x,LIT, 0,1,0     ); ACX(x);                           aqq        =x;
-// obsolete  GA(x,INT, 1,1,0     ); ACX(x); * AV(x)=0;                iv0=x;
-// obsolete  GA(x,INT, 1,1,0     ); ACX(x); * AV(x)=1;                iv1=x;
-// obsolete GA(x,INT, 1,0,0     ); ACX(x); * AV(x)=IMAX;             imax=x;
-// obsolete  GA(x,INT, 1,0,0     ); ACX(x); * AV(x)=0;                zeroionei(0)=x;
-// obsolete  GA(x,INT, 1,0,0     ); ACX(x); * AV(x)=1;                zeroionei(1)=x;
-// obsolete  GA(x,FL,  1,0,0     ); ACX(x); *DAV(x)=inf;              ainf       =x;
-// obsolete  GA(x,FL,  1,0,0     ); ACX(x); *DAV(x)=PI;               pie        =x;
-// obsolete GA(x,FL,  1,0,0     ); ACX(x); *DAV(x)=0.5;              onehalf    =x;
-// obsolete  GA(x,MARK,1,0,0     ); ACX(x); * AV(x)=0;                mark       =x; 
-// obsolete  GA(x,B01, 0,2,&zeroZ); ACX(x);                           mtm        =x;
-// obsolete  GA(x,CMPX,1,0,0     ); ACX(x); d=DAV(x); *d=0; *(1+d)=1; a0j1       =x;
  RZ(y=rifvs(str(1L,"z")));     ACX(y); AS(y)[0]=BUCKETXLOC(1,"z");   // for paths, the shape holds the bucketx
  GA(x,BOX, 1,1,0     ); ACX(x); AAV(x)[0]=y;                zpath      =x;  AFLAG(zpath) |= (AT(zpath)&TRAVERSIBLE);  // ensure that traversible types in pst are marked traversible, so tpush/ra/fa will not recur on them
-// obsolete  GA(x,ASGN+ASGNLOCAL+ASGNTONAME, 1,1,0     ); ACX(x); *CAV(x)=CASGN; asgnlocsimp=x;
-// obsolete  GA(x,ASGN+ASGNTONAME, 1,1,0     ); ACX(x); *CAV(x)=CGASGN; asgngloname=x;
-// obsolete  GA(x,ASGN+ASGNTONAME, 1,1,0     ); ACX(x); *CAV(x)=CASGN; asgnforcegloname=x;  // =. converted to global+NAME
-// obsolete  GA(x,ASGN, 1,1,0     ); ACX(x); *CAV(x)=CASGN; asgnforceglo=x;  // =. converted to global
  RZ(mnuvxynam[0]=makename("m"));
  RZ(mnuvxynam[1]=makename("n"));
  RZ(mnuvxynam[2]=makename("u"));
  RZ(mnuvxynam[3]=makename("v"));
  RZ(mnuvxynam[4]=makename("x"));
  RZ(mnuvxynam[5]=makename("y"));
-// obsolete  zeroQ.n =iv0; zeroQ.d =iv1;
-// obsolete  zeroDX.e=0;     zeroDX.x=iv0;
-// obsolete  memset(minus0,C0,8L); minus0[C_LE?7:0]='\200';
  // can be left at initial value v00[0]=v00[1]=0;   // vector 0 0, for rank
  pf=qpf();
  pinit();

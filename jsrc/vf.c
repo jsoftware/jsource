@@ -107,7 +107,7 @@ F2(jtrotate){A origw=w,y,z;B b;C*u,*v;I acr,af,ar,*av,d,k,m,n,p,*s,wcr,wf,wn,wr;
  RZ(w=setfv(w,w)); u=CAV(w); wn=AN(w); s=AS(w); k=bpnoun(AT(w));  // set fill value if given
  GA(z,AT(w),wn,wr,s); v=CAV(z);
  if(!wn)R z;
- PROD(m,wf,s); PROD1(d,wr-wf-1,s+wf+1); SETICFR(w,wf,wcr,n); /* obsolete n=wcr?s[wf]:1;*/  // m=#cells of w, n=#items per cell  d=#atoms per item of cell
+ PROD(m,wf,s); PROD1(d,wr-wf-1,s+wf+1); SETICFR(w,wf,wcr,n);   // m=#cells of w, n=#items per cell  d=#atoms per item of cell
  rot(m,d,n,k,1>=p?AN(a):1L,av,u,v);
  if(1<p){
   GA(y,AT(w),wn,wr,s); u=CAV(y); 
@@ -116,9 +116,6 @@ F2(jtrotate){A origw=w,y,z;B b;C*u,*v;I acr,af,ar,*av,d,k,m,n,p,*s,wcr,wf,wn,wr;
   z=b?y:z;
  } 
  // w is going to be replaced.  That makes it non-pristine; but if it is inplaceable it can pass its pristinity to the result, as long as there is no fill
-// obsolete  I wflg=AFLAG(w); jtinplace=(J)(wflg&(((jt->fill==0)&SGNTO0(AC(w))&((I)jtinplace>>JTINPLACEWX))<<AFPRISTINEX)); A wbase=w; if(unlikely(wflg&AFVIRTUAL)){wbase=ABACK(w); wflg=AFLAG(wbase);} AFLAG(wbase)=wflg&~AFPRISTINE;
-// obsolete  // now jtinplace is the PRISTINE flag to install into the result
-// obsolete  AFLAG(z)|=(I)jtinplace;  // if result is a repeat of the input, and the input is going away, pass on the pristinity
  PRISTXFERFIF(z,origw,jt->fill==0)  // transfer pristinity if there is no fill
  RETF(z);
 }    /* a|.!.f"r w */
@@ -153,7 +150,6 @@ F1(jtreverse){A z;C*wv,*zv;I f,k,m,n,nk,r,*v,*ws,wt,wr;
  k=bpnoun(wt); v=1+f+ws; DQ(r-1, k*=*v++;); nk=n*k;
  GA(z,wt,AN(w),wr,ws); zv=CAV(z);
  // w is going to be replaced.  That makes it non-pristine; but if it is inplaceable it can pass its pristinity to the result, as long as there is no fill
-// obsolete  I wflg=AFLAG(w); AFLAG(z)|=(wflg&((SGNTO0(AC(w))&((I)jtinplace>>JTINPLACEWX))<<AFPRISTINEX)); if(unlikely(wflg&AFVIRTUAL)){w=ABACK(w); wflg=AFLAG(w);} AFLAG(w)=wflg&~AFPRISTINE;
  PRISTXFERF(z,w)
  // w has been destroyed
  switch(k){
@@ -229,7 +225,6 @@ F2(jtreshape){A z;B filling;C*wv,*zv;I acr,ar,c,k,m,n,p,q,r,*s,t,* RESTRICT u,wc
  // now a is an atom or a list.  w can have any rank
  RZ(a=vip(a)); r=AN(a); u=AV(a);   // r=length of a   u->values of a
  if(unlikely(SPARSE&AT(w))){RETF(reshapesp(a,w,wf,wcr));}
-// obsolete  wn=AN(w); RE(m=prod(r,u)); CPROD(wn,c,wf,ws); CPROD(wn,n,wcr,wf+ws);  // m=*/a (#atoms in result)  c=#cells of w  n=#atoms/cell of w
  wn=AN(w); PRODX(m,r,u,1) CPROD(wn,c,wf,ws); CPROD(wn,n,wcr,wf+ws);  // m=*/a (#atoms in result)  c=#cells of w  n=#atoms/cell of w
  ASSERT(n||!m||jt->fill,EVLENGTH);  // error if attempt to extend array of no items to some items without fill
  t=AT(w); filling = 0;
@@ -295,7 +290,6 @@ F2(jtexpand){A z;B*av;C*wv,*wx,*zv;I an,*au,i,k,p,wc,wk,wn,wt,zn;
  DPMULDE(an,wc,zn);
  GA(z,wt,zn,AR(w),AS(w)); AS(z)[0]=an; zv=CAV(z);
  // We extracted from w, so mark it (or its backer if virtual) non-pristine.  Note that w was not changed above if it was boxed nonempty.  z is never pristine, since it may have repeats
-// obsolete  I wflg=AFLAG(w); if(unlikely(wflg&AFVIRTUAL)){w=ABACK(w); wflg=AFLAG(w);} AFLAG(w)=wflg&~AFPRISTINE;
  PRISTCLRF(w)   // this destroys w
  switch(wk){
   case sizeof(C): EXPAND(C); break;

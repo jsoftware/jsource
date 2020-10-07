@@ -101,11 +101,10 @@ static B jtiixI(J jt,I n,I m,A a,A w,I*zv){A t;B ascend;I*av,j,p,q,*tv,*u,*v,*vv
 F2(jticap2){A*av,*wv,z;C*uu,*vv;I ar,*as,at,b,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t,wr,*ws,wt,* RESTRICT zv;I cc;
  RZ(a&&w);
  ar=AR(a); at=AT(a); as=AS(a); SETIC(a,n); r=ar-1<0?0:ar-1;  // n=length of 1-cell of a, r=frame of a
- wr=AR(w); wt=AT(w); ws=AS(w); // obsolete I b=(AN(a)-1)|(AN(w)-1);  // b<0 if something is empty
+ wr=AR(w); wt=AT(w); ws=AS(w);
  ASSERT(r<=wr,EVRANK);
  ASSERTAGREE(as+ar-r,ws+wr-r,r)
-// obsolete  if(b>=0){ASSERT(HOMO(at,wt),EVDOMAIN); ASSERT(!((at|wt)&SPARSE),EVNONCE); } // if no empties, verify agreement & non-sparse
- ASSERT((POSIFHOMO(at,wt)&-AN(a)&-AN(w))>=0,EVDOMAIN); ASSERT(!((at|wt)&SPARSE)/* obsolete &-AN(a)&-AN(w)*/,EVNONCE); // if no empties, verify agreement & non-sparse
+ ASSERT((POSIFHOMO(at,wt)&-AN(a)&-AN(w))>=0,EVDOMAIN); ASSERT(!((at|wt)&SPARSE),EVNONCE); // if no empties, verify agreement & non-sparse
  CPROD(AN(w),m,wr-r,ws); CPROD(AN(w),c,r,ws+wr-r);  // m=#atoms in result   c=# atoms in a cell of w
  GATV(z,INT,m,wr-r,ws); zv=AV(z);
  if(((m-1)|(n-1)|(c-1))<0){DQ(m, *zv++=0;); R z;}  // exit with zeros for empty args

@@ -45,16 +45,6 @@ I jtmult(J jt, I x, I y){I z;I const lm = 0x00000000ffffffffLL; I const hm = 0xf
 
 // take the product of n values starting at *v.  Set error if overflow, but NOT if any of the values is 0
 I jtprod(J jt,I n,I*v){I z;
-#if 0 // obsolete
- if(1>n)R 1;
- // We want to make sure that if any of the numbers being multiplied is 0, we return 0 with no error.
- // So we check each number as it is read, and exit early if 0 is encountered.  When we multiply, we suppress
- // the error assertion.  Then, at the end, if the product is 0, it must mean that there was an error, and
- // we report it then.  This way we don't need a separate pass to check for 0.
- if(!(z=*v++))R 0; DO(n-1, if(!(v[i]))R 0; z=jtmult(0,z,v[i]););  // the 0 to jtmult suppresses error assertion there
- ASSERT(z!=0,EVLIMIT)
- R z;
-#else
  DPMULDDECLS
  // We generally don't call here unless n>2, so we optimize for that case
  // We want to make sure that if any of the numbers being multiplied is 0, we return 0 with no error.
@@ -65,7 +55,6 @@ I jtprod(J jt,I n,I*v){I z;
  DQ(n, if(unlikely(*v==0))R 0; DPMULDZ(z,*v,z) ++v;)
  ASSERT(z!=0,EVLIMIT)
  R z;
-#endif
 }
 #else
 
@@ -258,7 +247,6 @@ void mvc(I m,void*z,I n,void*w){I p=n,r;static I k=sizeof(D);
 
 // odometer, up to the n numbers s[]
 A jtodom(J jt,I r,I n,I* RESTRICT s){A z;I m,mn,*u,*zv;
-// obsolete  RE(m=prod(n,s)); RE(mn=mult(m,n));
  PRODX(m,n,s,1) DPMULDE(m,n,mn);
  GATV(z,INT,mn,2==r?2:n,s);
  if(2==r){u=AS(z); u[0]=m; u[1]=n;}

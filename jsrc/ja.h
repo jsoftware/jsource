@@ -234,14 +234,10 @@
 #define detr(x)                     jtdetr(jt,(x))
 #define detxm(x,y)                  jtdetxm(jt,(x),(y))
 #define detz(x)                     jtdetz(jt,(x))
-// obsolete #define df1(x,y)                    jtdf1(jt,(x),(y))  
-// obsolete #define df2(x,y,z)                  jtdf2(jt,(x),(y),(z))  
 #define df1(r,x,y)                  (r=((r=(y))?(FAV(r)->valencefns[0])(jt,(x),r):r))
 #define df2(r,x,y,z)                (r=((r=(z))?(FAV(r)->valencefns[1])(jt,(x),(y),r):r))
 #define df1ip(r,x,y)                  (r=((r=(y))?(FAV(r)->valencefns[0])(jtinplace,(x),r):r))
 #define df2ip(r,x,y,z)                (r=((r=(z))?(FAV(r)->valencefns[1])(jtinplace,(x),(y),r):r))
-// obsolete #define df1ip(x,y)                  jtdf1(jtinplace,(x),(y))  
-// obsolete #define df2ip(x,y,z)                jtdf2(jtinplace,(x),(y),(z))  
 #define dfc(x,y)                    jtdfc(jt,(x),(y))
 #define dfr(x)                      jtdfr(jt,(x))
 #define dfrep(x)                    jtdfrep(jt,(x))
@@ -353,15 +349,10 @@
 // Zczero is ~0 if usecount is going negative, 0 otherwise.  Usecount 1->0, 8..1->8..2, 4..0 unchanged, others decrement
 #define fadecr(x) I Zc=AC(x); AC(x)=Zc=Zc-1+((UI)Zc>>(BW-2));  // this does the decrement only, checking for PERMANENT
 #define faaction(x, nomfaction) {fadecr(x) I tt=AT(x); Zc=REPSGN(Zc-1); if((tt&=TRAVERSIBLE)&(Zc|~AFLAG(x)))jtfa(jt,(x),tt); if(Zc){jtmf(jt,x);} nomfaction}
-// obsolete #define fa(x)                       {if(x){I Zc=AC(x); if(!ACISPERM(Zc)){I tt=AT(x); I Zczero=-(I )(--Zc<=0); if((tt&=TRAVERSIBLE)&(Zczero|~AFLAG(x)))jtfa(jt,(x),tt); if(Zczero){jtmf(jt,x);}else {AC(x)=Zc; if(MEMAUDIT&2)audittstack(jt);}}}}
-// obsolete #define fa(x)                       {if(x){I Zc=AC(x); AC(x)=Zc=Zc-1+((UI)Zc>>(BW-2)); I tt=AT(x); Zc=REPSGN(Zc-1); if((tt&=TRAVERSIBLE)&(Zc|~AFLAG(x)))jtfa(jt,(x),tt); if(Zc){jtmf(jt,x);}else {if(MEMAUDIT&2)audittstack(jt);}}}
 #define fa(x)                       {if(x)faaction((x),else {if(MEMAUDIT&2)audittstack(jt);})}
 // Within the tpush/tpop when we know the usecount has gone to 0, no need to audit fa, since it was checked on the push
-// obsolete #define fana(x)                     {if(x){I Zc=AC(x); if(!ACISPERM(Zc)){I tt=AT(x); I Zczero=-(I )(--Zc<=0); if((tt&=TRAVERSIBLE)&(Zczero|~AFLAG(x)))jtfa(jt,(x),tt); if(Zczero){jtmf(jt,x);}else {AC(x)=Zc;}}}}
-// obsolete #define fana(x)                     {if(x){I Zc=AC(x); AC(x)=Zc=Zc-1+((UI)Zc>>(BW-2)); I tt=AT(x); Zc=REPSGN(Zc-1); if((tt&=TRAVERSIBLE)&(Zc|~AFLAG(x)))jtfa(jt,(x),tt); if(Zc){jtmf(jt,x);}}}
 #define fana(x)                     {if(x)fanano0(x)}
 // when x is known to be valid and usecount has gone to 0
-// obsolete #define fanano0(x)                  {I Zc=AC(x); AC(x)=Zc=Zc-1+((UI)Zc>>(BW-2)); I tt=AT(x); Zc=REPSGN(Zc-1); if((tt&=TRAVERSIBLE)&(Zc|~AFLAG(x)))jtfa(jt,(x),tt); if(Zc){jtmf(jt,x);}}
 #define fanano0(x)                  faaction((x),)
 // Within tpop, no need to check ACISPERM; Zczero is (i. e. usecount has gone to 0) ~0; and we should recur only if flag indicates RECURSIBLE.  In that case we can reconstruct the type from the flag
 #define fanapop(x,flg)              {if((flg)&RECURSIBLE)jtfa(jt,(x),(flg)&RECURSIBLE); jtmf(jt,x);}
@@ -380,7 +371,7 @@
 // and must be marked recursive if it is of such a type so that if we fa() the block we will not try to recur
 // PRISTINE is inherited from the backer (this is not done in virtual(), perhaps it should), because we know the block will never be inplaced unless it was inplaceable at the time this fauxblock was
 // created, which means it is not extant anywhere it could be assigned or extracted from.
-#define fauxvirtual(z,v,w,r,c) {if((r)<=4){z=ABACK(w); AK((A)(v))=(CAV(w)-(C*)(v)); AT((A)(v))=AT(w); AR((A)(v))=(RANKT)(r); z=AFLAG(w)&AFVIRTUAL?z:(w); AFLAG((A)(v))=AFVIRTUAL|AFUNINCORPABLE|(AFLAG(z)&AFPRISTINE)|(AT(w)&TRAVERSIBLE)/* obsolete |AFNJA*/; ABACK((A)(v))=z; z=(A)(v); AC(z)=(c);} \
+#define fauxvirtual(z,v,w,r,c) {if((r)<=4){z=ABACK(w); AK((A)(v))=(CAV(w)-(C*)(v)); AT((A)(v))=AT(w); AR((A)(v))=(RANKT)(r); z=AFLAG(w)&AFVIRTUAL?z:(w); AFLAG((A)(v))=AFVIRTUAL|AFUNINCORPABLE|(AFLAG(z)&AFPRISTINE)|(AT(w)&TRAVERSIBLE); ABACK((A)(v))=z; z=(A)(v); AC(z)=(c);} \
                               else{RZ(z=virtual((w),0,(r))); AFLAG(z)|=AFUNINCORPABLE; if((c)!=ACUC1)AC(z)=(c);} }
 #define fdef(x0,x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,x11)     jtfdef(jt,(x0),(x1),(x2),(x3),(x4),(x5),(x6),(x7),(x8),(x9),(x10),(x11))
 #if !USECSTACK
@@ -449,7 +440,6 @@
 #define fx(x)                       jtfx(jt,(x),0L) 
 #define fxchar(x,y)                 jtfxchar(jt,(x),(y))
 #define fxeach(x,y)                 jtfxeach(jt,(x),(y))
-// obsolete #define fxeachacv(x)                jtfxeachacv(jt,(x))
 #define fxeachv(x,y)                jtfxeachv(jt,(x),(y))
 #define ga(x0,x1,x2,x3)             jtga(jt,(x0),(x1),(x2),(x3))
 #define gaf(x0)                     jtgaf(jt,(x0))
@@ -493,7 +483,6 @@
 #define gri1(x0,x1,x2,x3,x4)        jtgri1(jt,(x0),(x1),(x2),(x3),(x4))
 #define gru(x0,x1,x2,x3,x4)         jtgru(jt,(x0),(x1),(x2),(x3),(x4))
 #define gru1(x0,x1,x2,x3,x4)        jtgru1(jt,(x0),(x1),(x2),(x3),(x4))
-// obsolete #define group(x)                    jtgroup(jt,(x))
 #define grs(x0,x1,x2,x3,x4)         jtgrs(jt,(x0),(x1),(x2),(x3),(x4))
 #define grx(x0,x1,x2,x3,x4)         jtgrx(jt,(x0),(x1),(x2),(x3),(x4))
 #define gt(x,y)                     jtatomic2(jt,(x),(y),ds(CGT))     
@@ -866,17 +855,10 @@
 // Handle top level of ra().  Increment usecount.  Set usecount recursive usecount if recursible type; recur on contents if original usecount is not recursive
 // We can have an inplaceable but recursible block, if it was gc'd or created that way
 // ra() DOES NOT realize a virtual block, so that it can be used in places where virtual blocks are not possible.  ras() does include rifv
-#if 0 // obsolete 
-#define ra(x)                       {I c=AC(x); if(!ACISPERM(c)){I tt=AT(x); FLAGT flg=AFLAG(x); if((tt^flg)&TRAVERSIBLE){AFLAG(x)=flg|=(tt&RECURSIBLE); if(tt&RECURSIBLE&&!(flg&(AFNJA))&&AC(x)>=2&&AC(x)<ACPERMANENT)SEGFAULT jtra(jt,(x),tt);}; AC(x)=(c+1)&~ACINPLACE;}}
-// If this is a recursible type, make it recursible if it isn't already, by traversing the descendants.  This is like raising the usecount by 0.
-#define ra0(x)                      {I tt=AT(x); FLAGT flg=AFLAG(x); if((tt^flg)&RECURSIBLE){if(flg&AFVIRTUAL){RZ((x)=realize(x)); flg=AFLAG(x);} AFLAG(x)=flg|=(tt&RECURSIBLE); if(!(flg&(AFNJA))&&AC(x)>=2&&AC(x)<ACPERMANENT)SEGFAULT jtra(jt,(x),tt);}}
-#else
-// obsolete #define ra(x)                       {I c=AC(x); if(!ACISPERM(c)){I tt=AT(x); FLAGT flg=AFLAG(x); if((tt^flg)&TRAVERSIBLE){AFLAG(x)=flg|=(tt&RECURSIBLE); jtra(jt,(x),tt);}; AC(x)=(c+1)&~ACINPLACE;}}
 #define ra(x)                       {I c=AC(x); c&=~ACINPLACE; AC(x)=c+=(c>>(BW-2))^1; I tt=AT(x); FLAGT flg=AFLAG(x); if((tt^flg)&TRAVERSIBLE){AFLAG(x)=flg|=(tt&RECURSIBLE); jtra((x),tt);};}
 // If this is a recursible type, make it recursive if it isn't already, by traversing the descendants.  This is like raising the usecount by 0.  Since we aren't liable to assign the block, we don't have to realize a
 // virtual block unless it is a recursible type.  NOTE that PERMANENT and VIRTUAL blocks are always marked recursible if they are of recursible type
 #define ra0(x)                      {I tt=AT(x); FLAGT flg=AFLAG(x); if((tt^flg)&RECURSIBLE){if(unlikely(flg&AFVIRTUAL)){RZ((x)=realize(x)); flg=AFLAG(x);} AFLAG(x)=flg|=(tt&RECURSIBLE); jtra((x),tt);}}
-#endif
 // make this block recursive, used when x has just been allocated & thus is known to be nonrecursive & nonvirtual.  We may know the type t, too (otherwise use AT(x))
 #define ra00(x,tt)                   {if((tt)&RECURSIBLE){AFLAG(x)|=(tt)&RECURSIBLE; jtra((x),(tt));}}
 #define ranec(x0,x1,x2,x3,x4,x5)    jtranec(jt,(x0),(x1),(x2),(x3),(x4),(x5))
@@ -1259,12 +1241,8 @@
 #define v2(x,y)                     jtv2(jt,(x),(y))
 #define va1(x,y)                    jtva1(jt,(x),(y))
 #define va1s(x0,x1,x2,x3)           jtva1s(jt,(x0),(x1),(x2),(x3))
-// obsolete #define va2(x,y,z)                  jtva2(jt,(x),(y),(z))
 #define vaid(x)                     jtvaid(jt,(x))
-// obsolete #define vains(x0,x1)                jtvains(jt,(x0),(x1))
-// obsolete #define vapfx(x0,x1)                jtvapfx(jt,(x0),(x1))
 #define var(x0,x1,x2)               jtvar(jt,(x0),(x1),(x2))
-// obsolete #define vasfx(x0,x1)                jtvasfx(jt,(x0),(x1))
 // fetch adocv for an rps function (i. e. f/ f/\ f/\.) in self.  rps is 0-2 for / /\ /\.   t is the type of the input.  Assign result to z, which is a VARPS
 #define varps(z,self,t,rps) {VARPSA *rpsa=FAV(self)->localuse.lvp[1]; I tmax=rpsa->nprec; if(jt->jerr<EWOV){I zc=CTTZI(t); VARPS *az=&rpsa->actrtns[tmax*(rps)+zc]; az=zc>=tmax?&rpsnull.actrtns[0]:az; z=*az;}else{jt->jerr=0; z=rpsa->actrtns[3*tmax+(rps)];}  }
 #define vasp(x0,x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,x11,x12)     jtvasp(jt,(x0),(x1),(x2),(x3),(x4),(x5),(x6),(x7),(x8),(x9),(x10),(x11),(x12))
@@ -1305,7 +1283,6 @@
 #define xco1(x)                     jtxco1(jt,(x))    
 #define xco2(x,y)                   jtxco2(jt,(x),(y))
 #define xcompare(x,y)               jtxcompare(jt,(x),(y))
-// obsolete #define xcvt(x,y)                   jtxcvt(jt,(x),(y)) 
 #define xdefn(x,y,z)                jtxdefn(jt,(x),(y),(z))
 #define xd1(x,y)                      jtxd1(jt,(x),(y))
 #define xdiv(x,y,z)                 jtxdiv(jt,(x),(y),(z))

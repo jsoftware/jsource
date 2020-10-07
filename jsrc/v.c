@@ -84,24 +84,8 @@ static A jtlr2(J jt,RANK2T ranks,A a,A w){I acr,af,ar,wcr,wf,wr;
  // simply keep the surviving argument intact.
  if(wf>=af)RETF(w);  // no replication - quick out
  RESETRANK; RETF(reitem(vec(INT,af-wf,AS(a)),lamin1(w)));  // could use virtual block, but this case is so rare...
-// obsolete  if(left){if(af>=wf){RETF(a);} os=AS(w); r=acr; s=af+AS(a); t=AT(a); v=CAV(a); n=AN(a); of=wf; }
-// obsolete  else    {if(wf>=af){RETF(w);} os=AS(a); r=wcr; s=wf+AS(w); t=AT(w); v=CAV(w); n=AN(w); of=af; }
-// obsolete  // If the cells of the surviving arg must be replicated, do so
-// obsolete  // r=cell-rank, s->cell-shape, t=type, v->data, n=#atoms   of surviving arg
-// obsolete  // of=frame os->shape   of non-surviving arg
-// obsolete  // Now get size of cell of survivor, and #cells in the other (necessarily longer) frame.
-// obsolete  // The product of these is the number of atoms of the result
-// obsolete  RE(zn=mult(prod(af,AS(a)),prod(wcr,wf+AS(w))));  // #cells in non-survivor * #atoms in cell of survivor
-// obsolete  GA(z,t,zn,of+r,os); MCISH(of+AS(z),s,r); // allocate result; copy in nonsurviving frame+shape; overwrite cell-shape from survivor
-// obsolete  k=bpnoun(AT(w)); GA(z,AT(w),zn,af+wcr,AS(a)); MCISH(af+AS(z),wf+AS(w),wcr); // allocate result; copy in nonsurviving frame+shape; overwrite cell-shape from survivor
-// obsolete  mvc(k*zn,AV(z),k*AN(w),CAV(w));   // get #bytes/atom, copy&replicate cells
-// obsolete  // Mark the source input non-pristine; leave the result non-pristine, since it has repetitions
-// obsolete  {A awback=w; I awflg=AFLAG(w); if(unlikely(awflg&AFVIRTUAL)){awback=ABACK(w); awflg=AFLAG(awback);} AFLAG(awback)=awflg&~AFPRISTINE;}  // make input non-PRISTINE
-// obsolete  RETF(z);
 } 
 
-// obsolete F2(jtleft2 ){F2PREFIP;if(jt->ranks==(RANK2T)~0)RETARG(a); RETF(lr2(1,a,w));}
-// obsolete F2(jtright2){F2PREFIP;if(jt->ranks==(RANK2T)~0)RETARG(w); RETF(lr2(0,a,w));}
 F2(jtleft2 ){F2PREFIP;RANK2T jtr=jt->ranks; if(jtr==(RANK2T)~0)RETARG(a); RETF(lr2((jtr<<RMAXX)|(jtr>>RMAXX),w,a));}  // swap a & w, and their ranks
 F2(jtright2){F2PREFIP;RANK2T jtr=jt->ranks; if(jtr==(RANK2T)~0)RETARG(w); RETF(lr2(jtr,a,w));}
 
@@ -113,7 +97,6 @@ F1(jtiota){A z;I m,n,*v;
  if(AT(w)&XNUM+RAT)R cvt(XNUM,iota(vi(w)));
  RZ(w=vi(w)); n=AN(w); v=AV(w);
  if(1==n){m=*v; R 0>m?apv(-m,-m-1,-1L):IX(m);}
-// obsolete RE(m=prod(n,v)); RZ(z=IX(ABS(m))); RZ(z=reshape(mag(w),z));
  A mg; RZ(mg=mag(w)); PRODX(m,n,IAV(mg),1); RZ(z=IX(m)); RZ(z=reshape(mag(w),z));
  DO(n, A zz; if(0>v[i])z=IRS1(z,0L,n-i,jtreverse,zz););
  RETF(z);

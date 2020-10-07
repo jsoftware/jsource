@@ -343,9 +343,6 @@ static I jtconword(J jt,I n,C*s){
 static F1(jtgetsen){A y,z,*z0,*zv;C*s;I i,j,k=-1,m,n,*v;
  RZ(y=wordil(w));  // split string into words - result block has special format
  v=AV(y);   // v-> (index,end+1) for each word; #words neg if last is NB.
-// obsolete  n=*v++; n^=REPSGN(n); n<<=1;  // n=# ints in (index,length) pairs, v->index0
-// obsolete  n=2**v++;                 
-// obsolete  n=0>n?-(2+n):n;                   /* remove NB. pair            */
  n=AM(y)<<1;  // number of words not including any final NB., times 2 to get  # start/end+1 slots
  GATV0(z,BOX,n>>1,1); z0=zv=AAV(z);  // allocate one box per word
  s=CAV(w);                         // s-> original text
@@ -387,7 +384,6 @@ B jtpreparse(J jt,A w,A*zl,A*zc){PROLOG(0004);A c,l,*lv,*v,w0,w1,*wv,x,y;B b=0,t
    w0=v[j];                             // w0 is A block for sentence j
    RZ(w1=wordil(w0));                   // w1 is A block for (# words), (index,end+1) pairs
    s=CAV(str0(w0));                           // s->start of sentence after appending final NUL,  why?
-// obsolete    k=conword(AV(w1)[2]-AV(w1)[1],s);         // classify first word, using its length.  0 means 'not CW', otherwise control type
    k=conword(AV(w1)[1]-AV(w1)[0],s);         // classify first word, using its length.  0 means 'not CW', otherwise control type
    if(k==CTRY)try=1;                    // remember if we see a try.
    if(k==CASSERT){ASSERTCW(!as,i  ); as=1;}   // if assert., verify not preceded by assert.; go to post-assert. state

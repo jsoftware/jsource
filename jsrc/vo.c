@@ -28,16 +28,12 @@ F1(jtlevel1){RZ(w); R sc(level(w));}
 F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws; 
  RZ(w);F1PREFIP;I wt=AT(w); FLAGT waf=AFLAG(w);
  ASSERT(!(SPARSE&wt),EVNONCE);
-// obsolete  FLAGT newflags = 0;
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r;   // no RESETRANK because we call no primitives
  if(!f){
   // single box: fast path.  Allocate a scalar box and point it to w.  Mark w as incorporated.  Make all results recursive
   // DO NOT take potentially expensive pass through w to find recursibility, because it may never be needed if this result expires without being assigned
   // If the input is DIRECT and inplaceable in an inplaceable context, mark the result as PRISTINE
   GAT0(z,BOX,1,0); AFLAG(z)=BOX+((-(wt&DIRECT))&((SGNTO0(AC(w))&((I)jtinplace>>JTINPLACEWX))<<AFPRISTINEX)); INCORPRA(w); AAV(z)[0]=w;
-// obsolete   if((waf&RECURSIBLE)||(wt&DIRECT)){newflags|=BOX; ACINCR(w);}  // if w is recursible or direct, mark new box recursible and correspondingly incr usecount of w.  We do this because w is already in cache now.
-// obsolete   if((((waf&RECURSIBLE)-1)&((wt&DIRECT)-1))>=0){/* obsolete newflags|=BOX; */AFLAG(z)=BOX; ACINCR(w);}  // if w is recursible or direct, mark new box recursible and correspondingly incr usecount of w.  We do this because w is already in cache now.
-// obsolete   AFLAG(z) = newflags;  // set NOSMREL if w is not boxed, or known to contain no relatives
  } else {
   // <"r
   ws=AS(w);
@@ -49,12 +45,7 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
   GATV(z,BOX,n,f,ws); AFLAG(z) = BOX+((-(wt&DIRECT))&AFPRISTINE); if(n==0)RETF(z);  // Recursive result; could avoid filling with 0 if we modified AN after error, or cleared after *tnextpushp
   // We have allocated the result; now we allocate a block for each cell of w and copy the w values to the new block.  Since we are copying contents of w, it must lose PRISTINE status is it is boxed
   AFLAG(w)&=~AFPRISTINE;
-// obsolete    // If w is DIRECT, we make the result block recursive and increment the count of the others (we do so here because it saves a traversal of the new blocks
-// obsolete    // if the result block is assigned).  If w is indirect, we just leave everything nonrecursive to avoid traversing w, because
-// obsolete    // that will prove unnecessary if this result is not assigned.
 
-// obsolete   if(t&DIRECT){
-// obsolete    // Direct w.
   // Since we are making the result recursive, we can save a lot of overhead by NOT putting the cells onto the tstack.  As we have marked the result as
   // recursive, it will free up the cells when it is deleted.  We want to end up with the usecount in the cells being 1, not inplaceable.  The result itself will be
   // inplaceable with a free on the tstack.
@@ -64,7 +55,6 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
   DQ(n, GAE(y,wt,m,r,f+ws,break); MC(CAV(y),wv,k); wv+=k; AC(y)=ACUC1; if(wt&RECURSIBLE){AFLAG(y)=wt; jtra(y,wt);});   // allocate, but don't grow the tstack.  Set usecount of cell to 1.  ra0() if recursible.  Put allocated addr into *jt->tnextpushp++
   jt->tnextpushp=pushxsave;   // restore tstack pointer
   ASSERT(y!=0,EVWSFULL);  // if we broke out an allocation failure, fail.  Since the block is recursive, when it is tpop()d it will recur to delete contents
-// obsolete   }else{/* obsolete AFLAG(z) = newflags; */DO(n, GA(y,t,m,r,f+ws);/* obsolete  AFLAG(y)=newflags;*/ MC(CAV(y),wv,k); wv+=k; zv[i]=y;); } // indirect w; don't set recursible, which might be expensive
  }
  RETF(z);
 }    /* <"r w */
@@ -174,7 +164,6 @@ A jtassembleresults(J jt, I ZZFLAGWORD, A zz, A zzbox, A* zzboxp, I zzcellp, I z
   }
   // Now zz has the type zft
 
-// obsolete   I natomsresultcell; RE(natomsresultcell=prod(zzcr,zzcs));  // # atoms in actual result-cell.  Could overflow, if there is a mix of tall & wide
   I natomsresultcell; PRODX(natomsresultcell,zzcr,zzcs,1);  // # atoms in actual result-cell.  Could overflow, if there is a mix of tall & wide
   I natomsresult; DPMULDE(natomsresultcell,zzncells,natomsresult);  // number of atoms in result
   // Since we know the result-cell size in zzcellshape must be able to contain a cell of zz, we can test for equal rank and equal number of atoms.
@@ -224,7 +213,6 @@ A jtassembleresults(J jt, I ZZFLAGWORD, A zz, A zzbox, A* zzboxp, I zzcellp, I z
    if(zzboxp!=box0 && (zzboxp-=startatend, zzboxcell= *zzboxp)){
     // cell comes from zzboxp.  Convert if necessary, then move.  Before moving, calculate the rank to use for the fill.
     // Don't convert empties, to make sure we don't have a failure while we are processing boxed results
-// obsolete     if(AN(zzboxcell)&&TYPESNE(zft,AT(zzboxcell))){
     if((-AN(zzboxcell)&-TYPESXOR(zft,AT(zzboxcell)))<0){  // not empty and new type
      if(unlikely(!(zzboxcell=cvt(zft,zzboxcell)))){
       // error during conversion.  THIS IS THE ONLY PLACE WHERE ERROR IS POSSIBLE DURING THE COPY.
@@ -380,7 +368,6 @@ F1(jtope){PROLOG(0080);A cs,*v,y,z;I nonh;C*x;I i,n,*p,q=RMAX,r=0,*s,t=0,te=0,*u
 #if AUDITBOXAC
   if(!(AFLAG(w)&AFVIRTUALBOXED)&&AC(z)<0)SEGFAULT
 #endif
-// obsolete   ACIPNO(z);
   PRISTCLRF(w) R z;
  }
  // Here we have an array of boxes.  We will create a new block with the concatenated contents (even if there is only one box), and thus we don't need to turn of pristine in w
@@ -397,7 +384,6 @@ F1(jtope){PROLOG(0080);A cs,*v,y,z;I nonh;C*x;I i,n,*p,q=RMAX,r=0,*s,t=0,te=0,*u
  // The homogeneity flag h is set if max rank is 1 and there is 0 or 1 nonempty type.  In that case fill is 1-dimensional and we just copy into the result area
  nonh = (r&~1) | (t&(t-1));  // non homogeneous if rank is not 0 or 1, or if there is more than 1 bit set in t
  if(t){
-// obsolete  ASSERT(HOMONE(t,0)||t==BOX||t==SBT,EVDOMAIN);  // no mixed nonempties
   ASSERT((POSIFHOMO(t,0)&-(t^BOX)&-(t^SBT))>=0,EVDOMAIN);  // no mixed nonempties: t is homo num/char or all boxed or all symbol
   ASSERT(!(t&SPARSE&&t&XNUM+RAT),EVDOMAIN);  // don't allow a sparse that requires promotion to indirect
   te=t;  // te holds the type to use
@@ -409,7 +395,6 @@ F1(jtope){PROLOG(0080);A cs,*v,y,z;I nonh;C*x;I i,n,*p,q=RMAX,r=0,*s,t=0,te=0,*u
  DO(n, y=v[i]; s=AS(y); p=u+r-AR(y); DO(AR(y),p[i]=MAX(p[i],s[i]);););
  if(unlikely(t&SPARSE))RZ(z=opes(t,cs,w))
  else{I klg; I m;
-// obsolete   RE(m=prod(r,u)); RE(zn=mult(n,m)); klg=bplg(t); q=m<<klg;
   PRODX(m,r,u,1); DPMULDE(n,m,zn); klg=bplg(t); q=m<<klg;
   // Allocate result area & copy in shape (= frame followed by result-cell shape)
   GA(z,t,zn,r+AR(w),AS(w)); MCISH(AS(z)+AR(w),u,r); x=CAV(z); fillv(t,zn,x);  // init to a:  fills  bug copy shape could overrun w
@@ -445,7 +430,6 @@ static A jtrazeg(J jt,A w,I t,I n,I r,A*v,I nonempt){A h,h1,y,z;C*zu;I c=0,i,j,k
   DO(yr, s[j]=MAX(ys[i],s[j]); ++j;);
  }
  // Install the number of result items in s; m=total #result atoms
-// obsolete  *s=c; RE(m=prod(r,s)); PROD(p,r-1,s+1);
  *s=c; PRODX(m,r,s,1); PROD(p,r-1,s+1);
  // Now that we know the shape of the result-cell, we can decide, for each box, whether the
  // box contributes to the result, and whether it will be filled.  This matters only if a fill-cell has been specified.
@@ -520,7 +504,6 @@ F1(jtraze){A*v,y,z,* RESTRICT zv;C* RESTRICT zu;I *wws,d,i,klg,m=0,n,r=1,t=0,te=
   // So, we don't check compatibility for empty boxes.
   i=t;  // save indicator of nonempties
   if(t){
-// obsolete    ASSERT(HOMONE(t,0)||t==BOX||t==SBT,EVDOMAIN);  // no mixed nonempties
    ASSERT((POSIFHOMO(t,0)&-(t^BOX)&-(t^SBT))>=0,EVDOMAIN);  // no mixed nonempties: t is homo num/char or all boxed or all symbol
    te=t;  // te holds the type to use
   }else if(jt->fill){te=AT(jt->fill);}  // all empty: use fill type if given.
@@ -547,9 +530,6 @@ F1(jtraze){A*v,y,z,* RESTRICT zv;C* RESTRICT zu;I *wws,d,i,klg,m=0,n,r=1,t=0,te=
   GA(z,t,m*nitems,r,wws); AS(z)[0]=nitems; // allocate the result area; finish shape
   zu=CAV(z); zv=AAV(z); klg=bplg(t); // input pointers, depending on type; length of an item
   // loop through the boxes copying the data into sequential output positions
-// obsolete   for(i=0;i<n;++i){
-// obsolete    y=v[i]; if(AN(y)){d=AN(y)<<klg; MC(zu,AV(y),d); zu+=d;}
-// obsolete   }
   DO(n, y=v[i]; d=AN(y)<<klg; MC(zu,AV(y),d); zu+=d;)
  }
 

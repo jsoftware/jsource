@@ -95,39 +95,6 @@ static DF1(jtfpown){A fs,z;AF f1;I n;V*sv;A *old;
 }
 
 // general u^:n w where n is any array or finite atom.  If atom, it will be negative
-#if 0  // obsolete
-static DF1(jtply1){PROLOG(0040);DECLFG;A b,hs,j,*xv,y,z;B*bv,q;I i,k,m,n,*nv,p=0;AD * RESTRICT x;A *old;  // RESTRICT on x fails in VS2013
- hs=sv->fgh[2]; m=AN(hs); 
- RZ(y=ravel(hs)); RZ(y=from(j=grade1(y),y)); nv=AV(y);  // j is grading permutation of y; y is sorted powers
- GATV0(x,BOX,m,1); xv=AAV(x);  // cannot be virtual
- while(p<m&&0>nv[p])p++;  // find first positive power
- if(p<m){  // if there is a positive power...
-  z=w;
-  n=nv[m-1]; k=p;
-  while(k<m&&!nv[k]){INSTALLBOX(x,xv,k,z); ++k;}  // install the input as the result for any 0 powers
-  RZ(b=eq(ainf,from(j,ravel(gs)))); bv=BAV(b); q=k<m?bv[k]:0;
-  old=jt->tnextpushp;  // should move this up
-  for(i=1;i<=n;++i){
-   RZ(z=CALL1(f1,y=z,fs));  // z=next power, y=previous power
-   if(q&&equ(y,z)){DQ(m-k, INSTALLBOX(x,xv,k,z); ++k;); break;}  // if there is an infinity, check for repetition; if any, use it for all higher powers, & be done
-   while(k<m&&i==nv[k]){INSTALLBOX(x,xv,k,z); ++k; q=k<m?bv[k]:0;}  // otherwise use result for all equal powers
-   if(!(i&7)){JBREAK0; if(!gc3((A*)&x,&z,0L,old))R0;}
- }}
- if(0<p){  // if there was a negative power...
-  RZ(fs=inv(fs)); f1=FAV(fs)->valencefns[0];
-  z=w;
-  n=nv[0]; k=p-1;
-  RZ(b=eq(scf(-inf),from(j,ravel(gs)))); bv=BAV(b); q=bv[k];
-  old=jt->tnextpushp;
-  for(i=-1;i>=n;--i){
-   RZ(z=CALL1(f1,y=z,fs));
-   if(q&&equ(y,z)){DQ(1+k, INSTALLBOX(x,xv,k,z); --k;); break;}
-   while(0<=k&&i==nv[k]){INSTALLBOX(x,xv,k,z); --k; q=0<=k?bv[k]:0;}
-   if(!(i&7)){JBREAK0; if(!gc3((A*)&x,&z,0L,old))R0;}
- }}
- z=ope(reshape(shape(hs),from(grade1(j),x))); EPILOG(z);
-}
-#else
 static DF1(jtply1){PROLOG(0040);DECLFG;A zz=0;
 #define ZZWILLBEOPENEDNEVER 1  // can't honor willbeopened because the results are recycled as inputs
 #define ZZPOPNEVER 1  // can't pop the inputs - 
@@ -210,7 +177,6 @@ static DF1(jtply1){PROLOG(0040);DECLFG;A zz=0;
  if(AR(n)!=1)zz=reshape(shape(n),zz);  // if n is an arry, use its shape
  EPILOG(zz);
 }
-#endif
 
 // u^:_ w  Bivalent, called as w,fs or a,w,fs
 static DF2(jtpinf12){PROLOG(0340);A z;  // no reason to inplace, since w must be preserved for comparison, & a for reuse
@@ -230,36 +196,6 @@ static DF2(jtpinf12){PROLOG(0340);A z;  // no reason to inplace, since w must be
     // make the new result the starting value for next loop, replacing w wherever it is
  }
 }
-
-#if 0 // obsolete 
-#define DIST(i,x)  if(i==e){v=CAV(x); \
-                     while(k<m&&i==(e=nv[jv[k]])){MC(zv+c*jv[k],v,c); ++k;}}
-
-// u^:n w where n is not empty and is either an array or a negative atom (which will abort to ply1)
-static DF1(jtply1s){DECLFG;A hs,j,y,y1,z;C*v,*zv;I c,e,i,*jv,k,m,n,*nv,r,*s,t,zn;
- RZ(w);
- hs=sv->fgh[2]; m=AN(hs); nv=AV(hs); 
- RZ(j=grade1(ravel(hs))); jv=AV(j); e=nv[*jv];  // e=lowest power
- if(!e&&!nv[jv[m-1]])R reshape(over(shape(hs),shape(w)),w);  // all powers 0
- RZ(y=y1=CALL1(f1,w,fs)); t=AT(y); r=AR(y);
- if(0>e||t&BOX)R ply1(w,self);  // negative or boxed power - go to general case
- if(!e){
-  if(HOMO(t,AT(w)))RZ(w=pcvt(t,w));
-  if(!(TYPESEQ(t,AT(w))&&AN(y)==AN(w)&&(r==AR(w)||1>=r&&1>=AR(w))))R ply1(w,self);
- }
- k=AR(hs); RE(zn=mult(m,AN(y)));
- GA(z,AT(y),zn,k+AR(y),0); zv=CAV(z);
- s=AS(z); MCISH(s,AS(hs),k); MCISH(s+k,AS(y),r);
- n=nv[jv[m-1]]; c=AN(y)<<bplg(t); s=AS(y);
- k=0; DIST(0,w); DIST(1,y);
- for(i=2;i<=n;++i){
-  RZ(y=CALL1(f1,y,fs));
-  if(TYPESNE(t,AT(y))||r!=AR(y)||ICMP(AS(y),s,r))R ply1(w,self);
-  DIST(i,y);
- }
- RETF(z);
-}    /* f^:n w, non-negative finite n, well-behaved f */
-#endif
 
 static DF1(jtinv1){F1PREFIP;DECLFG;A z; RZ(w);A i; RZ(i=inv((fs))); FDEPINC(1);  z=(FAV(i)->valencefns[0])(FAV(i)->flag&VJTFLGOK1?jtinplace:jt,w,i);       FDEPDEC(1); RETF(z);}  // was invrecur(fix(fs))
 static DF1(jtinvh1){F1PREFIP;DECLFGH;A z; RZ(w);    FDEPINC(1); z=(FAV(hs)->valencefns[0])(jtinplace,w,hs);        FDEPDEC(1); RETF(z);}
@@ -343,7 +279,6 @@ DF2(jtpowop){A hs;B b;V*v;
  }
  // fall through for unboxed n.
  // handle the very important case of scalar   int/boolean   n of 0/1
-// obsolete  if(likely(((-(AT(w)&B01+INT))&(AR(w)-1)&(((UI)BIV0(w)>>1)-1))<0))R a=BIV0(w)?a:ds(CRIGHT);  //  u^:0 is like ],  u^:1 is like u   AR(w)==0 and B01|INT and BAV0=0 or 1
  if(likely(((-(AT(w)&B01+INT))&((AR(w)|((UI)BIV0(w)>>1))-1))<0))R a=BIV0(w)?a:ds(CRIGHT);  //  u^:0 is like ],  u^:1 is like u   AR(w)==0 and B01|INT and BAV0=0 or 1
  RZ(hs=vib(w));   // hs=n coerced to integer
  AF f1=jtply1;  // default routine for general array.  no reason to inplace this, since it has to keep the old value to check for changes
@@ -367,9 +302,5 @@ DF2(jtpowop){A hs;B b;V*v;
  // If not special case, fall through to handle general case
  I m=AN(hs); // m=#atoms of n; n=1st atom; r=n has rank>0
  ASSERT(m!=0,EVDOMAIN);  // empty power is error
-// obsolete  b=0; if(m&&AT(w)&FL+CMPX)RE(b=!all0(eps(w,over(ainf,scf(infm)))));   // set b if n is nonempty FL or CMPX array containing _ or __ kludge should just use hs
-// obsolete  b|=!m; B nonnegatom=!AR(w)&&0<=IAV(hs)[0]; I flag=FAV(a)->flag&((~b&nonnegatom)<<VJTFLGOK1X);  // b is (empty or contains _/__), (scalar n>=0); if the latter, keep the inplace flag
-// obsolete  R fdef(0,CPOWOP,VERB, b?jtply1:nonnegatom?jtfpown:jtply1/*obsolete s*/,jtply2, a,w,hs,   // scaf Create derived verb: special cases pown (nonneg noninfinite atom), ply1s (nonempty not containing infinity)
-// obsolete     flag|VFLAGNONE, RMAX,RMAX,RMAX);
  R fdef(0,CPOWOP,VERB, f1,jtply2, a,w,hs,flag, RMAX,RMAX,RMAX);   // Create derived verb: pass in integer powers as h
 }

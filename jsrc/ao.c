@@ -42,12 +42,10 @@ static DF1(jtoblique){A x,y,z;I m,n,r;D rkblk[16];
 static DF1(jtobqfslash){A y,z;B b=0,p;C er,id,*wv;I c,d,k,m,m1,mn,n,n1,r,*s,wt;
  RZ(w);
  r=AR(w); s=AS(w); wt=AT(w); wv=CAV(w);
-// obsolete  if(!(AN(w)&&1<r&&DENSE&wt))R oblique(w,self);  // revert to default if rank<2, empty, or sparse
  if((-AN(w)&(1-r)&-(DENSE&wt))>=0)R oblique(w,self);  // revert to default if rank<2, empty, or sparse.  This implies m/n below are non0
- y=FAV(self)->fgh[0]; y=FAV(y)->fgh[0]; id=FAV(y)->id/* obsolete vaid(y) */;
+ y=FAV(self)->fgh[0]; y=FAV(y)->fgh[0]; id=FAV(y)->id;
  m=s[0]; m1=m-1;
  n=s[1]; n1=n-1; mn=m*n; d=m+n-1; PROD(c,r-2,2+s);
-// obsolete  if(1==m||1==n){GA(z,wt,AN(w),r-1,1+s); AS(z)[0]=d; MC(AV(z),wv,AN(w)<<bplg(wt)); R z;}
  if(((1-m)&(1-n))>=0){GA(z,wt,AN(w),r-1,1+s); AS(z)[0]=d; MC(AV(z),wv,AN(w)<<bplg(wt)); R z;}  // m=1 or n=1, return item of input
  if(wt&FL+CMPX)NAN0;
  if(1==c)switch(OBQCASE(CTTZ(wt),id)){
@@ -115,13 +113,9 @@ DF2(jtpolymult){A f,g,z;B b=0;C*av,c,d,*wv;I at,i,j,k,m,m1,n,p,t,wt,zn;V*v;
  if(TYPESNE(t,at))RZ(a=cvt(t,a)); at=AT(a); av=CAV(a);
  if(TYPESNE(t,wt))RZ(w=cvt(t,w)); wt=AT(w); wv=CAV(w);
  v=FAV(self);  // f//. @ (g/)
-// obsolete  f=v->fgh[0]; y=FAV(f)->fgh[0]; y=FAV(y)->fgh[0]; c=vaid(y);  //
-// obsolete  g=v->fgh[1]; y=FAV(g)->fgh[0];              d=vaid(y);   // g taken from g/
  f=v->fgh[0]; g=v->fgh[1];
  c=FAV(FAV(FAV(f)->fgh[0])->fgh[0])->id;   // id of f     f//. f/ f
  d=FAV(FAV(g)->fgh[0])->id;   // id of g     g/ g
-// obsolete  if(!(m&&1==AR(a)&&n&&1==AR(w)))R obqfslash(df2(z,a,w,g),f);  // if empty, or not lists, do general code.  Never happens.
-// obsolete  if(!(m&&1>=AR(a)&&n&&1>=AR(w)))R obqfslash(df2(z,a,w,g),f);  // if empty, or not lists, do general code.  Never happens.
  if((-m&(AR(a)-2)&-n&(AR(w)-2))>=0)R obqfslash(df2(z,a,w,g),f);  // if empty, or not atoms/lists, do general code.  Never happens.
  // from here on polymult on nonempty lists
  if(t&FL+CMPX)NAN0;
@@ -149,7 +143,6 @@ DF2(jtpolymult){A f,g,z;B b=0;C*av,c,d,*wv;I at,i,j,k,m,m1,n,p,t,wt,zn;V*v;
   {A a1,y;I*aa,i,*u,*ww=(I*)wv,*v,*yv,*zv;VA2 adocv; VARPS adocvsum;
    b=1;
    adocv=var(ds(CSTAR),at,wt); varps(adocvsum,FAV(f)->fgh[0],wt,0);  // get sum routine from f/, which is +/
-// obsolete adocvsum=vains(ds(CPLUS),wt);
    GATV0(a1,INT,m,1); aa=AV(a1); u=m+(I*)av; DO(m, aa[i]=*--u;);
    GATV0(y,INT,MIN(m,n),1); yv=AV(y);
    GATV0(z,INT,zn,1); zv=AV(z);
@@ -194,7 +187,6 @@ static DF2(jtkey){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
  RZ(a&&w);
  if(unlikely(SPARSE&AT(a)))R keysp(a,w,self);  // if sparse, go handle it
  {I t2; ASSERT(SETIC(a,nitems)==SETIC(w,t2),EVLENGTH);}  // verify agreement.  nitems is # items of a
-// obsolete  RZ(a=indexof(a,a));  // self-classify the input using ct set before this verb; we are going to modify a, so make sure it's not virtual
  RZ(ai=indexofsub(IFORKEY,a,a));   // self-classify the input using ct set before this verb
  // indexofsub has 2 returns: most of the time, it returns a normal i.-family result, but with each slot holding the index PLUS the number of values
  // mapped to that index.  If processing determines that small-range lookup would be best, indexofsub doesn't do it, but instead returns a block giving the size, min value, and range.
@@ -218,7 +210,6 @@ static DF2(jtkey){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
    if(AR(w)<=1){
     // partitions have rank 1, so operations are on atoms.  set the index
     routineid=RTNCASE(keyslashfn,zt) ^ ztoride; // min, max are normal.  + is B01 (BtoI) or FL.  mean is B01 (BtoF), INT (ItoF), or FL
-// obsolete     routineid=RTNCASE((FAV(self)->flag&VFKEYSLASHF)>>VFKEYSLASHFX,zt);  // case index if this is an atom
    }else{
     // partitions are arrays.  Operate on them in the output area
     routineid=RTNCASE(ztoride,INT+FL);  // special case index for action routine: 3 for normal (for <. >.), 7 for BtoI (for +), 11 for BtoF (for mean), 15 for ItoF (for mean) 17 = FL mean 16 for other mean e. g. INTX
@@ -416,9 +407,6 @@ static DF2(jtkey){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
   makewritable(ai);  // we modify the size+index info to be running endptrs into the reorder area
   // pass through the input, incrementing each reference
   I *av=IAV(ai);  // av->a data
- #if 0  // obsolete
-  {I *av2, *avend=av+nitems; for(av2=av;av2!=avend;++av2)++av[*av2];}  // first time the root of the partition points to & increments itself
- #endif
   // Now each item av[i] is either (1) smaller than i, which means that it is extending a previous key; or (2) greater than i, which
   // means it starts a new partition whose length is a[i]-i.  Process the values in order, creating partitions as they come up, and
   // moving the data for each input value in turn, reading in order and scatter-writing.
@@ -439,12 +427,6 @@ static DF2(jtkey){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
    }
 
    av[avvalue]=(I)partitionptr+celllen;  // store updated end-of-partition after move
-// obsolete    // copy the data to the end of its partition and advance the partition pointer
-// obsolete    if(celllen<MEMCPYTUNELOOP) {  // copy by hand if that's faster (0 len OK)
-// obsolete     I n=celllen; while((n-=SZI)>=0){*partitionptr++=*wv++;}
-// obsolete       // move full words.  Must not overwrite the area, since we are scatter-writing.
-// obsolete     if(n&(SZI-1)){STOREBYTES(partitionptr,*wv,-n); wv = (I*)((C*)wv+SZI+n);}  // Use test because this code is repeated
-// obsolete    }else{MC(partitionptr,wv,celllen); wv = (I*)((C*)wv+celllen);}
    JMCR(partitionptr,wv,celllen,loop1,1,endmask); wv = (I*)((C*)wv+celllen);  // Don't overwrite, since we are scatter-writing
 
   }
@@ -491,11 +473,6 @@ static DF2(jtkey){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
    I *partitionptr=(I*)(wpermv+partitionndx*celllen);  // place to copy next input to
    *slotaddr=partitionndx+1;  // store updated next-in-partition after move
    // copy the data to the end of its partition and advance the input pointer
-// obsolete    if(celllen<MEMCPYTUNELOOP) {  // copy by hand if that's faster (0 len OK)
-// obsolete     I n=celllen; while((n-=SZI)>=0){*partitionptr++=*wv++;}
-// obsolete       // move full words.  Must not overwrite the area, since we are scatter-writing.
-// obsolete     if(n&(SZI-1)){STOREBYTES(partitionptr,*wv,-n); wv = (I*)((C*)wv+SZI+n);}  // Use test because this code is repeated
-// obsolete    }else{MC(partitionptr,wv,celllen); wv = (I*)((C*)wv+celllen);}
    JMCR(partitionptr,wv,celllen,loop2,1,endmask); wv = (I*)((C*)wv+celllen);  // Don't overwrite, since we are scatter-writing
 
    av=(I*)((I)av+k);  // advance to next input value
@@ -540,7 +517,6 @@ DF2(jtkeybox){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
  JMCDECL(endmask) JMCSETMASK(endmask,celllen,1)   // set mask for JMCR.  Harmless if celllen=-1
 
  // Note: self is invalid from here on
-// obsolete  RZ(a=indexof(a,a));  // self-classify the input using ct set before this verb; we are going to modify a, so make sure it's not virtual
  RZ(ai=indexofsub(IFORKEY,a,a));   // self-classify the input using ct set before this verb
  // indexofsub has 2 returns: most of the time, it returns a normal i.-family result, but with each slot holding the index PLUS the number of values
  // mapped to that index.  If processing determines that small-range lookup would be best, indexofsub doesn't do it, but instead returns a block giving the size, min value, and range.
@@ -588,11 +564,6 @@ DF2(jtkeybox){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
    if(celllen>=0) {
      av[avvalue]=(I)partitionptr+celllen;  // store updated end-of-partition after move
      // copy the data to the end of its partition and advance the partition pointer
-// obsolete      if(celllen<MEMCPYTUNELOOP) {  // copy by hand if that's faster (0 len OK)
-// obsolete       I n=celllen; while((n-=SZI)>=0){*partitionptr++=*wv++;}
-// obsolete         // move full words.  Must not overwrite the area, since we are scatter-writing.
-// obsolete       if(n&(SZI-1)){STOREBYTES(partitionptr,*wv,-n); wv = (I*)((C*)wv+SZI+n);}  // Use test because this code is repeated
-// obsolete      }else{MC(partitionptr,wv,celllen); wv = (I*)((C*)wv+celllen);}
     JMCR(partitionptr,wv,celllen,loop3,1,endmask); wv = (I*)((C*)wv+celllen);  // Don't overwrite, since we are scatter-writing
 
    }else{  // flag for (<./ i.@#)
@@ -646,11 +617,6 @@ DF2(jtkeybox){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
    if(celllen>=0) {
      *slotaddr=(I)partitionptr+celllen;  // store updated end-of-partition after move
      // copy the data to the end of its partition and advance the partition pointer
-// obsolete      if(celllen<MEMCPYTUNELOOP) {  // copy by hand if that's faster (0 len OK)
-// obsolete       I n=celllen; while((n-=SZI)>=0){*partitionptr++=*wv++;}
-// obsolete         // move full words.  Must not overwrite the area, since we are scatter-writing.
-// obsolete       if(n&(SZI-1)){STOREBYTES(partitionptr,*wv,-n); wv = (I*)((C*)wv+SZI+n);}  // Use test because this code is repeated
-// obsolete      }else{MC(partitionptr,wv,celllen); wv = (I*)((C*)wv+celllen);}
      JMCR(partitionptr,wv,celllen,loop4,1,endmask); wv = (I*)((C*)wv+celllen);  // Don't overwrite, since we are scatter-writing
    }else{  // flag for (<./ i.@#)
      *slotaddr=(I)partitionptr+SZI;  // store updated end-of-partition after move
@@ -674,225 +640,6 @@ DF2(jtkeybox){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
 const UI4 shortrange[3][4] = {{0,65536,65536,0}, {0,2,258,0}, {0,256,65536,0}};  // C2T, B01, LIT
 
 
-#if 0  // obsolete 
-typedef struct {   // return struct from jtkeyrs
- CR minrange;  // detected min/range
- I type;  // pseudotype to use
-} CRT;
-
-
-static CRT jtkeyrs(J jt,A a,UI maxrange){I ac; CRT res;
- res.minrange.min=res.minrange.range=0; res.type=AT(a); ac=aii(a);
- if(2>=ac)switch(CTTZ(res.type)){
-  case C2TX: if(1==ac)res.minrange.range=65536;                      break;
-  case C4TX: if(1==ac){res.minrange=condrange4(C4AV(a),AN(a),-1,0,maxrange);} break;
-  case B01X: if(1==ac)res.minrange.range=2;   else{res.minrange.range=258;   res.type=C2T;} break;
-  case LITX: if(1==ac)res.minrange.range=256; else{res.minrange.range=65536; res.type=C2T;} break;
-  case INTX: if(1==ac)res.minrange=condrange(AV(a),AN(a),IMAX,IMIN,maxrange);    break;
-  case SBTX: if(1==ac){res.type=INT; res.minrange.range=jt->sbun; if(65536<res.minrange.range)res.minrange=condrange(AV(a),AN(a),IMAX,IMIN,maxrange);}
- }
- R res;
-}
-
-#define KCASE(d,t)          (t+5*d)
-#define KACC1(F,Ta)  \
- {Ta*u;                                                          \
-  if(1==c){                                                      \
-   u=(Ta*)av0; DQ(n, v=qv+  *u++;       y=*wv++; *v=F;       );  \
-   u=(Ta*)av0; DQ(n, if(bv[j=*u++]){*zv++=qv[j];                  bv[j]=0; if(s==++m)break;});  \
-  }else{                                                         \
-   u=(Ta*)av0; DQ(n, v=qv+c**u++; DQ(c, y=*wv++; *v=F; ++v;););  \
-   u=(Ta*)av0; DQ(n, if(bv[j=*u++]){v=qv+c*j; DQ(c, *zv++=*v++;); bv[j]=0; if(s==++m)break;});  \
- }}
-#define KACC(F,Tz,Tw,v0)   \
- {Tw*wv=(Tw*)wv0,y;Tz*qv=(Tz*)qv0,*v,*zv=(Tz*)zv0;               \
-  if(bb){                                                        \
-   m=0; v=qv; DQ(AN(q), *v++=v0;); qv-=r*c;                      \
-   switch(CTTZNOFLAG(at)){                                                   \
-    case B01X: KACC1(F,B ); break;                                \
-    case LITX: KACC1(F,UC); break;                                \
-    case C2TX: KACC1(F,US); break;                                \
-    case C4TX: KACC1(F,C4); break;                                \
-    case SBTX: KACC1(F,SB); break;                                \
-    case INTX: KACC1(F,I ); break;                                \
-  }}else{                                                        \
-   v=zv; DQ(m*c, *v++=v0;);                                      \
-   if(1==c)DQ(n, v=zv+  *xv++;       y=*wv++; *v=F;       )      \
-   else    DQ(n, v=zv+c**xv++; DQ(c, y=*wv++; *v=F; ++v;););     \
- }}
-
-static DF2(jtkeyslash){PROLOG(0012);A b,q,x,z=0;B bb,*bv,pp=0;C d;I at,*av0,c,n,j,m,*qv0,r,s,*u,wr,wt,*wv0,*xv,zt,*zv0;
- RZ(a&&w);
- at=AT(a); av0=AV(a); SETIC(a,n); 
- wt=AT(w); wv0=AV(w); wr=AR(w);
- ASSERT(n==SETIC(w,m),EVLENGTH);
-// obsolete x=; d=vaid(VAV(x)->fgh[0]);
- d=FAV(FAV(FAV(self)->fgh[0])->fgh[0])->id;  // self is f//.   get  f/   then f  then id of f
-d=0;  // scaf temporarily disable this until we decide it's worthwhile (and works - currently + has an overflow problem)
- if(B01&wt){d=d==CMAX?CPLUSDOT:d; d=(d==CMIN)|(d==CSTAR)?CSTARDOT:d;}
- if(!(AN(a)&&AN(w)&&at&DENSE&&
-     (wt&B01&&(d==CEQ||d==CPLUSDOT||d==CSTARDOT||d==CNE||d==CPLUS)||
-     wt&SBT&&(d==CMIN||d==CMAX)||
-     wt&INT&&BETWEENC(d,17,25)||
-     wt&INT+FL&&(d==CMIN||d==CMAX||d==CPLUS) )))R key(a,w,self);
- CRT rng=keyrs(a,MAX(2*n,65536)); c=aii(w); at=rng.type; r=rng.minrange.min; s=rng.minrange.range; m=s;
- zt=wt; zt=wt&INT?FL:zt; zt=wt&B01?INT:zt; zt=d==CPLUS?zt:wt;  // type of result, promoting bool and int but only if +
- bb=s!=0;
- if(bb){
-  GATV0(b,B01,s,  1); bv=BAV(b); memset(bv,C1,s); bv-=r;
-  GA(q,zt, s*c,1,0); qv0=AV(q);
- }else{RZ(x=indexof(a,a)); makewritable(x); xv=AV(x); m=0; u=xv; DO(n, *u=i==*u?m++:xv[*u]; ++u;);}  // kludge should remove misbranch
- GA(z,zt,m*c,wr,AS(w)); AS(z)[0]=m; zv0=AV(z);
- if(wt&FL)NAN0;
- PUSHCCT(jt->cctdefault)
- switch(KCASE(d,CTTZ(wt))){
-  case KCASE(CEQ,     B01X): KACC(*v^y^1,    B, B, 1   ); break;
-  case KCASE(CPLUSDOT,B01X): KACC(*v|y,    B, B, 0   ); break;
-  case KCASE(CSTARDOT,B01X): KACC(*v&y,    B, B, 1   ); break;
-  case KCASE(CNE,     B01X): KACC(*v^y,    B, B, 0   ); break;
-  case KCASE(CMIN,    SBTX): KACC(SBLT(*v,y)?*v:y,SB,SB,jt->sbuv[0].down); break;
-  case KCASE(CMAX,    SBTX): KACC(SBGT(*v,y)?*v:y,SB,SB,0); break;
-  case KCASE(CMIN,    INTX): KACC(MIN(*v,y),I, I, IMAX); break;  
-  case KCASE(CMIN,    FLX ): KACC(MIN(*v,y),D, D, inf ); break;
-  case KCASE(CMAX,    INTX): KACC(MAX(*v,y),I, I, IMIN); break;
-  case KCASE(CMAX,    FLX ): KACC(MAX(*v,y),D, D, infm); break;
-  case KCASE(CPLUS,   B01X): KACC(*v+y,     I, B, 0   ); break;
-  case KCASE(CPLUS,   INTX): KACC(*v+y,     D, I, 0.0 ); pp=1; break;
-  case KCASE(CPLUS,   FLX ): KACC(*v+y,     D, D, 0.0 ); break;
-  case KCASE(17,      INTX): KACC(*v&y,     UI,UI,-1  ); break;
-  case KCASE(22,      INTX): KACC(*v^y,     UI,UI,0   ); break;
-  case KCASE(23,      INTX): KACC(*v|y,     UI,UI,0   ); break;
-  case KCASE(25,      INTX): KACC(~(*v^y),  UI,UI,-1  ); break;
-// kludge this fails for other boolean values
- }
- POPCCT
- if(wt&FL)NAN1;
- *AS(z)=m; AN(z)=m*c; if(pp)RZ(z=pcvt(INT,z));
- EPILOG(z);
-}    /* x f//.y */
-
-#define KMCASE(ta,tw)  (4*ta+tw) // (ta+65536*tw)
-#define KMACC(Ta,Tw) \
- {Ta*u=(Ta*)av;Tw*v=(Tw*)wv;                                        \
-  if(1==c)DQ(n, ++pv[*u];                   qv[*u]+=*v++;   ++u;)   \
-  else    DQ(n, ++pv[*u]; vv=qv+c**u; DQ(c, *vv++ +=*v++;); ++u;);  \
- }
-#define KMSET(Ta)    \
- {Ta*u=(Ta*)av;                                                                                           \
-  if(1==c)DQ(n, if(pv[j=*u++]){                             *zv++=qv[j]/pv[j]; pv[j]=0; if(s==++m)break;})   \
-  else    DQ(n, if(pv[j=*u++]){vv=qv+c*j; d=(D)pv[j]; DQ(c, *zv++=*vv++/d;);   pv[j]=0; if(s==++m)break;});  \
- }
-#define KMFUN(Tw)    \
- {Tw*v=(Tw*)wv;                                                      \
-  if(1==c)DQ(n, j=*xv++; ++pv[j]; zv[j]+=*v++;)                      \
-  else    DQ(n, j=*xv++; ++pv[j]; vv=zv+j*c; DQ(c, *vv+++=*v++;););  \
- }
-
-static DF2(jtkeymean){PROLOG(0013);A p,q,x,z;D d,*qv,*vv,*zv;I at,*av,c,j,m=0,n,*pv,r,s,*u,wr,wt,*wv,*xv;
- RZ(a&&w);
- at=AT(a); av=AV(a); SETIC(a,n); 
- wt=AT(w); wv=AV(w); wr=AR(w);
- ASSERT(n==SETIC(w,j),EVLENGTH);
-// obsolete  if(!(AN(a)&&AN(w)&&at&DENSE&&wt&B01+INT+FL))R df2(z,a,w,folk(sldot(slash(ds(CPLUS))),ds(CDIV),sldot(ds(CPOUND))));
- if((-AN(a)&-AN(w)&-(at&DENSE)&-(wt&B01+INT+FL))>=0)R df2(z,a,w,folk(sldot(slash(ds(CPLUS))),ds(CDIV),sldot(ds(CPOUND))));
- CRT rng = keyrs(a,MAX(2*n,65536)); at=rng.type; r=rng.minrange.min; s=rng.minrange.range; c=aii(w);
- if(wt&FL)NAN0;
- if(s){
-  GATV0(p,INT,s,  1); pv= AV(p); memset(pv,C0,s*  SZI); pv-=r;
-  GATV0(q,FL, s*c,1); qv=DAV(q); memset(qv,C0,s*c*SZD); qv-=r*c;
-  GATV(z,FL, s*c,wr,AS(w)); zv=DAV(z);
-  switch(KMCASE(CTTZ(at),CTTZ(wt))){
-   case KMCASE(B01X,B01X): KMACC(B, B); break;
-   case KMCASE(B01X,INTX): KMACC(B, I); break;
-   case KMCASE(B01X,FLX ): KMACC(B, D); break;
-   case KMCASE(LITX,B01X): KMACC(UC,B); break;
-   case KMCASE(LITX,INTX): KMACC(UC,I); break;
-   case KMCASE(LITX,FLX ): KMACC(UC,D); break;
-   case KMCASE(C2TX,B01X): KMACC(US,B); break;
-   case KMCASE(C2TX,INTX): KMACC(US,I); break;
-   case KMCASE(C2TX,FLX ): KMACC(US,D); break;
-   case KMCASE(C4TX,B01X): KMACC(C4,B); break;
-   case KMCASE(C4TX,INTX): KMACC(C4,I); break;
-   case KMCASE(C4TX,FLX ): KMACC(C4,D); break;
-   case KMCASE(SBTX,B01X): KMACC(SB,B); break;
-   case KMCASE(SBTX,INTX): KMACC(SB,I); break;
-   case KMCASE(SBTX,FLX ): KMACC(SB,D); break;
-   case KMCASE(INTX,B01X): KMACC(I ,B); break;
-   case KMCASE(INTX,INTX): KMACC(I ,I); break;
-   case KMCASE(INTX,FLX ): KMACC(I ,D);
-  }
-  switch(CTTZNOFLAG(at)){
-   case B01X: KMSET(B ); break;
-   case LITX: KMSET(UC); break;
-   case C2TX: KMSET(US); break;
-   case C4TX: KMSET(C4); break;
-   case SBTX: KMSET(SB); break;
-   case INTX: KMSET(I ); break;
-  }
-  AS(z)[0]=m; AN(z)=m*c;
- }else{
-  RZ(x=indexof(a,a)); xv=AV(x); m=0; u=xv; DO(n, *u=i==*u?m++:xv[*u]; ++u;);
-  GATV0(p,INT,m,  1);           pv= AV(p); memset(pv,C0,m*  SZI);
-  GATV(z,FL, m*c,wr,AS(w)); AS(z)[0]=m; zv=DAV(z); memset(zv,C0,m*c*SZD);
-  switch(CTTZNOFLAG(wt)){
-   case B01X: KMFUN(B); break;
-   case INTX: KMFUN(I); break;
-   case FLX:  KMFUN(D); break;
-  }
-  if(1==c)DQ(m, *zv++/=*pv++;) else DQ(m, d=(D)*pv++; DQ(c, *zv++/=d;););
- }
- if(wt&FL)NAN1;
- EPILOG(z);
-}    /* x (+/%#)/.y */
-
-
-#define GRPCD(T)            {T*v=(T*)wv; DO(n, j=*v++; if(0<=dv[j])++cv[j]; else{dv[j]=i; cv[j]=1; ++zn;});}
-#define GRPIX(T,asgn,j,k)   {T*v=(T*)wv; DO(n, j=asgn; if(m>=j)*cu[k]++=i; \
-                                 else{GATV0(x,INT,cv[k],1); *zv++=x; u=AV(x); *u++=m=j; cu[k]=u;})}
-
-
-F1(jtgroup){PROLOG(0014);A c,d,x,z,*zv;I**cu,*cv,*dv,j,k,m,n,t,*u,*v,*wv,zn=0;CR rng;
- RZ(w);
- if(SPARSE&AT(w))RZ(w=denseit(w));
- SETIC(w,n); t=AT(w); k=n?aii(w)<<bplg(t):0;
- if(!AN(w)){GATV0(z,BOX,n?1:0,1); if(n)RZ(*AAV(z)=IX(n)); R z;}
- if(2>=k){rng.range=shortrange[t&(B01+LIT)][k]; rng.min = 0;}  // kludge scaf use shift
-// obsolete  else if(k==sizeof(C4)&&t&C4T){rng=condrange4(C4AV(w),n,-1,0,2*n);}
-// obsolete  else if(k==SZI&&t&INT+SBT){rng=condrange(AV(w),n,IMAX,IMIN,2*n);}
- else if(((k^sizeof(C4))+(t&(NOUN&~C4T)))==0){rng=condrange4(C4AV(w),n,-1,0,2*n);}
- else if(((k^SZI)+(t&(NOUN&~(INT+SBT))))==0){rng=condrange(AV(w),n,IMAX,IMIN,2*n);}
- else{rng.range=0;}
- if(rng.range){
-  GATV0(c,INT,rng.range,1); cv=AV(c)-rng.min;  /* counts  */
-  GATV0(d,INT,rng.range,1); dv=AV(d)-rng.min;  /* indices */
-  wv=AV(w); v=dv+rng.min; DQ(rng.range, *v++=-1;);
-  switch(k){
-   case 1:   GRPCD(UC); break;
-   case 2:   GRPCD(US); break;
-#if SY_64
-   case 4:   GRPCD(C4); break;
-#endif
-   case SZI: GRPCD(I);
- }}else{
-  RZ(w=indexof(w,w)); wv=AV(w);
-  GATV0(c,INT,n,1); cv=AV(c);
-  m=-1; v=wv; DQ(n, j=*v++; if(m>=j)++cv[j]; else{m=j; cv[j]=1; ++zn;});
- }
- GATV0(z,BOX,zn,1); zv=AAV(z);
- m=-1; cu=(I**)cv;
- switch(!!rng.range*k){
-  case 1:   GRPIX(UC,dv[k=*v++],j,k); break;
-  case 2:   GRPIX(US,dv[k=*v++],j,k); break;
-#if SY_64
-  case 4:   GRPIX(C4,dv[k=*v++],j,k); break;
-#endif
-  case SZI: GRPIX(I ,dv[k=*v++],j,k); break;
-  default:  GRPIX(I ,     *v++ ,j,j);
- }
- EPILOG(z);
-}    /* (</. i.@#) w */
-
-#endif
 
 static DF2(jtkeytally);
 
@@ -911,27 +658,12 @@ static F1(jtkeytallysp){PROLOG(0015);A b,e,q,x,y,z;I c,d,j,k,*u,*v;P*p;
  EPILOG(z);
 }    /* x #/.y , sparse x */
 
-#if 0  // obsolete
-#define KEYTALLY(T)     {T*u;                             \
-                         u=(T*)av; I npart=0; DQ(n, I *ta=qv+*u++; I t=*ta; *ta=t+1; npart+=SGNTO0(t-1););  \
-                         GATV0(z,INT,npart,1); zv=AV(z);  /* output area: one per bucket */ \
-                         u=(T*)av; I tally; do{v=qv+*u++; tally=*v; *v=0; *zv=tally; tally=SGNTO0(-tally); zv+=tally;}while(npart-=tally);}
-// obsolete                          u=(T*)av; DQ(n, v=qv+*u++; if(*v){*zv++=*v; *v=0; if(s==++j)break;});}
-// Create total # of each type in av[]; npart is #distinct values.  Counters are ainitialized to -1
-#define KEYTALLY(T) { \
- T *u; u=(T*)av; npart=0; DQ(n, I *ta=qv+*u++; I t=*ta; I firstinc=SGNTO0(t); *ta=t+firstinc+1; npart+=firstinc;); \
- GATV0(z,INT,npart,1); zv=AV(z);  /* output area: one per bucket */ \
- u=(T*)av; I tally; do{v=qv+*u++; tally=*v; *v=-1; *zv=tally; tally=SGNTO0(-tally); zv+=tally;}while(npart-=tally); \
- }
-#endif
-
 static DF2(jtkeytally){F2PREFIP;PROLOG(0016);A z,q;I at,j,k,n,r,s,*qv,*u,*v;
  RZ(a&&w);  // we don't neep ip, but all jtkey dyads must support it
  SETIC(a,n); at=AT(a);
  ASSERT(n==SETIC(w,k),EVLENGTH);
  if(!AN(a))R vec(INT,!!n,&AS(a)[0]);  // handle case of empties - a must have rank, so use AS[0] as  proxy for n
  if(unlikely(at&SPARSE))R keytallysp(a);
-// obsolete CRT rng = keyrs(a,MAX(2*n,65536)); at=rng.type; r=rng.minrange.min; s=rng.minrange.range;
  if((-n&SGNIF(at,B01X)&(AR(a)-2))<0){B*b=BAV(a); k=bsum(n,b); R BETWEENO(k,1,n)?v2(*b?k:n-k,*b?n-k:k):vci(n);}  // nonempty rank<2 boolean a, just add the 1s
  A ai;  // result from classifying a
  RZ(ai=indexofsub(IFORKEY,a,a));   // self-classify the input using ct set before this verb
@@ -954,23 +686,6 @@ static DF2(jtkeytally){F2PREFIP;PROLOG(0016);A z,q;I at,j,k,n,r,s,*qv,*u,*v;
   GATV0(z,INT,nparts,1);  // output area: one per partition
   // pass the input again, copying out the values.  Use branches to avoid the long carried dependency
   av=IAV(a); I *zv=AV(z); while(1){I of=ftblv[*av&valmsk]; ftblv[*av&valmsk]=-1; if(of>=0){*zv++=of+1; if(--nparts==0)break;} av=(I*)((I)av+k);}
-#if 0  // obsolete 
- if(s){A z;I*zv;
-  // small-range case with s buckets.
-// obsolete  GATV0(z,INT,s,1); zv=AV(z);  // output area: one per bucket
-  GATV0(q,INT,s,1); qv=AV(q)-r;   // biased start of area where we count occurrences
-  u=qv+r; DQ(s, *u++=-1;);   // clear the counters to -1
-  I npart;  // number of result values
-  switch(CTTZ(at)){
-   case LITX: KEYTALLY(UC); break;
-   case C2TX: KEYTALLY(US); break;
-   case C4TX: KEYTALLY(C4); break;
-   case SBTX: KEYTALLY(SB); break;
-   case INTX: KEYTALLY(I ); break;
-  }
-
-// obsolete   AN(z)=*AS(z)=s-j;   // see how many different values there actually were
-#endif
   EPILOG(z);
  }
 
@@ -981,109 +696,22 @@ static DF2(jtkeytally){F2PREFIP;PROLOG(0016);A z,q;I at,j,k,n,r,s,*qv,*u,*v;
  GATV0(z,INT,nparts,1);   // avoid calls with empty args
  // pass through the table, writing out every value that starts a new partition.  The partition size is encoded in the value
  I i=0; I *av=IAV(ai);I *zv=IAV(z); while(1){I a0=*av++; if(a0-i>=0){*zv++=a0-i; if(--nparts==0)break;} ++i;}
-#if 0
-
- // here when small-range not applicable
- RZ(q=indexof(a,a)); makewritable(q) /* obsolete realizeifvirtual(q);*/   // self-classify the atoms of a
-// obsolete if(!AR(q))R iv1; 
-// obsolete  v=
- qv=AV(q);
-// obsolete  u=qv; DQ(n, ++*(qv+*u++););
-// obsolete  u=qv; I npart=0; DO(n, I tu=*u++; ++*(qv+tu); npart+=REPSGN(tu-i)+1;);   // total each different value in its first occurrence, by adding to the index; so result is (index+#higher-or-equal values mapped to it)
- u=qv; I npart=0;  // scan pointer for slots; number of unique values
- I *chn=qv;  // pointer to first of the most recent string of consecutive misses.  The value stored there is -(#misses)
- do{
-  I ux=*u;  // fetch index for slot being analyzed
-  I* acux=&qv[ux];  // address of contents at ux: pointer to the value being incremented
-  I cux=*acux;  // value being incremented
-  cux=acux==u?0:cux;  // if this is the first time encountering this slot, remove the index value so count starts at 0
-  *chn=(I)chn-(I)u;  // chn points to previous miss position, which is u if the previous slot was not a miss.  In case u is a miss, store # consecutive misses (neg)
-       // OK to use byte distance, since it can't span more than half the address space
-  *acux=cux+1;   // increment the total count.  If previous slot was not a miss, and this also, this overwrites the write to the chain
-  ++u;  // advance to next slot
-  chn=--cux<0?u:chn;  // move chain if the current slot is not a miss
-  npart+=SGNTO0(cux);  // if not a miss, increment count of unique values
- }while(--n);  // n is gone now
- A z;I *zv; I skipmsk;
- GATV0(z,INT,npart,1); zv=AV(z);  /* output area: one per bucket */
- u=qv;
- // move values from q to z.  If an encountered count is negative, don't advance the output pointer, but skip that many slots of input
- // to avoid a carried dependency over the input values, we use a branch to decide what to do.  After the beginning it will alternate skips and moves,
- // which the branch predictor will lock onto
-#if 0 // obsolete 
- do{
-  I tally=*u; *zv=tally;  // presumptively move one value
-  skipmsk=REPSGN(tally);  // ~0 if this is a skip
-  u=(I*)((I)u-(skipmsk&tally));  // if neg, skip by the count given - it's in bytes
-  ++skipmsk;  // now skipmsk is 1 if no skip, 0 if skip
-  zv+=skipmsk; u+=skipmsk; // advance if there was no skip
- }while(npart-=skipmsk);  // loop till all non-skips have been written
-#else
- do{
-  I tally=*u;
-  if(tally<0){
-   // it's a skip
-   u=(I*)((I)u-tally);  // if neg, skip by the count given - it's in bytes
-   tally=*u;  // only one skip in a row
-  }
-  // here it's not a skip - move the result 
-  *zv++=tally;  // presumptively move one value
-  ++u; // advance to next value/skip
- }while(--npart);  // loop till all non-skips have been written
-#endif
-#endif
  EPILOG(z);
 
-// obsolete  *AS(q)=AN(q)=npart;
-// obsolete  u=qv; DO(n, k=*u++; if(i<k){j+=*v++=k-i; if(n==j)break;});
-// obsolete  u=qv; I tally; I indx=0; I *vend=v+npart; do{tally=*u++-indx; *v=tally; ++indx; tally=REPSGN(tally); v+=tally+1;}while(v!=vend);  // calc tally in each slot, which is never 0
-// obsolete  *AS(q)=AN(q)=v-qv;
-// obsolete  EPILOG(q);
 }    /* x #/.y main control & dense x */
-
-#if 0 // obsolete
-#define KEYHEADTALLY(Tz,Ta,Tw,exp0,exp1)  \
- {Ta*u;Tw*wv=(Tw*)AV(w);Tz*zz=(Tz*)zv;    \
-  u=(Ta*)av; DQ(n, ++*(qv+*u++););        \
-  u=(Ta*)av; DO(n, v=qv+*u++; if(*v){*zz++=exp0; *zz++=exp1; k+=*v; if(n==k)break; *v=0;}); \
-  AN(z)=zz-(Tz*)zv;                       \
- }
-
-// npart is #distinct values.  Counters are initialized to -1
-// Each row has the type of the final result (Tw) but what is stored in it is actually two INTs: frequency and original slot#.
-// The order depends on b, which is the index the tally should be stored to
-#define KEYHEADBUILD(Ta) { \
- Ta *u;  u=(Ta*)av; npart=0; DQ(n, I *ta=qv+*u++; I t=*ta; I firstinc=SGNTO0(t); *ta=t+firstinc+1; npart+=firstinc;); \
- GATV0(z,wt&FL?FL:INT,2*npart,2); zv=IAV(z)+b; I bc=1-(b<<1); AS(z)[0]=npart; AS(z)[1]=2; I zinc=wt&FL?(SZD*2):(SZI*2);   /* output area: one per bucket offset zv to offset of tally */ \
- u=(Ta*)av; I tally; I headx=0; I i=npart; do{v=qv+*u++; tally=*v; *v=-1; zv[bc]=headx++; zv[0]=tally; tally=REPSGN(-tally); zv=(I*)((I)zv+(tally&zinc));}while(i+=tally); \
- }
-
-// process the result of the above.  If the type of w is FL (case 1), we must convert the frequency to FL.
-#define KEYHEADFILL(Tw,Tz,casen) { \
- Tz *optr=(Tz*)AV(z); Tw *wv=(Tw*)AV(w); \
- DQ(npart, I *iptr=(I*)optr; Tz head=wv[iptr[b^1]]; if(casen==1)optr[b]=iptr[b]; optr[b^1]=head; optr+=2;) \
-}
-#endif
 
 
 static DF2(jtkeyheadtally){F2PREFIP;PROLOG(0017);A f,q,x,y,z;I b;I at,*av,k,n,r,*qv,*u,*v,wt,*zv;
  RZ(a&&w);  // we don't neep ip, but all jtkey dyads must support it
  SETIC(a,n); wt=AT(w);
  ASSERT(n==SETIC(w,k),EVLENGTH);
-// obsolete  ASSERT(!n||wt&NUMERIC,EVDOMAIN);
  ASSERT((-n&((wt&NUMERIC)-1))>=0,EVDOMAIN); // OK if n=0 or numeric w
-// obsolete  if(SPARSE&AT(a)||1<AR(w)||!n||!AN(a))R key(a,w,self);  // if sparse or w has rank>1 or a has no cells or no stoms, revert
  if(unlikely((((SPARSE&AT(a))-1)&((I)AR(w)-2)&(-n)&(-AN(a)))>=0))R key(a,w,self);  // if sparse or w has rank>1 or a has no cells or no atoms, revert
  av=AV(a);
  f=FAV(self)->fgh[0]; f=VAV(f)->fgh[0]; b=CHEAD==ID(f);  // b is 1 for {.,#  0 for #,{.  i. e. index of tally
-// obsolete  CRT rng = keyrs(a,MAX(2*n,65536)); at=rng.type; r=rng.minrange.min; I s=rng.minrange.range;
  if(AT(a)&B01&&1>=AR(a)){B*p=(B*)av;I i,j,m;  // first special case: boolean list/atom
-// obsolete   c=d=p;
   if(*p){i=0; B *d=(B*)memchr(p,C0,n); j=d-p; j=d?j:0;} // i=index of first 1, j=index of first 0 (0 if not found)
   else  {j=0; B *c=(B*)memchr(p,C1,n); i=c-p; i=c?i:0;}
-// obsolete   k=bsum(n,p); m=c&&d?2:1;  // k=# 1s
-// obsolete   GATV0(x,INT,m,1); v=AV(x); *v++=MIN(i,j);      if(c&&d)*v=MAX(i,j); 
-// obsolete   GATV0(y,INT,m,1); v=AV(y); *v++=i<j||!d?k:n-k; if(c&&d)*v=i<j?n-k:k;
   k=bsum(n,p); m=i+j?1:0;  // k=# 1s  m is 1 if there are 0s and 1s
   GATV0(x,INT,m+1,1); v=AV(x); v[m]=i+j; v[0]=0;  // 0=index of first item (always 0); 1 if it exists is the other
   GATV0(y,INT,m+1,1); v=AV(y); j=n-k; k=i?j:k; k&=-m; v[0]=k; v[m]=n-k;  // if 1st value is 0, complement k; if only 1 value, clear k
@@ -1119,23 +747,6 @@ static DF2(jtkeyheadtally){F2PREFIP;PROLOG(0017);A f,q,x,y,z;I b;I at,*av,k,n,r,
    }else{  // FL
     D *wv=DAV(w); D *zv=DAV(z); while(1){I of=ftblv[*av&valmsk]; ftblv[*av&valmsk]=-1; if(of>=0){zv[b]=(D)(of+1); zv[1-b]=wv[i]; if(--nparts==0)break; zv+=2;} av=(I*)((I)av+k); ++i;}
    }
-#if 0  // obsolete 
- if(s){A z;I*zv;
-  // small-range case with s buckets.
-// obsolete  GATV0(z,INT,s,1); zv=AV(z);  // output area: one per bucket
-  GATV0(q,INT,s,1); qv=AV(q)-r;   // biased start of area where we count occurrences
-  u=qv+r; DQ(s, *u++=-1;);   // clear the counters to -1
-  I npart;  // number of result values
-  switch(CTTZ(at)){
-   case LITX: KEYTALLY(UC); break;
-   case C2TX: KEYTALLY(US); break;
-   case C4TX: KEYTALLY(C4); break;
-   case SBTX: KEYTALLY(SB); break;
-   case INTX: KEYTALLY(I ); break;
-  }
-
-// obsolete   AN(z)=*AS(z)=s-j;   // see how many different values there actually were
-#endif
   }else{
 
    // not smallrange processing.  ai has combined fret/frequency information
@@ -1152,118 +763,6 @@ static DF2(jtkeyheadtally){F2PREFIP;PROLOG(0017);A f,q,x,y,z;I b;I at,*av,k,n,r,
    }else{  // FL
     D *wv=DAV(w); D *zv=DAV(z); while(1){I a0=*av++; if(a0-i>=0){zv[b]=(D)(a0-i); zv[1-b]=wv[i]; if(--nparts==0)break; zv+=2;} ++i;}
    }
-#if 0  // obsolete
-// obsolete  if(at&LIT+C2T+C4T+INT+SBT&&wt&B01+INT+FL&&s){  // second special case: small-range
- if((-(at&LIT+C2T+C4T+INT+SBT)&-(wt&B01+INT+FL)&-s)<0){  // second special case: small-range on integral x when w is a compatible type
-  GATV0(q,INT,s,1); qv=AV(q)-r;  // allocate the frequency table
-  u=qv+r; DQ(s, *u++=-1;);  // initialize frequencies to -1
-  // build the result table, containing integers.  The table holds frequency and index of the value
-  I npart;  // number of result values
-  switch(CTTZ(at)){
-   case INTX: KEYHEADBUILD(I ); break;
-   case LITX: KEYHEADBUILD(UC); break;
-   case C2TX: KEYHEADBUILD(US); break;
-   case C4TX: KEYHEADBUILD(C4); break;
-   case SBTX: KEYHEADBUILD(SB); break;
-  }
-  // replace the head indexes with the value there
-  if(wt&INT)KEYHEADFILL(I,I,0)
-  else if(wt&FL)KEYHEADFILL(D,D,1)
-  else KEYHEADFILL(B,I,0)
-#if 0  // obsolete
-  GA(z,wt&FL?FL:INT,2*s,2,0); zv=AV(z);  // output area is INT/FL depending on w
- k=0;
-  r=0; r=at&C2T?3:r; r=at&INT?6:r; r=at&C4T?9:r; r=at&SBT?12:r; 
-  switch(15*b+r+((wt>>INTX)&3)){
-   case  0: KEYHEADTALLY(I,UC,B,*v,   wv[i]); break;
-   case  1: KEYHEADTALLY(I,UC,I,*v,   wv[i]); break;
-   case  2: KEYHEADTALLY(D,UC,D,(D)*v,wv[i]); break;
-   case  3: KEYHEADTALLY(I,US,B,*v,   wv[i]); break;
-   case  4: KEYHEADTALLY(I,US,I,*v,   wv[i]); break;
-   case  5: KEYHEADTALLY(D,US,D,(D)*v,wv[i]); break;
-   case  6: KEYHEADTALLY(I,I ,B,*v,   wv[i]); break;
-   case  7: KEYHEADTALLY(I,I ,I,*v,   wv[i]); break;
-   case  8: KEYHEADTALLY(D,I ,D,(D)*v,wv[i]); break;
-   case  9: KEYHEADTALLY(I,C4,B,*v,   wv[i]); break;
-   case 10: KEYHEADTALLY(I,C4,I,*v,   wv[i]); break;
-   case 11: KEYHEADTALLY(D,C4,D,(D)*v,wv[i]); break;
-   case 12: KEYHEADTALLY(I,SB,B,*v,   wv[i]); break;
-   case 13: KEYHEADTALLY(I,SB,I,*v,   wv[i]); break;
-   case 14: KEYHEADTALLY(D,SB,D,(D)*v,wv[i]); break;
-   case 15: KEYHEADTALLY(I,UC,B,wv[i],*v   ); break;
-   case 16: KEYHEADTALLY(I,UC,I,wv[i],*v   ); break;
-   case 17: KEYHEADTALLY(D,UC,D,wv[i],(D)*v); break;
-   case 18: KEYHEADTALLY(I,US,B,wv[i],*v   ); break;
-   case 19: KEYHEADTALLY(I,US,I,wv[i],*v   ); break;
-   case 20: KEYHEADTALLY(D,US,D,wv[i],(D)*v); break;
-   case 21: KEYHEADTALLY(I,I ,B,wv[i],*v   ); break;
-   case 22: KEYHEADTALLY(I,I ,I,wv[i],*v   ); break;
-   case 23: KEYHEADTALLY(D,I ,D,wv[i],(D)*v); break;
-   case 24: KEYHEADTALLY(I,C4,B,wv[i],*v   ); break;
-   case 25: KEYHEADTALLY(I,C4,I,wv[i],*v   ); break;
-   case 26: KEYHEADTALLY(D,C4,D,wv[i],(D)*v); break;
-   case 27: KEYHEADTALLY(I,SB,B,wv[i],*v   ); break;
-   case 28: KEYHEADTALLY(I,SB,I,wv[i],*v   ); break;
-   case 29: KEYHEADTALLY(D,SB,D,wv[i],(D)*v); break;
-  }
-  *AS(z)=AN(z)>>1; *(1+AS(z))=2;
-#endif
- }else{  // must self-classify a
-  RZ(q=indexof(a,a)); makewritable(q)
-  // if w is compatible with INT (i. e. is B01+INT+FL list), scan the self-classify result 
-  if(wt&B01+INT+FL){
-   // obsolete  v=
-   qv=AV(q);
-// obsolete  u=qv; DQ(n, ++*(qv+*u++););
-// obsolete  u=qv; I npart=0; DO(n, I tu=*u++; ++*(qv+tu); npart+=REPSGN(tu-i)+1;);   // total each different value in its first occurrence, by adding to the index; so result is (index+#higher-or-equal values mapped to it)
-   u=qv; I npart=0;  // scan pointer for slots; number of unique values
-   I *chn=qv;  // pointer to first of the most recent string of consecutive misses.  The value stored there is -(#misses)
-   do{
-    I ux=*u;  // fetch index for slot being analyzed
-    I* acux=&qv[ux];  // address of contents at ux: pointer to the value being incremented
-    I cux=*acux;  // value being incremented
-    cux=acux==u?0:cux;  // if this is the first time encountering this slot, remove the index value so count starts at 0
-    *chn=(I)chn-(I)u;  // chn points to previous miss position, which is u if the previous slot was not a miss.  In case u is a miss, store # consecutive misses (neg).  Can't overflow, even as bytes
-    *acux=cux+1;   // increment the total count.  If previous slot was not a miss, and this also, this overwrites the write to the chain
-    ++u;  // advance to next slot
-    chn=--cux<0?u:chn;  // move chain if the current slot is not a miss
-    npart+=SGNTO0(cux);  // if not a miss, increment count of unique values
-   }while(--n);  // n is gone now
-   /* I *zv; */ I skipmsk;
-   GATV0(z,wt&FL?FL:INT,2*npart,2); AS(z)[0]=npart; AS(z)[1]=2; I *u0=u=qv;
-   // move values from q to z.  If an encountered count is negative, don't advance the output pointer, but skip that many slots of input
-
-// we chase the chain using a branch to avoid the carried dependency.  After a startup phase the skip will almost always be taken
-#define KEYHEADFILLGEN(Tw,Tz) \
-   {Tz *zv=(Tz*)AV(z);  /* output scan pointer */ \
-   Tw *wv=(Tw*)AV(w);  /* start of w list */ \
-   zv+=b; I bc=1-(b<<1);  /* advance zv to point to tally slot, bc the  distance to the head */ \
-   do{ \
-    I tally=*u; \
-    if(tally<0){ \
-     u=(I*)((I)u-tally);  /* if neg, skip by the count given - it's in bytes */ \
-     tally=*u;  /* only one skip in a row */ \
-    } \
-    zv[0]=tally; zv[bc]=wv[u-u0];  /* move tally and head */ \
-    zv+=2; ++u; /* advance to next value/skip */ \
-   }while(--npart); \
-   }
-
-#if 0  // obsolete
-    I tally=*u; zv[0]=tally;  /* presumptively move one count... */ \
-    zv[bc]=wv[u-u0];  /* ...and headvalue */ \
-    skipmsk=REPSGN(tally);  /* ~0 if this is a skip */ \
-    u=(I*)((I)u-(skipmsk&tally));  /* if neg, skip by the count given - it's in bytes */ \
-    ++skipmsk;  /* now skipmsk is 1 if no skip, 0 if skip */ \
-    zv+=skipmsk*2; u+=skipmsk; /* advance if there was no skip */ \
-   }while(npart-=skipmsk);  /* loop till all non-skips have been written */
-#endif
-
-   if(wt&INT)KEYHEADFILLGEN(I,I)
-   else if(wt&FL)KEYHEADFILLGEN(D,D)
-   else KEYHEADFILLGEN(B,I)
- }
-#endif
   }
  }else{  // no special processing
   RZ(q=indexof(a,a)); x=repeat(eq(q,IX(n)),w); y=keytally(q,q,0L); z=stitch(b?x:y,b?y:x);  // (((i.~a) = i. # a) # w) ,. (#/.~ i.~ a)   for ({. , #)
@@ -1280,7 +779,6 @@ F1(jtsldot){A h=0;AF f1=jtoblique,f2;C c,d,e;I flag=VJTFLGOK1|VJTFLGOK2;V*v;
  v=VAV(w);
  switch(ID(w)){  // no default for f2: every path must set it
   case CPOUND: f2=jtkeytally; break;
-// obsolete   case CSLASH: f2=jtkeyslash; if(vaid(v->fgh[0]))f1=jtobqfslash; break;
   case CSLASH: f2=jtkey; if(AT(v->fgh[0])&VERB&&FAV(v->fgh[0])->flag&VISATOMIC2){ // f//.  if f is atomic2
    /*scaf f2=jtkeyslash;*/ f1=jtobqfslash; flag&=~VJTFLGOK1;
    // dyad f//. is special for f=+ >. <.   we set flags to indicate the operation and the allowed types
@@ -1292,7 +790,7 @@ F1(jtsldot){A h=0;AF f1=jtoblique,f2;C c,d,e;I flag=VJTFLGOK1|VJTFLGOK2;V*v;
 
    } break;
   case CBOX: f2=jtkeybox; break;  // </.
-  case CFORK:  if(v->valencefns[0]==(AF)jtmean){/* obsolete f2=jtkeymean*/flag+=(3<<VFKEYSLASHFX)+((FL+INT+B01)<<VFKEYSLASHTX);  // (+/%#)/., treated as f//.
+  case CFORK:  if(v->valencefns[0]==(AF)jtmean){flag+=(3<<VFKEYSLASHFX)+((FL+INT+B01)<<VFKEYSLASHTX);  // (+/%#)/., treated as f//.
                }else{c=ID(v->fgh[0]); d=ID(v->fgh[1]); e=ID(v->fgh[2]); 
                 if(((c^e)==(CHEAD^CPOUND))&&d==CCOMMA&&(c==CHEAD||c==CPOUND)){f2=jtkeyheadtally; break;}
                }

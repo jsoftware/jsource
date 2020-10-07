@@ -334,7 +334,6 @@ static A jtlocindirect(J jt,I n,C*u,UI4 hash){A x,y;C*s,*v,*xv;I k,xn;
   if(AT(y)&(INT|B01)){g=findnl(BIV0(y)); ASSERT(g!=0,EVLOCALE);  // if atomic integer, look it up
   }else{
    ASSERTN(BOX&AT(y),EVDOMAIN,nfs(k,v));  // verify box
-// obsolete    x=AAV0(y); if(!AR(x)&&AT(x)&(INT|B01)) {
    x=AAV0(y); if((((I)AR(x)-1)&-(AT(x)&(INT|B01)))<0) {
     // Boxed integer - use that as bucketx
     g=findnl(BIV0(x)); ASSERT(g!=0,EVLOCALE);  // boxed integer, look it up
@@ -532,7 +531,7 @@ L* jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;L*e;
    // won't be freed till later.  By deferring all deletions we don't have to worry about whether local values are on the stack; and that allows us to avoid putting local values
    // on the NVR stack at all.
    // ABANDONED values can never be NVR (which are never inplaceable), so they will be flagged as !NVR,!UNFREED,ABANDONED
-   if(likely(xaf&(AFNVRUNFREED/* obsolete |AFVIRTUAL*/))){  // x is 0, or unfreed on the NVR stack, or abandoned.  Do not fa().  0 is probably the normal case (assignment to unassigned name)
+   if(likely(xaf&(AFNVRUNFREED))){  // x is 0, or unfreed on the NVR stack, or abandoned.  Do not fa().  0 is probably the normal case (assignment to unassigned name)
     if(unlikely(xaf&AFNVR)){AFLAG(x)=(xaf&=~AFNVRUNFREED);} // If unfreed on the NVR stack, mark as to-be-freed on the stack.  This defers the deletion
     // x=0 case, and LABANDONED case, go through quietly making no change to the usecount of x
    }else{  // x is non0 and either already marked as freed on the NVR stack or must be put there now, or VIRTUAL
@@ -548,15 +547,11 @@ L* jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;L*e;
      AFLAG(x) |= AFNVR;  // mark the value as protected in NVR stack
     }else{
      // already NVR+FREED or VIRTUAL: free this time, knowing the real free will happen later,  We know usecount>1, but it may be PERMANENT; decrement it if not
-// obsolete      fa(x);
      fadecr(x)
     }
    }
    e->val=w;   // install the new value
   } 
-// obsolete else {if(AC(w)<0)SEGFAULT  /* scaf */ ACIPNO(w);}  // Set that this value cannot be in-place assigned - needed if the usecount was not incremented above
-// obsolete     // kludge this should not be required, since the incumbent value should never be inplaceable
-// obsolete    // ra() also removes inplaceability
  } else {  // x exists, and is either read-only or memory-mapped
   ASSERT(!(AFRO&xaf),EVRO);   // error if read-only value
   if(x!=w){  // replacing name with different mapped data.  If data is the same, just leave it alone
@@ -568,7 +563,7 @@ L* jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;L*e;
   }
  }
  e->sn=jt->slisti;  // Save the script in which this name was defined
- if(unlikely(jt->stch)/* obsolete &&(m<n||jt->locsyms!=g&&jt->stloc!=g)*/)e->flag|=LCH;  // update 'changed' flag if enabled - no harm in marking locals too
+ if(unlikely(jt->stch))e->flag|=LCH;  // update 'changed' flag if enabled - no harm in marking locals too
  R e;   // return the block for the assignment
 }    /* a: name; w: value; g: symbol table */
 

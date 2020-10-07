@@ -269,8 +269,7 @@ F2(jtthorn2){PROLOG(0050);A da,ea,h,ma,s,y,*yv,z;B e,*ev;C*sv,*wv,*zv;I an,c,d,*
  if(t&BOX)R th2box(a,w);  // If boxed w, go handle as special case
  ASSERT(t&NUMERIC&&!(t&SPARSE)&&!(AT(a)&SPARSE),EVDOMAIN);  // w must be numeric and dense; a must be dense
  // r=rank of w; ws->shape of w; c=#atoms in 1-cell of w; n = #1-cells of w
-// obsolete  r=AR(w); ws=AS(w); SHAPEN(w,r-1,c); /* obsolete c=r?ws[r-1]:1;*/ n=c?AN(w)/c:prod(r-1,ws);
- r=AR(w); ws=AS(w); SHAPEN(w,r-1,c); /* obsolete c=r?ws[r-1]:1; n=c?AN(w)/c:prod(r-1,ws);*/ PRODX(n,r-1,ws,1);
+ r=AR(w); ws=AS(w); SHAPEN(w,r-1,c);  PRODX(n,r-1,ws,1);
  ASSERT(!AR(a)||c==an,EVLENGTH);  // if a is not an atom, it must have the same length as a 1-cell of w
  // k=#bytes in an atom of w, wk=*bytes in a cell of w; wv->first atom of w (prebiased)
  k=bpnoun(t); wk=c*k; wv=CAV(w)-k;

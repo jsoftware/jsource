@@ -57,13 +57,10 @@ static NUMH(jtnumj){C*t,*ta;D x,y;Z*v;
 
 static NUMH(jtnumi){I neg;I j;
  neg='-'==s[0]; s+=neg; n-=neg; if(!n)R 0;  // extract & skip sign; exit if no digits
-// obsolete  for(;*s=='0'&&n>1;--n,++s);  // skip leading zeros, as long as there is more than one character
  for(;*s=='0';--n,++s);  // skip leading zeros, even down to nothing, which will be 0 value
  if(!(19>=n))R 0;   // 2^63 is 9223372036854775808.  So a 20-digit input must overflow, and the most a
   // 19-digit number can be is a little way into the negative; so testing for negative will be a valid test for overflow
  j=0; DQ(n, I dig=*s++; if(!BETWEENC(dig,'0','9'))R 0; j=10*j+(dig-'0'););
-// obsolete  if(j<0&&j!=(neg<<(BW-1)))R 0;  // overflow if negative AND not the case of -2^63, which shows as IMIN with a negative flag
-// obsolete  if((j&(j-neg))<0)R 0;  // overflow if negative AND not the case of -2^63, which shows as IMIN with a negative flag
  *(I*)vv=(j^(-neg))+neg;   // if - was coded, take 2's comp, which will leave IMIN unchanged
  R 1+REPSGN(j&(j-neg));  // overflow if negative AND not the case of -2^63, which shows as IMIN with a negative flag
 }     /* called only if SY_64 */
@@ -414,7 +411,6 @@ F2(jtexec2){A z;B b,p;C d,*v;I at,c,i,k,m,n,r,*s;
  if(!r||AS(w)[r-1]){    // skip the count if y is atom, or the last axis of y has dimension 0.   Nothing to count.
   // Calculate w ,"1 0 ' '   to end each (or only) line with delimiter
   {A t; RZ(w=IRS2(w,chrspace,0L,1L,0L,jtover,t)); makewritable(w);}  // New w will be created
-// obsolete   v=CAV(w); r=AR(w); s=AS(w); n=s[r-1]; m=prod(r-1,s);  // v->data, m = #lists, n = length of each list
   v=CAV(w); r=AR(w); s=AS(w); n=s[r-1]; PRODX(m,r-1,s,1)  // v->data, m = #lists, n = length of each list
   for(i=0;i<m;++i){I j;
    // b is set when the current character is significant (i. e. not whitespace); p when the previous character was significant

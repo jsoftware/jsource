@@ -136,13 +136,6 @@ static B jtpscanlt(J jt,I m,I d,I n,B*z,B*x,B p){A t;B*v;I i;
  memset(z,p^1,m*n*d); 
  if(1==d)DQ(m, if(v=memchr(x,p,n))*(z+(v-x))=p; z+=n; x+=n;)
  else{
-#if 0 // obsolete
-  GATV0(t,B01,d,1); v=BAV(t);
-  for(i=0;i<m;++i){
-   memset(v,C1,d);
-   DQ(n, DO(d, if(v[i]&&p==x[i]){v[i]=0; z[i]=p;};); z+=d; x+=d;); 
-  }
-#else
   I *xiv0=(I*)x, *ziv0=(I*)z;  // word-long pointers running through each cell
   I npp; REPLBYTETOW(p^1,npp);  // one copy of p in each lane
   I nw=(d-1)>>LGSZI;  // number of words to process before the last
@@ -172,7 +165,6 @@ static B jtpscanlt(J jt,I m,I d,I n,B*z,B*x,B p){A t;B*v;I i;
    }
    xiv0=(I*)((I)xiv0+n*d); ziv0=(I*)((I)ziv0+n*d);  // advance to next cell
   }
-#endif
  }
  R 1;
 }    /* f/\"r w for < and <: */
@@ -180,34 +172,6 @@ static B jtpscanlt(J jt,I m,I d,I n,B*z,B*x,B p){A t;B*v;I i;
 AHDRP(ltpfxB,B,B){pscanlt(m,d,n,z,x,C1);R EVOK;}
 AHDRP(lepfxB,B,B){pscanlt(m,d,n,z,x,C0);R EVOK;}
 
-#if 0  // obsolete
-// result is alternating pp,~pp,... till a is encountered; then one atom from pa,~pa (as if started from 0), then one atom from ~ps,ps,... repeated
-static B jtpscangt(J jt,I m,I d,I n,B*z,B*x,B a,B pp,B pa,B ps){
-  A t;B b,*cc="\000\001\000",e,*p=cc+pp,*v;B*u;I i,j;
- if(d==1)for(i=0;i<m;++i){
-  if(v=memchr(x,a,n)){
-   j=v-x; b=j&1; 
-// obsolete    mvc(j,z,2L,p); memset(z+j,b!=ps,n-j); *(z+j)=b^pa;
-   mvc(j,z,2L,p); memset(z+j,b^ps,n-j); *(z+j)=b^pa;
-  }else mvc(n,z,2L,p);
-  z+=n; x+=n;
- }else{
-  GATV0(t,B01,d,1); u=BAV(t);
-  for(i=0;i<m;++i){
-   e=pp; memset(u,C0,d);
-   DO(n, j=i; DO(d, if(u[i])z[i]='1'==u[i]; else 
-     if(a==x[i]){b=j&1; z[i]=b^pa; u[i]=b^ps?'1':'0';}else z[i]=e;);
-    e^=1; z+=d; x+=d;); 
-  }
- }
- R 1;
-}    /* f/\"r w for > >: +: *: */
-
-AHDRP(  gtpfxB,B,B){pscangt(m,d,n,z,x,C0,C1,C0,C0);R EVOK;}
-AHDRP(  gepfxB,B,B){pscangt(m,d,n,z,x,C1,C0,C1,C1);R EVOK;}
-AHDRP( norpfxB,B,B){pscangt(m,d,n,z,x,C1,C0,C1,C0);R EVOK;}
-AHDRP(nandpfxB,B,B){pscangt(m,d,n,z,x,C0,C1,C0,C1);R EVOK;}
-#else
 // result is alternating pp,~pp,... till a is encountered; then one atom from pa,~pa (as if started from 0), then one atom from ~ps,ps,... repeated
 static B jtpscangt(J jt,I m,I d,I n,B*z,B*x,I apas){
  I a=apas&1, pp=(apas>>1)&1, pa=(apas>>2)&1, ps=apas>>3;  // extract values from mask
@@ -216,7 +180,6 @@ static B jtpscangt(J jt,I m,I d,I n,B*z,B*x,I apas){
    A t;B b,*cc="\000\001\000",e,*p=cc+pp,*v;B*u;I i,j;
    if(v=memchr(x,a,n)){
     j=v-x; b=j&1; 
-// obsolete    mvc(j,z,2L,p); memset(z+j,b!=ps,n-j); *(z+j)=b^pa;
     mvc(j,z,2L,p); memset(z+j,b^ps,n-j); *(z+j)=b^pa;
    }else mvc(n,z,2L,p);
    z+=n; x+=n;
@@ -266,7 +229,6 @@ AHDRP(  gtpfxB,B,B){pscangt(m,d,n,z,x,0x2);R EVOK;}
 AHDRP(  gepfxB,B,B){pscangt(m,d,n,z,x,0xd);R EVOK;}
 AHDRP( norpfxB,B,B){pscangt(m,d,n,z,x,0x5);R EVOK;}
 AHDRP(nandpfxB,B,B){pscangt(m,d,n,z,x,0xa);R EVOK;}
-#endif
 
 PREFIXOVF( pluspfxI, I, I,  PLUSP, PLUSVV)
 PREFIXOVF(tymespfxI, I, I, TYMESP,TYMESVV)
@@ -368,7 +330,6 @@ static F2(jtseg){A z;I c,k,m,n,*u,zn;
  RZ(a&&w);
  // The (start,length) had better be integers.  Extract them into m,n
  if(INT&AT(a)){u=AV(a); m=*u; n=*(1+u);} else m=n=0;
-// obsolete  c=aii(w); k=c<<bplg(AT(w)); RE(zn=mult(n,c));  // c=#atoms per item, k=#bytes/item, zn=atoms/infix
  c=aii(w); k=c<<bplg(AT(w)); DPMULDE(n,c,zn);  // c=#atoms per item, k=#bytes/item, zn=atoms/infix
  GA(z,AT(w),zn,MAX(1,AR(w)),AS(w)); AS(z)[0]=n;  // Allocate array of items, move in shape, override # items
  // Copy the selected items to the new block and return the new block
@@ -638,10 +599,7 @@ static DF1(jtpscan){A z;I f,n,r,t,wn,wr,*ws,wt;
  wn=AN(w); wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; RESETRANK; f=wr-r; ws=AS(w);
  // m = #cells, c=#atoms/cell, n = #items per cell
  SETICFR(w,f,r,n);  // wn=0 doesn't matter
-// obsolete  y=FAV(self)->fgh[0]; // y is the verb u, which is f/
  // If there are 0 or 1 items, or w is empty, return the input unchanged, except: if rank 0, return (($w),1)($,)w - if atomic op, do it right here, otherwise call the routine to get the shape of result cell
-// obsolete  if(2>n||!wn){if(vaid(FAV(y)->fgh[0])){R r?RETARG(w):reshape(over(shape(w),num(1)),w);}else R IRS1(w,self,r,jtinfixprefix1,z);}
-// obsolete  if(((1-n)&-wn)>=0){if(vaid(FAV(y)->fgh[0])){R r?RETARG(w):reshape(over(shape(w),num(1)),w);}else SEGFAULT /* obsolete  R IRS1(w,self,r,jtinfixprefix1,z); scaf*/}  // n<2 or wn=0
  if(((1-n)&-wn)>=0){R r?RETARG(w):reshape(over(shape(w),num(1)),w);}  // n<2 or wn=0
  VARPS adocv; varps(adocv,self,wt,1);  // fetch info for f/\ and this type of arg
  if(!adocv.f)R IRS1(w,self,r,jtinfixprefix1,z);  // if there is no special function for this type, do general scan
@@ -659,7 +617,6 @@ static DF2(jtinfixd){A fs,z;C*x,*y;I c=0,d,k,m,n,p,q,r,*s,wr,*ws,wt,zc;
  wr=AR(w); ws=AS(w); wt=AT(w); SETIC(w,n);
  RE(m=i0(vib(a))); if(m==IMAX){m=n+1;} p=m==IMIN?IMAX:ABS(m);
  if(0>m){p=MIN(p,n); d=p?(n+p-1)/p:0;}else{ASSERT(IMAX-1>n-m,EVDOMAIN); d=MAX(0,1+n-m);}
-// obsolete  if(fs=FAV(self)->fgh[0],CCOMMA==ID(fs)){RE(c=aii(w)); RE(zc=mult(p,c)); r=2;}
  if(fs=FAV(self)->fgh[0],CCOMMA==ID(fs)){RE(c=aii(w)); DPMULDE(p,c,zc) r=2;}
  else{if(n)RE(c=aii(w)); zc=p; r=wr?1+wr:2;}
  GA(z,wt,d*p*c,r,0); x=CAV(z); y=CAV(w);
@@ -865,10 +822,8 @@ static DF2(jtmovfslash){A x,z;B b;C id,*wv,*zv;I d,m,m0,p,t,wk,wt,zi,zk,zt;
   case CBW0110:  if(wt&    INT   )R movbwneeq(m,w,self,0); break;
  }
  VARPS adocv;
-// obsolete  if(!ds(id) || !(adocv = vains(ds(id),wt)).f)R jtinfixprefix2(jt,a,w,self);  // if no special routine for insert, do general case
  varps(adocv,self,wt,0); if(!adocv.f)R jtinfixprefix2(jt,a,w,self);  // if no special routine for insert, do general case
  if(m0>=0){zi=MAX(0,1+p-m);}else{zi=1+(p-1)/m; zi=(p==0)?p:zi;}  // zi = # result cells
-// obsolete  d=aii(w); b=0>m0&&zi*m!=p;   // b='has shard'
  PROD(d,AR(w)-1,AS(w)+1) b=0>m0&&zi*m!=p;   // b='has shard'
  zt=rtype(adocv.cv); RESETRANK;
  GA(z,zt,d*zi,MAX(1,AR(w)),AS(w)); AS(z)[0]=zi;
@@ -899,7 +854,6 @@ F1(jtbslash){A f;AF f1=jtinfixprefix1,f2=jtinfixprefix2;V*v;I flag=FAV(ds(CBSLAS
   case CSLASH: ;  // never gerund/ which is coded as GRCO
    A u=v->fgh[0];  // the u in u/\ y
    if(AT(u)&VERB)flag |= (FAV(u)->flag >> (VIRS2X-VFSCANIRSX)) & VFSCANIRS;  // indic if we should use {: f }: for 2 /\ y
-// obsolete    f2=jtmovfslash; if(vaid(u)){f1=jtpscan; flag|=VASGSAFE|VJTFLGOK1;} break;
    f2=jtmovfslash; if(FAV(u)->flag&VISATOMIC2){f1=jtpscan; flag|=VASGSAFE|VJTFLGOK1;} break;
   default:
    flag |= VJTFLGOK1|VJTFLGOK2; break; // The default u\ looks at WILLBEOPENED

@@ -299,7 +299,6 @@ static AF atcompX[]={   /* table for any vs. any */
 /* 4 [: + / f   32  33  34  35  36  37  38  39  */
 /* 5 [: +./ f   40  41  42  43  44  45  46  47  */
 /* 6 [: *./ f   48  49  50  51  52  53  54  55  */
-// obsolete /* 7 [: I.  f   56  57  58  59  60  61  62  63  */
 
 // Here to choose the function to use, after the arguments are known.
 // We require the ranks to be <2 for processing here except for @e., which requires that the result of e. have rank<2

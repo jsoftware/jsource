@@ -38,12 +38,6 @@ BPFXAVX2(eqCC, CMPEQCC,x, CMPEQCC, x,
    I work; , __m256i workarea; __m256i bool256=_mm256_set1_epi64x(0x0101010101010101);
    )
 
-#if 0 // obsolete 
- (workarea=_mm256_xor_pd(u256,v256), workarea=_mm256_or_pd(workarea,_mm256_castsi256_pd(_mm256_srli_epi64(_mm256_castpd_si256(workarea),4))) ,
-     workarea=_mm256_or_pd(workarea,_mm256_castsi256_pd(_mm256_srli_epi64(_mm256_castpd_si256(workarea),2))),
-     _mm256_andnot_pd(_mm256_or_pd(workarea,_mm256_castsi256_pd(_mm256_srli_epi64(_mm256_castpd_si256(workarea),1))),bool256) ) , 
-#endif
-
                            EQTEMPLATE(eqCS, B,UC,US, CMPEQ,, R EVOK;)  EQTEMPLATE(eqSC, B,US,UC, CMPEQ,, R EVOK;)  EQTEMPLATE(eqSS, B,S,S, CMPEQ,, R EVOK;)
 EQTEMPLATE(eqUU, B,C4,C4, CMPEQ,, R EVOK;)  EQTEMPLATE(eqUS, B,C4,US, CMPEQ,, R EVOK;)  EQTEMPLATE(eqSU, B,US,C4, CMPEQ,, R EVOK;)
 EQTEMPLATE(eqCU, B,UC,C4, CMPEQ,, R EVOK;)  EQTEMPLATE(eqUC, B,C4,UC, CMPEQ,, R EVOK;)
@@ -59,11 +53,6 @@ BPFXAVX2(neCC, CMPNECC,x, CMPNECC, x,
    (workarea=_mm256_castpd_si256(_mm256_xor_pd(u256,v256)), _mm256_castsi256_pd(_mm256_andnot_si256(_mm256_srli_epi64(_mm256_andnot_si256(workarea,_mm256_sub_epi8(workarea,bool256)),7),bool256))) ,
    I work; , __m256i workarea; __m256i bool256=_mm256_set1_epi64x(0x0101010101010101);
    )
-#if 0 // obsolete 
- (workarea=_mm256_xor_pd(u256,v256), workarea=_mm256_or_pd(workarea,_mm256_castsi256_pd(_mm256_srli_epi64(_mm256_castpd_si256(workarea),4))) ,
-     workarea=_mm256_or_pd(workarea,_mm256_castsi256_pd(_mm256_srli_epi64(_mm256_castpd_si256(workarea),2))),
-     _mm256_and_pd(_mm256_or_pd(workarea,_mm256_castsi256_pd(_mm256_srli_epi64(_mm256_castpd_si256(workarea),1))),bool256) ) , 
-#endif
                            NETEMPLATE(neCS, B,UC,US, CMPNE,, R EVOK;)  NETEMPLATE(neSC, B,US,UC, CMPNE,, R EVOK;)  NETEMPLATE(neSS, B,S,S, CMPNE,, R EVOK;)
 NETEMPLATE(neUU, B,C4,C4, CMPNE,, R EVOK;)  NETEMPLATE(neUS, B,C4,US, CMPNE,, R EVOK;)  NETEMPLATE(neSU, B,US,C4, CMPNE,, R EVOK;)
 NETEMPLATE(neCU, B,UC,C4, CMPNE,, R EVOK;)  NETEMPLATE(neUC, B,C4,UC, CMPNE,, R EVOK;)

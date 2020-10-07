@@ -169,8 +169,6 @@ F2(jtunparsem){A h,*hv,dc,ds,mc,ms,z,*zu,*zv;I dn,m,mn,n,p;V*wv;
  }else{
   mn=AN(ms); dn=AN(ds);
   GATV0(z,BOX,p+mn+dn,1); zv=AAV(z);
-// obsolete   ICPY(zv,AAV(ms),mn); zv+=mn; if(p)RZ(*zv++=chrcolon);
-// obsolete   ICPY(zv,AAV(ds),dn);
   DO(mn, *zv++=incorp(AAV(ms)[i]);); if(p)RZ(*zv++=chrcolon);
   DO(dn, *zv++=incorp(AAV(ds)[i]););
  }

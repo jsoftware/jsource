@@ -19,23 +19,6 @@
 #define SNZ             10    // NB. - bit 3 of state means 'comment'
 #define SZ              11    // trailing comment - bit 3 of state means 'comment'
 
-#if 0 // obsolete 
-#define E0              0  // 1 no action
-#define EI              1    /* 4 emit (b,i-1); b=.i              */
-#define EN              2    /* 5 b=.i                            */
-typedef struct {C new,effect;} ST;
-#define SE(s,e) {s,e}
-#else
-#if 0// obsolete 
-// bits 0-2 and 7 of the state are flags: 0=!EI 1=state is SS 2=EI|EN 7=state is S9  6=state is comment
-#define E0              1  // no action
-#define EI              4    // end of previous word - emit
-#define EN              5    // start of next word - save position
-#define EZ              EI   // end and start together - $ eg
-
-typedef C ST;
-#define SE(s,e) (((s)==S9)<<7)|((s)<<3)|(((s)==SS)<<1)|e
-#else
 #define E0              0  // no action
 #define EI              1    // end of previous word - emit
 #define EN              1    // start of next word - save position
@@ -43,8 +26,6 @@ typedef C ST;
 
 typedef C ST;
 #define SE(s,e) (((s)<<4)|((((s)==S99))<<3)|(e))  // set bit 3 inside followon numeric
-#endif
-#endif
 
 static const ST state[SZ+1][16]={
 /*SS */ {[CX]=SE(SX,EN),[CS]=SE(SS,E0),[CA]=SE(SA,EN),[CN]=SE(SN,EN),[CB]=SE(SA,EN),[C9]=SE(S9,EN),[CD]=SE(SX,EN),[CC]=SE(SX,EN),[CQ]=SE(SQ,EN)},
@@ -69,48 +50,6 @@ F1(jtwordil){A z;I s,i,m,n,nv,*x;UC*v;
  nv=0;    // set not creating numeric constant
  n=AN(w); v=UAV(w); GATV0(z,INT,n+n,3); x=AV(z); AS(z)[1]=2; AS(z)[2]=1;  // get count of characters n and address v; turn into suitable shape for ;.0 (x 2 1)
   // allocate absolute worst-case output area (each char is 1 word); point x to output indexes
-#if 0  // obsolete 
- s=SS; // init state (after space)
- for(i=0;i<n;++i){   // run the state machine
-  p=state[s][ctype[v[i]]]; e=p.effect;    // go to next state
-  if(e==EI){  // if 'emit'...
-   t&=s==S9;   // was previous state S9? (means we were building a number)
-   if(t){xb=nv?xb:b; nv=1; xe=i;}   // if so, b must be set; if this is first number, remember starting index.  In any case remember presumptive ending index
-   else{if(nv){nv=0; *x++=xb; *x++=xe-xb;} *x++=b; *x++=i-b;}  // Not S9.  If a numeric constant was in progress, it ended on the word BEFORE
-    // the one ending now.  In that case, emit the numeric constant.  Then in any case emit the (nonnumeric) ending here.
-  }
-  s=p.new;   // get next state
-  if(e){b=i; t=s==S9;}   // If we should move the chains, remember the new starting position, and whether we are processing a numeric
- }
- if(s==SQ){jsignal3(EVOPENQ,w,b); R 0;}  // error if open quote
- t&=s==S9;    // finish outing the last word as above
- if(t){*x++=xb=nv?xb:b; *x++=n-xb;}
- else{if(nv){*x++=xb; *x++=xe-xb;} if(s!=SS){*x++=b; *x++=n-b;}}  // if final state was 'spaces', there is nothing to put out
-#else
-#if 0  // obsolete 
- s=SE(SS,E0); I swas9=0; I b=0; I t=0;
- for(i=0;i<n;++i){   // run the state machine
-  C *statebase=(C*)state+ctype[v[i]]; s=statebase[2*(s&0x78)];
-  // t is set if we are producing a number; nv is t delayed by one emit (updated only at EI)
-  // thus t&!nv is first, t&nv is middle, !t&nv is last   for numbers, and !t&!nv is a single non-number.
-  // we write out the starting point b every time, and also the current length i-b.
-  // for first, we write start and length but do not advance after the length.
-  // for middle we write both start and length to length (the second write survives) and do not advance either time
-  // for last we advance (off the length) before writing for the next (nonnumber) start/length, advance after both
-  // for non-number we advance after both
-  t&=swas9|(s&1);   // bit0 is 0 for EI
-  I *oldx=x; x+=(s&1)+(nv&(t^1)); *x=b; x+=(t&nv)^1; *x=i/* obsolete -x[-1]*/; x+=t^1; x=(s&1)?oldx:x;
-  nv=s&1?nv:t; // sample nv on any E1
-  swas9=s>>7;   // bit 7 set if new state there is s9
-  b=s&4?i:b; t=s&4?swas9:t;  // bit 2 set on any nonnull action: move start pointer, init numeric flag
- }
- if((s>>3)==SQ){jsignal3(EVOPENQ,w,b); R 0;}  // error if open quote
- // force an EI at the end
- t&=swas9;   // always EI
- x+=nv&(t^1); *x=b; x+=(t&nv)^1; *x=i/* obsolete -x[-1]*/; x+=t^1;
- // if final state was 'spaces', retract the last word
- x-=s&2;  // bit 1 means 'SS'
-#else
  s=SE(SS,0);
  for(i=0;i<n;++i){   // run the state machine
   I prevs=s;  // state before new character
@@ -119,11 +58,9 @@ F1(jtwordil){A z;I s,i,m,n,nv,*x;UC*v;
   // Handle followon numerics.  If the previous state was 'followon numeric' and the new character is CX/CS/CQ, we will emit after this state but
   // we need to overwrite the previous numeric.  Decrement the pointer by 2 before writing.  This runs while the state-fetch is happening and is fast enough to allow
   // the store addresses to be calculated before the next fetch
-// obsolete   x=(I*)((I)x-(((((prevs>>1)&6)+currc)&16)>>(3-LGSZI)));  // add 6 to currc if followon numeric, then add that to char code.  This produces carry to 16 for CX/CS/CQ.
   currc+=16-CX; currc&=16; prevs=2*prevs+1; currc&=prevs;   // set currc to 16 iff CX/CS/CQ; move 'followon numeric' flag to bit 4; combine
   // the +1 is to trick the compiler.  Without it it moves the &16 onto prevs, but prevs is the critical path
   x=(I*)((I)x-(currc>>(3-LGSZI)));  // subtract from x, to move x back 2 positions if coming out of followon numeric with a number
-// obsolete   x-=(((prevs&currc)>>3)&(currc&1))<<1;  // state bit 3 is set in followon numeric; bits 3 and 0 of char class are set in CX/CS/CQ
   // do two stores, and advance over any that are to be emitted.  0, 1, or 2 may be emitted (0 when the state has no action, 1 when the
   // state is an end+1 or start value, and 2 if an end+1 AND start value)
   x[0]=i; x[1]=i; x+=s&3;
@@ -131,13 +68,8 @@ F1(jtwordil){A z;I s,i,m,n,nv,*x;UC*v;
  if((s>>4)==SQ){jsignal3(EVOPENQ,w,x[-1]); R 0;}  // error if open quote
  // force an EI at the end, as if with a space.  We will owe one increment of x, repaid when we calxculate m.
  //  If the line ends without a token being open (spaces perhaps) this will be half of a field and will be shifted away
-// obsolete  x=(I*)((I)x-(((((s>>1)&6)+CS)&16)>>(3-LGSZI)));     // as above, for final state
  x=(I*)((I)x-(((s<<1)&16)>>(3-LGSZI)));    // same as above, with CS as the character
  *x=i;
-#endif
-#endif
-// obsolete  m=x-AV(z); *AV(z)=s==SZ||s==SNZ?-(m>>1):(m>>1);  // Calculate & install count; if last field is NB., make count negative
-// obsolete  m=(x-AV(z))>>1; I isnb=REPSGN((I)(SE(SNZ,0)-1)-s); *AV(z)=(m^isnb)-isnb;  // Calculate & install count; if last field is NB., make count negative
  m=((x-AV(z))+1)>>1; AS(z)[0]=m; AM(z)=m+REPSGN((I)(SE(SNZ,0)-1)-s); // Calculate & install count; if last field is NB., make count negative
  R z;
 }    /* word index & end+1; z is m 2 1$(i0,e0),(i1,e1),... AM(z) is # words not including final NB */
@@ -154,18 +86,13 @@ F1(jtwordil){A z;I s,i,m,n,nv,*x;UC*v;
 DF1(jtwords){A t,*x,z;C*s;I k,n,*y;
  F1RANK(1,jtwords,self);
  RZ(w=vs(w));  // convert w to LIT if it's not already
-// obsolete  RZ(t=wordil(w));
  R jtboxcut0(jt,wordil(w),w,self);
-// obsolete  s=CAV(w); y=AV(t); n=*y++; n=0>n?-n:n;
-// obsolete  GATV0(z,BOX,n,1); x=AAV(z);
-// obsolete  DQ(n, k=*y++; RZ(*x++=rifvs(str(*y++-k,s+k))););
-// obsolete  RETF(z);  // always boxed chars
 }
 
 
 static A jtconstr(J jt,I n,C*s){A z;C b,c,p,*t,*x;I m=0;
  p=0; t=s; DQ(n-2, c=*++t; b=c==CQUOTE; m+=(b^1)|p; p=((b^1)|p)^1;);  // should just take half the # '
- if(0==m)R aqq; /* obsolete else if(1==m&&(z=chr[(UC)s[1]]))R z;  not worth it */
+ if(0==m)R aqq; 
  GATV0(z,LIT,m,1!=m); x=CAV(z);
  p=0; t=s; DQ(n-2, *x=c=*++t; b=c==CQUOTE; x+=(b^1)|p; p=((b^1)|p)^1;);  // This may overstore by 1 character but that's OK because LIT types have allocated space at the end
  R z;
@@ -189,13 +116,10 @@ A jtenqueue(J jt,A a,A w,I env){A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl;UC c;
  RZ(a&&w);
  s=CAV(w); u=AV(a);
  n=AM(a);  // get # words not including any final NB.
-// obsolete  n=*u++; n=REPSGN(n)^n;  // point s to start of string; set u as running pointer pointer in a; fetch # words;
-// obsolete     // if negative (meaning last word is NB.), discard the NB. from the count; step u to point to first (i0,l0) pair
  GATV0(z,BOX,n,1); x=v=AAV(z);   //  allocate list of words; set running word pointer x, and static
    // beginning-of-list pointer v, to start of list of output pointers
  for(i=0;i<n;i++,x++){  // for each word
   wl=u[1]-u[0]; wi=u[0]+s; u+=2; c=e=*wi; p=ctype[(UC)c]; b=0;   // wi=first char, wl=length, c=e=first char, p=type of first char, b='no inflections'
-// obsolete   if(1<wl){d=*(wi+wl-1); if(b=((p!=C9)&(d==CESC1))|(d==CESC2))e=spellin(wl,wi);}  // if word has >1 character, is 9--. or ---:, convert to pseudocharacter
   if(wl==1||(b=((p!=C9)&(wi[wl-1]==CESC1))|(wi[wl-1]==CESC2)))e=spellin(wl,wi);else e=0;  // if word has 1 character, or is a--. or ---:, convert to pseudocharacter
   if(BETWEENO(c,32,128)&&AK(y=ds(e))){
    // If first char is ASCII, see if the form including inflections is a primitive;
@@ -213,12 +137,6 @@ A jtenqueue(J jt,A a,A w,I env){A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl;UC c;
    *x=y;   // install the value
   } else if(e==CFCONS){RZ(*x=FCONS(connum(wl-1,wi)))  // if the inflected form says [_]0-9:, create word for that
   } else {
-// obsolete switch(b?0:p){    // otherwise, it's not a primitive, but data, either numeric, string, or name.  Check first character, but fail if inflected form, which must be invalid
-// obsolete    default: jsignal3(EVSPELL,w,wi-s); R 0;   // bad first character or inflection
-// obsolete    case C9: RZ(*x=connum(wl,wi));   break;   // starts with numeric, create numeric constant
-// obsolete    case CQ: RZ(*x=constr(wl,wi));   break;   // start with ', make string constant
-// obsolete    case CA: ASSERTN(vnm(wl,wi),EVILNAME,nfs(wl,wi)); RZ(*x=nfs(wl,wi)); if((env==2)&&(NAV(*x)->flag&NMXY)){AT(*x)|=NAMEBYVALUE;}  // starts with alphabetic, make it a name, error if invalid name
-// obsolete   }
    p=b?b:p;    // otherwise, it's not a primitive, but data, either numeric, string, or name.  Check first character, but fail if inflected form, which must be invalid.  p must be non0
     // If the name is a call-by-value name (x y u. etc), we mark it as BYVALUE if it is slated for execution in an explicit definition
    if((p&~CA)==0){ASSERTN(vnm(wl,wi),EVILNAME,nfs(wl,wi)); RZ(*x=nfs(wl,wi)); if((env==2)&&(NAV(*x)->flag&NMXY)){AT(*x)|=NAMEBYVALUE;}  // starts with alphabetic, make it a name, error if invalid name

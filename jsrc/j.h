@@ -621,14 +621,7 @@ extern unsigned int __cdecl _clearfp (void);
 #if 1 && ((C_AVX&&SY_64) || EMU_AVX)
 // We would like to use these AVX versions because they generate fewest instructions.  Unfortunately, they
 // modify ymm upper bits, which causes us to issue VZEROUPPER, which in turn causes us to save/restore all of ymm.
-// That's not worth it.  Even the 128-bit MASKLOAD instructions modify ymm upper.
-#if 0 // obsolete
-#define ASSERTAGREE(x,y,l) {D *aaa=(D*)(x), *aab=(D*)(y); I aai=4-(l); \
- do{__m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+(aai>=0?aai:0))); \
-  endmask=_mm256_castpd_si256(_mm256_xor_pd(_mm256_maskload_pd(aaa,endmask),_mm256_maskload_pd(aab,endmask))); \
-  ASSERT(_mm256_testz_si256(endmask,endmask),EVLENGTH); if(likely(aai>=0))break; aaa+=NPAR; aab+=(SGNTO0(aai))<<LGNPAR; aai+=NPAR; /* prevent compiler from doing address offset */\
- }while(aai<4); }  // the test at end is to prevent the compiler from duplicating the loop.  It is almost never executed.
-#else
+// It's still worth it for all the register pressure it saves
 #define ASSERTAGREE(x,y,l) \
  {D *aaa=(D*)(x), *aab=(D*)(y); I aai=(l); \
   if(likely(aai<=NPAR)){__m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-aai)); \
@@ -644,7 +637,6 @@ extern unsigned int __cdecl _clearfp (void);
    r=!_mm256_testz_si256(endmask,endmask); /* result is 1 if any mismatch */ \
   }else{r=memcmp(aaa,aab,aai<<LGSZI)!=0;} \
  }
-#endif
 #else
 #define ASSERTAGREE(x,y,l) \
  {I *aaa=(x), *aab=(y); I aai=(l); \
@@ -660,19 +652,6 @@ extern unsigned int __cdecl _clearfp (void);
    r=((aaa[0]^aab[0])+(aaa[aai]^aab[aai]))!=0;  \
   }else{r=memcmp(aaa,aab,aai<<LGSZI)!=0;} \
  }
-// obsolete #define ASSERTAGREE(x,y,l) {I *aaa=(x), *aab=(y), aai=(l)-1; do{aab=aai<0?aaa:aab; ASSERT(aaa[aai]==aab[aai],EVLENGTH); --aai; aab=aai<0?aaa:aab; ASSERT(aaa[aai]==aab[aai],EVLENGTH); --aai;}while(aai>=0); }
-// obsolete #define TESTDISAGREE(r,x,y,l) {I *aaa=(x), *aab=(y), aai=(l)-1; r=0; do{aab=aai<0?aaa:aab; r|=aaa[aai]!=aab[aai]; --aai; aab=aai<0?aaa:aab; r|=aaa[aai]!=aab[aai]; --aai;}while(aai>=0); }
-#endif
-#if (C_AVX2&&SY_64) || EMU_AVX2 // scaf
-// set r nonzero if shapes disagree
-#if 0 // obsolete 
-#define TESTDISAGREE(r,x,y,l) {I *aaa=(I*)(x), *aab=(I*)(y); I aai=4-(l); r=0; \
- do{__m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+(aai>=0?aai:0))); \
-  r|=0xf^_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_cmpeq_epi64(_mm256_maskload_epi64(aaa,endmask),_mm256_maskload_epi64(aab,endmask)))); \
-  if(likely(aai>=0))break; aaa+=NPAR; aab+=(SGNTO0(aai))<<LGNPAR; aai+=NPAR; /* prevent compiler from doing address offset */\
- }while(aai<4); }  // the test at end is to prevent the compiler from duplicating the loop.  It is almost never executed.
-#endif
-#else
 #endif
 #define ASSERTAGREESEGFAULT(x,y,l) {I *aaa=(x), *aab=(y), aai=(l)-1; do{aab=aai<0?aaa:aab; if(aaa[aai]!=aab[aai])SEGFAULT --aai; aab=aai<0?aaa:aab; if(aaa[aai]!=aab[aai])SEGFAULT --aai;}while(aai>=0); }
 // BETWEENx requires that lo be <= hi
@@ -773,8 +752,6 @@ extern unsigned int __cdecl _clearfp (void);
 // SHAPE0 is used when the shape is 0 - write shape only if rank==1
 #define GACOPYSHAPE0(name,type,atoms,rank,shaape) if((rank)==1)AS(name)[0]=(atoms);
 // General shape copy, branchless when rank<3  AS[0] is always written: #atoms if rank=1, 0 if rank=0.  Used in jtga(), which uses the 0 in AS[0] as a pun for nullptr
-// obsolete #define GACOPYSHAPEG(name,type,atoms,rank,shaape)  {I *_d=AS(name); I *_s=(shaape); _s=_s?_s:_d; I cp=*_s; I _r=1-(rank); cp&=REPSGN(_r); cp=_r==0?(atoms):cp; _s=_r==0?_d:_s; *_d=cp; do{_s+=SGNTO0(_r); _d+=SGNTO0(_r); *_d=*_s;}while(++_r<0);}
-// obsolete #define GACOPYSHAPEG(name,type,atoms,rank,shaape) {I *_d=AS(name); I *_s=(shaape); _s=_s?_s:_d; I cp=*_s; I _r=-(rank); cp&=REPSGN(_r); cp=++_r==0?(atoms):cp; _s=_r>=0?_d:_s; *_d=cp; do{_s+=SGNTO0(_r); _d+=SGNTO0(_r); *_d=*_s;}while(++_r<0);}
 #define GACOPYSHAPEG(name,type,atoms,rank,shaape) \
  {I *_d=AS(name); I *_s=(shaape); _s=_s?_s:_d; I cp=*_s; I _r=(rank); cp=_r<1?0:cp; cp=_r==1?(atoms):cp; _s=_r<=1?_d:_s; *_d=cp; ++_d; ++_s; if(likely(_r<3)){*_d=*_s;}else{MC(_d,_s,(_r-1)<<LGSZI);}}
 // Use when shape is known to be present but rank is not SDT.  One value is always written to shape
@@ -842,24 +819,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define SETIC(w,targ)   (targ=AS(w)[0], targ=AR(w)?targ:1)  //   (AR(w) ? *AS(w) : 1L)
 #define ICMP(z,w,n)     memcmpne((z),(w),(n)*SZI)
 #define ICPY(z,w,n)     memcpy((z),(w),(n)*SZI)
-// obsolete #if (C_AVX&&SY_64) || EMU_AVX
-// obsolete // Name comparison using wide instructions.   Run stmt if the names match
-// obsolete #define IFCMPNAME(name,string,len,stmt) \
-// obsolete  if((name)->m==(len)){  /* compare len.  todo should we also compare hash first? */ \
-// obsolete   __m256i readmask=_mm256_loadu_si256((__m256i*)(validitymask+(((-len)>>LGSZI)&(NPAR-1)))); /* the words we read */ \
-// obsolete   __m256i endmask=_mm256_loadu_si256((__m256i*)((C*)validitymask+((-(len))&((NPAR*SZI)-1))));  /* the valid bytes */\
-// obsolete   __m256d accumdiff=_mm256_xor_pd(_mm256_castsi256_pd(readmask),_mm256_castsi256_pd(readmask)); /* will hold total xor result */ \
-// obsolete   D *in0=(D*)((name)->s), *in1=(D*)(string); \
-// obsolete   DQ(((len)-1)>>(LGNPAR+LGSZI), \
-// obsolete     accumdiff=_mm256_or_pd(_mm256_xor_pd(_mm256_loadu_pd(in0),_mm256_loadu_pd(in1)),accumdiff); \
-// obsolete     in0+=NPAR; in1+=NPAR; \
-// obsolete   ) \
-// obsolete   accumdiff=_mm256_or_pd(_mm256_and_pd(_mm256_castsi256_pd(endmask),_mm256_xor_pd(_mm256_maskload_pd(in0,readmask),_mm256_maskload_pd(in1,readmask))),accumdiff); \
-// obsolete   if(_mm256_testz_si256(_mm256_castpd_si256(accumdiff),_mm256_castpd_si256(accumdiff)))stmt \
-// obsolete  }
-// obsolete #else
 #define IFCMPNAME(name,string,len,stmt) if((name)->m==(len) && !memcmpne((name)->s,string,len))stmt
-// obsolete #endif
 
 // Mark a block as incorporated by removing its inplaceability.  The blocks that are tested for incorporation are ones that are allocated by partitioning, and they will always start out as inplaceable
 // If a block is virtual, it must be realized before it can be incorporated.  realized blocks always start off inplaceable and non-pristine
@@ -872,7 +832,6 @@ extern unsigned int __cdecl _clearfp (void);
 // same, but for nonassignable argument.  Must remember to check the result for 0
 #define INCORPNA(z) incorp(z)
 // use to incorporate into a known-recursive box.  We raise the usecount of z
-// obsolete #define INCORPRA(z)       {if(AFLAG(z)&AFVIRTUAL)RZ((z)=realize(z)); ra(z); }
 #define INCORPRA(z) {I af=AFLAG(z); if(unlikely(af&AFVIRTUAL)){RZ((z)=realize(z))} else{AFLAG(z)=af&~AFPRISTINE;} ra(z); }
 // Tests for whether a result incorporates its argument.  The originator, who is going to check this, always marks the argument inplaceable,
 // and we signal incorporation either by returning the argument itself or by marking it non-inplaceable (if we box it)
@@ -969,20 +928,12 @@ extern unsigned int __cdecl _clearfp (void);
 // Copy shapes.  Optimized for length <5, subroutine for others
 // For AVX, we can profitably use the MASKLOAD/STORE instruction to do all the  testing
 #if 1 && ((C_AVX&&SY_64) || EMU_AVX)  // as with xAGREE, using ymm has too much baggage
-#if 0 // obsolete
-#define MCISH(dest,src,n) {D *_d=(D*)(dest), *_s=(D*)(src); I _n=-(I)(n); \
- do{_n+=NPAR; __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+(_n>=0?_n:0))); \
-  _mm256_maskstore_pd(_d,endmask,_mm256_maskload_pd(_s,endmask)); \
-  if(likely(_n>=0))break; _d+=NPAR; _s+=NPAR;  /* prevent compiler from calculating offsets */ \
- }while(_n<4); }  // the test at end is to prevent the compiler from duplicating the loop.  It is almost never executed.
-#else
 #define MCISH(dest,src,n) \
  {D *_d=(D*)(dest), *_s=(D*)(src); I _n=(I)(n); \
   if(likely(_n<=NPAR)){__m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-_n)); \
    _mm256_maskstore_pd(_d,endmask,_mm256_maskload_pd(_s,endmask)); \
   }else{MC(_d,_s,_n<<LGSZI);} \
  }
-#endif
 #else
 #define MCISH(dest,src,n) \
  {I *_d=(dest), *_s=(src); I _n=(I)(n); \
@@ -991,7 +942,6 @@ extern unsigned int __cdecl _clearfp (void);
    _d[0]=_s[0]; _d[_n]=_s[_n];  \
   }else{MC(_d,_s,_n<<LGSZI);} \
  }
-// obsolete #define MCISH(dest,src,n) {I *_d=(I*)(dest); I *_s=(I*)(src); I _n=1-(n); _d=_n>0?jt->shapesink:_d; _s=_n>0?_d:_s; *_d=*_s; do{_s+=SGNTO0(_n); _d+=SGNTO0(_n); *_d=*_s;}while(++_n<0);}  // use for copies of shape, optimized for no branch when n<3.
 #endif
 #define MCISHd(dest,src,n) {MCISH(dest,src,n) dest+=(n);}  // ... this version when d increments through the loop
 #define MCISHs(dest,src,n) {MCISH(dest,src,n) src+=(n);}
@@ -1249,10 +1199,7 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x
 #define PRISTXFERF2(z,a,w) I aflg=AFLAG(a), wflg=AFLAG(w); AFLAG(z)|=aflg&wflg&(((a!=w)&SGNTO0(AC(a)&AC(w))&((I)jtinplace>>JTINPLACEAX)&((I)jtinplace>>JTINPLACEWX))<<AFPRISTINEX); \
                            PRISTCOMSETF(a,aflg) PRISTCOMSETF(w,wflg)
 // PROD multiplies a list of numbers, where the product is known not to overflow a signed int (for example, it might be part of the shape of a nonempty dense array)
-// obsolete #define PROD(result,length,ain) {I *_zzt=(ain); I _i=(length)-1; _zzt=_i<0?iotavec-IOTAVECBEGIN+1:_zzt; result=*_zzt; do{++_zzt; --_i; _zzt=_i<0?iotavec-IOTAVECBEGIN+1:_zzt; result*=*_zzt;}while(_i>0);} 
 // assign length first so we can sneak some computation into ain in va2
-// obsolete #define PROD(result,length,ain) {I _i=(length); I * RESTRICT _zzt=(ain); \
-// obsolete  if(likely(_i<3)){_zzt=_i<=0?iotavec-IOTAVECBEGIN+1:_zzt; result=*_zzt; ++_zzt; _zzt=_i<=1?iotavec-IOTAVECBEGIN+1:_zzt; result*=*_zzt;}else{result=prod(_i,_zzt);} }
 #define PROD(z,length,ain) {I _i=(length); I * RESTRICT _zzt=(ain)-2; \
 if(likely(_i<3)){_zzt+=_i; z=(I)&oneone; _zzt=_i>=1?_zzt:(I*)z; z=_i>1?(I)_zzt:z; z=((I*)z)[0]; z*=_zzt[1];}else{z=prod(_i,_zzt+2);} }
 // This version ignores bits of length above the low RANKTX bits
@@ -1262,7 +1209,6 @@ if(likely(_i<3)){_zzt+=_i; z=(I)&oneone; _zzt=_i>=1?_zzt:(I*)z; z=_i>1?(I)_zzt:z
 #define PRODRNK3REG(z,length,ain) {I _i=(length); I * RESTRICT _zzt=(ain)-2; z=(US)_i; \
 if(likely(z<3)){_zzt+=z; z=(I)&oneone; _zzt=_i&3?_zzt:(I*)z; z=_i&2?(I)_zzt:z; z=((I*)z)[0]; z*=_zzt[1];}else{z=prod(z,_zzt+2);} }
 
-// obsolete #define PROD(result,length,ain) {I _i=(length)-1; result=(ain)[_i]; result=_i<0?1:result; do{--_i; I _r=(ain)[_i]*result; result=_i<0?result:_r;}while(_i>0);} 
 #define PROD1(result,length,ain) PROD(result,length,ain)  // scaf
 // PRODX replaces CPROD.  It is PROD with a test for overflow included.  To save calls to mult, PRODX takes an initial value
 // PRODX takes the product of init and v[0..n-1], generating error if overflow, but waiting till the end so no error if there is a 0 in the product
@@ -1274,7 +1220,7 @@ if(likely(z<3)){_zzt+=z; z=(I)&oneone; _zzt=_i&3?_zzt:(I*)z; z=_i&2?(I)_zzt:z; z
 // This is what I would rather have
 #define PRODXcommon(z,n,v,init,lbl) \
   {DPMULDDECLS z=(init);\
-   if(likely(z)){I * RESTRICT mp=(v); I nn=(n); mp=nn>0?mp:iotavec-IOTAVECBEGIN+1; /* obsolete DPMULD(z,*mp,z,z=0;)*/ DPMULDZ(z,*mp,z) \
+   if(likely(z)){I * RESTRICT mp=(v); I nn=(n); mp=nn>0?mp:iotavec-IOTAVECBEGIN+1;  DPMULDZ(z,*mp,z) \
     if(likely(*mp!=0LL)){ \
      --nn; \
      LOOPBEGIN(lbl): ++mp; mp=nn>0?mp:iotavec-IOTAVECBEGIN+1; DPMULDZ(z,*mp,z) if(unlikely(*mp==0LL))goto LOOPEND(lbl); --nn; if(unlikely(nn>0)){goto LOOPBEGIN(lbl);} \
@@ -1297,8 +1243,6 @@ if(likely(z<3)){_zzt+=z; z=(I)&oneone; _zzt=_i&3?_zzt:(I*)z; z=_i&2?(I)_zzt:z; z
 #endif
 // CPROD is to be used to create a test testing #atoms.  Because empty arrays can have cells that have too many atoms, we can't use PROD if
 // we don't know that the array isn't empty or will be checked later
-// obsolete #define CPROD(t,z,x,a)if(likely(t))PROD(z,x,a)else RE(z=prod(x,a))
-// obsolete #define CPROD1(t,z,x,a)if(likely(t))PROD1(z,x,a)else RE(z=prod(x,a))
 #define CPROD(t,z,x,a) PRODX(z,x,a,1)
 #define CPROD1(t,z,x,a) CPROD(t,z,x,a)
 // PROLOG/EPILOG are the main means of memory allocation/free.  jt->tstack contains a pointer to every block that is allocated by GATV(i. e. all blocks).
@@ -1330,9 +1274,6 @@ if(likely(z<3)){_zzt+=z; z=(I)&oneone; _zzt=_i&3?_zzt:(I*)z; z=_i&2?(I)_zzt:z; z
 // When we push, we are about to execute verbs before the last one, and an inplacement there would lead to the name's being assigned with invalid
 // data.  So, we clear the inplace variables if we don't want to allow that: if the user set zomblevel=0, or if there is no local symbol table
 // (which means the user is fooling around at the keyboard & performance is not as important as transparency)
-// obsolete #define CLEARZOMBIE     {jt->assignsym=0; jt->zombieval=0;}  // Used when we know there shouldn't be an assignsym, just in case
-// obsolete #define PUSHZOMB L*savassignsym = jt->assignsym; A savzombval; if(savassignsym){savzombval=jt->zombieval; if(((jt->asgzomblevel-1)|((AN(jt->locsyms)-2)))<0){CLEARZOMBIE}}  // test is (jt->asgzomblevel==0||AN(jt->locsyms)<2)
-// obsolete #define POPZOMB if(savassignsym){jt->assignsym=savassignsym;jt->zombieval=savzombval;}
 #define CLEARZOMBIE     {jt->assignsym=0;}  // Used when we know there shouldn't be an assignsym, just in case
 #define PUSHZOMB L*savassignsym = jt->assignsym; if(savassignsym){if(((jt->asgzomblevel-1)|((AN(jt->locsyms)-2)))<0){CLEARZOMBIE}}  // test is (jt->asgzomblevel==0||AN(jt->locsyms)<2)
 #define POPZOMB {jt->assignsym=savassignsym;}
@@ -1347,7 +1288,6 @@ if(likely(z<3)){_zzt+=z; z=(I)&oneone; _zzt=_i&3?_zzt:(I*)z; z=_i&2?(I)_zzt:z; z
 // In the original JE many verbs returned a clone of the input, i. e. R ca(w).  We have changed these to avoid the clone, but we preserve the memory in case we need to go back
 #define RCA(w)          R w
 #define RE(exp)         {if(unlikely(((exp),jt->jerr)))R 0;}
-// obsolete #define RER             {if(er){jt->jerr=er; R;}}
 #define RESETERR        {jt->etxn=jt->jerr=0;}
 #define RESETERRANDMSG  {jt->etxn1=jt->etxn=jt->jerr=0;}
 #define RESETRANK       (jt->ranks=(RANK2T)~0)
@@ -1369,15 +1309,11 @@ if(likely(z<3)){_zzt+=z; z=(I)&oneone; _zzt=_i&3?_zzt:(I*)z; z=_i&2?(I)_zzt:z; z
 #define STOREBYTES(out,in,n) {*(UI*)(out) = (*(UI*)(out)&~((UI)~(I)0 >> ((n)<<3))) | ((in)&((UI)~(I)0 >> ((n)<<3)));}
 #endif
 // Input is the name of word of bytes.  Result is modified name, 1 bit per input byte, spaced like B01s, with the bit 0 iff the corresponding input byte was all 0.  Non-boolean bits of result are garbage.
-// obsolete #define ZBYTESTOZBITS(b) (b|=b>>4,b|=b>>2,b|=b>>1)
 #define ZBYTESTOZBITS(b) (b=b|((b|(~b+VALIDBOOLEAN))>>7))  // for each byte: zero if b0 off, b7 off, and b7 turns on when you subtract 1 or 2
 // to verify gah conversion #define RETF(exp)       { A retfff=(exp);  if ((retfff) && ((AT(retfff)&SPARSE && AN(retfff)!=1) || (AT(retfff)&DENSE && AN(retfff)!=prod(AR(retfff),AS(retfff)))))SEGFAULT; R retfff; } // scaf
 #endif
 #define SBSV(x)         (jt->sbsv+(I)(x))
 #define SBUV(x)         (jt->sbuv+(I)(x))
-//obsolete // Find the index of a byte in a list of up to BW bytes.  x is the byte, list is a word containing bytes in order.  Result (must be UI) is index of first matched byte, or BW-1 if no match
-//obsolete #define SEARCHBYTE(x,list,result) (result=(UI)x*0x0101010101010101, result^=list, result=(~result)&(result-0x0101010101010101), \
-//obsolete     result>>=7, result&=0x0101010101010101, result=CTTZI(result|0x8000000000000000), result=(result+1)>>3;)
 #define SEGFAULT        {*(volatile I*)0 = 0;}
 #define SGN(a)          ((I )(0<(a))-(I )(0>(a)))
 #define SMAX            65535

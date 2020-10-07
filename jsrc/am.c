@@ -33,9 +33,6 @@ static A jtmerge1(J jt,A w,A ind){A z;B*b;C*wc,*zc;D*wd,*zd;I c,it,j,k,m,r,*s,t,
  GA(z,t,c,r,s);
  if(!(AT(ind)&B01+INT))RZ(ind=cvt(INT,ind));
  it=AT(ind); u=AV(ind); b=(B*)u;
-// obsolete  ASSERT(!c||1<m||!(it&B01),EVINDEX);  // if m is 0 no selection is possible
-// obsolete  ASSERT(!c||m,EVINDEX);  // if m is 0 no selection is possible
-// obsolete  ASSERT(!c||1!=m||!memchr(b,C1,c),EVINDEX);  // if m is 1 all selectors must be 0.  INT will be checked individually, so we just look at the first c bytes
  ASSERT((-c&(m-2))>=0||(!c||(m==1&&!memchr(b,C1,c))),EVINDEX);  // unless items are empty, m must have items.  if m is 1 all selectors must be 0.  INT will be checked individually, so we just look at the first c bytes
  zi=AV(z); zc=(C*)zi; zd=(D*)zc;
  wi=AV(w); wc=(C*)wi; wd=(D*)wc;
@@ -176,14 +173,7 @@ static A jtmerge2(J jt,A a,A w,A ind,I cellframelen){F2PREFIP;A z;I t;
    case sizeof(I):  // may include D
     {I * RESTRICT zv=AV(z); I *RESTRICT av=(I*)av0; DO(AN(ind), zv[iv[i]]=*av; ++av; av=(av==(I*)avn)?(I*)av0:av;); break;}  // scatter-copy the data
    default: ;
-// obsolete     // handle small integral number of words with a local loop
-// obsolete     if(cellsize<MEMCPYTUNELOOP){  // length is not too big (0 is OK).  We must not copy outside cells boundaries here
-// obsolete      // move full words followed by the remnant.  Must not overwrite the area, since we are scatter-writing
-// obsolete      C* RESTRICT zv=CAV(z); I *RESTRICT av=(I*)av0; DO(AN(ind), I * RESTRICT d=(I*)(zv+(iv[i]*cellsize)); I n=cellsize; while((n-=SZI)>=0){*d++=*av++;} if(n&(SZI-1)){STOREBYTES(d,*av,-n); av=(I*)((C*)av+SZI+n);} av=av==(I*)avn?(I*)av0:av;);  // use local copy
-// obsolete       // we test for the STOREBYTES because this is assumed repeated and might well have even length
-// obsolete     }else{
      C* RESTRICT zv=CAV(z); C *RESTRICT av=(C*)av0; JMCDECL(endmask) JMCSETMASK(endmask,cellsize,1) DO(AN(ind), JMCR(zv+(iv[i]*cellsize),av,cellsize,loop1,1,endmask); av+=cellsize; av=(av==avn)?av0:av;);  // scatter-copy the data, cyclically.  Don't overwrite
-// obsolete     }
    }
   }else{
    // the cellsize is bigger than a.  We will have to repeat a within each cell
@@ -367,7 +357,6 @@ static B gerar(J jt, A w){A x; C c;
   if(!vnm(n,stg)){
    // not name, see if valid primitive
    UC p = spellin(n,stg);
-// obsolete    R p>=128||ds(p);  // return if valid primitive (all pseudochars are valid primitives, but 0: is not in pst[])
    R (p>>7)|!!ds(p);  // return if valid primitive (all non-ASCII are valid primitives, but 0: is not in pst[] so force that in)
   }
  } else if(AT(w)&BOX) {A *wv;I bmin=0,bmax=0;
@@ -383,8 +372,6 @@ static B gerar(J jt, A w){A x; C c;
    if(c=='0')R 1;    // if noun, the second box can be anything & is always OK, don't require AR there
    I oride=2+(c&1);  // 2 if '2'/'4', 3 if '3'
    bmin=BETWEENC(c,'2','4')?oride:bmin; bmax=BETWEENC(c,'2','4')?oride:bmax; 
-// obsolete    else if(c=='2'||c=='4')bmin=bmax=2;
-// obsolete    else if(c=='3')bmin=bmax=3;
   }
   // If the first box is not a special case, it had better be a valid AR; and it will take 1 or 2 operands
   if(bmin==0){if(!(gerar(jt,x)))R 0; bmin=1,bmax=2;}

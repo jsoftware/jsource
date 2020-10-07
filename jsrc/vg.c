@@ -720,7 +720,7 @@ F1(jtgr1){PROLOG(0075);A z;I c,f,ai,m,n,r,*s,t,wn,wr,zn;
  t=AT(w); wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; RESETRANK;
  f=wr-r; s=AS(w);
  // Calculate m: #cells in w   n: #items in a cell of w   ai: #atoms in an item of a cell of w  c: #atoms in a cell of w  
- SETICFR(w,f,r,n); /* obsolete n=r?s[f]:1;*/ if(wn=AN(w)){
+ SETICFR(w,f,r,n);  if(wn=AN(w)){
   // If w is not empty, it must have an acceptable number of cells
   PROD(m,f,s); PROD1(ai,r-1,f+s+1); c=ai*n; zn=m*n;
  }else{
@@ -787,7 +787,6 @@ F2(jtordstat){A q,t=0;I j,m,m0,m1,n,wt;D *qv;
  I i=NRANDS-1;  // i points to the next random number to draw
  RZ(a&&w);
  n=AN(w); wt=AT(w); RE(j=i0(a));
-// obsolete  if(((4-n)&(AR(a)-1)&((1^AR(w))-1)&(-(wt&FL+INT)))>=0)R from(a,grade2(w,w));  // if not int/float, or short, or list a, do full grade
  if(((4-n)&((AR(a)|(1^AR(w)))-1)&(-(wt&FL+INT)))>=0)R from(a,grade2(w,w));  // if not int/float, or short, or not (atom a and list w), do full grade
  if((UI)j>=(UI)n){j+=n; ASSERT((UI)j<(UI)n,EVINDEX);}
  // deal a bunch of random floats to provide pivots.  We reuse them if needed

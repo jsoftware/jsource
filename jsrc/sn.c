@@ -7,10 +7,8 @@
 
 // validate fullname (possibly locative).  s->name, n=length.  Returns 1 if name valid, 0 if not
 B jtvnm(J jt,I n,C *s){C c,t;I j;
-// obsolete  if(!(n))R 0;  // error if empty string
  s=n==0?(C*)ctype+1:s;  // if empty string, point to erroneous string (we will fetch s[0] and s[-1]) 
  c=s[0];    // c = first char of name
-// obsolete  if((ctype[(UC)c]&~CA)!=0)R 0;   // first char must be alphabetic
  t=ctype[(UC)c]; t|=t>>3;   // decode char type; move 'numeric' to 'error'.  We accumulate error in LSB of t
  // scan the string: verify all remaining characters alphameric (incl _); set j=index of first indirect locative (pointing to the __), or 0 if no ind loc
   // (the string can't start with _)
@@ -24,16 +22,13 @@ B jtvnm(J jt,I n,C *s){C c,t;I j;
  // Now t is the mask of invalidity, and j is the index one before the first __ (-1 if no __)
  if((t&1)+((cn!='_')&SGNTO0(j)))R 1^(t&1);   // Return if accumulated error, or if not trailing '_' and no __ (normal return)
  // If the last char is _, any ind loc is invalid (but not trailing __); scan to find previous _ (call its index j, error if 0); audit locale name, or OK if empty (base locale)
-// obsolete  if(cn=='_'){j=(j==n-3)?0:j+1; if(!(!j))R 0; DQ(j=n-1, if('_'==s[--j])break;); if(!(j))R 0; k=n-j-2; R(!k||vlocnm(k,s+j+1));}
  if(cn=='_'){if(j>=0)R j==n-3; j=n-3; do{if(s[j]=='_')R((ctype[(UC)s[j+1]]&CA)||vlocnm(n-j-2,s+j+1));}while(--j>0); R 0;}  // return if any __, including at end; find last '_', which cannot be in the last 2 chars; see if valid locale name; if no '_', error
  // Here last char was not _, and j is still pointed after __ if any
-// obsolete  if(j<0)R 1;  // If no ind loc, OK
  // There is an indirect locative.  Scan all of them, verifying first char of each name is alphabetic (all chars were verified alphameric above)
  // Also verify that any _ is preceded or followed by _
  // We do this with a state machine that scans 3 characters at a time, creating 3 bits: [0]='_' [1]='_' [2]=digit (including _).  We always start pointing to the first '_'.  State result tells
  // how many characters to advance, 0 meaning error.  We stop when there are <2 characters left.  The word cannot end with '_'.  If it ends xx9_9 we will go to 9_9 and then _9?, i. e. overfetch the buffer by 1.  But that's OK on literal data.
  // advance counts are: xxa=3, xx9=2, x_a=0, x_9=1, _xa=0, _x9=0, __a=3, __9=0 
-// obsolete  ++j; DO(n-j-1, if(s[j+i]=='_'){if(s[j+i+1]=='_'){if((ctype[(UC)s[j+i+2]]&~CA)!=0)R 0;}else{if(!(s[j+i-1]=='_'))R 0;}});
  ++j; do{I state=4*(s[j]=='_')+2*(s[j+1]=='_')+(ctype[(UC)s[j+2]]>>3); state=(0x03001023L>>(state<<2))&3; if(state==0)R 0; j+=state;}while(j<n-1);
  R 1;
 }    /* validate name s, return 1 if name well-formed or 0 if error */
@@ -57,8 +52,6 @@ A jtnfs(J jt,I n,C*s){A z;C f,*t;I m,p;NM*zv;
  DQ(n, if(' '!=*t)break; --t; --n;);
  ASSERT(n!=0,EVILNAME);   // error if name is empty  (? not required since name always valid?
  // If the name is the special x y.. or x. y. ..., return a copy of the preallocated block for that name (we may have to add flags to it)
-// obsolete  C *nmp;if((1==n)&&(nmp=strchr(argnames,*s))){  // if an argument name
-// obsolete   R ca(mnuvxynam[nmp-argnames]);  // return a clone of the argument block (because flags may be added)
  if(SGNTO0(n-2)&BETWEENC(f,'m','y')&(p=(0x1b03>>(f-'m')))){  // M N o p q r s t U V w X Y 1101100000011
   R ca(mnuvxynam[5-((p&0x800)>>(11-2))-((p&0x8)>>(3-1))-((p&0x2)>>(1-0))]);  // return a clone of the argument block (because flags may be added)
  }
@@ -128,7 +121,6 @@ F1(jtnc){A*wv,x,y,z;I i,n,t,*zv;L*v;
   // kludge: if the locale is not defined, syrd will create it.  Better to use a version/parameter to syrd to control that?
   //   If that were done, we could dispense with the error check here (but invalid locale would be treated as undefined rather than invalid).
   // Would have to mod locindirect too
-// obsolete   I zc=2; zc=(0x21c>>((t>>(VERBX-1))&0xe))&3;   // C A V N = 4 2 1 0 -> 2 1 3 0    10 xx 01 11 00
   I zc=2; zc=((0x20034>>(((t)>>(ADVX-1))&(CONJ+ADV+VERB>>(ADVX-1))))&3);   // C x V A (N) -> 16 x 4 2 0 -> 2 x 3 1 0    10 xx xx xx xx xx 11 01 00
   zc=x?zc:-1; zc=y?zc:-2;
   zv[i]=zc;  // calculate the type, store in result array
@@ -228,7 +220,6 @@ F1(jtnch){A ch;B b;LX *e;I i,m,n;L*d;
 F1(jtex){A*wv,y,z;B*zv;I i,n;L*v;I modifierchg=0;
  RZ(w);
  n=AN(w); wv=AAV(w); 
-// obsolete  ASSERT(!n||BOX&AT(w),EVDOMAIN);
  ASSERT(((n-1)|SGNIF(AT(w),BOXX))<0,EVDOMAIN);
  GATV(z,B01,n,AR(w),AS(w)); zv=BAV(z);
  for(i=0;i<n;++i){

@@ -67,12 +67,6 @@ static A jthrep(J jt,B b,B d,A w);
 static I bsize(J jt,B d,B tb,I t,I n,I r,I*s){I k,w,z;
  w=WS(d);
  z=BH(d)+w*r;
-#if 0  // obsolete
- if(t&BIT){
-  c=r?s[r-1]:1; m=c?n/c:0; 
-  R z+w*m*((c+w*BB-1)/(w*BB));
- }else{
-#endif
  k=t&INT+SBT+BOX+XNUM?w:t&RAT?w+w:bp(t); 
  R z+((n*k+(tb&&t&LAST0)+w-1)&(-w));
 }   /* size in byte of binary representation, rounded up to even # words */
@@ -121,7 +115,7 @@ static B jtmvw(J jt,C*v,C*u,I n,B bv,B bu,B dv,B du){C c;
 
 // move the header, return new move point
 static C*jtbrephdrq(J jt,B b,B d,A w,C *q){I f,r;I extt = UNSAFE(AT(w));
- /* obsolete q=(A)AV(y);*/ r=AR(w); f=0;
+  r=AR(w); f=0;
  RZ(mvw(BF(d,q),(C*)&f,    1L,b,BU,d,SY_64)); *q=d?(b?0xe3:0xe2):(b?0xe1:0xe0);
  RZ(mvw(BT(d,q),(C*)&extt,1L,b,BU,d,SY_64));
  RZ(mvw(BN(d,q),(C*)&AN(w),1L,b,BU,d,SY_64));
@@ -176,13 +170,6 @@ static C* jtbrepfill(J jt,B b,B d,A w,C *zv){I klg,kk;
   R origzv+blksize;  // return next output position
  }
  // Here for non-DIRECT values.  These recur through the boxes
-// obsolete if(t&RAT){e+=n; GATV0(q,XNUM,e,1); MC(AV(q),u,n<<klg);}
-// obsolete  else     RZ(q=1<AR(w)?ravel(w):w);
-// obsolete  m=AN(y); wv=AAV(w); 
-// obsolete  GATV0(z,BOX,1+e,1); zv=AAV(z); 
-// obsolete  *zv++=y;
-// obsolete  DO(e, RZ(*zv++=q=brep(b,d,wv[i])); RZ(mvw(v+i*kk,(C*)&m,1L,b,BU,d,SY_64)); m+=AN(q););
-// obsolete  z=raze(z);
  // we have already written the header for the indirect block.  Skip over the indirect pointers; they will be replaced by
  // offsets to each block
  A *wv=AAV(w); 

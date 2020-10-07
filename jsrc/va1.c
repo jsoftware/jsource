@@ -8,12 +8,6 @@
 
 
 #if BW==64
-// obsolete static AMONPS(floorDI,I,D,
-// obsolete  D mplrs[2]; mplrs[0]=2.0-jt->cct; mplrs[1]=jt->cct-0.00000000000000011; ,
-// obsolete  {if((*(UI*)x&0x7fffffffffffffff)<0x4310000000000000){I neg=SGNTO0((*(UI*)x)-SGNTO0(*(UI*)x)); *z=(I)(*x*mplrs[neg])-neg;}  // -0 is NOT neg
-// obsolete   else{D d=tfloor(*x); if(d!=(I)d){/* obsolete jt->workareas.ceilfloor.oflondx=n+~i; jt->jerr=EWOV;*/ R i-n;} *z=(I)d;}} ,  // we use DQ; i is n-1-reali, ~i = (reali-n+1)-1 = i-n
-// obsolete   R 0;
-// obsolete  ; )  // x100 0011 0001 =>2^50
 static AMONPS(floorDI,I,D,
  I rc=0; UI fbits; D mplrs[2]; mplrs[0]=2.0-jt->cct; mplrs[1]=jt->cct-0.00000000000000011; ,
  {if(((fbits=*(UI*)x)&0x7fffffffffffffff)<0x43c0000000000000){I neg=SGNTO0((*(UI*)x)-SGNTO0(*(UI*)x)); *z=(I)(*x*mplrs[neg])-neg;}  // -0 is NOT neg; take everything up to +-2^61
@@ -29,12 +23,6 @@ static AMON(floorD, D,D, *z=tfloor(*x);)
 static AMON(floorZ, Z,Z, *z=zfloor(*x);)
 
 #if BW==64
-// obsolete static AMONPS(ceilDI,I,D,
-// obsolete  D mplrs[2]; mplrs[0]=2.0-jt->cct; mplrs[1]=jt->cct-0.00000000000000011; ,
-// obsolete  {if((*(UI*)x&0x7fffffffffffffff)<0x4310000000000000){I pos=SGNTO0((0-*(UI*)x)-SGNTO0(0-*(UI*)x)); *z=(I)(*x*mplrs[pos])+pos;}  // 0 is NOT pos
-// obsolete   else{D d=tceil(*x); if(d!=(I)d){/* obsolete jt->workareas.ceilfloor.oflondx=n+~i; jt->jerr=EWOV; */R i-n;} *z=(I)d;}} ,
-// obsolete   R 0;
-// obsolete  ; )  // x100 0011 0001 =>2^50
 static AMONPS(ceilDI,I,D,
  I rc=0; UI fbits; D mplrs[2]; mplrs[0]=2.0-jt->cct; mplrs[1]=jt->cct-0.00000000000000011; ,
  {if(((fbits=*(UI*)x)&0x7fffffffffffffff)<0x43c0000000000000){I pos=SGNTO0((0-*(UI*)x)-SGNTO0(0-*(UI*)x)); *z=(I)(*x*mplrs[pos])+pos;}  // 0 is NOT pos; take everything up to +-2^61
@@ -177,7 +165,6 @@ static A jtva1(J jt,A w,A self){A z;I cv,n,t,wt,zt;VA1F ado;
   RESETERR;
  }
  if(ado==0)R w;  // if function is identity, return arg
-// obsolete  if(unlikely(AT(w)&SPARSE&&n))R va1s(w,self,cv,ado);  // branch off to do sparse
  if(unlikely((-(AT(w)&SPARSE)&-n)<0))R va1s(w,self,cv,ado);  // branch off to do sparse
  // from here on is dense va1
  t=atype(cv); zt=rtype(cv);  // extract required type of input and result
@@ -190,12 +177,9 @@ static A jtva1(J jt,A w,A self){A z;I cv,n,t,wt,zt;VA1F ado;
   // There was an error.  If it is recoverable in place, handle the cases here
   // positive result gives error type to use for retrying the operation; negative is 1's complement of the restart point (first value NOT stored)
   // integer abs: convert everything to float, changing IMIN to IMAX+1
-  if(ado==absI){/* obsolete RESETERR; */A zz=z; if(VIP64){MODBLOCKTYPE(zz,FL)}else{GATV(zz,FL,n,AR(z),AS(z))}; I *zv=IAV(z); D *zzv=DAV(zz); DQ(n, if(*zv<0)*zzv=-(D)*zv;else*zzv=(D)*zv; ++zv; ++zzv;) RETF(zz);}
+  if(ado==absI){A zz=z; if(VIP64){MODBLOCKTYPE(zz,FL)}else{GATV(zz,FL,n,AR(z),AS(z))}; I *zv=IAV(z); D *zzv=DAV(zz); DQ(n, if(*zv<0)*zzv=-(D)*zv;else*zzv=(D)*zv; ++zv; ++zzv;) RETF(zz);}
   // float sqrt: reallocate as complex, scan to make positive results real and negative ones imaginary
-  if(ado==sqrtD){/* obsolete RESETERR; */A zz; GATV(zz,CMPX,n,AR(z),AS(z)); D *zv=DAV(z); Z *zzv=ZAV(zz); DQ(n, if(*zv>=0){zzv->re=*zv;zzv->im=0.0;}else{zzv->im=-*zv;zzv->re=0.0;} ++zv; ++zzv;) RETF(zz);}
-// obsolete   // float floor: copy everything that was successfully converted, converting to float; then floor the rest as float
-// obsolete   if(VIP64&&ado==floorDI){/* obsolete RESETERR; */A zz=z; MODBLOCKTYPE(zz,FL) I *zv=IAV(z); D *zzv=DAV(zz); DQ(~oprc, *zzv++=(D)*zv++;)
-// obsolete    D *wv=DAV(w)+~oprc; DQ(n-~oprc, *zzv++=tfloor(*wv++);) RETF(zz);}
+  if(ado==sqrtD){A zz; GATV(zz,CMPX,n,AR(z),AS(z)); D *zv=DAV(z); Z *zzv=ZAV(zz); DQ(n, if(*zv>=0){zzv->re=*zv;zzv->im=0.0;}else{zzv->im=-*zv;zzv->re=0.0;} ++zv; ++zzv;) RETF(zz);}
   // float floor: unconvertable cases are stored with bit 63 and bit 62 unlike; restore the float value by setting bit 62.
   // if bit 0 of oprc is 1, values must be converted to float; if 0, they can be left as int
   if(VIP64&&ado==floorDI){A zz=z;
@@ -204,8 +188,6 @@ static A jtva1(J jt,A w,A self){A z;I cv,n,t,wt,zt;VA1F ado;
    RETF(zz);
   }
   // float ceil, similarly
-// obsolete   if(VIP64&&ado==ceilDI){/* obsolete RESETERR; */A zz=z; MODBLOCKTYPE(zz,FL) I *zv=IAV(z); D *zzv=DAV(zz); DQ(~oprc, *zzv++=(D)*zv++;)
-// obsolete    D *wv=DAV(w)+~oprc; DQ(n-~oprc, *zzv++=tceil(*wv++);) RETF(zz);}
   if(VIP64&&ado==ceilDI){A zz=z;
    if(!(oprc&1)){I *zv=IAV(z); DQ(n, I bits=*(I*)zv; if((bits^SGNIF(bits,BW-2))<0){bits|=0x4000000000000000; *zv=(I)tceil(*(D*)&bits);} ++zv;)}  // convert overflows, turn back to integer
    else{MODBLOCKTYPE(zz,FL) I *zv=IAV(z); D *zzv=DAV(zz); DQ(n, I bits=*(I*)zv++; if((bits^SGNIF(bits,BW-2))>=0)*zzv=(D)bits;else{bits|=0x4000000000000000; *zzv=tceil(*(D*)&bits);} ++zzv;)}   // force float conversion

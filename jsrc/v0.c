@@ -297,11 +297,9 @@ DF2(jtpoly2){F2PREFIP;A c,za;I b;D*ad,d,p,*x,u,*z;I an,at,j,t,n,wt;Z*az,e,q,*wz,
  an=AN(a); at=AT(a); b=BOX&at;   // b if mplr/roots form or multinomial; otherwise coeff
  n=AN(w); wt=AT(w);
  ASSERT(!(at&SPARSE),EVNONCE);  // sparse polynomial not supported
-// obsolete  ASSERT((-an&((at&NUMERIC+BOX)-1))>=0,EVDOMAIN);
  ASSERT((-an&-(at&NUMERIC+BOX))<0,EVDOMAIN);  // error if degree<0 
  // if we are applying f@:p, revert if not sum-of-powers form
  I postfn=FAV(self)->flag&VFATOPPOLY;  //  index of function to apply after p. 0=none 1=^
-// obsolete  if(!an)R reshape(shape(w),num(!!postfn));  // if degree 0, return all 0s, or 1s if ^@:p.
  if(b){A*av=AAV(a); 
   if(postfn)R jtupon2cell(jt,a,w,self);  // revert if ^@:p.   must do before a is modified
   ASSERT(2>=an,EVLENGTH);

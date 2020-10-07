@@ -17,8 +17,6 @@
 // *pp is number of inner-product muladds
 //   (in each, an atom of a multiplies an item of w)
 static A jtipprep(J jt,A a,A w,I zt,I*pm,I*pn,I*pp){A z=mark;I*as,ar,ar1,m,mn,n,p,*ws,wr,wr1;
-//  obsolete  ar=AR(a); as=AS(a); ar1=ar-1>=0?ar-1:0; RE(*pm=m=prod(ar1,as));  // m=# 1-cells of a.  It could overflow, if there are no atoms
-//  obsolete  wr=AR(w); ws=AS(w); wr1=wr-1>=0?wr-1:0; RE(*pn=n=prod(wr1,1+ws)); RE(mn=mult(m,n));  // n=#atoms in item of w; mn = #atoms in result
  ar=AR(a); as=AS(a); ar1=ar-1>=0?ar-1:0; PRODX(m,ar1,as,1) *pm=m;  // m=# 1-cells of a.  It could overflow, if there are no atoms
  wr=AR(w); ws=AS(w); wr1=wr-1>=0?wr-1:0; PRODX(n,wr1,ws+1,1) *pn=n; DPMULDE(m,n,mn);  // n=#atoms in item of w; mn = #atoms in result
  I t=AS(w)[0]; p=wr?t:1; t=AS(a)[ar1]; p=ar?t:p; *pp=p;  // if a is an array, the length of a 1-cell; otherwise, the number of items of w
@@ -984,7 +982,7 @@ static A jtipbx(J jt,A a,A w,C c,C d){A g=0,x0,x1,z;B*av,*av0,b,*v0,*v1,*zv;C c0
  // m=#1-cells of a, n=# bytes in 1-cell of w, p=length of individual inner product creating an atom
  ana=!!AR(a); wc=AR(w)?n:0; q=(n-1)>>LGSZI; r=(-n)&(SZI-1);  // ana = 1 if a is not atomic; wc = stride between items of w; q=#fullwords to proc, r=#bytes of last one NOT to proc
  // Set c0 & c1 to classify the g operation
-#if !SY_64 // obsolete
+#if !SY_64
  switch(B01&AT(w)?d:0){  // scaf use shift
   case CEQ:                             c0=IPBXNW; c1=IPBXW;  break;
   case CNE:                             c0=IPBXW;  c1=IPBXNW; break;

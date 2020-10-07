@@ -103,7 +103,6 @@ static I jtdpone(J jt, B bits, D w){D t;
 //  if no '.', return -1/www; if both given (even if d empty) return www/ddd
 static B jtwidthdp(J jt, A a, I *w, I *d){
  RZ(a&&w&&d);
- #if 1
  #define digdotvalues(w) CCM(w,'0')+CCM(w,'1')+CCM(w,'2')+CCM(w,'3')+CCM(w,'4')+CCM(w,'5')+CCM(w,'6')+CCM(w,'7')+CCM(w,'8')+CCM(w,'9')+CCM(w,'.')
  CCMWDS(digdot)
  I remchars=AN(a); C *v=CAV(a);  // number of chars left, pointer to current
@@ -123,30 +122,6 @@ static B jtwidthdp(J jt, A a, I *w, I *d){
  }else *w=-1;   // flag to indicate omitted d (!)
  // verify no remaining digits/. in field
  for(;remchars;++v,--remchars){C vv=*v; CCMCAND(digdot,cand,vv) ASSERT(!CCMTST(cand,vv),EVDOMAIN);}
-#else  // obsolete
- RZ(a=ca(a)); n=AN(a); v=CAV(a); v[n]=0;  // null-terminate the string, which is safe since we have made a copy here
-#define digdotvalues(w) CCM(w,'0')+CCM(w,'1')+CCM(w,'2')+CCM(w,'3')+CCM(w,'4')+CCM(w,'5')+CCM(w,'6')+CCM(w,'7')+CCM(w,'8')+CCM(w,'9')+CCM(w,'.')
- CCMWDS(digdot)
-// obsolete  DQ(n, if(!strchr("0123456789.", *v)) *v=' '; v++;);
- C *vvv=v; DQ(n, C vv=*vvv; CCMCAND(digdot,cand,vv) vv=CCMTST(cand,vv)?vv:' '; *vvv=vv; vvv++;);  // replace non-digits&. with SP
- // string now contains digits/., SP, and \0 and is null-terminated
-
- x=strspn(CAV(a), " "          ); AK(a)+=x;AN(a)-=x;AS(a)[0]=x;  // kludge scaf look at strspn - since we have replaced every non digit with space we could do better
- x=strspn(CAV(a), "0123456789.");
- ASSERT(AN(a)-x==(I)strspn(x+CAV(a), " "), EVDOMAIN);
- AN(a)=AS(a)[0]=x;
- 
- n=AN(a); v=CAV(a); x=n;
- if(n){
-  ASSERT(x=strspn(v, "0123456789"), EVDOMAIN);
-  y=0; DO(x, y=(v[i]-'0')+10*y;); *w=*d=y;
-  if(n>x) {
-   ASSERT(v[x]=='.', EVDOMAIN);
-   ASSERT(n==x+1+(I)strspn(v+x+1, "0123456789"), EVDOMAIN); 
-   y=0; DO(n-x-1, y=(v[x+1+i]-'0')+10*y;); *d=y;
-  } else *w=-1;
- } else *w=*d=-1;
-#endif
  ASSERT(BETWEENC(*d,-1,9), EVDOMAIN);
  R 1;
 } /* width and decimal places */
@@ -286,7 +261,7 @@ static B jtsprintfeD(J jt, C *x, I m, I dp, D dw, C *subs) {I y,y0;int decpt,sig
 static F2(jtfmtprecomp) {A*as,base,fb,len,strs,*u,z;B*bits,*bw;D dtmp,*dw;
      I d,i,*ib,imod,*iw,*iv,maxl,mods,n,nB,nD,nMN,nPQ,nI,nc,nf,*s,wr,*ws,wt;
  RZ(a&&w); 
- nf=AS(a)[0]; nf=1==AR(a)?1:nf; n=AN(w); wt=AT(w); wr=AR(w); ws=AS(w); SHAPEN(w,wr-1,nc); /* obsolete  nc=wr?ws[wr-1]:1;*/  // nf=#cells, nc=length of 1-cell (# columns)
+ nf=AS(a)[0]; nf=1==AR(a)?1:nf; n=AN(w); wt=AT(w); wr=AR(w); ws=AS(w); SHAPEN(w,wr-1,nc);   // nf=#cells, nc=length of 1-cell (# columns)
  ASSERT(wt&B01+INT+FL, EVDOMAIN);
  if(1<nf){GATV0(base,INT,nf*4,2); s=AS(base); *s++=nf; *s=4;}else GATV0(base,INT,3+nc,1);
  GATV0(strs,BOX,nf*NMODVALS,2); s=AS(strs); *s++=nf; *s=NMODVALS;
@@ -294,8 +269,8 @@ static F2(jtfmtprecomp) {A*as,base,fb,len,strs,*u,z;B*bits,*bw;D dtmp,*dw;
  GATV(fb,  B01,n,wr,ws); memset(BAV(fb),C0,n);
  GAT0(z,BOX,4,1); u=AAV(z); *u++=incorp(base); *u++=incorp(strs); *u++=incorp(len); *u++=incorp(fb); 
  ib=AV(base); as=AAV(strs); u=AAV(a);
- if(1==nf){MC(ib,AV(*u),SZI*3); memset(ib+3,C0,SZI*nc); DO(NMODVALS, *as++=incorp(u[i+1]);)}  // obsolete  MC(as,u+1,SZA*NMODVALS);}
- else DQ(nf, MC(ib,AV(*u),SZI*3); ib[3]=0; ib+=4; DO(NMODVALS, *as++=incorp(*(u++ +1));) ++u; )  // obsolete MC(as,u+1,SZA*NMODVALS); as+=NMODVALS; u+=1+NMODVALS;);
+ if(1==nf){MC(ib,AV(*u),SZI*3); memset(ib+3,C0,SZI*nc); DO(NMODVALS, *as++=incorp(u[i+1]);)}
+ else DQ(nf, MC(ib,AV(*u),SZI*3); ib[3]=0; ib+=4; DO(NMODVALS, *as++=incorp(*(u++ +1));) ++u; )
  bits=BAV(fb);
  switch(CTTZNOFLAG(wt)) {
   case B01X:
@@ -427,7 +402,7 @@ static A jtfmtallcol(J jt, A a, A w, I mode) {A *a1v,base,fb,len,strs,*u,v,x;
     B *bits,*bv;C*cB,*cD,*cM,*cN,*cP,*cQ,*cR,*cI,*cJ,*cK,*cv,**cvv,*cx,*subs;D dtmp,*dv;
     I coll,d,g,h,i,*ib,imod,*iv,*il,j,k,l,m,mods,nB,nD,nM,nN,nP,nQ,nR,nI,nJ,nK,n,nc,nf,t,wr,*ws,y,zs[2];
  RZ(a); u=AAV(a); base=*u++; strs=*u++; len=*u++; fb=*u++; u=0; subs=0;  // extract components: len->lengths of the values
- RZ(w); n=AN(w); t=AT(w); wr=AR(w); ws=AS(w); SHAPEN(w,wr-1,nc); /* obsolete nc=wr?ws[wr-1]:1; */
+ RZ(w); n=AN(w); t=AT(w); wr=AR(w); ws=AS(w); SHAPEN(w,wr-1,nc); 
  ASSERT(B01+INT+FL&t, EVDOMAIN);
 
  nf=1==AR(base)?1:AS(base)[0];

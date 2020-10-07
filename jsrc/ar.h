@@ -12,7 +12,7 @@
 #define REDUCEPFX(f,Tz,Tx,pfx,vecfn1,vecfnn)  \
  AHDRR(f,Tz,Tx){I i;Tz v;                              \
   if(d==1){x += m*n; z+=m; DQ(m, v=*--x; DQ(n-1, --x; v=pfx(*x,v);); *--z=v;)}  \
-/* obsolete   else if(1==n){if(sizeof(Tz)!=sizeof(Tx)){DQ(d, *z++=    *x++;)}else{MC((C*)z,(C*)x,d*sizeof(Tz));}}     */     \
+     \
   else{z+=(m-1)*d; x+=(m*n-1)*d;                                        \
    for(i=0;i<m;++i,z-=d){I rc;                                    \
     Tx* RESTRICT y=x; x-=d; if(255&(rc=vecfn1(1,d,x,y,z,jt)))R rc; x-=d;        \
@@ -23,7 +23,7 @@
 #define REDUCEPFXIDEM2(f,Tz,Tx,pfx,vecfn)  \
  AHDRR(f,Tz,Tx){I i;                              \
   if(d==1){x += m*n; z+=m; DQ(m, Tz v0=(Tz)*--x; Tz v1=v0; if(!(n&1))v1=*--x;  DQ((n-1)>>1, x-=2; v0=pfx(x[0],v0); v1=pfx(x[1],v1); ); v0=pfx(v0,v1); *--z=v0;)}  \
-/* obsolete    else if(1==n){if(sizeof(Tz)!=sizeof(Tx)){DQ(d, *z++=    *x++;)}else{MC((C*)z,(C*)x,d*sizeof(Tz));}}     */     \
+     \
   else{z+=(m-1)*d; x+=(m*n-1)*d;                                        \
    for(i=0;i<m;++i,z-=d){                                    \
     Tx* RESTRICT y=x; x-=d; vecfn(1,d,x,y,z,jt); x-=d;        \
@@ -35,7 +35,7 @@
 #define REDUCEPFXIDEM2PRIM256(f,Tz,Tx,pfx,vecfn,prim,identity)  \
  AHDRR(f,Tz,Tx){I i;                              \
   if(d==1){redprim256rk1(prim,identity)}  \
-/* obsolete    else if(1==n){if(sizeof(Tz)!=sizeof(Tx)){DQ(d, *z++=    *x++;)}else{MC((C*)z,(C*)x,d*sizeof(Tz));}}     */     \
+     \
   else{z+=(m-1)*d; x+=(m*n-1)*d;                                        \
    for(i=0;i<m;++i,z-=d){                                    \
     Tx* RESTRICT y=x; x-=d; vecfn(1,d,x,y,z,jt); x-=d;        \
@@ -49,7 +49,7 @@
  AHDRR(f,Tz,Tx){I i;Tz v;                              \
   NAN0;                                                        \
   if(d==1){x += m*n; z+=m; DQ(m, v=*--x; DQ(n-1, --x; v=pfx(*x,v);); *--z=v;)}  \
-/* obsolete    else if(1==n){if(sizeof(Tz)!=sizeof(Tx)){DQ(n, *z++=    *x++;)}else{MC((C*)z,(C*)x,d*sizeof(Tz));}}     */     \
+     \
   else{z+=(m-1)*d; x+=(m*n-1)*d;                                        \
    for(i=0;i<m;++i,z-=d){I rc;                                    \
     Tx* RESTRICT y=x; x-=d; if(255&(rc=vecfn(1,d,x,y,z,jt)))R rc; x-=d;        \
@@ -61,7 +61,7 @@
 #define REDUCCPFX(f,Tz,Tx,pfx)  \
  AHDRR(f,Tz,Tx){I i;Tx* RESTRICT y;Tz v,* RESTRICT zz;                              \
   if(d==1){x += m*n; z+=m; DQ(m, v=(Tz)*--x; DQ(n-1, --x; v=pfx(*x,v);); *--z=v;)}  \
-/* obsolete    else if(1==n){DQ(d, *z++= (Tz)*x++;)}    */      \
+      \
   else{zz=z+=m*d; x+=m*d*n;                                       \
    for(i=0;i<m;++i,zz-=d){                                    \
     y=x; x-=d; z=zz; DQ(d, --z; --x; --y; *z=pfx(*x,*y););         \

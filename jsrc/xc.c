@@ -20,9 +20,4 @@ F2(jtfixrecursive){A z;
  RZ(a&&w);
  df1(z,w,eval("1 : 'u y\n:\nx u y'"));
  R z;
- // obsolete I ai=*IAV0(a);
- // obsolete  RZ(y=lrep(w)); 
- // obsolete  if(((I)1<<ai)&0xa)RZ(f=colon(num(3),                over(y,cstr(" y")) ));  // 1 or 3
-  // obsolete if(((I)1<<ai)&0xc)RZ(g=colon(num(4),over(cstr("x "),over(y,cstr(" y")))));  // 2 or 3
- // obsolete  R ai==3?colon(f,g):ai==1?f:g;
 }

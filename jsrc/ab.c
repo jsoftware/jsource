@@ -44,11 +44,11 @@ REDUCEPFX(bw1101insI, UI,UI, BW1101, bw1101II, bw1101II)   static REDUCEPFX(bw11
 REDUCEPFX(bw1110insI, UI,UI, BW1110, bw1110II, bw1110II)   static REDUCEPFX(bw1110insC, UC,UC, BW1110, bw1110CC, bw1110CC)
 /* see below */                        /* see below */
 
-       AHDRR(bw0000insI,UI,UI){I k=SZI*m*d; /* obsolete if(1<n)*/memset(z,C0 ,k); /* obsolete else MC(z,x,k);*/R EVOK;}
-static AHDRR(bw0000insC,UC,UC){I k=    m*d; /* obsolete if(1<n)*/memset(z,C0 ,k); /* obsolete else MC(z,x,k);*/R EVOK;}
+       AHDRR(bw0000insI,UI,UI){I k=SZI*m*d; memset(z,C0 ,k); R EVOK;}
+static AHDRR(bw0000insC,UC,UC){I k=    m*d; memset(z,C0 ,k); R EVOK;}
 
-       AHDRR(bw1111insI,UI,UI){I k=SZI*m*d; /* obsolete if(1<n)*/memset(z,CFF,k); /* obsolete else MC(z,x,k);*/R EVOK;}
-static AHDRR(bw1111insC,UC,UC){I k=    m*d; /* obsolete if(1<n)*/memset(z,CFF,k); /* obsolete else MC(z,x,k);*/R EVOK;}
+       AHDRR(bw1111insI,UI,UI){I k=SZI*m*d; memset(z,CFF,k); R EVOK;}
+static AHDRR(bw1111insC,UC,UC){I k=    m*d; memset(z,CFF,k); R EVOK;}
 
        AHDRR(bw0011insI,UI,UI){I k=d*(n-1);                        DQ(m, DQ(d, *z++=  *x++;); x+=k;);R EVOK;}
 static AHDRR(bw0011insC,UC,UC){I k=d*(n-1);                        DQ(m, DQ(d, *z++=  *x++;); x+=k;);R EVOK;}
@@ -151,7 +151,6 @@ static AHDRRFN* bwinsI[16]={(AHDRRFN*)bw0000insI,(AHDRRFN*)bw0001insI,(AHDRRFN*)
 DF1(jtbitwiseinsertchar){A fs,z;I d,j,n,r,wn,wr,zatoms;UC*u,*v,*wv,x,*zv;AHDRRFN* ado;
  RZ(w&&self);
  wr=AR(w); wn=AN(w); SETIC(w,n); z=VAV(self)->fgh[0]; fs=VAV(z)->fgh[0];
-// obsolete  if(!(wn&&SZI<n&&LIT&AT(w)))R from(df1(z,indexof(ds(CALP),w),fs),ds(CALP));
  if((-(wn)&(SZI-n)&SGNIF(AT(w),LITX))>=0)R from(df1(z,indexof(ds(CALP),w),fs),ds(CALP));  // revert if not wn!=0 & n>SZI & LIT
  PROD(d,wr-1,AS(w)+1); zatoms=d; wv=CAV(w); j=i0(VAV(fs)->fgh[1])-16; ado=(AHDRRFN*)bwinsC[j];  // d=#atoms in an item of a cell.  There is only 1 cell here (rank _)
  if(1==wr)switch(j){   // d==1 here

@@ -246,15 +246,6 @@ typedef I AHDRSFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);
   R EVOK; \
  }
 
-#if 0 // obsolete
-#define AOVF(f,Tz,Tx,Ty,fvv,f1v,fv1)  \
- AHDR2(f,I,I,I){C er=0;I u,v,*x1,*y1,*z1;                                       \
-  if(n-1==0)  {fvv(m,z,x,y); RER;}                                                \
-  else if(n-1<0){z1=z; y1=y; n=~n; DQ(m, u=*x++; f1v(n,z,u,y); RER; z=z1+=n; y=y1+=n;);}  \
-  else      {z1=z; x1=x; DQ(m, v=*y++; fv1(n,z,x,v); RER; z=z1+=n; x=x1+=n;);}  \
- }
-#endif
-
 // suff must return the correct result
 #define APFX(f,Tz,Tx,Ty,pfx,pref,suff)   \
  AHDR2(f,Tz,Tx,Ty){Tx u;Ty v;                                  \
@@ -296,17 +287,6 @@ AHDR2(name,D,D,D){ \
  } \
  suff \
 }
-
-#if 0 // obsolete
-#define ANAN(f,Tz,Tx,Ty,pfx)   \
- AHDR2(f,Tz,Tx,Ty){Tx u;Ty v;                                  \
-  NAN0;                                                        \
-  if(n-1==0)  DQ(m,               *z++=pfx(*x,*y); x++; y++; )   \
-  else if(n-1<0)DQ(m, u=*x++; DQC(n, *z++=pfx( u,*y);      y++;))   \
-  else      DQ(m, v=*y++; DQ(n, *z++=pfx(*x, v); x++;     ));  \
-  NAN1V;                                                       \
- }
-#endif
 
 /* Embedded visual tools v3.0 fails perform the z++ on all wince platforms. -KBI */
 #if SY_WINCE

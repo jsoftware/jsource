@@ -321,7 +321,6 @@ NAN0;
  case 11: DQ(n,         *z++=0.0;);            break;
  case 12: DQ(n,         *z++=0<=*x++?0.0:PI;); break;
  }
-// obsolete NAN1V;
  ASSERTWR(!NANTEST,EVNAN);
  R EVOK;
 }

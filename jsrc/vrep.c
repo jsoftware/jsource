@@ -43,31 +43,6 @@ static REPF(jtrepzsx){A q,x,y;I c,d,j,k=-1,m,p=0,*qv,*xv,*yv;P*ap;
  ASSERT(0,EVNONCE);
 }    /* (sparse complex) #"r (dense or sparse) */
 
-#if 0  // obsolete 
-#define REPB(T)  \
- {T*u,*v=(T*)zv;                                                    \
-  for(i=0;i<c;++i){                                                 \
-   u=i*m+(T*)wv;                                                    \
-   for(j=0,iv=(I*)b;j<q;++j,u+=SZI)switch(*iv++){                   \
-    case B0001:                                  *v++=u[3]; break;  \
-    case B0010:                       *v++=u[2];            break;  \
-    case B0011:                       *v++=u[2]; *v++=u[3]; break;  \
-    case B0100:            *v++=u[1];                       break;  \
-    case B0101:            *v++=u[1];            *v++=u[3]; break;  \
-    case B0110:            *v++=u[1]; *v++=u[2];            break;  \
-    case B0111:            *v++=u[1]; *v++=u[2]; *v++=u[3]; break;  \
-    case B1000: *v++=u[0];                                  break;  \
-    case B1001: *v++=u[0];                       *v++=u[3]; break;  \
-    case B1010: *v++=u[0];            *v++=u[2];            break;  \
-    case B1011: *v++=u[0];            *v++=u[2]; *v++=u[3]; break;  \
-    case B1100: *v++=u[0]; *v++=u[1];                       break;  \
-    case B1101: *v++=u[0]; *v++=u[1];            *v++=u[3]; break;  \
-    case B1110: *v++=u[0]; *v++=u[1]; *v++=u[2];            break;  \
-    case B1111: *v++=u[0]; *v++=u[1]; *v++=u[2]; *v++=u[3];         \
-   }                                                                \
-   if(r){B*c=(B*)iv; DO(r, if(c[i])*v++=u[i];);}                      \
- }}
-#endif
 static REPF(jtrepbdx){A z;I c,k,m,p;
  // wf and wcr are set
  RZ(a&&w);F2PREFIP;
@@ -199,7 +174,7 @@ static REPF(jtrepisx){A e,q,x,y;I c,j,m,p=0,*qv,*xv,*yv;P*ap;
 
 static REPF(jtrep1d){A z;C*wv,*zv;I c,k,m,n,p=0,q,t,*ws,zk,zn;
  RZ(a&&w);F2PREFIP;
- t=AT(a); m=AN(a); ws=AS(w); SETICFR(w,wf,wcr,n); /* obsolete n=wcr?ws[wf]:1;*/  // n=length of item axis in input.  If atom, is repeated to length of a
+ t=AT(a); m=AN(a); ws=AS(w); SETICFR(w,wf,wcr,n);   // n=length of item axis in input.  If atom, is repeated to length of a
  if(t&CMPX){
   if(wcr)R repzdx(from(apv(n,0L,0L),a),w,                wf,wcr);
   else{A za; RZ(za=apv(m,0L,0L)); R repzdx(a,IRS2(za,w,0L,1L,0L,jtfrom,z),wf,1L );}
@@ -285,7 +260,6 @@ I att=SGNTO0(-(AT(a)&B01+SB01))+((UI)(-(AT(a)&CMPX+SCMPX))>>(BW-1-1));  // 0 if 
  A (*repfn)() = reptab[2*att+SGNTO0(adense)];  // fetch address to call
 
  // special case: if a is atomic 1, and cells of w are not atomic.  a=0 is fast in the normal path
-// obsolete  if(wcr&&!ar&&AT(a)&(B01|INT)) {I aval = AT(a)&B01?(I)BAV(a)[0]:IAV(a)[0];  // no fast support for float
  if(((-wcr)&(ar-1)&(-(AT(a)&(B01|INT))))<0){I aval = BIV0(a);  // no fast support for float; take all of INT, or 1 bit of B01
   if(!(aval&-2LL)){  // 0 or 1
    if(aval==1)R RETARG(w);   // 1 # y, return y
@@ -293,13 +267,7 @@ I att=SGNTO0(-(AT(a)&B01+SB01))+((UI)(-(AT(a)&CMPX+SCMPX))>>(BW-1-1));  // 0 if 
   }
  }
  if(((1-acr)|(acr-ar))<0){z=rank2ex(a,w,DUMMYSELF,MIN(1,acr),wcr,acr,wcr,jtrepeat); PRISTCLRF(w) RETF(z);}  // multiple cells - must losr pristinity  // loop if multiple cells of a
-// obsolete  ASSERT(!acr||!wcr||(AS(a)[0]==AS(w)[wf]),EVLENGTH);
  ASSERT((-acr&-wcr)>=0||(AS(a)[0]==AS(w)[wf]),EVLENGTH);
-// obsolete  if(!acr||!wcr){RZ(z=!((AT(a)|AT(w))&SPARSE)?rep1d(a,w,wf,wcr):rep1s(a,w,wf,wcr)); RETF(z);}   // a is atom, or w is an atom and a has rank <= 1
-// obsolete  if((-acr&-wcr)>=0){RZ(z=!((AT(a)|AT(w))&SPARSE)?rep1d(a,w,wf,wcr):rep1s(a,w,wf,wcr)); RETF(z);}   // a is atom, or w is an atom and a has rank <= 1
-// obsolete  if(AT(a)&B01 +SB01 ){RZ(z=AT(a)&DENSE?repbdx(a,w,wf,wcr):repbsx(a,w,wf,wcr)); RETF(z);}
-// obsolete  if(AT(a)&CMPX+SCMPX){RZ(z=AT(a)&DENSE?repzdx(a,w,wf,wcr):repzsx(a,w,wf,wcr)); RETF(z);}
-// obsolete  /* integer or float */    {RZ(z=AT(a)&DENSE?repidx(a,w,wf,wcr):repisx(a,w,wf,wcr)); RETF(z);}
  z=(*repfn)(jtinplace,a,w,wf,wcr);
  // mark w not pristine, since we pulled from it
  PRISTCLRF(w)

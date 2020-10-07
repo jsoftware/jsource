@@ -13,7 +13,6 @@
 static A jtistd1(J jt,A z,A ind){A*iv,j,*jv,x;I d,i,n,r,*s;
  RZ(z&&ind);
  ASSERT(1>=AR(ind),EVRANK);
-// obsolete  if(AN(ind)&&!(BOX&AT(ind))){ASSERT(NUMERIC&AT(ind),EVINDEX); RZ(ind=every(ind,0L,jtright1));}
  if(AN(ind)&&!(BOX&AT(ind))){ASSERT(NUMERIC&AT(ind),EVINDEX); RZ(ind=every(ind,ds(CRIGHT)));}
  s=AS(z); n=AN(ind); iv=AAV(ind); 
  ASSERT(n<=AR(z),EVINDEX);

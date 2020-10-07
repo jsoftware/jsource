@@ -65,9 +65,6 @@ static DF2(jtexecgerundcellB){  // call is w,self or a,w,self
 A jtcreatecycliciterator(J jt, A z, A w){
  // Create the (skeletal) clone, point it to come to the execution point, set the next-verb number to 0
  AC(z)=ACPERMANENT; AT(z)=VERB; A gerund=FAV(z)->fgh[2]=FAV(w)->fgh[2]; FAV(z)->mr=FAV(w)->mr; FAV(z)->valencefns[0]=FAV(z)->valencefns[1]=jtexeccyclicgerund; FAV(z)->localuse.lI=0;
-// obsolete  // clear the BOXATOP flags for this iterator  scaf should set if all gerunds are BOXATOP
-// obsolete  // set BOXATOP if all BOXATOP flags are set; clear ATOPOPEN always since they can't coexist
-// obsolete  UI4 flg2=VF2BOXATOP1|VF2BOXATOP2; DO(AN(gerund), flg2 &= FAV(AAV(gerund)[i])->flag2&(VF2BOXATOP1|VF2BOXATOP2);)
  FAV(z)->flag2=0; FAV(z)->id=CCYCITER;   // clear flags, and give this verb a proper id so it can be checked for
  R z;
 }
@@ -78,9 +75,6 @@ static A jtcreategerunditerator(J jt, A z, A w, A r){  // z is result area, w is
  // Create the (skeletal) clone, point it to come to the execution point, set the next-verb number to 0
  AC(z)=ACPERMANENT; AT(z)=VERB; FAV(z)->fgh[2]=FAV(w)->fgh[2]; FAV(z)->fgh[1]=r; FAV(z)->mr=FAV(w)->mr;
  FAV(z)->valencefns[0]=FAV(z)->valencefns[1]=AT(r)&INT?jtexecgerundcellI:jtexecgerundcellB; FAV(z)->localuse.lI=0;
-// obsolete  // clear the BOXATOP flags for this iterator  scaf should set if all gerunds are BOXATOP
-// obsolete  // set BOXATOP if all BOXATOP flags are set; clear ATOPOPEN always since they can't coexist
-// obsolete  UI4 flg2=VF2BOXATOP1|VF2BOXATOP2; DO(AN(gerund), flg2 &= FAV(AAV(gerund)[i])->flag2&(VF2BOXATOP1|VF2BOXATOP2);)
  FAV(z)->flag2=0;
  R z;
 }
@@ -104,8 +98,6 @@ PRIM jtfxself[2]={ {{0,0,0,0,0,0,0},{{{jtfx,0},{0,0,0},0,0,0,0,0,0,0}}} , {{1,0,
 // self is a parm passed through to jtfx, coming from jtfxself above.  if AK(self) is nonzero, we return nouns as is
 // Result claims to be an array of boxes, but each box holds a function
 DF1(jtfxeach){RETF(every(w,self));}
-// obsolete // run jtfx on each box in w, EXCEPT on nouns, which we return as is
-// obsolete F1(jtfxeachacv){RETF(every(w,w,jtfx));}  // the second w is just any nonzero
 
 static DF1(jtcon1){A h,*hv,*x,z;V*sv;
  PREF1(jtcon1);
@@ -152,107 +144,6 @@ F2(jtevger){A hs;I k;
 
 F2(jttie){RZ(a&&w); R over(VERB&AT(a)?arep(a):a,VERB&AT(w)?arep(w):w);}
 
-#if 0  // obsolete
-// We want to know whether the verb w can guarantee that it will return the same shape it is given, if all
-// executions of all verbs have the same shape
-static B jtatomic(J jt,C m,A w){A f,g;B ax,ay,vf,vg;C c,id;V*v;
- // char types that are atomic both dyad and monad
- // CFCONS should not be atomic.  But who would use it by itself?  It must be part of
- // some compound, so we will pretend it's atomic.  It's too much trouble to add an 'atomic result'
- // type, and tests rely on 1: being treated as atomic.  It's been this way a long time.
- static const C atomic12[]={CMIN, CLE, CMAX, CGE, CPLUS, CPLUSCO, CSTAR, CSTARCO, CMINUS, CDIV, CROOT, 
-     CEXP, CLOG, CSTILE, CBANG, CLEFT, CRIGHT, CJDOT, CCIRCLE, CRDOT, CHGEOM,/* obsolete  CFCONS,*/ 0};
- // atomic monad-only
- static const C atomic1[]={CNOT, CHALVE, 0};
- // atomic dyad-only
- static const C atomic2[]={CEQ, CLT, CGT, CPLUSDOT, CSTARDOT, CNE, 0};
- RZ(w&&VERB&AT(w));  // if not a verb (including if a name), fail
- v=FAV(w); id=v->id;
- if(strchr(atomic12,id)||strchr(1==m?atomic1:atomic2,id))R 1;
- f=v->fgh[0]; vf=f&&VERB&AT(f); ax=f&&NOUN&AT(f)&&!AR(f);
- g=v->fgh[1]; vg=g&&VERB&AT(g); ay=g&&NOUN&AT(g)&&!AR(g);
- switch(id){  // should handle @. ?
-  case CAT:
-  case CATCO:  R atomic(1,f)&&atomic(m,g);
-  case CUNDER:
-  case CUNDCO: R atomic(m,f)&&atomic(1,g);
-  case CAMPCO: R atomic(m,f)&&atomic(1,g);
-// obsolete   case CQQ:    R ax||atomic(m,f);
-  case CQQ:    R ax||atomic(m,f);
-  case CFORK:  R (CCAP==ID(f)?atomic(1,g):atomic(m,f)&&atomic(2,g))&&atomic(m,v->fgh[2]);
-  case CHOOK:  R atomic(2,f)&&atomic(1,g);
-  case CTILDE: R NAME&AT(f)?atomic(m,fix(f,zeroionei(0))):atomic(2,f);
-  case CFIT:   R atomic(m,f);
-  case CAMP:   
-   if(vf&&vg)R atomic(m,f)&&atomic(1,g);
-   if(ax&&atomic(2,g)||ay&&atomic(2,f))R 1;
-   if(vg&&1==AR(f)){c=ID(g); R c==CPOLY||c==CBASE;}
- }
- R 0;
-}    /* 1 iff verb w is atomic; 1=m monad 2=m dyad */
-
-static A jtgjoin(J jt,C c,A a,A w){A f,z,z1;
- RZ(a&&w);
- ASSERT(1>=(AR(a)|AR(w)),EVRANK);  // both ranks<2
- ASSERT((((AN(a)-1)|-(BOX&AT(a)))&((AN(w)-1)|-(BOX&AT(w))))<0,EVDOMAIN);  // both boxed or empty
- RZ(f=qq(atop(ds(CBOX),ds(CCOMMA)),zeroionei(0)));  // f = <@,"0
- R df2(z,box(spellout(c)),df2(z1,a,w,f),f);   // gerund: (<c) <@,"0 a <@,"0 w
-}
-
-// u@.v y atomic.  Operate on the nub of y and then rearrange the results
-// kludge TODO: Don't do this if the nub is almost as big as y; also find a way to expose this logic
-// to general verbs
-static DF1(jtcase1a){F1PREFIP;A g,h,*hv,k,t,u,w0=w,x,y,*yv,z;B b;I r,*xv;V*sv;
- RZ(w);
- r=AR(w);
- if(1<r)RZ(w=ravel(w));  // will return virtual block
- sv=FAV(self); g=sv->fgh[1];
- // Calculate v y.  If v is atomic, apply v y, else v"0 y
- if(atomic(1,g))RZ(df1(k,w,g))
- else{RZ(df1(k,w,qq(g,zeroionei(0)))); ASSERT(((AR(k)^AR(w))|(AN(k)^AN(w)))==0,EVRANK);}
- if(B01&AT(k)){
-  // v produced a binary list.  Pull out the operands for u[0] and u[1], operate on them individually,
-  // and interleave the results
-  h=sv->fgh[2]; ASSERT(2<=AN(h),EVINDEX); hv=AAV(h);
-  RZ(df1(x,t=repeat(not(k),w),hv[0])); if(!AR(x))RZ(x=reshape(tally(t),x));
-  RZ(df1(y,t=repeat(k,     w),hv[1])); if(!AR(y))RZ(y=reshape(tally(t),y));
-  RZ(z=!AN(x)?y:!AN(y)?x:from(grade1(grade1(k)),over(x,y)));
- }else{
-  // v produced non-binary. apply k u/. y and shuffle the results to their proper positions
-  RZ(u=nub(k));
-  RZ(df2(y,k,w,sldot(gjoin(CATCO,box(scc(CBOX)),from(u,sv->fgh[0]))))); yv=AAV(y);  // for each selected gerund, create AR of <@:ger   apply as k <@:ger/. w
-  b=0; DO(AN(y), if(b=!AR(yv[i]))break;);
-  if(b){  // if there is a verb that returned a scalar...
-   RZ(df2(x,k,w,sldot(ds(CPOUND)))); xv=AV(x);
-   y=rifvs(y); yv=AAV(y);   // mustn't install into virtual
-   DO(AN(y), if(!AR(yv[i])){RZ(z=reshape(sc(xv[i]),yv[i])); INSTALLBOXNF(y,yv,i,z);});  // ...replicate it
-  }
-  RZ(z=from(grade1(grade1(k)),raze(grade2(y,u))));
- }
- if(1<r){RZ(z=virtualip(z,0,r)); AN(z)=AN(w0); MCISH(AS(z),AS(w0),r);}
- R z;
-}
-
-// m@.v general (non-atomic)case, like dyad case below
-static DF1(jtcase1b){A h,u;V*sv;
- F1PREFIP;sv=FAV(self); h=sv->fgh[2];
- RZ(u=from(df1(u,w,sv->fgh[1]),h));  // not inplace
- ASSERT(!AR(u),EVRANK);
-// obsolete  R jtdf1(FAV(*AAV(u))->flag&VJTFLGOK1?jtinplace:jt,w,*AAV(u));  // inplace if the verb can handle it
- R (FAV(*AAV(u))->valencefns[0])(FAV(*AAV(u))->flag&VJTFLGOK1?jtinplace:jt,w,*AAV(u));  // inplace if the verb can handle it
-}
-
-// m@.v y.  First check for atomic verbs (special case case1a); if not, process through case1b.  Pass inplacing to case1b only if there is 1 cell
-static DF1(jtcase1){A h,*hv;B b;I r,wr;V*sv;
- RZ(w);
- F1PREFIP; sv=FAV(self);
- wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; r=MIN(r,sv->mr); RESETRANK;
- if(b=!r&&wr&&AN(w)){h=sv->fgh[2]; hv=AAV(h); DO(AN(h), if(!atomic(1,hv[i])){b=0; break;});}
- if(b){R case1a(w,self);}   // atomic: go there
- if(r>=wr){R jtcase1b(jtinplace,w,self);}  // If there is only 1 cell, execute on it, keeping inplaceability
- R rank1ex(w,self,r,jtcase1b);  // Otherwise loop over the cells (perforce not inplace)
-}
-#endif
 
 // m@.:v y.  Execute the verbs at high rank if the operands are large
 // Bivalent entry point: called as (jt,w,self) or (jt,a,w,self)
@@ -263,7 +154,7 @@ static DF2(jtcasei12){A vres,z;I gerit[128/SZI],ZZFLAGWORD;
  ZZFLAGWORD=AT(w)&VERB?ZZFLAGINITSTATE|ZZFLAGWILLBEOPENED|ZZFLAGCOUNTITEMS:ZZFLAGINITSTATE|ZZFLAGWILLBEOPENED|ZZFLAGCOUNTITEMS|ZZFLAGISDYAD;  // we collect the results on the cells, but we don't assemble into a result.  To signal this, we force BOXATOP and set WILLBEOPENED
  jtinplace=(J)((I)jtinplace&(a==w?-4:-1));  // Don't allow inplacing if a==w dyad
  self=AT(w)&VERB?w:self; w=AT(w)&VERB?a:w;  // if monad, a==w
- I wr=AR(w); I ar=AR(a); I mr=MAX(wr,ar);    // ranks, and max rank  // obsolete  r=(RANKT)jt->ranks; r=wr<r?wr:r; r=MIN(r,FAV(self)->mr);   // scaf turn off IRS
+ I wr=AR(w); I ar=AR(a); I mr=MAX(wr,ar);    // ranks, and max rank   scaf turn off IRS
  // Execute v at infinite rank
  vres=FAV(self)->fgh[1];   // temp: verb to execute
  RZ(vres=(FAV(vres)->valencefns[ZZFLAGWORD>>ZZFLAGISDYADX])(jt,a,ZZFLAGWORD&ZZFLAGISDYAD?w:vres,vres));  // execute v at infinite rank, not inplace
@@ -298,44 +189,36 @@ static DF2(jtcasei12){A vres,z;I gerit[128/SZI],ZZFLAGWORD;
    I numres= maxx - minx + 1;  // max possible # of selectors
    // get sorted input order - as long as it wasn't an atom, which we will have to repeat
    A sortw,sorta;
-// obsolete  J jtinplaceorig=jtinplace;   // remember inplacing for original args
-// obsolete    jtinplace = jt;  // clear inplaceability for new args
    // Now we construe the input as a list of ar/wr-cells.  If rank is neg, the input was an atom: don't reshape
    // from here on we have w always, and optional a.  But we call a always, with optional w.  That's OK, because we set up
    // omitted a to point to w and not to modify it.
    if(wr>=0){
-// obsolete     RZ(w=jtredcatcell(jtinplaceorig,w,wr));  // inplaceability of original w
     RZ(w=jtredcatcell(jtinplace,w,wr));  // inplaceability of original w
     RZ(sortw=from(gradepm,w));
     // Inplace the virtual block if that is allowed
     ZZFLAGWORD |= SGNTO0((-(AT(sortw)&TYPEVIPOK))&AC(sortw))<<ZZFLAGVIRTWINPLACEX;
-// obsolete     jtinplace=(J)((I)jtinplace|(SGNTO0(AC(sortw))<<JTINPLACEWX));   // if we have a copy of the input, we can inplace it.  Could also inplace if original inplaceable
     ZZFLAGWORD|=ZZFLAGARRAYW;  // indicate that virtw must be updated between iterations
    }else{
     sortw=w;
-// obsolete     jtinplace=(J)((I)jtinplace&~JTINPLACEW);   // if we have a repeated atom, we MUST NOT inplace it
    }
    // create a virtual block for the input(s).
    A virtw,virta; fauxblock(virtwfaux); fauxblock(virtafaux);
    I virtr=(wr|REPSGN(wr))+1;   // rank of a list of cells, or 0 if original arg was an atom
-   fauxvirtual(virtw,virtwfaux,sortw,virtr,ACUC1/* obsolete |ACINPLACE*/) MCISH(AS(virtw),AS(w),virtr); AN(virtw)=1;  // in case atom, set AN to 1
+   fauxvirtual(virtw,virtwfaux,sortw,virtr,ACUC1) MCISH(AS(virtw),AS(w),virtr); AN(virtw)=1;  // in case atom, set AN to 1
    // Create the size of a cell in atoms.  If the original argument was an atom (?r=IMAX), use 0 for the cellsize so that the cell is repeated
    I wck,ack; PROD(wck,virtr-1,AS(sortw)+1);  // number of atoms in a cell of w
    I ak,wk=bp(AT(w)); wk&=REPSGN(~wr);  // size of atom of k, but 0 if w is an atom (so we don't advance)
    if(ZZFLAGWORD&ZZFLAGISDYAD){   // if we need to repeat for a
     if(ar>=0){
-// obsolete      RZ(a=jtredcatcell((J)((I)jt|(((I)jtinplaceorig>>(JTINPLACEAX-JTINPLACEWX))&JTINPLACEW)),a,ar));  // move inplaceability of original a to w
      RZ(a=jtredcatcell((J)((I)jt|(((I)jtinplace>>(JTINPLACEAX-JTINPLACEWX))&JTINPLACEW)),a,ar));  // move inplaceability of original a to w
      RZ(sorta=from(gradepm,a));
     ZZFLAGWORD |= SGNTO0((-(AT(sorta)&TYPEVIPOK))&AC(sorta))<<ZZFLAGVIRTAINPLACEX;
-// obsolete      jtinplace=(J)((I)jtinplace|(SGNTO0(AC(sorta))<<JTINPLACEAX));
      ZZFLAGWORD|=ZZFLAGARRAYA;
     }else{
      sorta=a;
-// obsolete      jtinplace=(J)((I)jtinplace&~JTINPLACEA);
     }
     virtr=(ar|REPSGN(ar))+1;   // rank of a list of cells, or 0 if original arg was an atom
-    fauxvirtual(virta,virtafaux,sorta,virtr,ACUC1/* obsolete |ACINPLACE*/) MCISH(AS(virta),AS(a),virtr); AN(virta)=1;
+    fauxvirtual(virta,virtafaux,sorta,virtr,ACUC1) MCISH(AS(virta),AS(a),virtr); AN(virta)=1;
     PROD(ack,virtr-1,AS(sorta)+1);  // number of atoms in a cell of w
     ak=bp(AT(a)); ak&=REPSGN(~ar);  // size of atom of k, but 0 if w is an atom (so we don't advance)
    }else{virta=virtw; ak=0;}  // if monad, set a=w, and make the addition to AK(a) harmless
@@ -363,18 +246,15 @@ static DF2(jtcasei12){A vres,z;I gerit[128/SZI],ZZFLAGWORD;
     // fill in the virtual block for this block
     if(ZZFLAGWORD&ZZFLAGARRAYW){  // if w is not a repeated atom...
      AS(virtw)[0]=srchhi-blkstart; AN(virtw)=(srchhi-blkstart)*wck;
-// obsolete      AC(virtw)=ACUC1|ACINPLACE;   // in case we created a virtual block from it, restore inplaceability to the UNINCORPABLE block (not if atom, which is never inplaceable)
      AC(virtw)=ACUC1 + ((state&ZZFLAGVIRTWINPLACE)<<(ACINPLACEX-ZZFLAGVIRTWINPLACEX));   // in case we created a virtual block from it, restore inplaceability to the UNINCORPABLE block (not if atom, which is never inplaceable)
     }
     if(ZZFLAGWORD&ZZFLAGARRAYA){  // if a is not a repeated atom...
      AS(virta)[0]=srchhi-blkstart; AN(virta)=AS(virta)[0]*ack;
-// obsolete      AC(virta)=ACUC1|ACINPLACE;   // in case we created a virtual block from it, restore inplaceability to the UNINCORPABLE block (not if atom, which is never inplaceable)
      AC(virta)=ACUC1 + ((state&ZZFLAGVIRTAINPLACE)<<(ACINPLACEX-ZZFLAGVIRTAINPLACEX));   // in case we created a virtual block from it, restore inplaceability to the UNINCORPABLE block (not if atom, which is never inplaceable)
     }
    //  pull the function for the value, execute on the value with forced attributes (ASSUMEBOXATOP, WILLBEOPENED, COUNTITEMS)
    // take inplaceability from the selected verb always - we have made the cells inplaceable if possible
     A fs=AAV(FAV(self)->fgh[2])[currres];  // fetch the gerund to execute
-// obsolete     RZ(z=(FAV(fs)->valencefns[ZZFLAGWORD>>ZZFLAGISDYADX])((J)((REPSGN(SGNIF(FAV(fs)->flag,(ZZFLAGWORD>>ZZFLAGISDYADX)+VJTFLGOK1X))|~JTFLAGMSK)&(I)jtinplace),
     RZ(z=(FAV(fs)->valencefns[ZZFLAGWORD>>ZZFLAGISDYADX])((J)((I)jt+((FAV(fs)->flag>>((ZZFLAGWORD>>ZZFLAGISDYADX)+VJTFLGOK1X))*(((I)1<<(ZZFLAGWORD>>ZZFLAGISDYADX))-1))),
      virta,ZZFLAGWORD&ZZFLAGISDYAD?virtw:fs,fs));  // execute gerund at infinite rank, inplace from VJTFLGOK1/2 depending on valence
 
@@ -436,18 +316,6 @@ static DF2(jtcasei12){A vres,z;I gerit[128/SZI],ZZFLAGWORD;
  }
 }
 
-#if 0
-// x m@.v y.  Run v (not inplace); select the "BOX" containing the verb to run; run it, inplacing as called for in the input
-static DF2(jtcase2){A u;V*sv;
- F2PREFIP;PREF2(jtcase2);
- sv=FAV(self);
- RZ(u=from(df2(u,a,w,sv->fgh[1]),sv->fgh[2]));
- ASSERT(!AR(u),EVRANK);
-// obsolete  R jtdf2(FAV(*AAV(u))->flag&VJTFLGOK2?jtinplace:jt,a,w,*AAV(u));  // inplace if the verb can handle it
- R (FAV(*AAV(u))->valencefns[1])(FAV(*AAV(u))->flag&VJTFLGOK2?jtinplace:jt,a,w,*AAV(u));  // inplace if the verb can handle it
-}
-#endif
-
 // @.n
 static F2(jtgerfrom){A*av,*v,z;I n;
  RZ(a&&w);  /* 1==AR(w)&&BOX&AT(w) */
@@ -460,18 +328,6 @@ static F2(jtgerfrom){A*av,*v,z;I n;
   DO(n, RZ(*v++=incorp(gerfrom(av[i],w))););
   R z;
 }}
-
-#if 0   // obsolete
-F2(jtagenda){I flag;
- RZ(a&&w)
- if(NOUN&AT(w))R exg(gerfrom(w,a));
- // verb v.  Create a "BOX" type holding the verb form of each gerund
- A avb; RZ(avb = fxeachv(1L,a));
-  // Calculate ASGSAFE from all of the verbs (both a and w), provided the user can handle it
- flag = VASGSAFE&FAV(w)->flag; A* avbv = AAV(avb); DQ(AN(avb), flag &= FAV(*avbv)->flag; ++avbv;);  // Don't increment inside FAV!
- R fdef(0,CATDOT,VERB, jtcase1,jtcase2, a,w,avb, flag+((VGERL|VJTFLGOK1|VJTFLGOK2)|FAV(ds(CATDOT))->flag), mr(w),lr(w),rr(w));
-}
-#endif
 
 F2(jtagendai){I flag;
  RZ(a&&w)

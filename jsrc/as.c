@@ -218,7 +218,6 @@ static DF1(jtssg){F1PREFIP;PROLOG(0020);A a,z;I i,n,r,wr;
  fauxblock(virtafaux); fauxvirtual(a,virtafaux,w,r-1,ACUC1);
  // z will hold the result from the iterations.  Init to value of last cell
  // Since there are multiple cells, z will be in a virtual block to begin with (usually)
-// obsolete RZ(z=tail(w)); k=AN(z)<<bplg(AT(z)); // k=length of input cell in bytes
  // Allocate fauxvirtual arg for the first cell, so it can be inplaceable/pristine if needed (tail returned a noninplaceable virtual block, which messed things up for high rank)
  fauxblock(virtwfaux); fauxvirtual(z,virtwfaux,w,r-1,ACUC1);  // allocate UNINCORPORABLE block, mark inplaceable - used only once
  // fill in the shape, offset, and item-count of the virtual block
@@ -226,7 +225,6 @@ static DF1(jtssg){F1PREFIP;PROLOG(0020);A a,z;I i,n,r,wr;
  AN(z)=k; AN(a)=k;
  k<<=bplg(AT(w)); // k now=length of input cell in bytes, where it will remain
  AK(z)+=(n-1)*k; AK(a)+=(n-1)*k; MCISH(AS(z),AS(w)+1,r-1); MCISH(AS(a),AS(w)+1,r-1);  // a points to tail; it will be decremented before first use
-// obsolete AN(a)=AN(z); AK(a)+=(n-1)*k; MCISH(AS(a),AS(z),r-1);  // make the virtual block look like the tail, except for the offset.  We start out pointing
  // Calculate inplaceability.  We can inplace the left arg, which is always virtual, if w is inplaceable and (w is direct or fs is &.>)
  // We include contextual inplaceability (from jtinplace) here because if the block is returned, its pristinity will be checked if it is inplaceable.  Thus
  // we do not want to call a faux argument inplaceable if it really isn't.  This gives us leeway with jtinplace itself
@@ -235,9 +233,6 @@ static DF1(jtssg){F1PREFIP;PROLOG(0020);A a,z;I i,n,r,wr;
  // and the input jtinplace.  We turn off WILLBEOPENED status in jtinplace for the callee.
  AC(z)=ACUC1 + ((state&ZZFLAGVIRTAINPLACE)<<(ACINPLACEX-ZZFLAGVIRTAINPLACEX));   // first cell is inplaceable if second is
  jtinplace = (J)(intptr_t)(((I)jt) + (JTINPLACEW+JTINPLACEA)*((FAV(fs)->flag>>(VJTFLGOK2X-JTINPLACEWX)) & JTINPLACEW));  // all items are used only once
-// obsolete  // Set inplaceability for the running a.  It is inplaceable if w is.  a itself is vistual and cannot be included in a result, but the atoms it points to can be changed & then copied.
-// obsolete  // Inplaceability of fs is already included in the inplaceability of the arguments
-// obsolete  jtinplace = (J)(intptr_t)(((I)jt) + (JTINPLACEA)*((I)jtinplace&(((AT(w)&TYPEVIPOK)!=0)|f2==jtevery2self)&SGNTO0(AC(w))));  // inplace left arg only if w is direct inplaceable, enabled, and verb can take it
 
 #define ZZPOPNEVER 1   // we mustn't TPOP after copying the result atoms, because they are reused.  This will leave the memory used for type-conversions unclaimed.
    // if we implement the annulment of tpop pointers, we should use that to hand-free results that have been converted
@@ -270,7 +265,6 @@ static DF1(jtssg){F1PREFIP;PROLOG(0020);A a,z;I i,n,r,wr;
   else if(unlikely(a==z)){RZ(z=virtual(z,0,AR(a))); AN(z)=AN(a); MCISH(AS(z),AS(a),r-1);}
 
   AK(a)-=k;  // back up to next input
-// obsolete   AC(a)=ACUC1|ACINPLACE;   // in case we created a virtual block from it, restore inplaceability to the UNINCORPABLE block
   AC(a)=ACUC1 + ((state&ZZFLAGVIRTAINPLACE)<<(ACINPLACEX-ZZFLAGVIRTAINPLACEX));   // in case we created a virtual block from it, restore inplaceability to the UNINCORPABLE block
  }
 #define ZZEXIT
@@ -306,9 +300,8 @@ static DF1(jtsscan){A y,z;I d,f,m,n,r,t,wn,wr,*ws,wt;
  wt=AT(w);
  if(unlikely(SPARSE&wt))R scansp(w,self,jtsscan);
  wn=AN(w); wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; ws=AS(w); RESETRANK;
- PROD(m,f,ws); PROD1(d,r-1,f+ws+1); I *nn=&ws[f]; nn=r?nn:&I1mem; n=*nn; /* obsolete n=r?ws[f]:1;*/  // will not be used if WN==0, so PROD ok.  n is # items along the selected rank
+ PROD(m,f,ws); PROD1(d,r-1,f+ws+1); I *nn=&ws[f]; nn=r?nn:&I1mem; n=*nn;   // will not be used if WN==0, so PROD ok.  n is # items along the selected rank
  y=FAV(self)->fgh[0]; // y is f/
-// obsolete  if(((n-2)|(wn-1))<0){if(vaid(FAV(y)->fgh[0])){R r?RETARG(w):reshape(over(shape(w),num(1)),w);}else R IRS1(w,self,r,jtsuffix,z);}  // if empty arg, or just 1 cell in selected axis, convert to f/\ which handles the short arg 
  if(((n-2)|(wn-1))<0){if(FAV(FAV(y)->fgh[0])->flag&VISATOMIC2){R r?RETARG(w):reshape(over(shape(w),num(1)),w);}else R IRS1(w,self,r,jtsuffix,z);}  // if empty arg, or just 1 cell in selected axis, convert to f/\ which handles the short arg 
 
    // note that the above line always takes the r==0 case
@@ -369,7 +362,6 @@ static DF2(jtofxassoc){A f,i,j,p,s,x,z;C id,*zv;I c,d,k,kc,m,r,t;V*v;VA2 adocv;
  // If we modify this code to use this path for other associative verbs, we would need to check the type of (p f s)
  I rc;  // return code from execution of verb
  if(!TYPESEQ(AT(p),AT(s))){rc=EWOV;} else {I klg;  // simulate overflow if different precisions - will convert everything to float
-// obsolete   r=AR(p); c=aii(p); t=AT(p); klg=bplg(t); kc=c<<klg;
   r=AR(p); PROD(c,AR(p)-1,AS(p)+1) t=AT(p); klg=bplg(t); kc=c<<klg;
   adocv=var(x,t,t); // analyze the u operand
   ASSERTSYS(adocv.f,"ofxassoc");  // scaf
@@ -380,7 +372,7 @@ static DF2(jtofxassoc){A f,i,j,p,s,x,z;C id,*zv;I c,d,k,kc,m,r,t;V*v;VA2 adocv;
   // If there was overflow on the ado, we have to redo the operation as a float.
   // We also have to redo if the types of p and s were different (for example, if one overflowed to float and the other didn't)
  }
- if((rc&255)>=EWOV){/* obsolete RESETERR;*/ R ofxassoc(a,cvt(FL,w),self);}
+ if((rc&255)>=EWOV){ R ofxassoc(a,cvt(FL,w),self);}
  if(rc)jsignal(rc);  // if there was an error, signal it
  R z;
 }    /* a f/\. w where f is an atomic associative fn */
@@ -400,13 +392,6 @@ F1(jtbsdot){A f;AF f1=jtsuffix,f2=jtoutfix;I flag=FAV(ds(CBSDOT))->flag;C id;V*v
    {CCMWDS(xinv) CCMCAND(xinv,cand,id) f2=CCMTST(cand,id)?jtofxinv:f2;}
 #define xassocvalues(w) CCM(w,CSTAR)+CCM(w,CMAX)+CCM(w,CMIN)+CCM(w,CPLUSDOT)+CCM(w,CSTARDOT)+CCM(w,CBW0000)+CCM(w,CBW0001)+CCM(w,CBW0011)+CCM(w,CBW0101)+CCM(w,CBW0111)+CCM(w,CBW1111)
    {CCMWDS(xassoc) CCMCAND(xassoc,cand,id) f2=CCMTST(cand,id)?jtofxassoc:f2;}
-// obsolete    switch(id){
-// obsolete     case CPLUS:   case CEQ:     case CNE:     case CBW0110:  case CBW1001:               
-// obsolete      f2=jtofxinv;   break;
-// obsolete     case CSTAR:   case CMAX:    case CMIN:    case CPLUSDOT: case CSTARDOT: 
-// obsolete     case CBW0000: case CBW0001: case CBW0011: case CBW0101:  case CBW0111: case CBW1111: 
-// obsolete      f2=jtofxassoc;
-// obsolete    }
   }
  RZ(f=ADERIV(CBSDOT,f1,f2,flag,RMAX,0,RMAX));
  // Fill in the lvp[1] field: with 0 if not f/\; with the lookup field for f/ if f/\ .

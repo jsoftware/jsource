@@ -118,7 +118,6 @@ extern F1(jtfsmvfya);
 extern F1(jtfullname);
 extern DF1(jtfx);
 extern DF1(jtfxeach);
-// obsolete extern F1(jtfxeachacv);
 extern PRIM jtfxself[2];
 extern F1(jtfxx);
 extern F1(jtgaussdet);
@@ -312,7 +311,6 @@ extern F1(jtsignum);
 extern F1(jtsiinfo);
 extern F1(jtslash);
 extern F1(jtsldot);
-// obsolete extern F1(jtsmmblks);
 extern F1(jtsnl);
 extern F1(jtsp);
 extern F1(jtsparse1);
@@ -564,7 +562,6 @@ extern DF1(jtbitwise1);
 extern DF1(jtbitwiseinsertchar);
 extern DF1(jtcrcfixedleft);
 extern DF1(jtdetxm);
-// obsolete extern DF1(jtdf1);
 extern DF1(jtdfs1);
 extern DF1(jtexppi);
 extern DF1(jtfsmfx);
@@ -584,7 +581,6 @@ extern DF2(jtbitwisechar);
 extern DF2(jtcharfn2);
 extern DF2(jtunquote);
 extern DF2(jtdbunquote);
-// obsolete extern DF2(jtdf2);
 extern DF2(jtdfs2);
 extern DF2(jteachl);
 extern DF2(jteachr);
@@ -844,11 +840,7 @@ extern A        jttokens(J,A,I);
 extern B        jtunlk(J,I);
 extern A        jtv2(J,I,I);
 extern A        jtva2s(J,A,A,C,VF,I,I,I,I,I);
-// obsolete extern C        jtvaid(J,A);
-// obsolete extern VARPS      jtvains(J,A,I);
-// obsolete extern VARPS      jtvapfx(J,A,I);
 extern VA2      jtvar(J,A,I,I);
-// obsolete extern VARPS      jtvasfx(J,A,I);
 extern A        jtvasp(J,A,A,C,VF,I,I,I,I,I,I,I,I,I);
 extern B        jtvc1(J,I,US*);
 extern A        jtvci(J,I);
@@ -859,7 +851,6 @@ extern A        jtvger2(J,C,A,A);
 extern A        jtvirtual(J,AD * RESTRICT,I,I);
 extern B        jtvnm(J,I,C*);
 extern void     jtwri(J,I,C*,I,C*);
-// obsolete extern A        jtxcvt(J,I,A);
 extern B        jtxlinit(J);
 extern B        jtxoinit(J);
 extern B        jtxsinit(J);
@@ -914,27 +905,14 @@ struct Bd1 {I hdr[AKXR(0)/SZI]; D v[1];};
 struct Bd2;
 extern struct Bd2 Ba0j1;
 #define a0j1 ((A)&Ba0j1)
-// obsolete extern A        ds(CACE);
-// obsolete extern A        ainf;
 extern struct Bd1 Bainf;
 #define ainf ((A)&Bainf)
-// obsolete extern A        ds(CALP);
-// obsolete extern A        aqq;
-// obsolete extern A        mtv;
-// obsolete extern A        mtm;
 extern I Baqq[];
 #define aqq ((A)&Baqq)
 extern I Bmtv[];
 #define mtv ((A)&Bmtv)
 extern I Bmtm[];
 #define mtm ((A)&Bmtm)
-// obsolete extern A        asgnlocsimp;  // points to block with ASGN+ASGNLOCAL+ASGTONNAME
-// obsolete extern A        asgngloname;  // points to block with ASGN+ASGNTONAME
-// obsolete extern A        asgnforceglo;  // points to block with ASGN but char is =. CASGN
-// obsolete extern A        asgnforcegloname;  // points to block with ASGN+ASGNTONAME  but char is =. CASGN
-// obsolete extern const UC       bit[];
-// obsolete extern A        imax;
-// obsolete extern A        mark;
 extern I Basgnlocsimp[];
 #define asgnlocsimp ((A)&Basgnlocsimp)
 extern I Basgngloname[];
@@ -948,7 +926,6 @@ extern I Bimax[];
 extern I Bmark[];
 #define mark ((A)&Bmark)
 extern C        breakdata;
-// obsolete extern A        chr[];
 extern I Bchrcolon[];
 #define chrcolon ((A)&Bchrcolon)
 extern I Bchrspace[];
@@ -962,36 +939,26 @@ extern C  ctype[];
 extern const double dzero;
 extern D        inf;
 extern D        infm;
-// obsolete extern A        iv0;
-// obsolete extern A        iv1;
 extern I Biv0[];
 #define iv0 ((A)&Biv0)
 extern I Biv1[];
 #define iv1 ((A)&Biv1)
 extern D        jnan;           /* "nan" name conflict under Solaris       */
-// obsolete extern I        liln;
-// obsolete extern C        minus0[];
 extern A        mnuvxynam[6];
 extern void     moveparseinfotosi(J);
-// obsolete extern A        numv[];
 extern I Bnum[][9-SY_64];
 #define zeroionei(n) ((A)(Bnum+(n)))
 #define num(n) ((A)(Bnum+2+(n)-NUMMIN))
 #define I1mem (Bnum[1][8-SY_64])  // 1 stored in memory
-// obsolete extern A        numvr[3];
 extern struct Bd1 Bnumvr[];
 #define numvr(n) ((A)(Bnumvr+(n)))
-// obsolete extern A        onehalf;
 extern struct Bd1 Bonehalf;
 #define onehalf ((A)&Bonehalf)
 extern D        pf;
-// obsolete extern A        pie;            /* "pi" name conflict                      */
 extern struct Bd1 Bpie;
 #define pie ((A)&Bpie)
-// obsolete extern A        pst[];
 extern PRIM     primtab[];
 extern const UI4      shortrange[3][4];
-// obsolete extern A        zeroionei[2];
 extern Z        zeroZ;
 extern const dcomplex zone;
 extern const dcomplex zzero;

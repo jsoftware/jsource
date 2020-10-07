@@ -32,7 +32,6 @@ A jtevery(J jt, A w, A fs){A * RESTRICT wv,x,z,* RESTRICT zv;
  A virtw; I flags;  // flags are: ACINPLACE=pristine result; JTWILLBEOPENED=nonrecursive result; BOX=input was boxed; ACPERMANENT=input was inplaceable pristine, contents can be inplaced
  // If the result will be immediately unboxed, we create a NONrecursive result and we can store virtual blocks in it.  This echoes what result.h does.
  flags=ACINPLACE|((I)jtinplace&JTWILLBEOPENED)|(AT(w)&BOX);
-// obsolete  flags=ACINPLACE|((I)jtinplace&JTWILLBEOPENED)|(AT(w)&BOX)|((AC(w)>>(ACINPLACEX-ACPERMANENTX))&((I)jtinplace<<(ACPERMANENTX-JTINPLACEWX))&(AFLAG(w)<<(ACPERMANENTX-AFPRISTINEX))&ACPERMANENT);
  // Get input pointer
  I virtblockw[NORMAH];  // space for a virtual block of rank 0
  if(likely(flags&BOX)){virtw=*(wv=AAV(w));  // if input is boxed, point to first box
@@ -49,7 +48,6 @@ A jtevery(J jt, A w, A fs){A * RESTRICT wv,x,z,* RESTRICT zv;
  zv=AAV(z);
  // Get jt flags to pass to next level - take them from  fs, so that we always inplace this verb, which will allow us to set pristinity better
  // We must remove raze flags since we are using them here
-// obsolete jtinplace=(J)((I)jt+((flags>>(ACPERMANENTX-JTINPLACEWX))&(FAV(fs)->flag>>(VJTFLGOK1X-JTINPLACEWX))&JTINPLACEW));
  jtinplace=(J)((I)jt+((FAV(fs)->flag>>(VJTFLGOK1X-JTINPLACEWX))&JTINPLACEW));
  // If the verb returns its input block, we will have to turn off pristinity of the arg.  Replace w by its backing block
  if(AFLAG(w)&AFVIRTUAL)w=ABACK(w);
@@ -59,9 +57,7 @@ A jtevery(J jt, A w, A fs){A * RESTRICT wv,x,z,* RESTRICT zv;
   // If the input is inplaceable, there is no more use for it after this verb.  If it was pristine, every block in it is DIRECT and was either permanent or inplaceable when it was added; so if it's
   // not PERMANENT it is OK to change the usecount to inplaceable.  We must remove inplaceability on the usecount after execution, in case the input block is recursive and the contents now show a count of 2
   // We may create a block with usecount 8..2,  That's OK, because it cannot be fa'd unless it is ra'd first, and the ra will wipe out the inplaceability.  We do need to keep the usecount accurate, though.
-#if 1  // don't try inplacing in boxes yet  scaf
   AC(virtw)|=(AC(virtw)-(flags&ACPERMANENT))&ACINPLACE;
-#endif
   if(!(x=CALL1IP(f1,virtw,fs))){ // run the user's verb
    AC(virtw)&=~ACINPLACE; R0;  // make sure we reset the usecounts of the virtual blocks in case of error
   }
@@ -74,11 +70,10 @@ A jtevery(J jt, A w, A fs){A * RESTRICT wv,x,z,* RESTRICT zv;
   }else{
     // not DIRECT.  result must be non-pristine, and we need to turn off pristinity of x since we are going to incorporate it
     flags&=~ACINPLACE;  // result not pristine
-// obsolete     {I aflg=AFLAG(x); A awbase=x; if(unlikely(aflg&AFVIRTUAL)){awbase=ABACK(x); aflg=AFLAG(awbase);} AFLAG(awbase)=aflg&~AFPRISTINE;}  // x can never be pristine, since is being incorped
     {PRISTCLR(x)}  // x can never be pristine, since is being incorped
   }
   // Restore usecount to virtw.  We can't just store back what it was, because it may have been modified in the verb.
-#if 1  // scaf
+#if 1  // scaf should not be required
   AC(virtw)&=~ACINPLACE;
 #endif
   ASSERT(!(SPARSE&AT(x)),EVNONCE);
@@ -122,52 +117,6 @@ A jtevery(J jt, A w, A fs){A * RESTRICT wv,x,z,* RESTRICT zv;
 DF2(jtevery2self){R jtevery2(jt,a,w,FAV(self)->fgh[0]);}   // replace u&.> with u and process
 // u&.>, but w may be a gerund, which makes the result a list of functions masquerading as an aray of boxes
 A jtevery2(J jt, A a, A w, A fs){A*av,*wv,x,z,*zv;
-#if 0  // obsolete 
-// todo kludge should rewrite with single flag word
- RZ(a&&w);F2PREFIP;
- AF f2=FAV(fs)->valencefns[1];
- // Get the number of atoms, and the number of times to repeat the short side.
- // The repetition is the count of the surplus frame.
- I rpti;  // number of times short frame must be repeated
- I natoms;  // total # cells
- C flags;  // 20=w is boxed 40=a is boxed 1=w is repeated 2=a is repeated
- {
-  I ar=AR(a); I wr=AR(w);
-  I cf=ar; A la=w; cf=ar<wr?cf:wr; la=ar<wr?la:a; I lr=ar+wr-cf;  // #common frame, Ablock with long shape, long rank.
-  PROD(rpti,lr-cf,AS(la)+cf);
-  natoms=MAX(AN(a),AN(w)); natoms=rpti==0?rpti:natoms;  // number of atoms.  Beware of empty arg with surplus frame containing 0; if an arg is empty, so is the result
-  flags=(C)(REPSGN(1-rpti)&(SGNTO0(ar-wr)+1));  // if rpti<2, no repeat; otherwise repeat short frame 1 if ar>wr 2 if wr>ar
-  // Verify agreement
-  ASSERTAGREE(AS(a),AS(w),cf);  // frames must agree
-  GATV(z,BOX,natoms,lr,AS(la)); if(!natoms)R z; zv=AAV(z);  // make sure we don't fetch outside empty arg
- }
- A virtw;
- // create virtual blocks if needed
- I virtblockw[NORMAH+1];  // space for a virtual block of rank 0
- if(BOX&AT(w)){flags|=BOX; virtw=*(wv=AAV(w));}  // if input is boxed, point to first box
- else{
-  // if input is not boxed, use a faux-virtual block to point to the atoms.  In this case wv is not needed and we use it for the length of an atom
-  fauxvirtual(virtw,virtblockw,w,0,ACUC1); AN(virtw)=1; wv=(A*)bpnoun(AT(w));
- }
- A virta;
- I virtblocka[NORMAH+1];  // space for a virtual block of rank 0
- if(BOX&AT(a)){flags|=BOX<<1; virta=*(av=AAV(a));}  // if input is boxed, point to first box
- else{
-  // if input is not boxed, use a faux-virtual block to point to the atoms.  In this case av is not needed and we use it for the length of an atom
-  fauxvirtual(virta,virtblocka,a,0,ACUC1); AN(virta)=1; av=(A*)bpnoun(AT(a));
- }
- // Loop for each cell.  Increment the pointer unless the side is being repeated and the repeat-count has not expired.
- // Break in the middle of the loop to avoid fetching out of bounds to get the next address from [aw]v
-// obsolete  I rpt=rpti; while(1){EVERYI(CALL2(f2,virta,virtw,fs)); if(!--natoms)break; if(!(flags&2)||(--rpt==0&&(rpt=rpti,1))){if(flags&(BOX<<1))virta=*++av;else AK(virta)+=(I)av;} if(!(flags&1)||(--rpt==0&&(rpt=rpti,1))){if(flags&BOX)virtw=*++wv;else AK(virtw)+=(I)wv;} }
- I rpt=rpti=-rpti; while(1){
-  EVERYI(CALL2(f2,virta,virtw,fs)); if(!--natoms)break;
-  ++rpt; I endrpt=REPSGN(rpt); rpt=rpt==0?rpti:rpt;  // endrpt=0 if end of repeat, otherwise ~0.  Reload rpt at end
-  if(!(flags&endrpt&2)){if(flags&(BOX<<1))virta=*++av;else AK(virta)+=(I)av;}  // advance unrepeated arg
-  if(!(flags&endrpt&1)){if(flags&BOX)virtw=*++wv;else AK(virtw)+=(I)wv;}
- }
- R z;
-}
-#else
  RZ(a&&w);F2PREFIP;
  AF f2=FAV(fs)->valencefns[1];
  // Get the number of atoms, and the number of times to repeat the short side.
@@ -215,7 +164,6 @@ A jtevery2(J jt, A a, A w, A fs){A*av,*wv,x,z,*zv;
  // We must remove raze flags since we are using them here
  // If the arguments are the same, we turn off inplacing for the function but not for the argument blocks.  It only matters if a block is returned: then
  // it's OK to treat the return as pristine the arguments are zombie, even if noninplaceable ones
-// obsolete jtinplace=(J)((I)jt+((flags>>(ACPERMANENTX-JTINPLACEWX))&(FAV(fs)->flag>>(VJTFLGOK1X-JTINPLACEWX))&JTINPLACEW));
  jtinplace=(J)((I)jt+((FAV(fs)->flag>>(VJTFLGOK2X-JTINPLACEWX))&(a!=w))*(JTINPLACEW+JTINPLACEA));
  // If the verb returns its input block, we will have to turn off pristinity of the arg.  Replace w by its backing block
  if(AFLAG(w)&AFVIRTUAL)w=ABACK(w);
@@ -228,12 +176,10 @@ A jtevery2(J jt, A a, A w, A fs){A*av,*wv,x,z,*zv;
   // If the input is inplaceable, there is no more use for it after this verb.  If it was pristine, every block in it is DIRECT and was either permanent or inplaceable when it was added; so if it's
   // not PERMANENT it is OK to change the usecount to inplaceable.  We must remove inplaceability on the usecount after execution, in case the input block is recursive and the contents now show a count of 2
   // We may create a block with usecount 8..2,  That's OK, because it cannot be fa'd unless it is ra'd first, and the ra will wipe out the inplaceability.  We do need to keep the usecount accurate, though.
-#if 1  // don't try inplacing in boxes yet  scaf
   AC(virta)|=(AC(virta)-(flags&ACPERMANENT))&ACINPLACE;
   AC(virtw)|=(AC(virtw)-((flags<<1)&ACPERMANENT))&ACINPLACE;
-#endif
   if(!(x=CALL2IP(f2,virta,virtw,fs))){; // run the user's verb
-   AC(virtw)&=~ACINPLACE; AC(virta)&=~ACINPLACE; R0;  // make sure usecount restroed on error
+   AC(virtw)&=~ACINPLACE; AC(virta)&=~ACINPLACE; R0;  // make sure usecount restored on error
   }
   // If x is DIRECT inplaceable, it must be unique and we can inherit them into a pristine result.  Otherwise clear pristinity
   if(AT(x)&DIRECT){   // will predict correctly
@@ -245,11 +191,10 @@ A jtevery2(J jt, A a, A w, A fs){A*av,*wv,x,z,*zv;
   }else{
     // not DIRECT.  result must be non-pristine, and we need to turn off pristinity of x since we are going to incorporate it
     flags&=~ACINPLACE;  // result not pristine
-// obsolete     {I aflg=AFLAG(x); A awbase=x; if(unlikely(aflg&AFVIRTUAL)){awbase=ABACK(x); aflg=AFLAG(awbase);} AFLAG(awbase)=aflg&~AFPRISTINE;}  // x can never be pristine, since is being incorped
     {PRISTCLR(x)}  // x can never be pristine, since is being incorped
   }
   // Restore usecount to virta and virtw.  We can't just store back what it was, because it may have been modified in the verb.
-#if 1  // scaf
+#if 1  // scaf should not be required
   AC(virtw)&=~ACINPLACE; AC(virta)&=~ACINPLACE;
 #endif
   ASSERT(!(SPARSE&AT(x)),EVNONCE);
@@ -292,7 +237,6 @@ A jtevery2(J jt, A a, A w, A fs){A*av,*wv,x,z,*zv;
  R z;
 }
 
-#endif
 // apply f2 on items of a or w against the entirety of the other argument.  Pass on rank of f2 to reduce rank nesting
 DF2(jteachl){RZ(a&&w&&self); I lcr=AR(a)-1<0?0:AR(a)-1; I lr=lr(self); lr=lcr<lr?lcr:lr; I rr=rr(self); rr=AR(w)<rr?AR(w):rr; R rank2ex(a,w,self,lr,rr,lcr,AR(w),FAV(self)->valencefns[1]);}
 DF2(jteachr){RZ(a&&w&&self); I rcr=AR(w)-1<0?0:AR(w)-1; I rr=rr(self); rr=rcr<rr?rcr:rr; I lr=lr(self); lr=AR(a)<lr?AR(a):lr; R rank2ex(a,w,self,lr,rr,AR(a),rcr,FAV(self)->valencefns[1]);}
@@ -309,8 +253,6 @@ static DF2(jtunderh2){F2PREFIP;DECLFGH; R (FAV(hs)->valencefns[1])(jtinplace,a,w
 static DF1(jtundco1){F1PREFIP;DECLFG;A fullf; RZ(fullf=atop(inv(sv->localuse.lvp[0]),sv->fgh[2])); R (FAV(fullf)->valencefns[0])(FAV(fullf)->flag&VJTFLGOK1?jtinplace:jt,w,fullf);}
 static DF2(jtundco2){F2PREFIP;DECLFG;A fullf; RZ(fullf=atop(inv(sv->localuse.lvp[0]),sv->fgh[2])); R (FAV(fullf)->valencefns[1])(FAV(fullf)->flag&VJTFLGOK2?jtinplace:jt,a,w,fullf);}
 
-// obsolete // u&.> main entry point.  Does not support inplacing.
-// obsolete static DF2(jteach2){DECLF; R every2(a,w,fs,f2);}
 // versions for rank 0 (including each).  Passes inplaceability through
 // if there is only one cell, process it through under[h]1, which understands this type; if more, loop through
 static DF1(jtunder10){R jtrank1ex0(jt,w,self,jtunder1);}  // pass inplaceability through
@@ -351,7 +293,6 @@ F2(jtunder){A x,wvb=w;AF f1,f2;B b,b1;C c,uid;I gside=-1;V*u,*v;
  I flag = (FAV(a)->flag&v->flag&VASGSAFE) + (VJTFLGOK1|VJTFLGOK2);
  // If v is WILLOPEN, so will the compound be - for all valences
  switch(v->id&gside){  // never special if gerund - this could evaluate to 0 or 1, neither of which is one of these codes
-// obsolete  case COPE:  f1=jtunderh10; f2=jtunderh20; flag&=~(VJTFLGOK1|VJTFLGOK2); flag2|=VF2ATOPOPEN1|VF2ATOPOPEN2A|VF2ATOPOPEN2W|VF2BOXATOP1|VF2BOXATOP2; break;   // &.>
  case COPE:
   R fdef(VF2WILLOPEN1|VF2WILLOPEN2A|VF2WILLOPEN2W,CUNDER,VERB,jteveryself,jtevery2self,a,w,0,flag|VIRS1,0,0,0);   // this is the commonest case.  Return fast, avoiding analysis below
    // We do not expose BOXATOP or ATOPOPEN flags, because we want all u&.> to go through this path & thus we don't want to allow other loops to break in

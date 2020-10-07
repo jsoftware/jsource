@@ -590,7 +590,6 @@ static __forceinline I icmpeq(I *x, I *y, I n, __m256i endmask) {
   u=_mm256_loadu_si256 ((__m256i*)x); v=_mm256_loadu_si256 ((__m256i*)y); if(~_mm256_movemask_epi8(_mm256_cmpeq_epi8(u,v)))R 1; x+=NPAR; y+=NPAR;
   }
  u=_mm256_maskload_epi64(x,endmask); v=_mm256_maskload_epi64(y,endmask); 
-// obsolete  R 0!=~_mm256_movemask_epi8(_mm256_or_si256(tailmask,_mm256_cmpeq_epi8(u,v)));  // no miscompares, compare equal
  R 0!=~_mm256_movemask_epi8(_mm256_cmpeq_epi8(u,v));  // no miscompares, compare equal
 }
 #else
@@ -722,21 +721,7 @@ static IOFX(Z,UI4,jtioz02,, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n)
 // reflexive.  Because the compare for expa does not force intolerance, we must do so here.  This is required only for boxes, since the other expas are intolerant
 #define TFINDBY(TH,expa,expw,fstmt0,endtest1,fstmt1)   \
  {HASHSLOT(hia(1.0,*v))  PUSHCCT(1.0) FINDWR(TH,expa); POPCCT TFINDBX(TH,expa,expw,fstmt0,endtest1,fstmt1)}
-#if 0 // obsolete
- HASHSLOT(hia(tl,*v)) jx=j; FINDRD(expw,j,asct==hj,fstmt0); il=hj;   \
- HASHSLOT(hia(tr,*v)) if(j!=jx){FINDRD(expw,j,endtest1,fstmt1);}  \
- }
-#endif
-#if 0 // obsolete 
-// reflexive for nub/key.  Tolerant for expa.  Each FINDRD sets hj, leaving il and hj at the end; the lower wins
-#define TFINDBYTOL(TH,expa,expw,fstmt0,endtest1,fstmt1)   \
- {HASHSLOT(hia(1.0,*v))  FINDWR(TH,expa); TFINDBX(TH,expa,expw,fstmt0,endtest1,fstmt1)}
-#if 0   // obsolete 
- HASHSLOT(hia(tl,*v)) jx=j; FINDRD(expw,j,asct==hj,fstmt0); il=hj;   \
- HASHSLOT(hia(tr,*v)) if(j!=jx){FINDRD(expw,j,endtest1,fstmt1);}  \
- }
-#endif
-#endif
+
 // reflexive for nub/key.  First search the table, then insert only if no match found.
 // Each FINDRD sets hj, leaving il and hj at the end; set il to be the lower.
 // if not found, set il=i (that is, match on the newly-added element), and add that element
@@ -768,17 +753,10 @@ static IOFX(Z,UI4,jtioz02,, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n)
             }else{DQ(wsct, FXY(TH,expa,expw,goto found2;,hj==asct,goto found2;); {MC(zc,v,k); zc+=k;}; found2: v=(T*)((C*)v+k); );}  \
  }
 // for ~.  Same idea, but reflexive.  FYY is always TFINDBYKEY
-#if 0  // obsolete 
-#define TMVY(T,TH,FYY,expa,expw)   \
-  {if(k==sizeof(T)){DO(wsct, FYY(TH,expa,expw,if(hj<i)goto found1;,hj==asct,il=hj;); *(T*)zc=*(T*)v; zc+=(i==il)*sizeof(T); found1: v=(T*)((C*)v+k); );     \
-             }else{DO(wsct, FYY(TH,expa,expw,if(hj<i)goto found0;,hj==asct,if(hj<i)goto found0;); {MC(zc,v,k); zc+=k;}; found0: v=(T*)((C*)v+k); );}   \
- }
-#else
 #define TMVY(T,TH,FYY,expa,expw)   \
   {if(k==sizeof(T)){DO(wsct, FYY(TH,expa,expw,{},hj==asct,il=hj;); *(T*)zc=*(T*)v; zc+=(i==il)*sizeof(T); v=(T*)((C*)v+k); );     \
              }else{DO(wsct, FYY(TH,expa,expw,{},hj==asct,il=hj;); if(il==i){MC(zc,v,k); zc+=k;}; v=(T*)((C*)v+k); );}   \
  }
-#endif
 
 #define SETXNEW  __m128d tltr; tltr=_mm_set_pd(tl,tr); xnew=xrot=xval=_mm_sub_pd(tltr,tltr);
 // Do the operation.  Build a hash for a except when self-index
@@ -1067,7 +1045,7 @@ fnd001: ; I res=(avv-av)+CTTZ(cmps); res=(cmps==0)?asct:res; *(I*)zv=res; zv=(I*
        DO(wsct, __m256d x=_mm256_set1_pd(*wv); D*avv=av; D*avend=av+((asct-1)&(-(I)NPAR)); int cmps; 
         while(1){if(avv==avend)break; if(cmps=_mm256_movemask_pd(_mm256_cmp_pd(x,_mm256_loadu_pd(avv),_CMP_EQ_OQ)))goto fnd004; avv+=NPAR;} 
         cmps=_mm256_movemask_pd(_mm256_and_pd(_mm256_castsi256_pd (endmask),_mm256_cmp_pd(x,_mm256_maskload_pd(avv,endmask),_CMP_EQ_OQ))); 
-fnd004: ; I res=(avv-av)+CTTZ(cmps); /* obsolete res=(cmps==0)?asct:res;*/ *(I*)zv=res; nuniq+=(res-i)==0; ((I*)zv)[res-i]++; zv=(I*)zv+1;      wv+=q;);
+fnd004: ; I res=(avv-av)+CTTZ(cmps);  *(I*)zv=res; nuniq+=(res-i)==0; ((I*)zv)[res-i]++; zv=(I*)zv+1;      wv+=q;);
       av+=p; wv=(1==wc)?(D*)v:wv;); AM(z)=nuniq;} break; 
    case IOSCCASE(XDX,0,IICO): {D *wv=(D*)v; D*av=(D*)u; __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-asct)&(NPAR-1)))); 
       DQ(ac, 
@@ -1092,16 +1070,6 @@ fnd003: *(C*)zv=SGNTO0(-cmps); zv=(C*)zv+1;      wv+=q;);
         y=_mm256_maskload_pd(avv,endmask); cmps=_mm256_movemask_pd(_mm256_and_pd(_mm256_castsi256_pd (endmask),_mm256_xor_pd(_mm256_cmp_pd(x,_mm256_mul_pd(cct,y),_CMP_GT_OQ),_mm256_cmp_pd(tolx,y,_CMP_GE_OQ)))); 
 fnd021: ; I res=(avv-av)+CTTZ(cmps); res=(cmps==0)?asct:res; *(I*)zv=res; zv=(I*)zv+1;      wv+=q;);
       av+=p; wv=(1==wc)?(D*)v:wv;);} break;
-#if 0  // obsolete - not allowed
-   case IOSCCASE(FLX,0,IFORKEY): {D *wv=(D*)v; D*av=(D*)u; __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-asct)&(NPAR-1)))); I nuniq=0;
-      __m256d cct=_mm256_set1_pd(jt->cct);
-      DQ(ac, 
-       DO(wsct, __m256d x=_mm256_set1_pd(*wv); __m256d y; __m256d tolx=_mm256_mul_pd(x,cct); D*avv=av; D*avend=av+((asct-1)&(-(I)NPAR)); int cmps; 
-        while(1){if(avv==avend)break; y=_mm256_loadu_pd(avv); if(cmps=_mm256_movemask_pd(_mm256_xor_pd(_mm256_cmp_pd(x,_mm256_mul_pd(cct,y),_CMP_GT_OQ),_mm256_cmp_pd(tolx,y,_CMP_GE_OQ))))goto fnd024; avv+=NPAR;} 
-        y=_mm256_maskload_pd(avv,endmask); cmps=_mm256_movemask_pd(_mm256_and_pd(_mm256_castsi256_pd (endmask),_mm256_xor_pd(_mm256_cmp_pd(x,_mm256_mul_pd(cct,y),_CMP_GT_OQ),_mm256_cmp_pd(tolx,y,_CMP_GE_OQ)))); 
-fnd024: ; I res=(avv-av)+CTTZ(cmps); /* obsolete res=(cmps==0)?asct:res;*/ *(I*)zv=res; nuniq+=(res-i)==0; ((I*)zv)[res-i]++; zv=(I*)zv+1;      wv+=q;);
-      av+=p; wv=(1==wc)?(D*)v:wv;); AM(z)=nuniq;} break;
-#endif
    case IOSCCASE(FLX,0,IICO): {D *wv=(D*)v; D*av=(D*)u; __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-asct)&(NPAR-1)))); 
       __m256d cct=_mm256_set1_pd(jt->cct);
       DQ(ac, 
@@ -1137,7 +1105,7 @@ fnd011: ; I res=(avv-av)+CTTZ(cmps); res=(cmps==0)?asct:res; *(I*)zv=res; zv=(I*
        DO(wsct, __m256i x=_mm256_set1_epi64x(*wv); I*avv=av; I*avend=av+((asct-1)&(-(I)NPAR)); int cmps; 
         while(1){if(avv==avend)break; if(cmps=_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_cmpeq_epi64(x,_mm256_loadu_si256((__m256i*)avv)))))goto fnd014; avv+=NPAR;} 
         cmps=_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_and_si256(endmask,_mm256_cmpeq_epi64(x,_mm256_maskload_epi64(avv,endmask))))); 
-fnd014: ; I res=(avv-av)+CTTZ(cmps); /* obsolete res=(cmps==0)?asct:res;*/ *(I*)zv=res; nuniq+=(res-i)==0; ((I*)zv)[res-i]++; zv=(I*)zv+1;      wv+=q;);
+fnd014: ; I res=(avv-av)+CTTZ(cmps);  *(I*)zv=res; nuniq+=(res-i)==0; ((I*)zv)[res-i]++; zv=(I*)zv+1;      wv+=q;);
       av+=p; wv=(1==wc)?(I*)v:wv;); AM(z)=nuniq;} break; 
    case IOSCCASE(INTX,0,IICO): {I *wv=(I*)v; I*av=(I*)u; __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-asct)&(NPAR-1)))); 
       DQ(ac, 
@@ -1462,7 +1430,6 @@ static IOFXWS(jtio42w,I,US)  static IOFXWS(jtio44w,I,UI4)  // INT-sized items, u
 // The return is a CR struct holding max and range+1.  But if the range+1 is > maxrange,
 // we abort and return 0 range.
 // min and max are initial values for min/max
-#if 1
 #if C_AVX2 || EMU_AVX2
 CR condrange(I *s,I n,I min,I max,I maxrange){CR ret;
  if(!n)goto fail;
@@ -1526,39 +1493,6 @@ CR condrange(I *s,I n,I min,I max,I maxrange){CR ret;
  R ret;
 fail: ret.min=ret.range=0; R ret;
 }
-#else
-CR condrange(I *s,I n,I min,I max,I maxrange){CR ret;I i,min0,min1,max0,max1;I x;
- // Unroll loop once to keep the compares rolling
- if(!n)goto fail;
- min0=min1=min; max0=max1=max;  // initial values
- if(n&1)min1=max1=*s++;  // if odd number of words, take first word to even it up
- if(n>>=1){  // n=#pairs of words left
-  --n; i=n&(ASSESSBLOCKSIZE/2-1); n>>=5;  // do a block of compares to get on boundary; n=#64-words blocks left, i=size-1 of this block
-  do{  // We keep this short loop separate because it always finishes with a misprediction.
-   x=s[0]; max0=(x>max0)?x:max0; min0=(x<min0)?x:min0; // this generates CMOVcc in VS
-   x=s[1]; max1=(x>max1)?x:max1; min1=(x<min1)?x:min1;
-   s+=2;  // advance to next set
-  }while(--i>=0);
-  while(n--){  // Do the remaining 64-word blocks
-   // Every so often, coalesce the results & see if input maxrange has been exceeded
-   max0=(max1>max0)?max1:max0; min0=(min1<min0)?min1:min0; if((UI)(max0-min0)>=(UI)maxrange)goto fail;
-   i=(ASSESSBLOCKSIZE/4-1);  // # 4-groups-1
-   do{  // This loop, which is always 64 words, will never mispredict
-    x=s[0]; max0=(x>max0)?x:max0; min0=(x<min0)?x:min0; // this generates CMOVcc in VS
-    x=s[1]; max1=(x>max1)?x:max1; min1=(x<min1)?x:min1;
-    x=s[2]; max0=(x>max0)?x:max0; min0=(x<min0)?x:min0;
-    x=s[3]; max1=(x>max1)?x:max1; min1=(x<min1)?x:min1;
-    s+=4;  // advance to next set
-   }while(--i>=0);
-  }
- }
- // combine last results
- max0=(max1>max0)?max1:max0; min0=(min1<min0)?min1:min0; if((UI)(max0-min0)>=(UI)maxrange)goto fail;
- ret.min=min0; ret.range=max0-min0+1;  // because the tests succeed, this will give the proper range
- R ret;
-fail: ret.min=ret.range=0; R ret;
-}
-#endif
 // Same for 4-bytes types, such as C4T
 CR condrange4(C4 *s,I n,I min,I max,I maxrange){CR ret;I i; C4 min0,min1,max0,max1;C4 x;
  // Unroll loop once to keep the compares rolling
@@ -1783,12 +1717,11 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
   // prehash is set if w argument is omitted (we are just prehashing the a arg)
   f=af?af:wf; s=af?as:ws; r=acr?acr-1:0; f1=wcr-r;  // see below.  f1<0 here means cell of w has rank smaller than the item of a-cell, thus there are no matches possible
   I f1clamp=REPSGN(f1); I disagree; TESTDISAGREE(disagree,as+af+1,ws+wf+(~f1clamp&f1),r)
-// obsolete   if(0>f1||ICMP(as+af+1,ws+wf+f1,r)){I f0,*v;A z;
   if(unlikely(f1clamp<disagree)){I f0,*v;A z;   // true if f1<0 OR disagree!=0
    // Dyad where shape of an item of a does not match shape of a cell of w.  Return appropriate not-found
    if(((af-wf)&-af)<0){f1+=wf-af; wf=af;}  // see below for discussion about long frame in w
    I witems=ws[0]; witems=wr>r?witems:1;  // # items of w, in case we are doing i.&0 eg on result of e., which will have that many items
-   SETICFR(a,af,acr,m); /* obsolete m=acr?as[af]:1;*/ f0=MAX(0,f1); RE(zn=mult(prod(f,s),prod(f0,ws+wf)));
+   SETICFR(a,af,acr,m);  f0=MAX(0,f1); RE(zn=mult(prod(f,s),prod(f0,ws+wf)));
    switch(mode&IIOPMSK){
     case IIDOT:  
     case IICO:    GATV(z,INT,zn,f+f0,s); if(af)MCISH(f+AS(z),ws+wf,f0); v=AV(z); DQ(zn, *v++=m;); R z;
@@ -1823,7 +1756,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
  // m=target axis length, n=target item # atoms
  // c # target items in a left-arg cell, which may include multiple right-arg cells
  // k=target item # bytes, h->hash table or to 0   z=result   p=size of hashtable
- SETICFR(a,af,acr,m); /* obsolete m=acr?as[af]:1;*/ t=(mode&IPHCALC)?at:maxtyped(at,wt); klg=bplg(t);   // m=length of target axis; the common type; klg=lg of #bytes/atom of common type
+ SETICFR(a,af,acr,m);  t=(mode&IPHCALC)?at:maxtyped(at,wt); klg=bplg(t);   // m=length of target axis; the common type; klg=lg of #bytes/atom of common type
  // Now that we have audited the shape of the cells of a/w to make sure they have commensurate items, we need to revise
  // the frame of w if it has the longer frame.  This can happen only where IRS is supported, namely ~: i. i: e. .
  // For those verbs, we get the effect of repeating a cell of a by having a macrocell of w, which is then broken into target-cell sizes.
@@ -1834,7 +1767,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
   PROD1(n,acr-1,as+af+1); k=n<<klg; // n=number of atoms in a target item; k=number of bytes in a target item
   PROD(ac,af,as); PROD(wc,wf,ws); PROD1(c,MAX(f1,-1),ws+wf);  // ?c=#cells in a & w;  c=#target items (and therefore #result values) in a result-cell.  -1 so we don't fetch outside the shape
   DPMULDE(af?ac:wc,c,zn);   // #results is results/cell * number of cells; number of cells comes from ac if a has frame, otherwise w.  If both have frame, a's must be longer, use it
-  ak=(/*obsolete acr?as[af]*k:k*/m*k)&REPSGN(1-ac); wk=(c*k)&REPSGN(1-wc);   // # bytes in a cell, but 0 if there are 0 or 1 cells
+  ak=(m*k)&REPSGN(1-ac); wk=(c*k)&REPSGN(1-wc);   // # bytes in a cell, but 0 if there are 0 or 1 cells
   if(!af)c=zn;   // if af=0, wc may be >1 if there is w-frame.  In that case, #result/a-cell must include the # w-cells.  This has been included in zn
  }else{
   // An argument is empty.  We must beware of overflow in counting cells.  Just do it the old slow way
@@ -1849,8 +1782,6 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
  if(likely(TYPESEQ(at,wt))){fnx=0;
  }else{
   fnx=HOMONE(at,wt)?0:-2; /* noavx jt->min=0; */  // are args compatible?  -2 if not.  MARK is inhomo
-// obsolete   if(((th-1)|(TYPESXOR(t,at)-1))>=0)RZ(a=t&XNUM?xcvt(XMEXMT,a):cvt(t,a))  // convert if th and TYPESXOR both nonzero
-// obsolete   if(((th-1)|(TYPESXOR(t,wt)-1))>=0)RZ(w=t&XNUM?xcvt(XMEXMT,w):cvt(t,w))
   if((fnx|(TYPESXOR(t,at)-1))>=0)RZ(a=cvt(t|VFRCEXMT,a))  // convert if homo and TYPESXOR both nonzero
   if((fnx|(TYPESXOR(t,wt)-1))>=0)RZ(w=cvt(t|VFRCEXMT,w))
   fnx=mode&IPHCALC?0:fnx;  // if prehash, ignore the in homo
@@ -1874,7 +1805,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
     // this will not choose sequential search enough when the cells are large (comparisons then are cheap because of early exit)
   fnx-=1;  // now fnx is -3 for inhomo, -2 for empty, -1 for sequential.  This is ready for lookup.
 //  jtiosc(jt,mode,n,m,c,ac,wc,a,w,z); // simple sequential search without hashing
- }else{// obsolete I b=1.0==jt->cct;  // b means 'intolerant comparison'
+ }else{
 // jtioa* BOX
 // jtiox  XNUM
 // jtioq  RAT
@@ -2017,7 +1948,6 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
     mode |= IIMODFORCE0;
 #endif
     // we can use the small table.  See if there already is one we can use, otherwise allocate one
-// obsolete    if((mode&IPHCALC)||!(h=jt->idothash0)){
     if(unlikely((REPSGN(SGNIFNOT(mode,IPHCALCX))&(I)(h=jt->idothash0))==0)){   // precalc, or  small table doesn't exist
      GATV0(h,INT,((SMALLHASHMAX*sizeof(US)+SZI+(SZI-1))>>LGSZI),0);  // size too big for GAT
      // Fill in the header
@@ -2045,7 +1975,6 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
          // for small-range to round up to an even word of an I, and possibly padding leading/trailing bytes; for hashing, we need a sentinel at the beginning and the end
     if(unlikely((mode&IPHCALC)||!((h=jt->idothash1) && IHAV(h)->datasize >= psizeinbytes))){  // scaf combine
      // if we have to reallocate, free the old one
-// obsolete      if(!(mode&IPHCALC)&&h){fr(h); jt->idothash1=0;}  // free old, and clear pointer in case of allo error  // scaf combine
      if(unlikely(REPSGN(SGNIFNOT(mode,IPHCALCX))&(I)h)){fr(h); jt->idothash1=0;}  // free old, and clear pointer in case of allo error
      // allocate the new one and fill it in
      GATV0(h,INT,(psizeinbytes+sizeof(IH)+(SZI-1))>>LGSZI,0);
@@ -2056,7 +1985,6 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
      hh->currenthi = hh->previousindexend = 0;  // This is the minimum need to initialize when FORCE0 is set
      // If the hash size is moderate, there is a gain to be had by preserving it between searches (it will already be in cache).  On the other hand,
      // it would be a shame to tie up vast amounts of memory waiting for a large search.  To compromise, we keep the buffer unless it is much bigger than the L3 cache
-// obsolete      if(!(mode&IPHCALC)&&hh->datasize<5*L3CACHESIZE){ras(h); jt->idothash1=h;}  // If not prehashing a table, save this and protect against removal
      if(likely((SGNIFNOT(mode,IPHCALCX)&(hh->datasize-5*L3CACHESIZE))<0)){ras(h); jt->idothash1=h;}  // If not prehashing a table, save this and protect against removal if not prehash and table not huge
     }
     // switch the routine pointer to the big table
@@ -2076,8 +2004,6 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
   case IIDOT: case IFORKEY:
   case IICO:    GATV(z,INT,zn,f+f1,     s); if(af)MCISH(f+AS(z),ws+wf,f1); break;
   case INUBSV:  GATV(z,B01,zn,f+f1+!acr,s); if(af)MCISH(f+AS(z),ws+wf,f1); if(!acr)AS(z)[AR(z)-1]=1; break;
-// obsolete   case INUB:    q=m+1; GA(z,t,mult(q,aii(a)),MAX(1,wr),ws); AS(z)[0]=q; break;  // +1 because we speculatively overwrite.  Was MIN(m,p) but we don't have the range yet
-// obsolete   case INUB:    PROD(q,AR(a)-1,AS(a)+1) GA(z,t,mult(m+1,aii(a)),MAX(1,wr),ws); AS(z)[0]=m+1; break;  // +1 because we speculatively overwrite.  Was MIN(m,p) but we don't have the range yet
   case INUB:    {I q; PRODX(q,AR(a)-1,AS(a)+1,m+1) GA(z,t,q,MAX(1,wr),ws); AS(z)[0]=m+1; break;}  // +1 because we speculatively overwrite.  Was MIN(m,p) but we don't have the range yet   scaf yes we do
   case ILESS:   GA(z,t,AN(w),MAX(1,wr),ws); break;
   case IEPS:    GATV(z,B01,zn,f+f1,     s); if(af)MCISH(f+AS(z),ws+wf,f1); break;
@@ -2095,7 +2021,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
 
  // Create result for empty/inhomogeneous arguments, & return
  if(unlikely(fnx<-1)){  // if empty (-2) or inhomo (-3), create the result immediately
-  I witems; SETICFR(w,0,wr>r,witems); /* obsolete = wr>r?ws[0]:1;*/  // # items of w, in case we are doing i.&0 eg on result of e., which will have that many items
+  I witems; SETICFR(w,0,wr>r,witems);   // # items of w, in case we are doing i.&0 eg on result of e., which will have that many items
   switch(mode&(IIOPMSK)){  // if PHCALC, we never got here
   // If empty argument or result, or inhomogeneous arguments, return an appropriate empty or not-found
   // We also handle the case of i.&0@:e. when the rank of w is more than 1 greater than the rank of a cell of a;
@@ -2153,14 +2079,12 @@ A jtindexofprehashed(J jt,A a,A w,A hs){A h,*hv,x,z;AF fn;I ar,*as,at,c,f1,k,m,m
  wr=AR(w); ws=AS(w); wt=AT(w);
  r=ar?ar-1:0;
  f1=wr-r;
-// obsolete  RE(c=prod(f1,ws));  // c=#cells of w (and result)
  PRODX(c,f1,ws,1);  // c=#cells of w (and result)
  // audit conformance of input shapes.  If there is an error, pass to the main code to get the error result
  // Use c=0 as an error flag
  c &= REPSGN(~(f1|(ar-r)));   // w must have rank big enough to hold a cell of a.  Clear c if f1<0 or r>ar
  if(ICMP(as+ar-r,ws+f1,r))c=0;  // and its shape at that rank must match the shape of a cell of a
  // If there is any error, switch back to the non-prehashed code.  We must remove any command bits from mode, leaving just the operation type
-// obsolete  if(!(m&&n&&c&&HOMO(t,wt)&&UNSAFE(t)>=UNSAFE(wt)))R indexofsub(mode&IIOPMSK,a,w);
  if(unlikely((-m&-n&-c&NEGIFHOMO(t,wt)&(UNSAFE(wt)-(UNSAFE(t)+1)))>=0))R indexofsub(mode&IIOPMSK,a,w);
 
  // allocate enough space for the result, depending on the type of the operation
@@ -2203,11 +2127,9 @@ F1(jtnubsieve){
 // ~. y  - does not have IRS
 F1(jtnub){ 
  RZ(w);F1PREFIP;
-// obsolete  if(SPARSE&AT(w)||AFLAG(w)&AFNJA)R repeat(nubsieve(w),w); 
  if(unlikely((SPARSE&AT(w))|(AFLAG(w)&AFNJA)))R repeat(nubsieve(w),w);    // sparse or NJA
  A z; RZ(z=indexofsub(INUB,w,w));
  // We extracted from w, so mark it (or its backer if virtual) non-pristine.  If w was pristine and inplaceable, transfer its pristine status to the result.  We overwrite w because it is no longer in use
-// obsolete  I awflg=AFLAG(w); AFLAG(z)|=awflg&((SGNTO0(AC(w))&((I)jtinplace>>JTINPLACEWX))<<AFPRISTINEX); if(unlikely(awflg&AFVIRTUAL)){w=ABACK(w); awflg=AFLAG(w);} AFLAG(w)=awflg&~AFPRISTINE;
  PRISTXFERF(z,w)
  RETF(z);
 }    /* ~.w */
@@ -2219,18 +2141,12 @@ F2(jtless){A x=w;I ar,at,k,r,*s,wr,*ws,wt;
  wt=AT(w); wr=AR(w); r=MAX(1,ar);
  if(ar>1+wr)RCA(a);  // if w's rank is smaller than that of a cell of a, nothing can be removed, return a
  // if w's rank is larger than that of a cell of a, reheader w to look like a list of such cells
-// obsolete  if((-wr&-(r^wr))<0){RZ(x=virtual(w,0,r)); AN(x)=AN(w); s=AS(x); ws=AS(w); k=ar>wr?0:1+wr-r; *s=prod(k,ws); MCISH(1+s,k+ws,r-1);}  //  use fauxvirtual here
  if((-wr&-(r^wr))<0){RZ(x=virtual(w,0,r)); AN(x)=AN(w); s=AS(x); ws=AS(w); k=ar>wr?0:1+wr-r; I s0; PRODX(s0,k,ws,1) s[0]=s0; MCISH(1+s,k+ws,r-1);}  //  use fauxvirtual here
  // if nothing special (like sparse, or incompatible types, or x requires conversion) do the fast way; otherwise (-. x e. y) # y
  // because LESS allocates a large array to hold all the values, we use the slower, less memory-intensive, version if a is mapped
-// obsolete  R !(at&SPARSE)&&HOMO(at,wt)&&TYPESEQ(at,maxtyped(at,wt))&&!(AFLAG(a)&AFNJA)?indexofsub(ILESS,x,a):
-// obsolete      repeat(not(eps(a,x)),a);
-// obsolete  RZ(x=!(at&SPARSE)&&HOMO(at,wt)&&TYPESEQ(at,maxtyped(at,wt))&&!(AFLAG(a)&AFNJA)?indexofsub(ILESS,x,a):
-// obsolete      repeat(not(eps(a,x)),a));
  RZ(x=(NEGIFHOMO(at,wt)&((TYPESXOR(at,maxtyped(at,wt))|(at&SPARSE)|(AFLAG(a)&AFNJA))-1))<0?indexofsub(ILESS,x,a):
      repeat(not(eps(a,x)),a));
  // We extracted from a, so mark it (or its backer if virtual) non-pristine.  If a was pristine and inplaceable, transfer its pristine status to the result
-// obsolete  I aflg=AFLAG(a); AFLAG(x)|=aflg&((SGNTO0(AC(a))&((I)jtinplace>>JTINPLACEAX))<<AFPRISTINEX); if(unlikely(aflg&AFVIRTUAL)){a=ABACK(a); aflg=AFLAG(a);} AFLAG(a)=aflg&~AFPRISTINE;
  PRISTXFERAF(x,a)
  RETF(x);
 }    /* a-.w */

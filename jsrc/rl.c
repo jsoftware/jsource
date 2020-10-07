@@ -14,7 +14,6 @@ static F1(jtlnoun);
 static F1(jtlnum);
 static DF1(jtlrr);
 
-// obsolete #define NUMV(c)  (c==C9||c==CD||c==CA||c==CS)
 #define NUMV(c)  (((1LL<<C9)|(1LL<<CD)|(1LL<<CS)|(1LL<<CA)|(1LL<<CN)|(1LL<<CB))&(1LL<<(c)))
 
 
@@ -55,7 +54,6 @@ static F1(jtltiea){A t,*v,*wv,x,y;B b;C c;I n;
  n=AN(w); wv=AAV(w);  RZ(t=spellout(CGRAVE));
  GATV0(y,BOX,n+n,1); v=AAV(y);
  DO(n, *v++=i?t:mtv; x=wv[i]; c=ID(x); RZ(x=lrr(x)); 
- // obsolete     b=(C)(c-CHOOK)<=(C)(CFORK-CHOOK)||i&&lp(x); RZ(*v++=CALL2(jt->lcp,b,x,0)););
      b=BETWEENC(c,CHOOK,CFORK)||i&&lp(x); RZ(*v++=CALL2(jt->lcp,b,x,0)););
  R raze(y);
 }
@@ -66,7 +64,6 @@ static F1(jtltieb){A pt,t,*v,*wv,x,y;B b;C c,*s;I n;
  GATV0(y,BOX,n+n,1); v=AAV(y);
  if(1>=n)x=mtv; else{GATV0(x,LIT,n-2,1); s=CAV(x); DQ(n-2, *s++='(';);}
  DO(n, x=i==1?t:x; x=i>1?pt:x; *v++=x; x=wv[i]; c=ID(x); RZ(x=lrr(x)); 
- // obsolete      b=(C)(c-CHOOK)<=(C)(CFORK-CHOOK)||i&&lp(x); RZ(*v++=CALL2(jt->lcp,b,x,0)););
      b=BETWEENC(c,CHOOK,CFORK)||i&&lp(x); RZ(*v++=CALL2(jt->lcp,b,x,0)););
  R raze(y);
 }
@@ -264,7 +261,6 @@ static A jtlsymb(J jt,C c,A w){A t;C buf[20],d,*s;I*u;V*v=FAV(w);
 static B laa(A a,A w){C c,d;
  if(!(a&&w))R 0;
  c=ctype[(UC)cl(a)]; d=ctype[(UC)cf(w)];
-// obsolete R (c==C9||c==CA)&&(d==C9||d==CA);
  R ((c|d)&(0xf&~(CA|C9)))^1;  // 1 if c,d both alphameric
 }
 
@@ -341,8 +337,6 @@ static DF1(jtlrr){A hs,t,*tv;C id;I fl,m;V*v;
  GATV0(t,BOX,m,1); tv=AAV(t);
  if(2<m)RZ(tv[2]=lrr(hs));
  // for top-level of gerund (indicated by self!=0), any noun type could not have come from an AR, so return it as is
-// obsolete  if(1<m)RZ(tv[1]=fl&VGERR?CALL1(jt->ltie,self?fxeachacv(gs):fxeach(gs),0L):lrr(gs));
-// obsolete  if(0<m)RZ(tv[0]=fl&VGERL?CALL1(jt->ltie,self?fxeachacv(fs):fxeach(fs),0L):lrr(fs));
  if(1<m)RZ(tv[1]=fl&VGERR?CALL1(jt->ltie,fxeach(gs,(A)&jtfxself[!!self]),0L):lrr(gs));
  if(0<m)RZ(tv[0]=fl&VGERL?CALL1(jt->ltie,fxeach(fs,(A)&jtfxself[!!self]),0L):lrr(fs));
  R linsert(t,w);

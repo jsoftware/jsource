@@ -96,7 +96,6 @@ F2(jtcdot2){A p;I k;
 
 F1(jtpparity){A x,y,z;B *u;I i,j,k,m,n,p,r,*s,*v,*zv;
  RZ(x=cvt(INT,w)); makewritable(x);   // we ALWAYS create a copy of w, because we modify it here
-// obsolete  r=AR(x); s=AS(x); n=AS(x)[r-1]; n=r?n:1; RE(m=prod(r-1,s)); v=AV(x);
  r=AR(x); s=AS(x); n=AS(x)[r-1]; n=r?n:1; PRODX(m,r-1,s,1); v=AV(x);
  GATV0(y,B01,n,1); u=BAV(y);
  GATV(z,INT,m,r?r-1:0,s); zv=AV(z);

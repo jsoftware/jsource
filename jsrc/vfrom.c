@@ -40,20 +40,6 @@ F1(jtcatalog){PROLOG(0072);A b,*wv,x,z,*zv;C*bu,*bv,**pv;I*cv,i,j,k,m=1,n,p,*qv,
   if(1==an){v+=j;   DQ(m,                                    *x++=*v;       v+=p; );}  \
   else              DQ(m, DO(an, SETJ(av[i]);                *x++=v[j];);   v+=p; );   \
  }
-// obsolete #define MVMC(d,s,l) MC(d,s,l); d=(I*)((C*)d+(l)); s=(I*)((C*)s+(l));
-// obsolete #define MVLOOP(d,s,l) I n=(l); do{*d++=*s++;}while((n-=SZI)>0); d=(I*)((C*)d+n);
-// obsolete #define IFROMLOOP2(qexp,mvlp)  \
-// obsolete  {I* RESTRICT u,* RESTRICT v=(I*)wv,* RESTRICT x=(I*)zv;  \
-// obsolete   q=(qexp); pq=p*k;         \
-// obsolete   if(1==an){v=(I*)((C*)v+j*k); DQ(m,                     u=v;     mvlp(x,u,k)  v=(I*)((C*)v+pq););}  \
-// obsolete   else              DQ(m, DO(an, SETJ(av[i]); u=(I*)((C*)v+j*k); mvlp(x,u,k) ); v=(I*)((C*)v+pq););   \
-// obsolete  }
-// obsolete #define IFROMLOOP2(qexp,mvlp)  \
-// obsolete  {I* RESTRICT u,* RESTRICT v=(I*)wv,* RESTRICT x=(I*)zv;  \
-// obsolete   q=(qexp); pq=p*k;         \
-// obsolete   if(1==an){v=(I*)((C*)v+j*k); DQ(m,                     u=v;     JMC(x,u,k,loop1)  x=(I*)((C*)x+(k)); v=(I*)((C*)v+pq););}  \
-// obsolete   else              DQ(m, DO(an, SETJ(av[i]); u=(I*)((C*)v+j*k); JMC(x,u,k,loop2) ); x=(I*)((C*)x+(k)); v=(I*)((C*)v+pq););   \
-// obsolete  }
 
 // a is not boxed and not boolean (except when a is an atom, which we pass through here to allow a virtual result)
 F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wk,wn,wr,*ws,zn;
@@ -157,8 +143,6 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wk,wn,wr,*ws,zn;
 #endif
   default:
   // cells are not simple types.  We can safely move full words, since there is always extra buffer space at the end of any type that is not a word-multiple
-// obsolete    if(k<MEMCPYTUNELOOP)IFROMLOOP2((k+SZI-1)>>LGSZI,MVLOOP)
-// obsolete    else IFROMLOOP2((k+SZI-1)>>LGSZI,MVMC)
    {C* RESTRICT u,* RESTRICT v=(C*)wv,* RESTRICT x=(C*)zv;
     pq=p*k;
     JMCDECL(endmask) JMCSETMASK(endmask,k+(SZI-1),0) 
@@ -223,9 +207,7 @@ static F2(jtbfrom){A z;B*av,*b;C*wv,*zv;I acr,an,ar,k,m,p,q,r,*u=0,wcr,wf,wk,wn,
  an=AN(a); wn=AN(w); ws=AS(w);
  // If a is empty, it needs to simulate execution on a cell of fills.  But that might produce domain error, if w has no
  // items, where 0 { empty is an index error!  In that case, we set wr to 0, in effect making it an atom (since failing exec on fill-cell produces atomic result)
-// obsolete if(an==0 && wn==0 && ws[wf]==0)wcr=wr=0;
  p=wcr?ws[wf]:1; q=an>>LGSZI; r=an&(SZI-1);   // p=# items of w
-// obsolete  ASSERT(2<=p||1==p&&all0(a)||!p&&!an,EVINDEX);
  ASSERT(((p-2)&-(p|an))>=0||(p&all0(a)),EVINDEX);  // OK if p has >1 item, or if it has 0 but an is 0, or is a is all 0 and p has 1 item
  // We always need zn, the number of result atoms
  if(wn){
@@ -371,7 +353,6 @@ static A jtafrom2(J jt,A p,A q,A w,I r){A z;C*wv,*zv;I d,e,j,k,m,n,pn,pr,* RESTR
  if(AN(w)){
   // Set zn=#atoms of result  d=#atoms in a _2-cell of cell of w
   // e=length of axis corresponding to q  n=#_2-cells in a cell of w   m=#cells of w (frame*size of 2-cell*(# _2-cells = pn*qn))
-// obsolete   PROD(m,wf,ws); PROD(d,r-2,ws+wf+2); e=ws[1+wf]; n=e*ws[wf]; RE(zn=mult(pn,mult(qn,d*m)));
   PROD(m,wf,ws); PROD(d,r-2,ws+wf+2); e=ws[1+wf]; n=e*ws[wf]; DPMULDE(qn,d*m,zn) DPMULDE(pn,zn,zn);
  }else{zn=0;}
  GA(z,AT(w),zn,wf+pr+qr+r-2,ws);
@@ -393,7 +374,6 @@ static A jtafrom2(J jt,A p,A q,A w,I r){A z;C*wv,*zv;I d,e,j,k,m,n,pn,pr,* RESTR
 #endif
  default:        {C* RESTRICT v=wv,* RESTRICT x=zv-k;n=k*n;   // n=#bytes in a cell of w
   JMCDECL(endmask) JMCSETMASK(endmask,k+(SZI-1),0) 
-// obsolete   DO(m, DO(pn, j=e*pv[i]; DO(qn, MC(x+=k,v+k*(j+qv[i]),k);)); v+=n;);} break;
   DQ(m, DO(pn, j=e*pv[i]; DO(qn, x+=k; JMCR(x,v+k*(j+qv[i]),k+(SZI-1),loop1,0,endmask);)); v+=n;);} break;
  }
  RETF(z);   // return block
@@ -428,14 +408,12 @@ static F2(jtafrom){PROLOG(0073);A c,ind,p=0,q,*v,y=w;B bb=1;I acr,ar,i=0,j,m,n,p
    p=afi(s[i],v[i]);
    if(!(p&&(((AN(p)^1)-1)&-(AT(p)&NUMERIC))<0))break;  // if 1 selection from numeric axis, do selection here, by adding offset to selected cell
    pr+=AR(p); 
-// obsolete    RANKT rsav=AR(p); AR(p)=0; m+=i0(p)*prod(wcr-i-1,1+i+s); AR(p)=rsav;  // kludge but easier than creating a fauxvirtual block
    RANKT rsav=AR(p); AR(p)=0; I px; PRODX(px,wcr-i-1,1+i+s,i0(p)) m+=px; AR(p)=rsav;  // kludge but easier than creating a fauxvirtual block
   }
  }
  if(i){I*ys;
   RZ(y=virtual(w,m,pr+wcr-i));
   ys=AS(y); DO(pr, *ys++=1;); MCISH(ys,s+i,wcr-i);
-// obsolete   AN(y)=prod(AR(y),AS(y));
   I temp; PROD(temp,AR(y),AS(y)); AN(y)=temp;
  }
  // take remaining axes 2 at a time, properly handling omitted axes (ds(CACE)).  First time through p is set if there has been no error
@@ -474,7 +452,6 @@ F2(jtfrom){I at;A z;
     // Move the value and transfer the block-type
     I j; AT(z)=AT(w); SETNDX(j,av,AN(w)); IAV(z)[0]=IAV(w)[j];
     // Here we transferred an atom out of w.  We must mark w non-pristine.  If it was inplaceable, we can transfer the pristine status.  We overwrite w because it is no longer in use
-// obsolete     I awflg=AFLAG(w); AFLAG(z)|=awflg&((SGNTO0(AC(w))&((I)jtinplace>>JTINPLACEWX))<<AFPRISTINEX); if(unlikely(awflg&AFVIRTUAL)){w=ABACK(w); awflg=AFLAG(w);} AFLAG(w)=awflg&~AFPRISTINE;
     PRISTXFERF(z,w)  // this destroys w
    }else{
     // rank of w > 1, return virtual cell
@@ -520,13 +497,7 @@ F2(jtsfrom){
     case sizeof(I):  // may include D
      {I * RESTRICT zv=IAV(z); I *RESTRICT wv=IAV(w); DQ(AN(ind), *zv++=wv[*iv++];) break;}  // scatter-copy the data, 8-byte chunks
     default: ;
-// obsolete      // handle small integral number of words with a local loop
      // It is OK to pad to an I boundary, because any block with cells not a multiple of I is padded to an I
-// obsolete      if(cellsize<MEMCPYTUNELOOP){
-// obsolete       C* RESTRICT zv=CAV(z); C *RESTRICT wv=CAV(w); DQ(AN(ind), MCIS((I*)zv,(I*)(wv+*iv++*cellsize),(cellsize+SZI-1)>>LGSZI) zv+=cellsize;)  // use local copy
-// obsolete      }else{
-// obsolete       C* RESTRICT zv=CAV(z); C *RESTRICT wv=CAV(w); DQ(AN(ind), MC(zv,wv+*iv++*cellsize,(cellsize+SZI-1)&-SZI); zv+=cellsize;)  // use memcpy
-// obsolete      }
      C* RESTRICT zv=CAV(z); C *RESTRICT wv=CAV(w);     JMCDECL(endmask) JMCSETMASK(endmask,cellsize+(SZI-1),0) 
      DQ(AN(ind), JMCR(zv,wv+*iv++*cellsize,cellsize+(SZI-1),loop1,0,endmask); zv+=cellsize;)  // use memcpy
      break;
@@ -574,9 +545,6 @@ F2(jtfetch){A*av, z;I n;F2PREFIP;
 #if AUDITBOXAC
    if(!(AFLAG(w)&AFVIRTUALBOXED)&&AC(z)<0)SEGFAULT
 #endif
-// obsolete    // Inplaceability depends on the context.  If the overall operand is either noninplaceable or in a noninplaceable context, we must
-// obsolete    // protect the value we fetch (the overall operand would matter only if it was flagged without a ra())
-// obsolete   if((AC(w)&SGNIF(jtinplace,JTINPLACEWX))>=0)ACIPNO(z);
    // Since the whole purpose of fetch is to copy one contents by address, we turn off pristinity of w
    PRISTCLRF(w)
    RETF(z);   // turn off inplace if w not inplaceable, or jt not inplaceable.
@@ -588,7 +556,6 @@ F2(jtfetch){A*av, z;I n;F2PREFIP;
  DO(n, A next=av[i]; if(((AT(z)>>BOXX)&1)>=(2*(AR(next)+(AT(next)&BOX))+AR(z))){RZ(z=jtquicksel(jt,next,z))}  // next is unboxed atom, z is boxed atom or list, use fast indexing  AR(next)==0 && !(AT(next)&BOX) && (AR(z)==0 || (AR(z)==1 && AT(z)&BOX))
       else{RZ(z=afrom(box(next),z)); ASSERT(((i+1-n)&-AR(z))>=0,EVRANK); if(((AR(z)-1)&SGNIF(AT(z),BOXX))<0)RZ(z=ope(z));}  // Rank must be 0 unless last; open if boxed atom
    );
-// obsolete   if((AC(w)&SGNIF(jtinplace,JTINPLACEWX))>=0)ACIPNO(z);
  // Since the whole purpose of fetch is to copy one contents by address, we turn off pristinity of w
  PRISTCLRF(w)
  RETF(z);   // Mark the box as non-inplaceable, as above

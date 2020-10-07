@@ -105,7 +105,7 @@ static void vdone(I m,I n,B*x,B*z,B pc){B b;I q,r;UC*u;UI s,*y;
  AHDRP(f,B,B){B*y=0;I j,q;                       \
   if(d==1){vdo; R EVOK;}                                \
   x+=m*d*n; z+=m*d;                           \
-/* obsolete   if(1==n)DQ(d, *--z=*--x;)              */          \
+          \
   if(0==d%sizeof(UI  ))RBFXLOOP(UI,   pfx)    \
   else if(0==d%sizeof(UINT))RBFXLOOP(UINT,ipfx)    \
   else if(0==d%sizeof(US  ))RBFXLOOP(US,  spfx)    \
@@ -188,7 +188,6 @@ AHDRR(plusinsD,D,D){I i;D* RESTRICT y;
                        DQ(n>>2, v0=PLUS(*--x,v0); v1=PLUS(*--x,v1); v2=PLUS(*--x,v2); v3=PLUS(*--x,v3);); v0+=v1; v2+=v3;*--z=v0+v2;)
 #endif
   }
-// obsolete  else if(1==n){if(sizeof(D)!=sizeof(D)){DQ(n, *z++=    *x++;)}else{MC((C*)z,(C*)x,d*sizeof(D));}}
   else{z+=(m-1)*d; x+=(m*n-1)*d;
    for(i=0;i<m;++i,z-=d){I rc;
     y=x; x-=d; if(255&(rc=plusDD(1,d,x,y,z,jt)))R rc; x-=d;
@@ -238,13 +237,12 @@ static DF1(jtredg){F1PREFIP;PROLOG(0020);DECLF;AD * RESTRICT a;I i,n,r,wr;
  // From here on we are doing a single reduction
  n=AS(w)[0]; // n=#cells
  // Allocate virtual block for the running x argument.
- fauxblock(virtafaux); fauxvirtual(a,virtafaux,w,r-1,ACUC1/* obsolete |ACINPLACE*/);  // allocate UNINCORPORABLE block
+ fauxblock(virtafaux); fauxvirtual(a,virtafaux,w,r-1,ACUC1);  // allocate UNINCORPORABLE block
  // wfaux will hold the result from the iterations.  Init to value of last cell
  // Allocate fauxvirtual arg for the first cell, so it can be inplaceable/pristine if needed (tail returned a virtual block, which messed things up for high rank)
  fauxblock(virtwfaux); A wfaux; fauxvirtual(wfaux,virtwfaux,w,r-1,ACUC1);  // allocate UNINCORPORABLE block, mark inplaceable - used only once
    // finish filling the virt block
  A *old=jt->tnextpushp; // save stack mark for subsequent frees.  We keep the a argument over the calls, but allow the w to be deleted
-// obsolete  RZ(w=tail(w));
  // fill in the shape, offset, and item-count of the virtual block
  I k; PROD(k,r-1,AS(w)+1);  // k=#atoms of cell of w
  AN(wfaux)=k; AN(a)=k;
@@ -257,8 +255,6 @@ static DF1(jtredg){F1PREFIP;PROLOG(0020);DECLF;AD * RESTRICT a;I i,n,r,wr;
  // We can inplace the right arg the first time if it is direct inplaceable, and always after that (assuming it is an inplaceable result).
  // and the input jtinplace.  We turn off WILLBEOPENED status in jtinplace for the callee.
  AC(wfaux)=aipok;   // first cell is inplaceable if second is
-// obsolete  I inplacelaterw = (FAV(fs)->flag>>(VJTFLGOK2X-JTINPLACEWX)) & JTINPLACEW;  // JTINPLACEW if the verb can handle inplacing
-// obsolete  jtinplace = (J)(intptr_t)(((I)jt) + (JTINPLACEW+JTINPLACEA)*(inplacelaterw&(I)jtinplace&(((AT(w)&TYPEVIPOK)!=0)|f2==jtevery2self)&REPSGN(AC(w))));  // inplace left arg, and first right arg, only if w is direct inplaceable, enabled, and verb can take it
  jtinplace = (J)(intptr_t)(((I)jt) + (JTINPLACEW+JTINPLACEA)*((FAV(fs)->flag>>(VJTFLGOK2X-JTINPLACEWX)) & JTINPLACEW));  // all items are used only once
 
  // We need to free memory in case the called routine leaves it unfreed (that's bad form & we shouldn't expect it), and also to free the result of the
@@ -267,9 +263,7 @@ static DF1(jtredg){F1PREFIP;PROLOG(0020);DECLF;AD * RESTRICT a;I i,n,r,wr;
 #define LGMINGCS 3  // lg2 of minimum number of times we call gc
 #define MINGCINTERVAL 8  // max spacing between frees
  I freedist=MIN((n+((1<<LGMINGCS)-1))>>LGMINGCS,MINGCINTERVAL); I freephase=freedist;
-// obsolete  for(i=1;i<n;++i){   // loop through items
  i=n-1; while(1){  // for each cell except the last
-// obsolete   AC(a)=ACUC1|ACINPLACE;   // in case we created a virtual block from it, restore inplaceability to the UNINCORPABLE block
   AC(a)=aipok;   // in case we created a virtual block from it, restore inplaceability to the UNINCORPABLE block
   RZ(wfaux=CALL2IP(f2,a,wfaux,fs));
   if(--i==0)break;   // stop housekeeping after last iteration
@@ -278,8 +272,6 @@ static DF1(jtredg){F1PREFIP;PROLOG(0020);DECLF;AD * RESTRICT a;I i,n,r,wr;
   if(--freephase==0){wfaux=gc(wfaux,old); freephase=freedist;}   // free the buffers we allocated, except for the result
   // move to next input cell
   AK(a) -= k;
-// obsolete   // set larger inplaceability for iterations after the first
-// obsolete   jtinplace = (J)(intptr_t)((I)jtinplace|inplacelaterw);
  }
  // At the end of all this, it is possible that the result is the original first or last cell, resting in its original virtual block.
  // In that case, we have to realize it, so that we don't let the fauxvirtual block escape
@@ -328,7 +320,6 @@ DF1(jtredravel){A f,x,z;I n;P*wp;
   ASSERT(adocv.f,EVNONCE);
   GA(z,rtype(adocv.cv),1,0,0);
   if(n)rc=((AHDRRFN*)adocv.f)((I)1,n,(I)1,AV(x),AV(z),jt);  // mustn't adocv on empty
-// obsolete   if(jt->jerr<EWOV){RE(0); R redsp1a(vaid(FAV(f)->fgh[0]),z,SPA(wp,e),n,AR(w),AS(w));}
   rc&=255; if(rc)jsignal(rc); if(rc<EWOV){if(rc)R0; R redsp1a(FAV(FAV(f)->fgh[0])->id,z,SPA(wp,e),n,AR(w),AS(w));}  // since f has an insert fn, its id must be OK
  }
 }  /* f/@, w */
@@ -442,7 +433,6 @@ static DF1(jtreducesp){A a,g,z;B b;I f,n,r,*v,wn,wr,*ws,wt,zt;P*wp;
  wt=AT(w); wt=wn?DTYPE(wt):B01;
  g=VAV(self)->fgh[0];  // g is the f in f/
  if(!n)R red0(w,self);  // red0 uses ranks, and resets them
-// obsolete C id=vaid(g);
  C id; if(AT(g)&VERB){id=FAV(g)->id; id=FAV(g)->flag&VISATOMIC2?id:0;}else id=0;
  VARPS adocv; varps(adocv,self,wt,0);
  if(2==n&&!(adocv.f&&strchr(fca,id))){
@@ -538,7 +528,7 @@ static DF1(jtreduce){A z;I d,f,m,n,r,t,wr,*ws,zt;
  if(unlikely(SPARSE&AT(w)))R reducesp(w,self);  // If sparse, go handle it
  wr=AR(w); ws=AS(w);
  // Create  r: the effective rank; f: length of frame; n: # items in a CELL of w
- r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; SETICFR(w,f,r,n);  // no RESETRANK obsolete n=r?ws[f]:1;  // no RESETRANK
+ r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; SETICFR(w,f,r,n);  // no RESETRANK
  // Handle the special cases: neutrals, single items
  if(n>1){
   // Normal case, >1 item.
@@ -571,7 +561,7 @@ static DF1(jtreduce){A z;I d,f,m,n,r,t,wr,*ws,zt;
   // if return is EWOV, it's an integer overflow and we must restart, after restoring the ranks
   // EWOV1 means that there was an overflow on a single result, which was calculated accurately and stored as a D.  So in that case all we
   // have to do is change the type of the result.
-  if(255&rc){if(jt->jerr==EWOV1){/* obsoleteRESETERR;*/AT(z)=FL;RETF(z);}else {jsignal(rc); RETF(rc>=EWOV?IRS1(w,self,r,jtreduce,z):0);}} else {RETF(adocv.cv&VRI+VRD?cvz(adocv.cv,z):z);}
+  if(255&rc){if(jt->jerr==EWOV1){AT(z)=FL;RETF(z);}else {jsignal(rc); RETF(rc>=EWOV?IRS1(w,self,r,jtreduce,z):0);}} else {RETF(adocv.cv&VRI+VRD?cvz(adocv.cv,z):z);}
 
   // special cases:
  }else if(n==1)R head(w);    // reduce on single items - ranks are still set
@@ -641,12 +631,10 @@ DF1(jtredcat){A z;B b;I f,r,*s,*v,wr;
  // use virtual block (possibly self-virtual) for all cases except sparse
  if(likely(!(SPARSE&AT(w)))){
   RZ(z=jtvirtual(jtinplace,w,0,wr-1)); AN(z)=AN(w); // Allocate the block.  Then move in AN and shape
-// obsolete   I *zs=AS(z); MCISH(zs,s,f); if(!b){RE(zs[f]=mult(s[f],s[f+1])); MCISH(zs+f+1,s+f+2,r-2);}
   I *zs=AS(z); MCISH(zs,s,f); if(!b){DPMULDE(s[f],s[f+1],zs[f]); MCISH(zs+f+1,s+f+2,r-2);}
   R z;
  }else{
   GASPARSE(z,AT(w),AN(w),wr-1,s); 
-// obsolete   if(!b){v=f+AS(z); RE(*v=mult(s[f],s[1+f])); MCISH(1+v,2+f+s,r-2);}
   if(!b){v=f+AS(z); DPMULDE(s[f],s[1+f],*v); MCISH(1+v,2+f+s,r-2);}
   R redcatsp(w,z,r);
  }
@@ -654,7 +642,7 @@ DF1(jtredcat){A z;B b;I f,r,*s,*v,wr;
 
 static DF1(jtredsemi){I f,n,r,*s,wr;
  RZ(w);
- wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; s=AS(w); SETICFR(w,f,r,n); /* obsolete n=r?s[f]:1;*/  // let the rank run into tail   n=#items  in a cell of w
+ wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; s=AS(w); SETICFR(w,f,r,n);   // let the rank run into tail   n=#items  in a cell of w
  if(2>n){ASSERT(n!=0,EVDOMAIN); R tail(w);}  // rank still set
  if(BOX&AT(w))R jtredg(jt,w,self);  // the old way failed because it did not mimic scalar replication; revert to the long way.  ranks are still set
  else{A z; R IRS1(w,0L,r-1,jtbox,z);}  // unboxed, just box the cells
@@ -664,7 +652,6 @@ static DF1(jtredstitch){A c,y;I f,n,r,*s,*v,wr;
  RZ(w);
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; RESETRANK;
  s=AS(w); SETICFR(w,f,r,n);
-// obsolete n=r?s[f]:1;
  ASSERT(n!=0,EVDOMAIN);
  if(1==n)R IRS1(w,0L,r,jthead,y);
  if(1==r){if(2==n)R RETARG(w); A z1,z2,z3; RZ(IRS2(num(-2),w,0L,0L,1L,jtdrop,z1)); RZ(IRS2(num(-2),w,0L,0L,1L,jttake,z2)); R IRS2(z1,z2,0L,1L,0L,jtover,z3);}
@@ -672,7 +659,6 @@ static DF1(jtredstitch){A c,y;I f,n,r,*s,*v,wr;
  RZ(c=apvwr(wr,0L,1L)); v=AV(c); v[f]=f+1; v[f+1]=f; RZ(y=cant2(c,w));  // transpose last 2 axes
  if(unlikely(SPARSE&AT(w))){A x;
   GATV0(x,INT,f+r-1,1); v=AV(x); MCISH(v,AS(y),f+1);
-// obsolete   RE(v[f+1]=mult(s[f],s[f+2])); MCISH(v+f+2,s+3+f,r-3);
   DPMULDE(s[f],s[f+2],v[f+1]); MCISH(v+f+2,s+3+f,r-3);
   RETF(reshape(x,y));
  }else{
@@ -695,7 +681,6 @@ static DF1(jtredcateach){A*u,*v,*wv,x,*xv,z,*zv;I f,m,mn,n,r,wr,*ws,zm,zn;I n1=0
  RZ(w);
  wr=AR(w); ws=AS(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; RESETRANK;
  SETICFR(w,f,r,n);
-// obsolete  n=r?ws[f]:1;
  if(!r||1>=n)R reshape(repeat(ne(sc(f),IX(wr)),shape(w)),n?w:ds(CACE));
  if(!(BOX&AT(w)))R df1(z,cant2(sc(f),w),qq(ds(CBOX),zeroionei(1)));  // handle unboxed args
 // bug: ,&.>/ y does scalar replication wrong

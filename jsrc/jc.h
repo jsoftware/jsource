@@ -229,11 +229,6 @@
 
 
 
-// obsolete #define CEVEN      (C)'\230'       /* 152 230 98 ..                           */
-// obsolete #define CODD       (C)'\231'       /* 153 231 99 .:                           */
-// obsolete #define CLEV       (C)'\250'       /* 168 250 a8 [.                           */
-// obsolete #define CDEX       (C)'\252'       /* 170 252 aa ].                           */
-// obsolete #define CIDA       (C)'\253'       /* 171 253 ab ]:                           */
 #define CEXEC      (C)'\260'       /* 176 260 b0 ".                           */
 #define CGRDOT     (C)'\262'       /* 178 262 b2 `.                           */
 
@@ -251,11 +246,6 @@
 #define CNDOT      (C)'\322'       /* 210 322 d2 n.                           */
 #define CQCAPCO    (C)'\326'       /* 214 326 d6 Q:                           */
 #define CSCAPCO    (C)'\332'       /* 218 332 da S:                           */
-// obsolete #define CTDOT      (C)'\333'       /* 219 333 db t.                           */
-// obsolete #define CTCO       (C)'\334'       /* 220 334 dc t:                           */
-// obsolete #define CTCAP      (C)'\335'       /* 221 335 dd T.                           */
-// obsolete #define CXDOT      (C)'\341'       /* 225 341 e1 x.                           */
-// obsolete #define CYDOT      (C)'\343'       /* 227 343 e3 y.                           */
 // 228-231 free
 #define CQRYCO     (C)'\271'       /* 185 271 b9 ?:                           */
 

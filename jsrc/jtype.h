@@ -208,7 +208,6 @@ typedef I SI;
 #define XAV(x)          ( (X*)((C*)(x)+AK(x)))  /* extended                */
 #define QAV(x)          ( (Q*)((C*)(x)+AK(x)))  /* rational                */
 #define AAV(x)          ( (A*)((C*)(x)+AK(x)))  /* boxed                   */
-// obsolete #define A1AV(x)         ((A1*)((C*)(x)+AK(x)))  /* boxed relative address  */
 #define VAV(x)          ( (V*)((C*)(x)+AK(x)))  /* verb, adverb, conj      */
 #define FAV(x)          ( (V*)((C*)(x)+AKXR(0)) )  // verb, adverb, conj - always at fixed offset
 #define PAV(x)          ( (P*)((C*)(x)+AK(x)))  /* sparse                  */
@@ -420,9 +419,6 @@ typedef I SI;
 // Utility: keep the lowest 1 only
 #define LOWESTBIT(x)    ((x)&-(x))
 
-// obsolete #define HOMO(s,t)       (TYPESEQ((s),(t)) || HOMONE((s),(t)) )
-// obsolete #define HOMONE(s,t)     ( !(((s)|(t))&(BOX|SBT|JCHAR|MARK)) || !(((s)|(t))&(BOX|SBT|NUMERIC|MARK)) )   // if known to be not equal.  One arg may be MARK (in indexofsub) but must show non-HOMO
-// obsolete #define NEGIFHOMO(s,t)  ( (((s)^(t))-1) | ((((s)|(t))&(BOX|SBT|JCHAR|MARK))-1) | ((((s)|(t))&(BOX|SBT|NUMERIC|MARK))-1) )
 #define POSIFHOMO(s,t)  ( -(((s)^(t))&(BOX|SBT|JCHAR|MARK)) & -(((s)^(t))&(BOX|SBT|NUMERIC|MARK)) )
 #define NEGIFHOMO(s,t)  ( ~POSIFHOMO(s,t) )
 #define HOMO(s,t)       ( POSIFHOMO(s,t)>=0 )
@@ -432,7 +428,6 @@ typedef I SI;
 
 // Flags in the count field of type A
 #define ACINPLACEX      (BW-1)
-// obsolete #define ACINPLACE       (I)((((UI)-1)>>1)^(UI)-1)  // set when this block CAN be used in inplace operations.  Always the sign bit.
 #define ACINPLACE       ((I)((UI)1<<ACINPLACEX))  // set when this block CAN be used in inplace operations.  Always the sign bit.
 #define ACPERMANENTX    (BW-2)
 #define ACPERMANENT     ((I)1<<ACPERMANENTX)  // next-to-top bit, set in blocks that should never modify the AC field
@@ -446,16 +441,12 @@ typedef I SI;
 #define ACX(a)          {AC(a)=ACPERMANENT;}
 #define ACISPERM(c)     ((I)((UI)(c)+(UI)(c))<0)  // is PERMANENT bit set?
 #define SGNIFPRISTINABLE(c) ((c)+ACPERMANENT)  // sign is set if this block is OK in a PRISTINE boxed noun
-// obsolete #define ASGNINPLACE(w)  (ACIPISOK(w) || AC(w)==1&&jt->assignsym&&jt->assignsym->val==w&&!(AFLAG(w)&AFRO)&&notonupperstack(w))  // OK to inplace ordinary operation
 // same, but s is an expression that is neg if it's OK to inplace
-// obsolete #define ASGNINPLACESGN(s,w)  (((s)&AC(w))<0 || ((s)&(AC(w)-2))<0 &&jt->assignsym&&jt->assignsym->val==w&&!(AFLAG(w)&AFRO)&&notonupperstack(w))  // OK to inplace ordinary operation
-// obsolete #define ASGNINPLACESGNNJA(s,w)  ( ((s)&AC(w))<0 || (((s)&(AC(w)-2))<0||(((s)&(AC(w)-3)&SGNIF(AFLAG(w),AFNJAX))<0))&&jt->assignsym&&jt->assignsym->val==w&&!(AFLAG(w)&AFRO)&&notonupperstack(w))  // OK to inplace ordinary operation
 #define ASGNINPLACESGN(s,w)  (((s)&AC(w))<0 || ((s)&(AC(w)-2))<0 &&jt->assignsym&&jt->assignsym->val==w&&(!(AFLAG(w)&AFRO+AFNVR)||(!(AFLAG(w)&AFRO)&&notonupperstack(w))))  // OK to inplace ordinary operation
 #define ASGNINPLACESGNNJA(s,w)  ( ((s)&AC(w))<0 || (((s)&(AC(w)-2))<0||(((s)&(AC(w)-3)&SGNIF(AFLAG(w),AFNJAX))<0))&&jt->assignsym&&jt->assignsym->val==w&&(!(AFLAG(w)&AFRO+AFNVR)||(!(AFLAG(w)&AFRO)&&notonupperstack(w))))  // OK to inplace ordinary operation
 // define virtreqd and set it to 0 to start   scaf no LIT B01 C2T etc
 // This is used in apip.  We must ALWAYS allow inplacing for NJA types, but for ordinary inplacing we don't bother if the number of atoms of w pushes a over a power-of-2 boundary
 // We don't try to help the non-NVR case because NJAs will always be globals and thus have NVR set
-// obsolete #define EXTENDINPLACENJA(a,w)  ( ((AC(a)&(((AN(a)+AN(w))^AN(a))-AN(a)))<0) || (AC(a)==1||(AC(a)==2&&AFLAG(a)&AFNJA))&&((jt->assignsym&&jt->assignsym->val==a&&!(AFLAG(a)&AFRO))||(!jt->assignsym&&(virtreqd=1,!(AFLAG(a)&(AFRO|AFVIRTUAL)))))&&notonupperstack(a))  // OK to inplace ordinary operation
 #define EXTENDINPLACENJA(a,w)  ( ((AC(a)&(((AN(a)+AN(w))^AN(a))-AN(a)))<0) || ((((AC(a)-2)&(((AN(a)+AN(w))^AN(a))-AN(a)))<0)||(AC(a)==2&&AFLAG(a)&AFNJA))&&((jt->assignsym&&jt->assignsym->val==a&&!(AFLAG(a)&AFRO))||(!jt->assignsym&&(virtreqd=1,!(AFLAG(a)&(AFRO|AFVIRTUAL)))))&&notonupperstack(a))  // OK to inplace ordinary operation
 
 /* Values for AFLAG(x) field of type A                                     */
@@ -591,7 +582,6 @@ typedef struct {A name,val;US flag;S sn;LX next;} L;
 // In all local symbol tables, the first 'hashchain' has the symbol offsets of x/y
 
 #define LCH             (I)1            /* changed since last exec of 4!:5 */
-// obsolete #define LHEAD           (I)2            /* head pointer (no predecessor)   */
 #define LINFO           (I)4            /* locale info                     */
 #define LPERMANENT      (I)8            // This is a permanent entry in a local symbol table; don't delete, just leave val=0
 #define LWASABANDONEDX  4
@@ -758,7 +748,6 @@ typedef struct {AF valencefns[2];A fgh[3];union { D lD; void *lvp[2]; I lI; I4 l
 // id must be in the last word  so that we can use validitymask to point to it
 
 
-// obsolete #define ID(f)           (f&&FUNC&AT(f)?FAV(f)->id:C0)
 #define ID(f)  FAV(AT(f?f:(A)(validitymask+12))&FUNC?f:(A)validitymask)->id  // can be branchless, if compiler can manage it
 #define VFLAGNONE 0L
 #define VRTNNONE ((A)0)
@@ -860,8 +849,6 @@ typedef struct {AF valencefns[2];A fgh[3];union { D lD; void *lvp[2]; I lI; I4 l
 
 // layout of primitive, in the primtbl.  It is a memory header (shape 0) followed by a V
 typedef struct {I memhdr[AKXR(0)/SZI]; union { V primvb; I primint; } prim; } PRIM;  // two cachelines exactly in 64-bit
-// obsolete // Level (L: and S:) code build self blocks for every on the C stack.  every looks at the function pointers, so these can be short to save stack space
-// obsolete typedef struct {I memhdr[AKXR(0)/SZI]; AF fptrs[2]; } PRIMSHORT;   // the mem hdr gets filled in, plus the function pointers
 
 // Info for calling an atomic verb
 typedef struct {VF f;I cv;} VA2;  // for dyads
@@ -869,7 +856,6 @@ typedef struct {VA1F f;I cv;} VA1;  // for monads
 typedef struct {VARPSF f;I cv;} VARPS;  // for reduce/prefix/suffix
 
 typedef struct {I nprec; VARPS actrtns[];} VARPSA;
-// obsolete typedef struct {VA2 p2[13];VARPS pins[7];VARPS ppfx[7];VARPS psfx[7];} VA;
 typedef struct {VA2 p2[13];VARPSA *rps;} VA;
 typedef struct {VA1 p1[6];} UA;
 

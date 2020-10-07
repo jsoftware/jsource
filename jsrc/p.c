@@ -134,7 +134,6 @@ static PSTK* jtpparen(J jt,PSTK *stack){
  R stack+2;  // advance stack pointer to result
 }
 
-// obsolete static F2(jtisf){RZ(symbis(onm(a),CALL1(jt->pre,w,0L),jt->symb)); R num(0);}
 // multiple assignment.  self has parms.  ABACK(self) is the symbol table to assign to, valencefns[0] is preconditioning routine to open value or convert it to AR
 static DF2(jtisf){RZ(symbis(onm(a),CALL1(FAV(self)->valencefns[0],w,0L),ABACK(self))); R num(0);} 
 
@@ -152,7 +151,6 @@ static PSTK* jtis(J jt,PSTK *stack){B ger=0;C *s;
    if(AN(n)==1)n=AAV(n)[0];  // if there is only 1 name, treat this like simple assignment to first box, fall through
    else{
     // True multiple assignment
-// obsolete     ASSERT(!AR(v)||AN(n)==AS(v)[0],EVLENGTH);   // v is atom, or length matches n
     ASSERT((-(AR(v))&(-(AN(n)^AS(v)[0])))>=0,EVLENGTH);   // v is atom, or length matches n
     if(((AR(v)^1)+(~AT(v)&BOX))==0){A *nv=AAV(n), *vv=AAV(v); DO(AN(n), symbis(nv[i],vv[i],symtab);)}  // v is boxed list
     else {A *nv=AAV(n); DO(AN(n), symbis(nv[i],ope(AR(v)?from(sc(i),v):v),symtab);)}  // repeat atomic v for each name, otherwise select item.  Open in either case
@@ -191,7 +189,6 @@ static PSTK* jtis(J jt,PSTK *stack){B ger=0;C *s;
     // if it is AR assignment, apply jtfxx to each assignand, to convert AR to internal form
     // if not AR assignment, just open each box of rhs and assign
     ASSERT(1==AR(n),EVRANK); ASSERT(AT(v)&NOUN,EVDOMAIN);
-// obsolete     jt->symb=symtab; jt->pre=ger?jtfxx:jtope;
     // create faux fs to pass args to the multiple-assignment function, in AM and valencefns
     PRIM asgfs; ABACK((A)&asgfs)=symtab; FAV((A)&asgfs)->flag2=0; FAV((A)&asgfs)->valencefns[0]=ger?jtfxx:jtope;   // pass in the symtab to assign, and whether w must be converted from AR.  flag2 must be 0 to satisfy rank2ex
     rank2ex(n,v,(A)&asgfs,0,AR(v)-1<0?0:AR(v)-1,0,AR(v)-1<0?0:AR(v)-1,jtisf);
@@ -576,10 +573,7 @@ rdglob: ;
         s=((FAV(fs)->flag&(FAV(stack[1].a)->flag|((~pmask)<<(VASGSAFEX-1))))&VASGSAFE)?s:0;
         // It is OK to remember the address of the symbol being assigned, because anything that might conceivably create a new symbol (and thus trigger
         // a relocation of the symbol table) is marked as not ASGSAFE
-// obsolete         if(s){
         jt->assignsym=s;  // remember the symbol being assigned.  It may have no value yet, but that's OK - save the lookup
-// obsolete          A sval=s->val; sval=AT(stack[0].a)&ASGNLOCAL?sval:0; jt->zombieval=sval;  // Remember the value, whether it exists or not.  We have to avoid private/public puns
-// obsolete         }
        }
        jt=(J)(intptr_t)((I)jt+(pline|1));   // set bit 0, and bit 1 if dyadic
       }
@@ -627,10 +621,7 @@ RECURSIVERESULTSCHECK
       // We can free all DIRECT blocks, and PRISTINE also.  We mustn't free non-PRISTINE boxes because the contents are at large
       // and might be freed while in use elsewhere.
       // We mustn't free VIRTUAL blocks because they have to be zapped differently.  When we work that out, we will free them here too
-#if 1
       {
-// obsolete if(AC(y)<0 && AFLAG(y)&BOX && AT(y)&BOX && AC(AAV(y)[0])<2)  // scaf
-// obsolete  {I aaa = 1;} 
       if(arg1=*tpopw){  // if the arg has a place on the stack, look at it to see if the block is still around
        I c=AC(arg1); c=arg1==y?0:c;
        if((c&(-(AT(arg1)&DIRECT)|SGNIF(AFLAG(arg1),AFPRISTINEX)))<0){   // inplaceable and not return value.
@@ -653,7 +644,6 @@ RECURSIVERESULTSCHECK
       audittstack(jt);
 #endif
       }
-#endif
      }else{
       // Lines 3-4, conj/adv execution.  We must get the parsing type of the result, but we don't need to worry about inplacing or recursion
       AF actionfn=FAV(fs)->valencefns[pline-3];  // the routine we will execute.  It's going to take longer to read this than we can fill before the branch is mispredicted, usually

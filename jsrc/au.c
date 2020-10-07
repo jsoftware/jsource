@@ -27,9 +27,6 @@ I jtfdep(J jt,A w){A f,g;I d=0,k;V*v;
 F1(jtfdepadv){RZ(w); ASSERT(VERB&AT(w),EVDOMAIN); R sc(fdep(w));}
 #endif
 
-// obsolete // jtdf1 and jtdf2 can be called with or without inplace flags since they don't use jt but merely pass it through
-// obsolete DF1(jtdf1){RZ(self); R CALL1(FAV(self)->valencefns[0],  w,self);}
-// obsolete DF2(jtdf2){RZ(self); R CALL2(FAV(self)->valencefns[1],a,w,self);}
 
 DF1(jtdfs1){F1PREFIP;A s=jt->sf,z; RZ(self); z=CALL1IP(FAV(self)->valencefns[0],  w,jt->sf=self); jt->sf=s; RETF(z);}
 DF2(jtdfs2){F2PREFIP;
@@ -39,9 +36,6 @@ z=CALL2IP(FAV(self)->valencefns[1],a,w,jt->sf=self); jt->sf=s;
 RETF(z);}    
      /* for monads and dyads that can possibly involve $: */
 
-// obsolete A jtdfss1(J jt, A w, A self, A self0)     {RZ(self); R CALL1(FAV(self)->valencefns[0],  w,self0);}
-// obsolete A jtdfss2(J jt, A a, A w, A self, A self0){RZ(self); R CALL2(FAV(self)->valencefns[1],a,w,self0);}
-// obsolete      // used to treat self as an argument.  Used with routines that don't really use self
 
 // $: itself
 F1(jtself1){A z; FDEPINC(d=fdep(jt->sf)); STACKCHKOFL df1(z,  w,jt->sf); FDEPDEC(d); forcetomemory(w); RETF(z);}
@@ -123,9 +117,4 @@ I atoplr(A w){
  V *v=FAV(w);     // v->verb info, c=id of w
  C id = v->id;if((v->id&-2)==CATCO)id = FAV(v->fgh[1])->id;  // @ @:
  R (id-(CLEFT-1)) & REPSGN((CLEFT-1)-(I)id) & REPSGN((I)id-(CRIGHT+1));  // LEFT->1, RIGHT->2 punning with JINPLACEW/A; but 0 if not LEFT or RIGHT
-// obsolete  switch(id){
-// obsolete   case CLEFT: R JTINPLACEW;   // ...@[  ok to inplace W
-// obsolete   case CRIGHT: R JTINPLACEA;   // ...@]  ok to inplace A
-// obsolete  }
-// obsolete  R 0;   // both args in use
 }

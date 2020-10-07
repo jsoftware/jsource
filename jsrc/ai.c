@@ -198,7 +198,6 @@ static F1(jtinvamp){A f,ff,g,h,x,y;B nf,ng;C c,d,*yv;I n;V*u,*v;
    if(ng&&equ(x,num(1))&&equ(f,eval("i.\"1")))R hook(ds(CFROM),ds(CEQ));
    break;
   case CBSLASH:
-// obsolete    if(nf&&(n=i0(x),0>n)&&(d=ID(u->fgh[0]),d==CLEFT||d==CRIGHT))R slash(ds(CCOMMA));
    if(nf&&(n=i0(x),0>n)&&(d=ID(u->fgh[0]),(d&-2)==CLEFT))R slash(ds(CCOMMA));  // LEFT || RIGHT
    break;
   case CIBEAM:
@@ -226,17 +225,6 @@ static F1(jtinvamp){A f,ff,g,h,x,y;B nf,ng;C c,d,*yv;I n;V*u,*v;
  ASSERT(0,EVDOMAIN);
 }
 
-// obsolete static const C invf[2][29] = {
-// obsolete  CDIV,   CPLUS,  CMINUS,  CLEFT,   CRIGHT,  CREV,    CCANT,   CPOLY, 
-// obsolete  CNOT,   CGRADE, CCYCLE,  CDOMINO, COPE,    CBOX,    CLOG,    CEXP,
-// obsolete  CGE,    CLE,    CHALVE,  CPLUSCO, CSQRT,   CSTARCO, CHEAD,   CLAMIN,
-// obsolete  CABASE, CBASE,  CTHORN,  CEXEC,   0,
-// obsolete  CDIV,   CPLUS,  CMINUS,  CLEFT,   CRIGHT,  CREV,    CCANT,   CPOLY,
-// obsolete  CNOT,   CGRADE, CCYCLE,  CDOMINO, CBOX,    COPE,    CEXP,    CLOG,
-// obsolete  CLE,    CGE,    CPLUSCO, CHALVE,  CSTARCO, CSQRT,   CLAMIN,  CHEAD,  
-// obsolete  CBASE,  CABASE, CEXEC,   CTHORN,  0 
-// obsolete };
-// obsolete 
 // simpleinv[i] is the inverse function for function i
 static const C simpleinv[128] = {
 [CDIV&127]=CDIV, [CPLUS&127]=CPLUS, [CMINUS&127]=CMINUS, [CLEFT&127]=CLEFT, [CRIGHT&127] =CRIGHT , [CREV&127] =CREV , [CCANT&127]=CCANT, [CPOLY&127]=CPOLY,
@@ -256,7 +244,6 @@ A jtinv(J jt, A w, I recur){A f,ff,g;B b,nf,ng,vf,vg;C id;I p,q;V*v;
  CCM(w,CGE)+CCM(w,CLE)+CCM(w,CHALVE)+CCM(w,CPLUSCO)+CCM(w,CSQRT)+CCM(w,CSTARCO)+CCM(w,CHEAD)+CCM(w,CLAMIN)+ \
  CCM(w,CABASE)+CCM(w,CBASE)+CCM(w,CTHORN)+CCM(w,CEXEC)
  CCMWDS(simpleinv) CCMCAND(simpleinv,cand,id) if(CCMTST(cand,id))R ds(simpleinv[id&127]);
-// obsolete  if(s=strchr(invf[0],id))R ds(invf[1][s-invf[0]]);   // quickly handle verbs that have primitive inverses  kludge scaf faster
  // in case id indicates a modifier, set (f|g) to the operand, n? if it is a noun or name, v? if it is a verb
  f=v->fgh[0]; nf=f&&AT(f)&NOUN+NAME; vf=f&&!nf;
  g=v->fgh[1]; ng=g&&AT(g)&NOUN+NAME; vg=g&&!ng;
@@ -323,7 +310,6 @@ A jtinv(J jt, A w, I recur){A f,ff,g;B b,nf,ng,vf,vg;C id;I p,q;V*v;
    if(3==p&&3==q)R foreign(f,num(2));
    break;
   case CHOOK:
-// obsolete   if(CFROM==ID(f)&&CEQ==ID(g))R eval("i.\"1&1");
     if(BOTHEQ8(ID(f),ID(g),CFROM,CEQ))R eval("i.\"1&1");
    break;
  }
@@ -388,16 +374,6 @@ F1(jtiden){A f,g,x=0;V*u,*v;
    }
    break;
   }
-// obsolete    switch(i0(g)){
-// obsolete     case 25:    x=num(-1); break;
-// obsolete     case  2: case  4: case  5: case  6: case  7:
-// obsolete     case 18: case 20: case 21: case 22: case 23:
-// obsolete                 x=num(0); break;
-// obsolete     case  1: case  9: case 11: case 13: case 17: 
-// obsolete     case 27: case 29:
-// obsolete                 x=num(1);
-// obsolete   }
-// obsolete  }
  ASSERT(x!=0,EVDOMAIN);
  R folk(x,swap(ds(CDOLLAR)),atop(ds(CBEHEAD),ds(CDOLLAR)));
 }

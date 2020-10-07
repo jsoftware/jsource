@@ -592,7 +592,6 @@ F1(jtrngseeds){I k,r;
 static F2(jtrollksub){A z;I an,*av,k,m1,n,p,q,r,sh;UI m,mk,s,t,*u,x=jt->rngM[jt->rng];
  RZ(a&&w);
  an=AN(a); RE(m1=i0(w)); ASSERT(0<=m1,EVDOMAIN); m=m1;
-// obsolete  RZ(a=vip(a)); av=AV(a); RE(n=prod(an,av));
  RZ(a=vip(a)); av=AV(a); PRODX(n,an,av,1);
  GA(z,0==m?FL:2==m?B01:INT,n,an,av); u=(UI*)AV(z);
  if(!m){D*v=DAV(z); INITD; if(sh)DQ(n, *v++=NEXTD1;)else DQ(n, *v++=NEXTD0;);}  // floating-point output
@@ -812,7 +811,6 @@ F2(jtdeal){A z;I at,j,k,m,n,wt,*zv;UI c,s,t,x=jt->rngM[jt->rng];UI sq;
 static F2(jtrollksubdot){A z;I an,*av,k,m1,n,p,q,r,sh;UI j,m,mk,s,t,*u,x=jt->rngM[jt->rng];
  RZ(a&&w);
  an=AN(a); RE(m1=i0(w)); ASSERT(0<=m1,EVDOMAIN); m=m1;
-// obsolete  RZ(a=vip(a)); av=AV(a); RE(n=prod(an,av));
  RZ(a=vip(a)); av=AV(a); PRODX(n,an,av,1);
  GA(z,0==m?FL:2==m?B01:INT,n,an,av); u=(UI*)AV(z);
  if(!m){D*v=DAV(z); INITD; if(sh)DQ(n, *v++=NEXTD1;)else DQ(n, *v++=NEXTD0;);}

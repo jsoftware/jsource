@@ -18,10 +18,6 @@
 //********** defines *******************
 #ifdef ZZDEFN
 // make sure these don't overlap with the definitions in cr.c.  Note dependence below on AFPRISTINE
-#if 0  // obsolete
-#define ZZFLAGNOPOPX 0 // set to suppress tpop
-#define ZZFLAGNOPOP (((I)1)<<ZZFLAGNOPOPX)
-#endif
 #define ZZFLAGBOXATOPX 1 // set if u is <@f - must not be above JTWILLBEOPENED and JTCOUNTITEMS
 #define ZZFLAGBOXATOP (((I)1)<<ZZFLAGBOXATOPX)
 #define ZZFLAGUSEOPENX (LGSZI^1)  // result contains a cell for which a full call to OPEN will be required (viz sparse)
@@ -97,9 +93,6 @@
 #define ZZSTARTATEND 0  // user defines as 1 to build result starting at the end
 #endif
 #ifndef ZZPOPNEVER
-#if 0 // obsolete
- A *zzold;  // place to tpop to between executions
-#endif
 #define ZZPOPNEVER 0  // user defines as 1 to force us to NEVER tpop in the loop
 #endif
 #ifndef ZZASSUMEBOXATOP  // set to cause us to put the result of the user's function into the result without boxing
@@ -121,7 +114,6 @@ do{
 
   // The original result z will either be incorporated into zz or its items will be copied.  In either case, that makes z non-PRISTINE.
   I zzzaflag=AFLAG(z);  // we save AFLAG(z) for its PRISTINE flag.  We have to clear PRISTINE before the tpop, so here is convenient.  We just need the one flag for a short while
-// obsolete   if(AT(z)&BOX){A awbase=z; if(unlikely(aflg&AFVIRTUAL)){awbase=ABACK(z); awflg=AFLAG(awbase);} AFLAG(awbase)=awflg&~AFPRISTINE;}   // since it will be repeated, run the test
   if(AT(z)&BOX){PRISTCLR(z)}   // since it will be repeated, run the test
 
   if(!(ZZASSUMEBOXATOP||ZZFLAGWORD&ZZFLAGBOXATOP)){  // is forced-boxed result?  If so, just move in the box
@@ -164,13 +156,6 @@ do{
        // if the new type is recursible, make sure zz is recursive.  This simplifies logic below
        ra00(zz,zt);  // make recursive if recursible
        JMCSETMASK(zzendmask,zzcelllen+(ZZSTARTATEND^1)*(SZI-1),ZZSTARTATEND)   // when len changes, reset mask
-#if 0&&!ZZPOPNEVER  // obsolete
-       // recalculate whether we can pop the stack.  We can, if the type is DIRECT and zzbox has not been allocated.  We could start zz as B01 (pop OK), then promote to
-       // XNUM (pop not OK), then to FL (pop OK again).  It's not vital to be perfect, but then again it's cheap to be
-       ZZFLAGWORD&=~ZZFLAGNOPOP; ZZFLAGWORD|=((((zt&DIRECT)==0)|(ZZFLAGWORD>>ZZFLAGBOXALLOX))&1)<<ZZFLAGNOPOPX;
-       // NOTE that if we are converting to an indirect type, the converted block might NOT be recursive
-       zzold=jt->tnextpushp;  // reset the pop-back point so we don't free zz during a pop.  Could gc if needed
-#endif
       }
      }else{
       // empty cells.  Just adjust the type, using the type priority
@@ -179,8 +164,6 @@ do{
      }
     }
     // The result area and the new result now have identical shapes and precisions (or compatible precisions and are empty).  Move the cells
-// obsolete     if(zzcelllen){  // questionable - likely fails
-#if 1
     // The result being built is recursive if recursible.  It has recursive count, so we have to increment the usecount of any blocks we add.
     // And, we want to remove the blocks from the source so that we can free the source block immediately.  We get a small edge by handling here the special case when z is recursive inplaceable:
     // then we can get the desired effect by copying the cells and zapping z.  That has the effect of raising the usecount of the elements of z by 1, so we don't
@@ -194,24 +177,14 @@ do{
 #else
     I zzoktozap=AC(z)&SGNIFNOT(AFLAG(z),AFVIRTUALX);  // neg if inplaceable, not virtual
 #endif
-// obsolete     I zznoneedrecur = ((AT(z)^AFLAG(z))&RECURSIBLE)-1;  // POS if z is recursible nonrecursive
-// obsolete     if(unlikely((zzoktozap&zznoneedrecur)>=0)){  // not ok to zap OR must be made recursive
     if(unlikely(((zzoktozap&(-(AFLAG(z)&RECURSIBLE)))|((AT(z)&RECURSIBLE)-1))>=0)){  // not ok to zap OR must be made recursive, only if type is recursible
      // if unzappable OR recursible nonrecursive, raise children - even if z is UNINCORPABLE or VIRTUAL.  The children are about to be copied
      // We raise only the children, not the base block.  This converts the children to recursive usecount.  We leave the base block nonrecursive if it started
      // that way.  We may zap it later.  By not making the base recursive, we add 1 to the effective usecount of the children
      jtra(z,AT(z));   // raise children only and make them recursive
-// obsolete      if(unlikely(AT(z)&RECURSIBLE))jtra(jt,z,AT(z));   // raise children only and make them recursive
-// obsolete      // ra00 is a convenient way to make the contents recursive and increment their stored usecount before
-// obsolete      // we copy.  But if z is not recursive to start with, it doesn't actually increment the EFFECTIVE usecount of the children.
-// obsolete      // That's OK if we are going to zap z, which in effect increments the usecount.  Otherwise, we have to bump the usecount of
-// obsolete      // z itself.
-// obsolete      if(unlikely((~zzoktozap&~zznoneedrecur)<0))AC(z)=(AC(z)+1)&~ACINPLACE;  // PERMANENT and VIRTUAL always recursive, thus don't do this
-// obsolete      ra00(z,AT(z));  // incr children and bring pointers into cache
     }
     // copy the cells, which have been raised if needed.  If we are copying forward, it is OK to copy fullwords
     JMCR(CAV(zz)+zzcellp,AV(z),zzcelllen+(ZZSTARTATEND^1)*(SZI-1),loop1,ZZSTARTATEND,zzendmask)
-// obsolete     if(zzcelllen<MEMCPYTUNELOOP){I * RESTRICT d=(I*)(CAV(zz)+zzcellp); I * RESTRICT s=IAV(z); I n=zzcelllen; while((n-=SZI)>=0){*d++=*s++;} if(n&(SZI-1))STOREBYTES(d,*s,-n);}else{MC(CAV(zz)+zzcellp,AV(z),zzcelllen);}
     // Release the result now that we have copied its elements.  We do this rather than calling tpop to save the overhead, on the grounds that
     // any routine that allocated memory should have freed it, so the only thing on the tpop stack should be the result.  We do this only if the
     // result was inplaceable: otherwise the block is protected somewhere else and we can't free it.
@@ -219,38 +192,11 @@ do{
     // if the value iz zappable, zap it (it may have become zappable, if it turned recursive above).  Free only the root block
     // We should do this for virtual blocks also, to get the full effect of tpop.  When we can zap virtuals we will
     if(likely(zzoktozap<0)){*AZAPLOC(z)=0; mf(z);}  // free the root block.  If is has descendants their ownership was transferred to zz.
-#else // obsolete
-    if(AFLAG(zz)&RECURSIBLE){
-     // The result being built is recursive.  It has recursive count, so we have to increment the usecount of any blocks we add.
-     // And, we want to remove the blocks from the source so that we can free the source block immediately.  We get a small edge by handling here the special case when z is recursive inplaceable:
-     // then we can get the desired effect by just marking z as nonrecursible.  That has the effect of raising the usecount of the elements of zt by 1, so we don't
-     // actually have to touch them.  This is a transfer of ownership, and would fail if the new block is not inplaceable: for example, if the block is in a name, with
-     // no frees on the tstack, it could have usecount of 1.  Transferring ownership would then leave the block in the name without an owner, and when zz is deleted the
-     // name would be corrupted
-// obsolete       if((AC(z)&(-(AFLAG(z)&RECURSIBLE)))<0){  // if z has AC <0 (inplaceable) and is recursive and not virtual
-     if((AC(z)&(((AFLAG(z)&(RECURSIBLENOUN|AFVIRTUAL))^AFVIRTUAL)+(~(ACINPLACE|AFVIRTUAL))))<0){  // if z has AC <0 (inplaceable) and is recursive and not virtual
-      AFLAG(z)&=~RECURSIBLE;  // mark as nonrecursive, transferring ownership to the new block  (should use zap/fanapop z)
-      if(zzcelllen<MEMCPYTUNELOOP){I * RESTRICT d=(I*)(CAV(zz)+zzcellp); I * RESTRICT s=IAV(z); I n=zzcelllen; while((n-=SZI)>=0){*d++=*s++;} if(n&(SZI-1))STOREBYTES(d,*s,-n);}else{MC(CAV(zz)+zzcellp,AV(z),zzcelllen);}
-       // move the result-cell to the output.  Must not write outside cell boundaries in case we are going backwards.  Use test on STOREBYTES because this is repeated
-     }else{
-      // copy and raise the elements (normal path).  We copy the references as A types, since there may be 1 or 2 per atom of z
-      // because these are cells of an ordinary array (i. e. not WILLBEOPENED) the elements cannot be virtual
-      A *zzbase=(A*)(CAV(zz)+zzcellp), *zbase=AAV(z); DO(zzcelllen>>LGSZI, A zblk=zbase[i]; ra(zblk); zzbase[i]=zblk;)
-     }
-    }else{  // not recursible
-      if(zzcelllen<MEMCPYTUNELOOP){I * RESTRICT d=(I*)(CAV(zz)+zzcellp); I * RESTRICT s=IAV(z); I n=zzcelllen; while((n-=SZI)>=0){*d++=*s++;} if(n&(SZI-1))STOREBYTES(d,*s,-n);}else{MC(CAV(zz)+zzcellp,AV(z),zzcelllen);}
-       // move the result-cell to the output.  Must not write outside cell boundaries in case we are going backwards
-    }
-#if !ZZPOPNEVER
-    if(!(ZZFLAGWORD&ZZFLAGNOPOP))tpop(zzold);  // Now that we have copied to the output area, free what the verb allocated
-#endif
-#endif
 #if !ZZSTARTATEND
     zzcellp+=zzcelllen;  // advance to next cell
 #else
     zzcellp-=zzcelllen;  // back up to next cell
 #endif
-// obsolete    }
     // **** z may have been destroyed and must not be used from here on ****
    }else{  // there was a wreck
     if(unlikely(zt&SPARSE)){
@@ -299,7 +245,7 @@ do{
       // We use a faux-A block to catch most of the cases.  The part before AN is not allocated on the stack and we don't refer to it
       if(AR(zz)-zzframelen<=ZZFAUXCELLSHAPEMAXRANK){zzcellshape=(A)((I)zzfauxcellshape-offsetof(AD,n)); AN(zzcellshape)=ZZFAUXCELLSHAPEMAXRANK+1;} else {GATV0(zzcellshape,INT,AR(zz)-zzframelen+3,0);}
       AR(zzcellshape)=(RANKT)(AR(zz)-zzframelen); MCISH(AS(zzcellshape),AS(zz)+zzframelen,AR(zz)-zzframelen);
-      ZZFLAGWORD|=(ZZFLAGBOXALLO/* obsolete |ZZFLAGNOPOP*/);  // indicate we have allocated the boxed area
+      ZZFLAGWORD|=(ZZFLAGBOXALLO);  // indicate we have allocated the boxed area
      }
     }while(1);
    }

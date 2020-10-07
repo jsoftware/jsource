@@ -61,7 +61,6 @@ ZF1(jtznegate){R zminus(zeroZ,v);}
 D zmag(Z v){R hypoth(v.re,v.im);}
 
 B jtzeq(J jt,Z u,Z v){D a=u.re,b=u.im,c=v.re,d=v.im,p,q;
-// obsolete if(a==c&&b==d)R 1;
  if(a==c&&TEQ(b,d))R 1;  // fast check for equality - also picks up cases where one component is infinite
  if(b==d&&TEQ(a,c))R 1;
  if(ZEZ(u)||ZEZ(v)||1.0==jt->cct||(0>a!=0>c&&0>b!=0>d))R 0;

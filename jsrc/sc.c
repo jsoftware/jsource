@@ -93,7 +93,6 @@ DF2(jtunquote){A z;
   AF actionfn=v->valencefns[dyadex];
   ++AC(fs);  // protect the entity
   // Recursion through $: does not go higher than the name it was defined in.  We make this happen by pushing the name onto the $: stack
-// obsolete   A s=jt->sf; jt->sf=fs; z=(*actionfn)(SGNIF(v->flag,dyadex+VJTFLGOK1X)<0?jtinplace:jt,a,w,fs); jt->sf=s;  // keep all flags in jtinplace
   A s=jt->sf; jt->sf=fs; z=(*actionfn)((J)(((REPSGN(SGNIF(v->flag,dyadex+VJTFLGOK1X)))|~JTFLAGMSK)&(I)jtinplace),a,w,fs); jt->sf=s;  // keep all flags in jtinplace
   // Undo the protection.  If, most unusually, the usecount goes to 0, back up and do the full recursive decrement
   if(--AC(fs)<=0){++AC(fs); fa(fs);}
@@ -106,7 +105,6 @@ DF2(jtunquote){A z;
    jt->cursymb=stabent; z=dbunquote(dyadex?a:0,dyadex?w:a,fs);  // if debugging, go do that.  save last sym lookup as debug parm
   }else{
    ra(fs);  // should assert recursive usecount
-// obsolete    A s=jt->sf; jt->sf=fs; z=v->valencefns[dyadex]((v->flag>>dyadex)&VJTFLGOK1?jtinplace:jt,a,w,fs); jt->sf=s;
    A s=jt->sf; jt->sf=fs; z=v->valencefns[dyadex]((J)(((REPSGN(SGNIF(v->flag,dyadex+VJTFLGOK1X)))|~JTFLAGMSK)&(I)jtinplace),a,w,fs); jt->sf=s;
    fa(fs);
   }

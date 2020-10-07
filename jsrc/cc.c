@@ -13,7 +13,6 @@
 
 
 static DF1(jtcut01){DECLF;A h,x,z;
-// obsolete  RZ(x=from(box(every(negate(shape(w)),0L,jtiota)),w));
  RZ(x=from(box(every(negate(shape(w)),ds(CIOTA))),w));
  if(VGERL&sv->flag){h=sv->fgh[2]; R df1(z,x,AAV(h)[0]);}else R CALL1(f1,x,fs);
 }    /* f;.0 w */
@@ -208,7 +207,6 @@ DF2(jtrazecut0){A z;C*wv,*zv;I ar,*as,(*av)[2],j,k,m,n,wt;
  DO(m, j=av[i][0]; k=av[i][1]; if(k<0)R jtspecialatoprestart(jt,a,w,self); I jj=j+n; jj=(j>=0)?j:jj; ASSERT(((jj^(jj-n))|(k-1))<0,EVINDEX); j=n-jj; k=k>j?j:k; nitems+=k; ASSERT(nitems>=0,EVLIMIT))
  // audits passed and we have counted the items.  Allocate the result and copy
  I wcn; PROD(wcn,AR(w)-1,AS(w)+1);  // number of atoms per cell of w
-// obsolete  I zn; RE(zn=mult(wcn,nitems));  // number of atoms in result
  I zn; DPMULDE(wcn,nitems,zn);  // number of atoms in result
  GA(z,wt,zn,AR(w),AS(w)); AS(z)[0]=nitems; zv=CAV(z);  // allocate a list of items of w, fill in length.  zv is running output pointer
  // copy em in.  We use MC because the strings are probably long and unpredictable - think HTML parsing
@@ -738,9 +736,6 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[12
   GA(zz,wt,m*wcn,r,AS(w)); zc=CAV(zz); AS(zz)[0]=m;
   EACHCUT(if(d)MC(zc,id==CHEAD?v1:v1+k*(d-1),k); else fillv(wt,wcn,zc); zc+=k;);
   break;
-// obsolete   GA(zz,wt,m*wcn,r,AS(w)); zc=CAV(zz); AS(zz)[0]=m;
-// obsolete   EACHCUT(if(d)MC(zc,v1+k*(d-1),k); else fillv(wt,wcn,zc); zc+=k;);
-// obsolete   break;
 // scaf MUST CALCULATE e or discard this, which might be better
 // scaf should take this under BOXATOP?
  case CSLASH: ;
@@ -778,7 +773,7 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[12
   if(m){
    // There are cells.  Run the result loop over them
    // Allocate the virtual block we will use for arguments
-   A virtw; fauxblock(virtwfaux); fauxvirtual(virtw,virtwfaux,w,r,ACUC1/* obsolete |ACINPLACE*/);  // allocate UNINCORPORABLE block
+   A virtw; fauxblock(virtwfaux); fauxvirtual(virtw,virtwfaux,w,r,ACUC1);  // allocate UNINCORPORABLE block
    // Copy in the shape of a cell.  The number of cells in a subarray will depend on d
    MCISH(AS(virtw)+1,AS(w)+1,r-1);
    // Set the offset to the first data
@@ -788,21 +783,18 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[12
 
    // Remove WILLOPEN for the callee.  We use the caller's WILLOPEN status for the result created here
    // Remove inplacing if the verb is not inplaceable, possible because we always set u;. to inplaceable so we can get the WILLBEOPENED flags
-// obsolete    jtinplace = (J)(intptr_t)((I)jtinplace & (~(JTWILLBEOPENED+JTCOUNTITEMS+JTINPLACEA)) & (((((wt&TYPEVIPOK)!=0)|f1==jteveryself)&REPSGN(AC(w))&(FAV(fs)->flag>>(VJTFLGOK1X-JTINPLACEWX)))*JTINPLACEW-(JTINPLACEW<<1)));  // turn off inplacing unless DIRECT and w is inplaceable
    jtinplace = (J)(intptr_t)(((I)jtinplace & (~(JTWILLBEOPENED+JTCOUNTITEMS+JTINPLACEA+JTINPLACEW))) | (((FAV(fs)->flag>>(VJTFLGOK1X-JTINPLACEWX)))&JTINPLACEW));  // turn off inplacing unless DIRECT and w is inplaceable
 
 #define ZZDECL
 #include "result.h"
    ZZPARMS(1,m,1)
 #define ZZINSTALLFRAME(optr) *optr++=m;
-// obsolete    I gerundx=0;  // if we have gerunds, this indicates which one we should run next
 
    do{UC *pdend=(UC*)CUTFRETEND(pd0);   /* 1st ele is # eles; get &chain  */
     while(pd<pdend){   /* step to first/next; process each fret.  Quit when pointing to end */
      UI len=*pd++; if(len==255){len=*(UI4*)pd; pd+=SZUI4;} d=len-neg;  /* fetch size, adjust if neg */
      AS(virtw)[0]=d; AN(virtw)=wcn*d; // install the size of the partition into the virtual block, and # atoms
      // call the user's function
-// obsolete      AC(virtw)=ACUC1|ACINPLACE;   // in case we created a virtual block from it, restore inplaceability to the UNINCORPABLE block
      AC(virtw)=ACUC1 + ((state&ZZFLAGVIRTWINPLACE)<<(ACINPLACEX-ZZFLAGVIRTWINPLACEX));   // in case we created a virtual block from it, restore inplaceability to the UNINCORPABLE block
      RZ(z=CALL1IP(f1,virtw,fs));  //normal case
 
@@ -875,8 +867,6 @@ DF2(jtrazecut2){A fs,gs,y,z=0;B b; I neg,pfx;C id,sep,*u,*v,*wv,*zv;I d,k,m=0,wi
  p=SETIC(w,wi); wt=AT(w); k=(I)vv->localuse.lvp[0]; neg=0>k; pfx=k==1||k==-1; b=neg&&pfx;   // p,wi is # items of w; 
  id=FAV(fs)->id;  // fs is f/id   where id is \ \.
   // if f is atomic/\ or atomic /\., set ado and cv with info for the operation
-// obsolete  if(id==CBSLASH)adocv = vapfx(FAV(FAV(fs)->fgh[0])->fgh[0],wt);   // FAV(fs)->fgh[0] is f/    FAV(FAV(fs)->fgh[0])->fgh[0] is f
-// obsolete  else           adocv = vasfx(FAV(FAV(fs)->fgh[0])->fgh[0],wt); 
  varps(adocv,fs,wt,1+(id!=CBSLASH));   // fs is f/\  type 1 is f/\ 2 is f/\.
  if(SPARSE&AT(w)||!adocv.f)R jtspecialatoprestart(jt,a,w,self);  // if sparse w or nonatomic function, do it the long way
  if(a!=mark){   // dyadic case
@@ -931,7 +921,7 @@ static F2(jttesa){A x;I*av,ac,c,d,k,r,*s,t,*u,*v;
  RZ(a&&w);
  t=AT(a);
  RZ(a=vib(a));    // convert a to integer (possibly with infinities)
- r=AR(a); s=AS(a); SHAPEN(a,r-1,c); /* obsolete c=r?s[r-1]:1;*/ ac=c; av=AV(a); d=AR(w);  // r = rank of x; s->shape of x; c=#axes specd in x, av->data; d=rank of w
+ r=AR(a); s=AS(a); SHAPEN(a,r-1,c);  ac=c; av=AV(a); d=AR(w);  // r = rank of x; s->shape of x; c=#axes specd in x, av->data; d=rank of w
  ASSERT(d>=c&&(2>r||2==s[0]),EVLENGTH);  // x must not be bigger than called for by rank of w, and must be a list or 2-item table
  if(2<=r)DO(c, ASSERT(0<=av[i],EVDOMAIN););  // if movement vector given, it must be nonnegative
  if(2==r&&t&INT){RETF(a);}  // if we can use a as given, return a as is

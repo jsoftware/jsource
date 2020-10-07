@@ -524,7 +524,6 @@ RESTRICTF A jtvirtual(J jtip, AD *RESTRICT w, I offset, I r){AD* RESTRICT z;
  ASSERT(RMAX>=r,EVLIMIT);
  I t=AT(w);  // type of input
  offset<<=bplg(t);  // length of an atom of t
-// obsolete  I c=AC(w);  // count of input
  I wf=AFLAG(w);  // flags in input
  I wip=SGNIF((I)jtip,JTINPLACEWX)&AC(w);   // sgn if w is inplaceable in inplaceable context
  // If this is an inplaceable request for an inplaceable DIRECT block, we don't need to create a new virtual block: just modify the offset in the old block.  Make sure the shape fits
@@ -560,15 +559,6 @@ RESTRICTF A jtvirtual(J jtip, AD *RESTRICT w, I offset, I r){AD* RESTRICT z;
   }
 
   // As a result of the above we can say that all backers must have recursive usecount
-// obsolete   if(wf&AFVIRTUAL){
-// obsolete    // If w is virtual, me must raise the count of the backer.
-// obsolete    // We must also turn off inplacing for w itself.  It might be believed to be inplaceable, but if it is inplaced, the atoms of the backer that
-// obsolete    // are being virtualed here would also be modified.  We could transfer the inplaceability, as noted above
-// obsolete    ACIPNO(w);  // turn off inplacing
-// obsolete    w=ABACK(w);  // if w is itself virtual, use its original backer.  Otherwise we would have trouble knowing when the backer for z is freed.  Backer is never virtual
-// obsolete   }
-// obsolete   ABACK(z)=w;   // set the pointer to the base: w or its base
-// obsolete   ra(w);   // ensure that the backer is not deleted while it is a backer.  This means that all backers are RECURSIBLE
   R z;
  }
 }  
@@ -646,7 +636,6 @@ A jtgc (J jt,A w,A* old){
    tpop(old);  // delete everything allocated on the stack, except for w and b which were protected
    // if the block backing w must be deleted, we must realize w to protect it; and we must also ra() w to protect its contents.  When this is
    // finished, we have a brand-new w with usecount necessarily 1, so we can make it in-placeable.  Setting the usecount to inplaceable will undo the ra() for the top block only
-// obsolete    if(AC(b)<=1){A origw = w; RZ(w=realize(w)); ra(w); AC(w)=ACUC1|ACINPLACE; fa(b); mf(origw); }  // if b is about to be deleted, get w out of the way.  Since we
    if(((AC(b)-2)&(AC(b)-bc))<0){A origw = w; RZ(w=realize(w)); ra(w); AC(w)=ACUC1|ACINPLACE; fa(b); mf(origw); }  // if b is about to be deleted, get w out of the way.  Since we
                                       // raised the usecount of w only, we use mf rather than fa to free just the virtual block
                                       // fa the backer to undo the ra when the virtual block was created
@@ -682,17 +671,9 @@ A jtgc (J jt,A w,A* old){
  // NOTE: certain functions (ex: rational determinant) perform operations 'in place' on non-direct names and then protect those names using gc().  The protection is
  // ineffective if the code goes through the fa() path here, because components that were modified will be freed immediately rather than later.  In those places we
  // must either use gc3() which always does the tpush, or do ACIPNO to force us through the tpush path here.  We generally use gc3().
-#if 0  // obsolete
- if((c&(1-AC(w)))<0){fa(w);} else {tpush(w);}  // test is c<0 and AC(w)>1
- // The usecount of w is now back to where it started, or possibly lower, if the block was popped multiple times.
- // But we know for sure that if the block was inplaceable to begin with, its usecount is 1 now, and we should make it inplaceable on exit
- // Note: a block that was originally VIRTUAL cannot have been inplaceable
- if(c<0)AC(w) = c;  // restore inplaceability.  Could use AC(w)=(c<0)?c:AC(w) to avoid conditional jump
-#else
  // Since w now has recursive usecounts (except for sparse, which is never inplaceable), we don't have to do a full fa() on a block that is returning
  // inplaceable - we just reset the usecount in the block.  If the block is returning inplaceable, we must update AM if we tpush
  I cafter=AC(w); if((c&(1-cafter))>=0){A **amptr=(c<0?&AZAPLOC(w):(A**)&jt->shapesink); *amptr=jt->tnextpushp; tpush(w);} cafter=c<0?c:cafter; AC(w)=cafter;  // push unless was inplaceable and was not freed during tpop; make inplaceable if it was originally
-#endif
  R w;
 }
 
@@ -719,29 +700,9 @@ I jtra(AD* RESTRICT wd,I t){I n=AN(wd);
  if(t&BOX){AD* np;
   // boxed.  Loop through each box, recurring if called for.  Two passes are intertwined in the loop
   A* RESTRICT wv=AAV(wd);  // pointer to box pointers
-#if 0 // obsolete
-  if(n==0)R 0;  // Can't be mapped boxed; skip prefetch if no boxes
-  np=*wv++;  // prefetch first box
-  while(1){AD* np0;  // n is always > 0 to start
-   if(--n>0){   // mustn't read past the end of the block, in case of protection check
-    np0=*wv++;  // fetch next box if it exists
-#ifdef PREFETCH
-    PREFETCH((C*)np0);   // prefetch the next box
-#endif
-   }else if(n<0)break;  // exit if no more elements
-   if(np){
-    ra(np);  // increment the box, possibly turning it to recursive
-   }
-   np=np0;  // advance to next box
-  }
-#else
-// obsolete   n=1-n;  // convert count to complementary count: 0 for last, <0 before last
-// obsolete   if(n>0)R 0;  // Can't be mapped boxed; skip everything if no boxes
   if(n==0)R 0;  // Can't be mapped boxed; skip everything if no boxes
   np=*wv;  // prefetch first box
   while(--n>0){AD* np0;  // n is always >0 to start.  Loop for n-1 times
-// obsolete   wv+=SGNTO0(n);   // advance to pointer to next, unless this is the last
-// obsolete    np0=*wv;  // fetch next box if it exists, otherwise harmless value.  This fetch settles while the ra() is running
    np0=*++wv;  // fetch next box if it exists, otherwise harmless value.  This fetch settles while the ra() is running
 #ifdef PREFETCH
    PREFETCH((C*)np0);   // prefetch the next box while ra() is running
@@ -750,7 +711,6 @@ I jtra(AD* RESTRICT wd,I t){I n=AN(wd);
    np=np0;  // advance to next box
   };
   if(np)ra(np);  // handle last one
-#endif
  } else if(t&(VERB|ADV|CONJ)){V* RESTRICT v=FAV(wd);
   // ACV.  Recur on each component
   raonlys(v->fgh[0]); raonlys(v->fgh[1]); raonlys(v->fgh[2]);
@@ -769,25 +729,9 @@ I jtfa(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
  if(t&BOX){AD* np;
   // boxed.  Loop through each box, recurring if called for.
   A* RESTRICT wv=AAV(wd);  // pointer to box pointers
-#if 0   // obsolete
-  if(n==0)R 0;  // Can't be mapped boxed; skip prefetch if no boxes
-  np=*wv++;  // prefetch first box
-  while(1){AD* np0;  // n is always > 0 to start
-   if(--n>0){   // mustn't read past the end of the block, in case of protection check
-    np0=*wv++;  // fetch next box if it exists
-#ifdef PREFETCH
-    PREFETCH((C*)np0);   // prefetch the next box
-#endif
-   }else if(n<0)break;  // exit if no more elements
-   fana(np);  // free the contents, but don't audit
-   np = np0;  // advance to next box
-  }
-#else
   if(n==0)R 0;  // Can't be mapped boxed; skip everything if no boxes
   np=*wv;  // prefetch first box
   while(--n>0){AD* np0;  // n is always >0 to start.  Loop for n-1 times
-// obsolete   wv+=SGNTO0(n);   // advance to pointer to next, unless this is the last
-// obsolete    np0=*wv;  // fetch next box if it exists, otherwise harmless value.  This fetch settles while the ra() is running
    np0=*++wv;  // fetch next box if it exists, otherwise harmless value.  This fetch settles while the ra() is running
 #ifdef PREFETCH
    PREFETCH((C*)np0);   // prefetch the next box while ra() is running
@@ -796,7 +740,6 @@ I jtfa(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
    np=np0;  // advance to next box
   };
   fana(np);  // increment the box, possibly turning it to recursive
-#endif
  } else if(t&(VERB|ADV|CONJ)){V* RESTRICT v=FAV(wd);
   // ACV.
   fana(v->fgh[0]); fana(v->fgh[1]); fana(v->fgh[2]);
@@ -917,8 +860,6 @@ void jttpop(J jt,A *old){A *endingtpushp;
     // We never tpush a PERMANENT block so we needn't check for it.
     // If count goes to 0: if the usercount is marked recursive, do the recursive fa(), otherwise just free using mf().  If virtual, the backer must be recursive, so fa() it
     // Otherwise just decrement the count
-// obsolete   if(--c<=0){if(AFLAG(np)&AFVIRTUAL){A b=ABACK(np); fana(b);} if(UCISRECUR(np)){fana(np);}else{mf(np);}}else AC(np)=c;  // decrement usecount and either store it back or free the block
-// obsolete     AC(np)=--c;  // update count & store...
     if(likely(--c<=0)){
      I flg=AFLAG(np);  // fetch flags
      // The block is going to be destroyed.  See if there are further ramifications
@@ -996,7 +937,6 @@ if((I)jt&3)SEGFAULT
 #if MEMAUDIT&1
     if(AFCHAIN(z)&&FHRHPOOLBIN(AFHRH(AFCHAIN(z)))!=(1+blockx-PMINL))SEGFAULT  // reference the next block to verify chain not damaged
     if(FHRHPOOLBIN(AFHRH(z))!=(1+blockx-PMINL))SEGFAULT  // verify block has correct size
-// obsolete     if(!(z->fill==(UI4)AFHRH(z)))SEGFAULT  // fill should duplicate h
 #endif
    }else{A u,chn; US hrh; I nt=jt->malloctotal;                   // small block, but chain is empty.  Alloc PSIZE and split it into blocks
 #if 1 || ALIGNTOCACHE   // with smaller headers, always align pool allo to cache bdy
@@ -1134,7 +1074,6 @@ if((I)jt&3)SEGFAULT
 #if MEMAUDIT&1
  if(hrh==0 || blockx>(PLIML-PMINL+1))SEGFAULT  // pool number must be valid
 #if MEMAUDIT&17
-// obsolete   if(!(w->fill==(UI4)hrh))SEGFAULT  // fill should duplicate h
 #endif
 #endif
  if(FHRHBINISPOOL(blockx)){   // allocated by malloc

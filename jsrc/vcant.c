@@ -102,7 +102,6 @@ F1(jtcant1){I r;
  A z=canta(apv(r,r-1,-1L),w); RZ(z);  // rank is set
  // We extracted from w, so mark it (or its backer if virtual) non-pristine.  If w was pristine and inplaceable, transfer its pristine status to the result
  // But if we are returning the input block unchanged, leave pristinity unchanged
-// obsolete  if(z!=w){I awflg=AFLAG(w); AFLAG(z)|=awflg&((SGNTO0(AC(w))&((I)jtinplace>>JTINPLACEWX))<<AFPRISTINEX); if(unlikely(awflg&AFVIRTUAL)){w=ABACK(w); awflg=AFLAG(w);} AFLAG(w)=awflg&~AFPRISTINE;}
  if(z!=w){PRISTXFERF(z,w)}
  RETF(z);
 }    /* |:"r w */
@@ -120,7 +119,6 @@ F2(jtcant2){A*av,p,t,y;I j,k,m,n,*pv,q,r,*v;
  }else RZ(p=pinv(pfill(r,a)));
  A z; IRS2(p,w,0L,1L,r,jtcanta,z); RZ(z);  // Set rank for w in canta.  p is now INT type.  No need to check agreement since a has rank 1
  // We extracted from w, so mark it (or its backer if virtual) non-pristine.  If w was pristine and inplaceable, transfer its pristine status to the result
-// obsolete  I awflg=AFLAG(w); AFLAG(z)|=awflg&((SGNTO0(AC(w))&((I)jtinplace>>JTINPLACEWX))<<AFPRISTINEX); if(unlikely(awflg&AFVIRTUAL)){w=ABACK(w); awflg=AFLAG(w);} AFLAG(w)=awflg&~AFPRISTINE;
  PRISTXFERF(z,w)
  RETF(z);
 }    /* a|:"r w main control */ 

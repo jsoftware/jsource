@@ -81,12 +81,8 @@ static B eqv(I af,I wf,I m,I n,I k,C* RESTRICT av,C* RESTRICT wv,B* RESTRICT z,B
 }
  I n0=(k-1)>>LGSZI;  // number of Is to process (after we skip the first 1-8 chars); later, # repeat count in inner loop
  __m256i u,v;
-// obsolete  _mm256_zeroupper(VOIDARG);
  // prep for each compare loop
  __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n0)&(NPAR-1))));  /* mask for 0 1 2 3 4 5 is xxxx 0001 0011 0111 1111 0001 */
-// obsolete  __m256i tailmask = _mm256_loadu_si256((__m256i*)((C*)validitymask+NPAR*SZI+((-k)&(NPAR*SZI-1))));  // ff for the trailing invalid bytes of last compare, all 0 if n is 00000, 1 0 if 00001
-// obsolete  __m256i endmask = _mm256_cmpeq_epi64(tailmask,tailmask);  // init to all 1s
-// obsolete  endmask = _mm256_xor_si256(endmask,_mm256_cmpeq_epi64(tailmask,endmask));  // mask for 0 1 2 3 4 5 is xxxx 0001 0011 0111 1111 0001.  If any byte is compared (00), read the whole qword
  I i0=(n0-1)>>LGNPAR;  /* # loops for 0 1 2 3 4 5 is x 0 0 0 0 1 */
  b1^=1;  // change success value to failure value
  // loop for each result
@@ -99,12 +95,8 @@ static B eqv(I af,I wf,I m,I n,I k,C* RESTRICT av,C* RESTRICT wv,B* RESTRICT z,B
    // compare up to 8 bytes.  This checks for early failure & allows us to operate on full qwords hereafter
    {I ll=SZI; ll=k<ll?k:ll; I comp=(*(I*)av^*(I*)wv)<<(((-ll)&(SZI-1))<<LGBB); comp=-((I*)comp==0); I l8=8-k; if((l8&comp)>=0){b = b1^1^(comp-REPSGN(l8-8)); goto fail;}}  // if mismatch in 1st 8 bytes, or len <=8, return mismatch status  -(comp==0)) is ~0 if comp==0
   // fetch the load mask for the last block: the words to load, including any trailing fragment
-// obsolete  // fetch the mask of valid bytes in the last batch fetched, maybe less than the load mask
    // step up to qword boundary
    I *x=(I*)((C*)av+((k-1)&(SZI-1))+1), *y=(I*)((C*)wv+((k-1)&(SZI-1))+1);  // access the arguments as Is
-// obsolete    // compare 8 bytes to give a fast out for early miscompares - to help with the case where all compares fail early
-// obsolete    if((-(*(I*)av!=*(I*)wv)&(7-k))<0)goto fail;  // this repeatedly fetches *av: better than testing ka?
-// obsolete    I *x=(I*)av, *y=(I*)wv;  // init arg pointers to start of cell
    __m256i allmatches =_mm256_cmpeq_epi8(endmask,endmask); // accumuland for compares init to all 1
    b=b1;  // init store value to compare failure
    if(i0){
@@ -122,7 +114,6 @@ static B eqv(I af,I wf,I m,I n,I k,C* RESTRICT av,C* RESTRICT wv,B* RESTRICT z,B
 oneloop:;
    }
    u=_mm256_maskload_epi64(x,endmask); v=_mm256_maskload_epi64(y,endmask); 
-// obsolete   b ^= 0==~_mm256_movemask_epi8(_mm256_and_si256(allmatches,_mm256_or_si256(tailmask,_mm256_cmpeq_epi8(u,v))));  // no miscompares, switch failure value to success
    b ^= 0==~_mm256_movemask_epi8(_mm256_and_si256(allmatches,_mm256_cmpeq_epi8(u,v)));  // no miscompares, switch failure value to success
 fail:
    *z++=b;  // store one result
@@ -141,21 +132,14 @@ I memcmpne(void *s, void *t, I l){
  // expensive on short ones.  We roll arg-length testing and value testing into one
  {I ll=SZI; ll=l<ll?l:ll; I comp=(*(I*)s^*(I*)t)<<(((-ll)&(SZI-1))<<LGBB); comp=-((I*)comp==0); I l8=8-l; if((l8&comp)>=0)R comp-REPSGN(l8-8);}  // if mismatch in 1st 8 bytes, or len <=8, return mismatch status  -(comp==0)) is ~0 if comp==0
  // fetch the load mask for the last block: the words to load, including any trailing fragment
-// obsolete  // fetch the mask of valid bytes in the last batch fetched, maybe less than the load mask
  // step up to qword boundary
  I *x=(I*)((C*)s+((l-1)&(SZI-1))+1), *y=(I*)((C*)t+((l-1)&(SZI-1))+1);  // access the arguments as Is
-// obsolete  I n=(l+(SZI-1))>>LGSZD;  // number of Ds to process
  I n=(l-1)>>LGSZI;  // number of Ds to process
  __m256i u,v;
-// obsolete  _mm256_zeroupper(VOIDARG);
  __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1))));  // mask for 0 1 2 3 4 5 is xxxx 0001 0011 0111 1111 0001
-// obsolete  __m256i tailmask = _mm256_loadu_si256((__m256i*)((C*)validitymask+NPAR*SZI+((-l)&(NPAR*SZI-1))));  // ff for the trailing invalid bytes of last compare, all 0 if n is 00000, 1 0 if 00001
-// obsolete  __m256i endmask = _mm256_cmpeq_epi64(tailmask,tailmask);  // init to all 1s
-// obsolete  endmask = _mm256_xor_si256(endmask,_mm256_cmpeq_epi64(tailmask,endmask));  // mask for 0 1 2 3 4 5 is xxxx 0001 0011 0111 1111 0001.  If any byte is compared (00), read the whole qword
 
  I i=(n-1)>>LGNPAR;  /* # loops for 0 1 2 3 4 5 is x 0 0 0 0 1 */
  if(i){
-#if 1  // the long version is noticeably faster - 10% or so
   __m256i allmatches =_mm256_cmpeq_epi8(endmask,endmask); // accumuland for compares init to all 1
   switch(i&3){
   loopback:
@@ -166,15 +150,9 @@ I memcmpne(void *s, void *t, I l){
    if(~_mm256_movemask_epi8(allmatches))R 1;
    if((i-=4)>0)goto loopback;
   }
-#else
-  do{
-  u=_mm256_loadu_si256 ((__m256i*)x); v=_mm256_loadu_si256 ((__m256i*)y); if(~_mm256_movemask_epi8(_mm256_cmpeq_epi8(u,v)))R 1; x+=NPAR; y+=NPAR;
-  }while((i-=1)>0);
-#endif
  }
 
  u=_mm256_maskload_epi64(x,endmask); v=_mm256_maskload_epi64(y,endmask); 
-// obsolete  R 0!=~_mm256_movemask_epi8(_mm256_or_si256(tailmask,_mm256_cmpeq_epi8(u,v)));  // no miscompares, compare equal
  R 0!=~_mm256_movemask_epi8(_mm256_cmpeq_epi8(u,v));  // no miscompares, compare equal
 }
 
@@ -187,7 +165,6 @@ I memcmpnefl(void *s, void *t, I l, J jt){
  // fetch the mask of valid bytes in the last batch fetched, maybe less than the load mask
  D *x=s, *y=t;  // access the arguments as doubles
  __m256d u,v;
-// obsolete  _mm256_zeroupper(VOIDARG);
  __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-l)&(NPAR-1))));  // mask for 0 1 2 3 4 5 is xxxx 0001 0011 0111 1111 0001
  I i=(l-1)>>LGNPAR;  /* # loops for 0 1 2 3 4 5 is x 0 0 0 0 1 */
  if(jt->cct==1.0){
@@ -227,7 +204,6 @@ static B eqvfl(I af,I wf,I m,I n,I k,D* RESTRICT av,D* RESTRICT wv,B* RESTRICT z
   R 0;  // return value immaterial
  }
  __m256d u,v;
-// obsolete  _mm256_zeroupper(VOIDARG);
  // prep for each compare loop
  __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-k)&(NPAR-1))));  // mask for 0 1 2 3 4 5 is xxxx 0001 0011 0111 1111 0001
  I i0=(k-1)>>LGNPAR;  /* # loops for 0 1 2 3 4 5 is x 0 0 0 0 1 */
@@ -312,7 +288,6 @@ static B jteqf(J jt,A a,A w){A p,q;V*u=FAV(a),*v=FAV(w);
 // compare function for boxes.  Do a test on the single contents of the box.  Reset comparison direction to normal.
 #define EQA(a,w) \
  ((-(a!=w)&((AN(a)^AN(w))-1))>=0?(a==w):((B (*)())jtmatchsub)(jt,a,w,0   MATCHSUBDEFAULTS))
-// obsolete   (a==w||((B (*)())jtmatchsub)(jt,a,w,0   MATCHSUBDEFAULTS))
 // compare rationals
 #define EQQ(a,w)  (equ(a.n,w.n)&&equ(a.d,w.d))
 
@@ -356,18 +331,14 @@ static B jtmatchsub(J jt,A a,A w,B* RESTRICT x,I af,I wf,I m,I n,I b1){C*av,*wv;
  p=q<p?q:p; q^=shapediff; TESTDISAGREE(shapediff,af+AS(a),wf+AS(w),p); // now p is smaller rank; q=ranks differ; shapediff=shapes differ
  shapediff|=q;  // shapes or ranks differ
  PROD(c,p,af+AS(a));  // get c=length of a cell in atoms
-// obsolete  q=a!=w;   // now q=0 if args are identical & therefore don't need to be compared
  at=UNSAFE(AT(a)); wt=UNSAFE(AT(w));   // save types, now that register pressure is over
  p=NEGIFHOMO(at,wt);  // now p= neg if homogeneous args
  if(((shapediff-1)&(-c)&p)>=0){  // skip compare if rank differ, or if shapes differ, or if inhomo, or if empty; not checking for identical args
-  // create result, !b1 if there was a difference in shape or inhomo, b1 otherwise// obsolete 
+  // create result, !b1 if there was a difference in shape or inhomo, b1 otherwise
   p=1^SGNTO0((shapediff-1)&((c-1)|p));  // p=1 if error, =no match  ignore inhomo error if empty
   if(x)memset(x,p^b1,m*n);else b1=1; R p^b1;  // write 'error' if writing enabled; return false
  }
  }
-// obsolete  if(!(b=p!=q)){if(!(b=!!ICMP(af+AS(a),wf+AS(w),p))){PROD(c,p,af+AS(a)); b=c&&!HOMO(at,wt);}}  // b='mismatch'
-// obsolete  // If we know the result - either they mismatch, or the cell is empty, or the buffers are identical - return all success/failure
-// obsolete  if(b||!c||a==w){if(x)memset(x,b^b1,m*n);else b1=1; R b^b1;}
 
 
 
@@ -380,8 +351,6 @@ static B jtmatchsub(J jt,A a,A w,B* RESTRICT x,I af,I wf,I m,I n,I b1){C*av,*wv;
   t=maxtypedne(at,wt);
   if(at!=t)RZ(a=cvt(t|VFRCEXMT,a));
   if(wt!=t)RZ(w=cvt(t|VFRCEXMT,w));
-// obsolete   if(at!=t)RZ(a=t&XNUM?xcvt(XMEXMT,a):cvt(t,a));
-// obsolete   if(wt!=t)RZ(w=t&XNUM?xcvt(XMEXMT,w):cvt(t,w));
  }
  // If a has no frame, it might be the shorter frame and therefore repeated; but in that case
  // m will be 1 (1 cell in shorter frame).  So it is safe to increment each address by c in the compare loops
@@ -391,7 +360,6 @@ static B jtmatchsub(J jt,A a,A w,B* RESTRICT x,I af,I wf,I m,I n,I b1){C*av,*wv;
  switch(CTTZ(t)){
   // Take the case of no frame quickly, because it happens on each recursion and also in much user code
  default:
-// obsolete    c <<= bplg(t); if(af|wf){b = eqv(af,wf,m,n,c,av,wv,x,b1);}else{b = (!!memcmp(av,wv,c))^b1; if(x)x[0]=b;} break; // change c to number of bytes in cell
   c <<= bplg(t);
   if(!x){
 #if C_AVX2 || EMU_AVX2
@@ -468,8 +436,6 @@ F2(jtmatch){A z;I af,m,n,mn,wf;
  // number of cells may overflow, even if there are no atoms
  if(isatoms>=0){B b; I p;  // AN(a) is 0 or AN(w) is 0
   // no atoms.  The shape of the result is the length of the longer frame.  See how many cells that is
-// obsolete   if(af>wf){f=af; s=AS(a); RE(mn = prod(af,AS(a)));}else{f=wf; s=AS(w); RE(mn = prod(wf,AS(w)));}
-// obsolete   RE(mn = prod(wf,AS(w)));
   PRODX(mn,wf,AS(w),1)
   // The compare for each cell is 1 if the cell-shapes are the same
   p=AR(a)-af; b=p==(AR(w)-wf)&&!ICMP(af+AS(a),wf+AS(w),p);   // b =  shapes are the same
@@ -477,15 +443,12 @@ F2(jtmatch){A z;I af,m,n,mn,wf;
   GATV(z,B01,mn,wf,AS(w)); memset(BAV(z),b^eqis0,mn); R z;
  }
  // There are atoms.  If there is only 1 cell to compare, do it quickly
-// obsolete  if(wf==0)R num((a==w||((B (*)())jtmatchsub)(jt,a,w,0   MATCHSUBDEFAULTS))^eqis0);
  if(wf==0){
  I nocall = (-(a!=w)&((AN(a)^AN(w))-1));
  R num((nocall>=0?SGNTO0(nocall)+(a==w):((B (*)())jtmatchsub)(jt,a,w,0   MATCHSUBDEFAULTS))^eqis0);  // SGNTO0 to prevent misbranch
  }
  // Otherwise we are doing match with rank.  Set up for the repetition in matchsub
  // Create m: #cells in shorter (i. e. common) frame  n: # times cell of shorter frame is repeated
-// obsolete if(af>wf){f=af; s=AS(a); PROD(m,wf,s); PROD(n,af-wf,wf+s);}
-// obsolete  else     {f=wf; s=AS(w); PROD(m,af,s); PROD(n,wf-af,af+s);}
  PROD(m,af,AS(w)); PROD(n,wf-af,AS(w)+af);
  mn=m*n;  // total number of matches to do, i. e. # results
  GATV(z,B01,mn,wf,AS(w)); matchsub(a,w,BAV(z),af,wf,m,n,eqis0^1);  // matchsub stores, and we ignore the result
@@ -493,29 +456,4 @@ F2(jtmatch){A z;I af,m,n,mn,wf;
  RETF(z);
 }    /* a -:"r w */
 
-#if 0 // obsolete
-F2(jtnotmatch){A z;I af,f,m,n,mn,*s,wf;
- RZ(a&&w);
- if(SPARSE&(AT(a)|AT(w)))R matchs(a,w);
- af=AR(a)-(I)(jt->ranks>>RANKTX); af=af<0?0:af; wf=AR(w)-(I)((RANKT)jt->ranks); wf=wf<0?0:wf; RESETRANK;
- // If either operand is empty return without any comparisons.  In this case we have to worry that the
- // number of cells may overflow, even if there are no atoms
- if(((-AN(a))&(-AN(w)))>=0){B b; I p;  // AN(a) is 0 or AN(w) is 0
-  // no atoms.  The shape of the result is the length of the longer frame.  See how many cells that is
-  if(af>wf){f=af; s=AS(a); RE(mn = prod(af,AS(a)));}else{f=wf; s=AS(w); RE(mn = prod(wf,AS(w)));}
-  // The result for each cell is 1 if the cell-shapes are the same
-  p=AR(a)-af; b=!(p==(AR(w)-wf)&&!ICMP(af+AS(a),wf+AS(w),p));   // b =  shapes are the same
-  // Allocate & return result
-  GATV(z,B01,mn,f,s); memset(BAV(z),b,mn); R z;
- }
- // There are atoms.
- // Create m: #cells in shorter (i. e. common) frame  n: # times cell of shorter frame is repeated
- if(af>wf){f=af; s=AS(a); PROD(m,wf,s); PROD(n,af-wf,wf+s);}
- else     {f=wf; s=AS(w); PROD(m,af,s); PROD(n,wf-af,af+s);}
- mn=m*n;  // total number of matches to do, i. e. # results
- GATV(z,B01,mn,f,s); matchsub(af,wf,m,n,a,w,BAV(z),C0);
- RETF(z);
-}
-#else
 F2(jtnotmatch){R jtmatch((J)((I)jt+1),a,w);}   /* a -.@-:"r w */
-#endif

@@ -128,7 +128,6 @@ static KF1(jtXfromI){B b;I c,d,i,j,n,r,u[XIDIG],*v;X*x;
 }
 
 static X jtxd1(J jt,D p, I mode){PROLOG(0052);A t;D d,e=tfloor(p),q,r;I m,*u;
-// obsolete  switch(jt->xmode){
  switch(mode){
   case XMFLR:   p=e;                            break;
   case XMCEIL:  p=jceil(p);                      break;
@@ -441,26 +440,17 @@ A jtpcvt(J jt,I t,A w){A y;B b;RANK2T oqr=jt->ranks;
 }    /* convert w to type t, if possible, otherwise just return w */
 
 #if !C_CRC32C
-F1(jtcvt0){I n,t/* obsolete ,*v,z0,z1*/;D *u;
+F1(jtcvt0){I n,t;D *u;
  RZ(w);
  t=AT(w); n=AN(w); 
  if(n&&t&FL+CMPX){
   if(t&CMPX)n+=n; u=DAV(w);
-// obsolete  v=(I*)&m0; z0=z1=*v;
   DQ(n, if(*u==0.0)*u=0.0;        ++u; ); 
-// obsolete #if SY_64
-// obsolete             DQ(n, if(z0==*u            )*u=0;        ++u; ); 
-// obsolete#else
-// obsolete  z1=*(1+v); DQ(n, if(z0==u[0]&&z1==u[1])u[0]=u[1]=0; u+=2;);
-// obsolete#endif
  }
  R w;
 }    /* convert -0 to 0 in place */
 #endif
 
-// obsolete // convert to xnum, using conversion type in m.  Old conversion type is stacked
-// obsolete A jtxcvt(J jt,I m,A w){A z;I old=jt->xmode; jt->xmode=m; z=cvt(XNUM,w); jt->xmode=old; R z;}
-// obsolete 
 F1(jtxco1){RZ(w); ASSERT(AT(w)&DENSE,EVNONCE); R cvt(AT(w)&B01+INT+XNUM?XNUM:RAT,w);}
 
 F2(jtxco2){A z;B b;I j,n,r,*s,t,*wv,*zu,*zv;
@@ -471,7 +461,6 @@ F2(jtxco2){A z;B b;I j,n,r,*s,t,*wv,*zu,*zv;
  switch(j){
   case -2: R aslash1(CDIV,w);
   case -1: R bcvt(1,w);
-// obsolete  b=jt->xco; jt->xco=1; z=bcvt(1,w); jt->xco=b; R z;
   case  1: R xco1(w);
   case  2: 
    if(!(t&RAT))RZ(w=cvt(RAT,w));

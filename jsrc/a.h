@@ -8,12 +8,10 @@
 #define GINSERT         (I)3
 #define GTRAIN          (I)6
 
-// obsolete #define COMPOSE(c)  (((c)==CAT)|((c)==CATCO)|((c)==CAMP)|((c)==CAMPCO))
 #define COMPOSE(c)  (BETWEENC((c),CAMPCO,CAT))   // &: & @: @ 
-// obsolete #define COMPOSECO(c)  (((c)==CATCO)|((c)==CAMPCO))
 
 #define CONJCASET(at,wt) ((((at)>>(VERBX-1))+((wt)>>VERBX))&3)
-#define CONJCASE(a,w)   CONJCASET(AT(a),AT(w)) // obsolete (2*!(VERB&AT(a))+!(VERB&AT(w)))
+#define CONJCASE(a,w)   CONJCASET(AT(a),AT(w))
 #define NN              CONJCASET(NOUN,NOUN)               /* NOUN NOUN                       */
 #define NV              CONJCASET(NOUN,VERB)               /* NOUN VERB                       */
 #define VN              CONJCASET(VERB,NOUN)               /* VERB NOUN                       */
@@ -57,7 +55,6 @@
 #define ASSERTVN(a,w)   RZ(a&&w); ASSERT((VERB&AT(a))>(VERB&AT(w)),EVDOMAIN)
 #define ASSERTNN(a,w)   RZ(a&&w); ASSERT(!(VERB&(AT(a)|AT(w))),EVDOMAIN)
 
-// obsolete #define SCALARFN(id,w)  (id==ID(w)&&!lr(w)&&!rr(w))
 
 // TRUE if v is c!.0.  This is used for detecting use of special code.
 #define FIT0(c,v)       (CFIT==v->id&&c==ID(v->fgh[0])&&v->localuse.lD==1.0)

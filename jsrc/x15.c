@@ -619,9 +619,7 @@ static float NOOPTIMIZE altcallf(ALTCALLF fp,I*d,I cnt,DoF*dd,I dcnt){float r;
 static void docall(FARPROC fp, I*d, I cnt, DoF* dd, I dcnt, C zl, I*v, B alternate){
 #define vdresvalues(w) CCM(w,'c')+CCM(w,'w')+CCM(w,'u')+CCM(w,'b')+CCM(w,'s')+CCM(w,'i')+CCM(w,'l')+CCM(w,'x')+CCM(w,'*')+CCM(w,'n')
  CCMWDS(vdres) CCMCAND(vdres,cand,zl)   // see if zl is one of the direct results, which can be moved into the result directly
-// obsolete  if(s=strchr(invf[0],id))R ds(invf[1][s-invf[0]]);   // quickly handle verbs that have primitive inverses  kludge scaf faster
 
-// obsolete  if(strchr("cwubsilx*n",zl)){I r;
  if(CCMTST(cand,zl)){I r;
   r= alternate ? altcalli((ALTCALLI)fp,d,cnt,dd,dcnt) : stdcalli((STDCALLI)fp,d,cnt,dd,dcnt);
   switch(zl&0x1f){   // kludge scaf could do this with shift
@@ -793,7 +791,6 @@ static CCT*jtcdload(J jt,CCT*cc,C*lib,C*proc){B ha=0;FARPROC f;HMODULE h;
  R cc;
 }
 
-// obsolete static I cdjtype(C c){R c=='c'?LIT:c=='w'?C2T:c=='u'?C4T:(c=='j'||c=='z')?CMPX:(c=='f'||c=='d')?FL:c?INT:0;}  // kludge scaf use tables or shifts
      /* J type from type letter */
 static I cdjtype(C c){I r=INT; r=c=='c'?LIT:r; r=c=='w'?C2T:r; r=c=='u'?C4T:r; r=(c&(C)~('j'^'z'))=='j'?CMPX:r; r=(c&(C)~('d'^'f'))=='d'?FL:r; r=c==0?0:r; R r;}  // d/f and j/z differ by only 1 bit
 
@@ -861,16 +858,13 @@ static CCT*jtcdparse(J jt,A a,I empty){C c,lib[NPATH],*p,proc[NPATH],*s,*s0;CCT*
 #define vresvalues(w) CCM(w,'c')+CCM(w,'w')+CCM(w,'u')+CCM(w,'b')+CCM(w,'s')+CCM(w,'i')+CCM(w,'l')+CCM(w,'x')+CCM(w,'f')+CCM(w,'d')+CCM(w,'*')+CCM(w,'n')
  CCMWDS(vres) CCMCAND(vres,cand,c)  // see if zl is one of the allowed types
  CDASSERT(CCMTST(cand,c),DEDEC);
-// obsolete  CDASSERT(strchr("cwubsilxfd*n",c),DEDEC);
  CDASSERT(SY_64||'l'!=c,DEDEC);
  // if result is * followed by valid arg type, ratify it by advancing the pointer over the type (otherwise fail in next test)
 #define vargtvalues(w) CCM(w,'c')+CCM(w,'w')+CCM(w,'u')+CCM(w,'b')+CCM(w,'s')+CCM(w,'i')+CCM(w,'l')+CCM(w,'x')+CCM(w,'f')+CCM(w,'d')+CCM(w,'z')+CCM(w,'j')
  CCMWDS(vargt)  // set up for comparisons against list of bytes
  if(c=='*' && *s){
   CCMCAND(vargt,cand,*s) s+=SGNTO0(CCMSGN(cand,*s)); // if *s is valid, skip over it
-// obsolete   if(strchr("cwubsilxfdzj",*s)) ++s;
  }
-// obsolete  CDASSERT(!*s||*s==' ',DEDEC);
  CDASSERT((*s&~' ')==0,DEDEC);  // 0 or SP
 #ifdef C_CD_NODF // platform does not support f result
  CDASSERT(cc->zl!='f',DEDEC)
@@ -886,7 +880,6 @@ static CCT*jtcdparse(J jt,A a,I empty){C c,lib[NPATH],*p,proc[NPATH],*s,*s0;CCT*
   if('*'==c||'&'==c){cc->star[i]=1+(I )('&'==c); c=*s++; if(!c)break; if(' '==c)continue;}
   cc->tletter[i]=c;
   CCMCAND(vargt,cand,c) CDASSERT(CCMTST(cand,c),der);  // vrgt defined above,list of valid arg bytes
-// obsolete   CDASSERT(strchr("cwubsilxfdzj",c),der);
   CDASSERT((c!='z'&&c!='j')||cc->star[i],der);
   if('l'==c){CDASSERT(SY_64,der); cc->tletter[i]='x';}
 #ifdef C_CD_NODF // platform does not support f or d args
@@ -1129,13 +1122,11 @@ F2(jtcd){A z;C*tv,*wv,*zv;CCT*cc;I k,m,n,p,q,t,wr,*ws,wt;
  AFLAG(w)&=~AFPRISTINE;  // we transfer boxes from w to the result, thereby letting them escape.  That makes w non-pristine
  if(!jt->cdarg)RZ(cdinit());
  if(1<AR(a))R rank2ex(a,w,DUMMYSELF,1L,MIN(AR(w),1),1L,MIN(AR(w),1),jtcd);
-// obsolete  wt=AT(w); wr=AR(w); ws=AS(w); m=wr?prod(wr-1,ws):1;
  wt=AT(w); wr=AR(w); ws=AS(w); PRODX(m,wr-1,ws,1);
  ASSERT(wt&DENSE,EVDOMAIN);
  ASSERT(LIT&AT(a),EVDOMAIN);
  C* enda=&CAV(a)[AN(a)]; C endc=*enda; *enda=0; cc=cdparse(a,0); *enda=endc; RZ(cc); // should do outside rank2 loop?
  n=cc->n;
-// obsolete  CDASSERT(n==(wr?ws[wr-1]:1),DECOUNT);
  I nn; CDASSERT(n==SHAPEN(w,wr-1,nn),DECOUNT);
  if(cc->zbx){GATV(z,BOX,m*(1+n),MAX(1,wr),ws); AS(z)[AR(z)-1]=1+n;}
  else{CDASSERT('*'!=cc->zl,DEDEC); GA(z,cc->zt,m,MAX(0,wr-1),ws);}

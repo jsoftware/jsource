@@ -65,9 +65,7 @@ typedef struct {
  PFRAME parserstackframe;  // 4 words  $
  A    global;           /* global symbol table   $                        */
  A    sf;               /* for $:     $                                     */
-// obsolete  A    zombieval;        // value of assignsym, if it can be reused   $
  L    *assignsym;       // symbol-table entry for the symbol about to be assigned   $
-// obsolete  A    symb;             /* symbol table for assignment       $              */
  D    cct;               // complementary comparison tolerance
 // ----- end of cache line 1
  A*   nvrav;            /* AAV(jt->nvra)      $                             */
@@ -109,9 +107,6 @@ typedef struct {
  B    sesm;             /* whether there is a session manager              */
  B    tmonad;           /* tacit translator: 1 iff monad         >          */
  B    tsubst;           /* tacit translator           >                     */
-#if 0  // obsolete 
- B    xco;              /* 1 iff doing x: conversion                       */
-#endif
  UC   dbuser;           /* user-entered value for db                       */
  A    flkd;             /* file lock data: number, index, length           */
  I    flkn;             /* file lock count                                 */
@@ -144,7 +139,6 @@ typedef struct {
  I    malloctotalhwmk;  // highest value since most recent 7!:1
  void * iomalloc;   // address of block, if any, allocated in io.c to be returned to the FE
  I    iomalloclen;   // length of the allocated block (in case we can reuse it)
-// obsolete  I validitymask[8]; // -1, -1, -1, -1, 0, 0, 0, 0   used to prepare for mask load/store
 // --- end cache line 7/8
 #if 0 // used only for direct locale numbering
  I*   numlocdelqh;      // head of deleted queue, waiting for realloc
@@ -234,10 +228,7 @@ typedef struct {
  A*   fxpv;             /* f. AAV(fxpath)                                  */
  A    iep;              /* immediate execution phrase                      */
  AF   lcp;              /* linear representation paren function            */
-// obsolete  I    lleft;            /* positive finite left    level                   */
-// obsolete  I    lmon;             /* positive finite monadic level                   */
  I    locsize[2];       /* size indices for named and numbered locales     */
-// obsolete  I    lright;           /* positive finite right   level                   */
  A    ltext;            /* linear representation text                      */
  AF   ltie;             /* linear representation tie   function            */
  I    min;              /* the r result from irange                        */
@@ -256,7 +247,6 @@ typedef struct {
  PM*  pmv;              /* perf. monitor: (PM*)(sizeof(PM0)+CAV(pma))      */
  I    pos[2];           /* boxed output x-y positioning                    */
  C    pp[8];            /* print precision                                 */
-// obsolete  AF   pre;              /* preface function for assignment                 */
  A    p4792;            // pointer to p: i. 4792, filled in on first use
  I    redefined;        /* symbol table entry of redefined explicit defn   */
  I    sbfillfactor;     /* SB for binary tree                              */
@@ -270,7 +260,6 @@ typedef struct {
  A    sbu;              /* SB data for each unique symbol                  */
  I    sbun;             /* SB cardinality                                  */
  SBU* sbuv;             /* SB points to ravel of sbu                       */
-// obsolete  A    sca;              // S: result vector  rank=1 AN=#elements AS[0]=#used
  int  sdinited;         /* sockets                                         */
  A    slist;            /* files used in right arg to 0!:                  */
  A    sclist;           /* slisti when items of slist were added           */
@@ -320,9 +309,6 @@ union {
   B    nla[256];         /* namelist names mask                             */
   I    nlt;              /* namelist type  mask                             */
  } namelist;
-// obsolete  struct {
-// obsolete   I    oflondx;  // index at which overflow happened
-// obsolete  } ceilfloor;
  struct {
   I    postflags;  // what to do with the result
  } compsc;

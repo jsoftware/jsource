@@ -130,7 +130,6 @@ static F2(jtovg){A s,z;C*x;I ar,*as,c,k,m,n,r,*sv,t,wr,*ws,zn;
   DQ(m, --as; --ws; sv[--k]=MAX(*as,*ws);); 
   DO(r-m, sv[i]=MAX(1,sv[i]););
  }
-// obsolete  RE(c=prod(r-1,1+sv)); m=AS(a)[0]; m=r>ar?1:m; n=AS(w)[0]; n=r>wr?1:n; // verify composite item not too big
  PRODX(c,r-1,1+sv,1); m=AS(a)[0]; m=r>ar?1:m; n=AS(w)[0]; n=r>wr?1:n; // verify composite item not too big
  DPMULDE(c,m+n,zn); ASSERT(0<=m+n,EVLIMIT);
  GA(z,AT(a),zn,r,sv); AS(z)[0]=m+n; x=CAV(z); k=bpnoun(AT(a));
@@ -138,17 +137,6 @@ static F2(jtovg){A s,z;C*x;I ar,*as,c,k,m,n,r,*sv,t,wr,*ws,zn;
  RZ(x=ovgmove(k,c,n,s,w,x,z));
  RETF(z);
 }    /* a,w general case for dense array with the same type; jt->ranks=~0 */
-
-#if 0  // obsolete 
-static F2(jtovv){A z;I m,t;
- t=AT(a); 
- GA(z,t,AN(a)+AN(w),1,0);  
- I klg=bplg(t); m=AN(a)<<klg; C *x=CAV(z); 
- MC(x,  AV(a),m      ); 
- MC(x+m,AV(w),AN(w)<<klg);
- RETF(z);
-}    /* a,w for vectors/scalars with the same type */
-#endif
 
 // these variants copy vectors or scalars, with optional repetition of items and, for the scalars, scalar repetition
 static void moveawVV(C *zv,C *av,C *wv,I c,I k,I ma,I mw,I arptreset,I wrptreset){
@@ -222,21 +210,17 @@ F2(jtover){A z;C*zv;I replct,framect,acr,af,ar,*as,k,ma,mw,p,q,r,t,wcr,wf,wr,*ws
     // We extracted from a and w, so mark them (or the backer if virtual) non-pristine.  If both were pristine and inplaceable, transfer its pristine status to the result
     // if they were boxed nonempty, a and w have not been changed.  Otherwise the PRISTINE flag doesn't matter.
     // If a and w are the same, we mustn't mark the result pristine!  It has repetitions
-// obsolete     I aflg=aflag, wflg=AFLAG(w); AFLAG(z)|=aflg&wflg&(((a!=w)&SGNTO0(AC(a)&AC(w))&((I)jtinplace>>JTINPLACEAX)&((I)jtinplace>>JTINPLACEWX))<<AFPRISTINEX);
-// obsolete     if(unlikely(aflg&AFVIRTUAL)){a=ABACK(a); aflg=aflag;} AFLAG(a)=aflg&~AFPRISTINE; if(unlikely(wflg&AFVIRTUAL)){w=ABACK(w); wflg=AFLAG(w);} AFLAG(w)=wflg&~AFPRISTINE;  // 
     PRISTXFERF2(z,a,w);   // pass PRISTINE status through if possible, make inputs non-PRISTINE
     RETF(z);
    }
   }
  }
  // dissimilar items, or there is frame.  Mark the inputs non-pristine; leave the result non-pristine, since we don't know whether it has repetitions (we could figure that out)
-// obsolete  {A awback=a; I awflg=AFLAG(a); if(unlikely(awflg&AFVIRTUAL)){awback=ABACK(a); awflg=AFLAG(awback);} AFLAG(awback)=awflg&~AFPRISTINE; awback=w; awflg=AFLAG(w); if(unlikely(awflg&AFVIRTUAL)){awback=ABACK(w); awflg=AFLAG(awback);} AFLAG(awback)=awflg&~AFPRISTINE;}
  PRISTCLR(a) PRISTCLRNODCL(w)  // make inputs non-PRISTINE
  p=as[ar-1];   // p=len of last axis of cell.  Always safe to fetch first 
  q=ws[wr-1];   //  q=len of last axis of cell
  r=MAX(acr,wcr); r=(r==0)?1:r;  // r=cell-rank, or 1 if both atoms.
  // if max cell-rank>2, or an argument is empty, or (joining table/table or table/row with cells of different lengths), do general case
-// obsolete  if((((2-r)|(AN(a)-1)|(AN(w)-1))<0)||2<acr+wcr&&p!=q){  // r>2, or empty.  If max rank <= 2 and sum of ranks >2, neither can be an atom
  if(((r-3)&-AN(a)&-AN(w)&((acr+wcr-3)|((p^q)-1)))>=0){  // r>2, or empty (if max rank <= 2 and sum of ranks >2, neither can possibly be an atom), and items (which are lists) have same length 
   RESETRANK; z=rank2ex(a,w,DUMMYSELF,acr,wcr,acr,wcr,jtovg); R z;  // ovg calls other functions, so we clear rank
  }
@@ -255,10 +239,9 @@ F2(jtover){A z;C*zv;I replct,framect,acr,af,ar,*as,k,ma,mw,p,q,r,t,wcr,wf,wr,*ws
  RETF(z);
 }    /* overall control, and a,w and a,"r w for cell rank <: 2 */
 
-F2(jtstitch){/* obsolete B sp2;*/I ar,wr; A z;
+F2(jtstitch){I ar,wr; A z;
  RZ(a&&w);F2PREFIP;
- ar=AR(a); wr=AR(w); // obsolete sp2=(SPARSE&(AT(a)|AT(w)))&&2>=ar&&2>=wr;
-// obsolete  ASSERT(!ar||!wr||*AS(a)==*AS(w),EVLENGTH);  // always OK to fetch s[0]
+ ar=AR(a); wr=AR(w);
  ASSERT((-ar&-wr&-(AS(a)[0]^AS(w)[0]))>=0,EVLENGTH);  // a or w scalar, or same # items    always OK to fetch s[0]
  if(likely((((SPARSE&(AT(a)|AT(w)))-1)&(2-ar)&(2-wr))>=0))R IRSIP2(a,w,0L,(ar-1)&RMAX,(wr-1)&RMAX,jtover,z);  // not sparse or rank>2
  R stitchsp2(a,w);  // sparse rank <=2 separately
@@ -306,9 +289,7 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;I ak,k,p,*u,*v,wk,wm,wn;
    // Instead, we simply convert w to recursive-usecount.  This may take some time if w is complex, but it will (1) increment the
    // usecount of a if any part of w refers to a (3) make the eventual incrementing of usecount in a quicker.  After we have resolved w we see if the usecount of a has budged.  If not, we can proceed with inplacing.
    if(at&BOX){
-// obsolete    I oldac = ACUC(a);  // remember original UC of a
     ra0(w);  // ensure w is recursive usecount.  This will be fast if w has 1=L.
-// obsolete    if(AC(a)>oldac)an = 0;  // turn off inplacing if w referred to a
     an=(AC(a)>ac)?0:an;  // turn off inplacing if w referred to a
     an&=virtreqd-1;  // turn off inplacing if the result must be virtual
    }

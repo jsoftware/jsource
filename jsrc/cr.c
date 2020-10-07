@@ -44,7 +44,7 @@ A jtrank1ex(J jt,AD * RESTRICT w,A fs,I rr,AF f1){F1PREFIP;PROLOG(0041);A z,virt
  // if its rank is not less than the outer rank (we would simply ignore it), but we don't bother.  If its rank is smaller we can't ignore it because assembly might affect
  // the order of fill.  But if f is BOXATOP, there will be no fill, and we can safely use the smaller rank
  if(unlikely(FAV(fs)->flag2&VF2BOXATOP1)){
-  I mr=FAV(fs)->mr; rr=rr<mr?rr:mr;   // obsolete efr(rr,mr,rr);   scaf should be rr=
+  I mr=FAV(fs)->mr; rr=rr<mr?rr:mr;
   state |= (FAV(fs)->flag2&VF2BOXATOP1)>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // If this is BOXATOP, set so for loop.  Don't touch fs yet, since we might not loop
   state &= ~((FAV(fs)->flag2&VF2ATOPOPEN1)>>(VF2ATOPOPEN1X-ZZFLAGBOXATOPX));  // We don't handle &.> here; ignore it
   // if we are using the BOXATOP from f, we can also use the raze flags.  Set these only if BOXATOP to prevent us from incorrectly
@@ -55,7 +55,6 @@ A jtrank1ex(J jt,AD * RESTRICT w,A fs,I rr,AF f1){F1PREFIP;PROLOG(0041);A z,virt
  // multiple cells.  Loop through them.
  // Get size of each argument cell in atoms.  If this overflows, there must be a 0 in the frame, & we will have
  // gone through the fill path (& caught the overflow)
-// obsolete  RE(mn=prod(wf,AS(w))); PROD(wcn,rr,AS(w)+wf);   // number of cells, number of atoms in a cell
  CPROD(AN(w),mn,wf,AS(w)); PROD(wcn,rr,AS(w)+wf);   // number of cells, number of atoms in a cell
  // ?cn=number of atoms in a cell, ?k=#bytes in a cell
  wk=wcn<<bplg(AT(w));
@@ -70,8 +69,7 @@ A jtrank1ex(J jt,AD * RESTRICT w,A fs,I rr,AF f1){F1PREFIP;PROLOG(0041);A z,virt
   // if the original block was direct inplaceable, make the virtual block inplaceable.  (We can't do this for indirect blocks because a virtual block is not marked recursive - rather it increments
   // the usecount of the entire backing block - and modifying the virtual contents would leave the usecounts invalid since the backing block is always recursive (having been ra'd).  Maybe could do this if it isn't?)
   // Don't pass WILLOPEN status - we use that at this level
-// obsolete   jtinplace = (J)((I)jtinplace & (~(JTWILLBEOPENED+JTCOUNTITEMS)) & (((((AT(w)&TYPEVIPOK)!=0)|f1==jteveryself)&REPSGN(AC(w)))*JTINPLACEW-(JTINPLACEW<<1)));  // turn off inplacing unless DIRECT and w is inplaceable
-  fauxvirtual(virtw,virtwfaux,w,rr,ACUC1/* obsolete |ACINPLACE*/) MCISH(AS(virtw),AS(w)+wf,rr); AN(virtw)=wcn;
+  fauxvirtual(virtw,virtwfaux,w,rr,ACUC1) MCISH(AS(virtw),AS(w)+wf,rr); AN(virtw)=wcn;
   // Calculate inplaceability.  Since the inplaceability of f1 was passed into f"r, we don't need to look it up: we just pass the original
   // jtinplace through, except that we remove WILLOPEN status which we are picking up at this level
   jtinplace = (J)((I)jtinplace & ~(JTWILLBEOPENED+JTCOUNTITEMS));
@@ -85,7 +83,6 @@ A jtrank1ex(J jt,AD * RESTRICT w,A fs,I rr,AF f1){F1PREFIP;PROLOG(0041);A z,virt
   ZZPARMS(wf,mn,1)
 #define ZZINSTALLFRAME(optr) MCISHd(optr,AS(w),wf)
   for(i0=mn;i0;--i0){
-// obsolete    AC(virtw)=ACUC1|ACINPLACE;   // in case we created a virtual block from it, restore inplaceability to the UNINCORPABLE block
    AC(virtw)=ACUC1 + ((state&ZZFLAGVIRTWINPLACE)<<(ACINPLACEX-ZZFLAGVIRTWINPLACEX));   // in case we created a virtual block from it, restore inplaceability to the UNINCORPABLE block
    RZ(z=CALL1IP(f1,virtw,fs));
 
@@ -145,7 +142,6 @@ A jtrank1ex0(J jt,AD * RESTRICT w,A fs,AF f1){F1PREFIP;PROLOG(0041);A z,virtw;
 
   while(1){  // loop collecting ATOPs
    I fstate=(FAV(fs)->flag2&(VF2BOXATOP1|VF2ATOPOPEN1))>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // extract <@ and @> status bits from f
-// obsolete     if(fstate&state||!fstate)break;  // If this f overlaps with old, or it's not just a flag node, we have to stop
    if((((fstate&state)-1)&-fstate)>=0)break;  // If this f overlaps with old, or it's not just a flag node, we have to stop
    if(fstate&ZZFLAGATOPOPEN1){
     // @> &> &.>
@@ -181,14 +177,10 @@ A jtrank1ex0(J jt,AD * RESTRICT w,A fs,AF f1){F1PREFIP;PROLOG(0041);A z,virtw;
    // Mark the virtual block as inplaceable only if w is fully inplaceable.  We have to turn of inplaceability in the virtual block so that
    // a non-inplaceable value might cause PRISTINE to be set.  We also require the type to be right, with some allowances for &.>
    state |= (UI)(SGNIF((I)jtinplace,JTINPLACEWX)&~((AT(w)&TYPEVIPOK)-(f1!=jteveryself))&AC(w))>>(BW-1-ZZFLAGVIRTWINPLACEX);   // requires JTINPLACEWX==0.  Single flag bit
-// obsolete    // We can inplace the operation if it is on the items of w (i. e. is not ATOPOPEN) and the w argument was inplaceable.  But we must always remove the raze flags,
-// obsolete    // since we are consuming them here
-// obsolete    jtinplace = (J)((I)jtinplace &(~(JTWILLBEOPENED+JTCOUNTITEMS+JTINPLACEW)+SGNTO0(AC(w))));
    // Init the inplaceability of virtw.  We do this here because in the loop we handle it only for low rank (i. e. virtwfaux) so as to avoid inplacing ATOPOPEN.
    // Thus, for higher rank we set it only this once.  It will stay right unless it gets virtualed
    AC(virtw)=ACUC1 + ((state&ZZFLAGVIRTWINPLACE)<<(ACINPLACEX-ZZFLAGVIRTWINPLACEX));
   }else{wav=AAV(w); virtw=*wav++;
-// obsolete    jtinplace = (J)((I)jtinplace &~(JTWILLBEOPENED+JTCOUNTITEMS+JTINPLACEW));  // no inplacing for ATOPOPEN
   }
   // Since the inplaceability of f1 was passed into f"r, we don't need to look it up: we just pass the original
   // jtinplace through, except that we remove WILLOPEN status which we are picking up at this level
@@ -196,7 +188,6 @@ A jtrank1ex0(J jt,AD * RESTRICT w,A fs,AF f1){F1PREFIP;PROLOG(0041);A z,virtw;
 
 #define ZZINSTALLFRAME(optr) MCISHd(optr,AS(w),AR(w))
   do{
-// obsolete    RZ(z=CALL1(f1,virtw,fs));
    RZ(z=CALL1IP(f1,virtw,fs));
 
 #define ZZBODY  // assemble results
@@ -275,7 +266,6 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,I lr,I rr,I lcr,I rcr,AF f
  // RANKONLY verbs were handled in the caller to this routine, but fs might be RANKATOP.  In that case we can include its rank in the loop here, which will save loop setups
  if(unlikely((I)(((FAV(fs)->flag2&(VF2RANKATOP2|VF2BOXATOP2))-1)|(-((rr^rcr)|(lr^lcr))))>=0)){  // prospective new ranks to include
   I t=(I)lr(fs); lr=t<lr?t:lr; t=(I)rr(fs); rr=t<rr?t:rr;   // get the ranks if we accept the new cell
-// obsolete   efr(lr,lr,(I)lr(fs)); efr(rr,rr,(I)rr(fs));
   state |= (FAV(fs)->flag2&VF2BOXATOP2)>>(VF2BOXATOP2X-ZZFLAGBOXATOPX);  // If this is BOXATOP, set so for loop.  Don't touch fs yet, since we might not loop
   state &= ~((FAV(fs)->flag2&VF2ATOPOPEN2W)>>(VF2ATOPOPEN2WX-ZZFLAGBOXATOPX));  // We don't handle &.> here; ignore it
   // if we are using the BOXATOP from f, we can also use the raze flags.  Set these only if BOXATOP to prevent us from incorrectly
@@ -290,45 +280,24 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,I lr,I rr,I lcr,I rcr,AF f
  if(likely(0<=(((lr-lcr)|(rr-rcr))&(-(aof^wof))))){los=0; lof=aof=wof=0; outerframect=outerrptct=1;  // no outer frame unless it's needed
  }else{
   // outerframect is the number of cells in the shorter frame; outerrptct is the number of cells in the residual frame
-// obsolete  if(aof>=wof){wof=wof<0?0:wof; lof=aof; sof=wof; los=AS(a);}else{aof=aof<0?0:aof;  lof=wof; sof=aof; los=AS(w); state|=STATEOUTERREPEATA;}  // clamp smaller frame at min=0
   // find smaller/larger frame/shape, and indicate if a is the repeated arg (otherwise we assume w)
   wof=wof<0?0:wof; aof=aof<0?0:aof; lof=aof; sof=wof; los=AS(a); lof=aof-wof<0?wof:lof; sof=aof-wof<0?aof:sof; los=aof-wof<0?AS(w):los; state|=(aof-wof)&STATEOUTERREPEATA;
   ASSERTAGREE(AS(a),AS(w),sof)  // prefixes must agree
-// obsolete   RE(outerframect=prod(sof,los)); RE(outerrptct=prod(lof-sof,los+sof));  // get # cells in frame, and in unmatched frame
   CPROD(state&STATEAWNOTEMPTY,outerframect,sof,los); CPROD(state&STATEAWNOTEMPTY,outerrptct,lof-sof,los+sof);  // get # cells in frame, and in unmatched frame
  }
 
  // Now work on inner frames.  Compare frame lengths after discarding outer frames
  // set lif=length of longer inner frame, sif=length of shorter inner frame, lis->longer inner shape
-#if 0 // obsolete
- if((af-aof)==(wf-wof)){
-  // inner frames are equal.  No repeats
-  lif=wf-wof; sif=af-aof; lis=AS(w)+wof;
- } else if((af-aof)<(wf-wof)){
-  // w has the longer inner frame.  Repeat cells of a
-  lif=wf-wof; sif=af-aof; lis=AS(w)+wof;
-  state |= STATEINNERREPEATA;
- } else{
-  // a has the longer inner frame.  Repeat cells of w
-  lif=af-aof; sif=wf-wof; lis=AS(a)+aof;
-  state |= STATEINNERREPEATW;
- }
- ASSERTAGREE(AS(a)+aof,AS(w)+wof,sif)  // error if frames are not same as prefix
-#endif
  {
   I ea=af-aof, ew=wf-wof; sif=lif=ea; lif=ea-ew<=0?ew:lif; sif=ea-ew<=0?sif:ew;  // lif=long inner frame, sif=short
   state|=(ea-ew)&STATEINNERREPEATA;  // if w is longer, indicate repeating a.  The flag bit is far above the max rank
   lis=AS(w)+wof; I *sis=AS(a)+aof;  // start out as the two inner shapes lis=w, sis=a
-// obsolete  ASSERTAGREE(AS(a)+aof,AS(w)+wof,sif)  // error if frames are not same as prefix
   ASSERTAGREE(sis,lis,sif)  // error if frames are not same as prefix
   lis=ew-ea<=0?sis:lis; state|=(ew-ea)&STATEINNERREPEATW;  // make lis the shape pointer for longer; if a is longer, indicate repeating w
  }
-// obsolete  RE(innerrptct=prod(lif-sif,lis+sif));  // number of repetitions per matched-frame cell
-// obsolete  RE(innerframect=prod(sif,lis));   // number of cells in matched frame
  CPROD(state&STATEAWNOTEMPTY,innerrptct,lif-sif,lis+sif);  // number of repetitions per matched-frame cell
  CPROD(state&STATEAWNOTEMPTY,innerframect,sif,lis);   // number of cells in matched frame
 
-// obsolete  I an=AN(a), wn=AN(w);  // empty-operand indicators
  // Migrate loops with count=1 toward the inner to reduce overhead.  We choose not to promote the outer to the inner if both
  // innerframect & innerrptct are 1, on grounds of rarity
  if(innerrptct==1){innerrptct=innerframect; innerframect=1; state &=~(STATEINNERREPEATW|STATEINNERREPEATA);}  // if only one loop needed, make it the inner, with no repeats
@@ -341,10 +310,8 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,I lr,I rr,I lcr,I rcr,AF f
  wk=wcn<<bplg(AT(w));
 
  // See how many cells are going to be in the result
-// obsolete  RE(mn=mult(mult(outerframect,outerrptct),mult(innerframect,innerrptct)));
  DPMULDE(outerframect,outerrptct,mn)  DPMULDE(innerframect,mn,mn)  DPMULDE(innerrptct,mn,mn) 
 
-// obsolete  jtinplace = (J)(intptr_t)((I)jtinplace & (~(JTWILLBEOPENED+JTCOUNTITEMS)) & ~(((I )(a==w)|(I )(outerrptct!=1))*(JTINPLACEA+JTINPLACEW)|(state>>STATEINNERREPEATWX)));  // turn off inplacing if variable is inner-repeated, or any outer repeat, or identical args
 
  // allocate the virtual blocks that we will use for the arguments, and fill in the shape of a cell of each
  // The base pointer AK advances through the source argument.  But if an operand is empty (meaning that there are no output cells),
@@ -359,9 +326,7 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,I lr,I rr,I lcr,I rcr,AF f
  if(likely(mn|(state&STATEANOTEMPTY))){
   // OK to inplace an arg if it's not the same as the other, not repeated, correct type (unless &.>), inplaceable usecount
   state |= (UI)(SGNIF((a!=w)&(outerrptct==1),0)&SGNIF((I)jtinplace,JTINPLACEAX)&AC(a)&~(((AT(a)&TYPEVIPOK)-(f2!=jtevery2self))|SGNIF(state,STATEINNERREPEATAX)))>>(BW-1-ZZFLAGVIRTAINPLACEX);   // requires JTINPLACEWX==0.  Single flag bit  sign=0 if (VIPOK or &.>) 
-// obsolete   jtinplace = (J)(intptr_t)((I)jtinplace & (((((AT(a)&TYPEVIPOK)!=0)|f2==jtevery2self)&REPSGN(AC(a)))*JTINPLACEA+~JTINPLACEA));  // turn off inplacing unless DIRECT and a is inplaceable.
-  fauxvirtual(virta,virtafaux,a,lr,ACUC1/* obsolete |ACINPLACE*/) MCISH(AS(virta),AS(a)+af,lr); AN(virta)=acn;
-// obsolete   AFLAG(virta)&=((I)jtinplace<<(AFPRISTINEX-JTINPLACEAX))|~AFPRISTINE;  // if a repeated, that's like an extraction, turn off pristinity
+  fauxvirtual(virta,virtafaux,a,lr,ACUC1) MCISH(AS(virta),AS(a)+af,lr); AN(virta)=acn;
   // Init the inplaceability of virtw.  We do this here because in the loop we handle it only for low rank (i. e. virt[aw]faux) so as to avoid inplacing fill.
   // Thus, for higher rank we set it only this once.  It will stay right unless it gets virtualed
   AC(virta)=ACUC1 + ((state&ZZFLAGVIRTAINPLACE)<<(ACINPLACEX-ZZFLAGVIRTAINPLACEX));
@@ -369,9 +334,7 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,I lr,I rr,I lcr,I rcr,AF f
 
  if(likely(mn|(state&STATEWNOTEMPTY))){  // repeat for w
   state |= (UI)(SGNIF((a!=w)&(outerrptct==1),0)&SGNIF((I)jtinplace,JTINPLACEWX)&AC(w)&~(((AT(w)&TYPEVIPOK)-(f2!=jtevery2self))|SGNIF(state,STATEINNERREPEATWX)))>>(BW-1-ZZFLAGVIRTWINPLACEX);   // requires JTINPLACEWX==0.  Single flag bit  sign=0 if (VIPOK or &.>) 
-// obsolete   jtinplace = (J)(intptr_t)((I)jtinplace & (((((AT(w)&TYPEVIPOK)!=0)|f2==jtevery2self)&REPSGN(AC(w)))*JTINPLACEW+~JTINPLACEW));  // turn off inplacing unless DIRECT and w is inplaceable.
-  fauxvirtual(virtw,virtwfaux,w,rr,ACUC1/* obsolete |ACINPLACE*/) MCISH(AS(virtw),AS(w)+wf,rr); AN(virtw)=wcn;
-// obsolete   AFLAG(virtw)&=((I)jtinplace<<(AFPRISTINEX-JTINPLACEWX))|~AFPRISTINE;  // if a repeated, that's like an extraction, turn off pristinity
+  fauxvirtual(virtw,virtwfaux,w,rr,ACUC1) MCISH(AS(virtw),AS(w)+wf,rr); AN(virtw)=wcn;
   AC(virtw)=ACUC1 + ((state&ZZFLAGVIRTWINPLACE)<<(ACINPLACEX-ZZFLAGVIRTWINPLACEX));
  }else{RZ(virtw=reshape(vec(INT,rr,AS(w)+wf),filler(w)));}
  // Allow inplacing if the verb supports it, but with the raze flags removed.  We can be loose here because we must be strict about the virt inplaceability to get pristinity right.
@@ -396,8 +359,6 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,I lr,I rr,I lcr,I rcr,AF f
     for(i2=innerframect;i2;--i2){
      // loop over the unmatched part of the inner frame, repeating the shorter argument
      for(i3=innerrptct;i3;--i3){
-// obsolete       AC((A)virtafaux)=ACUC1|ACINPLACE;   // in case we created a virtual block from it, restore inplaceability to the UNINCORPABLE block - only if faux (thus not filler)
-// obsolete       AC((A)virtwfaux)=ACUC1|ACINPLACE; 
       AC((A)virtafaux)=ACUC1 + ((state&ZZFLAGVIRTAINPLACE)<<(ACINPLACEX-ZZFLAGVIRTAINPLACEX));   // in case we created a virtual block from it, restore inplaceability to the UNINCORPABLE block - only if faux (thus not filler)
       AC((A)virtwfaux)=ACUC1 + ((state&ZZFLAGVIRTWINPLACE)<<(ACINPLACEX-ZZFLAGVIRTWINPLACEX)); 
       // invoke the function, get the result for one cell
@@ -493,7 +454,6 @@ A jtrank2ex0(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,AF f2){F2PREFIP;PROLOG(00
 
   while(1){  // loop collecting ATOPs
   I fstate=(FAV(fs)->flag2&(VF2BOXATOP2|VF2ATOPOPEN2A|VF2ATOPOPEN2W))>>(VF2BOXATOP2X-ZZFLAGBOXATOPX);  // extract <@ and @> status bits from f
-// obsolete     if(fstate&state||!fstate)break;  // If this f overlaps with old, or it's not a flag-only node, we have to stop
    if((((fstate&state)-1)&-fstate)>=0)break;  // If this f overlaps with old, or it's not just a flag node, we have to stop
    if(fstate&ZZFLAGATOPOPEN2W){
     // @> &> &.>
@@ -541,7 +501,6 @@ A jtrank2ex0(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,AF f2){F2PREFIP;PROLOG(00
 
   do{I i0=ict;
    do{
-// obsolete     RZ(z=CALL2IP(f2,virta,virtw,fs));
     RZ(z=CALL2(f2,virta,virtw,fs));
 
 #define ZZBODY  // assemble results

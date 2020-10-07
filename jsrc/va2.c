@@ -424,36 +424,6 @@ A jtcvz(J jt,I cv,A w){I t;
  R w;
 }    /* convert result */
 
-#if 0 // obsolete
-// Routine to lookup function/flags for u/ u\ u\.
-// ptr is the type of lookup (insert/prefix/suffix) to generate the function for
-// In the function, id is the pseudochar for the function to look up
-//  t is the argument type
-//  action routine is stored in *ado, flags in *cv.  If no action routine, *ado=0
-#define VA2F(fname,ptr,fp,fm,ft)   \
- static VARPS fname##EWOV[] = { {ft,VD} , {fp,VD}, {fm,VD}, {0,0} }; \
- VARPS jt##fname(J jt,A self,I t){  \
-  if(!(jt->jerr>=EWOV)){  /* normal case, starting the op */                        \
-   t&=(NUMERIC+SBT)&(~SPARSE); t=FAV(self)->flag&VISATOMIC2?t:0;   /* t=0 is not numeric or not atomic fn */  \
-   I tx=t>>INTX; if(t>FL){tx>>=(XNUMX-INTX); tx=t>RAT?3:tx; tx+=3;}  /* index of type */  \
-   VARPS *ra=((VA*)(FAV(self)->localuse.lvp[0]))->ptr+tx; ra=t?ra:fname##EWOV+3;  /* point to return slot */  \
-   R *ra;   /* return the routine address/flags */  \
-  }else{ /* here to recover from integer overflow */ \
-   jt->jerr=0;                                 \
-   R fname##EWOV[2*(FAV(self)->id==CMINUS) + (FAV(self)->id==CPLUS)]; \
-  }  \
- }
-// Lookup the action routine & flags for insert/prefix/suffix
-// first name is name of the generated function
-// second name (e. g. pins) is the name of the structure element containing the action-routine pointers
-// other names are the names of overflow action routines for plus,minus,times respectively
-
-VA2F(vains,pins, plusinsO,minusinsO,tymesinsO)
-VA2F(vapfx,ppfx, pluspfxO,minuspfxO,tymespfxO)
-VA2F(vasfx,psfx, plussfxO,minussfxO,tymessfxO)
-#endif
-
-// obsolete #define VARCASE(e,c) (70*(e)+(c))
 
 // Table converting operand types to slot numbers in a va[] entry
 // Employed when one arg is known to be CMPX/XNUM/RAT.  Indexed by
@@ -551,43 +521,34 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
    // No rank specified.  Since all these verbs have rank 0, that simplifies quite a bit.  ak/wk/zk are not needed and are garbage
    // n is not needed for sparse, but we start it early to get it finished
    if(likely(jtinplace!=0)){
-// obsolete     A t=a;  // will hold, first the longer-rank argument, then the shorter
     I an=AN(a); m=zn=AN(w);
     I raminusw=fr-shortr;   // ar-wr, neg if WISLONG
     zn=raminusw<0?zn:an; m=raminusw<0?an:m;  // zn=# atoms in bigger operand, m=#atoms in smaller
-// obsolete t=raminusw<0?w:t;  // t->block with longer frame
     jtinplace = (J)(((I)jtinplace&3)+aadocv->cv+(raminusw&VIPWCRLONG));  // inplaceability plus routine flags  aadocv free
-// obsolete     s=AS(t); zn=AN(t);     // atoms, shape of larger frame.  shape first.  The dependency chain is s/r/shortr->n->move data
-// obsolete     s=AS((I)jtinplace&VIPWCRLONG?w:a);
     mf=REPSGN(raminusw);  // mf=-1 if w has longer frame, means cannot inplace a
     raminusw=-raminusw;   // now wr-ar
     nf=REPSGN(raminusw);  // nf=-1 if a has longer frame, means cannot inplace w
     raminusw=raminusw&mf; fr+=raminusw; shortr-=raminusw;  // if ar is the longer one, change nothing; otherwise transfer aw-ar from shortr to r.  f (high part of fr) is 0
     PRODRNK(n,fr-shortr,AS((I)jtinplace&VIPWCRLONG?w:a)+shortr);  // treat the entire operands as one big cell; get the rest of the values needed
-// obsolete    t=(A)((I)t^((I)a^(I)w)); m=AN(t);  // rank, atoms of shorter frame  m needed for data move
    // notionally we now repurpose fr to be frame/rank, with the frame 0
     shortr=((I)jtinplace>>VIPOKWX);  // only if supported by routine
     shortr=a==w?0:shortr;  // not if args equal
     // Non-sparse setup for copy loop, no rank
       // get number of inner cells
-// obsolete     jtinplace = (J)(((I)jtinplace&nf)+4*nf+(adocv.cv&-16));  // bits 0-1 of jtinplace are combined input+local; 2-3 just local; 4+ hold adocv.cv; at least one is set to show non-sparse
-// obsolete     nf=(adocv.cv>>VIPOKWX) & ((I)(a==w)-1) & (3 + nf*2 + mf);  // set inplaceability here: not if addresses equal (in case of retry); only if op supports; only if nonrepeated cell
     nf= 3 + mf*2 + nf;  // set inplaceability here: only if nonrepeated cell
     nf&=shortr;  // we use shortr to shorten dependency chain on nf
     nf+=4*nf-16;  // make 2 copies of the 2 bits  This is a long dependency chain through nf
     jtinplace = (J)((I)jtinplace&nf);  // bit 2-3=routine/rank/arg inplaceable, 0-1=routine/rank/arg/input inplaceable
     n^=REPSGN(1-n)&mf;  // encode 'w has long frame, so a is repeated' as complementary n; but if n<2, leave it alone.  Since n=1 when frames are equal, mf in that case is N/C
-    mf=/*nf= obsolete*/1;  // suppress the outer loop, leaving only the loop over m and n
+    mf=1;  // suppress the outer loop, leaving only the loop over m and n
    }else{
     // Sparse setup: move the block-local variables to longer-lived ones.  We are trying to reduce register pressure
     // repurpose ak/wk/mf/nf to hold acr/wcr/af/wf, which we will pass into vasp.  This allows acr/wcr/af/wf to be block-local
-// obsolete     aawwzk[0]=argranks>>RANKTX; aawwzk[1]=argranks&RANKTMSK; mf=0; nf=0;
     aawwzk[0]=fr; aawwzk[1]=shortr; fr=shortr>fr?shortr:fr; mf=0; nf=0;
    }
   }else{I ak,wk;UI acr,wcr;  // fr, shortr are left/right verb rank here
    // Here, a rank was specified.  That means there must be a frame, according to the IRS rules
 #if SY_64
-// obsolete I savallranks=allranks;  // scaf
    {I af,wf;
     // Heavy register pressure here.  Seemingly trivial changes to allranks cause early spill of a in next-to-last PRODRNK
     // When this was written with 6 names it barely fit in registers, so I rewrote it with 4 names.  Compiler's ideas about handling allranks fill spare register
@@ -597,22 +558,13 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
     acr=allranks>>2*RANKTX; acr-=af; acr-=wf;  // acr = ar/wr/acr/wcr
     wcr=acr; wcr&=RANKTMSK; wf<<=2*RANKTX+1; wcr|=wf;   // wcr = wfr/0/wcr  final value
     acr>>=RANKTX; af<<=RANKTX+1; acr|=af;  // acr = afr/0/acr    final value
-// obsolete I wcr2=wcr, acr2=acr; allranks=savallranks; fr=allranks>>(3*RANKTX); wf=(allranks>>(2*RANKTX))&RANKTMSK;  // scaf
    }
-// obsolete    acr=(allranks>>RANKTX)&RANKTMSK; acr=fr<acr?fr:acr; acr*=0xfffffffe00000001; fr<<=(2*RANKTX+1); acr+=fr;  // acr=left frame/cellrank
-// obsolete    wcr=allranks&RANKTMSK; wcr=shortr<wcr?shortr:wcr; wcr*=0xfffffffe00000001; shortr<<=(2*RANKTX+1); wcr+=shortr; // wcr=right frame/cellrank  fr/shortr free
-// obsolete // don't do it   acr=(allranks>>RANKTX)&RANKTMSK; acr=fr<acr?fr:acr; fr-=acr; fr<<=(2*RANKTX+1); acr+=fr;  // acr=left frame/cellrank
-// obsolete // don't do it   wcr=allranks&RANKTMSK; wcr=shortr<wcr?shortr:wcr; shortr-=wcr; shortr<<=(2*RANKTX+1); wcr+=shortr; // wcr=right frame/cellrank  fr/shortr free
-// obsolete    // you would think that the last 3 stmts on each line should be fr-=acr; fr<<=(2*RANKTX+1); acr+=fr;  but
-// obsolete    // that calculates only acr/wcr before branching to the sparse code, and somehow it ends up using another register and everything goes bad
-// obsolete if(acr!=acr2 || wcr!=wcr2)SEGFAULT
 #else
    I af,wf;
    acr=ranks>>RANKTX; acr=fr<acr?fr:acr; af=fr-acr;  // acr=effective rank, af=left frame
    wcr=(RANKT)ranks; wcr=shortr<wcr?shortr:wcr; wf=shortr-wcr; // r=right rank of verb, wcr=effective rank, wf=right frame  fr/shortr free
 #endif
    if(likely(jtinplace!=0)){  // If not sparse... This block isn't needed for sparse arguments, and may fail on them.
-// obsolete    jtinplace = (J)(((I)jtinplace&3)+(adocv.cv&-16)+12+((af-wf)&VIPWFLONG)+((acr-wcr)&VIPWCRLONG));  // inplaceability plus routine flags  adocv.cv free scaf the 12 could go into the table
     jtinplace = (J)((I)jtinplace&3);  // remove all but the inplacing bits
     jtinplace = (J)((I)jtinplace+aadocv->cv);  // insert flag bits for routine (always has bits 0-3=0xc); set bits 2-3 (converted inplacing bits) aadocv free
 #if SY_64
@@ -637,7 +589,6 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
     aawwzk[4]=zn<<bplg(rtype((I)jtinplace));  // calc result-cell size and move it out of registers
     ak<<=bplg(AT(a)); wk<<=bplg(AT(w));  // convert cell sizes to bytes
     aawwzk[0]=ak; aawwzk[2]=wk; ak=((I)jtinplace&VIPWFLONG)?0:ak; wk=((I)jtinplace&VIPWFLONG)?wk:0; aawwzk[1]=ak; aawwzk[3]=wk;  // set inner cell size for last followed by non-last.  Last is 0 for a repeated cell ak/wk free
-// obsolete     awzk[0]=ak; awzk[1]=wk;  // get these values out of registers - the compiler thinks they're needed for a loop
     I shortr=(I)jtinplace&VIPWCRLONG?acr:wcr; fr=(I)jtinplace&VIPWCRLONG?wcr:acr; // shortr=frame(short cell)/0/cellrank(short cell)  fr=frame(long cell)/0/cellrank(long cell)
     shortr&=RANKTMSK;  // cellrank(short cell)
 #if SY_64
@@ -655,14 +606,9 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
     // fr will be (frame(long cell))  /  (shorter frame len)   /  (longer frame len)                      /   (longer frame len+longer celllen)
     //  (offset to store cellshape to)  / for #outer cells mf  / length of frame to copy, also to calc nf / ranks that = this have no repeats, can inplace (also used to figure cellen for shape copy)
     // on 32-bit systems, the top 2 fields have to go into names scellf and f
-    I f=((I)jtinplace&VIPWFLONG)?wcr:acr; /* sf=AS(af<=wf?w:a); obsolete mf=af<=wf;*/   // f=#long frame len
+    I f=((I)jtinplace&VIPWFLONG)?wcr:acr;    // f=#long frame len
 #if SY_64
-// obsolete     fr+=((I)jtinplace&VIPWCRLONG?wcr:acr)<<(3*RANKTX);  // encode start of cell-shape in the argument where the longer cell-shape resides
-// obsolete     fr=(fr&RANKTMSK)+((fr>>RANKTX)<<(3*RANKTX));  // encode start of cell-shape in the argument where the longer cell-shape resides
-// obsolete     fr=(fr+(fr<<(2*RANKTX)))&(RANKTMSK*0x1000000000001U);  // encode start of cell-shape in the argument where the longer cell-shape resides
     fr*=0x8001; fr&=(0xffff000000007fffU);  // encode start of cell-shape in the argument where the longer cell-shape resides  frame(long cell)/0/0/cellrank(long cell)
-// obsolete     fr+=(af-f)<<(2*RANKTX);  // encode shorter frame in upper fx
-// obsolete     fr+=(acr+wcr-f)<<(2*RANKTX);
     f*=0xffffffff00010001; fr+=f; f=(acr+wcr)<<(2*RANKTX); fr+=f;  // cry/-longframe/longframe/longframe   frame(long cell)+cry/-longframe/longframe/longframe+cellrank(long cell) 0 + ffffffff00000000 + 10000 + 1
         //   frame(long cell)/shortframe/longframe/longframe+cellrank(long cell) - final value   f free
     // register pressure is excruciating here.  Only one register allowed, and no 64-bit immediates
@@ -670,13 +616,10 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
     allranks+=(VIPOKRNKA-1)-((1LL<<(2*RANKTX))-1)+(1LL<<RANKTX); // 0x00010000  set VIPOKRNKA  (by carry into 0) if a byte of allranks is 00
     allranks&=~((VIPOKRNKW<<1)-(1LL<<RANKTX)); allranks+=(VIPOKRNKW-(1LL<<RANKTX))+1;  // 0x3fff0001  set VIPOKRNKW (by carry into 0) if w byte of allranks is 00
     allranks>>=(VIPOKRNKAX-VIPOKAX); allranks&=~VIPOKW; allranks+=VIPOKW>>1; allranks|=~(VIPOKA+VIPOKW); jtinplace=(J)((I)jtinplace&allranks);  // close up gap betw RNKA and RNKW  allranks free
-// obsolete     jtinplace=(J)((I)jtinplace&(((((allranks>>(3*RANKTX))^fr)&RANKTMSK)-1)|~VIPOKA));  // disable inplace a if a rank has either repeat,
-// obsolete     jtinplace=(J)((I)jtinplace&(((((allranks>>(2*RANKTX))^fr)&RANKTMSK)-1)|~VIPOKW));  // disable inplace w if w rank has either repeat, i. e. argrank!=f+fr
     ASSERTAGREE(AS(a)+acr, AS(w)+wcr, (shortr>>RANKTX)&RANKTMSK)  // offset to each cellshape, and cellrank(short cell) acr wcr free but were actually spilled earlier
     PRODRNK(n,shortr,AS((I)jtinplace&VIPWCRLONG?w:a)+(shortr>>=(2*RANKTX+1)));  // n is #atoms in excess frame of inner cells, length assigned first shortr free
 #else
     // fr will be (frame(long cell))  /  (shorter frame len)   /  (longer frame len)                      /   (longer frame len+longer celllen)
-// obsolete     scellf=(I)jtinplace&VIPWCRLONG?wcr:acr;  // offset is long shape of start of inner cell
     scellf=(fr>>RANKTX);  // offset is long shape of start of inner cell    frame(long cell)
     fr&=RANKTMSK;  // longer celllen
     fr += f<<RANKTX;  // longer frame/longer cellen
@@ -686,28 +629,16 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
     jtinplace=(J)((I)jtinplace&((((argranks^fr)&RANKTMSK)-1)|~VIPOKW));  // disable inplace w if w rank has either repeat, i. e. argrank!=f+fr
     ASSERTAGREE(AS(a)+acr, AS(w)+wcr, (shortr>>RANKTX)&RANKTMSK)   // shortr free  af/wf free
     PRODRNK(n,shortr,AS((I)jtinplace&VIPWCRLONG?w:a)+savshortr);  // n is #atoms in excess frame of inner cells, length assigned first shortr free
-// obsolete     f=af-f;
 #endif
-// obsolete     I tf=SGNTO0((((argranks>>RANKTX)^fr)&RANKTMSK)-1);  // register pressure, so we break this up.  Bit 0 set if a does not have repeat, i. e argrank==f+fr
-// obsolete     tf=2*tf+SGNTO0(((argranks^fr)&RANKTMSK)-1);  // bits 0-1 set with inplaceability of a/w owing to frame  move this up
-// obsolete     s=AS((I)jtinplace&VIPWCRLONG?w:a)+scellf;  // s->shape of larger-rank cell
-// obsolete     PROD(n,fr-shortr,AS((I)jtinplace&VIPWCRLONG?w:a)+((I)jtinplace&VIPWCRLONG?wcr:acr)+shortr);  // n is #atome in excess frame of inner cells
-// obsolete     PROD(n,(fr&RANKTMSK)-shortr,AS((I)jtinplace&VIPWCRLONG?w:a)+(fr>>RANKTX)+shortr);  // n is #atoms in excess frame of inner cells
     // if the cell-shapes don't match, that's an agreement error UNLESS the frame contains 0; in that case it counts as
     // 'error executing on the cell of fills' and produces a scalar 0 as the result for that cell, which we handle by changing the result-cell rank to 0
     // Nonce: continue giving the error even when frame contains 0 - remove 1|| in the next line to conform to fill-cell rules
 // this shows the fix   if(ICMP(as+af,ws+wf,MIN(acr,wcr))){if(1||zn)ASSERT(0,EVLENGTH)else r = 0;}
-// obsolete       // len is common inner len: cellrank(long cell)-cellrank(short cell)   offset is frame(long cell)+cellrank(short cell) (i. e. loc of excess inner cellrank)  acr wcr free
-// obsolete     f=af+wf-(fr>>RANKTX); //  free
     n^=REPSGN((1-n)&SGNIF((I)jtinplace,VIPWCRLONGX));  // encode 'w has long frame, so a is repeated' as complementary n; but if n<2, leave it alone
-// obsolete     nf=acr<=wcr;
-// obsolete     jtinplace = (J)(((I)jtinplace)|((ak-1)&ACINPLACE));  // install sign bit if af<=wf ak==0 ACINPLACE just means the sign bit  ak/wk free
-// obsolete     nf=(C)((RANKT)jtinplace>>VIPOKWX) & (C)((RANKT)(a==w)-1) & ((C)((RANKT)(argranks>>RANKTX)==(RANKT)fr)*2 + (C)((RANKT)(argranks&RANKTMSK)==(RANKT)fr));  // set inplaceability here: not if addresses equal (in case of retry); only if op supports; only if nonrepeated cell
     nf=((I)jtinplace>>VIPOKWX)&3;  // extract inplaceability from operation and ranks
     nf=a==w?0:nf;  // not inplaceable if args identical
     nf+=4*nf-16;  // make 2 copies of the 2 bits protect high bits of jtinplace.  This is a long dependency chain through nf but it will overlap the PRODs coming up
     jtinplace = (J)((I)jtinplace&nf);  // bit 2-3=routine/rank/arg inplaceable, 0-1=routine/rank/arg/input inplaceable   nf free
-// obsolete     sf=AS((I)jtinplace<0?w:a);   // get start of longer frame
 #if SY_64
     f=(fr>>(2*RANKTX))&RANKTMSK;  // recover (shorter frame len) from upper fx
     PRODRNK(nf,((fr>>RANKTX)-f),f+AS(((I)jtinplace&VIPWFLONG)?w:a));    // nf=#times shorter-frame cell must be repeated;  offset is (shorter frame len), i. e. loc of excess frame
@@ -718,11 +649,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
          // length is (longer frame len)-(shorter frame len)  i. e. length of excess frame
     PRODRNK(mf,f,AS(a));  //  mf=#cells in common frame [either arg ok]   f is (shorter frame len)      f free now
 #endif
-// obsolete #ifdef DPMULD
-    /* obsolete nf^=REPSGN(1-nf)&-mf;*/
-// obsolete #else
-// obsolete     RE(zn=mult(nf,zk)); /* obsolete nf^=REPSGN(1-nf)&-mf; */ PROD(mf,q,sf); RE(zn=mult(mf,zn));  // zn=total # result atoms  (only if non-sparse)
-// obsolete #endif
+    
     // Now nf=outer repeated frame  mf=outer common frame  n=inner repeated frame  m=inner common frame
     //    leading axes --------------------------------------------------------------> trailing axes
     // loop migration: if the outer loop can be subsumed into the inner loop do that to make the faster inner loops more effective
@@ -743,7 +670,6 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
     }
    }else{
 #if SY_64
-// obsolete     I af=acr>>(2*RANKTX+1), wf=wcr>>(2*RANKTX+1); acr&=RANKTMSK; wcr&=RANKTMSK;   // separate cr and f for sparse
     I af=acr>>(2*RANKTX+1), wf=wcr>>(2*RANKTX+1); acr&=RANKTMSK; wcr&=RANKTMSK;   // separate cr and f for sparse
 #endif
     fr=acr<wcr?wcr:acr; I f=(af<wf)?wf:af; fr+=(f<<RANKTX)+f; aawwzk[0]=acr; aawwzk[1]=wcr; mf=af; nf=wf;
@@ -771,8 +697,6 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
     // Conversions to XNUM use a routine that pushes/sets/pops jt->mode, which controls the
     // type of conversion to XNUM in use.  Any result of the conversion is automatically inplaceable.  If type changes, change the cell-size too, possibly larger or smaller
     // bits 2-3 of jtinplace indicate whether inplaceability is allowed by the op, the ranks, and the addresses
-// obsolete     if(TYPESNE(t,AT(a))){aawwzk[0]=(aawwzk[0]>>bplg(AT(a)))<<bplg(t); aawwzk[1]=(aawwzk[1]>>bplg(AT(a)))<<bplg(t); RZ(a=!(t&XNUM)?cvt(t,a):xcvt(((I)jtinplace&VXCVTYPEMSK)>>VXCVTYPEX,a));jtinplace = (J)(intptr_t)((I)jtinplace | (((I)jtinplace>>2)&JTINPLACEA));}
-// obsolete     if(TYPESNE(t,AT(w))){aawwzk[2]=(aawwzk[2]>>bplg(AT(w)))<<bplg(t); aawwzk[3]=(aawwzk[3]>>bplg(AT(w)))<<bplg(t); RZ(w=!(t&XNUM)?cvt(t,w):xcvt(((I)jtinplace&VXCVTYPEMSK)>>VXCVTYPEX,w));jtinplace = (J)(intptr_t)((I)jtinplace | (((I)jtinplace>>2)&JTINPLACEW));}
     if(TYPESNE(t,AT(a))){aawwzk[0]=(aawwzk[0]>>bplg(AT(a)))<<bplg(t); aawwzk[1]=(aawwzk[1]>>bplg(AT(a)))<<bplg(t); RZ(a=cvt(t|((I)jtinplace&VARGCVTMSKF),a)); jtinplace = (J)(intptr_t)((I)jtinplace | (((I)jtinplace>>2)&JTINPLACEA));}
     if(TYPESNE(t,AT(w))){aawwzk[2]=(aawwzk[2]>>bplg(AT(w)))<<bplg(t); aawwzk[3]=(aawwzk[3]>>bplg(AT(w)))<<bplg(t); RZ(w=cvt(t|((I)jtinplace&VARGCVTMSKF),w)); jtinplace = (J)(intptr_t)((I)jtinplace | (((I)jtinplace>>2)&JTINPLACEW));}
    }  // It might be better to do the conversion earlier, and defer the error
@@ -805,12 +729,8 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
   // The ordering here assumes that jtinplace will usually be set
 // alternative  if(((I)jtinplace&1) && (AC(w)<ACUC1 || AC(w)==ACUC1&&jt->assignsym&&jt->assignsym->val==w&&!(adocv.cv&VCANHALT && jt->asgzomblevel<2))){z=w; if(TYPESNE(AT(w),zt))MODBLOCKTYPE(z,zt)  //  Uses JTINPLACEW==1
 // alternative  }else if(((I)jtinplace&2) && (AC(a)<ACUC1 || AC(a)==ACUC1&&jt->assignsym&&jt->assignsym->val==a&&!(adocv.cv&VCANHALT && jt->asgzomblevel<2))){z=a; if(TYPESNE(AT(a),zt))MODBLOCKTYPE(z,zt)  //  Uses JTINPLACEA==2
-// obsolete  if( (SGNIF(jtinplace,JTINPLACEWX)&AC(w))<0 || ((SGNIF(jtinplace,JTINPLACEWX)&(AC(w)-2))<0)&&jt->assignsym&&jt->assignsym->val==w/* no longer &&!((I)jtinplace&VCANHALT && jt->asgzomblevel<2)*/){z=w; I zt=rtype((I)jtinplace); if(TYPESNE(AT(w),zt))MODBLOCKTYPE(z,zt)  //  Uses JTINPLACEW==1
-// obsolete   }else if( (SGNIF(jtinplace,JTINPLACEAX)&AC(a))<0 || ((SGNIF(jtinplace,JTINPLACEAX)&(AC(a)-2))<0)&&jt->assignsym&&jt->assignsym->val==a/* no longer &&!((I)jtinplace&VCANHALT && jt->asgzomblevel<2)*/){z=a; I zt=rtype((I)jtinplace); if(TYPESNE(AT(a),zt))MODBLOCKTYPE(z,zt)  //  Uses JTINPLACEA==2
   if(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX),w)){z=w; I zt=rtype((I)jtinplace); if(unlikely(TYPESNE(AT(w),zt)))MODBLOCKTYPE(z,zt)  //  Uses JTINPLACEW==1
   }else if(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEAX),a)){z=a; I zt=rtype((I)jtinplace); if(unlikely(TYPESNE(AT(a),zt)))MODBLOCKTYPE(z,zt)  //  Uses JTINPLACEA==2
-// obsolete   }else{GA(z,rtype((I)jtinplace),zn,(RANKT)fr+(fr>>RANKTX),0); MCISH(AS(z),sf,fr>>RANKTX); MCISH(AS(z)+(fr>>RANKTX),s,(RANKT)fr);} 
-// obsolete   }else{GA(z,rtype((I)jtinplace),zn,(RANKT)fr,0); MCISH(AS(z),AS(((I)jtinplace&VIPWFLONG)?w:a),(fr>>RANKTX)&RANKTMSK); MCISH(AS(z)+((fr>>RANKTX)&RANKTMSK),s,(fr&RANKTMSK)-((fr>>RANKTX)&RANKTMSK));} 
 #if SY_64
 #define scell AS((I)jtinplace&VIPWCRLONG?w:a)+(fr>>(3*RANKTX))  // address of start of cell shape     shape of long cell+frame(long cell)
 #else
@@ -831,21 +751,14 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
    {  // lowest rc from the executed sections
     C *av=CAV(a); C *wv=CAV(w); C *zv=CAV(z);  // point to the data
     // Call the action routines: nf,mf, etc must be preserved in case of repair
-#if 0   // obsolete
-    if(nf-1==0){I i=mf; do{((AHDR2FN*)adocv.f)(n,m,av,wv,zv,jt); if(!--i)break; av+=awzk[0]; wv+=awzk[1]; zv+=awzk[2];}while(1);}  // if the short cell is not repeated, loop over the frame
-    else if(nf-1<0){I im=mf; do{I in=~nf; do{((AHDR2FN*)adocv.f)(n,m,av,wv,zv,jt); wv+=awzk[1]; zv+=awzk[2];}while(--in); av+=awzk[0];}while(--im);} // if right frame is longer, repeat cells of a
-    else         {I im=mf; do{I in=nf; do{((AHDR2FN*)adocv.f)(n,m,av,wv,zv,jt); av+=awzk[0]; zv+=awzk[2];}while(--in); wv+=awzk[1];}while(--im);}  // if left frame is longer, repeat cells of w
-#else
      // mf has the total number of calls.  nf is 1 less than the number of calls with a repeated cell.  aawwzk[0,1] are the cell-size of a for the outer loop, aawwzk[2,3] are for w;
      // but aawwzk[1,3] have 0 in a repeated argument.  aawwzk[1,3] are added for each inner iteration, aawwzk[0,2] at the end of an inner cycle
      // m is the number of outer loops the caller will run
      // n is the number of times the inner-loop atom is repeated for each outer loop: n=1 means no inner loop needed; n>1 means each atom of y is repeated n times; n<0 means each atom of x is repeated ~n times.  n*m cannot=0. 
    I i=mf; I jj=nf; lp000: {I lrc=((AHDR2FN*)aadocv->f)(n,m,av,wv,zv,jt); rc=lrc<rc?lrc:rc; if(unlikely(--i)){ I jj1=--jj; jj=jj<0?nf:jj; av+=aawwzk[1+REPSGN(jj1)]; wv+=aawwzk[3+REPSGN(jj1)]; zv+=aawwzk[4]; goto lp000; }}  // jj1 is -1 on the last inner iter, where we use outer incr
-#endif
    }
 
    // The work has been done.  If there was no error, check for optional conversion-if-possible or -if-necessary
-// obsolete   if(likely(rc==EVOK)){RETF(!((I)jtinplace&VRI+VRD)?z:cvz((I)jtinplace,z));  // normal return is here.  The rest is error recovery
    if(likely(rc==EVOK)){if(unlikely((I)jtinplace&VRI+VRD))z=cvz((I)jtinplace,z); RETF(z);  // normal return is here.  The rest is error recovery
    }else if(rc-EWOVIP>=0){A zz;C *zzv;I zzk;
     // Here for overflow that can be corrected in place
@@ -876,21 +789,6 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
     } else {   // not multiply repair, but something else to do inplace
      adocv.f = repairip[(rc-EWOVIP)&3];   // fetch ep from table
      I nipw = ((z!=w) & (rc-EWOVIP)) ^ (((rc-EWOVIP)>>2) & 1);  // nipw from z!=w if bits2,0==01; 1 if 10; 0 if 00
-// obsolete      switch(rc-EWOVIP){
-// obsolete      case EWOVIPPLUSII:
-// obsolete       // choose the non-in-place argument
-// obsolete       adocv.f=(VF)plusIIO; nipw = z!=w; break; // if w not repeated, select it for not-in-place
-// obsolete      case EWOVIPPLUSBI:
-// obsolete       adocv.f=(VF)plusBIO; nipw = 0; break;   // Leave the Boolean argument as a
-// obsolete      case EWOVIPPLUSIB:
-// obsolete       adocv.f=(VF)plusBIO; nipw = 1; break;  // Use w as not-in-place
-// obsolete      case EWOVIPMINUSII:
-// obsolete       adocv.f=(VF)minusIIO; nipw = z!=w; break; // if w not repeated, select it for not-in-place
-// obsolete      case EWOVIPMINUSBI:
-// obsolete       adocv.f=(VF)minusBIO; nipw = 0; break;   // Leave the Boolean argument as a
-// obsolete      case EWOVIPMINUSIB:
-// obsolete       adocv.f=(VF)minusBIO; nipw = 1; break;  // Use w as not-in-place
-// obsolete      }
      // nipw means 'use w as not-in-place'; c means 'repeat cells of a'; so if nipw!=c we repeat cells of not-in-place, if nipw==c we set nf to 1
      // if we are repeating cells of the not-in-place, we leave the repetition count in nf, otherwise subsume it in mf
      // b means 'repeat atoms inside a'; so if nipw!=b we repeat atoms of not-in-place, if nipw==b we set n to 1
@@ -919,7 +817,6 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
    // retry required, not inplaceable.  Signal the error code to the caller.  If the error is not retryable, set the error message
    if(rc<=NEVM)jsignal(rc);else jt->jerr=(UC)rc;
   }
-// obsolete  }else{z=vasp(a,w,FAV(self)->id,adocv.f,adocv.cv,atype(adocv.cv),rtype(adocv.cv),mf,aawwzk[0],nf,aawwzk[1],fr>>RANKTX,(RANKT)fr); if(!jt->jerr)R z;}  // handle sparse arrays separately. 
  }else{z=vasp(a,w,FAV(self)->id,aadocv->f,aadocv->cv,atype(aadocv->cv),rtype(aadocv->cv),mf,aawwzk[0],nf,aawwzk[1],fr>>RANKTX,(RANKT)fr-(fr>>RANKTX)); if(!jt->jerr)R z;}  // handle sparse arrays separately.
  R 0;  // return to the caller, who will retry any retryable errors
 }    /* scalar fn primitive and f"r main control */
@@ -1240,7 +1137,6 @@ static A jtsumattymes(J jt, A a, A w, I b, I t, I m, I n, I nn, I r, I *s, I zn)
  RETF(z);
 }    /* a +/@:* w for non-scalar a and w */
 
-// obsolete static C sumbf[]={CSTARDOT,CMIN,CSTAR,CPLUSDOT,CMAX,CEQ,CNE,CSTARCO,CPLUSCO,CLT,CLE,CGT,CGE};  // verbs that support +/@:g
 
 #define SUMBFLOOPW(BF)     \
  {DO(q, memset(tv,C0,p); DO(255, DO(dw,tv[i]+=BF(*u,*v); ++u; ++v;);); DO(zn,zv[i]+=tu[i];));  \
@@ -1299,11 +1195,10 @@ DF2(jtfslashatg){A fs,gs,y,z;B b,sb=0;C*av,c,d,*wv;I ak,an,ar,*as,at,m,
  y=FAV(fs)->fgh[0]; c=ID(y); d=ID(gs);
  if(c==CPLUS){
   // +/@:g is special if args are boolean, length is integral number of I, and g is boolean or *
-  if((((at&wt&(n==1))>(zn&(SZI-1)))||!SY_ALIGN)/* obsolete &&strchr(sumbf,d)*/){   //  relies on B01==1
+  if((((at&wt&(n==1))>(zn&(SZI-1)))||!SY_ALIGN)){   //  relies on B01==1
 #define sumbfvalues(w) CCM(w,CGE)+CCM(w,CLE)+CCM(w,CGT)+CCM(w,CLT)+CCM(w,CPLUSCO)+CCM(w,CSTARCO)+CCM(w,CNE)+CCM(w,CEQ)+ \
  CCM(w,CSTARDOT)+CCM(w,CPLUSDOT)+CCM(w,CMIN)+CCM(w,CMAX)+CCM(w,CSTAR)
    CCMWDS(sumbf) CCMCAND(sumbf,cand,d) if(CCMTST(cand,d))R sumatgbool(a,w,d);   // quickly handle verbs that have primitive inverses
-// obsolete  if(s=strchr(invf[0],id))R ds(invf[1][s-invf[0]]);     kludge scaf faster
   }
   if(d==CSTAR){
    if(!ar||!wr){  // if either argument is atomic, apply the distributive property to save multiplies
@@ -1317,9 +1212,6 @@ DF2(jtfslashatg){A fs,gs,y,z;B b,sb=0;C*av,c,d,*wv;I ak,an,ar,*as,at,m,
  sb=yt&(c==CPLUS);  // +/@:g where g produces Boolean.
  if(!(sb||TYPESEQ(yt,zt)))R df1(z,df2(y,a,w,gs),fs);
  if(t){
-// obsolete   I bb=t&XNUM;
-// obsolete   if(TYPESNE(t,at))RZ(a=bb?xcvt((adocv.cv&VXCVTYPEMSK)>>VXCVTYPEX,a):cvt(t,a));
-// obsolete   if(TYPESNE(t,wt))RZ(w=bb?xcvt((adocv.cv&VXCVTYPEMSK)>>VXCVTYPEX,w):cvt(t,w));
   if(TYPESNE(t,at))RZ(a=cvt(t|(adocv.cv&VARGCVTMSKF),a));
   if(TYPESNE(t,wt))RZ(w=cvt(t|(adocv.cv&VARGCVTMSKF),w));
  }
@@ -1464,7 +1356,6 @@ VA2 jtvar(J jt,A self,I at,I wt){I t;
   }else{
    // Normal case, but something is nonnumeric.  This will be a domain error except for = and ~:, and a few symbol operations
    VA2 retva2;  retva2.cv=VB; // where we build the return value   cv indicates no input conversion, boolean result
-// obsolete   I opx=(UC)FAV(self)->id==CNE; if(opx|((UC)FAV(self)->id==CEQ)){I opcode;
     if(likely(((UC)FAV(self)->id&~1)==CEQ)){I opcode;  // CEQ or CNE
     // = or ~:, possibly inhomogeneous
     if(likely(HOMO(at,wt))){

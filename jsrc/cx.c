@@ -28,6 +28,7 @@
 
 // Parse/execute a line, result in z.  If locked, reveal nothing.  Save current line number in case we reexecute
 // If the sentence passes a u/v into an operator, the current symbol table will become the prev and will have the u/v environment info
+// If the sentence fails, we go into debug mode and don't return until the user releases us
 #define parseline(z) {C attnval=*jt->adbreakr; A *queue=line+ci->i; I m=ci->n; if(likely(!attnval)){if(likely(!(gsfctdl&16)))z=parsea(queue,m);else {thisframe->dclnk->dcix=i; z=parsex(queue,m,ci,callframe);}}else{jsignal(EVATTN); z=0;} }
 
 typedef struct{A t,x,line;C*iv,*xv;I j,n; I4 k,w;} CDATA;
@@ -254,8 +255,9 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
     // We check before every sentence in case the user turns on debug in the middle of this definition
     // NOTE: this stack frame could be put on the C stack, but that would reduce the recursion limit because the frame is pretty big
     // If there is no calling stack frame we can't turn on debug mode because we can't suspend
+    // If we are executing a recursive call to JDo we can't go into debug because we can't prompt
     DC d; for(d=jt->sitop;d&&DCCALL!=d->dctype;d=d->dclnk);  /* find bottommost call                 */
-    if(d){  // if there is a call and thus we can suspend
+    if(d&&jt->recurstate<RECSTATEPROMPT){  // if there is a call and thus we can suspend; and not prompting already
      BZ(thisframe=deba(DCPARSE,0L,0L,0L));  // if deba fails it will be before it modifies sitop.  Remember our stack frame
      old=jt->tnextpushp;  // protect the stack frame against free
      gsfctdl|=16+2;  // indicate we have a debug frame and are in debug mode
@@ -298,11 +300,11 @@ tblockcase:
    parseline(t);
    // Check for assert.  Since this is only for T-blocks we tolerate the test (rather than duplicating code)
    if(ci->type==CASSERT&&jt->assert&&t&&!(NOUN&AT(t)&&all1(eq(num(1),t))))t=pee(line,ci,EVASSERT,gsfctdl<<(BW-2),callframe);  // if assert., signal post-execution error if result not all 1s.  May go into debug; sets to result after debug
-   if(t){ti=i,++i;  // if no error, continue on
+   if(likely(t!=0)){ti=i,++i;  // if no error, continue on
     if((UI)i<(UI)n&&!(((cwtype=(ci=i+cw)->type)^CDO)+jt->cxspecials))goto docase;  // avoid indirect-branch overhead on the likely case
-   }else if((gsfctdl&16)&&DB1&jt->uflags.us.cx.cx_c.db)ti=i,i=debugnewi(i+1,thisframe,self);  // if coming out of debug with error: go to new line (there had better be one)
+   }else if((gsfctdl&16)&&DB1&jt->uflags.us.cx.cx_c.db)ti=i,i=debugnewi(i+1,thisframe,self);  // error in debug mode: when coming out of debug, go to new line (there had better be one)
    else if(EVTHROW==jt->jerr){if(gsfctdl&4&&(tdv+tdi-1)->t){i=(tdv+tdi-1)->t+1; RESETERR;}else BASSERT(0,EVTHROW);}  // if throw., and there is a catch., do so
-   else{i=ci->go; if(i<SMAX){RESETERR; z=mtm; if(gsfctdl&4){if(!--tdi){jt->uflags.us.cx.cx_c.db=(UC)(gsfctdl>>8); gsfctdl^=4;}}}else z=0;}  // if we take error exit, we might not have protected z, which is not needed anyway; so clear it to prevent invalid use
+   else{i=ci->go; if(i<SMAX){RESETERR; z=mtm; if(gsfctdl&4){if(!--tdi){jt->uflags.us.cx.cx_c.db=(UC)(gsfctdl>>8); gsfctdl^=4;}}}else z=0;}  // uncaught error: if we take error exit, we might not have protected z, which is not needed anyway; so clear it to prevent invalid use
      // if we are not taking the error exit, we still need to set z to a safe value since we might not have protected it.  This is B1 try. if. error do. end. catch. return. end.
    break;
   case CDO:
@@ -336,12 +338,12 @@ dobblock:
    // run the sentence
    tpop(old); parseline(z);
    // if there is no error, or ?? debug mode, step to next line
-   if(z){bi=i; i+=(cwtype>>5)+1;  // go to next sentence, or to the one after that if it's harmless end. 
+   if(likely(z!=0)){bi=i; i+=(cwtype>>5)+1;  // go to next sentence, or to the one after that if it's harmless end. 
     if((UI)i<(UI)n&&!((((cwtype=(ci=i+cw)->type)&31)^CBBLOCK)+jt->cxspecials))goto dobblock;  // avoid indirect-branch overhead on the likely case
     // BBLOCK is usually followed by another BBLOCK, but another important followon is END followed by BBLOCK.  BBLOCKEND means
     // 'bblock followed by end that falls through', i. e. a bblock whose successor is i+2.  By handling that we process all sequences of if. T do. B end. B... without having to go through the switch;
     // this means the switch will learn to go to the if.
-   }else if((gsfctdl&16)&&jt->uflags.us.cx.cx_c.db&(DB1)){  // if debug mode, we assume we are ready to execute on
+   }else if((gsfctdl&16)&&jt->uflags.us.cx.cx_c.db&(DB1)){  // error in debug mode
     z=mtm,bi=i,i=debugnewi(i+1,thisframe,self);   // Remember the line w/error; fetch continuation line if any. it is OK to have jerr set if we are in debug mode, but z must be a harmless value to avoid error protecting it
    // if the error is THROW, and there is a catcht. block, go there, otherwise pass the THROW up the line
    }else if(EVTHROW==jt->jerr){
@@ -601,12 +603,12 @@ static I jtxop(J jt,A w){I i,k;
 static F1(jtcolon0){A l,z;C*p,*q,*s;I m,n;
  n=0; RZ(z=exta(LIT,1L,1L,300L)); s=CAV(z);
  while(1){
-  RE(l=jgets("\001"));
-  if(!l)break;
+  RE(l=jgets("\001"));   // abort if error on input
+  if(!l)break;  // exit loop if EOF
   m=AN(l); p=q=CAV(l); 
   while(p<q+m&&' '==*p)++p; if(p<q+m&&')'==*p){while(p<q+m&&' '==*++p); if(p>=m+q)break;}  // if ) with nothing else but blanks, stop
   while(AN(z)<=n+m){RZ(z=ext(0,z)); s=CAV(z);}
-  MC(s+n,q,m); n+=m; s[n]=CLF; ++n;
+  MC(s+n,q,m); n+=m; s[n]=CLF; ++n;  // append LF at end of each line
  }
  R str(n,s);
 }    /* enter nl terminated lines; ) on a line by itself to exit */

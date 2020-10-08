@@ -114,10 +114,10 @@ static void jtsusp(J jt){B t;DC d;
  jt->fcalln=MIN(NFCALL,jt->fcalln+NFCALL/10);
  if     (jt->dbssexec){RESETERR; immex(jt->dbssexec); tpop(old);}
  else if(jt->dbtrap  ){RESETERR; immex(jt->dbtrap  ); tpop(old);}
- while(jt->dbsusact==SUSCONT){
+ while(jt->dbsusact==SUSCONT){A  inp;
   jt->jerr=0;
   if(jt->iepdo&&jt->iep){jt->iepdo=0; immex(jt->iep); tpop(old);}
-  immex(jgets("      ")); 
+  if((inp=jgets("      "))==0)jt->dbsusact==SUSCLEAR;else immex(inp); // read and execute a line, but exit debug if error reading line
   tpop(old);
  }
  if(jt->dbuser){
@@ -178,7 +178,7 @@ A jtpee(J jt,A *queue,CW*ci,I err,I lk,DC c){A z=0;
  if(jt->jerr)z=0; R z;  // if we entered debug, the error may have been cleared.  If not, clear the result.  Return debug result, which is result to use or 0 to indicate jump
 }
 
-/* parsex: parse an explicit defn line              */
+// parsex: parse an explicit defn line when the debugger is running
 /* w  - line to be parsed                           */
 /* lk - 1 iff locked function; _1 to signal noun error at beginning of sentence */
 /* ci - current row of control matrix               */

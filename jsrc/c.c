@@ -15,17 +15,17 @@ F2(jtobverse){ASSERTVV(a,w); R CDERIV(COBVERSE,obv1,obv2,((FAV(a)->flag&FAV(w)->
 
 
 // Adverse.  Run f, and if that fails (and not with THROW), run g
-static DF1(ad1){DECLFG;A z;UC od=jt->uflags.us.cx.cx_c.db; 
+static DF1(ad1){DECLFG;A z;
  RZ(w); 
- jt->uflags.us.cx.cx_c.db=0; z=CALL1(f1,  w,fs); jt->uflags.us.cx.cx_c.db=od;
+ WITHDEBUGOFF(z=CALL1(f1,  w,fs);)
  if(EVTHROW==jt->jerr)R 0;
  RESETERR;
  R z?z:AT(gs)&NOUN?gs:CALL1(g1,  w,gs);
 }
 
-static DF2(ad2){DECLFG;A z;UC od=jt->uflags.us.cx.cx_c.db;
+static DF2(ad2){DECLFG;A z;
  RZ(a&&w); 
- jt->uflags.us.cx.cx_c.db=0; z=CALL2(f2,a,w,fs); jt->uflags.us.cx.cx_c.db=od;
+ WITHDEBUGOFF(z=CALL2(f2,a,w,fs);)
  if(EVTHROW==jt->jerr)R 0;
  RESETERR; 
  R z?z:AT(gs)&NOUN?gs:CALL2(g2,a,w,gs);

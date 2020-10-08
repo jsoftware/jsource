@@ -39,6 +39,7 @@ je routines (io.c):
             or
            advl() to get next script line
 
+
  jtwri()    - write to file - if file is 2, calls jsto()
 
  jtjfread() - read file - if file is 1, calls jgets()
@@ -78,17 +79,20 @@ and continue through various inputs to see the flow
    input()            <---------       call jt->sminput()
    return line        --------->       call immex(inpl(line)
                                      loop
-*** n : 0
-similar to debug suspension except jgets() lines added  to defn
+*** m : 0
+similar to debug suspension except jgets() lines added  to defn.  m : 0 stops reading
+after encountering ) on a line by itself
 
 *** script load
-jgets() calls advl() - gets line from script in memory
+linf() is called first to read in all lines.  It sets jt->dcs to indicate that fact.  Thereafter
+all calls to jgets() return llies from the file without calling jt->sminput().
+jgets() calls advl() to advance through the lines, returns 0 for EOF.  Error is possible.
 
 *** jwd (11!:x)
 similar to debug suspension except output/input
  processed by gui sm
 
-*** JHS nfe (native fron end)
+*** JHS nfe (native front end)
 jt->nfe flag - JE does not use jt->smoutout() and jt->sminput()
 instead it calls J code that provides equivalent services
 JHS routines are J socket code to talk with javascript browser page
@@ -180,7 +184,7 @@ static C* nfeinput(J jt,C* s){A y;
 // type NUL-terminated prompt string p, read 1 line, & return
 // if *p is (C)1 (which comes from m : 0), the request is for unprocessed 'literal input'
 // otherwise processed in inpl
-// Lines may come from a script, in which case return 0 on EOF
+// Lines may come from a script, in which case return 0 on EOF, but EVINPRUPT is still possible as an error
 A jtjgets(J jt,C*p){A y;B b;C*v;I j,k,m,n;UC*s;
  *jt->adbreak=0;
  if(b=1==*p)p=""; /* 1 means literal input; remember & clear prompt */
@@ -198,8 +202,11 @@ A jtjgets(J jt,C*p){A y;B b;C*v;I j,k,m,n;UC*s;
     debug suspension for normal input
     n : 0 input lines up to terminating )
     1!:1[1 read from keyboard */
+ // if we are already prompting, a second prompt would be unrecoverable & we fail this request
+ ASSERT(jt->recurstate<RECSTATEPROMPT,EVCTRL)
  showerr();  // if there is an error at this point, display it (shouldn't happen)
  // read from the front end. This is either through the nfe path or via the callback to the FE
+ jt->recurstate=RECSTATEPROMPT;  // advance to PROMPT state
  if(jt->nfe)
   // Native Front End
   v=nfeinput(jt,*p?"input_jfe_'      '":"input_jfe_''");
@@ -207,6 +214,7 @@ A jtjgets(J jt,C*p){A y;B b;C*v;I j,k,m,n;UC*s;
   ASSERT(jt->sminput,EVBREAK); 
   v=((inputtype)(jt->sminput))(jt,p);
  }
+ jt->recurstate=RECSTATEBUSY;  // prompt complete, go back to normal running state
  R inpl(b,(I)strlen(v),v);  // return A block for string
 }
 
@@ -257,19 +265,20 @@ I jdo(J jt, C* lp){I e;A x;
  jt->jerr=0; jt->etxn=0; /* clear old errors */
  // The named-execution stack contains information on resetting the current locale.  If the first named execution deletes the locale it is running in,
  // that deletion is deferred until the locale is no longer running, which is never detected because there is no earlier named execution to clean up.
- // To prevent the stack from growing indefinitely, we reset it here.  It would be better (perhaps) if we actually PROCESSED the stack elements we cut,
- // but we don't bother.  Another possibility would be to reset the callstack only if it was 0, so that a recursive immex will have its deletes handled by
+ // To prevent the stack from growing indefinitely, we reset it here.  We reset the callstack only if it was 0, so that a recursive immex will have its deletes handled by
  // the resumption of the name that was interrupted.
  I4 savcallstack = jt->callstacknext;
  if(jt->capture) jt->capture[0]=0; // clear capture buffer
  A *old=jt->tnextpushp;
  *jt->adbreak=0;
  x=inpl(0,(I)strlen(lp),lp);
- while(jt->iepdo&&jt->iep){jt->iepdo=0; immex(jt->iep); if(savcallstack==0)CALLSTACKRESET jt->jerr=0; tpop(old);}
+ // Run any enabled immex sentences both before & after the line being executed.  I don't understand why we do it before, but it can't hurt since there won't be any.
+ // BUT: don't do it if the call is recursive.  The user might have set the iep before a prompt, and won't expect it to be executed asynchronously
+ if(likely(jt->recurstate<RECSTATEPROMPT))while(jt->iepdo&&jt->iep){jt->iepdo=0; immex(jt->iep); if(savcallstack==0)CALLSTACKRESET jt->jerr=0; tpop(old);}
  if(!jt->jerr)immex(x);
  e=jt->jerr;
  if(savcallstack==0)CALLSTACKRESET jt->jerr=0;
- while(jt->iepdo&&jt->iep){jt->iepdo=0; immex(jt->iep); if(savcallstack==0)CALLSTACKRESET jt->jerr=0; tpop(old);}
+ if(likely(jt->recurstate<RECSTATEPROMPT))while(jt->iepdo&&jt->iep){jt->iepdo=0; immex(jt->iep); if(savcallstack==0)CALLSTACKRESET jt->jerr=0; tpop(old);}
  showerr();
  spfree();
  tpop(old);
@@ -344,15 +353,27 @@ static char breaknone=0;
 
 B jtsesminit(J jt){jt->adbreakr=jt->adbreak=&breakdata; R 1;}
 
-int _stdcall JDo(J jt, C* lp){int r;
+// Main entry point to run the sentence in *lp
+int _stdcall JDo(J jt, C* lp){int r; UI savcstackmin, savcstackinit, savqtstackinit;
+ if(unlikely(jt->recurstate>RECSTATEIDLE)){
+  // recursive call.  If we are busy or already recurring, this would be an uncontrolled recursion.  Fail that
+  savcstackmin=jt->cstackmin, savcstackinit=jt->cstackinit, savqtstackinit=jt->qtstackinit;  // save stack pointers over recursion, in case the host resets them
+  ASSERT(!(jt->recurstate&(RECSTATEBUSY&RECSTATERECUR)),EVCTRL)  // fail if BUSY or RECUR
+  CLEARZOMBIE   // since we are executing a surprise call, the verb that is prompting might have set assignsym, which is about to be invalidated.  Clear that.
+ }
 #if USECSTACK
  if(jt->cstacktype==2){
   jt->qtstackinit = (uintptr_t)&jt;
   if(jt->cstackmin)jt->cstackmin=(jt->cstackinit=jt->qtstackinit)-(CSTACKSIZE-CSTACKRESERVE);
  }
 #endif
+ ++jt->recurstate;  // advance, to BUSY or RECUR state
  r=(int)jdo(jt,lp);
- while(jt->nfe){
+ if(unlikely(--jt->recurstate>RECSTATEIDLE)){  // return to IDLE or PROMPT state
+  // return from recursive call.  Restore stackpointers
+  jt->cstackmin=savcstackmin, jt->cstackinit=savcstackinit, jt->qtstackinit=savqtstackinit;  // restore stack pointers after recursion
+ }
+ while(jt->nfe){  // nfe normally loops here forever
   A *old=jt->tnextpushp; r=(int)jdo(jt,nfeinput(jt,"input_jfe_'   '")); tpop(old);
  }
  R r;

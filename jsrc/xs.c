@@ -63,19 +63,20 @@ static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;B xt=jt->tostdout;DC d,xd=jt
  jt->dcs=d; jt->tostdout=tso&&!jt->seclev;
  A *old=jt->tnextpushp;
  switch(ce){
-  case 0: while(x&&!jt->jerr){jt->etxn=0;                           immex(x=jgets("   ")); tpop(old);} break;
-  case 1: while(x           ){if(!jt->seclev)showerr(); jt->jerr=0; immex(x=jgets("   ")); tpop(old);} break;
-  case 2:
-  case 3: {
+ // loop over the lines.  jgets may fail, in which case we leave that as the error code for the sentence.
+ case 0: while(x&&!jt->jerr){jt->etxn=0;                           immex(x=jgets("   ")); tpop(old);} break;  // lgets returns 0 for error or EOF
+ case 1: while(x           ){if(!jt->seclev)showerr(); jt->jerr=0; immex(x=jgets("   ")); tpop(old);} break;
+ case 2:
+ case 3: {
 #if SEEKLEAK
-    I stbytes = spbytesinuse();
+  I stbytes = spbytesinuse();
 #endif
-    while(x&&!jt->jerr){jt->etxn=0;                           immea(x=jgets("   ")); tpop(old);}
-    jt->asgn=0;
+  while(x&&!jt->jerr){jt->etxn=0;                           immea(x=jgets("   ")); tpop(old);}
+  jt->asgn=0;
 #if SEEKLEAK
-    I endbytes=spbytesinuse(); if(endbytes-stbytes > 1000)printf("%lld bytes lost\n",endbytes-stbytes);
+  I endbytes=spbytesinuse(); if(endbytes-stbytes > 1000)printf("%lld bytes lost\n",endbytes-stbytes);
 #endif
-   }
+  }
  }
  jt->dcs=xd; jt->tostdout=xt;
   debz();

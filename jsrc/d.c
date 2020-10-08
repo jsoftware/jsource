@@ -11,6 +11,8 @@
 #include "j.h"
 #include "d.h"
 
+// All the 'display' routines in this file simply add characters to the error buffer.  They can't be typed
+// here, because the error may be captured by a higher-level routine
 
 static void jtep(J jt,I n,C*s){I m;
  m=NETX-jt->etxn; m=MIN(n,m); 

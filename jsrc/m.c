@@ -1170,7 +1170,7 @@ F1(jtclonevirtual){
  R z;
 }
 
-B jtspc(J jt){A z; RZ(z=MALLOC(1000)); FREECHK(z); R 1; }
+B jtspc(J jt){A z; RZ(z=MALLOC(1000)); FREECHK(z); R 1; }  // see if 1000 bytes are available before we embark on error display
 
 // Double the allocation of w (twice as many atoms), then round up # items to max allowed in allocation
 // if b=1, the result will replace w, so decrement usecount of w and increment usecount of new buffer

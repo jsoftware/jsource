@@ -1228,8 +1228,6 @@ if(likely(z<3)){_zzt+=z; z=(I)&oneone; _zzt=_i&3?_zzt:(I*)z; z=_i&2?(I)_zzt:z; z
     } \
    } \
   }
-#define PRODX(z,n,v,init) PRODXcommon(z,n,v,init,__COUNTER__)
-#endif
 #define PRODX(z,n,v,init) \
  {z=(init); I nn=(n); \
   if(likely(nn<3)){DPMULDDECLS \
@@ -1237,6 +1235,15 @@ if(likely(z<3)){_zzt+=z; z=(I)&oneone; _zzt=_i&3?_zzt:(I*)z; z=_i&2?(I)_zzt:z; z
     if(likely(*mp!=0LL)){ ++mp; mp=nn>1?mp:iotavec-IOTAVECBEGIN+1; DPMULDZ(z,*mp,z) if(likely(*mp!=0LL)){ASSERT(z!=0,EVLIMIT)} } \
    } \
   }else{DPMULDE(z,prod(nn,v),z) RE(0)} \
+ }
+#define PRODX(z,n,v,init) PRODXcommon(z,n,v,init,__COUNTER__)
+#endif
+#define PRODX(z,n,v,init) \
+ {I nn=(n); \
+  if(likely(nn<3)){I temp=(init);  \
+   I *_zzt=(v); _zzt+=nn-2; z=(I)&oneone; _zzt=nn>=1?_zzt:(I*)z; z=nn>1?(I)_zzt:z; nn=temp;  /* set up pointers to args, and init value */ \
+   z=((I*)z)[0]; if(likely(z!=0)){DPMULDZ(z,_zzt[1],z); if(likely(_zzt[1]!=0)){DPMULDZ(z,nn,z);if(likely(nn!=0)){ASSERT(z!=0,EVLIMIT)}}}  /* no error if any nonzero */ \
+  }else{DPMULDE(init,prod(nn,v),z) RE(0)} /* error if error inside prod */ \
  }
 #else
 #define PRODX(z,n,v,init) RE(z=mult(init,prod(n,v)))
@@ -1349,6 +1356,7 @@ if(likely(z<3)){_zzt+=z; z=(I)&oneone; _zzt=_i&3?_zzt:(I*)z; z=_i&2?(I)_zzt:z; z
 
 #define VAL1            '\001'
 #define VAL2            '\002'
+#define WITHDEBUGOFF(stmt) {UC d=jt->uflags.us.cx.cx_c.db; jt->uflags.us.cx.cx_c.db=0; stmt jt->uflags.us.cx.cx_c.db=d;}  // execute stmt with debug turned off
 
 #if C_LE
 #if BW==64

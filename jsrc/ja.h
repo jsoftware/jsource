@@ -349,14 +349,14 @@
 // fa() audits the tstack, for use outside the tpop system.  fadecr does just the decrement (for when AC is known > 1)
 // Zczero is ~0 if usecount is going negative, 0 otherwise.  Usecount 1->0, 8..1->8..2, 4..0 unchanged, others decrement
 #define fadecr(x) I Zc=AC(x); AC(x)=Zc=Zc-1+((UI)Zc>>(BW-2));  // this does the decrement only, checking for PERMANENT
-#define faaction(x, nomfaction) {fadecr(x) I tt=AT(x); Zc=REPSGN(Zc-1); if((tt&=TRAVERSIBLE)&(Zc|~AFLAG(x)))jtfa(jt,(x),tt); if(Zc){jtmf(jt,x);} nomfaction}
-#define fa(x)                       {if(x)faaction((x),else {if(MEMAUDIT&2)audittstack(jt);})}
+#define faaction(x, nomfaction) {fadecr(x) I tt=AT(x); Zc=REPSGN(Zc-1); if(unlikely(((tt&=TRAVERSIBLE)&(Zc|~AFLAG(x)))!=0))jtfa(jt,(x),tt); if(likely(Zc!=0)){jtmf(jt,x);} nomfaction}
+#define fa(x)                       {if(likely((x)!=0))faaction((x),else {if(MEMAUDIT&2)audittstack(jt);})}
 // Within the tpush/tpop when we know the usecount has gone to 0, no need to audit fa, since it was checked on the push
-#define fana(x)                     {if(x)fanano0(x)}
+#define fana(x)                     {if(likely((x)!=0))fanano0(x)}
 // when x is known to be valid and usecount has gone to 0
 #define fanano0(x)                  faaction((x),)
 // Within tpop, no need to check ACISPERM; Zczero is (i. e. usecount has gone to 0) ~0; and we should recur only if flag indicates RECURSIBLE.  In that case we can reconstruct the type from the flag
-#define fanapop(x,flg)              {if((flg)&RECURSIBLE)jtfa(jt,(x),(flg)&RECURSIBLE); jtmf(jt,x);}
+#define fanapop(x,flg)              {if(unlikely(((flg)&RECURSIBLE)!=0))jtfa(jt,(x),(flg)&RECURSIBLE); jtmf(jt,x);}
 #define fac_ecm(x)                  jtfac_ecm(jt,(x))
 #define facit(x)                    jtfacit(jt,(x))
 #define fact(x)                     jtatomic1(jt,(x),ds(CBANG))
@@ -420,7 +420,7 @@
 #define fplus(x,y)                  jtfplus(jt,(x),(y))
 #define fpoly(x,y)                  jtfpoly(jt,(x),(y))
 #define fpolyc(x)                   jtfpolyc(jt,(x))
-#define fr(x)                       {if(x){I Zs = AC(x); if(!ACISPERM(Zs)){if(--Zs<=0)mf(x);else AC(x)=Zs;}}}
+#define fr(x)                       {if(likely((x)!=0)){I Zs = AC(x); if(likely(!ACISPERM(Zs))){if(likely(--Zs<=0))mf(x);else AC(x)=Zs;}}}
 #define fram(x0,x1,x2,x3,x4)        jtfram(jt,(x0),(x1),(x2),(x3),(x4))   
 #define from(x,y)                   jtfrom(jt,(x),(y))   
 #define frombs(x,y)                 jtfrombs(jt,(x),(y))
@@ -856,12 +856,12 @@
 // Handle top level of ra().  Increment usecount.  Set usecount recursive usecount if recursible type; recur on contents if original usecount is not recursive
 // We can have an inplaceable but recursible block, if it was gc'd or created that way
 // ra() DOES NOT realize a virtual block, so that it can be used in places where virtual blocks are not possible.  ras() does include rifv
-#define ra(x)                       {I c=AC(x); c&=~ACINPLACE; AC(x)=c+=(c>>(BW-2))^1; I tt=AT(x); FLAGT flg=AFLAG(x); if((tt^flg)&TRAVERSIBLE){AFLAG(x)=flg|=(tt&RECURSIBLE); jtra((x),tt);};}
+#define ra(x)                       {I c=AC(x); c&=~ACINPLACE; AC(x)=c+=(c>>(BW-2))^1; I tt=AT(x); FLAGT flg=AFLAG(x); if(unlikely(((tt^flg)&TRAVERSIBLE)!=0)){AFLAG(x)=flg|=(tt&RECURSIBLE); jtra((x),tt);};}
 // If this is a recursible type, make it recursive if it isn't already, by traversing the descendants.  This is like raising the usecount by 0.  Since we aren't liable to assign the block, we don't have to realize a
 // virtual block unless it is a recursible type.  NOTE that PERMANENT and VIRTUAL blocks are always marked recursible if they are of recursible type
-#define ra0(x)                      {I tt=AT(x); FLAGT flg=AFLAG(x); if((tt^flg)&RECURSIBLE){if(unlikely((flg&AFVIRTUAL)!=0)){RZ((x)=realize(x)); flg=AFLAG(x);} AFLAG(x)=flg|=(tt&RECURSIBLE); jtra((x),tt);}}
+#define ra0(x)                      {I tt=AT(x); FLAGT flg=AFLAG(x); if(unlikely(((tt^flg)&RECURSIBLE)!=0)){if(unlikely((flg&AFVIRTUAL)!=0)){RZ((x)=realize(x)); flg=AFLAG(x);} AFLAG(x)=flg|=(tt&RECURSIBLE); jtra((x),tt);}}
 // make this block recursive, used when x has just been allocated & thus is known to be nonrecursive & nonvirtual.  We may know the type t, too (otherwise use AT(x))
-#define ra00(x,tt)                   {if((tt)&RECURSIBLE){AFLAG(x)|=(tt)&RECURSIBLE; jtra((x),(tt));}}
+#define ra00(x,tt)                   {if(unlikely(((tt)&RECURSIBLE)!=0)){AFLAG(x)|=(tt)&RECURSIBLE; jtra((x),(tt));}}
 #define ranec(x0,x1,x2,x3,x4,x5)    jtranec(jt,(x0),(x1),(x2),(x3),(x4),(x5))
 #define rank1ex(x0,x1,x2,x3)        jtrank1ex(jt,(x0),(x1),(x2),(x3))
 #define rank1ex0(x0,x1,x2)          jtrank1ex0(jt,(x0),(x1),(x2))
@@ -884,7 +884,7 @@
 #define rdns(x)                     jtrdns(jt,(x))   
 #define rdot1(x)                    jtrdot1(jt,(x))   
 #define realize(x)                  jtrealize(jt,(x))
-#define realizeifvirtual(x)         {if(AFLAG(x)&AFVIRTUAL)RZ((x)=realize(x));}
+#define realizeifvirtual(x)         {if(unlikely((AFLAG(x)&AFVIRTUAL)!=0))RZ((x)=realize(x));}
 #define rifv(x)                     realizeifvirtual(x)
 #define rifvs(x)                    jtrifvs(jt,(x))
 // We have used rifvs liberally through the code to guarantee that all functions can deal with virtual blocks returned.
@@ -1196,13 +1196,14 @@
 // Handle top level of tpush().  push the current block, and recur if it is traversible and does not have recursive usecount
 // We can have an inplaceable but recursible block, if it was gc'd.  We never push a PERMANENT block, so that we won't try to free it
 // NOTE that PERMANENT blocks are always marked traversible if they are of traversible type, so we will not recur on them internally
-#define tpushcommon(x,suffix) {if(!ACISPERM(AC(x))){I tt=AT(x); A *pushp=jt->tnextpushp; *pushp++=(x); if(!((I)pushp&(NTSTACKBLOCK-1))){RZ(pushp=tg(pushp));} if((tt^AFLAG(x))&TRAVERSIBLE)RZ(pushp=jttpush(jt,(x),tt,pushp)); jt->tnextpushp=pushp; suffix}}
+#define tpushcommon(x,suffix) {if(likely(!ACISPERM(AC(x)))){I tt=AT(x); A *pushp=jt->tnextpushp; *pushp++=(x); \
+                              if(unlikely(!((I)pushp&(NTSTACKBLOCK-1)))){RZ(pushp=tg(pushp));} if(unlikely(((tt^AFLAG(x))&TRAVERSIBLE)!=0))RZ(pushp=jttpush(jt,(x),tt,pushp)); jt->tnextpushp=pushp; suffix}}
 #define tpush(x)              tpushcommon(x,if(MEMAUDIT&2)audittstack(jt);)
 #define tpushna(x)            tpushcommon(x,)   // suppress audit
 // Internal version, used when the local name pushp is known to hold jt->tnextpushp
-#define tpushi(x)                   {if(!ACISPERM(AC(x))){I tt=AT(x); *pushp++=(x); if(!((I)pushp&(NTSTACKBLOCK-1))){RZ(pushp=tg(pushp));} if((tt^AFLAG(x))&TRAVERSIBLE)RZ(pushp=jttpush(jt,(x),tt,pushp)); }}
+#define tpushi(x)                   {if(likely(!ACISPERM(AC(x)))){I tt=AT(x); *pushp++=(x); if(unlikely(!((I)pushp&(NTSTACKBLOCK-1)))){RZ(pushp=tg(pushp));} if((unlikely((tt^AFLAG(x))&TRAVERSIBLE)!=0))RZ(pushp=jttpush(jt,(x),tt,pushp)); }}
 // tpush1 is like tpush, but it does not recur to lower levels.  Used only for virtual block (which cannot be PERMANENT)
-#define tpush1(x)                   {A *pushp=jt->tnextpushp; *pushp++=(x); if(!((I)pushp&(NTSTACKBLOCK-1))){RZ(pushp=tg(pushp));} jt->tnextpushp=pushp; if(MEMAUDIT&2)audittstack(jt);}
+#define tpush1(x)                   {A *pushp=jt->tnextpushp; *pushp++=(x); if(unlikely(!((I)pushp&(NTSTACKBLOCK-1)))){RZ(pushp=tg(pushp));} jt->tnextpushp=pushp; if(MEMAUDIT&2)audittstack(jt);}
 #define traverse(x,y)               jttraverse(jt,(x),(y))
 #define trc(x)                      jttrc(jt,(x))     
 #define treach(x)                   jttreach(jt,(x))
@@ -1246,7 +1247,7 @@
 #define vaid(x)                     jtvaid(jt,(x))
 #define var(x0,x1,x2)               jtvar(jt,(x0),(x1),(x2))
 // fetch adocv for an rps function (i. e. f/ f/\ f/\.) in self.  rps is 0-2 for / /\ /\.   t is the type of the input.  Assign result to z, which is a VARPS
-#define varps(z,self,t,rps) {VARPSA *rpsa=FAV(self)->localuse.lvp[1]; I tmax=rpsa->nprec; if(jt->jerr<EWOV){I zc=CTTZI(t); VARPS *az=&rpsa->actrtns[tmax*(rps)+zc]; az=zc>=tmax?&rpsnull.actrtns[0]:az; z=*az;}else{jt->jerr=0; z=rpsa->actrtns[3*tmax+(rps)];}  }
+#define varps(z,self,t,rps) {VARPSA *rpsa=FAV(self)->localuse.lvp[1]; I tmax=rpsa->nprec; if(likely(jt->jerr<EWOV)){I zc=CTTZI(t); VARPS *az=&rpsa->actrtns[tmax*(rps)+zc]; az=zc>=tmax?&rpsnull.actrtns[0]:az; z=*az;}else{jt->jerr=0; z=rpsa->actrtns[3*tmax+(rps)];}  }
 #define vasp(x0,x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,x11,x12)     jtvasp(jt,(x0),(x1),(x2),(x3),(x4),(x5),(x6),(x7),(x8),(x9),(x10),(x11),(x12))
 #define vasp0(x0,x1,x2,x3,x4,x5)                            jtvasp0(jt,(x0),(x1),(x2),(x3),(x4),(x5))
 #define vaspc(x0,x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,x11,x12)    jtvaspc(jt,(x0),(x1),(x2),(x3),(x4),(x5),(x6),(x7),(x8),(x9),(x10),(x11),(x12))

@@ -547,14 +547,6 @@ extern unsigned int __cdecl _clearfp (void);
 
 #define TOOMANYATOMS 0xFFFFFFFFFFFFLL  // more atoms than this is considered overflow (64-bit).  i.-family can't handle more than 2G cells in array.
 
-#ifdef ALIGNEDMEM
-#define MEMCPYTUNE 0     // (bytes) unpredictable blocks shorter than this should just use MCISxx.  Keep as power of 2
-#define MEMCPYTUNELOOP 0    // (bytes) predictable blocks shorter than this should just use MCISxx.
-#else
-#define MEMCPYTUNE 4096  // (bytes) unpredictable blocks shorter than this should just use MCISxx.  Keep as power of 2
-#define MEMCPYTUNELOOP 350  // (bytes) predictable blocks shorter than this should just use MCISxx.
-#endif
-
 // Tuning options for cip.c
 #if C_AVX2 && defined(_WIN32)
 // tuned for windows
@@ -1240,9 +1232,9 @@ if(likely(z<3)){_zzt+=z; z=(I)&oneone; _zzt=_i&3?_zzt:(I*)z; z=_i&2?(I)_zzt:z; z
 #endif
 #define PRODX(z,n,v,init) \
  {I nn=(n); \
-  if(likely(nn<3)){I temp=(init);  \
-   I *_zzt=(v); _zzt+=nn-2; z=(I)&oneone; _zzt=nn>=1?_zzt:(I*)z; z=nn>1?(I)_zzt:z; nn=temp;  /* set up pointers to args, and init value */ \
-   z=((I*)z)[0]; if(likely(z!=0)){DPMULDZ(z,_zzt[1],z); if(likely(_zzt[1]!=0)){DPMULDZ(z,nn,z);if(likely(nn!=0)){ASSERT(z!=0,EVLIMIT)}}}  /* no error if any nonzero */ \
+  if(likely(nn<3)){I temp=(init);  /* must use temp because init may depend on z */ \
+   I *_zzt=(v); _zzt+=nn-2; z=(I)&oneone; _zzt=nn>=1?_zzt:(I*)z; z=nn>1?(I)_zzt:z;   /* set up pointers to args, and init value */ \
+   z=((I*)z)[0]; if(likely(z!=0)){DPMULDZ(z,_zzt[1],z); if(likely(_zzt[1]!=0)){DPMULDZ(z,temp,z);if(likely(temp!=0)){ASSERT(z!=0,EVLIMIT)}}}  /* no error if any nonzero */ \
   }else{DPMULDE(init,prod(nn,v),z) RE(0)} /* error if error inside prod */ \
  }
 #else

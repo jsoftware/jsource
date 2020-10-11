@@ -11,6 +11,14 @@ x -: f x=: _50+?2 3 4$100
 x -: f x=: j./_50+?2 3 4$100
 (x+y) -: x f y=: j./_50+2 3 4$100
 
+add=:(4 : 0)"0  NB. Verify that $: is pushed over parser call
+x+y
+)
+p=:10&$: : (4 : 0) " 0
+x add y
+)
+12 13 -: p 2 3
+
 4!:55 ;:'f x y'
 
 

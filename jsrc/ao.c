@@ -780,7 +780,7 @@ F1(jtsldot){A h=0;AF f1=jtoblique,f2;C c,d,e;I flag=VJTFLGOK1|VJTFLGOK2;V*v;
  switch(ID(w)){  // no default for f2: every path must set it
   case CPOUND: f2=jtkeytally; break;
   case CSLASH: f2=jtkey; if(AT(v->fgh[0])&VERB&&FAV(v->fgh[0])->flag&VISATOMIC2){ // f//.  if f is atomic2
-   /*scaf f2=jtkeyslash;*/ f1=jtobqfslash; flag&=~VJTFLGOK1;
+   f1=jtobqfslash; flag&=~VJTFLGOK1;
    // dyad f//. is special for f=+ >. <.   we set flags to indicate the operation and the allowed types
 #define keyslashvalues(w)CCM(w,CPLUS)+CCM(w,CMIN)+CCM(w,CMAX)
     CCMWDS(keyslash) CCMCAND(keyslash,cand,FAV(v->fgh[0])->id) if(CCMTST(cand,FAV(v->fgh[0])->id)){

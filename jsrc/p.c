@@ -560,7 +560,7 @@ rdglob: ;
      // We have fs already.  arg1 will come from position 2 3 1 1 1 depending on stack line; arg2 will come from 1 2 3 2 3
      if(pmask&0x7){A y;  // lines 0 1 2, verb execution
       // Verb execution (in order: V N, V V N, N V N).  We must support inplacing, including assignment in place, and support recursion
-      jt->sf=fs;  // push $: stack
+      A savfs=jt->sf; jt->sf=fs;  // push $: stack
       // While we are waiting for the branch address, work on inplacing.  See if the primitive being executed is inplaceable
       if((FAV(fs)->flag>>(pline>>1))&VJTFLGOK1){L *s;
        // Inplaceable.  If it is an assignment to a known name that has a value, remember the name and the value
@@ -602,6 +602,7 @@ rdglob: ;
       y=(*actionfn)(jt,arg1,arg2,fs);  // expect pipeline break
       jt=(J)(intptr_t)((I)jt&~JTFLAGMSK);
       // jt is OK again
+      jt->sf=savfs;  // pop $: stack
 RECURSIVERESULTSCHECK
 #if MEMAUDIT&0x10
       auditmemchains();  // trap here while we still point to the action routine

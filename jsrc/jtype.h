@@ -793,7 +793,7 @@ typedef struct {AF valencefns[2];A fgh[3];union { D lD; void *lvp[2]; I lI; I4 l
 #define VXOP            (I)0x100000      /* : defn derived fn               */
 #define VXOPCALL        (I)0x200000      /* : defn derived fn call          */
 #define VTRY1           (I)0x400000      /* monad contains try.             */
-#define VTRY2           (I)0x800000      /* dyad  contains try.             */
+#define VTRY2           (I)0x800000      /* dyad  contains try.  must be just above VTRY1           */
 #define VDDOP           (I)0x1000000     /* 24 derived from a derived operator */
 #define VJTFLGOK1X    25    // 25 monad can handle flags in jt
 #define VJTFLGOK1     (((I)1)<<VJTFLGOK1X)

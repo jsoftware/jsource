@@ -106,7 +106,7 @@ DF2(jtunquote){A z;
   }else{
    ra(fs);  // should assert recursive usecount
    A s=jt->sf; jt->sf=fs; z=v->valencefns[dyadex]((J)(((REPSGN(SGNIF(v->flag,dyadex+VJTFLGOK1X)))|~JTFLAGMSK)&(I)jtinplace),a,w,fs); jt->sf=s;
-   fa(fs);
+   fa(fs); 
   }
   if(PMCTRBPMON&jt->uflags.us.uq.uq_c.pmctrbstk)pmrecord(thisname,jt->global?LOCNAME(jt->global):0,-2L,dyadex?VAL2:VAL1);  // record the return from call
   if(jt->uflags.us.uq.uq_c.spfreeneeded)spfree();   // if garbage collection required, do it

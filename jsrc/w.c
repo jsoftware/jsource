@@ -16,8 +16,9 @@
 #define S9              7    /* numeric                         */
 #define S99             8    // numeric, previous field was numeric
 #define SQ              9    /* quote                           */
-#define SNZ             10    // NB. - bit 3 of state means 'comment'
-#define SZ              11    // trailing comment - bit 3 of state means 'comment'
+#define SNZ             10    // NB.
+#define SZ              11    // trailing comment
+#define SU              12   // prev char was uninflectable (i. e. LF).
 
 #define E0              0  // no action
 #define EI              1    // end of previous word - emit
@@ -27,19 +28,20 @@
 typedef C ST;
 #define SE(s,e) (((s)<<4)|((((s)==S99))<<3)|(e))  // set bit 3 inside followon numeric
 
-static const ST state[SZ+1][16]={
-/*SS */ {[CX]=SE(SX,EN),[CS]=SE(SS,E0),[CA]=SE(SA,EN),[CN]=SE(SN,EN),[CB]=SE(SA,EN),[C9]=SE(S9,EN),[CD]=SE(SX,EN),[CC]=SE(SX,EN),[CQ]=SE(SQ,EN)},
-/*SS9*/ {[CX]=SE(SX,EN),[CS]=SE(SS9,E0),[CA]=SE(SA,EN),[CN]=SE(SN,EN),[CB]=SE(SA,EN),[C9]=SE(S99,EN),[CD]=SE(SX,EN),[CC]=SE(SX,EN),[CQ]=SE(SQ,EN)},
-/*SX */ {[CX]=SE(SX,EZ),[CS]=SE(SS,EI),[CA]=SE(SA,EZ),[CN]=SE(SN,EZ),[CB]=SE(SA,EZ),[C9]=SE(S9,EZ),[CD]=SE(SX,E0),[CC]=SE(SX,E0),[CQ]=SE(SQ,EZ)},
-/*SA */ {[CX]=SE(SX,EZ),[CS]=SE(SS,EI),[CA]=SE(SA,E0),[CN]=SE(SA,E0),[CB]=SE(SA,E0),[C9]=SE(SA,E0),[CD]=SE(SX,E0),[CC]=SE(SX,E0),[CQ]=SE(SQ,EZ)},
-/*SN */ {[CX]=SE(SX,EZ),[CS]=SE(SS,EI),[CA]=SE(SA,E0),[CN]=SE(SA,E0),[CB]=SE(SNB,E0),[C9]=SE(SA,E0),[CD]=SE(SX,E0),[CC]=SE(SX,E0),[CQ]=SE(SQ,EZ)},
-/*SNB*/ {[CX]=SE(SX,EZ),[CS]=SE(SS,EI),[CA]=SE(SA,E0),[CN]=SE(SA,E0),[CB]=SE(SA,E0),[C9]=SE(SA,E0),[CD]=SE(SNZ,E0),[CC]=SE(SX,E0),[CQ]=SE(SQ,EZ)},
-/*SQQ*/ {[CX]=SE(SX,EZ),[CS]=SE(SS,EI),[CA]=SE(SA,EZ),[CN]=SE(SN,EZ),[CB]=SE(SA,EZ),[C9]=SE(S9,EZ),[CD]=SE(SX,EZ),[CC]=SE(SX,EZ),[CQ]=SE(SQ,E0)},
-/*S9 */ {[CX]=SE(SX,EZ),[CS]=SE(SS9,EI),[CA]=SE(S9,E0),[CN]=SE(S9,E0),[CB]=SE(S9,E0),[C9]=SE(S9,E0),[CD]=SE(S9,E0),[CC]=SE(SX,E0),[CQ]=SE(SQ,EZ)},
-/*S99*/ {[CX]=SE(SX,EZ),[CS]=SE(SS9,EI),[CA]=SE(S99,E0),[CN]=SE(S99,E0),[CB]=SE(S99,E0),[C9]=SE(S99,E0),[CD]=SE(S99,E0),[CC]=SE(SX,E0),[CQ]=SE(SQ,EZ)},
-/*SQ */ {[CX]=SE(SQ,E0),[CS]=SE(SQ,E0),[CA]=SE(SQ,E0),[CN]=SE(SQ,E0),[CB]=SE(SQ,E0),[C9]=SE(SQ,E0),[CD]=SE(SQ,E0),[CC]=SE(SQ,E0),[CQ]=SE(SQQ,E0)},
-/*SNZ*/ {[CX]=SE(SZ,E0),[CS]=SE(SZ,E0),[CA]=SE(SZ,E0),[CN]=SE(SZ,E0),[CB]=SE(SZ,E0),[C9]=SE(SZ,E0),[CD]=SE(SX,E0),[CC]=SE(SX,E0),[CQ]=SE(SZ,E0)},
-/*SZ */ {[CX]=SE(SZ,E0),[CS]=SE(SZ,E0),[CA]=SE(SZ,E0),[CN]=SE(SZ,E0),[CB]=SE(SZ,E0),[C9]=SE(SZ,E0),[CD]=SE(SZ,E0),[CC]=SE(SZ,E0),[CQ]=SE(SZ,E0)}
+static const ST state[SU+1][16]={
+/*SS */ {[CX]=SE(SX,EN),[CU]=SE(SU,EN),[CS]=SE(SS,E0),[CA]=SE(SA,EN),[CN]=SE(SN,EN),[CB]=SE(SA,EN),[C9]=SE(S9,EN),[CD]=SE(SX,EN),[CC]=SE(SX,EN),[CQ]=SE(SQ,EN)},
+/*SS9*/ {[CX]=SE(SX,EN),[CU]=SE(SU,EN),[CS]=SE(SS9,E0),[CA]=SE(SA,EN),[CN]=SE(SN,EN),[CB]=SE(SA,EN),[C9]=SE(S99,EN),[CD]=SE(SX,EN),[CC]=SE(SX,EN),[CQ]=SE(SQ,EN)},
+/*SX */ {[CX]=SE(SX,EZ),[CU]=SE(SU,EZ),[CS]=SE(SS,EI),[CA]=SE(SA,EZ),[CN]=SE(SN,EZ),[CB]=SE(SA,EZ),[C9]=SE(S9,EZ),[CD]=SE(SX,E0),[CC]=SE(SX,E0),[CQ]=SE(SQ,EZ)},
+/*SA */ {[CX]=SE(SX,EZ),[CU]=SE(SU,EZ),[CS]=SE(SS,EI),[CA]=SE(SA,E0),[CN]=SE(SA,E0),[CB]=SE(SA,E0),[C9]=SE(SA,E0),[CD]=SE(SX,E0),[CC]=SE(SX,E0),[CQ]=SE(SQ,EZ)},
+/*SN */ {[CX]=SE(SX,EZ),[CU]=SE(SU,EZ),[CS]=SE(SS,EI),[CA]=SE(SA,E0),[CN]=SE(SA,E0),[CB]=SE(SNB,E0),[C9]=SE(SA,E0),[CD]=SE(SX,E0),[CC]=SE(SX,E0),[CQ]=SE(SQ,EZ)},
+/*SNB*/ {[CX]=SE(SX,EZ),[CU]=SE(SU,EZ),[CS]=SE(SS,EI),[CA]=SE(SA,E0),[CN]=SE(SA,E0),[CB]=SE(SA,E0),[C9]=SE(SA,E0),[CD]=SE(SNZ,E0),[CC]=SE(SX,E0),[CQ]=SE(SQ,EZ)},
+/*SQQ*/ {[CX]=SE(SX,EZ),[CU]=SE(SU,EZ),[CS]=SE(SS,EI),[CA]=SE(SA,EZ),[CN]=SE(SN,EZ),[CB]=SE(SA,EZ),[C9]=SE(S9,EZ),[CD]=SE(SX,EZ),[CC]=SE(SX,EZ),[CQ]=SE(SQ,E0)},
+/*S9 */ {[CX]=SE(SX,EZ),[CU]=SE(SU,EZ),[CS]=SE(SS9,EI),[CA]=SE(S9,E0),[CN]=SE(S9,E0),[CB]=SE(S9,E0),[C9]=SE(S9,E0),[CD]=SE(S9,E0),[CC]=SE(SX,E0),[CQ]=SE(SQ,EZ)},
+/*S99*/ {[CX]=SE(SX,EZ),[CU]=SE(SU,EZ),[CS]=SE(SS9,EI),[CA]=SE(S99,E0),[CN]=SE(S99,E0),[CB]=SE(S99,E0),[C9]=SE(S99,E0),[CD]=SE(S99,E0),[CC]=SE(SX,E0),[CQ]=SE(SQ,EZ)},
+/*SQ */ {[CX]=SE(SQ,E0),[CU]=SE(SQ,E0),[CS]=SE(SQ,E0),[CA]=SE(SQ,E0),[CN]=SE(SQ,E0),[CB]=SE(SQ,E0),[C9]=SE(SQ,E0),[CD]=SE(SQ,E0),[CC]=SE(SQ,E0),[CQ]=SE(SQQ,E0)},
+/*SNZ*/ {[CX]=SE(SZ,E0),[CU]=SE(SU,EZ),[CS]=SE(SZ,E0),[CA]=SE(SZ,E0),[CN]=SE(SZ,E0),[CB]=SE(SZ,E0),[C9]=SE(SZ,E0),[CD]=SE(SX,E0),[CC]=SE(SX,E0),[CQ]=SE(SZ,E0)},
+/*SZ */ {[CX]=SE(SZ,E0),[CU]=SE(SU,EZ),[CS]=SE(SZ,E0),[CA]=SE(SZ,E0),[CN]=SE(SZ,E0),[CB]=SE(SZ,E0),[C9]=SE(SZ,E0),[CD]=SE(SZ,E0),[CC]=SE(SZ,E0),[CQ]=SE(SZ,E0)},
+/*SU */ {[CX]=SE(SX,EZ),[CU]=SE(SU,EZ),[CS]=SE(SS,EI),[CA]=SE(SA,EZ),[CN]=SE(SN,EZ),[CB]=SE(SA,EZ),[C9]=SE(S9,EZ),[CD]=SE(SX,EZ),[CC]=SE(SX,EZ),[CQ]=SE(SQ,EZ)}
 };
 
 // w points to a string A-block
@@ -53,8 +55,8 @@ F1(jtwordil){A z;I s,i,m,n,nv,*x;UC*v;
  s=SE(SS,0);
  for(i=0;i<n;++i){   // run the state machine
   I prevs=s;  // state before new character
-  I currc=ctype[v[i]];
-  C *statebase=(C*)state+currc; s=statebase[s&0xf0];
+  I currc=ctype[v[i]];  // get class of input character
+  C *statebase=(C*)state+currc; s=statebase[s&0xf0];  // top 4 bits of s are state line; currc indexes the char code.  This fetches new state
   // Handle followon numerics.  If the previous state was 'followon numeric' and the new character is CX/CS/CQ, we will emit after this state but
   // we need to overwrite the previous numeric.  Decrement the pointer by 2 before writing.  This runs while the state-fetch is happening and is fast enough to allow
   // the store addresses to be calculated before the next fetch
@@ -66,27 +68,38 @@ F1(jtwordil){A z;I s,i,m,n,nv,*x;UC*v;
   x[0]=i; x[1]=i; x+=s&3;
  }
  if((s>>4)==SQ){jsignal3(EVOPENQ,w,x[-1]); R 0;}  // error if open quote
- // force an EI at the end, as if with a space.  We will owe one increment of x, repaid when we calxculate m.
+ // force an EI at the end, as if with a space.  We will owe one increment of x, repaid when we calculate m.
  //  If the line ends without a token being open (spaces perhaps) this will be half of a field and will be shifted away
  x=(I*)((I)x-(((s<<1)&16)>>(3-LGSZI)));    // same as above, with CS as the character
  *x=i;
  m=((x-AV(z))+1)>>1; AS(z)[0]=m; AM(z)=m+REPSGN((I)(SE(SNZ,0)-1)-s); // Calculate & install count; if last field is NB., make count negative
  R z;
-}    /* word index & end+1; z is m 2 1$(i0,e0),(i1,e1),... AM(z) is # words not including final NB */
+}    // word index & end+1; z is m 2 1$(i0,e0),(i1,e1),... AM(z) is # words not including any final NB
 
-/* locals in wordil:                                            */
-/* i:  index of current character being scanned                 */
-/* m:  2 * actual number of words                               */
-/* n:  length of input string w                                 */
-/* s:  current state                                            */
-/* v:  ptr to input string                                      */
-/* x:  ptr to current element of z being computed               */
-/* z:  result; maximum of n pairs                               */
+// Turn word list back into string
+// wil is the word list from wordil (we ignore AM), w is the original character list
+// result is a single string containing all the words separated by a space
+// We make no effort to elide the delimiting space
+// if opts&1 is set, the result should be enquoted (wrapped in quotes with internal quotes doubled)
+// if opts&2 is set, we make sure the result has room for 4 extra bytes at the end
+// The result is always writable
+A jtunwordil(J jt, A wil, A w, I opts){A z;
+ I n=AS(wil)[0]; I (* RESTRICT wilv)[2]=voidAV(wil); C * RESTRICT wv=CAV(w);  // n=#words; wilv->start,end pairs; wv->chars
+ I cc=0; DO(n, cc-=wilv[i][0]; cc+=wilv[i][1];)  // cc=# characters in all words
+ I buflen=n+(cc<<(opts&1))+((opts&1)<<1)+((opts&2)<<1);  // len to get: one byte per word for delimiter, plus # chars (doubled if we are doubling quotes), plus 2 if enclosing in quotes, plus 4 if requested
+ GATV0(z,LIT,buflen,1); C *zv0=CAV(z), *zv=zv0;  // allocate the buffer, point to beginning, set scan pointer
+ UI dupchar=(opts&1)?'\'':256; *zv='\''; zv+=(opts&1);  // if dup requested, set to look for quotes and install leading quote
+ DO(n, C *w0=wv+wilv[i][0]; C *wend=wv+wilv[i][1]; while(w0!=wend){C c=*w0++; *zv++=c; if(c==dupchar)*zv++=c;} *zv++=' ';)  // copy all words, with 1 space between, duplicating where needed
+ zv[-1]='\''; zv-=1-(opts&1);  // install final quote (over final space) if needed; back up over it if not needed
+ AS(z)[0]=AN(z)=zv-zv0;  // install length of result
+ RETF(z);
+}
 
+// ;: y
 DF1(jtwords){A t,*x,z;C*s;I k,n,*y;
  F1RANK(1,jtwords,self);
  RZ(w=vs(w));  // convert w to LIT if it's not already
- R jtboxcut0(jt,wordil(w),w,self);
+ R jtboxcut0(jt,wordil(w),w,self);  // result of wordil has shape suitable for <;.0, so we use that
 }
 
 

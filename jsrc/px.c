@@ -34,13 +34,13 @@ F1(jtexec1){A z;
  }else{
   F1RANK(1,jtexec1,DUMMYSELF);
   A savself = jt->sf;  // in case we are in a recursion, preserve the restart point
-  STACKCHKOFL FDEPINC(1); z=parse(tokens(vs(w),1+(AN(jt->locsyms)>1))); jt->asgn=0; FDEPDEC(1);
+  STACKCHKOFL FDEPINC(1); z=parse(ddtokens(vs(w),4+1+(AN(jt->locsyms)>1))); jt->asgn=0; FDEPDEC(1);  // replace DDs, but require that they be complete within the string (no jgets)
   jt->sf=savself;
  }
  RETF(z&&!(AT(z)&NOUN)?mtv:z);  // if non-noun result, return empty $0
 }
 
-// execute w, which is either a string or the boxed words of a string (as if from wordil())
+// execute w, which is either a string or the boxed words of a string (as if from tokens())
 F1(jtimmex){A z;
  if(!w)R A0;  // if no string, return error
  // When we start a sentence, we need to establish AKGST in locsyms as a shadow of jt->global, because that's
@@ -48,14 +48,14 @@ F1(jtimmex){A z;
  // because if AKGST has been set it will already hold jt->global.  Of course, any event code must restore everything
  // to its previous state, including locales
  AKGST(jt->locsyms)=jt->global; // in case the sentence has operators, set a locale for it
- STACKCHKOFL FDEPINC(1); z=parse(tokens(w,1+(AN(jt->locsyms)>1))); FDEPDEC(1);
+ STACKCHKOFL FDEPINC(1); z=parse(AT(w)&BOX?w:tokens(w,1+(AN(jt->locsyms)>1))); FDEPDEC(1);
  if(z&&!jt->asgn)jpr(z);
  RETF(z);
 }
 
 // execute for assert: check result for all 1
 F1(jtimmea){A t,z,z1;
- z=immex(w); 
+ RZ(w=ddtokens(w,4+1+(AN(jt->locsyms)>1))); z=immex(w);   // check for DD, but don't allow continuation read
  ASSERT(jt->asgn||!z||!(AT(z)&NOUN)||(t=eq(num(1),z),
      all1(AT(z)&SPARSE?df1(z1,t,atop(slash(ds(CSTARDOT)),ds(CCOMMA))):t)),EVASSERT);  // apply *./@, if sparse
  RETF(z);

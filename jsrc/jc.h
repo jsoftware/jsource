@@ -4,6 +4,7 @@
 /* Character Definitions                                                   */
 
 // value is >9 iff the type causes a numeric to be emitted if in process
+// if code&~CA==0, the value is a letter if code&~(CA|C9) (i. e. bit 0 set), it is not alphameric
 #define CX         11            /* other                                   */
 #define CS         13            /* space or tab                            */
 #define CA         6            /* letter                                  */
@@ -13,6 +14,7 @@
 #define CD         1            /* dot                                     */
 #define CC         3            /* colon                                   */
 #define CQ         15            /* quote                                   */
+#define CU         12           // like CX, but uninflectable.  Used for LF.  it doesn't follow the alphanumeric rules so mustn't be a valid word for parse
 
 // Character names
 #define C0         (C)'\000'       /*   0 000 00                              */

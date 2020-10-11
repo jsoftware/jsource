@@ -17,6 +17,11 @@
 #include "p.h"
 #include "w.h"
 
+// DD definitions
+#define DDBGN (US)('('+256*'.')  // digraph for start DD
+#define DDEND (US)(')'+256*'.')  // digraph for end DD
+#define DDSEP 0xf  // ASCII value used to mark line separator inside 9 : string.  Must have class CU so that it ends a final comment
+
 #define BASSERT(b,e)   {if(unlikely(!(b))){jsignal(e); i=-1; z=0; continue;}}
 #define BZ(e)          if(unlikely(!(e))){i=-1; z=0; continue;}
 
@@ -560,51 +565,52 @@ static DF1(xop1){
 }
 
 
-// h is the compiled form of an explicit function: an array of 2*HN boxes.
-// Boxes 0&HN contain the enqueued words  for the sentences, jammed together
-// Return code indicating what we found:
-// 4: mnuv found 2: x found 1: y found.  u./v. count as u./v.
+// obsolete // h is the compiled form of an explicit function: an array of 2*HN boxes.
+// obsolete // Boxes 0&HN contain the enqueued words  for the sentences, jammed together
+// obsolete // Return code indicating what we found:
+// w is a box containing enqueued words for the sentences of a definition, jammed together
+// 8: nv found 4: mu found 2: x found 1: y found.  u./v. count as u./v.
 static I jtxop(J jt,A w){I i,k;
  // init flags to 'not found'
  I fndflag=0;
- // Loop through monad and dyad
- A *wv=AAV(w); 
- for(k=0;k<=HN+0;k+=HN){    // for monad and dyad cases...
-  A w=wv[k];  // w is now the box containing the words of the expdef
-  {A *wv=AAV(w);
+// obsolete  // Loop through monad and dyad
+// obsolete  A *wv=AAV(w); 
+// obsolete  for(k=0;k<=HN+0;k+=HN){    // for monad and dyad cases...
+// obsolete   A w=wv[k];  // w is now the box containing the words of the expdef
+ A *wv=AAV(w);
    
-   I in=AN(w);
-   // Loop over each word, starting at beginning where the references are more likely
-   for(i=0;i<in;++i) {
-    A w=wv[i];  // w is box containing a queue value.  If it's a name, we inspect it
-    if(AT(w)&NAME){
-     // Get length/string pointer
-     I n=AN(w); C *s=NAV(w)->s;
-     if(n){
-      // Set flags if this is a special name, or an indirect locative referring to a special name in the last position, or u./v.
-      if(n==1||(n>=3&&s[n-3]=='_'&&s[n-2]=='_')){
-       if(s[n-1]=='m'||s[n-1]=='n'||s[n-1]=='u'||s[n-1]=='v')fndflag|=4;
-       else if(s[n-1]=='x')fndflag|=2;
-       else if(s[n-1]=='y')fndflag|=1;
-      }   // 'one-character name'
-     }  // 'name is not empty'
-    } // 'is name'
-    if(AT(w)&VERB){
-      if((FAV(w)->id&-2)==CUDOT)fndflag|=4;  // u./v.
-    }
-    // exit if we have seen enough: mnuv plus x.  No need to wait for y.  If we have seen only y, keep looking for x
-    if(fndflag>=4+2)R fndflag;
-   }  // loop for each word
-  }  // namescope of new w
- }  // loop for each valence
+ I in=AN(w);
+ // Loop over each word, starting at beginning where the references are more likely
+ for(i=0;i<in;++i) {
+  A w=wv[i];  // w is box containing a queue value.  If it's a name, we inspect it
+  if(AT(w)&NAME){
+   // Get length/string pointer
+   I n=AN(w); C *s=NAV(w)->s;
+   if(n){
+    // Set flags if this is a special name, or an indirect locative referring to a special name in the last position, or u./v.
+    if(n==1||(n>=3&&s[n-3]=='_'&&s[n-2]=='_')){
+     if(s[n-1]=='n'||s[n-1]=='v')fndflag|=8;
+     if(s[n-1]=='m'||s[n-1]=='u')fndflag|=4;
+     else if(s[n-1]=='x')fndflag|=2;
+     else if(s[n-1]=='y')fndflag|=1;
+    }   // 'one-character name'
+   }  // 'name is not empty'
+  } // 'is name'
+  if(AT(w)&VERB){
+    if((FAV(w)->id&-2)==CUDOT)fndflag|=4;  // u./v.
+  }
+  // exit if we have seen enough: mnuv plus x.  No need to wait for y.  If we have seen only y, keep looking for x
+  if(fndflag>=8+4+2)R fndflag;
+ }  // loop for each word
  R fndflag;  // return what we found
 }
 
-static F1(jtcolon0){A l,z;C*p,*q,*s;I m,n;
+static A jtcolon0(J jt, I deftype){A l,z;C*p,*q,*s;I m,n;
  n=0; RZ(z=exta(LIT,1L,1L,300L)); s=CAV(z);
  while(1){
   RE(l=jgets("\001"));   // abort if error on input
   if(!l)break;  // exit loop if EOF
+  if(deftype!=0)RZ(l=ddtokens(l,8+2));  // if non-noun def, handle DDs, for explicit def, return string, allow jgets().  Leave noun contents untouched
   m=AN(l); p=q=CAV(l); 
   while(p<q+m&&' '==*p)++p; if(p<q+m&&')'==*p){while(p<q+m&&' '==*++p); if(p>=m+q)break;}  // if ) with nothing else but blanks, stop
   while(AN(z)<=n+m){RZ(z=ext(0,z)); s=CAV(z);}
@@ -613,25 +619,71 @@ static F1(jtcolon0){A l,z;C*p,*q,*s;I m,n;
  R str(n,s);
 }    /* enter nl terminated lines; ) on a line by itself to exit */
 
+// w is character array or list
+// if table, take , w ,. LF    if list take ,&LF^:(LF~:{:) w)
 static F1(jtlineit){
  R 1<AR(w)?ravel(stitch(w,scc(CLF))):AN(w)&&CLF==cl(w)?w:over(w,scc(CLF));
 }
 
-static B jtsent12c(J jt,A w,A*m,A*d){C*p,*q,*r,*s,*x;A z;
+// Convert ASCII w to boxed lines.  Create separate lists of boxes for monad and dyad
+// if preparsed it set, we know the lines have gone through wordil already & it is OK
+// to do it again.  This means we are processing 9 :  n
+static B jtsent12c(J jt,A w,A*m,A*d,I preparsed){C*p,*q,*r,*s,*x;A z;
  ASSERT(!AN(w)||LIT&AT(w),EVDOMAIN);
  ASSERT(2>=AR(w),EVRANK);
- RZ(w=lineit(w));
- x=p=r=CAV(w);  /* p: monad start; r: dyad start */
- q=s=p+AN(w);   /* q: monad end;   s: dyad end   */
- while(x<s){
-  q=x;
-  while(' '==*x)++x; if(':'==*x){while(' '==*++x); if(CLF==*x){r=++x; break;}}
-  while(CLF!=*x++);
+ if(preparsed){
+  // Handling 9 : n lines.  Lines are separated by DDSEP, and there may be DDSEP embedded in strings.  Convert the whole thing to words, which will
+  // leave the embedded DDSEP embedded; then split on the individual DDSEP tokens
+  // The line comes in without trailing DDSEP.  Add it
+  // The line comes in without trailing DDSEP.  Add it
+  RZ(w=over(w,scc(DDSEP)));  // force trailing separator
+  // tokenize the lines.  Each LF is its own token.
+  A wil; RZ(wil=wordil(w)); makewritable(wil); I wiln=AS(wil)[0]; I (*wilv)[2]=voidAV(wil); // line index, and number of lines; array of (start,end+1) for each line
+  // Compact the word-list to a line-list.  Go through the words looking for LF.  For each line, add an entry to the line-list with all the characters except the LF
+  I dyad1=-1; I i=0;  // start of dyad, input pointer through wilv
+  I currlinest=0;  // character# at which current line (ending in next LF) starts
+  I linex=0;  // index of next output (start,end) to fill
+  C *wv=CAV(w);  // the character list backing the words
+  while(i<wiln){
+   // we have just finished a line.  currlinest is the first character position of the next line
+   // if we are still looking for end-of-monad, see if this line starts with : folllowed by DDSEP
+   if(dyad1<0 && wv[wilv[i][0]]==':' && wilv[i][1]-wilv[i][0]==1 && i+1<wiln && wv[wilv[i+1][0]]==DDSEP){
+    // we found : on a line by itself.  Remember where, and skip over the line
+    dyad1=linex;  // save # lines in monad
+    currlinest=wilv[i+1][1];  // skip past the LF
+    i+=2;  // quietly eat the : and LF
+   }else{
+    // a real line.  scan to find next DDSEP.  There must be one.
+    while(wv[wilv[i][0]]!=DDSEP)++i;  // advance to LF
+    // add the new line - everything except the LF - to the line list
+    wilv[linex][0]=currlinest; wilv[linex][1]=wilv[i][0];  // add the line
+    ++linex; currlinest=wilv[i][0]+1;  // advance line pointer, skip over the LF to start of next line
+    ++i;  // skip over the LF we processed
+   }
+  }
+  // Now we have compacted all the lines.  Box them: monad first, then dyad
+  // We fiddle with wil to make it look first like the monad, then the dyad
+  dyad1=dyad1<0?linex:dyad1;  // now 0..dyad1 are the monad, dyad1..linex are the dyad
+  AS(wil)[0]=dyad1;  // set length
+  *m=jtboxcut0(jt,wil,w,ds(CWORDS));
+  AS(wil)[0]=linex-dyad1; AK(wil)+=dyad1<<(LGSZI+1);  // advance to dyad, set its length
+  *d=jtboxcut0(jt,wil,w,ds(CWORDS));
+ }else{
+  // the lines have not been processed before - they might not contain valid words.  Search for
+  // the ':' line, and cut the remaining lines on trailing LFs
+  RZ(w=lineit(w));  // make lines LF-terminated
+  x=p=r=CAV(w);  /* p: monad start; r: dyad start */
+  q=s=p+AN(w);   /* q: monad end;   s: dyad end   */
+  while(x<s){
+   q=x;
+   while(' '==*x)++x; if(':'==*x){while(' '==*++x); if(CLF==*x){r=++x; break;}}
+   while(CLF!=*x++);
+  }
+  if(x==s)q=r=s;
+  A zc=cut(ds(CBOX),num(-2));  // create function for <;._2
+  *m=df1(z,str(q-p,p),zc);
+  *d=df1(z,str(s-r,r),zc);
  }
- if(x==s)q=r=s;
- A zc=cut(ds(CBOX),num(-2));
- *m=df1(z,str(q-p,p),zc);
- *d=df1(z,str(s-r,r),zc);
  R *m&&*d;
 }    /* literal fret-terminated or matrix sentences into monad/dyad */
 
@@ -830,12 +882,12 @@ F2(jtcolon){A d,h,*hv,m;B b;C*s;I flag=VFLAGNONE,n,p;
   if(CCOLON==FAV(w)->id&&FAV(w)->fgh[0]&&VERB&AT(FAV(w)->fgh[0])&&VERB&AT(FAV(w)->fgh[1]))w=FAV(w)->fgh[1];
   R fdef(0,CCOLON,VERB,xv1,xv2,a,w,0L,((FAV(a)->flag&FAV(w)->flag)&VASGSAFE),mr(a),lr(w),rr(w));  // derived verb is ASGSAFE if both parents are 
  }
- RE(n=i0(a));  // m : n; set n=type of result
- if(equ(w,num(0))){RZ(w=colon0(mark)); if(!n)R w;}   // if m : 0, read up to the ) .  If 0 : 0, return the string unedited
+ RE(n=i0(a));  // m : n; set n=value of a argument
+ if(equ(w,num(0))){RZ(w=colon0(n)); if(!n)R w;}   // if m : 0, read up to the ) .  If 0 : 0, return the string unedited
  if((C2T+C4T)&AT(w))RZ(w=cvt(LIT,w));
  if(10<n){s=CAV(w); p=AN(w); if(p&&CLF==s[p-1])RZ(w=str(p-1,s));}
  else{  // not tacit translator - preparse the body
-  RZ(BOX&AT(w)?sent12b(w,&m,&d):sent12c(w,&m,&d)); INCORP(m); INCORP(d);  // get monad & dyad parts; we are incorporating them into hv[]
+  RZ(BOX&AT(w)?sent12b(w,&m,&d):sent12c(w,&m,&d,n==9)); INCORP(m); INCORP(d);  // get monad & dyad parts; we are incorporating them into hv[]
   if(4==n){if((-AN(m)&(AN(d)-1))<0)d=m; m=mtv;}  //  for 4 :, make the single def given the dyadic one
   GAT0(h,BOX,2*HN,1); hv=AAV(h);
   if(n){  // if not noun, audit the valences as valid sentences
@@ -845,16 +897,25 @@ F2(jtcolon){A d,h,*hv,m;B b;C*s;I flag=VFLAGNONE,n,p;
  }
  if(!n){ra0(w); RCA(w);}  // noun - return it.  Since this is a noun result, we make sure it is recursive usecount
  // Non-noun results cannot become inputs to verbs, so we do not force them to be recursive
- if(n<=2){  // adv/conj
-  I fndflag=xop(h);   // 4=mnuv 2=x 1=y
-  b=fndflag>4;   // set if there is mnuv and xy
-  if(b)flag|=VXOPR;   // if this def refers to xy, set VXOPR
+ if((1LL<<n)&0x206){  // types 1, 2, 9
+// obsolete   I fndflag=xop(h);   // 4=mnuv 2=x 1=y
+  I fndflag=xop(hv[0])|xop(hv[0+HN]);   // 4=mnuv 2=x 1=y, combined for both valences
+  // for 9 : n, figure out best type after looking at n
+  if(n==9){
+   I defflg=fndflag|1; CTLZI(fndflag,n); n=(0x2143>>(n<<2))&0xf; // replace 9 by value depending on what was seen
+   if(n==4){hv[HN]=hv[0]; hv[0]=mtv; hv[HN+1]=hv[1]; hv[1]=mtv; hv[HN+2]=hv[2]; hv[2]=mtv; flag=(flag&~VTRY2)+VTRY1; }  // if we created a dyadic verb, shift the monad over to the dyad and clear the monad, incl try flag
+  } 
+  if(n<=2){  // adv of conj after autodetection
+   fndflag=(fndflag&7)|((fndflag&8)>>1);  // scaf put back in old form
+   b=fndflag>4;   // set if there is mnuv and xy scaf
+   if(b)flag|=VXOPR;   // if this def refers to xy, set VXOPR
 // saved for next rev   ASSERT(!BETWEENC(fndflag,1,3),EVNONCE);  // scaf
 if(BETWEENC(fndflag,1,3))jfwrite(str(129,"************ Old-style definition encountered.  It will be invalid after the beta period.\nIt has x/y without u/v/m/n **********\n"),num(2));
-  // if there is only one valence defined, that will be the monad.  Swap it over to the dyad in two cases: (1) it is a conjunction with uv only: the operands will be the two verbs;
-  // (2) it is an operator with a reference to x
-  if(((-AN(m))&(AN(d)-1)&(((fndflag-5)&(1-n))|(5-fndflag)))<0){A*u=hv,*v=hv+HN,x; DQ(HN, x=*u; *u++=*v; *v++=x;);}  // if not, it executes on uv only; if conjunction, make the default the 'dyad' by swapping monad/dyad
-  // for adv/conj, b has operator status from here on
+   // if there is only one valence defined, that will be the monad.  Swap it over to the dyad in two cases: (1) it is a conjunction with uv only: the operands will be the two verbs;
+   // (2) it is an operator with a reference to x
+   if(((-AN(m))&(AN(d)-1)&(((fndflag-5)&(1-n))|(5-fndflag)))<0){A*u=hv,*v=hv+HN,x; DQ(HN, x=*u; *u++=*v; *v++=x;);}  // if not, it executes on uv only; if conjunction, make the default the 'dyad' by swapping monad/dyad
+   // for adv/conj, b has operator status from here on
+  }
  }
  flag|=VFIX;  // ensures that f. will not look inside n : n
  // Create a symbol table for the locals that are assigned in this definition.  It would be better to wait until the
@@ -877,7 +938,7 @@ if(BETWEENC(fndflag,1,3))jfwrite(str(129,"************ Old-style definition enco
 }
 
 // input reader for direct definition
-// This is a drop-in for tokens().  It takes a string and env, and returns tokens created by enqueue()
+// This is a drop-in for tokens().  It takes a string and env, and returns tokens created by enqueue().  Can optionally return string
 //
 // Any DDs found are collected and converted into ( m : string ).  This is done recursively.  If an unterminated
 // DD is found, we call jgets() to get the next line, taking as many lines as needed to leave with a valid line.
@@ -887,5 +948,83 @@ if(BETWEENC(fndflag,1,3))jfwrite(str(129,"************ Old-style definition enco
 // input, for example if the string comes from (". y) or from an event.  If an unterminated DD is found when bit 2 is set,
 // the call fails with control error
 //
+// Bit 3 of env is set if the caller wants the returned value as a string rather than as enqueued words
+//
 // If the call to jgets() returns EOF, indicating end-of-script, that is also a control error
-A jtddtokens(J jt,A w,I env);
+A jtddtokens(J jt,A w,I env){
+ PROLOG(000);F1PREFIP;
+ RZ(w);
+#if 0  // set to 1 to disable DD
+ w=(env&8)?w:tokens(w,env&3);  // return the input unmodified
+#endif
+ // find word boundaries, remember if last word is NB
+ A wil; RZ(wil=wordil(w));  // get index to words
+ C *wv=CAV(w); I nw=AS(wil)[0]; I (*wilv)[2]=voidAV(wil);  // cv=pointer to chars, nw=#words including final NB   wilv->[][2] array of indexes into wv word start/end
+ // scan for start of DD/end of DD.
+ I firstddbgnx;  // index of first/last start of DD, and end of DD
+ for(firstddbgnx=0;firstddbgnx<nw;++firstddbgnx){US ch2=*(US*)(wv+wilv[firstddbgnx][0]); ASSERT(!(ch2==DDEND&&(wilv[firstddbgnx][1]-wilv[firstddbgnx][0]==2)),EVCTRL) if(ch2==DDBGN&&(wilv[firstddbgnx][1]-wilv[firstddbgnx][0]==2))break; }
+ if(firstddbgnx>=nw&&(env&8))R w;    //   If no DD chars found, and caller wants a string, return w fast
+ // loop till all DDs found
+ while(firstddbgnx<nw){
+  // We know that firstddbgnx is DDBGN
+  I ddendx=-1, ddbgnx=firstddbgnx;  // end/start of DD, indexes into wilv.  This will be the pair we process.  We advance ddbgnx and stop when we hit ddendx
+  I scanstart=firstddbgnx+1;  // start looking for DDEND after the first known DDBGN.  But if there turns out to be no DDEND, advance start ptr to avoid rescanning
+  while(1){I i;  // loop till we find a complete DD
+   for(i=scanstart;i<nw;++i){US ch2=*(US*)(wv+wilv[i][0]); if(ch2==DDEND&&(wilv[i][1]-wilv[i][0]==2)){ddendx=i; break;} if(ch2==DDBGN&&(wilv[i][1]-wilv[i][0]==2))ddbgnx=i;}  // find DD pair
+   if(ddendx>=0)break;  // we found an end, and we started at a begin, so we have a pair.  Go process it
+
+   // Here the current line ended with no end DD.  We have to continue onto the next line
+   ASSERT(!(env&4),EVCTRL);   // Abort if we are not allowed to continue (as for an event or ". y)
+   scanstart=AM(wil);  // Get # words, not including final NB.  We have looked at em all, so start next look after all of them
+   A neww=jgets("");  // fetch next line.
+   RE(0); ASSERT(neww,EVCTRL); // fail if jgets failed, or if it returned EOF - problem either way
+   // join the new line onto the end of the old one (after discarding trailing NB in the old).  Must add an LF character and a word for it
+   w=jtapip(jtinplace,w,scc(DDSEP));   // append a separator, which is all that remains of the original line   scaf use faux or constant block
+   jtinplace=(J)((I)jtinplace|JTINPLACEW);  // after the first one, we can certainly inplace on top of w
+   I oldchn=AN(w);  // len after adding LF, before adding new line
+   RZ(w=jtapip(jtinplace,w,neww));   // join the new character list onto the old, inplace if possible
+   // Remove the trailing comment if any from wil, and add a word for the added LF
+   makewritable(wil);  // We will modify the block rather than curtailing it
+   AS(wil)[0]=scanstart; AN(wil)=2*scanstart;  // set AS and AN to discard comment
+   A lfwd; fauxblockINT(lffaux,2,2); fauxINT(lfwd,lffaux,2,2)  AS(lfwd)[0]=2; AS(lfwd)[1]=1; IAV(lfwd)[0]=oldchn-1; IAV(lfwd)[1]=oldchn; 
+   RZ(wil=jtapip(jtinplace,wil,lfwd));  // add a new word for added LF.  # words in wil is now scanstart+1
+   ++scanstart;  // update count of words already examined so we start after the added LF word
+   A newwil; RZ(newwil=wordil(neww));  // get index to new words
+   I savam=AM(newwil);  // save AM for insertion if final new string block
+   makewritable(newwil);  // We will modify the block rather than adding to it
+   I *nwv=IAV(newwil); DO(AN(newwil), *nwv++ += oldchn;)  // relocate all the new words so that they point to chars after the added LF
+   RZ(wil=jtapip(jtinplace,wil,newwil));   // add new words after LF, giving old LF new
+   AM(wil)=savam+scanstart;  // set total # words in combined list, not including final comment
+   wv=CAV(w); nw=AS(wil)[0]; wilv=voidAV(wil);  // refresh pointer to word indexes, and length
+  }
+
+  // We have found an innermost DD, running from ddbgnx to ddendx.  Convert it to ( m : 'string' ) form
+  //  create a faux block for the input to enqueue, so we can insert AM
+  A ddwds; fauxblockINT(ddfaux,0,3); fauxINT(ddwds,ddfaux,0,3)  AS(ddwds)[0]=ddendx-ddbgnx-1; AS(ddwds)[1]=2; AS(ddwds)[2]=1; AN(ddwds)=2*(ddendx-ddbgnx-1);
+  AK(ddwds)=(C*)(wilv+ddbgnx+1)-(C*)ddwds;  // point to data after the DDBGN
+// obsolete   A qwds; RZ(qwds=enqueue(ddwds,w,env&3)); I opflags=xop(qwds)|1;  // see what args are given - if no args at all, use y  scaf
+// obsolete   I deftype; CTLZI(opflags,deftype); deftype=(0x2143>>(deftype<<2))&0xf;  // digit number for the definition scaf let cx do it
+  A ddstg; RZ(ddstg=unwordil(ddwds,w,2+1));  // create string form: ask for enclosing quotes and 4 bytes of extra space.. Result is always writable
+  // Add (m:) to the string so we can refer to it
+  I ddstglen=AN(ddstg); AN(ddstg)=AS(ddstg)[0]=ddstglen+4; C* suffv=CAV(ddstg)+ddstglen; suffv[0]='('; suffv[1]='9'; suffv[2]=':'; suffv[3]=')';
+  // append the new chars to w
+  I ddstgbgn=AN(w); w=jtapip(jtinplace,w,ddstg);   // remember where new string starts in combined string; add on to the character list
+  // replace the words of the DD with 5 word slots.  Transfer comment-at-end status to the new wordlist
+  I commentdiff=AS(wil)[0]-AM(wil);  // remember comment status, 0 or 1
+  RZ(wil=over(take(sc(ddbgnx+5),wil),drop(sc(ddendx+1),wil))); makewritable(wil);  // replace DD with 5 slots
+  AM(wil)=AS(wil)[0]-commentdiff;  // restore comment status to new wordlist
+  wv=CAV(w); nw=AS(wil)[0]; wilv=voidAV(wil);  // refresh pointer to word indexes, and length
+  // install pointers to the DD: ( m : string )
+  wilv[ddbgnx+3][0]=ddstgbgn; ddstglen+=ddstgbgn; wilv[ddbgnx+3][1]=ddstglen;  // word: 'string'
+  wilv[ddbgnx][0]=ddstglen; wilv[ddbgnx][1]=ddstglen+1;  // word: (
+  wilv[ddbgnx+1][0]=ddstglen+1; wilv[ddbgnx+1][1]=ddstglen+2;  // word: m
+  wilv[ddbgnx+2][0]=ddstglen+2; wilv[ddbgnx+2][1]=ddstglen+3;  // word: :
+  wilv[ddbgnx+4][0]=ddstglen+3; wilv[ddbgnx+4][1]=ddstglen+4;  // word: )
+
+  // We have replaced one DD with its equivalent explicit definition.  Rescan the line, starting at the first location where DDBGN was seen
+  for(;firstddbgnx<nw;++firstddbgnx){US ch2=*(US*)(wv+wilv[firstddbgnx][0]); ASSERT(!(ch2==DDEND&&(wilv[firstddbgnx][1]-wilv[firstddbgnx][0]==2)),EVCTRL) if(ch2==DDBGN&&(wilv[firstddbgnx][1]-wilv[firstddbgnx][0]==2))break; }
+ }
+ // All DDs replaced. convert word list back to either text form or enqueued form
+ w=(env&8)?unwordil(wil,w,0):enqueue(wil,w,env&3);  // the word list is where everything is.  Convert as required
+ EPILOG(w);
+}

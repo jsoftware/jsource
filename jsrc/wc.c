@@ -377,7 +377,7 @@ B jtpreparse(J jt,A w,A*zl,A*zc){PROLOG(0004);A c,l,*lv,*v,w0,w1,*wv,x,y;B b=0,t
  RZ(c=exta(CONW,1L,1L,3*p)); cv=(CW*)AV(c); n=0;  // allocate result area, cv->start of block of CWs, n=#cws encountered
  RZ(l=exta(BOX, 1L,1L,5*p)); lv=    AAV(l); m=0;  // allocate list of boxed words, lv->&A for first word; m=#words
  for(i=0;i<p;++i){   // loop for each line
-  // split the line into a sequence of sentences, splitting on each control word.  Result is a list of boxed strings, each one sentnece
+  // split the line into a sequence of sentences, splitting on each control word.  Result is a list of boxed strings, each one sentence
   RZ(y=getsen(wv[i])); yn=AN(y); v=AAV(y);  // split string into sentences; yn=#sentences on line, v->block for first sentence
   for(j=0;j<yn;++j){   // for each sentence on the line...
    if(n==AN(c)){RZ(c=ext(0,c)); cv=(CW*)AV(c);}  // if result buffer is full, reallocate it, reset pointer to first CW

@@ -52,7 +52,9 @@ and continue through various inputs to see the flow
  
 *** jfe repl (read/execute/print/loop)
  s=input()
- call jdo(s)           ---------> jdo() calls immex(inpl(sentence))
+ call jdo(s)           ---------> jdo() calls ddtokens(sentence)
+   input()   (optional) <-------- if DD seen, get more lines if needed by calling jt->sminput
+                                  jdo() calls immex(inpl(sentence))
                                    ... 
    output(s)           <--------  jsto(type,s) - jt->smoutout(type,s)
    output returns      ---------> ...
@@ -77,16 +79,22 @@ and continue through various inputs to see the flow
                                      loop as long as suspended
                                        call jgets()
    input()            <---------       call jt->sminput()
-   return line        --------->       call immex(inpl(line)
-                                     loop
+   return line        --------->
+   input()   (optional) <--------      if DD seen, get more lines if needed by calling jt->sminput
+                                       call immex(inpl(line)
+                                       loop
 *** m : 0
 similar to debug suspension except jgets() lines added  to defn.  m : 0 stops reading
-after encountering ) on a line by itself
+after encountering ) on a line by itself.  If not 0 : 0, call ddtokens() after each line
+to see if more lines need to be read to finish the DD; is so, call jgets() to get them
 
 *** script load
 linf() is called first to read in all lines.  It sets jt->dcs to indicate that fact.  Thereafter
 all calls to jgets() return llies from the file without calling jt->sminput().
 jgets() calls advl() to advance through the lines, returns 0 for EOF.  Error is possible.
+
+The lines are executed one by one.  Before each is executed, ddtokens() is called to see if more lines
+are needed to finish a DD.
 
 *** jwd (11!:x)
 similar to debug suspension except output/input
@@ -96,6 +104,12 @@ similar to debug suspension except output/input
 jt->nfe flag - JE does not use jt->smoutout() and jt->sminput()
 instead it calls J code that provides equivalent services
 JHS routines are J socket code to talk with javascript browser page
+
+DD NOTE: DD is not supported on special sentences: iep, xep, dbssexec, dbtrap.  This is mostly because I don't understand how these work.
+
+DD is supported on ". y, but only if the DD is fully contained in the string
+A recursive JDo may use a DD, but only if it is fully contained in the string
+
 */
 
 #ifdef _WIN32
@@ -275,7 +289,8 @@ I jdo(J jt, C* lp){I e;A x;
  // Run any enabled immex sentences both before & after the line being executed.  I don't understand why we do it before, but it can't hurt since there won't be any.
  // BUT: don't do it if the call is recursive.  The user might have set the iep before a prompt, and won't expect it to be executed asynchronously
  if(likely(jt->recurstate<RECSTATEPROMPT))while(jt->iepdo&&jt->iep){jt->iepdo=0; immex(jt->iep); if(savcallstack==0)CALLSTACKRESET jt->jerr=0; tpop(old);}
- if(!jt->jerr)immex(x);
+ // Check for DDs in the input sentence.  If there is one, call jgets() to finish it.  Result is enqueue()d sentence.  If recursive, don't allow call to jgets()
+ x=ddtokens(x,(((jt->recurstate&RECSTATEPROMPT)<<(2-1)))+1+(AN(jt->locsyms)>1)); if(!jt->jerr)immex(x);  // allow reads from jgets() if not recursive; return enqueue() result
  e=jt->jerr;
  if(savcallstack==0)CALLSTACKRESET jt->jerr=0;
  if(likely(jt->recurstate<RECSTATEPROMPT))while(jt->iepdo&&jt->iep){jt->iepdo=0; immex(jt->iep); if(savcallstack==0)CALLSTACKRESET jt->jerr=0; tpop(old);}

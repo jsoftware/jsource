@@ -883,8 +883,6 @@ DF2(jtrazecut2){A fs,gs,y,z=0;B b; I neg,pfx;C id,sep,*u,*v,*wv,*zv;I d,k,m=0,wi
  I t,zk,zt;                     /* atomic function f/\ or f/\. */
  if((t=atype(adocv.cv))&&TYPESNE(t,wt)){RZ(w=cvt(t,w)); wv=CAV(w);}
  zt=rtype(adocv.cv); zk=d<<bplg(zt);
-// ?? vaid(VAV(fs)->fgh[0]) is always /, so this does nothing
-// unused if(1==r&&!neg&&B01&AT(a)&&p==wi&&v[(wi-1)&(pfx-1)]){RE(z=partfscan(a,w,adocv.cv,(B)pfx,id,vaid(VAV(fs)->fgh[0]))); if(z)SEGFAULT /* scaf  R z;*/}
  GA(z,zt,AN(w),r,s); zv=CAV(z); // allocate size of w, which is as big as it can get if there are no discarded items
  while(p){I n;
   if(u=memchr(v+pfx,sep,p-pfx))u+=pfx^1; else{if(!pfx)break; u=v+p;}

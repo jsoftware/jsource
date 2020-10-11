@@ -1005,7 +1005,7 @@ if((I)jt&3)SEGFAULT
   }
 #endif
   // If the user is keeping track of memory high-water mark with 7!:2, figure it out & keep track of it.  Otherwise save the cycles
-  if(unlikely((mfreeb&MFREEBCOUNTING))){
+  if(unlikely(((mfreeb&MFREEBCOUNTING)!=0))){
    jt->bytes += n; if(jt->bytes>jt->bytesmax)jt->bytesmax=jt->bytes;
   }
   R z;
@@ -1123,7 +1123,7 @@ RESTRICTF A jtgah(J jt,I r,A w){A z;
 F1(jtca){A z;I t;P*wp,*zp;
  RZ(w);
  t=AT(w);
- if(unlikely(t&SPARSE)){
+ if(unlikely((t&SPARSE)!=0)){
   GASPARSE(z,t,AN(w),AR(w),AS(w))
   wp=PAV(w); zp=PAV(z);
   SPB(zp,a,ca(SPA(wp,a)));

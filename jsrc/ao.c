@@ -185,7 +185,7 @@ static DF2(jtkeysp){PROLOG(0008);A b,by,e,q,x,y,z;I j,k,n,*u,*v;P*p;
 // a u/. w.  Self-classify a, then rearrange w and call cut.  Includes special cases for f//.
 static DF2(jtkey){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
  RZ(a&&w);
- if(unlikely(SPARSE&AT(a)))R keysp(a,w,self);  // if sparse, go handle it
+ if(unlikely((SPARSE&AT(a))!=0))R keysp(a,w,self);  // if sparse, go handle it
  {I t2; ASSERT(SETIC(a,nitems)==SETIC(w,t2),EVLENGTH);}  // verify agreement.  nitems is # items of a
  RZ(ai=indexofsub(IFORKEY,a,a));   // self-classify the input using ct set before this verb
  // indexofsub has 2 returns: most of the time, it returns a normal i.-family result, but with each slot holding the index PLUS the number of values
@@ -497,11 +497,11 @@ static DF2(jtkey){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
 // bivalent entry point: a </. w   or  (</. i.@#) w
 DF2(jtkeybox){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
  RZ(a&&w);  // we don't neep ip, but all jtkey dyads must support it
- if(unlikely(SPARSE&AT(a)))R (AT(w)&NOUN?(AF)jtkeysp:(AF)jthook1cell)(jt,a,w,self);  // if sparse, go handle it
+ if(unlikely((SPARSE&AT(a))!=0))R (AT(w)&NOUN?(AF)jtkeysp:(AF)jthook1cell)(jt,a,w,self);  // if sparse, go handle it
  SETIC(a,nitems);   // nitems is # items in a and w
  I cellatoms, celllen;  // number of atoms in an item of w, and the number of bytes therein.  celllen is negative for the monad
  struct AD fauxw;  // needed only for (</. i.@#) but must stay in scope
- if(likely(AT(w)&NOUN)){
+ if(likely((AT(w)&NOUN)!=0)){
   // dyad: </.
   I t2; ASSERT(nitems==SETIC(w,t2),EVLENGTH);  // verify agreement
   PROD(cellatoms,AR(w)-1,AS(w)+1);   // length of a cell of w, in atoms
@@ -663,7 +663,7 @@ static DF2(jtkeytally){F2PREFIP;PROLOG(0016);A z,q;I at,j,k,n,r,s,*qv,*u,*v;
  SETIC(a,n); at=AT(a);
  ASSERT(n==SETIC(w,k),EVLENGTH);
  if(!AN(a))R vec(INT,!!n,&AS(a)[0]);  // handle case of empties - a must have rank, so use AS[0] as  proxy for n
- if(unlikely(at&SPARSE))R keytallysp(a);
+ if(unlikely((at&SPARSE)!=0))R keytallysp(a);
  if((-n&SGNIF(at,B01X)&(AR(a)-2))<0){B*b=BAV(a); k=bsum(n,b); R BETWEENO(k,1,n)?v2(*b?k:n-k,*b?n-k:k):vci(n);}  // nonempty rank<2 boolean a, just add the 1s
  A ai;  // result from classifying a
  RZ(ai=indexofsub(IFORKEY,a,a));   // self-classify the input using ct set before this verb

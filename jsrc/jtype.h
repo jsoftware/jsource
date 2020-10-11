@@ -330,7 +330,8 @@ typedef I SI;
 #define ASGN            ((I)1L<<ASGNX)     /* I  assignment                   */
 #define ASGNSIZE sizeof(I)     // only 1 byte, but all non-DIRECT are fullword multiples
 // ** ASGN type can have the following informational bits set along with ASGN
-#define ASGNLOCAL       ((I)1L<<SYMBX)     // set for =. (but not when assigning to locative)    aliases with SYMB
+#define ASGNLOCALX      SYMBX     // set for =. (but not when assigning to locative)    aliases with SYMB
+#define ASGNLOCAL       ((I)1L<<ASGNLOCALX)     // set for =. (but not when assigning to locative)    aliases with SYMB
 #define ASGNTONAME      ((I)1L<<CONWX)     // set when assignment is to name    aliases with CONW
 // NOTE: The parser assumes that CONW always means ASGNTONAME, so don't use it in any parseable type (such as NAME, NOUN)
 // ** NOUN types can have the following informational bits set

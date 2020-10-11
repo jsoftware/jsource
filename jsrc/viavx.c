@@ -1739,7 +1739,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
  // f is len of frame of a (or of w if a has no frame); s->shape of a (or of w is a has no frame)
  // r is rank of an item of a cell of a (i. e. rank of a target item), f1 is len of frame of A CELL OF w with respect to target cells, in
  // other words the frame of the results each cell of w will produce
- if(unlikely((at|wt)&SPARSE)){A z;
+ if(unlikely(((at|wt)&SPARSE)!=0)){A z;
   // Handle sparse arguments
   mode &= IIOPMSK;  // remove flags before going to sparse code
   if(1>=acr)R af?sprank2(a,w,0L,acr,RMAX,jtindexof):wt&SPARSE?iovxs(mode,a,w):iovsd(mode,a,w);
@@ -1830,9 +1830,9 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
   // p>>booladj is the number of hashtable entries we need.  booladj is 0 for full hash, 3 if we just need one byte-encoded boolean per input value, 5 if just one bit per input value
   UI booladj=(mode&(IIOPMSK&~(IIDOT^IICO)))?5:0;  // boolean allowed when not i./i:
   p=0;  // indicate we haven't come up with the table size yet.  It depends on reverse and small-range decisions
-  if(unlikely((fnx+1)&t&BOX+FL+CMPX))ctmask(jt);   // calculate ctmask if comparison is tolerant and there might be floats
+  if(unlikely(((fnx+1)&t&BOX+FL+CMPX)!=0))ctmask(jt);   // calculate ctmask if comparison is tolerant and there might be floats
 
-  if(unlikely(t&BOX+XNUM+RAT)){
+  if(unlikely((t&BOX+XNUM+RAT)!=0)){
    if(t&BOX){I t1; fnx=(fnx&1)&&(1<n||usebs(a,ac,m))?FNTBLBOXSSORT:1<n?FNTBLBOXARRAY:(fnx&1)?FNTBLBOXINTOLERANT:
              (t1=utype(a,ac))&&((mode&IPHCALC)||a==w||TYPESEQ(t1,utype(w,wc)))?FNTBLBOXUNIFORM:FNTBLBOXUNKNOWN;
    }else fnx=CTTZ(t)+(FNTBLXNUM-XNUMX);
@@ -1862,7 +1862,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
    }
    if(likely(fnx<0)){  // if we don't have it yet, it will be a hash or small-range integers.  Decide which one
     if((k&~(t&FL))==SZI){  // non-float, might be INT or SBT, or characters.  FL has -0 problem   requires SZI==FL
-     if(likely(t&INT+SBT)){I fnprov;A rangearg; UI rangearglen;  // same here, for I types
+     if(likely((t&INT+SBT)!=0)){I fnprov;A rangearg; UI rangearglen;  // same here, for I types
       // small-range processing is a possibility, but we need to decide whether we are going to do a reversed hash, so we will
       // know which range to check.  For i./i:, we reverse if c is much shorter than m; for e., we have to consider whether
       // the forward hash will benefit from bits mode, so we have to estimate the size of each hash table
@@ -1975,7 +1975,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
          // for small-range to round up to an even word of an I, and possibly padding leading/trailing bytes; for hashing, we need a sentinel at the beginning and the end
     if(unlikely((mode&IPHCALC)||!((h=jt->idothash1) && IHAV(h)->datasize >= psizeinbytes))){  // scaf combine
      // if we have to reallocate, free the old one
-     if(unlikely(REPSGN(SGNIFNOT(mode,IPHCALCX))&(I)h)){fr(h); jt->idothash1=0;}  // free old, and clear pointer in case of allo error
+     if(unlikely((REPSGN(SGNIFNOT(mode,IPHCALCX))&(I)h)!=0)){fr(h); jt->idothash1=0;}  // free old, and clear pointer in case of allo error
      // allocate the new one and fill it in
      GATV0(h,INT,(psizeinbytes+sizeof(IH)+(SZI-1))>>LGSZI,0);
      // Fill in the header
@@ -2052,7 +2052,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
  // If the call was IFORKEY, the number of partitions was stored in AM(h).  Move it to AM(z) whence it will be returned.
  I forkeyresult=AM(h);  // save # partitions
 
- if(unlikely((mode&IPHCALC))){A x,*zv;I*xv;
+ if(unlikely((mode&IPHCALC)!=0)){A x,*zv;I*xv;
   // If w was omitted (indicating prehashing), return the information for that special case
   // result is an array of 3 boxes, containing (info vector),(hashtable),(mask of hashed bytes if applicable)
   // The caller must ras() this result to protect it, if it is going to be saved
@@ -2119,7 +2119,7 @@ F2(jtjico2){R indexofsub(IICO,a,w);}
 // ~: y
 F1(jtnubsieve){
  RZ(w);
- if(unlikely(SPARSE&AT(w)))R nubsievesp(w); 
+ if(unlikely((SPARSE&AT(w))!=0))R nubsievesp(w); 
  jt->ranks=(RANKT)jt->ranks + ((RANKT)jt->ranks<<RANKTX);  // we process as if dyad; make left rank=right rank
  R indexofsub(INUBSV,w,w); 
 }    /* ~:"r w */
@@ -2127,7 +2127,7 @@ F1(jtnubsieve){
 // ~. y  - does not have IRS
 F1(jtnub){ 
  RZ(w);F1PREFIP;
- if(unlikely((SPARSE&AT(w))|(AFLAG(w)&AFNJA)))R repeat(nubsieve(w),w);    // sparse or NJA
+ if(unlikely(((SPARSE&AT(w))|(AFLAG(w)&AFNJA))!=0))R repeat(nubsieve(w),w);    // sparse or NJA
  A z; RZ(z=indexofsub(INUB,w,w));
  // We extracted from w, so mark it (or its backer if virtual) non-pristine.  If w was pristine and inplaceable, transfer its pristine status to the result.  We overwrite w because it is no longer in use
  PRISTXFERF(z,w)
@@ -2156,7 +2156,7 @@ F2(jteps){I l,r;
  RZ(a&&w);
  l=jt->ranks>>RANKTX; l=AR(a)<l?AR(a):l;
  r=(RANKT)jt->ranks; r=AR(w)<r?AR(w):r; RESETRANK;
- if(unlikely(SPARSE&(AT(a)|AT(w))))R lt(irs2(w,a,0L,r,l,jtindexof),sc(r?AS(w)[AR(w)-r]:1));  // for sparse, implement as (# cell of y) > y i. x
+ if(unlikely((SPARSE&(AT(a)|AT(w)))!=0))R lt(irs2(w,a,0L,r,l,jtindexof),sc(r?AS(w)[AR(w)-r]:1));  // for sparse, implement as (# cell of y) > y i. x
  jt->ranks=(RANK2T)((r<<RANKTX)+l);  // swap ranks for subroutine.  Subroutine will reset ranks
  R indexofsub(IEPS,w,a);
 }    /* a e."r w */

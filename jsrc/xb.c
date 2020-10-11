@@ -185,7 +185,7 @@ static C* jtbrepfill(J jt,B b,B d,A w,C *zv){I klg,kk;
 static A jtbrep(J jt,B b,B d,A w){A y;I t;
  RZ(w);
  t=UNSAFE(AT(w)); 
- if(unlikely(t&SPARSE))R breps(b,d,w);  // sparse separately
+ if(unlikely((t&SPARSE)!=0))R breps(b,d,w);  // sparse separately
  GATV0(y,LIT,bsizer(jt,d,1,w),1);   // allocate entire result
  RZ(jtbrepfill(jt,b,d,w,CAV(y)));   // fill it
  R y;  // return it
@@ -204,7 +204,7 @@ static A jthrep(J jt,B b,B d,A w){A y,z;C c,*hex="0123456789abcdef",*u,*v;I n,s[
 static A jthrep(J jt,B b,B d,A w){A y;C c,*hex="0123456789abcdef",*u,*v;I n,s[2],t;
  RZ(w);
  t=UNSAFE(AT(w)); 
- if(unlikely(t&SPARSE)){A z;  // sparse separately
+ if(unlikely((t&SPARSE)!=0)){A z;  // sparse separately
   RZ(y=breps(b,d,w));
   n=AN(y); s[0]=n>>LGWS(d); s[1]=2*WS(d); 
   GATVR(z,LIT,2*n,2,s);  
@@ -266,7 +266,7 @@ static A jtunbinr(J jt,B b,B d,B pre601,I m,A w){A y,z;C*u=(C*)w,*v;I e,j,kk,n,p
  ASSERT(BETWEENC(r,0,RMAX),EVRANK);
  p=bsize(jt,d,0,t,n,r,0L); e=t&RAT?n+n:t&SPARSE?1+sizeof(P)/SZI:n; 
  ASSERT(m>=p,EVLENGTH);
- if(likely(t&DENSE)){GA(z,t,n,r,0)}else{GASPARSE(z,t,n,r,(I*)0)} s=AS(z);
+ if(likely((t&DENSE)!=0)){GA(z,t,n,r,0)}else{GASPARSE(z,t,n,r,(I*)0)} s=AS(z);
  RZ(mvw((C*)s,BS(d,w),r,BU,b,SY_64,d)); 
  j=1; DO(r, ASSERT(0<=s[i],EVLENGTH); if(t&DENSE)j*=s[i];); 
  ASSERT(j==n,EVLENGTH);
@@ -278,7 +278,7 @@ static A jtunbinr(J jt,B b,B d,B pre601,I m,A w){A y,z;C*u=(C*)w,*v;I e,j,kk,n,p
    ASSERT(BETWEENO(j,0,m),EVINDEX);
    if(i>iv[i])zv[i]=zv[iv[i]];
    else{while(k<e&&j>=vv[k])++k; zv[i]=incorp(unbinr(b,d,pre601,k<e?vv[k]-j:m-j,(A)(u+j)));}
- }}else if(unlikely(t&SPARSE)){P*zp=PAV(z);
+ }}else if(unlikely((t&SPARSE)!=0)){P*zp=PAV(z);
   j=vv[1]; ASSERT(BETWEENO(j,0,m),EVINDEX); SPB(zp,a,unbinr(b,d,pre601,vv[2]-j,(A)(u+j)));
   j=vv[2]; ASSERT(BETWEENO(j,0,m),EVINDEX); SPB(zp,e,unbinr(b,d,pre601,vv[3]-j,(A)(u+j)));
   j=vv[3]; ASSERT(BETWEENO(j,0,m),EVINDEX); SPB(zp,i,unbinr(b,d,pre601,vv[4]-j,(A)(u+j)));

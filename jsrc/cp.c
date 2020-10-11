@@ -274,7 +274,7 @@ DF2(jtpowop){A hs;B b;V*v;
    }
    R CDERIV(CPOWOP,f1,f2,VFLAGNONE, RMAX,RMAX,RMAX);  // create the derived verb for <n
   }
-//    ASSERT(self,EVDOMAIN);  // If gerund returns gerund, error.  This check is removed pending further design
+//    ASSERT(self!=0,EVDOMAIN);  // If gerund returns gerund, error.  This check is removed pending further design
   R gconj(a,w,CPOWOP);  // create the derived verb for [v0`]v1`v2
  }
  // fall through for unboxed n.

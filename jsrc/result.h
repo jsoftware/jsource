@@ -137,7 +137,7 @@ do{
     if(unlikely(TYPESNE(zt,zzt))){
      // The type changed.  Convert the types to match.
      zt=maxtypedne(zt,zzt);  // get larger priority
-     if(likely(AN(z))){I zatomct;
+     if(likely(AN(z)!=0)){I zatomct;
       // nonempty cells. we must convert the actual data.  See which we have to change
       if(zt==zzt){
        // Here the type of z must change.  Just convert it to type zt
@@ -199,7 +199,7 @@ do{
 #endif
     // **** z may have been destroyed and must not be used from here on ****
    }else{  // there was a wreck
-    if(unlikely(zt&SPARSE)){
+    if(unlikely((zt&SPARSE)!=0)){
      // we encountered a sparse result.  Ecch.  We are going to have to box all the results and open them.  Remember that fact
      ZZFLAGWORD|=ZZFLAGUSEOPEN;
     }
@@ -268,7 +268,7 @@ do{
     // since we are adding the block to a NONrecursive boxed result,  we DO NOT have to raise the usecount of the block.  And we can leave the usecount inplaceable.  The only way the inplaceable
     // usecount would be exposed is if the next thing is u&.>, and there it is OK - if the overall argument is inplaceable, the contents would be marked inplaceable anyway
     *zzboxp=z;  // install the new box.  zzboxp is ALWAYS a pointer to a box when force-boxed result
-    if(unlikely(ZZFLAGWORD&ZZFLAGCOUNTITEMS)){
+    if(unlikely((ZZFLAGWORD&ZZFLAGCOUNTITEMS)!=0)){
      // if the result will be razed next, we will count the items and store that in AM.  We will also ensure that the result boxes' contents have the same type
      // and item-shape.  If one does not, we turn off special raze processing.  It is safe to take over the AM field in this case, because we know this is WILLBEOPENED and
      // (1) will never assemble or epilog; (2) will feed directly into a verb that will discard it without doing any usecount modification

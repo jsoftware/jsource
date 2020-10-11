@@ -27,14 +27,14 @@ DF1(jteveryself){R jtevery(jt,w,FAV(self)->fgh[0]);}   // replace u&.> with u an
 // u&.>, but w may be a gerund, which makes the result a list of functions masquerading as an aray of boxes
 A jtevery(J jt, A w, A fs){A * RESTRICT wv,x,z,* RESTRICT zv;
  RZ(w);F1PREFIP;RESETRANK;  // we claim to support IRS1 but really there's nothing to do for it
- if(unlikely(SPARSE&AT(w)))R everysp(w,fs);
+ if(unlikely((SPARSE&AT(w))!=0))R everysp(w,fs);
  AF f1=FAV(fs)->valencefns[0];   // pointer to function to call
  A virtw; I flags;  // flags are: ACINPLACE=pristine result; JTWILLBEOPENED=nonrecursive result; BOX=input was boxed; ACPERMANENT=input was inplaceable pristine, contents can be inplaced
  // If the result will be immediately unboxed, we create a NONrecursive result and we can store virtual blocks in it.  This echoes what result.h does.
  flags=ACINPLACE|((I)jtinplace&JTWILLBEOPENED)|(AT(w)&BOX);
  // Get input pointer
  I virtblockw[NORMAH];  // space for a virtual block of rank 0
- if(likely(flags&BOX)){virtw=*(wv=AAV(w));  // if input is boxed, point to first box
+ if(likely((flags&BOX)!=0)){virtw=*(wv=AAV(w));  // if input is boxed, point to first box
   if(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX)&SGNIF(AFLAG(w),AFPRISTINEX),w))flags|=ACPERMANENT;  // indicates inplaceability of boxed contents
  }else{
   // if input is not boxed, use a faux-virtual block to point to the atoms.  Repurpose unneeded wv to hold length
@@ -143,7 +143,7 @@ A jtevery2(J jt, A a, A w, A fs){A*av,*wv,x,z,*zv;
  A virtw;
  // Get input pointer
  I virtblockw[NORMAH];  // space for a virtual block of rank 0
- if(likely(flags&BOX)){
+ if(likely((flags&BOX)!=0)){
   virtw=*(wv=AAV(w));  // if input is boxed, point to first box
   if(ASGNINPLACESGN(SGNIF((I)jtinplace&~flags,JTINPLACEWX)&SGNIF(AFLAG(w),AFPRISTINEX),w))flags|=(ACPERMANENT>>1);  // indicates inplaceability of boxed contents.  Never if arg repeated
  }else{
@@ -154,7 +154,7 @@ A jtevery2(J jt, A a, A w, A fs){A*av,*wv,x,z,*zv;
  // repeat for a
  A virta;
  I virtblocka[NORMAH];
- if(likely(flags&(BOX<<1))){
+ if(likely((flags&(BOX<<1))!=0)){
   virta=*(av=AAV(a));
   if(ASGNINPLACESGN(SGNIF((I)jtinplace&~flags,JTINPLACEAX)&SGNIF(AFLAG(a),AFPRISTINEX),a))flags|=ACPERMANENT;
  }else{

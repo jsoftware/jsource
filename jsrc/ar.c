@@ -223,7 +223,7 @@ REDUCEPFX(  mininsS, SB,SB,SBMIN, minSS, minSS )
 
 static DF1(jtred0){DECLF;A x,z;I f,r,wr,*s;
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; RESETRANK; s=AS(w);
- if(likely(AT(w)&DENSE)){GA(x,AT(w),0L,r,f+s);}else{GASPARSE(x,AT(w),1,r,f+s);}
+ if(likely((AT(w)&DENSE)!=0)){GA(x,AT(w),0L,r,f+s);}else{GASPARSE(x,AT(w),1,r,f+s);}
  R reitem(vec(INT,f,s),lamin1(df1(z,x,(AT(w)&SBT)?idensb(fs):iden(fs))));
 }    /* f/"r w identity case */
 
@@ -275,7 +275,7 @@ static DF1(jtredg){F1PREFIP;PROLOG(0020);DECLF;AD * RESTRICT a;I i,n,r,wr;
  }
  // At the end of all this, it is possible that the result is the original first or last cell, resting in its original virtual block.
  // In that case, we have to realize it, so that we don't let the fauxvirtual block escape
- if(unlikely(AFLAG(wfaux)&AFUNINCORPABLE))wfaux=realize(wfaux);
+ if(unlikely((AFLAG(wfaux)&AFUNINCORPABLE)!=0))wfaux=realize(wfaux);
  EPILOG(wfaux);  // this frees the virtual block, at the least
 }    /* f/"r w for general f and 1<(-r){$w */
 
@@ -525,7 +525,7 @@ static B jtreduce2(J jt,A w,C id,I f,I r,A*zz){A z=0;B b=0,btab[258],*zv;I c,d,m
 
 static DF1(jtreduce){A z;I d,f,m,n,r,t,wr,*ws,zt;
  RZ(w);F1PREFIP;
- if(unlikely(SPARSE&AT(w)))R reducesp(w,self);  // If sparse, go handle it
+ if(unlikely((SPARSE&AT(w))!=0))R reducesp(w,self);  // If sparse, go handle it
  wr=AR(w); ws=AS(w);
  // Create  r: the effective rank; f: length of frame; n: # items in a CELL of w
  r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; SETICFR(w,f,r,n);  // no RESETRANK
@@ -657,7 +657,7 @@ static DF1(jtredstitch){A c,y;I f,n,r,*s,*v,wr;
  if(1==r){if(2==n)R RETARG(w); A z1,z2,z3; RZ(IRS2(num(-2),w,0L,0L,1L,jtdrop,z1)); RZ(IRS2(num(-2),w,0L,0L,1L,jttake,z2)); R IRS2(z1,z2,0L,1L,0L,jtover,z3);}
  if(2==r)R IRS1(w,0L,2L,jtcant1,y);
  RZ(c=apvwr(wr,0L,1L)); v=AV(c); v[f]=f+1; v[f+1]=f; RZ(y=cant2(c,w));  // transpose last 2 axes
- if(unlikely(SPARSE&AT(w))){A x;
+ if(unlikely((SPARSE&AT(w))!=0)){A x;
   GATV0(x,INT,f+r-1,1); v=AV(x); MCISH(v,AS(y),f+1);
   DPMULDE(s[f],s[f+2],v[f+1]); MCISH(v+f+2,s+3+f,r-3);
   RETF(reshape(x,y));

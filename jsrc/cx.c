@@ -977,7 +977,7 @@ A jtddtokens(J jt,A w,I env){
    ASSERT(!(env&4),EVCTRL);   // Abort if we are not allowed to continue (as for an event or ". y)
    scanstart=AM(wil);  // Get # words, not including final NB.  We have looked at em all, so start next look after all of them
    A neww=jgets("");  // fetch next line.
-   RE(0); ASSERT(neww,EVCTRL); // fail if jgets failed, or if it returned EOF - problem either way
+   RE(0); ASSERT(neww!=0,EVCTRL); // fail if jgets failed, or if it returned EOF - problem either way
    // join the new line onto the end of the old one (after discarding trailing NB in the old).  Must add an LF character and a word for it
    w=jtapip(jtinplace,w,scc(DDSEP));   // append a separator, which is all that remains of the original line   scaf use faux or constant block
    jtinplace=(J)((I)jtinplace|JTINPLACEW);  // after the first one, we can certainly inplace on top of w

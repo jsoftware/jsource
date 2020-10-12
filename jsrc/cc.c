@@ -512,6 +512,7 @@ static C*jtidenv0(J jt,A a,A w,V*sv,I zt,A*zz){A fs,y,z;
 )
 
 // 1st word in buf is chain, 2nd is end+1 of data
+// in the user's stmt, v1 points to the start of the fret, k is the length of an item in bytes, d is #items in subarray
 #define EACHCUT(stmt) \
  do{UC *pdend=(UC*)CUTFRETEND(pd0);   /* 1st ele is # eles; get &chain  */ \
   while(pd<pdend){   /* step to first/next; process each fret.  Quit when pointing to end */ \
@@ -719,10 +720,29 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[12
  }
 
  // At this point we have m, the number of result cells; pd0, pointer to first block of lengths; pd, pointer to first fret-length to use; v1, pointer to first participating cell of w; pfx, neg
+ // in the user's stmt, v1 points to the start of the fret, k is the length of an item in bytes, d is #items in subarray
 
  // process, handling special cases
  zz=0;   // indicate no result from special cases
  switch(id){
+ case CBOX:  // do <;.n to produce recursive pristine result, all zapped
+  if(likely(!(state&ZZFLAGWILLBEOPENED))){  // If we will open the result, we will gain more by boxing virtual blocks than by zapping them here
+   GATV0(zz,BOX,m,1); AFLAG(zz) = BOX+((-(wt&DIRECT))&AFPRISTINE);  // allocate result
+   if(likely(m!=0)){ // exit if empty for comp ease below
+    // boxes will be in AAV(z), in order.  Details of hijacking tnextpushp are discussed in jtbox().
+    A *pushxsave = jt->tnextpushp; jt->tnextpushp=AAV(zz);  // save tstack info before allocation
+    // **** MUST NOT FAIL FROM HERE UNTIL THE END, WHERE THE ALLOCATION SYSTEM CAN BE RESTORED ****
+    EACHCUT(GAE(z,wt,d*wcn,r,AS(w),break); AS(z)[0]=d; AC(z)=ACUC1; if(wt&RECURSIBLE){AFLAG(z)=wt; jtra(z,wt);} JMC(CAV(z),v1,d*k+(SZI-1),lp000,0));    // allocate, but don't grow the tstack.  Set usecount of cell to 1.  ra0() if recursible.  Put allocated addr into *jt->tnextpushp++
+    // restore the allocation system
+    jt->tnextpushp=pushxsave;   // restore tstack pointer
+    // Set PRISTINE if w now has DIRECT type
+    AFLAG(zz)=(-(wt&DIRECT) & AFPRISTINE);  // maybe pristine
+    // remove pristinity from w since a contents is escaping
+    PRISTCLRF(w)   // destroys w
+    ASSERT(z!=0,EVWSFULL);  // if we broke out on allocation failure, fail.
+   }
+  }
+  break;
  case CPOUND:  // quickly calculate #;.n
   GATV0(zz,INT,m,1); zi=AV(zz); EACHCUT(*zi++=d;); 
   break;
@@ -736,8 +756,6 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[12
   GA(zz,wt,m*wcn,r,AS(w)); zc=CAV(zz); AS(zz)[0]=m;
   EACHCUT(if(d)MC(zc,id==CHEAD?v1:v1+k*(d-1),k); else fillv(wt,wcn,zc); zc+=k;);
   break;
-// scaf MUST CALCULATE e or discard this, which might be better
-// scaf should take this under BOXATOP?
  case CSLASH: ;
   // no need to turn off pristinity in w, because we handle only DIRECT types here
   VARPS adocv; varps(adocv,fs,wt,0);  // qualify the operation, returning action routine and conversion info

@@ -18,7 +18,7 @@ DF2(jtunquote){A z;
  I callstackx=jt->callstacknext; // Remember where our stack frame starts.  We may add an entry; execution may add more
  A thisname=v->fgh[0]; A fs; A explocale; L *stabent;// the A block for the name of the function (holding an NM) - unless it's a pseudo-name   fs is the 'named' function itself  explocale=explicit locale if any stabent=symbol-table entry if any
  A savname=jt->curname;  // we stack the executing name
- if(thisname){
+ if(likely(thisname!=0)){  // normal names
   jt->curname=thisname;  // set failing name before we have value errors
   // normal path for named functions
   if(AM(self)==jt->modifiercounter&&v->localuse.lvp[0]){
@@ -70,9 +70,9 @@ DF2(jtunquote){A z;
  FDEPINC(d);  // verify sufficient stack space - NO ERRORS until FDEPDEC below
 #endif
  STACKCHKOFL
- if(explocale){  // there is a locative or implied locative
+ if(unlikely(explocale!=0)){  // there is a locative or implied locative
   // locative. switch to it, stacking the prev value.  If the switch is to the current local symbol table, that means 'switch to caller's environment'
-  if(explocale==jt->locsyms){
+  if(unlikely(explocale==jt->locsyms)){
    pushcallstack1d(CALLSTACKPUSHLOCALSYMS,jt->locsyms);  // save current locsyms
    jt->locsyms=(A)AM(jt->locsyms);  // get the local syms at the time u/v was assigned; make them current.  Leave GST unchanged in it
    explocale=AKGST(jt->locsyms);  // fetch global syms for the caller's environment, so we stack it next
@@ -84,7 +84,7 @@ DF2(jtunquote){A z;
  w=dyadex?w:(A)fs;  // set up the bivalent argument with the new self, since fs may have been changed
 
  // Execute the name.  First check 4 flags at once to see if anything special is afoot
- if(!(jt->uflags.ui4|(v->flag&VLOCK))) {
+ if(likely(!(jt->uflags.ui4|(v->flag&VLOCK)))) {
   // No special processing. Just run the entity
   // We have to raise the usecount, in case the name is deleted while running.  But that will be very rare.  Plus, we know that the executable type is recursive and non-inplaceable.
   // So, all we have to do is increment the usecount.  If it's a PERMANENT symbol no harm will be done, since we decrement below
@@ -95,7 +95,7 @@ DF2(jtunquote){A z;
   // Recursion through $: does not go higher than the name it was defined in.  We make this happen by pushing the name onto the $: stack
   A s=jt->sf; jt->sf=fs; z=(*actionfn)((J)(((REPSGN(SGNIF(v->flag,dyadex+VJTFLGOK1X)))|~JTFLAGMSK)&(I)jtinplace),a,w,fs); jt->sf=s;  // keep all flags in jtinplace
   // Undo the protection.  If, most unusually, the usecount goes to 0, back up and do the full recursive decrement
-  if(--AC(fs)<=0){++AC(fs); fa(fs);}
+  if(unlikely(--AC(fs)<=0)){++AC(fs); fa(fs);}
  } else {
   // Extra processing is required.  Check each option individually
   if(PMCTRBPMON&jt->uflags.us.uq.uq_c.pmctrbstk)pmrecord(thisname,jt->global?LOCNAME(jt->global):0,-1L,dyadex?VAL2:VAL1);  // Record the call to the name, if perf monitoring on
@@ -118,9 +118,10 @@ DF2(jtunquote){A z;
  // Now pop the stack.  Execution may have added entries, but our stack frame always starts in the same place.
  // We may add entries to the end of the caller's stack frame
  jt->curname=savname;  // restore the executing name
- if(callstackx!=jt->callstacknext){  // normal case, with no stack, bypasses all this
+ if(unlikely(callstackx!=jt->callstacknext)){  // normal case, with no stack, bypasses all this
   // There are stack entries.  Process them
-  if(jt->callstack[callstackx].type==CALLSTACKPOPLOCALE && callstackx+1==jt->callstacknext) {
+// obsolete   if(likely(jt->callstack[callstackx].type==CALLSTACKPOPLOCALE && callstackx+1==jt->callstacknext)) {
+  if(likely(((jt->callstack[callstackx].type^CALLSTACKPOPLOCALE) | ((callstackx+1)^jt->callstacknext))==0)) {   // jt->callstack[callstackx].type==CALLSTACKPOPLOCALE && callstackx+1==jt->callstacknext
    // The only thing on the stack is a simple POP.  Do the pop.  This & the previous case account for almost all the calls here
    SYMSETGLOBAL(jt->locsyms,jt->callstack[callstackx].value);  // restore global locale
    jt->callstacknext=(I4)callstackx;  // restore stackpointer for caller

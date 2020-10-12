@@ -196,6 +196,7 @@ static DF2(jtkey){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
  I cellatoms; PROD(cellatoms,AR(w)-1,AS(w)+1);   // length of a cell of w, in atoms
  // if this is a supported f//., handle it without calling cut.  We can take it if the flag says f//. and the rank is >1 or the type is one we can do cheaply: B01/INT/FL 
  if(unlikely(SZI==SZD&&FAV(self)->flag&VFKEYSLASHT)){  // f//. where f is + >. <. mean   Implementation requires SZI==SZD
+  // start of f//. on special cases
   if((((AR(w)-2)|((AT(w)&CMPX+XNUM+RAT)-1))&((AT(w)&FAV(self)->flag&VFKEYSLASHT)-1))>=0){  // rank>=2 and extended, or type we can handle locally  flag is B01+INT+FL for <. >., B01+FL for +  (we don't handle int ovfl)
    // We are going to handle the //. locally
    A freq;  // for mean, save frequencies here
@@ -373,10 +374,10 @@ static DF2(jtkey){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
    // Finally, if this was mean, divide the total by the frequency
    if(unlikely(((FAV(self)->flag&VFKEYSLASHF)>>VFKEYSLASHFX)==3)){z=divideAW(z,freq);}  // always inplaceable
    EPILOG(z);
-  }
+  }  // end 'locally handled arg types'
  }
 
- // Here it wasn't fspecial//. - reorder the input and create frets
+ // ** Here it wasn't fspecial//. - reorder the input and create frets
  // Allocate the area for the reordered copy of the input.  Do these calls early to free up registers for the main loop
  A frets,wperm;  // fret block, and place to reorder w
  UC *fretp;  // where the frets will be stored
@@ -701,24 +702,35 @@ static DF2(jtkeytally){F2PREFIP;PROLOG(0016);A z,q;I at,j,k,n,r,s,*qv,*u,*v;
 }    /* x #/.y main control & dense x */
 
 
-static DF2(jtkeyheadtally){F2PREFIP;PROLOG(0017);A f,q,x,y,z;I b;I at,*av,k,n,r,*qv,*u,*v,wt,*zv;
+//  bivalent entry point for x ({.,#)/.y or x (#,{.)/. y (dyad), or (({.,#)/. i.@#) y or ((#,{.)/. i.@#) y  (monad)
+DF2(jtkeyheadtally){F2PREFIP;PROLOG(0017);A f,q,x,y,z;I b;I at,*av,k,n,r,*qv,*u,*v,wt,*zv;
  RZ(a&&w);  // we don't neep ip, but all jtkey dyads must support it
  SETIC(a,n); wt=AT(w);
- ASSERT(n==SETIC(w,k),EVLENGTH);
- ASSERT((-n&((wt&NUMERIC)-1))>=0,EVDOMAIN); // OK if n=0 or numeric w
- if(unlikely((((SPARSE&AT(a))-1)&((I)AR(w)-2)&(-n)&(-AN(a)))>=0))R key(a,w,self);  // if sparse or w has rank>1 or a has no cells or no atoms, revert
+ if(likely((AT(w)&NOUN)!=0)){
+  // dyad: </.
+  ASSERT(n==SETIC(w,k),EVLENGTH);  // verify agreement
+  f=FAV(self)->fgh[0];  // f->({.,#)
+ }else{
+  // monad: (<./ i.@#)   In case of failover, set self right, and leave w pointing to self
+  f=FAV(FAV(w)->fgh[0])->fgh[0];  // f->({.,#), found inside (({.,#)/. i.@#)  left of hook, then go past /.
+ }
+ ASSERT((-n&((wt&NUMERIC+VERB)-1))>=0,EVDOMAIN); // OK if n=0 or numeric/i.@# w
+// obsolete  if(unlikely((((SPARSE&AT(a))-1)&((I)AR(w)-2)&(-n)&(-AN(a)))>=0))R key(a,w,self);  // if sparse or w has rank>1 or a has no cells or no atoms, revert
+ if(unlikely((((SPARSE&AT(a))-1)&((I)AR(w)-2)&(-n)&(-AN(a)))>=0))R wt&VERB?jthook1cell(jt,a,w):key(a,w,self);  // if sparse or w has rank>1 or a has no cells or no atoms, revert, to monad/dyad.  w=self for monad
  av=AV(a);
- f=FAV(self)->fgh[0]; f=VAV(f)->fgh[0]; b=CHEAD==ID(f);  // b is 1 for {.,#  0 for #,{.  i. e. index of tally
- if(AT(a)&B01&&1>=AR(a)){B*p=(B*)av;I i,j,m;  // first special case: boolean list/atom
-  if(*p){i=0; B *d=(B*)memchr(p,C0,n); j=d-p; j=d?j:0;} // i=index of first 1, j=index of first 0 (0 if not found)
-  else  {j=0; B *c=(B*)memchr(p,C1,n); i=c-p; i=c?i:0;}
+// obsolete  f=FAV(self)->fgh[0]; f=VAV(f)->fgh[0]; b=CHEAD==ID(f);  // b is 1 for {.,#  0 for #,{.  i. e. index of tally
+ f=FAV(f)->fgh[0]; b=CHEAD==ID(f);  // f-> left tine of (#,{.)  b is 1 for {.,#  0 for #,{.  i. e. index of tally
+ if(unlikely((AT(a)&B01)!=0))if(1>=AR(a)&&!(wt&VERB)){B*p=(B*)av;I i,j,m;  // first special case: boolean list/atom, for which we can handle all types (except VERB)
+// obsolete   if(*p){i=0; B *d=(B*)memchr(p,C0,n); j=d-p; j=d?j:0;} // i=index of first 1, j=index of first 0 (0 if not found)
+// obsolete   else  {j=0; B *c=(B*)memchr(p,C1,n); i=c-p; i=c?i:0;}
+  B *c=memchr(p,1^*p,n); i=c-p; i=c?i:0; j=i; i=*p?0:i; j=*p?j:0;  // i=index of first 1, j=index of first 0 (0 if not found)
   k=bsum(n,p); m=i+j?1:0;  // k=# 1s  m is 1 if there are 0s and 1s
   GATV0(x,INT,m+1,1); v=AV(x); v[m]=i+j; v[0]=0;  // 0=index of first item (always 0); 1 if it exists is the other
   GATV0(y,INT,m+1,1); v=AV(y); j=n-k; k=i?j:k; k&=-m; v[0]=k; v[m]=n-k;  // if 1st value is 0, complement k; if only 1 value, clear k
-  RZ(x=w=from(x,w)); x=b?x:y; y=b?y:w; R stitch(x,y);
+  if(!(wt&VERB))RZ(x=from(x,w)); w=x; x=b?x:y; y=b?y:w; R stitch(x,y);  // select using index (unless i.@#, then keep index); set order & ,.
  }
- // for other types of a, we handle it quickly only if w is B01/INT/FL
- if(wt&B01+INT+FL){
+ // for other types of a, we handle it quickly only if w is B01/INT/FL or i.@# which has type of VERB
+ if(wt&B01+INT+FL+VERB){
   A ai;  // result from classifying a
   RZ(ai=indexofsub(IFORKEY,a,a));   // self-classify the input using ct set before this verb
   // indexofsub has 2 returns: most of the time, it returns a normal i.-family result, but with each slot holding the index PLUS the number of values
@@ -737,15 +749,17 @@ static DF2(jtkeyheadtally){F2PREFIP;PROLOG(0017);A f,q,x,y,z;I b;I at,*av,k,n,r,
    // count tally and partition
    I *av=IAV(a); DQ(n, I of=ftblv[*av&valmsk]; ftblv[*av&valmsk]=of+1; nparts+=SGNTO0(of); av=(I*)((I)av+k);)   // count partitions and set pointers there to 0
    // allocate result area
-   GA(z,MAX(wt,INT),nparts*2,2,0); AS(z)[0]=nparts; AS(z)[1]=2;  // output area: one per partition
+   GA(z,MAX(wt&~VERB,INT),nparts*2,2,0); AS(z)[0]=nparts; AS(z)[1]=2;  // output area: one per partition
    // pass the input again, copying out the values.  Use branches to avoid the long carried dependency
    I i=0; av=IAV(a);   // item index and input scan pointer
    if(wt&INT){
     I *wv=IAV(w); I *zv=IAV(z); while(1){I of=ftblv[*av&valmsk]; ftblv[*av&valmsk]=-1; if(of>=0){zv[b]=of+1; zv[1-b]=wv[i]; if(--nparts==0)break; zv+=2;} av=(I*)((I)av+k); ++i;}
    }else if(wt&B01){
     B *wv=BAV(w); I *zv=IAV(z); while(1){I of=ftblv[*av&valmsk]; ftblv[*av&valmsk]=-1; if(of>=0){zv[b]=of+1; zv[1-b]=wv[i]; if(--nparts==0)break; zv+=2;} av=(I*)((I)av+k); ++i;}
-   }else{  // FL
+   }else if(wt&FL){  // FL
     D *wv=DAV(w); D *zv=DAV(z); while(1){I of=ftblv[*av&valmsk]; ftblv[*av&valmsk]=-1; if(of>=0){zv[b]=(D)(of+1); zv[1-b]=wv[i]; if(--nparts==0)break; zv+=2;} av=(I*)((I)av+k); ++i;}
+   }else{  // i.@#
+    I *zv=IAV(z); while(1){I of=ftblv[*av&valmsk]; ftblv[*av&valmsk]=-1; if(of>=0){zv[b]=of+1; zv[1-b]=i; if(--nparts==0)break; zv+=2;} av=(I*)((I)av+k); ++i;}
    }
   }else{
 
@@ -753,15 +767,17 @@ static DF2(jtkeyheadtally){F2PREFIP;PROLOG(0017);A f,q,x,y,z;I b;I at,*av,k,n,r,
    I nparts=AM(ai);  // before we possibly clone it, extract # frets found
    makewritable(ai);  // we modify the size+index info
    // allocate the result area
-   GA(z,MAX(wt,INT),nparts*2,2,0); AS(z)[0]=nparts; AS(z)[1]=2;  // output area: one per partition
+   GA(z,MAX(wt&~VERB,INT),nparts*2,2,0); AS(z)[0]=nparts; AS(z)[1]=2;  // output area: one per partition
    // pass through the table, writing out every value that starts a new partition.  The partition size is encoded in the value
    I i=0; I *av=IAV(ai);   // item index and input scan pointer
    if(wt&INT){
     I *wv=IAV(w); I *zv=IAV(z); while(1){I a0=*av++; if(a0-i>=0){zv[b]=a0-i; zv[1-b]=wv[i]; if(--nparts==0)break; zv+=2;} ++i;}
    }else if(wt&B01){
     B *wv=BAV(w); I *zv=IAV(z); while(1){I a0=*av++; if(a0-i>=0){zv[b]=a0-i; zv[1-b]=wv[i]; if(--nparts==0)break; zv+=2;} ++i;}
-   }else{  // FL
+   }else if(wt&FL){  // FL
     D *wv=DAV(w); D *zv=DAV(z); while(1){I a0=*av++; if(a0-i>=0){zv[b]=(D)(a0-i); zv[1-b]=wv[i]; if(--nparts==0)break; zv+=2;} ++i;}
+   }else{  // i.@#
+    I *zv=IAV(z); while(1){I a0=*av++; if(a0-i>=0){zv[b]=a0-i; zv[1-b]=i; if(--nparts==0)break; zv+=2;} ++i;}
    }
   }
  }else{  // no special processing

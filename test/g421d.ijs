@@ -6,12 +6,29 @@ randuni''
 f=: ~:@[ # ]
 g=: #/.
 
+NB. Verify special forms detected
+(7!:2 'xx ({.,#"#)/. yy') > 10000 + (7!:2 'xx ({.,#)/. yy') [ xx =: i. 10000 [ yy =: i. 10000
+(7!:2 'xx (#"#,{.)/. yy') > 10000 + (7!:2 'xx (#,{.)/. yy')
+(7!:2 '((#,{.)/. i.@#@]) yy') > 50000 + (7!:2 '((#,{.)/. i.@#) yy') [ yy =: 10000 $ a.
+
 test=: 3 : 0
  y testa 0 1
  y testa      i.900
  y testa _450+i.900
  y testa o.   i.900
  y testa x:   i.900
+ xx=:y{~?1000$#y
+ assert. ((({.,#)/. i.@#) -: ((f,.g) i.@#)) xx
+ assert. (((#,{.)/. i.@#) -: ((g,.f) i.@#)) xx
+ xx=:1 $ xx
+ assert. ((({.,#)/. i.@#) -: ((f,.g) i.@#)) xx
+ assert. (((#,{.)/. i.@#) -: ((g,.f) i.@#)) xx
+ xx=:'' $ xx
+ assert. ((({.,#)/. i.@#) -: ((f,.g) i.@#)) xx
+ assert. (((#,{.)/. i.@#) -: ((g,.f) i.@#)) xx
+ xx=:0 $ xx
+ assert. ((({.,#)/. i.@#) -: ((f,.g) i.@#)) xx
+ assert. (((#,{.)/. i.@#) -: ((g,.f) i.@#)) xx
 )
 
 testa=: 4 : 0

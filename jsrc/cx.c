@@ -635,7 +635,6 @@ static B jtsent12c(J jt,A w,A*m,A*d,I preparsed){C*p,*q,*r,*s,*x;A z;
   // Handling 9 : n lines.  Lines are separated by DDSEP, and there may be DDSEP embedded in strings.  Convert the whole thing to words, which will
   // leave the embedded DDSEP embedded; then split on the individual DDSEP tokens
   // The line comes in without trailing DDSEP.  Add it
-  // The line comes in without trailing DDSEP.  Add it
   RZ(w=over(w,scc(DDSEP)));  // force trailing separator
   // tokenize the lines.  Each LF is its own token.
   A wil; RZ(wil=wordil(w)); makewritable(wil); I wiln=AS(wil)[0]; I (*wilv)[2]=voidAV(wil); // line index, and number of lines; array of (start,end+1) for each line
@@ -905,12 +904,12 @@ F2(jtcolon){A d,h,*hv,m;B b;C*s;I flag=VFLAGNONE,n,p;
    I defflg=fndflag|1; CTLZI(fndflag,n); n=(0x2143>>(n<<2))&0xf; // replace 9 by value depending on what was seen
    if(n==4){hv[HN]=hv[0]; hv[0]=mtv; hv[HN+1]=hv[1]; hv[1]=mtv; hv[HN+2]=hv[2]; hv[2]=mtv; flag=(flag&~VTRY2)+VTRY1; }  // if we created a dyadic verb, shift the monad over to the dyad and clear the monad, incl try flag
   } 
-  if(n<=2){  // adv of conj after autodetection
+  if(n<=2){  // adv or conj after autodetection
    fndflag=(fndflag&7)|((fndflag&8)>>1);  // scaf put back in old form
    b=fndflag>4;   // set if there is mnuv and xy scaf
    if(b)flag|=VXOPR;   // if this def refers to xy, set VXOPR
-// saved for next rev   ASSERT(!BETWEENC(fndflag,1,3),EVNONCE);  // scaf
-if(BETWEENC(fndflag,1,3))jfwrite(str(129,"************ Old-style definition encountered.  It will be invalid after the beta period.\nIt has x/y without u/v/m/n **********\n"),num(2));
+   ASSERT(!BETWEENC(fndflag,1,3),EVNONCE);  // scaf
+// obsolete if(BETWEENC(fndflag,1,3))jfwrite(str(129,"************ Old-style definition encountered.  It will be invalid after the beta period.\nIt has x/y without u/v/m/n **********\n"),num(2));
    // if there is only one valence defined, that will be the monad.  Swap it over to the dyad in two cases: (1) it is a conjunction with uv only: the operands will be the two verbs;
    // (2) it is an operator with a reference to x
    if(((-AN(m))&(AN(d)-1)&(((fndflag-5)&(1-n))|(5-fndflag)))<0){A*u=hv,*v=hv+HN,x; DQ(HN, x=*u; *u++=*v; *v++=x;);}  // if not, it executes on uv only; if conjunction, make the default the 'dyad' by swapping monad/dyad

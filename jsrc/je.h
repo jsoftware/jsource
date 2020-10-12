@@ -127,6 +127,7 @@ extern F1(jtgemmtune);
 extern F1(jtgh15);
 extern F1(jtgrade1);
 extern DF2(jtkeybox);
+extern DF2(jtkeyheadtally);
 extern F1(jthalve);
 extern F1(jthash);
 extern F1(jthead);

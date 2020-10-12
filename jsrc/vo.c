@@ -39,12 +39,11 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
   ws=AS(w);
   CPROD(AN(w),n,f,ws); CPROD(AN(w),m,r,f+ws);
   k=m<<bplg(wt); wv=CAV(w);
-  // Since we are allocating the new boxes, the result will ipso facto be PRIVATE, as long as w is DIRECT.  If w is not DIRECT, we can be PRIVATE if we ensure that
-  // w is PRIVATE inplaceable, but we don't bother to do that because 
+  // Since we are allocating the new boxes, the result will ipso facto be PRIVATE, as long as w is DIRECT.  If w is not DIRECT, we can be PRISTINE if we ensure that
+  // w is PRISTINE inplaceable, but we don't bother to do that because 
   // If the input is DIRECT, mark the result as PRISTINE
   GATV(z,BOX,n,f,ws); AFLAG(z) = BOX+((-(wt&DIRECT))&AFPRISTINE); if(n==0)RETF(z);  // Recursive result; could avoid filling with 0 if we modified AN after error, or cleared after *tnextpushp
-  // We have allocated the result; now we allocate a block for each cell of w and copy the w values to the new block.  Since we are copying contents of w, it must lose PRISTINE status is it is boxed
-  AFLAG(w)&=~AFPRISTINE;
+  // We have allocated the result; now we allocate a block for each cell of w and copy the w values to the new block.
 
   // Since we are making the result recursive, we can save a lot of overhead by NOT putting the cells onto the tstack.  As we have marked the result as
   // recursive, it will free up the cells when it is deleted.  We want to end up with the usecount in the cells being 1, not inplaceable.  The result itself will be
@@ -52,8 +51,15 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
   // To avoid the tstack overhead, we switch the tpush pointer to our data area, so that blocks are filled in as they are allocated, with nothing put
   // onto the real tpop stack.  If we hit an error, that's OK, because whatever we did get allocated will be freed when the result block is freed.  We use GAE so that we don't abort on error
   A *pushxsave = jt->tnextpushp; jt->tnextpushp=AAV(z);  // save tstack info before allocation
-  DQ(n, GAE(y,wt,m,r,f+ws,break); MC(CAV(y),wv,k); wv+=k; AC(y)=ACUC1; if(wt&RECURSIBLE){AFLAG(y)=wt; jtra(y,wt);});   // allocate, but don't grow the tstack.  Set usecount of cell to 1.  ra0() if recursible.  Put allocated addr into *jt->tnextpushp++
+// obsolete   DQ(n, GAE(y,wt,m,r,f+ws,break); MC(CAV(y),wv,k); wv+=k; AC(y)=ACUC1; if(wt&RECURSIBLE){AFLAG(y)=wt; jtra(y,wt);});   // allocate, but don't grow the tstack.  Set usecount of cell to 1.  ra0() if recursible.  Put allocated addr into *jt->tnextpushp++
+  JMCDECL(endmask) JMCSETMASK(endmask,k+SZI-1,0)   // set mask for JMCR - OK to copy SZIs
+  DQ(n, GAE(y,wt,m,r,f+ws,break); JMCR(CAV(y),wv,k+SZI-1,lp000,0,endmask); wv+=k; AC(y)=ACUC1; if(wt&RECURSIBLE){AFLAG(y)=wt; jtra(y,wt);});   // allocate, but don't grow the tstack.  Set usecount of cell to 1.  ra0() if recursible.  Put allocated addr into *jt->tnextpushp++
+
+
   jt->tnextpushp=pushxsave;   // restore tstack pointer
+// obsolete   AFLAG(w)&=~AFPRISTINE;
+  //   Since we are copying contents of w, it must lose PRISTINE status if it is boxed
+  PRISTCLRF(w);  // destroys w
   ASSERT(y!=0,EVWSFULL);  // if we broke out an allocation failure, fail.  Since the block is recursive, when it is tpop()d it will recur to delete contents
  }
  RETF(z);

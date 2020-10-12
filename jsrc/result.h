@@ -357,7 +357,7 @@ do{
  if(ZZFLAGWORD&ZZFLAGBOXALLO){
   RZ(zz=assembleresults(ZZFLAGWORD,zz,zzbox,zzboxp,zzcellp,zzcelllen,zzresultpri,zzcellshape,zzncells,zzframelen,-ZZSTARTATEND));  // inhomogeneous results: go assemble them
  }
- // assemly may have added framing fill but it didn't repeat any cells.  If we thought the result was pristine, it is
+ // assembly may have added framing fill but it didn't repeat any cells.  If we thought the result was pristine, it is
  AFLAG(zz)|=ZZFLAGWORD&ZZFLAGPRISTINE;
 #undef ZZFLAGWORD
 #undef ZZWILLBEOPENEDNEVER

@@ -220,12 +220,13 @@ A jtjgets(J jt,C*p){A y;B b;C*v;I j,k,m,n;UC*s;
  ASSERT(jt->recurstate<RECSTATEPROMPT,EVCTRL)
  showerr();  // if there is an error at this point, display it (shouldn't happen)
  // read from the front end. This is either through the nfe path or via the callback to the FE
- jt->recurstate=RECSTATEPROMPT;  // advance to PROMPT state
- if(jt->nfe)
+ if(jt->nfe){
   // Native Front End
+  jt->recurstate=RECSTATEPROMPT;  // advance to PROMPT state
   v=nfeinput(jt,*p?"input_jfe_'      '":"input_jfe_''");
- else{
+ }else{
   ASSERT(jt->sminput,EVBREAK); 
+  jt->recurstate=RECSTATEPROMPT;  // advance to PROMPT state
   v=((inputtype)(jt->sminput))(jt,p);
  }
  jt->recurstate=RECSTATEBUSY;  // prompt complete, go back to normal running state
@@ -337,6 +338,10 @@ DF1(jtwd){A z=0;C*p=0;D*pd;I e,*pi,t;V*sv;
     }
   }
   RZ(w=jtmemu(jtinplace,w));
+  // Now call the host and get the response
+  // Since we are relinquishing control to the host, we treat this call like a prompt (jgets()) for recursion purposes:
+  // we fail any wd request if we are already waiting for a response, and we increment the recursion state to allow a single recursive call
+  ASSERT(jt->recurstate<RECSTATEPROMPT,EVCTRL)
 // t is 11!:t and w is wd argument
 // smoption:
 //   1=pass current locale
@@ -344,16 +349,21 @@ DF1(jtwd){A z=0;C*p=0;D*pd;I e,*pi,t;V*sv;
 //   4=use smpoll to get last result
 //   8=multithreaded
 // smdowd = function pointer to Jwd, if NULL nothing will be called
+  ASSERT(jt->smdowd,EVDOMAIN);
+  jt->recurstate=RECSTATEPROMPT;  // advance to PROMPT state
   if(SMOPTLOCALE&jt->smoption) {
 // pass locale as parameter of callback
-    e=jt->smdowd ? ((dowdtype2)(jt->smdowd))(jt, (int)t, w, &z, getlocale(jt)) : EVDOMAIN;
+// obsolete     e= jt->smdowd? ((dowdtype2)(jt->smdowd))(jt, (int)t, w, &z, getlocale(jt)) : EVDOMAIN;
+    e=((dowdtype2)(jt->smdowd))(jt, (int)t, w, &z, getlocale(jt));
   } else {
 // front-end will call getlocale() inside callback
-    e=jt->smdowd ? ((dowdtype)(jt->smdowd))(jt, (int)t, w, &z) : EVDOMAIN;
+// obsolete     e=jt->smdowd ? ((dowdtype)(jt->smdowd))(jt, (int)t, w, &z) : EVDOMAIN;
+    e=((dowdtype)(jt->smdowd))(jt, (int)t, w, &z);
   }
+  jt->recurstate=RECSTATEBUSY;  // prompt complete, go back to normal running state
   if(!e) R mtm;   // e==0 is MTM
   ASSERT(e<=0,e); // e>=0 is EVDOMAIN etc
-  if(SMOPTPOLL&jt->smoption) RZ(z=(A)((polltype)(jt->smpoll))(jt, (int)t, (int)e)); // alternate way to get result aftercallback, but not yet used in any front-end
+  if(SMOPTPOLL&jt->smoption){jt->recurstate=RECSTATEPROMPT; z=(A)((polltype)(jt->smpoll))(jt, (int)t, (int)e); jt->recurstate=RECSTATEBUSY; RZ(z);} // alternate way to get result aftercallback, but not yet used in any front-end
   if(SMOPTNOJGA&jt->smoption) z=ca(z);  // front-end promised not to use Jga to allocate memory, but not yet used in any front-end
   if(e==-2){      // e==-2 is lit pairs
 // callback result z is a rank-1 literal array 

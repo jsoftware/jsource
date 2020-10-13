@@ -89,6 +89,9 @@ y
 
 '|value error: t|       x/' -: efx 't 5'
 
+'|ill-formed number|   1+1qs|     ^|   3     :(''1+1qs'',(10{a.))' -: efx '3 : (''1+1qs'',(10{a.))'
+
+
 NB. Verify AR assignment works for 1 & more names
 '`a' =: +`''
 3 -: 4!:0<'a'

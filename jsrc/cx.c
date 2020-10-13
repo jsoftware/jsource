@@ -954,7 +954,7 @@ A jtddtokens(J jt,A w,I env){
  PROLOG(000);F1PREFIP;
  RZ(w);
 #if 0  // set to 1 to disable DD
- w=(env&8)?w:tokens(w,env&3);  // return the input unmodified
+ R (env&8)?w:tokens(w,env&3);  // return the input unmodified
 #endif
  // find word boundaries, remember if last word is NB
  A wil; RZ(wil=wordil(w));  // get index to words

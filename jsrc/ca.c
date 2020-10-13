@@ -114,8 +114,8 @@ CS2IP(static,static,on2, \
  /* here for execution on a single cell */ \
  A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)(intptr_t)((I)a+((I)jtinplace&JTINPLACEA)); \
  /* take inplaceability of each monad from the corresponding dyad argument */ \
- RZ(gw=(g1)((J)(intptr_t)((I)jtinplace&~(JTINPLACEA+JTWILLBEOPENED+JTCOUNTITEMS)),w,gs)); \
- RZ(ga=(g1)((J)(intptr_t)((I)jt+(((I)jtinplace>>JTINPLACEAX)&JTINPLACEW)),a,gs));  /* Move bit 1 to bit 0, clear bit 1 */ \
+ RZ(gw=(g1)(JTIPWonly,w,gs)); \
+ RZ(ga=(g1)(JTIPAtoW,a,gs));  /* Move bit 1 to bit 0, clear bit 1 */ \
  POPZOMB; jtinplace=(J)(intptr_t)(((I)jtinplace&~(JTINPLACEA+JTINPLACEW))+(I )(ga!=prota)*JTINPLACEA+(I )(gw!=protw)*JTINPLACEW); jtinplace=FAV(fs)->flag&VJTFLGOK2?jtinplace:jt; \
  RZ(z=(f2)(jtinplace,ga,gw,fs)); \
 ,0023)

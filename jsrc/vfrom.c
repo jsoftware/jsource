@@ -8,7 +8,7 @@
 
 F1(jtcatalog){PROLOG(0072);A b,*wv,x,z,*zv;C*bu,*bv,**pv;I*cv,i,j,k,m=1,n,p,*qv,r=0,*s,t=0,*u;
  F1RANK(1,jtcatalog,DUMMYSELF);
- if((-AN(w)&-(AT(w)&BOX+SBOX))>=0)R box(w);   // empty or unboxed, just box it
+ if((-AN(w)&-(AT(w)&BOX+SBOX))>=0)R boxW(w);   // empty or unboxed, just box it
  n=AN(w); wv=AAV(w); 
  DO(n, x=wv[i]; if(AN(x)){p=AT(x); t=t?t:p; ASSERT(HOMO(t,p),EVDOMAIN); RE(t=maxtype(t,p));});  // use vector maxtype; establish type of result
  t=t?t:B01; k=bpnoun(t);  // if all empty, use boolean for result

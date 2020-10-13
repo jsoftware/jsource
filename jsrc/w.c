@@ -14,11 +14,14 @@
 #define SNB             5    /* NB                              */
 #define SQQ             6    /* even quotes                     */
 #define S9              7    /* numeric                         */
-#define S99             8    // numeric, previous field was numeric
+#define S99             8    // numeric, previous field was numeric i. e. followon numeric
 #define SQ              9    /* quote                           */
 #define SNZ             10    // NB.
 #define SZ              11    // trailing comment
 #define SU              12   // prev char was uninflectable (i. e. LF).
+#define SDD             13   // { seen
+#define SDDZ            14   // } seen
+#define SDDD            15   // doubled {} seen
 
 #define E0              0  // no action
 #define EI              1    // end of previous word - emit
@@ -28,20 +31,23 @@
 typedef C ST;
 #define SE(s,e) (((s)<<4)|((((s)==S99))<<3)|(e))  // set bit 3 inside followon numeric
 
-static const ST state[SU+1][16]={
-/*SS */ {[CX]=SE(SX,EN),[CU]=SE(SU,EN),[CS]=SE(SS,E0),[CA]=SE(SA,EN),[CN]=SE(SN,EN),[CB]=SE(SA,EN),[C9]=SE(S9,EN),[CD]=SE(SX,EN),[CC]=SE(SX,EN),[CQ]=SE(SQ,EN)},
-/*SS9*/ {[CX]=SE(SX,EN),[CU]=SE(SU,EN),[CS]=SE(SS9,E0),[CA]=SE(SA,EN),[CN]=SE(SN,EN),[CB]=SE(SA,EN),[C9]=SE(S99,EN),[CD]=SE(SX,EN),[CC]=SE(SX,EN),[CQ]=SE(SQ,EN)},
-/*SX */ {[CX]=SE(SX,EZ),[CU]=SE(SU,EZ),[CS]=SE(SS,EI),[CA]=SE(SA,EZ),[CN]=SE(SN,EZ),[CB]=SE(SA,EZ),[C9]=SE(S9,EZ),[CD]=SE(SX,E0),[CC]=SE(SX,E0),[CQ]=SE(SQ,EZ)},
-/*SA */ {[CX]=SE(SX,EZ),[CU]=SE(SU,EZ),[CS]=SE(SS,EI),[CA]=SE(SA,E0),[CN]=SE(SA,E0),[CB]=SE(SA,E0),[C9]=SE(SA,E0),[CD]=SE(SX,E0),[CC]=SE(SX,E0),[CQ]=SE(SQ,EZ)},
-/*SN */ {[CX]=SE(SX,EZ),[CU]=SE(SU,EZ),[CS]=SE(SS,EI),[CA]=SE(SA,E0),[CN]=SE(SA,E0),[CB]=SE(SNB,E0),[C9]=SE(SA,E0),[CD]=SE(SX,E0),[CC]=SE(SX,E0),[CQ]=SE(SQ,EZ)},
-/*SNB*/ {[CX]=SE(SX,EZ),[CU]=SE(SU,EZ),[CS]=SE(SS,EI),[CA]=SE(SA,E0),[CN]=SE(SA,E0),[CB]=SE(SA,E0),[C9]=SE(SA,E0),[CD]=SE(SNZ,E0),[CC]=SE(SX,E0),[CQ]=SE(SQ,EZ)},
-/*SQQ*/ {[CX]=SE(SX,EZ),[CU]=SE(SU,EZ),[CS]=SE(SS,EI),[CA]=SE(SA,EZ),[CN]=SE(SN,EZ),[CB]=SE(SA,EZ),[C9]=SE(S9,EZ),[CD]=SE(SX,EZ),[CC]=SE(SX,EZ),[CQ]=SE(SQ,E0)},
-/*S9 */ {[CX]=SE(SX,EZ),[CU]=SE(SU,EZ),[CS]=SE(SS9,EI),[CA]=SE(S9,E0),[CN]=SE(S9,E0),[CB]=SE(S9,E0),[C9]=SE(S9,E0),[CD]=SE(S9,E0),[CC]=SE(SX,E0),[CQ]=SE(SQ,EZ)},
-/*S99*/ {[CX]=SE(SX,EZ),[CU]=SE(SU,EZ),[CS]=SE(SS9,EI),[CA]=SE(S99,E0),[CN]=SE(S99,E0),[CB]=SE(S99,E0),[C9]=SE(S99,E0),[CD]=SE(S99,E0),[CC]=SE(SX,E0),[CQ]=SE(SQ,EZ)},
-/*SQ */ {[CX]=SE(SQ,E0),[CU]=SE(SQ,E0),[CS]=SE(SQ,E0),[CA]=SE(SQ,E0),[CN]=SE(SQ,E0),[CB]=SE(SQ,E0),[C9]=SE(SQ,E0),[CD]=SE(SQ,E0),[CC]=SE(SQ,E0),[CQ]=SE(SQQ,E0)},
-/*SNZ*/ {[CX]=SE(SZ,E0),[CU]=SE(SU,EZ),[CS]=SE(SZ,E0),[CA]=SE(SZ,E0),[CN]=SE(SZ,E0),[CB]=SE(SZ,E0),[C9]=SE(SZ,E0),[CD]=SE(SX,E0),[CC]=SE(SX,E0),[CQ]=SE(SZ,E0)},
-/*SZ */ {[CX]=SE(SZ,E0),[CU]=SE(SU,EZ),[CS]=SE(SZ,E0),[CA]=SE(SZ,E0),[CN]=SE(SZ,E0),[CB]=SE(SZ,E0),[C9]=SE(SZ,E0),[CD]=SE(SZ,E0),[CC]=SE(SZ,E0),[CQ]=SE(SZ,E0)},
-/*SU */ {[CX]=SE(SX,EZ),[CU]=SE(SU,EZ),[CS]=SE(SS,EI),[CA]=SE(SA,EZ),[CN]=SE(SN,EZ),[CB]=SE(SA,EZ),[C9]=SE(S9,EZ),[CD]=SE(SX,EZ),[CC]=SE(SX,EZ),[CQ]=SE(SQ,EZ)}
+static const ST state[SDDD+1][16]={
+/*SS */ {[CX]=SE(SX,EN),[CDD]=SE(SDD,EN),[CDDZ]=SE(SDDZ,EN),[CU]=SE(SU,EN),[CS]=SE(SS,E0),[CA]=SE(SA,EN),[CN]=SE(SN,EN),[CB]=SE(SA,EN),[C9]=SE(S9,EN),[CD]=SE(SX,EN),[CC]=SE(SX,EN),[CQ]=SE(SQ,EN)},
+/*SS9*/ {[CX]=SE(SX,EN),[CDD]=SE(SDD,EN),[CDDZ]=SE(SDDZ,EN),[CU]=SE(SU,EN),[CS]=SE(SS9,E0),[CA]=SE(SA,EN),[CN]=SE(SN,EN),[CB]=SE(SA,EN),[C9]=SE(S99,EN),[CD]=SE(SX,EN),[CC]=SE(SX,EN),[CQ]=SE(SQ,EN)},
+/*SX */ {[CX]=SE(SX,EZ),[CDD]=SE(SDD,EZ),[CDDZ]=SE(SDDZ,EZ),[CU]=SE(SU,EZ),[CS]=SE(SS,EI),[CA]=SE(SA,EZ),[CN]=SE(SN,EZ),[CB]=SE(SA,EZ),[C9]=SE(S9,EZ),[CD]=SE(SX,E0),[CC]=SE(SX,E0),[CQ]=SE(SQ,EZ)},
+/*SA */ {[CX]=SE(SX,EZ),[CDD]=SE(SDD,EZ),[CDDZ]=SE(SDDZ,EZ),[CU]=SE(SU,EZ),[CS]=SE(SS,EI),[CA]=SE(SA,E0),[CN]=SE(SA,E0),[CB]=SE(SA,E0),[C9]=SE(SA,E0),[CD]=SE(SX,E0),[CC]=SE(SX,E0),[CQ]=SE(SQ,EZ)},
+/*SN */ {[CX]=SE(SX,EZ),[CDD]=SE(SDD,EZ),[CDDZ]=SE(SDDZ,EZ),[CU]=SE(SU,EZ),[CS]=SE(SS,EI),[CA]=SE(SA,E0),[CN]=SE(SA,E0),[CB]=SE(SNB,E0),[C9]=SE(SA,E0),[CD]=SE(SX,E0),[CC]=SE(SX,E0),[CQ]=SE(SQ,EZ)},
+/*SNB*/ {[CX]=SE(SX,EZ),[CDD]=SE(SDD,EZ),[CDDZ]=SE(SDDZ,EZ),[CU]=SE(SU,EZ),[CS]=SE(SS,EI),[CA]=SE(SA,E0),[CN]=SE(SA,E0),[CB]=SE(SA,E0),[C9]=SE(SA,E0),[CD]=SE(SNZ,E0),[CC]=SE(SX,E0),[CQ]=SE(SQ,EZ)},
+/*SQQ*/ {[CX]=SE(SX,EZ),[CDD]=SE(SDD,EZ),[CDDZ]=SE(SDDZ,EZ),[CU]=SE(SU,EZ),[CS]=SE(SS,EI),[CA]=SE(SA,EZ),[CN]=SE(SN,EZ),[CB]=SE(SA,EZ),[C9]=SE(S9,EZ),[CD]=SE(SX,EZ),[CC]=SE(SX,EZ),[CQ]=SE(SQ,E0)},
+/*S9 */ {[CX]=SE(SX,EZ),[CDD]=SE(SDD,EZ),[CDDZ]=SE(SDDZ,EZ),[CU]=SE(SU,EZ),[CS]=SE(SS9,EI),[CA]=SE(S9,E0),[CN]=SE(S9,E0),[CB]=SE(S9,E0),[C9]=SE(S9,E0),[CD]=SE(S9,E0),[CC]=SE(SX,E0),[CQ]=SE(SQ,EZ)},
+/*S99*/ {[CX]=SE(SX,EZ),[CDD]=SE(SDD,EZ),[CDDZ]=SE(SDDZ,EZ),[CU]=SE(SU,EZ),[CS]=SE(SS9,EI),[CA]=SE(S99,E0),[CN]=SE(S99,E0),[CB]=SE(S99,E0),[C9]=SE(S99,E0),[CD]=SE(S99,E0),[CC]=SE(SX,E0),[CQ]=SE(SQ,EZ)},
+/*SQ */ {[CX]=SE(SQ,E0),[CDD]=SE(SQ,E0),[CDDZ]=SE(SQ,E0),[CU]=SE(SQ,E0),[CS]=SE(SQ,E0),[CA]=SE(SQ,E0),[CN]=SE(SQ,E0),[CB]=SE(SQ,E0),[C9]=SE(SQ,E0),[CD]=SE(SQ,E0),[CC]=SE(SQ,E0),[CQ]=SE(SQQ,E0)},
+/*SNZ*/ {[CX]=SE(SZ,E0),[CDD]=SE(SZ,E0),[CDDZ]=SE(SZ,E0),[CU]=SE(SU,EZ),[CS]=SE(SZ,E0),[CA]=SE(SZ,E0),[CN]=SE(SZ,E0),[CB]=SE(SZ,E0),[C9]=SE(SZ,E0),[CD]=SE(SX,E0),[CC]=SE(SX,E0),[CQ]=SE(SZ,E0)},
+/*SZ */ {[CX]=SE(SZ,E0),[CDD]=SE(SZ,E0),[CDDZ]=SE(SZ,E0),[CU]=SE(SU,EZ),[CS]=SE(SZ,E0),[CA]=SE(SZ,E0),[CN]=SE(SZ,E0),[CB]=SE(SZ,E0),[C9]=SE(SZ,E0),[CD]=SE(SZ,E0),[CC]=SE(SZ,E0),[CQ]=SE(SZ,E0)},
+/*SU */ {[CX]=SE(SX,EZ),[CDD]=SE(SDD,EZ),[CDDZ]=SE(SDDZ,EZ),[CU]=SE(SU,EZ),[CS]=SE(SS,EI),[CA]=SE(SA,EZ),[CN]=SE(SN,EZ),[CB]=SE(SA,EZ),[C9]=SE(S9,EZ),[CD]=SE(SX,EZ),[CC]=SE(SX,EZ),[CQ]=SE(SQ,EZ)},
+/*SDD*/ {[CX]=SE(SX,EZ),[CDD]=SE(SDDD,E0),[CDDZ]=SE(SX,EZ),[CU]=SE(SU,EZ),[CS]=SE(SS,EI),[CA]=SE(SA,EZ),[CN]=SE(SN,EZ),[CB]=SE(SA,EZ),[C9]=SE(S9,EZ),[CD]=SE(SX,E0),[CC]=SE(SX,E0),[CQ]=SE(SQ,EZ)},
+/*SDDZ*/ {[CX]=SE(SX,EZ),[CDD]=SE(SX,EZ),[CDDZ]=SE(SDDD,E0),[CU]=SE(SU,EZ),[CS]=SE(SS,EI),[CA]=SE(SA,EZ),[CN]=SE(SN,EZ),[CB]=SE(SA,EZ),[C9]=SE(S9,EZ),[CD]=SE(SX,E0),[CC]=SE(SX,E0),[CQ]=SE(SQ,EZ)},
+/*SDDD*/ {[CX]=SE(SX,EZ),[CDD]=SE(SDD,EZ),[CDDZ]=SE(SDDZ,EZ),[CU]=SE(SU,EZ),[CS]=SE(SS,EI),[CA]=SE(SA,EZ),[CN]=SE(SN,EZ),[CB]=SE(SA,EZ),[C9]=SE(S9,EZ),[CD]=SE(SX,EZ),[CC]=SE(SX,EZ),[CQ]=SE(SQ,EZ)},
 };
 
 // w points to a string A-block
@@ -60,9 +66,10 @@ F1(jtwordil){A z;I s,i,m,n,nv,*x;UC*v;
   // Handle followon numerics.  If the previous state was 'followon numeric' and the new character is CX/CS/CQ, we will emit after this state but
   // we need to overwrite the previous numeric.  Decrement the pointer by 2 before writing.  This runs while the state-fetch is happening and is fast enough to allow
   // the store addresses to be calculated before the next fetch
-  currc+=16-CX; currc&=16; prevs=2*prevs+1; currc&=prevs;   // set currc to 16 iff CX/CS/CQ; move 'followon numeric' flag to bit 4; combine
-  // the +1 is to trick the compiler.  Without it it moves the &16 onto prevs, but prevs is the critical path
-  x=(I*)((I)x-(currc>>(3-LGSZI)));  // subtract from x, to move x back 2 positions if coming out of followon numeric with a number
+  prevs&=8; prevs&=((8LL<<CX)|(8LL<<CS)|(8LL<<CQ)|(8LL<<CDD)|(8LL<<CDDZ)|(8LL<<CU))>>currc; x=(I*)((I)x-(prevs<<((LGSZI+1)-3)));  // if followon numeric and CX/CS/CQ/CDD/CDDZ, subtract from x, to move x back 2 positions if coming out of followon numeric with a number
+// obsolete   currc+=16-CX; currc&=16; prevs=2*prevs+1; currc&=prevs;   // set currc to 16 iff CX/CS/CQ; move 'followon numeric' flag to bit 4; combine
+// obsolete   // the +1 is to trick the compiler.  Without it it moves the &16 onto prevs, but prevs is the critical path
+// obsolete   x=(I*)((I)x-(currc>>(3-LGSZI)));  // subtract from x, to move x back 2 positions if coming out of followon numeric with a number
   // do two stores, and advance over any that are to be emitted.  0, 1, or 2 may be emitted (0 when the state has no action, 1 when the
   // state is an end+1 or start value, and 2 if an end+1 AND start value)
   x[0]=i; x[1]=i; x+=s&3;
@@ -72,7 +79,8 @@ F1(jtwordil){A z;I s,i,m,n,nv,*x;UC*v;
  //  If the line ends without a token being open (spaces perhaps) this will be half of a field and will be shifted away
  x=(I*)((I)x-(((s<<1)&16)>>(3-LGSZI)));    // same as above, with CS as the character
  *x=i;
- m=((x-AV(z))+1)>>1; AS(z)[0]=m; AM(z)=m+REPSGN((I)(SE(SNZ,0)-1)-s); // Calculate & install count; if last field is NB., make count negative
+// obsolete  m=((x-AV(z))+1)>>1; AS(z)[0]=m; AM(z)=m+REPSGN((I)(SE(SNZ,0)-1)-s); // Calculate & install count; if last field is NB., subtract 1 from word count
+ m=((x-AV(z))+1)>>1; AS(z)[0]=m; AM(z)=m-((((1LL<<SNZ)|(1LL<<SZ))>>(s>>4))&1); // Calculate & install count; if last field is NB., subtract 1 from word count
  R z;
 }    // word index & end+1; z is m 2 1$(i0,e0),(i1,e1),... AM(z) is # words not including any final NB
 

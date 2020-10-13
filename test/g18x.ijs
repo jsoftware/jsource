@@ -15,7 +15,7 @@ t=: 18!:30 <'base'
 32 -: type y
 1 = #$y
 (;:'adv sum x') e. y
-1 3 0 -: (y i. ;:'adv sum x'){{:"1 x
+1 3 0 -: (y i. ;:'adv sum x'){ {:"1 x
 
 4!:55 <'sum'
 -. (<'sum') e. >1{18!:30 <'base'

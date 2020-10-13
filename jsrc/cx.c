@@ -951,6 +951,7 @@ F2(jtcolon){A d,h,*hv,m;B b;C*s;I flag=VFLAGNONE,n,p;
 //
 // If the call to jgets() returns EOF, indicating end-of-script, that is also a control error
 A jtddtokens(J jt,A w,I env){
+// TODO: Use LF for DDSEP, support {{), make nouns work
  PROLOG(000);F1PREFIP;
  RZ(w);
 #if 0  // set to 1 to disable DD

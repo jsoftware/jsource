@@ -378,7 +378,7 @@ static F2(jtloccre){A g,y;C*s;I n,p;L*v;
  }
  FULLHASHSIZE(1LL<<(p+5),SYMBSIZE,1,SYMLINFOSIZE,p);  // get table, size 2^p+6 minus a little
  RZ(stcreate(0,p,n,s));
- R box(ca(y));
+ R boxW(ca(y));
 }    /* create a locale named w with hash table size a */
 
 static F1(jtloccrenum){C s[20];I k,p;
@@ -388,7 +388,7 @@ static F1(jtloccrenum){C s[20];I k,p;
  FULLHASHSIZE(1LL<<(p+5),SYMBSIZE,1,SYMLINFOSIZE,p);  // get table, size 2^p+6 minus a little
  RZ(stcreate(1,p,k,0L));
  sprintf(s,FMTI,k); 
- R box(cstr(s));
+ R boxW(cstr(s));
 }    /* create a numbered locale with hash table size n */
 
 F1(jtloccre1){
@@ -422,7 +422,7 @@ F1(jtlocswitch){A g;
 F1(jtlocname){A g=jt->global;
  ASSERTMTV(w);
  ASSERT(g!=0,EVLOCALE);
- R box(sfn(0,LOCNAME(g)));
+ R boxW(sfn(0,LOCNAME(g)));
 }    /* 18!:5  current locale name */
 
 static SYMWALK(jtlocmap1,I,INT,18,3,1,

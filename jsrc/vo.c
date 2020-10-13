@@ -29,11 +29,14 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
  RZ(w);F1PREFIP;I wt=AT(w); FLAGT waf=AFLAG(w);
  ASSERT(!(SPARSE&wt),EVNONCE);
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r;   // no RESETRANK because we call no primitives
- if(!f){
+ if(likely(!f)){
   // single box: fast path.  Allocate a scalar box and point it to w.  Mark w as incorporated.  Make all results recursive
-  // DO NOT take potentially expensive pass through w to find recursibility, because it may never be needed if this result expires without being assigned
-  // If the input is DIRECT and inplaceable in an inplaceable context, mark the result as PRISTINE
-  GAT0(z,BOX,1,0); AFLAG(z)=BOX+((-(wt&DIRECT))&((SGNTO0(AC(w))&((I)jtinplace>>JTINPLACEWX))<<AFPRISTINEX)); INCORPRA(w); AAV(z)[0]=w;
+  // If the input is DIRECT and abandoned, mark the result as PRISTINE
+  // If the input is abandoned and direct or recursive, zap it rather than raising the usecount
+  I aband=SGNTO0(AC(w))&((I)jtinplace>>JTINPLACEWX);  // bit 0 = 1 if w is abandoned
+// obsolete   GAT0(z,BOX,1,0); AFLAG(z)=BOX+((-(wt&DIRECT))&((aband)<<AFPRISTINEX)); INCORPRA(w); AAV(z)[0]=w;
+  GAT0(z,BOX,1,0); AFLAG(z)=BOX+((-(wt&DIRECT))&((aband)<<AFPRISTINEX)); INCORP(w); AAV(z)[0]=w;
+  if(((-aband)&((AFLAG(w)|DIRECT)&(wt&(RECURSIBLE|DIRECT))))!=0){*AZAPLOC(w)=0;}else{ra(w);}  // INCORPRA, but using zap where possible
  } else {
   // <"r
   ws=AS(w);
@@ -65,7 +68,7 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
  RETF(z);
 }    /* <"r w */
 
-F1(jtboxopen){RZ(w); if((-AN(w)&-(AT(w)&BOX+SBOX))>=0){w = box(w);} R w;}
+F1(jtboxopen){F1PREFIP; RZ(w); if((-AN(w)&-(AT(w)&BOX+SBOX))>=0){w = jtbox(jtinplace,w);} R w;}
 
 F2(jtlink){
 RZ(a&&w);F2PREFIP;
@@ -83,8 +86,8 @@ RZ(a&&w);F2PREFIP;
   I i; for(i=AR(a)-1; i>=0&&AS(a)[i]==AS(ABACK(a))[i];--i); if(i<0)a = ABACK(a);
  }
 #endif
- if((-AN(w)&SGNIF(AT(w),BOXX))>=0){w = jtbox((J)((I)jtinplace&~(JTINPLACEA+JTWILLBEOPENED+JTCOUNTITEMS)),w);}
- R jtover(jtinplace,jtbox((J)((I)jt+(((I)jtinplace>>JTINPLACEAX)&JTINPLACEW)),a),w);  // box empty or unboxed w, join to boxed a
+ if((-AN(w)&SGNIF(AT(w),BOXX))>=0){w = jtbox(JTIPWonly,w);}
+ R jtover(jtinplace,jtbox(JTIPAtoW,a),w);  // box empty or unboxed w, join to boxed a
 }
 
 // Calculate the value to use for r arg of copyresultcell: bit 0=ra() flag, next 15=rank requiring fill, higher=-(#leading axes of 1)

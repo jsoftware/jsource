@@ -9,13 +9,14 @@
 
 
 C ctype[256]={
-CX, CX, CX, CX, CX, CX, CX, CX, CX, CS, CX, CX, CX, CX, CX, CU, /*CX       TABLF      */
+CX, CX, CX, CX, CX, CX, CX, CX, CX, CS, CX, CX, CX, CX, CX, CU, /*CX       TAB      DDSEP*/
 CX, CX, CX, CX, CX, CX, CX, CX, CX, CX, CX, CX, CX, CX, CX, CX, /* 1                  */
 CS, CX, CX, CX, CX, CX, CX, CQ, CX, CX, CX, CX, CX, CX, CD, CX, /* 2  !"#$%&'()*+,-./ */
 C9, C9, C9, C9, C9, C9, C9, C9, C9, C9, CC, CX, CX, CX, CX, CX, /* 3 0123456789:;<=>? */
 CX, CA, CB, CA, CA, CA, CA, CA, CA, CA, CA, CA, CA, CA, CN, CA, /* 4 @ABCDEFGHIJKLMNO */
 CA, CA, CA, CA, CA, CA, CA, CA, CA, CA, CA, CX, CX, CX, CX, C9, /* 5 PQRSTUVWXYZ[\]^_ */
 CX, CA, CA, CA, CA, CA, CA, CA, CA, CA, CA, CA, CA, CA, CA, CA, /* 6 `abcdefghijklmno */
+// {{ }}  CA, CA, CA, CA, CA, CA, CA, CA, CA, CA, CA, CDD, CX, CDDZ, CX, CX, /* 7 pqrstuvwxyz{|}~  */
 CA, CA, CA, CA, CA, CA, CA, CA, CA, CA, CA, CX, CX, CX, CX, CX, /* 7 pqrstuvwxyz{|}~  */
 CX, CX, CX, CX, CX, CX, CX, CX, CX, CX, CX, CX, CX, CX, CX, CX, /* 8                  */
 CX, CX, CX, CX, CX, CX, CX, CX, CX, CX, CX, CX, CX, CX, CX, CX, /* 9                  */

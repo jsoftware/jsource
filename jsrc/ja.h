@@ -78,6 +78,7 @@
 #define bdot(x)                     jtbdot(jt,(x))
 #define bdot2(x,y,z)                jtbdot2(jt,(x),(y),(z))
 #define behead(x)                   jtbehead(jt,(x))
+#define beheadW(x)                  jtbehead((J)((I)jt|JTINPLACEW),(x))
 #define bfi(x,y,z)                  jtbfi(jt,(x),(y),(z))
 #define bfind(x,y,z)                jtbfind(jt,(x),(y),(z))
 #define bfrom(x,y)                  jtbfrom(jt,(x),(y))

@@ -886,10 +886,23 @@ F2(jtcolon){A d,h,*hv,m;B b;C*s;I flag=VFLAGNONE,n,p;
  if((C2T+C4T)&AT(w))RZ(w=cvt(LIT,w));
  if(10<n){s=CAV(w); p=AN(w); if(p&&CLF==s[p-1])RZ(w=str(p-1,s));}
  else{  // not tacit translator - preparse the body
-  RZ(BOX&AT(w)?sent12b(w,&m,&d):sent12c(w,&m,&d,n==9)); INCORP(m); INCORP(d);  // get monad & dyad parts; we are incorporating them into hv[]
+  RZ(BOX&AT(w)?sent12b(w,&m,&d):sent12c(w,&m,&d,n==9));  // get monad & dyad parts;
+  // If there is a control line )x at the top of the definition, parse it now and discard it from m
+  if(likely(AN(m)!=0))if(unlikely(AN(AAV(m)[0])&&CAV(AAV(m)[0])[0]==')')){
+   // there is a control line.  parse it.  For now, just the first character
+   if(AN(AAV(m)[0])>2){
+    C ctltype=CAV(AAV(m)[0])[2];  // look at the second char, which must be one of acmdv*
+    I newn=0; newn=ctltype=='a'?1:newn; newn=ctltype=='c'?2:newn; newn=ctltype=='m'?3:newn; newn=ctltype=='d'?4:newn; newn=ctltype=='v'?3:newn; newn=ctltype=='*'?9:newn;  // choose type based on char
+    ASSERT(newn!=0,EVDOMAIN);  // error if invalid char
+    n=newn;  // accept the type the user specified
+   }
+   // discard the control line
+   RZ(m=beheadW(m));
+  }
+  INCORP(m); INCORP(d);  // we are incorporating them into hv[]
   if(4==n){if((-AN(m)&(AN(d)-1))<0)d=m; m=mtv;}  //  for 4 :, make the single def given the dyadic one
   GAT0(h,BOX,2*HN,1); hv=AAV(h);
-  if(n){  // if not noun, audit the valences as valid sentences
+  if(n){  // if not noun, audit the valences as valid sentences and convert to a queue to send into parse()
    RE(b=preparse(m,hv,hv+1)); if(b)flag|=VTRY1; hv[2   ]=jt->retcomm?m:mtv;
    RE(b=preparse(d,hv+HN,hv+HN+1)); if(b)flag|=VTRY2; hv[2+HN]=jt->retcomm?d:mtv;
   }

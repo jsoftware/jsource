@@ -135,6 +135,7 @@ typedef struct {
 #define RECSTATEPROMPT  2  // JE is running, and is suspended having called the host for input
 #define RECSTATERECUR   3  // JE is running and waiting for a prompt, and the host has made a recursive call to JDo (which must not prompt)
 // 2 bytes here
+ B    directdef;         // 1 iff recognize DD scaf
  UC   disp[7];          /* # different verb displays                       */
  UC   outeol;           /* output: EOL sequence code                       */
 // 3 words free

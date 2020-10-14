@@ -220,6 +220,8 @@ F2(jtforeign){I p,q;
   case XC(9,58):  R CDERIV(CIBEAM, jtgemmtune, jtgemmtune2,    VFLAGNONE,RMAX,RMAX,RMAX);
   case XC(9,60):  R CDERIV(CIBEAM, jtleakblockread, 0,            VFLAGNONE,RMAX,RMAX,RMAX);
   case XC(9,61):  R CDERIV(CIBEAM, jtleakblockreset, 0,            VFLAGNONE,RMAX,RMAX,RMAX);
+  case XC(9,62):  R CDERIV(CIBEAM, jtdirectdefq,    0,            VASGSAFE,RMAX,RMAX,RMAX); // scaf
+  case XC(9,63):  R CDERIV(CIBEAM, jtdirectdefs,    0,            VASGSAFE,RMAX,RMAX,RMAX); // scaf
 
 
 

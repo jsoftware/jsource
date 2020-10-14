@@ -18,8 +18,8 @@
 #include "w.h"
 
 // DD definitions
-#define DDBGN (US)('('+256*'.')  // digraph for start DD
-#define DDEND (US)(')'+256*'.')  // digraph for end DD
+#define DDBGN (US)('{'+256*'{')  // digraph for start DD
+#define DDEND (US)('}'+256*'}')  // digraph for end DD
 #define DDSEP 0xf  // ASCII value used to mark line separator inside 9 : string.  Must have class CU so that it ends a final comment
 
 #define BASSERT(b,e)   {if(unlikely(!(b))){jsignal(e); i=-1; z=0; continue;}}

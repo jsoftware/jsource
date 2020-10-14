@@ -14,6 +14,8 @@ extern F1(jtasgzombq);
 extern F1(jtasgzombs);
 extern F1(jtassertq);
 extern F1(jtasserts);
+extern F1(jtdirectdefq);
+extern F1(jtdirectdefs);
 extern F1(jtaudittdisab);
 extern F1(jtbase1);
 extern F1(jtbdot);

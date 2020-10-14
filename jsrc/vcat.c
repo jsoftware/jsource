@@ -182,7 +182,7 @@ F2(jtover){A z;C*zv;I replct,framect,acr,af,ar,*as,k,ma,mw,p,q,r,t,wcr,wf,wr,*ws
  RZ(a&&w);F2PREFIP;
  UI jtr=jt->ranks;//  fetch early
  if(unlikely((SPARSE&(AT(a)|AT(w)))!=0)){R ovs(a,w);}  // if either arg is sparse, switch to sparse code
- if(AT(a)!=(t=AT(w))){t=maxtypedne(AT(a)|(AN(a)==0),t|(AN(w)==0)); t&=-t; if(!TYPESEQ(t,AT(a))){RZ(a=cvt(t,a));} else {RZ(w=cvt(t,w));}}  // convert args to compatible precisions, changing a and w if needed.  Treat empty arg as boolean
+ if(unlikely(AT(a)!=(t=AT(w)))){t=maxtypedne(AT(a)|(AN(a)==0),t|(AN(w)==0)); t&=-t; if(!TYPESEQ(t,AT(a))){RZ(a=cvt(t,a));} else {RZ(w=cvt(t,w));}}  // convert args to compatible precisions, changing a and w if needed.  Treat empty arg as boolean
  ar=AR(a); wr=AR(w);
  acr=jtr>>RANKTX; acr=ar<acr?ar:acr; af=ar-acr;  // acr=rank of cell, af=len of frame, as->shape
  wcr=(RANKT)jtr; wcr=wr<wcr?wr:wcr; wf=wr-wcr;  // wcr=rank of cell, wf=len of frame, ws->shape
@@ -193,11 +193,13 @@ F2(jtover){A z;C*zv;I replct,framect,acr,af,ar,*as,k,ma,mw,p,q,r,t,wcr,wf,wr,*ws
   // No frame.  See if ranks are equal or different by 1, and if the items have the same shape
   I lr=ar;  // rank of arg with long shape
   A l=a; l=wr>ar?w:l; lr=wr>ar?wr:lr;  // arg with long shape.  Not needed till later but we usually go through the fast path
-  if(2*lr-1<=ar+wr){  // if ranks differ by at most 1
+  if(likely(2*lr-1<=ar+wr)){  // if ranks differ by at most 1
    // items have the same rank or one argument is an item of the other (cases where the ranks differ by more than 1 follow the general path below)
    // see if the shapes agree up to the shape of an item of the longer argument
-   I mismatch=0; I *ase=as+ar-1, *wse=ws+wr-1; DQ(lr-1, mismatch|=*ase--^*wse--;);
-   if(!mismatch){
+   I mismatch=0; I cr=lr-1; cr=cr<0?0:cr;
+   TESTDISAGREE(mismatch,as+ar-cr,ws+wr-cr,cr)  // compare the tail of the shapes, for the length of an item of the longer shape
+// obsolete    I *ase=as+ar-1, *wse=ws+wr-1; DQ(lr-1, mismatch|=*ase--^*wse--;);
+   if(likely(!mismatch)){
     // The data can be copied in toto, with only the number of items changing.
     A s=(A)((I)a+(I)w-(I)l);  // arg with short shape
     // The rank is the rank of the long argument, unless both arguments are atoms; then it's 1

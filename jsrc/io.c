@@ -339,9 +339,9 @@ DF1(jtwd){A z=0;C*p=0;D*pd;I e,*pi,t;V*sv;
   }
   RZ(w=jtmemu(jtinplace,w));
   // Now call the host and get the response
-  // Since we are relinquishing control to the host, we treat this call like a prompt (jgets()) for recursion purposes:
-  // we fail any wd request if we are already waiting for a response, and we increment the recursion state to allow a single recursive call
-  ASSERT(jt->recurstate<RECSTATEPROMPT,EVCTRL)
+  // Calling the Host takes us out of BUSY state, back to IDLE.  (If for some reason we are prompting, that is not affected)
+  // That is, while we are waiting for the reply we are back to interruptible state.  If the interrupt issues another wd,
+  // that too is interruptible, for as many levels as needed.
 // t is 11!:t and w is wd argument
 // smoption:
 //   1=pass current locale
@@ -350,7 +350,7 @@ DF1(jtwd){A z=0;C*p=0;D*pd;I e,*pi,t;V*sv;
 //   8=multithreaded
 // smdowd = function pointer to Jwd, if NULL nothing will be called
   ASSERT(jt->smdowd,EVDOMAIN);
-  jt->recurstate=RECSTATEPROMPT;  // advance to PROMPT state
+  jt->recurstate&=~RECSTATEBUSY;  // back to IDLE/PROMPT state
   if(SMOPTLOCALE&jt->smoption) {
 // pass locale as parameter of callback
 // obsolete     e= jt->smdowd? ((dowdtype2)(jt->smdowd))(jt, (int)t, w, &z, getlocale(jt)) : EVDOMAIN;
@@ -360,7 +360,7 @@ DF1(jtwd){A z=0;C*p=0;D*pd;I e,*pi,t;V*sv;
 // obsolete     e=jt->smdowd ? ((dowdtype)(jt->smdowd))(jt, (int)t, w, &z) : EVDOMAIN;
     e=((dowdtype)(jt->smdowd))(jt, (int)t, w, &z);
   }
-  jt->recurstate=RECSTATEBUSY;  // prompt complete, go back to normal running state
+  jt->recurstate|=RECSTATEBUSY;  // wd complete, go back to normal running state, BUSY normally or RECUR if a prompt is pending
   if(!e) R mtm;   // e==0 is MTM
   ASSERT(e<=0,e); // e>=0 is EVDOMAIN etc
   if(SMOPTPOLL&jt->smoption){jt->recurstate=RECSTATEPROMPT; z=(A)((polltype)(jt->smpoll))(jt, (int)t, (int)e); jt->recurstate=RECSTATEBUSY; RZ(z);} // alternate way to get result aftercallback, but not yet used in any front-end

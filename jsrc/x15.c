@@ -633,8 +633,8 @@ static void docall(FARPROC fp, I*d, I cnt, DoF* dd, I dcnt, C zl, I*v, B alterna
    case 'x'&0x1f:
    case '*'&0x1f: *v=r;         break;
    case 'n'&0x1f: *v=0;         break;
-  }}
- else
+  }
+ }else
 #if !SY_64 && !defined(__arm__)
  {D r;
   r= alternate ? altcalld((ALTCALLD)fp,d,cnt,dd,dcnt) : stdcalld((STDCALLD)fp,d,cnt,dd,dcnt);
@@ -648,7 +648,8 @@ static void docall(FARPROC fp, I*d, I cnt, DoF* dd, I dcnt, C zl, I*v, B alterna
   }else{float r;
    r= alternate ? altcallf((ALTCALLF)fp,d,cnt,dd,dcnt) : stdcallf((STDCALLF)fp,d,cnt,dd,dcnt);
    *(D*)v=(D)r;
- }}
+  }
+ }
 #endif
 }
 
@@ -1100,9 +1101,14 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
 #endif
 
  DO(cipcount, convertdown(cipv[i],cipn[i],cipt[i]););  /* convert I to s and int and d to f as required */
+ // allocate the result area
  if(zbx){GA(x,cc->zt,1,0,0); xv=AV(x); *(A*)zv0=incorp(x);}else xv=(I*)zv0;  // must not box an inplaceable
+ // get the address of the function
  if('1'==cc->cc){fp=(FARPROC)*((I)cc->fp+(I*)*(I*)*data); CDASSERT(fp!=0,DEBADFN);}else fp=cc->fp;
- docall(fp, data, dv-data, dd, dcnt, cc->zl, xv, cc->alternate);
+ // call it.  This is a safe recursion point.  Back up to IDLE
+ jt->recurstate&=~RECSTATEBUSY;  // back to IDLE/PROMPT state
+ docall(fp, data, dv-data, dd, dcnt, cc->zl, xv, cc->alternate);  // call the function, set the result
+ jt->recurstate|=RECSTATEBUSY;  // cd complete, go back to normal running state, BUSY normally or RECUR if a prompt is pending
 
  DO(cipcount, convertup(cipv[i],cipn[i],cipt[i]);); /* convert s and int to I and f to d as required */
 #if SY_WIN32

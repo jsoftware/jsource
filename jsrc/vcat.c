@@ -209,7 +209,10 @@ F2(jtover){A z;C*zv;I replct,framect,acr,af,ar,*as,k,ma,mw,p,q,r,t,wcr,wf,wr,*ws
     I klg=bplg(t); I alen=AN(a)<<klg; I wlen=AN(w)<<klg;
     GA(z,t,AN(a)+AN(w),lr,AS(l)); AS(z)[0]=si; C *x=CAV(z);  // install # items after copying shape
     JMC(x,CAV(a),alen+(SZI-1),loop1,0); JMC(x+alen,CAV(w),wlen+(SZI-1),loop2,0);
-    // We extracted from a and w, so mark them (or the backer if virtual) non-pristine.  If both were pristine and inplaceable, transfer its pristine status to the result
+    // If a & w are both recursive abandoned, we can take ownership of the contents by marking them nonrecursive and marking z recursive.
+    // We could also zap a & w, but we don't because it's just a box header and it will be freed by a caller anyway
+
+    // We extracted from a and w, so mark them (or the backer if virtual) non-pristine.  If both were pristine and abandoned, transfer its pristine status to the result
     // if they were boxed nonempty, a and w have not been changed.  Otherwise the PRISTINE flag doesn't matter.
     // If a and w are the same, we mustn't mark the result pristine!  It has repetitions
     PRISTXFERF2(z,a,w);   // pass PRISTINE status through if possible, make inputs non-PRISTINE

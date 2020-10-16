@@ -32,11 +32,12 @@ static C spellintab3[][4] = {
 /* & */ {0, CUNDCO, 0, 0},
 /* F */ {CFDOTDOT, CFDOTCO, CFCODOT, CFCOCO},
 };
-// The spelling is encoded (littleendian) as (graphic) followed by 4 bits of inflection1 followed by 4 bits of inflection2: 0000=NUL 0111=. 1110=:
-#define DOT0 0x700
-#define CO0 0xe00
-#define DOT1 0x7000
-#define CO1 0xe000
+// The spelling is encoded (littleendian) as (graphic) followed by 2 bits of inflection1 followed by 2 bits of inflection2: 00=NUL 01=. 10=: 11=SP
+#define DOT0 0x100
+#define CO0 0x200
+#define SP0 0x300
+#define DOT1 0x400
+#define CO1 0x800
 static US spellouttab[256] = {
 // 2-3 free
 // 5-8 free
@@ -111,7 +112,8 @@ C spellin(I n,C*s){
 // s is a buffer long enough to hold the longest spelling.  Fill it with the spelling of c
 void spellit(UC c,UC *s){
  I spell=spellouttab[c]; // Fetch inf2/inf1 graphic
- s[0]=(C)spell; s[1]=(C)(0xe9700>>((spell>>8)&0xf)); s[2]=(C)(0xe9700>>(spell>>12));   // 0011101(0) 0010111(0) 00000000  for NUL . :, with overlap
+// obsolete  s[0]=(C)spell; s[1]=(C)(0xe9700>>((spell>>8)&0xf)); s[2]=(C)(0xe9700>>(spell>>12));   // 0011101(0) 0010111(0) 00000000  for NUL . :, with overlap
+ s[0]=(C)spell; s[1]=(C)(0x203a2e00>>(((spell>>8)&0x3)<<3)); s[2]=(C)(0x203a2e00>>(((spell>>10)&0x3)<<3));   // 00100000 00111010 00101110 00000000  for NUL . :, with overlap
 }
 
 A jtspella(J jt,A w){C c,s[3];V*v;

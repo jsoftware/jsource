@@ -122,6 +122,7 @@ DF1(jtfx){A f,fs,g,h,p,q,*wv,y,*yv;C id;I m,n=0;
 }}
 
 static A jtunparse1(J jt,CW*c,A x,I j,A y){A q,z;C*s;I t;
+ // for BBLOCK/TBLOCK types, convert the lines to displayable by displaying them as if for error messages, and copying the result
  switch(t=c->type){
   case CBBLOCK: case CBBLOCKEND: case CTBLOCK: RZ(z=unparse(x));  break;
   case CASSERT:               RZ(q=unparse(x)); GATV0(z,LIT,8+AN(q),1); s=CAV(z); 
@@ -130,6 +131,7 @@ static A jtunparse1(J jt,CW*c,A x,I j,A y){A q,z;C*s;I t;
   case CFOR:                  RZ(z=c->n?AAV(x)[0]:spellcon(t)); break;
   default:                    RZ(z=spellcon(t));
  }
+ // if the CW we processed comes from the same source lime, append it and return the combination; ootherwise return the new
  if(j==c->source){
   GATV0(q,LIT,1+AN(y)+AN(z),1); s=CAV(q); 
   MC(s,CAV(y),AN(y)); s+=AN(y); *s++=' '; MC(s,CAV(z),AN(z)); 
@@ -138,28 +140,36 @@ static A jtunparse1(J jt,CW*c,A x,I j,A y){A q,z;C*s;I t;
  R z;
 }    /* unparse a single line */
 
+// unparse a definition, by going through the control words
+// hv[0]->packed words, hv[1]->control words zv->pointer in array of boxes, indicating where to store the lines
+// m is #CWs to process
+// result points after the last line stored into zv
 static A*jtunparse1a(J jt,I m,A*hv,A*zv){A*v,x,y;CW*u;I i,j,k;
- y=hv[0]; v=AAV(y); 
- y=hv[1]; u=(CW*)AV(y);
+ y=hv[0]; v=AAV(y);  // v->word 0
+ y=hv[1]; u=(CW*)AV(y);  // u is running pointer through control words
  y=0; j=k=-1;
- for(i=0;i<m;++i,++u){
-  RZ(x=unparse1(u,vec(BOX,u->n,v+u->i),j,y)); 
+ for(i=0;i<m;++i,++u){  // for each word
+  RZ(x=unparse1(u,vec(BOX,u->n,v+u->i),j,y)); // append new line to y or else return it as x if it is on a new line.
   k=u->source;
-  if(j<k){if(y)*zv++=incorp(y); DQ(k-j-1, *zv++=mtv;);}
+// call unDD instead of incorp scaf
+  if(j<k){if(y)*zv++=incorp(y); DQ(k-j-1, *zv++=mtv;);}  // if we are about to move to a new line, save y and zap the surplus control words on the line to empties
   y=x; j=k;
  }
- if(y)*zv++=incorp(y);
+ if(y)*zv++=incorp(y);  // repeat to out last line
+// call unDD instead of incorp scaf
  DQ(k-j-1, *zv++=mtv;);
  R zv;
 }
 
+// w is a def.  Return unparsed form
 F2(jtunparsem){A h,*hv,dc,ds,mc,ms,z,*zu,*zv;I dn,m,mn,n,p;V*wv;
  RZ(a&&w);
- wv=VAV(w); h=wv->fgh[2]; hv=AAV(h);
- mc=hv[1];    ms=hv[2];    m=mn=AN(mc);
+ wv=VAV(w); h=wv->fgh[2]; hv=AAV(h);  // h[2][HN] is preparsed def
+ mc=hv[1];    ms=hv[2];    m=mn=AN(mc);  // mc->control words ms->commented text
  dc=hv[1+HN]; ds=hv[2+HN]; n=dn=AN(dc);
- p=n&&(m||3==i0(wv->fgh[0])||VXOPR&wv->flag);
+ p=n&&(m||3==i0(wv->fgh[0])||VXOPR&wv->flag);  // p=2 valences present: dyad given, and  it's a verb or an operator referring to x 
  if(equ(mtv,hv[2])&&equ(mtv,hv[2+HN])){
+  // no comments: recover the original by unparsing
   if(m)mn=1+((CW*)AV(mc)+m-1)->source;
   if(n)dn=1+((CW*)AV(dc)+n-1)->source;
   GATV0(z,BOX,p+mn+dn,1); zu=zv=AAV(z);
@@ -167,8 +177,10 @@ F2(jtunparsem){A h,*hv,dc,ds,mc,ms,z,*zu,*zv;I dn,m,mn,n,p;V*wv;
   RZ(zv=unparse1a(n,hv+HN,zv));
   ASSERTSYS(AN(z)==zv-zu,"unparsem zn");
  }else{
+  // commented text found.  Use it
   mn=AN(ms); dn=AN(ds);
   GATV0(z,BOX,p+mn+dn,1); zv=AAV(z);
+// call unDD instead of incorp scaf
   DO(mn, *zv++=incorp(AAV(ms)[i]);); if(p)RZ(*zv++=chrcolon);
   DO(dn, *zv++=incorp(AAV(ds)[i]););
  }

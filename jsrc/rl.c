@@ -253,7 +253,7 @@ static A jtlsymb(J jt,C c,A w){A t;C buf[20],d,*s;I*u;V*v=FAV(w);
   u=AV(v->fgh[2]); s=buf; 
   *s++=' '; *s++='('; s+=sprintf(s,FMTI,*u); spellit(CIBEAM,s); s+=2; s+=sprintf(s,FMTI,u[1]); *s++=')';
   RZ(t=str(s-buf,buf)); 
- }else RZ(t=spella(w));
+ }else{RZ(t=spella(w)); if(AN(t)==1&&(CAV(t)[0]=='{'||CAV(t)[0]=='}')){RZ(t=mkwris(t)); AS(t)[0]=AN(t)=2; CAV(t)[1]=' '; }}  // add trailing space to { } to avoid DD codes
  d=cf(t);
  R d==CESC1||d==CESC2?over(chrspace,t):t;
 }
@@ -300,6 +300,7 @@ static F2(jtlinsert){A*av,f,g,h,t,t0,t1,t2,*u,y;B b,ft,gt,ht;C c,id;I n;V*v;
    R over(y,laa(y,t2)?over(chrspace,t2):t2);
 }}
 
+// create linear rep for m : n
 static F1(jtlcolon){A*v,x,y;C*s,*s0;I m,n;
  RZ(y=unparsem(num(1),w));
  n=AN(y); v=AAV(y); RZ(x=lrr(VAV(w)->fgh[0]));
@@ -325,20 +326,20 @@ static DF1(jtlrr){A hs,t,*tv;C id;I fl,m;V*v;
  // If name, it must be in ".@'name', or (in debug mode) the function name, which we will discard
  if(AT(w)&NAME){RZ(w=sfn(0,w));}
  if(AT(w)&NOUN)R lnoun(w);
+ v=VAV(w); id=v->id;  // outer verb, & its id
  // if f is 0, we take f from g.  In other words, adverbs can put their left arg in either f or g.  u b. uses g so that it can leave f=0 to allow it to function as an ATOMIC2 op
- v=VAV(w); id=v->id;
  I fndx=(id==CBDOT)&&!v->fgh[0]; A fs=v->fgh[fndx]; A gs=v->fgh[fndx^1];  // In verb for m b., if f is empty look to g for the left arg.  It would be nice to be more general
  hs=v->fgh[2]; fl=v->flag; if(id==CBOX)gs=0;  // ignore gs field in BOX, there to simulate BOXATOP
- if(fl&VXOPCALL)R lrr(hs);
- m=(I )!!fs+(I )(gs&&id!=CBOX)+(I )(id==CFORK)+(I )(hs&&id==CCOLON&&VXOP&fl);  // BOX has g for BOXATOP; ignore it
- if(!m)R lsymb(id,w);
+ if(fl&VXOPCALL)R lrr(hs);   // pseudo-named entity created during debug of operator.  The defn is in h
+ m=(I )!!fs+(I )(gs&&id!=CBOX)+(I )(id==CFORK)+(I )(hs&&id==CCOLON&&VXOP&fl);  // BOX has g for BOXATOP; ignore it; get # nonzero values in f g h
+ if(!m)R lsymb(id,w);  // if none, it's a primitive, out it
  if(evoke(w)){RZ(w=sfne(w)); if(FUNC&AT(w))w=lrr(w); R w;}  // keep named verb as a string, UNLESS it is NMDOT, in which case use the (f.'d) verb value
- if(!(VXOP&fl)&&hs&&BOX&AT(hs)&&id==CCOLON)R lcolon(w);
+ if(!(VXOP&fl)&&hs&&BOX&AT(hs)&&id==CCOLON)R lcolon(w);  // x : boxed - must be explicit defn
  GATV0(t,BOX,m,1); tv=AAV(t);
- if(2<m)RZ(tv[2]=lrr(hs));
+ if(2<m)RZ(tv[2]=incorp(lrr(hs)));   // fill in h if present
  // for top-level of gerund (indicated by self!=0), any noun type could not have come from an AR, so return it as is
- if(1<m)RZ(tv[1]=fl&VGERR?CALL1(jt->ltie,fxeach(gs,(A)&jtfxself[!!self]),0L):lrr(gs));
- if(0<m)RZ(tv[0]=fl&VGERL?CALL1(jt->ltie,fxeach(fs,(A)&jtfxself[!!self]),0L):lrr(fs));
+ if(1<m)RZ(tv[1]=incorp(fl&VGERR?CALL1(jt->ltie,fxeach(gs,(A)&jtfxself[!!self]),0L):lrr(gs)));  // fill in g if present
+ if(0<m)RZ(tv[0]=incorp(fl&VGERL?CALL1(jt->ltie,fxeach(fs,(A)&jtfxself[!!self]),0L):lrr(fs)));  // fill in f (always present)
  R linsert(t,w);
 }
 

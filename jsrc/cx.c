@@ -565,9 +565,6 @@ static DF1(xop1){
 }
 
 
-// obsolete // h is the compiled form of an explicit function: an array of 2*HN boxes.
-// obsolete // Boxes 0&HN contain the enqueued words  for the sentences, jammed together
-// obsolete // Return code indicating what we found:
 // w is a box containing enqueued words for the sentences of a definition, jammed together
 // 8: nv found 4: mu found 2: x found 1: y found.  u./v. count as u./v.
 static I jtxop(J jt,A w){I i,k;
@@ -903,10 +900,11 @@ F2(jtcolon){A d,h,*hv,m;B b;C*s;I flag=VFLAGNONE,n,p;
   if(4==n){if((-AN(m)&(AN(d)-1))<0)d=m; m=mtv;}  //  for 4 :, make the single def given the dyadic one
   GAT0(h,BOX,2*HN,1); hv=AAV(h);
   if(n){  // if not noun, audit the valences as valid sentences and convert to a queue to send into parse()
-   RE(b=preparse(m,hv,hv+1)); if(b)flag|=VTRY1; hv[2   ]=jt->retcomm?m:mtv;
+   RE(b=preparse(m,hv,hv+1)); if(b)flag|=VTRY1; hv[2]=jt->retcomm?m:mtv;
    RE(b=preparse(d,hv+HN,hv+HN+1)); if(b)flag|=VTRY2; hv[2+HN]=jt->retcomm?d:mtv;
   }
  }
+ // The h argument is logically h[2][HN] where the boxes hold (parsed words, in a row);(info for each control word);(original commented text (optional));(local symbol table)
  if(!n){ra0(w); RCA(w);}  // noun - return it.  Since this is a noun result, we make sure it is recursive usecount
  // Non-noun results cannot become inputs to verbs, so we do not force them to be recursive
  if((1LL<<n)&0x206){  // types 1, 2, 9

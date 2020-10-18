@@ -9,7 +9,7 @@
 
 
 C ctype[256]={
-CX, CX, CX, CX, CX, CX, CX, CX, CX, CS, CX, CX, CX, CX, CX, CU, /*CX       TAB      DDSEP*/
+CX, CX, CX, CX, CX, CX, CX, CX, CX, CS, CU, CX, CX, CX, CX, CX, /*CX       TAB      DDSEP*/
 CX, CX, CX, CX, CX, CX, CX, CX, CX, CX, CX, CX, CX, CX, CX, CX, /* 1                  */
 CS, CX, CX, CX, CX, CX, CX, CQ, CX, CX, CX, CX, CX, CX, CD, CX, /* 2  !"#$%&'()*+,-./ */
 C9, C9, C9, C9, C9, C9, C9, C9, C9, C9, CC, CX, CX, CX, CX, CX, /* 3 0123456789:;<=>? */

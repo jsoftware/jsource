@@ -20,7 +20,7 @@
 // DD definitions
 #define DDBGN (US)('{'+256*'{')  // digraph for start DD
 #define DDEND (US)('}'+256*'}')  // digraph for end DD
-#define DDSEP 0xf  // ASCII value used to mark line separator inside 9 : string.  Must have class CU so that it ends a final comment
+#define DDSEP 0xa  // ASCII value used to mark line separator inside 9 : string.  Must have class CU so that it ends a final comment
 
 #define BASSERT(b,e)   {if(unlikely(!(b))){jsignal(e); i=-1; z=0; continue;}}
 #define BZ(e)          if(unlikely(!(e))){i=-1; z=0; continue;}
@@ -602,17 +602,35 @@ static I jtxop(J jt,A w){I i,k;
  R fndflag;  // return what we found
 }
 
-static A jtcolon0(J jt, I deftype){A l,z;C*p,*q,*s;I m,n;
- n=0; RZ(z=exta(LIT,1L,1L,300L)); s=CAV(z);
+// handle m : 0.  deftype=m.
+// For 0 : and 13 :, the result is a string.  For other types, it is a list of boxes, one per
+// line of the definition.  DDs in the input will have been translated to 9 : string form.
+// Stop when we hit ) line, or EOF
+static A jtcolon0(J jt, I deftype){A l,z;C*p,*q,*s;A *sb;I m,n;
+ n=0;
+ I isboxed=BETWEENC(deftype,1,9);  // do we return boxes?
+ // Allocate the return area, which we extend as needed
+ if(isboxed){RZ(z=exta(BOX,1L,1L,20L)); sb=AAV(z);}
+ else{RZ(z=exta(LIT,1L,1L,300L)); s=CAV(z);}
  while(1){
   RE(l=jgets("\001"));   // abort if error on input
-  if(!l)break;  // exit loop if EOF
+  if(!l)break;  // exit loop if EOF.  The incomplete definition will be processed
   if(deftype!=0)RZ(l=ddtokens(l,8+2));  // if non-noun def, handle DDs, for explicit def, return string, allow jgets().  Leave noun contents untouched
+  // check for end: ) by itself, possibly with spaces
   m=AN(l); p=q=CAV(l); 
   while(p<q+m&&' '==*p)++p; if(p<q+m&&')'==*p){while(p<q+m&&' '==*++p); if(p>=m+q)break;}  // if ) with nothing else but blanks, stop
-  while(AN(z)<=n+m){RZ(z=ext(0,z)); s=CAV(z);}
-  MC(s+n,q,m); n+=m; s[n]=CLF; ++n;  // append LF at end of each line
+  // There is a new line.  Append it to the growing result.
+  if(isboxed){
+   if((C2T+C4T)&AT(l))RZ(l=cvt(LIT,l));  // each line must be LIT
+   while(AN(z)<=n+1){RZ(z=ext(0,z)); sb=AAV(z);}  // extend the result if necessary
+   sb[n]=l; ++n; // append the line, increment line number
+  }else{
+   while(AN(z)<=n+m){RZ(z=ext(0,z)); s=CAV(z);}  // extend the result if necessary
+   MC(s+n,q,m); n+=m; s[n]=CLF; ++n;  // append LF at end of each line
+  }
  }
+ // Return the string.  No need to trim down the list of boxes, as it's transitory
+ if(isboxed){AN(z)=AS(z)[0]=n; R z;}
  R str(n,s);
 }    /* enter nl terminated lines; ) on a line by itself to exit */
 
@@ -625,48 +643,36 @@ static F1(jtlineit){
 // Convert ASCII w to boxed lines.  Create separate lists of boxes for monad and dyad
 // if preparsed it set, we know the lines have gone through wordil already & it is OK
 // to do it again.  This means we are processing 9 :  n
-static B jtsent12c(J jt,A w,A*m,A*d,I preparsed){C*p,*q,*r,*s,*x;A z;
+// obsolete static B jtsent12c(J jt,A w,A*m,A*d,I preparsed){C*p,*q,*r,*s,*x;A z;
+static A jtsent12c(J jt,A w){C*p,*q,*r,*s,*x;A z;
  ASSERT(!AN(w)||LIT&AT(w),EVDOMAIN);
  ASSERT(2>=AR(w),EVRANK);
- if(preparsed){
-  // Handling 9 : n lines.  Lines are separated by DDSEP, and there may be DDSEP embedded in strings.  Convert the whole thing to words, which will
-  // leave the embedded DDSEP embedded; then split on the individual DDSEP tokens
-  // The line comes in without trailing DDSEP.  Add it
-  RZ(w=over(w,scc(DDSEP)));  // force trailing separator
-  // tokenize the lines.  Each LF is its own token.
-  A wil; RZ(wil=wordil(w)); makewritable(wil); I wiln=AS(wil)[0]; I (*wilv)[2]=voidAV(wil); // line index, and number of lines; array of (start,end+1) for each line
-  // Compact the word-list to a line-list.  Go through the words looking for LF.  For each line, add an entry to the line-list with all the characters except the LF
-  I dyad1=-1; I i=0;  // start of dyad, input pointer through wilv
-  I currlinest=0;  // character# at which current line (ending in next LF) starts
-  I linex=0;  // index of next output (start,end) to fill
-  C *wv=CAV(w);  // the character list backing the words
-  while(i<wiln){
-   // we have just finished a line.  currlinest is the first character position of the next line
-   // if we are still looking for end-of-monad, see if this line starts with : folllowed by DDSEP
-   if(dyad1<0 && wv[wilv[i][0]]==':' && wilv[i][1]-wilv[i][0]==1 && i+1<wiln && wv[wilv[i+1][0]]==DDSEP){
-    // we found : on a line by itself.  Remember where, and skip over the line
-    dyad1=linex;  // save # lines in monad
-    currlinest=wilv[i+1][1];  // skip past the LF
-    i+=2;  // quietly eat the : and LF
-   }else{
-    // a real line.  scan to find next DDSEP.  There must be one.
-    while(wv[wilv[i][0]]!=DDSEP)++i;  // advance to LF
-    // add the new line - everything except the LF - to the line list
-    wilv[linex][0]=currlinest; wilv[linex][1]=wilv[i][0];  // add the line
-    ++linex; currlinest=wilv[i][0]+1;  // advance line pointer, skip over the LF to start of next line
-    ++i;  // skip over the LF we processed
-   }
-  }
-  // Now we have compacted all the lines.  Box them: monad first, then dyad
-  // We fiddle with wil to make it look first like the monad, then the dyad
-  dyad1=dyad1<0?linex:dyad1;  // now 0..dyad1 are the monad, dyad1..linex are the dyad
-  AS(wil)[0]=dyad1;  // set length
-  *m=jtboxcut0(jt,wil,w,ds(CWORDS));
-  AS(wil)[0]=linex-dyad1; AK(wil)+=dyad1<<(LGSZI+1);  // advance to dyad, set its length
-  *d=jtboxcut0(jt,wil,w,ds(CWORDS));
- }else{
-  // the lines have not been processed before - they might not contain valid words.  Search for
-  // the ':' line, and cut the remaining lines on trailing LFs
+ if(AR(w)>1)R IRS1(w,0L,1,jtbox,z);  // table, just box lines individually 
+
+ // otherwise we have a single string.  Could be from 9 : string
+ if(!(AN(w)&&DDSEP==cl(w)))RZ(w=over(w,scc(DDSEP)));  // add LF if missing
+ // Lines are separated by DDSEP, and there may be DDSEP embedded in strings.  Convert the whole thing to words, which will
+ // leave the embedded DDSEP embedded; then split on the individual DDSEP tokens
+ // tokenize the lines.  Each LF is its own token.
+ A wil; RZ(wil=wordil(w)); makewritable(wil); I wiln=AS(wil)[0]; I (*wilv)[2]=voidAV(wil); // line index, and number of lines; array of (start,end+1) for each line
+ // Compact the word-list to a line-list.  Go through the words looking for LF.  For each line, add an entry to the line-list with all the characters except the LF
+ I i=0;  // start of dyad, input pointer through wilv
+ I currlinest=0;  // character# at which current line (ending in next LF) starts
+ I linex=0;  // index of next output (start,end) to fill
+ C *wv=CAV(w);  // the character list backing the words
+ while(i<wiln){
+  // we have just finished a line.  currlinest is the first character position of the next line
+  // a real line.  scan to find next DDSEP.  There must be one.
+  while(wv[wilv[i][0]]!=DDSEP)++i;  // advance to LF
+  // add the new line - everything except the LF - to the line list
+  wilv[linex][0]=currlinest; wilv[linex][1]=wilv[i][0];  // add the line
+  ++linex; currlinest=wilv[i][0]+1;  // advance line pointer, skip over the LF to start of next line
+  ++i;  // skip over the LF we processed
+ }
+ // Now we have compacted all the lines.  Box them
+ AS(wil)[0]=linex;  // advance to dyad, set its length
+ R jtboxcut0(jt,wil,w,ds(CWORDS));
+#if 0
   RZ(w=lineit(w));  // make lines LF-terminated
   x=p=r=CAV(w);  /* p: monad start; r: dyad start */
   q=s=p+AN(w);   /* q: monad end;   s: dyad end   */
@@ -679,10 +685,12 @@ static B jtsent12c(J jt,A w,A*m,A*d,I preparsed){C*p,*q,*r,*s,*x;A z;
   A zc=cut(ds(CBOX),num(-2));  // create function for <;._2
   *m=df1(z,str(q-p,p),zc);
   *d=df1(z,str(s-r,r),zc);
- }
  R *m&&*d;
+ R df1(z,w,cut(ds(CBOX),num(-2)));  // create function for <;._2
+#endif
 }    /* literal fret-terminated or matrix sentences into monad/dyad */
 
+#if 0 // obsolete 
 static B jtsent12b(J jt,A w,A*m,A*d){A t,*wv,y,*yv;I j,*v;
  ASSERT(1>=AR(w),EVRANK);
  wv=AAV(w); 
@@ -693,6 +701,16 @@ static B jtsent12b(J jt,A w,A*m,A*d){A t,*wv,y,*yv;I j,*v;
  *d=drop(sc(j+1),y);
  R 1;
 }    /* boxed sentences into monad/dyad */
+#else
+// Audit w to make sure it contains all strings; convert to LIT if needed
+static A jtsent12b(J jt,A w){A t,*wv,y,*yv;I j,*v;
+ ASSERT(1>=AR(w),EVRANK);
+ wv=AAV(w); 
+ GATV(y,BOX,AN(w),AR(w),AS(w)); yv=AAV(y);
+ DO(AN(w), RZ(yv[i]=vs(wv[i])););
+ R y;
+}    /* boxed sentences into monad/dyad */
+#endif
 
 // Install bucket info into the NAME type t, if it is a local name
 // actstv points to the chain headers, actstn is the number of chains
@@ -879,23 +897,36 @@ F2(jtcolon){A d,h,*hv,m;B b;C*s;I flag=VFLAGNONE,n,p;
   R fdef(0,CCOLON,VERB,xv1,xv2,a,w,0L,((FAV(a)->flag&FAV(w)->flag)&VASGSAFE),mr(a),lr(w),rr(w));  // derived verb is ASGSAFE if both parents are 
  }
  RE(n=i0(a));  // m : n; set n=value of a argument
- if(equ(w,num(0))){RZ(w=colon0(n)); if(!n)R w;}   // if m : 0, read up to the ) .  If 0 : 0, return the string unedited
+ I col0;  // set if it was m : 0
+ if(col0=equ(w,num(0))){RZ(w=colon0(n)); /* obsolete if(!n)R w; */}   // if m : 0, read up to the ) .  If 0 : n, return the string unedited
+ if(!n){ra0(w); RCA(w);}  // noun - return it.  Since this is a noun result, we make sure it is recursive usecount
  if((C2T+C4T)&AT(w))RZ(w=cvt(LIT,w));
- if(10<n){s=CAV(w); p=AN(w); if(p&&CLF==s[p-1])RZ(w=str(p-1,s));}
+ if(10<n){s=CAV(w); p=AN(w); if(p&&CLF==s[p-1])RZ(w=str(p-1,s));}  // if tacit form, discard trailing LF
  else{  // not tacit translator - preparse the body
-  RZ(BOX&AT(w)?sent12b(w,&m,&d):sent12c(w,&m,&d,n==9));  // get monad & dyad parts;
+  // we want to get all forms to a common one: a list of boxed strings.  If we went through m : 0, we are in that form
+  // already.  Convert strings
+// obsolete   RZ(BOX&AT(w)?sent12b(w,&m,&d):sent12c(w,&m,&d,n==9));  // get monad & dyad parts;
+  if(!col0)if(BOX&AT(w)){RZ(w=sent12b(w))}else{RZ(w=sent12c(w))}  // convert to list of boxes
   // If there is a control line )x at the top of the definition, parse it now and discard it from m
-  if(likely(AN(m)!=0))if(unlikely(AN(AAV(m)[0])&&CAV(AAV(m)[0])[0]==')')){
+  if(likely(AN(w)!=0))if(unlikely(AN(AAV(w)[0])&&CAV(AAV(w)[0])[0]==')')){
    // there is a control line.  parse it.  For now, just the first character
-   if(AN(AAV(m)[0])>2){
-    C ctltype=CAV(AAV(m)[0])[2];  // look at the second char, which must be one of acmdv*
+   if(AN(AAV(w)[0])>2){
+    C ctltype=CAV(AAV(w)[0])[2];  // look at the second char, which must be one of acmdv*
     I newn=0; newn=ctltype=='a'?1:newn; newn=ctltype=='c'?2:newn; newn=ctltype=='m'?3:newn; newn=ctltype=='d'?4:newn; newn=ctltype=='v'?3:newn; newn=ctltype=='*'?9:newn;  // choose type based on char
     ASSERT(newn!=0,EVDOMAIN);  // error if invalid char
     n=newn;  // accept the type the user specified
    }
    // discard the control line
-   RZ(m=beheadW(m));
+   RZ(w=beheadW(w));
   }
+  // find the location of the ':' divider line, if any.  But don't recognize : on the last line, since it could
+  // conceivably be the return value from a modifier
+  I splitloc=-1; A *wv=AAV(w); DO(AN(w)-1, I st=0;
+    DO(AN(*wv), I c=CAV(*wv)[i]; if(c!=':'&&c!=' '){st=0; break;} if(c!=' ')if(st==1){s=0; break;}else st=1;)
+    if(st==1){splitloc=wv-AAV(w); break;} ++wv;)
+  // split the definition into monad and dyad.
+  I mn=splitloc<0?AN(w):splitloc; I nn=splitloc<0?0:AN(w)-splitloc-1;
+  RZ(m=take(sc(mn),w)); RZ(d=take(sc(-nn),w));
   INCORP(m); INCORP(d);  // we are incorporating them into hv[]
   if(4==n){if((-AN(m)&(AN(d)-1))<0)d=m; m=mtv;}  //  for 4 :, make the single def given the dyadic one
   GAT0(h,BOX,2*HN,1); hv=AAV(h);
@@ -905,7 +936,6 @@ F2(jtcolon){A d,h,*hv,m;B b;C*s;I flag=VFLAGNONE,n,p;
   }
  }
  // The h argument is logically h[2][HN] where the boxes hold (parsed words, in a row);(info for each control word);(original commented text (optional));(local symbol table)
- if(!n){ra0(w); RCA(w);}  // noun - return it.  Since this is a noun result, we make sure it is recursive usecount
  // Non-noun results cannot become inputs to verbs, so we do not force them to be recursive
  if((1LL<<n)&0x206){  // types 1, 2, 9
 // obsolete   I fndflag=xop(h);   // 4=mnuv 2=x 1=y

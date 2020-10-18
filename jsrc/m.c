@@ -327,7 +327,7 @@ static void auditsimverify0(A w){
 // recur on children if any.  If it produces a delete count higher than the use count in the block, abort
 static void auditsimdelete(A w){I delct;
  if(!w)R;
- if(AN(w)==0xdeadbeefdeadbeef||AN(w)==0xfeeefeeefeeefeee)SEGFAULT
+ if((UI)AN(w)==0xdeadbeefdeadbeef||(UI)AN(w)==0xfeeefeeefeeefeee)SEGFAULT
  if((delct = ((AFLAG(w)+=AFAUDITUC)>>AFAUDITUCX))>ACUC(w))SEGFAULT   // hang if too many deletes
  if(AFLAG(w)&AFVIRTUAL && (AT(w)^AFLAG(w))&RECURSIBLE)SEGFAULT   // hang if nonrecursive virtual
  if(delct==ACUC(w)&&AFLAG(w)&AFVIRTUAL){A wb = ABACK(w);

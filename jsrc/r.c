@@ -121,6 +121,62 @@ DF1(jtfx){A f,fs,g,h,p,q,*wv,y,*yv;C id;I m,n=0;
    R 1==n ? df1(g,p,fs) : df2(g,p,q,fs);
 }}
 
+// Convert any 9 : string found in a line to DD form for display
+// w is a string block, and so is the result.
+// If w is abandoned (which it is for recursive calls), the result is formed inplace over w
+// result is always incorpable
+static A jtunDD(J jt, A w){PROLOG(676);F1PREFIP;
+ // quick scan for 9 :; if not, return the input
+ I scan; for(scan=2;scan<=AN(w)-8;++scan)if(CAV(w)[scan]=='9'&&CAV(w)[scan+2]==':')break;
+ if(scan<=AN(w)-8){  // if there is possibly a DD...
+  // make input writable if it is not recursive; find words
+  if(!((I)jtinplace&JTINPLACEW))RZ(w=ca(w)); A wil; RZ(wil=wordil(w));
+  // loop until no more DDs found
+  I (*wilv)[2]=voidAV(wil); // pointer to wordlist: (start,end+1) pairs
+  I inx=0;  // next input character that has not been copied to the result
+  I outx=0;  // next output position, built over the input
+  I wilx=0;  // index in wil of next candidate DD
+  C *wv=CAV(w);  // start of word string
+  while(1){
+   // find next 9 : if any.  We do some fancy skipping based on word length
+   while(wilx<=AS(wil)[0]-5){
+    if(wilv[wilx+2][1]-wilv[wilx+2][0]>1)wilx+=3;  // : too big, skip it
+    else if(wv[wilv[wilx+2][0]]!=':')wilx+=1;  // not :, skip it
+    else if(wilv[wilx+1][1]-wilv[wilx+1][0]>1)wilx+=2;  // 9 too big, skip it
+    else if(wv[wilv[wilx+1][0]]!='9')wilx+=1;  // not :, skip it
+    // the rest of the test is a formality
+    else if(wilv[wilx][1]-wilv[wilx][0]>1)wilx+=1;  // ( too big, skip it
+    else if(wv[wilv[wilx][0]]!='(')wilx+=1;  // not (, skip it
+    else if(wilv[wilx+3][1]-wilv[wilx+3][0]<2)wilx+=1;  // '' too small, skip it
+    else if(wv[wilv[wilx+3][0]]!='\'')wilx+=1;  // not ', skip it
+    else if(wilv[wilx+4][1]-wilv[wilx+4][0]>1)wilx+=1;  // ) too big, skip it
+    else if(wv[wilv[wilx+4][0]]!=')')wilx+=1;  // not ', skip it
+    else break;  // if we matched, go handle it
+   }
+   wilx=wilx>AS(wil)[0]-5?AS(wil)[0]:wilx;  // if no more DDs possible, pick entire rest of input
+   // pack everything before the ( 9 : string ) down into the result
+   if(inx!=outx){DQ(wilv[wilx-1][1]-inx, wv[outx++]=wv[inx++];)}
+   if(wilx==AS(wil)[0])break;  // break if no more DDs
+   // dequote the string and move it down into the result
+   I startddx=outx;  // remember where the DD starts, because its length may be reduced
+   inx=wilv[wilx+3][0]+1; I endx=wilv[wilx+3][1]-1; while(inx<endx){if(wv[inx]=='\'')++inx; wv[outx++]=wv[inx++];}
+   inx=wilv[wilx+4][1];  // next input character will pick up after the final )
+   // recur on the string to handle any 9 : it holds; update length when finished
+   fauxblock(fauxw); A z; fauxvirtual(z,fauxw,w,1,ACUC1); AK(z)+=startddx; AN(z)=AS(z)[0]=outx-startddx;
+   RZ(jtunDD((J)((I)jt|JTINPLACEW),z));
+   // the recursion leaves the DD in place, but it may have become shorter if it too contained DDs (the {{ }}
+   // overhead is always less than the ( 9 : '' ) overhead)
+   outx=startddx+AN(z);
+   // skip wordlist pointer to the next candidate
+   wilx+=5;
+  }
+  // Install the length of the final result
+  AN(w)=AS(w)[0]=outx;  // number of chars we transferred
+ }
+ // make result incorpable
+ EPILOG(incorp(w));
+}
+
 static A jtunparse1(J jt,CW*c,A x,I j,A y){A q,z;C*s;I t;
  // for BBLOCK/TBLOCK types, convert the lines to displayable by displaying them as if for error messages, and copying the result
  switch(t=c->type){
@@ -151,12 +207,10 @@ static A*jtunparse1a(J jt,I m,A*hv,A*zv){A*v,x,y;CW*u;I i,j,k;
  for(i=0;i<m;++i,++u){  // for each word
   RZ(x=unparse1(u,vec(BOX,u->n,v+u->i),j,y)); // append new line to y or else return it as x if it is on a new line.
   k=u->source;
-// call unDD instead of incorp scaf
-  if(j<k){if(y)*zv++=incorp(y); DQ(k-j-1, *zv++=mtv;);}  // if we are about to move to a new line, save y and zap the surplus control words on the line to empties
+  if(j<k){if(y)*zv++=jtunDD(jt,y); DQ(k-j-1, *zv++=mtv;);}  // if we are about to move to a new line, save y and zap the surplus control words on the line to empties
   y=x; j=k;
  }
- if(y)*zv++=incorp(y);  // repeat to out last line
-// call unDD instead of incorp scaf
+ if(y)*zv++=jtunDD(jt,y);  // repeat to out last line
  DQ(k-j-1, *zv++=mtv;);
  R zv;
 }
@@ -180,9 +234,8 @@ F2(jtunparsem){A h,*hv,dc,ds,mc,ms,z,*zu,*zv;I dn,m,mn,n,p;V*wv;
   // commented text found.  Use it
   mn=AN(ms); dn=AN(ds);
   GATV0(z,BOX,p+mn+dn,1); zv=AAV(z);
-// call unDD instead of incorp scaf
-  DO(mn, *zv++=incorp(AAV(ms)[i]);); if(p)RZ(*zv++=chrcolon);
-  DO(dn, *zv++=incorp(AAV(ds)[i]););
+  DO(mn, *zv++=jtunDD(jt,AAV(ms)[i]);); if(p)RZ(*zv++=chrcolon);
+  DO(dn, *zv++=jtunDD(jt,AAV(ds)[i]););
  }
  if(a==num(0)){RZ(z=ope(z)); if(1==AR(z))z=table(z);}
  R z;

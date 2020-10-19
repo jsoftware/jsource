@@ -125,7 +125,7 @@ DF1(jtfx){A f,fs,g,h,p,q,*wv,y,*yv;C id;I m,n=0;
 // w is a string block, and so is the result.
 // If w is abandoned (which it is for recursive calls), the result is formed inplace over w
 // result is always incorpable
-static A jtunDD(J jt, A w){PROLOG(676);F1PREFIP;
+static A jtunDD(J jt, A w){F1PREFIP;
  // quick scan for 9 :; if not, return the input
  I scan; for(scan=2;scan<=AN(w)-8;++scan)if(CAV(w)[scan]=='9'&&CAV(w)[scan+2]==':')break;
  if(scan<=AN(w)-8){  // if there is possibly a DD...
@@ -155,8 +155,10 @@ static A jtunDD(J jt, A w){PROLOG(676);F1PREFIP;
    }
    wilx=wilx>AS(wil)[0]-5?AS(wil)[0]:wilx;  // if no more DDs possible, pick entire rest of input
    // pack everything before the ( 9 : string ) down into the result
-   if(inx!=outx){DQ(wilv[wilx-1][1]-inx, wv[outx++]=wv[inx++];)}
+   if(inx!=outx){DQ(wilv[wilx-1][1]-inx, wv[outx++]=wv[inx++];)}else{inx=outx=wilv[wilx-1][1];}
    if(wilx==AS(wil)[0])break;  // break if no more DDs
+   // install leading DD delimiter
+   wv[outx++]='{'; wv[outx++]='{'; wv[outx++]=' ';
    // dequote the string and move it down into the result
    I startddx=outx;  // remember where the DD starts, because its length may be reduced
    inx=wilv[wilx+3][0]+1; I endx=wilv[wilx+3][1]-1; while(inx<endx){if(wv[inx]=='\'')++inx; wv[outx++]=wv[inx++];}
@@ -167,6 +169,8 @@ static A jtunDD(J jt, A w){PROLOG(676);F1PREFIP;
    // the recursion leaves the DD in place, but it may have become shorter if it too contained DDs (the {{ }}
    // overhead is always less than the ( 9 : '' ) overhead)
    outx=startddx+AN(z);
+   // install trailing DD delimiter
+   wv[outx++]=' '; wv[outx++]='}'; wv[outx++]='}';
    // skip wordlist pointer to the next candidate
    wilx+=5;
   }
@@ -174,7 +178,7 @@ static A jtunDD(J jt, A w){PROLOG(676);F1PREFIP;
   AN(w)=AS(w)[0]=outx;  // number of chars we transferred
  }
  // make result incorpable
- EPILOG(incorp(w));
+ RETF(incorp(w));
 }
 
 static A jtunparse1(J jt,CW*c,A x,I j,A y){A q,z;C*s;I t;

@@ -28,6 +28,8 @@
 #define EN              1    // start of next word - save position
 #define EZ              2   // end and start together - +$ eg
 
+#define UNDD            4  // inflection found on {{ }} - abort the DD state, revert to individual primitives
+
 typedef C ST;
 #define SE(s,e) (((s)<<4)|((((s)==S99))<<3)|(e))  // set bit 3 inside followon numeric
 
@@ -47,7 +49,7 @@ static const ST state[SDDD+1][16]={
 /*SU */ {[CX]=SE(SX,EZ),[CDD]=SE(SDD,EZ),[CDDZ]=SE(SDDZ,EZ),[CU]=SE(SU,EZ),[CS]=SE(SS,EI),[CA]=SE(SA,EZ),[CN]=SE(SN,EZ),[CB]=SE(SA,EZ),[C9]=SE(S9,EZ),[CD]=SE(SX,EZ),[CC]=SE(SX,EZ),[CQ]=SE(SQ,EZ)},
 /*SDD*/ {[CX]=SE(SX,EZ),[CDD]=SE(SDDD,E0),[CDDZ]=SE(SX,EZ),[CU]=SE(SU,EZ),[CS]=SE(SS,EI),[CA]=SE(SA,EZ),[CN]=SE(SN,EZ),[CB]=SE(SA,EZ),[C9]=SE(S9,EZ),[CD]=SE(SX,E0),[CC]=SE(SX,E0),[CQ]=SE(SQ,EZ)},
 /*SDDZ*/ {[CX]=SE(SX,EZ),[CDD]=SE(SX,EZ),[CDDZ]=SE(SDDD,E0),[CU]=SE(SU,EZ),[CS]=SE(SS,EI),[CA]=SE(SA,EZ),[CN]=SE(SN,EZ),[CB]=SE(SA,EZ),[C9]=SE(S9,EZ),[CD]=SE(SX,E0),[CC]=SE(SX,E0),[CQ]=SE(SQ,EZ)},
-/*SDDD*/ {[CX]=SE(SX,EZ),[CDD]=SE(SDD,EZ),[CDDZ]=SE(SDDZ,EZ),[CU]=SE(SU,EZ),[CS]=SE(SS,EI),[CA]=SE(SA,EZ),[CN]=SE(SN,EZ),[CB]=SE(SA,EZ),[C9]=SE(S9,EZ),[CD]=SE(SX,EZ),[CC]=SE(SX,EZ),[CQ]=SE(SQ,EZ)},
+/*SDDD*/ {[CX]=SE(SX,EZ),[CDD]=SE(SDD,EZ),[CDDZ]=SE(SDDZ,EZ),[CU]=SE(SU,EZ),[CS]=SE(SS,EI),[CA]=SE(SA,EZ),[CN]=SE(SN,EZ),[CB]=SE(SA,EZ),[C9]=SE(S9,EZ),[CD]=SE(SX,E0)+UNDD,[CC]=SE(SX,E0)+UNDD,[CQ]=SE(SQ,EZ)},
 };
 
 // w points to a string A-block
@@ -71,6 +73,10 @@ if(!jt->directdef&&(currc==CDD||currc==CDDZ))currc=CX;  // scaf  if direct def d
 // obsolete   currc+=16-CX; currc&=16; prevs=2*prevs+1; currc&=prevs;   // set currc to 16 iff CX/CS/CQ; move 'followon numeric' flag to bit 4; combine
 // obsolete   // the +1 is to trick the compiler.  Without it it moves the &16 onto prevs, but prevs is the critical path
 // obsolete   x=(I*)((I)x-(currc>>(3-LGSZI)));  // subtract from x, to move x back 2 positions if coming out of followon numeric with a number
+  // handle {{. etc.  It looked like a DD but turns out to be inflected.  We have outed the start for the first character;
+  // we also outed the second character but did not accept the word.  We accept it now by advancing x over it
+  // Use an IF because this is rare and we don't want it in the normal path
+  if(unlikely(s&UNDD))x+=2;
   // do two stores, and advance over any that are to be emitted.  0, 1, or 2 may be emitted (0 when the state has no action, 1 when the
   // state is an end+1 or start value, and 2 if an end+1 AND start value)
   x[0]=i; x[1]=i; x+=s&3;

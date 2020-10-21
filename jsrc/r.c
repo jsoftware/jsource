@@ -124,19 +124,22 @@ DF1(jtfx){A f,fs,g,h,p,q,*wv,y,*yv;C id;I m,n=0;
 // Convert any 9 : string found in a line to DD form for display
 // w is a string block, and so is the result.
 // If w is abandoned (which it is for recursive calls), the result is formed inplace over w
+// if JTINPLACEA is set, make sure the result fits on one line for error display: stop copying if we hit LF and emit '...',
+// and don't put spaces before/after the delimiters
 // result is always incorpable
-static A jtunDD(J jt, A w){F1PREFIP;
+A jtunDD(J jt, A w){F1PREFIP;
  // quick scan for 9 :; if not, return the input
- I scan; for(scan=2;scan<=AN(w)-8;++scan)if(CAV(w)[scan]=='9'&&CAV(w)[scan+2]==':')break;
+ I shortres=(I)jtinplace&JTINPLACEA;  // set for short, one-line result
+ C *wv=CAV(w);  // start of word string
+ I scan; for(scan=2;scan<=AN(w)-8;++scan)if(wv[scan]=='9'&&wv[scan+2]==':')break;
  if(scan<=AN(w)-8){  // if there is possibly a DD...
   // make input writable if it is not recursive; find words
-  if(!((I)jtinplace&JTINPLACEW))RZ(w=ca(w)); A wil; RZ(wil=wordil(w));
+  if(!((I)jtinplace&JTINPLACEW))RZ(w=ca(w)); wv=CAV(w); A wil; RZ(wil=wordil(w));
   // loop until no more DDs found
   I (*wilv)[2]=voidAV(wil); // pointer to wordlist: (start,end+1) pairs
   I inx=0;  // next input character that has not been copied to the result
   I outx=0;  // next output position, built over the input
   I wilx=0;  // index in wil of next candidate DD
-  C *wv=CAV(w);  // start of word string
   while(1){
    // find next 9 : if any.  We do some fancy skipping based on word length
    while(wilx<=AS(wil)[0]-5){
@@ -154,28 +157,46 @@ static A jtunDD(J jt, A w){F1PREFIP;
     else break;  // if we matched, go handle it
    }
    wilx=wilx>AS(wil)[0]-5?AS(wil)[0]:wilx;  // if no more DDs possible, pick entire rest of input
-   // pack everything before the ( 9 : string ) down into the result
-   if(inx!=outx){DQ(wilv[wilx-1][1]-inx, wv[outx++]=wv[inx++];)}else{inx=outx=wilv[wilx-1][1];}
+   // pack everything before the ( 9 : string ) down into the result.  We include space after
+   // the last token in case it is needed for inflections
+   // the ending index is the start pos of the new first word, but total length if we copy everything
+   I endx=wilx==AS(wil)[0]?AN(w):wilv[wilx][0];
+   // if we are about to move a LF character when we are limited to a single line, stop and output ...
+   C currc=0;
+   if(inx!=outx||shortres){
+    DQ(endx-inx, currc=wv[inx++]; if(shortres&&currc==CLF)break;wv[outx++]=currc;)  // copy in to end
+   }else{
+    // we are at the beginning.  No need to move
+    inx=outx=wilv[wilx][0];
+   }
    if(wilx==AS(wil)[0])break;  // break if no more DDs
+   if(shortres&&currc==CLF){wv[outx++]='.'; wv[outx++]='.'; wv[outx++]='.'; break;}  // stop if we exceeded single line
    // install leading DD delimiter
-   wv[outx++]='{'; wv[outx++]='{'; wv[outx++]=' ';
+   wv[outx++]='{'; wv[outx++]='{'; if(!shortres)wv[outx++]=' ';
    // dequote the string and move it down into the result
    I startddx=outx;  // remember where the DD starts, because its length may be reduced
-   inx=wilv[wilx+3][0]+1; I endx=wilv[wilx+3][1]-1; while(inx<endx){if(wv[inx]=='\'')++inx; wv[outx++]=wv[inx++];}
+   inx=wilv[wilx+3][0]+1; endx=wilv[wilx+3][1]-1; while(inx<endx){if(wv[inx]=='\'')++inx; wv[outx++]=wv[inx++];}
    inx=wilv[wilx+4][1];  // next input character will pick up after the final )
    // recur on the string to handle any 9 : it holds; update length when finished
    fauxblock(fauxw); A z; fauxvirtual(z,fauxw,w,1,ACUC1); AK(z)+=startddx; AN(z)=AS(z)[0]=outx-startddx;
-   RZ(jtunDD((J)((I)jt|JTINPLACEW),z));
+   RZ(jtunDD((J)((I)jt|JTINPLACEW|shortres),z));
    // the recursion leaves the DD in place, but it may have become shorter if it too contained DDs (the {{ }}
    // overhead is always less than the ( 9 : '' ) overhead)
    outx=startddx+AN(z);
    // install trailing DD delimiter
-   wv[outx++]=' '; wv[outx++]='}'; wv[outx++]='}';
+   if(!shortres)wv[outx++]=' '; wv[outx++]='}'; wv[outx++]='}';
    // skip wordlist pointer to the next candidate
    wilx+=5;
   }
   // Install the length of the final result
   AN(w)=AS(w)[0]=outx;  // number of chars we transferred
+ }else{
+  // The input did not contain 9 : .  Keep it all,  UNLESS this we need a short result.  In that case scan for LF,
+  // and replace the LF with ... .  We know that there was enough room in the original area for ... since there are
+  // a minimum of 7 padding chars for the (9 :'string') form and we have put in only 4 for {{}}
+  if(shortres){
+   DO(AN(w), if(wv[i]==CLF){wv[i++]='.'; wv[i++]='.'; wv[i++]='.'; AN(w)=AS(w)[0]=i; break;})
+  }
  }
  // make result incorpable
  RETF(incorp(w));

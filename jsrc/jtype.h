@@ -349,7 +349,7 @@ typedef I SI;
 #define XCVTXNUMCV      ((I)3<<XCVTXNUMCVX)  // in cvt(), the precision for xnum (if XCVTXNUMORIDE is set)
 // ** ADV type can have the following information flag set
 #define NAMELESSMODX    LPARX
-#define NAMELESSMOD      ((I)3<<NAMELESSMODX)  // set in a modifier to indicate that the value contains no names.  Such values are pushed onto the stack by value to save parsing overhead.
+#define NAMELESSMOD     ((I)1<<NAMELESSMODX)  // set in a modifier to indicate that the value contains no names.  Such values are pushed onto the stack by value to save parsing overhead.
                              // namelessness is detected only when a modifier is assigned, and is supported only for ADV types because of coding details.  It would be nice to support it
                              // for CONJ too, but a nameless conj would be either primitive or explicit, and users shouldn't cover primitives.  This feature is mostly for every/each/inv
 

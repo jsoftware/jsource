@@ -178,7 +178,7 @@ static void moveawSV(C *zv,C *av,C *wv,I c,I k,I ma,I mw,I arptreset,I wrptreset
 }
 int (*p[4]) (int x, int y);
 static void(*moveawtbl[])() = {moveawVV,moveawVS,moveawSV};
-F2(jtover){A z;C*zv;I replct,framect,acr,af,ar,*as,k,ma,mw,p,q,r,t,wcr,wf,wr,*ws,zn;
+F2(jtover){AD * RESTRICT z;C*zv;I replct,framect,acr,af,ar,*as,k,ma,mw,p,q,r,t,wcr,wf,wr,*ws,zn;
  RZ(a&&w);F2PREFIP;
  UI jtr=jt->ranks;//  fetch early
  if(unlikely((SPARSE&(AT(a)|AT(w)))!=0)){R ovs(a,w);}  // if either arg is sparse, switch to sparse code
@@ -211,7 +211,10 @@ F2(jtover){A z;C*zv;I replct,framect,acr,af,ar,*as,k,ma,mw,p,q,r,t,wcr,wf,wr,*ws
     JMC(x,CAV(a),alen+(SZI-1),loop1,0); JMC(x+alen,CAV(w),wlen+(SZI-1),loop2,0);
     // If a & w are both recursive abandoned, we can take ownership of the contents by marking them nonrecursive and marking z recursive.
     // We could also zap a & w, but we don't because it's just a box header and it will be freed by a caller anyway
-
+//    I xfer, afl=AFLAG(a), wfl=AFLAG(w);
+//    xfer=REPSGN((JTINPLACEA-((JTINPLACEA+JTINPLACEW)*(a!=w)&(I)jtinplace))&AC(a)&AC(w))&afl&wfl&RECURSIBLE;
+     // xfer is the transferable recursibility if any: both abandoned, both recursible, not same blocks
+//    AFLAG(a)=afl&~xfer; AFLAG(w)=wfl&~xfer; AFLAG(z)|=xfer;  // transfer inplaceability
     // We extracted from a and w, so mark them (or the backer if virtual) non-pristine.  If both were pristine and abandoned, transfer its pristine status to the result
     // if they were boxed nonempty, a and w have not been changed.  Otherwise the PRISTINE flag doesn't matter.
     // If a and w are the same, we mustn't mark the result pristine!  It has repetitions

@@ -899,8 +899,9 @@ F2(jtcolon){A d,h,*hv,m;B b;C*s;I flag=VFLAGNONE,n,p;
  RE(n=i0(a));  // m : n; set n=value of a argument
  I col0;  // set if it was m : 0
  if(col0=equ(w,num(0))){RZ(w=colon0(n)); /* obsolete if(!n)R w; */}   // if m : 0, read up to the ) .  If 0 : n, return the string unedited
- if(!n){ra0(w); RCA(w);}  // noun - return it.  Since this is a noun result, we make sure it is recursive usecount
+ if(!n){ra0(w); RCA(w);}  // noun - return it.  Give it recursive usecount
  if((C2T+C4T)&AT(w))RZ(w=cvt(LIT,w));
+ I splitloc=-1;   // will hold line number of : line
  if(10<n){s=CAV(w); p=AN(w); if(p&&CLF==s[p-1])RZ(w=str(p-1,s));}  // if tacit form, discard trailing LF
  else{  // not tacit translator - preparse the body
   // we want to get all forms to a common one: a list of boxed strings.  If we went through m : 0, we are in that form
@@ -910,18 +911,22 @@ F2(jtcolon){A d,h,*hv,m;B b;C*s;I flag=VFLAGNONE,n,p;
   // If there is a control line )x at the top of the definition, parse it now and discard it from m
   if(likely(AN(w)!=0))if(unlikely(AN(AAV(w)[0])&&CAV(AAV(w)[0])[0]==')')){
    // there is a control line.  parse it.  For now, just the first character
-   if(AN(AAV(w)[0])>2){
-    C ctltype=CAV(AAV(w)[0])[2];  // look at the second char, which must be one of acmdv*
-    I newn=0; newn=ctltype=='a'?1:newn; newn=ctltype=='c'?2:newn; newn=ctltype=='m'?3:newn; newn=ctltype=='d'?4:newn; newn=ctltype=='v'?3:newn; newn=ctltype=='*'?9:newn;  // choose type based on char
-    ASSERT(newn!=0,EVDOMAIN);  // error if invalid char
+   if(AN(AAV(w)[0])>1){
+    C ctltype=CAV(AAV(w)[0])[1];  // look at the second char, which must be one of acmdvn*
+    I newn=-1; newn=ctltype=='a'?1:newn; newn=ctltype=='c'?2:newn; newn=ctltype=='m'?3:newn; newn=ctltype=='d'?4:newn; newn=ctltype=='v'?3:newn; newn=ctltype=='n'?0:newn; newn=ctltype=='*'?9:newn;  // choose type based on char
+    ASSERT(newn>=0,EVDOMAIN);  // error if invalid char
     n=newn;  // accept the type the user specified
    }
    // discard the control line
    RZ(w=beheadW(w));
+   // if the selected type is 0 (noun), add LFs at the end, run it together into one line, and return it
+   if(n==0){  // noun DD
+    RETF(w=raze(every2(w,scc(CLF),(A)&sfn0overself)));
+   }
   }
   // find the location of the ':' divider line, if any.  But don't recognize : on the last line, since it could
   // conceivably be the return value from a modifier
-  I splitloc=-1; A *wv=AAV(w); DO(AN(w)-1, I st=0;
+  A *wv=AAV(w); DO(AN(w)-1, I st=0;
     DO(AN(*wv), I c=CAV(*wv)[i]; if(c!=':'&&c!=' '){st=0; break;} if(c!=' ')if(st==1){s=0; break;}else st=1;)
     if(st==1){splitloc=wv-AAV(w); break;} ++wv;)
   // split the definition into monad and dyad.
@@ -942,7 +947,7 @@ F2(jtcolon){A d,h,*hv,m;B b;C*s;I flag=VFLAGNONE,n,p;
   I fndflag=xop(hv[0])|xop(hv[0+HN]);   // 4=mnuv 2=x 1=y, combined for both valences
   // for 9 : n, figure out best type after looking at n
   if(n==9){
-   I defflg=fndflag|1; CTLZI(fndflag,n); n=(0x2143>>(n<<2))&0xf; // replace 9 by value depending on what was seen
+   I defflg=(fndflag&((splitloc>>(BW-1))|-4))|1; CTLZI(defflg,n); n=(0x2143>>(n<<2))&0xf; // replace 9 by value depending on what was seen; if : seen, ignore x
    if(n==4){hv[HN]=hv[0]; hv[0]=mtv; hv[HN+1]=hv[1]; hv[1]=mtv; hv[HN+2]=hv[2]; hv[2]=mtv; flag=(flag&~VTRY2)+VTRY1; }  // if we created a dyadic verb, shift the monad over to the dyad and clear the monad, incl try flag
   } 
   if(n<=2){  // adv or conj after autodetection
@@ -1003,15 +1008,27 @@ A jtddtokens(J jt,A w,I env){
  C *wv=CAV(w); I nw=AS(wil)[0]; I (*wilv)[2]=voidAV(wil);  // cv=pointer to chars, nw=#words including final NB   wilv->[][2] array of indexes into wv word start/end
  // scan for start of DD/end of DD.
  I firstddbgnx;  // index of first/last start of DD, and end of DD
- for(firstddbgnx=0;firstddbgnx<nw;++firstddbgnx){US ch2=*(US*)(wv+wilv[firstddbgnx][0]); ASSERT(!(ch2==DDEND&&(wilv[firstddbgnx][1]-wilv[firstddbgnx][0]==2)),EVCTRL) if(ch2==DDBGN&&(wilv[firstddbgnx][1]-wilv[firstddbgnx][0]==2))break; }
- if(firstddbgnx>=nw&&(env&8))R w;    //   If no DD chars found, and caller wants a string, return w fast
+ I ddschbgnx=0; // place where we started looking for DD
+ for(firstddbgnx=ddschbgnx;firstddbgnx<nw;++firstddbgnx){US ch2=*(US*)(wv+wilv[firstddbgnx][0]); ASSERT(!(ch2==DDEND&&(wilv[firstddbgnx][1]-wilv[firstddbgnx][0]==2)),EVCTRL) if(ch2==DDBGN&&(wilv[firstddbgnx][1]-wilv[firstddbgnx][0]==2))break; }
+ if(firstddbgnx>=nw){R env&8?w:enqueue(wil,w,env&3);}    //   If no DD chars found, and caller wants a string, return w fast
  // loop till all DDs found
  while(firstddbgnx<nw){
   // We know that firstddbgnx is DDBGN
+  // Move all the words before the DD into one long megaword - if there are any.  We mustn't disturb the DD itself
+  // Close up after the megaword with empties
+  I *fillv=&wilv[ddschbgnx][1]; DQ(2*(firstddbgnx-ddschbgnx)-1, *fillv++=wilv[firstddbgnx][0];)
   I ddendx=-1, ddbgnx=firstddbgnx;  // end/start of DD, indexes into wilv.  This will be the pair we process.  We advance ddbgnx and stop when we hit ddendx
   I scanstart=firstddbgnx+1;  // start looking for DDEND after the first known DDBGN.  But if there turns out to be no DDEND, advance start ptr to avoid rescanning
   while(1){I i;  // loop till we find a complete DD
-   for(i=scanstart;i<nw;++i){US ch2=*(US*)(wv+wilv[i][0]); if(ch2==DDEND&&(wilv[i][1]-wilv[i][0]==2)){ddendx=i; break;} if(ch2==DDBGN&&(wilv[i][1]-wilv[i][0]==2))ddbgnx=i;}  // find DD pair
+   for(i=scanstart;i<nw;++i){
+    US ch2=*(US*)(wv+wilv[i][0]);  // digraph for next word
+    if(ch2==DDEND&&(wilv[i][1]-wilv[i][0]==2)){ddendx=i; break;}  // if end, break, we can process
+    if(ch2==DDBGN&&(wilv[i][1]-wilv[i][0]==2)){
+     //  Nested DD found.  We have to go back and preserve the spacing for everything that precedes it
+     ddbgnx=i;  // set new start pointer, when we find an end
+     fillv=&wilv[firstddbgnx][1]; DQ(2*(ddbgnx-firstddbgnx)-1, *fillv++=wilv[ddbgnx][0];)
+    }
+   }  // find DD pair
    if(ddendx>=0)break;  // we found an end, and we started at a begin, so we have a pair.  Go process it
 
    // Here the current line ended with no end DD.  We have to continue onto the next line
@@ -1040,6 +1057,30 @@ A jtddtokens(J jt,A w,I env){
   }
 
   // We have found an innermost DD, running from ddbgnx to ddendx.  Convert it to ( m : 'string' ) form
+  // convert all the chars of the DD to a quoted string block
+  A ddqu; RZ(ddqu=strq(wilv[ddendx][0]-wilv[ddbgnx+1][0],wv+wilv[ddbgnx+1][0]));
+  // append the string for the start/end of DD
+  I bodystart=AN(w), bodylen=AN(ddqu), trailstart=wilv[ddendx][1];  // start/len of body in w, and start of after-DD text
+  RZ(ddqu=jtapip(jtinplace,ddqu,str(7,")( 9 : ")));
+  // append the new stuff to w
+  RZ(w=jtapip(jtinplace,w,ddqu));
+  wv=CAV(w);   // refresh data pointer.  Number of words has not changed, nor have indexes
+  // Replace ddbgnx and ddendx with the start/end strings.  Fill in the middle, if any, with everything in between
+  wilv[ddbgnx][0]=AN(w)-6; wilv[ddbgnx][1]=AN(w);  //  ( 9 :  
+  wilv[ddbgnx+1][0]=bodystart; fillv=&wilv[ddbgnx+1][1]; DQ(2*(ddendx-ddbgnx)-1, *fillv++=bodystart+bodylen+1;)  // everything in between
+  // continue the search.
+  if(ddbgnx==firstddbgnx){ddschbgnx=ddendx+1;  //   If this was not a nested DD, we can simply pick up the search after ddendx.
+  }else{
+   // Nested DD.  The characters below ddendx are out of order and there will be trouble if we try to preserve
+   // the user's spacing by grouping them.  We must run the ending lines together, to save their spacing, and then
+   // refresh w and wil to get the characters in order
+   if(++ddendx<nw){wilv[ddendx][0]=trailstart; wilv[ddendx][1]=bodystart; AN(wil)=2*(AS(wil)[0]=ddendx+1);}  // make one string of DDEND to end of string
+   RZ(w=unwordil(wil,w,0)); RZ(wil=wordil(w));  // run chars in order; get index to words
+   wv=CAV(w); nw=AS(wil)[0]; wilv=voidAV(wil);  // cv=pointer to chars, nw=#words including final NB   wilv->[][2] array of indexes into wv word start/end
+   ddschbgnx=0;  // start scan back at the beginning
+  }
+
+#if 0 // obsolete
   //  create a faux block for the input to enqueue, so we can insert AM
   A ddwds; fauxblockINT(ddfaux,0,3); fauxINT(ddwds,ddfaux,0,3)  AS(ddwds)[0]=ddendx-ddbgnx-1; AS(ddwds)[1]=2; AS(ddwds)[2]=1; AN(ddwds)=2*(ddendx-ddbgnx-1);
   AK(ddwds)=(C*)(wilv+ddbgnx+1)-(C*)ddwds;  // point to data after the DDBGN
@@ -1047,9 +1088,10 @@ A jtddtokens(J jt,A w,I env){
 // obsolete   I deftype; CTLZI(opflags,deftype); deftype=(0x2143>>(deftype<<2))&0xf;  // digit number for the definition scaf let cx do it
   A ddstg; RZ(ddstg=unwordil(ddwds,w,2+1));  // create string form: ask for enclosing quotes and 4 bytes of extra space.. Result is always writable
   // Add (m:) to the string so we can refer to it
+  
   I ddstglen=AN(ddstg); AN(ddstg)=AS(ddstg)[0]=ddstglen+4; C* suffv=CAV(ddstg)+ddstglen; suffv[0]='('; suffv[1]='9'; suffv[2]=':'; suffv[3]=')';
   // append the new chars to w
-  I ddstgbgn=AN(w); w=jtapip(jtinplace,w,ddstg);   // remember where new string starts in combined string; add on to the character list
+  I ddstgbgn=AN(w); RZ(w=jtapip(jtinplace,w,ddstg));   // remember where new string starts in combined string; add on to the character list
   // replace the words of the DD with 5 word slots.  Transfer comment-at-end status to the new wordlist
   I commentdiff=AS(wil)[0]-AM(wil);  // remember comment status, 0 or 1
   RZ(wil=over(take(sc(ddbgnx+5),wil),drop(sc(ddendx+1),wil))); makewritable(wil);  // replace DD with 5 slots
@@ -1061,11 +1103,17 @@ A jtddtokens(J jt,A w,I env){
   wilv[ddbgnx+1][0]=ddstglen+1; wilv[ddbgnx+1][1]=ddstglen+2;  // word: m
   wilv[ddbgnx+2][0]=ddstglen+2; wilv[ddbgnx+2][1]=ddstglen+3;  // word: :
   wilv[ddbgnx+4][0]=ddstglen+3; wilv[ddbgnx+4][1]=ddstglen+4;  // word: )
+#endif
 
   // We have replaced one DD with its equivalent explicit definition.  Rescan the line, starting at the first location where DDBGN was seen
-  for(;firstddbgnx<nw;++firstddbgnx){US ch2=*(US*)(wv+wilv[firstddbgnx][0]); ASSERT(!(ch2==DDEND&&(wilv[firstddbgnx][1]-wilv[firstddbgnx][0]==2)),EVCTRL) if(ch2==DDBGN&&(wilv[firstddbgnx][1]-wilv[firstddbgnx][0]==2))break; }
+  for(firstddbgnx=ddschbgnx;firstddbgnx<nw;++firstddbgnx){US ch2=*(US*)(wv+wilv[firstddbgnx][0]); ASSERT(!(ch2==DDEND&&(wilv[firstddbgnx][1]-wilv[firstddbgnx][0]==2)),EVCTRL) if(ch2==DDBGN&&(wilv[firstddbgnx][1]-wilv[firstddbgnx][0]==2))break; }
  }
  // All DDs replaced. convert word list back to either text form or enqueued form
- w=(env&8)?unwordil(wil,w,0):enqueue(wil,w,env&3);  // the word list is where everything is.  Convert as required
+ // We searched starting with ddschbgnx looking for DDBGN, and din't find one.  Now we need to lump
+ // the words together, since the spacing may be necessary
+ if(ddschbgnx<nw){wilv[ddschbgnx][1]=wilv[nw-1][1]; AN(wil)=2*(AS(wil)[0]=ddschbgnx+1);}  // make one word of the last part
+
+ w=unwordil(wil,w,0);  // the word list is where everything is.  Collect to string
+ if(!(env&8))w=tokens(w,env&3);  // enqueue if called for
  EPILOG(w);
 }

@@ -14,6 +14,7 @@
 // All the 'display' routines in this file simply add characters to the error buffer.  They can't be typed
 // here, because the error may be captured by a higher-level routine
 
+// add n chars at *s to the error buffer at jt->etxn, increment jt->etxn
 static void jtep(J jt,I n,C*s){I m;
  m=NETX-jt->etxn; m=MIN(n,m); 
  if(0<m){MC(jt->etx+jt->etxn,s,m); jt->etxn+=m;}
@@ -96,8 +97,16 @@ static void jtdisp(J jt,A w){B b=1&&AT(w)&NAME+NUMERIC;
 static void jtseeparse(J jt,DC d){A*v;I m;
  v=(A*)d->dcy;  /* list of tokens */
  m=d->dcix-1;         /* index of active token when error found */
- jt->nflag=0; 
+ jt->nflag=0;
+ I m1=jt->etxn;  // starting index of sentence text
  DO(d->dcn, if(i==m)eputs("    "); disp(v[i]););  // display tokens with spaces before error
+ if(jt->etxn<NETX){  // if we overran the buffer, don't reformat it.  Reformatting requires splitting to words
+  // We displayed the sentence.  See if it contains (9 :'string'); if so, replace with {{ string }}
+  fauxblock(fauxw); A z=(A)&fauxw;
+  AK(z)=jt->etx+m1-(C*)z; AFLAG(z)=0; AT(z)=LIT; AC(z)=ACUC1; AR(z)=1; AN(z)=AS(z)[0]=jt->etxn-m1;  // point to etx for parsed line
+  jtunDD((J)((I)jt|JTINPLACEW|JTINPLACEA),z);  // reformat in place
+  jt->etxn=m1+AN(z);  // set new end-of-sentence pointer
+ }
 }    /* display error line */
 
 F1(jtunparse){A*v,z;

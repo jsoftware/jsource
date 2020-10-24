@@ -35,7 +35,7 @@ A jtevery(J jt, A w, A fs){A * RESTRICT wv,x,z,* RESTRICT zv;
  // Get input pointer
  I virtblockw[NORMAH];  // space for a virtual block of rank 0
  if(likely((flags&BOX)!=0)){virtw=*(wv=AAV(w));  // if input is boxed, point to first box
-  if(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX)&SGNIF(AFLAG(w),AFPRISTINEX),w))flags|=ACPERMANENT;  // indicates inplaceability of boxed contents
+  if(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX)&SGNIF(AFLAG(w),AFPRISTINEX),w))flags|=ACPERMANENT&-(AFLAG(w)&RECURSIBLE);  // indicates inplaceability of boxed contents - only if recursive block
  }else{
   // if input is not boxed, use a faux-virtual block to point to the atoms.  Repurpose unneeded wv to hold length
   fauxvirtual(virtw,virtblockw,w,0,ACUC1); AN(virtw)=1; wv=(A*)bpnoun(AT(w));  // note if w has gerunds, it is always boxed & doesn't go through here
@@ -57,34 +57,42 @@ A jtevery(J jt, A w, A fs){A * RESTRICT wv,x,z,* RESTRICT zv;
   // If the input is inplaceable, there is no more use for it after this verb.  If it was pristine, every block in it is DIRECT and was either permanent or inplaceable when it was added; so if it's
   // not PERMANENT it is OK to change the usecount to inplaceable.  We must remove inplaceability on the usecount after execution, in case the input block is recursive and the contents now show a count of 2
   // We may create a block with usecount 8..2,  That's OK, because it cannot be fa'd unless it is ra'd first, and the ra will wipe out the inplaceability.  We do need to keep the usecount accurate, though.
-  AC(virtw)|=(AC(virtw)-(flags&ACPERMANENT))&ACINPLACE;
+  if(((AC(virtw)-(flags&ACPERMANENT))&ACINPLACE)<0){
+   AC(virtw)|=ACINPLACE;  // make the block inplaceable
+   // If we are setting the usecount to inplaceable, that must be a change, because we do that only on contents of boxes.  If the block is ibplaceable, the system requires that AM point to a tpop-stack entry
+   // that will free the block, and code may simulate a free by clearing that entry.  We can't be sure that the original tpush entry is valid, but we do know that our w block is recursive and inplaceable, so we
+   AM(virtw)=(I)wv;  // point to a zappable entry
+   // can use *wv as a zappable location
+  }
+  I wcpre=AC(virtw);  // remember usecount before call
   if(!(x=CALL1IP(f1,virtw,fs))){ // run the user's verb
    AC(virtw)&=~ACINPLACE; R0;  // make sure we reset the usecounts of the virtual blocks in case of error
   }
   // If x is DIRECT inplaceable, it must be unique and we can inherit them into a pristine result.  Otherwise clear pristinity
   if(AT(x)&DIRECT){   // will predict correctly
-   flags&=SGNIFPRISTINABLE(AC(x))|~ACINPLACE;  // sign bit of flags will hold PRISTINE status of result: 1 if all DIRECT and inplaceable or PERMANENT
-   // If the verb returned its input, that means the input is escaping and the argument block is no longer pristine.  We only need to worry about this when the arg was pristine, which
-   // means that x must be DIRECT.
-   if(unlikely(x==virtw))AFLAG(w)&=~AFPRISTINE;
+   flags&=SGNIFPRISTINABLE(AC(x))|~ACINPLACE;  // sign bit of flags will hold PRISTINE status of result: 1 if all DIRECT and inplaceable or PERMANENT.  NOTE that x may be the initial virtw.
+         // If so, we will still let it show PRISTINE in z, because for virtw to be inplace, it must be abandoned or virtual, neither of which can be used again
+// obsolete    // If the verb returned its input, that means the input is escaping and the argument block is no longer pristine.  We only need to worry about this when the arg was pristine, which
+// obsolete    // means that x must be DIRECT.
+// obsolete    if(unlikely(x==virtw))AFLAG(w)&=~AFPRISTINE;
   }else{
     // not DIRECT.  result must be non-pristine, and we need to turn off pristinity of x since we are going to incorporate it
     flags&=~ACINPLACE;  // result not pristine
     {PRISTCLR(x)}  // x can never be pristine, since is being incorped
   }
-  // Restore usecount to virtw.  We can't just store back what it was, because it may have been modified in the verb.
-#if 1  // scaf should not be required
-  AC(virtw)&=~ACINPLACE;
-#endif
-  ASSERT(!(SPARSE&AT(x)),EVNONCE);
   // prepare the result so that it can be incorporated into the overall boxed result
-  if(!(flags&JTWILLBEOPENED)) {
+  if(likely(!(flags&JTWILLBEOPENED))) {
    // normal case where we are creating the result box.  Must incorp the result
    realizeifvirtual(x); ra(x);   // Since we are moving the result into a recursive box, we must ra() it.  This plus rifv plus pristine removal=INCORPRA.  We could save some fetches by bundling this code into the RIRECT path
+   // We have to see if virtw escaped.  If so, we must mark w non-PRISTINE.  Since we are concerned about virtw itself escaping, rather than a part of it,
+   // we can look at its usecount after it the result is incorporated into the new result
+   AFLAG(w)&=~((AC(virtw)!=wcpre)<<AFPRISTINEX);
   } else {
    // result will be opened.  It is nonrecursive.  description in result.h.  We don't have to realize or ra
    if(AFLAG(x)&AFUNINCORPABLE){RZ(x=clonevirtual(x));}
    // since we are adding the block to a NONrecursive boxed result,  we DO NOT have to raise the usecount of the block.  And we don't have to mark the usecount non-inplaceable
+   // We still have to see if virtw escaped, and on this leg we also have to see if the returned x was virtw
+   AFLAG(w)&=~(((AC(virtw)!=wcpre)|(x==virtw))<<AFPRISTINEX);
 #if 0  // not clear this is worth doing
    if(ZZFLAGWORD&ZZFLAGCOUNTITEMS){
     // if the result will be razed next, we will count the items and store that in AM.  We will also ensure that the result boxes' contents have the same type
@@ -104,11 +112,17 @@ A jtevery(J jt, A w, A fs){A * RESTRICT wv,x,z,* RESTRICT zv;
    // count then, because no virtual contents would be allowed.  But we are not sure that the EPILOG is safe, and this path is now off to the side
 #endif
   }
+  // Restore usecount to virtw.  We can't just store back what it was, because it may have been modified in the verb.
+#if 1  // scaf should not be required
+  AC(virtw)&=~ACINPLACE;
+#endif
+  ASSERT(!(SPARSE&AT(x)),EVNONCE);
   // Store result & advance to next cell
   *zv++=x;
   if(!--natoms)break;  // break to avoid fetching over the end of the input
   if(flags&BOX)virtw=*++wv;else AK(virtw)+=(I)wv;  // advance to next input cell - either by fetching the next box or advancing the virtual pointer to the next atom
  }
+
  // indicate pristinity of result
  AFLAG(z)|=(flags>>(ACINPLACEX-AFPRISTINEX))&AFPRISTINE;   // could synthesize rather than loading from z
  R z;
@@ -145,7 +159,7 @@ A jtevery2(J jt, A a, A w, A fs){A*av,*wv,x,z,*zv;
  I virtblockw[NORMAH];  // space for a virtual block of rank 0
  if(likely((flags&BOX)!=0)){
   virtw=*(wv=AAV(w));  // if input is boxed, point to first box
-  if(ASGNINPLACESGN(SGNIF((I)jtinplace&~flags,JTINPLACEWX)&SGNIF(AFLAG(w),AFPRISTINEX),w))flags|=(ACPERMANENT>>1);  // indicates inplaceability of boxed contents.  Never if arg repeated
+  if(ASGNINPLACESGN(SGNIF((I)jtinplace&~flags,JTINPLACEWX)&SGNIF(AFLAG(w),AFPRISTINEX),w))flags|=(ACPERMANENT>>1)&-(AFLAG(w)&RECURSIBLE);  // indicates inplaceability of boxed contents.  Never if arg repeated, only if recursive
  }else{
   // if input is not boxed, use a faux-virtual block to point to the atoms.  Repurpose unneeded wv to hold length
   fauxvirtual(virtw,virtblockw,w,0,ACUC1); AN(virtw)=1; wv=(A*)bpnoun(AT(w));  // note if w has gerunds, it is always boxed & doesn't go through here
@@ -156,7 +170,7 @@ A jtevery2(J jt, A a, A w, A fs){A*av,*wv,x,z,*zv;
  I virtblocka[NORMAH];
  if(likely((flags&(BOX<<1))!=0)){
   virta=*(av=AAV(a));
-  if(ASGNINPLACESGN(SGNIF((I)jtinplace&~flags,JTINPLACEAX)&SGNIF(AFLAG(a),AFPRISTINEX),a))flags|=ACPERMANENT;
+  if(ASGNINPLACESGN(SGNIF((I)jtinplace&~flags,JTINPLACEAX)&SGNIF(AFLAG(a),AFPRISTINEX),a))flags|=ACPERMANENT&-(AFLAG(a)&RECURSIBLE);
  }else{
   fauxvirtual(virta,virtblocka,a,0,ACUC1); AN(virta)=1; av=(A*)bpnoun(AT(a));
  }
@@ -176,36 +190,50 @@ A jtevery2(J jt, A a, A w, A fs){A*av,*wv,x,z,*zv;
   // If the input is inplaceable, there is no more use for it after this verb.  If it was pristine, every block in it is DIRECT and was either permanent or inplaceable when it was added; so if it's
   // not PERMANENT it is OK to change the usecount to inplaceable.  We must remove inplaceability on the usecount after execution, in case the input block is recursive and the contents now show a count of 2
   // We may create a block with usecount 8..2,  That's OK, because it cannot be fa'd unless it is ra'd first, and the ra will wipe out the inplaceability.  We do need to keep the usecount accurate, though.
-  AC(virta)|=(AC(virta)-(flags&ACPERMANENT))&ACINPLACE;
-  AC(virtw)|=(AC(virtw)-((flags<<1)&ACPERMANENT))&ACINPLACE;
+// obsolete   AC(virta)|=(AC(virta)-(flags&ACPERMANENT))&ACINPLACE;
+// obsolete   AC(virtw)|=(AC(virtw)-((flags<<1)&ACPERMANENT))&ACINPLACE;
+
+  if(((AC(virta)-(flags&ACPERMANENT))&ACINPLACE)<0){
+   AC(virta)|=ACINPLACE;  // make the block inplaceable
+   // If we are setting the usecount to inplaceable, that must be a change, because we do that only on contents of boxes.  If the block is ibplaceable, the system requires that AM point to a tpop-stack entry
+   // that will free the block, and code may simulate a free by clearing that entry.  We can't be sure that the original tpush entry is valid, but we do know that our w block is recursive and inplaceable, so we
+   AM(virta)=(I)av;  // point to a zappable entry
+   // can use *av as a zappable location
+  }
+  if(((AC(virtw)-((flags<<1)&ACPERMANENT))&ACINPLACE)<0){AC(virtw)|=ACINPLACE; AM(virtw)=(I)wv;}
+
+  I wcpre=AC(virtw), acpre=AC(virta);  // remember usecount before call
   if(!(x=CALL2IP(f2,virta,virtw,fs))){; // run the user's verb
    AC(virtw)&=~ACINPLACE; AC(virta)&=~ACINPLACE; R0;  // make sure usecount restored on error
   }
   // If x is DIRECT inplaceable, it must be unique and we can inherit them into a pristine result.  Otherwise clear pristinity
   if(AT(x)&DIRECT){   // will predict correctly
    flags&=SGNIFPRISTINABLE(AC(x))|~ACINPLACE;  // sign bit of flags will hold PRISTINE status of result: 1 if all DIRECT and inplaceable or PERMANENT
-   // If the verb returned its input, that means the input is escaping by address and the argument block is no longer pristine.  We only need to worry about this when the arg was pristine, which
-   // means that x must be DIRECT.
-   if(unlikely(x==virta))AFLAG(a)&=~AFPRISTINE;  // a, w = backers if original a, w were virtual
-   if(unlikely(x==virtw))AFLAG(w)&=~AFPRISTINE;
+// obsolete    // If the verb returned its input, that means the input is escaping by address and the argument block is no longer pristine.  We only need to worry about this when the arg was pristine, which
+// obsolete    // means that x must be DIRECT.
+// obsolete   if(unlikely(x==virta))AFLAG(a)&=~AFPRISTINE;  // a, w = backers if original a, w were virtual
+// obsolete    if(unlikely(x==virtw))AFLAG(w)&=~AFPRISTINE;
   }else{
     // not DIRECT.  result must be non-pristine, and we need to turn off pristinity of x since we are going to incorporate it
     flags&=~ACINPLACE;  // result not pristine
     {PRISTCLR(x)}  // x can never be pristine, since is being incorped
   }
-  // Restore usecount to virta and virtw.  We can't just store back what it was, because it may have been modified in the verb.
-#if 1  // scaf should not be required
-  AC(virtw)&=~ACINPLACE; AC(virta)&=~ACINPLACE;
-#endif
-  ASSERT(!(SPARSE&AT(x)),EVNONCE);
+
   // prepare the result so that it can be incorporated into the overall boxed result
-  if(!(flags&JTWILLBEOPENED)) {
+  if(likely(!(flags&JTWILLBEOPENED))) {
    // normal case where we are creating the result box.  Must incorp the result
    realizeifvirtual(x); ra(x);   // Since we are moving the result into a recursive box, we must ra() it.  This plus rifv plus pristine removal=INCORPRA.  We could save some fetches by bundling this code into the RIRECT path
+   // We have to see if virtw escaped.  If so, we must mark w non-PRISTINE.  Since we are concerned about virtw itself escaping, rather than a part of it,
+   // we can look at its usecount after it the result is incorporated into the new result
+   AFLAG(w)&=~((AC(virtw)!=wcpre)<<AFPRISTINEX);
+   AFLAG(a)&=~((AC(virta)!=acpre)<<AFPRISTINEX);
   } else {
    // result will be opened.  It is nonrecursive.  description in result.h.  We don't have to realize or ra
    if(AFLAG(x)&AFUNINCORPABLE){RZ(x=clonevirtual(x));}
    // since we are adding the block to a NONrecursive boxed result,  we DO NOT have to raise the usecount of the block.  And we don't have to mark the usecount non-inplaceable
+   // We still have to see if virtw escaped, and on this leg we also have to see if the returned x was virtw
+   AFLAG(w)&=~(((AC(virtw)!=wcpre)|(x==virtw))<<AFPRISTINEX);
+   AFLAG(a)&=~(((AC(virta)!=acpre)|(x==virta))<<AFPRISTINEX);
 #if 0  // not clear this is worth doing
    if(ZZFLAGWORD&ZZFLAGCOUNTITEMS){
     // if the result will be razed next, we will count the items and store that in AM.  We will also ensure that the result boxes' contents have the same type
@@ -225,6 +253,11 @@ A jtevery2(J jt, A a, A w, A fs){A*av,*wv,x,z,*zv;
    // count then, because no virtual contents would be allowed.  But we are not sure that the EPILOG is safe, and this path is now off to the side
 #endif
   }
+  // Restore usecount to virta and virtw.  We can't just store back what it was, because it may have been modified in the verb.
+#if 1  // scaf should not be required
+  AC(virtw)&=~ACINPLACE; AC(virta)&=~ACINPLACE;
+#endif
+  ASSERT(!(SPARSE&AT(x)),EVNONCE);
   // Store result & advance to next cell
   *zv++=x;
   if(!--natoms)break;

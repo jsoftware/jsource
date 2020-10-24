@@ -727,16 +727,14 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[12
  switch(id){
  case CBOX:  // do <;.n to produce recursive pristine result, all zapped
   if(likely(!(state&ZZFLAGWILLBEOPENED))){  // If we will open the result, we will gain more by boxing virtual blocks than by zapping them here
-   GATV0(zz,BOX,m,1); AFLAG(zz) = BOX+((-(wt&DIRECT))&AFPRISTINE);  // allocate result
+   GATV0(zz,BOX,m,1); AFLAG(zz) = BOX+((-(wt&DIRECT))&AFPRISTINE);  // allocate result, set recursive, and also PRISTINE if direct
    if(likely(m!=0)){ // exit if empty for comp ease below
     // boxes will be in AAV(z), in order.  Details of hijacking tnextpushp are discussed in jtbox().
     A *pushxsave = jt->tnextpushp; jt->tnextpushp=AAV(zz);  // save tstack info before allocation
     // **** MUST NOT FAIL FROM HERE UNTIL THE END, WHERE THE ALLOCATION SYSTEM CAN BE RESTORED ****
-    EACHCUT(GAE(z,wt,d*wcn,r,AS(w),break); AS(z)[0]=d; AC(z)=ACUC1; if(wt&RECURSIBLE){AFLAG(z)=wt; jtra(z,wt);} JMC(CAV(z),v1,d*k+(SZI-1),lp000,0));    // allocate, but don't grow the tstack.  Set usecount of cell to 1.  ra0() if recursible.  Put allocated addr into *jt->tnextpushp++
+    EACHCUT(GAE(z,wt,d*wcn,r,AS(w),break); AS(z)[0]=d; AC(z)=ACUC1; JMC(CAV(z),v1,d*k+(SZI-1),lp000,0) ra00(z,wt););    // allocate, but don't grow the tstack.  Set usecount of cell to 1.  make recursive.  Put allocated addr into *jt->tnextpushp++
     // restore the allocation system
     jt->tnextpushp=pushxsave;   // restore tstack pointer
-    // Set PRISTINE if w now has DIRECT type
-    AFLAG(zz)=(-(wt&DIRECT) & AFPRISTINE);  // maybe pristine
     // remove pristinity from w since a contents is escaping
     PRISTCLRF(w)   // destroys w
     ASSERT(z!=0,EVWSFULL);  // if we broke out on allocation failure, fail.

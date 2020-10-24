@@ -209,16 +209,20 @@ F2(jtover){AD * RESTRICT z;C*zv;I replct,framect,acr,af,ar,*as,k,ma,mw,p,q,r,t,w
     I klg=bplg(t); I alen=AN(a)<<klg; I wlen=AN(w)<<klg;
     GA(z,t,AN(a)+AN(w),lr,AS(l)); AS(z)[0]=si; C *x=CAV(z);  // install # items after copying shape
     JMC(x,CAV(a),alen+(SZI-1),loop1,0); JMC(x+alen,CAV(w),wlen+(SZI-1),loop2,0);
-    // If a & w are both recursive abandoned, we can take ownership of the contents by marking them nonrecursive and marking z recursive.
+    // If a & w are both recursive abandoned pristine, we can take ownership of the contents by marking them nonrecursive and marking z recursive.
     // We could also zap a & w, but we don't because it's just a box header and it will be freed by a caller anyway
-//    I xfer, afl=AFLAG(a), wfl=AFLAG(w);
-//    xfer=REPSGN((JTINPLACEA-((JTINPLACEA+JTINPLACEW)*(a!=w)&(I)jtinplace))&AC(a)&AC(w))&afl&wfl&RECURSIBLE;
+    // Pristinity is required because otherwise there might be blocks present in both, and the usecount would be too low in result
+    I xfer, aflg=AFLAG(a), wflg=AFLAG(w);
+    xfer=aflg&wflg&(RECURSIBLE|AFPRISTINE);  
+    xfer&=REPSGN((JTINPLACEA-((JTINPLACEA+JTINPLACEW)*(a!=w)&(I)jtinplace))&AC(a)&AC(w)&SGNIF(xfer,AFPRISTINEX));
      // xfer is the transferable recursibility if any: both abandoned, both recursible, not same blocks
-//    AFLAG(a)=afl&~xfer; AFLAG(w)=wfl&~xfer; AFLAG(z)|=xfer;  // transfer inplaceability
+    AFLAG(z)|=xfer; xfer|=AFPRISTINE; AFLAG(a)=aflg&=~xfer; AFLAG(w)=wflg&=~xfer;  // transfer inplaceability/pristinity; always clear pristinity from a/w
     // We extracted from a and w, so mark them (or the backer if virtual) non-pristine.  If both were pristine and abandoned, transfer its pristine status to the result
     // if they were boxed nonempty, a and w have not been changed.  Otherwise the PRISTINE flag doesn't matter.
     // If a and w are the same, we mustn't mark the result pristine!  It has repetitions
-    PRISTXFERF2(z,a,w);   // pass PRISTINE status through if possible, make inputs non-PRISTINE
+    if(unlikely((aflg&AFVIRTUAL)!=0)){AFLAG(ABACK(a))&=~AFPRISTINE;}  //  like PRISTCOMSETF
+    if(unlikely((wflg&AFVIRTUAL)!=0)){AFLAG(ABACK(w))&=~AFPRISTINE;}  //  like PRISTCOMSETF
+// obsolete     PRISTXFERF2(z,a,w);   // pass PRISTINE status through if possible, make inputs non-PRISTINE
     RETF(z);
    }
   }

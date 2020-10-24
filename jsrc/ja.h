@@ -930,6 +930,7 @@
 #define repzdx(x0,x1,x2,x3)         jtrepzdx(jt,(x0),(x1),(x2),(x3))
 #define repzsx(x0,x1,x2,x3)         jtrepzsx(jt,(x0),(x1),(x2),(x3))
 #define reshape(x,y)                jtreshape(jt,(x),(y))
+#define reshapeW(x,y)               jtreshape((J)((I)jt|JTINPLACEW),(x),(y))
 #define reshapesp(x0,x1,x2,x3)      jtreshapesp(jt,(x0),(x1),(x2),(x3))
 #define reshapesp0(x0,x1,x2,x3)     jtreshapesp0(jt,(x0),(x1),(x2),(x3))
 #define residue(x,y)                jtresidue(jt,(x),(y),ds(CSTILE))

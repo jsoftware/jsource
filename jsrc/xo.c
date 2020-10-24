@@ -36,7 +36,7 @@ I jtfnum(J jt,A w){A y;I h,j;
  y=AAV0(w);
  ASSERT(AN(y),EVLENGTH);
  if(AT(y)&B01+INT){ASSERT(h=i0(y),EVFNUM); R h;}
- RE(j=i0(indexof(vec(BOX,jt->fopn,AAV(jt->fopa)),box(fullname(vslit(y)))))); 
+ RE(j=i0(indexof(vec(BOX,jt->fopn,AAV(jt->fopa)),boxW(fullname(vslit(y)))))); 
  R j<jt->fopn?*(j+AV(jt->fopf)):0;
 }    /* file# corresp. to standard argument w */
 

@@ -58,7 +58,7 @@ XF1(jtxstd){A z;B b;I c=0,d,i,j,k,m=XBASE,n,*zv;
   else if(m<=-k){c=-(-k)/m;   zv[i]=-(-k)%m;}
   else          c=0;
  }
- if(c)R over(z,sc(c));
+ if(c)R apip(z,sc(c));
  j=n-1; while(j&&!zv[j])--j; ++j;
  R j==n?z:vec(INT,j,zv);
 }    /* convert to standard form */

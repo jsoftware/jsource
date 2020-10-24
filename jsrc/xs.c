@@ -86,7 +86,7 @@ static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;B xt=jt->tostdout;DC d,xd=jt
 }
 
 static F1(jtaddscriptname){I i;
- RE(i=i0(indexof(vec(BOX,jt->slistn,AAV(jt->slist)),box(ravel(w)))));  // look up only in the defined names
+ RE(i=i0(indexof(vec(BOX,jt->slistn,AAV(jt->slist)),boxW(ravel(w)))));  // look up only in the defined names
  if(jt->slistn==i){
   if(jt->slistn==AN(jt->slist)){RZ(jt->slist=ext(1,jt->slist));RZ(jt->sclist=ext(1,jt->sclist));}
   RZ(ras(w)); RZ(*(jt->slistn+AAV(jt->slist))=w); *(jt->slistn+IAV(jt->sclist))=jt->slisti;

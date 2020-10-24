@@ -244,7 +244,7 @@ static DF2(jtcut2bx){A*av,b,t,x,*xv,y,*yv;B*bv;I an,bn,i,j,m,p,q,*u,*v,*ws;
  }
  RZ(x=ope(catalog(x)));
  RZ(y=ope(catalog(y)));
- if(AN(x)){RZ(IRS2(x,y,0L,1L,1L,jtlamin2,t));}else{RZ(t=iota(over(shape(x),v2(2L,0L))));}
+ if(AN(x)){RZ(IRS2(x,y,0L,1L,1L,jtlamin2,t));}else{RZ(t=iota(apip(shape(x),v2(2L,0L))));}
  R cut02(t,w,self);
 }    /* a f;.n w for boxed a, with special code for matrix w */
 

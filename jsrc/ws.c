@@ -119,7 +119,7 @@ void spellit(UC c,UC *s){
 A jtspella(J jt,A w){C c,s[3];V*v;
  RZ(w);
  v=FAV(w); c=v->id;
- if(c==CFCONS)R over(thorn1(v->fgh[2]),chrcolon); 
+ if(c==CFCONS)R apip(thorn1(v->fgh[2]),chrcolon); 
  spellit(c,s); 
  R str(1+!!s[1]+!!s[2],s);
 }

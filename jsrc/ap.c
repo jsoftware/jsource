@@ -600,7 +600,7 @@ static DF1(jtpscan){A z;I f,n,r,t,wn,wr,*ws,wt;
  // m = #cells, c=#atoms/cell, n = #items per cell
  SETICFR(w,f,r,n);  // wn=0 doesn't matter
  // If there are 0 or 1 items, or w is empty, return the input unchanged, except: if rank 0, return (($w),1)($,)w - if atomic op, do it right here, otherwise call the routine to get the shape of result cell
- if(((1-n)&-wn)>=0){R r?RETARG(w):reshape(over(shape(w),num(1)),w);}  // n<2 or wn=0
+ if(((1-n)&-wn)>=0){R r?RETARG(w):reshape(apip(shape(w),zeroionei(1)),w);}  // n<2 or wn=0
  VARPS adocv; varps(adocv,self,wt,1);  // fetch info for f/\ and this type of arg
  if(!adocv.f)R IRS1(w,self,r,jtinfixprefix1,z);  // if there is no special function for this type, do general scan
  // Here is the fast special reduce for +/ etc

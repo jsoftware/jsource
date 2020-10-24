@@ -101,7 +101,7 @@ F2(jtrotate){A origw=w,y,z;B b;C*u,*v;I acr,af,ar,*av,d,k,m,n,p,*s,wcr,wf,wn,wr;
  // special case: if a is atomic 0, and cells of w are not atomic
  if((wcr!=0)&(((ar|IAV(a)[0])==0)))R RETARG(w);   // 0 |. y, return y
  if(((1-acr)|((-af)&(-acr|(wf-1))))<0)R df2(z,a,w,qq(qq(ds(CROT),v2(1L,RMAX)),v2(acr,wcr)));  // if multiple a-lists per cell, or a has frame and (a cell is not an atom or w has frame) handle rank by using " for it
- if(((wcr-1)&(1-p))<0){RZ(w=reshape(over(shape(w),apv(p,1L,0L)),w)); wr=wcr=p;}  // if cell is an atom, extend it up to #axes being rotated   !wcr && p>1
+ if(((wcr-1)&(1-p))<0){RZ(w=reshape(apip(shape(w),apv(p,1L,0L)),w)); wr=wcr=p;}  // if cell is an atom, extend it up to #axes being rotated   !wcr && p>1
  ASSERT(((-wcr)&(wcr-p))>=0,EVLENGTH);    // !wcr||p<=wcr  !(wcr&&p>wcr)
  av=AV(a);
  RZ(w=setfv(w,w)); u=CAV(w); wn=AN(w); s=AS(w); k=bpnoun(AT(w));  // set fill value if given

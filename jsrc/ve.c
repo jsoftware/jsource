@@ -399,7 +399,7 @@ F1(jtabase1){A d,z;B*zv;I c,n,p,r,t,*v;UI x;
  ASSERT(t&DENSE,EVNONCE);
  // Result has rank one more than the input.  If there are no atoms,
  // return (($w),0)($,)w; if Boolean, return (($w),1)($,)w
- if((-n&SGNIFNOT(t,B01X))>=0)R reshape(over(shape(w),num(n!=0)),w);
+ if((-n&SGNIFNOT(t,B01X))>=0)R reshape(apip(shape(w),zeroionei(n!=0)),w);
  if(!(t&INT)){
   // Not integer.  Calculate # digits-1 as d = 2 <.@^. >./ | , w  
   df2(d,num(2),maximum(zeroionei(1),aslash(CMAX,mag(ravel(w)))),atop(ds(CFLOOR),ds(CLOG)));

@@ -76,12 +76,12 @@ FORCE_INLINE void _mm_storel_pd(double * mem_addr, __m128d a)
     *mem_addr = vget_low_u64(vreinterpretq_u64_f64(a));
 }
 
-FORCE_INLINE __m128d _mm_set_pd(double e1, double e0)
-{
-    __m128d res;
-    SET64x2(res, e0, e1);
-    return res;
-}
+// FORCE_INLINE __m128d _mm_set_pd(double e1, double e0)
+// {
+//     __m128d res;
+//     SET64x2(res, e0, e1);
+//     return res;
+// }
 
 FORCE_INLINE __m128d _mm_set1_pd(double a)
 {

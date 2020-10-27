@@ -134,7 +134,7 @@ A jtunDD(J jt, A w){F1PREFIP;
  I scan; for(scan=2;scan<=AN(w)-8;++scan)if(wv[scan]=='9'&&wv[scan+2]==':')break;
  if(scan<=AN(w)-8){  // if there is possibly a DD...
   // make input writable if it is not recursive; find words
-  if(!((I)jtinplace&JTINPLACEW))RZ(w=ca(w)); wv=CAV(w); A wil; RZ(wil=wordil(w));
+  if(!((I)jtinplace&JTINPLACEW))RZ(w=ca(w)); wv=CAV(w); A wil; RZ(wil=wordil(w)); ASSERT(AM(wil)>=0,EVOPENQ)
   // loop until no more DDs found
   I (*wilv)[2]=voidAV(wil); // pointer to wordlist: (start,end+1) pairs
   I inx=0;  // next input character that has not been copied to the result

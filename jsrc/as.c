@@ -235,7 +235,7 @@ static DF1(jtssg){F1PREFIP;PROLOG(0020);A a,z;I i,n,r,wr;
  jtinplace = (J)(intptr_t)(((I)jt) + (JTINPLACEW+JTINPLACEA)*((FAV(fs)->flag>>(VJTFLGOK2X-JTINPLACEWX)) & JTINPLACEW));  // all items are used only once
 
 #define ZZPOPNEVER 1   // we mustn't TPOP after copying the result atoms, because they are reused.  This will leave the memory used for type-conversions unclaimed.
-   // if we implement the annulment of tpop pointers, we should use that to hand-free results that have been converted
+
  // We have to dance a bit for BOXATOP verbs, because the result comes back unboxed, but it has to be put into a box
  // to be fed into the next iteration.  This is still a saving, because we can use the same box to point to each successive result.
  // Exception: if the reusable box gets incorporated, it is no longer reusable and must be reallocated.  We will use the original z box,
@@ -252,6 +252,9 @@ static DF1(jtssg){F1PREFIP;PROLOG(0020);A a,z;I i,n,r,wr;
  AD * RESTRICT zz=0;
  for(i=0;i<n;++i){   // loop through items, noting that the first is the tail itself
   if(i){RZ(z=CALL2IP(f2,a,z,fs));}   // apply the verb to the arguments (except the first time)
+  // In case we are performing f&.>, we must set z non-PRISTINE, which it is by definition because all its boxes have escaped into the running result
+  AFLAG(z)&=~AFPRISTINE;  // we just stored z, so it's never pristine here
+
 #define ZZBODY
 #include "result.h"
   // If BOXATOP, we need to reinstate the boxing around z for the next iteration.

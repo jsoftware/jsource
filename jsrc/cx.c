@@ -654,7 +654,7 @@ static A jtsent12c(J jt,A w){C*p,*q,*r,*s,*x;A z;
  // Lines are separated by DDSEP, and there may be DDSEP embedded in strings.  Convert the whole thing to words, which will
  // leave the embedded DDSEP embedded; then split on the individual DDSEP tokens
  // tokenize the lines.  Each LF is its own token.
- A wil; RZ(wil=wordil(w)); makewritable(wil); I wiln=AS(wil)[0]; I (*wilv)[2]=voidAV(wil); // line index, and number of lines; array of (start,end+1) for each line
+ A wil; RZ(wil=wordil(w)); ASSERT(AM(wil)>=0,EVOPENQ) makewritable(wil); I wiln=AS(wil)[0]; I (*wilv)[2]=voidAV(wil); // line index, and number of lines; array of (start,end+1) for each line
  // Compact the word-list to a line-list.  Go through the words looking for LF.  For each line, add an entry to the line-list with all the characters except the LF
  I i=0;  // start of dyad, input pointer through wilv
  I currlinest=0;  // character# at which current line (ending in next LF) starts
@@ -779,7 +779,7 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
    A neww=words(t);
    if(AN(neww)){  // ignore blank string
     A newt=every(neww,(A)&onmself);  // convert every word to a NAME block
-    if(newt){t=lv[j-1]=newt; AT(t)|=BOXMULTIASSIGN;}else RESETERR  // if no error, mark the block as MULTIASSIGN type and save it in the compiled definition; also set as t for below.  If error, catch it later
+    if(newt){t=lv[j-1]=incorp(newt); AT(t)|=BOXMULTIASSIGN;}else RESETERR  // if no error, mark the block as MULTIASSIGN type and save it in the compiled definition; also set as t for below.  If error, catch it later
    }
   }
 
@@ -968,10 +968,9 @@ F2(jtcolon){A d,h,*hv,m;B b;C*s;I flag=VFLAGNONE,n,p;
  // the components of the explicit def, we'd better do it now, so that the usecounts are all identical
  if(4>=n) {
   // Don't bother to create a symbol table for an empty definition, since it is a domain error
-  if(AN(hv[1]))RZ(hv[3] = rifvs(crelocalsyms(hv[0],hv[1],n,0,flag)));  // wordss,cws,type,monad,flag
-  if(AN(hv[HN+1]))RZ(hv[HN+3] = rifvs(crelocalsyms(hv[HN+0], hv[HN+1],n,1,flag)));  // words,cws,type,dyad,flag
+  if(AN(hv[1]))RZ(hv[3] = incorp(crelocalsyms(hv[0],hv[1],n,0,flag)));  // wordss,cws,type,monad,flag
+  if(AN(hv[HN+1]))RZ(hv[HN+3] = incorp(crelocalsyms(hv[HN+0], hv[HN+1],n,1,flag)));  // words,cws,type,dyad,flag
  }
-
  switch(n){
   case 3:  R fdef(0,CCOLON, VERB, xn1,jtxdefn,       num(n),0L,h, flag|VJTFLGOK1|VJTFLGOK2, RMAX,RMAX,RMAX);
   case 1:  R fdef(0,CCOLON, ADV,  b?xop1:xadv,0L,    num(n),0L,h, flag, RMAX,RMAX,RMAX);
@@ -1000,7 +999,7 @@ A jtddtokens(J jt,A w,I env){
 // TODO: Use LF for DDSEP, support {{), make nouns work
  PROLOG(000);F1PREFIP;
  RZ(w);
-#if 0  // set to 1 to disable DD
+#if 0  // set to 1 to disable DD scaf
  R (env&8)?w:tokens(w,env&3);  // return the input unmodified
 #endif
  // find word boundaries, remember if last word is NB
@@ -1027,11 +1026,12 @@ A jtddtokens(J jt,A w,I env){
      //  Nested DD found.  We have to go back and preserve the spacing for everything that precedes it
      ddbgnx=i;  // set new start pointer, when we find an end
      fillv=&wilv[firstddbgnx][1]; DQ(2*(ddbgnx-firstddbgnx)-1, *fillv++=wilv[ddbgnx][0];)
+// if the nested DD is a noun, break to process it
     }
    }  // find DD pair
    if(ddendx>=0)break;  // we found an end, and we started at a begin, so we have a pair.  Go process it
 
-   // Here the current line ended with no end DD.  We have to continue onto the next line
+   // Here the current line ended with no end DD or noun DD.  We have to continue onto the next line
    ASSERT(!(env&4),EVCTRL);   // Abort if we are not allowed to continue (as for an event or ". y)
    scanstart=AM(wil);  // Get # words, not including final NB.  We have looked at em all, so start next look after all of them
    A neww=jgets("");  // fetch next line.
@@ -1055,6 +1055,8 @@ A jtddtokens(J jt,A w,I env){
    AM(wil)=savam+scanstart;  // set total # words in combined list, not including final comment
    wv=CAV(w); nw=AS(wil)[0]; wilv=voidAV(wil);  // refresh pointer to word indexes, and length
   }
+
+// if we found a noun DD, process it, replacing it with its string.  Look for delimiters on the first line, or at the start of a later line
 
   // We have found an innermost DD, running from ddbgnx to ddendx.  Convert it to ( m : 'string' ) form
   // convert all the chars of the DD to a quoted string block

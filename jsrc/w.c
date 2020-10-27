@@ -55,6 +55,7 @@ static const ST state[SDDD+1][16]={
 // w points to a string A-block
 // result is word index & length; z is (i0,end0+1),(i1,end1+1),...
 // AM(z) gives # of words not counting a final comment, ({.$z) - hascomment
+// If there are mismatched quotes, AM(z) is set to -1 and the number of valid tokens is in AS(z)[0]
 F1(jtwordil){A z;I s,i,m,n,nv,*x;UC*v;
  RZ(w);  // if no string, could be empty line from keyboard; return null A in that case
  nv=0;    // set not creating numeric constant
@@ -81,15 +82,16 @@ if(!jt->directdef&&(currc==CDD||currc==CDDZ))currc=CX;  // scaf  if direct def d
   // state is an end+1 or start value, and 2 if an end+1 AND start value)
   x[0]=i; x[1]=i; x+=s&3;
  }
- if((s>>4)==SQ){jsignal3(EVOPENQ,w,x[-1]); R 0;}  // error if open quote, giving the complete failing line
+// obsolete  if((s>>4)==SQ){jsignal3(EVOPENQ,w,x[-1]); R 0;}  // error if open quote, giving the complete failing line
  // force an EI at the end, as if with a space.  We will owe one increment of x, repaid when we calculate m.
  //  If the line ends without a token being open (spaces perhaps) this will be half of a field and will be shifted away
  x=(I*)((I)x-(((s<<1)&16)>>(3-LGSZI)));    // same as above, with CS as the character
  *x=i;
 // obsolete  m=((x-AV(z))+1)>>1; AS(z)[0]=m; AM(z)=m+REPSGN((I)(SE(SNZ,0)-1)-s); // Calculate & install count; if last field is NB., subtract 1 from word count
  m=((x-AV(z))+1)>>1; AS(z)[0]=m; AM(z)=m-((((1LL<<SNZ)|(1LL<<SZ))>>(s>>4))&1); // Calculate & install count; if last field is NB., subtract 1 from word count
+ if(unlikely((s>>4)==SQ))AM(z)=-1;  // error if open quote, indicated by nag AM
  R z;
-}    // word index & end+1; z is m 2 1$(i0,e0),(i1,e1),... AM(z) is # words not including any final NB
+}    // word index & end+1; z is m 2 1$(i0,e0),(i1,e1),... AM(z) is # words not including any final NB, or -1 if quote error
 
 // Turn word list back into string
 // wil is the word list from wordil (we ignore AM), w is the original character list
@@ -111,7 +113,8 @@ A jtunwordil(J jt, A wil, A w, I opts){A z;
 DF1(jtwords){A t,*x,z;C*s;I k,n,*y;
  F1RANK(1,jtwords,self);
  RZ(w=vs(w));  // convert w to LIT if it's not already
- R jtboxcut0(jt,wordil(w),w,self);  // result of wordil has shape suitable for <;.0, so we use that
+ RZ(t=wordil(w)); ASSERT(AM(t)>=0,EVOPENQ)
+ R jtboxcut0(jt,t,w,self);  // result of wordil has shape suitable for <;.0, so we use that
 }
 
 
@@ -228,7 +231,7 @@ A jtenqueue(J jt,A a,A w,I env){A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl;UC c;
 
 // env is the environment: 0=tacit translator, 1=keyboard/immex with no local symbol, 2=explicit definition running
 // w is either a string block or a string block that has been processed into words in wordil format, with AM set
-A jttokens(J jt,A w,I env){R enqueue(wordil(w),w,env);}
+A jttokens(J jt,A w,I env){A t; RZ(t=wordil(w)); ASSERT(AM(t)>=0,EVOPENQ) R enqueue(t,w,env);}
 // enqueue produces nonrecursive result, and so does tokens.  This is OK because the result is always parsed and is never an argument to a verb
 
 

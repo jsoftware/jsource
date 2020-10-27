@@ -265,9 +265,9 @@ do{
     // but never an output from the block it is created in, since it changes during the loop.  Thus, UNINCORPABLEs are found only in the loop that created them.
     // It might be better to keep the result recursive and transfer ownership of the virtual block, but not by much.
     if(AFLAG(z)&AFUNINCORPABLE){RZ(z=clonevirtual(z));}
-    // since we are adding the block to a NONrecursive boxed result,  we DO NOT have to raise the usecount of the block.  And we can leave the usecount inplaceable.  The only way the inplaceable
-    // usecount would be exposed is if the next thing is u&.>, and there it is OK - if the overall argument is inplaceable, the contents would be marked inplaceable anyway
-    *zzboxp=z;  // install the new box.  zzboxp is ALWAYS a pointer to a box when force-boxed result
+    // since we are adding the block to a NONrecursive boxed result,  we DO NOT have to raise the usecount of the block.  We set the usecount non-inplaceable because
+    // box code all over assumes that contents are never inplaceable, and since we go through here only when we are going through box code next, we honor that
+    ACIPNO(z); *zzboxp=z;  // install the new box.  zzboxp is ALWAYS a pointer to a box when force-boxed result
     if(unlikely((ZZFLAGWORD&ZZFLAGCOUNTITEMS)!=0)){
      // if the result will be razed next, we will count the items and store that in AM.  We will also ensure that the result boxes' contents have the same type
      // and item-shape.  If one does not, we turn off special raze processing.  It is safe to take over the AM field in this case, because we know this is WILLBEOPENED and
@@ -315,7 +315,7 @@ do{
   // If zz is recursible, make it recursive-usecount (without actually recurring, since it's empty), unless WILLBEOPENED is set, since then we may put virtual blocks in the boxed array
   AFLAG(zz) |= (zzt&RECURSIBLE) & ((ZZFLAGWORD&ZZFLAGWILLBEOPENED)-1);  // if recursible type, (viz box), make it recursible.  But not if WILLBEOPENED set. Leave usecount unchanged
   // If zz is not DIRECT, it will contain things allocated on the stack and we can't pop back to here
-#if 0&&!ZZPOPNEVER
+#if 0&&!ZZPOPNEVER  // obsolete 
   ZZFLAGWORD |= (zzt&DIRECT)?0:ZZFLAGNOPOP;
   // Remember the point before which we allocated zz.  This will be the free-back-to point, unless we require boxes later
   zzold=jt->tnextpushp;  // pop back to AFTER where we allocated our result and argument blocks

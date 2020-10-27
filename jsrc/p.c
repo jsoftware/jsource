@@ -205,7 +205,9 @@ static PSTK * (*(lines58[]))() = {jtpfork,jtphook,jtis,jtpparen};  // handlers f
 
 #if AUDITEXECRESULTS
 // go through a block to make sure that the descendants of a recursive block are all recursive, and that no descendant is virtual/unincorpable
+// and that any block marked PRISTINE, if boxed, has DIRECT descendants with usecount 1
 // Initial call has nonrecurok and virtok both set
+
 void auditblock(A w, I nonrecurok, I virtok) {
  if(!w)R;
  I nonrecur = (AT(w)&RECURSIBLE) && ((AT(w)^AFLAG(w))&RECURSIBLE);  // recursible type, but not marked recursive
@@ -219,7 +221,10 @@ void auditblock(A w, I nonrecurok, I virtok) {
   case XNUMX:
    {A*v=AAV(w); DO(AN(w), if(v[i])if(!(((AT(v[i])&NOUN)==INT) && !(AFLAG(v[i])&AFVIRTUAL)))SEGFAULT);} break;
   case BOXX:
-   if(!(AFLAG(w)&AFNJA)){A*wv=AAV(w); 
+   if(!(AFLAG(w)&AFNJA)){A*wv=AAV(w);
+   DO(AN(w), if(wv[i]&&(AC(wv[i])<0))SEGFAULT)
+   I acbias=(AFLAG(w)&BOX)!=0;  // subtract 1 if recursive
+   if(AFLAG(w)&AFPRISTINE){DO(AN(w), if(wv[i]&&(AC(w)-acbias)>1||!(AT(wv[i])&DIRECT))SEGFAULT)}
    {DO(AN(w), auditblock(wv[i],nonrecur,0););}
    }
    break;
@@ -686,7 +691,7 @@ RECURSIVERESULTSCHECK
      if(pline<=6)auditblock(stack[1].a,1,1);  // () and asgn have already been audited
 #endif
 #if MEMAUDIT&0x2
-      if(AC(stack[0].a)==0 || (AC(stack[0].a)<0 && AC(stack[0].a)!=ACINPLACE+ACUC1))SEGFAULT 
+      if(m>=0 && (AC(stack[0].a)==0 || (AC(stack[0].a)<0 && AC(stack[0].a)!=ACINPLACE+ACUC1)))SEGFAULT 
       audittstack(jt);
 #endif
      stack0pt=stack[0].pt;  // bottom of stack was modified, so refresh the type for it (lines 0-6 don't change it)
@@ -706,6 +711,9 @@ RECURSIVERESULTSCHECK
 failparse:  // If there was an error during execution or name-stacking, exit with failure.  Error has already been signaled.  Remove zombiesym
    CLEARZOMBIE z=0;
   }
+#if MEMAUDIT&0x2
+  audittstack(jt);  /* scaf */
+#endif
 
   // Now that the sentence has completed, take care of some cleanup.  Names that were reassigned after
   // their value was moved onto the stack had the decrementing of the use count deferred: we decrement

@@ -37,6 +37,7 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
 // obsolete   GAT0(z,BOX,1,0); AFLAG(z)=BOX+((-(wt&DIRECT))&((aband)<<AFPRISTINEX)); INCORPRA(w); AAV(z)[0]=w;
   GAT0(z,BOX,1,0); AFLAG(z)=BOX+((-(wt&DIRECT))&((aband)<<AFPRISTINEX)); INCORP(w); AAV(z)[0]=w;
   if(((-aband)&((AFLAG(w)|DIRECT)&(wt&(RECURSIBLE|DIRECT))))!=0){*AZAPLOC(w)=0;}else{ra(w);}  // INCORPRA, but using zap where possible
+// obsolete   if(aband>((wt^AFLAG(w))&RECURSIBLE)){*AZAPLOC(w)=0;}else{ra(w);}  // INCORPRA, but using zap where possible
  } else {
   // <"r
   ws=AS(w);
@@ -86,6 +87,52 @@ RZ(a&&w);F2PREFIP;
   I i; for(i=AR(a)-1; i>=0&&AS(a)[i]==AS(ABACK(a))[i];--i); if(i<0)a = ABACK(a);
  }
 #endif
+#if 1 // obsolete 
+ ASSERT(!((AT(a)|AT(w))&SPARSE),EVNONCE);   // can't box sparse values
+ realizeifvirtual(w); realizeifvirtual(a);  // it's going into an array, so realize it
+ I unboxempty=SGNIFNOT(AT(w),BOXX)|(AN(w)-1);  // sign set if unboxed or empty
+ I aband=(a!=w)&SGNTO0(AC(w))&((I)jtinplace>>JTINPLACEWX);  // bit 0 = 1 if w is abandoned.  Must not accept a==w as it could lead to w containing itself
+
+ if((unboxempty|((AN(w)|AR(w))-2))<0){A neww;   // unboxed/empty w, or AN(w)<2 and AR(w)<2
+  // if w is unboxed/empty or is a singleton rank<2, allocate a recursive vector of 8 boxes, point AK to the next-last, and put w there as the new w.
+  GAT0(neww,BOX,8,1);  // allocate 8 boxes
+  AN(neww)=AS(neww)[0]=1; AFLAG(neww)|=BOX; AK(neww)+=6*SZI;   // Make neww a singleton list, recursive, with AK pointing to the next-last atom
+  // If w was abandoned, zap it, else ra
+  if(unboxempty<0){
+   // w was unboxed or empty.  Put it directly into neww, then ra or zap it.  If DIRECT abandoned, make result PRISTINE
+   AFLAG(neww)|=(-(AT(w)&DIRECT))&((aband)<<AFPRISTINEX);  // starts PRISTINE if abandoned DIRECT
+   if(aband>((AT(w)^AFLAG(w))&RECURSIBLE)){*AZAPLOC(w)=0;}else{ra(w);}  // zappable if abandoned recursive or direct
+   INCORPNV(w); AAV(neww)[0]=w;   // mark w as inside neww
+  }else{
+   // w was boxed, & a known singleton.  Put the single value into neww, then ra or zap.  neww is PRISTINE if w is abandoned pristine
+   // We don't have access to the tpush stack, but if w is abandoned recursive we can use the slot in w as a surrogate location to zap - maybe could even if nonrecursive?
+   AFLAG(neww)|=AFLAG(w)&((aband)<<AFPRISTINEX); AFLAG(w)&=~AFPRISTINE; // transfer pristinity from abandoned w to neww; clear in w since contents escaping
+   AAV(neww)[0]=AAV(w)[0]; if((AFLAG(w)&(aband<<BOXX))!=0){AAV(w)[0]=0;}else{ra(AAV(w)[0]);}  // zappable if abandoned recursive
+  }
+  aband=1;  // We can always start adding to the lists created here, UNLESS a and w were the same - 
+  w=neww;  // switch to new list
+ }
+ // now w has been boxed if needed & includes the new w value
+
+ if(1&&likely(((aband-AR(w))|SGNIFNOT(AFLAG(w),BOXX))>=0)){   // if w is recursive abandoned rank 1: (rank can't be 0, since we would have replaced it above)
+  // w was recursive abandoned.  We will store back-to-front, on the assumption that ; usually happens in bunches and w probably came from ;
+  // if new w has no space before the end, allocate a bigger block and move w to the end of it
+  if(unlikely(AK(w)==AKXR(1))){A neww;   // no space at the beginning of w
+   I neededn=AN(w)+4+8; CTLZI(neededn,neededn); neededn=(2LL<<neededn)-8;  // number of atoms needed in larger block: room for at least 4 more, rounded up to power of 2 after header
+   GATV0(neww,BOX,neededn,1); AN(neww)=AS(neww)[0]=AN(w); AK(neww)+=(neededn-(AN(w)+4))*SZI;  // allocate and position AK to put AN(w) atoms at end, with several spaces extra in case user wants to append in place
+   MC(AAV(neww),AAV(w),AN(w)*SZI);  // copy the atoms from old to new
+   AFLAG(neww)=AFLAG(w); AFLAG(w)&=~RECURSIBLE;  // Transfer ownership of old blocks to new, making neww recursive (& maybe PRISTINE) and w nonrecursive
+   w=neww;  // start adding to the new block
+  }
+  // Store a there & return.  If a was abandoned recursive or direct, zap it, else ra.  If a is DIRECT abandoned, allow w to stay PRISTINE
+  aband=SGNTO0(AC(a))&((I)jtinplace>>JTINPLACEAX);  // bit 0 = 1 if a is abandoned
+  AFLAG(w)&=((-(AT(a)&DIRECT))&((aband)<<AFPRISTINEX))|~AFPRISTINE;  // stays PRISTINE if abandoned DIRECT
+  if(aband>((AT(a)^AFLAG(a))&RECURSIBLE)){*AZAPLOC(a)=0;}else{ra(a);}  // zappable if abandoned and not recursible nonrecursive
+  AK(w)-=SZI; AN(w)=AS(w)[0]=AN(w)+1; INCORPNV(a); AAV(w)[0]=a;  // mark a incorped, install a at front, add to counts
+  RETF(w);  // return the augmented result
+ }
+#endif
+ // else fall through to handle general case
  if((-AN(w)&SGNIF(AT(w),BOXX))>=0){w = jtbox(JTIPWonly,w);}
  R jtover(jtinplace,jtbox(JTIPAtoW,a),w);  // box empty or unboxed w, join to boxed a
 }

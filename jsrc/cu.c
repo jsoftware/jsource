@@ -53,7 +53,7 @@ A jtevery(J jt, A w, A fs){A * RESTRICT wv,x,z,* RESTRICT zv;
  if(AFLAG(w)&AFVIRTUAL)w=ABACK(w);
  // *** now w has been replaced by its backing block, if it was virtual
  while(1){
-  // If the input was pristine inplaceable, flag the contents as inplaceable UNLESS they are PERMANENT
+  // If the input was pristine inplaceable and not virtual (i. e. originally unboxed), flag the contents as inplaceable UNLESS they are PERMANENT
   // If the input is inplaceable, there is no more use for it after this verb.  If it was pristine, every block in it is DIRECT and was either permanent or inplaceable when it was added; so if it's
   // not PERMANENT it is OK to change the usecount to inplaceable.  We must remove inplaceability on the usecount after execution, in case the input block is recursive and the contents now show a count of 2
   // We may create a block with usecount 8..2,  That's OK, because it cannot be fa'd unless it is ra'd first, and the ra will wipe out the inplaceability.  We do need to keep the usecount accurate, though.
@@ -186,7 +186,7 @@ A jtevery2(J jt, A a, A w, A fs){A*av,*wv,x,z,*zv;
 
  I rpt=rpti=-rpti;  // repeat counters
  while(1){
-  // If the input was pristine inplaceable, flag the contents as inplaceable UNLESS they are PERMANENT
+  // If the input was pristine inplaceable and not virtual (i. e. originally unboxed), flag the contents as inplaceable UNLESS they are PERMANENT
   // If the input is inplaceable, there is no more use for it after this verb.  If it was pristine, every block in it is DIRECT and was either permanent or inplaceable when it was added; so if it's
   // not PERMANENT it is OK to change the usecount to inplaceable.  We must remove inplaceability on the usecount after execution, in case the input block is recursive and the contents now show a count of 2
   // We may create a block with usecount 8..2,  That's OK, because it cannot be fa'd unless it is ra'd first, and the ra will wipe out the inplaceability.  We do need to keep the usecount accurate, though.
@@ -225,15 +225,17 @@ A jtevery2(J jt, A a, A w, A fs){A*av,*wv,x,z,*zv;
    realizeifvirtual(x); ra(x);   // Since we are moving the result into a recursive box, we must ra() it.  This plus rifv plus pristine removal=INCORPRA.  We could save some fetches by bundling this code into the RIRECT path
    // We have to see if virtw escaped.  If so, we must mark w non-PRISTINE.  Since we are concerned about virtw itself escaping, rather than a part of it,
    // we can look at its usecount after it the result is incorporated into the new result
+   // It might be better to leave pristinity of a/w unchanged if the input was abandoned, since that would allow earlier free of a/w
+   // If the arg escaped, we must also remove pristinity on the result if the arg is repeated, since it might show up again
    AFLAG(w)&=~((AC(virtw)!=wcpre)<<AFPRISTINEX);
-   AFLAG(a)&=~((AC(virta)!=acpre)<<AFPRISTINEX);
+   AFLAG(a)&=~((AC(virta)!=acpre)<<AFPRISTINEX); flags&=~((((AC(virtw)!=wcpre)&flags)|((AC(virta)!=acpre)&(flags>>1)))<<ACINPLACEX);
   } else {
    // result will be opened.  It is nonrecursive.  description in result.h.  We don't have to realize or ra
    if(AFLAG(x)&AFUNINCORPABLE){RZ(x=clonevirtual(x));}
    // since we are adding the block to a NONrecursive boxed result,  we DO NOT have to raise the usecount of the block.  And we don't have to mark the usecount non-inplaceable
    // We still have to see if virtw escaped, and on this leg we also have to see if the returned x was virtw
    AFLAG(w)&=~(((AC(virtw)!=wcpre)|(x==virtw))<<AFPRISTINEX);
-   AFLAG(a)&=~(((AC(virta)!=acpre)|(x==virta))<<AFPRISTINEX);
+   AFLAG(a)&=~(((AC(virta)!=acpre)|(x==virta))<<AFPRISTINEX); flags&=~(((((AC(virtw)!=wcpre)|(x==virtw))&flags)|(((AC(virtw)!=wcpre)|(x==virtw))&(flags>>1)))<<ACINPLACEX);
 #if 0  // not clear this is worth doing
    if(ZZFLAGWORD&ZZFLAGCOUNTITEMS){
     // if the result will be razed next, we will count the items and store that in AM.  We will also ensure that the result boxes' contents have the same type

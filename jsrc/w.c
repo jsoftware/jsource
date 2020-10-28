@@ -94,7 +94,7 @@ if(!jt->directdef&&(currc==CDD||currc==CDDZ))currc=CX;  // scaf  if direct def d
 }    // word index & end+1; z is m 2 1$(i0,e0),(i1,e1),... AM(z) is # words not including any final NB, or -1 if quote error
 
 // Turn word list back into string
-// wil is the word list from wordil (we ignore AM), w is the original character list
+// wil is the word list from wordil (we ignore AM and AN), w is the original character list
 // result is a single string containing all the words with no separators
 // The result is always writable
 A jtunwordil(J jt, A wil, A w, I opts){A z;

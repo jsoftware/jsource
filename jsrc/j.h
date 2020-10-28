@@ -658,6 +658,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define CALL2IP(f,a,w,fs) ((f)(jtinplace,(a),(w),(A)(fs)))
 #define RETARG(z)       (z)   // These places were ca(z) in the original JE
 #define CALLSTACKRESET  {jt->callstacknext=0; jt->uflags.us.uq.uq_c.pmctrbstk &= ~PMCTRBSTKREQD;} // establish initial conditions for things that might not get processed off the stack.  The last things stacked may never be popped
+#define MODESRESET      {jt->xmode=XMEXACT;}  // anything that might get left in a bad state and should be reset on return to immediate mode
 // see if a character matches one of many.  Example in ai.c
 // create mask for the bit, if any, in word w for value.  Reverse order: 0=MSB
 #define CCM(w,value) ((I)(((value)>>LGBW)==(w)?1LL<<(BW-1-((value)&BW-1)):0))

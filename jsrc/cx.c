@@ -1017,7 +1017,7 @@ A jtddtokens(J jt,A w,I env){
   // Close up after the megaword with empties
   I *fillv=&wilv[ddschbgnx][1]; DQ(2*(firstddbgnx-ddschbgnx)-1, *fillv++=wilv[firstddbgnx][0];)
   I ddendx=-1, ddbgnx=firstddbgnx;  // end/start of DD, indexes into wilv.  This will be the pair we process.  We advance ddbgnx and stop when we hit ddendx
-  I scanstart=firstddbgnx+1;  // start looking for DDEND after the first known DDBGN.  But if there turns out to be no DDEND, advance start ptr to avoid rescanning
+  I scanstart=firstddbgnx;  // start looking for DDEND/nounDD at the first known DDBGN.  But if there turns out to be no DDEND, advance start ptr to avoid rescanning
   while(1){I i;  // loop till we find a complete DD
    for(i=scanstart;i<nw;++i){
     US ch2=*(US*)(wv+wilv[i][0]);  // digraph for next word
@@ -1026,12 +1026,17 @@ A jtddtokens(J jt,A w,I env){
      //  Nested DD found.  We have to go back and preserve the spacing for everything that precedes it
      ddbgnx=i;  // set new start pointer, when we find an end
      fillv=&wilv[firstddbgnx][1]; DQ(2*(ddbgnx-firstddbgnx)-1, *fillv++=wilv[ddbgnx][0];)
-// if the nested DD is a noun, break to process it
+     if(AN(w)>=wilv[i][1]+2 && wv[wilv[i][0]+2]==')' && wv[wilv[i][0]+3]=='n'){  // is noun DD?
+      // if the nested DD is a noun, break to process it immediately
+      ddendx=0;  // use the impossible starting }} to signify noun DD
+      break;  // go process the noun DD
+     }
     }
    }  // find DD pair
-   if(ddendx>=0)break;  // we found an end, and we started at a begin, so we have a pair.  Go process it
+   if(ddendx>=0)break;  // we found an end, and we started at a begin, so we have a pair, or a noun DD if endx=0.  Go process it
 
    // Here the current line ended with no end DD or noun DD.  We have to continue onto the next line
+   ASSERT(AM(wil)>=0,EVOPENQ);  // if the line didn't contain noun DD, we have to give error if open quote
    ASSERT(!(env&4),EVCTRL);   // Abort if we are not allowed to continue (as for an event or ". y)
    scanstart=AM(wil);  // Get # words, not including final NB.  We have looked at em all, so start next look after all of them
    A neww=jgets("");  // fetch next line.
@@ -1048,38 +1053,82 @@ A jtddtokens(J jt,A w,I env){
    RZ(wil=jtapip(jtinplace,wil,lfwd));  // add a new word for added LF.  # words in wil is now scanstart+1
    ++scanstart;  // update count of words already examined so we start after the added LF word
    A newwil; RZ(newwil=wordil(neww));  // get index to new words
-   I savam=AM(newwil);  // save AM for insertion if final new string block
+   I savam=AM(newwil);  // save AM for insertion in final new string block
    makewritable(newwil);  // We will modify the block rather than adding to it
    I *nwv=IAV(newwil); DO(AN(newwil), *nwv++ += oldchn;)  // relocate all the new words so that they point to chars after the added LF
    RZ(wil=jtapip(jtinplace,wil,newwil));   // add new words after LF, giving old LF new
-   AM(wil)=savam+scanstart;  // set total # words in combined list, not including final comment
+   if(likely(savam>=0)){AM(wil)=savam+scanstart;}else{AM(wil)=0;}  // set total # words in combined list, not including final comment; remember if error scanning line
    wv=CAV(w); nw=AS(wil)[0]; wilv=voidAV(wil);  // refresh pointer to word indexes, and length
   }
 
-// if we found a noun DD, process it, replacing it with its string.  Look for delimiters on the first line, or at the start of a later line
-
-  // We have found an innermost DD, running from ddbgnx to ddendx.  Convert it to ( m : 'string' ) form
-  // convert all the chars of the DD to a quoted string block
-  A ddqu; RZ(ddqu=strq(wilv[ddendx][0]-wilv[ddbgnx+1][0],wv+wilv[ddbgnx+1][0]));
-  // append the string for the start/end of DD
-  I bodystart=AN(w), bodylen=AN(ddqu), trailstart=wilv[ddendx][1];  // start/len of body in w, and start of after-DD text
-  RZ(ddqu=jtapip(jtinplace,ddqu,str(7,")( 9 : ")));
-  // append the new stuff to w
-  RZ(w=jtapip(jtinplace,w,ddqu));
-  wv=CAV(w);   // refresh data pointer.  Number of words has not changed, nor have indexes
-  // Replace ddbgnx and ddendx with the start/end strings.  Fill in the middle, if any, with everything in between
-  wilv[ddbgnx][0]=AN(w)-6; wilv[ddbgnx][1]=AN(w);  //  ( 9 :  
-  wilv[ddbgnx+1][0]=bodystart; fillv=&wilv[ddbgnx+1][1]; DQ(2*(ddendx-ddbgnx)-1, *fillv++=bodystart+bodylen+1;)  // everything in between
-  // continue the search.
-  if(ddbgnx==firstddbgnx){ddschbgnx=ddendx+1;  //   If this was not a nested DD, we can simply pick up the search after ddendx.
-  }else{
-   // Nested DD.  The characters below ddendx are out of order and there will be trouble if we try to preserve
-   // the user's spacing by grouping them.  We must run the ending lines together, to save their spacing, and then
-   // refresh w and wil to get the characters in order
-   if(++ddendx<nw){wilv[ddendx][0]=trailstart; wilv[ddendx][1]=bodystart; AN(wil)=2*(AS(wil)[0]=ddendx+1);}  // make one string of DDEND to end of string
-   RZ(w=unwordil(wil,w,0)); RZ(wil=wordil(w));  // run chars in order; get index to words
+  if(ddendx==0){
+   // ******* NOUN DD **********
+   // we found a noun DD at ddbgnx: process it, replacing it with its string.  Look for delimiters on the first line, or at the start of a later line
+   I nounstart=wilv[ddbgnx][0]+4, wn=AN(w);  // the start of the DD string, the length of the string
+   I enddelimx=wn;  // will be character index of the ending }}, not found if >=wn-1, first line empty if =wn
+   // characters after nounstart cannot be examined as words, since they might have mismatched quotes.  Scan them for }}
+   if(nounstart<wn){  // {{)n at EOL does not add LF
+    for(enddelimx=nounstart;enddelimx<wn-1;++enddelimx)if(wv[enddelimx]==(DDEND&0xff) && wv[enddelimx+1]==(DDEND>>8))break;
+   }
+   if(enddelimx>=wn-1){
+    ASSERT(!(env&4),EVCTRL);   // Abort if we are not allowed to consume a new line (as for an event or ". y)
+    // if a delimiter was not found on the first line, consume lines until we hit a delimiter
+    while(1){
+     // append the LF for the previous line (unless an empty first line), then the new line itself, to w
+     if(enddelimx<wn){
+      w=jtapip(jtinplace,w,scc(DDSEP));   // append a separator   scaf use faux or constant block
+      jtinplace=(J)((I)jtinplace|JTINPLACEW);  // after the first one, we can certainly inplace on top of w
+     }
+     enddelimx=0;   // after the first line, we always install the LF
+     A neww=jgets("");  // fetch next line.
+     RE(0); ASSERT(neww!=0,EVCTRL); // fail if jgets failed, or if it returned EOF - problem either way
+     // join the new line onto the end of the old one
+     I oldchn=AN(w);  // len after adding LF, before adding new line
+     RZ(w=jtapip(jtinplace,w,neww));   // join the new character list onto the old, inplace if possible
+     jtinplace=(J)((I)jtinplace|JTINPLACEW);  // after the first one, we can certainly inplace on top of w
+     wv=CAV(w);   // refresh data pointer.  Number of words has not changed, nor have indexes
+     // see if the new line starts with the delimiter - if so, we're done looking
+     if(AN(w)>=oldchn+2 && wv[oldchn]==(DDEND&0xff) && wv[oldchn+1]==(DDEND>>8)){enddelimx=oldchn; break;}
+    }
+   }
+   // We have found the end delimiter, which starts at enddelimx.  We reconstitute the input line: we convert the noun DD to a quoted string
+   // and append the unprocessed part of the last line.  For safety, we put spaces around the string.  We rescan the combined line without
+   // trying to save the scan pointer, since the case is rare
+   A remnant; RZ(remnant=str(AN(w)-enddelimx-2,CAV(w)+enddelimx+2));  // get a string for the preserved tail of w
+   AS(wil)[0]=ddbgnx; RZ(w=unwordil(wil,w,0));  // take everything up to the {{)n - it may have been put out of order
+   A spacea; RZ(spacea=scc(' ')); RZ(w=apip(w,spacea));  // put space before quoted string
+   RZ(w=apip(w,strq(enddelimx-nounstart,wv+nounstart)));  // append quoted string
+   RZ(w=apip(w,spacea));  // put space after quoted string
+   RZ(w=apip(w,remnant));  // install unprocessed chars of original line
+   // line is ready.  Process it from the beginning
+   RZ(wil=wordil(w));  // get index to words
    wv=CAV(w); nw=AS(wil)[0]; wilv=voidAV(wil);  // cv=pointer to chars, nw=#words including final NB   wilv->[][2] array of indexes into wv word start/end
    ddschbgnx=0;  // start scan back at the beginning
+  }else{
+   // ********* NORMAL DD *******
+   // We have found an innermost non-noun DD, running from ddbgnx to ddendx.  Convert it to ( m : 'string' ) form
+   // convert all the chars of the DD to a quoted string block
+   A ddqu; RZ(ddqu=strq(wilv[ddendx][0]-wilv[ddbgnx+1][0],wv+wilv[ddbgnx+1][0]));
+   // append the string for the start/end of DD
+   I bodystart=AN(w), bodylen=AN(ddqu), trailstart=wilv[ddendx][1];  // start/len of body in w, and start of after-DD text
+   RZ(ddqu=jtapip(jtinplace,ddqu,str(7,")( 9 : ")));
+   // append the new stuff to w
+   RZ(w=jtapip(jtinplace,w,ddqu));
+   wv=CAV(w);   // refresh data pointer.  Number of words has not changed, nor have indexes
+   // Replace ddbgnx and ddendx with the start/end strings.  Fill in the middle, if any, with everything in between
+   wilv[ddbgnx][0]=AN(w)-6; wilv[ddbgnx][1]=AN(w);  //  ( 9 :  
+   wilv[ddbgnx+1][0]=bodystart; fillv=&wilv[ddbgnx+1][1]; DQ(2*(ddendx-ddbgnx)-1, *fillv++=bodystart+bodylen+1;)  // everything in between
+   // continue the search.
+   if(ddbgnx==firstddbgnx){ddschbgnx=ddendx+1;  //   If this was not a nested DD, we can simply pick up the search after ddendx.
+   }else{
+    // Nested DD.  The characters below ddendx are out of order and there will be trouble if we try to preserve
+    // the user's spacing by grouping them.  We must run the ending lines together, to save their spacing, and then
+    // refresh w and wil to get the characters in order
+    if(++ddendx<nw){wilv[ddendx][0]=trailstart; wilv[ddendx][1]=bodystart; AN(wil)=2*(AS(wil)[0]=ddendx+1);}  // make one string of DDEND to end of string
+    RZ(w=unwordil(wil,w,0)); RZ(wil=wordil(w));  // run chars in order; get index to words
+    wv=CAV(w); nw=AS(wil)[0]; wilv=voidAV(wil);  // cv=pointer to chars, nw=#words including final NB   wilv->[][2] array of indexes into wv word start/end
+    ddschbgnx=0;  // start scan back at the beginning
+   }
   }
 
 #if 0 // obsolete
@@ -1110,6 +1159,7 @@ A jtddtokens(J jt,A w,I env){
   // We have replaced one DD with its equivalent explicit definition.  Rescan the line, starting at the first location where DDBGN was seen
   for(firstddbgnx=ddschbgnx;firstddbgnx<nw;++firstddbgnx){US ch2=*(US*)(wv+wilv[firstddbgnx][0]); ASSERT(!(ch2==DDEND&&(wilv[firstddbgnx][1]-wilv[firstddbgnx][0]==2)),EVCTRL) if(ch2==DDBGN&&(wilv[firstddbgnx][1]-wilv[firstddbgnx][0]==2))break; }
  }
+ ASSERT(AM(wil)>=0,EVOPENQ);  // we have to make sure there is not an unscannable remnant at the end of the last line
  // All DDs replaced. convert word list back to either text form or enqueued form
  // We searched starting with ddschbgnx looking for DDBGN, and din't find one.  Now we need to lump
  // the words together, since the spacing may be necessary

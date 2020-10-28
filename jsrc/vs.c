@@ -338,7 +338,7 @@ F2(jtsparse2){A*av,q=0;B b;I j,k,t,*v;P*p;
  ASSERT(b||0<=k&&k<=2,EVDOMAIN);
  switch(k){
   case 0:  ASSERT(!q,EVDOMAIN); R t&SPARSE?denseit(w):sparse1(w);
-  case 1:  ASSERT(!q,EVDOMAIN); R sparsep1(w);
+  case 1:  ASSERT(!q,EVDOMAIN); q=sparsep1(w); PRISTCLRF(w); R q;
   case -1: ASSERT(!q,EVDOMAIN); R sparsen1(w);
   case 2:
    if(AR(a)){j=v[1]; ASSERT(q&&(1==j||2==j),EVDOMAIN); R 1==j?axbytes(q,w):axtally(q,w);}

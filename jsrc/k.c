@@ -386,7 +386,7 @@ A jtcvt(J jt,I t,A w){A y;B b;
 // If mode bit 1 is set, minimum precision is INT; if mode bit 2 is set, minimum precision is FL; if mode bit 3 is set, minimum precision is CMPX 
 // Result is a new buffer, always
 A jtbcvt(J jt,C mode,A w){FPREFIP; A y,z=w;D ofuzz;
- RZ(w);
+ ARGCHK1(w);
  ofuzz=jt->fuzz; RANK2T oqr=jt->ranks;  // save status for comparison, and ranks in case sparse needs them (should let sparse do the saving)
  jt->fuzz=0;     RESETRANK;
 #ifdef NANFLAG
@@ -424,7 +424,7 @@ A jtbcvt(J jt,C mode,A w){FPREFIP; A y,z=w;D ofuzz;
 }    /* convert to lowest type. 0=mode: don't convert XNUM/RAT to other types */
 
 F1(jticvt){A z;D*v,x;I i,n,*u;
- RZ(w);
+ ARGCHK1(w);
  n=AN(w); v=DAV(w);
  GATV(z,INT,n,AR(w),AS(w)); u=AV(z);
  for(i=0;i<n;++i){
@@ -441,7 +441,7 @@ A jtpcvt(J jt,I t,A w){A y;B b;RANK2T oqr=jt->ranks;
 
 #if !C_CRC32C
 F1(jtcvt0){I n,t;D *u;
- RZ(w);
+ ARGCHK1(w);
  t=AT(w); n=AN(w); 
  if(n&&t&FL+CMPX){
   if(t&CMPX)n+=n; u=DAV(w);
@@ -451,10 +451,10 @@ F1(jtcvt0){I n,t;D *u;
 }    /* convert -0 to 0 in place */
 #endif
 
-F1(jtxco1){RZ(w); ASSERT(AT(w)&DENSE,EVNONCE); R cvt(AT(w)&B01+INT+XNUM?XNUM:RAT,w);}
+F1(jtxco1){ARGCHK1(w); ASSERT(AT(w)&DENSE,EVNONCE); R cvt(AT(w)&B01+INT+XNUM?XNUM:RAT,w);}
 
 F2(jtxco2){A z;B b;I j,n,r,*s,t,*wv,*zu,*zv;
- RZ(a&&w);
+ ARGCHK2(a,w);
  n=AN(w); r=AR(w); t=AT(w);
  ASSERT(t&DENSE,EVNONCE);
  RE(j=i0(a));

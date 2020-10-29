@@ -169,13 +169,13 @@ SUFFIXPFX(bw1111sfxI, UI,UI, BW1111, bw1111II,R EVOK;)
 
 
 static DF1(jtsuffix){DECLF;I r;
- RZ(w);
+ ARGCHK1(w);
  r=(RANKT)jt->ranks; RESETRANK; if(r<AR(w))R rank1ex(w,self,r,jtsuffix);
  R eachl(IX(SETIC(w,r)),w,atop(fs,ds(CDROP)));
 }    /* f\."r w for general f */
 
 static DF1(jtgsuffix){A h,*hv,z,*zv;I m,n,r;
- RZ(w);
+ ARGCHK1(w);
  r=(RANKT)jt->ranks; RESETRANK; if(r<AR(w))R rank1ex(w,self,r,jtgsuffix);
  SETIC(w,n); 
  h=VAV(self)->fgh[2]; hv=AAV(h); m=AN(h);
@@ -193,7 +193,7 @@ static DF1(jtgsuffix){A h,*hv,z,*zv;I m,n,r;
  }}
 
 static DF1(jtssg){F1PREFIP;PROLOG(0020);A a,z;I i,n,r,wr;
- RZ(w);
+ ARGCHK1(w);
  ASSERT(DENSE&AT(w),EVNONCE);
  // loop over rank - we claim to handle IRS
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; RESETRANK; if(r<wr)R rank1ex(w,self,r,jtssg);
@@ -299,7 +299,7 @@ A jtscansp(J jt,A w,A self,AF sf){A e,ee,x,z;B*b;I f,m,j,r,t,wr;P*wp,*zp;
 }    /* f/\"r or f/\."r on sparse w */
 
 static DF1(jtsscan){A y,z;I d,f,m,n,r,t,wn,wr,*ws,wt;
- RZ(w);F1PREFIP;
+ ARGCHK1(w);F1PREFIP;
  wt=AT(w);
  if(unlikely((SPARSE&wt)!=0))R scansp(w,self,jtsscan);
  wn=AN(w); wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; ws=AS(w); RESETRANK;
@@ -319,7 +319,7 @@ static DF1(jtsscan){A y,z;I d,f,m,n,r,t,wn,wr,*ws,wt;
 
 
 static F2(jtomask){A c,r,x,y;I m,n,p;
- RZ(a&&w);
+ ARGCHK2(a,w);
  RE(m=i0(a)); p=ABS(m); SETIC(w,n);
  r=sc(0>m?(n+p-1)/p:MAX(0,1+n-m)); c=tally(w);
  x=reshape(sc(p),  num(0));
@@ -383,7 +383,7 @@ static DF2(jtofxassoc){A f,i,j,p,s,x,z;C id,*zv;I c,d,k,kc,m,r,t;V*v;VA2 adocv;
 static DF1(jtiota1rev){I j; SETIC(w,j); R apv(j,j,-1L);}
 
 F1(jtbsdot){A f;AF f1=jtsuffix,f2=jtoutfix;I flag=FAV(ds(CBSDOT))->flag;C id;V*v;  // init flag is IRS1
- RZ(w);
+ ARGCHK1(w);
  if(NOUN&AT(w))R fdef(0,CBSLASH,VERB, jtgsuffix,jtgoutfix, w,0L,fxeachv(1L,w), VGERL|VAV(ds(CBSLASH))->flag, RMAX,0L,RMAX);
  v=FAV(w);  // verb info for w
  switch(v->id){

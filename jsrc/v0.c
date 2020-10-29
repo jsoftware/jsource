@@ -30,7 +30,7 @@ static CFR(jtcfrx,X,XNUM,xplus,xtymes, negate)
 static CFR(jtcfrq,Q,RAT, qplus,qtymes,QNEGATE)
 
 static F1(jtrsort){A t,z;
- RZ(w);
+ ARGCHK1(w);
  PUSHCCT(1.0-jt->fuzz)
  RZ(t=over(mag(w),cant1(rect(w))));
  A tt; RZ(IRS2(t,t,0L,1L,1L,jtindexof,tt));
@@ -260,7 +260,7 @@ F1(jtpoly1){A c,e,x;
 
 
 static A jtmnomx(J jt,I m,A w){A s,*wv,x,z=w,*zv;I i,n,r;
- RZ(w);
+ ARGCHK1(w);
  if(BOX&AT(w)){
   n=AN(w); wv=AAV(w);  RZ(s=sc(m));
   GATV(z,BOX,n,AR(w),AS(w)); zv=AAV(z);
@@ -277,7 +277,7 @@ static A jtmnomx(J jt,I m,A w){A s,*wv,x,z=w,*zv;I i,n,r;
 }    /* standardize multinomial right arg */
 
 static F2(jtpoly2a){A c,e,x;I m;D rkblk[16];
- RZ(a&&w);
+ ARGCHK2(a,w);
  m=*(1+AS(a))-1;
  ASSERT(AT(a)&NUMERIC,EVDOMAIN);
  ASSERT(2==AR(a),EVRANK);
@@ -290,7 +290,7 @@ static F2(jtpoly2a){A c,e,x;I m;D rkblk[16];
 
 // x p. y    Supports IRS on the y argument; supports inplace
 DF2(jtpoly2){F2PREFIP;A c,za;I b;D*ad,d,p,*x,u,*z;I an,at,j,t,n,wt;Z*az,e,q,*wz,y,*zz;
- RZ(a&&w);
+ ARGCHK2(a,w);
  { RANK2T jtr=jt->ranks;I acr=jtr>>RANKTX; acr=AR(a)<acr?AR(a):acr; RESETRANK; // cell-rank of a
    if(((1-acr)|(acr-AR(a)))<0){R rank2ex(a,w,self,MIN(acr,1),0,acr,MIN(AR(w),jtr&RMAX),jtpoly2);}  // loop if multiple cells of a
  }
@@ -329,7 +329,7 @@ DF2(jtpoly2){F2PREFIP;A c,za;I b;D*ad,d,p,*x,u,*z;I an,at,j,t,n,wt;Z*az,e,q,*wz,
  b=b?3:b;
  if(likely(((j-1)&((t&XNUM+RAT+SPARSE)-1))<0)){
   if(ASGNINPLACESGN(SGNIF((I)jtinplace,JTINPLACEWX),w))za=w;else{GA(za,t,AN(w),AR(w),AS(w));}
-  if(n==0)RETF(za);  // don't run the copy loop if 0 atoms in result
+  if(n==0){RETF(za);}  // don't run the copy loop if 0 atoms in result
   z=DAV(za); zz=ZAV(za);
   b+=(t>>FLX)&3; // must be FL/CMPX, add 1 or 2
  }else{if(postfn)R jtupon2cell(jt,a,w,self);  // revert if there is a postfn, and we are using the eval path.  type must be FL

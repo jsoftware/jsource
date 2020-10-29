@@ -10,7 +10,7 @@
 
 
 static REPF(jtrepzdx){A p,q,x;P*wp;
- RZ(a&&w);F2PREFIP;
+ ARGCHK2(a,w);F2PREFIP;
  if(SPARSE&AT(w)){wp=PAV(w); x=SPA(wp,e);}
  else x=jt->fill&&AN(jt->fill)?jt->fill:filler(w);
  RZ(p=repeat(ravel(rect(a)),ravel(stitch(IX(wcr?*(wf+AS(w)):1),num(-1)))));
@@ -19,7 +19,7 @@ static REPF(jtrepzdx){A p,q,x;P*wp;
 }    /* (dense complex) # (dense or sparse) */
 
 static REPF(jtrepzsx){A q,x,y;I c,d,j,k=-1,m,p=0,*qv,*xv,*yv;P*ap;
- RZ(a&&w);F2PREFIP;
+ ARGCHK2(a,w);F2PREFIP;
  ap=PAV(a); x=SPA(ap,x); m=AN(x);
  if(!AN(SPA(ap,a)))R repzdx(ravel(x),w,wf,wcr);
  y=SPA(ap,i); yv=AV(y);
@@ -45,12 +45,12 @@ static REPF(jtrepzsx){A q,x,y;I c,d,j,k=-1,m,p=0,*qv,*xv,*yv;P*ap;
 
 static REPF(jtrepbdx){A z;I c,k,m,p;
  // wf and wcr are set
- RZ(a&&w);F2PREFIP;
+ ARGCHK2(a,w);F2PREFIP;
  if(SPARSE&AT(w))R irs2(ifb(AN(a),BAV(a)),w,0L,1L,wcr,jtfrom);
  m=AN(a);
  void *zvv; void *wvv=voidAV(w); I n=0; // pointer to output area; pointer to input data; number of prefix bytes to skip in first cell
  p=bsum(m,BAV(a));  // p=# 1s in result, i. e. length of result item axis
- if(m==p)RETF(w);  // if all the bits are 1, we can return very quickly.  It's rare, but so cheap to test for.
+ if(m==p){RETF(w);}  // if all the bits are 1, we can return very quickly.  It's rare, but so cheap to test for.
  PROD(c,wf,AS(w)); PROD(k,wcr-1,AS(w)+wf+1); // c=#cells, k=#atoms per item of cell
  I zn=c*k*p;  // zn=#atoms in result
  k<<=bplg(AT(w));   // k is now # bytes/cell
@@ -113,7 +113,7 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
 }    /* (dense boolean)#"r (dense or sparse) */
 
 static REPF(jtrepbsx){A ai,c,d,e,g,q,x,wa,wx,wy,y,y1,z,zy;B*b;I*dv,*gv,j,m,n,*u,*v,*v0;P*ap,*wp,*zp;
- RZ(a&&w);F2PREFIP;
+ ARGCHK2(a,w);F2PREFIP;
  ap=PAV(a); e=SPA(ap,e); 
  y=SPA(ap,i); u=AV(y);
  x=SPA(ap,x); n=AN(x); b=BAV(x);
@@ -146,7 +146,7 @@ static REPF(jtrepbsx){A ai,c,d,e,g,q,x,wa,wx,wy,y,y1,z,zy;B*b;I*dv,*gv,j,m,n,*u,
 }    /* (sparse boolean) #"r (dense or sparse) */
 
 static REPF(jtrepidx){A y;I j,m,p=0,*v,*x;
- RZ(a&&w);F2PREFIP;
+ ARGCHK2(a,w);F2PREFIP;
  RZ(a=vi(a)); x=AV(a);
  m=AS(a)[0];
  DO(m, ASSERT(0<=x[i],EVDOMAIN); p+=x[i]; ASSERT(0<=p,EVLIMIT););  // add up total # result slots
@@ -156,7 +156,7 @@ static REPF(jtrepidx){A y;I j,m,p=0,*v,*x;
 }    /* (dense  integer) #"r (dense or sparse) */
 
 static REPF(jtrepisx){A e,q,x,y;I c,j,m,p=0,*qv,*xv,*yv;P*ap;
- RZ(a&&w);F2PREFIP;
+ ARGCHK2(a,w);F2PREFIP;
  ap=PAV(a); e=SPA(ap,e); 
  y=SPA(ap,i); yv=AV(y);
  x=SPA(ap,x); if(!(INT&AT(x)))RZ(x=cvt(INT,x)); xv=AV(x);
@@ -173,7 +173,7 @@ static REPF(jtrepisx){A e,q,x,y;I c,j,m,p=0,*qv,*xv,*yv;P*ap;
 
 
 static REPF(jtrep1d){A z;C*wv,*zv;I c,k,m,n,p=0,q,t,*ws,zk,zn;
- RZ(a&&w);F2PREFIP;
+ ARGCHK2(a,w);F2PREFIP;
  t=AT(a); m=AN(a); ws=AS(w); SETICFR(w,wf,wcr,n);   // n=length of item axis in input.  If atom, is repeated to length of a
  if(t&CMPX){
   if(wcr)R repzdx(from(apv(n,0L,0L),a),w,                wf,wcr);
@@ -206,7 +206,7 @@ static B jtrep1sa(J jt,A a,I*c,I*d){A x;B b;I*v;
 }    /* process a in a#"0 w */
 
 static REPF(jtrep1s){A ax,e,x,y,z;B*b;I c,d,cd,j,k,m,n,p,q,*u,*v,wr,*ws;P*wp,*zp;
- RZ(a&&w);F2PREFIP;
+ ARGCHK2(a,w);F2PREFIP;
  if(AT(a)&SCMPX)R rep1d(denseit(a),w,wf,wcr);
  RE(rep1sa(a,&c,&d)); cd=c+d;
  if(DENSE&AT(w))R rep1d(d?jdot2(sc(c),sc(d)):sc(c),w,wf,wcr);  // here if dense w
@@ -250,7 +250,7 @@ static REPF(jtrep1s){A ax,e,x,y,z;B*b;I c,d,cd,j,k,m,n,p,q,*u,*v,wr,*ws;P*wp,*zp
 
 A (*reptab[])() = {jtrepisx,jtrepidx,jtrepbsx,jtrepbdx,jtrep1s,jtrep1d,jtrepzsx,jtrepzdx};
 F2(jtrepeat){A z;I acr,ar,wcr,wf,wr;
- RZ(a&&w);F2PREFIP;
+ ARGCHK2(a,w);F2PREFIP;
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK;
 I adense=-(AT(a)&DENSE);  // sign set if a is dense

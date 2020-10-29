@@ -10,14 +10,14 @@
 // AT(self) is the trigger level (the original n)
 // AM(self) is the block for u
 static DF1(jtlev1){
- RZ(w);  // self is never 0
+ ARGCHK1(w);  // self is never 0
  A fs=(A)AM(self); AF fsf=FAV(fs)->valencefns[0];  // fetch verb and routine for leaf nodes.  Do it early
  if(levelle(w,AT(self))){R CALL1(fsf,w,fs);} else{STACKCHKOFL R every(w,self);}  // since this recurs, check stack
 }
 
 // Like monad, but AT(self) is left trigger level, AC(self) is the right trigger level 
 static A jtlev2(J jt,A a,A w,A self){
- RZ(a&&w);
+ ARGCHK2(a,w);
  A fs=(A)AM(self); AF fsf=FAV(fs)->valencefns[1];  // fetch verb and routine for leaf nodes.  Do it early
  I aready=levelle(a,AT(self)); I wready=levelle(w,AC(self));  // see if args are at the needed level
  // If both args are ready to process, do so.  Otherwise, drop down a level and try again.  If one arg is ready but the other isn't,
@@ -35,7 +35,7 @@ static I jtefflev(J jt,I j,A h,A x){I n,t; n=*(j+AV(h)); R n>=0?n:(t=level(x),MA
 // L: and S: will be rarely used on pristine blocks, which be definition have all DIRECT contents & would thus be
 // better served by &.> .  Thus, we just mark the inputs as non-pristinable.
 static DF1(jtlcapco1){A z;V*v=FAV(self); 
- RZ(w);
+ ARGCHK1(w);
  PRISTCLR(w)
 
  PRIM shdr; A recurself=(A)&shdr;  // allocate the block we will recur with
@@ -47,7 +47,7 @@ static DF1(jtlcapco1){A z;V*v=FAV(self);
 }
 
 static DF2(jtlcapco2){A z;V*v=FAV(self);
- RZ(a&&w);
+ ARGCHK2(a,w);
  PRISTCLR(w) PRISTCLRNODCL(a)
  PRIM shdr; A recurself=(A)&shdr;  // allocate the block we will recur with
  AM(recurself)=(I)v->fgh[0];  // fill in the pointer to u
@@ -60,7 +60,7 @@ static DF2(jtlcapco2){A z;V*v=FAV(self);
 // Result logger for S:   w is the result; we add it to AK(self), reallocating as needed
 // result is 0 for error or a harmless small result (0) which will be collected at higher levels and discarded
 static DF1(jtscfn){
- RZ(w);
+ ARGCHK1(w);
  if(AS(AKASA(self))[0]==AN(AKASA(self))){I n=AN(AKASA(self)); RZ(AKASA(self)=ext(1,AKASA(self))); AS(AKASA(self))[0]=n;}  // if current buffer is full, reallocate.  ext resets AS
  AAV(AKASA(self))[AS(AKASA(self))[0]++]=incorp(w);  // copy in new result pointer
  R num(0);  // harmless good return
@@ -68,14 +68,14 @@ static DF1(jtscfn){
 
 // u S: n - like L: except for calling the logger
 static DF1(jtlevs1){
- RZ(w);  // self is never 0
+ ARGCHK1(w);  // self is never 0
  A fs=(A)AM(self); AF fsf=FAV(fs)->valencefns[0];  // fetch verb and routine for leaf nodes.  Do it early
  if(levelle(w,AT(self))){RZ(scfn(CALL1(fsf,w,fs),self));} else{STACKCHKOFL RZ(every(w,self));}  // since this recurs, check stack
  R num(0);
 }
 
 static DF2(jtlevs2){
- RZ(a&&w);
+ ARGCHK2(a,w);
  A fs=(A)AM(self); AF fsf=FAV(fs)->valencefns[1];  // fetch verb and routine for leaf nodes.  Do it early
  I aready=levelle(a,AT(self)); I wready=levelle(w,AC(self));  // see if args are at the needed level
  // If both args are ready to process, do so.  Otherwise, drop down a level and try again.  If one arg is ready but the other isn't,
@@ -89,7 +89,7 @@ static DF2(jtlevs2){
 }
 
 static DF1(jtscapco1){PROLOG(555);A x,z=0;I m;V*v=FAV(self);
- RZ(w);
+ ARGCHK1(w);
  PRISTCLR(w)
  PRIM shdr; A recurself=(A)&shdr;  // allocate the block we will recur with
  AM(recurself)=(I)v->fgh[0];  // fill in the pointer to u
@@ -109,7 +109,7 @@ static DF1(jtscapco1){PROLOG(555);A x,z=0;I m;V*v=FAV(self);
 }
 
 static DF2(jtscapco2){PROLOG(556);A x,z=0;V*v=FAV(self); 
- RZ(a&&w);
+ ARGCHK2(a,w);
  PRISTCLR(w) PRISTCLRNODCL(a)
  PRIM shdr; A recurself=(A)&shdr;  // allocate the block we will recur with
  AM(recurself)=(I)v->fgh[0];  // fill in the pointer to u
@@ -130,7 +130,7 @@ static DF2(jtscapco2){PROLOG(556);A x,z=0;V*v=FAV(self);
 
 
 static A jtlsub(J jt,C id,A a,A w){A h,t;B b=id==CLCAPCO;I*hv,n,*v;
- RZ(a&&w);
+ ARGCHK2(a,w);
  ASSERT((SGNIF(AT(a),VERBX)&-(AT(w)&NOUN))<0,EVDOMAIN);
  n=AN(w); 
  ASSERT(1>=AR(w),EVRANK);

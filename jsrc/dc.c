@@ -7,7 +7,7 @@
 #include "d.h"
 
 
-static F1(jtdfrep){RZ(w); R NOUN&AT(w)?w:lrep(w);}
+static F1(jtdfrep){ARGCHK1(w); R NOUN&AT(w)?w:lrep(w);}
 
 static SYMWALK(jtdloc,A,BOX,5,2,1,{RZ(*zv++=incorp(sfn(0,d->name))); RZ(*zv++=incorp(dfrep(d->val)));})
 

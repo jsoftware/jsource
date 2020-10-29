@@ -66,7 +66,7 @@ static AHDRR(bw1010insC,UC,UC){I k=d*(n-1);UC t=(UC)((n&1)-1); x+=k; DQ(m, DQ(d,
 
 #define BITWISE(f,T,op)  \
  F2(f){A z;I *av,k=0,x;T*wv,y,*zv;             \
-  RZ(a&&w);F2PREFIP;  /* kludge we allow inplace call but we don't honor it yet */ \
+  ARGCHK2(a,w);F2PREFIP;  /* kludge we allow inplace call but we don't honor it yet */ \
   if(!(INT&AT(a)))RZ(a=cvt(INT,a));                                    \
   if(!(INT&AT(w)))RZ(w=cvt(INT,w));                                    \
   av=(I*)AV(a);                          \
@@ -102,7 +102,7 @@ static AHDR2FN* bwI[16]={(AHDR2FN*)bw0000II,(AHDR2FN*)bw0001II,(AHDR2FN*)bw0010I
 /* m e. 16+i.16      */
 
 DF2(jtbitwisechar){DECLFG;A*p,x,y,z;B b;I j,m,n,zn;AHDR2FN* ado;
- RZ(a&&w);
+ ARGCHK2(a,w);
  x=a;
  y=w;
  if((-AN(a)&-AN(w)&-(AT(a)&AT(w))&LIT)>=0)R from(df2(z,indexof(ds(CALP),a),indexof(ds(CALP),w),fs),ds(CALP));  // empty or not LIT
@@ -149,7 +149,7 @@ static AHDRRFN* bwinsI[16]={(AHDRRFN*)bw0000insI,(AHDRRFN*)bw0001insI,(AHDRRFN*)
 /* m e. 16+i.16     */
 
 DF1(jtbitwiseinsertchar){A fs,z;I d,j,n,r,wn,wr,zatoms;UC*u,*v,*wv,x,*zv;AHDRRFN* ado;
- RZ(w&&self);
+ ARGCHK2(w,self);
  wr=AR(w); wn=AN(w); SETIC(w,n); z=VAV(self)->fgh[0]; fs=VAV(z)->fgh[0];
  if((-(wn)&(SZI-n)&SGNIF(AT(w),LITX))>=0)R from(df1(z,indexof(ds(CALP),w),fs),ds(CALP));  // revert if not wn!=0 & n>SZI & LIT
  PROD(d,wr-1,AS(w)+1); zatoms=d; wv=CAV(w); j=i0(VAV(fs)->fgh[1])-16; ado=(AHDRRFN*)bwinsC[j];  // d=#atoms in an item of a cell.  There is only 1 cell here (rank _)

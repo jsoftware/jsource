@@ -6,18 +6,18 @@
 #include "j.h"
 
 
-F1(jttally ){A z; I k; RZ(w); z=sc(SETIC(w,k));            RETF(AT(w)&XNUM+RAT?xco1(z):z);}  //  # y
-F1(jtshapex){A z; RZ(w); z=vec(INT,AR(w),AS(w)); RETF(AT(w)&XNUM+RAT?xco1(z):z);}
-F1(jtshape){RZ(w); R vec(INT,AR(w),AS(w));}  // $ y
-F1(jtisempty){RZ(w); if(unlikely((AT(w)&SPARSE)!=0))R eps(zeroionei(0),shape(w)); R num(AN(w)==0);}  // 0 e. $
-F1(jtisnotempty){RZ(w); if(unlikely((AT(w)&SPARSE)!=0))R not(eps(zeroionei(0),shape(w))); R num(AN(w)!=0);}  // *@#@,
-F1(jtisitems){RZ(w); R num(!AR(w)|!!AS(w)[0]);}   // *@#   *@:#
-F1(jtrank){F1PREFIP; RZ(w); R sc(AR(w));}  // #@$
-F1(jtnatoms){F1PREFIP; A z; RZ(w); if(unlikely((AT(w)&SPARSE)!=0))R df1(z,shape(w),slash(ds(CSTAR))); R sc(AN(w));}   // */@$  #@,
+F1(jttally ){A z; I k; ARGCHK1(w); z=sc(SETIC(w,k));            RETF(AT(w)&XNUM+RAT?xco1(z):z);}  //  # y
+F1(jtshapex){A z; ARGCHK1(w); z=vec(INT,AR(w),AS(w)); RETF(AT(w)&XNUM+RAT?xco1(z):z);}
+F1(jtshape){ARGCHK1(w); R vec(INT,AR(w),AS(w));}  // $ y
+F1(jtisempty){ARGCHK1(w); if(unlikely((AT(w)&SPARSE)!=0))R eps(zeroionei(0),shape(w)); R num(AN(w)==0);}  // 0 e. $
+F1(jtisnotempty){ARGCHK1(w); if(unlikely((AT(w)&SPARSE)!=0))R not(eps(zeroionei(0),shape(w))); R num(AN(w)!=0);}  // *@#@,
+F1(jtisitems){ARGCHK1(w); R num(!AR(w)|!!AS(w)[0]);}   // *@#   *@:#
+F1(jtrank){F1PREFIP; ARGCHK1(w); R sc(AR(w));}  // #@$
+F1(jtnatoms){F1PREFIP; A z; ARGCHK1(w); if(unlikely((AT(w)&SPARSE)!=0))R df1(z,shape(w),slash(ds(CSTAR))); R sc(AN(w));}   // */@$  #@,
 
 // ,y and ,"r y - producing virtual blocks
 F1(jtravel){A a,c,q,x,y,y0,z;B*b;I f,j,m,r,*u,*v,*yv;P*wp,*zp;
- F1PREFIP; RZ(w); 
+ F1PREFIP; ARGCHK1(w); 
  r=(RANKT)jt->ranks; r=AR(w)<r?AR(w):r; f=AR(w)-r; // r=effective rank (jt->rank is effective rank from irs1), f=frame
  if(likely(!(AT(w)&SPARSE))){
   if(r==1)R RETARG(w);  // if we are enfiling 1-cells, there's nothing to do, return the input (note: AN of sparse array is always 1)
@@ -64,7 +64,7 @@ F1(jtravel){A a,c,q,x,y,y0,z;B*b;I f,j,m,r,*u,*v,*yv;P*wp,*zp;
 }
 
 F1(jttable){A z,zz;I r,wr;
- RZ(w);F1PREFIP;
+ ARGCHK1(w);F1PREFIP;
  // We accept the pristine calculations from ravel
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r;  // r=rank to use
  RZ(IRSIP1(w,0L,r-1<0?0:r-1,jtravel,z));  // perform ravel on items
@@ -74,7 +74,7 @@ F1(jttable){A z,zz;I r,wr;
 // ]"n, dyadic - also ["n, implemented as ] with ranks switched
 // length error has already been detected, in irs
 static A jtlr2(J jt,RANK2T ranks,A a,A w){I acr,af,ar,wcr,wf,wr;
- RZ(a&&w);
+ ARGCHK2(a,w);
  // ?r=rank of ? arg; ?cr= verb-rank for that arg; ?f=frame for ?; ?s->shape
  // We know that jt->rank is nonzero, because the caller checked it
  ar=AR(a); acr=ranks>>RANKTX; acr=ar<acr?ar:acr; af=ar-acr;
@@ -82,7 +82,7 @@ static A jtlr2(J jt,RANK2T ranks,A a,A w){I acr,af,ar,wcr,wf,wr;
  // Cells of the shorter-frame argument are repeated.  If the shorter- (or equal-)-frame argument
  // is the one being discarded (eg (i. 10 10) ["0 i. 10), the replication doesn't matter, and we
  // simply keep the surviving argument intact.
- if(wf>=af)RETF(w);  // no replication - quick out
+ if(wf>=af){RETF(w);}  // no replication - quick out
  RESETRANK; RETF(reitem(vec(INT,af-wf,AS(a)),lamin1(w)));  // could use virtual block, but this case is so rare...
 } 
 
@@ -115,14 +115,14 @@ F1(jtjico1){A y,z;B b;D d,*v;I c,m,n;
  RETF(z);
 }
 
-DF1(jtnum1){RZ(   w&&self); R FAV(self)->fgh[2];}
-DF2(jtnum2){RZ(a&&w&&self); R FAV(self)->fgh[2];}
+DF1(jtnum1){ARGCHK2(w,self); R FAV(self)->fgh[2];}
+DF2(jtnum2){ARGCHK3(a,w,self); R FAV(self)->fgh[2];}
 
-F2(jtfromr  ){RZ(a&&w); A z; R IRS2(a,w,0, RMAX,1L,jtfrom  ,z);} // no agreement check because left rank is infinite - no frame  {"_ 1
-F2(jtrepeatr){RZ(a&&w); A z; R IRS2(a,w,0, RMAX,1L,jtrepeat,z);}  // #"_ 1
+F2(jtfromr  ){ARGCHK2(a,w); A z; R IRS2(a,w,0, RMAX,1L,jtfrom  ,z);} // no agreement check because left rank is infinite - no frame  {"_ 1
+F2(jtrepeatr){ARGCHK2(a,w); A z; R IRS2(a,w,0, RMAX,1L,jtrepeat,z);}  // #"_ 1
 
-A jttaker(J jt,I n,A w){RZ(w); A a,z; RZ(a=sc(n)); R IRS2(a,w,0, RMAX,1L,jttake,z);}  // n {."1 w
-A jtdropr(J jt,I n,A w){RZ(w); A a,z; RZ(a=sc(n)); R IRS2(a,w,0, RMAX,1L,jtdrop,z);}  // n }."1 w
+A jttaker(J jt,I n,A w){ARGCHK1(w); A a,z; RZ(a=sc(n)); R IRS2(a,w,0, RMAX,1L,jttake,z);}  // n {."1 w
+A jtdropr(J jt,I n,A w){ARGCHK1(w); A a,z; RZ(a=sc(n)); R IRS2(a,w,0, RMAX,1L,jtdrop,z);}  // n }."1 w
 
 F1(jticap){A a,e;I n;P*p;
  F1RANK(1,jticap,DUMMYSELF);

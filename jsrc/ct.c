@@ -9,13 +9,13 @@
 static F1(jttayatop);
 
 static F1(jtcoeff){V*v;
- RZ(w);
+ ARGCHK1(w);
  v=FAV(w);
  R VTAYFINITE&v->flag ? curtail(FAV(v->fgh[0])->fgh[1]) : mtv;
 }    /* coefficents c in {&c@(n&<.), or empty */
 
 static F1(jttpoly){A z;
- RZ(w);
+ ARGCHK1(w);
  RZ(z=atop(amp(ds(CLBRACE),over(AT(w)&CMPX?w:xco1(w),num(0))),amp(tally(w),ds(CMIN))));
  FAV(z)->flag=VTAYFINITE;
  RETF(z);
@@ -85,7 +85,7 @@ static A jttcoamp(J jt,A w,B nf,A x,A h){I j;V*v=FAV(h);
 }
 
 static F2(jttayinv){A y;I m,*v;
- RZ(a&&w);
+ ARGCHK2(a,w);
  RZ(y=vip(w)); v=AV(y);
  m=0; DO(AN(w), m=MAX(m,v[i]);); ++m;
  RZ(y=IX(m)); if(AT(w)&XNUM+RAT)RZ(y=xco1(y));
@@ -186,7 +186,7 @@ static CS1(jttcap1, df1(w,tcap(fix(fs,zeroionei(0)),gs)),0106)
 static DF1(jttcoh1){R hgcoeff(w,FAV(self)->fgh[0]);}
 
 F1(jttdot){A f,g,h;B nf,ng;C id;V*v;
- RZ(w);
+ ARGCHK1(w);
  if(NOUN&AT(w))R vger2(CTDOT,0L,w);
  if(!nameless(w))R ADERIV(CTDOT,jttdot1,0L,VISATOMIC1,RMAX,RMAX,RMAX);
  v=FAV(w); id=v->id;
@@ -236,7 +236,7 @@ F1(jttdot){A f,g,h;B nf,ng;C id;V*v;
 }
 
 F1(jttco){A f,g;B nf,ng;C id;V*v;
- RZ(w);
+ ARGCHK1(w);
  ASSERT(VERB&AT(w),EVDOMAIN);
  if(!nameless(w))R ADERIV(CTCO,jttco1,0L,VFLAGNONE, RMAX,RMAX,RMAX);
  v=FAV(w); id=v->id;

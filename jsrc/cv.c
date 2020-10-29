@@ -15,7 +15,7 @@ fitctvector(jtfitcteq,jtatomic2(jtinplace,a,w,fs))
 // To avoid multiple indirect branches, we vector the common comparisons to a routine that jumps directly to them
 static const AF aff2[] = {jtfitct2, jtfitcteq};
 static A jtfitct(J jt,A a,A w,I cno){V*sv;
- RZ(a&&w);
+ ARGCHK2(a,w);
  ASSERT(!AR(w),EVRANK);
  sv=FAV(a);
  // Get the tolerance, as a float

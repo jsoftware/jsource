@@ -10,7 +10,7 @@ static F1(jtdrr);
 EVERYFS(drrself,jtdrr,0,0,VFLAGNONE)
 
 static F1(jtdrr){PROLOG(0055);A df,dg,hs,*x,z;B b,ex,xop;C c,id;I fl,*hv,m;V*v;
- RZ(w);
+ ARGCHK1(w);
  // If the input is a name, it must be from ".@'name' which turned into ".@(name+noun)  - or in debug, but that's discarded
  if(AT(w)&NAME){RZ(w=sfn(0,w));}
  // If noun, return the value of the noun.
@@ -40,7 +40,7 @@ F1(jtdrep){A z=drr(w); R z&&AT(z)&BOX?z:ravel(box(z));}
 
 
 F1(jtaro){A fs,gs,hs,s,*u,*x,y,z;B ex,xop;C id;I*hv,m;V*v;
- RZ(w);
+ ARGCHK1(w);
  if(FUNC&AT(w)){
   v=FAV(w); id=v->id;
   I fndx=(id==CBDOT)&&!v->fgh[0]; fs=v->fgh[fndx]; gs=v->fgh[fndx^1];  // In verb for m b., if f is empty look to g for the left arg.  It would be nice to be more general
@@ -83,7 +83,7 @@ static DF1(jtfxchar){A y;C c,d,id,*s;I m,n;
 // Convert an AR to an A block.  w is a gerund that has been opened
 // self is normally 0; if nonzero, we return a noun type ('0';<value) as is rather than returning value, and leave adv/conj ARs looking like nouns
 DF1(jtfx){A f,fs,g,h,p,q,*wv,y,*yv;C id;I m,n=0;
- RZ(w);
+ ARGCHK1(w);
  // if string, handle that special case (verb/primitive)
  if(LIT&AT(w))R fxchar(w,self);
  // otherwise, it had better be boxed with rank 0 or 1, and 1 or 2 atoms
@@ -242,7 +242,7 @@ static A*jtunparse1a(J jt,I m,A*hv,A*zv){A*v,x,y;CW*u;I i,j,k;
 
 // w is a def.  Return unparsed form
 F2(jtunparsem){A h,*hv,dc,ds,mc,ms,z,*zu,*zv;I dn,m,mn,n,p;V*wv;
- RZ(a&&w);
+ ARGCHK2(a,w);
  wv=VAV(w); h=wv->fgh[2]; hv=AAV(h);  // h[2][HN] is preparsed def
  mc=hv[1];    ms=hv[2];    m=mn=AN(mc);  // mc->control words ms->commented text
  dc=hv[1+HN]; ds=hv[2+HN]; n=dn=AN(dc);
@@ -267,7 +267,7 @@ F2(jtunparsem){A h,*hv,dc,ds,mc,ms,z,*zu,*zv;I dn,m,mn,n,p;V*wv;
 }    /* convert h parameter for : definitions; open if a is 0 */
 
 static F2(jtxrep){A h,*hv,*v,x,z,*zv;CW*u;I i,j,n,q[3],*s;V*wv; 
- RZ(a&&w);
+ ARGCHK2(a,w);
  RE(j=i0(a)); ASSERT(1==j||2==j,EVDOMAIN); j=1==j?0:HN;
  ASSERT(AT(w)&VERB+ADV+CONJ,EVDOMAIN);
  wv=FAV(w); h=wv->fgh[2];

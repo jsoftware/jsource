@@ -136,7 +136,7 @@ static A jtva1s(J jt,A w,A self,I cv,VA1F ado){A e,x,z,ze,zx;B c;I n,oprc,t,zt;P
 
 static A jtva1(J jt,A w,A self){A z;I cv,n,t,wt,zt;VA1F ado;
  UA *u=(UA *)FAV(self)->localuse.lvp[1];
- RZ(w);F1PREFIP;
+ ARGCHK1(w);F1PREFIP;
  wt=AT(w); n=AN(w); wt=(I)jtinplace&JTEMPTY?B01:wt;
 #if SY_64
  VA1 *p=&u->p1[(0x0321000054032100>>(CTTZ(wt)<<2))&7];  // from MSB, we need xxx 011 010 001 xxx 000 xxx xxx   101 100 xxx 011 010 001 xxx 000
@@ -170,7 +170,7 @@ static A jtva1(J jt,A w,A self){A z;I cv,n,t,wt,zt;VA1F ado;
  t=atype(cv); zt=rtype(cv);  // extract required type of input and result
  if(UNSAFE(t&~wt)){RZ(w=cvt(t,w)); jtinplace=(J)((I)jtinplace|JTINPLACEW);}  // convert input if necessary; if we converted, converted result is ipso facto inplaceable.  t is usually 0
  if(ASGNINPLACESGN(SGNIF((I)jtinplace,JTINPLACEWX)&SGNIF(cv,VIPOKWX),w)){z=w; if(TYPESNE(AT(w),zt))MODBLOCKTYPE(z,zt)}else{GA(z,zt,n,AR(w),AS(w));}
- if(!n)RETF(z); 
+ if(!n){RETF(z);} 
  I oprc = ((AHDR1FN*)ado)(jt,n,AV(z),AV(w));  // perform the operation on all the atoms, save result status.  If an error was signaled it will be reported here, but not necessarily vice versa
  if(oprc==EVOK){RETF(cv&VRI+VRD?cvz(cv,z):z);}  // Normal return point: if no error, convert the result if necessary (rare)
  else{
@@ -204,13 +204,13 @@ static A jtva1(J jt,A w,A self){A z;I cv,n,t,wt,zt;VA1F ado;
 // Consolidated entry point for ATOMIC1 verbs.
 // This entry point supports inplacing
 DF1(jtatomic1){A z;
- RZ(w);
+ ARGCHK1(w);
  F1PREFIP;
  I awm1=AN(w)-1;
  // check for singletons
  if(!(awm1|(AT(w)&(NOUN&UNSAFE(~(B01+INT+FL)))))){  // len=1 andbool/int/float
   z=jtssingleton1(jtinplace,w,self);
-  if(z||jt->jerr<=NEVM)RETF(z);  // normal return, or non-retryable error
+  if(z||jt->jerr<=NEVM){RETF(z);}  // normal return, or non-retryable error
   // if retryable error, fall through.  The retry will not be through the singleton code
   jtinplace=(J)((I)jtinplace|JTRETRY);  // indicate that we are retrying the operation
  }
@@ -219,9 +219,9 @@ DF1(jtatomic1){A z;
  // Run the full dyad, retrying if a retryable error is returned
  while(1){  // run until we get no error
   z=jtva1(jtinplace,w,self);  // execute the verb
-  if(z||jt->jerr<=NEVM)RETF(z);   // return if no error or error not retryable
+  if(z||jt->jerr<=NEVM){RETF(z);}   // return if no error or error not retryable
   jtinplace=(J)((I)jtinplace|JTRETRY);  // indicate that we are retrying the operation
  }
 }
 
-DF1(jtpix   ){RZ(w); F1PREFIP; if(XNUM&AT(w)&&(jt->xmode==XMFLR||jt->xmode==XMCEIL))R jtatomic1(jtinplace,w,self); R jtatomic2(jtinplace,pie,w,ds(CSTAR));}
+DF1(jtpix   ){ARGCHK1(w); F1PREFIP; if(XNUM&AT(w)&&(jt->xmode==XMFLR||jt->xmode==XMCEIL))R jtatomic1(jtinplace,w,self); R jtatomic2(jtinplace,pie,w,ds(CSTAR));}

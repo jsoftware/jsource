@@ -17,7 +17,7 @@ static AIFX(gtC,  B, UC,UC, >  )
 #define PLUSX +
 
 DF2(jtcharfn2){A z;B b;C c;I an,ar,*as,m,n,wn,wr,*ws,zn,zt;V*v;VF ado=0;
- RZ(a&&w);
+ ARGCHK2(a,w);
  v=FAV(self); c=ID(v->fgh[0]);
  if(CUNDER==v->id)switch(c){
   case CMAX:  zt=LIT; ado=(VF)maxC; break;

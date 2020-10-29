@@ -23,19 +23,19 @@ static DF2(secf2){F2PREFIP; A h=FAV(self)->fgh[2]; ASSERT(!jt->seclev,EVSECURE);
 
 // undocumented 13!:80 functions, used to test condrange
 static DF2(jtfindrange){
- RZ(a&&w);
+ ARGCHK2(a,w);
  I *av = AV(a);
  CR rng = condrange(AV(w),AN(w),av[0],av[1],av[2]);
  R v2(rng.min,rng.range);
 } // 13!:80
 static DF2(jtfindrange4){
- RZ(a&&w);
+ ARGCHK2(a,w);
  I *av = AV(a);
  CR rng = condrange4(C4AV(w),AN(w),av[0],av[1],av[2]);
  R v2(rng.min,rng.range);
 }  // 13!:81
 static DF2(jtfindrange2){
- RZ(a&&w);
+ ARGCHK2(a,w);
  I *av = AV(a);
  CR rng = condrange2(USAV(w),AN(w),av[0],av[1],av[2]);
  R v2(rng.min,rng.range);
@@ -43,14 +43,14 @@ static DF2(jtfindrange2){
 
 // 13!:83  Return header info: t, flag, m, type, c, n, r
 static DF1(jthdrinfo){A z;
- RZ(w);
+ ARGCHK1(w);
  GAT0(z,INT,7,1);
  IAV(z)[0]=AK(w); IAV(z)[1]=AFLAG(w); IAV(z)[2]=AM(w); IAV(z)[3]=AT(w); IAV(z)[4]=AC(w); IAV(z)[5]=AN(w); IAV(z)[6]=AR(w);
  R z;
 }
 
 F2(jtforeign){I p,q;
- RZ(a&&w);
+ ARGCHK2(a,w);
  p=i0(a); q=i0(w); RE(0);
  if(11==p)R fdef(0,CIBEAM,VERB, jtwd,0L, a,w,0L, VASGSAFE, 1L,RMAX,RMAX);
  ASSERT((UI)p<=(UI)128 && (UI)q<XCC,EVDOMAIN);

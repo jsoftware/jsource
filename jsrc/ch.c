@@ -44,7 +44,7 @@ static A jthgd(J jt,B b,I n,A w,A p,A q){A c,d,e,z;D r,s,t,*u,*v,x,*zv;I j,pn,qn
 }    /* real vector p,q; real scalar w; all terms (1=b) or last term (0=b) */
 
 static DF2(jthgeom2){PROLOG(0036);A h,*hv,t,z;B b;I an,*av,j,n;V*sv=FAV(self);
- RZ(a&&w);
+ ARGCHK2(a,w);
  if(AR(w))R rank2ex0(a,w,self,jthgeom2);
  RZ(a=AT(a)&FL+CMPX?vib(a):vi(a));  // kludge just call vib?
  an=AN(a); av=AV(a); n=0; DO(an, j=av[i]; ASSERT(0<=j,EVDOMAIN); if(n<j)n=j;);
@@ -74,7 +74,7 @@ static F2(jtcancel){A c,d,f,x,y;
 }
 
 F2(jthgeom){A c,d,h=0;B p,q;I at,wt;
- RZ(a&&w);
+ ARGCHK2(a,w);
  at=AT(a); p=1&&at&NOUN; c=d=mtv;
  wt=AT(w); q=1&&wt&NOUN;
  if(p){c=a; ASSERT(!AN(a)||at&NUMERIC,EVDOMAIN); ASSERT(1>=AR(a),EVRANK);}

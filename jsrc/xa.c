@@ -58,7 +58,7 @@ F1(jtdisps){UC n;
 F1(jtevmq){ASSERTMTV(w); R behead(jt->evm);}
 
 F1(jtevms){A t,*tv,*wv;
- RZ(w);
+ ARGCHK1(w);
  ASSERT(1==AR(w),EVRANK);
  ASSERT(NEVM==AN(w),EVLENGTH);
  ASSERT(BOX&AT(w),EVDOMAIN);
@@ -71,7 +71,7 @@ F1(jtevms){A t,*tv,*wv;
 }
 
 F1(jtfxx){
- RZ(w);
+ ARGCHK1(w);
  ASSERT(AT(w)&LIT+BOX,EVDOMAIN);
  ASSERT(1>=AR(w),EVRANK);
  R fx(ope(w)); 
@@ -89,7 +89,7 @@ F1(jtiepq){
 }
 
 F1(jtieps){
- RZ(w);
+ ARGCHK1(w);
  ASSERT(1>=AR(w),EVRANK);
  ASSERT(!AN(w)||AT(w)&LIT,EVDOMAIN);
  fa(jt->iep);
@@ -181,7 +181,7 @@ F1(jtsysparmq){I k;
 }}
 
 F1(jtsysparms){A*wv;I k,m;
- RZ(w);
+ ARGCHK1(w);
  ASSERT(BOX&AT(w),EVDOMAIN);
  ASSERT(1==AR(w),EVRANK);
  ASSERT(2==AN(w),EVLENGTH);
@@ -217,7 +217,7 @@ F1(jtxepq){
 }
 
 F1(jtxeps){
- RZ(w);
+ ARGCHK1(w);
  ASSERT(1>=AR(w),EVRANK);
  ASSERT(!AN(w)||AT(w)&LIT,EVDOMAIN);
  fa(jt->xep);
@@ -251,7 +251,7 @@ F1(jtunicodex78s){I k;
 // 9!:56  undocumented
 // query/override cpu feature
 F1(jtcpufeature){
- RZ(w);
+ ARGCHK1(w);
  ASSERT(AT(w)&LIT,EVDOMAIN);
  ASSERT(AN(w),EVLENGTH);
  ASSERT(1>=AR(w),EVRANK);
@@ -320,7 +320,7 @@ F1(jtcpufeature){
 
 // thread unsafe
 F2(jtcpufeature2){I k;
- RZ(a&&w);
+ ARGCHK2(a,w);
  ASSERT(AT(w)&LIT,EVDOMAIN);
  ASSERT(AN(w),EVLENGTH);
  ASSERT(1>=AR(w),EVRANK);
@@ -430,7 +430,7 @@ R mtm;
 // 2 zgemm_thres  complex threshold
 
 F1(jtgemmtune){I k;
- RZ(w);
+ ARGCHK1(w);
  ASSERT(AT(w)&(B01+INT),EVDOMAIN);
  ASSERT(1==AN(w),EVLENGTH);
  ASSERT(1>=AR(w),EVRANK);
@@ -440,7 +440,7 @@ F1(jtgemmtune){I k;
 }
 
 F2(jtgemmtune2){I j,k;
- RZ(a&&w);
+ ARGCHK2(a,w);
  ASSERT(AT(a)&(B01+INT),EVDOMAIN);
  ASSERT(1==AN(a),EVLENGTH);
  ASSERT(1>=AR(a),EVRANK);

@@ -74,24 +74,24 @@ static F1(jtfpolyc){A b;B*bv;I m,n;
 
 static A jtfpoly(J jt,I n,A f){I m=0>n?1:1+n; RZ(f); R fpolyc(df1(IX(m),tdot(f)));}
 
-static F1(jtfnegate){V*v; RZ(w); v=VAV(w); R CAT==v->id&&CMINUS==ID(v->fgh[0])?v->fgh[1]:atop(ds(CMINUS),w);}
+static F1(jtfnegate){V*v; ARGCHK1(w); v=VAV(w); R CAT==v->id&&CMINUS==ID(v->fgh[0])?v->fgh[1]:atop(ds(CMINUS),w);}
 
 static F2(jtfplus){
- RZ(a&&w);
+ ARGCHK2(a,w);
  if(iscons(a)&&equ(VAV(a)->fgh[0],zeroionei(0)))R w;
  if(iscons(w)&&equ(VAV(w)->fgh[0],zeroionei(0)))R a;
  R folk(a,ds(CPLUS),w);
 }
 
 static F2(jtfminus){
- RZ(a&&w);
+ ARGCHK2(a,w);
  if(iscons(a)&&equ(VAV(a)->fgh[0],zeroionei(0)))R fnegate(w);
  if(iscons(w)&&equ(VAV(w)->fgh[0],zeroionei(0)))R a;
  R folk(a,ds(CMINUS),w);
 }
 
 static F2(jtftymes){A x,y;B b,c;I k;
- RZ(a&&w);
+ ARGCHK2(a,w);
  b=iscons(a); x=VAV(a)->fgh[0];
  c=iscons(w); y=VAV(w)->fgh[0];
  if(CFORK==ID(w)&&NOUN&AT(y))R ftymes(a,folk(qq(y,ainf),VAV(w)->fgh[1],VAV(w)->fgh[2]));
@@ -102,7 +102,7 @@ static F2(jtftymes){A x,y;B b,c;I k;
 }
 
 static F1(jtdpoly){A c,e,x;I n,t;
- RZ(w);
+ ARGCHK1(w);
  n=AN(w); t=AT(w);
  ASSERT(!n||t&NUMERIC+BOX,EVDOMAIN);
  if(!n||t&NUMERIC)R 2>=n?qq(2==n?tail(w):cvt(n?t:B01,num(0)),zeroionei(0)):fpolyc(behead(tymes(w,IX(n))));
@@ -115,7 +115,7 @@ static F1(jtdpoly){A c,e,x;I n,t;
 }
 
 static F1(jtipoly){A b,c,e,p=0,q=0,x;I n,t;
- RZ(w);
+ ARGCHK1(w);
  n=AN(w); t=AT(w);
  ASSERT(!n||t&NUMERIC+BOX,EVDOMAIN);
  if(!n||t&NUMERIC)R fpolyc(over(num(0),divide(w,apv(n,1L,1L))));
@@ -133,7 +133,7 @@ static F1(jtipoly){A b,c,e,p=0,q=0,x;I n,t;
 static F1(jticube){R atco(eval("* =/~@(i.@$)"),w);}
 
 static F1(jtdiffamp0){A f,g,h,x,y;B nf,ng;C id;V*v;
- RZ(w);
+ ARGCHK1(w);
  v=VAV(w);
  f=v->fgh[0]; nf=1&&NOUN&AT(f);
  g=v->fgh[1]; ng=1&&NOUN&AT(g);
@@ -173,7 +173,7 @@ static F1(jtdiffamp0){A f,g,h,x,y;B nf,ng;C id;V*v;
 }
 
 static F1(jtdiff0){A df,dg,dh,f,g,h,x,y,z;B b,nf,ng,vf,vg;C id;I m,p,q;V*v;
- RZ(w);
+ ARGCHK1(w);
  v=VAV(w); id=v->id;
  f=v->fgh[0]; nf=f&&NOUN&AT(f); vf=f&&!nf;  // nf=f is a noun vf=f is a verb same for ng, vg
  g=v->fgh[1]; ng=g&&NOUN&AT(g); vg=g&&!ng;
@@ -266,7 +266,7 @@ static F1(jtdiff0){A df,dg,dh,f,g,h,x,y,z;B b,nf,ng,vf,vg;C id;I m,p,q;V*v;
 
 // integrals of f&g, where exactly one of f,g is a noun
 static F1(jtintgamp0){A f,g,h,x,y;B nf,ng;C id;V*v;
- RZ(w);
+ ARGCHK1(w);
  v=VAV(w);
  f=v->fgh[0]; nf=1&&NOUN&AT(f);  // nf means f is a noun, ng means g is a noun
  g=v->fgh[1]; ng=1&&NOUN&AT(g);
@@ -317,7 +317,7 @@ static F1(jtintgamp0){A f,g,h,x,y;B nf,ng;C id;V*v;
 static F1(jtintg0); 
 
 static F2(jtintgatop){A df,f=a,g=w,q,x,y;I m,n;V*v;
- RZ(a&&w);
+ ARGCHK2(a,w);
  m=ispoly(f);
  n=ispoly(g);
  if(m&&n)R ipoly(df1(IX(1+(m-1)*(n-1)),tdot(atop(a,w))));
@@ -348,12 +348,12 @@ static F2(jtintgatop){A df,f=a,g=w,q,x,y;I m,n;V*v;
 }    /* integral of a @ w */
 
 static F2(jtintgtymes){A f=a,g=w;
- RZ(a&&w);
+ ARGCHK2(a,w);
  R A0;
 }    /* integral of a * w */
 
 static F1(jtintg0){A df,dh,f,g,h;B nf,ng,vf,vg;C id;I m,n,p,q;V*fv,*gv,*v;
- RZ(w);
+ ARGCHK1(w);
  id=ID(w); v=VAV(w);
  f=v->fgh[0]; nf=f&&NOUN&AT(f); if(vf=f&&!nf)fv=VAV(f);
  g=v->fgh[1]; ng=g&&NOUN&AT(g); if(vg=g&&!ng)gv=VAV(g);
@@ -424,7 +424,7 @@ static F1(jtintg0){A df,dh,f,g,h;B nf,ng,vf,vg;C id;I m,n,p,q;V*fv,*gv,*v;
 static DF1(jtddot1){V*v=VAV(self); R df1(w,ddot(fix(v->fgh[0],zeroionei(0)),v->fgh[1]));}
 
 F2(jtddot){A x,*xv,y,z;AF f;I j,n,p,q,r,*wv;
- RZ(a&&w);
+ ARGCHK2(a,w);
  ASSERT(NOUN&AT(w),EVDOMAIN);
  RZ(w=vi(w)); r=AR(w); n=AN(w); wv=AV(w);
  if(NOUN&AT(a)){ASSERT(0,EVNONCE);}
@@ -444,7 +444,7 @@ F2(jtddot){A x,*xv,y,z;AF f;I j,n,p,q,r,*wv;
 
 
 static F1(jtdiffamp){A f,g,h,x,y;B nf,ng;V*v;
- RZ(w);
+ ARGCHK1(w);
  v=VAV(w);
  f=v->fgh[0]; nf=1&&NOUN&AT(f);
  g=v->fgh[1]; ng=1&&NOUN&AT(g);
@@ -470,7 +470,7 @@ static F1(jtdiffamp){A f,g,h,x,y;B nf,ng;V*v;
 }
 
 static F1(jtdiff){A df,dh,f,g,h,z;B nf,ng,vf,vg;C id;I r;V*v;
- RZ(w);
+ ARGCHK1(w);
  ASSERT(VERB&AT(w),EVDOMAIN);
  v=VAV(w); id=v->id; r=v->mr;
  f=v->fgh[0]; nf=f&&NOUN&AT(f); vf=f&&!nf;
@@ -568,7 +568,7 @@ static DF1(jtderiv1){A e,ff,fs,gs,s,t,z,*zv;I*gv,d,n,*tv;V*v;
 }
 
 F2(jtdcap){A z;I r,*v;
- RZ(a&&w);
+ ARGCHK2(a,w);
  ASSERT(NOUN&AT(w),EVDOMAIN);
  RZ(w=vi(w)); v=AV(w); DO(AN(w), ASSERT(0<=v[i],EVNONCE););
  if(NOUN&AT(a))R vger2(CDCAP,a,w);

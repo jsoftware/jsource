@@ -180,7 +180,7 @@ static TACT(jtvmove){A t;TA*u,x,z;
 /* c. replaces [: g ] by g, if monad                   */
 
 static F1(jtvfinal){I i;V*u,*v;
- RZ(w);
+ ARGCHK1(w);
  if(!(VERB&AT(w)))R w;
  v=FAV(w);
  if(CFORK!=v->id){i=tvi(w); R 0<=i?vfinal(jt->ttab[i].t):w;}
@@ -197,7 +197,7 @@ static F1(jtvfinal){I i;V*u,*v;
 }    
 
 F1(jttparse){A*s,t,x;C d;I b,*c,e,i,j,k,m,n;TA*stack;
- RZ(w);
+ ARGCHK1(w);
  stack=(TA*)AV(w); n=m=AS(w)[0]-4;
  do{
   for(i=0;i<NCASES;i++){

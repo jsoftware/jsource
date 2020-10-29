@@ -18,7 +18,7 @@ static DF1(jtlrr);
 
 
 static B jtlp(J jt,A w){B b=1,p=0;C c,d,q=CQUOTE,*v;I j=0,n;
- RZ(w);
+ ARGCHK1(w);
  n=AN(w); v=CAV(w); c=*v; d=*(v+n-1);
  if(1==n||(2==n||3>=n&&' '==c)&&(d==CESC1||d==CESC2)||vnm(n,v))R 0;
  if(C9==ctype[(UC)c])DQ(n-1, d=c; c=ctype[(UC)*++v]; if(b=!NUMV(c)||d==CS&&c!=C9)break;)
@@ -28,13 +28,13 @@ static B jtlp(J jt,A w){B b=1,p=0;C c,d,q=CQUOTE,*v;I j=0,n;
 }    /* 1 iff put parens around w */
 
 static A jtlcpa(J jt,B b,A w){A z=w;C*zv;I n;
- RZ(w);
+ ARGCHK1(w);
  if(b){n=AN(w); GATV0(z,LIT,2+n,1); zv=CAV(z); *zv='('; MC(1+zv,AV(w),n); zv[1+n]=')';}
  R z;
 }    /* if b then (w) otherwise just w */
 
 static A jtlcpb(J jt,B b,A w){A z=w;B p;C c,*v,*wv,*zv;I n;
- RZ(w);
+ ARGCHK1(w);
  n=AN(w); wv=CAV(w); 
  if(!b){
   c=ctype[(UC)*wv]; v=wv; p=0;
@@ -47,10 +47,10 @@ static A jtlcpb(J jt,B b,A w){A z=w;B p;C c,*v,*wv,*zv;I n;
  R z;
 }
 
-static A jtlcpx(J jt,A w){RZ(w); R CALL2(jt->lcp,lp(w),w,0);}
+static A jtlcpx(J jt,A w){ARGCHK1(w); R CALL2(jt->lcp,lp(w),w,0);}
 
 static F1(jtltiea){A t,*v,*wv,x,y;B b;C c;I n;
- RZ(w);
+ ARGCHK1(w);
  n=AN(w); wv=AAV(w);  RZ(t=spellout(CGRAVE));
  GATV0(y,BOX,n+n,1); v=AAV(y);
  DO(n, *v++=i?t:mtv; x=wv[i]; c=ID(x); RZ(x=lrr(x)); 
@@ -59,7 +59,7 @@ static F1(jtltiea){A t,*v,*wv,x,y;B b;C c;I n;
 }
 
 static F1(jtltieb){A pt,t,*v,*wv,x,y;B b;C c,*s;I n;
- RZ(w);
+ ARGCHK1(w);
  n=AN(w); wv=AAV(w);  RZ(t=spellout(CGRAVE)); RZ(pt=over(scc(')'),t));
  GATV0(y,BOX,n+n,1); v=AAV(y);
  if(1>=n)x=mtv; else{GATV0(x,LIT,n-2,1); s=CAV(x); DQ(n-2, *s++='(';);}
@@ -71,14 +71,14 @@ static F1(jtltieb){A pt,t,*v,*wv,x,y;B b;C c,*s;I n;
 static F1(jtlsh){R apip(thorn1(shape(w)),spellout(CDOLLAR));}
 
 static F1(jtlshape){I r,*s;
- RZ(w);
+ ARGCHK1(w);
  r=AR(w); s=AS(w);
  R 2==r&&(1==s[0]||1==s[1]) ? spellout((C)(1==s[1]?CCOMDOT:CLAMIN)) : !r ? mtv :
      1<r ? lsh(w) : 1<AN(w) ? mtv : spellout(CCOMMA);
 }
 
 static F1(jtlchar){A y;B b,p=1,r1;C c,d,*u,*v;I j,k,m,n;
- RZ(w);
+ ARGCHK1(w);
  m=AN(ds(CALP)); n=AN(w); j=n-m; r1=1==AR(w); u=v=CAV(w); d=*v;
  if(0<=j&&r1&&!memcmpne(v+j,AV(ds(CALP)),m)){ 
   if(!j)R cstr("a.");
@@ -105,7 +105,7 @@ static F1(jtlchar){A y;B b,p=1,r1;C c,d,*u,*v;I j,k,m,n;
 }    /* non-empty character array */
 
 static F1(jtlbox){A p,*v,*vv,*wv,x,y;B b=0;I n;
- RZ(w);
+ ARGCHK1(w);
  if(equ(ds(CACE),w)&&B01&AT(AAV0(w)))R cstr("a:");
  n=AN(w); wv=AAV(w); 
  DO(n, x=wv[i]; if(BOX&AT(x)){b=1; break;}); b|=1==n;
@@ -158,7 +158,7 @@ A jtdecorate(J jt,A w,I t){
 
 
 static F1(jtlnum1){A z,z0;I t;
- RZ(w);
+ ARGCHK1(w);
  t=AT(w);
  RZ(z=t&FL+CMPX?df1(z0,w,fit(ds(CTHORN),sc((I)18))):thorn1(w));
  R decorate(z,t);
@@ -189,7 +189,7 @@ static F1(jtlnum){A b,d,t,*v,y;B p;I n;
 }    /* dense numeric non-empty array */
 
 static F1(jtlsparse){A a,e,q,t,x,y,z;B ba,be,bn;I j,r,*v;P*p;
- RZ(w);
+ ARGCHK1(w);
  r=AR(w); p=PAV(w); a=SPA(p,a); e=SPA(p,e); y=SPA(p,i); x=SPA(p,x);
  bn=0; v=AS(w); DQ(r, if(!*v++){bn=1; break;});
  ba=0; if(r==AR(a)){v=AV(a); DO(r, if(i!=*v++){ba=1; break;});}
@@ -217,7 +217,7 @@ static F1(jtlsparse){A a,e,q,t,x,y,z;B ba,be,bn;I j,r,*v;P*p;
 }    /* sparse array */
 
 static F1(jtlnoun0){A s,x;B r1;
- RZ(w);
+ ARGCHK1(w);
  r1=1==AR(w); RZ(s=thorn1(shape(w)));
  switch(CTTZ(AT(w))){
   default:    R apip(s,cstr("$00"    ));  // over(cstr("i."),s);
@@ -235,7 +235,7 @@ static F1(jtlnoun0){A s,x;B r1;
 
 
 static F1(jtlnoun){I t;
- RZ(w);
+ ARGCHK1(w);
  t=AT(w);
  if(unlikely((t&SPARSE)!=0))R lsparse(w);
  if(!AN(w))R lnoun0(w);
@@ -268,7 +268,7 @@ static B laa(A a,A w){C c,d;
 static B lnn(A a,A w){C c; if(!(a&&w))R 0; c=cl(a); R ('x'==c||'.'==c||C9==ctype[(UC)c])&&C9==ctype[(UC)cf(w)];}
 
 static F2(jtlinsert){A*av,f,g,h,t,t0,t1,t2,*u,y;B b,ft,gt,ht;C c,id;I n;V*v;
- RZ(a&&w);
+ ARGCHK2(a,w);
  n=AN(a); av=AAV(a);  
  v=VAV(w); id=v->id;
  b=id==CCOLON&&VXOP&v->flag;
@@ -322,7 +322,7 @@ static F1(jtlcolon){A*v,x,y;C*s,*s0;I m,n;
 
 // Main routine for () and linear rep.  w is to be represented
 static DF1(jtlrr){A hs,t,*tv;C id;I fl,m;V*v;
- RZ(w);
+ ARGCHK1(w);
  // If name, it must be in ".@'name', or (in debug mode) the function name, which we will discard
  if(AT(w)&NAME){RZ(w=sfn(0,w));}
  if(AT(w)&NOUN)R lnoun(w);

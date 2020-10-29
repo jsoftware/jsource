@@ -315,7 +315,7 @@ static void utomnull(C4* src, I srcn, UC* snk){ C4 w;I nignulls = 0;
 // NUL char if a wide char is already followed by a NUL byte.  We assume that
 // there will not be NUL bytes in user input (since they were going to be eaten before display anyway)
 static A wtownull(J jt,A w){US *wv,*zv;I n,i,nignulls=0,naddednulls=0;A z;
- RZ(w); n=AN(w);
+ ARGCHK1(w); n=AN(w);
  if(!n) R w;
  wv=USAV(w);
  // See how many NUL codes we will need to add
@@ -336,7 +336,7 @@ static A wtownull(J jt,A w){US *wv,*zv;I n,i,nignulls=0,naddednulls=0;A z;
 }
 
 static A utounull(J jt,A w){C4 *wv,*zv;I n,i,nignulls=0,naddednulls=0;A z;
- RZ(w); n=AN(w);
+ ARGCHK1(w); n=AN(w);
  if(!n) R w;
  wv=C4AV(w);
  // See how many NUL codes we will need to add
@@ -402,7 +402,7 @@ Process:
 */
 
 A RoutineA(J jt,A w){A z;I n,t,q,q1,b=0; UC* wv;
- RZ(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w); wv=UAV(w);
+ ARGCHK1(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w); wv=UAV(w);
  ASSERT(t&LIT,EVDOMAIN);
  if(!n) {GATV(z,LIT,n,AR(w),AS(w)); R z;}; // empty lit list 
  DQ(n, if(127<*wv++){b=1;break;});
@@ -421,7 +421,7 @@ A RoutineA(J jt,A w){A z;I n,t,q,q1,b=0; UC* wv;
 }
 
 A RoutineB(J jt,A w){A z;I n,t,q,b=0; UC* wv; US* c2v; C4* c4v;
- RZ(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w); wv=UAV(w);
+ ARGCHK1(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w); wv=UAV(w);
  ASSERT(t&C2T,EVDOMAIN);
  if(!n) {GATV(z,C2T,n,AR(w),AS(w)); R z;}; // empty C2T list 
  q=wtousize(USAV(w),n);
@@ -437,7 +437,7 @@ A RoutineB(J jt,A w){A z;I n,t,q,b=0; UC* wv; US* c2v; C4* c4v;
 }
 
 A RoutineC(J jt,A w){A z;I n,t,q,b=0; C4* wv;
- RZ(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w); wv=C4AV(w);
+ ARGCHK1(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w); wv=C4AV(w);
  ASSERT(t&C4T,EVDOMAIN);
  if(!n) {GATV(z,C4T,n,AR(w),AS(w)); R z;}; // empty C4T list 
  DQ(n, if((UI4)(*wv-0xd800)<=(UI4)(0xdfff-0xd800)){b=1;break;};wv++;);
@@ -452,7 +452,7 @@ A RoutineC(J jt,A w){A z;I n,t,q,b=0; C4* wv;
 }
 
 A RoutineD(J jt,A w){A z;I n,t,q,b=0;C4* c4v;
-RZ(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w);
+ARGCHK1(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w);
 if(!n) {GATV(z,LIT,n,AR(w),AS(w)); R z;}; // empty lit list
 ASSERT(t&(C2T+C4T), EVDOMAIN);
 if(t&C4T)

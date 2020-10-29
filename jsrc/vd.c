@@ -12,7 +12,7 @@ static F1(jtnorm){R sqroot(pdt(w,conjug(w)));}
 // n is the size of the nxn matrix w; ncomp codes for special processing
 // if n<=ncomp, this is a small FL matrix & we take the inverse inplace
 static A jtrinvip(J jt,A w,I n,I ncomp){PROLOG(0066);A ai,bx,di,z;I m;
- RZ(w);
+ ARGCHK1(w);
  if(n<=ncomp){
   // Handle 2x2 and smaller FL quickly and inplace to avoid recursion and memory-allocation overhead
   // result is 1/w00 w01/(w00*w11)
@@ -55,7 +55,7 @@ static A jtrinvip(J jt,A w,I n,I ncomp){PROLOG(0066);A ai,bx,di,z;I m;
 
 // 128!:1 Invert Upper-triangular matrix R
 F1(jtrinv){
- RZ(w);
+ ARGCHK1(w);
  F1RANK(2,jtrinv,DUMMYSELF);
  ASSERT(AR(w)==2,EVRANK);  // rank at least 2
  ASSERT(AS(w)[0]==AS(w)[1],EVLENGTH);  // error if not square
@@ -65,7 +65,7 @@ F1(jtrinv){
 
 // recursive subroutine for qr decomposition, returns q;r
 static F1(jtqrr){PROLOG(0067);A a1,q,q0,q1,r,r0,r1,t,*tv,t0,t1,y,z;I m,n,p,*s;
- RZ(w);
+ ARGCHK1(w);
  if(2>AR(w)){p=AN(w); n=1;}else{s=AS(w); p=s[0]; n=s[1];}  // p=#rows, n=#columns
  m=n>>1; I tom=(0x01222100>>((n&7)<<2))&3; m=(m+tom<n)?m+tom:m;  // Minimize number of wasted multiply slots, processing in batches of 4
  if(1>=n){  // just 1 col
@@ -98,7 +98,7 @@ static F1(jtltqip){PROLOG(0067);A l0,l1,y,z;
 #if C_AVX || EMU_AVX
  D ipa[8], *ipv;
 #endif
-RZ(w);
+ARGCHK1(w);
  A q0; fauxblock(virtwq0); D *w0v=DAV(w);  // q0 & q1 data
  I rw=AS(w)[0]; I cl=AS(w)[1];  // # rows, # columns
   // handle case of 2 rows
@@ -222,7 +222,7 @@ static F1(jtlq){A l;D c=inf,d=0,x;I n1,n,*s,wr;
 // determinant to integer and then each value to an integer multiple of the determinant.
 // The determinant was calculated when we inverted the matrix
 static F1(jticor){D d,*v;
- RZ(w);
+ ARGCHK1(w);
  d=jt->workareas.minv.determ;  // fetch flag/determinant
  if(d==0.0)R w;  // if not enabled or not applicable, return input unchanged
  d=jround(ABS(d));  // force determinant to integer

@@ -889,7 +889,7 @@ A jtclonelocalsyms(J jt, A a){A z;I j;I an=AN(a); LX *av=LXAV0(a),*zv;
 }
 
 F2(jtcolon){A d,h,*hv,m;B b;C*s;I flag=VFLAGNONE,n,p;
- RZ(a&&w);
+ ARGCHK2(a,w);
  if(VERB&AT(a)&AT(w)){  // v : v case
   // If nested v : v, prune the tree
   if(CCOLON==FAV(a)->id&&FAV(a)->fgh[0]&&VERB&AT(FAV(a)->fgh[0])&&VERB&AT(FAV(a)->fgh[1]))a=FAV(a)->fgh[0];  // look for v : v; don't fail if fgh[0]==0 (namerefop).  Must test fgh[0] first
@@ -998,7 +998,7 @@ F2(jtcolon){A d,h,*hv,m;B b;C*s;I flag=VFLAGNONE,n,p;
 A jtddtokens(J jt,A w,I env){
 // TODO: Use LF for DDSEP, support {{), make nouns work
  PROLOG(000);F1PREFIP;
- RZ(w);
+ ARGCHK1(w);
 #if 0  // set to 1 to disable DD scaf
  R (env&8)?w:tokens(w,env&3);  // return the input unmodified
 #endif

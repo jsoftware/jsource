@@ -18,7 +18,7 @@ static DF1(jtcut01){DECLF;A h,x,z;
 }    /* f;.0 w */
 
 static DF2(jtcut02){F2PREFIP;A fs,q,qq,*qv,z,zz=0;I*as,c,e,i,ii,j,k,m,n,*u,*ws;PROLOG(876);I cger[128/SZI];
- RZ(a&&w);
+ ARGCHK2(a,w);
 #define ZZFLAGWORD state
  I state=ZZFLAGINITSTATE;  // init flags, including zz flags
 
@@ -127,7 +127,7 @@ static DF2(jtcut02){F2PREFIP;A fs,q,qq,*qv,z,zz=0;I*as,c,e,i,ii,j,k,m,n,*u,*ws;P
 // self is a compound, using @/@:/&/&:, that we tried to run with special code, but we found that we don't support the arguments
 // here we revert to the non-special code for the compound
 DF2(jtspecialatoprestart){
-  RZ(a&&w&&self);  // return fast if there has been an error
+  ARGCHK3(a,w,self);  // return fast if there has been an error
   V *sv=FAV(self);  // point to verb info for the current overall compound
   R a==mark?(sv->id==CFORK?jtcork1:on1)(jt,w,self) : (sv->id==CFORK?jtcork2:jtupon2)(jt,a,w,self);  // figure out the default routine that should process the compound, and transfer to it
 }
@@ -135,7 +135,7 @@ DF2(jtspecialatoprestart){
 // x <;.0 y  and  x (<;.0~ -~/"2)~ y   where _2 { $x is 1 (i. e. 1 dimension of selection)  localuse distinguishes the two cases (relative vs absolute length)
 // We go for minimum overhead in the box allocation and copy
 DF2(jtboxcut0){A z;
- RZ(a&&w);F2PREFIP;
+ ARGCHK2(a,w);F2PREFIP;
  // NOTE: this routine is called from jtwords.  In that case, self comes from jtwords and is set up with the parm for x (<;.0~ -~/"2)~ y but with no failover routine.
  // Thus, the preliminary tests must not cause a failover.  They don't, because the inputs from jtwords are known to be well-formed
  // We require a have rank >=2, not sparse
@@ -152,7 +152,7 @@ DF2(jtboxcut0){A z;
  I resatoms; PROD(resatoms,f,AS(a)); I cellsize; PROD(cellsize,wr-1,AS(w)+1);
  I k=bplg(t); C *wv=CAV(w);  // k is length of an atom of w
  // allocate the result area
- GATV(z,BOX,resatoms,f,AS(a)); AFLAG(z) = BOX; if(resatoms==0)RETF(z);  // could avoid filling with 0 if we modified AN after error, or cleared after *tnextpushp
+ GATV(z,BOX,resatoms,f,AS(a)); AFLAG(z) = BOX; if(resatoms==0){RETF(z);}  // could avoid filling with 0 if we modified AN after error, or cleared after *tnextpushp
   // We have allocated the result; now we allocate a block for each cell of w and copy
   // the w values to the new block.
   // Make result inplaceable; recursive too, since otherwise the boxes won't get freed
@@ -193,7 +193,7 @@ DF2(jtboxcut0){A z;
 // if we encounter a reversal, we abort
 // if it's a case we can't handle, we fail over to the normal code, with BOXATOP etc flags set
 DF2(jtrazecut0){A z;C*wv,*zv;I ar,*as,(*av)[2],j,k,m,n,wt;
- RZ(a&&w);
+ ARGCHK2(a,w);
  wt=AT(w); wv=CAV(w);
  ar=AR(a); as=AS(a);
  // we need rank of a>2 (otherwise why bother?), rank of w>0, w not sparse, a not empty, w not empty (to make item-size easier)
@@ -217,7 +217,7 @@ DF2(jtrazecut0){A z;C*wv,*zv;I ar,*as,(*av)[2],j,k,m,n,wt;
 
 
 static DF2(jtcut2bx){A*av,b,t,x,*xv,y,*yv;B*bv;I an,bn,i,j,m,p,q,*u,*v,*ws;
- RZ(a&&w&&self);
+ ARGCHK3(a,w,self);
  q=(I)FAV(self)->localuse.lvp[0];  // fetch the n in the original u;.n
  an=AN(a); av=AAV(a);  ws=AS(w);
  ASSERT(an<=AR(w),EVLENGTH);
@@ -290,7 +290,7 @@ static DF2(jtcut2bx){A*av,b,t,x,*xv,y,*yv;B*bv;I an,bn,i,j,m,p,q,*u,*v,*ws;
    }else{EACHC(GA(y,t,d*c,r,s); AS(y)[0]=d; MC(AV(y),v1,d*k); A Zz; RZ(Zz = CALL1(f1,y,fs)); incorp(Zz); *za++=Zz; ); \
    }                                                                         \
    z=ope(z);                                                                 \
-   EPILOG(z);                                                                \
+   {EPILOG(z);}                                                                \
  }
 
 #define EACHCUTSP(stmt)  \
@@ -878,7 +878,7 @@ static A jtpartfscan(J jt,A a,A w,I cv,B pfx,C id,C ie){A z=0;B*av;I m,n,zt;
 //  This routine produces an extra axis, as if the shape of the boxed result were preserved even when there are no boxed results
 DF2(jtrazecut2){A fs,gs,y,z=0;B b; I neg,pfx;C id,sep,*u,*v,*wv,*zv;I d,k,m=0,wi,p,q,r,*s,wt;
     V *vv;VARPS adocv;
- RZ(a&&w);
+ ARGCHK2(a,w);
  gs=FAV(self)->fgh[1+(CFORK==FAV(self)->id)]; vv=VAV(gs); y=vv->fgh[0]; fs=VAV(y)->fgh[1];  // self is ;@:(<@(f/\);.1)     gs  gs is <@(f/\);.1   y is <@(f/\)  fs is   f/\  ...
  p=SETIC(w,wi); wt=AT(w); k=(I)vv->localuse.lvp[0]; neg=0>k; pfx=k==1||k==-1; b=neg&&pfx;   // p,wi is # items of w; 
  id=FAV(fs)->id;  // fs is f/id   where id is \ \.
@@ -921,7 +921,7 @@ DF1(jtrazecut1){R razecut2(mark,w,self);}
 // we look at all the axes even if we don't store them all; if any are 0 we set
 // n is the op type (as in u;.n)
 static A jttesos(J jt,A a,A w,I n, I *pv){A p;I*av,c,axisct,k,m,s,*ws;
- RZ(a&&w);
+ ARGCHK2(a,w);
  axisct=c=AS(a)[1]; av=AV(a); ws=AS(w);
  if(pv){c=(c>2)?2:c; p=0; // if more than 2 axes requested, limit the return to that
  }else{GATV0(p,INT,c,1); pv=AV(p); AS(p)[0]=c;}  // all requested, make an A block for it
@@ -932,7 +932,7 @@ static A jttesos(J jt,A a,A w,I n, I *pv){A p;I*av,c,axisct,k,m,s,*ws;
 
 
 static F2(jttesa){A x;I*av,ac,c,d,k,r,*s,t,*u,*v;
- RZ(a&&w);
+ ARGCHK2(a,w);
  t=AT(a);
  RZ(a=vib(a));    // convert a to integer (possibly with infinities)
  r=AR(a); s=AS(a); SHAPEN(a,r-1,c);  ac=c; av=AV(a); d=AR(w);  // r = rank of x; s->shape of x; c=#axes specd in x, av->data; d=rank of w
@@ -1147,7 +1147,7 @@ static DF2(jttess2){A z,zz=0,virtw,strip;I n,rs[3],cellatoms,cellbytes,vmv,hmv,v
 }
 
 static DF1(jttess1){A s;I m,r,*v;
- RZ(w);
+ ARGCHK1(w);
  r=AR(w); RZ(s=shape(w)); RZ(s=mkwris(s)); v=AV(s);
  m=IMAX; DO(r, if(m>v[i])m=v[i];); DO(r, v[i]=m;);  // Get length of long axis; set all axes to that length in a arg to cut
  R tess2(s,w,self);
@@ -1157,7 +1157,7 @@ static DF1(jttess1){A s;I m,r,*v;
 F2(jtcut){A h=0,z;I flag=0,k;
 // NOTE: u/. is processed using the code for u;.1 and passing the self for /. into the cut verb.  So, the self produced
 // by /. and ;.1 must be the same as far as flags etc.  For the shared case, inplacing is OK
- RZ(a&&w);
+ ARGCHK2(a,w);
  ASSERT(NOUN&AT(w),EVDOMAIN);
  RE(k=i0(w));
  if(NOUN&AT(a)){flag=VGERL; RZ(h=fxeachv(1L,a)); ASSERT(-2<=k&&k<=2,EVNONCE);}

@@ -56,7 +56,7 @@
 #if (MEMAUDIT==0 || !_WIN32)
 #define FREECHK(x) FREE(x)
 #else
-#define FREECHK(x) if(!FREE(x))SEGFAULT  // crash on error
+#define FREECHK(x) if(!FREE(x))SEGFAULT;  // crash on error
 #endif
 
 static void jttraverse(J,A,AF);
@@ -107,7 +107,7 @@ B jtmeminit(J jt){I k,m=MLEN;
 #endif
 void jtauditmemchains(J jt){
 #if MEMAUDIT&16
-I Wi,Wj;A Wx,prevWx=0; if(jt->peekdata){for(Wi=PMINL;Wi<=PLIML;++Wi){Wj=0; Wx=(jt->mfree[-PMINL+Wi].pool); while(Wx){if(FHRHPOOLBIN(AFHRH(Wx))!=(Wi-PMINL)AUDITFILL||Wj>0x10000000)SEGFAULT prevWx=Wx; Wx=AFCHAIN(Wx); ++Wj;}}}
+I Wi,Wj;A Wx,prevWx=0; if(jt->peekdata){for(Wi=PMINL;Wi<=PLIML;++Wi){Wj=0; Wx=(jt->mfree[-PMINL+Wi].pool); while(Wx){if(FHRHPOOLBIN(AFHRH(Wx))!=(Wi-PMINL)AUDITFILL||Wj>0x10000000)SEGFAULT; prevWx=Wx; Wx=AFCHAIN(Wx); ++Wj;}}}
 #endif
 }
 
@@ -135,7 +135,7 @@ B jtspfree(J jt){I i;A p;
    US freereqd = 0;  // indicate if any fully-freed block is found
    for(p=jt->mfree[i].pool;p;p=AFCHAIN(p)){
 #if MEMAUDIT&1
-    if(FHRHPOOLBIN(AFHRH(p))!=i)SEGFAULT  // make sure chains are valid
+    if(FHRHPOOLBIN(AFHRH(p))!=i)SEGFAULT;  // make sure chains are valid
 #endif
     A base = FHRHROOTADDR(p,offsetmask);   // address of base
     US baseh = AFHRH(base);  // fetch header for base
@@ -189,7 +189,7 @@ B jtspfree(J jt){I i;A p;
 }    /* free unused blocks */
 
 static F1(jtspfor1){
- RZ(w);
+ ARGCHK1(w);
  if(BOX&AT(w)){A*wv=AAV(w); DO(AN(w), if(wv[i])spfor1(wv[i]););}
  else if(AT(w)&TRAVERSIBLE)traverse(w,jtspfor1); 
  if(!ACISPERM(AC(w))) {
@@ -210,7 +210,7 @@ static F1(jtspfor1){
 }
 
 F1(jtspfor){A*wv,x,y,z;C*s;D*v,*zv;I i,m,n;
- RZ(w);
+ ARGCHK1(w);
  n=AN(w); wv=AAV(w);  v=&jt->spfor;
  ASSERT(!n||BOX&AT(w),EVDOMAIN);
  GATV(z,FL,n,AR(w),AS(w)); zv=DAV(z); 
@@ -226,7 +226,7 @@ F1(jtspfor){A*wv,x,y,z;C*s;D*v,*zv;I i,m,n;
 }    /* 7!:5 space for named object; w is <'name' */
 
 F1(jtspforloc){A*wv,x,y,z;C*s;D*v,*zv;I i,j,m,n;L*u;LX *yv,c;
- RZ(w);
+ ARGCHK1(w);
  n=AN(w); wv=AAV(w);  v=&jt->spfor;
  ASSERT(!n||BOX&AT(w),EVDOMAIN);
  GATV(z,FL,n,AR(w),AS(w)); zv=DAV(z);   // zv-> results
@@ -304,8 +304,8 @@ void jtspendtracking(J jt){I i;
 // Make sure all deletecounts start at 0
 static void auditsimverify0(A w){
  if(!w)R;
- if(AFLAG(w)>>AFAUDITUCX)SEGFAULT   // hang if nonzero count
- if(AC(w)==0 || (AC(w)<0 && AC(w)!=ACINPLACE+ACUC1 && AC(w)!=ACINPLACE+2))SEGFAULT 
+ if(AFLAG(w)>>AFAUDITUCX)SEGFAULT;   // hang if nonzero count
+ if(AC(w)==0 || (AC(w)<0 && AC(w)!=ACINPLACE+ACUC1 && AC(w)!=ACINPLACE+2))SEGFAULT; 
  if(AFLAG(w)&AFVIRTUAL)auditsimverify0(ABACK(w));  // check backer
  if(AT(w)&(RAT|XNUM)) {A* v=AAV(w);  DQ(AT(w)&RAT?2*AN(w):AN(w), if(*v)auditsimverify0(*v); ++v;)}
  if(!(AFLAG(w)&AFVIRTUAL)&&UCISRECUR(w)){  // process children
@@ -318,7 +318,7 @@ static void auditsimverify0(A w){
   }else if(AT(w)&FUNC) {V* RESTRICT v=VAV(w);
    auditsimverify0(v->fgh[0]); auditsimverify0(v->fgh[1]); auditsimverify0(v->fgh[2]);
   }else if(AT(w)&RAT|XNUM) {
-  }else SEGFAULT  // inadmissible type for recursive usecount
+  }else SEGFAULT;  // inadmissible type for recursive usecount
  }
  R;
 }
@@ -327,13 +327,13 @@ static void auditsimverify0(A w){
 // recur on children if any.  If it produces a delete count higher than the use count in the block, abort
 static void auditsimdelete(A w){I delct;
  if(!w)R;
- if((UI)AN(w)==0xdeadbeefdeadbeef||(UI)AN(w)==0xfeeefeeefeeefeee)SEGFAULT
- if((delct = ((AFLAG(w)+=AFAUDITUC)>>AFAUDITUCX))>ACUC(w))SEGFAULT   // hang if too many deletes
- if(AFLAG(w)&AFVIRTUAL && (AT(w)^AFLAG(w))&RECURSIBLE)SEGFAULT   // hang if nonrecursive virtual
+ if((UI)AN(w)==0xdeadbeefdeadbeef||(UI)AN(w)==0xfeeefeeefeeefeee)SEGFAULT;
+ if((delct = ((AFLAG(w)+=AFAUDITUC)>>AFAUDITUCX))>ACUC(w))SEGFAULT;   // hang if too many deletes
+ if(AFLAG(w)&AFVIRTUAL && (AT(w)^AFLAG(w))&RECURSIBLE)SEGFAULT;   // hang if nonrecursive virtual
  if(delct==ACUC(w)&&AFLAG(w)&AFVIRTUAL){A wb = ABACK(w);
   // we fa() the backer, while we mf() the block itself.  So if the backer is NOT recursive, we have to
   // handle nonrecursive children.  All recursible types will be recursive
-  if(AFLAG(w)&AFVIRTUAL && (AT(wb)^AFLAG(wb))&RECURSIBLE)SEGFAULT  // backer must be recursive
+  if(AFLAG(w)&AFVIRTUAL && (AT(wb)^AFLAG(wb))&RECURSIBLE)SEGFAULT;  // backer must be recursive
   auditsimdelete(wb);  // delete backer of virtual block, recursibly
  }
  if(delct==ACUC(w)&&!(AFLAG(w)&AFVIRTUAL)&&(UCISRECUR(w))){  // we deleted down to 0.  process children
@@ -346,7 +346,7 @@ static void auditsimdelete(A w){I delct;
   }else if(AT(w)&FUNC) {V* RESTRICT v=VAV(w);
    auditsimdelete(v->fgh[0]); auditsimdelete(v->fgh[1]); auditsimdelete(v->fgh[2]);
   }else if(AT(w)&RAT|XNUM) {A* v=AAV(w);  DQ(AT(w)&RAT?2*AN(w):AN(w), if(*v)auditsimdelete(*v); ++v;)
-  }else SEGFAULT  // inadmissible type for recursive usecount
+  }else SEGFAULT;  // inadmissible type for recursive usecount
  }
  R;
 }
@@ -369,7 +369,7 @@ static void auditsimreset(A w){I delct;
   }else if(AT(w)&FUNC) {V* RESTRICT v=VAV(w);
    auditsimreset(v->fgh[0]); auditsimreset(v->fgh[1]); auditsimreset(v->fgh[2]);
   }else if(AT(w)&RAT|XNUM) {A* v=AAV(w);  DQ(AT(w)&RAT?2*AN(w):AN(w), if(*v)auditsimreset(*v); ++v;)
-  }else SEGFAULT  // inadmissible type for recursive usecount
+  }else SEGFAULT;  // inadmissible type for recursive usecount
  }
  R;
 }
@@ -508,7 +508,7 @@ void jtfh(J jt,A w){fr(w);}
 // mf() frees a block.  If what if freed is a symbol table, all the symbols are freed first.
 
 // mark w incorporated, reassigning if necessary.  Return the address of the block.  Used when w is an rvalue
-A jtincorp(J jt, A w) {RZ(w); INCORP(w); R w;}
+A jtincorp(J jt, A w) {ARGCHK1(w); INCORP(w); R w;}
 
 // allocate a virtual block, given the backing block
 // offset is offset in atoms from start of w; r is rank
@@ -583,7 +583,7 @@ ra(w);   // ensure that the backer is not deleted while it is a backer.
 // Mark the backing block non-PRISTINE, because realize is a form of escaping from the backer
 A jtrealize(J jt, A w){A z; I t;
 // allocate a block of the correct type and size.  Copy the shape
- RZ(w);
+ ARGCHK1(w);
  t=AT(w);
  AFLAG(ABACK(w))&=~AFPRISTINE;  // clear PRISTINE in the backer, since its contents are escaping
  GA(z,t,AN(w),AR(w),AS(w));
@@ -615,7 +615,7 @@ A jtrealize(J jt, A w){A z; I t;
 
 
 A jtgc (J jt,A w,A* old){
- RZ(w);  // return if no input (could be error or unfilled box)
+ ARGCHK1(w);  // return if no input (could be error or unfilled box)
  I c=AC(w);  // remember original usecount/inplaceability
  // We want to avoid realizing w if possible, so we handle virtual w separately
  if(AFLAG(w)&(AFVIRTUAL|AFVIRTUALBOXED)){
@@ -689,9 +689,9 @@ I jtgc3(J jt,A *x,A *y,A *z,A* old){
 }
 
 // subroutine version of ra without rifv to save space
-static A raonlys(AD * RESTRICT w) { RZ(w);
+static A raonlys(AD * RESTRICT w) { ARGCHK1(w);
 #if AUDITEXECRESULTS
- if(AFLAG(w)&(AFVIRTUAL|AFUNINCORPABLE))SEGFAULT
+ if(AFLAG(w)&(AFVIRTUAL|AFUNINCORPABLE))SEGFAULT;
 #endif
  ra(w); R w; }
 
@@ -901,12 +901,12 @@ void jttpop(J jt,A *old){A *endingtpushp;
 // If the noun is assigned as part of a named derived verb, protection is not needed (but harmless) because if the same value is
 // assigned to another name, the usecount will be >1 and therefore not inplaceable.  Likewise, the the noun is non-DIRECT we need
 // only protect the top level, because if the named value is incorporated at a lower level its usecount must be >1.
-F1(jtrat){RZ(w); ras(w); tpush(w); R w;}  // recursive.  w can be zero only if explicit definition had a failing sentence
+F1(jtrat){ARGCHK1(w); ras(w); tpush(w); R w;}  // recursive.  w can be zero only if explicit definition had a failing sentence
 
-A jtras(J jt, AD * RESTRICT w) { RZ(w); realizeifvirtual(w); ra(w); R w; }  // subroutine version of ra() to save space
-A jtra00s(J jt, AD * RESTRICT w) { RZ(w); ra00(w,AT(w)); R w; }  // subroutine version of ra00() to save space
-A jtrifvs(J jt, AD * RESTRICT w) { RZ(w); realizeifvirtual(w); R w; }  // subroutine version of rifv() to save space and be an rvalue
-A jtmkwris(J jt, AD * RESTRICT w) { RZ(w); makewritable(w); R w; }  // subroutine version of makewritable() to save space and be an rvalue
+A jtras(J jt, AD * RESTRICT w) { ARGCHK1(w); realizeifvirtual(w); ra(w); R w; }  // subroutine version of ra() to save space
+A jtra00s(J jt, AD * RESTRICT w) { ARGCHK1(w); ra00(w,AT(w)); R w; }  // subroutine version of ra00() to save space
+A jtrifvs(J jt, AD * RESTRICT w) { ARGCHK1(w); realizeifvirtual(w); R w; }  // subroutine version of rifv() to save space and be an rvalue
+A jtmkwris(J jt, AD * RESTRICT w) { ARGCHK1(w); makewritable(w); R w; }  // subroutine version of makewritable() to save space and be an rvalue
 
 #if MEMAUDIT&8
 static I lfsr = 1;  // holds varying memory pattern
@@ -922,7 +922,7 @@ RESTRICTF A jtgaf(J jt,I blockx){A z;I mfreeb;I n=(I)2<<blockx;  // n=size of al
 auditmemchains();
 #endif
 #if MEMAUDIT&15
-if((I)jt&3)SEGFAULT
+if((I)jt&3)SEGFAULT;
 #endif
  z=jt->mfree[-PMINL+1+blockx].pool;   // tentatively use head of free list as result - normal case, and even if blockx is out of bounds will not segfault
  if(likely(2>*jt->adbreakr)){  // this is JBREAK0, done this way so predicted fallthrough will be true
@@ -935,8 +935,8 @@ if((I)jt&3)SEGFAULT
    if(z){         // allocate from a chain of free blocks
     jt->mfree[-PMINL+1+blockx].pool = AFCHAIN(z);  // remove & use the head of the free chain
 #if MEMAUDIT&1
-    if(AFCHAIN(z)&&FHRHPOOLBIN(AFHRH(AFCHAIN(z)))!=(1+blockx-PMINL))SEGFAULT  // reference the next block to verify chain not damaged
-    if(FHRHPOOLBIN(AFHRH(z))!=(1+blockx-PMINL))SEGFAULT  // verify block has correct size
+    if(AFCHAIN(z)&&FHRHPOOLBIN(AFHRH(AFCHAIN(z)))!=(1+blockx-PMINL))SEGFAULT;  // reference the next block to verify chain not damaged
+    if(FHRHPOOLBIN(AFHRH(z))!=(1+blockx-PMINL))SEGFAULT;  // verify block has correct size
 #endif
    }else{A u,chn; US hrh; I nt=jt->malloctotal;                   // small block, but chain is empty.  Alloc PSIZE and split it into blocks
 #if 1 || ALIGNTOCACHE   // with smaller headers, always align pool allo to cache bdy
@@ -1052,7 +1052,7 @@ void jtmf(J jt,A w){I mfreeb;
 auditmemchains();
 #endif
 #if MEMAUDIT&15
-if((I)jt&3)SEGFAULT
+if((I)jt&3)SEGFAULT;
 #endif
 #if LEAKSNIFF
  if(leakcode){I i;
@@ -1072,7 +1072,7 @@ if((I)jt&3)SEGFAULT
   freesymb(jt,w);
  }
 #if MEMAUDIT&1
- if(hrh==0 || blockx>(PLIML-PMINL+1))SEGFAULT  // pool number must be valid
+ if(hrh==0 || blockx>(PLIML-PMINL+1))SEGFAULT;  // pool number must be valid
 #if MEMAUDIT&17
 #endif
 #endif
@@ -1121,7 +1121,7 @@ RESTRICTF A jtgah(J jt,I r,A w){A z;
 
 // clone w, returning the address of the cloned area.  Result is NOT recursive, not AFRO, not virtual
 F1(jtca){A z;I t;P*wp,*zp;
- RZ(w);
+ ARGCHK1(w);
  t=AT(w);
  if(unlikely((t&SPARSE)!=0)){
   GASPARSE(z,t,AN(w),AR(w),AS(w))
@@ -1137,7 +1137,7 @@ F1(jtca){A z;I t;P*wp,*zp;
  R z;
 }
 // clone block only if it is read-only
-F1(jtcaro){ if(AFLAG(w)&AFRO)RETF(ca(w)); RETF(w); }
+F1(jtcaro){ if(AFLAG(w)&AFRO){RETF(ca(w));} RETF(w); }
 
 // clone recursive.
 F1(jtcar){A*u,*wv,z;I n;P*p;V*v;
@@ -1176,7 +1176,7 @@ B jtspc(J jt){A z; RZ(z=MALLOC(1000)); FREECHK(z); R 1; }  // see if 1000 bytes 
 // if b=1, the result will replace w, so decrement usecount of w and increment usecount of new buffer
 // the itemcount of the result is set as large as will fit evenly, and the atomcount is adjusted accordingly
 A jtext(J jt,B b,A w){A z;I c,k,m,m1,t;
- RZ(w);                               /* assume AR(w)&&AN(w)    */
+ ARGCHK1(w);                               /* assume AR(w)&&AN(w)    */
  m=AS(w)[0]; PROD(c,AR(w)-1,AS(w)+1); t=AT(w); k=c*bp(t);
  GA(z,t,2*AN(w)+(AN(w)?0:c),AR(w),0);  // ensure we allocate SOMETHING to make progress
  m1=allosize(z)/k;  // start this divide before the copy

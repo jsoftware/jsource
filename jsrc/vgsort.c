@@ -397,7 +397,7 @@ static SF(jtsortd){FPREFIP;A x,y,z;B b;D*g,*h,*xu,*wv,*zu;I i,nneg;void *yv;
 
 // x /:"r y, not sparse
 F2(jtgr2){F2PREFIP;PROLOG(0076);A z=0;I acr,api,d,f,m,n,*s,t,wcr; 
- RZ(a&&w);
+ ARGCHK2(a,w);
  // ?cr= rank of the cells being sorted; t= type of w
  acr=jt->ranks>>RANKTX; acr=AR(a)<acr?AR(a):acr; 
  wcr=(RANKT)jt->ranks; wcr=AR(w)<wcr?AR(w):wcr; t=AT(w);

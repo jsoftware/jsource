@@ -307,7 +307,7 @@ static F1(jtthxqe){A d,t,*tv,*v,y,z;C*zv;I c,*dv,m,n,p,r,*s,*wv;
 // Also return the largest type encountered
 // Result is 1 normally, 0 if size out of bounds
 static B jtrc(J jt,A w,A*px,A*py, I *t){A*v,x,y;I j=0,k=0,maxt=0,r,*s,xn,*xv,yn,*yv;
- RZ(w);  // return failure if no input
+ ARGCHK1(w);  // return failure if no input
  // r = rank of w, s->shape of w, v->values
  r=AR(w); s=AS(w); v=AAV(w);
  // xn = #rows in 2-cell of joined table, x=vector of (xn+1) 0s, xv->data for vector
@@ -472,7 +472,7 @@ static F1(jtenframe){A x,y,z;C*zv;I ht,m,n,p,q,t,wd,wdb,wr,xn,*xv,yn,*yv,zn;
 // w is an r-dimensional array of characters; result is a table with
 // 1 blank line between 2-cells, 2 blank lines between 3-cells, etc
 F1(jtmat){A z;B b=0;C*v,*x;I c,k,m=1,p,q,qc,r,*s,t,zn;
- RZ(w);  // return if no w
+ ARGCHK1(w);  // return if no w
  // r=rank of w, s->shape, v->characters, t=type
  r=AR(w); s=AS(w); v=CAV(w); t=AT(w);
  // set (q,c) to the shape of a 2-cell of the input
@@ -538,7 +538,7 @@ static F1(jtths){A e,i,x,z;C c,*u,*v;I d,m,n,*s;P*p;
 // ": y, returning character array.  If jt->thornuni is set, LIT and C2T types return
 // C2T when there are unicodes present
 static F1(jtthorn1main){PROLOG(0001);A z;
- RZ(w);
+ ARGCHK1(w);
  if(!AN(w))GATV(z,LIT,0,AR(w),AS(w))
  else switch(CTTZ(AT(w))){
 #ifdef UNDER_CE
@@ -600,10 +600,10 @@ static F1(jtthorn1main){PROLOG(0001);A z;
 
 // entry point to allow C2T result from thorn1.  But always pass byte arguments unchanged
 // This will enable null insertion/removal for CJK, but that's OK since the result goes to display
-F1(jtthorn1u){ A z; RZ(w); B to = jt->thornuni; jt->thornuni = !(AT(w)&(LIT)); z = thorn1main(w); jt->thornuni = to; R z; }
+F1(jtthorn1u){ A z; ARGCHK1(w); B to = jt->thornuni; jt->thornuni = !(AT(w)&(LIT)); z = thorn1main(w); jt->thornuni = to; R z; }
 
 // entry point for returning LIT array only.  Allow C2T result, then convert.  But always pass literal arguments unchanged
-F1(jtthorn1){ A z; RZ(w); B to = jt->thornuni; jt->thornuni = !(AT(w)&(LIT+C2T+C4T)); z = thorn1main(w); if (z&&AT(z)&(C2T+C4T))z = rank1ex(z, DUMMYSELF, MIN(AR(z),1), RoutineD); jt->thornuni = to; R z; }
+F1(jtthorn1){ A z; ARGCHK1(w); B to = jt->thornuni; jt->thornuni = !(AT(w)&(LIT+C2T+C4T)); z = thorn1main(w); if (z&&AT(z)&(C2T+C4T))z = rank1ex(z, DUMMYSELF, MIN(AR(z),1), RoutineD); jt->thornuni = to; R z; }
 
 
 #define DDD(v)   {*v++='.'; *v++='.'; *v++='.';}
@@ -843,7 +843,7 @@ static A jtjprx(J jt,I ieol,I maxlen,I lb,I la,A w){A y,z;B ch;C e,eov[2],*v,x,*
 // w is any noun
 // Result is the UTF-8 byte string that would be displayed
 F2(jtoutstr){I*v;
- RZ(a&&w);
+ ARGCHK2(a,w);
  RZ(a=vib(a));
  ASSERT(1==AR(a), EVRANK);
  ASSERT(4==AN(a), EVLENGTH);
@@ -876,7 +876,7 @@ static F1(jtjpr1){PROLOG(0002);A z;
 // if jt->tostdout is clear (for loading scripts quietly), check for errors but produce no output
 // Result is 0 if error, otherwise a harmless constant
 F1(jtjpr){A y;I i,n,t; UC *v;
- RZ(w);
+ ARGCHK1(w);
  t=AT(w);
   // if w is a noun, format it and output it
  if(t&NOUN&&jt->tostdout)RZ(jpr1(w))

@@ -34,7 +34,7 @@ F1(jtgausselm){I c,e,i,j,r,r1,*s;Q p,*u,*v,*x;
 }    /* Gaussian elimination in place */
 
 static F1(jtdetr){A z;I c,e,g=1,i,j,k,r,*s;Q d,p,*u,*v,*x;
- RZ(w);
+ ARGCHK1(w);
  w=rifvsdebug(w);  // must realize before in-place operations, as above
  s=AS(w); r=s[0]; c=s[1];
  A *old=jt->tnextpushp;
@@ -57,7 +57,7 @@ static F1(jtdetr){A z;I c,e,g=1,i,j,k,r,*s;Q d,p,*u,*v,*x;
 }    /* determinant on rational matrix; works in place */
 
 static F1(jtdetd){D g,h,p,q,*u,*v,*x,*y,z=1.0;I c,d,e,i,j,k,r,*s;
- RZ(w);
+ ARGCHK1(w);
  s=AS(w); r=s[0]; c=s[1]; v=DAV(w);
  NAN0;
  for(j=0;j<r;++j){
@@ -79,7 +79,7 @@ static F1(jtdetd){D g,h,p,q,*u,*v,*x,*y,z=1.0;I c,d,e,i,j,k,r,*s;
 #define ZABT(v)         ((v).re*(v).re+(v).im*(v).im)
 
 static F1(jtdetz){A t;D g,h;I c,d,e,i,j,k,r,*s;Z p,q,*u,*v,*x,*y,z;
- RZ(w);
+ ARGCHK1(w);
  z.re=1.0; z.im=0.0;
  s=AS(w); r=s[0]; c=s[1]; v=ZAV(w);
  NAN0;
@@ -100,7 +100,7 @@ static F1(jtdetz){A t;D g,h;I c,d,e,i,j,k,r,*s;Z p,q,*u,*v,*x,*y,z;
 }    /* determinant on complex  matrix; works in place */
 
 F1(jtgaussdet){A z;I*s;
- RZ(w);
+ ARGCHK1(w);
  ASSERT(2==AR(w),EVRANK);
  s=AS(w);
  ASSERT(s[0]==s[1],EVLENGTH);

@@ -29,7 +29,7 @@ A jtevc(J jt,A a,A w,C*s){A z; R df2(z,a,w,colon(num(2),cstr(s)));}
 
 // ". y
 F1(jtexec1){A z;
- RZ(w);
+ ARGCHK1(w);
  if(AT(w)&NAME){z=nameref(w);  // the case ".@'name' which is the fastest way to refer to a deferred name
  }else{
   F1RANK(1,jtexec1,DUMMYSELF);
@@ -66,7 +66,7 @@ static A jtcex(J jt,A w,AF f,A self){A z; RE(w); z=f(jt,w,self); RESETERR; R z;}
 
 // convert the gerund (i.e  AR) in w into a verb
 F1(jtexg){A*v,*wv,x,y,z;I n;
- RZ(w);
+ ARGCHK1(w);
  n=AN(w); wv=AAV(w); 
  ASSERT(n!=0,EVLENGTH);
  ASSERT(1>=AR(w),EVRANK);

@@ -19,7 +19,7 @@
 
 // Calculate byte-at-a-time CRC table in *crctab, and return the starting value as the result
 static UINT jtcrcvalidate(J jt,A w, UINT* crctab){A*wv;B*v;I m;UINT p,x,z=-1;
- RZ(w);
+ ARGCHK1(w);
  ASSERT(1>=AR(w),EVRANK);
  m=AN(w);
  if(m&&BOX&AT(w)){ASSERT(2>=m,EVLENGTH); wv=AAV(w);  w=wv[0]; if(2==m)RE(z=(UINT)i0(wv[1]));}
@@ -32,7 +32,7 @@ static UINT jtcrcvalidate(J jt,A w, UINT* crctab){A*wv;B*v;I m;UINT p,x,z=-1;
 F1(jtcrc1){R crc2(sc(-306674912),w);}
 
 F2(jtcrc2){I n;UINT z;UC*v; UINT crctab[256];
- RZ(a&&w);
+ ARGCHK2(a,w);
  ASSERT(1>=AR(a)&&1>=AR(w),EVRANK);
  n=AN(w); v=UAV(w);
 // ASSERT(!n||AT(w)&LIT+C2T+C4T,EVDOMAIN);
@@ -44,7 +44,7 @@ F2(jtcrc2){I n;UINT z;UC*v; UINT crctab[256];
 }
 
 F1(jtcrccompile){A h,*hv;UINT z; UINT crctab[256];
- RZ(w);
+ ARGCHK1(w);
  GAT0(h,BOX,2,1); hv=AAV(h);
  RE(z=crcvalidate(w,crctab));
  RZ(hv[0]=rifvs(vec(LIT,sizeof(crctab),crctab)));  // Save the table.  We don't have any other good type to use
@@ -53,7 +53,7 @@ F1(jtcrccompile){A h,*hv;UINT z; UINT crctab[256];
 }
 
 DF1(jtcrcfixedleft){A h,*hv;I n;UINT*t,z;UC*v;
- RZ(w);
+ ARGCHK1(w);
  h=FAV(self)->fgh[2]; hv=AAV(h); t=(UINT*)AV(hv[0]); z=(UINT)AV(hv[1])[0];
  n=AN(w); v=UAV(w);
  ASSERT(!n||AT(w)&LIT+C2T+C4T,EVDOMAIN);
@@ -67,7 +67,7 @@ DF1(jtcrcfixedleft){A h,*hv;I n;UINT*t,z;UC*v;
 #define CRC32L(acc,in) (0xffffffff&((acc*15015)^(in)))   // if no hardware CRC (rare), mix the bits a little
 #endif
 F2(jtqhash12){F2PREFIP; I hsiz; UI crc;
- RZ(a&&w);
+ ARGCHK2(a,w);
  if(AT(w)&NOUN){RE(hsiz=i0(vib(a)));} else{w=a; hsiz=0;}  // fetch hashtable size; set w=data to hash
  ASSERT(hsiz>=0,EVDOMAIN);
  ASSERT(AT(w)&DENSE,EVNONCE);  // not sparse for now

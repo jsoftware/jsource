@@ -8,7 +8,7 @@
 static F2(jtcanta);
 
 static A jtcants(J jt,A a,A w,A z){A a1,q,y;B*b,*c;I*u,wr,zr;P*wp,*zp;
- RZ(a&&w&&z);
+ ARGCHK3(a,w,z);
  RZ(a=grade1(a));
  wr=AR(w); wp=PAV(w); a1=SPA(wp,a);
  zr=AR(z); zp=PAV(z);
@@ -41,7 +41,7 @@ static A jtcants(J jt,A a,A w,A z){A a1,q,y;B*b,*c;I*u,wr,zr;P*wp,*zp;
 // This is the inverse permutation of the x in x |: y
 // This routine handles IRS on w only (by making higher axes passthroughs), and ignores the rank of a (assumes 1)
 static F2(jtcanta){A m,s,t,z;C*wv,*zv;I*av,j,*mv,r,*sv,*tv,wf,wr,*ws,zn,zr,ms[4],ss[4],ts[4];
- RZ(a&&w);
+ ARGCHK2(a,w);
  av=AV(a); ws=AS(w); wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; RESETRANK;
  ASSERT(r==AN(a),EVLENGTH);
  fauxblockINT(afaux,4,1);
@@ -97,7 +97,7 @@ static F2(jtcanta){A m,s,t,z;C*wv,*zv;I*av,j,*mv,r,*sv,*tv,wf,wr,*ws,zn,zr,ms[4]
 }    /* dyadic transpose in APL\360, a f"(1,r) w where 1>:#$a  */
 
 F1(jtcant1){I r; 
- RZ(w); F1PREFIP;
+ ARGCHK1(w); F1PREFIP;
  r=(RANKT)jt->ranks; r=AR(w)<r?AR(w):r;   // no RESETRANK; we pass the rank of w on
  A z=canta(apv(r,r-1,-1L),w); RZ(z);  // rank is set
  // We extracted from w, so mark it (or its backer if virtual) non-pristine.  If w was pristine and inplaceable, transfer its pristine status to the result
@@ -107,7 +107,7 @@ F1(jtcant1){I r;
 }    /* |:"r w */
 
 F2(jtcant2){A*av,p,t,y;I j,k,m,n,*pv,q,r,*v;
- RZ(a&&w); F2PREFIP;
+ ARGCHK2(a,w); F2PREFIP;
  r=(RANKT)jt->ranks; r=AR(w)<r?AR(w):r; 
  q=jt->ranks>>RANKTX; q=AR(a)<q?AR(a):q; RESETRANK;
  if(((q-2)&(AR(a)-q-1))>=0){t=rank2ex(a,w,DUMMYSELF,MIN(q,1),r,q,r,jtcant2); PRISTCLRF(w) RETF(t);} // rank loop on a.  Loses pristinity

@@ -99,7 +99,7 @@ static B jtiixI(J jt,I n,I m,A a,A w,I*zv){A t;B ascend;I*av,j,p,q,*tv,*u,*v,*vv
 #define TT(s,t) (((s)&16)<<3)+(((s)&7)<<4)+(((t)&16)>>1)+((t)&7)
 
 F2(jticap2){A*av,*wv,z;C*uu,*vv;I ar,*as,at,b,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t,wr,*ws,wt,* RESTRICT zv;I cc;
- RZ(a&&w);
+ ARGCHK2(a,w);
  ar=AR(a); at=AT(a); as=AS(a); SETIC(a,n); r=ar-1<0?0:ar-1;  // n=length of 1-cell of a, r=frame of a
  wr=AR(w); wt=AT(w); ws=AS(w);
  ASSERT(r<=wr,EVRANK);

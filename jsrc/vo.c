@@ -23,10 +23,10 @@ I levelle(A w,I l){
  R 1;  // if it never gets big enough, say so, keep looking
 }
 
-F1(jtlevel1){RZ(w); R sc(level(w));}
+F1(jtlevel1){ARGCHK1(w); R sc(level(w));}
 
 F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws; 
- RZ(w);F1PREFIP;I wt=AT(w); FLAGT waf=AFLAG(w);
+ ARGCHK1(w);F1PREFIP;I wt=AT(w); FLAGT waf=AFLAG(w);
  ASSERT(!(SPARSE&wt),EVNONCE);
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r;   // no RESETRANK because we call no primitives
  if(likely(!f)){
@@ -46,7 +46,7 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
   // Since we are allocating the new boxes, the result will ipso facto be PRIVATE, as long as w is DIRECT.  If w is not DIRECT, we can be PRISTINE if we ensure that
   // w is PRISTINE inplaceable, but we don't bother to do that because 
   // If the input is DIRECT, mark the result as PRISTINE
-  GATV(z,BOX,n,f,ws); AFLAG(z) = BOX+((-(wt&DIRECT))&AFPRISTINE); if(n==0)RETF(z);  // Recursive result; could avoid filling with 0 if we modified AN after error, or cleared after *tnextpushp
+  GATV(z,BOX,n,f,ws); AFLAG(z) = BOX+((-(wt&DIRECT))&AFPRISTINE); if(n==0){RETF(z);}  // Recursive result; could avoid filling with 0 if we modified AN after error, or cleared after *tnextpushp
   // We have allocated the result; now we allocate a block for each cell of w and copy the w values to the new block.
 
   // Since we are making the result recursive, we can save a lot of overhead by NOT putting the cells onto the tstack.  As we have marked the result as
@@ -69,10 +69,10 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
  RETF(z);
 }    /* <"r w */
 
-F1(jtboxopen){F1PREFIP; RZ(w); if((-AN(w)&-(AT(w)&BOX+SBOX))>=0){w = jtbox(jtinplace,w);} R w;}
+F1(jtboxopen){F1PREFIP; ARGCHK1(w); if((-AN(w)&-(AT(w)&BOX+SBOX))>=0){w = jtbox(jtinplace,w);} R w;}
 
 F2(jtlink){
-RZ(a&&w);F2PREFIP;
+ARGCHK2(a,w);F2PREFIP;
 #if FORCEVIRTUALINPUTS
  // to allow mapped-boxed tests to run, we detect when the virtual block being realized is at offset 0 from its
  // base block, and has the same atomsct/rank/shape.  Then we just return the base block, since the virtual block
@@ -415,14 +415,14 @@ static A jtopes(J jt,I zt,A cs,A w){A a,d,e,sh,t,*wv,x,x1,y,y1,z;B*b;C*xv;I an,*
 // if y contained inplaceable components (possible if y came from < yy or <"r yy).  In that case, mark the result as non-inplaceable.
 // We don't support inplacing here yet so just do that always
 F1(jtope){PROLOG(0080);A cs,*v,y,z;I nonh;C*x;I i,n,*p,q=RMAX,r=0,*s,t=0,te=0,*u,zn;
- RZ(w);
+ ARGCHK1(w);
  n=AN(w); v=AAV(w);
  if(!(BOX&(AT(w)&REPSGN(-n))))RCA(w);  // return w if empty or open
  if(!AR(w)){
   // scalar box: Turn off pristine in w since we are pulling an address from it.  Contents must not be inplaceable
   z=*v;
 #if AUDITBOXAC
-  if(!(AFLAG(w)&AFVIRTUALBOXED)&&AC(z)<0)SEGFAULT
+  if(!(AFLAG(w)&AFVIRTUALBOXED)&&AC(z)<0)SEGFAULT;
 #endif
   PRISTCLRF(w) R z;
  }
@@ -457,7 +457,7 @@ F1(jtope){PROLOG(0080);A cs,*v,y,z;I nonh;C*x;I i,n,*p,q=RMAX,r=0,*s,t=0,te=0,*u
   for(i=0;i<n;++i){
    y=v[i];   // get pointer to contents
 #if AUDITBOXAC
-   if(!(AFLAG(w)&AFVIRTUALBOXED)&&AC(y)<0)SEGFAULT
+   if(!(AFLAG(w)&AFVIRTUALBOXED)&&AC(y)<0)SEGFAULT;
 #endif
    if(!nonh)                MC(x,AV(y),AN(y)<<klg);  // homogeneous atomic types: fill only at end, copy the valid part
    else if(TYPESEQ(t,AT(y))&&m==AN(y))MC(x,AV(y),q);   // cell of maximum size: copy it entire
@@ -537,7 +537,7 @@ static A jtrazeg(J jt,A w,I t,I n,I r,A*v,I nonempt){A h,h1,y,z;C*zu;I c=0,i,j,k
 
 // ; y
 F1(jtraze){A*v,y,z,* RESTRICT zv;C* RESTRICT zu;I *wws,d,i,klg,m=0,n,r=1,t=0,te=0;
- RZ(w);
+ ARGCHK1(w);
  n=AN(w); v=AAV(w);  // n=#,w  v->w data
  if(!n)R mtv;   // if empty operand, return boolean empty
  if(!(BOX&AT(w)))R ravel(w);   // if not boxed, just return ,w
@@ -595,7 +595,7 @@ F1(jtraze){A*v,y,z,* RESTRICT zv;C* RESTRICT zu;I *wws,d,i,klg,m=0,n,r=1,t=0,te=
 // TODO: remove divides from razeh
 
 F1(jtrazeh){A*wv,y,z;C*xv,*yv,*zv;I c=0,ck,dk,i,k,n,p,r,*s,t;
- RZ(w);
+ ARGCHK1(w);
  ASSERT(BOX&AT(w),EVDOMAIN);
  if(!AR(w))R ope(w);
  n=AN(w); wv=AAV(w);  y=wv[0]; SETIC(y,p); t=AT(y); k=bpnoun(t);

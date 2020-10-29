@@ -46,7 +46,7 @@ static A jtfromis1(J jt,A ind,A w,A z,I wf){A a,a1,j1,p,q,x,x1,y,y1;C*xu,*xuu,*x
 }    /* ind{"r w along a sparse axis  */
 
 F2(jtfromis){A ind,x,z;B*b;I acr,af,an,ar,*av,k,m,*v,wcr,wf,wn,wr,*ws,wt;P*wp,*zp;
- RZ(a&&w);
+ ARGCHK2(a,w);
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr; af=ar-acr;
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK;
  if(af)R rank2ex(a,w,DUMMYSELF,acr,wcr,acr,wcr,jtfromis);
@@ -137,7 +137,7 @@ static A jtfrombs1(J jt,A ind,A w,I wf){A*iv,x,y,z;I j,m,n,wr,wcr;
 }    /* (<ind){"r w, sparse w */
 
 F2(jtfrombs){A ind;I acr,af,ar,wcr,wf,wr;
- RZ(a&&w);
+ ARGCHK2(a,w);
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr; af=ar-acr;
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK;
  ASSERT(!af,EVNONCE);
@@ -146,7 +146,7 @@ F2(jtfrombs){A ind;I acr,af,ar,wcr,wf,wr;
 }    /* a{"r w for boxed a and sparse w */
 
 F2(jtfromsd){A e,x,z;I acr,af,ar,*v,wcr,wf,wr,*ws;P*ap,*zp;
- RZ(a&&w);
+ ARGCHK2(a,w);
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr; af=ar-acr;
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK;
  if(af)R sprank2(a,w,0L,acr,wcr,jtfrom);
@@ -168,7 +168,7 @@ F2(jtfromsd){A e,x,z;I acr,af,ar,*v,wcr,wf,wr,*ws;P*ap,*zp;
 }    /* a{"r w, sparse a, dense w */
 
 F2(jtfromss){A e,x,y,z;B*b;I acr,af,ar,c,d,k,m,n,p,*u,*v,wcr,wf,wr,*ws,*yv;P*ap,*wp,*xp,*zp;
- RZ(a&&w);
+ ARGCHK2(a,w);
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr; af=ar-acr;
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK;
  if(af)R sprank2(a,w,0L,acr,wcr,jtfrom);

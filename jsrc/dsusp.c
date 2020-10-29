@@ -221,7 +221,7 @@ DF2(jtdbunquote){A t,z;B b=0,s;DC d;V*sv;
 
 
 F1(jtdbc){UC k;
- RZ(w);
+ ARGCHK1(w);
  if(AN(w)){
   RE(k=(UC)i0(w));
   ASSERT(!(k&~1),EVDOMAIN);
@@ -250,7 +250,7 @@ F1(jtdbrun ){ASSERTMTV(w); jt->dbsusact=SUSRUN;  R mtm;}
 F1(jtdbnext){ASSERTMTV(w); jt->dbsusact=SUSNEXT; R mtm;}
      /* 13!:5  run next */
 
-F1(jtdbret ){RZ(w); jt->dbsusact=SUSRET; ras(w); jt->dbresult=w; R mtm;}
+F1(jtdbret ){ARGCHK1(w); jt->dbsusact=SUSRET; ras(w); jt->dbresult=w; R mtm;}
      /* 13!:6  exit with result */
 
 F1(jtdbjump){RE(jt->dbjump=i0(w)); jt->dbsusact=SUSJUMP; R mtm;}

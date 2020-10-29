@@ -16,7 +16,7 @@
 
 
 static DF1(jtpowseqlim){PROLOG(0039);A x,y,z,*zv;I i,n;
- RZ(w);
+ ARGCHK1(w);
  RZ(z=exta(BOX,1L,1L,20L)); zv=AAV(z); INCORP(w); *zv++=x=w;
  i=1; n=AN(z);
  while(1){
@@ -31,7 +31,7 @@ static DF1(jtpowseqlim){PROLOG(0039);A x,y,z,*zv;I i,n;
 
 // AR(a) is 1 and AN(w)!=0
 static F2(jttclosure){A z;I an,*av,c,d,i,wn,wr,wt,*wv,*zv,*zz;
- RZ(a&&w);
+ ARGCHK2(a,w);
  wt=AT(w); wn=AN(w); wr=AR(w);
  if(B01&wt)RZ(w=cvt(INT,w)); wv=AV(w);
  av=AV(a); an=AN(a);
@@ -58,19 +58,19 @@ static F2(jttclosure){A z;I an,*av,c,d,i,wn,wr,wt,*wv,*zv,*zz;
 }    /* {&a^:(<_) w */
 
 static DF1(jtindexseqlim1){A fs;
- RZ(w); 
+ ARGCHK1(w); 
  fs=FAV(self)->fgh[0];  // {&x
  R AN(w)&&AT(w)&B01+INT?tclosure(FAV(fs)->fgh[1],w):powseqlim(w,fs);
 }    /* {&x^:(<_) w */
 
 static DF2(jtindexseqlim2){
- RZ(a&&w);
+ ARGCHK2(a,w);
  R 1==AR(a)&&AT(a)&INT&&AN(w)&&AT(w)&B01+INT?tclosure(a,w):powseqlim(w,amp(ds(CFROM),a));
 }    /* a {~^:(<_) w */
 
 // u^:(<n) If n negative, take inverse of u; if v infinite, go to routine that checks for no change.  Otherwise convert to u^:(i.|n) and restart
 static DF1(jtpowseq){A fs,gs,x;I n=IMAX;V*sv;
- RZ(w);
+ ARGCHK1(w);
  sv=FAV(self); fs=sv->fgh[0]; gs=sv->fgh[1];
  ASSERT(!AR(gs),EVRANK);
  ASSERT(BOX&AT(gs),EVDOMAIN);
@@ -82,7 +82,7 @@ static DF1(jtpowseq){A fs,gs,x;I n=IMAX;V*sv;
 
 // u^:n w where n is nonnegative finite integer atom (but never 0 or 1, which are handled as special cases)
 static DF1(jtfpown){A fs,z;AF f1;I n;V*sv;A *old;
- RZ(w);
+ ARGCHK1(w);
  F1PREFIP;
  sv=FAV(self);
  n=AV(sv->fgh[2])[0];
@@ -193,15 +193,15 @@ static DF2(jtpinf12){PROLOG(0340);A z;  // no reason to inplace, since w must be
   if(!((isend-1)&++i&7)) {  // every so often, but always when we leave...
    JBREAK0;   // check for user interrupt, in case the function doesn't allocate memory
    RZ(z=EPILOGNORET(z));  // free up allocated blocks, but keep z.  If z is virtual it will be realized
-   if(isend)RETF(z);  // return at end
+   if(isend){RETF(z);}  // return at end
   }
     // make the new result the starting value for next loop, replacing w wherever it is
  }
 }
 
-static DF1(jtinv1){F1PREFIP;DECLFG;A z; RZ(w);A i; RZ(i=inv((fs))); FDEPINC(1);  z=(FAV(i)->valencefns[0])(FAV(i)->flag&VJTFLGOK1?jtinplace:jt,w,i);       FDEPDEC(1); RETF(z);}  // was invrecur(fix(fs))
-static DF1(jtinvh1){F1PREFIP;DECLFGH;A z; RZ(w);    FDEPINC(1); z=(FAV(hs)->valencefns[0])(jtinplace,w,hs);        FDEPDEC(1); RETF(z);}
-static DF2(jtinv2){DECLFG;A z; RZ(a&&w); FDEPINC(1); df1(z,w,inv(amp(a,fs))); FDEPDEC(1); STACKCHKOFL RETF(z);}  // the CHKOFL is to avoid tail recursion, which prevents a recursion loop from being broken
+static DF1(jtinv1){F1PREFIP;DECLFG;A z; ARGCHK1(w);A i; RZ(i=inv((fs))); FDEPINC(1);  z=(FAV(i)->valencefns[0])(FAV(i)->flag&VJTFLGOK1?jtinplace:jt,w,i);       FDEPDEC(1); RETF(z);}  // was invrecur(fix(fs))
+static DF1(jtinvh1){F1PREFIP;DECLFGH;A z; ARGCHK1(w);    FDEPINC(1); z=(FAV(hs)->valencefns[0])(jtinplace,w,hs);        FDEPDEC(1); RETF(z);}
+static DF2(jtinv2){DECLFG;A z; ARGCHK2(a,w); FDEPINC(1); df1(z,w,inv(amp(a,fs))); FDEPDEC(1); STACKCHKOFL RETF(z);}  // the CHKOFL is to avoid tail recursion, which prevents a recursion loop from being broken
 static DF1(jtinverr){F1PREFIP;ASSERT(0,EVDOMAIN);}  // used for uninvertible monads
 
 // old static CS2(jtply2, df1(z,w,powop(amp(a,fs),gs,0)),0107)  // dyad adds x to make x&u, and then reinterpret the compound.  We could interpret u differently now that it has been changed (x {~^:a: y)
@@ -255,7 +255,7 @@ z=(FAV(u)->valencefns[0])(FAV(u)->flag&VJTFLGOK1?jtinplace:jt,w,u);} \
 // from parse) to 0 in all calls resulting from execution of gerund v.  Then we fail any gerund
 // if self is 0.
 DF2(jtpowop){A hs;B b;V*v;
- RZ(a&&w);
+ ARGCHK2(a,w);
  ASSERT(AT(a)&VERB,EVDOMAIN);  // u must be a verb
  if(AT(w)&VERB){
   // u^:v.  Create derived verb to handle it.

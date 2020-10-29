@@ -12,7 +12,7 @@ B jtvc1(J jt,I n,US*v){DQ(n, RZ(255>=*v++);); R 1;}
 // allocate new datablock and return the ASCII for the characters in w
 // if b is 0, raise error if high byte of unicode is not 0
 A jttoc1(J jt,B h,A w){A z;C*wv,*zv;I n;C4*w4;
- RZ(w);
+ ARGCHK1(w);
  if(LIT&AT(w))RCA(w);  // if already ASCII, return
  n=AN(w); wv=CAV(w);    // number of characters, pointer to characters if any
  w4=C4AV(w);
@@ -43,7 +43,7 @@ A jttoc1(J jt,B h,A w){A z;C*wv,*zv;I n;C4*w4;
 }    /* convert 2-byte or 4-byte chars to 1-byte chars; 0==h iff high order byte(s) must be 0 */
 
 static F1(jttoc2){A z;C*wv,*zv;I n;C4*w4;US*z2;
- RZ(w);
+ ARGCHK1(w);
  if(C2T&AT(w))RCA(w);
  n=AN(w); wv=CAV(w); w4=C4AV(w);
  ASSERT(!n||(LIT+C4T)&AT(w),EVDOMAIN);
@@ -71,7 +71,7 @@ static F1(jttoc2){A z;C*wv,*zv;I n;C4*w4;US*z2;
 }    /* convert 1-byte chars or 4-byte chars(discard high order half) to 2-byte chars */
 
 static F1(jttoc2e){A z;I m,n,r;
- RZ(w);
+ ARGCHK1(w);
  n=AN(w); r=AR(w);
  ASSERT(r!=0,EVRANK);
  ASSERT(!n||LIT&AT(w),EVDOMAIN);
@@ -84,7 +84,7 @@ static F1(jttoc2e){A z;I m,n,r;
 
 // extended to C4
 static F1(jtifc2){A z;I n,t,*zv;
- RZ(w);
+ ARGCHK1(w);
  n=AN(w); t=AT(w);
  ASSERT(((n-1)&((t&JCHAR)-1))>=0,EVDOMAIN);
  GATV(z,INT,n,AR(w),AS(w)); zv=AV(z);
@@ -107,14 +107,14 @@ static F1(jtc2fi){A z;I j,n,*v;US*zv;
 }    /* 2-byte chars from integers */
 
 F1(jtuco1){I t;
- RZ(w);
+ ARGCHK1(w);
  t=AT(w);
  ASSERT(!AN(w)||t&JCHAR+NUMERIC,EVDOMAIN);
  R t&NUMERIC?c2fi(w):t&C2T?w:toc2(w);  // was ca(w)
 }    /* return 2-byte chars unchanged; convert 1-byte or 4-byte to 2-byte */
 
 F2(jtuco2){I j;
- RZ(a&&w);
+ ARGCHK2(a,w);
  RE(j=i0(a));
  switch(j){
   case 1: R toc1(1,w);

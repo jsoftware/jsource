@@ -25,7 +25,7 @@ mv=: 4 : 0     NB. sparse matrix +/ .* vector
 */
 
 static F2(jtpdtspvv){A x;D*av,s,t,*wv,z;I i,*u,*u0,*uu,*v,*v0,*vv;P*ap,*wp;
- RZ(a&&w);
+ ARGCHK2(a,w);
  ap=PAV(a); x=SPA(ap,i); u=u0=AV(x); uu=u+AN(x); x=SPA(ap,x); av=DAV(x);
  wp=PAV(w); x=SPA(wp,i); v=v0=AV(x); vv=v+AN(x); x=SPA(wp,x); wv=DAV(x);
  z=0.0;
@@ -41,7 +41,7 @@ static F2(jtpdtspvv){A x;D*av,s,t,*wv,z;I i,*u,*u0,*uu,*v,*v0,*vv;P*ap,*wp;
 }
 
 static F2(jtpdtspmv){A ax,b,g,x,wx,y,yi,yj,z;B*bv;I m,n,s[2],*u,*v,*yv;P*ap,*wp,*zp;
- RZ(a&&w);
+ ARGCHK2(a,w);
  ap=PAV(a); y=SPA(ap,i); yv=AV(y); s[0]=n=*AS(y); s[1]=1;
  GATVR(yj,INT,n,2,s);
  if(DENSE&AT(w)){
@@ -69,7 +69,7 @@ static F2(jtpdtspmv){A ax,b,g,x,wx,y,yi,yj,z;B*bv;I m,n,s[2],*u,*v,*yv;P*ap,*wp,
 }    /* (sparse matrix) +/ .* vector; non-complex */
 
 static F2(jtpdtspvm){A ax,b,g,x,wx,y,yi,yj,z;B*bv;D*av,c,d,*wv,*xv;I m,n,s[2],*u,*v,*yv;P*ap,*wp,*zp;
- RZ(a&&w);
+ ARGCHK2(a,w);
  wp=PAV(w); y=SPA(wp,i); yv=AV(y); s[0]=n=*AS(y); s[1]=1;
  if(DENSE&AT(a)){
   GATVR(yj,INT,n,2,s); v=AV(yj); 
@@ -134,7 +134,7 @@ static B jtmmharvest(J jt,I ii,I zjn,A zj,D*zyv,I*n,A*zi,A*zx){A x;D*zxv,*zxv0;I
 
 static F2(jtpdtspmm){A z,zi,zj,zx,zy,*old;D*axv,c,d,*dv,*wxv,*zyv;
      I*aiv,*aivm,i,ii,j,k,k0,m,n=0,p,q,*v,wm,*wiv,*wnv,*zjv,*zjv0;P*zp;
- RZ(a&&w);
+ ARGCHK2(a,w);
  RZ(mmprep(PAV(a),&m,&aiv,0L ,0L  ,&axv)); aivm=m+aiv;
  RZ(mmprep(PAV(w),&m,&wiv,&wm,&wnv,&wxv));
  GATV0(zy,FL,AS(w)[1],1); zyv=DAV(zy); memset(zyv,C0,AN(zy)*sizeof(D));
@@ -170,7 +170,7 @@ static F2(jtpdtspmm){A z,zi,zj,zx,zy,*old;D*axv,c,d,*dv,*wxv,*zyv;
 
 
 F2(jtpdtsp){A x;B ab=0,wb=0;P*p;
- RZ(a&&w);
+ ARGCHK2(a,w);
  ASSERT(!AR(a)||!AR(w)||*(AS(a)+AR(a)-1)==*AS(w),EVLENGTH);
  if(AT(a)&FL+SFL&&AT(w)&FL+SFL){
   if(SPARSE&AT(a)){p=PAV(a); x=SPA(p,a); ab=AR(a)==AN(x)&&equ(num(0),SPA(p,e));}

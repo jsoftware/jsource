@@ -17,7 +17,7 @@ static DF2(swap2){DECLF; F2PREFIP; jtinplace = (J)(intptr_t)((I)jtinplace^((JTIN
 
 // w~, which is either reflexive/passive or evoke
 F1(jtswap){A y;C*s;I n;
- RZ(w); 
+ ARGCHK1(w); 
  if(VERB&AT(w)){
   // reflexive/passive.  Create verb that swaps.  Most flags do not apply to the derived verb
   I flag = FAV(w)->flag&(VIRS2|VJTFLGOK2); flag = (FAV(w)->flag&VASGSAFE)+flag+(flag>>1);  // set ASGSAFE, both inplace/irs bits from dyad; ISATOMIC immaterial, since always dyad
@@ -58,7 +58,7 @@ static DF1(jtbasis1){DECLF;A z;D*x;I j;V*v;
 }}
 
 F1(jtbdot){A b,h=0;I j=0,n,*v;
- RZ(w);
+ ARGCHK1(w);
  if(VERB&AT(w))R ADERIV(CBDOT, jtbasis1,0L, 0L,0,0,0);
  RZ(w=vi(w));
  n=AN(w); v=AV(w);
@@ -141,14 +141,14 @@ static I jtint0(J jt,A w){A x;
 }
 
 static DF1(jtmemo1){DECLF;A z;I x,y;
- RZ(w);
+ ARGCHK1(w);
  x=IMIN; y=int0(w);
  if(y==IMIN)R CALL1(f1,w,fs);
  R (z=memoget(x,y,self))?z:memoput(x,y,self,CALL1(f1,w,fs));
 }
 
 static DF2(jtmemo2){DECLF;A z;I x,y; 
- RZ(a&&w);
+ ARGCHK2(a,w);
  x=int0(a); y=int0(w);
  if(MIN(x,y)==IMIN)R CALL2(f2,a,w,fs);  // IMIN is unmemoable, run fn
  R (z=memoget(x,y,self))?z:memoput(x,y,self,CALL2(f2,a,w,fs));  // if memo lookup returns empty, run the function and remember the result
@@ -160,7 +160,7 @@ static DF2(jtmemo2){DECLF;A z;I x,y;
 // 2 boxed list containing results
 // All these start life on the tpush stack
 F1(jtmemo){PROLOG(300);A h,*hv,q;I m;V*v;
- RZ(w);
+ ARGCHK1(w);
  ASSERT(VERB&AT(w),EVDOMAIN);
  v=FAV(w); FULLHASHSIZE(30,BOXSIZE,1,0,m);  // m = # items to allocate
  GAT0(h,BOX,3,1); hv=AAV(h);

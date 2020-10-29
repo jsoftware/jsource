@@ -36,7 +36,7 @@ B compp(I n,I *a, I *b){J jt=(J)n; I*cv=jt->workareas.compare.compsyv; DO(jt->wo
 
 // this is used by routines outside of sort/merge & therefore a & w can be dissimilar
 I jtcompare(J jt,A a,A w){C*av,*wv;I ar,an,*as,at,c,d,j,m,t,wn,wr,*ws,wt;
- RZ(a&&w);
+ ARGCHK2(a,w);
  an=AN(a); at=an?AT(a):B01; ar=AR(a); as=AS(a);
  wn=AN(w); wt=wn?AT(w):B01; wr=AR(w); ws=AS(w); t=maxtyped(at,wt);
  if(unlikely(!HOMO(at,wt)))R (at&BOX?-1:wt&BOX?1:at&JCHAR?-1:wt&JCHAR?1:

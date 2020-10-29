@@ -740,7 +740,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
   }else{GA(z,rtype((I)jtinplace),zn,(RANKT)fr,0); MCISH(AS(z),AS(((I)jtinplace&VIPWFLONG)?w:a),(fr>>RANKTX)&RANKTMSK); MCISH(AS(z)+((fr>>RANKTX)&RANKTMSK),scell,(fr&RANKTMSK)-((fr>>RANKTX)&RANKTMSK));} 
 //                                                 frame loc     shape of long frame             len of long frame           cellshape loc              cellshape     longer cellen 
   // fr free
-  if(unlikely(zn==0))RETF(z);  // If the result is empty, the allocated area says it all
+  if(unlikely(zn==0)){RETF(z);}  // If the result is empty, the allocated area says it all
   // zn  NOT USED FROM HERE ON
 
   // End of setup phase.  The execution phase:
@@ -1009,14 +1009,14 @@ I jtsumattymesprods(J jt,I it,void *avp, void *wvp,I dplen,I nfro,I nfri,I ndpo,
    *zv++=total;
   )
  }
- RETF(1);
+ R 1;
 }
 
 
 
 // +/@:*"1 with IRS
 DF2(jtsumattymes1){
- RZ(a&&w);
+ ARGCHK2(a,w);
  I ar=AR(a); I wr=AR(w); I acr=jt->ranks>>RANKTX; I wcr=jt->ranks&RMAX;
  // get the cell-ranks to use 
  acr=ar<acr?ar:acr;   // r=left rank of verb, acr=effective rank
@@ -1080,7 +1080,7 @@ DF2(jtsumattymes1){
 
 
 static A jtsumattymes(J jt, A a, A w, I b, I t, I m, I n, I nn, I r, I *s, I zn){A z;
- RZ(a&&w);
+ ARGCHK2(a,w);
  switch(UNSAFE(t)){
  case B01:  // the aligned cases are handled elsewhere, a word at a time
   {B*av=BAV(a),u,*wv=BAV(w);I*zu,*zv;
@@ -1155,7 +1155,7 @@ static A jtsumattymes(J jt, A a, A w, I b, I t, I m, I n, I nn, I r, I *s, I zn)
 #endif
 
 static A jtsumatgbool(J jt,A a,A w,C id){A t,z;B* RESTRICTI av,* RESTRICTI wv;I dw,n,p,q,r,*s,zn,* RESTRICT zv;UC* RESTRICT tu;UI* RESTRICTI tv,*u,*v;
- RZ(a&&w);
+ ARGCHK2(a,w);
  s=AS(w); n=*s;
  zn=AN(w)/n; dw=(zn+SZI-1)>>LGSZI; p=dw*SZI;
  q=n/255; r=n%255;
@@ -1183,7 +1183,7 @@ static A jtsumatgbool(J jt,A a,A w,C id){A t,z;B* RESTRICTI av,* RESTRICTI wv;I 
 
 DF2(jtfslashatg){A fs,gs,y,z;B b,sb=0;C*av,c,d,*wv;I ak,an,ar,*as,at,m,
      n,nn,r,rs,*s,t,wk,wn,wr,*ws,wt,yt,zn,zt;VA2 adocv,adocvf;
- RZ(a&&w&&self);
+ ARGCHK3(a,w,self);
  an=AN(a); ar=AR(a); as=AS(a); at=AT(a); at=an?at:B01;
  wn=AN(w); wr=AR(w); ws=AS(w); wt=AT(w); wt=wn?wt:B01;
  b=ar<=wr; r=b?wr:ar; rs=b?ar:wr; s=b?ws:as; nn=s[0]; nn=r?nn:1;  // b='w has higher rank'; r=higher rank rs=lower rank s->longer shape  nn=#items in longer-shape arg
@@ -1248,7 +1248,7 @@ DF2(jtatomic2){A z;
  A realself=FAV(self)->fgh[0];  // if rank operator, this is nonzero and points to the left arg of rank
  RANK2T selfranks=FAV(self)->lrr;  // get left & right rank from rank/primitive
  self=realself?realself:self;  // if this is a rank block, move to the primitive.  u b. or any atomic primitive has f clear
- RZ(a&&w);
+ ARGCHK2(a,w);
  F2PREFIP;
  RANK2T jtranks=jt->ranks;  // fetch IRS ranks if any
  UI ar=AR(a), wr=AR(w), awr=(ar<<RANKTX)+wr; I awm1=(AN(a)-1)|(AN(w)-1);
@@ -1256,8 +1256,8 @@ DF2(jtatomic2){A z;
  // check for singletons
  if(!(awm1|((AT(a)|AT(w))&(NOUN&UNSAFE(~(B01+INT+FL)))))){
   z=jtssingleton(jtinplace,a,w,self,(RANK2T)awr,selfranks);
-  if(likely(z!=0))RETF(z);  // normal case is good return
-  if(unlikely(jt->jerr<=NEVM))RETF(z);   // if error is unrecoverable, don't retry
+  if(likely(z!=0)){RETF(z);}  // normal case is good return
+  if(unlikely(jt->jerr<=NEVM)){RETF(z);}   // if error is unrecoverable, don't retry
   // if retryable error, fall through.  The retry will not be through the singleton code
   jtinplace=(J)((I)jtinplace|JTRETRY);  // indicate that we are retrying the operation.  We must, because jt->jerr is set with the retry code
  }
@@ -1276,8 +1276,8 @@ DF2(jtatomic2){A z;
 #else
  z=jtva2(jtinplace,a,w,self,selfranks,(RANK2T)awr);  // execute the verb
 #endif
- if(likely(z!=0))RETF(z);  // normal case is good return
- if(unlikely(jt->jerr<=NEVM))RETF(z);   // if error is unrecoverable, don't retry
+ if(likely(z!=0)){RETF(z);}  // normal case is good return
+ if(unlikely(jt->jerr<=NEVM)){RETF(z);}   // if error is unrecoverable, don't retry
 #if SY_64
  R z=jtva2((J)((I)jtinplace|JTRETRY),a,w,self,(awr<<RANK2TX)+selfranks);  // execute the verb
 #else
@@ -1285,8 +1285,8 @@ DF2(jtatomic2){A z;
 #endif
 }
 
-DF2(jtexpn2  ){F2PREFIP; RZ(a&&w); if(unlikely(((((I)AR(w)-1)&SGNIF(AT(w),FLX))<0)))if(unlikely(0.5==DAV(w)[0]))R sqroot(a);  R jtatomic2(jtinplace,a,w,self);}  // use sqrt hardware for sqrt.  Only for atomic w. 
-DF2(jtresidue){F2PREFIP; RZ(a&&w); I intmod; if(!((AT(a)|AT(w))&(NOUN&~INT)|AR(a))&&(intmod=IAV(a)[0], (intmod&-intmod)+(intmod<=0)==0))R intmod2(w,intmod); R jtatomic2(jtinplace,a,w,self);}
+DF2(jtexpn2  ){F2PREFIP; ARGCHK2(a,w); if(unlikely(((((I)AR(w)-1)&SGNIF(AT(w),FLX))<0)))if(unlikely(0.5==DAV(w)[0]))R sqroot(a);  R jtatomic2(jtinplace,a,w,self);}  // use sqrt hardware for sqrt.  Only for atomic w. 
+DF2(jtresidue){F2PREFIP; ARGCHK2(a,w); I intmod; if(!((AT(a)|AT(w))&(NOUN&~INT)|AR(a))&&(intmod=IAV(a)[0], (intmod&-intmod)+(intmod<=0)==0))R intmod2(w,intmod); R jtatomic2(jtinplace,a,w,self);}
 
 
 // These are the unary ops that are implemented using a canned argument
@@ -1299,14 +1299,14 @@ DF2(jtresidue){F2PREFIP; RZ(a&&w); I intmod; if(!((AT(a)|AT(w))&(NOUN&~INT)|AR(a
 #define SETCONPTR(n) A conptr=num(n); A conptr2=zeroionei(n); A conptr3=numvr(n); conptr=AT(w)&INT?conptr2:conptr; conptr=AT(w)&FL?conptr3:conptr;  // for 0 or 1 only
 #define SETCONPTR2(n) A conptr=num(n); A conptr3=numvr(n); conptr=AT(w)&FL?conptr3:conptr;   // used for 2, when the only options are INT/FL
 
-F1(jtnot   ){RZ(w); SETCONPTR(1) R AT(w)&B01+SB01?eq(num(0),w):minus(conptr,w);}
-F1(jtnegate){RZ(w); SETCONPTR(0) R minus(conptr,w);}
-F1(jtdecrem){RZ(w); SETCONPTR(1) IPSHIFTWA; R minus(w,conptr);}
-F1(jtincrem){RZ(w); SETCONPTR(1) R plus(conptr,w);}
-F1(jtduble ){RZ(w); SETCONPTR2(2) R tymes(conptr,w);}
-F1(jtsquare){RZ(w); R tymes(w,w);}   // leave inplaceable in w only  ?? never inplaces
-F1(jtrecip ){RZ(w); SETCONPTR(1) R divide(conptr,w);}
-F1(jthalve ){RZ(w); if(!(AT(w)&XNUM+RAT))R tymes(onehalf,w); IPSHIFTWA; R divide(w,num(2));} 
+F1(jtnot   ){ARGCHK1(w); SETCONPTR(1) R AT(w)&B01+SB01?eq(num(0),w):minus(conptr,w);}
+F1(jtnegate){ARGCHK1(w); SETCONPTR(0) R minus(conptr,w);}
+F1(jtdecrem){ARGCHK1(w); SETCONPTR(1) IPSHIFTWA; R minus(w,conptr);}
+F1(jtincrem){ARGCHK1(w); SETCONPTR(1) R plus(conptr,w);}
+F1(jtduble ){ARGCHK1(w); SETCONPTR2(2) R tymes(conptr,w);}
+F1(jtsquare){ARGCHK1(w); R tymes(w,w);}   // leave inplaceable in w only  ?? never inplaces
+F1(jtrecip ){ARGCHK1(w); SETCONPTR(1) R divide(conptr,w);}
+F1(jthalve ){ARGCHK1(w); if(!(AT(w)&XNUM+RAT))R tymes(onehalf,w); IPSHIFTWA; R divide(w,num(2));} 
 
 static AHDR2(zeroF,B,void,void){memset(z,C0,m*(n^REPSGN(n)));R EVOK;}
 static AHDR2(oneF,B,void,void){memset(z,C1,m*(n^REPSGN(n)));R EVOK;}

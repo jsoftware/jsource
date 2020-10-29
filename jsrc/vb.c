@@ -16,11 +16,11 @@ BPFX(nandBB, NAND,BNAND,NAND,BNAND, _mm256_xor_pd(bool256,_mm256_and_pd(u256,v25
 BPFX( norBB, NOR ,BNOR, NOR, BNOR, _mm256_xor_pd(bool256,_mm256_or_pd(u256,v256)) , , __m256d bool256=_mm256_castsi256_pd(_mm256_set1_epi64x(0x0101010101010101)); )
 
 
-F1(jtrazein){A z; R df2(z,w,boxW(raze(w)),amp(swap(ds(CEPS)),ds(COPE)));}
+F1(jtrazein){A z; R df2(z,w,box(raze(w)),amp(swap(ds(CEPS)),ds(COPE)));}
 
 
 static F2(jtebarmat){A ya,yw,z;B b,*zv;C*au,*av,*u,*v,*v0,*wu,*wv;I*as,c,i,k,m,n,r,s,si,sj,t,*ws;
- RZ(a&&w);
+ ARGCHK2(a,w);
  as=AS(a);      av=CAV(a);
  ws=AS(w); v=v0=wv=CAV(w);
  si=as[0]; m=1+ws[0]-si;
@@ -42,7 +42,7 @@ static F2(jtebarmat){A ya,yw,z;B b,*zv;C*au,*av,*u,*v,*v0,*wu,*wv;I*as,c,i,k,m,n
 }    /* E. on matrix arguments */
 
 static F2(jtebarvec){A y,z;B*zv;C*av,*wv,*yv;I an,k,n,s,t,wn;
- RZ(a&&w);
+ ARGCHK2(a,w);
  an=AN(a); av=CAV(a); 
  wn=AN(w); wv=CAV(w); n=1+wn-an; 
  t=AT(w); k=bpnoun(t); s=k*an;
@@ -208,7 +208,7 @@ static A jtebar1C(J jt, C *av, C *wv, I an, I wn, C* zv, I type, A z){
 #endif
 
 F2(jtebar){PROLOG(0065);A y,z;B*zv;C*av,*wv;I c,d,i,k=0,m,n,p,*yv;
- RZ(a&&w);
+ ARGCHK2(a,w);
  ASSERT(!((AT(a) | AT(w)) & SPARSE), EVNONCE);
  ASSERT((AR(a) == AR(w)) || (AR(a) + (AR(w) ^ 1)) == 0, EVRANK);
  if(AN(a)==1)R eq(reshape(mtv,a),w);  // if a is a singleton, just revert to =
@@ -244,7 +244,7 @@ default:
 
 
 F2(jti1ebar){A y;C*av,*wv;I c,d,i,k=0,m,n,p,*yv;
- RZ(a&&w);
+ ARGCHK2(a,w);
 
  RE(d=ebarprep(a,w,&a,&w,&c));
  av=CAV(a); m=AN(a);
@@ -274,7 +274,7 @@ default:
 }    /* a (E. i. 1:) w where a and w are atoms or lists */
 
 F2(jtsumebar){A y;C*av,*wv;I c,d,i,k=0,m,n,p,*yv,z=0;
- RZ(a&&w);
+ ARGCHK2(a,w);
  RE(d=ebarprep(a,w,&a,&w,&c));
  av=CAV(a); m=AN(a);
  wv=CAV(w); n=AN(w); p=n-m;
@@ -304,7 +304,7 @@ default:
 }    /* a ([: +/ E.) w where a and w are atoms or lists */
 
 F2(jtanyebar){A y;C*av,*wv;I c,d,i,k=0,m,n,p,*yv;
- RZ(a&&w);
+ ARGCHK2(a,w);
  RE(d=ebarprep(a,w,&a,&w,&c));
  av=CAV(a); m=AN(a);
  wv=CAV(w); n=AN(w); p=n-m;
@@ -337,7 +337,7 @@ default:
  {if(zu==zv){I m=zu-AV(z); RZ(z=ext(0,z)); zv=m+AV(z); zu=AN(z)+AV(z);} *zv++=k;}
 
 F2(jtifbebar){A y,z;C*av,*wv;I c,d,i,k=0,m,n,p,*yv,*zu,*zv;
- RZ(a&&w);
+ ARGCHK2(a,w);
  RE(d=ebarprep(a,w,&a,&w,&c));
  av=CAV(a); m=AN(a);
  wv=CAV(w); n=AN(w); p=n-m;

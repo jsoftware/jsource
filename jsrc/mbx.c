@@ -162,7 +162,7 @@ static B jtsmmin(J jt,A a,A w){A*wv;I wd;MS*x;
 }   /* 1 iff any leaf of w is part of SMM array a */
 
 F2(jtsmmcar){A*wv,x,z;A1*zv;I n,t;
- RZ(w);
+ ARGCHK1(w);
  n=AN(w); t=AT(w); 
  ASSERT(t&B01+LIT+C2T+C4T+INT+FL+CMPX+BOX+SBT,EVDOMAIN);
  RZ(z=smmga(a,t,n,AR(w),AS(w)));
@@ -173,7 +173,7 @@ F2(jtsmmcar){A*wv,x,z;A1*zv;I n,t;
 }    /* make copy of w in SMM area of a */
 
 F2(jtsmmis){A*wv,x;A1*av;I wn,wr;
- RZ(a&&w);   
+ ARGCHK2(a,w);   
  if(a==w)R a;
  wn=AN(w); wr=AR(w);
  if(smmin(a,w))RZ(w=cpa(1,w));
@@ -208,7 +208,7 @@ static B leafrel(A w){A*v;
 // if w is non-boxed but in the memory-mapped system, clone it to get it out of the memory-mapped boxed area
 // if boxed, check to see if any leaf has AFSMM or AFREL; if so, clone the whole thing
 F1(jtrca){
- RZ(w);
+ ARGCHK1(w);
  if(!(BOX&AT(w)))R AFSMM&AFLAG(w)?ca(w):w;
  R leafrel(w)?cpa(0,w):w;
 }
@@ -216,7 +216,7 @@ F1(jtrca){
 
 
 static F1(jtsmmblkf){A z;I**mfree,p,q,*v,*zv;MS*x;
- RZ(w);
+ ARGCHK1(w);
  mfree=SMMFREE(w);
  p=MLEN; q=0; 
  DO(p, v=mfree[i]; while(v){x=(MS*)AABS(v,w); ++q;                           v=x->a;});
@@ -240,7 +240,7 @@ static I* smmblku1(B b,I*zv,A w){A1*wv;MS*x;
 }
 
 static A jtsmmblku(J jt,A w){A z;I n;
- RZ(w);
+ ARGCHK1(w);
  n=smmblkun(0,w);
  GATV0(z,INT,2*n,2); *AS(z)=n; *(1+AS(z))=2;
  smmblku1(0,AV(z),w);
@@ -248,7 +248,7 @@ static A jtsmmblku(J jt,A w){A z;I n;
 }    /* blocks in use */
 
 F1(jtsmmblks){A x,y,z;I n,t,*v,*zv;
- RZ(w);
+ ARGCHK1(w);
 #if FORCEVIRTUALINPUTS
  // To allow us to run mbx tests in FORCEVIRTUAL compilation, chase any VIRTUAL block back to its ultimate backing block and get stats for that
  while(AFLAG(w)&AFVIRTUAL)w=ABACK(w);
@@ -269,12 +269,12 @@ F1(jtsmmblks){A x,y,z;I n,t,*v,*zv;
 
 
 // F2(jtafr2){A x,*wv;A1*wu;
-//  RZ(a&&w);
+//  ARGCHK2(a,w);
 //  wv=AAV(w); wu=A1AV(w);
 //  DO(AN(w), x=(A)AABS(wu[i],a); if(BOX&AT(x))RZ(x=afr2(a,x)); wv[i]=x;);
 //  R w;
 // }    /* w has addresses relative to a; works in place */
 
-A relocate(I m,A w){A1*wv; RZ(w); AFLAG(w)|=AFREL; wv=A1AV(w); DO(AN(w), wv[i]+=m;); R w;}
+A relocate(I m,A w){A1*wv; ARGCHK1(w); AFLAG(w)|=AFREL; wv=A1AV(w); DO(AN(w), wv[i]+=m;); R w;}
      /* add m to the addresses in w; works in place */
 #endif

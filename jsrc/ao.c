@@ -11,7 +11,7 @@
 
 // This is the derived verb for f/. y
 static DF1(jtoblique){A x,y,z;I m,n,r;D rkblk[16];
- RZ(w);F1PREFIP;
+ ARGCHK1(w);F1PREFIP;
  r=AR(w);  // r = rank of w
  // create y= ,/ w - the _2-cells of w arranged in a list (virtual block)
  RZ(y=redcat(w,self)); if(1>=r){m=AN(w); n=1;}else{m=AS(w)[0]; n=AS(w)[1];}
@@ -40,7 +40,7 @@ static DF1(jtoblique){A x,y,z;I m,n,r;D rkblk[16];
 
 // Derived verb for f//. y for atomic f
 static DF1(jtobqfslash){A y,z;B b=0,p;C er,id,*wv;I c,d,k,m,m1,mn,n,n1,r,*s,wt;
- RZ(w);
+ ARGCHK1(w);
  r=AR(w); s=AS(w); wt=AT(w); wv=CAV(w);
  if((-AN(w)&(1-r)&-(DENSE&wt))>=0)R oblique(w,self);  // revert to default if rank<2, empty, or sparse.  This implies m/n below are non0
  y=FAV(self)->fgh[0]; y=FAV(y)->fgh[0]; id=FAV(y)->id;
@@ -106,7 +106,7 @@ static DF1(jtobqfslash){A y,z;B b=0,p;C er,id,*wv;I c,d,k,m,m1,mn,n,n1,r,*s,wt;
  }}
 
 DF2(jtpolymult){A f,g,z;B b=0;C*av,c,d,*wv;I at,i,j,k,m,m1,n,p,t,wt,zn;V*v;
- RZ(a&&w&&self);
+ ARGCHK3(a,w,self);
  ASSERT(!((AT(a)|AT(w))&SPARSE),EVNONCE);
  m=AN(a); n=AN(w); m1=m-1; zn=m+n-1; k=MIN(m,n);
  at=AT(a); wt=AT(w); t=maxtyped(at,wt);
@@ -165,7 +165,7 @@ DF2(jtpolymult){A f,g,z;B b=0;C*av,c,d,*wv;I at,i,j,k,m,m1,n,p,t,wt,zn;V*v;
 static DF2(jtkey);
 
 static DF2(jtkeysp){PROLOG(0008);A b,by,e,q,x,y,z;I j,k,n,*u,*v;P*p;
- RZ(a&&w);
+ ARGCHK2(a,w);
  {I t2; ASSERT(SETIC(a,n)==SETIC(w,t2),EVLENGTH);}  // verify agreement.  n is # items of a
  RZ(q=indexof(a,a)); p=PAV(q); 
  x=SPA(p,x); u=AV(x);
@@ -184,7 +184,7 @@ static DF2(jtkeysp){PROLOG(0008);A b,by,e,q,x,y,z;I j,k,n,*u,*v;P*p;
 
 // a u/. w.  Self-classify a, then rearrange w and call cut.  Includes special cases for f//.
 static DF2(jtkey){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
- RZ(a&&w);
+ ARGCHK2(a,w);
  if(unlikely((SPARSE&AT(a))!=0))R keysp(a,w,self);  // if sparse, go handle it
  {I t2; ASSERT(SETIC(a,nitems)==SETIC(w,t2),EVLENGTH);}  // verify agreement.  nitems is # items of a
  RZ(ai=indexofsub(IFORKEY,a,a));   // self-classify the input using ct set before this verb
@@ -497,7 +497,7 @@ static DF2(jtkey){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
 
 // bivalent entry point: a </. w   or  (</. i.@#) w
 DF2(jtkeybox){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
- RZ(a&&w);  // we don't neep ip, but all jtkey dyads must support it
+ ARGCHK2(a,w);  // we don't neep ip, but all jtkey dyads must support it
  if(unlikely((SPARSE&AT(a))!=0))R (AT(w)&NOUN?(AF)jtkeysp:(AF)jthook1cell)(jt,a,w,self);  // if sparse, go handle it
  SETIC(a,nitems);   // nitems is # items in a and w
  I cellatoms, celllen;  // number of atoms in an item of w, and the number of bytes therein.  celllen is negative for the monad
@@ -532,7 +532,7 @@ DF2(jtkeybox){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
   I nboxes=AM(ai);  //fetch # frets before we possibly clone ai
   makewritable(ai);  // we modify the size+index info to be running endptrs into the reorder area
   // allocate the result, which will be recursive, and set up to fill it with blocks off the tstack
-  GATV0(z,BOX,nboxes,1); if(nboxes==0)RETF(z); // allocate result, and exit if empty for comp ease below
+  GATV0(z,BOX,nboxes,1); if(nboxes==0){RETF(z);} // allocate result, and exit if empty for comp ease below
   // boxes will be in AAV(z), in order.  Details of hijacking tnextpushp are discussed in jtbox().
   // We have to do it a little differently here, because when we allocate a block the contents come in piecemeal and we have no
   // convenient time to INCORPRA the new contents.  So instead we leave the outer box non-recursive, and rely on the EPILOG to make
@@ -590,7 +590,7 @@ DF2(jtkeybox){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
   I nboxes=0;  // initialize fret counter, incremented for each fret
   av=IAV(a); DQ(nitems, I tval=ftblv[*av&valmsk]; ftblv[*av&valmsk]=++tval; nboxes+=tval==freqminval; av=(I*)((I)av+k);)   // build (negative) frequency table; sub 1 for each non-fret
   // allocate the result, which will be recursive, and set up to fill it with blocks off the tstack
-  GATV0(z,BOX,nboxes,1); if(nboxes==0)RETF(z); // allocate result, and exit if empty for comp ease below
+  GATV0(z,BOX,nboxes,1); if(nboxes==0){RETF(z);} // allocate result, and exit if empty for comp ease below
   // boxes will be in AAV(z), in order.  Details discussed in jtbox().
   // We will later make the block recursive usecount, and we will set all the initial usecounts to 1 since they are not on the tpop stack
   pushxsave = jt->tnextpushp; jt->tnextpushp=AAV(z);  // save tstack info before allocation
@@ -645,7 +645,7 @@ const UI4 shortrange[3][4] = {{0,65536,65536,0}, {0,2,258,0}, {0,256,65536,0}}; 
 static DF2(jtkeytally);
 
 static F1(jtkeytallysp){PROLOG(0015);A b,e,q,x,y,z;I c,d,j,k,*u,*v;P*p;
- RZ(w);
+ ARGCHK1(w);
  RZ(q=indexof(w,w));
  p=PAV(q); 
  x=SPA(p,x); u=AV(x); c=AN(x);
@@ -660,7 +660,7 @@ static F1(jtkeytallysp){PROLOG(0015);A b,e,q,x,y,z;I c,d,j,k,*u,*v;P*p;
 }    /* x #/.y , sparse x */
 
 static DF2(jtkeytally){F2PREFIP;PROLOG(0016);A z,q;I at,j,k,n,r,s,*qv,*u,*v;
- RZ(a&&w);  // we don't neep ip, but all jtkey dyads must support it
+ ARGCHK2(a,w);  // we don't neep ip, but all jtkey dyads must support it
  SETIC(a,n); at=AT(a);
  ASSERT(n==SETIC(w,k),EVLENGTH);
  if(!AN(a))R vec(INT,!!n,&AS(a)[0]);  // handle case of empties - a must have rank, so use AS[0] as  proxy for n
@@ -704,7 +704,7 @@ static DF2(jtkeytally){F2PREFIP;PROLOG(0016);A z,q;I at,j,k,n,r,s,*qv,*u,*v;
 
 //  bivalent entry point for x ({.,#)/.y or x (#,{.)/. y (dyad), or (({.,#)/. i.@#) y or ((#,{.)/. i.@#) y  (monad)
 DF2(jtkeyheadtally){F2PREFIP;PROLOG(0017);A f,q,x,y,z;I b;I at,*av,k,n,r,*qv,*u,*v,wt,*zv;
- RZ(a&&w);  // we don't neep ip, but all jtkey dyads must support it
+ ARGCHK2(a,w);  // we don't neep ip, but all jtkey dyads must support it
  SETIC(a,n); wt=AT(w);
  if(likely((AT(w)&NOUN)!=0)){
   // dyad: </.
@@ -790,7 +790,7 @@ DF2(jtkeyheadtally){F2PREFIP;PROLOG(0017);A f,q,x,y,z;I b;I at,*av,k,n,r,*qv,*u,
 F1(jtsldot){A h=0;AF f1=jtoblique,f2;C c,d,e;I flag=VJTFLGOK1|VJTFLGOK2;V*v;
 // NOTE: u/. is processed using the code for u;.1 and passing the self for /. into the cut verb.  So, the self produced
 // by /. and ;.1 must be the same as far as flags etc.
- RZ(w);
+ ARGCHK1(w);
  if(NOUN&AT(w)){flag|=VGERL; RZ(h=fxeachv(1L,w));}
  v=VAV(w);
  switch(ID(w)){  // no default for f2: every path must set it

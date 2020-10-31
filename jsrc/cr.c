@@ -292,7 +292,7 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,UI lrrr,UI lcrrcr,AF f2){
 // obsolete  aof=AR(a)-lcr; wof=AR(w)-rcr;   // ?of = outer frame
  I aofwof=((UI)AR(a)<<RANKTX)+AR(w)-lcrrcr;  // outer frames
 // obsolete  if(likely(0<=(((lr-lcr)|(rr-rcr))&(-(aof^wof))))){los=0; lof=aof=wof=0; outerframect=outerrptct=1;  // no outer frame unless it's needed
- if(likely(((lrrr-lcrrcr)&(-((aofwof>>RANKTX)^(aofwof&RANKTMSK))))>=0)){los=0; lof=aof=wof=0; outerframect=outerrptct=1;  // no outer frame unless it's needed
+ if(likely((I)((lrrr-lcrrcr)&(-((aofwof>>RANKTX)^(aofwof&RANKTMSK))))>=0)){los=0; lof=aof=wof=0; outerframect=outerrptct=1;  // no outer frame unless it's needed
  }else{
   // outerframect is the number of cells in the shorter frame; outerrptct is the number of cells in the residual frame
   // find smaller/larger frame/shape, and indicate if a is the repeated arg (otherwise we assume w)

@@ -114,7 +114,7 @@ ARGCHK2(a,w);F2PREFIP;
  }
  // now w has been boxed if needed & includes the new w value
 
- if(1&&likely(((aband-AR(w))|SGNIFNOT(AFLAG(w),BOXX))>=0)){   // if w is recursive abandoned rank 1: (rank can't be 0, since we would have replaced it above)
+ if(likely(((aband-AR(w))|SGNIFNOT(AFLAG(w),BOXX))>=0)){   // if w is recursive abandoned rank 1: (rank can't be 0, since we would have replaced it above)
   // w was recursive abandoned.  We will store back-to-front, on the assumption that ; usually happens in bunches and w probably came from ;
   // if new w has no space before the end, allocate a bigger block and move w to the end of it
   if(unlikely(AK(w)==AKXR(1))){A neww;   // no space at the beginning of w

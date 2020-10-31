@@ -68,8 +68,10 @@ static F1(jtltieb){A pt,t,*v,*wv,x,y;B b;C c,*s;I n;
  R raze(y);
 }
 
+// return atring for the shape: 's$'
 static F1(jtlsh){R apip(thorn1(shape(w)),spellout(CDOLLAR));}
 
+// return something to turn alist into the shape:
 static F1(jtlshape){I r,*s;
  ARGCHK1(w);
  r=AR(w); s=AS(w);
@@ -79,25 +81,28 @@ static F1(jtlshape){I r,*s;
 
 static F1(jtlchar){A y;B b,p=1,r1;C c,d,*u,*v;I j,k,m,n;
  ARGCHK1(w);
- m=AN(ds(CALP)); n=AN(w); j=n-m; r1=1==AR(w); u=v=CAV(w); d=*v;
- if(0<=j&&r1&&!memcmpne(v+j,AV(ds(CALP)),m)){ 
-  if(!j)R cstr("a.");
-  RZ(y=lchar(1==j?scc(*v):str(j,v)));
-  R lp(y)?over(cstr("a.,~"),y):over(y,cstr(",a."));
+ m=AN(ds(CALP)); n=AN(w); j=n-m; r1=1==AR(w); u=v=CAV(w); d=*v;  // m=256, n=string length, j=n-256, r1 set if rank is 1, u=v->string, d=first char
+ if(0<=j&&r1&&!memcmpne(v+j,AV(ds(CALP)),m)){
+  // string ends with an entire a. sequence
+  if(!j)R cstr("a.");  // if that's all there is, use a.
+  RZ(y=lchar(1==j?scc(*v):str(j,v)));  // recur on the rest of the string to get its lr
+  R lp(y)?over(cstr("a.,~"),y):over(y,cstr(",a."));  // use rest,a. or a.,~rest depending on () needs
  }
- if(r1&&m==n&&(y=icap(ne(w,ds(CALP))))&&m>AN(y)){
+ if(r1&&m==n&&(y=icap(ne(w,ds(CALP))))&&m>AN(y)){  // if 256-byte string, see where it differs from a.
   if(1==AN(y))RZ(y=head(y));
-  R over(over(cstr("a. "),lcpx(lnum(y))),over(cstr("}~"),lchar(from(y,w))));
+  R over(over(cstr("a. "),lcpx(lnum(y))),over(cstr("}~"),lchar(from(y,w))));   // use diff indx} a. or the like
  }
- j=2; b=7<n||1<n&&1<AR(w);
- DQ(n, c=*v++; j+=c==CQUOTE; b&=c==d; p&=(C)(c-32)<(C)(127-32);); 
- if(b){n=1; j=MIN(3,j);}
- if(!p){
+ // we will try for quoted string
+ j=2; b=7<n||1<n&&1<AR(w);  // j will be # added chars (init 2 for outer quotes); look for repeated chars if 7 chars or rank>1
+ DQ(n, c=*v++; j+=c==CQUOTE; b&=c==d; p&=(C)(c-32)<(C)(127-32);); // b=1 if all chars the same; p=1 if all printable; add to j for each quote found
+ if(b){n=1; j=MIN(3,j);}  // if all repeated, back to 1 character, which j=2/3 dep whether it is a quote
+ if(!p){  // if the string contains a nonprintable, represent it as nums { a.
   k=(UC)d; RZ(y=indexof(ds(CALP),w));
   if(r1&&n<m&&(!k||k==m-n)&&equ(y,apv(n,k,1L)))R over(thorn1(sc(d?-n:n)),cstr("{.a."));
   RZ(y=lnum(y));
   R lp(y)?over(cstr("a.{~"),y):over(y,cstr("{a.")); 
  }
+ // out the enquoted string, preceded the the shape if repeated or not a list
  GATV0(y,LIT,n+j,1); v=CAV(y);
  *v=*(v+n+j-1)=CQUOTE; ++v;
  if(2==j)MC(v,u,n); else DQ(n, *v++=c=*u++; if(c==CQUOTE)*v++=c;);

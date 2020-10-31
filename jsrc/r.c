@@ -121,18 +121,18 @@ DF1(jtfx){A f,fs,g,h,p,q,*wv,y,*yv;C id;I m,n=0;
    R 1==n ? df1(g,p,fs) : df2(g,p,q,fs);
 }}
 
-// Convert any 9 : string found in a line to DD form for display
+// Convert any DD (i. e. 9 : string or quoted string containing LF) found in a line to DD form for display
 // w is a string block, and so is the result.
 // If w is abandoned (which it is for recursive calls), the result is formed inplace over w
 // if JTINPLACEA is set, make sure the result fits on one line for error display: stop copying if we hit LF and emit '...',
 // and don't put spaces before/after the delimiters
 // result is always incorpable
 A jtunDD(J jt, A w){F1PREFIP;
- // quick scan for 9 :; if not, return the input
  I shortres=(I)jtinplace&JTINPLACEA;  // set for short, one-line result
  C *wv=CAV(w);  // start of word string
- I scan; for(scan=2;scan<=AN(w)-8;++scan)if(wv[scan]=='9'&&wv[scan+2]==':')break;
- if(scan<=AN(w)-8){  // if there is possibly a DD...
+ // quick scan for 9, :, '; if not, return the input
+ I scan; I qc9=0; for(scan=0;scan<AN(w);++scan){I t=0; t=wv[scan]=='\''?4:t; t=wv[scan]==':'?2:t; t=wv[scan]=='9'?1:t; qc9|=t;}  // check for ' : 9 chars
+ if(qc9==7){  // if there is possibly a DD...
   // make input writable if it is not recursive; find words
   if(!((I)jtinplace&JTINPLACEW))RZ(w=ca(w)); wv=CAV(w); A wil; RZ(wil=wordil(w)); ASSERT(AM(wil)>=0,EVOPENQ)
   // loop until no more DDs found
@@ -191,11 +191,48 @@ A jtunDD(J jt, A w){F1PREFIP;
   // Install the length of the final result
   AN(w)=AS(w)[0]=outx;  // number of chars we transferred
  }else{
-  // The input did not contain 9 : .  Keep it all,  UNLESS this we need a short result.  In that case scan for LF,
-  // and replace the LF with ... .  We know that there was enough room in the original area for ... since there are
-  // a minimum of 7 padding chars for the (9 :'string') form and we have put in only 4 for {{}}
+  // The input did not contain 9 : .  Keep it all,  UNLESS we need a short result.  In that case scan for LF,
+  // and replace the LF with ... .
   if(shortres){
-   DO(AN(w), if(wv[i]==CLF){wv[i++]='.'; wv[i++]='.'; wv[i++]='.'; AN(w)=AS(w)[0]=i; break;})
+   DO(AN(w), if(wv[i]==CLF){wv[i++]='.'; if(i<AN(w)){wv[i++]='.'; if(i<AN(w))wv[i++]='.';} AN(w)=AS(w)[0]=i; break;})
+  }
+ }
+ // 9 : string has been handled.  Any residual strings containing LF must be noun DDs, and must be represented as such
+ // so that the result will be executable
+ // We just look for quoted strings containing LF, then replacing with {{)n,unquoted string}}
+ if(!shortres){  // if we can't add LF, don't expand strings
+  I stringstartx;  // starting index of current ' string
+  scan=0;  // next position to examine
+  while(1){  // till all nounDDs emitted
+   // look for next string
+   for(stringstartx=scan;stringstartx<AN(w);++stringstartx)if(wv[stringstartx]=='\'')break;
+   if(stringstartx==AN(w))break;  // if none, we're through
+   C hasLF=0;
+   I numqu=0;
+   for(scan=stringstartx+1;scan<AN(w);++scan){
+    if(wv[scan]==CLF)hasLF=1;  // see if nounDD needed
+    if(wv[scan]=='\''){if(scan+1<AN(w)&&wv[scan+1]=='\'')++scan, ++numqu;else break;}  // exit loop at ondoubled quote
+   }
+   // we end with scan pointing to the final quote
+   if(hasLF){
+    I finalLF=wv[scan-1]==CLF;  // 1 if string ends with LF and thus must start with one
+    // We must insert a nounDD.  We will allocate the string and copy header, unquoted middle, and trailer.
+    // If the string doesn't end with LF, we use a one-line form; otherwise multiline
+    // We could try to reduce number of copies, but this just isn't very common.  Unfortunately the nounDD form is bigger than the quoted form
+    // length of the revised string is 6 ({{)n}}) plus len+finalLF-2-numqu
+    A neww; GATV0(neww,LIT,AN(w)+6-2-numqu+finalLF,1); C *newwv=CAV(neww);
+    MC(newwv,wv,stringstartx); newwv+=stringstartx;  // pre-string, moving newwv to start of dequoted section
+    MC(newwv,"{{)n\n",5); newwv+=4+finalLF;  // write the header of the nounDD, possibly starting with LF
+    for(++stringstartx;stringstartx<scan;++stringstartx){  // skip the leading quote
+     *newwv++=wv[stringstartx];
+     if(stringstartx+1<scan&&wv[stringstartx+1]=='\'')++stringstartx;  // dedouble quote
+    }  // move the quoted part
+    ++scan;  // advance past the final quote
+    MC(newwv,"}}",2); newwv+=2;  // trailer of nounDD
+    MC(newwv,wv+scan,AN(w)-scan); // the rest of the input
+    scan=newwv-CAV(neww);  // adjust input pointer to the correct position in the new string
+    w=neww; wv=CAV(w); // pick up processing the modified string
+   }
   }
  }
  // make result incorpable

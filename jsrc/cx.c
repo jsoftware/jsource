@@ -910,19 +910,20 @@ F2(jtcolon){A d,h,*hv,m;B b;C*s;I flag=VFLAGNONE,n,p;
   if(!col0)if(BOX&AT(w)){RZ(w=sent12b(w))}else{RZ(w=sent12c(w))}  // convert to list of boxes
   // If there is a control line )x at the top of the definition, parse it now and discard it from m
   if(likely(AN(w)!=0))if(unlikely(AN(AAV(w)[0])&&CAV(AAV(w)[0])[0]==')')){
-   // there is a control line.  parse it.  For now, just the first character
-   if(AN(AAV(w)[0])>1){
-    C ctltype=CAV(AAV(w)[0])[1];  // look at the second char, which must be one of acmdvn*
-    I newn=-1; newn=ctltype=='a'?1:newn; newn=ctltype=='c'?2:newn; newn=ctltype=='m'?3:newn; newn=ctltype=='d'?4:newn; newn=ctltype=='v'?3:newn; newn=ctltype=='n'?0:newn; newn=ctltype=='*'?9:newn;  // choose type based on char
-    ASSERT(newn>=0,EVDOMAIN);  // error if invalid char
-    n=newn;  // accept the type the user specified
-   }
+   // there is a control line.  parse it.  Cut to words
+   A cwds=wordil(AAV(w)[0]); RZ(cwds); ASSERT(AM(cwds)==2,EVDOMAIN);  // must be exactly 2 words: ) and type
+   ASSERT(((IAV(cwds)[1]-IAV(cwds)[0])|(IAV(cwds)[3]-IAV(cwds)[2]))==1,EVDOMAIN);  // the ) and the next char must be 1-letter words  
+   C ctltype=CAV(AAV(w)[0])[IAV(cwds)[2]];  // look at the second char, which must be one of acmdv*  (n is handled in ddtokens)
+   I newn=-1; newn=ctltype=='a'?1:newn; newn=ctltype=='c'?2:newn; newn=ctltype=='m'?3:newn; newn=ctltype=='d'?4:newn; newn=ctltype=='v'?3:newn; newn=ctltype=='*'?9:newn;  // choose type based on char
+   ASSERT(newn>=0,EVDOMAIN);  // error if invalid char
+   n=newn;  // accept the type the user specified
    // discard the control line
    RZ(w=beheadW(w));
-   // if the selected type is 0 (noun), add LFs at the end, run it together into one line, and return it
-   if(n==0){  // noun DD
-    RETF(w=raze(every2(w,scc(CLF),(A)&sfn0overself)));
-   }
+   // Noun DD
+// obsolete    // if the selected type is 0 (noun), add LFs at the end, run it together into one line, and return it
+// obsolete    if(n==0){  // noun DD
+// obsolete     RETF(w=raze(every2(w,scc(CLF),(A)&sfn0overself)));
+// obsolete    }
   }
   // find the location of the ':' divider line, if any.  But don't recognize : on the last line, since it could
   // conceivably be the return value from a modifier
@@ -1039,7 +1040,7 @@ A jtddtokens(J jt,A w,I env){
    ASSERT(AM(wil)>=0,EVOPENQ);  // if the line didn't contain noun DD, we have to give error if open quote
    ASSERT(!(env&4),EVCTRL);   // Abort if we are not allowed to continue (as for an event or ". y)
    scanstart=AM(wil);  // Get # words, not including final NB.  We have looked at em all, so start next look after all of them
-   A neww=jgets("");  // fetch next line.
+   A neww=jgets("\001");  // fetch next line, in raw mode
    RE(0); ASSERT(neww!=0,EVCTRL); // fail if jgets failed, or if it returned EOF - problem either way
    // join the new line onto the end of the old one (after discarding trailing NB in the old).  Must add an LF character and a word for it
    w=jtapip(jtinplace,w,scc(DDSEP));   // append a separator, which is all that remains of the original line   scaf use faux or constant block
@@ -1080,7 +1081,7 @@ A jtddtokens(J jt,A w,I env){
       jtinplace=(J)((I)jtinplace|JTINPLACEW);  // after the first one, we can certainly inplace on top of w
      }
      enddelimx=0;   // after the first line, we always install the LF
-     A neww=jgets("");  // fetch next line.
+     A neww=jgets("\001");  // fetch next line, in raw mode
      RE(0); ASSERT(neww!=0,EVCTRL); // fail if jgets failed, or if it returned EOF - problem either way
      // join the new line onto the end of the old one
      I oldchn=AN(w);  // len after adding LF, before adding new line

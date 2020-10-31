@@ -300,10 +300,11 @@ static DF2(jtcasei12){A vres,z;I gerit[128/SZI],ZZFLAGWORD;
   }else{
    // If there are too few values to justify the sort, create an indirect iterator for them and run it
    RZ(z=jtcreategerunditerator(jt,(A)&gerit,self,vres));
+   ar&=~REPSGN(ar); wr&=~REPSGN(wr);   // if neg, set to 0 
    if(ZZFLAGWORD&ZZFLAGISDYAD){
-    zz=rank2ex(a,w,z,MAX(ar,0),MAX(wr,0),MAX(ar,0),MAX(wr,0),FAV(z)->valencefns[1]);  // Execute on all cells
+    zz=rank2ex(a,w,z,ar,wr,ar,wr,FAV(z)->valencefns[1]);  // Execute on all cells
    }else{
-    zz=rank1ex(w,z,MAX(wr,0),FAV(z)->valencefns[0]);  // Execute on all cells8
+    zz=rank1ex(w,z,wr,FAV(z)->valencefns[0]);  // Execute on all cells8
    }
   }
   EPILOG(zz);

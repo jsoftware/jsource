@@ -884,7 +884,7 @@ FORCE_INLINE __m128 _mm_move_ss(__m128 a, __m128 b)
 // https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=_mm_undefined_ps
 FORCE_INLINE __m128 _mm_undefined_ps(void)
 {
-    __m128 a;
+    __m128 a={0};    // workaround gcc/clang uninitialized warning
     return a;
 }
 

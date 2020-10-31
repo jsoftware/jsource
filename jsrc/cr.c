@@ -242,7 +242,7 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,UI lrrr,UI lcrrcr,AF f2){
 // obsolete  af=AR(a)-lr; wf=AR(w)-rr;   // frames wrt innermost cell
 // obsolete if(AR(a)<lr || AR(w)<rr || lr>lcr || rr>rcr || lr<0 || rr<0 || AR(a)<lcr || AR(w)<rcr)SEGFAULT;  // * scaf
 // obsolete  if(unlikely(!(af|wf))){R CALL2IP(f2,a,w,fs);}  // if there's only one cell and no frame, run on it, that's the result.
- if(unlikely(lrrr==(((UI)AR(a)<<RANKTX)+AR(w)))){R CALL2IP(f2,a,w,fs);}  // if there's only one cell and no frame, run on it, that's the result.
+ if(unlikely((UI)lrrr==(((UI)AR(a)<<RANKTX)+AR(w)))){R CALL2IP(f2,a,w,fs);}  // if there's only one cell and no frame, run on it, that's the result.
  if(unlikely(((AT(a)|AT(w))&SPARSE)!=0))R sprank2(a,w,fs,(UI)lcrrcr>>RANKTX,lcrrcr&RANKTMSK,f2);  // this needs to be updated to handle multiple ranks
 // lr,rr are the ranks of the underlying verb.  lcr,rcr are the cell-ranks given by u"lcr rcr.
 // If " was not used, lcr,rcr=lr,rr usually

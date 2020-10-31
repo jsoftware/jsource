@@ -167,7 +167,7 @@ A jtunDD(J jt, A w){F1PREFIP;
     DQ(endx-inx, currc=wv[inx++]; if(shortres&&currc==CLF)break;wv[outx++]=currc;)  // copy in to end
    }else{
     // we are at the beginning.  No need to move
-    inx=outx=wilv[wilx][0];
+    inx=outx=endx;
    }
    if(wilx==AS(wil)[0])break;  // break if no more DDs
    if(shortres&&currc==CLF){wv[outx++]='.'; wv[outx++]='.'; wv[outx++]='.'; break;}  // stop if we exceeded single line
@@ -199,7 +199,7 @@ A jtunDD(J jt, A w){F1PREFIP;
  }
  // 9 : string has been handled.  Any residual strings containing LF must be noun DDs, and must be represented as such
  // so that the result will be executable
- // We just look for quoted strings containing LF, then replacing with {{)n,unquoted string}}
+ // We just look for quoted strings containing LF, then replace with {{)n,unquoted string}}
  if(!shortres){  // if we can't add LF, don't expand strings
   I stringstartx;  // starting index of current ' string
   scan=0;  // next position to examine

@@ -742,6 +742,7 @@ typedef struct {AF valencefns[2];A fgh[3];union { D lD; void *lvp[2]; I lI; I4 l
 // for reductions (u/ u/\ u/\.) lvp[1] points to the VA block for u
 // for u&.[:]v, lvp[0] points to the verb whose inverse is needed
 // for x <;.0 y  and  x (<;.0~ -~/"2)~ y, lpf.parm is ~0 for first, 0 for second, and func points to failover routine
+// for dyads ; (,<) ,&[:]<  lclr[0] indicates which function
 
 // lc is a local-use byte.  Used in atomic dyads to indicate which singleton function to execute
 // in the derived function from fold, lc has the original id byte of the fold op

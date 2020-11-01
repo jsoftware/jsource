@@ -261,26 +261,41 @@ NB. x;y -----------------------------------------------------------------
 boxed =: e.&32 64@(3!:0)
 mt    =: 0&e.@$
 link  =: <@[ , <`]@.(boxed *. -.@mt)@]
+f =. 4 : 0
+assert. x (; -: link) y
+assert. x ((;<) -: (link<)) y
+assert. x (,&< -: (link<)) y
+if. boxed x do. assert. x ((,<) -: (,"_ <)) y end.
+1
+)
 
-1 2          (; -: link) 3 4 5
-''           (; -: link) ''
-'abc'        (; -: link) +&.>i.3 4
-(u:'abc')    (; -: link) +&.>i.3 4
-(10&u:'abc') (; -: link) +&.>i.3 4
-(s:@<"0 'abc')(; -: link) +&.>i.3 4
-(+&.>i.3 4)  (; -: link) 'abc'
-(+&.>i.3 4)  (; -: link) u:'abc'
-(+&.>i.3 4)  (; -: link) 10&u:'abc'
-(+&.>i.3 4)  (; -: link) s:@<"0 'abc'
-''           (; -: link) 0$<''
-''           (; -: link) 0$<u:''
-''           (; -: link) 0$<10&u:''
-''           (; -: link) 0$s:@<"0&.> <''
-''           (; -: link) 0$<"0@s: <''
-(0$<'')      (; -: link) ''
-(0$<'')      (; -: link) u:''
-(0$<'')      (; -: link) 10&u:''
-(0$<'')      (; -: link) s:''
+1 2          f 3 4 5
+''           f ''
+'abc'        f +&.>i.3 4
+(u:'abc')    f +&.>i.3 4
+(10&u:'abc') f +&.>i.3 4
+(s:@<"0 'abc')f +&.>i.3 4
+(+&.>i.3 4)  f 'abc'
+(+&.>i.3 4)  f u:'abc'
+(+&.>i.3 4)  f 10&u:'abc'
+(+&.>i.3 4)  f s:@<"0 'abc'
+(<i.3 4)  f 'abc'
+(,<i.3 4)  f 'abc'
+(4 2 { <"1 i.5 4)  f 'abc'  NB. nonrecursive
+(3 { <"1 i.5 4)  f 'abc'  NB. nonrecursive
+(2 3;i.3 4)  f 'abc'
+(<i.3 4)  f u:'abc'
+(<i.3 4)  f 10&u:'abc'
+(<i.3 4)  f s:@<"0 'abc'
+''           f 0$<''
+''           f 0$<u:''
+''           f 0$<10&u:''
+''           f 0$s:@<"0&.> <''
+''           f 0$<"0@s: <''
+(0$<'')      f ''
+(0$<'')      f u:''
+(0$<'')      f 10&u:''
+(0$<'')      f s:''
 
 IGNOREIFFVI (IF64{1200 2800) > 7!:2 'x;y' [ x=: i.1e4 [ y=: 2e4$'chthonic'
 IGNOREIFFVI (IF64{1200 2800) > 7!:2 'x;y' [ x=: i.1e4 [ y=: 2e4$u:'chthonic'
@@ -312,6 +327,66 @@ IGNOREIFFVI (IF64{1200 2800) > 7!:2 'x;y' [ x=: i.1e4 [ y=: 2e4$s:@<"0 'chthonic
 'domain error' -: ex '>2 3 4; 2;3;(s:@<"0 ''1234'')'
 'domain error' -: ex '>2 3 4;~2;3;(s:@<"0 ''1234'')'
 
-4!:55 ;:'a adot1 adot2 sdot0 boxed link maxr mt raze t templ x y'
+'domain error' -: ex '>''abc'',&< 2 3 4     '
+'domain error' -: ex '>''abc'',&<~2 3 4     '
+'domain error' -: ex '>''abc'',&< 2,&<3,&<4     '
+'domain error' -: ex '>''abc'',&<~2,&<3,&<4     '
+'domain error' -: ex '>2 3 4,&< 2,&<3,&<''1234'''
+'domain error' -: ex '>2 3 4,&<~2,&<3,&<''1234'''
+'domain error' -: ex '>(u:''abc''),&< 2 3 4     '
+'domain error' -: ex '>(u:''abc''),&<~2 3 4     '
+'domain error' -: ex '>(u:''abc''),&< 2,&<3,&<4     '
+'domain error' -: ex '>(u:''abc''),&<~2,&<3,&<4     '
+'domain error' -: ex '>2 3 4,&< 2,&<3,&<(u:''1234'')'
+'domain error' -: ex '>2 3 4,&<~2,&<3,&<(u:''1234'')'
+'domain error' -: ex '>(10&u:''abc''),&< 2 3 4     '
+'domain error' -: ex '>(10&u:''abc''),&<~2 3 4     '
+'domain error' -: ex '>(10&u:''abc''),&< 2,&<3,&<4     '
+'domain error' -: ex '>(10&u:''abc''),&<~2,&<3,&<4     '
+'domain error' -: ex '>2 3 4,&< 2,&<3,&<(10&u:''1234'')'
+'domain error' -: ex '>2 3 4,&<~2,&<3,&<(10&u:''1234'')'
+'domain error' -: ex '>(s:@<"0 ''abc''),&< 2 3 4     '
+'domain error' -: ex '>(s:@<"0 ''abc''),&<~2 3 4     '
+'domain error' -: ex '>(s:@<"0 ''abc''),&< 2,&<3,&<4     '
+'domain error' -: ex '>(s:@<"0 ''abc''),&<~2,&<3,&<4     '
+'domain error' -: ex '>2 3 4,&< 2,&<3,&<(s:@<"0 ''1234'')'
+'domain error' -: ex '>2 3 4,&<~2,&<3,&<(s:@<"0 ''1234'')'
+
+'domain error' -: ex '>''abc''(;<) 2 3 4     '
+'domain error' -: ex '>''abc''(;<)~2 3 4     '
+'domain error' -: ex '>''abc''(;<) 2(;<)3(;<)4     '
+'domain error' -: ex '>''abc''(;<)~2(;<)3(;<)4     '
+'domain error' -: ex '>2 3 4(;<) 2(;<)3(;<)''1234'''
+'domain error' -: ex '>2 3 4(;<)~2(;<)3(;<)''1234'''
+'domain error' -: ex '>(u:''abc'')(;<) 2 3 4     '
+'domain error' -: ex '>(u:''abc'')(;<)~2 3 4     '
+'domain error' -: ex '>(u:''abc'')(;<) 2(;<)3(;<)4     '
+'domain error' -: ex '>(u:''abc'')(;<)~2(;<)3(;<)4     '
+'domain error' -: ex '>2 3 4(;<) 2(;<)3(;<)(u:''1234'')'
+'domain error' -: ex '>2 3 4(;<)~2(;<)3(;<)(u:''1234'')'
+'domain error' -: ex '>(10&u:''abc'')(;<) 2 3 4     '
+'domain error' -: ex '>(10&u:''abc'')(;<)~2 3 4     '
+'domain error' -: ex '>(10&u:''abc'')(;<) 2(;<)3(;<)4     '
+'domain error' -: ex '>(10&u:''abc'')(;<)~2(;<)3(;<)4     '
+'domain error' -: ex '>2 3 4(;<) 2(;<)3(;<)(10&u:''1234'')'
+'domain error' -: ex '>2 3 4(;<)~2(;<)3(;<)(10&u:''1234'')'
+'domain error' -: ex '>(s:@<"0 ''abc'')(;<) 2 3 4     '
+'domain error' -: ex '>(s:@<"0 ''abc'')(;<)~2 3 4     '
+'domain error' -: ex '>(s:@<"0 ''abc'')(;<) 2(;<)3(;<)4     '
+'domain error' -: ex '>(s:@<"0 ''abc'')(;<)~2(;<)3(;<)4     '
+'domain error' -: ex '>2 3 4(;<) 2(;<)3(;<)(s:@<"0 ''1234'')'
+'domain error' -: ex '>2 3 4(;<)~2(;<)3(;<)(s:@<"0 ''1234'')'
+
+'domain error' -: ex '1 2 3(,<) 2 3 4     '
+'domain error' -: ex '1(,<) 2 3 4     '
+(,<1 2 3) -: (0$a:) (,<) 1 2 3
+16b200020 = 1 { 13!:83 (>:  i. 3) ; (>: i. 4)  NB. pristine recursive
+16b200020 = 1 { 13!:83 (>:  i. 3) ; (< >: i. 4)
+16b200020 = 1 { 13!:83 (>:  i. 3) (;<) (>: i. 4)
+16b200020 = 1 { 13!:83 (>:  i. 3) (,&<) (>: i. 4)
+16b200020 = 1 { 13!:83 (< >:  i. 3) (,<) (>: i. 4)
+16b20 = 1 { 13!:83 (>:  i. 3) ; (i. 4)
+
+4!:55 ;:'a adot1 adot2 sdot0 boxed f link maxr mt raze t templ x y'
 randfini''
 

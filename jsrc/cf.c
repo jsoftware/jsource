@@ -201,10 +201,8 @@ A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I
   }
  }
 
-
-
  // If this fork is not a special form, set the flags to indicate whether the f verb does not use an
- // argument.  In that case h can inplace the unused aegument.
+ // argument.  In that case h can inplace the unused argument.
  if(f1==jtfolk1 && f2==jtfolk2) flag |= atoplr(f);
  R fdef(flag2,CFORK,VERB, f1,f2, f,g,h, flag, RMAX,RMAX,RMAX);
 }
@@ -225,7 +223,8 @@ RZ(z=(f2)(jtinplace,w,gx,fs)); \
 } \
 , 0111)
 
-CS2IP(static,static,jthook2, \
+// hook2cell is external
+CS2IP(,static,jthook2, \
 {PUSHZOMB; A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)(intptr_t)((I)a+((I)jtinplace&JTINPLACEA)); \
 A gx; RZ(gx=(g1)((J)(intptr_t)((I)jt + ((((I)jtinplace&((a!=w)<<JTINPLACEWX)) + ((FAV(fs)->flag2>>(VF2WILLOPEN2WX-VF2WILLOPEN1X)) & JTWILLBEOPENED+JTCOUNTITEMS)) & REPSGN(SGNIF(FAV(gs)->flag,VJTFLGOK1X)))),w,gs));  /* inplace g unless a=w.  jtinplace is always set */ \
 /* inplace gx unless it is protected */ \
@@ -285,7 +284,7 @@ static DF2(jthklvl2){
  RETF(num(((VAV(self)->flag>>VFHKLVLGTX)&1)^levelle(w,comparand-(VAV(self)->flag&VFHKLVLDEC))));  // decrement for < or >:; complement for > >:
 }
 
-F2(jthook){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE;V*u,*v;
+F2(jthook){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE,linktype=0;V*u,*v;
  ARGCHK2(a,w);
  switch(BD(AT(a),AT(w))){
   default:            ASSERT(0,EVSYNTAX);
@@ -293,10 +292,14 @@ F2(jthook){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE;V*u,*v;
    // This is the (V V) case, producing a verb
    u=FAV(a); c=u->id; f1=jthook1cell; f2=jthook2cell;
    v=FAV(w); d=v->id; e=ID(v->fgh[0]);
-   // Set flag to use: ASGSAFE if both operands are safe, and INPLACEOK to match f1,f2
+   // Set flag to use: ASGSAFE if both operands are safe; and FLGOK init to OK as for hook, but change as needed to match f1,f2
    flag=((u->flag&v->flag)&VASGSAFE)+(VJTFLGOK1|VJTFLGOK2);  // start with in-place enabled, as befits hook1/hook2
-   if(d==CCOMMA)switch(c){   // all of this except for $, could be handled by virtual blocks
+   if(d==CCOMMA)switch(c){   // all of this except for ($,) is handled by virtual blocks
     case CDOLLAR: f2=jtreshape; flag+=VIRS2; break;  // ($,) is inplace
+   }else if(d==CBOX){
+    if(c==CRAZE){f2=jtlink; linktype=ACINPLACE;  // (;<)
+    }else if(c==CCOMMA){f2=jtlink; linktype=ACINPLACE+1;  // (,<)
+    }
    }else if(d==CLDOT){   // (compare L.)
     I comptype=0; comptype=c==CLT?VFHKLVLGT:comptype; comptype=c==CGT?VFHKLVLDEC:comptype; comptype=c==CLE?VFHKLVLDEC+VFHKLVLGT:comptype; comptype=c==CGE?4:comptype;
     if(comptype){flag|=comptype; f2=jthklvl2; flag &=~VJTFLGOK2;}
@@ -312,7 +315,8 @@ F2(jthook){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE;V*u,*v;
     case CFROM:   if(d==CGRADE){f2=jtordstati; flag &=~VJTFLGOK2;} else if(d==CTILDE&&e==CGRADE){f2=jtordstat; flag &=~VJTFLGOK2;}
    }
    // Return the derived verb
-   R fdef(0,CHOOK, VERB, f1,f2, a,w,0L, flag, RMAX,RMAX,RMAX);
+   A z;RZ(z=fdef(0,CHOOK, VERB, f1,f2, a,w,0L, flag, RMAX,RMAX,RMAX));
+   FAV(z)->localuse.lclr[0]=linktype; R z;  // if it's a form of ;, install the form
   // All other cases produce an adverb
   case BD(ADV, ADV ): f1=taa; break;
   case BD(NOUN,CONJ):

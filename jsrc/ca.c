@@ -328,14 +328,14 @@ F2(jtatco){A f,g;AF f1=on1cell,f2=jtupon2cell;C c,d,e;I flag, flag2=0,m=-1;V*av,
 }
 
 // u&:v
-F2(jtampco){AF f1=on1cell;C c,d;I flag,flag2=0;V*wv;
+F2(jtampco){AF f1=on1cell,f2=on2cell;C c,d;I flag,flag2=0,linktype=0;V*wv;
  ASSERTVV(a,w);
  c=ID(a); wv=FAV(w); d=wv->id;  // c=pseudochar for u, d=pseudochar for v
  // Set flag wfith ASGSAFE status from f/g; keep INPLACE? in sync with f1,f2.  Inplace only if monad v can handle it
  flag = ((FAV(a)->flag&wv->flag)&VASGSAFE)+((wv->flag&VJTFLGOK1)*((VJTFLGOK2+VJTFLGOK1)/VJTFLGOK1));
  if(c==CBOX){flag2 |= VF2BOXATOP1;}  // mark this as <@f - monad only
- else if(BOTHEQ8(c,d,CSLASH,CCOMMA))         {f1=jtredravel; }
- else if(BOTHEQ8(c,d,CRAZE,CCUT)&&boxatop(w)){  // w is <@g;.k    detect ;&:(<@(f/\));._2 _1 1 2
+ else if(BOTHEQ8(c,d,CSLASH,CCOMMA)){f1=jtredravel;}    // f/&:, y
+ else if(BOTHEQ8(c,d,CRAZE,CCUT)&&boxatop(w)){  // w is <@g;.k    detect ;&:(<@(f/\));._2 _1 1 2 y
   if((((I)1)<<(wv->localuse.lI+3))&0x36) { // fetch k (cut type); bits are 3 2 1 0 _1 _2 _3; is 1/2-cut?
    A wf=wv->fgh[0]; V *wfv=FAV(wf); A g=wfv->fgh[1]; V *gv=FAV(g);  // w is <@g;.k  find g
    if((gv->id&~(CBSLASH^CBSDOT))==CBSLASH) {  // g is gf\ or gf\.
@@ -346,14 +346,16 @@ F2(jtampco){AF f1=on1cell;C c,d;I flag,flag2=0;V*wv;
    }
   }
  }
- else if(BOTHEQ8(c,d,CGRADE,CGRADE))         {f1=jtranking;  flag&=~VJTFLGOK1;flag+=VIRS1;}
+ else if(BOTHEQ8(c,d,CGRADE,CGRADE)){f1=jtranking;  flag&=~VJTFLGOK1;flag+=VIRS1;}  // /:&:/: monad
+ else if(BOTHEQ8(c,d,CCOMMA,CBOX)){f2=jtlink; linktype=ACINPLACE;}  // x ,&< y   supports IP 
 
  // Copy the monad open/raze status from v into u&:v
  flag2 |= wv->flag2&(VF2WILLOPEN1|VF2USESITEMCOUNT1);
 
  // Install the flags to indicate that this function starts out with a rank loop, and thus can be subsumed into a higher rank loop
  flag2|=(f1==on1cell)<<VF2RANKATOP1X;  flag2|=VF2RANKATOP2; 
- R fdef(flag2,CAMPCO,VERB, f1,on2cell, a,w,0L, flag, RMAX,RMAX,RMAX);
+ A z; RZ(z=fdef(flag2,CAMPCO,VERB, f1,f2, a,w,0L, flag, RMAX,RMAX,RMAX));
+ FAV(z)->localuse.lclr[0]=linktype; R z;
 }
 
 // m&v and u&n.  Never inplace the noun argument, since the verb may
@@ -384,7 +386,7 @@ static DF1(ixfixedright0){A z;V*v=FAV(self);
 static DF2(with2){A z; R df1(z,w,powop(self,a,0));}
 
 // u&v
-F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;I flag,flag2=0,mode=-1,p,r;V*u,*v;
+F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;I flag,flag2=0,linktype=0,mode=-1,p,r;V*u,*v;
  ARGCHK2(a,w);
  switch(CONJCASE(a,w)){
  default: ASSERTSYS(0,"amp");
@@ -450,10 +452,11 @@ F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;I flag,flag2=0,mode=-1,p,r;V*u,*v;
   }
   switch(ID(a)){   // if we matched the a.&i. code above, a must be a. and its ID will be 0
   case CBOX:   flag |= VF2BOXATOP1; break;  // mark this as <@f for the monad
-  case CGRADE: if(c==CGRADE){f1=jtranking; flag+=VIRS1; flag&=~VJTFLGOK1;} break;
-  case CSLASH: if(c==CCOMMA){f1=jtredravel; } break;
-  case CCEIL:  f1=jtonf1; flag+=VCEIL; flag&=~VJTFLGOK1; break;
-  case CFLOOR: f1=jtonf1; flag+=VFLR; flag&=~VJTFLGOK1; break;
+  case CGRADE: if(c==CGRADE){f1=jtranking; flag+=VIRS1; flag&=~VJTFLGOK1;} break;  // /:&/: y
+  case CSLASH: if(c==CCOMMA){f1=jtredravel; } break;   // f/&, y
+  case CCOMMA: if(c==CBOX){f2=jtlink; linktype=ACINPLACE;} break;  // x ,&< y   supports IP 
+  case CCEIL:  f1=jtonf1; flag+=VCEIL; flag&=~VJTFLGOK1; break;  // >.@g
+  case CFLOOR: f1=jtonf1; flag+=VFLR; flag&=~VJTFLGOK1; break;   // <.@g
   case CRAZE:  // detect ;@(<@(f/\));.
    if(c==CCUT&&boxatop(w)){  // w is <@g;.k
     if((((I)1)<<(v->localuse.lI+3))&0x36) { // fetch k (cut type); bits are 3 2 1 0 _1 _2 _3; is 1/2-cut?
@@ -478,6 +481,7 @@ F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;I flag,flag2=0,mode=-1,p,r;V*u,*v;
  // Even though we don't test for infinite, allow this node to be flagged as rankloop so it can combine with others
   if(f1==on1){flag2|=VF2RANKATOP1; if(r==RMAX)f1=on1cell; else{if(r==0)f1=jton10;}}
   if(f2==on2){flag2|=VF2RANKATOP2; if(r==RMAX)f2=on2cell; else{if(r==0)f2=on20;}}
-  R fdef(flag2,CAMP,VERB, f1,f2, a,w,0L, flag, r,r,r);
+  A z; RZ(z=fdef(flag2,CAMP,VERB, f1,f2, a,w,0L, flag, r,r,r));
+  FAV(z)->localuse.lclr[0]=linktype; R z;
  }
 }

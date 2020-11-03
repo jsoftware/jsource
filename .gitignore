@@ -64,4 +64,6 @@ make2/
 /jlibrary/bin
 /jlibrary/bin32
 /jlibrary/system
+/jlibrary/system/config
+/jlibrary/system/main
 /jlibrary/tools

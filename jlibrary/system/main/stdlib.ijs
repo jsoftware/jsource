@@ -1,7 +1,7 @@
 18!:4 <'z'
 3 : 0 ''
 
-JLIB=: '9.02.05'
+JLIB=: '9.02.06'
 
 notdef=. 0: ~: 4!:0 @ <
 hostpathsep=: ('/\'{~6=9!:12'')&(I. @ (e.&'/\')@] })
@@ -955,7 +955,7 @@ if. +/ # &> c do.
 
 end.
 
-if. 0=#;res do. r=. r,'no difference',LF end.
+if. 0=+/# S:0 res do. r=. r,'no difference',LF end.
 
 }:r
 )

@@ -5,8 +5,10 @@ build uses make2 for linux/macos
 JE binaries are copied to git/jlibrary/bin with qualified names (e.g. libjavx2.so)
    build'jconsole'
    build'libtsdll'
-   build'libj'    NB. 'libjavx' 'libjavx2'
-   build_all''    NB. build all
+   build'libj'          NB. 'libjavx' 'libjavx2'
+   build_all 'beta-x'   NB. build all
+   
+   set_jversion'beta-x' 
 
 windows builds done with vs2019
 
@@ -125,6 +127,19 @@ cp ../bin/$jplatform/j64/libtsdllSUFFIX $target
 echo done
 )
 
+set_jversion=: 3 : 0
+'bad jversion'assert ('beta-'-:5{.y)*.6=#y
+f=. 'git/jsource/jsrc/jversion.h'
+a=. fread f
+i=. 1 i.~'"beta-' E. a
+d=. }.i}.a
+d=. (d i.'"'){.d
+a=. a rplc d;y
+echo a
+a fwrite f
+)
+
+
 build=: 3 : 0
 suf=. suffix
 select. y
@@ -149,6 +164,8 @@ echo fread stderr
 )
 
 build_all=: 3 : 0
+'do not run in JHS'assert -.IFJHS
+set_jversion y
 build each 'jconsole';'libtsdll';'libj';'libjavx';'libjavx2'
 )
 

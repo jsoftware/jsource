@@ -580,7 +580,7 @@ rdglob: ;
        // that the next assignment will be to the name, and that the reassigned value is available for inplacing.  In the V V N case,
        // this may be over two verbs
        if(PTISASGNNAME(stack[0]))if(likely(PTISM(stackfs[2]))){   // assignment to name; nothing in the stack to the right of what we are about to execute; well-behaved function (doesn't change locales)
-        s=((AT(stack[0].a))&ASGNLOCAL?jtprobelocal:jtprobeisquiet)(jt,queue[m-1]);  // look up the target.  It will usually be found (in an explicit definition)
+        s=((AT(stack[0].a))&ASGNLOCAL?jtprobelocal:jtprobeisquiet)(jt,queue[m-1],jt->locsyms);  // look up the target.  It will usually be found (in an explicit definition)
         // Don't remember the assignand if it may change during execution, i. e. if the verb is unsafe.  For line 1 we have to look at BOTH verbs that come after the assignment
         s=((FAV(fs)->flag&(FAV(stack[1].a)->flag|((~pmask)<<(VASGSAFEX-1))))&VASGSAFE)?s:0;
         // It is OK to remember the address of the symbol being assigned, because anything that might conceivably create a new symbol (and thus trigger
@@ -742,7 +742,7 @@ failparse:  // If there was an error during execution or name-stacking, exit wit
    jt->parserstackframe.parsercurrtok=0;  // error token if error found
    I at=AT(y = queue[0]);  // fetch the word
    if(likely((at&NAME)!=0)) {L *s;
-    if(likely((s=syrd(y))!=0)) {     // Resolve the name.
+    if(likely((s=syrd(y,jt->locsyms))!=0)) {     // Resolve the name.
       A sv;  // pointer to value block for the name
       RZ(sv = s->val);  // symbol table entry, but no value.  Must be in an explicit definition, so there is no need to raise an error
       if(likely(((AT(sv)|at)&(NOUN|NAMEBYVALUE))!=0)){   // if noun or special name, use value

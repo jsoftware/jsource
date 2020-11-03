@@ -30,7 +30,7 @@ A jtevc(J jt,A a,A w,C*s){A z; R df2(z,a,w,colon(num(2),cstr(s)));}
 // ". y
 F1(jtexec1){A z;
  ARGCHK1(w);
- if(AT(w)&NAME){z=nameref(w);  // the case ".@'name' which is the fastest way to refer to a deferred name
+ if(AT(w)&NAME){z=nameref(w,jt->locsyms);  // the case ".@'name' which is the fastest way to refer to a deferred name
  }else{
   F1RANK(1,jtexec1,DUMMYSELF);
   A savself = jt->sf;  // in case we are in a recursion, preserve the restart point

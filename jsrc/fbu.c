@@ -20,10 +20,10 @@ extern void utom(C4* src, I srcn, UC* snk);
 extern void utou(C4* src, I srcn, C4* snk);
 
 // forward declaration
-A RoutineA(J,A);
-A RoutineB(J,A);
-A RoutineC(J,A);
-A RoutineD(J,A);
+A RoutineA(J,A,A);
+A RoutineB(J,A,A);
+A RoutineC(J,A,A);
+A RoutineD(J,A,A);
 static I wtomnullsize(US* src, I srcn);
 static I utomnullsize(C4* src, I srcn);
 static void wtomnull(US* src, I srcn, UC* snk);
@@ -378,7 +378,7 @@ Process:
   Convert block to C4T, one character at a time, ignoring surrogates;
   Call Routine C and return its result;
  }
- if(jt->thornuni)install a NUL C2T character after each CJK fullwidth char that is not followed by NUL;
+ if(BAV0(prxthornuni)[0]&1)install a NUL C2T character after each CJK fullwidth char that is not followed by NUL;
  return the C2T block;
 
 Routine C:
@@ -388,7 +388,7 @@ Process:
  if(block contains surrogate pairs){
   Join surrogate pairs into one C4T character per pair;
  }
- if(jt->thornuni)install a NUL C4T character after each CJK fullwidth char that is not followed by NUL;
+ if(BAV0(prxthornuni)[0]&1)install a NUL C4T character after each CJK fullwidth char that is not followed by NUL;
  return the C4T block;
 
 
@@ -397,11 +397,11 @@ Input: a block of type C2T or C4T, rank <=1
 Result: a block of type LIT
 Process:
   if(C4T and block contains a character above 10FFFF)domain error;
-  if(jt->thornuni)convert to UTF-8 byte string, ignoring the first NUL following a CJK fullwidth character;
+  if(BAV0(prxthornuni)[0]&1)convert to UTF-8 byte string, ignoring the first NUL following a CJK fullwidth character;
   else convert all bytes to UTF-8 byte string;
 */
 
-A RoutineA(J jt,A w){A z;I n,t,q,q1,b=0; UC* wv;
+A RoutineA(J jt,A w,A prxthornuni){A z;I n,t,q,q1,b=0; UC* wv;
  ARGCHK1(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w); wv=UAV(w);
  ASSERT(t&LIT,EVDOMAIN);
  if(!n) {GATV(z,LIT,n,AR(w),AS(w)); R z;}; // empty lit list 
@@ -412,15 +412,15 @@ A RoutineA(J jt,A w){A z;I n,t,q,q1,b=0; UC* wv;
  if(q==(q1=mtousize(UAV(w),n))){
   GATV0(z,C2T,q,1);
   mtow(UAV(w),n,USAV(z));
-  R RoutineB(jt,z);
+  R RoutineB(jt,z,prxthornuni);
  }else{
   GATV0(z,C4T,q1,1);
   mtou(UAV(w),n,C4AV(z));
-  R RoutineC(jt,z);
+  R RoutineC(jt,z,prxthornuni);
  }
 }
 
-A RoutineB(J jt,A w){A z;I n,t,q,b=0; UC* wv; US* c2v; C4* c4v;
+A RoutineB(J jt,A w,A prxthornuni){A z;I n,t,q,b=0; UC* wv; US* c2v; C4* c4v;
  ARGCHK1(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w); wv=UAV(w);
  ASSERT(t&C2T,EVDOMAIN);
  if(!n) {GATV(z,C2T,n,AR(w),AS(w)); R z;}; // empty C2T list 
@@ -430,13 +430,13 @@ A RoutineB(J jt,A w){A z;I n,t,q,b=0; UC* wv; US* c2v; C4* c4v;
   c4v=C4AV(z);
   c2v=USAV(w);
   DQ(n, *c4v++=(C4)*c2v++;);
-  R RoutineC(jt,z);
+  R RoutineC(jt,z,prxthornuni);
  }
- if(jt->thornuni)R wtownull(jt,w);
+ if(BAV0(prxthornuni)[0]&1)R wtownull(jt,w);
  R w;
 }
 
-A RoutineC(J jt,A w){A z;I n,t,q,b=0; C4* wv;
+A RoutineC(J jt,A w,A prxthornuni){A z;I n,t,q,b=0; C4* wv;
  ARGCHK1(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w); wv=C4AV(w);
  ASSERT(t&C4T,EVDOMAIN);
  if(!n) {GATV(z,C4T,n,AR(w),AS(w)); R z;}; // empty C4T list 
@@ -445,13 +445,13 @@ A RoutineC(J jt,A w){A z;I n,t,q,b=0; C4* wv;
  q=utousize(C4AV(w),n);
  GATV0(z,C4T,q,1);
  utou(C4AV(w),n,C4AV(z));
- if(jt->thornuni)R utounull(jt,z); else R z;
+ if(BAV0(prxthornuni)[0]&1)R utounull(jt,z); else R z;
  }
- if(jt->thornuni)R utounull(jt,w);
+ if(BAV0(prxthornuni)[0]&1)R utounull(jt,w);
  R w;
 }
 
-A RoutineD(J jt,A w){A z;I n,t,q,b=0;C4* c4v;
+A RoutineD(J jt,A w,A prxthornuni){A z;I n,t,q,b=0;C4* c4v;
 ARGCHK1(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w);
 if(!n) {GATV(z,LIT,n,AR(w),AS(w)); R z;}; // empty lit list
 ASSERT(t&(C2T+C4T), EVDOMAIN);
@@ -460,7 +460,7 @@ if(t&C4T)
  c4v=C4AV(w);
  DQ(n, if(0x10ffff<*c4v++){b=1;break;});
  ASSERT(!b, EVDOMAIN);
- if(jt->thornuni){
+ if(BAV0(prxthornuni)[0]&1){
  q=utomnullsize(C4AV(w),n);
  GATV0(z,LIT,q,1);
  utomnull(C4AV(w),n,UAV(z));
@@ -475,7 +475,7 @@ if(t&C4T)
 }
 else
 {
- if(jt->thornuni){
+ if(BAV0(prxthornuni)[0]&1){
  q=wtomnullsize(USAV(w),n);
  GATV0(z,LIT,q,1);
  wtomnull(USAV(w),n,UAV(z));

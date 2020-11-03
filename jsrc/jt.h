@@ -66,7 +66,7 @@ typedef struct {
  A    global;           /* global symbol table   $                        */
  A    sf;               /* for $:     $                                     */
  L    *assignsym;       // symbol-table entry for the symbol about to be assigned   $
- D    cct;               // complementary comparison tolerance
+ D    cct;               // complementary comparison tolerance $
 // ----- end of cache line 1
  A*   nvrav;            /* AAV(jt->nvra)      $                             */
  UI4  nvran;            // number of atoms in nvrav    $
@@ -105,8 +105,8 @@ typedef struct {
 // end cache line 4.  10 bytes carry over.  next cache line is junk; we don't expect to use these types much
  B    nflag;            /* 1 if space required before name                 */
  B    sesm;             /* whether there is a session manager              */
- B    tmonad;           /* tacit translator: 1 iff monad         >          */
- B    tsubst;           /* tacit translator           >                     */
+// obsolete  B    tmonad;           /* tacit translator: 1 iff monad         >          */
+// obsolete  B    tsubst;           /* tacit translator           >                     */
  UC   dbuser;           /* user-entered value for db                       */
  A    flkd;             /* file lock data: number, index, length           */
  I    flkn;             /* file lock count                                 */
@@ -124,8 +124,8 @@ typedef struct {
  C*   fillv;            /* fill value     $                                 */
  C    typesizes[32];    // the length of an allocated item of each type
 // --- end cache line 6.  24 bytes carry over.  next cache line is junk; we don't expect to use these types much
- B    thornuni;         /* 1 iff ": allowed to produce C2T result    >      */
- B    jprx;             /* 1 iff ": for jprx (jconsole output)       >      */
+// obsolete  B    prxthornuni;         /* 1 iff ": allowed to produce C2T result    >      */
+// obsolete  B    jprx;             /* 1 iff ": for jprx (jconsole output)       >      */
  C    unicodex78;       /* 1 iff disallow numeric argument for 7 8 u:  >    */
  B    retcomm;          /* 1 iff retain comments and redundant spaces      */
  UC   seclev;           /* security level                                  */
@@ -163,8 +163,8 @@ typedef struct {
  A*   tstackcurr;       // current allocation, holding NTSTACK bytes+1 block for alignment.  First entry points to next-lower allocation
  D    cctdefault;        /* default complementary comparison tolerance                    */
  UIL  ctmask;           /* 1 iff significant wrt ct; for i. and i:         */
- A    idothash0;        // 2-byte hash table for use by i.
- A    idothash1;        // 4-byte hash table for use by i.
+ A    idothash0;        // 2-byte hash table for use by i.    $
+ A    idothash1;        // 4-byte hash table for use by i.     $
  I    symindex;         /* symbol table index (monotonically increasing)   */
  DC   sitop;            /* top of SI stack                                 */
  I    stmax;            /* numbered locales maximum number                 */
@@ -284,9 +284,9 @@ typedef struct {
  I    int64rflag;       /* com flag for returning 64-bit integers          */
  I    transposeflag;    /* com flag for transposed arrays                  */
  D    tssbase;          /* initial time of date                            */
- TA*  ttab;             /* tacit translator                                */
- I    ttabi;            /* tacit translator                                */
- I    ttabi0;           /* tacit translator                                */
+// obsolete  TA*  ttab;             /* tacit translator                                */
+// obsolete  I    ttabi;            /* tacit translator                                */
+// obsolete  I    ttabi0;           /* tacit translator                                */
  A    xmod;             /* extended integer: the m in m&|@f                */  
  I    xmode;            /* extended integer operating mode                 */
 #if MEMAUDIT & 2

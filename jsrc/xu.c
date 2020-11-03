@@ -795,7 +795,7 @@ F1(jttoutf16){A z;I n,t,q,b=0,j; UC* wv; US* c2v; C4* c4v; A c4; I *v;
 
 // Similar to jttoutf8, but allow invalid unicode
 // w is C2T C4T or LIT.  Result is U8 string
-F1(jttoutf8a){A z;I n,t,q;
+A jttoutf8a(J jt,A w,A prxthornuni){A z;I n,t,q;  // prxthornuni is unused
 PROLOG(0000);
 ARGCHK1(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w);
 if(!n) {GATV(z,LIT,n,AR(w),AS(w)); R z;}; // empty lit list
@@ -881,7 +881,7 @@ EPILOG(z);
 // Similar to jttoutf8a, allow invalid unicode
 // w is C2T C4T or LIT.  Result is U8 string and null-terminate
 F1(jttoutf8x){
-R str0(toutf8a(w));
+R str0(toutf8a(w,0));
 }
 
 // External function - just convert wide-char fw[] to U8 in f[], and null-terminate

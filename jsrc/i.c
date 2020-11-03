@@ -215,8 +215,8 @@ static C jtjinit3(J jt){S t;
  fpsetmask(0);
 #endif
  jt->tssbase=tod();
- jt->thornuni=0;  // init to non-unicode (normal) state
- jt->jprx=0;      // init to non jprx jconsole output (normal) state
+// obsolete  jt->prxthornuni=0;  // init to non-unicode (normal) state
+// obsolete  jt->jprx=0;      // init to non jprx jconsole output (normal) state
  meminit();
  sesminit();
  evinit();

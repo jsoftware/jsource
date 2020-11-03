@@ -230,10 +230,10 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
    }else ra(a);
    xbuckptr->val=a; xbuckptr->sn=jt->slisti;
   }
-  // Do the other assignments, which occur less frequently, with IS
+  // Do the other assignments, which occur less frequently, with symbis
   if((I)u|(I)v){
-   if(u){(IS(mnuvxynam[2],u)); if(NOUN&AT(u))IS(mnuvxynam[0],u); }  // assign u, and m if u is a noun
-   if(v){(IS(mnuvxynam[3],v)); if(NOUN&AT(v))IS(mnuvxynam[1],v); }  // bug errors here must be detected
+   if(u){(symbis(mnuvxynam[2],u,locsym)); if(NOUN&AT(u))symbis(mnuvxynam[0],u,locsym); }  // assign u, and m if u is a noun
+   if(v){(symbis(mnuvxynam[3],v,locsym)); if(NOUN&AT(v))symbis(mnuvxynam[1],v,locsym); }  // bug errors here must be detected
   }
  }
  FDEPINC(1);   // do not use error exit after this point; use BASSERT, BGA, BZ
@@ -902,7 +902,7 @@ F2(jtcolon){A d,h,*hv,m;B b;C*s;I flag=VFLAGNONE,n,p;
  if(!n){ra0(w); RCA(w);}  // noun - return it.  Give it recursive usecount
  if((C2T+C4T)&AT(w))RZ(w=cvt(LIT,w));
  I splitloc=-1;   // will hold line number of : line
- if(10<n){s=CAV(w); p=AN(w); if(p&&CLF==s[p-1])RZ(w=str(p-1,s));}  // if tacit form, discard trailing LF
+ if(10<n){ASSERT(AT(w)&LIT,EVDOMAIN) s=CAV(w); p=AN(w); if(p&&CLF==s[p-1])RZ(w=str(p-1,s));}  // if tacit form, discard trailing LF
  else{  // not tacit translator - preparse the body
   // we want to get all forms to a common one: a list of boxed strings.  If we went through m : 0, we are in that form
   // already.  Convert strings

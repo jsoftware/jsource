@@ -12,10 +12,10 @@ extern void wtom(US* src, I srcn, UC* snk);
 extern void utom(C4* src, I srcn, UC* snk);
 
 // in fbu.c
-extern A RoutineA(J,A);  // convert LIT to C2T/C4T is it contains UTF-8
-extern A RoutineB(J,A);  // Convert C2T to C4T if it contains surrogates; install NUL after CJK if result is C2T
-extern A RoutineC(J,A);  // instal NUL after CJK characters of C4T
-extern A RoutineD(J,A);  // Convert C2T/C4T to UTF-8
+extern A RoutineA(J,A,A);  // convert LIT to C2T/C4T is it contains UTF-8
+extern A RoutineB(J,A,A);  // Convert C2T to C4T if it contains surrogates; install NUL after CJK if result is C2T
+extern A RoutineC(J,A,A);  // instal NUL after CJK characters of C4T
+extern A RoutineD(J,A,A);  // Convert C2T/C4T to UTF-8
 extern I stringdisplaywidth(J jt, I c2, void*src, I nsrc); // display width of a string
 
 #if SY_64
@@ -40,7 +40,7 @@ typedef void ((*FMTFUN)());
  {I k=1,p=(j),*sr=s+r-2; DO(p?r-1:0, k*=*(sr-i); if(p%k)break; exp); }
 
 static F1(jtthxqe);
-static F1(jtthorn1main);
+static A jtthorn1main(J,A,A);
 
 static FMTF(jtfmtI,I){I x=*v;
  sprintf(s,FMTI,x);
@@ -175,7 +175,7 @@ static void sbtou8(J jt,SBU*u,C*s){
   MC(s,SBSV(u->i),u->n);
 }
 
-static F1(jtthsb){A d,z;C*zv;I c,*dv,m,n,p,q,r,*s;SB*x,*y;SBU*u;
+static A jtthsb(J jt,A w,A prxthornuni){A d,z;C*zv;I c,*dv,m,n,p,q,r,*s;SB*x,*y;SBU*u;
  PROLOG(0000);
  n=AN(w); r=AR(w); s=AS(w); x=y=SBAV(w); q=jt->sbun;
  if(1>=r){
@@ -185,7 +185,7 @@ static F1(jtthsb){A d,z;C*zv;I c,*dv,m,n,p,q,r,*s;SB*x,*y;SBU*u;
   GATV0(z,LIT,  p,1); zv=CAV(z); memset(zv,' ',AN(z));
         DO(c, u=SBUV(*y++); *zv='`'; sbtou8(jt,u,1+zv); zv+=2+dv[i];);
  }else{
-  if(jt->jprx){I j;A dd,dw,e,ew;I *ddv,*dwv,*ev,*ewv;C*zv1;
+  if(BAV0(prxthornuni)[0]&2){I j;A dd,dw,e,ew;I *ddv,*dwv,*ev,*ewv;C*zv1;  // jprx flag, set when result going to display
    c=s[r-1]; m=n/c; 
    RZ(d =apvwr(c,0L,0L)); dv =AV(d);      // col max byte
    RZ(dw=apvwr(c,0L,0L)); dwv=AV(dw);     // col max display width
@@ -498,15 +498,15 @@ F1(jtmat){A z;B b=0;C*v,*x;I c,k,m=1,p,q,qc,r,*s,t,zn;
 }
 
 // Convert 1 box to character array, then to character table
-static F1(jtmatth1){R mat(thorn1main(w));}
-static EVERYFS(matth1self,jtmatth1,0,0,VFLAGNONE)
+static F2(jtmatth1){R mat(thorn1main(a,w));}
+static EVERYFS(matth1self,0,jtmatth1,0,VFLAGNONE)
 
 // Format boxed array.  Result is table of characters, with space-changing characters (like BS, CR) converted to spaces
-static F1(jtthbox){A z;static UC ctrl[]=" \001\002\003\004\005\006\007   \013\014 ";
+static A jtthbox(J jt,A w,A prxthornuni){A z;static UC ctrl[]=" \001\002\003\004\005\006\007   \013\014 ";
  // Format the contents of each box; form into a table.  every returns an array of boxes,
  // with the same shape as w, where the contents have been replaced by a table of characters
  // Then call enframe to assemble all the tables into the result table
- RZ(z=enframe(every(w,(A)&matth1self)));
+ RZ(z=enframe(every2(w,prxthornuni,(A)&matth1self)));
  // Go through each byte of the result, replacing ASCII codes 0, 8, 9, 10, and 13
  // (NUL, BS, TAB, LF, CR) with space
  // Three versions of replacement, depending on datatype of the array
@@ -530,14 +530,14 @@ static F1(jtths){A e,i,x,z;C c,*u,*v;I d,m,n,*s;P*p;
  RZ(z=take(e,x)); 
  u=CAV(i)-n;        
  d=aii(z); v=CAV(z)-d; DQ(m, MC(v+=d,u+=n,n););
- if(2<AR(z))RZ(z=matth1(z));
+ if(2<AR(z))RZ(z=matth1(z,zeroionei(0)));  // no prxthornuni
  s=AS(z); d=*(1+s); v=1+CAV(z); c=jt->bx[9]; DQ(*s, *(v+n)=c; v+=d;);
  R z;
 }
 
-// ": y, returning character array.  If jt->thornuni is set, LIT and C2T types return
+// ": y, returning character array.  If jt->prxthornuni is set, LIT and C2T types return.  prxthornuni is zeroionei[0 or 1]
 // C2T when there are unicodes present
-static F1(jtthorn1main){PROLOG(0001);A z;
+static A jtthorn1main(J jt,A w,A prxthornuni){PROLOG(0001);A z;
  ARGCHK1(w);
  if(!AN(w))GATV(z,LIT,0,AR(w),AS(w))
  else switch(CTTZ(AT(w))){
@@ -561,7 +561,8 @@ static F1(jtthorn1main){PROLOG(0001);A z;
     // we hit an invalid non-ASCII sequence, abort and keep the original byte string.
     // The conversion to C2T includes appending NUL to double-wide chars, and conversion up to
     // C4T if there are surrogate pairs or codes above U+FFFF
-   z=jt->thornuni?rank1ex(w,DUMMYSELF,MIN(AR(w),1L),RoutineA) : RETARG(w);  // check list for U8 codes, return LIT or C2T
+// obsolete    z=jt->prxthornuni?rank1ex(w,DUMMYSELF,MIN(AR(w),1L),RoutineA) : RETARG(w);  // check list for U8 codes, return LIT or C2T
+   z=BAV0(prxthornuni)[0]&1?rank2ex(w,prxthornuni,DUMMYSELF,MIN(AR(w),1L),0,MIN(AR(w),1L),0,RoutineA) : RETARG(w);  // check list for U8 codes, return LIT or C2T
    break;
   case C2TX:
    // If C2T output is allowed, keep it as C2T (it's not worth the time to go through
@@ -572,15 +573,15 @@ static F1(jtthorn1main){PROLOG(0001);A z;
    // on any conversion back to U8.
    // If there are surrogates, the value returned here might be C4T
    // If C2T output not allowed, convert to ragged array of bytes
-   z=rank1ex(w,DUMMYSELF,MIN(AR(w),1L),jt->thornuni?RoutineB:jttoutf8a);
+   z=rank2ex(w,prxthornuni,DUMMYSELF,MIN(AR(w),1L),0,MIN(AR(w),1L),0,BAV0(prxthornuni)[0]&1?RoutineB:jttoutf8a);
    break;
   case C4TX:
    // If C2T output is allowed, keep this as C4T, but add the padding NUL characters following CJK fullwidth.
    // If C2T output not allowed, just convert to UTF-8 bytes
-   z=rank1ex(w,DUMMYSELF,MIN(AR(w),1L),jt->thornuni?RoutineC:jttoutf8a);
+   z=rank2ex(w,prxthornuni,DUMMYSELF,MIN(AR(w),1L),0,MIN(AR(w),1L),0,BAV0(prxthornuni)[0]&1?RoutineC:jttoutf8a);
    break;
-  case BOXX:  z=thbox(w);                  break;
-  case SBTX:  z=thsb(w);                   break;
+  case BOXX:  z=thbox(w,prxthornuni);                  break;
+  case SBTX:  z=thsb(w,prxthornuni);                   break;
   case NAMEX: z=sfn(0,w);                  break;
   case ASGNX: z=spellout(CAV(w)[0]);         break;
   case INTX:  case FLX: case CMPXX:
@@ -589,21 +590,24 @@ static F1(jtthorn1main){PROLOG(0001);A z;
              z=ths(w);                    break;
   case VERBX: case ADVX:  case CONJX:
    switch((jt->disp)[1]){
-    case 1: z=thorn1main(arep(w)); break;
-    case 2: z=thorn1main(drep(w)); break;
-    case 4: z=thorn1main(trep(w)); break;
-    case 5: z=thorn1main(lrep(w)); break;
-    case 6: z=thorn1main(prep(w)); break;
+    case 1: z=thorn1main(arep(w),prxthornuni); break;
+    case 2: z=thorn1main(drep(w),prxthornuni); break;
+    case 4: z=thorn1main(trep(w),prxthornuni); break;
+    case 5: z=thorn1main(lrep(w),prxthornuni); break;
+    case 6: z=thorn1main(prep(w),prxthornuni); break;
  }}
  EPILOG(z);
 }
 
 // entry point to allow C2T result from thorn1.  But always pass byte arguments unchanged
 // This will enable null insertion/removal for CJK, but that's OK since the result goes to display
-F1(jtthorn1u){ A z; ARGCHK1(w); B to = jt->thornuni; jt->thornuni = !(AT(w)&(LIT)); z = thorn1main(w); jt->thornuni = to; R z; }
+// This is called only from jprx()
+// obsolete F1(jtthorn1u){ A z; ARGCHK1(w); B to = jt->prxthornuni; jt->prxthornuni = !(AT(w)&(LIT)); z = thorn1main(w); jt->prxthornuni = to; R z; }
+F1(jtthorn1u){ A z; ARGCHK1(w); z = thorn1main(w,num(2+!(AT(w)&(LIT)))); R z; }  // set prx and prxthornuni flags
 
 // entry point for returning LIT array only.  Allow C2T result, then convert.  But always pass literal arguments unchanged
-F1(jtthorn1){ A z; ARGCHK1(w); B to = jt->thornuni; jt->thornuni = !(AT(w)&(LIT+C2T+C4T)); z = thorn1main(w); if (z&&AT(z)&(C2T+C4T))z = rank1ex(z, DUMMYSELF, MIN(AR(z),1), RoutineD); jt->thornuni = to; R z; }
+// obsolete F1(jtthorn1){ A z; ARGCHK1(w); B to = jt->prxthornuni; jt->prxthornuni = !(AT(w)&(LIT+C2T+C4T)); z = thorn1main(w); if (z&&AT(z)&(C2T+C4T))z = rank1ex(z, DUMMYSELF, MIN(AR(z),1), RoutineD); jt->prxthornuni = to; R z; }
+F1(jtthorn1){ A z; ARGCHK1(w); A prxthornuni=zeroionei(!(AT(w)&(LIT+C2T+C4T))); z = thorn1main(w,prxthornuni); if (z&&AT(z)&(C2T+C4T))z = rank2ex(z,prxthornuni,DUMMYSELF,MIN(AR(z),1L),0,MIN(AR(z),1L),0, RoutineD); R z; }
 
 
 #define DDD(v)   {*v++='.'; *v++='.'; *v++='.';}
@@ -716,7 +720,8 @@ static A jtjprx(J jt,I ieol,I maxlen,I lb,I la,A w){A y,z;B ch;C e,eov[2],*v,x,*
      I c,c1,h,i,j,k,lc,m,nbx,nq,p,q,r,*s,t,zn;
      static C bdc[]="123456789_123456\214\254\220\234\274\244\224\264\230\202\200";
  // Convert w to a character array; set t=1 if it's LIT, t=2 if C2T, 4 if C4T
- jt->jprx=1; y=thorn1u(w); jt->jprx=0; RZ(y); t=bpnoun(AT(y));
+// obsolete  jt->jprx=1; y=thorn1u(w); jt->jprx=0; RZ(y); t=bpnoun(AT(y));
+ RZ(y=thorn1u(w)); t=bpnoun(AT(y));
  // set ch iff input w is a character type.
  ch=1&&AT(w)&LIT+C2T+C4T+SBT;
  // r=rank of result (could be anything), s->shape, v->1st char

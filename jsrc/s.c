@@ -541,9 +541,9 @@ L* jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;L*e;
      // if we knew this is a final assignment
      // (2) the value is not VIRTUAL.  The only way for an assigned value to be VIRTUAL is for it to be an initial assignment to x/y.  And to get here
      // the value must not have been adandoned.  So the usecount was raised on assignment (otherwise we would have gone through the no-fa special case).  So it is safe to fa() immediately then
-     A *nvrav=jt->nvrav;
-     if(unlikely((jt->parserstackframe.nvrtop+1U) > jt->nvran))RZ(nvrav=extnvr());  // Extend nvr stack if necessary.  copied from parser
-     nvrav[jt->parserstackframe.nvrtop++] = x;   // record the place where the value was protected (i. e. this sentence); it will be freed when this sentence finishes
+     A nvra=jt->nvra;
+     if(unlikely((jt->parserstackframe.nvrtop+1U) > AN(nvra)))RZ(nvra=extnvr());  // Extend nvr stack if necessary.  copied from parser
+     AAV1(nvra)[jt->parserstackframe.nvrtop++] = x;   // record the place where the value was protected (i. e. this sentence); it will be freed when this sentence finishes
      AFLAG(x) |= AFNVR;  // mark the value as protected in NVR stack
     }else{
      // already NVR+FREED or VIRTUAL: free this time, knowing the real free will happen later,  We know usecount>1, but it may be PERMANENT; decrement it if not
@@ -578,7 +578,7 @@ L* jtsymbisdel(J jt,A a,A w,A g){
  I currtop=jt->parserstackframe.nvrtop;
  while(currtop>nvrtop){  // the only new blocks must be ones that were newly added to the nvr stack by symbis
   --currtop;  // index points to OPEN slot; back up to slot to free
-  A delval=jt->nvrav[currtop];  // block that has been deferred-freed
+  A delval=AAV1(jt->nvra)[currtop];  // block that has been deferred-freed
   AFLAG(delval) &= ~(AFNVR|AFNVRUNFREED); fa(delval);  // in case the block survives, indicate that it is off the stack now; then reduce usecount
  }
  jt->parserstackframe.nvrtop=(US)nvrtop;  // remove additions to nvr stack

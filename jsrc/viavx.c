@@ -32,6 +32,7 @@
 #endif
 
 // create a mask of bits in which a difference is considered significant for floating-point purposes.
+#if 0  // obsolete
 static void ctmask(J jt){
  // New version: we have to find the max maskvalue such that x+tolerance and x-tolerance are not separated by more than one
  // maskpoint, for any x.  The worst-case x occurs where the mantissa of x is as big as it can be, e. g. 1.1111111111...
@@ -46,6 +47,26 @@ static void ctmask(J jt){
   jt->ctmask=(UIL)q;
  }else{jt->ctmask = ~0LL;}
 }    /* 1 iff significant wrt comparison tolerance */
+#else
+// cct is complementary comparison tolerance; return 
+static UIL calcctmask(D cct){
+ // New version: we have to find the max maskvalue such that x+tolerance and x-tolerance are not separated by more than one
+ // maskpoint, for any x.  The worst-case x occurs where the mantissa of x is as big as it can be, e. g. 1.1111111111...
+ // At that point the tolerance band above is t/(t+1) times the approx value (2 in the example).  The tolerance band below is about the same,
+ // and the sum of the two must not exceed the mask size.  We calculate the mask in floating point as 2 - 2 * 2*(t/(t+1)) which will
+ // give its floating-point representation.  We then adjust the mask by forcing the exponent to be masked, and clearing any bits below the
+ // highest clear bit
+ if(likely(cct==1.0-FUZZ))R (UIL)0xfffffffffffffc00LL;  // default ct
+ if(likely(cct==1.0))R ~0LL;  // intolerant ct
+ // user specified ct.  Calculate the mask for it
+ D p=2.0 - (4.0*(1.0-cct))/(2.0-cct);
+// obsolete  IL q=0xffffffff00000000LL | *(UIL*)&p;
+// obsolete  q&=q>>1; q&=q>>2; q&=q>>4; q&=q>>8; q&=q>>16;
+ UIL q=(~*(UIL*)&p)<<16;  // shift exponent away & complement
+ I zeropos; CTLZI(q,zeropos);   // get bit# of highest 0 bit (+ 16, because of shift) - 15 if all bits were 1
+ R ((UIL)~0LL)<<(zeropos-15);
+}
+#endif
 
 #if (C_AVX2&&SY_64) || EMU_AVX2
 static void fillwords(void* x, UI4 storeval, I nstores){
@@ -359,15 +380,16 @@ static UI hiq(Q*v){A y=v->n; R hici(AN(y),UIAV(y));}
 
 // Hash a single double, using only the bits in ctmask.
 //  not required for tolerant comparison, but if we tried to do tolerant comparison through the fast code it would help
-static UI jthid(J jt,D d){R *(UIL*)&d!=NEGATIVE0?CRC32LL(-1L,*(UIL*)&d&jt->ctmask):CRC32LL(-1L,0);}
+// obsolete static UI jthid(J jt,D d){R *(UIL*)&d!=NEGATIVE0?CRC32LL(-1L,*(UIL*)&d&jt->ctmask):CRC32LL(-1L,0);}
+static UI cthid(UIL ctmask,D d){R *(UIL*)&d!=NEGATIVE0?CRC32LL(-1L,*(UIL*)&d&ctmask):CRC32LL(-1L,0);}
 
 // Hash the data in the given A, which is an element of the box we are hashing
 // If empty or boxed, hash the shape
 // If literal, hash the whole thing
 // If numeric, convert first atom to float and hash it after multiplying by hct.  hct will change to give low/high values
-// Q: called only for singletons?  is hct=1 for exact compares?  Seems to be 1.0 always.  Why multiply by hct?
-//  is ctmask=~0 for exact compares?  Better be.
-static UI jthia(J jt,D hct,A y){UC*yv;D d;I n,t;Q*u;
+// Q: called only for singletons?
+// obsolete static UI jthia(J jt,D hct,A y){UC*yv;D d;I n,t;Q*u;
+static UI cthia(UIL ctmask,D hct,A y){UC*yv;D d;I n,t;Q*u;
  n=AN(y); t=AT(y); yv=UAV(y);
  if(((n-1)|SGNIF(t,BOXX))<0)R hic((I)AR(y)*SZI,(UC*)AS(y));  // boxed or empty
  switch(CTTZ(t)){
@@ -382,7 +404,7 @@ static UI jthia(J jt,D hct,A y){UC*yv;D d;I n,t;Q*u;
   case XNUMX: d=xdouble(*(X*)yv); break;
   case RATX:  u=(Q*)yv; d=xdouble(u->n)/xdouble(u->d); break;
  }
- R hid(d*hct);
+ R cthid(ctmask,d*hct);
 }
 
 // Hash y, which is not a singleton.
@@ -616,7 +638,7 @@ static __forceinline I icmpeq(I *a, I *w, I n) {
 // jtioz01 intolerant CMPX atom
 // jtioz0 intolerant CMPX array
 
-static IOFX(A,US,jtioax1,,hia(1.0,*v),!equ(*v,av[hj]),1  )  /* boxed exact 1-element item */   
+static IOFX(A,US,jtioax1,,cthia(~0LL,1.0,*v),!equ(*v,av[hj]),1  )  /* boxed exact 1-element item */   
 static IOFX(A,US,jtioau,, hiau(*v),  !equ(*v,av[hj]),1  )  /* boxed uniform type         */
 static IOFX(X,US,jtiox,,  hix(v),            !eqx(n,v,av+n*hj),               cn)  /* extended integer           */   
 static IOFX(Q,US,jtioq,,  hiq(v),            !eqq(n,v,av+n*hj),               cn)  /* rational number            */   
@@ -628,7 +650,7 @@ static IOFX(Z,US,jtioz01,, hic0(2,(UIL*)v),    (v[0].re!=av[hj].re)||(v[0].im!=a
 static IOFX(D,US,jtioc0,, hic0(n,(UIL*)v),    fcmp0(v,&av[n*hj],n),           cn) // float array
 static IOFX(Z,US,jtioz0,, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n),  cn) // complex array
 
-static IOFX(A,UI4,jtioax12,,hia(1.0,*v),!equ(*v,av[hj]),1  )  /* boxed exact 1-element item */   
+static IOFX(A,UI4,jtioax12,,cthia(~0LL,1.0,*v),!equ(*v,av[hj]),1  )  /* boxed exact 1-element item */   
 static IOFX(A,UI4,jtioau2,, hiau(*v),  !equ(*v,av[hj]),1  )  /* boxed uniform type         */
 static IOFX(X,UI4,jtiox2,,  hix(v),            !eqx(n,v,av+n*hj),               cn)  /* extended integer           */   
 static IOFX(Q,UI4,jtioq2,,  hiq(v),            !eqq(n,v,av+n*hj),               cn)  /* rational number            */   
@@ -715,20 +737,20 @@ static IOFX(Z,UI4,jtioz02,, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n)
 
 // here comparing boxes.  Consider modifying hia to take a self/neighbor flag rather than a tolerance
 #define TFINDBX(TH,expa,expw,fstmt0,endtest1,fstmt1)   \
- {HASHSLOT(hia(tl,*v)) jx=j; FINDRD(expw,j,asct==hj,fstmt0); il=hj;   \
- HASHSLOT(hia(tr,*v)) if(j!=jx){FINDRD(expw,j,endtest1,fstmt1);}  \
+ {HASHSLOT(cthia(ctmask,tl,*v)) jx=j; FINDRD(expw,j,asct==hj,fstmt0); il=hj;   \
+ HASHSLOT(cthia(ctmask,tr,*v)) if(j!=jx){FINDRD(expw,j,endtest1,fstmt1);}  \
  }
 // reflexive.  Because the compare for expa does not force intolerance, we must do so here.  This is required only for boxes, since the other expas are intolerant
 #define TFINDBY(TH,expa,expw,fstmt0,endtest1,fstmt1)   \
- {HASHSLOT(hia(1.0,*v))  PUSHCCT(1.0) FINDWR(TH,expa); POPCCT TFINDBX(TH,expa,expw,fstmt0,endtest1,fstmt1)}
+ {HASHSLOT(cthia(ctmask,1.0,*v))  PUSHCCT(1.0) FINDWR(TH,expa); POPCCT TFINDBX(TH,expa,expw,fstmt0,endtest1,fstmt1)}
 
 // reflexive for nub/key.  First search the table, then insert only if no match found.
 // Each FINDRD sets hj, leaving il and hj at the end; set il to be the lower.
 // if not found, set il=i (that is, match on the newly-added element), and add that element
 #define TFINDBYKEY(TH,expa,expw,fstmt0,endtest1,fstmt1)   \
- {HASHSLOT(hia(tl,*v)) jx=j; FINDRD(expw,j,asct==hj,fstmt0); il=hj;   \
- HASHSLOT(hia(tr,*v)) if(j!=jx){FINDRD(expw,j,endtest1,fstmt1); }  \
- if(il>=i){HASHSLOT(hia(1.0,*v))  FINDWR(TH,expa); il=i;} \
+ {HASHSLOT(cthia(ctmask,tl,*v)) jx=j; FINDRD(expw,j,asct==hj,fstmt0); il=hj;   \
+ HASHSLOT(cthia(ctmask,tr,*v)) if(j!=jx){FINDRD(expw,j,endtest1,fstmt1); }  \
+ if(il>=i){HASHSLOT(cthia(ctmask,1.0,*v))  FINDWR(TH,expa); il=i;} \
  }
 
 
@@ -764,7 +786,7 @@ static IOFX(Z,UI4,jtioz02,, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n)
  IOF(f){I acn=ak/sizeof(T),  \
         wcn=wk/sizeof(T),* RESTRICT zv=AV(z);T* RESTRICT av=(T*)AV(a),* RESTRICT wv=(T*)AV(w);I md; \
         D tl=jt->cct,tr=1/tl;I il,jx; D x=0.0;  /* =0.0 to stifle warning */    \
-        IH *hh=IHAV(h); I p=hh->datarange; TH * RESTRICT hv=hh->data.TH; UIL ctmask=jt->ctmask;   \
+        IH *hh=IHAV(h); I p=hh->datarange; TH * RESTRICT hv=hh->data.TH; UIL ctmask=calcctmask(jt->cct);   \
   __m128i vp, vpstride;   /* v for hash/v for search; stride for each */ \
   _mm256_zeroupper(VOIDARG);  \
   __m128d xval, xnew, xrot; SETXNEW \
@@ -818,9 +840,9 @@ static IOFT(D,US,jtiod, HIDMSK(v), TFINDXYT,TFINDY1T,TFINDY1TKEY,fcmp0(v,av+n*hj
 // FL atom
 static IOFT(D,US,jtiod1,HIDMSK(v), TFINDXYT,TFINDY1T,TFINDY1TKEY,*v!=av[hj],                       !TCMPEQ(tl,x,av[hj] )                 )
 // boxed array with more than 1 box
-static IOFT(A,US,jtioa, hia(1.0,*v),TFINDBX,TFINDBY,TFINDBYKEY,!eqa(n,v,av+n*hj),          !eqa(n,v,av+n*hj)          )
+static IOFT(A,US,jtioa, cthia(ctmask,1.0,*v),TFINDBX,TFINDBY,TFINDBYKEY,!eqa(n,v,av+n*hj),          !eqa(n,v,av+n*hj)          )
 // singleton box
-static IOFT(A,US,jtioa1,hia(1.0,*v),TFINDBX,TFINDBY,TFINDBYKEY,!equ(*v,av[hj]),!equ(*v,av[hj]))
+static IOFT(A,US,jtioa1,cthia(ctmask,1.0,*v),TFINDBX,TFINDBY,TFINDBYKEY,!equ(*v,av[hj]),!equ(*v,av[hj]))
 
 static IOFT(Z,UI4,jtioz2, HIDMSK(v), TFINDXYT,TFINDY1T,TFINDY1TKEY,fcmp0((D*)v,(D*)(av+n*hj),n*2), !eqz(n,v,av+n*hj)               )
 // CMPLX atom
@@ -830,9 +852,9 @@ static IOFT(D,UI4,jtiod2, HIDMSK(v), TFINDXYT,TFINDY1T,TFINDY1TKEY,fcmp0(v,av+n*
 // FL atom
 static IOFT(D,UI4,jtiod12,HIDMSK(v), TFINDXYT,TFINDY1T,TFINDY1TKEY,*v!=av[hj],                       !TCMPEQ(tl,x,av[hj] )                 )
 // boxed array with more than 1 box
-static IOFT(A,UI4,jtioa2, hia(1.0,*v),TFINDBX,TFINDBY,TFINDBYKEY,!eqa(n,v,av+n*hj),          !eqa(n,v,av+n*hj)          )
+static IOFT(A,UI4,jtioa2, cthia(ctmask,1.0,*v),TFINDBX,TFINDBY,TFINDBYKEY,!eqa(n,v,av+n*hj),          !eqa(n,v,av+n*hj)          )
 // singleton box
-static IOFT(A,UI4,jtioa12,hia(1.0,*v),TFINDBX,TFINDBY,TFINDBYKEY,!equ(*v,av[hj]),!equ(*v,av[hj]))
+static IOFT(A,UI4,jtioa12,cthia(ctmask,1.0,*v),TFINDBX,TFINDBY,TFINDBYKEY,!equ(*v,av[hj]),!equ(*v,av[hj]))
 
 // ********************* third class: small-range arguments ****************************
 
@@ -1321,7 +1343,7 @@ static I jtutype(J jt,A w,I c){A*wv,x;I m,t;
   R h;                                                                               \
  }
 
-static IOFXW(A,US,jtiowax1,,hia(1.0,*v),!equ(*v,wv[hj]),1  )  /* boxed exact 1-element item */   
+static IOFXW(A,US,jtiowax1,,cthia(~0LL,1.0,*v),!equ(*v,wv[hj]),1  )  /* boxed exact 1-element item */   
 static IOFXW(A,US,jtiowau,, hiau(*v),  !equ(*v,wv[hj]),1  )  /* boxed uniform type         */
 static IOFXW(X,US,jtiowx,,  hix(v),            !eqx(n,v,wv+n*hj),               cn)  /* extended integer           */   
 static IOFXW(Q,US,jtiowq,,  hiq(v),            !eqq(n,v,wv+n*hj),               cn)  /* rational number            */   
@@ -1333,7 +1355,7 @@ static IOFXW(Z,US,jtiowz01,, hic0(2,(UIL*)v),    (v[0].re!=wv[hj].re)||(v[0].im!
 static IOFXW(D,US,jtiowc0,, hic0(n,(UIL*)v),    fcmp0(v,&wv[n*hj],n),           cn) // float array
 static IOFXW(Z,US,jtiowz0,, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&wv[n*hj],2*n),  cn) // complex array
 
-static IOFXW(A,UI4,jtiowax12,,hia(1.0,*v),!equ(*v,wv[hj]),1  )  /* boxed exact 1-element item */   
+static IOFXW(A,UI4,jtiowax12,,cthia(~0LL,1.0,*v),!equ(*v,wv[hj]),1  )  /* boxed exact 1-element item */   
 static IOFXW(A,UI4,jtiowau2,, hiau(*v),  !equ(*v,wv[hj]),1  )  /* boxed uniform type         */
 static IOFXW(X,UI4,jtiowx2,,  hix(v),            !eqx(n,v,wv+n*hj),               cn)  /* extended integer           */   
 static IOFXW(Q,UI4,jtiowq2,,  hiq(v),            !eqq(n,v,wv+n*hj),               cn)  /* rational number            */   
@@ -1685,6 +1707,7 @@ static const S fnflags[]={  // 0 values reserved for small-range.  They turn off
 A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
     I ac,acr,af,ak,an,ar,*as,at,datamin,f,f1,k,klg,n,r,*s,t,wc,wcr,wf,wk,wn,wr,*ws,wt,zn;UI c,m,p;
  ARGCHK2(a,w);
+
  // ?r=rank of argument, ?cr=rank the verb is applied at, ?f=length of frame, ?s->shape, ?t=type, ?n=#atoms
  // prehash is set if w argument is omitted (we are just prehashing the a arg)
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr; af=ar-acr;
@@ -1830,7 +1853,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
   // p>>booladj is the number of hashtable entries we need.  booladj is 0 for full hash, 3 if we just need one byte-encoded boolean per input value, 5 if just one bit per input value
   UI booladj=(mode&(IIOPMSK&~(IIDOT^IICO)))?5:0;  // boolean allowed when not i./i:
   p=0;  // indicate we haven't come up with the table size yet.  It depends on reverse and small-range decisions
-  if(unlikely(((fnx+1)&t&BOX+FL+CMPX)!=0))ctmask(jt);   // calculate ctmask if comparison is tolerant and there might be floats
+// obsolete   if(unlikely(((fnx+1)&t&BOX+FL+CMPX)!=0))ctmask(jt);   // calculate ctmask if comparison is tolerant and there might be floats
 
   if(unlikely((t&BOX+XNUM+RAT)!=0)){
    if(t&BOX){I t1; fnx=(fnx&1)&&(1<n||usebs(a,ac,m))?FNTBLBOXSSORT:1<n?FNTBLBOXARRAY:(fnx&1)?FNTBLBOXINTOLERANT:
@@ -2202,7 +2225,7 @@ F1(jtsclass){A e,x,xy,y,z;I c,j,m,n,*v;P*p;
 // support for a i."1 &.|:w or a i:"1 &.|:w
 
 // function definition
-#define IOCOLF(f)     void f(J jt,I asct,I wsct,I d,A a,A w,A z,A h)
+#define IOCOLF(f)     void f(J jt,I asct,I wsct,I d,A a,A w,A z,A h,UIL ctmask)
 #define IOCOLDECL(T)  D tl=jt->cct,tr=1/tl,x;                           \
                           I hj,*hv=AV(h),i,j,jr,l,p=AN(h),*u,*zv=AV(z);  \
                           T*av=(T*)AV(a),*v,*wv=(T*)AV(w);UI pm=p
@@ -2251,11 +2274,11 @@ F1(jtsclass){A e,x,xy,y,z;I c,j,m,n,*v;P*p;
  }}
 
 // create the index-of routines.  These hash just the real part of a complex value
-static IOCOLFT(D,jtiocold,hid(*v),    hid(tl*x),hid(tr*x),!TEQ(*v,av[wsct*hj]))
-static IOCOLFT(Z,jtiocolz,hid(*(D*)v),hid(tl*x),hid(tr*x),!zeq(*v,av[wsct*hj]))
+static IOCOLFT(D,jtiocold,cthid(ctmask,*v),    cthid(ctmask,tl*x),cthid(ctmask,tr*x),!TEQ(*v,av[wsct*hj]))
+static IOCOLFT(Z,jtiocolz,cthid(ctmask,*(D*)v),cthid(ctmask,tl*x),cthid(ctmask,tr*x),!zeq(*v,av[wsct*hj]))
 
-static JOCOLFT(D,jtjocold,hid(*v),    hid(tl*x),hid(tr*x),!TEQ(*v,av[wsct*hj]))
-static JOCOLFT(Z,jtjocolz,hid(*(D*)v),hid(tl*x),hid(tr*x),!zeq(*v,av[wsct*hj]))
+static JOCOLFT(D,jtjocold,cthid(ctmask,*v),    cthid(ctmask,tl*x),cthid(ctmask,tr*x),!TEQ(*v,av[wsct*hj]))
+static JOCOLFT(Z,jtjocolz,cthid(ctmask,*(D*)v),cthid(ctmask,tl*x),cthid(ctmask,tr*x),!zeq(*v,av[wsct*hj]))
 
 // support for a i."1 &.|:w or a i:"1 &.|:w   used only by some sparse-array stuff
 A jtiocol(J jt,I mode,A a,A w){A h,z;I ar,at,c,d,m,p,t,wr,*ws,wt;void(*fn)();
@@ -2274,12 +2297,13 @@ A jtiocol(J jt,I mode,A a,A w){A h,z;I ar,at,c,d,m,p,t,wr,*ws,wt;void(*fn)();
  GATV0(h,INT,p,1);
  GATV(z,INT,AN(w),wr,ws);
  // call routine based on types.  Only float and CMPX are supported
+ UIL ctmask;
  switch(UNSAFE(t)){
   default:   ASSERT(0,EVNONCE);     
-  case FL:   fn=mode==IICO?jtjocold:jtiocold; ctmask(jt); break;
-  case CMPX: fn=mode==IICO?jtjocolz:jtiocolz; ctmask(jt); break;
+  case FL:   fn=mode==IICO?jtjocold:jtiocold; ctmask=calcctmask(jt->cct); break;
+  case CMPX: fn=mode==IICO?jtjocolz:jtiocolz; ctmask=calcctmask(jt->cct); break;
  }
- fn(jt,m,c,d,a,w,z,h);
+ fn(jt,m,c,d,a,w,z,h,ctmask);
  R z;
 }    /* a i."1 &.|:w or a i:"1 &.|:w */
 #endif // C_AVX

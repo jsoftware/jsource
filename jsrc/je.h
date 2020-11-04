@@ -683,7 +683,7 @@ extern DF2(jtevery2self);
 extern void jtexpostvirtual(J,A,A,I);
 extern A        jtext(J,B,A);
 extern A        jtexta(J,I,I,I,I);
-extern A*       jtextnvr(J);
+extern A        jtextnvr(J);
 extern I        jtfa(J,AD * RESTRICT,I);
 extern A        jtfdef(J,I,C,I,AF,AF,A,A,A,I,I,I,I);
 #if !USECSTACK

@@ -185,7 +185,7 @@ static A jtthsb(J jt,A w,A prxthornuni){A d,z;C*zv;I c,*dv,m,n,p,q,r,*s;SB*x,*y;
   GATV0(z,LIT,  p,1); zv=CAV(z); memset(zv,' ',AN(z));
         DO(c, u=SBUV(*y++); *zv='`'; sbtou8(jt,u,1+zv); zv+=2+dv[i];);
  }else{
-  if(BAV0(prxthornuni)[0]&2){I j;A dd,dw,e,ew;I *ddv,*dwv,*ev,*ewv;C*zv1;  // jprx flag, set when result going to display
+  if(BAV(prxthornuni)[0]&2){I j;A dd,dw,e,ew;I *ddv,*dwv,*ev,*ewv;C*zv1;  // jprx flag, set when result going to display
    c=s[r-1]; m=n/c; 
    RZ(d =apvwr(c,0L,0L)); dv =AV(d);      // col max byte
    RZ(dw=apvwr(c,0L,0L)); dwv=AV(dw);     // col max display width
@@ -562,7 +562,7 @@ static A jtthorn1main(J jt,A w,A prxthornuni){PROLOG(0001);A z;
     // The conversion to C2T includes appending NUL to double-wide chars, and conversion up to
     // C4T if there are surrogate pairs or codes above U+FFFF
 // obsolete    z=jt->prxthornuni?rank1ex(w,DUMMYSELF,MIN(AR(w),1L),RoutineA) : RETARG(w);  // check list for U8 codes, return LIT or C2T
-   z=BAV0(prxthornuni)[0]&1?rank2ex(w,prxthornuni,DUMMYSELF,MIN(AR(w),1L),0,MIN(AR(w),1L),0,RoutineA) : RETARG(w);  // check list for U8 codes, return LIT or C2T
+   z=BAV(prxthornuni)[0]&1?rank2ex(w,prxthornuni,DUMMYSELF,MIN(AR(w),1L),0,MIN(AR(w),1L),0,RoutineA) : RETARG(w);  // check list for U8 codes, return LIT or C2T
    break;
   case C2TX:
    // If C2T output is allowed, keep it as C2T (it's not worth the time to go through
@@ -573,12 +573,12 @@ static A jtthorn1main(J jt,A w,A prxthornuni){PROLOG(0001);A z;
    // on any conversion back to U8.
    // If there are surrogates, the value returned here might be C4T
    // If C2T output not allowed, convert to ragged array of bytes
-   z=rank2ex(w,prxthornuni,DUMMYSELF,MIN(AR(w),1L),0,MIN(AR(w),1L),0,BAV0(prxthornuni)[0]&1?RoutineB:jttoutf8a);
+   z=rank2ex(w,prxthornuni,DUMMYSELF,MIN(AR(w),1L),0,MIN(AR(w),1L),0,BAV(prxthornuni)[0]&1?RoutineB:jttoutf8a);
    break;
   case C4TX:
    // If C2T output is allowed, keep this as C4T, but add the padding NUL characters following CJK fullwidth.
    // If C2T output not allowed, just convert to UTF-8 bytes
-   z=rank2ex(w,prxthornuni,DUMMYSELF,MIN(AR(w),1L),0,MIN(AR(w),1L),0,BAV0(prxthornuni)[0]&1?RoutineC:jttoutf8a);
+   z=rank2ex(w,prxthornuni,DUMMYSELF,MIN(AR(w),1L),0,MIN(AR(w),1L),0,BAV(prxthornuni)[0]&1?RoutineC:jttoutf8a);
    break;
   case BOXX:  z=thbox(w,prxthornuni);                  break;
   case SBTX:  z=thsb(w,prxthornuni);                   break;

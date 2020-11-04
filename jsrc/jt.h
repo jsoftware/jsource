@@ -68,8 +68,9 @@ typedef struct {
  L    *assignsym;       // symbol-table entry for the symbol about to be assigned   $
  D    cct;               // complementary comparison tolerance $
 // ----- end of cache line 1
- A*   nvrav;            /* AAV(jt->nvra)      $                             */
- UI4  nvran;            // number of atoms in nvrav    $
+ A    nvra;             // data blocks that are in execution somewhere - always non-virtual, always rank 1, AS[0] holds current pointer
+// obsolete  A*   nvrav;            /* AAV(jt->nvra)      $                             */
+// obsolete  UI4  nvran;            // number of atoms in nvrav    $
  I4   slisti;           /* index into slist of current script     $         */
  A    stloc;            /* locales symbol table                            */
  A    fill;             // fill     stuck here as filler
@@ -162,7 +163,9 @@ typedef struct {
  A*   tstacknext;       // if not 0, points to the recently-used tstack buffer, whose chain field points to tstacknext
  A*   tstackcurr;       // current allocation, holding NTSTACK bytes+1 block for alignment.  First entry points to next-lower allocation
  D    cctdefault;        /* default complementary comparison tolerance                    */
+#if !(C_CRC32C && SY_64)
  UIL  ctmask;           /* 1 iff significant wrt ct; for i. and i:         */
+#endif
  A    idothash0;        // 2-byte hash table for use by i.    $
  A    idothash1;        // 4-byte hash table for use by i.     $
  I    symindex;         /* symbol table index (monotonically increasing)   */
@@ -187,7 +190,6 @@ typedef struct {
  I    hin;              /* used in dyad i. & i:                            */
  I*   hiv;              /* used in dyad i. & i:                            */
 #endif
- A    nvra;             /* data blocks that are in execution somewhere     */
  A    symp;             /* symbol pool array                               */
  L*   sympv;            /* symbol pool array value ptr, (L*)AV(jt->symp)   */
  I    arg;              /* integer argument                                */

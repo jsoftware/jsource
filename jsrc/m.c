@@ -408,7 +408,7 @@ void audittstack(J jt){
 #if BW==64 && MEMAUDIT&2
  if(jt->audittstackdisabled&1)R;
  A *ttop;
- A *nvrav=jt->nvrav;
+ A *nvrav=IAV1(jt->nvra);
  // verify counts start clear
  for(ttop=jt->tnextpushp-!!((I)jt->tnextpushp&(NTSTACKBLOCK-1));ttop;){
   // loop through each entry, skipping the first which is a chain

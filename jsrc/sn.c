@@ -234,9 +234,9 @@ F1(jtex){A*wv,y,z;B*zv;I i,n;L*v;I modifierchg=0;
    if((locfound==jt->locsyms)|(AFLAG(v->val)&AFNVRUNFREED)){  // see if local or NVR
     if(!(AFLAG(v->val)&AFNVR)){
      // The symbol is a local symbol not on the NVR stack.  We must put it onto the NVR stack.
-     A *nvrav=jt->nvrav;
-     if((jt->parserstackframe.nvrtop+1U) > jt->nvran)RZ(nvrav=extnvr());  // Extend nvr stack if necessary.  copied from parser
-     nvrav[jt->parserstackframe.nvrtop++] = v->val;   // record the place where the value was protected; it will be freed when this sentence finishes
+     A nvra=jt->nvra;
+     if(unlikely((jt->parserstackframe.nvrtop+1U) > AN(nvra)))RZ(nvra=extnvr());  // Extend nvr stack if necessary.  copied from parser
+     AAV1(nvra)[jt->parserstackframe.nvrtop++] = v->val;   // record the place where the value was protected; it will be freed when this sentence finishes
      AFLAG(v->val) |= AFNVR|AFNVRUNFREED;  // mark the value as protected
     }
     if(AFLAG(v->val)&AFNVRUNFREED){AFLAG(v->val)&=~AFNVRUNFREED; ras(v->val);}  // indicate deferred free, and protect from the upcoming free; but if already deferred-free, reduce the usecount now

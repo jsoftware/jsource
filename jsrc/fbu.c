@@ -378,7 +378,7 @@ Process:
   Convert block to C4T, one character at a time, ignoring surrogates;
   Call Routine C and return its result;
  }
- if(BAV0(prxthornuni)[0]&1)install a NUL C2T character after each CJK fullwidth char that is not followed by NUL;
+ if(BAV(prxthornuni)[0]&1)install a NUL C2T character after each CJK fullwidth char that is not followed by NUL;
  return the C2T block;
 
 Routine C:
@@ -388,7 +388,7 @@ Process:
  if(block contains surrogate pairs){
   Join surrogate pairs into one C4T character per pair;
  }
- if(BAV0(prxthornuni)[0]&1)install a NUL C4T character after each CJK fullwidth char that is not followed by NUL;
+ if(BAV(prxthornuni)[0]&1)install a NUL C4T character after each CJK fullwidth char that is not followed by NUL;
  return the C4T block;
 
 
@@ -397,7 +397,7 @@ Input: a block of type C2T or C4T, rank <=1
 Result: a block of type LIT
 Process:
   if(C4T and block contains a character above 10FFFF)domain error;
-  if(BAV0(prxthornuni)[0]&1)convert to UTF-8 byte string, ignoring the first NUL following a CJK fullwidth character;
+  if(BAV(prxthornuni)[0]&1)convert to UTF-8 byte string, ignoring the first NUL following a CJK fullwidth character;
   else convert all bytes to UTF-8 byte string;
 */
 
@@ -432,7 +432,7 @@ A RoutineB(J jt,A w,A prxthornuni){A z;I n,t,q,b=0; UC* wv; US* c2v; C4* c4v;
   DQ(n, *c4v++=(C4)*c2v++;);
   R RoutineC(jt,z,prxthornuni);
  }
- if(BAV0(prxthornuni)[0]&1)R wtownull(jt,w);
+ if(BAV(prxthornuni)[0]&1)R wtownull(jt,w);
  R w;
 }
 
@@ -445,9 +445,9 @@ A RoutineC(J jt,A w,A prxthornuni){A z;I n,t,q,b=0; C4* wv;
  q=utousize(C4AV(w),n);
  GATV0(z,C4T,q,1);
  utou(C4AV(w),n,C4AV(z));
- if(BAV0(prxthornuni)[0]&1)R utounull(jt,z); else R z;
+ if(BAV(prxthornuni)[0]&1)R utounull(jt,z); else R z;
  }
- if(BAV0(prxthornuni)[0]&1)R utounull(jt,w);
+ if(BAV(prxthornuni)[0]&1)R utounull(jt,w);
  R w;
 }
 
@@ -460,7 +460,7 @@ if(t&C4T)
  c4v=C4AV(w);
  DQ(n, if(0x10ffff<*c4v++){b=1;break;});
  ASSERT(!b, EVDOMAIN);
- if(BAV0(prxthornuni)[0]&1){
+ if(BAV(prxthornuni)[0]&1){
  q=utomnullsize(C4AV(w),n);
  GATV0(z,LIT,q,1);
  utomnull(C4AV(w),n,UAV(z));
@@ -475,7 +475,7 @@ if(t&C4T)
 }
 else
 {
- if(BAV0(prxthornuni)[0]&1){
+ if(BAV(prxthornuni)[0]&1){
  q=wtomnullsize(USAV(w),n);
  GATV0(z,LIT,q,1);
  wtomnull(USAV(w),n,UAV(z));

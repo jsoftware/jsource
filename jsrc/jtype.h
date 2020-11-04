@@ -208,6 +208,7 @@ typedef I SI;
 #define XAV(x)          ( (X*)((C*)(x)+AK(x)))  /* extended                */
 #define QAV(x)          ( (Q*)((C*)(x)+AK(x)))  /* rational                */
 #define AAV(x)          ( (A*)((C*)(x)+AK(x)))  /* boxed                   */
+#define AAV1(x)         ((A*)((C*)(x)+AKXR(1)))  // A block in a stack- or heap-allocated list (rank 1)
 #define VAV(x)          ( (V*)((C*)(x)+AK(x)))  /* verb, adverb, conj      */
 #define FAV(x)          ( (V*)((C*)(x)+AKXR(0)) )  // verb, adverb, conj - always at fixed offset
 #define PAV(x)          ( (P*)((C*)(x)+AK(x)))  /* sparse                  */

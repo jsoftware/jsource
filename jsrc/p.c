@@ -17,10 +17,9 @@
 /* a value referenced in the parser which is the value of a name        */
 /* (that is, in some symbol table).                                     */
 /*                                                                      */
-/* jt->nvra      NVR stack a: stack of A values.  LSB is a flag         */
-/* jt->nvrav     AAV(jt->nvra)                                          */
-// jt->nvran     AN(jt->nvra)
-/* jt->nvrtop    index of top of stack.  stack grows up                 */
+// jt->nvra      A block for NVR stack
+// AAV1(jt->nvra)        the stack.  LSB in each is a flag
+// AN(jt->nvra)  size of stack
 /*                                                                      */
 /* Each call of the parser records the current NVR stack top (nvrtop),  */
 /* and pop stuff off the stack back to that top on exit       */
@@ -29,7 +28,7 @@
 // from the queue to the stack.  Local values are not pushed.
 
 B jtparseinit(J jt){A x;
- GAT0(x,INT,20,1); ras(x); jt->nvra=x; jt->nvrav=AAV(x); jt->nvran=(UI4)AN(x);  // Initial stack.  Size is doubled as needed
+ GAT0(x,INT,20,1); ras(x); jt->nvra=x; /* obsolete jt->nvrav=AAV(x); jt->nvran=(UI4)AN(x); */  // Initial stack.  Size is doubled as needed
  R 1;
 }
 
@@ -40,7 +39,7 @@ B jtparseinit(J jt){A x;
 I jtnotonupperstack(J jt, A w) {
   // w is known nonzero
   // see if name was stacked (for the first time) in this very sentence
-  A *v=jt->parserstackframe.nvrotop+jt->nvrav;  // point to current-sentence region of the nvr area
+  A *v=jt->parserstackframe.nvrotop+AAV1(jt->nvra);  // point to current-sentence region of the nvr area
   DQ(jt->parserstackframe.nvrtop-jt->parserstackframe.nvrotop, if(*v==w)R 1; ++v;);   // if name stacked in this sentence, that's OK
   // see if name was not stacked at all
   R !(AFLAG(w)&AFNVR);   // return OK if name not stacked (rare, because if it wasn't stacked in the current sentence why would we think we can inplace it?)
@@ -359,7 +358,8 @@ static A virthook(J jtip, A f, A g){
 // operation.  It will check usecounts and addresses to decide whether to do this, and it bears the responsibility
 // of worrying about names on the stack.  Note that local names are not put onto the stack, so absence of AFNVR suffices for them.
 #endif
-A* jtextnvr(J jt){ASSERT(jt->parserstackframe.nvrtop<32000,EVLIMIT); RZ(jt->nvra = ext(1, jt->nvra)); jt->nvran=(UI4)AN(jt->nvra); jt->nvrav = AAV(jt->nvra); R jt->nvrav;}
+// extend NVR stack, returning the A block for it
+A jtextnvr(J jt){ASSERT(jt->parserstackframe.nvrtop<32000,EVLIMIT); RZ(jt->nvra = ext(1, jt->nvra)); /* obsolete jt->nvran=(UI4)AN(jt->nvra); jt->nvrav = AAV(jt->nvra); */ R jt->nvra;}
 
 #define BACKMARKS 3   // amount of space to leave for marks at the end.  Because we stack 3 words before we start to parse, we will
  // never see 4 marks on the stack - the most we can have is 1 value + 3 marks.
@@ -418,7 +418,7 @@ A jtparsea(J jt, A *queue, I m){PSTK * RESTRICT stack;A z,*v;I es;
     DQ(m, maxnvrlen+=(AT(queue[i])>>NAMEX)&1;)
    }
    // extend the nvr stack, doubling its size each time, till it can hold our names.  Don't let it get too big.  This code duplicated in 4!:55
-   while((jt->parserstackframe.nvrtop+maxnvrlen) > jt->nvran)RZ(extnvr());
+   while((jt->parserstackframe.nvrtop+maxnvrlen) > AN(jt->nvra))RZ(extnvr());
   }
 
   // We have the initial stack pointer.  Grow the stack down from there
@@ -488,7 +488,7 @@ rdglob: ;
          // (via namerefacv), no special protection is needed.  And, it is not needed for local names, because they are inaccessible to deletion in called
          // functions (that is, the user should not use u. to delete a local name).  If a local name is deleted, we always defer the deletion till the end of the sentence, easier than checking
         if(likely(s!=0))if(likely(s->val!=0))if(AT(s->val)&NOUN)if(likely(!(AFLAG(s->val)&AFNVR))){ 
-         jt->nvrav[jt->parserstackframe.nvrtop++] = s->val;   // record the place where the value was protected, so we can free it when this sentence completes
+         AAV1(jt->nvra)[jt->parserstackframe.nvrtop++] = s->val;   // record the place where the value was protected, so we can free it when this sentence completes
          AFLAG(s->val) |= AFNVR|AFNVRUNFREED;  // mark the value as protected and not yet deferred-freed
         }
        }
@@ -720,7 +720,7 @@ failparse:  // If there was an error during execution or name-stacking, exit wit
   // them now.  There may be references to these names in the result (if we are returning a verb/adv/conj),
   // so we don't free the names quite yet: we put them on the tpush stack to be freed after we know
   // we are through with the result.  If we are returning a noun, free them right away unless they happen to be the very noun we are returning
-  v=jt->nvrav+nvrotop;  // point to our region of the nvr area
+  v=AAV1(jt->nvra)+nvrotop;  // point to our region of the nvr area
   UI zcompval = !z||AT(z)&NOUN?0:-1;  // if z is 0, or a noun, immediately free only values !=z.  Otherwise don't free anything
   DQ(jt->parserstackframe.nvrtop-nvrotop, A vv = *v; I vf = AFLAG(vv); AFLAG(vv) = vf & ~(AFNVR|AFNVRUNFREED); if(!(vf&AFNVRUNFREED))if(((UI)z^(UI)vv)>zcompval){fanano0(vv);}else{tpushna(vv);} ++v;);   // schedule deferred frees.
     // na so that we don't audit, since audit will relook at this NVR stack

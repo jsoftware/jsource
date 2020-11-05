@@ -205,27 +205,3 @@ target_sources(j-blis PRIVATE
     blis/gemm_int-sse2.c
     blis/gemm_vec-ref.c
 )
-
-add_library(j-openssl-sha OBJECT)
-target_compile_definitions(j-openssl-sha PRIVATE NO_SHA_ASM)
-target_sources(j-openssl-sha PRIVATE
-    openssl/sha/md32_common.h
-    openssl/sha/md4.h
-    openssl/sha/md4_locl.h
-    openssl/sha/md5.h
-    openssl/sha/md5_locl.h
-    openssl/sha/openssl.h
-    openssl/sha/sha.h
-    openssl/sha/sha3.h
-    openssl/sha/sha_locl.h
-    openssl/sha/keccak1600.c
-    openssl/sha/md4_dgst.c
-    openssl/sha/md4_one.c
-    openssl/sha/md5_dgst.c
-    openssl/sha/md5_one.c
-    openssl/sha/openssl-util.c
-    openssl/sha/sha1_one.c
-    openssl/sha/sha256.c
-    openssl/sha/sha3.c
-    openssl/sha/sha512.c
-)

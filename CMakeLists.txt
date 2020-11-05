@@ -10,7 +10,7 @@ elseif(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_C_FLAGS)
 endif()
 
 project(j)
-enable_language(C CXX)
+enable_language(C CXX ASM)
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
@@ -68,6 +68,7 @@ add_subdirectory(jsrc)
 add_subdirectory(sleef)
 add_subdirectory(base64)
 add_subdirectory(dllsrc)
+add_subdirectory(jsrc/openssl/sha)
 
 set_target_properties(j-blis j-openssl-sha j-sleef j-base64 PROPERTIES
     POSITION_INDEPENDENT_CODE ON)

@@ -353,7 +353,7 @@ extern F1(jttoutf32);
 extern F1(jttoutf8);
 extern A jttoutf8a(J,A,A);
 extern F1(jttoutf8x);
-extern A jttparse(J,A,A,I,I,TA*,I*,I);
+// obsolete extern A jttparse(J,A,A,I,I,TA*,I*,I);
 extern F1(jttrep);
 extern F1(jttrx);
 extern F1(jtts);

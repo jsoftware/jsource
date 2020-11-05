@@ -1596,7 +1596,7 @@ F1(jtnubsieve){
 
 // ~. y  - does not have IRS
 F1(jtnub){ 
- ARGCHK1(w);F1PREFIP;
+ F1PREFIP;ARGCHK1(w);
  if(SPARSE&AT(w)||AFLAG(w)&AFNJA)R repeat(nubsieve(w),w); 
 // obsolete  R indexofsub(INUB,w,w);
  A z; RZ(z=indexofsub(INUB,w,w));
@@ -1608,7 +1608,7 @@ F1(jtnub){
 
 // x -. y.  does not have IRS
 F2(jtless){A x=w;I ar,at,k,r,*s,wr,*ws,wt;
- ARGCHK2(a,w);F2PREFIP;
+ F2PREFIP;ARGCHK2(a,w);
  at=AT(a); ar=AR(a); 
  wt=AT(w); wr=AR(w); r=MAX(1,ar);
  if(ar>1+wr)RCA(a);  // if w's rank is smaller than that of a cell of a, nothing can be removed, return a

@@ -1297,7 +1297,7 @@ if(likely(z<3)){_zzt+=z; z=(I)&oneone; _zzt=_i&3?_zzt:(I*)z; z=_i&2?(I)_zzt:z; z
 #define RNE(exp)        {R jt->jerr?0:(exp);}
 #define RZ(exp)         {if(unlikely(!(exp)))R0}
 #if MEMAUDIT&0xc
-#define DEADARG(x)      (x?(AFLAG(x)&CONW?SEGFAULT:0):0)
+#define DEADARG(x)      (x?(AFLAG(x)&CONW?SEGFAULT:0):0); if(MEMAUDIT&0x10)auditmemchains(); if(MEMAUDIT&0x2)audittstack(jt); 
 #define ARGCHK1D(x)     ARGCHK1(x)  // these not needed normally, but useful for debugging
 #define ARGCHK2D(x,y)   ARGCHK2(x,y)
 #else
@@ -1447,6 +1447,13 @@ if(likely(z<3)){_zzt+=z; z=(I)&oneone; _zzt=_i&3?_zzt:(I*)z; z=_i&2?(I)_zzt:z; z
 #define FLGWMINUSZX 6
 #define FLGWMINUSZ ((I)1<<FLGWMINUSZX)  // calculate z-x*y rather than x*y.  Used by %.
 
+#if !defined(C_CRC32C)
+#define C_CRC32C 0
+#endif
+#if (C_AVX&&SY_64) || defined(__aarch64__) || defined(_M_ARM64) || EMU_AVX
+#undef C_CRC32C
+#define C_CRC32C 1
+#endif
 
 
 #include "ja.h" 
@@ -1719,14 +1726,6 @@ static __forceinline void aligned_free(void *ptr) {
 #define XANDY(x,y) ((x)&(y))
 #else
 #define XANDY(x,y) ((I)((UI)(x)&(UI)(y)))
-#endif
-
-#if !defined(C_CRC32C)
-#define C_CRC32C 0
-#endif
-#if (C_AVX&&SY_64) || defined(__aarch64__) || defined(_M_ARM64) || EMU_AVX
-#undef C_CRC32C
-#define C_CRC32C 1
 #endif
 
 // Supported in architecture ARMv8.1 and later

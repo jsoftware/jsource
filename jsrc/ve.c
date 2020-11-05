@@ -465,7 +465,7 @@ F2(jtabase2){A z;I an,ar,at,t,wn,wr,wt,zn;
 
 // Compute power-of-2 | w for INT w, by ANDing.  Result is boolean if mod is 1 or 2
 A jtintmod2(J jt,A w,I mod){A z;B *v;I n,q,r,*u;UI m=0;  // init m for warning
- ARGCHK1(w);F1PREFIP;
+ F1PREFIP;ARGCHK1(w);
  if(mod>2)R jtatomic2(jtinplace,sc(mod-1),w,ds(CBW0001));  // INT result, by AND
  // the rest is boolean result
  n=AN(w); v=BAV(w);  // littleendian only

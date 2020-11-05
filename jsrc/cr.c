@@ -640,19 +640,19 @@ static DF2(cycr2){V*sv=FAV(self);I cger[128/SZI];
 
 
 // Handle u"n y where u supports irs.  Since the verb may support inplacing even with rank (,"n for example), pass that through.
-static DF1(rank1i){ARGCHK1(w);F1PREFIP;DECLF;  // this version when requested rank is positive
+static DF1(rank1i){F1PREFIP;ARGCHK1(w);DECLF;  // this version when requested rank is positive
  I m=sv->localuse.lI4[0]; m=m>=AR(w)?~0:m; jt->ranks=(RANK2T)(m);  // install rank for called routine
  A z=CALL1IP(f1,w,fs);
  jt->ranks=(RANK2T)~0;  // reset rank to infinite
  RETF(z);
 }
-static DF1(rank1in){ARGCHK1(w);F1PREFIP;DECLF;  // this version when requested rank is negative
+static DF1(rank1in){F1PREFIP;ARGCHK1(w);DECLF;  // this version when requested rank is negative
  I m=sv->localuse.lI4[0]+AR(w); m=m<0?0:m; jt->ranks=(RANK2T)(m);  // install rank for called routine
  A z=CALL1IP(f1,w,fs);
  jt->ranks=(RANK2T)~0;  // reset rank to infinite
  RETF(z);
 }
-static DF2(rank2i){ARGCHK1(w);F2PREFIP;DECLF;  // this version when requested rank is positive
+static DF2(rank2i){F2PREFIP;ARGCHK1(w);DECLF;  // this version when requested rank is positive
  I ar=sv->localuse.lI4[1]; ar=ar>=AR(a)?(RANKT)~0:ar; I af=AR(a)-ar;   // left rank
  I wr=sv->localuse.lI4[2]; wr=wr>=AR(w)?(RANKT)~0:wr; I wf=AR(w)-wr;   // right rank
  af=wf<af?wf:af; af=af<0?0:af;
@@ -662,7 +662,7 @@ static DF2(rank2i){ARGCHK1(w);F2PREFIP;DECLF;  // this version when requested ra
  jt->ranks=(RANK2T)~0;  // reset rank to infinite
  RETF(z);
 }
-static DF2(rank2in){ARGCHK1(w);F2PREFIP;DECLF;  // this version when a requested rank is negative
+static DF2(rank2in){F2PREFIP;ARGCHK1(w);DECLF;  // this version when a requested rank is negative
  I wr=AR(w); I r=sv->localuse.lI4[2]; r=r>=wr?(RANKT)~0:r; wr+=r; wr=wr<0?0:wr; wr=r>=0?r:wr; I wf=AR(w)-wr;   // right rank
  I ar=AR(a); r=sv->localuse.lI4[1];   r=r>=ar?(RANKT)~0:r; ar+=r; ar=ar<0?0:ar; ar=r>=0?r:ar; I af=AR(a)-ar;   // left rank
  af=wf<af?wf:af; af=af<0?0:af;

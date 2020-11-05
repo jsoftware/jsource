@@ -592,7 +592,7 @@ static DF1(jtinfixprefix1){F1PREFIP;
 
 //  f/\"r y    w is y, fs is in self
 static DF1(jtpscan){A z;I f,n,r,t,wn,wr,*ws,wt;
- ARGCHK1(w);F1PREFIP;
+ F1PREFIP;ARGCHK1(w);
  wt=AT(w);   // get type of w
  if(unlikely((SPARSE&wt)!=0))R scansp(w,self,jtpscan);  // if sparse, go do it separately
  // wn = #atoms in w, wr=rank of w, r=effective rank, f=length of frame, ws->shape of w

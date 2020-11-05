@@ -22,8 +22,7 @@
 // passes inplacing through
 static DF2(jtexeccyclicgerund){  // call is w,self or a,w,self
  // find the real self, valence-dependent
- ARGCHK1(w);
- F2PREFIP;
+  F2PREFIP;ARGCHK1(w);
  I ismonad=(AT(w)>>VERBX)&1; self=ismonad?w:self;
  I nexttoexec=FAV(self)->localuse.lI; A vbtoexec=AAV(FAV(self)->fgh[2])[nexttoexec]; AF fntoexec=FAV(vbtoexec)->valencefns[1-ismonad]; ASSERT(fntoexec!=0,EVDOMAIN); // get fn to exec
  ++nexttoexec; nexttoexec=AN(FAV(self)->fgh[2])==nexttoexec?0:nexttoexec; FAV(self)->localuse.lI=nexttoexec; // cyclically advance exec pointer
@@ -32,8 +31,7 @@ static DF2(jtexeccyclicgerund){  // call is w,self or a,w,self
 // similar, for executing m@.v.  This for I selectors
 static DF2(jtexecgerundcellI){  // call is w,self or a,w,self
  // find the real self, valence-dependent
- ARGCHK1(w);
- F2PREFIP;
+ F2PREFIP;ARGCHK1(w);
  I ismonad=(AT(w)>>VERBX)&1; self=ismonad?w:self;
  I nexttoexec=FAV(self)->localuse.lI;
  I gerx=IAV(FAV(self)->fgh[1])[nexttoexec];
@@ -46,8 +44,7 @@ static DF2(jtexecgerundcellI){  // call is w,self or a,w,self
 // This for B selectors
 static DF2(jtexecgerundcellB){  // call is w,self or a,w,self
  // find the real self, valence-dependent
- ARGCHK1(w);
- F2PREFIP;
+ F2PREFIP;ARGCHK1(w);
  I ismonad=(AT(w)>>VERBX)&1; self=ismonad?w:self;
  I nexttoexec=FAV(self)->localuse.lI;
  I gerx=BAV(FAV(self)->fgh[1])[nexttoexec];
@@ -148,8 +145,8 @@ F2(jttie){ARGCHK2(a,w); R over(VERB&AT(a)?arep(a):a,VERB&AT(w)?arep(w):w);}
 // m@.:v y.  Execute the verbs at high rank if the operands are large
 // Bivalent entry point: called as (jt,w,self) or (jt,a,w,self)
 static DF2(jtcasei12){A vres,z;I gerit[128/SZI],ZZFLAGWORD;
- ARGCHK2(a,w);
- F1PREFIP; PROLOG(997);
+ F1PREFIP; ARGCHK2(a,w);
+ PROLOG(997);
  // see if we were called as monad or dyad.  If monad, fix up w and self
  ZZFLAGWORD=AT(w)&VERB?ZZFLAGINITSTATE|ZZFLAGWILLBEOPENED|ZZFLAGCOUNTITEMS:ZZFLAGINITSTATE|ZZFLAGWILLBEOPENED|ZZFLAGCOUNTITEMS|ZZFLAGISDYAD;  // we collect the results on the cells, but we don't assemble into a result.  To signal this, we force BOXATOP and set WILLBEOPENED
  jtinplace=(J)((I)jtinplace&(a==w?-4:-1));  // Don't allow inplacing if a==w dyad

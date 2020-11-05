@@ -265,7 +265,7 @@ fail:
 
 // Return 1 if a and w match, 0 if not
 B jtequ(J jt,A a,A w){A x;
- ARGCHK2(a,w);F2PREFIP;  // allow inplace request - it has no effect
+ F2PREFIP;ARGCHK2(a,w);  // allow inplace request - it has no effect
  if(a==w)R 1;
  if(unlikely((SPARSE&(AT(a)|AT(w)))!=0))if(AR(a)&&AR(w)){RZ(x=matchs(a,w)); R BAV(x)[0];}
  R ((B (*)())jtmatchsub)(jt,a,w,0   MATCHSUBDEFAULTS);  // don't check level - it takes too long for big arrays

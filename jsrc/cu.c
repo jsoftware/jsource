@@ -26,7 +26,7 @@ static A jteverysp(J jt,A w,A fs){A*wv,x,z,*zv;P*wp,*zp;
 DF1(jteveryself){R jtevery(jt,w,FAV(self)->fgh[0]);}   // replace u&.> with u and process
 // u&.>, but w may be a gerund, which makes the result a list of functions masquerading as an aray of boxes
 A jtevery(J jt, A w, A fs){A * RESTRICT wv,x,z,* RESTRICT zv;
- ARGCHK1(w);F1PREFIP;RESETRANK;  // we claim to support IRS1 but really there's nothing to do for it
+ F1PREFIP;ARGCHK1(w);RESETRANK;  // we claim to support IRS1 but really there's nothing to do for it
  if(unlikely((SPARSE&AT(w))!=0))R everysp(w,fs);
  AF f1=FAV(fs)->valencefns[0];   // pointer to function to call
  A virtw; I flags;  // flags are: ACINPLACE=pristine result; JTWILLBEOPENED=nonrecursive result; BOX=input was boxed; ACPERMANENT=input was inplaceable pristine, contents can be inplaced
@@ -90,7 +90,10 @@ A jtevery(J jt, A w, A fs){A * RESTRICT wv,x,z,* RESTRICT zv;
   } else {
    // result will be opened.  It is nonrecursive.  description in result.h.  We don't have to realize or ra
    if(AFLAG(x)&AFUNINCORPABLE){RZ(x=clonevirtual(x));}
-   // since we are adding the block to a NONrecursive boxed result,  we DO NOT have to raise the usecount of the block.  And we don't have to mark the usecount non-inplaceable
+   // since we are adding the block to a NONrecursive boxed result,  we DO NOT have to raise the usecount of the block, but we do have to mark the block
+   // non-inplaceable, because the next thing to open it might be each: each will set the inplaceable flag if the parent is abandoned, so as to allow
+   // pristinity of lower results; thus we may not relax the rule that all contents must be non-inplaceable
+   ACIPNO(x);  // can't ever have inplaceable contents
    // We still have to see if virtw escaped, and on this leg we also have to see if the returned x was virtw
    AFLAG(w)&=~(((AC(virtw)!=wcpre)|(x==virtw))<<AFPRISTINEX);
 #if 0  // not clear this is worth doing
@@ -131,7 +134,7 @@ A jtevery(J jt, A w, A fs){A * RESTRICT wv,x,z,* RESTRICT zv;
 DF2(jtevery2self){R jtevery2(jt,a,w,FAV(self)->fgh[0]);}   // replace u&.> with u and process
 // u&.>, but w may be a gerund, which makes the result a list of functions masquerading as an aray of boxes
 A jtevery2(J jt, A a, A w, A fs){A*av,*wv,x,z,*zv;
- ARGCHK2(a,w);F2PREFIP;
+ F2PREFIP;ARGCHK2(a,w);
  AF f2=FAV(fs)->valencefns[1];
  // Get the number of atoms, and the number of times to repeat the short side.
  // The repetition is the count of the surplus frame.
@@ -232,7 +235,10 @@ A jtevery2(J jt, A a, A w, A fs){A*av,*wv,x,z,*zv;
   } else {
    // result will be opened.  It is nonrecursive.  description in result.h.  We don't have to realize or ra
    if(AFLAG(x)&AFUNINCORPABLE){RZ(x=clonevirtual(x));}
-   // since we are adding the block to a NONrecursive boxed result,  we DO NOT have to raise the usecount of the block.  And we don't have to mark the usecount non-inplaceable
+   // since we are adding the block to a NONrecursive boxed result,  we DO NOT have to raise the usecount of the block, but we do have to mark the block
+   // non-inplaceable, because the next thing to open it might be each: each will set the inplaceable flag if the parent is abandoned, so as to allow
+   // pristinity of lower results; thus we may not relax the rule that all contents must be non-inplaceable
+   ACIPNO(x);  // can't ever have inplaceable contents
    // We still have to see if virtw escaped, and on this leg we also have to see if the returned x was virtw
    AFLAG(w)&=~(((AC(virtw)!=wcpre)|(x==virtw))<<AFPRISTINEX);
    AFLAG(a)&=~(((AC(virta)!=acpre)|(x==virta))<<AFPRISTINEX); flags&=~(((((AC(virtw)!=wcpre)|(x==virtw))&flags)|(((AC(virtw)!=wcpre)|(x==virtw))&(flags>>1)))<<ACINPLACEX);

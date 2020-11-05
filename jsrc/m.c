@@ -105,7 +105,7 @@ B jtmeminit(J jt){I k,m=MLEN;
 #else
 #define AUDITFILL 
 #endif
-void jtauditmemchains(J jt){
+void jtauditmemchains(J jt){F1PREFIP;
 #if MEMAUDIT&16
 I Wi,Wj;A Wx,prevWx=0; if(jt->peekdata){for(Wi=PMINL;Wi<=PLIML;++Wi){Wj=0; Wx=(jt->mfree[-PMINL+Wi].pool); while(Wx){if(FHRHPOOLBIN(AFHRH(Wx))!=(Wi-PMINL)AUDITFILL||Wj>0x10000000)SEGFAULT; prevWx=Wx; Wx=AFCHAIN(Wx); ++Wj;}}}
 #endif
@@ -404,11 +404,11 @@ R num(0);
 
 // Verify that block w does not appear on tstack more than lim times
 // nextpushp might start out on a boundary
-void audittstack(J jt){
+void audittstack(J jt){F1PREFIP;
 #if BW==64 && MEMAUDIT&2
  if(jt->audittstackdisabled&1)R;
  A *ttop;
- A *nvrav=IAV1(jt->nvra);
+ A *nvrav=AAV1(jt->nvra);
  // verify counts start clear
  for(ttop=jt->tnextpushp-!!((I)jt->tnextpushp&(NTSTACKBLOCK-1));ttop;){
   // loop through each entry, skipping the first which is a chain
@@ -689,7 +689,7 @@ I jtgc3(J jt,A *x,A *y,A *z,A* old){
 }
 
 // subroutine version of ra without rifv to save space
-static A raonlys(AD * RESTRICT w) { ARGCHK1(w);
+static A raonlys(AD * RESTRICT w) { RZ(w);
 #if AUDITEXECRESULTS
  if(AFLAG(w)&(AFVIRTUAL|AFUNINCORPABLE))SEGFAULT;
 #endif

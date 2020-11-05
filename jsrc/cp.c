@@ -82,8 +82,7 @@ static DF1(jtpowseq){A fs,gs,x;I n=IMAX;V*sv;
 
 // u^:n w where n is nonnegative finite integer atom (but never 0 or 1, which are handled as special cases)
 static DF1(jtfpown){A fs,z;AF f1;I n;V*sv;A *old;
- ARGCHK1(w);
- F1PREFIP;
+ F1PREFIP;ARGCHK1(w);
  sv=FAV(self);
  n=AV(sv->fgh[2])[0];
  fs=sv->fgh[0]; f1=FAV(fs)->valencefns[0];

@@ -299,7 +299,7 @@ A jtscansp(J jt,A w,A self,AF sf){A e,ee,x,z;B*b;I f,m,j,r,t,wr;P*wp,*zp;
 }    /* f/\"r or f/\."r on sparse w */
 
 static DF1(jtsscan){A y,z;I d,f,m,n,r,t,wn,wr,*ws,wt;
- ARGCHK1(w);F1PREFIP;
+ F1PREFIP;ARGCHK1(w);
  wt=AT(w);
  if(unlikely((SPARSE&wt)!=0))R scansp(w,self,jtsscan);
  wn=AN(w); wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; ws=AS(w); RESETRANK;

@@ -218,7 +218,7 @@ F1(jttail){I wcr,wf,wr;
  F1PREFIP;
  ARGCHK1(w);
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr;  // no RESETRANK: rank is passed into from/take/rsh0.  Left rank is garbage but that's OK
- R !wcr||*(wf+AS(w))?jtfrom(jtinplace,num(-1),w) :  // scaf should generate virtual block here for speed
+ R !wcr||AS(w)[wf]?jtfrom(jtinplace,num(-1),w) :  // if cells are atoms, or if the cells are nonempty arrays, result is last cell(s) scaf should generate virtual block here for speed
      SPARSE&AT(w)?irs2(num(0),take(num(-1),w),0L,0L,wcr,jtfrom):rsh0(w);
  // pristinity from other verbs
 }

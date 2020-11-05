@@ -2149,7 +2149,7 @@ F1(jtnubsieve){
 
 // ~. y  - does not have IRS
 F1(jtnub){ 
- ARGCHK1(w);F1PREFIP;
+ F1PREFIP;ARGCHK1(w);
  if(unlikely(((SPARSE&AT(w))|(AFLAG(w)&AFNJA))!=0))R repeat(nubsieve(w),w);    // sparse or NJA
  A z; RZ(z=indexofsub(INUB,w,w));
  // We extracted from w, so mark it (or its backer if virtual) non-pristine.  If w was pristine and inplaceable, transfer its pristine status to the result.  We overwrite w because it is no longer in use
@@ -2159,7 +2159,7 @@ F1(jtnub){
 
 // x -. y.  does not have IRS
 F2(jtless){A x=w;I ar,at,k,r,*s,wr,*ws,wt;
- ARGCHK2(a,w);F2PREFIP;
+ F2PREFIP;ARGCHK2(a,w);
  at=AT(a); ar=AR(a); 
  wt=AT(w); wr=AR(w); r=MAX(1,ar);
  if(ar>1+wr)RCA(a);  // if w's rank is smaller than that of a cell of a, nothing can be removed, return a

@@ -160,8 +160,8 @@ typedef struct {
  A    implocref[2];     // references to 'u.'~ and 'v.'~, marked as implicit locatives
  I4   parsercalls;      /* # times parser was called     $                  */
  I4   nthreads;  // number of threads to use, or 0 if we haven't checked     $
- A*   tstacknext;       // if not 0, points to the recently-used tstack buffer, whose chain field points to tstacknext
- A*   tstackcurr;       // current allocation, holding NTSTACK bytes+1 block for alignment.  First entry points to next-lower allocation
+ A*   tstacknext;       // if not 0, points to the recently-used tstack buffer, whose chain field points to tstacknext   $
+ A*   tstackcurr;       // current allocation, holding NTSTACK bytes+1 block for alignment.  First entry points to next-lower allocation   $
  D    cctdefault;        /* default complementary comparison tolerance                    */
 #if !(C_CRC32C && SY_64)
  UIL  ctmask;           /* 1 iff significant wrt ct; for i. and i:         */

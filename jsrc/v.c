@@ -64,7 +64,7 @@ F1(jtravel){A a,c,q,x,y,y0,z;B*b;I f,j,m,r,*u,*v,*yv;P*wp,*zp;
 }
 
 F1(jttable){A z,zz;I r,wr;
- ARGCHK1(w);F1PREFIP;
+ F1PREFIP;ARGCHK1(w);
  // We accept the pristine calculations from ravel
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r;  // r=rank to use
  RZ(IRSIP1(w,0L,r-1<0?0:r-1,jtravel,z));  // perform ravel on items

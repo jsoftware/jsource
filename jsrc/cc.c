@@ -135,7 +135,7 @@ DF2(jtspecialatoprestart){
 // x <;.0 y  and  x (<;.0~ -~/"2)~ y   where _2 { $x is 1 (i. e. 1 dimension of selection)  localuse distinguishes the two cases (relative vs absolute length)
 // We go for minimum overhead in the box allocation and copy
 DF2(jtboxcut0){A z;
- ARGCHK2(a,w);F2PREFIP;
+ F2PREFIP;ARGCHK2(a,w);
  // NOTE: this routine is called from jtwords.  In that case, self comes from jtwords and is set up with the parm for x (<;.0~ -~/"2)~ y but with no failover routine.
  // Thus, the preliminary tests must not cause a failover.  They don't, because the inputs from jtwords are known to be well-formed
  // We require a have rank >=2, not sparse

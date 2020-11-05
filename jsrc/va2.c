@@ -1248,8 +1248,7 @@ DF2(jtatomic2){A z;
  A realself=FAV(self)->fgh[0];  // if rank operator, this is nonzero and points to the left arg of rank
  RANK2T selfranks=FAV(self)->lrr;  // get left & right rank from rank/primitive
  self=realself?realself:self;  // if this is a rank block, move to the primitive.  u b. or any atomic primitive has f clear
- ARGCHK2(a,w);
- F2PREFIP;
+ F2PREFIP;ARGCHK2(a,w);
  RANK2T jtranks=jt->ranks;  // fetch IRS ranks if any
  UI ar=AR(a), wr=AR(w), awr=(ar<<RANKTX)+wr; I awm1=(AN(a)-1)|(AN(w)-1);
  selfranks=jtranks==(RANK2T)~0?selfranks:jtranks;

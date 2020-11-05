@@ -524,7 +524,7 @@ static B jtreduce2(J jt,A w,C id,I f,I r,A*zz){A z=0;B b=0,btab[258],*zv;I c,d,m
 }    /* f/"r for dense w over an axis of length 2 */
 
 static DF1(jtreduce){A z;I d,f,m,n,r,t,wr,*ws,zt;
- ARGCHK1(w);F1PREFIP;
+ F1PREFIP;ARGCHK1(w);
  if(unlikely((SPARSE&AT(w))!=0))R reducesp(w,self);  // If sparse, go handle it
  wr=AR(w); ws=AS(w);
  // Create  r: the effective rank; f: length of frame; n: # items in a CELL of w
@@ -606,7 +606,7 @@ static A jtredcatsp(J jt,A w,A z,I r){A a,q,x,y;B*b;I c,d,e,f,j,k,m,n,n1,p,*u,*v
 // ,&.:(<"r)  run together all axes above the last r.  r must not exceed AR(w)-1
 // w must not be sparse or empty
 A jtredcatcell(J jt,A w,I r){A z;
- ARGCHK1(w);F1PREFIP;
+ F1PREFIP;ARGCHK1(w);
  I wr=AR(w);  // get original rank, which may change if we inplace into the same block
  if(r>=wr-1)R RETARG(w);  // if only 1 axis left to run together, return the input
  if((ASGNINPLACESGN(SGNIF((I)jtinplace,JTINPLACEWX)&(-r),w) && !(AFLAG(w)&AFUNINCORPABLE))){  // inplace allowed, usecount is right
@@ -624,7 +624,7 @@ A jtredcatcell(J jt,A w,I r){A z;
 
 
 DF1(jtredcat){A z;B b;I f,r,*s,*v,wr;
- ARGCHK1(w);F1PREFIP;
+ F1PREFIP;ARGCHK1(w);
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; s=AS(w); RESETRANK;
  b=1==r&&1==s[f];  // special case: ,/ on last axis which has length 1: in that case, the rules say the axis disappears (because of the way ,/ works on length-1 lists)
  if(2>r&&!b)RCA(w);  // in all OTHER cases, result=input for ranks<2

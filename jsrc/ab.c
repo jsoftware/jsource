@@ -66,7 +66,7 @@ static AHDRR(bw1010insC,UC,UC){I k=d*(n-1);UC t=(UC)((n&1)-1); x+=k; DQ(m, DQ(d,
 
 #define BITWISE(f,T,op)  \
  F2(f){A z;I *av,k=0,x;T*wv,y,*zv;             \
-  ARGCHK2(a,w);F2PREFIP;  /* kludge we allow inplace call but we don't honor it yet */ \
+  F2PREFIP;ARGCHK2(a,w);  /* kludge we allow inplace call but we don't honor it yet */ \
   if(!(INT&AT(a)))RZ(a=cvt(INT,a));                                    \
   if(!(INT&AT(w)))RZ(w=cvt(INT,w));                                    \
   av=(I*)AV(a);                          \

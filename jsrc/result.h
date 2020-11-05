@@ -265,7 +265,9 @@ do{
     // but never an output from the block it is created in, since it changes during the loop.  Thus, UNINCORPABLEs are found only in the loop that created them.
     // It might be better to keep the result recursive and transfer ownership of the virtual block, but not by much.
     if(AFLAG(z)&AFUNINCORPABLE){RZ(z=clonevirtual(z));}
-    // since we are adding the block to a NONrecursive boxed result,  we DO NOT have to raise the usecount of the block.  We set the usecount non-inplaceable because
+    // since we are adding the block to a NONrecursive boxed result,  we DO NOT have to raise the usecount of the block, but we do have to mark the block
+    // non-inplaceable, because the next thing to open it might be each: each will set the inplaceable flag if the parent is abandoned, so as to allow
+    // pristinity of lower results; thus we may not relax the rule that all contents must be non-inplaceable
     // box code all over assumes that contents are never inplaceable, and since we go through here only when we are going through box code next, we honor that
     ACIPNO(z); *zzboxp=z;  // install the new box.  zzboxp is ALWAYS a pointer to a box when force-boxed result
     if(unlikely((ZZFLAGWORD&ZZFLAGCOUNTITEMS)!=0)){

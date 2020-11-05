@@ -93,7 +93,7 @@ static void jtrot(J jt,I m,I d,I n,I atomsize,I p,I*av,C*u,C*v){I dk,e,k,j,r,x,y
    v   target data area      */
 
 F2(jtrotate){A origw=w,y,z;B b;C*u,*v;I acr,af,ar,*av,d,k,m,n,p,*s,wcr,wf,wn,wr;
- ARGCHK2(a,w);F2PREFIP;
+ F2PREFIP;ARGCHK2(a,w);
  if(unlikely((SPARSE&AT(w))!=0))R rotsp(a,w);
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr; af=ar-acr; p=acr?*(af+AS(a)):1;
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK;
@@ -139,7 +139,7 @@ static F1(jtrevsp){A a,q,x,y,z;I c,f,k,m,n,r,*v,wr;P*wp,*zp;
 }    /* |."r w on sparse arrays */
 
 F1(jtreverse){A z;C*wv,*zv;I f,k,m,n,nk,r,*v,*ws,wt,wr;
- ARGCHK1(w);F1PREFIP;
+ F1PREFIP;ARGCHK1(w);
  if(unlikely((SPARSE&AT(w))!=0))R revsp(w);
  if(jt->fill)R rotate(num(-1),w);  // rank is set - not inplaceable because it uses fill
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r;  // no RESETRANK - we don't call any primitive from here on

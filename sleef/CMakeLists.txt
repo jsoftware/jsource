@@ -1,11 +1,8 @@
-if(WIN32)
-    add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
-endif()
-
 add_library(j-sleef OBJECT)
 target_include_directories(j-sleef PRIVATE src/arch src/common)
 target_compile_definitions(j-sleef INTERFACE SLEEF=1)
 target_compile_definitions(j-sleef PRIVATE SLEEF_STATIC_LIBS ENABLE_AVX2 DORENAME=1)
+target_compile_definitions(j-sleef PRIVATE $<$<PLATFORM_ID:Windows>:_CRT_SECURE_NO_WARNINGS>)
 target_sources(j-sleef PRIVATE
     include/sleef.h
     src/arch/avxintrin-emu.h

@@ -37,6 +37,7 @@ jj.ijs
 *.sln*
 *.vcxproj*
 !*.template
+.vs/
 
 # mac
 .DS_Store
@@ -58,6 +59,8 @@ release
 /test/temp.ijs
 
 # build folders
+out/
+build/
 bin/
 make2/
 jlibrary/addons/

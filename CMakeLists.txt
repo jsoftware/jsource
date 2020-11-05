@@ -18,7 +18,6 @@ include(OptimizeForArchitecture)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
-set(CMAKE_C_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -70,6 +69,8 @@ add_subdirectory(sleef)
 add_subdirectory(base64)
 add_subdirectory(dllsrc)
 
+set_target_properties(j-blis j-openssl-sha j-sleef j-base64 PROPERTIES
+    POSITION_INDEPENDENT_CODE ON)
 target_link_libraries(j PRIVATE j-blis j-openssl-sha j-sleef j-base64)
 if(WIN32)
     target_link_libraries(j PRIVATE j-dll)

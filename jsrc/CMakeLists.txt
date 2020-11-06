@@ -1,10 +1,7 @@
-add_compile_definitions(C_NA=0 C_AVX=1 C_AVX2=1 EMU_AVX=1)
-if(WIN32)
-    add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
-endif()
-
 add_library(j)
-set_target_properties(j PROPERTIES CXX_VISIBILITY_PRESET hidden)
+target_compile_definitions(j PRIVATE C_NA=0 C_AVX=1 C_AVX2=1 EMU_AVX=1)
+target_compile_definitions(j PRIVATE $<$<PLATFORM_ID:Windows>:_CRT_SECURE_NO_WARNINGS>)
+target_link_libraries(j PRIVATE ${STANDARD_MATH_LIBRARY})
 set_source_files_properties(aes-ni.c PROPERTIES COMPILE_FLAGS -maes)
 target_sources(j PRIVATE
     a.h
@@ -16,7 +13,6 @@ target_sources(j PRIVATE
     avxintrin-neon.h
     cip_t.h
     cipfloatmm_t.h
-    com_jsoftware_j_JInterface.h
     cpuinfo.h
     cr_t.h
     crc32c.h
@@ -34,9 +30,7 @@ target_sources(j PRIVATE
     js.h
     jt.h
     jtype.h
-    jversion-x.h
     jversion.h
-    jx_utils_jnative.h
     linenoise.h
     m.h
     p.h
@@ -195,8 +189,9 @@ target_sources(j PRIVATE
     crc32c.c
 )
 
-add_library(j-blis OBJECT)
-target_sources(j-blis PRIVATE
+configure_file(jversion-x.h ${CMAKE_CURRENT_SOURCE_DIR}/jversion.h COPYONLY)
+
+target_sources(j PRIVATE
     blis.h
     blis/gemm_c-ref.c
     blis/gemm_int-aarch64.c
@@ -204,4 +199,51 @@ target_sources(j-blis PRIVATE
     blis/gemm_int-fma.c
     blis/gemm_int-sse2.c
     blis/gemm_vec-ref.c
+)
+
+if(NOT BUILD_SHARED_LIBS)
+    return()
+endif()
+
+add_library(tsdll SHARED)
+target_link_libraries(tsdll PRIVATE ${STANDARD_MATH_LIBRARY})
+target_sources(tsdll PRIVATE
+    tsdll.c
+    ../makevs/tsdll/tsdll.def
+)
+
+add_library(linenoise OBJECT EXCLUDE_FROM_ALL)
+target_compile_definitions(linenoise INTERFACE USE_LINENOISE)
+target_compile_definitions(linenoise PUBLIC $<$<PLATFORM_ID:Windows>:_CRT_SECURE_NO_WARNINGS>)
+target_sources(linenoise PRIVATE
+    linenoise.h
+    linenoise.c
+)
+
+add_executable(jconsole)
+target_compile_definitions(jconsole PRIVATE READLINE)
+if(NOT UNIX OR ${CMAKE_SYSTEM_PROCESSOR} MATCHES "^(aarch64|arm)")
+    target_link_libraries(jconsole PRIVATE linenoise)
+endif()
+if("${CMAKE_C_COMPILER_FRONTEND_VARIANT}" STREQUAL "MSVC")
+    target_link_options(jconsole PRIVATE /STACK:0x1000000)
+endif()
+target_link_libraries(jconsole PRIVATE ${CMAKE_DL_LIBS})
+target_sources(jconsole PRIVATE
+    jconsole.c
+    jeload.h
+    jeload.c
+    jlib.h
+    ../makevs/jconsole/jconsole.rc
+    ../makevs/jconsole/resource1.h
+    ../makevs/jconsole/jgray.ico
+)
+
+file(TO_NATIVE_PATH "${PROJECT_SOURCE_DIR}/jlibrary/bin" J_BINPATH)
+file(TO_NATIVE_PATH "/profile.ijs" J_PROFILE_SCRIPT)
+file(GENERATE
+    OUTPUT "$<${is_multi_config}:$<CONFIG>/>profile.ijs"
+    CONTENT "NB. loaded under debug
+BINPATH_z_=: '${J_BINPATH}'
+0!:0<BINPATH,'${J_PROFILE_SCRIPT}'"
 )

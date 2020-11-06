@@ -3,7 +3,7 @@ if(WIN32)
     add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
 endif()
 
-add_library(j SHARED)
+add_library(j)
 set_target_properties(j PROPERTIES CXX_VISIBILITY_PRESET hidden)
 set_source_files_properties(aes-ni.c PROPERTIES COMPILE_FLAGS -maes)
 target_sources(j PRIVATE

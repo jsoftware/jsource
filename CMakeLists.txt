@@ -22,10 +22,13 @@ endif()
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
+set(CMAKE_C_VISIBILITY_PRESET hidden)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 
+find_package(StandardMathLibrary REQUIRED)
 find_package(OpenMP)
 
 set(TARGET_ARCHITECTURE "skylake" CACHE STRING "CPU architecture")
@@ -79,10 +82,10 @@ add_subdirectory(dllsrc)
 add_subdirectory(jsrc/openssl/sha)
 
 if(BUILD_SHARED_LIBS)
-    set_target_properties(j-blis j-openssl-sha j-sleef j-base64 PROPERTIES
+    set_target_properties(j-openssl-sha j-sleef j-base64 PROPERTIES
         POSITION_INDEPENDENT_CODE ON)
 endif()
-target_link_libraries(j PRIVATE j-blis j-openssl-sha j-sleef j-base64)
+target_link_libraries(j PRIVATE j-openssl-sha j-sleef j-base64)
 if(WIN32)
     target_link_libraries(j PRIVATE j-dll)
     target_sources(j PRIVATE dllsrc/jdll.def dllsrc/jdll.rc dllsrc/jdll.tlb)

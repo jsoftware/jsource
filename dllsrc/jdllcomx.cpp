@@ -270,7 +270,6 @@ STDMETHODIMP CJServer::Invoke(DISPID dispID, REFIID riid
 {
     HRESULT     hr;
     ITypeInfo  *pTI;
-    LANGID      langID=PRIMARYLANGID(lcid);
 
     if (IID_NULL!=riid) return DISP_E_UNKNOWNINTERFACE;
     hr=GetTypeInfo(0, lcid, &pTI);

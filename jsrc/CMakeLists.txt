@@ -1,4 +1,4 @@
-add_compile_definitions(C_AVX=1 C_AVX2=1 EMU_AVX=1)
+add_compile_definitions(C_NA=0 C_AVX=1 C_AVX2=1 EMU_AVX=1)
 if(WIN32)
     add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
 endif()

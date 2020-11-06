@@ -32,8 +32,9 @@ DC jtdeba(J jt,C t,void *x,void *y,A fs){DC d;
   case DCCALL:   
    d->dcx=x; d->dcy=y; d->dcf=fs; 
    d->dca=jt->curname; d->dcm=NAV(d->dca)->m;
-   d->dcn=(I)jt->cursymb;
+// obsolete   d->dcn=(I)jt->cursymb;
    d->dcstop=-2;
+   // dcn fill in in caller
    if(jt->dbss==SSSTEPINTO){d->dcss=SSSTEPINTO; jt->dbssd=d; jt->dbss=0;}
  }
  R d;
@@ -195,9 +196,9 @@ A jtparsex(J jt,A* queue,I m,CW*ci,DC c){A z;B s;
  R z;
 }
 
-DF2(jtdbunquote){A t,z;B b=0,s;DC d;V*sv;
+A jtdbunquote(J jt,A a,A w,A self,L *stabent){A t,z;B b=0,s;DC d;V*sv;
  sv=FAV(self); t=sv->fgh[0]; 
- RZ(d=deba(DCCALL,a,w,self));
+ RZ(d=deba(DCCALL,a,w,self)); d->dcn=(I)stabent;
  if(CCOLON==sv->id&&(sv->flag&VXOP||t&&NOUN&AT(t))){  // : and executable body: either OP (adv/conj now with noun operands) or m : n
   ras(self); z=a?dfs2(a,w,self):dfs1(w,self); fa(self);
  }else{                              /* tacit    */

@@ -216,7 +216,7 @@
 #define dbstack(x)                  jtdbstack(jt,(x))
 #define dbstop(x,y)                 jtdbstop(jt,(x),(y))
 #define dbsig(x,y)                  jtdbsig(jt,(x),(y))
-#define dbunquote(x,y,z)            jtdbunquote(jt,(x),(y),(z))
+#define dbunquote(x,y,z,w)          jtdbunquote(jt,(x),(y),(z),(w))
 #define dcase(x,y)                  jtdcase(jt,(x),(y))
 #define dcube(x,y)                  jtdcube(jt,(x),(y))
 #define ddtokens(x,y)               jtddtokens(jt,(x),(y))

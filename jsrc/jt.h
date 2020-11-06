@@ -168,13 +168,12 @@ typedef struct {
 #endif
  A    idothash0;        // 2-byte hash table for use by i.    $
  A    idothash1;        // 4-byte hash table for use by i.     $
- I    symindex;         /* symbol table index (monotonically increasing)   */
  DC   sitop;            /* top of SI stack                                 */
- I    stmax;            /* numbered locales maximum number                 */
- A    stnum;            /* numbered locale numbers or hash table                         */
- A    stptr;            /* numbered locale symbol table ptrs               */
- I    stused;           /* entries in stnum/stptr in use                   */
- I    sttsize;          // length of hash table, =AN(jt->stnum)
+// obsolete  I    stmax;            /* numbered locales maximum number                 */
+ A    stnum;            // numbered locale numbers or hash table - rank 1, holding symtab pointer for each entry.  0 means empty
+// obsolete  A    stptr;            /* numbered locale symbol table ptrs               */
+// obsolete  I    stused;           /* entries in stnum/stptr in use                   */
+// obsolete  I    sttsize;          // length of hash table, =AN(jt->stnum)
  I    pmctr;            /* perf. monitor: ctr>0 means do monitoring        */
  C    baselocale[4];    // will be "base"
  UI4  baselocalehash;   // name hash for base locale
@@ -191,7 +190,9 @@ typedef struct {
  I*   hiv;              /* used in dyad i. & i:                            */
 #endif
  A    symp;             /* symbol pool array                               */
- L*   sympv;            /* symbol pool array value ptr, (L*)AV(jt->symp)   */
+// obsolete  L*   sympv;            /* symbol pool array value ptr, (L*)AV(jt->symp)   */
+// obsolete  I    symindex;         /* symbol table index (monotonically increasing)   */
+// obsolete  L*   cursymb;          /* current symbol table entry                      */
  I    arg;              /* integer argument                                */
  I*   breakfh;          /* win break file handle                           */
  I*   breakmh;          /* win break map handle                            */
@@ -204,7 +205,6 @@ typedef struct {
  I    cdnl;             /* # of used entries in cdhashl                    */
  I    cdns;             /* length of used portion of cdstr                 */
  A    cdstr;            /* strings for cdarg                               */
- L*   cursymb;          /* current symbol table entry                      */
  A    dbalpha;          /* left  argument for rerun                        */
  I    dbjump;           /* line to jump to                                 */
  A    dbomega;          /* right argument for rerun                        */

@@ -211,8 +211,9 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
   // both cases we know the block will be freed by the caller.
   // Virtual abandoned blocks are both cases at once.  That's OK.
   UI4 yxbucks = *(UI4*)LXAV0(locsym);  // get the yx bucket indexes, stored in first hashchain by crelocalsyms
-  L *ybuckptr = LXAV0(locsym)[(US)yxbucks]+jt->sympv;  // pointer to sym block for y
-  L *xbuckptr = LXAV0(locsym)[yxbucks>>16]+jt->sympv;  // pointer to sym block for x
+  L *sympv=LAV0(jt->symp);  // bring into local
+  L *ybuckptr = LXAV0(locsym)[(US)yxbucks]+sympv;  // pointer to sym block for y
+  L *xbuckptr = LXAV0(locsym)[yxbucks>>16]+sympv;  // pointer to sym block for x
   if(w){  // If y given, install it & incr usecount as in assignment.  Include the script index of the modification
    // If input is abandoned inplace and not the same as x, DO NOT increment usecount, but mark as abandoned and make not-inplace.  Otherwise ra
    // We can handle an abandoned argument only if it is direct or recursive, since only those values can be assigned to a name
@@ -224,7 +225,7 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
     // for x (if given), slot is from the beginning of hashchain EXCEPT when that collides with y; then follow y's chain
     // We have verified that hardware CRC32 never results in collision, but the software hashes do (needs to be confirmed on ARM CPU hardware CRC32C)
   if(a){
-   if(!C_CRC32C&&xbuckptr==ybuckptr)xbuckptr=xbuckptr->next+jt->sympv;
+   if(!C_CRC32C&&xbuckptr==ybuckptr)xbuckptr=xbuckptr->next+sympv;
    if((a!=w)&SGNTO0(AC(a)&(((AT(a)^AFLAG(a))&RECURSIBLE)-1))&((I)jtinplace>>JTINPLACEAX)){
     xbuckptr->flag=LPERMANENT|LWASABANDONED; AC(a)&=~ACINPLACE;
    }else ra(a);
@@ -724,8 +725,9 @@ static void jtcalclocalbuckets(J jt, A t, LX *actstv, I actstn){LX k;
   // search through the chain, looking for a match on name.  If we get a match, the bucket index is the one's complement
   // of the number of items compared before the match.  If we get no match, the bucket index is the number
   // of items compared (= the number of items in the chain)
-  for(k=actstv[tn->bucket];k;++compcount,k=(jt->sympv)[k].next){  // k chases the chain of symbols in selected bucket
-   if(tn->m==NAV((jt->sympv)[k].name)->m&&!memcmpne(tn->s,NAV((jt->sympv)[k].name)->s,tn->m)){compcount=~compcount; break;}
+  L *sympv=LAV0(jt->symp);
+  for(k=actstv[tn->bucket];k;++compcount,k=sympv[k].next){  // k chases the chain of symbols in selected bucket
+   if(tn->m==NAV(sympv[k].name)->m&&!memcmpne(tn->s,NAV(sympv[k].name)->s,tn->m)){compcount=~compcount; break;}
   }
   tn->bucketx=compcount;
  }
@@ -824,9 +826,9 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
 
  // Count the assigned names, and allocate a symbol table of the right size to hold them.  We won't worry too much about collisions, since we will be assigning indexes in the definition.
  // We choose the smallest feasible table to reduce the expense of clearing it at the end of executing the verb
- I pfstn=AN(pfst); LX*pfstv=LXAV0(pfst),pfx; I asgct=0;
+ I pfstn=AN(pfst); LX*pfstv=LXAV0(pfst),pfx; I asgct=0; L *sympv=LAV0(jt->symp);
  for(j=SYMLINFOSIZE;j<pfstn;++j){  // for each hashchain
-  for(pfx=pfstv[j];pfx;pfx=(jt->sympv)[pfx].next)++asgct;  // chase the chain and count
+  for(pfx=pfstv[j];pfx;pfx=sympv[pfx].next)++asgct;  // chase the chain and count
  }
 
  asgct = asgct + (asgct>>1); // leave 33% empty space, since we will have resolved most names here
@@ -838,10 +840,10 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
  // So we add them by hand - just y and possibly x.
  RZ(probeis(mnuvxynam[5],actst));if(!(!dyad&&(type>=3||(flags&VXOPR)))){RZ(probeis(mnuvxynam[4],actst));}
  for(j=1;j<pfstn;++j){  // for each hashchain
-  for(pfx=pfstv[j];pfx;pfx=(jt->sympv)[pfx].next){L *newsym;
-   A nm=(jt->sympv)[pfx].name;
+  for(pfx=pfstv[j];pfx;pfx=sympv[pfx].next){L *newsym;
+   A nm=sympv[pfx].name;
    RZ(newsym=probeis(nm,actst));  // create new symbol (or possibly overwrite old argument name)
-   newsym->flag = (jt->sympv)[pfx].flag|LPERMANENT;   // Mark as permanent
+   newsym->flag = sympv[pfx].flag|LPERMANENT;   // Mark as permanent
   }
  }
  I actstn=AN(actst)-SYMLINFOSIZE; LX*actstv=LXAV0(actst);  // # hashchains in new symbol table, and pointer to hashchain table
@@ -875,14 +877,14 @@ A jtclonelocalsyms(J jt, A a){A z;I j;I an=AN(a); LX *av=LXAV0(a),*zv;
  zv[0]=av[0]; // Copy as Lx; really it's a UI4
  // Go through each hashchain of the model, after the first one
  for(j=SYMLINFOSIZE;j<an;++j) {LX *zhbase=&zv[j]; LX ahx=av[j]; LX ztx=0; // hbase->chain base, hx=index of current element, tx is element to insert after
-  while(ahx&&(jt->sympv)[ahx].flag&LPERMANENT) {L *l;  // for each permanent entry...
+  while(ahx&&(LAV0(jt->symp))[ahx].flag&LPERMANENT) {L *l;  // for each permanent entry...
    RZ(l=symnew(zhbase,ztx)); 
-   A nm=(jt->sympv)[ahx].name;
+   A nm=(LAV0(jt->symp))[ahx].name;
    l->name=nm; ras(l->name);  // point symbol table to the name block, and increment its use count accordingly
-   l->flag=(jt->sympv)[ahx].flag&(LINFO|LPERMANENT);  // clear all but PERMANENT and INFO, in case we try to delete the name (as in for_xyz. or 4!:55)
-   ztx = ztx?(jt->sympv)[ztx].next : *zhbase;  // ztx=index to value we just added.  We avoid address calculation because of the divide.  If we added
+   l->flag=(LAV0(jt->symp))[ahx].flag&(LINFO|LPERMANENT);  // clear all but PERMANENT and INFO, in case we try to delete the name (as in for_xyz. or 4!:55)
+   ztx = ztx?(LAV0(jt->symp))[ztx].next : *zhbase;  // ztx=index to value we just added.  We avoid address calculation because of the divide.  If we added
       // at head, the added block is the new head; otherwise it's pointed to by previous tail
-   ahx = (jt->sympv)[ahx].next;  // advance to next symbol
+   ahx = (LAV0(jt->symp))[ahx].next;  // advance to next symbol
   }
  }
  R z;

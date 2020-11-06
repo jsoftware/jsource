@@ -584,7 +584,7 @@ extern DF2(jtatomic2);
 extern DF2(jtbitwisechar);
 extern DF2(jtcharfn2);
 extern DF2(jtunquote);
-extern DF2(jtdbunquote);
+extern A jtdbunquote(J,A,A,A,L*);
 extern DF2(jtdfs2);
 extern DF2(jteachl);
 extern DF2(jteachr);

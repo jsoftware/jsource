@@ -66,7 +66,7 @@ typedef UI4                RANK2T;  // 2 ranks, (l<<16)|r
 #define RANK2TX            32   // # bits in a RANK2T
 #define RANK2TMSK           0xFFFFFFFFU
 typedef I                  FLAGT;
-typedef UI4                LX;  // index of an L block in jt->sympv
+typedef UI4                LX;  // index of an L block in LAV0(jt->symp)
 
 typedef struct AD AD;
 typedef AD *A;
@@ -198,9 +198,10 @@ typedef I SI;
 #define NAV(x)          ((NM*)((C*)(x)+AKXR(1)))  // name, which is always allocated as rank 1, for some reason
 #define IAV(x)          AV(x)                   /* integer                 */
 #define IAV0(x)         ((I*)((C*)(x)+AKXR(0)))  // integer in a stack- or heap-allocated atom (rank 0 - used for internal tables)
-#define IAV1(x)         ((I*)((C*)(x)+AKXR(1)))  // integer in a stack- or heap-allocated list (rank 1)
+#define IAV1(x)         ((I*)((C*)(x)+AKXR(1)))  // integer in a stack- or heap-allocated list (rank 1 - used for internal tables that need alignment or need AS[0])
 #define BAV0(x)         ( (C*)((C*)(x)+AKXR(0)) )  // Boolean when rank is 0 - fixed position (known to avoid segfault)
-#define LXAV0(x)        ( (LX*)((C*)(x)+AKXR(0)) )  // Symbol when rank is 0 - fixed position (for SYMB tables).  Note AK() is used in SYMB tables
+#define LXAV0(x)        ( (LX*)((C*)(x)+AKXR(0)) )  // Symbol when rank is 0 - fixed position (for SYMB hash tables).  Note AK() is used in SYMB tables
+#define LAV0(x)         ( (L*)((C*)(x)+AKXR(0)) )  // Symbol array when rank is 0 - used for the symbol pool
 #define DAV(x)          ( (D*)((C*)(x)+AK(x)))  /* double                  */
 #define DAV0(x)         ( (D*)((C*)(x)+AKXR(0)))  // double atom
 #define DAV2(x)         ( (D*)((C*)(x)+AKXR(2)) )  // Double when rank is 2 - fixed position (for matrix inversion)

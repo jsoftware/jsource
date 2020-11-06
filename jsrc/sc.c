@@ -102,7 +102,8 @@ DF2(jtunquote){A z;
   // If we are required to insert a marker for each call, do so (if it hasn't been done already).  But not for pseudo-named functions
   if(stabent!=0 && jt->uflags.us.uq.uq_c.pmctrbstk&PMCTRBSTKREQD && callstackx==jt->callstacknext){pushcallstack1d(CALLSTACKPOPLOCALE,jt->global);}  //  If cocurrent is about, make every call visible
   if(jt->uflags.us.cx.cx_c.db&&!(jt->uflags.us.cx.cx_c.glock||VLOCK&v->flag)&&jt->recurstate<RECSTATEPROMPT){  // The verb is locked if it is marked as locked, or if the script is locked; if recursive JDo, can't enter debug suspension so ignore debug
-   jt->cursymb=stabent; z=dbunquote(dyadex?a:0,dyadex?w:a,fs);  // if debugging, go do that.  save last sym lookup as debug parm
+// obsolete    jt->cursymb=stabent;
+   z=dbunquote(dyadex?a:0,dyadex?w:a,fs,stabent);  // if debugging, go do that.  save last sym lookup as debug parm
   }else{
    ra(fs);  // should assert recursive usecount
    A s=jt->sf; jt->sf=fs; z=v->valencefns[dyadex]((J)(((REPSGN(SGNIF(v->flag,dyadex+VJTFLGOK1X)))|~JTFLAGMSK)&(I)jtinplace),a,w,fs); jt->sf=s;

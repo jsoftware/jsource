@@ -250,7 +250,7 @@ F1(jtspforloc){A*wv,x,y,z;C*s;D*v,*zv;I i,j,m,n;L*u;LX *yv,c;
   m=AN(y); yv=LXAV0(y); 
   for(j=SYMLINFOSIZE;j<m;++j){  // for each name in the locale
    c=yv[j];
-   while(c){*v+=sizeof(L); u=c+jt->sympv; spfor1(u->name); spfor1(u->val); c=u->next;}  // add in the size of the name itself and the value, and the L block for the name
+   while(c){*v+=sizeof(L); u=c+LAV0(jt->symp); spfor1(u->name); spfor1(u->val); c=u->next;}  // add in the size of the name itself and the value, and the L block for the name
   }
   zv[i]=*v;
  }
@@ -441,7 +441,7 @@ void audittstack(J jt){F1PREFIP;
 
 // Free all symbols pointed to by the SYMB block w.
 static void freesymb(J jt, A w){I j,wn=AN(w); LX k,kt,* RESTRICT wv=LXAV0(w);
- L *jtsympv=jt->sympv;  // Move base of symbol block to a register.  Block 0 is the base of the free chain.  MUST NOT move the base of the free queue to a register,
+ L *jtsympv=LAV0(jt->symp);  // Move base of symbol block to a register.  Block 0 is the base of the free chain.  MUST NOT move the base of the free queue to a register,
   // because when we free a locale it frees its symbols here, and one of them might be a verb that contains a nested SYMB, giving recursion.  It is safe to move sympv to a register because
   // we know there will be no allocations during the free process.
  // First, free the path and name (in the SYMLINFO block), and then free the SYMLINFO block itself
@@ -450,7 +450,7 @@ static void freesymb(J jt, A w){I j,wn=AN(w); LX k,kt,* RESTRICT wv=LXAV0(w);
   fr(LOCNAME(w));
   // clear the data fields   kludge but this is how it was done (should be done in symnew)
   jtsympv[k].name=0;jtsympv[k].val=0;jtsympv[k].sn=0;jtsympv[k].flag=0;
-  jtsympv[k].next=jtsympv[0].next;jtsympv[0].next=k;  // jt->sympv[0] is the base of the free chain
+  jtsympv[k].next=jtsympv[0].next;jtsympv[0].next=k;  // LAV0(jt->symp)[0] is the base of the free chain
  }
  // loop through each hash chain, clearing the blocks in the chain
  for(j=SYMLINFOSIZE;j<wn;++j){

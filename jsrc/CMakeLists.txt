@@ -191,6 +191,19 @@ target_sources(j PRIVATE
 
 configure_file(jversion-x.h ${CMAKE_CURRENT_SOURCE_DIR}/jversion.h COPYONLY)
 
+if(OpenMP_C_FOUND)
+    target_link_libraries(j PRIVATE OpenMP::OpenMP_C)
+
+    if(DEFINED OpenMP_libomp_DLL)
+        add_custom_command(
+            TARGET j POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy
+                ${OpenMP_libomp_DLL}
+                "${CMAKE_CURRENT_BINARY_DIR}$<${is_multi_config}:/$<CONFIG>>"
+        )
+    endif()
+endif()
+
 target_sources(j PRIVATE
     blis.h
     blis/gemm_c-ref.c

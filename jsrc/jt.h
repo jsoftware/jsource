@@ -193,7 +193,7 @@ typedef struct {
 // obsolete  L*   sympv;            /* symbol pool array value ptr, (L*)AV(jt->symp)   */
 // obsolete  I    symindex;         /* symbol table index (monotonically increasing)   */
 // obsolete  L*   cursymb;          /* current symbol table entry                      */
- I    arg;              /* integer argument                                */
+// obsolete  I    arg;              /* integer argument                                */
  I*   breakfh;          /* win break file handle                           */
  I*   breakmh;          /* win break map handle                            */
  C*   bx;               /* box drawing characters                          */
@@ -201,9 +201,9 @@ typedef struct {
  A    cdarg;            /* table of 15!:0 parsed left arguments            */
  A    cdhash;           /* hash table of indices into cdarg                */
  A    cdhashl;          /* hash table of indices into cdarg                */
- I    cdna;             /* # of used entries in cdarg                      */
- I    cdnl;             /* # of used entries in cdhashl                    */
- I    cdns;             /* length of used portion of cdstr                 */
+// obsolete  I    cdna;             /* # of used entries in cdarg                      */
+// obsolete  I    cdnl;             /* # of used entries in cdhashl                    */
+// obsolete  I    cdns;             /* length of used portion of cdstr                 */
  A    cdstr;            /* strings for cdarg                               */
  A    dbalpha;          /* left  argument for rerun                        */
  I    dbjump;           /* line to jump to                                 */

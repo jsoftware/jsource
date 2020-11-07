@@ -418,7 +418,7 @@ A jtparsea(J jt, A *queue, I m){PSTK * RESTRICT stack;A z,*v;I es;
     DQ(m, maxnvrlen+=(AT(queue[i])>>NAMEX)&1;)
    }
    // extend the nvr stack, doubling its size each time, till it can hold our names.  Don't let it get too big.  This code duplicated in 4!:55
-   while((jt->parserstackframe.nvrtop+maxnvrlen) > AN(jt->nvra))RZ(extnvr());
+   while((jt->parserstackframe.nvrtop+maxnvrlen) > (UI)AN(jt->nvra))RZ(extnvr());
   }
 
   // We have the initial stack pointer.  Grow the stack down from there

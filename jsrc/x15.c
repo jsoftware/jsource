@@ -681,18 +681,20 @@ static void convertup(I*pi,I n,C t){I j=n;
 /* cdarg   - append-only table of parsed results                        */
 /*           rows are interpreted by CCT                                */
 /*           when space runs out allocation is doubled                  */
-/* cdna    - # used entries in cdarg                                    */
+// AM(cdarg) is # rows filled
 /* cdstr   - append-only table of 15!:0 left argument strings verbatim  */
 /*           indexed by ai and an in the CCT struct                     */
 /*           when space runs out allocation is doubled                  */
-/* cdns    - # used chars in cdstr                                      */
+// AM(cdstr) is # bytes allocated
 /* cdhash  - hash table                                                 */
-/*           # entries is a prime                                       */
+//           one entry per row of cdarg
 /*           when 2*cdna exceeds # entries allocation is doubled        */
 /*           table values are indices into cdarg, or -1                 */
+// AM(cdhash) is # entries filled, always equal to AM(cdarg)
 /* cdhashl - hash table for libraries (modules)                         */
-/* cdnl    - # used entries in cdhashl                                  */
+// AM(cdhash) is # entries filled, max (NLIBS)
 
+// allocate hashtable, fill with -1
 static A jtcdgahash(J jt,I n){A z;I hn;
  FULLHASHSIZE(n,INTSIZE,0,0,hn);
  GATV0(z,INT,hn,0); memset(AV(z),CFF,hn*SZI);  // no rank - use all words for table
@@ -703,35 +705,73 @@ static B jtcdinit(J jt){A x;
  RZ(x=exta(LIT,2L,sizeof(CCT),100L )); ras(x); memset(AV(x),C0,AN(x)); jt->cdarg=x;
  RZ(x=exta(LIT,1L,1L,         5000L)); ras(x); memset(AV(x),C0,AN(x)); jt->cdstr=x;
  RZ(jt->cdhash =cdgahash(4*AS(jt->cdarg)[0]));
- RZ(jt->cdhashl=cdgahash(NLIBS           ));
- jt->cdna=jt->cdns=jt->cdnl=0;
+ RZ(jt->cdhashl=cdgahash(NLIBS+16           ));  // will round up to power of 2 - we allow 100 libraries, which will almost never be used, so we don't get the usual 2x
+// obsolete  jt->cdna=jt->cdns=jt->cdnl=0;
+ AM(jt->cdarg)=AM(jt->cdstr)=AM(jt->cdhash)=AM(jt->cdhashl)=0;  // init all tables to empty
  R 1;
 }
 
-static CCT*jtcdlookup(J jt,A a){C*s;CCT*pv;I an,hn,*hv,j,k;UC*av;
- hn=AN(jt->cdhash); hv=AV(jt->cdhash); pv=(CCT*)AV(jt->cdarg); s=CAV(jt->cdstr);
- an=AN(a); av=UAV(a); j=hic(an,av)%hn;
- while(0<=(k=hv[j])){if(an==pv[k].an&&!memcmpne(av,s+pv[k].ai,an))R k+pv; if((j=(j+1))==hn)j=0;}
- R 0;
+// find the starting index for v->string (length n) in table tbl
+#if SY_64
+#define HASHINDEX(tbl,n,v) ((hic(n,v)*(UI)AN(tbl))>>32)
+#else
+#define HASHINDEX(tbl,n,v) ((hic(n,v)*(UIL)AN(tbl))>>32)
+#endif
+
+// see if v->string (length n) is in hashtable tbl.  The hash in tbl contains indexes into cdarg, or -1 for empty slot.
+// return retval, where pv[k] is the address of the found slot in cdarg
+#define HASHLOOKUP(tbl,nn,vv,pvklett,retval) I j=HASHINDEX(tbl,nn,vv); I *hv=IAV0(tbl); C *s=CAV1(jt->cdstr); CCT*pv=(CCT*)CAV2(jt->cdarg); \
+ while(1){I k=hv[j]; if(k<0)R 0; if(nn==pv[k].pvklett##n&&!memcmpne(vv,s+pv[k].pvklett##i,nn))R retval; if(--j<0)j+=AN(tbl);}
+
+// add v->string (length n) to hashtable tbl.  argx is the index to insert into the hashtable.  Increment AM(tbl), which contains the # hashed items
+#define HASHINSERT(tbl,n,v,argx) I j=HASHINDEX(tbl,n,v); I *hv=IAV0(tbl); ++AM(tbl); while(hv[j]>=0)if(--j<0)j+=AN(tbl); hv[j]=argx;
+
+
+// a is a string block for a cd string
+// result is the address in cdarg of the CCT block for the string, or 0 if not found
+static CCT*jtcdlookup(J jt,A a){
+// obsolete  hn=AN(jt->cdhash); hv=AV(jt->cdhash); pv=(CCT*)AV(jt->cdarg); s=CAV(jt->cdstr);
+// obsolete  an=AN(a); av=UAV(a); j=hic(an,av)%hn;
+// obsolete  while(0<=(k=hv[j])){if(an==pv[k].an&&!memcmpne(av,s+pv[k].ai,an))R k+pv; if((j=(j+1))==hn)j=0;}
+ HASHLOOKUP(jt->cdhash,AN(a),UAV(a),a,&pv[k])
+// obsolete  R 0;
 }
 
-static HMODULE jtcdlookupl(J jt,C*av){C*s;CCT*pv;I an,hn,*hv,j,k;
- hn=AN(jt->cdhashl); hv=AV(jt->cdhashl); pv=(CCT*)AV(jt->cdarg); s=CAV(jt->cdstr);
- an=strlen(av); j=hic(an,av)%hn;
- while(0<=(k=hv[j])){if(an==pv[k].ln&&!memcmpne(av,s+pv[k].li,an))R pv[k].h; if((j=(j+1))==hn)j=0;}
- R 0;
+// av->null-terminated name of library
+// result is h field of the entry in cdarg for the library.  This entry may come from any CCT that matches the library name
+static HMODULE jtcdlookupl(J jt,C*av){
+// obsolete C*s;CCT*pv;I an,hn,*hv,j,k;
+// obsolete  hn=AN(jt->cdhashl); hv=AV(jt->cdhashl); pv=(CCT*)AV(jt->cdarg); s=CAV(jt->cdstr);
+// obsolete  an=strlen(av); j=hic(an,av)%hn;
+// obsolete  while(0<=(k=hv[j])){if(an==pv[k].ln&&!memcmpne(av,s+pv[k].li,an))R pv[k].h; if((j=(j+1))==hn)j=0;}
+// obsolete  R 0;
+ I an=strlen(av);
+ HASHLOOKUP(jt->cdhashl,an,av,l,pv[k].h)
 }
 
-static CCT*jtcdinsert(J jt,A a,CCT*cc){A x;C*s;CCT*pv,*z;I an,hn,*hv,j,k;
+// add a hash entry for a cd left arg.  It is known not to be present already
+// a is the A block for the string
+// cc->parsed CCT block
+// the string is appended to the end of cdstr, and its offset is installed into cc->ai (cc->an is already filled in)
+// the CCT is appended to cdarg, and then the string is hashed into cdhash
+// result is the address of the CCT entry (which is in cdarg)
+// if the hash table gets too full, it is reallocated & rehashed
+// if the string table or the table of CCTs gets full it is extended
+static CCT*jtcdinsert(J jt,A a,CCT*cc){A x;C*s;CCT*pv,*z;I an,hn,k;
  an=AN(a);
- if(jt->cdns> AN(jt->cdstr)-an)RZ(jt->cdstr=ext(1,jt->cdstr));
- if(jt->cdna==AS(jt->cdarg)[0])RZ(jt->cdarg=ext(1,jt->cdarg));
+ while(AM(jt->cdstr) > AN(jt->cdstr)-an){I oldm=AM(jt->cdstr); RZ(jt->cdstr=ext(1,jt->cdstr)); AM(jt->cdstr)=oldm;}  // double allocations as needed, keep count
+ while(AM(jt->cdarg)==AS(jt->cdarg)[0]){I oldm=AM(jt->cdarg); RZ(jt->cdarg=ext(1,jt->cdarg)); AM(jt->cdarg)=oldm;}
  s=CAV(jt->cdstr); pv=(CCT*)AV(jt->cdarg);
- cc->ai=jt->cdns; MC(s+jt->cdns,CAV(a),an); jt->cdns+=an;
- z=pv+jt->cdna; MC(z,cc,sizeof(CCT)); k=jt->cdna++;
- if(AN(jt->cdhash)<=2*jt->cdna){k=0; RZ(x=cdgahash(2*jt->cdna)); fa(jt->cdhash); jt->cdhash=x;}
- hv=AV(jt->cdhash); hn=AN(jt->cdhash);
- DQ(jt->cdna-k, j=hic(pv[k].an,s+pv[k].ai)%hn; while(0<=hv[j])if((j=(j+1))==hn)j=0; hv[j]=k; ++k;);
+// obsolete  cc->ai=jt->cdns; MC(s+jt->cdns,CAV(a),an); jt->cdns+=an;
+// obsolete  z=pv+jt->cdna; MC(z,cc,sizeof(CCT)); k=jt->cdna++;
+// obsolete  if(AN(jt->cdhash)<=2*jt->cdna){k=0; RZ(x=cdgahash(2*jt->cdna)); fa(jt->cdhash); jt->cdhash=x;}
+ cc->ai=AM(jt->cdstr); MC(s+AM(jt->cdstr),CAV(a),an); AM(jt->cdstr)+=an;
+ z=pv+AM(jt->cdarg); MC(z,cc,sizeof(CCT)); k=AM(jt->cdarg);
+ if(AN(jt->cdarg)<=2*AM(jt->cdarg)){RZ(x=cdgahash(2*AM(jt->cdarg))); fa(jt->cdhash); jt->cdhash=x; AM(jt->cdarg)=k; AM(jt->cdhash)=0; k=0;}  // reallo if needed, and signal to rehash all
+// obsolete  hv=AV(jt->cdhash); hn=AN(jt->cdhash);
+// obsolete  DQ(jt->cdna-k, j=hic(pv[k].an,s+pv[k].ai)%hn; while(0<=hv[j])if((j=(j+1))==hn)j=0; hv[j]=k; ++k;);
+ // insert the last k elements of pv into the table.  This will be either all of them (on a rehash) or just the last 1.
+ ++AM(jt->cdarg); DQ(AM(jt->cdarg)-k, HASHINSERT(jt->cdhash,pv[k].an,s+pv[k].ai,k) ++k;);  // add 1 ele to cdarg, and all or 1 to cdhash
  R z;
 }
 
@@ -750,9 +790,9 @@ static CCT*jtcdload(J jt,CCT*cc,C*lib,C*proc){B ha=0;FARPROC f;HMODULE h;
   cc->fp=(FARPROC)k;
   R cc;
  }
- if(h=cdlookupl(lib))cc->h=h;
+ if(h=cdlookupl(lib))cc->h=h;  // if lib is in hash table, use the handle for it.  Save the handle to match other hasshes later
  else{
-  CDASSERT(jt->cdnl<NLIBS,DETOOMANY);    /* too many dlls loaded */
+  CDASSERT(AM(jt->cdhashl)<NLIBS,DETOOMANY);    /* too many dlls loaded */
 #if SY_WIN32
 #if SY_WINCE
   h=LoadLibrary(tounibuf(lib));
@@ -784,10 +824,14 @@ static CCT*jtcdload(J jt,CCT*cc,C*lib,C*proc){B ha=0;FARPROC f;HMODULE h;
  CDASSERT(f!=0,DEBADFN);
  cc->fp=f;
  /* assumes the hash table for libraries (jt->cdhashl) is fixed sized */
- /* assumes cc will be cached as entry number jt->cdna                */
- if(ha){I hn,*hv,j;
-  ++jt->cdnl; hv=AV(jt->cdhashl); hn=AN(jt->cdhashl);
-  j=hic(cc->ln,lib)%hn; while(0<=hv[j])if((j=(j+1))==hn)j=0; hv[j]=jt->cdna;
+ /* assumes cc will be cached as next entry of jt->cdarg              */
+ if(ha){
+// obsolete I hn,*hv,j;
+  // a new lib was loaded and verified.  Add it to the hash
+  HASHINSERT(jt->cdhashl,cc->ln,lib,AM(jt->cdarg))
+// obsolete   ++jt->cdnl;
+// obsolete   hv=AV(jt->cdhashl); hn=AN(jt->cdhashl);
+// obsolete   j=hic(cc->ln,lib)%hn; while(0<=hv[j])if((j=(j+1))==hn)j=0; hv[j]=jt->cdna;
  }
  R cc;
 }
@@ -1160,10 +1204,13 @@ void dllquit(J jt){CCT*av;I j,*v;
  if(!jt->cdarg)R;
  v=AV(jt->cdhashl); av=(CCT*)AV(jt->cdarg);
  DQ(AN(jt->cdhashl), j=*v++; if(0<=j)FREELIB(av[j].h););
- fa(jt->cdarg);   jt->cdarg  =0; jt->cdna=0;
- fa(jt->cdstr);   jt->cdstr  =0; jt->cdns=0;
+ fa(jt->cdarg);   jt->cdarg  =0;
+// obsolete jt->cdna=0;
+ fa(jt->cdstr);   jt->cdstr  =0;
+// obsolete  jt->cdns=0;
  fa(jt->cdhash);  jt->cdhash =0;
- fa(jt->cdhashl); jt->cdhashl=0; jt->cdnl=0;
+ fa(jt->cdhashl); jt->cdhashl=0;
+// obsolete  jt->cdnl=0;
 }    /* dllquit - shutdown and cdf clean up dll call resources */
 
 F1(jtcdf){ASSERTMTV(w); dllquit(jt); R mtm;}

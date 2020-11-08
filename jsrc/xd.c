@@ -321,7 +321,7 @@ static int ismatch(J jt,C*pat,C*name,struct stat *dirstatbuf,C *diratts, C *dirm
 }
 
 static A jtdir1(J jt,struct dirent*f,struct stat *dirstatbuf,C *diratts, C *dirmode,C *dirrwx){A z,*zv;C*s,att[16];I n,ts[6],i,m,sz;S x;struct tm tmr,*tm=&tmr;
- tm=localtime_r(dirstatbuf[0].st_mtime,tm);
+ tm=localtime_r(&dirstatbuf[0].st_mtime,tm);
  ts[0]=1900+tm->tm_year; ts[1]=1+tm->tm_mon; ts[2]=tm->tm_mday;
  ts[3]=tm->tm_hour; ts[4]=tm->tm_min; ts[5]=tm->tm_sec;
  s=f->d_name; n=strlen(s);
@@ -364,9 +364,9 @@ F1(jtjdir){PROLOG(0103);A*v,z,*zv;C*dir,*pat,*s,*x;I j=0,n=32;DIR*DP;struct dire
  sprintf(dirnamebuf,"%s/",dir); C */*obsolete jt->*/dirbase=dirnamebuf+strlen(dirnamebuf); f=readdir(DP);
  GATV0(z,BOX,n,1); zv=AAV(z);
  while(f){
-  if(ismatch(jt,pat,f->d_name,&dirstatbuf,diratts,dirmode,dirrwx,dirnamebuf,dirbase)){
+  if(ismatch(jt,pat,f->d_name,dirstatbuf,diratts,dirmode,dirrwx,dirnamebuf,dirbase)){
    if(j==n){RZ(z=ext(0,z)); n=AN(z); zv=AAV(z);}
-   RZ(zv[j++]=jtdir1(jt,f,&dirstatbuf,diratts,dirmode,dirrwx)); 
+   RZ(zv[j++]=jtdir1(jt,f,dirstatbuf,diratts,dirmode,dirrwx));
   }
   f=readdir(DP);
  }
@@ -385,7 +385,7 @@ F1(jtjfperm1){A y;F f;C b[11];
  struct stat dirstatbuf[3];
  F1RANK(0,jtjfperm1,DUMMYSELF);
  RE(f=stdf(w)); if(f){RZ(y=fname(sc((I)f)));y=str0(y);} else ASSERT(y=str0(vslit(AAV0(w))),EVFNUM)
- if(0!=stat(CAV(y),&dirstatbuf))R jerrno();
+ if(0!=stat(CAV(y),dirstatbuf))R jerrno();
  R vec(LIT,9L,1+modebuf(dirstatbuf[0].st_mode,b));
 }
 

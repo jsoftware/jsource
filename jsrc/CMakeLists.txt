@@ -218,13 +218,6 @@ if(NOT BUILD_SHARED_LIBS)
     return()
 endif()
 
-add_library(tsdll SHARED)
-target_link_libraries(tsdll PRIVATE ${STANDARD_MATH_LIBRARY})
-target_sources(tsdll PRIVATE
-    tsdll.c
-    ../makevs/tsdll/tsdll.def
-)
-
 add_library(linenoise OBJECT EXCLUDE_FROM_ALL)
 target_compile_definitions(linenoise INTERFACE USE_LINENOISE)
 target_compile_definitions(linenoise PUBLIC $<$<PLATFORM_ID:Windows>:_CRT_SECURE_NO_WARNINGS>)

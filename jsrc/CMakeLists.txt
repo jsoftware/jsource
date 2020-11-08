@@ -255,3 +255,16 @@ file(GENERATE
 BINPATH_z_=: '${J_BINPATH}'
 0!:0<BINPATH,'${J_PROFILE_SCRIPT}'"
 )
+
+if(JNI_FOUND)
+    add_library(jnative)
+    target_include_directories(jnative PRIVATE ${JNI_INCLUDE_DIRS})
+    target_link_libraries(jnative PRIVATE ${JNI_LIBRARIES})
+    target_sources(jnative PRIVATE
+        andjnative.c
+        jeload.h
+        jeload.c
+        com_jsoftware_j_JInterface.h
+        ../makemsvc/jnative/jnative.def
+    )
+endif()

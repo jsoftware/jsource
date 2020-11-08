@@ -14,6 +14,7 @@ enable_language(C CXX ASM)
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
+include(CTest)
 include(OptimizeForArchitecture)
 
 if(PROJECT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
@@ -90,6 +91,7 @@ add_subdirectory(jsrc/openssl/sha)
 if(BUILD_SHARED_LIBS)
     set_target_properties(j-openssl-sha j-sleef j-base64 PROPERTIES
         POSITION_INDEPENDENT_CODE ON)
+    add_subdirectory(test)
 endif()
 target_link_libraries(j PRIVATE j-openssl-sha j-sleef j-base64)
 if(WIN32)

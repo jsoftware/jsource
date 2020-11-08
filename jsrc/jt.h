@@ -214,18 +214,18 @@ typedef struct {
  A    dbstops;          /* stops set by the user                           */
  A    dbtrap;           /* trap, execute on suspension                     */
  DC   dcs;              /* ptr to debug stack entry for current script     */
- C*   dirbase;          /* for directory search                            */
- C    diratts[7];       /* set by ismatch, read by dir1                    */
- C    dirmode[11];      /* set by ismatch, read by dir1                    */
- C    dirrwx[3];        /* set by ismatch, read by dir1                    */
+// obsolete  C*   dirbase;          /* for directory search                            */
+// obsolete  C    diratts[7];       /* set by ismatch, read by dir1                    */
+// obsolete  C    dirmode[11];      /* set by ismatch, read by dir1                    */
+// obsolete  C    dirrwx[3];        /* set by ismatch, read by dir1                    */
  C    dbsusact;         /* suspension action                               */
-#if !SY_WINCE
- struct stat dirstatbuf; //set by ismatch, read by dir1
-#if !SY_64 && (SYS & SYS_LINUX)
- struct stat dummy1;    // stat above should be stat64
- struct stat dummy2;    // reserve extra to avoid stomping disp
-#endif
-#endif 
+// obsolete #if !SY_WINCE
+// obsolete  struct stat dirstatbuf; //set by ismatch, read by dir1
+// obsolete #if !SY_64 && (SYS & SYS_LINUX)
+// obsolete  struct stat dummy1;    // stat above should be stat64
+// obsolete  struct stat dummy2;    // reserve extra to avoid stomping disp
+// obsolete #endif
+// obsolete #endif 
  C*   capture;          /* capture output for python->J etc.               */
  I    dlllasterror;     /* DLL stuff                                       */
  I    etxn;             /* strlen(etx)                                     */
@@ -320,9 +320,9 @@ union {
  struct {
   I    postflags;  // what to do with the result
  } compsc;
-#if (SYS & SYS_UNIX)
- C    dirnamebuf[NPATH];/* for directory search                            */
-#endif
+// obsolete #if (SYS & SYS_UNIX)
+// obsolete  C    dirnamebuf[NPATH];/* for directory search                            */
+// obsolete #endif
  struct {
   CMP  comp;             /* comparison function in sort                     */
   B    compusejt;        // set if the parameter to comparison function is jt rather than n

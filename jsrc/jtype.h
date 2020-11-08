@@ -107,6 +107,7 @@ struct AD {
         // (6) in the return from wordil, holds the number of words if any final NB. is discarded; (7) in the result of indexofsub when called for FORKEY, contains the
         // number of partitions found; (8) in the self block for y L: n and u S: n, the address of the fs block for u; (9) in the call to jtisf (multiple assignment), holds the
         // address of the symbol table being assigned to (10) in the y block internal to pv.c, used for flags (11) in hashtables in x15.c, the number of entries that have been hashed
+        // (12) in the faux arg to fixa, pointer to the recursive name-list block
   A back; // For VIRTUAL blocks, points to backing block
   A *zaploc;  // For all blocks, AM initially holds a pointer to the place in the tpop stack (or hijacked tpop stack) that points back to the allocated block.  This value is guaranteed
         // to remain valid as long as the block is nonvirtual inplaceable and might possibly return as a result to the parser or result assembly  (in cases under m above, the block cannot become such a result)
@@ -211,6 +212,7 @@ typedef I SI;
 #define XAV(x)          ( (X*)((C*)(x)+AK(x)))  /* extended                */
 #define QAV(x)          ( (Q*)((C*)(x)+AK(x)))  /* rational                */
 #define AAV(x)          ( (A*)((C*)(x)+AK(x)))  /* boxed                   */
+#define AAV0(x)         ((A*)((C*)(x)+AKXR(0)))  // A block in a stack- or heap-allocated atom (rank 0 - used for internal tables)
 #define AAV1(x)         ((A*)((C*)(x)+AKXR(1)))  // A block in a stack- or heap-allocated list (rank 1)
 #define VAV(x)          ( (V*)((C*)(x)+AK(x)))  /* verb, adverb, conj      */
 #define FAV(x)          ( (V*)((C*)(x)+AKXR(0)) )  // verb, adverb, conj - always at fixed offset
@@ -218,7 +220,6 @@ typedef I SI;
 #define SBAV(x)         ((SB*)((C*)(x)+AK(x)))  /* symbol                  */
 #define voidAV(x)       ((void*)((C*)(x)+AK(x)))  // unknown
 
-#define AAV0(w) AAV(w)[0]
 #if C_LE
 #define BIV0(w) (IAV(w)[0]&(1-((AT(w)&INT)>>(INTX-1))))  // the first (presumably only) value in w, when w is an INT or B01 type
 #endif

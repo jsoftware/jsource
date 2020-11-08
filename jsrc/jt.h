@@ -94,7 +94,7 @@ typedef struct {
  UC   jerr;             /* error number (0 means no error)      $           */
  C    asgzomblevel;     // 0=do not assign zombie name before final assignment; 1=allow premature assignment of complete result; 2=allow premature assignment even of incomplete result   $
  B    assert;           /* 1 iff evaluate assert. statements               */
- B    foldrunning;      // 1 if fold is running (allows Z:)    $
+ B    foldrunning;      // 1 if fold is running (allows Z:)    $ scaf
  UC   jerr1;            /* last non-zero jerr    $                          */
  C    cxspecials;       // 1 if special testing needed in cx loop (pm or debug)    $
  B    iepdo;            /* 1 iff do iep    $                                */
@@ -104,7 +104,7 @@ typedef struct {
  UC   prioritytype[11];  // type bit for the priority types
  UC   typepriority[19];  // priority value for the noun types
 // end cache line 4.  10 bytes carry over.  next cache line is junk; we don't expect to use these types much
- B    nflag;            /* 1 if space required before name                 */
+ B    nflag;            /* 1 if space required before name          scaf       */
  B    sesm;             /* whether there is a session manager              */
 // obsolete  B    tmonad;           /* tacit translator: 1 iff monad         >          */
 // obsolete  B    tsubst;           /* tacit translator           >                     */
@@ -119,15 +119,15 @@ typedef struct {
  void *dtoa;             /* use internally by dtoa.c                        */
  I    bytes;            /* bytes currently in use                          */
  I    bytesmax;         /* high-water mark of "bytes"                      */
- I    mulofloloc;       // index of the result at which II multiply overflow occurred   $
- D    fuzz;             /* fuzz (sometimes set to 0)    $                   */
+ I    mulofloloc;       // index of the result at which II multiply overflow occurred  scaf  $
+ D    fuzz;             /* fuzz (sometimes set to 0)  scaf  $                   */
  C    fillv0[sizeof(Z)];/* default fill value     $                         */
  C*   fillv;            /* fill value     $                                 */
  C    typesizes[32];    // the length of an allocated item of each type
 // --- end cache line 6.  24 bytes carry over.  next cache line is junk; we don't expect to use these types much
 // obsolete  B    prxthornuni;         /* 1 iff ": allowed to produce C2T result    >      */
 // obsolete  B    jprx;             /* 1 iff ": for jprx (jconsole output)       >      */
- C    unicodex78;       /* 1 iff disallow numeric argument for 7 8 u:  >    */
+ C    unicodex78;       /* 1 iff disallow numeric argument for 7 8 u:  >  scaf  */
  B    retcomm;          /* 1 iff retain comments and redundant spaces      */
  UC   seclev;           /* security level                                  */
  C    recurstate;       // state of recursions through JDo
@@ -231,12 +231,12 @@ typedef struct {
  I    etxn;             /* strlen(etx)                                     */
  I    etxn1;            /* last non-zero etxn                              */
  A    evm;              /* event messages                                  */
- I    fxi;              /* f. depth countdown                              */
- A    fxpath;           /* f. path of names                                */
- A*   fxpv;             /* f. AAV(fxpath)                                  */
+// obsolete  I    fxi;              /* f. depth countdown                              */
+// obsolete  A    fxpath;           /* f. path of names                                */
+// obsolete  A*   fxpv;             /* f. AAV(fxpath)                                  */
  A    iep;              /* immediate execution phrase                      */
- AF   lcp;              /* linear representation paren function            */
  I    locsize[2];       /* size indices for named and numbered locales     */
+ AF   lcp;              /* linear representation paren function            */
  A    ltext;            /* linear representation text                      */
  AF   ltie;             /* linear representation tie   function            */
  I    min;              /* the r result from irange                        */

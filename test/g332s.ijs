@@ -113,6 +113,20 @@ f=: (0;(0 10#:10*".;._2]0 :0);(a.e.'ABCDEF0123456789abcdef')+(2*a.='\')+3*a.e.'U
 )
 (,<,'a') -: f ,'a'  NB. SYSTEM HANG !!!!
 
+f=: (0;(0 10#:10*".;._2]0 :0);('abc' i. a.))&;:
+ 1.1  1.1  1.1 4
+ 2.0  1.0  2.2 4
+ 2.2  3.7  2.2 4
+ 1.2  1.2  1.2 4
+ 1.2  5.0  2.2 4
+ 1.2  6.0  2.2 4
+ 1.2  7.0  2.2 4
+ 1.2  3.0  2.2 4
+)
+(;:'a ab') -: f ,'aab'
+(;:'aa a') -: f ,'aaa'
+(;:'a aba') -: f ,'aaba'
+
 NB. Example 6.  Storing items of y
 STATE=: 1 1 ,:&:(,:~) 0 3  NB. This time with items that are not atoms
 Y=:i.8

@@ -384,7 +384,7 @@ static A jtafrom2(J jt,A p,A q,A w,I r){A z;C*wv,*zv;I d,e,j,k,m,n,pn,pr,* RESTR
 static A jtafi(J jt,I n,A w){A x;
  if((-AN(w)&SGNIF(AT(w),BOXX))>=0)R pind(n,w);   // empty or not boxed
  ASSERT(!AR(w),EVINDEX);  // if boxed, must be an atom
- x=AAV0(w);
+ x=AAV(w)[0];
  R AN(x)?less(IX(n),pind(n,x)):ds(CACE);   // complementary
 }
 
@@ -398,7 +398,7 @@ static F2(jtafrom){PROLOG(0073);A c,ind,p=0,q,*v,y=w;B bb=1;I acr,ar,i=0,j,m,n,p
   R wr==wcr?rank2ex(a,w,DUMMYSELF,0L,wcr,0L,wcr,jtafrom):  // if a has frame, rank-loop over a
       df2(p,IRS1(a,0L,acr,jtbox,c),IRS1(w,0L,wcr,jtbox,ind),amp(ds(CLBRACE),ds(COPE)));  // (<"0 a) {&> <"0 w
  }
- c=AAV0(a); t=AT(c); SETIC(c,n); v=AAV(c);   // B prob not reqd 
+ c=AAV(a)[0]; t=AT(c); SETIC(c,n); v=AAV(c);   // B prob not reqd 
  s=AS(w)+wr-wcr;
  ASSERT(1>=AR(c),EVRANK);
  ASSERT(n<=wcr,EVLENGTH);

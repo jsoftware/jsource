@@ -111,7 +111,7 @@ static F1(jtlchar){A y;B b,p=1,r1;C c,d,*u,*v;I j,k,m,n;
 
 static F1(jtlbox){A p,*v,*vv,*wv,x,y;B b=0;I n;
  ARGCHK1(w);
- if(equ(ds(CACE),w)&&B01&AT(AAV0(w)))R cstr("a:");
+ if(equ(ds(CACE),w)&&B01&AT(AAV(w)[0]))R cstr("a:");
  n=AN(w); wv=AAV(w); 
  DO(n, x=wv[i]; if(BOX&AT(x)){b=1; break;}); b|=1==n;
  GATV0(y,BOX,n+n-(1^b),1); v=vv=AAV(y);

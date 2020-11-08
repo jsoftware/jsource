@@ -342,7 +342,7 @@ static A jtlocindirect(J jt,I n,C*u,UI4 hash){A x,y;C*s,*v,*xv;I k,xn;
   if(AT(y)&(INT|B01)){g=findnl(BIV0(y)); ASSERT(g!=0,EVLOCALE);  // if atomic integer, look it up
   }else{
    ASSERTN(BOX&AT(y),EVDOMAIN,nfs(k,v));  // verify box
-   x=AAV0(y); if((((I)AR(x)-1)&-(AT(x)&(INT|B01)))<0) {
+   x=AAV(y)[0]; if((((I)AR(x)-1)&-(AT(x)&(INT|B01)))<0) {
     // Boxed integer - use that as bucketx
     g=findnl(BIV0(x)); ASSERT(g!=0,EVLOCALE);  // boxed integer, look it up
    }else{

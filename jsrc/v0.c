@@ -246,7 +246,7 @@ F1(jtpoly1){A c,e,x;
  F1RANK(1L,jtpoly1,DUMMYSELF);
  // If y is not boxed, it's a list of coefficients.  Get the roots
  if((-AN(w)&SGNIF(AT(w),BOXX))>=0)R rfc(w);
- x=AAV0(w);
+ x=AAV(w)[0];
  // If there is more than one box, or the first box has rank <= 1, it's scale;roots form - go handle it
  if(((AN(w)-2)&(1-AR(x)))>=0)R cfr(w);
  // Must be exponent form: a single box containing a table with 2-atom rows

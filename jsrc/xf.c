@@ -236,7 +236,7 @@ static B rmdir(C*v){R!rmdir1(v);}
 F1(jtjmkdir){A y,z;
  F1RANK(0,jtjmkdir,DUMMYSELF);
  ASSERT(AT(w)&BOX,EVDOMAIN);
- RZ(y=str0(vslit(AAV0(w))));
+ RZ(y=str0(vslit(AAV(w)[0])));
 #if (SYS & SYS_UNIX)
  R mkdir(CAV(y),0775)?jerrno():num(1);
 #else
@@ -248,7 +248,7 @@ F1(jtjmkdir){A y,z;
 F1(jtjferase){A y,fn;US*s;I h;
  F1RANK(0,jtjferase,DUMMYSELF);
  RE(h=fnum(w));
- if(h) {RZ(y=str0(fname(sc(h))))} else ASSERT(y=vslit(AAV0(w)),EVFNUM);
+ if(h) {RZ(y=str0(fname(sc(h))))} else ASSERT(y=vslit(AAV(w)[0]),EVFNUM);
  if(h)RZ(jclose(sc(h)));
 #if (SYS&SYS_UNIX)
  A y0=str0(y); R !unlink(CAV(y0))||!rmdir(CAV(y0))?num(1):jerrno();

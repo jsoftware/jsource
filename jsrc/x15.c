@@ -1022,7 +1022,7 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
   // now xv points to the actual arg data for arg i, and an A-block for same has been installed into *zv
   // if wt&BOX only, x is an A-block for arg i
   if(star&&!xr&&xt&BOX){           /* scalar boxed integer/boolean scalar is a pointer - NOT memu'd */
-   y=AAV0(x);
+   y=AAV(x)[0];
    CDASSERT(!AR(y)&&AT(y)&B01+INT,per);
    if(AT(y)&B01){CDASSERT(0==BAV(y)[0],per); *dv++=0;}else *dv++=AV(y)[0];
   }else if(star){

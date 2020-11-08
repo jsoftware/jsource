@@ -70,7 +70,8 @@ EVERYFS(arofixaself,jtaro,jtfixa,0,VFLAGNONE)  // create A block to be used in e
 // FIXALOCSONLYLOWEST set if we replace only lowest-level locatives (suitable for function return).  We stop in a branch when we hit a locative reference
 // FIXASTOPATINV set if we halt at a defined oberse
 // a has to be an A type because it goes into every2.  It is always an I type, but it may be virtual when it comes back from every2
-static A jtfixa(J jt,A a,A w){A f,g,h,wf,x,y,z=w;V*v;I aa[AKXR(0)/SZI+1]={AKXR(0)};  // place to build recursion parm - make the AK field right
+// AM(a) points to the recursion name-list and must be passed to all recursion levels
+static A jtfixa(J jt,A a,A w){A f,g,h,wf,x,y,z=w;V*v;I aa[AKXR(0)/SZI+1]={AKXR(0)}; AM((A)aa)=AM(a);  // place to build recursion parm - make the AK field right, and pass the AM field along
 #define REFIXA(a,x) (IAV0(aa)[0]=(aif|(a)), fixa((A)aa,(x)))
  ARGCHK1(w);
  I ai=IAV(a)[0];  // value of a
@@ -107,7 +108,9 @@ static A jtfixa(J jt,A a,A w){A f,g,h,wf,x,y,z=w;V*v;I aa[AKXR(0)/SZI+1]={AKXR(0
    f=REFIXA(na,f); g=REFIXA(ID(f)==CCAP?1:2,g); h=REFIXA(na,h); R folk(f,g,h);  // f first in case it's [:
   case CATDOT:
   case CGRCO:
-   RZ(f=every(every2(sc(aif|na),h,(A)&arofixaself),(A)&arofixaself)); // full A block required for call
+   IAV0(aa)[0]=(aif|na);
+// obsolete    RZ(f=every(every2(sc(aif|na),h,(A)&arofixaself),(A)&arofixaself)); // full A block required for call
+   RZ(f=every(every2((A)aa,h,(A)&arofixaself),(A)&arofixaself)); // full A block required for call
    RZ(g=REFIXA(na,g));
    R df2(z,f,g,wf);
   case CIBEAM:
@@ -122,8 +125,10 @@ static A jtfixa(J jt,A a,A w){A f,g,h,wf,x,y,z=w;V*v;I aa[AKXR(0)/SZI+1]={AKXR(0
   case CTILDE:
    if(f&&NAME&AT(f)){
     RZ(y=sfn(0,f));
-    if(all1(eps(box(y),jt->fxpath)))R w;  // break out of loop if recursive name lookup
-    ASSERT(jt->fxi,EVLIMIT);
+// obsolete     if(all1(eps(box(y),jt->fxpath)))R w;  // break out of loop if recursive name lookup
+    if(all1(eps(box(y),(A)AM(a))))R w;  // break out of loop if recursive name lookup
+// obsolete     ASSERT(jt->fxi,EVLIMIT);
+    ASSERT(AN((A)AM(a))<248,EVLIMIT);  // error if too many names in expansion
     // recursion check finished.  Now replace the name with its value
     if(x=symbrdlock(f)){
      // if this is an implicit locative, we have to switch the environment before we recur on the name for subsequent lookups
@@ -148,14 +153,16 @@ static A jtfixa(J jt,A a,A w){A f,g,h,wf,x,y,z=w;V*v;I aa[AKXR(0)/SZI+1]={AKXR(0
      // a loop (since we are advancing the symbol pointer) and the name, which is just 'u', might well come up again; so we don't
      // add the name to the table in that case.  NOTE bug: an indirect locative a__b, if it appeared twice, would be detected as a loop even
      // if it evaluated to different locales
-     if(savloc==jt->locsyms)jt->fxpv[--jt->fxi]=rifvs(y); // add symbol to list of visited names for recursion check
+// obsolete      if(savloc==jt->locsyms)jt->fxpv[--jt->fxi]=rifvs(y); // add name-string to list of visited names for recursion check
+     if(savloc==jt->locsyms)AAV0((A)AM(a))[AN((A)AM(a))++]=rifvs(y); // add name-string to list of visited names for recursion check
      if(z=REFIXA(na,x)){
       if(ai!=0&&selfq(x))z=fixrecursive(sc(ai),z);  // if a lower name contains $:, replace it with explicit equivalent
      }
      SYMRESTOREFROMLOCAL(savloc);
      RZ(z);  // make sure we restore
     }
-    jt->fxpv[jt->fxi++]=mtv;
+// obsolete     jt->fxpv[jt->fxi++]=mtv;
+    AN((A)AM(a))--;
     RE(z);
     ASSERT(PARTOFSPEECHEQ(AT(w),AT(z)),EVDOMAIN);  // if there was a change of part-of-speech during the fix, that's a pun, don't allow it
     R z;
@@ -173,16 +180,20 @@ static A jtfixa(J jt,A a,A w){A f,g,h,wf,x,y,z=w;V*v;I aa[AKXR(0)/SZI+1]={AKXR(0
 // On internal calls, self is an integer whose value contains flags.  Otherwise zeroionei is used
 DF1(jtfix){PROLOG(0005);A z;
  ARGCHK1(w);
- RZ(jt->fxpath=mkwris(reshape(sc(jt->fxi=(I)255),ds(CACE)))); jt->fxpv=AAV(jt->fxpath);  // for stopping infinite recursions
+// obsolete  RZ(jt->fxpath=mkwris(reshape(sc(jt->fxi=(I)255),ds(CACE)))); jt->fxpv=AAV(jt->fxpath);  // for stopping infinite recursions
  if(LIT&AT(w)){ASSERT(1>=AR(w),EVRANK); RZ(w=nfs(AN(w),CAV(w)));}
  // only verbs/noun can get in through the parser, but internally we also vet adv/conj
  ASSERT(AT(w)&NAME+VERB+ADV+CONJ,EVDOMAIN);
  self=AT(self)&NOUN?self:zeroionei(0);  // default to 0 if noun not given
- RZ(z=fixa(self,AT(w)&VERB+ADV+CONJ?w:symbrdlock(w)));  // name comes from string a
+ // To avoid infinite recursion we keep an array of names that we have looked up.  We create that array here, initialized to empty.  To pass it into fixa, we create
+ // a faux INT block to hold the value, and use AM in that block to point to the list of names
+ A namelist; GAT0(namelist,BOX,248,0); AN(namelist)=0;  // allocate 248 slots, but initialize to empty
+ fauxblock(fauxself); A augself; fauxINT(augself,fauxself,1,0); AM(augself)=(I)namelist; IAV(augself)[0]=IAV(self)[0];  // transfer value to writable block; install empty name array
+ RZ(z=fixa(augself,AT(w)&VERB+ADV+CONJ?w:symbrdlock(w)));  // name comes from string a
  // Once a node has been fixed, it doesn't need to be looked at ever again.  This applies even if the node itself carries a name.  To indicate this
  // we set VFIX.  We only do so if the node has descendants (or a name).  We also turn off VNAMED, which is set in named explicit definitions (I don't
-  // understand why).  We can do this only if we are sure the entire tree was traversed, i. e. we were not just looking for implicit locatives orminverses.
+  // understand why).  We can do this only if we are sure the entire tree was traversed, i. e. we were not just looking for implicit locatives or inverses.
  if(!(*IAV0(self)&(FIXALOCSONLY|FIXALOCSONLYLOWEST|FIXASTOPATINV))&&AT(z)&VERB+ADV+CONJ){V*v=FAV(z); if(v->fgh[0]){v->flag|=VFIX+VNAMED; v->flag^=VNAMED;}}  // f is clear for anything in the pst
- jt->fxpath=0;
+// obsolete  jt->fxpath=0;
  EPILOG(z);
 }

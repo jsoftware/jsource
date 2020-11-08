@@ -63,6 +63,7 @@ A jtcreatecycliciterator(J jt, A z, A w){
  // Create the (skeletal) clone, point it to come to the execution point, set the next-verb number to 0
  AC(z)=ACPERMANENT; AT(z)=VERB; A gerund=FAV(z)->fgh[2]=FAV(w)->fgh[2]; FAV(z)->mr=FAV(w)->mr; FAV(z)->valencefns[0]=FAV(z)->valencefns[1]=jtexeccyclicgerund; FAV(z)->localuse.lI=0;
  FAV(z)->flag2=0; FAV(z)->id=CCYCITER;   // clear flags, and give this verb a proper id so it can be checked for
+ if(MEMAUDIT&0xc)AFLAG(z)=0;  // in debug, flags must be valid
  R z;
 }
 // Similar, but also install the list of gerund results that will select the verb to run
@@ -73,6 +74,7 @@ static A jtcreategerunditerator(J jt, A z, A w, A r){  // z is result area, w is
  AC(z)=ACPERMANENT; AT(z)=VERB; FAV(z)->fgh[2]=FAV(w)->fgh[2]; FAV(z)->fgh[1]=r; FAV(z)->mr=FAV(w)->mr;
  FAV(z)->valencefns[0]=FAV(z)->valencefns[1]=AT(r)&INT?jtexecgerundcellI:jtexecgerundcellB; FAV(z)->localuse.lI=0;
  FAV(z)->flag2=0;
+ if(MEMAUDIT&0xc)AFLAG(z)=0;  // in debug, flags must be valid
  R z;
 }
 

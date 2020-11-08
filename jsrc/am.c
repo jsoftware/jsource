@@ -257,7 +257,7 @@ static A jtjstd(J jt,A w,A ind,I *cellframelen){A j=0,k,*v,x;I b;I d,i,n,r,*u,wr
   RZ(j=celloffset(w,ind));  // convert list/table to list of indexes, possibly in place
   n=AR(ind)<2?1:AS(ind)[AR(ind)-1];  // n=#axes used: 1, if m is a list; otherwise {:$m
  }else{  // a single box.
-  ind=AAV0(ind); n=AN(ind); r=AR(ind);  // ind etc now refer to the CONTENTS of the single box
+  ind=AAV(ind)[0]; n=AN(ind); r=AR(ind);  // ind etc now refer to the CONTENTS of the single box
   ASSERT((-(n|(r^1))&((AT(ind)&BOX+NUMERIC)-1))>=0,EVINDEX);  // must be empty list or numeric or boxed
   if(((n-1)|SGNIF(AT(ind),BOXX))>=0)RZ(ind=IRS1(ind,0,0,jtbox,j));  // if numeric, box each atom
   v=AAV(ind);   // now ind is a atom/list of boxes, one per axis
@@ -269,7 +269,7 @@ static A jtjstd(J jt,A w,A ind,I *cellframelen){A j=0,k,*v,x;I b;I d,i,n,r,*u,wr
    x=v[i]; d=ws[i];
    if((-AN(x)&SGNIF(AT(x),BOXX))<0){   // notempty and boxed
     ASSERT(!AR(x),EVINDEX); 
-    x=AAV0(x); k=IX(d);
+    x=AAV(x)[0]; k=IX(d);
     if(AN(x))k=less(k,pind(d,1<AR(x)?ravel(x):x));
    }else k=pind(d,x);
    RZ(x=tymesA(j,sc(d)));
@@ -343,7 +343,7 @@ static DF1(mergv1){DECLF; R merge1(w,CALL1(f1,w,fs));}
 static B ger(A w){A*wv,x;
  if(!(BOX&AT(w)))R 0;
  wv=AAV(w); 
- DO(AN(w), x=wv[i]; if((-(BOX&AT(x))&(((AR(x)^1)|(AN(x)^2))-1))<0)x=AAV0(x); if(((-(LIT&AT(x))&(AR(x)-2)&-AN(x)))>=0)R 0;);  // box/rank1/N=2; lit/R<2/N!=0
+ DO(AN(w), x=wv[i]; if((-(BOX&AT(x))&(((AR(x)^1)|(AN(x)^2))-1))<0)x=AAV(x)[0]; if(((-(LIT&AT(x))&(AR(x)-2)&-AN(x)))>=0)R 0;);  // box/rank1/N=2; lit/R<2/N!=0
  R 1;
 }    /* 0 if w is definitely not a gerund; 1 if possibly a gerund */
 

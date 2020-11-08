@@ -254,7 +254,8 @@ A jttokens(J jt,A w,I env){A t; RZ(t=wordil(w)); ASSERT(AM(t)>=0,EVOPENQ) R enqu
   case 6:         i=n; break;                                             \
   case 2: case 3: if(0<=vi){EMIT(T,vj,vi,vr,vc); vi=vr=-1;} EMIT(T,j,i,r,c);       j=2==e?i:-1; break;  \
   case 4: case 5: if(r!=vr){if(0<=vi)EMIT(T,vj,vi,vr,vc); vj=j; vr=r; vc=c;} vi=i; j=4==e?i:-1; break;  \
-  case 1:         j=i;                                                    \
+  case 1:         j=i; break;                                                    \
+  case 7: i-=2; i=i<0?0:i; break; \
  }
 
 #define ZVAx                {}
@@ -319,7 +320,7 @@ F1(jtfsmvfya){PROLOG(0099);A a,*av,m,s,x,z,*zv;I an,c,e,f,ijrd[4],k,p,q,*sv,*v;
  RZ(s=vi(av[1])); sv=AV(s);
  ASSERT(3==AR(s),EVRANK);
  v=AS(s); p=v[0]; q=v[1]; ASSERT(2==v[2],EVLENGTH);
- v=sv; DQ(p*q, k=*v++; e=*v++; ASSERT((UI)k<(UI)p&&(UI)e<=(UI)6,EVINDEX););
+ v=sv; DQ(p*q, k=*v++; e=*v++; ASSERT((UI)k<(UI)p&&(UI)e<=(UI)7,EVINDEX););
  ijrd[0]=0; ijrd[1]=-1; ijrd[2]=0; ijrd[3]=-1;
  if(4==an){I d,i,j,n,r;
   RZ(x=vi(av[3])); n=AN(x); v=AV(x);
@@ -350,7 +351,7 @@ static A jtfsm0(J jt,A a,A w,C chka){PROLOG(0100);A*av,m,s,x,w0=w;B b;I c,f,*ijr
  n=AN(w); v=AS(s); p=v[0]; q=v[1];
  ASSERT((UI)ijrd[0]<(UI)n,EVINDEX);
  b=1>=AR(w)&&(!n||LIT&AT(w)); c=AN(m);  // b=w is atom/list, either literal or empty; c is # columns mapped to input through m
- if(((c-1)&((AR(m)^1)-1))<0){  // m is omitted or empty, use column numbers in y; audit them first   m is emptry list
+ if(((c-1)&((AR(m)^1)-1))<0){  // m is omitted or empty, use column numbers in y; audit them first   m is empty list
   ASSERT(1>=AR(w),EVRANK);
   if(!(B01&AT(w))){RZ(w=w0=vi(w)); v=AV(w); DO(n, k=v[i]; ASSERT((UI)k<(UI)q,EVINDEX););}
  }else if(NUMERIC&AT(m)){  // m is numeric list

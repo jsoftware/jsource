@@ -840,10 +840,10 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
  // So we add them by hand - just y and possibly x.
  RZ(probeis(mnuvxynam[5],actst));if(!(!dyad&&(type>=3||(flags&VXOPR)))){RZ(probeis(mnuvxynam[4],actst));}
  for(j=1;j<pfstn;++j){  // for each hashchain
-  for(pfx=pfstv[j];pfx;pfx=sympv[pfx].next){L *newsym;
-   A nm=sympv[pfx].name;
+  for(pfx=pfstv[j];pfx;pfx=LAV0(jt->symp)[pfx].next){L *newsym;
+   A nm=LAV0(jt->symp)[pfx].name;
    RZ(newsym=probeis(nm,actst));  // create new symbol (or possibly overwrite old argument name)
-   newsym->flag = sympv[pfx].flag|LPERMANENT;   // Mark as permanent
+   newsym->flag = LAV0(jt->symp)[pfx].flag|LPERMANENT;   // Mark as permanent
   }
  }
  I actstn=AN(actst)-SYMLINFOSIZE; LX*actstv=LXAV0(actst);  // # hashchains in new symbol table, and pointer to hashchain table

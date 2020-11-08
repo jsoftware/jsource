@@ -370,7 +370,7 @@ F2(jtlocpath2){A g; AD * RESTRICT x;
 static F2(jtloccre){A g,y;C*s;I n,p;L*v;
  ARGCHK2(a,w);
  if(MARK&AT(a))p=jt->locsize[0]; else{RE(p=i0(a)); ASSERT(0<=p,EVDOMAIN); ASSERT(p<14,EVLIMIT);}
- y=AAV0(w); n=AN(y); s=CAV(y);
+ y=AAV(w)[0]; n=AN(y); s=CAV(y);
  if(v=probe(n,s,(UI4)nmhash(n,s),jt->stloc)){   // scaf this is disastrous if the named locale is on the stack
   // named locale exists.  Verify no defined names, then delete it
   g=v->val; 

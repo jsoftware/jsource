@@ -37,6 +37,7 @@ endif()
 
 find_package(StandardMathLibrary REQUIRED)
 find_package(OpenMP)
+find_package(JNI)
 
 set(TARGET_ARCHITECTURE "skylake" CACHE STRING "CPU architecture")
 OptimizeForArchitecture()

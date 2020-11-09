@@ -7,8 +7,13 @@
 #include "vcomp.h"
 
 #define KF1(f)          B f(J jt,A w,void*yv)
+#define KF1F(f)         B f(J jt,A w,void*yv,D fuzz)  // calls that use optional fuzz
 #define KF2(f)          B f(J jt,A w,void*yv,I mode)
 #define CVCASE(a,b)     (((a)<<3)+(b))   // The main cases fit in low 8 bits of mask
+
+// FEQ/FIEQ are used in bcvt, where FUZZ may be set to 0 to ensure only exact values are demoted to lower precision
+#define FEQ(u,v,fuzz)    (ABS((u)-(v))<=fuzz*MAX(ABS(u),ABS(v)))
+#define FIEQ(u,v,fuzz)   (ABS((u)-(v))<=fuzz*ABS(v))  // used when v is known to be exact integer.  It's close enough, maybe ULP too small on the high end
 
 #if 0  // for bit types
 #define TOBIT(T,AS)   {T*v=(T*)wv,x; \
@@ -73,38 +78,38 @@ static KF1(jtBfromI){B*x;I n,p,*v;
  R 1;
 }
 
-static KF1(jtBfromD){B*x;D p,*v;I n;
+static KF1F(jtBfromD){B*x;D p,*v;I n;
  n=AN(w); v=DAV(w); x=(B*)yv;
  DQ(n, p=*v++; if(p<-2||2<p)R 0;   // handle infinities
-  I val=2; val=(p==0)?0:val; val=FIEQ(p,1.0)?1:val; if(val==2)R 0; *x++=(B)val; )
+  I val=2; val=(p==0)?0:val; val=FIEQ(p,1.0,fuzz)?1:val; if(val==2)R 0; *x++=(B)val; )
  R 1;
 }
 
-static KF1(jtIfromD){D p,q,*v;I i,k=0,n,*x;
+static KF1F(jtIfromD){D p,q,*v;I i,k=0,n,*x;
  n=AN(w); v=DAV(w); x=(I*)yv;
 #if SY_64
  for(i=0;i<n;++i){
   p=v[i]; q=jround(p); I rq=(I)q;
-  if(!(p==q || FIEQ(p,q)))R 0;  // must equal int, possibly out of range
+  if(!(p==q || FIEQ(p,q,fuzz)))R 0;  // must equal int, possibly out of range
   // out-of-range values don't convert, handle separately
-  if(p<(D)IMIN){if(!(p>=IMIN*(1+jt->fuzz)))R 0; rq=IMIN;}  // if tolerantly < IMIN, error; else take IMIN
-  else if(p>=FLIMAX){if(!(p<=-(D)IMIN*(1+jt->fuzz)))R 0; rq=IMAX;}  // if tolerantly > IMAX, error; else take IMAX
+  if(p<(D)IMIN){if(!(p>=IMIN*(1+fuzz)))R 0; rq=IMIN;}  // if tolerantly < IMIN, error; else take IMIN
+  else if(p>=FLIMAX){if(!(p<=-(D)IMIN*(1+fuzz)))R 0; rq=IMAX;}  // if tolerantly > IMAX, error; else take IMAX
   *x++=rq;
  }
 #else
- q=IMIN*(1+jt->fuzz); D r=IMAX*(1+jt->fuzz);
+ q=IMIN*(1+fuzz); D r=IMAX*(1+fuzz);
  DO(n, p=v[i]; if(p<q||r<p)R 0;);
  for(i=0;i<n;++i){
   p=v[i]; q=jfloor(p);
-  if(FIEQ(p,q))*x++=(I)q; else if(FIEQ(p,1+q))*x++=(I)(1+q); else R 0;
+  if(FIEQ(p,q,fuzz))*x++=(I)q; else if(FIEQ(p,1+q,fuzz))*x++=(I)(1+q); else R 0;
  }
 #endif
  R 1;
 }
 
-static KF1(jtDfromZ){D d,*x;I n;Z*v;
+static KF1F(jtDfromZ){D d,*x;I n;Z*v;
  n=AN(w); v=ZAV(w); x=(D*)yv;
- if(jt->fuzz)DQ(n, d=ABS(v->im); if(d!=inf&&d<=jt->fuzz*ABS(v->re)){*x++=v->re; v++;} else R 0;)
+ if(fuzz)DQ(n, d=ABS(v->im); if(d!=inf&&d<=fuzz*ABS(v->re)){*x++=v->re; v++;} else R 0;)
  else        DQ(n, d=    v->im ; if(!d                            ){*x++=v->re; v++;} else R 0;);
  R 1;
 }
@@ -273,14 +278,16 @@ static B jtDXfI(J jt,I p,A w,DX*x){A y;I b,c,d,dd,e,i,m,n,q,r,*wv,*yv;
 // Convert the data in w to the type t.  w and t must be noun types.  A new buffer is always created (with a
 // copy of the data if w is already of the right type), and returned in *y.  Result is
 // 0 if error, 1 if success.  If the conversion loses precision, error is returned
-B jtccvt(J jt,I tflagged,A w,A*y){A d;I n,r,*s,wt; void *wv,*yv;I t=tflagged&NOUN;
- if(!(w))R 0;
+// Calls through bcvt are tagged with a flag in jt, indicating to set fuzz=0
+B jtccvt(J jt,I tflagged,A w,A*y){F1PREFIP;A d;I n,r,*s,wt; void *wv,*yv;I t=tflagged&NOUN;
+ ARGCHK1(w);
  r=AR(w); s=AS(w);
  if(unlikely(((t|AT(w))&SPARSE)!=0)){
   // Handle sparse
+  RANK2T oqr=jt->ranks; RESETRANK; 
   switch((t&SPARSE?2:0)+(AT(w)&SPARSE?1:0)){I t1;P*wp,*yp;
   case 1: RZ(w=denseit(w)); break;  // sparse to dense
-  case 2: RZ(*y=sparseit(cvt(DTYPE(t),w),IX(r),cvt(DTYPE(t),num(0)))); R 1;  // dense to sparse; convert type first (even if same dtype)
+  case 2: RZ(*y=sparseit(cvt(DTYPE(t),w),IX(r),cvt(DTYPE(t),num(0)))); jt->ranks=oqr; R 1;  // dense to sparse; convert type first (even if same dtype)
   case 3: // sparse to sparse
    t1=DTYPE(t);
    GASPARSE(*y,t,1,r,s); yp=PAV(*y); wp=PAV(w);
@@ -288,8 +295,9 @@ B jtccvt(J jt,I tflagged,A w,A*y){A d;I n,r,*s,wt; void *wv,*yv;I t=tflagged&NOU
    SPB(yp,i,ca(SPA(wp,i)));
    SPB(yp,e,cvt(t1,SPA(wp,e)));
    SPB(yp,x,cvt(t1,SPA(wp,x)));
-   R 1;
+   jt->ranks=oqr; R 1;
   }
+  jt->ranks=oqr;
  }
  // Now known to be non-sparse
  n=AN(w); wt=AT(w);
@@ -350,16 +358,16 @@ B jtccvt(J jt,I tflagged,A w,A*y){A d;I n,r,*s,wt; void *wv,*yv;I t=tflagged&NOU
   case CVCASE(RATX, INTX): GATV(d, XNUM, n, r, s); R XfromI(w, AV(d)) && QfromX(d, yv);
   case CVCASE(FLX, INTX): {D*x = (D*)yv; I*v = wv; DQ(n, *x++ = (D)*v++;); } R 1;
   case CVCASE(CMPXX, INTX): {Z*x = (Z*)yv; I*v = wv; DQ(n, x++->re = (D)*v++;); } R 1;
-  case CVCASE(B01X, FLX): R BfromD(w, yv);
-  case CVCASE(INTX, FLX): R IfromD(w, yv);
+  case CVCASE(B01X, FLX): R BfromD(w, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZ);
+  case CVCASE(INTX, FLX): R IfromD(w, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZ);
   case CVCASE(XNUMX, FLX): R XfromD(w, yv, (jt->xmode&REPSGN(SGNIFNOT(tflagged,XCVTXNUMORIDEX)))|(tflagged>>XCVTXNUMCVX));
   case CVCASE(RATX, FLX): R QfromD(w, yv, (jt->xmode&REPSGN(SGNIFNOT(tflagged,XCVTXNUMORIDEX)))|(tflagged>>XCVTXNUMCVX));
   case CVCASE(CMPXX, FLX): R ZfromD(w, yv);
-  case CVCASE(B01X, CMPXX): GATV(d, FL, n, r, s); if(!(DfromZ(w, AV(d))))R 0; R BfromD(d, yv);
-  case CVCASE(INTX, CMPXX): GATV(d, FL, n, r, s); if(!(DfromZ(w, AV(d))))R 0; R IfromD(d, yv);
-  case CVCASE(XNUMX, CMPXX): GATV(d, FL, n, r, s); if(!(DfromZ(w, AV(d))))R 0; R XfromD(d, yv, (jt->xmode&REPSGN(SGNIFNOT(tflagged,XCVTXNUMORIDEX)))|(tflagged>>XCVTXNUMCVX));
-  case CVCASE(RATX, CMPXX): GATV(d, FL, n, r, s); if(!(DfromZ(w, AV(d))))R 0; R QfromD(d, yv, (jt->xmode&REPSGN(SGNIFNOT(tflagged,XCVTXNUMORIDEX)))|(tflagged>>XCVTXNUMCVX));
-  case CVCASE(FLX, CMPXX): R DfromZ(w, yv);
+  case CVCASE(B01X, CMPXX): GATV(d, FL, n, r, s); if(!(DfromZ(w, AV(d), (I)jtinplace&JTNOFUZZ?0.0:FUZZ)))R 0; R BfromD(d, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZ);
+  case CVCASE(INTX, CMPXX): GATV(d, FL, n, r, s); if(!(DfromZ(w, AV(d), (I)jtinplace&JTNOFUZZ?0.0:FUZZ)))R 0; R IfromD(d, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZ);
+  case CVCASE(XNUMX, CMPXX): GATV(d, FL, n, r, s); if(!(DfromZ(w, AV(d), (I)jtinplace&JTNOFUZZ?0.0:FUZZ)))R 0; R XfromD(d, yv, (jt->xmode&REPSGN(SGNIFNOT(tflagged,XCVTXNUMORIDEX)))|(tflagged>>XCVTXNUMCVX));
+  case CVCASE(RATX, CMPXX): GATV(d, FL, n, r, s); if(!(DfromZ(w, AV(d), (I)jtinplace&JTNOFUZZ?0.0:FUZZ)))R 0; R QfromD(d, yv, (jt->xmode&REPSGN(SGNIFNOT(tflagged,XCVTXNUMORIDEX)))|(tflagged>>XCVTXNUMCVX));
+  case CVCASE(FLX, CMPXX): R DfromZ(w, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZ);
   case CVCASE(B01X, XNUMX): R BfromX(w, yv);
   case CVCASE(INTX, XNUMX): R IfromX(w, yv);
   case CVCASE(RATX, XNUMX): R QfromX(w, yv);
@@ -376,7 +384,9 @@ B jtccvt(J jt,I tflagged,A w,A*y){A d;I n,r,*s,wt; void *wv,*yv;I t=tflagged&NOU
 
 // clear rank before calling ccvt - needed for sparse arrays only but returns the block as the result
 A jtcvt(J jt,I t,A w){A y;B b; 
- RANK2T oqr=jt->ranks; RESETRANK; b=ccvt(t,w,&y); jt->ranks=oqr;
+// obsolete  RANK2T oqr=jt->ranks; RESETRANK; 
+ b=ccvt(t,w,&y);
+// obsolete jt->ranks=oqr;
  ASSERT(b!=0,EVDOMAIN);
  R y;
 }
@@ -385,10 +395,13 @@ A jtcvt(J jt,I t,A w){A y;B b;
 // and use 'exact' and 'no rank' for them.  If mode=0, do not promote XNUM/RAT to fixed-length types.
 // If mode bit 1 is set, minimum precision is INT; if mode bit 2 is set, minimum precision is FL; if mode bit 3 is set, minimum precision is CMPX 
 // Result is a new buffer, always
-A jtbcvt(J jt,C mode,A w){FPREFIP; A y,z=w;D ofuzz;
+A jtbcvt(J jt,C mode,A w){FPREFIP; A y,z=w;
+// obsolete D ofuzz;
  ARGCHK1(w);
- ofuzz=jt->fuzz; RANK2T oqr=jt->ranks;  // save status for comparison, and ranks in case sparse needs them (should let sparse do the saving)
- jt->fuzz=0;     RESETRANK;
+// obsolete  ofuzz=FUZZ;
+// obsolete  RANK2T oqr=jt->ranks;  // save status for comparison, and ranks in case sparse needs them (should let sparse do the saving)
+// obsolete  FUZZ=0;
+// obsolete  RESETRANK;
 #ifdef NANFLAG
  // there may be values (especially b types) that were nominally CMPX but might actually be integers.  Those were
  // stored with the real part being the actual integer value and the imaginary part as the special 'flag' value.  We
@@ -415,11 +428,14 @@ A jtbcvt(J jt,C mode,A w){FPREFIP; A y,z=w;D ofuzz;
  // for all numerics, try Boolean/int/float in order, stopping when we find one that holds the data
  if(mode&1||!(AT(w)&XNUM+RAT)){  // if we are not stopping at XNUM/RAT
   // To avoid a needless copy, suppress conversion to B01 if type is B01, to INT if type is INT, etc
-  z=!(mode&14)&&ccvt(B01,w,&y)?y:
-    (y=w,AT(w)&INT||(!(mode&12)&&ccvt(INT,w,&y)))?y:
-    (y=w,AT(w)&FL||(!(mode&8)&&ccvt(FL,w,&y)))?y:w;  // convert to enabled modes one by one, stopping when one works
+  // set the NOFUZZ flag in jt to insist on an exact match so we won't lose precision
+  jtinplace=(J)((I)jt+JTNOFUZZ);  // demand exact match
+  z=!(mode&14)&&jtccvt(jtinplace,B01,w,&y)?y:
+    (y=w,AT(w)&INT||(!(mode&12)&&jtccvt(jtinplace,INT,w,&y)))?y:
+    (y=w,AT(w)&FL||(!(mode&8)&&jtccvt(jtinplace,FL,w,&y)))?y:w;  // convert to enabled modes one by one, stopping when one works
  }
- jt->fuzz=ofuzz; jt->ranks=oqr;
+// obsolete  FUZZ=ofuzz;
+// obsolete  jt->ranks=oqr;
  RNE(z);
 }    /* convert to lowest type. 0=mode: don't convert XNUM/RAT to other types */
 

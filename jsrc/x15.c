@@ -979,8 +979,8 @@ static I*jtconvert0(J jt,I zt,I*v,I wt,C*u){D p,q;I k=0;US s;C4 s4;
   *v=rq;
 #else
    p=*(D*)u; q=jfloor(p);
-   if(p<IMIN*(1+jt->fuzz)||IMAX*(1+jt->fuzz)<p)R 0;
-   if(FEQ(p,q))*v=(I)q; else if(FEQ(p,1+q))*v=(I)(1+q); else R 0;
+   if(p<IMIN*(1+FUZZ)||IMAX*(1+FUZZ)<p)R 0;
+   if(FFEQ(p,q))*v=(I)q; else if(FFEQ(p,1+q))*v=(I)(1+q); else R 0;
 #endif
  }
  R v;

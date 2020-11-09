@@ -65,7 +65,7 @@ typedef struct {
  PFRAME parserstackframe;  // 4 words  $
  A    global;           /* global symbol table   $                        */
  A    sf;               /* for $:     $                                     */
- L    *assignsym;       // symbol-table entry for the symbol about to be assigned   $
+ L    *assignsym;       // symbol-table entry for the symbol about to be assigned   $   scaf  need to use LX when muvltithreaded
  D    cct;               // complementary comparison tolerance $
 // ----- end of cache line 1
  A    nvra;             // data blocks that are in execution somewhere - always non-virtual, always rank 1, AS[0] holds current pointer
@@ -104,7 +104,7 @@ typedef struct {
  UC   prioritytype[11];  // type bit for the priority types
  UC   typepriority[19];  // priority value for the noun types
 // end cache line 4.  10 bytes carry over.  next cache line is junk; we don't expect to use these types much
-// obsolete B    nflag;            /* 1 if space required before name          scaf       */
+// obsolete B    nflag;            /* 1 if space required before name               */
  B    sesm;             /* whether there is a session manager              */
 // obsolete  B    tmonad;           /* tacit translator: 1 iff monad         >          */
 // obsolete  B    tsubst;           /* tacit translator           >                     */
@@ -120,14 +120,14 @@ typedef struct {
  I    bytes;            /* bytes currently in use                          */
  I    bytesmax;         /* high-water mark of "bytes"                      */
  I    mulofloloc;       // index of the result at which II multiply overflow occurred  scaf  $
- D    fuzz;             /* fuzz (sometimes set to 0)  scaf  $                   */
+// obsolete  D    fuzz;             /* fuzz (sometimes set to 0)  scaf  $                   */
  C    fillv0[sizeof(Z)];/* default fill value     $                         */
  C*   fillv;            /* fill value     $                                 */
  C    typesizes[32];    // the length of an allocated item of each type
 // --- end cache line 6.  24 bytes carry over.  next cache line is junk; we don't expect to use these types much
 // obsolete  B    prxthornuni;         /* 1 iff ": allowed to produce C2T result    >      */
 // obsolete  B    jprx;             /* 1 iff ": for jprx (jconsole output)       >      */
- C    unicodex78;       /* 1 iff disallow numeric argument for 7 8 u:  >  scaf  */
+// obsolete  C    unicodex78;       /* 1 iff disallow numeric argument for 7 8 u:  >  scaf  */
  B    retcomm;          /* 1 iff retain comments and redundant spaces      */
  UC   seclev;           /* security level                                  */
  C    recurstate;       // state of recursions through JDo
@@ -162,7 +162,7 @@ typedef struct {
  I4   nthreads;  // number of threads to use, or 0 if we haven't checked     $
  A*   tstacknext;       // if not 0, points to the recently-used tstack buffer, whose chain field points to tstacknext   $
  A*   tstackcurr;       // current allocation, holding NTSTACK bytes+1 block for alignment.  First entry points to next-lower allocation   $
- D    cctdefault;        /* default complementary comparison tolerance                    */
+ D    cctdefault;        /* default complementary comparison tolerance set by user                    */
 #if !(C_CRC32C && SY_64)
  UIL  ctmask;           /* 1 iff significant wrt ct; for i. and i:         */
 #endif
@@ -196,8 +196,8 @@ typedef struct {
 // obsolete  I    arg;              /* integer argument                                */
  I*   breakfh;          /* win break file handle                           */
  I*   breakmh;          /* win break map handle                            */
- C*   bx;               /* box drawing characters                          */
- A    bxa;              /* array of box drawing characters                 */
+ C    bx[11];               /* box drawing characters                          */
+// obsolete  A    bxa;              /* array of box drawing characters                 */
  A    cdarg;            /* table of 15!:0 parsed left arguments            */
  A    cdhash;           /* hash table of indices into cdarg                */
  A    cdhashl;          /* hash table of indices into cdarg                */

@@ -23,12 +23,13 @@ F1(jtdirectdefq){ASSERTMTV(w); R scb(jt->directdef);}  // scaf 9!:62
 
 F1(jtdirectdefs){B b; RE(b=b0(w)); jt->directdef=b; R mtm;}  // scaf 9!:63
 
-F1(jtboxq){ASSERTMTV(w); R ca(jt->bxa);}
+F1(jtboxq){ASSERTMTV(w); R str(sizeof(jt->bx),jt->bx);}
 
 F1(jtboxs){A x;
  RZ(w=vs(w));
- ASSERT(11==AS(w)[0],EVLENGTH);
- x=jt->bxa; RZ(ras(w)); RZ(jt->bxa=w); jt->bx=CAV(jt->bxa); fa(x);
+ ASSERT(sizeof(jt->bx)==AS(w)[0],EVLENGTH);
+// obsolete  x=jt->bxa; RZ(ras(w)); RZ(jt->bxa=w); jt->bx=CAV(jt->bxa); fa(x);
+ MC(jt->bx,CAV(w),sizeof(jt->bx));
  R mtv;
 }  // box-display characters
 
@@ -234,6 +235,7 @@ F1(jtasgzombs){I k;
  R mtm;
 }
 
+#if 0 // obsolete 
 // 9!:54/55  undocumented
 // unicodex78;       /* 1 iff disallow numeric argument for 7 8 u:      */
 F1(jtunicodex78q){
@@ -247,6 +249,7 @@ F1(jtunicodex78s){I k;
  jt->unicodex78=(C)k;
  R mtm;
 }
+#endif
 
 // 9!:56  undocumented
 // query/override cpu feature

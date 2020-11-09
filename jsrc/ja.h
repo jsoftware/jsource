@@ -4,7 +4,7 @@
 /* Aliases for jt                                                          */
 
 
-#define BfromD(x,y)                 jtBfromD(jt,(x),(y))
+#define BfromD(x,y,z)               jtBfromD(jt,(x),(y),(z))
 #define BfromI(x,y)                 jtBfromI(jt,(x),(y))
 #define BfromX(x,y)                 jtBfromX(jt,(x),(y))
 #define C1fromC2(x,y)               jtC1fromC2(jt,(x),(y))
@@ -15,9 +15,9 @@
 #define C4fromC2(x,y)               jtC4fromC2(jt,(x),(y))
 #define DfromQ(x,y)                 jtDfromQ(jt,(x),(y))
 #define DfromX(x,y)                 jtDfromX(jt,(x),(y))
-#define DfromZ(x,y)                 jtDfromZ(jt,(x),(y))
+#define DfromZ(x,y,z)               jtDfromZ(jt,(x),(y),(z))
 #define DXfI(x,y,z)                 jtDXfI(jt,(x),(y),(z))
-#define IfromD(x,y)                 jtIfromD(jt,(x),(y))
+#define IfromD(x,y,z)               jtIfromD(jt,(x),(y),(z))
 #define IfromX(x,y)                 jtIfromX(jt,(x),(y))
 #define QfromD(x,y,z)               jtQfromD(jt,(x),(y),(z))
 #define QfromX(x,y)                 jtQfromX(jt,(x),(y))

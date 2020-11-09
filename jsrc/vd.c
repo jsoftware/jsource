@@ -195,7 +195,7 @@ F1(jtqr){A r,z;D c=inf,d=0,x;I n1,n,*s,wr;
  RZ(z=qrr(w)); r=AAV(z)[1]; n=AS(r)[0]; n1=1+n;
  if(FL&AT(r)){D*v=DAV(r);  DQ(n, x= ABS(*v); if(x<c)c=x; if(x>d)d=x; v+=n1;);}
  else        {Z*v=ZAV(r);  DQ(n, x=zmag(*v); if(x<c)c=x; if(x>d)d=x; v+=n1;);}
- ASSERT(!n||c>d*jt->fuzz,EVDOMAIN);
+ ASSERT(!n||c>d*FUZZ,EVDOMAIN);
 RETF(z);
 }
 
@@ -214,7 +214,7 @@ static F1(jtlq){A l;D c=inf,d=0,x;I n1,n,*s,wr;
  // build determinant for integer correction, if that is enabled (i. e. nonzero)
  if(FL&AT(l)){D*v=DAV(l); D determ=jt->workareas.minv.determ; DQ(n, x= ABS(*v); if(determ!=0){determ*=x; if(determ>1e20)determ=0.0;} if(x<c)c=x; if(x>d)d=x; v+=n1;); jt->workareas.minv.determ=determ;} 
  else        {Z*v=ZAV(l);  DQ(n, x=zmag(*v); if(x<c)c=x; if(x>d)d=x; v+=n1;);}
- ASSERT(!n||c>d*jt->fuzz,EVDOMAIN);
+ ASSERT(!n||c>d*FUZZ,EVDOMAIN);
  RETF(pdt(jtrinvip(jt,l,n,AT(w)&FL?2:0),w));  // engage fast reciprocal for float matrices
 }
 

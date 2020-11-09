@@ -165,8 +165,9 @@ if(((-1) >> 1) != -1)*(I *)4 = 104;
 jt->asgzomblevel = 1;  // allow premature change to zombie names, but not data-dependent errors
 jt->assert = 1;
 jt->directdef = 1;  // scaf
- RZ(jt->bxa=cstr("+++++++++|-")); jt->bx=CAV(jt->bxa);
- jt->cctdefault=jt->cct= 1.0-FUZZ; jt->fuzz=FUZZ;
+// obsolete  RZ(jt->bxa=cstr("+++++++++|-")); jt->bx=CAV(jt->bxa);
+ MC(jt->bx,"+++++++++|-",sizeof(jt->bx));
+ jt->cctdefault=jt->cct= 1.0-FUZZ;
  jt->disp[0]=1; jt->disp[1]=5;
  jt->fcalln=NFCALL;
 #if USECSTACK

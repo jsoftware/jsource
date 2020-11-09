@@ -239,7 +239,7 @@ static F1(jtprimetest){A x;I t;
   case INTX:            R iprimetest(w);
   case RATX: case XNUMX: R xprimetest(w);
   case FLX:  case CMPXX:
-   {PUSHCCT(1.0-jt->fuzz) x=eq(t&FL?w:conjug(w),floor1(w)); POPCCT}
+   {PUSHCCT(1.0-FUZZ) x=eq(t&FL?w:conjug(w),floor1(w)); POPCCT}
    R xprimetest(cvt(XNUM,tymes(w,x))); 
 }}   /* primality test */
 

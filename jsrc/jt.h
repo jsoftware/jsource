@@ -94,7 +94,7 @@ typedef struct {
  UC   jerr;             /* error number (0 means no error)      $           */
  C    asgzomblevel;     // 0=do not assign zombie name before final assignment; 1=allow premature assignment of complete result; 2=allow premature assignment even of incomplete result   $
  B    assert;           /* 1 iff evaluate assert. statements               */
- B    foldrunning;      // 1 if fold is running (allows Z:)    $ scaf
+ B    foldrunning;      // 1 if fold is running (allows Z:)    $
  UC   jerr1;            /* last non-zero jerr    $                          */
  C    cxspecials;       // 1 if special testing needed in cx loop (pm or debug)    $
  B    iepdo;            /* 1 iff do iep    $                                */
@@ -104,7 +104,7 @@ typedef struct {
  UC   prioritytype[11];  // type bit for the priority types
  UC   typepriority[19];  // priority value for the noun types
 // end cache line 4.  10 bytes carry over.  next cache line is junk; we don't expect to use these types much
- B    nflag;            /* 1 if space required before name          scaf       */
+// obsolete B    nflag;            /* 1 if space required before name          scaf       */
  B    sesm;             /* whether there is a session manager              */
 // obsolete  B    tmonad;           /* tacit translator: 1 iff monad         >          */
 // obsolete  B    tsubst;           /* tacit translator           >                     */

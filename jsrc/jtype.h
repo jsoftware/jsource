@@ -710,6 +710,7 @@ typedef struct{
  I n;                   /* maximum number of records                       */
  I i;                   /* index of next record to be written              */
  I s;                   /* initial bytesmax value                          */
+ I pmctr;               // counter, set > 0 to start sampling
  B rec;                 /* what to record (0 entry & exit; 1 all)          */
  B trunc;               /* what to do on overflow (0 wrap; 1 truncate)     */
  B wrapped;             /* 1 iff wrapping has happened                     */

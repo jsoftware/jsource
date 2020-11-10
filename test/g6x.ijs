@@ -60,7 +60,7 @@ x=: qpc"1 i.21 0
 NB. 6!:10 11 12 13 ------------------------------------------------------
 
 bpe     =: IF64{28 56   NB. bytes per entry
-bhdr    =: IF64{16 32   NB. bytes for header
+bhdr    =: IF64{20 40   NB. bytes for header
 
 pmdata  =: 6!:10
 pmunpack=: 6!:11

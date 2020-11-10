@@ -71,7 +71,6 @@ typedef struct {
  A    nvra;             // data blocks that are in execution somewhere - always non-virtual, always rank 1, AS[0] holds current pointer
 // obsolete  A*   nvrav;            /* AAV(jt->nvra)      $                             */
 // obsolete  UI4  nvran;            // number of atoms in nvrav    $
- I4   slisti;           /* index into slist of current script     $         */
  A    stloc;            /* locales symbol table                            */
  A    fill;             // fill     stuck here as filler
 // things needed for memory allocation
@@ -98,7 +97,6 @@ typedef struct {
  UC   jerr1;            /* last non-zero jerr    $                          */
  C    cxspecials;       // 1 if special testing needed in cx loop (pm or debug)    $
  B    iepdo;            /* 1 iff do iep    $                                */
- B    pmrec;            /* perf. monitor: 0 entry/exit; 1 all              */
  B    tostdout;         /* 1 if output to stdout       $                    */
  UC   prioritytype[11];  // type bit for the priority types
  UC   typepriority[19];  // priority value for the noun types
@@ -173,7 +171,6 @@ typedef struct {
 // obsolete  A    stptr;            /* numbered locale symbol table ptrs               */
 // obsolete  I    stused;           /* entries in stnum/stptr in use                   */
 // obsolete  I    sttsize;          // length of hash table, =AN(jt->stnum)
- I    pmctr;            /* perf. monitor: ctr>0 means do monitoring        */
  C    baselocale[4];    // will be "base"
  UI4  baselocalehash;   // name hash for base locale
 #if !USECSTACK
@@ -230,8 +227,8 @@ typedef struct {
 // obsolete #endif 
  C*   capture;          /* capture output for python->J etc.               */
  I    dlllasterror;     /* DLL stuff                                       */
- I    etxn;             /* strlen(etx)                                     */
- I    etxn1;            /* last non-zero etxn                              */
+ S    etxn;             /* strlen(etx)                                     */
+ S    etxn1;            /* last non-zero etxn                              */
  A    evm;              /* event messages                                  */
 // obsolete  I    fxi;              /* f. depth countdown                              */
 // obsolete  A    fxpath;           /* f. path of names                                */
@@ -254,9 +251,11 @@ typedef struct {
  I    outmaxlen;        /* output: maximum line length before truncation   */
  C    outseq[3];		    /* EOL: "LF" "CR" "CRLF"                           */
  I    peekdata;         /* our window into the interpreter                 */
+// obsolete  B    pmrec;            /* perf. monitor: 0 entry/exit; 1 all              */
+// obsolete  I    pmctr;            /* perf. monitor: ctr>0 means do monitoring        */
  A    pma;              /* perf. monitor: data area                        */
- PM0* pmu;              /* perf. monitor: (PM0)AV(pma)                     */
- PM*  pmv;              /* perf. monitor: (PM*)(sizeof(PM0)+CAV(pma))      */
+// obsolete  PM0* pmu;              /* perf. monitor: (PM0)AV(pma)                     */
+// obsolete  PM*  pmv;              /* perf. monitor: (PM*)(sizeof(PM0)+CAV(pma))      */
  I    pos[2];           /* boxed output x-y positioning                    */
  C    pp[8];            // print precision (sprintf field for numeric output)
  A    p4792;            // pointer to p: i. 4792, filled in on first use
@@ -273,6 +272,7 @@ typedef struct {
  I    sbun;             /* SB cardinality                                  */
  SBU* sbuv;             /* SB points to ravel of sbu                       */
  int  sdinited;         /* sockets                                         */
+ I4   slisti;           /* index into slist of current script     $         */
  A    slist;            /* files used in right arg to 0!:                  */
  A    sclist;           /* slisti when items of slist were added           */
  I    slistn;           /* slist # of real entries                         */

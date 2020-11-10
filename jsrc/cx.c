@@ -274,7 +274,7 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
    if((UI)i>=(UI)n)break;
 
    // if performance monitor is on, collect data for it
-   if(PMCTRBPMON&jt->uflags.us.uq.uq_c.pmctrbstk&&C1==jt->pmrec&&FAV(self)->flag&VNAMED)pmrecord(jt->curname,jt->global?LOCNAME(jt->global):0,i,isdyad?VAL2:VAL1);
+   if(PMCTRBPMON&jt->uflags.us.uq.uq_c.pmctrbstk&&C1==((PM0*)CAV1(jt->pma))->rec&&FAV(self)->flag&VNAMED)pmrecord(jt->curname,jt->global?LOCNAME(jt->global):0,i,isdyad?VAL2:VAL1);
    // If the executing verb was reloaded during debug, switch over to the modified definition
    if((gsfctdl&16)&&jt->redefined){DC siparent;A *hv;
     if((siparent=thisframe->dclnk)&&jt->redefined==siparent->dcn&&DCCALL==siparent->dctype&&self!=siparent->dcf){
@@ -284,7 +284,7 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
     }
     jt->redefined=0;
    }
-   if(!((I)jt->redefined|(I)jt->pmctr|(I)(gsfctdl&16)))jt->cxspecials=0;  // if no more special work to do, close the gate
+   if(!((I)jt->redefined|(I)(PMCTRBPMON&jt->uflags.us.uq.uq_c.pmctrbstk)|(I)(gsfctdl&16)))jt->cxspecials=0;  // if no more special work to do, close the gate
   }
 
   // Don't do the loop-exit test until debug has had the chance to update the execution line.  For example, we might be asked to reexecute the last line of the definition

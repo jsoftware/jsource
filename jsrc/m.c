@@ -932,7 +932,7 @@ if((I)jt&3)SEGFAULT;
    // small block: allocate from pool
    mfreeb=jt->mfree[-PMINL+1+blockx].ballo; // bytes in pool allocations
 
-   if(z){         // allocate from a chain of free blocks
+   if(likely(z!=0)){         // allocate from a chain of free blocks
     jt->mfree[-PMINL+1+blockx].pool = AFCHAIN(z);  // remove & use the head of the free chain
 #if MEMAUDIT&1
     if(AFCHAIN(z)&&FHRHPOOLBIN(AFHRH(AFCHAIN(z)))!=(1+blockx-PMINL))SEGFAULT;  // reference the next block to verify chain not damaged
@@ -1018,9 +1018,8 @@ RESTRICTF A jtgafv(J jt, I bytes){UI4 j;
  bytes|=(I)1<<(PMINL-1);  // if the memory header itself doesn't meet the minimum buffer length, insert a minimum
 #endif
  CTLZI((UI)bytes,j);  // 3 or 4 should return 2; 5 should return 3
- if((UI)bytes<=(UI)jt->mmax){
-  R jtgaf(jt,(I)j);
- }else{jsignal(EVLIMIT); R 0;}  // do it this way for branch-prediction
+ ASSERT((UI)bytes<=(UI)jt->mmax,EVLIMIT)
+ R jtgaf(jt,(I)j);
 }
 
 RESTRICTF A jtga(J jt,I type,I atoms,I rank,I* shaape){A z;
@@ -1028,22 +1027,21 @@ RESTRICTF A jtga(J jt,I type,I atoms,I rank,I* shaape){A z;
  // trailing NUL (because boolean-op code needs it)
  I bytes = ALLOBYTESVSZ(atoms,rank,bp(type),type&LAST0,0);  // We never use GA for NAME types, so we don't need to check for it
 #if SY_64
- if(!((((unsigned long long)(atoms))&~TOOMANYATOMS)+((rank)&~RMAX))){
+ ASSERT(!((((unsigned long long)(atoms))&~TOOMANYATOMS)+((rank)&~RMAX)),EVLIMIT)
 #else
- if(((I)bytes>(I)(atoms)&&(I)(atoms)>=(I)0)&&!((rank)&~RMAX)){
+ ASSERT(((I)bytes>(I)(atoms)&&(I)(atoms)>=(I)0)&&!((rank)&~RMAX),EVLIMIT)
 #endif
-  RZ(z = jtgafv(jt, bytes));   // allocate the block, filling in AC and AFLAG
-  I akx=AKXR(rank);   // Get offset to data
-  AK(z)=akx; AT(z)=type; AN(z)=atoms;   // Fill in AK, AT, AN
-  // Set rank, and shape if user gives it.  This might leave the shape unset, but that's OK
-  AR(z)=(RANKT)rank;   // Storing the extra last I (as was done originally) might wipe out rank, so defer storing rank till here
-  // Since we allocate powers of 2, we can make the memset a multiple of 32 bytes.  The value of an atomic box would come before the cleared region, but we pick that up here when the shape is cleared
-  if(!(type&DIRECT)){if(SY_64){memset((C*)(AS(z)+1),C0,(bytes-32)&-32);}else{memset((C*)z+akx,C0,bytes+1-akx);}}  // bytes=63=>0 bytes cleared.  bytes=64=>32 bytes cleared.  bytes=64 means the block is 65 bytes long
-  GACOPYSHAPEG(z,type,atoms,rank,shaape)  /* 1==atoms always if t&SPARSE  */  // copy shape by hand since short
-   // Tricky point: if rank=0, GACOPYSHAPEG stores 0 in AS[0] so we don't have to do that in the DIRECT path
-    // All non-DIRECT types have items that are multiples of I, so no need to round the length
-  R z;
- }else{jsignal(EVLIMIT); R 0;}  // do it this way for branch-prediction
+ RZ(z = jtgafv(jt, bytes));   // allocate the block, filling in AC and AFLAG
+ I akx=AKXR(rank);   // Get offset to data
+ AK(z)=akx; AT(z)=type; AN(z)=atoms;   // Fill in AK, AT, AN
+ // Set rank, and shape if user gives it.  This might leave the shape unset, but that's OK
+ AR(z)=(RANKT)rank;   // Storing the extra last I (as was done originally) might wipe out rank, so defer storing rank till here
+ // Since we allocate powers of 2, we can make the memset a multiple of 32 bytes.  The value of an atomic box would come before the cleared region, but we pick that up here when the shape is cleared
+ if(!(type&DIRECT)){if(SY_64){memset((C*)(AS(z)+1),C0,(bytes-32)&-32);}else{memset((C*)z+akx,C0,bytes+1-akx);}}  // bytes=63=>0 bytes cleared.  bytes=64=>32 bytes cleared.  bytes=64 means the block is 65 bytes long
+ GACOPYSHAPEG(z,type,atoms,rank,shaape)  /* 1==atoms always if t&SPARSE  */  // copy shape by hand since short
+  // Tricky point: if rank=0, GACOPYSHAPEG stores 0 in AS[0] so we don't have to do that in the DIRECT path
+   // All non-DIRECT types have items that are multiples of I, so no need to round the length
+ R z;
 }
 
 // free a block.  The usecount must make it freeable
@@ -1068,7 +1066,7 @@ if((I)jt&3)SEGFAULT;
  I blockx=FHRHPOOLBIN(hrh);   // pool index, if pool
  I allocsize;  // size of full allocation for this block
  // SYMB must free as a monolith, with the symbols returned when the hashtables are
- if(AT(w)==SYMB){
+ if(unlikely(AT(w)==SYMB)){
   freesymb(jt,w);
  }
 #if MEMAUDIT&1
@@ -1084,7 +1082,7 @@ if((I)jt&3)SEGFAULT;
   mfreeb = jt->mfree[blockx].ballo;   // number of bytes allocated at this size (biased zero point)
   AFCHAIN(w)=jt->mfree[blockx].pool;  // append free list to the new addition...
   jt->mfree[blockx].pool=w;   //  ...and make new addition the new head
-  if(0 > (mfreeb-=allocsize))jt->uflags.us.uq.uq_c.spfreeneeded=1;  // Indicate we have one more free buffer;
+  if(unlikely(0 > (mfreeb-=allocsize)))jt->uflags.us.uq.uq_c.spfreeneeded=1;  // Indicate we have one more free buffer;
    // if this kicks the list into garbage-collection mode, indicate that
   jt->mfree[blockx].ballo=mfreeb;
  }else{                // buffer allocated from subpool.
@@ -1102,7 +1100,7 @@ if((I)jt&3)SEGFAULT;
 #endif
   jt->mfreegenallo = mfreeb-allocsize;
  }
- if(mfreeb&MFREEBCOUNTING){jt->bytes -= allocsize;}  // keep track of total allocation only if asked to
+ if(unlikely(mfreeb&MFREEBCOUNTING)){jt->bytes -= allocsize;}  // keep track of total allocation only if asked to
 }
 
 // allocate header with rank r; if r==1, move the item count to be the shape also

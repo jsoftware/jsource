@@ -98,7 +98,6 @@ typedef struct {
  UC   jerr1;            /* last non-zero jerr    $                          */
  C    cxspecials;       // 1 if special testing needed in cx loop (pm or debug)    $
  B    iepdo;            /* 1 iff do iep    $                                */
- C    dbss;             /* single step mode                                */
  B    pmrec;            /* perf. monitor: 0 entry/exit; 1 all              */
  B    tostdout;         /* 1 if output to stdout       $                    */
  UC   prioritytype[11];  // type bit for the priority types
@@ -110,10 +109,10 @@ typedef struct {
 // obsolete  B    tsubst;           /* tacit translator           >                     */
  UC   dbuser;           /* user-entered value for db                       */
  A    flkd;             /* file lock data: number, index, length           */
- I    flkn;             /* file lock count                                 */
+// obsolete  I    flkn;             /* file lock count                                 */
  A    fopa;             /* open files boxed names                          */
  A    fopf;             /* open files corresp. file numbers                */
- I    fopn;             /* open files count                                */
+// obsolete  I    fopn;             /* open files count                                */
  I    getlasterror;     /* DLL stuff                                       */
 // end cache line 5.
  void *dtoa;             /* use internally by dtoa.c                        */
@@ -205,12 +204,16 @@ typedef struct {
 // obsolete  I    cdnl;             /* # of used entries in cdhashl                    */
 // obsolete  I    cdns;             /* length of used portion of cdstr                 */
  A    cdstr;            /* strings for cdarg                               */
+
  A    dbalpha;          /* left  argument for rerun                        */
  I    dbjump;           /* line to jump to                                 */
  A    dbomega;          /* right argument for rerun                        */
  A    dbresult;         /* result to pop to the next level                 */
+ C    dbss;             /* single step mode                                */
  DC   dbssd;            /* stack entry d corresp. to d->dcss setting       */
  A    dbssexec;         /* single step: execute string                     */
+ C    dbsusact;         /* suspension action                               */
+
  A    dbstops;          /* stops set by the user                           */
  A    dbtrap;           /* trap, execute on suspension                     */
  DC   dcs;              /* ptr to debug stack entry for current script     */
@@ -218,7 +221,6 @@ typedef struct {
 // obsolete  C    diratts[7];       /* set by ismatch, read by dir1                    */
 // obsolete  C    dirmode[11];      /* set by ismatch, read by dir1                    */
 // obsolete  C    dirrwx[3];        /* set by ismatch, read by dir1                    */
- C    dbsusact;         /* suspension action                               */
 // obsolete #if !SY_WINCE
 // obsolete  struct stat dirstatbuf; //set by ismatch, read by dir1
 // obsolete #if !SY_64 && (SYS & SYS_LINUX)
@@ -235,11 +237,13 @@ typedef struct {
 // obsolete  A    fxpath;           /* f. path of names                                */
 // obsolete  A*   fxpv;             /* f. AAV(fxpath)                                  */
  A    iep;              /* immediate execution phrase                      */
- I    locsize[2];       /* size indices for named and numbered locales     */
- AF   lcp;              /* linear representation paren function            */
- A    ltext;            /* linear representation text                      */
- AF   ltie;             /* linear representation tie   function            */
+ C    locsize[2];       /* size indices for named and numbered locales     */
+// obsolete AF   lcp;              /* linear representation paren function            */
+// obsolete  A    ltext;            /* linear representation text                      */
+// obsolete AF   ltie;             /* linear representation tie   function            */
+#if !(C_CRC32C && SY_64)
  I    min;              /* the r result from irange                        */
+#endif
  I    mtyo;				      /* jsto output type - jfwrite arg to jpr           */
  C*   mtyostr;          /* jsto string                                     */
  I    nfe;              /* 1 for J native front end                        */
@@ -254,7 +258,7 @@ typedef struct {
  PM0* pmu;              /* perf. monitor: (PM0)AV(pma)                     */
  PM*  pmv;              /* perf. monitor: (PM*)(sizeof(PM0)+CAV(pma))      */
  I    pos[2];           /* boxed output x-y positioning                    */
- C    pp[8];            /* print precision                                 */
+ C    pp[8];            // print precision (sprintf field for numeric output)
  A    p4792;            // pointer to p: i. 4792, filled in on first use
  I    redefined;        /* symbol table entry of redefined explicit defn   */
  I    sbfillfactor;     /* SB for binary tree                              */

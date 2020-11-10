@@ -632,7 +632,7 @@ a =: i. 10000
 40000 < 7!:2 '3 : ''a =: 5 (5&+)@:+ a'' 0'  NB. Not safe with usecount 1
 40000 < 7!:2 '3 : ''a =: 5 ((15!:15 (5))&+)@:+ a'' 0'  NB. Safe with usecount _1
 9!:53 (1)
-9000 > 7!:2 '3 : ''a =: 5 ((15!:15 (5))&+)@:+ a'' 0'  NB. Safe with usecount _1
+12000 > 7!:2 '3 : ''a =: 5 ((15!:15 (5))&+)@:+ a'' 0'  NB. Safe with usecount _1
 
 NB. u&.v
 IGNOREIFFVI 20000 > 7!:2 ',&''b''&.] 10000#''a'''
@@ -874,10 +874,10 @@ a =:  i: 5000
 
 NB. Abandoned inputs become inplaceable in an explicit definition
 f1 =: 3 : 'y =. b 5} y'
-140000 > 7!:2 'f1 131000 # a' [ a =: 'a' [ b =: 'b'
+(dbq'') +. 140000 > 7!:2 'f1 131000 # a' [ a =: 'a' [ b =: 'b'   NB. debug doesn't inplace names
 
 NB. They can be virtual too
-140000 > 7!:2 'f1 }. 131000 # a' [ a =: 'a' [ b =: 'b'
+(dbq'') +. 140000 > 7!:2 'f1 }. 131000 # a' [ a =: 'a' [ b =: 'b'
 
 NB. They can be passed through but lose inplaceability at lower levels
 f2 =: 3 : 'f1 y'
@@ -885,31 +885,31 @@ f2 =: 3 : 'f1 y'
 
 NB. They are reset to inplace on exit
 f3 =: 3 : '5'
-140000 > 7!:2 '(f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a)'
+(dbq'') +. 140000 > 7!:2 '(f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a)'
 f3 =: 3 : 0
 y =. b 5} y
 5
 )
-140000 > 7!:2 '(f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a)'
+(dbq'') +. 140000 > 7!:2 '(f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a)'
 f3 =: 3 : 0
 y =. 10
 5
 )
-140000 > 7!:2 '(f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a)'
+(dbq'') +. 140000 > 7!:2 '(f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a)'
 
 NB. Assignment to self leaves inplaceable
 f3 =: 3 : 0
 y =. y
 5
 )
-140000 > 7!:2 '(f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a)'
+(dbq'') +. 140000 > 7!:2 '(f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a)'
 
 NB. Inplaceable result of explicit definition stays inplaceable after exit
 f3 =: 3 : '10000 # a'
-170000 > 7!:2 '(f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a)'
+(dbq'') +. 170000 > 7!:2 '(f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a)'
 NB. Even if named
 f3 =: 3 : 'p =. 10000 # a'
-170000 > 7!:2 '(f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a)'
+(dbq'') +. 170000 > 7!:2 '(f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a)'
 
 
 

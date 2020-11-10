@@ -69,9 +69,9 @@ EVERYFS(arofixaself,jtaro,jtfixa,0,VFLAGNONE)  // create A block to be used in e
 // FIXALOCSONLY set if we will replace only implicit locatives.  We don't go down a branch that doesn't contain one
 // FIXALOCSONLYLOWEST set if we replace only lowest-level locatives (suitable for function return).  We stop in a branch when we hit a locative reference
 // FIXASTOPATINV set if we halt at a defined oberse
-// a has to be an A type because it goes into every2.  It is always an I type, but it may be virtual when it comes back from every2
+// a has to be an A type because it goes into every2.  It is always an I type with rank 0, but it may be virtual when it comes back from every2
 // AM(a) points to the recursion name-list and must be passed to all recursion levels
-static A jtfixa(J jt,A a,A w){A f,g,h,wf,x,y,z=w;V*v;I aa[AKXR(0)/SZI+1]={AKXR(0)}; AM((A)aa)=AM(a);  // place to build recursion parm - make the AK field right, and pass the AM field along
+static A jtfixa(J jt,A a,A w){A f,g,h,wf,x,y,z=w;V*v;fauxblock(fauxself); A aa; fauxINT(aa,fauxself,1,0); AM((A)aa)=AM(a);  // place to build recursion parm - make the AK field right, and pass the AM field along
 #define REFIXA(a,x) (IAV0(aa)[0]=(aif|(a)), fixa((A)aa,(x)))
  ARGCHK1(w);
  I ai=IAV(a)[0];  // value of a
@@ -110,7 +110,7 @@ static A jtfixa(J jt,A a,A w){A f,g,h,wf,x,y,z=w;V*v;I aa[AKXR(0)/SZI+1]={AKXR(0
   case CGRCO:
    IAV0(aa)[0]=(aif|na);
 // obsolete    RZ(f=every(every2(sc(aif|na),h,(A)&arofixaself),(A)&arofixaself)); // full A block required for call
-   RZ(f=every(every2((A)aa,h,(A)&arofixaself),(A)&arofixaself)); // full A block required for call
+   RZ(f=every(every2(aa,h,(A)&arofixaself),(A)&arofixaself)); // full A block required for call
    RZ(g=REFIXA(na,g));
    R df2(z,f,g,wf);
   case CIBEAM:
@@ -154,15 +154,16 @@ static A jtfixa(J jt,A a,A w){A f,g,h,wf,x,y,z=w;V*v;I aa[AKXR(0)/SZI+1]={AKXR(0
      // add the name to the table in that case.  NOTE bug: an indirect locative a__b, if it appeared twice, would be detected as a loop even
      // if it evaluated to different locales
 // obsolete      if(savloc==jt->locsyms)jt->fxpv[--jt->fxi]=rifvs(y); // add name-string to list of visited names for recursion check
-     if(savloc==jt->locsyms)AAV0((A)AM(a))[AN((A)AM(a))++]=rifvs(y); // add name-string to list of visited names for recursion check
+     I initn=AN((A)AM(a));  // save name depth coming in
+     if(savloc==jt->locsyms){AAV1((A)AM(a))[AN((A)AM(a))]=rifvs(y); AN((A)AM(a))++; AS((A)AM(a))[0]++;} // add name-string to list of visited names for recursion check
      if(z=REFIXA(na,x)){
       if(ai!=0&&selfq(x))z=fixrecursive(sc(ai),z);  // if a lower name contains $:, replace it with explicit equivalent
      }
-     SYMRESTOREFROMLOCAL(savloc);
-     RZ(z);  // make sure we restore
+     SYMRESTOREFROMLOCAL(savloc);  // make sure we restore current symbols
+     AN((A)AM(a))=AS((A)AM(a))[0]=initn;   // restore name count
+     RZ(z);
     }
 // obsolete     jt->fxpv[jt->fxi++]=mtv;
-    AN((A)AM(a))--;
     RE(z);
     ASSERT(PARTOFSPEECHEQ(AT(w),AT(z)),EVDOMAIN);  // if there was a change of part-of-speech during the fix, that's a pun, don't allow it
     R z;
@@ -175,7 +176,8 @@ static A jtfixa(J jt,A a,A w){A f,g,h,wf,x,y,z=w;V*v;I aa[AKXR(0)/SZI+1]={AKXR(0
    if(f)RZ(f=REFIXA(na,f));
    if(g)RZ(g=REFIXA(na,g));
    R f&&g?df2(z,f,g,wf):f?df1(z,f,wf):w;
-}}   /* 0=a if fix names; 1=a if fix names only if does not contain $: */
+ }
+}   /* 0=a if fix names; 1=a if fix names only if does not contain $: */
 
 // On internal calls, self is an integer whose value contains flags.  Otherwise zeroionei is used
 DF1(jtfix){PROLOG(0005);A z;
@@ -187,7 +189,7 @@ DF1(jtfix){PROLOG(0005);A z;
  self=AT(self)&NOUN?self:zeroionei(0);  // default to 0 if noun not given
  // To avoid infinite recursion we keep an array of names that we have looked up.  We create that array here, initialized to empty.  To pass it into fixa, we create
  // a faux INT block to hold the value, and use AM in that block to point to the list of names
- A namelist; GAT0(namelist,BOX,248,0); AN(namelist)=0;  // allocate 248 slots, but initialize to empty
+ A namelist; GAT0(namelist,BOX,248,1); AS(namelist)[0]=AN(namelist)=0;  // allocate 248 slots with rank 1, but initialize to empty
  fauxblock(fauxself); A augself; fauxINT(augself,fauxself,1,0); AM(augself)=(I)namelist; IAV(augself)[0]=IAV(self)[0];  // transfer value to writable block; install empty name array
  RZ(z=fixa(augself,AT(w)&VERB+ADV+CONJ?w:symbrdlock(w)));  // name comes from string a
  // Once a node has been fixed, it doesn't need to be looked at ever again.  This applies even if the node itself carries a name.  To indicate this

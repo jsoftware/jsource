@@ -144,10 +144,12 @@ static void jtsusp(J jt){B t;DC d;
 // Result is the value that will be used for the failing sentence.  This should not be 0 unless there is an error, because
 // jtxdefn requires nonzero z during normal operation
 static A jtdebug(J jt){A z=0;C e;DC c,d;
- if(jt->dbssd){jt->dbssd->dcss=0; jt->dbssd=0;}
+ if(jt->dbssd){jt->dbssd->dcss=0; jt->dbssd=0;}  // clear previous single-step state - should do at end instead
+// create debug state frame scaf
  RZ(d=suspset(jt->sitop));
  if(d->dcix<0)R 0;  // if the verb has exited, all we can do is return
  e=jt->jerr; jt->jerr=0;
+// pass in & rcv debug state frame
  susp();
  switch(jt->dbsusact){
   case SUSRUN:      
@@ -159,12 +161,13 @@ static A jtdebug(J jt){A z=0;C e;DC c,d;
   case SUSCLEAR:
    jt->jerr=e;    
    c=jt->sitop; 
-   while(c){if(DCCALL==c->dctype)DGOTO(c,-1) c=c->dclnk;} 
+   while(c){if(DCCALL==c->dctype)DGOTO(c,-1) c=c->dclnk;} break;
  }
  if(jt->dbsusact!=SUSCLEAR)jt->dbsusact=SUSCONT;
  d->dcsusp=0;
  // If there is an error, set z=0; if not, make sure z is nonzero (use i. 0 0)
   if(jt->jerr)z=0; // return z=0 to cause us to look for resumption address
+// return debug state frame scaf
  R z;
 }
 
@@ -205,14 +208,15 @@ A jtdbunquote(J jt,A a,A w,A self,L *stabent){A t,z;B b=0,s;DC d;V*sv;
   d->dcix=0;  // set a pseudo-line-number for display purposes for the tacit 
   do{
    d->dcnewlineno=0;  // turn off 'reexec requested' flag
-   if(s=dbstop(d,0L)){z=0; jsignal(EVSTOP);}
+   if(s=dbstop(d,0L)){z=0; jsignal(EVSTOP);}  // if this line is a stop
    else              {ras(self); z=a?dfs2(a,w,self):dfs1(w,self); fa(self);}
    // If we hit a stop, or if we hit an error outside of try./catch., enter debug mode.  But if debug mode is off now, we must have just
    // executed 13!:8]0, and we should continue on outside of debug mode
    if(!z&&jt->uflags.us.cx.cx_c.db){d->dcj=jt->jerr; movecurrtoktosi(jt); z=debug(); if(self!=jt->sitop->dcf)self=jt->sitop->dcf;}
+// look at debug frame for looping scaf
    if(b){fa(a); fa(w);}
    if(b=jt->dbalpha||jt->dbomega){a=jt->dbalpha; w=jt->dbomega; jt->dbalpha=jt->dbomega=0;}
-  }while(d->dcnewlineno&&d->dcix!=-1);  // if suspension tries to reexecute a line other than -1 (which means 'exit'), reexecute
+  }while(d->dcnewlineno&&d->dcix!=-1);  // if suspension tries to reexecute a line other than -1 (which means 'exit'), reexecute the tacit definition
  }
  if(d->dcss)ssnext(d,d->dcss);
  if(jt->dbss==SSSTEPINTOs)jt->dbss=0;

@@ -79,6 +79,9 @@ typedef AD *A;
 // following bit is used on input to jtcvt only
 #define JTNOFUZZX       1   // comparison on legal float conversion should be exact
 #define JTNOFUZZ        (((I)1)<<JTNOFUZZX)
+// following bit is used inside jtlrep only
+#define JTPARENSX       1   // create fully parenthesized output
+#define JTPARENS        (((I)1)<<JTPARENSX)
 // Next flag must match result.h and VF2 flags, and must be above ZZFLAGBOXATOP
 #define JTWILLBEOPENEDX 4   // result of this exec will be opened immediately, so it can contain virtual references to an input to the current verb
      // Note: this flag MUST NOT equal BOX, or BOX<<1, or 1 or 2
@@ -110,7 +113,7 @@ struct AD {
         // (6) in the return from wordil, holds the number of words if any final NB. is discarded; (7) in the result of indexofsub when called for FORKEY, contains the
         // number of partitions found; (8) in the self block for y L: n and u S: n, the address of the fs block for u; (9) in the call to jtisf (multiple assignment), holds the
         // address of the symbol table being assigned to (10) in the y block internal to pv.c, used for flags (11) in hashtables in x15.c, the number of entries that have been hashed
-        // (12) in the faux arg to fixa, pointer to the recursive name-list block
+        // (12) in the faux arg to fixa, pointer to the recursive name-list block (13) in file-lock list and file-number list, the # valid files
   A back; // For VIRTUAL blocks, points to backing block
   A *zaploc;  // For all blocks, AM initially holds a pointer to the place in the tpop stack (or hijacked tpop stack) that points back to the allocated block.  This value is guaranteed
         // to remain valid as long as the block is nonvirtual inplaceable and might possibly return as a result to the parser or result assembly  (in cases under m above, the block cannot become such a result)

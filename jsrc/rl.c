@@ -10,14 +10,19 @@
 #include <ctype.h>
 #endif
 
-static F1(jtlnoun);
-static F1(jtlnum);
-static DF1(jtlrr);
+#define F1X(f)           A f(J jt,A w,A *ltext)
+#define DF1X(f)           A f(J jt,A w,A self,A *ltext)
+#define F2X(f)           A f(J jt,A a,A w,A *ltext)
+static F1X(jtlnoun);
+static F1X(jtlnum);
+static DF1X(jtlrr);
 
 #define NUMV(c)  (((1LL<<C9)|(1LL<<CD)|(1LL<<CS)|(1LL<<CA)|(1LL<<CN)|(1LL<<CB))&(1LL<<(c)))
 
+#define parfn ((I)jtinplace&JTPARENS?jtlcpb:jtlcpa)
+#define tiefn ((I)jtinplace&JTPARENS?jtltieb:jtltiea)
 
-static B jtlp(J jt,A w){B b=1,p=0;C c,d,q=CQUOTE,*v;I j=0,n;
+static B jtlp(J jt,A w){F1PREFIP;B b=1,p=0;C c,d,q=CQUOTE,*v;I j=0,n;
  ARGCHK1(w);
  n=AN(w); v=CAV(w); c=*v; d=*(v+n-1);
  if(1==n||(2==n||3>=n&&' '==c)&&(d==CESC1||d==CESC2)||vnm(n,v))R 0;
@@ -27,13 +32,13 @@ static B jtlp(J jt,A w){B b=1,p=0;C c,d,q=CQUOTE,*v;I j=0,n;
  R b;
 }    /* 1 iff put parens around w */
 
-static A jtlcpa(J jt,B b,A w){A z=w;C*zv;I n;
+static A jtlcpa(J jt,B b,A w){F1PREFIP;A z=w;C*zv;I n;
  ARGCHK1(w);
  if(b){n=AN(w); GATV0(z,LIT,2+n,1); zv=CAV(z); *zv='('; MC(1+zv,AV(w),n); zv[1+n]=')';}
  R z;
 }    /* if b then (w) otherwise just w */
 
-static A jtlcpb(J jt,B b,A w){A z=w;B p;C c,*v,*wv,*zv;I n;
+static A jtlcpb(J jt,B b,A w){F1PREFIP;A z=w;B p;C c,*v,*wv,*zv;I n;
  ARGCHK1(w);
  n=AN(w); wv=CAV(w); 
  if(!b){
@@ -47,39 +52,39 @@ static A jtlcpb(J jt,B b,A w){A z=w;B p;C c,*v,*wv,*zv;I n;
  R z;
 }
 
-static A jtlcpx(J jt,A w){ARGCHK1(w); R CALL2(jt->lcp,lp(w),w,0);}
+static A jtlcpx(J jt,A w){F1PREFIP;ARGCHK1(w); R parfn(jtinplace,lp(w),w);}
 
-static F1(jtltiea){A t,*v,*wv,x,y;B b;C c;I n;
+static F1X(jtltiea){F1PREFIP;A t,*v,*wv,x,y;B b;C c;I n;
  ARGCHK1(w);
  n=AN(w); wv=AAV(w);  RZ(t=spellout(CGRAVE));
  GATV0(y,BOX,n+n,1); v=AAV(y);
  DO(n, *v++=i?t:mtv; x=wv[i]; c=ID(x); RZ(x=lrr(x)); 
-     b=BETWEENC(c,CHOOK,CFORK)||i&&lp(x); RZ(*v++=CALL2(jt->lcp,b,x,0)););
+     b=BETWEENC(c,CHOOK,CFORK)||i&&lp(x); RZ(*v++=parfn(jtinplace,b,x)););
  R raze(y);
 }
 
-static F1(jtltieb){A pt,t,*v,*wv,x,y;B b;C c,*s;I n;
+static F1X(jtltieb){F1PREFIP;A pt,t,*v,*wv,x,y;B b;C c,*s;I n;
  ARGCHK1(w);
  n=AN(w); wv=AAV(w);  RZ(t=spellout(CGRAVE)); RZ(pt=over(scc(')'),t));
  GATV0(y,BOX,n+n,1); v=AAV(y);
  if(1>=n)x=mtv; else{GATV0(x,LIT,n-2,1); s=CAV(x); DQ(n-2, *s++='(';);}
  DO(n, x=i==1?t:x; x=i>1?pt:x; *v++=x; x=wv[i]; c=ID(x); RZ(x=lrr(x)); 
-     b=BETWEENC(c,CHOOK,CFORK)||i&&lp(x); RZ(*v++=CALL2(jt->lcp,b,x,0)););
+     b=BETWEENC(c,CHOOK,CFORK)||i&&lp(x); RZ(*v++=parfn(jtinplace,b,x)););
  R raze(y);
 }
 
-// return atring for the shape: 's$'
-static F1(jtlsh){R apip(thorn1(shape(w)),spellout(CDOLLAR));}
+// return string for the shape: 's$'
+static F1X(jtlsh){F1PREFIP;R apip(thorn1(shape(w)),spellout(CDOLLAR));}
 
-// return something to turn alist into the shape:
-static F1(jtlshape){I r,*s;
+// return something to turn a list into the shape:
+static F1X(jtlshape){F1PREFIP;I r,*s;
  ARGCHK1(w);
  r=AR(w); s=AS(w);
  R 2==r&&(1==s[0]||1==s[1]) ? spellout((C)(1==s[1]?CCOMDOT:CLAMIN)) : !r ? mtv :
      1<r ? lsh(w) : 1<AN(w) ? mtv : spellout(CCOMMA);
 }
 
-static F1(jtlchar){A y;B b,p=1,r1;C c,d,*u,*v;I j,k,m,n;
+static F1X(jtlchar){F1PREFIP;A y;B b,p=1,r1;C c,d,*u,*v;I j,k,m,n;
  ARGCHK1(w);
  m=AN(ds(CALP)); n=AN(w); j=n-m; r1=1==AR(w); u=v=CAV(w); d=*v;  // m=256, n=string length, j=n-256, r1 set if rank is 1, u=v->string, d=first char
  if(0<=j&&r1&&!memcmpne(v+j,AV(ds(CALP)),m)){
@@ -109,7 +114,7 @@ static F1(jtlchar){A y;B b,p=1,r1;C c,d,*u,*v;I j,k,m,n;
  R over(b?lsh(w):lshape(w),y);
 }    /* non-empty character array */
 
-static F1(jtlbox){A p,*v,*vv,*wv,x,y;B b=0;I n;
+static F1X(jtlbox){F1PREFIP;A p,*v,*vv,*wv,x,y;B b=0;I n;
  ARGCHK1(w);
  if(equ(ds(CACE),w)&&B01&AT(AAV(w)[0]))R cstr("a:");
  n=AN(w); wv=AAV(w); 
@@ -162,14 +167,14 @@ A jtdecorate(J jt,A w,I t){
 }
 
 
-static F1(jtlnum1){A z,z0;I t;
+static F1X(jtlnum1){F1PREFIP;A z,z0;I t;
  ARGCHK1(w);
  t=AT(w);
  RZ(z=t&FL+CMPX?df1(z0,w,fit(ds(CTHORN),sc((I)18))):thorn1(w));
  R decorate(z,t);
 }    /* dense non-empty numeric vector */
 
-static F1(jtlnum){A b,d,t,*v,y;B p;I n;
+static F1X(jtlnum){F1PREFIP;A b,d,t,*v,y;B p;I n;
  RZ(t=ravel(w));
  n=AN(w);
  if(7<n||1<n&&1<AR(w)){
@@ -193,7 +198,7 @@ static F1(jtlnum){A b,d,t,*v,y;B p;I n;
  R over(lshape(w),lnum1(t));
 }    /* dense numeric non-empty array */
 
-static F1(jtlsparse){A a,e,q,t,x,y,z;B ba,be,bn;I j,r,*v;P*p;
+static F1X(jtlsparse){F1PREFIP;A a,e,q,t,x,y,z;B ba,be,bn;I j,r,*v;P*p;
  ARGCHK1(w);
  r=AR(w); p=PAV(w); a=SPA(p,a); e=SPA(p,e); y=SPA(p,i); x=SPA(p,x);
  bn=0; v=AS(w); DQ(r, if(!*v++){bn=1; break;});
@@ -221,7 +226,7 @@ static F1(jtlsparse){A a,e,q,t,x,y,z;B ba,be,bn;I j,r,*v;P*p;
  R over(lcpx(lnoun(drop(sc(j),q))),over(cstr("|:"),z));
 }    /* sparse array */
 
-static F1(jtlnoun0){A s,x;B r1;
+static F1X(jtlnoun0){F1PREFIP;A s,x;B r1;
  ARGCHK1(w);
  r1=1==AR(w); RZ(s=thorn1(shape(w)));
  switch(CTTZ(AT(w))){
@@ -239,7 +244,7 @@ static F1(jtlnoun0){A s,x;B r1;
 }}   /* empty dense array */
 
 
-static F1(jtlnoun){I t;
+static F1X(jtlnoun){F1PREFIP;I t;
  ARGCHK1(w);
  t=AT(w);
  if(unlikely((t&SPARSE)!=0))R lsparse(w);
@@ -253,7 +258,7 @@ static F1(jtlnoun){I t;
   default:  R lnum(w);
 }}
 
-static A jtlsymb(J jt,C c,A w){A t;C buf[20],d,*s;I*u;V*v=FAV(w);
+static A jtlsymb(J jt,C c,A w,A *ltext){F1PREFIP;A t;C buf[20],d,*s;I*u;V*v=FAV(w);
  if(VDDOP&v->flag){
   u=AV(v->fgh[2]); s=buf; 
   *s++=' '; *s++='('; s+=sprintf(s,FMTI,*u); spellit(CIBEAM,s); s+=2; s+=sprintf(s,FMTI,u[1]); *s++=')';
@@ -272,7 +277,7 @@ static B laa(A a,A w){C c,d;
 // Is a string a number?  Must start with a digit and end with digit, x, or .
 static B lnn(A a,A w){C c; if(!(a&&w))R 0; c=cl(a); R ('x'==c||'.'==c||C9==ctype[(UC)c])&&C9==ctype[(UC)cf(w)];}
 
-static F2(jtlinsert){A*av,f,g,h,t,t0,t1,t2,*u,y;B b,ft,gt,ht;C c,id;I n;V*v;
+static F2X(jtlinsert){F1PREFIP;A*av,f,g,h,t,t0,t1,t2,*u,y;B b,ft,gt,ht;C c,id;I n;V*v;
  ARGCHK2(a,w);
  n=AN(a); av=AAV(a);  
  v=VAV(w); id=v->id;
@@ -286,18 +291,18 @@ static F2(jtlinsert){A*av,f,g,h,t,t0,t1,t2,*u,y;B b,ft,gt,ht;C c,id;I n;V*v;
   case CADVF:
   case CHOOK:
    GAT0(y,BOX,3,1); u=AAV(y);
-   u[0]=f=CALL2(jt->lcp,ft||lnn(f,g),f,0);
-   u[2]=g=CALL2(jt->lcp,gt||b,       g,0);
+   u[0]=f=parfn(jtinplace,ft||lnn(f,g),f);
+   u[2]=g=parfn(jtinplace,gt||b,       g);
    u[1]=str(' '==cf(g)||id==CADVF&&!laa(f,g)&&!(lp(f)&&lp(g))?0L:1L," ");
    RE(0); R raze(y);
   case CFORK:
    GAT0(y,BOX,5,1); u=AAV(y);
-   RZ(u[0]=f=CALL2(jt->lcp,ft||lnn(f,g),   f,0));
-   RZ(u[2]=g=CALL2(jt->lcp,gt||lnn(g,h)||b,g,0)); RZ(u[1]=str(' '==cf(g)?0L:1L," "));
-   RZ(u[4]=h=CALL2(jt->lcp,ht,             h,0)); RZ(u[3]=str(' '==cf(h)?0L:1L," "));
+   RZ(u[0]=f=parfn(jtinplace,ft||lnn(f,g),   f));
+   RZ(u[2]=g=parfn(jtinplace,gt||lnn(g,h)||b,g)); RZ(u[1]=str(' '==cf(g)?0L:1L," "));
+   RZ(u[4]=h=parfn(jtinplace,ht,             h)); RZ(u[3]=str(' '==cf(h)?0L:1L," "));
    R raze(y);
   default:
-   t0=CALL2(jt->lcp,ft||NOUN&AT(fs)&&!(VGERL&v->flag)&&lp(f),f,0);
+   t0=parfn(jtinplace,ft||NOUN&AT(fs)&&!(VGERL&v->flag)&&lp(f),f);
    t1=lsymb(id,w);
    y=over(t0,laa(t0,t1)?over(chrspace,t1):t1);
    if(1==n)R y;
@@ -306,7 +311,7 @@ static F2(jtlinsert){A*av,f,g,h,t,t0,t1,t2,*u,y;B b,ft,gt,ht;C c,id;I n;V*v;
 }}
 
 // create linear rep for m : n
-static F1(jtlcolon){A*v,x,y;C*s,*s0;I m,n;
+static F1X(jtlcolon){F1PREFIP;A*v,x,y;C*s,*s0;I m,n;
  RZ(y=unparsem(num(1),w));
  n=AN(y); v=AAV(y); RZ(x=lrr(VAV(w)->fgh[0]));
  if(2>n||2==n&&1==AN(v[0])&&':'==CAV(v[0])[0]){
@@ -321,12 +326,12 @@ static F1(jtlcolon){A*v,x,y;C*s,*s0;I m,n;
  DO(n, *s++=CLF; y=v[i]; m=AN(y); MC(s,CAV(y),m); s+=m;);
  *s++=CLF; *s++=')'; 
  RZ(y=str(s-s0,s0));
- jt->ltext=jt->ltext?over(jt->ltext,y):y;
+ *ltext=*ltext?over(*ltext,y):y;
  R over(x,str(4L," : 0"));
 }
 
 // Main routine for () and linear rep.  w is to be represented
-static DF1(jtlrr){A hs,t,*tv;C id;I fl,m;V*v;
+static DF1X(jtlrr){F1PREFIP;A hs,t,*tv;C id;I fl,m;V*v;
  ARGCHK1(w);
  // If name, it must be in ".@'name', or (in debug mode) the function name, which we will discard
  if(AT(w)&NAME){RZ(w=sfn(0,w));}
@@ -343,28 +348,30 @@ static DF1(jtlrr){A hs,t,*tv;C id;I fl,m;V*v;
  GATV0(t,BOX,m,1); tv=AAV(t);
  if(2<m)RZ(tv[2]=incorp(lrr(hs)));   // fill in h if present
  // for top-level of gerund (indicated by self!=0), any noun type could not have come from an AR, so return it as is
- if(1<m)RZ(tv[1]=incorp(fl&VGERR?CALL1(jt->ltie,fxeach(gs,(A)&jtfxself[!!self]),0L):lrr(gs)));  // fill in g if present
- if(0<m)RZ(tv[0]=incorp(fl&VGERL?CALL1(jt->ltie,fxeach(fs,(A)&jtfxself[!!self]),0L):lrr(fs)));  // fill in f (always present)
+ if(1<m)RZ(tv[1]=incorp(fl&VGERR?tiefn(jtinplace,fxeach(gs,(A)&jtfxself[!!self]),ltext):lrr(gs)));  // fill in g if present
+ if(0<m)RZ(tv[0]=incorp(fl&VGERL?tiefn(jtinplace,fxeach(fs,(A)&jtfxself[!!self]),ltext):lrr(fs)));  // fill in f (always present)
  R linsert(t,w);
 }
 
 // Create linear representation of w.  Call lrr, which creates an A for the text plus jt->ltext which is appended to it.
 // jt->lcp and jt->ltie are routines for handling adding enclosing () and handling `
-F1(jtlrep){PROLOG(0056);A z;
- jt->ltext=0; jt->lcp=(AF)jtlcpa; jt->ltie=jtltiea;
- RE(z=jtlrr(jt,w,w));  // the w for self is just any nonzero to indicate top-level call
- if(jt->ltext)z=apip(z,jt->ltext);
- jt->ltext=0;
+F1(jtlrep){PROLOG(0056);A z;A ltextb=0, *ltext=&ltextb;
+// obsolete  jt->ltext=0;
+// obsolete  jt->lcp=(AF)jtlcpa; jt->ltie=jtltiea;
+ RE(z=jtlrr(jt,w,w,ltext));  // the w for self is just any nonzero to indicate top-level call
+ if(*ltext)z=apip(z,*ltext);
+// obsolete  jt->ltext=0;
  EPILOG(z);
 }
 
 // Create paren representation of w.  Call lrr, which creates an A for the text plus jt->ltext which is appended to it.
 // jt->lcp and jt->ltie are routines for handling adding enclosing () and handling `
-F1(jtprep){PROLOG(0057);A z;
- jt->ltext=0; jt->lcp=(AF)jtlcpb; jt->ltie=jtltieb;
- RE(z=jtlrr(jt,w,w));
- if(jt->ltext)z=apip(z,jt->ltext);
- jt->ltext=0;
+F1(jtprep){PROLOG(0057);A z;A ltextb=0, *ltext=&ltextb;
+// obsolete  jt->ltext=0;
+// obsolete  jt->lcp=(AF)jtlcpb; jt->ltie=jtltieb;
+ RE(z=jtlrr((J)((I)jt|JTPARENS),w,w,ltext));
+ if(*ltext)z=apip(z,*ltext);
+// obsolete  jt->ltext=0;
  EPILOG(z);
 }
 

@@ -23,11 +23,11 @@ B jtxoinit(J jt){A x;
  _setmode(_fileno(stderr),_O_BINARY);
 #endif
  GAT0(x,BOX,8,1); memset(AV(x),C0,AN(x)*SZI); ras(x); jt->fopa=x;
- GAT0(x,INT,8,1);                             ras(x); jt->fopf=x;
+ GAT0(x,INT,8,1);                             ras(x); jt->fopf=x; AM(jt->fopf)=0;  // AM is # valid files
  R 1;
 }
 
-F jtvfn(J jt,F x){I*v=AV(jt->fopf); DQ(jt->fopn,if(x==(F)*v++)R x;); ASSERT(0,EVFNUM);}
+F jtvfn(J jt,F x){I*v=AV(jt->fopf); DQ(AM(jt->fopf),if(x==(F)*v++)R x;); ASSERT(0,EVFNUM);}
      /* check that x is in table of file#s */
 
 I jtfnum(J jt,A w){A y;I h,j;
@@ -36,20 +36,20 @@ I jtfnum(J jt,A w){A y;I h,j;
  y=AAV(w)[0];
  ASSERT(AN(y),EVLENGTH);
  if(AT(y)&B01+INT){ASSERT(h=i0(y),EVFNUM); R h;}
- RE(j=i0(indexof(vec(BOX,jt->fopn,AAV(jt->fopa)),boxW(fullname(vslit(y)))))); 
- R j<jt->fopn?*(j+AV(jt->fopf)):0;
+ RE(j=i0(indexof(vec(BOX,AM(jt->fopf),AAV(jt->fopa)),boxW(fullname(vslit(y)))))); 
+ R j<AM(jt->fopf)?*(j+AV(jt->fopf)):0;
 }    /* file# corresp. to standard argument w */
 
 F1(jtfname){I j; 
  RE(j=i0(indexof(jt->fopf,w)));
- ASSERT(j<jt->fopn,EVFNUM);
+ ASSERT(j<AM(jt->fopf),EVFNUM);
  R ca(*(j+AAV(jt->fopa)));
 }    /* string name corresp. to file# w */
 
 F1(jtjfiles){A y,z;
  ASSERTMTV(w);
- RZ(y=vec(INT,jt->fopn,AV(jt->fopf)));
- R grade2(stitch(IRS1(y,0,0,jtbox,z),vec(BOX,jt->fopn,AV(jt->fopa))),y);
+ RZ(y=vec(INT,AM(jt->fopf),AV(jt->fopf)));
+ R grade2(stitch(IRS1(y,0,0,jtbox,z),vec(BOX,AM(jt->fopf),AV(jt->fopa))),y);
 }    /* file (number,name) table */
 
 F jtjope(J jt,A w,C*mode){A t;F f;I n;static I nf=25; A z;
@@ -95,37 +95,37 @@ F1(jtjopen){A z;I h;
  RE(h=fnum(w));
  if(h){RZ(z=sc(h)); RZ(fname(z)); R z;}
  else{A ww;
-  if(jt->fopn==AN(jt->fopf)){RZ(jt->fopa=ext(1,jt->fopa)); RZ(jt->fopf=ext(1,jt->fopf));}
-  RZ(*(jt->fopn+IAV(jt->fopf))=h=(I)jope(w,FUPDATE_O));
+  if(AM(jt->fopf)==AN(jt->fopf)){I ct=AM(jt->fopf); RZ(jt->fopa=ext(1,jt->fopa)); RZ(jt->fopf=ext(1,jt->fopf)); AM(jt->fopf)=ct;}
+  RZ(*(AM(jt->fopf)+IAV(jt->fopf))=h=(I)jope(w,FUPDATE_O));
   RZ(ww=fullname(vslit(AAV(w)[0]))); RZ(ras(ww));
-  RZ(*(jt->fopn+AAV(jt->fopa))=ww);
+  RZ(*(AM(jt->fopf)+AAV(jt->fopa))=ww);
  
-  ++jt->fopn;
+  ++AM(jt->fopf);
   R sc(h);
 }}   /* open the file named w if necessary; return file# */
 
 B jtadd2(J jt,F f1,F f2,C*cmd){A c,x;
- if(f1==NULL) {jt->fopn+=2;R 1;};
+ if(f1==NULL) {AM(jt->fopf)+=2;R 1;};
  GATV0(c,LIT,1+strlen(cmd),1);MC(CAV(c)+1,cmd,AN(c)-1);cmd=CAV(c);
- if(jt->fopn+1>=AN(jt->fopf)){RZ(jt->fopa=ext(1,jt->fopa)); RZ(jt->fopf=ext(1,jt->fopf));}
- *cmd='<';x=cstr(cmd); RZ(ras(x)); RZ(*(jt->fopn+AAV(jt->fopa)  )=x); RZ(*(jt->fopn+IAV(jt->fopf)  )=(I)f1);
- *cmd='>';x=cstr(cmd); RZ(ras(x)); RZ(*(jt->fopn+AAV(jt->fopa)+1)=x); RZ(*(jt->fopn+IAV(jt->fopf)+1)=(I)f2);
+ if(AM(jt->fopf)+1>=AN(jt->fopf)){I ct=AM(jt->fopf); RZ(jt->fopa=ext(1,jt->fopa)); RZ(jt->fopf=ext(1,jt->fopf)); AM(jt->fopf)=ct;}
+ *cmd='<';x=cstr(cmd); RZ(ras(x)); RZ(*(AM(jt->fopf)+AAV(jt->fopa)  )=x); RZ(*(AM(jt->fopf)+IAV(jt->fopf)  )=(I)f1);
+ *cmd='>';x=cstr(cmd); RZ(ras(x)); RZ(*(AM(jt->fopf)+AAV(jt->fopa)+1)=x); RZ(*(AM(jt->fopf)+IAV(jt->fopf)+1)=(I)f2);
  fa(c); R 1;
-}   /* add 2 entries to jt->fopn table (for hostio); null arg commits entries */
+}   /* add 2 entries to AM(jt->fopf) table (for hostio); null arg commits entries */
 
 
 F1(jtjclose){A*av;I*iv,j;
  ARGCHK1(w);
  if(!AN(w))R w;
  if(AR(w))R rank1ex0(w,DUMMYSELF,jtjclose);
- RE(j=i0(indexof(jt->fopf,sc(fnum(w))))); ASSERT(j<jt->fopn,EVFNUM);
+ RE(j=i0(indexof(jt->fopf,sc(fnum(w))))); ASSERT(j<AM(jt->fopf),EVFNUM);
  av=AAV(jt->fopa); iv=IAV(jt->fopf); 
 // #if (SYS & SYS_DOS+SYS_MACINTOSH+SYS_UNIX)
 #if (SYS & SYS_DOS+SYS_MACINTOSH)
  RZ(unlk(iv[j]));
 #endif
  if(fclose((F)iv[j]))R jerrno();
- --jt->fopn; fa(av[j]); if(j<jt->fopn){av[j]=av[jt->fopn]; iv[j]=iv[jt->fopn];}
+ --AM(jt->fopf); fa(av[j]); if(j<AM(jt->fopf)){av[j]=av[AM(jt->fopf)]; iv[j]=iv[AM(jt->fopf)];}
  R num(1);
 }    /* close file# w */
 

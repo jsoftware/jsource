@@ -54,11 +54,11 @@ FORCE_INLINE __m128d _mm_permute_pd(__m128d a, int control)
     return dest;
 }
 
-FORCE_INLINE __m128d _mm_xor_pd(__m128d a, __m128d b)
-{
-    return vreinterpretq_f64_s32(
-        veorq_s32(vreinterpretq_s32_f64(a), vreinterpretq_s32_f64(b)));
-}
+// FORCE_INLINE __m128d _mm_xor_pd(__m128d a, __m128d b)
+// {
+//     return vreinterpretq_f64_s32(
+//         veorq_s32(vreinterpretq_s32_f64(a), vreinterpretq_s32_f64(b)));
+// }
 
 FORCE_INLINE __m128d _mm_sub_pd(__m128d a, __m128d b)
 {

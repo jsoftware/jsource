@@ -828,8 +828,7 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
  // We choose the smallest feasible table to reduce the expense of clearing it at the end of executing the verb
  I pfstn=AN(pfst); LX*pfstv=LXAV0(pfst),pfx; I asgct=0; L *sympv=LAV0(jt->symp);
  for(j=SYMLINFOSIZE;j<pfstn;++j){  // for each hashchain
-  for(pfx=pfstv[j];pfx;pfx=sympv[pfx].next){sympv[pfx].flag=LPFST; ++asgct;}  // chase the chain and count. Also set the PFST flag in every PFST symbol, so 18!:31 checking will
-                             // know to ignore the record
+  for(pfx=pfstv[j];pfx;pfx=sympv[pfx].next){++asgct;}  // chase the chain and count.
  }
 
  asgct = asgct + (asgct>>1); // leave 33% empty space, since we will have resolved most names here
@@ -892,7 +891,7 @@ A jtclonelocalsyms(J jt, A a){A z;I j;I an=AN(a); LX *av=LXAV0(a),*zv;
 }
 
 F2(jtcolon){A d,h,*hv,m;B b;C*s;I flag=VFLAGNONE,n,p;
- ARGCHK2(a,w);
+ ARGCHK2(a,w);PROLOG(778);
  if(VERB&AT(a)&AT(w)){  // v : v case
   // If nested v : v, prune the tree
   if(CCOLON==FAV(a)->id&&FAV(a)->fgh[0]&&VERB&AT(FAV(a)->fgh[0])&&VERB&AT(FAV(a)->fgh[1]))a=FAV(a)->fgh[0];  // look for v : v; don't fail if fgh[0]==0 (namerefop).  Must test fgh[0] first
@@ -975,14 +974,18 @@ F2(jtcolon){A d,h,*hv,m;B b;C*s;I flag=VFLAGNONE,n,p;
   if(AN(hv[1]))RZ(hv[3] = incorp(crelocalsyms(hv[0],hv[1],n,0,flag)));  // wordss,cws,type,monad,flag
   if(AN(hv[HN+1]))RZ(hv[HN+3] = incorp(crelocalsyms(hv[HN+0], hv[HN+1],n,1,flag)));  // words,cws,type,dyad,flag
  }
+ A z;
  switch(n){
-  case 3:  R fdef(0,CCOLON, VERB, xn1,jtxdefn,       num(n),0L,h, flag|VJTFLGOK1|VJTFLGOK2, RMAX,RMAX,RMAX);
-  case 1:  R fdef(0,CCOLON, ADV,  b?xop1:xadv,0L,    num(n),0L,h, flag, RMAX,RMAX,RMAX);
-  case 2:  R fdef(0,CCOLON, CONJ, 0L,b?jtxop2:jtxdefn, num(n),0L,h, flag, RMAX,RMAX,RMAX);
-  case 4:  R fdef(0,CCOLON, VERB, xn1,jtxdefn,       num(n),0L,h, flag|VJTFLGOK1|VJTFLGOK2, RMAX,RMAX,RMAX);
-  case 13: R vtrans(w);
-  default: ASSERT(0,EVDOMAIN);
+ case 3:  z=fdef(0,CCOLON, VERB, xn1,jtxdefn,       num(n),0L,h, flag|VJTFLGOK1|VJTFLGOK2, RMAX,RMAX,RMAX); break;
+ case 1:  z=fdef(0,CCOLON, ADV,  b?xop1:xadv,0L,    num(n),0L,h, flag, RMAX,RMAX,RMAX); break;
+ case 2:  z=fdef(0,CCOLON, CONJ, 0L,b?jtxop2:jtxdefn, num(n),0L,h, flag, RMAX,RMAX,RMAX); break;
+ case 4:  z=fdef(0,CCOLON, VERB, xn1,jtxdefn,       num(n),0L,h, flag|VJTFLGOK1|VJTFLGOK2, RMAX,RMAX,RMAX); break;
+ case 13: z=vtrans(w); break;
+ default: ASSERT(0,EVDOMAIN);
  }
+ // EPILOG is called for because of the allocations we made, but it is essential to make sure the pfsts created during crelocalsyms get deleted.  They have symbols with no value
+ // that will cause trouble if 18!:31 is executed before they are expunged.
+ EPILOG(z);
 }
 
 // input reader for direct definition

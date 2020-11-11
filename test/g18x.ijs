@@ -59,11 +59,11 @@ NB. Flag is changed,0,LINFO,PERM,WASABANDONED,hasname,hasvalue
 
  oktypes =. <. 2 ^ 0 1 2 3 4 5 6 7 10 11 12 13 14 15 16 17 18 24 26 27 29   NB. Type 0 OK if permanent
  f =. 2{"1 p
- pfst =. 2<:4|f                                   NB. symbol is in pfst, may have no value
+ NB. pfst =. 2<:4|f                                   NB. symbol is in pfst, may have no value
  li=. 4<:8|f                                   NB. locale info
  perm=. 8<:16|f                                NB. permanent
  assert. i -: 0{"1 p                           NB. index
- assert. b +. li +. ((1{"1 p)e.oktypes) +. ((perm +. pfst) *. 0 = 1{"1 p)          NB. internal type
+ assert. b +. li +. ((1{"1 p)e.oktypes) +. (perm *. 0 = 1{"1 p)          NB. internal type
  assert. li <: (s e.<'**local**')+.0 32 e.~ 1{"1 p   NB. search path of locales - 0 if local symbol table
  assert. 0<:f                                  NB. flag
  assert. b +. li +. (3{"1 p) e. _1,i.#4!:3 ''  NB. script index

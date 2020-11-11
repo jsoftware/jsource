@@ -599,8 +599,6 @@ typedef struct {A name,val;US flag;S sn;LX next;} L;
 // In all local symbol tables, the first 'hashchain' has the symbol offsets of x/y
 
 #define LCH             (I)1            /* changed since last exec of 4!:5 */
-#define LPFST           (I)2            // set if the entry is in a pro-forma symbol table.  This is needed only to make 18!:31 work.  Entries in a pfst have just a name,
-                                        // so they need to be treated like PERMANENT entries when auditing for value
 #define LINFO           (I)4            /* locale info                     */
 #define LPERMANENT      (I)8            // This is a permanent entry in a local symbol table; don't delete, just leave val=0
 #define LWASABANDONEDX  4

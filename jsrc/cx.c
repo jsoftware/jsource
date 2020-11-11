@@ -828,7 +828,8 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
  // We choose the smallest feasible table to reduce the expense of clearing it at the end of executing the verb
  I pfstn=AN(pfst); LX*pfstv=LXAV0(pfst),pfx; I asgct=0; L *sympv=LAV0(jt->symp);
  for(j=SYMLINFOSIZE;j<pfstn;++j){  // for each hashchain
-  for(pfx=pfstv[j];pfx;pfx=sympv[pfx].next)++asgct;  // chase the chain and count
+  for(pfx=pfstv[j];pfx;pfx=sympv[pfx].next){sympv[pfx].flag=LPFST; ++asgct;}  // chase the chain and count. Also set the PFST flag in every PFST symbol, so 18!:31 checking will
+                             // know to ignore the record
  }
 
  asgct = asgct + (asgct>>1); // leave 33% empty space, since we will have resolved most names here

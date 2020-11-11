@@ -717,6 +717,8 @@ extern unsigned int __cdecl _clearfp (void);
 #define FPREFIP         J jtinplace=jt; jt=(J)(intptr_t)((I)jt&~JTFLAGMSK)  // turn off all flag bits in jt, leave them in jtinplace
 #define F1PREFIP        FPREFIP
 #define F2PREFIP        FPREFIP
+#define F1PREFJT        FPREFIP  // for doc purposes, use when the JT flags are not for inplacing
+#define F2PREFJT        FPREFIP
 #define F1RANK(m,f,self)    {ARGCHK1(w); if(unlikely(m<AR(w)))if(m==0)R rank1ex0(w,(A)self,f);else R rank1ex(  w,(A)self,(I)m,     f);}  // if there is more than one cell, run rank1ex on them.  m=monad rank, f=function to call for monad cell.  Fall through otherwise
 #define F2RANKcommon(l,r,f,self,extra)  {ARGCHK2(a,w); extra if(unlikely((I)((l-AR(a))|(r-AR(w)))<0))if((l|r)==0)R rank2ex0(a,w,(A)self,f);else{I lr=MIN((I)l,AR(a)); I rr=MIN((I)r,AR(w)); R rank2ex(a,w,(A)self,lr,rr,lr,rr,f);}}  // If there is more than one cell, run rank2ex on them.  l,r=dyad ranks, f=function to call for dyad cell
 #define F2RANK(l,r,f,self)  F2RANKcommon(l,r,f,self,)
@@ -1160,6 +1162,7 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x
 
 #define NUMMAX          9    // largest number represented in num[]
 #define NUMMIN          (~NUMMAX)    // smallest number represented in num[]
+#define OUTSEQ          "\n"  // string used for internal end-of-line (not jtpx)
 // Given SZI B01s read into p, pack the bits into the MSBs of p and clear the lower bits of p
 #if C_LE  // if anybody makes a bigendian CPU we'll have to recode
 #if BW==64

@@ -100,6 +100,7 @@ F1(jtieps){
 
 F1(jtoutparmq){A z;D*u;I*v;
  ASSERTMTV(w);
+#if 0 // obsolete 
  if(IMAX==jt->outmaxlen||IMAX==jt->outmaxbefore||IMAX==jt->outmaxafter){
   GAT0(z,FL, 4,1); u=DAV(z);
   u[0]=(D)jt->outeol;
@@ -107,12 +108,14 @@ F1(jtoutparmq){A z;D*u;I*v;
   u[2]=jt->outmaxbefore==IMAX?inf:(D)jt->outmaxbefore;
   u[3]=jt->outmaxafter==IMAX?inf:(D)jt->outmaxafter;
  }else{
-  GAT0(z,INT,4,1); v= AV(z);
-  v[0]=jt->outeol;
-  v[1]=jt->outmaxlen;
-  v[2]=jt->outmaxbefore;
-  v[3]=jt->outmaxafter;
- }
+#else
+ GAT0(z,INT,4,1); v= AV(z);
+ v[0]=jt->outeol;
+ v[1]=jt->outmaxlen;
+ v[2]=jt->outmaxbefore;
+ v[3]=jt->outmaxafter;
+// obsolete  }
+#endif
  RETF(z);
 }
 
@@ -122,9 +125,15 @@ F1(jtoutparms){I*v;
  ASSERT(4==AN(w),EVLENGTH);
  v=AV(w);
  ASSERT(0==v[0]||2==v[0],EVINDEX);
+#if 0 // obsolete
  ASSERT(0<=v[1],EVDOMAIN);
  ASSERT(0<=v[2],EVDOMAIN);
  ASSERT(0<=v[3],EVDOMAIN);
+#else
+ ASSERT(BETWEENC(v[1],0,32767),EVDOMAIN);
+ ASSERT(BETWEENC(v[2],0,32767),EVDOMAIN);
+ ASSERT(BETWEENC(v[3],0,32767),EVDOMAIN);
+#endif
  jt->outeol      =(UC)v[0];
  jt->outmaxlen   =v[1];
  jt->outmaxbefore=v[2];

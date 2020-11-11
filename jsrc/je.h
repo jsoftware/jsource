@@ -221,7 +221,7 @@ extern F1(jtnc);
 extern F1(jtnch);
 extern F1(jtnegate);
 extern F1(jtnfb);
-extern F1(jtnfeoutstr);
+// obsolete extern F1(jtnfeoutstr);
 extern F1(jtnfes);
 extern F1(jtnl1);
 extern F1(jtnlsym);

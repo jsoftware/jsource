@@ -44,7 +44,7 @@ static void jtefmt(J jt,C*s,I i){
 void jtshowerr(J jt){C b[1+2*NETX],*p,*q,*r;
  if(jt->etxn&&jt->tostdout){
   p=b; q=jt->etx; r=q+jt->etxn;
-  while(q<r&&p<b+2*NETX-3){if(*q==CLF){strcpy(p,jt->outseq); p+=strlen(jt->outseq); ++q;}else *p++=*q++;}  // avoid buffer overrun on huge typeouts
+  while(q<r&&p<b+2*NETX-3){if(*q==CLF){strcpy(p,OUTSEQ); p+=strlen(OUTSEQ); ++q;}else *p++=*q++;}  // avoid buffer overrun on huge typeouts
   *p=0;
 #ifdef ANDROID
   A z=tocesu8(str(strlen(b),b));

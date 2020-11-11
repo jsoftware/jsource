@@ -1428,6 +1428,7 @@ F1(jtcallback){
 
 F1(jtnfes){I k;I r;
  RE(k=i0(w));
+ ASSERT(BETWEENC(k,0,1),EVDOMAIN);
  r=jt->nfe;
  jt->nfe=k;
  R sc(r);
@@ -1438,11 +1439,13 @@ F1(jtcallbackx){
  R vec(INT,cbxn,cbx);
 } /* 15!:17 return x callback arguments */
 
+#if 0 // obsolete 
 F1(jtnfeoutstr){I k;
  RE(k=i0(w));
  ASSERT(0==k,EVDOMAIN);
  R cstr(jt->mtyostr?jt->mtyostr:(C*)"");
 } /* 15!:18 return last jsto output */
+#endif
 
 F1(jtcdjt){
  ASSERTMTV(w);

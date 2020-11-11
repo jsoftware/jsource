@@ -366,9 +366,12 @@
 #define fauxblock(z) I z[NORMAH+4]  // define a block that can be passed in to fauxvirtual.  The 4 is the max rank, and must match fauxvirtual and fauxplain
 #define fauxblockINT(z,n,r) I z[(AKXR(r)>>LGSZI)+(n)]   // define a block, big enough to hold n atoms at rank r, for use in fauxINT
 // Allocate an INT block. z is the zvalue to hold the result; v is the fauxblock to use if n INTs will fit in the fauxblock, which has rank r
-// shape is not filled in, except when rank is 1; therefore shape will be 0 in any call to GATV
+// shape is not filled in, except when rank is 1
 // scaf We should mark the blocks as NJA for good form?
 #define fauxINT(z,v,n,r) {if(AKXR(r)+(n)*SZI<=(I)sizeof(v)){z=(A)(v); AK(z)=AKXR(r); AFLAG(z)=0/*AFNJA*/; AT(z)=INT; AC(z)=ACUC1; AN(z)=(n); AR(z)=(RANKT)(r); if(r==1)AS(z)[0]=(n);}else{GATV0(z,INT,(n),(r));}}
+#define fauxBOX(z,v,n,r) {if(AKXR(r)+(n)*SZI<=(I)sizeof(v)){z=(A)(v); AK(z)=AKXR(r); AFLAG(z)=0/*AFNJA*/; AT(z)=BOX; AC(z)=ACUC1; AN(z)=(n); AR(z)=(RANKT)(r); if(r==1)AS(z)[0]=(n);}else{GATV0(z,BOX,(n),(r));}}
+// use the following in functions that cannot admit a return.  You must know that the allocated fauxblock is big enough
+#define fauxBOXNR(z,v,n,r) {z=(A)(v); AK(z)=AKXR(r); AFLAG(z)=0/*AFNJA*/; AT(z)=BOX; AC(z)=ACUC1; AN(z)=(n); AR(z)=(RANKT)(r); if(r==1)AS(z)[0]=(n);}
 // v is a block declared by fauxblock, w is the source data, r is the rank.  offset is assumed 0.  c is the initial value for AC.  If the rank is small enough, we use the fauxblock, otherwise
 // we allocate a block.  We assume that the caller will fill in AN, AS.  Block must be marked UNINCORPABLE so it will not free its backer if freed, and so it will not be in-place virtualed,
 // and must be marked recursive if it is of such a type so that if we fa() the block we will not try to recur
@@ -588,7 +591,7 @@
 #define joi(x0,x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,x11,x12)  jtjoi(jt,(x0),(x1),(x2),(x3),(x4),(x5),(x6),(x7),(x8),(x9),(x10),(x11),(x12))
 #define jope(x,y)                   jtjope(jt,(x),(y))
 #define jpr(x)                      jtjpr(jt,(x))
-#define jpr1(x)                     jtjpr1(jt,(x))
+#define jpr1(x)                     jtjpr1(jtinplace,(x))
 #define jprx(x0,x1,x2,x3,x4)        jtjprx(jt,(x0),(x1),(x2),(x3),(x4))
 #define jset(x,y)                   jtjset(jt,(x),(y))
 #define jsig(x,y)                   jtjsig(jt,(x),(y))

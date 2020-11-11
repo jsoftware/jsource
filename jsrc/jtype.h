@@ -82,6 +82,11 @@ typedef AD *A;
 // following bit is used inside jtlrep only
 #define JTPARENSX       1   // create fully parenthesized output
 #define JTPARENS        (((I)1)<<JTPARENSX)
+// following bits are passed into jpr/jpr1/immex
+#define JTPRTYO         7  // output class, see MTYO*
+#define JTPRNOSTDOUTX   3   // set to suppress typing sentence result on stdout (as in scripts)
+#define JTPRNOSTDOUT    (((I)1)<<JTPRNOSTDOUTX)
+
 // Next flag must match result.h and VF2 flags, and must be above ZZFLAGBOXATOP
 #define JTWILLBEOPENEDX 4   // result of this exec will be opened immediately, so it can contain virtual references to an input to the current verb
      // Note: this flag MUST NOT equal BOX, or BOX<<1, or 1 or 2

@@ -241,36 +241,36 @@ typedef struct {
 #if !(C_CRC32C && SY_64)
  I    min;              /* the r result from irange                        */
 #endif
- I    mtyo;				      /* jsto output type - jfwrite arg to jpr           */
- C*   mtyostr;          /* jsto string                                     */
- I    nfe;              /* 1 for J native front end                        */
+// obsolete  I    mtyo;				      /* jsto output type - jfwrite arg to jpr           */
+// obsolete  C*   mtyostr;          /* jsto string                                     */
+ C    nfe;              /* 1 for J native front end                        */
  I    oleop;            /* com flag to capture output                      */
  void*opbstr;           /* com ptr to BSTR for captured output             */
- I    outmaxafter;      /* output: maximum # lines after truncation        */
- I    outmaxbefore;     /* output: maximum # lines before truncation       */
- I    outmaxlen;        /* output: maximum line length before truncation   */
- C    outseq[3];		    /* EOL: "LF" "CR" "CRLF"                           */
+ S    outmaxafter;      /* output: maximum # lines after truncation        */
+ S    outmaxbefore;     /* output: maximum # lines before truncation       */
+ S    outmaxlen;        /* output: maximum line length before truncation   */
+// obsolete  C    outseq[3];		    /* EOL: "LF" "CR" "CRLF"                           */
  I    peekdata;         /* our window into the interpreter                 */
 // obsolete  B    pmrec;            /* perf. monitor: 0 entry/exit; 1 all              */
 // obsolete  I    pmctr;            /* perf. monitor: ctr>0 means do monitoring        */
  A    pma;              /* perf. monitor: data area                        */
 // obsolete  PM0* pmu;              /* perf. monitor: (PM0)AV(pma)                     */
 // obsolete  PM*  pmv;              /* perf. monitor: (PM*)(sizeof(PM0)+CAV(pma))      */
- I    pos[2];           /* boxed output x-y positioning                    */
+ C    pos[2];           /* boxed output x-y positioning                    */
  C    pp[8];            // print precision (sprintf field for numeric output)
  A    p4792;            // pointer to p: i. 4792, filled in on first use
  I    redefined;        /* symbol table entry of redefined explicit defn   */
- I    sbfillfactor;     /* SB for binary tree                              */
- I    sbgap;            /* SB for binary tree                              */
+ I    sbfillfactor;     /* ?SB for binary tree                              */
+ I    sbgap;            /* ?SB for binary tree                              */
  A    sbh;              /* SB hash table of indices; -1 means unused       */
- I*   sbhv;             /* SB points to ravel of sbh                       */
- I    sbroot;           /* SB root of the binary tree                      */
- A    sbs;              /* SB string                                       */
- I    sbsn;             /* SB string length so far                         */
- C*   sbsv;             /* SB points to ravel of sbs                       */
+ I*   sbhv;             /* *SB points to ravel of sbh                       */
+ I    sbroot;           /* ?SB root of the binary tree                      */
+ A    sbs;              /* *SB string                                       */
+ I    sbsn;             /* *SB string length so far                         */
+ C*   sbsv;             /* *SB points to ravel of sbs                       */
  A    sbu;              /* SB data for each unique symbol                  */
- I    sbun;             /* SB cardinality                                  */
- SBU* sbuv;             /* SB points to ravel of sbu                       */
+ I    sbun;             /* *SB cardinality                                  */
+ SBU* sbuv;             /* *SB points to ravel of sbu                       */
  int  sdinited;         /* sockets                                         */
  I4   slisti;           /* index into slist of current script     $         */
  A    slist;            /* files used in right arg to 0!:                  */

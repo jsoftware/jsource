@@ -178,7 +178,7 @@ jt->directdef = 1;  // scaf
 #endif
  jt->outmaxafter=222;
  jt->outmaxlen=256;
- strcpy(jt->outseq,"\x0a");
+// obsolete strcpy(jt->outseq,"\x0a");
  strcpy(jt->pp,"%0.6g");
  jt->retcomm=1;
  jt->tostdout=1;

@@ -13,6 +13,13 @@
 #define ROOT            (jt->sbroot)
 #define FILLFACTOR      (jt->sbfillfactor)
 #define GAP             (jt->sbgap)  
+#if SY_64
+#define INITHASH2(h,n) ((h*(UI)n)>>32)  // get initial index for hash lookup into sbh
+#else
+#define INITHASH2(h,n) ((h*(UIL)n)>>32)
+#endif
+#define INITHASH(h) INITHASH2(h,AN(jt->sbh))  // get initial index for hash lookup into sbh
+
 
 // The hash field is filled in at initialization, but that's OK because it's always set to the same value
 static SBU       sentinel = {0,0,0,BLACK,0,0,0,IMIN,0,0,0};
@@ -280,10 +287,10 @@ static I jtsbextend(J jt,I n,C*s,UI h,I hi){A x;I c,*hv,j,p;SBU*v;
 
   FULLHASHSIZE(2*AN(jt->sbh),INTSIZE,1,0,p);
   RZ(x=apvwr(p,-1L,0L)); hv=AV(x); v=jt->sbuv;
-  DO(c, j=v++->h%p; while(0<=hv[j]){++j; if(j==p)j=0;} hv[j]=i;);
   fa(jt->sbh); ras(x); jt->sbh=x; jt->sbhv= AV(x);
-  hi=h%p;                               /* new hi wrt new sbh size      */
-  while(0<=hv[hi]){++hi; if(hi==p)hi=0;} 
+  DO(c, j=INITHASH(v++->h); while(0<=hv[j]){if(--j<0)j+=AN(jt->sbh);} hv[j]=i;);
+  hi=INITHASH(h);                               /* new hi wrt new sbh size      */
+  while(0<=hv[hi]){if(--hi<0)hi+=AN(jt->sbh);} 
  }
  R hi;
 }
@@ -324,7 +331,7 @@ static SB jtsbprobe(J jt,S c2,I n,C*s,I test){B b;UC*t;I hi,ui;SBU*u;UI h,hn;UC*
  h=(c0&SBC4?hic4:c0&SBC2?hic2:hic)(n,us);
 
  hn=AN(jt->sbh);                        /* size of hast table           */
- hi=h%hn;                               /* index into hash table        */
+ hi=INITHASH(h);                               /* index into hash table        */
  while(1){
   ui=(jt->sbhv)[hi];                    /* index into unique symbols    */
   if(0>ui){if(test)R -1; else R sbinsert(c2,c0,n,s,h,hi);} /* new symbol                   */
@@ -348,7 +355,8 @@ static SB jtsbprobe(J jt,S c2,I n,C*s,I test){B b;UC*t;I hi,ui;SBU*u;UI h,hn;UC*
     case 8:
     case 0: if(n==u->n&&!memcmpne(t,s,n))R(SB)ui; break;
   }}
-  ++hi; hi&=(I )(hi==(I)hn)-1;                         /* next hash table index        */
+// obsolete   ++hi; hi&=(I )(hi==(I)hn)-1;                         /* next hash table index        */
+  if(--hi<0)hi+=AN(jt->sbh);
   }
  }   /* insert new symbol or get existing symbol */
 
@@ -530,7 +538,7 @@ static A jtsblit(J jt,C c,A w){A z;S c2=0;I k,m=0,n;SB*v,*v0;SBU*u;
 static F1(jtsbhashstat){A z;I j,k,n,p,*zv;SBU*v;
  n=jt->sbun; v=jt->sbuv; p=AN(jt->sbh);
  GATV0(z,INT,n,1); zv=AV(z);
- DO(n, j=v++->h%p; k=1; while(i!=(jt->sbhv)[j]){++j; if(j==p)j=0; ++k;} *zv++=k;);
+ DO(n, j=INITHASH(v++->h); k=1; while(i!=(jt->sbhv)[j]){if(--j<0)j+=AN(jt->sbh); ++k;} *zv++=k;);
  R z;
 }    /* # queries in hash table for each unique symbol */
 
@@ -594,7 +602,7 @@ static A jtsbcheck1(J jt,A una,A sna,A u,A s,A h,A roota,A ff,A gp){PROLOG(0003)
   ASSERTD(sn>=vi+vn,"u index/length");
   k=(c2&SBC4?hic4:c2&SBC2?hic2:hic)(vn,vc);
   ASSERTD(k==v->h,"u hash");
-  j=k%hn; while(i!=hv[j]&&0<=hv[j])j=(1+j)%hn;
+  j=INITHASH2(k,hn); while(i!=hv[j]&&0<=hv[j])if(--j<0)j+=hn;
   ASSERTD(i==hv[j],"u/h mismatch");
   ASSERTD(BLACK==v->color||RED==v->color,"u color");
   RZ(xv[i]=incorp(c2&SBC4?vec(C4T,vn>>2,vc):c2&SBC2?vec(C2T,vn>>1,vc):str(vn,vc)));
@@ -822,7 +830,7 @@ B jtsbtypeinit(J jt){A x;I c=sizeof(SBU)/SZI,s[2],p;
  sentinel.h=hash0;  // initialize the hash value for the empty symbol
  jt->sbuv[0]=sentinel;
  jt->sbun=1;
- jt->sbhv[hash0%AN(jt->sbh)]=0;  // clear symbol-table entry for empty symbol
+ jt->sbhv[INITHASH(hash0)]=0;  // clear symbol-table entry for empty symbol
  R 1;
 }    /* initialize global data for SBT datatype */
 

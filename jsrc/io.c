@@ -133,7 +133,7 @@ A recursive JDo may use a DD, but only if it is fully contained in the string
 
 extern void dllquit(J);
 
-void jtwri(J jt,I type,C*p,I m,C*s){C buf[1024],*t=jt->outseq,*v=buf;I c,d,e,n;
+void jtwri(J jt,I type,C*p,I m,C*s){C buf[1024],*t=OUTSEQ,*v=buf;I c,d,e,n;
  if(jt->tostdout){
   c=strlen(p);            /* prompt      */
   e=strlen(t);            /* end-of-line */
@@ -550,13 +550,19 @@ void jsto(J jt,I type,C*s){C e;I ex;
  if(jt->nfe)
  {
   // here for Native Front End state, toggled by 15!:16
-  C q[]="0 output_jfe_ (15!:18)0";
-  q[0]+=(C)type;
-  jt->mtyostr=s;
-  e=jt->jerr; ex=jt->etxn;
+  // we execute the sentence:  type output_jfe_ s
+  fauxblockINT(fauxtok,3,1); A tok; fauxBOXNR(tok,fauxtok,3,1);  // allocate 3-word sentence on stack, rank 1
+  AAV1(tok)[0]=num(type); AAV1(tok)[1]=nfs(11,"output_jfe_"); AAV1(tok)[2]=cstr(s);  // the sentence to execute, tokenized
+// obsolete   C q[]="0 output_jfe_ (15!:18)0";
+// obsolete   q[0]+=(C)type;
+// obsolete   jt->mtyostr=s;
+  e=jt->jerr; ex=jt->etxn;   // save error state before running the output sentence
   jt->jerr=0; jt->etxn=0;
-  jt->adbreakr=&breakdata;exec1(cstr(q));jt->adbreakr=jt->adbreak;
-  jt->jerr=e; jt->etxn=ex; 
+  jt->adbreakr=&breakdata;
+// obsolete   exec1(cstr(q));
+  parse(tok); jt->asgn=0;  // run it, ignoring errors.  always reset jt->asgn after every execution has had its chance to type
+  jt->adbreakr=jt->adbreak;
+  jt->jerr=e; jt->etxn=ex; // restore
  }else{
   // Normal output.  Call the output routine
   if(jt->smoutput){((outputtype)(jt->smoutput))(jt,(int)type,s);R;} // JFE output

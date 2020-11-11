@@ -862,7 +862,9 @@ F2(jtoutstr){I*v;
 }
 
 // w is a noun.  Convert it to a UTF-8 string and write it to the console
-static F1(jtjpr1){PROLOG(0002);A z;
+static F1(jtjpr1){F1PREFJT;PROLOG(0002);A z;
+ // extract the output type buried in jt
+ I mtyo=(I)jtinplace&JTPRTYO;
  // convert the character array to a null-terminated UTF-8 string
  RZ(z=jprx(jt->outeol,jt->outmaxlen,jt->outmaxbefore,jt->outmaxafter,w));
  // write string to stdout, calling it a 'formatted array' unless otherwise overridden
@@ -872,15 +874,15 @@ static F1(jtjpr1){PROLOG(0002);A z;
   CAV(z)[AN(z)]=0;
 #endif
   ASSERTSYS(!CAV(z)[AN(z)],"jtjpr1 trailing null byte");
-  jsto(jt,jt->mtyo==0?MTYOFM:jt->mtyo,CAV(z));
+  jsto(jt,mtyo==0?MTYOFM:mtyo,CAV(z));
  }
  EPILOG(mtm);
 }
 
 // w is anything; convert it to character and write it to the display
-// if jt->tostdout is clear (for loading scripts quietly), check for errors but produce no output
+// flag bits in jt indicate output class and print-enable
 // Result is 0 if error, otherwise a harmless constant
-F1(jtjpr){A y;I i,n,t; UC *v;
+F1(jtjpr){F1PREFJT;A y;I i,n,t; UC *v;
  ARGCHK1(w);
  t=AT(w);
   // if w is a noun, format it and output it

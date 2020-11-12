@@ -41,8 +41,9 @@ static void jtefmt(J jt,C*s,I i){
  if(15<NETX-jt->etxn){C*v=jt->etx+jt->etxn; sprintf(v,s,i); jt->etxn+=strlen(v);}
 }
 
-void jtshowerr(J jt){C b[1+2*NETX],*p,*q,*r;
- if(jt->etxn&&jt->tostdout){
+// jt has the typeout flags
+void jtshowerr(J jt){F1PREFJT;C b[1+2*NETX],*p,*q,*r;
+ if(jt->etxn&&!((I)jtinplace&JTPRNOSTDOUT)){  // if there is a message and it is not suppressed...
   p=b; q=jt->etx; r=q+jt->etxn;
   while(q<r&&p<b+2*NETX-3){if(*q==CLF){strcpy(p,OUTSEQ); p+=strlen(OUTSEQ); ++q;}else *p++=*q++;}  // avoid buffer overrun on huge typeouts
   *p=0;

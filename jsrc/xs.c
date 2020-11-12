@@ -47,7 +47,8 @@ void setftype(C*v,OSType type,OSType crea){C p[256];FInfo f;
 /* tso: echo to stdout                          */
 
 #define SEEKLEAK 0
-static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;B xt=jt->tostdout;DC d,xd=jt->dcs;
+static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;DC d,xd=jt->dcs;
+// obsolete B xt=jt->tostdout;
  if(equ(w,num(1)))R mtm;
  RZ(w=vs(w));
  // Handle locking.  Global glock has lock status for higher levels.  We see if this text is locked; if so, we mark lock status for this level
@@ -60,25 +61,28 @@ static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;B xt=jt->tostdout;DC d,xd=jt
  }
  FDEPINC(1);   // No ASSERTs or returns till the FDEPDEC below
  RZ(d=deba(DCSCRIPT,0L,w,(A)si));
- jt->dcs=d; jt->tostdout=tso&&!jt->seclev;
+ jt->dcs=d; jt->dcs->dcpflags=(!(tso&&!jt->seclev))<<JTPRNOSTDOUTX;  // set flag to indicate suppression of output
+ J jtinplace=(J)((I)jt|jt->dcs->dcpflags);  // create typeout flags to pass along: no output class, suppression as called for in tso
+// obsolete  jt->tostdout=tso&&!jt->seclev;
  A *old=jt->tnextpushp;
  switch(ce){
  // loop over the lines.  jgets may fail, in which case we leave that as the error code for the sentence.
- case 0: while(x&&!jt->jerr){jt->etxn=0;                           immex(x=ddtokens(jgets("   "),1+(AN(jt->locsyms)>1))); tpop(old);} break;  // lgets returns 0 for error or EOF
- case 1: while(x           ){if(!jt->seclev)showerr(); jt->jerr=0; immex(x=ddtokens(jgets("   "),1+(AN(jt->locsyms)>1))); tpop(old);} break;
+ case 0: while(x&&!jt->jerr){jt->etxn=0;                           jtimmex(jtinplace,x=ddtokens(jgets("   "),1+(AN(jt->locsyms)>1))); tpop(old);} break;  // lgets returns 0 for error or EOF
+ case 1: while(x           ){if(!jt->seclev)jtshowerr(jtinplace); jt->jerr=0; jtimmex(jtinplace,x=ddtokens(jgets("   "),1+(AN(jt->locsyms)>1))); tpop(old);} break;
  case 2:
  case 3: {
 #if SEEKLEAK
   I stbytes = spbytesinuse();
 #endif
-  while(x&&!jt->jerr){jt->etxn=0;                           immea(x=jgets("   ")); tpop(old);}
+  while(x&&!jt->jerr){jt->etxn=0;                           jtimmea(jtinplace,x=jgets("   ")); tpop(old);}
   jt->asgn=0;
 #if SEEKLEAK
   I endbytes=spbytesinuse(); if(endbytes-stbytes > 1000)printf("%lld bytes lost\n",endbytes-stbytes);
 #endif
   }
  }
- jt->dcs=xd; jt->tostdout=xt;
+ jt->dcs=xd;
+// obsolete  jt->tostdout=xt;
   debz();
  FDEPDEC(1);  // ASSERT OK now
  jt->uflags.us.cx.cx_c.glock=oldk; // pop lock status

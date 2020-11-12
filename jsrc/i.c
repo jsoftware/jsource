@@ -181,7 +181,7 @@ jt->directdef = 1;  // scaf
 // obsolete strcpy(jt->outseq,"\x0a");
  strcpy(jt->pp,"%0.6g");
  jt->retcomm=1;
- jt->tostdout=1;
+// obsolete  jt->tostdout=1;
  jt->transposeflag=1;
 // jt->int64rflag=0;
  jt->xmode=XMEXACT;

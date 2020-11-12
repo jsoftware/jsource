@@ -789,7 +789,7 @@ CDPROC int _stdcall JFree(J jt)
 #if !SY_WINCE
 	dllquit(jt);  // clean up call dll
 #endif
-	if(jt->xep&&AN(jt->xep)){A *old=jt->tnextpushp; immex(jt->xep); fa(jt->xep); jt->xep=0; jt->jerr=0; jt->etxn=0; tpop(old); }
+	if(jt->xep&&AN(jt->xep)){A *old=jt->tnextpushp; immex(jt->xep); fa(jt->xep); jt->xep=0; jt->jerr=0; jt->etxn=0; tpop(old); }  // force typeout
 	HeapDestroy(jt->heap);
 	return 0;
 }

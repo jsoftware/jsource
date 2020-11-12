@@ -133,16 +133,18 @@ A recursive JDo may use a DD, but only if it is fully contained in the string
 
 extern void dllquit(J);
 
-void jtwri(J jt,I type,C*p,I m,C*s){C buf[1024],*t=OUTSEQ,*v=buf;I c,d,e,n;
- if(jt->tostdout){
+// flags in jt indicate whether display is suppressed.  p is the prompt, s is the text.  suppression of s happen when it is created;
+// here we control suppression of p; but we suppress all anyway
+void jtwri(J jt,I type,C*p,I m,C*s){F1PREFJT;C buf[1024],*t=OUTSEQ,*v=buf;I c,d,e,n;
+ if(!((I)jtinplace&JTPRNOSTDOUT)){  // if the prompt is not suppressed...
   c=strlen(p);            /* prompt      */
   e=strlen(t);            /* end-of-line */
   n=sizeof(buf)-(c+e+1);  /* main text   */
   d=m>n?n-3:m;
   MC(v,p,c); v+=c;
   MC(v,s,d); v+=d; if(m>n){MC(v,"...",3L); v+=3;}
-  MC(v,t,e); v+=e; 
-  *v=0;
+  MC(v,t,e); v+=e;   // join prompt/body/EOL
+  *v=0;   // NUL termination
 #ifdef ANDROID
   A z=tocesu8(str(strlen(buf),buf));
   CAV(z)[AN(z)]=0;
@@ -150,7 +152,8 @@ void jtwri(J jt,I type,C*p,I m,C*s){C buf[1024],*t=OUTSEQ,*v=buf;I c,d,e,n;
 #else
   jsto(jt,type,buf);
 #endif
-}}
+ }
+}
 
 static void jtwrf(J jt,I n,C*v,F f){C*u,*x;I j=0,m;
  while(n>j){
@@ -191,7 +194,7 @@ void breakclose(J jt);
 static C* nfeinput(J jt,C* s){A y;
  jt->adbreakr=&breakdata; y=exec1(cstr(s)); jt->adbreakr=jt->adbreak;
  if(!y){breakclose(jt);exit(2);} /* J input verb failed */
- jtwri(jt,MTYOLOG,"",strlen(CAV(y)),CAV(y));
+ jtwri(jt,MTYOLOG,"",strlen(CAV(y)),CAV(y));  // call to nfeinput() comes from a prompt or from jdo.  In either case we want to display the result.  Thus jt
  return CAV(y); /* don't combine with previous line! CAV runs (x) 2 times! */
 }
 
@@ -209,7 +212,7 @@ A jtjgets(J jt,C*p){A y;B b;C*v;I j,k,m,n;UC*s;
   jt->dcs->dcj=k=j;  // k=start index
   jt->dcs->dcix=j=advl(j,n,s);  // j=end+1 index
   m=j-k; if(m&&32>s[k+m-1])--m; if(m&&32>s[k+m-1])--m;  // m is length; discard trailing control characters (usually CRLF, but not necessarily) ?not needed: done in inpl
-  jtwri(jt,MTYOLOG,p,m,k+s);  // log the input
+  jtwri((J)((I)jt+jt->dcs->dcpflags),MTYOLOG,p,m,k+s);  // log the input, but only if we wanted to echo the input
   R inpl(b,m,k+s);  // process & return the line
  }
  /* J calls for input in 3 cases:
@@ -218,12 +221,12 @@ A jtjgets(J jt,C*p){A y;B b;C*v;I j,k,m,n;UC*s;
     1!:1[1 read from keyboard */
  // if we are already prompting, a second prompt would be unrecoverable & we fail this request
  ASSERT(jt->recurstate<RECSTATEPROMPT,EVCTRL)
- showerr();  // if there is an error at this point, display it (shouldn't happen)
+ showerr();  // if there is an error at this point, display it (shouldn't happen)   use jt to force typeout
  // read from the front end. This is either through the nfe path or via the callback to the FE
  if(jt->nfe){
   // Native Front End
   jt->recurstate=RECSTATEPROMPT;  // advance to PROMPT state
-  v=nfeinput(jt,*p?"input_jfe_'      '":"input_jfe_''");
+  v=nfeinput(jt,*p?"input_jfe_'      '":"input_jfe_''");   // use jt so always emit prompt
  }else{
   ASSERT(jt->sminput,EVBREAK); 
   jt->recurstate=RECSTATEPROMPT;  // advance to PROMPT state
@@ -287,6 +290,7 @@ I jdo(J jt, C* lp){I e;A x;
  A *old=jt->tnextpushp;
  *jt->adbreak=0;
  x=inpl(0,(I)strlen(lp),lp);
+ // All these immexes run with result-display enabled (jt flags=0)
  // Run any enabled immex sentences both before & after the line being executed.  I don't understand why we do it before, but it can't hurt since there won't be any.
  // BUT: don't do it if the call is recursive.  The user might have set the iep before a prompt, and won't expect it to be executed asynchronously
  if(likely(jt->recurstate<RECSTATEPROMPT))while(jt->iepdo&&jt->iep){jt->iepdo=0; immex(jt->iep); if(savcallstack==0)CALLSTACKRESET MODESRESET jt->jerr=0; tpop(old);}
@@ -295,7 +299,7 @@ I jdo(J jt, C* lp){I e;A x;
  e=jt->jerr;
  if(savcallstack==0)CALLSTACKRESET MODESRESET jt->jerr=0;
  if(likely(jt->recurstate<RECSTATEPROMPT))while(jt->iepdo&&jt->iep){jt->iepdo=0; immex(jt->iep); if(savcallstack==0)CALLSTACKRESET MODESRESET jt->jerr=0; tpop(old);}
- showerr();
+ showerr();   // jt flags=0 to force typeout
  spfree();
  tpop(old);
  R e;
@@ -399,7 +403,7 @@ int _stdcall JDo(J jt, C* lp){int r; UI savcstackmin, savcstackinit, savqtstacki
   jt->cstackmin=savcstackmin, jt->cstackinit=savcstackinit, jt->qtstackinit=savqtstackinit;  // restore stack pointers after recursion
  }
  while(jt->nfe){  // nfe normally loops here forever
-  A *old=jt->tnextpushp; r=(int)jdo(jt,nfeinput(jt,"input_jfe_'   '")); tpop(old);
+  A *old=jt->tnextpushp; r=(int)jdo(jt,nfeinput(jt,"input_jfe_'   '")); tpop(old);  // use jt to force output in nfeinput
  }
  R r;
 } 
@@ -610,7 +614,7 @@ int JFree(J jt){
   if(!jt) R 0;
   breakclose(jt);
   jt->jerr=0; jt->etxn=0; /* clear old errors */
-  if(jt->xep&&AN(jt->xep)){A *old=jt->tnextpushp; immex(jt->xep); fa(jt->xep); jt->xep=0; jt->jerr=0; jt->etxn=0; tpop(old); }
+  if(jt->xep&&AN(jt->xep)){A *old=jt->tnextpushp; immex(jt->xep); fa(jt->xep); jt->xep=0; jt->jerr=0; jt->etxn=0; tpop(old); }  // run with typeout enabled
   dllquit(jt);  // clean up call dll
   free(jt->heap);  // free the initial allocation
   R 0;

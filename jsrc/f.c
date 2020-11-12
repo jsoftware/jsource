@@ -886,12 +886,13 @@ F1(jtjpr){F1PREFJT;A y;I i,n,t; UC *v;
  ARGCHK1(w);
  t=AT(w);
   // if w is a noun, format it and output it
- if(t&NOUN&&jt->tostdout)RZ(jpr1(w))
+// obsolete  if(t&NOUN&&jt->tostdout)RZ(jpr1(w))
+ if(t&NOUN&&!((I)jtinplace&JTPRNOSTDOUT))RZ(jpr1(w))
  else if(t&VERB+ADV+CONJ){
   // function result.  If it is the evocation of a name, evaluate the name (unless it is locked - then
   // just use the name)
   RZ(y=evoke(w)?symbrdlock(FAV(w)->fgh[0]):w);
-  if(jt->tostdout){
+  if(!((I)jtinplace&JTPRNOSTDOUT)){
    // for each representation selected by the user, create the representation and type it
    n=*jt->disp; v=1+jt->disp;
    for(i=0;i<n;++i)switch(*v++){

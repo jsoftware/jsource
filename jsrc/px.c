@@ -14,7 +14,6 @@
 /* A     slist     script files used in right argument to 0!:              */
 /* I     slisti    index in slist for current script                       */
 /* I     slistn    slist # real entries; AN(slist) is reserved entries     */
-/* B     tostdout  1 iff output to standard output                         */
 
 #include "j.h"
 #include "p.h"
@@ -41,7 +40,8 @@ F1(jtexec1){A z;
 }
 
 // execute w, which is either a string or the boxed words of a string (as if from tokens())
-F1(jtimmex){A z;
+// JT flags controlling print are passed through to jpr
+F1(jtimmex){F1PREFJT;A z;
  if(!w)R A0;  // if no string, return error
  // When we start a sentence, we need to establish AKGST in locsyms as a shadow of jt->global, because that's
  // the normal condition and u./v. will rely on it.  This is not needed for a recursive call, but it doesn't hurt either,
@@ -49,13 +49,14 @@ F1(jtimmex){A z;
  // to its previous state, including locales
  AKGST(jt->locsyms)=jt->global; // in case the sentence has operators, set a locale for it
  STACKCHKOFL FDEPINC(1); z=parse(AT(w)&BOX?w:tokens(w,1+(AN(jt->locsyms)>1))); FDEPDEC(1);
- if(z&&!jt->asgn)jpr(z);
+ if(z&&!jt->asgn)jtjpr(jtinplace,z);
  RETF(z);
 }
 
 // execute for assert: check result for all 1
-F1(jtimmea){A t,z,z1;
- RZ(w=ddtokens(w,4+1+(AN(jt->locsyms)>1))); z=immex(w);   // check for DD, but don't allow continuation read
+// jt has typeout flags, pass through to immex
+F1(jtimmea){F1PREFJT;A t,z,z1;
+ RZ(w=ddtokens(w,4+1+(AN(jt->locsyms)>1))); z=jtimmex(jtinplace,w);   // check for DD, but don't allow continuation read
  ASSERT(jt->asgn||!z||!(AT(z)&NOUN)||(t=eq(num(1),z),
      all1(AT(z)&SPARSE?df1(z1,t,atop(slash(ds(CSTARDOT)),ds(CCOMMA))):t)),EVASSERT);  // apply *./@, if sparse
  RETF(z);

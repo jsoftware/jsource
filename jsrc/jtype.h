@@ -82,7 +82,7 @@ typedef AD *A;
 // following bit is used inside jtlrep only
 #define JTPARENSX       1   // create fully parenthesized output
 #define JTPARENS        (((I)1)<<JTPARENSX)
-// following bits are passed into jpr/jpr1/immex
+// following bits are passed into jpr/jpr1/immex/immea/showerr/wri
 #define JTPRTYO         7  // output class, see MTYO*
 #define JTPRNOSTDOUTX   3   // set to suppress typing sentence result on stdout (as in scripts)
 #define JTPRNOSTDOUT    (((I)1)<<JTPRNOSTDOUTX)
@@ -553,6 +553,7 @@ typedef struct DS{      /* 1 2 3                                                
  B dcsusp;              /* x   x  1 iff begins a debug suspension                       */
  C dcss;                /*     x  single step code                                      */
  C dcnewlineno;         //     x  set when debug has installed a new line number into dcix
+ C dcpflags;            //   x    prompt flags, see JTPRTYO
  A dca;                 /*     x  fn/op name                                            */
  A dcf;                 /*     x  fn/op                                                 */
  A dcx;                 /*     x  left argument                                         */

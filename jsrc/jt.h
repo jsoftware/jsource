@@ -97,7 +97,7 @@ typedef struct {
  UC   jerr1;            /* last non-zero jerr    $                          */
  C    cxspecials;       // 1 if special testing needed in cx loop (pm or debug)    $
  B    iepdo;            /* 1 iff do iep    $                                */
- B    tostdout;         /* 1 if output to stdout       $                    */
+// obsolete  B    tostdout;         /* 1 if output to stdout       $                    */
  UC   prioritytype[11];  // type bit for the priority types
  UC   typepriority[19];  // priority value for the noun types
 // end cache line 4.  10 bytes carry over.  next cache line is junk; we don't expect to use these types much
@@ -154,7 +154,7 @@ typedef struct {
  I    igemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for integer matrix product.  _1 means 'never'
  I    dgemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for float matrix product.  _1 means 'never'
  I    zgemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for complex matrix product.  _1 means 'never'
- A    implocref[2];     // references to 'u.'~ and 'v.'~, marked as implicit locatives
+ A    implocref[2];     // references to 'u.'~ and 'v.'~, marked as implicit locatives scaf
  I4   parsercalls;      /* # times parser was called     $                  */
  I4   nthreads;  // number of threads to use, or 0 if we haven't checked     $
  A*   tstacknext;       // if not 0, points to the recently-used tstack buffer, whose chain field points to tstacknext   $

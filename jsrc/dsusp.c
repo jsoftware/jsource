@@ -96,7 +96,7 @@ static B jterrcap(J jt){A y,*yv;
 }    /* error capture */
 
 // suspension.  Loop on keyboard input.  Keep executing sentences until something changes dbsusact.
-static void jtsusp(J jt){B t;DC d;
+static void jtsusp(J jt){DC d;
  // normally we run with an empty stack frame which is always ready to hold the display of the next sentence
  // to execute; the values are filled in when there is an error.  We are about to call immex to run sentences,
  // and it will create a stack frame for its result.  CREATION of this stack frame will overwrite the current top-of-stack
@@ -105,20 +105,22 @@ static void jtsusp(J jt){B t;DC d;
  if(!deba(DCJUNK,0,0,0))R; // create spacer frame
  jt->dbsusact=SUSCONT;
  A *old=jt->tnextpushp;  // fence must be after we have allocated out stack block
- d=jt->dcs; t=jt->tostdout;
- jt->dcs=0; jt->tostdout=1;
+ d=jt->dcs;
+// obsolete t=jt->tostdout;
+ jt->dcs=0;
+// obsolete  jt->tostdout=1;
 #if USECSTACK
  jt->cstackmin=MAX(jt->cstackinit-(CSTACKSIZE-CSTACKRESERVE),jt->cstackmin-CSTACKSIZE/10);
 #else
  jt->fdepn =MIN(NFDEP ,jt->fdepn +NFDEP /10);
 #endif
  jt->fcalln=MIN(NFCALL,jt->fcalln+NFCALL/10);
- if     (jt->dbssexec){RESETERR; immex(jt->dbssexec); tpop(old);}
- else if(jt->dbtrap  ){RESETERR; immex(jt->dbtrap  ); tpop(old);}
+ if     (jt->dbssexec){RESETERR; immex(jt->dbssexec); tpop(old);}  // force typeout
+ else if(jt->dbtrap  ){RESETERR; immex(jt->dbtrap  ); tpop(old);}  // force typeout
  while(jt->dbsusact==SUSCONT){A  inp;
   jt->jerr=0;
-  if(jt->iepdo&&jt->iep){jt->iepdo=0; immex(jt->iep); tpop(old);}
-  if((inp=jgets("      "))==0)jt->dbsusact==SUSCLEAR;else immex(inp); // read and execute a line, but exit debug if error reading line
+  if(jt->iepdo&&jt->iep){jt->iepdo=0; immex(jt->iep); tpop(old);}  // force typeout
+  if((inp=jgets("      "))==0)jt->dbsusact==SUSCLEAR;else immex(inp); // force prompt and typeout read and execute a line, but exit debug if error reading line
   tpop(old);
  }
  if(jt->dbuser){
@@ -137,7 +139,8 @@ static void jtsusp(J jt){B t;DC d;
   jt->fcalln =NFCALL;
  }
  debz(); 
- jt->dcs=d; jt->tostdout=t;
+ jt->dcs=d;
+// obsolete  jt->tostdout=t;
 }    /* user keyboard loop while suspended */
 
 // Go into debug mode.  Run sentences in suspension until we come out of suspension

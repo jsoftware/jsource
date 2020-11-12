@@ -136,7 +136,7 @@ F2(jtjfwrite){B b;F f;
  if(BOX&AT(w)){ASSERT(1>=AR(a),EVRANK); ASSERT(!AN(a)||AT(a)&LIT+C2T+C4T,EVDOMAIN);}
  RE(f=stdf(w));
 // obsolete  if(2==(I)f){b=jt->tostdout; jt->tostdout=1; jt->mtyo=MTYOFILE; jpr(a); jt->mtyo=0; jt->tostdout=b; R a;}
- if(2==(I)f){b=jt->tostdout; jt->tostdout=1; jtjpr((J)((I)jt|MTYOFILE),a); jt->tostdout=b; R a;}
+ if(2==(I)f){jtjpr((J)((I)jt|MTYOFILE),a); R a;}  // this forces typeout, with NOSTDOUT off
  if(4==(I)f){R (U)AN(a)!=fwrite(CAV(a),sizeof(C),AN(a),stdout)?jerrno():a;}
  if(5==(I)f){R (U)AN(a)!=fwrite(CAV(a),sizeof(C),AN(a),stderr)?jerrno():a;}
  if(b=!f)RZ(f=jope(w,FWRITE_O)) else RE(vfn(f)); 
@@ -148,7 +148,7 @@ F2(jtjfwrite){B b;F f;
 F2(jtjfappend){B b;F f;
  F2RANK(RMAX,0,jtjfappend,DUMMYSELF);
  RE(f=stdf(w));
- if(2==(I)f){B b=jt->tostdout; jt->tostdout=1; jpr(a); jt->tostdout=b; R a;}
+ if(2==(I)f){jpr(a); R a;}  // this forces typeout, with NOSTDOUT off
  ASSERT(!AN(a)||AT(a)&LIT+C2T+C4T,EVDOMAIN);
  ASSERT(1>=AR(a),EVRANK);
  if(b=!f)RZ(f=jope(w,FAPPEND_O)) else RE(vfn(f));

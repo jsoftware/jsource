@@ -138,9 +138,12 @@ static PSTK* jtpparen(J jt,PSTK *stack){
 static DF2(jtisf){RZ(symbis(onm(a),CALL1(FAV(self)->valencefns[0],w,0L),ABACK(self))); R num(0);} 
 
 // assignment, single or multiple
+// return sets stack[0] to -1 if this is a final assignment
 static PSTK* jtis(J jt,PSTK *stack){B ger=0;C *s;
   A asgblk=stack[1].a; I asgt=AT(asgblk); A v=stack[2].a, n=stack[0].a;  // value and name
- jt->asgn = stack[0].t==1;  // if the word number of the lhs is 1, it's either (noun)=: or name=: or 'value'=: at the beginning of the line; so indicate
+// obsolete  jt->asgn = stack[0].t==1;  // if the word number of the lhs is 1, it's either (noun)=: or name=: or 'value'=: at the beginning of the line; so indicate
+ stack[1+(stack[0].t==1)].t=-1;  // if the word number of the lhs is 1, it's either (noun)=: or name=: or 'value'=: at the beginning of the line;
+  // store -1 to the new stack[0].t.  Otherwise, make a harmless store to stack[-1].t
  if(likely(jt->assignsym!=0)){symbis(n,v,(A)asgt);}   // Assign to the known name.  Pass in the type of the ASGN
  else {
   // Point to the block for the assignment; fetch the assignment pseudochar (=. or =:); choose the starting symbol table
@@ -197,7 +200,7 @@ static PSTK* jtis(J jt,PSTK *stack){B ger=0;C *s;
   }
  }
 retstack:  // return, but 0 if error
- stack+=2; stack=jt->jerr?0:stack; R stack;  // the result is the same value that was assigned
+ stack+=2; if(unlikely(jt->jerr))stack=0; R stack;  // the result is the same value that was assigned
 }
 
 static PSTK * (*(lines58[]))() = {jtpfork,jtphook,jtis,jtpparen};  // handlers for parse lines 5-8
@@ -246,6 +249,7 @@ void auditblock(A w, I nonrecurok, I virtok) {
 
 
 // Run parser, creating a new debug frame.  Explicit defs, which make other tests first, then go through jtparsea
+// the result has bit 0 set if final assignment
 F1(jtparse){A z;
  ARGCHK1(w);
  A *queue=AAV(w); I m=AN(w);   // addr and length of sentence
@@ -365,20 +369,15 @@ A jtextnvr(J jt){ASSERT(jt->parserstackframe.nvrtop<32000,EVLIMIT); RZ(jt->nvra 
  // never see 4 marks on the stack - the most we can have is 1 value + 3 marks.
 #define FRONTMARKS 1  // amount of space to leave for front-of-string mark
 // Parse a J sentence.  Input is the queue of tokens
+// Result has PARSERASGNX (bit 0) set if the last thing is an assignment
 A jtparsea(J jt, A *queue, I m){PSTK * RESTRICT stack;A z,*v;I es;
-
- // This routine has two global responsibilities in addition to parsing.  jt->asgn must be set to 1
- // if the last thing is an assignment, and since this flag is cleared during execution (by ". and
- // others), it must be set at the time the assignment is executed.  We catch it in the action routine,
- // noting when the assignment is to (possibly inherited) word 1 (word 0 is the mark).
- //
  // jt->parsercurrtok must be set before executing anything that might fail; it holds the original
  // word number+1 of the token that failed.  jt->parsercurrtok is set before dispatching an action routine,
  // so that the information is available for formatting an error display
   // Save info for error typeout.  We save sentence info once, and token info for every executed fragment
  PFRAME oframe=jt->parserstackframe;   // save all the stack status
  jt->parserstackframe.parserqueue=queue; jt->parserstackframe.parserqueuelen=(US)m;  // addr & length of words being parsed
- jt->asgn = 0;
+// obsolete  jt->asgn = 0;
  if(likely(m>1)) {  // normal case where there is a fragment to parse
   // save $: stack.  The recursion point for $: is set on every verb execution here, and there's no need to restore it until the parse completes
   A savfs=jt->sf;  // push $: stack
@@ -704,12 +703,12 @@ RECURSIVERESULTSCHECK
   if(likely(stack!=0)){  // if no error yet...
    // before we exited, we backed the stack to before the initial mark entry.  At this point stack[0] is invalid,
    // stack[1] is the initial mark, stack[2] is the result, and stack[3] had better be the first ending mark
-   z=stack[2].a;   // stack[1..2] are the mark; this is the sentence result, if there is no error
+   z=stack[2].a;   // stack[0..1] are the mark; this is the sentence result, if there is no error
 // obsolete   if(!(PTISCAVN(stack[2])&&PTISM(stack[3]))){jt->parserstackframe.parsercurrtok = 0; jsignal(EVSYNTAX); z=0;}  // OK if 0 or 1 words left (0 should not occur)
    if(unlikely(!(PTOKEND(stack[2],stack[3])))){jt->parserstackframe.parsercurrtok = 0; jsignal(EVSYNTAX); z=0;}  // OK if 0 or 1 words left (0 should not occur)
   }else{
 failparse:  // If there was an error during execution or name-stacking, exit with failure.  Error has already been signaled.  Remove zombiesym
-   CLEARZOMBIE z=0;
+   CLEARZOMBIE z=0; stack=(PSTK*)(validitymask+12)-2;  // set stack to something that IS NOT a final assignment
   }
 #if MEMAUDIT&0x2
   audittstack(jt);
@@ -731,8 +730,8 @@ failparse:  // If there was an error during execution or name-stacking, exit wit
   audittstack(jt);
 #endif
   jt->sf=savfs;  // pop $: stack
-  // NOW it is OK to return
-  R z;  // this is the return point from normal parsing
+  // NOW it is OK to return.  Insert the final-assignment bit (sign of stack[2]) into the return
+  R (A)((I)z+SGNTO0I4(stack[2].t));  // this is the return point from normal parsing
 
  }else{A y;  // m<2.  Happens fairly often, and full parse can be omitted
   if(likely(m==1)){  // exit fast if empty input.  Happens only during load, but we can't deal with it

@@ -75,7 +75,7 @@ static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;DC d,xd=jt->dcs;
   I stbytes = spbytesinuse();
 #endif
   while(x&&!jt->jerr){jt->etxn=0;                           jtimmea(jtinplace,x=jgets("   ")); tpop(old);}
-  jt->asgn=0;
+// obsolete   jt->asgn=0;
 #if SEEKLEAK
   I endbytes=spbytesinuse(); if(endbytes-stbytes > 1000)printf("%lld bytes lost\n",endbytes-stbytes);
 #endif

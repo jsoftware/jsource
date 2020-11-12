@@ -34,7 +34,7 @@
 // Parse/execute a line, result in z.  If locked, reveal nothing.  Save current line number in case we reexecute
 // If the sentence passes a u/v into an operator, the current symbol table will become the prev and will have the u/v environment info
 // If the sentence fails, we go into debug mode and don't return until the user releases us
-#define parseline(z) {C attnval=*jt->adbreakr; A *queue=line+ci->i; I m=ci->n; if(likely(!attnval)){if(likely(!(gsfctdl&16)))z=parsea(queue,m);else {thisframe->dclnk->dcix=i; z=parsex(queue,m,ci,callframe);}}else{jsignal(EVATTN); z=0;} }
+#define parseline(z) {C attnval=*jt->adbreakr; A *queue=line+ci->i; I m=ci->n; if(likely(!attnval)){if(likely(!(gsfctdl&16)))z=PARSERVALUE(parsea(queue,m));else {thisframe->dclnk->dcix=i; z=PARSERVALUE(parsex(queue,m,ci,callframe));}}else{jsignal(EVATTN); z=0;} }
 
 typedef struct{A t,x,line;C*iv,*xv;I j,n; I4 k,w;} CDATA;
 /* for_xyz. t do. control data   */
@@ -531,7 +531,7 @@ dobblock:
  if(gsfctdl&32){AR(locsym)=LLOCALTABLE; symfreeha(locsym);}
  // Pop the private-area stack; set no assignment (to call for result display)
  SYMSETLOCAL(prevlocsyms);
- jt->asgn=0;
+// obsolete  jt->asgn=0;
  // Now that we have deleted all the local symbols, we can see if we were returning one.
  // See if EPILOG pushed a pointer to the block we are returning.  If it did, and the usecount we are returning is 1, set this
  // result as inplaceable and install the address of the tpop stack into AM (as is required for all inplaceable blocks).  The the usecount is inplaceable 1,

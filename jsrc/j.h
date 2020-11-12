@@ -1174,6 +1174,10 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x
 #define PACKBITSINTO(p,out) {p|=p>>7LL;p|=p>>14LL;out=(p<<28)|(out>>SZI);}  // pack and shift into out
 #endif
 #endif
+// parser results have the LSB set if the last thing was an assignment
+#define PARSERVALUE(p) ((A)((I)(p)&-2))   // the value part of the parser return, pointer to the A block
+#define PARSERASGN(p) ((I)(p)&1)   // the assignment part of the parser return, 1 if assignment
+#define PARSERASGNX 0  // bit# of asgn bit
 #define PRISTCOMSET(w,flg) awback=(w); if(unlikely((flg&AFVIRTUAL)!=0)){awback=ABACK(awback); flg=AFLAG(awback);} AFLAG(awback)=flg&~AFPRISTINE;
 #define PRISTCOMSETF(w,flg) if(unlikely((flg&AFVIRTUAL)!=0)){w=ABACK(w); flg=AFLAG(w);} AFLAG(w)=flg&~AFPRISTINE;   // used only at end, when w can be destroyed
 #define PRISTCOMMON(w,exe) awflg=AFLAG(w); exe PRISTCOMSET(w,awflg)
@@ -1288,6 +1292,7 @@ if(likely(z<3)){_zzt+=z; z=(I)&oneone; _zzt=_i&3?_zzt:(I*)z; z=_i&2?(I)_zzt:z; z
 #endif
 #define REPSGN(x) ((x)>>(BW-1))  // replicate sign bit of x to entire word (assuming x is signed type - if unsigned, just move sign to bit 0)
 #define SGNTO0(x) ((UI)(x)>>(BW-1))  // move sign bit to bit 0, clear other bits
+#define SGNTO0I4(x) ((UI4)(x)>>(32-1))  // move sign bit to bit 0, clear other bits
 // In the original JE many verbs returned a clone of the input, i. e. R ca(w).  We have changed these to avoid the clone, but we preserve the memory in case we need to go back
 #define RCA(w)          R w
 #define RE(exp)         {if(unlikely(((exp),jt->jerr!=0)))R 0;}

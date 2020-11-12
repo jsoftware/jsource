@@ -564,7 +564,8 @@ void jsto(J jt,I type,C*s){C e;I ex;
   jt->jerr=0; jt->etxn=0;
   jt->adbreakr=&breakdata;
 // obsolete   exec1(cstr(q));
-  parse(tok); jt->asgn=0;  // run it, ignoring errors.  always reset jt->asgn after every execution has had its chance to type
+  parse(tok);  // run it, ignoring errors.  always reset jt->asgn after every execution has had its chance to type
+// obsolete  jt->asgn=0;
   jt->adbreakr=jt->adbreak;
   jt->jerr=e; jt->etxn=ex; // restore
  }else{

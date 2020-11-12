@@ -88,7 +88,7 @@ typedef struct {
  UI   qtstackinit;      // jqt front-end C stack pointer    $
  I4   callstacknext;           /* named fn calls: current depth      $             */
  I4   fcalln;           /* named fn calls: maximum permissible depth     $  */
- B    asgn;             /* 1 iff last operation on this line is assignment  $  */
+// obsolete  B    asgn;             /* 1 iff last operation on this line is assignment  $  */
  B    stch;             /* enable setting of changed bit       $            */
  UC   jerr;             /* error number (0 means no error)      $           */
  C    asgzomblevel;     // 0=do not assign zombie name before final assignment; 1=allow premature assignment of complete result; 2=allow premature assignment even of incomplete result   $

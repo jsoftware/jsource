@@ -76,7 +76,7 @@ F1(jtcasev){A b,*u,*v,w1,x,y,z;B*bv,p,q;I*aa,c,*iv,j,m,n,r,*s,t;
   if(p)DO(m, y=u[i]; if(!(TYPESEQ(t,AT(y))&&r==AR(y)&&!ICMP(s,AS(y),r))){p=0; break;});  // fail if list is not homogeneous in type, rank, and shape
  }
  // If the audit failed, the sentence might work, but we won't be doing it here.  Go run the original sentence
- if(!p)R parse(v[m+2]);   // NOTE this will end up assigning the value twice: once in the parse, and again when we return.  Should we whack off the first two words?
+ if(!p)R PARSERVALUE(parse(v[m+2]));   // NOTE this will end up assigning the value twice: once in the parse, and again when we return.  Should we whack off the first two words?
  // We can do it here!  We split into two cases: Boolean pqr with two names in the list, which can never fail;
  // and all other, which may produce index error
  fauxblockINT(aafaux,4,1);

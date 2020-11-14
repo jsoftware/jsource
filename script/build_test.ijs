@@ -216,8 +216,8 @@ report fappend~runit'libj'    ;'runjd.ijs'
 report fappend~runit'libjavx' ;'runjd.ijs'
 report fappend~runit'libjavx2';'runjd.ijs'
 
-r=. fread report
 echo 'fread report'
+check_report''
 )
 
 

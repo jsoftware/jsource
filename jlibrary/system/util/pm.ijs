@@ -209,6 +209,8 @@ if. 0 e. msk do.
   mend=. msk # mend
 end.
 
+if. 0 e. (#mbgn),#mend do. i.0 4 return. end.
+
 lvl=. mbgn usage mend
 if. 1 +. 2 e. lvl do.
   rep=. getreps ind;ndx;lns;val

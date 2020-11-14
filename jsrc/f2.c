@@ -26,10 +26,10 @@ static F2(jtth2box){A z;I n,p,q,*v,x,y;
 //  m width of result area (0 if unknown)
 //  zv->output area
 // Result is the number of characters moved to the output area
-static I jtc2j(J jt,B e,I m,C*zv){C c,*s,*t;I k,p;
+static I jtc2j(J jt,B e,I m,C*zv,A*cellbuf){C c,*s,*t;I k,p;
  // If this field calls for exponential notation, and the result contains an exponent, convert the exponent
  //  by removing leading '0' or '+'
- if(e&&(t=strchr(jt->th2buf,'e'))){   // set t->the 'e'.  t will trace through the field
+ if(e&&(t=strchr(CAV1(*cellbuf),'e'))){   // set t->the 'e'.  t will trace through the field
   // exponent is e+n[n...] or e-n[n...]  Step over the e, and - if present
   ++t; t+='-'==*t;
   // count k=the number of leading + or 0 characters in the exponent; leave c=stopper character
@@ -40,10 +40,10 @@ static I jtc2j(J jt,B e,I m,C*zv){C c,*s,*t;I k,p;
    while(*t=*(k+t))++t;  // close up the skipped characters, till end of string (including the\0)
    // t now points to trailing \0.  Set p=(field width)-(# characters copied) = #spare characters at end of field
    // if m is 0, p is negative.  Fill to end-of-field with spaces, and append \0 if there was any fill
-   p=m-(t-jt->th2buf); DQ(p,*t++=' ';); if(0<=p)jt->th2buf[m]=0;
+   p=m-(t-CAV1(*cellbuf)); DQ(p,*t++=' ';); if(0<=p)CAV1(*cellbuf)[m]=0;
  }}
  // point t to start of formatted string, and k to the length.  k will be the return value
- t=jt->th2buf; k=strlen(t);
+ t=CAV1(*cellbuf); k=strlen(t);
  if(!e&&(s=memchr(t,'-',k))){  /* turn -0 to 0 */
   // Nonexponential field containing '-' (s points to the -)
   s[0]=' ';   // blank out the sign
@@ -65,31 +65,31 @@ static I jtc2j(J jt,B e,I m,C*zv){C c,*s,*t;I k,p;
  R k;
 }    /* c format to j format */
 
-static B jtfmtex(J jt,I m,I d,I n,I*xv,B b,I c,I q,I ex){B bm=b||m;C*u,*v=jt->th2buf;I k;
- if(jt->th2bufn<20+d){A s; jt->th2bufn=20+d; GATV0(s,LIT,jt->th2bufn,1); v=jt->th2buf=CAV(s);}
+static B jtfmtex(J jt,I m,I d,I n,I*xv,B b,I c,I q,I ex,A*cellbuf){B bm=b||m;C*u,*v=CAV1(*cellbuf);I k;
+ if(AN(*cellbuf)<20+d){GATV0(*cellbuf,LIT,20+d,1); v=CAV1(*cellbuf);}
  if(b)*v++='_'; else if(m)*v++=' '; *v++=' '; sprintf(v,FMTI,c); v+=q;
  k=(XBASEN+d+1-q)/XBASEN; k=MIN(n-1,k);
  DQ(k, c=*--xv; sprintf(v,FMTI04,b?-c:c); v+=XBASEN;);
- k=v-jt->th2buf-(2+bm);
+ k=v-CAV1(*cellbuf)-(2+bm);
  if(k<d){memset(v,'0',d-k); v+=d-k;}
- else if(k>d&&(u=v=jt->th2buf+d+2+bm,'5'<=*v)){
+ else if(k>d&&(u=v=CAV1(*cellbuf)+d+2+bm,'5'<=*v)){
   while('9'==*--u);
   if(' '!=*u)++*u; else{*++u='1'; ++ex;}
   memset(u+1,'0',v-u-1);
  }
- jt->th2buf[bm]=jt->th2buf[bm+1]; jt->th2buf[bm+1]='.'; sprintf(v-!d,"e"FMTI"",ex);
+ CAV1(*cellbuf)[bm]=CAV1(*cellbuf)[bm+1]; CAV1(*cellbuf)[bm+1]='.'; sprintf(v-!d,"e"FMTI"",ex);
  R 1;
 }    /* format one extended integer in exponential form */
 
-static B jtfmtx(J jt,B e,I m,I d,C*s,I t,X*wv){B b;C*v=jt->th2buf;I c,n,p,q,*xv;X x;
+static B jtfmtx(J jt,B e,I m,I d,C*s,I t,X*wv,A*cellbuf){B b;C*v=CAV1(*cellbuf);I c,n,p,q,*xv;X x;
  x=*wv; n=AN(x); xv=AV(x)+n-1; 
  c=*xv; b=0>c; if(b)c=-c;
  if(c==XPINF){if(b)*v++='_'; *v++='_'; *v=0; R 1;}
  q=c>999?4:c>99?3:c>9?2:1; p=q+XBASEN*(n-1);
- if(e)R fmtex(m,d,n,xv,b,c,q,p-1);
+ if(e)R fmtex(m,d,n,xv,b,c,q,p-1,cellbuf);
  else if(m&&m<b+p+d+!!d){memset(v,'*',m); v[m]=0;}
  else{
-  if(jt->th2bufn<4+p+d){A s; jt->th2bufn=4+p+d; GATV0(s,LIT,jt->th2bufn,1); v=jt->th2buf=CAV(s);}
+  if(AN(*cellbuf)<4+p+d){GATV0(*cellbuf,LIT,4+p+d,1); v=CAV1(*cellbuf);}
   if(' '==s[0])*v++=' '; if(b)*v++='_'; 
   sprintf(v,FMTI,c); v+=q;
   DQ(n-1, c=*--xv; sprintf(v,FMTI04,b?-c:c); v+=XBASEN;); 
@@ -98,7 +98,7 @@ static B jtfmtx(J jt,B e,I m,I d,C*s,I t,X*wv){B b;C*v=jt->th2buf;I c,n,p,q,*xv;
  R 1;
 }    /* format one extended integer */
 
-static B jtfmtq(J jt,B e,I m,I d,C*s,I t,Q*wv){B b;C*v=jt->th2buf;I c,ex=0,k,n,p,q,*xv;Q y;X a,g,x;
+static B jtfmtq(J jt,B e,I m,I d,C*s,I t,Q*wv,A*cellbuf){B b;C*v=CAV1(*cellbuf);I c,ex=0,k,n,p,q,*xv;Q y;X a,g,x;
  y=*wv; x=y.n; c=XDIG(x); b=0>c; if(b)x=negate(x);
  if(c==XPINF||c==XNINF){if(e)*v++=' '; if(e>b)*v++=' '; if(b)*v++='_'; *v++='_'; *v=0; R 1;}
  RZ(a=xpow(xc(10L),xc(1+d)));
@@ -112,10 +112,10 @@ static B jtfmtq(J jt,B e,I m,I d,C*s,I t,Q*wv){B b;C*v=jt->th2buf;I c,ex=0,k,n,p
  RZ(x=xdiv(xplus(x,xc(5L)),xc(10L),XMFLR));
  n=AN(x); xv=AV(x)+n-1; c=*xv; b=0>c; if(b)c=-c;
  q=c>999?4:c>99?3:c>9?2:1; p=q+XBASEN*(n-1); if(c||!e)ex+=p-d-1;
- if(e)R fmtex(m,d,n,xv,b,c,q,ex);
+ if(e)R fmtex(m,d,n,xv,b,c,q,ex,cellbuf);
  else if(m&&m<b+d+(I )!!d+(0>ex?1:1+ex)){memset(v,'*',m); v[m]=0;}
  else{
-  if(jt->th2bufn<4+p+d){A s; jt->th2bufn=4+p+d; GATV0(s,LIT,jt->th2bufn,1); v=jt->th2buf=CAV(s);}
+  if(AN(*cellbuf)<4+p+d){GATV0(*cellbuf,LIT,4+p+d,1); v=CAV1(*cellbuf);}
   if(' '==s[0])*v++=' '; if(b)*v++='_';
   if(0>ex){k=-ex-1; DQ(1+MIN(d,k), *v++='0';);}
   sprintf(v,FMTI,c); v+=q;
@@ -130,36 +130,36 @@ static B jtfmtq(J jt,B e,I m,I d,C*s,I t,Q*wv){B b;C*v=jt->th2buf;I c,ex=0,k,n,p
 // s->printf format string
 // t is the type of the data
 // wv->the data
-// jt->th2buf->output area
-static void jtfmt1(J jt,B e,I m,I d,C*s,I t,C*wv){D y;
+// CAV1(*cellbuf)->output area
+static void jtfmt1(J jt,B e,I m,I d,C*s,I t,C*wv,A*cellbuf){D y;
  switch(CTTZNOFLAG(t)){
-  case B01X:  sprintf(jt->th2buf,s,(D)*wv);     break;
+  case B01X:  sprintf(CAV1(*cellbuf),s,(D)*wv);     break;
   case INTX:;
 #if SY_64
    // If I is 64 bits, and the format string ends with '.0f', change the format to lld
    C *fldend; for(fldend=s;*fldend!='d'&&*fldend!='f'&&*fldend!='e';++fldend);  // find end-of-field
    if(fldend[0]=='f'&&fldend[-1]=='0'&&fldend[-2]=='.'){fldend[-2]='l'; fldend[-1]='l'; fldend[0]='d';}
    // If I is 64 bits and the format string ends with 'd', use integer; otherwise use float
-   if(fldend[0]=='d'){sprintf(jt->th2buf,s,*(I*)wv); break;}
+   if(fldend[0]=='d'){sprintf(CAV1(*cellbuf),s,*(I*)wv); break;}
 #endif
-   sprintf(jt->th2buf,s,(D)*(I*)wv);
+   sprintf(CAV1(*cellbuf),s,(D)*(I*)wv);
    break;
-  case XNUMX: fmtx(e,m,d,s,t,(X*)wv);          break;
-  case RATX:  fmtq(e,m,d,s,t,(Q*)wv);          break;
+  case XNUMX: fmtx(e,m,d,s,t,(X*)wv,cellbuf);          break;
+  case RATX:  fmtq(e,m,d,s,t,(Q*)wv,cellbuf);          break;
   default:
    y=*(D*)wv; y=y?y:0.0;  /* -0 to 0 */
-   if     (!memcmpne(wv,&inf, SZD))strcpy(jt->th2buf,e?"  _" :' '==s[0]?" _" :"_" );
-   else if(!memcmpne(wv,&infm,SZD))strcpy(jt->th2buf,e?" __" :' '==s[0]?" __":"__");
-   else if(_isnan(*(D*)wv)      )strcpy(jt->th2buf,e?"  _.":' '==s[0]?" _.":"_.");
-   else sprintf(jt->th2buf,s,y);
+   if     (!memcmpne(wv,&inf, SZD))strcpy(CAV1(*cellbuf),e?"  _" :' '==s[0]?" _" :"_" );
+   else if(!memcmpne(wv,&infm,SZD))strcpy(CAV1(*cellbuf),e?" __" :' '==s[0]?" __":"__");
+   else if(_isnan(*(D*)wv)      )strcpy(CAV1(*cellbuf),e?"  _.":' '==s[0]?" _.":"_.");
+   else sprintf(CAV1(*cellbuf),s,y);
 }}   /* format one number */
 
 // format a fixed-size column.  See th2a for description of most values
 //  zk stride between result areas, in bytes
 //  zv->place to put result
 // No result: the output area is filled
-static void jtth2c(J jt,B e,I m,I d,C*s,I n,I t,I wk,C*wv,I zk,C*zv){
- DQ(n, fmt1(e,m,d,s,t,wv); c2j(e,m,zv); zv+=zk; wv+=wk;);
+static void jtth2c(J jt,B e,I m,I d,C*s,I n,I t,I wk,C*wv,I zk,C*zv,A*cellbuf){
+ DQ(n, fmt1(e,m,d,s,t,wv,cellbuf); c2j(e,m,zv,cellbuf); zv+=zk; wv+=wk;);
 }    /* format a column */
 
 // Create a column of results (a table) for a single field
@@ -174,22 +174,22 @@ static void jtth2c(J jt,B e,I m,I d,C*s,I n,I t,I wk,C*wv,I zk,C*zv){
 //  wk stride (in bytes) between values
 //  wv->first value
 // first set when we are processing the first field (to suppress the leading space between fields)
-static A jtth2a(J jt,B e,I m,I d,C*s,I n,I t,I wk,C*wv,B first){PROLOG(0049);A y,z;C*u,*yv,*zv;I b,i,m0=m,k,p,q;
+static A jtth2a(J jt,B e,I m,I d,C*s,I n,I t,I wk,C*wv,B first,A*cellbuf){PROLOG(0049);A y,z;C*u,*yv,*zv;I b,i,m0=m,k,p,q;
  // Set q=nominal length of field: the length given, if m!=0; otheriwse based on type.  p=length of allocated buffer
  q=m?m:t&B01?3:t&INT?12:17; p=n*q;
   // Allocate space for all results; set shape to (n,q); zv->result area
  GATV0(z,LIT,p,2); AS(z)[0]=n; AS(z)[1]=q; zv=CAV(z);
  // If field length is fixed, format the column to that width & return it
- if(m){th2c(e,m,d,s,n,t,wk,wv,m,zv); R z;}
+ if(m){th2c(e,m,d,s,n,t,wk,wv,m,zv,cellbuf); R z;}
  // Otherwise, field has variable width.  Format the values one by one.
  // q holds total length so far, p is length of allocated buffer.  ; m will hold the maximum length encountered
  // b will be set for exponential fields only, if no result is negative
  b = e;  // init no negative exponential values (if field is exponential).  0 if nonexponential field
  for(i=q=0;i<n;++i){
-  fmt1(e,m0,d,s,t,wv);  // Create the (null-terminated) string in th2buf.  m0=0
-  while(p<q+(I)strlen(jt->th2buf)+1){RZ(z=over(z,z)); p+=p; zv=CAV(z);}  // If new string overflows output area, double the output-area size
+  fmt1(e,m0,d,s,t,wv,cellbuf);  // Create the (null-terminated) string in th2buf.  m0=0
+  while(p<q+(I)strlen(CAV1(*cellbuf))+1){RZ(z=over(z,z)); p+=p; zv=CAV(z);}  // If new string overflows output area, double the output-area size
    // u->place to put string; convert th2buf to j form in *u; k=length of string; update string pointer & null-terminate string; advance to next input value
-   u=q+zv; q+=k=c2j(e,0L,u); zv[q++]=0; wv+=wk;
+   u=q+zv; q+=k=c2j(e,0L,u,cellbuf); zv[q++]=0; wv+=wk;
    // Exponential-field sign spacing:
    // If the result has a negative sign, remember that fact.  If the result DOES NOT have a negative sign, then
    // for add 1 to the field-length to account for the leading space that will be added.
@@ -221,15 +221,16 @@ static A jtth2a(J jt,B e,I m,I d,C*s,I n,I t,I wk,C*wv,B first){PROLOG(0049);A y
 // dp number of decimal places
 // sp sprintf format string to use for the field
 // zkp has the total field width (if known), or 0 if there were fields of unknown width
-// Also we create a conversion buffer area, pointed to by jt->th2buf, whose length
-// is jt->th2bufn (long enough to hold 1 1-cell of the result).  We calculate the needed
+// Also we allocate & return a conversion buffer area whose length
+// is long enough to hold 1 1-cell of the result.  We calculate the needed
 // size here, by starting with a length of 500 and incrementing as required
-static B jtth2ctrl(J jt,A a,A*ep,A*mp,A*dp,A*sp,I*zkp){A da,ea,ma,s;B b=1,*ev,r,x;
-  C*sv;D y;I an,*av,d,*dv,i,m,*mv,zk=0;Z*au;const I sk=15;
+// We may get it wrong, & have to reallocate later
+static A jtth2ctrl(J jt,A a,A*ep,A*mp,A*dp,A*sp,I*zkp){A da,ea,ma,s;B b=1,*ev,r,x;
+  C*sv;D y;I an,*av,d,*dv,i,lenreqd,m,*mv,zk=0;Z*au;const I sk=15;
  // b means 'all fields have a defined width'
  // zk holds the total of the field sizes
  // r='non-complex a', init length of conversion area to 500 bytes, convert a to int if it's not complex
- r=!(CMPX&AT(a)); jt->th2bufn=500;
+ r=!(CMPX&AT(a)); lenreqd=500;
  if(r)RZ(a=cvt(INT,a));  // this detects invalid type for a
  an=AN(a); au=ZAV(a); av=AV(a);  // an=#atoms of a, au->a data (if complex), av->a data (if real)
  // Allocate output arrays, set return value, set ?v->first value of output area
@@ -253,16 +254,17 @@ static B jtth2ctrl(J jt,A a,A*ep,A*mp,A*dp,A*sp,I*zkp){A da,ea,ma,s;B b=1,*ev,r,
   // store results in output areas; advance sprintf pointer; count # bytes in fields; see if there are any unknown widths
   sv+=sk; ev[i]=x; mv[i]=m; dv[i]=d; zk+=m; b=b&&m; 
   // keep the size of the conversion buffer to a minimum of the given field width or 500+the number of decimal places (in case the values overflows the field)
-  if(jt->th2bufn<m)jt->th2bufn=m; if(jt->th2bufn<500+d)jt->th2bufn=500+d;
+  if(lenreqd<m)lenreqd=m; if(lenreqd<500+d)lenreqd=500+d;
  }
  // Now that we know the conversion buffer size, allocate it
- GATV0(s,LIT,jt->th2bufn,1); jt->th2buf=CAV(s);
+ GATV0(s,LIT,lenreqd,1);
+// obsolete  jt->th2buf=CAV(s);
  // Output total line width if it is valid, 0 if not
- *zkp=b?zk:0; R 1;
+ *zkp=b?zk:0; R s;
 }    /* parse format control (left argument of ":) */
 
 // x ": y
-F2(jtthorn2){PROLOG(0050);A da,ea,h,ma,s,y,*yv,z;B e,*ev;C*sv,*wv,*zv;I an,c,d,*dv,k,m,*mv,n,r,sk,t,wk,*ws,zk;
+F2(jtthorn2){PROLOG(0050);A da,ea,h,ma,s,cellbuf,y,*yv,z;B e,*ev;C*sv,*wv,*zv;I an,c,d,*dv,k,m,*mv,n,r,sk,t,wk,*ws,zk;
  F2RANK(1,RMAX,jtthorn2,DUMMYSELF);  // apply rank 1 _
  // From here on the a arg is rank 0 or 1
  an=AN(a); t=AT(w);  // an=#atoms of a, t=type of w
@@ -274,7 +276,7 @@ F2(jtthorn2){PROLOG(0050);A da,ea,h,ma,s,y,*yv,z;B e,*ev;C*sv,*wv,*zv;I an,c,d,*
  // k=#bytes in an atom of w, wk=*bytes in a cell of w; wv->first atom of w (prebiased)
  k=bpnoun(t); wk=c*k; wv=CAV(w)-k;
  // Analyze a to get info for each format
- RZ(th2ctrl(a,&ea,&ma,&da,&s,&zk));
+ RZ(cellbuf=th2ctrl(a,&ea,&ma,&da,&s,&zk));
  // ev->expformat flags, mv->field width, dv->decimal places, sk=length of each sprintf string, sv->sprintf string (prebiased)
  ev=BAV(ea); mv=AV(ma); dv=AV(da); sk=1<an?*(1+AS(s)):0; sv=CAV(s)-sk;
  if(zk||!AN(w)){
@@ -283,12 +285,12 @@ F2(jtthorn2){PROLOG(0050);A da,ea,h,ma,s,y,*yv,z;B e,*ev;C*sv,*wv,*zv;I an,c,d,*
   GATV(z,LIT,n*zk,r?r:1,ws); AS(z)[AR(z)-1]=zk; zv=CAV(z);  // Allocate table for result; init shape to shape of w; replace 1-cell length with length of line; zv->result area
   // Format the fields one by one, appending the new string to the accumulated old.  We process each field specifier for the entire
   // w before moving to the next field.
-  DO(c, if(i<an){e=ev[i]; m=mv[i]; d=dv[i];} th2c(e,m,d,sv+=sk,n,t,wk,wv+=k,zk,zv); zv+=m;);  // Set e,m,d (if atomic a, keep the same values each time
+  DO(c, if(i<an){e=ev[i]; m=mv[i]; d=dv[i];} th2c(e,m,d,sv+=sk,n,t,wk,wv+=k,zk,zv,&cellbuf); zv+=m;);  // Set e,m,d (if atomic a, keep the same values each time
  }else{
   // The width is unknown.  Build up the result one field at a time.  Each field becomes a box in this intermediate result
   GATV0(y,BOX,c,1); yv=AAV(y);  // Allocate boxed array, one box per field
   // Format each field into its own box
-  DO(c, if(i<an){e=ev[i]; m=mv[i]; d=dv[i];} RZ(yv[i]=th2a(e,m,d,sv+=sk,n,t,wk,wv+=k,(B)!i)););
+  DO(c, if(i<an){e=ev[i]; m=mv[i]; d=dv[i];} RZ(yv[i]=th2a(e,m,d,sv+=sk,n,t,wk,wv+=k,(B)!i,&cellbuf)););
   // Join the fields of each line to produce an nxc table of characters, one row per 1-cell of w
   RZ(z=razeh(y));
   // If w has rank > 2, we need to rearrange the rows into an array.  Or, if there is a single 1-cell and

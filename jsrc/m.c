@@ -188,30 +188,47 @@ B jtspfree(J jt){I i;A p;
  R 1;
 }    /* free unused blocks */
 
-static F1(jtspfor1){
- ARGCHK1(w);
- if(BOX&AT(w)){A*wv=AAV(w); DO(AN(w), if(wv[i])spfor1(wv[i]););}
- else if(AT(w)&TRAVERSIBLE)traverse(w,jtspfor1); 
+// return space used by w and its descendants
+static D jtspfor1(J jt, A w){D tot=0.0;
+ if(unlikely(w==0))R 0.0;
+// obsolete  if(BOX&AT(w)){A*wv=AAV(w); DO(AN(w), if(wv[i])spfor1(wv[i]););}
+// obsolete  else if(AT(w)&TRAVERSIBLE)traverse(w,jtspfor1); 
+ switch(CTTZ(AT(w))){
+  case XNUMX: case BOXX:
+   if(!(AFLAG(w)&AFNJA)){A*wv=AAV(w);
+   {DO(AN(w), if(wv[i])tot+=spfor1(wv[i]););}
+   }
+   break;
+  case VERBX: case ADVX:  case CONJX: 
+   {V*v=FAV(w); if(v->fgh[0])tot+=spfor1(v->fgh[0]); if(v->fgh[1])tot+=spfor1(v->fgh[1]); if(v->fgh[2])tot+=spfor1(v->fgh[2]);} break;
+  case XDX:
+   {DX*v=(DX*)AV(w); DQ(AN(w), if(v->x)tot+=spfor1(v->x); ++v;);} break;
+  case RATX:  
+   {A*v=AAV(w); DQ(2*AN(w), if(*v)tot+=spfor1(*v++););} break;
+  case SB01X: case SINTX: case SFLX: case SCMPXX: case SLITX: case SBOXX:
+   {P*v=PAV(w); if(SPA(v,a))tot+=spfor1(SPA(v,a)); if(SPA(v,e))tot+=spfor1(SPA(v,e)); if(SPA(v,i))tot+=spfor1(SPA(v,i)); if(SPA(v,x))tot+=spfor1(SPA(v,x));} break;
+ }
  if(!ACISPERM(AC(w))) {
   // for NJA allocations with contiguous header, the size is the header size (7+64 words) plus the data size
   // for NJA allocations with separate header, the size is the data size plus the size of the base block
   if(AFNJA&AFLAG(w)) {
-   if(AK(w)>0&&AK(w)<=AM(w))jt->spfor += SZI*WP(AT(w),AN(w),64);  // fixed rank of 64 in NJA memory
+   if(AK(w)>0&&AK(w)<=AM(w))tot += SZI*WP(AT(w),AN(w),64);  // fixed rank of 64 in NJA memory
    else{
-    jt->spfor += SZI*((1&&AT(w)&LAST0)+(((AT(w)&NAME?sizeof(NM):0)+(AN(w)<<bplg(AT(w)))+SZI-1)>>LGSZI));  // data size only
-    jt->spfor += alloroundsize(w);  // add in the header
+    tot += SZI*((1&&AT(w)&LAST0)+(((AT(w)&NAME?sizeof(NM):0)+(AN(w)<<bplg(AT(w)))+SZI-1)>>LGSZI));  // data size only
+    tot += alloroundsize(w);  // add in the header
    }
   } else {
   // for non-NJA allocations, just take the full size of the block
-   jt->spfor += alloroundsize(w);
+   tot += alloroundsize(w);
   }
  }
- R mtm;
+ R tot;
 }
 
-F1(jtspfor){A*wv,x,y,z;C*s;D*v,*zv;I i,m,n;
+F1(jtspfor){A*wv,x,y,z;C*s;D*zv;I i,m,n;
  ARGCHK1(w);
- n=AN(w); wv=AAV(w);  v=&jt->spfor;
+ n=AN(w); wv=AAV(w);
+// obsolete   v=&jt->spfor;
  ASSERT(!n||BOX&AT(w),EVDOMAIN);
  GATV(z,FL,n,AR(w),AS(w)); zv=DAV(z); 
  for(i=0;i<n;++i){
@@ -220,14 +237,16 @@ F1(jtspfor){A*wv,x,y,z;C*s;D*v,*zv;I i,m,n;
   ASSERT(1>=AR(x),EVRANK);
   ASSERT(vnm(m,s),EVILNAME);
   RZ(y=symbrd(nfs(m,s))); 
-  *v=0.0; spfor1(y); zv[i]=*v;
+// obsolete   *v=0.0; spfor1(y); zv[i]=*v;
+  zv[i]=spfor1(y);
  }
  RETF(z);
 }    /* 7!:5 space for named object; w is <'name' */
 
-F1(jtspforloc){A*wv,x,y,z;C*s;D*v,*zv;I i,j,m,n;L*u;LX *yv,c;
+F1(jtspforloc){A*wv,x,y,z;C*s;D tot,*zv;I i,j,m,n;L*u;LX *yv,c;
  ARGCHK1(w);
- n=AN(w); wv=AAV(w);  v=&jt->spfor;
+ n=AN(w); wv=AAV(w);
+// obsolete   v=&jt->spfor;
  ASSERT(!n||BOX&AT(w),EVDOMAIN);
  GATV(z,FL,n,AR(w),AS(w)); zv=DAV(z);   // zv-> results
  for(i=0;i<n;++i){   // loop over each name given...
@@ -245,14 +264,14 @@ F1(jtspforloc){A*wv,x,y,z;C*s;D*v,*zv;I i,j,m,n;L*u;LX *yv,c;
   }
   y=stfind(m,s,bucketx);   // y is the block for the locale
   ASSERT(y!=0,EVLOCALE);
-  *v=(D)(FHRHSIZE(AFHRH(y)));  // start with the size of the locale block (always a normal block)
-  spfor1(LOCPATH(y)); spfor1(LOCNAME(y));  // add in the size of the path and name
+  tot=(D)(FHRHSIZE(AFHRH(y)));  // start with the size of the locale block (always a normal block)
+  tot+=spfor1(LOCPATH(y)); tot+=spfor1(LOCNAME(y));  // add in the size of the path and name
   m=AN(y); yv=LXAV0(y); 
   for(j=SYMLINFOSIZE;j<m;++j){  // for each name in the locale
    c=yv[j];
-   while(c){*v+=sizeof(L); u=c+LAV0(jt->symp); spfor1(u->name); spfor1(u->val); c=u->next;}  // add in the size of the name itself and the value, and the L block for the name
+   while(c){tot+=sizeof(L); u=c+LAV0(jt->symp); tot+=spfor1(u->name); tot+=spfor1(u->val); c=u->next;}  // add in the size of the name itself and the value, and the L block for the name
   }
-  zv[i]=*v;
+  zv[i]=tot;
  }
  RETF(z);
 }    /* 7!:6 space for a locale */

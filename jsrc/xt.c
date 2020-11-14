@@ -347,7 +347,7 @@ F1(jtpmstats){A x,z;I*zv;PM0*u;
  R z;
 }
 
-
+#if 0 // obsolete 
 F1(jttlimq){ASSERTMTV(w); R scf(0.001*jt->timelimit);}
 
 F1(jttlims){D d;
@@ -360,3 +360,4 @@ F1(jttlims){D d;
  jt->timelimit=(UI)(1000*d);
  R mtm;
 }
+#endif

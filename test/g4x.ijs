@@ -329,7 +329,7 @@ erase ;:'abc abc_z_ ces_exist_ sum_z_'
 
 NB. Script lists --------------------------------------------------------
 
-(4!:3 =&# 4!:8) ''
+NB. obsolete (4!:3 =&# 4!:8) ''
 this1=: 'this1'
 si_g4x=: 4!:4 <'this1'
 si_g4x e. i.#4!:3 ''
@@ -337,7 +337,7 @@ si_g4x e. i.#4!:3 ''
 
 empty 4!:7 si_sn [ this2=: 'this2' [ si_sn=: 4!:7 ] 4!:6 sn=. 'scriptname',":?1e6
 sn-:>(4!:4 <'this2'){4!:3 ''
-si_g4x=(4!:4 <'this2'){4!:8 ''
+NB. obsolete si_g4x=(4!:4 <'this2'){4!:8 ''
 
 NB. delete a name on same line as when it is reassigned
 3 : 0 ''

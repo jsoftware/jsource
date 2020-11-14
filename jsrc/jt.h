@@ -272,21 +272,21 @@ typedef struct {
 // obsolete I    sbun;             /* *SB cardinality                                  */
 // obsolete  SBU* sbuv;             /* *SB points to ravel of sbu                       */
 
- int  sdinited;         /* sockets                                         */
- I4   slisti;           /* index into slist of current script     $         */
+// obsolete  int  sdinited;         /* sockets                                         */
+// obsolete  I4   slisti;           /* index into slist of current script     $         */
  A    slist;            /* files used in right arg to 0!:                  */
- A    sclist;           /* slisti when items of slist were added           */
- I    slistn;           /* slist # of real entries                         */
+// obsolete  A    sclist;           /* slisti when items of slist were added           */
+// obsolete  I    slistn;           /* slist # of real entries                         */
  I    sm;               /* sm options set by JSM()                         */
  void*smdowd;
  void*sminput;
  void*smoutput;         /* sm.. sm/wd callbacks set by JSM()               */
  void*smpoll;           /* re-used in wd                                   */
  UI   smoption;         /* wd options, see comment in jtwd                 */
- D    spfor;            /* semi-global for use by spfor()                  */
- C*   th2buf;           /* space for formatting one number                 */
- I    th2bufn;          /* current max length of buf                       */
- UI   timelimit;        /* execution time limit milliseconds               */
+// obsolete  D    spfor;            /* semi-global for use by spfor()                  */
+// obsolete  C*   th2buf;           /* space for formatting one number                 */
+// obsolete  I    th2bufn;          /* current max length of buf                       */
+// obsolete  UI   timelimit;        /* execution time limit milliseconds               */
  A    xep;              /* exit execution phrase                           */
  I    int64rflag;       /* com flag for returning 64-bit integers          */
  I    transposeflag;    /* com flag for transposed arrays                  */
@@ -295,7 +295,7 @@ typedef struct {
 // obsolete  I    ttabi;            /* tacit translator                                */
 // obsolete  I    ttabi0;           /* tacit translator                                */
  A    xmod;             /* extended integer: the m in m&|@f                */  
- I    xmode;            /* extended integer operating mode                 */
+ C    xmode;            /* extended integer operating mode                 */
 #if MEMAUDIT & 2
  I    audittstackdisabled;   // set to 1 to disable auditing
 #endif

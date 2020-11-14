@@ -222,10 +222,10 @@ static C jtjinit3(J jt){S t;
  sesminit();
  evinit();
  consinit();
+ xsinit();  // must be before symbinit
  symbinit();  // must be after consinit
  parseinit();
  xoinit();
- xsinit();
  sbtypeinit();
  rnginit();
 // #if (SYS & SYS_DOS+SYS_MACINTOSH+SYS_UNIX)

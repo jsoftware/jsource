@@ -907,22 +907,13 @@ FORCE_INLINE __m128d _mm256_extractf128_pd (__m256d a, const int imm8)
     return a.vect_f64[imm8];
 }
 
-FORCE_INLINE __m256i _mm256_permute4x64_epi64(__m256i a, const int imm8)
-{
-    __m256i res;
-    int64_t ptr_a[4];
-    vst1q_s64(ptr_a, a.vect_s64[0]);
-    vst1q_s64(ptr_a + 2, a.vect_s64[1]);
-    const int id0 = imm8 & 0x03;
-    const int id1 = (imm8 >> 2) & 0x03;
-    const int id2 = (imm8 >> 4) & 0x03;
-    const int id3 = (imm8 >> 6) & 0x03;
-    res.vect_s64[0] = vsetq_lane_s64(ptr_a[id0], res.vect_s64[0], 0);
-    res.vect_s64[0] = vsetq_lane_s64(ptr_a[id1], res.vect_s64[0], 1);
-    res.vect_s64[1] = vsetq_lane_s64(ptr_a[id2], res.vect_s64[1], 0);
-    res.vect_s64[1] = vsetq_lane_s64(ptr_a[id3], res.vect_s64[1], 1);
-    return res;
-}
+#define _mm256_permute_ps(a, imm8)  \
+({ \
+    __m256 res;  \
+    res.vect_f32[0] = _mm_castsi128_ps( _mm_shuffle_epi32( *(__m128i*)&(a.vect_f32[0]), imm8 ) ); \
+    res.vect_f32[1] = _mm_castsi128_ps( _mm_shuffle_epi32( *(__m128i*)&(a.vect_f32[1]), imm8 ) ); \
+    res; \
+})
 
 FORCE_INLINE __m256i _mm256_permute2f128_si256 (__m256i a, __m256i b, int imm8)
 {
@@ -946,6 +937,62 @@ FORCE_INLINE __m256i _mm256_permute2f128_si256 (__m256i a, __m256i b, int imm8)
         res.vect_s32[1] = vdupq_n_s32(0);
     }
     return res;
+}
+
+FORCE_INLINE __m256 _mm256_permute2f128_ps (__m256 a, __m256 b, int imm8)
+{
+    __m256 res;
+    int bit_0 = imm8 & 0x1, bit_1 = imm8 & 0x2, bit_3 = imm8 & 0x8;
+    if (bit_1 == 0) {
+        res.vect_f32[0] = a.vect_f32[bit_0];
+    } else {
+        res.vect_f32[0] = b.vect_f32[bit_0];
+    }
+    if (bit_3) {
+        res.vect_f32[0] = vdupq_n_f32(0);
+    }
+    bit_0 = (imm8 & 0x10) >> 4, bit_1 = imm8 & 0x20, bit_3 = imm8 & 0x80;
+    if (bit_1 == 0) {
+        res.vect_f32[1] = a.vect_f32[bit_0];
+    } else {
+        res.vect_f32[1] = b.vect_f32[bit_0];
+    }
+    if (bit_3) {
+        res.vect_f32[1] = vdupq_n_f32(0);
+    }
+    return res;
+}
+
+FORCE_INLINE __m256i _mm256_permute4x64_epi64(__m256i a, const int imm8)
+{
+    __m256i res;
+    int64_t ptr_a[4];
+    vst1q_s64(ptr_a, a.vect_s64[0]);
+    vst1q_s64(ptr_a + 2, a.vect_s64[1]);
+    const int id0 = imm8 & 0x03;
+    const int id1 = (imm8 >> 2) & 0x03;
+    const int id2 = (imm8 >> 4) & 0x03;
+    const int id3 = (imm8 >> 6) & 0x03;
+    res.vect_s64[0] = vsetq_lane_s64(ptr_a[id0], res.vect_s64[0], 0);
+    res.vect_s64[0] = vsetq_lane_s64(ptr_a[id1], res.vect_s64[0], 1);
+    res.vect_s64[1] = vsetq_lane_s64(ptr_a[id2], res.vect_s64[1], 0);
+    res.vect_s64[1] = vsetq_lane_s64(ptr_a[id3], res.vect_s64[1], 1);
+    return res;
+}
+
+FORCE_INLINE __m256d _mm256_permute4x64_pd(__m256d a, const int control)
+{
+    __m256d A;
+    double* ptr_a = (double*) &a;
+    const int id0 = control & 0x03;
+    const int id1 = (control >> 2) & 0x03;
+    const int id2 = (control >> 4) & 0x03;
+    const int id3 = (control >> 6) & 0x03;
+    (A.vect_f64[0])[0] = ptr_a[id0];
+    (A.vect_f64[0])[1] = ptr_a[id1];
+    (A.vect_f64[1])[0] = ptr_a[id2];
+    (A.vect_f64[1])[1] = ptr_a[id3];
+    return A;
 }
 
 FORCE_INLINE __m256i _mm256_set_epi32(int e7, int e6, int e5, int e4, int e3, int e2, int e1, int e0)
@@ -1164,6 +1211,25 @@ FORCE_INLINE __m128i _mm256_castsi256_si128(__m256i a)
     ret = a.vect_s32[0];
     return ret;
 }
+
+#define _mm_broadcast_impl( name, res_type, type )     \
+FORCE_INLINE res_type  name(type const *a) {         \
+    const size_t size = sizeof( res_type ) / sizeof( type );\
+    ALIGN_STRUCT(32) type res[ size ];                  \
+    size_t i = 0;                                           \
+    for ( ; i < size; ++i )                                 \
+        res[ i ] = *a;                                      \
+    return (*(res_type*)&res);                              \
+}
+
+_mm_broadcast_impl( _mm_broadcast_ss, __m128, float )
+_mm_broadcast_impl( _mm256_broadcast_ss, __m256, float )
+
+_mm_broadcast_impl( _mm_broadcast_sd, __m128d, double )
+_mm_broadcast_impl( _mm256_broadcast_sd, __m256d, double )
+
+_mm_broadcast_impl( _mm256_broadcast_ps, __m256, __m128 )
+_mm_broadcast_impl( _mm256_broadcast_pd, __m256d, __m128d )
 
 FORCE_INLINE __m256d _mm256_cvtepi32_pd(__m128i a)
 {
@@ -2285,6 +2351,12 @@ FORCE_INLINE void _mm256_store_ps (float * mem_addr, __m256 a)
     vst1q_f32(mem_addr + 4, a.vect_f32[1]);
 }
 
+FORCE_INLINE void _mm256_storeu_ps(float* mem_addr, __m256 a)
+{
+    vst1q_f32(mem_addr, a.vect_f32[0]);
+    vst1q_f32(mem_addr + 4, a.vect_f32[1]);
+}
+
 FORCE_INLINE __m256i _mm256_max_epi32 (__m256i a, __m256i b)
 {
     __m256i res;
@@ -2385,12 +2457,42 @@ FORCE_INLINE __m256d _mm256_sqrt_pd(__m256d in)
  return res;
 }
 
+FORCE_INLINE __m256 _mm256_castpd_ps(__m256d a)
+{
+    __m256 b;
+
+    b.vect_f32[0] = vreinterpretq_f64_f32(a.vect_f64[0]);
+    b.vect_f32[1] = vreinterpretq_f64_f32(a.vect_f64[1]);
+
+    return b;
+}
+
 FORCE_INLINE __m256i _mm256_castpd_si256(__m256d a)
 {
     __m256i b;
 
     b.vect_s64[0] = vreinterpretq_f64_s64(a.vect_f64[0]);
     b.vect_s64[1] = vreinterpretq_f64_s64(a.vect_f64[1]);
+
+    return b;
+}
+
+FORCE_INLINE __m256d _mm256_castps_pd(__m256 a)
+{
+    __m256d b;
+
+    b.vect_f64[0] = vreinterpretq_f32_f64(a.vect_f32[0]);
+    b.vect_f64[1] = vreinterpretq_f32_f64(a.vect_f32[1]);
+
+    return b;
+}
+
+FORCE_INLINE __m256i _mm256_castps_si256(__m256 a)
+{
+    __m256i b;
+
+    b.vect_s64[0] = vreinterpretq_s64_f32(a.vect_f32[0]);
+    b.vect_s64[1] = vreinterpretq_s64_f32(a.vect_f32[1]);
 
     return b;
 }
@@ -2410,6 +2512,14 @@ FORCE_INLINE __m256d _mm256_loadu_pd (double const * mem_addr)
     __m256d res;
     res.vect_f64[0] = vld1q_f64((const double *)mem_addr);
     res.vect_f64[1] = vld1q_f64((const double *)mem_addr + 2);
+    return res;
+}
+
+FORCE_INLINE __m256 _mm256_loadu_ps (float const * mem_addr)
+{
+    __m256 res;
+    res.vect_f32[0] = vld1q_f32((const float *)mem_addr);
+    res.vect_f32[1] = vld1q_f32((const float *)mem_addr + 4);
     return res;
 }
 
@@ -2631,6 +2741,16 @@ FORCE_INLINE __m256i _mm256_mask_i64gather_epi64( __m256i src, long long const *
  return B;
 }
 
+FORCE_INLINE __m256d _mm256_i64gather_pd(double const *addr, __m256i index, const int scale) {
+__m256d B;
+ double *p = (double*) &B;
+ p[0] = *(double*)((int8_t*)addr + (index.vect_s64[ 0 ])[0] * scale);
+ p[1] = *(double*)((int8_t*)addr + (index.vect_s64[ 0 ])[1] * scale);
+ p[2] = *(double*)((int8_t*)addr + (index.vect_s64[ 1 ])[0] * scale);
+ p[3] = *(double*)((int8_t*)addr + (index.vect_s64[ 1 ])[1] * scale);
+ return B;
+}
+
 #if 0
 #define _mm_load_impl( name, sfx, m256_sfx, m256_type, type_128, type )           \
 FORCE_INLINE m256_type  _mm256_##name##_##m256_sfx(const type* a) { \
@@ -2688,6 +2808,25 @@ FORCE_INLINE __m256d _mm256_fmadd_pd(__m256d a, __m256d b, __m256d c)
     res.vect_f64[1] = vfmaq_f64(c.vect_f64[1], a.vect_f64[1], b.vect_f64[1]);  // *NOTE* argument swap
     return res;
 }
+
+FORCE_INLINE __m256 _mm256_fmadd_ps(__m256 a, __m256 b, __m256 c)
+{
+    return _mm256_add_ps(_mm256_mul_ps(a,b),c);
+}
+
+FORCE_INLINE __m256d _mm256_fmsub_pd(__m256d a, __m256d b, __m256d c)
+{
+    __m256d res;
+    res.vect_f64[0] = vfmsq_f64(c.vect_f64[0], a.vect_f64[0], b.vect_f64[0]);  // *NOTE* argument swap
+    res.vect_f64[1] = vfmsq_f64(c.vect_f64[1], a.vect_f64[1], b.vect_f64[1]);  // *NOTE* argument swap
+    return res;
+}
+
+FORCE_INLINE __m256 _mm256_fmsub_ps(__m256 a, __m256 b, __m256 c)
+{
+    return _mm256_sub_ps(_mm256_mul_ps(a,b),c);
+}
+
 
 #if defined(__GNUC__) || defined(__clang__)
 #pragma pop_macro("ALIGN_STRUCT")

@@ -316,6 +316,35 @@ static __emu_inline __m128d _mm_blendv_pd_REF       ( __m128d a, __m128d b, __m1
     return A;
 }
 
+/** \SSE4_1{Reference,_mm_blend_ps} */
+static __emu_inline __m128 _mm_blend_ps_REF        ( __m128 a, __m128 b, const int mask )
+{
+    __m128 A, B;
+    A = a;
+    B = b;
+
+    A[0] = (mask & 0x1) ? B[0] : A[0];
+    A[1] = (mask & 0x2) ? B[1] : A[1];
+    A[2] = (mask & 0x4) ? B[2] : A[2];
+    A[3] = (mask & 0x8) ? B[3] : A[3];
+    return A;
+}
+
+/** \SSE4_1{Reference,_mm_blendv_epi8} */
+static __emu_inline __m128 _mm_blendv_ps_REF       ( __m128 a, __m128 b, __m128 mask )
+{
+    __m128 A, B; __v4si Mask;
+    A = a;
+    B = b;
+    Mask = (__v4si)mask;
+
+    A[0] = (( Mask[0] )) ? B[0] : A[0];
+    A[1] = (( Mask[1] )) ? B[1] : A[1];
+    A[2] = (( Mask[2] )) ? B[2] : A[2];
+    A[3] = (( Mask[3] )) ? B[3] : A[3];
+    return A;
+}
+
 /** \SSE45{Reference,_mm_testc_si128,ptest} */
 static __emu_inline int _mm_testc_si128_REF( __m128i a, __m128i b)
 {
@@ -713,7 +742,7 @@ __EMU_M256_IMPL_M2( __m256, xor_ps );
 })
 #define __emu_mm256_blend_ps( m256_param1, m256_param2, param3 ) \
 ({   __emu__m256 res; \
-    res.__emu_m128[0] = _mm_blend_ps( m256_param1.__emu_m128[0], m256_param2.__emu_m128[0], (param3) & ((1<<2)-1) ); \
+    res.__emu_m128[0] = _mm_blend_ps( m256_param1.__emu_m128[0], m256_param2.__emu_m128[0], (param3) & ((1<<4)-1) ); \
     res.__emu_m128[1] = _mm_blend_ps( m256_param1.__emu_m128[1], m256_param2.__emu_m128[1], (param3) >> 4 ); \
      res ; \
 })
@@ -740,10 +769,10 @@ __EMU_M256_IMPL_M3( __m256, blendv_ps );
 #else
 
 __EMU_M256_IMPL_M2I_SHIFT_REF( __m256d, blend_pd, 2 );
-// __EMU_M256_IMPL_M2I_SHIFT_REF( __m256, blend_ps, 4 );
+__EMU_M256_IMPL_M2I_SHIFT_REF( __m256, blend_ps, 4 );
 
 __EMU_M256_IMPL_M3_REF( __m256d, blendv_pd );
-// __EMU_M256_IMPL_M3_REF( __m256, blendv_ps );
+__EMU_M256_IMPL_M3_REF( __m256, blendv_ps );
 
 #endif
 #if defined (__SSE4_2__) || defined (__SSE4_1__)
@@ -1020,14 +1049,20 @@ static __emu_inline __m128  __emu_mm_permutevar_ps(__m128 a, __m128i control)
 }
 __EMU_M256_IMPL2_M2T( __m256, __m256i, permutevar_ps );
 /*
-static __emu_inline __m128  __emu_mm_permute_ps(__m128 a, const int control) {
+static __emu_inline __m128 __emu_mm_permute_ps(__m128 a, const int control) {
   return _mm_castsi128_ps( _mm_shuffle_epi32( *(__m128i*)&a, control ) );
 }
 */
+#define __emu_mm_permute_ps(a, control) _mm_castsi128_ps( _mm_shuffle_epi32( *(__m128i*)&a, control ) )
 // TODO: clang
 #if !defined(__clang__)
-#define __emu_mm_permute_ps(a, control) _mm_castsi128_ps( _mm_shuffle_epi32( *(__m128i*)&a, control ) )
 __EMU_M256_IMPL2_M1I_DUP( __m256, permute_ps );
+#else
+#define __emu_mm256_permute_ps(a, control) ({  \
+    __emu__m256 A;   \
+    A.__emu_m128[ 0 ] = _mm_castsi128_ps( _mm_shuffle_epi32( *(__m128i*)&(a.__emu_m128[0]), control ) );  \
+    A.__emu_m128[ 1 ] = _mm_castsi128_ps( _mm_shuffle_epi32( *(__m128i*)&(a.__emu_m128[1]), control ) );  \
+    A;})
 #endif
 
 
@@ -1340,6 +1375,53 @@ static __emu_inline __emu__m256i __emu_mm256_permute2x128_si256 (__emu__m256i a,
  return A;
 }
 
+static __emu_inline __emu__m256d __emu_mm256_permute4x64_pd(__emu__m256d a, const int control)
+{
+    __emu__m256d A;
+    double* ptr_a = (double*) &a;
+    const int id0 = control & 0x03;
+    const int id1 = (control >> 2) & 0x03;
+    const int id2 = (control >> 4) & 0x03;
+    const int id3 = (control >> 6) & 0x03;
+    (A.__emu_m128[0])[0] = ptr_a[id0];
+    (A.__emu_m128[0])[1] = ptr_a[id1];
+    (A.__emu_m128[1])[0] = ptr_a[id2];
+    (A.__emu_m128[1])[1] = ptr_a[id3];
+    return A;
+}
+
+static __emu_inline __emu__m256 __emu_mm256d_fmadd_pd(__emu__m256 a, __emu__m256 b, __emu__m256 c)
+{
+    __emu__m256 A;
+    A.__emu_m128[ 0 ] = _mm_add_pd(_mm_mul_pd(a.__emu_m128[ 0 ],b.__emu_m128[ 0 ]),c.__emu_m128[ 0 ]);
+    A.__emu_m128[ 1 ] = _mm_add_pd(_mm_mul_pd(a.__emu_m128[ 1 ],b.__emu_m128[ 1 ]),c.__emu_m128[ 1 ]);
+    return A;
+}
+
+static __emu_inline __emu__m256 __emu_mm256_fmadd_ps(__emu__m256 a, __emu__m256 b, __emu__m256 c)
+{
+    __emu__m256 A;
+    A.__emu_m128[ 0 ] = _mm_add_ps(_mm_mul_ps(a.__emu_m128[ 0 ],b.__emu_m128[ 0 ]),c.__emu_m128[ 0 ]);
+    A.__emu_m128[ 1 ] = _mm_add_ps(_mm_mul_ps(a.__emu_m128[ 1 ],b.__emu_m128[ 1 ]),c.__emu_m128[ 1 ]);
+    return A;
+}
+
+static __emu_inline __emu__m256d __emu_mm256d_fmsub_pd(__emu__m256d a, __emu__m256d b, __emu__m256d c)
+{
+    __emu__m256d A;
+    A.__emu_m128[ 0 ] = _mm_sub_pd(_mm_mul_pd(a.__emu_m128[ 0 ],b.__emu_m128[ 0 ]),c.__emu_m128[ 0 ]);
+    A.__emu_m128[ 1 ] = _mm_sub_pd(_mm_mul_pd(a.__emu_m128[ 1 ],b.__emu_m128[ 1 ]),c.__emu_m128[ 1 ]);
+    return A;
+}
+
+static __emu_inline __emu__m256 __emu_mm256_fmsub_ps(__emu__m256 a, __emu__m256 b, __emu__m256 c)
+{
+    __emu__m256 A;
+    A.__emu_m128[ 0 ] = _mm_sub_ps(_mm_mul_ps(a.__emu_m128[ 0 ],b.__emu_m128[ 0 ]),c.__emu_m128[ 0 ]);
+    A.__emu_m128[ 1 ] = _mm_sub_ps(_mm_mul_ps(a.__emu_m128[ 1 ],b.__emu_m128[ 1 ]),c.__emu_m128[ 1 ]);
+    return A;
+}
+
 static __emu_inline __emu__m256i __emu_mm256_i64gather_epi64(__emu_int64_t const *addr, __emu__m256i index, const int scale) {
  __emu__m256i A;
  __emu__m256i B;
@@ -1349,6 +1431,18 @@ static __emu_inline __emu__m256i __emu_mm256_i64gather_epi64(__emu_int64_t const
  p[1] = *(__emu_int64_t*)((int8_t*)addr + (A.__emu_m128[ 0 ])[1] * scale);
  p[2] = *(__emu_int64_t*)((int8_t*)addr + (A.__emu_m128[ 1 ])[0] * scale);
  p[3] = *(__emu_int64_t*)((int8_t*)addr + (A.__emu_m128[ 1 ])[1] * scale);
+ return B;
+}
+
+static __emu_inline __emu__m256d __emu_mm256_i64gather_pd(double const *addr, __emu__m256i index, const int scale) {
+ __emu__m256i A;
+ __emu__m256d B;
+ A = index;
+ double *p = (double*) &B;
+ p[0] = *(double*)((int8_t*)addr + (A.__emu_m128[ 0 ])[0] * scale);
+ p[1] = *(double*)((int8_t*)addr + (A.__emu_m128[ 0 ])[1] * scale);
+ p[2] = *(double*)((int8_t*)addr + (A.__emu_m128[ 1 ])[0] * scale);
+ p[3] = *(double*)((int8_t*)addr + (A.__emu_m128[ 1 ])[1] * scale);
  return B;
 }
 
@@ -1642,9 +1736,15 @@ __emu_maskstore_impl( __emu_mm256_maskstore_epi64, __emu__m256i, __emu__m256i, _
 #endif
 
 #define _mm256_extract_epi64 __emu_mm256_extract_epi64
+#define _mm256_fmadd_pd __emu_mm256_fmadd_pd
+#define _mm256_fmadd_ps __emu_mm256_fmadd_ps
+#define _mm256_fmsub_pd __emu_mm256_fmsub_pd
+#define _mm256_fmsub_ps __emu_mm256_fmsub_ps
 #define _mm256_i64gather_epi64 __emu_mm256_i64gather_epi64
+#define _mm256_i64gather_pd __emu_mm256_i64gather_pd
 #define _mm256_mask_i64gather_epi64 __emu_mm256_mask_i64gather_epi64
 #define _mm256_permute2x128_si256 __emu_mm256_permute2x128_si256
+#define _mm256_permute4x64_pd __emu_mm256_permute4x64_pd
 
 #endif /* __EMU_M256_NOMAP */
 

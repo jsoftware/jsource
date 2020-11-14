@@ -1338,8 +1338,8 @@ if(likely(z<3)){_zzt+=z; z=(I)&oneone; _zzt=_i&3?_zzt:(I*)z; z=_i&2?(I)_zzt:z; z
 // Input is the name of word of bytes.  Result is modified name, 1 bit per input byte, spaced like B01s, with the bit 0 iff the corresponding input byte was all 0.  Non-boolean bits of result are garbage.
 #define ZBYTESTOZBITS(b) (b=b|((b|(~b+VALIDBOOLEAN))>>7))  // for each byte: zero if b0 off, b7 off, and b7 turns on when you subtract 1 or 2
 // to verify gah conversion #define RETF(exp)       { A retfff=(exp);  if ((retfff) && ((AT(retfff)&SPARSE && AN(retfff)!=1) || (AT(retfff)&DENSE && AN(retfff)!=prod(AR(retfff),AS(retfff)))))SEGFAULT;; R retfff; } // scaf
-#define SBSV(x)         (jt->sbsv+(I)(x))
-#define SBUV(x)         (jt->sbuv+(I)(x))
+#define SBSV(x)         (CAV1((A)AN(jt->sbu))+(I)(x))
+#define SBUV(x)         (SBUV4(jt->sbu)+(I)(x))
 #define SEGFAULT        (*(volatile I*)0 = 0)
 #define SGN(a)          ((I )(0<(a))-(I )(0>(a)))
 #define SMAX            65535

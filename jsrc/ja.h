@@ -976,7 +976,7 @@
 #define sb2(x,y)                    jtsb2(jt,(x),(y))
 #define sbbox(x)                    jtsbbox(jt,(x))
 #define sbcheck(x)                  jtsbcheck(jt,(x))
-#define sbcheck1(x0,x1,x2,x3,x4,x5,x6,x7)           jtsbcheck1(jt,(x0),(x1),(x2),(x3),(x4),(x5),(x6),(x7))
+#define sbcheck1(x0,x1,x2,x3,x4,x5,x6,x7,x8)           jtsbcheck1(jt,(x0),(x1),(x2),(x3),(x4),(x5),(x6),(x7),(x8))
 #define sbcheck2(x0,x1,x2,x3)       jtsbcheck2(jt,(x0),(x1),(x2),(x3))
 #define sbextend(x0,x1,x2,x3)       jtsbextend(jt,(x0),(x1),(x2),(x3))
 #define sbgetdata(x)                jtsbgetdata(jt,(x))

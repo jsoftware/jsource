@@ -244,7 +244,7 @@ typedef struct {
 // obsolete  I    mtyo;				      /* jsto output type - jfwrite arg to jpr           */
 // obsolete  C*   mtyostr;          /* jsto string                                     */
  C    nfe;              /* 1 for J native front end                        */
- I    oleop;            /* com flag to capture output                      */
+ C    oleop;            /* com flag to capture output                      */
  void*opbstr;           /* com ptr to BSTR for captured output             */
  S    outmaxafter;      /* output: maximum # lines after truncation        */
  S    outmaxbefore;     /* output: maximum # lines before truncation       */
@@ -260,17 +260,18 @@ typedef struct {
  C    pp[8];            // print precision (sprintf field for numeric output)
  A    p4792;            // pointer to p: i. 4792, filled in on first use
  I    redefined;        /* symbol table entry of redefined explicit defn   */
- I    sbfillfactor;     /* ?SB for binary tree                              */
- I    sbgap;            /* ?SB for binary tree                              */
- A    sbh;              /* SB hash table of indices; -1 means unused       */
- I*   sbhv;             /* *SB points to ravel of sbh                       */
- I    sbroot;           /* ?SB root of the binary tree                      */
- A    sbs;              /* *SB string                                       */
- I    sbsn;             /* *SB string length so far                         */
- C*   sbsv;             /* *SB points to ravel of sbs                       */
+// obsolete  I    sbfillfactor;     /* ?SB for binary tree                              */
+// obsolete  I    sbgap;            /* ?SB for binary tree                              */
+// obsolete  A    sbh;              /* SB hash table of indices; -1 means unused       */
+// obsolete  I*   sbhv;             /* *SB points to ravel of sbh                       */
+// obsolete  I    sbroot;           /* ?SB root of the binary tree                      */
+// obsolete  A    sbs;              /* *SB string                                       */
+// obsolete  I    sbsn;             /* *SB string length so far                         */
+// obsolete  C*   sbsv;             /* *SB points to ravel of sbs                       */
  A    sbu;              /* SB data for each unique symbol                  */
- I    sbun;             /* *SB cardinality                                  */
- SBU* sbuv;             /* *SB points to ravel of sbu                       */
+// obsolete I    sbun;             /* *SB cardinality                                  */
+// obsolete  SBU* sbuv;             /* *SB points to ravel of sbu                       */
+
  int  sdinited;         /* sockets                                         */
  I4   slisti;           /* index into slist of current script     $         */
  A    slist;            /* files used in right arg to 0!:                  */

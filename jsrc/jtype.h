@@ -117,7 +117,7 @@ struct AD {
         // holding the amend offsets in x u} y, the number of axes of y that are built into the indexes in u (5) for name references, the value of jt->modifiercount when the name was last looked up
         // (6) in the return from wordil, holds the number of words if any final NB. is discarded; (7) in the result of indexofsub when called for FORKEY, contains the
         // number of partitions found; (8) in the self block for y L: n and u S: n, the address of the fs block for u; (9) in the call to jtisf (multiple assignment), holds the
-        // address of the symbol table being assigned to (10) in the y block internal to pv.c, used for flags (11) in hashtables in x15.c, the number of entries that have been hashed
+        // address of the symbol table being assigned to (10) in the y block internal to pv.c, used for flags (11) in hashtables in x15.c and in tickers, the number of entries that have been hashed
         // (12) in the faux arg to fixa, pointer to the recursive name-list block (13) in file-lock list and file-number list, the # valid files
   A back; // For VIRTUAL blocks, points to backing block
   A *zaploc;  // For all blocks, AM initially holds a pointer to the place in the tpop stack (or hijacked tpop stack) that points back to the allocated block.  This value is guaranteed
@@ -213,6 +213,7 @@ typedef I SI;
 #define IAV(x)          AV(x)                   /* integer                 */
 #define IAV0(x)         ((I*)((C*)(x)+AKXR(0)))  // integer in a stack- or heap-allocated atom (rank 0 - used for internal tables)
 #define IAV1(x)         ((I*)((C*)(x)+AKXR(1)))  // integer in a stack- or heap-allocated list (rank 1 - used for internal tables that need alignment or need AS[0])
+#define IAV2(x)         ((I*)((C*)(x)+AKXR(2)))  // integer in a stack- or heap-allocated list (rank 2)
 #define BAV0(x)         ( (C*)((C*)(x)+AKXR(0)) )  // Boolean when rank is 0 - fixed position (known to avoid segfault)
 #define LXAV0(x)        ( (LX*)((C*)(x)+AKXR(0)) )  // Symbol when rank is 0 - fixed position (for SYMB hash tables).  Note AK() is used in SYMB tables
 #define LAV0(x)         ( (L*)((C*)(x)+AKXR(0)) )  // Symbol array when rank is 0 - used for the symbol pool
@@ -229,6 +230,7 @@ typedef I SI;
 #define FAV(x)          ( (V*)((C*)(x)+AKXR(0)) )  // verb, adverb, conj - always at fixed offset
 #define PAV(x)          ( (P*)((C*)(x)+AK(x)))  /* sparse                  */
 #define SBAV(x)         ((SB*)((C*)(x)+AK(x)))  /* symbol                  */
+#define SBUV4(x)        ((SBU*)((C*)(x)+AKXR(4)))  // symbol, nonvirtual rank 4
 #define voidAV(x)       ((void*)((C*)(x)+AK(x)))  // unknown
 
 #if C_LE

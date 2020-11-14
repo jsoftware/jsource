@@ -8,6 +8,7 @@ JE binaries are copied to git/jlibrary/bin with qualified names (e.g. libjavx2.s
    build'libj'          NB. 'libjavx' 'libjavx2'
    build_all 'beta-x'   NB. build all
    
+   get_jversion''
    set_jversion'beta-x' 
 
 windows builds done with vs2019
@@ -125,6 +126,10 @@ COMMON
 j64x=j64 ./build_tsdll.sh  
 cp ../bin/$jplatform/j64/libtsdllSUFFIX $target
 echo done
+)
+
+get_jversion=: 3 : 0
+fread'git/jsource/jsrc/jversion.h'
 )
 
 set_jversion=: 3 : 0

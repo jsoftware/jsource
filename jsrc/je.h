@@ -224,7 +224,7 @@ extern F1(jtnfb);
 // obsolete extern F1(jtnfeoutstr);
 extern F1(jtnfes);
 extern F1(jtnl1);
-extern F1(jtnlsym);
+extern F2(jtnlsym);
 extern F1(jtnot);
 extern F1(jtnub);
 extern F1(jtnubind);

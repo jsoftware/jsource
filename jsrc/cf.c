@@ -88,8 +88,10 @@ EPILOG(z);}
 static DF2(jtfolkcomp){F2PREFIP;DECLFGH;PROLOG(0034);A z;AF f;
  ARGCHK2(a,w);
  f=atcompf(a,w,self);
+ I postflags=(I)f&3;  // extract postprocessing from return
+ f=(AF)((I)f&-4);    // restore function address
  if(f){
-  I postflags=jt->workareas.compsc.postflags;
+// obsolete   I postflags=jt->workareas.compsc.postflags;
   z=f(jt,a,w,self);
   if(z){if(postflags&2){z=num((IAV(z)[0]!=AN(AR(a)>=AR(w)?a:w))^(postflags&1));}}
  }else if(cap(fs))CAP2 else FOLK2;
@@ -100,8 +102,10 @@ static DF2(jtfolkcomp0){F2PREFIP;DECLFGH;PROLOG(0035);A z;AF f;
  ARGCHK2(a,w);
  PUSHCCT(1.0)
  f=atcompf(a,w,self);
+ I postflags=(I)f&3;  // extract postprocessing from return
+ f=(AF)((I)f&-4);    // restore function address
  if(f){
-  I postflags=jt->workareas.compsc.postflags;
+// obsolete   I postflags=jt->workareas.compsc.postflags;
   z=f(jt,a,w,self);
   if(z){if(postflags&2){z=num((IAV(z)[0]!=AN(AR(a)>=AR(w)?a:w))^(postflags&1));}}
  }else if(cap(fs))CAP2 else FOLK2;

@@ -201,7 +201,7 @@ RETF(z);
 
 // return inverse of w, calculated by lq applied to adjoint
 // result has rank 2
-static F1(jtlq){A l;D c=inf,d=0,x;I n1,n,*s,wr;
+static A jtlq(J jt,A w,D *det){A l;D c=inf,d=0,x;I n1,n,*s,wr;
  F1RANK(2,jtqr,DUMMYSELF);
  ASSERT(DENSE&AT(w),EVNONCE);
  ASSERT(AT(w)&B01+INT+FL+CMPX,EVDOMAIN);
@@ -212,7 +212,7 @@ static F1(jtlq){A l;D c=inf,d=0,x;I n1,n,*s,wr;
  w=conjug(cant1(w));  // create w*, where the result will be built inplace
  RZ(l=jtltqip(jt,w)); n=AS(l)[0]; n1=1+n;
  // build determinant for integer correction, if that is enabled (i. e. nonzero)
- if(FL&AT(l)){D*v=DAV(l); D determ=jt->workareas.minv.determ; DQ(n, x= ABS(*v); if(determ!=0){determ*=x; if(determ>1e20)determ=0.0;} if(x<c)c=x; if(x>d)d=x; v+=n1;); jt->workareas.minv.determ=determ;} 
+ if(FL&AT(l)){D*v=DAV(l); D determ=*det; DQ(n, x= ABS(*v); if(determ!=0){determ*=x; if(determ>1e20)determ=0.0;} if(x<c)c=x; if(x>d)d=x; v+=n1;); *det=determ;} 
  else        {Z*v=ZAV(l);  DQ(n, x=zmag(*v); if(x<c)c=x; if(x>d)d=x; v+=n1;);}
  ASSERT(!n||c>d*FUZZ,EVDOMAIN);
  RETF(pdt(jtrinvip(jt,l,n,AT(w)&FL?2:0),w));  // engage fast reciprocal for float matrices
@@ -221,9 +221,9 @@ static F1(jtlq){A l;D c=inf,d=0,x;I n1,n,*s,wr;
 // Boolean/integer correction.  If the inversand was B01 or INT, we can eliminate some rounding error by forcing the
 // determinant to integer and then each value to an integer multiple of the determinant.
 // The determinant was calculated when we inverted the matrix
-static F1(jticor){D d,*v;
+static A jticor(J jt,A  w,D d){D *v;
  ARGCHK1(w);
- d=jt->workareas.minv.determ;  // fetch flag/determinant
+// obsolete  d=*det;  // fetch flag/determinant
  if(d==0.0)R w;  // if not enabled or not applicable, return input unchanged
  d=jround(ABS(d));  // force determinant to integer
  D recipd=1/d;
@@ -231,9 +231,9 @@ static F1(jticor){D d,*v;
  R w;
 }
 
-F1(jtminv){PROLOG(0068);A q,y,z;I m,n,*s,t,wr;
+static A jtminvdet(J jt,A w,D *det){PROLOG(0068);A q,y,z;I m,n,*s,t,wr;
  F1RANK(2,jtminv,DUMMYSELF);
- jt->workareas.minv.determ=0.0;
+// obsolete jt->workareas.minv.determ=0.0;
  t=AT(w); wr=AR(w); s=AS(w); m=wr?s[0]:1; n=1<wr?s[1]:1;
  if(!wr)R recip(w);
  if(!AN(w)){ASSERT(1==wr||m>=n,EVLENGTH); R cant1(w);}
@@ -245,13 +245,14 @@ F1(jtminv){PROLOG(0068);A q,y,z;I m,n,*s,t,wr;
   if(2>wr)z=tymes(reshape(mtv,z),w); else if(m>n)z=pdt(z,q);
  }else{
   // not RAT/XNUM.  Calculate inverse as R^-1 Q^-1 after taking QR decomp & using Q^-1=Q*
-  if(t&B01+INT&&2==wr&&m==n)jt->workareas.minv.determ=1.0;  // if taking inverse of square int, allow setting up for correction afterward
-  z=jtlq(jt,w);
-  z=icor(z);  // if integer correction called for, do it
+  *det=(t&B01+INT&&2==wr&&m==n)?1.0:0.0;  // if taking inverse of square int, allow setting up for correction afterward
+  z=jtlq(jt,w,det);
+  z=icor(z,*det);  // if integer correction called for, do it
   z=2==wr?z:reshape(shape(w),z);
  }
  EPILOG(z);
 }
+F1(jtminv){D detv; R jtminvdet(jt,w,&detv);}
 
 static B jttridiag(J jt,I n,A a,A x){D*av,d,p,*xv;I i,j,n1=n-1;
  av=DAV(a); xv=DAV(x); d=xv[0];
@@ -291,8 +292,9 @@ F2(jtmdiv){PROLOG(0069);A z;I t;
  if(AT(a)&SPARSE)RZ(a=denseit(a));
  t=AT(w);
  if(t&SPARSE)R mdivsp(a,w);
- z=minv(w);  // take generalized inverse of w, setting up for icor if needed
+ D detv; // place to build determinant of inverse
+ z=jtminvdet(jt,w,&detv);  // take generalized inverse of w, setting up for icor if needed
  z=pdt(2>AR(w)?reshape(shape(w),z):z,a);  // a * w^-1
- if(AT(a)&B01+INT)z=icor(z);  // integer correct if a is not float (& correction is possible)
+ if(AT(a)&B01+INT)z=icor(z,detv);  // integer correct if a is not float (& correction is possible)
  EPILOG(z);
 }

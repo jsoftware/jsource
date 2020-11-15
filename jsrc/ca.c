@@ -126,8 +126,10 @@ static DF2(on20){R jtrank2ex0(jt,a,w,self,on2cell);}  // pass inplaceability thr
 static DF2(atcomp){AF f;A z;
  ARGCHK2(a,w); 
  f=atcompf(a,w,self);
+ I postflags=(I)f&3;  // extract postprocessing from return
+ f=(AF)((I)f&-4);    // restore function address
  if(f){
-  I postflags=jt->workareas.compsc.postflags;
+// obsolete   I postflags=jt->workareas.compsc.postflags;
   z=f(jt,a,w,self);
   if(z){if(postflags&2){z=num((IAV(z)[0]!=AN(AR(a)>=AR(w)?a:w))^(postflags&1));}}
  }else z=upon2(a,w,self);
@@ -137,9 +139,11 @@ static DF2(atcomp){AF f;A z;
 static DF2(atcomp0){A z;AF f;
  ARGCHK2(a,w);
  f=atcompf(a,w,self);
+ I postflags=(I)f&3;  // extract postprocessing from return
+ f=(AF)((I)f&-4);    // restore function address
  PUSHCCT(1.0)
  if(f){
-  I postflags=jt->workareas.compsc.postflags;
+// obsolete   I postflags=jt->workareas.compsc.postflags;
   z=f(jt,a,w,self);
   if(z){if(postflags&2){z=num((IAV(z)[0]!=AN(AR(a)>=AR(w)?a:w))^(postflags&1));}}
  }else z=upon2(a,w,self);

@@ -92,7 +92,7 @@ static A jtgrd1spss(J jt,A w,I wf,I wcr){A c,d,t,x,y,z;I cn,*cv,*dv,i,n,n1,*tv,*
 static A jtgrd1spsd(J jt,A w,I wf,I wcr){A d,t,y,z;I*dv,i,n,p,*tv,yc,*ws,*ys,*yv,*zv;P*wp;
  wp=PAV(w); ws=AS(w); n=wcr?ws[wf]:1; 
  RZ(z=grd1spz(w,wf,wcr)); zv=AV(z);
- RZ(IRS1(SPA(wp,x),0L,wcr,jtgr1,t)); tv=AV(t);  /* grade dense cells              */
+ A spax=SPA(wp,x); RZ(IRS1(spax,0L,wcr,jtgr1,t)); tv=AV(t);  /* grade dense cells              */
  RZ(d=apvwr(wf,0L,0L)); dv=AV(d);                 /* odometer for frame             */
  y=SPA(wp,i); ys=AS(y); p=ys[0]; yc=ys[1]; yv=AV(y);
  for(i=0;i<p;++i){                              /* now merge dense & sparse cells */

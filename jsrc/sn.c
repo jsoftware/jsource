@@ -128,35 +128,42 @@ F1(jtnc){A*wv,x,y,z;I i,n,t,*zv;L*v;
  RETF(z);
 }    /* 4!:0  name class */
 
-
-static SYMWALK(jtnlxxx, A,BOX,20,1, jt->workareas.namelist.nla[*((UC*)NAV(d->name)->s)]&&jt->workareas.namelist.nlt&AT(d->val), 
+// these functions are called with an a arg that is a 256-char rank-1 boolean map giving the initial characters wanted, and AS(a)[0] is a mask of allowed types
+// obsolete static SYMWALK(jtnlxxx, A,BOX,20,1, jt->workareas.namelist.nla[*((UC*)NAV(d->name)->s)]&&jt->workareas.namelist.nlt&AT(d->val), 
+// obsolete     RZ(*zv++=incorp(sfn(SFNSIMPLEONLY,d->name))) )
+// obsolete        SYMWALK(jtnlsym, A,BOX,20,1, jt->workareas.namelist.nla[*((UC*)NAV(d->name)->s)],
+// obsolete     RZ(*zv++=incorp(sfn(SFNSIMPLEONLY,d->name))) )
+static SYMWALK(jtnlxxx, A,BOX,20,1, CAV1(a)[((UC*)NAV(d->name)->s)[0]]&&AS(a)[0]&AT(d->val), 
     RZ(*zv++=incorp(sfn(SFNSIMPLEONLY,d->name))) )
 
-       SYMWALK(jtnlsym, A,BOX,20,1, jt->workareas.namelist.nla[*((UC*)NAV(d->name)->s)],
+       SYMWALK(jtnlsym, A,BOX,20,1, CAV1(a)[((UC*)NAV(d->name)->s)[0]],
     RZ(*zv++=incorp(sfn(SFNSIMPLEONLY,d->name))) )
 
 static const I nlmask[] = {NOUN,ADV,CONJ,VERB, MARK,MARK,SYMB,MARK};
 
-static F1(jtnlx){A z=mtv;B b;I m=0,*v,x;
+// a is the rank-1 256-byte initial-letter mask
+static F2(jtnlx){A z=mtv;B b;I m=0,*v,x;
  RZ(w=vi(w)); v=AV(w); 
  DQ(AN(w), x=*v++; m|=nlmask[BETWEENC(x,0,6)?x:7];); 
- jt->workareas.namelist.nlt=m&RHS; b=1&&jt->workareas.namelist.nlt&RHS;
+// obsolete  jt->workareas.namelist.nlt=m&RHS; b=1&&jt->workareas.namelist.nlt&RHS;
+ AS(a)[0]=m&RHS; b=1&&AS(a)[0]&RHS;  // AS(a)[0] is used for the type mask
  ASSERT(!(m&MARK),EVDOMAIN);
- if(b           )RZ(z=nlxxx(jt->global));
- if(b&&(AN(jt->locsyms)>1))RZ(z=over(nlxxx(jt->locsyms),z));
- if(m==SYMB     )RZ(z=over(nlsym(jt->stloc),z));
+ if(b           )RZ(z=nlxxx(a,jt->global));
+ if(b&&(AN(jt->locsyms)>1))RZ(z=over(nlxxx(a,jt->locsyms),z));
+ if(m==SYMB     )RZ(z=over(nlsym(a,jt->stloc),z));
  R nub(grade2(z,ope(z)));
 }
 
-F1(jtnl1){memset(jt->workareas.namelist.nla,C1,256L); R nlx(w);}
+F1(jtnl1){A a; GAT0(a,B01,256,1) memset(CAV1(a),C1,256L); R nlx(a,w);}
      /* 4!:1  name list */
 
 F2(jtnl2){UC*u;
  ARGCHK2(a,w);
  ASSERT(LIT&AT(a),EVDOMAIN);
- memset(jt->workareas.namelist.nla,C0,256L); 
- u=UAV(a); DQ(AN(a),jt->workareas.namelist.nla[*u++]=1;);
- R nlx(w);
+// obsolete  memset(jt->workareas.namelist.nla,C0,256L); 
+ A tmp; GAT0(tmp,B01,256,1) memset(CAV1(tmp),C0,256L);
+ u=UAV(a); DQ(AN(a),CAV1(a=tmp)[*u++]=1;);
+ R nlx(tmp,w);
 }    /* 4!:1  name list */
 
 

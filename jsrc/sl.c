@@ -323,22 +323,23 @@ F1(jtlocnc){A*wv,y,z;C c,*u;I i,m,n,*zv;
  RETF(z);
 }    /* 18!:0 locale name class */
 
-static F1(jtlocnlx){A y,z=mtv;B*wv;I m=0;
+static F2(jtlocnlx){A y,z=mtv;B*wv;I m=0;
  RZ(w=cvt(B01,w)); wv=BAV(w); DO(AN(w), m|=1+wv[i];);  // accumulate mask of requested types
- if(1&m)z=nlsym(jt->stloc);  // named locales
+ if(1&m)z=nlsym(a,jt->stloc);  // named locales
  if(2&m){RZ(y=jtactivenl(jt)); z=over(y,z); }  // get list of active numbered locales
  R grade2(z,ope(z));
 }
 
-F1(jtlocnl1){memset(jt->workareas.namelist.nla,C1,256); R locnlx(w);}
+F1(jtlocnl1){A a; GAT0(a,B01,256,1) memset(CAV1(a),C1,256L);  R locnlx(a,w);}
     /* 18!:1 locale name list */
 
 F2(jtlocnl2){UC*u;
  ARGCHK2(a,w);
  ASSERT(LIT&AT(a),EVDOMAIN);
- memset(jt->workareas.namelist.nla,C0,256); 
- u=UAV(a); DQ(AN(a),jt->workareas.namelist.nla[*u++]=1;);
- R locnlx(w); 
+// obsolete  memset(jt->workareas.namelist.nla,C0,256); 
+ A tmp; GAT0(tmp,B01,256,1) memset(CAV1(tmp),C0,256L);
+ u=UAV(a); DQ(AN(a),CAV1(tmp)[*u++]=1;);
+ R locnlx(tmp,w); 
 }    /* 18!:1 locale name list */
 
 static A jtlocale(J jt,B b,A w){A g=0,*wv,y;

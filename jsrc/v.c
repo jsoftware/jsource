@@ -55,7 +55,7 @@ F1(jtravel){A a,c,q,x,y,y0,z;B*b;I f,j,m,r,*u,*v,*yv;P*wp,*zp;
   GATV0(y,INT,m*(1+n-r),2); v=AS(y); v[0]=m; v[1]=1+n-r;
   yv=AV(y); u=AV(y0); v=AV(q); j=n-r;
   DQ(m, ICPY(yv,u,j); yv[j]=*v++; yv+=1+j; u+=n;);
- }else{RZ(a=ca(SPA(wp,a))); RZ(x=IRS1(SPA(wp,x),0L,r,jtravel,y0)); RZ(y=ca(SPA(wp,i)));}
+ }else{RZ(a=ca(SPA(wp,a))); A spax=SPA(wp,x); RZ(x=IRS1(spax,0L,r,jtravel,y0)); RZ(y=ca(SPA(wp,i)));}
  SPB(zp,a,a); 
  SPB(zp,e,ca(SPA(wp,e)));
  SPB(zp,x,x);

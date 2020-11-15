@@ -113,7 +113,7 @@ typedef struct {
 // obsolete  I    fopn;             /* open files count                                */
  I    getlasterror;     /* DLL stuff                                       */
 // end cache line 5.
- void *dtoa;             /* use internally by dtoa.c                        */
+ void *dtoa;             /* use internally by dtoa.c           $             */
  I    bytes;            /* bytes currently in use                          */
  I    bytesmax;         /* high-water mark of "bytes"                      */
  I    mulofloloc;       // index of the result at which II multiply overflow occurred  scaf  $
@@ -137,7 +137,7 @@ typedef struct {
  UC   disp[7];          /* # different verb displays                       */
  UC   outeol;           /* output: EOL sequence code                       */
 // 3 words free
- I    filler[3];
+// obsolete  I    filler[3];
 // --- end cache line 7
  I    malloctotal;    // net total of malloc/free performed in m.c only
  I    malloctotalhwmk;  // highest value since most recent 7!:1
@@ -259,7 +259,7 @@ typedef struct {
  C    pos[2];           /* boxed output x-y positioning                    */
  C    pp[8];            // print precision (sprintf field for numeric output)
  A    p4792;            // pointer to p: i. 4792, filled in on first use
- I    redefined;        /* symbol table entry of redefined explicit defn   */
+ I    redefined;        /* symbol table entry of redefined explicit defn  scaf */
 // obsolete  I    sbfillfactor;     /* ?SB for binary tree                              */
 // obsolete  I    sbgap;            /* ?SB for binary tree                              */
 // obsolete  A    sbh;              /* SB hash table of indices; -1 means unused       */
@@ -294,37 +294,38 @@ typedef struct {
 // obsolete  TA*  ttab;             /* tacit translator                                */
 // obsolete  I    ttabi;            /* tacit translator                                */
 // obsolete  I    ttabi0;           /* tacit translator                                */
- A    xmod;             /* extended integer: the m in m&|@f                */  
- C    xmode;            /* extended integer operating mode                 */
+ A    xmod;             /* extended integer: the m in m&|@f        $        */  
+ C    xmode;            /* extended integer operating mode         $        */
 #if MEMAUDIT & 2
  I    audittstackdisabled;   // set to 1 to disable auditing
 #endif
- I    rng;              /* RNG: generator selector                         */
  UF   rngF[5];          /* RNG: function to get the next random number     */
- UI*  rngfxsv;          /* RNG: rngv for fixed seed (?.)                   */
- UF   rngf;             /* RNG: rngF[rng]                                  */
- I    rngI[5];          /* RNG: indices                                    */
- I    rngI0[5];         /* RNG: indices for RNG0                           */
- I    rngi;             /* RNG: current index                              */
  UI   rngM[5];          /* RNG: moduli                                     */
+
+// obsolete  UF   rngf;             /* RNG: rngF[rng]                                  */
+ UI*  rngv;             /* RNG: rngV[rng]                                  */
+ C    rng;              /* RNG: generator selector                         */
+ UI*  rngfxsv;          /* RNG: rngv for fixed seed (?.)                   */
+ S    rngI[5];          /* RNG: indices                                    */
+ S    rngI0[5];         /* RNG: indices for RNG0                           */
+ S    rngi;             /* RNG: current index                              */
  I    rngS[5];          /* RNG: seeds                                      */
  A    rngseed;          /* RNG: array seed                                 */
  UI*  rngV[5];          /* RNG: state vectors                              */
  UI*  rngV0[5];         /* RNG: state vectors for RNG0                     */
- UI*  rngv;             /* RNG: rngV[rng]                                  */
- I    rngw;             /* RNG: # bits in a random #                       */
+ C    rngw;             /* RNG: # bits in a random #                       */
 // workareas for individual primitives, overlapping in the same memory
 union {
- struct{
-  D determ;  // determinant of the triangular matrix, if the matrix to be inverted was B01 or INT.  Set to 0 to suppress INT rounding
- } minv;
- struct {
-  B    nla[256];         /* namelist names mask                             */
-  I    nlt;              /* namelist type  mask                             */
- } namelist;
- struct {
-  I    postflags;  // what to do with the result
- } compsc;
+// obsolete struct{
+// obsolete  D determ;  // determinant of the triangular matrix, if the matrix to be inverted was B01 or INT.  Set to 0 to suppress INT rounding
+// obsolete } minv;
+// obsolete  struct {
+// obsolete   B    nla[256];         /* namelist names mask                             */
+// obsolete   I    nlt;              /* namelist type  mask                             */
+// obsolete  } namelist;
+// obsolete struct {
+// obsolete  I    postflags;  // what to do with the result
+// obsolete } compsc;
 // obsolete #if (SYS & SYS_UNIX)
 // obsolete  C    dirnamebuf[NPATH];/* for directory search                            */
 // obsolete #endif

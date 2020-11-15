@@ -18,7 +18,12 @@
 #define X52         2.22044604925031308085e-16
 #define X64         5.42101086242752217004e-20
 
-#define NEXT        (jt->rngf(jt))
+#define SETNEXT     UF nextfn=jt->rngF[jt->rng];
+#define NEXT        (nextrand(jt,nextfn))
+// call the rng efficiently.  The call is an indirect call from many places & thus likely to mispredict.  To help out, we make
+// all calls through a common routine that does the indirect call; in the one location it is more likely to be predicted.  Compiler 'optimizations'
+// may defeat us.  SETNEXT must appear in every function that calls NEXT
+static UI nextrand(J jt, UF f){R (*f)(jt);}
 
 #if SY_64
 #define INITD       {sh=mk=1;}
@@ -439,7 +444,7 @@ static void jtsm_init(J jt,UI s){
 
 /* ----------------------------------------------------------------------- */
 
-F1(jtrngraw){A z;I n,*v;
+F1(jtrngraw){A z;I n,*v;SETNEXT
  RE(n=i0(w));
  ASSERT(0<=n,EVDOMAIN);
  GATV0(z,INT,n,1); v=AV(z);
@@ -493,7 +498,7 @@ F1(jtrngselects){I i;UI**vv=jt->rngV;
   case DXI: RZ(rngga(i,  vv)); jt->rngw=SY_64?64:30; break;
   case MRI: RZ(rngga(i,  vv)); jt->rngw=SY_64?64:31; 
  }
- jt->rngf=jt->rngF[jt->rng];
+// obsolete  jt->rngf=jt->rngF[jt->rng];
  R mtv;
 }
 
@@ -589,7 +594,7 @@ F1(jtrngseeds){I k,r;
 }
 
 
-static F2(jtrollksub){A z;I an,*av,k,m1,n,p,q,r,sh;UI m,mk,s,t,*u,x=jt->rngM[jt->rng];
+static F2(jtrollksub){A z;I an,*av,k,m1,n,p,q,r,sh;UI m,mk,s,t,*u,x=jt->rngM[jt->rng];SETNEXT
  ARGCHK2(a,w);
  an=AN(a); RE(m1=i0(w)); ASSERT(0<=m1,EVDOMAIN); m=m1;
  RZ(a=vip(a)); av=AV(a); PRODX(n,an,av,1);
@@ -658,7 +663,7 @@ static X jtxrand(J jt,X x){PROLOG(0090);A q,z;B b=1;I j,m,n,*qv,*xv,*zv;
  EPILOG(z);
 }    /* ?x where x is a single strictly positive extended integer */
 
-static F1(jtrollxnum){A z;B c=0;I d,n;X*u,*v,x;
+static F1(jtrollxnum){A z;B c=0;I d,n;X*u,*v,x;SETNEXT
  if(!(AT(w)&XNUM))RZ(w=cvt(XNUM,w));  // convert rational to numeric
  n=AN(w); v=XAV(w);
  GATV(z,XNUM,n,AR(w),AS(w)); u=XAV(z);
@@ -674,7 +679,7 @@ static F1(jtrollxnum){A z;B c=0;I d,n;X*u,*v,x;
 }    /* ?n$x where x is extended integer */
 
 
-static F1(jtrollbool){A z;B*v;D*u;I n,sh;UINT mk;
+static F1(jtrollbool){A z;B*v;D*u;I n,sh;UINT mk;SETNEXT
  n=AN(w); v=BAV(w); INITD;
  GATV(z,FL,n,AR(w),AS(w)); u=DAV(z);
  if(sh)DQ(n, *u++=*v++?0.0:NEXTD1;)
@@ -685,7 +690,7 @@ static F1(jtrollbool){A z;B*v;D*u;I n,sh;UINT mk;
 // If w is all 2, deal Booleans, with each each bit of a random number providing a single Boolean
 // Result is Boolean array, or mark if w is not all 2
 // *b=0 if w contained non-2, 1 otherwise (i. e. result is valid if *b=1)
-static A jtroll2(J jt,A w,B*b){A z;I j,n,nslice,p,q,r,*v;UI mk,t,*zv;
+static A jtroll2(J jt,A w,B*b){A z;I j,n,nslice,p,q,r,*v;UI mk,t,*zv;SETNEXT
  *b=0; n=AN(w); v=AV(w);  // init failure return; n=#atoms of w, v->first atom
  // If w contains non-2, return with error
  DO(n, if(v[i]!=2)R mark;);   // return fast if not all-Boolean result
@@ -716,7 +721,7 @@ static A jtroll2(J jt,A w,B*b){A z;I j,n,nslice,p,q,r,*v;UI mk,t,*zv;
  *b=1; R z;
 }    /* ?n$x where x is 2, maybe */
 
-static A jtrollnot0(J jt,A w,B*b){A z;I j,m1,n,*u,*v;UI m,s,t,x=jt->rngM[jt->rng];
+static A jtrollnot0(J jt,A w,B*b){A z;I j,m1,n,*u,*v;UI m,s,t,x=jt->rngM[jt->rng];SETNEXT
  *b=0; n=AN(w);
  if(n){v=AV(w); m1=*v++; j=1; DQ(n-1, if(m1!=*v++){j=0; break;});}
  if(n&&j)RZ(z=rollksub(shape(w),sc(m1)))
@@ -730,7 +735,7 @@ static A jtrollnot0(J jt,A w,B*b){A z;I j,m1,n,*u,*v;UI m,s,t,x=jt->rngM[jt->rng
  *b=1; R z;
 }    /* ?n$x where x is not 0, maybe */
 
-static A jtrollany(J jt,A w,B*b){A z;D*u;I j,m1,n,sh,*v;UI m,mk,s,t,x=jt->rngM[jt->rng];
+static A jtrollany(J jt,A w,B*b){A z;D*u;I j,m1,n,sh,*v;UI m,mk,s,t,x=jt->rngM[jt->rng];SETNEXT
  *b=0; n=AN(w); v=AV(w); INITD;
  GATV(z,FL,n,AR(w),AS(w)); u=DAV(z);
  for(j=0;j<n;++j){
@@ -755,7 +760,7 @@ F1(jtroll){A z;B b=0;I m,wt;
  RETF(z&&!(FL&AT(z))&&wt&XNUM+RAT?xco1(z):z);
 }
 
-F2(jtdeal){A z;I at,j,k,m,n,wt,*zv;UI c,s,t,x=jt->rngM[jt->rng];UI sq;
+F2(jtdeal){A z;I at,j,k,m,n,wt,*zv;UI c,s,t,x=jt->rngM[jt->rng];UI sq;SETNEXT
  ARGCHK2(a,w);
  at=AT(a); wt=AT(w);
  ASSERT(at&DENSE&at&&wt&DENSE,EVDOMAIN);
@@ -808,7 +813,7 @@ F2(jtdeal){A z;I at,j,k,m,n,wt,*zv;UI c,s,t,x=jt->rngM[jt->rng];UI sq;
 
 #undef rollksub
 #define rollksub(a,w) jtrollksubdot(jt,(a),(w))
-static F2(jtrollksubdot){A z;I an,*av,k,m1,n,p,q,r,sh;UI j,m,mk,s,t,*u,x=jt->rngM[jt->rng];
+static F2(jtrollksubdot){A z;I an,*av,k,m1,n,p,q,r,sh;UI j,m,mk,s,t,*u,x=jt->rngM[jt->rng];SETNEXT
  ARGCHK2(a,w);
  an=AN(a); RE(m1=i0(w)); ASSERT(0<=m1,EVDOMAIN); m=m1;
  RZ(a=vip(a)); av=AV(a); PRODX(n,an,av,1);
@@ -877,7 +882,7 @@ static X jtxranddot(J jt,X x){PROLOG(0090);A q,z;B b=1;I j,m,n,*qv,*xv,*zv;
 
 #undef rollxnum
 #define rollxnum(w) jtrollxnumdot(jt,(w))
-static F1(jtrollxnumdot){A z;B c=0;I d,n;X*u,*v,x;
+static F1(jtrollxnumdot){A z;B c=0;I d,n;X*u,*v,x;SETNEXT
  if(!(AT(w)&XNUM))RZ(w=cvt(XNUM,w));  // convert rational to numeric
  n=AN(w); v=XAV(w);
  GATV(z,XNUM,n,AR(w),AS(w)); u=XAV(z);
@@ -894,7 +899,7 @@ static F1(jtrollxnumdot){A z;B c=0;I d,n;X*u,*v,x;
 
 #undef rollbool
 #define rollbool(w) jtrollbooldot(jt,(w))
-static F1(jtrollbooldot){A z;B*v;D*u;I n,sh;UINT mk;
+static F1(jtrollbooldot){A z;B*v;D*u;I n,sh;UINT mk;SETNEXT
  n=AN(w); v=BAV(w); INITD;
  GATV(z,FL,n,AR(w),AS(w)); u=DAV(z);
  if(sh)DQ(n, *u++=*v++?0.0:NEXTD1;)
@@ -907,7 +912,7 @@ static F1(jtrollbooldot){A z;B*v;D*u;I n,sh;UINT mk;
 // *b=0 if w contained non-2, 1 otherwise (i. e. result is valid if *b=1)
 #undef roll2
 #define roll2(w,b) jtroll2dot(jt,(w),(b))
-static A jtroll2dot(J jt,A w,B*b){A z;I j,n,nslice,p,q,r,*v;UI mk,t,*zv;
+static A jtroll2dot(J jt,A w,B*b){A z;I j,n,nslice,p,q,r,*v;UI mk,t,*zv;SETNEXT
  *b=0; n=AN(w); v=AV(w);  // init failure return; n=#atoms of w, v->first atom
  // If w contains non-2, return with error
  DO(n, if(v[i]!=2)R mark;);   // return fast if not all-Boolean result
@@ -940,7 +945,7 @@ static A jtroll2dot(J jt,A w,B*b){A z;I j,n,nslice,p,q,r,*v;UI mk,t,*zv;
 
 #undef rollnot0
 #define rollnot0(w,b) jtrollnot0dot(jt,(w),(b))
-static A jtrollnot0dot(J jt,A w,B*b){A z;I j,m1,n,*u,*v;UI m,s,t,x=jt->rngM[jt->rng];
+static A jtrollnot0dot(J jt,A w,B*b){A z;I j,m1,n,*u,*v;UI m,s,t,x=jt->rngM[jt->rng];SETNEXT
  *b=0; n=AN(w);
  if(n){v=AV(w); m1=*v++; j=1; DQ(n-1, if(m1!=*v++){j=0; break;});}
  if(n&&j)RZ(z=rollksub(shape(w),sc(m1)))
@@ -956,7 +961,7 @@ static A jtrollnot0dot(J jt,A w,B*b){A z;I j,m1,n,*u,*v;UI m,s,t,x=jt->rngM[jt->
 
 #undef rollany
 #define rollany(w,b) jtrollanydot(jt,(w),(b))
-static A jtrollanydot(J jt,A w,B*b){A z;D*u;I j,m1,n,sh,*v;UI m,mk,s,t,x=jt->rngM[jt->rng];
+static A jtrollanydot(J jt,A w,B*b){A z;D*u;I j,m1,n,sh,*v;UI m,mk,s,t,x=jt->rngM[jt->rng];SETNEXT
  *b=0; n=AN(w); v=AV(w); INITD;
  GATV(z,FL,n,AR(w),AS(w)); u=DAV(z);
  for(j=0;j<n;++j){
@@ -985,7 +990,7 @@ static F1(jtrolldot){A z;B b=0;I m,wt;
 
 #undef deal
 #define deal(a,w) jtdealdot(jt,(a),(w))
-static F2(jtdealdot){A h,y,z;I at,d,*hv,i,i1,j,k,m,n,p,q,*v,wt,*yv,*zv;UI c,s,t,x=jt->rngM[jt->rng];
+static F2(jtdealdot){A h,y,z;I at,d,*hv,i,i1,j,k,m,n,p,q,*v,wt,*yv,*zv;UI c,s,t,x=jt->rngM[jt->rng];SETNEXT
  ARGCHK2(a,w);
  at=AT(a); wt=AT(w);
  ASSERT(at&DENSE&at&&wt&DENSE,EVDOMAIN);

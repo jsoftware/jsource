@@ -304,32 +304,32 @@ static AF atcompX[]={   /* table for any vs. any */
 // We require the ranks to be <2 for processing here except for @e., which requires that the result of e. have rank<2
 // If the form is [: f/ g  and g is a simple comparison, use f/@g code for higher ranks
 // If no routine found, return 0 to failover to normal path
-// compsc.postflags bits 0-1 indicate postprocessing needed: 00=none, 10=+./ (result is binary 0 if search completed), 11=*./ (result is binary 1 if search completed)
+// result bits 0-1 indicate postprocessing needed: 0x=none, 10=+./ (result is binary 0 if search completed), 11=*./ (result is binary 1 if search completed)
 AF jtatcompf(J jt,A a,A w,A self){I m;
  ARGCHK2(a,w);
  m=FAV(self)->flag&255;
  if((m&6)!=6){   // normal comparison
   // verify rank is OK, based on operation
-  if((AR(a)|AR(w))>1){jt->workareas.compsc.postflags=0; R (m>=(4<<3))?(AF)jtfslashatg:0;}   // If an operand has rank>1, reject it unless it can be turned to f/@g special
+  if((AR(a)|AR(w))>1){R (m>=(4<<3))?(AF)jtfslashatg:0;}   // If an operand has rank>1, reject it unless it can be turned to f/@g special. postflags are 0
   ASSERT(AN(a)==AN(w)||((AR(a)&AR(w))==0),EVLENGTH)   // agreement is same length or one an atom - we know ranks<=1
   // split m into search and comparison
   I search=m>>3; I comp=m&7;
   // Change +./ to i.&1, *./ to i.&0; save flag bits to include in return address
-  jt->workareas.compsc.postflags=(0xc0>>search)&3; search=(0x0143210>>(search<<2))&15;  // flags: 00 00 00 00 00 10 11, rev/overlap to 11000000   search: 0 1 2 3 4 1 0
+  I postflags=(0xc0>>search)&3; search=(0x0143210>>(search<<2))&15;  // flags: 00 00 00 00 00 10 11, rev/overlap to 11000000   search: 0 1 2 3 4 1 0
   // Change i.&1@:comp to i.&0@:compx, sim for i:  XOR comp with 000 001 000 110 000 110
   comp^=(0x606010>>(((search&1)+(comp&6))<<2))&7; search>>=1;  // complement comp if search is i&1; then the only search values are 0, 2, 4 so map them to 012.  Could reorder compares to = ~: < >: > <: to save code here
   if(!((AT(a)|AT(w))&(NOUN&~(INT+FL+B01)))){
    // numeric types that we can handle here, for sure
-   R atcompxy[6*9*search+9*comp+3*(AT(a)>>INTX)+(AT(w)>>INTX)];
+   R (AF)((I)atcompxy[6*9*search+9*comp+3*(AT(a)>>INTX)+(AT(w)>>INTX)]+postflags);
   }
   // Other types have a chance only if they are equal types; fetch from the appropriate table then
-  if((AT(a)&AT(w)&(LIT+C2T+C4T+SBT))){R (AT(a)&LIT?atcompC:AT(a)&C2T?atcompUS:AT(a)&C4T?atcompC4:atcompSB)[6*search+comp];}
+  if((AT(a)&AT(w)&(LIT+C2T+C4T+SBT))){R (AF)((I)(AT(a)&LIT?atcompC:AT(a)&C2T?atcompUS:AT(a)&C4T?atcompC4:atcompSB)[6*search+comp]+postflags);}
   R 0;
  }else{  // E. (6) or e. (7)
-  jt->workareas.compsc.postflags=0;
+// obsolete   jt->workareas.compsc.postflags=0;
   if((AR(a)|AR(w))>1){if(!(m&1)||AR(a)>(AR(w)?AR(w):1))R0;}  // some rank > 1, fail if E. or e. returns rank>1
   if(((m&1)|(AN(a)-1))==0)R 0;  // E. when a is a singleton - no need for the full E. treatment
-  R atcompX[((m>>2)&~1)+(m&1)];  // choose i.-family routine
+  R atcompX[((m>>2)&~1)+(m&1)];  // choose i.-family routine; postflags are 0
  }
 }    /* function table look-up for  comp i. 1:  and  i.&1@:comp  etc. */
 

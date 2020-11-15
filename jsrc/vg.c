@@ -689,12 +689,16 @@ static GF(jtgrs){R gri(m,ai,n,sborder(w),zv);}
      /* grade"r w on symbols w */
 
 F2(jtgrade1p){PROLOG(0074);A x,z;I n,*s,*xv,*zv;
+ RZ(x=curtail(a)); IRS2(x,w,0L,1L,1L,jtfrom,z); z=grade1(z); EPILOG(z);
+ // A special sort function for this is a bad idea, because the indirection is repeated so often
+#if 0 // obsolete
  s=AS(w); n=s[0]; jt->workareas.compare.compn=s[1]-1; jt->workareas.compare.compk=SZI*s[1];
  jt->workareas.compare.comp=compp; jt->workareas.compare.compsyv=AV(a); jt->workareas.compare.compv=CAV(w); jt->workareas.compare.compusejt=1;
  GATV0(z,INT,n,1); zv=AV(z);
  GATV0(x,INT,n,1); xv=AV(x);
  msortitems(jmsort,n,(void**)zv,(void**)xv);
  EPILOG(z);
+#endif
 }    /* /:(}:a){"1 w , permutation a, integer matrix w */
 
 

@@ -98,6 +98,7 @@ F1(jtieps){
  R mtm;
 }
 
+// 9!:38
 F1(jtoutparmq){A z;D*u;I*v;
  ASSERTMTV(w);
 #if 0 // obsolete 
@@ -119,25 +120,20 @@ F1(jtoutparmq){A z;D*u;I*v;
  RETF(z);
 }
 
+// 9!:37
 F1(jtoutparms){I*v;
  RZ(w=vib(w));
  ASSERT(1==AR(w),EVRANK);
  ASSERT(4==AN(w),EVLENGTH);
  v=AV(w);
  ASSERT(0==v[0]||2==v[0],EVINDEX);
-#if 0 // obsolete
  ASSERT(0<=v[1],EVDOMAIN);
  ASSERT(0<=v[2],EVDOMAIN);
  ASSERT(0<=v[3],EVDOMAIN);
-#else
- ASSERT(BETWEENC(v[1],0,32767),EVDOMAIN);
- ASSERT(BETWEENC(v[2],0,32767),EVDOMAIN);
- ASSERT(BETWEENC(v[3],0,32767),EVDOMAIN);
-#endif
  jt->outeol      =(UC)v[0];
- jt->outmaxlen   =v[1];
- jt->outmaxbefore=v[2];
- jt->outmaxafter =v[3];
+ jt->outmaxlen   =MIN(0x7fffffff,v[1]);
+ jt->outmaxbefore=MIN(0x7fffffff,v[2]);
+ jt->outmaxafter =MIN(0x7fffffff,v[3]);
  R mtv;
 }
 

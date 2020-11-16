@@ -246,9 +246,9 @@ typedef struct {
  C    nfe;              /* 1 for J native front end                        */
  C    oleop;            /* com flag to capture output                      */
  void*opbstr;           /* com ptr to BSTR for captured output             */
- S    outmaxafter;      /* output: maximum # lines after truncation        */
- S    outmaxbefore;     /* output: maximum # lines before truncation       */
- S    outmaxlen;        /* output: maximum line length before truncation   */
+ I4    outmaxafter;      /* output: maximum # lines after truncation        */
+ I4    outmaxbefore;     /* output: maximum # lines before truncation       */
+ I4    outmaxlen;        /* output: maximum line length before truncation   */
 // obsolete  C    outseq[3];		    /* EOL: "LF" "CR" "CRLF"                           */
  I    peekdata;         /* our window into the interpreter                 */
 // obsolete  B    pmrec;            /* perf. monitor: 0 entry/exit; 1 all              */

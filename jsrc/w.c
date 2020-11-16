@@ -255,7 +255,7 @@ A jttokens(J jt,A w,I env){A t; RZ(t=wordil(w)); ASSERT(AM(t)>=0,EVOPENQ) R enqu
   case 2: case 3: if(0<=vi){EMIT(T,vj,vi,vr,vc); vi=vr=-1;} EMIT(T,j,i,r,c);       j=2==e?i:-1; break;  \
   case 4: case 5: if(r!=vr){if(0<=vi)EMIT(T,vj,vi,vr,vc); vj=j; vr=r; vc=c;} vi=i; j=4==e?i:-1; break;  \
   case 1:         j=i; break;                                                    \
-  case 7: i-=2; i=i<0?0:i; j=i<j?i:j; break;  /* backtrack */ \
+  case 7: i-=2; i=i<0?0:i; j=-1; break;  /* backtrack */ \
  }
 
 #define ZVAx                {}

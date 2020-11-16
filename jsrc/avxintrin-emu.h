@@ -283,6 +283,69 @@ static __emu_inline __emu##type __emu_mm256_##func( __emu##type m256_param1, __e
     return ( res ); \
 }
 
+// sse2
+
+/** */
+static __emu_inline void ssp_convert_odd_even_ps_SSE2( __m128 *a, __m128 *b )
+{
+    // IN
+    // a = a3,a2,a1,a0
+    // b = b3,b2,b1,b0
+
+    // OUT
+    // a = b2,b0,a2,a0  // even
+    // b = b3,b1,a3,a1  // odd
+
+    __m128 c, d;
+    c = _mm_shuffle_ps( *a, *b, _MM_SHUFFLE(3,1,3,1) );
+    d = _mm_shuffle_ps( *a, *b, _MM_SHUFFLE(2,0,2,0) );
+    *a = c;
+    *b = d;
+}
+
+static __emu_inline __m128i ssp_movmask_imm8_to_epi32_SSE2( int mask )
+{
+    __m128i screen;
+    const __m128i mulShiftImm = _mm_set_epi16( 0x1000, 0x0000, 0x2000, 0x0000, 0x4000, 0x0000, 0x8000, 0x0000 ); // Shift mask multiply moves all bits to left, becomes MSB
+    screen = _mm_set1_epi16 ( mask                );   // Load the mask into register
+    screen = _mm_mullo_epi16( screen, mulShiftImm );   // Shift bits to MSB
+    screen = _mm_srai_epi32 ( screen, 31          );   // Shift bits to obtain all F's or all 0's
+    return screen;
+}
+
+
+static __emu_inline __m128i ssp_logical_bitwise_select_SSE2( __m128i a, __m128i b, __m128i mask )   // Bitwise (mask ? a : b) 
+{
+    a = _mm_and_si128   ( a,    mask );                                 // clear a where mask = 0
+    b = _mm_andnot_si128( mask, b    );                                 // clear b where mask = 1
+    a = _mm_or_si128    ( a,    b    );                                 // a = a OR b                         
+    return a; 
+}
+
+#define __EMU_M256_IMPL_M2_SSE2( type, func ) \
+static __emu_inline __emu##type __emu_mm256_##func( __emu##type m256_param1, __emu##type m256_param2 ) \
+{   __emu##type res; \
+    res.__emu_m128[0] = _mm_##func##_SSE2( m256_param1.__emu_m128[0], m256_param2.__emu_m128[0] ); \
+    res.__emu_m128[1] = _mm_##func##_SSE2( m256_param1.__emu_m128[1], m256_param2.__emu_m128[1] ); \
+    return ( res ); \
+}
+
+#define __EMU_M256_IMPL_M2I_SHIFT_SSE2( type, func, shift_for_hi ) \
+static __emu_inline  __emu##type __emu_mm256_##func( __emu##type m256_param1, __emu##type m256_param2, const int param3 ) \
+{   __emu##type res; \
+    res.__emu_m128[0] = _mm_##func##_SSE2( m256_param1.__emu_m128[0], m256_param2.__emu_m128[0], param3 & ((1<<shift_for_hi)-1) ); \
+    res.__emu_m128[1] = _mm_##func##_SSE2( m256_param1.__emu_m128[1], m256_param2.__emu_m128[1], param3 >> shift_for_hi ); \
+    return ( res ); \
+}
+
+#define __EMU_M256_IMPL_M3_SSE2( type, func ) \
+static __emu_inline __emu##type __emu_mm256_##func( __emu##type m256_param1, __emu##type m256_param2, __emu##type m256_param3 ) \
+{   __emu##type res; \
+    res.__emu_m128[0] = _mm_##func##_SSE2( m256_param1.__emu_m128[0], m256_param2.__emu_m128[0], m256_param3.__emu_m128[0] ); \
+    res.__emu_m128[1] = _mm_##func##_SSE2( m256_param1.__emu_m128[1], m256_param2.__emu_m128[1], m256_param3.__emu_m128[1] ); \
+    return ( res ); \
+}
+
 // avx2  __EMU_M256_128_IMPL_M2
 #define __EMU_M256_128_IMPL_M2( type, func ) \
 static __emu_inline __emu##type __emu_mm256_##func##256( __emu##type m256_param1, __emu##type m256_param2 ) \
@@ -303,46 +366,47 @@ static __emu_inline __m128d _mm_blend_pd_REF        ( __m128d a, __m128d b, cons
     return A;
 }
 
-/** \SSE4_1{Reference,_mm_blendv_pd} */
-static __emu_inline __m128d _mm_blendv_pd_REF       ( __m128d a, __m128d b, __m128d mask )
+/** \SSE4_1{SSE2,_mm_blendv_pd} */
+static __emu_inline __m128d _mm_blendv_pd_SSE2( __m128d a, __m128d b, __m128d mask )
 {
-    __m128d A, B, Mask;
-    A = a;
-    B = b;
-    Mask = mask;
+    __m128i A, B, Mask;
+    A = _mm_castpd_si128(a);
+    B = _mm_castpd_si128(b);
+    Mask = _mm_castpd_si128(mask);
 
-    A[0] = (((__v2di)Mask)[0] & 0x8000000000000000ll) ? B[0] : A[0];
-    A[1] = (((__v2di)Mask)[1] & 0x8000000000000000ll) ? B[1] : A[1];
-    return A;
+    Mask = _mm_shuffle_epi32( Mask, _MM_SHUFFLE(3, 3, 1, 1) );
+    Mask = _mm_srai_epi32   ( Mask, 31                      );
+
+    B = _mm_and_si128( B, Mask );
+    A = _mm_andnot_si128( Mask, A );
+    A = _mm_or_si128( A, B );
+    return _mm_castsi128_pd(A);
 }
 
-/** \SSE4_1{Reference,_mm_blend_ps} */
-static __emu_inline __m128 _mm_blend_ps_REF        ( __m128 a, __m128 b, const int mask )
+/** \SSE4_1{SSE2,_mm_blend_ps} */
+static __emu_inline __m128 _mm_blend_ps_SSE2( __m128 a, __m128 b, const int mask )
 {
-    __m128 A, B;
-    A = a;
-    B = b;
-
-    A[0] = (mask & 0x1) ? B[0] : A[0];
-    A[1] = (mask & 0x2) ? B[1] : A[1];
-    A[2] = (mask & 0x4) ? B[2] : A[2];
-    A[3] = (mask & 0x8) ? B[3] : A[3];
-    return A;
+    __m128i screen, A, B;
+    A = _mm_castps_si128(a);
+    B = _mm_castps_si128(b);
+    screen = ssp_movmask_imm8_to_epi32_SSE2( mask );
+    screen = ssp_logical_bitwise_select_SSE2( B, A, screen );
+    return _mm_castsi128_ps(screen);
 }
 
-/** \SSE4_1{Reference,_mm_blendv_epi8} */
-static __emu_inline __m128 _mm_blendv_ps_REF       ( __m128 a, __m128 b, __m128 mask )
+/** \SSE4_1{SSE2,_mm_blendv_epi8} */
+static __emu_inline __m128 _mm_blendv_ps_SSE2( __m128 a, __m128 b, __m128 mask )
 {
-    __m128 A, B; __v4si Mask;
-    A = a;
-    B = b;
-    Mask = (__v4si)mask;
+    __m128 A, B, Mask;
+    A = _mm_castps_si128(a);
+    B = _mm_castps_si128(b);
+    Mask = _mm_castps_si128(mask);
 
-    A[0] = (( Mask[0] )) ? B[0] : A[0];
-    A[1] = (( Mask[1] )) ? B[1] : A[1];
-    A[2] = (( Mask[2] )) ? B[2] : A[2];
-    A[3] = (( Mask[3] )) ? B[3] : A[3];
-    return A;
+    Mask = _mm_srai_epi32( Mask, 31 );
+    B = _mm_and_si128( B, Mask );
+    A = _mm_andnot_si128( Mask, A );
+    A = _mm_or_si128( A, B );
+    return _mm_castsi128_ps(A);
 }
 
 /** \SSE45{Reference,_mm_testc_si128,ptest} */
@@ -383,7 +447,7 @@ static __emu_inline int _mm_testnzc_si128_REF( __m128i a, __m128i b)
 }
 
 /** \SSE3{SSE2,_mm_addsub_ps} */
-static __emu_inline __m128 _mm_addsub_ps_REF(__m128 a, __m128 b)
+static __emu_inline __m128 _mm_addsub_ps_SSE2(__m128 a, __m128 b)
 {
     static __m128 const const_addSub_ps_neg  = { -1, 1, -1, 1 };
 
@@ -393,7 +457,7 @@ static __emu_inline __m128 _mm_addsub_ps_REF(__m128 a, __m128 b)
 }
 
 /** \SSE3{SSE2,_mm_addsub_pd} */
-static __emu_inline __m128d _mm_addsub_pd_REF(__m128d a, __m128d b)
+static __emu_inline __m128d _mm_addsub_pd_SSE2(__m128d a, __m128d b)
 {
     static __m128d const const_addSub_pd_neg = { -1, 1 };
 
@@ -433,55 +497,47 @@ static __emu_inline __m128i _mm_cmpeq_epi64_REF( __m128i a, __m128i b )
     return A;
 }
 
-/** \SSSE3{Reference,_mm_hadd_ps} */
-static __emu_inline __m128 _mm_hadd_ps_REF(__m128 a, __m128 b)
+/** \SSE3{SSE2,_mm_hadd_ps} */
+static __emu_inline __m128 _mm_hadd_ps_SSE2(__m128 a, __m128 b)
 {
-    __m128 A, B;
+    ssp_convert_odd_even_ps_SSE2( &a, &b );
+    a = _mm_add_ps( a, b );
+    return a;
+}
+
+/** \SSE3{SSE2,_mm_hadd_pd} */
+static __emu_inline __m128d _mm_hadd_pd_SSE2(__m128d a, __m128d b)
+{
+    __m128d A,B,C;
     A = a;
+    C = a;
     B = b;
 
-    A[0] = A[0] + A[1];
-    A[1] = A[2] + A[3];
-    A[2] = B[0] + B[1];
-    A[3] = B[2] + B[3];
+    A = _mm_castps_pd( _mm_movelh_ps( _mm_castpd_ps(A), _mm_castpd_ps(B) ) );
+    B = _mm_castps_pd( _mm_movehl_ps( _mm_castpd_ps(B), _mm_castpd_ps(C) ) );
+    A = _mm_add_pd   ( A, B );
     return A;
 }
 
-/** \SSSE3{Reference,_mm_hadd_pd} */
-static __emu_inline __m128d _mm_hadd_pd_REF(__m128d a, __m128d b)
+/** \SSE3{SSE2,_mm_hsub_ps} */
+static __emu_inline __m128 _mm_hsub_ps_SSE2(__m128 a, __m128 b)
 {
-    __m128d A, B;
-    A = a;
-    B = b;
-
-    A[0] = A[0] + A[1];
-    A[1] = B[0] + B[1];
-    return A;
+    ssp_convert_odd_even_ps_SSE2( &a, &b );
+    a = _mm_sub_ps( b, a );
+    return a;
 }
 
-/** \SSSE3{Reference,_mm_hsub_ps} */
-static __emu_inline __m128 _mm_hsub_ps_REF(__m128 a, __m128 b)
+/** \SSE3{SSE2,_mm_hsub_pd} */
+static __emu_inline __m128d _mm_hsub_pd_SSE2(__m128d a, __m128d b)
 {
-    __m128 A, B;
+    __m128d A,B,C;
     A = a;
+    C = a;
     B = b;
 
-    A[0] = A[0] - A[1];
-    A[1] = A[2] - A[3];
-    A[2] = B[0] - B[1];
-    A[3] = B[2] - B[3];
-    return A;
-}
-
-/** \SSSE3{Reference,_mm_hsub_pd} */
-static __emu_inline __m128d _mm_hsub_pd_REF(__m128d a, __m128d b)
-{
-    __m128d A, B;
-    A = a;
-    B = b;
-
-    A[0] = A[0] - A[1];
-    A[1] = B[0] - B[1];
+    A = _mm_castps_pd( _mm_movelh_ps( _mm_castpd_ps(A), _mm_castpd_ps(B) ) );
+    B = _mm_castps_pd( _mm_movehl_ps( _mm_castpd_ps(B), _mm_castpd_ps(C) ) );
+    A = _mm_sub_pd   ( A, B );
     return A;
 }
 
@@ -543,47 +599,31 @@ static __emu_inline __m128i _mm_shuffle_epi8_REF (__m128i a, __m128i mask)
  return ret;
 }
 
-#define SSP_SATURATION(a, pos_limit, neg_limit) (a>pos_limit) ? pos_limit : ((a<neg_limit)?neg_limit:a)
+/** \SSSE3{SSE2,_mm_maddubs_epi16} 
 
-/** \SSSE3{Reference,_mm_maddubs_epi16} */
-static __emu_inline __m128i _mm_maddubs_epi16_REF( __m128i a,  __m128i b)
+in:  2 registers x 16 x 8 bit values (a is unsigned, b is signed)
+out: 1 register  x 8  x 16 bit values
+
+r0 := SATURATE_16((a0 * b0) + (a1 * b1))
+
+*/
+static __emu_inline __m128i _mm_maddubs_epi16_SSE2( __m128i a,  __m128i b)
 {
- __m128i ret;
- uint8_t A[16];
- int8_t B[16];
- int16_t C[8];
- int tmp[8];
+    const __m128i EVEN_8 = _mm_set_epi8( 0,0xFF,0,0xFF,0,0xFF,0,0xFF,0,0xFF,0,0xFF,0,0xFF,0,0xFF);
+    __m128i Aodd, Aeven, Beven, Bodd;
 
- memcpy(A,&a,16);
- memcpy(B,&b,16);
+    // Convert the 8 bit inputs into 16 bits by dropping every other value
+    Aodd  = _mm_srli_epi16( a, 8 );             // A is unsigned  
+    Bodd  = _mm_srai_epi16( b, 8 );             // B is signed
 
- // a is 8 bit unsigned integer, b is signed integer
- tmp[0] = A[0] * B[0] +  A[1] * B[1];
- C[0] = (int16_t)(SSP_SATURATION(tmp[0], 32767, -32768));
+    Aeven = _mm_and_si128 ( a, EVEN_8 );        // A is unsigned   
+    Beven = _mm_slli_si128( b,     1  );        // B is signed
+    Beven = _mm_srai_epi16( Beven, 8  );
 
- tmp[1] = A[2] * B[2] +  A[3] * B[3];
- C[1] = (int16_t)(SSP_SATURATION(tmp[1], 32767, -32768));
-
- tmp[2] = A[4] * B[4] +  A[5] * B[5];
- C[2] = (int16_t)(SSP_SATURATION(tmp[2], 32767, -32768));
-
- tmp[3] = A[6] * B[6] +  A[7] * B[7];
- C[3] = (int16_t)(SSP_SATURATION(tmp[3], 32767, -32768));
-
- tmp[4] = A[8] * B[8] +  A[9] * B[9];
- C[4] = (int16_t)(SSP_SATURATION(tmp[4], 32767, -32768));
-
- tmp[5] = A[10] * B[10] +  A[11] * B[11];
- C[5] = (int16_t)(SSP_SATURATION(tmp[5], 32767, -32768));
-
- tmp[6] = A[12] * B[12] +  A[13] * B[13];
- C[6] = (int16_t)(SSP_SATURATION(tmp[6], 32767, -32768));
-
- tmp[7] = A[14] * B[14] +  A[15] * B[15];
- C[7] = (int16_t)(SSP_SATURATION(tmp[7], 32767, -32768));
-
- memcpy(&ret,C,16);
- return ret;
+    a = _mm_mullo_epi16( Aodd , Bodd  );        // Will always fit in lower 16
+    b = _mm_mullo_epi16( Aeven, Beven );  
+    a = _mm_adds_epi16 ( a, b );
+   	return a;
 }
 
 /** \AVX{Reference,_mm256_extract_epi64} */
@@ -668,8 +708,8 @@ __EMU_M256_IMPL_M2( __m256, add_ps );
 __EMU_M256_IMPL_M2( __m256d, addsub_pd );
 __EMU_M256_IMPL_M2( __m256, addsub_ps  );
 #else
-__EMU_M256_IMPL_M2_REF( __m256d, addsub_pd );
-__EMU_M256_IMPL_M2_REF( __m256, addsub_ps );
+__EMU_M256_IMPL_M2_SSE2( __m256d, addsub_pd );
+__EMU_M256_IMPL_M2_SSE2( __m256, addsub_ps );
 #endif
 
 __EMU_M256_IMPL_M2( __m256d, and_pd  );
@@ -688,11 +728,11 @@ __EMU_M256_IMPL_M2( __m256, hadd_ps );
 __EMU_M256_IMPL_M2( __m256d, hsub_pd );
 __EMU_M256_IMPL_M2( __m256, hsub_ps );
 #else
-__EMU_M256_IMPL_M2_REF( __m256d, hadd_pd );
-__EMU_M256_IMPL_M2_REF( __m256, hadd_ps );
+__EMU_M256_IMPL_M2_SSE2( __m256d, hadd_pd );
+__EMU_M256_IMPL_M2_SSE2( __m256, hadd_ps );
 
-__EMU_M256_IMPL_M2_REF( __m256d, hsub_pd );
-__EMU_M256_IMPL_M2_REF( __m256, hsub_ps );
+__EMU_M256_IMPL_M2_SSE2( __m256d, hsub_pd );
+__EMU_M256_IMPL_M2_SSE2( __m256, hsub_ps );
 #endif
 
 __EMU_M256_IMPL_M2( __m256d, max_pd );
@@ -769,10 +809,10 @@ __EMU_M256_IMPL_M3( __m256, blendv_ps );
 #else
 
 __EMU_M256_IMPL_M2I_SHIFT_REF( __m256d, blend_pd, 2 );
-__EMU_M256_IMPL_M2I_SHIFT_REF( __m256, blend_ps, 4 );
+__EMU_M256_IMPL_M2I_SHIFT_SSE2( __m256, blend_ps, 4 );
 
-__EMU_M256_IMPL_M3_REF( __m256d, blendv_pd );
-__EMU_M256_IMPL_M3_REF( __m256, blendv_ps );
+__EMU_M256_IMPL_M3_SSE2( __m256d, blendv_pd );
+__EMU_M256_IMPL_M3_SSE2( __m256, blendv_ps );
 
 #endif
 #if defined (__SSE4_2__) || defined (__SSE4_1__)
@@ -1315,7 +1355,7 @@ __EMU_M256_IMPL_M1P_DUP( __m256i, char, set1_epi8 );
 __EMU_M256_IMPL_M1P_DUP( __m256i, short, set1_epi16 );
 __EMU_M256_IMPL_M1P_DUP( __m256i, int, set1_epi32 );
 
-static inline __emu__m256i __emu_mm256_set1_epi64x(__emu_int64_t a)
+static __emu_inline __emu__m256i __emu_mm256_set1_epi64x(__emu_int64_t a)
 {
     __emu_int64_t res[4] = { a, a, a, a };
     return *((__emu__m256i*)res);
@@ -1732,7 +1772,7 @@ __emu_maskstore_impl( __emu_mm256_maskstore_epi64, __emu__m256i, __emu__m256i, _
 
 #if !defined (__SSSE3__)
 #define _mm_shuffle_epi8 _mm_shuffle_epi8_REF
-#define _mm_maddubs_epi16 _mm_maddubs_epi16_REF
+#define _mm_maddubs_epi16 _mm_maddubs_epi16_SSE2
 #endif
 
 #define _mm256_extract_epi64 __emu_mm256_extract_epi64

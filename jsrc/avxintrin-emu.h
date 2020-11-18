@@ -86,6 +86,41 @@
 
 #endif
 
+#if !defined (__SSE3__)
+#define _mm_lddqu_si128 _mm_loadu_si128
+
+#define _mm_addsub_pd _mm_addsub_pd_SSE2
+#define _mm_addsub_ps _mm_addsub_ps_SSE2
+#define _mm_hadd_pd _mm_hadd_pd_SSE2
+#define _mm_hadd_ps _mm_hadd_ps_SSE2
+#define _mm_hsub_pd _mm_hsub_pd_SSE2
+#define _mm_hsub_ps _mm_hsub_ps_SSE2
+#define _mm_maddubs_epi16 _mm_maddubs_epi16_SSE2
+#define _mm_movedup_pd _mm_movedup_pd_SSE2
+#define _mm_movehdup_ps _mm_movehdup_ps_SSE2
+#define _mm_moveldup_ps _mm_moveldup_ps_SSE2
+#endif
+
+#if !defined (__SSSE3__)
+#define _mm_maddubs_epi16 _mm_maddubs_epi16_SSE2
+#define _mm_shuffle_epi8 _mm_shuffle_epi8_REF
+#endif
+
+#if !(defined (__SSE4_2__) || defined (__SSE4_1__))
+#define _mm_blend_pd _mm_blend_pd_REF
+#define _mm_blend_ps _mm_blend_ps_SSE2
+#define _mm_blendv_pd _mm_blendv_pd_SSE2
+#define _mm_blendv_ps _mm_blendv_ps_SSE2
+#define _mm_cmpeq_epi64 _mm_cmpeq_epi64_REF
+#define _mm_cmpgt_epi64 _mm_cmpgt_epi64_REF
+#define _mm_extract_epi64 _mm_extract_epi64_REF
+#define _mm_insert_epi64 _mm_insert_epi64_REF
+#define _mm_insert_epi8 _mm_insert_epi8_REF
+#define _mm_testc_si128 _mm_testc_si128_REF
+#define _mm_testnzc_si128 _mm_testnzc_si128_REF
+#define _mm_testz_si128 _mm_testz_si128_REF
+#endif
+
 // #pragma message ("Warning: AVX intrinsics are emulated with SSE")
 
 /*
@@ -259,30 +294,6 @@ static __emu_inline __emu##type __emu_mm256_##func( __emu##type m256_param1, __e
     return ( res ); \
 }
 
-#define __EMU_M256_IMPL_M2_REF( type, func ) \
-static __emu_inline __emu##type __emu_mm256_##func( __emu##type m256_param1, __emu##type m256_param2 ) \
-{   __emu##type res; \
-    res.__emu_m128[0] = _mm_##func##_REF( m256_param1.__emu_m128[0], m256_param2.__emu_m128[0] ); \
-    res.__emu_m128[1] = _mm_##func##_REF( m256_param1.__emu_m128[1], m256_param2.__emu_m128[1] ); \
-    return ( res ); \
-}
-
-#define __EMU_M256_IMPL_M2I_SHIFT_REF( type, func, shift_for_hi ) \
-static __emu_inline  __emu##type __emu_mm256_##func( __emu##type m256_param1, __emu##type m256_param2, const int param3 ) \
-{   __emu##type res; \
-    res.__emu_m128[0] = _mm_##func##_REF( m256_param1.__emu_m128[0], m256_param2.__emu_m128[0], param3 & ((1<<shift_for_hi)-1) ); \
-    res.__emu_m128[1] = _mm_##func##_REF( m256_param1.__emu_m128[1], m256_param2.__emu_m128[1], param3 >> shift_for_hi ); \
-    return ( res ); \
-}
-
-#define __EMU_M256_IMPL_M3_REF( type, func ) \
-static __emu_inline __emu##type __emu_mm256_##func( __emu##type m256_param1, __emu##type m256_param2, __emu##type m256_param3 ) \
-{   __emu##type res; \
-    res.__emu_m128[0] = _mm_##func##_REF( m256_param1.__emu_m128[0], m256_param2.__emu_m128[0], m256_param3.__emu_m128[0] ); \
-    res.__emu_m128[1] = _mm_##func##_REF( m256_param1.__emu_m128[1], m256_param2.__emu_m128[1], m256_param3.__emu_m128[1] ); \
-    return ( res ); \
-}
-
 // sse2
 
 /** */
@@ -320,30 +331,6 @@ static __emu_inline __m128i ssp_logical_bitwise_select_SSE2( __m128i a, __m128i 
     b = _mm_andnot_si128( mask, b    );                                 // clear b where mask = 1
     a = _mm_or_si128    ( a,    b    );                                 // a = a OR b                         
     return a; 
-}
-
-#define __EMU_M256_IMPL_M2_SSE2( type, func ) \
-static __emu_inline __emu##type __emu_mm256_##func( __emu##type m256_param1, __emu##type m256_param2 ) \
-{   __emu##type res; \
-    res.__emu_m128[0] = _mm_##func##_SSE2( m256_param1.__emu_m128[0], m256_param2.__emu_m128[0] ); \
-    res.__emu_m128[1] = _mm_##func##_SSE2( m256_param1.__emu_m128[1], m256_param2.__emu_m128[1] ); \
-    return ( res ); \
-}
-
-#define __EMU_M256_IMPL_M2I_SHIFT_SSE2( type, func, shift_for_hi ) \
-static __emu_inline  __emu##type __emu_mm256_##func( __emu##type m256_param1, __emu##type m256_param2, const int param3 ) \
-{   __emu##type res; \
-    res.__emu_m128[0] = _mm_##func##_SSE2( m256_param1.__emu_m128[0], m256_param2.__emu_m128[0], param3 & ((1<<shift_for_hi)-1) ); \
-    res.__emu_m128[1] = _mm_##func##_SSE2( m256_param1.__emu_m128[1], m256_param2.__emu_m128[1], param3 >> shift_for_hi ); \
-    return ( res ); \
-}
-
-#define __EMU_M256_IMPL_M3_SSE2( type, func ) \
-static __emu_inline __emu##type __emu_mm256_##func( __emu##type m256_param1, __emu##type m256_param2, __emu##type m256_param3 ) \
-{   __emu##type res; \
-    res.__emu_m128[0] = _mm_##func##_SSE2( m256_param1.__emu_m128[0], m256_param2.__emu_m128[0], m256_param3.__emu_m128[0] ); \
-    res.__emu_m128[1] = _mm_##func##_SSE2( m256_param1.__emu_m128[1], m256_param2.__emu_m128[1], m256_param3.__emu_m128[1] ); \
-    return ( res ); \
 }
 
 // avx2  __EMU_M256_128_IMPL_M2
@@ -495,6 +482,32 @@ static __emu_inline __m128i _mm_cmpeq_epi64_REF( __m128i a, __m128i b )
     else
         A[1] = 0x0ll;
     return A;
+}
+
+/** \SSE3{SSE2,_mm_movehdup_ps} */
+static __emu_inline __m128 _mm_movehdup_ps_SSE2(__m128 a)
+{
+    __m128 A;
+    A = a;
+    A = _mm_shuffle_epi32( _mm_castps_si128(A), _MM_SHUFFLE( 3, 3, 1, 1) );
+    return A;
+}
+
+/** \SSE3{SSE2,_mm_moveldup_ps} */
+static __emu_inline __m128 _mm_moveldup_ps_SSE2(__m128 a)
+{
+    __m128 A;
+    A = a;
+    A = _mm_shuffle_epi32( _mm_castps_si128(A), _MM_SHUFFLE( 2, 2, 0, 0) );
+    return A;
+}
+
+/** \SSE3{SSE2,_mm_movedup_pd} */
+static __emu_inline __m128d _mm_movedup_pd_SSE2(__m128d a)
+{
+    __m128d A;
+    A = a;
+    return _mm_set_pd( A[0], A[0] );
 }
 
 /** \SSE3{SSE2,_mm_hadd_ps} */
@@ -697,20 +710,15 @@ static __emu_inline __emu__m256i __emu_mm256_srli_epi64 ( __emu__m256i a, int im
 }
 
 // avx2
-__EMU_M256_IMPL_M2_REF( __m256i, cmpgt_epi64 );
+__EMU_M256_IMPL_M2( __m256i, cmpgt_epi64 );
 __EMU_M256_IMPL_M2( __m256i, add_epi64 );
 __EMU_M256_IMPL_M2( __m256i, sub_epi64 );
 
 __EMU_M256_IMPL_M2( __m256d, add_pd );
 __EMU_M256_IMPL_M2( __m256, add_ps );
 
-#ifdef __SSE3__
 __EMU_M256_IMPL_M2( __m256d, addsub_pd );
 __EMU_M256_IMPL_M2( __m256, addsub_ps  );
-#else
-__EMU_M256_IMPL_M2_SSE2( __m256d, addsub_pd );
-__EMU_M256_IMPL_M2_SSE2( __m256, addsub_ps );
-#endif
 
 __EMU_M256_IMPL_M2( __m256d, and_pd  );
 __EMU_M256_IMPL_M2( __m256, and_ps );
@@ -721,19 +729,11 @@ __EMU_M256_IMPL_M2( __m256, andnot_ps );
 __EMU_M256_IMPL_M2( __m256d, div_pd );
 __EMU_M256_IMPL_M2( __m256, div_ps );
 
-#ifdef __SSE3__
 __EMU_M256_IMPL_M2( __m256d, hadd_pd );
 __EMU_M256_IMPL_M2( __m256, hadd_ps );
 
 __EMU_M256_IMPL_M2( __m256d, hsub_pd );
 __EMU_M256_IMPL_M2( __m256, hsub_ps );
-#else
-__EMU_M256_IMPL_M2_SSE2( __m256d, hadd_pd );
-__EMU_M256_IMPL_M2_SSE2( __m256, hadd_ps );
-
-__EMU_M256_IMPL_M2_SSE2( __m256d, hsub_pd );
-__EMU_M256_IMPL_M2_SSE2( __m256, hsub_ps );
-#endif
 
 __EMU_M256_IMPL_M2( __m256d, max_pd );
 __EMU_M256_IMPL_M2( __m256, max_ps );
@@ -808,13 +808,14 @@ __EMU_M256_IMPL_M3( __m256, blendv_ps );
 
 #else
 
-__EMU_M256_IMPL_M2I_SHIFT_REF( __m256d, blend_pd, 2 );
-__EMU_M256_IMPL_M2I_SHIFT_SSE2( __m256, blend_ps, 4 );
+__EMU_M256_IMPL_M2I_SHIFT( __m256d, blend_pd, 2 );
+__EMU_M256_IMPL_M2I_SHIFT( __m256, blend_ps, 4 );
 
-__EMU_M256_IMPL_M3_SSE2( __m256d, blendv_pd );
-__EMU_M256_IMPL_M3_SSE2( __m256, blendv_ps );
+__EMU_M256_IMPL_M3( __m256d, blendv_pd );
+__EMU_M256_IMPL_M3( __m256, blendv_ps );
 
 #endif
+
 #if defined (__SSE4_2__) || defined (__SSE4_1__)
 
 #if defined(__clang__)
@@ -901,13 +902,6 @@ static __emu_inline int     __emu_mm256_test##op##_##sfx(vec_type s1, vec_type s
     return ( ret1 && ret2 );                                                         \
 };
 
-#define __emu_mm256_test_impl_REF( prfx, op, sfx, sfx_impl, vec_type ) \
-static __emu_inline int     __emu_mm256_test##op##_##sfx(vec_type s1, vec_type s2) { \
-    int ret1 = prfx##_test##op##_##sfx_impl##_REF( s1.__emu_m128[0], s2.__emu_m128[0] );           \
-    int ret2 = prfx##_test##op##_##sfx_impl##_REF( s1.__emu_m128[1], s2.__emu_m128[1] );           \
-    return ( ret1 && ret2 );                                                         \
-};
-
 #if defined (__SSE4_2__) || defined (__SSE4_1__)
 
 __emu_mm256_test_impl( _mm, z,   si256, si128, __emu__m256i );
@@ -924,9 +918,9 @@ __emu_mm256_test_impl( __emu_mm, nzc, ps, ps, __emu__m256 );
 
 #else
 
-__emu_mm256_test_impl_REF( _mm, z,   si256, si128, __emu__m256i );
-__emu_mm256_test_impl_REF( _mm, c,   si256, si128, __emu__m256i );
-__emu_mm256_test_impl_REF( _mm, nzc, si256, si128, __emu__m256i );
+__emu_mm256_test_impl( _mm, z,   si256, si128, __emu__m256i );
+__emu_mm256_test_impl( _mm, c,   si256, si128, __emu__m256i );
+__emu_mm256_test_impl( _mm, nzc, si256, si128, __emu__m256i );
 
 #endif
 
@@ -1060,7 +1054,7 @@ __EMU_M256_IMPL_M1_RET( __m256i, __m256, cvttps_epi32 );
 
 // avx2
 __EMU_M256_IMPL_M2( __m256i, cmpeq_epi8 );
-__EMU_M256_IMPL_M2_REF( __m256i, cmpeq_epi64 );
+__EMU_M256_IMPL_M2( __m256i, cmpeq_epi64 );
 __EMU_M256_IMPL_M2( __m256i, mul_epu32 );
 __EMU_M256_IMPL_M2( __m256i, sub_epi8 );
 __EMU_M256_128_IMPL_M2( __m256i, and_si  );
@@ -1763,17 +1757,6 @@ __emu_maskstore_impl( __emu_mm256_maskstore_epi64, __emu__m256i, __emu__m256i, _
 #define _mm256_maskstore_epi64 __emu_mm256_maskstore_epi64
 
 #define _mm256_movemask_epi8 __emu_mm256_movemask_epi8
-
-#if !(defined (__SSE4_2__) || defined (__SSE4_1__))
-#define _mm_extract_epi64 _mm_extract_epi64_REF
-#define _mm_insert_epi64 _mm_insert_epi64_REF
-#define _mm_insert_epi8 _mm_insert_epi8_REF
-#endif
-
-#if !defined (__SSSE3__)
-#define _mm_shuffle_epi8 _mm_shuffle_epi8_REF
-#define _mm_maddubs_epi16 _mm_maddubs_epi16_SSE2
-#endif
 
 #define _mm256_extract_epi64 __emu_mm256_extract_epi64
 #define _mm256_fmadd_pd __emu_mm256_fmadd_pd

@@ -7,7 +7,7 @@
 
 
 // merge the sorted lists of pointers lo[] and hi[] into a single list, and return the address of that list
-// comp() is the comparison function and compn is a numeric parameter to it.  comp(op0,op1,compn) returns 1 if op0 comes before op1,
+// comp() is the comparison function and compn is a parameter to it (could be length of compare or address of a SORT block).  comp(compn,op0,op1) returns 1 if op0 comes before op1,
 //  i. e. comp returns the number of the after argument
 // wk[] is a workarea, big enough to hold the combined result.  It may overlap with hi[]
 static void** MERGEFNNAME(CMP comp, I compn, void * * RESTRICT lo, I lon, void ** RESTRICT hi, I hin, void ** RESTRICT wk){

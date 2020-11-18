@@ -4,10 +4,9 @@
 /* Grades                                                                  */
 
 
-extern F1(jtgr1);
-extern F2(jtgr2);
-extern F1(jtgrd1sp);
-extern F2(jtgrd2sp);
+extern A jtgr2(J,A,A);
+extern A jtgrd2sp(J,A,A);
+extern A jtgrd1sp(J,A);
 
 extern B compcu(I,UC*,UC*);
 extern B compcd(I,UC*,UC*);
@@ -24,20 +23,20 @@ extern B compqu(I,Q*,Q*);
 extern B compqd(I,Q*,Q*);
 // obsolete extern B compp(I,I*,I*);
 
-extern int  compspdsB(J,I,I);
-extern int  compspdsD(J,I,I);
-extern int  compspdsI(J,I,I);
-extern int  compspdsZ(J,I,I);
+extern int  compspdsB(SORT * RESTRICT,I,I);
+extern int  compspdsD(SORT * RESTRICT,I,I);
+extern int  compspdsI(SORT * RESTRICT,I,I);
+extern int  compspdsZ(SORT * RESTRICT,I,I);
 
-extern int  compspssB(J,I,I);
-extern int  compspssD(J,I,I);
-extern int  compspssI(J,I,I);
-extern int  compspssZ(J,I,I);
+extern int  compspssB(SORT * RESTRICT,I,I);
+extern int  compspssD(SORT * RESTRICT,I,I);
+extern int  compspssI(SORT * RESTRICT,I,I);
+extern int  compspssZ(SORT * RESTRICT,I,I);
 
 extern I grcol4(I,I,UI4*,I,I*,I*,const I,US*,I);
 extern I grcol2(I,I,US*,I,I*,I*,const I,US*,I);
 
-extern void jtmsort(J,I,void**,void**);
+extern void msort(SORT *,I,void**,void**,I);
 
 // Convert 2 Booleans to a code 0-3
 #if C_LE

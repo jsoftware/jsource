@@ -86,6 +86,10 @@ typedef AD *A;
 #define JTPRTYO         7  // output class, see MTYO*
 #define JTPRNOSTDOUTX   3   // set to suppress typing sentence result on stdout (as in scripts)
 #define JTPRNOSTDOUT    (((I)1)<<JTPRNOSTDOUTX)
+// following bit is used in sort/grade to indicate sort direction
+#define JTDESCENDX      2   // direction of sort
+#define JTDESCEND       (((I)1)<<JTDESCENDX)
+
 
 // Next flag must match result.h and VF2 flags, and must be above ZZFLAGBOXATOP
 #define JTWILLBEOPENEDX 4   // result of this exec will be opened immediately, so it can contain virtual references to an input to the current verb
@@ -908,3 +912,23 @@ typedef struct {
   US  nvrtop;           /* top of nvr stack; # valid entries               */
   US  nvrotop;          // previous top of nvr stack
  } PFRAME;  // these are stacked en bloc
+
+typedef struct {
+  C*   sev;          /* comparison: sparse element value ptr            */
+  I    si;           /* comparison: sparse current cell index           */
+  I*   stv;          /* comparison: sparse element item indices         */
+  I    swf;          /* comparison: sparse wf value                     */
+  I    sxc;          /* comparison: sparse aii(x)                       */
+  C*   sxv;          /* comparison: sparse AV(x)                        */
+  I    syc;          /* comparison: sparse aii(y) or *(1+AS(y))         */
+  I*   syv;          /* comparison: sparse AV(y)                        */
+ } SORTSP;   // sparse extension for sortblok
+
+typedef struct {
+  CMP  f;             /* comparison function in sort                     */
+  J    jt;        // jt, including the DESCEND flag
+  I    n;            /* comparison: number of atoms in each item        */
+  I    k;            /* comparison: byte size of each item              */
+  C*   v;            /* comparison: beginning of data area              */
+  SORTSP *sp;  // pointer to extension for sparse arrays
+ } SORT;

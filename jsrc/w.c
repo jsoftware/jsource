@@ -235,7 +235,7 @@ A jttokens(J jt,A w,I env){A t; RZ(t=wordil(w)); ASSERT(AM(t)>=0,EVOPENQ) R enqu
 // enqueue produces nonrecursive result, and so does tokens.  This is OK because the result is always parsed and is never an argument to a verb
 
 // u is output pointer  uu->end+1 of output area  p is length of 
-#define CHKJ(j)             ASSERT(0<=(j),EVINDEX);
+#define CHKJ(j)             ASSERT(BETWEENO((j),0,i),EVINDEX);
 #define EXTZ(T,p)           while(uu<p+u){k=u-(T*)AV(z); RZ(z=ext(0,z)); u=k+(T*)AV(z); uu=(T*)AV(z)+AN(z);}
 
 #define EMIT0c(T,j,i,r,c)   {CHKJ(j); p=(i)-(j); EXTZ(T,1); RZ(*u++=rifvsdebug(str(p,(j)+wv)));}
@@ -247,7 +247,7 @@ A jttokens(J jt,A w,I env){A t; RZ(t=wordil(w)); ASSERT(AM(t)>=0,EVOPENQ) R enqu
 #define EMIT2(T,j,i,r,c)    {CHKJ(j); p=(i)-(j); EXTZ(T,2); *u++=(j); *u++=p;}
 #define EMIT3(T,j,i,r,c)    {CHKJ(j);            EXTZ(T,1);                   *u++=(c)+q*(r);}
 #define EMIT4(T,j,i,r,c)    {CHKJ(j); p=(i)-(j); EXTZ(T,3); *u++=(j); *u++=p; *u++=(c)+q*(r);}
-#define EMIT5(T,j,x,r,c)    {if(0>(j))i=n;}
+#define EMIT5(T,j,x,r,c)    {if(!BETWEENO((j),0,i))i=n; ASSERT(zv!=AV(z)+AN(z),EVNONCE)}
 
 #define DO_ONE(T,EMIT) \
  switch(e=v[1]){                                                          \
@@ -255,7 +255,7 @@ A jttokens(J jt,A w,I env){A t; RZ(t=wordil(w)); ASSERT(AM(t)>=0,EVOPENQ) R enqu
   case 2: case 3: if(0<=vi){EMIT(T,vj,vi,vr,vc); vi=vr=-1;} EMIT(T,j,i,r,c);       j=2==e?i:-1; break;  \
   case 4: case 5: if(r!=vr){if(0<=vi)EMIT(T,vj,vi,vr,vc); vj=j; vr=r; vc=c;} vi=i; j=4==e?i:-1; break;  \
   case 1:         j=i; break;                                                    \
-  case 7: i-=2; i=i<0?0:i; j=-1; break;  /* backtrack */ \
+  case 7: i-=2; i=i<0?0:i; break;  /* backtrack */ \
  }
 
 #define ZVAx                {}
@@ -263,7 +263,7 @@ A jttokens(J jt,A w,I env){A t; RZ(t=wordil(w)); ASSERT(AM(t)>=0,EVOPENQ) R enqu
 
 #define FSMF(T,zk,zt,zr,zm,cexp,EMIT,ZVA)    \
  {T*u,*uu;                                                                  \
-  RZ(z=exta((zt),(zr),(zm),(f|4)==5?n+1:n/3));                              \
+  RZ(z=exta((zt),(zr),(zm),(f|4)==5?n+4*f:n/3));                              \
   if(1<(zr)){I*s=AS(z); s[1]=(zm); if(1==f&&2<wr)MCISH(1+s,1+AS(w0),wr-1);}  \
   zv=AV(z); u=(T*)zv; uu=u+AN(z);                                           \
   for(;i<n;++i,r=*v){c=(cexp); v=sv+2*(c+r*q); ZVA; DO_ONE(T,EMIT);}        \

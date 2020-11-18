@@ -203,6 +203,10 @@ jt->directdef = 1;  // scaf
 static C jtjinit3(J jt){S t;
 /* required for jdll and doesn't hurt others */
  gjt=jt; // global jt for JPF debug
+  // init the buffers pointed to by jt
+ jt->etx=malloc(1+NETX);  // error-message buffer
+ jt->callstack=(LS *)malloc(sizeof(LS)*(1+NFCALL));  // function-call stack
+ jt->breakfn=malloc(NPATH); memset(jt->breakfn,0,NPATH);  // place to hold the break filename
  MC(jt->typesizes,typesizes,sizeof(jt->typesizes));  // required for ma.
  MC(jt->typepriority,typepriority,sizeof(jt->typepriority));  // required for ma.  Repeated for each thread in jtinit3
  MC(jt->prioritytype,prioritytype,sizeof(jt->prioritytype));  // required for ma.  Repeated for each thread in jtinit3

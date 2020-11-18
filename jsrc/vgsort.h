@@ -1,7 +1,7 @@
 // Inputs:
 // GRADEFNNAME - name of the main entry point, normally jmsortxxx
 // MERGEFNNAME - name of the merge entry point, normally jmergexxx
-// COMPFN - function to call to compare
+// COMPFN - function to call to compare, compn the data to call it with
 // T - type of direct data (void if we are comparing using function call)
 // PTRADD(p,ic) address of item at p[i]
 // MVITEMS(dest,src,itemct)  move items from src to dest, incrementing pointers

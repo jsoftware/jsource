@@ -1321,9 +1321,9 @@ if(likely(z<3)){_zzt+=z; z=(I)&oneone; _zzt=_i&3?_zzt:(I*)z; z=_i&2?(I)_zzt:z; z
 #define RETF(exp)       A ZZZz = (exp); auditblock(ZZZz,1,1); ZZZz = virtifnonip(jt,0,ZZZz); R ZZZz
 #else
 #if MEMAUDIT&0xc
-#define RETF(exp)       A ZZZz = (exp); DEADARG(ZZZz); R ZZZz
+#define RETF(exp)       {A ZZZz = (exp); DEADARG(ZZZz); R ZZZz;}
 #else
-#define RETF(exp)       R exp
+#define RETF(exp)       R exp;
 #endif
 // Input is a byte.  It is replicated to all lanes of a UI
 #endif
@@ -1461,7 +1461,7 @@ if(likely(z<3)){_zzt+=z; z=(I)&oneone; _zzt=_i&3?_zzt:(I*)z; z=_i&2?(I)_zzt:z; z
 #define C_CRC32C 1
 #endif
 
-
+typedef struct JSTstruct * J; 
 #include "ja.h" 
 #include "jc.h" 
 #include "jtype.h" 

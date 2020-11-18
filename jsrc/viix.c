@@ -117,7 +117,8 @@ F2(jticap2){A*av,*wv,z;C*uu,*vv;I ar,*as,at,b,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t,wr,*
    UI4 nlg; CTLZI(n,nlg); nlg=(nlg<<1)+(SGNTO0(SGNIF((n<<1),nlg)));   // approx lg with 1 bit frac precision.  Can't shift 64 bits in case r=1
    if((I)((r>>2)+2*n)<(I)(m*nlg)){RZ(iixI(n,m,a,w,zv)); R z;}  // weight misbranches as equiv to 8 stores
  }}
- jt->workareas.compare.complt=-1; cc=0; uu=CAV(a); vv=CAV(a)+(c*(n-1)<<bplg(at));
+// obsolete  jt->workareas.compare.complt=-1;
+ cc=0; uu=CAV(a); vv=CAV(a)+(c*(n-1)<<bplg(at));
  // first decide if the input array is ascending or descending, comparing the first & last items atom by atom
  switch(CTTZ(at)){
   default:   ASSERT(0,EVNONCE);

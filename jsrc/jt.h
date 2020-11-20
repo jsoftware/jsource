@@ -27,8 +27,8 @@ windows the global data that needs scrutiny is in the 0003: section.
 
 
 typedef struct JSTstruct {
-// The first 2 cache lines is the hottest real estate in J, because they can be referenced with
 // $=must be a per-thread variable
+// The first 2 cache lines is the hottest real estate in J, because they can be referenced with
 // single-byte displacement.  Put your heaviest-used items here
  C*   adbreak;			/* must be first! ad mapped shared file break flag */
  C*   adbreakr;         // read location: same as adbreak, except that when we are ignoring interrupts it points to 0
@@ -65,7 +65,7 @@ typedef struct JSTstruct {
  PFRAME parserstackframe;  // 4 words  $
  A    global;           /* global symbol table   $                        */
  A    sf;               /* for $:     $                                     */
- L    *assignsym;       // symbol-table entry for the symbol about to be assigned   $   scaf  need to use LX when muvltithreaded
+ L    *assignsym;       // symbol-table entry for the symbol about to be assigned   $   scaf  need to use LX when multithreaded
  D    cct;               // complementary comparison tolerance $
 // ----- end of cache line 1
  A    nvra;             // data blocks that are in execution somewhere - always non-virtual, always rank 1, AS[0] holds current pointer
@@ -173,16 +173,6 @@ typedef struct JSTstruct {
  A    cdhash;           /* hash table of indices into cdarg                */
  A    cdhashl;          /* hash table of indices into cdarg                */
  A    cdstr;            /* strings for cdarg                               */
-
- A    dbalpha;          /* left  argument for rerun                        */
- I    dbjump;           /* line to jump to                                 */
- A    dbomega;          /* right argument for rerun                        */
- A    dbresult;         /* result to pop to the next level                 */
- C    dbss;             /* single step mode                                */
- DC   dbssd;            /* stack entry d corresp. to d->dcss setting       */
- A    dbssexec;         /* single step: execute string                     */
- C    dbsusact;         /* suspension action                               */
-
  A    dbstops;          /* stops set by the user                           */
  A    dbtrap;           /* trap, execute on suspension                     */
  DC   dcs;              /* ptr to debug stack entry for current script     */
@@ -245,6 +235,14 @@ typedef struct JSTstruct {
  LS   *callstack;   // [1+NFCALL]; // named fn calls: stack.  Usually only a little is used; the rest overflows onto a new DRAM page
  C    *breakfn;  // [NPATH];   /* break file name                                 */
 } JST;
+// obsolete A     dbalpha;          /* left  argument for rerun                        */
+// obsolete  I    dbjump;           /* line to jump to                                 */
+// obsolete  A    dbomega;          /* right argument for rerun                        */
+// obsolete  A    dbresult;         /* result to pop to the next level                 */
+// obsolete  C    dbss;             /* single step mode                                */
+// obsolete  DC   dbssd;            /* stack entry d corresp. to d->dcss setting       */
+// obsolete  A    dbssexec;         /* single step: execute string                     */
+// obsolete  C    dbsusact;         /* suspension action                               */
 // obsolete  A*   nvrav;            /* AAV(jt->nvra)      $                             */
 // obsolete  UI4  nvran;            // number of atoms in nvrav    $
 // obsolete  B    asgn;             /* 1 iff last operation on this line is assignment  $  */
@@ -350,6 +348,6 @@ typedef struct JSTstruct {
 // obsolete   C*   compv;            /* comparison: beginning of data area              */
 // obsolete  } compare;
 // obsolete } workareas;
-// the offset at this point is about 0x14E8, so everything up to here will fit in a single 0x2000-byte DRAM page
+// obsolete // the offset at this point is about 0x14E8, so everything up to here will fit in a single 0x2000-byte DRAM page
 
 typedef JST* J; 

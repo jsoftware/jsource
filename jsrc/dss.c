@@ -14,8 +14,8 @@
 DC jtssnext(J jt,DC d,C c){
  d=d->dclnk;
  while(d&&DCCALL!=d->dctype)d=d->dclnk;      /* find next call                 */
- if(d&&!d->dcsusp){d->dcss=c; jt->dbssd=d;} 
- else             {d=0;       jt->dbssd=0;}
+ if(d&&!d->dcsusp){d->dcss=c; } 
+ else             {d=0;      }
  R d;
 }    /* set dcss for next stack level */
 
@@ -30,16 +30,18 @@ static A jtssdo(J jt,A a,A w,C c){DC d,e;I n;
  ASSERT(d!=0,EVDOMAIN);                        /* must have a suspension          */
  while(d&&DCCALL!=d->dctype)d=d->dclnk;     /* find topmost call               */
  ASSERT(d!=0,EVDOMAIN);                        /* must have a call                */
- if(a)RE(n=lnumcw(i0(a),d->dcc));           /* source line # to cw line #      */
- jt->dbsusact=SUSSS;
+ if(a)RE(n=lnumcw(i0(a),d->dcc));           // for dyad, source line # to cw line #
+// obsolete  jt->dbsusact=SUSSS;
  switch(c){
-  case SSSTEPOVER: DGOTO(d,a?n:d->dcix) jt->dbss=d->dcss=c; jt->dbssd=d;   break;
-  case SSSTEPINTO: DGOTO(d,a?n:d->dcix) jt->dbss=d->dcss=c; jt->dbssd=d;   break;
-  case SSSTEPOUT:  DGOTO(d,a?n:d->dcix) jt->dbss=d->dcss=0;   ssnext(d,c); break;
-  case SSCUTBACK:  DGOTO(d,-1) jt->dbss=d->dcss=0; e=ssnext(d,c); if(e)DGOTO(e,e->dcix) break;  // terminate current verb and back up in caller
+  case SSSTEPOVER: DGOTO(d,a?n:d->dcix) d->dcss=c;    break;
+  case SSSTEPINTO: DGOTO(d,a?n:d->dcix) d->dcss=c;    break;
+  case SSSTEPOUT:  DGOTO(d,a?n:d->dcix) d->dcss=0;   ssnext(d,SSSTEPOVERs); break;
+  case SSCUTBACK:  DGOTO(d,-1) d->dcss=0; e=ssnext(d,SSSTEPOVERs); if(e)DGOTO(e,e->dcix) break;  // terminate current verb and back up in caller
  }
- fa(jt->dbssexec); if(AN(w)){RZ(ras(w)); jt->dbssexec=w;}else jt->dbssexec=0;
- R mtm;                                     /* 0 return to terminate call      */
+// obsolete fa(jt->dbssexec); if(AN(w)){RZ(ras(w)); jt->dbssexec=w;}else jt->dbssexec=0;
+// obsolete  jt->dbssexec=AN(w)?w:ds(CACE);
+ // Return a suspension-ending value
+ A z; RZ(z=mkwris(box(sc(SUSSS)))); AFLAG(z)|=AFDEBUGRESULT; R z;
 }
 
 F1(jtdbcutback  ){R ssdo(0L,w,SSCUTBACK );}  /* 13!:19 */

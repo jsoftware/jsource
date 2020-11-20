@@ -479,6 +479,8 @@ typedef I SI;
 #define AFROX           0            /* read only; can't change data    */
 #define AFNJAX          1            /* non-J alloc; i.e. mem mapped    */
 #define AFNJA           ((I)1<<AFNJAX)
+#define AFDEBUGRESULTX  2           // special flag for values that alter debug state
+#define AFDEBUGRESULT   ((I)1<<AFDEBUGRESULTX)
 // Note: bit 4 is LABANDONED which is merged here
 #define AFNVRX          8
 #define AFNVR           ((I)1<<AFNVRX)  // This value is on the parser's execution stack, and must not be freed until it is removed.  Stacked values start as NVR+UNFREED

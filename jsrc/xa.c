@@ -78,10 +78,13 @@ F1(jtfxx){
  R fx(ope(w)); 
 }
 
+// 9!:28, immex flag
 F1(jtiepdoq){ASSERTMTV(w); R scb(jt->iepdo);}
 
+// 9!:29, immex flag
 F1(jtiepdos){B b; RE(b=b0(w)); jt->iepdo=b; R mtm;}
 
+// 9!:26, immex sentence
 F1(jtiepq){
  ASSERTMTV(w); 
  ASSERT(1==AR(w),EVRANK);
@@ -89,6 +92,7 @@ F1(jtiepq){
  R jt->iep?jt->iep:mtv;
 }
 
+// 9!:27, immex sentence
 F1(jtieps){
  ARGCHK1(w);
  ASSERT(1>=AR(w),EVRANK);

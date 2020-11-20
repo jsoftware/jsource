@@ -175,7 +175,6 @@ typedef struct JSTstruct {
  A    cdstr;            /* strings for cdarg                               */
  A    dbstops;          /* stops set by the user                           */
  A    dbtrap;           /* trap, execute on suspension                     */
- DC   dcs;              /* ptr to debug stack entry for current script     */
  C*   capture;          /* capture output for python->J etc.               */
  I    dlllasterror;     /* DLL stuff                                       */
  S    etxn;             /* strlen(etx)                                     */
@@ -235,6 +234,7 @@ typedef struct JSTstruct {
  LS   *callstack;   // [1+NFCALL]; // named fn calls: stack.  Usually only a little is used; the rest overflows onto a new DRAM page
  C    *breakfn;  // [NPATH];   /* break file name                                 */
 } JST;
+// obsolete  DC   dcs;              /* ptr to debug stack entry for current script     */
 // obsolete A     dbalpha;          /* left  argument for rerun                        */
 // obsolete  I    dbjump;           /* line to jump to                                 */
 // obsolete  A    dbomega;          /* right argument for rerun                        */

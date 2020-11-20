@@ -37,7 +37,7 @@ B jtdbstop(J jt,DC d,I i){A a;B b,c=0,e;C nw[11],*s,*t,*u,*v;I md,n,p,q;
  case SSSTEPINTO:  d->dcss=SSSTEPINTOs; break;  // first time is executing the stop line.  Then wait for any next line
  case SSSTEPOVER:  d->dcss=SSSTEPOVERs; break;  // first time is executing the stop line.  Then wait for line in this function
  case SSSTEPOVERs:
- case SSSTEPINTOs: c=i!=d->dcstop; d->dcstop=i; while(d){d->dcss=0; d=d->dclnk;} R c;  // about to execute a second line.  stop, unless already stopped there; clear all stops once we take a stop
+ case SSSTEPINTOs: c=i!=d->dcstop; d->dcstop=i; while(d){if(d->dctype==DCCALL)d->dcss=0; d=d->dclnk;} R c;  // about to execute a second line.  stop, unless already stopped there; clear all stops once we take a stop
 // others not stored
  }
  // if no single-step stop, try looking the line up in the stops table
@@ -52,7 +52,7 @@ B jtdbstop(J jt,DC d,I i){A a;B b,c=0,e;C nw[11],*s,*t,*u,*v;I md,n,p,q;
   if(e){s=1+v; if(stopsub(s,nw,md)){if(b){c=0; break;} c=1;}}
   s=strchr(s,';'); if(s)++s;
  }
- if(c){d->dcstop=i;  while(d){d->dcss=0; d=d->dclnk;}}  // if stop found, turn off single-step everywhere
+ if(c){d->dcstop=i;  while(d){if(d->dctype==DCCALL)d->dcss=0; d=d->dclnk;}}  // if stop found, turn off single-step everywhere
  else  d->dcstop=-2;
  R c;
 }    /* stop on line i? */

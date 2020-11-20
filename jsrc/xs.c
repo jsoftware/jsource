@@ -49,7 +49,7 @@ void setftype(C*v,OSType type,OSType crea){C p[256];FInfo f;
 /* tso: echo to stdout                          */
 
 #define SEEKLEAK 0
-static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;DC d,xd=jt->dcs;
+static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;DC d;
 // obsolete B xt=jt->tostdout;
  if(equ(w,num(1)))R mtm;
  RZ(w=vs(w));
@@ -63,8 +63,10 @@ static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;DC d,xd=jt->dcs;
  }
  FDEPINC(1);   // No ASSERTs or returns till the FDEPDEC below
  RZ(d=deba(DCSCRIPT,0L,w,(A)si));
- jt->dcs=d; jt->dcs->dcpflags=(!(tso&&!jt->seclev))<<JTPRNOSTDOUTX;  // set flag to indicate suppression of output
- J jtinplace=(J)((I)jt|jt->dcs->dcpflags);  // create typeout flags to pass along: no output class, suppression as called for in tso
+// obsolete  jt->dcs=d; jt->dcs->dcpflags=(!(tso&&!jt->seclev))<<JTPRNOSTDOUTX;  // set flag to indicate suppression of output
+ d->dcpflags=(!(tso&&!jt->seclev))<<JTPRNOSTDOUTX;  // set flag to indicate suppression of output
+ J jtinplace=(J)((I)jt|d->dcpflags);  // create typeout flags to pass along: no output class, suppression as called for in tso
+ d->dcss=1;  // indicate this script is not overridden by suspension
 // obsolete  jt->tostdout=tso&&!jt->seclev;
  A *old=jt->tnextpushp;
  switch(ce){
@@ -83,7 +85,7 @@ static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;DC d,xd=jt->dcs;
 #endif
   }
  }
- jt->dcs=xd;
+// obsolete  jt->dcs=xd;
 // obsolete  jt->tostdout=xt;
   debz();
  FDEPDEC(1);  // ASSERT OK now

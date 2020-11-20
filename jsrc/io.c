@@ -89,8 +89,8 @@ after encountering ) on a line by itself.  If not 0 : 0, call ddtokens() after e
 to see if more lines need to be read to finish the DD; is so, call jgets() to get them
 
 *** script load
-linf() is called first to read in all lines.  It sets jt->dcs to indicate that fact.  Thereafter
-all calls to jgets() return llies from the file without calling jt->sminput().
+linf() is called first to read in all lines.  It sets d->dcss in the SCRIPT entry to indicate that fact.  Thereafter
+all calls to jgets() return lines from the file without calling jt->sminput().
 jgets() calls advl() to advance through the lines, returns 0 for EOF.  Error is possible.
 
 The lines are executed one by one.  Before each is executed, ddtokens() is called to see if more lines
@@ -205,14 +205,15 @@ static C* nfeinput(J jt,C* s){A y;
 A jtjgets(J jt,C*p){A y;B b;C*v;I j,k,m,n;UC*s;
  *jt->adbreak=0;
  if(b=1==*p)p=""; /* 1 means literal input; remember & clear prompt */
- if(jt->dcs){   // DCSCRIPT debug type - means we are reading from file (or string)  for 0!:x
-  ++jt->dcs->dcn; j=jt->dcs->dcix; // increment line# and fetch current start index
-  y=jt->dcs->dcy; n=AN(y); s=UAV(y);
+ DC d; for(d=jt->sitop; d&&d->dctype!=DCSCRIPT; d=d->dclnk);  // d-> last SCRIPT type, if any
+ if(d&&d->dcss){   // enabled DCSCRIPT debug type - means we are reading from file (or string)  for 0!:x
+  ++d->dcn; j=d->dcix; // increment line# and fetch current start index
+  y=d->dcy; n=AN(y); s=UAV(y);
   if(!(j<n))R 0;  // return 0 for EOF
-  jt->dcs->dcj=k=j;  // k=start index
-  jt->dcs->dcix=j=advl(j,n,s);  // j=end+1 index
+  d->dcj=k=j;  // k=start index
+  d->dcix=j=advl(j,n,s);  // j=end+1 index
   m=j-k; if(m&&32>s[k+m-1])--m; if(m&&32>s[k+m-1])--m;  // m is length; discard trailing control characters (usually CRLF, but not necessarily) ?not needed: done in inpl
-  jtwri((J)((I)jt+jt->dcs->dcpflags),MTYOLOG,p,m,k+s);  // log the input, but only if we wanted to echo the input
+  jtwri((J)((I)jt+d->dcpflags),MTYOLOG,p,m,k+s);  // log the input, but only if we wanted to echo the input
   R inpl(b,m,k+s);  // process & return the line
  }
  /* J calls for input in 3 cases:

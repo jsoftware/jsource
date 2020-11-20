@@ -559,7 +559,7 @@ typedef struct DS{      /* 1 2 3                                                
  I dcj;                 /* x x x  error#; prev index  ; error #                         */
  C dctype;              /* x x x  type of entry (see #define DC*)                       */
  B dcsusp;              /* x   x  1 iff begins a debug suspension                       */
- C dcss;                /*     x  single step code                                      */
+ C dcss;                //   x x  1 if script is supplying sentences (0 if interrupted by prompt) ;single step code
  C dcnewlineno;         //     x  set when debug has installed a new line number into dcix
  C dcpflags;            //   x    prompt flags, see JTPRTYO
  A dca;                 /*     x  fn/op name                                            */

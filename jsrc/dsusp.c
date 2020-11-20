@@ -109,7 +109,8 @@ static A jtsusp(J jt){A z;
 // obsolete  jt->dbsusact=SUSCONT;
  A *old=jt->tnextpushp;  // fence must be after we have allocated our stack block
  // If the failure happened while a script was being loaded, we have to sieze jgets so we can prompt the user.  We will restore on exit
- DC d=jt->dcs; if(!(jt->dbuser&0x80))jt->dcs=0;  // in super-debug mode (dbr 16b81), we continue reading suspension lines from the script
+ DC d; for(d=jt->sitop; d&&d->dctype!=DCSCRIPT; d=d->dclnk);  // d-> last SCRIPT type, if any
+ if(d&&!(jt->dbuser&0x80))d->dcss=0;  // in super-debug mode (dbr 16b81), we continue reading suspension lines from the script; otherwise turn it off
 // obsolete t=jt->tostdout;
 // obsolete  jt->tostdout=1;
  // Make sure we have a decent amount of stack space left to run sentences in suspension
@@ -152,7 +153,8 @@ static A jtsusp(J jt){A z;
   jt->fcalln =NFCALL;
  }
  debz(); 
- jt->dcs=d;  // restore jgets() state
+// obsolete  jt->dcs=d;  // restore jgets() state
+ if(d)d->dcss=1;  // restore jgets() state if there is an active script
  R z;
 // obsolete  jt->tostdout=t;
 }    /* user keyboard loop while suspended */
@@ -164,7 +166,7 @@ static A jtsusp(J jt){A z;
 // Tacit definitions detect stop before they execute.
 static A jtdebug(J jt){A z=0;C e;DC c,d;
 // obsolete  if(DBSSD(DBBLOK)){(DC)DBSSD(DBBLOK)->dcss=0; DBSSD(DBBLOK)=0;}  // clear previous single-step state - should do at end instead
- c=jt->sitop; while(c){c->dcss=0; c=c->dclnk;}  // clear all previous ss state, since this might be a new error
+ c=jt->sitop; while(c){if(c->dctype==DCCALL)c->dcss=0; c=c->dclnk;}  // clear all previous ss state, since this might be a new error
  RZ(d=suspset(jt->sitop));  // find the topmost CALL frame and mark it as suspended
  if(d->dcix<0)R 0;  // if the verb has exited, all we can do is return
  e=jt->jerr; jt->jerr=0;

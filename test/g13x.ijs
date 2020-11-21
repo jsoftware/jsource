@@ -1,6 +1,9 @@
 1:@:(dbr bind Debug)@:(9!:19)2^_44[(echo^:ECHOFILENAME) './g13x.ijs'
 NB. 13!: ----------------------------------------------------------------
 
+original=: 9!:6''
+boxdraw_j_ 1
+
 goo =: 3 : 0
 y =. 1 + y
 goo1 y
@@ -138,11 +141,13 @@ foo =: foo , (];._2 (0 : 0)) -: ": a: 5}"1 (13!:13)''
 |   |  | | |                               ||+-+|+-+-+| |
 +---+--+-+-+-------------------------------++---+-----+-+
 )
+
+9!:7 original
+
 13!:3''  NB. clear stops
 13!:4''  NB. get out of suspension
 13!:0 ] 0
 13!:0 [1
-rrr =: foo
 foo
 foo       =: foo_loc1_
 foo_loc1_ =: foo_loc2_ /
@@ -336,6 +341,6 @@ m;n;x;y
 
 
 4!:55 ;:'commute conj f f1 f2 fac foo expa fexpa '
-4!:55 ;:'g goo goo1 goo2 goo3 h h1 mean sum t x '
+4!:55 ;:'g goo goo1 goo2 goo3 h h1 mean sum t x original '
 
 

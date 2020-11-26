@@ -8,8 +8,6 @@
 
 
 /* d->dcss   - single step code in current function                        */
-/* jt->dbssd - the d whose dcss is non-zero                                */
-/* jt->dbss  - single step code for propagation to appropriate function    */
 
 DC jtssnext(J jt,DC d,C c){
  d=d->dclnk;
@@ -19,6 +17,10 @@ DC jtssnext(J jt,DC d,C c){
  R d;
 }    /* set dcss for next stack level */
 
+// Process one of the step verbs.  We adjust the next-line addresses in the functions,
+// and the single-step codes, as requested by the user.  We may modify this level or the previous level
+// (for step into, we will set up the next level when it is created).  We return a flagged value to cause
+// the suspension to terminate
 static A jtssdo(J jt,A a,A w,C c){DC d,e;I n;
  RZ(w=vs(w));
  ASSERT(jt->uflags.us.cx.cx_c.db,EVDOMAIN);
@@ -33,10 +35,10 @@ static A jtssdo(J jt,A a,A w,C c){DC d,e;I n;
  if(a)RE(n=lnumcw(i0(a),d->dcc));           // for dyad, source line # to cw line #
 // obsolete  jt->dbsusact=SUSSS;
  switch(c){
-  case SSSTEPOVER: DGOTO(d,a?n:d->dcix) d->dcss=c;    break;
-  case SSSTEPINTO: DGOTO(d,a?n:d->dcix) d->dcss=c;    break;
-  case SSSTEPOUT:  DGOTO(d,a?n:d->dcix) d->dcss=0;   ssnext(d,SSSTEPOVERs); break;
-  case SSCUTBACK:  DGOTO(d,-1) d->dcss=0; e=ssnext(d,SSSTEPOVERs); if(e)DGOTO(e,e->dcix) break;  // terminate current verb and back up in caller
+  case SSSTEPOVER: DGOTO(d,a?n:d->dcix) d->dcss=c;    break;  // rerun stop line (executing it), then stop in this function
+  case SSSTEPINTO: DGOTO(d,a?n:d->dcix) d->dcss=c;    break;  // rerun stop line(executing it), then stop in any function
+  case SSSTEPOUT:  DGOTO(d,a?n:d->dcix) d->dcss=0;   ssnext(d,SSSTEPOVERs); break;  // rerun stop line, stop in calling function
+  case SSCUTBACK:  DGOTO(d,-1) d->dcss=0; e=ssnext(d,SSSTEPOVERs); if(e)DGOTO(e,e->dcix) break;  // terminate current verb, resume previous fn, stop before executing there
  }
 // obsolete fa(jt->dbssexec); if(AN(w)){RZ(ras(w)); jt->dbssexec=w;}else jt->dbssexec=0;
 // obsolete  jt->dbssexec=AN(w)?w:ds(CACE);

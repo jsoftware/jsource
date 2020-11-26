@@ -19,10 +19,6 @@ F1(jtassertq){ASSERTMTV(w); R scb(jt->assert);}
 
 F1(jtasserts){B b; RE(b=b0(w)); jt->assert=b; R mtm;}
 
-F1(jtdirectdefq){ASSERTMTV(w); R scb(jt->directdef);}  // scaf 9!:62
-
-F1(jtdirectdefs){B b; RE(b=b0(w)); jt->directdef=b; R mtm;}  // scaf 9!:63
-
 F1(jtboxq){ASSERTMTV(w); R str(sizeof(jt->bx),jt->bx);}
 
 F1(jtboxs){A x;

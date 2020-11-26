@@ -65,7 +65,7 @@ F1(jtwordil){A z;I s,i,m,n,nv,*x;UC*v;
  for(i=0;i<n;++i){   // run the state machine
   I prevs=s;  // state before new character
   I currc=ctype[v[i]];  // get class of input character
-if(!jt->directdef&&(currc==CDD||currc==CDDZ))currc=CX;  // scaf  if direct def disabled, treat { } as CX
+// obsolete if(!jt->directdef&&(currc==CDD||currc==CDDZ))currc=CX;  // if direct def disabled, treat { } as CX
   C *statebase=(C*)state+currc; s=statebase[s&0xf0];  // top 4 bits of s are state line; currc indexes the char code.  This fetches new state
   // Handle followon numerics.  If the previous state was 'followon numeric' and the new character is CX/CS/CQ, we will emit after this state but
   // we need to overwrite the previous numeric.  Decrement the pointer by 2 before writing.  This runs while the state-fetch is happening and is fast enough to allow

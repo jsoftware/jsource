@@ -122,7 +122,7 @@ static A jtsusp(J jt){A z;
  jt->fcalln=MIN(NFCALL,jt->fcalln+NFCALL/10);
 // obsolete  if (AT(jt->dbssexec)&LIT){RESETERR; immex(jt->dbssexec); tpop(old);}  // force typeout
  // if there is a 13!:15 sentence (latent expression) to execute before going into debug, do it
- if(jt->dbtrap  ){RESETERR; immex(jt->dbtrap  ); tpop(old);}  // force typeout
+ if(jt->dbtrap){RESETERR; immex(jt->dbtrap  ); tpop(old);}  // force typeout
  // Loop executing the user's sentences until one returns a value that is flagged as 'end of suspension'
 // obsolete  while(jt->dbsusact==SUSCONT){A  inp;
  while(1){A  inp;

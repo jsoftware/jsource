@@ -1006,9 +1006,6 @@ A jtddtokens(J jt,A w,I env){
 // TODO: Use LF for DDSEP, support {{), make nouns work
  PROLOG(000);F1PREFIP;
  ARGCHK1(w);
-#if 0  // set to 1 to disable DD scaf
- R (env&8)?w:tokens(w,env&3);  // return the input unmodified
-#endif
  // find word boundaries, remember if last word is NB
  A wil; RZ(wil=wordil(w));  // get index to words
  C *wv=CAV(w); I nw=AS(wil)[0]; I (*wilv)[2]=voidAV(wil);  // cv=pointer to chars, nw=#words including final NB   wilv->[][2] array of indexes into wv word start/end

@@ -69,9 +69,10 @@ EVERYFS(arofixaself,jtaro,jtfixa,0,VFLAGNONE)  // create A block to be used in e
 // FIXALOCSONLY set if we will replace only implicit locatives.  We don't go down a branch that doesn't contain one
 // FIXALOCSONLYLOWEST set if we replace only lowest-level locatives (suitable for function return).  We stop in a branch when we hit a locative reference
 // FIXASTOPATINV set if we halt at a defined oberse
-// a has to be an A type because it goes into every2.  It is always an I type with rank 0, but it may be virtual when it comes back from every2
-// AM(a) points to the recursion name-list and must be passed to all recursion levels
-static A jtfixa(J jt,A a,A w){A f,g,h,wf,x,y,z=w;V*v;fauxblock(fauxself); A aa; fauxINT(aa,fauxself,1,0); AM((A)aa)=AM(a);  // place to build recursion parm - make the AK field right, and pass the AM field along
+// a has to be an A type because it goes into every2.  It is always an I type with rank 0 so it can go into every, but it has multiple items.
+//   It may be virtual in callbacks from every2 so must not use IAV0
+// IAV0(aa)[1] points to the recursion name-list and must be passed to all recursion levels
+static A jtfixa(J jt,A a,A w){A f,g,h,wf,x,y,z=w;V*v;fauxblock(fauxself); A aa; fauxINT(aa,fauxself,2,0); IAV0(aa)[1]=IAV(a)[1];  // place to build recursion parm - make the AK field right, and pass the AM field along
 #define REFIXA(a,x) (IAV0(aa)[0]=(aif|(a)), fixa((A)aa,(x)))
  ARGCHK1(w);
  I ai=IAV(a)[0];  // value of a
@@ -108,7 +109,7 @@ static A jtfixa(J jt,A a,A w){A f,g,h,wf,x,y,z=w;V*v;fauxblock(fauxself); A aa; 
    f=REFIXA(na,f); g=REFIXA(ID(f)==CCAP?1:2,g); h=REFIXA(na,h); R folk(f,g,h);  // f first in case it's [:
   case CATDOT:
   case CGRCO:
-   IAV0(aa)[0]=(aif|na);
+   IAV(aa)[0]=(aif|na);
 // obsolete    RZ(f=every(every2(sc(aif|na),h,(A)&arofixaself),(A)&arofixaself)); // full A block required for call
    RZ(f=every(every2(aa,h,(A)&arofixaself),(A)&arofixaself)); // full A block required for call
    RZ(g=REFIXA(na,g));
@@ -126,11 +127,11 @@ static A jtfixa(J jt,A a,A w){A f,g,h,wf,x,y,z=w;V*v;fauxblock(fauxself); A aa; 
    if(f&&NAME&AT(f)){
     RZ(y=sfn(0,f));
 // obsolete     if(all1(eps(box(y),jt->fxpath)))R w;  // break out of loop if recursive name lookup
-    if(all1(eps(box(y),(A)AM(a))))R w;  // break out of loop if recursive name lookup
+    if(all1(eps(box(y),(A)IAV0(aa)[1])))R w;  // break out of loop if recursive name lookup
 // obsolete     ASSERT(jt->fxi,EVLIMIT);
-    ASSERT(AN((A)AM(a))<248,EVLIMIT);  // error if too many names in expansion
+    ASSERT(AN((A)IAV0(aa)[1])<248,EVLIMIT);  // error if too many names in expansion
     // recursion check finished.  Now replace the name with its value
-    if(x=symbrdlock(f)){
+    if(x=symbrdlock(f)){   // locked returns a ref to the same name
      // if this is an implicit locative, we have to switch the environment before we recur on the name for subsequent lookups
      // The value we get from the lookup must be interpreted in the environment of the higher level
      A savloc=jt->locsyms;  // initial locales
@@ -154,13 +155,13 @@ static A jtfixa(J jt,A a,A w){A f,g,h,wf,x,y,z=w;V*v;fauxblock(fauxself); A aa; 
      // add the name to the table in that case.  NOTE bug: an indirect locative a__b, if it appeared twice, would be detected as a loop even
      // if it evaluated to different locales
 // obsolete      if(savloc==jt->locsyms)jt->fxpv[--jt->fxi]=rifvs(y); // add name-string to list of visited names for recursion check
-     I initn=AN((A)AM(a));  // save name depth coming in
-     if(savloc==jt->locsyms){AAV1((A)AM(a))[AN((A)AM(a))]=rifvs(y); AN((A)AM(a))++; AS((A)AM(a))[0]++;} // add name-string to list of visited names for recursion check
+     I initn=AN((A)IAV0(aa)[1]);  // save name depth coming in
+     if(savloc==jt->locsyms){AAV1((A)IAV0(aa)[1])[AN((A)IAV0(aa)[1])]=rifvs(y); AN((A)IAV0(aa)[1])++; AS((A)IAV0(aa)[1])[0]++;} // add name-string to list of visited names for recursion check
      if(z=REFIXA(na,x)){
       if(ai!=0&&selfq(x))z=fixrecursive(sc(ai),z);  // if a lower name contains $:, replace it with explicit equivalent
      }
      SYMRESTOREFROMLOCAL(savloc);  // make sure we restore current symbols
-     AN((A)AM(a))=AS((A)AM(a))[0]=initn;   // restore name count
+     AN((A)IAV0(aa)[1])=AS((A)IAV0(aa)[1])[0]=initn;   // restore name count
      RZ(z);
     }
 // obsolete     jt->fxpv[jt->fxi++]=mtv;
@@ -188,14 +189,14 @@ DF1(jtfix){PROLOG(0005);A z;
  ASSERT(AT(w)&NAME+VERB+ADV+CONJ,EVDOMAIN);
  self=AT(self)&NOUN?self:zeroionei(0);  // default to 0 if noun not given
  // To avoid infinite recursion we keep an array of names that we have looked up.  We create that array here, initialized to empty.  To pass it into fixa, we create
- // a faux INT block to hold the value, and use AM in that block to point to the list of names
+ // a faux INT block to hold the value, and use AM in that block to point to the list of names.  The fauxblock has rank 0 but 2 items
  A namelist; GAT0(namelist,BOX,248,1); AS(namelist)[0]=AN(namelist)=0;  // allocate 248 slots with rank 1, but initialize to empty
- fauxblock(fauxself); A augself; fauxINT(augself,fauxself,1,0); AM(augself)=(I)namelist; IAV(augself)[0]=IAV(self)[0];  // transfer value to writable block; install empty name array
+ fauxblock(fauxself); A augself; fauxINT(augself,fauxself,2,0); IAV0(augself)[0]=IAV(self)[0]; IAV0(augself)[1]=(I)namelist;  // transfer value to writable block; install empty name array
  RZ(z=fixa(augself,AT(w)&VERB+ADV+CONJ?w:symbrdlock(w)));  // name comes from string a
  // Once a node has been fixed, it doesn't need to be looked at ever again.  This applies even if the node itself carries a name.  To indicate this
  // we set VFIX.  We only do so if the node has descendants (or a name).  We also turn off VNAMED, which is set in named explicit definitions (I don't
   // understand why).  We can do this only if we are sure the entire tree was traversed, i. e. we were not just looking for implicit locatives or inverses.
- if(!(*IAV0(self)&(FIXALOCSONLY|FIXALOCSONLYLOWEST|FIXASTOPATINV))&&AT(z)&VERB+ADV+CONJ){V*v=FAV(z); if(v->fgh[0]){v->flag|=VFIX+VNAMED; v->flag^=VNAMED;}}  // f is clear for anything in the pst
+ if(!(IAV(self)[0]&(FIXALOCSONLY|FIXALOCSONLYLOWEST|FIXASTOPATINV))&&AT(z)&VERB+ADV+CONJ){V*v=FAV(z); if(v->fgh[0]){v->flag|=VFIX+VNAMED; v->flag^=VNAMED;}}  // f is clear for anything in the pst
 // obsolete  jt->fxpath=0;
  EPILOG(z);
 }

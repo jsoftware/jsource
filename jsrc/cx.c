@@ -276,15 +276,20 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
    // if performance monitor is on, collect data for it
    if(PMCTRBPMON&jt->uflags.us.uq.uq_c.pmctrbstk&&C1==((PM0*)CAV1(jt->pma))->rec&&FAV(self)->flag&VNAMED)pmrecord(jt->curname,jt->global?LOCNAME(jt->global):0,i,isdyad?VAL2:VAL1);
    // If the executing verb was reloaded during debug, switch over to the modified definition
-   if((gsfctdl&16)&&jt->redefined){DC siparent;A *hv;
-    if((siparent=thisframe->dclnk)&&jt->redefined==siparent->dcn&&DCCALL==siparent->dctype&&self!=siparent->dcf){
-     self=siparent->dcf; V *sv=FAV(self); LINE(sv); siparent->dcc=hv[1];
-     // Clear all local bucket info in the definition, since it doesn't match the symbol table now
-     DO(AN(hv[0]), if(AT(line[i])&NAME){NAV(line[i])->bucket=0;});
-    }
-    jt->redefined=0;
+   DC siparent;
+// obsolete     if((gsfctdl&16)&&jt->redefined){A *hv;
+// obsolete     if((siparent=thisframe->dclnk)&&jt->redefined==siparent->dcn&&DCCALL==siparent->dctype&&self!=siparent->dcf){
+   if(gsfctdl&16){
+     if(thisframe->dcredef&&(siparent=thisframe->dclnk)&&siparent->dcn&&DCCALL==siparent->dctype&&self!=siparent->dcf){A *hv;
+      self=siparent->dcf; V *sv=FAV(self); LINE(sv); siparent->dcc=hv[1];  // LINE sets pointers for subsequent line lookups
+      // Clear all local bucket info in the definition, since it doesn't match the symbol table now
+      // This will affect the current definition and all future executions of this definition.  We allow it because
+      // it's for debug only.  The symbol table itself persists
+      DO(AN(hv[0]), if(AT(line[i])&NAME){NAV(line[i])->bucket=0;});
+     }
+    thisframe->dcredef=0;
    }
-   if(!((I)jt->redefined|(I)(PMCTRBPMON&jt->uflags.us.uq.uq_c.pmctrbstk)|(I)(gsfctdl&16)))jt->cxspecials=0;  // if no more special work to do, close the gate
+   if(!((I)(PMCTRBPMON&jt->uflags.us.uq.uq_c.pmctrbstk)|(I)(gsfctdl&16)))jt->cxspecials=0;  // if no more special work to do, close the gate
   }
 
   // Don't do the loop-exit test until debug has had the chance to update the execution line.  For example, we might be asked to reexecute the last line of the definition
@@ -890,7 +895,7 @@ A jtclonelocalsyms(J jt, A a){A z;I j;I an=AN(a); LX *av=LXAV0(a),*zv;
  R z;
 }
 
-F2(jtcolon){A d,h,*hv,m;B b;C*s;I flag=VFLAGNONE,n,p;
+F2(jtcolon){A d,h,*hv,m;C*s;I flag=VFLAGNONE,n,p;
  ARGCHK2(a,w);PROLOG(778);
  if(VERB&AT(a)&AT(w)){  // v : v case
   // If nested v : v, prune the tree
@@ -938,7 +943,7 @@ F2(jtcolon){A d,h,*hv,m;B b;C*s;I flag=VFLAGNONE,n,p;
   INCORP(m); INCORP(d);  // we are incorporating them into hv[]
   if(4==n){if((-AN(m)&(AN(d)-1))<0)d=m; m=mtv;}  //  for 4 :, make the single def given the dyadic one
   GAT0(h,BOX,2*HN,1); hv=AAV(h);
-  if(n){  // if not noun, audit the valences as valid sentences and convert to a queue to send into parse()
+  if(n){B b;  // if not noun, audit the valences as valid sentences and convert to a queue to send into parse()
    RE(b=preparse(m,hv,hv+1)); if(b)flag|=VTRY1; hv[2]=jt->retcomm?m:mtv;
    RE(b=preparse(d,hv+HN,hv+HN+1)); if(b)flag|=VTRY2; hv[2+HN]=jt->retcomm?d:mtv;
   }
@@ -947,22 +952,24 @@ F2(jtcolon){A d,h,*hv,m;B b;C*s;I flag=VFLAGNONE,n,p;
  // Non-noun results cannot become inputs to verbs, so we do not force them to be recursive
  if((1LL<<n)&0x206){  // types 1, 2, 9
 // obsolete   I fndflag=xop(h);   // 4=mnuv 2=x 1=y
-  I fndflag=xop(hv[0])|xop(hv[0+HN]);   // 4=mnuv 2=x 1=y, combined for both valences
+  I fndflag=xop(hv[0])|xop(hv[0+HN]);   // 8=mu 4=nv 2=x 1=y, combined for both valences
   // for 9 : n, figure out best type after looking at n
   if(n==9){
    I defflg=(fndflag&((splitloc>>(BW-1))|-4))|1; CTLZI(defflg,n); n=(0x2143>>(n<<2))&0xf; // replace 9 by value depending on what was seen; if : seen, ignore x
    if(n==4){hv[HN]=hv[0]; hv[0]=mtv; hv[HN+1]=hv[1]; hv[1]=mtv; hv[HN+2]=hv[2]; hv[2]=mtv; flag=(flag&~VTRY2)+VTRY1; }  // if we created a dyadic verb, shift the monad over to the dyad and clear the monad, incl try flag
   } 
   if(n<=2){  // adv or conj after autodetection
-   fndflag=(fndflag&7)|((fndflag&8)>>1);  // scaf put back in old form
-   b=fndflag>4;   // set if there is mnuv and xy scaf
-   if(b)flag|=VXOPR;   // if this def refers to xy, set VXOPR
-   ASSERT(!BETWEENC(fndflag,1,3),EVNONCE);  // scaf
+// obsolete    fndflag=(fndflag&7)|((fndflag&8)>>1);  // scaf put back in old form
+// obsolete    b=fndflag>4;   // set if there is mnuv and xy scaf
+// obsolete    if(b)flag|=VXOPR;   // if this def refers to xy, set VXOPR
+// obsolete    ASSERT(!BETWEENC(fndflag,1,3),EVNONCE);  // scaf
+    flag|=REPSGN(-(fndflag&3))&VXOPR;   // if this def refers to xy, set VXOPR
 // obsolete if(BETWEENC(fndflag,1,3))jfwrite(str(129,"************ Old-style definition encountered.  It will be invalid after the beta period.\nIt has x/y without u/v/m/n **********\n"),num(2));
-   // if there is only one valence defined, that will be the monad.  Swap it over to the dyad in two cases: (1) it is a conjunction with uv only: the operands will be the two verbs;
+   // if there is only one valence defined, that will be the monad.  Swap it over to the dyad in two cases: (1) it is a non-operator conjunction: the operands will be the two verbs;
    // (2) it is an operator with a reference to x
-   if(((-AN(m))&(AN(d)-1)&(((fndflag-5)&(1-n))|(5-fndflag)))<0){A*u=hv,*v=hv+HN,x; DQ(HN, x=*u; *u++=*v; *v++=x;);}  // if not, it executes on uv only; if conjunction, make the default the 'dyad' by swapping monad/dyad
-   // for adv/conj, b has operator status from here on
+// obsolete    if(((-AN(m))&(AN(d)-1)&(((fndflag-5)&(1-n))|(5-fndflag)))<0){A*u=hv,*v=hv+HN,x; DQ(HN, x=*u; *u++=*v; *v++=x;);}  // if not, it executes on uv only; if conjunction, make the default the 'dyad' by swapping monad/dyad
+   if(((-AN(m))&(AN(d)-1)&((SGNIFNOT(flag,VXOPRX)&(1-n))|(SGNIF(flag,VXOPRX)&SGNIF(fndflag,1))))<0){A*u=hv,*v=hv+HN,x; DQ(HN, x=*u; *u++=*v; *v++=x;);}  // if not, it executes on uv only; if conjunction, make the default the 'dyad' by swapping monad/dyad
+   // for adv/conj, flag has operator status from here on
   }
  }
  flag|=VFIX;  // ensures that f. will not look inside n : n
@@ -977,8 +984,8 @@ F2(jtcolon){A d,h,*hv,m;B b;C*s;I flag=VFLAGNONE,n,p;
  A z;
  switch(n){
  case 3:  z=fdef(0,CCOLON, VERB, xn1,jtxdefn,       num(n),0L,h, flag|VJTFLGOK1|VJTFLGOK2, RMAX,RMAX,RMAX); break;
- case 1:  z=fdef(0,CCOLON, ADV,  b?xop1:xadv,0L,    num(n),0L,h, flag, RMAX,RMAX,RMAX); break;
- case 2:  z=fdef(0,CCOLON, CONJ, 0L,b?jtxop2:jtxdefn, num(n),0L,h, flag, RMAX,RMAX,RMAX); break;
+ case 1:  z=fdef(0,CCOLON, ADV,  flag&VXOPR?xop1:xadv,0L,    num(n),0L,h, flag, RMAX,RMAX,RMAX); break;
+ case 2:  z=fdef(0,CCOLON, CONJ, 0L,flag&VXOPR?jtxop2:jtxdefn, num(n),0L,h, flag, RMAX,RMAX,RMAX); break;
  case 4:  z=fdef(0,CCOLON, VERB, xn1,jtxdefn,       num(n),0L,h, flag|VJTFLGOK1|VJTFLGOK2, RMAX,RMAX,RMAX); break;
  case 13: z=vtrans(w); break;
  default: ASSERT(0,EVDOMAIN);

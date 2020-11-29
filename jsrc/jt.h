@@ -127,13 +127,6 @@ typedef struct JSTstruct {
  void * iomalloc;   // address of block, if any, allocated in io.c to be returned to the FE
  I    iomalloclen;   // length of the allocated block (in case we can reuse it)
 // --- end cache line 7/8
-#if 0 // used only for direct locale numbering
- I*   numlocdelqh;      // head of deleted queue, waiting for realloc
- I    numlocdelqn;      // number of blocks on the deleted queue  could be UI4
- I*   numlocdelqt;       // tail of deleted queue
- I*   numloctbl;         // pointer to data area for locale-number to locale translation
- UI4  numlocsize;       // AN(jt->stnum)
-#endif
  I    igemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for integer matrix product.  _1 means 'never'
  I    dgemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for float matrix product.  _1 means 'never'
  I    zgemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for complex matrix product.  _1 means 'never'
@@ -156,6 +149,7 @@ typedef struct JSTstruct {
  I4   fdepi;            /* fn calls: current depth                         */
  I4   fdepn;            /* fn calls: maximum permissible depth             */
 #else
+ UC   cstacktype;  /* cstackmin set during 0: jt init  1: passed in JSM  2: set in JDo */
  UI   cstackinit;       // C stack pointer at beginning of execution
 #endif
 
@@ -180,6 +174,7 @@ typedef struct JSTstruct {
  S    etxn1;            /* last non-zero etxn                              */
  A    evm;              /* event messages                                  */
  A    iep;              /* immediate execution phrase                      */
+ A    xep;              /* exit execution phrase                           */
  C    locsize[2];       /* size indices for named and numbered locales     */
 #if !(C_CRC32C && SY_64)
  I    min;              /* the r result from irange                        */
@@ -196,20 +191,17 @@ typedef struct JSTstruct {
  C    pos[2];           /* boxed output x-y positioning                    */
  C    pp[8];            // print precision (sprintf field for numeric output)
  A    p4792;            // pointer to p: i. 4792, filled in on first use
- I    redefined;        /* symbol table entry of redefined explicit defn  scaf */
  A    sbu;              /* SB data for each unique symbol                  */
  A    slist;            /* files used in right arg to 0!:                  */
- UC   cstacktype;  /* cstackmin set during 0: jt init  1: passed in JSM  2: set in JDo */
  I    sm;               /* sm options set by JSM()                         */
  void*smdowd;
  void*sminput;
  void*smoutput;         /* sm.. sm/wd callbacks set by JSM()               */
  void*smpoll;           /* re-used in wd                                   */
  UI   smoption;         /* wd options, see comment in jtwd                 */
- A    xep;              /* exit execution phrase                           */
  I    int64rflag;       /* com flag for returning 64-bit integers          */
  I    transposeflag;    /* com flag for transposed arrays                  */
- D    tssbase;          /* initial time of date                            */
+ D    tssbase;          /* initial 6!:0''                            */
  A    xmod;             /* extended integer: the m in m&|@f        $        */  
  C    xmode;            /* extended integer operating mode         $        */
 #if MEMAUDIT & 2
@@ -233,6 +225,14 @@ typedef struct JSTstruct {
  LS   *callstack;   // [1+NFCALL]; // named fn calls: stack.  Usually only a little is used; the rest overflows onto a new DRAM page
  C    *breakfn;  // [NPATH];   /* break file name                                 */
 } JST;
+#if 0 // used only for direct locale numbering
+ I*   numlocdelqh;      // head of deleted queue, waiting for realloc
+ I    numlocdelqn;      // number of blocks on the deleted queue  could be UI4
+ I*   numlocdelqt;       // tail of deleted queue
+ I*   numloctbl;         // pointer to data area for locale-number to locale translation
+ UI4  numlocsize;       // AN(jt->stnum)
+#endif
+// obsolete I    redefined;        /* symbol table entry of redefined explicit defn  scaf */
 // obsolete  DC   dcs;              /* ptr to debug stack entry for current script     */
 // obsolete A     dbalpha;          /* left  argument for rerun                        */
 // obsolete  I    dbjump;           /* line to jump to                                 */

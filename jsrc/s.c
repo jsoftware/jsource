@@ -445,18 +445,25 @@ F1(jtsymbrdlock){A y;
 
 
 // w is a value, v is the symbol-table entry about to be assigned
-// return 0 if there is an attempt to reassign the currently-executing name
+// Called only in debug mode.  If we redefine an executing name, it would invalidate
+// the debug stack.  Fail if any redefinition would change part of speech or the id of the executing function.
+// If the currently-executing definition is reloaded, set cxspecials to note that fact and mark the stack entry
+// as modified - xdefn will try to hot-swap to the new definition between lines
+// If the modified name is executing higher on the stack, fail
+// returns nonzero for OK to allow the assignment to proceed
 B jtredef(J jt,A w,L*v){A f;DC c,d;
  // find the most recent DCCALL, exit if none
  d=jt->sitop; while(d&&!(DCCALL==d->dctype&&d->dcj))d=d->dclnk; if(!(d&&DCCALL==d->dctype&&d->dcj))R 1;
  if(v==(L*)d->dcn){  // if the saved stabent (from the unquote lookup) matches the name being assigned...
+  // attempted reassignment of the executing name
   // insist that the redefinition have the same type, and the same explicit character
   f=d->dcf;
   ASSERTN(TYPESEQ(AT(f),AT(w))&&(CCOLON==FAV(f)->id)==(CCOLON==FAV(w)->id),EVSTACK,d->dca);
   d->dcf=w;
-  // If we are redefining the executing explicit definition during debug, remember that.  We will use it to reload the definition.
-  // Reassignment outside of debug waits until the name is off the stack
-  if(CCOLON==FAV(w)->id){jt->redefined=(I)v; jt->cxspecials=1;}
+  // If we are redefining the executing explicit definition during debug, remember that.
+  // debug will switch over to the new definition before the next line is executed.
+  // Reassignment outside of debug continues executing the old definition
+  if(CCOLON==FAV(w)->id){/* obsolete jt->redefined=(I)v; */d->dcredef=1; jt->cxspecials=1;}
   // Erase any stack entries after the redefined call
   c=jt->sitop; while(c&&DCCALL!=c->dctype){c->dctype=DCJUNK; c=c->dclnk;}
  }
@@ -500,7 +507,7 @@ L* jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;L*e;
    // kludge  these flags are modified in the input area (w), which means they will be improperly set in the result of the
    // assignment (ex: (nm =: 3 : '...') y).  There seems to be no ill effect, because VNAMED isn't used much.
  }
- if(jt->uflags.us.cx.cx_c.db)RZ(redef(w,e));  // if debug, check for changes to stack
+ if(unlikely(jt->uflags.us.cx.cx_c.db))RZ(redef(w,e));  // if debug, check for changes to stack
  x=e->val;   // if x is 0, this name has not been assigned yet; if nonzero, x points to the incumbent value
  I xaf;  // holder for nvr/free flags
  I xt;  // If not assigned, use empty type

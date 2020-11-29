@@ -122,7 +122,7 @@ struct AD {
         // (6) in the return from wordil, holds the number of words if any final NB. is discarded; (7) in the result of indexofsub when called for FORKEY, contains the
         // number of partitions found; (8) in the self block for y L: n and u S: n, the address of the fs block for u; (9) in the call to jtisf (multiple assignment), holds the
         // address of the symbol table being assigned to (10) in the y block internal to pv.c, used for flags (11) in hashtables in x15.c and in tickers, the number of entries that have been hashed
-        // (12) in the faux arg to fixa, pointer to the recursive name-list block (13) in file-lock list and file-number list, the # valid files
+        // (12) in file-lock list and file-number list, the # valid files
   A back; // For VIRTUAL blocks, points to backing block
   A *zaploc;  // For all blocks, AM initially holds a pointer to the place in the tpop stack (or hijacked tpop stack) that points back to the allocated block.  This value is guaranteed
         // to remain valid as long as the block is nonvirtual inplaceable and might possibly return as a result to the parser or result assembly  (in cases under m above, the block cannot become such a result)
@@ -562,6 +562,7 @@ typedef struct DS{      /* 1 2 3                                                
  C dcss;                //   x x  1 if script is supplying sentences (0 if interrupted by prompt) ;single step code
  C dcnewlineno;         //     x  set when debug has installed a new line number into dcix
  C dcpflags;            //   x    prompt flags, see JTPRTYO
+ C dcredef;             //     x  set if this definition has been reassigned while running on top of stack
  A dca;                 /*     x  fn/op name                                            */
  A dcf;                 /*     x  fn/op                                                 */
  A dcx;                 /*     x  left argument                                         */
@@ -817,7 +818,8 @@ typedef struct {AF valencefns[2];A fgh[3];union { D lD; void *lvp[2]; I lI; I4 l
 #define VLOCK           (I)0x10000        /* function is locked              */
 #define VNAMED          (I)0x20000       /* named explicit defn             */
 #define VFIX            (I)0x40000       /* f. applied                      */
-#define VXOPR           (I)0x80000       /* : defn with u. and x.           */
+#define VXOPRX          19
+#define VXOPR           ((I)1<<VXOPRX)       /* : defn with u. and x.           */
 #define VXOP            (I)0x100000      /* : defn derived fn               */
 #define VXOPCALL        (I)0x200000      /* : defn derived fn call          */
 #define VTRY1           (I)0x400000      /* monad contains try.             */

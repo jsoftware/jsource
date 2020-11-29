@@ -252,7 +252,16 @@ if. 0: y -: 6 do.
 end.
 )
 '|noun result was required: f|       y+undefname' -: efx 'f 4'
- 
+
+7 -: 2 %: 2 : 'x + y' *: 5
+'domain error' -: 2 (1) : 'x + y' etx 5
+7 -: 2 *: (1) : 'x + y' 5
+'domain error' -: *: (1) : 'x + y' etx 5
+'domain error' -: 2 %: ((2) : 'y') *: etx 5
+5 -: %: (2) : 'y' *: 5
+5 -: *: (1) : 'y' 5
+
+13 -: +: 2 : '(u 2) + (v 3)' *: 
 NB. : empty defn --------------------------------------------------------
 
 f=: 3 : ''

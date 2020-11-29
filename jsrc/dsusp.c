@@ -131,8 +131,8 @@ static A jtsusp(J jt){A z;
   if(jt->iepdo&&jt->iep){jt->iepdo=0; immex(jt->iep); tpop(old);}  // force typeout
   // Execute one sentence from the user
   if((inp=jgets("      "))==0){z=0; break;} z=immex(inp); // force prompt and typeout read and execute a line, but exit debug if error reading line
-  // If there was an error, or if the result came from a suspension-ending command, get out of suspension
-  if(!z||AFLAG(z)&AFDEBUGRESULT)break;
+  // If the result came from a suspension-ending command, get out of suspension
+  if(z&&AFLAG(z)&AFDEBUGRESULT)break;  // dbr * exits suspension, even dbr 1
   tpop(old);  // if we don't need the result for the caller here, free up the space
  }
  // Coming out of suspension.  z has the result to pass up the line, containing the suspension-ending info
@@ -267,7 +267,7 @@ F1(jtdbc){UC k;
   ASSERT(!(k&~0x81),EVDOMAIN);
   ASSERT(!k||!jt->uflags.us.cx.cx_c.glock,EVDOMAIN);
  }
- jt->redefined=0;
+// obsolete  jt->redefined=0;
  if(AN(w)){
   jt->uflags.us.cx.cx_c.db=k&1; jt->dbuser=k; jt->cxspecials=1;
 #if USECSTACK

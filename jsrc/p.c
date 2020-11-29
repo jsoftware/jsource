@@ -637,7 +637,9 @@ RECURSIVERESULTSCHECK
        I c=AC(arg1); c=arg1==y?0:c;
        if((c&(-(AT(arg1)&DIRECT)|SGNIF(AFLAG(arg1),AFPRISTINEX)))<0){   // inplaceable and not return value.
         if(!(AFLAG(arg1)&AFVIRTUAL)){  // for now, don't handle virtuals
-         if(*(A*)ABACK(arg1)!=arg1)SEGFAULT;  // scaf
+#if MEMAUDIT&0x02
+         if(*(A*)ABACK(arg1)!=arg1)SEGFAULT;
+#endif
          *tpopw=0; fanapop(arg1,AFLAG(arg1));  // zap the top block; if recursive, fa the contents
         }
        }
@@ -646,7 +648,9 @@ RECURSIVERESULTSCHECK
        I c=AC(arg2); c=arg2==y?0:c; c=arg1==arg2?0:c;
        if((c&(-(AT(arg2)&DIRECT)|SGNIF(AFLAG(arg2),AFPRISTINEX)))<0){  // inplaceable, not return value, not same as arg1, dyad.  Safe to check AC even if freed as arg1
         if(!(AFLAG(arg2)&AFVIRTUAL)){  // for now, don't handle virtuals
-         if(*(A*)ABACK(arg2)!=arg2)SEGFAULT;   // scaf
+#if MEMAUDIT&0x02
+         if(*(A*)ABACK(arg2)!=arg2)SEGFAULT;
+#endif
          *tpopa=0; fanapop(arg2,AFLAG(arg2));
         }
        }

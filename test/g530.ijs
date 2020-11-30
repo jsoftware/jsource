@@ -672,6 +672,7 @@ IGNOREIFFVI 200000 > 7!:2 'a =: b (10$i. 2)} a'   NB. Rewrite cells
 a -: b , b , 2 }. <"0 i. 100 1000
 IGNOREIFFVI (size1 - 2 * 1000 * IF64{4 8) > 7!:0''  NB. Verify values freed
 4!:55 ;:'a b'
+IGNOREIFFVI 1  NB. execute a name to allow garbage collection to run
 IGNOREIFFVI (size0 + 1000) > 7!:0''
 
 NB. Verify memcpy routine by replacing one cell of an array

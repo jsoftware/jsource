@@ -17,6 +17,7 @@
 #define LEAKSNIFF 0
 
 #define ALIGNTOCACHE 0   // set to 1 to align each block to cache-line boundary.  Will reduce cache usage for headers
+#define TAILPAD (32)  // we must ensure that a 32-byte masked op fetch to the last byte doesn't run off into unallocated memory
 
 #define MEMJMASK 0xf   // these bits of j contain subpool #; higher bits used for computation for subpool entries
 #define SBFREEBLG (14+PMINL)   // lg2(SBFREEB)
@@ -164,10 +165,12 @@ B jtspfree(J jt){I i;A p;
     if(FHRHISROOTALLOFREE(AFHRH(baseblock))){ // Free fully-unused base blocks;
 #if 1 || ALIGNTOCACHE   // with short headers, always align to cache bdy
      FREECHK(((I**)baseblock)[-1]);  // If aligned, the word before the block points to the original block address
-     jt->malloctotal-=PSIZE+CACHELINESIZE;  // return storage+bdy
+     jt->malloctotal-=PSIZE+TAILPAD+CACHELINESIZE;  // return storage+bdy
+     jt->mfreegenallo-=TAILPAD+CACHELINESIZE;  // remove pad from the amount we report allocated
 #else
      FREECHK(baseblock);
-     jt->malloctotal-=PSIZE;  // return storage
+     jt->malloctotal-=PSIZE+TAILPAD;  // return storage
+     jt->mfreegenallo-=TAILPAD;  // remove pad from the amount we report allocated
 #endif
     }else{AFHRH(baseblock) = virginbase;}   // restore the count to 0 in the rest
     p=np;   //  step to next base block
@@ -176,8 +179,8 @@ B jtspfree(J jt){I i;A p;
    // set up for next spfree: set mfreeb to a value such that when SPFREEB bytes have been freed,
    // mfreeb will hit 0, causing a rescan.
    // Account for the buffers that were freed during the coalescing by reducing the number of PSIZEL bytes allocated
-   // coalescing doesn't change the allocation, but it does change the accounting.  The change to mfreeb[] must be
-   // compensated for by a change to mfreegenallo
+   // coalescing doesn't change the allocation, but it does change the accounting.  The change to mfree[] must be
+   // compensated for by a change to mfreegenallo.  mfreegenallo must also account for the excess padding that is now being returned
    // This elides the step of subtracting coalesced buffers from the number of allocated buffers of size i, followed by
    // adding the bytes for those blocks to mfreebgenallo
    jt->mfreegenallo -= SBFREEB - (jt->mfree[i].ballo & ~MFREEBCOUNTING);  // subtract diff between current mfreeb[] and what it will be set to
@@ -295,8 +298,8 @@ F1(jtmmaxs){I j,m=MLEN,n;
 // mfreegenallo
 // At init, each mfreeb indicates SBFREEB bytes. mfreegenallo is negative to match that total,
 // indicating nothing has really been allocated; that's (PLIML-PMINL+1)*SBFREEB to begin with.  When a block
-// is alocated, mfreeb[] increases; when a big block is allocated, mfreegenallo increases by the
-// amount of the alllocation, and mfree[-PMINL+] decreases by the amount in all the blocks that are now
+// is allocated, mfreeb[] increases; when a big block is allocated, mfreegenallo increases by the
+// amount of the allocation, and mfree[-PMINL+n] decreases by the amount in all the blocks that are now
 // on the free list.
 // At coalescing,
 // mfreeb is set back to indicate SBFREEB bytes, and mfreegenallo is decreased by the amount of the setback.
@@ -961,14 +964,16 @@ if((I)jt&3)SEGFAULT;
 #if 1 || ALIGNTOCACHE   // with smaller headers, always align pool allo to cache bdy
     // align the buffer list on a cache-line boundary
     I *v;
-    ASSERT(v=MALLOC(PSIZE+CACHELINESIZE),EVWSFULL);
+    ASSERT(v=MALLOC(PSIZE+TAILPAD+CACHELINESIZE),EVWSFULL);
     z=(A)(((I)v+CACHELINESIZE)&-CACHELINESIZE);   // get cache-aligned section
     ((I**)z)[-1] = v;   // save address of entire allocation in the word before the aligned section
-    nt += PSIZE+CACHELINESIZE;  // add to total allocated
+    nt += PSIZE+TAILPAD+CACHELINESIZE;  // add to total allocated
+    jt->mfreegenallo+=PSIZE+TAILPAD+CACHELINESIZE;   // ...add them to the total bytes allocated
 #else
     // allocate without alignment
-    ASSERT(av=MALLOC(PSIZE),EVWSFULL);
-    nt += PSIZE;  // add to total allocated
+    ASSERT(av=MALLOC(PSIZE+TAILPAD),EVWSFULL);
+    nt += PSIZE+TAILPAD;  // add to total allocated
+    jt->mfreegenallo+=PSIZE+TAILPAD;   // ...add them to the total bytes allocated
 #endif
     {I ot=jt->malloctotalhwmk; ot=ot>nt?ot:nt; jt->malloctotal=nt; jt->malloctotalhwmk=ot;}
     // split the allocation into blocks.  Chain them together, and flag the base.  We chain them in ascending order (the order doesn't matter), but
@@ -982,29 +987,29 @@ if((I)jt&3)SEGFAULT;
 #endif
     jt->mfree[-PMINL+1+blockx].pool=(A)((C*)u+n);  // the second block becomes the head of the free list
     mfreeb-=PSIZE;     // We are adding a bunch of free blocks now...
-    jt->mfreegenallo+=PSIZE;   // ...add them to the total bytes allocated
    }
    jt->mfree[-PMINL+1+blockx].ballo=mfreeb+=n;
   } else { I nt=jt->malloctotal;  // here for non-pool allocs...
-   mfreeb=jt->mfreegenallo;    // bytes in large allocations
+   mfreeb=jt->mfreegenallo;    // bytes in large allocations, including flag for whether we are keeping track of hwmk
 #if ALIGNTOCACHE
    // Allocate the block, and start it on a cache-line boundary
    I *v;
-   ASSERT(v=MALLOC(n+CACHELINESIZE),EVWSFULL);
+   n+=TAILPAD+CACHELINESIZE;  // add to the allocation for the fixed tail and the alignment area
+   ASSERT(v=MALLOC(n),EVWSFULL);
    z=(MS *)(((I)v+CACHELINESIZE)&-CACHELINESIZE);   // get cache-aligned section
    ((I**)z)[-1] = v;    // save address of original allocation
-   nt += n+CACHELINESIZE;
 #else
    // Allocate without alignment
+   n+=TAILPAD;  // add to the allocation for the fixed tail
    ASSERT(z=MALLOC(n),EVWSFULL);
-   nt += n;
 #endif
+   nt += n;
    {I ot=jt->malloctotalhwmk; ot=ot>nt?ot:nt; jt->malloctotal=nt; jt->malloctotalhwmk=ot;}
    AFHRH(z) = (US)FHRHSYSJHDR(1+blockx);    // Save the size of the allocation so we know how to free it and how big it was
 #if MEMAUDIT&17 && SY_64
    z->fill=(UI4)AFHRH(z);
 #endif
-   jt->mfreegenallo=mfreeb+=n;    // mfreegenallo is the byte count allocated for large blocks
+   jt->mfreegenallo=mfreeb+=n;    // mfreegenallo includes the byte count allocated for large blocks (incl pad)
   }
 #if MEMAUDIT&8
   DO((((I)1)<<(1+blockx-LGSZI)), lfsr = (lfsr<<1LL) ^ (lfsr<0?0x1b:0); if(i!=6)((I*)z)[i] = lfsr;);   // fill block with garbage - but not the allocation word
@@ -1093,7 +1098,7 @@ if((I)jt&3)SEGFAULT;
 #if MEMAUDIT&17
 #endif
 #endif
- if(FHRHBINISPOOL(blockx)){   // allocated by malloc
+ if(FHRHBINISPOOL(blockx)){   // allocated from subpool
   allocsize = FHRHPOOLBINSIZE(blockx);
 #if MEMAUDIT&4
   DO((allocsize>>LGSZI), if(i!=6)((I*)w)[i] = (I)0xdeadbeefdeadbeefLL;);   // wipe the block clean before we free it - but not the reserved area
@@ -1104,20 +1109,21 @@ if((I)jt&3)SEGFAULT;
   if(unlikely(0 > (mfreeb-=allocsize)))jt->uflags.us.uq.uq_c.spfreeneeded=1;  // Indicate we have one more free buffer;
    // if this kicks the list into garbage-collection mode, indicate that
   jt->mfree[blockx].ballo=mfreeb;
- }else{                // buffer allocated from subpool.
+ }else{                // buffer allocated from malloc
   mfreeb = jt->mfreegenallo;
   allocsize = FHRHSYSSIZE(hrh);
 #if MEMAUDIT&4
   DO((allocsize>>LGSZI), if(i!=6)((I*)w)[i] = (I)0xdeadbeefdeadbeefLL;);   // wipe the block clean before we free it - but not the reserved area
 #endif
 #if ALIGNTOCACHE
+  allocsize+=TAILPAD+CACHELINESIZE;  // the actual allocation had a tail pad and boundary
   FREECHK(((I**)w)[-1]);  // point to initial allocation and free it
-  jt->malloctotal-=allocsize+CACHELINESIZE;
 #else
-  FREECHK(w);  // point to initial allocation and free it
-  jt->malloctotal-=allocsize;
+  allocsize+=TAILPAD;  // the actual allocation had a tail pad
+  FREECHK(w);  // free the block
 #endif
-  jt->mfreegenallo = mfreeb-allocsize;
+  jt->malloctotal-=allocsize;
+  jt->mfreegenallo = mfreeb-allocsize;  // account for all the bytes returned to the OS
  }
  if(unlikely(mfreeb&MFREEBCOUNTING)){jt->bytes -= allocsize;}  // keep track of total allocation only if asked to
 }

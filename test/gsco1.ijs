@@ -27,6 +27,7 @@ q=: ":&.>?100$1e9
 d=:p=:s=: 911
 b0=: 911
 b1=: 911
+IGNOREIFFVI 1  NB. allow garbage collection to run
 s0=: 7!:3 ''
 s1=: 7!:3 ''
 
@@ -56,10 +57,11 @@ t -: 5 s: s
 0 s: 11
 
 d=:p=:s=: 911
+IGNOREIFFVI 1  NB. allow garbage collection to run
 s1=: 7!:3 ''
 b1=: 7!:0 ''
 
-b0 < 512 + b1  NB. uncertainty from caching of !:
+(b0 + 2000) > b1
 NB. IF64 +. s0 -: s1
 
 0 s: 11

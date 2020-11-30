@@ -27,6 +27,7 @@ b1=: 911
 s0=: 7!:3 ''
 s1=: 7!:3 ''
 
+IGNOREIFFVI 1  NB. allow garbage collection to run
 s0=: 7!:3 ''
 b0=: 7!:0 ''
 
@@ -51,10 +52,11 @@ t -: 5 s: s
 0 s: 11
  
 d=:p=:s=: 911
+IGNOREIFFVI 1  NB. allow garbage collection to run
 s1=: 7!:3 ''
 b1=: 7!:0 ''
 
-b0 -: b1
+(b0 + 2000) > b1
 NB. IF64 +. s0 -: s1
 
 0 s: 11

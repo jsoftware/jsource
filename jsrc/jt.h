@@ -27,11 +27,13 @@ windows the global data that needs scrutiny is in the 0003: section.
 
 
 typedef struct JSTstruct {
-// $=must be a per-thread variable
+// shared area
 // The first 2 cache lines is the hottest real estate in J, because they can be referenced with
 // single-byte displacement.  Put your heaviest-used items here
  C*   adbreak;			/* must be first! ad mapped shared file break flag */
  C*   adbreakr;         // read location: same as adbreak, except that when we are ignoring interrupts it points to 0
+
+// per-thread area
 // things needed by verb execution
  A*   tnextpushp;       // pointer to empty slot in allocated-block stack.  When low bits are 00..00, pointer to previous block of pointers.  Chain in first block is 0
  I    shapesink[2];     // garbage area used as load/store targets of operations we don't want to branch around

@@ -127,8 +127,12 @@ static A jtsusp(J jt){A z;
 // obsolete  while(jt->dbsusact==SUSCONT){A  inp;
  while(1){A  inp;
   jt->jerr=0;
-  // if there is an immex latent expression (9!:27), execute it before prompting
-  if(jt->iepdo&&jt->iep){jt->iepdo=0; immex(jt->iep); tpop(old);}  // force typeout
+  if(jt->iepdo&&jt->iep){
+   // if there is an immex latent expression (9!:27), execute it before prompting
+   jt->iepdo=0; z=immex(jt->iep);  // force typeout
+   if(z&&AFLAG(z)&AFDEBUGRESULT)break;  // dbr * exits suspension, even dbr 1.  PFkeys may come through iep
+   tpop(old);  // if we don't need the result for the caller here, free up the space
+  }
   // Execute one sentence from the user
   if((inp=jgets("      "))==0){z=0; break;} z=immex(inp); // force prompt and typeout read and execute a line, but exit debug if error reading line
   // If the result came from a suspension-ending command, get out of suspension

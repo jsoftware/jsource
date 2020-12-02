@@ -946,6 +946,9 @@ auditmemchains();
 #if MEMAUDIT&15
 if((I)jt&3)SEGFAULT;
 #endif
+#if MEMHISTO
+ jt->memhisto[blockx+1]++;  // record the request, at its size
+#endif
  z=jt->mfree[-PMINL+1+blockx].pool;   // tentatively use head of free list as result - normal case, and even if blockx is out of bounds will not segfault
  if(likely(2>*jt->adbreakr)){  // this is JBREAK0, done this way so predicted fallthrough will be true
   A *pushp=jt->tnextpushp;  // start reads for tpush

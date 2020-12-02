@@ -383,7 +383,7 @@ A jtssingleton(J jt, A a,A w,A self,RANK2T awr,RANK2T ranks){A z;
 
  circleresult: ;
  D cirvals[3]={adv,wdv};  // put ops into memory
- I rc=cirDD(1,1,cirvals,cirvals+1,cirvals+2,jt);  // run the routine
+ I rc=cirDD(1,1,cirvals,cirvals+1,cirvals+2,jt); rc=rc<0?EWOVIP+EWOVIPMULII:rc;  // run the routine
  if(rc==EVOK){SSSTORE(cirvals[2],z,FL,D);}else{jsignal(rc); z=0;} R z;  // Don't change the input block if there is an error.  If there is, post it to the return area
 
 }

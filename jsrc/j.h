@@ -582,6 +582,8 @@ extern unsigned int __cdecl _clearfp (void);
 // set FINDNULLRET to trap when a routine returns 0 without having set an error message
 #define FINDNULLRET 0
 
+#define MEMHISTO 1  // set to create a histogram of memory requests, interrogated by 9!:54/9!:55
+
 
 #if BW==64
 #define ALTBYTES 0x00ff00ff00ff00ffLL

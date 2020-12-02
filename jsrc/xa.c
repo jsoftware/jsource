@@ -257,6 +257,20 @@ F1(jtunicodex78s){I k;
 }
 #endif
 
+#if MEMHISTO
+// 9!:54/55  read/set memory histogram
+F1(jtmemhistoq){
+ ASSERTMTV(w);
+ R vec(INT,sizeof(jt->memhisto)/sizeof(jt->memhisto)[0],jt->memhisto);
+}
+
+F1(jtmemhistos){I k;
+ ASSERTMTV(w); 
+ memset(jt->memhisto,0,sizeof(jt->memhisto));
+ R mtm;
+}
+#endif
+
 // 9!:56  undocumented
 // query/override cpu feature
 F1(jtcpufeature){

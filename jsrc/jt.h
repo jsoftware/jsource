@@ -70,13 +70,13 @@ typedef struct JSTstruct {
  I*   breakmh;          /* win break map handle                            */
  C    bx[11];               /* box drawing characters                          */
  A    cdarg;            /* table of 15!:0 parsed left arguments            */
- A    cdhash;           /* hash table of indices into cdarg                */
- A    cdhashl;          /* hash table of indices into cdarg                */
+ A    cdhash;           // hash table of cdstr strings into cdarg
+ A    cdhashl;          // hash table of cdstr strings into module index
  A    cdstr;            /* strings for cdarg                               */
  A    dbstops;          /* stops set by the user                           */
- A    dbtrap;           /* trap, execute on suspension                     */
  C*   capture;          /* capture output for python->J etc.               */
  A    evm;              /* event messages                                  */
+ A    dbtrap;           /* trap, execute on suspension                     */
  A    iep;              /* immediate execution phrase                      */
  A    xep;              /* exit execution phrase                           */
  C    locsize[2];       /* size indices for named and numbered locales     */
@@ -161,16 +161,15 @@ typedef struct JSTstruct {
  I    getlasterror;     /* DLL stuff                                       */
 // end cache line 5.
  void *dtoa;             /* use internally by dtoa.c           $             */
+ I    malloctotal;    // net total of malloc/free performed in m.c only
+ I    malloctotalhwmk;  // highest value since most recent 7!:1
  I    bytes;            /* bytes currently in use                          */
  I    bytesmax;         /* high-water mark of "bytes"                      */
- I    mulofloloc;       // index of the result at which II multiply overflow occurred  scaf  $
  C    fillv0[sizeof(Z)];/* default fill value     $                         */
  C*   fillv;            /* fill value     $                                 */
 // --- end cache line 6.  24 bytes carry over.  next cache line is junk; we don't expect to use these types much
 // 2 bytes here
 // --- end cache line 7
- I    malloctotal;    // net total of malloc/free performed in m.c only
- I    malloctotalhwmk;  // highest value since most recent 7!:1
 // --- end cache line 7/8
  I4   parsercalls;      /* # times parser was called     $                  */
  I4   nthreads;  // number of threads to use, or 0 if we haven't checked     $
@@ -224,6 +223,9 @@ typedef struct JSTstruct {
  C    rngw;             /* RNG: # bits in a random #                       */
  C    *etx;  // [1+NETX];      // display text for last error (+1 for trailing 0)  fits in main page
  LS   *callstack;   // [1+NFCALL]; // named fn calls: stack.  Usually only a little is used; the rest overflows onto a new DRAM page
+#if MEMHISTO
+I     memhisto[64];  // histogram of requested memory blocks (9!:54, 9!:55)
+#endif
 } JST;
 #if 0 // used only for direct locale numbering
  I*   numlocdelqh;      // head of deleted queue, waiting for realloc
@@ -232,6 +234,7 @@ typedef struct JSTstruct {
  I*   numloctbl;         // pointer to data area for locale-number to locale translation
  UI4  numlocsize;       // AN(jt->stnum)
 #endif
+// obsolete  I    mulofloloc;       // index of the result at which II multiply overflow occurred  scaf  $
 // obsolete  D    cctdefault;        /* default complementary comparison tolerance set by user                    */
 // obsolete  C    outseq[3];		    /* EOL: "LF" "CR" "CRLF"                           */
 // obsolete I    redefined;        /* symbol table entry of redefined explicit defn  scaf */

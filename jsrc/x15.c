@@ -692,7 +692,7 @@ static void convertup(I*pi,I n,C t){I j=n;
 /*           table values are indices into cdarg, or -1                 */
 // AM(cdhash) is # entries filled, always equal to AM(cdarg)
 /* cdhashl - hash table for libraries (modules)                         */
-// AM(cdhash) is # entries filled, max (NLIBS)
+// AM(cdhashl) is # entries filled, max (NLIBS)
 
 // allocate hashtable, fill with -1
 static A jtcdgahash(J jt,I n){A z;I hn;

@@ -166,7 +166,8 @@ jt->asgzomblevel = 1;  // allow premature change to zombie names, but not data-d
 jt->assert = 1;
 // obsolete  RZ(jt->bxa=cstr("+++++++++|-")); jt->bx=CAV(jt->bxa);
  MC(jt->bx,"+++++++++|-",sizeof(jt->bx));
- jt->cctdefault=jt->cct= 1.0-FUZZ;
+// obsolete  jt->cctdefault=
+ jt->cct= 1.0-FUZZ;
  jt->disp[0]=1; jt->disp[1]=5;
  jt->fcalln=NFCALL;
 #if USECSTACK

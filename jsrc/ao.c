@@ -182,17 +182,21 @@ static DF2(jtkeysp){PROLOG(0008);A b,by,e,q,x,y,z;I j,k,n,*u,*v;P*p;
  EPILOG(z);
 }
 
+static DF2(jtkey){F2PREFIP;R jtkeyct(jtinplace,a,w,self,jt->cct);}
+
 // a u/. w.  Self-classify a, then rearrange w and call cut.  Includes special cases for f//.
-static DF2(jtkey){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
+// toler is the ct to use for the classification
+A jtkeyct(J jt,A a,A w,A self,D toler){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
  ARGCHK2(a,w);
  if(unlikely((SPARSE&AT(a))!=0))R keysp(a,w,self);  // if sparse, go handle it
  {I t2; ASSERT(SETIC(a,nitems)==SETIC(w,t2),EVLENGTH);}  // verify agreement.  nitems is # items of a
- RZ(ai=indexofsub(IFORKEY,a,a));   // self-classify the input using ct set before this verb
+ PUSHCCT(toler);  // now that partitioning is over, reset ct for the executions of u
+ RZ(ai=indexofsub(IFORKEY,a,a));   // self-classify the input using ct
+ POPCCT
  // indexofsub has 2 returns: most of the time, it returns a normal i.-family result, but with each slot holding the index PLUS the number of values
  // mapped to that index.  If processing determines that small-range lookup would be best, indexofsub doesn't do it, but instead returns a block giving the size, min value, and range.
  // We then allocate and run the small-range table and use it to rearrange the input.  The small-range variant is signaled by the LSB of the result
  // of indexofsub being set.
- PUSHCCT(jt->cctdefault);  // now that partitioning is over, reset ct for the executions of u
  I cellatoms; PROD(cellatoms,AR(w)-1,AS(w)+1);   // length of a cell of w, in atoms
  // if this is a supported f//., handle it without calling cut.  We can take it if the flag says f//. and the rank is >1 or the type is one we can do cheaply: B01/INT/FL 
  if(unlikely(SZI==SZD&&FAV(self)->flag&VFKEYSLASHT)){  // f//. where f is + >. <. mean   Implementation requires SZI==SZD
@@ -491,7 +495,7 @@ static DF2(jtkey){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
  z=jtcut2((J)(intptr_t)((I)jt+((FAV(self)->flag&VGERL)?0:(FAV(FAV(self)->fgh[0])->flag>>(VJTFLGOK1X-JTINPLACEWX))&JTINPLACEW)),frets,wperm,self);
  // If the operation turned off pristinity of wperm, do the same for w.  Remember that pristinity only matters if the block is inplaceable
  AFLAG(w)&=AFLAG(wperm)|~AFPRISTINE;
- POPCCT
+// obsolete POPCCT
  EPILOG(z);
 }    /* a f/. w for dense x & w */
 
@@ -523,7 +527,7 @@ DF2(jtkeybox){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
  // mapped to that index.  If processing determines that small-range lookup would be best, indexofsub doesn't do it, but instead returns a block giving the size, min value, and range.
  // We then allocate and run the small-range table and use it to rearrange the input.  The small-range variant is signaled by the LSB of the result
  // of indexofsub being set.
- PUSHCCT(jt->cctdefault);  // now that partitioning is over, reset ct for the executions of u
+// obsolete  PUSHCCT(jt->cctdefault);  // now that partitioning is over, reset ct for the executions of u
 
  A *pushxsave;  // place to save the tpop stack when we hijack it
   A y;  // name under which boxes are allocated
@@ -633,7 +637,7 @@ DF2(jtkeybox){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
  // Set PRISTINE if w now has DIRECT type (note that w has been switched to INT for (<./ i.@#))
  AFLAG(z)=(-(AT(w)&DIRECT) & AFPRISTINE);  // maybe pristine
  ASSERT(y!=0,EVWSFULL);  // if we broke out on allocation failure, fail.
- POPCCT
+// obsolete  POPCCT
  EPILOG(z);
 }    // a <./ w
 

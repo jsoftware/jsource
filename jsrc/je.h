@@ -129,6 +129,7 @@ extern F1(jtgemmtune);
 extern F1(jtgh15);
 extern F1(jtgrade1);
 extern F1(jtgr1);
+extern A jtkeyct(J,A,A,A,D);
 extern DF2(jtkeybox);
 extern DF2(jtkeyheadtally);
 extern F1(jthalve);

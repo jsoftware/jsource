@@ -108,7 +108,7 @@ static A jtsusp(J jt){A z;
  RZ(deba(DCJUNK,0,0,0)); // create spacer frame
 // obsolete  jt->dbsusact=SUSCONT;
  A *old=jt->tnextpushp;  // fence must be after we have allocated our stack block
- // If the failure happened while a script was being loaded, we have to sieze jgets so we can prompt the user.  We will restore on exit
+ // If the failure happened while a script was being loaded, we have to take jgets() out of script mode so we can prompt the user.  We will restore on exit
  DC d; for(d=jt->sitop; d&&d->dctype!=DCSCRIPT; d=d->dclnk);  // d-> last SCRIPT type, if any
  if(d&&!(jt->dbuser&0x80))d->dcss=0;  // in super-debug mode (dbr 16b81), we continue reading suspension lines from the script; otherwise turn it off
 // obsolete t=jt->tostdout;
@@ -122,14 +122,14 @@ static A jtsusp(J jt){A z;
  jt->fcalln=MIN(NFCALL,jt->fcalln+NFCALL/10);
 // obsolete  if (AT(jt->dbssexec)&LIT){RESETERR; immex(jt->dbssexec); tpop(old);}  // force typeout
  // if there is a 13!:15 sentence (latent expression) to execute before going into debug, do it
- if(jt->dbtrap){RESETERR; immex(jt->dbtrap  ); tpop(old);}  // force typeout
+ if(jt->dbtrap){RESETERR; immex(jt->dbtrap); tpop(old);}  // force typeout
  // Loop executing the user's sentences until one returns a value that is flagged as 'end of suspension'
 // obsolete  while(jt->dbsusact==SUSCONT){A  inp;
  while(1){A  inp;
   jt->jerr=0;
   if(jt->iepdo&&jt->iep){
    // if there is an immex latent expression (9!:27), execute it before prompting
-   jt->iepdo=0; z=immex(jt->iep);  // force typeout
+   jt->iepdo=0; z=immex(jt->iep);  // reset requesy flag; run sentence & force typeout
    if(z&&AFLAG(z)&AFDEBUGRESULT)break;  // dbr * exits suspension, even dbr 1.  PFkeys may come through iep
    tpop(old);  // if we don't need the result for the caller here, free up the space
   }

@@ -582,7 +582,7 @@ extern unsigned int __cdecl _clearfp (void);
 // set FINDNULLRET to trap when a routine returns 0 without having set an error message
 #define FINDNULLRET 0
 
-#define MEMHISTO 1  // set to create a histogram of memory requests, interrogated by 9!:54/9!:55
+#define MEMHISTO 1       // scaf  // set to create a histogram of memory requests, interrogated by 9!:54/9!:55
 
 
 #if BW==64
@@ -731,6 +731,11 @@ extern unsigned int __cdecl _clearfp (void);
 // get # of things of size s, rank r to allocate so as to have an odd number of them at least n, after discarding w items of waste.  Try to fill up a full buffer 
 #define FULLHASHSIZE(n,s,r,w,z) {UI4 zzz;  CTLZI((((n)|1)+(w))*(s) + AKXR(r) - 1,zzz); z = ((((I)1<<(zzz+1)) - AKXR(r)) / (s) - 1) | (1&~(w)); }
 // Memory-allocation macros
+#if MEMHISTO   // create histogram of allocation calls
+#define HISTOCALL memhashadd(__LINE__,__FILE__);
+#else
+#define HISTOCALL
+#endif
 // Size-of-block calculations.  VSZ when size is constant or variable.  Byte counts are (total length including header)-1
 // Because the Boolean dyads read beyond the end of the byte area (up to 1 extra word), we add one SZI-1 for islast (which includes B01), rather than adding 1
 #define ALLOBYTESVSZ(atoms,rank,size,islast,isname)      ( ((((rank)|(!SY_64))*SZI  + ((islast)? (isname)?(NORMAH*SZI+sizeof(NM)+SZI-1-1):(NORMAH*SZI+SZI-1-1) : (NORMAH*SZI-1)) + (atoms)*(size)))  )  // # bytes to allocate allowing 1 I for string pad - include mem hdr - minus 1
@@ -756,14 +761,15 @@ extern unsigned int __cdecl _clearfp (void);
 #define GACOPYSHAPE(name,type,atoms,rank,shaape)  {I *_s=(I*)(shaape); I *_d=AS(name); *_d=*_s; I _r=1-(rank); do{_s+=SGNTO0(_r); _d+=SGNTO0(_r); *_d=*_s;}while(++_r<0);}
 #endif
 #define GACOPY1(name,type,atoms,rank,shaape) {I *_d=AS(name); *_d=1; I _r=1-(rank); do{_d+=SGNTO0(_r); *_d=1;}while(++_r<0);} // copy all 1s to shape
-#define GA(v,t,n,r,s)   RZ(v=ga(t,(I)(n),(I)(r),(I*)(s)))
+#define GA(v,t,n,r,s)   {HISTOCALL RZ(v=ga(t,(I)(n),(I)(r),(I*)(s)))}
 // GAE executes the given expression when there is an error
-#define GAE(v,t,n,r,s,erraction)   if(unlikely(!(v=ga(t,(I)(n),(I)(r),(I*)(s)))))erraction;
+#define GAE(v,t,n,r,s,erraction)   {HISTOCALL if(unlikely(!(v=ga(t,(I)(n),(I)(r),(I*)(s)))))erraction;}
 // When the type and all rank/shape are known at compile time, use GAT.  The compiler precalculates almost everything
 // For best results declare name as: AD* RESTRICT name;  The number of bytes, rounded up with overhead added, must not exceed 2^(PMINL+4)
 #define GATS(name,type,atoms,rank,shaape,size,shapecopier,erraction) \
 { ASSERT(!((rank)&~RMAX),EVLIMIT); \
  I bytes = ALLOBYTES(atoms,rank,size,(type)&LAST0,(type)&NAME); \
+ HISTOCALL \
  name = jtgaf(jt, ALLOBLOCK(bytes)); \
  I akx=AKXR(rank);   \
  if(likely(name!=0)){   \
@@ -785,6 +791,7 @@ extern unsigned int __cdecl _clearfp (void);
 { I bytes = ALLOBYTES(atoms,rank,size,(type)&LAST0,(type)&NAME); \
  if(SY_64){ASSERT(!((((unsigned long long)(atoms))&~TOOMANYATOMS)+((rank)&~RMAX)),EVLIMIT)} \
  else{ASSERT(((I)bytes>(I)(atoms)&&(I)(atoms)>=(I)0)&&!((rank)&~RMAX),EVLIMIT)} \
+ HISTOCALL \
  name = jtgafv(jt, bytes);   \
  I akx=AKXR(rank);   \
  if(likely(name!=0)){   \

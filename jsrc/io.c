@@ -628,12 +628,13 @@ F1(jtbreakfnq){
  R cstr(jt->breakfn);
 }
 
+// w is a filename; use it as the breakfile
 F1(jtbreakfns){A z;I *fh,*mh=0; void* ad;
  ASSERT(1>=AR(w),EVRANK);
  ASSERT(!AN(w)||AT(w)&LIT,EVDOMAIN);
  ASSERT(AN(w)<NPATH,EVDOMAIN);
- w=str0(w);
- if(!strcmp(jt->breakfn,CAV(w))) R mtm;
+ w=str0(w);   // add NUL termination
+ if(!strcmp(jt->breakfn,CAV(w))) R mtm;   // return fast if no name change
  breakclose(jt);
 #if SYS&SYS_UNIX
  fh=(I*)(I)open(CAV(w),O_RDWR);

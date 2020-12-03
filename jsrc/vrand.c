@@ -5,7 +5,7 @@
 
 #include "j.h"
 
-#define NRNG        5     /* # of available RNGs (excluding 0)             */
+#define NRNG        5     /* # of available RNGs+1 (excluding 0)             */
 #define SMI         0     /* sum of all RNGs                               */
 #define GBI         1     /* gb_flip, Knuth 1994                           */
 #define MTI         2     /* Mersenne Twister, Matsumoto & Nishimura, 2002 */

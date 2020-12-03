@@ -254,7 +254,7 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
  while(1){CW *ci;
   // i holds the control-word number of the current control word
   // Check for debug and other modes
-  if(jt->cxspecials){  // fast check to see if we have overhead functions to perform
+  if(unlikely(jt->cxspecials!=0)){  // fast check to see if we have overhead functions to perform
    if(!(gsfctdl&(16+1))&&jt->uflags.us.cx.cx_c.db){
     // If we haven't done so already, allocate an area to use for the SI entries for sentences executed here, if needed.  We need a new area only if we are debugging.  Don't do it if locked.
     // We have to have 1 debug frame to hold parse-error information in, but it is allocated earlier if debug is off

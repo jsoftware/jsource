@@ -34,7 +34,7 @@ CREBLOCKATOMI(mark,MARK,0)  // parser mark, also used generally as a special val
 CREBLOCKATOMI(imax,INT,IMAX)  // max positive value
 CREBLOCKATOMI(chrcolon,LIT,':')  // the one character
 CREBLOCKATOMI(chrspace,LIT,' ')  // the one character
-C   breakdata=0;
+C   breakdata=0;   // always 0: used 
 D   inf=INFINITY;                /* _                                    */
 D   infm=-INFINITY;               /* __                                   */
 #define CREBLOCKVEC1I(name,t,v) I B##name[9]={(7+1)*SZI,(t)&TRAVERSIBLE,0,(t),ACPERMANENT,1,1,1,(v)};
@@ -85,6 +85,7 @@ const double dzero=0.0;   // used by gemm
 const dcomplex zone={1.0,0.0};  // used gy gemm
 const dcomplex zzero={0.0,0.0};
 I oneone[2]={1,1};  // used by PROD
+
 // global const end 
 
 

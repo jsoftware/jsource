@@ -32,6 +32,7 @@ typedef struct JSTstruct {
 // single-byte displacement.  Put your heaviest-used items here
  C*   adbreak;			/* must be first! ad mapped shared file break flag */
  C*   adbreakr;         // read location: same as adbreak, except that when we are ignoring interrupts it points to 0
+ void *heap;            // heap handle for large allocations
  A    stloc;            /* locales symbol table                            */
  I    mmax;             /* space allocation limit                          */
  UI   qtstackinit;      // jqt front-end C stack pointer    $
@@ -47,6 +48,9 @@ typedef struct JSTstruct {
  UC   seclev;           /* security level                                  */
  UC   disp[7];          /* # different verb displays                       */
  UC   outeol;           /* output: EOL sequence code                       */
+#if MEMAUDIT & 2
+ C    audittstackdisabled;   // set to 1 to disable auditing
+#endif
  C    recurstate;       // state of recursions through JDo
 #define RECSTATEIDLE    0  // JE is inactive, waiting for work
 #define RECSTATEBUSY    1  // JE is running a call from JDo
@@ -99,6 +103,7 @@ typedef struct JSTstruct {
  I    transposeflag;    /* com flag for transposed arrays                  */
  D    tssbase;          /* initial 6!:0''                            */
  C    *breakfn;  // [NPATH];   /* break file name                                 */
+ A    pma;              /* perf. monitor: data area                        */
  A    p4792;            // pointer to p: i. 4792, filled in on first use
 
 // per-thread area
@@ -142,11 +147,10 @@ typedef struct JSTstruct {
  A    fill;             // fill     stuck here as filler
 // things needed for memory allocation
  I    mfreegenallo;        // Amount allocated through malloc, biased
- void *heap;            // heap handle for large allocations
  struct {
   I ballo;              // negative number of bytes in free pool, but with zero-point biased so that - means needs garbage collection 
   A pool;             // pointer to first free block
- }    mfree[-PMINL+PLIML+1];      // pool info.  Use struct to keep cache footprint small
+ } mfree[-PMINL+PLIML+1];      // pool info.  Use struct to keep cache footprint small
 // --- end of cache line 3. 1 words carries over
 // things needed by executing explicit defs
  A    curname;          // current name, an A block containing an NM   $
@@ -199,29 +203,28 @@ typedef struct JSTstruct {
 #if !(C_CRC32C && SY_64)
  I    min;              /* the r result from irange                        */
 #endif
- A    pma;              /* perf. monitor: data area                        */
  C    pos[2];           /* boxed output x-y positioning                    */
  C    pp[8];            // print precision (sprintf field for numeric output)
  A    xmod;             /* extended integer: the m in m&|@f        $        */  
  C    xmode;            /* extended integer operating mode         $        */
-#if MEMAUDIT & 2
- I    audittstackdisabled;   // set to 1 to disable auditing
-#endif
- UF   rngF[5];          /* RNG: function to get the next random number     */
- UI   rngM[5];          /* RNG: moduli                                     */
+
+// should align this to cacheline bdy
+ UF   rngF[5];          /* RNG: function to get the next random number  scaf    */
+ I    rngS[5];          /* RNG: seeds                                      */
+ UI*  rngV[5];          /* RNG: state vectors                              */
+ UI4  rngM[5];          /* RNG: moduli                                     */
+ S    rngI[5];          /* RNG: indices                                    */
 
  UI*  rngv;             /* RNG: rngV[rng]                                  */
- C    rng;              /* RNG: generator selector                         */
  UI*  rngfxsv;          /* RNG: rngv for fixed seed (?.)                   */
- S    rngI[5];          /* RNG: indices                                    */
- S    rngI0[5];         /* RNG: indices for RNG0                           */
- S    rngi;             /* RNG: current index                              */
- I    rngS[5];          /* RNG: seeds                                      */
  A    rngseed;          /* RNG: array seed                                 */
- UI*  rngV[5];          /* RNG: state vectors                              */
- UI*  rngV0[5];         /* RNG: state vectors for RNG0                     */
+ S    rngi;             // RNG: current index into state array
  C    rngw;             /* RNG: # bits in a random #                       */
- C    *etx;  // [1+NETX];      // display text for last error (+1 for trailing 0)  fits in main page
+ C    rng;              /* RNG: generator selector                         */
+ S    rngI0[5];         /* RNG: indices for RNG0                           */
+ UI*  rngV0[5];         /* RNG: state vectors for RNG0                     */
+
+ C    *etx;  // [1+NETX];      // display text for last error (+1 for trailing 0)
  LS   *callstack;   // [1+NFCALL]; // named fn calls: stack.  Usually only a little is used; the rest overflows onto a new DRAM page
 #if MEMHISTO
 I     memhisto[64];  // histogram of requested memory blocks (9!:54, 9!:55)

@@ -80,8 +80,35 @@ I allosize(A y) {
  R AM(y);
 }
 
+#if MEMHISTO
+static I histarea[16384][2] = {0};  // name, frequency
+void memhashadd(I lineno, C *string){
+ C string8[8]="        ";  // padded string
+ string+=strlen(string);  // go to end
+ while(string[-1]!='/' && string[-1]!='\\')--string;  // back up to filename
+ I nwrit=snprintf(string8,8,"%lld",lineno);
+ memcpy(string8+nwrit,string,MIN(8-nwrit,strlen(string)));
+ I stringi=*(I*)&string8;  // the string as int
+ UI hash=16383&hic(sizeof(string8),string8);
+ while(1){if(histarea[hash][0]==stringi)break; if(histarea[hash][0]==0){histarea[hash][0]=stringi; break;} if(--hash<0)hash=16383;}  // find hash slot
+ ++histarea[hash][1];  // increment count
+}
 
-// msize[k]=2^k, for sizes up to the size of an I.  Not used in this file any more
+// return histo area
+
+// process using   ;"1 (":@{. ; ' ' ; 3 (3!:4) {:)"1 (20) {. \:~ |."1 (_2) ]\ 9!:62''
+F1(jtmemhashq){
+ R vec(INT,sizeof(histarea)/sizeof(histarea)[0][0],histarea);
+}
+F1(jtmemhashs){
+ ASSERTMTV(w); 
+ memset(histarea,0,sizeof(histarea));
+ R mtm;
+}
+
+#endif
+
+// obsolete // msize[k]=2^k, for sizes up to the size of an I.  Not used in this file any more
 B jtmeminit(J jt){I k,m=MLEN;
  if(jt->tstackcurr==0){  // meminit gets called twice.  Alloc the block only once
   jt->tstackcurr=(A*)MALLOC(NTSTACK+NTSTACKBLOCK);  // save address of first allocation

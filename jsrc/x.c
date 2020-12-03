@@ -220,6 +220,8 @@ F2(jtforeign){I p,q;
 #ifdef MEMHISTO
   case XC(9,54):  R CDERIV(CIBEAM, jtmemhistoq, 0,            VASGSAFE,RMAX,RMAX,RMAX);
   case XC(9,55):  R CDERIV(CIBEAM, jtmemhistos, 0,            VFLAGNONE,RMAX,RMAX,RMAX);
+  case XC(9,62):  R CDERIV(CIBEAM, jtmemhashq, 0,            VASGSAFE,RMAX,RMAX,RMAX);
+  case XC(9,63):  R CDERIV(CIBEAM, jtmemhashs, 0,            VFLAGNONE,RMAX,RMAX,RMAX);
 #endif
   case XC(9,56):  R CDERIV(CIBEAM, jtcpufeature, jtcpufeature2, VASGSAFE,RMAX,RMAX,RMAX);
   case XC(9,57):  R CDERIV(CIBEAM, jtaudittdisab, 0,            VFLAGNONE,RMAX,RMAX,RMAX);

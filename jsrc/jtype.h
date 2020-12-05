@@ -804,7 +804,7 @@ typedef struct {AF valencefns[2];A fgh[3];union { D lD; void *lvp[2]; I lI; I4 l
 #define VFKEYSLASHF      (((I)3)<<VFKEYSLASHFX)
 
 
-// bits 8 and above are available for all functions:
+// bits 8 and above are available for all verbs:
 #define VGERLX          8
 #define VGERL           (((I)1)<<VGERLX)          /* gerund left  argument           */
 #define VGERR           (I)512          /* gerund right argument           */

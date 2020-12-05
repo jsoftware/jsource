@@ -58,7 +58,7 @@ DF2(jtunquote){A z;
   ASSERT(fs!=0,EVVALUE); // make sure the name's value is given also
   ASSERT(TYPESEQ(AT(self),AT(fs)),EVDOMAIN);   // make sure its part of speech has not changed since the name was parsed
   // The pseudo-named function was created under debug mode.  If the same sequence had been parsed outside of debug, it would have been anonymous.  This has
-  // implications: anonymous verbs do not push/pop the locale stack.  If PMCTRBSTKREQD is set, ALL functions will push the stack here.  That is bad, because
+  // implications: anonymous verbs do not push/pop the locale stack.  If bstkreqd is set, ALL functions will push the stack here.  That is bad, because
   // it means that a function that modifies the current locale behaves differently depending on whether debug is on or not.  We use stabent=0 to indicate that
   // the forced-push should be omitted.
   stabent=0;  // no symbol table for pseudo-names, since they aren't looked up
@@ -83,8 +83,9 @@ DF2(jtunquote){A z;
  // ************** no errors till the stack has been popped
  w=dyadex?w:(A)fs;  // set up the bivalent argument with the new self, since fs may have been changed
 
- // Execute the name.  First check 4 flags at once to see if anything special is afoot
- if(likely(!(jt->uflags.ui4|(v->flag&VLOCK)))) {
+ // Execute the name.  First check 4 flags at once to see if anything special is afoot: debug, pm, bstk, garbage collection
+// obsolete  if(likely(!(jt->uflags.ui4|(v->flag&VLOCK)))) {   // scaf don't test VLOCK
+ if(likely(!(jt->uflags.ui4))) {
   // No special processing. Just run the entity
   // We have to raise the usecount, in case the name is deleted while running.  But that will be very rare.  Plus, we know that the executable type is recursive and non-inplaceable.
   // So, all we have to do is increment the usecount.  If it's a PERMANENT symbol no harm will be done, since we decrement below
@@ -98,18 +99,20 @@ DF2(jtunquote){A z;
   if(unlikely(--AC(fs)<=0)){++AC(fs); fa(fs);}
  } else {
   // Extra processing is required.  Check each option individually
-  if(PMCTRBPMON&jt->uflags.us.uq.uq_c.pmctrbstk)pmrecord(thisname,jt->global?LOCNAME(jt->global):0,-1L,dyadex?VAL2:VAL1);  // Record the call to the name, if perf monitoring on
+  if(jt->uflags.us.cx.cx_c.pmctr)pmrecord(thisname,jt->global?LOCNAME(jt->global):0,-1L,dyadex?VAL2:VAL1);  // Record the call to the name, if perf monitoring on
   // If we are required to insert a marker for each call, do so (if it hasn't been done already).  But not for pseudo-named functions
-  if(stabent!=0 && jt->uflags.us.uq.uq_c.pmctrbstk&PMCTRBSTKREQD && callstackx==jt->callstacknext){pushcallstack1d(CALLSTACKPOPLOCALE,jt->global);}  //  If cocurrent is about, make every call visible
-  if(jt->uflags.us.cx.cx_c.db&&!(jt->uflags.us.cx.cx_c.glock||VLOCK&v->flag)&&jt->recurstate<RECSTATEPROMPT){  // The verb is locked if it is marked as locked, or if the script is locked; if recursive JDo, can't enter debug suspension so ignore debug
+  if(stabent!=0 && jt->uflags.us.uq.uq_c.bstkreqd && callstackx==jt->callstacknext){pushcallstack1d(CALLSTACKPOPLOCALE,jt->global);}  //  If cocurrent is about, make every call visible
+  if(jt->uflags.us.cx.cx_c.db&&!(jt->glock||VLOCK&v->flag)&&jt->recurstate<RECSTATEPROMPT){  // The verb is locked if it is marked as locked, or if the script is locked; if recursive JDo, can't enter debug suspension so ignore debug
 // obsolete    jt->cursymb=stabent;
    z=dbunquote(dyadex?a:0,dyadex?w:a,fs,stabent);  // if debugging, go do that.  save last sym lookup as debug parm
   }else{
-   ra(fs);  // should assert recursive usecount
+// obsolete    ra(fs);  // should assert recursive usecount
+   ++AC(fs);  // protect the entity
    A s=jt->sf; jt->sf=fs; z=v->valencefns[dyadex]((J)(((REPSGN(SGNIF(v->flag,dyadex+VJTFLGOK1X)))|~JTFLAGMSK)&(I)jtinplace),a,w,fs); jt->sf=s;
-   fa(fs); 
+// obsolete    fa(fs); 
+   if(unlikely(--AC(fs)<=0)){++AC(fs); fa(fs);}
   }
-  if(PMCTRBPMON&jt->uflags.us.uq.uq_c.pmctrbstk)pmrecord(thisname,jt->global?LOCNAME(jt->global):0,-2L,dyadex?VAL2:VAL1);  // record the return from call
+  if(jt->uflags.us.cx.cx_c.pmctr)pmrecord(thisname,jt->global?LOCNAME(jt->global):0,-2L,dyadex?VAL2:VAL1);  // record the return from call
   if(jt->uflags.us.uq.uq_c.spfreeneeded)spfree();   // if garbage collection required, do it
  }
 #if !USECSTACK
@@ -139,7 +142,7 @@ DF2(jtunquote){A z;
     if(jt->callstack[i].type&(CALLSTACKPOPFROM|CALLSTACKPOPLOCALE|CALLSTACKPOPLOCALEFIRST)){
      earlyloc=jt->callstack[i].value;  // remember earliest POP[FROM]
      // When we remove the earliest POPFROM, we can go back to processing names without requiring stacking the return locale
-     if(jt->callstack[i].type&CALLSTACKPOPLOCALEFIRST){jt->uflags.us.uq.uq_c.pmctrbstk &= ~PMCTRBSTKREQD;}
+     if(jt->callstack[i].type&CALLSTACKPOPLOCALEFIRST){jt->uflags.us.uq.uq_c.bstkreqd = 0;}
     }else if(jt->callstack[i].type&CALLSTACKPUSHLOCALSYMS)SYMSETLOCAL((A)jt->callstack[i].value);  // restore locsyms if we stacked it, and restore possibly-changed global value therein
    }while(i!=callstackx);
    // if we encountered u./v., we have now restored the previous local symbols so that it is OK to restore the globals into it
@@ -159,14 +162,14 @@ DF2(jtunquote){A z;
    // There is no way to detect this, because names that don't change locales don't leave a trace, and there is no guarantee that the function-call stack will
    // be at 0 when the last name returns, because the name might have been called from the middle of a tacit expression that already had a function-call depth when the
    // name was called.
-   // So, we reset the name-stack pointer whenever we call from console level (jt->uflags.us.uq.uq_c.pmctrbstk too)
+   // So, we reset the name-stack pointer whenever we call from console level (jt->uflags.us.uq.uq_c.bstkreqd too)
 
    // If there is a POPFROM, we have to make sure it is undone when the caller returns.  If the caller has a POP already, we can leave it alone; otherwise we have to add one.
-   // To make sure we don't overflow the stack because of a sequence of cocurrents, we use jt->uflags.us.uq.uq_c.pmctrbstk to indicate that a POPFROM is on the stack and in that case
-   // we ensure that there is a POP for every name (but don't create new ones for every cocurrent).  Thus, if jt->uflags.us.uq.uq_c.pmctrbstk is not set, we set it for future calls, and put a POPFIRST onto the caller's stack.
-   // When that is found, jt->uflags.us.uq.uq_c.pmctrbstk will be reset
+   // To make sure we don't overflow the stack because of a sequence of cocurrents, we use jt->uflags.us.uq.uq_c.bstkreqd to indicate that a POPFROM is on the stack and in that case
+   // we ensure that there is a POP for every name (but don't create new ones for every cocurrent).  Thus, if jt->uflags.us.cx.cx_c.pmctrbstk is not set, we set it for future calls, and put a POPFIRST onto the caller's stack.
+   // When that is found, jt->uflags.us.uq.uq_c.bstkreqd will be reset
    if(fromfound){
-    if(!(jt->uflags.us.uq.uq_c.pmctrbstk&PMCTRBSTKREQD)){pushcallstack1(CALLSTACKPOPLOCALEFIRST,earlyloc); jt->uflags.us.uq.uq_c.pmctrbstk |= PMCTRBSTKREQD;}
+    if(!(jt->uflags.us.uq.uq_c.bstkreqd)){pushcallstack1(CALLSTACKPOPLOCALEFIRST,earlyloc); jt->uflags.us.uq.uq_c.bstkreqd=1;}
    }
    // If the current locale was deletable, push an entry to that effect in the caller's stack.  It will be deleted when it becomes un-current (if ever: if
    // the locale is still in use back to console level, it will not be deleted.  Invariant: if a locale is marked for destruction, it appears

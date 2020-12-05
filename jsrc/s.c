@@ -434,20 +434,20 @@ F1(jtsymbrdlocknovalerr){A y;L *v;
  }
  // no error.  Return the value unless locked function
  y=v->val;
- R FUNC&AT(y)&&(jt->uflags.us.cx.cx_c.glock||VLOCK&FAV(y)->flag)?nameref(w,jt->locsyms):y;
+ R FUNC&AT(y)&&(jt->glock||VLOCK&FAV(y)->flag)?nameref(w,jt->locsyms):y;
 }
 
 // Same, but value error if name not defined
 F1(jtsymbrdlock){A y;
  RZ(y=symbrd(w));
- R FUNC&AT(y)&&(jt->uflags.us.cx.cx_c.glock||VLOCK&FAV(y)->flag)?nameref(w,jt->locsyms):y;
+ R FUNC&AT(y)&&(jt->glock||VLOCK&FAV(y)->flag)?nameref(w,jt->locsyms):y;
 }
 
 
 // w is a value, v is the symbol-table entry about to be assigned
 // Called only in debug mode.  If we redefine an executing name, it would invalidate
 // the debug stack.  Fail if any redefinition would change part of speech or the id of the executing function.
-// If the currently-executing definition is reloaded, set cxspecials to note that fact and mark the stack entry
+// If the currently-executing definition is reloaded, mark the stack entry: xdefn will pick it up when debug is on
 // as modified - xdefn will try to hot-swap to the new definition between lines
 // If the modified name is executing higher on the stack, fail
 // returns nonzero for OK to allow the assignment to proceed
@@ -463,7 +463,8 @@ B jtredef(J jt,A w,L*v){A f;DC c,d;
   // If we are redefining the executing explicit definition during debug, remember that.
   // debug will switch over to the new definition before the next line is executed.
   // Reassignment outside of debug continues executing the old definition
-  if(CCOLON==FAV(w)->id){/* obsolete jt->redefined=(I)v; */d->dcredef=1; jt->cxspecials=1;}
+  if(CCOLON==FAV(w)->id){d->dcredef=1;}
+// obsolete jt->redefined=(I)v;  jt->cxspecials=1;
   // Erase any stack entries after the redefined call
   c=jt->sitop; while(c&&DCCALL!=c->dctype){c->dctype=DCJUNK; c=c->dclnk;}
  }
@@ -496,13 +497,13 @@ L* jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;L*e;
   CLEARZOMBIE   // clear until next use.
  } else {A jtlocal=jt->locsyms;
   n=AN(a); NM *v=NAV(a); m=v->m;  // n is length of name, v points to string value of name, m is length of non-locale part of name
-  if(n==m)ASSERT(!(g==jt->global&&probelocal(a,jtlocal)),EVDOMAIN)  // if non-locative, give error if there is a local
+  if(likely(n==m))ASSERT(!(g==jt->global&&probelocal(a,jtlocal)),EVDOMAIN)  // if non-locative, give error if there is a local
     // symbol table, and we are assigning to the global symbol table, and the name is defined in the local table
   else{C*s=1+m+v->s; RZ(g=NMILOC&v->flag?locindirect(n-m-2,1+s,(UI4)v->bucketx):stfindcre(n-m-2,s,v->bucketx));}
     // locative: s is the length of name_.  Find the symbol table to use, creating one if none found
   // Now g has the symbol table to look in
   RZ(e=g==jtlocal?probeislocal(a) : probeis(a,g));   // set e to symbol-table slot to use
-  if(AT(w)&FUNC&&(FAV(w)->fgh[0])){if(FAV(w)->id==CCOLON)FAV(w)->flag|=VNAMED; if(jt->uflags.us.cx.cx_c.glock)FAV(w)->flag|=VLOCK;}
+  if(unlikely(AT(w)&FUNC))if(likely(FAV(w)->fgh[0]!=0)){if(FAV(w)->id==CCOLON)FAV(w)->flag|=VNAMED; if(jt->glock)FAV(w)->flag|=VLOCK;}
    // If the value is a function created by n : m, this becomes a named function; if running a locked function, this is locked too.
    // kludge  these flags are modified in the input area (w), which means they will be improperly set in the result of the
    // assignment (ex: (nm =: 3 : '...') y).  There seems to be no ill effect, because VNAMED isn't used much.

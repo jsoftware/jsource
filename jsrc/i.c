@@ -207,6 +207,8 @@ static C jtjinit3(J jt){S t;
  jt->etx=malloc(1+NETX);  // error-message buffer
  jt->callstack=(LS *)malloc(sizeof(LS)*(1+NFCALL));  // function-call stack
  jt->breakfn=malloc(NPATH); memset(jt->breakfn,0,NPATH);  // place to hold the break filename
+ jt->rngdata=(RNG*)(((I)malloc(sizeof(RNG)+CACHELINESIZE)+CACHELINESIZE-1)&-CACHELINESIZE); memset(jt->rngdata,0,sizeof(RNG));  // place to hold RNG data, aligned to cacheline
+
  MC(jt->typesizes,typesizes,sizeof(jt->typesizes));  // required for ma.
  MC(jt->typepriority,typepriority,sizeof(jt->typepriority));  // required for ma.  Repeated for each thread in jtinit3
  MC(jt->prioritytype,prioritytype,sizeof(jt->prioritytype));  // required for ma.  Repeated for each thread in jtinit3

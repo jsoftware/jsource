@@ -55,8 +55,8 @@ static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;DC d;
  RZ(w=vs(w));
  // Handle locking.  Global glock has lock status for higher levels.  We see if this text is locked; if so, we mark lock status for this level
  // We do not inherit the lock from higher levels, per the original design
- C oldk=jt->uflags.us.cx.cx_c.glock; // incoming lock status
- if((jt->uflags.us.cx.cx_c.glock=(AN(w)&&CFF==CAV(w)[0]))){
+ C oldk=jt->glock; // incoming lock status
+ if((jt->glock=(AN(w)&&CFF==CAV(w)[0]))){
   RZ(w=unlock2(mtm,w));
   ASSERT(CFF!=CAV(w)[0],EVDOMAIN);
   si=-1; tso=0;  // if locked, keep shtum about internals
@@ -89,7 +89,7 @@ static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;DC d;
 // obsolete  jt->tostdout=xt;
   debz();
  FDEPDEC(1);  // ASSERT OK now
- jt->uflags.us.cx.cx_c.glock=oldk; // pop lock status
+ jt->glock=oldk; // pop lock status
  if(3==ce){z=num(jt->jerr==0); RESETERR; R z;}else RNE(mtm);
 }
 
@@ -123,7 +123,7 @@ static A jtlinf(J jt,A a,A w,C ce,B tso){A x,y,z;B lk=0;C*s;I i=-1,n,oldi=AM(jt-
  A scripti; RZ(scripti=jtaddscriptname(jt,y)); i=IAV(scripti)[0];
 
  // set the current script number
- AM(jt->slist)=i;    // glock=0 or 1 is original setting; 2 if this script is locked (so reset after 
+ AM(jt->slist)=i;
  z=line(x,i,ce,tso); 
  AM(jt->slist)=oldi;
 #if SYS & SYS_PCWIN

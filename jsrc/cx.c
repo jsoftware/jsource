@@ -126,7 +126,7 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
  A *line;   // pointer to the words of the definition.  Filled in by LINE
  I n;  // number of lines in the definition.  Filled in by LINE
  CW *cw;  // pointer to control-word info for the definition.  Filled in by LINE
- I gsfctdl=0;  // flags: 1=locked 2=debug(& not locked) 4=tdi!=0 8=cd!=0 16=thisframe!=0 32=symtable was the original (i. e. AR(symtab)&LSYMINUSE) 256=original debug flag (must be highest bit)
+ I gsfctdl;  // flags: 1=locked 2=debug(& not locked) 4=tdi!=0 8=cd!=0 16=thisframe!=0 32=symtable was the original (i. e. AR(symtab)&LSYMINUSE) 256=original debug flag (must be highest bit)
  DC callframe=0;  // pointer to the debug frame of the caller to this function (only if it's named), but 0 if we are not debugging
 
  TD*tdv=0;  // pointer to base of try. stack
@@ -142,28 +142,27 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
   A u,v;  // pointers to args
   // If this is adv/conj, it must be (1/2 : n) executed with no x or y.  Set uv then, and undefine x/y
   u=AT(self)&ADV+CONJ?a:0; v=AT(self)&ADV+CONJ?w:0;
-// saved for next rev   a=AT(self)&ADV+CONJ?0:a; w=AT(self)&ADV+CONJ?0:w;
-  if(likely(!(jt->uflags.us.cx.cx_us | (sflg&(VLOCK|VXOP|VTRY1|VTRY2))))){
-   // Normal case of verbs. Read the info for the parsed definition, including control table and number of lines
-   LINE(sv);
-   // Create symbol table for this execution.  If the original symbol table is not in use (rank unflagged), use it;
-   // otherwise clone a copy of it.  We have to do this before we create the debug frame
-   // This code duplicated below
-   locsym=hv[3];  // fetch pointer to preallocated symbol table
-   ASSERT(locsym!=0,EVDOMAIN);  // if the valence is not defined, give valence error
-   if(!(AR(locsym)&LSYMINUSE)){AR(locsym)|=LSYMINUSE;gsfctdl|=32;}  // remember if we are using the original symtab
-   else{RZ(locsym=clonelocalsyms(locsym));}
-  } else {  // something special required
-   // If this is a modifier-verb referring to x or y, set u, v to the modifier operands, and sv to the saved modifier (f=type, g=compiled text).  The flags don't change
-   if(sflg&VXOP){u=sv->fgh[0]; v=sv->fgh[2]; sv=VAV(sv->fgh[1]);}
-   // Read the info for the parsed definition, including control table and number of lines
-   LINE(sv);
-   locsym=hv[3];  // fetch pointer to preallocated symbol table
-   ASSERT(locsym!=0,EVDOMAIN);  // if the valence is not defined, give valence error
-   if(!(AR(locsym)&LSYMINUSE)){AR(locsym)|=LSYMINUSE;gsfctdl|=32;}  // remember if we are using the original symtab
-   else{RZ(locsym=clonelocalsyms(locsym));}
-
-   gsfctdl|=jt->uflags.us.cx.cx_c.glock||sv->flag&VLOCK;  // 1=lock bit
+// saved for next rev   a=AT(self)&ADV+CONJ?0:a; w=AT(self)&ADV+CONJ?0:w;   scaf should do this now?  may leave y undefined
+  gsfctdl=SGNTO0(-(jt->glock|(sflg&VLOCK)));  // init flags: 1=lock bit, whether from locked script or locked verb
+  // If this is a modifier-verb referring to x or y, set u, v to the modifier operands, and sv to the saved modifier (f=type, g=compiled text).  The flags don't change
+  if(unlikely((sflg&VXOP)!=0)){u=sv->fgh[0]; v=sv->fgh[2]; sv=VAV(sv->fgh[1]);}
+  // Read the info for the parsed definition, including control table and number of lines
+  LINE(sv);
+  // Create symbol table for this execution.  If the original symbol table is not in use (rank unflagged), use it;
+  // otherwise clone a copy of it.  We have to do this before we create the debug frame
+  // This code duplicated below
+  locsym=hv[3];  // fetch pointer to preallocated symbol table
+  ASSERT(locsym!=0,EVDOMAIN);  // if the valence is not defined, give valence error
+  if(likely(!(AR(locsym)&LSYMINUSE))){AR(locsym)|=LSYMINUSE;gsfctdl|=32;}  // remember if we are using the original symtab
+  else{RZ(locsym=clonelocalsyms(locsym));}
+// obsolete   if(likely(!(jt->uflags.us.cx.cx_us | (sflg&(VLOCK|VXOP|VTRY1|VTRY2))))){
+  if(unlikely((jt->uflags.us.cx.cx_c.db | (sflg&(VTRY1|VTRY2))))){
+// obsolete    LINE(sv);
+// obsolete    locsym=hv[3];  // fetch pointer to preallocated symbol table
+// obsolete    ASSERT(locsym!=0,EVDOMAIN);  // if the valence is not defined, give valence error
+// obsolete    if(!(AR(locsym)&LSYMINUSE)){AR(locsym)|=LSYMINUSE;gsfctdl|=32;}  // remember if we are using the original symtab
+// obsolete    else{RZ(locsym=clonelocalsyms(locsym));}
+   // special processing required
    // if we are in debug mode, the call to this defn should be on the stack (unless debug was entered under program control).  If it is, point to its
    // stack frame, which functions as a flag to indicate that we are debugging.  If the function is locked we ignore debug mode
    if(!(gsfctdl&1)&&jt->uflags.us.cx.cx_c.db){
@@ -182,8 +181,8 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
     }
 
     // With debug on, we will save pointers to the sentence being executed in the stack frame we just allocated
-    // We will keep cxspecials set as long as savdcy is 0, i. e. in all levels where debug was set at the start of the frame
-    jt->cxspecials=1;
+// obsolete     // We will keep cxspecials set in all levels where debug was set at the start of the frame
+// obsolete     jt->cxspecials=1;
    }
 
    // If the verb contains try., allocate a try-stack area for it.  Remember debug state coming in so we can restore on exit
@@ -254,7 +253,8 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
  while(1){CW *ci;
   // i holds the control-word number of the current control word
   // Check for debug and other modes
-  if(unlikely(jt->cxspecials!=0)){  // fast check to see if we have overhead functions to perform
+// obsolete   if(unlikely(jt->cxspecials!=0)){  // fast check to see if we have overhead functions to perform
+  if(unlikely(jt->uflags.us.cx.cx_us!=0)){  // fast check to see if we have overhead functions to perform
    if(!(gsfctdl&(16+1))&&jt->uflags.us.cx.cx_c.db){
     // If we haven't done so already, allocate an area to use for the SI entries for sentences executed here, if needed.  We need a new area only if we are debugging.  Don't do it if locked.
     // We have to have 1 debug frame to hold parse-error information in, but it is allocated earlier if debug is off
@@ -274,7 +274,7 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
    if((UI)i>=(UI)n)break;
 
    // if performance monitor is on, collect data for it
-   if(PMCTRBPMON&jt->uflags.us.uq.uq_c.pmctrbstk&&C1==((PM0*)CAV1(jt->pma))->rec&&FAV(self)->flag&VNAMED)pmrecord(jt->curname,jt->global?LOCNAME(jt->global):0,i,isdyad?VAL2:VAL1);
+   if(jt->uflags.us.cx.cx_c.pmctr&&C1==((PM0*)CAV1(jt->pma))->rec&&FAV(self)->flag&VNAMED)pmrecord(jt->curname,jt->global?LOCNAME(jt->global):0,i,isdyad?VAL2:VAL1);
    // If the executing verb was reloaded during debug, switch over to the modified definition
    DC siparent;
 // obsolete     if((gsfctdl&16)&&jt->redefined){A *hv;
@@ -289,7 +289,7 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
      }
     thisframe->dcredef=0;
    }
-   if(!((I)(PMCTRBPMON&jt->uflags.us.uq.uq_c.pmctrbstk)|(I)(gsfctdl&16)))jt->cxspecials=0;  // if no more special work to do, close the gate
+// obsolete    if(!((I)(jt->uflags.us.cx.cx_c.pmctr)|(I)(gsfctdl&16)))jt->cxspecials=0;  // if no more special work to do, close the gate
   }
 
   // Don't do the loop-exit test until debug has had the chance to update the execution line.  For example, we might be asked to reexecute the last line of the definition
@@ -300,7 +300,7 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
   switch(cwtype=ci->type){
   case CIF: case CWHILE: case CELSEIF: 
    i=ci->go;  // Go to the next sentence, whatever it is
-   if((UI)i>=(UI)n||(((cwtype=(ci=i+cw)->type)^CTBLOCK)+jt->cxspecials))break;  // avoid indirect-branch overhead on the likely case
+   if((UI)i>=(UI)n||(((cwtype=(ci=i+cw)->type)^CTBLOCK)+jt->uflags.us.cx.cx_us))break;  // avoid indirect-branch overhead on the likely case
   case CASSERT:
   case CTBLOCK:
 tblockcase:
@@ -312,7 +312,7 @@ tblockcase:
    // Check for assert.  Since this is only for T-blocks we tolerate the test (rather than duplicating code)
    if(ci->type==CASSERT&&jt->assert&&t&&!(NOUN&AT(t)&&all1(eq(num(1),t))))t=pee(line,ci,EVASSERT,gsfctdl<<(BW-2),callframe);  // if assert., signal post-execution error if result not all 1s.  May go into debug; sets to result after debug
    if(likely(t!=0)){ti=i,++i;  // if no error, continue on
-    if((UI)i<(UI)n&&!(((cwtype=(ci=i+cw)->type)^CDO)+jt->cxspecials))goto docase;  // avoid indirect-branch overhead on the likely case
+    if((UI)i<(UI)n&&!(((cwtype=(ci=i+cw)->type)^CDO)+jt->uflags.us.cx.cx_us))goto docase;  // avoid indirect-branch overhead on the likely case
    }else if((gsfctdl&16)&&DB1&jt->uflags.us.cx.cx_c.db)ti=i,i=debugnewi(i+1,thisframe,self);  // error in debug mode: when coming out of debug, go to new line (there had better be one)
    else if(EVTHROW==jt->jerr){if(gsfctdl&4&&(tdv+tdi-1)->t){i=(tdv+tdi-1)->t+1; RESETERR;}else BASSERT(0,EVTHROW);}  // if throw., and there is a catch., do so
    else{i=ci->go; if(i<SMAX){RESETERR; z=mtm; if(gsfctdl&4){if(!--tdi){jt->uflags.us.cx.cx_c.db=(UC)(gsfctdl>>8); gsfctdl^=4;}}}else z=0;}  // uncaught error: if we take error exit, we might not have protected z, which is not needed anyway; so clear it to prevent invalid use
@@ -341,7 +341,7 @@ docase:
    }
    }
    t=0;  // Indicate no T block, now that we have processed it
-   if((UI)i>=(UI)n||((((cwtype=(ci=i+cw)->type)&31)^CBBLOCK)+jt->cxspecials))break;  // avoid indirect-branch overhead on the likely case
+   if((UI)i>=(UI)n||((((cwtype=(ci=i+cw)->type)&31)^CBBLOCK)+jt->uflags.us.cx.cx_us))break;  // avoid indirect-branch overhead on the likely case
    // fall through if continuing to BBLOCK (normal)
   case CBBLOCK: case CBBLOCKEND:
 dobblock:
@@ -350,7 +350,7 @@ dobblock:
    tpop(old); parseline(z);
    // if there is no error, or ?? debug mode, step to next line
    if(likely(z!=0)){bi=i; i+=(cwtype>>5)+1;  // go to next sentence, or to the one after that if it's harmless end. 
-    if((UI)i<(UI)n&&!((((cwtype=(ci=i+cw)->type)&31)^CBBLOCK)+jt->cxspecials))goto dobblock;  // avoid indirect-branch overhead on the likely case
+    if((UI)i<(UI)n&&!((((cwtype=(ci=i+cw)->type)&31)^CBBLOCK)+jt->uflags.us.cx.cx_us))goto dobblock;  // avoid indirect-branch overhead on the likely case
     // BBLOCK is usually followed by another BBLOCK, but another important followon is END followed by BBLOCK.  BBLOCKEND means
     // 'bblock followed by end that falls through', i. e. a bblock whose successor is i+2.  By handling that we process all sequences of if. T do. B end. B... without having to go through the switch;
     // this means the switch will learn to go to the if.
@@ -461,7 +461,7 @@ dobblock:
     BZ(ras(t)); cv->t=t; t=0;  // protect t from free while we are comparing with it, save in stack
    }
    i=ci->go;  // Go to next sentence, which might be in the default case (if T block is empty)
-   if((UI)i<(UI)n&&!(((cwtype=(ci=i+cw)->type)^CTBLOCK)+jt->cxspecials))goto tblockcase;  // avoid indirect-branch overhead on the likely case, which is case. t-block do.
+   if((UI)i<(UI)n&&!(((cwtype=(ci=i+cw)->type)^CTBLOCK)+jt->uflags.us.cx.cx_us))goto tblockcase;  // avoid indirect-branch overhead on the likely case, which is case. t-block do.
    break;  // if it's not a t-block, take the indirect branch
   case CDOSEL:   // do. after case. or fcase.
    // do. for case./fcase. evaluates the condition.  t is the result (a T block); if it is nonexistent
@@ -478,7 +478,7 @@ dobblock:
     // Clear t to ensure that the next case./fcase. does not reuse this value
     t=0;
    }
-   if((UI)i<(UI)n&&!((((cwtype=(ci=i+cw)->type)&31)^CBBLOCK)+jt->cxspecials))goto dobblock;  // avoid indirect-branch overhead on the likely  case. ... do. bblock
+   if((UI)i<(UI)n&&!((((cwtype=(ci=i+cw)->type)&31)^CBBLOCK)+jt->uflags.us.cx.cx_us))goto dobblock;  // avoid indirect-branch overhead on the likely  case. ... do. bblock
    break;
   default:   //   CELSE CWHILST CGOTO CEND
    if(unlikely(2<=*jt->adbreakr)) { BASSERT(0,EVBREAK);} 

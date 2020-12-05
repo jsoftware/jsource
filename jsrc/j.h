@@ -582,7 +582,7 @@ extern unsigned int __cdecl _clearfp (void);
 // set FINDNULLRET to trap when a routine returns 0 without having set an error message
 #define FINDNULLRET 0
 
-#define MEMHISTO 1       // scaf  // set to create a histogram of memory requests, interrogated by 9!:54/9!:55
+#define MEMHISTO 1     // scaf  // set to create a histogram of memory requests, interrogated by 9!:54/9!:55
 
 
 #if BW==64
@@ -659,7 +659,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define CALL1IP(f,w,fs)   ((f)(jtinplace,    (w),(A)(fs)))
 #define CALL2IP(f,a,w,fs) ((f)(jtinplace,(a),(w),(A)(fs)))
 #define RETARG(z)       (z)   // These places were ca(z) in the original JE
-#define CALLSTACKRESET  {jt->callstacknext=0; jt->uflags.us.uq.uq_c.pmctrbstk &= ~PMCTRBSTKREQD;} // establish initial conditions for things that might not get processed off the stack.  The last things stacked may never be popped
+#define CALLSTACKRESET  {jt->callstacknext=0; jt->uflags.us.uq.uq_c.bstkreqd = 0;} // establish initial conditions for things that might not get processed off the stack.  The last things stacked may never be popped
 #define MODESRESET      {jt->xmode=XMEXACT;}  // anything that might get left in a bad state and should be reset on return to immediate mode
 // see if a character matches one of many.  Example in ai.c
 // create mask for the bit, if any, in word w for value.  Reverse order: 0=MSB
@@ -932,6 +932,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define MCISds(dest,src,n) {I _n=~(n); while((_n-=REPSGN(_n))<0)*dest++=*src++;}  // ...this when both
 // Copy shapes.  Optimized for length <5, subroutine for others
 // For AVX, we can profitably use the MASKLOAD/STORE instruction to do all the  testing
+// len is # words in shape
 #if 1 && ((C_AVX&&SY_64) || EMU_AVX)  // as with xAGREE, using ymm has too much baggage
 #define MCISH(dest,src,n) \
  {D *_d=(D*)(dest), *_s=(D*)(src); I _n=(I)(n); \
@@ -1385,6 +1386,8 @@ if(likely(z<3)){_zzt+=z; z=(I)&oneone; _zzt=_i&3?_zzt:(I*)z; z=_i&2?(I)_zzt:z; z
 
 #define VAL1            '\001'
 #define VAL2            '\002'
+// like vec(INT,n,v), but without the call and using shape-copy
+#define VECI(z,n,v) {GATV0(z,INT,(I)(n),1); MCISH(IAV1(z),(v),(I)(n));}
 #define WITHDEBUGOFF(stmt) {UC d=jt->uflags.us.cx.cx_c.db; jt->uflags.us.cx.cx_c.db=0; stmt jt->uflags.us.cx.cx_c.db=d;}  // execute stmt with debug turned off
 
 #if C_LE

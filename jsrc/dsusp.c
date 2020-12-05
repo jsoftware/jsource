@@ -269,11 +269,12 @@ F1(jtdbc){UC k;
  if(AN(w)){
   RE(k=(UC)i0(w));
   ASSERT(!(k&~0x81),EVDOMAIN);
-  ASSERT(!k||!jt->uflags.us.cx.cx_c.glock,EVDOMAIN);
+  ASSERT(!k||!jt->glock,EVDOMAIN);
  }
 // obsolete  jt->redefined=0;
  if(AN(w)){
-  jt->uflags.us.cx.cx_c.db=k&1; jt->dbuser=k; jt->cxspecials=1;
+  jt->uflags.us.cx.cx_c.db=k&1; jt->dbuser=k;
+// obsolete  jt->cxspecials=1;
 #if USECSTACK
   jt->cstackmin=jt->cstackinit-((CSTACKSIZE-CSTACKRESERVE)>>k);
 #else

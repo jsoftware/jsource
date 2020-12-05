@@ -87,7 +87,7 @@ void memhashadd(I lineno, C *string){
  string+=strlen(string);  // go to end
  while(string[-1]!='/' && string[-1]!='\\')--string;  // back up to filename
  I nwrit=snprintf(string8,8,"%lld",lineno);
- memcpy(string8+nwrit,string,MIN(8-nwrit,strlen(string)));
+ memcpy(string8+nwrit,string,MIN(8-nwrit,(I)strlen(string)));
  I stringi=*(I*)&string8;  // the string as int
  UI hash=16383&hic(sizeof(string8),string8);
  while(1){if(histarea[hash][0]==stringi)break; if(histarea[hash][0]==0){histarea[hash][0]=stringi; break;} if(--hash<0)hash=16383;}  // find hash slot

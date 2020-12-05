@@ -7,8 +7,9 @@
 
 
 F1(jttally ){A z; I k; ARGCHK1(w); z=sc(SETIC(w,k));            RETF(AT(w)&XNUM+RAT?xco1(z):z);}  //  # y
-F1(jtshapex){A z; ARGCHK1(w); z=vec(INT,AR(w),AS(w)); RETF(AT(w)&XNUM+RAT?xco1(z):z);}
-F1(jtshape){ARGCHK1(w); R vec(INT,AR(w),AS(w));}  // $ y
+F1(jtshapex){A z; ARGCHK1(w); VECI(z,AR(w),AS(w)); if(unlikely(((AT(w)&XNUM+RAT)!=0)))z=xco1(z); RETF(z);}
+// obsolete F1(jtshape){ARGCHK1(w); R vec(INT,AR(w),AS(w));}  // $ y
+F1(jtshape){ARGCHK1(w); A z; VECI(z,AR(w),AS(w)); RETF(z);}  // $ y
 F1(jtisempty){ARGCHK1(w); if(unlikely((AT(w)&SPARSE)!=0))R eps(zeroionei(0),shape(w)); R num(AN(w)==0);}  // 0 e. $
 F1(jtisnotempty){ARGCHK1(w); if(unlikely((AT(w)&SPARSE)!=0))R not(eps(zeroionei(0),shape(w))); R num(AN(w)!=0);}  // *@#@,
 F1(jtisitems){ARGCHK1(w); R num(!AR(w)|!!AS(w)[0]);}   // *@#   *@:#

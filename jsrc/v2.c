@@ -659,7 +659,7 @@ static F1(jtxfactor){PROLOG(0064);A st,z;B b=0;I k,m;X g,*sv,*sv0,x;
   if(xprimeq(100L,x)){RZ(z=apip(z,scx(x))); continue;}
   RZ(g=pollard_p_1(x)); if(g!=iv1){*sv++=g; RZ(*sv++=xdiv(x,g,XMFLR)); continue;}
   RZ(g=pollard_rho(x)); if(g!=iv1){*sv++=g; RZ(*sv++=xdiv(x,g,XMFLR)); continue;}
-  if(!b){b=1; RZ(rngseeds(sc(jt->rngS[jt->rng]))); RZ(roll(v2(m,m*m)));} 
+  if(!b){b=1; RZ(rngseeds(sc(jt->rngdata->rngparms[jt->rngdata->rng].rngS))); RZ(roll(v2(m,m*m)));} 
   RZ(g=fac_ecm(x));     if(g!=iv1){*sv++=g; RZ(*sv++=xdiv(x,g,XMFLR)); continue;}
   ASSERT(0,EVNONCE);
  }

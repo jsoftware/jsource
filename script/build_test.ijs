@@ -133,7 +133,7 @@ fread'git/jsource/jsrc/jversion.h'
 )
 
 set_jversion=: 3 : 0
-'bad jversion'assert ('beta-'-:5{.y)*.6=#y
+'bad jversion'assert (('beta-'-:5{.y)*.6=#y)+.('release-'-:8{.y)*.9=#y
 f=. 'git/jsource/jsrc/jversion.h'
 a=. fread f
 i=. 1 i.~'"beta-' E. a

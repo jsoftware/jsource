@@ -25,7 +25,7 @@ jhjmlink''
  'helpwikiconstant'  jhmab'constant'
  'helpwikicontrol'   jhmab'control'
  'helpwikiforeign'   jhmab'foreign'
- 'helpwikiancilliary'jhmab'Ancilliary'
+ 'helpwikiancillary'jhmab'Ancillary'
 'help'          jhmg'help';1;10
  'helphelp'      jhmab'help'
  'helpinfo'      jhmab'info'
@@ -180,7 +180,7 @@ dbstepin''
 )
 
 jhjmlink=: 3 : 0
-t=.   'jmlink' jhmg 'ide';1;12
+t=.   'jmlink' jhmg 'ide';1;13
 t=. t,'jfile'  jhmab'jfile    f^'
 t=. t,'jfiles' jhmab'jfiles   k^'
 t=. t,JIJSAPP  jhmab'jijs     J^'
@@ -446,7 +446,7 @@ function ev_helphelp_click(){linkclick("~addons/docs/help/index.htm")};
 function ev_helpinfo_click(){linkclick("~addons/docs/help/user/product.htm")};
 function ev_helpvocab_click(){linkclick("~addons/docs/help/dictionary/vocabul.htm")};
 function ev_helpwikinuvoc_click(){linkclick("http://code.jsoftware.com/wiki/NuVoc")};
-function ev_helpwikiancilliary_click(){linkclick("http://code.jsoftware.com/wiki/NuVoc#bottomrefs")};
+function ev_helpwikiancillary_click(){linkclick("http://code.jsoftware.com/wiki/NuVoc#bottomrefs")};
 
 function ev_helpwikiconstant_click(){linkclick("http://code.jsoftware.com/wiki/Vocabulary/Constants")};
 function ev_helpwikicontrol_click(){linkclick("http://code.jsoftware.com/wiki/Vocabulary/ControlStructures")};

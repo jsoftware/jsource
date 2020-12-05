@@ -1,7 +1,7 @@
 18!:4 <'z'
 3 : 0 ''
 
-JLIB=: '9.02.07'
+JLIB=: '9.02.08'
 
 notdef=. 0: ~: 4!:0 @ <
 hostpathsep=: ('/\'{~6=9!:12'')&(I. @ (e.&'/\')@] })
@@ -1371,7 +1371,7 @@ c=. l = #f
 c } x ,: y
 )
 chopstring=: 3 : 0
-(' ';'""') chopstring y
+(' ';'"') chopstring y
 :
 dat=. y
 'fd sd'=. 2{. boxopen x
@@ -1384,8 +1384,8 @@ if. #sd do.
     sd=. s
   end.
   dat=. dat,fd
-  b=. dat e. fd
-  c=. dat e. sd
+  b=. dat = fd
+  c=. dat = {.sd
   d=. ~:/\ c
   fmsk=. b > d
   smsk=. (> (0 , }:)) c

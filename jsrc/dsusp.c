@@ -130,13 +130,13 @@ static A jtsusp(J jt){A z;
   if(jt->iepdo&&jt->iep){
    // if there is an immex latent expression (9!:27), execute it before prompting
    jt->iepdo=0; z=immex(jt->iep);  // force typeout
-   if(z&&AFLAG(z)&AFDEBUGRESULT)break;  // dbr * exits suspension, even dbr 1.  PFkeys may come through iep
+   if((z&&AFLAG(z)&AFDEBUGRESULT)||!jt->dbuser)break;  // dbr * exits suspension, even dbr 1.  PFkeys may come through iep
    tpop(old);  // if we don't need the result for the caller here, free up the space
   }
   // Execute one sentence from the user
   if((inp=jgets("      "))==0){z=0; break;} z=immex(inp); // force prompt and typeout read and execute a line, but exit debug if error reading line
   // If the result came from a suspension-ending command, get out of suspension
-  if(z&&AFLAG(z)&AFDEBUGRESULT)break;  // dbr * exits suspension, even dbr 1
+  if((z&&AFLAG(z)&AFDEBUGRESULT)||!jt->dbuser)break;  // dbr * exits suspension, even dbr 1
   tpop(old);  // if we don't need the result for the caller here, free up the space
  }
  // Coming out of suspension.  z has the result to pass up the line, containing the suspension-ending info

@@ -211,12 +211,13 @@ static F1(jtii){ARGCHK1(w); I j; RETF(IX(SETIC(w,j)));}
 // Return the higher-priority of the types s and t.  s and t are known to be not equal.
 // If either is sparse, convert the result to sparse.
 // Error if one argument is sparse and the other is non-sparsable
-// s or t may be set to 0 to suppress the argument (if argument is empty, usually)
+// s and t may not be 0
 // Result is always an UNSAFE type
 // this code is repeated in result.h
 I jtmaxtype(J jt,I s,I t){
  // If values differ and are both nonzero...
- I resultbit = jt->prioritytype[MAX(jt->typepriority[CTTZ(s)],jt->typepriority[CTTZ(t)])];  // Get the higher-priority type
+// obsolete  I resultbit = PRIORITYTYPE(MAX(jt->typepriority[CTTZ(s)],jt->typepriority[CTTZ(t)]));  // Get the higher-priority type
+ I resultbit = PRIORITYTYPE(MAX(TYPEPRIORITY(s),TYPEPRIORITY(t)));  // Get the higher-priority type
  if(unlikely(((s|t)&SPARSE))!=0){ASSERT(!((s|t)&(C2T|C4T|XNUM|RAT|SBT)),EVDOMAIN); R (I)1 << (resultbit+SB01X-B01X);}  // If either operand sparse, return sparse version
  R (I)1 << resultbit;   // otherwise, return normal version
 }

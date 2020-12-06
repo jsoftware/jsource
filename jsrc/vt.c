@@ -187,7 +187,7 @@ static F1(jtrsh0){A x,y;I wcr,wf,wr,*ws;
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK;
  ws=AS(w);
  RZ(x=vec(INT,wr-1,ws)); MCISH(wf+AV(x),ws+wf+1,wcr-1);
- RZ(w=setfv(w,w)); GA(y,AT(w),1,0,0); MC(AV(y),jt->fillv,bp(AT(w)));
+ RZ(w=setfv(w,w)); GA(y,AT(w),1,0,0); MC(AV(y),jt->fillv,bpnoun(AT(w)));
  R reshape(x,y);
  // not pristine
 }

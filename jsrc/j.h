@@ -582,7 +582,7 @@ extern unsigned int __cdecl _clearfp (void);
 // set FINDNULLRET to trap when a routine returns 0 without having set an error message
 #define FINDNULLRET 0
 
-#define MEMHISTO 1     // scaf  // set to create a histogram of memory requests, interrogated by 9!:54/9!:55
+#define MEMHISTO 0     // scaf  // set to create a histogram of memory requests, interrogated by 9!:54/9!:55
 
 
 #if BW==64
@@ -1189,6 +1189,27 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x
 #define PARSERVALUE(p) ((A)((I)(p)&-2))   // the value part of the parser return, pointer to the A block
 #define PARSERASGN(p) ((I)(p)&1)   // the assignment part of the parser return, 1 if assignment
 #define PARSERASGNX 0  // bit# of asgn bit
+// conversion from priority index to bit# in a type with that priority
+// static const UC prioritytype[] = {  // Convert priority to type bit
+// B01X, LITX, C2TX, C4TX, INTX, BOXX, XNUMX, RATX, SBTX, FLX, CMPXX};
+#if SY_64
+#define PRIORITYTYPE(p) (((((((((((((((((((((((I)CMPXX<<5)+FLX)<<5)+SBTX)<<5)+RATX)<<5)+XNUMX)<<5)+BOXX)<<5)+INTX)<<5)+C4TX)<<5)+C2TX)<<5)+LITX)<<5)+B01X)>>((p)*5))&0x1f)
+#else
+#define PRIORITYTYPE(p) (((p)>=6?(((((((((I)CMPXX<<5)+FLX)<<5)+SBTX)<<5)+RATX)<<5)+XNUMX)>>((p-6)*5):(((((((((((I)BOXX<<5)+INTX)<<5)+C4TX)<<5)+C2TX)<<5)+LITX)<<5)+B01X)>>((p)*5))&0x1f)
+#endif
+// Conversion from type to priority
+// B01 LIT C2T C4T INT BOX XNUM RAT SBT FL CMPX
+// For sparse types, we encode here the corresponding dense type
+// static const UC typepriority[] = {   // convert type bit to priority
+// 0, 1, 4, 9, 10, 5, 6, 7,  // B01-RAT
+// 0, 0, 0, 1, 4, 9, 10, 5,  // x x SB01-SBOX
+// 8, 2, 3};  // SBT C2T C4T
+#if SY_64
+#define TYPEPRIORITY(t) (((((t)&0xffff)?0x5a941000765a9410:0x328)>>((CTTZ(t)&0xf)*4))&0xf)
+#else
+#define TYPEPRIORITY(t) (((((t)&0xff)?0x765a9410:((t)&0xff00)?0x5a941000:0x328)>>((CTTZ(t)&0x7)*4))&0xf)
+#endif
+
 #define PRISTCOMSET(w,flg) awback=(w); if(unlikely((flg&AFVIRTUAL)!=0)){awback=ABACK(awback); flg=AFLAG(awback);} AFLAG(awback)=flg&~AFPRISTINE;
 #define PRISTCOMSETF(w,flg) if(unlikely((flg&AFVIRTUAL)!=0)){w=ABACK(w); flg=AFLAG(w);} AFLAG(w)=flg&~AFPRISTINE;   // used only at end, when w can be destroyed
 #define PRISTCOMMON(w,exe) awflg=AFLAG(w); exe PRISTCOMSET(w,awflg)

@@ -1017,7 +1017,7 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
   }else{
    xv=convert0(t,cv0,wt,u); xt=t; u+=wk;
    CDASSERT(xv!=0,per);
-   if(zbx){GA(y,t,1,0,0); MC(AV(y),xv,bp(t)); *zv=incorp(y);}  // must never install inplaceable block
+   if(zbx){GA(y,t,1,0,0); MC(AV(y),xv,bpnoun(t)); *zv=incorp(y);}  // must never install inplaceable block
   }
   // now xv points to the actual arg data for arg i, and an A-block for same has been installed into *zv
   // if wt&BOX only, x is an A-block for arg i
@@ -1188,7 +1188,7 @@ F2(jtcd){A z;C*tv,*wv,*zv;CCT*cc;I k,m,n,p,q,t,wr,*ws,wt;
  }
  wv=CAV(w); zv=CAV(z); k=bpnoun(wt);
  if(1==m)RZ(jtcdexec1(jtinplace,cc,zv,wv,k,wt,0))
- else{p=n*k; q=cc->zbx?sizeof(A)*(1+n):bp(AT(z)); DQ(m, RZ(jtcdexec1(jtinplace,cc,zv,wv,k,wt,0)); wv+=p; zv+=q;);}
+ else{p=n*k; q=cc->zbx?sizeof(A)*(1+n):bpnoun(AT(z)); DQ(m, RZ(jtcdexec1(jtinplace,cc,zv,wv,k,wt,0)); wv+=p; zv+=q;);}
  R z;
 }    /* 15!:0 */
 
@@ -1305,7 +1305,7 @@ F2(jtmemw){C*u;I m,n,t,*v;
 
 // 15!:15 memu - make a copy of y if it is not writable (inplaceable and not read-only)
 // We have to check jt in case this usage is in a fork that will use the block later
-F1(jtmemu) { F1PREFIP; ARGCHK1(w); if(!((I)jtinplace&JTINPLACEW && (AC(w)<(AFLAG(w)<<((BW-1)-AFROX)))))w=ca(w); if(AT(w)&LAST0)*(C4*)&CAV(w)[AN(w)*bp(AT(w))]=0;  RETF(w); }  // append 0 so that calls from cd append NUL termination
+F1(jtmemu) { F1PREFIP; ARGCHK1(w); if(!((I)jtinplace&JTINPLACEW && (AC(w)<(AFLAG(w)<<((BW-1)-AFROX)))))w=ca(w); if(AT(w)&LAST0)*(C4*)&CAV(w)[AN(w)*bpnoun(AT(w))]=0;  RETF(w); }  // append 0 so that calls from cd append NUL termination
 F2(jtmemu2) { RETF(ca(w)); }  // dyad - force copy willy-nilly
 
 F1(jtgh15){A z;I k; RE(k=i0(w)); RZ(z=gah(k,0L)); ACINCR(z); R sc((I)z);}

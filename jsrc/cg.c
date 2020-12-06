@@ -206,7 +206,7 @@ static DF2(jtcasei12){A vres,z;I gerit[128/SZI],ZZFLAGWORD;
    fauxvirtual(virtw,virtwfaux,sortw,virtr,ACUC1) MCISH(AS(virtw),AS(w),virtr); AN(virtw)=1;  // in case atom, set AN to 1
    // Create the size of a cell in atoms.  If the original argument was an atom (?r=IMAX), use 0 for the cellsize so that the cell is repeated
    I wck,ack; PROD(wck,virtr-1,AS(sortw)+1);  // number of atoms in a cell of w
-   I ak,wk=bp(AT(w)); wk&=REPSGN(~wr);  // size of atom of k, but 0 if w is an atom (so we don't advance)
+   I ak,wk=bpnoun(AT(w)); wk&=REPSGN(~wr);  // size of atom of w, but 0 if w is an atom (so we don't advance)
    if(ZZFLAGWORD&ZZFLAGISDYAD){   // if we need to repeat for a
     if(ar>=0){
      RZ(a=jtredcatcell((J)((I)jt|(((I)jtinplace>>(JTINPLACEAX-JTINPLACEWX))&JTINPLACEW)),a,ar));  // move inplaceability of original a to w
@@ -219,7 +219,7 @@ static DF2(jtcasei12){A vres,z;I gerit[128/SZI],ZZFLAGWORD;
     virtr=(ar|REPSGN(ar))+1;   // rank of a list of cells, or 0 if original arg was an atom
     fauxvirtual(virta,virtafaux,sorta,virtr,ACUC1) MCISH(AS(virta),AS(a),virtr); AN(virta)=1;
     PROD(ack,virtr-1,AS(sorta)+1);  // number of atoms in a cell of w
-    ak=bp(AT(a)); ak&=REPSGN(~ar);  // size of atom of k, but 0 if w is an atom (so we don't advance)
+    ak=bpnoun(AT(a)); ak&=REPSGN(~ar);  // size of atom of a, but 0 if a is an atom (so we don't advance)
    }else{virta=virtw; ak=0;}  // if monad, set a=w, and make the addition to AK(a) harmless
 #define ZZDECL
 #define ZZASSUMEBOXATOP 1

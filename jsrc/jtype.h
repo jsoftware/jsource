@@ -90,7 +90,6 @@ typedef AD *A;
 #define JTDESCENDX      2   // direction of sort
 #define JTDESCEND       (((I)1)<<JTDESCENDX)
 
-
 // Next flag must match result.h and VF2 flags, and must be above ZZFLAGBOXATOP
 #define JTWILLBEOPENEDX 4   // result of this exec will be opened immediately, so it can contain virtual references to an input to the current verb
      // Note: this flag MUST NOT equal BOX, or BOX<<1, or 1 or 2

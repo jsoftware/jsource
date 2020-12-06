@@ -286,7 +286,7 @@ static A jtfsmdo(J jt,I f,A s,A m,I*ijrd,A w,A w0){A x,z;C*cc,*wv0;
  if(t&INT){t0=AT(w0); wr=AR(w0); PROD(wm,AR(w0)-1,AS(w0)+1) wk=wm<<bplg(AT(w0)); wv0=CAV(w0);}
  switch(f+(t&(B01+LIT))*6){
   case 0+0: {I *wv= AV(w); FSMF(A,1,BOX,1, 1,   wv[i] ,EMIT0x,ZVAx);} break; // other
-  case 0+1: {I *wv= AV(w); FSMF(C,bp(AT(w0)),t0, wr,wm,  wv[i] ,EMIT1x,ZVAx);} break;
+  case 0+1: {I *wv= AV(w); FSMF(C,bpnoun(AT(w0)),t0, wr,wm,  wv[i] ,EMIT1x,ZVAx);} break;
   case 0+2: {I *wv= AV(w); FSMF(I,1,INT,2, 2,   wv[i] ,EMIT2, ZVAx);} break;
   case 0+3: {I *wv= AV(w); FSMF(I,1,INT,1, 1,   wv[i] ,EMIT3, ZVAx);} break;
   case 0+4: {I *wv= AV(w); FSMF(I,1,INT,2, 3,   wv[i] ,EMIT4, ZVAx);} break;

@@ -12,30 +12,6 @@
 #endif
 
 
-// These statics get copied into jt for cache footprint.  If you change them,
-// change the definition in jt.h
-
-// For each Type, the length of a data-item of that type.  The order
-// here is by number of trailing 0s in the (32-bit) type; aka the bit-number index.
-// Example: LITX is 1, so location 1 contains sizeof(C)
-#define TPSZ(name) [name##X] = name##SIZE
-static const UC typesizes[32] = {
-TPSZ(B01), TPSZ(LIT), TPSZ(INT), TPSZ(FL), TPSZ(CMPX), TPSZ(BOX), TPSZ(XNUM), TPSZ(RAT), 
-TPSZ(SB01), TPSZ(SLIT), TPSZ(SINT), TPSZ(SFL), TPSZ(SCMPX), TPSZ(SBOX), TPSZ(SBT), TPSZ(C2T), 
-TPSZ(C4T), TPSZ(ASGN), TPSZ(MARK), TPSZ(NAME), TPSZ(SYMB), TPSZ(CONW), TPSZ(LPAR), TPSZ(RPAR), 
-[ADVX] = INTSIZE, [CONJX] = INTSIZE, [VERBX] = INTSIZE  // note ACV sizes are in INTs
-};
-
-// Priority is
-// B01 LIT C2T C4T INT BOX XNUM RAT SBT FL CMPX
-// For sparse types, we encode here the corresponding dense type
-static const UC typepriority[] = {   // convert type bit to priority
-0, 1, 4, 9, 10, 5, 6, 7,  // B01-RAT
-0, 0, 0, 1, 4, 9, 10, 5,  // x x SB01-SBOX
-8, 2, 3};  // SBT C2T C4T
-static const UC prioritytype[] = {  // Convert priority to type bit
-B01X, LITX, C2TX, C4TX, INTX, BOXX, XNUMX, RATX, SBTX, FLX, CMPXX};
-
 // create name block for xyuvmn
 static A jtmakename(J jt,C*s){A z;I m;NM*zv;
  m=strlen(s);
@@ -73,11 +49,11 @@ J gjt=0; // JPF debug - convenience debug single process
 // thread-safe/one-time initialization of all global constants
 // Use GA for all these initializations, to save space since they're done only once
 B jtglobinit(J jt){A x,y;A *oldpushx=jt->tnextpushp;
- MC(jt->typesizes,typesizes,sizeof(jt->typesizes));  // required for ma.  Repeated for each thread in jtinit3
- MC(jt->typepriority,typepriority,sizeof(jt->typepriority));  // may not be needed
- MC(jt->prioritytype,prioritytype,sizeof(jt->prioritytype));  // may not be needed
+// obsolete  MC(jt->typesizes,typesizes,sizeof(jt->typesizes));  // required for ma.  Repeated for each thread in jtinit3
+// obsolete  MC(jt->typepriority,typepriority,sizeof(jt->typepriority));  // may not be needed
+// obsolete MC(jt->prioritytype,prioritytype,sizeof(jt->prioritytype));  // may not be needed
  jt->adbreakr=jt->adbreak=&breakdata; /* required for ma to work */
- meminit();  /* required for ma to work */
+ meminit();  // init allocation queues & tpop stack
  RZ(y=rifvs(str(1L,"z")));     ACX(y); AS(y)[0]=BUCKETXLOC(1,"z");   // for paths, the shape holds the bucketx
  GA(x,BOX, 1,1,0     ); ACX(x); AAV(x)[0]=y;                zpath      =x;  AFLAG(zpath) |= (AT(zpath)&TRAVERSIBLE);  // ensure that traversible types in pst are marked traversible, so tpush/ra/fa will not recur on them
  RZ(mnuvxynam[0]=makename("m"));
@@ -87,10 +63,10 @@ B jtglobinit(J jt){A x,y;A *oldpushx=jt->tnextpushp;
  RZ(mnuvxynam[4]=makename("x"));
  RZ(mnuvxynam[5]=makename("y"));
  // can be left at initial value v00[0]=v00[1]=0;   // vector 0 0, for rank
- pf=qpf();
- pinit();
+ pf=qpf();  // init performance monitor count info
+ pinit();  // init block for a.
 
- cpuInit();
+ cpuInit();  // get CPU characteristics
 #if defined(__aarch64__)
  hwaes=(getCpuFeatures()&ARM_HWCAP_AES)?1:0;
 #elif (defined(__i386__) || defined(_M_X64) || defined(__x86_64__))
@@ -209,9 +185,9 @@ static C jtjinit3(J jt){S t;
  jt->breakfn=malloc(NPATH); memset(jt->breakfn,0,NPATH);  // place to hold the break filename
  jt->rngdata=(RNG*)(((I)malloc(sizeof(RNG)+CACHELINESIZE)+CACHELINESIZE-1)&-CACHELINESIZE); memset(jt->rngdata,0,sizeof(RNG));  // place to hold RNG data, aligned to cacheline
 
- MC(jt->typesizes,typesizes,sizeof(jt->typesizes));  // required for ma.
- MC(jt->typepriority,typepriority,sizeof(jt->typepriority));  // required for ma.  Repeated for each thread in jtinit3
- MC(jt->prioritytype,prioritytype,sizeof(jt->prioritytype));  // required for ma.  Repeated for each thread in jtinit3
+// obsolete MC(jt->typesizes,typesizes,sizeof(jt->typesizes));  // required for ma.
+// obsolete  MC(jt->typepriority,typepriority,sizeof(jt->typepriority));  // required for ma.  Repeated for each thread in jtinit3
+// obsolete  MC(jt->prioritytype,prioritytype,sizeof(jt->prioritytype));  // required for ma.  Repeated for each thread in jtinit3
 #if (SYS & SYS_DOS)
  t=EM_ZERODIVIDE+EM_INVALID; _controlfp(t,t);
 #endif

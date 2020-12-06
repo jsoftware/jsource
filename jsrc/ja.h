@@ -671,7 +671,8 @@
 // reversed        001 0000 0111 0000 0011 1001 1000 1010 0010 1001 0100 0100 0010 0000
 #define maxtypene(x,y)              jtmaxtype(jt,(x),(y))
 #define maxtype(x,y)                (((x)==(y))?(x):maxtypene(x,y))
-#define maxtypedne(x,y) (jt->typepriority[CTTZ(x)]>jt->typepriority[CTTZ(y)]?(x):(y))
+// obsolete #define maxtypedne(x,y) (jt->typepriority[CTTZ(x)]>jt->typepriority[CTTZ(y)]?(x):(y))  // d means 'dense'
+#define maxtypedne(x,y) (TYPEPRIORITY(x)>TYPEPRIORITY(y)?(x):(y))  // d means 'dense'
 #define maxtyped(x,y)               (((x)==(y))?(x):maxtypedne(x,y))
 // For sparse types, we encode here the corresponding dense type
 #define mdiv(x,y)                   jtmdiv(jt,(x),(y))   

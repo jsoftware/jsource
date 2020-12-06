@@ -142,7 +142,7 @@ do{
       if(zt==zzt){
        // Here the type of z must change.  Just convert it to type zt
        ASSERT(z=cvt(zt,z),EVDOMAIN);
-      }else{I zzatomshift=CTTZ(bp(zzt)); I zexpshift = CTTZ(bp(zt))-zzatomshift;  // convert zz from type zzt to type zt.  shift for size of atom; expansion factor of the conversion, as shift amount
+      }else{I zzatomshift=CTTZ(bpnoun(zzt)); I zexpshift = CTTZ(bpnoun(zt))-zzatomshift;  // convert zz from type zzt to type zt.  shift for size of atom; expansion factor of the conversion, as shift amount
        // here the old values in zz must change.  Convert them.  Use the special flag to cvt that converts only as many atoms as given
 #if !ZZSTARTATEND
        zatomct=zzcellp>>zzatomshift;   // get # atoms that have been filled in
@@ -222,7 +222,8 @@ do{
       INCORP(z);  // we can't store a virtual block, because its backer may change before we collect the final result
       *zzboxp=z;
       // update the result priority based on the type.  We prioritize all non-empties over empties
-      I zpri=jt->typepriority[CTTZ(zt)]; zpri+=AN(z)?256:0; zzresultpri=(zpri>zzresultpri)?zpri:zzresultpri;
+// obsolete       I zpri=jt->typepriority[CTTZ(zt)]; zpri+=AN(z)?256:0; zzresultpri=(zpri>zzresultpri)?zpri:zzresultpri;
+      I zpri=TYPEPRIORITY(zt); zpri+=AN(z)?256:0; zzresultpri=(zpri>zzresultpri)?zpri:zzresultpri;
       break;
      }else{I nboxes;
       // first wreck.  Allocate a boxed array to hold the results that mismatch zz

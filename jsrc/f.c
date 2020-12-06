@@ -419,7 +419,7 @@ static void jtfmfill(J jt,I p,I q,I wd,A w,A x,A y,C*zv,I cw){A e,*wv;
     // Move in the data.  If sizes are dissimilar, the target must be larger; do length conversion then
     if(cw==bpnoun(AT(e))){C* v=CAV(e); C* u=zv+f; DQ(r, MC(u,v,c*cw); u+=wd; v+=c*cw;)}
     else{  // conversion required
-     if(bp(AT(e))==1){UC *v=UAV(e);   // source is bytes
+     if(bpnoun(AT(e))==1){UC *v=UAV(e);   // source is bytes
       if(cw==2){   // dest is C2T
        US *u=(US*)(zv+f),*uu; DQ(r, uu=u; DQ(c,*uu++=*v++;) u=(US*)((UC*)u+wd);)
       }else{   // dest is C4T

@@ -201,6 +201,7 @@ static C *copyresultcell(J jt, C *z, C *w, I *sizes, I rf, I *s){I wadv;I r=rf>>
  R w;
 }
 
+// Variables are defined in result.h.  zz is values that matched the first cell, zzbox is the rest.  zzresultpri has combined types returned in zzbox
 A jtassembleresults(J jt, I ZZFLAGWORD, A zz, A zzbox, A* zzboxp, I zzcellp, I zzcelllen, I zzresultpri, A zzcellshape, I zzncells, I zzwf, I startatend) {A zztemp;  // if we never allocated the boxed area (including force-boxed cases which never do) we just keep zz as the final result
  // startatend is 0 for forward, ~0 for reverse
  // Create a homogeneous array of results, by processing zzbox and zz one cell at a time from the end.
@@ -216,21 +217,21 @@ A jtassembleresults(J jt, I ZZFLAGWORD, A zz, A zzbox, A* zzboxp, I zzcellp, I z
   // No sparse results.  We will bypass jtope and move the results into the result area here, with conversion and fill
 
   // Create the fill-cell we will need.  Note: all recursible fills must have the PERMANENT flag set, since we may not increment the usecount
-  I zpri=jt->typepriority[CTTZ(zzt)]; zpri+=AN(zz)?256:0;   // priority of unboxed results, giving high pri to nonempty
-  zzresultpri=(zpri>zzresultpri)?zpri:zzresultpri; I zft=((I)1)<<(jt->prioritytype[zzresultpri&255]);  // zft=highest precision encountered
-  fillv(zft,1L,jt->fillv0); I zfs=bpnoun(zft); mvc(sizeof(jt->fillv0),jt->fillv0,zfs,jt->fillv0);  // create 16 bytes of fill.  zfs is byte=length of 1 atom of result type
-
+  I zpri=TYPEPRIORITY(zzt); zpri+=AN(zz)?256:0;   // priority of unboxed results, giving high pri to nonempty
   I *zzcs=AS(zzcellshape);  // zzcs->shape of padded result cell (may be a faux A block) AS[] is shape, AR is rank, AN is allocation
   I zzcr=AR(zzcellshape);  // zzcr=rank of result cell
+  zzresultpri=(zpri>zzresultpri)?zpri:zzresultpri; I zft=((I)1)<<(PRIORITYTYPE(zzresultpri&255));  // zft=highest precision encountered
+  fillv(zft,1L,jt->fillv0); I zfs=bpnoun(zft); mvc(sizeof(jt->fillv0),jt->fillv0,zfs,jt->fillv0);  // create 16 bytes of fill.  zfs is byte=length of 1 atom of result type
+
   zzcs[zzcr]=zfs;  // length of 0-cell is byte-length of atom - store after the shape - we know there's room
 
   // if the result has different type from the values in zz, convert zz en bloc to type zft
-  if(TYPESNE(zft,zzt)){I zzatomshift=CTTZ(bp(zzt)); I zexpshift = CTTZ(bp(zft))-zzatomshift;  // shift for size of atom; expansion factor of the conversion, as shift amount
+  if(TYPESNE(zft,zzt)){I zzatomshift=CTTZ(bpnoun(zzt)); I zexpshift = CTTZ(bpnoun(zft))-zzatomshift;  // shift for size of atom; expansion factor of the conversion, as shift amount
    // here the old values in zz must change.  Convert them.  Use the special flag to cvt that converts only as many atoms as given
    I zatomct=(zzcellp>>zzatomshift)-(startatend&(AN(zz)-(zzcelllen>>zzatomshift)));   // get # atoms that have been filled in
    ASSERT(ccvt(zft|NOUNCVTVALIDCT,zz,(A*)&zatomct),EVDOMAIN); zz=(A)zatomct;  // flag means convert zcellct atoms.  Not worth checking for empty
    // change the strides to match the new cellsize
-   if(zexpshift>=0){zzcelllen<<=zexpshift; zzcellp<<=zexpshift;}else{zzcelllen>>=-zexpshift; zzcellp>>=-zexpshift;}
+   if(likely(zexpshift>=0)){zzcelllen<<=zexpshift; zzcellp<<=zexpshift;}else{zzcelllen>>=-zexpshift; zzcellp>>=-zexpshift;}
    zzcell=CAV(zz)+zzcellp;  //  recalc address of last+1 cell moved to zz
   }
   // Now zz has the type zft

@@ -45,100 +45,107 @@ typedef struct rngdata {
  RNGPARMS rngparms0[5];  // parms for RNG 0
  } RNG;
 
-
+// Must be aligned on a 256-byte boundary for flags; but better to align on a DRAM page boundary to avoid precharge
 typedef struct JSTstruct {
 // shared area
- C*   adbreak;			/* must be first! ad mapped shared file break flag */
- C*   adbreakr;         // read location: same as adbreak, except that when we are ignoring interrupts it points to 0
+ C* adbreak;			/* must be first! ad mapped shared file break flag */
+ C* adbreakr;         // read location: same as adbreak, except that when we are ignoring interrupts it points to 0
 
-// stuff used during verb execution
- void *heap;            // heap handle for large allocations
- A    stloc;            /* locales symbol table                            */
- I    mmax;             /* space allocation limit                          */
- C    typesizes[32];    // the length of an allocated item of each type
- UC   prioritytype[11];  // type bit for the priority types
- UC   typepriority[19];  // priority value for the noun types
- I    igemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for integer matrix product.  _1 means 'never'
- I    dgemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for float matrix product.  _1 means 'never'
- I    zgemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for complex matrix product.  _1 means 'never'
- A    implocref[2];     // references to 'u.'~ and 'v.'~, marked as implicit locatives scaf
- C    asgzomblevel;     // 0=do not assign zombie name before final assignment; 1=allow premature assignment of complete result; 2=allow premature assignment even of incomplete result   
- B    assert;           /* 1 iff evaluate assert. statements               */
- B    stch;             /* enable setting of changed bit                   */
- B    retcomm;          /* 1 iff retain comments and redundant spaces      */
- UC   seclev;           /* security level                                  */
- UC   disp[7];          /* # different verb displays                       */
- UC   outeol;           /* output: EOL sequence code                       */
-#if MEMAUDIT & 2
- C    audittstackdisabled;   // set to 1 to disable auditing
-#endif
- C    locsize[2];       /* size indices for named and numbered locales     */
- A    stnum;            // numbered locale numbers or hash table - rank 1, holding symtab pointer for each entry.  0 means empty
- A    symp;             /* symbol pool array                               */
- C    baselocale[4];    // will be "base"
- UI4  baselocalehash;   // name hash for base locale
- A    p4792;            // pointer to p: i. 4792, filled in on first use
-
-// DLL stuff
- A    cdarg;            /* table of 15!:0 parsed left arguments            */
- A    cdhash;           // hash table of cdstr strings into cdarg
- A    cdhashl;          // hash table of cdstr strings into module index
- A    cdstr;            /* strings for cdarg                               */
-
-// file stuff
- A    flkd;             /* file lock data: number, index, length           */
- A    fopa;             /* open files boxed names                          */
- A    fopf;             /* open files corresp. file numbers                */
-
-// little-used stuff
- C bx[11];               /* box drawing characters                          */
- A evm;              /* event messages                                  */
- A iep;              /* immediate execution phrase                      */
- I4 outmaxafter;      /* output: maximum # lines after truncation        */
- I4 outmaxbefore;     /* output: maximum # lines before truncation       */
- I4 outmaxlen;        /* output: maximum line length before truncation   */
- I peekdata;         /* our window into the interpreter                 */
- A sbu;              /* SB data for each unique symbol                  */
- A slist;            /* files used in right arg to 0!:                  */
- A pma;              /* perf. monitor: data area                        */
- D tssbase;          /* initial 6!:0''                            */
-
-// front-end interface info
- void *iomalloc;   // address of block, if any, allocated in io.c to be returned to the FE
- I    iomalloclen;   // length of the allocated block (in case we can reuse it)
- UI   qtstackinit;      // jqt front-end C stack pointer    
- B    sesm;             /* whether there is a session manager              */
- C    recurstate;       // state of recursions through JDo
+// parsing, lookup, explicit definition execution
+ A stloc;            /* locales symbol table                            */
+ A symp;             /* symbol pool array                               */
+ A slist;            /* files used in right arg to 0!:  AM() is current file#    */
+ B assert;           /* 1 iff evaluate assert. statements               */
+ B stch;             /* enable setting of changed bit                   */
+ C asgzomblevel;     // 0=do not assign zombie name before final assignment; 1=allow premature assignment of complete result; 2=allow premature assignment even of incomplete result   
+ C recurstate;       // state of recursions through JDo migrated
 #define RECSTATEIDLE    0  // JE is inactive, waiting for work
 #define RECSTATEBUSY    1  // JE is running a call from JDo
 #define RECSTATEPROMPT  2  // JE is running, and is suspended having called the host for input
 #define RECSTATERECUR   3  // JE is running and waiting for a prompt, and the host has made a recursive call to JDo (which must not prompt)
- I*   breakfh;          /* win break file handle                           */
- I*   breakmh;          /* win break map handle                            */
- UC   cstacktype;  /* cstackmin set during 0: jt init  1: passed in JSM  2: set in JDo */
- void *smdowd;
+ UC dbuser;           /* user-entered value for db          migrated             */
+#if MEMAUDIT & 2
+ C audittstackdisabled;   // set to 1 to disable auditing
+#endif
+// 3 bytes free
+
+// stuff used during verb execution
+ void *heap;            // heap handle for large allocations
+ I mmax;             /* space allocation limit                          */
+// end of cache line 0
+ A stnum;            // numbered locale numbers or hash table - rank 1, holding symtab pointer for each entry.  0 means empty
+ I igemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for integer matrix product.  _1 means 'never'
+ I dgemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for float matrix product.  _1 means 'never'
+ I zgemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for complex matrix product.  _1 means 'never'
+ A implocref[2];     // references to 'u.'~ and 'v.'~, marked as implicit locatives scaf
+ C baselocale[4];    // will be "base"
+ UI4 baselocalehash;   // name hash for base locale
+ A sbu;              /* SB data for each unique symbol                  */
+// end of cache line 1
+ A p4792;            // pointer to p: i. 4792, filled in on first use
+
+// DLL stuff
+ A cdarg;            /* table of 15!:0 parsed left arguments            */
+ A cdhash;           // hash table of cdstr strings into cdarg// end of cache line 0
+ A cdhashl;          // hash table of cdstr strings into module index
+ A cdstr;            /* strings for cdarg                               */
+
+// file stuff
+ A flkd;             /* file lock data: number, index, length           */
+ A fopa;             /* open files boxed names                          */
+ A fopf;             /* open files corresp. file numbers                */
+// end of cache line 2
+
+// little-used stuff
+ D tssbase;          /* initial 6!:0''                            */
+ A iep;              /* immediate execution phrase                      */
+ A pma;              /* perf. monitor: data area                        */
+ A evm;              /* event messages                                  */
+ I4 outmaxafter;      /* output: maximum # lines after truncation        */
+ I4 outmaxbefore;     /* output: maximum # lines before truncation       */
+ I4 outmaxlen;        /* output: maximum line length before truncation   */
+ B retcomm;          /* 1 iff retain comments and redundant spaces      */
+ UC seclev;           /* security level                                  */
+ C locsize[2];       /* size indices for named and numbered locales     */
+ C bx[11];               /* box drawing characters                          */
+ UC cstacktype;  /* cstackmin set during 0: jt init  1: passed in JSM  2: set in JDo   migrated*/
+ B sesm;             /* whether there is a session manager      migrated        */
+ C nfe;              /* 1 for J native front end            migrated            */
+ C oleop;            /* com flag to capture output          migrated            */
+ UC outeol;           /* output: EOL sequence code, 0, 1, or 2             */
+// end of cache line 3
+ UC disp[7];          /* # different verb displays                       */
+// 1 byte free
+
+// front-end interface info
+ void *smdowd;         /* sm.. sm/wd callbacks set by JSM()               */
  void *sminput;
- void *smoutput;         /* sm.. sm/wd callbacks set by JSM()               */
+ void *smoutput;
  void *smpoll;           /* re-used in wd                                   */
  void *opbstr;           /* com ptr to BSTR for captured output             */
- UI   smoption;         /* wd options, see comment in jtwd                 */
- I    int64rflag;       /* com flag for returning 64-bit integers          */
- I    transposeflag;    /* com flag for transposed arrays                  */
- C    *breakfn;  // [NPATH];   /* break file name                                 */
- I    sm;               /* sm options set by JSM()                         */
- C*   capture;          /* capture output for python->J etc.               */
- C    nfe;              /* 1 for J native front end                        */
- C    oleop;            /* com flag to capture output                      */
- A    xep;              /* exit execution phrase                           */
+ C *breakfn;  // [NPATH];   /* break file name                                 */
+// end of cache line 4
+ C* capture;          /* capture output for python->J etc.               */
+ UI smoption;         /* wd options, see comment in jtwd                 */
+ I sm;               /* sm options set by JSM()                         */
+ I int64rflag;       /* com flag for returning 64-bit integers          */
+ I transposeflag;    /* com flag for transposed arrays                  */
+ void *iomalloc;   // address of block, if any, allocated in io.c to be returned to the FE
+ I iomalloclen;   // length of the allocated block (in case we can reuse it)
+ UI qtstackinit;      // jqt front-end C stack pointer    
+// end of cache line 5
+ I* breakfh;          /* win break file handle                           */
+ I* breakmh;          /* win break map handle                            */
+ A xep;              /* exit execution phrase                           */
 
 // debug info
- UC   dbuser;           /* user-entered value for db                       */
- A    dbstops;          /* stops set by the user                           */
- A    dbtrap;           /* trap, execute on suspension                     */
+ A dbstops;          /* stops set by the user                           */
+ A dbtrap;           /* trap, execute on suspension                     */
+ I peekdata;         /* our window into the interpreter                 */
 
 
 
-// per-thread area
+// per-thread area.  Align on a 256B boundary to leave low 8 bits for flags (JTFLAGMSK is the list of bits)
 // The first 2 cache lines is the hottest real estate in J, because they can be referenced with
 // single-byte displacement.  Put your heaviest-used items here
 // things needed for memory allocation
@@ -154,7 +161,8 @@ typedef struct JSTstruct {
  I modifiercounter;  // incremented whenever anything happens that could alter modifier lookup: assignment/deletion of a modifier, or any change to locales or path
  UI cstackmin;        // red warning for C stack pointer    
  I4 callstacknext;    /* named fn calls: current depth                   */
- I4 fcalln;           /* named fn calls: maximum permissible depth       */
+ I4 fcalln;           /* named fn calls: maximum permissible depth   migrated    */
+// end of cachline 1
  UI4 ranks;            // low half: rank of w high half: rank of a  for IRS 
  union {  // this union is 4 bytes long
   UI4 ui4;    // all 4 flags at once, access as ui4
@@ -183,39 +191,46 @@ typedef struct JSTstruct {
 
 // things needed by execution of certain verbs
  I shapesink[2];     // garbage area used as load/store targets of operations we don't want to branch around
- A fill;             // fill     stuck here as filler
- C fillv0[sizeof(Z)];/* default fill value                              */
- C* fillv;            /* fill value                                      */
- D cct;               // complementary comparison tolerance 
  A idothash0;        // 2-byte hash table for use by i.    
  A idothash1;        // 4-byte hash table for use by i.     
+// end of cacheline 2
+ A fill;             // fill     stuck here as filler
+ C* fillv;            /* fill value                                      */
+ C fillv0[sizeof(Z)];/* default fill value                              */
+ D cct;               // complementary comparison tolerance 
  B foldrunning;      // 1 if fold is running (allows Z:)    
  C glock;            /* 0=unlocked, 1=perm lock, 2=temp lock            */
+ UC jerr;             /* error number (0 means no error)    migrated             */
+ UC jerr1;            /* last non-zero jerr                 migrated             */
+// 4 bytes free
  RNG *rngdata;    // separately allocated block for RNG
  I4 nthreads;  // number of threads to use, or 0 if we haven't checked     
+ I4 parsercalls;      /* # times parser was called          migrated             */
+// end of cacheline 3
 
 // things needed by parsing
  PFRAME parserstackframe;  // 4 words  
  L *assignsym;       // symbol-table entry for the symbol about to be assigned      scaf  need to use LX when multithreaded
  A nvra;             // data blocks that are in execution somewhere - always non-virtual, always rank 1, AS[0] holds current pointer   ???
- I4 parsercalls;      /* # times parser was called                       */
 
 // things needed for allocation of large blocks
  I mfreegenallo;        // Amount allocated through malloc, biased
  I malloctotal;    // net total of malloc/free performed in m.c only
+// end of cacheline 4
  I malloctotalhwmk;  // highest value since most recent 7!:1
-
-// end cache line 5.
 
 // things needed by unusual verbs
  void *dtoa;             /* use internally by dtoa.c                        */
  A xmod;             /* extended integer: the m in m&|@f                */  
  C pp[8];            // print precision (sprintf field for numeric output)
- C pos[2];           /* boxed output x-y positioning                    */
- C xmode;            /* extended integer operating mode                 */
  I bytes;            // bytes currently in use - used only during 7!:1
  I bytesmax;         // high-water mark of "bytes" - used only during 7!:1
-
+ S etxn;             /* strlen(etx)                        migrated             */
+ S etxn1;            /* last non-zero etxn                 migrated             */
+ C pos[2];           /* boxed output x-y positioning                    */
+ B iepdo;            /* 1 iff do iep                       migrated            */
+ C xmode;            /* extended integer operating mode                 */
+// 1 byte free
 #if !(C_CRC32C && SY_64)
  UIL  ctmask;           /* 1 iff significant wrt ct; for i. and i:         */
 #endif
@@ -225,21 +240,17 @@ typedef struct JSTstruct {
  I4   fdepi;            /* fn calls: current depth                         */
  I4   fdepn;            /* fn calls: maximum permissible depth             */
 #else
- UI cstackinit;       // C stack pointer at beginning of execution
 #endif
- A* tstacknext;       // if not 0, points to the recently-used tstack buffer, whose chain field points to tstacknext   
+ A* tstacknext;       // if not 0, points to the recently-used tstack buffer, whose chain field points to tstacknext  
+ // end of cacheline 5
  A* tstackcurr;       // current allocation, holding NTSTACK bytes+1 block for alignment.  First entry points to next-lower allocation   
  I getlasterror;     /* DLL stuff                                       */
  I dlllasterror;     /* DLL stuff                                       */
  C *etx;  // [1+NETX];      // display text for last error (+1 for trailing 0)
- S etxn;             /* strlen(etx)                                     */
- S etxn1;            /* last non-zero etxn                              */
- UC jerr;             /* error number (0 means no error)                 */
- UC jerr1;            /* last non-zero jerr                              */
- B iepdo;            /* 1 iff do iep                                    */
 
 // debugging info
  DC sitop;            /* pointer to top of SI stack                                 */
+ UI cstackinit;       // C stack pointer at beginning of execution
 
 // unordered symbols follow
 #if !C_CRC32C
@@ -250,9 +261,7 @@ typedef struct JSTstruct {
  I    min;              /* the r result from irange                        */
 #endif
 
-#if MEMHISTO
-I memhisto[64];  // histogram of requested memory blocks (9!:54, 9!:55)
-#endif
+// end of cacheline 6 (normalment)
 } JST;
 #if 0 // used only for direct locale numbering
  I*   numlocdelqh;      // head of deleted queue, waiting for realloc
@@ -261,6 +270,9 @@ I memhisto[64];  // histogram of requested memory blocks (9!:54, 9!:55)
  I*   numloctbl;         // pointer to data area for locale-number to locale translation
  UI4  numlocsize;       // AN(jt->stnum)
 #endif
+// obsolete C    typesizes[32];    // the length of an allocated item of each type
+// obsolete  UC   prioritytype[11];  // type bit for the priority types
+// obsolete  UC   typepriority[19];  // priority value for the noun types
 // obsolete  C cxspecials;       // 1 if special testing needed in cx loop (pm or debug)    
 // obsolete  I    mulofloloc;       // index of the result at which II multiply overflow occurred  scaf  $
 // obsolete  D    cctdefault;        /* default complementary comparison tolerance set by user                    */

@@ -81,7 +81,9 @@ I allosize(A y) {
 }
 
 #if MEMHISTO
-static I histarea[16384][2] = {0};  // name, frequency
+I memhisto[64];  // histogram of requested memory blocks (9!:54, 9!:55)
+static I histarea[16384][2] = {0};  // name, frequency of calls to jtgaf
+
 void memhashadd(I lineno, C *string){
  C string8[8]="        ";  // padded string
  string+=strlen(string);  // go to end
@@ -93,6 +95,19 @@ void memhashadd(I lineno, C *string){
  while(1){if(histarea[hash][0]==stringi)break; if(histarea[hash][0]==0){histarea[hash][0]=stringi; break;} if(--hash<0)hash=16383;}  // find hash slot
  ++histarea[hash][1];  // increment count
 }
+
+// 9!:54/55  read/set memory histogram
+F1(jtmemhistoq){
+ ASSERTMTV(w);
+ R vec(INT,sizeof(jt->memhisto)/sizeof(jt->memhisto)[0],jt->memhisto);
+}
+
+F1(jtmemhistos){I k;
+ ASSERTMTV(w); 
+ memset(jt->memhisto,0,sizeof(jt->memhisto));
+ R mtm;
+}
+
 
 // return histo area
 
@@ -1079,7 +1094,8 @@ RESTRICTF A jtgafv(J jt, I bytes){UI4 j;
 RESTRICTF A jtga(J jt,I type,I atoms,I rank,I* shaape){A z;
  // Get the number of bytes needed, including the header, the atoms, and a full I appended for types that require a
  // trailing NUL (because boolean-op code needs it)
- I bytes = ALLOBYTESVSZ(atoms,rank,bp(type),type&LAST0,0);  // We never use GA for NAME types, so we don't need to check for it
+ I bpt; if(likely(CTTZ(type)<=C4TX))bpt=bpnoun(type);else bpt=bp(type);
+ I bytes = ALLOBYTESVSZ(atoms,rank,bpt,type&LAST0,0);  // We never use GA for NAME types, so we don't need to check for it
 #if SY_64
  ASSERT(!((((unsigned long long)(atoms))&~TOOMANYATOMS)+((rank)&~RMAX)),EVLIMIT)
 #else
@@ -1186,7 +1202,8 @@ F1(jtca){A z;I t;P*wp,*zp;
  }else{
   if(t&NAME){GATV(z,NAME,AN(w),AR(w),AS(w));AT(z)=t;}  // GA does not allow NAME type, for speed
   else GA(z,t,AN(w),AR(w),AS(w));
-  MC(AV(z),AV(w),(AN(w)*bp(t))+(t&NAME?sizeof(NM):0));}
+  I bpt; if(likely(CTTZ(t)<=C4TX))bpt=bpnoun(t);else bpt=bp(t);
+  MC(AV(z),AV(w),(AN(w)*bpt)+(t&NAME?sizeof(NM):0));}
  R z;
 }
 // clone block only if it is read-only
@@ -1230,10 +1247,11 @@ B jtspc(J jt){A z; RZ(z=MALLOC(1000)); FREECHK(z); R 1; }  // see if 1000 bytes 
 // the itemcount of the result is set as large as will fit evenly, and the atomcount is adjusted accordingly
 A jtext(J jt,B b,A w){A z;I c,k,m,m1,t;
  ARGCHK1(w);                               /* assume AR(w)&&AN(w)    */
- m=AS(w)[0]; PROD(c,AR(w)-1,AS(w)+1); t=AT(w); k=c*bp(t);
+ m=AS(w)[0]; PROD(c,AR(w)-1,AS(w)+1);
+ t=AT(w); I bpt; if(likely(CTTZ(t)<=C4TX))bpt=bpnoun(t);else bpt=bp(t); k=c*bpt;
  GA(z,t,2*AN(w)+(AN(w)?0:c),AR(w),0);  // ensure we allocate SOMETHING to make progress
  m1=allosize(z)/k;  // start this divide before the copy
- MC(AV(z),AV(w),AN(w)*bp(t));                 /* copy old contents      */
+ MC(AV(z),AV(w),AN(w)*bpt);                 /* copy old contents      */
  MCISH(&AS(z)[1],&AS(w)[1],AR(w)-1);
  if(b){RZ(ras(z)); fa(w);}                 /* 1=b iff w is permanent.  This frees up the old space */
  AS(z)[0]=m1; AN(z)=m1*c;       /* "optimal" use of space */

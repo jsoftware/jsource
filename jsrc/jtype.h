@@ -89,6 +89,10 @@ typedef AD *A;
 // following bit is used in sort/grade to indicate sort direction
 #define JTDESCENDX      2   // direction of sort
 #define JTDESCEND       (((I)1)<<JTDESCENDX)
+// following bit is used as input to jtsymbis only
+#define JTFINALASGNX    0   // turn this on in jt to indicate that the assignment is final and does not have to worry about protecting the input value
+#define JTFINALASGN     (((I)1)<<JTFINALASGNX)
+
 
 // Next flag must match result.h and VF2 flags, and must be above ZZFLAGBOXATOP
 #define JTWILLBEOPENEDX 4   // result of this exec will be opened immediately, so it can contain virtual references to an input to the current verb

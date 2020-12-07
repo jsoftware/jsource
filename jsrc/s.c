@@ -486,7 +486,7 @@ L* jtprobeisquiet(J jt,A a,A locsyms){A g;  // locsyms is used in the call, but 
 
 // assign symbol: assign name a in symbol table g to the value w (but g is special if jt->assignsym is nonnull)
 // Result points to the symbol-table block for the assignment
-L* jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;L*e;
+L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I m,n,wn,wr,wt;L*e;
  ARGCHK2(a,w); RZ(g)
  // If we have an assignsym, we have looked this name up already, so just use the symbol-table entry found then
  // in this case g is the type field of the name being assigned; and jt->locsyms must exist, since it comes from
@@ -525,20 +525,31 @@ L* jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;L*e;
    }
  } else {xaf = AFNVRUNFREED; xt=0;}   // If name is not assigned, indicate that it is not read-only or memory-mapped.  Also set 'impossible' code of unfreed+not NVR
  if(!(AFNJA&xaf)){
+  I wt=AT(w);
   // Normal case of non-memory-mapped assignment.
-  // If we are assigning the same data block that's already there, don't bother with changing use counts or anything else
+  // If we are assigning the same data block that's already there, don't bother with changing use counts or anything else (assignment-in-place)
   if(likely(x!=w)){
-   if(unlikely(((xt|AT(w))&(VERB|CONJ|ADV))!=0)){
+   if(unlikely(((xt|wt)&(VERB|CONJ|ADV))!=0)){
     // When we assign to, or reassign, a modifier, invalidate all the lookups of modifiers that are extant
     // It's a pity that we have to do this for ALL assignments, even assignments to uv.  If we don't, a reference to a local modifier may get passed in, and
     // it will still be considered valid even though the local names have disappeared.  Maybe we could avoid this if the local namespace has no defined modifiers - but then we'd have to keep up with that...
     ++jt->modifiercounter;
     // If we are assigning a adverb value, check to see if it is nameless, and mark the value if it is
-    if(AT(w)&ADV)AT(w)|=(I)nameless(w)<<NAMELESSMODX;
+    if(unlikely((wt&ADV)!=0))AT(w)=wt|(I)nameless(w)<<NAMELESSMODX;
    }
    // Increment the use count of the value being assigned, to reflect the fact that the assigned name will refer to it.
    // This realizes any virtual value, and makes the usecount recursive if the type is recursible
-   realizeifvirtual(w); ra(w);
+   // If the value is abandoned inplaceable, we can just zap it, set its usecount to 1, and make it recursive if not already
+   // We do this only for final assignment, because we are creating a name that would then need to be put onto the NVR stack for protection if the sentence continued
+#if 1  // obsolete
+   rifv(w); // must realize any virtual
+   if(likely((SGNIF((I)jtinplace,JTFINALASGNX)&AC(w)&(-(wt&NOUN)))<0)){  // if final assignment to abandoned noun
+    *AZAPLOC(w)=0; AC(w)=ACUC1; if(unlikely(((wt^AFLAG(w))&RECURSIBLE)!=0)){AFLAG(w)|=wt&RECURSIBLE; jtra(w,wt);}  // zap it, make it non-abandoned, make it recursive (incr children if was nonrecursive)
+      // NOTE: NJA can't zap either, but it never has AC<0
+   }else ra(w);  // if zap not allowed, just ra() the whole thing
+#else
+   rifv(w); ra(w);
+#endif
    // If this is a reassignment, we need to decrement the use count in the old name, since that value is no longer used.
    // But if the value of the name is 'out there' in the sentence (coming from an earlier reference), we'd better not delete
    // that value until its last use.
@@ -551,18 +562,22 @@ L* jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;L*e;
     if(unlikely((xaf&AFNVR)!=0)){AFLAG(x)=(xaf&=~AFNVRUNFREED);} // If unfreed on the NVR stack, mark as to-be-freed on the stack.  This defers the deletion
     // x=0 case, and LABANDONED case, go through quietly making no change to the usecount of x
    }else{  // x is non0 and either already marked as freed on the NVR stack or must be put there now, or VIRTUAL
-    if(!(xaf&(AFNVR|AFVIRTUAL))){
+    if(likely(!(xaf&(AFNVR|AFVIRTUAL)))){
      // (1) the value in x is not on the NVR stack.  But it may still be at large in the sentence, because we don't push local names
-     // onto the NVR stack.  So, we defer the deletion until the end of the sentence, by adding the name to the NVR stack.  We could avoid this
-     // if we knew this is a final assignment
+     // onto the NVR stack.  So, we defer the deletion until the end of the sentence, by adding the name to the NVR stack.  If we are already at the end of the sentence
+     // we can avoid this, and just fa(), since the local name cannot be in use higher uup
      // (2) the value is not VIRTUAL.  The only way for an assigned value to be VIRTUAL is for it to be an initial assignment to x/y.  And to get here
      // the value must not have been adandoned.  So the usecount was raised on assignment (otherwise we would have gone through the no-fa special case).  So it is safe to fa() immediately then
-     A nvra=jt->nvra;
-     if(unlikely((I)(jt->parserstackframe.nvrtop+1U) > AN(nvra)))RZ(nvra=extnvr());  // Extend nvr stack if necessary.  copied from parser
-     AAV1(nvra)[jt->parserstackframe.nvrtop++] = x;   // record the place where the value was protected (i. e. this sentence); it will be freed when this sentence finishes
-     AFLAG(x) |= AFNVR;  // mark the value as protected in NVR stack
+     if(likely((I)jtinplace&JTFINALASGNX)){
+      fa(x);  // sentence is ending, no need to defer free
+     }else{
+      A nvra=jt->nvra;
+      if(unlikely((I)(jt->parserstackframe.nvrtop+1U) > AN(nvra)))RZ(nvra=extnvr());  // Extend nvr stack if necessary.  copied from parser
+      AAV1(nvra)[jt->parserstackframe.nvrtop++] = x;   // record the place where the value was protected (i. e. this sentence); it will be freed when this sentence finishes
+      AFLAG(x) |= AFNVR;  // mark the value as protected in NVR stack
+     }
     }else{
-     // already NVR+FREED or VIRTUAL: free this time, knowing the real free will happen later,  We know usecount>1, but it may be PERMANENT; decrement it if not
+     // already NVR+FREED or VIRTUAL: 'free' this time, knowing the real free will happen later,  We know usecount>1, but it may be PERMANENT; decrement it if not
      fadecr(x)
     }
    }

@@ -404,6 +404,11 @@ typedef JST* JS;  // shared part of struct
 
 #undef J
 #define J JJ
-#define JJTOJ(jj) ((JS)((I)(jj)&-0x2000))
+#if 0  // for multithreading
+#define JJTOJ(jj) ((JS)((I)(jj)&-JTALIGNBDY))
+#else
+#define JJTOJ(jj) ((JS)((I)(jj)-offsetof(struct JSTstruct,threaddata)+(jj->ranks&0)+((((I)jj^0x200)&0x1e00)<<48)))
+// scaf #define JJTOJ(jj) ((JS)((I)(jj)-offsetof(JSTstruct,threaddata)))
+#endif
 #define JT(p,n) JJTOJ(p)->n
 #define MTHREAD(jt) (&jt->threaddata[0])   // master thread for shared jt

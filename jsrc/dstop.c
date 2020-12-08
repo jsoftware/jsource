@@ -42,7 +42,7 @@ B jtdbstop(J jt,DC d,I i){A a;B b,c=0,e;C nw[11],*s,*t,*u,*v;I md,n,p,q;
  }
  // if no single-step stop, try looking the line up in the stops table
  if(i==d->dcstop){d->dcstop=-2; R 0;}     /* not stopping if already stopped at the same place */
- if(!(jt->dbstops))R 0; s=CAV(str0(jt->dbstops)); sprintf(nw,FMTI,i);
+ if(!(JT(jt,dbstops)))R 0; s=CAV(str0(JT(jt,dbstops))); sprintf(nw,FMTI,i);
  a=d->dca; n=d->dcm; t=NAV(a)->s; md=d->dcx&&d->dcy?2:1; 
  while(s){
   while(' '==*s)++s; if(b='~'==*s)++s; while(' '==*s)++s;
@@ -58,8 +58,8 @@ B jtdbstop(J jt,DC d,I i){A a;B b,c=0,e;C nw[11],*s,*t,*u,*v;I md,n,p,q;
 }    /* stop on line i? */
 
 
-F1(jtdbstopq){ASSERTMTV(w); R jt->dbstops?jt->dbstops:mtv;}
+F1(jtdbstopq){ASSERTMTV(w); R JT(jt,dbstops)?JT(jt,dbstops):mtv;}
      /* 13!:2  query stops */
 
-F1(jtdbstops){RZ(w=vs(w)); fa(jt->dbstops); if(AN(w)){RZ(ras(w)); jt->dbstops=w;}else jt->dbstops=0; R mtm;}
+F1(jtdbstops){RZ(w=vs(w)); fa(JT(jt,dbstops)); if(AN(w)){RZ(ras(w)); JT(jt,dbstops)=w;}else JT(jt,dbstops)=0; R mtm;}
      /* 13!:3  set stops */

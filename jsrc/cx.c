@@ -34,7 +34,7 @@
 // Parse/execute a line, result in z.  If locked, reveal nothing.  Save current line number in case we reexecute
 // If the sentence passes a u/v into an operator, the current symbol table will become the prev and will have the u/v environment info
 // If the sentence fails, we go into debug mode and don't return until the user releases us
-#define parseline(z) {C attnval=*jt->adbreakr; A *queue=line+ci->i; I m=ci->n; if(likely(!attnval)){if(likely(!(gsfctdl&16)))z=PARSERVALUE(parsea(queue,m));else {thisframe->dclnk->dcix=i; z=PARSERVALUE(parsex(queue,m,ci,callframe));}}else{jsignal(EVATTN); z=0;} }
+#define parseline(z) {C attnval=*JT(jt,adbreakr); A *queue=line+ci->i; I m=ci->n; if(likely(!attnval)){if(likely(!(gsfctdl&16)))z=PARSERVALUE(parsea(queue,m));else {thisframe->dclnk->dcix=i; z=PARSERVALUE(parsex(queue,m,ci,callframe));}}else{jsignal(EVATTN); z=0;} }
 
 typedef struct{A t,x,line;C*iv,*xv;I j,n; I4 k,w;} CDATA;
 /* for_xyz. t do. control data   */
@@ -210,7 +210,7 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
   // both cases we know the block will be freed by the caller.
   // Virtual abandoned blocks are both cases at once.  That's OK.
   UI4 yxbucks = *(UI4*)LXAV0(locsym);  // get the yx bucket indexes, stored in first hashchain by crelocalsyms
-  L *sympv=LAV0(jt->symp);  // bring into local
+  L *sympv=LAV0(JT(jt,symp));  // bring into local
   L *ybuckptr = LXAV0(locsym)[(US)yxbucks]+sympv;  // pointer to sym block for y
   L *xbuckptr = LXAV0(locsym)[yxbucks>>16]+sympv;  // pointer to sym block for x
   if(w){  // If y given, install it & incr usecount as in assignment.  Include the script index of the modification
@@ -219,7 +219,7 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
    if((a!=w)&SGNTO0(AC(w)&(((AT(w)^AFLAG(w))&RECURSIBLE)-1))&((I)jtinplace>>JTINPLACEWX)){
     ybuckptr->flag=LPERMANENT|LWASABANDONED; AC(w)&=~ACINPLACE;  // remember, blocks from every may be 0x8..2, and we must preserve the usecount then as if we ra()d it
    }else ra(w);
-   ybuckptr->val=w; ybuckptr->sn=AM(jt->slist);
+   ybuckptr->val=w; ybuckptr->sn=AM(JT(jt,slist));
   }
     // for x (if given), slot is from the beginning of hashchain EXCEPT when that collides with y; then follow y's chain
     // We have verified that hardware CRC32 never results in collision, but the software hashes do (needs to be confirmed on ARM CPU hardware CRC32C)
@@ -228,7 +228,7 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
    if((a!=w)&SGNTO0(AC(a)&(((AT(a)^AFLAG(a))&RECURSIBLE)-1))&((I)jtinplace>>JTINPLACEAX)){
     xbuckptr->flag=LPERMANENT|LWASABANDONED; AC(a)&=~ACINPLACE;
    }else ra(a);
-   xbuckptr->val=a; xbuckptr->sn=AM(jt->slist);
+   xbuckptr->val=a; xbuckptr->sn=AM(JT(jt,slist));
   }
   // Do the other assignments, which occur less frequently, with symbis
   if((I)u|(I)v){
@@ -263,7 +263,7 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
     // If there is no calling stack frame we can't turn on debug mode because we can't suspend
     // If we are executing a recursive call to JDo we can't go into debug because we can't prompt
     DC d; for(d=jt->sitop;d&&DCCALL!=d->dctype;d=d->dclnk);  /* find bottommost call                 */
-    if(d&&jt->recurstate<RECSTATEPROMPT){  // if there is a call and thus we can suspend; and not prompting already
+    if(d&&JT(jt,recurstate)<RECSTATEPROMPT){  // if there is a call and thus we can suspend; and not prompting already
      BZ(thisframe=deba(DCPARSE,0L,0L,0L));  // if deba fails it will be before it modifies sitop.  Remember our stack frame
      old=jt->tnextpushp;  // protect the stack frame against free
      gsfctdl|=16+2;  // indicate we have a debug frame and are in debug mode
@@ -274,7 +274,7 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
    if((UI)i>=(UI)n)break;
 
    // if performance monitor is on, collect data for it
-   if(jt->uflags.us.cx.cx_c.pmctr&&C1==((PM0*)CAV1(jt->pma))->rec&&FAV(self)->flag&VNAMED)pmrecord(jt->curname,jt->global?LOCNAME(jt->global):0,i,isdyad?VAL2:VAL1);
+   if(jt->uflags.us.cx.cx_c.pmctr&&C1==((PM0*)CAV1(JT(jt,pma)))->rec&&FAV(self)->flag&VNAMED)pmrecord(jt->curname,jt->global?LOCNAME(jt->global):0,i,isdyad?VAL2:VAL1);
    // If the executing verb was reloaded during debug, switch over to the modified definition
    DC siparent;
 // obsolete     if((gsfctdl&16)&&jt->redefined){A *hv;
@@ -310,7 +310,7 @@ tblockcase:
    if(ci->canend&2)tpop(old);else z=gc(z,old);   // 2 means previous B can't be the result
    parseline(t);
    // Check for assert.  Since this is only for T-blocks we tolerate the test (rather than duplicating code)
-   if(ci->type==CASSERT&&jt->assert&&t&&!(NOUN&AT(t)&&all1(eq(num(1),t))))t=pee(line,ci,EVASSERT,gsfctdl<<(BW-2),callframe);  // if assert., signal post-execution error if result not all 1s.  May go into debug; sets to result after debug
+   if(ci->type==CASSERT&&JT(jt,assert)&&t&&!(NOUN&AT(t)&&all1(eq(num(1),t))))t=pee(line,ci,EVASSERT,gsfctdl<<(BW-2),callframe);  // if assert., signal post-execution error if result not all 1s.  May go into debug; sets to result after debug
    if(likely(t!=0)){ti=i,++i;  // if no error, continue on
     if((UI)i<(UI)n&&!(((cwtype=(ci=i+cw)->type)^CDO)+jt->uflags.us.cx.cx_us))goto docase;  // avoid indirect-branch overhead on the likely case
    }else if((gsfctdl&16)&&DB1&jt->uflags.us.cx.cx_c.db)ti=i,i=debugnewi(i+1,thisframe,self);  // error in debug mode: when coming out of debug, go to new line (there had better be one)
@@ -376,7 +376,7 @@ dobblock:
    tryinit(tdv+tdi,i,cw);
    // turn off debugging UNLESS there is a catchd; then turn on only if user set debug mode
    // if debugging is already off, it stays off
-   if(jt->uflags.us.cx.cx_c.db)jt->uflags.us.cx.cx_c.db=(gsfctdl&16)&&(UC)(tdv+tdi)->d?jt->dbuser:0;
+   if(jt->uflags.us.cx.cx_c.db)jt->uflags.us.cx.cx_c.db=(gsfctdl&16)&&(UC)(tdv+tdi)->d?JT(jt,dbuser):0;
    ++tdi; ++i; gsfctdl|=4;  // bump tdi pointer, set flag
    break;
   case CCATCH: case CCATCHD: case CCATCHT:
@@ -481,7 +481,7 @@ dobblock:
    if((UI)i<(UI)n&&!((((cwtype=(ci=i+cw)->type)&31)^CBBLOCK)+jt->uflags.us.cx.cx_us))goto dobblock;  // avoid indirect-branch overhead on the likely  case. ... do. bblock
    break;
   default:   //   CELSE CWHILST CGOTO CEND
-   if(unlikely(2<=*jt->adbreakr)) { BASSERT(0,EVBREAK);} 
+   if(unlikely(2<=*JT(jt,adbreakr))) { BASSERT(0,EVBREAK);} 
      // this is JBREAK0, but we have to finish the loop.  This is double-ATTN, and bypasses the TRY block
    i=ci->go;  // Go to the next sentence, whatever it is
   }
@@ -730,7 +730,7 @@ static void jtcalclocalbuckets(J jt, A t, LX *actstv, I actstn){LX k;
   // search through the chain, looking for a match on name.  If we get a match, the bucket index is the one's complement
   // of the number of items compared before the match.  If we get no match, the bucket index is the number
   // of items compared (= the number of items in the chain)
-  L *sympv=LAV0(jt->symp);
+  L *sympv=LAV0(JT(jt,symp));
   for(k=actstv[tn->bucket];k;++compcount,k=sympv[k].next){  // k chases the chain of symbols in selected bucket
    if(tn->m==NAV(sympv[k].name)->m&&!memcmpne(tn->s,NAV(sympv[k].name)->s,tn->m)){compcount=~compcount; break;}
   }
@@ -831,7 +831,7 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
 
  // Count the assigned names, and allocate a symbol table of the right size to hold them.  We won't worry too much about collisions, since we will be assigning indexes in the definition.
  // We choose the smallest feasible table to reduce the expense of clearing it at the end of executing the verb
- I pfstn=AN(pfst); LX*pfstv=LXAV0(pfst),pfx; I asgct=0; L *sympv=LAV0(jt->symp);
+ I pfstn=AN(pfst); LX*pfstv=LXAV0(pfst),pfx; I asgct=0; L *sympv=LAV0(JT(jt,symp));
  for(j=SYMLINFOSIZE;j<pfstn;++j){  // for each hashchain
   for(pfx=pfstv[j];pfx;pfx=sympv[pfx].next){++asgct;}  // chase the chain and count.
  }
@@ -845,10 +845,10 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
  // So we add them by hand - just y and possibly x.
  RZ(probeis(mnuvxynam[5],actst));if(!(!dyad&&(type>=3||(flags&VXOPR)))){RZ(probeis(mnuvxynam[4],actst));}
  for(j=1;j<pfstn;++j){  // for each hashchain
-  for(pfx=pfstv[j];pfx;pfx=LAV0(jt->symp)[pfx].next){L *newsym;
-   A nm=LAV0(jt->symp)[pfx].name;
+  for(pfx=pfstv[j];pfx;pfx=LAV0(JT(jt,symp))[pfx].next){L *newsym;
+   A nm=LAV0(JT(jt,symp))[pfx].name;
    RZ(newsym=probeis(nm,actst));  // create new symbol (or possibly overwrite old argument name)
-   newsym->flag = LAV0(jt->symp)[pfx].flag|LPERMANENT;   // Mark as permanent
+   newsym->flag = LAV0(JT(jt,symp))[pfx].flag|LPERMANENT;   // Mark as permanent
   }
  }
  I actstn=AN(actst)-SYMLINFOSIZE; LX*actstv=LXAV0(actst);  // # hashchains in new symbol table, and pointer to hashchain table
@@ -882,14 +882,14 @@ A jtclonelocalsyms(J jt, A a){A z;I j;I an=AN(a); LX *av=LXAV0(a),*zv;
  zv[0]=av[0]; // Copy as Lx; really it's a UI4
  // Go through each hashchain of the model, after the first one
  for(j=SYMLINFOSIZE;j<an;++j) {LX *zhbase=&zv[j]; LX ahx=av[j]; LX ztx=0; // hbase->chain base, hx=index of current element, tx is element to insert after
-  while(ahx&&(LAV0(jt->symp))[ahx].flag&LPERMANENT) {L *l;  // for each permanent entry...
+  while(ahx&&(LAV0(JT(jt,symp)))[ahx].flag&LPERMANENT) {L *l;  // for each permanent entry...
    RZ(l=symnew(zhbase,ztx)); 
-   A nm=(LAV0(jt->symp))[ahx].name;
+   A nm=(LAV0(JT(jt,symp)))[ahx].name;
    l->name=nm; ras(l->name);  // point symbol table to the name block, and increment its use count accordingly
-   l->flag=(LAV0(jt->symp))[ahx].flag&(LINFO|LPERMANENT);  // clear all but PERMANENT and INFO, in case we try to delete the name (as in for_xyz. or 4!:55)
-   ztx = ztx?(LAV0(jt->symp))[ztx].next : *zhbase;  // ztx=index to value we just added.  We avoid address calculation because of the divide.  If we added
+   l->flag=(LAV0(JT(jt,symp)))[ahx].flag&(LINFO|LPERMANENT);  // clear all but PERMANENT and INFO, in case we try to delete the name (as in for_xyz. or 4!:55)
+   ztx = ztx?(LAV0(JT(jt,symp)))[ztx].next : *zhbase;  // ztx=index to value we just added.  We avoid address calculation because of the divide.  If we added
       // at head, the added block is the new head; otherwise it's pointed to by previous tail
-   ahx = (LAV0(jt->symp))[ahx].next;  // advance to next symbol
+   ahx = (LAV0(JT(jt,symp)))[ahx].next;  // advance to next symbol
   }
  }
  R z;
@@ -944,8 +944,8 @@ F2(jtcolon){A d,h,*hv,m;C*s;I flag=VFLAGNONE,n,p;
   if(4==n){if((-AN(m)&(AN(d)-1))<0)d=m; m=mtv;}  //  for 4 :, make the single def given the dyadic one
   GAT0(h,BOX,2*HN,1); hv=AAV(h);
   if(n){B b;  // if not noun, audit the valences as valid sentences and convert to a queue to send into parse()
-   RE(b=preparse(m,hv,hv+1)); if(b)flag|=VTRY1; hv[2]=jt->retcomm?m:mtv;
-   RE(b=preparse(d,hv+HN,hv+HN+1)); if(b)flag|=VTRY2; hv[2+HN]=jt->retcomm?d:mtv;
+   RE(b=preparse(m,hv,hv+1)); if(b)flag|=VTRY1; hv[2]=JT(jt,retcomm)?m:mtv;
+   RE(b=preparse(d,hv+HN,hv+HN+1)); if(b)flag|=VTRY2; hv[2+HN]=JT(jt,retcomm)?d:mtv;
   }
  }
  // The h argument is logically h[2][HN] where the boxes hold (parsed words, in a row);(info for each control word);(original commented text (optional));(local symbol table)

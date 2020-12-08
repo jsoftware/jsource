@@ -9,9 +9,9 @@
 #endif
 
 #if SY_WIN32 && !SY_WINCE
-#define FREE(a)     HeapFree(jt->heap,0,a)
-#define MALLOC(n)   (void*)HeapAlloc(jt->heap,0,n)
-#define REALLOC(a,n) (void*)HeapReAlloc(jt->heap,0,a,n)
+#define FREE(a)     HeapFree(JT(jt,heap),0,a)
+#define MALLOC(n)   (void*)HeapAlloc(JT(jt,heap),0,n)
+#define REALLOC(a,n) (void*)HeapReAlloc(JT(jt,heap),0,a,n)
 #else
 #define FREE(a) free(a)
 #define MALLOC(n) malloc(n)

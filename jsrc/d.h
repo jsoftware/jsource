@@ -4,7 +4,7 @@
 /* Debug                                                                   */
 
 
-/* jt->uflags.us.cx.cx_c.db and jt->dbuser values; 0 means no debug                           */
+/* jt->uflags.us.cx.cx_c.db and JT(jt,dbuser) values; 0 means no debug                           */
 
 #define DB1         1       /* full debug                                   */
 

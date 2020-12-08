@@ -457,8 +457,8 @@ A jtparsea(J jt, A *queue, I m){PSTK * RESTRICT stack;A z,*v;I es;
        // This code is copied from s.c
        if(likely(NAV(y)->bucket!=0)){I bx;
         if(likely(0 <= (bx = ~NAV(y)->bucketx))){   // negative bucketx (now positive); skip that many items, and then you're at the right place.  This is the path for almost all local symbols
-         s = LXAV0(jt->locsyms)[NAV(y)->bucket]+LAV0(jt->symp);  // fetch hashchain headptr, point to L for first symbol
-         while(bx--){s = s->next+LAV0(jt->symp);}  // skip the prescribed number
+         s = LXAV0(jt->locsyms)[NAV(y)->bucket]+LAV0(JT(jt,symp));  // fetch hashchain headptr, point to L for first symbol
+         while(bx--){s = s->next+LAV0(JT(jt,symp));}  // skip the prescribed number
          if(unlikely(s->val==0))goto rdglob;  // if value has not been assigned, ignore it
         }else{
          // positive bucketx (now negative); that means skip that many items and then do name search.  This is set for words that were recognized as names but were not detected as assigned-to in the definition.  This is the path for global symbols
@@ -467,11 +467,11 @@ A jtparsea(J jt, A *queue, I m){PSTK * RESTRICT stack;A z,*v;I es;
          // from here on it is rare to find a name - usually they're globals defined elsewhere
          LX lx = LXAV0(jt->locsyms)[NAV(y)->bucket];  // index of first block if any
          I m=NAV(y)->m; C* nm=NAV(y)->s;  // length/addr of name from name block
-         while(0>++bx){lx = LAV0(jt->symp)[lx].next;}
+         while(0>++bx){lx = LAV0(JT(jt,symp))[lx].next;}
          // Now lx is the index of the first name that might match.  Do the compares
          while(1) {
           if(lx==0)goto rdglob;  // If we run off chain, go read from globals
-          s = lx+LAV0(jt->symp);  // symbol entry
+          s = lx+LAV0(JT(jt,symp));  // symbol entry
           IFCMPNAME(NAV(s->name),nm,m,{if(s->val==0)goto rdglob; break;})  // if match, we're done looking; could be not found, if no value
           lx = s->next;
          }

@@ -263,7 +263,7 @@ static SF(jtsorti1){F1PREFJT;A x,y,z;I*wv;I i,*xv,*zv;void *yv;
 #include "vgsortq.h"
 
 // JTDESCEND set in jt
-static SF(jtsortiq){FPREFIP;  // m=#sorts, n=#items in each sort, w is block
+static SF(jtsortiq){F1PREFIP;  // m=#sorts, n=#items in each sort, w is block
  A z; 
  if(ASGNINPLACESGN(SGNIF((I)jtinplace,JTINPLACEWX),w))z=w; else RZ(z=ca(w));   // output area, possibly the same as the input
  I *zv=IAV(z); DQ(m, sortiq1(zv,n); if((I)jtinplace&JTDESCEND){I *zv1=zv; I *zv2=zv+n; DQ(n>>1, I t=*zv1; *zv1++=*--zv2; *zv2=t;)} zv+=n;)  // sort each list (ascending); reverse if descending
@@ -271,7 +271,7 @@ static SF(jtsortiq){FPREFIP;  // m=#sorts, n=#items in each sort, w is block
 }
 
 
-static SF(jtsorti){FPREFIP;A y,z;I i;UI4 *yv;I j,s,*wv,*zv;
+static SF(jtsorti){F1PREFIP;A y,z;I i;UI4 *yv;I j,s,*wv,*zv;
  wv=AV(w);
  // figure out whether we should do small-range processing.  Comments in vg.c
  // First, decide, based on the length of the list, what the threshold for small-range sorting will be.
@@ -311,7 +311,7 @@ static SF(jtsorti){FPREFIP;A y,z;I i;UI4 *yv;I j,s,*wv,*zv;
 static SF(jtsortu1);
 
 // see jtsorti above
-static SF(jtsortu){FPREFIP;A y,z;I i;UI4 *yv;C4 j,s,*wv,*zv;
+static SF(jtsortu){F1PREFIP;A y,z;I i;UI4 *yv;C4 j,s,*wv,*zv;
  wv=C4AV(w);
  I maxrange; CR rng;
  if(0<(maxrange=16*(n-32))){rng = condrange4(wv,AN(w),-1,0,maxrange);
@@ -361,7 +361,7 @@ static SF(jtsortu1){F1PREFJT;A x,y,z;C4 *xu,*wv,*zu;I i;void *yv;
 #define SORTQULOADTYPE D*
 #include "vgsortq.h"
 
-static SF(jtsortdq){FPREFIP;  // m=#sorts, n=#items in each sort, w is block
+static SF(jtsortdq){F1PREFIP;  // m=#sorts, n=#items in each sort, w is block
  A z; 
  if(ASGNINPLACESGN(SGNIF((I)jtinplace,JTINPLACEWX),w))z=w; else RZ(z=ca(w));   // output area, possibly the same as the input
  D *zv=DAV(z); DQ(m, sortdq1(zv,n); if((I)jtinplace&JTDESCEND){D *zv1=zv; D *zv2=zv+n; DQ(n>>1, D t=*zv1; *zv1++=*--zv2; *zv2=t;)} zv+=n;)  // sort each list (ascending); reverse if descending
@@ -369,7 +369,7 @@ static SF(jtsortdq){FPREFIP;  // m=#sorts, n=#items in each sort, w is block
 }
 
 // We are known to have 1 atom per item
-static SF(jtsortd){FPREFIP;A x,y,z;B b;D*g,*h,*xu,*wv,*zu;I i,nneg;void *yv;
+static SF(jtsortd){F1PREFIP;A x,y,z;B b;D*g,*h,*xu,*wv,*zu;I i,nneg;void *yv;
  // Use quicksort for normal-sized lists
  if(n<50000)R jtsortdq(jtinplace,m,n,w);  // TUNE
 // testing if(n&1)R jtsortdq(jtinplace,m,n,w);

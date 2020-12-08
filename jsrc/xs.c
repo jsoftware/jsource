@@ -13,17 +13,17 @@
 
 
 B jtxsinit(J jt){A x;
- GAT0(x,BOX,10,1); memset(AV(x),C0,AN(x)*SZI); ras(x); jt->slist=x; AS(jt->slist)[0]=0;  // init block, set item count to 0
+ GAT0(x,BOX,10,1); memset(AV(x),C0,AN(x)*SZI); ras(x); JT(jt,slist)=x; AS(JT(jt,slist))[0]=0;  // init block, set item count to 0
 // obsolete  GAT0(x,INT,10,1); memset(AV(x),C0,AN(x)*SZI); ras(x); jt->sclist=x;
- AM(jt->slist)=-1;  // indicate 'not in script'
+ AM(JT(jt,slist))=-1;  // indicate 'not in script'
  R 1;
 }
 
-F1(jtsnl){ASSERTMTV(w); R vec(BOX,AS(jt->slist)[0],AAV(jt->slist));}
+F1(jtsnl){ASSERTMTV(w); R vec(BOX,AS(JT(jt,slist))[0],AAV(JT(jt,slist)));}
      /* 4!:3  list of script names */
 
 #if 0 // obsolete
-F1(jtscnl){ASSERTMTV(w); R vec(INT,AS(jt->slist)[0],AAV(jt->sclist));}
+F1(jtscnl){ASSERTMTV(w); R vec(INT,AS(JT(jt,slist))[0],AAV(jt->sclist));}
      /* 4!:8  list of script indices which loaded slist */
 #endif
 
@@ -63,16 +63,16 @@ static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;DC d;
  }
  FDEPINC(1);   // No ASSERTs or returns till the FDEPDEC below
  RZ(d=deba(DCSCRIPT,0L,w,(A)si));
-// obsolete  jt->dcs=d; jt->dcs->dcpflags=(!(tso&&!jt->seclev))<<JTPRNOSTDOUTX;  // set flag to indicate suppression of output
- d->dcpflags=(!(tso&&!jt->seclev))<<JTPRNOSTDOUTX;  // set flag to indicate suppression of output
+// obsolete  jt->dcs=d; jt->dcs->dcpflags=(!(tso&&!JT(jt,seclev)))<<JTPRNOSTDOUTX;  // set flag to indicate suppression of output
+ d->dcpflags=(!(tso&&!JT(jt,seclev)))<<JTPRNOSTDOUTX;  // set flag to indicate suppression of output
  J jtinplace=(J)((I)jt|d->dcpflags);  // create typeout flags to pass along: no output class, suppression as called for in tso
  d->dcss=1;  // indicate this script is not overridden by suspension
-// obsolete  jt->tostdout=tso&&!jt->seclev;
+// obsolete  jt->tostdout=tso&&!JT(jt,seclev);
  A *old=jt->tnextpushp;
  switch(ce){
  // loop over the lines.  jgets may fail, in which case we leave that as the error code for the sentence.
  case 0: while(x&&!jt->jerr){jt->etxn=0;                           jtimmex(jtinplace,x=ddtokens(jgets("   "),1+(AN(jt->locsyms)>1))); tpop(old);} break;  // lgets returns 0 for error or EOF
- case 1: while(x           ){if(!jt->seclev)jtshowerr(jtinplace); jt->jerr=0; jtimmex(jtinplace,x=ddtokens(jgets("   "),1+(AN(jt->locsyms)>1))); tpop(old);} break;
+ case 1: while(x           ){if(!JT(jt,seclev))jtshowerr(jtinplace); jt->jerr=0; jtimmex(jtinplace,x=ddtokens(jgets("   "),1+(AN(jt->locsyms)>1))); tpop(old);} break;
  case 2:
  case 3: {
 #if SEEKLEAK
@@ -94,23 +94,23 @@ static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;DC d;
 }
 
 static F1(jtaddscriptname){I i;
- RE(i=i0(indexof(vec(BOX,AS(jt->slist)[0],AAV(jt->slist)),box(ravel(w)))));  // look up only in the defined names
- if(AS(jt->slist)[0]==i){
-  if(AS(jt->slist)[0]==AN(jt->slist)){I oldn=AM(jt->slist); RZ(jt->slist=ext(1,jt->slist)); AM(jt->slist)=oldn;}  // extend, preserving curr index (destroying len momentarily)
+ RE(i=i0(indexof(vec(BOX,AS(JT(jt,slist))[0],AAV(JT(jt,slist))),box(ravel(w)))));  // look up only in the defined names
+ if(AS(JT(jt,slist))[0]==i){
+  if(AS(JT(jt,slist))[0]==AN(JT(jt,slist))){I oldn=AM(JT(jt,slist)); RZ(JT(jt,slist)=ext(1,JT(jt,slist))); AM(JT(jt,slist))=oldn;}  // extend, preserving curr index (destroying len momentarily)
 // obsolete RZ(jt->sclist=ext(1,jt->sclist));
-  INCORP(w); RZ(ras(w)); RZ(*(i+AAV(jt->slist))=w);
-// obsolete  *(AS(jt->slist)[0]+IAV(jt->sclist))=AM(jt->slist);
-  AS(jt->slist)[0]=i+1;  // set new len
+  INCORP(w); RZ(ras(w)); RZ(*(i+AAV(JT(jt,slist)))=w);
+// obsolete  *(AS(JT(jt,slist))[0]+IAV(jt->sclist))=AM(JT(jt,slist));
+  AS(JT(jt,slist))[0]=i+1;  // set new len
  }
  R sc(i);
 }
 
 
 
-static A jtlinf(J jt,A a,A w,C ce,B tso){A x,y,z;B lk=0;C*s;I i=-1,n,oldi=AM(jt->slist);
+static A jtlinf(J jt,A a,A w,C ce,B tso){A x,y,z;B lk=0;C*s;I i=-1,n,oldi=AM(JT(jt,slist));
  ARGCHK2(a,w);
  ASSERT(AT(w)&BOX,EVDOMAIN);
- if(jt->seclev){
+ if(JT(jt,seclev)){
   y=AAV(w)[0]; n=AN(y); s=CAV(y); 
   ASSERT(LIT&AT(y),EVDOMAIN); 
   ASSERT(3<n&&!memcmpne(s+n-3,".js",3L)||4<n&&!memcmpne(s+n-4,".ijs",4L),EVSECURE);
@@ -123,9 +123,9 @@ static A jtlinf(J jt,A a,A w,C ce,B tso){A x,y,z;B lk=0;C*s;I i=-1,n,oldi=AM(jt-
  A scripti; RZ(scripti=jtaddscriptname(jt,y)); i=IAV(scripti)[0];
 
  // set the current script number
- AM(jt->slist)=i;
+ AM(JT(jt,slist))=i;
  z=line(x,i,ce,tso); 
- AM(jt->slist)=oldi;
+ AM(JT(jt,slist))=oldi;
 #if SYS & SYS_PCWIN
  if(lk)memset(AV(x),C0,AN(x));  /* security paranoia */
 #endif
@@ -142,9 +142,9 @@ F1(jtscriptstring){
 // 4!:7 set script name to use and return previous value
 F1(jtscriptnum){
  I i=i0(w);  // fetch index
- ASSERT(BETWEENO(i,-1,AS(jt->slist)[0]),EVINDEX);  // make sure it's _1 or valid index
- A rv=sc(AM(jt->slist));  // save the old value
- RZ(rv); AM(jt->slist)=i;  // set the new value (if no error)
+ ASSERT(BETWEENO(i,-1,AS(JT(jt,slist))[0]),EVINDEX);  // make sure it's _1 or valid index
+ A rv=sc(AM(JT(jt,slist)));  // save the old value
+ RZ(rv); AM(JT(jt,slist))=i;  // set the new value (if no error)
  R rv;  // return prev value
 }
 

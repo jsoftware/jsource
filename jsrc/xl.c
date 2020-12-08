@@ -60,15 +60,15 @@ static B jtdolock(J jt,B lk,F f,I i,I n){I e;
 }
 #endif
 
-#define LKC  3      /* number of columns in jt->flkd table       */
+#define LKC  3      /* number of columns in JT(jt,flkd) table       */
 
 B jtxlinit(J jt){A x;I*s;
  GAT0(x,INT,20*LKC,2); ras(x); s=AS(x); s[0]=20; s[1]=LKC;
- jt->flkd=x; AM(jt->flkd)=0;  // AM holds the # valid entries
+ JT(jt,flkd)=x; AM(JT(jt,flkd))=0;  // AM holds the # valid entries
  R 1;
 }
 
-F1(jtjlocks){A y; ASSERTMTV(w); y=take(sc(AM(jt->flkd)),jt->flkd); R grade2(y,y);}
+F1(jtjlocks){A y; ASSERTMTV(w); y=take(sc(AM(JT(jt,flkd))),JT(jt,flkd)); R grade2(y,y);}
      /* return the locks, a 3-column table of (number,index,length) */
 
 F1(jtjlock){B b;I*v;
@@ -76,31 +76,31 @@ F1(jtjlock){B b;I*v;
  RZ(w=vi(w)); 
  ASSERT(LKC==AN(w),EVLENGTH);
  v=AV(w); RE(vfn((F)*v)); ASSERT(0<=v[1]&&0<=v[2],EVDOMAIN); 
- if(AM(jt->flkd)==AS(jt->flkd)[0]){I ct=AM(jt->flkd); RZ(jt->flkd=ext(1,jt->flkd)); AM(jt->flkd)=ct;}
+ if(AM(JT(jt,flkd))==AS(JT(jt,flkd))[0]){I ct=AM(JT(jt,flkd)); RZ(JT(jt,flkd)=ext(1,JT(jt,flkd))); AM(JT(jt,flkd))=ct;}
  RE(b=dolock(1,(F)v[0],v[1],v[2]));
  if(!b)R num(0);
- ICPY(AV(jt->flkd)+LKC*AM(jt->flkd),v,LKC); ++AM(jt->flkd);
+ ICPY(AV(JT(jt,flkd))+LKC*AM(JT(jt,flkd)),v,LKC); ++AM(JT(jt,flkd));
  R num(1);
 }    /* w is (number,index,length); lock the specified region */
 
 static A jtunlj(J jt,I j){B b;I*u,*v;
  RE(j);
- ASSERT(BETWEENO(j,0,AM(jt->flkd)),EVINDEX);
- u=AV(jt->flkd); v=u+j*LKC;
+ ASSERT(BETWEENO(j,0,AM(JT(jt,flkd))),EVINDEX);
+ u=AV(JT(jt,flkd)); v=u+j*LKC;
  RE(b=dolock(0,(F)v[0],v[1],v[2]));
  if(!b)R num(0);
- --AM(jt->flkd); 
- if(j<AM(jt->flkd))ICPY(v,u+AM(jt->flkd)*LKC,LKC); else *v=0; 
+ --AM(JT(jt,flkd)); 
+ if(j<AM(JT(jt,flkd)))ICPY(v,u+AM(JT(jt,flkd))*LKC,LKC); else *v=0; 
  R num(1);
-}    /* unlock the j-th entry in jt->flkd */
+}    /* unlock the j-th entry in JT(jt,flkd) */
 
-B jtunlk(J jt,I x){I j=0,*v=AV(jt->flkd); 
- while(j<AM(jt->flkd)){while(x==*v)RZ(unlj(j)); ++j; v+=LKC;} 
+B jtunlk(J jt,I x){I j=0,*v=AV(JT(jt,flkd)); 
+ while(j<AM(JT(jt,flkd))){while(x==*v)RZ(unlj(j)); ++j; v+=LKC;} 
  R 1;
 }    /* unlock all existing locks for file# x */
 
 F1(jtjunlock){
  F1RANK(1,jtjunlock,DUMMYSELF); 
  ASSERT(INT&AT(w),EVDOMAIN); 
- R unlj(i0(indexof(jt->flkd,w))); 
+ R unlj(i0(indexof(JT(jt,flkd),w))); 
 }    /* w is (number,index,length); unlock the specified region */

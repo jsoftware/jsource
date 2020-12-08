@@ -19,13 +19,13 @@
 
 #define BLACK           0
 #define RED             1
-#define ROOT            (AS(jt->sbu)[1])  // safe place to get out of jst
-#define FILLFACTOR      (AS(jt->sbu)[2])
-#define GAP             (AS(jt->sbu)[3])
-#define HASHTABLE       ((A)AK(jt->sbu))
-#define STRINGTABLE     ((A)AN(jt->sbu))
-#define SETHASHTABLE(x)  AK(jt->sbu)=(I)(x);
-#define SETSTRINGTABLE(x) AN(jt->sbu)=(I)(x);
+#define ROOT            (AS(JT(jt,sbu))[1])  // safe place to get out of jst
+#define FILLFACTOR      (AS(JT(jt,sbu))[2])
+#define GAP             (AS(JT(jt,sbu))[3])
+#define HASHTABLE       ((A)AK(JT(jt,sbu)))
+#define STRINGTABLE     ((A)AN(JT(jt,sbu)))
+#define SETHASHTABLE(x)  AK(JT(jt,sbu))=(I)(x);
+#define SETSTRINGTABLE(x) AN(JT(jt,sbu))=(I)(x);
 #if SY_64
 #define INITHASH2(h,n) ((h*(UI)n)>>32)  // get initial index for hash lookup into sbh
 #else
@@ -65,12 +65,12 @@ typedef enum {
 
 
 #ifdef TMP
-#define NODE(a)         (tmp_node++,a+SBUV4(jt->sbu))
+#define NODE(a)         (tmp_node++,a+SBUV4(JT(jt,sbu)))
 #else
-#define NODE(a)         (a+SBUV4(jt->sbu))
+#define NODE(a)         (a+SBUV4(JT(jt,sbu)))
 #endif
 
-#define NODEM(a,b)      (SBUV4(jt->sbu)[a].b)
+#define NODEM(a,b)      (SBUV4(JT(jt,sbu))[a].b)
 #define LEFT(a)         NODEM(a,left)
 #define RIGHT(a)        NODEM(a,right)
 #define ORDER(a)        NODEM(a,order)
@@ -110,8 +110,8 @@ static __inline int Vcompare(J jt,I a,I b){I m,n;SBU*u,*v;UC*s,*t;US*p,*q;C4*f,*
 #ifdef TMP
  tmp_lt++;
 #endif
- u=a+SBUV4(jt->sbu); m=u->n; s=(UC*)(CAV1(STRINGTABLE)+u->i);
- v=b+SBUV4(jt->sbu); n=v->n; t=(UC*)(CAV1(STRINGTABLE)+v->i);
+ u=a+SBUV4(JT(jt,sbu)); m=u->n; s=(UC*)(CAV1(STRINGTABLE)+u->i);
+ v=b+SBUV4(JT(jt,sbu)); n=v->n; t=(UC*)(CAV1(STRINGTABLE)+v->i);
 // string comparison ignores storage type
 //         u   s   m                        v   t   n
  switch((SBC4&u->flag?6:SBC2&u->flag?3:0)+(SBC4&v->flag?2:SBC2&v->flag?1:0)){
@@ -288,13 +288,13 @@ static statusEnum insert(J jt, I key) {
 /* ************************************************* */
 
 static I jtsbextend(J jt,I n,C*s,UI h,I hi){A x;I c,*hv,j,p;SBU*v;
- c=AM(jt->sbu);
- if(c==AS(jt->sbu)[0]){                   /* extend sbu unique symbols    */
+ c=AM(JT(jt,sbu));
+ if(c==AS(JT(jt,sbu))[0]){                   /* extend sbu unique symbols    */
   I sfill=FILLFACTOR; I sgap=GAP; I sroot=ROOT; A ssbs=STRINGTABLE; A ssbh=HASHTABLE;  // save fields
-  AK(jt->sbu)=AKXR(4); AS(jt->sbu)[1]=sizeof(SBU)/SZI; AS(jt->sbu)[2]=1; AS(jt->sbu)[3]=1; AN(jt->sbu)=AS(jt->sbu)[0]*AS(jt->sbu)[1];  // reconstruct fields for extend
-  RZ(x=ext(1,jt->sbu)); jt->sbu=x; AM(x)=c;
+  AK(JT(jt,sbu))=AKXR(4); AS(JT(jt,sbu))[1]=sizeof(SBU)/SZI; AS(JT(jt,sbu))[2]=1; AS(JT(jt,sbu))[3]=1; AN(JT(jt,sbu))=AS(JT(jt,sbu))[0]*AS(JT(jt,sbu))[1];  // reconstruct fields for extend
+  RZ(x=ext(1,JT(jt,sbu))); JT(jt,sbu)=x; AM(x)=c;
   FILLFACTOR=sfill; GAP=sgap; ROOT=sroot; SETSTRINGTABLE(ssbs); SETHASHTABLE(ssbh);    // restore
-// obsolete  jt->sbuv=(SBU*)AV(x);
+// obsolete  JT(jt,sbu)v=(SBU*)AV(x);
  }
  if(AN(STRINGTABLE)<n+AM(STRINGTABLE)){            /* extend sbs strings           */
   GATV0(x,LIT,2*(n+AM(STRINGTABLE)),1); MC(CAV(x),CAV1(STRINGTABLE),AM(STRINGTABLE)); AM(x)=AM(STRINGTABLE);
@@ -304,7 +304,7 @@ static I jtsbextend(J jt,I n,C*s,UI h,I hi){A x;I c,*hv,j,p;SBU*v;
  if(AN(HASHTABLE)<2*c){                   /* extend sbh hash table        */
 
   FULLHASHSIZE(2*AN(HASHTABLE),INTSIZE,1,0,p);
-  RZ(x=apvwr(p,-1L,0L)); hv=AV(x); v=SBUV4(jt->sbu); I oroot=ROOT;
+  RZ(x=apvwr(p,-1L,0L)); hv=AV(x); v=SBUV4(JT(jt,sbu)); I oroot=ROOT;
   fa(HASHTABLE); ras(x); SETHASHTABLE(x); ROOT=oroot;
 // obsolete  HASHTABLEv= AV(x);
   DO(c, j=INITHASH(v++->h); while(0<=hv[j]){if(--j<0)j+=AN(HASHTABLE);} hv[j]=i;);
@@ -318,7 +318,7 @@ static SB jtsbinsert(J jt,S c2,S c0,I n,C*s,UI h,UI hi){I c,m,p;SBU*u;
 // optimize storage if ascii or short
 // c2 new flag; c0 original flag
  if(c2!=c0)n>>=(c0&SBC4&&!c2&SBC2)?2:1;
- c=AM(jt->sbu);                            /* cardinality                  */
+ c=AM(JT(jt,sbu));                            /* cardinality                  */
  m=AM(STRINGTABLE);                            /* existing # chars in sbs      */
 // p = (-m)&(c2+(c2>>1));               /* pad for alignment (leaner)   */
  p=c2&SBC4?((-m)&3):c2&SBC2?(m&1):0;    /* pad for alignment            */
@@ -334,7 +334,7 @@ static SB jtsbinsert(J jt,S c2,S c0,I n,C*s,UI h,UI hi){I c,m,p;SBU*u;
  u->flag=c2;                            /* SBC2 SBC4 flag               */
  ASSERTSYS(STATUS_OK==insert(jt,c),"sbinsert");
  IAV1(HASHTABLE)[hi]=c;                      /* make sbh point to new symbol */
- ++AM(jt->sbu);                            /* # unique symbols             */
+ ++AM(JT(jt,sbu));                            /* # unique symbols             */
  AM(STRINGTABLE)+=n+p;                         /* # chars in sbs               */
  R(SB)c;
 }    /* insert new symbol */
@@ -453,7 +453,7 @@ static F1(jtsbunbox){A*wv,x,z;S c2;I i,m,n;SB*zv;
 
 static F1(jtsbunind){A z;I j,n,*zv;
  RZ(z=cvt(INT,w));
- zv=AV(z); n=AM(jt->sbu);
+ zv=AV(z); n=AM(JT(jt,sbu));
  DQ(AN(w), j=*zv++; ASSERT((UI)j<(UI)n,EVINDEX););
  AT(z)=SBT;
  R z;
@@ -555,7 +555,7 @@ static A jtsblit(J jt,C c,A w){A z;S c2=0;I k,m=0,n;SB*v,*v0;SBU*u;
 
 
 static F1(jtsbhashstat){A z;I j,k,n,p,*zv;SBU*v;
- n=AM(jt->sbu); v=SBUV4(jt->sbu); p=AN(HASHTABLE);
+ n=AM(JT(jt,sbu)); v=SBUV4(JT(jt,sbu)); p=AN(HASHTABLE);
  GATV0(z,INT,n,1); zv=AV(z);
  DO(n, j=INITHASH(v++->h); k=1; while(i!=IAV1(HASHTABLE)[j]){if(--j<0)j+=AN(HASHTABLE); ++k;} *zv++=k;);
  R z;
@@ -648,7 +648,7 @@ static A jtsbcheck2(J jt,A una,A sna,A u,A s){PROLOG(0000);
  c=AV(una)[0];
  ASSERTD(0<=c,"c non-negative");
  if(2==AN(una)){ASSERTD(0<=(offset=*(1+AV(una))),"offset non-negative");}
- if(!offset){ASSERTD(!offset||offset==AM(jt->sbu),"offset contiguous");}
+ if(!offset){ASSERTD(!offset||offset==AM(JT(jt,sbu)),"offset contiguous");}
  ASSERTD(!AR(sna),"sn atom");           /* string length */
  ASSERTD(INT&AT(sna),"sn integer");
  sn=AV(sna)[0];
@@ -678,7 +678,7 @@ static A jtsbcheck2(J jt,A una,A sna,A u,A s){PROLOG(0000);
 }
 
 static F1(jtsbcheck){
- A z=sbcheck1(sc(AM(jt->sbu)),sc(AM(STRINGTABLE)),jt->sbu,STRINGTABLE,HASHTABLE,sc(ROOT),sc(FILLFACTOR),sc(GAP),1);
+ A z=sbcheck1(sc(AM(JT(jt,sbu))),sc(AM(STRINGTABLE)),JT(jt,sbu),STRINGTABLE,HASHTABLE,sc(ROOT),sc(FILLFACTOR),sc(GAP),1);
  R z;
 }
 
@@ -689,10 +689,10 @@ static F1(jtsbsetdata){A h,s,u,*wv,x;
  ASSERTD(8==AN(w), "arg length");
  wv=AAV(w); 
  RZ(sbcheck1(wv[0],wv[1],wv[2],wv[3],wv[4],wv[5],wv[6],wv[7],0));
- u=jt->sbu; s=STRINGTABLE; h=HASHTABLE;
- RZ(x=ca(reshape((over(shape(wv[2]),v2(1,1))),wv[2]))); ras(x); jt->sbu=x;  // make shape nx11x1x1
- AM(jt->sbu)=AV(wv[0])[0];
-// obsolete  jt->sbuv=(SBU*)AV(x);
+ u=JT(jt,sbu); s=STRINGTABLE; h=HASHTABLE;
+ RZ(x=ca(reshape((over(shape(wv[2]),v2(1,1))),wv[2]))); ras(x); JT(jt,sbu)=x;  // make shape nx11x1x1
+ AM(JT(jt,sbu))=AV(wv[0])[0];
+// obsolete  JT(jt,sbu)v=(SBU*)AV(x);
  RZ(x=ca(wv[3])); ras(x); SETSTRINGTABLE(x);
  AM(STRINGTABLE)=AV(wv[1])[0];
 //  obsolete  STRINGTABLEv=     CAV(x);
@@ -706,9 +706,9 @@ static F1(jtsbsetdata){A h,s,u,*wv,x;
 }
 
 static void resetdata(J jt){
- fa(STRINGTABLE); fa(HASHTABLE); fa(jt->sbu); // free old symbol
+ fa(STRINGTABLE); fa(HASHTABLE); fa(JT(jt,sbu)); // free old symbol
  sbtypeinit();                          // initialization routine
- ras(jt->sbu); ra(STRINGTABLE); ra(HASHTABLE); // prevent automatically freed by tpop()
+ ras(JT(jt,sbu)); ra(STRINGTABLE); ra(HASHTABLE); // prevent automatically freed by tpop()
 }    /* re-initialize global symbol table */
 
 static F1(jtsbsetdata2){A *wv;I c,i,sn,offset=0;SBU*uv,*v;C*sv;
@@ -750,12 +750,12 @@ static F1(jtsbtestbox){A*wv,x,z;S c2;I i,m,n;B*zv;
 
 static F1(jtsbgetdata){A z,*zv;
  GAT0(z,BOX,8,1); zv=AAV(z);
- RZ(zv[0]=incorp(sc(AM(jt->sbu))));
+ RZ(zv[0]=incorp(sc(AM(JT(jt,sbu)))));
  RZ(zv[1]=incorp(sc(AM(STRINGTABLE))));
  I sfill=FILLFACTOR; I sgap=GAP; I sroot=ROOT; A ssbs=STRINGTABLE; A ssbh=HASHTABLE;  // save fields
- AK(jt->sbu)=AKXR(4); AR(jt->sbu)=2; AS(jt->sbu)[1]=sizeof(SBU)/SZI; AS(jt->sbu)[2]=1; AS(jt->sbu)[3]=1; AN(jt->sbu)=AS(jt->sbu)[0]*AS(jt->sbu)[1];  // reconstruct fields for extend
- RZ(zv[2]=incorp(ca(jt->sbu)));
- FILLFACTOR=sfill; GAP=sgap; ROOT=sroot; SETSTRINGTABLE(ssbs); SETHASHTABLE(ssbh); AR(jt->sbu)=4;  // restore
+ AK(JT(jt,sbu))=AKXR(4); AR(JT(jt,sbu))=2; AS(JT(jt,sbu))[1]=sizeof(SBU)/SZI; AS(JT(jt,sbu))[2]=1; AS(JT(jt,sbu))[3]=1; AN(JT(jt,sbu))=AS(JT(jt,sbu))[0]*AS(JT(jt,sbu))[1];  // reconstruct fields for extend
+ RZ(zv[2]=incorp(ca(JT(jt,sbu))));
+ FILLFACTOR=sfill; GAP=sgap; ROOT=sroot; SETSTRINGTABLE(ssbs); SETHASHTABLE(ssbh); AR(JT(jt,sbu))=4;  // restore
  RZ(zv[3]=incorp(ca(STRINGTABLE)));
  RZ(zv[4]=incorp(ca(HASHTABLE)));
  RZ(zv[5]=incorp(sc(ROOT)));
@@ -777,13 +777,13 @@ F2(jtsb2){A z;I j,k,n;
    RE(k=i0(w));
    switch(k){
     default: ASSERT(0,EVDOMAIN);
-    case 0:  R sc(AM(jt->sbu));
+    case 0:  R sc(AM(JT(jt,sbu)));
     case 1:  R sc(AM(STRINGTABLE));
     case 2: ;
      I sfill=FILLFACTOR; I sgap=GAP; I sroot=ROOT; A ssbs=STRINGTABLE; A ssbh=HASHTABLE;  // save fields
-     AK(jt->sbu)=AKXR(4); AR(jt->sbu)=2; AS(jt->sbu)[1]=sizeof(SBU)/SZI; AS(jt->sbu)[2]=1; AS(jt->sbu)[3]=1; AN(jt->sbu)=AS(jt->sbu)[0]*AS(jt->sbu)[1];  // reconstruct fields for extend
-     z=ca(jt->sbu);
-     FILLFACTOR=sfill; GAP=sgap; ROOT=sroot; SETSTRINGTABLE(ssbs); SETHASHTABLE(ssbh); AR(jt->sbu)=4;  // restore
+     AK(JT(jt,sbu))=AKXR(4); AR(JT(jt,sbu))=2; AS(JT(jt,sbu))[1]=sizeof(SBU)/SZI; AS(JT(jt,sbu))[2]=1; AS(JT(jt,sbu))[3]=1; AN(JT(jt,sbu))=AS(JT(jt,sbu))[0]*AS(JT(jt,sbu))[1];  // reconstruct fields for extend
+     z=ca(JT(jt,sbu));
+     FILLFACTOR=sfill; GAP=sgap; ROOT=sroot; SETSTRINGTABLE(ssbs); SETHASHTABLE(ssbh); AR(JT(jt,sbu))=4;  // restore
      R z;
     case 3:  R ca(STRINGTABLE);
     case 4:  R ca(HASHTABLE);
@@ -855,21 +855,21 @@ F2(jtsb2){A z;I j,k,n;
 // automatically freed by tpop()
 B jtsbtypeinit(J jt){A x;I c=sizeof(SBU)/SZI,s[4],p;
  s[0]=2000; s[1]=c; s[2]=1; s[3]=1;
- GATVR(x,INT,s[0]*c,4,s);          jt->sbu=x;
+ GATVR(x,INT,s[0]*c,4,s);          JT(jt,sbu)=x;
  GA(x,LIT,20000,1,0); SETSTRINGTABLE(x);
 // obsolete  STRINGTABLEv=     CAV(x);
  AM(STRINGTABLE)=0;  // size too big for GAT; initialization anyway
  FULLHASHSIZE(2000,INTSIZE,1,0,p);  // initial allo
  RZ(x=apvwr(p,-1L,0L)); SETHASHTABLE(x);
 // obsolete  IAV1(HASHTABLE)=      AV(x);
-// obsolete  jt->sbuv=(SBU*)AV(x);
+// obsolete  JT(jt,sbu)v=(SBU*)AV(x);
  GAP=15;                /* TWICE the difference in order numbers we want after re-ordering */
  FILLFACTOR=1024;
  ROOT=0;                /* initialize binary tree; initialize the empty symbol (used as fill) */
  UI hash0=hic(0,0);  // hash value of empty string
  sentinel.h=hash0;  // initialize the hash value for the empty symbol
- SBUV4(jt->sbu)[0]=sentinel;
- AM(jt->sbu)=1;  // init 1 symbol in table
+ SBUV4(JT(jt,sbu))[0]=sentinel;
+ AM(JT(jt,sbu))=1;  // init 1 symbol in table
  IAV1(HASHTABLE)[INITHASH(hash0)]=0;  // clear symbol-table entry for empty symbol
  R 1;
 }    /* initialize global data for SBT datatype */

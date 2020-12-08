@@ -127,7 +127,7 @@ static B jtsmmjoin(J jt,A a,I j){A y;I m,**mfree,n,*p,*q;
 static A jtsmma(J jt,A a,I m){A z;I j,n,**mfree,p;MS*x;
  JBREAK0;
  n=p=m+mhb; 
- ASSERT(n<=jt->mmax,EVLIMIT);
+ ASSERT(n<=JT(jt,mmax),EVLIMIT);
  j=6; n>>=j; while(n){n>>=1; ++j;}
  if(p==(I)1<<(j-1))--j;
  mfree=SMMFREE(a);

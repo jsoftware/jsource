@@ -50,9 +50,9 @@ void jtshowerr(J jt){F1PREFJT;C b[1+2*NETX],*p,*q,*r;
 #ifdef ANDROID
   A z=tocesu8(str(strlen(b),b));
   CAV(z)[AN(z)]=0;
-  jsto(jt,MTYOER,CAV(z));
+  jsto(JJTOJ(jt),MTYOER,CAV(z));
 #else
-  jsto(jt,MTYOER,b);
+  jsto(JJTOJ(jt),MTYOER,b);
 #endif
  }
  jt->etxn=0;
@@ -134,12 +134,12 @@ static void jtdhead(J jt,C k,DC d){C s[]="    ";
 void jtdebdisp(J jt,DC d){A*x,y;I e,t;
  e=d->dcj;   // error #, or 0 if no error (if DCCALL or DCPARSE frame)
  t=d->dctype;
- if(e&&!jt->etxn&&(t==DCPARSE||t==DCCALL)){x=e+AAV(jt->evm); dhead(0,0L); eputl(*x);}  // if error, display error header
+ if(e&&!jt->etxn&&(t==DCPARSE||t==DCCALL)){x=e+AAV(JT(jt,evm)); dhead(0,0L); eputl(*x);}  // if error, display error header
  switch(t){
   case DCPARSE:  dhead(3,d); seeparse(d); if(NETX==jt->etxn)--jt->etxn; eputc(CLF); break;
   case DCCALL:   dhead(0,d); seecall(d);  eputc(CLF); break;
   case DCSCRIPT: dhead(0,d); efmt("[-"FMTI"] ", d->dcn-1); 
-                 if(0<=d->dcm){y=*(d->dcm+AAV(jt->slist)); ep(AN(y),CAV(y));}
+                 if(0<=d->dcm){y=*(d->dcm+AAV(JT(jt,slist))); ep(AN(y),CAV(y));}
                  eputc(CLF); break;
 }}
 
@@ -191,14 +191,14 @@ void jtjsigd(J jt,C*s){C buf[100],*d="domain error: ";I m,n,p;
 }
 
 void jtjsignal(J jt,I e){A x;
- if(EVATTN==e||EVBREAK==e||e==EVINPRUPT) *jt->adbreak=0;
+ if(EVATTN==e||EVBREAK==e||e==EVINPRUPT) *JT(jt,adbreak)=0;
 // template for debug break point
 // if(EVDOMAIN==e){
 // fprintf(stderr,"domain error\n");
 // }
  // Errors > NEVM are internal-only errors that should never make it to the end of execution.
  // Ignore them here - they will not be displayed
- x=BETWEENC(e,1,NEVM)?AAV(jt->evm)[e]:mtv; jsigstr(e,AN(x),CAV(x));
+ x=BETWEENC(e,1,NEVM)?AAV(JT(jt,evm))[e]:mtv; jsigstr(e,AN(x),CAV(x));
 }
 
 void jtjsignal3(J jt,I e,A w,I j){
@@ -206,7 +206,7 @@ void jtjsignal3(J jt,I e,A w,I j){
  moveparseinfotosi(jt); jt->jerr=(C)e; jt->jerr1=(C)e; jt->etxn=0;  // before we display, move error info from parse variables to si
  dhead(0,0L);
  if(jt->uflags.us.cx.cx_c.db&&!spc()){eputs("ws full (can not suspend)"); eputc(CLF); jt->uflags.us.cx.cx_c.db=0;}
- eputl(AAV(jt->evm)[jt->jerr]);
+ eputl(AAV(JT(jt,evm))[jt->jerr]);
  if(!jt->glock){
   if(e==EVCTRL){dhead(3,0L); efmt("["FMTI"]",j); eputl(w);}
   else{

@@ -66,7 +66,7 @@ typedef UI4                RANK2T;  // 2 ranks, (l<<16)|r
 #define RANK2TX            32   // # bits in a RANK2T
 #define RANK2TMSK           0xFFFFFFFFU
 typedef I                  FLAGT;
-typedef UI4                LX;  // index of an L block in LAV0(jt->symp)
+typedef UI4                LX;  // index of an L block in LAV0(JT(jt,symp))
 
 typedef struct AD AD;
 typedef AD *A;
@@ -736,7 +736,7 @@ typedef struct{
 } PM0;
 
 
-/* each unique symbol has a row in jt->sbu                                 */
+/* each unique symbol has a row in JT(jt,sbu)                                 */
 /* a row is interpreted per SBU                                            */
 /* for best results make sizeof(SBU) a multiple of sizeof(I)               */
  
@@ -933,7 +933,7 @@ typedef struct {
 
 typedef struct {
   CMP  f;             /* comparison function in sort                     */
-  J    jt;        // jt, including the DESCEND flag
+  struct JTTstruct * jt;           // jt, including the DESCEND flag
   I    n;            /* comparison: number of atoms in each item        */
   I    k;            /* comparison: byte size of each item              */
   C*   v;            /* comparison: beginning of data area              */

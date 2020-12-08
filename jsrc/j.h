@@ -603,12 +603,13 @@ extern unsigned int __cdecl _clearfp (void);
 #define A0              0   // a nonexistent A-block
 #define ABS(a)          (0<=(a)?(a):-(a))
 #define ASSERT(b,e)     {if(unlikely(!(b))){jsignal(e); R 0;}}
+#define ASSERTMASTER(b,e)     {if(unlikely(!(b))){jtjsignal(jm,e); R 0;}}   // used in io.c to signal in master thread
 // version for debugging
 // #define ASSERT(b,e)     {if(unlikely(!(b))){fprintf(stderr,"error code: %i : file %s line %d\n",(int)(e),__FILE__,__LINE__); jsignal(e); R 0;}}
 #define ASSERTD(b,s)    {if(unlikely(!(b))){jsigd((s)); R 0;}}
 #define ASSERTMTV(w)    {ARGCHK1(w); ASSERT(1==AR(w),EVRANK); ASSERT(!AN(w),EVLENGTH);}
 #define ASSERTN(b,e,nm) {if(unlikely(!(b))){jt->curname=(nm); jsignal(e); R 0;}}  // set name for display (only if error)
-#define ASSERTSYS(b,s)  {if(unlikely(!(b))){fprintf(stderr,"system error: %s : file %s line %d\n",s,__FILE__,__LINE__); jsignal(EVSYSTEM); jtwri(jt,MTYOSYS,"",(I)strlen(s),s); R 0;}}
+#define ASSERTSYS(b,s)  {if(unlikely(!(b))){fprintf(stderr,"system error: %s : file %s line %d\n",s,__FILE__,__LINE__); jsignal(EVSYSTEM); jtwri(JJTOJ(jt),MTYOSYS,"",(I)strlen(s),s); R 0;}}
 #define ASSERTW(b,e)    {if(unlikely(!(b))){if((e)<=NEVM)jsignal(e); else jt->jerr=(e); R;}}
 #define ASSERTWR(c,e)   {if(unlikely(!(c))){R e;}}
 // verify that shapes *x and *y match for l axes using AVX for rank<5, memcmp otherwise
@@ -659,8 +660,8 @@ extern unsigned int __cdecl _clearfp (void);
 #define CALL1IP(f,w,fs)   ((f)(jtinplace,    (w),(A)(fs)))
 #define CALL2IP(f,a,w,fs) ((f)(jtinplace,(a),(w),(A)(fs)))
 #define RETARG(z)       (z)   // These places were ca(z) in the original JE
-#define CALLSTACKRESET  {jt->callstacknext=0; jt->uflags.us.uq.uq_c.bstkreqd = 0;} // establish initial conditions for things that might not get processed off the stack.  The last things stacked may never be popped
-#define MODESRESET      {jt->xmode=XMEXACT;}  // anything that might get left in a bad state and should be reset on return to immediate mode
+#define CALLSTACKRESET  {jm->callstacknext=0; jm->uflags.us.uq.uq_c.bstkreqd = 0;} // establish initial conditions for things that might not get processed off the stack.  The last things stacked may never be popped
+#define MODESRESET      {jm->xmode=XMEXACT;}  // anything that might get left in a bad state and should be reset on return to immediate mode
 // see if a character matches one of many.  Example in ai.c
 // create mask for the bit, if any, in word w for value.  Reverse order: 0=MSB
 #define CCM(w,value) ((I)(((value)>>LGBW)==(w)?1LL<<(BW-1-((value)&BW-1)):0))
@@ -674,8 +675,8 @@ extern unsigned int __cdecl _clearfp (void);
 // set the sign bit to the selected bit of the mask
 #define CCMSGN(cand,tval) (cand<<(tval&(BW-1)))   // set sign bit if value found
 #define CCMTST(cand,tval) (cand&(1LL<<(~tval&(BW-1))))  // test true is value found
-#define DF1(f)          A f(J jt,    A w,A self)
-#define DF2(f)          A f(J jt,A a,A w,A self)
+#define DF1(f)          A f(JJ jt,    A w,A self)
+#define DF2(f)          A f(JJ jt,A a,A w,A self)
 #define DO(n,stm)       {I i=0,_n=(n); for(;i<_n;i++){stm}}  // i runs from 0 to n-1
 #define DP(n,stm)       {I i=-(n);    for(;i<0;++i){stm}}   // i runs from -n to -1 (faster than DO)
 #define DQ(n,stm)       {I i=(I)(n)-1;    for(;i>=0;--i){stm}}  // i runs from n-1 downto 0 (fastest when you don't need i)
@@ -711,16 +712,16 @@ extern unsigned int __cdecl _clearfp (void);
 // FFEQ/FFIEQ (fixed fuzz) are used where we know for sure the test should be tolerant
 #define FFEQ(u,v)        (ABS((u)-(v))<=FUZZ*MAX(ABS(u),ABS(v)))
 #define FFIEQ(u,v)       (ABS((u)-(v))<=FUZZ*ABS(v))  // used when v is known to be exact integer.  It's close enough, maybe ULP too small on the high end
-#define F1(f)           A f(J jt,    A w)
-#define F2(f)           A f(J jt,A a,A w)
+#define F1(f)           A f(JJ jt,    A w)  // whether in an interface routine or not, these must use the internal parameter type
+#define F2(f)           A f(JJ jt,A a,A w)
 #define FPREF           
 #define F1PREF          FPREF
 #define F2PREF          FPREF
-#define FPREFIP         J jtinplace=jt; jt=(J)(intptr_t)((I)jt&~JTFLAGMSK)  // turn off all flag bits in jt, leave them in jtinplace
-#define F1PREFIP        FPREFIP
-#define F2PREFIP        FPREFIP
-#define F1PREFJT        FPREFIP  // for doc purposes, use when the JT flags are not for inplacing
-#define F2PREFJT        FPREFIP
+#define FPREFIP(T)         T jtinplace=jt; jt=(T)(intptr_t)((I)jt&~JTFLAGMSK)  // turn off all flag bits in jt, leave them in jtinplace
+#define F1PREFIP        FPREFIP(J)
+#define F2PREFIP        FPREFIP(J)
+#define F1PREFJT        FPREFIP(J)  // for doc purposes, use when the JT flags are not for inplacing
+#define F2PREFJT        FPREFIP(J)
 #define F1RANK(m,f,self)    {ARGCHK1(w); if(unlikely(m<AR(w)))if(m==0)R rank1ex0(w,(A)self,f);else R rank1ex(  w,(A)self,(I)m,     f);}  // if there is more than one cell, run rank1ex on them.  m=monad rank, f=function to call for monad cell.  Fall through otherwise
 #define F2RANKcommon(l,r,f,self,extra)  {ARGCHK2(a,w); extra if(unlikely((I)((l-AR(a))|(r-AR(w)))<0))if((l|r)==0)R rank2ex0(a,w,(A)self,f);else{I lr=MIN((I)l,AR(a)); I rr=MIN((I)r,AR(w)); R rank2ex(a,w,(A)self,lr,rr,lr,rr,f);}}  // If there is more than one cell, run rank2ex on them.  l,r=dyad ranks, f=function to call for dyad cell
 #define F2RANK(l,r,f,self)  F2RANKcommon(l,r,f,self,)
@@ -907,8 +908,8 @@ extern unsigned int __cdecl _clearfp (void);
 #endif
 
 #define IX(n)           apv((n),0L,1L)
-#define JATTN           {if(unlikely(*jt->adbreakr!=0)){jsignal(EVATTN); R 0;}}
-#define JBREAK0         {if(unlikely(2<=*jt->adbreakr)){jsignal(EVBREAK); R 0;}}
+#define JATTN           {if(unlikely(*JT(jt,adbreakr)!=0)){jsignal(EVATTN); R 0;}}
+#define JBREAK0         {if(unlikely(2<=*JT(jt,adbreakr))){jsignal(EVBREAK); R 0;}}
 #define JTIPA           ((J)((I)jt|JTINPLACEA))
 #define JTIPAW          ((J)((I)jt|JTINPLACEA+JTINPLACEW))
 #define JTIPW           ((J)((I)jt|JTINPLACEW))
@@ -1314,7 +1315,7 @@ if(likely(z<3)){_zzt+=z; z=(I)&oneone; _zzt=_i&3?_zzt:(I*)z; z=_i&2?(I)_zzt:z; z
 // data.  So, we clear the inplace variables if we don't want to allow that: if the user set zomblevel=0, or if there is no local symbol table
 // (which means the user is fooling around at the keyboard & performance is not as important as transparency)
 #define CLEARZOMBIE     {jt->assignsym=0;}  // Used when we know there shouldn't be an assignsym, just in case
-#define PUSHZOMB L*savassignsym = jt->assignsym; if(savassignsym){if(unlikely(((jt->asgzomblevel-1)|((AN(jt->locsyms)-2)))<0)){CLEARZOMBIE}}  // test is (jt->asgzomblevel==0||AN(jt->locsyms)<2)
+#define PUSHZOMB L*savassignsym = jt->assignsym; if(savassignsym){if(unlikely(((JT(jt,asgzomblevel)-1)|((AN(jt->locsyms)-2)))<0)){CLEARZOMBIE}}  // test is (JT(jt,asgzomblevel)==0||AN(jt->locsyms)<2)
 #define POPZOMB {jt->assignsym=savassignsym;}
 #define R               return
 #if FINDNULLRET   // When we return 0, we should always have an error code set.  trap if not
@@ -1370,8 +1371,8 @@ if(likely(z<3)){_zzt+=z; z=(I)&oneone; _zzt=_i&3?_zzt:(I*)z; z=_i&2?(I)_zzt:z; z
 // Input is the name of word of bytes.  Result is modified name, 1 bit per input byte, spaced like B01s, with the bit 0 iff the corresponding input byte was all 0.  Non-boolean bits of result are garbage.
 #define ZBYTESTOZBITS(b) (b=b|((b|(~b+VALIDBOOLEAN))>>7))  // for each byte: zero if b0 off, b7 off, and b7 turns on when you subtract 1 or 2
 // to verify gah conversion #define RETF(exp)       { A retfff=(exp);  if ((retfff) && ((AT(retfff)&SPARSE && AN(retfff)!=1) || (AT(retfff)&DENSE && AN(retfff)!=prod(AR(retfff),AS(retfff)))))SEGFAULT;; R retfff; } // scaf
-#define SBSV(x)         (CAV1((A)AN(jt->sbu))+(I)(x))
-#define SBUV(x)         (SBUV4(jt->sbu)+(I)(x))
+#define SBSV(x)         (CAV1((A)AN(JT(jt,sbu)))+(I)(x))
+#define SBUV(x)         (SBUV4(JT(jt,sbu))+(I)(x))
 #define SEGFAULT        (*(volatile I*)0 = 0)
 #define SGN(a)          ((I )(0<(a))-(I )(0>(a)))
 #define SMAX            65535
@@ -1494,7 +1495,7 @@ if(likely(z<3)){_zzt+=z; z=(I)&oneone; _zzt=_i&3?_zzt:(I*)z; z=_i&2?(I)_zzt:z; z
 #define C_CRC32C 1
 #endif
 
-typedef struct JSTstruct * J; 
+#define J struct JSTstruct * 
 #include "ja.h" 
 #include "jc.h" 
 #include "jtype.h" 
@@ -1616,7 +1617,7 @@ extern I CTLZI_(UI,UI4*);
 // JPF("size and extra: %i %i\n", (v,x))
 #define JPFX(s)  {char b[1000]; sprintf(b, s);    jsto(gjt,MTYOFM,b);}
 #define JPF(s,v) {char b[1000]; sprintf(b, s, v); jsto(gjt,MTYOFM,b);}
-extern J gjt; // global for JPF (procs without jt)
+extern JS gjt; // global for JPF (procs without jt)
 
 #if SY_WINCE_MIPS
 /* strchr fails for CE MIPS - neg chars - spellit fails in ws.c for f=.+.  */

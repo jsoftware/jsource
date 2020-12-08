@@ -44,15 +44,17 @@ there are only a few globals that have storage not in J
 */
 
 // globals 
-J gjt=0; // JPF debug - convenience debug single process
+JS gjt=0; // JPF debug - convenience debug single process - points to shared area bacause sto() uses it
 
 // thread-safe/one-time initialization of all global constants
 // Use GA for all these initializations, to save space since they're done only once
-B jtglobinit(J jt){A x,y;A *oldpushx=jt->tnextpushp;
+// The call gives us jt, but we initialize in the master thread
+// The jt we are given is a throwaway, needed ONLY so we can allocate some A blocks here.  Anything stored
+// into jt will never be used.  jinit3 will later be called with the real jt, to initialize it
+B jtglobinit(JS jjt){A x,y;J jt=MTHREAD(jjt);  // initialize in master thread
 // obsolete  MC(jt->typesizes,typesizes,sizeof(jt->typesizes));  // required for ma.  Repeated for each thread in jtinit3
 // obsolete  MC(jt->typepriority,typepriority,sizeof(jt->typepriority));  // may not be needed
 // obsolete MC(jt->prioritytype,prioritytype,sizeof(jt->prioritytype));  // may not be needed
- jt->adbreakr=jt->adbreak=&breakdata; /* required for ma to work */
  meminit();  // init allocation queues & tpop stack
  RZ(y=rifvs(str(1L,"z")));     ACX(y); AS(y)[0]=BUCKETXLOC(1,"z");   // for paths, the shape holds the bucketx
  GA(x,BOX, 1,1,0     ); ACX(x); AAV(x)[0]=y;                zpath      =x;  AFLAG(zpath) |= (AT(zpath)&TRAVERSIBLE);  // ensure that traversible types in pst are marked traversible, so tpush/ra/fa will not recur on them
@@ -75,8 +77,6 @@ B jtglobinit(J jt){A x,y;A *oldpushx=jt->tnextpushp;
 #if C_AVX && !defined(ANDROID)
  hwfma=(getCpuFeatures()&CPU_X86_FEATURE_FMA)?1:0;
 #endif
- // take all the permanent blocks off the tpop stack so that we don't decrement their usecount.  All blocks allocated here must be permanent
- jt->tnextpushp=oldpushx;
  DO(IOTAVECLEN, iotavec[i]=i+IOTAVECBEGIN;)  // init our vector of ascending integers
 
  R 1;
@@ -120,7 +120,7 @@ static B jtevinit(J jt){A q,*v;
  v[EVTHROW  ]=cstr("uncaught throw."            );
  v[EVTIME   ]=cstr("time limit"                 );
  v[EVVALUE  ]=cstr("value error"                );
- ras(q); jt->evm=q;
+ ras(q); JT(jt,evm)=q;
  if(jt->jerr){printf("evinit failed; error %hhi\n", jt->jerr); R 0;} else R 1;
 }
 
@@ -138,13 +138,13 @@ if (CTTZZ(0x140000000LL) != 30)*(I *)3 = 103;   // Create program check if error
 // verify that (I)x >> does sign-extension.  jtmult relies on that
 if(((-1) >> 1) != -1)*(I *)4 = 104;
 #endif
-jt->asgzomblevel = 1;  // allow premature change to zombie names, but not data-dependent errors
-jt->assert = 1;
-// obsolete  RZ(jt->bxa=cstr("+++++++++|-")); jt->bx=CAV(jt->bxa);
- MC(jt->bx,"+++++++++|-",sizeof(jt->bx));
+JT(jt,asgzomblevel) = 1;  // allow premature change to zombie names, but not data-dependent errors
+JT(jt,assert) = 1;
+// obsolete  RZ(JT(jt,bx)a=cstr("+++++++++|-")); JT(jt,bx)=CAV(JT(jt,bx)a);
+ MC(JT(jt,bx),"+++++++++|-",sizeof(JT(jt,bx)));
 // obsolete  jt->cctdefault=
  jt->cct= 1.0-FUZZ;
- jt->disp[0]=1; jt->disp[1]=5;
+ JT(jt,disp)[0]=1; JT(jt,disp)[1]=5;
  jt->fcalln=NFCALL;
 #if USECSTACK
  jt->cstackinit=(uintptr_t)&y;  // use a static variable to get the stack address
@@ -152,37 +152,39 @@ jt->assert = 1;
 #else
  jt->fdepn=NFDEP;
 #endif
- jt->outmaxafter=222;
- jt->outmaxlen=256;
+ JT(jt,outmaxafter)=222;
+ JT(jt,outmaxlen)=256;
 // obsolete strcpy(jt->outseq,"\x0a");
  strcpy(jt->pp,"%0.6g");
- jt->retcomm=1;
+ JT(jt,retcomm)=1;
 // obsolete  jt->tostdout=1;
- jt->transposeflag=1;
-// jt->int64rflag=0;
+ JT(jt,transposeflag)=1;
+// JT(jt,int64rflag)=0;
  jt->xmode=XMEXACT;
- MC(jt->baselocale,"base",sizeof(jt->baselocale));   // establish value & hash of "base"
- jt->baselocalehash=(UI4)nmhash(sizeof(jt->baselocale),jt->baselocale);
+ MC(JT(jt,baselocale),"base",sizeof(JT(jt,baselocale)));   // establish value & hash of "base"
+ JT(jt,baselocalehash)=(UI4)nmhash(sizeof(JT(jt,baselocale)),JT(jt,baselocale));
  RESETRANK;  // init both ranks to RMAX
   // Init for u./v.
  A uimp=ca(mnuvxynam[2]); NAV(uimp)->flag|=NMIMPLOC;  // create the name for u.
- jt->implocref[0] = fdef(0,CTILDE,VERB, 0,0, uimp,0L,0L, 0, RMAX,RMAX,RMAX);  //create 'u.'~
+ JT(jt,implocref)[0] = fdef(0,CTILDE,VERB, 0,0, uimp,0L,0L, 0, RMAX,RMAX,RMAX);  //create 'u.'~
  A vimp=ca(mnuvxynam[3]); NAV(vimp)->flag|=NMIMPLOC;
- jt->implocref[1] = fdef(0,CTILDE,VERB, 0,0, vimp,0L,0L, 0, RMAX,RMAX,RMAX);  //create 'v.'~
+ JT(jt,implocref)[1] = fdef(0,CTILDE,VERB, 0,0, vimp,0L,0L, 0, RMAX,RMAX,RMAX);  //create 'v.'~
 
- jt->igemm_thres=IGEMM_THRES;   // tuning parameters for cip.c
- jt->dgemm_thres=DGEMM_THRES;
- jt->zgemm_thres=ZGEMM_THRES;
+ JT(jt,igemm_thres)=IGEMM_THRES;   // tuning parameters for cip.c
+ JT(jt,dgemm_thres)=DGEMM_THRES;
+ JT(jt,zgemm_thres)=ZGEMM_THRES;
  R 1;
 }
 
+// initialize the master thread for a new instance.  This fills in the jt block, which will remain
+// for the duration of the instance
 static C jtjinit3(J jt){S t;
 /* required for jdll and doesn't hurt others */
- gjt=jt; // global jt for JPF debug
+ gjt=JJTOJ(jt); // global jt for JPF debug
   // init the buffers pointed to by jt
  jt->etx=malloc(1+NETX);  // error-message buffer
  jt->callstack=(LS *)malloc(sizeof(LS)*(1+NFCALL));  // function-call stack
- jt->breakfn=malloc(NPATH); memset(jt->breakfn,0,NPATH);  // place to hold the break filename
+ JT(jt,breakfn)=malloc(NPATH); memset(JT(jt,breakfn),0,NPATH);  // place to hold the break filename
  jt->rngdata=(RNG*)(((I)malloc(sizeof(RNG)+CACHELINESIZE)+CACHELINESIZE-1)&-CACHELINESIZE); memset(jt->rngdata,0,sizeof(RNG));  // place to hold RNG data, aligned to cacheline
 
 // obsolete MC(jt->typesizes,typesizes,sizeof(jt->typesizes));  // required for ma.
@@ -197,7 +199,7 @@ static C jtjinit3(J jt){S t;
 #if (SYS & SYS_FREEBSD)
  fpsetmask(0);
 #endif
- jt->tssbase=tod();
+ JT(jt,tssbase)=tod();
 // obsolete  jt->prxthornuni=0;  // init to non-unicode (normal) state
 // obsolete  jt->jprx=0;      // init to non jprx jconsole output (normal) state
  meminit();
@@ -222,7 +224,8 @@ static C jtjinit3(J jt){S t;
  R !jt->jerr;
 }
 
-C jtjinit2(J jt,int dummy0,C**dummy1){jt->sesm=1; R jinit3();}
+// Here we initialize the new jt for a new J instance.  We do so in the master thread.
+C jtjinit2(JS jjt,int dummy0,C**dummy1){J jt=MTHREAD(jjt); JT(jt,sesm)=1; R jinit3();}
 
 
 

@@ -159,13 +159,13 @@
 #define BW1110(x,y)     (~( (x)& (y)))
 #define BW1111(x,y)     (-1)
 
-typedef I AHDR1FN(JST * RESTRICT jt,I n,void* z,void* x);  // negative return is offset to failure point in >. or <.
+typedef I AHDR1FN(J RESTRICT jt,I n,void* z,void* x);  // negative return is offset to failure point in >. or <.
 typedef I AHDR2FN(I n,I m,void* RESTRICTI x,void* RESTRICTI y,void* RESTRICTI z,J jt);  // negative return is failure point for integer multiply
 typedef I AHDRPFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);  // these 3 must be the same for now, for VARPS.  The return is never negative
 typedef I AHDRRFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);
 typedef I AHDRSFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);
 
-#define AHDR1(f,Tz,Tx)          I f(JST * RESTRICT jt,I n,Tz* z,Tx* x)   // must match VA1F, AHDR1FN
+#define AHDR1(f,Tz,Tx)          I f(J RESTRICT jt,I n,Tz* z,Tx* x)   // must match VA1F, AHDR1FN
 #define AMON(f,Tz,Tx,stmt)      AHDR1(f,Tz,Tx){DQ(n, {stmt} ++z; ++x;); R EVOK;}
 #define AMONPS(f,Tz,Tx,prefix,stmt,suffix)      AHDR1(f,Tz,Tx){prefix DQ(n, {stmt} ++z; ++x;) suffix}
 #define HDR1JERR I rc=jt->jerr; jt->jerr=0; R rc?rc:EVOK;   // translate no error to no-error value

@@ -390,7 +390,7 @@ DF1(jtwd){A z=0;C*p=0;D*pd;I e,*pi,t;V*sv;
 static char breaknone=0;
 
 // Init anything the sessions manager needs in the jt for a new instance
-B jtsesminit(JJ jt){R 1;}
+B jtsesminit(JS jjt, I nthreads){R 1;}
 // obsolete IJT(jt,adbreakr)=IJT(jt,adbreak)=&breakdata; 
 
 // Main entry point to run the sentence in *lp in the master thread

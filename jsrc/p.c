@@ -27,8 +27,11 @@
 // The nvr stack contains pointers to values, added as names are moved
 // from the queue to the stack.  Local values are not pushed.
 
-B jtparseinit(J jt){A x;
- GAT0(x,INT,20,1); ras(x); jt->nvra=x; /* obsolete jt->nvrav=AAV(x); jt->nvran=(UI4)AN(x); */  // Initial stack.  Size is doubled as needed
+B jtparseinit(JS jjt, I nthreads){A x;
+ I threadno; for(threadno=0;threadno<nthreads;++threadno){JJ jt=&jjt->threaddata[threadno];
+  GAT0(x,INT,20,1); AC(x)=ACUC1; jt->nvra=x; /* obsolete jt->nvrav=AAV(x); jt->nvran=(UI4)AN(x); */  // Initial stack.  Size is doubled as needed
+  // ras not required because this is called during initialization 
+ }
  R 1;
 }
 

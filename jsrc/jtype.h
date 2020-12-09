@@ -110,7 +110,6 @@ typedef AD *A;
 #define JTFLAGMSK       255  // mask big enough to cover all defined flags
 #define JTALIGNBDY      8192  // jt is aligned on this boundary - all lower bits are 0 (the value is the size of an SDRAM page, to avoid row precharges while accessing jt)
 
-
 struct AD {
  union {
   I k;

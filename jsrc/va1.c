@@ -223,4 +223,4 @@ DF1(jtatomic1){A z;
  }
 }
 
-DF1(jtpix   ){F1PREFIP; ARGCHK1(w); if(XNUM&AT(w)&&(jt->xmode==XMFLR||jt->xmode==XMCEIL))R jtatomic1(jtinplace,w,self); R jtatomic2(jtinplace,pie,w,ds(CSTAR));}
+DF1(jtpix){F1PREFIP; ARGCHK1(w); if(unlikely(XNUM&AT(w)))if(jt->xmode==XMFLR||jt->xmode==XMCEIL)R jtatomic1(jtinplace,w,self); R jtatomic2(jtinplace,pie,w,ds(CSTAR));}

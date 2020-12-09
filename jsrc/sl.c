@@ -88,6 +88,7 @@
 #define HASHSLOT(x,tsize) (((UI4)(x)*(UI4)2654435761U)%(UI4)(tsize))
 #endif
 // Initialize the numbered-locale system.  Called during initialization, so no need for ras()
+// Runs in master thread
 static A jtinitnl(J jt){A q;
  I s; FULLHASHSIZE(5*1,INTSIZE,0,0,s);  // at least 5 slots, so we always have at least 2 empties
  GATV0(q,INT,s,0); memset(IAV(q),0,s*SZI);  // allocate hashtable and clear to 0
@@ -213,19 +214,23 @@ A jtstcreate(J jt,C k,I p,I n,C*u){A g,x,xx;C s[20];L*v;
  R g;
 }    /* create locale, named (0==k) or numbered (1==k) */
 
-B jtsymbinit(J jt){A q;
- JT(jt,locsize)[0]=3;  /* default hash table size for named    locales */
- JT(jt,locsize)[1]=2;  /* default hash table size for numbered locales */
+B jtsymbinit(JS jjt,I nthreads){A q;JJ jt=MTHREAD(jjt);
+ INITJT(jjt,locsize)[0]=3;  /* default hash table size for named    locales */
+ INITJT(jjt,locsize)[1]=2;  /* default hash table size for numbered locales */
  RZ(symext(0));     /* initialize symbol pool                       */
  I p; FULLHASHSIZE(400,SYMBSIZE,1,SYMLINFOSIZE,p);
- GATV0(q,SYMB,p,0); JT(jt,stloc)=q;  // alloc space, clear hashchains.  No name/val for stloc
- jtinitnl(jt);  // init numbered locales
- FULLHASHSIZE(1LL<<10,SYMBSIZE,1,SYMLINFOSIZE,p);  // about 2^11 chains
- RZ(jt->global=stcreate(0,p,sizeof(JT(jt,baselocale)),JT(jt,baselocale)));
+ GATV0(q,SYMB,p,0); INITJT(jjt,stloc)=q;  // alloc space, clear hashchains.  No name/val for stloc
+ jtinitnl(jt);  // init numbered locales, using master thread to allocate
+ // init z locale
  FULLHASHSIZE(1LL<<12,SYMBSIZE,1,SYMLINFOSIZE,p);  // about 2^13 chains
- RZ(           stcreate(0,p,1L,"z"   ));
+ RZ(stcreate(0,p,1L,"z"));
+ // init the symbol tables for the master thread.  Worker threads must copy when they start execution
+ // init base locale
+ FULLHASHSIZE(1LL<<10,SYMBSIZE,1,SYMLINFOSIZE,p);  // about 2^11 chains
+ RZ(jt->global=stcreate(0,p,sizeof(INITJT(jjt,baselocale)),INITJT(jjt,baselocale)));
  // Allocate a symbol table with just 1 (empty) chain; then set length to 1 indicating 0 chains; make this the current local symbols, to use when no explicit def is running
  RZ(jt->locsyms=stcreate(2,2,0,0)); AKGST(jt->locsyms)=jt->global; AN(jt->locsyms)=1; AM(jt->locsyms)=(I)jt->locsyms;  // close chain so u. at top level has no effect
+ // That inited the symbol tables for the master thread.  Worker threads must copy when they start execution
  R 1;
 }
 

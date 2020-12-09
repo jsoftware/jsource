@@ -62,9 +62,9 @@ static B jtdolock(J jt,B lk,F f,I i,I n){I e;
 
 #define LKC  3      /* number of columns in JT(jt,flkd) table       */
 
-B jtxlinit(J jt){A x;I*s;
- GAT0(x,INT,20*LKC,2); ras(x); s=AS(x); s[0]=20; s[1]=LKC;
- JT(jt,flkd)=x; AM(JT(jt,flkd))=0;  // AM holds the # valid entries
+B jtxlinit(JS jjt,I nthreads){A x;I*s;JJ jt=MTHREAD(jjt);
+ GAT0(x,INT,20*LKC,2); AC(x)=ACUC1; s=AS(x); s[0]=20; s[1]=LKC;  // called at init so no ras()
+ INITJT(jjt,flkd)=x; AM(INITJT(jjt,flkd))=0;  // AM holds the # valid entries
  R 1;
 }
 

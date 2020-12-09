@@ -707,8 +707,8 @@ static F1(jtsbsetdata){A h,s,u,*wv,x;
 
 static void resetdata(J jt){
  fa(STRINGTABLE); fa(HASHTABLE); fa(JT(jt,sbu)); // free old symbol
- sbtypeinit();                          // initialization routine
- ras(JT(jt,sbu)); ra(STRINGTABLE); ra(HASHTABLE); // prevent automatically freed by tpop()
+ jtsbtypeinit(JJTOJ(jt),MAXTHREADS);                          // initialization routine
+ ras(JT(jt,sbu)); ra(STRINGTABLE); ra(HASHTABLE); // init does not ra(); we do it here
 }    /* re-initialize global symbol table */
 
 static F1(jtsbsetdata2){A *wv;I c,i,sn,offset=0;SBU*uv,*v;C*sv;
@@ -853,24 +853,25 @@ F2(jtsb2){A z;I j,k,n;
 
 // This is an initialization routine, so memory allocations performed here are NOT
 // automatically freed by tpop()
-B jtsbtypeinit(J jt){A x;I c=sizeof(SBU)/SZI,s[4],p;
+B jtsbtypeinit(JS jjt, I nthreads){A x;I c=sizeof(SBU)/SZI,s[4],p;JJ jt=MTHREAD(jjt);
  s[0]=2000; s[1]=c; s[2]=1; s[3]=1;
- GATVR(x,INT,s[0]*c,4,s);          JT(jt,sbu)=x;
+ GATVR(x,INT,s[0]*c,4,s);          INITJT(jjt,sbu)=x;
  GA(x,LIT,20000,1,0); SETSTRINGTABLE(x);
 // obsolete  STRINGTABLEv=     CAV(x);
  AM(STRINGTABLE)=0;  // size too big for GAT; initialization anyway
  FULLHASHSIZE(2000,INTSIZE,1,0,p);  // initial allo
  RZ(x=apvwr(p,-1L,0L)); SETHASHTABLE(x);
 // obsolete  IAV1(HASHTABLE)=      AV(x);
-// obsolete  JT(jt,sbu)v=(SBU*)AV(x);
+// obsolete  INITJT(jjt,sbu)v=(SBU*)AV(x);
  GAP=15;                /* TWICE the difference in order numbers we want after re-ordering */
  FILLFACTOR=1024;
  ROOT=0;                /* initialize binary tree; initialize the empty symbol (used as fill) */
  UI hash0=hic(0,0);  // hash value of empty string
- sentinel.h=hash0;  // initialize the hash value for the empty symbol
- SBUV4(JT(jt,sbu))[0]=sentinel;
- AM(JT(jt,sbu))=1;  // init 1 symbol in table
+ SBUV4(INITJT(jjt,sbu))[0]=sentinel;
+ AM(INITJT(jjt,sbu))=1;  // init 1 symbol in table
  IAV1(HASHTABLE)[INITHASH(hash0)]=0;  // clear symbol-table entry for empty symbol
  R 1;
 }    /* initialize global data for SBT datatype */
+
+void jtsbtypeglobinit(){UI hash0=hic(0,0);sentinel.h=hash0;}  // initialize the hash value for the empty symbol
 

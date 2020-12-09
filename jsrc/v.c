@@ -95,11 +95,11 @@ F1(jtright1){RETF(w);}
 // i. y
 F1(jtiota){A z;I m,n,*v;
  F1RANK(1,jtiota,DUMMYSELF);
- if(AT(w)&XNUM+RAT)R cvt(XNUM,iota(vi(w)));
+ if(AT(w)&XNUM+RAT)R cvt(XNUM,iota(vi(w)));  // if extended, take integer and convert
  RZ(w=vi(w)); n=AN(w); v=AV(w);
- if(1==n){m=*v; R 0>m?apv(-m,-m-1,-1L):IX(m);}
- A mg; RZ(mg=mag(w)); PRODX(m,n,IAV(mg),1); RZ(z=IX(m)); RZ(z=reshape(mag(w),z));
- DO(n, A zz; if(0>v[i])z=IRS1(z,0L,n-i,jtreverse,zz););
+ if(1==n){m=*v; R 0>m?apv(-m,-m-1,-1L):IX(m);}  // if list required, create it (ascending or descending) and return it
+ A mg; RZ(mg=mag(w)); PRODX(m,n,IAV(mg),1); RZ(z=IX(m)); RZ(z=reshape(mag(w),z));  // rank>1.  Take */|y, create index vector, reshape to (|y) i. */|y
+ DO(n, A zz; if(0>v[i])z=IRS1(z,0L,n-i,jtreverse,zz););  // reverse negative axes in input
  RETF(z);
 }
 

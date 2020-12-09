@@ -50,14 +50,10 @@ typedef struct rngdata {
 // per-thread area.  Align on a 256B boundary to leave low 8 bits for flags (JTFLAGMSK is the list of bits)
 // The first 2 cache lines is the hottest real estate in J, because they can be referenced with
 // single-byte displacement.  Put your heaviest-used items here
-// things needed for memory allocation
 // Must be aligned on a 256-byte boundary for flags; but better to align on a DRAM page boundary to avoid precharge
-typedef struct JTTstruct {
+ struct __attribute__((aligned(256))) JTTstruct {
+// things needed for memory allocation
  A* tnextpushp;       // pointer to empty slot in allocated-block stack.  When low bits are 00..00, pointer to previous block of pointers.  Chain in first block is 0
- struct {
-  I ballo;              // negative number of bytes in free pool, but with zero-point biased so that - means needs garbage collection 
-  A pool;             // pointer to first free block
- } mfree[-PMINL+PLIML+1];      // pool info.  Use struct to keep cache footprint small
 
 // things needed by name lookup (unquote)
  LS *callstack;   // [1+NFCALL]; // named fn calls: stack.  Usually only a little is used; the rest overflows onto a new DRAM page
@@ -66,7 +62,6 @@ typedef struct JTTstruct {
  UI cstackmin;        // red warning for C stack pointer    
  I4 callstacknext;    /* named fn calls: current depth                   */
  I4 fcalln;           /* named fn calls: maximum permissible depth   migrated    */
-// end of cachline 1
  UI4 ranks;            // low half: rank of w high half: rank of a  for IRS 
  union {  // this union is 4 bytes long
   UI4 ui4;    // all 4 flags at once, access as ui4
@@ -89,19 +84,25 @@ typedef struct JTTstruct {
    } uq;   // flags needed only by unquote
   } us;   // access as US
  } uflags;   // 
- A locsyms;  // local symbol table, or dummy empty symbol table if none  
- A global;           /* global symbol table                          */
  A curname;          // current name, an A block containing an NM   
+// end of cacheline 0
+ A locsyms;  // local symbol table, or dummy empty symbol table if none
+ A global;           /* global symbol table                          */
+ I shapesink[2];     // garbage area used as load/store targets of operations we don't want to branch around migrated
+ A idothash0;        // 2-byte hash table for use by i.    migrated
+ A idothash1;        // 4-byte hash table for use by i.    migrated
+// cacheline 1 ends inside the pool struct
+ struct {
+  I ballo;              // negative number of bytes in free pool, but with zero-point biased so that - means needs garbage collection 
+  A pool;             // pointer to first free block
+ } mfree[-PMINL+PLIML+1];      // pool info.  Use struct to keep cache footprint small
+// end of cacheline 2
 
 // things needed by execution of certain verbs
- I shapesink[2];     // garbage area used as load/store targets of operations we don't want to branch around
- A idothash0;        // 2-byte hash table for use by i.    
- A idothash1;        // 4-byte hash table for use by i.     
-// end of cacheline 2
+ D cct;               // complementary comparison tolerance 
  A fill;             // fill     stuck here as filler
  C* fillv;            /* fill value                                      */
  C fillv0[sizeof(Z)];/* default fill value                              */
- D cct;               // complementary comparison tolerance 
  B foldrunning;      // 1 if fold is running (allows Z:)    
  C glock;            /* 0=unlocked, 1=perm lock, 2=temp lock            */
  UC jerr;             /* error number (0 means no error)    migrated             */
@@ -166,7 +167,8 @@ typedef struct JTTstruct {
 #endif
 
 // end of cacheline 6 (normalment)
-} JTT;
+};
+typedef struct JTTstruct JTT;
 typedef JTT* JJ;  // thread-specific part of struct
 
 // Must be aligned on a 256-byte boundary for flags; but better to align on a DRAM page boundary to avoid precharge
@@ -267,7 +269,7 @@ typedef struct JSTstruct {
  A dbtrap;           /* trap, execute on suspension                     */
  I peekdata;         /* our window into the interpreter                 */
 
- JTT threaddata[2] __attribute__((aligned(256)));
+ JTT threaddata[MAXTHREADS] __attribute__((aligned(256)));
 } JST;
 typedef JST* JS;  // shared part of struct
 
@@ -404,11 +406,13 @@ typedef JST* JS;  // shared part of struct
 
 #undef J
 #define J JJ
-#if 0  // for multithreading
+#if MAXTHREADS>1  // for multithreading
 #define JJTOJ(jj) ((JS)((I)(jj)&-JTALIGNBDY))
 #else
-#define JJTOJ(jj) ((JS)((I)(jj)-offsetof(struct JSTstruct,threaddata)+(jj->ranks&0)+((((I)jj^0x200)&0x1e00)<<48)))
-// scaf #define JJTOJ(jj) ((JS)((I)(jj)-offsetof(JSTstruct,threaddata)))
+// scaf testing only #define JJTOJ(jj) ((JS)((I)(jj)-offsetof(struct JSTstruct,threaddata)+(jj->ranks&0)+((((I)jj^0x200)&0x1e00)<<48)))
+#define JJTOJ(jj) ((JS)((I)(jj)-offsetof(struct JSTstruct,threaddata)))
 #endif
 #define JT(p,n) JJTOJ(p)->n
+#define INITJT(p,n) (p)->n   // in init functions, jjt points to the JS block and we use this to reference components
 #define MTHREAD(jt) (&jt->threaddata[0])   // master thread for shared jt
+enum {xxxx = 1/(offsetof(struct JSTstruct, threaddata[MAXTHREADS])<=JTALIGNBDY) };  // assert not too many threads

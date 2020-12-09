@@ -584,6 +584,7 @@ extern unsigned int __cdecl _clearfp (void);
 
 #define MEMHISTO 0       // set to create a histogram of memory requests, interrogated by 9!:54/9!:55
 
+#define MAXTHREADS 1  // maximum number of threads
 
 #if BW==64
 #define ALTBYTES 0x00ff00ff00ff00ffLL

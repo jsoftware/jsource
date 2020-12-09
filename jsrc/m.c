@@ -124,17 +124,21 @@ F1(jtmemhashs){
 #endif
 
 // obsolete // msize[k]=2^k, for sizes up to the size of an I.  Not used in this file any more
-B jtmeminit(J jt){I k,m=MLEN;
- JT(jt,adbreakr)=JT(jt,adbreak)=&breakdata; /* required for ma to work */
- if(jt->tstackcurr==0){  // meminit gets called twice.  Alloc the block only once
+B jtmeminit(JS jjt,I nthreads){I k,m=MLEN;
+ INITJT(jjt,adbreakr)=INITJT(jjt,adbreak)=&breakdata; /* required for ma to work */
+ INITJT(jjt,mmax) =(I)1<<(m-1);
+ I threadno; for(threadno=0;threadno<nthreads;++threadno){JJ jt=&jjt->threaddata[threadno];
+// obsolete   if(jt->tstackcurr==0){  //
+  // init tpop stack
   jt->tstackcurr=(A*)MALLOC(NTSTACK+NTSTACKBLOCK);  // save address of first allocation
   jt->malloctotal = NTSTACK+NTSTACKBLOCK;
   jt->tnextpushp = (A*)(((I)jt->tstackcurr+NTSTACKBLOCK)&(-NTSTACKBLOCK));  // get address of aligned block AFTER the first word
   *jt->tnextpushp++=0;  // blocks chain to blocks, allocations to allocations.  0 in first block indicates end.  We will never try to go past the first allo, so no chain needed
+// obsolete   }
+  // init all subpools to empty, setting the garbage-collection trigger points
+  for(k=PMINL;k<=PLIML;++k){jt->mfree[-PMINL+k].ballo=SBFREEB;jt->mfree[-PMINL+k].pool=0;}  // init so we garbage-collect after SBFREEB frees
+  jt->mfreegenallo=-SBFREEB*(PLIML+1-PMINL);   // balance that with negative general allocation
  }
- JT(jt,mmax) =(I)1<<(m-1);
- for(k=PMINL;k<=PLIML;++k){jt->mfree[-PMINL+k].ballo=SBFREEB;jt->mfree[-PMINL+k].pool=0;}  // init so we garbage-collect after SBFREEB frees
- jt->mfreegenallo=-SBFREEB*(PLIML+1-PMINL);   // balance that with negative general allocation
 #if LEAKSNIFF
  leakblock = 0;
  leaknbufs = 0;

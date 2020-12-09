@@ -12,10 +12,11 @@
 #include "x.h"
 
 
-B jtxsinit(J jt){A x;
- GAT0(x,BOX,10,1); memset(AV(x),C0,AN(x)*SZI); ras(x); JT(jt,slist)=x; AS(JT(jt,slist))[0]=0;  // init block, set item count to 0
+B jtxsinit(JS jjt,I nthreads){A x;JJ jt=MTHREAD(jjt);
+ GAT0(x,BOX,10,1); memset(AV(x),C0,AN(x)*SZI); AC(x)=ACUC1; INITJT(jjt,slist)=x; AS(INITJT(jjt,slist))[0]=0;  // init block, set item count to 0
+// obsolete  ras(x); iniit block has no tpop
 // obsolete  GAT0(x,INT,10,1); memset(AV(x),C0,AN(x)*SZI); ras(x); jt->sclist=x;
- AM(JT(jt,slist))=-1;  // indicate 'not in script'
+ AM(INITJT(jjt,slist))=-1;  // indicate 'not in script'
  R 1;
 }
 

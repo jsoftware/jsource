@@ -766,7 +766,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define GA(v,t,n,r,s)   {HISTOCALL RZ(v=ga(t,(I)(n),(I)(r),(I*)(s)))}
 // GAE executes the given expression when there is an error
 #define GAE(v,t,n,r,s,erraction)   {HISTOCALL if(unlikely(!(v=ga(t,(I)(n),(I)(r),(I*)(s)))))erraction;}
-// When the type and all rank/shape are known at compile time, use GAT.  The compiler precalculates almost everything
+// GAT*, used when the type and all rank/shape are known at compile time.  The compiler precalculates almost everything
 // For best results declare name as: AD* RESTRICT name;  The number of bytes, rounded up with overhead added, must not exceed 2^(PMINL+4)
 #define GATS(name,type,atoms,rank,shaape,size,shapecopier,erraction) \
 { ASSERT(!((rank)&~RMAX),EVLIMIT); \
@@ -787,7 +787,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define GAT0(name,type,atoms,rank)  GATS(name,type,atoms,rank,0,type##SIZE,GACOPYSHAPE0,R 0)
 #define GAT0E(name,type,atoms,rank,erraction)  GATS(name,type,atoms,rank,0,type##SIZE,GACOPYSHAPE0,erraction)
 
-// Used when type is known and something else is variable.  ##SIZE must be applied before type is substituted, so we have GATVS to use inside other macros.  Normally use GATV
+// GATV*, used when type is known and something else is variable.  ##SIZE must be applied before type is substituted, so we have GATVS to use inside other macros.  Normally use GATV
 // Note: assigns name before assigning the components of the array, so the components had better not depend on name, i. e. no GATV(z,BOX,AN(z),AR(z),AS(z))
 #define GATVS(name,type,atoms,rank,shaape,size,shapecopier,erraction) \
 { I bytes = ALLOBYTES(atoms,rank,size,(type)&LAST0,(type)&NAME); \
@@ -865,8 +865,12 @@ extern unsigned int __cdecl _clearfp (void);
 // call to atomic2(), similar to IRS2.  fs is a local block to use to hold the rank (declared as D fs[16]), cxx is the Cxx value of the function to be called
 #define ATOMIC2(jt,a,w,fs,l,r,cxx) (FAV((A)(fs))->fgh[0]=ds(cxx), FAV((A)(fs))->id=CQQ, FAV((A)(fs))->lrr=(RANK2T)((l)<<RANKTX)+(r), jtatomic2(jt,(a),(w),(A)fs))
 
-// memory copy, for J blocks.  Like memory copy, but knows it can fetch outside the arg boundaries for LIT-type args
+// memory copy, for J blocks.  Like memcpy, but knows it can fetch outside the arg boundaries for LIT-type args
 // if bytelen is 1, the arg may be of any length; if 0, must be a multiple of Is and the low bits of length are ignored
+// Normal use allowing overcopy: JMC(d,s,l+(SZI-1),lbl,0)    where lbl is a unique statement label
+// Normal use not allowing overcopy: JMC(d,s,l,lbl,1)    where lbl is a unique statement label
+// For use in loop, allowing overcopy: JMCDECL(endmask) JMCSETMASK(endmask,l+(SZI-1),0)   DO(...,  JMCR(d,s,l+(SZI-1),lbl,0,endmask)    )
+// For use in loop, not allowing overcopy: JMCDECL(endmask) JMCSETMASK(endmask,l,1)   DO(...,  JMCR(d,s,l,lbl,1,endmask)    )
 #if C_AVX2 || EMU_AVX2
 #define JMCDECL(mskname) __m256i mskname;
 #define JMCSETMASK(mskname,l,bytelen) mskname=_mm256_loadu_si256((__m256i*)(validitymask+((-(((l)-bytelen)>>LGSZI))&(NPAR-1)))); /* 0->1111 1->1000 3->1110 */

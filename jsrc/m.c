@@ -149,7 +149,7 @@ B jtmeminit(JS jjt,I nthreads){I k,m=MLEN;
 
 // Audit all memory chains to detect overrun
 #if SY_64
-#define AUDITFILL ||(UI4)AFHRH(Wx)!=Wx->fill
+#define AUDITFILL ||(US)AFHRH(Wx)!=Wx->fill
 #else
 #define AUDITFILL 
 #endif
@@ -1029,8 +1029,8 @@ if((I)jt&3)SEGFAULT;
     // split the allocation into blocks.  Chain them together, and flag the base.  We chain them in ascending order (the order doesn't matter), but
     // we visit them in back-to-front order so the first-allocated headers are in cache
 #if MEMAUDIT&17 && BW==64
-    u=(A)((C*)z+PSIZE); chn = 0; hrh = FHRHENDVALUE(1+blockx-PMINL); DQ(PSIZE/2>>blockx, u=(A)((C*)u-n); AFCHAIN(u)=chn; chn=u; hrh -= FHRHBININCR(1+blockx-PMINL); AFHRH(u)=hrh; u->fill=AFHRH(u););    // chain blocks to each other; set chain of last block to 0
-    AFHRH(u) = hrh|FHRHROOT;  u->fill=AFHRH(u);  // flag first block as root.  It has 0 offset already
+    u=(A)((C*)z+PSIZE); chn = 0; hrh = FHRHENDVALUE(1+blockx-PMINL); DQ(PSIZE/2>>blockx, u=(A)((C*)u-n); AFCHAIN(u)=chn; chn=u; hrh -= FHRHBININCR(1+blockx-PMINL); AFHRH(u)=hrh; u->fill=(US)AFHRH(u););    // chain blocks to each other; set chain of last block to 0
+    AFHRH(u) = hrh|FHRHROOT;  u->fill=(US)AFHRH(u);  // flag first block as root.  It has 0 offset already
 #else
     u=(A)((C*)z+PSIZE); chn = 0; hrh = FHRHENDVALUE(1+blockx-PMINL); DQ(PSIZE/2>>blockx, u=(A)((C*)u-n); AFCHAIN(u)=chn; chn=u; hrh -= FHRHBININCR(1+blockx-PMINL); AFHRH(u)=hrh;);    // chain blocks to each other; set chain of last block to 0
     AFHRH(u) = hrh|FHRHROOT;    // flag first block as root.  It has 0 offset already
@@ -1057,7 +1057,7 @@ if((I)jt&3)SEGFAULT;
    {I ot=jt->malloctotalhwmk; ot=ot>nt?ot:nt; jt->malloctotal=nt; jt->malloctotalhwmk=ot;}
    AFHRH(z) = (US)FHRHSYSJHDR(1+blockx);    // Save the size of the allocation so we know how to free it and how big it was
 #if MEMAUDIT&17 && SY_64
-   z->fill=(UI4)AFHRH(z);
+   z->fill=(US)AFHRH(z);
 #endif
    jt->mfreegenallo=mfreeb+=n;    // mfreegenallo includes the byte count allocated for large blocks (incl pad)
   }

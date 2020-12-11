@@ -430,11 +430,10 @@ static A jtopes(J jt,I zt,A cs,A w){A a,d,e,sh,t,*wv,x,x1,y,y1,z;B*b;C*xv;I an,*
 // If y cannot be inplaced, we have to make sure we don't return an inplaceable reference to a part of y.  This would happen
 // if y contained inplaceable components (possible if y came from < yy or <"r yy).  In that case, mark the result as non-inplaceable.
 // We don't support inplacing here yet so just do that always
-F1(jtope){PROLOG(0080);A cs,*v,y,z;I nonh;C*x;I i,n,*p,q=RMAX,r=0,*s,t=0,te=0,*u,zn;
+F1(jtope){A cs,*v,y,z;I nonh;C*x;I i,n,*p,q=RMAX,r=0,*s,t=0,te=0,*u,zn;
  ARGCHK1(w);
- n=AN(w); v=AAV(w);
- if(!(BOX&(AT(w)&REPSGN(-n))))RCA(w);  // return w if empty or open
- if(!AR(w)){
+ v=AAV(w);
+ if(likely((RANKT)((AT(w)&BOX)>>BOXX)>AR(w))){   // boxed and rank=0
   // scalar box: Turn off pristine in w since we are pulling an address from it.  Contents must not be inplaceable
   z=*v;
 #if AUDITBOXAC
@@ -442,6 +441,9 @@ F1(jtope){PROLOG(0080);A cs,*v,y,z;I nonh;C*x;I i,n,*p,q=RMAX,r=0,*s,t=0,te=0,*u
 #endif
   PRISTCLRF(w) R z;
  }
+ n=AN(w);
+ if(unlikely(((AT(w)&BOX)&REPSGN(-n))==0))RCA(w);  // return w if empty or open
+ PROLOG(0080);
  // Here we have an array of boxes.  We will create a new block with the concatenated contents (even if there is only one box), and thus we don't need to turn of pristine in w
  // set q=min rank of contents, r=max rank of contents
  for(i=0;i<n;++i){

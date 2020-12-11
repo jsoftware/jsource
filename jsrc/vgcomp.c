@@ -24,7 +24,7 @@ B compqd(I n, Q *a, Q *b){SORT *sbk=(SORT *)n; I j; n=sbk->n; J jt=(J)((I)sbk->j
 
 #define CF(f)            int f(SORT * RESTRICT sortblok,I a,I b)
 
-// if expr true (1), return 1, otherwise -1; reverse if DESCEND flag
+// if expr true (1), return 1; if 0, return -1
 // obsolete #define RETGT(x) ((((x)^(((I)jtinplace>>JTDESCENDX)&1))<<1)-1) 
 #define RETGT(x) (((x)<<1)-1) 
 
@@ -44,23 +44,27 @@ I jtcompare(J jt,A a,A w){C*av,*wv;I ar,an,*as,at,c,d,j,m,t,wn,wr,*ws,wt;F1PREFJ
  ARGCHK2(a,w); 
  an=AN(a); at=an?AT(a):B01; ar=AR(a); as=AS(a);
  wn=AN(w); wt=wn?AT(w):B01; wr=AR(w); ws=AS(w); t=maxtyped(at,wt);
- if(unlikely(!HOMO(at,wt)))R RETGT(at&BOX?1:wt&BOX?0:at&JCHAR?1:wt&JCHAR?0:
-                   at&SBT?1:0);
- if(ar!=wr)R RETGT(ar>wr);
- if(1<ar&&ICMP(1+as,1+ws,ar)){A s;I*v;fauxblockINT(sfaux,4,1);
+ if(unlikely(!HOMO(at,wt))){
+// obsolete R RETGT(at&BOX?1:wt&BOX?0:at&JCHAR?1:wt&JCHAR?0:at&SBT?1:0);
+  ar=(at>>SBTX)&1; ar=wt&JCHAR?0:ar; ar=at&JCHAR?1:ar; ar=wt&BOX?0:ar; ar=at&BOX?1:ar; R RETGT(ar);
+ }
+ if(unlikely(ar!=wr))R RETGT(ar>wr);  // unequal ranks, higher rank is bigger
+ if(unlikely(1<ar))if(ICMP(1+as,1+ws,ar)){A s;I*v;fauxblockINT(sfaux,4,1);
+  // dissimilar shapes - bring to common shape
   fauxINT(s,sfaux,ar,1) v=AV(s);
   DO(ar, v[i]=MAX(as[i],ws[i]);); v[0]=MIN(as[0],ws[0]);
   RZ(a=take(s,a)); an=wn=AN(a);
   RZ(w=take(s,w));
  }
  m=MIN(an,wn); 
- if(t&XNUM+RAT&&((at|wt)&FL+CMPX)){A p,q;B*u,*v;  // indirect type vs flt/complex: create boolean vector for each value in turn
+ if(unlikely((-(t&XNUM+RAT)&-((at|wt)&FL+CMPX))<0)){A p,q;B*u,*v;
+  // indirect numeric type vs flt/complex: create boolean vector for each value in turn
   RZ(p=lt(a,w)); u=BAV(p);
   RZ(q=gt(a,w)); v=BAV(q);
   DO(m, if(u[i]|v[i])R RETGT(!u[i]););
  }else{
-  if(TYPESNE(t,at))RZ(a=cvt(t,a));
-  if(TYPESNE(t,wt))RZ(w=cvt(t,w));
+  if(unlikely(TYPESNE(t,at)))RZ(a=cvt(t,a));
+  if(unlikely(TYPESNE(t,wt)))RZ(w=cvt(t,w));
   av=CAV(a); wv=CAV(w);
   switch(CTTZ(t)){
    case INTX:  COMPLOOQ (I, m  );         break;
@@ -75,8 +79,8 @@ I jtcompare(J jt,A a,A w){C*av,*wv;I ar,an,*as,at,c,d,j,m,t,wn,wr,*ws,wt;F1PREFJ
    case BOXX:  {COMPDCLQ(A);I j; DO(m, if(j=jtcompare(jtinplace,x[i],y[i]))R j;);} break;
   }
  }
- if(1>=ar)R an==wn?0:RETGT(an>wn);
- DQ(j=ar, --j; c=as[j]; d=ws[j]; if(c!=d)R RETGT(c>d););
+ if(1>=ar)R an==wn?0:RETGT(an>wn);   // all compared items matched.  If they weren't the same length, the longer is bigger
+ DQ(ar, c=as[i]; d=ws[i]; if(c!=d)R RETGT(c>d););  // finally, compare original shape, lowest axis first
  R 0;
 }    /* compare 2 arbitrary dense arrays; _1 0 1 per a<w, a=w, a>w */
 

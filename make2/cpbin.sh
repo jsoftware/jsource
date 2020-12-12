@@ -30,6 +30,21 @@ cp ../bin/${jplatform}/j64/jconsole ../jlibrary/bin/. || true
 cp ../bin/${jplatform}/j64avx/jconsole ../jlibrary/bin/. || true
 cp ../bin/${jplatform}/j64avx2/jconsole ../jlibrary/bin/. || true
 
+if [ "`uname`" = "Darwin" ]; then
+
+cp ../bin/${jplatform}/j32/libtsdll.dylib ../jlibrary/bin32/. || true
+cp ../bin/${jplatform}/j64/libtsdll.dylib ../jlibrary/bin/. || true
+cp ../bin/${jplatform}/j64avx/libtsdll.dylib ../jlibrary/bin/. || true
+cp ../bin/${jplatform}/j64avx2/libtsdll.dylib ../jlibrary/bin/. || true
+
+cp ../bin/${jplatform}/j32/libj.dylib ../jlibrary/bin32/. || true
+cp ../bin/${jplatform}/j64/libj.dylib ../jlibrary/bin/libj-nonavx.dylib || true
+cp ../bin/${jplatform}/j64avx/libj.dylib ../jlibrary/bin/libjavx.dylib || true
+cp ../bin/${jplatform}/j64avx2/libj.dylib ../jlibrary/bin/libjavx2.dylib || true
+cp ../bin/${jplatform}/j64avx2/libj.dylib ../jlibrary/bin/. || true
+
+else
+
 cp ../bin/${jplatform}/j32/libtsdll.so ../jlibrary/bin32/. || true
 cp ../bin/${jplatform}/j64/libtsdll.so ../jlibrary/bin/. || true
 cp ../bin/${jplatform}/j64avx/libtsdll.so ../jlibrary/bin/. || true
@@ -40,5 +55,7 @@ cp ../bin/${jplatform}/j64/libj.so ../jlibrary/bin/libj-nonavx.so || true
 cp ../bin/${jplatform}/j64avx/libj.so ../jlibrary/bin/libjavx.so || true
 cp ../bin/${jplatform}/j64avx2/libj.so ../jlibrary/bin/libjavx2.so || true
 cp ../bin/${jplatform}/j64avx2/libj.so ../jlibrary/bin/. || true
+
+fi
 
 fi

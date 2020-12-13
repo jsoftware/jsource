@@ -415,4 +415,7 @@ typedef JST* JS;  // shared part of struct
 #define JT(p,n) JJTOJ(p)->n
 #define INITJT(p,n) (p)->n   // in init functions, jjt points to the JS block and we use this to reference components
 #define MTHREAD(jt) (&jt->threaddata[0])   // master thread for shared jt
+#define LGTHREADBLKSIZE 9  // log2 of threaddata
+#define THREADID(jt) (((jt)&(JTALIGNBDY-1)-offsetof(struct JSTstruct, threaddata[0]))>>LGTHREADBLKSIZE)  // thread number from jt
 enum {xxxx = 1/(offsetof(struct JSTstruct, threaddata[MAXTHREADS])<=JTALIGNBDY) };  // assert not too many threads
+enum {xxxxx = 1/(offsetof(struct JSTstruct, threaddata[1])-offsetof(struct JSTstruct, threaddata[0])==((I)1<<LGTHREADBLKSIZE)) };  // assert size of threaddata what we expected

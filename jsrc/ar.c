@@ -12,17 +12,18 @@
 static DF1(jtreduce);
 
 
-#define PARITY2         u=(B*)&s; b=0; b^=*u++; b^=*u++;
-#define PARITY4         u=(B*)&s; b=0; b^=*u++; b^=*u++; b^=*u++; b^=*u++; 
-#define PARITY8         u=(B*)&s; b=0; b^=*u++; b^=*u++; b^=*u++; b^=*u++; b^=*u++; b^=*u++; b^=*u++; b^=*u++;
+// obsolete #define PARITY2         u=(B*)&s; b=0; b^=*u++; b^=*u++;
+// obsolete #define PARITY4         u=(B*)&s; b=0; b^=*u++; b^=*u++; b^=*u++; b^=*u++; 
+// obsolete #define PARITY8         u=(B*)&s; b=0; b^=*u++; b^=*u++; b^=*u++; b^=*u++; b^=*u++; b^=*u++; b^=*u++; b^=*u++;
+// obsolete 
+// obsolete #if SY_64
+// obsolete #define PARITYW         PARITY8
+// obsolete #else
+// obsolete #define PARITYW         PARITY4
+// obsolete #endif  
+#define PARITYW(s) (s=BW>32?s^s>>32:s, s^=s>>16, s^=s>>8)  // parity of a word full of Bs
 
-#if SY_64
-#define PARITYW         PARITY8
-#else
-#define PARITYW         PARITY4
-#endif  
-
-#if SY_ALIGN
+#if 0&&SY_ALIGN
 #define VDONE(T,PAR)  \
  {I q=n/sizeof(T);T s,*y=(T*)x; DQ(m, s=0; DQ(q, s^=*y++;); PAR; *z++=b==pc;);}
 
@@ -39,16 +40,13 @@ static void vdone(I m,I n,B*x,B*z,B pc){B b,*u;
  else  DQ(m, b=0; DQ(n, b^=*x++;); *z++=b==pc;);
 }
 #else
-static void vdone(I m,I n,B*x,B*z,B pc){B b;I q,r;UC*u;UI s,*y;
- q=n>>LGSZI; r=n&(SZI-1); y=(UI*)x;
- switch((r?2:0)+pc){
-  case 0: DQ(m, s=0; DQ(q, s^=*y++;); PARITYW;                            *z++=!b;); break;
-  case 1: DQ(m, s=0; DQ(q, s^=*y++;); PARITYW;                            *z++= b;); break;
-  case 2: DQ(m, s=0; DQ(q, s^=*y++;); PARITYW; u=(UC*)y; DQ(r, b^=*u++;); *z++=!b; x+=n; y=(UI*)x;); break;
-  case 3: DQ(m, s=0; DQ(q, s^=*y++;); PARITYW; u=(UC*)y; DQ(r, b^=*u++;); *z++= b; x+=n; y=(UI*)x;); break;
-}}
+// vdo for eq/ne. take parity of *x over n bytes, store into *z; invert if pc; repeat for m cells
+static void vdone(I m,I n,B*x,B*z,B pc){
+ I nfull=(n-1)>>LGSZI; I ndisc=(-n)&(SZI-1); // number of full Is, and number of bytes to discard from the next I
+ DQ(m, I s=pc^1; I *y=(I*)x; DQ(nfull, s^=*y++;); s^=(*y<<(ndisc<<3)); PARITYW(s); *z++=s; x+=n;);
+}
 #endif
-
+  // m is # cells to operate on; n is # items in 1 such cell; d is # atoms in one such item
 #define RBFXLOOP(T,pfx)  \
  {T* RESTRICT xx=(T*)x,* RESTRICT yy,*z0,* RESTRICT zz=(T*)z;   \
   q=d/sizeof(T);                  \
@@ -57,6 +55,7 @@ static void vdone(I m,I n,B*x,B*z,B pc){B b;I q,r;UC*u;UI s,*y;
    DQ(n-2,       zz=z0; DQ(q, --xx;       --zz; *zz=pfx(*xx,*zz);););  \
  }}  /* non-commutative */
 
+  // m is # cells to operate on; n is # items in 1 such cell; d is # atoms in one such item
 #define RCFXLOOP(T,pfx)  \
  {T* RESTRICT xx=(T*)x,* RESTRICT yy,*z0,* RESTRICT zz=(T*)z;   \
   q=d/sizeof(T);                  \
@@ -101,9 +100,11 @@ static void vdone(I m,I n,B*x,B*z,B pc){B b;I q,r;UC*u;UI s,*y;
 #endif
 
 // no errors possible here
+#if 0
+  // m is # cells to operate on; n is # items in 1 such cell; d is # atoms in one such item
 #define REDUCEBFX(f,pfx,ipfx,spfx,bpfx,vdo)  \
- AHDRP(f,B,B){B*y=0;I j,q;                       \
-  if(d==1){vdo; R EVOK;}                                \
+ AHDRP(f,B,B){B*y=0;I j,q;                         \
+  if(d==1){vdo; R EVOK;}    /* if arg is byte list, do it */                            \
   x+=m*d*n; z+=m*d;                           \
           \
   if(0==d%sizeof(UI  ))RBFXLOOP(UI,   pfx)    \
@@ -111,6 +112,22 @@ static void vdone(I m,I n,B*x,B*z,B pc){B b;I q,r;UC*u;UI s,*y;
   else if(0==d%sizeof(US  ))RBFXLOOP(US,  spfx)    \
   else                      RBFXODDSIZE(pfx,bpfx)  \
  R EVOK;}  /* non-commutative */
+#else
+  // this version, which processes by column and doesn't write out intermediates, will be better unless the arg is huge and blows out of cache.  Solution to that would be to block the computation.
+  // m is # cells to operate on; n is # items in 1 such cell; d is # atoms in one such item
+#define REDUCEBFX(f,pfx,ipfx,spfx,bpfx,vdo)  \
+AHDRP(f,B,B){  \
+ if(d==1){vdo; R EVOK;}     /* if arg is byte list, do it */   \
+ I dipercell=(d+SZI-1)>>LGSZI;  \
+ DQ(m, B *xx=x+(n-1)*d; B *zz=z;  /* end-of-column scanner, start at end of first column; row result pointer */ \
+  DQ(dipercell, B *xxc=xx; I r=*(I*)xxc;  /* init to end of column */ \
+   DQ(n-1, xxc-=d; r=pfx(*(I*)xxc,r);)  /* roll up the column */ \
+   if(i){*(I*)zz=r; xx+=SZI; zz+=SZI;}else STOREBYTES(zz,r,-d&(SZI-1));  /* store valid bytes, advance to next column if there is one */ \
+  ) x+=n*d; z+=d;  /* advance to next cell */ \
+ ) \
+ R EVOK; \
+}  /* non-commutative */
+#endif
 
 REDUCECFX(  eqinsB, EQ,  IEQ,  SEQ,  BEQ,  vdone(m,n,x,z,(B)(n&1)))
 REDUCECFX(  neinsB, NE,  INE,  SNE,  BNE,  vdone(m,n,x,z,1       ))
@@ -118,10 +135,10 @@ REDUCECFX(  orinsB, OR,  IOR,  SOR,  BOR,  {I c=d*n; DQ(m, *z++=1&&memchr(x,C1,n
 REDUCECFX( andinsB, AND, IAND, SAND, BAND, {I c=d*n; DQ(m, *z++=!  memchr(x,C0,n);                         x+=c;}))
 REDUCEBFX(  ltinsB, LT,  ILT,  SLT,  BLT,  {I c=d*n; DQ(m, *z++= *(x+n-1)&&!memchr(x,C1,n-1)?1:0;          x+=c;)})
 REDUCEBFX(  leinsB, LE,  ILE,  SLE,  BLE,  {I c=d*n; DQ(m, *z++=!*(x+n-1)&&!memchr(x,C0,n-1)?0:1;          x+=c;)})
-REDUCEBFX(  gtinsB, GT,  IGT,  SGT,  BGT,  {I c=d*n; DQ(m, y=memchr(x,C0,n); *z++=1&&(y?1&(y-x):1&n);      x+=c;)})
-REDUCEBFX(  geinsB, GE,  IGE,  SGE,  BGE,  {I c=d*n; DQ(m, y=memchr(x,C1,n); *z++=!  (y?1&(y-x):1&n);      x+=c;)})
-REDUCEBFX( norinsB, NOR, INOR, SNOR, BNOR, {I c=d*n; DQ(m, y=memchr(x,C1,n); d=y?y-x:n; *z++=(1&d)==d<n-1; x+=c;)})
-REDUCEBFX(nandinsB, NAND,INAND,SNAND,BNAND,{I c=d*n; DQ(m, y=memchr(x,C0,n); d=y?y-x:n; *z++=(1&d)!=d<n-1; x+=c;)})
+REDUCEBFX(  gtinsB, GT,  IGT,  SGT,  BGT,  {I c=d*n; DQ(m, B *y=memchr(x,C0,n); *z++=1&&(y?1&(y-x):1&n);      x+=c;)})
+REDUCEBFX(  geinsB, GE,  IGE,  SGE,  BGE,  {I c=d*n; DQ(m, B *y=memchr(x,C1,n); *z++=!  (y?1&(y-x):1&n);      x+=c;)})
+REDUCEBFX( norinsB, NOR, INOR, SNOR, BNOR, {I c=d*n; DQ(m, B *y=memchr(x,C1,n); d=y?y-x:n; *z++=(1&d)==d<n-1; x+=c;)})
+REDUCEBFX(nandinsB, NAND,INAND,SNAND,BNAND,{I c=d*n; DQ(m, B *y=memchr(x,C0,n); d=y?y-x:n; *z++=(1&d)!=d<n-1; x+=c;)})
 
 
 #if SY_ALIGN
@@ -543,7 +560,7 @@ static DF1(jtreduce){A z;I d,f,m,n,r,t,wr,*ws,zt;
   // If there is no special routine, go perform general reduce
   if(!adocv.f)R redg(w,self);  // jt->ranks is still set.  redg will clear the ranks
   // Here for primitive reduce handled by special code.
-  // Calculate m: #cells of w to operate on; d: #atoms in an item of a cell of w cell of w (a cell to which u is applied);
+  // Calculate m: #cells of w to operate on; d: #atoms in an item of a cell of w (a cell to which u is applied);
   // zn: #atoms in result
   PROD(d,r-1,f+ws+1);  //  */ }. $ cell
   // m=*/ frame (i. e. #cells to operate on)

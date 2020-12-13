@@ -82,6 +82,7 @@ typedef double complex double_complex;
 
 #include "j.h"
 
+#define SY_FREEBSD 0  // ??
 #define SY_UNIX64 (SY_64 && (SY_LINUX || SY_MAC || SY_FREEBSD))
 
 #if SY_WINCE
@@ -1049,23 +1050,28 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
     ++cipcount;
    }
   }else{
-   // coded to avoid switch which mispredicts
-   if(likely((cbit&(((I)1<<('b'-'a'))|((I)1<<('c'-'a'))|((I)1<<('w'-'a'))|((I)1<<('u'-'a'))|((I)1<<('s'-'a'))|((I)1<<('i'-'a'))|((I)1<<('x'-'a'))))!=0)){  // could bring d through here too for Intel
-    // integers.  Most singletons are integers
+#if defined(C_CD_ARMHF) || defined(C_CD_ARMEL)
+#define ARMARGS 1
+#else
+#define ARMARGS 0
+#endif
+   // coded to avoid switch, which mispredicts
+   if(likely((cbit&(((I)1<<('b'-'a'))|((I)1<<('c'-'a'))|((I)1<<('w'-'a'))|((I)1<<('u'-'a'))|((I)1<<('s'-'a'))|((I)1<<('i'-'a'))|((I)1<<('x'-'a'))|((I)!(SY_MACPPC||SY_UNIX64||ARMARGS||!SY_64)<<('d'-'a'))))!=0)){
+    // integers.  Most singletons are integers.  d on SY_64 and no weird calling convention is handled like an 8-byte integer
     // general plan for integers is: fetch 8 bytes (overfetch OK); get length; sign-extend at that length; mask off if not sign-extended
-    // code: b  c  w  u  s  i  x
-    // ASC:  62 63 77 75 73 69 78
-    // >>1   31 31 3b 3a 39 34 3c
-    // &15   1  1  11 10 9  4  12 decimal
-    // len   0  0  1  2  1  2  3/2
-    // sign  x  0  0  0  1  1  x
+    // code: b  c  w  u  s  i  x  d
+    // ASC:  62 63 77 75 73 69 78 64
+    // >>1   31 31 3b 3a 39 34 3c 32
+    // &15   1  1  11 10 9  4  12  2  decimal
+    // len   0  0  1  2  1  2  3/2 3
+    // sign  x  0  0  0  1  1  x   x
     I iwd=*xv;  // fetch 8 bytes, possibly overfetching
 #if SY_64
-    I lglen=(0x03640200 >>(c&0x1e))&3;  // lg2(len of data in bytes)  0000 001x 0110 0100 0000 0010 0000 0000
+    I lglen=(0x03640230 >>(c&0x1e))&3;  // lg2(len of data in bytes)  0000 001x 0110 0100 0000 0010 0011 0000
 #else
     I lglen=(0x02640200 >>(c&0x1e))&3;  // lg2(len of data in bytes)  0000 001x 0110 0100 0000 0010 0000 0000
 #endif
-    I sxt=(0x00080200 >>(c&0x1e))&2;   // 2 if sign-extend required   0000 00x0 0000 1000 0000 0010 00x0 0000
+    I sxt=(0x00080200 >>(c&0x1e))&2;   // 2 if sign-extend required   0000 00x0 0000 1000 0000 0010 00x0 x000
     I nsig=(I)1<<(lglen+3);  // # significant bits in iwd
     I sxtwd=(iwd<<(BW-nsig))>>(BW-nsig);  // install sign extend over ignored bits
     iwd&=~((sxt-2)<<(nsig-1));  // if not sign-extend, clear upper bits.  Can't shift by BW.  If nsig is 8, sxt=1 ANDs with ~0, sxt=0 ANDs with ~0xFF..FF00
@@ -1079,8 +1085,8 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
 // long way   case 'i': *dv++=(int)*xv; break;
 // long way   case 'x': *dv++=*xv;      break;
 // long way   case 'f':
-   }else if(likely(c=='d')){  // double-precision arg
-// obsolete    case 'd':
+   }else if(likely((SY_MACPPC||SY_UNIX64||ARMARGS||!SY_64)&&c=='d')){  // double-precision arg with a weird calling sequence
+// long way    case 'd':
 #if SY_MACPPC
              dd[dcnt++]=*(D*)xv;
 #endif

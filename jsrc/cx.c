@@ -213,7 +213,7 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
   L *sympv=LAV0(JT(jt,symp));  // bring into local
   L *ybuckptr = LXAV0(locsym)[(US)yxbucks]+sympv;  // pointer to sym block for y
   L *xbuckptr = LXAV0(locsym)[yxbucks>>16]+sympv;  // pointer to sym block for x
-  if(w){  // If y given, install it & incr usecount as in assignment.  Include the script index of the modification
+  if(likely(w!=0)){  // If y given, install it & incr usecount as in assignment.  Include the script index of the modification
    // If input is abandoned inplace and not the same as x, DO NOT increment usecount, but mark as abandoned and make not-inplace.  Otherwise ra
    // We can handle an abandoned argument only if it is direct or recursive, since only those values can be assigned to a name
    if((a!=w)&SGNTO0(AC(w)&(((AT(w)^AFLAG(w))&RECURSIBLE)-1))&((I)jtinplace>>JTINPLACEWX)){
@@ -231,7 +231,7 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
    xbuckptr->val=a; xbuckptr->sn=AM(JT(jt,slist));
   }
   // Do the other assignments, which occur less frequently, with symbis
-  if((I)u|(I)v){
+  if(unlikely(((I)u|(I)v)!=0)){
    if(u){(symbis(mnuvxynam[2],u,locsym)); if(NOUN&AT(u))symbis(mnuvxynam[0],u,locsym); }  // assign u, and m if u is a noun
    if(v){(symbis(mnuvxynam[3],v,locsym)); if(NOUN&AT(v))symbis(mnuvxynam[1],v,locsym); }  // bug errors here must be detected
   }
@@ -310,7 +310,7 @@ tblockcase:
    if(ci->canend&2)tpop(old);else z=gc(z,old);   // 2 means previous B can't be the result
    parseline(t);
    // Check for assert.  Since this is only for T-blocks we tolerate the test (rather than duplicating code)
-   if(ci->type==CASSERT&&JT(jt,assert)&&t&&!(NOUN&AT(t)&&all1(eq(num(1),t))))t=pee(line,ci,EVASSERT,gsfctdl<<(BW-2),callframe);  // if assert., signal post-execution error if result not all 1s.  May go into debug; sets to result after debug
+   if(unlikely(ci->type==CASSERT))if(JT(jt,assert)&&t&&!(NOUN&AT(t)&&all1(eq(num(1),t))))t=pee(line,ci,EVASSERT,gsfctdl<<(BW-2),callframe);  // if assert., signal post-execution error if result not all 1s.  May go into debug; sets to result after debug
    if(likely(t!=0)){ti=i,++i;  // if no error, continue on
     if((UI)i<(UI)n&&!(((cwtype=(ci=i+cw)->type)^CDO)+jt->uflags.us.cx.cx_us))goto docase;  // avoid indirect-branch overhead on the likely case
    }else if((gsfctdl&16)&&DB1&jt->uflags.us.cx.cx_c.db)ti=i,i=debugnewi(i+1,thisframe,self);  // error in debug mode: when coming out of debug, go to new line (there had better be one)
@@ -326,10 +326,10 @@ docase:
    //  Start by assuming condition is true; set to move to the next line then
    ++i;
    // Quick true cases are: nonexistent t; empty t; direct numeric t with low byte nonzero.  This gets most of the true.  We add in char types and BOX cause it's free (they are always true)
-   if(AN(tt)&&(-(AT(tt)&(B01|LIT|INT|FL|CMPX|C2T|C4T|BOX))&-((I)CAV(tt)[0]))>=0){I nexti=ci->go;  // C cond is false if (type direct or BOX) and (value not 0).  J cond is true then.  Musn't fetch CAV[0] if AN==0
+   if(likely(AN(tt)))if((-(AT(tt)&(B01|LIT|INT|FL|CMPX|C2T|C4T|BOX))&-((I)CAV(tt)[0]))>=0){I nexti=ci->go;  // C cond is false if (type direct or BOX) and (value not 0).  J cond is true then.  Musn't fetch CAV[0] if AN==0
     // here the type is indirect or the low byte is 0.  We must compare more
     while(1){  // 2 loops if sparse
-     if(AT(tt)&INT+B01){i=BIV0(tt)?i:nexti; break;} // INT and B01 are most common
+     if(likely(AT(tt)&INT+B01)){i=BIV0(tt)?i:nexti; break;} // INT and B01 are most common
      if(AT(tt)&FL){i=DAV(tt)[0]?i:nexti; break;}
      if(AT(tt)&CMPX){i=DAV(tt)[0]||DAV(tt)[1]?i:nexti; break;}
      if(AT(tt)&(RAT|XNUM)){i=1<AN(XAV(tt)[0])||IAV(XAV(tt)[0])[0]?i:nexti; break;}
@@ -400,14 +400,14 @@ dobblock:
    break;
   case CDOF:   // do. after for.
    // do. after for. .  If this is first time, initialize the iterator
-   if(!cv->t){
+   if(unlikely(!cv->t)){
     BASSERT(t!=0,EVCTRL);   // Error if no sentences in T-block
     CHECKNOUN    // if t is not a noun, signal error on the last line executed in the T block
     BZ(forinit(cv,t)); t=0;
    }
    ++cv->j;  // step to first (or next) iteration
    if(cv->x){A x;  // assign xyz and xyz_index for for_xyz.
-    if(!(ci->canend&2))BZ(z=rat(z));   // if z might be the result, protect it over the possible frees during this assignment
+    if(unlikely(!(ci->canend&2)))BZ(z=rat(z));   // if z might be the result, protect it over the possible frees during this assignment
     symbisdel(nfs(6+cv->k,cv->xv),x=sc(cv->j),  locsym);  // Assign iteration number.  since there is no sentence, take deletion off nvr stack
     symbisdel(nfs(  cv->k,cv->iv),cv->j<cv->n?from(x,cv->t):mtv,locsym);
    }
@@ -419,14 +419,14 @@ dobblock:
    // end. for select., and do. for for. after the last iteration, must pop the stack - just once
    // Must rat() if the current result might be final result, in case it includes the variables we will delete in unstack
    // (this includes ONLY xyz_index, so perhaps we should avoid rat if stack empty or xyz_index not used)
-   if(!(ci->canend&2))BZ(z=rat(z)); unstackcv(cv); --cv; ++r; 
+   if(unlikely(!(ci->canend&2)))BZ(z=rat(z)); unstackcv(cv); --cv; ++r; 
    i=ci->go;    // continue at new location
    break;
   case CBREAKS:
   case CCONTS:
    // break./continue-in-while. must pop the stack if there is a select. nested in the loop.  These are
    // any number of SELECTN, up to the SELECT 
-   if(!(ci->canend&2))BZ(z=rat(z));   // protect possible result from pop, if it might be the final result
+   if(unlikely(!(ci->canend&2)))BZ(z=rat(z));   // protect possible result from pop, if it might be the final result
    do{I fin=cv->w==CSELECT; unstackcv(cv); --cv; ++r; if(fin)break;}while(1);
     // fall through to...
   case CBREAK:
@@ -439,7 +439,7 @@ dobblock:
    // break. in a for. must first pop any active select., and then pop the for.
    // We just pop till we have popped a non-select.
    // Must rat() if the current result might be final result, in case it includes the variables we will delete in unstack
-   if(!(ci->canend&2))BZ(z=rat(z));   // protect possible result from pop
+   if(unlikely(!(ci->canend&2)))BZ(z=rat(z));   // protect possible result from pop
    do{I fin=cv->w!=CSELECT&&cv->w!=CSELECTN; unstackcv(cv); --cv; ++r; if(fin)break;}while(1);
    i=ci->go;     // continue at new location
    // It must also pop the try. stack, if the destination is outside the try.-end. range
@@ -513,9 +513,9 @@ dobblock:
   // Since we initialized z to i. 0 0, there's nothing more to do
  }
 
- if((gsfctdl&16)){debz();}   // pair with the deba if we did one
+ if(unlikely(gsfctdl&16)){debz();}   // pair with the deba if we did one
  A prevlocsyms=(A)AM(locsym);  // get symbol table to return to, before we free the old one
- if(!(gsfctdl&8)){
+ if(likely(!(gsfctdl&8))){
   // Normal path.  protect the result block and free everything allocated here, possibly including jt->locsyms if it was cloned (it is on the stack now)
   z=EPILOGNORET(z);  // protect return value from being freed when the symbol table is.  Must also be before stack cleanup, in case the return value is xyz_index or the like
  }else{
@@ -533,7 +533,7 @@ dobblock:
  // If we are using the original local symbol table, clear it (free all values, free non-permanent names) for next use.  We know it hasn't been freed yet
  // We detect original symbol table by rank LSYMINUSE - other symbol tables are assigned rank 0.
  // Tables are born with NAMEADDED off.  It gets set when a name is added.  Setting back to initial state here, we clear NAMEADDED
- if(gsfctdl&32){AR(locsym)=LLOCALTABLE; symfreeha(locsym);}
+ if(likely(gsfctdl&32)){AR(locsym)=LLOCALTABLE; symfreeha(locsym);}
  // Pop the private-area stack; set no assignment (to call for result display)
  SYMSETLOCAL(prevlocsyms);
 // obsolete  jt->asgn=0;
@@ -543,7 +543,7 @@ dobblock:
  // we don't do this, because it is possible that the AM slot was inherited from higher up the stack.
  // Note that we know we are not returning a virtual block here, so it is OK to write to AM
 
- if(likely(z!=0))if((_ttop!=jt->tnextpushp)==AC(z)){AC(z)=ACINPLACE|ACUC1; ABACK(z)=(A)_ttop;}  // AC can't be 0
+ if(likely(z!=0))if(likely((_ttop!=jt->tnextpushp)==AC(z))){AC(z)=ACINPLACE|ACUC1; ABACK(z)=(A)_ttop;}  // AC can't be 0
  RETF(z);
 }
 

@@ -632,11 +632,11 @@ J JInit(void){
 }
 
 // clean up at the end of a J instance
-int JFree(J jt){JJ jm=MTHREAD(jt);   // use master thread
-  if(!jt) R 0;
+int JFree(J jt){
+  if(!jt) R 0; JJ jm=MTHREAD(jt);   // use master thread
   breakclose(jt);
-  jt->jerr=0; jt->etxn=0; /* clear old errors */
-// obsolete   if(JT(jt,xep)&&AN(JT(jt,xep))){A *old=jt->tnextpushp; immex(JT(jt,xep)); fajt(jm,JT(jt,xep)); JT(jt,xep)=0; jt->jerr=0; jt->etxn=0; tpop(old); }  // run with typeout enabled
+  jm->jerr=0; jm->etxn=0; /* clear old errors */
+// obsolete   if(JT(jt,xep)&&AN(JT(jt,xep))){A *old=jm->tnextpushp; jtimmex(jm,JT(jt,xep)); fajt(jm,JT(jt,xep)); JT(jt,xep)=0; jm->jerr=0; jm->etxn=0; tpop(old); }  // run with typeout enabled
   if(JT(jt,xep)&&AN(JT(jt,xep))){jtimmex(jm,JT(jt,xep));}  // If there is an exit sentence, run it & force typeout.  No need to tidy up since the heap is going away
   dllquit(jm);  // clean up call dll
   free(JT(jt,heap));  // free the initial allocation

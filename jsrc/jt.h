@@ -51,7 +51,7 @@ typedef struct rngdata {
 // The first 2 cache lines is the hottest real estate in J, because they can be referenced with
 // single-byte displacement.  Put your heaviest-used items here
 // Must be aligned on a 256-byte boundary for flags; but better to align on a DRAM page boundary to avoid precharge
- struct __attribute__((aligned(256))) JTTstruct {
+ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
 // things needed for memory allocation
  A* tnextpushp;       // pointer to empty slot in allocated-block stack.  When low bits are 00..00, pointer to previous block of pointers.  Chain in first block is 0
 
@@ -269,7 +269,7 @@ typedef struct JSTstruct {
  A dbtrap;           /* trap, execute on suspension                     */
  I peekdata;         /* our window into the interpreter                 */
 
- JTT threaddata[MAXTHREADS] __attribute__((aligned(256)));
+ JTT threaddata[MAXTHREADS] __attribute__((aligned(JTFLAGMSK+1)));
 } JST;
 typedef JST* JS;  // shared part of struct
 

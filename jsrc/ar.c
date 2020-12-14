@@ -21,7 +21,7 @@ static DF1(jtreduce);
 // obsolete #else
 // obsolete #define PARITYW         PARITY4
 // obsolete #endif  
-#define PARITYW(s) (s=BW>32?s^s>>32:s, s^=s>>16, s^=s>>8)  // parity of a word full of Bs
+#define PARITYW(s) (s=BW>32?s^s>>32:s, s^=s>>16, s^=s>>8)  // parity of a word full of Bs.  Upper bits are garbage
 
 #if 0&&SY_ALIGN
 #define VDONE(T,PAR)  \
@@ -40,21 +40,16 @@ static void vdone(I m,I n,B*x,B*z,B pc){B b,*u;
  else  DQ(m, b=0; DQ(n, b^=*x++;); *z++=b==pc;);
 }
 #else
-// vdo for eq/ne. take parity of *x over n bytes, store into *z; invert if pc; repeat for m cells
+// vdo for eq/ne. take parity of *x over n bytes, store into *z; invert if !pc; repeat for m cells
 static void vdone(I m,I n,B*x,B*z,B pc){
  I nfull=(n-1)>>LGSZI; I ndisc=(-n)&(SZI-1); // number of full Is, and number of bytes to discard from the next I
- DQ(m, I s=pc^1; I *y=(I*)x; DQ(nfull, s^=*y++;); s^=(*y<<(ndisc<<3)); PARITYW(s); *z++=s; x+=n;);
+ DQ(m, I s=pc^1; I *y=(I*)x; DQ(nfull, s^=*y++;); s^=(*y<<(ndisc<<3)); PARITYW(s); *z++=s; x+=n;);  // parity, discarding trailing bytes of overfetch
 }
 #endif
-  // m is # cells to operate on; n is # items in 1 such cell; d is # atoms in one such item
-#define RBFXLOOP(T,pfx)  \
- {T* RESTRICT xx=(T*)x,* RESTRICT yy,*z0,* RESTRICT zz=(T*)z;   \
-  q=d/sizeof(T);                  \
-  for(j=0;j<m;++j){               \
-   yy=xx; xx-=q; z0=zz; DQ(q, --xx; --yy; --zz; *zz=pfx(*xx,*yy););    \
-   DQ(n-2,       zz=z0; DQ(q, --xx;       --zz; *zz=pfx(*xx,*zz);););  \
- }}  /* non-commutative */
-
+#if SY_ALIGN
+#define RBFXODDSIZE(pfx,bpfx)  RBFXLOOP(C,bpfx)
+#define REDUCECFX              REDUCEBFX
+#else
   // m is # cells to operate on; n is # items in 1 such cell; d is # atoms in one such item
 #define RCFXLOOP(T,pfx)  \
  {T* RESTRICT xx=(T*)x,* RESTRICT yy,*z0,* RESTRICT zz=(T*)z;   \
@@ -64,10 +59,6 @@ static void vdone(I m,I n,B*x,B*z,B pc){
    DQ(n-2,       zz=z0; DQ(q, *zz++=pfx(*zz,*xx); ++xx;      ););  \
  }}  /* commutative */
 
-#if SY_ALIGN
-#define RBFXODDSIZE(pfx,bpfx)  RBFXLOOP(C,bpfx)
-#define REDUCECFX              REDUCEBFX
-#else
 #define RBFXODDSIZE(pfx,bpfx)  \
  {B*zz;I r,t,*xi,*yi,*zi;                                                       \
   q=d>>LGSZI; r=d&(SZI-1); xi=(I*)x; zz=z;                                             \
@@ -102,6 +93,15 @@ static void vdone(I m,I n,B*x,B*z,B pc){
 // no errors possible here
 #if 0
   // m is # cells to operate on; n is # items in 1 such cell; d is # atoms in one such item
+#define RBFXLOOP(T,pfx)  \
+ {T* RESTRICT xx=(T*)x,* RESTRICT yy,*z0,* RESTRICT zz=(T*)z;   \
+  q=d/sizeof(T);                  \
+  for(j=0;j<m;++j){               \
+   yy=xx; xx-=q; z0=zz; DQ(q, --xx; --yy; --zz; *zz=pfx(*xx,*yy););    \
+   DQ(n-2,       zz=z0; DQ(q, --xx;       --zz; *zz=pfx(*xx,*zz);););  \
+ }}  /* non-commutative */
+
+  // m is # cells to operate on; n is # items in 1 such cell; d is # atoms in one such item
 #define REDUCEBFX(f,pfx,ipfx,spfx,bpfx,vdo)  \
  AHDRP(f,B,B){B*y=0;I j,q;                         \
   if(d==1){vdo; R EVOK;}    /* if arg is byte list, do it */                            \
@@ -131,14 +131,14 @@ AHDRP(f,B,B){  \
 
 REDUCECFX(  eqinsB, EQ,  IEQ,  SEQ,  BEQ,  vdone(m,n,x,z,(B)(n&1)))
 REDUCECFX(  neinsB, NE,  INE,  SNE,  BNE,  vdone(m,n,x,z,1       ))
-REDUCECFX(  orinsB, OR,  IOR,  SOR,  BOR,  {I c=d*n; DQ(m, *z++=1&&memchr(x,C1,n);                         x+=c;)}) 
-REDUCECFX( andinsB, AND, IAND, SAND, BAND, {I c=d*n; DQ(m, *z++=!  memchr(x,C0,n);                         x+=c;}))
-REDUCEBFX(  ltinsB, LT,  ILT,  SLT,  BLT,  {I c=d*n; DQ(m, *z++= *(x+n-1)&&!memchr(x,C1,n-1)?1:0;          x+=c;)})
-REDUCEBFX(  leinsB, LE,  ILE,  SLE,  BLE,  {I c=d*n; DQ(m, *z++=!*(x+n-1)&&!memchr(x,C0,n-1)?0:1;          x+=c;)})
-REDUCEBFX(  gtinsB, GT,  IGT,  SGT,  BGT,  {I c=d*n; DQ(m, B *y=memchr(x,C0,n); *z++=1&&(y?1&(y-x):1&n);      x+=c;)})
-REDUCEBFX(  geinsB, GE,  IGE,  SGE,  BGE,  {I c=d*n; DQ(m, B *y=memchr(x,C1,n); *z++=!  (y?1&(y-x):1&n);      x+=c;)})
-REDUCEBFX( norinsB, NOR, INOR, SNOR, BNOR, {I c=d*n; DQ(m, B *y=memchr(x,C1,n); d=y?y-x:n; *z++=(1&d)==d<n-1; x+=c;)})
-REDUCEBFX(nandinsB, NAND,INAND,SNAND,BNAND,{I c=d*n; DQ(m, B *y=memchr(x,C0,n); d=y?y-x:n; *z++=(1&d)!=d<n-1; x+=c;)})
+REDUCECFX(  orinsB, OR,  IOR,  SOR,  BOR,  {DQ(m, *z++=1&&memchr(x,C1,n);                         x+=n;)}) 
+REDUCECFX( andinsB, AND, IAND, SAND, BAND, {DQ(m, *z++=!  memchr(x,C0,n);                         x+=n;}))
+REDUCEBFX(  ltinsB, LT,  ILT,  SLT,  BLT,  {DQ(m, *z++= *(x+n-1)&&!memchr(x,C1,n-1)?1:0;          x+=n;)})
+REDUCEBFX(  leinsB, LE,  ILE,  SLE,  BLE,  {DQ(m, *z++=!*(x+n-1)&&!memchr(x,C0,n-1)?0:1;          x+=n;)})
+REDUCEBFX(  gtinsB, GT,  IGT,  SGT,  BGT,  {DQ(m, B *y=memchr(x,C0,n); *z++=1&&(y?1&(y-x):1&n);      x+=n;)})
+REDUCEBFX(  geinsB, GE,  IGE,  SGE,  BGE,  {DQ(m, B *y=memchr(x,C1,n); *z++=!  (y?1&(y-x):1&n);      x+=n;)})
+REDUCEBFX( norinsB, NOR, INOR, SNOR, BNOR, {DQ(m, B *y=memchr(x,C1,n); d=y?y-x:n; *z++=(1&d)==d<n-1; x+=n;)})
+REDUCEBFX(nandinsB, NAND,INAND,SNAND,BNAND,{DQ(m, B *y=memchr(x,C0,n); d=y?y-x:n; *z++=(1&d)!=d<n-1; x+=n;)})
 
 
 #if SY_ALIGN

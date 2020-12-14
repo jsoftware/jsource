@@ -192,7 +192,7 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
   SYMPUSHLOCAL(locsym);   // Chain the calling symbol table to this one
 
   // assignsym etc should never be set here; if it is, there must have been a pun-in-ASGSAFE that caused us to mark a
-  // derived verb as ASGSAFE and it was later overwritten with an unsafe verb.  That would be a major mess; we'll invest 2 stores
+  // derived verb as ASGSAFE and it was later overwritten with an unsafe verb.  That would be a major mess; we'll invest
   // in preventing it - still not a full fix, since invalid inplacing may have been done already
   CLEARZOMBIE
   // Assign the special names x y m n u v.  Do this late in initialization because it would be bad to fail after assigning to yx (memory leak would result)

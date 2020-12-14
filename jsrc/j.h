@@ -1320,7 +1320,8 @@ if(likely(z<3)){_zzt+=z; z=(I)&oneone; _zzt=_i&3?_zzt:(I*)z; z=_i&2?(I)_zzt:z; z
 // data.  So, we clear the inplace variables if we don't want to allow that: if the user set zomblevel=0, or if there is no local symbol table
 // (which means the user is fooling around at the keyboard & performance is not as important as transparency)
 #define CLEARZOMBIE     {jt->assignsym=0;}  // Used when we know there shouldn't be an assignsym, just in case
-#define PUSHZOMB L*savassignsym = jt->assignsym; if(savassignsym){if(unlikely(((JT(jt,asgzomblevel)-1)|((AN(jt->locsyms)-2)))<0)){CLEARZOMBIE}}  // test is (JT(jt,asgzomblevel)==0||AN(jt->locsyms)<2)
+// obsolete #define PUSHZOMB L*savassignsym = jt->assignsym; if(savassignsym){if(unlikely(((JT(jt,asgzomblevel)-1)|((AN(jt->locsyms)-2)))<0)){CLEARZOMBIE}}  // test is (JT(jt,asgzomblevel)==0||AN(jt->locsyms)<2)
+#define PUSHZOMB L*savassignsym = jt->assignsym; if(unlikely(JT(jt,asgzomblevel)==0)){CLEARZOMBIE}
 #define POPZOMB {jt->assignsym=savassignsym;}
 #define R               return
 #if FINDNULLRET   // When we return 0, we should always have an error code set.  trap if not

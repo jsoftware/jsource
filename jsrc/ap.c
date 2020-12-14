@@ -612,19 +612,28 @@ static DF1(jtpscan){A z;I f,n,r,t,wn,wr,*ws,wt;
  if(255&rc){jsignal(rc); R (rc>=EWOV)?IRS1(w,self,r,jtpscan,z):0;} else R adocv.cv&VRI+VRD?cvz(adocv.cv,z):z;
 }    /* f/\"r w atomic f main control */
 
-static DF2(jtinfixd){A fs,z;C*x,*y;I c=0,d,k,m,n,p,q,r,*s,wr,*ws,wt,zc; 
+static DF2(jtinfixd){A z;C*x,*y;I c=0,d,k,m,n,p,q,r,*s,wr,*ws,wt,zc; 
  F2RANKW(0,RMAX,jtinfixd,self);
- wr=AR(w); ws=AS(w); wt=AT(w); SETIC(w,n);
- RE(m=i0(vib(a))); if(m==IMAX){m=n+1;} p=m==IMIN?IMAX:ABS(m);
- if(0>m){p=MIN(p,n); d=p?(n+p-1)/p:0;}else{ASSERT(IMAX-1>n-m,EVDOMAIN); d=MAX(0,1+n-m);}
- if(fs=FAV(self)->fgh[0],CCOMMA==ID(fs)){RE(c=aii(w)); DPMULDE(p,c,zc) r=2;}
- else{if(n)RE(c=aii(w)); zc=p; r=wr?1+wr:2;}
- GA(z,wt,d*p*c,r,0); x=CAV(z); y=CAV(w);
- s=AS(z); s[0]=d; s[1]=zc; MCISH(s+2,1+ws,r-2);
- k=c<<bplg(wt); 
- if(AN(z)){
-  if(m>=0){ q=p*k; DQ(d, MC(x,y,q);    x+=q; y+=k;);
-  }else{ MC(x,y,n*k);  if(q=d*p-n)fillv(wt,q*c,x+n*k);
+ wr=AR(w); ws=AS(w); wt=AT(w); SETIC(w,n);   // n=#items of w
+ RE(m=i0(vib(a))); if(m==IMAX){m=n+1;} p=m==IMIN?IMAX:ABS(m);  // m=x arg, p=abs(m)
+ if(0>m){p=MIN(p,n); if(likely(p!=0))d=(n+p-1)/p;else d=0;}else{ASSERT(IMAX-1>n-m,EVDOMAIN); d=MAX(0,1+n-m);}  // d=#partitions; error if n-m+1 overflows
+ if(unlikely(CCOMMA==ID(FAV(self)->fgh[0]))){RE(c=aii(w)); DPMULDE(p,c,zc) r=2;}  // c=#atoms in item of w; zc=#atoms in cell of result; r=result rank
+ else{if(n)RE(c=aii(w)); zc=p; r=wr?1+wr:2;}   // if w has no items, proceed allocating 0 items of result
+ // if m<0 and there is no final shard, create a virtual result
+ q=d*p-n;   // number of uncopied or overcopied cells.  Uncopied cells are a shard when m<0; overcopied cells happen whem m>1.
+ if(likely(q==0)){
+  // Each input will be moved once.  We can make a virtual block using ($,)
+  // Create the shape of the result
+  fauxblockINT(afaux,4,1); fauxINT(z,afaux,r,1) s=IAV1(z); s[0]=d; s[1]=zc; MCISH(s+2,1+ws,r-2);  // allocate and copy shape
+  R reshape(z,w);  // return the reshaped w
+ }
+ GA(z,wt,d*p*c,r,0); x=CAV(z); y=CAV(w);   // allocate result, set x=output pointer y=input pointer
+ s=AS(z); s[0]=d; s[1]=zc; MCISH(s+2,1+ws,r-2);   // install shape
+ k=c<<bplg(wt);   // k=#bytes in a cell of result
+ if(likely(AN(z)!=0)){
+// obsolete   if(m>=0){ q=p*k; DQ(d, MC(x,y,q);    x+=q; y+=k;);  // m>0, overlapping inputs, copy them
+  if(m>=0){ q=p*k; JMCDECL(endmask) JMCSETMASK(endmask,q+SZI-1,0) DQ(d, JMCR(x,y,q+(SZI-1),lbl1,0,endmask) x+=q; y+=k;);  // m>0, overlapping inputs, copy them
+  }else{JMC(x,y,n*k+(SZI-1),lbl2,0)  /* obsolete if(unlikely((q=d*p-n)!=0))*/fillv(wt,q*c,x+n*k);    // nonoverlapping: copy en bloc and fill
   }
  }
  RETF(z);
@@ -725,7 +734,7 @@ static A jtmovminmax(J jt,I m,A w,A fs,B max){A y,z;I c,i,j,p,wt;
  SETIC(w,p); p-=m; wt=AT(w); c=aii(w);
  GA(z,AT(w),c*(1+p),AR(w),AS(w)); AS(z)[0]=1+p;
  switch(max + ((wt>>(INTX-1))&6)){
-  case 0: MOVMINMAXS(SB,SBT,SBUV4(jt->sbu)[0].down,SBLE); break;
+  case 0: MOVMINMAXS(SB,SBT,SBUV4(JT(jt,sbu))[0].down,SBLE); break;
   case 1: MOVMINMAXS(SB,SBT,0,SBGE); break;
   case 2: MOVMINMAX(I,INT,IMAX,<=); break;
   case 3: MOVMINMAX(I,INT,IMIN,>=); break;

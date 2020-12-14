@@ -66,7 +66,7 @@ typedef UI4                RANK2T;  // 2 ranks, (l<<16)|r
 #define RANK2TX            32   // # bits in a RANK2T
 #define RANK2TMSK           0xFFFFFFFFU
 typedef I                  FLAGT;
-typedef UI4                LX;  // index of an L block in LAV0(jt->symp)
+typedef UI4                LX;  // index of an L block in LAV0(JT(jt,symp))
 
 typedef struct AD AD;
 typedef AD *A;
@@ -89,6 +89,9 @@ typedef AD *A;
 // following bit is used in sort/grade to indicate sort direction
 #define JTDESCENDX      2   // direction of sort
 #define JTDESCEND       (((I)1)<<JTDESCENDX)
+// following bit is used as input to jtsymbis only
+#define JTFINALASGNX    0   // turn this on in jt to indicate that the assignment is final and does not have to worry about protecting the input value
+#define JTFINALASGN     (((I)1)<<JTFINALASGNX)
 
 
 // Next flag must match result.h and VF2 flags, and must be above ZZFLAGBOXATOP
@@ -106,7 +109,6 @@ typedef AD *A;
 
 #define JTFLAGMSK       255  // mask big enough to cover all defined flags
 #define JTALIGNBDY      8192  // jt is aligned on this boundary - all lower bits are 0 (the value is the size of an SDRAM page, to avoid row precharges while accessing jt)
-
 
 struct AD {
  union {
@@ -138,11 +140,13 @@ struct AD {
  RANKT r;  // rank
  US h;   // reserved for allocator.  Not used for AFNJA memory
 #if BW==64
- UI4 fill;   // On 64-bit systems, there will be a padding word here - insert in case compiler doesn't
+ US origin;
+ US fill;   // On 64-bit systems, there will be a padding word here - insert in case compiler doesn't
 #endif
 #else
 #if BW==64
- UI4 fill;   // On 64-bit systems, there will be a padding word here - insert in case compiler doesn't
+ US fill;   // On 64-bit systems, there will be a padding word here - insert in case compiler doesn't
+ US origin;
 #endif
  US h;   // reserved for allocator.  Not used for AFNJA memory
  RANKT r;  // rank
@@ -733,7 +737,7 @@ typedef struct{
 } PM0;
 
 
-/* each unique symbol has a row in jt->sbu                                 */
+/* each unique symbol has a row in JT(jt,sbu)                                 */
 /* a row is interpreted per SBU                                            */
 /* for best results make sizeof(SBU) a multiple of sizeof(I)               */
  
@@ -804,7 +808,7 @@ typedef struct {AF valencefns[2];A fgh[3];union { D lD; void *lvp[2]; I lI; I4 l
 #define VFKEYSLASHF      (((I)3)<<VFKEYSLASHFX)
 
 
-// bits 8 and above are available for all functions:
+// bits 8 and above are available for all verbs:
 #define VGERLX          8
 #define VGERL           (((I)1)<<VGERLX)          /* gerund left  argument           */
 #define VGERR           (I)512          /* gerund right argument           */
@@ -930,7 +934,7 @@ typedef struct {
 
 typedef struct {
   CMP  f;             /* comparison function in sort                     */
-  J    jt;        // jt, including the DESCEND flag
+  struct JTTstruct * jt;           // jt, including the DESCEND flag
   I    n;            /* comparison: number of atoms in each item        */
   I    k;            /* comparison: byte size of each item              */
   C*   v;            /* comparison: beginning of data area              */

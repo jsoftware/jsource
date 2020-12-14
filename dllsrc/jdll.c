@@ -23,6 +23,11 @@
 #include <windows.h>
 #include "../jsrc/j.h"
 #include "../jsrc/jlib.h"
+#undef JT
+#define JT(p,n) p->n
+#undef J
+#define J JST*
+#define IJT(p,n) JT(JJTOJ(p),n)    // used in function that interface to internal functions and thus take a JJ
 
 extern void wtom(US* src, I srcn, UC* snk);
 extern void utow(C4* src, I srcn, US* snk);
@@ -34,7 +39,7 @@ C* esub(J jt, long ec);
 extern int uniflag;
 #endif
 
-I jdo(J, C*);
+// obsolete I jdo(J, C*);
 
 #define MAXRANK	60
 
@@ -71,7 +76,7 @@ CDPROC int _stdcall JIsBusy(J jt){	return 0;}
 #if !SY_WINCE
 
 //! 64 bit problems - com and dll interface is 32 bit - needs test and thought
-static int a2v (J jt, A a, VARIANT *v, int dobstrs)
+static int a2v (JJ jt, A a, VARIANT *v, int dobstrs)  // jt is a thread pointer, normally the master
 {
 	SAFEARRAY FAR* psa; 
 	SAFEARRAYBOUND rgsabound[MAXRANK];
@@ -136,7 +141,7 @@ static int a2v (J jt, A a, VARIANT *v, int dobstrs)
 
 	case INT:
 #if SY_64
-		if(jt->int64rflag) {
+		if(IJT(jt,int64rflag)) {
 		  if(!r) {v->vt=VT_I8; v->llVal = (I)(*pi); return 0;}
 		  vt=VT_I8;
 		  cb=k*sizeof(long long);
@@ -187,7 +192,7 @@ static int a2v (J jt, A a, VARIANT *v, int dobstrs)
 	}
 
 
-	if(1<r && jt->transposeflag)
+	if(1<r && IJT(jt,transposeflag))
 		RE(a=cant1(a));  // undo shape reversal later!
 
 	for(i=0; i<r; ++i)
@@ -240,7 +245,7 @@ static int a2v (J jt, A a, VARIANT *v, int dobstrs)
 #if SY_64
   case INT:
   {
-    if (!jt->int64rflag) {
+    if (!IJT(jt,int64rflag)) {
       long *p1=psa->pvData;
       I *p2=AV(a);
       while (k--)
@@ -257,7 +262,7 @@ static int a2v (J jt, A a, VARIANT *v, int dobstrs)
 	return 0;
 }
 
-int jget(J jt, C* name, VARIANT* v, int dobstr)
+static int jget(JJ jt, C* name, VARIANT* v, int dobstr)  // jt is a thread pointer
 {
 	A a;
 	char gn[256];
@@ -274,17 +279,17 @@ int jget(J jt, C* name, VARIANT* v, int dobstr)
 
 CDPROC int _stdcall JGet(J jt, C* name, VARIANT* v)
 {
-	return jget(jt, name, v, 0); // no bstrs
+	return jget(MTHREAD(jt), name, v, 0); // no bstrs; run in master thread
 }
 
 CDPROC int _stdcall JGetB(J jt, C* name, VARIANT* v)
 {
-	return jget(jt, name, v, 1); // do bstrs
+	return jget(MTHREAD(jt), name, v, 1); // do bstrs; run in master thread
 }
 
 // convert a VARIANT to a J array
 // returns 0 on error with detail in jerr.
-static A v2a(J jt, VARIANT* v, int dobstrs)
+static A v2a(JJ jt, VARIANT* v, int dobstrs)   // jt is a thread pointer
 {
 	A a;
 	SAFEARRAY* psa;
@@ -499,7 +504,7 @@ static A v2a(J jt, VARIANT* v, int dobstrs)
 	default:
 		ASSERT(0,EVDOMAIN);
 	}
-	if(1<r && jt->transposeflag)
+	if(1<r && IJT(jt,transposeflag))
 	{
 		RE(a=cant1(a));
 		DO(r, AS(a)[i]=shape[r-1-i];);
@@ -569,22 +574,22 @@ void oleoutput(J jt, I n, char* s)
 {
 	I k;
 
-	if(!jt->oleop) return;
+	if(!JT(jt,oleop)) return;
 	k = countoutput(n, s);
-	if(!jt->opbstr)
+	if(!JT(jt,opbstr))
 	{
-		jt->opbstr = SysAllocStringLen(0, (UINT)(n+k));
-		fixoutput(s, jt->opbstr, n);
+		JT(jt,opbstr) = SysAllocStringLen(0, (UINT)(n+k));
+		fixoutput(s, JT(jt,opbstr), n);
 	}
 	else
 	{
-		I len = SysStringLen(jt->opbstr);
-		SysReAllocStringLen((BSTR*)&jt->opbstr, 0, (UINT)(len+n+k));
-		fixoutput(s, (BSTR)jt->opbstr + len, n);
+		I len = SysStringLen(JT(jt,opbstr));
+		SysReAllocStringLen((BSTR*)&JT(jt,opbstr), 0, (UINT)(len+n+k));
+		fixoutput(s, (BSTR)JT(jt,opbstr) + len, n);
 	}
 }
 
-int jsetx(J jt, C* name, VARIANT* v, int dobstrs)
+static int jsetx(JJ jt, C* name, VARIANT* v, int dobstrs)   // jt is a thread pointer
 {
 	int er;
 	A *old=jt->tnextpushp;
@@ -595,7 +600,7 @@ int jsetx(J jt, C* name, VARIANT* v, int dobstrs)
 	if(valid(name, gn)) return EVILNAME; 
 
 	er=jt->jerr=0;
-	jset (gn, v2a(jt, v,dobstrs));	// no bstrs
+	jset(gn, v2a(jt, v,dobstrs));	// no bstrs, run in thread we were called in
 	er=jt->jerr; jt->jerr=0;
 	tpop(old);
 	return er;
@@ -603,12 +608,12 @@ int jsetx(J jt, C* name, VARIANT* v, int dobstrs)
 
 CDPROC int _stdcall JSet(J jt, C* name, VARIANT* v)
 {
-	return jsetx(jt, name, v, 0);	// no bstrs
+	return jsetx(MTHREAD(jt), name, v, 0);	// no bstrs, use master thread
 }
 
 CDPROC int _stdcall JSetB(J jt, C* name, VARIANT* v)
 {
-	return jsetx(jt, name, v, 1);	// do bstrs
+	return jsetx(MTHREAD(jt), name, v, 1);	// do bstrs
 }
 
 CDPROC int _stdcall JErrorText(J jt, long ec, VARIANT* v)
@@ -635,14 +640,14 @@ CDPROC int _stdcall JClear(J jt){ return 0;};
 CDPROC int _stdcall JInt64R(J jt, long b)
 {
 #if SY_64
-	jt->int64rflag = b;
+	JT(jt,int64rflag) = b;
 #endif
 	return 0;
 }
 
 CDPROC int _stdcall JTranspose(J jt, long b)
 {
-	jt->transposeflag = b;
+	JT(jt,transposeflag) = b;
 	return 0;
 }
 
@@ -663,12 +668,12 @@ CDPROC int _stdcall JDoR(J jt, C* p, VARIANT* v)
 {
 	int e;
 	
-	jt->oleop=1;	// capture output
-	jt->opbstr=0;	// none so far
+	JT(jt,oleop)=1;	// capture output
+	JT(jt,opbstr)=0;	// none so far
 	e=JDo(jt, p);
-	jt->oleop=0;
+	JT(jt,oleop)=0;
 	v->vt=VT_BSTR;
-	v->bstrVal=jt->opbstr;
+	v->bstrVal=JT(jt,opbstr);
 	R e;
 }
 #endif // wince
@@ -678,7 +683,7 @@ CDPROC int _stdcall JDoR(J jt, C* p, VARIANT* v)
 // previously in separate file when jdll.c and jcom.c both exisited
 char modulepath[_MAX_PATH];
 char dllpath[_MAX_PATH];
-void dllquit(J);
+void dllquit(JJ);
 void oleoutput(J,I n,char* s);
 HINSTANCE g_hinst;
 J g_jt;
@@ -711,7 +716,8 @@ void getpath(HINSTANCE hi, C* path)
 }
 #endif
 
-
+// create a memory heap of the given size, allocate a JST in it, and store the address
+// of the heap into jt->heap so that the JE can do memory allocations from it
 J heapinit(int size)
 {
 	HANDLE h;
@@ -727,7 +733,7 @@ J heapinit(int size)
 	}
  jt = (J)(((I)jt+JTALIGNBDY-1)&-JTALIGNBDY);  // force to SDRAM page boundary
 	memset(jt,0,sizeof(JST));
-	jt->heap = h;
+	JT(jt,heap) = h;
 	return jt;
 }
 
@@ -736,6 +742,7 @@ int WINAPI DllMain (HINSTANCE hDLL, DWORD dwReason, LPVOID lpReserved)
 	switch (dwReason)
 	{
     case DLL_PROCESS_ATTACH:
+        // Handle the first activation of J
 		g_hinst = hDLL;
 /*
 		{
@@ -748,11 +755,17 @@ int WINAPI DllMain (HINSTANCE hDLL, DWORD dwReason, LPVOID lpReserved)
 			}
 		}
 */
+        // Initialize J globals.  This is done only once.  Many of the globals are in static memory, initialized
+        // by the compiler; some must be initialized a run-time in static memory; some must be allocated into A blocks
+        // pointed to by static names.  Because of the A blocks, we have to perform a skeletal initialization of jt,
+        // just enough to do ga().  The rest of jt is never used
 		getpath(0, modulepath);
 		getpath(hDLL, dllpath);
-		g_jt=heapinit(10000);
-		if(!g_jt) R 0;
-		if(!jtglobinit(g_jt)) {HeapDestroy(g_jt->heap); g_jt=0; R 0;};
+		g_jt=heapinit(10000);  // just enough for a few allocations
+		if(!g_jt) R 0;   // abort if no memory
+		if(!jtglobinit(g_jt)) {HeapDestroy(g_jt->heap); g_jt=0; R 0;};  // free & abort if initialization error
+        // The g_jt heap MUST NOT be freed, because it holds the blocks pointed to by initialized globals.
+        // g_jt itself, a JST struct, is not used.  Perhaps it could be freed, as long as the rest of the heap remains.
 		break;
 
     case DLL_THREAD_ATTACH:
@@ -772,11 +785,14 @@ CDPROC J _stdcall JInit()
 {
 	JST* jt;
 
+    // Init for a new J instance.  Globals have already been initialized.
+    // Create a new jt, which will be the one we use for the entirety of the instance.
 	jt=heapinit(1000000);
-	if(!jt) R 0;
+	if(!jt) R 0;  // if no memory, fail
+    // Initialize all the info for the shared region and the master thread
 	if(!jtjinit2(jt,0,0))
 	{
-		HeapDestroy(jt->heap);
+		HeapDestroy(JT(jt,heap));  // if error during init, fail
 		R 0;
 	};
 	return jt;
@@ -784,13 +800,14 @@ CDPROC J _stdcall JInit()
 
 // clean up at the end of a J instance
 CDPROC int _stdcall JFree(J jt)
-{
+{JJ jm=&jt->threaddata[0];   // use master thread
 	if(!jt) return 0;
+// obsolete 	if(JT(jt,xep)&&AN(JT(jt,xep))){A *old=jm->tnextpushp; jtimmex(jm,JT(jt,xep)); fajt(jm,JT(jt,xep)); JT(jt,xep)=0; jm->jerr=0; jm->etxn=0; tpop(old); }  // force typeout
+	if(JT(jt,xep)&&AN(JT(jt,xep))){jtimmex(jm,JT(jt,xep));}  // If there is an exit sentence, run it & force typeout.  No need to tidy up since the heap is going away
 #if !SY_WINCE
-	dllquit(jt);  // clean up call dll
+	dllquit(jm);  // clean up call dll
 #endif
-	if(jt->xep&&AN(jt->xep)){A *old=jt->tnextpushp; immex(jt->xep); fa(jt->xep); jt->xep=0; jt->jerr=0; jt->etxn=0; tpop(old); }  // force typeout
-	HeapDestroy(jt->heap);
+	HeapDestroy(JT(jt,heap));
 	return 0;
 }
 

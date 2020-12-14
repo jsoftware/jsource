@@ -23,19 +23,19 @@ jfe routines (jconsole.c):
  load je shared library
  init je (get jt instance)
  set je callbacks (sm prefix indicates session manager)
-  jt->sminput=input
-  jt->smoutput=output
+  JT(jt,sminput)=input
+  JT(jt,smoutput)=output
 
- input()        - get kb line for jdo() or jt->sminput() result
+ input()        - get kb line for jdo() or JT(jt,sminput)() result
  
- output(string) - print s from jt->smoutput(type,string) 
+ output(string) - print s from JT(jt,smoutput)(type,string) 
 
 je routines (io.c):
  jdo(line)
 
- jsto(type,string) - jt->smoutput() to give jfe output
+ jsto(type,string) - JT(jt,smoutput)() to give jfe output
              
- jgets() - jt->sminput() callback to get jfe kb input
+ jgets() - JT(jt,sminput)() callback to get jfe kb input
             or
            advl() to get next script line
 
@@ -53,10 +53,10 @@ and continue through various inputs to see the flow
 *** jfe repl (read/execute/print/loop)
  s=input()
  call jdo(s)           ---------> jdo() calls ddtokens(sentence)
-   input()   (optional) <-------- if DD seen, get more lines if needed by calling jt->sminput
+   input()   (optional) <-------- if DD seen, get more lines if needed by calling JT(jt,sminput)
                                   jdo() calls immex(inpl(sentence))
                                    ... 
-   output(s)           <--------  jsto(type,s) - jt->smoutout(type,s)
+   output(s)           <--------  jsto(type,s) - JT(jt,sm)outout(type,s)
    output returns      ---------> ...
  ...                   <--------- jdo returns with error code
  loop
@@ -65,22 +65,22 @@ and continue through various inputs to see the flow
  ...
                                   1:2[2 calls jtwri()
                                   jsto(type,string)
-   output(s)           <--------- jt->smoutout(type,s)
+   output(s)           <--------- JT(jt,sm)outout(type,s)
    output returns      ---------> ...
 
 *** repl with read from keyboard (1!:1[1)
  ...
                                   1:1[1 calls jtjfread()
-   input()             <--------  jt->sminput()
+   input()             <--------  JT(jt,sminput)()
    input returns line  -------->  ...
 
 *** repl with debug suspension
  ...
                                      loop as long as suspended
                                        call jgets()
-   input()            <---------       call jt->sminput()
+   input()            <---------       call JT(jt,sminput)()
    return line        --------->
-   input()   (optional) <--------      if DD seen, get more lines if needed by calling jt->sminput
+   input()   (optional) <--------      if DD seen, get more lines if needed by calling JT(jt,sminput)
                                        call immex(inpl(line)
                                        loop
 *** m : 0
@@ -90,7 +90,7 @@ to see if more lines need to be read to finish the DD; is so, call jgets() to ge
 
 *** script load
 linf() is called first to read in all lines.  It sets d->dcss in the SCRIPT entry to indicate that fact.  Thereafter
-all calls to jgets() return lines from the file without calling jt->sminput().
+all calls to jgets() return lines from the file without calling JT(jt,sminput)().
 jgets() calls advl() to advance through the lines, returns 0 for EOF.  Error is possible.
 
 The lines are executed one by one.  Before each is executed, ddtokens() is called to see if more lines
@@ -101,7 +101,7 @@ similar to debug suspension except output/input
  processed by gui sm
 
 *** JHS nfe (native front end)
-jt->nfe flag - JE does not use jt->smoutout() and jt->sminput()
+JT(jt,nfe) flag - JE does not use JT(jt,sm)outout() and JT(jt,sminput)()
 instead it calls J code that provides equivalent services
 JHS routines are J socket code to talk with javascript browser page
 
@@ -130,10 +130,18 @@ A recursive JDo may use a DD, but only if it is fully contained in the string
 
 #include "j.h"
 #include "d.h"
+// Because this module interfaces heavily with the FE, we keep the original meaning of J.  Internal routines called by the JE may use JJ
+// jt is a JS here normally; but for eps called from the JE, it may be a JJ.  If we need the master thread, we call that jm
+#undef JT
+#define JT(p,n) p->n
+#undef J
+#define J JS
+#define IJT(p,n) JT(JJTOJ(p),n)    // used in function that interface to internal functions and thus take a JJ
 
-extern void dllquit(J);
 
-// flags in jt indicate whether display is suppressed.  p is the prompt, s is the text.  suppression of s happen when it is created;
+extern void dllquit(JJ);
+
+// flags in jt indicate whether display is suppressed.  p is the prompt, s is the text.  suppression of s happens when it is created;
 // here we control suppression of p; but we suppress all anyway
 void jtwri(J jt,I type,C*p,I m,C*s){F1PREFJT;C buf[1024],*t=OUTSEQ,*v=buf;I c,d,e,n;
  if(!((I)jtinplace&JTPRNOSTDOUT)){  // if the prompt is not suppressed...
@@ -168,15 +176,15 @@ static void jtwrf(J jt,I n,C*v,F f){C*u,*x;I j=0,m;
 // if !b (normal except for m : 0), look at the string:
 //   if it contains XOFF (ctrl-D), exit J
 //   if the vertical boxing character is Unicode, discard leading SP or | characters (which might have been error typeout)
-A jtinpl(J jt,B b,I n,C*s){C c;I k=0;
+static A jtinpl(JJ jt,B b,I n,C*s){C c;I k=0;
  if(n&&(c=s[n-1],CLF==c||CCR==c))--n;  // discard trailing [CR], CRLF, CRCR
 #if _WIN32
  if(n&&(c=s[n-1],CCR==c))--n;
 #endif
- ASSERT(!*jt->adbreak,EVINPRUPT);
+ ASSERT(!*IJT(jt,adbreak),EVINPRUPT);
  if(!b){ /* 1==b means literal input */
   if(n&&COFF==s[n-1])joff(num(0));
-  c=jt->bx[9]; if((UC)c>127)DO(n, if(' '!=s[i]&&c!=s[i]){k=i; break;});
+  c=IJT(jt,bx)[9]; if((UC)c>127)DO(n, if(' '!=s[i]&&c!=s[i]){k=i; break;});
  }
  R str(n-k,s+k);
 }
@@ -192,7 +200,7 @@ static I advl(I j,I n,C*s){B b;C c,*v;
 void breakclose(J jt);
 
 static C* nfeinput(J jt,C* s){A y;
- jt->adbreakr=&breakdata; y=exec1(cstr(s)); jt->adbreakr=jt->adbreak;
+ JT(jt,adbreakr)=&breakdata; y=jtexec1(MTHREAD(jt),jtcstr(MTHREAD(jt),s)); JT(jt,adbreakr)=JT(jt,adbreak);
  if(!y){breakclose(jt);exit(2);} /* J input verb failed */
  jtwri(jt,MTYOLOG,"",strlen(CAV(y)),CAV(y));  // call to nfeinput() comes from a prompt or from jdo.  In either case we want to display the result.  Thus jt
  return CAV(y); /* don't combine with previous line! CAV runs (x) 2 times! */
@@ -202,8 +210,8 @@ static C* nfeinput(J jt,C* s){A y;
 // if *p is (C)1 (which comes from m : 0), the request is for unprocessed 'literal input'
 // otherwise processed in inpl
 // Lines may come from a script, in which case return 0 on EOF, but EVINPRUPT is still possible as an error
-A jtjgets(J jt,C*p){A y;B b;C*v;I j,k,m,n;UC*s;
- *jt->adbreak=0;
+A jtjgets(JJ jt,C*p){A y;B b;C*v;I j,k,m,n;UC*s;
+ *IJT(jt,adbreak)=0;
  if(b=1==*p)p=""; /* 1 means literal input; remember & clear prompt */
  DC d; for(d=jt->sitop; d&&d->dctype!=DCSCRIPT; d=d->dclnk);  // d-> last SCRIPT type, if any
  if(d&&d->dcss){   // enabled DCSCRIPT debug type - means we are reading from file (or string)  for 0!:x
@@ -213,7 +221,7 @@ A jtjgets(J jt,C*p){A y;B b;C*v;I j,k,m,n;UC*s;
   d->dcj=k=j;  // k=start index
   d->dcix=j=advl(j,n,s);  // j=end+1 index
   m=j-k; if(m&&32>s[k+m-1])--m; if(m&&32>s[k+m-1])--m;  // m is length; discard trailing control characters (usually CRLF, but not necessarily) ?not needed: done in inpl
-  jtwri((J)((I)jt+d->dcpflags),MTYOLOG,p,m,k+s);  // log the input, but only if we wanted to echo the input
+  jtwri((J)((I)JJTOJ(jt)+d->dcpflags),MTYOLOG,p,m,k+s);  // log the input, but only if we wanted to echo the input
   R inpl(b,m,k+s);  // process & return the line
  }
  /* J calls for input in 3 cases:
@@ -221,19 +229,19 @@ A jtjgets(J jt,C*p){A y;B b;C*v;I j,k,m,n;UC*s;
     n : 0 input lines up to terminating )
     1!:1[1 read from keyboard */
  // if we are already prompting, a second prompt would be unrecoverable & we fail this request
- ASSERT(jt->recurstate<RECSTATEPROMPT,EVCTRL)
+ ASSERT(IJT(jt,recurstate)<RECSTATEPROMPT,EVCTRL)
  showerr();  // if there is an error at this point, display it (shouldn't happen)   use jt to force typeout
  // read from the front end. This is either through the nfe path or via the callback to the FE
- if(jt->nfe){
+ if(IJT(jt,nfe)){
   // Native Front End
-  jt->recurstate=RECSTATEPROMPT;  // advance to PROMPT state
-  v=nfeinput(jt,*p?"input_jfe_'      '":"input_jfe_''");   // use jt so always emit prompt
+  IJT(jt,recurstate)=RECSTATEPROMPT;  // advance to PROMPT state
+  v=nfeinput(JJTOJ(jt),*p?"input_jfe_'      '":"input_jfe_''");   // use jt so always emit prompt
  }else{
-  ASSERT(jt->sminput,EVBREAK); 
-  jt->recurstate=RECSTATEPROMPT;  // advance to PROMPT state
-  v=((inputtype)(jt->sminput))(jt,p);
+  ASSERT(IJT(jt,sminput),EVBREAK); 
+  IJT(jt,recurstate)=RECSTATEPROMPT;  // advance to PROMPT state
+  v=((inputtype)(IJT(jt,sminput)))(JJTOJ(jt),p);
  }
- jt->recurstate=RECSTATEBUSY;  // prompt complete, go back to normal running state
+ IJT(jt,recurstate)=RECSTATEBUSY;  // prompt complete, go back to normal running state
  R inpl(b,(I)strlen(v),v);  // return A block for string
 }
 
@@ -241,32 +249,32 @@ A jtjgets(J jt,C*p){A y;B b;C*v;I j,k,m,n;UC*s;
 #if SYS&SYS_UNIX
 void breakclose(J jt)
 {
- if(jt->adbreak==&breakdata) return;
- munmap(jt->adbreak,1);
- jt->adbreakr=jt->adbreak=&breakdata;
- close((intptr_t)jt->breakfh);
- jt->breakfh=0;
- unlink(jt->breakfn);
- *jt->breakfn=0;
+ if(JT(jt,adbreak)==&breakdata) return;
+ munmap(JT(jt,adbreak),1);
+ JT(jt,adbreakr)=JT(jt,adbreak)=&breakdata;
+ close((intptr_t)JT(jt,breakfh));
+ JT(jt,breakfh)=0;
+ unlink(JT(jt,breakfn));
+ *JT(jt,breakfn)=0;
 }
 #else
 void breakclose(J jt)
 {
- if(jt->adbreak==&breakdata) return;
- UnmapViewOfFile(jt->adbreak);
- jt->adbreakr=jt->adbreak=&breakdata;
- CloseHandle(jt->breakmh);
- jt->breakmh=0;
- CloseHandle(jt->breakfh);
- jt->breakfh=0;
+ if(JT(jt,adbreak)==&breakdata) return;
+ UnmapViewOfFile(JT(jt,adbreak));
+ JT(jt,adbreakr)=JT(jt,adbreak)=&breakdata;
+ CloseHandle(JT(jt,breakmh));
+ JT(jt,breakmh)=0;
+ CloseHandle(JT(jt,breakfh));
+ JT(jt,breakfh)=0;
 #if SY_WINCE
- DeleteFile(tounibuf(jt->breakfn));
+ DeleteFile(tounibuf(JT(jt,breakfn)));
 #else
  WCHAR wpath[NPATH];
- MultiByteToWideChar(CP_UTF8,0,jt->breakfn,1+(int)strlen(jt->breakfn),wpath,NPATH);
+ MultiByteToWideChar(CP_UTF8,0,JT(jt,breakfn),1+(int)strlen(JT(jt,breakfn)),wpath,NPATH);
  DeleteFileW(wpath);
 #endif
- *jt->breakfn=0;
+ *JT(jt,breakfn)=0;
 }
 #endif
 
@@ -274,41 +282,41 @@ F1(jtjoff){I x;
  ARGCHK1(w);
  x=i0(w);
  jt->jerr=0; jt->etxn=0; /* clear old errors */
- if(jt->sesm)jsto(jt, MTYOEXIT,(C*)x); else JFree(jt);
+ if(IJT(jt,sesm))jsto(JJTOJ(jt), MTYOEXIT,(C*)x); else JFree(JJTOJ(jt));
 // let front-end to handle exit
 // exit((int)x);
  R 0;
 }
 
-I jdo(J jt, C* lp){I e;A x;
- jt->jerr=0; jt->etxn=0; /* clear old errors */
+static I jdo(J jt, C* lp){I e;A x;JJ jm=MTHREAD(jt);  // get address of thread struct we are using (the master thread)    scaf should use JJ as input
+ jm->jerr=0; jm->etxn=0; /* clear old errors */
  // The named-execution stack contains information on resetting the current locale.  If the first named execution deletes the locale it is running in,
  // that deletion is deferred until the locale is no longer running, which is never detected because there is no earlier named execution to clean up.
  // To prevent the stack from growing indefinitely, we reset it here.  We reset the callstack only if it was 0, so that a recursive immex will have its deletes handled by
  // the resumption of the name that was interrupted.
- I4 savcallstack = jt->callstacknext;
- if(jt->capture) jt->capture[0]=0; // clear capture buffer
- A *old=jt->tnextpushp;
- *jt->adbreak=0;
- x=inpl(0,(I)strlen(lp),lp);
+ I4 savcallstack = jm->callstacknext;
+ if(JT(jt,capture))JT(jt,capture)[0]=0; // clear capture buffer
+ A *old=jm->tnextpushp;
+ *JT(jt,adbreak)=0;
+ x=jtinpl(jm,0,(I)strlen(lp),lp);
  // All these immexes run with result-display enabled (jt flags=0)
  // Run any enabled immex sentences both before & after the line being executed.  I don't understand why we do it before, but it can't hurt since there won't be any.
  // BUT: don't do it if the call is recursive.  The user might have set the iep before a prompt, and won't expect it to be executed asynchronously
- if(likely(jt->recurstate<RECSTATEPROMPT))while(jt->iepdo&&jt->iep){jt->iepdo=0; immex(jt->iep); if(savcallstack==0)CALLSTACKRESET MODESRESET jt->jerr=0; tpop(old);}
+ if(likely(JT(jt,recurstate)<RECSTATEPROMPT))while(jm->iepdo&&JT(jt,iep)){jm->iepdo=0; jtimmex(jm,JT(jt,iep)); if(savcallstack==0)CALLSTACKRESET MODESRESET jm->jerr=0; jttpop(jm,old);}
  // Check for DDs in the input sentence.  If there is one, call jgets() to finish it.  Result is enqueue()d sentence.  If recursive, don't allow call to jgets()
- x=ddtokens(x,(((jt->recurstate&RECSTATEPROMPT)<<(2-1)))+1+(AN(jt->locsyms)>1)); if(!jt->jerr)immex(x);  // allow reads from jgets() if not recursive; return enqueue() result
- e=jt->jerr;
- if(savcallstack==0)CALLSTACKRESET MODESRESET jt->jerr=0;
- if(likely(jt->recurstate<RECSTATEPROMPT))while(jt->iepdo&&jt->iep){jt->iepdo=0; immex(jt->iep); if(savcallstack==0)CALLSTACKRESET MODESRESET jt->jerr=0; tpop(old);}
- showerr();   // jt flags=0 to force typeout
- spfree();
- tpop(old);
+ x=jtddtokens(jm,x,(((JT(jt,recurstate)&RECSTATEPROMPT)<<(2-1)))+1+(AN(jm->locsyms)>1)); if(!jm->jerr)jtimmex(jm,x);  // allow reads from jgets() if not recursive; return enqueue() result
+ e=jm->jerr;
+ if(savcallstack==0)CALLSTACKRESET MODESRESET jm->jerr=0;
+ if(likely(JT(jt,recurstate)<RECSTATEPROMPT))while(jm->iepdo&&JT(jt,iep)){jm->iepdo=0; jtimmex(jm,JT(jt,iep)); if(savcallstack==0)CALLSTACKRESET MODESRESET jm->jerr=0; jttpop(jm,old);}
+ jtshowerr(jm);   // jt flags=0 to force typeout
+ jtspfree(jm);
+ jttpop(jm,old);
  R e;
 }
 
 #define SZINT             ((I)sizeof(int))
 
-C* getlocale(J jt){A y=locname(mtv); y=AAV(y)[0]; R CAV(str0(y));}
+C* getlocale(J jt){JJ jm=MTHREAD(jt); A y=jtlocname(jm,mtv); y=AAV(y)[0]; R CAV(jtstr0(jm,y));}   // return current locale of master thread
 
 // Front-ends can call any functions exposed by JE, but the callback function for 11!:0 only calls jga to allocate a new literal array for returning result.
 // A front-end knows nothing how J memory pool works and it won't try to free or pop memory itself. This was just a design decision. eg,
@@ -321,7 +329,7 @@ C* getlocale(J jt){A y=locname(mtv); y=AAV(y)[0]; R CAV(str0(y));}
 //
 // This may be confusing because the actual callback functions do not appear anywhere inside JE source.
 DF1(jtwd){A z=0;C*p=0;D*pd;I e,*pi,t;V*sv;
-  F1PREFIP;
+  FPREFIP(JJ);
   F1RANK(1,jtwd,self);
   ARGCHK1(w);
   ASSERT(2>AR(w),EVRANK);
@@ -354,22 +362,22 @@ DF1(jtwd){A z=0;C*p=0;D*pd;I e,*pi,t;V*sv;
 //   4=use smpoll to get last result
 //   8=multithreaded
 // smdowd = function pointer to Jwd, if NULL nothing will be called
-  ASSERT(jt->smdowd,EVDOMAIN);
-  jt->recurstate&=~RECSTATEBUSY;  // back to IDLE/PROMPT state
-  if(SMOPTLOCALE&jt->smoption) {
+  ASSERT(IJT(jt,smdowd),EVDOMAIN);
+  IJT(jt,recurstate)&=~RECSTATEBUSY;  // back to IDLE/PROMPT state
+  if(SMOPTLOCALE&IJT(jt,smoption)) {
 // pass locale as parameter of callback
-// obsolete     e= jt->smdowd? ((dowdtype2)(jt->smdowd))(jt, (int)t, w, &z, getlocale(jt)) : EVDOMAIN;
-    e=((dowdtype2)(jt->smdowd))(jt, (int)t, w, &z, getlocale(jt));
+// obsolete     e= IJT(jt,smdowd)? ((dowdtype2)(IJT(jt,smdowd)))(jt, (int)t, w, &z, getlocale(jt)) : EVDOMAIN;
+    e=((dowdtype2)(IJT(jt,smdowd)))(JJTOJ(jt), (int)t, w, &z, getlocale(JJTOJ(jt)));
   } else {
 // front-end will call getlocale() inside callback
-// obsolete     e=jt->smdowd ? ((dowdtype)(jt->smdowd))(jt, (int)t, w, &z) : EVDOMAIN;
-    e=((dowdtype)(jt->smdowd))(jt, (int)t, w, &z);
+// obsolete     e=IJT(jt,smdowd) ? ((dowdtype)(IJT(jt,smdowd)))(jt, (int)t, w, &z) : EVDOMAIN;
+    e=((dowdtype)(IJT(jt,smdowd)))(JJTOJ(jt), (int)t, w, &z);
   }
-  jt->recurstate|=RECSTATEBUSY;  // wd complete, go back to normal running state, BUSY normally or RECUR if a prompt is pending
+  IJT(jt,recurstate)|=RECSTATEBUSY;  // wd complete, go back to normal running state, BUSY normally or RECUR if a prompt is pending
   if(!e) R mtm;   // e==0 is MTM
   ASSERT(e<=0,e); // e>=0 is EVDOMAIN etc
-  if(SMOPTPOLL&jt->smoption){jt->recurstate=RECSTATEPROMPT; z=(A)((polltype)(jt->smpoll))(jt, (int)t, (int)e); jt->recurstate=RECSTATEBUSY; RZ(z);} // alternate way to get result aftercallback, but not yet used in any front-end
-  if(SMOPTNOJGA&jt->smoption) z=ca(z);  // front-end promised not to use Jga to allocate memory, but not yet used in any front-end
+  if(SMOPTPOLL&IJT(jt,smoption)){IJT(jt,recurstate)=RECSTATEPROMPT; z=(A)((polltype)(IJT(jt,smpoll)))(JJTOJ(jt), (int)t, (int)e); IJT(jt,recurstate)=RECSTATEBUSY; RZ(z);} // alternate way to get result aftercallback, but not yet used in any front-end
+  if(SMOPTNOJGA&IJT(jt,smoption)) z=ca(z);  // front-end promised not to use Jga to allocate memory, but not yet used in any front-end
   if(e==-2){      // e==-2 is lit pairs
 // callback result z is a rank-1 literal array 
 // literal array will be cut into rank-1 box array here using  <;._2 
@@ -381,36 +389,39 @@ DF1(jtwd){A z=0;C*p=0;D*pd;I e,*pi,t;V*sv;
 
 static char breaknone=0;
 
-B jtsesminit(J jt){jt->adbreakr=jt->adbreak=&breakdata; R 1;}
+// Init anything the sessions manager needs in the jt for a new instance
+B jtsesminit(JS jjt, I nthreads){R 1;}
+// obsolete IJT(jt,adbreakr)=IJT(jt,adbreak)=&breakdata; 
 
-// Main entry point to run the sentence in *lp
-int _stdcall JDo(J jt, C* lp){int r; UI savcstackmin, savcstackinit, savqtstackinit;
- if(unlikely(jt->recurstate>RECSTATEIDLE)){
+// Main entry point to run the sentence in *lp in the master thread
+int _stdcall JDo(J jt, C* lp){int r; UI savcstackmin, savcstackinit, savqtstackinit;JJ jm=MTHREAD(jt);  // get address of thread struct we are using (the master thread)
+ if(unlikely(JT(jt,recurstate)>RECSTATEIDLE)){
   // recursive call.  If we are busy or already recurring, this would be an uncontrolled recursion.  Fail that
-  savcstackmin=jt->cstackmin, savcstackinit=jt->cstackinit, savqtstackinit=jt->qtstackinit;  // save stack pointers over recursion, in case the host resets them
-  ASSERT(!(jt->recurstate&(RECSTATEBUSY&RECSTATERECUR)),EVCTRL)  // fail if BUSY or RECUR
-  CLEARZOMBIE   // since we are executing a surprise call, the verb that is prompting might have set assignsym, which is about to be invalidated.  Clear that.
+  savcstackmin=jm->cstackmin, savcstackinit=jm->cstackinit, savqtstackinit=JT(jt,qtstackinit);  // save stack pointers over recursion, in case the host resets them
+  ASSERTMASTER(!(JT(jt,recurstate)&(RECSTATEBUSY&RECSTATERECUR)),EVCTRL)  // fail if BUSY or RECUR
+  // we know that in PROMPT state there is no volatile C state about, such as zombie status
+// obsolete  CLEARZOMBIE   // since we are executing a surprise call, the verb that is prompting might have set assignsym, which is about to be invalidated.  Clear that.
  }
 #if USECSTACK
- if(jt->cstacktype==2){
-  jt->qtstackinit = (uintptr_t)&jt;
-  if(jt->cstackmin)jt->cstackmin=(jt->cstackinit=jt->qtstackinit)-(CSTACKSIZE-CSTACKRESERVE);
+ if(JT(jt,cstacktype)==2){
+  JT(jt,qtstackinit) = (uintptr_t)&jt;
+  if(jm->cstackmin)jm->cstackmin=(jm->cstackinit=JT(jt,qtstackinit))-(CSTACKSIZE-CSTACKRESERVE);
  }
 #endif
- ++jt->recurstate;  // advance, to BUSY or RECUR state
+ ++JT(jt,recurstate);  // advance, to BUSY or RECUR state
  r=(int)jdo(jt,lp);
- if(unlikely(--jt->recurstate>RECSTATEIDLE)){  // return to IDLE or PROMPT state
+ if(unlikely(--JT(jt,recurstate)>RECSTATEIDLE)){  // return to IDLE or PROMPT state
   // return from recursive call.  Restore stackpointers
-  jt->cstackmin=savcstackmin, jt->cstackinit=savcstackinit, jt->qtstackinit=savqtstackinit;  // restore stack pointers after recursion
+  jm->cstackmin=savcstackmin, jm->cstackinit=savcstackinit, JT(jt,qtstackinit)=savqtstackinit;  // restore stack pointers after recursion
  }
- while(jt->nfe){  // nfe normally loops here forever
-  A *old=jt->tnextpushp; r=(int)jdo(jt,nfeinput(jt,"input_jfe_'   '")); tpop(old);  // use jt to force output in nfeinput
+ while(JT(jt,nfe)){  // nfe normally loops here forever
+  A *old=jm->tnextpushp; r=(int)jdo(jt,nfeinput(jt,"input_jfe_'   '")); jttpop(jm,old);  // use jt to force output in nfeinput
  }
  R r;
 } 
 
 C* _stdcall JGetR(J jt){
- R jt->capture?jt->capture:(C*)"";
+ R JT(jt,capture)?JT(jt,capture):(C*)"";
 }
 
 /* socket protocol CMDGET name */
@@ -419,38 +430,38 @@ C* _stdcall JGetR(J jt){
 // so the user must save it before re-calling.  This is a kludge - the user should pass in the address/length of the block to use - but
 // it preserves the interface
 // If the pointer to the name is NULL we just free the block
-A _stdcall JGetA(J jt, I n, C* name){A x,z=0;
- if(name==0){if(jt->iomalloc){FREE(jt->iomalloc); jt->malloctotal -= jt->iomalloclen; jt->iomalloc=0; jt->iomalloclen=0;} R 0;}
- jt->jerr=0;
- A *old=jt->tnextpushp;
- if(!(x=symbrdlock(nfs(n,name)))){ jsignal(EVILNAME);  // look up the name, error if invalid
- }else if(FUNC&AT(x)){ jsignal(EVDOMAIN);   // verify the value is not adv/verb/conj
+A _stdcall JGetA(J jt, I n, C* name){A x,z=0;JJ jm=MTHREAD(jt);
+ if(name==0){if(JT(jt,iomalloc)){FREE(JT(jt,iomalloc)); jm->malloctotal -= JT(jt,iomalloclen); JT(jt,iomalloc)=0; JT(jt,iomalloclen)=0;} R 0;}
+ jm->jerr=0;
+ A *old=jm->tnextpushp;
+ if(!(x=jtsymbrdlock(jm,jtnfs(jm,n,name)))){jtjsignal(jm,EVILNAME);  // look up the name, error if invalid
+ }else if(FUNC&AT(x)){jtjsignal(jm,EVDOMAIN);   // verify the value is not adv/verb/conj
  }else{
   // name is OK; get the binary rep
-  if(z=binrep1(x)){
+  if(z=jtbinrep1(jm,x)){
    // bin rep was found.  Transfer it to MALLOC memory.  It is a LIT array
    // we transfer the whole thing, header and all.  Fortunately it is relocatable
    I replen = &CAV(z)[AN(z)] - (C*)z;  // length from start of z to end+1 of data
    // See if we can reuse the block.  We can, if it is big enough.  But if it is twice as big as the return value, don't.  Watch for overflow!
-   if(jt->iomalloc && (jt->iomalloclen < replen || (jt->iomalloclen>>1) > replen)){FREE(jt->iomalloc); jt->malloctotal -= jt->iomalloclen; jt->iomalloc=0;}  // free block if not reusable
-   if(!jt->iomalloc){if(jt->iomalloc=MALLOC(replen)){jt->malloctotal += replen; jt->iomalloclen = replen;}}  // allocate block if needed, and account for its space
-   if(jt->iomalloc){memcpy(jt->iomalloc,z,replen); z=(A)jt->iomalloc;  // normal case: block exists, move the data, set the return address to the malloc block
-   }else{jt->iomalloclen=0; z=0;}   // if unable to allocate, return error and indicate block is empty
+   if(JT(jt,iomalloc) && (JT(jt,iomalloclen) < replen || (JT(jt,iomalloclen)>>1) > replen)){FREE(JT(jt,iomalloc)); jm->malloctotal -= JT(jt,iomalloclen); JT(jt,iomalloc)=0;}  // free block if not reusable
+   if(!JT(jt,iomalloc)){if(JT(jt,iomalloc)=MALLOC(replen)){jm->malloctotal += replen; JT(jt,iomalloclen) = replen;}}  // allocate block if needed, and account for its space
+   if(JT(jt,iomalloc)){memcpy(JT(jt,iomalloc),z,replen); z=(A)JT(jt,iomalloc);  // normal case: block exists, move the data, set the return address to the malloc block
+   }else{JT(jt,iomalloclen)=0; z=0;}   // if unable to allocate, return error and indicate block is empty
   }
  }
  // z has the result, which is in MALLOC memory if it exists.  Free any J memory we used
- tpop(old);
+ jttpop(jm,old);
  R z;   // return the allocated (or reused) area
 }
 
 /* socket protocol CMDSET */
-I _stdcall JSetA(J jt,I n,C* name,I dlen,C* d){
- jt->jerr=0;
- if(!vnm(n,name)){ jsignal(EVILNAME); R EVILNAME;}
- A *old=jt->tnextpushp;
- symbisdel(nfs(n,name),jtunbin(jt,str(dlen,d)),jt->global);
- tpop(old);
- R jt->jerr;
+I _stdcall JSetA(J jt,I n,C* name,I dlen,C* d){JJ jm=MTHREAD(jt);   // use master thread
+ jm->jerr=0;
+ if(!jtvnm(jm,n,name)){jtjsignal(jm,EVILNAME); R EVILNAME;}
+ A *old=jm->tnextpushp;
+ jtsymbisdel(jm,jtnfs(jm,n,name),jtunbin(jm,jtstr(jm,dlen,d)),jm->global);
+ jttpop(jm,old);
+ R jm->jerr;
 }
 
 /* set jclient callbacks */
@@ -464,8 +475,8 @@ typedef C* (_stdcall * polltype) (J,int,int);
 */
 
 void _stdcall JSM(J jt, void* callbacks[])
-{
- jt->smoutput = (outputtype)callbacks[0];  // callback function for output to J session
+{JJ jm=MTHREAD(jt);   // use master thread for cstack setting
+ JT(jt,smoutput) = (outputtype)callbacks[0];  // callback function for output to J session
 // output type
 // #define MTYOFM  1 /* formatted result array output */
 // #define MTYOER  2 /* error output */
@@ -473,73 +484,73 @@ void _stdcall JSM(J jt, void* callbacks[])
 // #define MTYOSYS  4 /* system assertion failure */
 // #define MTYOEXIT 5 /* exit */
 // #define MTYOFILE 6 /* output 1!:2[2 */
- jt->smdowd = callbacks[1];                // callback function for 11!:x
- jt->sminput = (inputtype)callbacks[2];    // callback function for input from J session keyboard
- jt->smpoll = (polltype)callbacks[3];      // callback function for unused
- jt->sm = 0xff & (I)callbacks[4];          // lowest byte, sm : sessioin manager type
+ JT(jt,smdowd) = callbacks[1];                // callback function for 11!:x
+ JT(jt,sminput) = (inputtype)callbacks[2];    // callback function for input from J session keyboard
+ JT(jt,smpoll) = (polltype)callbacks[3];      // callback function for unused
+ JT(jt,sm) = 0xff & (I)callbacks[4];          // lowest byte, sm : sessioin manager type
 // smoptions
 // #define SMWIN    0  /* j.exe    Jwdw (Windows) front end */
 // #define SMJAVA   2  /* j.jar    Jwdp (Java) front end */
 // #define SMCON    3  /* jconsole */
 // #define SMQT     4  /* jqt */
 // #define SMJA     5  /* jandroid */
- jt->smoption = ((~0xff) & (UI)callbacks[4]) >> 8;  // upper bytes, smoption : 
+ JT(jt,smoption) = ((~0xff) & (UI)callbacks[4]) >> 8;  // upper bytes, smoption : 
 // #define SMOPTLOCALE 1  /* pass current locale */
 // #define SMOPTNOJGA  2  /* result not allocated by jga */
 // #define SMOPTPOLL   4  /* use smpoll to get last result */
 // #define SMOPTMTH    8  /* multithreaded */
- if(jt->sm==SMJAVA) jt->smoption |= SMOPTMTH;  /* assume java is multithreaded */
- if(SMOPTMTH&jt->smoption){
-  jt->cstacktype = 2;
-  jt->qtstackinit = (uintptr_t)&jt;
-  if(jt->cstackmin)jt->cstackmin=(jt->cstackinit=jt->qtstackinit)-(CSTACKSIZE-CSTACKRESERVE);
- }else if(SMQT==jt->sm){
-  jt->cstacktype = 1;
-  jt->qtstackinit = (uintptr_t)callbacks[3];
-  jt->smpoll = 0;
-  jt->smoption = (~SMOPTPOLL) & jt->smoption;  /* smpoll not used */
-  // If the user is giving us a better view of the stack through jt->qtstackinit, use it.  We get just the top-of-stack
+ if(JT(jt,sm)==SMJAVA) JT(jt,smoption) |= SMOPTMTH;  /* assume java is multithreaded */
+ if(SMOPTMTH&JT(jt,smoption)){
+  JT(jt,cstacktype) = 2;
+  JT(jt,qtstackinit) = (uintptr_t)&jt;
+  if(jm->cstackmin)jm->cstackmin=(jm->cstackinit=JT(jt,qtstackinit))-(CSTACKSIZE-CSTACKRESERVE);
+ }else if(SMQT==JT(jt,sm)){
+  JT(jt,cstacktype) = 1;
+  JT(jt,qtstackinit) = (uintptr_t)callbacks[3];
+  JT(jt,smpoll) = 0;
+  JT(jt,smoption) = (~SMOPTPOLL) & JT(jt,smoption);  /* smpoll not used */
+  // If the user is giving us a better view of the stack through JT(jt,qtstackinit), use it.  We get just the top-of-stack
   // address so we have to guess about the bottom, using our view of the minimum possible stack we have.
   // if cstackmin is 0, the user has turned off stack checking and we honor that decision
-  if(jt->qtstackinit&&jt->cstackmin)jt->cstackmin=(jt->cstackinit=jt->qtstackinit)-(CSTACKSIZE-CSTACKRESERVE);
+  if(JT(jt,qtstackinit)&&jm->cstackmin)jm->cstackmin=(jm->cstackinit=JT(jt,qtstackinit))-(CSTACKSIZE-CSTACKRESERVE);
  }
 }
 
 /* set jclient callbacks from values - easier for nodejs */
 void _stdcall JSMX(J jt, void* out, void* wd, void* in, void* poll, I opts)
-{
- jt->smoutput = (outputtype)out;
- jt->smdowd = wd;
- jt->sminput = (inputtype)in;
- jt->smpoll = (polltype)poll;
- jt->sm = 0xff & opts;
- jt->qtstackinit = (SMQT==jt->sm) ? (uintptr_t)poll : 0;
- jt->smoption = ((~0xff) & (UI)opts) >> 8;
- if(jt->sm==SMJAVA) jt->smoption |= SMOPTMTH;  /* assume java is multithreaded */
- if(SMOPTMTH&jt->smoption){
-  jt->cstacktype = 2;
-  jt->qtstackinit = (uintptr_t)&jt;
-  if(jt->cstackmin)jt->cstackmin=(jt->cstackinit=jt->qtstackinit)-(CSTACKSIZE-CSTACKRESERVE);
- }else if(SMQT==jt->sm){
-  jt->cstacktype = 1;
-  jt->qtstackinit = (uintptr_t)poll;
-  jt->smpoll = 0;
-  jt->smoption = (~SMOPTPOLL) & jt->smoption;  /* smpoll not used */
-  if(jt->qtstackinit&&jt->cstackinit)jt->cstackmin=(jt->cstackinit=jt->qtstackinit)-(CSTACKSIZE-CSTACKRESERVE);
+{JJ jm=MTHREAD(jt);   // use master thread for cstack
+ JT(jt,smoutput) = (outputtype)out;
+ JT(jt,smdowd) = wd;
+ JT(jt,sminput) = (inputtype)in;
+ JT(jt,smpoll) = (polltype)poll;
+ JT(jt,sm) = 0xff & opts;
+ JT(jt,qtstackinit) = (SMQT==JT(jt,sm)) ? (uintptr_t)poll : 0;
+ JT(jt,smoption) = ((~0xff) & (UI)opts) >> 8;
+ if(JT(jt,sm)==SMJAVA) JT(jt,smoption) |= SMOPTMTH;  /* assume java is multithreaded */
+ if(SMOPTMTH&JT(jt,smoption)){
+  JT(jt,cstacktype) = 2;
+  JT(jt,qtstackinit) = (uintptr_t)&jt;
+  if(jm->cstackmin)jm->cstackmin=(jm->cstackinit=JT(jt,qtstackinit))-(CSTACKSIZE-CSTACKRESERVE);
+ }else if(SMQT==JT(jt,sm)){
+  JT(jt,cstacktype) = 1;
+  JT(jt,qtstackinit) = (uintptr_t)poll;
+  JT(jt,smpoll) = 0;
+  JT(jt,smoption) = (~SMOPTPOLL) & JT(jt,smoption);  /* smpoll not used */
+  if(JT(jt,qtstackinit)&&jm->cstackinit)jm->cstackmin=(jm->cstackinit=JT(jt,qtstackinit))-(CSTACKSIZE-CSTACKRESERVE);
  }
 }
 
 // return pointer to string name of current locale, or 0 if error
-C* _stdcall JGetLocale(J jt){
- A *old=jt->tnextpushp;  // set free-back-to point
- if(jt->iomalloc){FREE(jt->iomalloc); jt->malloctotal -= jt->iomalloclen; jt->iomalloc=0; jt->iomalloclen=0;}  // free old block if any
+C* _stdcall JGetLocale(J jt){JJ jm=MTHREAD(jt);   // use master thread
+ A *old=jm->tnextpushp;  // set free-back-to point
+ if(JT(jt,iomalloc)){FREE(JT(jt,iomalloc)); jm->malloctotal -= JT(jt,iomalloclen); JT(jt,iomalloc)=0; JT(jt,iomalloclen)=0;}  // free old block if any
  C* z=getlocale(jt);  // get address of string to return
- if(jt->iomalloc=MALLOC(1+strlen(z))){jt->malloctotal += 1+strlen(z); jt->iomalloclen = 1+strlen(z); strcpy(jt->iomalloc,z); }  // allocate & copy, and account for its space
- tpop(old);  // free allocated blocks
- R jt->iomalloc;  // return pointer to string
+ if(JT(jt,iomalloc)=MALLOC(1+strlen(z))){jm->malloctotal += 1+strlen(z); JT(jt,iomalloclen) = 1+strlen(z); strcpy(JT(jt,iomalloc),z); }  // allocate & copy, and account for its space
+ jttpop(jm,old);  // free allocated blocks
+ R JT(jt,iomalloc);  // return pointer to string
 }
 
-A _stdcall Jga(J jt, I t, I n, I r, I*s){A z;
+A _stdcall Jga(J jjt, I t, I n, I r, I*s){A z;JJ jt=MTHREAD(jjt);  // the name 'jt' is used by ga()
  RZ(z=ga(t, n, r, s));
  AC(z)=ACUC1;  // set nonrecursive usecount so that parser won't free the block prematurely.  This gives the usecount as if the block were 'assigned' by this call
  return z;
@@ -552,35 +563,35 @@ void oleoutput(J jt, I n, char* s); /* SY_WIN32 only */
 /* jsto - display output in output window */
 // type is mtyo of string, s->null-terminated string
 void jsto(J jt,I type,C*s){C e;I ex;
- if(jt->nfe)
- {
+ if(JT(jt,nfe))
+ {JJ jm=MTHREAD(jt);  // get address of thread struct we are using
   // here for Native Front End state, toggled by 15!:16
-  // we execute the sentence:  type output_jfe_ s
+  // we execute the sentence:  type output_jfe_ s    in the master thread
   fauxblockINT(fauxtok,3,1); A tok; fauxBOXNR(tok,fauxtok,3,1);  // allocate 3-word sentence on stack, rank 1
-  AAV1(tok)[0]=num(type); AAV1(tok)[1]=nfs(11,"output_jfe_"); AAV1(tok)[2]=cstr(s);  // the sentence to execute, tokenized
+  AAV1(tok)[0]=num(type); AAV1(tok)[1]=jtnfs(jm,11,"output_jfe_"); AAV1(tok)[2]=jtcstr(jm,s);  // the sentence to execute, tokenized
 // obsolete   C q[]="0 output_jfe_ (15!:18)0";
 // obsolete   q[0]+=(C)type;
 // obsolete   jt->mtyostr=s;
-  e=jt->jerr; ex=jt->etxn;   // save error state before running the output sentence
-  jt->jerr=0; jt->etxn=0;
-  jt->adbreakr=&breakdata;
+  e=jm->jerr; ex=jm->etxn;   // save error state before running the output sentence
+  jm->jerr=0; jm->etxn=0;
+  JT(jt,adbreakr)=&breakdata;
 // obsolete   exec1(cstr(q));
-  parse(tok);  // run it, ignoring errors.  always reset jt->asgn after every execution has had its chance to type
+  jtparse(jm,tok);  // run it, ignoring errors.
 // obsolete  jt->asgn=0;
-  jt->adbreakr=jt->adbreak;
-  jt->jerr=e; jt->etxn=ex; // restore
+  JT(jt,adbreakr)=JT(jt,adbreak);
+  jm->jerr=e; jm->etxn=ex; // restore
  }else{
   // Normal output.  Call the output routine
-  if(jt->smoutput){((outputtype)(jt->smoutput))(jt,(int)type,s);R;} // JFE output
+  if(JT(jt,smoutput)){((outputtype)(JT(jt,smoutput)))(jt,(int)type,s);R;} // JFE output
 #if SY_WIN32 && !SY_WINCE && defined(OLECOM)
-  if(jt->oleop && (type & MTYOFM)){oleoutput(jt,strlen(s),s);R;} // ole output
+  if(JT(jt,oleop) && (type & MTYOFM)){oleoutput(jt,strlen(s),s);R;} // ole output
 #endif
   // lazy - malloc failure will crash and should alloc larger when full
-  if(!jt->capture){jt->capture=MALLOC(capturesize);jt->capture[0]=0;}
-  if(capturesize>2+strlen(jt->capture)+strlen(s))
-   strcat(jt->capture,s);
+  if(!JT(jt,capture)){JT(jt,capture)=MALLOC(capturesize);JT(jt,capture)[0]=0;}
+  if(capturesize>2+strlen(JT(jt,capture))+strlen(s))
+   strcat(JT(jt,capture),s);
   else
-   strcpy(jt->capture,"too much output ...\n");
+   strcpy(JT(jt,capture),"too much output ...\n");
  }
  R;
 }
@@ -592,49 +603,60 @@ C dll_initialized= 0; // dll init sets to 1
 // dll init on load - eqivalent to windows DLLMAIN DLL_ATTACH_PROOCESS
 __attribute__((constructor)) static void Initializer(int argc, char** argv, char** envp)
 {
+ // Initialize J globals.  This is done only once.  Many of the globals are in static memory, initialized
+ // by the compiler; some must be initialized a run-time in static memory; some must be allocated into A blocks
+ // pointed to by static names.  Because of the A blocks, we have to perform a skeletal initialization of jt,
+ // just enough to do ga().  The rest of jt is never used
  J jtnobdy=malloc(sizeof(JST)+JTALIGNBDY-1);
  if(!jtnobdy) R;
  J jt = (J)(((I)jtnobdy+JTALIGNBDY-1)&-JTALIGNBDY);  // force to SDRAM page boundary
  memset(jt,0,sizeof(JST));
  if(!jtglobinit(jt)){free(jtnobdy); R;}
- dll_initialized= 1; jt->heap=(void *)jtnobdy;  // save allo address for later free
+ dll_initialized= 1; JT(jt,heap)=(void *)jtnobdy;  // save allo address for later free
+ // The g_jt heap MUST NOT be freed, because it holds the blocks pointed to by initialized globals.
+ // g_jt itself, a JST struct, is not used.  Perhaps it could be freed, as long as the rest of the heap remains.
 }
 
+ // Init for a new J instance.  Globals have already been initialized.
+ // Create a new jt, which will be the one we use for the entirety of the instance.
 J JInit(void){
  if(!dll_initialized) R 0; // constructor failed
  J jtnobdy;
  RZ(jtnobdy=malloc(sizeof(JST)+JTALIGNBDY-1));
  J jt = (J)(((I)jtnobdy+JTALIGNBDY-1)&-JTALIGNBDY);  // force to SDRAM page boundary
  memset(jt,0,sizeof(JST));
+ // Initialize all the info for the shared region and the master thread
  if(!jtjinit2(jt,0,0)){free(jtnobdy); R 0;};
- jt->heap=(void *)jtnobdy;  // save allo address for later free
+ JT(jt,heap)=(void *)jtnobdy;  // save allo address for later free
  R jt;
 }
 
 // clean up at the end of a J instance
-int JFree(J jt){
+int JFree(J jt){JJ jm=MTHREAD(jt);   // use master thread
   if(!jt) R 0;
   breakclose(jt);
   jt->jerr=0; jt->etxn=0; /* clear old errors */
-  if(jt->xep&&AN(jt->xep)){A *old=jt->tnextpushp; immex(jt->xep); fa(jt->xep); jt->xep=0; jt->jerr=0; jt->etxn=0; tpop(old); }  // run with typeout enabled
-  dllquit(jt);  // clean up call dll
-  free(jt->heap);  // free the initial allocation
+// obsolete   if(JT(jt,xep)&&AN(JT(jt,xep))){A *old=jt->tnextpushp; immex(JT(jt,xep)); fajt(jm,JT(jt,xep)); JT(jt,xep)=0; jt->jerr=0; jt->etxn=0; tpop(old); }  // run with typeout enabled
+  if(JT(jt,xep)&&AN(JT(jt,xep))){jtimmex(jm,JT(jt,xep));}  // If there is an exit sentence, run it & force typeout.  No need to tidy up since the heap is going away
+  dllquit(jm);  // clean up call dll
+  free(JT(jt,heap));  // free the initial allocation
   R 0;
 }
 #endif
 
 F1(jtbreakfnq){
  ASSERTMTV(w);
- R cstr(jt->breakfn);
+ R cstr(IJT(jt,breakfn));
 }
 
+// w is a filename; use it as the breakfile
 F1(jtbreakfns){A z;I *fh,*mh=0; void* ad;
  ASSERT(1>=AR(w),EVRANK);
  ASSERT(!AN(w)||AT(w)&LIT,EVDOMAIN);
  ASSERT(AN(w)<NPATH,EVDOMAIN);
- w=str0(w);
- if(!strcmp(jt->breakfn,CAV(w))) R mtm;
- breakclose(jt);
+ w=str0(w);   // add NUL termination
+ if(!strcmp(IJT(jt,breakfn),CAV(w))) R mtm;   // return fast if no name change
+ breakclose(JJTOJ(jt));
 #if SYS&SYS_UNIX
  fh=(I*)(I)open(CAV(w),O_RDWR);
  ASSERT(-1!=(I)fh,EVDOMAIN);
@@ -649,10 +671,10 @@ F1(jtbreakfns){A z;I *fh,*mh=0; void* ad;
  ad=MapViewOfFile(mh,FILE_MAP_WRITE,0,0,0);
  if(0==ad){CloseHandle(mh); CloseHandle(fh); ASSERT(0,EVDOMAIN);}
 #endif
- strcpy(jt->breakfn,CAV(w));
- jt->breakfh=fh;
- jt->breakmh=mh;
- jt->adbreakr=jt->adbreak=ad;
+ strcpy(IJT(jt,breakfn),CAV(w));
+ IJT(jt,breakfh)=fh;
+ IJT(jt,breakmh)=mh;
+ IJT(jt,adbreakr)=IJT(jt,adbreak)=ad;
  R mtm;
 }
 
@@ -668,13 +690,13 @@ int valid(C* psrc, C* psnk)
 }
 
 int _stdcall JGetM(J jt, C* name, I* jtype, I* jrank, I* jshape, I* jdata)
-{
+{JJ jm=MTHREAD(jt);   // use master thread
  A a; char gn[256]; int z;
- A *old=jt->tnextpushp;
- if(strlen(name) >= sizeof(gn)){ jsignal(z=EVILNAME);
- }else if(valid(name, gn)){ jsignal(z=EVILNAME);
- }else if(!(a=symbrdlock(nfs(strlen(gn),gn)))){ jsignal(z=EVDOMAIN);
- }else if(FUNC&AT(a)){ jsignal(z=EVDOMAIN);
+ A *old=jm->tnextpushp;
+ if(strlen(name) >= sizeof(gn)){jtjsignal(jm,z=EVILNAME);
+ }else if(valid(name, gn)){jtjsignal(jm,z=EVILNAME);
+ }else if(!(a=jtsymbrdlock(jm,jtnfs(jm,strlen(gn),gn)))){jtjsignal(jm,z=EVDOMAIN);
+ }else if(FUNC&AT(a)){jtjsignal(jm,z=EVDOMAIN);
  }else{
   *jtype = AT(a);
   *jrank = AR(a);
@@ -682,12 +704,12 @@ int _stdcall JGetM(J jt, C* name, I* jtype, I* jrank, I* jshape, I* jdata)
   *jdata = (I)AV(a);
   z=0;  // good return
  }
- tpop(old);
+ jttpop(jm,old);
  return z;
 }
 
 static int setterm(J jt, C* name, I* jtype, I* jrank, I* jshape, I* jdata)
-{
+{JJ jm=MTHREAD(jt);   // use master thread
  A a;
  I k=1,i,n;
  char gn[256];
@@ -728,20 +750,20 @@ static int setterm(J jt, C* name, I* jtype, I* jrank, I* jshape, I* jdata)
  if(strlen(name) >= sizeof(gn)) return EVILNAME;
  if(valid(name, gn)) return EVILNAME; 
  for(i=0; i<*jrank; ++i) k *= ((I*)(*jshape))[i];
- a = ga(*jtype, k, *jrank, (I*)*jshape);
+ a = jtga(jm,*jtype, k, *jrank, (I*)*jshape);
  if(!a) return EVWSFULL;
  MC(AV(a), (void*)*jdata, n*k);
- jset(gn, a);
- return jt->jerr;
+ jtjset(jm,gn, a);
+ return jm->jerr;
 }
 
 int _stdcall JSetM(J jt, C* name, I* jtype, I* jrank, I* jshape, I* jdata)
-{
+{JJ jm=MTHREAD(jt);   // use master thread
  int er;
 
- PROLOG(0051);
+ A *old=jm->tnextpushp;
  er = setterm(jt, name, jtype, jrank, jshape, jdata);
- tpop(_ttop);
+ jttpop(jm,old);
  return er;
 }
 
@@ -754,7 +776,7 @@ C* esub(J jt, I ec)
  if(ec == EDCBUSY) return "busy with previous input";
  if(ec == EDCEXE) return "not supported in EXE server";
  if(ec > NEVM || ec < 0) return "unknown error";
- return CAV(AAV(jt->evm)[ec]);
+ return CAV(AAV(JT(jt,evm))[ec]);
 }
 
 int _stdcall JErrorTextM(J jt, I ec, I* p)

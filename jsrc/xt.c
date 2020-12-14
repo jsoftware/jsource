@@ -64,7 +64,7 @@ F1(jtspit){A z;I k;
 F1(jtparsercalls){ASSERTMTV(w); R sc(jt->parsercalls);}
 
 // 6!:5, window into the running J code
-F1(jtpeekdata){ I opeek=jt->peekdata; jt->peekdata = i0(w); R sc(opeek); }
+F1(jtpeekdata){ I opeek=JT(jt,peekdata); JT(jt,peekdata) = i0(w); R sc(opeek); }
 
 /*
 // 6!:6: set y as processor architecture and return previous value.  Now cannot set.  Bit 0=AVX instructions supported
@@ -171,7 +171,7 @@ __int64 GetMachineCycleCount()
 */
 
 
-F1(jttss){ASSERTMTV(w); R scf(tod()-jt->tssbase);}
+F1(jttss){ASSERTMTV(w); R scf(tod()-JT(jt,tssbase));}
 
 F2(jttsit2){A z;D t;I n;
  F2RANK(0,1,jttsit2,DUMMYSELF);
@@ -214,10 +214,11 @@ F1(jtqpctr ){ASSERTMTV(w); R scf(qpc());}
 // 6!:12
 F1(jtpmctr){D x;I q;
  RE(q=i0(w));
- ASSERT(jt->pma,EVDOMAIN);
- x=q+(D)((PM0*)(CAV1(jt->pma)))->pmctr;
+ ASSERT(JT(jt,pma),EVDOMAIN);
+ x=q+(D)((PM0*)(CAV1(JT(jt,pma))))->pmctr;
  ASSERT(IMIN<=x&&x<FLIMAX,EVDOMAIN);
- ((PM0*)(CAV1(jt->pma)))->pmctr=q=(I)x; jt->cxspecials=1; jt->uflags.us.uq.uq_c.pmctrbstk&=~PMCTRBPMON; jt->uflags.us.uq.uq_c.pmctrbstk|=q?PMCTRBPMON:0;  // tell cx and unquote to look for pm
+ ((PM0*)(CAV1(JT(jt,pma))))->pmctr=q=(I)x; jt->uflags.us.cx.cx_c.pmctr=!!q;  // tell cx and unquote to look for pm
+// obsolete  jt->cxspecials=1;
  R sc(q);
 }    /* add w to pmctr */
 
@@ -247,11 +248,11 @@ F2(jtpmarea2){A x;B a0,a1,*av;C*v;I an,n=0,s=sizeof(PM),s0=sizeof(PM0),wn;PM0*u;
  RZ(w=vs(w)); RZ(w=mkwris(w));  // make buffer a rank-1 list, and make sure it is writable
  wn=AN(w);  // wn=length in bytes
  ASSERT(!wn||wn>=s+s0,EVLENGTH);  // make sure it can record at least 1 sample
- x=jt->pma;   // read incumbent sample buffer
+ x=JT(jt,pma);   // read incumbent sample buffer
 // obsolete  jt->pmctr=0;
- jt->uflags.us.uq.uq_c.pmctrbstk&=~PMCTRBPMON;  // clear sample counter and tracking status
- if(wn){ras(w); jt->pma=w;}else jt->pma=0;  // set new buffer address, if it is valid
- if(jt->pma)spstarttracking();else spendtracking();  // track memory usage whenever PM is running
+ jt->uflags.us.cx.cx_c.pmctr=0;  // clear sample counter and tracking status
+ if(wn){ras(w); JT(jt,pma)=w;}else JT(jt,pma)=0;  // set new buffer address, if it is valid
+ if(JT(jt,pma))spstarttracking();else spendtracking();  // track memory usage whenever PM is running
  RZ(pmfree(x));  // free the old buffer and all its contents, if there was one
  if(wn){  // if we are turning on profiling
   v=CAV1(w);   // we put a PM0 struct at the beginning of the buffer, and use the rest for PM records
@@ -273,9 +274,9 @@ F2(jtpmarea2){A x;B a0,a1,*av;C*v;I an,n=0,s=sizeof(PM),s0=sizeof(PM0),wn;PM0*u;
 // lc is the line number being executed, or _1 for start function, _2 for end function
 // val is the PM counter
 void jtpmrecord(J jt,A name,A loc,I lc,int val){A x,y;B b;PM*v;PM0*u;
- u=(PM0*)CAV1(jt->pma);  // u-> pm control area
+ u=(PM0*)CAV1(JT(jt,pma));  // u-> pm control area
 // obsolete  v=jt->pmv+u->i;  // v -> next PM slot to fill
- v=(PM*)(CAV1(jt->pma)+sizeof(PM0))+u->i;  // v -> next PM slot to fill
+ v=(PM*)(CAV1(JT(jt,pma))+sizeof(PM0))+u->i;  // v -> next PM slot to fill
  if(b=u->wrapped){x=v->name; y=v->loc;}  // If this slot already has valid name/loc, extract those values for free
  ++u->i;  // Advance index to next slot
  if(u->i>u->n){u->wrapped=1; if(u->trunc){u->i=u->n; R;}else u->i=0;}  // If we stepped off the end,
@@ -296,17 +297,17 @@ void jtpmrecord(J jt,A name,A loc,I lc,int val){A x,y;B b;PM*v;PM0*u;
 // 6!:12
 F1(jtpmunpack){A*au,*av,c,t,x,z,*zv;B*b;D*dv;I*iv,k,k1,m,n,p,q,wn,*wv;PM*v,*v0,*vq;PM0*u;
  ARGCHK1(w);
- ASSERT(jt->pma,EVDOMAIN);
+ ASSERT(JT(jt,pma),EVDOMAIN);
  if(!(INT&AT(w)))RZ(w=cvt(INT,w));
  wn=AN(w); wv=AV(w);
- u=(PM0*)AV(jt->pma); p=u->wrapped?u->n-u->i:0; q=u->i; n=p+q;
+ u=(PM0*)AV(JT(jt,pma)); p=u->wrapped?u->n-u->i:0; q=u->i; n=p+q;
  GATV0(x,B01,n,1); b=BAV(x); memset(b,wn?C0:C1,n);
  if(wn){
   DO(wn, k=wv[i]; if(0>k)k+=n; ASSERT((UI)k<(UI)n,EVINDEX); b[k]=1;);
   m=0; 
   DO(n, if(b[i])++m;);
  }else m=n;
- v0=(PM*)(CAV1(jt->pma)+sizeof(PM0)); vq=q+v0;
+ v0=(PM*)(CAV1(JT(jt,pma))+sizeof(PM0)); vq=q+v0;
  GAT0(z,BOX,1+PMCOL,1); zv=AAV(z);
  GATV0(t,BOX,2*m,1); av=AAV(t); au=m+av;
  v=vq; DO(p, if(b[  i]){RZ(*av++=v->name?incorp(sfn(0,v->name)):mtv); RZ(*au++=v->loc?incorp(sfn(0,v->loc)):mtv);} ++v;); 
@@ -335,14 +336,14 @@ F1(jtpmunpack){A*au,*av,c,t,x,z,*zv;B*b;D*dv;I*iv,k,k1,m,n,p,q,wn,*wv;PM*v,*v0,*
 F1(jtpmstats){A x,z;I*zv;PM0*u;
  ASSERTMTV(w);
  GAT0(z,INT,6,1); zv=AV(z);
- if(x=jt->pma){
+ if(x=JT(jt,pma)){
   u=(PM0*)AV(x);
   zv[0]=u->rec;
   zv[1]=u->trunc;
   zv[2]=u->n;
   zv[3]=u->wrapped?u->n:u->i;
   zv[4]=u->wrapped;
-  zv[5]=((PM0*)(CAV1(jt->pma)))->pmctr;
+  zv[5]=((PM0*)(CAV1(JT(jt,pma))))->pmctr;
  }else zv[0]=zv[1]=zv[2]=zv[3]=zv[4]=zv[5]=0;
  R z;
 }

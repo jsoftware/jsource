@@ -315,7 +315,7 @@ extern ADECL2(tymesDI,D,I,D);
 extern ADECL2(tymesIB,I,I,B);
 extern ADECL2(tymesID,D,I,D);
 extern ADECL2(tymesII,I,I,I);
-extern ADECL2(tymesIIO,D,I,I);
+extern I tymesIIO(I,I,I*,I*,D*,I);
 extern ADECL2(tymesIO,D,I,I);
 extern ADECL2(tymesQQ,Q,Q,Q);
 extern ADECL2(tymesXX,X,X,X);

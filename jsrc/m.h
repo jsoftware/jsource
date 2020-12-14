@@ -9,9 +9,9 @@
 #endif
 
 #if SY_WIN32 && !SY_WINCE
-#define FREE(a)     HeapFree(jt->heap,0,a)
-#define MALLOC(n)   (void*)HeapAlloc(jt->heap,0,n)
-#define REALLOC(a,n) (void*)HeapReAlloc(jt->heap,0,a,n)
+#define FREE(a)     HeapFree(JT(jt,heap),0,a)
+#define MALLOC(n)   (void*)HeapAlloc(JT(jt,heap),0,n)
+#define REALLOC(a,n) (void*)HeapReAlloc(JT(jt,heap),0,a,n)
 #else
 #define FREE(a) free(a)
 #define MALLOC(n) malloc(n)
@@ -41,12 +41,13 @@
 
 
 // bp(type) returns the number of bytes in an atom of the type
-#define bp(i) (jt->typesizes[CTTZ(i)])
+#define bp(i) (typesizes[CTTZ(i)])
 // bplg(type) works for NOUN types and returns the lg of the size
 #if BW==64
 #define bplg(i) (((I)0x008bb6db408dc6c0>>3*CTTZ(i))&(I)7)  // 010 001 011   101 101 101 101 101 101 000 000   100 011 011 100 011 011 000 000 = 0 1000 1011 1011 0110 1101 1011   0100 0000 1000 1101 1100 0110 1100 0000
 // bpnoun is like bp but for NOUN types
 #define bpnoun(i) ((I)1<<bplg(i))
+// obsolete #define bpnoun(i) (CTTZ(i)>18?SEGFAULT:(I)1<<bplg(i))
 #else
 #define bpnoun(i) (I)bp(i)
 #define bplg(i) CTTZ(bpnoun(i))

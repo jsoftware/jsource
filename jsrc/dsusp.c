@@ -108,9 +108,9 @@ static A jtsusp(J jt){A z;
  RZ(deba(DCJUNK,0,0,0)); // create spacer frame
 // obsolete  jt->dbsusact=SUSCONT;
  A *old=jt->tnextpushp;  // fence must be after we have allocated our stack block
- // If the failure happened while a script was being loaded, we have to sieze jgets so we can prompt the user.  We will restore on exit
+ // If the failure happened while a script was being loaded, we have to take jgets() out of script mode so we can prompt the user.  We will restore on exit
  DC d; for(d=jt->sitop; d&&d->dctype!=DCSCRIPT; d=d->dclnk);  // d-> last SCRIPT type, if any
- if(d&&!(jt->dbuser&0x80))d->dcss=0;  // in super-debug mode (dbr 16b81), we continue reading suspension lines from the script; otherwise turn it off
+ if(d&&!(JT(jt,dbuser)&0x80))d->dcss=0;  // in super-debug mode (dbr 16b81), we continue reading suspension lines from the script; otherwise turn it off
 // obsolete t=jt->tostdout;
 // obsolete  jt->tostdout=1;
  // Make sure we have a decent amount of stack space left to run sentences in suspension
@@ -122,14 +122,14 @@ static A jtsusp(J jt){A z;
  jt->fcalln=MIN(NFCALL,jt->fcalln+NFCALL/10);
 // obsolete  if (AT(jt->dbssexec)&LIT){RESETERR; immex(jt->dbssexec); tpop(old);}  // force typeout
  // if there is a 13!:15 sentence (latent expression) to execute before going into debug, do it
- if(jt->dbtrap){RESETERR; immex(jt->dbtrap  ); tpop(old);}  // force typeout
+ if(JT(jt,dbtrap)){RESETERR; immex(JT(jt,dbtrap)); tpop(old);}  // force typeout
  // Loop executing the user's sentences until one returns a value that is flagged as 'end of suspension'
 // obsolete  while(jt->dbsusact==SUSCONT){A  inp;
  while(1){A  inp;
   jt->jerr=0;
-  if(jt->iepdo&&jt->iep){
+  if(jt->iepdo&&JT(jt,iep)){
    // if there is an immex latent expression (9!:27), execute it before prompting
-   jt->iepdo=0; z=immex(jt->iep);  // force typeout
+   jt->iepdo=0; z=immex(JT(jt,iep));  // reset requesy flag; run sentence & force typeout
    if(z&&AFLAG(z)&AFDEBUGRESULT)break;  // dbr * exits suspension, even dbr 1.  PFkeys may come through iep
    tpop(old);  // if we don't need the result for the caller here, free up the space
   }
@@ -141,7 +141,7 @@ static A jtsusp(J jt){A z;
  }
  // Coming out of suspension.  z has the result to pass up the line, containing the suspension-ending info
  // Reset stack
- if(jt->dbuser){
+ if(JT(jt,dbuser)){
 #if USECSTACK
   jt->cstackmin+=CSTACKSIZE/10;
 #else
@@ -259,7 +259,7 @@ A jtdbunquote(J jt,A a,A w,A self,L *stabent){A t,z;B s;DC d;V*sv;
  R z;
 }    /* function call, debug version */
 
-F1(jtdbq){ASSERTMTV(w); R sc(jt->dbuser);}
+F1(jtdbq){ASSERTMTV(w); R sc(JT(jt,dbuser));}
      /* 13!:17 debug flag */
 
 // Suspension-ending commands.  These commands return a list of boxed flagged with the AFDEBUGRESULT flag.  The first box is always an integer atom and gives the type
@@ -269,11 +269,12 @@ F1(jtdbc){UC k;
  if(AN(w)){
   RE(k=(UC)i0(w));
   ASSERT(!(k&~0x81),EVDOMAIN);
-  ASSERT(!k||!jt->uflags.us.cx.cx_c.glock,EVDOMAIN);
+  ASSERT(!k||!jt->glock,EVDOMAIN);
  }
 // obsolete  jt->redefined=0;
  if(AN(w)){
-  jt->uflags.us.cx.cx_c.db=k&1; jt->dbuser=k; jt->cxspecials=1;
+  jt->uflags.us.cx.cx_c.db=k&1; JT(jt,dbuser)=k;
+// obsolete  jt->cxspecials=1;
 #if USECSTACK
   jt->cstackmin=jt->cstackinit-((CSTACKSIZE-CSTACKRESERVE)>>k);
 #else
@@ -311,8 +312,8 @@ static F2(jtdbrr){DC d;
 F1(jtdbrr1 ){R dbrr(0L,w);}   /* 13!:9   re-run with arg(s) */
 F2(jtdbrr2 ){R dbrr(a, w);}
 
-F1(jtdbtrapq){ASSERTMTV(w); R jt->dbtrap?jt->dbtrap:mtv;}   
+F1(jtdbtrapq){ASSERTMTV(w); R JT(jt,dbtrap)?JT(jt,dbtrap):mtv;}   
      /* 13!:14 query trap */
 
-F1(jtdbtraps){RZ(w=vs(w)); fa(jt->dbtrap); if(AN(w)){RZ(ras(w)); jt->dbtrap=w;}else jt->dbtrap=0L; R mtm;}
+F1(jtdbtraps){RZ(w=vs(w)); fa(JT(jt,dbtrap)); if(AN(w)){RZ(ras(w)); JT(jt,dbtrap)=w;}else JT(jt,dbtrap)=0L; R mtm;}
      /* 13!:15 set trap */

@@ -12,14 +12,18 @@ static DF1(jtfitct1){DECLFG;F1PREFIP;A z; PUSHCCT(FAV(self)->localuse.lD) z=CALL
 fitctvector(jtfitct2,CALL2IP(f2,a,w,fs))
 fitctvector(jtfitcteq,jtatomic2(jtinplace,a,w,fs))
 
+// for key, we pass in the tolerance to use for the classification
+static DF2(jtfitctkey){DECLFG;R jtkeyct(jt,a,w,fs,FAV(self)->localuse.lD);}  // inplace is OK, since we don't use jt
+
 // To avoid multiple indirect branches, we vector the common comparisons to a routine that jumps directly to them
-static const AF aff2[] = {jtfitct2, jtfitcteq};
+static const AF aff2[] = {jtfitct2,jtfitcteq,jtfitctkey};
+// cno is 1 for f/., 2 for comparison, 0 otherwise
 static A jtfitct(J jt,A a,A w,I cno){V*sv;
  ARGCHK2(a,w);
  ASSERT(!AR(w),EVRANK);
  sv=FAV(a);
  // Get the tolerance, as a float
- D d; if(w==num(0))d=0.0; else{if(!(AT(w)&FL))RZ(w=cvt(FL,w)); d=DAV(w)[0];}  // 0 is usual; otherwise it better be FL, but convert in case its value is 0
+ D d; if(likely(w==num(0)))d=0.0; else{if(!(AT(w)&FL))RZ(w=cvt(FL,w)); d=DAV(w)[0];}  // 0 is usual; otherwise it better be FL, but convert in case its value is 0
  ASSERT(0<=d&&d<5.82076609134675e-11,EVDOMAIN);  // can't be greater than 2^_34
  A fn = fdef(0,CFIT,VERB,(AF)(jtfitct1),aff2[cno],a,w ,0L,sv->flag&(VIRS1|VIRS2|VJTFLGOK1|VJTFLGOK2|VISATOMIC1),(I)(sv->mr),lrv(sv),rrv(sv));  // preserve INPLACE flags
  RZ(fn); FAV(fn)->localuse.lD = 1.0-d; R fn;  // save the fit value in this verb
@@ -57,10 +61,10 @@ F2(jtfit){A f;C c;I k,l,m,r;V*sv;
  sv=FAV(a); m=sv->mr; l=lrv(sv); r=rrv(sv);
  I cno=0;
  switch(sv->id){
-  case CLE: case CLT: case CGE: case CGT: case CNE: case CEQ: cno=1;
+  case CSLDOT: cno=1;   case CLE: case CLT: case CGE: case CGT: case CNE: case CEQ: ++cno;
   case CMATCH: case CEPS:   case CIOTA:  case CICO:      case CNUB:     case CSTAR:  
   case CFLOOR: case CCEIL:  case CSTILE: case CPLUSDOT:  case CSTARDOT: case CABASE:
-  case CNOT:   case CXCO:   case CSLDOT: case CSPARSE:   case CEBAR:
+  case CNOT:   case CXCO:   case CSPARSE:   case CEBAR:
    R fitct(a,w,cno);
   case CEXP:
    ASSERT(AT(w)&NUMERIC,EVDOMAIN);

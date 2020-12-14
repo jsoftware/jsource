@@ -177,7 +177,7 @@ static void sbtou8(J jt,SBU*u,C*s){
 
 static A jtthsb(J jt,A w,A prxthornuni){A d,z;C*zv;I c,*dv,m,n,p,q,r,*s;SB*x,*y;SBU*u;
  PROLOG(0000);
- n=AN(w); r=AR(w); s=AS(w); x=y=SBAV(w); q=AM(jt->sbu);
+ n=AN(w); r=AR(w); s=AS(w); x=y=SBAV(w); q=AM(JT(jt,sbu));
  if(1>=r){
   c=n; 
   RZ(d=apvwr(c,0L,0L)); dv=AV(d);
@@ -324,7 +324,7 @@ static B jtrc(J jt,A w,A*px,A*py, I *t){A*v,x,y;I j=0,k=0,maxt=0,r,*s,xn,*xv,yn,
  R 1;  // good return
 }
 
-// Boxing characters are taken from jt->bx, with interpretation as follows:
+// Boxing characters are taken from JT(jt,bx), with interpretation as follows:
 // 0-8 are corners, (TMB*3)+(LCR) (Top/Middle/Bottom, Left/Center/Right)
 // 9 is vertical bar, 10 is horizontal bar
 
@@ -340,7 +340,7 @@ static void jtfram(J jt,I k,I n,I*x,C*v,I cw){C a,b=9==k,d,l,r;
  //   formatting the non-divider rows, use space)
  // d = character for middle divider (| if l=='|', otherwise the Center character corresponding to l)
  // r = character for rightmost divider (| if l=='|', otherwise the Right character corresponding to l)
- l=jt->bx[k]; a=b?' ':jt->bx[10]; d=b?l:jt->bx[1+k]; r=b?l:jt->bx[2+k];
+ l=JT(jt,bx)[k]; a=b?' ':JT(jt,bx)[10]; d=b?l:JT(jt,bx)[1+k]; r=b?l:JT(jt,bx)[2+k];
  // Install first character; then, for each field, {(width-1) copies of a; then d overwriting last a}
  // then install r over the last d
  // Different version for each character size
@@ -419,7 +419,7 @@ static void jtfmfill(J jt,I p,I q,I wd,A w,A x,A y,C*zv,I cw){A e,*wv;
     // Move in the data.  If sizes are dissimilar, the target must be larger; do length conversion then
     if(cw==bpnoun(AT(e))){C* v=CAV(e); C* u=zv+f; DQ(r, MC(u,v,c*cw); u+=wd; v+=c*cw;)}
     else{  // conversion required
-     if(bp(AT(e))==1){UC *v=UAV(e);   // source is bytes
+     if(bpnoun(AT(e))==1){UC *v=UAV(e);   // source is bytes
       if(cw==2){   // dest is C2T
        US *u=(US*)(zv+f),*uu; DQ(r, uu=u; DQ(c,*uu++=*v++;) u=(US*)((UC*)u+wd);)
       }else{   // dest is C4T
@@ -531,7 +531,7 @@ static F1(jtths){A e,i,x,z;C c,*u,*v;I d,m,n,*s;P*p;
  u=CAV(i)-n;        
  d=aii(z); v=CAV(z)-d; DQ(m, MC(v+=d,u+=n,n););
  if(2<AR(z))RZ(z=matth1(z,zeroionei(0)));  // no prxthornuni
- s=AS(z); d=*(1+s); v=1+CAV(z); c=jt->bx[9]; DQ(*s, *(v+n)=c; v+=d;);
+ s=AS(z); d=*(1+s); v=1+CAV(z); c=JT(jt,bx)[9]; DQ(*s, *(v+n)=c; v+=d;);
  R z;
 }
 
@@ -589,7 +589,7 @@ static A jtthorn1main(J jt,A w,A prxthornuni){PROLOG(0001);A z;
   case SB01X: case SINTX: case SFLX: case SCMPXX: case SLITX: case SBOXX:
              z=ths(w);                    break;
   case VERBX: case ADVX:  case CONJX:
-   switch((jt->disp)[1]){
+   switch((JT(jt,disp))[1]){
     case 1: z=thorn1main(arep(w),prxthornuni); break;
     case 2: z=thorn1main(drep(w),prxthornuni); break;
     case 4: z=thorn1main(trep(w),prxthornuni); break;
@@ -712,10 +712,10 @@ static C*dropl(C*zu,C*zv,I lb,I la,C*eol){C ec0,ec1,*u,*v;I n,p,zn=zv-zu;
 // We translate box-drawing characters (code 16-26) to Unicode box-drawing characters in UTF-8
 // We also add EOL at the ends of lines
 // parameters come from 9!:36 (output control)
-// ieol is jt->outeol: 0 to end lines with LF, 2 if CRLF
-// maxlen is jt->outmaxlen: max length of a line (later chars replaced by ...)
-// lb is jt->outmaxbefore: number of leading lines to display
-// la is jt->outmaxafter: number of trailing lines to display
+// ieol is JT(jt,outeol): 0 to end lines with LF, 2 if CRLF
+// maxlen is JT(jt,outmaxlen): max length of a line (later chars replaced by ...)
+// lb is JT(jt,outmaxbefore): number of leading lines to display
+// la is JT(jt,outmaxafter): number of trailing lines to display
 static A jtjprx(J jt,I ieol,I maxlen,I lb,I la,A w){A y,z;B ch;C e,eov[2],*v,x,*zu,*zv;D lba;
      I c,c1,h,i,j,k,lc,m,nbx,nq,p,q,r,*s,t,zn;
      static C bdc[]="123456789_123456\214\254\220\234\274\244\224\264\230\202\200";
@@ -866,7 +866,7 @@ static F1(jtjpr1){F1PREFJT;PROLOG(0002);A z;
  // extract the output type buried in jt
  I mtyo=(I)jtinplace&JTPRTYO;
  // convert the character array to a null-terminated UTF-8 string
- RZ(z=jprx(jt->outeol,jt->outmaxlen,jt->outmaxbefore,jt->outmaxafter,w));
+ RZ(z=jprx(JT(jt,outeol),JT(jt,outmaxlen),JT(jt,outmaxbefore),JT(jt,outmaxafter),w));
  // write string to stdout, calling it a 'formatted array' unless otherwise overridden
  if(AN(z)){
 #ifdef ANDROID
@@ -874,7 +874,7 @@ static F1(jtjpr1){F1PREFJT;PROLOG(0002);A z;
   CAV(z)[AN(z)]=0;
 #endif
   ASSERTSYS(!CAV(z)[AN(z)],"jtjpr1 trailing null byte");
-  jsto(jt,mtyo==0?MTYOFM:mtyo,CAV(z));
+  jsto(JJTOJ(jt),mtyo==0?MTYOFM:mtyo,CAV(z));
  }
  EPILOG(mtm);
 }
@@ -894,7 +894,7 @@ F1(jtjpr){F1PREFJT;A y;I i,n,t; UC *v;
   RZ(y=evoke(w)?symbrdlock(FAV(w)->fgh[0]):w);
   if(!((I)jtinplace&JTPRNOSTDOUT)){
    // for each representation selected by the user, create the representation and type it
-   n=*jt->disp; v=1+jt->disp;
+   n=*JT(jt,disp); v=1+JT(jt,disp);
    for(i=0;i<n;++i)switch(*v++){
     case 1: RZ(jpr1(arep(y))); break;
     case 2: RZ(jpr1(drep(y))); break;

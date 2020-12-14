@@ -439,7 +439,7 @@ printf("va2a: axes="); spt=SPA(PAV(spt),a); DO(AN(spt), printf(" %d",IAV(spt)[i]
 printf("va2a: indexes="); spt=SPA(PAV(a),i); DO(AN(spt), printf(" %d",IAV(spt)[i]);) printf("\n");
 }
 #endif
-// repair routines for 
+// repair routines for integer overflow, possibly in place
 static VF repairip[4] = {plusBIO, plusIIO, minusBIO, minusIIO};
 
 #if 0
@@ -478,7 +478,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
    // Here for the fast and important case, where the arguments are both B01/INT/FL
    VA *vainfo=(VA*)FAV(self)->localuse.lvp[0];  // extract table line from the primitive
    // The index into va is atype*3 + wtype, calculated sneakily.  We test here to avoid the call overhead
-   jt->mulofloloc = 0;  // Reinit multiplier-overflow count, in case we hit overflow.  Needed only on integer multiply, but there's no better place
+// obsolete    jt->mulofloloc = 0;  // Reinit multiplier-overflow count, in case we hit overflow.  Needed only on integer multiply, but there's no better place
    aadocv=&vainfo->p2[(UNSAFE(at)>>(INTX-1))+((UNSAFE(at)+UNSAFE(wt))>>INTX)];
   }else{
 
@@ -727,8 +727,8 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
    // Establish the result area z; if we're reusing an argument, make sure the type is updated to the result type
    // If the operation is one that can fail partway through, don't allow it to overwrite a zombie input unless so enabled by the user
   // The ordering here assumes that jtinplace will usually be set
-// alternative  if(((I)jtinplace&1) && (AC(w)<ACUC1 || AC(w)==ACUC1&&jt->assignsym&&jt->assignsym->val==w&&!(adocv.cv&VCANHALT && jt->asgzomblevel<2))){z=w; if(TYPESNE(AT(w),zt))MODBLOCKTYPE(z,zt)  //  Uses JTINPLACEW==1
-// alternative  }else if(((I)jtinplace&2) && (AC(a)<ACUC1 || AC(a)==ACUC1&&jt->assignsym&&jt->assignsym->val==a&&!(adocv.cv&VCANHALT && jt->asgzomblevel<2))){z=a; if(TYPESNE(AT(a),zt))MODBLOCKTYPE(z,zt)  //  Uses JTINPLACEA==2
+// alternative  if(((I)jtinplace&1) && (AC(w)<ACUC1 || AC(w)==ACUC1&&jt->assignsym&&jt->assignsym->val==w&&!(adocv.cv&VCANHALT && JT(jt,asgzomblevel)<2))){z=w; if(TYPESNE(AT(w),zt))MODBLOCKTYPE(z,zt)  //  Uses JTINPLACEW==1
+// alternative  }else if(((I)jtinplace&2) && (AC(a)<ACUC1 || AC(a)==ACUC1&&jt->assignsym&&jt->assignsym->val==a&&!(adocv.cv&VCANHALT && JT(jt,asgzomblevel)<2))){z=a; if(TYPESNE(AT(a),zt))MODBLOCKTYPE(z,zt)  //  Uses JTINPLACEA==2
   if(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX),w)){z=w; I zt=rtype((I)jtinplace); if(unlikely(TYPESNE(AT(w),zt)))MODBLOCKTYPE(z,zt)  //  Uses JTINPLACEW==1
   }else if(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEAX),a)){z=a; I zt=rtype((I)jtinplace); if(unlikely(TYPESNE(AT(a),zt)))MODBLOCKTYPE(z,zt)  //  Uses JTINPLACEA==2
 #if SY_64
@@ -747,7 +747,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
 
   // The compiler thinks that because ak/wk/zk are used in the loop they should reside in registers.  We do better to keep a and w in registers.  So we
   // force the compiler to spill aawwzk by using address arithmetic.
-  {I rc=EVOK;
+  {I rc=EVOK; I mulofloloc;  // good rc, and number of good results before we hit integer overflow on multiply
    {  // lowest rc from the executed sections
     C *av=CAV(a); C *wv=CAV(w); C *zv=CAV(z);  // point to the data
     // Call the action routines: nf,mf, etc must be preserved in case of repair
@@ -755,7 +755,19 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
      // but aawwzk[1,3] have 0 in a repeated argument.  aawwzk[1,3] are added for each inner iteration, aawwzk[0,2] at the end of an inner cycle
      // m is the number of outer loops the caller will run
      // n is the number of times the inner-loop atom is repeated for each outer loop: n=1 means no inner loop needed; n>1 means each atom of y is repeated n times; n<0 means each atom of x is repeated ~n times.  n*m cannot=0. 
-   I i=mf; I jj=nf; lp000: {I lrc=((AHDR2FN*)aadocv->f)(n,m,av,wv,zv,jt); rc=lrc<rc?lrc:rc; if(unlikely(--i!=0)){ I jj1=--jj; jj=jj<0?nf:jj; av+=aawwzk[1+REPSGN(jj1)]; wv+=aawwzk[3+REPSGN(jj1)]; zv+=aawwzk[4]; goto lp000; }}  // jj1 is -1 on the last inner iter, where we use outer incr
+    I i=mf; I jj=nf;
+    lp000: {I lrc=((AHDR2FN*)aadocv->f)(n,m,av,wv,zv,jt);    // run one section
+// obsolete  rc=lrc<rc?lrc:rc;
+     if(unlikely(lrc!=EVOK)){
+      // section did not complete normally.
+      if(unlikely(lrc<0)){mulofloloc=(mf-i)*m*(n^REPSGN(n))+~lrc; rc=EWOVIP+EWOVIPMULII; goto lp000e;}  // integer multiply overflow.  ~lrc is index of failing location; create global failure index.  Abort the computation to retry
+      rc=lrc<rc?lrc:rc;   // set rc to worst error found so far
+      if(unlikely(rc<EWOVIP))goto lp000e;  // error not recoverable in-place.  fail or retry, but no reason to continue loop
+      // here error is correctable in place.  Continue loop
+     }
+     if(unlikely(--i!=0)){ I jj1=--jj; jj=jj<0?nf:jj; av+=aawwzk[1+REPSGN(jj1)]; wv+=aawwzk[3+REPSGN(jj1)]; zv+=aawwzk[4]; goto lp000; }  // jj1 is -1 on the last inner iter, where we use outer incr
+    }
+    lp000e: ;
    }
 
    // The work has been done.  If there was no error, check for optional conversion-if-possible or -if-necessary
@@ -771,8 +783,8 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
     // Set up pointers etc for the overflow handling.  Set b=1 if w is taken for the x argument to repair
     if(rc==EWOVIP+EWOVIPMULII){D *zzvd=(D*)zzv; I *zvi=IAV(z);
      // Multiply repair.  We have to convert all the pre-overflow results to float, and then finish the multiplies
-     jt->mulofloloc = ~jt->mulofloloc;  // make length positive
-     DQ(jt->mulofloloc, *zzvd++=(D)*zvi++;);  // convert the multiply results to float.  mulofloloc is known negative, and must be complemented
+// obsolete      jt->mulofloloc = ~jt->mulofloloc;  // make length positive
+     DQ(mulofloloc, *zzvd++=(D)*zvi++;);  // convert the multiply results to float.  mulofloloc is known negative, and must be complemented
      // Now repeat the processing.  Unlike with add/subtract overflow, we have to match up all the argument atoms
      {C *av=CAV(a); C *wv=CAV(w);
 #if 0
@@ -782,10 +794,14 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
       akm=akn&wkn; wkn&=wkm; wkm^=wkn; akn^=akm;  // if c, akm=ak/wkn=wk; else akn=ak/wkm=wk.  The other incr is 0
       I im=mf; do{I in=nf; do{((AHDR2FN*)adocv.f)(n,m,av,wv,zzv,jt); zzv+=zzk; av+=akn; wv +=wkn;}while(--in); if(!--im)break; av+=akm; wv +=wkm;}while(1);
 #else
-      I i=mf; I jj=nf; while(1){tymesIIO(n,m,(I*)av,(I*)wv,(D*)zzv,jt); if(!--i)break; zzv+=zzk; I jj1=--jj; jj=jj<0?nf:jj; av+=aawwzk[1+REPSGN(jj1)]; wv+=aawwzk[3+REPSGN(jj1)];}  // jj1 is -1 on the last inner iter, where we use outer incr
+      I i=mf; I jj=nf; 
+      while(1){
+       tymesIIO(n,m,(I*)av,(I*)wv,(D*)zzv,mulofloloc); if(!--i)break;
+       mulofloloc-=m*(n^REPSGN(n)); zzv+=zzk; I jj1=--jj; jj=jj<0?nf:jj; av+=aawwzk[1+REPSGN(jj1)]; wv+=aawwzk[3+REPSGN(jj1)];  // jj1 is -1 on the last inner iter, where we use outer incr
+      }
 #endif
      }
-// not yet     jt->mulofloloc=0;  // reinit for next time
+// obsolete     jt->mulofloloc=0;  // reinit for next time
     } else {   // not multiply repair, but something else to do inplace
      adocv.f = repairip[(rc-EWOVIP)&3];   // fetch ep from table
      I nipw = ((z!=w) & (rc-EWOVIP)) ^ (((rc-EWOVIP)>>2) & 1);  // nipw from z!=w if bits2,0==01; 1 if 10; 0 if 00
@@ -1233,8 +1249,9 @@ DF2(jtfslashatg){A fs,gs,y,z;B b,sb=0;C*av,c,d,*wv;I ak,an,ar,*as,at,m,
   av=CAV(a)+ak*(nn-1); wv=CAV(w)+wk*(nn-1); yv=CAV(y); zv=CAV(z);
   GA(z1,zt,zn,r-1,1+s); zu=CAV(z1);  // allocate ping-pong output area for f/
   I rc;  // accumulate error returns
-  rc=((AHDR2FN*)adocv.f)(n,m,av,wv,zv,jt);  // create first result-cell of g
-  DQ(nn-1, av-=ak; wv-=wk; I lrc; lrc=((AHDR2FN*)adocv.f)(n,m,av,wv,yv,jt); rc=lrc<rc?lrc:rc; lrc=((AHDR2FN*)adocvf.f)((I)1,zn,yv,p?zu:zv,p?zv:zu,jt); rc=lrc<rc?lrc:rc; p^=1;);  // p==1 means result goes to ping buffer zv
+  rc=((AHDR2FN*)adocv.f)(n,m,av,wv,zv,jt); rc=rc<0?EWOVIP+EWOVIPMULII:rc;  // create first result-cell of g
+  DQ(nn-1, av-=ak; wv-=wk; I lrc; lrc=((AHDR2FN*)adocv.f)(n,m,av,wv,yv,jt); lrc=lrc<0?EWOVIP+EWOVIPMULII:lrc; rc=lrc<rc?lrc:rc;
+     lrc=((AHDR2FN*)adocvf.f)((I)1,zn,yv,p?zu:zv,p?zv:zu,jt); lrc=lrc<0?EWOVIP+EWOVIPMULII:lrc; rc=lrc<rc?lrc:rc; p^=1;);  // p==1 means result goes to ping buffer zv
   if(NEVM<(rc&255)){df1(z,df2(y,a,w,gs),fs);}else{if(rc&255)jsignal(rc); z=p?z1:z;}  // if overflow, revert to old-fashioned way.  If p points to ping, prev result went to pong, make pong the result
  }
  RE(0); RETF(z);
@@ -1339,7 +1356,7 @@ VA2 jtvar(J jt,A self,I at,I wt){I t;
   if(!((t=UNSAFE(at|wt))&(NOUN&~(B01|INT|FL)))){
    // Here for the fast and important case, where the arguments are both B01/INT/FL
    // The index into va is atype*3 + wtype, calculated sneakily
-   jt->mulofloloc = 0;  // Reinit multiplier-overflow count, in case we hit overflow
+// obsolete    jt->mulofloloc = 0;  // Reinit multiplier-overflow count, in case we hit overflow
    R vainfo->p2[(UNSAFE(at)>>(INTX-1))+((UNSAFE(at)+UNSAFE(wt))>>INTX)];
   }else if(!(t&(NOUN&~NUMERIC))) {
    // Here one of the arguments is CMPX/RAT/XNUM  (we don't support XD and XZ yet)
@@ -1378,6 +1395,7 @@ VA2 jtvar(J jt,A self,I at,I wt){I t;
   case CBANG: if(jt->jerr==EWIRR){retva2.f=(VF)binDD; retva2.cv=VD+VDD;} break;
   case CDIV: if(jt->jerr==EWRAT){retva2.f=(VF)divQQ; retva2.cv=VQ+VQQ;}
              else if(jt->jerr==EWDIV0){retva2.f=(VF)divDD; retva2.cv=VD+VDD;} break;
+// the following errors are normally retryable in place.  We keep the alternate code for sparse
   case CPLUS: if(jt->jerr==EWOVIP+EWOVIPPLUSII||jt->jerr==EWOVIP+EWOVIPPLUSBI||jt->jerr==EWOVIP+EWOVIPPLUSIB){retva2.f=(VF)plusIO; retva2.cv=VD+VII;} break;
   case CMINUS: if(jt->jerr==EWOVIP+EWOVIPMINUSII||jt->jerr==EWOVIP+EWOVIPMINUSBI||jt->jerr==EWOVIP+EWOVIPMINUSIB){retva2.f=(VF)minusIO; retva2.cv=VD+VII;} break;
   case CSTAR: if(jt->jerr==EWOVIP+EWOVIPMULII){retva2.f=(VF)tymesIO; retva2.cv=VD+VII;} break;

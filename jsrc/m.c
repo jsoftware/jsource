@@ -80,18 +80,65 @@ I allosize(A y) {
  R AM(y);
 }
 
+#if MEMHISTO
+I memhisto[64];  // histogram of requested memory blocks (9!:54, 9!:55)
+static I histarea[16384][2] = {0};  // name, frequency of calls to jtgaf
 
-// msize[k]=2^k, for sizes up to the size of an I.  Not used in this file any more
-B jtmeminit(J jt){I k,m=MLEN;
- if(jt->tstackcurr==0){  // meminit gets called twice.  Alloc the block only once
+void memhashadd(I lineno, C *string){
+ C string8[8]="        ";  // padded string
+ string+=strlen(string);  // go to end
+ while(string[-1]!='/' && string[-1]!='\\')--string;  // back up to filename
+ I nwrit=snprintf(string8,8,"%lld",lineno);
+ memcpy(string8+nwrit,string,MIN(8-nwrit,(I)strlen(string)));
+ I stringi=*(I*)&string8;  // the string as int
+ UI hash=16383&hic(sizeof(string8),string8);
+ while(1){if(histarea[hash][0]==stringi)break; if(histarea[hash][0]==0){histarea[hash][0]=stringi; break;} if(--hash<0)hash=16383;}  // find hash slot
+ ++histarea[hash][1];  // increment count
+}
+
+// 9!:54/55  read/set memory histogram
+F1(jtmemhistoq){
+ ASSERTMTV(w);
+ R vec(INT,sizeof(jt->memhisto)/sizeof(jt->memhisto)[0],jt->memhisto);
+}
+
+F1(jtmemhistos){I k;
+ ASSERTMTV(w); 
+ memset(jt->memhisto,0,sizeof(jt->memhisto));
+ R mtm;
+}
+
+
+// return histo area
+
+// process using   ;"1 (":@{. ; ' ' ; 3 (3!:4) {:)"1 (20) {. \:~ |."1 (_2) ]\ 9!:62''
+F1(jtmemhashq){
+ R vec(INT,sizeof(histarea)/sizeof(histarea)[0][0],histarea);
+}
+F1(jtmemhashs){
+ ASSERTMTV(w); 
+ memset(histarea,0,sizeof(histarea));
+ R mtm;
+}
+
+#endif
+
+// obsolete // msize[k]=2^k, for sizes up to the size of an I.  Not used in this file any more
+B jtmeminit(JS jjt,I nthreads){I k,m=MLEN;
+ INITJT(jjt,adbreakr)=INITJT(jjt,adbreak)=&breakdata; /* required for ma to work */
+ INITJT(jjt,mmax) =(I)1<<(m-1);
+ I threadno; for(threadno=0;threadno<nthreads;++threadno){JJ jt=&jjt->threaddata[threadno];
+// obsolete   if(jt->tstackcurr==0){  //
+  // init tpop stack
   jt->tstackcurr=(A*)MALLOC(NTSTACK+NTSTACKBLOCK);  // save address of first allocation
   jt->malloctotal = NTSTACK+NTSTACKBLOCK;
   jt->tnextpushp = (A*)(((I)jt->tstackcurr+NTSTACKBLOCK)&(-NTSTACKBLOCK));  // get address of aligned block AFTER the first word
   *jt->tnextpushp++=0;  // blocks chain to blocks, allocations to allocations.  0 in first block indicates end.  We will never try to go past the first allo, so no chain needed
+// obsolete   }
+  // init all subpools to empty, setting the garbage-collection trigger points
+  for(k=PMINL;k<=PLIML;++k){jt->mfree[-PMINL+k].ballo=SBFREEB;jt->mfree[-PMINL+k].pool=0;}  // init so we garbage-collect after SBFREEB frees
+  jt->mfreegenallo=-SBFREEB*(PLIML+1-PMINL);   // balance that with negative general allocation
  }
- jt->mmax =(I)1<<(m-1);
- for(k=PMINL;k<=PLIML;++k){jt->mfree[-PMINL+k].ballo=SBFREEB;jt->mfree[-PMINL+k].pool=0;}  // init so we garbage-collect after SBFREEB frees
- jt->mfreegenallo=-SBFREEB*(PLIML+1-PMINL);   // balance that with negative general allocation
 #if LEAKSNIFF
  leakblock = 0;
  leaknbufs = 0;
@@ -102,13 +149,13 @@ B jtmeminit(J jt){I k,m=MLEN;
 
 // Audit all memory chains to detect overrun
 #if SY_64
-#define AUDITFILL ||(UI4)AFHRH(Wx)!=Wx->fill
+#define AUDITFILL ||(US)AFHRH(Wx)!=Wx->fill
 #else
 #define AUDITFILL 
 #endif
 void jtauditmemchains(J jt){F1PREFIP;
 #if MEMAUDIT&16
-I Wi,Wj;A Wx,prevWx=0; if(jt->peekdata){for(Wi=PMINL;Wi<=PLIML;++Wi){Wj=0; Wx=(jt->mfree[-PMINL+Wi].pool); while(Wx){if(FHRHPOOLBIN(AFHRH(Wx))!=(Wi-PMINL)AUDITFILL||Wj>0x10000000)SEGFAULT; prevWx=Wx; Wx=AFCHAIN(Wx); ++Wj;}}}
+I Wi,Wj;A Wx,prevWx=0; if(JT(jt,peekdata)){for(Wi=PMINL;Wi<=PLIML;++Wi){Wj=0; Wx=(jt->mfree[-PMINL+Wi].pool); while(Wx){if(FHRHPOOLBIN(AFHRH(Wx))!=(Wi-PMINL)AUDITFILL||Wj>0x10000000)SEGFAULT; prevWx=Wx; Wx=AFCHAIN(Wx); ++Wj;}}}
 #endif
 }
 
@@ -259,7 +306,7 @@ F1(jtspforloc){A*wv,x,y,z;C*s;D tot,*zv;I i,j,m,n;L*u;LX *yv,c;
    m=-1; bucketx=IAV(x)[0];   // signal numeric-atom locale; fetch number
   }else{
    m=AN(x); s=CAV(x);
-   if(!m){m=sizeof(jt->baselocale); s=jt->baselocale;}
+   if(!m){m=sizeof(JT(jt,baselocale)); s=JT(jt,baselocale);}
    ASSERT(LIT&AT(x),EVDOMAIN);
    ASSERT(1>=AR(x),EVRANK);
    ASSERT(vlocnm(m,s),EVILNAME);
@@ -272,7 +319,7 @@ F1(jtspforloc){A*wv,x,y,z;C*s;D tot,*zv;I i,j,m,n;L*u;LX *yv,c;
   m=AN(y); yv=LXAV0(y); 
   for(j=SYMLINFOSIZE;j<m;++j){  // for each name in the locale
    c=yv[j];
-   while(c){tot+=sizeof(L); u=c+LAV0(jt->symp); tot+=spfor1(u->name); tot+=spfor1(u->val); c=u->next;}  // add in the size of the name itself and the value, and the L block for the name
+   while(c){tot+=sizeof(L); u=c+LAV0(JT(jt,symp)); tot+=spfor1(u->name); tot+=spfor1(u->val); c=u->next;}  // add in the size of the name itself and the value, and the L block for the name
   }
   zv[i]=tot;
  }
@@ -280,14 +327,14 @@ F1(jtspforloc){A*wv,x,y,z;C*s;D tot,*zv;I i,j,m,n;L*u;LX *yv,c;
 }    /* 7!:6 space for a locale */
 
 
-F1(jtmmaxq){ASSERTMTV(w); RETF(sc(jt->mmax));}
+F1(jtmmaxq){ASSERTMTV(w); RETF(sc(JT(jt,mmax)));}
      /* 9!:20 space limit query */
 
 F1(jtmmaxs){I j,m=MLEN,n;
  RE(n=i0(vib(w)));
  ASSERT(1E5<=n,EVLIMIT);
  j=m-1; DO(m, if(n<=(I)1<<i){j=i; break;});
- jt->mmax=(I)1<<j;
+ JT(jt,mmax)=(I)1<<j;
  RETF(mtm);
 }    /* 9!:21 space limit set */
 
@@ -463,7 +510,7 @@ void audittstack(J jt){F1PREFIP;
 
 // Free all symbols pointed to by the SYMB block w.
 static void freesymb(J jt, A w){I j,wn=AN(w); LX k,kt,* RESTRICT wv=LXAV0(w);
- L *jtsympv=LAV0(jt->symp);  // Move base of symbol block to a register.  Block 0 is the base of the free chain.  MUST NOT move the base of the free queue to a register,
+ L *jtsympv=LAV0(JT(jt,symp));  // Move base of symbol block to a register.  Block 0 is the base of the free chain.  MUST NOT move the base of the free queue to a register,
   // because when we free a locale it frees its symbols here, and one of them might be a verb that contains a nested SYMB, giving recursion.  It is safe to move sympv to a register because
   // we know there will be no allocations during the free process.
  // First, free the path and name (in the SYMLINFO block), and then free the SYMLINFO block itself
@@ -472,7 +519,7 @@ static void freesymb(J jt, A w){I j,wn=AN(w); LX k,kt,* RESTRICT wv=LXAV0(w);
   fr(LOCNAME(w));
   // clear the data fields   kludge but this is how it was done (should be done in symnew)
   jtsympv[k].name=0;jtsympv[k].val=0;jtsympv[k].sn=0;jtsympv[k].flag=0;
-  jtsympv[k].next=jtsympv[0].next;jtsympv[0].next=k;  // LAV0(jt->symp)[0] is the base of the free chain
+  jtsympv[k].next=jtsympv[0].next;jtsympv[0].next=k;  // LAV0(JT(jt,symp))[0] is the base of the free chain
  }
  // loop through each hash chain, clearing the blocks in the chain
  for(j=SYMLINFOSIZE;j<wn;++j){
@@ -939,15 +986,18 @@ static I lfsr = 1;  // holds varying memory pattern
 RESTRICTF A jtgaf(J jt,I blockx){A z;I mfreeb;I n=(I)2<<blockx;  // n=size of allocated block
 // audit free chain I i,j;MS *x; for(i=PMINL;i<=PLIML;++i){j=0; x=(jt->mfree[-PMINL+i].pool); while(x){x=(MS*)(x->a); if(++j>25)break;}}  // every time, audit first 25 entries
 // audit free chain if(++auditmodulus>25){auditmodulus=0; for(i=PMINL;i<=PLIML;++i){j=0; x=(jt->mfree[-PMINL+i].pool); while(x){x=(MS*)(x->a); ++j;}}}
-// use 6!:5 to start audit I i,j;MS *x; if(jt->peekdata){for(i=PMINL;i<=PLIML;++i){j=0; x=(jt->mfree[-PMINL+i].pool); while(x){x=(MS*)(x->a); ++j;}}}
+// use 6!:5 to start audit I i,j;MS *x; if(JT(jt,peekdata)){for(i=PMINL;i<=PLIML;++i){j=0; x=(jt->mfree[-PMINL+i].pool); while(x){x=(MS*)(x->a); ++j;}}}
 #if MEMAUDIT&16
 auditmemchains();
 #endif
 #if MEMAUDIT&15
 if((I)jt&3)SEGFAULT;
 #endif
+#if MEMHISTO
+ jt->memhisto[blockx+1]++;  // record the request, at its size
+#endif
  z=jt->mfree[-PMINL+1+blockx].pool;   // tentatively use head of free list as result - normal case, and even if blockx is out of bounds will not segfault
- if(likely(2>*jt->adbreakr)){  // this is JBREAK0, done this way so predicted fallthrough will be true
+ if(likely(2>*JT(jt,adbreakr))){  // this is JBREAK0, done this way so predicted fallthrough will be true
   A *pushp=jt->tnextpushp;  // start reads for tpush
 
   if(blockx<PLIML){ 
@@ -979,8 +1029,8 @@ if((I)jt&3)SEGFAULT;
     // split the allocation into blocks.  Chain them together, and flag the base.  We chain them in ascending order (the order doesn't matter), but
     // we visit them in back-to-front order so the first-allocated headers are in cache
 #if MEMAUDIT&17 && BW==64
-    u=(A)((C*)z+PSIZE); chn = 0; hrh = FHRHENDVALUE(1+blockx-PMINL); DQ(PSIZE/2>>blockx, u=(A)((C*)u-n); AFCHAIN(u)=chn; chn=u; hrh -= FHRHBININCR(1+blockx-PMINL); AFHRH(u)=hrh; u->fill=AFHRH(u););    // chain blocks to each other; set chain of last block to 0
-    AFHRH(u) = hrh|FHRHROOT;  u->fill=AFHRH(u);  // flag first block as root.  It has 0 offset already
+    u=(A)((C*)z+PSIZE); chn = 0; hrh = FHRHENDVALUE(1+blockx-PMINL); DQ(PSIZE/2>>blockx, u=(A)((C*)u-n); AFCHAIN(u)=chn; chn=u; hrh -= FHRHBININCR(1+blockx-PMINL); AFHRH(u)=hrh; u->fill=(US)AFHRH(u););    // chain blocks to each other; set chain of last block to 0
+    AFHRH(u) = hrh|FHRHROOT;  u->fill=(US)AFHRH(u);  // flag first block as root.  It has 0 offset already
 #else
     u=(A)((C*)z+PSIZE); chn = 0; hrh = FHRHENDVALUE(1+blockx-PMINL); DQ(PSIZE/2>>blockx, u=(A)((C*)u-n); AFCHAIN(u)=chn; chn=u; hrh -= FHRHBININCR(1+blockx-PMINL); AFHRH(u)=hrh;);    // chain blocks to each other; set chain of last block to 0
     AFHRH(u) = hrh|FHRHROOT;    // flag first block as root.  It has 0 offset already
@@ -1007,7 +1057,7 @@ if((I)jt&3)SEGFAULT;
    {I ot=jt->malloctotalhwmk; ot=ot>nt?ot:nt; jt->malloctotal=nt; jt->malloctotalhwmk=ot;}
    AFHRH(z) = (US)FHRHSYSJHDR(1+blockx);    // Save the size of the allocation so we know how to free it and how big it was
 #if MEMAUDIT&17 && SY_64
-   z->fill=(UI4)AFHRH(z);
+   z->fill=(US)AFHRH(z);
 #endif
    jt->mfreegenallo=mfreeb+=n;    // mfreegenallo includes the byte count allocated for large blocks (incl pad)
   }
@@ -1042,14 +1092,15 @@ RESTRICTF A jtgafv(J jt, I bytes){UI4 j;
  bytes|=(I)1<<(PMINL-1);  // if the memory header itself doesn't meet the minimum buffer length, insert a minimum
 #endif
  CTLZI((UI)bytes,j);  // 3 or 4 should return 2; 5 should return 3
- ASSERT((UI)bytes<=(UI)jt->mmax,EVLIMIT)
+ ASSERT((UI)bytes<=(UI)JT(jt,mmax),EVLIMIT)
  R jtgaf(jt,(I)j);
 }
 
 RESTRICTF A jtga(J jt,I type,I atoms,I rank,I* shaape){A z;
  // Get the number of bytes needed, including the header, the atoms, and a full I appended for types that require a
  // trailing NUL (because boolean-op code needs it)
- I bytes = ALLOBYTESVSZ(atoms,rank,bp(type),type&LAST0,0);  // We never use GA for NAME types, so we don't need to check for it
+ I bpt; if(likely(CTTZ(type)<=C4TX))bpt=bpnoun(type);else bpt=bp(type);
+ I bytes = ALLOBYTESVSZ(atoms,rank,bpt,type&LAST0,0);  // We never use GA for NAME types, so we don't need to check for it
 #if SY_64
  ASSERT(!((((unsigned long long)(atoms))&~TOOMANYATOMS)+((rank)&~RMAX)),EVLIMIT)
 #else
@@ -1156,7 +1207,8 @@ F1(jtca){A z;I t;P*wp,*zp;
  }else{
   if(t&NAME){GATV(z,NAME,AN(w),AR(w),AS(w));AT(z)=t;}  // GA does not allow NAME type, for speed
   else GA(z,t,AN(w),AR(w),AS(w));
-  MC(AV(z),AV(w),(AN(w)*bp(t))+(t&NAME?sizeof(NM):0));}
+  I bpt; if(likely(CTTZ(t)<=C4TX))bpt=bpnoun(t);else bpt=bp(t);
+  MC(AV(z),AV(w),(AN(w)*bpt)+(t&NAME?sizeof(NM):0));}
  R z;
 }
 // clone block only if it is read-only
@@ -1200,10 +1252,11 @@ B jtspc(J jt){A z; RZ(z=MALLOC(1000)); FREECHK(z); R 1; }  // see if 1000 bytes 
 // the itemcount of the result is set as large as will fit evenly, and the atomcount is adjusted accordingly
 A jtext(J jt,B b,A w){A z;I c,k,m,m1,t;
  ARGCHK1(w);                               /* assume AR(w)&&AN(w)    */
- m=AS(w)[0]; PROD(c,AR(w)-1,AS(w)+1); t=AT(w); k=c*bp(t);
+ m=AS(w)[0]; PROD(c,AR(w)-1,AS(w)+1);
+ t=AT(w); I bpt; if(likely(CTTZ(t)<=C4TX))bpt=bpnoun(t);else bpt=bp(t); k=c*bpt;
  GA(z,t,2*AN(w)+(AN(w)?0:c),AR(w),0);  // ensure we allocate SOMETHING to make progress
  m1=allosize(z)/k;  // start this divide before the copy
- MC(AV(z),AV(w),AN(w)*bp(t));                 /* copy old contents      */
+ MC(AV(z),AV(w),AN(w)*bpt);                 /* copy old contents      */
  MCISH(&AS(z)[1],&AS(w)[1],AR(w)-1);
  if(b){RZ(ras(z)); fa(w);}                 /* 1=b iff w is permanent.  This frees up the old space */
  AS(z)[0]=m1; AN(z)=m1*c;       /* "optimal" use of space */

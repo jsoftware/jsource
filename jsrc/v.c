@@ -7,8 +7,9 @@
 
 
 F1(jttally ){A z; I k; ARGCHK1(w); z=sc(SETIC(w,k));            RETF(AT(w)&XNUM+RAT?xco1(z):z);}  //  # y
-F1(jtshapex){A z; ARGCHK1(w); z=vec(INT,AR(w),AS(w)); RETF(AT(w)&XNUM+RAT?xco1(z):z);}
-F1(jtshape){ARGCHK1(w); R vec(INT,AR(w),AS(w));}  // $ y
+F1(jtshapex){A z; ARGCHK1(w); VECI(z,AR(w),AS(w)); if(unlikely(((AT(w)&XNUM+RAT)!=0)))z=xco1(z); RETF(z);}
+// obsolete F1(jtshape){ARGCHK1(w); R vec(INT,AR(w),AS(w));}  // $ y
+F1(jtshape){ARGCHK1(w); A z; VECI(z,AR(w),AS(w)); RETF(z);}  // $ y
 F1(jtisempty){ARGCHK1(w); if(unlikely((AT(w)&SPARSE)!=0))R eps(zeroionei(0),shape(w)); R num(AN(w)==0);}  // 0 e. $
 F1(jtisnotempty){ARGCHK1(w); if(unlikely((AT(w)&SPARSE)!=0))R not(eps(zeroionei(0),shape(w))); R num(AN(w)!=0);}  // *@#@,
 F1(jtisitems){ARGCHK1(w); R num(!AR(w)|!!AS(w)[0]);}   // *@#   *@:#
@@ -94,11 +95,11 @@ F1(jtright1){RETF(w);}
 // i. y
 F1(jtiota){A z;I m,n,*v;
  F1RANK(1,jtiota,DUMMYSELF);
- if(AT(w)&XNUM+RAT)R cvt(XNUM,iota(vi(w)));
+ if(AT(w)&XNUM+RAT)R cvt(XNUM,iota(vi(w)));  // if extended, take integer and convert
  RZ(w=vi(w)); n=AN(w); v=AV(w);
- if(1==n){m=*v; R 0>m?apv(-m,-m-1,-1L):IX(m);}
- A mg; RZ(mg=mag(w)); PRODX(m,n,IAV(mg),1); RZ(z=IX(m)); RZ(z=reshape(mag(w),z));
- DO(n, A zz; if(0>v[i])z=IRS1(z,0L,n-i,jtreverse,zz););
+ if(1==n){m=*v; R 0>m?apv(-m,-m-1,-1L):IX(m);}  // if list required, create it (ascending or descending) and return it
+ A mg; RZ(mg=mag(w)); PRODX(m,n,IAV(mg),1); RZ(z=IX(m)); RZ(z=reshape(mag(w),z));  // rank>1.  Take */|y, create index vector, reshape to (|y) i. */|y
+ DO(n, A zz; if(0>v[i])z=IRS1(z,0L,n-i,jtreverse,zz););  // reverse negative axes in input
  RETF(z);
 }
 

@@ -79,7 +79,7 @@ static F1(jtprime1){A d,t,y,z;B*b,*u;I c,*dv,e,i,j,k,m,n,p,q,*wv,x,*zv;
  k=0; n=AN(w); wv=AV(w); RE(m=sup(n,wv)); RESETRANK; JBREAK0;
  GATV(z,INT,n,AR(w),AS(w)); zv= AV(z);
  RZ(d=grade1(ravel(w)));  dv= AV(d);
- if(jt->p4792){I*u=AV(jt->p4792); c=AN(jt->p4792); while(n>k&&c>(x=wv[dv[k]]))zv[dv[k++]]=u[x];}
+ if(JT(jt,p4792)){I*u=AV(JT(jt,p4792)); c=AN(JT(jt,p4792)); while(n>k&&c>(x=wv[dv[k]]))zv[dv[k++]]=u[x];}
  else{
   while(n>k&&0==wv[dv[k]])zv[dv[k++]]=2;
   while(n>k&&1==wv[dv[k]])zv[dv[k++]]=3;
@@ -100,7 +100,7 @@ static F1(jtprime1){A d,t,y,z;B*b,*u;I c,*dv,e,i,j,k,m,n,p,q,*wv,x,*zv;
 }
 
 static I init4792(J jt) {
- if(!jt->p4792){RZ(jt->p4792=prime1(IX(4792L))); ACX(jt->p4792);} R 1;
+ if(!JT(jt,p4792)){RZ(JT(jt,p4792)=prime1(IX(4792L))); ACX(JT(jt,p4792));} R 1;
 }
 
 static I rem(D x,I d){R (I)jfloor(x-d*jfloor(x/(D)d));}
@@ -194,7 +194,7 @@ static const B pmsk[]={0,0,1,1,0,1,0,1,0,0, 0,1,0,1,0,0,0,1,0,1, 0,0,0,1,0,0,0,0
 
 static F1(jtiprimetest){A z;B*b;I d,j,n,*pv,q,*v,wn,*wv;
  ARGCHK1(w);
- wn=AN(w); wv=AV(w); pv=AV(jt->p4792);
+ wn=AN(w); wv=AV(w); pv=AV(JT(jt,p4792));
 #if SY_64
  DO(wn, if(2147483647L<wv[i])R xprimetest(cvt(XNUM,w)););
 #endif
@@ -202,14 +202,14 @@ static F1(jtiprimetest){A z;B*b;I d,j,n,*pv,q,*v,wn,*wv;
  for(j=0;j<wn;++j){
   n=*wv++; v=pv;
   if(32>n)b[j]=pmsk[MAX(0,n)];
-  else{b[j]=1; DQ(AN(jt->p4792), d=*v++; q=n/d; if(n==q*d){b[j]=0; break;}else if(q<d)break;);}
+  else{b[j]=1; DQ(AN(JT(jt,p4792)), d=*v++; q=n/d; if(n==q*d){b[j]=0; break;}else if(q<d)break;);}
  }
  RETF(z);
 }
 
 static F1(jtxprimetest){A z;B*b,rat;I d,j,q,n,*pv,*v,wn,wt,*yv;X r,*wv,x,xmaxint,y;
  ARGCHK1(w);
- wn=AN(w); wt=AT(w); wv=XAV(w); pv=AV(jt->p4792); 
+ wn=AN(w); wt=AT(w); wv=XAV(w); pv=AV(JT(jt,p4792)); 
  rat=1&&wt&RAT; RZ(xmaxint=xc(2147483647L)); RZ(y=xc(-1L)); yv=AV(y);
  GATV(z,B01,wn,AR(w),AS(w)); b=BAV(z);
  for(j=0;j<wn;++j){
@@ -225,7 +225,7 @@ static F1(jtxprimetest){A z;B*b,rat;I d,j,q,n,*pv,*v,wn,wt,*yv;X r,*wv,x,xmaxint
   }else{
    n=xint(x); v=pv;
    if(32>n)b[j]=pmsk[MAX(0,n)];
-   else DQ(AN(jt->p4792), d=*v++; q=n/d; if(n==q*d){b[j]=0; break;}else if(q<d)break;);
+   else DQ(AN(JT(jt,p4792)), d=*v++; q=n/d; if(n==q*d){b[j]=0; break;}else if(q<d)break;);
  }}
  RETF(z);
 }    /* prime test for extended integers or rationals */
@@ -361,7 +361,7 @@ F2(jtpco2){A z;B*b;I k;
 static A jtqco2x(J jt,I m,A w){A y;I c,*dv,i,*pv,*yv;X d,q,r,x;
  RZ(init4792(jt));
  if(!(XNUM&AT(w)))RZ(w=cvt(XNUM,w));
- x=XAV(w)[0]; pv=AV(jt->p4792); RZ(d=xc(2L)); dv=AV(d);
+ x=XAV(w)[0]; pv=AV(JT(jt,p4792)); RZ(d=xc(2L)); dv=AV(d);
  GATV0(y,INT,m,1); yv=AV(y); memset(yv,C0,m*SZI);
  for(i=0;i<m;++i){
   c=0; *dv=pv[i];
@@ -413,11 +413,11 @@ F1(jtfactor){PROLOG(0063);A y,z;I c,d,i,k,m,n,q,*u,*v,wn,*wv,*zv;
 #if SY_64
  if(n>2147483647)R cvt(INT,xfactor(w));
 #endif
- u=AV(jt->p4792); c=8*SZI-2;
+ u=AV(JT(jt,p4792)); c=8*SZI-2;
  GATV(z,INT,c*wn,1+AR(w),AS(w)); AS(z)[AR(w)]=c; v=zv=AV(z);
  for(i=m=0;i<wn;++i){
   n=*wv++;
-  DO(AN(jt->p4792), d=u[i]; q=n/d; while(n==q*d){*v++=d; n=q; q/=d;} if(q<d)break;);
+  DO(AN(JT(jt,p4792)), d=u[i]; q=n/d; while(n==q*d){*v++=d; n=q; q/=d;} if(q<d)break;);
   if(1<n)*v++=n;
   d=v-zv; m=MAX(m,d); zv+=c; while(v<zv)*v++=0; 
  }
@@ -438,8 +438,8 @@ F1(jtfactor){PROLOG(0063);A y,z;I c,d,i,k,m,n,q,*u,*v,wn,*wv,*zv;
 */
 
 static B jtsmallprimes(J jt,I n,X x,A*zs,X*zx){A s;I i,m,*pv,*sv,*v;X d,q,r;
- ASSERT(n<=1229&&n<=AN(jt->p4792),EVLIMIT);
- pv=AV(jt->p4792); m=(I)(3.322*XBASEN*AN(x)); 
+ ASSERT(n<=1229&&n<=AN(JT(jt,p4792)),EVLIMIT);
+ pv=AV(JT(jt,p4792)); m=(I)(3.322*XBASEN*AN(x)); 
  GATV0(s,INT,m,1); v=sv=AV(s);
  A *old=jt->tnextpushp;
  for(i=0;i<n;++i){
@@ -459,8 +459,8 @@ static B jtsmallprimes(J jt,I n,X x,A*zs,X*zx){A s;I i,m,*pv,*sv,*v;X d,q,r;
 /* if 1=n xprimeq y, then y is prime with a probability of error of 0.25^n */
 
 static B jtxprimeq(J jt,I n,X y){A h,om=jt->xmod;B b;I*dv,i,k,*pv;X d,m,t,x,y1;
- ASSERT(n<=AN(jt->p4792),EVLIMIT);
- pv=AV(jt->p4792);
+ ASSERT(n<=AN(JT(jt,p4792)),EVLIMIT);
+ pv=AV(JT(jt,p4792));
  GAT0(h,XNUM,1,0); XAV(h)[0]=y; jt->xmod=h; 
  k=0; RZ(t=xc(2L)); RZ(m=y1=xminus(y,iv1)); 
  while(0==(AV(m)[0]&1)){++k; RZ(m=xdiv(m,t,XMFLR));}
@@ -473,10 +473,10 @@ static B jtxprimeq(J jt,I n,X y){A h,om=jt->xmod;B b;I*dv,i,k,*pv;X d,m,t,x,y1;
   if(!b)break;
  }
  jt->xmod=om; R b;
-}    /* y assumed to be not in n{.jt->p4792 */
+}    /* y assumed to be not in n{.JT(jt,p4792) */
 
 static XF1(jtpollard_p_1){A om=jt->xmod;D p,m;I e,i,n,*pv;X c,g,z=iv1;
- n=MIN(1229,AN(jt->p4792)); pv=AV(jt->p4792); m=log((D)pv[n-1]);
+ n=MIN(1229,AN(JT(jt,p4792))); pv=AV(JT(jt,p4792)); m=log((D)pv[n-1]);
  RZ(c=xc(2L));
  RZ(jt->xmod=scx(w));
  A *old=jt->tnextpushp;
@@ -597,7 +597,7 @@ static B jtecm(J jt,X n,X a,X b,I m,X*p,X*z){
 static B jtecm_s1(J jt,X n,X a,X b,I b1,X*q,X*z){A tt;D d,lg;I dd,m,*pv;X x[3];
  A *old=jt->tnextpushp;
  lg=log((D)b1); RE(m=i0(plt(sc(b1))));
- if(m<=AN(jt->p4792))pv=AV(jt->p4792); else{RZ(tt=prime1(IX(m))); pv=AV(tt);}
+ if(m<=AN(JT(jt,p4792)))pv=AV(JT(jt,p4792)); else{RZ(tt=prime1(IX(m))); pv=AV(tt);}
  x[0]=q[0]; x[1]=q[1]; x[2]=q[2];
  DQ(m, d=(D)*pv++; dd=(I)pow(d,jfloor(5e-14+lg/log(d))); RZ(ecm(n,a,b,dd,x,x)););
  z[0]=x[0]; z[1]=x[1]; z[2]=x[2];
@@ -659,7 +659,7 @@ static F1(jtxfactor){PROLOG(0064);A st,z;B b=0;I k,m;X g,*sv,*sv0,x;
   if(xprimeq(100L,x)){RZ(z=apip(z,scx(x))); continue;}
   RZ(g=pollard_p_1(x)); if(g!=iv1){*sv++=g; RZ(*sv++=xdiv(x,g,XMFLR)); continue;}
   RZ(g=pollard_rho(x)); if(g!=iv1){*sv++=g; RZ(*sv++=xdiv(x,g,XMFLR)); continue;}
-  if(!b){b=1; RZ(rngseeds(sc(jt->rngS[jt->rng]))); RZ(roll(v2(m,m*m)));} 
+  if(!b){b=1; RZ(rngseeds(sc(jt->rngdata->rngparms[jt->rngdata->rng].rngS))); RZ(roll(v2(m,m*m)));} 
   RZ(g=fac_ecm(x));     if(g!=iv1){*sv++=g; RZ(*sv++=xdiv(x,g,XMFLR)); continue;}
   ASSERT(0,EVNONCE);
  }

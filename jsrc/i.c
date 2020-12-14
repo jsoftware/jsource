@@ -3,38 +3,20 @@
 /*                                                                         */
 /* Initializations                                                         */
 
+#ifdef _WIN32
+#include <windows.h>
+#else
+#define __cdecl
+#endif
 #include "j.h"
 #include "w.h"
+#include "m.h"
 #include "cpuinfo.h"
 
 #if SYS & SYS_FREEBSD
 #include <floatingpoint.h>
 #endif
 
-
-// These statics get copied into jt for cache footprint.  If you change them,
-// change the definition in jt.h
-
-// For each Type, the length of a data-item of that type.  The order
-// here is by number of trailing 0s in the (32-bit) type; aka the bit-number index.
-// Example: LITX is 1, so location 1 contains sizeof(C)
-#define TPSZ(name) [name##X] = name##SIZE
-static const UC typesizes[32] = {
-TPSZ(B01), TPSZ(LIT), TPSZ(INT), TPSZ(FL), TPSZ(CMPX), TPSZ(BOX), TPSZ(XNUM), TPSZ(RAT), 
-TPSZ(SB01), TPSZ(SLIT), TPSZ(SINT), TPSZ(SFL), TPSZ(SCMPX), TPSZ(SBOX), TPSZ(SBT), TPSZ(C2T), 
-TPSZ(C4T), TPSZ(ASGN), TPSZ(MARK), TPSZ(NAME), TPSZ(SYMB), TPSZ(CONW), TPSZ(LPAR), TPSZ(RPAR), 
-[ADVX] = INTSIZE, [CONJX] = INTSIZE, [VERBX] = INTSIZE  // note ACV sizes are in INTs
-};
-
-// Priority is
-// B01 LIT C2T C4T INT BOX XNUM RAT SBT FL CMPX
-// For sparse types, we encode here the corresponding dense type
-static const UC typepriority[] = {   // convert type bit to priority
-0, 1, 4, 9, 10, 5, 6, 7,  // B01-RAT
-0, 0, 0, 1, 4, 9, 10, 5,  // x x SB01-SBOX
-8, 2, 3};  // SBT C2T C4T
-static const UC prioritytype[] = {  // Convert priority to type bit
-B01X, LITX, C2TX, C4TX, INTX, BOXX, XNUMX, RATX, SBTX, FLX, CMPXX};
 
 // create name block for xyuvmn
 static A jtmakename(J jt,C*s){A z;I m;NM*zv;
@@ -68,16 +50,18 @@ there are only a few globals that have storage not in J
 */
 
 // globals 
-J gjt=0; // JPF debug - convenience debug single process
+JS gjt=0; // JPF debug - convenience debug single process - points to shared area bacause sto() uses it
 
 // thread-safe/one-time initialization of all global constants
 // Use GA for all these initializations, to save space since they're done only once
-B jtglobinit(J jt){A x,y;A *oldpushx=jt->tnextpushp;
- MC(jt->typesizes,typesizes,sizeof(jt->typesizes));  // required for ma.  Repeated for each thread in jtinit3
- MC(jt->typepriority,typepriority,sizeof(jt->typepriority));  // may not be needed
- MC(jt->prioritytype,prioritytype,sizeof(jt->prioritytype));  // may not be needed
- jt->adbreakr=jt->adbreak=&breakdata; /* required for ma to work */
- meminit();  /* required for ma to work */
+// The call gives us jt, but we initialize in the master thread
+// The jt we are given is a throwaway, needed ONLY so we can allocate some A blocks here.  Anything stored
+// into jt will never be used.  jinit3 will later be called with the real jt, to initialize it
+B jtglobinit(JS jjt){A x,y;J jt=MTHREAD(jjt);  // initialize in master thread
+// obsolete  MC(jt->typesizes,typesizes,sizeof(jt->typesizes));  // required for ma.  Repeated for each thread in jtinit3
+// obsolete  MC(jt->typepriority,typepriority,sizeof(jt->typepriority));  // may not be needed
+// obsolete MC(jt->prioritytype,prioritytype,sizeof(jt->prioritytype));  // may not be needed
+ jtmeminit(jjt,1);  // init allocation queues & tpop stack, master thread only
  RZ(y=rifvs(str(1L,"z")));     ACX(y); AS(y)[0]=BUCKETXLOC(1,"z");   // for paths, the shape holds the bucketx
  GA(x,BOX, 1,1,0     ); ACX(x); AAV(x)[0]=y;                zpath      =x;  AFLAG(zpath) |= (AT(zpath)&TRAVERSIBLE);  // ensure that traversible types in pst are marked traversible, so tpush/ra/fa will not recur on them
  RZ(mnuvxynam[0]=makename("m"));
@@ -87,10 +71,10 @@ B jtglobinit(J jt){A x,y;A *oldpushx=jt->tnextpushp;
  RZ(mnuvxynam[4]=makename("x"));
  RZ(mnuvxynam[5]=makename("y"));
  // can be left at initial value v00[0]=v00[1]=0;   // vector 0 0, for rank
- pf=qpf();
- pinit();
-
- cpuInit();
+ pf=qpf();  // init performance monitor count info
+ pinit();  // init block for a.
+ jtsbtypeglobinit();  // init empty symbol
+ cpuInit();  // get CPU characteristics
 #if defined(__aarch64__)
  hwaes=(getCpuFeatures()&ARM_HWCAP_AES)?1:0;
 #elif (defined(__i386__) || defined(_M_X64) || defined(__x86_64__))
@@ -99,14 +83,14 @@ B jtglobinit(J jt){A x,y;A *oldpushx=jt->tnextpushp;
 #if C_AVX && !defined(ANDROID)
  hwfma=(getCpuFeatures()&CPU_X86_FEATURE_FMA)?1:0;
 #endif
- // take all the permanent blocks off the tpop stack so that we don't decrement their usecount.  All blocks allocated here must be permanent
- jt->tnextpushp=oldpushx;
  DO(IOTAVECLEN, iotavec[i]=i+IOTAVECBEGIN;)  // init our vector of ascending integers
-
+ // We have no more use for the jt block.  The values allocated from it will never be freed.  We leave them extant,
+ // but we can free the tpop stack that we allocated
+ FREE(jt->tstackcurr);
  R 1;
 }
 
-static B jtevinit(J jt){A q,*v;
+static B jtevinit(JS jjt,I nthreads){A q,*v;JJ jt=MTHREAD(jjt);
  GA(q,BOX,1+NEVM,1,0); v=AAV(q);
  DO(AN(q), v[i]=mtv;);
  v[EVALLOC  ]=cstr("allocation error"           );
@@ -144,13 +128,13 @@ static B jtevinit(J jt){A q,*v;
  v[EVTHROW  ]=cstr("uncaught throw."            );
  v[EVTIME   ]=cstr("time limit"                 );
  v[EVVALUE  ]=cstr("value error"                );
- ras(q); jt->evm=q;
+ ras(q); INITJT(jjt,evm)=q;
  if(jt->jerr){printf("evinit failed; error %hhi\n", jt->jerr); R 0;} else R 1;
 }
 
 /* static void sigflpe(int k){jsignal(EVDOMAIN); signal(SIGFPE,sigflpe);} */
 
-static B jtconsinit(J jt){D y;
+static B jtconsinit(JS jjt,I nthreads){D y;JJ jt=MTHREAD(jjt);
 // This is an initialization routine, so memory allocations performed here are NOT
 // automatically freed by tpop()
 #if AUDITCOMPILER
@@ -162,53 +146,77 @@ if (CTTZZ(0x140000000LL) != 30)*(I *)3 = 103;   // Create program check if error
 // verify that (I)x >> does sign-extension.  jtmult relies on that
 if(((-1) >> 1) != -1)*(I *)4 = 104;
 #endif
-jt->asgzomblevel = 1;  // allow premature change to zombie names, but not data-dependent errors
-jt->assert = 1;
-// obsolete  RZ(jt->bxa=cstr("+++++++++|-")); jt->bx=CAV(jt->bxa);
- MC(jt->bx,"+++++++++|-",sizeof(jt->bx));
- jt->cctdefault=jt->cct= 1.0-FUZZ;
- jt->disp[0]=1; jt->disp[1]=5;
- jt->fcalln=NFCALL;
-#if USECSTACK
- jt->cstackinit=(uintptr_t)&y;  // use a static variable to get the stack address
- jt->cstackmin=jt->cstackinit-(CSTACKSIZE-CSTACKRESERVE);
-#else
- jt->fdepn=NFDEP;
-#endif
- jt->outmaxafter=222;
- jt->outmaxlen=256;
+ INITJT(jjt,asgzomblevel) = 1;  // allow premature change to zombie names, but not data-dependent errors
+ INITJT(jjt,assert) = 1;
+// obsolete  RZ(INITJT(jjt,bx)a=cstr("+++++++++|-")); INITJT(jjt,bx)=CAV(INITJT(jjt,bx)a);
+ MC(INITJT(jjt,bx),"+++++++++|-",sizeof(INITJT(jjt,bx)));
+// obsolete  jt->cctdefault=
+ INITJT(jjt,disp)[0]=1; INITJT(jjt,disp)[1]=5;
+ INITJT(jjt,outmaxafter)=222;
+ INITJT(jjt,outmaxlen)=256;
 // obsolete strcpy(jt->outseq,"\x0a");
- strcpy(jt->pp,"%0.6g");
- jt->retcomm=1;
+ INITJT(jjt,retcomm)=1;
 // obsolete  jt->tostdout=1;
- jt->transposeflag=1;
-// jt->int64rflag=0;
- jt->xmode=XMEXACT;
- MC(jt->baselocale,"base",sizeof(jt->baselocale));   // establish value & hash of "base"
- jt->baselocalehash=(UI4)nmhash(sizeof(jt->baselocale),jt->baselocale);
- RESETRANK;  // init both ranks to RMAX
+ INITJT(jjt,transposeflag)=1;
+// INITJT(jjt,int64rflag)=0;
+ MC(INITJT(jjt,baselocale),"base",sizeof(INITJT(jjt,baselocale)));   // establish value & hash of "base"
+ INITJT(jjt,baselocalehash)=(UI4)nmhash(sizeof(INITJT(jjt,baselocale)),INITJT(jjt,baselocale));
   // Init for u./v.
  A uimp=ca(mnuvxynam[2]); NAV(uimp)->flag|=NMIMPLOC;  // create the name for u.
- jt->implocref[0] = fdef(0,CTILDE,VERB, 0,0, uimp,0L,0L, 0, RMAX,RMAX,RMAX);  //create 'u.'~
+ INITJT(jjt,implocref)[0] = fdef(0,CTILDE,VERB, 0,0, uimp,0L,0L, 0, RMAX,RMAX,RMAX); AC(INITJT(jjt,implocref)[0])=ACUC1;  //create 'u.'~, mark an not abandoned (no ra() needed)
  A vimp=ca(mnuvxynam[3]); NAV(vimp)->flag|=NMIMPLOC;
- jt->implocref[1] = fdef(0,CTILDE,VERB, 0,0, vimp,0L,0L, 0, RMAX,RMAX,RMAX);  //create 'v.'~
+ INITJT(jjt,implocref)[1] = fdef(0,CTILDE,VERB, 0,0, vimp,0L,0L, 0, RMAX,RMAX,RMAX); AC(INITJT(jjt,implocref)[1])=ACUC1;  //create 'v.'~
 
- jt->igemm_thres=IGEMM_THRES;   // tuning parameters for cip.c
- jt->dgemm_thres=DGEMM_THRES;
- jt->zgemm_thres=ZGEMM_THRES;
+ INITJT(jjt,igemm_thres)=IGEMM_THRES;   // tuning parameters for cip.c
+ INITJT(jjt,dgemm_thres)=DGEMM_THRES;
+ INITJT(jjt,zgemm_thres)=ZGEMM_THRES;
+ I threadno; for(threadno=0;threadno<nthreads;++threadno){jt=&jjt->threaddata[threadno];
+  RESETRANK;  // init both ranks to RMAX
+  strcpy(jt->pp,"%0.6g");
+  jt->fcalln=NFCALL;
+  jt->cct= 1.0-FUZZ;
+#if USECSTACK
+  jt->cstackinit=(uintptr_t)&y;  // use a static variable to get the stack address
+  jt->cstackmin=jt->cstackinit-(CSTACKSIZE-CSTACKRESERVE);
+#else
+  jt->fdepn=NFDEP;
+#endif
+  jt->xmode=XMEXACT;
+ }
  R 1;
 }
 
-static C jtjinit3(J jt){S t;
+static B jtbufferinit(JS jjt,I nthreads){
+ INITJT(jjt,breakfn)=malloc(NPATH); memset(INITJT(jjt,breakfn),0,NPATH);  // place to hold the break filename
+ I threadno; for(threadno=0;threadno<nthreads;++threadno){JJ jt=&jjt->threaddata[threadno];
+  jt->etx=malloc(1+NETX);  // error-message buffer
+  jt->callstack=(LS *)malloc(sizeof(LS)*(1+NFCALL));  // function-call stack
+  jt->rngdata=(RNG*)(((I)malloc(sizeof(RNG)+CACHELINESIZE)+CACHELINESIZE-1)&-CACHELINESIZE); memset(jt->rngdata,0,sizeof(RNG));  // place to hold RNG data, aligned to cacheline
+ }
+ R 1;
+}
+
+ // We have completed initial allocation.  Everything allocated so far will not be freed by a tpop, because
+ // tpop() isn't called during initialization.  So, to keep the memory auditor happy, we reset ttop so that it doesn't
+ // look like those symbols have a free outstanding.
+ // This also has the effect that buffers allocated during init do not need ra() to protect them, since they have no free outstanding
+static B jtinitfinis(JS jjt,I nthreads){
+ I threadno; for(threadno=0;threadno<nthreads;++threadno){JJ jt=&jjt->threaddata[threadno];
+  jt->tnextpushp=(A*)(((I)jt->tstackcurr+NTSTACKBLOCK)&(-NTSTACKBLOCK))+1;  // first store is to entry 1 of the first block
+ }
+ R 1;
+}
+
+
+// initialize the master thread for a new instance.  This fills in the JS block, which will remain
+// for the duration of the instance.  It also fills in the JJ block for each thread
+static C jtjinit3(JS jjt){S t;
 /* required for jdll and doesn't hurt others */
- gjt=jt; // global jt for JPF debug
-  // init the buffers pointed to by jt
- jt->etx=malloc(1+NETX);  // error-message buffer
- jt->callstack=(LS *)malloc(sizeof(LS)*(1+NFCALL));  // function-call stack
- jt->breakfn=malloc(NPATH); memset(jt->breakfn,0,NPATH);  // place to hold the break filename
- MC(jt->typesizes,typesizes,sizeof(jt->typesizes));  // required for ma.
- MC(jt->typepriority,typepriority,sizeof(jt->typepriority));  // required for ma.  Repeated for each thread in jtinit3
- MC(jt->prioritytype,prioritytype,sizeof(jt->prioritytype));  // required for ma.  Repeated for each thread in jtinit3
+ gjt=jjt; // global jt for JPF debug
+ 
+// obsolete MC(jt->typesizes,typesizes,sizeof(jt->typesizes));  // required for ma.
+// obsolete  MC(jt->typepriority,typepriority,sizeof(jt->typepriority));  // required for ma.  Repeated for each thread in jtinit3
+// obsolete  MC(jt->prioritytype,prioritytype,sizeof(jt->prioritytype));  // required for ma.  Repeated for each thread in jtinit3
 #if (SYS & SYS_DOS)
  t=EM_ZERODIVIDE+EM_INVALID; _controlfp(t,t);
 #endif
@@ -218,32 +226,32 @@ static C jtjinit3(J jt){S t;
 #if (SYS & SYS_FREEBSD)
  fpsetmask(0);
 #endif
- jt->tssbase=tod();
+ INITJT(jjt,tssbase)=tod();  // starting time for all threads
 // obsolete  jt->prxthornuni=0;  // init to non-unicode (normal) state
 // obsolete  jt->jprx=0;      // init to non jprx jconsole output (normal) state
- meminit();
- sesminit();
- evinit();
- consinit();
- xsinit();  // must be before symbinit
- symbinit();  // must be after consinit
- parseinit();
- xoinit();
- sbtypeinit();
- rnginit();
+ // Initialize subsystems in order.  Each initializes all threads, if there are thread variables
+ RZ(jtbufferinit(jjt,MAXTHREADS)); // init the buffers pointed to by jjt
+ RZ(jtmeminit(jjt,MAXTHREADS));
+ RZ(jtsesminit(jjt,MAXTHREADS));  // master only
+ RZ(jtevinit(jjt,MAXTHREADS));  // master only
+ RZ(jtconsinit(jjt,MAXTHREADS));
+ RZ(jtxsinit(jjt,MAXTHREADS));  // must be before symbinit  master only
+ RZ(jtsymbinit(jjt,MAXTHREADS));  // must be after consinit   master only - global/locsyms must init at start of op
+ RZ(jtparseinit(jjt,MAXTHREADS));
+ RZ(jtxoinit(jjt,MAXTHREADS));  // master only
+ RZ(jtsbtypeinit(jjt,MAXTHREADS));  // master only
+ RZ(jtrnginit(jjt,MAXTHREADS));
 // #if (SYS & SYS_DOS+SYS_MACINTOSH+SYS_UNIX)
 #if (SYS & SYS_DOS+SYS_MACINTOSH)
- xlinit();
+ RZ(jtxlinit(jjt,MAXTHREADS));  // file info, master only
 #endif
- jtecvtinit(jt);
- // We have completed initial allocation.  Everything allocated so far will not be freed by a tpop, because
- // tpop() isn't called during initialization.  So, to keep the memory auditor happy, we reset ttop so that it doesn't
- // look like those symbols have a free outstanding.
- jt->tnextpushp=(A*)(((I)jt->tstackcurr+NTSTACKBLOCK)&(-NTSTACKBLOCK))+1;  // first store is to entry 1 of the first block
- R !jt->jerr;
+ RZ(jtecvtinit(jjt,MAXTHREADS));
+ RZ(jtinitfinis(jjt,MAXTHREADS));
+ R 1;
 }
 
-C jtjinit2(J jt,int dummy0,C**dummy1){jt->sesm=1; R jinit3();}
+// Here we initialize the new jt for a new J instance.
+C jtjinit2(JS jt,int dummy0,C**dummy1){INITJT(jt,sesm)=1; R jinit3();}
 
 
 

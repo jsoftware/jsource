@@ -176,7 +176,7 @@
 #define congotochk(x,y,z)           jtcongotochk(jt,(x),(y),(z))
 #define conjug(x)                   jtatomic1(jt,(x),ds(CPLUS))
 #define connum(x,y)                 jtconnum(jt,(x),(y))
-#define consinit()                  jtconsinit(jt)
+// obsolete #define consinit()                  jtconsinit(jt)
 #define constr(x,y)                 jtconstr(jt,(x),(y))
 #define convert0(x0,x1,x2,x3)       jtconvert0(jt,(x0),(x1),(x2),(x3)) 
 #define conword(x,y)                jtconword(jt,(x),(y))
@@ -330,7 +330,7 @@
 #define every2(x0,x1,x2)            jtevery2(jt,(x0),(x1),(x2)) 
 #define everysp(x,y)                jteverysp(jt,(x),(y))
 #define evger(x,y)                  jtevger(jt,(x),(y))
-#define evinit()                    jtevinit(jt)
+// obsolete #define evinit()                    jtevinit(jt)
 #define ex(x)                       jtex(jt,(x))  
 #define exec1(x)                    jtexec1(jt,(x))   
 #define exec2(x,y)                  jtexec2(jt,(x),(y))   
@@ -351,12 +351,13 @@
 // fa() audits the tstack, for use outside the tpop system.  fadecr does just the decrement (for when AC is known > 1)
 // Zczero is ~0 if usecount is going negative, 0 otherwise.  Usecount 1->0, 8..1->8..2, 4..0 unchanged, others decrement
 #define fadecr(x) I Zc=AC(x); AC(x)=Zc=Zc-1+((UI)Zc>>(BW-2));  // this does the decrement only, checking for PERMANENT
-#define faaction(x, nomfaction) {fadecr(x) I tt=AT(x); Zc=REPSGN(Zc-1); if(unlikely(((tt&=TRAVERSIBLE)&(Zc|~AFLAG(x)))!=0))jtfa(jt,(x),tt); if(likely(Zc!=0)){jtmf(jt,x);} nomfaction}
-#define fa(x)                       {if(likely((x)!=0))faaction((x),else {if(MEMAUDIT&2)audittstack(jt);})}
+#define faaction(jt,x, nomfaction) {fadecr(x) I tt=AT(x); Zc=REPSGN(Zc-1); if(unlikely(((tt&=TRAVERSIBLE)&(Zc|~AFLAG(x)))!=0))jtfa(jt,(x),tt); if(likely(Zc!=0)){jtmf(jt,x);} nomfaction}
+#define fajt(jt,x) {if(likely((x)!=0))faaction(jt,(x),else {if(MEMAUDIT&2)audittstack(jt);})}
+#define fa(x) fajt(jt,(x))
 // Within the tpush/tpop when we know the usecount has gone to 0, no need to audit fa, since it was checked on the push
 #define fana(x)                     {if(likely((x)!=0))fanano0(x)}
 // when x is known to be valid and usecount has gone to 0
-#define fanano0(x)                  faaction((x),)
+#define fanano0(x)                  faaction(jt,(x),)
 // Within tpop, no need to check ACISPERM; Zczero is (i. e. usecount has gone to 0) ~0; and we should recur only if flag indicates RECURSIBLE.  In that case we can reconstruct the type from the flag
 #define fanapop(x,flg)              {if(unlikely(((flg)&RECURSIBLE)!=0))jtfa(jt,(x),(flg)&RECURSIBLE); jtmf(jt,x);}
 #define fac_ecm(x)                  jtfac_ecm(jt,(x))
@@ -368,8 +369,8 @@
 // Allocate an INT block. z is the zvalue to hold the result; v is the fauxblock to use if n INTs will fit in the fauxblock, which has rank r
 // shape is not filled in, except when rank is 1
 // scaf We should mark the blocks as NJA for good form?
-#define fauxINT(z,v,n,r) {if(AKXR(r)+(n)*SZI<=(I)sizeof(v)){z=(A)(v); AK(z)=AKXR(r); AFLAG(z)=0/*AFNJA*/; AT(z)=INT; AC(z)=ACUC1; AN(z)=(n); AR(z)=(RANKT)(r); if(r==1)AS(z)[0]=(n);}else{GATV0(z,INT,(n),(r));}}
-#define fauxBOX(z,v,n,r) {if(AKXR(r)+(n)*SZI<=(I)sizeof(v)){z=(A)(v); AK(z)=AKXR(r); AFLAG(z)=0/*AFNJA*/; AT(z)=BOX; AC(z)=ACUC1; AN(z)=(n); AR(z)=(RANKT)(r); if(r==1)AS(z)[0]=(n);}else{GATV0(z,BOX,(n),(r));}}
+#define fauxINT(z,v,n,r) {if(likely(AKXR(r)+(n)*SZI<=(I)sizeof(v))){z=(A)(v); AK(z)=AKXR(r); AFLAG(z)=0/*AFNJA*/; AT(z)=INT; AC(z)=ACUC1; AN(z)=(n); AR(z)=(RANKT)(r); if(r==1)AS(z)[0]=(n);}else{GATV0(z,INT,(n),(r));}}
+#define fauxBOX(z,v,n,r) {if(likely(AKXR(r)+(n)*SZI<=(I)sizeof(v))){z=(A)(v); AK(z)=AKXR(r); AFLAG(z)=0/*AFNJA*/; AT(z)=BOX; AC(z)=ACUC1; AN(z)=(n); AR(z)=(RANKT)(r); if(r==1)AS(z)[0]=(n);}else{GATV0(z,BOX,(n),(r));}}
 // use the following in functions that cannot admit a return.  You must know that the allocated fauxblock is big enough
 #define fauxBOXNR(z,v,n,r) {z=(A)(v); AK(z)=AKXR(r); AFLAG(z)=0/*AFNJA*/; AT(z)=BOX; AC(z)=ACUC1; AN(z)=(n); AR(z)=(RANKT)(r); if(r==1)AS(z)[0]=(n);}
 // v is a block declared by fauxblock, w is the source data, r is the rank.  offset is assumed 0.  c is the initial value for AC.  If the rank is small enough, we use the fauxblock, otherwise
@@ -377,7 +378,7 @@
 // and must be marked recursive if it is of such a type so that if we fa() the block we will not try to recur
 // PRISTINE is inherited from the backer (this is not done in virtual(), perhaps it should), because we know the block will never be inplaced unless it was inplaceable at the time this fauxblock was
 // created, which means it is not extant anywhere it could be assigned or extracted from.
-#define fauxvirtual(z,v,w,r,c) {if((r)<=4){z=ABACK(w); AK((A)(v))=(CAV(w)-(C*)(v)); AT((A)(v))=AT(w); AR((A)(v))=(RANKT)(r); z=AFLAG(w)&AFVIRTUAL?z:(w); AFLAG((A)(v))=AFVIRTUAL|AFUNINCORPABLE|(AFLAG(z)&AFPRISTINE)|(AT(w)&TRAVERSIBLE); ABACK((A)(v))=z; z=(A)(v); AC(z)=(c);} \
+#define fauxvirtual(z,v,w,r,c) {if(likely((r)<=4)){z=ABACK(w); AK((A)(v))=(CAV(w)-(C*)(v)); AT((A)(v))=AT(w); AR((A)(v))=(RANKT)(r); z=AFLAG(w)&AFVIRTUAL?z:(w); AFLAG((A)(v))=AFVIRTUAL|AFUNINCORPABLE|(AFLAG(z)&AFPRISTINE)|(AT(w)&TRAVERSIBLE); ABACK((A)(v))=z; z=(A)(v); AC(z)=(c);} \
                               else{RZ(z=virtual((w),0,(r))); AFLAG(z)|=AFUNINCORPABLE; if((c)!=ACUC1)AC(z)=(c);} }
 #define fdef(x0,x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,x11)     jtfdef(jt,(x0),(x1),(x2),(x3),(x4),(x5),(x6),(x7),(x8),(x9),(x10),(x11))
 #if !USECSTACK
@@ -671,14 +672,15 @@
 // reversed        001 0000 0111 0000 0011 1001 1000 1010 0010 1001 0100 0100 0010 0000
 #define maxtypene(x,y)              jtmaxtype(jt,(x),(y))
 #define maxtype(x,y)                (((x)==(y))?(x):maxtypene(x,y))
-#define maxtypedne(x,y) (jt->typepriority[CTTZ(x)]>jt->typepriority[CTTZ(y)]?(x):(y))
+// obsolete #define maxtypedne(x,y) (jt->typepriority[CTTZ(x)]>jt->typepriority[CTTZ(y)]?(x):(y))  // d means 'dense'
+#define maxtypedne(x,y) (TYPEPRIORITY(x)>TYPEPRIORITY(y)?(x):(y))  // d means 'dense'
 #define maxtyped(x,y)               (((x)==(y))?(x):maxtypedne(x,y))
 // For sparse types, we encode here the corresponding dense type
 #define mdiv(x,y)                   jtmdiv(jt,(x),(y))   
 #define mdivsp(x,y)                 jtmdivsp(jt,(x),(y))
 #define meanD(x0,x1,x2,x3,x4)       jtmeanD(jt,(x0),(x1),(x2),(x3),(x4))
 #define meanI(x0,x1,x2,x3,x4)       jtmeanI(jt,(x0),(x1),(x2),(x3),(x4))
-#define meminit()                   jtmeminit(jt)
+// obsolete #define meminit()                   jtmeminit(jt)
 #define memoget(x,y,z)              jtmemoget(jt,(x),(y),(z))
 #define memoput(x0,x1,x2,x3)        jtmemoput(jt,(x0),(x1),(x2),(x3))
 #define merge1(x,y)                 jtmerge1(jt,(x),(y))
@@ -776,7 +778,7 @@
 #define pad(x,y,z)                  jtpad(jt,(x),(y),(z))
 #define parse(x)                    jtparse(jt,(x))
 #define parsea(x,y)                 jtparsea(jt,(x),(y))
-#define parseinit()                 jtparseinit(jt)
+// obsolete #define parseinit()                 jtparseinit(jt)
 #define parsex(x0,x1,x2,x3)         jtparsex(jt,(x0),(x1),(x2),(x3))
 #define partfscan(x0,x1,x2,x3,x4,x5)  jtpartfscan(jt,(x0),(x1),(x2),(x3),(x4),(x5))
 #define pathit(x)                   jtpathit(jt,(x))
@@ -952,7 +954,7 @@
 #define rinv(x)                     jtrinv(jt,(x))
 #define rmdir1(x)                   jtrmdir1(jt,(x))
 #define rngga(x,y)                  jtrngga(jt,(x),(y))
-#define rnginit()                   jtrnginit(jt)
+// obsolete #define rnginit()                   jtrnginit(jt)
 #define rngseeds(x)                 jtrngseeds(jt,(x))
 #define rngselects(x)               jtrngselects(jt,(x))
 #define rngstates1(x0,x1,x2,x3,x4,x5,x6)         jtrngstates1(jt,(x0),(x1),(x2),(x3),(x4),(x5),(x6))
@@ -989,7 +991,7 @@
 #define sbsetdata2(x)               jtsbsetdata2(jt,(x))
 #define sbstr(x,y)                  jtsbstr(jt,(x),(y))
 #define sbtestbox(x)                jtsbtestbox(jt,(x))
-#define sbtypeinit()                jtsbtypeinit(jt)
+// obsolete #define sbtypeinit()                jtsbtypeinit(jt)
 #define sbunbox(x)                  jtsbunbox(jt,(x))
 #define sbunind(x)                  jtsbunind(jt,(x))
 #define sbunlit(x,y)                jtsbunlit(jt,(x),(y))
@@ -1020,7 +1022,7 @@
 #define sely(x0,x1,x2,x3)           jtsely(jt,(x0),(x1),(x2),(x3))
 #define sent12b(x)              jtsent12b(jt,(x))
 #define sent12c(x)            jtsent12c(jt,(x))
-#define sesminit()                  jtsesminit(jt)
+// obsolete #define sesminit()                  jtsesminit(jt)
 #define setfv(x,y)                  jtsetfv(jt,(x),(y))
 #define setleakcode(x)              jtsetleakcode(jt,(x))
 #define sfn(x,y)                    jtsfn(jt,(x),(y))
@@ -1118,7 +1120,7 @@
 #define susp()                      jtsusp(jt)
 #define swap(x)                     jtswap(jt,(x)) 
 #define swapc(x)                    jtswapc(jt,(x)) 
-#define symbinit()                  jtsymbinit(jt)
+// obsolete #define symbinit()                  jtsymbinit(jt)
 #define symbis(x,y,z)               jtsymbis(jt,(x),(y),(z))
 #define symbisdel(x,y,z)            jtsymbisdel(jt,(x),(y),(z))
 #define symbrd(x)                   jtsymbrd(jt,(x))
@@ -1310,7 +1312,7 @@
 #define xgcd(x,y)                   jtxgcd(jt,(x),(y))
 #define xint(x)                     jtxint(jt,(x))
 #define xlcm(x,y)                   jtxlcm(jt,(x),(y))
-#define xlinit()                    jtxlinit(jt)
+// obsolete #define xlinit()                    jtxlinit(jt)
 #define xlog1(x)                    jtxlog1(jt,(x))
 #define xlog2(x,y)                  jtxlog2(jt,(x),(y))
 #define xlog2sub(x,y)               jtxlog2sub(jt,(x),(y))
@@ -1319,7 +1321,7 @@
 #define xlogz1(x)                   jtxlogz1(jt,(x))
 #define xminus(x,y)                 jtxminus(jt,(x),(y))
 #define xmodpow(x,y,z)              jtxmodpow(jt,(x),(y),(z))
-#define xoinit()                    jtxoinit(jt)
+// obsolete #define xoinit()                    jtxoinit(jt)
 #define xop(x)                      jtxop(jt,(x))
 #define xop2(x,y,z)                 jtxop2(jt,(x),(y),(z))
 #define xopcall(x)                  jtxopcall(jt,(x))
@@ -1333,7 +1335,7 @@
 #define xrep(x,y)                   jtxrep(jt,(x),(y))
 #define xroot(x,y)                  jtxroot(jt,(x),(y))
 #define xsgn(x)                     jtxsgn(jt,(x))
-#define xsinit()                    jtxsinit(jt)
+// obsolete #define xsinit()                    jtxsinit(jt)
 #define xsq(x)                      jtxsq(jt,(x))
 #define xsqrt(x)                    jtxsqrt(jt,(x))
 #define xstd(x)                     jtxstd(jt,(x))

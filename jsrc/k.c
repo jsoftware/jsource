@@ -395,7 +395,7 @@ A jtcvt(J jt,I t,A w){A y;B b;
 // and use 'exact' and 'no rank' for them.  If mode=0, do not promote XNUM/RAT to fixed-length types.
 // If mode bit 1 is set, minimum precision is INT; if mode bit 2 is set, minimum precision is FL; if mode bit 3 is set, minimum precision is CMPX 
 // Result is a new buffer, always
-A jtbcvt(J jt,C mode,A w){FPREFIP; A y,z=w;
+A jtbcvt(J jt,C mode,A w){FPREFIP(J); A y,z=w;
 // obsolete D ofuzz;
  ARGCHK1(w);
 // obsolete  ofuzz=FUZZ;

@@ -9,7 +9,7 @@
 F1(jtunname){A x;V*v;
  ARGCHK1(w); 
  v=VAV(w);
- if(CTILDE==v->id&&!jt->uflags.us.cx.cx_c.glock&&!(VLOCK&v->flag)){x=v->fgh[0]; if(NAME&AT(x))R symbrd(x);}
+ if(CTILDE==v->id&&!jt->glock&&!(VLOCK&v->flag)){x=v->fgh[0]; if(NAME&AT(x))R symbrd(x);}
  RETF(w);
 }
 
@@ -120,9 +120,9 @@ static A jtfixa(J jt,A a,A w){A f,g,h,wf,x,y,z=w;V*v;fauxblock(fauxself); A aa; 
    R f&&g ? (VDDOP&v->flag?df2(z,f,g,df2(x,head(h),tail(h),wf)):df2(z,f,g,wf)) : 
             (VDDOP&v->flag?df1(z,f,  df2(x,head(h),tail(h),wf)):df1(z,f,  wf)) ;
   case CUDOT:
-   R REFIXA(ai,jt->implocref[0]);  // u. is equivalent to 'u.'~ for fix purposes
+   R REFIXA(ai,JT(jt,implocref)[0]);  // u. is equivalent to 'u.'~ for fix purposes
   case CVDOT:
-   R REFIXA(ai,jt->implocref[1]);
+   R REFIXA(ai,JT(jt,implocref)[1]);
   case CTILDE:
    if(f&&NAME&AT(f)){
     RZ(y=sfn(0,f));

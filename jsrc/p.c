@@ -27,8 +27,11 @@
 // The nvr stack contains pointers to values, added as names are moved
 // from the queue to the stack.  Local values are not pushed.
 
-B jtparseinit(J jt){A x;
- GAT0(x,INT,20,1); ras(x); jt->nvra=x; /* obsolete jt->nvrav=AAV(x); jt->nvran=(UI4)AN(x); */  // Initial stack.  Size is doubled as needed
+B jtparseinit(JS jjt, I nthreads){A x;
+ I threadno; for(threadno=0;threadno<nthreads;++threadno){JJ jt=&jjt->threaddata[threadno];
+  GAT0(x,INT,20,1); AC(x)=ACUC1; jt->nvra=x; /* obsolete jt->nvrav=AAV(x); jt->nvran=(UI4)AN(x); */  // Initial stack.  Size is doubled as needed
+  // ras not required because this is called during initialization 
+ }
  R 1;
 }
 
@@ -134,17 +137,18 @@ static PSTK* jtpparen(J jt,PSTK *stack){
  R stack+2;  // advance stack pointer to result
 }
 
-// multiple assignment.  self has parms.  ABACK(self) is the symbol table to assign to, valencefns[0] is preconditioning routine to open value or convert it to AR
+// multiple assignment not to constant names.  self has parms.  ABACK(self) is the symbol table to assign to, valencefns[0] is preconditioning routine to open value or convert it to AR
 static DF2(jtisf){RZ(symbis(onm(a),CALL1(FAV(self)->valencefns[0],w,0L),ABACK(self))); R num(0);} 
 
 // assignment, single or multiple
 // return sets stack[0] to -1 if this is a final assignment
 static PSTK* jtis(J jt,PSTK *stack){B ger=0;C *s;
-  A asgblk=stack[1].a; I asgt=AT(asgblk); A v=stack[2].a, n=stack[0].a;  // value and name
+ A asgblk=stack[1].a; I asgt=AT(asgblk); A v=stack[2].a, n=stack[0].a;  // value and name
 // obsolete  jt->asgn = stack[0].t==1;  // if the word number of the lhs is 1, it's either (noun)=: or name=: or 'value'=: at the beginning of the line; so indicate
+ J jtinplace=(J)((I)jt+((stack[0].t==1)<<JTFINALASGNX));   // set JTFINALASGN if this is final assignment
  stack[1+(stack[0].t==1)].t=-1;  // if the word number of the lhs is 1, it's either (noun)=: or name=: or 'value'=: at the beginning of the line;
-  // store -1 to the new stack[0].t.  Otherwise, make a harmless store to stack[-1].t
- if(likely(jt->assignsym!=0)){symbis(n,v,(A)asgt);}   // Assign to the known name.  Pass in the type of the ASGN
+  // store -1 to the new stack[0].t.  Otherwise, make a harmless store to new stack[-1].t
+ if(likely(jt->assignsym!=0)){jtsymbis(jtinplace,n,v,(A)asgt);}   // Assign to the known name.  Pass in the type of the ASGN
  else {
   // Point to the block for the assignment; fetch the assignment pseudochar (=. or =:); choose the starting symbol table
   // depending on which type of assignment (but if there is no local symbol table, always use the global)
@@ -156,8 +160,8 @@ static PSTK* jtis(J jt,PSTK *stack){B ger=0;C *s;
    else{
     // True multiple assignment
     ASSERT((-(AR(v))&(-(AN(n)^AS(v)[0])))>=0,EVLENGTH);   // v is atom, or length matches n
-    if(((AR(v)^1)+(~AT(v)&BOX))==0){A *nv=AAV(n), *vv=AAV(v); DO(AN(n), symbis(nv[i],vv[i],symtab);)}  // v is boxed list
-    else {A *nv=AAV(n); DO(AN(n), symbis(nv[i],ope(AR(v)?from(sc(i),v):v),symtab);)}  // repeat atomic v for each name, otherwise select item.  Open in either case
+    if(((AR(v)^1)+(~AT(v)&BOX))==0){A *nv=AAV(n), *vv=AAV(v); DO(AN(n), jtsymbis(jtinplace,nv[i],vv[i],symtab);)}  // v is boxed list
+    else {A *nv=AAV(n); DO(AN(n), jtsymbis(jtinplace,nv[i],ope(AR(v)?from(sc(i),v):v),symtab);)}  // repeat atomic v for each name, otherwise select item.  Open in either case
     goto retstack;
    }
   }
@@ -181,12 +185,12 @@ static PSTK* jtis(J jt,PSTK *stack){B ger=0;C *s;
    // not allowed in general because of (verb1 x verb2) name =: virtual - if verb2 assigns the name, the value going into verb1 will be freed before use
    stack[2].a=
 #endif
-   symbis(n,v,symtab);
+   jtsymbis(jtinplace,n,v,symtab);
   }else{
    // computed name(s)
    ASSERT(AN(n)||(AR(v)&&!AS(v)[0]),EVILNAME);  // error if namelist empty or multiple assignment to no names, if there is something to be assigned
    // otherwise, if it's an assignment to an atomic computed name, convert the string to a name and do the single assignment
-   if(!AR(n))symbis(onm(n),v,symtab);
+   if(!AR(n))jtsymbis(jtinplace,onm(n),v,symtab);
    else {
     // otherwise it's multiple assignment (could have just 1 name to assign, if it is AR assignment).
     // Verify rank 1.  For each lhs-rhs pair, do the assignment (in jtisf).
@@ -456,8 +460,8 @@ A jtparsea(J jt, A *queue, I m){PSTK * RESTRICT stack;A z,*v;I es;
        // This code is copied from s.c
        if(likely(NAV(y)->bucket!=0)){I bx;
         if(likely(0 <= (bx = ~NAV(y)->bucketx))){   // negative bucketx (now positive); skip that many items, and then you're at the right place.  This is the path for almost all local symbols
-         s = LXAV0(jt->locsyms)[NAV(y)->bucket]+LAV0(jt->symp);  // fetch hashchain headptr, point to L for first symbol
-         while(bx--){s = s->next+LAV0(jt->symp);}  // skip the prescribed number
+         s = LXAV0(jt->locsyms)[NAV(y)->bucket]+LAV0(JT(jt,symp));  // fetch hashchain headptr, point to L for first symbol
+         while(bx--){s = s->next+LAV0(JT(jt,symp));}  // skip the prescribed number
          if(unlikely(s->val==0))goto rdglob;  // if value has not been assigned, ignore it
         }else{
          // positive bucketx (now negative); that means skip that many items and then do name search.  This is set for words that were recognized as names but were not detected as assigned-to in the definition.  This is the path for global symbols
@@ -466,11 +470,11 @@ A jtparsea(J jt, A *queue, I m){PSTK * RESTRICT stack;A z,*v;I es;
          // from here on it is rare to find a name - usually they're globals defined elsewhere
          LX lx = LXAV0(jt->locsyms)[NAV(y)->bucket];  // index of first block if any
          I m=NAV(y)->m; C* nm=NAV(y)->s;  // length/addr of name from name block
-         while(0>++bx){lx = LAV0(jt->symp)[lx].next;}
+         while(0>++bx){lx = LAV0(JT(jt,symp))[lx].next;}
          // Now lx is the index of the first name that might match.  Do the compares
          while(1) {
           if(lx==0)goto rdglob;  // If we run off chain, go read from globals
-          s = lx+LAV0(jt->symp);  // symbol entry
+          s = lx+LAV0(JT(jt,symp));  // symbol entry
           IFCMPNAME(NAV(s->name),nm,m,{if(s->val==0)goto rdglob; break;})  // if match, we're done looking; could be not found, if no value
           lx = s->next;
          }

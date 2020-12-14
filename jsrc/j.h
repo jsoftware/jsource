@@ -582,6 +582,9 @@ extern unsigned int __cdecl _clearfp (void);
 // set FINDNULLRET to trap when a routine returns 0 without having set an error message
 #define FINDNULLRET 0
 
+#define MEMHISTO 0       // set to create a histogram of memory requests, interrogated by 9!:54/9!:55
+
+#define MAXTHREADS 1  // maximum number of threads
 
 #if BW==64
 #define ALTBYTES 0x00ff00ff00ff00ffLL
@@ -601,12 +604,13 @@ extern unsigned int __cdecl _clearfp (void);
 #define A0              0   // a nonexistent A-block
 #define ABS(a)          (0<=(a)?(a):-(a))
 #define ASSERT(b,e)     {if(unlikely(!(b))){jsignal(e); R 0;}}
+#define ASSERTMASTER(b,e)     {if(unlikely(!(b))){jtjsignal(jm,e); R 0;}}   // used in io.c to signal in master thread
 // version for debugging
 // #define ASSERT(b,e)     {if(unlikely(!(b))){fprintf(stderr,"error code: %i : file %s line %d\n",(int)(e),__FILE__,__LINE__); jsignal(e); R 0;}}
 #define ASSERTD(b,s)    {if(unlikely(!(b))){jsigd((s)); R 0;}}
 #define ASSERTMTV(w)    {ARGCHK1(w); ASSERT(1==AR(w),EVRANK); ASSERT(!AN(w),EVLENGTH);}
 #define ASSERTN(b,e,nm) {if(unlikely(!(b))){jt->curname=(nm); jsignal(e); R 0;}}  // set name for display (only if error)
-#define ASSERTSYS(b,s)  {if(unlikely(!(b))){fprintf(stderr,"system error: %s : file %s line %d\n",s,__FILE__,__LINE__); jsignal(EVSYSTEM); jtwri(jt,MTYOSYS,"",(I)strlen(s),s); R 0;}}
+#define ASSERTSYS(b,s)  {if(unlikely(!(b))){fprintf(stderr,"system error: %s : file %s line %d\n",s,__FILE__,__LINE__); jsignal(EVSYSTEM); jtwri(JJTOJ(jt),MTYOSYS,"",(I)strlen(s),s); R 0;}}
 #define ASSERTW(b,e)    {if(unlikely(!(b))){if((e)<=NEVM)jsignal(e); else jt->jerr=(e); R;}}
 #define ASSERTWR(c,e)   {if(unlikely(!(c))){R e;}}
 // verify that shapes *x and *y match for l axes using AVX for rank<5, memcmp otherwise
@@ -657,8 +661,8 @@ extern unsigned int __cdecl _clearfp (void);
 #define CALL1IP(f,w,fs)   ((f)(jtinplace,    (w),(A)(fs)))
 #define CALL2IP(f,a,w,fs) ((f)(jtinplace,(a),(w),(A)(fs)))
 #define RETARG(z)       (z)   // These places were ca(z) in the original JE
-#define CALLSTACKRESET  {jt->callstacknext=0; jt->uflags.us.uq.uq_c.pmctrbstk &= ~PMCTRBSTKREQD;} // establish initial conditions for things that might not get processed off the stack.  The last things stacked may never be popped
-#define MODESRESET      {jt->xmode=XMEXACT;}  // anything that might get left in a bad state and should be reset on return to immediate mode
+#define CALLSTACKRESET  {jm->callstacknext=0; jm->uflags.us.uq.uq_c.bstkreqd = 0;} // establish initial conditions for things that might not get processed off the stack.  The last things stacked may never be popped
+#define MODESRESET      {jm->xmode=XMEXACT;}  // anything that might get left in a bad state and should be reset on return to immediate mode
 // see if a character matches one of many.  Example in ai.c
 // create mask for the bit, if any, in word w for value.  Reverse order: 0=MSB
 #define CCM(w,value) ((I)(((value)>>LGBW)==(w)?1LL<<(BW-1-((value)&BW-1)):0))
@@ -672,8 +676,8 @@ extern unsigned int __cdecl _clearfp (void);
 // set the sign bit to the selected bit of the mask
 #define CCMSGN(cand,tval) (cand<<(tval&(BW-1)))   // set sign bit if value found
 #define CCMTST(cand,tval) (cand&(1LL<<(~tval&(BW-1))))  // test true is value found
-#define DF1(f)          A f(J jt,    A w,A self)
-#define DF2(f)          A f(J jt,A a,A w,A self)
+#define DF1(f)          A f(JJ jt,    A w,A self)
+#define DF2(f)          A f(JJ jt,A a,A w,A self)
 #define DO(n,stm)       {I i=0,_n=(n); for(;i<_n;i++){stm}}  // i runs from 0 to n-1
 #define DP(n,stm)       {I i=-(n);    for(;i<0;++i){stm}}   // i runs from -n to -1 (faster than DO)
 #define DQ(n,stm)       {I i=(I)(n)-1;    for(;i>=0;--i){stm}}  // i runs from n-1 downto 0 (fastest when you don't need i)
@@ -709,16 +713,16 @@ extern unsigned int __cdecl _clearfp (void);
 // FFEQ/FFIEQ (fixed fuzz) are used where we know for sure the test should be tolerant
 #define FFEQ(u,v)        (ABS((u)-(v))<=FUZZ*MAX(ABS(u),ABS(v)))
 #define FFIEQ(u,v)       (ABS((u)-(v))<=FUZZ*ABS(v))  // used when v is known to be exact integer.  It's close enough, maybe ULP too small on the high end
-#define F1(f)           A f(J jt,    A w)
-#define F2(f)           A f(J jt,A a,A w)
+#define F1(f)           A f(JJ jt,    A w)  // whether in an interface routine or not, these must use the internal parameter type
+#define F2(f)           A f(JJ jt,A a,A w)
 #define FPREF           
 #define F1PREF          FPREF
 #define F2PREF          FPREF
-#define FPREFIP         J jtinplace=jt; jt=(J)(intptr_t)((I)jt&~JTFLAGMSK)  // turn off all flag bits in jt, leave them in jtinplace
-#define F1PREFIP        FPREFIP
-#define F2PREFIP        FPREFIP
-#define F1PREFJT        FPREFIP  // for doc purposes, use when the JT flags are not for inplacing
-#define F2PREFJT        FPREFIP
+#define FPREFIP(T)         T jtinplace=jt; jt=(T)(intptr_t)((I)jt&~JTFLAGMSK)  // turn off all flag bits in jt, leave them in jtinplace
+#define F1PREFIP        FPREFIP(J)
+#define F2PREFIP        FPREFIP(J)
+#define F1PREFJT        FPREFIP(J)  // for doc purposes, use when the JT flags are not for inplacing
+#define F2PREFJT        FPREFIP(J)
 #define F1RANK(m,f,self)    {ARGCHK1(w); if(unlikely(m<AR(w)))if(m==0)R rank1ex0(w,(A)self,f);else R rank1ex(  w,(A)self,(I)m,     f);}  // if there is more than one cell, run rank1ex on them.  m=monad rank, f=function to call for monad cell.  Fall through otherwise
 #define F2RANKcommon(l,r,f,self,extra)  {ARGCHK2(a,w); extra if(unlikely((I)((l-AR(a))|(r-AR(w)))<0))if((l|r)==0)R rank2ex0(a,w,(A)self,f);else{I lr=MIN((I)l,AR(a)); I rr=MIN((I)r,AR(w)); R rank2ex(a,w,(A)self,lr,rr,lr,rr,f);}}  // If there is more than one cell, run rank2ex on them.  l,r=dyad ranks, f=function to call for dyad cell
 #define F2RANK(l,r,f,self)  F2RANKcommon(l,r,f,self,)
@@ -729,6 +733,11 @@ extern unsigned int __cdecl _clearfp (void);
 // get # of things of size s, rank r to allocate so as to have an odd number of them at least n, after discarding w items of waste.  Try to fill up a full buffer 
 #define FULLHASHSIZE(n,s,r,w,z) {UI4 zzz;  CTLZI((((n)|1)+(w))*(s) + AKXR(r) - 1,zzz); z = ((((I)1<<(zzz+1)) - AKXR(r)) / (s) - 1) | (1&~(w)); }
 // Memory-allocation macros
+#if MEMHISTO   // create histogram of allocation calls
+#define HISTOCALL memhashadd(__LINE__,__FILE__);
+#else
+#define HISTOCALL
+#endif
 // Size-of-block calculations.  VSZ when size is constant or variable.  Byte counts are (total length including header)-1
 // Because the Boolean dyads read beyond the end of the byte area (up to 1 extra word), we add one SZI-1 for islast (which includes B01), rather than adding 1
 #define ALLOBYTESVSZ(atoms,rank,size,islast,isname)      ( ((((rank)|(!SY_64))*SZI  + ((islast)? (isname)?(NORMAH*SZI+sizeof(NM)+SZI-1-1):(NORMAH*SZI+SZI-1-1) : (NORMAH*SZI-1)) + (atoms)*(size)))  )  // # bytes to allocate allowing 1 I for string pad - include mem hdr - minus 1
@@ -754,14 +763,15 @@ extern unsigned int __cdecl _clearfp (void);
 #define GACOPYSHAPE(name,type,atoms,rank,shaape)  {I *_s=(I*)(shaape); I *_d=AS(name); *_d=*_s; I _r=1-(rank); do{_s+=SGNTO0(_r); _d+=SGNTO0(_r); *_d=*_s;}while(++_r<0);}
 #endif
 #define GACOPY1(name,type,atoms,rank,shaape) {I *_d=AS(name); *_d=1; I _r=1-(rank); do{_d+=SGNTO0(_r); *_d=1;}while(++_r<0);} // copy all 1s to shape
-#define GA(v,t,n,r,s)   RZ(v=ga(t,(I)(n),(I)(r),(I*)(s)))
+#define GA(v,t,n,r,s)   {HISTOCALL RZ(v=ga(t,(I)(n),(I)(r),(I*)(s)))}
 // GAE executes the given expression when there is an error
-#define GAE(v,t,n,r,s,erraction)   if(unlikely(!(v=ga(t,(I)(n),(I)(r),(I*)(s)))))erraction;
-// When the type and all rank/shape are known at compile time, use GAT.  The compiler precalculates almost everything
+#define GAE(v,t,n,r,s,erraction)   {HISTOCALL if(unlikely(!(v=ga(t,(I)(n),(I)(r),(I*)(s)))))erraction;}
+// GAT*, used when the type and all rank/shape are known at compile time.  The compiler precalculates almost everything
 // For best results declare name as: AD* RESTRICT name;  The number of bytes, rounded up with overhead added, must not exceed 2^(PMINL+4)
 #define GATS(name,type,atoms,rank,shaape,size,shapecopier,erraction) \
 { ASSERT(!((rank)&~RMAX),EVLIMIT); \
  I bytes = ALLOBYTES(atoms,rank,size,(type)&LAST0,(type)&NAME); \
+ HISTOCALL \
  name = jtgaf(jt, ALLOBLOCK(bytes)); \
  I akx=AKXR(rank);   \
  if(likely(name!=0)){   \
@@ -777,12 +787,13 @@ extern unsigned int __cdecl _clearfp (void);
 #define GAT0(name,type,atoms,rank)  GATS(name,type,atoms,rank,0,type##SIZE,GACOPYSHAPE0,R 0)
 #define GAT0E(name,type,atoms,rank,erraction)  GATS(name,type,atoms,rank,0,type##SIZE,GACOPYSHAPE0,erraction)
 
-// Used when type is known and something else is variable.  ##SIZE must be applied before type is substituted, so we have GATVS to use inside other macros.  Normally use GATV
+// GATV*, used when type is known and something else is variable.  ##SIZE must be applied before type is substituted, so we have GATVS to use inside other macros.  Normally use GATV
 // Note: assigns name before assigning the components of the array, so the components had better not depend on name, i. e. no GATV(z,BOX,AN(z),AR(z),AS(z))
 #define GATVS(name,type,atoms,rank,shaape,size,shapecopier,erraction) \
 { I bytes = ALLOBYTES(atoms,rank,size,(type)&LAST0,(type)&NAME); \
  if(SY_64){ASSERT(!((((unsigned long long)(atoms))&~TOOMANYATOMS)+((rank)&~RMAX)),EVLIMIT)} \
  else{ASSERT(((I)bytes>(I)(atoms)&&(I)(atoms)>=(I)0)&&!((rank)&~RMAX),EVLIMIT)} \
+ HISTOCALL \
  name = jtgafv(jt, bytes);   \
  I akx=AKXR(rank);   \
  if(likely(name!=0)){   \
@@ -854,8 +865,12 @@ extern unsigned int __cdecl _clearfp (void);
 // call to atomic2(), similar to IRS2.  fs is a local block to use to hold the rank (declared as D fs[16]), cxx is the Cxx value of the function to be called
 #define ATOMIC2(jt,a,w,fs,l,r,cxx) (FAV((A)(fs))->fgh[0]=ds(cxx), FAV((A)(fs))->id=CQQ, FAV((A)(fs))->lrr=(RANK2T)((l)<<RANKTX)+(r), jtatomic2(jt,(a),(w),(A)fs))
 
-// memory copy, for J blocks.  Like memory copy, but knows it can fetch outside the arg boundaries for LIT-type args
+// memory copy, for J blocks.  Like memcpy, but knows it can fetch outside the arg boundaries for LIT-type args
 // if bytelen is 1, the arg may be of any length; if 0, must be a multiple of Is and the low bits of length are ignored
+// Normal use allowing overcopy: JMC(d,s,l+(SZI-1),lbl,0)    where lbl is a unique statement label
+// Normal use not allowing overcopy: JMC(d,s,l,lbl,1)    where lbl is a unique statement label
+// For use in loop, allowing overcopy: JMCDECL(endmask) JMCSETMASK(endmask,l+(SZI-1),0)   DO(...,  JMCR(d,s,l+(SZI-1),lbl,0,endmask)    )
+// For use in loop, not allowing overcopy: JMCDECL(endmask) JMCSETMASK(endmask,l,1)   DO(...,  JMCR(d,s,l,lbl,1,endmask)    )
 #if C_AVX2 || EMU_AVX2
 #define JMCDECL(mskname) __m256i mskname;
 #define JMCSETMASK(mskname,l,bytelen) mskname=_mm256_loadu_si256((__m256i*)(validitymask+((-(((l)-bytelen)>>LGSZI))&(NPAR-1)))); /* 0->1111 1->1000 3->1110 */
@@ -898,8 +913,8 @@ extern unsigned int __cdecl _clearfp (void);
 #endif
 
 #define IX(n)           apv((n),0L,1L)
-#define JATTN           {if(unlikely(*jt->adbreakr!=0)){jsignal(EVATTN); R 0;}}
-#define JBREAK0         {if(unlikely(2<=*jt->adbreakr)){jsignal(EVBREAK); R 0;}}
+#define JATTN           {if(unlikely(*JT(jt,adbreakr)!=0)){jsignal(EVATTN); R 0;}}
+#define JBREAK0         {if(unlikely(2<=*JT(jt,adbreakr))){jsignal(EVBREAK); R 0;}}
 #define JTIPA           ((J)((I)jt|JTINPLACEA))
 #define JTIPAW          ((J)((I)jt|JTINPLACEA+JTINPLACEW))
 #define JTIPW           ((J)((I)jt|JTINPLACEW))
@@ -923,6 +938,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define MCISds(dest,src,n) {I _n=~(n); while((_n-=REPSGN(_n))<0)*dest++=*src++;}  // ...this when both
 // Copy shapes.  Optimized for length <5, subroutine for others
 // For AVX, we can profitably use the MASKLOAD/STORE instruction to do all the  testing
+// len is # words in shape
 #if 1 && ((C_AVX&&SY_64) || EMU_AVX)  // as with xAGREE, using ymm has too much baggage
 #define MCISH(dest,src,n) \
  {D *_d=(D*)(dest), *_s=(D*)(src); I _n=(I)(n); \
@@ -1179,6 +1195,27 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x
 #define PARSERVALUE(p) ((A)((I)(p)&-2))   // the value part of the parser return, pointer to the A block
 #define PARSERASGN(p) ((I)(p)&1)   // the assignment part of the parser return, 1 if assignment
 #define PARSERASGNX 0  // bit# of asgn bit
+// conversion from priority index to bit# in a type with that priority
+// static const UC prioritytype[] = {  // Convert priority to type bit
+// B01X, LITX, C2TX, C4TX, INTX, BOXX, XNUMX, RATX, SBTX, FLX, CMPXX};
+#if SY_64
+#define PRIORITYTYPE(p) (((((((((((((((((((((((I)CMPXX<<5)+FLX)<<5)+SBTX)<<5)+RATX)<<5)+XNUMX)<<5)+BOXX)<<5)+INTX)<<5)+C4TX)<<5)+C2TX)<<5)+LITX)<<5)+B01X)>>((p)*5))&0x1f)
+#else
+#define PRIORITYTYPE(p) (((p)>=6?(((((((((I)CMPXX<<5)+FLX)<<5)+SBTX)<<5)+RATX)<<5)+XNUMX)>>((p-6)*5):(((((((((((I)BOXX<<5)+INTX)<<5)+C4TX)<<5)+C2TX)<<5)+LITX)<<5)+B01X)>>((p)*5))&0x1f)
+#endif
+// Conversion from type to priority
+// B01 LIT C2T C4T INT BOX XNUM RAT SBT FL CMPX
+// For sparse types, we encode here the corresponding dense type
+// static const UC typepriority[] = {   // convert type bit to priority
+// 0, 1, 4, 9, 10, 5, 6, 7,  // B01-RAT
+// 0, 0, 0, 1, 4, 9, 10, 5,  // x x SB01-SBOX
+// 8, 2, 3};  // SBT C2T C4T
+#if SY_64
+#define TYPEPRIORITY(t) (((((t)&0xffff)?0x5a941000765a9410:0x328)>>((CTTZ(t)&0xf)*4))&0xf)
+#else
+#define TYPEPRIORITY(t) (((((t)&0xff)?0x765a9410:((t)&0xff00)?0x5a941000:0x328)>>((CTTZ(t)&0x7)*4))&0xf)
+#endif
+
 #define PRISTCOMSET(w,flg) awback=(w); if(unlikely((flg&AFVIRTUAL)!=0)){awback=ABACK(awback); flg=AFLAG(awback);} AFLAG(awback)=flg&~AFPRISTINE;
 #define PRISTCOMSETF(w,flg) if(unlikely((flg&AFVIRTUAL)!=0)){w=ABACK(w); flg=AFLAG(w);} AFLAG(w)=flg&~AFPRISTINE;   // used only at end, when w can be destroyed
 #define PRISTCOMMON(w,exe) awflg=AFLAG(w); exe PRISTCOMSET(w,awflg)
@@ -1283,7 +1320,8 @@ if(likely(z<3)){_zzt+=z; z=(I)&oneone; _zzt=_i&3?_zzt:(I*)z; z=_i&2?(I)_zzt:z; z
 // data.  So, we clear the inplace variables if we don't want to allow that: if the user set zomblevel=0, or if there is no local symbol table
 // (which means the user is fooling around at the keyboard & performance is not as important as transparency)
 #define CLEARZOMBIE     {jt->assignsym=0;}  // Used when we know there shouldn't be an assignsym, just in case
-#define PUSHZOMB L*savassignsym = jt->assignsym; if(savassignsym){if(unlikely(((jt->asgzomblevel-1)|((AN(jt->locsyms)-2)))<0)){CLEARZOMBIE}}  // test is (jt->asgzomblevel==0||AN(jt->locsyms)<2)
+// obsolete #define PUSHZOMB L*savassignsym = jt->assignsym; if(savassignsym){if(unlikely(((JT(jt,asgzomblevel)-1)|((AN(jt->locsyms)-2)))<0)){CLEARZOMBIE}}  // test is (JT(jt,asgzomblevel)==0||AN(jt->locsyms)<2)
+#define PUSHZOMB L*savassignsym = jt->assignsym; if(unlikely(JT(jt,asgzomblevel)==0)){CLEARZOMBIE}
 #define POPZOMB {jt->assignsym=savassignsym;}
 #define R               return
 #if FINDNULLRET   // When we return 0, we should always have an error code set.  trap if not
@@ -1339,8 +1377,8 @@ if(likely(z<3)){_zzt+=z; z=(I)&oneone; _zzt=_i&3?_zzt:(I*)z; z=_i&2?(I)_zzt:z; z
 // Input is the name of word of bytes.  Result is modified name, 1 bit per input byte, spaced like B01s, with the bit 0 iff the corresponding input byte was all 0.  Non-boolean bits of result are garbage.
 #define ZBYTESTOZBITS(b) (b=b|((b|(~b+VALIDBOOLEAN))>>7))  // for each byte: zero if b0 off, b7 off, and b7 turns on when you subtract 1 or 2
 // to verify gah conversion #define RETF(exp)       { A retfff=(exp);  if ((retfff) && ((AT(retfff)&SPARSE && AN(retfff)!=1) || (AT(retfff)&DENSE && AN(retfff)!=prod(AR(retfff),AS(retfff)))))SEGFAULT;; R retfff; } // scaf
-#define SBSV(x)         (CAV1((A)AN(jt->sbu))+(I)(x))
-#define SBUV(x)         (SBUV4(jt->sbu)+(I)(x))
+#define SBSV(x)         (CAV1((A)AN(JT(jt,sbu)))+(I)(x))
+#define SBUV(x)         (SBUV4(JT(jt,sbu))+(I)(x))
 #define SEGFAULT        (*(volatile I*)0 = 0)
 #define SGN(a)          ((I )(0<(a))-(I )(0>(a)))
 #define SMAX            65535
@@ -1376,6 +1414,8 @@ if(likely(z<3)){_zzt+=z; z=(I)&oneone; _zzt=_i&3?_zzt:(I*)z; z=_i&2?(I)_zzt:z; z
 
 #define VAL1            '\001'
 #define VAL2            '\002'
+// like vec(INT,n,v), but without the call and using shape-copy
+#define VECI(z,n,v) {GATV0(z,INT,(I)(n),1); MCISH(IAV1(z),(v),(I)(n));}
 #define WITHDEBUGOFF(stmt) {UC d=jt->uflags.us.cx.cx_c.db; jt->uflags.us.cx.cx_c.db=0; stmt jt->uflags.us.cx.cx_c.db=d;}  // execute stmt with debug turned off
 
 #if C_LE
@@ -1461,7 +1501,7 @@ if(likely(z<3)){_zzt+=z; z=(I)&oneone; _zzt=_i&3?_zzt:(I*)z; z=_i&2?(I)_zzt:z; z
 #define C_CRC32C 1
 #endif
 
-typedef struct JSTstruct * J; 
+#define J struct JSTstruct * 
 #include "ja.h" 
 #include "jc.h" 
 #include "jtype.h" 
@@ -1583,7 +1623,7 @@ extern I CTLZI_(UI,UI4*);
 // JPF("size and extra: %i %i\n", (v,x))
 #define JPFX(s)  {char b[1000]; sprintf(b, s);    jsto(gjt,MTYOFM,b);}
 #define JPF(s,v) {char b[1000]; sprintf(b, s, v); jsto(gjt,MTYOFM,b);}
-extern J gjt; // global for JPF (procs without jt)
+extern JS gjt; // global for JPF (procs without jt)
 
 #if SY_WINCE_MIPS
 /* strchr fails for CE MIPS - neg chars - spellit fails in ws.c for f=.+.  */

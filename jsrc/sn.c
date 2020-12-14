@@ -150,7 +150,7 @@ static F2(jtnlx){A z=mtv;B b;I m=0,*v,x;
  ASSERT(!(m&MARK),EVDOMAIN);
  if(b           )RZ(z=nlxxx(a,jt->global));
  if(b&&(AN(jt->locsyms)>1))RZ(z=over(nlxxx(a,jt->locsyms),z));
- if(m==SYMB     )RZ(z=over(nlsym(a,jt->stloc),z));
+ if(m==SYMB     )RZ(z=over(nlsym(a,JT(jt,stloc)),z));
  R nub(grade2(z,ope(z)));
 }
 
@@ -181,10 +181,10 @@ F1(jtscind){A*wv,x,y,z;I n,*zv;L*v;
 static A jtnch1(J jt,B b,A w,I*pm,A ch){A*v,x,y;C*s,*yv;LX *e;I i,k,m,p,wn;L*d;
  ARGCHK1(w);
  wn=AN(w); e=LXAV0(w);                                /* locale                */
- x=(A)(*e+LAV0(jt->symp))->name; p=AN(x); s=NAV(x)->s;  /* locale name/number           */
+ x=(A)(*e+LAV0(JT(jt,symp)))->name; p=AN(x); s=NAV(x)->s;  /* locale name/number           */
  m=*pm; v=AAV(ch)+m;                               /* result to appended to */
  for(i=SYMLINFOSIZE;i<wn;++i,++e)if(*e){
-  d=*e+LAV0(jt->symp);
+  d=*e+LAV0(JT(jt,symp));
   while(1){
    if(LCH&d->flag&&d->name&&d->val){
     d->flag^=LCH;
@@ -196,7 +196,7 @@ static A jtnch1(J jt,B b,A w,I*pm,A ch){A*v,x,y;C*s,*yv;LX *e;I i,k,m,p,wn;L*d;
      *v++=incorp(y); ++m;
    }}
    if(!d->next)break;
-   d=d->next+LAV0(jt->symp);
+   d=d->next+LAV0(JT(jt,symp));
  }}
  *pm=m;
  R ch;
@@ -205,20 +205,20 @@ static A jtnch1(J jt,B b,A w,I*pm,A ch){A*v,x,y;C*s,*yv;LX *e;I i,k,m,p,wn;L*d;
 F1(jtnch){A ch;B b;LX *e;I i,m,n;L*d;
  RZ(w=cvt(B01,w)); ASSERT(!AR(w),EVRANK); b=BAV(w)[0];
  GAT0(ch,BOX,20,1); m=0;
- if(jt->stch){
-  n=AN(jt->stloc); e=SYMLINFOSIZE+LXAV0(jt->stloc);
+ if(JT(jt,stch)){
+  n=AN(JT(jt,stloc)); e=SYMLINFOSIZE+LXAV0(JT(jt,stloc));
   // named locales first
   for(i=1;i<n;++i,++e)if(*e){
-   d=*e+LAV0(jt->symp);
+   d=*e+LAV0(JT(jt,symp));
    while(1){
     RZ(ch=nch1(b,d->val,&m,ch));
     if(!d->next)break;
-    d=d->next+LAV0(jt->symp);
+    d=d->next+LAV0(JT(jt,symp));
   }}
   // now numbered locales
   DO(jtcountnl(jt), A loc=jtindexnl(jt,i); if(loc)RZ(ch=nch1(b,loc,&m,ch)););
  }
- jt->stch=b;
+ JT(jt,stch)=b;
  AN(ch)=AS(ch)[0]=m;
  R grade2(ch,ope(ch));
 }    /* 4!:5  names changed */

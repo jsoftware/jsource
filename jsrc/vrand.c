@@ -5,7 +5,7 @@
 
 #include "j.h"
 
-#define NRNG        5     /* # of available RNGs (excluding 0)             */
+#define NRNG        5     /* # of available RNGs+1 (excluding 0)             */
 #define SMI         0     /* sum of all RNGs                               */
 #define GBI         1     /* gb_flip, Knuth 1994                           */
 #define MTI         2     /* Mersenne Twister, Matsumoto & Nishimura, 2002 */
@@ -18,7 +18,7 @@
 #define X52         2.22044604925031308085e-16
 #define X64         5.42101086242752217004e-20
 
-#define SETNEXT     UF nextfn=jt->rngF[jt->rng];
+#define SETNEXT     UF nextfn=jt->rngdata->rngparms[jt->rngdata->rng].rngF;
 #define NEXT        (nextrand(jt,nextfn))
 // call the rng efficiently.  The call is an indirect call from many places & thus likely to mispredict.  To help out, we make
 // all calls through a common routine that does the indirect call; in the one location it is more likely to be predicted.  Compiler 'optimizations'
@@ -30,7 +30,7 @@ static UI nextrand(J jt, UF f){R (*f)(jt);}
 #define NEXTD1      ((0.5+X52/2)+X64*(I)(NEXT&(UI)0xfffffffffffff000))
 #define NEXTD0      NEXTD1
 #else
-#define INITD       {sh=32-jt->rngw; mk=0x003fffff>>(2-sh);}
+#define INITD       {sh=32-jt->rngdata->rngw; mk=0x003fffff>>(2-sh);}
 #define NEXTD1      ((0.5+X52/2)+X32*((int)NEXT<<sh)+X52*(mk&(int)NEXT))
 #define NEXTD0      ((0.5+X52/2)+X32* (int)NEXT     +X52*(mk&(int)NEXT))
 #endif
@@ -81,26 +81,26 @@ F1(jtlcg_test){A x;I n=1597,*v;
 #define mod_diff(x,y)       (((x)-(y))&0x7fffffffL) /* difference modulo 2^31 */
 #define two_to_the_31       (0x80000000L)
 
-static UI jtgb_flip_cycle(J jt){I*A=(I*)jt->rngv;register I*i,*j;
+static UI jtgb_flip_cycle(J jt){I*A=(I*)jt->rngdata->rngv;register I*i,*j;
  for(i=&A[1],j=&A[32];j<=&A[55];i++,j++)*i=mod_diff(*i,*j);
  for(        j=&A[1 ];i<=&A[55];i++,j++)*i=mod_diff(*i,*j);
- jt->rngi=54;
+ jt->rngdata->rngi=54;
  R (UI)A[55];
 }
 
 #if SY_64
 static UI jtgb_next(J jt){UI a,b,c;
- a= jt->rngi ? jt->rngv[jt->rngi--] : gb_flip_cycle();
- b= jt->rngi ? jt->rngv[jt->rngi--] : gb_flip_cycle();
- c= jt->rngi ? jt->rngv[jt->rngi--] : gb_flip_cycle();
+ a= jt->rngdata->rngi ? jt->rngdata->rngv[jt->rngdata->rngi--] : gb_flip_cycle();
+ b= jt->rngdata->rngi ? jt->rngdata->rngv[jt->rngdata->rngi--] : gb_flip_cycle();
+ c= jt->rngdata->rngi ? jt->rngdata->rngv[jt->rngdata->rngi--] : gb_flip_cycle();
  R a+(b<<31)+(c<<33&0xc000000000000000UL);
 }
 #else
-static UI jtgb_next(J jt){R jt->rngi ? jt->rngv[jt->rngi--] : gb_flip_cycle();}
+static UI jtgb_next(J jt){R jt->rngdata->rngi ? jt->rngdata->rngv[jt->rngdata->rngi--] : gb_flip_cycle();}
 #endif
 
 static void jtgb_init(J jt,UI s){I*A;register I i,next=1,prev,seed;
- A=(I*)jt->rngv; next=1; prev=seed=(I)s;
+ A=(I*)jt->rngdata->rngv; next=1; prev=seed=(I)s;
  seed=prev=mod_diff(prev,0); /* strip off the sign */
  A[0]=0; A[55]=prev;
  for (i=21; i; i=(i+21)%55) {
@@ -115,7 +115,7 @@ static void jtgb_init(J jt,UI s){I*A;register I i,next=1,prev,seed;
  gb_flip_cycle();
  gb_flip_cycle();
  gb_flip_cycle();
- jt->rngi=54;
+ jt->rngdata->rngi=54;
 }
 
 static I jtgb_unif_rand(J jt,I m){
@@ -124,7 +124,7 @@ static I jtgb_unif_rand(J jt,I m){
  R r%m;
 }
 
-F1(jtgb_test){I j=jt->rng;
+F1(jtgb_test){I j=jt->rngdata->rng;
  ASSERTMTV(w);
  RZ(rngselects(sc(GBI)));
  gb_init(-314159);
@@ -195,7 +195,7 @@ F1(jtgb_test){I j=jt->rng;
 #define LM          0x7fffffffUL    /* least significant r bits  */
 
 /* initializes mt[MTN] with a seed */
-static void jtmt_init(J jt,UI s){I i;UI*mt=jt->rngv;
+static void jtmt_init(J jt,UI s){I i;UI*mt=jt->rngdata->rngv;
  mt[0]= s;
  for (i=1; i<MTN; i++)
 #if SY_64
@@ -207,10 +207,10 @@ static void jtmt_init(J jt,UI s){I i;UI*mt=jt->rngv;
   /* In the previous versions, MSBs of the seed affect   */
   /* only MSBs of the array mt[].                        */
   /* 2002/01/09 modified by Makoto Matsumoto             */
- jt->rngi=MTN;
+ jt->rngdata->rngi=MTN;
 } 
 
-static void jtmt_init_by_array(J jt,UI init_key[], I key_length){I i,j,k;UI*mt=jt->rngv;
+static void jtmt_init_by_array(J jt,UI init_key[], I key_length){I i,j,k;UI*mt=jt->rngdata->rngv;
  mt_init((UI)19650218);
  i=1; j=0; k=MTN>key_length?MTN:key_length;
  for(; k; k--) {
@@ -240,15 +240,15 @@ static void jtmt_init_by_array(J jt,UI init_key[], I key_length){I i,j,k;UI*mt=j
 }
 
 /* generates a random 32-or 64-bit number */
-static UI jtmt_next(J jt){UI*mt=jt->rngv,*u,*v,*w,y;
- if (MTN<=jt->rngi) {  /* generate MTN words at one time */
+static UI jtmt_next(J jt){UI*mt=jt->rngdata->rngv,*u,*v,*w,y;
+ if (MTN<=jt->rngdata->rngi) {  /* generate MTN words at one time */
   v=1+mt; w=MTM+mt; 
   u=mt; DQ(MTN-MTM, y=(*u&UM)|(*v++&LM); *u++=*w++^(y>>1)^MATRIX_A*(y&0x1UL););
   w=mt; DQ(MTM-1,   y=(*u&UM)|(*v++&LM); *u++=*w++^(y>>1)^MATRIX_A*(y&0x1UL););
   v=mt;             y=(*u&UM)|(*v++&LM); *u++=*w++^(y>>1)^MATRIX_A*(y&0x1UL);
-  jt->rngi=0;
+  jt->rngdata->rngi=0;
  }
- y = mt[jt->rngi++];
+ y = mt[jt->rngdata->rngi++];
 #if SY_64
  y ^= (y >> 29) & 0x5555555555555555ULL;
  y ^= (y << 17) & 0x71D67FFFEDA60000ULL;
@@ -264,7 +264,7 @@ static UI jtmt_next(J jt){UI*mt=jt->rngv,*u,*v,*w,y;
 }
 
 #if SY_64
-F1(jtmt_test){I j=jt->rng;UI init[4]={0x12345ULL, 0x23456ULL, 0x34567ULL, 0x45678ULL},x;
+F1(jtmt_test){I j=jt->rngdata->rng;UI init[4]={0x12345ULL, 0x23456ULL, 0x34567ULL, 0x45678ULL},x;
  ASSERTMTV(w);
  RZ(rngselects(sc(MTI)));
  mt_init_by_array(init,(I)4);
@@ -277,7 +277,7 @@ F1(jtmt_test){I j=jt->rng;UI init[4]={0x12345ULL, 0x23456ULL, 0x34567ULL, 0x4567
  R num(1);
 }
 #else
-F1(jtmt_test){I j=jt->rng;UI init[4]={0x123, 0x234, 0x345, 0x456},x;
+F1(jtmt_test){I j=jt->rngdata->rng;UI init[4]={0x123, 0x234, 0x345, 0x456},x;
  ASSERTMTV(w);
  RZ(rngselects(sc(MTI)));
  mt_init_by_array(init,(I)4);
@@ -304,13 +304,13 @@ F1(jtmt_test){I j=jt->rng;UI init[4]={0x123, 0x234, 0x345, 0x456},x;
 
 #if SY_64
 static UI jtdx_next30(J jt){I j;UI*u,*v,*vv,r,x;
- j=jt->rngi; v=vv=j+jt->rngv; u=DXN+jt->rngv;
+ j=jt->rngdata->rngi; v=vv=j+jt->rngdata->rngv; u=DXN+jt->rngdata->rngv;
  r =*v; v+=532; if(v>=u)v-=DXN;
  r+=*v; v+=532; if(v>=u)v-=DXN; 
  r+=*v; v+=532; if(v>=u)v-=DXN;
  r+=*v;
  *vv=x=(r*DXB)%DXM;
- ++j; jt->rngi=j==DXN?0:j;
+ ++j; jt->rngdata->rngi=j==DXN?0:j;
  R x;
 }
 
@@ -322,21 +322,21 @@ static UI jtdx_next(J jt){UI a,b,c;
 }
 #else
 static UI jtdx_next(J jt){I j;UI*u,*v,*vv,r,x;
- j=jt->rngi; v=vv=j+jt->rngv; u=DXN+jt->rngv;
+ j=jt->rngdata->rngi; v=vv=j+jt->rngdata->rngv; u=DXN+jt->rngdata->rngv;
  r =*v;                    v+=532; if(v>=u)v-=DXN;
  r+=*v; r=(r&DXM)+(r>>31); v+=532; if(v>=u)v-=DXN; 
  r+=*v; r=(r&DXM)+(r>>31); v+=532; if(v>=u)v-=DXN;
  r+=*v; r=(r&DXM)+(r>>31);
  x=(DXM&r*DXB)+(UI)((r*DXBD)/2147483648.0);
  *vv=x=(x&DXM)+(x>>31);
- ++j; jt->rngi=j==DXN?0:j;
+ ++j; jt->rngdata->rngi=j==DXN?0:j;
  R x;
 }
 #endif
 
-static void jtdx_init(J jt,UI s){lcg(DXN,jt->rngv,s); jt->rngi=0;} 
+static void jtdx_init(J jt,UI s){lcg(DXN,jt->rngdata->rngv,s); jt->rngdata->rngi=0;} 
 
-F1(jtdx_test){I j=jt->rng,x;
+F1(jtdx_test){I j=jt->rngdata->rng,x;
  ASSERTMTV(w);
  RZ(rngselects(sc(DXI))); dx_init(1UL); 
  x=dx_next(); ASSERTSYS(x== 221240004UL, "dx_test 0");
@@ -361,11 +361,11 @@ F1(jtdx_test){I j=jt->rng,x;
 #define MRM0 4294967087UL  /*   _209+2^32 */
 #define MRM1 4294944443UL  /* _22853+2^32 */
 
-static UI jtmr_next31(J jt){I d,j,*v=jt->rngv,x,y;
- switch(j=jt->rngi){
-  case 0: x=1403580*v[1]-810728*v[0]; y=527612*v[5]-1370589*v[3]; jt->rngi=1; break;
-  case 1: x=1403580*v[2]-810728*v[1]; y=527612*v[3]-1370589*v[4]; jt->rngi=2; break;
-  case 2: x=1403580*v[0]-810728*v[2]; y=527612*v[4]-1370589*v[5]; jt->rngi=0;
+static UI jtmr_next31(J jt){I d,j,*v=jt->rngdata->rngv,x,y;
+ switch(j=jt->rngdata->rngi){
+  case 0: x=1403580*v[1]-810728*v[0]; y=527612*v[5]-1370589*v[3]; jt->rngdata->rngi=1; break;
+  case 1: x=1403580*v[2]-810728*v[1]; y=527612*v[3]-1370589*v[4]; jt->rngdata->rngi=2; break;
+  case 2: x=1403580*v[0]-810728*v[2]; y=527612*v[4]-1370589*v[5]; jt->rngdata->rngi=0;
  }
  x%=MRM0; if(x<0)x+=MRM0; v[j  ]=x;
  y%=MRM1; if(y<0)y+=MRM1; v[j+3]=y;
@@ -385,11 +385,11 @@ static UI jtmr_next(J jt){UI a,b,c;
 #define MRM0 4294967087.0  /*   _209+2^32 */
 #define MRM1 4294944443.0  /* _22853+2^32 */
 
-static UI jtmr_next(J jt){D d,*v=(D*)jt->rngv,x,y;I j,k;
- switch(j=jt->rngi){
-  case 0: x=1403580.0*v[1]-810728.0*v[0]; y=527612.0*v[5]-1370589.0*v[3]; jt->rngi=1; break;
-  case 1: x=1403580.0*v[2]-810728.0*v[1]; y=527612.0*v[3]-1370589.0*v[4]; jt->rngi=2; break;
-  case 2: x=1403580.0*v[0]-810728.0*v[2]; y=527612.0*v[4]-1370589.0*v[5]; jt->rngi=0;
+static UI jtmr_next(J jt){D d,*v=(D*)jt->rngdata->rngv,x,y;I j,k;
+ switch(j=jt->rngdata->rngi){
+  case 0: x=1403580.0*v[1]-810728.0*v[0]; y=527612.0*v[5]-1370589.0*v[3]; jt->rngdata->rngi=1; break;
+  case 1: x=1403580.0*v[2]-810728.0*v[1]; y=527612.0*v[3]-1370589.0*v[4]; jt->rngdata->rngi=2; break;
+  case 2: x=1403580.0*v[0]-810728.0*v[2]; y=527612.0*v[4]-1370589.0*v[5]; jt->rngdata->rngi=0;
  }
  k=(I)(x/MRM0); x-=k*MRM0; if(x<0.0)x+=MRM0; v[j  ]=x;
  k=(I)(y/MRM1); y-=k*MRM1; if(y<0.0)y+=MRM1; v[j+3]=y;
@@ -399,13 +399,13 @@ static UI jtmr_next(J jt){D d,*v=(D*)jt->rngv,x,y;I j,k;
 }
 #endif
 
-static void jtmr_init(J jt,UI s){D*v=(D*)jt->rngv;I t[MRN];
+static void jtmr_init(J jt,UI s){D*v=(D*)jt->rngdata->rngv;I t[MRN];
  lcg(MRN,t,s);
  DO(MRN, *v++=(D)t[i];);
- jt->rngi=0;
+ jt->rngdata->rngi=0;
 } 
 
-F1(jtmr_test){I j=jt->rng,x;
+F1(jtmr_test){I j=jt->rngdata->rng,x;
  ASSERTMTV(w);
  RZ(rngselects(sc(MRI))); mr_init(1UL);
  x=mr_next(); ASSERTSYS(x==(I)3293966663UL, "mr_test 0");
@@ -428,18 +428,18 @@ F1(jtmr_test){I j=jt->rng,x;
 /* sum of all RNGs                                                         */
 
 static UI jtsm_next(J jt){UI x;
- jt->rngi=jt->rngI0[GBI]; jt->rngv=jt->rngV0[GBI]; x =gb_next(); jt->rngI0[GBI]=jt->rngi;
- jt->rngi=jt->rngI0[MTI]; jt->rngv=jt->rngV0[MTI]; x+=mt_next(); jt->rngI0[MTI]=jt->rngi; 
- jt->rngi=jt->rngI0[DXI]; jt->rngv=jt->rngV0[DXI]; x+=dx_next(); jt->rngI0[DXI]=jt->rngi;
- jt->rngi=jt->rngI0[MRI]; jt->rngv=jt->rngV0[MRI]; x+=mr_next(); jt->rngI0[MRI]=jt->rngi;
+ jt->rngdata->rngi=jt->rngdata->rngparms0[GBI].rngI; jt->rngdata->rngv=jt->rngdata->rngparms0[GBI].rngV; x =gb_next(); jt->rngdata->rngparms0[GBI].rngI=jt->rngdata->rngi;
+ jt->rngdata->rngi=jt->rngdata->rngparms0[MTI].rngI; jt->rngdata->rngv=jt->rngdata->rngparms0[MTI].rngV; x+=mt_next(); jt->rngdata->rngparms0[MTI].rngI=jt->rngdata->rngi; 
+ jt->rngdata->rngi=jt->rngdata->rngparms0[DXI].rngI; jt->rngdata->rngv=jt->rngdata->rngparms0[DXI].rngV; x+=dx_next(); jt->rngdata->rngparms0[DXI].rngI=jt->rngdata->rngi;
+ jt->rngdata->rngi=jt->rngdata->rngparms0[MRI].rngI; jt->rngdata->rngv=jt->rngdata->rngparms0[MRI].rngV; x+=mr_next(); jt->rngdata->rngparms0[MRI].rngI=jt->rngdata->rngi;
  R x;
 }
 
 static void jtsm_init(J jt,UI s){
- jt->rngv=jt->rngV0[GBI]; gb_init(s); jt->rngI0[GBI]=jt->rngi;
- jt->rngv=jt->rngV0[MTI]; mt_init(s); jt->rngI0[MTI]=jt->rngi;
- jt->rngv=jt->rngV0[DXI]; dx_init(s); jt->rngI0[DXI]=jt->rngi;
- jt->rngv=jt->rngV0[MRI]; mr_init(s); jt->rngI0[MRI]=jt->rngi;
+ jt->rngdata->rngv=jt->rngdata->rngparms0[GBI].rngV; gb_init(s); jt->rngdata->rngparms0[GBI].rngI=jt->rngdata->rngi;
+ jt->rngdata->rngv=jt->rngdata->rngparms0[MTI].rngV; mt_init(s); jt->rngdata->rngparms0[MTI].rngI=jt->rngdata->rngi;
+ jt->rngdata->rngv=jt->rngdata->rngparms0[DXI].rngV; dx_init(s); jt->rngdata->rngparms0[DXI].rngI=jt->rngdata->rngi;
+ jt->rngdata->rngv=jt->rngdata->rngparms0[MRI].rngV; mr_init(s); jt->rngdata->rngparms0[MRI].rngI=jt->rngdata->rngi;
 }
 
 /* ----------------------------------------------------------------------- */
@@ -452,27 +452,29 @@ F1(jtrngraw){A z;I n,*v;SETNEXT
  R z;
 }
 
-B jtrnginit(J jt){
- DO(NRNG, jt->rngV[i]=jt->rngV0[i]=0;);
- jt->rngF[0]=jtsm_next; jt->rngS[0]=16807;
- jt->rngF[1]=jtgb_next; jt->rngS[1]=16807;
- jt->rngF[2]=jtmt_next; jt->rngS[2]=16807;
- jt->rngF[3]=jtdx_next; jt->rngS[3]=16807;
- jt->rngF[4]=jtmr_next; jt->rngS[4]=16807;
- jt->rngM[0]=SY_64?0:0;             /*   %      2^32 */
- jt->rngM[1]=SY_64?0:2147483648UL;  /*   %      2^31 */
- jt->rngM[2]=0;                     /*   %      2^32 */
- jt->rngM[3]=SY_64?0:2147483648UL;  /*   %   _1+2^31 */  /* fudge; should be _1+2^31 */
- jt->rngM[4]=SY_64?0:4294967087UL;  /*   % _209+2^32 */
- jt->rngI0[GBI]=54;
- rngselects(num(2)); 
+B jtrnginit(JS jjt,I nthreads){
+ I threadno; for(threadno=0;threadno<nthreads;++threadno){JJ jt=&jjt->threaddata[threadno];
+  DO(NRNG, jt->rngdata->rngparms[i].rngV=jt->rngdata->rngparms0[i].rngV=0;);
+  jt->rngdata->rngparms[0].rngF=jtsm_next; jt->rngdata->rngparms[0].rngS=16807;
+  jt->rngdata->rngparms[1].rngF=jtgb_next; jt->rngdata->rngparms[1].rngS=16807;
+  jt->rngdata->rngparms[2].rngF=jtmt_next; jt->rngdata->rngparms[2].rngS=16807;
+  jt->rngdata->rngparms[3].rngF=jtdx_next; jt->rngdata->rngparms[3].rngS=16807;
+  jt->rngdata->rngparms[4].rngF=jtmr_next; jt->rngdata->rngparms[4].rngS=16807;
+  jt->rngdata->rngparms[0].rngM=SY_64?0:0;             /*   %      2^32 */
+  jt->rngdata->rngparms[1].rngM=SY_64?0:2147483648UL;  /*   %      2^31 */
+  jt->rngdata->rngparms[2].rngM=0;                     /*   %      2^32 */
+  jt->rngdata->rngparms[3].rngM=SY_64?0:2147483648UL;  /*   %   _1+2^31 */  /* fudge; should be _1+2^31 */
+  jt->rngdata->rngparms[4].rngM=SY_64?0:4294967087UL;  /*   % _209+2^32 */
+  jt->rngdata->rngparms0[GBI].rngI=54;
+  rngselects(num(2));
+ }
  R 1;
 }
 
-F1(jtrngselectq){ASSERTMTV(w); R sc(jt->rng);}
+F1(jtrngselectq){ASSERTMTV(w); R sc(jt->rngdata->rng);}
 
-static B jtrngga(J jt,I i,UI**vv){
- if(vv[i]){jt->rngv=vv[i]; jt->rngi=jt->rngI[i];}
+static B jtrngga(J jt,I i,struct rngparms*vv){
+ if(vv[i].rngV){jt->rngdata->rngv=vv[i].rngV; jt->rngdata->rngi=jt->rngdata->rngparms[i].rngI;}
  else{A x;I n,t;void(*f)(); 
   switch(i){
    case GBI: t=INT; n=GBN; f=jtgb_init; break;
@@ -480,83 +482,83 @@ static B jtrngga(J jt,I i,UI**vv){
    case DXI: t=INT; n=DXN; f=jtdx_init; break;
    case MRI: t=FL;  n=MRN; f=jtmr_init; 
   }
-  GA(x,t,n,1,0); ras(x); vv[i]=jt->rngv=AV(x);   // x will never be freed, but that's OK, it's inited only once
-  f(jt,jt->rngS[i]); jt->rngI[i]=jt->rngi;
+  GA(x,t,n,1,0); ras(x); vv[i].rngV=jt->rngdata->rngv=AV(x);   // x will never be freed, but that's OK, it's inited only once
+  f(jt,jt->rngdata->rngparms[i].rngS); jt->rngdata->rngparms[i].rngI=jt->rngdata->rngi;
  }
  R 1;
 }
 
-F1(jtrngselects){I i;UI**vv=jt->rngV;
+F1(jtrngselects){I i;struct rngparms*vv=jt->rngdata->rngparms;
  RE(i=i0(w));
  ASSERT(BETWEENO(i,0,NRNG),EVDOMAIN);
- jt->rngI[jt->rng]=jt->rngi;
- switch(jt->rng=i){
-  case SMI: vv=jt->rngV0;      jt->rngw=SY_64?64:32;
+ jt->rngdata->rngparms[jt->rngdata->rng].rngI=jt->rngdata->rngi;
+ switch(jt->rngdata->rng=i){
+  case SMI: vv=jt->rngdata->rngparms0;      jt->rngdata->rngw=SY_64?64:32;
             RZ(rngga(GBI,vv)); RZ(rngga(MTI,vv)); RZ(rngga(DXI,vv)); RZ(rngga(MRI,vv)); break;
-  case GBI: RZ(rngga(i,  vv)); jt->rngw=SY_64?64:31; break;
-  case MTI: RZ(rngga(i,  vv)); jt->rngw=SY_64?64:32; break; 
-  case DXI: RZ(rngga(i,  vv)); jt->rngw=SY_64?64:30; break;
-  case MRI: RZ(rngga(i,  vv)); jt->rngw=SY_64?64:31; 
+  case GBI: RZ(rngga(i,  vv)); jt->rngdata->rngw=SY_64?64:31; break;
+  case MTI: RZ(rngga(i,  vv)); jt->rngdata->rngw=SY_64?64:32; break; 
+  case DXI: RZ(rngga(i,  vv)); jt->rngdata->rngw=SY_64?64:30; break;
+  case MRI: RZ(rngga(i,  vv)); jt->rngdata->rngw=SY_64?64:31; 
  }
-// obsolete  jt->rngf=jt->rngF[jt->rng];
+// obsolete  jt->rngdata->rngf=jt->rngdata->rngparms[jt->rngdata->rng].rngF;
  R mtv;
 }
 
 F1(jtrngstateq){A x=0,z,*zv;D*u=0;I n;UI*v;
  ASSERTMTV(w);
- switch(jt->rng){
+ switch(jt->rngdata->rng){
   case SMI: 
    GAT0(z,BOX,9,1); zv=AAV(z);
    RZ(*zv++=num(0));
-   RZ(*zv++=incorp(sc(jt->rngI0[GBI]))); RZ(*zv++=incorp(vec(INT,GBN,jt->rngV0[GBI])));
-   RZ(*zv++=incorp(sc(jt->rngI0[MTI]))); RZ(*zv++=incorp(vec(INT,MTN,jt->rngV0[MTI])));
-   RZ(*zv++=incorp(sc(jt->rngI0[DXI]))); RZ(*zv++=incorp(vec(INT,DXN,jt->rngV0[DXI])));
+   RZ(*zv++=incorp(sc(jt->rngdata->rngparms0[GBI].rngI))); RZ(*zv++=incorp(vec(INT,GBN,jt->rngdata->rngparms0[GBI].rngV)));
+   RZ(*zv++=incorp(sc(jt->rngdata->rngparms0[MTI].rngI))); RZ(*zv++=incorp(vec(INT,MTN,jt->rngdata->rngparms0[MTI].rngV)));
+   RZ(*zv++=incorp(sc(jt->rngdata->rngparms0[DXI].rngI))); RZ(*zv++=incorp(vec(INT,DXN,jt->rngdata->rngparms0[DXI].rngV)));
 #if SY_64
-   RZ(*zv++=incorp(sc(jt->rngI0[MRI]))); RZ(*zv++=incorp(vec(INT,MRN,jt->rngV0[MRI])));
+   RZ(*zv++=incorp(sc(jt->rngdata->rngparms0[MRI].rngI))); RZ(*zv++=incorp(vec(INT,MRN,jt->rngdata->rngparms0[MRI].rngV)));
 #else
-   u=(D*)jt->rngV0[MRI]; GAT0(x,INT,MRN,1); v=AV(x); DO(MRN, v[i]=(UI)u[i];);
-   RZ(*zv++=incorp(sc(jt->rngI0[MRI]))); *zv++=x;
+   u=(D*)jt->rngdata->rngparms0[MRI].rngV; GAT0(x,INT,MRN,1); v=AV(x); DO(MRN, v[i]=(UI)u[i];);
+   RZ(*zv++=incorp(sc(jt->rngdata->rngparms0[MRI].rngI))); *zv++=x;
 #endif
    R z;
-  case GBI: n=GBN; v=jt->rngv; break;
-  case MTI: n=MTN; v=jt->rngv; break;
-  case DXI: n=DXN; v=jt->rngv; break;
+  case GBI: n=GBN; v=jt->rngdata->rngv; break;
+  case MTI: n=MTN; v=jt->rngdata->rngv; break;
+  case DXI: n=DXN; v=jt->rngdata->rngv; break;
 #if SY_64
-  case MRI: n=MRN; v=jt->rngv; break;
+  case MRI: n=MRN; v=jt->rngdata->rngv; break;
 #else
-  case MRI: n=MRN; u=(D*)jt->rngv; GATV0(x,INT,n,1); v=AV(x); DO(n, v[i]=(UI)u[i];);
+  case MRI: n=MRN; u=(D*)jt->rngdata->rngv; GATV0(x,INT,n,1); v=AV(x); DO(n, v[i]=(UI)u[i];);
 #endif
  }
  GAT0(z,BOX,3,1); zv=AAV(z);
- RZ(*zv++=incorp(sc(jt->rng))); RZ(*zv++=incorp(sc(jt->rngi))); RZ(*zv++=incorp(vec(INT,n,v)));
+ RZ(*zv++=incorp(sc(jt->rngdata->rng))); RZ(*zv++=incorp(sc(jt->rngdata->rngi))); RZ(*zv++=incorp(vec(INT,n,v)));
  R z;
 }
 
-static B jtrngstates1(J jt,I j,I n,UI**vv,I i,I k,A x,B p){D*u;UI*xv;
+static B jtrngstates1(J jt,I j,I n,struct rngparms*vv,I i,I k,A x,B p){D*u;UI*xv;
  RZ(x=vi(x)); xv=AV(x);
  ASSERT(1==AR(x),EVRANK);
  ASSERT(n==AN(x),EVLENGTH); 
  ASSERT(i<=k&&k<n+(I )(j==MTI),EVINDEX); 
  if(p)DO(n, ASSERT(x31>xv[i],EVDOMAIN););
- if(SY_64||j!=MRI)ICPY(vv[j],xv,n); else{u=(D*)vv[j]; DO(n, u[i]=(D)xv[i];);}
- jt->rngi=k;
+ if(SY_64||j!=MRI)ICPY(vv[j].rngV,xv,n); else{u=(D*)vv[j].rngV; DO(n, u[i]=(D)xv[i];);}
+ jt->rngdata->rngi=k;
  R 1;
 }
 
-F1(jtrngstates){A*wv;I k;UI**vv=jt->rngV;
+F1(jtrngstates){A*wv;I k;struct rngparms*vv=jt->rngdata->rngparms;
  ARGCHK1(w);
  ASSERT(1==AR(w),EVRANK);
  ASSERT(BOX&AT(w),EVDOMAIN);
  ASSERT(2<=AN(w),EVLENGTH);
  wv=AAV(w); 
- RZ(rngselects(wv[0]));  /* changes jt->rng */
- ASSERT(AN(w)==(jt->rng?3:9),EVLENGTH);
- switch(jt->rng){
-  case SMI: vv=jt->rngV0;
-            RE(k=i0(wv[1])); RZ(rngstates1(GBI,GBN,vv,0,k,wv[2],1)); jt->rngI0[GBI]=k;  // We accept 0-55 even though we never produce 55 ourselves
-            RE(k=i0(wv[3])); RZ(rngstates1(MTI,MTN,vv,0,k,wv[4],0)); jt->rngI0[MTI]=k;
-            RE(k=i0(wv[5])); RZ(rngstates1(DXI,DXN,vv,0,k,wv[6],1)); jt->rngI0[DXI]=k;
-            RE(k=i0(wv[7])); RZ(rngstates1(MRI,MRN,vv,0,k,wv[8],0)); jt->rngI0[MRI]=k;
+ RZ(rngselects(wv[0]));  /* changes jt->rngdata->rng */
+ ASSERT(AN(w)==(jt->rngdata->rng?3:9),EVLENGTH);
+ switch(jt->rngdata->rng){
+  case SMI: vv=jt->rngdata->rngparms0;
+            RE(k=i0(wv[1])); RZ(rngstates1(GBI,GBN,vv,0,k,wv[2],1)); jt->rngdata->rngparms0[GBI].rngI=k;  // We accept 0-55 even though we never produce 55 ourselves
+            RE(k=i0(wv[3])); RZ(rngstates1(MTI,MTN,vv,0,k,wv[4],0)); jt->rngdata->rngparms0[MTI].rngI=k;
+            RE(k=i0(wv[5])); RZ(rngstates1(DXI,DXN,vv,0,k,wv[6],1)); jt->rngdata->rngparms0[DXI].rngI=k;
+            RE(k=i0(wv[7])); RZ(rngstates1(MRI,MRN,vv,0,k,wv[8],0)); jt->rngdata->rngparms0[MRI].rngI=k;
             break;
   case GBI: RE(k=i0(wv[1])); RZ(rngstates1(GBI,GBN,vv,0,k,wv[2],1)); break;  // We accept 0-55 even though we never produce 55 ourselves
   case MTI: RE(k=i0(wv[1])); RZ(rngstates1(MTI,MTN,vv,0,k,wv[2],0)); break;
@@ -566,9 +568,9 @@ F1(jtrngstates){A*wv;I k;UI**vv=jt->rngV;
  R mtv;
 }
 
-// Return the seed info.  This is a scalar jt->rngS[jt->rng] unless the generator is Mersenne Twister and
-// jt->rngseed is set, in which case jt->rngseed is the vector of seed info
-F1(jtrngseedq){ASSERTMTV(w); R jt->rngseed&&MTI==jt->rng?jt->rngseed:sc(jt->rngS[jt->rng]);}
+// Return the seed info.  This is a scalar jt->rngdata->rngparms[jt->rngdata->rng].rngS unless the generator is Mersenne Twister and
+// jt->rngdata->rngseed is set, in which case jt->rngdata->rngseed is the vector of seed info
+F1(jtrngseedq){ASSERTMTV(w); R jt->rngdata->rngseed&&MTI==jt->rngdata->rng?jt->rngdata->rngseed:sc(jt->rngdata->rngparms[jt->rngdata->rng].rngS);}
 
 // Set the vector of RNG seed info
 F1(jtrngseeds){I k,r; 
@@ -576,10 +578,10 @@ F1(jtrngseeds){I k,r;
  RZ(w=vi(w)); k=AV(w)[0]; r=AR(w);
  if(r){
   // w is not an atom.  the RNG had better be Mersenne Twister.  Initialize using w, and save the w list
-  ASSERT(1==r&&MTI==jt->rng,EVRANK);
-  RZ(ras(w)); fa(jt->rngseed); jt->rngseed=w;   // note ra before fa, in case same buffers
+  ASSERT(1==r&&MTI==jt->rngdata->rng,EVRANK);
+  RZ(ras(w)); fa(jt->rngdata->rngseed); jt->rngdata->rngseed=w;   // note ra before fa, in case same buffers
   mt_init_by_array(AV(w),AN(w));
- }else switch(jt->rng){
+ }else switch(jt->rngdata->rng){
   // atomic w.  We can use that for any generator.  Choose the current one.
   case SMI: ASSERT(k!=0,EVDOMAIN); sm_init(k);     break;
   case GBI:                     gb_init(k);     break;
@@ -587,14 +589,14 @@ F1(jtrngseeds){I k,r;
   case DXI: ASSERT(k!=0,EVDOMAIN); dx_init(k);     break;
   case MRI: ASSERT(k!=0,EVDOMAIN); mr_init(k);
  }
- jt->rngS[jt->rng]=k;  // Save first value, in case k is atomic
- if(!r&&MTI==jt->rng&&jt->rngseed){fa(jt->rngseed); jt->rngseed=0;}   // If k is atomic, discard jt->rngseed if there is one
- // Now jt->rngseed is set iff the w for Mersenne Twister was a list.  jt->rngS[jt->rng] is always set.
+ jt->rngdata->rngparms[jt->rngdata->rng].rngS=k;  // Save first value, in case k is atomic
+ if(!r&&MTI==jt->rngdata->rng&&jt->rngdata->rngseed){fa(jt->rngdata->rngseed); jt->rngdata->rngseed=0;}   // If k is atomic, discard jt->rngdata->rngseed if there is one
+ // Now jt->rngdata->rngseed is set iff the w for Mersenne Twister was a list.  jt->rngdata->rngparms[jt->rngdata->rng].rngS is always set.
  R mtv;
 }
 
 
-static F2(jtrollksub){A z;I an,*av,k,m1,n,p,q,r,sh;UI m,mk,s,t,*u,x=jt->rngM[jt->rng];SETNEXT
+static F2(jtrollksub){A z;I an,*av,k,m1,n,p,q,r,sh;UI m,mk,s,t,*u,x=jt->rngdata->rngparms[jt->rngdata->rng].rngM;SETNEXT
  ARGCHK2(a,w);
  an=AN(a); RE(m1=i0(w)); ASSERT(0<=m1,EVDOMAIN); m=m1;
  RZ(a=vip(a)); av=AV(a); PRODX(n,an,av,1);
@@ -602,7 +604,7 @@ static F2(jtrollksub){A z;I an,*av,k,m1,n,p,q,r,sh;UI m,mk,s,t,*u,x=jt->rngM[jt-
  if(!m){D*v=DAV(z); INITD; if(sh)DQ(n, *v++=NEXTD1;)else DQ(n, *v++=NEXTD0;);}  // floating-point output
  else if(2==m){I nslice; I j;
   // binary output
-  p = (BW/8) * (nslice = (8 - (BW-jt->rngw)));  // #bits/slice, times number of slices
+  p = (BW/8) * (nslice = (8 - (BW-jt->rngdata->rngw)));  // #bits/slice, times number of slices
   // See how many p-size blocks we can have, and how many single leftovers
   q=n/p; r=n%p;   // q=# p-size blocks, r=#single-bit leftovers
 #if SY_64
@@ -628,7 +630,7 @@ static F2(jtrollksub){A z;I an,*av,k,m1,n,p,q,r,sh;UI m,mk,s,t,*u,x=jt->rngM[jt-
    if(s==0)s=0-m;  // since we reject t>=s, we must make s less than IMAX.  This is the max possible multiple of s.  We don't check for s=0 in this path.  s==0 possible only in 32-bit
    // here if w is a power of 2, >2; take bits from each value.  s cannot be 0
    k=CTTZI(m);  // lg(m)
-   p=jt->rngw/k; mk=m-1;  // p=#results per random number; r is number of values left after bit processing
+   p=jt->rngdata->rngw/k; mk=m-1;  // p=#results per random number; r is number of values left after bit processing
    r-=p; while(r>=0){do{t=NEXT;}while(s<=t); DQU(p, *u++=mk&t; t>>=k;) r-=p;}  // deal p at a time till we are as close to n as we can get
    r+=p;  // rebias to get # values still needed
   }
@@ -694,11 +696,11 @@ static A jtroll2(J jt,A w,B*b){A z;I j,n,nslice,p,q,r,*v;UI mk,t,*zv;SETNEXT
  *b=0; n=AN(w); v=AV(w);  // init failure return; n=#atoms of w, v->first atom
  // If w contains non-2, return with error
  DO(n, if(v[i]!=2)R mark;);   // return fast if not all-Boolean result
- // See how many RNG values to use.  jt->rngw gives the number of bits in a generated random #
+ // See how many RNG values to use.  jt->rngdata->rngw gives the number of bits in a generated random #
  // We will shift these out 4 or 8 bits at a time; the number of slices we can get out of
  // a random number is 8 - the number of non-random bits at the top of a word.  p will be the number
  // of bits we can get per random number
- p = (BW/8) * (nslice = (8 - (BW-jt->rngw)));  // #bits/slice, times number of slices
+ p = (BW/8) * (nslice = (8 - (BW-jt->rngdata->rngw)));  // #bits/slice, times number of slices
  // See how many p-size blocks we can have, and how many single leftovers
  q=n/p; r=n%p;   // q=# p-size blocks, r=#single-bit leftovers
 #if SY_64
@@ -721,7 +723,7 @@ static A jtroll2(J jt,A w,B*b){A z;I j,n,nslice,p,q,r,*v;UI mk,t,*zv;SETNEXT
  *b=1; R z;
 }    /* ?n$x where x is 2, maybe */
 
-static A jtrollnot0(J jt,A w,B*b){A z;I j,m1,n,*u,*v;UI m,s,t,x=jt->rngM[jt->rng];SETNEXT
+static A jtrollnot0(J jt,A w,B*b){A z;I j,m1,n,*u,*v;UI m,s,t,x=jt->rngdata->rngparms[jt->rngdata->rng].rngM;SETNEXT
  *b=0; n=AN(w);
  if(n){v=AV(w); m1=*v++; j=1; DQ(n-1, if(m1!=*v++){j=0; break;});}
  if(n&&j)RZ(z=rollksub(shape(w),sc(m1)))
@@ -735,7 +737,7 @@ static A jtrollnot0(J jt,A w,B*b){A z;I j,m1,n,*u,*v;UI m,s,t,x=jt->rngM[jt->rng
  *b=1; R z;
 }    /* ?n$x where x is not 0, maybe */
 
-static A jtrollany(J jt,A w,B*b){A z;D*u;I j,m1,n,sh,*v;UI m,mk,s,t,x=jt->rngM[jt->rng];SETNEXT
+static A jtrollany(J jt,A w,B*b){A z;D*u;I j,m1,n,sh,*v;UI m,mk,s,t,x=jt->rngdata->rngparms[jt->rngdata->rng].rngM;SETNEXT
  *b=0; n=AN(w); v=AV(w); INITD;
  GATV(z,FL,n,AR(w),AS(w)); u=DAV(z);
  for(j=0;j<n;++j){
@@ -760,7 +762,7 @@ F1(jtroll){A z;B b=0;I m,wt;
  RETF(z&&!(FL&AT(z))&&wt&XNUM+RAT?xco1(z):z);
 }
 
-F2(jtdeal){A z;I at,j,k,m,n,wt,*zv;UI c,s,t,x=jt->rngM[jt->rng];UI sq;SETNEXT
+F2(jtdeal){A z;I at,j,k,m,n,wt,*zv;UI c,s,t,x=jt->rngdata->rngparms[jt->rngdata->rng].rngM;UI sq;SETNEXT
  ARGCHK2(a,w);
  at=AT(a); wt=AT(w);
  ASSERT(at&DENSE&at&&wt&DENSE,EVDOMAIN);
@@ -813,14 +815,14 @@ F2(jtdeal){A z;I at,j,k,m,n,wt,*zv;UI c,s,t,x=jt->rngM[jt->rng];UI sq;SETNEXT
 
 #undef rollksub
 #define rollksub(a,w) jtrollksubdot(jt,(a),(w))
-static F2(jtrollksubdot){A z;I an,*av,k,m1,n,p,q,r,sh;UI j,m,mk,s,t,*u,x=jt->rngM[jt->rng];SETNEXT
+static F2(jtrollksubdot){A z;I an,*av,k,m1,n,p,q,r,sh;UI j,m,mk,s,t,*u,x=jt->rngdata->rngparms[jt->rngdata->rng].rngM;SETNEXT
  ARGCHK2(a,w);
  an=AN(a); RE(m1=i0(w)); ASSERT(0<=m1,EVDOMAIN); m=m1;
  RZ(a=vip(a)); av=AV(a); PRODX(n,an,av,1);
  GA(z,0==m?FL:2==m?B01:INT,n,an,av); u=(UI*)AV(z);
  if(!m){D*v=DAV(z); INITD; if(sh)DQ(n, *v++=NEXTD1;)else DQ(n, *v++=NEXTD0;);}
  else if(2==m){I nslice; I j;
-  p = (BW/8) * (nslice = (8 - (BW-jt->rngw)));  // #bits/slice, times number of slices
+  p = (BW/8) * (nslice = (8 - (BW-jt->rngdata->rngw)));  // #bits/slice, times number of slices
   // See how many p-size blocks we can have, and how many single leftovers
   q=n/p; r=n%p;   // q=# p-size blocks, r=#single-bit leftovers
 #if SY_64
@@ -843,7 +845,7 @@ static F2(jtrollksubdot){A z;I an,*av,k,m1,n,p,q,r,sh;UI j,m,mk,s,t,*u,x=jt->rng
   r=n; s=GMOF(m,x); if(s==x)s=0;
   k=0; j=1; while(m>j){++k; j<<=1;}
   if(k&&j==m){  /* m=2^k but is not 1 or 2 */
-   p=jt->rngw/k; q=n/p; r=n%p; mk=m-1;
+   p=jt->rngdata->rngw/k; q=n/p; r=n%p; mk=m-1;
    switch((s?2:0)+(1<p)){
     case 0: DQ(q,           t=NEXT;         *u++=mk&t;         ); break;
     case 1: DQ(q,           t=NEXT;   DQ(p, *u++=mk&t; t>>=k;);); break;
@@ -916,11 +918,11 @@ static A jtroll2dot(J jt,A w,B*b){A z;I j,n,nslice,p,q,r,*v;UI mk,t,*zv;SETNEXT
  *b=0; n=AN(w); v=AV(w);  // init failure return; n=#atoms of w, v->first atom
  // If w contains non-2, return with error
  DO(n, if(v[i]!=2)R mark;);   // return fast if not all-Boolean result
- // See how many RNG values to use.  jt->rngw gives the number of bits in a generated random #
+ // See how many RNG values to use.  jt->rngdata->rngw gives the number of bits in a generated random #
  // We will shift these out 4 or 8 bits at a time; the number of slices we can get out of
  // a random number is 8 - the number of non-random bits at the top of a word.  p will be the number
  // of bits we can get per random number
- p = (BW/8) * (nslice = (8 - (BW-jt->rngw)));  // #bits/slice, times number of slices
+ p = (BW/8) * (nslice = (8 - (BW-jt->rngdata->rngw)));  // #bits/slice, times number of slices
  // See how many p-size blocks we can have, and how many single leftovers
  q=n/p; r=n%p;   // q=# p-size blocks, r=#single-bit leftovers
 #if SY_64
@@ -945,7 +947,7 @@ static A jtroll2dot(J jt,A w,B*b){A z;I j,n,nslice,p,q,r,*v;UI mk,t,*zv;SETNEXT
 
 #undef rollnot0
 #define rollnot0(w,b) jtrollnot0dot(jt,(w),(b))
-static A jtrollnot0dot(J jt,A w,B*b){A z;I j,m1,n,*u,*v;UI m,s,t,x=jt->rngM[jt->rng];SETNEXT
+static A jtrollnot0dot(J jt,A w,B*b){A z;I j,m1,n,*u,*v;UI m,s,t,x=jt->rngdata->rngparms[jt->rngdata->rng].rngM;SETNEXT
  *b=0; n=AN(w);
  if(n){v=AV(w); m1=*v++; j=1; DQ(n-1, if(m1!=*v++){j=0; break;});}
  if(n&&j)RZ(z=rollksub(shape(w),sc(m1)))
@@ -961,7 +963,7 @@ static A jtrollnot0dot(J jt,A w,B*b){A z;I j,m1,n,*u,*v;UI m,s,t,x=jt->rngM[jt->
 
 #undef rollany
 #define rollany(w,b) jtrollanydot(jt,(w),(b))
-static A jtrollanydot(J jt,A w,B*b){A z;D*u;I j,m1,n,sh,*v;UI m,mk,s,t,x=jt->rngM[jt->rng];SETNEXT
+static A jtrollanydot(J jt,A w,B*b){A z;D*u;I j,m1,n,sh,*v;UI m,mk,s,t,x=jt->rngdata->rngparms[jt->rngdata->rng].rngM;SETNEXT
  *b=0; n=AN(w); v=AV(w); INITD;
  GATV(z,FL,n,AR(w),AS(w)); u=DAV(z);
  for(j=0;j<n;++j){
@@ -990,7 +992,7 @@ static F1(jtrolldot){A z;B b=0;I m,wt;
 
 #undef deal
 #define deal(a,w) jtdealdot(jt,(a),(w))
-static F2(jtdealdot){A h,y,z;I at,d,*hv,i,i1,j,k,m,n,p,q,*v,wt,*yv,*zv;UI c,s,t,x=jt->rngM[jt->rng];SETNEXT
+static F2(jtdealdot){A h,y,z;I at,d,*hv,i,i1,j,k,m,n,p,q,*v,wt,*yv,*zv;UI c,s,t,x=jt->rngdata->rngparms[jt->rngdata->rng].rngM;SETNEXT
  ARGCHK2(a,w);
  at=AT(a); wt=AT(w);
  ASSERT(at&DENSE&at&&wt&DENSE,EVDOMAIN);
@@ -1020,11 +1022,11 @@ static F2(jtdealdot){A h,y,z;I at,d,*hv,i,i1,j,k,m,n,p,q,*v,wt,*yv,*zv;UI c,s,t,
 
 
 
-#define FXSDECL     A z;I i,j=jt->rng;UI*v=jt->rngV[GBI];
-#define FXSDO       {i=j==GBI?jt->rngi:jt->rngI[GBI];                                \
-                     if(!jt->rngfxsv){GAT0(z,INT,GBN,1); ras(z); jt->rngfxsv=AV(z);}  \
-                     jt->rngV[GBI]=jt->rngfxsv; rngselects(sc(GBI)); gb_init(16807);}
-#define FXSOD       {jt->rngV[GBI]=v; jt->rngI[GBI]=jt->rngi=i; rngselects(sc(j));}
+#define FXSDECL     A z;I i,j=jt->rngdata->rng;UI*v=jt->rngdata->rngparms[GBI].rngV;
+#define FXSDO       {i=j==GBI?jt->rngdata->rngi:jt->rngdata->rngparms[GBI].rngI;                                \
+                     if(!jt->rngdata->rngfxsv){GAT0(z,INT,GBN,1); ras(z); jt->rngdata->rngfxsv=AV(z);}  \
+                     jt->rngdata->rngparms[GBI].rngV=jt->rngdata->rngfxsv; rngselects(sc(GBI)); gb_init(16807);}
+#define FXSOD       {jt->rngdata->rngparms[GBI].rngV=v; jt->rngdata->rngparms[GBI].rngI=jt->rngdata->rngi=i; rngselects(sc(j));}
 
 F1(jtrollx  ){FXSDECL; ARGCHK1(w);                 FXSDO; z=roll(w);         FXSOD; R z;}       
 F2(jtdealx  ){FXSDECL; F2RANK(0,0,jtdealx,DUMMYSELF); FXSDO; z=deal(a,w);       FXSOD; R z;}        

@@ -149,7 +149,7 @@ DF2(jtpolymult){A f,g,z;B b=0;C*av,c,d,*wv;I at,i,j,k,m,m1,n,p,t,wt,zn;V*v;
    for(i=0;i<zn;++i){
     j=MIN(i,m1); u=aa+m1-j; v=ww+i-j;
     p=MIN(1+i,zn-i); p=MIN(p,k);
-    I rc=((AHDR2FN*)adocv.f)((I)1,p,u,v,yv,jt); if(rc&255)jsignal(rc); if(255&(rc=((AHDRRFN*)adocvsum.f)((I)1,p,(I)1,yv,zv,jt)))jsignal(rc);
+    I rc=((AHDR2FN*)adocv.f)((I)1,p,u,v,yv,jt); rc=rc<0?EWOVIP+EWOVIPMULII:rc; if(rc&255)jsignal(rc); if(255&(rc=((AHDRRFN*)adocvsum.f)((I)1,p,(I)1,yv,zv,jt)))jsignal(rc);
     ++zv;
    }
    if(EWOV<=jt->jerr){RESETERR; PMLOOP(I,D,FL, x=*u--*(D)*v++, x+=*u--*(D)*v++);}  // erroneous fa(z) removed; any error >= EWOV will be an overflow
@@ -182,17 +182,21 @@ static DF2(jtkeysp){PROLOG(0008);A b,by,e,q,x,y,z;I j,k,n,*u,*v;P*p;
  EPILOG(z);
 }
 
+static DF2(jtkey){F2PREFIP;R jtkeyct(jtinplace,a,w,self,jt->cct);}
+
 // a u/. w.  Self-classify a, then rearrange w and call cut.  Includes special cases for f//.
-static DF2(jtkey){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
+// toler is the ct to use for the classification
+A jtkeyct(J jt,A a,A w,A self,D toler){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
  ARGCHK2(a,w);
  if(unlikely((SPARSE&AT(a))!=0))R keysp(a,w,self);  // if sparse, go handle it
  {I t2; ASSERT(SETIC(a,nitems)==SETIC(w,t2),EVLENGTH);}  // verify agreement.  nitems is # items of a
- RZ(ai=indexofsub(IFORKEY,a,a));   // self-classify the input using ct set before this verb
+ PUSHCCT(toler);  // now that partitioning is over, reset ct for the executions of u
+ RZ(ai=indexofsub(IFORKEY,a,a));   // self-classify the input using ct
+ POPCCT
  // indexofsub has 2 returns: most of the time, it returns a normal i.-family result, but with each slot holding the index PLUS the number of values
  // mapped to that index.  If processing determines that small-range lookup would be best, indexofsub doesn't do it, but instead returns a block giving the size, min value, and range.
  // We then allocate and run the small-range table and use it to rearrange the input.  The small-range variant is signaled by the LSB of the result
  // of indexofsub being set.
- PUSHCCT(jt->cctdefault);  // now that partitioning is over, reset ct for the executions of u
  I cellatoms; PROD(cellatoms,AR(w)-1,AS(w)+1);   // length of a cell of w, in atoms
  // if this is a supported f//., handle it without calling cut.  We can take it if the flag says f//. and the rank is >1 or the type is one we can do cheaply: B01/INT/FL 
  if(unlikely(SZI==SZD&&FAV(self)->flag&VFKEYSLASHT)){  // f//. where f is + >. <. mean   Implementation requires SZI==SZD
@@ -273,12 +277,12 @@ static DF2(jtkey){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
     } \
  }
     switch(routineid){
-    case 3: {I rc; KSLGLP(celllen,celllen,MC(partition,wv,celllen);,ASSERT(EVOK==(rc=((AHDR2FN*)adocv.f)(1,cellatoms,wv,partition,partition,jt)),rc)) break;}  // <. >.
-    case 7: {I rc; KSLGLP(cellatoms,celllen,DO(cellatoms, ((I*)partition)[i]=((C*)wv)[i];),ASSERT(EVOK==(rc=((AHDR2FN*)adocv.f)(1,cellatoms,wv,partition,partition,jt)),rc)) break;}  // + B01
-    case 11: {I rc; KSLGLPMEAN(cellatoms,celllen,DO(cellatoms, ((D*)partition)[i]=((B*)wv)[i];),ASSERT(EVOK==(rc=((AHDR2FN*)adocv.f)(1,cellatoms,wv,partition,partition,jt)),rc),D) break;}  // mean B01
-    case 15: {I rc; KSLGLPMEAN(celllen,celllen,DO(cellatoms, ((D*)partition)[i]=((I*)wv)[i];),ASSERT(EVOK==(rc=((AHDR2FN*)adocv.f)(1,cellatoms,wv,partition,partition,jt)),rc),D) break;}  // mean INT
-    case 16: {I rc; KSLGLPMEAN(celllen,celllen,MC(partition,wv,celllen);,ASSERT(EVOK==(rc=((AHDR2FN*)adocv.f)(1,cellatoms,wv,partition,partition,jt)),rc),I) break;}  // mean for XNUM/RAT
-    case 17: {I rc; KSLGLPMEAN(celllen,celllen,MC(partition,wv,celllen);,ASSERT(EVOK==(rc=((AHDR2FN*)adocv.f)(1,cellatoms,wv,partition,partition,jt)),rc),D) break;}  // mean for FL
+    case 3: {I rc; KSLGLP(celllen,celllen,MC(partition,wv,celllen);,ASSERT(EVOK==(rc=((AHDR2FN*)adocv.f)(1,cellatoms,wv,partition,partition,jt), rc=rc<0?EWOVIP+EWOVIPMULII:rc),rc)) break;}  // <. >.
+    case 7: {I rc; KSLGLP(cellatoms,celllen,DO(cellatoms, ((I*)partition)[i]=((C*)wv)[i];),ASSERT(EVOK==(rc=((AHDR2FN*)adocv.f)(1,cellatoms,wv,partition,partition,jt), rc=rc<0?EWOVIP+EWOVIPMULII:rc),rc)) break;}  // + B01
+    case 11: {I rc; KSLGLPMEAN(cellatoms,celllen,DO(cellatoms, ((D*)partition)[i]=((B*)wv)[i];),ASSERT(EVOK==(rc=((AHDR2FN*)adocv.f)(1,cellatoms,wv,partition,partition,jt), rc=rc<0?EWOVIP+EWOVIPMULII:rc),rc),D) break;}  // mean B01
+    case 15: {I rc; KSLGLPMEAN(celllen,celllen,DO(cellatoms, ((D*)partition)[i]=((I*)wv)[i];),ASSERT(EVOK==(rc=((AHDR2FN*)adocv.f)(1,cellatoms,wv,partition,partition,jt), rc=rc<0?EWOVIP+EWOVIPMULII:rc),rc),D) break;}  // mean INT
+    case 16: {I rc; KSLGLPMEAN(celllen,celllen,MC(partition,wv,celllen);,ASSERT(EVOK==(rc=((AHDR2FN*)adocv.f)(1,cellatoms,wv,partition,partition,jt), rc=rc<0?EWOVIP+EWOVIPMULII:rc),rc),I) break;}  // mean for XNUM/RAT
+    case 17: {I rc; KSLGLPMEAN(celllen,celllen,MC(partition,wv,celllen);,ASSERT(EVOK==(rc=((AHDR2FN*)adocv.f)(1,cellatoms,wv,partition,partition,jt), rc=rc<0?EWOVIP+EWOVIPMULII:rc),rc),D) break;}  // mean for FL
     case RTNCASE(0,B01): KSLGLP(1,1,*(C*)partition=*(C*)wv;,*(C*)partition&=*(B*)wv;) break;  // <.
     case RTNCASE(0,INT): KSLGLP(SZI,SZI,*(I*)partition=*(I*)wv;,I p0=*(I*)partition; I w0=*(I*)wv; p0=p0<w0?p0:w0;  *(I*)partition=p0;) break;  // <.
     case RTNCASE(0,FL): KSLGLP(SZD,SZD,*(D*)partition=*(D*)wv;,D *p0=partition; p0=*(D*)partition<*(D*)wv?p0:wv;*(D*)partition=*p0;) break;  // <.
@@ -352,12 +356,12 @@ static DF2(jtkey){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
  }
 
     switch(routineid){
-    case 3: {I rc; KSLSRLP(celllen,celllen,MC(partition,wv,celllen);,ASSERT(EVOK==(rc=((AHDR2FN*)adocv.f)(1,cellatoms,wv,partition,partition,jt)),rc)) break;}  // <. >.
-    case 7: {I rc; KSLSRLP(cellatoms,celllen,DO(cellatoms, ((I*)partition)[i]=((C*)wv)[i];),ASSERT(EVOK==(rc=((AHDR2FN*)adocv.f)(1,cellatoms,wv,partition,partition,jt)),rc)) break;}  // + B01
-    case 11: {I rc; KSLSRLPMEAN(cellatoms,celllen,DO(cellatoms, ((D*)partition)[i]=((B*)wv)[i];),ASSERT(EVOK==(rc=((AHDR2FN*)adocv.f)(1,cellatoms,wv,partition,partition,jt)),rc),D) break;}  // mean B01
-    case 15: {I rc; KSLSRLPMEAN(celllen,celllen,DO(cellatoms, ((D*)partition)[i]=((I*)wv)[i];),ASSERT(EVOK==(rc=((AHDR2FN*)adocv.f)(1,cellatoms,wv,partition,partition,jt)),rc),D) break;}  // mean INT
-    case 16: {I rc; KSLSRLPMEAN(celllen,celllen,MC(partition,wv,celllen);,ASSERT(EVOK==(rc=((AHDR2FN*)adocv.f)(1,cellatoms,wv,partition,partition,jt)),rc),I) break;}  // mean for XNUM/RAT
-    case 17: {I rc; KSLSRLPMEAN(celllen,celllen,MC(partition,wv,celllen);,ASSERT(EVOK==(rc=((AHDR2FN*)adocv.f)(1,cellatoms,wv,partition,partition,jt)),rc),D) break;}  // mean for FL
+    case 3: {I rc; KSLSRLP(celllen,celllen,MC(partition,wv,celllen);,ASSERT(EVOK==(rc=((AHDR2FN*)adocv.f)(1,cellatoms,wv,partition,partition,jt), rc=rc<0?EWOVIP+EWOVIPMULII:rc),rc)) break;}  // <. >.
+    case 7: {I rc; KSLSRLP(cellatoms,celllen,DO(cellatoms, ((I*)partition)[i]=((C*)wv)[i];),ASSERT(EVOK==(rc=((AHDR2FN*)adocv.f)(1,cellatoms,wv,partition,partition,jt), rc=rc<0?EWOVIP+EWOVIPMULII:rc),rc)) break;}  // + B01
+    case 11: {I rc; KSLSRLPMEAN(cellatoms,celllen,DO(cellatoms, ((D*)partition)[i]=((B*)wv)[i];),ASSERT(EVOK==(rc=((AHDR2FN*)adocv.f)(1,cellatoms,wv,partition,partition,jt), rc=rc<0?EWOVIP+EWOVIPMULII:rc),rc),D) break;}  // mean B01
+    case 15: {I rc; KSLSRLPMEAN(celllen,celllen,DO(cellatoms, ((D*)partition)[i]=((I*)wv)[i];),ASSERT(EVOK==(rc=((AHDR2FN*)adocv.f)(1,cellatoms,wv,partition,partition,jt), rc=rc<0?EWOVIP+EWOVIPMULII:rc),rc),D) break;}  // mean INT
+    case 16: {I rc; KSLSRLPMEAN(celllen,celllen,MC(partition,wv,celllen);,ASSERT(EVOK==(rc=((AHDR2FN*)adocv.f)(1,cellatoms,wv,partition,partition,jt), rc=rc<0?EWOVIP+EWOVIPMULII:rc),rc),I) break;}  // mean for XNUM/RAT
+    case 17: {I rc; KSLSRLPMEAN(celllen,celllen,MC(partition,wv,celllen);,ASSERT(EVOK==(rc=((AHDR2FN*)adocv.f)(1,cellatoms,wv,partition,partition,jt), rc=rc<0?EWOVIP+EWOVIPMULII:rc),rc),D) break;}  // mean for FL
     case RTNCASE(0,B01): KSLSRLP(1,1,*(C*)partition=*(C*)wv;,*(C*)partition&=*(B*)wv;) break;  // <.
     case RTNCASE(0,INT): KSLSRLP(SZI,SZI,*(I*)partition=*(I*)wv;,I p0=*(I*)partition; I w0=*(I*)wv; p0=p0<w0?p0:w0;  *(I*)partition=p0;) break;  // <.
     case RTNCASE(0,FL): KSLSRLP(SZD,SZD,*(D*)partition=*(D*)wv;,D *p0=partition; p0=*(D*)partition<*(D*)wv?p0:wv;*(D*)partition=*p0;) break;  // <.
@@ -491,7 +495,7 @@ static DF2(jtkey){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
  z=jtcut2((J)(intptr_t)((I)jt+((FAV(self)->flag&VGERL)?0:(FAV(FAV(self)->fgh[0])->flag>>(VJTFLGOK1X-JTINPLACEWX))&JTINPLACEW)),frets,wperm,self);
  // If the operation turned off pristinity of wperm, do the same for w.  Remember that pristinity only matters if the block is inplaceable
  AFLAG(w)&=AFLAG(wperm)|~AFPRISTINE;
- POPCCT
+// obsolete POPCCT
  EPILOG(z);
 }    /* a f/. w for dense x & w */
 
@@ -523,7 +527,7 @@ DF2(jtkeybox){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
  // mapped to that index.  If processing determines that small-range lookup would be best, indexofsub doesn't do it, but instead returns a block giving the size, min value, and range.
  // We then allocate and run the small-range table and use it to rearrange the input.  The small-range variant is signaled by the LSB of the result
  // of indexofsub being set.
- PUSHCCT(jt->cctdefault);  // now that partitioning is over, reset ct for the executions of u
+// obsolete  PUSHCCT(jt->cctdefault);  // now that partitioning is over, reset ct for the executions of u
 
  A *pushxsave;  // place to save the tpop stack when we hijack it
   A y;  // name under which boxes are allocated
@@ -633,7 +637,7 @@ DF2(jtkeybox){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
  // Set PRISTINE if w now has DIRECT type (note that w has been switched to INT for (<./ i.@#))
  AFLAG(z)=(-(AT(w)&DIRECT) & AFPRISTINE);  // maybe pristine
  ASSERT(y!=0,EVWSFULL);  // if we broke out on allocation failure, fail.
- POPCCT
+// obsolete  POPCCT
  EPILOG(z);
 }    // a <./ w
 

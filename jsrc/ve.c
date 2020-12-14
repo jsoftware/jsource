@@ -110,12 +110,15 @@ AHDR2(minusIB,I,I,B){I u;I v;I w;I oflo=0;
 }
 
 // II multiply, in double precision.  Always return error code so we can clean up
-AHDR2(tymesII,I,I,I){DPMULDECLS I u;I v; if(jt->mulofloloc<0)R EWOVIP+EWOVIPMULII; I *zi=z;   // could use a side channel to avoid having main loop look at rc
- if(n-1==0)  DQ(m, u=*x; v=*y; DPMUL(u,v,z, goto oflo;) z++; x++; y++; )
+AHDR2(tymesII,I,I,I){DPMULDECLS I u;I v;I *zi=z;   // could use a side channel to avoid having main loop look at rc
+// obsolete  if(jt->mulofloloc<0)R EWOVIP+EWOVIPMULII;
+ if(n-1==0) DQ(m, u=*x; v=*y; DPMUL(u,v,z, goto oflo;) z++; x++; y++; )
  else if(n-1<0)DQ(m, u=*x; DQC(n, v=*y; DPMUL(u,v,z, goto oflo;) z++; y++;) x++;)
  else      DQ(m, v=*y; DQ(n, u=*x; DPMUL(u,v,z, goto oflo;) z++; x++;) y++;)
- jt->mulofloloc += z-zi; R EVOK;  // not yet for EVOKCLEANUP
-oflo: *x=u; *y=v; jt->mulofloloc = ~(jt->mulofloloc + z-zi);R EWOVIP+EWOVIPMULII;  // back out the last store, in case it's in-place; gcc stores before overflow
+// obsolete  jt->mulofloloc += z-zi;
+ R EVOK;
+oflo: *x=u; *y=v; R ~(z-zi);  // back out the last store, in case it's in-place; gcc stores before overflow.  Return complement of overflow offset as special signal
+// obsolete  jt->mulofloloc = ~(jt->mulofloloc + z-zi);R EWOVIP+EWOVIPMULII;
 }
 
 // BI multiply, using clear/copy
@@ -178,18 +181,17 @@ AHDR2(minusBIO,D,B,I){I u; I absn=n^REPSGN(n);
 // In multiply repair, z points to result, x and y to inputs
 // Parts of z before mulofloloc have been filled in already
 // We have to track the inputs just as for any other action routine
-AHDR2(tymesIIO,D,I,I){I u,v; I absn=n^REPSGN(n);
+I tymesIIO(I n,I m,I* RESTRICTI x,I* RESTRICTI y,D* RESTRICTI z,I skipct){I u,v; I absn=n^REPSGN(n);
  // if all the multiplies are to be skipped, skip them quickly
- I skipct=jt->mulofloloc;
- if(skipct>=m*absn){skipct-=m*absn;
- }else{
+// obsolete  I skipct=jt->mulofloloc;
+ if(skipct<m*absn){
   // There are unskipped multiplies.  Do them.
-  if(n-1==0)  DQ(m, u=*x; v=*y; if(skipct){--skipct;}else{*z=(D)u * (D)v;} z++; x++; y++; )
-  else if(n-1<0)DQ(m, u=*x++; DQC(n, v=*y; if(skipct){--skipct;}else{*z=(D)u * (D)v;} z++; y++;))
-  else      DQ(m, v=*y++; DQ(n, u=*x; if(skipct){--skipct;}else{*z=(D)u * (D)v;} z++; x++;))
+  if(n-1==0)  DQ(m, u=*x; v=*y; if(--skipct<0){*z=(D)u * (D)v;} z++; x++; y++; )
+  else if(n-1<0)DQ(m, u=*x++; DQC(n, v=*y; if(--skipct<0){*z=(D)u * (D)v;} z++; y++;))
+  else DQ(m, v=*y++; DQ(n, u=*x; if(--skipct<0){*z=(D)u * (D)v;} z++; x++;))
  }
- // Store the new skipct
- jt->mulofloloc=skipct;
+// obsolete  // Store the new skipct
+// obsolete  jt->mulofloloc=skipct;
  R EVOK;
 }
 

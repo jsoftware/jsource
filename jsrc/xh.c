@@ -135,7 +135,7 @@ F1(jthostne){
 #endif
 #if !SY_64 && (SYS&SYS_LINUX)
   //Java-jnative-j.so system always returns -1
-  if(jt->sm==SMJAVA&&-1==b) b=-1==system("")?0:-1;
+  if(JT(jt,sm)==SMJAVA&&-1==b) b=-1==system("")?0:-1;
 #endif
   b=!b;
   ASSERT(b!=0,EVFACE);

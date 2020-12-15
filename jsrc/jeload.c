@@ -32,7 +32,7 @@
 #include <stdint.h>
 
 static void* hjdll;
-static J jt;
+static JST* jt;
 static JDoType jdo;
 static JFreeType jfree;
 static JgaType jga;
@@ -87,7 +87,7 @@ A jega(I t, I n, I r, I*s){return jga(jt,t,n,r,s);}
 void* jehjdll(){return hjdll;}
 
 // load JE, Jinit, getprocaddresses, JSM
-J jeload(void* callbacks)
+JST* jeload(void* callbacks)
 {
 #ifdef _WIN32
  WCHAR wpath[PLEN];

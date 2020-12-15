@@ -27,6 +27,9 @@
 #else
 #undef MMSC_VER
 #endif
+#if !defined(MMSC_VER)
+#include <stddef.h>       // offsetof
+#endif
 
 #ifndef EMU_AVX
 #define EMU_AVX 0
@@ -1583,9 +1586,11 @@ if(likely(z<3)){_zzt+=z; z=(I)&oneone; _zzt=_i&3?_zzt:(I*)z; z=_i&2?(I)_zzt:z; z
 // table, and it expects TZCNT to set the Z flag properly.  We use CTTZNOFLAG to set it right
 #define CTTZNOFLAG(w) (CTTZ(w)&31)
 
-#ifdef __GNUC__
 #ifndef offsetof
+#ifdef __GNUC__
 #define offsetof(TYPE, MEMBER)  __builtin_offsetof (TYPE, MEMBER)
+#else
+#define offsetof(TYPE, MEMBER) ((size_t) &((TYPE *)0)->MEMBER)
 #endif
 #endif
 

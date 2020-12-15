@@ -154,7 +154,7 @@ void jtwri(J jt,I type,C*p,I m,C*s){F1PREFJT;C buf[1024],*t=OUTSEQ,*v=buf;I c,d,
   MC(v,t,e); v+=e;   // join prompt/body/EOL
   *v=0;   // NUL termination
 #ifdef ANDROID
-  A z=tocesu8(str(strlen(buf),buf));
+  A z=jttocesu8(MTHREAD(jt),jtstr(MTHREAD(jt),strlen(buf),buf));  // calling internal jt... functions
   CAV(z)[AN(z)]=0;
   jsto(jt,type,CAV(z));
 #else

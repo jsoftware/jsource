@@ -164,7 +164,7 @@ char* Jinput_stdio(char* prompt)
 	return input;
 }
 
-C* _stdcall Jinput(J jt,C* prompt){
+C* _stdcall Jinput(JST* jt,C* prompt){
 #ifdef READLINE
     if(!norl&&_isatty(_fileno(stdin))){
 		return (C*)Jinput_rl((char*)prompt);
@@ -174,7 +174,7 @@ C* _stdcall Jinput(J jt,C* prompt){
 }
 
 /* J calls for output */
-void _stdcall Joutput(J jt,int type, C* s)
+void _stdcall Joutput(JST* jt,int type, C* s)
 {
  if(MTYOEXIT==type)
  {
@@ -210,7 +210,7 @@ void addargv(int argc, char* argv[], char* d)
  *p=0;
 }
 
-J jt;
+JST* jt;
 
 int main(int argc, char* argv[])
 {

@@ -27,30 +27,39 @@ DF1(jteveryself){R jtevery(jt,w,FAV(self)->fgh[0]);}   // replace u&.> with u an
 // u&.>, but w may be a gerund, which makes the result a list of functions masquerading as an aray of boxes
 A jtevery(J jt, A w, A fs){A * RESTRICT wv,x,z,* RESTRICT zv;
  F1PREFIP;ARGCHK1(w);RESETRANK;  // we claim to support IRS1 but really there's nothing to do for it
- if(unlikely((SPARSE&AT(w))!=0))R everysp(w,fs);
+ I wt=AT(w), wflag=AFLAG(w), wr=AR(w);
+ if(unlikely((SPARSE&wt)!=0))R everysp(w,fs);
+ I natoms=AN(w);
+ GATV(z,BOX,natoms,wr,AS(w));
+ if(!natoms)R z;  // exit if no result atoms
  AF f1=FAV(fs)->valencefns[0];   // pointer to function to call
+ if(0&&unlikely(natoms==1))if(likely((SGNIF(wt,BOXX)|(wr-1))<0)){
+  // w is a singleton (boxed containing one atom or unboxed with rank 0).  Execute the verb once.
+  // Get the address of the block
+  // Inplaceability and usecount follow the main line; see there for comments
+  // Execute the function
+  // store the result
+ }
  A virtw; I flags;  // flags are: ACINPLACE=pristine result; JTWILLBEOPENED=nonrecursive result; BOX=input was boxed; ACPERMANENT=input was inplaceable pristine, contents can be inplaced
  // If the result will be immediately unboxed, we create a NONrecursive result and we can store virtual blocks in it.  This echoes what result.h does.
- flags=ACINPLACE|((I)jtinplace&JTWILLBEOPENED)|(AT(w)&BOX);
+ flags=ACINPLACE|((I)jtinplace&JTWILLBEOPENED)|(wt&BOX);
  // Get input pointer
  I virtblockw[NORMAH];  // space for a virtual block of rank 0
  if(likely((flags&BOX)!=0)){virtw=*(wv=AAV(w));  // if input is boxed, point to first box
-  if(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX)&SGNIF(AFLAG(w),AFPRISTINEX),w))flags|=ACPERMANENT&-(AFLAG(w)&RECURSIBLE);  // indicates inplaceability of boxed contents - only if recursive block
+  if(ASGNINPLACESGN(SGNIF(jtinplace,JTINPLACEWX)&SGNIF(wflag,AFPRISTINEX),w))flags|=ACPERMANENT&-(wflag&RECURSIBLE);  // indicates inplaceability of boxed contents - only if recursive block
  }else{
   // if input is not boxed, use a faux-virtual block to point to the atoms.  Repurpose unneeded wv to hold length
-  fauxvirtual(virtw,virtblockw,w,0,ACUC1); AN(virtw)=1; wv=(A*)bpnoun(AT(w));  // note if w has gerunds, it is always boxed & doesn't go through here
+  fauxvirtual(virtw,virtblockw,w,0,ACUC1); AN(virtw)=1; wv=(A*)bpnoun(wt);  // note if w has gerunds, it is always boxed & doesn't go through here
   // If not boxed, can't be pristine
  }
  // Allocate result area
- GATV(z,BOX,AN(w),AR(w),AS(w));
  AFLAG(z)=(~flags<<(BOXX-JTWILLBEOPENEDX))&BOX;  // if WILLBEOPENED is NOT set, make the result a recursive box
- I natoms=AN(w); if(!natoms)R z;  // exit if no result atoms
  zv=AAV(z);
  // Get jt flags to pass to next level - take them from  fs, so that we always inplace this verb, which will allow us to set pristinity better
  // We must remove raze flags since we are using them here
  jtinplace=(J)((I)jt+((FAV(fs)->flag>>(VJTFLGOK1X-JTINPLACEWX))&JTINPLACEW));
  // If the verb returns its input block, we will have to turn off pristinity of the arg.  Replace w by its backing block
- if(AFLAG(w)&AFVIRTUAL)w=ABACK(w);
+ if(wflag&AFVIRTUAL)w=ABACK(w);
  // *** now w has been replaced by its backing block, if it was virtual
  while(1){
   // If the input was pristine inplaceable and not virtual (i. e. originally unboxed), flag the contents as inplaceable UNLESS they are PERMANENT

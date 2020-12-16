@@ -393,8 +393,10 @@ static char breaknone=0;
 B jtsesminit(JS jjt, I nthreads){R 1;}
 // obsolete IJT(jt,adbreakr)=IJT(jt,adbreak)=&breakdata; 
 
-// Main entry point to run the sentence in *lp in the master thread
-int _stdcall JDo(J jt, C* lp){int r; UI savcstackmin, savcstackinit, savqtstackinit;JJ jm=MTHREAD(jt);  // get address of thread struct we are using (the master thread)
+// Main entry point to run the sentence in *lp in the master thread, or in the thread given if jt is not a JS pointer
+int _stdcall JDo(J jt, C* lp){int r; UI savcstackmin, savcstackinit, savqtstackinit;JJ jm;
+ if((I)jt&(JTALIGNBDY-1)){jm=(JJ)jt; jt=JJTOJ(jt);   // if jt is a thread pointer, use it and set jt to the shared
+ }else{jm=MTHREAD(jt);}  // if jt is a shared pointer, use the master thread
  if(unlikely(JT(jt,recurstate)>RECSTATEIDLE)){
   // recursive call.  If we are busy or already recurring, this would be an uncontrolled recursion.  Fail that
   savcstackmin=jm->cstackmin, savcstackinit=jm->cstackinit, savqtstackinit=JT(jt,qtstackinit);  // save stack pointers over recursion, in case the host resets them

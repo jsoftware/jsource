@@ -107,7 +107,7 @@ typedef struct rngdata {
  C glock;            /* 0=unlocked, 1=perm lock, 2=temp lock            */
  UC jerr;             /* error number (0 means no error)    migrated             */
  UC jerr1;            /* last non-zero jerr                 migrated             */
-// 4 bytes free
+ I4 currslistx;    // index into slist of the current script being executed (or -1 if none)
  RNG *rngdata;    // separately allocated block for RNG
  I4 nthreads;  // number of threads to use, or 0 if we haven't checked     
  I4 parsercalls;      /* # times parser was called          migrated             */
@@ -180,7 +180,7 @@ typedef struct JSTstruct {
 // parsing, lookup, explicit definition execution
  A stloc;            /* locales symbol table                            */
  A symp;             /* symbol pool array                               */
- A slist;            /* files used in right arg to 0!:  AM() is current file#    */
+ A slist;            /* files used in right arg to 0!:    */
  B assert;           /* 1 iff evaluate assert. statements               */
  B stch;             /* enable setting of changed bit                   */
  C asgzomblevel;     // 0=do not assign zombie name before final assignment; 1=allow premature assignment of complete result; 2=allow premature assignment even of incomplete result   

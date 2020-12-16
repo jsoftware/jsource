@@ -593,7 +593,7 @@ L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I m,n,wn,wr,wt;L*e;
    AT(x)=wt; AN(x)=wn; AR(x)=(RANKT)wr; MCISH(AS(x),AS(w),wr); MC(AV(x),AV(w),m);  // copy in the data
   }
  }
- e->sn=AM(JT(jt,slist));  // Save the script in which this name was defined
+ e->sn=jt->currslistx;  // Save the script in which this name was defined
  if(unlikely(JT(jt,stch)!=0))e->flag|=LCH;  // update 'changed' flag if enabled - no harm in marking locals too
  R e;   // return the block for the assignment
 }    /* a: name; w: value; g: symbol table */

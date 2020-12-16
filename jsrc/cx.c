@@ -219,7 +219,7 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
    if((a!=w)&SGNTO0(AC(w)&(((AT(w)^AFLAG(w))&RECURSIBLE)-1))&((I)jtinplace>>JTINPLACEWX)){
     ybuckptr->flag=LPERMANENT|LWASABANDONED; AC(w)&=~ACINPLACE;  // remember, blocks from every may be 0x8..2, and we must preserve the usecount then as if we ra()d it
    }else ra(w);
-   ybuckptr->val=w; ybuckptr->sn=AM(JT(jt,slist));
+   ybuckptr->val=w; ybuckptr->sn=jt->currslistx;
   }
     // for x (if given), slot is from the beginning of hashchain EXCEPT when that collides with y; then follow y's chain
     // We have verified that hardware CRC32 never results in collision, but the software hashes do (needs to be confirmed on ARM CPU hardware CRC32C)
@@ -228,7 +228,7 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
    if((a!=w)&SGNTO0(AC(a)&(((AT(a)^AFLAG(a))&RECURSIBLE)-1))&((I)jtinplace>>JTINPLACEAX)){
     xbuckptr->flag=LPERMANENT|LWASABANDONED; AC(a)&=~ACINPLACE;
    }else ra(a);
-   xbuckptr->val=a; xbuckptr->sn=AM(JT(jt,slist));
+   xbuckptr->val=a; xbuckptr->sn=jt->currslistx;
   }
   // Do the other assignments, which occur less frequently, with symbis
   if(unlikely(((I)u|(I)v)!=0)){

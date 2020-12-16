@@ -16,7 +16,7 @@ B jtxsinit(JS jjt,I nthreads){A x;JJ jt=MTHREAD(jjt);
  GAT0(x,BOX,10,1); memset(AV(x),C0,AN(x)*SZI); AC(x)=ACUC1; INITJT(jjt,slist)=x; AS(INITJT(jjt,slist))[0]=0;  // init block, set item count to 0
 // obsolete  ras(x); iniit block has no tpop
 // obsolete  GAT0(x,INT,10,1); memset(AV(x),C0,AN(x)*SZI); ras(x); jt->sclist=x;
- AM(INITJT(jjt,slist))=-1;  // indicate 'not in script'
+ MTHREAD(jjt)->currslistx=-1;  // indicate 'not in script' in master thread
  R 1;
 }
 
@@ -97,10 +97,10 @@ static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;DC d;
 static F1(jtaddscriptname){I i;
  RE(i=i0(indexof(vec(BOX,AS(JT(jt,slist))[0],AAV(JT(jt,slist))),box(ravel(w)))));  // look up only in the defined names
  if(AS(JT(jt,slist))[0]==i){
-  if(AS(JT(jt,slist))[0]==AN(JT(jt,slist))){I oldn=AM(JT(jt,slist)); RZ(JT(jt,slist)=ext(1,JT(jt,slist))); AM(JT(jt,slist))=oldn;}  // extend, preserving curr index (destroying len momentarily)
+  if(AS(JT(jt,slist))[0]==AN(JT(jt,slist))){RZ(JT(jt,slist)=ext(1,JT(jt,slist)));}  // extend, preserving curr index (destroying len momentarily)
 // obsolete RZ(jt->sclist=ext(1,jt->sclist));
   INCORP(w); RZ(ras(w)); RZ(*(i+AAV(JT(jt,slist)))=w);
-// obsolete  *(AS(JT(jt,slist))[0]+IAV(jt->sclist))=AM(JT(jt,slist));
+// obsolete  *(AS(JT(jt,slist))[0]+IAV(jt->sclist))=jt->currslistx;
   AS(JT(jt,slist))[0]=i+1;  // set new len
  }
  R sc(i);
@@ -108,7 +108,7 @@ static F1(jtaddscriptname){I i;
 
 
 
-static A jtlinf(J jt,A a,A w,C ce,B tso){A x,y,z;B lk=0;C*s;I i=-1,n,oldi=AM(JT(jt,slist));
+static A jtlinf(J jt,A a,A w,C ce,B tso){A x,y,z;B lk=0;C*s;I i=-1,n,oldi=jt->currslistx;  // push script#
  ARGCHK2(a,w);
  ASSERT(AT(w)&BOX,EVDOMAIN);
  if(JT(jt,seclev)){
@@ -124,9 +124,9 @@ static A jtlinf(J jt,A a,A w,C ce,B tso){A x,y,z;B lk=0;C*s;I i=-1,n,oldi=AM(JT(
  A scripti; RZ(scripti=jtaddscriptname(jt,y)); i=IAV(scripti)[0];
 
  // set the current script number
- AM(JT(jt,slist))=i;
+ jt->currslistx=i;
  z=line(x,i,ce,tso); 
- AM(JT(jt,slist))=oldi;
+ jt->currslistx=oldi;  // pop script#
 #if SYS & SYS_PCWIN
  if(lk)memset(AV(x),C0,AN(x));  /* security paranoia */
 #endif
@@ -144,8 +144,8 @@ F1(jtscriptstring){
 F1(jtscriptnum){
  I i=i0(w);  // fetch index
  ASSERT(BETWEENO(i,-1,AS(JT(jt,slist))[0]),EVINDEX);  // make sure it's _1 or valid index
- A rv=sc(AM(JT(jt,slist)));  // save the old value
- RZ(rv); AM(JT(jt,slist))=i;  // set the new value (if no error)
+ A rv=sc(jt->currslistx);  // save the old value
+ RZ(rv); jt->currslistx=i;  // set the new value (if no error)
  R rv;  // return prev value
 }
 

@@ -24,16 +24,14 @@
 #include "../jsrc/j.h"
 #include "../jsrc/jlib.h"
 #undef JT
-#define JT(p,n) p->n
-#undef J
-#define J JST*
+#define JT(p,n) p->n  // used for references in JS, which most references in this module are
 #define IJT(p,n) JT(JJTOJ(p),n)    // used in function that interface to internal functions and thus take a JJ
 
 extern void wtom(US* src, I srcn, UC* snk);
 extern void utow(C4* src, I srcn, US* snk);
 extern I utowsize(C4* src, I srcn);
 int valid(C* psrc, C* psnk);
-C* esub(J jt, long ec);
+C* esub(JS jt, long ec);
 
 #ifdef OLECOM
 extern int uniflag;
@@ -67,9 +65,9 @@ void toasc(WCHAR* src, C* sink)
 	*sink++=0;
 }
 
-CDPROC int _stdcall JBreak(J jt){ return 0;}
+CDPROC int _stdcall JBreak(JS jt){ return 0;}
 
-CDPROC int _stdcall JIsBusy(J jt){	return 0;}
+CDPROC int _stdcall JIsBusy(JS jt){	return 0;}
 
 #ifdef OLECOM
 
@@ -277,12 +275,12 @@ static int jget(JJ jt, C* name, VARIANT* v, int dobstr)  // jt is a thread point
 	return er;
 }
 
-CDPROC int _stdcall JGet(J jt, C* name, VARIANT* v)
+CDPROC int _stdcall JGet(JS jt, C* name, VARIANT* v)
 {
 	return jget(MTHREAD(jt), name, v, 0); // no bstrs; run in master thread
 }
 
-CDPROC int _stdcall JGetB(J jt, C* name, VARIANT* v)
+CDPROC int _stdcall JGetB(JS jt, C* name, VARIANT* v)
 {
 	return jget(MTHREAD(jt), name, v, 1); // do bstrs; run in master thread
 }
@@ -570,7 +568,7 @@ I countoutput(I n, char*s)
 }
 
 #if !SY_WINCE
-void oleoutput(J jt, I n, char* s)
+void oleoutput(JS jt, I n, char* s)
 {
 	I k;
 
@@ -606,17 +604,17 @@ static int jsetx(JJ jt, C* name, VARIANT* v, int dobstrs)   // jt is a thread po
 	return er;
 }
 
-CDPROC int _stdcall JSet(J jt, C* name, VARIANT* v)
+CDPROC int _stdcall JSet(JS jt, C* name, VARIANT* v)
 {
 	return jsetx(MTHREAD(jt), name, v, 0);	// no bstrs, use master thread
 }
 
-CDPROC int _stdcall JSetB(J jt, C* name, VARIANT* v)
+CDPROC int _stdcall JSetB(JS jt, C* name, VARIANT* v)
 {
 	return jsetx(MTHREAD(jt), name, v, 1);	// do bstrs
 }
 
-CDPROC int _stdcall JErrorText(J jt, long ec, VARIANT* v)
+CDPROC int _stdcall JErrorText(JS jt, long ec, VARIANT* v)
 {
 	C* p;
 	SAFEARRAY FAR* psa; 
@@ -635,9 +633,9 @@ CDPROC int _stdcall JErrorText(J jt, long ec, VARIANT* v)
 	return 0;
 }
 
-CDPROC int _stdcall JClear(J jt){ return 0;};
+CDPROC int _stdcall JClear(JS jt){ return 0;};
 
-CDPROC int _stdcall JInt64R(J jt, long b)
+CDPROC int _stdcall JInt64R(JS jt, long b)
 {
 #if SY_64
 	JT(jt,int64rflag) = b;
@@ -645,13 +643,13 @@ CDPROC int _stdcall JInt64R(J jt, long b)
 	return 0;
 }
 
-CDPROC int _stdcall JTranspose(J jt, long b)
+CDPROC int _stdcall JTranspose(JS jt, long b)
 {
 	JT(jt,transposeflag) = b;
 	return 0;
 }
 
-CDPROC int _stdcall JErrorTextB(J jt, long ec, VARIANT* v)
+CDPROC int _stdcall JErrorTextB(JS jt, long ec, VARIANT* v)
 {
 	C* p;
 	BSTR bstr;
@@ -664,7 +662,7 @@ CDPROC int _stdcall JErrorTextB(J jt, long ec, VARIANT* v)
 	R 0;
 }
 
-CDPROC int _stdcall JDoR(J jt, C* p, VARIANT* v)
+CDPROC int _stdcall JDoR(JS jt, C* p, VARIANT* v)
 {
 	int e;
 	
@@ -684,11 +682,11 @@ CDPROC int _stdcall JDoR(J jt, C* p, VARIANT* v)
 char modulepath[_MAX_PATH];
 char dllpath[_MAX_PATH];
 void dllquit(JJ);
-void oleoutput(J,I n,char* s);
+void oleoutput(JS,I n,char* s);
 HINSTANCE g_hinst;
-J g_jt;
+JS g_jt;
 
-extern C* getlocale(J);
+extern C* getlocale(JS);
 extern void  FreeGL(HANDLE hglrc);
 
 
@@ -718,10 +716,10 @@ void getpath(HINSTANCE hi, C* path)
 
 // create a memory heap of the given size, allocate a JST in it, and store the address
 // of the heap into jt->heap so that the JE can do memory allocations from it
-J heapinit(int size)
+JS heapinit(int size)
 {
 	HANDLE h;
-	J jt;
+	JS jt;
 
 	h = HeapCreate(0, size, 0);
 	if(!h) return 0;
@@ -731,7 +729,7 @@ J heapinit(int size)
 		HeapDestroy(h);
 		return 0;
 	}
- jt = (J)(((I)jt+JTALIGNBDY-1)&-JTALIGNBDY);  // force to SDRAM page boundary
+ jt = (JS)(((I)jt+JTALIGNBDY-1)&-JTALIGNBDY);  // force to SDRAM page boundary
 	memset(jt,0,sizeof(JST));
 	JT(jt,heap) = h;
 	return jt;
@@ -781,7 +779,7 @@ int WINAPI DllMain (HINSTANCE hDLL, DWORD dwReason, LPVOID lpReserved)
 return TRUE;
 }
 
-CDPROC J _stdcall JInit()
+CDPROC JS _stdcall JInit()
 {
 	JST* jt;
 
@@ -799,7 +797,7 @@ CDPROC J _stdcall JInit()
 }
 
 // clean up at the end of a J instance
-CDPROC int _stdcall JFree(J jt)
+CDPROC int _stdcall JFree(JS jt)
 {JJ jm=&jt->threaddata[0];   // use master thread
 	if(!jt) return 0;
 // obsolete 	if(JT(jt,xep)&&AN(JT(jt,xep))){A *old=jm->tnextpushp; jtimmex(jm,JT(jt,xep)); fajt(jm,JT(jt,xep)); JT(jt,xep)=0; jm->jerr=0; jm->etxn=0; tpop(old); }  // force typeout

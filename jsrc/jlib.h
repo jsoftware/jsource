@@ -1,45 +1,51 @@
 /* Copyright 1990-2007, Jsoftware Inc.  All rights reserved.               */
 /* Licensed use only. Any other use is in violation of copyright.          */
 
-CDPROC JST* _stdcall JInit(void);                         /* init instance */
-CDPROC void _stdcall JSM(JST* jt, void*callbacks[]);  /* set callbacks */
-CDPROC void _stdcall JSMX(JST* jt, void*, void*, void*, void*, I);
-CDPROC int _stdcall JDo(JST* jt,C*);                  /* run sentence */
-CDPROC C* _stdcall JGetLocale(JST* jt);               /* get locale */
-CDPROC A _stdcall Jga(JST* jt, I t, I n, I r, I*s);
-CDPROC int _stdcall JFree(JST* jt);                   /* free instance */
-CDPROC A _stdcall JGetA(JST* jt,I n,C* name);         /* get 3!:1 from name */
-CDPROC C* _stdcall JGetR(JST* jt);                    /* get capture */
-CDPROC I _stdcall JSetA(JST* jt,I n,C* name,I x,C* d);/* name=:3!:2 data */
-CDPROC int _stdcall JGetM(JST* jt, C* name, I* jtype, I* jrank, I* jshape, I* jdata);
-CDPROC int _stdcall JSetM(JST* jt, C* name, I* jtype, I* jrank, I* jshape, I* jdata);
-CDPROC int _stdcall JErrorTextM(JST* jt, I ec, I* p);
+/* maintainer note: define JFRONTEND for non jsource front-ends */
+#ifdef JFRONTEND
+#undef JS
+typedef void* JS
+#endif
+
+CDPROC JS _stdcall JInit(void);                         /* init instance */
+CDPROC void _stdcall JSM(JS jt, void*callbacks[]);  /* set callbacks */
+CDPROC void _stdcall JSMX(JS jt, void*, void*, void*, void*, I);
+CDPROC int _stdcall JDo(JS jt,C*);                  /* run sentence */
+CDPROC C* _stdcall JGetLocale(JS jt);               /* get locale */
+CDPROC A _stdcall Jga(JS jt, I t, I n, I r, I*s);
+CDPROC int _stdcall JFree(JS jt);                   /* free instance */
+CDPROC A _stdcall JGetA(JS jt,I n,C* name);         /* get 3!:1 from name */
+CDPROC C* _stdcall JGetR(JS jt);                    /* get capture */
+CDPROC I _stdcall JSetA(JS jt,I n,C* name,I x,C* d);/* name=:3!:2 data */
+CDPROC int _stdcall JGetM(JS jt, C* name, I* jtype, I* jrank, I* jshape, I* jdata);
+CDPROC int _stdcall JSetM(JS jt, C* name, I* jtype, I* jrank, I* jshape, I* jdata);
+CDPROC int _stdcall JErrorTextM(JS jt, I ec, I* p);
 
 typedef void* (_stdcall *JInitType)     ();
-typedef int   (_stdcall *JDoType)       (JST*, C*);
-typedef C*    (_stdcall *JGetLocaleType)(JST*);
-typedef void  (_stdcall *JSMType)       (JST*, void*);
-typedef void  (_stdcall *JSMXType)      (JST*, void*, void*, void*, void*, I);
-typedef void  (_stdcall *JFreeType)     (JST*);
-typedef A     (_stdcall *JgaType)       (JST* jt, I t, I n, I r, I*s);
-typedef int   (_stdcall *JGetMType)     (JST* jt,C* name,I* jtype,I* jrank,I* jshape,I* jdata);
-typedef int   (_stdcall *JSetMType)     (JST* jt,C* name,I* jtype,I* jrank,I* jshape,I* jdata);
-typedef C*    (_stdcall *JGetRType)     (JST* jt);
-typedef int   (_stdcall *JErrorTextMType)(JST* jt,I ec,I* p);
-typedef A     (_stdcall *JGetAType)     (JST* jt,I n,C* name);
-typedef I     (_stdcall *JSetAType)     (JST* jt,I n,C* name,I x,C* d);
+typedef int   (_stdcall *JDoType)       (JS, C*);
+typedef C*    (_stdcall *JGetLocaleType)(JS);
+typedef void  (_stdcall *JSMType)       (JS, void*);
+typedef void  (_stdcall *JSMXType)      (JS, void*, void*, void*, void*, I);
+typedef void  (_stdcall *JFreeType)     (JS);
+typedef A     (_stdcall *JgaType)       (JS jt, I t, I n, I r, I*s);
+typedef int   (_stdcall *JGetMType)     (JS jt,C* name,I* jtype,I* jrank,I* jshape,I* jdata);
+typedef int   (_stdcall *JSetMType)     (JS jt,C* name,I* jtype,I* jrank,I* jshape,I* jdata);
+typedef C*    (_stdcall *JGetRType)     (JS jt);
+typedef int   (_stdcall *JErrorTextMType)(JS jt,I ec,I* p);
+typedef A     (_stdcall *JGetAType)     (JS jt,I n,C* name);
+typedef I     (_stdcall *JSetAType)     (JS jt,I n,C* name,I x,C* d);
 
 /*  void* callbacks[] = {Joutput, Jwd, Jinput, unused, smoptions}; */
 
-typedef void  (_stdcall * outputtype)(JST*,int,C*);
-typedef int   (_stdcall * dowdtype)  (JST*,int, A, A*);
-typedef int   (_stdcall * dowdtype2) (JST*,int, A, A*, C*);  // pass current locale
-typedef C* (_stdcall * inputtype) (JST*,C*);
-typedef C* (_stdcall * polltype) (JST*,int,int);
+typedef void  (_stdcall * outputtype)(JS,int,C*);
+typedef int   (_stdcall * dowdtype)  (JS,int, A, A*);
+typedef int   (_stdcall * dowdtype2) (JS,int, A, A*, C*);  // pass current locale
+typedef C* (_stdcall * inputtype) (JS,C*);
+typedef C* (_stdcall * polltype) (JS,int,int);
 
-void _stdcall Joutput(JST* jt, int type, C* s);
-int _stdcall Jwd(JST* jt, int x, A parg, A* pres);
-C* _stdcall Jinput(JST* jt, C*);
+void _stdcall Joutput(JS jt, int type, C* s);
+int _stdcall Jwd(JS jt, int x, A parg, A* pres);
+C* _stdcall Jinput(JS jt, C*);
 
 // output type
 #define MTYOFM  1 /* formatted result array output */

@@ -134,8 +134,8 @@ A recursive JDo may use a DD, but only if it is fully contained in the string
 // jt is a JS here normally; but for eps called from the JE, it may be a JJ.  If we need the master thread, we call that jm
 #undef JT
 #define JT(p,n) p->n
-#undef J
-#define J JS
+// #undef J
+// #define J JS
 #define IJT(p,n) JT(JJTOJ(p),n)    // used in function that interface to internal functions and thus take a JJ
 
 
@@ -143,7 +143,7 @@ extern void dllquit(JJ);
 
 // flags in jt indicate whether display is suppressed.  p is the prompt, s is the text.  suppression of s happens when it is created;
 // here we control suppression of p; but we suppress all anyway
-void jtwri(J jt,I type,C*p,I m,C*s){F1PREFJT;C buf[1024],*t=OUTSEQ,*v=buf;I c,d,e,n;
+void jtwri(JS jt,I type,C*p,I m,C*s){FPREFIP(JS);C buf[1024],*t=OUTSEQ,*v=buf;I c,d,e,n;
  if(!((I)jtinplace&JTPRNOSTDOUT)){  // if the prompt is not suppressed...
   c=strlen(p);            /* prompt      */
   e=strlen(t);            /* end-of-line */
@@ -163,7 +163,7 @@ void jtwri(J jt,I type,C*p,I m,C*s){F1PREFJT;C buf[1024],*t=OUTSEQ,*v=buf;I c,d,
  }
 }
 
-static void jtwrf(J jt,I n,C*v,F f){C*u,*x;I j=0,m;
+static void jtwrf(JS jt,I n,C*v,F f){C*u,*x;I j=0,m;
  while(n>j){
   u=j+v; 
   m=(x=memchr(u,CLF,n-j))?1+x-u:n-j; 
@@ -197,9 +197,9 @@ static I advl(I j,I n,C*s){B b;C c,*v;
  R n;
 }    /* advance one line on CR, CRLF, or LF */
 
-void breakclose(J jt);
+void breakclose(JS jt);
 
-static C* nfeinput(J jt,C* s){A y;
+static C* nfeinput(JS jt,C* s){A y;
  JT(jt,adbreakr)=&breakdata; y=jtexec1(MTHREAD(jt),jtcstr(MTHREAD(jt),s)); JT(jt,adbreakr)=JT(jt,adbreak);
  if(!y){breakclose(jt);exit(2);} /* J input verb failed */
  jtwri(jt,MTYOLOG,"",strlen(CAV(y)),CAV(y));  // call to nfeinput() comes from a prompt or from jdo.  In either case we want to display the result.  Thus jt
@@ -221,7 +221,7 @@ A jtjgets(JJ jt,C*p){A y;B b;C*v;I j,k,m,n;UC*s;
   d->dcj=k=j;  // k=start index
   d->dcix=j=advl(j,n,s);  // j=end+1 index
   m=j-k; if(m&&32>s[k+m-1])--m; if(m&&32>s[k+m-1])--m;  // m is length; discard trailing control characters (usually CRLF, but not necessarily) ?not needed: done in inpl
-  jtwri((J)((I)JJTOJ(jt)+d->dcpflags),MTYOLOG,p,m,k+s);  // log the input, but only if we wanted to echo the input
+  jtwri((JS)((I)JJTOJ(jt)+d->dcpflags),MTYOLOG,p,m,k+s);  // log the input, but only if we wanted to echo the input
   R inpl(b,m,k+s);  // process & return the line
  }
  /* J calls for input in 3 cases:
@@ -247,7 +247,7 @@ A jtjgets(JJ jt,C*p){A y;B b;C*v;I j,k,m,n;UC*s;
 
 
 #if SYS&SYS_UNIX
-void breakclose(J jt)
+void breakclose(JS jt)
 {
  if(JT(jt,adbreak)==&breakdata) return;
  munmap(JT(jt,adbreak),1);
@@ -258,7 +258,7 @@ void breakclose(J jt)
  *JT(jt,breakfn)=0;
 }
 #else
-void breakclose(J jt)
+void breakclose(JS jt)
 {
  if(JT(jt,adbreak)==&breakdata) return;
  UnmapViewOfFile(JT(jt,adbreak));
@@ -288,7 +288,7 @@ F1(jtjoff){I x;
  R 0;
 }
 
-static I jdo(J jt, C* lp){I e;A x;JJ jm=MTHREAD(jt);  // get address of thread struct we are using (the master thread)    scaf should use JJ as input
+static I jdo(JS jt, C* lp){I e;A x;JJ jm=MTHREAD(jt);  // get address of thread struct we are using (the master thread)    scaf should use JJ as input
  jm->jerr=0; jm->etxn=0; /* clear old errors */
  // The named-execution stack contains information on resetting the current locale.  If the first named execution deletes the locale it is running in,
  // that deletion is deferred until the locale is no longer running, which is never detected because there is no earlier named execution to clean up.
@@ -316,7 +316,7 @@ static I jdo(J jt, C* lp){I e;A x;JJ jm=MTHREAD(jt);  // get address of thread s
 
 #define SZINT             ((I)sizeof(int))
 
-C* getlocale(J jt){JJ jm=MTHREAD(jt); A y=jtlocname(jm,mtv); y=AAV(y)[0]; R CAV(jtstr0(jm,y));}   // return current locale of master thread
+C* getlocale(JS jt){JJ jm=MTHREAD(jt); A y=jtlocname(jm,mtv); y=AAV(y)[0]; R CAV(jtstr0(jm,y));}   // return current locale of master thread
 
 // Front-ends can call any functions exposed by JE, but the callback function for 11!:0 only calls jga to allocate a new literal array for returning result.
 // A front-end knows nothing how J memory pool works and it won't try to free or pop memory itself. This was just a design decision. eg,
@@ -394,7 +394,7 @@ B jtsesminit(JS jjt, I nthreads){R 1;}
 // obsolete IJT(jt,adbreakr)=IJT(jt,adbreak)=&breakdata; 
 
 // Main entry point to run the sentence in *lp in the master thread
-int _stdcall JDo(J jt, C* lp){int r; UI savcstackmin, savcstackinit, savqtstackinit;JJ jm=MTHREAD(jt);  // get address of thread struct we are using (the master thread)
+int _stdcall JDo(JS jt, C* lp){int r; UI savcstackmin, savcstackinit, savqtstackinit;JJ jm=MTHREAD(jt);  // get address of thread struct we are using (the master thread)
  if(unlikely(JT(jt,recurstate)>RECSTATEIDLE)){
   // recursive call.  If we are busy or already recurring, this would be an uncontrolled recursion.  Fail that
   savcstackmin=jm->cstackmin, savcstackinit=jm->cstackinit, savqtstackinit=JT(jt,qtstackinit);  // save stack pointers over recursion, in case the host resets them
@@ -420,7 +420,7 @@ int _stdcall JDo(J jt, C* lp){int r; UI savcstackmin, savcstackinit, savqtstacki
  R r;
 } 
 
-C* _stdcall JGetR(J jt){
+C* _stdcall JGetR(JS jt){
  R JT(jt,capture)?JT(jt,capture):(C*)"";
 }
 
@@ -430,7 +430,7 @@ C* _stdcall JGetR(J jt){
 // so the user must save it before re-calling.  This is a kludge - the user should pass in the address/length of the block to use - but
 // it preserves the interface
 // If the pointer to the name is NULL we just free the block
-A _stdcall JGetA(J jt, I n, C* name){A x,z=0;JJ jm=MTHREAD(jt);
+A _stdcall JGetA(JS jt, I n, C* name){A x,z=0;JJ jm=MTHREAD(jt);
  if(name==0){if(JT(jt,iomalloc)){FREE(JT(jt,iomalloc)); jm->malloctotal -= JT(jt,iomalloclen); JT(jt,iomalloc)=0; JT(jt,iomalloclen)=0;} R 0;}
  jm->jerr=0;
  A *old=jm->tnextpushp;
@@ -455,7 +455,7 @@ A _stdcall JGetA(J jt, I n, C* name){A x,z=0;JJ jm=MTHREAD(jt);
 }
 
 /* socket protocol CMDSET */
-I _stdcall JSetA(J jt,I n,C* name,I dlen,C* d){JJ jm=MTHREAD(jt);   // use master thread
+I _stdcall JSetA(JS jt,I n,C* name,I dlen,C* d){JJ jm=MTHREAD(jt);   // use master thread
  jm->jerr=0;
  if(!jtvnm(jm,n,name)){jtjsignal(jm,EVILNAME); R EVILNAME;}
  A *old=jm->tnextpushp;
@@ -474,7 +474,7 @@ typedef C* (_stdcall * inputtype) (J,C*);
 typedef C* (_stdcall * polltype) (J,int,int);
 */
 
-void _stdcall JSM(J jt, void* callbacks[])
+void _stdcall JSM(JS jt, void* callbacks[])
 {JJ jm=MTHREAD(jt);   // use master thread for cstack setting
  JT(jt,smoutput) = (outputtype)callbacks[0];  // callback function for output to J session
 // output type
@@ -517,7 +517,7 @@ void _stdcall JSM(J jt, void* callbacks[])
 }
 
 /* set jclient callbacks from values - easier for nodejs */
-void _stdcall JSMX(J jt, void* out, void* wd, void* in, void* poll, I opts)
+void _stdcall JSMX(JS jt, void* out, void* wd, void* in, void* poll, I opts)
 {JJ jm=MTHREAD(jt);   // use master thread for cstack
  JT(jt,smoutput) = (outputtype)out;
  JT(jt,smdowd) = wd;
@@ -541,7 +541,7 @@ void _stdcall JSMX(J jt, void* out, void* wd, void* in, void* poll, I opts)
 }
 
 // return pointer to string name of current locale, or 0 if error
-C* _stdcall JGetLocale(J jt){JJ jm=MTHREAD(jt);   // use master thread
+C* _stdcall JGetLocale(JS jt){JJ jm=MTHREAD(jt);   // use master thread
  A *old=jm->tnextpushp;  // set free-back-to point
  if(JT(jt,iomalloc)){FREE(JT(jt,iomalloc)); jm->malloctotal -= JT(jt,iomalloclen); JT(jt,iomalloc)=0; JT(jt,iomalloclen)=0;}  // free old block if any
  C* z=getlocale(jt);  // get address of string to return
@@ -550,19 +550,19 @@ C* _stdcall JGetLocale(J jt){JJ jm=MTHREAD(jt);   // use master thread
  R JT(jt,iomalloc);  // return pointer to string
 }
 
-A _stdcall Jga(J jjt, I t, I n, I r, I*s){A z;JJ jt=MTHREAD(jjt);  // the name 'jt' is used by ga()
+A _stdcall Jga(JS jjt, I t, I n, I r, I*s){A z;JJ jt=MTHREAD(jjt);  // the name 'jt' is used by ga()
  RZ(z=ga(t, n, r, s));
  AC(z)=ACUC1;  // set nonrecursive usecount so that parser won't free the block prematurely.  This gives the usecount as if the block were 'assigned' by this call
  return z;
 }
 
-void oleoutput(J jt, I n, char* s); /* SY_WIN32 only */
+void oleoutput(JS jt, I n, char* s); /* SY_WIN32 only */
 
 #define capturesize 80000
 
 /* jsto - display output in output window */
 // type is mtyo of string, s->null-terminated string
-void jsto(J jt,I type,C*s){C e;I ex;
+void jsto(JS jt,I type,C*s){C e;I ex;
  if(JT(jt,nfe))
  {JJ jm=MTHREAD(jt);  // get address of thread struct we are using
   // here for Native Front End state, toggled by 15!:16
@@ -607,9 +607,9 @@ __attribute__((constructor)) static void Initializer(int argc, char** argv, char
  // by the compiler; some must be initialized a run-time in static memory; some must be allocated into A blocks
  // pointed to by static names.  Because of the A blocks, we have to perform a skeletal initialization of jt,
  // just enough to do ga().  The rest of jt is never used
- J jtnobdy=malloc(sizeof(JST)+JTALIGNBDY-1);
+ JS jtnobdy=malloc(sizeof(JST)+JTALIGNBDY-1);
  if(!jtnobdy) R;
- J jt = (J)(((I)jtnobdy+JTALIGNBDY-1)&-JTALIGNBDY);  // force to SDRAM page boundary
+ JS jt = (JS)(((I)jtnobdy+JTALIGNBDY-1)&-JTALIGNBDY);  // force to SDRAM page boundary
  memset(jt,0,sizeof(JST));
  if(!jtglobinit(jt)){free(jtnobdy); R;}
  dll_initialized= 1; JT(jt,heap)=(void *)jtnobdy;  // save allo address for later free
@@ -619,11 +619,11 @@ __attribute__((constructor)) static void Initializer(int argc, char** argv, char
 
  // Init for a new J instance.  Globals have already been initialized.
  // Create a new jt, which will be the one we use for the entirety of the instance.
-J JInit(void){
+JS JInit(void){
  if(!dll_initialized) R 0; // constructor failed
- J jtnobdy;
+ JS jtnobdy;
  RZ(jtnobdy=malloc(sizeof(JST)+JTALIGNBDY-1));
- J jt = (J)(((I)jtnobdy+JTALIGNBDY-1)&-JTALIGNBDY);  // force to SDRAM page boundary
+ JS jt = (JS)(((I)jtnobdy+JTALIGNBDY-1)&-JTALIGNBDY);  // force to SDRAM page boundary
  memset(jt,0,sizeof(JST));
  // Initialize all the info for the shared region and the master thread
  if(!jtjinit2(jt,0,0)){free(jtnobdy); R 0;};
@@ -632,7 +632,7 @@ J JInit(void){
 }
 
 // clean up at the end of a J instance
-int JFree(J jt){
+int JFree(JS jt){
   if(!jt) R 0; JJ jm=MTHREAD(jt);   // use master thread
   breakclose(jt);
   jm->jerr=0; jm->etxn=0; /* clear old errors */
@@ -689,7 +689,7 @@ int valid(C* psrc, C* psnk)
  return 0;  
 }
 
-int _stdcall JGetM(J jt, C* name, I* jtype, I* jrank, I* jshape, I* jdata)
+int _stdcall JGetM(JS jt, C* name, I* jtype, I* jrank, I* jshape, I* jdata)
 {JJ jm=MTHREAD(jt);   // use master thread
  A a; char gn[256]; int z;
  A *old=jm->tnextpushp;
@@ -708,7 +708,7 @@ int _stdcall JGetM(J jt, C* name, I* jtype, I* jrank, I* jshape, I* jdata)
  return z;
 }
 
-static int setterm(J jt, C* name, I* jtype, I* jrank, I* jshape, I* jdata)
+static int setterm(JS jt, C* name, I* jtype, I* jrank, I* jshape, I* jdata)
 {JJ jm=MTHREAD(jt);   // use master thread
  A a;
  I k=1,i,n;
@@ -757,7 +757,7 @@ static int setterm(J jt, C* name, I* jtype, I* jrank, I* jshape, I* jdata)
  return jm->jerr;
 }
 
-int _stdcall JSetM(J jt, C* name, I* jtype, I* jrank, I* jshape, I* jdata)
+int _stdcall JSetM(JS jt, C* name, I* jtype, I* jrank, I* jshape, I* jdata)
 {JJ jm=MTHREAD(jt);   // use master thread
  int er;
 
@@ -770,7 +770,7 @@ int _stdcall JSetM(J jt, C* name, I* jtype, I* jrank, I* jshape, I* jdata)
 #define EDCBUSY -1
 #define EDCEXE -2
 
-C* esub(J jt, I ec)
+C* esub(JS jt, I ec)
 {
  if(!ec) return "";
  if(ec == EDCBUSY) return "busy with previous input";
@@ -779,7 +779,7 @@ C* esub(J jt, I ec)
  return CAV(AAV(JT(jt,evm))[ec]);
 }
 
-int _stdcall JErrorTextM(J jt, I ec, I* p)
+int _stdcall JErrorTextM(JS jt, I ec, I* p)
 {
  *p = (I)esub(jt, ec);
  return 0;

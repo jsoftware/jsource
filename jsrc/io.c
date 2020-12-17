@@ -133,6 +133,15 @@ A recursive JDo may use a DD, but only if it is fully contained in the string
 #undef JT
 #define JT(p,n) p->n  // used for references in JS, which most references in this module are
 #define IJT(p,n) JT(JJTOJ(p),n)    // used in function that interface to internal functions and thus take a JJ
+#define SETJTJM \
+ JJ jm; \
+ if((I)jt&(JTALIGNBDY-1)){jm=(JJ)jt; jt=JJTOJ(jt);   /* if jt is a thread pointer, use it and set jt to the shared */ \
+ }else{jm=MTHREAD(jt);}  /* if jt is a shared pointer, use the master thread */
+#define SETJTJM2 /* name jt is reference in other macros */ \
+ JJ jt; \
+ if((I)jjt&(JTALIGNBDY-1)){jt=(JJ)jjt; jjt=JJTOJ(jjt);   /* if jjt is a thread pointer, use it and set jjt to the shared */ \
+ }else{jt=MTHREAD(jjt);}  /* if jjt is a shared pointer, use the master thread */
+
 
 
 extern void dllquit(JJ);
@@ -390,9 +399,8 @@ B jtsesminit(JS jjt, I nthreads){R 1;}
 // obsolete IJT(jt,adbreakr)=IJT(jt,adbreak)=&breakdata; 
 
 // Main entry point to run the sentence in *lp in the master thread, or in the thread given if jt is not a JS pointer
-int _stdcall JDo(JS jt, C* lp){int r; UI savcstackmin, savcstackinit, savqtstackinit;JJ jm;
- if((I)jt&(JTALIGNBDY-1)){jm=(JJ)jt; jt=JJTOJ(jt);   // if jt is a thread pointer, use it and set jt to the shared
- }else{jm=MTHREAD(jt);}  // if jt is a shared pointer, use the master thread
+int _stdcall JDo(JS jt, C* lp){int r; UI savcstackmin, savcstackinit, savqtstackinit;
+ SETJTJM
  if(unlikely(JT(jt,recurstate)>RECSTATEIDLE)){
   // recursive call.  If we are busy or already recurring, this would be an uncontrolled recursion.  Fail that
   savcstackmin=jm->cstackmin, savcstackinit=jm->cstackinit, savqtstackinit=JT(jt,qtstackinit);  // save stack pointers over recursion, in case the host resets them
@@ -419,6 +427,7 @@ int _stdcall JDo(JS jt, C* lp){int r; UI savcstackmin, savcstackinit, savqtstack
 } 
 
 C* _stdcall JGetR(JS jt){
+ SETJTJM
  R JT(jt,capture)?JT(jt,capture):(C*)"";
 }
 
@@ -428,7 +437,8 @@ C* _stdcall JGetR(JS jt){
 // so the user must save it before re-calling.  This is a kludge - the user should pass in the address/length of the block to use - but
 // it preserves the interface
 // If the pointer to the name is NULL we just free the block
-A _stdcall JGetA(JS jt, I n, C* name){A x,z=0;JJ jm=MTHREAD(jt);
+A _stdcall JGetA(JS jt, I n, C* name){A x,z=0;
+ SETJTJM
  if(name==0){if(JT(jt,iomalloc)){FREE(JT(jt,iomalloc)); jm->malloctotal -= JT(jt,iomalloclen); JT(jt,iomalloc)=0; JT(jt,iomalloclen)=0;} R 0;}
  jm->jerr=0;
  A *old=jm->tnextpushp;
@@ -453,7 +463,8 @@ A _stdcall JGetA(JS jt, I n, C* name){A x,z=0;JJ jm=MTHREAD(jt);
 }
 
 /* socket protocol CMDSET */
-I _stdcall JSetA(JS jt,I n,C* name,I dlen,C* d){JJ jm=MTHREAD(jt);   // use master thread
+I _stdcall JSetA(JS jt,I n,C* name,I dlen,C* d){
+ SETJTJM
  jm->jerr=0;
  if(!jtvnm(jm,n,name)){jtjsignal(jm,EVILNAME); R EVILNAME;}
  A *old=jm->tnextpushp;
@@ -473,7 +484,8 @@ typedef C* (_stdcall * polltype) (J,int,int);
 */
 
 void _stdcall JSM(JS jt, void* callbacks[])
-{JJ jm=MTHREAD(jt);   // use master thread for cstack setting
+{
+ SETJTJM
  JT(jt,smoutput) = (outputtype)callbacks[0];  // callback function for output to J session
 // output type
 // #define MTYOFM  1 /* formatted result array output */
@@ -516,7 +528,8 @@ void _stdcall JSM(JS jt, void* callbacks[])
 
 /* set jclient callbacks from values - easier for nodejs */
 void _stdcall JSMX(JS jt, void* out, void* wd, void* in, void* poll, I opts)
-{JJ jm=MTHREAD(jt);   // use master thread for cstack
+{
+ SETJTJM
  JT(jt,smoutput) = (outputtype)out;
  JT(jt,smdowd) = wd;
  JT(jt,sminput) = (inputtype)in;
@@ -539,7 +552,8 @@ void _stdcall JSMX(JS jt, void* out, void* wd, void* in, void* poll, I opts)
 }
 
 // return pointer to string name of current locale, or 0 if error
-C* _stdcall JGetLocale(JS jt){JJ jm=MTHREAD(jt);   // use master thread
+C* _stdcall JGetLocale(JS jt){
+ SETJTJM
  A *old=jm->tnextpushp;  // set free-back-to point
  if(JT(jt,iomalloc)){FREE(JT(jt,iomalloc)); jm->malloctotal -= JT(jt,iomalloclen); JT(jt,iomalloc)=0; JT(jt,iomalloclen)=0;}  // free old block if any
  C* z=getlocale(jt);  // get address of string to return
@@ -548,7 +562,8 @@ C* _stdcall JGetLocale(JS jt){JJ jm=MTHREAD(jt);   // use master thread
  R JT(jt,iomalloc);  // return pointer to string
 }
 
-A _stdcall Jga(JS jjt, I t, I n, I r, I*s){A z;JJ jt=MTHREAD(jjt);  // the name 'jt' is used by ga()
+A _stdcall Jga(JS jjt, I t, I n, I r, I*s){A z;  // the name 'jt' is used by ga()
+ SETJTJM2
  RZ(z=ga(t, n, r, s));
  AC(z)=ACUC1;  // set nonrecursive usecount so that parser won't free the block prematurely.  This gives the usecount as if the block were 'assigned' by this call
  return z;
@@ -688,7 +703,8 @@ int valid(C* psrc, C* psnk)
 }
 
 int _stdcall JGetM(JS jt, C* name, I* jtype, I* jrank, I* jshape, I* jdata)
-{JJ jm=MTHREAD(jt);   // use master thread
+{
+ SETJTJM
  A a; char gn[256]; int z;
  A *old=jm->tnextpushp;
  if(strlen(name) >= sizeof(gn)){jtjsignal(jm,z=EVILNAME);
@@ -756,7 +772,8 @@ static int setterm(JS jt, C* name, I* jtype, I* jrank, I* jshape, I* jdata)
 }
 
 int _stdcall JSetM(JS jt, C* name, I* jtype, I* jrank, I* jshape, I* jdata)
-{JJ jm=MTHREAD(jt);   // use master thread
+{
+ SETJTJM
  int er;
 
  A *old=jm->tnextpushp;
@@ -779,6 +796,7 @@ C* esub(JS jt, I ec)
 
 int _stdcall JErrorTextM(JS jt, I ec, I* p)
 {
+ SETJTJM
  *p = (I)esub(jt, ec);
  return 0;
 }

@@ -40,11 +40,13 @@ B jtparseinit(JS jjt, I nthreads){A x;
 // routine only when we are checking inplacing for final assignments, for which the parser stack is guaranteed to be empty; so any
 // use of the name that was called for by this sentence must be finished
 I jtnotonupperstack(J jt, A w) {
-  // w is known nonzero
-  // see if name was stacked (for the first time) in this very sentence
-  A *v=jt->parserstackframe.nvrotop+AAV1(jt->nvra);  // point to current-sentence region of the nvr area
-  DQ(jt->parserstackframe.nvrtop-jt->parserstackframe.nvrotop, if(*v==w)R 1; ++v;);   // if name stacked in this sentence, that's OK
-  // see if name was not stacked at all
+  // w is known nonzero.  In-place assign it only if its NVR count is 1, indicating that only one sentence may have this name stacked
+  if(likely(AM(w)==1)){
+   // see if name was stacked (for the first time) in this very sentence
+   A *v=jt->parserstackframe.nvrotop+AAV1(jt->nvra);  // point to current-sentence region of the nvr area
+   DQ(jt->parserstackframe.nvrtop-jt->parserstackframe.nvrotop, if(*v==w)R 1; ++v;);   // if name stacked in this sentence, that's OK
+  }
+  // not stacked here, so not reassignable here.  see if name was not stacked at all - that would be OK
   R !(AFLAG(w)&AFNVR);   // return OK if name not stacked (rare, because if it wasn't stacked in the current sentence why would we think we can inplace it?)
 }
 
@@ -490,9 +492,21 @@ rdglob: ;
          // Stack a named value only once.  This is needed only for names whose VALUE is put onto the stack (i. e. a noun); if we stack a REFERENCE
          // (via namerefacv), no special protection is needed.  And, it is not needed for local names, because they are inaccessible to deletion in called
          // functions (that is, the user should not use u. to delete a local name).  If a local name is deleted, we always defer the deletion till the end of the sentence, easier than checking
-        if(likely(s!=0))if(likely(s->val!=0))if(AT(s->val)&NOUN)if(likely(!(AFLAG(s->val)&AFNVR))){ 
-         AAV1(jt->nvra)[jt->parserstackframe.nvrtop++] = s->val;   // record the place where the value was protected, so we can free it when this sentence completes
-         AFLAG(s->val) |= AFNVR|AFNVRUNFREED;  // mark the value as protected and not yet deferred-freed
+         // When NVR is set, AM is used to hold the count of NVR stacking, so we can't have NVR and NJA both set.  User manages NJAs separately anyway
+// obsolete         if(likely(s!=0))if(likely(s->val!=0))if(AT(s->val)&NOUN)if(likely(!(AFLAG(s->val)&AFNVR))){ 
+        if(likely(s!=0))if(likely(s->val!=0))if(AT(s->val)&NOUN){ 
+         // Normally local variables never get close to here because they have bucket info.  But if they are computed assignemts,
+         // or inside eval strings, they may come through this path.  If one of them is y, it might be virtual.  Thus, we must make sure we don't
+         // damage AM in that case.  We don't need NVR then, because locals never need NVR.
+         if(likely(!(AFLAG(s->val)&AFNVR+AFNJA+AFVIRTUAL))){
+          // on the FIRST NVR, we set NVR|UNFREED, and AM=1.  On subsequent ones we increment AM
+          AFLAG(s->val) |= AFNVR|AFNVRUNFREED;  // mark the value as protected and not yet deferred-freed
+          AM(s->val)=1;  // set NVR count on the first encounter
+          AAV1(jt->nvra)[jt->parserstackframe.nvrtop++] = s->val;   // record the place where the value was protected, so we can free it when this sentence completes
+         }else if(likely(!(AFLAG(s->val)&AFNJA+AFVIRTUAL))){
+          ++AM(s->val);
+          AAV1(jt->nvra)[jt->parserstackframe.nvrtop++] = s->val;   // record the place where the value was protected, so we can free it when this sentence completes
+         }  // if NJA/virtual, leave NVR alone
         }
        }
        // end of looking at local/global symbol tables
@@ -727,9 +741,12 @@ failparse:  // If there was an error during execution or name-stacking, exit wit
   // them now.  There may be references to these names in the result (if we are returning a verb/adv/conj),
   // so we don't free the names quite yet: we put them on the tpush stack to be freed after we know
   // we are through with the result.  If we are returning a noun, free them right away unless they happen to be the very noun we are returning
+  // We apply the final free only when the NVR count goes to 0, to make sure we hold off till the last stacked reference has been seen off
   v=AAV1(jt->nvra)+nvrotop;  // point to our region of the nvr area
   UI zcompval = !z||AT(z)&NOUN?0:-1;  // if z is 0, or a noun, immediately free only values !=z.  Otherwise don't free anything
-  DQ(jt->parserstackframe.nvrtop-nvrotop, A vv = *v; I vf = AFLAG(vv); AFLAG(vv) = vf & ~(AFNVR|AFNVRUNFREED); if(!(vf&AFNVRUNFREED))if(((UI)z^(UI)vv)>zcompval){fanano0(vv);}else{tpushna(vv);} ++v;);   // schedule deferred frees.
+  DQ(jt->parserstackframe.nvrtop-nvrotop, A vv = *v; I vf = AFLAG(vv);
+   if(likely(--AM(vv)==0)){AFLAG(vv) = vf & ~(AFNVR|AFNVRUNFREED); if(!(vf&AFNVRUNFREED))if(((UI)z^(UI)vv)>zcompval){fanano0(vv);}else{tpushna(vv);}}
+  ++v;);   // schedule deferred frees.
     // na so that we don't audit, since audit will relook at this NVR stack
 
   // Still can't return till frame-stack popped

@@ -607,7 +607,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define A0              0   // a nonexistent A-block
 #define ABS(a)          (0<=(a)?(a):-(a))
 #define ASSERT(b,e)     {if(unlikely(!(b))){jsignal(e); R 0;}}
-#define ASSERTMASTER(b,e)     {if(unlikely(!(b))){jtjsignal(jm,e); R 0;}}   // used in io.c to signal in master thread
+#define ASSERTTHREAD(b,e)     {if(unlikely(!(b))){jtjsignal(jm,e); R 0;}}   // used in io.c to signal in master thread
 // version for debugging
 // #define ASSERT(b,e)     {if(unlikely(!(b))){fprintf(stderr,"error code: %i : file %s line %d\n",(int)(e),__FILE__,__LINE__); jsignal(e); R 0;}}
 #define ASSERTD(b,s)    {if(unlikely(!(b))){jsigd((s)); R 0;}}

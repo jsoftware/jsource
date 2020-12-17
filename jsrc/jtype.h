@@ -118,13 +118,14 @@ struct AD {
  } kchain;
  FLAGT flag;
  union {
-  I m;  // Multi-use field. (1) For NJA/SMM blocks, size of allocation. (2) for blocks coming out of a COUNTITEMS verb, holds the number of items in the
-        // raze of the noun (if the types are identical) (3) for SYMB tables for explicit definitions, the address of the calling symbol table (4) for the block
-        // holding the amend offsets in x u} y, the number of axes of y that are built into the indexes in u (5) for name references, the value of jt->modifiercount when the name was last looked up
-        // (6) in the return from wordil, holds the number of words if any final NB. is discarded; (7) in the result of indexofsub when called for FORKEY, contains the
-        // number of partitions found; (8) in the self block for y L: n and u S: n, the address of the fs block for u; (9) in the call to jtisf (multiple assignment), holds the
-        // address of the symbol table being assigned to (10) in the y block internal to pv.c, used for flags (11) in hashtables in x15.c and in tickers, the number of entries that have been hashed
-        // (12) in file-lock list and file-number list, the # valid files
+  I m;  // Multi-use field. (1) For NJA/SMM blocks, size of allocation. (2) for NVR blocks (that are not NJA), the number of times the block has been put on the NVR stack.
+        // (3) for blocks coming out of a COUNTITEMS verb, holds the number of items in the
+        // raze of the noun (if the types are identical) (4) for SYMB tables for explicit definitions, the address of the calling symbol table (5) for the block
+        // holding the amend offsets in x u} y, the number of axes of y that are built into the indexes in u (6) for name references, the value of jt->modifiercount when the name was last looked up
+        // (7) in the return from wordil, holds the number of words if any final NB. is discarded; (8) in the result of indexofsub when called for FORKEY, contains the
+        // number of partitions found; (9) in the self block for y L: n and u S: n, the address of the fs block for u; (10) in the call to jtisf (multiple assignment), holds the
+        // address of the symbol table being assigned to (11) in the y block internal to pv.c, used for flags (12) in hashtables in x15.c and in tickers, the number of entries that have been hashed
+        // (13) in file-lock list and file-number list, the # valid files
   A back; // For VIRTUAL blocks, points to backing block
   A *zaploc;  // For all blocks, AM initially holds a pointer to the place in the tpop stack (or hijacked tpop stack) that points back to the allocated block.  This value is guaranteed
         // to remain valid as long as the block is nonvirtual inplaceable and might possibly return as a result to the parser or result assembly  (in cases under m above, the block cannot become such a result)
@@ -473,8 +474,11 @@ typedef I SI;
 #define ASGNINPLACESGNNJA(s,w)  ( ((s)&AC(w))<0 || (((s)&(AC(w)-2))<0||(((s)&(AC(w)-3)&SGNIF(AFLAG(w),AFNJAX))<0))&&jt->assignsym&&jt->assignsym->val==w&&(!(AFLAG(w)&AFRO+AFNVR)||(!(AFLAG(w)&AFRO)&&notonupperstack(w))))  // OK to inplace ordinary operation
 // define virtreqd and set it to 0 to start   scaf no LIT B01 C2T etc
 // This is used in apip.  We must ALWAYS allow inplacing for NJA types, but for ordinary inplacing we don't bother if the number of atoms of w pushes a over a power-of-2 boundary
-// We don't try to help the non-NVR case because NJAs will always be globals and thus have NVR set
-#define EXTENDINPLACENJA(a,w)  ( ((AC(a)&(((AN(a)+AN(w))^AN(a))-AN(a)))<0) || ((((AC(a)-2)&(((AN(a)+AN(w))^AN(a))-AN(a)))<0)||(AC(a)==2&&AFLAG(a)&AFNJA))&&((jt->assignsym&&jt->assignsym->val==a&&!(AFLAG(a)&AFRO))||(!jt->assignsym&&(virtreqd=1,!(AFLAG(a)&(AFRO|AFVIRTUAL)))))&&notonupperstack(a))  // OK to inplace ordinary operation
+#define EXTENDINPLACENJA(a,w)  ( ((AC(a)&(((AN(a)+AN(w))^AN(a))-AN(a)))<0) || \
+  ((((AC(a)-2)&(((AN(a)+AN(w))^AN(a))-AN(a)))<0)||(AC(a)==2&&AFLAG(a)&AFNJA)) && \
+  ( (jt->assignsym&&jt->assignsym->val==a&&!(AFLAG(a)&AFRO)) || (!jt->assignsym&&(virtreqd=1,!(AFLAG(a)&(AFRO|AFVIRTUAL)))) ) && \
+  notonupperstack(a) \
+ )  // OK to inplace ordinary operation
 
 /* Values for AFLAG(x) field of type A                                     */
 // the flags defined here must be mutually exclusive with TRAVERSIBLE
@@ -487,7 +491,8 @@ typedef I SI;
 #define AFDEBUGRESULT   ((I)1<<AFDEBUGRESULTX)
 // Note: bit 4 is LABANDONED which is merged here
 #define AFNVRX          8
-#define AFNVR           ((I)1<<AFNVRX)  // This value is on the parser's execution stack, and must not be freed until it is removed.  Stacked values start as NVR+UNFREED
+#define AFNVR           ((I)1<<AFNVRX)  // This value is on the parser's execution stack, and must not be freed until it is removed.  Stacked values start as NVR+UNFREED.  If NVR is set, AM contains the
+                                       // number of times the value is on the nvr stack.  Ir is freed when the value goes to 0.  NVR is not set if NJA is set.
 // the spacing of VIRTUALBOXED->UNIFORMITEMS must match ZZFLAGWILLBEOPENED->ZZCOUNTITEMS
 #define AFUNIFORMITEMSX 22     // matches MARK
 #define AFUNIFORMITEMS  ((I)1<<AFUNIFORMITEMSX)  // It is known that this boxed array has contents whose items are of uniform shape and type

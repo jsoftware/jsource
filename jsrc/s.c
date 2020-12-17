@@ -524,7 +524,7 @@ L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I m,n,wn,wr,wt;L*e;
      xaf = AFNVRUNFREED; // ignore other flags; set xaf as if x==0 to avoid any other usecount changes
    }
  } else {xaf = AFNVRUNFREED; xt=0;}   // If name is not assigned, indicate that it is not read-only or memory-mapped.  Also set 'impossible' code of unfreed+not NVR
- if(!(AFNJA&xaf)){
+ if(likely(!(AFNJA&xaf))){
   I wt=AT(w);
   // Normal case of non-memory-mapped assignment.
   // If we are assigning the same data block that's already there, don't bother with changing use counts or anything else (assignment-in-place)
@@ -575,6 +575,7 @@ L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I m,n,wn,wr,wt;L*e;
       if(unlikely((I)(jt->parserstackframe.nvrtop+1U) > AN(nvra)))RZ(nvra=extnvr());  // Extend nvr stack if necessary.  copied from parser
       AAV1(nvra)[jt->parserstackframe.nvrtop++] = x;   // record the place where the value was protected (i. e. this sentence); it will be freed when this sentence finishes
       AFLAG(x) |= AFNVR;  // mark the value as protected in NVR stack
+      AM(x)=1;  // When NVR is set, AM must contain count of # times value has been pushed onto the stack
      }
     }else{
      // already NVR+FREED or VIRTUAL: 'free' this time, knowing the real free will happen later,  We know usecount>1, but it may be PERMANENT; decrement it if not

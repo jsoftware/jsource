@@ -116,7 +116,7 @@ typedef struct rngdata {
 // things needed by parsing
  PFRAME parserstackframe;  // 4 words  
  L *assignsym;       // symbol-table entry for the symbol about to be assigned      scaf  need to use LX when multithreaded
- A nvra;             // data blocks that are in execution somewhere - always non-virtual, always rank 1, AS[0] holds current pointer   ???
+ A nvra;             // data blocks that are in execution somewhere - always non-virtual, always rank 1, AS[0] holds current pointer
 
 // things needed for allocation of large blocks
  I mfreegenallo;        // Amount allocated through malloc, biased
@@ -135,7 +135,11 @@ typedef struct rngdata {
  C pos[2];           /* boxed output x-y positioning                    */
  B iepdo;            /* 1 iff do iep                       migrated            */
  C xmode;            /* extended integer operating mode                 */
-// 1 byte free
+ C recurstate;       // state of recursions through JDo migrated
+#define RECSTATEIDLE    0  // JE is inactive, waiting for work
+#define RECSTATEBUSY    1  // JE is running a call from JDo
+#define RECSTATEPROMPT  2  // JE is running, and is suspended having called the host for input
+#define RECSTATERECUR   3  // JE is running and waiting for a prompt, and the host has made a recursive call to JDo (which must not prompt)
 #if !(C_CRC32C && SY_64)
  UIL  ctmask;           /* 1 iff significant wrt ct; for i. and i:         */
 #endif
@@ -184,16 +188,11 @@ typedef struct JSTstruct {
  B assert;           /* 1 iff evaluate assert. statements               */
  B stch;             /* enable setting of changed bit                   */
  C asgzomblevel;     // 0=do not assign zombie name before final assignment; 1=allow premature assignment of complete result; 2=allow premature assignment even of incomplete result   
- C recurstate;       // state of recursions through JDo migrated
-#define RECSTATEIDLE    0  // JE is inactive, waiting for work
-#define RECSTATEBUSY    1  // JE is running a call from JDo
-#define RECSTATEPROMPT  2  // JE is running, and is suspended having called the host for input
-#define RECSTATERECUR   3  // JE is running and waiting for a prompt, and the host has made a recursive call to JDo (which must not prompt)
  UC dbuser;           /* user-entered value for db          migrated             */
 #if MEMAUDIT & 2
  C audittstackdisabled;   // set to 1 to disable auditing
 #endif
-// 3 bytes free
+// 4 bytes free
 
 // stuff used during verb execution
  void *heap;            // heap handle for large allocations

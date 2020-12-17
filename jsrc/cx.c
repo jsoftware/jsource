@@ -263,7 +263,7 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
     // If there is no calling stack frame we can't turn on debug mode because we can't suspend
     // If we are executing a recursive call to JDo we can't go into debug because we can't prompt
     DC d; for(d=jt->sitop;d&&DCCALL!=d->dctype;d=d->dclnk);  /* find bottommost call                 */
-    if(d&&JT(jt,recurstate)<RECSTATEPROMPT){  // if there is a call and thus we can suspend; and not prompting already
+    if(d&&jt->recurstate<RECSTATEPROMPT){  // if there is a call and thus we can suspend; and not prompting already
      BZ(thisframe=deba(DCPARSE,0L,0L,0L));  // if deba fails it will be before it modifies sitop.  Remember our stack frame
      old=jt->tnextpushp;  // protect the stack frame against free
      gsfctdl|=16+2;  // indicate we have a debug frame and are in debug mode

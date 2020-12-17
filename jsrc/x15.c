@@ -1194,9 +1194,9 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
  if('1'==cc->cc){fp=(FARPROC)*((I)cc->fp+(I*)*(I*)*data); CDASSERT(fp!=0,DEBADFN);}else fp=cc->fp;
 
  // call it.  This is a safe recursion point.  Back up to IDLE
- JT(jt,recurstate)&=~RECSTATEBUSY;  // back to IDLE/PROMPT state
+ jt->recurstate&=~RECSTATEBUSY;  // back to IDLE/PROMPT state
  docall(fp, data, dv-data, dd, dcnt, cc->zl, xv, cc->alternate);  // call the function, set the result
- JT(jt,recurstate)|=RECSTATEBUSY;  // cd complete, go back to normal running state, BUSY normally or RECUR if a prompt is pending
+ jt->recurstate|=RECSTATEBUSY;  // cd complete, go back to normal running state, BUSY normally or RECUR if a prompt is pending
 
  DO(cipcount, convertup(cipv[i],cipn[i],cipt[i]);); /* convert s and int to I and f to d as required */
 #if SY_WIN32

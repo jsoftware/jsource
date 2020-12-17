@@ -239,12 +239,13 @@ F1(jtex){A*wv,y,z;B*zv;I i,n;L*v;I modifierchg=0;
    if(jt->uflags.us.cx.cx_c.db)RZ(redef(mark,v));
    A locfound=syrdforlocale(y);  // get the locale in which the name is defined
    if((locfound==jt->locsyms)|(AFLAG(v->val)&AFNVRUNFREED)){  // see if local or NVR
-    if(!(AFLAG(v->val)&AFNVR)){
+    if(!(AFLAG(v->val)&AFNVR+AFNJA+AFVIRTUAL)){  // We can't set NVR if it is set already, or if AM is otherwise needed.  In that case don't defer the free.  Only x/y can be virtual
      // The symbol is a local symbol not on the NVR stack.  We must put it onto the NVR stack.
      A nvra=jt->nvra;
      if(unlikely((I)(jt->parserstackframe.nvrtop+1U) > AN(nvra)))RZ(nvra=extnvr());  // Extend nvr stack if necessary.  copied from parser
      AAV1(nvra)[jt->parserstackframe.nvrtop++] = v->val;   // record the place where the value was protected; it will be freed when this sentence finishes
      AFLAG(v->val) |= AFNVR|AFNVRUNFREED;  // mark the value as protected
+     AM(v->val)=1;  // set initial count of NVRs for the value
     }
     if(AFLAG(v->val)&AFNVRUNFREED){ras(v->val); AFLAG(v->val)&=~AFNVRUNFREED;}  // indicate deferred free, and protect from the upcoming free; but if already deferred-free, reduce the usecount now
    }

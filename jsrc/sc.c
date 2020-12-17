@@ -102,7 +102,7 @@ DF2(jtunquote){A z;
   if(jt->uflags.us.cx.cx_c.pmctr)pmrecord(thisname,jt->global?LOCNAME(jt->global):0,-1L,dyadex?VAL2:VAL1);  // Record the call to the name, if perf monitoring on
   // If we are required to insert a marker for each call, do so (if it hasn't been done already).  But not for pseudo-named functions
   if(stabent!=0 && jt->uflags.us.uq.uq_c.bstkreqd && callstackx==jt->callstacknext){pushcallstack1d(CALLSTACKPOPLOCALE,jt->global);}  //  If cocurrent is about, make every call visible
-  if(jt->uflags.us.cx.cx_c.db&&!(jt->glock||VLOCK&v->flag)&&JT(jt,recurstate)<RECSTATEPROMPT){  // The verb is locked if it is marked as locked, or if the script is locked; if recursive JDo, can't enter debug suspension so ignore debug
+  if(jt->uflags.us.cx.cx_c.db&&!(jt->glock||VLOCK&v->flag)&&jt->recurstate<RECSTATEPROMPT){  // The verb is locked if it is marked as locked, or if the script is locked; if recursive JDo, can't enter debug suspension so ignore debug
 // obsolete    jt->cursymb=stabent;
    z=dbunquote(dyadex?a:0,dyadex?w:a,fs,stabent);  // if debugging, go do that.  save last sym lookup as debug parm
   }else{

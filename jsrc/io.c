@@ -225,19 +225,19 @@ A jtjgets(JJ jt,C*p){A y;B b;C*v;I j,k,m,n;UC*s;
     n : 0 input lines up to terminating )
     1!:1[1 read from keyboard */
  // if we are already prompting, a second prompt would be unrecoverable & we fail this request
- ASSERT(IJT(jt,recurstate)<RECSTATEPROMPT,EVCTRL)
+ ASSERT(jt->recurstate<RECSTATEPROMPT,EVCTRL)
  showerr();  // if there is an error at this point, display it (shouldn't happen)   use jt to force typeout
  // read from the front end. This is either through the nfe path or via the callback to the FE
  if(IJT(jt,nfe)){
   // Native Front End
-  IJT(jt,recurstate)=RECSTATEPROMPT;  // advance to PROMPT state
+  jt->recurstate=RECSTATEPROMPT;  // advance to PROMPT state
   v=nfeinput(JJTOJ(jt),*p?"input_jfe_'      '":"input_jfe_''");   // use jt so always emit prompt
  }else{
   ASSERT(IJT(jt,sminput),EVBREAK); 
-  IJT(jt,recurstate)=RECSTATEPROMPT;  // advance to PROMPT state
+  jt->recurstate=RECSTATEPROMPT;  // advance to PROMPT state
   v=((inputtype)(IJT(jt,sminput)))(JJTOJ(jt),p);
  }
- IJT(jt,recurstate)=RECSTATEBUSY;  // prompt complete, go back to normal running state
+ jt->recurstate=RECSTATEBUSY;  // prompt complete, go back to normal running state
  R inpl(b,(I)strlen(v),v);  // return A block for string
 }
 
@@ -298,12 +298,12 @@ static I jdo(JS jt, C* lp){I e;A x;JJ jm=MTHREAD(jt);  // get address of thread 
  // All these immexes run with result-display enabled (jt flags=0)
  // Run any enabled immex sentences both before & after the line being executed.  I don't understand why we do it before, but it can't hurt since there won't be any.
  // BUT: don't do it if the call is recursive.  The user might have set the iep before a prompt, and won't expect it to be executed asynchronously
- if(likely(JT(jt,recurstate)<RECSTATEPROMPT))while(jm->iepdo&&JT(jt,iep)){jm->iepdo=0; jtimmex(jm,JT(jt,iep)); if(savcallstack==0)CALLSTACKRESET MODESRESET jm->jerr=0; jttpop(jm,old);}
+ if(likely(jm->recurstate<RECSTATEPROMPT))while(jm->iepdo&&JT(jt,iep)){jm->iepdo=0; jtimmex(jm,JT(jt,iep)); if(savcallstack==0)CALLSTACKRESET MODESRESET jm->jerr=0; jttpop(jm,old);}
  // Check for DDs in the input sentence.  If there is one, call jgets() to finish it.  Result is enqueue()d sentence.  If recursive, don't allow call to jgets()
- x=jtddtokens(jm,x,(((JT(jt,recurstate)&RECSTATEPROMPT)<<(2-1)))+1+(AN(jm->locsyms)>1)); if(!jm->jerr)jtimmex(jm,x);  // allow reads from jgets() if not recursive; return enqueue() result
+ x=jtddtokens(jm,x,(((jm->recurstate&RECSTATEPROMPT)<<(2-1)))+1+(AN(jm->locsyms)>1)); if(!jm->jerr)jtimmex(jm,x);  // allow reads from jgets() if not recursive; return enqueue() result
  e=jm->jerr;
  if(savcallstack==0)CALLSTACKRESET MODESRESET jm->jerr=0;
- if(likely(JT(jt,recurstate)<RECSTATEPROMPT))while(jm->iepdo&&JT(jt,iep)){jm->iepdo=0; jtimmex(jm,JT(jt,iep)); if(savcallstack==0)CALLSTACKRESET MODESRESET jm->jerr=0; jttpop(jm,old);}
+ if(likely(jm->recurstate<RECSTATEPROMPT))while(jm->iepdo&&JT(jt,iep)){jm->iepdo=0; jtimmex(jm,JT(jt,iep)); if(savcallstack==0)CALLSTACKRESET MODESRESET jm->jerr=0; jttpop(jm,old);}
  jtshowerr(jm);   // jt flags=0 to force typeout
  jtspfree(jm);
  jttpop(jm,old);
@@ -359,7 +359,7 @@ DF1(jtwd){A z=0;C*p=0;D*pd;I e,*pi,t;V*sv;
 //   8=multithreaded
 // smdowd = function pointer to Jwd, if NULL nothing will be called
   ASSERT(IJT(jt,smdowd),EVDOMAIN);
-  IJT(jt,recurstate)&=~RECSTATEBUSY;  // back to IDLE/PROMPT state
+  jt->recurstate&=~RECSTATEBUSY;  // back to IDLE/PROMPT state
   if(SMOPTLOCALE&IJT(jt,smoption)) {
 // pass locale as parameter of callback
 // obsolete     e= IJT(jt,smdowd)? ((dowdtype2)(IJT(jt,smdowd)))(jt, (int)t, w, &z, getlocale(jt)) : EVDOMAIN;
@@ -369,10 +369,10 @@ DF1(jtwd){A z=0;C*p=0;D*pd;I e,*pi,t;V*sv;
 // obsolete     e=IJT(jt,smdowd) ? ((dowdtype)(IJT(jt,smdowd)))(jt, (int)t, w, &z) : EVDOMAIN;
     e=((dowdtype)(IJT(jt,smdowd)))(JJTOJ(jt), (int)t, w, &z);
   }
-  IJT(jt,recurstate)|=RECSTATEBUSY;  // wd complete, go back to normal running state, BUSY normally or RECUR if a prompt is pending
+  jt->recurstate|=RECSTATEBUSY;  // wd complete, go back to normal running state, BUSY normally or RECUR if a prompt is pending
   if(!e) R mtm;   // e==0 is MTM
   ASSERT(e<=0,e); // e>=0 is EVDOMAIN etc
-  if(SMOPTPOLL&IJT(jt,smoption)){IJT(jt,recurstate)=RECSTATEPROMPT; z=(A)((polltype)(IJT(jt,smpoll)))(JJTOJ(jt), (int)t, (int)e); IJT(jt,recurstate)=RECSTATEBUSY; RZ(z);} // alternate way to get result aftercallback, but not yet used in any front-end
+  if(SMOPTPOLL&IJT(jt,smoption)){jt->recurstate=RECSTATEPROMPT; z=(A)((polltype)(IJT(jt,smpoll)))(JJTOJ(jt), (int)t, (int)e); jt->recurstate=RECSTATEBUSY; RZ(z);} // alternate way to get result aftercallback, but not yet used in any front-end
   if(SMOPTNOJGA&IJT(jt,smoption)) z=ca(z);  // front-end promised not to use Jga to allocate memory, but not yet used in any front-end
   if(e==-2){      // e==-2 is lit pairs
 // callback result z is a rank-1 literal array 
@@ -393,10 +393,10 @@ B jtsesminit(JS jjt, I nthreads){R 1;}
 int _stdcall JDo(JS jt, C* lp){int r; UI savcstackmin, savcstackinit, savqtstackinit;JJ jm;
  if((I)jt&(JTALIGNBDY-1)){jm=(JJ)jt; jt=JJTOJ(jt);   // if jt is a thread pointer, use it and set jt to the shared
  }else{jm=MTHREAD(jt);}  // if jt is a shared pointer, use the master thread
- if(unlikely(JT(jt,recurstate)>RECSTATEIDLE)){
+ if(unlikely(jm->recurstate>RECSTATEIDLE)){
   // recursive call.  If we are busy or already recurring, this would be an uncontrolled recursion.  Fail that
   savcstackmin=jm->cstackmin, savcstackinit=jm->cstackinit, savqtstackinit=JT(jt,qtstackinit);  // save stack pointers over recursion, in case the host resets them
-  ASSERTMASTER(!(JT(jt,recurstate)&(RECSTATEBUSY&RECSTATERECUR)),EVCTRL)  // fail if BUSY or RECUR
+  ASSERTTHREAD(!(jm->recurstate&(RECSTATEBUSY&RECSTATERECUR)),EVCTRL)  // fail if BUSY or RECUR
   // we know that in PROMPT state there is no volatile C state about, such as zombie status
 // obsolete  CLEARZOMBIE   // since we are executing a surprise call, the verb that is prompting might have set assignsym, which is about to be invalidated.  Clear that.
  }
@@ -406,9 +406,9 @@ int _stdcall JDo(JS jt, C* lp){int r; UI savcstackmin, savcstackinit, savqtstack
   if(jm->cstackmin)jm->cstackmin=(jm->cstackinit=JT(jt,qtstackinit))-(CSTACKSIZE-CSTACKRESERVE);
  }
 #endif
- ++JT(jt,recurstate);  // advance, to BUSY or RECUR state
+ ++jm->recurstate;  // advance, to BUSY or RECUR state
  r=(int)jdo(jt,lp);
- if(unlikely(--JT(jt,recurstate)>RECSTATEIDLE)){  // return to IDLE or PROMPT state
+ if(unlikely(--jm->recurstate>RECSTATEIDLE)){  // return to IDLE or PROMPT state
   // return from recursive call.  Restore stackpointers
   jm->cstackmin=savcstackmin, jm->cstackinit=savcstackinit, JT(jt,qtstackinit)=savqtstackinit;  // restore stack pointers after recursion
  }

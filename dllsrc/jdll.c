@@ -26,6 +26,12 @@
 #undef JT
 #define JT(p,n) p->n  // used for references in JS, which most references in this module are
 #define IJT(p,n) JT(JJTOJ(p),n)    // used in function that interface to internal functions and thus take a JJ
+// given a pointer which might be a JST* or JTT*, set pointers to use for the shared and thread regions.
+// If we were given JST*, keep it as shared & use master thread; if JTT*, keep it as thread & use shared region
+#define SETJTJM(in,jstout,jttout) \
+ JJ jttout; \
+ if((I)in&(JTALIGNBDY-1)){jttout=(JJ)in; jstout=JJTOJ(in);   /* if jt is a thread pointer, use it and set jt to the shared */ \
+ }else{jttout=MTHREAD(in);}  /* if jt is a shared pointer, use the master thread */
 
 extern void wtom(US* src, I srcn, UC* snk);
 extern void utow(C4* src, I srcn, US* snk);
@@ -277,12 +283,14 @@ static int jget(JJ jt, C* name, VARIANT* v, int dobstr)  // jt is a thread point
 
 CDPROC int _stdcall JGet(JS jt, C* name, VARIANT* v)
 {
-	return jget(MTHREAD(jt), name, v, 0); // no bstrs; run in master thread
+ SETJTJM(jt,jt,jm)
+	return jget(jm, name, v, 0); // no bstrs; run in master thread
 }
 
 CDPROC int _stdcall JGetB(JS jt, C* name, VARIANT* v)
 {
-	return jget(MTHREAD(jt), name, v, 1); // do bstrs; run in master thread
+ SETJTJM(jt,jt,jm)
+	return jget(jm, name, v, 1); // do bstrs; run in master thread
 }
 
 // convert a VARIANT to a J array
@@ -606,16 +614,19 @@ static int jsetx(JJ jt, C* name, VARIANT* v, int dobstrs)   // jt is a thread po
 
 CDPROC int _stdcall JSet(JS jt, C* name, VARIANT* v)
 {
-	return jsetx(MTHREAD(jt), name, v, 0);	// no bstrs, use master thread
+ SETJTJM(jt,jt,jm)
+	return jsetx(jm, name, v, 0);	// no bstrs, use master thread
 }
 
 CDPROC int _stdcall JSetB(JS jt, C* name, VARIANT* v)
 {
-	return jsetx(MTHREAD(jt), name, v, 1);	// do bstrs
+ SETJTJM(jt,jt,jm)
+	return jsetx(jm, name, v, 1);	// do bstrs
 }
 
 CDPROC int _stdcall JErrorText(JS jt, long ec, VARIANT* v)
 {
+ SETJTJM(jt,jt,jm)
 	C* p;
 	SAFEARRAY FAR* psa; 
 	SAFEARRAYBOUND rgsabound;
@@ -637,6 +648,7 @@ CDPROC int _stdcall JClear(JS jt){ return 0;};
 
 CDPROC int _stdcall JInt64R(JS jt, long b)
 {
+ SETJTJM(jt,jt,jm)
 #if SY_64
 	JT(jt,int64rflag) = b;
 #endif
@@ -645,12 +657,14 @@ CDPROC int _stdcall JInt64R(JS jt, long b)
 
 CDPROC int _stdcall JTranspose(JS jt, long b)
 {
+ SETJTJM(jt,jt,jm)
 	JT(jt,transposeflag) = b;
 	return 0;
 }
 
 CDPROC int _stdcall JErrorTextB(JS jt, long ec, VARIANT* v)
 {
+ SETJTJM(jt,jt,jm)
 	C* p;
 	BSTR bstr;
 
@@ -664,6 +678,7 @@ CDPROC int _stdcall JErrorTextB(JS jt, long ec, VARIANT* v)
 
 CDPROC int _stdcall JDoR(JS jt, C* p, VARIANT* v)
 {
+ SETJTJM(jt,jt,jm)
 	int e;
 	
 	JT(jt,oleop)=1;	// capture output
@@ -798,8 +813,9 @@ CDPROC JS _stdcall JInit()
 
 // clean up at the end of a J instance
 CDPROC int _stdcall JFree(JS jt)
-{JJ jm=&jt->threaddata[0];   // use master thread
+{
 	if(!jt) return 0;
+ SETJTJM(jt,jt,jm)
 // obsolete 	if(JT(jt,xep)&&AN(JT(jt,xep))){A *old=jm->tnextpushp; jtimmex(jm,JT(jt,xep)); fajt(jm,JT(jt,xep)); JT(jt,xep)=0; jm->jerr=0; jm->etxn=0; tpop(old); }  // force typeout
 	if(JT(jt,xep)&&AN(JT(jt,xep))){jtimmex(jm,JT(jt,xep));}  // If there is an exit sentence, run it & force typeout.  No need to tidy up since the heap is going away
 #if !SY_WINCE

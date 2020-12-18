@@ -368,8 +368,8 @@ static A virthook(J jtip, A f, A g){
 // operation.  It will check usecounts and addresses to decide whether to do this, and it bears the responsibility
 // of worrying about names on the stack.  Note that local names are not put onto the stack, so absence of AFNVR suffices for them.
 #endif
-// extend NVR stack, returning the A block for it
-A jtextnvr(J jt){ASSERT(jt->parserstackframe.nvrtop<32000,EVLIMIT); RZ(jt->nvra = ext(1, jt->nvra)); /* obsolete jt->nvran=(UI4)AN(jt->nvra); jt->nvrav = AAV(jt->nvra); */ R jt->nvra;}
+// extend NVR stack, returning the A block for it.  stack error on fail, since that's the likely cause
+A jtextnvr(J jt){ASSERT(jt->parserstackframe.nvrtop<32000,EVSTACK); RZ(jt->nvra = ext(1, jt->nvra)); /* obsolete jt->nvran=(UI4)AN(jt->nvra); jt->nvrav = AAV(jt->nvra); */ R jt->nvra;}
 
 #define BACKMARKS 3   // amount of space to leave for marks at the end.  Because we stack 3 words before we start to parse, we will
  // never see 4 marks on the stack - the most we can have is 1 value + 3 marks.
@@ -395,7 +395,7 @@ A jtparsea(J jt, A *queue, I m){PSTK * RESTRICT stack;A z,*v;I es;
   // If there is a stack inherited from the previous parse, and it is big enough to hold our queue, just use that.
   // The stack grows down
   if(unlikely((uintptr_t)jt->parserstackframe.parserstkend1-(uintptr_t)jt->parserstackframe.parserstkbgn < (m+BACKMARKS+FRONTMARKS)*sizeof(PSTK))){A y;
-   ASSERT(m<65000,EVLIMIT);  // To keep the stack frame small, we limit the length of a sentence
+   ASSERT(m<65000,EVLIMIT);  // To keep the stack frame small, we limit the number of words of a sentence
    I allo = MAX((m+BACKMARKS+FRONTMARKS)*sizeof(PSTK),PARSERSTKALLO); // number of bytes to allocate.  Allow 4 marks: 1 at beginning, 3 at end
    GATV0(y,B01,allo,1);
    jt->parserstackframe.parserstkbgn=(PSTK*)AV(y);   // save start of data area

@@ -92,6 +92,11 @@ typedef AD *A;
 // following bit is used as input to jtsymbis only
 #define JTFINALASGNX    0   // turn this on in jt to indicate that the assignment is final and does not have to worry about protecting the input value
 #define JTFINALASGN     (((I)1)<<JTFINALASGNX)
+// following bits are used in thorn for boxes
+#define JTTHORNYX       2  // 0, 1, or 2 for min/center/max for positioning of formatted data in boxes: horiz
+#define JTTHORNY    (((I)3)<<JTTHORNYX)
+#define JTTHORNXX       4  // 0, 1, or 2 for min/center/max for positioning of formatted data in boxes: vert
+#define JTTHORNX    (((I)3)<<JTTHORNXX)
 
 
 // Next flag must match result.h and VF2 flags, and must be above ZZFLAGBOXATOP

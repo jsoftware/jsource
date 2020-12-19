@@ -393,11 +393,12 @@ static void jtfminit(J jt,I m,I ht,I wd,A x,A y,C*zv, I cw){C*u,*v;I p,xn,*xv,yn
 // cw=size of output character, in bytes 1=LIT 2=C2T 4=C4T
 // We go through the boxes one by one, moving the data according to the width/height and centering info
 static void jtfmfill(J jt,I p,I q,I wd,A w,A x,A y,C*zv,I cw){A e,*wv;
-  I c,d,f,i,j,k,n,r,*s,xn,xp,*xv,yn,yp,*yv;
+  I c,d,f,i,j,k,n,r,*s,xn,xp,*xv,yn,yp,*yv;F1PREFJT;
  // n=#boxes in w, wv->&first box
  n=AN(w); wv=AAV(w);
  // Get centering info for x and y, 012 for MinCenterMax
- xp=jt->pos[0]; yp=jt->pos[1];
+// obsolete  xp=jt->pos[0]; yp=jt->pos[1];
+ xp=((I)jtinplace&JTTHORNX)>>JTTHORNXX; yp=((I)jtinplace&JTTHORNY)>>JTTHORNYX;
  // get xn=# rows, xv->height; & similarly for y
  xn=AN(x); xv=AV(x); yn=AN(y); yv=AV(y);
  // Loop through each box, installing it in the proper position
@@ -443,7 +444,7 @@ static void jtfmfill(J jt,I p,I q,I wd,A w,A x,A y,C*zv,I cw){A e,*wv;
 // 2-cell of w is opened and the contents joined to its neighbors, with boxing characters
 // installed around it.
 // All the 2-cells of the result have boxing characters in the same locations.
-static F1(jtenframe){A x,y,z;C*zv;I ht,m,n,p,q,t,wd,wdb,wr,xn,*xv,yn,*yv,zn;
+static F1(jtenframe){A x,y,z;C*zv;I ht,m,n,p,q,t,wd,wdb,wr,xn,*xv,yn,*yv,zn;F1PREFJT;
  // Find the positions of the cell boundaries within each 2-cell of the
  // result. x and y are lists, where x[i] and y[j] give the height/width of cell
  // (i,j) of the result 2-cell. This height/width includes the boxing char
@@ -498,7 +499,7 @@ F1(jtmat){A z;B b=0;C*v,*x;I c,k,m=1,p,q,qc,r,*s,t,zn;
 }
 
 // Convert 1 box to character array, then to character table
-static F2(jtmatth1){R mat(thorn1main(a,w));}
+static F2(jtmatth1){F1PREFJT; R mat(thorn1main(a,w));}
 static EVERYFS(matth1self,0,jtmatth1,0,VFLAGNONE)
 
 // Format boxed array.  Result is table of characters, with space-changing characters (like BS, CR) converted to spaces
@@ -506,7 +507,7 @@ static A jtthbox(J jt,A w,A prxthornuni){A z;static UC ctrl[]=" \001\002\003\004
  // Format the contents of each box; form into a table.  every returns an array of boxes,
  // with the same shape as w, where the contents have been replaced by a table of characters
  // Then call enframe to assemble all the tables into the result table
- RZ(z=enframe(every2(w,prxthornuni,(A)&matth1self)));
+ RZ(z=jtenframe((J)((I)jt+BIV0(prxthornuni)),every2(w,prxthornuni,(A)&matth1self)));
  // Go through each byte of the result, replacing ASCII codes 0, 8, 9, 10, and 13
  // (NUL, BS, TAB, LF, CR) with space
  // Three versions of replacement, depending on datatype of the array
@@ -535,8 +536,9 @@ static F1(jtths){A e,i,x,z;C c,*u,*v;I d,m,n,*s;P*p;
  R z;
 }
 
-// ": y, returning character array.  If jt->prxthornuni is set, LIT and C2T types return.  prxthornuni is zeroionei[0 or 1]
-// C2T when there are unicodes present
+// ": y, returning character array.  prxthornuni must be an A so it can go through every; the value is xxyypu where
+// xx and yy are box-positioning, p is a flag to jpr, u is 1 to have LIT and C2T types return
+// C2T when there are unicodes present.
 static A jtthorn1main(J jt,A w,A prxthornuni){PROLOG(0001);A z;
  ARGCHK1(w);
  if(!AN(w))GATV(z,LIT,0,AR(w),AS(w))
@@ -603,11 +605,15 @@ static A jtthorn1main(J jt,A w,A prxthornuni){PROLOG(0001);A z;
 // This will enable null insertion/removal for CJK, but that's OK since the result goes to display
 // This is called only from jprx()
 // obsolete F1(jtthorn1u){ A z; ARGCHK1(w); B to = jt->prxthornuni; jt->prxthornuni = !(AT(w)&(LIT)); z = thorn1main(w); jt->prxthornuni = to; R z; }
-F1(jtthorn1u){ A z; ARGCHK1(w); z = thorn1main(w,num(2+!(AT(w)&(LIT)))); R z; }  // set prx and prxthornuni flags
+F1(jtthorn1u){ A z; ARGCHK1(w); z = thorn1main(w,sc(jt->boxpos+2+!(AT(w)&(LIT)))); R z; }  // set prx and prxthornuni flags
 
 // entry point for returning LIT array only.  Allow C2T result, then convert.  But always pass literal arguments unchanged
+A jtthorn1xy(J jt,A w,I xypos){ A z; ARGCHK1(w); A prxthornuni=sc(xypos+!(AT(w)&(LIT+C2T+C4T))); z = thorn1main(w,prxthornuni); if (z&&AT(z)&(C2T+C4T))z = rank2ex(z,prxthornuni,DUMMYSELF,MIN(AR(z),1L),0,MIN(AR(z),1L),0, RoutineD); R z; }
+
 // obsolete F1(jtthorn1){ A z; ARGCHK1(w); B to = jt->prxthornuni; jt->prxthornuni = !(AT(w)&(LIT+C2T+C4T)); z = thorn1main(w); if (z&&AT(z)&(C2T+C4T))z = rank1ex(z, DUMMYSELF, MIN(AR(z),1), RoutineD); jt->prxthornuni = to; R z; }
-F1(jtthorn1){ A z; ARGCHK1(w); A prxthornuni=zeroionei(!(AT(w)&(LIT+C2T+C4T))); z = thorn1main(w,prxthornuni); if (z&&AT(z)&(C2T+C4T))z = rank2ex(z,prxthornuni,DUMMYSELF,MIN(AR(z),1L),0,MIN(AR(z),1L),0, RoutineD); R z; }
+// obsolete F1(jtthorn1){ A z; ARGCHK1(w); A prxthornuni=zeroionei(!(AT(w)&(LIT+C2T+C4T))); z = thorn1main(w,prxthornuni); if (z&&AT(z)&(C2T+C4T))z = rank2ex(z,prxthornuni,DUMMYSELF,MIN(AR(z),1L),0,MIN(AR(z),1L),0, RoutineD); R z; }
+// entry point to use default boxing
+F1(jtthorn1){ R jtthorn1xy(jt,w,jt->boxpos); }
 
 
 #define DDD(v)   {*v++='.'; *v++='.'; *v++='.';}

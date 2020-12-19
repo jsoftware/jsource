@@ -50,20 +50,11 @@ typedef struct rngdata {
 // per-thread area.  Align on a 256B boundary to leave low 8 bits for flags (JTFLAGMSK is the list of bits)
 // The first 2 cache lines is the hottest real estate in J, because they can be referenced with
 // single-byte displacement.  Put your heaviest-used items here
-// Must be aligned on a 256-byte boundary for flags; but better to align on a DRAM page boundary to avoid precharge
  struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
-// things needed for memory allocation
- A* tnextpushp;       // pointer to empty slot in allocated-block stack.  When low bits are 00..00, pointer to previous block of pointers.  Chain in first block is 0
-
-// things needed by name lookup (unquote)
- LS *callstack;   // [1+NFCALL]; // named fn calls: stack.  Usually only a little is used; the rest overflows onto a new DRAM page
- A sf;               /* for $:                                          */
- I modifiercounter;  // incremented whenever anything happens that could alter modifier lookup: assignment/deletion of a modifier, or any change to locales or path
- UI cstackmin;        // red warning for C stack pointer    
- I4 callstacknext;    /* named fn calls: current depth                   */
- I4 fcalln;           /* named fn calls: maximum permissible depth   migrated    */
- UI4 ranks;            // low half: rank of w high half: rank of a  for IRS 
- union {  // this union is 4 bytes long
+// task-initialized values
+// these values are stacked and restored over the execution of a task
+ UI4 ranks;            // low half: rank of w high half: rank of a  for IRS init for task
+ union {  // this union is 4 bytes long  init for task
   UI4 ui4;    // all 4 flags at once, access as ui4
   struct {
    union {
@@ -76,7 +67,7 @@ typedef struct rngdata {
    union {
     US uq_us;       // accessing both flags at once
     struct {
-     C    bstkreqd;   // set if we MUST create a stack entry for each named call
+     C    bstkreqd;   // set if we MUST create a stack entry for each named call clear for task
 // obsolete #define PMCTRBPMON 1  // set if PM ctr is running
 // obsolete #define PMCTRBSTKREQD 2
      B    spfreeneeded;     // When set, we should perform a garbage-collection pass
@@ -84,84 +75,89 @@ typedef struct rngdata {
    } uq;   // flags needed only by unquote
   } us;   // access as US
  } uflags;   // 
- A curname;          // current name, an A block containing an NM   
-// end of cacheline 0
- A locsyms;  // local symbol table, or dummy empty symbol table if none
- A global;           /* global symbol table                          */
- I shapesink[2];     // garbage area used as load/store targets of operations we don't want to branch around migrated
- A idothash0;        // 2-byte hash table for use by i.    migrated
- A idothash1;        // 4-byte hash table for use by i.    migrated
-// cacheline 1 ends inside the pool struct
- struct {
-  I ballo;              // negative number of bytes in free pool, but with zero-point biased so that - means needs garbage collection 
-  A pool;             // pointer to first free block
- } mfree[-PMINL+PLIML+1];      // pool info.  Use struct to keep cache footprint small
-// end of cacheline 2
-
-// things needed by execution of certain verbs
- D cct;               // complementary comparison tolerance 
- A fill;             // fill     stuck here as filler
- C* fillv;            /* fill value                                      */
- C fillv0[sizeof(Z)];/* default fill value                              */
- B foldrunning;      // 1 if fold is running (allows Z:)    
- C glock;            /* 0=unlocked, 1=perm lock, 2=temp lock            */
- UC jerr;             /* error number (0 means no error)    migrated             */
- UC jerr1;            /* last non-zero jerr                 migrated             */
- I4 currslistx;    // index into slist of the current script being executed (or -1 if none)
- RNG *rngdata;    // separately allocated block for RNG
- I4 nthreads;  // number of threads to use, or 0 if we haven't checked     
- I4 parsercalls;      /* # times parser was called          migrated             */
-// end of cacheline 3
-
-// things needed by parsing
- PFRAME parserstackframe;  // 4 words  
- L *assignsym;       // symbol-table entry for the symbol about to be assigned      scaf  need to use LX when multithreaded
- A nvra;             // data blocks that are in execution somewhere - always non-virtual, always rank 1, AS[0] holds current pointer
-
-// things needed for allocation of large blocks
- I mfreegenallo;        // Amount allocated through malloc, biased
- I malloctotal;    // net total of malloc/free performed in m.c only
-// end of cacheline 4
- I malloctotalhwmk;  // highest value since most recent 7!:1
-
-// things needed by unusual verbs
- void *dtoa;             /* use internally by dtoa.c                        */
- A xmod;             /* extended integer: the m in m&|@f                */  
- C pp[8];            // print precision (sprintf field for numeric output)
- I bytes;            // bytes currently in use - used only during 7!:1
- I bytesmax;         // high-water mark of "bytes" - used only during 7!:1
- S etxn;             /* strlen(etx)                        migrated             */
- S etxn1;            /* last non-zero etxn                 migrated             */
- C pos[2];           /* boxed output x-y positioning                    */
- B iepdo;            /* 1 iff do iep                       migrated            */
- C xmode;            /* extended integer operating mode                 */
- C recurstate;       // state of recursions through JDo migrated
+ UI cstackmin;        // red warning for C stack pointer init for task
+ D cct;               // complementary comparison tolerance init for task
+ B foldrunning;      // 1 if fold is running (allows Z:) init for task
+ C glock;            // 0=unlocked, 1=perm lock, 2=temp lock clear for task
+ UC jerr;             // error number (0 means no error)    migrated  clear for task
+ C recurstate;       // state of recursions through JDo migrated init for task
 #define RECSTATEIDLE    0  // JE is inactive, waiting for work
 #define RECSTATEBUSY    1  // JE is running a call from JDo
 #define RECSTATEPROMPT  2  // JE is running, and is suspended having called the host for input
 #define RECSTATERECUR   3  // JE is running and waiting for a prompt, and the host has made a recursive call to JDo (which must not prompt)
-#if !(C_CRC32C && SY_64)
- UIL  ctmask;           /* 1 iff significant wrt ct; for i. and i:         */
-#endif
+ I4 currslistx;    // index into slist of the current script being executed (or -1 if none) clear for task
+ I4 nthreads;  // number of threads to use, or 0 if we haven't checked init for task
+ I4 threadrecip16;  // reciprocal of nthreads, 16 bits of fraction init for task
+ L *assignsym;       // symbol-table entry for the symbol about to be assigned      scaf  need to use LX when multithreaded clear for task
+ A xmod;             // extended integer: the m in m&|@f clear for task
+ A sf;               /* for $:                                          */
+// end of cacheline 0
+ void *dtoa;             /* use internally by dtoa.c                        */
+ C pp[8];            // print precision (sprintf field for numeric output) init for task
+ UI cstackinit;       // C stack pointer at beginning of execution init for task
+ I bytes;            // bytes currently in use - used only during 7!:1 clear for task
+ I bytesmax;         // high-water mark of "bytes" - used only during 7!:1 clear for task
+ S etxn;             // strlen(etx)                        migrated clear for task
+ S etxn1;            // last non-zero etxn                 migrated clear for task
+ C boxpos;           // boxed output x-y positioning, low bits xxyy00 clear for task
+ B iepdo;            // 1 iff do iep clear for task
+ C xmode;            // extended integer operating mode clear for task
+ UC jerr1;            // last non-zero jerr                 migrated  clear for task
+ C fill1[16];
+// end of cacheline 1 (little used)
 
+// everything after here persists over the life of the thread
+
+// things needed for memory allocation
+ A*   tnextpushp;       // pointer to empty slot in allocated-block stack.  When low bits are 00..00, pointer to previous block of pointers.  Chain in first block is 0
+ struct {
+  I ballo;              // negative number of bytes in free pool, but with zero-point biased so that - means needs garbage collection 
+  A pool;             // pointer to first free block
+ }    mfree[-PMINL+PLIML+1];      // pool info.  Use struct to keep cache footprint small
+// cacheline 2 ends inside the pool struct (5 qwords extra)
+
+// things needed by name lookup (unquote)
+ I modifiercounter;  // incremented whenever anything happens that could alter modifier lookup: assignment/deletion of a modifier, or any change to locales or path
+ I4 callstacknext;    /* named fn calls: current depth                   */
+ I4 fcalln;           /* named fn calls: maximum permissible depth   migrated    */
+ A curname;          // current name, an A block containing an NM
+ A nvra;             // data blocks that are in execution somewhere - always non-virtual, always rank 1, AS[0] holds current pointer
+ I4 parsercalls;      /* # times parser was called          migrated             */
+// 4 bytes free
+// end of cacheline 3
+ A locsyms;  // local symbol table, or dummy empty symbol table if none init for task
+ A global;           // global symbol table init for task
+ I shapesink[2];     // garbage area used as load/store targets of operations we don't want to branch around migrated
+
+// things needed by parsing
+ PFRAME parserstackframe;  // 4 words  
+// end of cacheline 4
+
+// things needed by execution of certain verbs
+ LS *callstack;   // [1+NFCALL]; // named fn calls: stack.  Usually only a little is used; the rest overflows onto a new DRAM page
+ A idothash0;        // 2-byte hash table for use by i.    migrated
+ A idothash1;        // 4-byte hash table for use by i.    migrated
+ A fill;             // fill     stuck here as filler
+ C* fillv;            /* fill value                                      */
+ C fillv0[sizeof(Z)];/* default fill value                              */
+ RNG *rngdata;    // separately allocated block for RNG
+// end of cacheline 5
+
+// things needed for allocation of large blocks
+ I mfreegenallo;        // Amount allocated through malloc, biased
+ I malloctotal;    // net total of malloc/free performed in m.c only
 // seldom-used fields
-#if !USECSTACK
- I4   fdepi;            /* fn calls: current depth                         */
- I4   fdepn;            /* fn calls: maximum permissible depth             */
-#else
-#endif
+ I malloctotalhwmk;  // highest value since most recent 7!:1
  A* tstacknext;       // if not 0, points to the recently-used tstack buffer, whose chain field points to tstacknext  
- // end of cacheline 5
  A* tstackcurr;       // current allocation, holding NTSTACK bytes+1 block for alignment.  First entry points to next-lower allocation   
  I getlasterror;     /* DLL stuff                                       */
  I dlllasterror;     /* DLL stuff                                       */
  C *etx;  // [1+NETX];      // display text for last error (+1 for trailing 0)
+//  end of cacheline 6
 
 // debugging info
  DC sitop;            /* pointer to top of SI stack                                 */
- UI cstackinit;       // C stack pointer at beginning of execution
 
-// unordered symbols follow
 #if !C_CRC32C
  I    hin;              /* used in dyad i. & i:                            */
  I*   hiv;              /* used in dyad i. & i:                            */
@@ -169,8 +165,15 @@ typedef struct rngdata {
 #if !(C_CRC32C && SY_64)
  I    min;              /* the r result from irange                        */
 #endif
+#if !(C_CRC32C && SY_64)
+ UIL  ctmask;           /* 1 iff significant wrt ct; for i. and i:         */
+#endif
+#if !USECSTACK
+ I4   fdepi;            /* fn calls: current depth                         */
+ I4   fdepn;            /* fn calls: maximum permissible depth             */
+#else
+#endif
 
-// end of cacheline 6 (normalment)
 };
 typedef struct JTTstruct JTT;
 typedef JTT* JJ;  // thread-specific part of struct
@@ -179,7 +182,7 @@ typedef JTT* JJ;  // thread-specific part of struct
 typedef struct JSTstruct {
 // shared area
  C* adbreak;			/* must be first! ad mapped shared file break flag */
- C* adbreakr;         // read location: same as adbreak, except that when we are ignoring interrupts it points to 0
+ C* adbreakr;         // read location: same as adbreak, except that when we are ignoring interrupts it points to a byte of 0
 
 // parsing, lookup, explicit definition execution
  A stloc;            /* locales symbol table                            */

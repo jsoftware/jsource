@@ -299,7 +299,7 @@
 #define efflev(x,y,z)               jtefflev(jt,(x),(y),(z))
 #define efmt(x,y)                   jtefmt(jt,(x),(y))
 #define efr(z,ar,r)                 (z = ((r)>(ar)?(ar):(r))+(REPSGN(r)&(ar)), z=(z<0)?0:z)  // effective rank: ar is rank of argument, r is rank of verb (may be negative), z becomes rank of argument cell
-#define enframe(x)                  jtenframe(jt,(x))
+#define enframe(x)                  jtenframe(jtinplace,(x))
 #define enqueue(x,y,z)              jtenqueue(jt,(x),(y),(z))
 #define ep(x,y)                     jtep(jt,(x),(y))
 #define eps(x,y)                    jteps(jt,(x),(y))    
@@ -399,7 +399,7 @@
 #define fixa(x,y)                   jtfixa(jt,(x),(y))
 #define fixrecursive(x,y)           jtfixrecursive(jt,(x),(y))
 #define floor1(x)                   jtatomic1(jt,(x),ds(CFLOOR))
-#define fmfill(x0,x1,x2,x3,x4,x5,x6,x7) jtfmfill(jt,(x0),(x1),(x2),(x3),(x4),(x5),(x6),(x7))
+#define fmfill(x0,x1,x2,x3,x4,x5,x6,x7) jtfmfill(jtinplace,(x0),(x1),(x2),(x3),(x4),(x5),(x6),(x7))
 #define fminit(x0,x1,x2,x3,x4,x5,x6)   jtfminit(jt,(x0),(x1),(x2),(x3),(x4),(x5),(x6))
 #define fminus(x,y)                 jtfminus(jt,(x),(y))
 #define fmt02(x,y)                  jtfmt02(jt,(x),(y))

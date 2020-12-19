@@ -8,15 +8,15 @@
 
 
 static F2(jtth2box){A z;I n,p,q,*v,x,y;
- p=jt->pos[0]; q=jt->pos[1];
+// obsolete  p=jt->pos[0]; q=jt->pos[1];
  RZ(a=vi(a)); n=AN(a); v=AV(a);
  ASSERT(1>=AR(a),EVRANK);
  ASSERT(1==n||2==n,EVLENGTH);
  x=v[0]; y=2>n?0:v[1]; 
  ASSERT((UI)x<=2&&(UI)y<=2,EVDOMAIN);
- jt->pos[0]=x; jt->pos[1]=y;
- z=thorn1(w); 
- jt->pos[0]=p; jt->pos[1]=q;
+// obsolete  jt->pos[0]=x; jt->pos[1]=y;
+ z=jtthorn1xy(jt,w,(x<<JTTHORNXX)+(y<<JTTHORNYX));  // override default box positioning 
+// obsolete  jt->pos[0]=p; jt->pos[1]=q;
  RETF(z);
 }
 

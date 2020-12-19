@@ -138,7 +138,7 @@ F1(jtoutparms){I*v;
  R mtv;
 }
 
-F1(jtposq){ASSERTMTV(w); R v2(jt->pos[0],jt->pos[1]);}
+F1(jtposq){ASSERTMTV(w); R v2((jt->boxpos&JTTHORNX)>>JTTHORNXX,(jt->boxpos&JTTHORNY)>>JTTHORNYX);}
 
 F1(jtposs){I n,p,q,*v;
  RZ(w=vi(w));
@@ -147,7 +147,8 @@ F1(jtposs){I n,p,q,*v;
  ASSERT(1==n||2==n,EVLENGTH);
  if(1==n)p=q=*v; else{p=v[0]; q=v[1];} 
  ASSERT(BETWEENC(p,0,2)&&BETWEENC(q,0,2),EVDOMAIN);
- jt->pos[0]=p; jt->pos[1]=q;   
+// obsolete  jt->pos[0]=p; jt->pos[1]=q;   
+ jt->boxpos=(p<<JTTHORNXX)+(q<<JTTHORNYX);
  R mtv;
 }
 

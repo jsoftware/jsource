@@ -343,6 +343,7 @@ extern F1(jttco);
 extern F1(jttdot);
 extern F1(jtthorn1);
 extern F1(jtthorn1u);
+extern A jtthorn1xy(J,A,I);
 // obsolete extern F1(jttlimq);
 // obsolete extern F1(jttlims);
 extern F1(jttobase64);

@@ -293,26 +293,27 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
   }
 
   // Don't do the loop-exit test until debug has had the chance to update the execution line.  For example, we might be asked to reexecute the last line of the definition
-  if((UI)i>=(UI)n)break;
+  if(unlikely((UI)i>=(UI)n))break;
   ci=i+cw;   // ci->control-word info
   // process the control word according to its type
   I cwtype;
-  switch(cwtype=ci->type){
+  switch(((cwtype=ci->type)&31)){  // highest cw is 33, but it aliases to 1 & there is no 32
   case CIF: case CWHILE: case CELSEIF: 
    i=ci->go;  // Go to the next sentence, whatever it is
-   if((UI)i>=(UI)n||(((cwtype=(ci=i+cw)->type)^CTBLOCK)+jt->uflags.us.cx.cx_us))break;  // avoid indirect-branch overhead on the likely case
+   if(unlikely((UI)i>=(UI)n))break;  // no fallthrough if line exits
+   if(unlikely(((cwtype=(ci=i+cw)->type)^CTBLOCK)+jt->uflags.us.cx.cx_us))break;  // avoid indirect-branch overhead on the likely case
   case CASSERT:
   case CTBLOCK:
 tblockcase:
    // execute and parse line as if for B block, except save the result in t
    // If there is a possibility that the previous B result may become the result of this definition,
    // protect it during the frees during the T block.  Otherwise, just free memory
-   if(ci->canend&2)tpop(old);else z=gc(z,old);   // 2 means previous B can't be the result
+   if(likely(ci->canend&2))tpop(old);else z=gc(z,old);   // 2 means previous B can't be the result
    parseline(t);
    // Check for assert.  Since this is only for T-blocks we tolerate the test (rather than duplicating code)
    if(unlikely(ci->type==CASSERT))if(JT(jt,assert)&&t&&!(NOUN&AT(t)&&all1(eq(num(1),t))))t=pee(line,ci,EVASSERT,gsfctdl<<(BW-2),callframe);  // if assert., signal post-execution error if result not all 1s.  May go into debug; sets to result after debug
    if(likely(t!=0)){ti=i,++i;  // if no error, continue on
-    if((UI)i<(UI)n&&!(((cwtype=(ci=i+cw)->type)^CDO)+jt->uflags.us.cx.cx_us))goto docase;  // avoid indirect-branch overhead on the likely case
+    if(likely((UI)i<(UI)n))if(likely(!(((cwtype=(ci=i+cw)->type)^CDO)+jt->uflags.us.cx.cx_us)))goto docase;  // avoid indirect-branch overhead on the likely case
    }else if((gsfctdl&16)&&DB1&jt->uflags.us.cx.cx_c.db)ti=i,i=debugnewi(i+1,thisframe,self);  // error in debug mode: when coming out of debug, go to new line (there had better be one)
    else if(EVTHROW==jt->jerr){if(gsfctdl&4&&(tdv+tdi-1)->t){i=(tdv+tdi-1)->t+1; RESETERR;}else BASSERT(0,EVTHROW);}  // if throw., and there is a catch., do so
    else{i=ci->go; if(i<SMAX){RESETERR; z=mtm; if(gsfctdl&4){if(!--tdi){jt->uflags.us.cx.cx_c.db=(UC)(gsfctdl>>8); gsfctdl^=4;}}}else z=0;}  // uncaught error: if we take error exit, we might not have protected z, which is not needed anyway; so clear it to prevent invalid use
@@ -350,7 +351,7 @@ dobblock:
    tpop(old); parseline(z);
    // if there is no error, or ?? debug mode, step to next line
    if(likely(z!=0)){bi=i; i+=(cwtype>>5)+1;  // go to next sentence, or to the one after that if it's harmless end. 
-    if((UI)i<(UI)n&&!((((cwtype=(ci=i+cw)->type)&31)^CBBLOCK)+jt->uflags.us.cx.cx_us))goto dobblock;  // avoid indirect-branch overhead on the likely case
+    if(likely((UI)i<(UI)n))if(likely(!((((cwtype=(ci=i+cw)->type)&31)^CBBLOCK)+jt->uflags.us.cx.cx_us)))goto dobblock;  // avoid indirect-branch overhead on the likely case
     // BBLOCK is usually followed by another BBLOCK, but another important followon is END followed by BBLOCK.  BBLOCKEND means
     // 'bblock followed by end that falls through', i. e. a bblock whose successor is i+2.  By handling that we process all sequences of if. T do. B end. B... without having to go through the switch;
     // this means the switch will learn to go to the if.
@@ -376,7 +377,7 @@ dobblock:
    tryinit(tdv+tdi,i,cw);
    // turn off debugging UNLESS there is a catchd; then turn on only if user set debug mode
    // if debugging is already off, it stays off
-   if(jt->uflags.us.cx.cx_c.db)jt->uflags.us.cx.cx_c.db=(gsfctdl&16)&&(UC)(tdv+tdi)->d?JT(jt,dbuser):0;
+   if(unlikely(jt->uflags.us.cx.cx_c.db))jt->uflags.us.cx.cx_c.db=(gsfctdl&16)&&(UC)(tdv+tdi)->d?JT(jt,dbuser):0;
    ++tdi; ++i; gsfctdl|=4;  // bump tdi pointer, set flag
    break;
   case CCATCH: case CCATCHD: case CCATCHT:
@@ -461,7 +462,7 @@ dobblock:
     BZ(ras(t)); cv->t=t; t=0;  // protect t from free while we are comparing with it, save in stack
    }
    i=ci->go;  // Go to next sentence, which might be in the default case (if T block is empty)
-   if((UI)i<(UI)n&&!(((cwtype=(ci=i+cw)->type)^CTBLOCK)+jt->uflags.us.cx.cx_us))goto tblockcase;  // avoid indirect-branch overhead on the likely case, which is case. t-block do.
+   if(likely((UI)i<(UI)n))if(likely(!(((cwtype=(ci=i+cw)->type)^CTBLOCK)+jt->uflags.us.cx.cx_us)))goto tblockcase;  // avoid indirect-branch overhead on the likely case, which is case. t-block do.
    break;  // if it's not a t-block, take the indirect branch
   case CDOSEL:   // do. after case. or fcase.
    // do. for case./fcase. evaluates the condition.  t is the result (a T block); if it is nonexistent
@@ -478,7 +479,7 @@ dobblock:
     // Clear t to ensure that the next case./fcase. does not reuse this value
     t=0;
    }
-   if((UI)i<(UI)n&&!((((cwtype=(ci=i+cw)->type)&31)^CBBLOCK)+jt->uflags.us.cx.cx_us))goto dobblock;  // avoid indirect-branch overhead on the likely  case. ... do. bblock
+   if(likely((UI)i<(UI)n))if(likely(!((((cwtype=(ci=i+cw)->type)&31)^CBBLOCK)+jt->uflags.us.cx.cx_us)))goto dobblock;  // avoid indirect-branch overhead on the likely  case. ... do. bblock
    break;
   default:   //   CELSE CWHILST CGOTO CEND
    if(unlikely(2<=*JT(jt,adbreakr))) { BASSERT(0,EVBREAK);} 
@@ -491,11 +492,11 @@ dobblock:
 
  FDEPDEC(1);  // OK to ASSERT now
  //  z may be 0 here and may become 0 before we exit
- if(z){
+ if(likely(z!=0)){
   // There was a result (normal case)
   // If we are executing a verb (whether or not it started with 3 : or [12] :), make sure the result is a noun.
   // If it isn't, generate a post-execution error for the non-noun
-  if(AT(z)&NOUN){
+  if(likely(AT(z)&NOUN)){
    // If we are returning a virtual block, we are going to have to realize it.  This is because it might be (indeed, probably is) backed by a local symbol that
    // is going to be summarily freed by the symfreeha() below.  We could modify symfreeha to recognize when we are freeing z, but the case is not common enough
    // to be worth the trouble

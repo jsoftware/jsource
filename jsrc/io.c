@@ -630,7 +630,7 @@ __attribute__((constructor)) static void Initializer(int argc, char** argv, char
 
  // Init for a new J instance.  Globals have already been initialized.
  // Create a new jt, which will be the one we use for the entirety of the instance.
-JS JInit(void){
+JS _stdcall JInit(void){
  if(!dll_initialized) R 0; // constructor failed
  JS jtnobdy;
  RZ(jtnobdy=malloc(sizeof(JST)+JTALIGNBDY-1));
@@ -639,12 +639,13 @@ JS JInit(void){
  // Initialize all the info for the shared region and the master thread
  if(!jtjinit2(jt,0,0)){free(jtnobdy); R 0;};
  JT(jt,heap)=(void *)jtnobdy;  // save allo address for later free
- R jt;
+ R jt;  // R (JS)MTHREAD(jt);
 }
 
 // clean up at the end of a J instance
-int JFree(JS jt){
-  if(!jt) R 0; JJ jm=MTHREAD(jt);   // use master thread
+int _stdcall JFree(JS jt){
+  if(!jt) R 0;
+  SETJTJM(jt,jt,jm)
   breakclose(jt);
   jm->jerr=0; jm->etxn=0; /* clear old errors */
 // obsolete   if(JT(jt,xep)&&AN(JT(jt,xep))){A *old=jm->tnextpushp; jtimmex(jm,JT(jt,xep)); fajt(jm,JT(jt,xep)); JT(jt,xep)=0; jm->jerr=0; jm->etxn=0; tpop(old); }  // run with typeout enabled

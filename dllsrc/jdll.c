@@ -808,7 +808,7 @@ CDPROC JS _stdcall JInit()
 		HeapDestroy(JT(jt,heap));  // if error during init, fail
 		R 0;
 	};
-	return jt;
+	return jt;  // return (JS)MTHREAD(jt);
 }
 
 // clean up at the end of a J instance

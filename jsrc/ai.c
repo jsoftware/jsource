@@ -384,7 +384,7 @@ F1(jtidensb){A f,g,x=0,w0=w;V*v;
  switch(v->id){
   default:      R iden(w0);
   case CMAX:    GATV0(x,SBT,1,0);SBAV(x)[0]=0; break;
-  case CMIN:    GATV0(x,SBT,1,0);SBAV(x)[0]=SBUV4(JT(jt,sbu))[0].down; break;
+// no max symbol  case CMIN:    GATV0(x,SBT,1,0);SBAV(x)[0]=SBUV4(JT(jt,sbu))[0].down; break;
  }
  ASSERT(x!=0,EVDOMAIN);
  R folk(x,swap(ds(CDOLLAR)),atop(ds(CBEHEAD),ds(CDOLLAR)));

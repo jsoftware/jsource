@@ -734,7 +734,8 @@ static A jtmovminmax(J jt,I m,A w,A fs,B max){A y,z;I c,i,j,p,wt;
  SETIC(w,p); p-=m; wt=AT(w); c=aii(w);
  GA(z,AT(w),c*(1+p),AR(w),AS(w)); AS(z)[0]=1+p;
  switch(max + ((wt>>(INTX-1))&6)){
-  case 0: MOVMINMAXS(SB,SBT,SBUV4(JT(jt,sbu))[0].down,SBLE); break;
+// no max sym now  case 0: MOVMINMAXS(SB,SBT,SBUV4(JT(jt,sbu))[0].down,SBLE); break;
+  case 0: MOVMINMAXS(SB,SBT,0,SBLE); break;
   case 1: MOVMINMAXS(SB,SBT,0,SBGE); break;
   case 2: MOVMINMAX(I,INT,IMAX,<=); break;
   case 3: MOVMINMAX(I,INT,IMIN,>=); break;

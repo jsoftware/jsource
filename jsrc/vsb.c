@@ -647,7 +647,7 @@ static A jtsbcheck2(J jt,A una,A sna,A u,A s){PROLOG(0000);
  ASSERTD(INT&AT(una),"c integer");
  c=AV(una)[0];
  ASSERTD(0<=c,"c non-negative");
- if(2==AN(una)){ASSERTD(0<=(offset=*(1+AV(una))),"offset non-negative");}
+ if(2==AN(una)){ASSERTD(0<=(offset=AV(una)[1]),"offset non-negative");}
  if(!offset){ASSERTD(!offset||offset==AM(JT(jt,sbu)),"offset contiguous");}
  ASSERTD(!AR(sna),"sn atom");           /* string length */
  ASSERTD(INT&AT(sna),"sn integer");

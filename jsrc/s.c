@@ -65,7 +65,7 @@ B jtsymext(J jt,B b){A x,y;I j,m,n/*obsolete ,s[2]*/,*v,xn,yn;L*u;
 // result is new symbol
 L* jtsymnew(J jt,LX*hv, LX tailx){LX j;L*u,*v;
  while(!(j=LAV0(JT(jt,symp))->next))RZ(symext(1));  /* extend pool if req'd        */
- LAV0(JT(jt,symp))->next=(j+LAV0(JT(jt,symp)))->next;       /* new top of stack            */
+ LAV0(JT(jt,symp))->next=LAV0(JT(jt,symp))[j].next;       /* new top of stack            */
  u=j+LAV0(JT(jt,symp));  // the new symbol.  u points to it, j is its index
  if(tailx) {L *t=tailx+LAV0(JT(jt,symp));
   // appending to tail.  Queue is known to be nonempty

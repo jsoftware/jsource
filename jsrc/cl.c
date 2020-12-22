@@ -29,7 +29,7 @@ static A jtlev2(J jt,A a,A w,A self){
  // There may be a structure in the user's data that could be detected for branch prediction.
 }
 
-static I jtefflev(J jt,I j,A h,A x){I n,t; n=*(j+AV(h)); R n>=0?n:(t=level(x),MAX(0,n+t));}
+static I jtefflev(J jt,I j,A h,A x){I n,t; n=AV(h)[j]; R n>=0?n:(t=level(x),MAX(0,n+t));}
 
 // execution of u L: n y.  Create the self to send to the recursion routine
 // L: and S: will be rarely used on pristine blocks, which be definition have all DIRECT contents & would thus be

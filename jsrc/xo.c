@@ -37,13 +37,13 @@ I jtfnum(J jt,A w){A y;I h,j;
  ASSERT(AN(y),EVLENGTH);
  if(AT(y)&B01+INT){ASSERT(h=i0(y),EVFNUM); R h;}
  RE(j=i0(indexof(vec(BOX,AM(JT(jt,fopf)),AAV(JT(jt,fopa))),boxW(fullname(vslit(y)))))); 
- R j<AM(JT(jt,fopf))?*(j+AV(JT(jt,fopf))):0;
+ R j<AM(JT(jt,fopf))?AV(JT(jt,fopf))[j]:0;
 }    /* file# corresp. to standard argument w */
 
 F1(jtfname){I j; 
  RE(j=i0(indexof(JT(jt,fopf),w)));
  ASSERT(j<AM(JT(jt,fopf)),EVFNUM);
- R ca(*(j+AAV(JT(jt,fopa))));
+ R ca(AAV(JT(jt,fopa))[j]);
 }    /* string name corresp. to file# w */
 
 F1(jtjfiles){A y,z;
@@ -96,9 +96,9 @@ F1(jtjopen){A z;I h;
  if(h){RZ(z=sc(h)); RZ(fname(z)); R z;}
  else{A ww;
   if(AM(JT(jt,fopf))==AN(JT(jt,fopf))){I ct=AM(JT(jt,fopf)); RZ(JT(jt,fopa)=ext(1,JT(jt,fopa))); RZ(JT(jt,fopf)=ext(1,JT(jt,fopf))); AM(JT(jt,fopf))=ct;}
-  RZ(*(AM(JT(jt,fopf))+IAV(JT(jt,fopf)))=h=(I)jope(w,FUPDATE_O));
+  RZ(IAV(JT(jt,fopf))[AM(JT(jt,fopf))]=h=(I)jope(w,FUPDATE_O));
   RZ(ww=fullname(vslit(AAV(w)[0]))); RZ(ras(ww));
-  RZ(*(AM(JT(jt,fopf))+AAV(JT(jt,fopa)))=ww);
+  RZ(AAV(JT(jt,fopa))[AM(JT(jt,fopf))]=ww);
  
   ++AM(JT(jt,fopf));
   R sc(h);
@@ -108,8 +108,8 @@ B jtadd2(J jt,F f1,F f2,C*cmd){A c,x;
  if(f1==NULL) {AM(JT(jt,fopf))+=2;R 1;};
  GATV0(c,LIT,1+strlen(cmd),1);MC(CAV(c)+1,cmd,AN(c)-1);cmd=CAV(c);
  if(AM(JT(jt,fopf))+1>=AN(JT(jt,fopf))){I ct=AM(JT(jt,fopf)); RZ(JT(jt,fopa)=ext(1,JT(jt,fopa))); RZ(JT(jt,fopf)=ext(1,JT(jt,fopf))); AM(JT(jt,fopf))=ct;}
- *cmd='<';x=cstr(cmd); RZ(ras(x)); RZ(*(AM(JT(jt,fopf))+AAV(JT(jt,fopa))  )=x); RZ(*(AM(JT(jt,fopf))+IAV(JT(jt,fopf))  )=(I)f1);
- *cmd='>';x=cstr(cmd); RZ(ras(x)); RZ(*(AM(JT(jt,fopf))+AAV(JT(jt,fopa))+1)=x); RZ(*(AM(JT(jt,fopf))+IAV(JT(jt,fopf))+1)=(I)f2);
+ *cmd='<';x=cstr(cmd); RZ(ras(x)); RZ(AAV(JT(jt,fopa))[AM(JT(jt,fopf))]=x); RZ(IAV(JT(jt,fopf))[AM(JT(jt,fopf))]=(I)f1);
+ *cmd='>';x=cstr(cmd); RZ(ras(x)); RZ(AAV(JT(jt,fopa))[AM(JT(jt,fopf))+1]=x); RZ(IAV(JT(jt,fopf))[AM(JT(jt,fopf))+1]=(I)f2);
  fa(c); R 1;
 }   /* add 2 entries to AM(JT(jt,fopf)) table (for hostio); null arg commits entries */
 

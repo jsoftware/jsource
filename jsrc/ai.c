@@ -162,7 +162,7 @@ static F1(jtinvamp){A f,ff,g,h,x,y;B nf,ng;C c,d,*yv;I n;V*u,*v;
    R fdef(0,CPOWOP,VERB, jtexpandf,0L, w,num(-1),0L, VFLAGNONE, RMAX,0L,0L);
    break;
   case CPOWOP:
-   if(VGERL&u->flag){ff=*(1+AAV(u->fgh[2])); R amp(nf?x:ff,nf?ff:x);} 
+   if(VGERL&u->flag){ff=AAV(u->fgh[2])[1]; R amp(nf?x:ff,nf?ff:x);} 
    break;
   case CCOMMA:  
    SETIC(x,n); 
@@ -273,7 +273,7 @@ A jtinv(J jt, A w, I recur){A f,ff,g;B b,nf,ng,vf,vg;C id;I p,q;V*v;
   case CSCO:     R amp(num(5),w);
   case CPOWOP:   
    if(vf&&ng){RE(p=i0(g)); R -1==p?f:1==p?invrecur(f):powop(0>p?f:invrecur(f),sc(ABS(p)),0);}
-   if(VGERL&v->flag)R*(1+AAV(v->fgh[2]));
+   if(VGERL&v->flag)R AAV(v->fgh[2])[1];
    break;
   case CTILDE:
    if(nf)R invrecur(symbrd(f));  // name~ - resolve name & try again

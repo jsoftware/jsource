@@ -115,7 +115,7 @@ DF2(jtbitwisechar){DECLFG;A*p,x,y,z;B b;I j,m,n,zn;AHDR2FN* ado;
  else                      ado=bwC[j];
  n^=-b; n=(n==~1)?1:n;  // encode b flag in sign of n
  ado(n,m,AV(x),AV(y),AV(z),jt); 
- *(zn+CAV(z))=0;
+ CAV(z)[zn]=0;
  RETF(z);
 }
 

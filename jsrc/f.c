@@ -532,7 +532,7 @@ static F1(jtths){A e,i,x,z;C c,*u,*v;I d,m,n,*s;P*p;
  u=CAV(i)-n;        
  d=aii(z); v=CAV(z)-d; DQ(m, MC(v+=d,u+=n,n););
  if(2<AR(z))RZ(z=matth1(z,zeroionei(0)));  // no prxthornuni
- s=AS(z); d=*(1+s); v=1+CAV(z); c=JT(jt,bx)[9]; DQ(*s, *(v+n)=c; v+=d;);
+ s=AS(z); d=s[1]; v=1+CAV(z); c=JT(jt,bx)[9]; DQ(*s, *(v+n)=c; v+=d;);
  R z;
 }
 

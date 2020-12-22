@@ -99,7 +99,7 @@ static F1(jtaddscriptname){I i;
  if(AS(JT(jt,slist))[0]==i){
   if(AS(JT(jt,slist))[0]==AN(JT(jt,slist))){RZ(JT(jt,slist)=ext(1,JT(jt,slist)));}  // extend, preserving curr index (destroying len momentarily)
 // obsolete RZ(jt->sclist=ext(1,jt->sclist));
-  INCORP(w); RZ(ras(w)); RZ(*(i+AAV(JT(jt,slist)))=w);
+  INCORP(w); RZ(ras(w)); RZ(AAV(JT(jt,slist))[i]=w);
 // obsolete  *(AS(JT(jt,slist))[0]+IAV(jt->sclist))=jt->currslistx;
   AS(JT(jt,slist))[0]=i+1;  // set new len
  }

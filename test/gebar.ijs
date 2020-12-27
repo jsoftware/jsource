@@ -269,6 +269,9 @@ y
 jtree =: ([: ~.@; joinroutes)/
 12 14 -: jtree G
 
+NB. implementation detail, ensure function pointer is 4 byte aligned, ok if no crash
+1 = 0 0 +/@:E. 0 0
+
 NB. ensure intermediate buffer doesn't fail the search
 olim =: 9!:20''
 9!:21 (16e6)

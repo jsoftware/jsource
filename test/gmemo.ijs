@@ -52,6 +52,6 @@ nhwmk  =:7!:0''
 nnhwmk   =: 7!:0''
 (hwmk + 2500) > 7!:0''
  
-4!:55 ;:'coeffs combr f fib fibr hwmk params pn pnx rec t'
+4!:55 ;:'coeffs combr f fib fibr hwmk nhwmk nnhwmk params pn pnx rec t'
 
 

@@ -44,11 +44,13 @@ end.
 1053389 -: 50 f 168
 1148904 -: 10 f 57
 
-hwmk =: 7!:0''
 r =: 1: M.
+hwmk =: 7!:0''
 r"0 i. 10000
+nhwmk  =:7!:0''
 4!:55<'r'
-(hwmk + 1000) > 7!:0''
+nnhwmk   =: 7!:0''
+(hwmk + 2500) > 7!:0''
  
 4!:55 ;:'coeffs combr f fib fibr hwmk params pn pnx rec t'
 

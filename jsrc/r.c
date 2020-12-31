@@ -90,23 +90,24 @@ DF1(jtfx){A f,fs,g,h,p,q,*wv,y,*yv;C id;I m,n=0;
  m=AN(w);   // m=#atoms
  ASSERT(BOX&AT(w),EVDOMAIN);
  ASSERT(1>=AR(w),EVRANK);
- ASSERT(1==m||2==m,EVLENGTH);
+ ASSERT((UI)(m-1)<=(UI)(2-1),EVLENGTH);
  wv=AAV(w); y=wv[0];  // set wv->box pointers, y->first box
  // If the first box contains boxes, they are ARs - go expand them and save as fs
- // id will contains the type of the AR: 0=another AR, '0'=noun
+ // id will contains the type of the AR: 0=another AR, '0'=noun, other=id of primitive or hook/fork
  if(BOX&AT(y)){RZ(fs=fx(y)); id=0;}
  else{RZ(y=vs(y)); ASSERT(id=spellin(AN(y),CAV(y)),EVSPELL);}
  if(1<m){
+  // here it's not a primitive verb
   y=wv[1]; n=AN(y); yv=AAV(y); 
   if(id==CNOUN)R self?box(w):y;
   ASSERT(1>=AR(y),EVRANK);
   ASSERT(BOX&AT(y),EVDOMAIN);
  }
  switch(id){
-  case CHOOK: case CADVF:
+  case CHOOK: case CADVF:  // yv must have been set
    ASSERT(2==n,EVLENGTH); R hook(fx(yv[0]),fx(yv[1]));
   case CFORK:
-   ASSERT(3==n,EVLENGTH); 
+   ASSERT(3==n,EVLENGTH);   // yv must have been set
    RZ(f=fx(yv[0])); ASSERT(AT(f)&VERB+NOUN,EVSYNTAX);
    RZ(g=fx(yv[1])); ASSERT(AT(g)&VERB,     EVSYNTAX);
    RZ(h=fx(yv[2])); ASSERT(AT(h)&VERB,     EVSYNTAX);
@@ -115,11 +116,12 @@ DF1(jtfx){A f,fs,g,h,p,q,*wv,y,*yv;C id;I m,n=0;
    if(id)fs=ds(id);
    ASSERT(fs&&RHS&AT(fs),EVDOMAIN);
    if(!n)R fs;
-   ASSERT(1==n&&ADV&AT(fs)||2==n&&CONJ&AT(fs),EVLENGTH);
+   ASSERT(1==n&&ADV&AT(fs)||2==n&&CONJ&AT(fs),EVLENGTH);  // after this test, yv is known set
    if(0<n){RZ(p=fx(yv[0])); ASSERT(AT(p)&NOUN+VERB,EVDOMAIN);}
    if(1<n){RZ(q=fx(yv[1])); ASSERT(AT(q)&NOUN+VERB,EVDOMAIN);}
    R 1==n ? df1(g,p,fs) : df2(g,p,q,fs);
-}}
+ }
+}
 
 // Convert any DD (i. e. 9 : string or quoted string containing LF) found in a line to DD form for display
 // w is a string block, and so is the result.

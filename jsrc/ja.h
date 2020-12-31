@@ -129,7 +129,7 @@
 #define canta(x,y)                  jtcanta(jt,(x),(y))
 #define cants(x,y,z)                jtcants(jt,(x),(y),(z)) 
 #define cap(x)                      jtcap(jt,(x))
-#define car(x)                      jtcar(jt,(x))
+// obsolete #define car(x)                      jtcar(jt,(x))
 #define caro(x)                     jtcaro(jt,(x))
 // if we ensured that setting AFRO always removed inplaceability, we could simplify this test
 #define makewritable(x)             RZ(x=(AC(x)<(AFLAG(x)<<((BW-1)-AFROX)))?x:ca(x))  // OK if AC is 0x8..1 and AFRO is 0
@@ -387,7 +387,7 @@
 #define fdep(x)                     0
 #endif
 #define fdepger(x)                  jtfdepger(jt,(x))
-#define fh(x)                       jtfh(jt,(x))
+// obsolete #define fh(x)                       jtfh(jt,(x))
 #define filler(x)                   jtfiller(jt,(x))  
 #define fillv(x,y,z)                jtfillv(jt,(x),(y),(z))
 #define findnl(x)                   jtfindnl(jt, (x))
@@ -1218,7 +1218,7 @@
 #define tpushi(x)                   {if(likely(!ACISPERM(AC(x)))){I tt=AT(x); *pushp++=(x); if(unlikely(!((I)pushp&(NTSTACKBLOCK-1)))){RZ(pushp=tg(pushp));} if((unlikely((tt^AFLAG(x))&TRAVERSIBLE)!=0))RZ(pushp=jttpush(jt,(x),tt,pushp)); }}
 // tpush1 is like tpush, but it does not recur to lower levels.  Used only for virtual block (which cannot be PERMANENT)
 #define tpush1(x)                   {A *pushp=jt->tnextpushp; *pushp++=(x); if(unlikely(!((I)pushp&(NTSTACKBLOCK-1)))){RZ(pushp=tg(pushp));} jt->tnextpushp=pushp; if(MEMAUDIT&2)audittstack(jt);}
-#define traverse(x,y)               jttraverse(jt,(x),(y))
+// obsolete #define traverse(x,y)               jttraverse(jt,(x),(y))
 #define trc(x)                      jttrc(jt,(x))     
 #define treach(x)                   jttreach(jt,(x))
 #define trep(x)                     jttrep(jt,(x))

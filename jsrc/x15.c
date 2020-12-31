@@ -1355,7 +1355,7 @@ F2(jtmemu2) { RETF(ca(w)); }  // dyad - force copy willy-nilly
 F1(jtgh15){A z;I k; RE(k=i0(w)); RZ(z=gah(k,0L)); ACINCR(z); R sc((I)z);}
      /* 15!:8  get header */
 
-F1(jtfh15){I k; RE(k=i0(w)); fh((A)k); R num(0);}
+F1(jtfh15){I k; RE(k=i0(w)); fr((A)k); R num(0);}
      /* 15!:9  free header */
 
 F1(jtdllsymset){ARGCHK1(w); R (A)i0(w);}      /* do some validation here */

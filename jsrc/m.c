@@ -60,7 +60,7 @@
 #define FREECHK(x) if(!FREE(x))SEGFAULT;  // crash on error
 #endif
 
-static void jttraverse(J,A,AF);
+// obsolete static void jttraverse(J,A,AF);
 
 #if LEAKSNIFF
 static I leakcode;
@@ -535,6 +535,7 @@ static void freesymb(J jt, A w){I j,wn=AN(w); LX k,kt,* RESTRICT wv=LXAV0(w);
  }
 }
 
+#if 0 // obsolete
 static void jttraverse(J jt,A wd,AF f){
  switch(CTTZ(AT(wd))){
   case XNUMX: case BOXX:
@@ -554,6 +555,7 @@ static void jttraverse(J jt,A wd,AF f){
 }
 
 void jtfh(J jt,A w){fr(w);}
+#endif
 
 // overview of the usecount routines
 //
@@ -1215,6 +1217,7 @@ F1(jtca){A z;I t;P*wp,*zp;
 // clone block only if it is read-only
 F1(jtcaro){ if(AFLAG(w)&AFRO){RETF(ca(w));} RETF(w); }
 
+#if 0 // obsolete 
 // clone recursive.
 F1(jtcar){A*u,*wv,z;I n;P*p;V*v;
  RZ(z=ca(w));
@@ -1238,7 +1241,7 @@ F1(jtcar){A*u,*wv,z;I n;P*p;V*v;
  }
  R z;
 }
-
+#endif
 // clone virtual block, producing a new virtual block
 F1(jtclonevirtual){
  A z; RZ(z=virtual(w,0,AR(w)));  // allocate a new virtual block

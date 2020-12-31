@@ -10,6 +10,7 @@
 #include <ctype.h>
 #endif
 
+// functions of this class add to the growing ltest
 #define F1X(f)           A f(J jt,A w,A *ltext)
 #define DF1X(f)           A f(J jt,A w,A self,A *ltext)
 #define F2X(f)           A f(J jt,A a,A w,A *ltext)
@@ -19,6 +20,7 @@ static DF1X(jtlrr);
 
 #define NUMV(c)  (((1LL<<C9)|(1LL<<CD)|(1LL<<CS)|(1LL<<CA)|(1LL<<CN)|(1LL<<CB))&(1LL<<(c)))
 
+// choose function for applying parentheses, for normal verbs and for tie strings
 #define parfn ((I)jtinplace&JTPARENS?jtlcpb:jtlcpa)
 #define tiefn ((I)jtinplace&JTPARENS?jtltieb:jtltiea)
 
@@ -32,12 +34,14 @@ static B jtlp(J jt,A w){F1PREFIP;B b=1,p=0;C c,d,q=CQUOTE,*v;I j=0,n;
  R b;
 }    /* 1 iff put parens around w */
 
+// add () when user asks for normal ()
 static A jtlcpa(J jt,B b,A w){F1PREFIP;A z=w;C*zv;I n;
  ARGCHK1(w);
  if(b){n=AN(w); GATV0(z,LIT,2+n,1); zv=CAV(z); *zv='('; MC(1+zv,AV(w),n); zv[1+n]=')';}
  R z;
 }    /* if b then (w) otherwise just w */
 
+// add (), when user asks for full ()
 static A jtlcpb(J jt,B b,A w){F1PREFIP;A z=w;B p;C c,*v,*wv,*zv;I n;
  ARGCHK1(w);
  n=AN(w); wv=CAV(w); 
@@ -54,6 +58,7 @@ static A jtlcpb(J jt,B b,A w){F1PREFIP;A z=w;B p;C c,*v,*wv,*zv;I n;
 
 static A jtlcpx(J jt,A w){F1PREFIP;ARGCHK1(w); R parfn(jtinplace,lp(w),w);}
 
+// display a list of boxes as if they come from a gerund.  Normal ()
 static F1X(jtltiea){F1PREFIP;A t,*v,*wv,x,y;B b;C c;I n;
  ARGCHK1(w);
  n=AN(w); wv=AAV(w);  RZ(t=spellout(CGRAVE));
@@ -63,6 +68,7 @@ static F1X(jtltiea){F1PREFIP;A t,*v,*wv,x,y;B b;C c;I n;
  R raze(y);
 }
 
+// display a list of boxes as if they come from a gerund.  Full ()
 static F1X(jtltieb){F1PREFIP;A pt,t,*v,*wv,x,y;B b;C c,*s;I n;
  ARGCHK1(w);
  n=AN(w); wv=AAV(w);  RZ(t=spellout(CGRAVE)); RZ(pt=over(scc(')'),t));

@@ -610,30 +610,40 @@ F1(jtraze){A*v,y,z,* RESTRICT zv;C* RESTRICT zu;I *wws,d,i,klg,m=0,n,r=1,t=0,te=
  RETF(z);
 }
 
-// TODO: remove divides from razeh
-
 F1(jtrazeh){A*wv,y,z;C*xv,*yv,*zv;I c=0,ck,dk,i,k,n,p,r,*s,t;
  ARGCHK1(w);
  ASSERT(BOX&AT(w),EVDOMAIN);
  if(!AR(w))R ope(w);
- n=AN(w); wv=AAV(w);  y=wv[0]; SETIC(y,p); t=AT(y); k=bpnoun(t);
- DO(n, I l; y=wv[i]; r=AR(y); ASSERT(p==SETIC(y,l),EVLENGTH); ASSERT(r&&r<=2&&TYPESEQ(t,AT(y)),EVNONCE); c+=1==r?1:*(1+AS(y)););
- GA(z,t,p*c,2,0); s=AS(z); s[0]=p; s[1]=c; 
- zv=CAV(z); ck=c*k;
+ n=AN(w); wv=AAV(w);  y=wv[0]; SETIC(y,p); t=AT(y); k=bpnoun(t);  // k is size of an atom
+ DO(n, I l; y=wv[i]; r=AR(y); ASSERT(p==SETIC(y,l),EVLENGTH); ASSERT(r&&r<=2&&TYPESEQ(t,AT(y)),EVNONCE); c+=1==r?1:AS(y)[1];);
+ GA(z,t,p*c,2,0); s=AS(z); s[0]=p; s[1]=c;  // p is # items in each input box, thus # rows in result; c is # atoms in each row
+ if(t&BOX){
+  // boxed contents.  Make the result recursive; since each input box is going into exactly one slot in the result, we get the usecounts right if we
+  // raise the usecount in the contents of w
+  jtra(w,BOX); AFLAG(z)|=BOX;
+  PRISTCLRF(w);   // contents have escaped.  w is no longer used
+ }
+ zv=CAV(z); ck=c*k;  // ck is length of one row in bytes
  for(i=0;i<n;++i){
-  y=wv[i]; dk=1==AR(y)?k:k**(1+AS(y)); xv=zv; zv+=dk;
-  if(!dk)continue;
-  if(t&BOX)RZ(y=car(y));
+  // zv is the start of the next output position in the first row
+  y=wv[i]; dk=1==AR(y)?k:k*AS(y)[1];  // y is contents of this box; dk is # atoms in each row of THIS Input box;
+  if(!dk)continue;  // if empty, nothing to move
+  xv=zv; zv+=dk; // xv is output pointer for this column; advance zv to next column
+// obsolete   if(t&BOX)RZ(y=car(y));
   yv=CAV(y);
+#if 0  // obsolete 
   switch(0==(I)xv%dk&&0==ck%dk?dk:0){
-   case sizeof(I): {I*u,*v=(I*)yv; DQ(p, u=(I*)xv; *u=*v++;    xv+=ck;);} break;
+  case sizeof(I): {I*u,*v=(I*)yv; DQ(p, u=(I*)xv; *u=*v++;    xv+=ck;);} break;
 #if SY_64
-   case sizeof(int):{int*u,*v=(int*)yv; DQ(p, u=(int*)xv; *u=*v++; xv+=ck;);} break;
+  case sizeof(int):{int*u,*v=(int*)yv; DQ(p, u=(int*)xv; *u=*v++; xv+=ck;);} break;
 #endif
-   case sizeof(S): {S*u,*v=(S*)yv; DQ(p, u=(S*)xv; *u=*v++;    xv+=ck;);} break;
-   case sizeof(C):                 DQ(p, *xv=*yv++;            xv+=ck;);  break;
-   default:                        DQ(p, MC(xv,yv,dk); yv+=dk; xv+=ck;); 
- }}
+  case sizeof(S): {S*u,*v=(S*)yv; DQ(p, u=(S*)xv; *u=*v++;    xv+=ck;);} break;
+  case sizeof(C):                 DQ(p, *xv=*yv++;            xv+=ck;); break;
+  default:                        DQ(p, MC(xv,yv,dk); yv+=dk; xv+=ck;); break;
+  }
+#endif
+  DQ(p, MC(xv,yv,dk); yv+=dk; xv+=ck;);
+ }
  RETF(z);
 }    /* >,.&.>/,w */
 

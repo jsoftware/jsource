@@ -1289,8 +1289,8 @@ static IOF(jtiobs){A*av,*wv,y;B *yb,*zb;C*zc;I acn,*hu,*hv,l,m1,md,s,wcn,*zi,*zv
 
 static I jtutype(J jt,A w,I c){A*wv,x;I m,t;
  if(!AN(w))R 1;
- m=AN(w)/c; wv=AAV(w); 
- DO(c, t=0; DO(m, x=wv[i]; if(AN(x)){if(t){if(!(TYPESEQ(t,AT(x))))R 0;} else{t=AT(x); if(t&FL+CMPX+BOX)R 0;}}););
+ m=AN(w); wv=AAV(w); 
+ DO(c, t=0; DOSTEP(m,c, x=wv[i]; if(AN(x)){if(t){if(!(TYPESEQ(t,AT(x))))R 0;} else{t=AT(x); if(t&FL+CMPX+BOX)R 0;}}););
  R t;
 }    /* return type if opened atoms of cells of w has uniform type (but not one that may contain -0), else 0. c is # of cells */
 

@@ -695,7 +695,7 @@ extern A        jtfdef(J,I,C,I,AF,AF,A,A,A,I,I,I,I);
 #if !USECSTACK
 extern I        jtfdep(J,A);
 #endif
-extern void     jtfh(J,A);
+// obsolete extern void     jtfh(J,A);
 extern void     jtfillv(J,I,I,C*);        /* "fill" name conflict on Mac             */
 extern A        jtfindnl(J,I);
 extern I        jtfnum(J,A);

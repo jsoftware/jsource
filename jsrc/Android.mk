@@ -15,8 +15,8 @@ ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
   LOCAL_CFLAGS := -DENABLE_VECEXT -fPIC -Os -fvisibility=hidden -fwrapv -Werror -Wno-string-plus-int -Wno-empty-body -Wno-parentheses -Wno-pointer-sign -Wno-logical-op-parentheses -Wno-unused-value -Wno-null-dereference -Wno-type-limits -Wno-pass-failed -D_FORTIFY_SOURCE=2 -Werror=fortify-source -fno-strict-aliasing -mfloat-abi=softfp -march=armv7-a -Wno-sign-compare -DDORENAME -I../sleef/src/arch -I../sleef/src/common
   LOCAL_ARM_MODE := arm
   LOCAL_ARM_NEON := true
-# LOCAL_CFLAGS += -fopenmp
-# LOCAL_LDFLAGS += -fopenmp -static-openmp
+  LOCAL_CFLAGS += -fopenmp
+  LOCAL_LDFLAGS += -fopenmp -static-openmp
 endif
 ifeq ($(TARGET_ARCH_ABI),armeabi)
   LOCAL_CFLAGS := -std=c99 -Wno-unknown-warning-option -DENABLE_VECEXT -fPIC -Os -fvisibility=hidden -fwrapv -Werror -Wno-string-plus-int -Wno-empty-body -Wno-parentheses -Wno-pointer-sign -Wno-logical-op-parentheses -Wno-unused-value -Wno-null-dereference -Wno-type-limits -fno-strict-aliasing -mfloat-abi=softfp -march=armv5te -Wno-sign-compare -DDORENAME -I../sleef/src/arch -I../sleef/src/common

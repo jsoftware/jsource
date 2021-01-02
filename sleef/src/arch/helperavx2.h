@@ -5,7 +5,7 @@
 
 #if CONFIG == 1
 
-#ifndef __AVX2__
+#if !defined(__AVX2__) && !defined(SLEEF_GENHEADER)
 #error Please specify -mavx2.
 #endif
 
@@ -14,19 +14,29 @@
 #endif
 
 #define ENABLE_DP
+//@#define ENABLE_DP
 #define LOG2VECTLENDP 2
+//@#define LOG2VECTLENDP 2
 #define VECTLENDP (1 << LOG2VECTLENDP)
+//@#define VECTLENDP (1 << LOG2VECTLENDP)
 #define ENABLE_FMA_DP
+//@#define ENABLE_FMA_DP
 
 #define ENABLE_SP
+//@#define ENABLE_SP
 #define LOG2VECTLENSP (LOG2VECTLENDP+1)
+//@#define LOG2VECTLENSP (LOG2VECTLENDP+1)
 #define VECTLENSP (1 << LOG2VECTLENSP)
+//@#define VECTLENSP (1 << LOG2VECTLENSP)
 #define ENABLE_FMA_SP
+//@#define ENABLE_FMA_SP
 
 #define FULL_FP_ROUNDING
-#define SPLIT_KERNEL
+//@#define FULL_FP_ROUNDING
 #define ACCURATE_SQRT
+//@#define ACCURATE_SQRT
 
+#if !defined(SLEEF_GENHEADER)
 #if defined(MMSC_VER)
 #include <intrin.h>
 #else
@@ -35,6 +45,7 @@
 
 #include <stdint.h>
 #include "misc.h"
+#endif // #if !defined(SLEEF_GENHEADER)
 
 typedef __m256i vmask;
 typedef __m256i vopmask;
@@ -45,11 +56,20 @@ typedef __m128i vint;
 typedef __m256 vfloat;
 typedef __m256i vint2;
 
+typedef __m256i vint64;
+typedef __m256i vuint64;
+
 typedef struct {
   vmask x, y;
-} vmask2;
+} vquad;
+
+typedef struct {
+  vmask x, y;
+} vargquad;
 
 //
+
+#if !defined(SLEEF_GENHEADER)
 
 #ifndef __SLEEF_H__
 void Sleef_x86CpuID(int32_t out[4], uint32_t eax, uint32_t ecx);
@@ -75,6 +95,8 @@ static INLINE int vavailability_i(int name) {
 #define ISANAME "AVX2"
 #define DFTPRIORITY 25
 #endif
+
+#endif // #if !defined(SLEEF_GENHEADER)
 
 static INLINE void vprefetch_v_p(const void *ptr) { _mm_prefetch(ptr, _MM_HINT_T0); }
 
@@ -131,6 +153,8 @@ static INLINE vopmask vcast_vo64_vo32(vopmask o) {
   return _mm256_permutevar8x32_epi32(o, _mm256_set_epi32(3, 3, 2, 2, 1, 1, 0, 0));
 }
 
+static INLINE vopmask vcast_vo_i(int i) { return _mm256_set1_epi64x(i ? -1 : 0); }
+
 //
 
 static INLINE vint vrint_vi_vd(vdouble vd) { return _mm256_cvtpd_epi32(vd); }
@@ -154,6 +178,9 @@ static INLINE vint vcastu_vi_vi2(vint2 vi) {
 static INLINE vmask vcast_vm_i_i(int i0, int i1) {
   return _mm256_set_epi32(i0, i1, i0, i1, i0, i1, i0, i1);
 }
+
+static INLINE vmask vcast_vm_i64(int64_t i) { return _mm256_set1_epi64x(i); }
+static INLINE vmask vcast_vm_u64(uint64_t i) { return _mm256_set1_epi64x((uint64_t)i); }
 
 static INLINE vopmask veq64_vo_vm_vm(vmask x, vmask y) { return _mm256_cmpeq_epi64(x, y); }
 static INLINE vmask vadd64_vm_vm_vm(vmask x, vmask y) { return _mm256_add_epi64(x, y); }
@@ -418,75 +445,22 @@ static INLINE void vsscatter2_v_p_i_i_vf(float *ptr, int offset, int step, vfloa
 
 //
 
-typedef Sleef_quad4 vargquad;
-
-static INLINE vmask2 vinterleave_vm2_vm2(vmask2 v) {
-  return (vmask2) { _mm256_unpacklo_epi64(v.x, v.y), _mm256_unpackhi_epi64(v.x, v.y) };
+static vquad loadu_vq_p(void *p) {
+  vquad vq;
+  memcpy(&vq, p, VECTLENDP * 16);
+  return vq;
 }
 
-static INLINE vmask2 vuninterleave_vm2_vm2(vmask2 v) {
-  return (vmask2) { _mm256_unpacklo_epi64(v.x, v.y), _mm256_unpackhi_epi64(v.x, v.y) };
+static INLINE vquad cast_vq_aq(vargquad aq) {
+  vquad vq;
+  memcpy(&vq, &aq, VECTLENDP * 16);
+  return vq;
 }
 
-static INLINE vint vuninterleave_vi_vi(vint v) {
-  return _mm_shuffle_epi32(v, (0 << 0) | (2 << 2) | (1 << 4) | (3 << 6));
-}
-
-static INLINE vdouble vinterleave_vd_vd(vdouble vd) {
-  return vreinterpret_vd_vm(_mm256_permute4x64_epi64(vreinterpret_vm_vd(vd), (3 << 6) | (1 << 4) | (2 << 2) | (0 << 0)));
-}
-
-static INLINE vdouble vuninterleave_vd_vd(vdouble vd) {
-  return vreinterpret_vd_vm(_mm256_permute4x64_epi64(vreinterpret_vm_vd(vd), (3 << 6) | (1 << 4) | (2 << 2) | (0 << 0)));
-}
-
-static INLINE vmask vinterleave_vm_vm(vmask vm) {
-  return _mm256_permute4x64_epi64(vm, (3 << 6) | (1 << 4) | (2 << 2) | (0 << 0));
-}
-
-static INLINE vmask vuninterleave_vm_vm(vmask vm) {
-  return _mm256_permute4x64_epi64(vm, (3 << 6) | (1 << 4) | (2 << 2) | (0 << 0));
-}
-
-static vmask2 vloadu_vm2_p(void *p) {
-  vmask2 vm2 = {
-    vloadu_vi2_p((int32_t *)p),
-    vloadu_vi2_p((int32_t *)((uint8_t *)p + sizeof(vmask)))
-  };
-  return vm2;
-}
-
-static void vstoreu_v_p_vm2(void *p, vmask2 vm2) {
-  vstoreu_v_p_vi2((int32_t *)p, vcast_vi2_vm(vm2.x));
-  vstoreu_v_p_vi2((int32_t *)((uint8_t *)p + sizeof(vmask)), vcast_vi2_vm(vm2.y));
-}
-
-static INLINE vmask2 vcast_vm2_aq(vargquad aq) {
-#if !defined(MMSC_VER)
-  union {
-    vargquad aq;
-    vmask2 vm2;
-  } c;
-  c.aq = aq;
-  return vinterleave_vm2_vm2(c.vm2);
-#else
-  return vinterleave_vm2_vm2(vloadu_vm2_p(&aq));
-#endif
-}
-
-static INLINE vargquad vcast_aq_vm2(vmask2 vm2) {
-#if !defined(MMSC_VER)
-  union {
-    vargquad aq;
-    vmask2 vm2;
-  } c;
-  c.vm2 = vuninterleave_vm2_vm2(vm2);
-  return c.aq;
-#else
-  vargquad a;
-  vstoreu_v_p_vm2(&a, vuninterleave_vm2_vm2(vm2));
-  return a;
-#endif
+static INLINE vargquad cast_aq_vq(vquad vq) {
+  vargquad aq;
+  memcpy(&aq, &vq, VECTLENDP * 16);
+  return aq;
 }
 
 static INLINE int vtestallzeros_i_vo64(vopmask g) {
@@ -501,9 +475,16 @@ static INLINE vopmask vgt64_vo_vm_vm(vmask x, vmask y) { return _mm256_cmpgt_epi
 
 #define vsll64_vm_vm_i(x, c) _mm256_slli_epi64(x, c)
 #define vsrl64_vm_vm_i(x, c) _mm256_srli_epi64(x, c)
+//@#define vsll64_vm_vm_i(x, c) _mm256_slli_epi64(x, c)
+//@#define vsrl64_vm_vm_i(x, c) _mm256_srli_epi64(x, c)
 
-static INLINE vmask vcast_vm_vi(vint vi) { return _mm256_cvtepi32_epi64(vi); }
-static INLINE vint vcast_vi_vm(vmask vm) {
+static INLINE vmask vcast_vm_vi(vint vi) { return _mm256_cvtepi32_epi64(vi); } // signed 32-bit => 64-bit
+static INLINE vint vcast_vi_vm(vmask vm) { // signed 32-bit <= 64-bit
   return _mm_or_si128(_mm_castps_si128(_mm_shuffle_ps(_mm_castsi128_ps(_mm256_castsi256_si128(vm)), _mm_set1_ps(0), 0x08)),
   		      _mm_castps_si128(_mm_shuffle_ps(_mm_set1_ps(0), _mm_castsi128_ps(_mm256_extractf128_si256(vm, 1)), 0x80)));
 }
+
+static INLINE vmask vreinterpret_vm_vi64(vint64 v) { return v; }
+static INLINE vint64 vreinterpret_vi64_vm(vmask m) { return m; }
+static INLINE vmask vreinterpret_vm_vu64(vuint64 v) { return v; }
+static INLINE vuint64 vreinterpret_vu64_vm(vmask m) { return m; }

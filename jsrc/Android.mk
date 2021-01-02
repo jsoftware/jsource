@@ -12,14 +12,14 @@ ifeq ($(TARGET_ARCH_ABI),arm64-v8a)
   LOCAL_LDFLAGS += -fopenmp -static-openmp
 endif
 ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
-  LOCAL_CFLAGS := -DENABLE_VECEXT -fPIC -Os -fvisibility=hidden -fwrapv -Werror -Wno-string-plus-int -Wno-empty-body -Wno-parentheses -Wno-pointer-sign -Wno-logical-op-parentheses -Wno-unused-value -Wno-null-dereference -Wno-type-limits -Wno-pass-failed -D_FORTIFY_SOURCE=2 -Werror=fortify-source -fno-strict-aliasing -mfloat-abi=softfp -march=armv7-a -Wno-sign-compare -DDORENAME -I../sleef/src/arch -I../sleef/src/common
+  LOCAL_CFLAGS := -fPIC -Os -fvisibility=hidden -fwrapv -Werror -Wno-string-plus-int -Wno-empty-body -Wno-parentheses -Wno-pointer-sign -Wno-logical-op-parentheses -Wno-unused-value -Wno-null-dereference -Wno-type-limits -Wno-pass-failed -D_FORTIFY_SOURCE=2 -Werror=fortify-source -fno-strict-aliasing -mfloat-abi=softfp -march=armv7-a -Wno-sign-compare
   LOCAL_ARM_MODE := arm
   LOCAL_ARM_NEON := true
-# LOCAL_CFLAGS += -fopenmp
-# LOCAL_LDFLAGS += -fopenmp -static-openmp
+  LOCAL_CFLAGS += -fopenmp
+  LOCAL_LDFLAGS += -fopenmp -static-openmp
 endif
 ifeq ($(TARGET_ARCH_ABI),armeabi)
-  LOCAL_CFLAGS := -std=c99 -Wno-unknown-warning-option -DENABLE_VECEXT -fPIC -Os -fvisibility=hidden -fwrapv -Werror -Wno-string-plus-int -Wno-empty-body -Wno-parentheses -Wno-pointer-sign -Wno-logical-op-parentheses -Wno-unused-value -Wno-null-dereference -Wno-type-limits -fno-strict-aliasing -mfloat-abi=softfp -march=armv5te -Wno-sign-compare -DDORENAME -I../sleef/src/arch -I../sleef/src/common
+  LOCAL_CFLAGS := -std=c99 -Wno-unknown-warning-option -fPIC -Os -fvisibility=hidden -fwrapv -Werror -Wno-string-plus-int -Wno-empty-body -Wno-parentheses -Wno-pointer-sign -Wno-logical-op-parentheses -Wno-unused-value -Wno-null-dereference -Wno-type-limits -fno-strict-aliasing -mfloat-abi=softfp -march=armv5te -Wno-sign-compare
   LOCAL_ARM_MODE := arm
   LOCAL_CFLAGS += -fopenmp
   LOCAL_LDFLAGS += -fopenmp
@@ -54,11 +54,7 @@ LOCAL_SRC_FILES := a.c ab.c aes-c.c aes-arm.c aes-sse2.c af.c ai.c am.c am1.c am
   ../base64/lib/arch/avx/codec-avx.c \
   ../base64/lib/lib.c \
   ../base64/lib/codec_choose.c \
-  ../base64/lib/tables/tables.c \
-  ../sleef/src/common/arraymap.c \
-  ../sleef/src/common/common.c \
-  ../sleef/src/libm/rempitab.c \
-  ../sleef/src/libm/sleefsimddp.c
+  ../base64/lib/tables/tables.c
 
 ifeq ($(TARGET_ARCH_ABI),arm64-v8a)
 LOCAL_ASMFLAGS += -f elf64 -X gnu -D LINUX
@@ -66,7 +62,11 @@ LOCAL_SRC_FILES += \
   openssl/sha/asm/keccak1600-armv8-elf.S \
   openssl/sha/asm/sha1-armv8-elf.S \
   openssl/sha/asm/sha256-armv8-elf.S \
-  openssl/sha/asm/sha512-armv8-elf.S
+  openssl/sha/asm/sha512-armv8-elf.S \
+  ../sleef/src/common/arraymap.c \
+  ../sleef/src/common/common.c \
+  ../sleef/src/libm/rempitab.c \
+  ../sleef/src/libm/sleefsimddp.c
 endif
 ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
 LOCAL_ASMFLAGS += -f elf32 -X gnu -D LINUX
@@ -91,7 +91,11 @@ LOCAL_SRC_FILES += \
   openssl/sha/asm/keccak1600-x86_64-elf.S \
   openssl/sha/asm/sha1-x86_64-elf.S \
   openssl/sha/asm/sha256-x86_64-elf.S \
-  openssl/sha/asm/sha512-x86_64-elf.S
+  openssl/sha/asm/sha512-x86_64-elf.S \
+  ../sleef/src/common/arraymap.c \
+  ../sleef/src/common/common.c \
+  ../sleef/src/libm/rempitab.c \
+  ../sleef/src/libm/sleefsimddp.c
 endif
 ifeq ($(TARGET_ARCH),x86)
 LOCAL_ASMFLAGS += -f elf32 -X gnu -D LINUX
@@ -99,7 +103,11 @@ LOCAL_SRC_FILES += \
   openssl/sha/asm/keccak1600-mmx-elf.S \
   openssl/sha/asm/sha1-586-elf.S \
   openssl/sha/asm/sha256-586-elf.S \
-  openssl/sha/asm/sha512-586-elf.S
+  openssl/sha/asm/sha512-586-elf.S \
+  ../sleef/src/common/arraymap.c \
+  ../sleef/src/common/common.c \
+  ../sleef/src/libm/rempitab.c \
+  ../sleef/src/libm/sleefsimddp.c
 endif
 
 include $(BUILD_SHARED_LIBRARY)

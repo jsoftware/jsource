@@ -497,8 +497,8 @@ static B jteqa0(J jt,I n,A*u,A*v){PUSHCCT(1.0) B res=1; DQ(n, if(!equ(*u,*v)){re
 
 // Misc code to set the shape once we see how many results there are, used for ~. y and x -. y
 #define ZISHAPE    AS(z)[0]=AN(z)=zi-zv
-#define ZCSHAPE    AS(z)[0]=(zc-(C*)zv)/k; AN(z)=n**AS(z)
-#define ZUSHAPE(T) AS(z)[0]= zu-(T*)zv;    AN(z)=n**AS(z)
+#define ZCSHAPE    AS(z)[0]=(zc-(C*)zv)/k; AN(z)=n*AS(z)[0]
+#define ZUSHAPE(T) AS(z)[0]= zu-(T*)zv;    AN(z)=n*AS(z)[0]
 
 
 // *************** first class: intolerant comparisons, unboxed or boxed ***********************

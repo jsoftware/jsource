@@ -9,7 +9,7 @@
 static A jtovs0(J jt,B p,I r,A a,A w){A a1,e,q,x,y,z;B*b;I at,*av,c,d,j,k,f,m,n,t,*v,wr,*ws,wt,zr;P*wp,*zp;
  ws=AS(w); wr=AR(w); f=wr-r; zr=wr+!r;
  ASSERT(IMAX>ws[f],EVLIMIT);
- wp=PAV(w); e=SPA(wp,e); x=SPA(wp,x); y=SPA(wp,i); m=*AS(y); 
+ wp=PAV(w); e=SPA(wp,e); x=SPA(wp,x); y=SPA(wp,i); m=AS(y)[0]; 
  a1=SPA(wp,a); c=AN(a1); av=AV(a1); RZ(b=bfi(zr,a1,1));
  at=AT(a); wt=AT(x);
  ASSERT(HOMO(at,wt),EVDOMAIN);
@@ -26,7 +26,7 @@ static A jtovs0(J jt,B p,I r,A a,A w){A a1,e,q,x,y,z;B*b;I at,*av,c,d,j,k,f,m,n,
   case 1:  /* dense and a not equal to e */
    GATV0(q,INT,c,1); v=AV(q); DO(c, v[i]=ws[av[i]];); RZ(q=odom(2L,c,v));
    if(AN(q)>=AN(y)){
-    RZ(z=shape(x)); *AV(z)=*AS(q); 
+    RZ(z=shape(x)); *AV(z)=AS(q)[0]; 
     RZ(x=from(grade1(over(y,less(q,y))),over(x,reshape(z,e))));
     y=q;
    }
@@ -37,7 +37,7 @@ static A jtovs0(J jt,B p,I r,A a,A w){A a1,e,q,x,y,z;B*b;I at,*av,c,d,j,k,f,m,n,
    if(!p){v=j+AV(y); DQ(m, ++*v; v+=c;);} 
    break;
   case 3:  /* sparse and a not equal to e */
-   GATV0(q,INT,c,1); v=AV(q); DO(c, v[i]=ws[av[i]];); v[j]=1; RZ(q=odom(2L,c,v)); n=*AS(q);
+   GATV0(q,INT,c,1); v=AV(q); DO(c, v[i]=ws[av[i]];); v[j]=1; RZ(q=odom(2L,c,v)); n=AS(q)[0];
    if(p){RZ(y=over(y,q)); v=AV(y)+j+m*c; d=ws[f]; DQ(n, *v=d; v+=c;);}
    else {RZ(y=over(q,y)); v=AV(y)+j+n*c;          DQ(m, ++*v; v+=c;);}
    RZ(q=shape(x)); *AV(q)=n; RZ(q=reshape(q,a)); RZ(x=p?over(x,q):over(q,x));
@@ -79,13 +79,13 @@ static F2(jtovs){A ae,ax,ay,q,we,wx,wy,x,y,z,za,ze;B*ab,*wb,*zb;I acr,ar,*as,at,
  SPB(zp,a,za); SPBV(zp,e,ze,ca(TYPESEQ(t,at)?ae:we));
  if(*zb){
   SPB(zp,x,  over(ax,wx));
-  SPBV(zp,i,y,over(ay,wy)); v=AV(y)+AN(ay); m=*as; DQ(*AS(wy), *v+=m; v+=c;);
+  SPBV(zp,i,y,over(ay,wy)); v=AV(y)+AN(ay); m=*as; DQ(AS(wy)[0], *v+=m; v+=c;);
  }else{C*av,*wv,*xv;I am,ak,i,j,k,mn,p,*u,wk,wm,xk,*yv;
   i=j=p=0; k=bpnoun(t); 
-  m=*AS(ay); u=AV(ay); av=CAV(ax); am=aii(ax); ak=k*am;
-  n=*AS(wy); v=AV(wy); wv=CAV(wx); wm=aii(wx); wk=k*wm; mn=m+n; xk=k*(am+wm);
+  m=AS(ay)[0]; u=AV(ay); av=CAV(ax); am=aii(ax); ak=k*am;
+  n=AS(wy)[0]; v=AV(wy); wv=CAV(wx); wm=aii(wx); wk=k*wm; mn=m+n; xk=k*(am+wm);
   GATVR(y,INT,mn*c,      2,     AS(ay)); yv= AV(y); AS(y)[0]=mn;                 
-  GA(x,t,  mn*(am+wm),AR(ax),AS(ax)); xv=CAV(x); *AS(x)=mn; *(1+AS(x))=*zs; mvc(k*AN(x),xv,k,AV(ze));
+  GA(x,t,  mn*(am+wm),AR(ax),AS(ax)); xv=CAV(x); AS(x)[0]=mn; AS(x)[1]=*zs; mvc(k*AN(x),xv,k,AV(ze));
   while(i<m||j<n){I cmp;
    if     (i==m)cmp= 1; 
    else if(j==n)cmp=-1;

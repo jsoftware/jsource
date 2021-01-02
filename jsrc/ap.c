@@ -329,7 +329,7 @@ static DF1(jtgprefix){A h,*hv,z,*zv;I m,n,r;
 static F2(jtseg){A z;I c,k,m,n,*u,zn;
  ARGCHK2(a,w);
  // The (start,length) had better be integers.  Extract them into m,n
- if(INT&AT(a)){u=AV(a); m=*u; n=*(1+u);} else m=n=0;
+ if(INT&AT(a)){u=AV(a); m=*u; n=u[1];} else m=n=0;
  c=aii(w); k=c<<bplg(AT(w)); DPMULDE(n,c,zn);  // c=#atoms per item, k=#bytes/item, zn=atoms/infix
  GA(z,AT(w),zn,MAX(1,AR(w)),AS(w)); AS(z)[0]=n;  // Allocate array of items, move in shape, override # items
  // Copy the selected items to the new block and return the new block

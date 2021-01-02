@@ -407,8 +407,8 @@ static F2(jtmatchs){A ae,ax,p,q,we,wx,x;B*b,*pv,*qv;D d;I acr,an=0,ar,c,j,k,m,n,
  if(SPARSE&AT(a)){ap=PAV(a); x=SPA(ap,a); v=AV(x); an=AN(x); DO(an, b[v[i]]=1;);}
  if(SPARSE&AT(w)){wp=PAV(w); x=SPA(wp,a); v=AV(x); wn=AN(x); DO(wn, b[v[i]]=1;);} 
  c=0; DO(r, c+=b[i];);
- if(an<c||DENSE&AT(a))RZ(a=reaxis(ifb(r,b),a)); ap=PAV(a); ae=SPA(ap,e); ax=SPA(ap,x); m=*AS(ax);
- if(wn<c||DENSE&AT(w))RZ(w=reaxis(ifb(r,b),w)); wp=PAV(w); we=SPA(wp,e); wx=SPA(wp,x); n=*AS(wx);
+ if(an<c||DENSE&AT(a))RZ(a=reaxis(ifb(r,b),a)); ap=PAV(a); ae=SPA(ap,e); ax=SPA(ap,x); m=AS(ax)[0];
+ if(wn<c||DENSE&AT(w))RZ(w=reaxis(ifb(r,b),w)); wp=PAV(w); we=SPA(wp,e); wx=SPA(wp,x); n=AS(wx)[0];
  RZ(x=indexof(SPA(ap,i),SPA(wp,i))); v=AV(x);
  GATV0(p,B01,m,1); pv=BAV(p);
  GATV0(q,B01,n,1); qv=BAV(q); 

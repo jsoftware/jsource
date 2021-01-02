@@ -97,7 +97,7 @@ F1(jtbdot){A b,h=0;I j=0,n,*v;
 
 static A jtmemoget(J jt,I x,I y,A self){A h,*hv,q;I*jv,k,m,*v;
  h=FAV(self)->fgh[2]; hv=AAV(h); 
- q=hv[1]; jv=AV(q); m=*AS(q);
+ q=hv[1]; jv=AV(q); m=AS(q)[0];
  k=HIC(x,y)%m; v=jv+2*k; while(IMIN!=*v&&!(y==*v&&x==v[1])){v+=2; if(v==jv+2*m)v=jv;}  // search hash table, stop on match or end
  R AAV(hv[2])[((v-jv)>>1)];  // return match if found, 0 if not
 }

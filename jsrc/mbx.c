@@ -112,7 +112,7 @@ static void smmput1(A a,I**mfree,I n,C*v){I j,k;MS*x;
 
 static B jtsmmjoin(J jt,A a,I j){A y;I m,**mfree,n,*p,*q;
  RZ(y=smmblkf(a));
- n=*AS(y);
+ n=AS(y)[0];
  RZ(1<n);
  RZ(y=grade2(y,y));
  p=q=AV(y); m=0;
@@ -145,7 +145,7 @@ static A jtsmmga(J jt,A a,I t,I n,I r,I*s){A z;I m,w;
  ASSERT(RMAX>=r&&m>n&&n>=0&&m>w&&w>0,EVLIMIT);   /* beware integer overflow */
  RZ(z=smma(a,m));
  AT(z)=t; ACX(z); AN(z)=n; AR(z)=(RANKT)r; AFLAG(z)=AFSMM; AK(z)=AKX(z);
- if(r&&s)ICPY(AS(z),s,r); else *AS(z)=n;
+ if(r&&s)ICPY(AS(z),s,r); else AS(z)[0]=n;
  if(t&LAST0)*((I*)z+w-1)=0;
  R z;
 }
@@ -178,9 +178,9 @@ F2(jtsmmis){A*wv,x;A1*av;I wn,wr;
  wn=AN(w); wr=AR(w);
  if(smmin(a,w))RZ(w=cpa(1,w));
  AK(a)=SZI*(SMMAH+64); AT(a)=AT(w); AN(a)=wn; AR(a)=(RANKT)wr;
- if(!smminit(a)){AT(a)=LIT; AN(a)=0; AR(a)=1; *AS(a)=0; R 0;}
+ if(!smminit(a)){AT(a)=LIT; AN(a)=0; AR(a)=1; AS(a)[0]=0; R 0;}
  av=A1AV(a); wv=AAV(w); RELBASEASGN(w,w) ;
- DO(wn, x=smmcar(a,wv[i]); if(!x){AT(a)=LIT; AN(a)=0; AR(a)=1; *AS(a)=0; R 0;} av[i]=AREL(x,a););
+ DO(wn, x=smmcar(a,wv[i]); if(!x){AT(a)=LIT; AN(a)=0; AR(a)=1; AS(a)[0]=0; R 0;} av[i]=AREL(x,a););
  ICPY(AS(a),AS(w),wr);
  RETF(a);
 }    /* a=:w where a is mapped and w is boxed */
@@ -220,7 +220,7 @@ static F1(jtsmmblkf){A z;I**mfree,p,q,*v,*zv;MS*x;
  mfree=SMMFREE(w);
  p=MLEN; q=0; 
  DO(p, v=mfree[i]; while(v){x=(MS*)AABS(v,w); ++q;                           v=x->a;});
- GATV0(z,INT,2*q,2); *AS(z)=q; *(1+AS(z))=2; zv=AV(z);
+ GATV0(z,INT,2*q,2); AS(z)[0]=q; AS(z)[1]=2; zv=AV(z);
  DO(p, v=mfree[i]; while(v){x=(MS*)AABS(v,w); *zv++=(I)x; *zv++=(I)1<<(x->j); v=x->a;});
  RETF(z);
 }    /* blocks free as a 2-column matrix of (address,size) */
@@ -242,7 +242,7 @@ static I* smmblku1(B b,I*zv,A w){A1*wv;MS*x;
 static A jtsmmblku(J jt,A w){A z;I n;
  ARGCHK1(w);
  n=smmblkun(0,w);
- GATV0(z,INT,2*n,2); *AS(z)=n; *(1+AS(z))=2;
+ GATV0(z,INT,2*n,2); AS(z)[0]=n; AS(z)[1]=2;
  smmblku1(0,AV(z),w);
  R z;
 }    /* blocks in use */
@@ -257,11 +257,11 @@ F1(jtsmmblks){A x,y,z;I n,t,*v,*zv;
  ASSERT(AFNJA&AFLAG(w)&&t&BOX,EVDOMAIN);
  RZ(x=smmblku(w));
  RZ(y=smmblkf(w));
- n=1+*AS(x)+*AS(y);
- GATV0(z,INT,3*n,2); *AS(z)=n; *(1+AS(z))=3; zv=AV(z); 
+ n=1+AS(x)[0]+AS(y)[0];
+ GATV0(z,INT,3*n,2); AS(z)[0]=n; AS(z)[1]=3; zv=AV(z); 
  *zv++=IMIN; *zv++=IMIN; *zv++=IMIN;
- v=AV(x); DQ(*AS(x), *zv++=*v++; *zv++=*v++; *zv++=SMMCINUSE;);
- v=AV(y); DQ(*AS(y), *zv++=*v++; *zv++=*v++; *zv++=SMMCFREE; );
+ v=AV(x); DQ(AS(x)[0], *zv++=*v++; *zv++=*v++; *zv++=SMMCINUSE;);
+ v=AV(y); DQ(AS(y)[0], *zv++=*v++; *zv++=*v++; *zv++=SMMCFREE; );
  RZ(z=grade2(z,z)); zv=AV(z);
  *zv++=(I)smmu(w); *zv++=smmsize(w); *zv++=SMMCTOTAL;
  RETF(z);

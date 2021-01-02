@@ -318,7 +318,7 @@ static A jtredsp1a(J jt,C id,A z,A e,I n,I r,I*s){A t;B b,p=0;D d=1;
 
 static A jtredsp1(J jt,A w,A self,C id,VARPSF ado,I cv,I f,I r,I zt){A e,x,z;I m,n;P*wp;
  ARGCHK1(w);
- wp=PAV(w); e=SPA(wp,e); x=SPA(wp,x); n=AN(x); m=*AS(w);
+ wp=PAV(w); e=SPA(wp,e); x=SPA(wp,x); n=AN(x); m=AS(w)[0];
  GA(z,zt,1,0,0);
  if(n){I rc=((AHDRRFN*)ado)(1L,n,1L,AV(x),AV(z),jt); if(255&rc)jsignal(rc); RE(0); if(m==n)R z;}
  R redsp1a(id,z,e,n,AR(w),AS(w));

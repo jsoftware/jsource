@@ -10,7 +10,7 @@ static I jtioev(J jt,I mode,A a){A ae,ax,ay,p;B*pv;I j,k,m,n,*yv;P*ap;
  ap=PAV(a);
  ae=SPA(ap,e);
  ay=SPA(ap,i); yv=AV(ay);
- ax=SPA(ap,x); m=k=AN(ax); n=j=*AS(a); 
+ ax=SPA(ap,x); m=k=AN(ax); n=j=AS(a)[0]; 
  RZ(p=eq(ax,ae)); pv=BAV(p);
  switch((AN(ay)?2:0)+(I )(1==mode)){
   case 0:  DO(m,           if(          pv[i])R i;); R m;
@@ -32,7 +32,7 @@ A jtiovxs(J jt,I mode,A a,A w){A e,x,z;B h;I at,t,wt;P*ap=0,*wp,*zp;
   ay=SPA(ap,i); yv=AV(ay); 
   ae=SPA(ap,e); if(h&&TYPESNE(t,at))RZ(ae=cvt(t,ae));
   ax=SPA(ap,x); if(h&&TYPESNE(t,at))RZ(ax=cvt(t,ax)); if(!AN(ay))RZ(ax=ravel(ax));
-  m=AN(ax); n=*AS(a);
+  m=AN(ax); n=AS(a)[0];
   j=ioev(mode,a);
   if(equ(ae,e))SPB(zp,e,sc(j))
   else{RE(k=i0(indexofsub(mode,ax,e))); SPB(zp,e,sc(AN(ay)?(m>k?yv[k]:n):k));}
@@ -53,7 +53,7 @@ A jtiovxs(J jt,I mode,A a,A w){A e,x,z;B h;I at,t,wt;P*ap=0,*wp,*zp;
 A jtiovsd(J jt,I mode,A a,A w){A ae,ax,ay,p,z;B h,*pv;I at,j,m,n,t,wt,*v,*yv;P*ap;
  ap=PAV(a); ax=SPA(ap,x); ay=SPA(ap,i);
  if(!AN(ay))R indexofsub(mode,ravel(ax),w);
- m=AN(ax); n=*AS(a); yv=AV(ay); ae=SPA(ap,e);
+ m=AN(ax); n=AS(a)[0]; yv=AV(ay); ae=SPA(ap,e);
  at=DTYPE(AT(a)); wt=AT(w); if(h=HOMO(at,wt))t=maxtype(at,wt);
  if(h&&TYPESNE(t,wt))RZ(w=cvt(t,w));
  j=ioev(mode,a); 
@@ -78,17 +78,17 @@ A jtindexofxx(J jt,I mode,A a,A w){A x;B*b,*c,s;I ar,d,j,m,n,wr;P*p;
 
 static F1(jtifdz){I m;
  ARGCHK1(w);
- m=bplg(AT(w))-LGSZI; AN(w)<<=m; *(1+AS(w))<<=m;
+ m=bplg(AT(w))-LGSZI; AN(w)<<=m; AS(w)[1]<<=m;
  AT(w)=INT;
  R w;
 }    /* INT from FL or CMPX, in place */
 
 static A jtioe(J jt,I mode,A w){A b,j,p,y;I c,jn,*jv,k,n;P*wp;
  wp=PAV(w);
- n=*AS(w); y=SPA(wp,i);
+ n=AS(w)[0]; y=SPA(wp,i);
  if(!AN(y))R sc(1==mode?(n?n-1:0):0);
  RZ(b=eq(SPA(wp,e),SPA(wp,x)));
- if(2<AR(b)){*(1+AS(b))=aii(b); AR(b)=2;}
+ if(2<AR(b)){AS(b)[1]=aii(b); AR(b)=2;}
  if(1<AR(b))RZ(b=aslash1(CSTARDOT,b));  /* b=. *./@,"_1 (3$.w)=5$.w */
  RZ(y=irs2(num(0),y,0L,0L,1L,jtfrom));
  RZ(df2(p,y,b,sldot(slash(ds(CSTARDOT)))));
@@ -123,7 +123,7 @@ static B jtiopart(J jt,A w,I r,I mm,I*zc,A*zi,A*zj,A*zx){A b,f,wx,x,wy,y;B*bv;
  wp=PAV(w); wy=SPA(wp,i); wx=SPA(wp,x); n=AR(wx)-1;
  RZ(b=not(irs2(wx,reshape(vec(INT,n,1+AS(wx)),SPA(wp,e)),0L,n,n,jtmatch)));
  if(!all1(b)){RZ(wx=repeat(b,wx)); RZ(wy=repeat(b,wy));}
- v=AV(wy); m=*AS(wy); n=*(1+AS(wy)); nd=n-d;
+ v=AV(wy); m=AS(wy)[0]; n=AS(wy)[1]; nd=n-d;
  GATV0(b,B01,m,1); bv=BAV(b);
  if     (0==d){memset(bv,C0,m); if(m)*bv=1;}
  else if(1==d){j=-1; DO(m, bv[i]=j!=*v; j=*v; v+=n;);}
@@ -133,9 +133,9 @@ static B jtiopart(J jt,A w,I r,I mm,I*zc,A*zi,A*zj,A*zx){A b,f,wx,x,wy,y;B*bv;
  }
  if(m){RZ(f=cut(ds(CCOMMA),num(1))); RZ(df2(y,b,dropr(d,wy),f)); RZ(df2(x,b,wx,f));}
  else{y=mtm; RZ(x=reshape(v2(0L,prod(r,AS(w)+wr-r)),wx));}
- if(0>c)*zc=c=*(1+AS(y)); 
- else if(c!=*(1+AS(y))){RZ(y=taker(c,y)); RZ(x=taker((c/(n-d))*aii(wx),x));}
- v=AV(y); k=0; q=*AS(y);
+ if(0>c)*zc=c=AS(y)[1]; 
+ else if(c!=AS(y)[1]){RZ(y=taker(c,y)); RZ(x=taker((c/(n-d))*aii(wx),x));}
+ v=AV(y); k=0; q=AS(y)[0];
  for(i=0;i<q;++i){
   j=k; k=1+j; while(k<m&&!bv[k])++k; p=nd*(k-j); 
   if(c<p)*v=mm; else DO(c-p, v[p+i]=mm;); 
@@ -163,7 +163,7 @@ A jtindexofss(J jt,I mode,A a,A w){A ai,aj,ax,wi,wj,wx,x,y,z;B aw=a!=w;I ar,c,m,
           y=stitch(wj,1.0!=jt->cct?iocol(mode,ax,wx):ifdz(wx));
  }
  RZ(x=indexofsub(mode,x,aw?y:x)); u=AV(x);
- m=*AS(ai); v=AV(ai); 
+ m=AS(ai)[0]; v=AV(ai); 
  if(aw)DO(AN(x), u[i]=m>u[i]?v[u[i]]:n;)
  else  DO(AN(x), u[i]=v[u[i]];);
  if(!r)R AN(x)?sc(*u):ioe(mode,a);
@@ -181,7 +181,7 @@ F1(jtnubsievesp){A e,x,y,z;I c,j,m,n,r,*s,*u,*v,*vv,wr,*yv;P*p;D rkblk[16];
  n=r?*(AS(w)+wr-r):1;
  if(r<wr)R ATOMIC2(jt,IX(n),irs2(w,w,0L,r,r,jtindexof),rkblk,1L,r?1L:0L,CEQ);  // seems to fail
  RZ(x=indexof(w,w)); p=PAV(x);
- y=SPA(p,i); u=AV(y); c=*AS(y);
+ y=SPA(p,i); u=AV(y); c=AS(y)[0];
  x=SPA(p,x); v=AV(x);
  e=SPA(p,e); j=*AV(e); m=j<n;
  DO(c, m+=u[i]==v[i];);

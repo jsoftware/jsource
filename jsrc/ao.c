@@ -175,7 +175,7 @@ static DF2(jtkeysp){PROLOG(0008);A b,by,e,q,x,y,z;I j,k,n,*u,*v;P*p;
  RZ(b=ne(e,x));
  RZ(by=repeat(b,y));
  RZ(x=key(repeat(b,x),from(ravel(by),w),self));
- GASPARSE(q,SB01,1,1,(I*)0); *AS(q)=n;  /* q=: 0 by}1$.n;0;1 */
+ GASPARSE(q,SB01,1,1,(I*)0); AS(q)[0]=n;  /* q=: 0 by}1$.n;0;1 */
  p=PAV(q); SPB(p,a,iv0); SPB(p,e,num(1)); SPB(p,i,by); SPB(p,x,reshape(tally(by),num(0)));
  RZ(z=over(df1(b,repeat(q,w),VAV(self)->fgh[0]),x));
  z=j?cdot2(box(IX(1+j)),z):z;

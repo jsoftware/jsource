@@ -25,11 +25,11 @@ B jtscheck(J jt,A w){A a,e,x,y;I k1,k2,r,*s,t;P*p;D rkblk[16];
  ASSERTSYS(2==AR(y),"scheck i rank");
  ASSERTSYS(INT&AT(y),"scheck i type");
  ASSERTSYS(SETIC(y,k1)==SETIC(x,k2),"scheck i/x tally");
- ASSERTSYS(*(1+AS(y))==SETIC(a,k1),"scheck i/a length");
+ ASSERTSYS(AS(y)[1]==SETIC(a,k1),"scheck i/a length");
  ASSERTSYS(equ(y,nub(y)),"scheck i unique");
  ASSERTSYS(all1(le(num(0),y)),"scheck i negative");
  ASSERTSYS(all1(ATOMIC2(jt,y,from(a,shape(w)),rkblk,1L,1L,CLT)),"scheck i index");
- ASSERTSYS(equ(grade1(y),IX(*AS(y))),"scheck i sorted");
+ ASSERTSYS(equ(grade1(y),IX(AS(y)[0])),"scheck i sorted");
  ASSERTSYS(AR(x)==1+r-AN(a),"scheck x rank");
  ASSERTSYS(equ(behead(shape(x)),from(less(IX(r),a),shape(w))),"scheck x shape");
  R 1;
@@ -81,20 +81,20 @@ static A jtsparse1a(J jt,A s,A a,A e,A y,A x){A z;B*b;I an,*av,et,r,*sv,t,*v;P*p
   GA(x,et,0L,1+r-an,0L); v=AS(x); v[0]=0; DO(r, if(b[i])*++v=sv[i];);
  }else{A q,x1,y1;C*xu,*xv;I i,j,k,m,n,*qv,*u,*yu,*yv;
   ASSERT(2==AR(y),EVRANK);
-  ASSERT(an==*(1+AS(y)),EVLENGTH);
+  ASSERT(an==AS(y)[1],EVLENGTH);
   if(!(INT&AT(y)))RZ(y=cvt(INT,y));
   GATV0(q,INT,an,1); qv=AV(q); 
   DO(an, qv[i]=sv[av[i]];);
   u=AV(y);
-  DO(*AS(y), DO(an, j=*u++; ASSERT(0<=j&&j<qv[i],EVINDEX);););
+  DO(AS(y)[0], DO(an, j=*u++; ASSERT(0<=j&&j<qv[i],EVINDEX);););
   ASSERT(AR(x)==1+r-an,EVRANK);
   v=AS(x); DO(r, if(b[i]){j=*++v; ASSERT(j==sv[i],EVLENGTH);});
-  ASSERT(*AS(x)==*AS(y),EVLENGTH);
+  ASSERT(AS(x)[0]==AS(y)[0],EVLENGTH);
   ASSERT(HOMO(et,AT(x)),EVDOMAIN);
   t=maxtype(et,AT(x));
   if(TYPESNE(t,et)   )RZ(e=cvt(t,e));
   if(TYPESNE(t,AT(x)))RZ(x=cvt(t,x));
-  n=*AS(y)-1; u=AV(y); v=an+u;
+  n=AS(y)[0]-1; u=AV(y); v=an+u;
   for(i=0;i<n;++i){
    j=0;
    DO(an, if(u[i]<v[i]){j=-1; break;}else if(u[i]>v[i]){j=1; break;});
@@ -110,8 +110,8 @@ static A jtsparse1a(J jt,A s,A a,A e,A y,A x){A z;B*b;I an,*av,et,r,*sv,t,*v;P*p
     ++qv; v=yu+an**qv;
     DO(an, if(yv[i]<v[i]){yv+=an; ICPY(yv,v,an); xv+=k; MC(xv,xu+k**qv,k); break;});
    }
-   yv+=an; AN(y1)=yv-AV(y1); *AS(y1)=AN(y1)/an; y=y1;
-   xv+=k; *AS(x1)=(xv-CAV(x1))/k; AN(x1)=m**AS(x1); x=x1;
+   yv+=an; AN(y1)=yv-AV(y1); AS(y1)[0]=AN(y1)/an; y=y1;
+   xv+=k; AS(x1)[0]=(xv-CAV(x1))/k; AN(x1)=m*AS(x1)[0]; x=x1;
  }}
  t=STYPE(AT(x)); 
  ASSERT(t!=0,EVDOMAIN);
@@ -179,7 +179,7 @@ F2(jtreaxis){A a1,e,p,q,x,y,z;B*b;I c,d,j,k,m,r,*u,*v,*ws,wt;P*wp,*zp;
  GASPARSE(z,wt,1L,r,ws); zp=PAV(z); 
  SPBV(zp,a,a1,vaxis(r,a)); 
  SPBV(zp,e,e,ca(SPA(wp,e)));
- a=SPA(wp,a); x=SPA(wp,x); y=SPA(wp,i); m=*AS(y);
+ a=SPA(wp,a); x=SPA(wp,x); y=SPA(wp,i); m=AS(y)[0];
  if(all1(eps(a,a1))){I*s;  /* old is subset of new */
   RZ(p=eps(daxis(r,a),a1)); b=BAV(p);
   GATV0(q,INT,1+r,1); u=AV(q); j=1;
@@ -208,7 +208,7 @@ F2(jtreaxis){A a1,e,p,q,x,y,z;B*b;I c,d,j,k,m,r,*u,*v,*ws,wt;P*wp,*zp;
   RZ(p=over(less(a,a1),daxis(r,a))); v=AV(p);
   *u=n; j=1; DQ(AN(p), u[j++]=ws[*v++];); RE(h=prod(1+r-d,u));
   GA(x1,AT(x),h,1+r-d,u);                       t=CAV(x1); s=CAV(x);
-  GATV0(y1,INT,n*d,2); *AS(y1)=n; *(1+AS(y1))=d; v= AV(y1); u= AV(y);  
+  GATV0(y1,INT,n*d,2); AS(y1)[0]=n; AS(y1)[1]=d; v= AV(y1); u= AV(y);  
   k=bpnoun(AT(x)); g=k*aii(x); h=k*aii(x1); mvc(k*AN(x1),t,k,AV(e));
   DO(m, MC(t+g*iv[i],s,g); s+=g; if(b[i]){ICPY(v,u+i*c,d); v+=d; t+=h;});
   SPB(zp,i,y1); SPB(zp,x,cant2(increm(indexof(p,daxis(r,a1))),x1));
@@ -243,7 +243,7 @@ static F2(jtaxbytes){A a1,e,p,q,x;B*b;I c,d,j,m,n=0,r,*u,*v,*ws,wt;P*wp;
  if(all1(eps(a1,a))){A y=SPA(wp,i);   /* new is subset of old */
   RZ(y=fromr(indexof(a,a1),y)); 
   RZ(y=grade2(y,y));
-  if(m=*AS(y)){n=1; u=AV(y); DQ(m-1, if(ICMP(u,u+d,d))++n; u+=d;);} 
+  if(m=AS(y)[0]){n=1; u=AV(y); DQ(m-1, if(ICMP(u,u+d,d))++n; u+=d;);} 
   RZ(p=over(less(a,a1),daxis(r,a))); v=AV(p);
   DQ(AN(p), u[j++]=ws[*v++];);
   R axbytes1(AT(e),d,n,j,u);
@@ -268,7 +268,7 @@ static F2(jtaxtally){A a1,e,p,q,x;B*b;I c,d,j,m,n=0,r,*u,*v,*ws,wt;P*wp;
  if(all1(eps(a1,a))){A y=SPA(wp,i);   /* new is subset of old */
   RZ(y=fromr(indexof(a,a1),y)); 
   RZ(y=grade2(y,y));
-  if(m=*AS(y)){n=1; u=AV(y); DQ(m-1, if(ICMP(u,u+d,d))++n; u+=d;);} 
+  if(m=AS(y)[0]){n=1; u=AV(y); DQ(m-1, if(ICMP(u,u+d,d))++n; u+=d;);} 
   R sc(n);
  }
  R axtally(a1,reaxis(over(a,less(a1,a)),w));

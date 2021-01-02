@@ -47,7 +47,7 @@ static NUMH(jtnumj){C*t,*ta;D x,y;Z*v;
  if(!(numd(t?t-s:n,s,&x)))R 0;
  if(t){t+=ta?2:1; if(!(numd(n+s-t,t,&y)))R 0;} else y=0;
  if(ta){C c;
-  c=*(1+ta);
+  c=ta[1];
   if(!(0<=x&&(c=='d'||c=='r')))R 0;
   if(c=='d')y*=PI/180; if(y<=-P2||P2<=y)y-=P2*jfloor(y/P2); if(0>y)y+=P2;
   v->re=y==0.5*PI||y==1.5*PI?0:x*cos(y); v->im=y==PI?0:x*sin(y);

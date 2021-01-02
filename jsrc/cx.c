@@ -703,7 +703,7 @@ static B jtsent12b(J jt,A w,A*m,A*d){A t,*wv,y,*yv;I j,*v;
  wv=AAV(w); 
  GATV(y,BOX,AN(w),AR(w),AS(w)); yv=AAV(y);
  DO(AN(w), RZ(yv[i]=vs(wv[i])););
- RZ(t=indexof(y,link(chrcolon,str(1L,":")))); v=AV(t); j=MIN(*v,*(1+v));
+ RZ(t=indexof(y,link(chrcolon,str(1L,":")))); v=AV(t); j=MIN(*v,v[1]);
  *m=take(sc(j  ),y); 
  *d=drop(sc(j+1),y);
  R 1;

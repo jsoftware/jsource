@@ -20,7 +20,7 @@ static A jtfromis1(J jt,A ind,A w,A z,I wf){A a,a1,j1,p,q,x,x1,y,y1;C*xu,*xuu,*x
   else R reshape(mtv,AN(x)?x:SPA(zp,e));
  if(h){q=grade1(fromr(sc(h),y)); RZ(y=ifrom(q,y)); RZ(x=ifrom(q,x));}
  RZ(q=odom(2L,r,AS(ind))); iv=AV(q);
- m=*AS(y); s=0; j=-1; u=h+AV(y); v=u+an;
+ m=AS(y)[0]; s=0; j=-1; u=h+AV(y); v=u+an;
  GATV0(p,INT,m,1); pv=AV(p); memset(pv,CFF,SZI*m);
  GATV0(q,INT,m,1); qu=AV(q);
  GATV0(q,INT,m,1); qv=AV(q);
@@ -92,7 +92,7 @@ A jtfrombsn(J jt,A ind,A w,I wf){A a,j1,p,q,x,x1,y,y1,ys,z;C*xu,*xuu,*xv;
  RZ(q=eps(ys,ind)); 
  if(!all1(q)){RZ(ys=repeat(q,ys)); RZ(y=repeat(q,y)); RZ(x=repeat(q,x));}
  if(wf){q=grade1(ys); RZ(ys=ifrom(q,ys)); RZ(y=ifrom(q,y)); RZ(x=ifrom(q,x));}
- m=*AS(y);
+ m=AS(y)[0];
  GATV0(p,INT,m,1); pv=AV(p);
  GATV0(q,INT,m,1); qv=AV(q);
  s=0; j=-1; u=AV(ys); v=u+h;
@@ -186,9 +186,9 @@ F2(jtfromss){A e,x,y,z;B*b;I acr,af,ar,c,d,k,m,n,p,*u,*v,wcr,wf,wr,*ws,*yv;P*ap,
  DO(wf, if(b[i])*v++=i;); DO(ar, *v++=wf+i;); DO(wcr-1, if(b[i+wf+1])*v++=wf+ar+i;);
  SPB(zp,a,x);
  RZ(x=irs2(SPA(ap,x),w,VFLAGNONE, RMAX,wcr,jtfrom)); xp=PAV(x); 
- y=SPA(xp,i); u=AV(y); c=*(1+AS(y)); m=*AS(y); k=0; DO(wf, if(b[i])++k;);
- y=SPA(ap,i); v=AV(y); d=*(1+AS(y)); n=c+d-1; p=c-(1+k);
- GATV0(y,INT,m*n,2); *AS(y)=m; *(1+AS(y))=n; yv=AV(y);
+ y=SPA(xp,i); u=AV(y); c=AS(y)[1]; m=AS(y)[0]; k=0; DO(wf, if(b[i])++k;);
+ y=SPA(ap,i); v=AV(y); d=AS(y)[1]; n=c+d-1; p=c-(1+k);
+ GATV0(y,INT,m*n,2); AS(y)[0]=m; AS(y)[1]=n; yv=AV(y);
  DQ(m, if(k)ICPY(yv,u,k); ICPY(yv+k,v+d*u[k],d); if(p)ICPY(yv+k+d,u+1+k,p); yv+=n; u+=c;);
  SPB(zp,i,y);
  SPB(zp,x,SPA(xp,x));

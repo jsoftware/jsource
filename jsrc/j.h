@@ -824,7 +824,7 @@ extern unsigned int __cdecl _clearfp (void);
 // Shape item s, but 1 if index is < 0
 #define SHAPEN(w,s,targ) (targ=AS(w)[s], targ=(s)<0?1:targ)
 // Item count
-#define SETIC(w,targ)   (targ=AS(w)[0], targ=AR(w)?targ:1)  //   (AR(w) ? *AS(w) : 1L)
+#define SETIC(w,targ)   (targ=AS(w)[0], targ=AR(w)?targ:1)  //   (AR(w) ? AS(w)[0] : 1L)
 #define ICMP(z,w,n)     memcmpne((z),(w),(n)*SZI)
 #define ICPY(z,w,n)     memcpy((z),(w),(n)*SZI)
 #define IFCMPNAME(name,string,len,stmt) if(likely((name)->m==(len)))if(likely(!memcmpne((name)->s,string,len)))stmt

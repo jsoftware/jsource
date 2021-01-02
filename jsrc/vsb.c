@@ -592,7 +592,7 @@ static A jtsbcheck1(J jt,A una,A sna,A u,A s,A h,A roota,A ff,A gp,I intcall){PR
  if(!intcall){
   ASSERTD(2==AR(u),"u matrix");
   ASSERTD(INT&AT(u),"u integer");
-  ASSERTD(*(1+AS(u))==sizeof(SBU)/SZI,"u #columns");
+  ASSERTD(AS(u)[1]==sizeof(SBU)/SZI,"u #columns");
  }
  ASSERTD(c<=un,"c bounded by #u");
  ASSERTD(1==AR(s),"s vector");
@@ -657,7 +657,7 @@ static A jtsbcheck2(J jt,A una,A sna,A u,A s){PROLOG(0000);
  un=AS(u)[0]; uv=(SBU*)AV(u);
  ASSERTD(4==AR(u),"u matrix");
  ASSERTD(INT&AT(u),"u integer");
- ASSERTD(*(1+AS(u))==sizeof(SBU)/SZI,"u #columns");
+ ASSERTD(AS(u)[1]==sizeof(SBU)/SZI,"u #columns");
  ASSERTD(c<=un+offset,"c bounded by #u");
  ASSERTD(1==AR(s),"s vector");
  ASSERTD(LIT&AT(s),"s literal");

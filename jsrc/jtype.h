@@ -938,7 +938,7 @@ typedef struct {
   I    swf;          /* comparison: sparse wf value                     */
   I    sxc;          /* comparison: sparse aii(x)                       */
   C*   sxv;          /* comparison: sparse AV(x)                        */
-  I    syc;          /* comparison: sparse aii(y) or *(1+AS(y))         */
+  I    syc;          /* comparison: sparse aii(y) or AS(y)[1]         */
   I*   syv;          /* comparison: sparse AV(y)                        */
  } SORTSP;   // sparse extension for sortblok
 

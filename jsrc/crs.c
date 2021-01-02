@@ -40,12 +40,12 @@ static A jtsprz(J jt,A z0,A y,A e,I f,I*s){A a,a0,q,y0,z;B d;I c,et,h,m,n,r,t,*u
  ASSERT(AN(e),EVDOMAIN);
  if(SPARSE&AT(e)){ep=PAV(e); ASSERT(all1(eq(SPA(ep,e),SPA(ep,x))),EVSPARSE); q=SPA(ep,e);}
  else{RZ(q=reshape(mtv,e)); ASSERT(all1(eq(q,e)),EVSPARSE);}
- if(!*AS(z0)){
+ if(!AS(z0)[0]){
   t=AT(q); zt=STYPE(t);
   GASPARSE(z,zt,1L,f+AR(e),s); ICPY(f+AS(z),AS(e),AR(e));
   zp=PAV(z); SPB(zp,e,q); SPB(zp,a,mtv); 
   GATR(q,INT,0,2,(I*)&zeroZ); SPB(zp,i,q);   // zeroZ is a pun for 0 0!!
-  GA(q,t,0L,1+AR(z),0L); *AS(q)=0; ICPY(1+AS(q),AS(z),AR(z)); SPB(zp,x,q);
+  GA(q,t,0L,1+AR(z),0L); AS(q)[0]=0; ICPY(1+AS(q),AS(z),AR(z)); SPB(zp,x,q);
   R z;
  }
  e=q;
@@ -57,7 +57,7 @@ static A jtsprz(J jt,A z0,A y,A e,I f,I*s){A a,a0,q,y0,z;B d;I c,et,h,m,n,r,t,*u
  if(d){SPB(zp,a,apvwr(f,0L,1L)); SPB(zp,i,y); SPB(zp,x,TYPESEQ(m,t)?z0:cvt(m,z0)); R z;}
  zq=PAV(z0); y0=SPA(zq,i); v=AS(y0); n=v[0]; c=v[1]; v=AV(y0);
  ASSERT(equ(e,SPA(zq,e)),EVNONCE);
- h=*AS(y); GATV0(q,INT,h,1); u=AV(q); memset(u,C0,h*SZI); 
+ h=AS(y)[0]; GATV0(q,INT,h,1); u=AV(q); memset(u,C0,h*SZI); 
  if(n){h=-1; DO(n-1, if(*v!=*(v+c)){u[*v]=i-h; h=i;} v+=c;); u[*v]=n-1-h;}
  SPB(zp,i,stitch(repeat(q,y),dropr(1L,y0)));
  a0=SPA(zq,a); v=AV(a0);
@@ -158,7 +158,7 @@ A jtsprank2(J jt,A a,A w,A fs,I lr,I rr,AF f2){PROLOG(0046);A aa,ae,we,ww,y,zi,z
  if(!af)R sprank2_0w(a,w,fs,f2,wf,wcr);
  if(!wf)R sprank2_a0(a,w,fs,f2,af,acr);
  f=MIN(af,wf); g=MAX(af,wf); m=1;
- if(f<g){d=g-f; RZ(y=odom(2L,d,f+(af<wf?ws:as))); ii=AV(y); m=*AS(y);}
+ if(f<g){d=g-f; RZ(y=odom(2L,d,f+(af<wf?ws:as))); ii=AV(y); m=AS(y)[0];}
  ASSERT(!ICMP(as,ws,f),EVLENGTH);
  RZ(a=sprarg(af,a)); at=AT(a); ap=PAV(a);
  RZ(w=sprarg(wf,w)); wt=AT(w); wp=PAV(w);
@@ -200,7 +200,7 @@ A jtsprank2(J jt,A a,A w,A fs,I lr,I rr,AF f2){PROLOG(0046);A aa,ae,we,ww,y,zi,z
   if     ( b&&0>=s&&(!v||ICMP(v,wv,f)))if(aj==an)av=0; else{av+=ak*ac; RE(ak=spradv(an,ab,af,acr,aj,ap,&aa)); aj+=ak;}
   else if(!b&&0<=s&&(!v||ICMP(v,av,f)))if(wj==wn)wv=0; else{wv+=wk*wc; RE(wk=spradv(wn,wb,wf,wcr,wj,wp,&ww)); wj+=wk;}
  }
- AN(z)=*AS(z)=*AS(zi)=j; AN(zi)=j*g;
+ AN(z)=AS(z)[0]=AS(zi)[0]=j; AN(zi)=j*g;
  z=sprz(ope(z),zi,CALL2(f2,ae,we,fs),g,g==af?as:ws);
  EPILOG(z);
 }    /* a f"r w on sparse arrays */
@@ -217,7 +217,7 @@ A jtva2s(J jt,A a,A w,C id,VF ado,I cv,I t,I zt,I lr,I rr){PROLOG(0047);A aa,ae,
  if(!ar){ado(jt,a,w); R 0;}
  if(!wr){ado(jt,a,w); R 0;}
  f=MIN(af,wf); g=MAX(af,wf); m=1;
- if(f<g){d=g-f; RZ(y=odom(2L,d,f+(af<wf?ws:as))); ii=AV(y); m=*AS(y);}
+ if(f<g){d=g-f; RZ(y=odom(2L,d,f+(af<wf?ws:as))); ii=AV(y); m=AS(y)[0];}
  ASSERT(!ICMP(as,ws,f),EVLENGTH);
  RZ(a=sprarg(af,a)); at=AT(a); ap=PAV(a);
  RZ(w=sprarg(wf,w)); wt=AT(w); wp=PAV(w);
@@ -259,7 +259,7 @@ A jtva2s(J jt,A a,A w,C id,VF ado,I cv,I t,I zt,I lr,I rr){PROLOG(0047);A aa,ae,
   if     ( b&&0>=s&&(!v||ICMP(v,wv,f)))if(aj==an)av=0; else{av+=ak*ac; RE(ak=spradv(an,ab,af,acr,aj,ap,&aa)); aj+=ak;}
   else if(!b&&0<=s&&(!v||ICMP(v,av,f)))if(wj==wn)wv=0; else{wv+=wk*wc; RE(wk=spradv(wn,wb,wf,wcr,wj,wp,&ww)); wj+=wk;}
  }
- AN(z)=*AS(z)=*AS(zi)=j; AN(zi)=j*g;
+ AN(z)=AS(z)[0]=AS(zi)[0]=j; AN(zi)=j*g;
  R 0;
  /* EPILOG(sprz(ope(z),zi,CALL2(f2,ae,we,fs),g,g==af?as:ws)); */
 }    /* a f"r w on sparse arrays for atomic f */

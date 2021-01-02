@@ -713,7 +713,7 @@ void getpath(HINSTANCE hi, C* path)
 	GetModuleFileName(hi, wpath,_MAX_PATH);
 	p = wcsrchr(wpath, '\\');
 	if(!p) p = wcsrchr(wpath, ':');
-	*(1+p) = 0;
+	p[1] = 0;
 	wtom(wpath,wcslen(wpath),path);
 }
 #else
@@ -724,7 +724,7 @@ void getpath(HINSTANCE hi, C* path)
 	GetModuleFileNameW(hi, wpath, _MAX_PATH);
 	p = wcsrchr(wpath, '\\');
 	if(!p) p = wcsrchr(wpath, ':');
-	*(1+p) = 0;
+	p[1] = 0;
 	wtom(wpath,wcslen(wpath),path);
 }
 #endif

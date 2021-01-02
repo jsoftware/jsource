@@ -18,7 +18,7 @@
   n=AN(w); u=(T*)AV(w);                          \
   GATVS(z,TYPE,1+n,1,0,TYPE##SIZE,GACOPYSHAPE0,R 0); v=(T*)AV(z); *v=*(T*)AV(a);  \
   for(j=0;j<n;++j){                              \
-   d=fnegate(u[j]); t=j+v; *(1+t)=*t;            \
+   d=fnegate(u[j]); t=j+v; t[1]=*t;            \
    DQ(j, *t=fplus(*(t-1),ftymes(d,*t)); --t;);   \
    *v=ftymes(d,*v);                              \
   }                                              \
@@ -251,7 +251,7 @@ F1(jtpoly1){A c,e,x;
  if(((AN(w)-2)&(1-AR(x)))>=0)R cfr(w);
  // Must be exponent form: a single box containing a table with 2-atom rows
  ASSERT(2==AR(x),EVRANK);
- ASSERT(2==*(1+AS(x)),EVLENGTH);
+ ASSERT(2==AS(x)[1],EVLENGTH);
  RZ(IRS1(x,0L,1L,jthead,c));  // c = {."1>y = list of coefficients
  RZ(IRS1(x,0L,1L,jttail,e));  // e = {:"1>y = list of exponents
  ASSERT(equ(e,floor1(e))&&all1(le(num(0),e)),EVDOMAIN);  // insist on nonnegative integral exponents
@@ -278,7 +278,7 @@ static A jtmnomx(J jt,I m,A w){A s,*wv,x,z=w,*zv;I i,n,r;
 
 static F2(jtpoly2a){A c,e,x;I m;D rkblk[16];
  ARGCHK2(a,w);
- m=*(1+AS(a))-1;
+ m=AS(a)[1]-1;
  ASSERT(AT(a)&NUMERIC,EVDOMAIN);
  ASSERT(2==AR(a),EVRANK);
  ASSERT(0<m,EVLENGTH);

@@ -315,7 +315,7 @@ static A jtselx(J jt,A x,I r,I i){A z;I c,k;
 }    /* (i+i.r){x */
 
 static A jtsely(J jt,A y,I r,I i,I j){A z;I c,*s,*v;
- c=*(1+AS(y));
+ c=AS(y)[1];
  GATV0(z,INT,r*c,2); s=AS(z); s[0]=r; s[1]=c;
  v=AV(z);
  ICPY(v,AV(y)+i*c,r*c);
@@ -350,7 +350,7 @@ static DF2(jtcut2sx){PROLOG(0024);DECLF;A h=0,*hv,y,yy;B b,neg,pfx,*u,*v;C id;I 
   else   for(i=1;i<=m;++i)*zi++=(yu[i  ]-yu[i-1])-neg;
   EPILOG(z);
  }else{A a,ww,x,y,z,*za,zz,z0;I c,i,j,q,qn,r;P*wp,*wwp;
-  wp=PAV(w); a=SPA(wp,a); x=SPA(wp,x); y=SPA(wp,i); yv=AV(y); r=*AS(y); c=*(1+AS(y));
+  wp=PAV(w); a=SPA(wp,a); x=SPA(wp,x); y=SPA(wp,i); yv=AV(y); r=AS(y)[0]; c=AS(y)[1];
   RZ(ww=cps(w)); wwp=PAV(ww);
   GATV0(z,BOX,m,1); za=AAV(z);
   switch(AN(a)&&AV(a)[0]?2+pfx:pfx){
@@ -359,7 +359,7 @@ static DF2(jtcut2sx){PROLOG(0024);DECLF;A h=0,*hv,y,yy;B b,neg,pfx,*u,*v;C id;I 
     for(i=1;i<=m;++i){
      j=yu[i]; DO(q=r-p, if(j<yv[c*(p+i)]){q=i; break;}); qn=q;
      if(neg)DO(qn=r-p, if(j-1<yv[c*(p+i)]){qn=i; break;});
-     *AS(ww)=(yu[i]-yu[i-1])-neg; 
+     AS(ww)[0]=(yu[i]-yu[i-1])-neg; 
      SPB(wwp,i,sely(y,qn,p,1+yu[i-1]));
      SPB(wwp,x,selx(x,qn,p));
      RZ(zz=h?df1(z0,ww,hv[(i-1)%hn]):CALL1(f1,ww,fs));
@@ -375,7 +375,7 @@ static DF2(jtcut2sx){PROLOG(0024);DECLF;A h=0,*hv,y,yy;B b,neg,pfx,*u,*v;C id;I 
     for(i=m;i>=1;--i){
      j=yu[i-1]; DO(q=r-p, if(j<=yv[c*(p+i)]){q=i; break;}); qn=q;
      if(neg){j=yu[i]; qn=0; DO(r-p, if(j<yv[c*(p+i)]){qn=q-i; break;});}
-     *AS(ww)=(yu[i-1]-yu[i])-neg; 
+     AS(ww)[0]=(yu[i-1]-yu[i])-neg; 
      SPB(wwp,i,sely(y,qn,p+q-qn,yu[i]+neg));
      SPB(wwp,x,selx(x,qn,p+q-qn));
      RZ(zz=h?df1(z0,ww,hv[(m-i)%hn]):CALL1(f1,ww,fs));
@@ -385,7 +385,7 @@ static DF2(jtcut2sx){PROLOG(0024);DECLF;A h=0,*hv,y,yy;B b,neg,pfx,*u,*v;C id;I 
     break;
    case 2:
     for(i=1;i<=m;++i){
-     q=yu[i]-yu[i-1]; *AS(ww)=q-neg;
+     q=yu[i]-yu[i-1]; AS(ww)[0]=q-neg;
      SPB(wwp,x,irs2(apv(q-neg,p,1L),x,0L,1L,-1L,jtfrom));
      RZ(zz=h?df1(z0,ww,hv[(i-1)%hn]):CALL1(f1,ww,fs));
      p+=q; if(WASINCORP1(zz,ww)){RZ(ww=cps(w)); wwp=PAV(ww);}
@@ -394,7 +394,7 @@ static DF2(jtcut2sx){PROLOG(0024);DECLF;A h=0,*hv,y,yy;B b,neg,pfx,*u,*v;C id;I 
     break;
    case 3:
     for(i=m;i>=1;--i){
-     q=yu[i-1]-yu[i]; *AS(ww)=q-neg;
+     q=yu[i-1]-yu[i]; AS(ww)[0]=q-neg;
      SPB(wwp,x,irs2(apv(q-neg,p+neg,1L),x,0L,1L,-1L,jtfrom));
      RZ(zz=h?df1(z0,ww,hv[(i-1)%hn]):CALL1(f1,ww,fs));
      p+=q; if(WASINCORP1(zz,ww)){RZ(ww=cps(w)); wwp=PAV(ww);}

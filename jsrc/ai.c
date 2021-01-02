@@ -184,7 +184,7 @@ static F1(jtinvamp){A f,ff,g,h,x,y;B nf,ng;C c,d,*yv;I n;V*u,*v;
    h=!yv[1]?f:atop(!yv[0]?ds(CMINUS):amp(negate(signum(x)),ds(CSTAR)),f);
    R obverse(hook(swap(ds(CTAKE)),atop(h,g)),w);
   case CDOMINO:
-   if(!(2==AR(x)&&*AS(x)==*(1+AS(x))))break;
+   if(!(2==AR(x)&&AS(x)[0]==AS(x)[1]))break;
    ff=eval("+/ .*");
    R nf?atop(h,amp(ff,minv(x))):amp(x,ff);
   case CDOT:

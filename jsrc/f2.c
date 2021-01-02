@@ -278,7 +278,7 @@ F2(jtthorn2){PROLOG(0050);A da,ea,h,ma,s,cellbuf,y,*yv,z;B e,*ev;C*sv,*wv,*zv;I 
  // Analyze a to get info for each format
  RZ(cellbuf=th2ctrl(a,&ea,&ma,&da,&s,&zk));
  // ev->expformat flags, mv->field width, dv->decimal places, sk=length of each sprintf string, sv->sprintf string (prebiased)
- ev=BAV(ea); mv=AV(ma); dv=AV(da); sk=1<an?*(1+AS(s)):0; sv=CAV(s)-sk;
+ ev=BAV(ea); mv=AV(ma); dv=AV(da); sk=1<an?AS(s)[1]:0; sv=CAV(s)-sk;
  if(zk||!AN(w)){
   // We know the width, or there is nothing to format.  Create the lines one by one
   if(1==an)zk*=c;   // If only one atom in a, replicate it to match a line of w

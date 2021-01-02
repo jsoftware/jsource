@@ -93,7 +93,7 @@ static A jtscuba(J jt,A z,A i1,B u){A*iv,q=0,x;I c,d,j,n,*s,*v;P*zp;
   x=iv[j];
   if(x==ds(CACE))RZ(x=IX(s[v[j]]))else{if(1<AR(x))RZ(x=ravel(x)); if(u)RZ(x=nub(x));}
   c=AN(x); 
-  if(q){d=*AS(q); RZ(q=stitch(repeat(sc(d),x),reitem(sc(c*d),q)));}
+  if(q){d=AS(q)[0]; RZ(q=stitch(repeat(sc(d),x),reitem(sc(c*d),q)));}
   else RZ(q=reshape(v2(c,1L),x));
  }
  R q;
@@ -101,14 +101,14 @@ static A jtscuba(J jt,A z,A i1,B u){A*iv,q=0,x;I c,d,j,n,*s,*v;P*zp;
 
 static A jtscubb(J jt,A z,A i1){A a,q,x,y;I c,d,h,j,*s,*v,*xv;P*zp;
  RZ(q=scuba(z,i1,1));
- if(!*AS(q))R mtm;
+ if(!AS(q)[0])R mtm;
  s=AS(z); zp=PAV(z); y=SPA(zp,i); a=SPA(zp,a); v=AV(a);
- c=*(1+AS(q)); d=*(1+AS(y)); h=d-c;
+ c=AS(q)[1]; d=AS(y)[1]; h=d-c;
  if(c==d)R less(q,y);
  RZ(q=less(q,taker(c,y)));
  GATV0(x,INT,h,1); xv=AV(x); j=c; DO(h, xv[i]=s[v[j++]];);
  RZ(x=odom(2L,h,xv));
- c=*AS(q); d=*AS(x);
+ c=AS(q)[0]; d=AS(x)[0];
  R stitch(repeat(sc(d),q),reitem(sc(c*d),x));
 }    /* new rows for the index matrix of z for brand new cells */
 
@@ -117,28 +117,28 @@ static A jtscubc(J jt,A z,A i1,A p){A a,q,s,y,y1;B*qv;I c,d,h,j=-1,m,n,*sv,*u,*v
  if(!h)R mtm;
  GATV0(s,INT,h,1); sv=AV(s); 
  d=1; u=AS(z); v=AV(a); DO(h, d*=sv[i]=u[v[n+i]];);
- RZ(y=repeat(p,SPA(zp,i))); m=*AS(y);
+ RZ(y=repeat(p,SPA(zp,i))); m=AS(y)[0];
  RZ(y1=take(v2(m,n),y)); v=AV(y1);
  GATV0(q,B01,m,1); qv=BAV(q);
  if(m){memset(qv,C0,m); DO(m-1, if(ICMP(v,v+n,n)){if(d>i-j)qv[i]=1; j=i;} v+=n;); if(d>(m-1)-j)qv[m-1]=1;}
- RZ(y1=repeat(q,y1)); c=*AS(y1);
+ RZ(y1=repeat(q,y1)); c=AS(y1)[0];
  if(!c)R mtm;
  R less(stitch(repeat(sc(d),y1),reitem(sc(c*d),odom(2L,h,sv))),y);
 }    /* new rows for the index matrix of z for existing cells */
 
 static A jtscube(J jt,A z,A i1,A p){A a,y;P*zp;
  zp=PAV(z); a=SPA(zp,a); y=SPA(zp,i);
- R !AN(a)&&!*AS(y)?take(num(1),mtm):over(scubb(z,i1),scubc(z,i1,p));
+ R !AN(a)&&!AS(y)[0]?take(num(1),mtm):over(scubb(z,i1),scubc(z,i1,p));
 }    /* new rows for the index matrix of z */
 
 static A jtiindx(J jt,A z,A i1){A q,j,j1,y;I c,d,e,h,i,*jv,m,n,*qv,*v,*yv;P*zp;
  c=AN(i1); zp=PAV(z); y=SPA(zp,i); 
- if(c==*(1+AS(y)))R indexof(y,scuba(z,i1,0));
+ if(c==AS(y)[1])R indexof(y,scuba(z,i1,0));
  /* when y has excess columns, do progressive indexing */
  RZ(y=taker(c,y)); 
  RZ(j=indexof(y,scuba(z,i1,0)));  /* j: group indices           */
  n= AN(j); jv=AV(j);
- m=*AS(y); yv=AV(y);
+ m=AS(y)[0]; yv=AV(y);
  GATV0(q,INT,n,1); qv=AV(q);          /* q: # members in each group */
  for(i=h=0;i<n;++i){
   e=1; d=jv[i]; v=yv+c*d;
@@ -152,7 +152,7 @@ static A jtiindx(J jt,A z,A i1){A q,j,j1,y;I c,d,e,h,i,*jv,m,n,*qv,*v,*yv;P*zp;
 
 static A jtzpad1(J jt,A z,A t,B ip){A q,s,x,x0,y,y0;I m;P*zp;
  RZ(z&&t);
- if(m=*AS(t)){  /* new cells being added */
+ if(m=AS(t)[0]){  /* new cells being added */
   zp=PAV(z);  
   y0=SPA(zp,i); RZ(y=over(y0,t)); RZ(q=grade1(y)); RZ(y=from(q,y));
   x0=SPA(zp,x); RZ(s=shape(x0)); *AV(s)=m; RZ(x=from(q,over(x0,reshape(s,SPA(zp,e)))));
@@ -202,7 +202,7 @@ A jtam1a(J jt,A a,A z,A ind,B ip){A a0=a,a1,e,i1,i2,t,x,y;C*u,*v,*xv;I ar,c,*iv,
  if(n){RZ(t=dcube(z,i2)); jv=AV(t); c=AN(t); v=xv-vk;}
  if(!n)    DO(m,                           mvc(vk,v+vk*iv[i],uk,u); if(ar)u+=uk;  )
  else if(m)DO(m,      v=xv+vk*iv[i]; DO(c, mvc(xk,v+xk*jv[i],uk,u); if(ar)u+=uk;);)
- else      DO(*AS(x), v+=vk;         DO(c, mvc(xk,v+xk*jv[i],uk,u); if(ar)u+=uk;););
+ else      DO(AS(x)[0], v+=vk;         DO(c, mvc(xk,v+xk*jv[i],uk,u); if(ar)u+=uk;););
  R z;
 }    /* a (<ind)}z; sparse z; ind is index list; arbitrary dense array a replacement */
 

@@ -247,7 +247,7 @@ static S jtunh(J jt,C c){
 
 static F1(jtunhex){A z;C*u;I c,n;UC p,q,*v;
  ARGCHK1(w);
- c=*(1+AS(w));
+ c=AS(w)[1];
  ASSERT(c==8||c==16,EVLENGTH);  
  n=AN(w)>>1; u=CAV(w);
  GATV0(z,LIT,n,1); v=UAV(z);

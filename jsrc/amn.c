@@ -22,13 +22,13 @@ static B jtiaddr(J jt,A z,A ind,A*i1,A*i2){A a,ai,as,ii,jj,q,t,x,y;I c,d,e,h,i,*
  h=*(AS(ind)+AR(ind)-1);                               /* # axes indexed              */
  RZ(q=gt(sc(h),a)); 
  y=SPA(zp,i); if(!all1(q))RZ(y=repeatr(q,y));          /* indexed cols of index mat   */
- m=*AS(y); yv=AV(y);      
+ m=AS(y)[0]; yv=AV(y);      
  RZ(ai=IX(h));
  RZ(as=less(IX(AR(z)),a)); u=AV(as); n=AN(as);         /* dense axes                  */
  GATV0(t,INT,n,1); v=AV(t);                             /* shape of indexed dense axes */
  e=0; d=1; DO(n, if(h>u[i])v[e++]=s[i]; else d*=s[i];);
  RZ(*i2=jj=tymes(sc(d),base2(vec(INT,e,v),repeatr(eps(ai,as),ind))));
- c=*(1+AS(y));
+ c=AS(y)[1];
  if(!c){
   n=AN(jj);
   RZ(*i1=repeat(sc(n),IX(m)));
@@ -60,14 +60,14 @@ static A jtzpadn(J jt,A z,A ind,B ip){A a,ai,i1,p,p1,q,t,x,x0,y,y0,y1;B*b;I c,d,
  RZ(t=gt(sc(h),a)); RZ(y1=all1(t)?y:repeatr(t,y));
  RZ(p=nub(less(i1,y1)));
  if(c=AN(a)-d){
-  RZ(t=from(less(a,ai),shape(z))); RZ(p1=odom(2L,c,AV(t))); n=*AS(p1);
-  if(m=*AS(p))RZ(p=stitch(repeat(sc(n),p),reshape(v2(n*m,c),p1)));
+  RZ(t=from(less(a,ai),shape(z))); RZ(p1=odom(2L,c,AV(t))); n=AS(p1)[0];
+  if(m=AS(p)[0])RZ(p=stitch(repeat(sc(n),p),reshape(v2(n*m,c),p1)));
   RZ(t=nub(repeat(eps(y1,i1),y1)));
-  RZ(t=stitch(repeat(sc(n),t),reshape(v2(n**AS(t),c),p1)));
+  RZ(t=stitch(repeat(sc(n),t),reshape(v2(n*AS(t)[0],c),p1)));
   RZ(t=less(t,y));
   if(AN(t))RZ(p=over(p,t));
  }
- if(m=*AS(p)){  /* new cells being added */
+ if(m=AS(p)[0]){  /* new cells being added */
   RZ(y=over(y,p)); RZ(q=grade1(y)); RZ(y=from(q,y));
   RZ(t=shape(x)); *AV(t)=m; RZ(x=from(q,over(x,reshape(t,SPA(zp,e)))));
   // if z is assigned to a name, the use counts need to be adjusted: the old ones need to be decremented
@@ -100,7 +100,7 @@ A jtamne(J jt,A a,A z,A ind,B ip){A i1,i2,x,y;C*u,*v;I*iv,*jv,k,m,n,vk,xk;P*zp;
  RZ(a&&z&&ind);
  RZ(iaddr(z,ind,&i1,&i2));
  zp=PAV(z); x=SPA(zp,x); y=SPA(zp,i);
- m=*AS(y); n=AN(i1);
+ m=AS(y)[0]; n=AN(i1);
  k=bpnoun(AT(x)); xk=k*aii(x); vk=k*csize(z,ind);
  u=CAV(a); v=CAV(x); iv=AV(i1); jv=AV(i2);
  DO(n, if(m>iv[i])mvc(vk,v+xk*iv[i]+k*jv[i],k,u););
@@ -127,7 +127,7 @@ A jtamnsp(J jt,A a,A z,A ind,B ip){A i1,i2,t;C*ev,*u,*v,*vv;I c,*dv,i,*iv,j,*jv,
  RZ(z=zpadn(z,ind,ip)); zp=PAV(z);
  RZ(iaddr(z,ind,&i1,&i2));
  s=AS(a); n=AN(i1); c=csize(z,ind); iv=AV(i1); jv=AV(i2);
- t=SPA(ap,i); yv= AV(t); m=*AS(t); p=0;
+ t=SPA(ap,i); yv= AV(t); m=AS(t)[0]; p=0;
  t=SPA(ap,e); ev=CAV(t);
  t=SPA(ap,x); u =CAV(t);
  t=SPA(zp,x); v =CAV(t); k=bpnoun(AT(t)); zk=k*aii(t);

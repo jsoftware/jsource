@@ -402,7 +402,7 @@ typedef JST* JS;  // shared part of struct
 // obsolete   I    compswf;          /* comparison: sparse wf value                     */
 // obsolete   I    compsxc;          /* comparison: sparse aii(x)                       */
 // obsolete   C*   compsxv;          /* comparison: sparse AV(x)                        */
-// obsolete   I    compsyc;          /* comparison: sparse aii(y) or *(1+AS(y))         */
+// obsolete   I    compsyc;          /* comparison: sparse aii(y) or AS(y)[1]         */
 // obsolete   I*   compsyv;          /* comparison: sparse AV(y)                        */
 // obsolete   C*   compv;            /* comparison: beginning of data area              */
 // obsolete  } compare;

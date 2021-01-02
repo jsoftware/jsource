@@ -19,8 +19,8 @@ F1(jtvaspz){A e,x,y;B c,*u,*xu,*xv;I j,n,*v,*yu,*yv,xc,yc;P*wp;
  if(!(SB01&AT(w)))R w;
  wp=PAV(w); 
  e=SPA(wp,e); c=!*BAV(e);
- x=SPA(wp,x); xv=xu=u=BAV(x); xc=aii(x); n=*AS(x); j=0;
- y=SPA(wp,i); yv=yu=   AV(y); yc=*(1+AS(y));
+ x=SPA(wp,x); xv=xu=u=BAV(x); xc=aii(x); n=AS(x)[0]; j=0;
+ y=SPA(wp,i); yv=yu=   AV(y); yc=AS(y)[1];
  if(!(n&&xc&&yc))R w;
  while(u=memchr(xv+xc*j,c,xc*(n-j))){
   j=(u-xv)/xc; v=yv+yc*j;
@@ -30,8 +30,8 @@ F1(jtvaspz){A e,x,y;B c,*u,*xu,*xv;I j,n,*v,*yu,*yv,xc,yc;P*wp;
  }
  n=(yu-yv)/yc;
  if(1==xc)memset(xv,c,n);
- *AS(y)=n; AN(y)=n*yc;
- *AS(x)=n; AN(x)=n*xc;
+ AS(y)[0]=n; AN(y)=n*yc;
+ AS(x)[0]=n; AN(x)=n*xc;
  RETF(w);
 }    /* post processing on result; modifies argument in place */
 
@@ -88,7 +88,7 @@ static B jtvaspeqprep(J jt,A a,A w,I t,I f,I r,A*ae,A*ay,A*ax,A*we,A*wy,A*wx,A*z
 }
 
 static I zcount(A ay,A wy,B ab,B wb){I c,d,i,j,m,n,*u,*v,yc;
- v=AS(ay); m=v[0]; yc=v[1]; n=*AS(wy);
+ v=AS(ay); m=v[0]; yc=v[1]; n=AS(wy)[0];
  i=j=d=0; u=AV(ay); v=AV(wy);
  while(m>i&&n>j){
   c=0; DO(yc, if(c=u[i]-v[i])break;);
@@ -108,7 +108,7 @@ static A jtvaspeq(J jt,A a,A w,C id,VF ado,I cv,I t,I zt,I f,I r){A ae,ax,ay,we,
      B ab=1,wb=1;C*aev,*axv,*wev,*wxv,*zxv;I ak,c,d,i,j,m,n,*u,*v,wk,xc,yc,zk,*zyv;P*zp;I rc=EVOK;
  RZ(vaspeqprep(a,w,t,f,r,&ae,&ay,&ax,&we,&wy,&wx,&za));
  if(id==CSTAR||id==CSTARDOT){ab=!equ(ae,num(0)); wb=!equ(we,num(0));} 
- v=AS(ay); m=v[0]; yc=v[1]; xc=aii(ax); n=*AS(wy);
+ v=AS(ay); m=v[0]; yc=v[1]; xc=aii(ax); n=AS(wy)[0];
  aev=CAV(ae); axv=CAV(ax); ak=xc<<bplg(AT(ax));
  wev=CAV(we); wxv=CAV(wx); wk=xc<<bplg(AT(wx));
  d=zcount(ay,wy,ab,wb);

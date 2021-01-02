@@ -21,7 +21,7 @@ static B jtspsscell(J jt,A w,I wf,I wcr,A*zc,A*zt){A c,t,y;B b;
  v0=u0+wf; v=v0+n;
  if(!m){*zt=*zc=mtv; R 1;}
  GATV0(t,INT,2+2*m,1); tv=AV(t); tv[0]=tv[1]=0; tn=2;
- GATV0(c,INT,  2*m,2); cv=AV(c); cv[0]=0;       cn=0; *(1+AS(c))=2;
+ GATV0(c,INT,  2*m,2); cv=AV(c); cv[0]=0;       cn=0; AS(c)[1]=2;
  for(j=1;j<m;++j){
   b=1;
   for(k=0;k<wf;++k)
@@ -38,8 +38,8 @@ static B jtspsscell(J jt,A w,I wf,I wcr,A*zc,A*zt){A c,t,y;B b;
  tv[tn++]=m; tv[tn++]=m; cv[1+cn]=tn-cv[cn];
  if(p==tn-cv[cn]){++cv[cn]; cv[1+cn]-=2;}
  cn+=2;
- AN(t)=    *AS(t)=tn;   *zt=t;  /* cell divisions (row indices in y)            */
- AN(c)=cn; *AS(c)=cn>>1; *zc=c;  /* item divisions (indices in t, # of elements) */
+ AN(t)=    AS(t)[0]=tn;   *zt=t;  /* cell divisions (row indices in y)            */
+ AN(c)=cn; AS(c)[0]=cn>>1; *zc=c;  /* item divisions (indices in t, # of elements) */
  R 1;
 }    /* frame: all sparse; cell: 1 or more sparse, then dense */
 
@@ -73,7 +73,7 @@ static A jtgrd1spss(J jt,A w,I wf,I wcr){F1PREFJT;A c,d,t,x,y,z;I cn,*cv,*dv,i,n
  sortblok.f=(CMP)(wt&SB01?compspssB:wt&SINT?compspssI:wt&SFL?compspssD:compspssZ);  // comparison function
  sortblok.jt=jtinplace;  // jt including direction bit
  x=SPA(wp,e); spblok.sev=CAV(x);
- y=SPA(wp,i); spblok.syv=yv=AV(y); spblok.syc=yc=*(1+AS(y));
+ y=SPA(wp,i); spblok.syv=yv=AV(y); spblok.syc=yc=AS(y)[1];
  x=SPA(wp,x); spblok.sxv=CAV(x);   spblok.sxc=aii(x)*(wt&SCMPX?2:1);
  spblok.swf=wf;
  sortblok.sp=&spblok;  // chain sparse parms to main sortblok
@@ -115,12 +115,12 @@ static B jtspdscell(J jt,A w,I wf,I wcr,A*zc,A*zt){A c,t,y;I*cv,m,n,p,*s,tn,*tv,
  v0=AV(y); v=v0+n; 
  if(!m){*zt=*zc=mtv; R 1;}
  GATV0(t,INT,2+m,1); tv=AV(t); tv[0]=tv[1]=0; tn=2;
- GAT0(c,INT,2,  2); cv=AV(c); cv[0]=0;       *(1+AS(c))=2;
+ GAT0(c,INT,2,  2); cv=AV(c); cv[0]=0;       AS(c)[1]=2;
  DO(m-1, if(*v0!=*v){tv[tn++]=1+i; v0=v;} v+=n;);
  tv[tn++]=m; tv[tn++]=m; cv[1]=tn;
  if(p==tn){++cv[0]; cv[1]-=2;}
- AN(t)=   *AS(t)=tn; *zt=t;  /* cell divisions (row indices in y)            */
- AN(c)=2; *AS(c)=1;  *zc=c;  /* item divisions (indices in t, # of elements) */
+ AN(t)=   AS(t)[0]=tn; *zt=t;  /* cell divisions (row indices in y)            */
+ AN(c)=2; AS(c)[0]=1;  *zc=c;  /* item divisions (indices in t, # of elements) */
  R 1;
 }    /* frame: all dense; cell: 1 or more sparse, then dense */
 
@@ -131,7 +131,7 @@ static A jtgrd1spds(J jt,A w,I wf,I wcr){F1PREFJT;A c,t,x,y,z;I*cv,m,n,n1,p,*tv,
  sortblok.f=(CMP)(wt&SB01?compspdsB:wt&SINT?compspdsI:wt&SFL?compspdsD:compspdsZ);  // comparison function
  sortblok.jt=jtinplace;  // jt including direction bit
  x=SPA(wp,e); spblok.sev=CAV(x);
- y=SPA(wp,i); spblok.syv=yv=AV(y); spblok.syc=yc=*(1+AS(y)); 
+ y=SPA(wp,i); spblok.syv=yv=AV(y); spblok.syc=yc=AS(y)[1]; 
  x=SPA(wp,x); spblok.sxv=CAV(x);   spblok.sxc=p=aii(x)*(wt&SCMPX?2:1);
  sortblok.n=p/m;
 // obsolete  spblok.=(CMP)(wt&SB01?compspdsB:wt&SINT?compspdsI:wt&SFL?compspdsD:compspdsZ); spblok.usejt=1;
@@ -211,7 +211,7 @@ static A jtgrd2spss(J jt,A w,I wf,I wcr){F1PREFJT;A c,t,x,y,z,zy;
  sortblok.f=(CMP)(wt&SB01?compspssB:wt&SINT?compspssI:wt&SFL?compspssD:compspssZ);  // comparison function
  sortblok.jt=jtinplace;  // jt including direction bit
  x=SPA(wp,e); spblok.sev=CAV(x);
- y=SPA(wp,i); spblok.syv=yv=AV(y); spblok.syc=yc=*(1+AS(y));
+ y=SPA(wp,i); spblok.syv=yv=AV(y); spblok.syc=yc=AS(y)[1];
  x=SPA(wp,x); spblok.sxv=CAV(x);   spblok.sxc=aii(x)*(wt&SCMPX?2:1);
  spblok.swf=wf;
  sortblok.sp=&spblok;  // chain sparse parms to main sortblok

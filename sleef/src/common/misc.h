@@ -8,7 +8,10 @@
 #ifndef __MISC_H__
 #define __MISC_H__
 
+#if !defined(SLEEF_GENHEADER)
 #include <stdint.h>
+#include <string.h>
+#endif
 
 #ifndef M_PI
 #define M_PI 3.141592653589793238462643383279502884
@@ -42,9 +45,12 @@
 #define SLEEF_FP_ILOGBNAN ((int)2147483647)
 #endif
 
-#define SLEEF_SNAN (((union { long long int i; double d; }) { .i = 0x7ff0000000000001LL }).d)
+#define SLEEF_SNAN (((union { long long int i; double d; }) { .i = INT64_C(0x7ff0000000000001) }).d)
 #define SLEEF_SNANf (((union { long int i; float f; }) { .i = 0xff800001 }).f)
 
+#define SLEEF_FLT_MIN 0x1p-126
+#define SLEEF_DBL_MIN 0x1p-1022
+#define SLEEF_INT_MAX 2147483647
 
 //
 
@@ -144,39 +150,41 @@
 #define stringify(s) stringify_(s)
 #define stringify_(s) #s
 
+#if !defined(SLEEF_GENHEADER)
 typedef long double longdouble;
+#endif
 
-#ifndef Sleef_double2_DEFINED
+#if !defined(Sleef_double2_DEFINED) && !defined(SLEEF_GENHEADER)
 #define Sleef_double2_DEFINED
 typedef struct {
   double x, y;
 } Sleef_double2;
 #endif
 
-#ifndef Sleef_float2_DEFINED
+#if !defined(Sleef_float2_DEFINED) && !defined(SLEEF_GENHEADER)
 #define Sleef_float2_DEFINED
 typedef struct {
   float x, y;
 } Sleef_float2;
 #endif
 
-#ifndef Sleef_longdouble2_DEFINED
+#if !defined(Sleef_longdouble2_DEFINED) && !defined(SLEEF_GENHEADER)
 #define Sleef_longdouble2_DEFINED
 typedef struct {
   long double x, y;
 } Sleef_longdouble2;
 #endif
 
-#if !defined(Sleef_quad_DEFINED)
+#if !defined(Sleef_quad_DEFINED) && !defined(SLEEF_GENHEADER)
 #define Sleef_quad_DEFINED
 #if defined(ENABLEFLOAT128)
 typedef __float128 Sleef_quad;
 #else
-typedef struct { double x, y; } Sleef_quad;
+typedef struct { uint64_t x, y; } Sleef_quad;
 #endif
 #endif
 
-#if !defined(Sleef_quad1_DEFINED)
+#if !defined(Sleef_quad1_DEFINED) && !defined(SLEEF_GENHEADER)
 #define Sleef_quad1_DEFINED
 typedef union {
   struct {
@@ -186,7 +194,7 @@ typedef union {
 } Sleef_quad1;
 #endif
 
-#if !defined(Sleef_quad2_DEFINED)
+#if !defined(Sleef_quad2_DEFINED) && !defined(SLEEF_GENHEADER)
 #define Sleef_quad2_DEFINED
 typedef union {
   struct {
@@ -196,7 +204,7 @@ typedef union {
 } Sleef_quad2;
 #endif
 
-#if !defined(Sleef_quad4_DEFINED)
+#if !defined(Sleef_quad4_DEFINED) && !defined(SLEEF_GENHEADER)
 #define Sleef_quad4_DEFINED
 typedef union {
   struct {
@@ -206,14 +214,14 @@ typedef union {
 } Sleef_quad4;
 #endif
 
-#if !defined(Sleef_quad8_DEFINED)
+#if !defined(Sleef_quad8_DEFINED) && !defined(SLEEF_GENHEADER)
 #define Sleef_quad8_DEFINED
 typedef union {
   Sleef_quad s[8];
 } Sleef_quad8;
 #endif
 
-#if defined(__ARM_FEATURE_SVE) && !defined(Sleef_quadx_DEFINED)
+#if defined(__ARM_FEATURE_SVE) && !defined(Sleef_quadx_DEFINED) && !defined(SLEEF_GENHEADER)
 #define Sleef_quadx_DEFINED
 typedef union {
   Sleef_quad s[32];
@@ -222,17 +230,11 @@ typedef union {
 
 //
 
-#if defined (__GNUC__) || defined (__clang__) || defined(__INTEL_COMPILER)
+#if (defined (__GNUC__) || defined (__clang__) || defined(__INTEL_COMPILER)) && !defined(MMSC_VER)
 
 #define LIKELY(condition) __builtin_expect(!!(condition), 1)
 #define UNLIKELY(condition) __builtin_expect(!!(condition), 0)
 #define RESTRICT __restrict__
-
-#if defined (__clang__)
-#define INLINE inline __attribute__((always_inline))
-#else
-#define INLINE inline
-#endif
 
 #ifndef __arm__
 #define ALIGNED(x) __attribute__((aligned(x)))
@@ -240,12 +242,22 @@ typedef union {
 #define ALIGNED(x)
 #endif
 
-#ifndef __INTEL_COMPILER
-// #define CONST const
-#define CONST
+#if defined(SLEEF_GENHEADER)
+
+#define INLINE SLEEF_ALWAYS_INLINE
+#define EXPORT SLEEF_INLINE
+#define CONST SLEEF_CONST
+#define NOEXPORT
+
+#else // #if defined(SLEEF_GENHEADER)
+
+// #ifndef __INTEL_COMPILER
+#if 0
+#define CONST const
 #else
 #define CONST
 #endif
+#define INLINE __attribute__((always_inline))
 
 #if defined(__MINGW32__) || defined(__MINGW64__) || defined(__CYGWIN__)
 #ifndef SLEEF_STATIC_LIBS
@@ -260,6 +272,8 @@ typedef union {
 #define EXPORT __attribute__ ((visibility ("hidden")))    // J private use
 #define NOEXPORT __attribute__ ((visibility ("hidden")))
 #endif // #if defined(__MINGW32__) || defined(__MINGW64__) || defined(__CYGWIN__)
+
+#endif // #if defined(SLEEF_GENHEADER)
 
 #define SLEEF_NAN __builtin_nan("")
 #define SLEEF_NANf __builtin_nanf("")
@@ -276,15 +290,19 @@ typedef union {
 #define SLEEF_NANq (SLEEF_INFINITYq - SLEEF_INFINITYq)
 #endif
 
-#elif defined(MMSC_VER)
+#elif defined(MMSC_VER) // #if (defined (__GNUC__) || defined (__clang__) || defined(__INTEL_COMPILER)) && !defined(MMSC_VER)
+
+#if defined(SLEEF_GENHEADER)
+
+#define INLINE SLEEF_ALWAYS_INLINE
+#define CONST SLEEF_CONST
+#define EXPORT SLEEF_INLINE
+#define NOEXPORT
+
+#else // #if defined(SLEEF_GENHEADER)
 
 #define INLINE __forceinline
 #define CONST
-#define RESTRICT
-#define ALIGNED(x)
-#define LIKELY(condition) (condition)
-#define UNLIKELY(condition) (condition)
-
 #ifndef SLEEF_STATIC_LIBS
 #define EXPORT __declspec(dllexport)
 #define NOEXPORT
@@ -293,7 +311,14 @@ typedef union {
 #define NOEXPORT
 #endif
 
-#if (defined(__GNUC__) || defined(__CLANG__)) && (defined(__i386__) || defined(__x86_64__))
+#endif // #if defined(SLEEF_GENHEADER)
+
+#define RESTRICT
+#define ALIGNED(x)
+#define LIKELY(condition) (condition)
+#define UNLIKELY(condition) (condition)
+
+#if (defined(__GNUC__) || defined(__CLANG__)) && (defined(__i386__) || defined(__x86_64__)) && !defined(SLEEF_GENHEADER)
 #include <x86intrin.h>
 #endif
 
@@ -322,7 +347,7 @@ typedef union {
 #endif
 #endif
 
-#endif // defined(MMSC_VER)
+#endif // #elif defined(MMSC_VER) // #if (defined (__GNUC__) || defined (__clang__) || defined(__INTEL_COMPILER)) && !defined(MMSC_VER)
 
 #if !defined(__linux__)
 #define isinff(x) ((x) == SLEEF_INFINITYf || (x) == -SLEEF_INFINITYf)
@@ -337,4 +362,24 @@ typedef union {
 #define VECTOR_CC __attribute__((aarch64_vector_pcs))
 #else
 #define VECTOR_CC
+#endif
+
+//
+
+#if defined (__GNUC__) && !defined(__INTEL_COMPILER)
+#pragma GCC diagnostic ignored "-Wpragmas"
+#pragma GCC diagnostic ignored "-Wunknown-pragmas"
+#if !defined (__clang__)
+#pragma GCC diagnostic ignored "-Wattribute-alias"
+#pragma GCC diagnostic ignored "-Wlto-type-mismatch"
+#pragma GCC diagnostic ignored "-Wstringop-overflow"
+#endif
+#endif
+
+#if defined(MMSC_VER)
+#pragma warning(disable:4101) // warning C4101: 'v': unreferenced local variable
+#pragma warning(disable:4116) // warning C4116: unnamed type definition in parentheses
+#pragma warning(disable:4244) // warning C4244: 'function': conversion from 'vopmask' to '__mmask8', possible loss of data
+#pragma warning(disable:4267) // warning C4267: 'initializing': conversion from 'size_t' to 'const int', possible loss of data
+#pragma warning(disable:4305) // warning C4305: 'function': truncation from 'double' to 'float'
 #endif

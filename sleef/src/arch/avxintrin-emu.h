@@ -427,7 +427,7 @@ __emu_mm256_test_impl( __emu_mm, nzc, ps, ps, __emu__m256 );
 
 #define __emu_mm256_cmp_pd(m1, m2, predicate) \
 ({ \
-    __emu__m256 res_ = (m1), m2_ = (m2); \
+    __emu__m256d res_ = (m1), m2_ = (m2); \
     if ( 7 < (unsigned)predicate ) __asm__ __volatile__ ( "ud2" : : : "memory" ); /* not supported yet */ \
     __asm__ ( "cmppd %[pred_], %[m2_], %[res_]" : [res_] "+x" (res_.__emu_m128[0]) : [m2_] "xm" (m2_.__emu_m128[0]), [pred_] "i" (predicate) ); \
     __asm__ ( "cmppd %[pred_], %[m2_], %[res_]" : [res_] "+x" (res_.__emu_m128[1]) : [m2_] "xm" (m2_.__emu_m128[1]), [pred_] "i" (predicate) ); \

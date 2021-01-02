@@ -9,6 +9,9 @@
 #ifndef SLEEF_STATIC_LIBS
 #define SLEEF_STATIC_LIBS
 #endif
+#define SLEEF_VERSION_MAJOR 3
+#define SLEEF_VERSION_MINOR 6
+#define SLEEF_VERSION_PATCHLEVEL 0
 
 #include <stddef.h>
 #include <stdint.h>
@@ -21,9 +24,12 @@
 #endif
 #endif
 
-#if defined(__AVX2__) || defined(__aarch64__) || defined(__arm__) || defined(__powerpc64__)
+#if defined(__AVX2__) || defined(__aarch64__) || defined(__arm__) || defined(__powerpc64__) || defined(__zarch__)
 #ifndef FP_FAST_FMA
 #define FP_FAST_FMA
+#endif
+#ifndef FP_FAST_FMAF
+#define FP_FAST_FMAF
 #endif
 #endif
 
@@ -60,6 +66,29 @@
 
 #if defined(__ARM_FEATURE_SVE)
 #include <arm_sve.h>
+#endif
+
+#if defined(__VSX__) && defined(__PPC64__) && defined(__LITTLE_ENDIAN__)
+#include <altivec.h>
+typedef __vector double       SLEEF_VECTOR_DOUBLE;
+typedef __vector float        SLEEF_VECTOR_FLOAT;
+typedef __vector int          SLEEF_VECTOR_INT;
+typedef __vector unsigned int SLEEF_VECTOR_UINT;
+typedef __vector long long SLEEF_VECTOR_LONGLONG;
+typedef __vector unsigned long long SLEEF_VECTOR_ULONGLONG;
+#endif
+
+#if defined(__VX__) && defined(__VEC__)
+#ifndef SLEEF_VECINTRIN_H_INCLUDED
+#include <vecintrin.h>
+#define SLEEF_VECINTRIN_H_INCLUDED
+#endif
+typedef __vector double       SLEEF_VECTOR_DOUBLE;
+typedef __vector float        SLEEF_VECTOR_FLOAT;
+typedef __vector int          SLEEF_VECTOR_INT;
+typedef __vector unsigned int SLEEF_VECTOR_UINT;
+typedef __vector long long SLEEF_VECTOR_LONGLONG;
+typedef __vector unsigned long long SLEEF_VECTOR_ULONGLONG;
 #endif
 
 //
@@ -107,8 +136,12 @@ typedef struct {
 
 #if !defined(Sleef_quad_DEFINED)
 #define Sleef_quad_DEFINED
-#if defined(ENABLEFLOAT128)
+#if defined(__SIZEOF_FLOAT128__) || (defined(__linux__) && defined(__GNUC__) && (defined(__i386__) || defined(__x86_64__))) || (defined(__PPC64__) && defined(__GNUC__) && !defined(__clang__) && __GNUC__ >= 8)
 typedef __float128 Sleef_quad;
+#define SLEEF_QUAD_C(x) (x ## Q)
+//#elif defined(__SIZEOF_LONG_DOUBLE__) && defined(__aarch64__)
+//typedef long double Sleef_quad;
+//#define SLEEF_QUAD_C(x) (x ## L)
 #else
 typedef struct { uint64_t x, y; } Sleef_quad;
 #endif
@@ -292,10 +325,9 @@ IMPORT CONST Sleef_quad2 Sleef_sincospiq_u05(Sleef_quad);
 IMPORT CONST Sleef_quad2 Sleef_sincospiq_u35(Sleef_quad);
 #endif
 #ifdef __ARM_NEON
-#define STRUCT_KEYWORD___ARM_NEON struct
 
 #ifndef Sleef_float64x2_t_2_DEFINED
-typedef STRUCT_KEYWORD___ARM_NEON {
+typedef struct {
   float64x2_t x, y;
 } Sleef_float64x2_t_2;
 #define Sleef_float64x2_t_2_DEFINED
@@ -455,7 +487,7 @@ IMPORT CONST int Sleef_getIntd2(int);
 IMPORT CONST void *Sleef_getPtrd2(int);
 
 #ifndef Sleef_float32x4_t_2_DEFINED
-typedef STRUCT_KEYWORD___ARM_NEON {
+typedef struct {
   float32x4_t x, y;
 } Sleef_float32x4_t_2;
 #define Sleef_float32x4_t_2_DEFINED
@@ -611,10 +643,9 @@ IMPORT CONST void *Sleef_getPtrf4(int);
 IMPORT CONST void *Sleef_finz_getPtrf4(int);
 #endif
 #ifdef __ARM_NEON
-#define STRUCT_KEYWORD___ARM_NEON struct
 
 #ifndef Sleef_float64x2_t_2_DEFINED
-typedef STRUCT_KEYWORD___ARM_NEON {
+typedef struct {
   float64x2_t x, y;
 } Sleef_float64x2_t_2;
 #define Sleef_float64x2_t_2_DEFINED
@@ -774,7 +805,7 @@ IMPORT CONST int Sleef_getIntd2_advsimd(int);
 IMPORT CONST void *Sleef_getPtrd2_advsimd(int);
 
 #ifndef Sleef_float32x4_t_2_DEFINED
-typedef STRUCT_KEYWORD___ARM_NEON {
+typedef struct {
   float32x4_t x, y;
 } Sleef_float32x4_t_2;
 #define Sleef_float32x4_t_2_DEFINED
@@ -930,10 +961,9 @@ IMPORT CONST void *Sleef_getPtrf4_advsimd(int);
 IMPORT CONST void *Sleef_finz_getPtrf4_advsimd(int);
 #endif
 #ifdef __ARM_NEON
-#define STRUCT_KEYWORD___ARM_NEON struct
 
 #ifndef Sleef_float64x2_t_2_DEFINED
-typedef STRUCT_KEYWORD___ARM_NEON {
+typedef struct {
   float64x2_t x, y;
 } Sleef_float64x2_t_2;
 #define Sleef_float64x2_t_2_DEFINED
@@ -1093,7 +1123,7 @@ IMPORT CONST int Sleef_getIntd2_advsimdnofma(int);
 IMPORT CONST void *Sleef_getPtrd2_advsimdnofma(int);
 
 #ifndef Sleef_float32x4_t_2_DEFINED
-typedef STRUCT_KEYWORD___ARM_NEON {
+typedef struct {
   float32x4_t x, y;
 } Sleef_float32x4_t_2;
 #define Sleef_float32x4_t_2_DEFINED
@@ -1249,10 +1279,9 @@ IMPORT CONST void *Sleef_getPtrf4_advsimdnofma(int);
 IMPORT CONST void *Sleef_cinz_getPtrf4_advsimdnofma(int);
 #endif
 #ifdef __SSE2__
-#define STRUCT_KEYWORD___SSE2__ struct
 
 #ifndef Sleef___m128d_2_DEFINED
-typedef STRUCT_KEYWORD___SSE2__ {
+typedef struct {
   __m128d x, y;
 } Sleef___m128d_2;
 #define Sleef___m128d_2_DEFINED
@@ -1412,7 +1441,7 @@ IMPORT CONST int Sleef_getIntd2(int);
 IMPORT CONST void *Sleef_getPtrd2(int);
 
 #ifndef Sleef___m128_2_DEFINED
-typedef STRUCT_KEYWORD___SSE2__ {
+typedef struct {
   __m128 x, y;
 } Sleef___m128_2;
 #define Sleef___m128_2_DEFINED
@@ -1568,10 +1597,9 @@ IMPORT CONST void *Sleef_getPtrf4(int);
 IMPORT CONST void *Sleef_cinz_getPtrf4(int);
 #endif
 #ifdef __SSE2__
-#define STRUCT_KEYWORD___SSE2__ struct
 
 #ifndef Sleef___m128d_2_DEFINED
-typedef STRUCT_KEYWORD___SSE2__ {
+typedef struct {
   __m128d x, y;
 } Sleef___m128d_2;
 #define Sleef___m128d_2_DEFINED
@@ -1731,7 +1759,7 @@ IMPORT CONST int Sleef_getIntd2_sse2(int);
 IMPORT CONST void *Sleef_getPtrd2_sse2(int);
 
 #ifndef Sleef___m128_2_DEFINED
-typedef STRUCT_KEYWORD___SSE2__ {
+typedef struct {
   __m128 x, y;
 } Sleef___m128_2;
 #define Sleef___m128_2_DEFINED
@@ -1887,10 +1915,9 @@ IMPORT CONST void *Sleef_getPtrf4_sse2(int);
 IMPORT CONST void *Sleef_cinz_getPtrf4_sse2(int);
 #endif
 #ifdef __SSE2__
-#define STRUCT_KEYWORD___SSE2__ struct
 
 #ifndef Sleef___m128d_2_DEFINED
-typedef STRUCT_KEYWORD___SSE2__ {
+typedef struct {
   __m128d x, y;
 } Sleef___m128d_2;
 #define Sleef___m128d_2_DEFINED
@@ -2050,7 +2077,7 @@ IMPORT CONST int Sleef_getIntd2_sse4(int);
 IMPORT CONST void *Sleef_getPtrd2_sse4(int);
 
 #ifndef Sleef___m128_2_DEFINED
-typedef STRUCT_KEYWORD___SSE2__ {
+typedef struct {
   __m128 x, y;
 } Sleef___m128_2;
 #define Sleef___m128_2_DEFINED
@@ -2206,10 +2233,9 @@ IMPORT CONST void *Sleef_getPtrf4_sse4(int);
 IMPORT CONST void *Sleef_cinz_getPtrf4_sse4(int);
 #endif
 #ifdef __AVX__
-#define STRUCT_KEYWORD___AVX__ struct
 
 #ifndef Sleef___m256d_2_DEFINED
-typedef STRUCT_KEYWORD___AVX__ {
+typedef struct {
   __m256d x, y;
 } Sleef___m256d_2;
 #define Sleef___m256d_2_DEFINED
@@ -2369,7 +2395,7 @@ IMPORT CONST int Sleef_getIntd4(int);
 IMPORT CONST void *Sleef_getPtrd4(int);
 
 #ifndef Sleef___m256_2_DEFINED
-typedef STRUCT_KEYWORD___AVX__ {
+typedef struct {
   __m256 x, y;
 } Sleef___m256_2;
 #define Sleef___m256_2_DEFINED
@@ -2525,10 +2551,9 @@ IMPORT CONST void *Sleef_getPtrf8(int);
 IMPORT CONST void *Sleef_cinz_getPtrf8(int);
 #endif
 #ifdef __AVX__
-#define STRUCT_KEYWORD___AVX__ struct
 
 #ifndef Sleef___m256d_2_DEFINED
-typedef STRUCT_KEYWORD___AVX__ {
+typedef struct {
   __m256d x, y;
 } Sleef___m256d_2;
 #define Sleef___m256d_2_DEFINED
@@ -2688,7 +2713,7 @@ IMPORT CONST int Sleef_getIntd4_avx(int);
 IMPORT CONST void *Sleef_getPtrd4_avx(int);
 
 #ifndef Sleef___m256_2_DEFINED
-typedef STRUCT_KEYWORD___AVX__ {
+typedef struct {
   __m256 x, y;
 } Sleef___m256_2;
 #define Sleef___m256_2_DEFINED
@@ -2844,10 +2869,9 @@ IMPORT CONST void *Sleef_getPtrf8_avx(int);
 IMPORT CONST void *Sleef_cinz_getPtrf8_avx(int);
 #endif
 #ifdef __AVX__
-#define STRUCT_KEYWORD___AVX__ struct
 
 #ifndef Sleef___m256d_2_DEFINED
-typedef STRUCT_KEYWORD___AVX__ {
+typedef struct {
   __m256d x, y;
 } Sleef___m256d_2;
 #define Sleef___m256d_2_DEFINED
@@ -3007,7 +3031,7 @@ IMPORT CONST int Sleef_getIntd4_fma4(int);
 IMPORT CONST void *Sleef_getPtrd4_fma4(int);
 
 #ifndef Sleef___m256_2_DEFINED
-typedef STRUCT_KEYWORD___AVX__ {
+typedef struct {
   __m256 x, y;
 } Sleef___m256_2;
 #define Sleef___m256_2_DEFINED
@@ -3163,10 +3187,9 @@ IMPORT CONST void *Sleef_getPtrf8_fma4(int);
 IMPORT CONST void *Sleef_finz_getPtrf8_fma4(int);
 #endif
 #ifdef __AVX__
-#define STRUCT_KEYWORD___AVX__ struct
 
 #ifndef Sleef___m256d_2_DEFINED
-typedef STRUCT_KEYWORD___AVX__ {
+typedef struct {
   __m256d x, y;
 } Sleef___m256d_2;
 #define Sleef___m256d_2_DEFINED
@@ -3326,7 +3349,7 @@ IMPORT CONST int Sleef_getIntd4_avx2(int);
 IMPORT CONST void *Sleef_getPtrd4_avx2(int);
 
 #ifndef Sleef___m256_2_DEFINED
-typedef STRUCT_KEYWORD___AVX__ {
+typedef struct {
   __m256 x, y;
 } Sleef___m256_2;
 #define Sleef___m256_2_DEFINED
@@ -3482,10 +3505,9 @@ IMPORT CONST void *Sleef_getPtrf8_avx2(int);
 IMPORT CONST void *Sleef_finz_getPtrf8_avx2(int);
 #endif
 #ifdef __SSE2__
-#define STRUCT_KEYWORD___SSE2__ struct
 
 #ifndef Sleef___m128d_2_DEFINED
-typedef STRUCT_KEYWORD___SSE2__ {
+typedef struct {
   __m128d x, y;
 } Sleef___m128d_2;
 #define Sleef___m128d_2_DEFINED
@@ -3645,7 +3667,7 @@ IMPORT CONST int Sleef_getIntd2_avx2128(int);
 IMPORT CONST void *Sleef_getPtrd2_avx2128(int);
 
 #ifndef Sleef___m128_2_DEFINED
-typedef STRUCT_KEYWORD___SSE2__ {
+typedef struct {
   __m128 x, y;
 } Sleef___m128_2;
 #define Sleef___m128_2_DEFINED
@@ -3801,10 +3823,9 @@ IMPORT CONST void *Sleef_getPtrf4_avx2128(int);
 IMPORT CONST void *Sleef_finz_getPtrf4_avx2128(int);
 #endif
 #ifdef __AVX512F__
-#define STRUCT_KEYWORD___AVX512F__ struct
 
 #ifndef Sleef___m512d_2_DEFINED
-typedef STRUCT_KEYWORD___AVX512F__ {
+typedef struct {
   __m512d x, y;
 } Sleef___m512d_2;
 #define Sleef___m512d_2_DEFINED
@@ -3964,7 +3985,7 @@ IMPORT CONST int Sleef_getIntd8(int);
 IMPORT CONST void *Sleef_getPtrd8(int);
 
 #ifndef Sleef___m512_2_DEFINED
-typedef STRUCT_KEYWORD___AVX512F__ {
+typedef struct {
   __m512 x, y;
 } Sleef___m512_2;
 #define Sleef___m512_2_DEFINED
@@ -4120,10 +4141,9 @@ IMPORT CONST void *Sleef_getPtrf16(int);
 IMPORT CONST void *Sleef_finz_getPtrf16(int);
 #endif
 #ifdef __AVX512F__
-#define STRUCT_KEYWORD___AVX512F__ struct
 
 #ifndef Sleef___m512d_2_DEFINED
-typedef STRUCT_KEYWORD___AVX512F__ {
+typedef struct {
   __m512d x, y;
 } Sleef___m512d_2;
 #define Sleef___m512d_2_DEFINED
@@ -4283,7 +4303,7 @@ IMPORT CONST int Sleef_getIntd8_avx512f(int);
 IMPORT CONST void *Sleef_getPtrd8_avx512f(int);
 
 #ifndef Sleef___m512_2_DEFINED
-typedef STRUCT_KEYWORD___AVX512F__ {
+typedef struct {
   __m512 x, y;
 } Sleef___m512_2;
 #define Sleef___m512_2_DEFINED
@@ -4439,10 +4459,9 @@ IMPORT CONST void *Sleef_getPtrf16_avx512f(int);
 IMPORT CONST void *Sleef_finz_getPtrf16_avx512f(int);
 #endif
 #ifdef __AVX512F__
-#define STRUCT_KEYWORD___AVX512F__ struct
 
 #ifndef Sleef___m512d_2_DEFINED
-typedef STRUCT_KEYWORD___AVX512F__ {
+typedef struct {
   __m512d x, y;
 } Sleef___m512d_2;
 #define Sleef___m512d_2_DEFINED
@@ -4602,7 +4621,7 @@ IMPORT CONST int Sleef_getIntd8_avx512fnofma(int);
 IMPORT CONST void *Sleef_getPtrd8_avx512fnofma(int);
 
 #ifndef Sleef___m512_2_DEFINED
-typedef STRUCT_KEYWORD___AVX512F__ {
+typedef struct {
   __m512 x, y;
 } Sleef___m512_2;
 #define Sleef___m512_2_DEFINED
@@ -4758,10 +4777,9 @@ IMPORT CONST void *Sleef_getPtrf16_avx512fnofma(int);
 IMPORT CONST void *Sleef_cinz_getPtrf16_avx512fnofma(int);
 #endif
 #ifdef __STDC__
-#define STRUCT_KEYWORD___STDC__ struct
 
 #ifndef Sleef_double_2_DEFINED
-typedef STRUCT_KEYWORD___STDC__ {
+typedef struct {
   double x, y;
 } Sleef_double_2;
 #define Sleef_double_2_DEFINED
@@ -4921,7 +4939,7 @@ IMPORT CONST int Sleef_getIntd1_purec(int);
 IMPORT CONST void *Sleef_getPtrd1_purec(int);
 
 #ifndef Sleef_float_2_DEFINED
-typedef STRUCT_KEYWORD___STDC__ {
+typedef struct {
   float x, y;
 } Sleef_float_2;
 #define Sleef_float_2_DEFINED
@@ -5077,10 +5095,9 @@ IMPORT CONST void *Sleef_getPtrf1_purec(int);
 IMPORT CONST void *Sleef_cinz_getPtrf1_purec(int);
 #endif
 #ifdef FP_FAST_FMA
-#define STRUCT_KEYWORD_FP_FAST_FMA struct
 
 #ifndef Sleef_double_2_DEFINED
-typedef STRUCT_KEYWORD_FP_FAST_FMA {
+typedef struct {
   double x, y;
 } Sleef_double_2;
 #define Sleef_double_2_DEFINED
@@ -5240,7 +5257,7 @@ IMPORT CONST int Sleef_getIntd1_purecfma(int);
 IMPORT CONST void *Sleef_getPtrd1_purecfma(int);
 
 #ifndef Sleef_float_2_DEFINED
-typedef STRUCT_KEYWORD_FP_FAST_FMA {
+typedef struct {
   float x, y;
 } Sleef_float_2;
 #define Sleef_float_2_DEFINED

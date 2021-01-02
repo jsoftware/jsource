@@ -19,18 +19,18 @@ EXPORT void Sleef_free(void *ptr) { _aligned_free(ptr); }
 EXPORT uint64_t Sleef_currentTimeMicros() {
   struct __timeb64 t;
   _ftime64(&t);
-  return t.time * 1000000LL + t.millitm*1000;
+  return t.time * INT64_C(1000000) + t.millitm*1000;
 }
 #elif defined(__APPLE__)
 #include <sys/time.h>
 
-EXPORT void *Sleef_malloc(size_t z) { void *ptr = NULL; posix_memalign(&ptr, 256, z); return ptr; }
+EXPORT void *Sleef_malloc(size_t z) { void *ptr = NULL; int rc = posix_memalign(&ptr, 256, z); return ptr; }
 EXPORT void Sleef_free(void *ptr) { free(ptr); }
 
 EXPORT uint64_t Sleef_currentTimeMicros() {
   struct timeval time;
   gettimeofday(&time, NULL);
-  return (uint64_t)((time.tv_sec * 1000000LL) + time.tv_usec);
+  return (uint64_t)((time.tv_sec * INT64_C(1000000)) + time.tv_usec);
 }
 #else // #if defined(__MINGW32__) || defined(__MINGW64__) || defined(_WIN32)
 #include <time.h>
@@ -42,7 +42,7 @@ EXPORT uint64_t Sleef_currentTimeMicros() {
 #endif
 
 #if !defined(ANDROID)
-EXPORT void *Sleef_malloc(size_t z) { void *ptr = NULL; posix_memalign(&ptr, 4096, z); return ptr; }
+EXPORT void *Sleef_malloc(size_t z) { void *ptr = NULL; int rc = posix_memalign(&ptr, 4096, z); return ptr; }
 #else
 EXPORT void *Sleef_malloc(size_t z) { return malloc(z); }
 #endif
@@ -51,9 +51,9 @@ EXPORT void Sleef_free(void *ptr) { free(ptr); }
 EXPORT uint64_t Sleef_currentTimeMicros() {
   struct timespec tp;
   clock_gettime(CLOCK_MONOTONIC, &tp);
-  return (uint64_t)tp.tv_sec * 1000000LL + ((uint64_t)tp.tv_nsec/1000);
+  return (uint64_t)tp.tv_sec * INT64_C(1000000) + ((uint64_t)tp.tv_nsec/1000);
 }
-#endif // #if defined(__MINGW32__) || defined(__MINGW64__) || defined(_WIN32)
+#endif // #if defined(__MINGW32__) || defined(__MINGW64__) || defined(MMSC_VER)
 
 #ifdef MMSC_VER
 #include <intrin.h>

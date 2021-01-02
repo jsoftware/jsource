@@ -142,7 +142,7 @@ A jtsparseit(J jt,A w,A a,A e){PROLOG(0091);A ax,c,x,y,z;B b,*cv;I cm,cn,m,n,r,*
  /* RZ(y=abase2(vec(INT,n,s),repeat(c,IX(cn)))); */
  GATV0(y,INT,cm*n,2); u=AS(y); *u++=cm; *u=n;
  if(cm){I d,e,k,q,*sn,*yv;
-  k=cn-1; cv+=cn; yv=AN(y)+AV(y); sn=s+n; d=*(sn-1); e=*(sn-2);
+  k=cn-1; cv+=cn; yv=AN(y)+AV(y); sn=s+n; d=sn[-1]; e=sn[-2];
   switch(n){
    case 1:  cv=BAV(c); yv=AV(y); DO(cn, if(*cv++)*yv++=i;); break;
    case 2:  DO(cn, if(*--cv){q=k-i;                  *--yv=q%d; *--yv=q/d;}); break;

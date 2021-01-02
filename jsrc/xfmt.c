@@ -270,7 +270,7 @@ static F2(jtfmtprecomp) {A*as,base,fb,len,strs,*u,z;B*bits,*bw;D dtmp,*dw;
  GAT0(z,BOX,4,1); u=AAV(z); *u++=incorp(base); *u++=incorp(strs); *u++=incorp(len); *u++=incorp(fb); 
  ib=AV(base); as=AAV(strs); u=AAV(a);
  if(1==nf){MC(ib,AV(*u),SZI*3); memset(ib+3,C0,SZI*nc); DO(NMODVALS, *as++=incorp(u[i+1]);)}
- else DQ(nf, MC(ib,AV(*u),SZI*3); ib[3]=0; ib+=4; DO(NMODVALS, *as++=incorp(*(u++ +1));) ++u; )
+ else DQ(nf, MC(ib,AV(*u),SZI*3); ib[3]=0; ib+=4; DO(NMODVALS, *as++=incorp(u++[1]);) ++u; )
  bits=BAV(fb);
  switch(CTTZNOFLAG(wt)) {
   case B01X:

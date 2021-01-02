@@ -88,7 +88,7 @@ static F1(jtbminv){A*wv,x,z=w;I i,j,m,r,*s,t=0,*u,**v,*y,wn,wr,*ws;
   GA(f,t,1,1,0); RZ(f=filler(f)); memset(u,C0,wr*SZI);
   for(i=0;i<wn;++i){
    zv[i]=x=wv[i];
-   if(2>AR(x)){DO(wr, hv[i]=*(v[i]+u[i]);); RZ(zv[i]=diag(x,reshape(h,f)));}
+   if(2>AR(x)){DO(wr, hv[i]=v[i][u[i]];); RZ(zv[i]=diag(x,reshape(h,f)));}
    j=wr-1; while(1){--j; ++u[j]; if(ws[j]>u[j])break; u[j]=0;}
  }}
  DO(wr, A t=z; RZ(df1(z,t,slash(under(qq(ds(CCOMMA),sc(wr-i)),ds(COPE))))););

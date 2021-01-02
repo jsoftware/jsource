@@ -26,7 +26,7 @@ static DF1X(jtlrr);
 
 static B jtlp(J jt,A w){F1PREFIP;B b=1,p=0;C c,d,q=CQUOTE,*v;I j=0,n;
  ARGCHK1(w);
- n=AN(w); v=CAV(w); c=*v; d=*(v+n-1);
+ n=AN(w); v=CAV(w); c=*v; d=v[n-1];
  if(1==n||(2==n||3>=n&&' '==c)&&(d==CESC1||d==CESC2)||vnm(n,v))R 0;
  if(C9==ctype[(UC)c])DQ(n-1, d=c; c=ctype[(UC)*++v]; if(b=!NUMV(c)||d==CS&&c!=C9)break;)
  else if(c==q)   DQ(n-1, c=*v++; p^=(c==q); if(b=(p^1)&(c!=q)){break;})
@@ -115,7 +115,7 @@ static F1X(jtlchar){F1PREFIP;A y;B b,p=1,r1;C c,d,*u,*v;I j,k,m,n;
  }
  // out the enquoted string, preceded the the shape if repeated or not a list
  GATV0(y,LIT,n+j,1); v=CAV(y);
- *v=*(v+n+j-1)=CQUOTE; ++v;
+ v[0]=v[n+j-1]=CQUOTE; ++v;
  if(2==j)MC(v,u,n); else DQ(n, *v++=c=*u++; if(c==CQUOTE)*v++=c;);
  R over(b?lsh(w):lshape(w),y);
 }    /* non-empty character array */

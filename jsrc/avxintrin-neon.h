@@ -2571,7 +2571,7 @@ FORCE_INLINE vec_type  name(type const *a, mask_vec_type mask) {   \
     mask_type sign_bit = 1;                                           \
     sign_bit <<= (8*size_type - 1);                                   \
     for ( ; i < size; ++i )                                           \
-        res[ i ] = (sign_bit & *(p_mask + i)) ? *(a+i) : 0;           \
+        res[ i ] = (sign_bit & p_mask[i]) ? a[i] : 0;           \
     return (*(vec_type*)&res);                                        \
 }
 
@@ -2585,8 +2585,8 @@ FORCE_INLINE void  name(type *a, mask_vec_type mask, vec_type data) { \
     mask_type sign_bit = 1;                                           \
     sign_bit <<= (8*size_type - 1);                                   \
     for ( ; i < size; ++i )                                           \
-        if ( *(p_mask + i ) & sign_bit)                               \
-            *(a + i) = *(p_data + i);                                 \
+        if ( p_mask[i] & sign_bit)                               \
+            a[i] = p_data[i];                                 \
 }
 
 // _maskload_impl( _mm256_maskload_pd, __m256d, __m256i, double, int64_t );
@@ -2601,13 +2601,13 @@ FORCE_INLINE __m256d _mm256_maskload_pd(double const* mem_addr, __m256i mask)
 
     for (i=0; i<2; i++){
       if (mask.vect_s64[0][i])
-        ret.vect_f64[0][i] = *(mem_addr + i);
+        ret.vect_f64[0][i] = mem_addr[i];
       else
         ret.vect_f64[0][i] = 0.0;
     }
     for (i=0; i<2; i++){
       if (mask.vect_s64[1][i])
-        ret.vect_f64[1][i] = *(mem_addr + i + 2);
+        ret.vect_f64[1][i] = mem_addr[i + 2];
       else
         ret.vect_f64[1][i] = 0.0;
     }
@@ -2620,11 +2620,11 @@ FORCE_INLINE void _mm256_maskstore_pd(double * mem_addr, __m256i mask, __m256d a
    int i;
     for (i=0; i<2; i++){
       if (mask.vect_s64[0][i])
-         *(mem_addr + i) = a.vect_f64[0][i];
+         mem_addr[i] = a.vect_f64[0][i];
     }
     for (i=0; i<2; i++){
       if (mask.vect_s64[1][i])
-         *(mem_addr + i + 2) = a.vect_f64[1][i];
+         mem_addr[i + 2] = a.vect_f64[1][i];
     }
 }
 

@@ -368,7 +368,7 @@ static GF(jtgrd){F1PREFJT;A x,y;int b;D*v,*wv;I *g,*h,nneg,*xv;US*u;void *yv;I c
 // BUG: should copy down in other order to avoid pointing past valid region.  As written will run over into the shape... but that will always be positive, at least
    // copy in the negatives, reversing the order.  Here u->place to put negatives, v->last+1 negative
    // as we copy, we have to keep equal keys in the original order, i. e. don't reverse them.
-   j=0; d=wv[*(v-1)];
+   j=0; d=wv[v[-1]];
    // At start of this loop, d has the last of a set of (possibly only 1) equal values, j has the index of the output location where
    // the set will be stored.  v scans back through the negatives, looking for a new value, and when it finds one copies out all
    // the old values.

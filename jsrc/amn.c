@@ -13,13 +13,13 @@
 static I jtcsize(J jt,A z,A ind){B*b;I h,j,m,r,*s;P*zp;
  r=AR(z); s=AS(z); zp=PAV(z);
  RZ(b=bfi(r,SPA(zp,a),0));
- m=1; j=h=*(AR(ind)+AS(ind)-1); DQ(r-h, if(b[j])m*=s[j]; ++j;);
+ m=1; j=h=AS(ind)[AR(ind)-1]; DQ(r-h, if(b[j])m*=s[j]; ++j;);
  R m;
 }    /* data cell size in z for each element of index array ind */
 
 static B jtiaddr(J jt,A z,A ind,A*i1,A*i2){A a,ai,as,ii,jj,q,t,x,y;I c,d,e,h,i,*iv,*jv,m,n,p,*qv,*s,*u,*v,*yv;P*zp;
  zp=PAV(z); a=SPA(zp,a); x=SPA(zp,x); s=1+AS(x); 
- h=*(AS(ind)+AR(ind)-1);                               /* # axes indexed              */
+ h=AS(ind)[AR(ind)-1];                               /* # axes indexed              */
  RZ(q=gt(sc(h),a)); 
  y=SPA(zp,i); if(!all1(q))RZ(y=repeatr(q,y));          /* indexed cols of index mat   */
  m=AS(y)[0]; yv=AV(y);      
@@ -53,7 +53,7 @@ static B jtiaddr(J jt,A z,A ind,A*i1,A*i2){A a,ai,as,ii,jj,q,t,x,y;I c,d,e,h,i,*
 static A jtzpadn(J jt,A z,A ind,B ip){A a,ai,i1,p,p1,q,t,x,x0,y,y0,y1;B*b;I c,d,h,m,n;P*zp;
  // put sparse axi into names a,x,y; remember x&y as x0,y0
  zp=PAV(z); a=SPA(zp,a); x=x0=SPA(zp,x); y=y0=SPA(zp,i);
- n=1; h=*(AS(ind)+AR(ind)-1);
+ n=1; h=AS(ind)[AR(ind)-1];
  RZ(ai=IX(h));
  RZ(t=eps(ai,a)); b=BAV(t); d=0; DO(h, if(b[i])++d;);
  RZ(i1=d<h?repeatr(t,ind):ind); if(2!=AR(ind))RZ(i1=d?reshape(v2(AN(i1)/d,d),i1):mtm);
@@ -84,7 +84,7 @@ static A jtastdn(J jt,A a,A z,A ind){A a1,q,r,s;B*b;I ar,*as,*av,d,ir,n,n1,*v,zr
  ar=AR(a); as=AS(a);
  zr=AR(z); zs=AS(z); 
  if(!ar)R a;
- ir=AR(ind); n=*(AS(ind)+ir-1); d=(ir-1)+(zr-n); ASSERT(ar<=d,EVRANK);  // n=shape of item of i; d is # unindexed axes
+ ir=AR(ind); n=AS(ind)[ir-1]; d=(ir-1)+(zr-n); ASSERT(ar<=d,EVRANK);  // n=shape of item of i; d is # unindexed axes
  GATV0(s,INT,d,1); v=AV(s); MCISH(v,AS(ind),ir-1); MCISH(v+ir-1,zs+n,zr-n);
  ASSERTAGREE(as,AV(s)+d-ar,ar);
  if(ar<d)RZ(a=reshape(s,a));

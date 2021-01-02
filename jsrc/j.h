@@ -1081,7 +1081,7 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_maskload_pd(dou
 
     for (i=0; i<2; i++){
       if (mask[i] & 0x8000000000000000){
-        ret[i] = *(mem_addr + i);
+        ret[i] = mem_addr[i]);
       }
     }
     return ret;
@@ -1092,7 +1092,7 @@ static inline __attribute__((__always_inline__)) void vec_maskstore_pd(double * 
    int i;
     for (i=0; i<2; i++){
       if (mask[i] & 0x8000000000000000)
-        *(mem_addr + i) = a[i];
+        mem_addr[i] = a[i];
     }
 }
 

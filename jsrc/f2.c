@@ -33,11 +33,11 @@ static I jtc2j(J jt,B e,I m,C*zv,A*cellbuf){C c,*s,*t;I k,p;
   // exponent is e+n[n...] or e-n[n...]  Step over the e, and - if present
   ++t; t+='-'==*t;
   // count k=the number of leading + or 0 characters in the exponent; leave c=stopper character
-  k=0; while(c=*(k+t),c=='0'||c=='+')++k;
+  k=0; while(c=t[k],c=='0'||c=='+')++k;
   if(k){
    // There are +0 characters to delete.  If we ran off the end of the exponent, back up and use one 0 (which should be there already)
    if(!c||' '==c){*t++='0'; --k;}
-   while(*t=*(k+t))++t;  // close up the skipped characters, till end of string (including the\0)
+   while(t[0]=t[k])++t;  // close up the skipped characters, till end of string (including the\0)
    // t now points to trailing \0.  Set p=(field width)-(# characters copied) = #spare characters at end of field
    // if m is 0, p is negative.  Fill to end-of-field with spaces, and append \0 if there was any fill
    p=m-(t-CAV1(*cellbuf)); DQ(p,*t++=' ';); if(0<=p)CAV1(*cellbuf)[m]=0;
@@ -120,7 +120,7 @@ static B jtfmtq(J jt,B e,I m,I d,C*s,I t,Q*wv,A*cellbuf){B b;C*v=CAV1(*cellbuf);
   if(0>ex){k=-ex-1; DQ(1+MIN(d,k), *v++='0';);}
   sprintf(v,FMTI,c); v+=q;
   DQ(n-1, c=*--xv; sprintf(v,FMTI04,b?-c:c); v+=XBASEN;);
-  if(d){v[1]=0; DQ(d, *v=*(v-1); --v;); *v='.';}
+  if(d){v[1]=0; DQ(d, *v=v[-1]; --v;); *v='.';}
  }
  R 1;
 }    /* format one rational number */

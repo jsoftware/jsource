@@ -22,7 +22,7 @@
 static A jtmakename(J jt,C*s){A z;I m;NM*zv;
  m=strlen(s);
  GATV0(z,NAME,m,1); zv=NAV(z);  // Use GATV because GA doesn't support NAME type
- MC(zv->s,s,m); *(m+zv->s)=0;
+ MC(zv->s,s,m); zv->s[m]=0;
  zv->m   =(UC)m; 
  zv->bucket=0;
  zv->bucketx=0;

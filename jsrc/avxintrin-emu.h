@@ -1211,7 +1211,7 @@ static __emu_inline vec_type  name(type const *a, mask_vec_type mask) {   \
     mask_type sign_bit = 1;                                           \
     sign_bit <<= (8*size_type - 1);                                   \
     for ( ; i < size; ++i )                                           \
-        res[ i ] = (sign_bit & *(p_mask + i)) ? *(a+i) : 0;           \
+        res[ i ] = (sign_bit & p_mask[i]) ? a[i] : 0;           \
     return (*(vec_type*)&res);                                        \
 }
 
@@ -1225,8 +1225,8 @@ static __emu_inline void  name(type *a, mask_vec_type mask, vec_type data) { \
     mask_type sign_bit = 1;                                           \
     sign_bit <<= (8*size_type - 1);                                   \
     for ( ; i < size; ++i )                                           \
-        if ( *(p_mask + i ) & sign_bit)                               \
-            *(a + i) = *(p_data + i);                                 \
+        if ( p_mask[i] & sign_bit)                               \
+            a[i] = p_data[i];                                 \
 }
 
 __emu_maskload_impl( __emu_mm256_maskload_pd, __emu__m256d, __emu__m256i, double, __emu_int64_t );

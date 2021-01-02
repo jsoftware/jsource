@@ -89,7 +89,7 @@ F1(jthost){A z;
 #else
 // system() is deprecated
  extern char **environ;
- *(n+s)=0;  /* use action to redirect */
+ s[n]=0;  /* use action to redirect */
  int status;
  pid_t pid;
  posix_spawn_file_actions_t action;

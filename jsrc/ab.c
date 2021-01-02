@@ -155,10 +155,10 @@ DF1(jtbitwiseinsertchar){A fs,z;I d,j,n,r,wn,wr,zatoms;UC*u,*v,*wv,x,*zv;AHDRRFN
  PROD(d,wr-1,AS(w)+1); zatoms=d; wv=CAV(w); j=i0(VAV(fs)->fgh[1])-16; ado=(AHDRRFN*)bwinsC[j];  // d=#atoms in an item of a cell.  There is only 1 cell here (rank _)
  if(1==wr)switch(j){   // d==1 here
   case  0: R scc(0);
-  case  3: R scc(*wv);
-  case  5: R scc(*(wv+wn-1));
-  case 10: x=*(wv+wn-1); R scc((UC)(((wn&1)-1))^x);
-  case 12: R scc((UC)~*wv);
+  case  3: R scc(wv[0]);
+  case  5: R scc(wv[wn-1]);
+  case 10: x=wv[wn-1]; R scc((UC)(((wn&1)-1))^x);
+  case 12: R scc((UC)~wv[0]);
   case 15: R scc((UC)255);
   case  1: case 6: case 7: case 9: ado=(AHDRRFN*)bwinsI[j]; n=n>>LGSZI;  // this gets # full words in the list arg.  Handle as ints.  Remnant handled below
  }else if(0==(d&(SZI-1))){ado=(AHDRRFN*)bwinsI[j]; d>>=LGSZI;}  //if #atoms are a word multiple, switch to handling ints

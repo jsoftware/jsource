@@ -25,7 +25,7 @@ A jttoc1(J jt,B h,A w){A z;C*wv,*zv;I n;C4*w4;
  }
  else
  {
- if(h)DQ(n, *zv++=(UC)*w4++; ) else DQ(n, *zv++=(UC)*w4++; ASSERT(*(w4-1)<256UL,EVDOMAIN);)
+ if(h)DQ(n, *zv++=(UC)*w4++; ) else DQ(n, *zv++=(UC)*w4++; ASSERT(w4[-1]<256UL,EVDOMAIN);)
  }
  // copy the low byte of the data (if there is any).  if b==0, verify high byte is 0
  // where low and high are depends on endianness
@@ -36,7 +36,7 @@ A jttoc1(J jt,B h,A w){A z;C*wv,*zv;I n;C4*w4;
  }
  else
  {
- if(h)DQ(n, *zv++=(UC)*w4++; ) else DQ(n, *zv++=(UC)*w4++; ASSERT(*(w4-1)<256UL,EVDOMAIN);)
+ if(h)DQ(n, *zv++=(UC)*w4++; ) else DQ(n, *zv++=(UC)*w4++; ASSERT(w4[-1]<256UL,EVDOMAIN);)
  }
 #endif
  RETF(z);

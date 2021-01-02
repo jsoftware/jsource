@@ -1097,11 +1097,11 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
 #elif defined(__aarch64__)
              dd[dcnt++]=*(D*)xv;
              if(dcnt>8){
-               if(dv-data>=8)*dv++=*xv;else *(data+dcnt-1)=*xv;}
+               if(dv-data>=8)*dv++=*xv;else data[dcnt-1]=*xv;}
 #elif defined(__x86_64__)
              dd[dcnt++]=*(D*)xv;
              if(dcnt>8){ /* push the 9th D and more on to stack (must be the 7th I onward) */
-               if(dv-data>=6)*dv++=*xv;else *(data+dcnt-3)=*xv;}
+               if(dv-data>=6)*dv++=*xv;else data[dcnt-3]=*xv;}
 #endif
 #endif
 #if !SY_UNIX64

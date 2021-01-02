@@ -13,7 +13,7 @@ static REPF(jtrepzdx){A p,q,x;P*wp;
  F2PREFIP;ARGCHK2(a,w);
  if(SPARSE&AT(w)){wp=PAV(w); x=SPA(wp,e);}
  else x=jt->fill&&AN(jt->fill)?jt->fill:filler(w);
- RZ(p=repeat(ravel(rect(a)),ravel(stitch(IX(wcr?*(wf+AS(w)):1),num(-1)))));
+ RZ(p=repeat(ravel(rect(a)),ravel(stitch(IX(wcr?AS(w)[wf]:1),num(-1)))));
  RZ(IRS2(w,x,0L,wcr,0L,jtover,q));
  R IRS2(p,q,0L,1L,wcr+!wcr,jtfrom,x);
 }    /* (dense complex) # (dense or sparse) */
@@ -25,7 +25,7 @@ static REPF(jtrepzsx){A q,x,y;I c,d,j,k=-1,m,p=0,*qv,*xv,*yv;P*ap;
  y=SPA(ap,i); yv=AV(y);
  RZ(x=cvt(INT,vec(FL,2*m,AV(x)))); xv=AV(x);
  if(equ(num(0),SPA(ap,e))){
-  k=c=*(wf+AS(w));
+  k=c=AS(w)[wf];
   if(!wf&&SPARSE&AT(w)){A a,y;I m,n,q,*v;P*wp;
    wp=PAV(w); a=SPA(wp,a);
    if(AN(a)&&!*AV(a)){
@@ -128,7 +128,7 @@ static REPF(jtrepbsx){A ai,c,d,e,g,q,x,wa,wx,wy,y,y1,z,zy;B*b;I*dv,*gv,j,m,n,*u,
  if(DENSE&AT(w)||all0(eq(sc(wf),SPA(wp,a)))){RZ(q=denseit(a)); R irs2(ifb(AN(q),BAV(q)),w,0L,1L,wcr,jtfrom);}  // here if dense w
  wa=SPA(wp,a); wy=SPA(wp,i); wx=SPA(wp,x);
  RZ(q=aslash(CPLUS,a));
- GASPARSE(z,AT(w),1,AR(w),AS(w)); *(wf+AS(z))=m=*AV(q);
+ GASPARSE(z,AT(w),1,AR(w),AS(w)); AS(z)[wf]=m=*AV(q);
  RZ(c=indexof(wa,sc(wf)));
  RZ(y1=fromr(c,wy));
  RZ(q=not(eps(y1,ravel(repeat(not(x),y)))));
@@ -210,9 +210,9 @@ static REPF(jtrep1s){A ax,e,x,y,z;B*b;I c,d,cd,j,k,m,n,p,q,*u,*v,wr,*ws;P*wp,*zp
  if(AT(a)&SCMPX)R rep1d(denseit(a),w,wf,wcr);
  RE(rep1sa(a,&c,&d)); cd=c+d;
  if(DENSE&AT(w))R rep1d(d?jdot2(sc(c),sc(d)):sc(c),w,wf,wcr);  // here if dense w
- wr=AR(w); ws=AS(w); n=wcr?*(wf+ws):1; RE(m=mult(n,cd));
+ wr=AR(w); ws=AS(w); n=wcr?ws[wf]:1; RE(m=mult(n,cd));
  wp=PAV(w); e=SPA(wp,e); ax=SPA(wp,a); y=SPA(wp,i); x=SPA(wp,x);
- GASPARSE(z,AT(w),1,wr+!wcr,ws); *(wf+AS(z))=m; zp=PAV(z);
+ GASPARSE(z,AT(w),1,wr+!wcr,ws); AS(z)[wf]=m; zp=PAV(z);
  RE(b=bfi(wr,ax,1));
  if(wcr&&b[wf]){    /* along sparse axis */
   u=AS(y); p=u[0]; q=u[1]; u=AV(y);

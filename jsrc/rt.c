@@ -23,7 +23,7 @@ static F1(jttrc){A bot,p,*v,x,y;B b;C*bv,c,ul,ll,*pv;I j,k,m,*s,xn,*xv,yn,*yv;
     m=AS(p)[1]; yv[k]=MAX(yv[k],m);
     pv=CAV(p); c=*pv;
     if(b&&(c==ul&&' '!=bv[k]||c!=' '&&ll==bv[k])){xv[j-1]+=1; b=0;}
-    bv[k]=*(pv+AN(p)-m);
+    bv[k]=pv[AN(p)-m];
    }else bv[k]=' ';
   }
  R link(x,y);
@@ -62,7 +62,7 @@ static F1(jtgraft){A p,q,t,*u,x,y,z,*zv;C*v;I d,j,k,m,n,*pv,*s,xn,*xv,yn,*yv;
   v=CAV(t)+AN(t)-n; DO(m, if(' '!=*v){k=m-i; break;} v-=n;);
   d=k-j;
   GATV0(p,LIT,m,1); v=CAV(p); memset(v,' ',m);
-  if(1==d)*(v+j)=JT(jt,bx)[10]; else{memset(v+j,JT(jt,bx)[9],d); *(v+j)=*JT(jt,bx); *(v+k-1)=JT(jt,bx)[6];}
+  if(1==d)*(v+j)=JT(jt,bx)[10]; else{memset(v+j,JT(jt,bx)[9],d); v[j]=*JT(jt,bx); v[k-1]=JT(jt,bx)[6];}
  }
  RZ(zv[0]=incorp(stitch(p,t)));
  R z;

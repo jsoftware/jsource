@@ -171,7 +171,7 @@ static F2(jtpdtspmm){A z,zi,zj,zx,zy,*old;D*axv,c,d,*dv,*wxv,*zyv;
 
 F2(jtpdtsp){A x;B ab=0,wb=0;P*p;
  ARGCHK2(a,w);
- ASSERT(!AR(a)||!AR(w)||*(AS(a)+AR(a)-1)==AS(w)[0],EVLENGTH);
+ ASSERT(!AR(a)||!AR(w)||AS(a)[AR(a)-1]==AS(w)[0],EVLENGTH);
  if(AT(a)&FL+SFL&&AT(w)&FL+SFL){
   if(SPARSE&AT(a)){p=PAV(a); x=SPA(p,a); ab=AR(a)==AN(x)&&equ(num(0),SPA(p,e));}
   if(SPARSE&AT(w)){p=PAV(w); x=SPA(p,a); wb=AR(w)==AN(x)&&equ(num(0),SPA(p,e));}

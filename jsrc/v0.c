@@ -19,7 +19,7 @@
   GATVS(z,TYPE,1+n,1,0,TYPE##SIZE,GACOPYSHAPE0,R 0); v=(T*)AV(z); *v=*(T*)AV(a);  \
   for(j=0;j<n;++j){                              \
    d=fnegate(u[j]); t=j+v; t[1]=*t;            \
-   DQ(j, *t=fplus(*(t-1),ftymes(d,*t)); --t;);   \
+   DQ(j, *t=fplus(t[-1],ftymes(d,*t)); --t;);   \
    *v=ftymes(d,*v);                              \
   }                                              \
   RE(z); EPILOG(z);                              \

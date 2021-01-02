@@ -57,7 +57,7 @@ A jtnfs(J jt,I n,C*s){A z;C f,*t;I m,p;NM*zv;
  }
  // The name may not be valid, but we will allocate a NAME block for it anyway
  GATV0(z,NAME,n,1); zv=NAV(z);   // the block is cleared to 0
- MC(zv->s,s,n); *(n+zv->s)=0;  // should copy locally, with special dispensation for <4 chars
+ MC(zv->s,s,n); zv->s[n]=0;  // should copy locally, with special dispensation for <4 chars
 // no because sources may be short  MCISH(zv->s,s,(n+SZI-1)>>LGSZI); *(n+zv->s)=0;  // copy in the name in fullwords (OK because NAMEs are passed, null-terminate it
  f=0; m=n; p=0;
  // Split name into simplename and locale, verify length of each; set flag and hash for locative/indirect locative

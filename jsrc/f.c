@@ -37,7 +37,7 @@ typedef void ((*FMTFUN)());
 // exp is expression to use to leave a blank line.  May be executed more than once.
 // if j==0 we skip 0 lines - this handles the case of the first line
 #define ENGAP(j,r,s,exp)  \
- {I k=1,p=(j),*sr=s+r-2; DO(p?r-1:0, k*=*(sr-i); if(p%k)break; exp); }
+ {I k=1,p=(j),*sr=s+r-2; DO(p?r-1:0, k*=sr[-i]; if(p%k)break; exp); }
 
 static F1(jtthxqe);
 static A jtthorn1main(J,A,A);
@@ -59,11 +59,11 @@ static FMTF(jtfmtD,D){B q;C buf[1+WD],c,*t;D x=*v;I k=0;
  MC(s,buf+q,WD+1-q);
  if(t=strchr(s,'e')){
   if('-'==*++t)*t++=CSIGN;
-  while(c=*(k+t),c=='0'||c=='+')k++;
-  if(k)while(*t=*(k+t))t++;
+  while(c=t[k],c=='0'||c=='+')k++;
+  if(k)while(t[0]=t[k])t++;
 }}
 
-static FMTF(jtfmtZ,Z){fmtD(s,&v->re); if(v->im){I k=strlen(s); *(k+s)='j'; fmtD(1+k+s,&v->im);}}
+static FMTF(jtfmtZ,Z){fmtD(s,&v->re); if(v->im){I k=strlen(s); s[k]='j'; fmtD(&s[k+1],&v->im);}}
 
 static void thcase(I t,I*wd,FMTFUN *fmt){
  switch(CTTZ(t)){
@@ -98,8 +98,8 @@ I jtthv(J jt,A w,I n,C*s){A t;B ov=0;C buf[WZ],*x,*y=s;I k,n4=n-4,p,wd,wn,wt;FMT
   if(n>=wn*wd)DQ(wn, fmt(jt,y,x); y+=strlen(y); *y++=' '; x+=k;)
   else        DQ(wn, fmt(jt,buf,x); p=strlen(buf); if(ov=n4<1+p+y-s)break; strcpy(y,buf); y+=p; *y++=' '; x+=k;);
  }
- if(ov){if(' '!=*(y-1))*y++=' '; memset(y,'.',3L); y+=3;}
- else if(' '==*(y-1))--y; 
+ if(ov){if(' '!=y[-1])*y++=' '; memset(y,'.',3L); y+=3;}
+ else if(' '==y[-1])--y; 
  *y=0; R y-s;
 }
 
@@ -108,7 +108,7 @@ ASSERTSYS(0,"thbit");
 #if 0
 A z;UC*x;C*y;I c,i,m,n,p,q,r,r1,*s; n=AN(w); r=AR(w); s=AS(w);
  c=r?s[r-1]:1; m=n/c; p=2*c-1;
- GATV(z,LIT,m*p,r+!r,s); *(AS(z)+AR(z)-1)=p; 
+ GATV(z,LIT,m*p,r+!r,s); AS(z)[AR(z)-1]=p; 
  x=UAV(w); y=CAV(z);
  q=c>>LGBB; r=c&(BB-1); r1=c&(BW-1)?(BW-(c&(BW-1)))>>LGBB:0;
  for(i=0;i<m;++i){
@@ -259,7 +259,7 @@ static A jtthq1(J jt,Q y){A c,d,z;B b;C*zv;I m,n=-1;
  d=y.d;
  if(b=1<AN(d)||1!=AV(d)[0]){RZ(d=thx1(y.d)); n=AN(d);}
  GATV0(z,LIT,m+n+1,1); zv=CAV(z);
- MC(zv,AV(c),m); if(b){*(zv+m)='r'; MC(zv+m+1,AV(d),n);}
+ MC(zv,AV(c),m); if(b){zv[m]='r'; MC(&zv[m+1],AV(d),n);}
  R z;
 }
 
@@ -532,7 +532,7 @@ static F1(jtths){A e,i,x,z;C c,*u,*v;I d,m,n,*s;P*p;
  u=CAV(i)-n;        
  d=aii(z); v=CAV(z)-d; DQ(m, MC(v+=d,u+=n,n););
  if(2<AR(z))RZ(z=matth1(z,zeroionei(0)));  // no prxthornuni
- s=AS(z); d=s[1]; v=1+CAV(z); c=JT(jt,bx)[9]; DQ(*s, *(v+n)=c; v+=d;);
+ s=AS(z); d=s[1]; v=1+CAV(z); c=JT(jt,bx)[9]; DQ(*s, v[n]=c; v+=d;);
  R z;
 }
 

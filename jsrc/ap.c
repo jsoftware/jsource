@@ -180,7 +180,7 @@ static B jtpscangt(J jt,I m,I d,I n,B*z,B*x,I apas){
    A t;B b,*cc="\000\001\000",e,*p=cc+pp,*v;B*u;I i,j;
    if(v=memchr(x,a,n)){
     j=v-x; b=j&1; 
-    mvc(j,z,2L,p); memset(z+j,b^ps,n-j); *(z+j)=b^pa;
+    mvc(j,z,2L,p); memset(z+j,b^ps,n-j); z[j]=b^pa;
    }else mvc(n,z,2L,p);
    z+=n; x+=n;
   }

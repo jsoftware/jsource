@@ -248,7 +248,7 @@ A jtconnum(J jt,I n,C*s){PROLOG(0101);A y,z;B (*f)(J,I,C*,void*),p=1;C c,*v;I d=
   while(i<mc){                                                              \
    while(u<uu&&C0==*u)++u;                                                  \
    while(u>=y){while(i<j)zv[i++]=a0; j+=c; y+=n; if(i==mc)R z;}             \
-   x=strchr(u,C0); if(x<uu)k=x-u; else{*(uu-1)=C0; k=uu-1-u;}               \
+   x=strchr(u,C0); if(x<uu)k=x-u; else{uu[-1]=C0; k=uu-1-u;}               \
    b=','==u[0]||','==u[k-1];                                                \
    x=u; DO(k, d=u[i]; if(','!=d)*x++=d==CSIGN?'-':d;); *x=C0;               \
    if(b||!f1(x-u,u,i+zv))zv[i]=a0;                                          \
@@ -357,7 +357,7 @@ B valueisint; // set if the value we are processing is really an int
     // comma.  We will remove commas from the number and then rescan it.
     b=u==v; x=v;   // b='first character was comma'; x is output pointer for the copy
     while(d=*++v)if(','!=d)*x++=d;   // copy to end-of-field, discarding commas
-    if(b||','==*(v-1)){INSDEFAULT u=v;}else while(v>x)*x++=C0;  // if first or last character is comma, use default and continue, skipping the field;
+    if(b||','==v[-1]){INSDEFAULT u=v;}else while(v>x)*x++=C0;  // if first or last character is comma, use default and continue, skipping the field;
        // otherwise put \0 over the characters after the last copied one, and go back to rescan the number
     continue;
    case '-':

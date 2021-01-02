@@ -21,7 +21,7 @@ static B stopsub(C*p,C*nw,I md){C*q,*s;I n;
  n=strlen(nw);
  while(q>p){
   while(' '==*p)++p;
-  if(!strncmp(p,nw,n)&&(q==p+n||' '==*(p+n)))R 1;
+  if(!strncmp(p,nw,n)&&(q==p+n||' '==p[n]))R 1;
   while(q>p&&' '!=*p)++p;
  }
  R 0;

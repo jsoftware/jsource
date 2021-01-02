@@ -51,8 +51,8 @@ void mtow(UC* src, I srcn, US* snk){ US c,c1,c2,c3; UINT t;
     else if(c<0xf0)
     {
 // 3 utf8
-      c1=*src;
-      c2=*(src+1);
+      c1=src[0];
+      c2=src[1];
       if((c1&0xc0)==0x80&&(c2&0xc0)==0x80&&(c>=0xe1||c1>=0xa0))
       {
         t=((c&0x0f)<<12)|((c1&0x3f)<<6)|(c2&0x3f);
@@ -74,8 +74,8 @@ void mtow(UC* src, I srcn, US* snk){ US c,c1,c2,c3; UINT t;
     {
 // 4 utf8
       c1=*src;
-      c2=*(src+1);
-      c3=*(src+2);
+      c2=src[1];
+      c3=src[2];
       if((c1&0xc0)==0x80&&(c2&0xc0)==0x80&&(c3&0xc0)==0x80&&(c>=0xf1||c1>=0x90))
       {
         t=((c&0x07)<<18)|((c1&0x3f)<<12)|((c2&0x3f)<<6)|(c3&0x3f);
@@ -153,8 +153,8 @@ I mtowsize(UC* src, I srcn){ US c,c1,c2,c3;UINT t;I r=0;int invalid=0;
     else if(c<0xf0)
     {
 // 3 utf8
-      c1=*src;
-      c2=*(src+1);
+      c1=src[0];
+      c2=src[1];
       if((c1&0xc0)==0x80&&(c2&0xc0)==0x80&&(c>=0xe1||c1>=0xa0))
       {
         src+=2;srcn-=2;
@@ -174,9 +174,9 @@ I mtowsize(UC* src, I srcn){ US c,c1,c2,c3;UINT t;I r=0;int invalid=0;
     else if(c<0xf5)
     {
 // 4 utf8
-      c1=*src;
-      c2=*(src+1);
-      c3=*(src+2);
+      c1=src[0];
+      c2=src[1];
+      c3=src[2];
       if((c1&0xc0)==0x80&&(c2&0xc0)==0x80&&(c3&0xc0)==0x80&&(c>=0xf1||c1>=0x90))
       {
         t=((c&0x07)<<18)|((c1&0x3f)<<12)|((c2&0x3f)<<6)|(c3&0x3f);
@@ -253,8 +253,8 @@ void mtou(UC* src, I srcn, C4* snk){ US c,c1,c2,c3; UINT t;
     else if(c<0xf0)
     {
 // 3 utf8
-      c1=*src;
-      c2=*(src+1);
+      c1=src[0];
+      c2=src[1];
       if((c1&0xc0)==0x80&&(c2&0xc0)==0x80&&(c>=0xe1||c1>=0xa0))
       {
         t=((c&0x0f)<<12)|((c1&0x3f)<<6)|(c2&0x3f);
@@ -275,9 +275,9 @@ void mtou(UC* src, I srcn, C4* snk){ US c,c1,c2,c3; UINT t;
     else if(c<0xf5)
     {
 // 4 utf8
-      c1=*src;
-      c2=*(src+1);
-      c3=*(src+2);
+      c1=src[0];
+      c2=src[1];
+      c3=src[2];
       if((c1&0xc0)==0x80&&(c2&0xc0)==0x80&&(c3&0xc0)==0x80&&(c>=0xf1||c1>=0x90))
       {
         t=((c&0x07)<<18)|((c1&0x3f)<<12)|((c2&0x3f)<<6)|(c3&0x3f);
@@ -349,8 +349,8 @@ I mtousize(UC* src, I srcn){ US c,c1,c2,c3;UINT t;I r=0;int invalid=0;
     else if(c<0xf0)
     {
 // 3 utf8
-      c1=*src;
-      c2=*(src+1);
+      c1=src[0];
+      c2=src[1];
       if((c1&0xc0)==0x80&&(c2&0xc0)==0x80&&(c>=0xe1||c1>=0xa0))
       {
         src+=2;srcn-=2;
@@ -370,9 +370,9 @@ I mtousize(UC* src, I srcn){ US c,c1,c2,c3;UINT t;I r=0;int invalid=0;
     else if(c<0xf5)
     {
 // 4 utf8
-      c1=*src;
-      c2=*(src+1);
-      c3=*(src+2);
+      c1=src[0];
+      c2=src[1];
+      c3=src[2];
       if((c1&0xc0)==0x80&&(c2&0xc0)==0x80&&(c3&0xc0)==0x80&&(c>=0xf1||c1>=0x90))
       {
         t=((c&0x07)<<18)|((c1&0x3f)<<12)|((c2&0x3f)<<6)|(c3&0x3f);

@@ -597,7 +597,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define VALIDBOOLEAN 0x0101010101010101LL   // valid bits in a Boolean
 #else
 #define ALTBYTES 0x00ff00ffLL
-#define ADDBYTESINIn(t) t = (t>>16) + t, t&=0xffff) // sig in 01ff01ff, then xxxx03ff, then 000003ff
+#define ADDBYTESINIn(t) (t = (t>>16) + t, t&=0xffff) // sig in 01ff01ff, then xxxx03ff, then 000003ff
 #define VALIDBOOLEAN 0x01010101   // valid bits in a Boolean
 #endif
 #define ADDBYTESINI(t) (ADDBYTESINI1(t) , ADDBYTESINIn(t)) // sig in 01ff01ff01ff01ff, then xxxxxxxx03ff03ff, then xxxxxxxxxxxx07ff, then 00000000000007ff

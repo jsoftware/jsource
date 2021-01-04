@@ -142,8 +142,67 @@ REDUCEBFX(nandinsB, NAND,INAND,SNAND,BNAND,{DQ(m, B *y=memchr(x,C0,n); d=y?y-x:n
 
 
 #if SY_ALIGN
-REDUCEPFX(plusinsB,I,B,PLUS, plusBB, plusBI)
+// obsolete REDUCEPFX(plusinsB,I,B,PLUS, plusBB, plusBI)
+AHDRR(plusinsB,I,B){
+ if(d==1){
+  // adding individual booleans  Go a word at a time, with 4 accumulators, up to 255 turns each
+  for(;m;--m,x+=n){
+   I acc=0; I nn;  UI *xu=(UI*)x; // number of atoms to go
+   for(nn=n;nn>=4*SZI;){  // till we get to the end...
+    I nloops=nn>>(LGSZI+2); nloops=nloops>255?255:nloops;  // max 255 loops, each 4 words
+    nn-=nloops<<(LGSZI+2);  // keep nn = # bytes remaining
+    I acc0=0, acc1=0, acc2=0, acc3=0;  
+    DQ(nloops, acc0+=xu[0]; acc1+=xu[1]; acc2+=xu[2]; acc3+=xu[3]; xu+=4;);  // add up each byte-lane
+    // collect all the values we read
+    ADDBYTESINI1(acc0); ADDBYTESINI1(acc1); ADDBYTESINI1(acc2); ADDBYTESINI1(acc3); // add alternate bytes
+    acc0+=acc1+acc2+acc3; ADDBYTESINIn(acc0); acc+=acc0; // collect all significance
+   }
+   // Now we have up to 4 words to finish, one of which may be partial.  Continue wordwise.  Overfetch is OK up to SZI-1 bytes
+   I acc0=0;
+   // we create the mask: 0 if no bytes left, ~0 if >=SZI bytes left, otherwise validity mask.  Littleendian
+   UI bytemask=(UI)~0>>(((-nn)&(SZI-1))<<3); bytemask=nn&-SZI?~0:bytemask; bytemask=nn<=0?0:bytemask;  // nn=0->~0->~0->0  nn=1->00ff nn=8->~0 nn=9->00ff->~0
+   // if the word has no valid data, back up to avoid overfetch.  Since arg can't have 0 length, that will always be a valid fetch
+   xu+=REPSGN(nn-1);
+   // fetch the data, mask, accumulate, advance to next word, reduce count for bytes read
+   acc0+=*xu++&bytemask; nn-=SZI;
+   // repeat for other words
+   bytemask=(UI)~0>>(((-nn)&(SZI-1))<<3); bytemask=nn&-SZI?~0:bytemask; bytemask=nn<=0?0:bytemask; xu+=REPSGN(nn-1); acc0+=*xu++&bytemask; nn-=SZI;
+   bytemask=(UI)~0>>(((-nn)&(SZI-1))<<3); bytemask=nn&-SZI?~0:bytemask; bytemask=nn<=0?0:bytemask; xu+=REPSGN(nn-1); acc0+=*xu++&bytemask; nn-=SZI;
+   bytemask=(UI)~0>>(((-nn)&(SZI-1))<<3); bytemask=nn<=0?0:bytemask; xu+=REPSGN(nn-1); acc0+=*xu&bytemask;
+   // collect significance
+   ADDBYTESINI(acc0); acc+=acc0; *z++=acc;  // store total
+  }
+ }else{
+  for(;m;--m,x+=n*d,z+=d){
+   // Adding items with more than 1 boolean.  Process a columnar swath with 1 accumulator
+   UI *xu=(UI*)x; I dd; // start position in column swath.  nn is # columns left
+   I *zz=z;  // output pointer, switched if not valid
+   // Now do the SZI-byte swaths, possibly with overfetch
+   for(dd=d;dd>0;dd-=SZI,xu+=1){  // for all columns...
+    I acc20=0; I acc21=0; I acc22=0; I acc23=0; I acc24=0; I acc25=0; I acc26=0; I acc27=0; 
+    UI *xu2=xu; I nn=n;   // accumulator, address moving down the swath, number of rows left in swath
+    while(nn){  // till swatch finished
+     I nloops=nn; nloops=nloops>255?255:nloops;  // max 255 loops, each 4 words
+     nn-=nloops;  // keep nn = # bytes remaining
+     I acc0=0;
+     DQ(nloops, acc0+=xu2[0]; xu2=(I*)((I)xu2+d););  // add up each byte-lane in the swatch
+     acc20+=acc0&255; acc0>>=8; acc21+=acc0&255; acc0>>=8; acc22+=acc0&255; acc0>>=8; acc23+=acc0&255; acc0>>=8;
+#if SY_64
+     acc24+=acc0&255; acc0>>=8; acc25+=acc0&255; acc0>>=8; acc26+=acc0&255; acc0>>=8; acc27+=acc0&255; acc0>>=8;
+#endif
+    }
+    // column is added.  Write out the valid totals, divert the rest to the sink
+    *zz++=acc20; zz=dd<=0?&jt->shapesink[0]:zz; *zz++=acc21; zz=dd<=1?&jt->shapesink[0]:zz; *zz++=acc22; zz=dd<=2?&jt->shapesink[0]:zz; *zz++=acc23; zz=dd<=3?&jt->shapesink[0]:zz; 
+#if SY_64
+    *zz++=acc24; zz=dd<=4?&jt->shapesink[0]:zz; *zz++=acc25; zz=dd<=5?&jt->shapesink[0]:zz; *zz++=acc26; zz=dd<=6?&jt->shapesink[0]:zz; *zz++=acc27; 
+#endif
+   }
+  }
+ }
+ R EVOK;
+}
 #else
+
 AHDRR(plusinsB,I,B){I dw,i,p,q,r,r1,s;UC*tu;UI*v;
  if(d==1&n<SZI)DQ(m, s=0; DQ(n, s+=*x++;); *z++=s;)
  else if(d==1){UI t;

@@ -589,16 +589,18 @@ extern unsigned int __cdecl _clearfp (void);
 
 #define MAXTHREADS 1  // maximum number of threads
 
+#define ADDBYTESINI1(t) (t=(t&ALTBYTES)+((t>>8)&ALTBYTES)) // sig in 01ff01ff01ff01ff, then xxxxxxxx03ff03ff, then xxxxxxxxxxxx07ff, then 00000000000007ff
 #if BW==64
 #define ALTBYTES 0x00ff00ff00ff00ffLL
 // t has totals per byte-lane, result combines them into single total.  t must be an lvalue
-#define ADDBYTESINI(t) (t=(t&ALTBYTES)+((t>>8)&ALTBYTES), t = (t>>32) + t, t = (t>>16) + t, t&=0xffff) // sig in 01ff01ff01ff01ff, then xxxxxxxx03ff03ff, then xxxxxxxxxxxx07ff, then 00000000000007ff
+#define ADDBYTESINIn(t) (t = (t>>32) + t, t = (t>>16) + t, t&=0xffff) // sig in 01ff01ff01ff01ff, then xxxxxxxx03ff03ff, then xxxxxxxxxxxx07ff, then 00000000000007ff
 #define VALIDBOOLEAN 0x0101010101010101LL   // valid bits in a Boolean
 #else
 #define ALTBYTES 0x00ff00ffLL
-#define ADDBYTESINI(t) (t=(t&ALTBYTES)+((t>>8)&ALTBYTES), t = (t>>16) + t, t&=0xffff) // sig in 01ff01ff, then xxxx03ff, then 000003ff
+#define ADDBYTESINIn(t) t = (t>>16) + t, t&=0xffff) // sig in 01ff01ff, then xxxx03ff, then 000003ff
 #define VALIDBOOLEAN 0x01010101   // valid bits in a Boolean
 #endif
+#define ADDBYTESINI(t) (ADDBYTESINI1(t) , ADDBYTESINIn(t)) // sig in 01ff01ff01ff01ff, then xxxxxxxx03ff03ff, then xxxxxxxxxxxx07ff, then 00000000000007ff
 
 // macros for bit testing
 #define SGNIF(v,bitno) ((I)(v)<<(BW-1-(bitno)))  // Sets sign bit if the numbered bit is set

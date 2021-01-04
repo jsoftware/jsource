@@ -65,6 +65,26 @@ test 'whilst. 1 do. 2 else. 3 end.'
 'spelling error' -: ex '3 : ''until.'''
 'spelling error' -: ex '3 : ''begin.'''
 
+NB. Direct definition
+NB. Note SP transferred from after }} to before it; & SP added after {{
+f0=. 3 : 0
+NB.
+; {{
+  '<', (|. y), '>'
+ }} &.> |. 'one'; 'two'; 'three'
+)
+(r =. '3 : 0' , LF , 0 : 0 , ')') -:5!:5<'f0'
+NB.
+; {{ 
+  '<', (|. y), '>'
+  }}&.> |. 'one'; 'two'; 'three'
+)
+
+
+
+
+
+
 4!:55 ;:'f0 f1 f2 f3 g0 g1 g2 g3 g4 g5 test '
 
 

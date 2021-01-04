@@ -199,14 +199,14 @@ A jtunDD(J jt, A w){F1PREFIP;
    DO(AN(w), if(wv[i]==CLF){wv[i++]='.'; if(i<AN(w)){wv[i++]='.'; if(i<AN(w))wv[i++]='.';} AN(w)=AS(w)[0]=i; break;})
   }
  }
- // 9 : string has been handled.  Any residual strings containing LF must be noun DDs, and must be represented as such
+ // 9 : string has been handled.  Any residual quoted strings containing LF must be noun DDs, and must be represented as such
  // so that the result will be executable
  // We just look for quoted strings containing LF, then replace with {{)n,unquoted string}}
  if(!shortres){  // if we can't add LF, don't expand strings
   I stringstartx;  // starting index of current ' string
   scan=0;  // next position to examine
   while(1){  // till all nounDDs emitted
-   // look for next string
+   // look for next string.  scan is the position to start looking at, just after the previous string if there was one
    for(stringstartx=scan;stringstartx<AN(w);++stringstartx)if(wv[stringstartx]=='\'')break;
    if(stringstartx==AN(w))break;  // if none, we're through
    C hasLF=0;
@@ -215,7 +215,7 @@ A jtunDD(J jt, A w){F1PREFIP;
     if(wv[scan]==CLF)hasLF=1;  // see if nounDD needed
     if(wv[scan]=='\''){if(scan+1<AN(w)&&wv[scan+1]=='\'')++scan, ++numqu;else break;}  // exit loop at ondoubled quote
    }
-   // we end with scan pointing to the final quote
+   // here scan is pointing to the final quote
    if(hasLF){
     I finalLF=wv[scan-1]==CLF;  // 1 if string ends with LF and thus must start with one
     // We must insert a nounDD.  We will allocate the string and copy header, unquoted middle, and trailer.
@@ -234,7 +234,7 @@ A jtunDD(J jt, A w){F1PREFIP;
     MC(newwv,wv+scan,AN(w)-scan); // the rest of the input
     scan=newwv-CAV(neww);  // adjust input pointer to the correct position in the new string
     w=neww; wv=CAV(w); // pick up processing the modified string
-   }
+   }else ++scan;  // no LF - step over the trailing quote
   }
  }
  // make result incorpable

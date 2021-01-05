@@ -789,7 +789,7 @@ F2(jtqq){A t;AF f1,f2;D*d;I hv[3],n,r[3],vf,flag2=0,*v;A ger=0;
    I isfork=av->id==CFORK;
    if(FAV(FAV(isfork?av->fgh[1]:av->fgh[0])->fgh[0])->id==CPLUS && FAV(isfork?av->fgh[2]:av->fgh[1])->id==CSTAR) {
     // +/@:*"1 1 or ([: +/ *)"1 1 .  Use special rank-1 routine.  It supports IRS, but not inplacing (fslashatg didn't inplace either)
-    f2=jtsumattymes1; vf |= VIRS2; flag2 &= ~VF2RANKONLY2;  // switch to new routine, which supports IRS
+    f2=jtsumattymes1; vf |= VIRS2; flag2 &= ~VF2RANKONLY2; vf &=~(VJTFLGOK2);  // switch to new routine, which supports IRS but not inplacing
    }
   }
  }

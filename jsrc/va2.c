@@ -1094,7 +1094,7 @@ DF2(jtsumattymes1){
  RETF(z);
 }
 
-
+#if 0 // obsolete
 static A jtsumattymes(J jt, A a, A w, I b, I t, I m, I n, I nn, I r, I *s, I zn){A z;
  ARGCHK2(a,w);
  switch(UNSAFE(t)){
@@ -1196,40 +1196,46 @@ static A jtsumatgbool(J jt,A a,A w,C id){A t,z;B* RESTRICTI av,* RESTRICTI wv;I 
  }
  RETF(z);
 }    /* a +/@:g w  for boolean a,w where a-:&(* /@$)w; see also plusinsB */
+#endif
 
-DF2(jtfslashatg){A fs,gs,y,z;B b,sb=0;C*av,c,d,*wv;I ak,an,ar,*as,at,m,
+// f/@:g when f and g are atomic.  If the args are big and not inplace it pays to execute one cell of g at a time to save cache footprint
+DF2(jtfslashatg){A fs,gs,y,z;B b;C*av,*wv;I ak,an,ar,*as,at,m,
      n,nn,r,rs,*s,t,wk,wn,wr,*ws,wt,yt,zn,zt;VA2 adocv,adocvf;
  ARGCHK3(a,w,self);F2PREFIP;
  an=AN(a); ar=AR(a); as=AS(a); at=AT(a); at=an?at:B01;
  wn=AN(w); wr=AR(w); ws=AS(w); wt=AT(w); wt=wn?wt:B01;
  b=ar<=wr; r=b?wr:ar; rs=b?ar:wr; s=b?ws:as; nn=s[0]; nn=r?nn:1;  // b='w has higher rank'; r=higher rank rs=lower rank s->longer shape  nn=#items in longer-shape arg
  ASSERTAGREE(as,ws,MIN(ar,wr));
- {I isfork=CFORK==FAV(self)->id; fs=FAV(self)->fgh[0+isfork]; gs=FAV(self)->fgh[1+isfork];}   // b=0 if @:, 1 if fork; take fs,gs accordingly
- // look for cases that we should NOT handle with special code: empty arg; 0 or 1 result item of g;too few items in result (the internal call overhead is high then) 
- // Also, don't use special code if g is inplaceable.  There's no gain then, because f/ is always inplaceable.  The gain comes when g can be split into small pieces with small overall cache footprint
- if(SPARSE&(at|wt)||!an||!wn||2>nn){ R df1(z,df2(y,a,w,gs),fs);}  // if sparse or empty, or just 1 item, do it the old-fashioned way
+ I isfork=CFORK==FAV(self)->id; fs=FAV(self)->fgh[0+isfork]; gs=FAV(self)->fgh[1+isfork];   // b=0 if @:, 1 if fork; take fs,gs accordingly
  rs=MAX(1,rs); PROD(m,rs-1,s+1); PROD(n,r-rs,s+rs); zn=m*n;   // zn=#atoms in _1-cell of longer arg = #atoms in result; m=#atoms in _1-cell of shorter arg  n=#times to repeat shorter arg  (*/ surplus longer shape)
    // if the short-frame arg is an atom, move its rank to 1 so we get the lengths of the _1-cells of the replicated arguments
- y=FAV(fs)->fgh[0]; c=ID(y); d=ID(gs);  // c is id of f, d is id of g
- if(c==CPLUS){
-  // +/@:g is special if args are boolean, length is integral number of I, and g is boolean or *
-  if((((at&wt&(n==1))>(zn&(SZI-1)))||!SY_ALIGN)){   //  relies on B01==1
-#define sumbfvalues(w) CCM(w,CGE)+CCM(w,CLE)+CCM(w,CGT)+CCM(w,CLT)+CCM(w,CPLUSCO)+CCM(w,CSTARCO)+CCM(w,CNE)+CCM(w,CEQ)+ \
- CCM(w,CSTARDOT)+CCM(w,CPLUSDOT)+CCM(w,CMIN)+CCM(w,CMAX)+CCM(w,CSTAR)
-   CCMWDS(sumbf) CCMCAND(sumbf,cand,d) if(CCMTST(cand,d))R sumatgbool(a,w,d);   // quickly handle verbs that have primitive inverses
-  }
-  if(d==CSTAR){
-   if(!ar||!wr){  // if either argument is atomic, apply the distributive property to save multiplies
-    A z0; z=!ar?tymes(a,df1(z0,w,fs)):tymes(w,df1(z0,a,fs));
-    if(jt->jerr==EVNAN)RESETERR else R z;
-   }else if(TYPESEQ(at,wt)&&at&B01+FL+(INT*!SY_64))R jtsumattymes(jt,a,w,b,at,m,n,nn,r,s,zn);  // +/@:*
-  }
- }
- adocv=var(gs,at,wt); ASSERT(adocv.f,EVDOMAIN); yt=rtype(adocv.cv ); t=atype(adocv.cv);
- adocvf=var(y,yt,yt); ASSERT(adocvf.f,EVDOMAIN); zt=rtype(adocvf.cv);
- sb=yt&(c==CPLUS);  // +/@:g where g produces Boolean.
- if(!(sb||TYPESEQ(yt,zt)))R df1(z,df2(y,a,w,gs),fs);
- if(t){
+ // look for cases that we should NOT handle with special code: empty arg; less than 4 result items of g (we would allocate 3 here); too few items in result (the internal call overhead is high then) 
+// obsolete  if(SPARSE&(at|wt)||!an||!wn||2>nn){ R df1(z,df2(y,a,w,gs),fs);}  // if sparse or empty, or just 1 item, do it the old-fashioned way
+// obsolete  if(unlikely((((SPARSE&(at|wt))-1)&-an&-wn&(3-nn)&(3-zn))>=0)){ R df1(z,df2(y,a,w,gs),fs);}  // if sparse or empty, or just 1 item, do it the old-fashioned way
+ if(unlikely((((SPARSE&(at|wt))-1)&-an&-wn&(3-nn)&(3-zn))>=0)){R (isfork?jtcork2:jtupon2cell)(jtinplace,a,w,self);}  // if sparse or empty, or just 1 item, do it the old-fashioned way
+ y=FAV(fs)->fgh[0];  // look at f/
+// obsolete  c=ID(y); d=ID(gs);  // c is id of f, d is id of g
+// obsolete  if(c==CPLUS){
+// obsolete   // +/@:g is special if args are boolean, length is integral number of I, and g is boolean or *
+// obsolete   if((((at&wt&(n==1))>(zn&(SZI-1)))||!SY_ALIGN)){   //  relies on B01==1
+// obsolete #define sumbfvalues(w) CCM(w,CGE)+CCM(w,CLE)+CCM(w,CGT)+CCM(w,CLT)+CCM(w,CPLUSCO)+CCM(w,CSTARCO)+CCM(w,CNE)+CCM(w,CEQ)+ \
+// obsolete  CCM(w,CSTARDOT)+CCM(w,CPLUSDOT)+CCM(w,CMIN)+CCM(w,CMAX)+CCM(w,CSTAR)
+// obsolete    CCMWDS(sumbf) CCMCAND(sumbf,cand,d) if(CCMTST(cand,d))R sumatgbool(a,w,d);   // quickly handle verbs that have primitive inverses
+// obsolete   }
+// obsolete   if(d==CSTAR){
+// obsolete    if(!ar||!wr){  // if either argument is atomic, apply the distributive property to save multiplies
+// obsolete     A z0; z=!ar?tymes(a,df1(z0,w,fs)):tymes(w,df1(z0,a,fs));
+// obsolete     if(jt->jerr==EVNAN)RESETERR else R z;
+// obsolete    }else if(TYPESEQ(at,wt)&&at&B01+FL+(INT*!SY_64))R jtsumattymes(jt,a,w,b,at,m,n,nn,r,s,zn);  // +/@:*
+// obsolete   }
+// obsolete  }
+ adocv=var(gs,at,wt); ASSERT(adocv.f,EVDOMAIN); yt=rtype(adocv.cv ); t=atype(adocv.cv);  // get type info on g
+ adocvf=var(y,yt,yt); ASSERT(adocvf.f,EVDOMAIN); zt=rtype(adocvf.cv);   // get type info on f/
+ // Also, don't use special code if g is inplaceable.  There's no gain then, because f/ is always inplaceable.  The gain comes when g can be split into small pieces with small overall cache footprint
+ if(((JTINPLACEA*((r==ar)&SGNTO0(AC(a)))+((r==wr)&SGNTO0(AC(w))))&(I)jtinplace&(adocv.cv>>VIPOKWX)))R (isfork?jtcork2:jtupon2cell)(jtinplace,a,w,self);  // if inplaceable, revert
+// obsolete  sb=yt&(c==CPLUS);  // +/@:g where g produces Boolean.
+ if(unlikely(!TYPESEQ(yt,zt)))R (isfork?jtcork2:jtupon2cell)(jtinplace,a,w,self);  // if the result of f (which feeds through f/) isn't the same type as the result of g, revert
+ if(t){  // convert args if needed
   if(TYPESNE(t,at))RZ(a=cvt(t|(adocv.cv&VARGCVTMSKF),a));
   if(TYPESNE(t,wt))RZ(w=cvt(t|(adocv.cv&VARGCVTMSKF),w));
  }
@@ -1237,25 +1243,30 @@ DF2(jtfslashatg){A fs,gs,y,z;B b,sb=0;C*av,c,d,*wv;I ak,an,ar,*as,at,m,
  GA(y,yt,zn,1,0);  // allocate one item for result of g
  GA(z,zt,zn,r-1,1+s);  // allocate main output area for final result from f/
  n^=-b; n=(n==~1)?1:n;  // encode b flag in sign of n
- if(sb){A t;I j,tn,*zv;UC*tc;UI*ti,*yv;  /* +/@:g for boolean-valued g */
-  av=CAV(a); wv=CAV(w); yv=(UI*)AV(y); zv=AV(z); memset(zv,C0,zn*SZI);
-  tn=(zn+SZI-1)>>LGSZI; GATV0(t,INT,tn,1); tc=UAV(t); ti=(UI*)tc;
-  // Run g in batches of up to 255, accumulating the result bytewise.  NOTE: there may be garbage at the end of yv, but because
-  // we are supporting littleendian only, it will not affect the result
-  for(j=nn;0<j;j-=255/C_LE){
-   memset(ti,C0,tn*SZI); 
-   DO(MIN(j,255), ((AHDR2FN*)adocv.f)(n,m,av,wv,yv,jt); av+=ak; wv+=wk; DO(tn,ti[i]+=yv[i];););
-   DO(zn, zv[i]+=tc[i];);
-  }
- }else{A z1;B p=0;C*yv,*zu,*zv;  // general f/@:g for atomic f,g.  Do not run g on entire y; instead run one cell at a time
-  av=CAV(a)+ak*(nn-1); wv=CAV(w)+wk*(nn-1); yv=CAV(y); zv=CAV(z);
-  GA(z1,zt,zn,r-1,1+s); zu=CAV(z1);  // allocate ping-pong output area for f/
-  I rc;  // accumulate error returns
-  rc=((AHDR2FN*)adocv.f)(n,m,av,wv,zv,jt); rc=rc<0?EWOVIP+EWOVIPMULII:rc;  // create first result-cell of g
-  DQ(nn-1, av-=ak; wv-=wk; I lrc; lrc=((AHDR2FN*)adocv.f)(n,m,av,wv,yv,jt); lrc=lrc<0?EWOVIP+EWOVIPMULII:lrc; rc=lrc<rc?lrc:rc;
-     lrc=((AHDR2FN*)adocvf.f)((I)1,zn,yv,p?zu:zv,p?zv:zu,jt); lrc=lrc<0?EWOVIP+EWOVIPMULII:lrc; rc=lrc<rc?lrc:rc; p^=1;);  // p==1 means result goes to ping buffer zv
-  if(NEVM<(rc&255)){df1(z,df2(y,a,w,gs),fs);}else{if(rc&255)jsignal(rc); z=p?z1:z;}  // if overflow, revert to old-fashioned way.  If p points to ping, prev result went to pong, make pong the result
- }
+// obsolete  if(sb){A t;I j,tn,*zv;UC*tc;UI*ti,*yv;  /* +/@:g for boolean-valued g */
+// obsolete   av=CAV(a); wv=CAV(w); yv=(UI*)AV(y); zv=AV(z); memset(zv,C0,zn*SZI);
+// obsolete   tn=(zn+SZI-1)>>LGSZI; GATV0(t,INT,tn,1); tc=UAV(t); ti=(UI*)tc;
+// obsolete   // Run g in batches of up to 255, accumulating the result bytewise.  NOTE: there may be garbage at the end of yv, but because
+// obsolete   // we are supporting littleendian only, it will not affect the result
+// obsolete   for(j=nn;0<j;j-=255/C_LE){
+// obsolete    memset(ti,C0,tn*SZI); 
+// obsolete    DO(MIN(j,255), ((AHDR2FN*)adocv.f)(n,m,av,wv,yv,jt); av+=ak; wv+=wk; DO(tn,ti[i]+=yv[i];););
+// obsolete    DO(zn, zv[i]+=tc[i];);
+// obsolete   }
+// obsolete  }else{
+ A z1;B p=0;C*yv,*zu,*zv;  // general f/@:g for atomic f,g.  Do not run g on entire y; instead run one cell at a time
+ av=CAV(a)+ak*(nn-1); wv=CAV(w)+wk*(nn-1); yv=CAV(y); zv=CAV(z);  // input and output pointers.  We process cells from back to front
+ GA(z1,zt,zn,r-1,1+s); zu=CAV(z1);  // allocate ping-pong output area for f/
+ // We use zv and zu as ping-pong buffers.  zv comes from z, zu from z1.  The last cell of g goes into zv; the next-last goes into
+ // yv and then we take zv=yv f zu; then third-last into yv, then zu=yv f zv, etc.  This way we don't require inplacing for f.
+ // We exchange zv/zu in the loop to do the ping-pong
+ z=nn&1?z:z1;  // If the number of items is odd, the final result is in original zv, otherwise original zu
+ I rc;  // accumulate error returns
+ rc=((AHDR2FN*)adocv.f)(n,m,av,wv,zv,jt); rc=rc<0?EWOVIP+EWOVIPMULII:rc;  // create first result-cell of g
+ DQ(nn-1, av-=ak; wv-=wk; I lrc; lrc=((AHDR2FN*)adocv.f)(n,m,av,wv,yv,jt); lrc=lrc<0?EWOVIP+EWOVIPMULII:lrc; rc=lrc<rc?lrc:rc;
+    lrc=((AHDR2FN*)adocvf.f)((I)1,zn,yv,zv,zu,jt); lrc=lrc<0?EWOVIP+EWOVIPMULII:lrc; rc=lrc<rc?lrc:rc; {C* ztemp=zu; zu=zv; zv=ztemp;});  // p==1 means result goes to ping buffer zv
+ if(NEVM<(rc&255)){z=(isfork?jtcork2:jtupon2cell)(jtinplace,a,w,self);}else{if(rc&255)jsignal(rc);}  // if overflow, revert to old-fashioned way.  If p points to ping, prev result went to pong, make pong the result
+// obsolete  }
  RE(0); RETF(z);
 }    /* a f/@:g w where f and g are atomic*/
 

@@ -43,12 +43,13 @@ test=: 2 : 0
 ~: test *. 'b'
 
 space=: 7!:2
-x=: 53 7 ?@$ 1e6
-y=: 53 7 ?@$ 1e6
+x=: 53 700 ?@$ 1e6
+y=: 53 700 ?@$ 1e6
 p=: 13#x
 q=: 13#y
-300 > | -/ space 'p +/@:*     q',:'x +/@:*     y'
+300 > | -/ space 'p +/@:*     q',:'x +/@:*     y'  NB. special code doesn't depend on # items
 300 > | -/ space 'p ([: +/ *) q',:'x ([: +/ *) y'
+(_5000+*/ >.&.(2&^.)SZI,$y) > | -/ space 'p +/@:*     q',:'x +/@:*     >: y'  NB. >: y makes a copy, but then no further copy and thus uses LESS space than the special code
 
 space=: 7!:2
 x=: 53 7 ?@$ 0

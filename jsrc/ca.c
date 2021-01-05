@@ -286,7 +286,7 @@ F2(jtatco){A f,g;AF f1=on1cell,f2=jtupon2cell;C c,d,e;I flag, flag2=0,m=-1;V*av,
   case CICAP:   if(d==CNE){f1=jtnubind; flag&=~VJTFLGOK1;} else if(FIT0(CNE,wv)){f1=jtnubind0; flag&=~VJTFLGOK1;}else if(d==CEBAR){f2=jtifbebar; flag&=~VJTFLGOK2;} break;  // I.@:~: y  I.@:(~:!.0) y  x I.@:E. y
   case CAMP:    {m=(e&~2)==CIOTA?e:m; I j=-1; j=g==num(0)?0:j;  j=g==num(1)?1:j; m|=j; break;}   // i.@0/1@:g    i:@0/1@:g
   case CSLASH:  //  f/@:g where f is not a gerund
-   if(FAV(f)->flag&FAV(w)->flag&VISATOMIC2){f2=jtfslashatg; flag&=~VJTFLGOK2;}
+   if(FAV(f)->flag&FAV(w)->flag&VISATOMIC2){f2=jtfslashatg;}  // f/@:g when f and g are goth atomic
    if(d==CCOMMA){f1=jtredravel;}
    else if(d==CDOLLAR&&FAV(av->fgh[0])->id==CSTAR){f1=jtnatoms;}
    else {e+=1; m=BETWEENC(e,CPLUS+1,CSTARDOT+1)?e:m;}  // +/@: +./@: */.*   m holds combination op, or -1 if no comparison

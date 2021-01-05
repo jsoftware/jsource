@@ -438,7 +438,7 @@
 #define fromr(x,y)                  jtfromr(jt,(x),(y))
 #define fromsd(x,y)                 jtfromsd(jt,(x),(y))
 #define fromss(x,y)                 jtfromss(jt,(x),(y))
-#define fslashatg(x,y,z)            jtfslashatg(jt,(x),(y),(z))
+// obsolete #define fslashatg(x,y,z)            jtfslashatg(jt,(x),(y),(z))
 #define fsm0(x,y,z)                 jtfsm0(jt,(x),(y),(z))
 #define fsmdo(x0,x1,x2,x3,x4,x5)    jtfsmdo(jt,(x0),(x1),(x2),(x3),(x4),(x5))
 #define fsmvfya(x)                  jtfsmvfya(jt,(x))

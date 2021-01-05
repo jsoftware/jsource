@@ -186,15 +186,15 @@ AHDRR(plusinsB,I,B){
      nn-=nloops;  // keep nn = # bytes remaining
      I acc0=0;
      DQ(nloops, acc0+=xu2[0]; xu2=(I*)((I)xu2+d););  // add up each byte-lane in the swatch
-     acc20+=acc0&255; acc0>>=8; acc21+=acc0&255; acc0>>=8; acc22+=acc0&255; acc0>>=8; acc23+=acc0&255; acc0>>=8;
+     acc20+=acc0&255; acc0>>=8; acc21+=acc0&255; acc0>>=8; acc22+=acc0&255; acc0>>=8; acc23+=acc0&255;
 #if SY_64
-     acc24+=acc0&255; acc0>>=8; acc25+=acc0&255; acc0>>=8; acc26+=acc0&255; acc0>>=8; acc27+=acc0&255; acc0>>=8;
+     acc0>>=8; acc24+=acc0&255; acc0>>=8; acc25+=acc0&255; acc0>>=8; acc26+=acc0&255; acc0>>=8; acc27+=acc0&255;
 #endif
     }
     // column is added.  Write out the valid totals, divert the rest to the sink
-    *zz++=acc20; zz=dd<=0?&jt->shapesink[0]:zz; *zz++=acc21; zz=dd<=1?&jt->shapesink[0]:zz; *zz++=acc22; zz=dd<=2?&jt->shapesink[0]:zz; *zz++=acc23; zz=dd<=3?&jt->shapesink[0]:zz; 
+    *zz++=acc20; zz=dd<=1?&jt->shapesink[0]:zz; *zz++=acc21; zz=dd<=2?&jt->shapesink[0]:zz; *zz++=acc22; zz=dd<=3?&jt->shapesink[0]:zz; *zz++=acc23; 
 #if SY_64
-    *zz++=acc24; zz=dd<=4?&jt->shapesink[0]:zz; *zz++=acc25; zz=dd<=5?&jt->shapesink[0]:zz; *zz++=acc26; zz=dd<=6?&jt->shapesink[0]:zz; *zz++=acc27; 
+    zz=dd<=4?&jt->shapesink[0]:zz; *zz++=acc24; zz=dd<=5?&jt->shapesink[0]:zz; *zz++=acc25; zz=dd<=6?&jt->shapesink[0]:zz; *zz++=acc26; zz=dd<=7?&jt->shapesink[0]:zz; *zz++=acc27; 
 #endif
    }
   }

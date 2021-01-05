@@ -1256,11 +1256,15 @@ DF2(jtfslashatg){A fs,gs,y,z;B b;C*av,*wv;I ak,an,ar,*as,at,m,
 // obsolete  }else{
  A z1;B p=0;C*yv,*zu,*zv;  // general f/@:g for atomic f,g.  Do not run g on entire y; instead run one cell at a time
  av=CAV(a)+ak*(nn-1); wv=CAV(w)+wk*(nn-1); yv=CAV(y); zv=CAV(z);  // input and output pointers.  We process cells from back to front
- GA(z1,zt,zn,r-1,1+s); zu=CAV(z1);  // allocate ping-pong output area for f/
- // We use zv and zu as ping-pong buffers.  zv comes from z, zu from z1.  The last cell of g goes into zv; the next-last goes into
- // yv and then we take zv=yv f zu; then third-last into yv, then zu=yv f zv, etc.  This way we don't require inplacing for f.
- // We exchange zv/zu in the loop to do the ping-pong
- z=nn&1?z:z1;  // If the number of items is odd, the final result is in original zv, otherwise original zu
+ if(likely((adocvf.cv&VIPOKW)!=0)){
+  zu=zv; // f is inplaceable: we don't need ping-pong nuffers, just keep operating inplace on z
+ }else{
+  // f not inplaceable.  Use zv and zu as ping-pong buffers.  zv comes from z, zu from z1.  The last cell of g goes into zv; the next-last goes into
+  // yv and then we take zu=yv f zv; then third-last into yv, then zv=yv f zu, etc.  This way we don't require inplacing for f.
+  // We exchange zv/zu in the loop to do the ping-pong
+  GA(z1,zt,zn,r-1,1+s); zu=CAV(z1);  // allocate ping-pong output area for f/
+  z=nn&1?z:z1;  // If the number of items is odd, the final result is in original zv, otherwise original zu
+ }
  I rc;  // accumulate error returns
  rc=((AHDR2FN*)adocv.f)(n,m,av,wv,zv,jt); rc=rc<0?EWOVIP+EWOVIPMULII:rc;  // create first result-cell of g
  DQ(nn-1, av-=ak; wv-=wk; I lrc; lrc=((AHDR2FN*)adocv.f)(n,m,av,wv,yv,jt); lrc=lrc<0?EWOVIP+EWOVIPMULII:lrc; rc=lrc<rc?lrc:rc;

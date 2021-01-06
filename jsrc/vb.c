@@ -84,13 +84,13 @@ static I jtebarprep(J jt,A a,A w,A*za,A*zw,I*zc){I ar,at,m,n,t,wr,wt,memlimit;CR
   // the range can be extended to cover 0..d-1 without exceeding the bound on d, do so to make
   // the SUB0 and SUB1 expressions into EBLOOP simpler
   // We allocate an array for each result in range, so we have to get c and d right
+  case C2TX:
+  case LITX:
+  case B01X: rng.min=0; rng.range=shortrange[t&B01+LIT][1]; break;
   case INTX: case SBTX: rng = condrange(AV(a),m,IMAX,IMIN,memlimit);
              if(rng.range){rng = condrange(AV(w),n,rng.min,rng.min+rng.range-1,memlimit);} break;
   case C4TX: rng = condrange4(C4AV(a),m,-1,0,memlimit);
              if(rng.range){rng = condrange4(C4AV(w),n,rng.min,rng.min+rng.range-1,memlimit);} break;
-  case C2TX:
-  case LITX:
-  case B01X: rng.min=0; rng.range=shortrange[t&B01+LIT][1]; break;
  }
  if(0<rng.min&&rng.range&&rng.min+rng.range<=memlimit){rng.range+=rng.min; rng.min=0;}  // Extend lower bound to 0 if that doesn't make range too big
  *zc=rng.min;  // Now that we know c, return it

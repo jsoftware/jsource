@@ -393,8 +393,6 @@ static DF2(with2){A z; R df1(z,w,powop(self,a,0));}
 F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;I flag,flag2=0,linktype=0,mode=-1,p,r;V*u,*v;
  ARGCHK2(a,w);
  switch(CONJCASE(a,w)){
- default: ASSERTSYS(0,"amp");
- case NN: ASSERT(0,EVDOMAIN);
  case NV:
   f1=withl; v=FAV(w); c=v->id;
   // set flag according to ASGSAFE of verb, and INPLACE and IRS from the dyad of the verb
@@ -487,5 +485,7 @@ F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;I flag,flag2=0,linktype=0,mode=-1,p,r;V*u,*
   if(f2==on2){flag2|=VF2RANKATOP2; if(r==RMAX)f2=on2cell; else{if(r==0)f2=on20;}}
   A z; RZ(z=fdef(flag2,CAMP,VERB, f1,f2, a,w,0L, flag, r,r,r));
   FAV(z)->localuse.lclr[0]=linktype; R z;
+ default: ASSERTSYS(0,"amp");
+ case NN: ASSERT(0,EVDOMAIN);
  }
 }

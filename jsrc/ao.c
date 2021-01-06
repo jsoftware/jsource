@@ -49,6 +49,7 @@ static DF1(jtobqfslash){A y,z;B b=0,p;C er,id,*wv;I c,d,k,m,m1,mn,n,n1,r,*s,wt;
  if(((1-m)&(1-n))>=0){GA(z,wt,AN(w),r-1,1+s); AS(z)[0]=d; MC(AV(z),wv,AN(w)<<bplg(wt)); R z;}  // m=1 or n=1, return item of input
  if(wt&FL+CMPX)NAN0;
  if(1==c)switch(OBQCASE(CTTZ(wt),id)){
+  case OBQCASE(FLX,  CPLUS   ): OBQLOOP(D,D,wt,x=*u, x+=*u        ); break;
   case OBQCASE(B01X, CNE     ): OBQLOOP(B,B,wt,x=*u, x^=*u        ); break;
   case OBQCASE(B01X, CEQ     ): OBQLOOP(B,B,wt,x=*u, x=x==*u      ); break;
   case OBQCASE(B01X, CMAX    ):
@@ -65,7 +66,6 @@ static DF1(jtobqfslash){A y,z;B b=0,p;C er,id,*wv;I c,d,k,m,m1,mn,n,n1,r,*s,wt;
   case OBQCASE(SBTX, CMIN    ): OBQLOOP(SB,SB,wt,x=*u, x=SBLT(x,*u)?x:*u ); break;
   case OBQCASE(FLX,  CMAX    ): OBQLOOP(D,D,wt,x=*u, x=MAX(x,*u)  ); break;
   case OBQCASE(FLX,  CMIN    ): OBQLOOP(D,D,wt,x=*u, x=MIN(x,*u)  ); break;
-  case OBQCASE(FLX,  CPLUS   ): OBQLOOP(D,D,wt,x=*u, x+=*u        ); break;
   case OBQCASE(CMPXX,CPLUS   ): OBQLOOP(Z,Z,wt,x=*u, x=zplus(x,*u)); break;
   case OBQCASE(XNUMX,CMAX    ): OBQLOOP(X,X,wt,x=*u, x=1==xcompare(x,*u)? x:*u); break;
   case OBQCASE(XNUMX,CMIN    ): OBQLOOP(X,X,wt,x=*u, x=1==xcompare(x,*u)?*u: x); break;
@@ -81,6 +81,7 @@ static DF1(jtobqfslash){A y,z;B b=0,p;C er,id,*wv;I c,d,k,m,m1,mn,n,n1,r,*s,wt;
   case OBQCASE(INTX, CPLUS   ): 
    er=0; OBQLOOP(I,I,wt,x=*u, {p=0>x; x+=*u; BOV(p==0>*u&&p!=0>x);}); 
    if(er>=EWOV)OBQLOOP(I,D,FL,x=(D)*u, x+=*u);
+   break;
  }
  if(wt&FL+CMPX)NAN1; RE(0);
  R b?z:oblique(w,self);
@@ -798,6 +799,7 @@ F1(jtsldot){A h=0;AF f1=jtoblique,f2;C c,d,e;I flag=VJTFLGOK1|VJTFLGOK2;V*v;
  if(NOUN&AT(w)){flag|=VGERL; RZ(h=fxeachv(1L,w));}
  v=VAV(w);
  switch(ID(w)){  // no default for f2: every path must set it
+  case CBOX: f2=jtkeybox; break;  // </.
   case CPOUND: f2=jtkeytally; break;
   case CSLASH: f2=jtkey; if(AT(v->fgh[0])&VERB&&FAV(v->fgh[0])->flag&VISATOMIC2){ // f//.  if f is atomic2
    f1=jtobqfslash; flag&=~VJTFLGOK1;
@@ -809,13 +811,12 @@ F1(jtsldot){A h=0;AF f1=jtoblique,f2;C c,d,e;I flag=VJTFLGOK1|VJTFLGOK2;V*v;
     }
 
    } break;
-  case CBOX: f2=jtkeybox; break;  // </.
   case CFORK:  if(v->valencefns[0]==(AF)jtmean){flag+=(3<<VFKEYSLASHFX)+((FL+INT+B01)<<VFKEYSLASHTX);  // (+/%#)/., treated as f//.
                }else{c=ID(v->fgh[0]); d=ID(v->fgh[1]); e=ID(v->fgh[2]); 
                 if(((c^e)==(CHEAD^CPOUND))&&d==CCOMMA&&(c==CHEAD||c==CPOUND)){f2=jtkeyheadtally; break;}
                }
                // otherwise (including keymean) fall through to...
-  default: f2=jtkey; flag |= (FAV(w)->flag&VASGSAFE);  // pass through ASGSAFE.
+  default: f2=jtkey; flag |= (FAV(w)->flag&VASGSAFE); break;  // pass through ASGSAFE.
  }
  R fdef(0,CSLDOT,VERB, f1,f2, w,0L,h, flag, RMAX,RMAX,RMAX);
 }

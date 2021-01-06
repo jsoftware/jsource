@@ -231,8 +231,8 @@ static F1(jtrfc){A r,w1;I m=0,n,t;
  }
  // switch based on degree of polynomial
  switch(m){
-  case 0:  R link(num(0),mtv);  // degree 0 - return 0;''
   case 1:  r=ravel(negate(aslash(CDIV,take(num(2),w)))); break;  // linear - return solution, whatever its type
+  case 0:  R link(num(0),mtv);  // degree 0 - return 0;''
   default: if(t&CMPX)r=rfcz(m,w);  // higher order - if complex, go straight to complex solutions
            else{RZ(rfcq(m,w,&r,&w1)); if(m>AN(r))r=over(r,rfcz(m-AN(r),w1));} // otherwise, find rational solutions in r, and residual polynomial in w1.
             // if there are residual (complex) solutions, go find them
@@ -336,7 +336,6 @@ DF2(jtpoly2){F2PREFIP;A c,za;I b;D*ad,d,p,*x,u,*z;I an,at,j,t,n,wt;Z*az,e,q,*wz,
  }
  switch(b){
  // coeffs: d/e are not set
- case 0: R df2(za,w,a,eval("(^/i.@#) +/ .* ]"));  // XNUM/RAT/SPARSE
  case 1: NAN0;  // FL
 #if (C_AVX&&SY_64) || EMU_AVX
 // loop for atomic parallel ops.  // fixed: n is #atoms, x->input, z->result, u=input atom4 and result
@@ -426,6 +425,7 @@ DF2(jtpoly2){F2PREFIP;A c,za;I b;D*ad,d,p,*x,u,*z;I an,at,j,t,n,wt;Z*az,e,q,*wz,
   }
 #endif
   NAN1; break;  // Horner's rule.  First multiply is never 0*_
+ case 0: R df2(za,w,a,eval("(^/i.@#) +/ .* ]"));  // XNUM/RAT/SPARSE
  case 2: NAN0; DQ(n, q=zeroZ; y=*wz++; j=an; DQ(an,q=zplus(az[--j],ztymes(y,q));); *zz++=q;); NAN1; break;  // CMPX
  // mult/roots: d/e are set
  case 3: R tymes(c,df2(za,negate(a),w,eval("*/@(+/)")));

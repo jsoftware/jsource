@@ -855,16 +855,16 @@ F1(jtbslash){A f;AF f1=jtinfixprefix1,f2=jtinfixprefix2;V*v;I flag=FAV(ds(CBSLAS
  if(NOUN&AT(w))R fdef(0,CBSLASH,VERB, jtinfixprefix1,jtinfixprefix2, w,0L,fxeachv(1L,w), VGERL|flag, RMAX,0L,RMAX);
  v=FAV(w);  // v is the u in u\ y
  switch(v->id){
+  case CSLASH: ;  // never gerund/ which is coded as GRCO
+   A u=v->fgh[0];  // the u in u/\ y
+   if(AT(u)&VERB)flag |= (FAV(u)->flag >> (VIRS2X-VFSCANIRSX)) & VFSCANIRS;  // indic if we should use {: f }: for 2 /\ y
+   f2=jtmovfslash; if(FAV(u)->flag&VISATOMIC2){f1=jtpscan; flag|=VASGSAFE|VJTFLGOK1;} break;
   case CPOUND:
    f1=jtiota1; break;
   case CLEFT: case CRIGHT: case CCOMMA:   
    f2=jtinfixd; break;
   case CFORK:  
    if(v->valencefns[0]==(AF)jtmean)f2=jtmovavg; break;
-  case CSLASH: ;  // never gerund/ which is coded as GRCO
-   A u=v->fgh[0];  // the u in u/\ y
-   if(AT(u)&VERB)flag |= (FAV(u)->flag >> (VIRS2X-VFSCANIRSX)) & VFSCANIRS;  // indic if we should use {: f }: for 2 /\ y
-   f2=jtmovfslash; if(FAV(u)->flag&VISATOMIC2){f1=jtpscan; flag|=VASGSAFE|VJTFLGOK1;} break;
   default:
    flag |= VJTFLGOK1|VJTFLGOK2; break; // The default u\ looks at WILLBEOPENED
  }

@@ -37,8 +37,8 @@ static A jtmerge1(J jt,A w,A ind){A z;B*b;C*wc,*zc;D*wd,*zd;I c,it,j,k,m,r,*s,t,
  zi=AV(z); zc=(C*)zi; zd=(D*)zc;
  wi=AV(w); wc=(C*)wi; wd=(D*)wc;
  switch(MCASE(CTTZ(it),k)){
-  case MCASE(B01X,sizeof(C)): DO(c,         *zc++=wc[i+c*(I)*b++];); break;
   case MCASE(B01X,sizeof(I)): DO(c,         *zi++=wi[i+c*(I)*b++];); break;
+  case MCASE(B01X,sizeof(C)): DO(c,         *zc++=wc[i+c*(I)*b++];); break;
 #if !SY_64
   case MCASE(B01X,sizeof(D)): DO(c,         *zd++=wd[i+c*(I)*b++];); break;
 #endif
@@ -168,12 +168,12 @@ static A jtmerge2(J jt,A a,A w,A ind,I cellframelen){F2PREFIP;A z;I t;
    // there is more than one cell in a.  We can copy entire cells
    cellsize *= k;   // change cellsize to bytes
    switch(cellsize){
-   case sizeof(C):
-    {C * RESTRICT zv=CAV(z); C *RESTRICT av=(C*)av0; DO(AN(ind), zv[iv[i]]=*av; ++av; av=(av==(C*)avn)?(C*)av0:av;); break;}  // scatter-copy the data, cyclically
    case sizeof(I):  // may include D
     {I * RESTRICT zv=AV(z); I *RESTRICT av=(I*)av0; DO(AN(ind), zv[iv[i]]=*av; ++av; av=(av==(I*)avn)?(I*)av0:av;); break;}  // scatter-copy the data
+   case sizeof(C):
+    {C * RESTRICT zv=CAV(z); C *RESTRICT av=(C*)av0; DO(AN(ind), zv[iv[i]]=*av; ++av; av=(av==(C*)avn)?(C*)av0:av;); break;}  // scatter-copy the data, cyclically
    default: ;
-     C* RESTRICT zv=CAV(z); C *RESTRICT av=(C*)av0; JMCDECL(endmask) JMCSETMASK(endmask,cellsize,1) DO(AN(ind), JMCR(zv+(iv[i]*cellsize),av,cellsize,loop1,1,endmask); av+=cellsize; av=(av==avn)?av0:av;);  // scatter-copy the data, cyclically.  Don't overwrite
+     C* RESTRICT zv=CAV(z); C *RESTRICT av=(C*)av0; JMCDECL(endmask) JMCSETMASK(endmask,cellsize,1) DO(AN(ind), JMCR(zv+(iv[i]*cellsize),av,cellsize,loop1,1,endmask); av+=cellsize; av=(av==avn)?av0:av;); break;  // scatter-copy the data, cyclically.  Don't overwrite
    }
   }else{
    // the cellsize is bigger than a.  We will have to repeat a within each cell

@@ -340,9 +340,6 @@ static B jtmatchsub(J jt,A a,A w,B* RESTRICT x,I af,I wf,I m,I n,I b1){C*av,*wv;
  }
  }
 
-
-
-
  // If we're comparing functions, return that result
  t=at;  //  in case types identical, pick one
  if(t&FUNC)R (!eqf(a,w))^(x==0?1:b1);  // true value, but switch if return is not 'match'

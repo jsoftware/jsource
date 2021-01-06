@@ -120,7 +120,7 @@
 #define CEXP       (C)0x1d  //
 #define CDIV       (C)0x1e  //
 #define CMINUS     (C)0x1f  //
-#define CSTARCO    (C)0x20  // *:  20-2f used in cip.c
+#define CSTARCO    (C)0x20  // *:  20-2f used in cip.c and ar.c
 #define CPLUSCO    (C)0x21  // +:
 #define CSTAR      (C)0x22  //
 #define CPLUS      (C)0x23  // + +. *. must stay in order.  Low digit is combining type-1
@@ -139,7 +139,7 @@
 #define CMIN       (C)0x2e  // <.
 #define CFLOOR     (C)0x2e  // <.
 #define CMAX       (C)0x2f  // >.
-#define CCEIL      (C)0x2f  // >.
+#define CCEIL      (C)0x2f  // >. 20-2f used in cip.c and ar.c
 #define CNOUN      (C)0x30  // '0' - used in AR for noun
 #define CSLASH     (C)0x31  // /
 #define CHOOK      (C)0x32  // '2' - used in AR for hook  is paired with ADVF 2 distant
@@ -150,9 +150,9 @@
 #define CAMP       (C)0x37  // &  must be CFORK^4
 #define CATCO      (C)0x38  // @:  must be paired with @
 #define CAT        (C)0x39  // @
-#define CATDOT     (C)0x3a  // @.
-#define CSELF      (C)0x3b  // $:
-#define CGRCO      (C)0x3c  // `:
+#define CATDOT     (C)0x3a  // @. paired with `:
+#define CGRCO      (C)0x3b  // `:
+#define CSELF      (C)0x3c  // $: @. `: $: all in a row
 #define CCOLON     (C)0x3d  //
 #define CUDOT      (C)0x3e  // u.  must be paired v.
 #define CVDOT      (C)0x3f  // v.

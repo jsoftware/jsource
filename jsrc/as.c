@@ -387,15 +387,17 @@ F1(jtbsdot){A f;AF f1=jtsuffix,f2=jtoutfix;I flag=FAV(ds(CBSDOT))->flag;C id;V*v
  if(NOUN&AT(w))R fdef(0,CBSLASH,VERB, jtgsuffix,jtgoutfix, w,0L,fxeachv(1L,w), VGERL|VAV(ds(CBSLASH))->flag, RMAX,0L,RMAX);
  v=FAV(w);  // verb info for w
  switch(v->id){
-  case CPOUND: f1=jtiota1rev; break;
-  case CSLASH:  // v is f/, but not when f is a gerund
-   f1=jtsscan;  // code for f/\. - take inplaceability from dyad f
-   f=v->fgh[0]; flag|=(FAV(f)->flag&VJTFLGOK2)>>(VJTFLGOK2X-VJTFLGOK1X); id=ID(f); if(id==CBDOT){f=VAV(f)->fgh[1]; if(INT&AT(f)&&!AR(f))id=(C)AV(f)[0];}
+ default: break;
+ case CPOUND: f1=jtiota1rev; break;
+ case CSLASH:  // v is f/, but not when f is a gerund
+  f1=jtsscan;  // code for f/\. - take inplaceability from dyad f
+  f=v->fgh[0]; flag|=(FAV(f)->flag&VJTFLGOK2)>>(VJTFLGOK2X-VJTFLGOK1X); id=ID(f); if(id==CBDOT){f=VAV(f)->fgh[1]; if(INT&AT(f)&&!AR(f))id=(C)AV(f)[0];}
 #define xinvvalues(w) CCM(w,CPLUS)+CCM(w,CEQ)+CCM(w,CNE)+CCM(w,CBW0110)+CCM(w,CBW1001)
-   {CCMWDS(xinv) CCMCAND(xinv,cand,id) f2=CCMTST(cand,id)?jtofxinv:f2;}
+  {CCMWDS(xinv) CCMCAND(xinv,cand,id) f2=CCMTST(cand,id)?jtofxinv:f2;}
 #define xassocvalues(w) CCM(w,CSTAR)+CCM(w,CMAX)+CCM(w,CMIN)+CCM(w,CPLUSDOT)+CCM(w,CSTARDOT)+CCM(w,CBW0000)+CCM(w,CBW0001)+CCM(w,CBW0011)+CCM(w,CBW0101)+CCM(w,CBW0111)+CCM(w,CBW1111)
-   {CCMWDS(xassoc) CCMCAND(xassoc,cand,id) f2=CCMTST(cand,id)?jtofxassoc:f2;}
-  }
+  {CCMWDS(xassoc) CCMCAND(xassoc,cand,id) f2=CCMTST(cand,id)?jtofxassoc:f2;}
+  break;
+ }
  RZ(f=ADERIV(CBSDOT,f1,f2,flag,RMAX,0,RMAX));
  // Fill in the lvp[1] field: with 0 if not f/\; with the lookup field for f/ if f/\ .
  FAV(f)->localuse.lvp[1]=v->id==CSLASH?v->localuse.lvp[1]:0;  // f is nonnull if f/\ .

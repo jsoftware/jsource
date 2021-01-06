@@ -1260,7 +1260,7 @@ DF2(jtfslashatg){A fs,gs,y,z;B b;C*av,*wv;I ak,an,ar,*as,at,m,
   zu=zv; // f is inplaceable: we don't need ping-pong nuffers, just keep operating inplace on z
  }else{
   // f not inplaceable.  Use zv and zu as ping-pong buffers.  zv comes from z, zu from z1.  The last cell of g goes into zv; the next-last goes into
-  // yv and then we take zu=yv f zv; then third-last into yv, then zv=yv f zu, etc.  This way we don't require inplacing for f.
+  // yv and then we take zu=yv f zv; then third-last into yv, then zv=yv f zu, etc.  This way we need only 2 cells of cache even without inplacing f or g
   // We exchange zv/zu in the loop to do the ping-pong
   GA(z1,zt,zn,r-1,1+s); zu=CAV(z1);  // allocate ping-pong output area for f/
   z=nn&1?z:z1;  // If the number of items is odd, the final result is in original zv, otherwise original zu

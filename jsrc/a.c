@@ -68,7 +68,7 @@ F1(jtbdot){A b,h=0;I j=0,n,*v;
   GAT0(b,B01,64,2); AS(b)[0]=16; AS(b)[1]=4; MC(AV(b),booltab,64L);
   RZ(h=rifvs(cant2(IX(AR(w)),from(w,b))));  // h is an array representing b.  One cell for each atom of b; cell is 4 values
   R fdef(0,CBDOT,VERB, jtbdot1,jtbdot2, 0L,w,h, VFLAGNONE, RMAX,0L,0L);
- }else switch(j){
+ }else switch(j){  // scaf can improve
   case 32: R fdef(0,CBDOT,VERB, jtbitwise1,jtbitwiserotate, 0L,w,0L, VASGSAFE|VJTFLGOK2, 0L,0L,0L);
   case 33: R fdef(0,CBDOT,VERB, jtbitwise1,jtbitwiseshift, 0L,w,0L, VASGSAFE|VJTFLGOK2, 0L,0L,0L);
   case 34: R fdef(0,CBDOT,VERB, jtbitwise1,jtbitwiseshifta, 0L,w,0L, VASGSAFE|VJTFLGOK2, 0L,0L,0L);
@@ -130,14 +130,18 @@ static A jtmemoput(J jt,I x,I y,A self,A z){A*cv,h,*hv,q;I *jv,k,m,*mv,*v;
  R z;
 }
 
+// w is an arg; result is IMIN if not memoable
+// memoable is: atomic int/bool or float with int value
 static I jtint0(J jt,A w){A x;
- if(AR(w))R IMIN;
- if(NUMERIC&AT(w))switch(UNSAFE(AT(w))){
-  case B01: R (I)BAV(w)[0];
-  case INT: R AV(w)[0];
- }
- x=pcvt(INT,w); 
- R x&&INT&AT(x)?AV(x)[0]:IMIN; 
+ if(unlikely(AR(w)))R IMIN;
+ if(unlikely(!(AT(w)&B01+INT)))w=pcvt(INT,w);
+ R w&&INT&AT(w)?BIV0(w):IMIN;
+// obsolete  if(NUMERIC&AT(w))switch(UNSAFE(AT(w))){
+// obsolete   case B01: R (I)BAV(w)[0];
+// obsolete   case INT: R AV(w)[0];
+// obsolete  }
+// obsolete  x=pcvt(INT,w); 
+// obsolete  R x&&INT&AT(x)?AV(x)[0]:IMIN; 
 }
 
 static DF1(jtmemo1){DECLF;A z;I x,y;

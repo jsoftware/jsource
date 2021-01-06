@@ -235,8 +235,8 @@ static F1(jtprimetest){A x;I t;
  t=AT(w);
  if((UI)SGNIF(t,B01X)>=(UI)AN(w))R reshape(shape(w),num(0));  // AN is 0, or t is boolean
  switch(CTTZ(t)){
-  default:             ASSERT(0,EVDOMAIN);
   case INTX:            R iprimetest(w);
+  default:             ASSERT(0,EVDOMAIN);
   case RATX: case XNUMX: R xprimetest(w);
   case FLX:  case CMPXX:
    {PUSHCCT(1.0-FUZZ) x=eq(t&FL?w:conjug(w),floor1(w)); POPCCT}

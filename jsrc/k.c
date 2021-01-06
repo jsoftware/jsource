@@ -9,7 +9,8 @@
 #define KF1(f)          B f(J jt,A w,void*yv)
 #define KF1F(f)         B f(J jt,A w,void*yv,D fuzz)  // calls that use optional fuzz
 #define KF2(f)          B f(J jt,A w,void*yv,I mode)
-#define CVCASE(a,b)     (((a)<<3)+(b))   // The main cases fit in low 8 bits of mask
+#define CVCASE(a,b)     (6*((0x28c>>(a))&7)+((0x28c>>(b))&7))   // Must distinguish 0 2 3 4 6 7->4 3 1 0 2 5  01010001100
+#define CVCASECHAR(a,b) ((3*(0x40000>>(a))+(0x40000>>(b)))&07)  // distinguish character cases - note last case is impossible (equal types)
 
 // FEQ/FIEQ are used in bcvt, where FUZZ may be set to 0 to ensure only exact values are demoted to lower precision
 #define FEQ(u,v,fuzz)    (ABS((u)-(v))<=fuzz*MAX(ABS(u),ABS(v)))
@@ -281,35 +282,42 @@ static B jtDXfI(J jt,I p,A w,DX*x){A y;I b,c,d,dd,e,i,m,n,q,r,*wv,*yv;
 // Calls through bcvt are tagged with a flag in jt, indicating to set fuzz=0
 B jtccvt(J jt,I tflagged,A w,A*y){F1PREFIP;A d;I n,r,*s,wt; void *wv,*yv;I t=tflagged&NOUN;
  ARGCHK1(w);
- r=AR(w); s=AS(w);
- if(unlikely(((t|AT(w))&SPARSE)!=0)){
+ r=AR(w); s=AS(w); wt=AT(w); n=AN(w);
+ if(unlikely(((t|wt)&SPARSE+BOX+SBT)!=0)){
+  // Unusual cases: box, ticker, sparse.
   // Handle sparse
-  RANK2T oqr=jt->ranks; RESETRANK; 
-  switch((t&SPARSE?2:0)+(AT(w)&SPARSE?1:0)){I t1;P*wp,*yp;
-  case 1: RZ(w=denseit(w)); break;  // sparse to dense
-  case 2: RZ(*y=sparseit(cvt(DTYPE(t),w),IX(r),cvt(DTYPE(t),num(0)))); jt->ranks=oqr; R 1;  // dense to sparse; convert type first (even if same dtype)
-  case 3: // sparse to sparse
-   t1=DTYPE(t);
-   GASPARSE(*y,t,1,r,s); yp=PAV(*y); wp=PAV(w);
-   SPB(yp,a,ca(SPA(wp,a)));
-   SPB(yp,i,ca(SPA(wp,i)));
-   SPB(yp,e,cvt(t1,SPA(wp,e)));
-   SPB(yp,x,cvt(t1,SPA(wp,x)));
-   jt->ranks=oqr; R 1;
+  if(likely((t|wt)&SPARSE)){
+   RANK2T oqr=jt->ranks; RESETRANK; 
+   switch((t&SPARSE?2:0)+(AT(w)&SPARSE?1:0)){I t1;P*wp,*yp;
+   case 1: RZ(w=denseit(w)); break;  // sparse to dense
+   case 2: RZ(*y=sparseit(cvt(DTYPE(t),w),IX(r),cvt(DTYPE(t),num(0)))); jt->ranks=oqr; R 1;  // dense to sparse; convert type first (even if same dtype)
+   case 3: // sparse to sparse
+    t1=DTYPE(t);
+    GASPARSE(*y,t,1,r,s); yp=PAV(*y); wp=PAV(w);
+    SPB(yp,a,ca(SPA(wp,a)));
+    SPB(yp,i,ca(SPA(wp,i)));
+    SPB(yp,e,cvt(t1,SPA(wp,e)));
+    SPB(yp,x,cvt(t1,SPA(wp,x)));
+    jt->ranks=oqr; R 1;
+   }
+   // must be sparse to dense.  Carry on now that w is dense
+   jt->ranks=oqr;
+  }else{
+   // conversion of BOXED or SBT.  Types better be equal
+   ASSERT(n==0||TYPESEQ(t,wt),EVDOMAIN)
+   // fall through to make clone
   }
-  jt->ranks=oqr;
  }
- // Now known to be non-sparse
- n=AN(w); wt=AT(w);
+ // Now known to be non-sparse, and numeric or literal except when empty or BOX or SBT not being changed
  // If type is already correct, return a clone - used to force a copy.  Should get rid of this kludge
- if(TYPESEQ(t,wt)){RZ(*y=ca(w)); R 1;}
+ if(TYPESEQ(t,AT(w))){RZ(*y=ca(w)); R 1;}
  // else if(n&&t&JCHAR){ASSERT(HOMO(t,wt),EVDOMAIN); RZ(*y=uco1(w)); R 1;}
  // Kludge on behalf of result assembly: we want to be able to stop converting after the valid cells.  If NOUNCVTVALIDCT is set in the type,
  // we use the input *y as as override on the # cells to convert.  We use it to replace n (for use here) and yv, and AK(w) and AN(w) for the subroutines.
  // If NOUNCVTVALIDCT is set, w is modified: the caller must restore AN(w) and AK(w) if it needs it
  // TODO: same-length conversion could be done in place
  GA(d,t,n,r,s); yv=voidAV(d);  // allocate the same # atoms, even if we will convert fewer
- if(tflagged&NOUNCVTVALIDCT){
+ if(unlikely(tflagged&NOUNCVTVALIDCT)){
   I inputn=*(I*)y;  // fetch input, in case it is called for
   if(inputn>0){  // if converting the leading values, just update the counts
    n=inputn;  // set the counts for local use, and in the block to be converted
@@ -323,30 +331,32 @@ B jtccvt(J jt,I tflagged,A w,A*y){F1PREFIP;A d;I n,r,*s,wt; void *wv,*yv;I t=tfl
  // If n and AN have been modified, it doesn't matter for rank-1 arguments whether the shape of the result is listed as n or s[0] since only n atoms will
  // be used.  For higher ranks, we need the shape from s.  So it's just as well that we take the shape from s now
  *y=d;  wv=voidAV(w); // return the address of the new block
- if(t&CMPX)fillv(t,n,(C*)yv);   // why??  just fill in imaginary parts as we need to
+ if(unlikely(t&CMPX))fillv(t,n,(C*)yv);   // why??  just fill in imaginary parts as we need to
  if(!n)R 1;
  // Perform the conversion based on data types
- // For branch-table efficiency, we split the C2T and C4T and BIT conversions into one block, and
+ // For branch-table efficiency, we split the literal conversions into one block, and
  // the rest in another
- if ((t|wt)&(C2T+C4T+BIT+SBT+XD+XZ)) {   // there are no SBT+XD+XZ conversions, but we have to show domain error
-   // we must account for all NOUN types.  Low 8 bits have most of them, and we know type can't be sparse.  This picks up the others
-  ASSERT(!((t|wt)&(SBT+XD+XZ)),EVDOMAIN);  // No conversions for these types
-  switch (CVCASE(CTTZ(t),CTTZ(wt))){
-   case CVCASE(LITX, C2TX): R C1fromC2(w, yv);
-   case CVCASE(LITX, C4TX): R C1fromC4(w, yv);
-   case CVCASE(C2TX, LITX): R C2fromC1(w, yv);
-   case CVCASE(C2TX, C4TX): R C2fromC4(w, yv);
-   case CVCASE(C4TX, LITX): R C4fromC1(w, yv);
-   case CVCASE(C4TX, C2TX): R C4fromC2(w, yv);
+ if(unlikely((t|wt)&(LIT+C2T+C4T+BIT+SBT+XD+XZ))) {   // there are no SBT+XD+XZ conversions, but we have to show domain error
+   // one of the types is literal.
+   // we must account for all NOUN types.  If there is a non-char, that's an error
+  ASSERT(!((t|wt)&(SBT+XD+XZ+NUMERIC+BOX)),EVDOMAIN);  // No conversions for these types
+  switch (CVCASECHAR(CTTZ(t),CTTZ(wt))){
+   case CVCASECHAR(LITX, C2TX): R C1fromC2(w, yv);
+   case CVCASECHAR(LITX, C4TX): R C1fromC4(w, yv);
+   case CVCASECHAR(C2TX, LITX): R C2fromC1(w, yv);
+   case CVCASECHAR(C2TX, C4TX): R C2fromC4(w, yv);
+   case CVCASECHAR(C4TX, LITX): R C4fromC1(w, yv);
+   case CVCASECHAR(C4TX, C2TX): R C4fromC2(w, yv);
 #if 0  // bit types
-   case CVCASE(BITX, B01X): R cvt2bit(w, yv);
-   case CVCASE(BITX, INTX): R cvt2bit(w, yv);
-   case CVCASE(BITX, FLX): R cvt2bit(w, yv);
-   case CVCASE(BITX, CMPXX): GATV(d, FL, n, r, s); if(!(DfromZ(w, AV(d))))R 0; R cvt2bit(d, yv);
+   case CVCASECHAR(BITX, B01X): R cvt2bit(w, yv);
+   case CVCASECHAR(BITX, INTX): R cvt2bit(w, yv);
+   case CVCASECHAR(BITX, FLX): R cvt2bit(w, yv);
+   case CVCASECHAR(BITX, CMPXX): GATV(d, FL, n, r, s); if(!(DfromZ(w, AV(d))))R 0; R cvt2bit(d, yv);
 #endif
    default:                ASSERT(0, EVDOMAIN);
   }
  }
+ // types here must both be among B01 INT FL CMPX XNUM RAT
  switch (CVCASE(CTTZ(t),CTTZ(wt))){
   case CVCASE(INTX, B01X): {I*x = yv; B*v = (B*)wv; DQ(n, *x++ = *v++;); } R 1;
   case CVCASE(XNUMX, B01X): R XfromB(w, yv);

@@ -256,13 +256,14 @@ static F1X(jtlnoun){F1PREFIP;I t;
  if(unlikely((t&SPARSE)!=0))R lsparse(w);
  if(!AN(w))R lnoun0(w);
  switch(CTTZ(t)){
-  case LITX: R lchar(w);
-  case C2TX: R over(cstr("u: "),lnum(uco2(num(3),w)));
-  case C4TX: R over(cstr("10&u: "),lnum(uco2(num(3),w)));
-  case BOXX: R lbox(w);
-  case SBTX: R over(cstr("s: "),lbox(sb2(num(5),w)));
-  default:  R lnum(w);
-}}
+ default:  R lnum(w);
+ case LITX: R lchar(w);
+ case C2TX: R over(cstr("u: "),lnum(uco2(num(3),w)));
+ case C4TX: R over(cstr("10&u: "),lnum(uco2(num(3),w)));
+ case BOXX: R lbox(w);
+ case SBTX: R over(cstr("s: "),lbox(sb2(num(5),w)));
+ }
+}
 
 static A jtlsymb(J jt,C c,A w,A *ltext){F1PREFIP;A t;C buf[20],d,*s;I*u;V*v=FAV(w);
  if(VDDOP&v->flag){

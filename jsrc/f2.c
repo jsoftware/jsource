@@ -133,26 +133,28 @@ static B jtfmtq(J jt,B e,I m,I d,C*s,I t,Q*wv,A*cellbuf){B b;C*v=CAV1(*cellbuf);
 // CAV1(*cellbuf)->output area
 static void jtfmt1(J jt,B e,I m,I d,C*s,I t,C*wv,A*cellbuf){D y;
  switch(CTTZNOFLAG(t)){
-  case B01X:  sprintf(CAV1(*cellbuf),s,(D)*wv);     break;
-  case INTX:;
+ case INTX:;
 #if SY_64
-   // If I is 64 bits, and the format string ends with '.0f', change the format to lld
-   C *fldend; for(fldend=s;*fldend!='d'&&*fldend!='f'&&*fldend!='e';++fldend);  // find end-of-field
-   if(fldend[0]=='f'&&fldend[-1]=='0'&&fldend[-2]=='.'){fldend[-2]='l'; fldend[-1]='l'; fldend[0]='d';}
-   // If I is 64 bits and the format string ends with 'd', use integer; otherwise use float
-   if(fldend[0]=='d'){sprintf(CAV1(*cellbuf),s,*(I*)wv); break;}
+  // If I is 64 bits, and the format string ends with '.0f', change the format to lld
+  C *fldend; for(fldend=s;*fldend!='d'&&*fldend!='f'&&*fldend!='e';++fldend);  // find end-of-field
+  if(fldend[0]=='f'&&fldend[-1]=='0'&&fldend[-2]=='.'){fldend[-2]='l'; fldend[-1]='l'; fldend[0]='d';}
+  // If I is 64 bits and the format string ends with 'd', use integer; otherwise use float
+  if(fldend[0]=='d'){sprintf(CAV1(*cellbuf),s,*(I*)wv); break;}
 #endif
-   sprintf(CAV1(*cellbuf),s,(D)*(I*)wv);
-   break;
-  case XNUMX: fmtx(e,m,d,s,t,(X*)wv,cellbuf);          break;
-  case RATX:  fmtq(e,m,d,s,t,(Q*)wv,cellbuf);          break;
-  default:
-   y=*(D*)wv; y=y?y:0.0;  /* -0 to 0 */
-   if     (!memcmpne(wv,&inf, SZD))strcpy(CAV1(*cellbuf),e?"  _" :' '==s[0]?" _" :"_" );
-   else if(!memcmpne(wv,&infm,SZD))strcpy(CAV1(*cellbuf),e?" __" :' '==s[0]?" __":"__");
-   else if(_isnan(*(D*)wv)      )strcpy(CAV1(*cellbuf),e?"  _.":' '==s[0]?" _.":"_.");
-   else sprintf(CAV1(*cellbuf),s,y);
-}}   /* format one number */
+  sprintf(CAV1(*cellbuf),s,(D)*(I*)wv);
+  break;
+ case B01X:  sprintf(CAV1(*cellbuf),s,(D)*wv);     break;
+ case XNUMX: fmtx(e,m,d,s,t,(X*)wv,cellbuf);          break;
+ case RATX:  fmtq(e,m,d,s,t,(Q*)wv,cellbuf);          break;
+ default:
+  y=*(D*)wv; y=y?y:0.0;  /* -0 to 0 */
+  if     (!memcmpne(wv,&inf, SZD))strcpy(CAV1(*cellbuf),e?"  _" :' '==s[0]?" _" :"_" );
+  else if(!memcmpne(wv,&infm,SZD))strcpy(CAV1(*cellbuf),e?" __" :' '==s[0]?" __":"__");
+  else if(_isnan(*(D*)wv)      )strcpy(CAV1(*cellbuf),e?"  _.":' '==s[0]?" _.":"_.");
+  else sprintf(CAV1(*cellbuf),s,y);
+  break;
+ }
+}   /* format one number */
 
 // format a fixed-size column.  See th2a for description of most values
 //  zk stride between result areas, in bytes

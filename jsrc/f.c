@@ -67,10 +67,11 @@ static FMTF(jtfmtZ,Z){fmtD(s,&v->re); if(v->im){I k=strlen(s); s[k]='j'; fmtD(&s
 
 static void thcase(I t,I*wd,FMTFUN *fmt){
  switch(CTTZ(t)){
-  case CMPXX: *wd=WZ; *fmt=jtfmtZ; break;
   case FLX:   *wd=WD; *fmt=jtfmtD; break;
+  case CMPXX: *wd=WZ; *fmt=jtfmtZ; break;
   default:   *wd=WI; *fmt=jtfmtI;
-}}
+ }
+}
 
 // copy numeric string to error line.  Values in w, n/s = len/addr of output buffer
 // negative n means 'decorate the result to show precision'
@@ -78,10 +79,6 @@ I jtthv(J jt,A w,I n,C*s){A t;B ov=0;C buf[WZ],*x,*y=s;I k,n4=n-4,p,wd,wn,wt;FMT
  RZ(w&&n);
  wn=AN(w); wt=AT(w); x=CAV(w); thcase(wt,&wd,&fmt);
  switch(CTTZNOFLAG(wt)){
- case XNUMX: case RATX:
-  RZ(t=thxqe(w)); p=AN(t); if(ov=n<p)p=n4; MC(y,AV(t),p); y+=p; break;
- case B01X:
-  if(ov=n<2*wn)p=n4>>1; else p=wn; DQ(p, *y++=*x++?'1':'0'; *y++=' ';); break;
  case INTX:
  	{C*t;I i,*v,x;
   	v=AV(w);
@@ -93,10 +90,15 @@ I jtthv(J jt,A w,I n,C*s){A t;B ov=0;C buf[WZ],*x,*y=s;I k,n4=n-4,p,wd,wn,wt;FMT
   	}
   }
   break;
+ case XNUMX: case RATX:
+  RZ(t=thxqe(w)); p=AN(t); if(ov=n<p)p=n4; MC(y,AV(t),p); y+=p; break;
+ case B01X:
+  if(ov=n<2*wn)p=n4>>1; else p=wn; DQ(p, *y++=*x++?'1':'0'; *y++=' ';); break;
  default:
   k=bpnoun(wt);
   if(n>=wn*wd)DQ(wn, fmt(jt,y,x); y+=strlen(y); *y++=' '; x+=k;)
   else        DQ(wn, fmt(jt,buf,x); p=strlen(buf); if(ov=n4<1+p+y-s)break; strcpy(y,buf); y+=p; *y++=' '; x+=k;);
+  break;
  }
  if(ov){if(' '!=y[-1])*y++=' '; memset(y,'.',3L); y+=3;}
  else if(' '==y[-1])--y; 
@@ -543,6 +545,8 @@ static A jtthorn1main(J jt,A w,A prxthornuni){PROLOG(0001);A z;
  ARGCHK1(w);
  if(!AN(w))GATV(z,LIT,0,AR(w),AS(w))
  else switch(CTTZ(AT(w))){
+  case INTX:  case FLX: case CMPXX:
+             z=thn(w);                    break;
 #ifdef UNDER_CE
   default:   if(AT(w)&XD+XZ)z=thxqe(w); else R 0; break;
   case XNUMX: case RATX:
@@ -586,8 +590,6 @@ static A jtthorn1main(J jt,A w,A prxthornuni){PROLOG(0001);A z;
   case SBTX:  z=thsb(w,prxthornuni);                   break;
   case NAMEX: z=sfn(0,w);                  break;
   case ASGNX: z=spellout(CAV(w)[0]);         break;
-  case INTX:  case FLX: case CMPXX:
-             z=thn(w);                    break;
   case SB01X: case SINTX: case SFLX: case SCMPXX: case SLITX: case SBOXX:
              z=ths(w);                    break;
   case VERBX: case ADVX:  case CONJX:

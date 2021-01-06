@@ -549,9 +549,10 @@ static DF1(jtreducesp){A a,g,z;B b;I f,n,r,*v,wn,wr,*ws,wt,zt;P*wp;
                          btab[C_LE?  1:256]=F(1,0); \
                          btab[257                      ]=F(1,1); \
                         }
-#define BR2CASE(t,id)   ((id)+256*(t))
-
-static B jtreduce2(J jt,A w,C id,I f,I r,A*zz){A z=0;B b=0,btab[258],*zv;I c,d,m,wn,wr,*ws,*wv;
+// obsolete #define BR2CASE(t,id)   ((id)+256*(t))
+#define BR2CASE(t,id)   (((id)*7)+((0x160008>>(t))&7))  // unique inputs are 0 1 2 3 16 17 18-> 0 4 2 1 6 3 5    10110 .... .... .... 1000
+// handle reduction along final axis of length 2.  Return result block if we can handle the combination, otherwise 1; or 0 if we hit an error
+static A jtreduce2(J jt,A w,C id,I f,I r){A z=(A)1;B b=0,btab[258],*zv;I c,d,m,wn,wr,*ws,*wv;
  wn=AN(w); wr=AR(w); ws=AS(w); wv=AV(w);
  PROD(m,f,ws); PROD(c,r,f+ws); d=c>>1;
  switch(BR2CASE(CTTZ(AT(w)),id)){
@@ -594,10 +595,10 @@ static B jtreduce2(J jt,A w,C id,I f,I r,A*zz){A z=0;B b=0,btab[258],*zv;I c,d,m
   case BR2CASE(FLX, CNE     ): BR2PFX(D,TNE); break;
  }
  if(b){S*u=(S*)wv; GATV(z,B01,wn>>1,wr-1,ws); zv=BAV(z); DQ(m, *zv++=btab[*u++];);}
- if(z&&1<r){I*u=f+AS(z),*v=f+1+ws; DQ(r-1, *u++=*v++;);}
- *zz=z;
- R 1;
-}    /* f/"r for dense w over an axis of length 2 */
+// obsolete  if(z&&1<r){I*u=f+AS(z),*v=f+1+ws; DQ(r-1, *u++=*v++;);}
+// obsolete  *zz=z;
+ R z;
+}    /* f/"r for dense w over an axis of length 2; boolean results only */
 
 static DF1(jtreduce){A z;I d,f,m,n,r,t,wr,*ws,zt;
  F1PREFIP;ARGCHK1(w);
@@ -606,45 +607,48 @@ static DF1(jtreduce){A z;I d,f,m,n,r,t,wr,*ws,zt;
  // Create  r: the effective rank; f: length of frame; n: # items in a CELL of w
  r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; SETICFR(w,f,r,n);  // no RESETRANK
  // Handle the special cases: neutrals, single items
- if(n>1){
-  // Normal case, >1 item.
-  // The case of empty w is interesting, because the #cells, and the #atoms in an item of a cell, may both overflow if
-  // n=0.  But we have handled that case above.  If n is not 0, there may be other zeros in the shape that allow
-  // an overflow when an infix of the shape is multiplied; but that won't matter because the other 0 will guarantee that there
-  // are no atoms written
-  I wt=AT(w); wt=AN(w)?wt:B01;   // Treat empty as Boolean type
+ I wt=AT(w); wt=AN(w)?wt:B01;   // Treat empty as Boolean type
 
-  // Normal processing for multiple items.  Get the routine & flags to process it
-  VARPS adocv; varps(adocv,self,wt,0);
-  // If there is no special routine, go perform general reduce
-  if(!adocv.f)R redg(w,self);  // jt->ranks is still set.  redg will clear the ranks
-  // Here for primitive reduce handled by special code.
-  // Calculate m: #cells of w to operate on; d: #atoms in an item of a cell of w (a cell to which u is applied);
-  // zn: #atoms in result
-  PROD(d,r-1,f+ws+1);  //  */ }. $ cell
-  // m=*/ frame (i. e. #cells to operate on)
-  // r cannot be 0 (would be handled above).  Calculate low part of zn first
-  PROD(m,f,ws);
-  RESETRANK;   // clear rank now that we've used it - not really required here?
-  // Allocate the result area
-  zt=rtype(adocv.cv);
-  GA(z,zt,m*d,MAX(0,wr-1),ws); if(1<r)MCISH(f+AS(z),f+1+ws,r-1);  // allocate, and install shape
-  if(m*d==0){RETF(z);}  // mustn't call the function on an empty argument!
-  // Convert inputs if needed 
-  if((t=atype(adocv.cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));
-  // call the selected reduce routine.
+ if(unlikely(n<=2)){
+  if(unlikely(n==1))R head(w);   // 1 item: the result is the item.  Rank is still set
+  if(unlikely(n==0))R red0(w,self);  // 0 item: return a neutral
+  if(unlikely(r==1))if(likely(wt&B01+LIT+INT+FL+SBT+C2T+C4T)){  // 2 items: special processing only if the operation is on rank 1: then we avoid loop overheads
+   C id=FAV(FAV(self)->fgh[0])->id; 
+   if(unlikely(BETWEENC(id,CSTARCO,CMAX))){  // only boolean results are supported
+    if((z=jtreduce2(jt,w,id,f,r))!=(A)1)R z;  // try the fast routine, continue on if it doesn't take the operation.  Return if error
+   }
+  }  // fall through for 2 items that can't be handled specially
+ }
+ // Normal case, >1 item.
+ // The case of empty w is interesting, because the #cells, and the #atoms in an item of a cell, may both overflow if
+ // n=0.  But we have handled that case above.  If n is not 0, there may be other zeros in the shape that allow
+ // an overflow when an infix of the shape is multiplied; but that won't matter because the other 0 will guarantee that there
+ // are no atoms written
+
+ // Normal processing for multiple items.  Get the routine & flags to process it
+ VARPS adocv; varps(adocv,self,wt,0);
+ // If there is no special routine, go perform general reduce
+ if(!adocv.f)R redg(w,self);  // jt->ranks is still set.  redg will clear the ranks
+ // Here for primitive reduce handled by special code.
+ // Calculate m: #cells of w to operate on; d: #atoms in an item of a cell of w (a cell to which u is applied);
+ // zn: #atoms in result
+ PROD(d,r-1,f+ws+1);  //  */ }. $ cell
+ // m=*/ frame (i. e. #cells to operate on)
+ // r cannot be 0 (would be handled above).  Calculate low part of zn first
+ PROD(m,f,ws);
+ RESETRANK;   // clear rank now that we've used it - not really required here?
+ // Allocate the result area
+ zt=rtype(adocv.cv);
+ GA(z,zt,m*d,MAX(0,wr-1),ws); if(1<r)MCISH(f+AS(z),f+1+ws,r-1);  // allocate, and install shape
+ if(m*d==0){RETF(z);}  // mustn't call the function on an empty argument!
+ // Convert inputs if needed 
+ if((t=atype(adocv.cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));
+ // call the selected reduce routine.
   I rc=((AHDRRFN*)adocv.f)(d,n,m,AV(w),AV(z),jt);
-  // if return is EWOV, it's an integer overflow and we must restart, after restoring the ranks
-  // EWOV1 means that there was an overflow on a single result, which was calculated accurately and stored as a D.  So in that case all we
-  // have to do is change the type of the result.
-  if(255&rc){if(jt->jerr==EWOV1){AT(z)=FL;RETF(z);}else {jsignal(rc); RETF(rc>=EWOV?IRS1(w,self,r,jtreduce,z):0);}} else {RETF(adocv.cv&VRI+VRD?cvz(adocv.cv,z):z);}
-
-  // special cases:
- }else if(n==1)R head(w);    // reduce on single items - ranks are still set
- else R red0(w,self);    // 0 items - neutrals - ranks are still set
-
-
-
+ // if return is EWOV, it's an integer overflow and we must restart, after restoring the ranks
+ // EWOV1 means that there was an overflow on a single result, which was calculated accurately and stored as a D.  So in that case all we
+ // have to do is change the type of the result.
+ if(255&rc){if(jt->jerr==EWOV1){AT(z)=FL;RETF(z);}else {jsignal(rc); RETF(rc>=EWOV?IRS1(w,self,r,jtreduce,z):0);}} else {RETF(adocv.cv&VRI+VRD?cvz(adocv.cv,z):z);}
 }    /* f/"r w main control */
 
 static A jtredcatsp(J jt,A w,A z,I r){A a,q,x,y;B*b;I c,d,e,f,j,k,m,n,n1,p,*u,*v,wr,*ws,xr;P*wp,*zp;

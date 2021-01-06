@@ -17,16 +17,22 @@ static B jtselfq(J jt,A w){A hs,*u;V*v;
  ARGCHK1(w);
  if(AT(w)&NOUN+NAME)R 0;
  v=FAV(w);
- switch(v->id){
-  case CSELF:  
-   R 1;
-  case CATDOT:
-  case CGRCO:
-   if(hs=v->fgh[2]){u=AAV(hs); DO(AN(hs), if(selfq(u[i]))R 1;);}
-   R 0;
-  default:
-   DO(3, if(v->fgh[i]&&selfq(v->fgh[i]))R 1;)
+ if(unlikely(BETWEENC(v->id,CATDOT,CSELF))){
+  if(v->id==CSELF)R 1;  // found!
+  if(hs=v->fgh[2]){u=AAV(hs); DO(AN(hs), if(selfq(u[i]))R 1;);}  // @. or `: - traverse the gerund
+ }else{
+  DO(3, if(v->fgh[i]&&selfq(v->fgh[i]))R 1;)  // anything else - traverse
  }
+// obsolete  switch(v->id){
+// obsolete   default:  // normal case
+// obsolete    DO(3, if(v->fgh[i]&&selfq(v->fgh[i]))R 1;) break;
+// obsolete   case CSELF:  
+// obsolete    R 1;
+// obsolete   case CATDOT:
+// obsolete   case CGRCO:
+// obsolete    if(hs=v->fgh[2]){u=AAV(hs); DO(AN(hs), if(selfq(u[i]))R 1;);}
+// obsolete    R 0;
+// obsolete  }
  R 0;
 }    /* 1 iff w contains $: */
 
@@ -36,6 +42,8 @@ B jthasimploc(J jt,A w){A hs,*u;V*v;
  if(AT(w)&NOUN+NAME)R 0;
  v=FAV(w);
  switch(v->id){
+  default:     
+   DO(3, if(v->fgh[i]&&hasimploc(v->fgh[i]))R 1;) break;
   case CUDOT: case CVDOT:
    R 1;  // these are always implicit locatives
   case CTILDE: ;
@@ -51,8 +59,6 @@ B jthasimploc(J jt,A w){A hs,*u;V*v;
   case CGRCO:
    if(hs=v->fgh[2]){u=AAV(hs); DO(AN(hs), if(hasimploc(u[i]))R 1;);}
    R 0;
-  default:     
-   DO(3, if(v->fgh[i]&&hasimploc(v->fgh[i]))R 1;)
  }
  R 0;
 }
@@ -85,98 +91,98 @@ static A jtfixa(J jt,A a,A w){A f,g,h,wf,x,y,z=w;V*v;fauxblock(fauxself); A aa; 
  v=VAV(w); f=v->fgh[0]; g=v->fgh[1]; h=v->fgh[2]; wf=ds(v->id); I na=ai==0?3:ai;
  if(!(((I)f|(I)g)||((v->id&-2)==CUDOT)))R w;  // combinations always have f or g; and u./v. must be replaced even though it doesn't
  switch(v->id){
-  case CSLASH: 
-   R df1(z,REFIXA(2,f),wf);
-  case CSLDOT: case CBSLASH: case CBSDOT:
-   R df1(z,REFIXA(1,f),wf);
-  case CAT: case CATCO: case CCUT:
-   f=REFIXA(1,f); g=REFIXA(na,g); R df2(z,f,g,wf);
-  case CAMP: case CAMPCO: case CUNDER: case CUNDCO:
-   f=REFIXA(na,f); g=REFIXA(1,g); R df2(z,f,g,wf);
-  case CCOLON:
-   // n : n had VFIX set & never gets here
-   if(v->flag&VXOPR){
-    // operator: fix the operands and rebuild.  If the operator is a pseudo-name, we have to fish the actual operator block out of h
-    if(!f){v=VAV(h); f=v->fgh[0]; g=v->fgh[1]; h=v->fgh[2]; wf=ds(v->id);}
-    f=REFIXA(0,f); h=REFIXA(0,h); R xop2(f,h,g);
-   }
-   else{f=REFIXA(1,f); g=REFIXA(2,g); R df2(z,f,g,wf);}  // v : v, similarly
-  case CADVF:
-   f=REFIXA(3,f); g=REFIXA(3,g); R hook(f,g);
-  case CHOOK:
-   f=REFIXA(2,f); g=REFIXA(1,g); R hook(f,g);
-  case CFORK:
-   f=REFIXA(na,f); g=REFIXA(ID(f)==CCAP?1:2,g); h=REFIXA(na,h); R folk(f,g,h);  // f first in case it's [:
-  case CATDOT:
-  case CGRCO:
-   IAV(aa)[0]=(aif|na);
+ case CSLASH: 
+  R df1(z,REFIXA(2,f),wf);
+ case CSLDOT: case CBSLASH: case CBSDOT:
+  R df1(z,REFIXA(1,f),wf);
+ case CAT: case CATCO: case CCUT:
+  f=REFIXA(1,f); g=REFIXA(na,g); R df2(z,f,g,wf);
+ case CAMP: case CAMPCO: case CUNDER: case CUNDCO:
+  f=REFIXA(na,f); g=REFIXA(1,g); R df2(z,f,g,wf);
+ case CCOLON:
+  // n : n had VFIX set & never gets here
+  if(v->flag&VXOPR){
+   // operator: fix the operands and rebuild.  If the operator is a pseudo-name, we have to fish the actual operator block out of h
+   if(!f){v=VAV(h); f=v->fgh[0]; g=v->fgh[1]; h=v->fgh[2]; wf=ds(v->id);}
+   f=REFIXA(0,f); h=REFIXA(0,h); R xop2(f,h,g);
+  }
+  else{f=REFIXA(1,f); g=REFIXA(2,g); R df2(z,f,g,wf);}  // v : v, similarly
+ case CADVF:
+  f=REFIXA(3,f); g=REFIXA(3,g); R hook(f,g);
+ case CHOOK:
+  f=REFIXA(2,f); g=REFIXA(1,g); R hook(f,g);
+ case CFORK:
+  f=REFIXA(na,f); g=REFIXA(ID(f)==CCAP?1:2,g); h=REFIXA(na,h); R folk(f,g,h);  // f first in case it's [:
+ case CATDOT:
+ case CGRCO:
+  IAV(aa)[0]=(aif|na);
 // obsolete    RZ(f=every(every2(sc(aif|na),h,(A)&arofixaself),(A)&arofixaself)); // full A block required for call
-   RZ(f=every(every2(aa,h,(A)&arofixaself),(A)&arofixaself)); // full A block required for call
-   RZ(g=REFIXA(na,g));
-   R df2(z,f,g,wf);
-  case CIBEAM:
-   if(f)RZ(f=REFIXA(na,f));
-   if(g)RZ(g=REFIXA(na,g));
-   R f&&g ? (VDDOP&v->flag?df2(z,f,g,df2(x,head(h),tail(h),wf)):df2(z,f,g,wf)) : 
-            (VDDOP&v->flag?df1(z,f,  df2(x,head(h),tail(h),wf)):df1(z,f,  wf)) ;
-  case CUDOT:
-   R REFIXA(ai,JT(jt,implocref)[0]);  // u. is equivalent to 'u.'~ for fix purposes
-  case CVDOT:
-   R REFIXA(ai,JT(jt,implocref)[1]);
-  case CTILDE:
-   if(f&&NAME&AT(f)){
-    RZ(y=sfn(0,f));
+  RZ(f=every(every2(aa,h,(A)&arofixaself),(A)&arofixaself)); // full A block required for call
+  RZ(g=REFIXA(na,g));
+  R df2(z,f,g,wf);
+ case CIBEAM:
+  if(f)RZ(f=REFIXA(na,f));
+  if(g)RZ(g=REFIXA(na,g));
+  R f&&g ? (VDDOP&v->flag?df2(z,f,g,df2(x,head(h),tail(h),wf)):df2(z,f,g,wf)) : 
+           (VDDOP&v->flag?df1(z,f,  df2(x,head(h),tail(h),wf)):df1(z,f,  wf)) ;
+ case CUDOT:
+  R REFIXA(ai,JT(jt,implocref)[0]);  // u. is equivalent to 'u.'~ for fix purposes
+ case CVDOT:
+  R REFIXA(ai,JT(jt,implocref)[1]);
+ case CTILDE:
+  if(f&&NAME&AT(f)){
+   RZ(y=sfn(0,f));
 // obsolete     if(all1(eps(box(y),jt->fxpath)))R w;  // break out of loop if recursive name lookup
-    if(all1(eps(box(y),(A)IAV0(aa)[1])))R w;  // break out of loop if recursive name lookup
+   if(all1(eps(box(y),(A)IAV0(aa)[1])))R w;  // break out of loop if recursive name lookup
 // obsolete     ASSERT(jt->fxi,EVLIMIT);
-    ASSERT(AN((A)IAV0(aa)[1])<248,EVLIMIT);  // error if too many names in expansion
-    // recursion check finished.  Now replace the name with its value
-    if(x=symbrdlock(f)){   // locked returns a ref to the same name
-     // if this is an implicit locative, we have to switch the environment before we recur on the name for subsequent lookups
-     // The value we get from the lookup must be interpreted in the environment of the higher level
-     A savloc=jt->locsyms;  // initial locales
-     A thisname=v->fgh[0];// the A block for the name of the function (holding an NM) - unless it's a pseudo-name
-     if(thisname){ // name given
-      NM* thisnameinfo=NAV(thisname);  // the NM block for the current name
-      if(thisnameinfo->flag&NMIMPLOC){ L *stabent; //  implicit locative
-       if((stabent = probelocal(thisname,jt->locsyms))){  // name is defined
-        // If our ONLY mission is to replace implicit locatives, we are finished after replacing this locative IF
-        // (1) we want to replace only first-level locatives; (2) there are no more locatives in this branch after the replacement
-        if(aif&FIXALOCSONLYLOWEST)R x;  // return looked-up value once we hit one
-        // If we have to continue after the replacement, we must do so in the environment of the implicit locative.
-        SYMRESTOREFROMLOCAL((A)AM(jt->locsyms));
-        // NO FAILURES ALLOWED FROM HERE TO RESTORE
-       }
+   ASSERT(AN((A)IAV0(aa)[1])<248,EVLIMIT);  // error if too many names in expansion
+   // recursion check finished.  Now replace the name with its value
+   if(x=symbrdlock(f)){   // locked returns a ref to the same name
+    // if this is an implicit locative, we have to switch the environment before we recur on the name for subsequent lookups
+    // The value we get from the lookup must be interpreted in the environment of the higher level
+    A savloc=jt->locsyms;  // initial locales
+    A thisname=v->fgh[0];// the A block for the name of the function (holding an NM) - unless it's a pseudo-name
+    if(thisname){ // name given
+     NM* thisnameinfo=NAV(thisname);  // the NM block for the current name
+     if(thisnameinfo->flag&NMIMPLOC){ L *stabent; //  implicit locative
+      if((stabent = probelocal(thisname,jt->locsyms))){  // name is defined
+       // If our ONLY mission is to replace implicit locatives, we are finished after replacing this locative IF
+       // (1) we want to replace only first-level locatives; (2) there are no more locatives in this branch after the replacement
+       if(aif&FIXALOCSONLYLOWEST)R x;  // return looked-up value once we hit one
+       // If we have to continue after the replacement, we must do so in the environment of the implicit locative.
+       SYMRESTOREFROMLOCAL((A)AM(jt->locsyms));
+       // NO FAILURES ALLOWED FROM HERE TO RESTORE
       }
      }
-     // Before we recur on the contents of the name, add the name we are currently looking up to the list of encountered names
-     // so that we abort if we hit a loop.  BUT if the current name is uv defined in a higher level, it can't be part of
-     // a loop (since we are advancing the symbol pointer) and the name, which is just 'u', might well come up again; so we don't
-     // add the name to the table in that case.  NOTE bug: an indirect locative a__b, if it appeared twice, would be detected as a loop even
-     // if it evaluated to different locales
-// obsolete      if(savloc==jt->locsyms)jt->fxpv[--jt->fxi]=rifvs(y); // add name-string to list of visited names for recursion check
-     I initn=AN((A)IAV0(aa)[1]);  // save name depth coming in
-     if(savloc==jt->locsyms){AAV1((A)IAV0(aa)[1])[AN((A)IAV0(aa)[1])]=rifvs(y); AN((A)IAV0(aa)[1])++; AS((A)IAV0(aa)[1])[0]++;} // add name-string to list of visited names for recursion check
-     if(z=REFIXA(na,x)){
-      if(ai!=0&&selfq(x))z=fixrecursive(sc(ai),z);  // if a lower name contains $:, replace it with explicit equivalent
-     }
-     SYMRESTOREFROMLOCAL(savloc);  // make sure we restore current symbols
-     AN((A)IAV0(aa)[1])=AS((A)IAV0(aa)[1])[0]=initn;   // restore name count
-     RZ(z);
     }
+    // Before we recur on the contents of the name, add the name we are currently looking up to the list of encountered names
+    // so that we abort if we hit a loop.  BUT if the current name is uv defined in a higher level, it can't be part of
+    // a loop (since we are advancing the symbol pointer) and the name, which is just 'u', might well come up again; so we don't
+    // add the name to the table in that case.  NOTE bug: an indirect locative a__b, if it appeared twice, would be detected as a loop even
+    // if it evaluated to different locales
+// obsolete      if(savloc==jt->locsyms)jt->fxpv[--jt->fxi]=rifvs(y); // add name-string to list of visited names for recursion check
+    I initn=AN((A)IAV0(aa)[1]);  // save name depth coming in
+    if(savloc==jt->locsyms){AAV1((A)IAV0(aa)[1])[AN((A)IAV0(aa)[1])]=rifvs(y); AN((A)IAV0(aa)[1])++; AS((A)IAV0(aa)[1])[0]++;} // add name-string to list of visited names for recursion check
+    if(z=REFIXA(na,x)){
+     if(ai!=0&&selfq(x))z=fixrecursive(sc(ai),z);  // if a lower name contains $:, replace it with explicit equivalent
+    }
+    SYMRESTOREFROMLOCAL(savloc);  // make sure we restore current symbols
+    AN((A)IAV0(aa)[1])=AS((A)IAV0(aa)[1])[0]=initn;   // restore name count
+    RZ(z);
+   }
 // obsolete     jt->fxpv[jt->fxi++]=mtv;
-    RE(z);
-    ASSERT(PARTOFSPEECHEQ(AT(w),AT(z)),EVDOMAIN);  // if there was a change of part-of-speech during the fix, that's a pun, don't allow it
-    R z;
-   }else R df1(z,REFIXA(2,f),wf);
+   RE(z);
+   ASSERT(PARTOFSPEECHEQ(AT(w),AT(z)),EVDOMAIN);  // if there was a change of part-of-speech during the fix, that's a pun, don't allow it
+   R z;
+  }else R df1(z,REFIXA(2,f),wf);
 // bug ^: and m} should process gerund args
-  case COBVERSE:
-   if(aif&FIXASTOPATINV)R w;  // stop at obverse if told to
-   // otherwise fall through to normal processing
-  default:
-   if(f)RZ(f=REFIXA(na,f));
-   if(g)RZ(g=REFIXA(na,g));
-   R f&&g?df2(z,f,g,wf):f?df1(z,f,wf):w;
+ case COBVERSE:
+  if(aif&FIXASTOPATINV)R w;  // stop at obverse if told to
+  // otherwise fall through to normal processing
+ default:
+  if(f)RZ(f=REFIXA(na,f));
+  if(g)RZ(g=REFIXA(na,g));
+  R f&&g?df2(z,f,g,wf):f?df1(z,f,wf):w;
  }
 }   /* 0=a if fix names; 1=a if fix names only if does not contain $: */
 

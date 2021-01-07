@@ -76,7 +76,7 @@ AMONPS(factZ,  Z,Z, , *z=zgamma(zplus(z1,*x)); , HDR1JERR)
 
 static D pq(D h,D m,D*c,D*d){D x=*c,y=*d;I n=(I)MIN(m,FLIMAX);
  if(0>=m)R h;
- switch(2*(I )(0>x)+(I )(0>y)){
+ switch(2*(I )(0>x)+(I )(0>y)){  // scaf should remove switch
   case 0: if(x!= y)PQLOOP(x--/y--); break;
   case 1: if(x!=-y)PQLOOP(x--/y++)else if(m>2*jfloor(0.5*m))h=-h; break;
   case 2: if(x!=-y)PQLOOP(x++/y--)else if(m>2*jfloor(0.5*m))h=-h; break;
@@ -94,7 +94,7 @@ static D jtdbin(J jt,D x,D y){D c,d,e,h=1.0,p,q,r;I k=0;
  c=y;   if(0<=c)p=jfloor(c); else{k+=4; ++c; p=jfloor(-c);}
  d=y-x; if(0<=d)q=jfloor(d); else{k+=2; ++d; q=jfloor(-d);}
  e=x;   if(0<=e)r=jfloor(e); else{k+=1; ++e; r=jfloor(-e);}
- switch(k){
+ switch(k){  // scaf remove switch
   case 0: h=pq(h,q,&c,&d); h=pq(h,r,&c,&e);                break;
   case 1: h=pq(h,p,&c,&d); h=pq(h,r,&e,&d);           --e; break;
   case 2: h=pq(h,p,&c,&e); h=pq(h,q,&d,&e);      --d;      break;

@@ -350,7 +350,8 @@ F2(jtintdiv){A z;B b,flr;I an,ar,*as,*av,c,d,j,k,m,n,p,p1,r,*s,wn,wr,*ws,*wv,*zv
  GATV(z,INT,b?an:wn,b?ar:wr,s); zv=AV(z);
  d=wn?*wv:0; p=0<d?d:-d; p1=d==IMIN?p:p-1; flr=XMFLR==jt->xmode;
  if(!wr&&p&&!(p&p1)){
-  k=0; j=1; while(p>j){++k; j<<=1;}
+// obsolete   k=0; j=1; while(p>j){++k; j<<=1;} // 16->4 17->5 32->5
+  CTLZI(p-1,k); ++k; k=p==1?0:k;
   switch((0<d?0:2)+(flr?0:1)){
    case 0: DQ(n,          *zv++=*av++>>k;);                    break;
    case 1: DQ(n, c=*av++; *zv++=0< c?1+((c-1)>>k):(c+p1)>>k;); break;

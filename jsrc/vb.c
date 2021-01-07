@@ -215,11 +215,13 @@ F2(jtebar){PROLOG(0065);A y,z;B*zv;C*av,*wv;I c,d,i,k=0,m,n,p,*yv;
  RE(d=ebarprep(a,w,&a,&w,&c));
  av=CAV(a); m=AN(a);
  wv=CAV(w); n=AN(w); p=n-m;
- switch(d){
+ if(unlikely(d<0)){
+  switch(d){
   case -1: R reshape(shape(w),num(0));
   case -2: R ebarmat(a,w);
   case -3: R df2(z,shape(a),w,cut(amp(a,ds(CMATCH)),num(3)));
   case -4: R ebarvec(a,w);
+  }
  }
  GATV0(z,B01,n,AR(w)); zv=BAV(z); memset(zv,m==0,n); if((-m&-n)>=0)R z;  // if x empty, return all 1s
 #if C_AVX2 || EMU_AVX2
@@ -227,12 +229,12 @@ F2(jtebar){PROLOG(0065);A y,z;B*zv;C*av,*wv;I c,d,i,k=0,m,n,p,*yv;
 #endif
  GATV0(y,INT,d,1); yv= AV(y); DO(d, yv[i]=1+m;);
  switch(CTTZ(AT(w))){
-  case INTX: if(c)EBLOOP(I, u[i]-c,v[k+m]-c, zv[k]=i==m) 
+ case INTX: if(c)EBLOOP(I, u[i]-c,v[k+m]-c, zv[k]=i==m) 
             else EBLOOP(I, u[i],  v[k+m],   zv[k]=i==m); break;
-  case SBTX: if(c)EBLOOP(SB,u[i]-c,v[k+m]-c, zv[k]=i==m) 
+ case SBTX: if(c)EBLOOP(SB,u[i]-c,v[k+m]-c, zv[k]=i==m) 
             else EBLOOP(SB,u[i],  v[k+m],   zv[k]=i==m); break;
-  case C2TX:      EBLOOP(US,u[i],  v[k+m],   zv[k]=i==m); break;
-  case C4TX: if(c)EBLOOP(C4,u[i]-c,v[k+m]-c, zv[k]=i==m) 
+ case C2TX:      EBLOOP(US,u[i],  v[k+m],   zv[k]=i==m); break;
+ case C4TX: if(c)EBLOOP(C4,u[i]-c,v[k+m]-c, zv[k]=i==m) 
             else EBLOOP(C4,u[i],  v[k+m],   zv[k]=i==m); break;
 #if !C_AVX2 && !EMU_AVX2
 default:
@@ -249,21 +251,23 @@ F2(jti1ebar){A y;C*av,*wv;I c,d,i,k=0,m,n,p,*yv;
  RE(d=ebarprep(a,w,&a,&w,&c));
  av=CAV(a); m=AN(a);
  wv=CAV(w); n=AN(w); p=n-m;
- switch(d){
+ if(unlikely(d<0)){
+  switch(d){
   case -1: R sc(n);
   case -4: R indexof(ebarvec(a,w),num(1));
+ }
  }
 #if C_AVX2 || EMU_AVX2
  if(AT(w)&LIT+B01)R jtebar1C(jt, av,wv, m,n,0,3LL<<56,0);
 #endif
  GATV0(y,INT,d,1); yv= AV(y); DO(d, yv[i]=1+m;);
  switch(CTTZ(AT(w))){
-  case INTX: if(c)EBLOOP(I, u[i]-c,v[k+m]-c, if(i==m)R sc(k)) 
+ case INTX: if(c)EBLOOP(I, u[i]-c,v[k+m]-c, if(i==m)R sc(k)) 
             else EBLOOP(I, u[i],  v[k+m],   if(i==m)R sc(k)); break;
-  case SBTX: if(c)EBLOOP(SB,u[i]-c,v[k+m]-c, if(i==m)R sc(k)) 
+ case SBTX: if(c)EBLOOP(SB,u[i]-c,v[k+m]-c, if(i==m)R sc(k)) 
             else EBLOOP(SB,u[i],  v[k+m],   if(i==m)R sc(k)); break;
-  case C2TX:      EBLOOP(US,u[i],  v[k+m],   if(i==m)R sc(k)); break;
-  case C4TX: if(c)EBLOOP(C4,u[i]-c,v[k+m]-c, if(i==m)R sc(k)) 
+ case C2TX:      EBLOOP(US,u[i],  v[k+m],   if(i==m)R sc(k)); break;
+ case C4TX: if(c)EBLOOP(C4,u[i]-c,v[k+m]-c, if(i==m)R sc(k)) 
             else EBLOOP(C4,u[i],  v[k+m],   if(i==m)R sc(k)); break;
 #if !C_AVX2 && !EMU_AVX2
 default:
@@ -278,9 +282,11 @@ F2(jtsumebar){A y;C*av,*wv;I c,d,i,k=0,m,n,p,*yv,z=0;
  RE(d=ebarprep(a,w,&a,&w,&c));
  av=CAV(a); m=AN(a);
  wv=CAV(w); n=AN(w); p=n-m;
- switch(d){
+ if(unlikely(d<0)){
+  switch(d){
   case -1: R num(0);
   case -4: R aslash(CPLUS,ebarvec(a,w));
+  }
  }
  if((-m&-n)>=0){R sc(n);}  // empty argument.  If m, it matches everywhere, so use n; if n, it's 0, use it
 #if C_AVX2 || EMU_AVX2
@@ -288,12 +294,12 @@ F2(jtsumebar){A y;C*av,*wv;I c,d,i,k=0,m,n,p,*yv,z=0;
 #endif
  GATV0(y,INT,d,1); yv= AV(y); DO(d, yv[i]=1+m;);
  switch(CTTZ(AT(w))){
-  case INTX: if(c)EBLOOP(I, u[i]-c,v[k+m]-c, if(i==m)++z) 
+ case INTX: if(c)EBLOOP(I, u[i]-c,v[k+m]-c, if(i==m)++z) 
             else EBLOOP(I, u[i],  v[k+m],   if(i==m)++z); break;
-  case SBTX: if(c)EBLOOP(SB,u[i]-c,v[k+m]-c, if(i==m)++z) 
+ case SBTX: if(c)EBLOOP(SB,u[i]-c,v[k+m]-c, if(i==m)++z) 
             else EBLOOP(SB,u[i],  v[k+m],   if(i==m)++z); break;
-  case C2TX:      EBLOOP(US,u[i],  v[k+m],   if(i==m)++z); break;
-  case C4TX: if(c)EBLOOP(C4,u[i]-c,v[k+m]-c, if(i==m)++z) 
+ case C2TX:      EBLOOP(US,u[i],  v[k+m],   if(i==m)++z); break;
+ case C4TX: if(c)EBLOOP(C4,u[i]-c,v[k+m]-c, if(i==m)++z) 
             else EBLOOP(C4,u[i],  v[k+m],   if(i==m)++z); break;
 #if !C_AVX2 && !EMU_AVX2
 default:
@@ -308,9 +314,11 @@ F2(jtanyebar){A y;C*av,*wv;I c,d,i,k=0,m,n,p,*yv;
  RE(d=ebarprep(a,w,&a,&w,&c));
  av=CAV(a); m=AN(a);
  wv=CAV(w); n=AN(w); p=n-m;
- switch(d){
+ if(unlikely(d<0)){
+  switch(d){
   case -1: R num(0);
   case -4: R aslash(CPLUSDOT,ebarvec(a,w));
+  }
  }
  if((-m&-n)>=0){R num(SGNTO0(-n));}  // empty argument.  If m, it matches everywhere, so use n; if n, it's 0, use it - 0/1 only
 #if C_AVX2 || EMU_AVX2
@@ -318,12 +326,12 @@ F2(jtanyebar){A y;C*av,*wv;I c,d,i,k=0,m,n,p,*yv;
 #endif
  GATV0(y,INT,d,1); yv= AV(y); DO(d, yv[i]=1+m;);
  switch(CTTZ(AT(w))){
-  case INTX: if(c)EBLOOP(I, u[i]-c,v[k+m]-c, if(i==m)R num(1)) 
+ case INTX: if(c)EBLOOP(I, u[i]-c,v[k+m]-c, if(i==m)R num(1)) 
             else EBLOOP(I, u[i],  v[k+m],   if(i==m)R num(1)); break;
-  case SBTX: if(c)EBLOOP(SB,u[i]-c,v[k+m]-c, if(i==m)R num(1)) 
+ case SBTX: if(c)EBLOOP(SB,u[i]-c,v[k+m]-c, if(i==m)R num(1)) 
             else EBLOOP(SB,u[i],  v[k+m],   if(i==m)R num(1)); break;
-  case C2TX:      EBLOOP(US,u[i],  v[k+m],   if(i==m)R num(1)); break;
-  case C4TX: if(c)EBLOOP(C4,u[i]-c,v[k+m]-c, if(i==m)R num(1)) 
+ case C2TX:      EBLOOP(US,u[i],  v[k+m],   if(i==m)R num(1)); break;
+ case C4TX: if(c)EBLOOP(C4,u[i]-c,v[k+m]-c, if(i==m)R num(1)) 
             else EBLOOP(C4,u[i],  v[k+m],   if(i==m)R num(1)); break;
 #if !C_AVX2 && !EMU_AVX2
 default:
@@ -341,9 +349,11 @@ F2(jtifbebar){A y,z;C*av,*wv;I c,d,i,k=0,m,n,p,*yv,*zu,*zv;
  RE(d=ebarprep(a,w,&a,&w,&c));
  av=CAV(a); m=AN(a);
  wv=CAV(w); n=AN(w); p=n-m;
- switch(d){
+ if(unlikely(d<0)){
+  switch(d){
   case -1: R mtv;
   case -4: R icap(ebarvec(a,w));
+  }
  }
  if((-m&-n)>=0){R icap(ebar(a,w));}  // empty argument.
  GATV0(z,INT,MAX(22,n>>7),1); zv=AV(z); zu=zv+AN(z);
@@ -355,12 +365,12 @@ F2(jtifbebar){A y,z;C*av,*wv;I c,d,i,k=0,m,n,p,*yv,*zu,*zv;
 #endif
  GATV0(y,INT,d,1); yv= AV(y); DO(d, yv[i]=1+m;);
  switch(CTTZ(AT(w))){
-  case INTX: if(c)EBLOOP(I, u[i]-c,v[k+m]-c, if(i==m)IFB1)
+ case INTX: if(c)EBLOOP(I, u[i]-c,v[k+m]-c, if(i==m)IFB1)
             else EBLOOP(I, u[i],  v[k+m],   if(i==m)IFB1); break;
-  case SBTX: if(c)EBLOOP(SB,u[i]-c,v[k+m]-c, if(i==m)IFB1)
+ case SBTX: if(c)EBLOOP(SB,u[i]-c,v[k+m]-c, if(i==m)IFB1)
             else EBLOOP(SB,u[i],  v[k+m],   if(i==m)IFB1); break;
-  case C2TX:      EBLOOP(US,u[i],  v[k+m],   if(i==m)IFB1); break;
-  case C4TX: if(c)EBLOOP(C4,u[i]-c,v[k+m]-c, if(i==m)IFB1)
+ case C2TX:      EBLOOP(US,u[i],  v[k+m],   if(i==m)IFB1); break;
+ case C4TX: if(c)EBLOOP(C4,u[i]-c,v[k+m]-c, if(i==m)IFB1)
             else EBLOOP(C4,u[i],  v[k+m],   if(i==m)IFB1); break;
 #if !C_AVX2 && !EMU_AVX2
 default:

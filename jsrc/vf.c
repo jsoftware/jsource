@@ -24,16 +24,16 @@ F2(jtsetfv){A q=jt->fill;I t;
 F1(jtfiller){A z; ARGCHK1(w); GA(z,AT(w),1,0,0); fillv(AT(w),1L,CAV(z)); R z;}
 
 // move n default fills of type t to *v
-void jtfillv(J jt,I t,I n,C*v){I k=bpnoun(t);A afill;
+void jtfillv(J jt,I t,I n,C*v){I k=bplg(t);A afill;
  switch(CTTZ(t)){
- case RATX: mvc(n*k,v,k,&zeroQ); break;
- case XNUMX: afill=iv0; mvc(n*k,v,k,&afill); break;
  case B01X: case BITX: case INTX: case FLX: case CMPXX: case XDX: case XZX: case SB01X: case SFLX: case SCMPXX: case SBTX:
-  memset(v,C0,k*n); break;
- case LITX: memset(v,' ',n); break;
- case C2TX: {US x=32; mvc(n*k,v,k,&x); break;}
- case C4TX: {C4 x=32; mvc(n*k,v,k,&x); break;}
- default: afill=mtv; mvc(n*k,v,k,&afill); break;
+ case LITX: // obsolete memset(v,' ',n); break;
+  memset(v,(t&LIT)<<(5-LITX),n<<k); break;  // use SP (0x20) for LIT, 0 for others
+ case RATX: mvc(n<<k,v,1LL<<k,&zeroQ); break;
+ case XNUMX: afill=iv0; mvc(n<<k,v,1LL<<k,&afill); break;
+ case C2TX: // obsolete  {US x=32; mvc(n<<k,v,1LL<<k,&x); break;}
+ case C4TX: {C4 x=32; mvc(n<<k,v,1LL<<k,&x); break;}
+ default: afill=mtv; mvc(n<<k,v,1LL<<k,&afill); break;  // must be box, uee a:
  }
 }
 
@@ -153,13 +153,13 @@ F1(jtreverse){A z;C*wv,*zv;I f,k,m,n,nk,r,*v,*ws,wt,wr;
  PRISTXFERF(z,w)
  // w has been destroyed
  switch(k){
+  case sizeof(I): {I*s=(I*)wv,*t,*u=(I*)zv; DQ(m, t=s+=n; DQ(n, *u++=*--t;););} break;
   default:        {C*s=wv-k,*t; DQ(m, t=s+=nk; DQ(n, MC(zv,t,k); zv+=k; t-=k;););} break;
   case sizeof(C): {C*s=    wv,*t,*u=    zv; DQ(m, t=s+=n; DQ(n, *u++=*--t;););} break;
   case sizeof(S): {S*s=(S*)wv,*t,*u=(S*)zv; DQ(m, t=s+=n; DQ(n, *u++=*--t;););} break;
 #if SY_64
   case sizeof(int):{int*s=(int*)wv,*t,*u=(int*)zv; DQ(m, t=s+=n; DQ(n, *u++=*--t;););} break;
 #endif
-  case sizeof(I): {I*s=(I*)wv,*t,*u=(I*)zv; DQ(m, t=s+=n; DQ(n, *u++=*--t;););} break;
 #if !SY_64 && SY_WIN32
   case sizeof(D): {D*s=(D*)wv,*t,*u=(D*)zv; DQ(m, t=s+=n; DQ(n, *u++=*--t;););} break;
 #endif
@@ -292,12 +292,12 @@ F2(jtexpand){A z;B*av;C*wv,*wx,*zv;I an,*au,i,k,p,wc,wk,wn,wt,zn;
  // We extracted from w, so mark it (or its backer if virtual) non-pristine.  Note that w was not changed above if it was boxed nonempty.  z is never pristine, since it may have repeats
  PRISTCLRF(w)   // this destroys w
  switch(wk){
+  case sizeof(I): EXPAND(I); break;
   case sizeof(C): EXPAND(C); break;
   case sizeof(S): EXPAND(S); break;
 #if SY_64
   case sizeof(int): EXPAND(int); break;
 #endif
-  case sizeof(I): EXPAND(I); break;
   default:  
    mvc(k*zn,zv,k,jt->fillv); // here we are trying to minimize calls to MC
    for(i=p=0;i<an;++i)

@@ -480,7 +480,7 @@ static B jtrngga(J jt,I i,struct rngparms*vv){
    case GBI: t=INT; n=GBN; f=jtgb_init; break;
    case MTI: t=INT; n=MTN; f=jtmt_init; break;
    case DXI: t=INT; n=DXN; f=jtdx_init; break;
-   case MRI: t=FL;  n=MRN; f=jtmr_init; 
+   case MRI: t=FL;  n=MRN; f=jtmr_init; break;
   }
   GA(x,t,n,1,0); ras(x); vv[i].rngV=jt->rngdata->rngv=AV(x);   // x will never be freed, but that's OK, it's inited only once
   f(jt,jt->rngdata->rngparms[i].rngS); jt->rngdata->rngparms[i].rngI=jt->rngdata->rngi;
@@ -498,7 +498,7 @@ F1(jtrngselects){I i;struct rngparms*vv=jt->rngdata->rngparms;
   case GBI: RZ(rngga(i,  vv)); jt->rngdata->rngw=SY_64?64:31; break;
   case MTI: RZ(rngga(i,  vv)); jt->rngdata->rngw=SY_64?64:32; break; 
   case DXI: RZ(rngga(i,  vv)); jt->rngdata->rngw=SY_64?64:30; break;
-  case MRI: RZ(rngga(i,  vv)); jt->rngdata->rngw=SY_64?64:31; 
+  case MRI: RZ(rngga(i,  vv)); jt->rngdata->rngw=SY_64?64:31; break;
  }
 // obsolete  jt->rngdata->rngf=jt->rngdata->rngparms[jt->rngdata->rng].rngF;
  R mtv;
@@ -526,7 +526,7 @@ F1(jtrngstateq){A x=0,z,*zv;D*u=0;I n;UI*v;
 #if SY_64
   case MRI: n=MRN; v=jt->rngdata->rngv; break;
 #else
-  case MRI: n=MRN; u=(D*)jt->rngdata->rngv; GATV0(x,INT,n,1); v=AV(x); DO(n, v[i]=(UI)u[i];);
+  case MRI: n=MRN; u=(D*)jt->rngdata->rngv; GATV0(x,INT,n,1); v=AV(x); DO(n, v[i]=(UI)u[i];); break;
 #endif
  }
  GAT0(z,BOX,3,1); zv=AAV(z);
@@ -563,7 +563,7 @@ F1(jtrngstates){A*wv;I k;struct rngparms*vv=jt->rngdata->rngparms;
   case GBI: RE(k=i0(wv[1])); RZ(rngstates1(GBI,GBN,vv,0,k,wv[2],1)); break;  // We accept 0-55 even though we never produce 55 ourselves
   case MTI: RE(k=i0(wv[1])); RZ(rngstates1(MTI,MTN,vv,0,k,wv[2],0)); break;
   case DXI: RE(k=i0(wv[1])); RZ(rngstates1(DXI,DXN,vv,0,k,wv[2],1)); break;
-  case MRI: RE(k=i0(wv[1])); RZ(rngstates1(MRI,MRN,vv,0,k,wv[2],0));
+  case MRI: RE(k=i0(wv[1])); RZ(rngstates1(MRI,MRN,vv,0,k,wv[2],0)); break;
  }
  R mtv;
 }
@@ -587,7 +587,7 @@ F1(jtrngseeds){I k,r;
   case GBI:                     gb_init(k);     break;
   case MTI:                     mt_init((UI)k); break;
   case DXI: ASSERT(k!=0,EVDOMAIN); dx_init(k);     break;
-  case MRI: ASSERT(k!=0,EVDOMAIN); mr_init(k);
+  case MRI: ASSERT(k!=0,EVDOMAIN); mr_init(k); break;
  }
  jt->rngdata->rngparms[jt->rngdata->rng].rngS=k;  // Save first value, in case k is atomic
  if(!r&&MTI==jt->rngdata->rng&&jt->rngdata->rngseed){fa(jt->rngdata->rngseed); jt->rngdata->rngseed=0;}   // If k is atomic, discard jt->rngdata->rngseed if there is one
@@ -815,7 +815,7 @@ F2(jtdeal){A z;I at,j,k,m,n,wt,*zv;UI c,s,t,x=jt->rngdata->rngparms[jt->rngdata-
 
 #undef rollksub
 #define rollksub(a,w) jtrollksubdot(jt,(a),(w))
-static F2(jtrollksubdot){A z;I an,*av,k,m1,n,p,q,r,sh;UI j,m,mk,s,t,*u,x=jt->rngdata->rngparms[jt->rngdata->rng].rngM;SETNEXT
+static F2(jtrollksubdot){A z;I an,*av,k,m1,n,p,q,r,sh;UI m,mk,s,t,*u,x=jt->rngdata->rngparms[jt->rngdata->rng].rngM;SETNEXT
  ARGCHK2(a,w);
  an=AN(a); RE(m1=i0(w)); ASSERT(0<=m1,EVDOMAIN); m=m1;
  RZ(a=vip(a)); av=AV(a); PRODX(n,an,av,1);
@@ -843,8 +843,9 @@ static F2(jtrollksubdot){A z;I an,*av,k,m1,n,p,q,r,sh;UI j,m,mk,s,t,*u,x=jt->rng
   B*c=(B*)u; DQ(r&(SZI-1), *c++=1&t; t>>=1;);
  }else{
   r=n; s=GMOF(m,x); if(s==x)s=0;
-  k=0; j=1; while(m>j){++k; j<<=1;}
-  if(k&&j==m){  /* m=2^k but is not 1 or 2 */
+// obsolete   k=0; j=1; while(m>j){++k; j<<=1;}
+  CTLZI(m-1,k); ++k; k=m==1?0:k;
+  if(k&&(1LL<<k)==m){  /* m=2^k but is not 1 or 2 */
    p=jt->rngdata->rngw/k; q=n/p; r=n%p; mk=m-1;
    switch((s?2:0)+(1<p)){
     case 0: DQ(q,           t=NEXT;         *u++=mk&t;         ); break;

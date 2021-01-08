@@ -584,9 +584,10 @@ static B jtecm(J jt,X n,X a,X b,I m,X*p,X*z){
  else{I k;UI c,d;X pm[3],q[3];
   q[0]=p[0]; q[1]=p[1]; q[2]=p[2]; 
   pm[0]=p[0]; RZ(pm[1]=xminus(iv0,p[1])); pm[2]=p[2]; 
-  c=(3*m)>>1; d=m>>1; k=8*sizeof(I);
-  while(!(c&BIT0)){c<<=1; d<<=1; --k;}
-  c<<=1; d<<=1; --k;
+// obsolete   c=(3*m)>>1; d=m>>1; k=8*sizeof(I);
+  CTLZI(3*m,k); c=((3*m)&~1)<<(BW-k); d=(m&~1)<<(BW-k); --k; // k=bit# of MSB+1
+// obsolete   while(!(c&BIT0)){c<<=1; d<<=1; --k;}
+// obsolete   c<<=1; d<<=1; --k;
   DQ(k, RZ(ecd(n,a,b,q,q)); if(BIT0&(c^d))RZ(eca(n,a,b,q,c&BIT0?p:pm,q)); c<<=1; d<<=1;);
   z[0]=q[0]; z[1]=q[1]; z[2]=q[2];
  }

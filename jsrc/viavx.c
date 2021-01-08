@@ -412,7 +412,7 @@ static UI jthiau(J jt,A y){I m,n;UC*v=UAV(y);UI z;X*u,x;
  m=n=AN(y);
  if(!n)R 0;
  switch(UNSAFE(AT(y))){
-  case INT:                                    R hici(n,AV(y));
+  case INT:  R hici(n,AV(y));
   case RAT:  m+=n;  /* fall thru */
   case XNUM: z=-1LL; u=XAV(y); DQ(m, x=*u++; v=UAV(x); z=CRC32((UI4)z,(UI4)hicnz(AN(x)*SZI,UAV(x)));); R z;
   default:   R hic(n<<bplg(AT(y)),UAV(y));

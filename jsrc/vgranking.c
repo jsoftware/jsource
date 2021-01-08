@@ -21,62 +21,68 @@ static A jtrankingb(J jt,A w,I wf,I wcr,I m,I n,I k){A z;C*wv;I i,j,p,t,*zv;TTYP
  if(2==k){US*v;
   for(i=0;i<m;++i){
    memset(yv,C0,p*sizeof(*yv)); 
-   for(j=0,v=(US*)wv;j<n;++j)switch(*v++){
-    case BS00: ++yv[0]; break;
-    case BS01: ++yv[1]; break;
-    case BS10: ++yv[2]; break;
-    case BS11: ++yv[3]; break;
-   }
+   for(j=0,v=(US*)wv;j<n;++j){I bb=*v++; bb|=bb<<9; bb>>=8; ++yv[bb&3];} // convert 2 bits to 1 value, big-endian
+// obsolete switch(*v++){
+// obsolete     case BS00: ++yv[0]; break;
+// obsolete     case BS01: ++yv[1]; break;
+// obsolete     case BS10: ++yv[2]; break;
+// obsolete     case BS11: ++yv[3]; break;
+// obsolete    }
    RANKINGSUMSCAN(p);
-   for(j=0,v=(US*)wv;j<n;++j)switch(*v++){
-    case BS00: *zv++=yv[0]++; break;
-    case BS01: *zv++=yv[1]++; break;
-    case BS10: *zv++=yv[2]++; break;
-    case BS11: *zv++=yv[3]++; break;
-   }
+   for(j=0,v=(US*)wv;j<n;++j){I bb=*v++; bb|=bb<<9; bb>>=8; *zv++=yv[bb&3]++;}  // fetch the value
+// obsolete switch(*v++){
+// obsolete     case BS00: *zv++=yv[0]++; break;
+// obsolete     case BS01: *zv++=yv[1]++; break;
+// obsolete    case BS10: *zv++=yv[2]++; break;
+// obsolete    case BS11: *zv++=yv[3]++; break;
+// obsolete    }
    wv+=n*k;
- }}else{int*v;
+  }
+ }else{int*v;
   for(i=0;i<m;++i){
    memset(yv,C0,p*sizeof(*yv)); 
-   for(j=0,v=(int*)wv;j<n;++j)switch(*v++){
-    case B0000: ++yv[ 0]; break;
-    case B0001: ++yv[ 1]; break;
-    case B0010: ++yv[ 2]; break;
-    case B0011: ++yv[ 3]; break;
-    case B0100: ++yv[ 4]; break;
-    case B0101: ++yv[ 5]; break;
-    case B0110: ++yv[ 6]; break;
-    case B0111: ++yv[ 7]; break;
-    case B1000: ++yv[ 8]; break;
-    case B1001: ++yv[ 9]; break;
-    case B1010: ++yv[10]; break;
-    case B1011: ++yv[11]; break;
-    case B1100: ++yv[12]; break;
-    case B1101: ++yv[13]; break;
-    case B1110: ++yv[14]; break;
-    case B1111: ++yv[15]; break;
-   }
+   for(j=0,v=(int*)wv;j<n;++j){I bb=*v++; bb|=bb<<9; bb|=bb<<18; bb>>=24; ++yv[bb&0xf];}  // big-endian
+// obsolete switch(*v++){
+// obsolete     case B0000: ++yv[ 0]; break;
+// obsolete     case B0001: ++yv[ 1]; break;
+// obsolete     case B0010: ++yv[ 2]; break;
+// obsolete     case B0011: ++yv[ 3]; break;
+// obsolete     case B0100: ++yv[ 4]; break;
+// obsolete     case B0101: ++yv[ 5]; break;
+// obsolete     case B0110: ++yv[ 6]; break;
+// obsolete     case B0111: ++yv[ 7]; break;
+// obsolete     case B1000: ++yv[ 8]; break;
+// obsolete     case B1001: ++yv[ 9]; break;
+// obsolete     case B1010: ++yv[10]; break;
+// obsolete     case B1011: ++yv[11]; break;
+// obsolete     case B1100: ++yv[12]; break;
+// obsolete     case B1101: ++yv[13]; break;
+// obsolete     case B1110: ++yv[14]; break;
+// obsolete     case B1111: ++yv[15]; break;
+// obsolete    }
    RANKINGSUMSCAN(p);
-   for(j=0,v=(int*)wv;j<n;++j)switch(*v++){
-    case B0000: *zv++=yv[ 0]++; break;
-    case B0001: *zv++=yv[ 1]++; break;
-    case B0010: *zv++=yv[ 2]++; break;
-    case B0011: *zv++=yv[ 3]++; break;
-    case B0100: *zv++=yv[ 4]++; break;
-    case B0101: *zv++=yv[ 5]++; break;
-    case B0110: *zv++=yv[ 6]++; break;
-    case B0111: *zv++=yv[ 7]++; break;
-    case B1000: *zv++=yv[ 8]++; break;
-    case B1001: *zv++=yv[ 9]++; break;
-    case B1010: *zv++=yv[10]++; break;
-    case B1011: *zv++=yv[11]++; break;
-    case B1100: *zv++=yv[12]++; break;
-    case B1101: *zv++=yv[13]++; break;
-    case B1110: *zv++=yv[14]++; break;
-    case B1111: *zv++=yv[15]++; break;
-   }
+   for(j=0,v=(int*)wv;j<n;++j){I bb=*v++; bb|=bb<<9; bb|=bb<<18; bb>>=24; *zv++=yv[bb&0xf]++;}
+// obsolete switch(*v++){
+// obsolete     case B0000: *zv++=yv[ 0]++; break;
+// obsolete     case B0001: *zv++=yv[ 1]++; break;
+// obsolete     case B0010: *zv++=yv[ 2]++; break;
+// obsolete     case B0011: *zv++=yv[ 3]++; break;
+// obsolete     case B0100: *zv++=yv[ 4]++; break;
+// obsolete     case B0101: *zv++=yv[ 5]++; break;
+// obsolete     case B0110: *zv++=yv[ 6]++; break;
+// obsolete     case B0111: *zv++=yv[ 7]++; break;
+// obsolete     case B1000: *zv++=yv[ 8]++; break;
+// obsolete     case B1001: *zv++=yv[ 9]++; break;
+// obsolete     case B1010: *zv++=yv[10]++; break;
+// obsolete     case B1011: *zv++=yv[11]++; break;
+// obsolete     case B1100: *zv++=yv[12]++; break;
+// obsolete     case B1101: *zv++=yv[13]++; break;
+// obsolete     case B1110: *zv++=yv[14]++; break;
+// obsolete     case B1111: *zv++=yv[15]++; break;
+// obsolete    }
    wv+=n*k;
- }}
+  }
+ }
  R z;
 }    /* /:@/: w where w is boolean and items have length 2 or 4 */
 
@@ -86,7 +92,7 @@ F1(jtranking){A y,z;C*wv;I icn,i,k,m,n,t,wcr,wf,wn,wr,*ws,wt,*zv;CR rng;TTYPE *y
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK;
  wt=AT(w); wv=CAV(w); wn=AN(w);
  ws=AS(w); SETICFR(w,wf,wcr,n);   // n=#cells in w; m is number of atoms in w
- if(wn){PROD(m,wf,ws);}  // If there are atoms, calculate result-shape the fast way
+ if(likely(wn)){PROD(m,wf,ws);}  // If there are atoms, calculate result-shape the fast way
  else{RE(m=prod(wf,ws)); R m?reitem(vec(INT,wf,ws),iota(v2(1L,n))):reshape(vec(INT,1+wf,ws),num(0));}
  PROD1(icn,wcr-1,ws+wf+1); k=icn<<bplg(wt);  // wk=size of atom in bytes; icn=# atoms in an item of a cell  k = *bytes in an item of a CELL of w
  // if Boolean 2- or 4-byte, go off to handle that special case

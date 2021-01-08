@@ -335,10 +335,10 @@ static B jtaindex1(J jt,A a,A w,I wf,A*ind){A z;I c,i,k,n,t,*v,*ws;
    for(i=n;i>0;--i){DO(c, k=*v; AUDITPOSINDEX(k,ws[i]) ++v;); if(k<0)break;} break; 
   }
  }else i=1;  // if not INT to begin with, we must convert
- if(i==0){z=a;  // If all indexes OK, return the original block
+ if(likely(i==0)){z=a;  // If all indexes OK, return the original block
  }else{
-  // There was a negative index.  Allocate a new block for a and copy to it.
-  RZ(z=t&INT?ca(a):cvt(INT,a));  v=AV(z);
+  // There was a negative index.  Allocate a new block for a and copy to it.  It must be writable
+  RZ(z=t&INT?ca(a):cvt(INT,a)); v=AV(z);
   DQ(n, DO(c, SETNDXRW(k,*v,ws[i]) ++v;););  // convert indexes to nonnegative & check for in-range
  }
  *ind=z;

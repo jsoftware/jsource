@@ -17,8 +17,12 @@
 
 static B jtiixBX(J jt,I n,I m,A a,A w,I*zv){B*av,*b,descend;I p,q;
  av=BAV(a); descend=av[0]>av[n-1];
- b=memchr(av,C0,n); p=b?b-av:-1;
- b=memchr(av,C1,n); q=b?b-av:-1;
+ // p is index of 1st 0, or -1 if none; q similar for first 1
+ b=memchr(av,1-descend,n);  // if ascending, get position of 1st 1; if descending, 1st 0.
+ p=(b-av)-(1-descend); p=(1-descend)|(I)b?p:-1; p=descend|(I)b?p:0; // set p to position of 0 (descending) or before 1st 1 (ascending).  If descending & 0 not found, use -1; if ascending & 1 not found, use 0
+ q=(b-av)-descend; q=descend|(I)b?q:-1; q=(1-descend)|(I)b?q:0; // set q to position of 1 (ascending) or before 1st 0 (descending).  If ascending & 1 not found, use -1; if descending & 0 not found, use 0
+// obsolete  b=memchr(av,C0,n); p=b?b-av:-1;
+// obsolete  b=memchr(av,C1,n); q=b?b-av:-1;
  switch(UNSAFE(AT(w))){
  case INT: BXLOOP(I); break;
  case FL:  BXLOOP(D); break;
@@ -96,7 +100,9 @@ static B jtiixI(J jt,I n,I m,A a,A w,I*zv){A t;B ascend;I*av,j,p,q,*tv,*u,*v,*vv
 // large values unsuitable for a branch table, and also took advantage of the fact that
 // codes produced by multiple combinations, such as LIT,B01 and B01,FL which both produce
 // 1111 would not generate spurious accepted cases because only one of them is HOMO.
-#define TT(s,t) (((s)&16)<<3)+(((s)&7)<<4)+(((t)&16)>>1)+((t)&7)
+// obsolete #define TT(s,t) (((s)&16)<<3)+(((s)&7)<<4)+(((t)&16)>>1)+((t)&7)
+#define CVCASE(a,b)     (6*((0x28c>>(a))&7)+((0x28c>>(b))&7))   // Must distinguish 0 2 3 4 6 7->4 3 1 0 2 5  01010001100
+#define CVCASECHAR(a,b) ((4*(0x30004>>(a))+(0x30004>>(b)))&0xf)  // distinguish character cases and SBT
 
 F2(jticap2){A*av,*wv,z;C*uu,*vv;I ar,*as,at,b,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t,wr,*ws,wt,* RESTRICT zv;I cc;
  ARGCHK2(a,w);
@@ -116,15 +122,16 @@ F2(jticap2){A*av,*wv,z;C*uu,*vv;I ar,*as,at,b,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t,wr,*
    UI r=IAV(a)[n-1]-IAV(a)[0]; r=IAV(a)[n-1]<IAV(a)[0]?0-r:r;  // get range, which may overflow I but will stay within UI
    UI4 nlg; CTLZI(n,nlg); nlg=(nlg<<1)+(SGNTO0(SGNIF((n<<1),nlg)));   // approx lg with 1 bit frac precision.  Can't shift 64 bits in case r=1
    if((I)((r>>2)+2*n)<(I)(m*nlg)){RZ(iixI(n,m,a,w,zv)); R z;}  // weight misbranches as equiv to 8 stores
- }}
+  }
+ }
 // obsolete  jt->workareas.compare.complt=-1;
  cc=0; uu=CAV(a); vv=CAV(a)+(c*(n-1)<<bplg(at));
  // first decide if the input array is ascending or descending, comparing the first & last items atom by atom
  switch(CTTZ(at)){
+  case INTX:  COMPVLOOP(I, c);           break;
   default:   ASSERT(0,EVNONCE);
   case B01X:  COMPVLOOP(B, c);           break;
   case LITX:  COMPVLOOP(UC,c);           break;
-  case INTX:  COMPVLOOP(I, c);           break;
   case FLX:   COMPVLOOP(D, c);           break;
   case CMPXX: COMPVLOOP(D, c+c);         break;
   case C2TX:  COMPVLOOP(US,c);           break;
@@ -137,34 +144,25 @@ F2(jticap2){A*av,*wv,z;C*uu,*vv;I ar,*as,at,b,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t,wr,*
    DO(c, if(cc=compare(av[i],av[i+c*(n-1)]))break;);
  }
  ge=cc; gt=-ge;
- switch(TT(CTTZ(at),CTTZ(wt))){
-  case TT(B01X, B01X ): BSLOOP(C, C ); break;
-  case TT(B01X, INTX ): BSLOOP(C, I ); break;
-  case TT(B01X, FLX  ): BSLOOP(C, D ); break;
-  case TT(LITX, C2TX ): BSLOOP(UC,US); break;
-  case TT(LITX, C4TX ): BSLOOP(UC,C4); break;
+ if(unlikely(t&JCHAR+SBT)){
+  switch(CVCASECHAR(CTTZ(at),CTTZ(wt))){
+  case CVCASECHAR(LITX, C2TX ): BSLOOP(UC,US); break;
+  case CVCASECHAR(LITX, C4TX ): BSLOOP(UC,C4); break;
 #if C_LE
-  case TT(LITX, LITX ): BSLOOP(UC,UC); break;
+  case CVCASECHAR(LITX, LITX ): BSLOOP(UC,UC); break;
 #else
-  case TT(LITX, LITX ): if(1&c){BSLOOP(UC,UC); break;}else c>>=1; /* fall thru */
+  case CVCASECHAR(LITX, LITX ): if(1&c){BSLOOP(UC,UC); break;}else c>>=1; /* fall thru */
 #endif
-  case TT(C2TX, C2TX ): BSLOOP(US,US); break;
-  case TT(C2TX, C4TX ): BSLOOP(US,C4); break;
-  case TT(C2TX, LITX ): BSLOOP(US,UC); break;
-  case TT(C4TX, C2TX ): BSLOOP(C4,US); break;
-  case TT(C4TX, C4TX ): BSLOOP(C4,C4); break;
-  case TT(C4TX, LITX ): BSLOOP(C4,UC); break;
-  case TT(SBTX, SBTX ): BSLOOF(SB,SB, SBCOMP  ); break;
-  case TT(INTX, B01X ): BSLOOP(I, C ); break;
-  case TT(INTX, INTX ): BSLOOP(I, I ); break;
-  case TT(INTX, FLX  ): BSLOOP(I, D ); break;
-  case TT(FLX,  B01X ): BSLOOP(D, C ); break;
-  case TT(FLX,  INTX ): BSLOOP(D, I ); break;
-  case TT(CMPXX,CMPXX): c+=c;  /* fall thru */
-  case TT(FLX,  FLX  ): BSLOOP(D, D ); break;
-  case TT(XNUMX,XNUMX): BSLOOF(X, X, xcompare); break;
-  case TT(RATX, RATX ): BSLOOF(Q, Q, qcompare); break;
-  case TT(BOXX, BOXX ):
+  case CVCASECHAR(C2TX, C2TX ): BSLOOP(US,US); break;
+  case CVCASECHAR(C2TX, C4TX ): BSLOOP(US,C4); break;
+  case CVCASECHAR(C2TX, LITX ): BSLOOP(US,UC); break;
+  case CVCASECHAR(C4TX, C2TX ): BSLOOP(C4,US); break;
+  case CVCASECHAR(C4TX, C4TX ): BSLOOP(C4,C4); break;
+  case CVCASECHAR(C4TX, LITX ): BSLOOP(C4,UC); break;
+  case CVCASECHAR(SBTX, SBTX ): BSLOOF(SB,SB, SBCOMP  ); break;
+  default:   ASSERT(0,EVNONCE);
+  }
+ }else if(unlikely(t&BOX)){
    for(j=0,cm=c*m;j<cm;j+=c){
     p=0; q=n-1;
     while(p<=q){
@@ -174,17 +172,32 @@ F2(jticap2){A*av,*wv,z;C*uu,*vv;I ar,*as,at,b,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t,wr,*
     } 
     *zv++=1+q;
    }
-   break;
+ }else{
+  switch(CVCASE(CTTZ(at),CTTZ(wt))){
+  case CVCASE(B01X, B01X ): BSLOOP(C, C ); break;
+  case CVCASE(B01X, INTX ): BSLOOP(C, I ); break;
+  case CVCASE(B01X, FLX  ): BSLOOP(C, D ); break;
+  case CVCASE(INTX, B01X ): BSLOOP(I, C ); break;
+  case CVCASE(INTX, INTX ): BSLOOP(I, I ); break;
+  case CVCASE(INTX, FLX  ): BSLOOP(I, D ); break;
+  case CVCASE(FLX,  B01X ): BSLOOP(D, C ); break;
+  case CVCASE(FLX,  INTX ): BSLOOP(D, I ); break;
+  case CVCASE(CMPXX,CMPXX): c+=c;  /* fall thru */
+  case CVCASE(FLX,  FLX  ): BSLOOP(D, D ); break;
+  case CVCASE(XNUMX,XNUMX): BSLOOF(X, X, xcompare); break;
+  case CVCASE(RATX, RATX ): BSLOOF(Q, Q, qcompare); break;
   default:
    ASSERT(TYPESNE(at,wt),EVNONCE);
    if(TYPESNE(t,at))RZ(a=cvt(t,a));
    if(TYPESNE(t,wt))RZ(w=cvt(t,w));
    switch(UNSAFE(t)){
-    case CMPX: c+=c;  /* fall thru */ 
-    case FL:   BSLOOP(D,D);           break;
-    case XNUM: BSLOOF(X,X, xcompare); break;
-    case RAT:  BSLOOF(Q,Q, qcompare); break;
-    default:   ASSERT(0,EVNONCE);
- }}
+   case CMPX: c+=c;  /* fall thru */ 
+   case FL:   BSLOOP(D,D);           break;
+   case XNUM: BSLOOF(X,X, xcompare); break;
+   case RAT:  BSLOOF(Q,Q, qcompare); break;
+   default:   ASSERT(0,EVNONCE);
+   }
+  }
+ }
  RETF(z);
 }    /* a I. w */

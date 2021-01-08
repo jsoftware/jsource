@@ -47,7 +47,7 @@ ZF2(jtzdiv){ZF2DECL;D t;
  if(ZNZ(v)){
   if(ABS(c)<ABS(d)){t=a; a=-b; b=t;  t=c; c=-d; d=t;}
   a/=c; b/=c; d/=c; t=1+d*d; zr=(a+TYMES(b,d))/t; zi=(b-TYMES(a,d))/t;
- }else if(ZNZ(u))switch(2*(I )(0>a)+(I )(0>b)){
+ }else if(ZNZ(u))switch(2*(I )(0>a)+(I )(0>b)){  // scaf rewrite w/o switch
    case 0: if(a> b)zr= inf; else zi= inf; break; 
    case 1: if(a>-b)zr= inf; else zi=-inf; break;
    case 2: if(a<-b)zr=-inf; else zi= inf; break;
@@ -105,7 +105,7 @@ ZF2(jtzgcd){D a,b;Z t,z;I lim;
  for(lim=2048; lim>0&&ZNZ(u); --lim){t=zrem(u,v); v.re=u.re; v.im=u.im; u.re=t.re; u.im=t.im;}  // max # iters is log(MAXFLOAT)/log(phi)
  if(lim==0)R zeroZ;  // if Euclid failed, return 0j0
  z.re=a=v.re; z.im=b=v.im;
- switch(2*(I )(0>a)+(I )(0>b)){
+ switch(2*(I )(0>a)+(I )(0>b)){  // scaf rewrite w/o switch
   case 0: if(!a){z.re= b; z.im=0;}                        break;
   case 1:                              z.re=-b; z.im= a;  break;
   case 2: if(!b){z.re=-a; z.im=0;}else{z.re= b; z.im=-a;} break;
@@ -284,7 +284,7 @@ DF1(jtexppi){A z;B b;D r,th,y;I k;Z*v,t;
  v=ZAV(w); r=exp(PI*v->re); y=v->im; if(b=0>y)y=-y;
  th=y-2*(I)(y/2); k=(I)(2*th); if(k!=2*th)k=-1; else if(b&&k)k=4-k;
  if(!((UI)k<=(UI)3))R expn1(pix(w));
- switch(k){
+ switch(k){  // scaf rewrite w/o switch
   case 0: t.re= r; t.im= 0; break;
   case 1: t.re= 0; t.im= r; break;
   case 2: t.re=-r; t.im= 0; break;

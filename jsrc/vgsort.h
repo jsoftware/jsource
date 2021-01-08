@@ -93,6 +93,19 @@ static void* MERGEFNNAME(CMP comp, I compn, I bpi, T * lo, I lon, T * hi, I hin,
 // By doing the sort we have more work to do between copied blocks & can take more time to prefetch into cache.
 static T* GRADEFNNAME(CMP comp, I compn, I n, I bpi, T * RESTRICT in, T * RESTRICT wk,T * RESTRICT wv){T *a,*b,*c,*d,*e,*iin=in;
  switch(n){
+ case 5:
+  a=wv; b=PTRADD(a,1); c=PTRADD(b,1); d=PTRADD(c,1); e=PTRADD(d,1);
+  CXCHG2(b,c);
+  CXCHG2(d,e);
+  CXCHG2(b,d);
+  CXCHG2(a,c);
+  CXCHG2(a,d);
+  CXCHG2(c,e);
+  CXCHG2(a,b);
+  CXCHG2(c,d);
+  CXCHG2(b,c);
+  MVITEMS(in,a,1);
+  goto exitbcde;
  case 1: e=wv; goto exite; 
  case 2:  // happens only if original input is 2 long
   d=wv; e=PTRADD(d,1);
@@ -111,19 +124,6 @@ static T* GRADEFNNAME(CMP comp, I compn, I n, I bpi, T * RESTRICT in, T * RESTRI
   CXCHG2(b,d);
   CXCHG2(c,e);
   CXCHG2(c,d);
-  goto exitbcde;
- case 5:
-  a=wv; b=PTRADD(a,1); c=PTRADD(b,1); d=PTRADD(c,1); e=PTRADD(d,1);
-  CXCHG2(b,c);
-  CXCHG2(d,e);
-  CXCHG2(b,d);
-  CXCHG2(a,c);
-  CXCHG2(a,d);
-  CXCHG2(c,e);
-  CXCHG2(a,b);
-  CXCHG2(c,d);
-  CXCHG2(b,c);
-  MVITEMS(in,a,1);
 exitbcde:
   MVITEMS(in,b,1);
 exitcde:

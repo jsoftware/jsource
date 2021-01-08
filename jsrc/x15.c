@@ -655,7 +655,7 @@ static void docall(FARPROC fp, I*d, I cnt, DoF* dd, I dcnt, C zl, I*v, B alterna
 }
 
 static void convertdown(I*pi,I n,C t){
- if(n)switch(t){
+ if(n)switch(t){  // scaf do without switch
   case 'b': {BYTE*pt=(BYTE*)pi;               DO(n, pt[i]=(BYTE)pi[i];);} break;
   case 's': {short*pt=(short*)pi;             DO(n, pt[i]=(short)pi[i];);} break;
   case 'i': {int  *pt=(int  *)pi;             DO(n, pt[i]=(int)  pi[i];);} break;
@@ -668,7 +668,7 @@ static void convertdown(I*pi,I n,C t){
 }}   /* convert I in place to s or int and d to f and j to z */
 
 static void convertup(I*pi,I n,C t){I j=n;
- if(n)switch(t){
+ if(n)switch(t){  // scaf do without switch
   case 'b': {BYTE*pt=(BYTE*)pi;               DQ(n, --j; pi[j]=(I)pt[j];);} break;
   case 's': {short*pt=(short*)pi;             DQ(n, --j; pi[j]=(I)pt[j];);} break;
   case 'i': {int  *pt=(int  *)pi;             DQ(n, --j; pi[j]=(I)pt[j];);} break;
@@ -951,9 +951,11 @@ strcpy(proc,"x15lseek32");
  R cc;
 }
 
-#define CDT(x,y) ((x)+32*(y))  // x runs from B01 to C4T 0-3, 17-18
+// obsolete #define CDT(x,y) ((x)+32*(y))  // encode 0 1 2 3 17 18-> 4 2 1 0 3 5  1011. .... .... .... 0100
+#define CDT(x,y) (6*((0x160004>>(x))&7)+((0x160004>>(y))&0x7))  // encode 0 1 2 3 17 18-> 4 2 1 0 3 5  1011. .... .... .... 0100
 
 static I*jtconvert0(J jt,I zt,I*v,I wt,C*u){D p,q;I k=0;US s;C4 s4;
+ if(unlikely((zt|wt)&(NOUN&~(B01+LIT+INT+FL+C2T+C4T))))R 0;  // if unallowed type, abort
  switch(CDT(CTTZ(zt),CTTZ(wt))){
   default:           R 0;
   case CDT(FLX, B01X): *(D*)v=*(B*)u; break;

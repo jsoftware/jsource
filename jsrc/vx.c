@@ -141,7 +141,7 @@ B jtxdivrem(J jt,X a,X w,X*qz,X*rz){B b,c;I*av,d,j,n,*qv,r,y;X q;
  j=n=AN(a); av=AV(a); b=0<=av[n-1];
  y=AV(w)[0]; c=0<=y; if(!c)y=-y; r=0;
  GATV0(q,INT,n,1); qv=AV(q);
- switch(2*b+c){
+ switch(2*b+c){  // scaf rewrite w/o switch
   case 0: DQ(n, --j; d=r*XBASE-av[j]; r=d%y; qv[j]=  d/y ;); r=-r;      break;
   case 1: DQ(n, --j; d=r*XBASE-av[j]; r=d%y; qv[j]=-(d/y);); r=r?y-r:0; break;
   case 2: DQ(n, --j; d=r*XBASE+av[j]; r=d%y; qv[j]=-(d/y);); r=r?r-y:0; break;
@@ -282,14 +282,14 @@ XF1(jtxsqrt){I c,m,n,p,q,*wv;X e,x;
  DQ(1+q, RZ(x=xdiv(xplus(x,xdiv(w,x,XMFLR)),e,XMFLR)););
  p=xcompare(w,xsq(x));
  switch(jt->xmode){
-  default:     ASSERTSYS(0,"xsqrt");
-  case XMFLR:  if(-1==p){--AV(x)[0]; R xstd(x);}else R rifvsdebug(x);
-  case XMCEIL: if( 1==p){++AV(x)[0]; R xstd(x);}else R rifvsdebug(x);
   case XMEXACT: 
    if(!p)R rifvsdebug(x); 
    AV(x)[0]+=p; RZ(x=xstd(x));
    ASSERT(!xcompare(w,xsq(x)),EWIRR);
    R rifvsdebug(x);
+  default:     ASSERTSYS(0,"xsqrt");
+  case XMFLR:  if(-1==p){--AV(x)[0]; R xstd(x);}else R rifvsdebug(x);
+  case XMCEIL: if( 1==p){++AV(x)[0]; R xstd(x);}else R rifvsdebug(x);
 }}
 
 static XF2(jtxroot){A q;D x;I an,*av,c,d,r,wn,*wv;X n,n1,p,t,z;

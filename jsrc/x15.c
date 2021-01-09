@@ -622,19 +622,32 @@ static void docall(FARPROC fp, I*d, I cnt, DoF* dd, I dcnt, C zl, I*v, B alterna
  CCMWDS(vdres) CCMCAND(vdres,cand,zl)   // see if zl is one of the direct results, which can be moved into the result directly
 
  if(CCMTST(cand,zl)){I r;
+  // result has integer type.  Call with that linkage
   r= alternate ? altcalli((ALTCALLI)fp,d,cnt,dd,dcnt) : stdcalli((STDCALLI)fp,d,cnt,dd,dcnt);
-  switch(zl&0x1f){   // kludge scaf could do this with shift
-   case 'c'&0x1f: *(C*)v=(C)r;  break;
-   case 'w'&0x1f: *(US*)v=(US)r;break;
-   case 'u'&0x1f: *(C4*)v=(C4)r;break;
-   case 'b'&0x1f: *v=(I)(BYTE)r;break;
-   case 's'&0x1f: *v=(I)(S)r;   break;
-   case 'i'&0x1f: *v=(I)(int)r; break;
-   case 'l'&0x1f:
-   case 'x'&0x1f:
-   case '*'&0x1f: *v=r;         break;
-   case 'n'&0x1f: *v=0;         break;
-  }
+  // Move the return code into an I, from whatever size the user says it is
+  zl=zl=='b'?'a':zl; I charcode=(zl&0x1f)>>1;  // unique value for each field type, remapping 'b'
+  // the fields are
+  // (12) x w u s _ n l * i _ _ c b (0)
+  // There are 5 fates for the result: passthrough; sign-extension of 1, 2, or 4 bytes; 0
+  // the first 4 are encoded as lg2(# bytes to keep):
+  // 64b  11111101xxxx111110xxxx1100 = 3f43e0c
+  // 32b  10101001xxxx101010xxxx1000 = 2a22a08
+  I shiftamt=BW-((1LL<<(((SY_64?0x3f43e0c:0x2a22a08)>>(charcode<<1))&3))<<3);  // # high bits to fill
+  r=(r<<shiftamt)>>shiftamt;  // fill em
+  r=zl=='n'?0:r;  // handle 'n' specially: store 0
+  *v=r;  // write out the formatted return code
+// obsolete   switch(zl&0x1f){   // kludge scaf could do this with shift
+// obsolete    case 'c'&0x1f: *(C*)v=(C)r;  break;
+// obsolete    case 'w'&0x1f: *(US*)v=(US)r;break;
+// obsolete    case 'u'&0x1f: *(C4*)v=(C4)r;break;
+// obsolete    case 'b'&0x1f: *v=(I)(BYTE)r;break;
+// obsolete    case 's'&0x1f: *v=(I)(S)r;   break;
+// obsolete    case 'i'&0x1f: *v=(I)(int)r; break;
+// obsolete    case 'l'&0x1f:
+// obsolete    case 'x'&0x1f:
+// obsolete    case '*'&0x1f: *v=r;         break;
+// obsolete    case 'n'&0x1f: *v=0;         break;
+// obsolete   }
  }else
 #if !SY_64 && !defined(__arm__)
  {D r;
@@ -643,7 +656,7 @@ static void docall(FARPROC fp, I*d, I cnt, DoF* dd, I dcnt, C zl, I*v, B alterna
  }
 #else
  {/* the above doesn't work for J64 */
-  if(zl=='d'){D r;
+  if(likely(zl=='d')){D r;
    r= alternate ? altcalld((ALTCALLD)fp,d,cnt,dd,dcnt) : stdcalld((STDCALLD)fp,d,cnt,dd,dcnt);
    *(D*)v=r;
   }else{float r;

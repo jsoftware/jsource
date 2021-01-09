@@ -23,18 +23,43 @@ F2(jtsetfv){A q=jt->fill;I t;
 
 F1(jtfiller){A z; ARGCHK1(w); GA(z,AT(w),1,0,0); fillv(AT(w),1L,CAV(z)); R z;}
 
+// There are 7 fill actions, encoded in 3 bits:
+// 00x fill with memset of the single byte 00x00000  (0 or SP)
+// 01x fill with mvc from 0x2000[0000], number of bytes/atom=2<<x
+// 100 fill with pointer to mtv
+// 110 fill with pointer to iv0 (for XNUM)
+// 111 fill with pointers to iv0/iv1 alternately (for RAT)
+#if !SY_64
+// keep this to doc the fill magic#
+static C fillactions[]={0, 1, 0,   0, 0, 4, 6, 7, 0, 0, 0,    1, 0, 0, 0, 4, 0, 2, 3};  // 011 010 000 100 000 000 000 001 000 000 000 111 110 100 000 000 000 001 000 = d0800200fa0008
+#endif
+
 // move n default fills of type t to *v
-void jtfillv(J jt,I t,I n,C*v){I k=bplg(t);A afill;
+void jtfillv(J jt,I t,I n,C*v){
+ I k=bplg(t);
+#if SY_64
+ I fillaction=(0xd0800200fa0008>>(3*CTTZ(t)))&7;  // get 3-bit action code
+#else
+ I fillaction=fillactions[3*CTTZ(t)];
+#endif
+ if(likely((fillaction&6)==0)){memset(v,fillaction<<5,n<<k);  // types 00x: fill with 00 or 20 - direct numeric or LIT
+ }else{  // others require filling with multibyte value
+  mvc(n<<k,v,2LL<<(((SY_64?0xea40:0x9540)>>(fillaction<<1))&3),&fillvalues[(fillaction>>1)-1]);  // lg2(len)-1 is (7) 3 2 2 2 1 0 x x (0)  1110 1010 0100 0000 = ea40   index in fillvalues=2 2 1 1 0 0 x x
+                                                                                                    // 32 bit         2 1 1 1 1 0 x x      1001 0101 0100 0000 = 9540
+ }
+#if 0 // obsolete 
+ A afill;
  switch(CTTZ(t)){
  case B01X: case BITX: case INTX: case FLX: case CMPXX: case XDX: case XZX: case SB01X: case SFLX: case SCMPXX: case SBTX:
  case LITX: // obsolete memset(v,' ',n); break;
   memset(v,(t&LIT)<<(5-LITX),n<<k); break;  // use SP (0x20) for LIT, 0 for others
- case RATX: mvc(n<<k,v,1LL<<k,&zeroQ); break;
+ case RATX: mvc(n<<k,v,1LL<<k,&fillvalues[2]); break;
  case XNUMX: afill=iv0; mvc(n<<k,v,1LL<<k,&afill); break;
  case C2TX: // obsolete  {US x=32; mvc(n<<k,v,1LL<<k,&x); break;}
  case C4TX: {C4 x=32; mvc(n<<k,v,1LL<<k,&x); break;}
  default: afill=mtv; mvc(n<<k,v,1LL<<k,&afill); break;  // must be box, uee a:
  }
+#endif
 }
 
 

@@ -625,6 +625,7 @@ static void docall(FARPROC fp, I*d, I cnt, DoF* dd, I dcnt, C zl, I*v, B alterna
   // result has integer type.  Call with that linkage
   r= alternate ? altcalli((ALTCALLI)fp,d,cnt,dd,dcnt) : stdcalli((STDCALLI)fp,d,cnt,dd,dcnt);
   // Move the return code into an I, from whatever size the user says it is
+  // Convert the type char to a concise code
   zl=zl=='b'?'a':zl; I charcode=(zl&0x1f)>>1;  // unique value for each field type, remapping 'b'
   // the fields are
   // (12) x w u s _ n l * i _ _ c b (0)

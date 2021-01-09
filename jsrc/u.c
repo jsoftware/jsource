@@ -375,7 +375,7 @@ F1(jtvib){A z;D d,e,*wv;I i,n,*zv;
  I p=-IMAX,q=IMAX;
  RANK2T oqr=jt->ranks; RESETRANK;
  if(unlikely((AT(w)&SPARSE)!=0))RZ(w=denseit(w));
- switch(UNSAFE(AT(w))){
+ switch(AT(w)){
  default:
   if(!(AT(w)&FL))RZ(w=cvt(FL,w));
   n=AN(w); wv=DAV(w);

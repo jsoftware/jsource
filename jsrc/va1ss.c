@@ -16,7 +16,7 @@
 #define SSSTORE(v,z,t,type) SSSTORENV(v,z,t,type)  // we don't use MODBLOCKTYPE any more
 #define SSSTORENVFL(v,z,t,type) {*((type *)CAV(z)) = (v); }  // When we know the type/shape doesn't change (FL,FL->FL)
 
-#define SSINGENC(type) (UNSAFE(type)>>INTX)
+#define SSINGENC(type) ((type)>>INTX)
 #define SSINGCASE(id,subtype) (3*(id)+(subtype))   // encode case/args into one branch value
 A jtssingleton1(J jt, A w,A self){A z;
  F2PREFIP;

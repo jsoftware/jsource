@@ -114,7 +114,7 @@ static B jtmvw(J jt,C*v,C*u,I n,B bv,B bu,B dv,B du){C c;
 }    /* move n words from u to v */
 
 // move the header, return new move point
-static C*jtbrephdrq(J jt,B b,B d,A w,C *q){I f,r;I extt = UNSAFE(AT(w));
+static C*jtbrephdrq(J jt,B b,B d,A w,C *q){I f,r;I extt = AT(w);
   r=AR(w); f=0;
  RZ(mvw(BF(d,q),(C*)&f,    1L,b,BU,d,SY_64)); *q=d?(b?0xe3:0xe2):(b?0xe1:0xe0);
  RZ(mvw(BT(d,q),(C*)&extt,1L,b,BU,d,SY_64));
@@ -184,7 +184,7 @@ static C* jtbrepfill(J jt,B b,B d,A w,C *zv){I klg,kk;
 // main entry point for brep.  First calculate the size by a (recursive) call; allocate; then make a (recursive) call to fill in the block
 static A jtbrep(J jt,B b,B d,A w){A y;I t;
  ARGCHK1(w);
- t=UNSAFE(AT(w)); 
+ t=AT(w); 
  if(unlikely((t&SPARSE)!=0))R breps(b,d,w);  // sparse separately
  GATV0(y,LIT,bsizer(jt,d,1,w),1);   // allocate entire result
  RZ(jtbrepfill(jt,b,d,w,CAV(y)));   // fill it
@@ -203,7 +203,7 @@ static A jthrep(J jt,B b,B d,A w){A y,z;C c,*hex="0123456789abcdef",*u,*v;I n,s[
 #else
 static A jthrep(J jt,B b,B d,A w){A y;C c,*hex="0123456789abcdef",*u,*v;I n,s[2],t;
  ARGCHK1(w);
- t=UNSAFE(AT(w)); 
+ t=AT(w); 
  if(unlikely((t&SPARSE)!=0)){A z;  // sparse separately
   RZ(y=breps(b,d,w));
   n=AN(y); s[0]=n>>LGWS(d); s[1]=2*WS(d); 

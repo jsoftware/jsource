@@ -23,7 +23,7 @@ static B jtiixBX(J jt,I n,I m,A a,A w,I*zv){B*av,*b,descend;I p,q;
  q=(b-av)-descend; q=descend|(I)b?q:-1; q=(1-descend)|(I)b?q:0; // set q to position of 1 (ascending) or before 1st 0 (descending).  If ascending & 1 not found, use -1; if descending & 0 not found, use 0
 // obsolete  b=memchr(av,C0,n); p=b?b-av:-1;
 // obsolete  b=memchr(av,C1,n); q=b?b-av:-1;
- switch(UNSAFE(AT(w))){
+ switch(AT(w)){
  case INT: BXLOOP(I); break;
  case FL:  BXLOOP(D); break;
  case B01:
@@ -190,7 +190,7 @@ F2(jticap2){A*av,*wv,z;C*uu,*vv;I ar,*as,at,b,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t,wr,*
    ASSERT(TYPESNE(at,wt),EVNONCE);
    if(TYPESNE(t,at))RZ(a=cvt(t,a));
    if(TYPESNE(t,wt))RZ(w=cvt(t,w));
-   switch(UNSAFE(t)){
+   switch(t){
    case CMPX: c+=c;  /* fall thru */ 
    case FL:   BSLOOP(D,D);           break;
    case XNUM: BSLOOF(X,X, xcompare); break;

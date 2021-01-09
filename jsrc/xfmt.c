@@ -493,7 +493,7 @@ static A jtfmtallcol(J jt, A a, A w, I mode) {A *a1v,base,fb,len,strs,*u,v,x;
     else if(dtmp< 0       ) { *cv=SUBm;                              }   // if other negative, use the specified - sign
     else if(dtmp>=0 && mPQ) { MC(cv, cP, nP); MC(cv+*il-nQ, cQ, nQ); }  // if nonnegative & pref/suff given, move them in
    } else {
-    if(UNSAFE(t)==INT){  // integer to be displayed in fixed-point
+    if(t==INT){  // integer to be displayed in fixed-point
      y=*iv < 0; g=0; 
      if(*iv < 0 && mMN) { y=nM; g=nN; }
      else if(*iv>=0 && mPQ) { y=nP; g=nQ; }  // pref/suff length as above
@@ -503,7 +503,7 @@ static A jtfmtallcol(J jt, A a, A w, I mode) {A *a1v,base,fb,len,strs,*u,v,x;
      if     (*iv < 0 && mMN) { MC(cv, cM, nM); MC(cv+*il-nN, cN, nN); }  // install pref/suff as above
      else if(*iv < 0       ) { *cv=SUBm;                              }
      else if(*iv>= 0 && mPQ) { MC(cv, cP, nP); MC(cv+*il-nQ, cQ, nQ); }
-    }else if(UNSAFE(t)<INT){  // B01
+    }else if(t<INT){  // B01
      if(mPQ) { MC(cv, cP, nP); MC(cv+*il-nQ, cQ, nQ); }
      RZ(sprintfI(cv+nP, *il-nP-nQ, d, *bv, subs));
     }else{  // FL to be displayed in fixed point, as above but with decimal places

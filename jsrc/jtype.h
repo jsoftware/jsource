@@ -431,6 +431,7 @@ typedef I SI;
 // Note: arithmetic dyads on bytes have similar issues, because the 8-byte-at-a-time operations may execute outside the cell of the array.  We detect
 // those cases inside the atomic-dyad code in va2.c.
 #define TYPEVIPOK       (FL+CMPX+SBT+(SZI==SZD?INT:0))
+#if 0 // obsolete 
 // NOUNSAFE flag
 // scaf expunge all the following
 #define SAFE(x)         (x)    // type, current block and descendants safe from tstack
@@ -439,10 +440,10 @@ typedef I SI;
 #define UNSAFE(x)       (x)   // type, not safe from tstack
 #define UNSAFED(x)      (x)   // type, descendants not safe from tstack
 #define UNSAFE0(x)      (x)   // type, not safe from tstack
-
-#define TYPESEQ(x,y)    ((x)==(y))  // types are equal, ignoring NOUNSAFE bits
-#define TYPESXOR(x,y)    ((x)^(y))  // types are not equal, ignoring NOUNSAFE bits, using full-word logical
-#define TYPESNE(x,y)    ((x)!=(y))  // types are equal, ignoring NOUNSAFE bits
+#endif
+#define TYPESEQ(x,y)    ((x)==(y))  // types are equal
+#define TYPESXOR(x,y)    ((x)^(y))  // types are not equal using full-word logical
+#define TYPESNE(x,y)    ((x)!=(y))  // types are not equal
 #define TYPESLT(x,y)    ((x)<(y))  // type x < type y
 #define TYPESGT(x,y)    ((x)>(y)) // type x > type y
 
@@ -892,7 +893,7 @@ typedef struct {AF valencefns[2];A fgh[3];union { D lD; void *lvp[2]; I lI; I4 l
 #define VF2USESITEMCOUNT2A  ((I)(((I)1)<<VF2USESITEMCOUNT2AX))
 
 // layout of primitive, in the primtbl.  It is a memory header (shape 0) followed by a V
-typedef struct {I memhdr[AKXR(0)/SZI]; union { V primvb; I primint; } prim; } PRIM;  // two cachelines exactly in 64-bit
+typedef struct __attribute__((aligned(CACHELINESIZE))) {I memhdr[AKXR(0)/SZI]; union { V primvb; I primint; } prim; } PRIM;  // two cachelines exactly in 64-bit
 
 // Info for calling an atomic verb
 typedef struct {VF f;I cv;} VA2;  // for dyads

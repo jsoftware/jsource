@@ -16,7 +16,7 @@
 #define SSRDU(w) (*(C4*)CAV(w))
 #define SSRDD(w) (*(D *)CAV(w))
 
-#define SSINGENC(a,w) (3*(UNSAFE(a)>>INTX)+(UNSAFE(w)>>INTX))
+#define SSINGENC(a,w) (3*(a>>INTX)+(w>>INTX))
 #define SSINGBB SSINGENC(B01,B01)
 #define SSINGBI SSINGENC(B01,INT)
 #define SSINGBD SSINGENC(B01,FL)

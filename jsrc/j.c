@@ -18,11 +18,11 @@ CREBLOCKATOMV2(a0j1,CMPX,0.0,1.0)  // 0j1
 #else
 #define CBAIVAL(t,v) {8*SZI,(t)&TRAVERSIBLE,0,(t),ACPERMANENT,1,0,0,(v)}
 #endif
-#define CREBLOCKATOMI(name,t,v) I B##name[9-SY_64]=CBAIVAL(t,v);
-#define CREBLOCKVEC0(name,t) I B##name[8]={8*SZI,(t)&TRAVERSIBLE,0,(t),ACPERMANENT,0,1,0};  // no padding at end - no atoms should be referenced
+#define CREBLOCKATOMI(name,t,v) I __attribute__((aligned(CACHELINESIZE))) B##name[9-SY_64]=CBAIVAL(t,v);
+#define CREBLOCKVEC0(name,t) I __attribute__((aligned(CACHELINESIZE))) B##name[8]={8*SZI,(t)&TRAVERSIBLE,0,(t),ACPERMANENT,0,1,0};  // no padding at end - no atoms should be referenced
 CREBLOCKVEC0(aqq,LIT)  // ''
 CREBLOCKVEC0(mtv,B01)  // i.0 boolean
-#define CREBLOCKATOMV1(name,t,v1) struct Bd1 B##name={{AKXR(0),(t)&TRAVERSIBLE,0,(t),ACPERMANENT,1,0},{v1}};
+#define CREBLOCKATOMV1(name,t,v1) struct Bd1 __attribute__((aligned(CACHELINESIZE))) B##name={{AKXR(0),(t)&TRAVERSIBLE,0,(t),ACPERMANENT,1,0},{v1}};
 CREBLOCKATOMV1(onehalf,FL,0.5)  // 0.5
 CREBLOCKATOMV1(ainf,FL,INFINITY)  // _
 CREBLOCKATOMV1(pie,FL,PI)  // PI
@@ -37,10 +37,10 @@ CREBLOCKATOMI(chrspace,LIT,' ')  // the one character
 C   breakdata=0;   // always 0: used 
 D   inf=INFINITY;                /* _                                    */
 D   infm=-INFINITY;               /* __                                   */
-#define CREBLOCKVEC1I(name,t,v) I B##name[9]={(7+1)*SZI,(t)&TRAVERSIBLE,0,(t),ACPERMANENT,1,1,1,(v)};
+#define CREBLOCKVEC1I(name,t,v) I __attribute__((aligned(CACHELINESIZE))) B##name[9]={(7+1)*SZI,(t)&TRAVERSIBLE,0,(t),ACPERMANENT,1,1,1,(v)};
 CREBLOCKVEC1I(iv0,INT,0)    /* ,0   also extended integer 0                                */
 CREBLOCKVEC1I(iv1,INT,1)     /* ,1   also extended integer 1                                */
-#define CREBLOCKVEC2I(name,t) I B##name[9]={(7+2)*SZI,(t)&TRAVERSIBLE,0,(t),ACPERMANENT,0,2,0,0};
+#define CREBLOCKVEC2I(name,t) I __attribute__((aligned(CACHELINESIZE)))  B##name[9]={(7+2)*SZI,(t)&TRAVERSIBLE,0,(t),ACPERMANENT,0,2,0,0};
 CREBLOCKVEC2I(mtm,B01)    /* ,0   also extended integer 0                                */
 D   jnan=NAN;               /* _.                                   */
 A   mnuvxynam[6]={0,0,0,0,0,0};   // name blocks for all arg names
@@ -49,7 +49,7 @@ A   mnuvxynam[6]={0,0,0,0,0,0};   // name blocks for all arg names
 #if !SY_64
 long long validitymask[16]={-1, -1, 0, 0, -1, -1, 0, 0, -1, -1, 0, 0,0,0,0,0};  // maskload expect s64x2 mask
 #elif C_AVX || EMU_AVX || EMU_AVX2
-I validitymask[16]={-1, -1, -1, -1, 0, 0, 0, 0, -1, -1, -1, -1,0,0,0,0};  // allows inverted mask
+I __attribute__((aligned(CACHELINESIZE))) validitymask[16]={-1, -1, -1, -1, 0, 0, 0, 0, -1, -1, -1, -1,0,0,0,0};  // allows inverted mask
 #else
 I validitymask[16]={-1, -1, 0, 0, -1, -1, 0, 0, -1, -1, 0, 0,0,0,0,0};  // native ss2/neon register is s64x2
 #endif
@@ -67,8 +67,9 @@ struct Bd1 Bnumvr[3] = {  // floating-point 0, 1, and 2, used for constants
 {{AKXR(0),FL&TRAVERSIBLE,0,FL,ACPERMANENT,1,0},2.0}
 };
 //I   v00[2]={0,0};         // vector value to use for rank 0 0
+A   __attribute__((aligned(32))) fillvalues[4]={(A)0x20,mtv,iv0,iv1};  // values to use for fills: char, box, xnum, rat
 D   pf=0;                 /* performance frequency                */
-Q   zeroQ={iv0,iv1};          /* 0r1                                  */
+// we now take zeroQ out of fillvalues Q   zeroQ={iv0,iv1};          /* 0r1                                  */
 DX  zeroDX={0,0,iv1};       /* 0                                    */
 Z   zeroZ={0,0};          /* 0j0                                  */
 A   zpath=0;              /* default locale search path           */

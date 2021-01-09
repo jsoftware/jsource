@@ -474,12 +474,12 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
  F2PREFIP;
  {I at=AT(a);
   I wt=AT(w);
-  if(likely(!(((I)jtinplace&(JTRETRY|JTEMPTY))+((UNSAFE(at|wt))&(NOUN&~(B01|INT|FL)))))){  // no error, bool/int/fl args, no empties
+  if(likely(!(((I)jtinplace&(JTRETRY|JTEMPTY))+((at|wt)&(NOUN&~(B01|INT|FL)))))){  // no error, bool/int/fl args, no empties
    // Here for the fast and important case, where the arguments are both B01/INT/FL
    VA *vainfo=(VA*)FAV(self)->localuse.lvp[0];  // extract table line from the primitive
    // The index into va is atype*3 + wtype, calculated sneakily.  We test here to avoid the call overhead
 // obsolete    jt->mulofloloc = 0;  // Reinit multiplier-overflow count, in case we hit overflow.  Needed only on integer multiply, but there's no better place
-   aadocv=&vainfo->p2[(UNSAFE(at)>>(INTX-1))+((UNSAFE(at)+UNSAFE(wt))>>INTX)];
+   aadocv=&vainfo->p2[(at>>(INTX-1))+((at+wt)>>INTX)];
   }else{
 
    // If an operand is empty, turn it to Boolean, and if the OTHER operand is non-numeric, turn that to Boolean too (leaving
@@ -1287,7 +1287,7 @@ DF2(jtatomic2){A z;
  UI ar=AR(a), wr=AR(w), awr=(ar<<RANKTX)+wr; I awm1=(AN(a)-1)|(AN(w)-1);
  selfranks=jtranks==(RANK2T)~0?selfranks:jtranks;
  // check for singletons
- if(!(awm1|((AT(a)|AT(w))&(NOUN&UNSAFE(~(B01+INT+FL)))))){
+ if(!(awm1|((AT(a)|AT(w))&(NOUN&~(B01+INT+FL))))){
   z=jtssingleton(jtinplace,a,w,self,(RANK2T)awr,selfranks);
   if(likely(z!=0)){RETF(z);}  // normal case is good return
   if(unlikely(jt->jerr<=NEVM)){RETF(z);}   // if error is unrecoverable, don't retry
@@ -1370,11 +1370,11 @@ VA2 jtvar(J jt,A self,I at,I wt){I t;
   // then [13-19] are for verb/, with precisions B I D Z X Q Symb
   // [20-26] for verb\, and [27-33] for verb\.
   VA *vainfo=(VA*)FAV(self)->localuse.lvp[0];  // extract table line from the primitive
-  if(!((t=UNSAFE(at|wt))&(NOUN&~(B01|INT|FL)))){
+  if(!((t=(at|wt))&(NOUN&~(B01|INT|FL)))){
    // Here for the fast and important case, where the arguments are both B01/INT/FL
    // The index into va is atype*3 + wtype, calculated sneakily
 // obsolete    jt->mulofloloc = 0;  // Reinit multiplier-overflow count, in case we hit overflow
-   R vainfo->p2[(UNSAFE(at)>>(INTX-1))+((UNSAFE(at)+UNSAFE(wt))>>INTX)];
+   R vainfo->p2[(at>>(INTX-1))+((at+wt)>>INTX)];
   }else if(!(t&(NOUN&~NUMERIC))) {
    // Here one of the arguments is CMPX/RAT/XNUM  (we don't support XD and XZ yet)
    // They are in priority order CMPX, FL, RAT, XNUM.  Extract those bits and look up

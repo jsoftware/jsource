@@ -310,7 +310,7 @@ B jtccvt(J jt,I tflagged,A w,A*y){F1PREFIP;A d;I n,r,*s,wt; void *wv,*yv;I t=tfl
  }
  // Now known to be non-sparse, and numeric or literal except when empty or BOX or SBT not being changed
  // If type is already correct, return a clone - used to force a copy.  Should get rid of this kludge
- if(TYPESEQ(t,AT(w))){RZ(*y=ca(w)); R 1;}
+ if(unlikely(TYPESEQ(t,AT(w)))){RZ(*y=ca(w)); R 1;}
  // else if(n&&t&JCHAR){ASSERT(HOMO(t,wt),EVDOMAIN); RZ(*y=uco1(w)); R 1;}
  // Kludge on behalf of result assembly: we want to be able to stop converting after the valid cells.  If NOUNCVTVALIDCT is set in the type,
  // we use the input *y as as override on the # cells to convert.  We use it to replace n (for use here) and yv, and AK(w) and AN(w) for the subroutines.
@@ -332,7 +332,7 @@ B jtccvt(J jt,I tflagged,A w,A*y){F1PREFIP;A d;I n,r,*s,wt; void *wv,*yv;I t=tfl
  // be used.  For higher ranks, we need the shape from s.  So it's just as well that we take the shape from s now
  *y=d;  wv=voidAV(w); // return the address of the new block
  if(unlikely(t&CMPX))fillv(t,n,(C*)yv);   // why??  just fill in imaginary parts as we need to
- if(!n)R 1;
+ if(unlikely(!n))R 1;
  // Perform the conversion based on data types
  // For branch-table efficiency, we split the literal conversions into one block, and
  // the rest in another
@@ -347,7 +347,7 @@ B jtccvt(J jt,I tflagged,A w,A*y){F1PREFIP;A d;I n,r,*s,wt; void *wv,*yv;I t=tfl
    case CVCASECHAR(C2TX, C4TX): R C2fromC4(w, yv);
    case CVCASECHAR(C4TX, LITX): R C4fromC1(w, yv);
    case CVCASECHAR(C4TX, C2TX): R C4fromC2(w, yv);
-#if 0  // bit types
+#if 0  // obsolete
    case CVCASECHAR(BITX, B01X): R cvt2bit(w, yv);
    case CVCASECHAR(BITX, INTX): R cvt2bit(w, yv);
    case CVCASECHAR(BITX, FLX): R cvt2bit(w, yv);

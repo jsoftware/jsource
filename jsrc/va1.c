@@ -168,7 +168,7 @@ static A jtva1(J jt,A w,A self){A z;I cv,n,t,wt,zt;VA1F ado;
  if(unlikely((-(AT(w)&SPARSE)&-n)<0))R va1s(w,self,cv,ado);  // branch off to do sparse
  // from here on is dense va1
  t=atype(cv); zt=rtype(cv);  // extract required type of input and result
- if(UNSAFE(t&~wt)){RZ(w=cvt(t,w)); jtinplace=(J)((I)jtinplace|JTINPLACEW);}  // convert input if necessary; if we converted, converted result is ipso facto inplaceable.  t is usually 0
+ if(t&~wt){RZ(w=cvt(t,w)); jtinplace=(J)((I)jtinplace|JTINPLACEW);}  // convert input if necessary; if we converted, converted result is ipso facto inplaceable.  t is usually 0
  if(ASGNINPLACESGN(SGNIF((I)jtinplace,JTINPLACEWX)&SGNIF(cv,VIPOKWX),w)){z=w; if(TYPESNE(AT(w),zt))MODBLOCKTYPE(z,zt)}else{GA(z,zt,n,AR(w),AS(w));}
  if(!n){RETF(z);} 
  I oprc = ((AHDR1FN*)ado)(jt,n,AV(z),AV(w));  // perform the operation on all the atoms, save result status.  If an error was signaled it will be reported here, but not necessarily vice versa
@@ -207,7 +207,7 @@ DF1(jtatomic1){A z;
  F1PREFIP;ARGCHK1(w);
  I awm1=AN(w)-1;
  // check for singletons
- if(!(awm1|(AT(w)&(NOUN&UNSAFE(~(B01+INT+FL)))))){  // len=1 andbool/int/float
+ if(!(awm1|(AT(w)&(NOUN&~(B01+INT+FL))))){  // len=1 andbool/int/float
   z=jtssingleton1(jtinplace,w,self);
   if(z||jt->jerr<=NEVM){RETF(z);}  // normal return, or non-retryable error
   // if retryable error, fall through.  The retry will not be through the singleton code

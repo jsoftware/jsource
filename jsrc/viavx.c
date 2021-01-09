@@ -411,7 +411,7 @@ static UI cthia(UIL ctmask,D hct,A y){UC*yv;D d;I n,t;Q*u;
 static UI jthiau(J jt,A y){I m,n;UC*v=UAV(y);UI z;X*u,x;
  m=n=AN(y);
  if(!n)R 0;
- switch(UNSAFE(AT(y))){
+ switch(AT(y)){
   case INT:  R hici(n,AV(y));
   case RAT:  m+=n;  /* fall thru */
   case XNUM: z=-1LL; u=XAV(y); DQ(m, x=*u++; v=UAV(x); z=CRC32((UI4)z,(UI4)hicnz(AN(x)*SZI,UAV(x)));); R z;
@@ -2109,7 +2109,7 @@ A jtindexofprehashed(J jt,A a,A w,A hs){A h,*hv,x,z;AF fn;I ar,*as,at,c,f1,k,m,m
  c &= REPSGN(~(f1|(ar-r)));   // w must have rank big enough to hold a cell of a.  Clear c if f1<0 or r>ar
  if(ICMP(as+ar-r,ws+f1,r))c=0;  // and its shape at that rank must match the shape of a cell of a
  // If there is any error, switch back to the non-prehashed code.  We must remove any command bits from mode, leaving just the operation type
- if(unlikely((-m&-n&-c&NEGIFHOMO(t,wt)&(UNSAFE(wt)-(UNSAFE(t)+1)))>=0))R indexofsub(mode&IIOPMSK,a,w);
+ if(unlikely((-m&-n&-c&NEGIFHOMO(t,wt)&(wt-(t+1)))>=0))R indexofsub(mode&IIOPMSK,a,w);
 
  // allocate enough space for the result, depending on the type of the operation
  switch(mode&IIOPMSK){
@@ -2299,7 +2299,7 @@ A jtiocol(J jt,I mode,A a,A w){A h,z;I ar,at,c,d,m,p,t,wr,*ws,wt;void(*fn)();
  GATV(z,INT,AN(w),wr,ws);
  // call routine based on types.  Only float and CMPX are supported
  UIL ctmask;
- switch(UNSAFE(t)){
+ switch(t){
   default:   ASSERT(0,EVNONCE);     
   case FL:   fn=mode==IICO?jtjocold:jtiocold; ctmask=calcctmask(jt->cct); break;
   case CMPX: fn=mode==IICO?jtjocolz:jtiocolz; ctmask=calcctmask(jt->cct); break;

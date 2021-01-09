@@ -40,7 +40,7 @@ void jtfillv(J jt,I t,I n,C*v){
 #if SY_64
  I fillaction=(0xd0800200fa0008>>(3*CTTZ(t)))&7;  // get 3-bit action code
 #else
- I fillaction=fillactions[3*CTTZ(t)];
+ I fillaction=fillactions[CTTZ(t)];
 #endif
  if(likely((fillaction&6)==0)){memset(v,fillaction<<5,n<<k);  // types 00x: fill with 00 or 20 - direct numeric or LIT
  }else{  // others require filling with multibyte value

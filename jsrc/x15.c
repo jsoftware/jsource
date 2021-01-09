@@ -655,11 +655,11 @@ static void docall(FARPROC fp, I*d, I cnt, DoF* dd, I dcnt, C zl, I*v, B alterna
 }
 
 static void convertdown(I*pi,I n,C t){
- if(n)switch(t){  // scaf do without switch
+ if(n)switch(t){
+  case 'f': {float*pt=(float*)pi;D*pd=(D*)pi; DO(n, pt[i]=(float)pd[i];);} break;
   case 'b': {BYTE*pt=(BYTE*)pi;               DO(n, pt[i]=(BYTE)pi[i];);} break;
   case 's': {short*pt=(short*)pi;             DO(n, pt[i]=(short)pi[i];);} break;
   case 'i': {int  *pt=(int  *)pi;             DO(n, pt[i]=(int)  pi[i];);} break;
-  case 'f': {float*pt=(float*)pi;D*pd=(D*)pi; DO(n, pt[i]=(float)pd[i];);} break;
 #ifdef _WIN32
   case 'z': {float_complex*pt=(float_complex*)pi;D*pd=(D*)pi; DO(n, pt[i]=_FCOMPLEX_((float)pd[2*i],(float)pd[1+2*i]););} break;
 #else
@@ -668,11 +668,11 @@ static void convertdown(I*pi,I n,C t){
 }}   /* convert I in place to s or int and d to f and j to z */
 
 static void convertup(I*pi,I n,C t){I j=n;
- if(n)switch(t){  // scaf do without switch
+ if(n)switch(t){
+  case 'f': {float*pt=(float*)pi;D*pd=(D*)pi; DQ(n, --j; pd[j]=(D)pt[j];);} break;
   case 'b': {BYTE*pt=(BYTE*)pi;               DQ(n, --j; pi[j]=(I)pt[j];);} break;
   case 's': {short*pt=(short*)pi;             DQ(n, --j; pi[j]=(I)pt[j];);} break;
   case 'i': {int  *pt=(int  *)pi;             DQ(n, --j; pi[j]=(I)pt[j];);} break;
-  case 'f': {float*pt=(float*)pi;D*pd=(D*)pi; DQ(n, --j; pd[j]=(D)pt[j];);} break;
   case 'z': {float_complex*pt=(float_complex*)pi;D*pd=(D*)pi; DQ(n, --j; pd[1+2*j]=(D)cimagf(pt[j]); pd[2*j]=(D)crealf(pt[j]););} break;
 }}   /* convert s or int to I and f to d and z to j */
 

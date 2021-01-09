@@ -47,11 +47,14 @@ ZF2(jtzdiv){ZF2DECL;D t;
  if(ZNZ(v)){
   if(ABS(c)<ABS(d)){t=a; a=-b; b=t;  t=c; c=-d; d=t;}
   a/=c; b/=c; d/=c; t=1+d*d; zr=(a+TYMES(b,d))/t; zi=(b-TYMES(a,d))/t;
- }else if(ZNZ(u))switch(2*(I )(0>a)+(I )(0>b)){  // scaf rewrite w/o switch
-   case 0: if(a> b)zr= inf; else zi= inf; break; 
-   case 1: if(a>-b)zr= inf; else zi=-inf; break;
-   case 2: if(a<-b)zr=-inf; else zi= inf; break;
-   case 3: if(a< b)zr=-inf; else zi=-inf;
+ }else if(ZNZ(u)){  // division by 0
+// obsolete   switch(2*(I )(0>a)+(I )(0>b)){  // scaf rewrite w/o switch
+// obsolete   case 0: if(a> b)zr= inf; else zi= inf; break; 
+// obsolete   case 1: if(a>-b)zr= inf; else zi=-inf; break;
+// obsolete   case 2: if(a<-b)zr=-inf; else zi= inf; break;
+// obsolete   case 3: if(a< b)zr=-inf; else zi=-inf;
+// obsolete   }
+  if(ABS(a)>ABS(b))zr=a/0.0;else zi=b/0.0;  // set the larger axis to infibity
  }
  ZEPILOG;
 }
@@ -104,13 +107,18 @@ ZF2(jtzgcd){D a,b;Z t,z;I lim;
  ZASSERT(!(ZINF(u)||ZINF(v)),EVNAN);
  for(lim=2048; lim>0&&ZNZ(u); --lim){t=zrem(u,v); v.re=u.re; v.im=u.im; u.re=t.re; u.im=t.im;}  // max # iters is log(MAXFLOAT)/log(phi)
  if(lim==0)R zeroZ;  // if Euclid failed, return 0j0
- z.re=a=v.re; z.im=b=v.im;
- switch(2*(I )(0>a)+(I )(0>b)){  // scaf rewrite w/o switch
-  case 0: if(!a){z.re= b; z.im=0;}                        break;
-  case 1:                              z.re=-b; z.im= a;  break;
-  case 2: if(!b){z.re=-a; z.im=0;}else{z.re= b; z.im=-a;} break;
-  case 3:                              z.re=-a; z.im=-b;
- }
+ // Move result into first quadrant, and off the real axis
+ I RrIi=(((v.re>0)*2+(v.re==0))*2+(v.im>0))*2+(v.im==0);  // classify result signs en bloc
+ z.re=ABS(v.re); z.im=ABS(v.im);
+ if((0xf1f4>>RrIi)&1){D zt=z.re; z.re=z.im; z.im=zt;}  // swap if re==0, or im!=0&(re>0!=im>0) 1111 0001 1111 0100
+// obsolete  z.re=a=v.re; z.im=b=v.im;
+// obsolete  switch(2*(I )(0>a)+(I )(0>b)){  // scaf rewrite w/o switch
+// obsolete   case 0: if(!a){z.re= b; z.im=0;}                        break;
+// obsolete   case 1:                              z.re=-b; z.im= a;  break;
+// obsolete   case 2: if(!b){z.re=-a; z.im=0;}else{z.re= b; z.im=-a;} break;
+// obsolete   case 3:                              z.re=-a; z.im=-b;
+// obsolete  }
+// obsolete  if(zz.re!=z.re||zz.im!=z.im)SEGFAULT;  // scaf
  R z;
 }
 
@@ -278,19 +286,22 @@ B jtztridiag(J jt,I n,A a,A x){I i,j,n1=n-1;Z*av,d,p,*xv;
  R 1;
 }
 
+static
 DF1(jtexppi){A z;B b;D r,th,y;I k;Z*v,t;
  F1RANK(0,jtexppi,DUMMYSELF);
- if(!(CMPX&AT(w)))R expn1(pix(w)); 
- v=ZAV(w); r=exp(PI*v->re); y=v->im; if(b=0>y)y=-y;
+ if(!(CMPX&AT(w)))R expn1(pix(w));   // if not complex, revert
+ v=ZAV(w); r=exp(PI*v->re); y=v->im; if(b=0>y)y=-y;  // take exp of real part, set y=imaginary part
  th=y-2*(I)(y/2); k=(I)(2*th); if(k!=2*th)k=-1; else if(b&&k)k=4-k;
- if(!((UI)k<=(UI)3))R expn1(pix(w));
- switch(k){  // scaf rewrite w/o switch
-  case 0: t.re= r; t.im= 0; break;
-  case 1: t.re= 0; t.im= r; break;
-  case 2: t.re=-r; t.im= 0; break;
-  case 3: t.re= 0; t.im=-r; break;
- }
- GAT0(z,CMPX,1,0); ZAV(z)[0]=t; R z;
+ if(!((UI)k<=(UI)3))R expn1(pix(w));   // if k is not an exact multiple of 0.5, revert - what good is that???
+// obsolete  switch(k){  // scaf rewrite w/o switch
+// obsolete   case 0: t.re= r; t.im= 0; break;
+// obsolete   case 1: t.re= 0; t.im= r; break;
+// obsolete   case 2: t.re=-r; t.im= 0; break;
+// obsolete   case 3: t.re= 0; t.im=-r; break;
+// obsolete  }
+ GAT0(z,CMPX,1,0); ZAV(z)[0].re=ZAV(z)[0].im=0; DAV(z)[k&1]=r*(1-(k&2));  // set result to 0, then store into real or imag, possibly changing sign
+// obsolete  ZAV(z)[0]=t;
+ R z;
 }    /* special code for ^@o. */
 
 

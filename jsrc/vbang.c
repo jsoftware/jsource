@@ -71,19 +71,26 @@ AMONPS(factI,  D,I, , *z=dgamma(1.0+(D)*x); , HDR1JERR)
 AMONPS(factD,  D,D, , *z=_isnan(*x)?*x:dgamma(1.0+*x); , HDR1JERR)
 AMONPS(factZ,  Z,Z, , *z=zgamma(zplus(z1,*x)); , HDR1JERR)
 
-
-#define PQLOOP(expr) while(n&&h&&h!=inf&&h!=infm){h*=expr; --n;}
-
-static D pq(D h,D m,D*c,D*d){D x=*c,y=*d;I n=(I)MIN(m,FLIMAX);
+// obsolete 
+// obsolete #define PQLOOP(expr) while(n&&h&&h!=inf&&h!=infm){h*=expr; --n;}
+// obsolete 
+static D pq(D h,D m,D*c,D*d){D x=*c,y=*d;I n=(I)MIN(m,FLIMAX);  // x and y cannot be 0
  if(0>=m)R h;
- switch(2*(I )(0>x)+(I )(0>y)){  // scaf should remove switch
-  case 0: if(x!= y)PQLOOP(x--/y--); break;
-  case 1: if(x!=-y)PQLOOP(x--/y++)else if(m>2*jfloor(0.5*m))h=-h; break;
-  case 2: if(x!=-y)PQLOOP(x++/y--)else if(m>2*jfloor(0.5*m))h=-h; break;
-  case 3: if(x!= y)PQLOOP(x++/y++); break;
+ D xsgn=x<0?-1.0:1.0, ysgn=y<0?-1.0:1.0;
+ if(ABS(x)!=ABS(y)){
+  while(n&&h&&h!=inf&&h!=infm){h*=x/y; x-=xsgn; y-=ysgn; --n;}
+ }else{
+  if(xsgn!=ysgn && m>2*jfloor(0.5*m))h=-h;
  }
- if(0>=*c)*c+=m; else *c-=m;
- if(0>=*d)*d+=m; else *d-=m;
+ *c-=xsgn*m; *d-=ysgn*m;
+// obsolete  switch(2*(I )(0>x)+(I )(0>y)){  // scaf should remove switch
+// obsolete   case 0: if(x!= y)PQLOOP(x--/y--); break;
+// obsolete   case 1: if(x!=-y)PQLOOP(x--/y++)else if(m>2*jfloor(0.5*m))h=-h; break;
+// obsolete   case 2: if(x!=-y)PQLOOP(x++/y--)else if(m>2*jfloor(0.5*m))h=-h; break;
+// obsolete   case 3: if(x!= y)PQLOOP(x++/y++); break;
+// obsolete  }
+// obsolete  if(0>=*c)*c+=m; else *c-=m;
+// obsolete  if(0>=*d)*d+=m; else *d-=m;
  R h;
 }
 

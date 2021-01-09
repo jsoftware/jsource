@@ -78,8 +78,8 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
  if(!zn)R z;  // If no atoms to process, return empty
 
 // original  DO(c, DO(m, if(b[i]){MC(zv,wv,k); zv+=k;} wv+=k;);); break;
-
- 
+ JMCDECL(endmask) JMCSETMASK(endmask,k+SZI-1,0)   // set up for irregular move, if we need one
+  
  while(--c>=0){
   // at top of loop n is biased by the number of leading bytes to skip. wvv points to the first byte to process
   UI *avv=(UI*)(CAV(a)+n); n=m-n+((m&(SZI-1))?SZI:0); UI bits=*avv++;  // prime the pipeline for top of loop
@@ -99,7 +99,8 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
 #if BW==64
    case sizeof(UI4): while(bitstack){I bitx=CTTZI(bitstack); *(UI4*)zvv=((UI4*)wvv)[bitx]; zvv=(C*)zvv+k; bitstack&=bitstack-1;} break;
 #endif
-   default: while(bitstack){I bitx=CTTZI(bitstack); MC(zvv,(C*)wvv+k*bitx,k); zvv=(C*)zvv+k; bitstack&=bitstack-1;} break;  // scaf use JMC
+// obsolete    default: while(bitstack){I bitx=CTTZI(bitstack); MC(zvv,(C*)wvv+k*bitx,k); zvv=(C*)zvv+k; bitstack&=bitstack-1;} break;
+   default: while(bitstack){I bitx=CTTZI(bitstack); JMCR(zvv,(C*)wvv+k*bitx,k+SZI-1,lp000,0,endmask); zvv=(C*)zvv+k; bitstack&=bitstack-1;} break;  // overwrite OK
    }
 
    wvv=(C*)wvv+(k<<LGBW);  // advance base to next batch of 64

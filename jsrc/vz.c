@@ -286,7 +286,6 @@ B jtztridiag(J jt,I n,A a,A x){I i,j,n1=n-1;Z*av,d,p,*xv;
  R 1;
 }
 
-static
 DF1(jtexppi){A z;B b;D r,th,y;I k;Z*v,t;
  F1RANK(0,jtexppi,DUMMYSELF);
  if(!(CMPX&AT(w)))R expn1(pix(w));   // if not complex, revert

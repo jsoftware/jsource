@@ -1554,7 +1554,7 @@ A jtindexofprehashed(J jt,A a,A w,A hs){A h,hi,*hv,x,z;AF fn;I ar,*as,at,c,f1,k,
  if(!(r<=ar&&0<=f1))c=0;   // w must have rank big enough to hold a cell of a
  if(ICMP(as+ar-r,ws+f1,r))c=0;  // and its shape at that rank must match the shape of a cell of a
  // If there is any error, switch back to the non-prehashed code.  We must remove any command bits from mode, leaving just the operation type
- if(!(m&&n&&c&&HOMO(t,wt)&&UNSAFE(t)>=UNSAFE(wt)))R indexofsub(mode&IIOPMSK,a,w);
+ if(!(m&&n&&c&&HOMO(t,wt)&&t>=wt))R indexofsub(mode&IIOPMSK,a,w);
 
  // allocate enough space for the result, depending on the type of the operation
  switch(ztype){

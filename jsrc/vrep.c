@@ -72,11 +72,14 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
   z=w; // inplace
   AN(z)=zn;  // Install the correct atom count
   // see how many leading values of the result are already in position.  We don't need to copy them in the first cell
-  UI *avv=IAV(a); for(n=0;n<(m>>LGSZI);++n)if(avv[n]!=VALIDBOOLEAN)break;
-  // now n has the number of words of a to skip.  Convert that to bytes, and advance wvv to point to the first cell that may move
-  n<<=LGSZI;
-  // if we are skipping ALL the full words, see if there are any values to skip in the remnant.  We know the bits can't ALL be 1, so n MUST be < m
-  if(unlikely(m-n<SZI)){n+=CTTZI(((avv[n>>LGSZI]^VALIDBOOLEAN))|(1LL<<((m-n)<<LGBB)))>>LGBB;}  // look for lowest 0, with sentinel at byte m; add # 0 bytes to n; return w if a is all 1
+  UI *avv=IAV(a); for(n=0;n<((m-1)>>LGSZI);++n)if(avv[n]!=VALIDBOOLEAN)break;  // n ends pointing to a word that is known not all valid, because there MUST be a 0 somewhere
+  // now n has the number of words of a to skip.  Get the number of extra bytes in the last word.
+  UI nextwd=avv[n];  // partially-filled word to check
+  n<<=LGSZI;  // convert skipct to bytes
+// obsolete   I ctinlast=m-n; ctinlast=(ctinlast>7)?7:ctinlast;  // ctinlast=# bytes valid in last word - never more than 7, could be 0
+  // Convert skipcount to bytes, and advance wvv to point to the first cell that may move
+// obsolete   n+=CTTZI(((nextwd^VALIDBOOLEAN))|(1LL<<(ctinlast<<LGBB)))>>LGBB;  // complement; install sentinel 1; count original 1s, add to n
+  n+=CTTZI(nextwd^VALIDBOOLEAN)>>LGBB;  // complement; count original 1s, add to n.  m cannot be 0 so there must be a valid 0 bit in nextwd
   zvv=wvv=(C*)wvv+k*n;  // step input over items left in place; use that as the starting output pointer also
 // obsolete  zvv=CAV(z)+k*n;   // step the output pointer over the initial items left in place
   exactlen=!!(k&(SZI-1));  // if items are not multiples `of I, require exact len.  Since we skip an unchanged prefix, we will seldom have address contention during the copy
@@ -90,7 +93,7 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
   
  while(--c>=0){
   // at top of loop n is biased by the number of leading bytes to skip. wvv points to the first byte to process
-  UI *avv=(UI*)(CAV(a)+n); n=m-n+((m&(SZI-1))?SZI:0); UI bits=*avv++;  // prime the pipeline for top of loop
+  UI *avv=(UI*)(CAV(a)+n); n=m-n; n+=((n&(SZI-1))?SZI:0); UI bits=*avv++;  // prime the pipeline for top of loop.  Extend n only if needed to get all bits, and only by a full word
   while(n>0){    // where we load bits SZI at a time
    // skip empty words, to get best speed on near-zero a.  This exits with the first unskipped word in bits
    while(bits==0 && n>=(2*SZI)){bits=*avv++; n-=SZI; wvv=(C*)wvv+(k<<LGSZI);}  // fast-forward over zeros.  Always leave 1 word so we have a batch to process
@@ -98,7 +101,7 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
    UI bitstack=0; while(--batchsize>0){I bits2=*avv++; PACKBITSINTO(bits,bitstack); bits=bits2;};  // keep read pipe ahead
    // Handle the last word of the batch.  It might have non-Boolean data at the end, AFTER the Boolean padding.  Just clear the non-boolean part in this line
    bits&=VALIDBOOLEAN; PACKBITSINTO(bits,bitstack);
-   // Now handle the last batch, by discarding garbage bits at the end and then shifting the lead bit down to bit 0
+   // Now handle the last batch, by removing initial extension if any, discarding garbage bits at the end, and then shifting the lead bit down to bit 0
    if(n>=BW+SZI)bits=*avv++;else {n-=n&(SZI-1)?SZI:0; bitstack<<=(BW-n)&(SZI-1); bitstack>>=BW-n;}  // discard invalid trailing bits; shift leading byte to position 0.  For non-last batches, start on next batch
    switch(k){  // copy the words
    case sizeof(UI): while(bitstack){I bitx=CTTZI(bitstack); *(UI*)zvv=((UI*)wvv)[bitx]; zvv=(C*)zvv+k; bitstack&=bitstack-1;} break;

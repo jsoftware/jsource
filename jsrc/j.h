@@ -873,7 +873,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define ATOMIC2(jt,a,w,fs,l,r,cxx) (FAV((A)(fs))->fgh[0]=ds(cxx), FAV((A)(fs))->id=CQQ, FAV((A)(fs))->lrr=(RANK2T)((l)<<RANKTX)+(r), jtatomic2(jt,(a),(w),(A)fs))
 
 // memory copy, for J blocks.  Like memcpy, but knows it can fetch outside the arg boundaries for LIT-type args
-// if bytelen is 1, the arg may be of any length; if 0, must be a multiple of Is and the low bits of length are ignored
+// if bytelen is 1, the arg may be of any length; if 0, must be a multiple of Is and the low bits of length are ignored; full words only are moved
 // Normal use allowing overcopy: JMC(d,s,l+(SZI-1),lbl,0)    where lbl is a unique statement label
 // Normal use not allowing overcopy: JMC(d,s,l,lbl,1)    where lbl is a unique statement label
 // For use in loop, allowing overcopy: JMCDECL(endmask) JMCSETMASK(endmask,l+(SZI-1),0)   DO(...,  JMCR(d,s,l+(SZI-1),lbl,0,endmask)    )

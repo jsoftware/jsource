@@ -44,41 +44,49 @@ static REPF(jtrepzsx){A q,x,y;I c,d,j,k=-1,m,p=0,*qv,*xv,*yv;P*ap;
 }    /* (sparse complex) #"r (dense or sparse) */
 
 static REPF(jtrepbdx){A z;I c,k,m,p;
- // wf and wcr are set
+ // wf and wcr are set.  a is repeated for each cell of w
  F2PREFIP;ARGCHK2(a,w);
  if(SPARSE&AT(w))R irs2(ifb(AN(a),BAV(a)),w,0L,1L,wcr,jtfrom);
- m=AN(a);
- void *zvv; void *wvv=voidAV(w); I n=0; // pointer to output area; pointer to input data; number of prefix bytes to skip in first cell
+ m=AN(a);   // m is # minor cells in a major cell, i. e. #booleans in a
+ void *zvv; void *wvv=voidAV(w); I n; // pointer to output area; pointer to input data; number of prefix bytes to skip in first cell
  p=bsum(m,BAV(a));  // p=# 1s in result, i. e. length of result item axis
  if(m==p){RETF(w);}  // if all the bits are 1, we can return very quickly.  It's rare, but so cheap to test for.
- PROD(c,wf,AS(w)); PROD(k,wcr-1,AS(w)+wf+1); // c=#cells, k=#atoms per item of cell
+ PROD(c,wf,AS(w)); PROD(k,wcr-1,AS(w)+wf+1); // c=#major cells, k=#atoms per item of cell
  I zn=c*k*p;  // zn=#atoms in result
  k<<=bplg(AT(w));   // k is now # bytes/cell
  // if the result is inplaceable, AND it is not getting much shorter, keep the same result area
  // We retain the old block as long as the new one is at least half as big, without looking at total size of the allocation,
  // This could result in a very small block's remaining in a large allocation after repeated trimming.  We will accept the risk.
  // Accept only DIRECT blocks so we don't have to worry about explicitly freeing uncopied cells
+ I exactlen;  // will be 1 if overstore is not allowed on copy
  if(!ASGNINPLACESGN(SGNIF((I)jtinplace,JTINPLACEWX)&(m-2*p)&(-(AT(w)&DIRECT)),w)) {
   // normal non-in-place copy
     // no overflow possible unless a is empty; nothing  moved then, and zn is 0
   GA(z,AT(w),zn,AR(w),0); MCISH(AS(z),AS(w),AR(w)) // allocate result
   zvv=voidAV(z);  // point to the output area
   // pristine status can be transferred to the result, because we know we are not repeating any cells
-  AFLAG(z)|=AFLAG(w)&((SGNTO0(AC(w))&((I)jtinplace>>JTINPLACEWX))<<AFPRISTINEX);  // result pristine if innplaceable input was
+  AFLAG(z)|=AFLAG(w)&((SGNTO0(AC(w))&((I)jtinplace>>JTINPLACEWX))<<AFPRISTINEX);  // result pristine if inplaceable input was
+  exactlen=0;  // OK to overstore when copying to new buffer
+  n=0;  // cannot skip prefix of 1s if not inplace
  }else{
   z=w; // inplace
   AN(z)=zn;  // Install the correct atom count
   // see how many leading values of the result are already in position.  We don't need to copy them in the first cell
-  UI *avv=IAV(a); for(;n<(m>>LGSZI);++n)if(avv[n]!=VALIDBOOLEAN)break;
-  // now n has the number of words to skip.  Convert that to bytes, and advance wvv to point to the first cell that may move
-  n<<=LGSZI; wvv=(C*)wvv+k*n;
-  zvv=CAV(z)+k*n;   // step the output pointer over the initial items left in place
+  UI *avv=IAV(a); for(n=0;n<(m>>LGSZI);++n)if(avv[n]!=VALIDBOOLEAN)break;
+  // now n has the number of words of a to skip.  Convert that to bytes, and advance wvv to point to the first cell that may move
+  n<<=LGSZI;
+  // if we are skipping ALL the full words, see if there are any values to skip in the remnant.  We know the bits can't ALL be 1, so n MUST be < m
+  if(unlikely(m-n<SZI)){n+=CTTZI(((avv[n>>LGSZI]^VALIDBOOLEAN))|(1LL<<((m-n)<<LGBB)))>>LGBB;}  // look for lowest 0, with sentinel at byte m; add # 0 bytes to n; return w if a is all 1
+  zvv=wvv=(C*)wvv+k*n;  // step input over items left in place; use that as the starting output pointer also
+// obsolete  zvv=CAV(z)+k*n;   // step the output pointer over the initial items left in place
+  exactlen=!!(k&(SZI-1));  // if items are not multiples `of I, require exact len.  Since we skip an unchanged prefix, we will seldom have address contention during the copy
+  // since the input is abandoned and no cell is ever duplicated, pristinity is unchanged
  }
  AS(z)[wf]=p;  // move in length of item axis, #bytes per item of cell
  if(!zn)R z;  // If no atoms to process, return empty
 
 // original  DO(c, DO(m, if(b[i]){MC(zv,wv,k); zv+=k;} wv+=k;);); break;
- JMCDECL(endmask) JMCSETMASK(endmask,k+SZI-1,0)   // set up for irregular move, if we need one
+ JMCDECL(endmask) JMCSETMASK(endmask,k+((SZI-1)&(exactlen-1)),exactlen)   // set up for irregular move, if we need one
   
  while(--c>=0){
   // at top of loop n is biased by the number of leading bytes to skip. wvv points to the first byte to process
@@ -100,7 +108,7 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
    case sizeof(UI4): while(bitstack){I bitx=CTTZI(bitstack); *(UI4*)zvv=((UI4*)wvv)[bitx]; zvv=(C*)zvv+k; bitstack&=bitstack-1;} break;
 #endif
 // obsolete    default: while(bitstack){I bitx=CTTZI(bitstack); MC(zvv,(C*)wvv+k*bitx,k); zvv=(C*)zvv+k; bitstack&=bitstack-1;} break;
-   default: while(bitstack){I bitx=CTTZI(bitstack); JMCR(zvv,(C*)wvv+k*bitx,k+SZI-1,lp000,0,endmask); zvv=(C*)zvv+k; bitstack&=bitstack-1;} break;  // overwrite OK
+   default: while(bitstack){I bitx=CTTZI(bitstack); JMCR(zvv,(C*)wvv+k*bitx,k+((SZI-1)&(exactlen-1)),lp000,exactlen,endmask); zvv=(C*)zvv+k; bitstack&=bitstack-1;} break;  // overwrite OK
    }
 
    wvv=(C*)wvv+(k<<LGBW);  // advance base to next batch of 64
@@ -267,7 +275,7 @@ I att=SGNTO0(-(AT(a)&B01+SB01))+((UI)(-(AT(a)&CMPX+SCMPX))>>(BW-1-1));  // 0 if 
    if(!(AT(w)&SPARSE)){GA(z,AT(w),0,AR(w),0); MCISH(AS(z),AS(w),AR(w)) AS(z)[wf]=0; RETF(z);}  // 0 # y, return empty
   }
  }
- if(((1-acr)|(acr-ar))<0){z=rank2ex(a,w,DUMMYSELF,MIN(1,acr),wcr,acr,wcr,jtrepeat); PRISTCLRF(w) RETF(z);}  // multiple cells - must losr pristinity  // loop if multiple cells of a
+ if(((1-acr)|(acr-ar))<0){z=rank2ex(a,w,DUMMYSELF,MIN(1,acr),wcr,acr,wcr,jtrepeat); PRISTCLRF(w) RETF(z);}  // multiple cells - must lose pristinity; loop if multiple cells of a
  ASSERT((-acr&-wcr)>=0||(AS(a)[0]==AS(w)[wf]),EVLENGTH);
  z=(*repfn)(jtinplace,a,w,wf,wcr);
  // mark w not pristine, since we pulled from it

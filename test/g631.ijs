@@ -336,12 +336,12 @@ isprist 13!:83 <@:+:"1 i. 4 5
 isprist 13!:83 <@:+:"1 i. 5
 isprist 13!:83 (i. 5 ) <@:+"1 i. 4 5
 isprist 13!:83 'abcda' </. i. 5   NB. w is permuted before use
-isprist 13!:83 'abcda' <@]/. +: i. 5
+IF64 = isprist 13!:83 'abcda' <@]/. +: i. 5
 isprist 13!:83 'abcda' <@:+:/. i. 5
 isprist 13!:83 (1 0 0 1 0) <;.1 i. 5  NB. i. 5 is not inplaceable but special code does the copy
 isprist 13!:83 (1 0 0 1 0) <;.1 +: i. 5
 -. isprist 13!:83 (1 0 0 1 0) <@];._1 i. 5
-isprist 13!:83 (1 0 0 1 0) <@];._1 +: i. 5
+IF64 = isprist 13!:83 (1 0 0 1 0) <@];._1 +: i. 5
 isprist 13!:83 (1 0 0 1 0) <@:+:;._2 i. 5
 isprist 13!:83 <;.2 'abcdeabac'   NB. LIT is never inplaceable but special code does the copy
 -. isprist 13!:83  <@:];.1 'abcdeabac'
@@ -349,7 +349,7 @@ isprist 13!:83  <@(2&#);.1 'abcdeabac'
 isprist 13!:83 <;.2 (3 1 4 1 5 9 2 5 3 1)
 -. isprist 13!:83  <@:];.1 (3 1 4 1 5 9 2 5 3 1)
 isprist 13!:83 <;.2 +: (3 1 4 1 5 9 2 5 3 1)
-isprist 13!:83  <@:];.1 +: (3 1 4 1 5 9 2 5 3 1)
+IF64 = isprist 13!:83  <@:];.1 +: (3 1 4 1 5 9 2 5 3 1)
 isprist 13!:83  <@(2&#);.1 (3 1 4 1 5 9 2 5 3 1)
 
 

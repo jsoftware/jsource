@@ -438,9 +438,10 @@ F2(jtfrom){I at;A z;
  if(likely(!((AT(a)|AT(w))&(SPARSE)))){
   // if B01|INT|FL atom { INT|FL|BOX array, and no frame, just pluck the value.  If a is inplaceable and not unincorpable, use it
   // If we turn the result to BOX it will have the original flags, i. e. it will be nonrecursive.  Thus fa will not free the contents, which do not have incremented usecount (and are garbage on error)
-  if(SY_64&&!((AT(a)&(NOUN&~(B01|INT|FL)))+(AT(w)&(NOUN&~(INT|FL|BOX)))+AR(a)+(SGNTO0((((RANKT)jt->ranks-AR(w))|(AR(w)-1))))+(AFLAG(w)&AFNJA))){   // NJAwhy
+  // We allow FL only if it is the same saize as INT
+  if(!((AT(a)&(NOUN&~(B01|INT|(SY_64*FL))))+(AT(w)&(NOUN&~(INT|(SY_64*FL)|BOX)))+AR(a)+(SGNTO0((((RANKT)jt->ranks-AR(w))|(AR(w)-1))))+(AFLAG(w)&AFNJA))){   // NJAwhy
    I av;  // selector value
-   if(AT(a)&(B01|INT)){av=BIV0(a);  // INT index
+   if(!SY_64||AT(a)&(B01|INT)){av=BIV0(a);  // INT index
    }else{  // FL index
     D af=DAV(a)[0], f=jround(af); av=(I)f;
     ASSERT(f==af || FFIEQ(f,af),EVDOMAIN);  // if index not integral, complain.  IMAX/IMIN will fail presently.  We rely on out-of-bounds conversion to peg out one side or other (standard violation)

@@ -268,7 +268,9 @@ NB. x ^@:p. y -----------------------------------------------------------
 'domain error' -: ($0) ^@:p. etx y=:r.?3 4$100
 
 f =: 4 : 0
-(x ^@p. etx y) -: x ^@:p. etx y
+res =. (x ^@p. etx y) (-: +. -:&(0 ([`([: I. 1e_50 > |@])`])} ])`1:@.(2 e. ,&(3!:0)) ) x ^@:p. etx y  NB. either tolerant = or both less than a tiny value
+if. -. res do. xx =: x [ yy =: y end.
+res
 )
 
 y =: (10 ?@$ 2);(_500 + 10 ?@$ 1000);(_5 10 p. 10 ?@$ 0);(j./ _5 10 p. 2 10 ?@$ 0);(x: _500 + 10 ?@$ 1000);(_2 x: x: (+ 0&=) _500 + 10 2 ?@$ 1000);_ __ 0 0 __ _ _ _ __ __
@@ -374,6 +376,6 @@ NB. (c;r) (p. -: pdot) z
 4!:55 ;:'a b boxed c cfr ct d d1 d2 del delta dfl '
 4!:55 ;:'div emm err evc evr f fc fr g h '
 4!:55 ;:'lg mt n p pc pdot pdot1 pdot2 pm pr ptimes r r1'
-4!:55 ;:'rem rfc root rou rov rs s sq step test x y z '
+4!:55 ;:'rem rfc root rou rov rs s sq step test x y xx yy z '
 
 

@@ -102,6 +102,7 @@ static A jtmemoget(J jt,I x,I y,A self){A h,*hv,q;I*jv,k,m,*v;
  R AAV(hv[2])[((v-jv)>>1)];  // return match if found, 0 if not
 }
 
+// add new arg(s)/result pair which missed during lookup.  Args are I, result is A
 static A jtmemoput(J jt,I x,I y,A self,A z){A*cv,h,*hv,q;I *jv,k,m,*mv,*v;
  RZ(z);
  h=FAV(self)->fgh[2]; hv=AAV(h);  // c = # fa()s needed to deallocate self, not counting the ones that just protect the name
@@ -109,19 +110,26 @@ static A jtmemoput(J jt,I x,I y,A self,A z){A*cv,h,*hv,q;I *jv,k,m,*mv,*v;
  q=hv[1]; jv= AV(q);
  q=hv[2]; cv=AAV(q); m=AN(q);
  // If the buffer must be extended, allocate a new one
- if(m<=2**mv){A cc,*cu=cv,jj;I i,*ju=jv,n=m,*u;A* _ttop=jt->tnextpushp;
+ if(m<=2**mv){A cc,*cu=cv,jj;I i,*ju=jv,n=m,*u;
+// obsolete A* _ttop=jt->tnextpushp;
   FULLHASHSIZE(2**mv,BOXSIZE,1,0,m);  // # boxes to allocate to get at least 2**mv slots
   RZ(jj=mkwris(reshape(v2(m,2L),sc(IMIN)))); jv= AV(jj);  // init arg table to IMIN
-  GATV0(cc,BOX,m,1);                  cv=AAV(cc);
-  for(i=0,u=ju;i<n;++i,u+=2){if(IMIN!=*u){  // copy the hash - does this lose the buffer for an arg of IMIN?
-   // the current slot in the memo table is filled.  Rehash it, and move the args into *jv and the values into *cv
-   k=HIC(x,y)%m; v=jv+2*k; while(IMIN!=*v){v+=2; if(v==jv+2*m)v=jv;}
-   cv[(v-jv)>>1]=cu[i]; v[0]=u[0]; v[1]=u[1];
-  }cu[i]=0;}  // always clear the pointer to the value so that we don't free the value when we free the old table
+  GATV0(cc,BOX,m,1); AFLAG(cc)|=BOX; cv=AAV(cc);  // the old table is recursive - the new one must be too
+  for(i=0,u=ju;i<n;++i,u+=2){
+   if(IMIN!=*u){  // copy the hash - does this lose the buffer for an arg of IMIN?
+    // the current slot in the memo table is filled.  Rehash it, and move the args into *jv and the values into *cv
+    k=HIC(x,y)%m; v=jv+2*k; while(IMIN!=*v){v+=2; if(v==jv+2*m)v=jv;}
+    cv[(v-jv)>>1]=cu[i]; v[0]=u[0]; v[1]=u[1];
+   }
+   cu[i]=0;  // always clear the pointer to the value so that we don't free the value when we free the old table
+  }
   // Free the old buffers, ras() the new to make them recursive usect, then clear the tpops to bring the usecount down to 1
-  q=hv[1]; AC(q)=1; fa(q); INSTALLBOXNF(h,hv,1,jj);  // expunge old table, install new one.  Could use mf().  h is not virtual
-  q=hv[2]; AC(q)=1; fa(q); ACINCR(cc); hv[2]=cc;   // not INSTALLBOX(h,hv,2,cc); because we DO NOT want to increment the count in the value.  But we do in the cc itself
-  tpop(_ttop);  // get the new buffers off the tpush stack so we can safely free them in the lines above. (no longer needed)
+  // h has recursive usecount
+// obsolete   q=hv[1]; AC(q)=1; fa(q); INSTALLBOXNF(h,hv,1,jj);  // expunge old table, install new one.  Could use mf().  h is not virtual
+// obsolete   q=hv[2]; AC(q)=1; fa(q); ACINCR(cc); hv[2]=cc;   // not INSTALLBOX(h,hv,2,cc); because we DO NOT want to increment the counts in the values already in the table.  But we do in the cc itself
+  mf(hv[1]); *AZAPLOC(jj)=0; hv[1]=jj;   // expunge old table, raise new one, install.   h is not virtual
+  mf(hv[2]); *AZAPLOC(cc)=0; hv[2]=cc;   // not INSTALLBOX(h,hv,2,cc); because we DO NOT want to increment the counts in the values already in the table.  But we do in the cc itself
+// obsolete   tpop(_ttop);  // get the new buffers off the tpush stack so we can safely free them in the lines above. (no longer needed)
  }
  ++*mv;
  k=HIC(x,y)%m; v=jv+2*k; while(IMIN!=*v){v+=2; if(v==jv+2*m)v=jv;}

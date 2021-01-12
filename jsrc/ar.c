@@ -330,7 +330,7 @@ static DF1(jtredg){F1PREFIP;PROLOG(0020);DECLF;AD * RESTRICT a;I i,n,r,wr;
  I aipok = (SGNIF((I)jtinplace&(((AT(w)&TYPEVIPOK)!=0)|f2==jtevery2self),JTINPLACEWX)&AC(w))+ACUC1;   // requires JTINPLACEWX==0.  This is 1 or 8..1
  // We can inplace the right arg the first time if it is direct inplaceable, and always after that (assuming it is an inplaceable result).
  // and the input jtinplace.  We turn off WILLBEOPENED status in jtinplace for the callee.
- AC(wfaux)=aipok;   // first cell is inplaceable if second is
+ ACINIT(wfaux,aipok)   // first cell is inplaceable if second is
  jtinplace = (J)(intptr_t)(((I)jt) + (JTINPLACEW+JTINPLACEA)*((FAV(fs)->flag>>(VJTFLGOK2X-JTINPLACEWX)) & JTINPLACEW));  // all items are used only once
 
  // We need to free memory in case the called routine leaves it unfreed (that's bad form & we shouldn't expect it), and also to free the result of the
@@ -340,7 +340,7 @@ static DF1(jtredg){F1PREFIP;PROLOG(0020);DECLF;AD * RESTRICT a;I i,n,r,wr;
 #define MINGCINTERVAL 8  // max spacing between frees
  I freedist=MIN((n+((1<<LGMINGCS)-1))>>LGMINGCS,MINGCINTERVAL); I freephase=freedist;
  i=n-1; while(1){  // for each cell except the last
-  AC(a)=aipok;   // in case we created a virtual block from it, restore inplaceability to the UNINCORPABLE block
+  ACRESET(a,aipok)   // in case we created a virtual block from it, restore inplaceability to the UNINCORPABLE block
   RZ(wfaux=CALL2IP(f2,a,wfaux,fs));
   if(--i==0)break;   // stop housekeeping after last iteration
   // if w happens to be the same virtual block that we passed in as x, we have to clone it before we change the pointer

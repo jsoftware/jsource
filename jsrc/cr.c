@@ -83,7 +83,7 @@ A jtrank1ex(J jt,AD * RESTRICT w,A fs,I rr,AF f1){F1PREFIP;PROLOG(0041);A z,virt
   ZZPARMS(wf,mn,1)
 #define ZZINSTALLFRAME(optr) MCISHd(optr,AS(w),wf)
   for(i0=mn;i0;--i0){
-   AC(virtw)=ACUC1 + ((state&ZZFLAGVIRTWINPLACE)<<(ACINPLACEX-ZZFLAGVIRTWINPLACEX));   // in case we created a virtual block from it, restore inplaceability to the UNINCORPABLE block
+   ACRESET(virtw,ACUC1 + SGNONLYIF(state,ZZFLAGVIRTWINPLACEX))   // in case we created a virtual block from it, restore inplaceability to the UNINCORPABLE block
    RZ(z=CALL1IP(f1,virtw,fs));
 
 #define ZZBODY  // assemble results
@@ -178,7 +178,7 @@ A jtrank1ex0(J jt,AD * RESTRICT w,A fs,AF f1){F1PREFIP;PROLOG(0041);A z,virtw;
    state |= (UI)(SGNIF((I)jtinplace,JTINPLACEWX)&~((AT(w)&TYPEVIPOK)-(f1!=jteveryself))&AC(w))>>(BW-1-ZZFLAGVIRTWINPLACEX);   // requires JTINPLACEWX==0.  Single flag bit
    // Init the inplaceability of virtw.  We do this here because in the loop we handle it only for low rank (i. e. virtwfaux) so as to avoid inplacing ATOPOPEN.
    // Thus, for higher rank we set it only this once.  It will stay right unless it gets virtualed
-   AC(virtw)=ACUC1 + ((state&ZZFLAGVIRTWINPLACE)<<(ACINPLACEX-ZZFLAGVIRTWINPLACEX));
+   ACRESET(virtw,ACUC1 + SGNONLYIF(state,ZZFLAGVIRTWINPLACEX))
   }else{wav=AAV(w); virtw=*wav++;
   }
   // Since the inplaceability of f1 was passed into f"r, we don't need to look it up: we just pass the original
@@ -193,7 +193,7 @@ A jtrank1ex0(J jt,AD * RESTRICT w,A fs,AF f1){F1PREFIP;PROLOG(0041);A z,virtw;
 #include "result.h"
 
    if(--mn==0)break;  // exit loop before last fetch to avoid fetching out of bounds
-   AC((A)virtwfaux)=ACUC1 + ((state&ZZFLAGVIRTWINPLACE)<<(ACINPLACEX-ZZFLAGVIRTWINPLACEX));   // in case we created a virtual block from it, restore inplaceability to the UNINCORPABLE block
+   AC((A)virtwfaux)=ACUC1 + SGNONLYIF(state,ZZFLAGVIRTWINPLACEX);   // in case we created a virtual block from it, restore inplaceability to the UNINCORPABLE block
      // for simplicity we apply this correction to the faux block, so as to ensure we don't do it when ATOPOPEN is active.  This means ranks higher than the max for
      // the faux virtual block miss out on the reinitialization.  That's not so bad
    // advance input pointer for next cell.  We keep the same virtual block because it can't be incorporated into anything
@@ -345,13 +345,13 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,UI lrrr,UI lcrrcr,AF f2){
   fauxvirtual(virta,virtafaux,a,(UI)lrrr>>RANKTX,ACUC1) MCISH(AS(virta),AS(a)+(afwf>>RANKTX),(UI)lrrr>>RANKTX); AN(virta)=acn;
   // Init the inplaceability of virtw.  We do this here because in the loop we handle it only for low rank (i. e. virt[aw]faux) so as to avoid inplacing fill.
   // Thus, for higher rank we set it only this once.  It will stay right unless it gets virtualed
-  AC(virta)=ACUC1 + ((state&ZZFLAGVIRTAINPLACE)<<(ACINPLACEX-ZZFLAGVIRTAINPLACEX));
+  ACRESET(virta,ACUC1 + SGNONLYIF(state,ZZFLAGVIRTAINPLACEX))
  }else{RZ(virta=reshape(vec(INT,(UI)lrrr>>RANKTX,AS(a)+(afwf>>RANKTX)),filler(a)));}
 
  if(likely((mn|(state&STATEWNOTEMPTY))!=0)){  // repeat for w
   state |= (UI)(SGNIF((a!=w)&(outerrptct==1),0)&SGNIF((I)jtinplace,JTINPLACEWX)&AC(w)&~(((AT(w)&TYPEVIPOK)-(f2!=jtevery2self))|SGNIF(state,STATEINNERREPEATWX)))>>(BW-1-ZZFLAGVIRTWINPLACEX);   // requires JTINPLACEWX==0.  Single flag bit  sign=0 if (VIPOK or &.>) 
   fauxvirtual(virtw,virtwfaux,w,lrrr&RANKTMSK,ACUC1) MCISH(AS(virtw),AS(w)+(afwf&RANKTMSK),lrrr&RANKTMSK); AN(virtw)=wcn;
-  AC(virtw)=ACUC1 + ((state&ZZFLAGVIRTWINPLACE)<<(ACINPLACEX-ZZFLAGVIRTWINPLACEX));
+  ACRESET(virtw,ACUC1 + SGNONLYIF(state,ZZFLAGVIRTWINPLACEX))
  }else{RZ(virtw=reshape(vec(INT,lrrr&RANKTMSK,AS(w)+(afwf&RANKTMSK)),filler(w)));}
  // Allow inplacing if the verb supports it, but with the raze flags removed.  We can be loose here because we must be strict about the virt inplaceability to get pristinity right.
  jtinplace = (J)(intptr_t)((I)jtinplace & (~(JTWILLBEOPENED+JTCOUNTITEMS)));
@@ -375,8 +375,8 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,UI lrrr,UI lcrrcr,AF f2){
     for(i2=innerframect;i2;--i2){
      // loop over the unmatched part of the inner frame, repeating the shorter argument
      for(i3=innerrptct;i3;--i3){
-      AC((A)virtafaux)=ACUC1 + ((state&ZZFLAGVIRTAINPLACE)<<(ACINPLACEX-ZZFLAGVIRTAINPLACEX));   // in case we created a virtual block from it, restore inplaceability to the UNINCORPABLE block - only if faux (thus not filler)
-      AC((A)virtwfaux)=ACUC1 + ((state&ZZFLAGVIRTWINPLACE)<<(ACINPLACEX-ZZFLAGVIRTWINPLACEX)); 
+      AC((A)virtafaux)=ACUC1 + SGNONLYIF(state,ZZFLAGVIRTAINPLACEX);   // in case we created a virtual block from it, restore inplaceability to the UNINCORPABLE block - only if faux (thus not filler)
+      AC((A)virtwfaux)=ACUC1 + SGNONLYIF(state,ZZFLAGVIRTWINPLACEX); 
       // invoke the function, get the result for one cell
       RZ(z=CALL2IP(f2,virta,virtw,fs));
 
@@ -622,7 +622,7 @@ static DF2(cons2){V*sv=FAV(self);
  R rank2ex(a,w,self,lr2,rr2,lr2,rr2,cons2a);
 }
 
-// cyclic-gerund verbs create an iterator from the gerund and pass that into rank processing, looping over cells
+// cyclic-gerund verbs for m"n create an iterator from the gerund and pass that into rank processing, looping over cells
 static DF1(cycr1){V*sv=FAV(self);I cger[128/SZI];
  ARGCHK1(w);
  RZ(self=createcycliciterator((A)&cger, self));  // fill in an iterator for this gerund

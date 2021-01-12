@@ -604,6 +604,7 @@ extern unsigned int __cdecl _clearfp (void);
 
 // macros for bit testing
 #define SGNIF(v,bitno) ((I)(v)<<(BW-1-(bitno)))  // Sets sign bit if the numbered bit is set
+#define SGNONLYIF(v,bitno) (((v)>>(bitno))<<(BW-1))  // Sets sign bit if the numbered bit is set, clears all other bits
 #define SGNIFNOT(v,bitno) (~SGNIF((v),(bitno)))  // Clears sign bit if the numbered bit is set
 
 #define A0              0   // a nonexistent A-block

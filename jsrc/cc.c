@@ -174,7 +174,7 @@ DF2(jtboxcut0){A z;
    GAE(y,t,(I)jtinplace&JTWILLBEOPENED?0:substratoms,wr,AS(w),break); AS(y)[0]=endorlen;  // allocate, but don't grow the tstack. Fix up the shape
    if(!((I)jtinplace&JTWILLBEOPENED)){
     // Normal case.  Set usecount of cell to 1 since z is recursive usecount and y is not on the stack.  ra0() if recursible.  Put allocated addr into *jt->tnextpushp++.
-    MC(CAV(y),wv+start*(cellsize<<k),substratoms<<k); AC(y)=ACUC1; if(t&RECURSIBLE){AFLAG(y)=t; jtra(y,t);}
+    MC(CAV(y),wv+start*(cellsize<<k),substratoms<<k); ACINIT(y,ACUC1) if(t&RECURSIBLE){AFLAG(y)=t; jtra(y,t);}
    }else{
     // WILLBEOPENED case.  We must make the block virtual so we can avoid the copy
     jtexpostvirtual(jt,y,w,start*(cellsize<<k)); AN(y)=substratoms;
@@ -732,7 +732,7 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[12
     // boxes will be in AAV(z), in order.  Details of hijacking tnextpushp are discussed in jtbox().
     A *pushxsave = jt->tnextpushp; jt->tnextpushp=AAV(zz);  // save tstack info before allocation
     // **** MUST NOT FAIL FROM HERE UNTIL THE END, WHERE THE ALLOCATION SYSTEM CAN BE RESTORED ****
-    EACHCUT(GAE(z,wt,d*wcn,r,AS(w),break); AS(z)[0]=d; AC(z)=ACUC1; JMC(CAV(z),v1,d*k+(SZI-1),lp000,0) ra00(z,wt););    // allocate, but don't grow the tstack.  Set usecount of cell to 1.  make recursive.  Put allocated addr into *jt->tnextpushp++
+    EACHCUT(GAE(z,wt,d*wcn,r,AS(w),break); AS(z)[0]=d; ACINIT(z,ACUC1) JMC(CAV(z),v1,d*k+(SZI-1),lp000,0) ra00(z,wt););    // allocate, but don't grow the tstack.  Set usecount of cell to 1.  make recursive.  Put allocated addr into *jt->tnextpushp++
     // restore the allocation system
     jt->tnextpushp=pushxsave;   // restore tstack pointer
     // remove pristinity from w since a contents is escaping
@@ -811,7 +811,7 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[12
      UI len=*pd++; if(len==255){len=*(UI4*)pd; pd+=SZUI4;} d=len-neg;  /* fetch size, adjust if neg */
      AS(virtw)[0]=d; AN(virtw)=wcn*d; // install the size of the partition into the virtual block, and # atoms
      // call the user's function
-     AC(virtw)=ACUC1 + ((state&ZZFLAGVIRTWINPLACE)<<(ACINPLACEX-ZZFLAGVIRTWINPLACEX));   // in case we created a virtual block from it, restore inplaceability to the UNINCORPABLE block
+     ACRESET(virtw,ACUC1 + SGNONLYIF(state,ZZFLAGVIRTWINPLACEX))   // in case we created a virtual block from it, restore inplaceability to the UNINCORPABLE block
      RZ(z=CALL1IP(f1,virtw,fs));  //normal case
 
 #define ZZBODY  // assemble results

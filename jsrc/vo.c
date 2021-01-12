@@ -57,7 +57,7 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
   A *pushxsave = jt->tnextpushp; jt->tnextpushp=AAV(z);  // save tstack info before allocation
 // obsolete   DQ(n, GAE(y,wt,m,r,f+ws,break); MC(CAV(y),wv,k); wv+=k; AC(y)=ACUC1; if(wt&RECURSIBLE){AFLAG(y)=wt; jtra(y,wt);});   // allocate, but don't grow the tstack.  Set usecount of cell to 1.  ra0() if recursible.  Put allocated addr into *jt->tnextpushp++
   JMCDECL(endmask) JMCSETMASK(endmask,k+SZI-1,0)   // set mask for JMCR - OK to copy SZIs
-  DQ(n, GAE(y,wt,m,r,f+ws,break); JMCR(CAV(y),wv,k+SZI-1,lp000,0,endmask); wv+=k; AC(y)=ACUC1; if(wt&RECURSIBLE){AFLAG(y)=wt; jtra(y,wt);});   // allocate, but don't grow the tstack.  Set usecount of cell to 1.  ra0() if recursible.  Put allocated addr into *jt->tnextpushp++
+  DQ(n, GAE(y,wt,m,r,f+ws,break); JMCR(CAV(y),wv,k+SZI-1,lp000,0,endmask); wv+=k; ACINIT(y,ACUC1); if(wt&RECURSIBLE){AFLAG(y)=wt; jtra(y,wt);});   // allocate, but don't grow the tstack.  Set usecount of cell to 1.  ra0() if recursible.  Put allocated addr into *jt->tnextpushp++
 
 
   jt->tnextpushp=pushxsave;   // restore tstack pointer

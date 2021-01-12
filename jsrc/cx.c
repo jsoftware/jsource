@@ -392,7 +392,7 @@ dobblock:
    // if it fills up, double it as required
    if(!r)
     if(gsfctdl&8){I m=AN(cd)/WCD; BZ(cd=ext(1,cd)); cv=(CDATA*)AV(cd)+m-1; r=AN(cd)/WCD-m;}
-    else  {r=9; GAT0E(cd,INT,9*WCD,1,i=-1; z=0; continue); ras(cd); cv=(CDATA*)AV(cd)-1; gsfctdl|=8;}   // 9=r
+    else  {r=9; GAT0E(cd,INT,9*WCD,1,i=-1; z=0; continue); ACINITZAP(cd) cv=(CDATA*)AV(cd)-1; gsfctdl|=8;}   // 9=r
 
    ++cv; --r; 
    // indicate no t result (test value for select., iteration array for for.) and clear iteration index
@@ -535,16 +535,15 @@ dobblock:
  // We detect original symbol table by rank LSYMINUSE - other symbol tables are assigned rank 0.
  // Tables are born with NAMEADDED off.  It gets set when a name is added.  Setting back to initial state here, we clear NAMEADDED
  if(likely(gsfctdl&32)){AR(locsym)=LLOCALTABLE; symfreeha(locsym);}
- // Pop the private-area stack; set no assignment (to call for result display)
+ // Pop the private-area stack
  SYMSETLOCAL(prevlocsyms);
 // obsolete  jt->asgn=0;
  // Now that we have deleted all the local symbols, we can see if we were returning one.
  // See if EPILOG pushed a pointer to the block we are returning.  If it did, and the usecount we are returning is 1, set this
- // result as inplaceable and install the address of the tpop stack into AM (as is required for all inplaceable blocks).  The the usecount is inplaceable 1,
+ // result as inplaceable and install the address of the tpop stack into AM (as is required for all inplaceable blocks).  If the usecount is inplaceable 1,
  // we don't do this, because it is possible that the AM slot was inherited from higher up the stack.
  // Note that we know we are not returning a virtual block here, so it is OK to write to AM
-
- if(likely(z!=0))if(likely((_ttop!=jt->tnextpushp)==AC(z))){AC(z)=ACINPLACE|ACUC1; ABACK(z)=(A)_ttop;}  // AC can't be 0
+ if(likely(z!=0))if(likely((_ttop!=jt->tnextpushp)==AC(z))){ACRESET(z,ACINPLACE|ACUC1) AZAPLOC(z)=_ttop;}  // AC can't be 0.  The block is not in use elsewhere
  RETF(z);
 }
 

@@ -448,7 +448,7 @@ static void auditsimreset(A w){I delct;
 // Register the value to insert into leak-sniff records
 void jtsetleakcode(J jt, I code) {
 #if LEAKSNIFF
- if(!leakblock)GAT0(leakblock,INT,10000,1); ras(leakblock);
+ if(!leakblock)GAT0(leakblock,INT,10000,1); ACINITZAP(leakblock);
  leakcode = code;
 #endif
 }
@@ -596,7 +596,7 @@ RESTRICTF A jtvirtual(J jtip, AD *RESTRICT w, I offset, I r){AD* RESTRICT z;
  I t=AT(w);  // type of input
  offset<<=bplg(t);  // length of an atom of t
  I wf=AFLAG(w);  // flags in input
- I wip=SGNIF((I)jtip,JTINPLACEWX)&AC(w);   // sgn if w is inplaceable in inplaceable context
+ I wip=SGNIF((I)jtip,JTINPLACEWX)&AC(w);   // sgn if w is abandoned
  // If this is an inplaceable request for an inplaceable DIRECT block, we don't need to create a new virtual block: just modify the offset in the old block.  Make sure the shape fits
  // if the block is UNINCORPABLE, we don't modify it, because then we would have to check everywhere to see if a parameter block had changed
  // We could check for assignsym etc, but it's not worth it: all we are saving is allocating one lousy block, usually 64 bytes
@@ -610,17 +610,17 @@ RESTRICTF A jtvirtual(J jtip, AD *RESTRICT w, I offset, I r){AD* RESTRICT z;
   RZ(z=gafv(SZI*(NORMAH+r)-1));  // allocate the block
   AK(z)=(CAV(w)-(C*)z)+offset;
   AFLAG(z)=AFVIRTUAL | (wf & ((UI)wip>>(BW-1-AFPRISTINEX))) | (t&TRAVERSIBLE);  // flags: recursive, not UNINCORPABLE, not NJA.  If w is inplaceable, inherit its PRISTINE status
-  A wback=ABACK(w); A *wtpop=(A*)wback; wback=wf&AFVIRTUAL?wback:w; ABACK(z)=wback;  // wtpop is AZAPLOC(w) in case it is to be zapped
+  A wback=ABACK(w); A *wzaploc=(A*)wback; wback=wf&AFVIRTUAL?wback:w; ABACK(z)=wback;  // wtpop is AZAPLOC(w) in case it is to be zapped
   AT(z)=t;
-  AC(z)=wip+ACUC1;   // transfer inplaceability from original block
+  ACINIT(z,wip+ACUC1)   // transfer inplaceability from original block
   AR(z)=(RANKT)r;
   if((wip&((wf&(AFVIRTUAL|AFUNINCORPABLE))-1))<0){
-    // w (the old block) is inplaceable and is not UNINCORPABLE.  It must still have an entry on the tpop stack.  Rather than incrementing its
+    // w (the old block) is abandoned and is not UNINCORPABLE.  It must still have an entry on the tpop stack.  Rather than incrementing its
     // usecount, we can simply remove its tpop entry.  We must also mark the block as uninplaceable, since it is a backer now (might not be necessary,
     // because to get here we must know that w has been abandoned)
     // We must ensure that the backer has recursive usecount, as a way of protecting the CONTENTS.  We zap the tpop for the backer itself, but
     // not for the contents.
-    AC(w)=ACUC1; *wtpop=0;  // zap the tpop for w in lieu of ra() for it
+    ACRESET(w,ACUC1) *wzaploc=0;  // zap the tpop for w in lieu of ra() for it
     if((t^wf)&RECURSIBLE){AFLAG(w)=wf|=(t&RECURSIBLE); jtra(w,t);}  // make w recursive, raising contents if was nonrecurive.  Like ra0()
 // when virtuals can be zapped, use that here
   }else{
@@ -634,10 +634,10 @@ RESTRICTF A jtvirtual(J jtip, AD *RESTRICT w, I offset, I r){AD* RESTRICT z;
  }
 }  
 
-// convert a block allocated in the caller to virtual.  The caller got the shape right; we just have to fill in all the other fields, including the data pointer.
+// convert a block, recently allocated in the caller, to virtual.  The caller got the shape right; we just have to fill in all the other fields, including the data pointer.
 // User still has to fill in AN and AS
 void jtexpostvirtual(J jt,A z,A w,I offset){
-AC(z)=ACUC1; AK(z)=(CAV(w)-(C*)z)+offset; // virtual, not inplaceable
+ACINIT(z,ACUC1) AK(z)=(CAV(w)-(C*)z)+offset; // virtual, not inplaceable
 if(AFLAG(w)&AFVIRTUAL){
  // If w is virtual, me must disallow inplacing for it, since it may be at large in the execution and we are creating an alias to it
  ACIPNO(w);  // turn off inplacing

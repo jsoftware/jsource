@@ -22,8 +22,8 @@ B jtxoinit(JS jjt, I nthreads){A x;JJ jt=MTHREAD(jjt);
  _setmode(_fileno(stdout),_O_BINARY);
  _setmode(_fileno(stderr),_O_BINARY);
 #endif
- GAT0(x,BOX,8,1); memset(AV(x),C0,AN(x)*SZI); AC(x)=ACUC1; INITJT(jjt,fopa)=x;  // called during init, so no ras()
- GAT0(x,INT,8,1);                             AC(x)=ACUC1; INITJT(jjt,fopf)=x; AM(INITJT(jjt,fopf))=0;  // AM is # valid files
+ GAT0(x,BOX,8,1); memset(AV(x),C0,AN(x)*SZI); ACINITZAP(x); INITJT(jjt,fopa)=x;  // called during init
+ GAT0(x,INT,8,1);                             ACINITZAP(x); INITJT(jjt,fopf)=x; AM(INITJT(jjt,fopf))=0;  // AM is # valid files
  R 1;
 }
 

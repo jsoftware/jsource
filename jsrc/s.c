@@ -544,7 +544,7 @@ L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I m,n,wn,wr,wt;L*e;
 #if 1  // obsolete
    rifv(w); // must realize any virtual
    if(likely((SGNIF((I)jtinplace,JTFINALASGNX)&AC(w)&(-(wt&NOUN)))<0)){  // if final assignment to abandoned noun
-    *AZAPLOC(w)=0; AC(w)=ACUC1; if(unlikely(((wt^AFLAG(w))&RECURSIBLE)!=0)){AFLAG(w)|=wt&RECURSIBLE; jtra(w,wt);}  // zap it, make it non-abandoned, make it recursive (incr children if was nonrecursive)
+    *AZAPLOC(w)=0; ACRESET(w,ACUC1) if(unlikely(((wt^AFLAG(w))&RECURSIBLE)!=0)){AFLAG(w)|=wt&RECURSIBLE; jtra(w,wt);}  // zap it, make it non-abandoned, make it recursive (incr children if was nonrecursive)
       // NOTE: NJA can't zap either, but it never has AC<0
    }else ra(w);  // if zap not allowed, just ra() the whole thing
 #else

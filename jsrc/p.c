@@ -29,7 +29,7 @@
 
 B jtparseinit(JS jjt, I nthreads){A x;
  I threadno; for(threadno=0;threadno<nthreads;++threadno){JJ jt=&jjt->threaddata[threadno];
-  GAT0(x,INT,20,1); AC(x)=ACUC1; jt->nvra=x; /* obsolete jt->nvrav=AAV(x); jt->nvran=(UI4)AN(x); */  // Initial stack.  Size is doubled as needed
+  GAT0(x,INT,20,1); ACINIT(x,ACUC1) jt->nvra=x; /* obsolete jt->nvrav=AAV(x); jt->nvran=(UI4)AN(x); */  // Initial stack.  Size is doubled as needed
   // ras not required because this is called during initialization 
  }
  R 1;

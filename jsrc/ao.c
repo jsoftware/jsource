@@ -562,7 +562,7 @@ DF2(jtkeybox){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
    }else{
     // start of new partition.  Figure out the length; out new partition; replace length with starting pointer; Use length to advance partition pointer
     avvalue-=i;  // length of partition
-    GAE(y,wt,cellatoms*avvalue,yr,AS(w),break); AC(y)=0; AS(y)[0]=avvalue; // allocate a region for the boxed data and set usecount to 0 since it is not on the tstack.  EPILOG will raise it to 1
+    GAE(y,wt,cellatoms*avvalue,yr,AS(w),break); ACINIT(y,0) AS(y)[0]=avvalue; // allocate a region for the boxed data and set usecount to 0 since it is not on the tstack.  EPILOG will raise it to 1
     partitionptr=IAV(y);  // start of partition: in the data area of the block
     avvalue=i;   // shift meaning of avvalue from length to index, where the partition pointer will be stored
    }
@@ -615,7 +615,7 @@ DF2(jtkeybox){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
    }else{
     // start of new partition.  Figure out the length; out new partition; replace length with starting pointer; Use length to advance partition pointer
     avvalue=avvalue-freqminval+1;  // length of partition
-    GAE(y,wt,cellatoms*avvalue,yr,AS(w),break); AC(y)=0; AS(y)[0]=avvalue; // allocate a region for the boxed data and set usecount to 0 since it is not on the tstack.  EPILOG will raise it to 1
+    GAE(y,wt,cellatoms*avvalue,yr,AS(w),break); ACINIT(y,0) AS(y)[0]=avvalue; // allocate a region for the boxed data and set usecount to 0 since it is not on the tstack.  EPILOG will raise it to 1
     partitionptr=(I*)IAV(y);  // start the data for the partition at the beginning of the allocated box's data
    }
 

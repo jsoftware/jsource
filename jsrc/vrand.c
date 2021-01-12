@@ -482,7 +482,7 @@ static B jtrngga(J jt,I i,struct rngparms*vv){
    case DXI: t=INT; n=DXN; f=jtdx_init; break;
    case MRI: t=FL;  n=MRN; f=jtmr_init; break;
   }
-  GA(x,t,n,1,0); ras(x); vv[i].rngV=jt->rngdata->rngv=AV(x);   // x will never be freed, but that's OK, it's inited only once
+  GA(x,t,n,1,0); ACINITZAP(x); vv[i].rngV=jt->rngdata->rngv=AV(x);   // x will never be freed, but that's OK, it's inited only once
   f(jt,jt->rngdata->rngparms[i].rngS); jt->rngdata->rngparms[i].rngI=jt->rngdata->rngi;
  }
  R 1;
@@ -1025,7 +1025,7 @@ static F2(jtdealdot){A h,y,z;I at,d,*hv,i,i1,j,k,m,n,p,q,*v,wt,*yv,*zv;UI c,s,t,
 
 #define FXSDECL     A z;I i,j=jt->rngdata->rng;UI*v=jt->rngdata->rngparms[GBI].rngV;
 #define FXSDO       {i=j==GBI?jt->rngdata->rngi:jt->rngdata->rngparms[GBI].rngI;                                \
-                     if(!jt->rngdata->rngfxsv){GAT0(z,INT,GBN,1); ras(z); jt->rngdata->rngfxsv=AV(z);}  \
+                     if(!jt->rngdata->rngfxsv){GAT0(z,INT,GBN,1); ACINITZAP(z); jt->rngdata->rngfxsv=AV(z);}  \
                      jt->rngdata->rngparms[GBI].rngV=jt->rngdata->rngfxsv; rngselects(sc(GBI)); gb_init(16807);}
 #define FXSOD       {jt->rngdata->rngparms[GBI].rngV=v; jt->rngdata->rngparms[GBI].rngI=jt->rngdata->rngi=i; rngselects(sc(j));}
 

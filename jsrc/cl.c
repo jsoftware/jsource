@@ -52,7 +52,7 @@ static DF2(jtlcapco2){A z;V*v=FAV(self);
  PRIM shdr; A recurself=(A)&shdr;  // allocate the block we will recur with
  AM(recurself)=(I)v->fgh[0];  // fill in the pointer to u
  FAV(recurself)->valencefns[1]=jtlev2;  // fill in function pointer
- AT(recurself)=efflev(1L,v->fgh[2],a); AC(recurself)=efflev(2L,v->fgh[2],w);  // fill in the trigger levels
+ AT(recurself)=efflev(1L,v->fgh[2],a); ACFAUX(recurself,efflev(2L,v->fgh[2],w))  // fill in the trigger levels
  FAV(recurself)->flag=VFLAGNONE;  // fill in the inplaceability flags
  RETF(lev2(a,w,recurself));
 }
@@ -114,7 +114,7 @@ static DF2(jtscapco2){PROLOG(556);A x,z=0;V*v=FAV(self);
  PRIM shdr; A recurself=(A)&shdr;  // allocate the block we will recur with
  AM(recurself)=(I)v->fgh[0];  // fill in the pointer to u
  FAV(recurself)->valencefns[1]=jtlevs2;  // fill in function pointer
- AT(recurself)=efflev(1L,v->fgh[2],a); AC(recurself)=efflev(2L,v->fgh[2],w);  // fill in the trigger levels
+ AT(recurself)=efflev(1L,v->fgh[2],a); ACFAUX(recurself,efflev(2L,v->fgh[2],w))  // fill in the trigger levels
  FAV(recurself)->flag=VFLAGNONE;  // fill in the inplaceability flags
  GAT0(x,INT,54,1); AKASA(recurself)=x; AS(x)[0]=0;    // allocate place to save results & fill into self. this will hold boxes, but it is allocated as INTs so it won't be freed on error.  AS[0] holds # valid results
  // jt->sca will be used to collect results during the execution of the verb.  Since we don't know how many results there will be, jt->sca may be extended

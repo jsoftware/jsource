@@ -56,22 +56,22 @@ static DF2(jtexecgerundcellB){  // call is w,self or a,w,self
 }
 
 // w is a verb that refers to a cyclic gerund which is stored in h.
-// z is a place to build a clone
+// z is a place to build a clone - 128 bytes on an I boundary
 // Result is a clone that is used to hold which gerund is next to execute
 // the gerund must not be empty
 A jtcreatecycliciterator(J jt, A z, A w){
  // Create the (skeletal) clone, point it to come to the execution point, set the next-verb number to 0
- AC(z)=ACPERMANENT; AT(z)=VERB; A gerund=FAV(z)->fgh[2]=FAV(w)->fgh[2]; FAV(z)->mr=FAV(w)->mr; FAV(z)->valencefns[0]=FAV(z)->valencefns[1]=jtexeccyclicgerund; FAV(z)->localuse.lI=0;
+ ACFAUX(z,ACPERMANENT) AT(z)=VERB; FAV(z)->fgh[2]=FAV(w)->fgh[2]; FAV(z)->mr=FAV(w)->mr; FAV(z)->valencefns[0]=FAV(z)->valencefns[1]=jtexeccyclicgerund; FAV(z)->localuse.lI=0;
  FAV(z)->flag2=0; FAV(z)->id=CCYCITER;   // clear flags, and give this verb a proper id so it can be checked for
  if(MEMAUDIT&0xc)AFLAG(z)=0;  // in debug, flags must be valid
  R z;
 }
-// Similar, but also install the list of gerund results that will select the verb to run
+// Similar, but also install r, the list of gerund results that will select the verb to run
 static A jtcreategerunditerator(J jt, A z, A w, A r){  // z is result area, w is gerunds, r is selector list
  // Convert the selectors to integer/boolean
  if(!(AT(r)&(INT|B01)))RZ(r=cvt(INT,r));
  // Create the (skeletal) clone, point it to come to the execution point, set the next-verb number to 0
- AC(z)=ACPERMANENT; AT(z)=VERB; FAV(z)->fgh[2]=FAV(w)->fgh[2]; FAV(z)->fgh[1]=r; FAV(z)->mr=FAV(w)->mr;
+ ACFAUX(z,ACPERMANENT) AT(z)=VERB; FAV(z)->fgh[2]=FAV(w)->fgh[2]; FAV(z)->fgh[1]=r; FAV(z)->mr=FAV(w)->mr;
  FAV(z)->valencefns[0]=FAV(z)->valencefns[1]=AT(r)&INT?jtexecgerundcellI:jtexecgerundcellB; FAV(z)->localuse.lI=0;
  FAV(z)->flag2=0;
  if(MEMAUDIT&0xc)AFLAG(z)=0;  // in debug, flags must be valid
@@ -245,11 +245,11 @@ static DF2(jtcasei12){A vres,z;I gerit[128/SZI],ZZFLAGWORD;
     // fill in the virtual block for this block
     if(ZZFLAGWORD&ZZFLAGARRAYW){  // if w is not a repeated atom...
      AS(virtw)[0]=srchhi-blkstart; AN(virtw)=(srchhi-blkstart)*wck;
-     AC(virtw)=ACUC1 + ((state&ZZFLAGVIRTWINPLACE)<<(ACINPLACEX-ZZFLAGVIRTWINPLACEX));   // in case we created a virtual block from it, restore inplaceability to the UNINCORPABLE block (not if atom, which is never inplaceable)
+     ACRESET(virtw,ACUC1 + SGNONLYIF(state,ZZFLAGVIRTWINPLACEX))   // in case we created a virtual block from it, restore inplaceability to the UNINCORPABLE block (not if atom, which is never inplaceable)
     }
     if(ZZFLAGWORD&ZZFLAGARRAYA){  // if a is not a repeated atom...
      AS(virta)[0]=srchhi-blkstart; AN(virta)=AS(virta)[0]*ack;
-     AC(virta)=ACUC1 + ((state&ZZFLAGVIRTAINPLACE)<<(ACINPLACEX-ZZFLAGVIRTAINPLACEX));   // in case we created a virtual block from it, restore inplaceability to the UNINCORPABLE block (not if atom, which is never inplaceable)
+     ACRESET(virta,ACUC1 + SGNONLYIF(state,ZZFLAGVIRTAINPLACEX))   // in case we created a virtual block from it, restore inplaceability to the UNINCORPABLE block (not if atom, which is never inplaceable)
     }
    //  pull the function for the value, execute on the value with forced attributes (ASSUMEBOXATOP, WILLBEOPENED, COUNTITEMS)
    // take inplaceability from the selected verb always - we have made the cells inplaceable if possible

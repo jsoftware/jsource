@@ -629,7 +629,7 @@ static A jtcolon0(J jt, I deftype){A l,z;C*p,*q,*s;A *sb;I m,n;
   if(isboxed){
    if((C2T+C4T)&AT(l))RZ(l=cvt(LIT,l));  // each line must be LIT
    while(AN(z)<=n+1){RZ(z=ext(0,z)); sb=AAV(z);}  // extend the result if necessary
-   sb[n]=l; ++n; // append the line, increment line number
+   sb[n]=incorp(l); ++n; // append the line, increment line number
   }else{
    while(AN(z)<=n+m){RZ(z=ext(0,z)); s=CAV(z);}  // extend the result if necessary
    MC(s+n,q,m); n+=m; s[n]=CLF; ++n;  // append LF at end of each line
@@ -647,7 +647,7 @@ static F1(jtlineit){
 }
 
 // Convert ASCII w to boxed lines.  Create separate lists of boxes for monad and dyad
-// if preparsed it set, we know the lines have gone through wordil already & it is OK
+// if preparsed is set, we know the lines have gone through wordil already & it is OK
 // to do it again.  This means we are processing 9 :  n
 // obsolete static B jtsent12c(J jt,A w,A*m,A*d,I preparsed){C*p,*q,*r,*s,*x;A z;
 static A jtsent12c(J jt,A w){C*p,*q,*r,*s,*x;A z;
@@ -678,7 +678,7 @@ static A jtsent12c(J jt,A w){C*p,*q,*r,*s,*x;A z;
  // Now we have compacted all the lines.  Box them
  AS(wil)[0]=linex;  // advance to dyad, set its length
  R jtboxcut0(jt,wil,w,ds(CWORDS));
-#if 0
+#if 0  // obsolete 
   RZ(w=lineit(w));  // make lines LF-terminated
   x=p=r=CAV(w);  /* p: monad start; r: dyad start */
   q=s=p+AN(w);   /* q: monad end;   s: dyad end   */
@@ -713,7 +713,7 @@ static A jtsent12b(J jt,A w){A t,*wv,y,*yv;I j,*v;
  ASSERT(1>=AR(w),EVRANK);
  wv=AAV(w); 
  GATV(y,BOX,AN(w),AR(w),AS(w)); yv=AAV(y);
- DO(AN(w), RZ(yv[i]=vs(wv[i])););
+ DO(AN(w), RZ(yv[i]=incorp(vs(wv[i]))););
  R y;
 }    /* boxed sentences into monad/dyad */
 #endif

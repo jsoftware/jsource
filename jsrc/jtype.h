@@ -475,7 +475,9 @@ typedef I SI;
 #define ACINIT(a,v)     AC(a)=(v);  // used when it is known that a has just been allocated & is not shared
 #define ACRESET(a,v)    AC(a)=(v);  // used when it is known that a has is not shared (perhaps it's UNINCORPABLE)
 #define ACFAUX(a,v)     AC(a)=(v);  // used when a is known to be a faux block
-#define ACINITZAP(a)    {*AZAPLOC(a)=0; ACINIT(a,ACUC1)}
+#define ACINITZAP(a)    {*AZAPLOC(a)=0; ACINIT(a,ACUC1)}  // effect ra() immediately after allocation, by zapping
+#define ACINITZAPRECUR(a,t) {*AZAPLOC(a)=0; ACINIT(a,ACUC1); AFLAG(a)|=(t)&RECURSIBLE;}  // effect ra() immediately after allocation, by zapping, and make the block recursive if possible
+#define ACZAPRA(x)      {if(likely(AC(x)<0)){*AZAPLOC(x)=0; ACIPNO(x);}else ra(x);}
 #define ACX(a)          {AC(a)=ACPERMANENT;}
 #define ACISPERM(c)     ((I)((UI)(c)+(UI)(c))<0)  // is PERMANENT bit set?
 #define SGNIFPRISTINABLE(c) ((c)+ACPERMANENT)  // sign is set if this block is OK in a PRISTINE boxed noun

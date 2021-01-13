@@ -113,8 +113,8 @@ static A jtmemoput(J jt,I x,I y,A self,A z){A*cv,h,*hv,q;I *jv,k,m,*mv,*v;
  if(m<=2**mv){A cc,*cu=cv,jj;I i,*ju=jv,n=m,*u;
 // obsolete A* _ttop=jt->tnextpushp;
   FULLHASHSIZE(2**mv,BOXSIZE,1,0,m);  // # boxes to allocate to get at least 2**mv slots
-  RZ(jj=mkwris(reshape(v2(m,2L),sc(IMIN)))); jv= AV(jj);  // init arg table to IMIN
-  GATV0(cc,BOX,m,1); AFLAG(cc)|=BOX; cv=AAV(cc);  // the old table is recursive - the new one must be too
+  RZ(jj=mkwris(reshape(v2(m,2L),sc(IMIN)))); ACINITZAP(jj) jv= AV(jj);  // init arg table to IMIN
+  GATV0(cc,BOX,m,1); ACINITZAPRECUR(cc,BOX) cv=AAV(cc);  // the old table is recursive - the new one must be too
   for(i=0,u=ju;i<n;++i,u+=2){
    if(IMIN!=*u){  // copy the hash - does this lose the buffer for an arg of IMIN?
     // the current slot in the memo table is filled.  Rehash it, and move the args into *jv and the values into *cv
@@ -127,8 +127,8 @@ static A jtmemoput(J jt,I x,I y,A self,A z){A*cv,h,*hv,q;I *jv,k,m,*mv,*v;
   // h has recursive usecount
 // obsolete   q=hv[1]; AC(q)=1; fa(q); INSTALLBOXNF(h,hv,1,jj);  // expunge old table, install new one.  Could use mf().  h is not virtual
 // obsolete   q=hv[2]; AC(q)=1; fa(q); ACINCR(cc); hv[2]=cc;   // not INSTALLBOX(h,hv,2,cc); because we DO NOT want to increment the counts in the values already in the table.  But we do in the cc itself
-  mf(hv[1]); *AZAPLOC(jj)=0; hv[1]=jj;   // expunge old table, raise new one, install.   h is not virtual
-  mf(hv[2]); *AZAPLOC(cc)=0; hv[2]=cc;   // not INSTALLBOX(h,hv,2,cc); because we DO NOT want to increment the counts in the values already in the table.  But we do in the cc itself
+  mf(hv[1]); hv[1]=jj;   // expunge old table, new one raised above, install.   h is not virtual
+  mf(hv[2]); hv[2]=cc;   // not INSTALLBOX(h,hv,2,cc); because we DO NOT want to increment the counts in the values already in the table.  cc itself raised above
 // obsolete   tpop(_ttop);  // get the new buffers off the tpush stack so we can safely free them in the lines above. (no longer needed)
  }
  ++*mv;
@@ -176,9 +176,9 @@ F1(jtmemo){PROLOG(300);A h,*hv,q;I m;V*v;
  ASSERT(VERB&AT(w),EVDOMAIN);
  v=FAV(w); FULLHASHSIZE(30,BOXSIZE,1,0,m);  // m = # items to allocate
  GAT0(h,BOX,3,1); hv=AAV(h);
- GAT0(q,INT,1,0); AV(q)[0]=0;        hv[0]=q;  // is modified; musn't use sc()
- RZ(q=reshape(v2(m,2L),sc(IMIN)));  RZ(hv[1]=mkwris(q));
- GATV0(q,BOX,m,1);                 hv[2]=q;
+ GAT0(q,INT,1,0); AV(q)[0]=0;        hv[0]=incorp(q);  // is modified; musn't use sc()
+ RZ(q=reshape(v2(m,2L),sc(IMIN)));  RZ(hv[1]=incorp(mkwris(q)));
+ GATV0(q,BOX,m,1);                 hv[2]=incorp(q);
  EPILOG(fdef(0,CMCAP,VERB,jtmemo1,jtmemo2,w,0L,h,0L,v->mr,lrv(v),rrv(v)));
  // Now we have converted the verb result to recursive usecount, and gotten rid of the pending tpops for the components of h
 }

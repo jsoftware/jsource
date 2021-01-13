@@ -218,6 +218,7 @@ static PSTK * (*(lines58[]))() = {jtpfork,jtphook,jtis,jtpparen};  // handlers f
 
 void auditblock(A w, I nonrecurok, I virtok) {
  if(!w)R;
+ if(AC(w)<0&&!(AFLAG(w)&AFVIRTUAL)&&((I)AZAPLOC(w)<0x100000||(*AZAPLOC(w)!=0&&*AZAPLOC(w)!=w)))SEGFAULT;  // if no zaploc for inplaceable block, error
  I nonrecur = (AT(w)&RECURSIBLE) && ((AT(w)^AFLAG(w))&RECURSIBLE);  // recursible type, but not marked recursive
  if(AFLAG(w)&AFVIRTUAL && !(AFLAG(w)&AFUNINCORPABLE))if(AFLAG(ABACK(w))&AFVIRTUAL)SEGFAULT;  // make sure e real backer is valid and not virtual
  if(nonrecur&&!nonrecurok)SEGFAULT;
@@ -232,7 +233,7 @@ void auditblock(A w, I nonrecurok, I virtok) {
    if(!(AFLAG(w)&AFNJA)){A*wv=AAV(w);
    DO(AN(w), if(wv[i]&&(AC(wv[i])<0))SEGFAULT;)
    I acbias=(AFLAG(w)&BOX)!=0;  // subtract 1 if recursive
-   if(AFLAG(w)&AFPRISTINE){DO(AN(w), if(wv[i]&&(AC(w)-acbias)>1||!(AT(wv[i])&DIRECT))SEGFAULT;)}
+   if(AFLAG(w)&AFPRISTINE){DO(AN(w), if(!(AT(wv[i])&DIRECT))SEGFAULT;)}  // wv[i]&&(AC(w)-acbias)>1|| can't because other uses may be not deleted yet
    {DO(AN(w), auditblock(wv[i],nonrecur,0););}
    }
    break;
@@ -431,7 +432,8 @@ A jtparsea(J jt, A *queue, I m){PSTK * RESTRICT stack;A z,*v;I es;
 
   // Set number of extra words to pull from the queue.  We always need 2 words after the first before a match is possible.
   es = 2;
-
+if(jt->parsercalls==0xdd)  // scaf for debugging
+ jt->parsercalls=0xdd;
   // DO NOT RETURN from inside the parser loop.  Stacks must be processed.
 
   while(1){  // till no more matches possible...
@@ -654,7 +656,7 @@ RECURSIVERESULTSCHECK
       if(arg1=*tpopw){  // if the arg has a place on the stack, look at it to see if the block is still around
        I c=AC(arg1); c=arg1==y?0:c;
        if((c&(-(AT(arg1)&DIRECT)|SGNIF(AFLAG(arg1),AFPRISTINEX)))<0){   // inplaceable and not return value.
-        if(!(AFLAG(arg1)&AFVIRTUAL)){  // for now, don't handle virtuals
+        if(!(AFLAG(arg1)&AFVIRTUAL)){  // for now, don't handle virtuals (which includes UNINCORPABLEs)
 #if MEMAUDIT&0x02
          if(*(A*)ABACK(arg1)!=arg1)SEGFAULT;
 #endif

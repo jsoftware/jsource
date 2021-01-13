@@ -13,7 +13,7 @@
 
 
 B jtxsinit(JS jjt,I nthreads){A x;JJ jt=MTHREAD(jjt);
- GAT0(x,BOX,10,1); memset(AV(x),C0,AN(x)*SZI); ACINITZAP(x); INITJT(jjt,slist)=x; AS(INITJT(jjt,slist))[0]=0;  // init block, set item count to 0
+ GAT0(x,BOX,10,1); memset(AV(x),C0,AN(x)*SZI); ACINITZAP(x); INITJT(jjt,slist)=x; AS(INITJT(jjt,slist))[0]=0;  // init block, set item count to 0.  This block is NOT recursive
 // obsolete  ras(x); iniit block has no tpop
 // obsolete  GAT0(x,INT,10,1); memset(AV(x),C0,AN(x)*SZI); ras(x); jt->sclist=x;
  MTHREAD(jjt)->currslistx=-1;  // indicate 'not in script' in master thread

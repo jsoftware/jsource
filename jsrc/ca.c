@@ -83,7 +83,8 @@ ARGCHK1D(gx) \
 POPZOMB; \
 jtinplace=(J)(intptr_t)(((I)jtinplace&~(JTINPLACEW))+((I )(gx!=protw)*JTINPLACEW));  \
 jtinplace=FAV(fs)->flag&VJTFLGOK1?jtinplace:jt; \
-RZ(z=(f1)(jtinplace,gx,fs));} \
+z=(f1)(jtinplace,gx,fs);} \
+RZ(z); \
 ,0113)
 
 CS2IP(,,jtupon2, \

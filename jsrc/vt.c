@@ -79,12 +79,14 @@ F2(jttake){A s;I acr,af,ar,n,*v,wcr,wf,wr;
  ARGCHK2(a,w); I wt = AT(w);  // wt=type of w
  if(unlikely((SPARSE&AT(a))!=0))RZ(a=denseit(a));
  if(likely(!(SPARSE&wt)))RZ(w=setfv(w,w)); 
+auditblock(w,1,1);  // scaf
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr; af=ar-acr;  // ?r=rank, ?cr=cell rank, ?f=length of frame
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK; 
  if(((af-1)&(acr-2))>=0){
   s=rank2ex(a,w,DUMMYSELF,MIN(acr,1),wcr,acr,wcr,jttake);  // if multiple x values, loop over them  af>0 or acr>1
   // We extracted from w, so mark it (or its backer if virtual) non-pristine.  There may be replication (if there was fill), so we don't pass pristinity through  We overwrite w because it is no longer in use
   PRISTCLRF(w)
+auditblock(s,1,1);  // scaf
   RETF(s);
  }
  // canonicalize x
@@ -121,6 +123,7 @@ F2(jttake){A s;I acr,af,ar,n,*v,wcr,wf,wr;
    I* RESTRICT ss=AS(s); ss[0]=tkabs; DO(wr-1, ss[i+1]=ws[i+1];);  // shape of virtual matches shape of w except for #items
    AN(s)=tkabs*wcellsize;  // install # atoms
    // virtual block does not affect pristinity of w
+auditblock(s,1,1);  // scaf
    RETF(s);
   }
  }
@@ -133,6 +136,7 @@ F2(jttake){A s;I acr,af,ar,n,*v,wcr,wf,wr;
  s=tk(s,w);  // go do the general take/drop
  // We extracted from w, so mark it (or its backer if virtual) non-pristine.  There may be replication (if there was fill), so we don't pass pristinity through  We overwrite w because it is no longer in use
  PRISTCLRF(w)
+auditblock(s,1,1);  // scaf
  RETF(s);
 }
 

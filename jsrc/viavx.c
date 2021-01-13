@@ -2083,7 +2083,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
   GAT0(z,BOX,2,1); zv=AAV(z);
   GAT0(x,INT,6,1); xv=AV(x);
   xv[0]=mode; xv[1]=n; xv[2]=k; /* noavx xv[3]=jt->min; */ xv[4]=(I)fntbl[FNTABLEPREFIX+fnx]; /* xv[5]=ztypefromitype[mode&IIOPMSK]; */
-  zv[0]=x; zv[1]=rifvs(h);
+  zv[0]=incorp(x); zv[1]=incorp(h);
  }
  RZ(z=EPILOGNORET(z));
  // Since EPILOG may have rewritten AM, and IFORKEY never returns to the parser, we can store the FORKEY result in AM.

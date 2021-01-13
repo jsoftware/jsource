@@ -171,7 +171,9 @@ do{
     // no frees on the tstack, it could have usecount of 1.  Transferring ownership would then leave the block in the name without an owner, and when zz is deleted the
     // name would be corrupted
     // If the value is NOT zappable, raise the usecounts of its children (leave its usecount alone)
-    // it is zappable if inplaceable, direct or recursive, not virtual
+    // it is zappable if inplaceable, direct or recursive, not virtual.  NOTE that strictly speaking a value is zappable only if inplaceable and abandoned.  Because z is a result,
+    // we can be sure it is abandoned ONLY because we know that the callers of this routine use unincorpable arguments, and so it is impossible for an inplaceable but non-abandoned
+    // value to have come out of the user's verb: it would have to be unincorpable and we will realize it.
 #if ZZPOPNEVER
     I zzoktozap=0;  // if we have to keep the result, never zap it
 #else
@@ -336,7 +338,7 @@ do{
   zzcellp=zzcelllen*(zzncells-1);  // init output offset in zz to end+1 of 
   zzboxp+=zzncells-1;     // move zzboxp to end of block
 #endif
-  AM(zz)=0;   // in case we count items in AM, init the count to 0 
+  AM(zz)=0;   // in case we count items in AM, init the count to 0.  This means this block cannot be flagged as inplaceable until the AM field has been reinstated by EPILOG processing 
  }
 }while(1);  // go back to store the first result
 

@@ -208,7 +208,7 @@ A jtnamerefacv(J jt, A a, L* w){A y;V*v;
  // old lookups on locatives or canned names like xyuvmn, and we leave localuse 0 as a flag of that condition to help logic in unquote
  // If the original name was not defined (w==0), don't set a value so that it will be looked up again to produce value error
  if(w&&!(NAV(a)->flag&(NMLOC|NMILOC|NMDOT))){
-  FAV(z)->localuse.lvp[0]=y; AM(z)=jt->modifiercounter;
+  FAV(z)->localuse.lvp[0]=y; AM(z)=jt->modifiercounter; ACIPNO(z);  // can't use AM in an inplaceable block
  }
  R z;
 }

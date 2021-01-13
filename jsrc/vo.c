@@ -134,8 +134,9 @@ F2PREFIP;ARGCHK2(a,w);
    // We don't have access to the tpush stack, but if a is abandoned recursive we can use the slot in a as a surrogate location to zap - maybe could even if nonrecursive?
    AFLAG(w)&=(AFLAG(a)&((aband)<<AFPRISTINEX))|~AFPRISTINE; AFLAG(a)&=~AFPRISTINE; // transfer pristinity from abandoned a to w; clear in a since contents escaping
     // it would be OK to leave a pristine if it was abandoned, because we know a is a singleton and we are zapping it; that would allow early release of a.  But we're scared.
+   A acontents=AAV(a)[0];  // save contents in case we zap it
    if((AFLAG(a)&(aband<<BOXX))!=0){AAV(a)[0]=0;}else{ra(AAV(a)[0]);}  // zappable if abandoned recursive
-   a=AAV(a)[0];  // move to the contents of a, which we will install into w.  It is already incorped and has the usecount right to go into a recursive block
+   a=acontents;  // move to the contents of a, which we will install into w.  It is already incorped and has the usecount right to go into a recursive block
   }else{  // not (,<), i. e.  ;  (;<)  ,&<   all of which box a
    // Store a into w & return.  If a was abandoned recursive or direct, zap it, else ra.  If a is DIRECT abandoned, allow w to stay PRISTINE
    AFLAG(w)&=((-(AT(a)&DIRECT))&((aband)<<AFPRISTINEX))|~AFPRISTINE;  // stays PRISTINE if abandoned DIRECT

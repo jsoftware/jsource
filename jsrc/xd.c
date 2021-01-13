@@ -197,15 +197,15 @@ static A jtdir1(J jt,LPWIN32_FIND_DATAW f,C* fn) {A z,*zv;C rwx[3],*s,*t;I n,ts[
  rwx[1]=f->dwFileAttributes & FILE_ATTRIBUTE_READONLY ?'-':'w';
  rwx[2]=strcmp(t,"exe")&&strcmp(t,"bat")&&strcmp(t,"com")?'-':'x';
  GAT0(z,BOX,5,1); zv=AAV(z);
- RZ(zv[0]=rifvs(str(n,s))); 
- RZ(zv[1]=rifvs(vec(INT,6L,ts)));
+ RZ(zv[0]=incorp(str(n,s))); 
+ RZ(zv[1]=incorp(vec(INT,6L,ts)));
 #if SY_64
- RZ(zv[2]=rifvs(sc(((I)f->nFileSizeHigh<<32) + (I)f->nFileSizeLow)));
+ RZ(zv[2]=incorp(sc(((I)f->nFileSizeHigh<<32) + (I)f->nFileSizeLow)));
 #else
  RZ(zv[2]=sc(   (f->nFileSizeHigh || 0>(I)f->nFileSizeLow)?-1:f->nFileSizeLow ));  
 #endif
- RZ(zv[3]=rifvs(str(3L,rwx)));
- RZ(zv[4]=rifvs(attv((S)f->dwFileAttributes)));
+ RZ(zv[3]=incorp(str(3L,rwx)));
+ RZ(zv[4]=incorp(attv((S)f->dwFileAttributes)));
  R z;
 }
 

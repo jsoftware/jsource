@@ -862,8 +862,14 @@
 #define qtymes(x,y)                 jtqtymes(jt,(x),(y))
 // Handle top level of ra().  Increment usecount.  Set usecount recursive usecount if recursible type; recur on contents if original usecount is not recursive
 // We can have an inplaceable but recursible block, if it was gc'd or created that way
-// ra() DOES NOT realize a virtual block, so that it can be used in places where virtual blocks are not possible.  ras() does include rifv
-#define ra(x)                       {I c=AC(x); c&=~ACINPLACE; AC(x)=c+=(c>>(BW-2))^1; I tt=AT(x); FLAGT flg=AFLAG(x); if(unlikely(((tt^flg)&TRAVERSIBLE)!=0)){AFLAG(x)=flg|=(tt&RECURSIBLE); jtra((x),tt);};}
+// ra() DOES NOT realize a virtual block; use it in places where virtual blocks are not possible.  ras() does include rifv
+// NOTE that every() produces blocks with usecount 0x8..2 (if a recursive block has pristine contents whose usecount is 2); if we ZAP that it must go to 2
+// We cannot simply ZAP every inplaceable value because we need to keep the oldest reference, which is the zap value.  Only OK to zap when the block has just been created.
+#define ra(x)                       {I c=AC(x); c&=~ACINPLACE; AC(x)=c+=(c>>(BW-2))^1; \
+                                    I tt=AT(x); FLAGT flg=AFLAG(x); if(unlikely(((tt^flg)&TRAVERSIBLE)!=0)){AFLAG(x)=flg|=(tt&RECURSIBLE); jtra((x),tt);};}
+#define razap(x)                    {I c=AC(x); if(likely(c<0)){*AZAPLOC(x)=0;}else{c+=(c>>(BW-2))^1;} AC(x)=c&=~ACINPLACE;\
+                                    I tt=AT(x); FLAGT flg=AFLAG(x); if(unlikely(((tt^flg)&TRAVERSIBLE)!=0)){AFLAG(x)=flg|=(tt&RECURSIBLE); jtra((x),tt);};}
+                                    // use ZAP for inplaceable blocks; don't increment PERMANENT blocks.  Use only if x's stack entry is in the current frame
 // If this is a recursible type, make it recursive if it isn't already, by traversing the descendants.  This is like raising the usecount by 0.  Since we aren't liable to assign the block, we don't have to realize a
 // virtual block unless it is a recursible type.  NOTE that PERMANENT and VIRTUAL blocks are always marked recursible if they are of recursible type
 #define ra0(x)                      {I tt=AT(x); FLAGT flg=AFLAG(x); if(unlikely(((tt^flg)&RECURSIBLE)!=0)){if(unlikely((flg&AFVIRTUAL)!=0)){RZ((x)=realize(x)); flg=AFLAG(x);} AFLAG(x)=flg|=(tt&RECURSIBLE); jtra((x),tt);}}

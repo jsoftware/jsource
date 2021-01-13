@@ -26,7 +26,7 @@ F1(jtcatalog){PROLOG(0072);A b,*wv,x,z,*zv;C*bu,*bv,**pv;I*cv,i,j,k,m=1,n,p,*qv,
   bu=bv-k;
   DO(n, MC(bu+=k,pv[i]+k*cv[i],k););  // move in each atom  (we could stop after moving the lowest)
   DO(n, j=n-1-i; if(qv[j]>++cv[j])break; cv[j]=0;);  // increment and roll over the odometer
-  RZ(*zv++=ca(b));  // clone the items and move pointer to the result
+  RZ(*zv++=incorp(ca(b)));  // clone the items and move pointer to the result  ?clone not required?
  }
  EPILOG(z);
 }

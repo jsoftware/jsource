@@ -30,8 +30,10 @@ static UINT jtcrcvalidate(J jt,A w, UINT* crctab){A*wv;B*v;I m;UINT p,x,z=-1;
  R z;
 }
 
+// 128!:3 monad
 F1(jtcrc1){R crc2(sc(-306674912),w);}
 
+// 128!:3 dyad
 F2(jtcrc2){I n;UINT z;UC*v; UINT crctab[256];
  ARGCHK2(a,w);
  ASSERT(1>=AR(a)&&1>=AR(w),EVRANK);
@@ -48,8 +50,8 @@ F1(jtcrccompile){A h,*hv;UINT z; UINT crctab[256];
  ARGCHK1(w);
  GAT0(h,BOX,2,1); hv=AAV(h);
  RE(z=crcvalidate(w,crctab));
- RZ(hv[0]=rifvs(vec(LIT,sizeof(crctab),crctab)));  // Save the table.  We don't have any other good type to use
- RZ(hv[1]=rifvs(sc((I)z)));
+ RZ(hv[0]=incorp(vec(LIT,sizeof(crctab),crctab)));  // Save the table.  We don't have any other good type to use
+ RZ(hv[1]=incorp(sc((I)z)));
  R h;
 }
 

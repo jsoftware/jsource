@@ -379,6 +379,9 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,UI lrrr,UI lcrrcr,AF f2){
       AC((A)virtwfaux)=ACUC1 + SGNONLYIF(state,ZZFLAGVIRTWINPLACEX); 
       // invoke the function, get the result for one cell
       RZ(z=CALL2IP(f2,virta,virtw,fs));
+#if AUDITEXECRESULTS
+      auditblock(z,1,1);
+#endif
 
 #define ZZBODY  // assemble results
 #include "result.h"
@@ -411,6 +414,9 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,UI lrrr,UI lcrrcr,AF f2){
   // would be wrong to ignore it, because the verb might execute erroneously with no
   // indication that anything unusual happened.  So fail then
   WITHDEBUGOFF(z=CALL2(f2,virta,virtw,fs);)
+#if AUDITEXECRESULTS
+  auditblock(z,1,1);
+#endif
   if(unlikely(jt->jerr!=0)){if(EMSK(jt->jerr)&EXIGENTERROR)RZ(z); z=num(0); RESETERR;}  // use 0 as result if error encountered
   GA(zz,AT(z),0L,lof+lif+AR(z),0L); zzs=AS(zz);
   MCISH(zzs,los,lof); MCISH(zzs+lof,lis,lif); MCISH(zzs+lof+lif,AS(z),AR(z));

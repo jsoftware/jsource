@@ -134,7 +134,7 @@ NB. Inplaceable arguments
 NB. Verify long leading 1s are fast
 l1 =: (9999#1),0
 l0 =: 0 (0}) l1
-((1000) 6!:2 'l0 # i. 10000') (> 1.25&*)&(-&((1000) 6!:2 'i. 10000')) ((1000) 6!:2 'l1 # i. 10000')  NB. occasionally miscompares
+THRESHOLD +. ((1000) 6!:2 'l0 # i. 10000') (> 1.25&*)&(-&((1000) 6!:2 'i. 10000')) ((1000) 6!:2 'l1 # i. 10000')  NB. occasionally miscompares
 
 10000 > 7!:2 '1 # l0' [ l0 =: i. 100 100   NB. Verify 1 # y does not copy
 10000 > 7!:2 '01 # l0' [ l0 =: i. 100 100   NB. Verify 1 # y does not copy

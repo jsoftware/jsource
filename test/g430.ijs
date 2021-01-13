@@ -563,7 +563,7 @@ f=: i.@:>:@:$
 
 NB. Verify that special forms are detected
 a =: 1e4 $ 'abc'
-(100 (6!:2) '40 ]@<\ a') > 1.2 * 100 (6!:2) '40 <\ a'
+THRESHOLD +. (100 (6!:2) '40 ]@<\ a') > 1.2 * 100 (6!:2) '40 <\ a'
 (40 <\ a) -: 40 ]@<\ a
 
 (7!:2 '; 40 <\ a') > 1.2 * 7!:2 '40 ;@:(<\) a'  NB. smaller because boxes contain (cloned) virtual blocks

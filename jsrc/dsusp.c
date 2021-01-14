@@ -316,5 +316,5 @@ F2(jtdbrr2 ){R dbrr(a, w);}
 F1(jtdbtrapq){ASSERTMTV(w); R JT(jt,dbtrap)?JT(jt,dbtrap):mtv;}   
      /* 13!:14 query trap */
 
-F1(jtdbtraps){RZ(w=vs(w)); fa(JT(jt,dbtrap)); if(AN(w)){RZ(ras(w)); JT(jt,dbtrap)=w;}else JT(jt,dbtrap)=0L; R mtm;}
+F1(jtdbtraps){RZ(w=vs(w)); if(AN(w)){RZ(ras(w)); fa(JT(jt,dbtrap)); JT(jt,dbtrap)=w;}else JT(jt,dbtrap)=0L; R mtm;}
      /* 13!:15 set trap */

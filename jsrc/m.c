@@ -706,7 +706,7 @@ A jtgc (J jt,A w,A* old){
    AC(w)=2;  // protect w from being freed.  Safe to use 2, since any higher value implies the backer is protected
    tpop(old);  // delete everything allocated on the stack, except for w and b which were protected
    // if the block backing w must be deleted, we must realize w to protect it; and we must also ra() the contents of w to protect them.
-   if(((AC(b)-2)&(AC(b)-bc))<0){A origw = w; RZ(w=realize(w)); radescend(w,); fa(b); mf(origw); }  // if b is about to be deleted, get w out of the way.  Since we
+   if(((AC(b)-2)&(AC(b)-bc))<0){A origw = w; RZ(w=realize(w)); radescend(w,); fa(b); mf(origw); }  // if b is about to be deleted, get w out of the way.  w cannot be sparse.  Since we
                                       // raised the usecount of w only, we use mf rather than fa to free just the virtual block
                                       // fa the backer to undo the ra when the virtual block was created
    else{

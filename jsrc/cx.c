@@ -63,7 +63,7 @@ static B jtforinit(J jt,CDATA*cv,A t){A x;C*s,*v;I k;
  cv->x=0;
  k=AN(cv->line)-5; cv->k=(I4)k;                 /* length of item name; -1 if omitted (for.; for_. not allowed) */
  if((-k&-cv->n)<0){                         /* for_xyz.       k>0 and cv->n >0     */
-  s=4+CAV(cv->line); RZ(x=str(6+k,s)); ras(x); cv->x=x;
+  s=4+CAV(cv->line); RZ(x=str(6+k,s)); ACINITZAP(x); cv->x=x;
   cv->xv=v=CAV(x); MC(k+v,"_index",6L);  /* index name          */
   cv->iv=s;                              /* item name           */
  }
@@ -217,7 +217,7 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
    // If input is abandoned inplace and not the same as x, DO NOT increment usecount, but mark as abandoned and make not-inplace.  Otherwise ra
    // We can handle an abandoned argument only if it is direct or recursive, since only those values can be assigned to a name
    if((a!=w)&SGNTO0(AC(w)&(((AT(w)^AFLAG(w))&RECURSIBLE)-1))&((I)jtinplace>>JTINPLACEWX)){
-    ybuckptr->flag=LPERMANENT|LWASABANDONED; ACIPNO(w);  // remember, blocks from every may be 0x8..2, and we must preserve the usecount then as if we ra()d it
+    ybuckptr->flag|=LPERMANENT|LWASABANDONED; ACIPNO(w);  // remember, blocks from every may be 0x8..2, and we must preserve the usecount then as if we ra()d it
    }else ra(w);
    ybuckptr->val=w; ybuckptr->sn=jt->currslistx;
   }
@@ -226,7 +226,7 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
   if(a){
    if(!C_CRC32C&&xbuckptr==ybuckptr)xbuckptr=xbuckptr->next+sympv;
    if((a!=w)&SGNTO0(AC(a)&(((AT(a)^AFLAG(a))&RECURSIBLE)-1))&((I)jtinplace>>JTINPLACEAX)){
-    xbuckptr->flag=LPERMANENT|LWASABANDONED; ACIPNO(a);
+    xbuckptr->flag|=LPERMANENT|LWASABANDONED; ACIPNO(a);
    }else ra(a);
    xbuckptr->val=a; xbuckptr->sn=jt->currslistx;
   }
@@ -523,7 +523,7 @@ dobblock:
   // Unusual path with an unclosed contruct (e. g. return. from inside for. loop).  We have to free up the for. stack, but the return value might be one of the names
   // to be deleted on the for. stack, so we must protect the result before we pop the stack.  BUT, EPILOG frees all locally-allocated blocks, which might include the symbol
   // table that we need to pop from.  So we protect the symbol table during the cleanup of the result and stack.
-  ra(locsym);  // protect local syms
+  ra(locsym);  // protect local symtable - not contents
   z=EPILOGNORET(z);  // protect return value from being freed when the symbol table is.  Must also be before stack cleanup, in case the return value is xyz_index or the like
   CDATA *cvminus1 = (CDATA*)VAV(cd)-1; while(cv!=cvminus1){unstackcv(cv); --cv;}  // clean up any remnants left on the for/select stack
   fa(cd);  // have to delete explicitly, because we had to ext() the block and thus protect it with ra()

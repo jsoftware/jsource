@@ -712,13 +712,13 @@ static void convertup(I*pi,I n,C t){I j=n;
 // allocate hashtable, fill with -1
 static A jtcdgahash(J jt,I n){A z;I hn;
  FULLHASHSIZE(n,INTSIZE,0,0,hn);
- GATV0(z,INT,hn,0); memset(AV(z),CFF,hn*SZI);  // no rank - use all words for table
- R ras(z);
+ GATV0(z,INT,hn,0); ACINITZAP(z); memset(AV(z),CFF,hn*SZI);  // no rank - use all words for table
+ R z;
 }
 
 static B jtcdinit(J jt){A x;
- RZ(x=exta(LIT,2L,sizeof(CCT),100L )); ras(x); memset(AV(x),C0,AN(x)); JT(jt,cdarg)=x;
- RZ(x=exta(LIT,1L,1L,         5000L)); ras(x); memset(AV(x),C0,AN(x)); JT(jt,cdstr)=x;
+ RZ(x=exta(LIT,2L,sizeof(CCT),100L )); ACINITZAP(x) memset(AV(x),C0,AN(x)); JT(jt,cdarg)=x;
+ RZ(x=exta(LIT,1L,1L,         5000L)); ACINITZAP(x) memset(AV(x),C0,AN(x)); JT(jt,cdstr)=x;
  RZ(JT(jt,cdhash) =cdgahash(4*AS(JT(jt,cdarg))[0]));
  RZ(JT(jt,cdhashl)=cdgahash(NLIBS+16           ));  // will round up to power of 2 - we allow 100 libraries, which will almost never be used, so we don't get the usual 2x
 // obsolete  jt->cdna=jt->cdns=jt->cdnl=0;

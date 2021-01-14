@@ -64,7 +64,7 @@ F1(jtevms){A t,*tv,*wv;
  *tv++=mtv;
  wv=AAV(w);
  DQ(NEVM, RZ(*tv=incorp(ca(vs(*wv)))); CAV(*tv)[AN(*tv)]=0; ++tv; ++wv;);  // NUL-terminate.  ca to make sure there's room
- ras(t); fa(JT(jt,evm)); JT(jt,evm)=t;
+ ras(t); fa(JT(jt,evm)); JT(jt,evm)=t;  // ras to protect contents
  R mtv;
 }
 
@@ -94,8 +94,8 @@ F1(jtieps){
  ARGCHK1(w);
  ASSERT(1>=AR(w),EVRANK);
  ASSERT(!AN(w)||AT(w)&LIT,EVDOMAIN);
- fa(JT(jt,iep));
- RZ(ras(w)); RZ(JT(jt,iep)=w); 
+ RZ(ras(w)); fa(JT(jt,iep));
+ RZ(JT(jt,iep)=w); 
  R mtm;
 }
 
@@ -219,6 +219,7 @@ F1(jtsysq){I j;
  R sc(j);
 }
 
+#if 0  // obsolete 
 F1(jtxepq){
  ASSERTMTV(w); 
  R JT(jt,xep)?JT(jt,xep):mtv;
@@ -232,7 +233,7 @@ F1(jtxeps){
  RZ(ras(w)); RZ(JT(jt,xep)=w); 
  R mtm;
 }
-
+#endif
 F1(jtasgzombq){ASSERTMTV(w); R sc(JT(jt,asgzomblevel));}
 
 F1(jtasgzombs){I k; 

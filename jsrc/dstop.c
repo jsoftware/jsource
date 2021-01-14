@@ -61,5 +61,5 @@ B jtdbstop(J jt,DC d,I i){A a;B b,c=0,e;C nw[11],*s,*t,*u,*v;I md,n,p,q;
 F1(jtdbstopq){ASSERTMTV(w); R JT(jt,dbstops)?JT(jt,dbstops):mtv;}
      /* 13!:2  query stops */
 
-F1(jtdbstops){RZ(w=vs(w)); fa(JT(jt,dbstops)); if(AN(w)){RZ(ras(w)); JT(jt,dbstops)=w;}else JT(jt,dbstops)=0; R mtm;}
+F1(jtdbstops){RZ(w=vs(w)); if(AN(w)){RZ(ras(w)); fa(JT(jt,dbstops)); JT(jt,dbstops)=w;}else JT(jt,dbstops)=0; R mtm;}
      /* 13!:3  set stops */

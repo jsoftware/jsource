@@ -840,6 +840,7 @@ extern unsigned int __cdecl _clearfp (void);
 // but that's OK as long as you don't pass it to some place where it can become an argument to another function
 // When a block is incorporated it becomes not pristine, because extractions from the parent may compromise it and we don't want to have to go through recursively to find them
 #define INCORP(z) {I af=AFLAG(z); if(unlikely((af&AFVIRTUAL)!=0)){RZ((z)=realize(z))} else{AFLAG(z)=af&~AFPRISTINE;} ACIPNO(z); }
+#define INCORPNC(z) {I af=AFLAG(z); if(unlikely((af&AFVIRTUAL)!=0)){RZ((z)=realize(z))} else{AFLAG(z)=af&~AFPRISTINE;} }  // use if you are immediately going to change AC, as with ras()
 #define INCORPNV(z) {I af=AFLAG(z); AFLAG(z)=af&~AFPRISTINE; ACIPNO(z);}  // use when z is known nonvirtual
 // same, but for nonassignable argument.  Must remember to check the result for 0
 #define INCORPNA(z) incorp(z)

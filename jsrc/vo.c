@@ -35,8 +35,10 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
   // If the input is abandoned and direct or recursive, zap it rather than raising the usecount
   I aband=SGNTO0(AC(w))&((I)jtinplace>>JTINPLACEWX);  // bit 0 = 1 if w is abandoned
 // obsolete   GAT0(z,BOX,1,0); AFLAG(z)=BOX+((-(wt&DIRECT))&((aband)<<AFPRISTINEX)); INCORPRA(w); AAV(z)[0]=w;
-  GAT0(z,BOX,1,0); AFLAG(z)=BOX+((-(wt&DIRECT))&((aband)<<AFPRISTINEX)); INCORP(w); AAV(z)[0]=w;
-  if(((-aband)&((AFLAG(w)|DIRECT)&(wt&(RECURSIBLE|DIRECT))))!=0){*AZAPLOC(w)=0;}else{ra(w);}  // INCORPRA, but using zap where possible
+  GAT0(z,BOX,1,0); AFLAG(z)=BOX+((-(wt&DIRECT))&((aband)<<AFPRISTINEX)); INCORPNC(w); AAV(z)[0]=w;
+// obsolete   GAT0(z,BOX,1,0); AFLAG(z)=BOX+((-(wt&DIRECT))&((aband)<<AFPRISTINEX)); INCORP(w); AAV(z)[0]=w;
+  raczap(w,aband!=0,c&=~ACINPLACE;)  // INCORPNC+this=INCORPRA, but using zap when abandoned
+// obsolete   if(((-aband)&((AFLAG(w)|DIRECT)&(wt&(RECURSIBLE|DIRECT))))!=0){*AZAPLOC(w)=0;}else{ra(w);}  // INCORPRA, but using zap where possible
 // obsolete   if(aband>((wt^AFLAG(w))&RECURSIBLE)){*AZAPLOC(w)=0;}else{ra(w);}  // INCORPRA, but using zap where possible
  } else {
   // <"r
@@ -104,8 +106,9 @@ F2PREFIP;ARGCHK2(a,w);
   if(unboxempty<0){
    // w was unboxed or empty.  Put it directly into neww, then ra or zap it.  If DIRECT abandoned, make result PRISTINE
    AFLAG(neww)|=(-(AT(w)&DIRECT))&((aband)<<AFPRISTINEX);  // starts PRISTINE if abandoned DIRECT
-   if(aband>((AT(w)^AFLAG(w))&RECURSIBLE)){*AZAPLOC(w)=0;}else{ra(w);}  // zappable if abandoned recursive or direct
-   INCORPNV(w); AAV(neww)[0]=w;   // mark w as inside neww
+// obsolete    if(aband>((AT(w)^AFLAG(w))&RECURSIBLE)){*AZAPLOC(w)=0;}else{ra(w);}  // zappable if abandoned recursive or direct
+   raczap(w,aband!=0,c&=~ACINPLACE;)  // INCORPNC+this=INCORPRA, but using zap when abandoned
+   INCORPNC(w); AAV(neww)[0]=w;   // mark w as inside neww
   }else{
    // w was boxed, & a known singleton.  Put the single value into neww, then ra or zap.  neww is PRISTINE if w is abandoned pristine
    // We don't have access to the tpush stack, but if w is abandoned recursive we can use the slot in w as a surrogate location to zap - maybe could even if nonrecursive?
@@ -140,8 +143,9 @@ F2PREFIP;ARGCHK2(a,w);
   }else{  // not (,<), i. e.  ;  (;<)  ,&<   all of which box a
    // Store a into w & return.  If a was abandoned recursive or direct, zap it, else ra.  If a is DIRECT abandoned, allow w to stay PRISTINE
    AFLAG(w)&=((-(AT(a)&DIRECT))&((aband)<<AFPRISTINEX))|~AFPRISTINE;  // stays PRISTINE if abandoned DIRECT
-   if(aband>((AT(a)^AFLAG(a))&RECURSIBLE)){*AZAPLOC(a)=0;}else{ra(a);}  // zappable if abandoned and not recursible nonrecursive
-   INCORPNV(a);   // mark a incorped
+   raczap(a,aband!=0,c&=~ACINPLACE;)  // INCORPNC+this=INCORPRA, but using zap when abandoned
+// obsolete    if(aband>((AT(a)^AFLAG(a))&RECURSIBLE)){*AZAPLOC(a)=0;}else{ra(a);}  // zappable if abandoned and not recursible nonrecursive
+   INCORPNC(a);   // mark a incorped
   }
   // a has the new value to add at the front of the list
   AK(w)-=SZI; AN(w)=AS(w)[0]=AN(w)+1; AAV(w)[0]=a;  // install a at front, add to counts
@@ -165,9 +169,9 @@ static I rescellrarg(I *zs, I zr, I *s, I r){
 // copy w into memory area z, which is known to be big enough to hold it (like povtake, but recursive implementation that doesn't require pre-fill)
 // the types of w and z are the same
 // sizes is +/\. (shape of z),bp(t(z)), i. e. the number of bytes in a result cell of each possible rank
-// r (bits 16 up) is the negative of number of leading axes of rank 1 to be appended to w
-// r (bits 1-15) is the number of axes of w requiring fill (lower axes are taken in full)
-// r (bit 0) is set if what is being moved is boxed pointers that need ra()
+// rf (bits 16 up) is the negative of number of leading axes of rank 1 to be appended to w
+// rf (bits 1-15) is the number of axes of w requiring fill (lower axes are taken in full)
+// rf (bit 0) is set if what is being moved is boxed pointers that need ra()
 // s is the shape of w, *s being the length of the first axis after the leading appended 1s
 // jt->fillv is set up, expanded to 16 bytes
 // result is the new position in w after the move
@@ -177,7 +181,7 @@ static C *copyresultcell(J jt, C *z, C *w, I *sizes, I rf, I *s){I wadv;I r=rf>>
   // r=0   This can only happen if lower r was 0 originally, since we stop recursion at r=1.  r=0 means that
   // the entire r matched the suffix of the shape of zcell, and we can copy the entire cell
   wadv=sizes[0];
-  if(rf&1){DO(wadv>>LGSZI, A a=((A*)w)[i]; ra(a); ((A*)z)[i]=a;)}else{MC(z,w,wadv);}
+  if(unlikely(rf&1)){DO(wadv>>LGSZI, A a=((A*)w)[i]; ra(a); ((A*)z)[i]=a;)}else{MC(z,w,wadv);}
   R wadv+w;
  }
  // otherwise there will be fill
@@ -185,7 +189,7 @@ static C *copyresultcell(J jt, C *z, C *w, I *sizes, I rf, I *s){I wadv;I r=rf>>
  if(r==1){
   // r=1 (after r1 exhausted).  Lower cells are taken in full, so we can copy the cells en bloc
   wadv = s[0]*sizes[1]; // number of bytes to move
-  if(rf&1){DO(wadv>>LGSZI, A a=((A*)w)[i]; ra(a); ((A*)z)[i]=a;)}else{MC(z,w,wadv);}
+  if(unlikely(rf&1)){DO(wadv>>LGSZI, A a=((A*)w)[i]; ra(a); ((A*)z)[i]=a;)}else{MC(z,w,wadv);}
   w+=wadv; z+=wadv; // move the valid data, and advance pointers
  }else if(r<1){
   // There is a leading 1 axis.  Recur once to copy the one cell

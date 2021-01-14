@@ -1979,7 +1979,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
      hh->datasize=allosize(h)-sizeof(IH);  // number of bytes in data area
      hh->hashelelgsize=1;  // hash entries are 2 bytes long
      hh->currenthi = hh->previousindexend = 0;  // This is the minimum need to initialize when FORCE0 is set
-     if(likely(!(mode&IPHCALC))){ras(h); jt->idothash0=h;}  // If not prehashing a table, save this and protect against removal.
+     if(likely(!(mode&IPHCALC))){ACINITZAP(h); jt->idothash0=h;}  // If not prehashing a table, save this and protect against removal.
     }
    }else{
     // using the long table.  Use the current one if it is long enough; otherwise allocate a new one
@@ -2009,7 +2009,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
      hh->currenthi = hh->previousindexend = 0;  // This is the minimum need to initialize when FORCE0 is set
      // If the hash size is moderate, there is a gain to be had by preserving it between searches (it will already be in cache).  On the other hand,
      // it would be a shame to tie up vast amounts of memory waiting for a large search.  To compromise, we keep the buffer unless it is much bigger than the L3 cache
-     if(likely((SGNIFNOT(mode,IPHCALCX)&(hh->datasize-5*L3CACHESIZE))<0)){ras(h); jt->idothash1=h;}  // If not prehashing a table, save this and protect against removal if not prehash and table not huge
+     if(likely((SGNIFNOT(mode,IPHCALCX)&(hh->datasize-5*L3CACHESIZE))<0)){ACINITZAP(h); jt->idothash1=h;}  // If not prehashing a table, save this and protect against removal if not prehash and table not huge
     }
     // switch the routine pointer to the big table
     fnx+=FNTBLSIZE;

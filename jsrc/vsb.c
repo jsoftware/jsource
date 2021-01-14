@@ -297,15 +297,15 @@ static I jtsbextend(J jt,I n,C*s,UI h,I hi){A x;I c,*hv,j,p;SBU*v;
 // obsolete  JT(jt,sbu)v=(SBU*)AV(x);
  }
  if(AN(STRINGTABLE)<n+AM(STRINGTABLE)){            /* extend sbs strings           */
-  GATV0(x,LIT,2*(n+AM(STRINGTABLE)),1); MC(CAV(x),CAV1(STRINGTABLE),AM(STRINGTABLE)); AM(x)=AM(STRINGTABLE);
-  fa(STRINGTABLE); ras(x); SETSTRINGTABLE(x);
+  GATV0(x,LIT,2*(n+AM(STRINGTABLE)),1); ACINITZAP(x) MC(CAV(x),CAV1(STRINGTABLE),AM(STRINGTABLE)); AM(x)=AM(STRINGTABLE);
+  fa(STRINGTABLE); SETSTRINGTABLE(x);  // can't
 // obsolete  STRINGTABLEv=CAV(x);
  }
  if(AN(HASHTABLE)<2*c){                   /* extend sbh hash table        */
 
   FULLHASHSIZE(2*AN(HASHTABLE),INTSIZE,1,0,p);
-  RZ(x=apvwr(p,-1L,0L)); hv=AV(x); v=SBUV4(JT(jt,sbu)); I oroot=ROOT;
-  fa(HASHTABLE); ras(x); SETHASHTABLE(x); ROOT=oroot;
+  RZ(x=apvwr(p,-1L,0L)); ACINITZAP(x); hv=AV(x); v=SBUV4(JT(jt,sbu)); I oroot=ROOT;
+  fa(HASHTABLE); SETHASHTABLE(x); ROOT=oroot;
 // obsolete  HASHTABLEv= AV(x);
   DO(c, j=INITHASH(v++->h); while(0<=hv[j]){if(--j<0)j+=AN(HASHTABLE);} hv[j]=i;);
   hi=INITHASH(h);                               /* new hi wrt new sbh size      */
@@ -690,13 +690,13 @@ static F1(jtsbsetdata){A h,s,u,*wv,x;
  wv=AAV(w); 
  RZ(sbcheck1(wv[0],wv[1],wv[2],wv[3],wv[4],wv[5],wv[6],wv[7],0));
  u=JT(jt,sbu); s=STRINGTABLE; h=HASHTABLE;
- RZ(x=ca(reshape((over(shape(wv[2]),v2(1,1))),wv[2]))); ras(x); JT(jt,sbu)=x;  // make shape nx11x1x1
+ RZ(x=ca(reshape((over(shape(wv[2]),v2(1,1))),wv[2]))); ACINITZAP(x); JT(jt,sbu)=x;  // make shape nx11x1x1
  AM(JT(jt,sbu))=AV(wv[0])[0];
 // obsolete  JT(jt,sbu)v=(SBU*)AV(x);
- RZ(x=ca(wv[3])); ras(x); SETSTRINGTABLE(x);
+ RZ(x=ca(wv[3])); ACINITZAP(x); SETSTRINGTABLE(x);
  AM(STRINGTABLE)=AV(wv[1])[0];
 //  obsolete  STRINGTABLEv=     CAV(x);
- RZ(x=ca(wv[4])); ras(x); SETHASHTABLE(x);
+ RZ(x=ca(wv[4])); ACINITZAP(x); SETHASHTABLE(x);
 // obsolete  HASHTABLEv=      AV(x);
  ROOT      =AV(wv[5])[0];
  FILLFACTOR=AV(wv[6])[0];

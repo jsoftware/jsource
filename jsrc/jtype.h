@@ -130,7 +130,7 @@ struct AD {
         // (7) in the return from wordil, holds the number of words if any final NB. is discarded; (8) in the result of indexofsub when called for FORKEY, contains the
         // number of partitions found; (9) in the self block for y L: n and u S: n, the address of the fs block for u; (10) in the call to jtisf (multiple assignment), holds the
         // address of the symbol table being assigned to (11) in the y block internal to pv.c, used for flags (12) in hashtables in x15.c and in tickers, the number of entries that have been hashed
-        // (13) in file-lock list and file-number list, the # valid files
+        // (13) in file-lock list and file-number list, the # valid files (14) in JT(jt,stnum), the numbered-locale table, the number of locales outstanding
   A back; // For VIRTUAL blocks, points to backing block
   A *zaploc;  // For all blocks, AM initially holds a pointer to the place in the tpop stack (or hijacked tpop stack) that points back to the allocated block.  This value is guaranteed
         // to remain valid as long as the block is nonvirtual inplaceable and might possibly return as a result to the parser or result assembly  (in cases under m above, the block cannot become such a result)

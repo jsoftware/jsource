@@ -54,7 +54,7 @@ B jtsymext(J jt,B b){A x,y;I j,m,n/*obsolete ,s[2]*/,*v,xn,yn;L*u;
  DQ(m-n-1, u++->next=(LX)(j++););                 /* build free list extension, leave last chain 0   */
  if(b)u->next=LAV0(JT(jt,symp))->next;              /* push extension onto stack   */
  ((L*)v)->next=(LX)n;                           /* new base of free chain               */
- ras(x); JT(jt,symp)=x;                           /* preserve new array          */
+ ACINITZAP(x); JT(jt,symp)=x;                           /* preserve new array          */
 // obsolete  LAV0(JT(jt,symp))=LAV0(x);                       /* new array value ptr         */
  if(b)fa(y);                                /* release old array           */
  R 1;

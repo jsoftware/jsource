@@ -870,11 +870,13 @@
 #define razap(x)                    {I c=AC(x); if(likely(c<0)){*AZAPLOC(x)=0;}else{c+=(c>>(BW-2))^1;} AC(x)=c&=~ACINPLACE;\
                                     I tt=AT(x); FLAGT flg=AFLAG(x); if(unlikely(((tt^flg)&TRAVERSIBLE)!=0)){AFLAG(x)=flg|=(tt&RECURSIBLE); jtra((x),tt);};}
                                     // use ZAP for inplaceable blocks; don't increment PERMANENT blocks.  Use only if x's stack entry is in the current frame
+// If this block is recursible and not recursive, execute prolog and then raise the descendants
+#define radescend(x,prolog)         {I tt=AT(x); FLAGT flg=AFLAG(x); if(unlikely(((tt^flg)&RECURSIBLE)!=0)){prolog AFLAG(x)=flg|=(tt&RECURSIBLE); jtra((x),tt);}}
 // If this is a recursible type, make it recursive if it isn't already, by traversing the descendants.  This is like raising the usecount by 0.  Since we aren't liable to assign the block, we don't have to realize a
 // virtual block unless it is a recursible type.  NOTE that PERMANENT and VIRTUAL blocks are always marked recursible if they are of recursible type
-#define ra0(x)                      {I tt=AT(x); FLAGT flg=AFLAG(x); if(unlikely(((tt^flg)&RECURSIBLE)!=0)){if(unlikely((flg&AFVIRTUAL)!=0)){RZ((x)=realize(x)); flg=AFLAG(x);} AFLAG(x)=flg|=(tt&RECURSIBLE); jtra((x),tt);}}
+#define ra0(x)                      radescend(x, if(unlikely((flg&AFVIRTUAL)!=0)){RZ((x)=realize(x)); flg=AFLAG(x);})
 // make this block recursive, used when x has just been allocated & thus is known to be nonrecursive & nonvirtual.  We may know the type t, too (otherwise use AT(x))
-#define ra00(x,tt)                   {if(unlikely(((tt)&RECURSIBLE)!=0)){AFLAG(x)|=(tt)&RECURSIBLE; jtra((x),(tt));}}
+#define ra00(x,tt)                  {if(unlikely(((tt)&RECURSIBLE)!=0)){AFLAG(x)|=(tt)&RECURSIBLE; jtra((x),(tt));}}
 #define ranec(x0,x1,x2,x3,x4,x5)    jtranec(jt,(x0),(x1),(x2),(x3),(x4),(x5))
 #define rank1ex(x0,x1,x2,x3)        jtrank1ex(jt,(x0),(x1),(x2),(x3))
 #define rank1ex0(x0,x1,x2)          jtrank1ex0(jt,(x0),(x1),(x2))

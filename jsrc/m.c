@@ -705,9 +705,8 @@ A jtgc (J jt,A w,A* old){
    I bc=AC(b);  // backer count before tpop
    AC(w)=2;  // protect w from being freed.  Safe to use 2, since any higher value implies the backer is protected
    tpop(old);  // delete everything allocated on the stack, except for w and b which were protected
-   // if the block backing w must be deleted, we must realize w to protect it; and we must also ra() w to protect its contents.  When this is
-   // finished, we have a brand-new w with usecount necessarily 1, so we can make it in-placeable.  Setting the usecount to inplaceable will undo the ra() for the top block only
-   if(((AC(b)-2)&(AC(b)-bc))<0){A origw = w; RZ(w=realize(w)); ra(w); AC(w)=ACUC1|ACINPLACE; fa(b); mf(origw); }  // if b is about to be deleted, get w out of the way.  Since we
+   // if the block backing w must be deleted, we must realize w to protect it; and we must also ra() the contents of w to protect them.
+   if(((AC(b)-2)&(AC(b)-bc))<0){A origw = w; RZ(w=realize(w)); radescend(w,); fa(b); mf(origw); }  // if b is about to be deleted, get w out of the way.  Since we
                                       // raised the usecount of w only, we use mf rather than fa to free just the virtual block
                                       // fa the backer to undo the ra when the virtual block was created
    else{
@@ -738,14 +737,15 @@ A jtgc (J jt,A w,A* old){
  // to do the fa().  We don't get it exactly right, but we note that any block that is part of a name will not be inplaceable, so we do the fa() only if
  // w is inplaceable - and in that case we can make the result here also inplaceable.  If the block was not inplaceable, or if it was freed during the tpop,
  // we push it again here.  In any case, if the input was inplaceable, so is the result.
- // If w was virtual, it cannot have been inplaceable, and will always go through the tpush path, whether it was realized or not
  //
  // NOTE: certain functions (ex: rational determinant) perform operations 'in place' on non-direct names and then protect those names using gc().  The protection is
  // ineffective if the code goes through the fa() path here, because components that were modified will be freed immediately rather than later.  In those places we
  // must either use gc3() which always does the tpush, or do ACIPNO to force us through the tpush path here.  We generally use gc3().
  // Since w now has recursive usecounts (except for sparse, which is never inplaceable), we don't have to do a full fa() on a block that is returning
  // inplaceable - we just reset the usecount in the block.  If the block is returning inplaceable, we must update AM if we tpush
- I cafter=AC(w); if((c&(1-cafter))>=0){A **amptr=(c<0?&AZAPLOC(w):(A**)&jt->shapesink); *amptr=jt->tnextpushp; tpush(w);} cafter=c<0?c:cafter; AC(w)=cafter;  // push unless was inplaceable and was not freed during tpop; make inplaceable if it was originally
+ I cafter=AC(w); if((c&(1-cafter))>=0){A **amptr=(c<0?&AZAPLOC(w):(A**)&jt->shapesink); *amptr=jt->tnextpushp; tpush(w);}  // push unless was inplaceable and was not freed during tpop
+// obsolete  cafter=c<0?c:cafter; ACRESET(w,cafter);;
+ I *cptr=&AC(w); cptr=c<0?cptr:(I*)&jt->shapesink; *cptr=c; // make inplaceable if it was originally
  R w;
 }
 
@@ -1257,6 +1257,7 @@ B jtspc(J jt){A z; RZ(z=MALLOC(1000)); FREECHK(z); R 1; }  // see if 1000 bytes 
 // Double the allocation of w (twice as many atoms), then round up # items to max allowed in allocation
 // if b=1, the result will replace w, so decrement usecount of w and increment usecount of new buffer
 // the itemcount of the result is set as large as will fit evenly, and the atomcount is adjusted accordingly
+// NOTE: w is not recursive, and its usecount must always be 1
 A jtext(J jt,B b,A w){A z;I c,k,m,m1,t;
  ARGCHK1(w);                               /* assume AR(w)&&AN(w)    */
  m=AS(w)[0]; PROD(c,AR(w)-1,AS(w)+1);
@@ -1265,7 +1266,8 @@ A jtext(J jt,B b,A w){A z;I c,k,m,m1,t;
  m1=allosize(z)/k;  // start this divide before the copy
  MC(AV(z),AV(w),AN(w)*bpt);                 /* copy old contents      */
  MCISH(&AS(z)[1],&AS(w)[1],AR(w)-1);
- if(b){RZ(ras(z)); fa(w);}                 /* 1=b iff w is permanent.  This frees up the old space */
+// obsolete  if(b){ras(z); fa(w);}          // 1=b iff w is permanent.  This frees up the old space.
+ if(b){ACINITZAP(z); mf(w);}          // 1=b iff w is permanent.  This frees up the old block but not the contents, which were transferred as is
  AS(z)[0]=m1; AN(z)=m1*c;       /* "optimal" use of space */
  if(!(t&DIRECT))memset(CAV(z)+m*k,C0,k*(m1-m));  // if non-DIRECT type, zero out new values to make them NULL
  R z;

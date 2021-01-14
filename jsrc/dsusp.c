@@ -243,7 +243,7 @@ ARGCHK1D(w); if(a)ARGCHK1D(a);  // scaf
   while(1){
    d->dcnewlineno=0;  // turn off 'reexec requested' flag
    if(s=dbstop(d,0L)){z=0; jsignal(EVSTOP);}  // if first line is a stop
-   else              {ras(self); z=a?dfs2(a,w,self):dfs1(w,self); fa(self); ARGCHK1D(w); if(a)ARGCHK1D(a);}  // scaf
+   else              {ras(self); z=a?dfs2(a,w,self):dfs1(w,self); fa(self);}
    // If we hit a stop, or if we hit an error outside of try./catch., enter debug mode.  But if debug mode is off now, we must have just
    // executed 13!:8]0, and we should continue on outside of debug mode
    if(!z&&jt->uflags.us.cx.cx_c.db){d->dcj=jt->jerr; movecurrtoktosi(jt); z=debug(); if(self!=jt->sitop->dcf)self=jt->sitop->dcf;}

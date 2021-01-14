@@ -855,7 +855,7 @@ F2(jtsb2){A z;I j,k,n;
 // automatically freed by tpop()
 B jtsbtypeinit(JS jjt, I nthreads){A x;I c=sizeof(SBU)/SZI,s[4],p;JJ jt=MTHREAD(jjt);
  s[0]=2000; s[1]=c; s[2]=1; s[3]=1;
- GATVR(x,INT,s[0]*c,4,s);          INITJT(jjt,sbu)=x;
+ GATVR(x,INT,s[0]*c,4,s);          INITJT(jjt,sbu)=x;  // ras() not required
  GA(x,LIT,20000,1,0); SETSTRINGTABLE(x);
 // obsolete  STRINGTABLEv=     CAV(x);
  AM(STRINGTABLE)=0;  // size too big for GAT; initialization anyway

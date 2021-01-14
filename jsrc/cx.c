@@ -217,7 +217,7 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
    // If input is abandoned inplace and not the same as x, DO NOT increment usecount, but mark as abandoned and make not-inplace.  Otherwise ra
    // We can handle an abandoned argument only if it is direct or recursive, since only those values can be assigned to a name
    if((a!=w)&SGNTO0(AC(w)&(((AT(w)^AFLAG(w))&RECURSIBLE)-1))&((I)jtinplace>>JTINPLACEWX)){
-    ybuckptr->flag=LPERMANENT|LWASABANDONED; AC(w)&=~ACINPLACE;  // remember, blocks from every may be 0x8..2, and we must preserve the usecount then as if we ra()d it
+    ybuckptr->flag=LPERMANENT|LWASABANDONED; ACIPNO(w);  // remember, blocks from every may be 0x8..2, and we must preserve the usecount then as if we ra()d it
    }else ra(w);
    ybuckptr->val=w; ybuckptr->sn=jt->currslistx;
   }
@@ -226,7 +226,7 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
   if(a){
    if(!C_CRC32C&&xbuckptr==ybuckptr)xbuckptr=xbuckptr->next+sympv;
    if((a!=w)&SGNTO0(AC(a)&(((AT(a)^AFLAG(a))&RECURSIBLE)-1))&((I)jtinplace>>JTINPLACEAX)){
-    xbuckptr->flag=LPERMANENT|LWASABANDONED; AC(a)&=~ACINPLACE;
+    xbuckptr->flag=LPERMANENT|LWASABANDONED; ACIPNO(a);
    }else ra(a);
    xbuckptr->val=a; xbuckptr->sn=jt->currslistx;
   }

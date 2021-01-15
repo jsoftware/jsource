@@ -97,7 +97,7 @@ F1(jtjopen){A z;I h;
  else{A ww;I ct=AM(JT(jt,fopf));
   if(AM(JT(jt,fopf))==AN(JT(jt,fopf))){RZ(JT(jt,fopa)=ext(1,JT(jt,fopa))); RZ(JT(jt,fopf)=ext(1,JT(jt,fopf))); AM(JT(jt,fopf))=ct;}
   RZ(IAV(JT(jt,fopf))[ct]=h=(I)jope(w,FUPDATE_O));
-  RZ(ww=fullname(vslit(AAV(w)[0]))); RZ(ras(ww));
+  RZ(ww=fullname(vslit(AAV(w)[0]))); RZ(ras(ww));  // ras because ww might be the actual original w
   RZ(AAV(JT(jt,fopa))[ct]=ww);
  
   AM(JT(jt,fopf))=ct+1;
@@ -110,7 +110,8 @@ B jtadd2(J jt,F f1,F f2,C*cmd){A c,x;I ct=AM(JT(jt,fopf));
  if(ct+2>AN(JT(jt,fopf))){RZ(JT(jt,fopa)=ext(1,JT(jt,fopa))); RZ(JT(jt,fopf)=ext(1,JT(jt,fopf))); AM(JT(jt,fopf))=ct;}
  *cmd='<';x=cstr(cmd); ACINITZAP(x) RZ(AAV(JT(jt,fopa))[ct]=x); RZ(IAV(JT(jt,fopf))[ct]=(I)f1);
  *cmd='>';x=cstr(cmd); ACINITZAP(x) RZ(AAV(JT(jt,fopa))[ct+1]=x); RZ(IAV(JT(jt,fopf))[ct+1]=(I)f2);
- fa(c); R 1;  // why this fa()????
+// obsolete will crash fa(c);
+ R 1;
 }   /* add 2 entries to AM(JT(jt,fopf)) table (for hostio); null arg commits entries */
 
 

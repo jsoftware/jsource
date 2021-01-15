@@ -25,10 +25,10 @@
   if(1<(COL)){AS(z)[0]=(COUNT); AS(z)[1]=(COL);}             \
   zv=(T*)AV(z);                                              \
   for(i=1;i<n;++i){                  \
-   k=*e++;  /* initial symbol index */  \
+   k=SYMNEXT(*e++);  /* initial symbol index */  \
    while(j=k){                         \
    d=j+LAV0(JT(jt,symp));                                            \
-   k=d->next;                                                \
+   k=SYMNEXT(d->next);                                                \
    if((d->name)&&(d->val)&&(SELECT)){                        \
     if(m==AS(z)[0]){RZ(z=ext(0,z)); zv=(m*(COL))+(T*)AV(z);}   \
     {PROCESS;}                                               \

@@ -478,6 +478,7 @@ if(jt->parsercalls==0xdd)  // scaf for debugging
          // Now lx is the index of the first name that might match.  Do the compares
          while(1) {
           if(lx==0)goto rdglob;  // If we run off chain, go read from globals
+          lx=SYMNEXT(lx);  // we are now into non-PERMANENT symbols & must clear the flag
           s = lx+LAV0(JT(jt,symp));  // symbol entry
           IFCMPNAME(NAV(s->name),nm,m,{if(s->val==0)goto rdglob; break;})  // if match, we're done looking; could be not found, if no value
           lx = s->next;

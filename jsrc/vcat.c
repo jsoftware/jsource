@@ -356,13 +356,13 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;I ak,k,p,*u,*v,wk,wm,wn;
       // Copy in the actual data, replicating if w is atomic
       if(wr){JMC(av,wv,wlen,loop1,1)} else mvc(wk,av,k,wv);  // no overcopy because there could be fill
       // The data has been copied.  Now adjust the result block to match.  If the operation is virtual extension we have to allocate a new block for the result
-      if(!virtreqd){
+      if(likely(!virtreqd)){
        // Normal append-in-place.
        // Update the # items in a, and the # atoms
        AS(a)[0]+=wm; AN(a)+=wn;
        // if a has recursive usecount, increment the usecount of the added data - including any fill
        // convert wn to be the number of indirect pointers in the added data (RAT types have 2, the rest have 1)
-       if(UCISRECUR(a)){wn*=k>>LGSZI; A* aav=(A*)av; DO(wn, ras(aav[i]);)}
+       if(unlikely(UCISRECUR(a))){wn*=k>>LGSZI; A* aav=(A*)av; DO(wn, ra(aav[i]);)}
       }else{
        // virtual extension.  Allocate a virtual block, which will extend past the original block.  Fill in AN and AS for the block
        A oa=a; RZ(a=virtual(a,0,ar)); AN(a)=AN(oa)+wn; AS(a)[0]=AS(oa)[0]+wm; MCISH(&AS(a)[1],&AS(oa)[1],AR(oa)-1);

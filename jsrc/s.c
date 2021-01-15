@@ -52,8 +52,8 @@ B jtsymext(J jt,B b){A x,y;I j,m,n/*obsolete ,s[2]*/,*v,xn,yn;L*u;
  memset(v+yn,C0,SZI*(xn-yn));               /* 0 unused area for safety    */
  u=n+(L*)v; j=1+n;
  DQ(m-n-1, u++->next=(LX)(j++););                 /* build free list extension, leave last chain 0   */
- if(b)u->next=LAV0(JT(jt,symp))->next;              /* push extension onto stack   */
- ((L*)v)->next=(LX)n;                           /* new base of free chain               */
+ if(b)u->next=LAV0(JT(jt,symp))[0].next;              /* push extension onto stack   */
+ ((L*)v)[0].next=(LX)n;                           /* new base of free chain               */
  ACINITZAP(x); JT(jt,symp)=x;                           /* preserve new array          */
 // obsolete  LAV0(JT(jt,symp))=LAV0(x);                       /* new array value ptr         */
  if(b)fa(y);                                /* release old array           */
@@ -61,19 +61,21 @@ B jtsymext(J jt,B b){A x,y;I j,m,n/*obsolete ,s[2]*/,*v,xn,yn;L*u;
 }    /* 0: initialize (no old array); 1: extend old array */
 
 // hv->hashtable slot; allocate new symbol, install as head/tail of hash chain, with previous chain appended
-// if tailx==0, append at head (immediately after *hv); if tailx!=0, append to tail.  If queue is empty, tail is always 0
+// if tailx==0, append at head (immediately after *hv); if tailx!=0, append to tail, which is knopwn to be tailx.  If queue is empty, tailx is always 0
+// The stored chain pointer to the new record is marked non-PERMANENT unless tailx is SYMNONPERM 
 // result is new symbol
 L* jtsymnew(J jt,LX*hv, LX tailx){LX j;L*u,*v;
- while(!(j=LAV0(JT(jt,symp))->next))RZ(symext(1));  /* extend pool if req'd        */
- LAV0(JT(jt,symp))->next=LAV0(JT(jt,symp))[j].next;       /* new top of stack            */
+ while(!(j=SYMNEXT(LAV0(JT(jt,symp))[0].next)))RZ(symext(1));  /* extend pool if req'd        */
+ LAV0(JT(jt,symp))[0].next=LAV0(JT(jt,symp))[j].next;       /* new top of stack            */
  u=j+LAV0(JT(jt,symp));  // the new symbol.  u points to it, j is its index
- if(tailx) {L *t=tailx+LAV0(JT(jt,symp));
-  // appending to tail.  Queue is known to be nonempty
-  u->next=0;t->next=j;  // it's always the end: point to next & prev, and chain from prev
+ if(SYMNEXT(tailx)) {L *t=tailx+LAV0(JT(jt,symp));
+  // appending to tail, must be a symbol.  Queue is known to be nonempty
+  u->next=0;t->next=j|SYMNONPERM;  // it's always the end: point to next & prev, and chain from prev.  Everything added here is non-PERMANENT
  }else{
   // appending to head.
-  if(u->next=*hv){v=*hv+LAV0(JT(jt,symp));}  // chain old queue to u; if not empty, backchain old head to new one, clear old head flag, 
-  *hv=j;   // set new head
+// obsolete   if(u->next=*hv){v=*hv+LAV0(JT(jt,symp));}  // chain old queue to u; if not empty, backchain old head to new one, clear old head flag, scaf
+  u->next=*hv;  // chain old queue to u
+  *hv=j|(tailx^SYMNONPERM);   // set new head, flagged as NONPERM unless suppressed
  }
  R u;
 }    /* allocate a new pool entry and insert into hash table entry hv */
@@ -94,7 +96,8 @@ extern void jtsymfreeha(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
   if(k=*aprev){
    // first, free the PERMANENT values (if any), but not the names
    do{
-    if(!(jtsympv[k].flag&LPERMANENT))break;
+    if(!SYMNEXTISPERM(k))break;  // we are about to free k.  exit if it is not permanent
+// obsolete     if(!(jtsympv[k].flag&LPERMANENT))break;
     aprev=&jtsympv[k].next;  // save last item we processed here
     if(jtsympv[k].val){
      ortypes|=AT(jtsympv[k].val);
@@ -109,8 +112,9 @@ extern void jtsymfreeha(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
    *aprev=0;  // only the PERMANENT survive
    // We are now pointing at the first non-permanent, if any.  Erase them all, deleting the name and value
    if(k){
-    LX k1=k;  // remember first non-PERMANENT 
+    LX k1=SYMNEXT(k);  // remember first non-PERMANENT 
     do{
+     k=SYMNEXT(k);  // remove address flagging
      aprev=&jtsympv[k].next;  // save last item we processed here
      ortypes|=AT(jtsympv[k].val);  // value must exist here, since the block wouldn't be created unless assigned
      fr(jtsympv[k].name);fa(jtsympv[k].val);jtsympv[k].name=0;jtsympv[k].val=0;jtsympv[k].sn=0;jtsympv[k].flag=0;
@@ -140,7 +144,7 @@ F1(jtsympool){A aa,q,x,y,*yv,z,*zv;I i,n,*u,*xv;L*pv;LX j,*v;
   *xv++=(q=pv->val)?LOWESTBIT(AT(pv->val)):0;  // type: only the lowest bit.  Must allow SYMB through
   *xv++=pv->flag+(pv->name?LHASNAME:0)+(pv->val?LHASVALUE:0);  // flag
   *xv++=pv->sn;    
-  *xv++=pv->next;
+  *xv++=SYMNEXT(pv->next);
   RZ(*yv++=(q=pv->name)?incorp(sfn(SFNSIMPLEONLY,q)):mtv);
  }
  // Allocate box 3: locale name
@@ -148,7 +152,7 @@ F1(jtsympool){A aa,q,x,y,*yv,z,*zv;I i,n,*u,*xv;L*pv;LX j,*v;
  DO(n, yv[i]=mtv;);
  n=AN(JT(jt,stloc)); v=LXAV0(JT(jt,stloc)); 
  for(i=0;i<n;++i){  // for each chain-base in locales pool
-  for(j=v[i];j;j=LAV0(JT(jt,symp))[j].next){      // j is index to named local entry; process the chain
+  for(j=v[i];j=SYMNEXT(j),j;j=LAV0(JT(jt,symp))[j].next){      // j is index to named local entry; process the chain
    x=LAV0(JT(jt,symp))[j].val;  // x->symbol table for locale
    RZ(yv[j]=yv[LXAV0(x)[0]]=aa=incorp(sfn(SFNSIMPLEONLY,LOCNAME(x))));  // install name in the entry for the locale
    RZ(q=sympoola(x)); u=AV(q); DO(AN(q), yv[u[i]]=aa;);
@@ -172,13 +176,13 @@ L* jtprobedel(J jt,I l,C*string,UI4 hash,A g){
  RZ(g);
  LX *asymx=LXAV0(g)+SYMHASH(hash,AN(g)-SYMLINFOSIZE);  // get pointer to index of start of chain
  while(1){
-  LX delblockx=*asymx;
+  LX delblockx=SYMNEXT(*asymx);
   if(!delblockx)R 0;  // if chain empty or ended, not found
-  L *sym=LAV0(JT(jt,symp))+delblockx;
+  L *sym=LAV0(JT(jt,symp))+delblockx;  // address of next in chain, before we delete it
   IFCMPNAME(NAV(sym->name),string,l,     // (1) exact match - if there is a value, use this slot, else say not found
     {
      SYMVALFA(*sym); sym->val=0;   // decr usecount in value; remove value from symbol
-     if(!(sym->flag&LPERMANENT)){*asymx=sym->next; fr(sym->name); sym->name=0; sym->flag=0; sym->sn=0; sym->next=LAV0(JT(jt,symp))[0].next; LAV0(JT(jt,symp))[0].next=delblockx;}
+     if(!(sym->flag&LPERMANENT)){*asymx=sym->next; fr(sym->name); sym->name=0; sym->flag=0; sym->sn=0; sym->next=LAV0(JT(jt,symp))[0].next; LAV0(JT(jt,symp))[0].next=delblockx;}  // add to symbol free list
      R sym;
     }
    // if match, bend predecessor around deleted block, return address of match (now deleted but still points to value)
@@ -194,6 +198,7 @@ L*jtprobe(J jt,I l,C*string,UI4 hash,A g){
  LX symx=LXAV0(g)[SYMHASH(hash,AN(g)-SYMLINFOSIZE)];  // get index of start of chain
  while(1){
   if(!symx)R 0;  // if chain empty or ended, not found
+  symx=SYMNEXT(symx);
   L *sym=LAV0(JT(jt,symp))+symx;
   IFCMPNAME(NAV(sym->name),string,l,R sym->val?sym:0;)     // (1) exact match - if there is a value, use this slot, else say not found
   symx=sym->next;   // mismatch - step to next
@@ -213,9 +218,9 @@ L *jtprobelocal(J jt,A a,A locsyms){NM*u;I b,bx;
    if(likely(!(AR(locsyms)&LNAMEADDED)))R 0;
    LX lx = LXAV0(locsyms)[b];  // index of first block if any
    I m=u->m; C* s=u->s;  // length/addr of name from name block
-   while(0>++bx){lx = LAV0(JT(jt,symp))[lx].next;}
+   while(0>++bx){lx = LAV0(JT(jt,symp))[lx].next;}  // all PERMANENT
    // Now lx is the index of the first name that might match.  Do the compares
-   while(lx) {L* l = lx+LAV0(JT(jt,symp));  // symbol entry
+   while(lx=SYMNEXT(lx)) {L* l = lx+LAV0(JT(jt,symp));  // symbol entry
     IFCMPNAME(NAV(l->name),s,m,R l->val?l : 0;)
     lx = l->next;
    }
@@ -224,7 +229,7 @@ L *jtprobelocal(J jt,A a,A locsyms){NM*u;I b,bx;
    LX lx = LXAV0(locsyms)[b];  // index of first block if any
    L* l = lx+LAV0(JT(jt,symp));  // fetch hashchain headptr, point to L for first symbol
    // negative bucketx (now positive); skip that many items, and then you're at the right place
-   while(bx--){l = l->next+LAV0(JT(jt,symp));}
+   while(bx--){l = l->next+LAV0(JT(jt,symp));}  // all permanent
    R l->val?l:0;
   }
  } else {
@@ -247,9 +252,9 @@ L *jtprobeislocal(J jt,A a){NM*u;I b,bx;L *sympv=LAV0(JT(jt,symp));
    LX tx = lx;  // tx will hold the address of the last item in the chain, in case we have to add a new symbol
    L* l;
 
-   while(0>++bx){tx = lx; lx = sympv[lx].next;}
+   while(0>++bx){tx = lx; lx = sympv[lx].next;}  // all permanent
    // Now lx is the index of the first name that might match.  Do the compares
-   while(lx) {
+   while(lx=SYMNEXT(lx)) {
     l = lx+sympv;  // symbol entry
     IFCMPNAME(NAV(l->name),s,m,R l;)
     tx = lx; lx = l->next;
@@ -261,7 +266,7 @@ L *jtprobeislocal(J jt,A a){NM*u;I b,bx;L *sympv=LAV0(JT(jt,symp));
    R l;
   } else {L* l = lx+sympv;  // fetch hashchain headptr, point to L for first symbol
    // negative bucketx (now positive); skip that many items, and then you're at the right place
-   while(bx--){l = l->next+sympv;}
+   while(bx--){l = l->next+sympv;}  // all permanent
    R l;  // return 
   }
  } else {
@@ -281,13 +286,13 @@ L *jtprobeislocal(J jt,A a){NM*u;I b,bx;L *sympv=LAV0(JT(jt,symp));
 // if not found, one is created
 L*jtprobeis(J jt,A a,A g){C*s;LX *hv,tx;I m;L*v;NM*u;L *sympv=LAV0(JT(jt,symp));
  u=NAV(a); m=u->m; s=u->s; hv=LXAV0(g)+SYMHASH(u->hash,AN(g)-SYMLINFOSIZE);  // get bucket number among the hash tables
- if(tx=*hv){                                 /* !*hv means (0) empty slot    */
+ if(tx=SYMNEXT(*hv)){                                 /* !*hv means (0) empty slot    */
   v=tx+sympv;
   while(1){                               
    u=NAV(v->name);
    IFCMPNAME(u,s,m,R v;)    // (1) exact match - may or may not have value
    if(!v->next)break;                                /* (2) link list end */
-   v=(tx=v->next)+sympv;
+   v=(tx=SYMNEXT(v->next))+sympv;
   }
  }
  // not found, create new symbol.  If tx is 0, the queue is empty, so adding at the head is OK; otherwise add after tx
@@ -544,7 +549,7 @@ L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I m,n,wn,wr,wt;L*e;
 #if 1  // obsolete
    rifv(w); // must realize any virtual
    if(likely((SGNIF((I)jtinplace,JTFINALASGNX)&AC(w)&(-(wt&NOUN)))<0)){  // if final assignment to abandoned noun
-    *AZAPLOC(w)=0; ACRESET(w,ACUC1) if(unlikely(((wt^AFLAG(w))&RECURSIBLE)!=0)){AFLAG(w)|=wt&RECURSIBLE; jtra(w,wt);}  // zap it, make it non-abandoned, make it recursive (incr children if was nonrecursive)
+    *AZAPLOC(w)=0; ACRESET(w,ACUC1) if(unlikely(((wt^AFLAG(w))&RECURSIBLE)!=0)){AFLAG(w)|=wt&RECURSIBLE; jtra(w,wt);}  // zap it, make it non-abandoned, make it recursive (incr children if was nonrecursive).  This is like raczap(1)
       // NOTE: NJA can't zap either, but it never has AC<0
    }else ra(w);  // if zap not allowed, just ra() the whole thing
 #else

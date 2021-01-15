@@ -53,8 +53,10 @@ F1(jtdisps){UC n;
  R mtv;
 }
 
+// 9!:8 error messages
 F1(jtevmq){ASSERTMTV(w); R behead(JT(jt,evm));}
 
+// 9!:9 set error messages
 F1(jtevms){A t,*tv,*wv;
  ARGCHK1(w);
  ASSERT(1==AR(w),EVRANK);
@@ -63,8 +65,8 @@ F1(jtevms){A t,*tv,*wv;
  GAT0(t,BOX,1+NEVM,1); tv=AAV(t); 
  *tv++=mtv;
  wv=AAV(w);
- DQ(NEVM, RZ(*tv=incorp(ca(vs(*wv)))); CAV(*tv)[AN(*tv)]=0; ++tv; ++wv;);  // NUL-terminate.  ca to make sure there's room
- ras(t); fa(JT(jt,evm)); JT(jt,evm)=t;  // ras to protect contents
+ DQ(NEVM, RZ(*tv=incorp(ca(vs(*wv)))); ACINITZAP(*tv) CAV(*tv)[AN(*tv)]=0; ++tv; ++wv;);  // NUL-terminate.  ca to make sure there's room.  ZAP since it's going into recursive box
+ ACINITZAPRECUR(t,BOX); fa(JT(jt,evm)); JT(jt,evm)=t;  // ras to protect contents
  R mtv;
 }
 

@@ -66,7 +66,7 @@ typedef UI4                RANK2T;  // 2 ranks, (l<<16)|r
 #define RANK2TX            32   // # bits in a RANK2T
 #define RANK2TMSK           0xFFFFFFFFU
 typedef I                  FLAGT;
-typedef UI4                LX;  // index of an L block in LAV0(JT(jt,symp))
+typedef I4                LX;  // index of an L block in LAV0(JT(jt,symp))
 
 typedef struct AD AD;
 typedef AD *A;
@@ -412,7 +412,7 @@ typedef I SI;
 #define RHS             (NOUN+FUNC)
 #define IS1BYTE         (B01+LIT)
 #define LAST0           (B01+LIT+C2T+C4T+NAME)
-// Don't call traverse unless one of these bits is set
+// Don't traverse for ra/fa unless one of these bits is set
 #define TRAVERSIBLE     (BOX|VERB|ADV|CONJ|RAT|XNUM|SB01|SINT|SFL|SCMPX|SLIT|SBOX)
 // Allow recursive usecount in one of these types
 #define RECURSIBLE      (BOX|VERB|ADV|CONJ|RAT|XNUM)
@@ -614,7 +614,13 @@ typedef struct {I e,p;X x;} DX;
 /*        decimal point after last digit                                   */
 
 #define SYMLINFO 0  // index of LINFO entry
-#define SYMLINFOSIZE 1     // Number of symbol-table entries that DO NOT contain symbol chains, but instead are LINFO entries
+#define SYMLINFOSIZE 1     // Number of symbol-table entries that DO NOT root symbol chains, but instead are LINFO entries
+// The MSB of LX values is used to indicate that the NEXT value is NOT permanent.  We do this so that we can visit all PERMANENT entries without ever
+// touching a non-PERMANENT one.  By marking NON-permanent symbols with the sign bit, we allow the code for permanent symbols to assume the
+// sign is 0, since the bucket #s are always for permanent symbols.  The end-of-chain pointer does not have the PERMANENT flag set
+#define SYMNONPERM 0x80000000   // flag set if next is non-permanent
+#define SYMNEXT(s) ((s)&~SYMNONPERM)  // address of next symbol
+#define SYMNEXTISPERM(s) ((s)>0)  // true if next symbol is permanent
 
 typedef struct {A name,val;US flag;S sn;LX next;} L;
 
@@ -627,7 +633,7 @@ typedef struct {A name,val;US flag;S sn;LX next;} L;
 /* next - index of successor in hash list or 0      mot used                  */
 
 // FOR EXECUTING LOCAL SYMBOL TABLES: AK() points to the active global symbol table, AM() points to the calling local symbol table.
-// In all local symbol tables, the first 'hashchain' has the symbol offsets of x/y
+// In all local symbol tables, the first 'hashchain' has the chain numbers for y/x; they are the first symbols in those chains, always permanent
 
 #define LCH             (I)1            /* changed since last exec of 4!:5 */
 #define LINFO           (I)4            /* locale info                     */
@@ -681,6 +687,7 @@ typedef struct{UI4 hash;I4 bucket;I bucketx;UC m;C flag,s[1];} NM;
 #define NMDOT           4       /* one of the names m. n. u. v. x. y.      */
 #define NMXY            8       // x/y, which must have NAMEBYVALUE set
 #define NMIMPLOC        16      // this NM block is in u./v.
+#define NMCACHED        32      // This NM is to cache any valid lookup
 
 
 typedef struct {I a,e,i,x;} P;

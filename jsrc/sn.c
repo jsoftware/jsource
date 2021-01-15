@@ -184,7 +184,7 @@ static A jtnch1(J jt,B b,A w,I*pm,A ch){A*v,x,y;C*s,*yv;LX *e;I i,k,m,p,wn;L*d;
  x=(A)(*e+LAV0(JT(jt,symp)))->name; p=AN(x); s=NAV(x)->s;  /* locale name/number           */
  m=*pm; v=AAV(ch)+m;                               /* result to appended to */
  for(i=SYMLINFOSIZE;i<wn;++i,++e)if(*e){
-  d=*e+LAV0(JT(jt,symp));
+  d=SYMNEXT(*e)+LAV0(JT(jt,symp));
   while(1){
    if(LCH&d->flag&&d->name&&d->val){
     d->flag^=LCH;
@@ -194,10 +194,12 @@ static A jtnch1(J jt,B b,A w,I*pm,A ch){A*v,x,y;C*s,*yv;LX *e;I i,k,m,p,wn;L*d;
      GATV0(y,LIT,k+2+p,1); yv=CAV(y); 
      MC(yv,NAV(x)->s,k); MC(1+k+yv,s,p); yv[k]=yv[1+k+p]='_';
      *v++=incorp(y); ++m;
-   }}
+    }
+   }
    if(!d->next)break;
-   d=d->next+LAV0(JT(jt,symp));
- }}
+   d=SYMNEXT(d->next)+LAV0(JT(jt,symp));
+  }
+ }
  *pm=m;
  R ch;
 }
@@ -209,11 +211,11 @@ F1(jtnch){A ch;B b;LX *e;I i,m,n;L*d;
   n=AN(JT(jt,stloc)); e=SYMLINFOSIZE+LXAV0(JT(jt,stloc));
   // named locales first
   for(i=1;i<n;++i,++e)if(*e){
-   d=*e+LAV0(JT(jt,symp));
+   d=SYMNEXT(*e)+LAV0(JT(jt,symp));
    while(1){
     RZ(ch=nch1(b,d->val,&m,ch));
     if(!d->next)break;
-    d=d->next+LAV0(JT(jt,symp));
+    d=SYMNEXT(d->next)+LAV0(JT(jt,symp));
   }}
   // now numbered locales
   DO(jtcountnl(jt), A loc=jtindexnl(jt,i); if(loc)RZ(ch=nch1(b,loc,&m,ch)););

@@ -318,8 +318,9 @@ F1(jtspforloc){A*wv,x,y,z;C*s;D tot,*zv;I i,j,m,n;L*u;LX *yv,c;
   tot+=spfor1(LOCPATH(y)); tot+=spfor1(LOCNAME(y));  // add in the size of the path and name
   m=AN(y); yv=LXAV0(y); 
   for(j=SYMLINFOSIZE;j<m;++j){  // for each name in the locale
-   c=yv[j];
-   while(c){tot+=sizeof(L); u=c+LAV0(JT(jt,symp)); tot+=spfor1(u->name); tot+=spfor1(u->val); c=u->next;}  // add in the size of the name itself and the value, and the L block for the name
+// obsolete    c=yv[j];
+// obsolete    while(c){tot+=sizeof(L); u=c+LAV0(JT(jt,symp)); tot+=spfor1(u->name); tot+=spfor1(u->val); c=u->next;}  // add in the size of the name itself and the value, and the L block for the name
+   for(c=yv[j];c=SYMNEXT(c),c;c=u->next){tot+=sizeof(L); u=c+LAV0(JT(jt,symp)); tot+=spfor1(u->name); tot+=spfor1(u->val);}  // add in the size of the name itself and the value, and the L block for the name
   }
   zv[i]=tot;
  }
@@ -526,11 +527,11 @@ static void freesymb(J jt, A w){I j,wn=AN(w); LX k,kt,* RESTRICT wv=LXAV0(w);
   // free the chain; kt->last block freed
   if(k=wv[j]){
    do{
-    kt=k;fr(jtsympv[k].name);SYMVALFA(jtsympv[k]);    // free name/value
+    kt=k=SYMNEXT(k);fr(jtsympv[k].name);SYMVALFA(jtsympv[k]);    // free name/value
     jtsympv[k].name=0;jtsympv[k].val=0;jtsympv[k].sn=0;jtsympv[k].flag=0;k=jtsympv[k].next;
    }while(k);
    // if the chain is not empty, make it the base of the free pool & chain previous pool from it
-   jtsympv[kt].next=jtsympv[0].next;jtsympv[0].next=wv[j];
+   jtsympv[kt].next=jtsympv[0].next;jtsympv[0].next=wv[j];  // free chain may have permanent flags
   }
  }
 }

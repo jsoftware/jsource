@@ -116,8 +116,8 @@ static I jtgetnl(J jt){
     IAV0(new)[probe]=(I)st;  // install in new hashtable
    }
   }
-  AK(new)=AK(JT(jt,stnum)); AM(new)=AM(JT(jt,stnum));  // before freeing the block, copy # locales and next locales#
-  fa(JT(jt,stnum)); ras(new); JT(jt,stnum)=new; /* obsolete jt->sttsize=AN(new);*/ // install the new table, release the old (can't zap - AM is gone)
+  AK(new)=AK(JT(jt,stnum)); ACINITZAP(new) AM(new)=AM(JT(jt,stnum));  // before freeing the block, copy # locales and next locales#
+  fa(JT(jt,stnum)); JT(jt,stnum)=new; /* obsolete jt->sttsize=AN(new);*/ // install the new table, release the old
  }
  R AK(JT(jt,stnum));  // return index of next allocation
 }
@@ -189,19 +189,20 @@ A jtstcreate(J jt,C k,I p,I n,C*u){A g,x,xx;C s[20];L*v;
  // (it is queried by 18!:31)
  // The allocation clears all the hash chain bases, including the one used for SYMLINFO
  switch(k){
-  case 0:  /* named    locale */
-   RZ(v=symnew(&LXAV0(g)[SYMLINFO],0)); v->flag|=LINFO; /* obsolete v->sn=(US)jt->symindex++; */   // allocate at head of chain
+  case 0:  /* named locale */
+   RZ(v=symnew(&LXAV0(g)[SYMLINFO],SYMNONPERM)); v->flag|=LINFO; /* obsolete v->sn=(US)jt->symindex++; */   // put new block into locales table, allocate at head of chain without non-PERMANENT marking
    RZ(x=nfs(n,u));  // this fills in the hash for the name
    // Install name and path.  Path is 'z' except in z locale itself, which has empty path
-   ACINITZAP(x); LOCNAME(g)=x; xx=1==n&&'z'==*u?vec(BOX,0L,0L):zpath; ras(xx); LOCPATH(g) = xx;   // ras() is never VIRTUAL
+   ACINITZAP(x); LOCNAME(g)=x; xx=zpath; if(unlikely('z'==*u))if(unlikely(1==n)){xx=vec(BOX,0L,0L); ras(xx);} LOCPATH(g) = xx;   // zpath is permanent
    // Assign this name in the locales symbol table to point to the allocated SYMB block
    // This does ras() on g
    symbisdel(x,g,JT(jt,stloc));
    break;
   case 1:  /* numbered locale */
-   RZ(v=symnew(&LXAV0(g)[SYMLINFO],0)); v->flag|=LINFO; /* obsolete v->sn=(US)jt->symindex++; */   // allocate at head of chain
+   RZ(v=symnew(&LXAV0(g)[SYMLINFO],SYMNONPERM)); v->flag|=LINFO; /* obsolete v->sn=(US)jt->symindex++; */   // put new block into locales table, allocate at head of chain without non-PERMANENT marking
    sprintf(s,FMTI,n); RZ(x=nfs(strlen(s),s)); NAV(x)->bucketx=n; // this fills in the hash for the name; we save locale# if numeric
-   ACINITZAP(x); LOCNAME(g)=x; ras(zpath); LOCPATH(g)=zpath;  // ras() is never virtual
+   ACINITZAP(x); LOCNAME(g)=x; LOCPATH(g)=zpath;  // ras() is never virtual.  zpath is permanent, no ras needed
+// obsolete  ras(zpath);
    // Put this locale into the in-use list at an empty location.  ras(g) at that time
    jtinstallnl(jt, g);  // put the locale into the numbered list at the value most recently returned (which must be n)
    break;

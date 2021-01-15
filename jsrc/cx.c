@@ -211,13 +211,13 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
   // Virtual abandoned blocks are both cases at once.  That's OK.
   UI4 yxbucks = *(UI4*)LXAV0(locsym);  // get the yx bucket indexes, stored in first hashchain by crelocalsyms
   L *sympv=LAV0(JT(jt,symp));  // bring into local
-  L *ybuckptr = LXAV0(locsym)[(US)yxbucks]+sympv;  // pointer to sym block for y
+  L *ybuckptr = LXAV0(locsym)[(US)yxbucks]+sympv;  // pointer to sym block for y, known to exist
   L *xbuckptr = LXAV0(locsym)[yxbucks>>16]+sympv;  // pointer to sym block for x
   if(likely(w!=0)){  // If y given, install it & incr usecount as in assignment.  Include the script index of the modification
    // If input is abandoned inplace and not the same as x, DO NOT increment usecount, but mark as abandoned and make not-inplace.  Otherwise ra
    // We can handle an abandoned argument only if it is direct or recursive, since only those values can be assigned to a name
    if((a!=w)&SGNTO0(AC(w)&(((AT(w)^AFLAG(w))&RECURSIBLE)-1))&((I)jtinplace>>JTINPLACEWX)){
-    ybuckptr->flag|=LPERMANENT|LWASABANDONED; ACIPNO(w);  // remember, blocks from every may be 0x8..2, and we must preserve the usecount then as if we ra()d it
+    ybuckptr->flag=LPERMANENT|LWASABANDONED; ACIPNO(w);  // remember, blocks from every may be 0x8..2, and we must preserve the usecount then as if we ra()d it
    }else ra(w);
    ybuckptr->val=w; ybuckptr->sn=jt->currslistx;
   }
@@ -226,7 +226,7 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
   if(a){
    if(!C_CRC32C&&xbuckptr==ybuckptr)xbuckptr=xbuckptr->next+sympv;
    if((a!=w)&SGNTO0(AC(a)&(((AT(a)^AFLAG(a))&RECURSIBLE)-1))&((I)jtinplace>>JTINPLACEAX)){
-    xbuckptr->flag|=LPERMANENT|LWASABANDONED; ACIPNO(a);
+    xbuckptr->flag=LPERMANENT|LWASABANDONED; ACIPNO(a);
    }else ra(a);
    xbuckptr->val=a; xbuckptr->sn=jt->currslistx;
   }
@@ -720,6 +720,7 @@ static A jtsent12b(J jt,A w){A t,*wv,y,*yv;I j,*v;
 
 // Install bucket info into the NAME type t, if it is a local name
 // actstv points to the chain headers, actstn is the number of chains
+// all the chains have had the non-PERMANENT flag cleared in the pointers
 static void jtcalclocalbuckets(J jt, A t, LX *actstv, I actstn){LX k;
  if(!(NAV(t)->flag&(NMLOC|NMILOC))){  // don't store if we KNOW we won't be looking up in the local symbol table
   I4 compcount=0;  // number of comparisons before match
@@ -780,7 +781,7 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
  ln=AN(l); lv=AAV(l);  // Get # words, address of first box
  for(j=1;j<ln;++j) {   // start at 1 because we look at previous word
   t=lv[j-1];  // t is the previous word
-  // look for 'names' =./=: .  If found (and the names do not begin with `), replace the string with a special form: a list of boxes where each box contains a name.
+  // look for 'names' =./=: .  If found (and the names do not begin with `, replace the string with a special form: a list of boxes where each box contains a name.
   // This form can appear only in compiled definitions
   if(AT(lv[j])&ASGN&&AT(t)&LIT&&AN(t)&&CAV(t)[0]!=CGRAVE){
    A neww=words(t);
@@ -833,7 +834,7 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
  // We choose the smallest feasible table to reduce the expense of clearing it at the end of executing the verb
  I pfstn=AN(pfst); LX*pfstv=LXAV0(pfst),pfx; I asgct=0; L *sympv=LAV0(JT(jt,symp));
  for(j=SYMLINFOSIZE;j<pfstn;++j){  // for each hashchain
-  for(pfx=pfstv[j];pfx;pfx=sympv[pfx].next){++asgct;}  // chase the chain and count.
+  for(pfx=pfstv[j];pfx=SYMNEXT(pfx),pfx;pfx=sympv[pfx].next){++asgct;}  // chase the chain and count.  The chains have MSB flag, which must be removed
  }
 
  asgct = asgct + (asgct>>1); // leave 33% empty space, since we will have resolved most names here
@@ -842,16 +843,23 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
 
  // Transfer the symbols from the pro-forma table to the result table, hashing using the table size
  // For fast argument assignment, we insist that the arguments be the first symbols added to the table.
- // So we add them by hand - just y and possibly x.
+ // So we add them by hand - just y and possibly x.  They will be added later too
  RZ(probeis(mnuvxynam[5],actst));if(!(!dyad&&(type>=3||(flags&VXOPR)))){RZ(probeis(mnuvxynam[4],actst));}
  for(j=1;j<pfstn;++j){  // for each hashchain
-  for(pfx=pfstv[j];pfx;pfx=LAV0(JT(jt,symp))[pfx].next){L *newsym;
+  for(pfx=pfstv[j];pfx=SYMNEXT(pfx);pfx=LAV0(JT(jt,symp))[pfx].next){L *newsym;
    A nm=LAV0(JT(jt,symp))[pfx].name;
    RZ(newsym=probeis(nm,actst));  // create new symbol (or possibly overwrite old argument name)
    newsym->flag = LAV0(JT(jt,symp))[pfx].flag|LPERMANENT;   // Mark as permanent
   }
  }
- I actstn=AN(actst)-SYMLINFOSIZE; LX*actstv=LXAV0(actst);  // # hashchains in new symbol table, and pointer to hashchain table
+ I actstn=AN(actst); LX*actstv=LXAV0(actst);  // # hashchains in new symbol table, and pointer to hashchain table
+
+ // Go through all the newly-created chains and clear the non-PERMANENT flag that was set in each root and next pointer.  This flag is set to
+ // indicate that the symbol POINTED TO is non-permanent.
+ sympv=LAV0(JT(jt,symp));  // refresh pointer to symbols
+ for(j=1;j<actstn;++j){  // for each hashchain
+  actstv[j]=SYMNEXT(actstv[j]); for(pfx=actstv[j];pfx;pfx=sympv[pfx].next)sympv[pfx].next=SYMNEXT(sympv[pfx].next);  // set PERMANENT for all symbols in the table
+ }
 
  // Go back through the words of the definition, and add bucket/index information for each simplename
  // Note that variable names must be replaced by clones so they are not overwritten
@@ -863,9 +871,9 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
  if(type>=3 || flags&VXOPR){  // If this is guaranteed to return a noun...
   for(j=0;j<ln;++j) {
    if(AT(t=lv[j])&NAME) {
-    jtcalclocalbuckets(jt,t,actstv,actstn);  // install bucket info into name
+    jtcalclocalbuckets(jt,t,actstv,actstn-SYMLINFOSIZE);  // install bucket info into name
    }else if((AT(t)&BOX+BOXMULTIASSIGN)==BOX+BOXMULTIASSIGN){
-    A *tv=AAV(t); DO(AN(t), jtcalclocalbuckets(jt,tv[i],actstv,actstn);)  // install bucket info into boxed names
+    A *tv=AAV(t); DO(AN(t), jtcalclocalbuckets(jt,tv[i],actstv,actstn-SYMLINFOSIZE);)  // install bucket info into boxed names
    }
   }
  }  // 'noun result guaranteed'
@@ -873,22 +881,25 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
 }
 
 // a is a local symbol table, possibly in use
-// result is a copy of it, ready to use.  All PERMANENT symbols are copied over and given empty values
+// result is a copy of it, ready to use.  All PERMANENT symbols are copied over and given empty values, without inspecting any non-PERMANENT ones
 // The rank-flag of the table is 'not modified'
 // static A jtclonelocalsyms(J jt, A a){A z;I j;I an=AN(a); I *av=AV(a);I *zv;
 A jtclonelocalsyms(J jt, A a){A z;I j;I an=AN(a); LX *av=LXAV0(a),*zv;
  RZ(z=stcreate(2,AN(a),0L,0L)); zv=LXAV0(z);  // allocate the clone; zv->clone hashchains
  // Copy the first hashchain, which has the x/v hashes
- zv[0]=av[0]; // Copy as Lx; really it's a UI4
- // Go through each hashchain of the model, after the first one
- for(j=SYMLINFOSIZE;j<an;++j) {LX *zhbase=&zv[j]; LX ahx=av[j]; LX ztx=0; // hbase->chain base, hx=index of current element, tx is element to insert after
-  while(ahx&&(LAV0(JT(jt,symp)))[ahx].flag&LPERMANENT) {L *l;  // for each permanent entry...
-   RZ(l=symnew(zhbase,ztx)); 
+ zv[0]=av[0]; // Copy as LX; really it's a UI4
+ // Go through each hashchain of the model, after the first one.  We know the non-PERMANENT flags are off
+ for(j=SYMLINFOSIZE;j<an;++j) {LX *zhbase=&zv[j]; LX ahx=av[j]; LX ztx=0; // hbase->chain base, hx=index of current element, ztx is element to insert after
+// obsolete   while(ahx&&(LAV0(JT(jt,symp)))[ahx].flag&LPERMANENT) {L *l;  // for each permanent entry...
+  while(ahx&&SYMNEXTISPERM(ahx)) {L *l;  // for each permanent entry...
+   RZ(l=symnew(zhbase,ztx));   // append new symbol after tail (or head, if tail is empty)
+   *zhbase=SYMNEXT(*zhbase);  // zhbase points to the pointer to the entry we just added.  First time, that's the chain base
    A nm=(LAV0(JT(jt,symp)))[ahx].name;
-   l->name=nm; ras(l->name);  // point symbol table to the name block, and increment its use count accordingly
-   l->flag=(LAV0(JT(jt,symp)))[ahx].flag&(LINFO|LPERMANENT);  // clear all but PERMANENT and INFO, in case we try to delete the name (as in for_xyz. or 4!:55)
+   l->name=nm; ra(l->name);  // point symbol table to the name block, and increment its use count accordingly
+   l->flag=(LAV0(JT(jt,symp)))[ahx].flag&(LINFO|LPERMANENT);  // clear all but INFO and PERMANENT.
    ztx = ztx?(LAV0(JT(jt,symp)))[ztx].next : *zhbase;  // ztx=index to value we just added.  We avoid address calculation because of the divide.  If we added
       // at head, the added block is the new head; otherwise it's pointed to by previous tail
+   zhbase=&l->next;  // after the first time, zhbase is the chain field of the tail
    ahx = (LAV0(JT(jt,symp)))[ahx].next;  // advance to next symbol
   }
  }

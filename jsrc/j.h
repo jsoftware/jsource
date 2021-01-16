@@ -819,7 +819,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define GATV0(name,type,atoms,rank) GATVS(name,type,atoms,rank,0,type##SIZE,GACOPYSHAPE0,R 0)  // shape not written unless rank==1
 #define GATV0E(name,type,atoms,rank,erraction) GATVS(name,type,atoms,rank,0,type##SIZE,GACOPYSHAPE0,erraction)  // shape not written unless rank==1
 // use this version when you are allocating a sparse matrix.  It handles the AS[0] field correctly.  ALL sparse allocations must come through here so that AC is set sorrectly
-#define GASPARSE(n,t,a,r,s) {if((r)==1){GA(n,(t),a,1,0); if(s)AS(n)[0]=(s)[0];}else{GA(n,(t),a,r,s)} AC(n)=ACUC1;}
+#define GASPARSE(n,t,a,r,s) {if((r)==1){GA(n,(t),a,1,0); if(s)AS(n)[0]=(s)[0];}else{GA(n,(t),a,r,s)} ACINIT(n,ACUC1);}
 
 #define HN              4L  // number of boxes per valence to hold exp-def info (words, control words, original (opt.), symbol table)
 // Item count given frame and rank: AS(f) unless r is 0; then 1 
@@ -846,6 +846,8 @@ extern unsigned int __cdecl _clearfp (void);
 #define INCORPNA(z) incorp(z)
 // use to incorporate into a known-recursive box.  We raise the usecount of z
 #define INCORPRA(z) {I af=AFLAG(z); if(unlikely((af&AFVIRTUAL)!=0)){RZ((z)=realize(z))} else{AFLAG(z)=af&~AFPRISTINE;} ra(z); }
+// use to incorporate a newly-created zapped block of type t into a known-recursive box.  If t is recursible, raise the contents of z
+#define INCORPRAZAPPED(z,t) {ACINIT(z,ACUC1) if(t&RECURSIBLE){AFLAG(z)=t; jtra(z,t);}}
 // Tests for whether a result incorporates its argument.  The originator, who is going to check this, always marks the argument inplaceable,
 // and we signal incorporation either by returning the argument itself or by marking it non-inplaceable (if we box it)
 #define WASINCORP1(z,w)    ((z)==(w)||0<=AC(w))

@@ -693,7 +693,7 @@ A jtgc (J jt,A w,A* old){
  if(AFLAG(w)&(AFVIRTUAL|AFVIRTUALBOXED)){
   if(AFLAG(w)&AFVIRTUALBOXED)R w;  // We don't disturb VIRTUALBOXED arrays because we know they're going to be opened presently.  The backer(s) might be on the stack.
   // It might be right to just return fast for any virtual block
-  if(!(AFLAG(w)&AFUNINCORPABLE)){
+  if(likely(!(AFLAG(w)&AFUNINCORPABLE))){
    A b=ABACK(w);  // backing block for w.  It is known to be direct or recursible, and had its usecount incremented by w
    // Raise the count of w to protect it.  Since w raised the count of b when w was created, this protects b also.  Afterwards, if
    // b need not be deleted, w can survive as is; but if b is to be deleted, we must realize w.  We don't keep b around because it may be huge
@@ -701,13 +701,15 @@ A jtgc (J jt,A w,A* old){
    // w was assigned to x or y.
    // Detecting when the backer is going away is subtle because it may have been zapped in a transfer of ownership and have NO entry to the stack.
    // In that case, it is totally unmoored and will persist for as long as w does.  We assume that the decision to transfer ownership was made
-   // advisedly and we do not delete hte backer, but leave w alone.  Thus the test for realizing is (backer count changed during tpop) AND
-   // (backer count is now 1)
-   I bc=AC(b);  // backer count before tpop
-   AC(w)=2;  // protect w from being freed.  Safe to use 2, since any higher value implies the backer is protected
+   // advisedly and we do not delete the backer, but leave w alone.  Thus the test for realizing is (backer count changed during tpop) AND
+   // (backer count is now <2)
+   I bc=AC(b); bc=bc>2?2:bc;  // backer count before tpop.  We will delete backer if value goes down, to a value less than 2.  
+   ACSET(w,2)  // protect w from being freed.  Safe to use 2, since any higher value implies the backer is protected
    tpop(old);  // delete everything allocated on the stack, except for w and b which were protected
-   // if the block backing w must be deleted, we must realize w to protect it; and we must also ra() the contents of w to protect them.
-   if(((AC(b)-2)&(AC(b)-bc))<0){A origw = w; RZ(w=realize(w)); radescend(w,); fa(b); mf(origw); }  // if b is about to be deleted, get w out of the way.  w cannot be sparse.  Since we
+   // if the block backing w has no reason to persist except as the backer for w, we delete it to avoid wasting space.  We must realize w to protect it; and we must also ra() the contents of w to protect them.
+   // If there are multiple virtual blocks relying on the backer, we can't realize them all so we have to keep the backer around.
+// obsolete    if(((AC(b)-2)&(AC(b)-bc))<0){A origw = w; RZ(w=realize(w)); radescend(w,); fa(b); mf(origw); }  // if b is about to be deleted, get w out of the way.  w cannot be sparse.  Since we
+   if(unlikely(AC(b)<bc)){A origw = w; RZ(w=realize(w)); radescend(w,); fa(b); mf(origw); }  // if b exists only for w, delete b.  get w out of the way.  w cannot be sparse.  Since we
                                       // raised the usecount of w only, we use mf rather than fa to free just the virtual block
                                       // fa the backer to undo the ra when the virtual block was created
    else{
@@ -715,7 +717,7 @@ A jtgc (J jt,A w,A* old){
     // the stack entry.  Otherwise we can keep the stack entry we have, wherever it is, but we must restore the usecount to its original value, which might
     // include inplaceability
     if(AC(w)<2)tpush1(w);  // if the stack entry for w was removed, restore it
-    AC(w)=c;  // restore initial usecount and inplaceability
+    ACSET(w,c)  // restore initial usecount and inplaceability
    }
   } else {
    // w was UNINCORPABLE.  That happens only if it is returned from a function called by the function in which it was created.  Therefore, w must not be on the stack
@@ -942,7 +944,7 @@ void jttpop(J jt,A *old){A *endingtpushp;
      if(flg&AFVIRTUAL){A b=ABACK(np); fanano0(b); mf(np);}  // if virtual block going away, reduce usecount in backer, ignore the flagged recursiveness just free the virt block
       // NOTE that ALL non-faux virtual blocks, even self-virtual ones, are on the tpop stack & are deleted here
      else fanapop(np,flg);  // do the recursive POP only if RECURSIBLE block; then free np
-    }else AC(np)=c;
+    }else ACSET(np,c)
    }
    np=np0;  // Advance to next block
   }
@@ -1071,7 +1073,7 @@ if((I)jt&3)SEGFAULT;
 #if MEMAUDIT&8
   DO((((I)1)<<(1+blockx-LGSZI)), lfsr = (lfsr<<1LL) ^ (lfsr<0?0x1b:0); if(i!=6)((I*)z)[i] = lfsr;);   // fill block with garbage - but not the allocation word
 #endif
-  AFLAG(z)=0; AZAPLOC(z)=pushp; AC(z)=ACUC1|ACINPLACE;  // all blocks are born inplaceable, and point to their deletion entry in tpop
+  AFLAG(z)=0; AZAPLOC(z)=pushp; ACINIT(z,ACUC1|ACINPLACE)  // all blocks are born inplaceable, and point to their deletion entry in tpop
    // we do not attempt to combine the AFLAG write into a 64-bit operation, because as of 2017 Intel processors
    // will properly store-forward any read that is to the same boundary as the write, and we always read the same way we write
   *pushp++=z; if(!((I)pushp&(NTSTACKBLOCK-1)))RZ(pushp=tg(pushp)); jt->tnextpushp=pushp;  // advance to next slot, allocating a new block as needed

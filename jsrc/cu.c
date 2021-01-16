@@ -46,7 +46,7 @@ A jtevery(J jt, A w, A fs){A * RESTRICT wv,x,z,* RESTRICT zv;
   fauxvirtual(virtw,virtblockw,w,0,ACUC1); AN(virtw)=1; wv=(A*)bpnoun(wt);  // note if w has gerunds, it is always boxed & doesn't go through here
   // If not boxed, can't be pristine
  }
- AFLAG(z)=(~flags<<(BOXX-JTWILLBEOPENEDX))&BOX;  // if WILLBEOPENED is NOT set, make the result a recursive box
+ AFLAGINIT(z,(~flags<<(BOXX-JTWILLBEOPENEDX))&BOX)  // if WILLBEOPENED is NOT set, make the result a recursive box
  zv=AAV(z);
  // Get jt flags to pass to next level - take them from  fs, so that we always inplace this verb, which will allow us to set pristinity better
  // We must remove raze flags since we are using them here
@@ -160,7 +160,7 @@ A jtevery2(J jt, A a, A w, A fs){A*av,*wv,x,z,*zv;
  }
  // If the result will be immediately unboxed, we create a NONrecursive result and we can store virtual blocks in it.  This echoes what result.h does.
  flags|=ACINPLACE|((I)jtinplace&JTWILLBEOPENED)|(AT(w)&BOX)|((AT(a)&BOX)<<1);
- AFLAG(z)=(~flags<<(BOXX-JTWILLBEOPENEDX))&BOX;  // if WILLBEOPENED is NOT set, make the result a recursive box
+ AFLAGINIT(z,(~flags<<(BOXX-JTWILLBEOPENEDX))&BOX)  // if WILLBEOPENED is NOT set, make the result a recursive box
  A virtw;
  // Get input pointer
  I virtblockw[NORMAH];  // space for a virtual block of rank 0

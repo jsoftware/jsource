@@ -432,8 +432,8 @@ A jtparsea(J jt, A *queue, I m){PSTK * RESTRICT stack;A z,*v;I es;
 
   // Set number of extra words to pull from the queue.  We always need 2 words after the first before a match is possible.
   es = 2;
-if(jt->parsercalls==0xdd)  // scaf for debugging
- jt->parsercalls=0xdd;
+  // scaf for debugging if(jt->parsercalls==0xdd)
+  // scaf for debugging  jt->parsercalls=0xdd;
   // DO NOT RETURN from inside the parser loop.  Stacks must be processed.
 
   while(1){  // till no more matches possible...

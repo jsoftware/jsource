@@ -231,7 +231,7 @@ static DF1(jtssg){F1PREFIP;PROLOG(0020);A a,z;I i,n,r,wr;
  state |= (UI)(SGNIF((I)jtinplace,JTINPLACEWX)&~((AT(w)&TYPEVIPOK)-(f2!=jtevery2self))&AC(w))>>(BW-1-ZZFLAGVIRTAINPLACEX);   // requires JTINPLACEWX==0.  Single flag bit
  // We can inplace the right arg the first time if it is direct inplaceable, and always after that (assuming it is an inplaceable result).
  // and the input jtinplace.  We turn off WILLBEOPENED status in jtinplace for the callee.
- ACINIT(z,ACUC1 + SGNONLYIF(state,ZZFLAGVIRTAINPLACEX))   // first cell is inplaceable if second is
+ ACINIT(z,ACUC1 + ((state&ZZFLAGVIRTAINPLACE)<<(ACINPLACEX-ZZFLAGVIRTAINPLACEX)))   // first cell is inplaceable if second is
  jtinplace = (J)(intptr_t)(((I)jt) + (JTINPLACEW+JTINPLACEA)*((FAV(fs)->flag>>(VJTFLGOK2X-JTINPLACEWX)) & JTINPLACEW));  // all items are used only once
 
 #define ZZPOPNEVER 1   // we mustn't TPOP after copying the result atoms, because they are reused.  This will leave the memory used for type-conversions unclaimed.
@@ -268,7 +268,7 @@ static DF1(jtssg){F1PREFIP;PROLOG(0020);A a,z;I i,n,r,wr;
   else if(unlikely(a==z)){RZ(z=virtual(z,0,AR(a))); AN(z)=AN(a); MCISH(AS(z),AS(a),r-1);}
 
   AK(a)-=k;  // back up to next input
-  ACRESET(a,ACUC1 + SGNONLYIF(state,ZZFLAGVIRTAINPLACEX))   // in case we created a virtual block from it, restore inplaceability to the UNINCORPABLE block
+  ACRESET(a,ACUC1 + ((state&ZZFLAGVIRTAINPLACE)<<(ACINPLACEX-ZZFLAGVIRTAINPLACEX)))   // in case we created a virtual block from it, restore inplaceability to the UNINCORPABLE block
  }
 #define ZZEXIT
 #include "result.h"

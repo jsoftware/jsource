@@ -105,7 +105,7 @@ static void jtseeparse(J jt,DC d){A*v;I m;
  if(jt->etxn<NETX){  // if we overran the buffer, don't reformat it.  Reformatting requires splitting to words
   // We displayed the sentence.  See if it contains (9 :'string'); if so, replace with {{ string }}
   fauxblock(fauxw); A z=(A)&fauxw;
-  AK(z)=jt->etx+m1-(C*)z; AFLAG(z)=0; AT(z)=LIT; ACINIT(z,ACUC1) AR(z)=1; AN(z)=AS(z)[0]=jt->etxn-m1;  // point to etx for parsed line
+  AK(z)=jt->etx+m1-(C*)z; AFLAGFAUX(z,0) AT(z)=LIT; ACFAUX(z,ACUC1) AR(z)=1; AN(z)=AS(z)[0]=jt->etxn-m1;  // point to etx for parsed line
   jtunDD((J)((I)jt|JTINPLACEW|JTINPLACEA),z);  // reformat in place
   jt->etxn=m1+AN(z);  // set new end-of-sentence pointer
  }

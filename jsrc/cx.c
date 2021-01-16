@@ -505,7 +505,7 @@ dobblock:
    // if we are returning a non-noun, we have to cleanse it of any implicit locatives that refer to the symbol table in use now.
    // It is OK to refer to other symbol tables, since they will be removed if they try to escape at higher lavels and in the meantime can be executed; but
    // there is no way we could have a reference to such an implied locative unless we also had a reference to the current table; so we replace only the
-   // first locative in eqch branch
+   // first locative in each branch
    z=fix(z,sc(FIXALOCSONLY|FIXALOCSONLYLOWEST));
   }else {pee(line,&cw[bi],EVNONNOUN,gsfctdl<<(BW-2),callframe); z=0;}  // signal error, set z to 'no result'
  }else{

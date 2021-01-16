@@ -152,7 +152,7 @@ DF2(jtboxcut0){A z;
  I resatoms; PROD(resatoms,f,AS(a)); I cellsize; PROD(cellsize,wr-1,AS(w)+1);
  I k=bplg(t); C *wv=CAV(w);  // k is length of an atom of w
  // allocate the result area
- GATV(z,BOX,resatoms,f,AS(a)); AFLAG(z) = BOX; if(resatoms==0){RETF(z);}  // could avoid filling with 0 if we modified AN after error, or cleared after *tnextpushp
+ GATV(z,BOX,resatoms,f,AS(a)); AFLAGINIT(z,BOX) if(resatoms==0){RETF(z);}  // could avoid filling with 0 if we modified AN after error, or cleared after *tnextpushp
   // We have allocated the result; now we allocate a block for each cell of w and copy
   // the w values to the new block.
   // Make result inplaceable; recursive too, since otherwise the boxes won't get freed
@@ -174,7 +174,8 @@ DF2(jtboxcut0){A z;
    GAE(y,t,(I)jtinplace&JTWILLBEOPENED?0:substratoms,wr,AS(w),break); AS(y)[0]=endorlen;  // allocate, but don't grow the tstack. Fix up the shape
    if(!((I)jtinplace&JTWILLBEOPENED)){
     // Normal case.  Set usecount of cell to 1 since z is recursive usecount and y is not on the stack.  ra0() if recursible.  Put allocated addr into *jt->tnextpushp++.
-    MC(CAV(y),wv+start*(cellsize<<k),substratoms<<k); ACINIT(y,ACUC1) if(t&RECURSIBLE){AFLAG(y)=t; jtra(y,t);}
+// obsolete     MC(CAV(y),wv+start*(cellsize<<k),substratoms<<k); ACINIT(y,ACUC1) if(t&RECURSIBLE){AFLAG(y)=t; jtra(y,t);}
+    MC(CAV(y),wv+start*(cellsize<<k),substratoms<<k); INCORPRAZAPPED(y,t)
    }else{
     // WILLBEOPENED case.  We must make the block virtual so we can avoid the copy
     jtexpostvirtual(jt,y,w,start*(cellsize<<k)); AN(y)=substratoms;
@@ -727,7 +728,7 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[12
  switch(id){
  case CBOX:  // do <;.n to produce recursive pristine result, all zapped
   if(likely(!(state&ZZFLAGWILLBEOPENED))){  // If we will open the result, we will gain more by boxing virtual blocks than by zapping them here
-   GATV0(zz,BOX,m,1); AFLAG(zz) = BOX+((-(wt&DIRECT))&AFPRISTINE);  // allocate result, set recursive, and also PRISTINE if direct
+   GATV0(zz,BOX,m,1); AFLAGINIT(zz,BOX+((-(wt&DIRECT))&AFPRISTINE))  // allocate result, set recursive, and also PRISTINE if direct
    if(likely(m!=0)){ // exit if empty for comp ease below
     // boxes will be in AAV(z), in order.  Details of hijacking tnextpushp are discussed in jtbox().
     A *pushxsave = jt->tnextpushp; jt->tnextpushp=AAV(zz);  // save tstack info before allocation

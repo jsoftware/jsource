@@ -414,7 +414,6 @@ typedef JST* JS;  // shared part of struct
 #if MAXTHREADS>1  // for multithreading
 #define JJTOJ(jj) ((JS)((I)(jj)&-JTALIGNBDY))
 #else
-// scaf testing only #define JJTOJ(jj) ((JS)((I)(jj)-offsetof(struct JSTstruct,threaddata)+(jj->ranks&0)+((((I)jj^0x200)&0x1e00)<<48)))
 #define JJTOJ(jj) ((JS)((I)(jj)-offsetof(struct JSTstruct,threaddata)))
 #endif
 #define JT(p,n) JJTOJ(p)->n

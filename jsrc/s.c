@@ -524,7 +524,7 @@ L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I m,n,wn,wr,wt;L*e;
      // However, we did change 8..1 to 1, and if the 1 is still there, we set it back to 8..1 so that the caller can see that the value is unincorporated.
      // The case where x==w is of interest (it comes up in x =. x , 5).  In that case we will not change the usecount of x/w below, so we have to keep the ABANDONED
      // status in sync with the usecount.  The best thing is to keep both unchanged, so that we can continue to inplace x
-     AC(x)|=(ACINPLACE&(AC(x)-1-(x!=w)));  // apply ABANDONED: 1 -> 8..1 but only if we are going to replace x; we don't want 8..1 in an active name
+     ACOR(x,ACINPLACE&(AC(x)-1-(x!=w)))  // apply ABANDONED: 1 -> 8..1 but only if we are going to replace x; we don't want 8..1 in an active name
      e->flag&=~((x!=w)<<LWASABANDONEDX);  // turn off abandoned flag after it has been applied, but only if we replace x
      xaf = AFNVRUNFREED; // ignore other flags; set xaf as if x==0 to avoid any other usecount changes
    }

@@ -405,7 +405,7 @@ A jtkeyct(J jt,A a,A w,A self,D toler){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
   // NOT small-range processing: go through the index+size table to create the frets and reordered data for passing to cut
   nfrets=AM(ai);  //fetch # frets before we possibly clone ai
   I maxfretsize=(nitems>>8); maxfretsize=maxfretsize<nfrets?nfrets:maxfretsize; maxfretsize=4*maxfretsize+nfrets+1;  // max # bytes needed for frets, if some are long
-  if((UI)maxfretsize<sizeof(localfrets)-NORMAH*SZI){frets=(A)localfrets; AT(frets)=0; if(MEMAUDIT&0xc)AFLAG(frets)=0;} // Cut tests the type field - only.  If debug, the flag also
+  if((UI)maxfretsize<sizeof(localfrets)-NORMAH*SZI){frets=(A)localfrets; AT(frets)=0; if(MEMAUDIT&0xc)AFLAGFAUX(frets,0)} // Cut tests the type field - only.  If debug, the flag also
   else if((I)jtinplace&(I)((AFLAG(w)&(AFVIRTUAL|AFNJA))==0)&((UI)((-(I )(AT(w)&DIRECT))&AC(w)&(4-celllen)&((I )(SZI==4)-AR(w)))>>(BW-1-JTINPLACEWX)))frets=w;
   else GATV0(frets,LIT,maxfretsize,0);   // 1 byte per fret is adequate, since we have padding
   fretp=CUTFRETFRETS(frets);  // Place where we will store the fret-lengths.  They are 1 byte normally, or 5 bytes for groups longer than 254
@@ -448,7 +448,7 @@ A jtkeyct(J jt,A a,A w,A self,D toler){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
   av=IAV(a); DQ(nitems, I tval=ftblv[*av&valmsk]; ftblv[*av&valmsk]=tval-1; nfrets-=SGNTO0(tval); av=(I*)((I)av+k);)   // build (negative) frequency table; sub 1 for each non-fret
   // now that we have the number of freats, we can allocate the fret block
   I maxfretsize=(nitems>>8); maxfretsize=maxfretsize<nfrets?nfrets:maxfretsize; maxfretsize=4*maxfretsize+nfrets+1;  // max # bytes needed for frets
-  if((UI)maxfretsize<sizeof(localfrets)-NORMAH*SZI){frets=(A)localfrets; AT(frets)=0; if(MEMAUDIT&0xc)AFLAG(frets)=0;} // Cut tests the type field - only; for memaudit we need flag too
+  if((UI)maxfretsize<sizeof(localfrets)-NORMAH*SZI){frets=(A)localfrets; AT(frets)=0; if(MEMAUDIT&0xc)AFLAGFAUX(frets,0)} // Cut tests the type field - only; for memaudit we need flag too
   else if((I)jtinplace&(I)((AFLAG(w)&(AFVIRTUAL|AFNJA))==0)&((UI)((-(I)(AT(w)&DIRECT))&AC(w)&(4-celllen)&((I)(SZI==4)-AR(w)))>>(BW-1-JTINPLACEWX)))frets=w;
   else GATV0(frets,LIT,maxfretsize,0);   // 1 byte per fret is adequate, since we have padding
   fretp=CUTFRETFRETS(frets);  // Place where we will store the fret-lengths.  They are 1 byte normally, or 5 bytes for groups longer than 254
@@ -491,11 +491,11 @@ A jtkeyct(J jt,A a,A w,A self,D toler){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
  // wperm is always inplaceable.  If u is inplaceable, make the call to cut inplaceable
  // Transfer pristinity of w to wperm so we can see if it went away, but only if w is pristine inplaceable.  We want to leave
  // wperm pristine so it can be used, but it's pristine only is w is zombie.  We sacrifice pristinity to inplaceability
- AFLAG(wperm)|=AFLAG(w)&AFPRISTINE&REPSGN(AC(w)&SGNIF(jtinplace,JTINPLACEWX));
+ AFLAGINIT(wperm,AFLAG(wperm)|AFLAG(w)&AFPRISTINE&REPSGN(AC(w)&SGNIF(jtinplace,JTINPLACEWX)))
  // We pass the self pointer for /. into cut, as it uses the id therein to interpret a
  z=jtcut2((J)(intptr_t)((I)jt+((FAV(self)->flag&VGERL)?0:(FAV(FAV(self)->fgh[0])->flag>>(VJTFLGOK1X-JTINPLACEWX))&JTINPLACEW)),frets,wperm,self);
  // If the operation turned off pristinity of wperm, do the same for w.  Remember that pristinity only matters if the block is inplaceable
- AFLAG(w)&=AFLAG(wperm)|~AFPRISTINE;
+ AFLAGAND(w,AFLAG(wperm)|~AFPRISTINE)
 // obsolete POPCCT
  EPILOG(z);
 }    /* a f/. w for dense x & w */
@@ -636,7 +636,7 @@ DF2(jtkeybox){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
  // restore the allocation system
  jt->tnextpushp=pushxsave;   // restore tstack pointer
  // Set PRISTINE if w now has DIRECT type (note that w has been switched to INT for (<./ i.@#))
- AFLAG(z)=(-(AT(w)&DIRECT) & AFPRISTINE);  // maybe pristine
+ AFLAGINIT(z,-(AT(w)&DIRECT) & AFPRISTINE)  // maybe pristine
  ASSERT(y!=0,EVWSFULL);  // if we broke out on allocation failure, fail.
 // obsolete  POPCCT
  EPILOG(z);

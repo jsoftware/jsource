@@ -237,7 +237,6 @@ A jtdbunquote(J jt,A a,A w,A self,L *stabent){A t,z;B s;DC d;V*sv;
  RZ(d=deba(DCCALL,a,w,self)); d->dcn=(I)stabent;
  if(CCOLON==sv->id&&(sv->flag&VXOP||t&&NOUN&AT(t))){  // : and executable body: either OP (adv/conj now with noun operands) or m : n
   ras(self); z=a?dfs2(a,w,self):dfs1(w,self); fa(self);
-ARGCHK1D(w); if(a)ARGCHK1D(a);  // scaf
  }else{                              /* tacit    */
   d->dcix=0;  // set a pseudo-line-number for display purposes for the tacit 
   while(1){

@@ -369,17 +369,18 @@
 // Allocate an INT block. z is the zvalue to hold the result; v is the fauxblock to use if n INTs will fit in the fauxblock, which has rank r
 // shape is not filled in, except when rank is 1
 // scaf We should mark the blocks as NJA for good form?
-#define fauxINT(z,v,n,r) {if(likely(AKXR(r)+(n)*SZI<=(I)sizeof(v))){z=(A)(v); AK(z)=AKXR(r); AFLAG(z)=0/*AFNJA*/; AT(z)=INT; AC(z)=ACUC1; AN(z)=(n); AR(z)=(RANKT)(r); if(r==1)AS(z)[0]=(n);}else{GATV0(z,INT,(n),(r));}}
-#define fauxBOX(z,v,n,r) {if(likely(AKXR(r)+(n)*SZI<=(I)sizeof(v))){z=(A)(v); AK(z)=AKXR(r); AFLAG(z)=0/*AFNJA*/; AT(z)=BOX; AC(z)=ACUC1; AN(z)=(n); AR(z)=(RANKT)(r); if(r==1)AS(z)[0]=(n);}else{GATV0(z,BOX,(n),(r));}}
+#define fauxINT(z,v,n,r) {if(likely(AKXR(r)+(n)*SZI<=(I)sizeof(v))){z=(A)(v); AK(z)=AKXR(r); AFLAG(z)=0/*AFNJA*/; AT(z)=INT; ACFAUX(z,ACUC1); AN(z)=(n); AR(z)=(RANKT)(r); if(r==1)AS(z)[0]=(n);}else{GATV0(z,INT,(n),(r));}}
+#define fauxBOX(z,v,n,r) {if(likely(AKXR(r)+(n)*SZI<=(I)sizeof(v))){z=(A)(v); AK(z)=AKXR(r); AFLAG(z)=0/*AFNJA*/; AT(z)=BOX; ACFAUX(z,ACUC1); AN(z)=(n); AR(z)=(RANKT)(r); if(r==1)AS(z)[0]=(n);}else{GATV0(z,BOX,(n),(r));}}
 // use the following in functions that cannot admit a return.  You must know that the allocated fauxblock is big enough
-#define fauxBOXNR(z,v,n,r) {z=(A)(v); AK(z)=AKXR(r); AFLAG(z)=0/*AFNJA*/; AT(z)=BOX; AC(z)=ACUC1; AN(z)=(n); AR(z)=(RANKT)(r); if(r==1)AS(z)[0]=(n);}
+#define fauxBOXNR(z,v,n,r) {z=(A)(v); AK(z)=AKXR(r); AFLAG(z)=0/*AFNJA*/; AT(z)=BOX; ACFAUX(z,ACUC1); AN(z)=(n); AR(z)=(RANKT)(r); if(r==1)AS(z)[0]=(n);}
 // v is a block declared by fauxblock, w is the source data, r is the rank.  offset is assumed 0.  c is the initial value for AC.  If the rank is small enough, we use the fauxblock, otherwise
 // we allocate a block.  We assume that the caller will fill in AN, AS.  Block must be marked UNINCORPABLE so it will not free its backer if freed, and so it will not be in-place virtualed,
 // and must be marked recursive if it is of such a type so that if we fa() the block we will not try to recur
 // PRISTINE is inherited from the backer (this is not done in virtual(), perhaps it should), because we know the block will never be inplaced unless it was inplaceable at the time this fauxblock was
 // created, which means it is not extant anywhere it could be assigned or extracted from.
-#define fauxvirtual(z,v,w,r,c) {if(likely((r)<=4)){z=ABACK(w); AK((A)(v))=(CAV(w)-(C*)(v)); AT((A)(v))=AT(w); AR((A)(v))=(RANKT)(r); z=AFLAG(w)&AFVIRTUAL?z:(w); AFLAG((A)(v))=AFVIRTUAL|AFUNINCORPABLE|(AFLAG(z)&AFPRISTINE)|(AT(w)&TRAVERSIBLE); ABACK((A)(v))=z; z=(A)(v); AC(z)=(c);} \
-                              else{RZ(z=virtual((w),0,(r))); AFLAG(z)|=AFUNINCORPABLE; if((c)!=ACUC1)AC(z)=(c);} }
+#define fauxvirtual(z,v,w,r,c) {if(likely((r)<=4)){z=ABACK(w); AK((A)(v))=(CAV(w)-(C*)(v)); AT((A)(v))=AT(w); AR((A)(v))=(RANKT)(r); z=AFLAG(w)&AFVIRTUAL?z:(w); \
+                              AFLAG((A)(v))=AFVIRTUAL|AFUNINCORPABLE|(AFLAG(z)&AFPRISTINE)|(AT(w)&TRAVERSIBLE); ABACK((A)(v))=z; z=(A)(v); ACFAUX(z,(c))} \
+                              else{RZ(z=virtual((w),0,(r))); AFLAG(z)|=AFUNINCORPABLE; if((c)!=ACUC1)ACINIT(z,(c))} }
 #define fdef(x0,x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,x11)     jtfdef(jt,(x0),(x1),(x2),(x3),(x4),(x5),(x6),(x7),(x8),(x9),(x10),(x11))
 #if !USECSTACK
 #define fdep(x)                     jtfdep(jt,(x))
@@ -426,7 +427,7 @@
 #define fplus(x,y)                  jtfplus(jt,(x),(y))
 #define fpoly(x,y)                  jtfpoly(jt,(x),(y))
 #define fpolyc(x)                   jtfpolyc(jt,(x))
-#define fr(x)                       {if(likely((x)!=0)){I Zs = AC(x); if(likely(!ACISPERM(Zs))){if(likely(--Zs<=0))mf(x);else AC(x)=Zs;}}}
+#define fr(x)                       {if(likely((x)!=0)){I Zs = AC(x); if(likely(!ACISPERM(Zs))){if(likely(--Zs<=0))mf(x);else AC(x)=Zs;}}}  // use fr for known nonrecursives, and for locales
 #define fram(x0,x1,x2,x3,x4)        jtfram(jt,(x0),(x1),(x2),(x3),(x4))   
 #define from(x,y)                   jtfrom(jt,(x),(y))   
 #define frombs(x,y)                 jtfrombs(jt,(x),(y))
@@ -860,18 +861,21 @@
 #define qrr(x)                      jtqrr(jt,(x))  
 #define qstd(x)                     jtqstd(jt,(x))
 #define qtymes(x,y)                 jtqtymes(jt,(x),(y))
-// Handle top level of ra().  Increment usecount.  Set usecount recursive usecount if recursible type; recur on contents if original usecount is not recursive
-// We can have an inplaceable but recursible block, if it was gc'd or created that way
-// ra() DOES NOT realize a virtual block; use it in places where virtual blocks are not possible.  ras() does include rifv
-// NOTE that every() produces blocks with usecount 0x8..2 (if a recursive block has pristine contents whose usecount is 2); if we ZAP that it must go to 2
-// We cannot simply ZAP every inplaceable value because we need to keep the oldest reference, which is the zap value.  Only OK to zap when the block has just been created.
 #define rarecur(x,tt,test,prolog,asgn) {if(unlikely(((test)&TRAVERSIBLE)!=0)){prolog AFLAG(x) asgn |=(tt)&RECURSIBLE; jtra((x),(tt));}}  // recur on descendants if traversible, set recursive if recursible
 // If this block is recursible and not recursive, execute prolog and then raise the descendants
 // obsolete #define radescend(x,prolog)         {I tt=AT(x); FLAGT flg=AFLAG(x); if(unlikely(((tt^flg)&TRAVERSIBLE)!=0)){prolog AFLAG(x)=flg|=(tt&RECURSIBLE); jtra((x),tt);}}
 #define radescend(x,prolog)         {I tt=AT(x); FLAGT flg=AFLAG(x); rarecur(x,tt,tt^flg,prolog,=flg)}
+// make this block recursive, used when x has just been allocated & thus is known to be nonrecursive & nonvirtual.  We may know the type t, too (otherwise use AT(x))
+// obsolete #define ra00(x,tt)                  {if(unlikely(((tt)&TRAVERSIBLE)!=0)){AFLAG(x)|=(tt)&RECURSIBLE; jtra((x),(tt));}}
+#define ra00(x,tt)                  rarecur(x,tt,tt,,)  // tt is all that needs to be tested
+// Handle top level of ra().  Increment usecount.  Set usecount recursive usecount if recursible type; recur on contents if original usecount is not recursive
+// We can have an inplaceable but recursible block, if it was gc'd or created that way
+// ra() DOES NOT realize a virtual block; use it in places where virtual blocks are not possible.  ras() does include rifv
 #define ra(x)                       {I c=AC(x); c&=~ACINPLACE; AC(x)=c+=(c>>(BW-2))^1; \
                                     radescend(x,)}
 // obsolete                                     I tt=AT(x); FLAGT flg=AFLAG(x); if(unlikely(((tt^flg)&TRAVERSIBLE)!=0)){AFLAG(x)=flg|=(tt&RECURSIBLE); jtra((x),tt);};}
+// NOTE that every() produces blocks with usecount 0x8..2 (if a recursive block has pristine contents whose usecount is 2); if we ZAP that it must go to 2
+// We cannot simply ZAP every inplaceable value because we need to keep the oldest reference, which is the zap value.  Only OK to zap when the block has just been created.
 #define raczap(x,cond,falsestart)   {I c=AC(x); if(likely(cond)){*AZAPLOC(x)=0; c&=~ACINPLACE;}else{falsestart c+=(c>>(BW-2))^1;} AC(x)=c; \
                                     radescend(x,)}
 // obsolete                                     I tt=AT(x); FLAGT flg=AFLAG(x); if(unlikely(((tt^flg)&TRAVERSIBLE)!=0)){AFLAG(x)=flg|=(tt&RECURSIBLE); jtra((x),tt);};}
@@ -881,9 +885,6 @@
 // If this is a recursible type, make it recursive if it isn't already, by traversing the descendants.  This is like raising the usecount by 0.  Since we aren't liable to assign the block, we don't have to realize a
 // virtual block unless it is a recursible type.  NOTE that PERMANENT and VIRTUAL blocks are always marked recursible if they are of recursible type
 #define ra0(x)                      radescend(x, if(unlikely((flg&AFVIRTUAL)!=0)){RZ((x)=realize(x)); flg=AFLAG(x);})
-// make this block recursive, used when x has just been allocated & thus is known to be nonrecursive & nonvirtual.  We may know the type t, too (otherwise use AT(x))
-// obsolete #define ra00(x,tt)                  {if(unlikely(((tt)&TRAVERSIBLE)!=0)){AFLAG(x)|=(tt)&RECURSIBLE; jtra((x),(tt));}}
-#define ra00(x,tt)                  rarecur(x,tt,tt,,)  // tt is all that needs to be tested
 #define ranec(x0,x1,x2,x3,x4,x5)    jtranec(jt,(x0),(x1),(x2),(x3),(x4),(x5))
 #define rank1ex(x0,x1,x2,x3)        jtrank1ex(jt,(x0),(x1),(x2),(x3))
 #define rank1ex0(x0,x1,x2)          jtrank1ex0(jt,(x0),(x1),(x2))

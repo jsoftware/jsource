@@ -224,7 +224,7 @@ static A jttparse(J jt,A w,A locsyms,I tmonad,I tsubst,TA *ttab,I *ttabi,I ttabi
 }
 
 F1(jtvtrans){PROLOG(0053);A locsyms,y,z=0;/* obsolete B tmonad,tsubst;*/I c,i,ttabi;TA ttab[NTTAB]/* obsolete ,*ttab0*/;
- /* local=jt->locsyms; obsolete ttab0=jt->ttab; tsubst=jt->tsubst; tmonad=jt->tmonad; */  // scaf get rid of local
+// obsolete  /* local=jt->locsyms; obsolete ttab0=jt->ttab; tsubst=jt->tsubst; tmonad=jt->tmonad; */  // scaf get rid of local
  RZ(ttab[0].a=cstr("x")); ttab[0].t=ds(CLEFT);
  RZ(ttab[1].a=cstr("y")); ttab[1].t=RT; c=2;
  for(i=0;!z&&2>i;++i){

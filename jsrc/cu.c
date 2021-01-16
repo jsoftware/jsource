@@ -86,7 +86,7 @@ A jtevery(J jt, A w, A fs){A * RESTRICT wv,x,z,* RESTRICT zv;
   // Now that we have looked at the original usecount of x (in case it is =virtw), remove inplacing from virtw to restore its proper status
   ACIPNO(virtw);
   // if x=virtw, or the usecount of virtw changed, virtw has escaped and w must be marked as not PRISTINE
-  AFLAG(w)&=~(((wcbefore!=AC(virtw))|(x==virtw))<<AFPRISTINEX);
+  AFLAGAND(w,~(((wcbefore!=AC(virtw))|(x==virtw))<<AFPRISTINEX))
 
   // prepare the result so that it can be incorporated into the overall boxed result
   if(likely(!(flags&JTWILLBEOPENED))) {
@@ -131,7 +131,7 @@ A jtevery(J jt, A w, A fs){A * RESTRICT wv,x,z,* RESTRICT zv;
  }
 
  // indicate pristinity of result
- AFLAG(z)|=(flags>>(ACINPLACEX-AFPRISTINEX))&AFPRISTINE;   // could synthesize rather than loading from z
+ AFLAGORLOCAL(z,(flags>>(ACINPLACEX-AFPRISTINEX))&AFPRISTINE)   // could synthesize rather than loading from z
  R z;
 }
 
@@ -226,8 +226,8 @@ A jtevery2(J jt, A a, A w, A fs){A*av,*wv,x,z,*zv;
   // Now that we have looked at the original usecount of x (in case it is =virtaw), remove inplacing from virtaw to restore its proper status
   ACIPNO(virtw); ACIPNO(virta);
   // if x=virtaw, or the usecount of virtw changed, virtaw has escaped and w must be marked as not PRISTINE
-  AFLAG(w)&=~(((wcbefore!=AC(virtw))|(x==virtw))<<AFPRISTINEX);
-  AFLAG(a)&=~(((acbefore!=AC(virta))|(x==virta))<<AFPRISTINEX);
+  AFLAGAND(w,~(((wcbefore!=AC(virtw))|(x==virtw))<<AFPRISTINEX))
+  AFLAGAND(a,~(((acbefore!=AC(virta))|(x==virta))<<AFPRISTINEX))
 
   // prepare the result so that it can be incorporated into the overall boxed result
   if(likely(!(flags&JTWILLBEOPENED))) {
@@ -262,7 +262,7 @@ A jtevery2(J jt, A a, A w, A fs){A*av,*wv,x,z,*zv;
   if(!(flags&endrpt&1)){if(flags&BOX)virtw=*++wv;else AK(virtw)+=(I)wv;}
  }
  // indicate pristinity of result
- AFLAG(z)|=(flags>>(ACINPLACEX-AFPRISTINEX))&AFPRISTINE;   // could synthesize rather than loading from z
+ AFLAGORLOCAL(z,(flags>>(ACINPLACEX-AFPRISTINEX))&AFPRISTINE)   // could synthesize rather than loading from z
  R z;
 }
 

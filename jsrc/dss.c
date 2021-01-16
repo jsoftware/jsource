@@ -43,7 +43,7 @@ static A jtssdo(J jt,A a,A w,C c){DC d,e;I n;
 // obsolete fa(jt->dbssexec); if(AN(w)){RZ(ras(w)); jt->dbssexec=w;}else jt->dbssexec=0;
 // obsolete  jt->dbssexec=AN(w)?w:ds(CACE);
  // Return a suspension-ending value
- A z; RZ(z=mkwris(box(sc(SUSSS)))); AFLAG(z)|=AFDEBUGRESULT; R z;
+ A z; RZ(z=mkwris(box(sc(SUSSS)))); AFLAGORLOCAL(z,AFDEBUGRESULT) R z;
 }
 
 F1(jtdbcutback  ){R ssdo(0L,w,SSCUTBACK );}  /* 13!:19 */

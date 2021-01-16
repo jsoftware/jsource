@@ -839,15 +839,15 @@ extern unsigned int __cdecl _clearfp (void);
 // even by calling a function that returns it, you can be OK just using rifv() or rifvs().  This may leave an incorporated block marked inplaceable,
 // but that's OK as long as you don't pass it to some place where it can become an argument to another function
 // When a block is incorporated it becomes not pristine, because extractions from the parent may compromise it and we don't want to have to go through recursively to find them
-#define INCORP(z) {I af=AFLAG(z); if(unlikely((af&AFVIRTUAL)!=0)){RZ((z)=realize(z))} else{AFLAG(z)=af&~AFPRISTINE;} ACIPNO(z); }
-#define INCORPNC(z) {I af=AFLAG(z); if(unlikely((af&AFVIRTUAL)!=0)){RZ((z)=realize(z))} else{AFLAG(z)=af&~AFPRISTINE;} }  // use if you are immediately going to change AC, as with ras()
-#define INCORPNV(z) {I af=AFLAG(z); AFLAG(z)=af&~AFPRISTINE; ACIPNO(z);}  // use when z is known nonvirtual
+#define INCORPNC(z) {if(unlikely((AFLAG(z)&AFVIRTUAL)!=0)){RZ((z)=realize(z))} else{AFLAGAND(z,~AFPRISTINE)} }  // use if you are immediately going to change AC, as with ras()
+#define INCORP(z) {INCORPNC(z) ACIPNO(z); }
+#define INCORPNV(z) {AFLAGAND(z,~AFPRISTINE) ACIPNO(z);}  // use when z is known nonvirtual
 // same, but for nonassignable argument.  Must remember to check the result for 0
 #define INCORPNA(z) incorp(z)
 // use to incorporate into a known-recursive box.  We raise the usecount of z
-#define INCORPRA(z) {I af=AFLAG(z); if(unlikely((af&AFVIRTUAL)!=0)){RZ((z)=realize(z))} else{AFLAG(z)=af&~AFPRISTINE;} ra(z); }
+#define INCORPRA(z) {INCORPNC(z) ra(z); }
 // use to incorporate a newly-created zapped block of type t into a known-recursive box.  If t is recursible, raise the contents of z
-#define INCORPRAZAPPED(z,t) {ACINIT(z,ACUC1) if(t&RECURSIBLE){AFLAG(z)=t; jtra(z,t);}}
+#define INCORPRAZAPPED(z,t) {ACINIT(z,ACUC1) if(t&RECURSIBLE){AFLAGINIT(z,t); jtra(z,(t));}}
 // Tests for whether a result incorporates its argument.  The originator, who is going to check this, always marks the argument inplaceable,
 // and we signal incorporation either by returning the argument itself or by marking it non-inplaceable (if we box it)
 #define WASINCORP1(z,w)    ((z)==(w)||0<=AC(w))
@@ -1236,7 +1236,8 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x
 // normal entry points.  clear PRISTINE flag in w (or its backer, if virtual) because we have removed something from it
 #define PRISTCLR(w) I awflg; A awback; PRISTCLRNODCL(w)
 // same, but destroy w in the process
-#define PRISTCLRF(w) PRISTCOMMONF(w,)
+// obsolete #define PRISTCLRF(w) PRISTCOMMONF(w,)
+#define PRISTCLRF(w) if(unlikely((AFLAG(w)&AFVIRTUAL)!=0)){w=ABACK(w);} AFLAGAND(w,~AFPRISTINE)   // scaf
 // transfer pristinity of w to z
 #define PRISTXFER(z,w) PRISTCOMMON(w,AFLAG(z)|=awflg&((SGNTO0(AC(w))&((I)jtinplace>>JTINPLACEWX))<<AFPRISTINEX);)
 // transfer pristinity of w to z, destroying w

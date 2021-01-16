@@ -284,19 +284,19 @@ F1(jtdbc){UC k;
  }
 // obsolete  jt->dbsusact=SUSCLEAR;
 
- A z; RZ(z=ca(mtm)); AFLAG(z)|=AFDEBUGRESULT; R z;
+ A z; RZ(z=ca(mtm)); AFLAGORLOCAL(z,AFDEBUGRESULT) R z;
 }    /* 13!:0  clear stack; enable/disable suspension */
 
-F1(jtdbrun ){ASSERTMTV(w); A z; RZ(z=mkwris(box(sc(SUSRUN)))); AFLAG(z)|=AFDEBUGRESULT; R z;}
+F1(jtdbrun ){ASSERTMTV(w); A z; RZ(z=mkwris(box(sc(SUSRUN)))); AFLAGORLOCAL(z,AFDEBUGRESULT) R z;}
      /* 13!:4  run again */
 
-F1(jtdbnext){ASSERTMTV(w); A z; RZ(z=mkwris(box(sc(SUSNEXT)))); AFLAG(z)|=AFDEBUGRESULT; R z;}
+F1(jtdbnext){ASSERTMTV(w); A z; RZ(z=mkwris(box(sc(SUSNEXT)))); AFLAGORLOCAL(z,AFDEBUGRESULT) R z;}
      /* 13!:5  run next */
 
-F1(jtdbret ){ARGCHK1(w); A z; RZ(z=mkwris(link(sc(SUSRET),box(w)))); AFLAG(z)|=AFDEBUGRESULT; R z;}
+F1(jtdbret ){ARGCHK1(w); A z; RZ(z=mkwris(link(sc(SUSRET),box(w)))); AFLAGORLOCAL(z,AFDEBUGRESULT) R z;}
      /* 13!:6  exit with result */
 
-F1(jtdbjump){I jump; RE(jump=i0(w)); A z; RZ(z=mkwris(link(sc(SUSJUMP),sc(jump)))); AFLAG(z)|=AFDEBUGRESULT; R z;}
+F1(jtdbjump){I jump; RE(jump=i0(w)); A z; RZ(z=mkwris(link(sc(SUSJUMP),sc(jump)))); AFLAGORLOCAL(z,AFDEBUGRESULT) R z;}
      /* 13!:7  resume at line n (return result error if out of range) */
 
 static F2(jtdbrr){DC d;
@@ -305,7 +305,7 @@ static F2(jtdbrr){DC d;
  ASSERT(d&&VERB&AT(d->dcf)&&!d->dcc,EVDOMAIN);  // must be tacit verb
 // obsolete RZ(ras(a)); jt->dbalpha=a; RZ(ras(w)); jt->dbomega=w;
  A z; RZ(z=box(w)); if(a)RZ(z=over(w,box(a))); 
- RZ(z=mkwris(link(sc(SUSRUN),z))); AFLAG(z)|=AFDEBUGRESULT;  // RUN ; w [;a]
+ RZ(z=mkwris(link(sc(SUSRUN),z))); AFLAGORLOCAL(z,AFDEBUGRESULT)  // RUN ; w [;a]
  R z;
 }
 

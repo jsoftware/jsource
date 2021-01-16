@@ -63,7 +63,7 @@ B jtglobinit(JS jjt){A x,y;J jt=MTHREAD(jjt);  // initialize in master thread
 // obsolete MC(jt->prioritytype,prioritytype,sizeof(jt->prioritytype));  // may not be needed
  jtmeminit(jjt,1);  // init allocation queues & tpop stack, master thread only
  RZ(y=rifvs(str(1L,"z")));     ACX(y); AS(y)[0]=BUCKETXLOC(1,"z");   // for paths, the shape holds the bucketx
- GA(x,BOX, 1,1,0     ); ACX(x); AAV(x)[0]=y;                zpath      =x;  AFLAG(zpath) |= (AT(zpath)&TRAVERSIBLE);  // ensure that traversible types in pst are marked traversible, so tpush/ra/fa will not recur on them
+ GA(x,BOX, 1,1,0); ACX(x); AAV(x)[0]=y; zpath=x; AFLAGORLOCAL(zpath,AT(zpath)&TRAVERSIBLE)  // ensure that traversible types in pst are marked traversible, so tpush/ra/fa will not recur on them
  RZ(mnuvxynam[0]=makename("m"));
  RZ(mnuvxynam[1]=makename("n"));
  RZ(mnuvxynam[2]=makename("u"));

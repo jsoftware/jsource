@@ -552,6 +552,8 @@ typedef I SI;
 #define AFLAGFAUX(a,v)  AFLAG(a)=(v);  // used when a is known to be a faux block
 #define AFLAGAND(a,v)   AFLAG(a)&=(v);
 #define AFLAGOR(a,v)    AFLAG(a)|=(v);
+#define AFLAGANDLOCAL(a,v)   AFLAG(a)&=(v);  // LOCAL functions are used when the block is known not to be shared
+#define AFLAGORLOCAL(a,v)    AFLAG(a)|=(v);
 
 // Flags in the AR field of local symbol tables
 #define LSYMINUSE 1  // This bit is set in the rank of the original symbol table when it is in use

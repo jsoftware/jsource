@@ -610,7 +610,7 @@ RESTRICTF A jtvirtual(J jtip, AD *RESTRICT w, I offset, I r){AD* RESTRICT z;
   // not self-virtual block: allocate a new one
   RZ(z=gafv(SZI*(NORMAH+r)-1));  // allocate the block
   AK(z)=(CAV(w)-(C*)z)+offset;
-  AFLAG(z)=AFVIRTUAL | (wf & ((UI)wip>>(BW-1-AFPRISTINEX))) | (t&TRAVERSIBLE);  // flags: recursive, not UNINCORPABLE, not NJA.  If w is inplaceable, inherit its PRISTINE status
+  AFLAGINIT(z,AFVIRTUAL | (wf & ((UI)wip>>(BW-1-AFPRISTINEX))) | (t&TRAVERSIBLE))  // flags: recursive, not UNINCORPABLE, not NJA.  If w is inplaceable, inherit its PRISTINE status
   A wback=ABACK(w); A *wzaploc=(A*)wback; wback=wf&AFVIRTUAL?wback:w; ABACK(z)=wback;  // wtpop is AZAPLOC(w) in case it is to be zapped
   AT(z)=t;
   ACINIT(z,wip+ACUC1)   // transfer inplaceability from original block
@@ -622,7 +622,7 @@ RESTRICTF A jtvirtual(J jtip, AD *RESTRICT w, I offset, I r){AD* RESTRICT z;
     // We must ensure that the backer has recursive usecount, as a way of protecting the CONTENTS.  We zap the tpop for the backer itself, but
     // not for the contents.
     ACRESET(w,ACUC1) *wzaploc=0;  // zap the tpop for w in lieu of ra() for it
-    if((t^wf)&RECURSIBLE){AFLAG(w)=wf|=(t&RECURSIBLE); jtra(w,t);}  // make w recursive, raising contents if was nonrecurive.  Like ra0()
+    if((t^wf)&RECURSIBLE){AFLAGRESET(w,wf|=(t&RECURSIBLE)) jtra(w,t);}  // make w recursive, raising contents if was nonrecurive.  Like ra0()
 // when virtuals can be zapped, use that here
   }else{
    // if we can't transfer ownership, must ra the backer.  UNINCORPORABLEs go through here, and must be virtual so the backer, not the indirect block, is raised
@@ -644,7 +644,7 @@ if(AFLAG(w)&AFVIRTUAL){
  ACIPNO(w);  // turn off inplacing
  w=ABACK(w);  // if w is itself virtual, use its original backer.  Otherwise we would have trouble knowing when the backer for z is freed.  Backer is never virtual
 }
-AFLAG(z)=AFVIRTUAL|(AFLAG(w)&AFPRISTINE)|(AT(z)&TRAVERSIBLE);  // flags: recursive, not UNINCORPABLE, not NJA, with PRISTINE inherited from backer
+AFLAGINIT(z,AFVIRTUAL|(AFLAG(w)&AFPRISTINE)|(AT(z)&TRAVERSIBLE))  // flags: recursive, not UNINCORPABLE, not NJA, with PRISTINE inherited from backer
 ABACK(z)=w;   // set the pointer to the base: w or its base
 ra(w);   // ensure that the backer is not deleted while it is a backer.
 }
@@ -1073,7 +1073,7 @@ if((I)jt&3)SEGFAULT;
 #if MEMAUDIT&8
   DO((((I)1)<<(1+blockx-LGSZI)), lfsr = (lfsr<<1LL) ^ (lfsr<0?0x1b:0); if(i!=6)((I*)z)[i] = lfsr;);   // fill block with garbage - but not the allocation word
 #endif
-  AFLAG(z)=0; AZAPLOC(z)=pushp; ACINIT(z,ACUC1|ACINPLACE)  // all blocks are born inplaceable, and point to their deletion entry in tpop
+  AFLAGINIT(z,0) AZAPLOC(z)=pushp; ACINIT(z,ACUC1|ACINPLACE)  // all blocks are born inplaceable, and point to their deletion entry in tpop
    // we do not attempt to combine the AFLAG write into a 64-bit operation, because as of 2017 Intel processors
    // will properly store-forward any read that is to the same boundary as the write, and we always read the same way we write
   *pushp++=z; if(!((I)pushp&(NTSTACKBLOCK-1)))RZ(pushp=tg(pushp)); jt->tnextpushp=pushp;  // advance to next slot, allocating a new block as needed

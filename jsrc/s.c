@@ -549,7 +549,7 @@ L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I m,n,wn,wr,wt;L*e;
 #if 1  // obsolete
    rifv(w); // must realize any virtual
    if(likely((SGNIF((I)jtinplace,JTFINALASGNX)&AC(w)&(-(wt&NOUN)))<0)){  // if final assignment to abandoned noun
-    *AZAPLOC(w)=0; ACRESET(w,ACUC1) if(unlikely(((wt^AFLAG(w))&RECURSIBLE)!=0)){AFLAG(w)|=wt&RECURSIBLE; jtra(w,wt);}  // zap it, make it non-abandoned, make it recursive (incr children if was nonrecursive).  This is like raczap(1)
+    *AZAPLOC(w)=0; ACRESET(w,ACUC1) if(unlikely(((wt^AFLAG(w))&RECURSIBLE)!=0)){AFLAGORLOCAL(w,wt&RECURSIBLE) jtra(w,wt);}  // zap it, make it non-abandoned, make it recursive (incr children if was nonrecursive).  This is like raczap(1)
       // NOTE: NJA can't zap either, but it never has AC<0
    }else ra(w);  // if zap not allowed, just ra() the whole thing
 #else
@@ -564,7 +564,7 @@ L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I m,n,wn,wr,wt;L*e;
    // on the NVR stack at all.
    // ABANDONED values can never be NVR (which are never inplaceable), so they will be flagged as !NVR,!UNFREED,ABANDONED
    if(likely((xaf&AFNVRUNFREED)!=0)){  // x is 0, or unfreed on the NVR stack, or abandoned.  Do not fa().  0 is probably the normal case (assignment to unassigned name)
-    if(unlikely((xaf&AFNVR)!=0)){AFLAG(x)=(xaf&=~AFNVRUNFREED);} // If unfreed on the NVR stack, mark as to-be-freed on the stack.  This defers the deletion
+    if(unlikely((xaf&AFNVR)!=0)){AFLAGSET(x,xaf&=~AFNVRUNFREED)} // If unfreed on the NVR stack, mark as to-be-freed on the stack.  This defers the deletion
     // x=0 case, and LABANDONED case, go through quietly making no change to the usecount of x
    }else{  // x is non0 and either already marked as freed on the NVR stack or must be put there now, or VIRTUAL
     if(likely(!(xaf&(AFNVR|AFVIRTUAL)))){
@@ -576,10 +576,11 @@ L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I m,n,wn,wr,wt;L*e;
      if(likely((I)jtinplace&JTFINALASGN)){
       fa(x);  // sentence is ending, no need to defer free
      }else{
+      // must push onto NVR stack for the first time
       A nvra=jt->nvra;
       if(unlikely((I)(jt->parserstackframe.nvrtop+1U) > AN(nvra)))RZ(nvra=extnvr());  // Extend nvr stack if necessary.  copied from parser
       AAV1(nvra)[jt->parserstackframe.nvrtop++] = x;   // record the place where the value was protected (i. e. this sentence); it will be freed when this sentence finishes
-      AFLAG(x) |= AFNVR;  // mark the value as protected in NVR stack
+      AFLAGOR(x,AFNVR)  // mark the value as protected in NVR stack
       AM(x)=1;  // When NVR is set, AM must contain count of # times value has been pushed onto the stack
      }
     }else{

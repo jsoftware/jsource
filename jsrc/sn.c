@@ -246,10 +246,10 @@ F1(jtex){A*wv,y,z;B*zv;I i,n;L*v;I modifierchg=0;
      A nvra=jt->nvra;
      if(unlikely((I)(jt->parserstackframe.nvrtop+1U) > AN(nvra)))RZ(nvra=extnvr());  // Extend nvr stack if necessary.  copied from parser
      AAV1(nvra)[jt->parserstackframe.nvrtop++] = v->val;   // record the place where the value was protected; it will be freed when this sentence finishes
-     AFLAG(v->val) |= AFNVR|AFNVRUNFREED;  // mark the value as protected
+     AFLAGOR(v->val,AFNVR|AFNVRUNFREED)  // mark the value as protected
      AM(v->val)=1;  // set initial count of NVRs for the value
     }
-    if(AFLAG(v->val)&AFNVRUNFREED){ras(v->val); AFLAG(v->val)&=~AFNVRUNFREED;}  // indicate deferred free, and protect from the upcoming free; but if already deferred-free, reduce the usecount now
+    if(AFLAG(v->val)&AFNVRUNFREED){ras(v->val); AFLAGAND(v->val,~AFNVRUNFREED)}  // indicate deferred free, and protect from the upcoming free; but if already deferred-free, reduce the usecount now
    }
    if(!(v->name->flag&NMDOT)&&v->val&&AT(v->val)&(VERB|ADV|CONJ))modifierchg=1;  // if we delete a modifier, remember that fact
    probedel(NAV(v->name)->m,NAV(v->name)->s,NAV(v->name)->hash,locfound);  // delete the symbol (incl name and value) in the locale in which it is defined

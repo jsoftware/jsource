@@ -160,7 +160,7 @@ do{
      }else{
       // empty cells.  Just adjust the type, using the type priority
       AT(zz)=zt;  // use highest-priority empty
-      AFLAG(zz) &= ~RECURSIBLE; AFLAG(zz) |= (zt&RECURSIBLE) & ((!ZZWILLBEOPENEDNEVER&&ZZFLAGWORD&ZZFLAGWILLBEOPENED)-1);  // move RECURSIBLE, if any, to new position, if not WILLBEOPENED.
+      AFLAGANDLOCAL(zz,~RECURSIBLE) AFLAGORLOCAL(zz,(zt&RECURSIBLE) & ((!ZZWILLBEOPENEDNEVER&&ZZFLAGWORD&ZZFLAGWILLBEOPENED)-1))  // move RECURSIBLE, if any, to new position, if not WILLBEOPENED.
      }
     }
     // The result area and the new result now have identical shapes and precisions (or compatible precisions and are empty).  Move the cells
@@ -318,7 +318,7 @@ do{
   // Allocate the result
   GA(zz,zzt,natoms,zzframelen+zzr,0L); I * RESTRICT zzs=AS(zz);  // rank is aframelen+wframelen+resultrank
   // If zz is recursible, make it recursive-usecount (without actually recurring, since it's empty), unless WILLBEOPENED is set, since then we may put virtual blocks in the boxed array
-  AFLAG(zz) |= (zzt&RECURSIBLE) & ((ZZFLAGWORD&ZZFLAGWILLBEOPENED)-1);  // if recursible type, (viz box), make it recursible.  But not if WILLBEOPENED set. Leave usecount unchanged
+  AFLAGORLOCAL(zz,(zzt&RECURSIBLE) & ((ZZFLAGWORD&ZZFLAGWILLBEOPENED)-1))  // if recursible type, (viz box), make it recursible.  But not if WILLBEOPENED set. Leave usecount unchanged
   // If zz is not DIRECT, it will contain things allocated on the stack and we can't pop back to here
 #if 0&&!ZZPOPNEVER  // obsolete 
   ZZFLAGWORD |= (zzt&DIRECT)?0:ZZFLAGNOPOP;
@@ -351,7 +351,7 @@ do{
  // result is now in zz, which must not be 0
  // if ZZFLAGCOUNTITEMS is still set, we got through assembly with all boxed homogeneous. Mark the result.
  // Any bypass path to here must clear ZZFLAGCOUNTITEMS.  Same with WILLBEOPENED, which turns into AFVIRTUALBOXED
- AFLAG(zz)|=(ZZFLAGWORD&(ZZFLAGWILLBEOPENED|ZZFLAGCOUNTITEMS))<<(AFUNIFORMITEMSX-ZZFLAGCOUNTITEMSX);
+ AFLAGORLOCAL(zz,(ZZFLAGWORD&(ZZFLAGWILLBEOPENED|ZZFLAGCOUNTITEMS))<<(AFUNIFORMITEMSX-ZZFLAGCOUNTITEMSX))
 
  // If WILLBEOPENED is set, there is no reason to EPILOG.  We didn't have any wrecks, we didn't allocate any blocks, and we kept the
  // result as a nonrecursive block.  In fact, we must avoid EPILOG because that would increment the usecount of the contents and apply the death warrant; then
@@ -367,7 +367,7 @@ do{
   RZ(zz=assembleresults(ZZFLAGWORD,zz,zzbox,zzboxp,zzcellp,zzcelllen,zzresultpri,zzcellshape,zzncells,zzframelen,-ZZSTARTATEND));  // inhomogeneous results: go assemble them
  }
  // assembly may have added framing fill but it didn't repeat any cells.  If we thought the result was pristine, it is
- AFLAG(zz)|=ZZFLAGWORD&ZZFLAGPRISTINE;
+ AFLAGORLOCAL(zz,ZZFLAGWORD&ZZFLAGPRISTINE)
 #undef ZZFLAGWORD
 #undef ZZWILLBEOPENEDNEVER
 #undef ZZSTARTATEND

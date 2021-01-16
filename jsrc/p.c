@@ -503,7 +503,7 @@ rdglob: ;
          // damage AM in that case.  We don't need NVR then, because locals never need NVR.
          if(likely(!(AFLAG(s->val)&AFNVR+AFNJA+AFVIRTUAL))){
           // on the FIRST NVR, we set NVR|UNFREED, and AM=1.  On subsequent ones we increment AM
-          AFLAG(s->val) |= AFNVR|AFNVRUNFREED;  // mark the value as protected and not yet deferred-freed
+          AFLAGOR(s->val,AFNVR|AFNVRUNFREED)  // mark the value as protected and not yet deferred-freed
           AM(s->val)=1;  // set NVR count on the first encounter
           AAV1(jt->nvra)[jt->parserstackframe.nvrtop++] = s->val;   // record the place where the value was protected, so we can free it when this sentence completes
          }else if(likely(!(AFLAG(s->val)&AFNJA+AFVIRTUAL))){
@@ -747,8 +747,9 @@ failparse:  // If there was an error during execution or name-stacking, exit wit
   // We apply the final free only when the NVR count goes to 0, to make sure we hold off till the last stacked reference has been seen off
   v=AAV1(jt->nvra)+nvrotop;  // point to our region of the nvr area
   UI zcompval = !z||AT(z)&NOUN?0:-1;  // if z is 0, or a noun, immediately free only values !=z.  Otherwise don't free anything
-  DQ(jt->parserstackframe.nvrtop-nvrotop, A vv = *v; I vf = AFLAG(vv);
-   if(likely(--AM(vv)==0)){AFLAG(vv) = vf & ~(AFNVR|AFNVRUNFREED); if(!(vf&AFNVRUNFREED))if(((UI)z^(UI)vv)>zcompval){fanano0(vv);}else{tpushna(vv);}}
+  DQ(jt->parserstackframe.nvrtop-nvrotop, A vv = *v;
+// obsolete  
+   if(likely(--AM(vv)==0)){I vf = AFLAG(vv); AFLAGAND(vv,~(AFNVR|AFNVRUNFREED)) if(!(vf&AFNVRUNFREED))if(((UI)z^(UI)vv)>zcompval){fanano0(vv);}else{tpushna(vv);}}
   ++v;);   // schedule deferred frees.
     // na so that we don't audit, since audit will relook at this NVR stack
 

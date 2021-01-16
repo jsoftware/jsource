@@ -1227,27 +1227,30 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x
 #define TYPEPRIORITY(t) (((((t)&0xff)?0x765a9410:((t)&0xff00)?0x5a941000:0x328)>>((CTTZ(t)&0x7)*4))&0xf)
 #endif
 
-#define PRISTCOMSET(w,flg) awback=(w); if(unlikely((flg&AFVIRTUAL)!=0)){awback=ABACK(awback); flg=AFLAG(awback);} AFLAG(awback)=flg&~AFPRISTINE;
-#define PRISTCOMSETF(w,flg) if(unlikely((flg&AFVIRTUAL)!=0)){w=ABACK(w); flg=AFLAG(w);} AFLAG(w)=flg&~AFPRISTINE;   // used only at end, when w can be destroyed
-#define PRISTCOMMON(w,exe) awflg=AFLAG(w); exe PRISTCOMSET(w,awflg)
+// obsolete #define PRISTCOMSET(w,flg) awback=(w); if(unlikely((flg&AFVIRTUAL)!=0)){awback=ABACK(awback); flg=AFLAG(awback);} AFLAG(awback)=flg&~AFPRISTINE;
+// obsolete #define PRISTCOMSETF(w,flg) if(unlikely((flg&AFVIRTUAL)!=0)){w=ABACK(w); flg=AFLAG(w);} AFLAG(w)=flg&~AFPRISTINE;   // used only at end, when w can be destroyed
+// obsolete #define PRISTCOMMON(w,exe) awflg=AFLAG(w); exe PRISTCOMSET(w,awflg)
 // same but destroy w
-#define PRISTCOMMONF(w,exe) I awflg=AFLAG(w); exe PRISTCOMSETF(w,awflg)
-#define PRISTCLRNODCL(w) PRISTCOMMON(w,)
+// obsolete #define PRISTCLRF(w,exe) I awflg=AFLAG(w); exe PRISTCOMSETF(w,awflg)
+#define PRISTCLRF(w) if(unlikely((AFLAG(w)&AFVIRTUAL)!=0)){w=ABACK(w);} AFLAGAND(w,~AFPRISTINE)   // used only at end, when w can be destroyed
+#define PRISTCOMMON(w) awback=(w); PRISTCLRF(awback)
+#define PRISTCLRNODCL(w) PRISTCOMMON(w)
 // normal entry points.  clear PRISTINE flag in w (or its backer, if virtual) because we have removed something from it
-#define PRISTCLR(w) I awflg; A awback; PRISTCLRNODCL(w)
+#define PRISTCLR(w) A awback; PRISTCLRNODCL(w)
 // same, but destroy w in the process
-// obsolete #define PRISTCLRF(w) PRISTCOMMONF(w,)
-#define PRISTCLRF(w) if(unlikely((AFLAG(w)&AFVIRTUAL)!=0)){w=ABACK(w);} AFLAGAND(w,~AFPRISTINE)   // scaf
+// obsolete #define PRISTCLRF(w) PRISTCLRF(w,)
+// obsolete #define PRISTCLRF(w) PRISTCLRF(w)
 // transfer pristinity of w to z
-#define PRISTXFER(z,w) PRISTCOMMON(w,AFLAG(z)|=awflg&((SGNTO0(AC(w))&((I)jtinplace>>JTINPLACEWX))<<AFPRISTINEX);)
+#define PRISTXFER(z,w) AFLAGORLOCAL(z,AFLAG(w)&((SGNTO0(AC(w))&((I)jtinplace>>JTINPLACEWX))<<AFPRISTINEX)) PRISTCOMMON(w)
 // transfer pristinity of w to z, destroying w
-#define PRISTXFERF(z,w) PRISTCOMMONF(w,AFLAG(z)|=awflg&((SGNTO0(AC(w))&((I)jtinplace>>JTINPLACEWX))<<AFPRISTINEX);)  // use w bit of jtinplace
-#define PRISTXFERAF(z,a) PRISTCOMMONF(a,AFLAG(z)|=awflg&((SGNTO0(AC(a))&((I)jtinplace>>JTINPLACEAX))<<AFPRISTINEX);)  // use a bit of jtinplace
+#define PRISTXFERF(z,w) AFLAGORLOCAL(z,AFLAG(w)&((SGNTO0(AC(w))&((I)jtinplace>>JTINPLACEWX))<<AFPRISTINEX)) PRISTCLRF(w)  // use w bit of jtinplace
+#define PRISTXFERAF(z,a) AFLAGORLOCAL(z,AFLAG(a)&((SGNTO0(AC(a))&((I)jtinplace>>JTINPLACEAX))<<AFPRISTINEX)) PRISTCLRF(a)  // use a bit of jtinplace
 // same, but with an added condition (in bit 0)
-#define PRISTXFERFIF(z,w,cond) PRISTCOMMONF(w,AFLAG(z)|=awflg&(((cond)&SGNTO0(AC(w))&((I)jtinplace>>JTINPLACEWX))<<AFPRISTINEX);)
+#define PRISTXFERFIF(z,w,cond)AFLAGORLOCAL(z,AFLAG(w)&(((cond)&SGNTO0(AC(w))&((I)jtinplace>>JTINPLACEWX))<<AFPRISTINEX)) PRISTCLRF(w)
 // transfer pristinity from a AND w to z (not if a==w)
-#define PRISTXFERF2(z,a,w) I aflg=AFLAG(a), wflg=AFLAG(w); AFLAG(z)|=aflg&wflg&(((a!=w)&SGNTO0(AC(a)&AC(w))&((I)jtinplace>>JTINPLACEAX)&((I)jtinplace>>JTINPLACEWX))<<AFPRISTINEX); \
-                           PRISTCOMSETF(a,aflg) PRISTCOMSETF(w,wflg)
+#define PRISTXFERF2(z,a,w) AFLAGORLOCAL(z,AFLAG(a)&AFLAG(w)&(((a!=w)&SGNTO0(AC(a)&AC(w))&((I)jtinplace>>JTINPLACEAX)&((I)jtinplace>>JTINPLACEWX))<<AFPRISTINEX)) \
+                           PRISTCLRF(a) PRISTCLRF(w)
+// obsolete                            PRISTCOMSETF(a,aflg) PRISTCOMSETF(w,wflg)
 // PROD multiplies a list of numbers, where the product is known not to overflow a signed int (for example, it might be part of the shape of a nonempty dense array)
 // assign length first so we can sneak some computation into ain in va2
 #define PROD(z,length,ain) {I _i=(length); I * RESTRICT _zzt=(ain)-2; \

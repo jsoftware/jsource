@@ -1002,7 +1002,7 @@ F2(jtcolon){A d,h,*hv,m;C*s;I flag=VFLAGNONE,n,p;
  default: ASSERT(0,EVDOMAIN);
  }
  // EPILOG is called for because of the allocations we made, but it is essential to make sure the pfsts created during crelocalsyms get deleted.  They have symbols with no value
- // that will cause trouble if 18!:31 is executed before they are expunged.
+ // that will cause trouble if 18!:31 is executed before they are expunged.  As a nice side effect, all explicit definitions are recursive.
  EPILOG(z);
 }
 

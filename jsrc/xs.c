@@ -62,6 +62,8 @@ static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;DC d;
   ASSERT(CFF!=CAV(w)[0],EVDOMAIN);
   si=-1; tso=0;  // if locked, keep shtum about internals
  }
+ // similarly for namecaching.  We push the per-script status and let the on/off status run independently
+ C oldnmcachescript=jt->namecaching&1;  // save the per-script part of the status
  FDEPINC(1);   // No ASSERTs or returns till the FDEPDEC below
  RZ(d=deba(DCSCRIPT,0L,w,(A)si));
 // obsolete  jt->dcs=d; jt->dcs->dcpflags=(!(tso&&!JT(jt,seclev)))<<JTPRNOSTDOUTX;  // set flag to indicate suppression of output
@@ -90,6 +92,7 @@ static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;DC d;
 // obsolete  jt->tostdout=xt;
   debz();
  FDEPDEC(1);  // ASSERT OK now
+ jt->namecaching&=~1; jt->namecaching|=oldnmcachescript;  // pop the per-script part
  jt->glock=oldk; // pop lock status
  if(3==ce){z=num(jt->jerr==0); RESETERR; R z;}else RNE(mtm);
 }

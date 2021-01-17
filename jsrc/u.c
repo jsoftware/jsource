@@ -171,8 +171,8 @@ B evoke(A w){V*v=FAV(w); R CTILDE==v->id&&v->fgh[0]&&NAME&AT(v->fgh[0]);}
 
 // Extract the integer value from w, return it.  Set error if non-integral or non-atomic
 I jti0(J jt,A w){ARGCHK1(w);
- if(AT(w)&INT+B01){ASSERT(!AR(w),EVRANK); R BIV0(w);}  // INT/B01 quickly
- if(AT(w)&FL){D d=DAV(w)[0]; D e=jround(d); I cval=(I)e;  // FL without call to cvt
+ if(likely(AT(w)&INT+B01)){ASSERT(!AR(w),EVRANK); R BIV0(w);}  // INT/B01 quickly
+ if(likely(AT(w)&FL)){D d=DAV(w)[0]; D e=jround(d); I cval=(I)e;  // FL without call to cvt
   // if an atom is tolerantly equal to integer,  there's a good chance it is exactly equal.
   // infinities will always round to themselves
   ASSERT(d==e || FFIEQ(d,e),EVDOMAIN);

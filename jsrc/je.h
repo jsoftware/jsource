@@ -219,6 +219,8 @@ extern F1(jtmmaxs);
 extern F1(jtmr_test);
 extern F1(jtmt_test);
 extern A jtnameref(J,A,A);
+extern F1(jtnmcacheq);
+extern F1(jtnmcaches);
 extern F1(jtnc);
 extern F1(jtnch);
 extern F1(jtnegate);

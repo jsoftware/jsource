@@ -357,6 +357,14 @@ p =: i. 10000 2 [ q =: i. 10000
 (p +"0 0"1 0 q) -: (p +"1 0 q)
 THRESHOLD +. ((10000) 6!:2 'p + q') > 0.6 * (10000) 6!:2 'p +"1 0 q'
 
+p =: 1 : 0
+u 5
+)
+q =: 3 : 0
+neg =. -
+neg p
+)
+'value error' -: q etx ''
 
 4!:55 ;:'Cogito Ich_liebe_dich a a_man aa abc alta b def erase ergo'
 4!:55 ;:'fa fb first global global1 global2 global3'

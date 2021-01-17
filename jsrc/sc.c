@@ -192,10 +192,9 @@ static DF1(jtunquote1){R unquote(w,self,self);}  // This just transfers to jtunq
 A jtnamerefacv(J jt, A a, L* w){A y;V*v;
  y=w?w->val:ds(CCAP);  // If there is a slot, get the value; if not, treat as [: (verb that creates error)
  if(!y||NOUN&AT(y))R y;  // return if error or it's a noun
- // We are about to create a reference to a name.  Since this reference might escape into another context, either (1) by becoming part of a
- // non-noun result; (2) being assigned to a global name; (3) being passed into an explicit modifier: we have to expunge any reference to local
- // buckets.  Tolerable because local ACVs are rare
- NAV(a)->bucket = 0;  // Clear bucket info so we won't try to look up using local info.  kludge this modifies the original a; not so bad, since it's usually not local; but ugly
+ // This reference might escape into another context, either (1) by becoming part of a
+ // non-noun result; (2) being assigned to a global name; (3) being passed into an explicit modifier: so we clear the bucket info if we ra() the reference
+// obsolete  NAV(a)->bucket = 0;  // Clear bucket info so we won't try to look up using local info.  kludge this modifies the original a; not so bad, since it's usually not local; but ugly
  v=FAV(y);
  // We cannot be guaranteed that the definition in place when a reference is created is the same value that is there when the reference
  // is used.  Thus, we can't guarantee inplaceability by copying INPLACE bits from f to the result, and we just set INPLACE for everything

@@ -171,6 +171,8 @@ F2(jtforeign){I p,q;
   case XC(9,1):   R CDERIV(CIBEAM, jtrngseeds,   0,            VASGSAFE,RMAX,RMAX,RMAX);
   case XC(9,2):   R CDERIV(CIBEAM, jtdispq,      0,            VASGSAFE,RMAX,RMAX,RMAX);
   case XC(9,3):   R CDERIV(CIBEAM, jtdisps,      0,            VASGSAFE,RMAX,RMAX,RMAX);
+  case XC(9,4):   R CDERIV(CIBEAM, jtnmcacheq,   0,            VASGSAFE,RMAX,RMAX,RMAX);
+  case XC(9,5):   R CDERIV(CIBEAM, jtnmcaches,   0,            VASGSAFE,RMAX,RMAX,RMAX);
   case XC(9,6):   R CDERIV(CIBEAM, jtboxq,       0,            VASGSAFE,RMAX,RMAX,RMAX);
   case XC(9,7):   R CDERIV(CIBEAM, jtboxs,       0,            VASGSAFE,RMAX,RMAX,RMAX);
   case XC(9,8):   R CDERIV(CIBEAM, jtevmq,       0,            VASGSAFE,RMAX,RMAX,RMAX);

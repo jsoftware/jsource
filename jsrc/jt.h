@@ -48,14 +48,13 @@ typedef struct rngdata {
 
 
 // per-thread area.  Align on a 256B boundary to leave low 8 bits for flags (JTFLAGMSK is the list of bits)
-// The first 2 cache lines is the hottest real estate in J, because they can be referenced with
-// single-byte displacement.  Put your heaviest-used items here
+// The first 2 cache lines is stacked on task switch
  struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
 // task-initialized values
 // these values are stacked and restored over the execution of a task
+ A global;           // global symbol table inherit for task
  D cct;               // complementary comparison tolerance inherit for task
  I4 currslistx;    // index into slist of the current script being executed (or -1 if none) inherit for task
- C glock;            // 0=unlocked, 1=perm lock, 2=temp lock inherit for task
  union {  // this union is 4 bytes long
   UI4 ui4;    // all 4 flags at once, access as ui4
   struct {
@@ -79,7 +78,19 @@ typedef struct rngdata {
   } us;   // access as US
  } uflags;   // 
  UI4 ranks;            // low half: rank of w high half: rank of a  for IRS init for task
+// 4 bytes free
  UI cstackmin;        // red warning for C stack pointer init for task
+ L *assignsym;       // symbol-table entry for the symbol about to be assigned      scaf  need to use LX when multithreaded clear/inherit for task
+ A sf;               /* for $: clear for task                                         */
+ A locsyms;  // local symbol table, or dummy empty symbol table if none init for task
+// end of cacheline 0
+ I4 nthreads;  // number of threads to use, or 0 if we haven't checked init for task
+ I4 threadrecip16;  // reciprocal of nthreads, 16 bits of fraction init for task
+ UI cstackinit;       // C stack pointer at beginning of execution init for task
+ I bytes;            // bytes currently in use - used only during 7!:1 clear for task
+ I bytesmax;         // high-water mark of "bytes" - used only during 7!:1 clear for task
+ S etxn;             // strlen(etx)                        migrated clear for task
+ S etxn1;            // last non-zero etxn                 migrated clear for task
  B foldrunning;      // 1 if fold is running (allows Z:) clear for task
  UC jerr;             // error number (0 means no error)    migrated  clear for task
  C recurstate;       // state of recursions through JDo migrated init for task
@@ -87,25 +98,17 @@ typedef struct rngdata {
 #define RECSTATEBUSY    1  // JE is running a call from JDo
 #define RECSTATEPROMPT  2  // JE is running, and is suspended having called the host for input
 #define RECSTATERECUR   3  // JE is running and waiting for a prompt, and the host has made a recursive call to JDo (which must not prompt)
- I4 nthreads;  // number of threads to use, or 0 if we haven't checked init for task
- I4 threadrecip16;  // reciprocal of nthreads, 16 bits of fraction init for task
- L *assignsym;       // symbol-table entry for the symbol about to be assigned      scaf  need to use LX when multithreaded clear/inherit for task
- A sf;               /* for $: clear for task                                         */
-// end of cacheline 0
- UI cstackinit;       // C stack pointer at beginning of execution init for task
- I bytes;            // bytes currently in use - used only during 7!:1 clear for task
- I bytesmax;         // high-water mark of "bytes" - used only during 7!:1 clear for task
- S etxn;             // strlen(etx)                        migrated clear for task
- S etxn1;            // last non-zero etxn                 migrated clear for task
+ C namecaching;     // 1=for script 2=on  clear for task
  B iepdo;            // 1 iff do iep clear for task
  UC jerr1;            // last non-zero jerr                 migrated  clear for task
 // ** end of initialized part
  C xmode;            // extended integer operating mode inherit for task
  C boxpos;           // boxed output x-y positioning, low bits xxyy00 inherit for task
- C pp[8];            // print precision (sprintf field for numeric output) inherit for task
+ C glock;            // 0=unlocked, 1=perm lock, 2=temp lock inherit for task
+// 3 bytes free
  A xmod;             // extended integer: the m in m&|@f inherit for task
+ C pp[8];            // print precision (sprintf field for numeric output) inherit for task
 // *** end of the region saved at task startup
- C endinitfill[16];
 // end of cacheline 1 (little used)
 
 // everything after here persists over the life of the thread
@@ -127,9 +130,10 @@ typedef struct rngdata {
  I4 parsercalls;      /* # times parser was called          migrated             */
 // 4 bytes free
 // end of cacheline 3
- A locsyms;  // local symbol table, or dummy empty symbol table if none init for task
- A global;           // global symbol table init for task
  I shapesink[2];     // garbage area used as load/store targets of operations we don't want to branch around migrated
+// things needed for allocation of large blocks
+ I mfreegenallo;        // Amount allocated through malloc, biased
+ I malloctotal;    // net total of malloc/free performed in m.c only
 
 // things needed by parsing
  PFRAME parserstackframe;  // 4 words  
@@ -145,9 +149,6 @@ typedef struct rngdata {
  RNG *rngdata;    // separately allocated block for RNG
 // end of cacheline 5
 
-// things needed for allocation of large blocks
- I mfreegenallo;        // Amount allocated through malloc, biased
- I malloctotal;    // net total of malloc/free performed in m.c only
 // seldom-used fields
  I malloctotalhwmk;  // highest value since most recent 7!:1
  A* tstacknext;       // if not 0, points to the recently-used tstack buffer, whose chain field points to tstacknext  
@@ -155,11 +156,11 @@ typedef struct rngdata {
  I getlasterror;     /* DLL stuff                                       */
  I dlllasterror;     /* DLL stuff                                       */
  C *etx;  // [1+NETX];      // display text for last error (+1 for trailing 0)
-//  end of cacheline 6
  void *dtoa;             /* use internally by dtoa.c                        */
 
 // debugging info
  DC sitop;            /* pointer to top of SI stack                                 */
+//  end of cacheline 6
 
 #if !C_CRC32C
  I    hin;              /* used in dyad i. & i:                            */

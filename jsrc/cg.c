@@ -331,7 +331,8 @@ static F2(jtgerfrom){A*av,*v,z;I n;
 
 F2(jtagendai){I flag;
  ARGCHK2(a,w)
- if(NOUN&AT(w))R exg(gerfrom(w,a));  // noun form, as before
+ ASSERT(NOUN&AT(a),EVDOMAIN);  // u must always be a gerund
+ if(unlikely(NOUN&AT(w)))R exg(gerfrom(w,a));  // noun form, as before
  // verb v.  Create a "BOX" type holding the verb form of each gerund
  A avb; RZ(avb = incorp(fxeachv(1L,a)));
   // Calculate ASGSAFE from all of the verbs (both a and w), provided the user can handle it

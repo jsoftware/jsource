@@ -205,8 +205,10 @@ A jtunDD(J jt, A w){F1PREFIP;
   scan=0;  // next position to examine
   while(1){  // till all nounDDs emitted
    // look for next string
-   for(stringstartx=scan;stringstartx<AN(w);++stringstartx)if(wv[stringstartx]=='\'')break;
+   // if we encounter NB., abort the scan
+   for(stringstartx=scan;stringstartx<AN(w);++stringstartx)if(wv[stringstartx]=='\''||((wv[stringstartx]=='N'&&stringstartx<=AN(w)-3&&wv[stringstartx+1]=='B'&&wv[stringstartx+2]=='.')))break;
    if(stringstartx==AN(w))break;  // if none, we're through
+   if(wv[stringstartx]!='\''){stringstartx=AN(w); break;}  // if we stopped at NB., we're through
    C hasLF=0;
    I numqu=0;
    for(scan=stringstartx+1;scan<AN(w);++scan){

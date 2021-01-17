@@ -210,18 +210,19 @@ F2(jtover){AD * RESTRICT z;C*zv;I replct,framect,acr,af,ar,*as,k,ma,mw,p,q,r,t,w
     GA(z,t,AN(a)+AN(w),lr,AS(l)); AS(z)[0]=si; C *x=CAV(z);  // install # items after copying shape
     JMC(x,CAV(a),alen+(SZI-1),loop1,0); JMC(x+alen,CAV(w),wlen+(SZI-1),loop2,0);
     // If a & w are both recursive abandoned pristine, we can take ownership of the contents by marking them nonrecursive and marking z recursive.
-    // We could also zap a & w, but we don't because it's just a box header and it will be freed by a caller anyway
+    // We could also zap a & w, but we don't because it's just a box header and it will be freed by a caller anyway - and they might be virtual, which would fail
     // Pristinity is required because otherwise there might be blocks present in both, and the usecount would be too low in result
+
     I xfer, aflg=AFLAG(a), wflg=AFLAG(w);
     xfer=aflg&wflg&(RECURSIBLE|AFPRISTINE);  
     xfer&=REPSGN((JTINPLACEA-((JTINPLACEA+JTINPLACEW)*(a!=w)&(I)jtinplace))&AC(a)&AC(w)&SGNIF(xfer,AFPRISTINEX));
      // xfer is the transferable recursibility if any: both abandoned, both recursible, not same blocks
-    AFLAG(z)|=xfer; xfer|=AFPRISTINE; AFLAG(a)=aflg&=~xfer; AFLAG(w)=wflg&=~xfer;  // transfer inplaceability/pristinity; always clear pristinity from a/w
+    AFLAGORLOCAL(z,xfer); xfer|=AFPRISTINE; AFLAGSET(a,aflg&=~xfer) AFLAGSET(w,wflg&=~xfer)  // transfer inplaceability/pristinity; always clear pristinity from a/w
     // We extracted from a and w, so mark them (or the backer if virtual) non-pristine.  If both were pristine and abandoned, transfer its pristine status to the result
     // if they were boxed nonempty, a and w have not been changed.  Otherwise the PRISTINE flag doesn't matter.
     // If a and w are the same, we mustn't mark the result pristine!  It has repetitions
-    if(unlikely((aflg&AFVIRTUAL)!=0)){AFLAG(ABACK(a))&=~AFPRISTINE;}  //  like PRISTCOMSETF
-    if(unlikely((wflg&AFVIRTUAL)!=0)){AFLAG(ABACK(w))&=~AFPRISTINE;}  //  like PRISTCOMSETF
+    if(unlikely((aflg&AFVIRTUAL)!=0)){AFLAGPRISTNO(ABACK(a))}  //  like PRISTCOMSETF
+    if(unlikely((wflg&AFVIRTUAL)!=0)){AFLAGPRISTNO(ABACK(w))}  //  like PRISTCOMSETF
 // obsolete     PRISTXFERF2(z,a,w);   // pass PRISTINE status through if possible, make inputs non-PRISTINE
     RETF(z);
    }
@@ -352,7 +353,7 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;I ak,k,p,*u,*v,wk,wm,wn;
       // copy fill to the output area.  Start the copy after the area that will be filled in by w
       I wlen = k*AN(w); // the length in bytes of the data in w
       if((-wr&(1+wr-ar))<0){RZ(setfv(a,w)); mvc(wk-wlen,av+wlen,k,jt->fillv); wprist=0;}  // fill removes pristine status
-      AFLAG(a)=aflag&=wprist|~AFPRISTINE;  // clear pristine flag in a if w is not also (a must not be virtual)
+      AFLAGRESET(a,aflag&=wprist|~AFPRISTINE)  // clear pristine flag in a if w is not also (a must not be virtual)
       // Copy in the actual data, replicating if w is atomic
       if(wr){JMC(av,wv,wlen,loop1,1)} else mvc(wk,av,k,wv);  // no overcopy because there could be fill
       // The data has been copied.  Now adjust the result block to match.  If the operation is virtual extension we have to allocate a new block for the result

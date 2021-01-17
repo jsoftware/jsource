@@ -66,7 +66,7 @@ static F1(jtcfd){A b,q,x,z,*zv;B*bv;I c,i,j,n,*qv,*u,*v,zn;
   RZ(zv[i++]=incorp(vec(INT,u-qv,qv)));
  }
  AN(z)=AS(z)[0]=zn=i; j=zn-1; DO(zn>>1, x=zv[i]; zv[i]=zv[j]; zv[j]=x; --j;);
- AFLAG(z)|=AFPRISTINE;  // what we generated is always pristine
+ AFLAGORLOCAL(z,AFPRISTINE)  // what we generated is always pristine
  R z;
 }    /* cycle from direct */
 

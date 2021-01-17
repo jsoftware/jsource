@@ -554,7 +554,7 @@ typedef I SI;
 #define AFLAGOR(a,v)    AFLAG(a)|=(v);
 #define AFLAGANDLOCAL(a,v)   AFLAG(a)&=(v);  // LOCAL functions are used when the block is known not to be shared
 #define AFLAGORLOCAL(a,v)    AFLAG(a)|=(v);
-
+#define AFLAGPRISTNO(a) AFLAGANDLOCAL(a,~AFPRISTINE)  // nothing from another thread can be PRISTINE
 // Flags in the AR field of local symbol tables
 #define LSYMINUSE 1  // This bit is set in the rank of the original symbol table when it is in use
 #define LNAMEADDED LPERMANENT  // Set in rank when a new name is added to the local symbol table.  We transfer the bit from the L flags to the rank-flag

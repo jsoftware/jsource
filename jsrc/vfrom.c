@@ -20,7 +20,7 @@ F1(jtcatalog){PROLOG(0072);A b,*wv,x,z,*zv;C*bu,*bv,**pv;I*cv,i,j,k,m=1,n,p,*qv,
  GATV0(z,BOX,m,r);    zv=AAV(z); s=AS(z);   // allocate result area
  // There is no need to turn off pristinity of w, because nothing was copied out by pointer (everything was copied & then cloned)
  // The result is certainly pristine if it is DIRECT
- AFLAG(z)|=(-(t&DIRECT))&AFPRISTINE;  // set result pristine if boxes DIRECT
+ AFLAGORLOCAL(z,(-(t&DIRECT))&AFPRISTINE)  // set result pristine if boxes DIRECT
  DO(n, x=wv[i]; u=AS(x); DQ(AR(x),*s++=*u++;););   // fill in shape: ; $&.> w
  for(i=0;i<m;i++){  // fill in each box
   bu=bv-k;

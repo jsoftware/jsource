@@ -574,12 +574,12 @@ extern unsigned int __cdecl _clearfp (void);
 // Debugging options
 
 // Use MEMAUDIT to sniff out errant memory alloc/free
-#define MEMAUDIT 0x0d       // scaf       // Bitmask for memory audits: 1=check headers 2=full audit of tpush/tpop 4=write garbage to memory before freeing it 8=write garbage to memory after getting it
+#define MEMAUDIT 0x00       // Bitmask for memory audits: 1=check headers 2=full audit of tpush/tpop 4=write garbage to memory before freeing it 8=write garbage to memory after getting it
                      // 16=audit freelist at every alloc/free (starting after you have run 6!:5 (1) to turn it on)
  // 13 (0xD) will verify that there are no blocks being used after they are freed, or freed prematurely.  If you get a wild free, turn on bit 0x2
  // 2 will detect double-frees before they happen, at the time of the erroneous tpush
 
-#define AUDITEXECRESULTS 1   // scaf  // When set, we go through all execution results to verify recursive and virtual bits are OK, and m nonzero if AC<0
+#define AUDITEXECRESULTS 0    // When set, we go through all execution results to verify recursive and virtual bits are OK, and m nonzero if AC<0
 #define FORCEVIRTUALINPUTS 0  // When 1 set, we make all non-inplaceable noun inputs to executions VIRTUAL.  Tests should still run
                            // When 2 set, make all outputs from RETF() virtual.  Tests for inplacing will fail; that's OK if nothing crashes
 // set FINDNULLRET to trap when a routine returns 0 without having set an error message
@@ -839,15 +839,15 @@ extern unsigned int __cdecl _clearfp (void);
 // even by calling a function that returns it, you can be OK just using rifv() or rifvs().  This may leave an incorporated block marked inplaceable,
 // but that's OK as long as you don't pass it to some place where it can become an argument to another function
 // When a block is incorporated it becomes not pristine, because extractions from the parent may compromise it and we don't want to have to go through recursively to find them
-#define INCORPNC(z) {if(unlikely((AFLAG(z)&AFVIRTUAL)!=0)){RZ((z)=realize(z))} else{AFLAGAND(z,~AFPRISTINE)} }  // use if you are immediately going to change AC, as with ras()
+#define INCORPNC(z) {if(unlikely((AFLAG(z)&AFVIRTUAL)!=0)){RZ((z)=realize(z))} else{AFLAGPRISTNO(z)} }  // use if you are immediately going to change AC, as with ras()
 #define INCORP(z) {INCORPNC(z) ACIPNO(z); }
-#define INCORPNV(z) {AFLAGAND(z,~AFPRISTINE) ACIPNO(z);}  // use when z is known nonvirtual
+#define INCORPNV(z) {AFLAGPRISTNO(z) ACIPNO(z);}  // use when z is known nonvirtual
 // same, but for nonassignable argument.  Must remember to check the result for 0
 #define INCORPNA(z) incorp(z)
 // use to incorporate into a known-recursive box.  We raise the usecount of z
 #define INCORPRA(z) {INCORPNC(z) ra(z); }
 // use to incorporate a newly-created zapped block of type t into a known-recursive box.  If t is recursible, raise the contents of z
-#define INCORPRAZAPPED(z,t) {ACINIT(z,ACUC1) if(t&RECURSIBLE){AFLAGINIT(z,t); jtra(z,(t));}}
+#define INCORPRAZAPPED(z,t) {ACINIT(z,ACUC1) if((t)&RECURSIBLE){AFLAGINIT(z,t); jtra(z,(t));}}
 // Tests for whether a result incorporates its argument.  The originator, who is going to check this, always marks the argument inplaceable,
 // and we signal incorporation either by returning the argument itself or by marking it non-inplaceable (if we box it)
 #define WASINCORP1(z,w)    ((z)==(w)||0<=AC(w))
@@ -1232,7 +1232,7 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x
 // obsolete #define PRISTCOMMON(w,exe) awflg=AFLAG(w); exe PRISTCOMSET(w,awflg)
 // same but destroy w
 // obsolete #define PRISTCLRF(w,exe) I awflg=AFLAG(w); exe PRISTCOMSETF(w,awflg)
-#define PRISTCLRF(w) if(unlikely((AFLAG(w)&AFVIRTUAL)!=0)){w=ABACK(w);} AFLAGAND(w,~AFPRISTINE)   // used only at end, when w can be destroyed
+#define PRISTCLRF(w) if(unlikely((AFLAG(w)&AFVIRTUAL)!=0)){w=ABACK(w);} AFLAGPRISTNO(w)   // used only at end, when w can be destroyed
 #define PRISTCOMMON(w) awback=(w); PRISTCLRF(awback)
 #define PRISTCLRNODCL(w) PRISTCOMMON(w)
 // normal entry points.  clear PRISTINE flag in w (or its backer, if virtual) because we have removed something from it
@@ -1360,11 +1360,11 @@ if(likely(z<3)){_zzt+=z; z=(I)&oneone; _zzt=_i&3?_zzt:(I*)z; z=_i&2?(I)_zzt:z; z
 #define ARGCHK1D(x)     ARGCHK1(x)  // these not needed normally, but useful for debugging
 #define ARGCHK2D(x,y)   ARGCHK2(x,y)
 #else
-#define DEADARG(x)      0
+#define DEADARG(x)      
 #define ARGCHK1D(x)
 #define ARGCHK2D(x,y)
 #endif
-#define ARGCHK1(x)      {RZ(x) DEADARG(x);}   // bit set in deadbeef
+#define ARGCHK1(x)      {RZ(x) DEADARG(x)}   // bit set in deadbeef
 #define ARGCHK2(x,y)    {ARGCHK1(x) ARGCHK1(y)}
 #define ARGCHK3(x,y,z)  {ARGCHK1(x) ARGCHK1(y) ARGCHK1(z)}
 

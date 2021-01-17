@@ -140,7 +140,7 @@ static DF1(jtply1){PROLOG(0040);DECLFG;A zz=0;
   if((neededpow^REPSGN(neededpow))<=(zpow^REPSGN(neededpow))){  // check for closer to 0, based on direction
    // desired power<=current power, store result and indic power needed.  z has the value to use as result
    // Turn off pristinity in the result because storing it is a version of escape
-   AFLAGAND(z,~AFPRISTINE)  // shared blocks can't be pristine
+   AFLAGPRISTNO(z)  // shared blocks can't be pristine
 #define ZZBODY
 #include "result.h"
    state|=STATENEEDNEWPOW;   // once we store a power we need the next one

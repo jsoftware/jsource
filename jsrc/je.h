@@ -6,7 +6,7 @@
 
 extern F1(jtabase1);
 extern F1(jtadot1);
-extern F1(jtaflag1);
+// obsolete extern F1(jtaflag1);
 extern F1(jtarep);
 extern F1(jtaro);
 extern F1(jtarx);
@@ -394,7 +394,7 @@ extern F2(jtabase2);
 extern F2(jtadot2);
 extern F2(jtadverse);
 extern F2(jtaes2);
-extern F2(jtaflag2);
+// obsolete extern F2(jtaflag2);
 extern F2(jtagenda);
 extern F2(jtagendai);
 extern F2(jtamp);

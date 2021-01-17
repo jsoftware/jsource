@@ -657,7 +657,7 @@ A jtrealize(J jt, A w){A z; I t;
 // allocate a block of the correct type and size.  Copy the shape
  ARGCHK1(w);
  t=AT(w);
- AFLAG(ABACK(w))&=~AFPRISTINE;  // clear PRISTINE in the backer, since its contents are escaping
+ AFLAGPRISTNO(ABACK(w))  // clear PRISTINE in the backer, since its contents are escaping
  GA(z,t,AN(w),AR(w),AS(w));
  // new block is not VIRTUAL, not RECURSIBLE
 // copy the contents.

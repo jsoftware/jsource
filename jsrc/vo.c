@@ -35,7 +35,7 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
   // If the input is abandoned and direct or recursive, zap it rather than raising the usecount
   I aband=SGNTO0(AC(w))&((I)jtinplace>>JTINPLACEWX);  // bit 0 = 1 if w is abandoned
 // obsolete   GAT0(z,BOX,1,0); AFLAG(z)=BOX+((-(wt&DIRECT))&((aband)<<AFPRISTINEX)); INCORPRA(w); AAV(z)[0]=w;
-  GAT0(z,BOX,1,0); AFLAG(z)=BOX+((-(wt&DIRECT))&((aband)<<AFPRISTINEX)); INCORPNC(w); AAV(z)[0]=w;
+  GAT0(z,BOX,1,0); AFLAGINIT(z,BOX+((-(wt&DIRECT))&((aband)<<AFPRISTINEX))) INCORPNC(w); AAV(z)[0]=w;
 // obsolete   GAT0(z,BOX,1,0); AFLAG(z)=BOX+((-(wt&DIRECT))&((aband)<<AFPRISTINEX)); INCORP(w); AAV(z)[0]=w;
   raczap(w,aband!=0,c&=~ACINPLACE;)  // INCORPNC+this=INCORPRA, but using zap when abandoned
 // obsolete   if(((-aband)&((AFLAG(w)|DIRECT)&(wt&(RECURSIBLE|DIRECT))))!=0){*AZAPLOC(w)=0;}else{ra(w);}  // INCORPRA, but using zap where possible
@@ -48,7 +48,7 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
   // Since we are allocating the new boxes, the result will ipso facto be PRIVATE, as long as w is DIRECT.  If w is not DIRECT, we can be PRISTINE if we ensure that
   // w is PRISTINE inplaceable, but we don't bother to do that because 
   // If the input is DIRECT, mark the result as PRISTINE
-  GATV(z,BOX,n,f,ws); AFLAG(z) = BOX+((-(wt&DIRECT))&AFPRISTINE); if(n==0){RETF(z);}  // Recursive result; could avoid filling with 0 if we modified AN after error, or cleared after *tnextpushp
+  GATV(z,BOX,n,f,ws); AFLAGINIT(z,BOX+((-(wt&DIRECT))&AFPRISTINE)) if(unlikely(n==0)){RETF(z);}  // Recursive result; could avoid filling with 0 if we modified AN after error, or cleared after *tnextpushp
   // We have allocated the result; now we allocate a block for each cell of w and copy the w values to the new block.
 
   // Since we are making the result recursive, we can save a lot of overhead by NOT putting the cells onto the tstack.  As we have marked the result as
@@ -59,7 +59,7 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
   A *pushxsave = jt->tnextpushp; jt->tnextpushp=AAV(z);  // save tstack info before allocation
 // obsolete   DQ(n, GAE(y,wt,m,r,f+ws,break); MC(CAV(y),wv,k); wv+=k; AC(y)=ACUC1; if(wt&RECURSIBLE){AFLAG(y)=wt; jtra(y,wt);});   // allocate, but don't grow the tstack.  Set usecount of cell to 1.  ra0() if recursible.  Put allocated addr into *jt->tnextpushp++
   JMCDECL(endmask) JMCSETMASK(endmask,k+SZI-1,0)   // set mask for JMCR - OK to copy SZIs
-  DQ(n, GAE(y,wt,m,r,f+ws,break); JMCR(CAV(y),wv,k+SZI-1,lp000,0,endmask); wv+=k; ACINIT(y,ACUC1); if(wt&RECURSIBLE){AFLAG(y)=wt; jtra(y,wt);});   // allocate, but don't grow the tstack.  Set usecount of cell to 1.  ra0() if recursible.  Put allocated addr into *jt->tnextpushp++
+  DQ(n, GAE(y,wt,m,r,f+ws,break); JMCR(CAV(y),wv,k+SZI-1,lp000,0,endmask); wv+=k; INCORPRAZAPPED(y,wt));   // allocate, but don't grow the tstack.  Set usecount of cell to 1.  ra0() if recursible.  Put allocated addr into *jt->tnextpushp++
 
 
   jt->tnextpushp=pushxsave;   // restore tstack pointer
@@ -101,18 +101,18 @@ F2PREFIP;ARGCHK2(a,w);
  if((unboxempty|((AN(w)|AR(w))-2))<0){A neww;   // unboxed/empty or force-boxed w, or AN(w)<2 and AR(w)<2
   // if w is unboxed/empty or is a singleton rank<2, allocate a recursive vector of 8 boxes, point AK to the next-last, and put w there as the new w.
   GAT0(neww,BOX,8,1);  // allocate 8 boxes
-  AN(neww)=AS(neww)[0]=1; AFLAG(neww)|=BOX; AK(neww)+=6*SZI;   // Make neww a singleton list, recursive, with AK pointing to the next-last atom
+  AN(neww)=AS(neww)[0]=1; AFLAGORLOCAL(neww,BOX); AK(neww)+=6*SZI;   // Make neww a singleton list, recursive, with AK pointing to the next-last atom
   // If w was abandoned, zap it, else ra
   if(unboxempty<0){
    // w was unboxed or empty.  Put it directly into neww, then ra or zap it.  If DIRECT abandoned, make result PRISTINE
-   AFLAG(neww)|=(-(AT(w)&DIRECT))&((aband)<<AFPRISTINEX);  // starts PRISTINE if abandoned DIRECT
+   AFLAGORLOCAL(neww,(-(AT(w)&DIRECT))&((aband)<<AFPRISTINEX))  // starts PRISTINE if abandoned DIRECT
 // obsolete    if(aband>((AT(w)^AFLAG(w))&RECURSIBLE)){*AZAPLOC(w)=0;}else{ra(w);}  // zappable if abandoned recursive or direct
    raczap(w,aband!=0,c&=~ACINPLACE;)  // INCORPNC+this=INCORPRA, but using zap when abandoned
    INCORPNC(w); AAV(neww)[0]=w;   // mark w as inside neww
   }else{
    // w was boxed, & a known singleton.  Put the single value into neww, then ra or zap.  neww is PRISTINE if w is abandoned pristine
    // We don't have access to the tpush stack, but if w is abandoned recursive we can use the slot in w as a surrogate location to zap - maybe could even if nonrecursive?
-   AFLAG(neww)|=AFLAG(w)&((aband)<<AFPRISTINEX); AFLAG(w)&=~AFPRISTINE; // transfer pristinity from abandoned w to neww; clear in w since contents escaping
+   AFLAGORLOCAL(neww,AFLAG(w)&((aband)<<AFPRISTINEX)) AFLAGPRISTNO(w) // transfer pristinity from abandoned w to neww; clear in w since contents escaping
    AAV(neww)[0]=AAV(w)[0]; if((AFLAG(w)&(aband<<BOXX))!=0){AAV(w)[0]=0;}else{ra(AAV(w)[0]);}  // zappable if abandoned recursive
   }
   aband=1;  // We can always start adding to the lists created here, UNLESS a and w were the same - 
@@ -127,7 +127,7 @@ F2PREFIP;ARGCHK2(a,w);
    I neededn=AN(w)+4+8; CTLZI(neededn,neededn); neededn=(2LL<<neededn)-8;  // number of atoms needed in larger block: room for at least 4 more, rounded up to power of 2 after header
    GATV0(neww,BOX,neededn,1); AN(neww)=AS(neww)[0]=AN(w); AK(neww)+=(neededn-(AN(w)+4))*SZI;  // allocate and position AK to put AN(w) atoms at end, with several spaces extra in case user wants to append in place
    MC(AAV(neww),AAV(w),AN(w)*SZI);  // copy the atoms from old to new
-   AFLAG(neww)=AFLAG(w); AFLAG(w)&=~RECURSIBLE;  // Transfer ownership of old blocks to new, making neww recursive (& maybe PRISTINE) and w nonrecursive
+   AFLAGINIT(neww,AFLAG(w)) AFLAGANDLOCAL(w,~RECURSIBLE)  // Transfer ownership of old blocks to new, making neww recursive (& maybe PRISTINE) and w nonrecursive
    w=neww;  // start adding to the new block
   }
   aband=SGNTO0(AC(a))&((I)jtinplace>>JTINPLACEAX)&&(a!=w);  // bit 0 = 1 if a is abandoned and is not the same as x
@@ -135,14 +135,14 @@ F2PREFIP;ARGCHK2(a,w);
    // if verb is (,<), a must be a boxed singleton.  move the contents of a into w, then ra/zap as above
    // a was boxed, & a known singleton.  Put the single value into w, then ra or zap.  w loses pristinity unless a is abandoned pristine
    // We don't have access to the tpush stack, but if a is abandoned recursive we can use the slot in a as a surrogate location to zap - maybe could even if nonrecursive?
-   AFLAG(w)&=(AFLAG(a)&((aband)<<AFPRISTINEX))|~AFPRISTINE; AFLAG(a)&=~AFPRISTINE; // transfer pristinity from abandoned a to w; clear in a since contents escaping
+   AFLAGANDLOCAL(w,(AFLAG(a)&((aband)<<AFPRISTINEX))|~AFPRISTINE) AFLAGPRISTNO(a) // transfer pristinity from abandoned a to w; clear in a since contents escaping
     // it would be OK to leave a pristine if it was abandoned, because we know a is a singleton and we are zapping it; that would allow early release of a.  But we're scared.
    A acontents=AAV(a)[0];  // save contents in case we zap it
    if((AFLAG(a)&(aband<<BOXX))!=0){AAV(a)[0]=0;}else{ra(AAV(a)[0]);}  // zappable if abandoned recursive
    a=acontents;  // move to the contents of a, which we will install into w.  It is already incorped and has the usecount right to go into a recursive block
   }else{  // not (,<), i. e.  ;  (;<)  ,&<   all of which box a
    // Store a into w & return.  If a was abandoned recursive or direct, zap it, else ra.  If a is DIRECT abandoned, allow w to stay PRISTINE
-   AFLAG(w)&=((-(AT(a)&DIRECT))&((aband)<<AFPRISTINEX))|~AFPRISTINE;  // stays PRISTINE if abandoned DIRECT
+   AFLAGANDLOCAL(w,((-(AT(a)&DIRECT))&((aband)<<AFPRISTINEX))|~AFPRISTINE)  // stays PRISTINE if abandoned DIRECT
    raczap(a,aband!=0,c&=~ACINPLACE;)  // INCORPNC+this=INCORPRA, but using zap when abandoned
 // obsolete    if(aband>((AT(a)^AFLAG(a))&RECURSIBLE)){*AZAPLOC(a)=0;}else{ra(a);}  // zappable if abandoned and not recursible nonrecursive
    INCORPNC(a);   // mark a incorped
@@ -256,7 +256,7 @@ A jtassembleresults(J jt, I ZZFLAGWORD, A zz, A zzbox, A* zzboxp, I zzcellp, I z
    // might fail: that would lose the blocks in zz that have not been copied to zztemp.  The problem does not exist for BOX type,
    // because we have already verified that there is not a mix of box/nonbox, so we can guarantee no failures until we get the
    // result area built.
-   I zzrecur = AFLAG(zz)&BOX; AFLAG(zztemp) |= zzrecur; AFLAG(zz)^=zzrecur;  // transfer recursibility from zz to zztemp, but only for boxed result
+   I zzrecur = AFLAG(zz)&BOX; AFLAGORLOCAL(zztemp,zzrecur) AFLAGANDLOCAL(zz,~zzrecur)  // transfer recursibility from zz to zztemp, but only for boxed result
   }else{
    // zz has the same item-shape as the final result (the items in zzbox must be smaller).  We can just keep zz as the final result area, and move the
    // items from zzbox into it.  NOTE that this may leave zztemp as a recursive XNUM/RAT, which it can't be if it was allocated above
@@ -625,7 +625,7 @@ F1(jtrazeh){A*wv,y,z;C*xv,*yv,*zv;I c=0,ck,dk,i,k,n,p,r,*s,t;
  if(t&BOX){
   // boxed contents.  Make the result recursive; since each input box is going into exactly one slot in the result, we get the usecounts right if we
   // raise the usecount in the contents of w
-  jtra(w,BOX); AFLAG(z)|=BOX;
+  jtra(w,BOX); AFLAGORLOCAL(z,BOX)
   PRISTCLRF(w);   // contents have escaped.  w is no longer used
  }
  zv=CAV(z); ck=c*k;  // ck is length of one row in bytes

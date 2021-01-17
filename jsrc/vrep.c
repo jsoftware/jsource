@@ -65,7 +65,7 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
   GA(z,AT(w),zn,AR(w),0); MCISH(AS(z),AS(w),AR(w)) // allocate result
   zvv=voidAV(z);  // point to the output area
   // pristine status can be transferred to the result, because we know we are not repeating any cells
-  AFLAG(z)|=AFLAG(w)&((SGNTO0(AC(w))&((I)jtinplace>>JTINPLACEWX))<<AFPRISTINEX);  // result pristine if inplaceable input was
+  AFLAGORLOCAL(z,AFLAG(w)&((SGNTO0(AC(w))&((I)jtinplace>>JTINPLACEWX))<<AFPRISTINEX))  // result pristine if inplaceable input was
   exactlen=0;  // OK to overstore when copying to new buffer
   n=0;  // cannot skip prefix of 1s if not inplace
  }else{

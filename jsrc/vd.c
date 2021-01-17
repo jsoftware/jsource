@@ -45,7 +45,7 @@ static A jtrinvip(J jt,A w,I n,I ncomp){PROLOG(0066);A ai,bx,di,z;I m;
   // copy bottom part: 0,.di
   rightr=voidAV(di);
   DQ(n-m, memset(zr,C0,leftlen); zr=(C*)zr+leftlen; MC(zr,rightr,rightlen); zr=(C*)zr+rightlen; rightr=(C*)rightr+rightlen;)
-  AFLAG(z)|=AFUPPERTRI; // Mark result as upper-triangular in case we multiply a matrix by it
+  AFLAGORLOCAL(z,AFUPPERTRI) // Mark result as upper-triangular in case we multiply a matrix by it
  }
  //  w00^_1     -w00^_1 mp w01 mp w11^_1
  //    0         w11^_1
@@ -181,7 +181,7 @@ ARGCHK1(w);
  // lq is  l0 q0
  //        (w1 q0*) q0 + (L of w1 - (w1 q0*) q0)(Q of w1 - (w1 q0*) q0)
  // = w
- AFLAG(z)|=AFUPPERTRI; // Mark result as upper-triangular in case we multiply a matrix by it
+ AFLAGORLOCAL(z,AFUPPERTRI) // Mark result as upper-triangular in case we multiply a matrix by it
  EPILOG(z);
 }
 

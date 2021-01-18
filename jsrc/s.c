@@ -82,14 +82,14 @@ L* jtsymnew(J jt,LX*hv, LX tailx){LX j;L*u,*v;
 
 // free all the symbols in symbol table w.  As long as the symbols are PERMANENT, delete the values but not the name.
 // For non-PERMANENT, delete name and value.
-// Reset the fields in the deleted blocks.  If any modifiers are deleted, increment modifiercounter to reset name lookups
+// Reset the fields in the deleted blocks.
 // This is used only for freeing local symbol tables, thus does not need to clear the name/path
 extern void jtsymfreeha(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
  L *jtsympv=LAV0(JT(jt,symp));  // Move base of symbol block to a register.  Block 0 is the base of the free chain.  MUST NOT move the base of the free queue to a register,
   // because when we free a locale it frees its symbols here, and one of them might be a verb that contains a nested SYMB, giving recursion.  It is safe to move sympv to a register because
   // we know there will be no allocations during the free process.
  // loop through each hash chain, clearing the blocks in the chain.  Do not clear chain 0, which holds x/y bucket numbers
- I ortypes=0;
+// obsolete  I ortypes=0;
  for(j=SYMLINFOSIZE;j<wn;++j){
   LX *aprev=&wv[j];  // this points to the predecessor of the last block we processed
   // process the chain
@@ -100,7 +100,7 @@ extern void jtsymfreeha(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
 // obsolete     if(!(jtsympv[k].flag&LPERMANENT))break;
     aprev=&jtsympv[k].next;  // save last item we processed here
     if(jtsympv[k].val){
-     ortypes|=AT(jtsympv[k].val);
+// obsolete      ortypes|=AT(jtsympv[k].val);
      // if the value was abandoned to an explicit definition, we took usecount 8..1  -> 1 ; revert that.  Can't change an ACPERMANENT!
      // otherwise decrement the usecount
      SYMVALFA(jtsympv[k]);
@@ -116,7 +116,7 @@ extern void jtsymfreeha(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
     do{
      k=SYMNEXT(k);  // remove address flagging
      aprev=&jtsympv[k].next;  // save last item we processed here
-     ortypes|=AT(jtsympv[k].val);  // value must exist here, since the block wouldn't be created unless assigned
+// obsolete      ortypes|=AT(jtsympv[k].val);  // value must exist here, since the block wouldn't be created unless assigned
      fr(jtsympv[k].name);fa(jtsympv[k].val);jtsympv[k].name=0;jtsympv[k].val=0;jtsympv[k].sn=0;jtsympv[k].flag=0;
      k=jtsympv[k].next;
     }while(k);
@@ -125,7 +125,7 @@ extern void jtsymfreeha(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
    }
   }
  }
- if(ortypes&FUNC)++jt->modifiercounter;  // if we encountered an ACV, clear name lookups for next time
+// obsolete  if(ortypes&FUNC)++jt->modifiercounter;  // if we encountered an ACV, clear name lookups for next time
 }
 
 static SYMWALK(jtsympoola, I,INT,100,1, 1, *zv++=j;)
@@ -535,10 +535,10 @@ L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I m,n,wn,wr,wt;L*e;
   // If we are assigning the same data block that's already there, don't bother with changing use counts or anything else (assignment-in-place)
   if(likely(x!=w)){
    if(unlikely(((xt|wt)&(VERB|CONJ|ADV))!=0)){
-    // When we assign to, or reassign, a modifier, invalidate all the lookups of modifiers that are extant
-    // It's a pity that we have to do this for ALL assignments, even assignments to uv.  If we don't, a reference to a local modifier may get passed in, and
-    // it will still be considered valid even though the local names have disappeared.  Maybe we could avoid this if the local namespace has no defined modifiers - but then we'd have to keep up with that...
-    ++jt->modifiercounter;
+// obsolete     // When we assign to, or reassign, a modifier, invalidate all the lookups of modifiers that are extant
+// obsolete     // It's a pity that we have to do this for ALL assignments, even assignments to uv.  If we don't, a reference to a local modifier may get passed in, and
+// obsolete     // it will still be considered valid even though the local names have disappeared.  Maybe we could avoid this if the local namespace has no defined modifiers - but then we'd have to keep up with that...
+// obsolete     ++jt->modifiercounter;
     // If we are assigning a adverb value, check to see if it is nameless, and mark the value if it is
     if(unlikely((wt&ADV)!=0))AT(w)=wt|(I)nameless(w)<<NAMELESSMODX;
    }

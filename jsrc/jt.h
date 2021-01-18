@@ -119,10 +119,11 @@ typedef struct rngdata {
   I ballo;              // negative number of bytes in free pool, but with zero-point biased so that - means needs garbage collection 
   A pool;             // pointer to first free block
  }    mfree[-PMINL+PLIML+1];      // pool info.  Use struct to keep cache footprint small
-// cacheline 2 ends inside the pool struct (5 qwords extra)
+// cacheline 2 ends inside the pool struct (3 qwords extra)
 
 // things needed by name lookup (unquote)
- I modifiercounter;  // incremented whenever anything happens that could alter modifier lookup: assignment/deletion of a modifier, or any change to locales or path
+// obsolete  I modifiercounter;  // incremented whenever anything happens that could alter modifier lookup: assignment/deletion of a modifier, or any change to locales or path
+ LS *callstack;   // [1+NFCALL]; // named fn calls: stack.  Usually only a little is used
  I4 callstacknext;    /* named fn calls: current depth                   */
  I4 fcalln;           /* named fn calls: maximum permissible depth   migrated    */
  A curname;          // current name, an A block containing an NM
@@ -140,7 +141,6 @@ typedef struct rngdata {
 // end of cacheline 4
 
 // things needed by execution of certain verbs
- LS *callstack;   // [1+NFCALL]; // named fn calls: stack.  Usually only a little is used; the rest overflows onto a new DRAM page
  A idothash0;        // 2-byte hash table for use by i.    migrated
  A idothash1;        // 4-byte hash table for use by i.    migrated
  A fill;             // fill     stuck here as filler

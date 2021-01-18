@@ -369,7 +369,7 @@ F2(jtlocpath2){A g; AD * RESTRICT x;
  // paths are special: the shape of each string holds the bucketx for the string.  Install that.
  AD * RESTRICT z; RZ(z=ca(x)); DO(AN(x), A t; RZ(t=ca(AT(AAV(x)[i])&((INT|B01))?thorn1(AAV(x)[i]):AAV(x)[i]));  AS(t)[0]=BUCKETXLOC(AN(t),CAV(t)); AAV(z)[i]=incorp(t);)  // ? why so many copies?  test before thorn1 not reqd
  fa(LOCPATH(g)); razap(z); LOCPATH(g)=z;
- ++jt->modifiercounter;  // invalidate any extant lookups of modifier names
+// obsolete  ++jt->modifiercounter;  // invalidate any extant lookups of modifier names
  R mtm;
 }    /* 18!:2  set locale path */
 
@@ -422,7 +422,7 @@ F1(jtlocswitch){A g;
  // If there is no name executing, there would be nothing to process this push; so don't push for unnamed execs (i. e. from console)
  if(jt->curname)pushcallstack1(CALLSTACKPOPFROM,jt->global);
  SYMSETGLOBAL(jt->locsyms,g);
- ++jt->modifiercounter;  // invalidate any extant lookups of modifier names
+// obsolete  ++jt->modifiercounter;  // invalidate any extant lookups of modifier names
 
  R mtm;
 }    /* 18!:4  switch locale */
@@ -492,7 +492,7 @@ F1(jtlocexmark){A g,*wv,y,z;B *zv;C*u;I i,m,n;L*v;
 
 // destroy symbol table g.  
 B jtlocdestroy(J jt,A g){
- ++jt->modifiercounter;  // invalidate any extant lookups of modifier names
+// obsolete  ++jt->modifiercounter;  // invalidate any extant lookups of modifier names
  // Look at the name to see whether the locale is named or numbered
  NM *locname=NAV(LOCNAME(g));  // NM block for name
  B isnum = '9'>=locname->s[0];  // first char of name tells the type

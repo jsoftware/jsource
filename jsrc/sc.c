@@ -21,7 +21,8 @@ DF2(jtunquote){A z;
  if(likely(thisname!=0)){  // normal names
   jt->curname=thisname;  // set failing name before we have value errors
   // normal path for named functions
-  if(AM(self)==jt->modifiercounter&&v->localuse.lvp[0]){
+// obsolete   if(AM(self)==jt->modifiercounter&&v->localuse.lvp[0]){
+  if(0){  // scaf
    // The most recent lookup is still valid, and it is nonzero.  Use it
    fs=v->localuse.lvp[0];
    explocale=0;  // flag no explicit locale
@@ -46,7 +47,7 @@ DF2(jtunquote){A z;
    fs=stabent->val;  // fetch the value of the name
    ASSERT(fs!=0,EVVALUE); // make sure the name's value is given also
    // Remember the resolved value and the current modifiercounter, UNLESS the name does not permit remembering the lookup
-   if(v->localuse.lvp[0]){v->localuse.lvp[0]=fs; AM(self)=jt->modifiercounter;}
+// obsolete    if(v->localuse.lvp[0]){v->localuse.lvp[0]=fs; AM(self)=jt->modifiercounter;}
    ASSERT(PARTOFSPEECHEQACV(AT(self),AT(fs)),EVDOMAIN);   // make sure its part of speech has not changed since the name was parsed
   }
  }else{
@@ -78,7 +79,7 @@ DF2(jtunquote){A z;
    explocale=AKGST(jt->locsyms);  // fetch global syms for the caller's environment, so we stack it next
   }
   pushcallstack1d(CALLSTACKPOPLOCALE,jt->global); jt->global=explocale;  // move to new implied locale.  DO NOT change locale it lt->locsyms.  It is set only by explicit action so that on a chain of locatives it stays unchanged
-  ++jt->modifiercounter;  // invalidate any extant lookups of modifier names
+// obsolete   ++jt->modifiercounter;  // invalidate any extant lookups of modifier names
  }
  // ************** no errors till the stack has been popped
  w=dyadex?w:(A)fs;  // set up the bivalent argument with the new self, since fs may have been changed
@@ -129,7 +130,7 @@ DF2(jtunquote){A z;
    // The only thing on the stack is a simple POP.  Do the pop.  This & the previous case account for almost all the calls here
    SYMSETGLOBAL(jt->locsyms,jt->callstack[callstackx].value);  // restore global locale
    jt->callstacknext=(I4)callstackx;  // restore stackpointer for caller
-   ++jt->modifiercounter;  // invalidate any extant lookups of modifier names
+// obsolete    ++jt->modifiercounter;  // invalidate any extant lookups of modifier names
   } else {
    // Locales were changed or deleted.  Process the stack fully
    // Find the locale to return to.  This will be the locale of the POP, or jt->global unchanged if there is a POPFROM or there is no POP.
@@ -146,7 +147,8 @@ DF2(jtunquote){A z;
     }else if(jt->callstack[i].type&CALLSTACKPUSHLOCALSYMS)SYMSETLOCAL((A)jt->callstack[i].value);  // restore locsyms if we stacked it, and restore possibly-changed global value therein
    }while(i!=callstackx);
    // if we encountered u./v., we have now restored the previous local symbols so that it is OK to restore the globals into it
-   if(earlyloc&&!fromfound){SYMSETGLOBAL(jt->locsyms,earlyloc); ++jt->modifiercounter;} // If there is a POP to do, do it; invalidate any extant lookups of modifier names
+   if(earlyloc&&!fromfound){SYMSETGLOBAL(jt->locsyms,earlyloc);} // If there is a POP to do, do it
+// obsolete  ++jt->modifiercounter;}; invalidate any extant lookups of modifier names
    // Delete the deletable locales.  If we encounter the (possibly new) current locale, remember that fact and don't delete it.
    I delcurr=0;  // set if we have to delete jt->global
    i=jt->callstacknext;  // back to front
@@ -203,12 +205,12 @@ A jtnamerefacv(J jt, A a, L* w){A y;V*v;
  // problem by making [: unsafe.
  A z=fdef(0,CTILDE,AT(y), jtunquote1,jtunquote, a,0L,0L, (v->flag&VASGSAFE)+(VJTFLGOK1|VJTFLGOK2), v->mr,lrv(v),rrv(v));  // return value of 'name~', with correct rank, part of speech, and safe/inplace bits
  RZ(z); 
- // To prevent having to look up the name every time it is executed, we will remember the address of the block (in localuse), AND the modifier counter at the time of the lookup (in AM).  We can't use
- // old lookups on locatives or canned names like xyuvmn, and we leave localuse 0 as a flag of that condition to help logic in unquote
- // If the original name was not defined (w==0), don't set a value so that it will be looked up again to produce value error
- if(w&&!(NAV(a)->flag&(NMLOC|NMILOC|NMDOT))){
-  FAV(z)->localuse.lvp[0]=y; AM(z)=jt->modifiercounter; ACIPNO(z);  // can't use AM in an inplaceable block
- }
+// obsolete  // To prevent having to look up the name every time it is executed, we will remember the address of the block (in localuse), AND the modifier counter at the time of the lookup (in AM).  We can't use
+// obsolete  // old lookups on locatives or canned names like xyuvmn, and we leave localuse 0 as a flag of that condition to help logic in unquote
+// obsolete  // If the original name was not defined (w==0), don't set a value so that it will be looked up again to produce value error
+// obsolete  if(w&&!(NAV(a)->flag&(NMLOC|NMILOC|NMDOT))){
+// obsolete   FAV(z)->localuse.lvp[0]=y; AM(z)=jt->modifiercounter; ACIPNO(z);  // can't use AM in an inplaceable block
+// obsolete  }
  R z;
 }
 

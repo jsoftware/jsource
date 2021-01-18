@@ -226,7 +226,8 @@ F1(jtnch){A ch;B b;LX *e;I i,m,n;L*d;
 }    /* 4!:5  names changed */
 
 
-F1(jtex){A*wv,y,z;B*zv;I i,n;L*v;I modifierchg=0;
+F1(jtex){A*wv,y,z;B*zv;I i,n;L*v;
+// obsolete I modifierchg=0;
  ARGCHK1(w);
  n=AN(w); wv=AAV(w); 
  ASSERT(((n-1)|SGNIF(AT(w),BOXX))<0,EVDOMAIN);
@@ -251,10 +252,10 @@ F1(jtex){A*wv,y,z;B*zv;I i,n;L*v;I modifierchg=0;
     }
     if(AFLAG(v->val)&AFNVRUNFREED){ras(v->val); AFLAGAND(v->val,~AFNVRUNFREED)}  // indicate deferred free, and protect from the upcoming free; but if already deferred-free, reduce the usecount now
    }
-   if(!(v->name->flag&NMDOT)&&v->val&&AT(v->val)&(VERB|ADV|CONJ))modifierchg=1;  // if we delete a modifier, remember that fact
+// obsolete    if(!(v->name->flag&NMDOT)&&v->val&&AT(v->val)&(VERB|ADV|CONJ))modifierchg=1;  // if we delete a modifier, remember that fact
    probedel(NAV(v->name)->m,NAV(v->name)->s,NAV(v->name)->hash,locfound);  // delete the symbol (incl name and value) in the locale in which it is defined
   }
  }
- jt->modifiercounter+=modifierchg;
+// obsolete  jt->modifiercounter+=modifierchg;
  RETF(z);
 }    /* 4!:55 expunge */

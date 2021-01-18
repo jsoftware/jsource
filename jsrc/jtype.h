@@ -413,9 +413,9 @@ typedef I SI;
 #define IS1BYTE         (B01+LIT)
 #define LAST0           (B01+LIT+C2T+C4T+NAME)
 // Don't traverse for ra/fa unless one of these bits is set
-#define TRAVERSIBLE     (BOX|VERB|ADV|CONJ|RAT|XNUM|SB01|SINT|SFL|SCMPX|SLIT|SBOX)
+#define TRAVERSIBLE     (BOX|VERB|ADV|CONJ|RAT|XNUM|NAME|SB01|SINT|SFL|SCMPX|SLIT|SBOX)
 // Allow recursive usecount in one of these types
-#define RECURSIBLE      (BOX|VERB|ADV|CONJ|RAT|XNUM)
+#define RECURSIBLE      (BOX|VERB|ADV|CONJ|RAT|XNUM|NAME)
 #define RECURSIBLENOUN  (RECURSIBLE&NOUN)
 // Modifiers that operate on subarrays do so with virtual blocks, and those blocks may be marked as inplaceable if the backing block is inplaceable.
 // The inplaceability applies to the data area, but not necessarily to the block header: if UNINCORPORABLE is set, the header must not be modified (we clone the header in that case)
@@ -679,9 +679,9 @@ typedef struct {
 #define pushcallstack1d(t,v) {FDEPDEC(d); ASSERT(jt->callstacknext<jt->fcalln,EVSTACK);  pushcallstack(jt->callstacknext,(t),(v));}
 
 
-typedef struct{UI4 hash;I4 bucket;I bucketx;UC m;C flag,s[1];} NM;
+typedef struct{UI4 hash;I4 bucket;I bucketx;A cachedref;UC m;C flag,s[1];} NM;
 
-/* hash: hash for  non-locale part of name                                 */
+/* hash: hash for non-locale part of name                                 */
 // bucket: (for local simple names) the index of the hash chain for this symbol when viewed as a local
 //   0 if chain index not known or name is a locative
 // bucketx: (for local simple names, only if bucket!=0) the number of chain entries to discard before
@@ -690,6 +690,7 @@ typedef struct{UI4 hash;I4 bucket;I bucketx;UC m;C flag,s[1];} NM;
 //   (for direct locatives) the hash of the locative - if numbered, the number itself.
 //   (for indirect locatives) hash of the last indirect name
 //   (for locale names in SYMLINFO of a numbered locale) the locale number 
+// cachedref: (only for cachable NAME blocks in an explicit definition): the nameref for this name entry, if it is not a noun.  The cached ref may or may not have the LX of the symbol for the name
 // m:    length of non-locale part of name note 255-byte limit! (AN holds the length of the entire name including the locative)
 /* s:    string part of full name (1 to ?? characters, including locale of assignment if given)           */
 
@@ -799,7 +800,7 @@ typedef struct {AF valencefns[2];A fgh[3];union { D lD; void *lvp[2]; I lI; I4 l
 // the localuse fields are not freed or counted for space, as the f/g/h fields are.  It is for local optimizations only.  We put if first so that the rest of
 // the block, which is used more, is in a single cacheline.  Local uses are:
 // for ATOMIC ops, lvp[] is pointer to the VA/UA block for adocv [dyad then monad]
-// for name references, lvp[0] is pointer to last resolution
+// for name references (id=CTILDE), lvp[0] is LX value of the last resolution
 // for FIT conj, the CCT data
 // for RANK conj, lI4[0-2] has the signed ranks
 // for Fold final operator, lfns[1] has pointer to the dyadic EP of the handler (xdefn or unquote)

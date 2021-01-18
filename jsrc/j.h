@@ -748,6 +748,7 @@ extern unsigned int __cdecl _clearfp (void);
 #endif
 // Size-of-block calculations.  VSZ when size is constant or variable.  Byte counts are (total length including header)-1
 // Because the Boolean dyads read beyond the end of the byte area (up to 1 extra word), we add one SZI-1 for islast (which includes B01), rather than adding 1
+// NOTE: sizeof(NM) is rounded up to a word multiple; offsetof() would be better.  But since it overallocates only for names of >20 characters, we keep it as is
 #define ALLOBYTESVSZ(atoms,rank,size,islast,isname)      ( ((((rank)|(!SY_64))*SZI  + ((islast)? (isname)?(NORMAH*SZI+sizeof(NM)+SZI-1-1):(NORMAH*SZI+SZI-1-1) : (NORMAH*SZI-1)) + (atoms)*(size)))  )  // # bytes to allocate allowing 1 I for string pad - include mem hdr - minus 1
 // here when size is constant.  The number of bytes, rounded up with overhead added, must not exceed 2^(PMINL+4)
 #define ALLOBYTES(atoms,rank,size,islast,isname)      ((size&(SZI-1))?ALLOBYTESVSZ(atoms,rank,size,islast,isname):(SZI*(((rank)|(!SY_64))+NORMAH+((size)>>LGSZI)*(atoms)+!!(islast))-1))  // # bytes to allocate-1
@@ -806,7 +807,7 @@ extern unsigned int __cdecl _clearfp (void);
  I akx=AKXR(rank);   \
  if(likely(name!=0)){   \
   AK(name)=akx; AT(name)=(type); AN(name)=atoms; AR(name)=(RANKT)(rank);     \
-  if(!((type)&DIRECT)){if(SY_64){AS(name)[0]=0; memset((C*)(AS(name)+1),C0,(bytes-32)&-32);}else{memset((C*)name+akx,C0,bytes+1-akx);}}  \
+  if(!((type)&DIRECT)){if(SY_64){AS(name)[0]=0; memset((C*)(AS(name)+1),C0,(bytes-32)&-32);}else{memset((C*)name+akx,C0,bytes+1-akx);}}   /* overclears the data but never over buffer bdy */ \
   shapecopier(name,type,atoms,rank,shaape)   \
      \
  }else{erraction;} \

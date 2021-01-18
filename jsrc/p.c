@@ -487,6 +487,8 @@ A jtparsea(J jt, A *queue, I m){PSTK * RESTRICT stack;A z,*v;I es;
         }
        }else{
         // No bucket info.  Usually this is a locative/global, but it could be an explicit modifier, console level, or ".
+        // If the name has a cached reference, use it
+        if(likely(NAV(y)->cachedref!=0)){y=NAV(y)->cachedref; at=AT(y); goto endname;}  // use the cache, take its type, proceed
 rdglob: ;
         jt->parserstackframe.parsercurrtok = (I4)(m+1);  // syrd can fail, so we have to set the error-word number (before it was decremented) before calling
         s=syrdnobuckets(y);  // do full symbol lookup, knowing that we have checked for buckets already
@@ -539,7 +541,7 @@ rdglob: ;
            // if syrd gave an error, namerefacv may return 0.  This will have previously signaled an error
          at=AT(y);  // refresh the type with the type of the resolved name
        }
-
+endname: ;
       }
 
      // If the new word was not a name (whether assigned or not), look to see if it is ) or a conjunction,

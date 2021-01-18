@@ -22,20 +22,20 @@ DF2(jtunquote){A z;
   jt->curname=thisname;  // set failing name before we have value errors
   // normal path for named functions
 // obsolete   if(AM(self)==jt->modifiercounter&&v->localuse.lvp[0]){
-  if(0){  // scaf
-   // The most recent lookup is still valid, and it is nonzero.  Use it
-   fs=v->localuse.lvp[0];
+  I4 cachedlkp=v->localuse.lI4[0];  // negative if cacheable; positive if cached
+  if(cachedlkp>0){
+   // There is a lookup for this nameref - use it
+   fs=LAV0(JT(jt,symp))[v->localuse.lI4[0]].val;
    explocale=0;  // flag no explicit locale
    stabent=(L*)fs;  // set stabent to NONZERO to indicate not a pseudofunction
   }else{
-   NM* thisnameinfo=NAV(thisname);  // the NM block for the current name
-   if(!(thisnameinfo->flag&(NMLOC|NMILOC|NMIMPLOC))) {  // simple name, and not u./v.
+   if(!(NAV(thisname)->flag&(NMLOC|NMILOC|NMIMPLOC))) {  // simple name, and not u./v.
     explocale=0;  // flag no explicit locale
-    if(!(stabent = probelocal(thisname,jt->locsyms)))stabent=syrd1(thisnameinfo->m,thisnameinfo->s,thisnameinfo->hash,jt->global);  // Try local, then look up the name starting in jt->global
+    if(likely(!(stabent = probelocal(thisname,jt->locsyms)))){stabent=syrd1(NAV(thisname)->m,NAV(thisname)->s,NAV(thisname)->hash,jt->global);}  // Try local, then look up the name starting in jt->global
    } else {  // locative or u/v
-    if(!(thisnameinfo->flag&NMIMPLOC)){  // locative
+    if(!(NAV(thisname)->flag&NMIMPLOC)){  // locative
      RZ(explocale=sybaseloc(thisname));  //  get the explicit locale.  0 if erroneous locale
-     stabent=syrd1(thisnameinfo->m,thisnameinfo->s,thisnameinfo->hash,explocale);  // Look up the name starting in the locale of the locative
+     stabent=syrd1(NAV(thisname)->m,NAV(thisname)->s,NAV(thisname)->hash,explocale);  // Look up the name starting in the locale of the locative
     }else{  // u./v.  We have to look at the assigned name/value to know whether this is an implied locative (it usually is)
      if(stabent = probelocal(thisname,jt->locsyms)){
       // u/v, assigned by xdefn.  Implied locative.  Use switching to the local table as a flag for restoring the caller's environment
@@ -43,12 +43,25 @@ DF2(jtunquote){A z;
      }
     }
    }
+   // syrd1 returns bit 0 set if the value is from a named locale, i. e. is cachable.  probelocal always returns with that flag off, since local symbols are never cachable
    ASSERT(stabent!=0,EVVALUE);  // name must be defined
+   I4 cachable=(I4)stabent&1; stabent=(L*)((I)stabent&~1);  // extract cachable flag from stabent & clear it
    fs=stabent->val;  // fetch the value of the name
    ASSERT(fs!=0,EVVALUE); // make sure the name's value is given also
-   // Remember the resolved value and the current modifiercounter, UNLESS the name does not permit remembering the lookup
-// obsolete    if(v->localuse.lvp[0]){v->localuse.lvp[0]=fs; AM(self)=jt->modifiercounter;}
+// obsolete    // Remember the resolved value and the current modifiercounter, UNLESS the name does not permit remembering the lookup
    ASSERT(PARTOFSPEECHEQACV(AT(self),AT(fs)),EVDOMAIN);   // make sure its part of speech has not changed since the name was parsed
+   // if this reference allows caching (lI4[0]<0), save the value if it comes from a cachable source, and attach the primitive block to the name
+   if(unlikely((cachedlkp&(-cachable))<0)){
+    // point the nameref to the lookup result.  This prevents further changes to the lookup
+    v->localuse.lI4[0]=stabent-LAV0(JT(jt,symp));  // convert symbol address back to index in case symbols are relocated
+    // If the NM block is cachable, point it to the nameref.  (If it's not cachable, it'll never be seen again, and we needn't worry about it)
+    // This leads to a loop in the inclusion graph, as nameref and name point to each other.  We have special code in fa() for names to break the loop.
+    if(NAV(thisname)->flag&NMCACHED){  // from explicit definition
+if(!(AFLAG(thisname)&NAME))SEGFAULT; // scaf
+     NAV(thisname)->cachedref=self; ra(self);  // exp def is ALWAYS recursive usecount, so we raise self when we store to it.  This wipes out bucket info in self, but that will not be needed since we have cached the lookup
+    }
+   }
+// obsolete    if(v->localuse.lvp[0]){v->localuse.lvp[0]=fs; AM(self)=jt->modifiercounter;}
   }
  }else{
   // here for pseudo-named function.  The actual name is in g, and the function itself is pointed to by h.  The verb is an anonymous explicit modifier that has received operands (but not arguments)
@@ -203,8 +216,10 @@ A jtnamerefacv(J jt, A a, L* w){A y;V*v;
  // and let unquote use the up-to-date value.
  // ASGSAFE has a similar problem, and that's more serious, because unquote is too late to stop the inplacing.  We try to ameliorate the
  // problem by making [: unsafe.
- A z=fdef(0,CTILDE,AT(y), jtunquote1,jtunquote, a,0L,0L, (v->flag&VASGSAFE)+(VJTFLGOK1|VJTFLGOK2), v->mr,lrv(v),rrv(v));  // return value of 'name~', with correct rank, part of speech, and safe/inplace bits
- RZ(z); 
+ A z=fdef(0,CTILDE,AT(y), jtunquote1,jtunquote, a,0L,0L, (v->flag&VASGSAFE)+(VJTFLGOK1|VJTFLGOK2), v->mr,lrv(v),rrv(v));  // create value of 'name~', with correct rank, part of speech, and safe/inplace bits
+ RZ(z);
+ // if the nameref is cachable, either because the name is cachable or name caching is enabled now, enable caching in lI4
+ FAV(z)->localuse.lI4[0]=(NAV(a)->flag&NMCACHED || (jt->namecaching && !(NAV(a)->flag&(NMILOC|NMDOT|NMIMPLOC))))<<SYMNONPERMX;  // 0x80.. to enable caching, otherwise 0
 // obsolete  // To prevent having to look up the name every time it is executed, we will remember the address of the block (in localuse), AND the modifier counter at the time of the lookup (in AM).  We can't use
 // obsolete  // old lookups on locatives or canned names like xyuvmn, and we leave localuse 0 as a flag of that condition to help logic in unquote
 // obsolete  // If the original name was not defined (w==0), don't set a value so that it will be looked up again to produce value error

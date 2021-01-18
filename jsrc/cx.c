@@ -861,22 +861,28 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
   actstv[j]=SYMNEXT(actstv[j]); for(pfx=actstv[j];pfx;pfx=sympv[pfx].next)sympv[pfx].next=SYMNEXT(sympv[pfx].next);  // set PERMANENT for all symbols in the table
  }
 
- // Go back through the words of the definition, and add bucket/index information for each simplename
+ // Go back through the words of the definition, and add bucket/index information for each simplename, and cachability flag
  // Note that variable names must be replaced by clones so they are not overwritten
  // Don't do this if this definition might return a non-noun (i. e. is an adverb/conjunction not operating on xy)
  // In that case, the returned result might contain local names; but these names contain bucket information
  // and are valid only in conjunction with the symbol table for this definition.  To prevent the escape of
  // incorrect bucket information, don't have any (this is easier than trying to remove it from the returned
  // result).  The definition will still benefit from the preallocation of the symbol table.
- if(type>=3 || flags&VXOPR){  // If this is guaranteed to return a noun...
-  for(j=0;j<ln;++j) {
-   if(AT(t=lv[j])&NAME) {
-    jtcalclocalbuckets(jt,t,actstv,actstn-SYMLINFOSIZE);  // install bucket info into name
-   }else if((AT(t)&BOX+BOXMULTIASSIGN)==BOX+BOXMULTIASSIGN){
+ for(j=0;j<ln;++j) {
+  if(AT(t=lv[j])&NAME) {
+   jtcalclocalbuckets(jt,t,actstv,actstn-SYMLINFOSIZE);  // install bucket info into name
+   // if the name is unbucketed, OR it has positive bucketx (meaning 'not found') it is not a simple local name.
+   // If it is also not indirect, x., or u., it is eligible for caching - if that is enabled
+   if(jt->namecaching && !(NAV(t)->flag&(NMILOC|NMDOT|NMIMPLOC)) && (NAV(t)->bucket==0||NAV(t)->bucketx>0))NAV(t)->flag|=NMCACHED;
+   if(!(type>=3 || flags&VXOPR)){  // If this is NOT guaranteed to return a noun...
+    NAV(t)->bucket=0; NAV(t)->bucketx=0;  // remove the bucket indexes we calculated
+   }
+  }else if((AT(t)&BOX+BOXMULTIASSIGN)==BOX+BOXMULTIASSIGN){
+   if(type>=3 || flags&VXOPR){  // If this is guaranteed to return a noun...
     A *tv=AAV(t); DO(AN(t), jtcalclocalbuckets(jt,tv[i],actstv,actstn-SYMLINFOSIZE);)  // install bucket info into boxed names
    }
   }
- }  // 'noun result guaranteed'
+ }
  R actst;
 }
 
@@ -896,7 +902,7 @@ A jtclonelocalsyms(J jt, A a){A z;I j;I an=AN(a); LX *av=LXAV0(a),*zv;
    *zhbase=SYMNEXT(*zhbase);  // zhbase points to the pointer to the entry we just added.  First time, that's the chain base
    A nm=(LAV0(JT(jt,symp)))[ahx].name;
    l->name=nm; ra(l->name);  // point symbol table to the name block, and increment its use count accordingly
-   l->flag=(LAV0(JT(jt,symp)))[ahx].flag&(LINFO|LPERMANENT);  // clear all but INFO and PERMANENT.
+   l->flag=(LAV0(JT(jt,symp)))[ahx].flag&(LINFO|LPERMANENT);  // Preserve only flags that persist
    ztx = ztx?(LAV0(JT(jt,symp)))[ztx].next : *zhbase;  // ztx=index to value we just added.  We avoid address calculation because of the divide.  If we added
       // at head, the added block is the new head; otherwise it's pointed to by previous tail
    zhbase=&l->next;  // after the first time, zhbase is the chain field of the tail

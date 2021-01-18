@@ -821,6 +821,18 @@ I jtfa(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
    np=np0;  // advance to next box
   };
   fana(np);  // increment the box, possibly turning it to recursive
+ } else if(t&NAME){A ref;
+  if(ref=NAV(wd)->cachedref){
+   // we have to free cachedref, but it is tricky because it points back to us and we will have a double-free.  So, we have to change
+   // the pointer to us, which is in fgh[0].  We look at the usecount of cachedref: if it is going to go away on the next fa(), we just clear fgh[0];
+   // if it is going to stick around (which means that it is part of a tacit function that got assigned to a name, or the like), we have to clone
+   // this name and switch the fgh pointer to point to it.
+   if(AC(ref)<=1){FAV(ref)->fgh[0]=0;  // cachedref going away - clear the pointer to prevent refree
+   }else{  // cachedref survives - replace its NM block
+    RZ(wd=ca(wd)); ACINITZAP(wd); NAV(wd)->cachedref=0; FAV(ref)->fgh[0]=wd; // clone, clear ref in clone to leave name only, repait ref to use new name scaf kludge allo failure here is fatal could rescind upcoming free?
+   }
+   fa(ref);  // free, now that nm is unlooped
+  }
  } else if(t&(VERB|ADV|CONJ)){V* RESTRICT v=FAV(wd);
   // ACV.
   fana(v->fgh[0]); fana(v->fgh[1]); fana(v->fgh[2]);
@@ -828,8 +840,8 @@ I jtfa(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
   // single-level indirect forms.  handle each block
   DQ(t&RAT?2*n:n, if(*v)fr(*v); ++v;);
  } else if(t&SPARSE){P* RESTRICT v=PAV(wd);
-  fana(SPA(v,a)); fana(SPA(v,e)); fana(SPA(v,i)); fana(SPA(v,x)); 
- }
+  fana(SPA(v,a)); fana(SPA(v,e)); fana(SPA(v,i)); fana(SPA(v,x));
+ } 
  R 1;
 }
 

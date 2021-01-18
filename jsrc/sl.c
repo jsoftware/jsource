@@ -183,6 +183,7 @@ A jtindexnl(J jt,I n) { R (A)IAV0(JT(jt,stnum))[n]; }  // the locale address, or
 // For named/numbered types, SYMLINFO (hash chain #0) is filled in to point to the name and path
 //   the name is an A type holding an NM, which has hash filled in, and, for numbered locales, the bucketx filled in with the locale number
 // For local symbol tables, hash chain 0 is repurposed to hold symbol-index info for x/y (filled in later)
+// The SYMB table is always allocated with rank 0.  The stored rank is 1 for named locales, 0 for others
 A jtstcreate(J jt,C k,I p,I n,C*u){A g,x,xx;C s[20];L*v;
  GATV0(g,SYMB,(p+1)&-2,0);   // have odd number of hashchains, excluding LINFO
  // Allocate a symbol for the locale info, install in special hashchain 0.  Set flag; // obsolete  set sn to the symindex at time of allocation
@@ -190,6 +191,7 @@ A jtstcreate(J jt,C k,I p,I n,C*u){A g,x,xx;C s[20];L*v;
  // The allocation clears all the hash chain bases, including the one used for SYMLINFO
  switch(k){
   case 0:  /* named locale */
+   AR(g)=1;   // set rank to indicate named locale.  It is left 0 in numbered or local
    RZ(v=symnew(&LXAV0(g)[SYMLINFO],SYMNONPERM)); v->flag|=LINFO; /* obsolete v->sn=(US)jt->symindex++; */   // put new block into locales table, allocate at head of chain without non-PERMANENT marking
    RZ(x=nfs(n,u));  // this fills in the hash for the name
    // Install name and path.  Path is 'z' except in z locale itself, which has empty path

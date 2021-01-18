@@ -629,7 +629,8 @@ typedef struct {I e,p;X x;} DX;
 // The MSB of LX values is used to indicate that the NEXT value is NOT permanent.  We do this so that we can visit all PERMANENT entries without ever
 // touching a non-PERMANENT one.  By marking NON-permanent symbols with the sign bit, we allow the code for permanent symbols to assume the
 // sign is 0, since the bucket #s are always for permanent symbols.  The end-of-chain pointer does not have the PERMANENT flag set
-#define SYMNONPERM 0x80000000   // flag set if next is non-permanent
+#define SYMNONPERMX 31
+#define SYMNONPERM (1L<<SYMNONPERMX)   // flag set if next is non-permanent, or if an LX is invalid
 #define SYMNEXT(s) ((s)&~SYMNONPERM)  // address of next symbol
 #define SYMNEXTISPERM(s) ((s)>0)  // true if next symbol is permanent
 

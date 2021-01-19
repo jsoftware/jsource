@@ -147,6 +147,7 @@ F1(jthostne){
 #endif
 
 
+#if 0 // doesn't work
 #if !(SYS & SYS_UNIX)
 
 F1(jthostio){ASSERT(0,EVDOMAIN);}
@@ -184,7 +185,7 @@ F1(jthostio){C*s;A z;F*pz;int fi[2],fo[2],r;int fii[2],foi[2];
 F1(jtjwait){I k;int s; RE(k=i0(w)); if(-1==waitpid(k,&s,0))jerrno(); R sc(s);}
 
 #endif
-
+#endif
 /* return errno info from c library */
 F1(jtcerrno){C buf[1024],ermsg[1024];
  ASSERTMTV(w);

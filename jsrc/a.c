@@ -29,8 +29,12 @@ F1(jtswap){A y;C*s;I n;
   n=AN(w); s=CAV(w); 
   ASSERT(vnm(n,s),EVILNAME);   // valid name
   RZ(y=nfs(AN(w),CAV(w)));  // create a NAME block for the string
-  R nameref(y,jt->locsyms);  // Create a name-reference pointing to the name
-}}
+  RZ(y=nameref(y,jt->locsyms));  // Create a name-reference pointing to the name
+  // Make sure this reference is non-cachable.  'name'~ is a way to get a non-cachable reference
+  FAV(y)->localuse.lI4[0]=0;  // turn off cachability
+  R y;
+ }
+}
 
 
 static const B booltab[64]={

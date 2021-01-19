@@ -184,7 +184,8 @@ A jtunDD(J jt, A w){F1PREFIP;
    RZ(jtunDD((J)((I)jt|JTINPLACEW|shortres),z));
    // the recursion leaves the DD in place, but it may have become shorter if it too contained DDs (the {{ }}
    // overhead is always less than the ( 9 : '' ) overhead)
-   outx=startddx+AN(z);
+   // We are going to install a trailing blank.  To prevent accumulation of blanks, discard any trailing blanks in the definition
+   for(outx=startddx+AN(z);outx>startddx&&wv[outx-1]==' ';--outx);
    // install trailing DD delimiter
    if(!shortres)wv[outx++]=' '; wv[outx++]='}'; wv[outx++]='}';
    // skip wordlist pointer to the next candidate

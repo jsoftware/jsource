@@ -57,12 +57,12 @@ valgone: ;
    if(unlikely((cachedlkp&(-cachable))<0)){
     // point the nameref to the lookup result.  This prevents further changes to the lookup
     v->localuse.lI4[0]=stabent-LAV0(JT(jt,symp));  // convert symbol address back to index in case symbols are relocated
+    stabent->flag|=LCACHED;  // protect the value from changes
     // If the NM block is cachable, point it to the nameref.  (If it's not cachable, it'll never be seen again, and we needn't worry about it)
     // This leads to a loop in the inclusion graph, as nameref and name point to each other.  We have special code in fa() for names to break the loop.
     if(NAV(thisname)->flag&NMCACHED){  // from explicit definition
 ASSERTSYS(AFLAG(thisname)&NAME,"nonrecursive name"); // scaf
      NAV(thisname)->cachedref=self; ra(self);  // exp def is ALWAYS recursive usecount, so we raise self when we store to it.  This wipes out bucket info in self, but that will not be needed since we have cached the lookup
-     stabent->flag|=LCACHED;  // 
     }
    }
 // obsolete    if(v->localuse.lvp[0]){v->localuse.lvp[0]=fs; AM(self)=jt->modifiercounter;}

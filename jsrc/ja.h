@@ -507,7 +507,7 @@
 #define hid(x)                      jthid(jt,(x))
 #define hook(x,y)                   jthook(jt,(x),(y))
 #define hook1(x,y)                  jthook1(jt,(x),(y))
-#define hostio(x)                   jthostio(jt,(x))
+// obsolete #define hostio(x)                   jthostio(jt,(x))
 #define hparm(x,y,z)                jthparm(jt,(x),(y),(z))
 #define hrep(x,y,z)                 jthrep(jt,(x),(y),(z))
 #define i0(x)                       jti0(jt,(x))

@@ -66,7 +66,7 @@ test 'whilst. 1 do. 2 else. 3 end.'
 'spelling error' -: ex '3 : ''begin.'''
 
 NB. Direct definition
-NB. Note SP transferred from after }} to before it; & SP added after {{
+NB. Note SP added after {{
 f0=. 3 : 0
 NB.
 ; {{
@@ -77,22 +77,22 @@ NB.
 NB.
 ; {{ 
   '<', (|. y), '>'
-  }}&.> |. 'one'; 'two'; 'three'
+ }}&.> |. 'one'; 'two'; 'three'
 )
 
-1: 0 : 0
 NB. Nameref caching
+NB. names are cached
 4!:55 ;:'vb__ vb_z_'
 vb_z_ =: 5:
 
 9!:5 (0)
 g0 =. 3 : 0
 vb y
-))
+)
 9!:5 (2)
 g1 =. 3 : 0
 vb y
-))
+)
 9!:5 (0)
 
 5 -: g0 ''
@@ -101,11 +101,223 @@ vb y
 5 -: g1 ''
 
 vb__ =: 9:
-
 9 -: g0 ''
 5 -: g1 ''
- 
+
+NB. caching continues over deletion
+vb_z_ =: 7:
+9 -: g0 ''
+5 -: g1 ''
+
+4!:55 <'vb__'
+7 -: g0 ''
+5 -: g1 ''
+
+9!:5 (2)
+g1 =. 3 : 0
+vb y
 )
+9!:5 (0)
+7 -: g0 ''
+7 -: g1 ''
+
+NB. cached name removed after deletion
+vb__ =: 3:
+9!:5 (2)
+g1 =. 3 : 0
+vb y
+)
+9!:5 (0)
+3 -: g0 ''
+3 -: g1 ''
+
+4!:55<'vb__'
+7 -: g0 ''
+3 -: g1 ''
+
+NB. deleting locale leaves cached name
+('a';'z') copath <'base'
+vb_a_ =: 4:
+
+9!:5 (2)
+g1 =. 3 : 0
+vb y
+)
+9!:5 (0)
+4 -: g0 ''
+4 -: g1 ''
+18!:55 <'a'
+7 -: g0 ''
+4 -: g1 ''
+
+NB. reference using ''~ not cached
+9!:5 (2)
+g1 =. 3 : 0
+'vb'~ y
+)
+9!:5 (0)
+7 -: g0 ''
+7 -: g1 ''
+
+vb__ =: 6:
+6 -: g0 ''
+6 -: g1 ''
+
+NB. Not even if caching continuously on
+4!:55 <'vb__'
+9!:5 (2)
+g1 =. 3 : 0
+'vb'~ y
+)
+7 -: g0 ''
+7 -: g1 ''
+
+vb__ =: 6:
+6 -: g0 ''
+6 -: g1 ''
+9!:5 (0)
+
+NB. Repeat for tacit verb
+4!:55 ;:'vb__ vb_z_'
+vb_z_ =: 5:
+
+9!:5 (0)
+g0 =: >:@<:@vb
+9!:5 (2)
+g1 =: >:@<:@vb
+9!:5 (0)
+
+5 -: g0 ''
+5 -: g1 ''
+5 -: g0 ''
+5 -: g1 ''
+
+vb__ =: 9:
+9 -: g0 ''
+5 -: g1 ''
+
+NB. caching continues over deletion
+vb_z_ =: 7:
+9 -: g0 ''
+5 -: g1 ''
+
+4!:55 <'vb__'
+7 -: g0 ''
+5 -: g1 ''
+
+9!:5 (2)
+g1 =: >:@<:@vb
+9!:5 (0)
+7 -: g0 ''
+7 -: g1 ''
+
+NB. cached name removed after deletion
+vb__ =: 3:
+9!:5 (2)
+g1 =: >:@<:@vb
+9!:5 (0)
+3 -: g0 ''
+3 -: g1 ''
+
+4!:55<'vb__'
+7 -: g0 ''
+3 -: g1 ''
+
+NB. deleting locale leaves cached name
+('a';'z') copath <'base'
+vb_a_ =: 4:
+
+9!:5 (2)
+g1 =: >:@<:@vb
+9!:5 (0)
+4 -: g0 ''
+4 -: g1 ''
+18!:55 <'a'
+7 -: g0 ''
+4 -: g1 ''
+
+NB. reference using ''~ not cached
+9!:5 (2)
+g1 =: >:@<:@('vb'~)
+9!:5 (0)
+7 -: g0 ''
+7 -: g1 ''
+
+vb__ =: 6:
+6 -: g0 ''
+6 -: g1 ''
+
+NB. Not even if caching continuously on
+4!:55 <'vb__'
+9!:5 (2)
+g1 =: >:@<:@('vb'~)
+7 -: g0 ''
+7 -: g1 ''
+
+vb__ =: 6:
+6 -: g0 ''
+6 -: g1 ''
+9!:5 (0)
+
+NB. numbered locale not cached
+4!:55 <'vb__'
+vb_z_=: 7:
+l =. cocreate''
+(l,<'z') copath <'base'
+vb__l =: 8:
+
+9!:5 (2)
+g1 =. 3 : 0
+vb y
+)
+9!:5 (0)
+8 -: g1 ''
+8 -: g1 ''
+(<'z') copath <'base'
+18!:55 l
+7 -: g1 ''
+
+NB. local name not cached
+9!:5 (2)
+g1 =. 4 : 0
+(x) =. y"_
+s ''
+)
+9!:5 (0)
+5 -: 's' g1 5
+6 -: 's' g1 6
+'value error' -: 't' g1 etx 6
+
+NB. indirect locative not cachable
+4!:55 ;:'vb__ vb_z_'
+vb_z_ =: 5:
+
+9!:5 (2)
+g1 =. 3 : 0
+l=.<'base'
+vb__l y
+)
+9!:5 (0)
+
+5 -: g1 ''
+5 -: g1 ''
+
+vb__ =: 9:
+9 -: g1 ''
+
+NB. direct locative cachable
+9!:5 (2)
+g1 =. 3 : 0
+vb__ y
+)
+9!:5 (0)
+
+9 -: g1 ''
+9 -: g1 ''
+
+4!:55 <'vb__'
+9 -: g1 ''
+9 -: g1 ''
 
 
 

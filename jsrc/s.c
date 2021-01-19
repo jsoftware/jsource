@@ -525,7 +525,7 @@ L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I m,n,wn,wr,wt;L*e;
  if(unlikely(e->flag&LCACHED)){
   // We are reassigning a value that is cached somewhere.  We must protect the old value.  We will create a new symbol after e, transfer ownership of
   // the name to the new symbol, and then delete e, which will actually just make it a value-only unmoored symbol
-  L *newe; RZ(newe=symnew(0,(e-LAV0(JT(jt,symp)))|SYMNONPERM)) newe->name=e->name; e->name=0; ASSERTSYS(probedel(NAV(newe->name)->m,NAV(newe->name)->s,NAV(newe->name)->hash,g)!=0,"delete error");  // assert scaf
+  L *newe; RZ(newe=symnew(0,(e-LAV0(JT(jt,symp)))|SYMNONPERM)) ASSERTSYS(e==probedel(NAV(e->name)->m,NAV(e->name)->s,NAV(e->name)->hash,g)!=0,"delete error"); newe->name=e->name; e->name=0; e=newe;  // assert scaf
  }
  x=e->val;   // if x is 0, this name has not been assigned yet; if nonzero, x points to the incumbent value
  I xaf;  // holder for nvr/free flags

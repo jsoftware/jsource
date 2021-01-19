@@ -61,21 +61,21 @@ B jtsymext(J jt,B b){A x,y;I j,m,n/*obsolete ,s[2]*/,*v,xn,yn;L*u;
 }    /* 0: initialize (no old array); 1: extend old array */
 
 // hv->hashtable slot; allocate new symbol, install as head/tail of hash chain, with previous chain appended
-// if tailx==0, append at head (immediately after *hv); if tailx!=0, append to tail, which is knopwn to be tailx.  If queue is empty, tailx is always 0
-// The stored chain pointer to the new record is marked non-PERMANENT unless tailx is SYMNONPERM 
+// if SYMNEXT(tailx)==0, append at head (immediately after *hv); if SYMNEXT(tailx)!=0, append after tailx.  If queue is empty, tailx is always 0
+// The stored chain pointer to the new record is given the non-PERMANENT status from the sign of tailx
 // result is new symbol
 L* jtsymnew(J jt,LX*hv, LX tailx){LX j;L*u,*v;
  while(!(j=SYMNEXT(LAV0(JT(jt,symp))[0].next)))RZ(symext(1));  /* extend pool if req'd        */
  LAV0(JT(jt,symp))[0].next=LAV0(JT(jt,symp))[j].next;       /* new top of stack            */
  u=j+LAV0(JT(jt,symp));  // the new symbol.  u points to it, j is its index
- if(SYMNEXT(tailx)) {L *t=tailx+LAV0(JT(jt,symp));
+ if(SYMNEXT(tailx)) {L *t=SYMNEXT(tailx)+LAV0(JT(jt,symp));
   // appending to tail, must be a symbol.  Queue is known to be nonempty
-  u->next=0;t->next=j|SYMNONPERM;  // it's always the end: point to next & prev, and chain from prev.  Everything added here is non-PERMANENT
+  u->next=t->next;t->next=j|(tailx&SYMNONPERM);  // it's always the end: point to next & prev, and chain from prev.  Everything added here is non-PERMANENT
  }else{
   // appending to head.
 // obsolete   if(u->next=*hv){v=*hv+LAV0(JT(jt,symp));}  // chain old queue to u; if not empty, backchain old head to new one, clear old head flag, scaf
   u->next=*hv;  // chain old queue to u
-  *hv=j|(tailx^SYMNONPERM);   // set new head, flagged as NONPERM unless suppressed
+  *hv=j|(tailx);   // set new head, flagged as NONPERM unless suppressed
  }
  R u;
 }    /* allocate a new pool entry and insert into hash table entry hv */
@@ -83,7 +83,7 @@ L* jtsymnew(J jt,LX*hv, LX tailx){LX j;L*u,*v;
 // free all the symbols in symbol table w.  As long as the symbols are PERMANENT, delete the values but not the name.
 // For non-PERMANENT, delete name and value.
 // Reset the fields in the deleted blocks.
-// This is used only for freeing local symbol tables, thus does not need to clear the name/path
+// This is used only for freeing local symbol tables, thus does not need to clear the name/path or worry about CACHED values
 extern void jtsymfreeha(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
  L *jtsympv=LAV0(JT(jt,symp));  // Move base of symbol block to a register.  Block 0 is the base of the free chain.  MUST NOT move the base of the free queue to a register,
   // because when we free a locale it frees its symbols here, and one of them might be a verb that contains a nested SYMB, giving recursion.  It is safe to move sympv to a register because
@@ -117,7 +117,7 @@ extern void jtsymfreeha(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
      k=SYMNEXT(k);  // remove address flagging
      aprev=&jtsympv[k].next;  // save last item we processed here
 // obsolete      ortypes|=AT(jtsympv[k].val);  // value must exist here, since the block wouldn't be created unless assigned
-     fr(jtsympv[k].name);fa(jtsympv[k].val);jtsympv[k].name=0;jtsympv[k].val=0;jtsympv[k].sn=0;jtsympv[k].flag=0;
+     fa(jtsympv[k].name);fa(jtsympv[k].val);jtsympv[k].name=0;jtsympv[k].val=0;jtsympv[k].sn=0;jtsympv[k].flag=0;
      k=jtsympv[k].next;
     }while(k);
     // make the non-PERMANENTs the base of the free pool & chain previous pool from them
@@ -171,19 +171,26 @@ F1(jtsympool){A aa,q,x,y,*yv,z,*zv;I i,n,*u,*xv;L*pv;LX j,*v;
 }    /* 18!:31 symbol pool */
 
 // l/string are length/addr of name, hash is hash of the name, g is symbol table
-// the symbol is deleted if found.  Return address of deleted symbol if found
+// the symbol is deleted if found.  Return address of deleted symbol if it was cached - caller must then take responsibility for the name
+// if the symbol is PERMANENT, it is not deleted but its value is removed
+// if the symbol is CACHED, it is removed from the chain but otherwise untouched, leaving the symbol abandoned.  It is the caller's responsibility to handle the name
 L* jtprobedel(J jt,I l,C*string,UI4 hash,A g){
  RZ(g);
- LX *asymx=LXAV0(g)+SYMHASH(hash,AN(g)-SYMLINFOSIZE);  // get pointer to index of start of chain
+ LX *asymx=LXAV0(g)+SYMHASH(hash,AN(g)-SYMLINFOSIZE);  // get pointer to index of start of chain; address of previous symbol in chain
  while(1){
   LX delblockx=SYMNEXT(*asymx);
   if(!delblockx)R 0;  // if chain empty or ended, not found
   L *sym=LAV0(JT(jt,symp))+delblockx;  // address of next in chain, before we delete it
   IFCMPNAME(NAV(sym->name),string,l,     // (1) exact match - if there is a value, use this slot, else say not found
     {
-     SYMVALFA(*sym); sym->val=0;   // decr usecount in value; remove value from symbol
-     if(!(sym->flag&LPERMANENT)){*asymx=sym->next; fr(sym->name); sym->name=0; sym->flag=0; sym->sn=0; sym->next=LAV0(JT(jt,symp))[0].next; LAV0(JT(jt,symp))[0].next=delblockx;}  // add to symbol free list
-     R sym;
+     if(unlikely(sym->flag&LCACHED)){
+      *asymx=sym->next;   // cached: just unhook from chain.  can't be permanent
+      R sym;
+     }else{
+      SYMVALFA(*sym); sym->val=0;   // decr usecount in value; remove value from symbol
+      if(!(sym->flag&LPERMANENT)){*asymx=sym->next; fa(sym->name); sym->name=0; sym->flag=0; sym->sn=0; sym->next=LAV0(JT(jt,symp))[0].next; LAV0(JT(jt,symp))[0].next=delblockx;}  // add to symbol free list
+     }
+     R 0;
     }
    // if match, bend predecessor around deleted block, return address of match (now deleted but still points to value)
   )
@@ -259,9 +266,9 @@ L *jtprobeislocal(J jt,A a){NM*u;I b,bx;L *sympv=LAV0(JT(jt,symp));
     IFCMPNAME(NAV(l->name),s,m,R l;)
     tx = lx; lx = l->next;
    }
-   // not found, create new symbol.  If tx is 0, the queue is empty, so adding at the head is OK; otherwise add after tx
-   RZ(l=symnew(&LXAV0(jt->locsyms)[b],tx)); 
-   ras(a); l->name=a;  // point symbol table to the name block, and increment its use count accordingly
+   // not found, create new symbol.  If tx is 0, the queue is empty, so adding at the head is OK; otherwise add after tx.  Make it non-PERMANENT
+   RZ(l=symnew(&LXAV0(jt->locsyms)[b],tx|SYMNONPERM)); 
+   ra(a); l->name=a;  // point symbol table to the name block, and increment its use count accordingly
    AR(jt->locsyms)|=LNAMEADDED;  // Mark that a name has been added beyond what was known at preprocessing time
    R l;
   } else {L* l = lx+sympv;  // fetch hashchain headptr, point to L for first symbol
@@ -296,8 +303,8 @@ L*jtprobeis(J jt,A a,A g){C*s;LX *hv,tx;I m;L*v;NM*u;L *sympv=LAV0(JT(jt,symp));
   }
  }
  // not found, create new symbol.  If tx is 0, the queue is empty, so adding at the head is OK; otherwise add after tx
- RZ(v=symnew(hv,tx)); 
- ras(a); v->name=a;  // point symbol table to the name block, and increment its use count accordingly
+ RZ(v=symnew(hv,tx|SYMNONPERM));   // symbol is non-PERMANENT
+ ra(a); v->name=a;  // point symbol table to the name block, and increment its use count accordingly
  R v;
 }    /* probe for assignment */
 
@@ -507,14 +514,19 @@ L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I m,n,wn,wr,wt;L*e;
     // symbol table, and we are assigning to the global symbol table, and the name is defined in the local table
   else{C*s=1+m+v->s; RZ(g=NMILOC&v->flag?locindirect(n-m-2,1+s,(UI4)v->bucketx):stfindcre(n-m-2,s,v->bucketx));}
     // locative: s is the length of name_.  Find the symbol table to use, creating one if none found
-  // Now g has the symbol table to look in
+  // Now g has the symbol table to store into
   RZ(e=g==jtlocal?probeislocal(a) : probeis(a,g));   // set e to symbol-table slot to use
   if(unlikely(AT(w)&FUNC))if(likely(FAV(w)->fgh[0]!=0)){if(FAV(w)->id==CCOLON)FAV(w)->flag|=VNAMED; if(jt->glock)FAV(w)->flag|=VLOCK;}
-   // If the value is a function created by n : m, this becomes a named function; if running a locked function, this is locked too.
+   // If the new value is a function created by n : m, this becomes a named function; if running a locked function, this is locked too.
    // kludge  these flags are modified in the input area (w), which means they will be improperly set in the result of the
    // assignment (ex: (nm =: 3 : '...') y).  There seems to be no ill effect, because VNAMED isn't used much.
  }
  if(unlikely(jt->uflags.us.cx.cx_c.db))RZ(redef(w,e));  // if debug, check for changes to stack
+ if(unlikely(e->flag&LCACHED)){
+  // We are reassigning a value that is cached somewhere.  We must protect the old value.  We will create a new symbol after e, transfer ownership of
+  // the name to the new symbol, and then delete e, which will actually just make it a value-only unmoored symbol
+  L *newe; RZ(newe=symnew(0,(e-LAV0(JT(jt,symp)))|SYMNONPERM)) newe->name=e->name; e->name=0; ASSERTSYS(probedel(NAV(newe->name)->m,NAV(newe->name)->s,NAV(newe->name)->hash,g)!=0,"delete error");  // assert scaf
+ }
  x=e->val;   // if x is 0, this name has not been assigned yet; if nonzero, x points to the incumbent value
  I xaf;  // holder for nvr/free flags
  I xt;  // If not assigned, use empty type

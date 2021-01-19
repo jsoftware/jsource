@@ -25,10 +25,13 @@ DF2(jtunquote){A z;
   I4 cachedlkp=v->localuse.lI4[0];  // negative if cacheable; positive if cached
   if(cachedlkp>0){
    // There is a lookup for this nameref - use it
-   fs=LAV0(JT(jt,symp))[v->localuse.lI4[0]].val;
-   explocale=0;  // flag no explicit locale
-   stabent=(L*)fs;  // set stabent to NONZERO to indicate not a pseudofunction
+   fs=LAV0(JT(jt,symp))[cachedlkp].val;
+   if(likely(fs!=0)){
+    explocale=0;  // flag no explicit locale
+    stabent=(L*)fs;  // set stabent to NONZERO to indicate not a pseudofunction
+   }else{cachedlkp=v->localuse.lI4[0]=SYMNONPERM; goto valgone;}  // if the value vanished, it must have been erased by hand.  Reenable caching but keep looking
   }else{
+valgone: ;
    if(!(NAV(thisname)->flag&(NMLOC|NMILOC|NMIMPLOC))) {  // simple name, and not u./v.
     explocale=0;  // flag no explicit locale
     if(likely(!(stabent = probelocal(thisname,jt->locsyms)))){stabent=syrd1(NAV(thisname)->m,NAV(thisname)->s,NAV(thisname)->hash,jt->global);}  // Try local, then look up the name starting in jt->global
@@ -57,8 +60,9 @@ DF2(jtunquote){A z;
     // If the NM block is cachable, point it to the nameref.  (If it's not cachable, it'll never be seen again, and we needn't worry about it)
     // This leads to a loop in the inclusion graph, as nameref and name point to each other.  We have special code in fa() for names to break the loop.
     if(NAV(thisname)->flag&NMCACHED){  // from explicit definition
-if(!(AFLAG(thisname)&NAME))SEGFAULT; // scaf
+ASSERTSYS(AFLAG(thisname)&NAME,"nonrecursive name"); // scaf
      NAV(thisname)->cachedref=self; ra(self);  // exp def is ALWAYS recursive usecount, so we raise self when we store to it.  This wipes out bucket info in self, but that will not be needed since we have cached the lookup
+     stabent->flag|=LCACHED;  // 
     }
    }
 // obsolete    if(v->localuse.lvp[0]){v->localuse.lvp[0]=fs; AM(self)=jt->modifiercounter;}

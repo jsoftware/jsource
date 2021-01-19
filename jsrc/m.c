@@ -509,7 +509,7 @@ void audittstack(J jt){F1PREFIP;
 #endif
 }
 
-// Free all symbols pointed to by the SYMB block w.
+// Free all symbols pointed to by the SYMB block w, iincluding PERMANENT ones.  But don't return CACHED values to the symbol pool
 static void freesymb(J jt, A w){I j,wn=AN(w); LX k,kt,* RESTRICT wv=LXAV0(w);
  L *jtsympv=LAV0(JT(jt,symp));  // Move base of symbol block to a register.  Block 0 is the base of the free chain.  MUST NOT move the base of the free queue to a register,
   // because when we free a locale it frees its symbols here, and one of them might be a verb that contains a nested SYMB, giving recursion.  It is safe to move sympv to a register because
@@ -525,13 +525,19 @@ static void freesymb(J jt, A w){I j,wn=AN(w); LX k,kt,* RESTRICT wv=LXAV0(w);
  // loop through each hash chain, clearing the blocks in the chain
  for(j=SYMLINFOSIZE;j<wn;++j){
   // free the chain; kt->last block freed
-  if(k=wv[j]){
+  if(k=wv[j]){LX *asymx=&wv[j];  // pointer to previous chain
    do{
-    kt=k=SYMNEXT(k);fr(jtsympv[k].name);SYMVALFA(jtsympv[k]);    // free name/value
-    jtsympv[k].name=0;jtsympv[k].val=0;jtsympv[k].sn=0;jtsympv[k].flag=0;k=jtsympv[k].next;
+    k=SYMNEXT(k);fa(jtsympv[k].name);jtsympv[k].name=0;  // always release name
+    if(likely(!(jtsympv[k].flag&LCACHED))){
+     kt=k;  // save tail pointer of freed items
+     SYMVALFA(jtsympv[k]);    // free value
+     jtsympv[k].val=0;jtsympv[k].sn=0;jtsympv[k].flag=0;
+     asymx=&jtsympv[k].next;  // make the current next field the previous for the next iteration
+    }else{*asymx=SYMNEXT(jtsympv[k].next);}  // for cached value, remove from list to be freed.  It becomes unmoored
+    k=jtsympv[k].next;  // advance to next block in chain
    }while(k);
    // if the chain is not empty, make it the base of the free pool & chain previous pool from it
-   jtsympv[kt].next=jtsympv[0].next;jtsympv[0].next=wv[j];  // free chain may have permanent flags
+   if(likely(wv[j]!=0)){jtsympv[kt].next=jtsympv[0].next;jtsympv[0].next=wv[j];}  // free chain may have permanent flags
   }
  }
 }

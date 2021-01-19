@@ -126,7 +126,7 @@ struct AD {
   I m;  // Multi-use field. (1) For NJA/SMM blocks, size of allocation. (2) for NVR blocks (that are not NJA), the number of times the block has been put on the NVR stack.
         // (3) for blocks coming out of a COUNTITEMS verb, holds the number of items in the
         // raze of the noun (if the types are identical) (4) for SYMB tables for explicit definitions, the address of the calling symbol table (5) for the block
-        // holding the amend offsets in x u} y, the number of axes of y that are built into the indexes in u (6) for name references, the value of jt->modifiercount when the name was last looked up
+        // holding the amend offsets in x u} y, the number of axes of y that are built into the indexes in u (6) no longer used
         // (7) in the return from wordil, holds the number of words if any final NB. is discarded; (8) in the result of indexofsub when called for FORKEY, contains the
         // number of partitions found; (9) in the self block for y L: n and u S: n, the address of the fs block for u; (10) in the call to jtisf (multiple assignment), holds the
         // address of the symbol table being assigned to (11) in the y block internal to pv.c, used for flags (12) in hashtables in x15.c and in tickers, the number of entries that have been hashed
@@ -648,6 +648,7 @@ typedef struct {A name,val;US flag;S sn;LX next;} L;
 // In all local symbol tables, the first 'hashchain' has the chain numbers for y/x; they are the first symbols in those chains, always permanent
 
 #define LCH             (I)1            /* changed since last exec of 4!:5 */
+#define LCACHED         (I)2      // this value is cached in some nameref
 #define LINFO           (I)4            /* locale info                     */
 #define LPERMANENT      (I)8            // This is a permanent entry in a local symbol table; don't delete, just leave val=0
 #define LWASABANDONEDX  4

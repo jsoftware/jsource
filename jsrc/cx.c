@@ -897,8 +897,8 @@ A jtclonelocalsyms(J jt, A a){A z;I j;I an=AN(a); LX *av=LXAV0(a),*zv;
  // Go through each hashchain of the model, after the first one.  We know the non-PERMANENT flags are off
  for(j=SYMLINFOSIZE;j<an;++j) {LX *zhbase=&zv[j]; LX ahx=av[j]; LX ztx=0; // hbase->chain base, hx=index of current element, ztx is element to insert after
 // obsolete   while(ahx&&(LAV0(JT(jt,symp)))[ahx].flag&LPERMANENT) {L *l;  // for each permanent entry...
-  while(ahx&&SYMNEXTISPERM(ahx)) {L *l;  // for each permanent entry...
-   RZ(l=symnew(zhbase,ztx));   // append new symbol after tail (or head, if tail is empty)
+  while(SYMNEXTISPERM(ahx)) {L *l;  // for each permanent entry...
+   RZ(l=symnew(zhbase,SYMNEXT(ztx)));   // append new symbol after tail (or head, if tail is empty), as PERMANENT
    *zhbase=SYMNEXT(*zhbase);  // zhbase points to the pointer to the entry we just added.  First time, that's the chain base
    A nm=(LAV0(JT(jt,symp)))[ahx].name;
    l->name=nm; ra(l->name);  // point symbol table to the name block, and increment its use count accordingly

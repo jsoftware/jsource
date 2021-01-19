@@ -48,7 +48,7 @@ valgone: ;
    }
    // syrd1 returns bit 0 set if the value is from a named locale, i. e. is cachable.  probelocal always returns with that flag off, since local symbols are never cachable
    ASSERT(stabent!=0,EVVALUE);  // name must be defined
-   I4 cachable=(I4)stabent&1; stabent=(L*)((I)stabent&~1);  // extract cachable flag from stabent & clear it
+   I4 cachable=(I4)(I)stabent&1; stabent=(L*)((I)stabent&~1);  // extract cachable flag from stabent & clear it
    fs=stabent->val;  // fetch the value of the name
    ASSERT(fs!=0,EVVALUE); // make sure the name's value is given also
 // obsolete    // Remember the resolved value and the current modifiercounter, UNLESS the name does not permit remembering the lookup

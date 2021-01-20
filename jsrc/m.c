@@ -823,21 +823,24 @@ I jtfa(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
 #ifdef PREFETCH
    PREFETCH((C*)np0);   // prefetch the next box while ra() is running
 #endif
-   fana(np);  // increment the box, possibly turning it to recursive
+   fana(np);  // free the contents
    np=np0;  // advance to next box
   };
-  fana(np);  // increment the box, possibly turning it to recursive
+  fana(np);  // free the contents
  } else if(t&NAME){A ref;
-  if(ref=NAV(wd)->cachedref){
+  if(ref=NAV(wd)->cachedref){I rc;
    // we have to free cachedref, but it is tricky because it points back to us and we will have a double-free.  So, we have to change
    // the pointer to us, which is in fgh[0].  We look at the usecount of cachedref: if it is going to go away on the next fa(), we just clear fgh[0];
-   // if it is going to stick around (which means that it is part of a tacit function that got assigned to a name, or the like), we have to clone
-   // this name and switch the fgh pointer to point to it.
-   if(AC(ref)<=1){FAV(ref)->fgh[0]=0;  // cachedref going away - clear the pointer to prevent refree
+   // if it is going to stick around (which means that it is part of a tacit function that got assigned to a name, or the like), we return nonzero so
+   // that the parent block will not be freed by the caller.  We set its usecount to 1 and wait for it to be freed when the reference is freed
+   if(AC(ref)<=1){FAV(ref)->fgh[0]=0; rc=0;  // cachedref going away - clear the pointer to prevent refree
    }else{  // cachedref survives - replace its NM block
-    RZ(wd=ca(wd)); ACINITZAP(wd); NAV(wd)->cachedref=0; FAV(ref)->fgh[0]=wd; // clone, clear ref in clone to leave name only, repait ref to use new name scaf kludge allo failure here is fatal could rescind upcoming free?
+   // scaf must test this by deleting orphaned values.  
+// obsolete     RZ(wd=ca(wd)); ACINITZAP(wd); NAV(wd)->cachedref=0; FAV(ref)->fgh[0]=wd; // clone, clear ref in clone to leave name only, repait ref to use new name scaf kludge allo failure here is fatal could rescind upcoming free?
+    NAV(wd)->cachedref=0; ACSET(wd,1) rc=1; // clear ref to leave name only, set count so it will free when reference is freed, prevent free of wd in caller
    }
-   fa(ref);  // free, now that nm is unlooped
+   fana(ref);  // free, now that nm is unlooped
+   R rc;
   }
  } else if(t&(VERB|ADV|CONJ)){V* RESTRICT v=FAV(wd);
   // ACV.
@@ -848,7 +851,7 @@ I jtfa(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
  } else if(t&SPARSE){P* RESTRICT v=PAV(wd);
   fana(SPA(v,a)); fana(SPA(v,e)); fana(SPA(v,i)); fana(SPA(v,x));
  } 
- R 1;
+ R 0;
 }
 
 
@@ -951,7 +954,9 @@ void jttpop(J jt,A *old){A *endingtpushp;
    // It is OK to prefetch the next box even on the last pass, because the next pointer IS a pointer to a valid box, or a chain pointer
    // to the previous free block (or 0 at end), all of which is OK to read and then prefetch from
    np0=*pushp;   // point to block for next pass through loop
+// stats jt->totalpops++;  // scaf
    if(np){
+// stats jt->nonnullpops++;  // scaf
     I c=AC(np);  // fetch usecount
 #ifdef PREFETCH
     PREFETCH((C*)np0);   // prefetch the next box.  Might be 0; that's no crime

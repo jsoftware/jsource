@@ -319,9 +319,56 @@ vb__ y
 9 -: g1 ''
 9 -: g1 ''
 
+NB. reference is cachable outside original context
+4!:55 <'vb__'
+vb_z_ =: 5:
+9!:5 (2)
+g1 =. 3 : 0
+gvb =: vb
+''
+)
+9!:5 (0)
+g1''
+5 -: gvb ''
+5 -: gvb ''
+vb__=: 2:
+5 -: gvb''
+
+NB. reference remains cachable after verb deleted
+4!:55 <'vb__'
+9!:5 (2)
+g1 =. 3 : 0
+gvb =: vb
+''
+)
+9!:5 (0)
+g1''
+5 -: gvb ''  NB. this caches the name in g1
+4!:55 <'g1'
+5 -: gvb ''
+5 -: gvb ''
+vb__=: 2:
+5 -: gvb''
+4!:55 <'gvb'
+
+NB. reference is cached before verb is deleted
+4!:55 <'vb__'
+vb_z_ =: 5:
+9!:5 (2)
+g1 =. 3 : 0
+gvb =: vb
+''
+)
+9!:5 (0)
+g1''
+4!:55 <'g1'
+5 -: gvb ''
+5 -: gvb ''
+vb__=: 2:
+5 -: gvb''
+4!:55 <'gvb'
 
 
-
-4!:55 ;:'f0 f1 f2 f3 g0 g1 g2 g3 g4 g5 r test vb__ vb_z_'
+4!:55 ;:'f0 f1 f2 f3 g0 g1 g2 g3 g4 g5 gvb r test vb__ vb_z_'
 
 

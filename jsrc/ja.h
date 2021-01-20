@@ -352,12 +352,13 @@
 // Zczero is ~0 if usecount is going negative, 0 otherwise.  Usecount 1->0, 8..1->8..2, 4..0 unchanged, others decrement
 #define fadecr(x) I Zc=AC(x); AC(x)=Zc=Zc-1+((UI)Zc>>(BW-2));  // this does the decrement only, checking for PERMANENT
 #define faaction(jt,x, nomfaction) {fadecr(x) I tt=AT(x); Zc=REPSGN(Zc-1); if(unlikely(((tt&=TRAVERSIBLE)&(Zc|~AFLAG(x)))!=0))jtfa(jt,(x),tt); if(likely(Zc!=0)){jtmf(jt,x);} nomfaction}
+#define faactionrescindable(jt,x, nomfaction) {fadecr(x) I tt=AT(x); Zc=REPSGN(Zc-1); if(unlikely(((tt&=TRAVERSIBLE)&(Zc|~AFLAG(x)))!=0))if(unlikely(jtfa(jt,(x),tt)!=0))Zc=0; if(likely(Zc!=0)){jtmf(jt,x);} nomfaction}
 #define fajt(jt,x) {if(likely((x)!=0))faaction(jt,(x),else {if(MEMAUDIT&2)audittstack(jt);})}
 #define fa(x) fajt(jt,(x))
 // when x is known to be valid and usecount has gone to 0
 #define fanano0(x)                  faaction(jt,(x),)
-// Within the tpush/tpop when we know the usecount has gone to 0, no need to audit fa, since it was checked on the push
-#define fana(x)                     {if(likely((x)!=0))fanano0(x)}
+// Within jtfa when we know the usecount has gone to 0, no need to audit fa, since it was checked on the push.  We allow for a nonzero return from jtfa to suppress freeing the parent block
+#define fana(x)                     {if(likely((x)!=0))faactionrescindable(jt,(x),)}
 // Within tpop, no need to check ACISPERM; Zczero is (i. e. usecount has gone to 0) ~0; and we should recur only if flag indicates RECURSIBLE.  In that case we can reconstruct the type from the flag
 #define fanapop(x,flg)              {if(unlikely(((flg)&RECURSIBLE)!=0))jtfa(jt,(x),(flg)&RECURSIBLE); jtmf(jt,x);}
 #define fac_ecm(x)                  jtfac_ecm(jt,(x))

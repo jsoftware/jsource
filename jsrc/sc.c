@@ -65,7 +65,10 @@ valgone: ;
 ASSERTSYS(AFLAG(thisname)&NAME,"nonrecursive name"); // scaf
      // This leads to a loop in the inclusion graph, as nameref and name point to each other.  We have special code in fa() for names to break the loop.
      // We must ensure that raising the nameref does not raise the usecount of the name, as it would if the nameref is not yet recursive.  If the usecount of the
-     // name were raised, it would never go to 0 when the explicit definition is freed, and the block would leak.
+     // name were raised, it would never go to 0 when the explicit definition is freed, and the block would leak.  Likewise we must undo the situation where the
+     // nameref was raised before this caching: that would set the name usecount to 2 and freeing the explicit verb would not trigger revisiting the link to the
+     // nameref.  In short, when there is a cached ref from the name, the count of the name is always 1, and the nameref has been incremented: so the name will
+     // not go away until the explicit does, and when that happens, the linbk will be removed in fa().
      NAV(thisname)->cachedref=self; ra(self); ACSET(thisname,ACUC1);   // exp def is ALWAYS recursive usecount, so we raise self when we store to it.
         //  This wipes out bucket info in self, but that will not be needed since we have cached the lookup
     }

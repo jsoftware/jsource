@@ -182,9 +182,9 @@ NB. Repeat for tacit verb
 vb_z_ =: 5:
 
 9!:5 (0)
-g0 =: >:@<:@vb
+g0 =. >:@<:@vb
 9!:5 (2)
-g1 =: >:@<:@vb
+g1 =. >:@<:@vb
 9!:5 (0)
 
 5 -: g0 ''
@@ -206,7 +206,7 @@ vb_z_ =: 7:
 5 -: g1 ''
 
 9!:5 (2)
-g1 =: >:@<:@vb
+g1 =. >:@<:@vb
 9!:5 (0)
 7 -: g0 ''
 7 -: g1 ''
@@ -214,7 +214,7 @@ g1 =: >:@<:@vb
 NB. cached name removed after deletion
 vb__ =: 3:
 9!:5 (2)
-g1 =: >:@<:@vb
+g1 =. >:@<:@vb
 9!:5 (0)
 3 -: g0 ''
 3 -: g1 ''
@@ -228,7 +228,7 @@ NB. deleting locale leaves cached name
 vb_a_ =: 4:
 
 9!:5 (2)
-g1 =: >:@<:@vb
+g1 =. >:@<:@vb
 9!:5 (0)
 4 -: g0 ''
 4 -: g1 ''
@@ -238,7 +238,7 @@ g1 =: >:@<:@vb
 
 NB. reference using ''~ not cached
 9!:5 (2)
-g1 =: >:@<:@('vb'~)
+g1 =. >:@<:@('vb'~)
 9!:5 (0)
 7 -: g0 ''
 7 -: g1 ''
@@ -250,7 +250,7 @@ vb__ =: 6:
 NB. Not even if caching continuously on
 4!:55 <'vb__'
 9!:5 (2)
-g1 =: >:@<:@('vb'~)
+g1 =. >:@<:@('vb'~)
 7 -: g0 ''
 7 -: g1 ''
 

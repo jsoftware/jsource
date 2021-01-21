@@ -60,10 +60,12 @@ release
 # build folders
 bin/
 make2/
-/jlibrary/addons
-/jlibrary/bin
-/jlibrary/bin32
-/jlibrary/system
-/jlibrary/system/config
-/jlibrary/system/main
-/jlibrary/tools
+jlibrary/addons/
+jlibrary/bin/
+jlibrary/bin32/
+jlibrary/system/
+jlibrary/system/config/
+jlibrary/system/main/
+jlibrary/tools/
+
+

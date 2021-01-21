@@ -1,7 +1,7 @@
 18!:4 <'z'
 3 : 0 ''
 
-JLIB=: '9.03.00'
+JLIB=: '9.03.01'
 
 notdef=. 0: ~: 4!:0 @ <
 hostpathsep=: ('/\'{~6=9!:12'')&(I. @ (e.&'/\')@] })
@@ -1891,15 +1891,6 @@ if. #err do.
   smoutput 'Shell command error: ',LF,LF,err
 end.
 res
-)
-htmlhelp=: 3 : 0
-f=. jpath '~addons/docs/help/',y
-if. fexist ({.~ i:&'#') f do.
-  browse file2url f
-else.
-  f=. 'http://www.jsoftware.com/docs/help', '903'
-  browse f,'/',y
-end.
 )
 browseref=: 3 : 0
 htmlhelp 'dictionary/',y

@@ -58,11 +58,19 @@ valgone: ;
     // point the nameref to the lookup result.  This prevents further changes to the lookup
     v->localuse.lI4[0]=stabent-LAV0(JT(jt,symp));  // convert symbol address back to index in case symbols are relocated
     stabent->flag|=LCACHED;  // protect the value from changes
-    // If the NM block is cachable, point it to the nameref.  (If it's not cachable, it'll never be seen again, and we needn't worry about it)
-    // This leads to a loop in the inclusion graph, as nameref and name point to each other.  We have special code in fa() for names to break the loop.
-    if(NAV(thisname)->flag&NMCACHED){  // from explicit definition
+     // If the NM block is cachable, point it to the nameref.  The NM block must be marked cachable AND still be pointed to by the explicit definition, which
+     // means that its usecount must be more than what comes from the nameref.  If the explicit definition has been deleted, we must ensure that we don't put a loop
+     // in the chains, because there will never be a free from the non-nameref side to break the loop
+    if(NAV(thisname)->flag&NMCACHED && AC(thisname)>((AFLAG(self)&TRAVERSIBLE)!=0)){  // name from explicit definition, and definition still active
 ASSERTSYS(AFLAG(thisname)&NAME,"nonrecursive name"); // scaf
-     NAV(thisname)->cachedref=self; ra(self);  // exp def is ALWAYS recursive usecount, so we raise self when we store to it.  This wipes out bucket info in self, but that will not be needed since we have cached the lookup
+     // This leads to a loop in the inclusion graph, as nameref and name point to each other.  We have special code in fa() for names to break the loop.
+     // We must ensure that raising the nameref does not raise the usecount of the name, as it would if the nameref is not yet recursive.  If the usecount of the
+     // name were raised, it would never go to 0 when the explicit definition is freed, and the block would leak.  Likewise we must undo the situation where the
+     // nameref was raised before this caching: that would set the name usecount to 2 and freeing the explicit verb would not trigger revisiting the link to the
+     // nameref.  In short, when there is a cached ref from the name, the count of the name is always 1, and the nameref has been incremented: so the name will
+     // not go away until the explicit does, and when that happens, the linbk will be removed in fa().
+     NAV(thisname)->cachedref=self; ra(self); ACSET(thisname,ACUC1);   // exp def is ALWAYS recursive usecount, so we raise self when we store to it.
+        //  This wipes out bucket info in self, but that will not be needed since we have cached the lookup
     }
    }
 // obsolete    if(v->localuse.lvp[0]){v->localuse.lvp[0]=fs; AM(self)=jt->modifiercounter;}

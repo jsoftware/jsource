@@ -161,7 +161,8 @@ typedef struct rngdata {
 // debugging info
  DC sitop;            /* pointer to top of SI stack                                 */
 //  end of cacheline 6
-
+// stats I totalpops;
+// stats I nonnullpops;
 #if !C_CRC32C
  I    hin;              /* used in dyad i. & i:                            */
  I*   hiv;              /* used in dyad i. & i:                            */

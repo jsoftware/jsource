@@ -137,15 +137,15 @@ F1(jtsympool){A aa,q,x,y,*yv,z,*zv;I i,n,*u,*xv;L*pv;LX j,*v;
  GAT0(z,BOX,3,1); zv=AAV(z);
 // obsolete  n=AS(JT(jt,symp))[0]; pv=LAV0(JT(jt,symp));
  n=AN(JT(jt,symp))/symcol; pv=LAV0(JT(jt,symp));
- GATV0(x,INT,n*5,2); AS(x)[0]=n; AS(x)[1]=5; xv= AV(x); zv[0]=incorp(x);
- GATV0(y,BOX,n,  1);                         yv=AAV(y); zv[1]=incorp(y);
+ GATV0(x,INT,n*5,2); AS(x)[0]=n; AS(x)[1]=5; xv= AV(x); zv[0]=incorp(x);  // box 0: sym info
+ GATV0(y,BOX,n,  1);                         yv=AAV(y); zv[1]=incorp(y);  // box 1: 
  for(i=0;i<n;++i,++pv){         /* per pool entry       */
   *xv++=i;   // sym number
   *xv++=(q=pv->val)?LOWESTBIT(AT(pv->val)):0;  // type: only the lowest bit.  Must allow SYMB through
   *xv++=pv->flag+(pv->name?LHASNAME:0)+(pv->val?LHASVALUE:0);  // flag
   *xv++=pv->sn;    
   *xv++=SYMNEXT(pv->next);
-  RZ(*yv++=(q=pv->name)?incorp(sfn(SFNSIMPLEONLY,q)):mtv);
+  RZ(*yv++=(q=pv->name)?incorp(sfn(SFNSIMPLEONLY,q)):mtv);  // simple name
  }
  // Allocate box 3: locale name
  GATV0(y,BOX,n,1); yv=AAV(y); zv[2]=incorp(y);
@@ -525,7 +525,7 @@ L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I m,n,wn,wr,wt;L*e;
  if(unlikely(e->flag&LCACHED)){
   // We are reassigning a value that is cached somewhere.  We must protect the old value.  We will create a new symbol after e, transfer ownership of
   // the name to the new symbol, and then delete e, which will actually just make it a value-only unmoored symbol
-  L *newe; RZ(newe=symnew(0,(e-LAV0(JT(jt,symp)))|SYMNONPERM)) ASSERTSYS(e==probedel(NAV(e->name)->m,NAV(e->name)->s,NAV(e->name)->hash,g)!=0,"delete error"); newe->name=e->name; e->name=0; e=newe;  // assert scaf
+  L *newe; RZ(newe=symnew(0,(e-LAV0(JT(jt,symp)))|SYMNONPERM)) probedel(NAV(e->name)->m,NAV(e->name)->s,NAV(e->name)->hash,g); newe->name=e->name; e->name=0; e=newe;
  }
  x=e->val;   // if x is 0, this name has not been assigned yet; if nonzero, x points to the incumbent value
  I xaf;  // holder for nvr/free flags

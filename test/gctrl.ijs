@@ -65,6 +65,7 @@ test 'whilst. 1 do. 2 else. 3 end.'
 'spelling error' -: ex '3 : ''until.'''
 'spelling error' -: ex '3 : ''begin.'''
 
+
 NB. Direct definition
 NB. Note SP added after {{
 f0=. 3 : 0
@@ -75,9 +76,18 @@ NB.
 )
 (r =: '3 : 0' , LF , 0 : 0 , ')') -:5!:5<'f0'
 NB.
-; {{ 
-  '<', (|. y), '>'
+; {{   '<', (|. y), '>'
  }}&.> |. 'one'; 'two'; 'three'
+)
+
+f0=. {{     NB. empty first line
+  idxmut=. I. x >: (*/$y) ?@$ 0
+  (populate idxmut) idxmut"_} y
+}}
+
+(r =: '4 : 0' , LF , 0 : 0 , ')') -:5!:5<'f0'
+  idxmut=. I. x >: (*/$y) ?@$ 0
+  (populate idxmut) idxmut"_} y
 )
 
 NB. Nameref caching

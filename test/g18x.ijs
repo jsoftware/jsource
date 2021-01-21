@@ -43,14 +43,15 @@ pcheck=: 3 : 0
  assert. (1=#$a) *. 32=type a                  NB. object name
  assert. (1=#$s) *. 32=type s                  NB. locale name (or '**local**')
  assert. (#p) = (#a),#s
-NB. p has: index,type,flag,sn,next,prev
-NB. Flag is changed,0,LINFO,PERM,WASABANDONED,hasname,hasvalue
+NB. p has: index,type,flag,sn,next
+NB. Flag is changed,cachable,LINFO,PERM,WASABANDONED,hasname,hasvalue
 
  i=. i.#p
  NB. b=. 0 0 -:"1 ]2 5{"1 p      NB. flag=0 & no prev pointer: empty symbol, on free list
- b=. 0 = 2{"1 p      NB. flag=0 (no name or value): empty symbol, on free list
- assert. {.b
- assert. 0=1 2 3{"1 b#p
+ b=. 0 = (64+32) 17 b. 2{"1 p      NB. flag=0 (no name or value): empty symbol, on free list
+ orph=. 64 = (64+32) 17 b. 2{"1 p      NB. flag=64 (no name, value): cached orphan value
+ assert. {.b  NB. first symbol always free
+ assert. 0=2 3{"1 b#p
  assert. (4{"1 b#p) e. (# i.@#) b
  assert. 0 e. 4{"1 b#p
  m=. >:>.2^.#b
@@ -72,8 +73,8 @@ NB. Flag is changed,0,LINFO,PERM,WASABANDONED,hasname,hasvalue
  NB. assert. b +. h +. (0=next) +. i = (next*-.h){prev,0
  NB. assert. b +. h +.             i = (prev*-.h){next,0
 
- assert. b +. li +. -. a e. a:
- assert. b +. li +. s e. '';'**local**';18!:1 i.2  NB. must allow no locale-name for local symbol tables
+ assert. b +. orph +. li +. -. a e. a:
+ assert. b +. orph +. li +. s e. '';'**local**';18!:1 i.2  NB. must allow no locale-name for local symbol tables
  assert. (18!:1 i.2) e. s
  1
 )

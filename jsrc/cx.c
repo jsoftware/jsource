@@ -1136,7 +1136,9 @@ A jtddtokens(J jt,A w,I env){
    // ********* NORMAL DD *******
    // We have found an innermost non-noun DD, running from ddbgnx to ddendx.  Convert it to ( m : 'string' ) form
    // convert all the chars of the DD to a quoted string block
-   A ddqu; RZ(ddqu=strq(wilv[ddendx][0]-wilv[ddbgnx+1][0],wv+wilv[ddbgnx+1][0]));
+   // if the first line is empty (meaning the first word is a linefeed by itself), skip it
+   I firstcharx=wilv[ddbgnx+1][0]; if(wv[firstcharx]=='\n')++firstcharx;  // just one skipped line
+   A ddqu; RZ(ddqu=strq(wilv[ddendx][0]-firstcharx,wv+firstcharx));
    // append the string for the start/end of DD
    I bodystart=AN(w), bodylen=AN(ddqu), trailstart=wilv[ddendx][1];  // start/len of body in w, and start of after-DD text
    RZ(ddqu=jtapip(jtinplace,ddqu,str(7,")( 9 : ")));

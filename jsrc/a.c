@@ -31,7 +31,7 @@ F1(jtswap){A y;C*s;I n;
   RZ(y=nfs(AN(w),CAV(w)));  // create a NAME block for the string
   RZ(y=nameref(y,jt->locsyms));  // Create a name-reference pointing to the name
   // Make sure this reference is non-cachable.  'name'~ is a way to get a non-cachable reference
-  FAV(y)->localuse.lI4[0]=0;  // turn off cachability
+  if(AT(y)&VERB+CONJ+ADV)FAV(y)->localuse.lI4[0]=0;  // turn off cachability if it's a reference (not if a noun)
   R y;
  }
 }

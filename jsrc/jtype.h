@@ -692,16 +692,20 @@ typedef struct{UI4 hash;I4 bucket;I bucketx;A cachedref;UC m;C flag,s[1];} NM;
 //   (for direct locatives) the hash of the locative - if numbered, the number itself.
 //   (for indirect locatives) hash of the last indirect name
 //   (for locale names in SYMLINFO of a numbered locale) the locale number 
-// cachedref: (only for cachable NAME blocks in an explicit definition): the nameref for this name entry, if it is not a noun.  The cached ref may or may not have the LX of the symbol for the name
-// m:    length of non-locale part of name note 255-byte limit! (AN holds the length of the entire name including the locative)
-/* s:    string part of full name (1 to ?? characters, including locale of assignment if given)           */
+// cachedref: (only for cachable NAME blocks): the nameref for this name entry, if it is not a noun.  The cached ref may or may not have the LX of the symbol for the name
+//         if flag&NMCACHEDSYM is set, the value here is the index of a symbol with the value to use for the name - it could be from a NAMELESS modifier
+// m: length of non-locale part of name note 255-byte limit! (AN holds the length of the entire name including the locative)
+/* s: string part of full name (1 to ?? characters, including locale of assignment if given)           */
 
 #define NMLOC           1       /* direct   locale abc_lm_                 */
 #define NMILOC          2       /* indirect locale abc__de__fgh ...        */
 #define NMDOT           4       /* one of the names m. n. u. v. x. y.      */
 #define NMXY            8       // x/y, which must have NAMEBYVALUE set
 #define NMIMPLOC        16      // this NM block is in u./v.
-#define NMCACHED        32      // This NM is to cache any valid lookup
+#define NMCACHEDX       5
+#define NMCACHED        (1<<NMCACHEDX)      // This NM is to cache any valid lookup
+#define NMCACHEDSYMX    6
+#define NMCACHEDSYM     (1<<NMCACHEDSYMX)      // This NM is storing a symbol index, not a pointer tio a reference
 
 
 typedef struct {I a,e,i,x;} P;

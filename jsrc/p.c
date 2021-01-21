@@ -488,7 +488,11 @@ A jtparsea(J jt, A *queue, I m){PSTK * RESTRICT stack;A z,*v;I es;
        }else{
         // No bucket info.  Usually this is a locative/global, but it could be an explicit modifier, console level, or ".
         // If the name has a cached reference, use it
-        if(likely(NAV(y)->cachedref!=0)){y=NAV(y)->cachedref; at=AT(y); goto endname;}  // use the cache, take its type, proceed
+        if(likely(NAV(y)->cachedref!=0)){
+         A cachead=NAV(y)->cachedref; // use the cached address
+         if(unlikely(NAV(y)->flag&NMCACHEDSYM)){cachead=(A)((LAV0(JT(jt,symp))[(I)cachead]).val); if(unlikely(!cachead)){jsignal(EVVALUE);FP}}  // if it's a symbol index, fetch that.  value error only if cached symbol deleted
+         y=cachead; at=AT(y); goto endname; // take its type, proceed
+        }
 rdglob: ;
         jt->parserstackframe.parsercurrtok = (I4)(m+1);  // syrd can fail, so we have to set the error-word number (before it was decremented) before calling
         s=syrdnobuckets(y);  // do full symbol lookup, knowing that we have checked for buckets already
@@ -526,7 +530,11 @@ rdglob: ;
         // If a modifier has no names in its value, we will stack it by value.  The Dictionary says all modifiers are stacked by value, but
         // that will make for tough debugging.  We really want to minimize overhead for each/every/inv.
         // Otherwise (normal adv/verb/conj name), replace with a 'name~' reference
-        if((AT(sv)|at)&(NOUN|NAMEBYVALUE|NAMELESSMOD)){   // use value if noun or special name
+        if((AT(sv)|at)&(NOUN|NAMEBYVALUE|NAMELESSMOD)){   // use value if noun or special name, or known nameless
+         if(unlikely(AT(sv)&NAMELESSMOD&((I)NAV(y)->flag<<(NAMELESSMODX-NMCACHEDX)))){
+          // cachable nameless modifier.  store the value in the name, and flag that it's a symbol index, flag the value as cached in case it gets deleted
+          NAV(y)->cachedref=(A)(s-LAV0(JT(jt,symp))); NAV(y)->flag|=NMCACHEDSYM; s->flag|=LCACHED; NAV(y)->bucket=0;  // clear bucket info so we will skip that search - this name is forever cached
+         }
          y=sv; at=AT(sv);
         } else {
          y = namerefacv(y, s);   // Replace other acv with reference

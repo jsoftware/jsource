@@ -378,6 +378,61 @@ vb__=: 2:
 5 -: gvb''
 4!:55 <'gvb'
 
+NB. Repeat for nameless modifier
+NB. names are cached
+4!:55 ;:'vb__ vb_z_'
+vb_z_ =: @5:
+
+9!:5 (0)
+g0 =. 3 : 0
+]vb y
+)
+9!:5 (2)
+g1 =. 3 : 0
+]vb y
+)
+9!:5 (0)
+
+5 -: g0 ''
+5 -: g1 ''
+5 -: g0 ''
+5 -: g1 ''
+
+vb__ =: @9:
+9 -: g0 ''
+5 -: g1 ''
+
+NB. caching continues over deletion
+vb_z_ =: @7:
+9 -: g0 ''
+5 -: g1 ''
+
+4!:55 <'vb__'
+7 -: g0 ''
+5 -: g1 ''
+
+9!:5 (2)
+g1 =. 3 : 0
+]vb y
+)
+9!:5 (0)
+7 -: g0 ''
+7 -: g1 ''
+
+NB. cached name removed after deletion
+vb__ =: @3:
+9!:5 (2)
+g1 =. 3 : 0
+]vb y
+)
+9!:5 (0)
+3 -: g0 ''
+3 -: g1 ''
+
+4!:55<'vb__'
+7 -: g0 ''
+3 -: g1 ''
+
 
 4!:55 ;:'f0 f1 f2 f3 g0 g1 g2 g3 g4 g5 gvb r test vb__ vb_z_'
 

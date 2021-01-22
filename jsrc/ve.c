@@ -111,14 +111,11 @@ AHDR2(minusIB,I,I,B){I u;I v;I w;I oflo=0;
 
 // II multiply, in double precision.  Always return error code so we can clean up
 AHDR2(tymesII,I,I,I){DPMULDECLS I u;I v;I *zi=z;   // could use a side channel to avoid having main loop look at rc
-// obsolete  if(jt->mulofloloc<0)R EWOVIP+EWOVIPMULII;
  if(n-1==0) DQ(m, u=*x; v=*y; DPMUL(u,v,z, goto oflo;) z++; x++; y++; )
  else if(n-1<0)DQ(m, u=*x; DQC(n, v=*y; DPMUL(u,v,z, goto oflo;) z++; y++;) x++;)
  else      DQ(m, v=*y; DQ(n, u=*x; DPMUL(u,v,z, goto oflo;) z++; x++;) y++;)
-// obsolete  jt->mulofloloc += z-zi;
  R EVOK;
 oflo: *x=u; *y=v; R ~(z-zi);  // back out the last store, in case it's in-place; gcc stores before overflow.  Return complement of overflow offset as special signal
-// obsolete  jt->mulofloloc = ~(jt->mulofloloc + z-zi);R EWOVIP+EWOVIPMULII;
 }
 
 // BI multiply, using clear/copy
@@ -183,15 +180,12 @@ AHDR2(minusBIO,D,B,I){I u; I absn=n^REPSGN(n);
 // We have to track the inputs just as for any other action routine
 I tymesIIO(I n,I m,I* RESTRICTI x,I* RESTRICTI y,D* RESTRICTI z,I skipct){I u,v; I absn=n^REPSGN(n);
  // if all the multiplies are to be skipped, skip them quickly
-// obsolete  I skipct=jt->mulofloloc;
  if(skipct<m*absn){
   // There are unskipped multiplies.  Do them.
   if(n-1==0)  DQ(m, u=*x; v=*y; if(--skipct<0){*z=(D)u * (D)v;} z++; x++; y++; )
   else if(n-1<0)DQ(m, u=*x++; DQC(n, v=*y; if(--skipct<0){*z=(D)u * (D)v;} z++; y++;))
   else DQ(m, v=*y++; DQ(n, u=*x; if(--skipct<0){*z=(D)u * (D)v;} z++; x++;))
  }
-// obsolete  // Store the new skipct
-// obsolete  jt->mulofloloc=skipct;
  R EVOK;
 }
 
@@ -350,7 +344,6 @@ F2(jtintdiv){A z;B b,flr;I an,ar,*as,*av,c,d,j,k,m,n,p,p1,r,*s,wn,wr,*ws,*wv,*zv
  GATV(z,INT,b?an:wn,b?ar:wr,s); zv=AV(z);
  d=wn?*wv:0; p=0<d?d:-d; p1=d==IMIN?p:p-1; flr=XMFLR==jt->xmode;
  if(!wr&&p&&!(p&p1)){
-// obsolete   k=0; j=1; while(p>j){++k; j<<=1;} // 16->4 17->5 32->5
   CTLZI(p-1,k); ++k; k=p==1?0:k;
   switch((0<d?0:2)+(flr?0:1)){
    case 0: DQ(n,          *zv++=*av++>>k;);                    break;

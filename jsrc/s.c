@@ -27,10 +27,6 @@
 // AN(JT(jt,stnum)) size of hashtable in entries (each 1 L*)
 // AK(JT(jt,stnum)) next loc# to allocate
 // AM(JT(jt,stnum)) number of entries in use in table
-// obsolete /* JT(jt,stnum): -1 means free; others are numbers in use                     */
-// obsolete/* jt->stptr:  0 means free; others are symbol tables                      */
-// obsolete/* jt->stused: # entries in stnum/stptr in use                             */
-// obsolete/* jt->stmax:  1 + maximum number extant                                   */
 
 /* named locales:                                                          */
 /* JT(jt,stloc):  locales symbol table                                        */
@@ -38,15 +34,13 @@
 
 #define symcol ((sizeof(L)+SZI-1)/SZI)
 
-B jtsymext(J jt,B b){A x,y;I j,m,n/*obsolete ,s[2]*/,*v,xn,yn;L*u;
- if(b){y=JT(jt,symp); j=allosize(y)+NORMAH*SZI; /* obsolete n=AS(y)[0];*/ yn=AN(y); n=yn/symcol;}  // extract allo size from header (approx)
- else {            j=((I)1)<<12;            /* obsolete n=1;*/      yn=0; n=1;   }  // n is # rows in chain base + old values
+B jtsymext(J jt,B b){A x,y;I j,m,n,*v,xn,yn;L*u;
+ if(b){y=JT(jt,symp); j=allosize(y)+NORMAH*SZI; yn=AN(y); n=yn/symcol;}  // extract allo size from header (approx)
+ else {            j=((I)1)<<12;                  yn=0; n=1;   }  // n is # rows in chain base + old values
  m=j<<1;                              /* new size in bytes           */
  m-=AKXR(0);                  /* less array overhead         */
  m/=symcol*SZI;                             /* new # rows                  */
-// obsolete  s[0]=m; s[1]=symcol;
  xn=m*symcol;          /* new pool array atoms        */
-// obsolete  GATVR(x,INT,xn,2,s); v=AV(x);                 /* new pool array              */
  GATV0(x,INT,xn,0); v=(I*)LAV0(x);                 /* new pool array              */
  if(b)ICPY(v,LAV0(y),yn);                     /* copy old data to new array  */
  memset(v+yn,C0,SZI*(xn-yn));               /* 0 unused area for safety    */
@@ -55,7 +49,6 @@ B jtsymext(J jt,B b){A x,y;I j,m,n/*obsolete ,s[2]*/,*v,xn,yn;L*u;
  if(b)u->next=LAV0(JT(jt,symp))[0].next;              /* push extension onto stack   */
  ((L*)v)[0].next=(LX)n;                           /* new base of free chain               */
  ACINITZAP(x); JT(jt,symp)=x;                           /* preserve new array          */
-// obsolete  LAV0(JT(jt,symp))=LAV0(x);                       /* new array value ptr         */
  if(b)fa(y);                                /* release old array           */
  R 1;
 }    /* 0: initialize (no old array); 1: extend old array */
@@ -73,7 +66,6 @@ L* jtsymnew(J jt,LX*hv, LX tailx){LX j;L*u,*v;
   u->next=t->next;t->next=j|(tailx&SYMNONPERM);  // it's always the end: point to next & prev, and chain from prev.  Everything added here is non-PERMANENT
  }else{
   // appending to head.
-// obsolete   if(u->next=*hv){v=*hv+LAV0(JT(jt,symp));}  // chain old queue to u; if not empty, backchain old head to new one, clear old head flag, scaf
   u->next=*hv;  // chain old queue to u
   *hv=j|(tailx);   // set new head, flagged as NONPERM unless suppressed
  }
@@ -89,7 +81,6 @@ extern void jtsymfreeha(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
   // because when we free a locale it frees its symbols here, and one of them might be a verb that contains a nested SYMB, giving recursion.  It is safe to move sympv to a register because
   // we know there will be no allocations during the free process.
  // loop through each hash chain, clearing the blocks in the chain.  Do not clear chain 0, which holds x/y bucket numbers
-// obsolete  I ortypes=0;
  for(j=SYMLINFOSIZE;j<wn;++j){
   LX *aprev=&wv[j];  // this points to the predecessor of the last block we processed
   // process the chain
@@ -97,10 +88,8 @@ extern void jtsymfreeha(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
    // first, free the PERMANENT values (if any), but not the names
    do{
     if(!SYMNEXTISPERM(k))break;  // we are about to free k.  exit if it is not permanent
-// obsolete     if(!(jtsympv[k].flag&LPERMANENT))break;
     aprev=&jtsympv[k].next;  // save last item we processed here
     if(jtsympv[k].val){
-// obsolete      ortypes|=AT(jtsympv[k].val);
      // if the value was abandoned to an explicit definition, we took usecount 8..1  -> 1 ; revert that.  Can't change an ACPERMANENT!
      // otherwise decrement the usecount
      SYMVALFA(jtsympv[k]);
@@ -116,7 +105,6 @@ extern void jtsymfreeha(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
     do{
      k=SYMNEXT(k);  // remove address flagging
      aprev=&jtsympv[k].next;  // save last item we processed here
-// obsolete      ortypes|=AT(jtsympv[k].val);  // value must exist here, since the block wouldn't be created unless assigned
      fa(jtsympv[k].name);fa(jtsympv[k].val);jtsympv[k].name=0;jtsympv[k].val=0;jtsympv[k].sn=0;jtsympv[k].flag=0;
      k=jtsympv[k].next;
     }while(k);
@@ -125,7 +113,6 @@ extern void jtsymfreeha(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
    }
   }
  }
-// obsolete  if(ortypes&FUNC)++jt->modifiercounter;  // if we encountered an ACV, clear name lookups for next time
 }
 
 static SYMWALK(jtsympoola, I,INT,100,1, 1, *zv++=j;)
@@ -135,7 +122,6 @@ F1(jtsympool){A aa,q,x,y,*yv,z,*zv;I i,n,*u,*xv;L*pv;LX j,*v;
  ASSERT(1==AR(w),EVRANK); 
  ASSERT(!AN(w),EVLENGTH);
  GAT0(z,BOX,3,1); zv=AAV(z);
-// obsolete  n=AS(JT(jt,symp))[0]; pv=LAV0(JT(jt,symp));
  n=AN(JT(jt,symp))/symcol; pv=LAV0(JT(jt,symp));
  GATV0(x,INT,n*5,2); AS(x)[0]=n; AS(x)[1]=5; xv= AV(x); zv[0]=incorp(x);  // box 0: sym info
  GATV0(y,BOX,n,  1);                         yv=AAV(y); zv[1]=incorp(y);  // box 1: 
@@ -478,7 +464,6 @@ B jtredef(J jt,A w,L*v){A f;DC c,d;
   // debug will switch over to the new definition before the next line is executed.
   // Reassignment outside of debug continues executing the old definition
   if(CCOLON==FAV(w)->id){d->dcredef=1;}
-// obsolete jt->redefined=(I)v;  jt->cxspecials=1;
   // Erase any stack entries after the redefined call
   c=jt->sitop; while(c&&DCCALL!=c->dctype){c->dctype=DCJUNK; c=c->dclnk;}
  }
@@ -549,10 +534,6 @@ L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I m,n,wn,wr;L*e;
   // If we are assigning the same data block that's already there, don't bother with changing use counts or anything else (assignment-in-place)
   if(likely(x!=w)){
    if(unlikely(((xt|wt)&(VERB|CONJ|ADV))!=0)){
-// obsolete     // When we assign to, or reassign, a modifier, invalidate all the lookups of modifiers that are extant
-// obsolete     // It's a pity that we have to do this for ALL assignments, even assignments to uv.  If we don't, a reference to a local modifier may get passed in, and
-// obsolete     // it will still be considered valid even though the local names have disappeared.  Maybe we could avoid this if the local namespace has no defined modifiers - but then we'd have to keep up with that...
-// obsolete     ++jt->modifiercounter;
     // If we are assigning a adverb value, check to see if it is nameless, and mark the value if it is
     if(unlikely((wt&ADV)!=0))AT(w)=wt|(I)nameless(w)<<NAMELESSMODX;
    }
@@ -560,15 +541,11 @@ L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I m,n,wn,wr;L*e;
    // This realizes any virtual value, and makes the usecount recursive if the type is recursible
    // If the value is abandoned inplaceable, we can just zap it, set its usecount to 1, and make it recursive if not already
    // We do this only for final assignment, because we are creating a name that would then need to be put onto the NVR stack for protection if the sentence continued
-#if 1  // obsolete
    rifv(w); // must realize any virtual
    if(likely((SGNIF((I)jtinplace,JTFINALASGNX)&AC(w)&(-(wt&NOUN)))<0)){  // if final assignment to abandoned noun
     *AZAPLOC(w)=0; ACRESET(w,ACUC1) if(unlikely(((wt^AFLAG(w))&RECURSIBLE)!=0)){AFLAGORLOCAL(w,wt&RECURSIBLE) jtra(w,wt);}  // zap it, make it non-abandoned, make it recursive (incr children if was nonrecursive).  This is like raczap(1)
       // NOTE: NJA can't zap either, but it never has AC<0
    }else ra(w);  // if zap not allowed, just ra() the whole thing
-#else
-   rifv(w); ra(w);
-#endif
    // If this is a reassignment, we need to decrement the use count in the old name, since that value is no longer used.
    // But if the value of the name is 'out there' in the sentence (coming from an earlier reference), we'd better not delete
    // that value until its last use.
@@ -626,15 +603,4 @@ L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I m,n,wn,wr;L*e;
 L* jtsymbisdel(J jt,A a,A w,A g){
  // All we have to do is mark the assignment as final.  That prevents any additions to the NVR stack.
  R jtsymbis((J)((I)jt|JTFINALASGN),a,w,g);
-// obsolete  ARGCHK3(a,w,g);
-// obsolete  I nvrtop=jt->parserstackframe.nvrtop;   // save stack before deletion
-// obsolete  L *ret=symbis(a,w,g);  // perform assignment
-// obsolete  I currtop=jt->parserstackframe.nvrtop;
-// obsolete  while(currtop>nvrtop){  // the only new blocks must be ones that were newly added to the nvr stack by symbis
-// obsolete   --currtop;  // index points to OPEN slot; back up to slot to free
-// obsolete   A delval=AAV1(jt->nvra)[currtop];  // block that has been deferred-freed
-// obsolete   AFLAG(delval) &= ~(AFNVR|AFNVRUNFREED); fa(delval);  // in case the block survives, indicate that it is off the stack now; then reduce usecount
-// obsolete  }
-// obsolete  jt->parserstackframe.nvrtop=(US)nvrtop;  // remove additions to nvr stack
-// obsolete  R ret;
 }

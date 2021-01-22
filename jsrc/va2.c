@@ -478,7 +478,6 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
    // Here for the fast and important case, where the arguments are both B01/INT/FL
    VA *vainfo=(VA*)FAV(self)->localuse.lvp[0];  // extract table line from the primitive
    // The index into va is atype*3 + wtype, calculated sneakily.  We test here to avoid the call overhead
-// obsolete    jt->mulofloloc = 0;  // Reinit multiplier-overflow count, in case we hit overflow.  Needed only on integer multiply, but there's no better place
    aadocv=&vainfo->p2[(at>>(INTX-1))+((at+wt)>>INTX)];
   }else{
 
@@ -757,7 +756,6 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
      // n is the number of times the inner-loop atom is repeated for each outer loop: n=1 means no inner loop needed; n>1 means each atom of y is repeated n times; n<0 means each atom of x is repeated ~n times.  n*m cannot=0. 
     I i=mf; I jj=nf;
     lp000: {I lrc=((AHDR2FN*)aadocv->f)(n,m,av,wv,zv,jt);    // run one section
-// obsolete  rc=lrc<rc?lrc:rc;
      if(unlikely(lrc!=EVOK)){
       // section did not complete normally.
       if(unlikely(lrc<0)){mulofloloc=(mf-i)*m*(n^REPSGN(n))+~lrc; rc=EWOVIP+EWOVIPMULII; goto lp000e;}  // integer multiply overflow.  ~lrc is index of failing location; create global failure index.  Abort the computation to retry
@@ -783,7 +781,6 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
     // Set up pointers etc for the overflow handling.  Set b=1 if w is taken for the x argument to repair
     if(rc==EWOVIP+EWOVIPMULII){D *zzvd=(D*)zzv; I *zvi=IAV(z);
      // Multiply repair.  We have to convert all the pre-overflow results to float, and then finish the multiplies
-// obsolete      jt->mulofloloc = ~jt->mulofloloc;  // make length positive
      DQ(mulofloloc, *zzvd++=(D)*zvi++;);  // convert the multiply results to float.  mulofloloc is known negative, and must be complemented
      // Now repeat the processing.  Unlike with add/subtract overflow, we have to match up all the argument atoms
      {C *av=CAV(a); C *wv=CAV(w);
@@ -801,7 +798,6 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
       }
 #endif
      }
-// obsolete     jt->mulofloloc=0;  // reinit for next time
     } else {   // not multiply repair, but something else to do inplace
      adocv.f = repairip[(rc-EWOVIP)&3];   // fetch ep from table
      I nipw = ((z!=w) & (rc-EWOVIP)) ^ (((rc-EWOVIP)>>2) & 1);  // nipw from z!=w if bits2,0==01; 1 if 10; 0 if 00
@@ -1094,109 +1090,6 @@ DF2(jtsumattymes1){
  RETF(z);
 }
 
-#if 0 // obsolete
-static A jtsumattymes(J jt, A a, A w, I b, I t, I m, I n, I nn, I r, I *s, I zn){A z;
- ARGCHK2(a,w);
- switch(UNSAFE(t)){
- case B01:  // the aligned cases are handled elsewhere, a word at a time
-  {B*av=BAV(a),u,*wv=BAV(w);I*zu,*zv;
-   GATV(z,INT,zn,r-1,1+s); zu=AV(z);
-   if(1==n){
-             zv=zu; DQ(m,                     *zv++ =*av++**wv++;);
-    DQ(nn-1, zv=zu; DQ(m,                     *zv+++=*av++**wv++;););
-   }else{if(!b){B* tv=av; av=wv; wv=tv;}
-             zv=zu; DQ(m, u=*av++;      DQ(n, *zv++ =u**wv++;););
-    DQ(nn-1, zv=zu; DQ(m, u=*av++; if(u)DQ(n, *zv+++=u**wv++;) else wv+=n;););
-   }
-  }
-  break;
-#if !SY_64
- case INT:
-  {D u,*zu,*zv;I*av=AV(a),*wv=AV(w);
-   GATV(z,FL,zn,r-1,1+s); zu=DAV(z);
-   if(1==n){
-             zv=zu; DQ(m,                        *zv++ =*av++*(D)*wv++;);
-    DQ(nn-1, zv=zu; DQ(m,                        *zv+++=*av++*(D)*wv++;););
-   }else{if(!b){I *tv=av; av=wv; wv=tv;}
-             zv=zu; DQ(m, u=(D)*av++;      DQ(n, *zv++ =u**wv++;););
-    DQ(nn-1, zv=zu; DQ(m, u=(D)*av++; if(u)DQ(n, *zv+++=u**wv++;) else wv+=n;););
-   }
-   RZ(z=icvt(z));
-  }
-  break;
-#endif
- case FL:   
-  {D*av=DAV(a),u,v,*wv=DAV(w),*zu,*zv;
-   GATV(z,FL,zn,r-1,1+s); zu=DAV(z);
-   NAN0;
-   // First, try without testing for 0*_ .  If we hit it, it will raise NAN
-   if(1==n){
-             zv=zu; DQ(m, u=*av++;            v=*wv++; *zv++ =u*v; );
-    DQ(nn-1, zv=zu; DQ(m, u=*av++;            v=*wv++; *zv+++=u*v; ););
-   }else{if(!b){zv=av; av=wv; wv=zv;}
-             zv=zu; DQ(m, u=*av++; DQ(n, v=*wv++; *zv++ =u*v;););
-    DQ(nn-1, zv=zu; DQ(m, u=*av++; DQ(n, v=*wv++; *zv+++=u*v;)););
-   }
-   if(NANTEST){av-=m*nn;wv-=m*nn*n; // try again, testing for 0*_
-    NAN0;
-    if(1==n){
-              zv=zu; DQ(m, u=*av++;            v=*wv++; *zv++ =u&&v?dmul2(u,v):0;  );
-     DQ(nn-1, zv=zu; DQ(m, u=*av++;            v=*wv++; *zv+++=u&&v?dmul2(u,v):0;  ););
-    }else{   // don't swap again
-              zv=zu; DQ(m, u=*av++;      DQ(n, v=*wv++; *zv++ =u&&v?dmul2(u,v):0;););
-     DQ(nn-1, zv=zu; DQ(m, u=*av++; if(u)DQ(n, v=*wv++; *zv+++=   v?dmul2(u,v):0;) else wv+=n;););
-    }
-    NAN1;
-   }
-  }
- }
- RETF(z);
-}    /* a +/@:* w for non-scalar a and w */
-
-
-#define SUMBFLOOPW(BF)     \
- {DO(q, memset(tv,C0,p); DO(255, DO(dw,tv[i]+=BF(*u,*v); ++u; ++v;);); DO(zn,zv[i]+=tu[i];));  \
-        memset(tv,C0,p); DO(r,   DO(dw,tv[i]+=BF(*u,*v); ++u; ++v;);); DO(zn,zv[i]+=tu[i];) ;  \
- }
-#define SUMBFLOOPX(BF)     \
- {DO(q, memset(tv,C0,p); DO(255, DO(dw,tv[i]+=BF(*u,*v); ++u; ++v;);                           \
-                               av+=zn; u=(UI*)av; wv+=zn; v=(UI*)wv;); DO(zn,zv[i]+=tu[i];));  \
-        memset(tv,C0,p); DO(r,   DO(dw,tv[i]+=BF(*u,*v); ++u; ++v;);                           \
-                               av+=zn; u=(UI*)av; wv+=zn; v=(UI*)wv;); DO(zn,zv[i]+=tu[i];) ;  \
- }
-#if SY_ALIGN
-#define SUMBFLOOP(BF)   SUMBFLOOPW(BF)
-#else
-#define SUMBFLOOP(BF)   if(zn%SZI)SUMBFLOOPX(BF) else SUMBFLOOPW(BF)
-#endif
-
-static A jtsumatgbool(J jt,A a,A w,C id){A t,z;B* RESTRICTI av,* RESTRICTI wv;I dw,n,p,q,r,*s,zn,* RESTRICT zv;UC* RESTRICT tu;UI* RESTRICTI tv,*u,*v;
- ARGCHK2(a,w);
- s=AS(w); n=*s;
- zn=AN(w)/n; dw=(zn+SZI-1)>>LGSZI; p=dw*SZI;
- q=n/255; r=n%255;
- GATV(z,INT,zn,AR(w)-1,1+s); zv=AV(z); memset(zv,C0,zn*SZI);
- GATV0(t,INT,dw,1); tu=UAV(t); tv=(UI*)tu;
- av=BAV(a); u=(UI*)av; 
- wv=BAV(w); v=(UI*)wv;
- switch(id){
-  case CMIN: 
-  case CSTAR: 
-  case CSTARDOT: SUMBFLOOP(AND ); break;
-  case CMAX:
-  case CPLUSDOT: SUMBFLOOP(OR  ); break;
-  case CEQ:      SUMBFLOOP(EQ  ); break;
-  case CNE:      SUMBFLOOP(NE  ); break;
-  case CSTARCO:  SUMBFLOOP(NAND); break;
-  case CPLUSCO:  SUMBFLOOP(NOR ); break;
-  case CLT:      SUMBFLOOP(LT  ); break;
-  case CLE:      SUMBFLOOP(LE  ); break;
-  case CGT:      SUMBFLOOP(GT  ); break;
-  case CGE:      SUMBFLOOP(GE  ); break;
- }
- RETF(z);
-}    /* a +/@:g w  for boolean a,w where a-:&(* /@$)w; see also plusinsB */
-#endif
 
 // f/@:g when f and g are atomic.  If the args are big and not inplace it pays to execute one cell of g at a time to save cache footprint
 DF2(jtfslashatg){A fs,gs,y,z;B b;C*av,*wv;I ak,an,ar,*as,at,m,
@@ -1210,30 +1103,12 @@ DF2(jtfslashatg){A fs,gs,y,z;B b;C*av,*wv;I ak,an,ar,*as,at,m,
  rs=MAX(1,rs); PROD(m,rs-1,s+1); PROD(n,r-rs,s+rs); zn=m*n;   // zn=#atoms in _1-cell of longer arg = #atoms in result; m=#atoms in _1-cell of shorter arg  n=#times to repeat shorter arg  (*/ surplus longer shape)
    // if the short-frame arg is an atom, move its rank to 1 so we get the lengths of the _1-cells of the replicated arguments
  // look for cases that we should NOT handle with special code: empty arg; less than 4 result items of g (we would allocate 3 here); too few items in result (the internal call overhead is high then) 
-// obsolete  if(SPARSE&(at|wt)||!an||!wn||2>nn){ R df1(z,df2(y,a,w,gs),fs);}  // if sparse or empty, or just 1 item, do it the old-fashioned way
-// obsolete  if(unlikely((((SPARSE&(at|wt))-1)&-an&-wn&(3-nn)&(3-zn))>=0)){ R df1(z,df2(y,a,w,gs),fs);}  // if sparse or empty, or just 1 item, do it the old-fashioned way
  if(unlikely((((SPARSE&(at|wt))-1)&-an&-wn&(3-nn)&(3-zn))>=0)){R (isfork?jtcork2:jtupon2cell)(jtinplace,a,w,self);}  // if sparse or empty, or just 1 item, do it the old-fashioned way
  y=FAV(fs)->fgh[0];  // look at f/
-// obsolete  c=ID(y); d=ID(gs);  // c is id of f, d is id of g
-// obsolete  if(c==CPLUS){
-// obsolete   // +/@:g is special if args are boolean, length is integral number of I, and g is boolean or *
-// obsolete   if((((at&wt&(n==1))>(zn&(SZI-1)))||!SY_ALIGN)){   //  relies on B01==1
-// obsolete #define sumbfvalues(w) CCM(w,CGE)+CCM(w,CLE)+CCM(w,CGT)+CCM(w,CLT)+CCM(w,CPLUSCO)+CCM(w,CSTARCO)+CCM(w,CNE)+CCM(w,CEQ)+ \
-// obsolete  CCM(w,CSTARDOT)+CCM(w,CPLUSDOT)+CCM(w,CMIN)+CCM(w,CMAX)+CCM(w,CSTAR)
-// obsolete    CCMWDS(sumbf) CCMCAND(sumbf,cand,d) if(CCMTST(cand,d))R sumatgbool(a,w,d);   // quickly handle verbs that have primitive inverses
-// obsolete   }
-// obsolete   if(d==CSTAR){
-// obsolete    if(!ar||!wr){  // if either argument is atomic, apply the distributive property to save multiplies
-// obsolete     A z0; z=!ar?tymes(a,df1(z0,w,fs)):tymes(w,df1(z0,a,fs));
-// obsolete     if(jt->jerr==EVNAN)RESETERR else R z;
-// obsolete    }else if(TYPESEQ(at,wt)&&at&B01+FL+(INT*!SY_64))R jtsumattymes(jt,a,w,b,at,m,n,nn,r,s,zn);  // +/@:*
-// obsolete   }
-// obsolete  }
  adocv=var(gs,at,wt); ASSERT(adocv.f,EVDOMAIN); yt=rtype(adocv.cv ); t=atype(adocv.cv);  // get type info on g
  adocvf=var(y,yt,yt); ASSERT(adocvf.f,EVDOMAIN); zt=rtype(adocvf.cv);   // get type info on f/
  // Also, don't use special code if g is inplaceable.  There's no gain then, because f/ is always inplaceable.  The gain comes when g can be split into small pieces with small overall cache footprint
  if(((JTINPLACEA*((r==ar)&SGNTO0(AC(a)))+((r==wr)&SGNTO0(AC(w))))&(I)jtinplace&(adocv.cv>>VIPOKWX)))R (isfork?jtcork2:jtupon2cell)(jtinplace,a,w,self);  // if inplaceable, revert
-// obsolete  sb=yt&(c==CPLUS);  // +/@:g where g produces Boolean.
  if(unlikely(!TYPESEQ(yt,zt)))R (isfork?jtcork2:jtupon2cell)(jtinplace,a,w,self);  // if the result of f (which feeds through f/) isn't the same type as the result of g, revert
  if(t){  // convert args if needed
   if(TYPESNE(t,at))RZ(a=cvt(t|(adocv.cv&VARGCVTMSKF),a));
@@ -1243,17 +1118,6 @@ DF2(jtfslashatg){A fs,gs,y,z;B b;C*av,*wv;I ak,an,ar,*as,at,m,
  GA(y,yt,zn,1,0);  // allocate one item for result of g
  GA(z,zt,zn,r-1,1+s);  // allocate main output area for final result from f/
  n^=-b; n=(n==~1)?1:n;  // encode b flag in sign of n
-// obsolete  if(sb){A t;I j,tn,*zv;UC*tc;UI*ti,*yv;  /* +/@:g for boolean-valued g */
-// obsolete   av=CAV(a); wv=CAV(w); yv=(UI*)AV(y); zv=AV(z); memset(zv,C0,zn*SZI);
-// obsolete   tn=(zn+SZI-1)>>LGSZI; GATV0(t,INT,tn,1); tc=UAV(t); ti=(UI*)tc;
-// obsolete   // Run g in batches of up to 255, accumulating the result bytewise.  NOTE: there may be garbage at the end of yv, but because
-// obsolete   // we are supporting littleendian only, it will not affect the result
-// obsolete   for(j=nn;0<j;j-=255/C_LE){
-// obsolete    memset(ti,C0,tn*SZI); 
-// obsolete    DO(MIN(j,255), ((AHDR2FN*)adocv.f)(n,m,av,wv,yv,jt); av+=ak; wv+=wk; DO(tn,ti[i]+=yv[i];););
-// obsolete    DO(zn, zv[i]+=tc[i];);
-// obsolete   }
-// obsolete  }else{
  A z1;B p=0;C*yv,*zu,*zv;  // general f/@:g for atomic f,g.  Do not run g on entire y; instead run one cell at a time
  av=CAV(a)+ak*(nn-1); wv=CAV(w)+wk*(nn-1); yv=CAV(y); zv=CAV(z);  // input and output pointers.  We process cells from back to front
  if(likely((adocvf.cv&VIPOKW)!=0)){
@@ -1270,7 +1134,6 @@ DF2(jtfslashatg){A fs,gs,y,z;B b;C*av,*wv;I ak,an,ar,*as,at,m,
  DQ(nn-1, av-=ak; wv-=wk; I lrc; lrc=((AHDR2FN*)adocv.f)(n,m,av,wv,yv,jt); lrc=lrc<0?EWOVIP+EWOVIPMULII:lrc; rc=lrc<rc?lrc:rc;
     lrc=((AHDR2FN*)adocvf.f)((I)1,zn,yv,zv,zu,jt); lrc=lrc<0?EWOVIP+EWOVIPMULII:lrc; rc=lrc<rc?lrc:rc; {C* ztemp=zu; zu=zv; zv=ztemp;});  // p==1 means result goes to ping buffer zv
  if(NEVM<(rc&255)){z=(isfork?jtcork2:jtupon2cell)(jtinplace,a,w,self);}else{if(rc&255)jsignal(rc);}  // if overflow, revert to old-fashioned way.  If p points to ping, prev result went to pong, make pong the result
-// obsolete  }
  RE(0); RETF(z);
 }    /* a f/@:g w where f and g are atomic*/
 
@@ -1373,7 +1236,6 @@ VA2 jtvar(J jt,A self,I at,I wt){I t;
   if(!((t=(at|wt))&(NOUN&~(B01|INT|FL)))){
    // Here for the fast and important case, where the arguments are both B01/INT/FL
    // The index into va is atype*3 + wtype, calculated sneakily
-// obsolete    jt->mulofloloc = 0;  // Reinit multiplier-overflow count, in case we hit overflow
    R vainfo->p2[(at>>(INTX-1))+((at+wt)>>INTX)];
   }else if(!(t&(NOUN&~NUMERIC))) {
    // Here one of the arguments is CMPX/RAT/XNUM  (we don't support XD and XZ yet)

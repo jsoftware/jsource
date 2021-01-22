@@ -550,7 +550,6 @@ F2(jtfetch){A*av, z;I n;F2PREFIP;
    PRISTCLRF(w)
    RETF(z);   // turn off inplace if w not inplaceable, or jt not inplaceable.
   }
-// obsolete   RZ(a=box(a));  // if not special case, box any unboxed a
   RZ(a=jtbox(JTIPAtoW,a));  // if not special case, box any unboxed a
  }
  n=AN(a); av=AAV(a); 

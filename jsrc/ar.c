@@ -12,15 +12,6 @@
 static DF1(jtreduce);
 
 
-// obsolete #define PARITY2         u=(B*)&s; b=0; b^=*u++; b^=*u++;
-// obsolete #define PARITY4         u=(B*)&s; b=0; b^=*u++; b^=*u++; b^=*u++; b^=*u++; 
-// obsolete #define PARITY8         u=(B*)&s; b=0; b^=*u++; b^=*u++; b^=*u++; b^=*u++; b^=*u++; b^=*u++; b^=*u++; b^=*u++;
-// obsolete 
-// obsolete #if SY_64
-// obsolete #define PARITYW         PARITY8
-// obsolete #else
-// obsolete #define PARITYW         PARITY4
-// obsolete #endif  
 #define PARITYW(s) (s=BW>32?s^s>>32:s, s^=s>>16, s^=s>>8)  // parity of a word full of Bs.  Upper bits are garbage
 
 #if 0&&SY_ALIGN
@@ -142,7 +133,6 @@ REDUCEBFX(nandinsB, NAND,INAND,SNAND,BNAND,{DQ(m, B *y=memchr(x,C0,n); d=y?y-x:n
 
 
 #if SY_ALIGN
-// obsolete REDUCEPFX(plusinsB,I,B,PLUS, plusBB, plusBI)
 AHDRR(plusinsB,I,B){
  if(d==1){
   // adding individual booleans  Go a word at a time, with 4 accumulators, up to 255 turns each
@@ -549,7 +539,6 @@ static DF1(jtreducesp){A a,g,z;B b;I f,n,r,*v,wn,wr,*ws,wt,zt;P*wp;
                          btab[C_LE?  1:256]=F(1,0); \
                          btab[257                      ]=F(1,1); \
                         }
-// obsolete #define BR2CASE(t,id)   ((id)+256*(t))
 #define BR2CASE(t,id)   (((id)*7)+((0x160008>>(t))&7))  // unique inputs are 0 1 2 3 16 17 18-> 0 4 2 1 6 3 5    10110 .... .... .... 1000
 // handle reduction along final axis of length 2.  Return result block if we can handle the combination, otherwise 1; or 0 if we hit an error
 static A jtreduce2(J jt,A w,C id,I f,I r){A z=(A)1;B b=0,btab[258],*zv;I c,d,m,wn,wr,*ws,*wv;
@@ -595,8 +584,6 @@ static A jtreduce2(J jt,A w,C id,I f,I r){A z=(A)1;B b=0,btab[258],*zv;I c,d,m,w
   case BR2CASE(FLX, CNE     ): BR2PFX(D,TNE); break;
  }
  if(b){S*u=(S*)wv; GATV(z,B01,wn>>1,wr-1,ws); zv=BAV(z); DQ(m, *zv++=btab[*u++];);}
-// obsolete  if(z&&1<r){I*u=f+AS(z),*v=f+1+ws; DQ(r-1, *u++=*v++;);}
-// obsolete  *zz=z;
  R z;
 }    /* f/"r for dense w over an axis of length 2; boolean results only */
 

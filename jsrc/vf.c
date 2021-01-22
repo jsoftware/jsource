@@ -47,19 +47,6 @@ void jtfillv(J jt,I t,I n,C*v){
   mvc(n<<k,v,2LL<<(((SY_64?0xea40:0x9540)>>(fillaction<<1))&3),&fillvalues[(fillaction>>1)-1]);  // lg2(len)-1 is (7) 3 2 2 2 1 0 x x (0)  1110 1010 0100 0000 = ea40   index in fillvalues=2 2 1 1 0 0 x x
                                                                                                     // 32 bit         2 1 1 1 1 0 x x      1001 0101 0100 0000 = 9540
  }
-#if 0 // obsolete 
- A afill;
- switch(CTTZ(t)){
- case B01X: case BITX: case INTX: case FLX: case CMPXX: case XDX: case XZX: case SB01X: case SFLX: case SCMPXX: case SBTX:
- case LITX: // obsolete memset(v,' ',n); break;
-  memset(v,(t&LIT)<<(5-LITX),n<<k); break;  // use SP (0x20) for LIT, 0 for others
- case RATX: mvc(n<<k,v,1LL<<k,&fillvalues[2]); break;
- case XNUMX: afill=iv0; mvc(n<<k,v,1LL<<k,&afill); break;
- case C2TX: // obsolete  {US x=32; mvc(n<<k,v,1LL<<k,&x); break;}
- case C4TX: {C4 x=32; mvc(n<<k,v,1LL<<k,&x); break;}
- default: afill=mtv; mvc(n<<k,v,1LL<<k,&afill); break;  // must be box, uee a:
- }
-#endif
 }
 
 

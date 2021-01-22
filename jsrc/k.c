@@ -347,12 +347,6 @@ B jtccvt(J jt,I tflagged,A w,A*y){F1PREFIP;A d;I n,r,*s,wt; void *wv,*yv;I t=tfl
    case CVCASECHAR(C2TX, C4TX): R C2fromC4(w, yv);
    case CVCASECHAR(C4TX, LITX): R C4fromC1(w, yv);
    case CVCASECHAR(C4TX, C2TX): R C4fromC2(w, yv);
-#if 0  // obsolete
-   case CVCASECHAR(BITX, B01X): R cvt2bit(w, yv);
-   case CVCASECHAR(BITX, INTX): R cvt2bit(w, yv);
-   case CVCASECHAR(BITX, FLX): R cvt2bit(w, yv);
-   case CVCASECHAR(BITX, CMPXX): GATV(d, FL, n, r, s); if(!(DfromZ(w, AV(d))))R 0; R cvt2bit(d, yv);
-#endif
    default:                ASSERT(0, EVDOMAIN);
   }
  }
@@ -394,9 +388,7 @@ B jtccvt(J jt,I tflagged,A w,A*y){F1PREFIP;A d;I n,r,*s,wt; void *wv,*yv;I t=tfl
 
 // clear rank before calling ccvt - needed for sparse arrays only but returns the block as the result
 A jtcvt(J jt,I t,A w){A y;B b; 
-// obsolete  RANK2T oqr=jt->ranks; RESETRANK; 
  b=ccvt(t,w,&y);
-// obsolete jt->ranks=oqr;
  ASSERT(b!=0,EVDOMAIN);
  R y;
 }
@@ -406,12 +398,7 @@ A jtcvt(J jt,I t,A w){A y;B b;
 // If mode bit 1 is set, minimum precision is INT; if mode bit 2 is set, minimum precision is FL; if mode bit 3 is set, minimum precision is CMPX 
 // Result is a new buffer, always
 A jtbcvt(J jt,C mode,A w){FPREFIP(J); A y,z=w;
-// obsolete D ofuzz;
  ARGCHK1(w);
-// obsolete  ofuzz=FUZZ;
-// obsolete  RANK2T oqr=jt->ranks;  // save status for comparison, and ranks in case sparse needs them (should let sparse do the saving)
-// obsolete  FUZZ=0;
-// obsolete  RESETRANK;
 #ifdef NANFLAG
  // there may be values (especially b types) that were nominally CMPX but might actually be integers.  Those were
  // stored with the real part being the actual integer value and the imaginary part as the special 'flag' value.  We
@@ -444,8 +431,6 @@ A jtbcvt(J jt,C mode,A w){FPREFIP(J); A y,z=w;
     (y=w,AT(w)&INT||(!(mode&12)&&jtccvt(jtinplace,INT,w,&y)))?y:
     (y=w,AT(w)&FL||(!(mode&8)&&jtccvt(jtinplace,FL,w,&y)))?y:w;  // convert to enabled modes one by one, stopping when one works
  }
-// obsolete  FUZZ=ofuzz;
-// obsolete  jt->ranks=oqr;
  RNE(z);
 }    /* convert to lowest type. 0=mode: don't convert XNUM/RAT to other types */
 

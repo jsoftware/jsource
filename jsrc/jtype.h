@@ -431,16 +431,6 @@ typedef I SI;
 // Note: arithmetic dyads on bytes have similar issues, because the 8-byte-at-a-time operations may execute outside the cell of the array.  We detect
 // those cases inside the atomic-dyad code in va2.c.
 #define TYPEVIPOK       (FL+CMPX+SBT+(SZI==SZD?INT:0))
-#if 0 // obsolete 
-// NOUNSAFE flag
-// scaf expunge all the following
-#define SAFE(x)         (x)    // type, current block and descendants safe from tstack
-#define SAFED(x)        (x)    // type, descendants safe from tstack
-#define SAFE0(x)        (x)    // type, current block safe from tstack
-#define UNSAFE(x)       (x)   // type, not safe from tstack
-#define UNSAFED(x)      (x)   // type, descendants not safe from tstack
-#define UNSAFE0(x)      (x)   // type, not safe from tstack
-#endif
 #define TYPESEQ(x,y)    ((x)==(y))  // types are equal
 #define TYPESXOR(x,y)    ((x)^(y))  // types are not equal using full-word logical
 #define TYPESNE(x,y)    ((x)!=(y))  // types are not equal

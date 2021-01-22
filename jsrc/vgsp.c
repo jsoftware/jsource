@@ -77,7 +77,6 @@ static A jtgrd1spss(J jt,A w,I wf,I wcr){F1PREFJT;A c,d,t,x,y,z;I cn,*cv,*dv,i,n
  x=SPA(wp,x); spblok.sxv=CAV(x);   spblok.sxc=aii(x)*(wt&SCMPX?2:1);
  spblok.swf=wf;
  sortblok.sp=&spblok;  // chain sparse parms to main sortblok
-// obsolete  spblok.=(CMP)(wt&SB01?compspssB:wt&SINT?compspssI:wt&SFL?compspssD:compspssZ); spblok.usejt=1;
  RZ(spsscell(w,wf,wcr,&c,&t));
  tv=AV(t); cv=AV(c); cn=AN(c); 
  GATV0(x,INT,2+n,1);   xv=AV(x);  /* work area for msmerge() */
@@ -134,7 +133,6 @@ static A jtgrd1spds(J jt,A w,I wf,I wcr){F1PREFJT;A c,t,x,y,z;I*cv,m,n,n1,p,*tv,
  y=SPA(wp,i); spblok.syv=yv=AV(y); spblok.syc=yc=AS(y)[1]; 
  x=SPA(wp,x); spblok.sxv=CAV(x);   spblok.sxc=p=aii(x)*(wt&SCMPX?2:1);
  sortblok.n=p/m;
-// obsolete  spblok.=(CMP)(wt&SB01?compspdsB:wt&SINT?compspdsI:wt&SFL?compspdsD:compspdsZ); spblok.usejt=1;
  spblok.swf=wf;
  sortblok.sp=&spblok;  // chain sparse parms to main sortblok
  RZ(spdscell(w,wf,wcr,&c,&t));
@@ -215,7 +213,6 @@ static A jtgrd2spss(J jt,A w,I wf,I wcr){F1PREFJT;A c,t,x,y,z,zy;
  x=SPA(wp,x); spblok.sxv=CAV(x);   spblok.sxc=aii(x)*(wt&SCMPX?2:1);
  spblok.swf=wf;
  sortblok.sp=&spblok;  // chain sparse parms to main sortblok
-// obsolete spblok.=(CMP)(wt&SB01?compspssB:wt&SINT?compspssI:wt&SFL?compspssD:compspssZ); spblok.usejt=1;
  RZ(spsscell(w,wf,wcr,&c,&t));
  tv=AV(t); cv=AV(c); cn=AN(c);
  m=0; j=1; DQ(cn, m=MAX(m,cv[j]); j+=2;);
@@ -253,7 +250,6 @@ F2(jtgrd2sp){F1PREFJT;PROLOG(0078);A z;B b,c,*wb;I acr,af,am,ar,*as,j,m,wcr,wf,w
  DQ(wcr, --j; if(wb[j])b=1; else if(b){c=1; wb[j]=1;});
  if(c){b=a==w; RZ(w=reaxis(ifb(wr,wb),w)); if(b)a=w;}
  switch((2*wb[0]+wb[wf])*(a==w&&af==wf&&acr==wcr)){
-// obsolete  default: z=irs2(IRS1(w,0L,wcr,jt->workareas.compare.complt<0?jtgrade1:jtdgrade1,z),a,VFLAGNONE, RMAX,acr,jtfrom); break;
   default: z=irs2(IRS1(w,0L,wcr,(I)jtinplace&JTDESCEND?jtdgrade1:jtgrade1,z),a,VFLAGNONE, RMAX,acr,jtfrom); break;
   case 2: /* sparse dense  */ z=grd2spsd(w,wf,wcr); break;
   case 3: /* sparse sparse */ z=grd2spss(w,wf,wcr); break;

@@ -326,7 +326,6 @@ AF jtatcompf(J jt,A a,A w,A self){I m;
   if((AT(a)&AT(w)&(LIT+C2T+C4T+SBT))){R (AF)((I)(AT(a)&LIT?atcompC:AT(a)&C2T?atcompUS:AT(a)&C4T?atcompC4:atcompSB)[6*search+comp]+postflags);}
   R 0;
  }else{  // E. (6) or e. (7)
-// obsolete   jt->workareas.compsc.postflags=0;
   if((AR(a)|AR(w))>1){if(!(m&1)||AR(a)>(AR(w)?AR(w):1))R0;}  // some rank > 1, fail if E. or e. returns rank>1
   if(((m&1)|(AN(a)-1))==0)R 0;  // E. when a is a singleton - no need for the full E. treatment
   R atcompX[((m>>2)&~1)+(m&1)];  // choose i.-family routine; postflags are 0

@@ -91,7 +91,6 @@ static DF2(jtfolkcomp){F2PREFIP;DECLFGH;PROLOG(0034);A z;AF f;
  I postflags=(I)f&3;  // extract postprocessing from return
  f=(AF)((I)f&-4);    // restore function address
  if(f){
-// obsolete   I postflags=jt->workareas.compsc.postflags;
   z=f(jt,a,w,self);
   if(z){if(postflags&2){z=num((IAV(z)[0]!=AN(AR(a)>=AR(w)?a:w))^(postflags&1));}}
  }else if(cap(fs))CAP2 else FOLK2;
@@ -105,7 +104,6 @@ static DF2(jtfolkcomp0){F2PREFIP;DECLFGH;PROLOG(0035);A z;AF f;
  I postflags=(I)f&3;  // extract postprocessing from return
  f=(AF)((I)f&-4);    // restore function address
  if(f){
-// obsolete   I postflags=jt->workareas.compsc.postflags;
   z=f(jt,a,w,self);
   if(z){if(postflags&2){z=num((IAV(z)[0]!=AN(AR(a)>=AR(w)?a:w))^(postflags&1));}}
  }else if(cap(fs))CAP2 else FOLK2;

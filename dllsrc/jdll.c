@@ -43,7 +43,6 @@ C* esub(JS jt, long ec);
 extern int uniflag;
 #endif
 
-// obsolete I jdo(J, C*);
 
 #define MAXRANK	60
 
@@ -816,7 +815,6 @@ CDPROC int _stdcall JFree(JS jt)
 {
 	if(!jt) return 0;
  SETJTJM(jt,jt,jm)
-// obsolete 	if(JT(jt,xep)&&AN(JT(jt,xep))){A *old=jm->tnextpushp; jtimmex(jm,JT(jt,xep)); fajt(jm,JT(jt,xep)); JT(jt,xep)=0; jm->jerr=0; jm->etxn=0; tpop(old); }  // force typeout
 	if(JT(jt,xep)&&AN(JT(jt,xep))){jtimmex(jm,JT(jt,xep));}  // If there is an exit sentence, run it & force typeout.  No need to tidy up since the heap is going away
 #if !SY_WINCE
 	dllquit(jm);  // clean up call dll

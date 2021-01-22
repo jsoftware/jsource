@@ -198,7 +198,6 @@ F2(jtover){AD * RESTRICT z;C*zv;I replct,framect,acr,af,ar,*as,k,ma,mw,p,q,r,t,w
    // see if the shapes agree up to the shape of an item of the longer argument
    I mismatch=0; I cr=lr-1; cr=cr<0?0:cr;
    TESTDISAGREE(mismatch,as+ar-cr,ws+wr-cr,cr)  // compare the tail of the shapes, for the length of an item of the longer shape
-// obsolete    I *ase=as+ar-1, *wse=ws+wr-1; DQ(lr-1, mismatch|=*ase--^*wse--;);
    if(likely(!mismatch)){
     // The data can be copied in toto, with only the number of items changing.
     A s=(A)((I)a+(I)w-(I)l);  // arg with short shape
@@ -223,7 +222,6 @@ F2(jtover){AD * RESTRICT z;C*zv;I replct,framect,acr,af,ar,*as,k,ma,mw,p,q,r,t,w
     // If a and w are the same, we mustn't mark the result pristine!  It has repetitions
     if(unlikely((aflg&AFVIRTUAL)!=0)){AFLAGPRISTNO(ABACK(a))}  //  like PRISTCOMSETF
     if(unlikely((wflg&AFVIRTUAL)!=0)){AFLAGPRISTNO(ABACK(w))}  //  like PRISTCOMSETF
-// obsolete     PRISTXFERF2(z,a,w);   // pass PRISTINE status through if possible, make inputs non-PRISTINE
     RETF(z);
    }
   }

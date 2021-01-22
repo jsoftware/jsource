@@ -34,12 +34,8 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
   // If the input is DIRECT and abandoned, mark the result as PRISTINE
   // If the input is abandoned and direct or recursive, zap it rather than raising the usecount
   I aband=SGNTO0(AC(w))&((I)jtinplace>>JTINPLACEWX);  // bit 0 = 1 if w is abandoned
-// obsolete   GAT0(z,BOX,1,0); AFLAG(z)=BOX+((-(wt&DIRECT))&((aband)<<AFPRISTINEX)); INCORPRA(w); AAV(z)[0]=w;
   GAT0(z,BOX,1,0); AFLAGINIT(z,BOX+((-(wt&DIRECT))&((aband)<<AFPRISTINEX))) INCORPNC(w); AAV(z)[0]=w;
-// obsolete   GAT0(z,BOX,1,0); AFLAG(z)=BOX+((-(wt&DIRECT))&((aband)<<AFPRISTINEX)); INCORP(w); AAV(z)[0]=w;
   raczap(w,aband!=0,c&=~ACINPLACE;)  // INCORPNC+this=INCORPRA, but using zap when abandoned
-// obsolete   if(((-aband)&((AFLAG(w)|DIRECT)&(wt&(RECURSIBLE|DIRECT))))!=0){*AZAPLOC(w)=0;}else{ra(w);}  // INCORPRA, but using zap where possible
-// obsolete   if(aband>((wt^AFLAG(w))&RECURSIBLE)){*AZAPLOC(w)=0;}else{ra(w);}  // INCORPRA, but using zap where possible
  } else {
   // <"r
   ws=AS(w);
@@ -57,13 +53,11 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
   // To avoid the tstack overhead, we switch the tpush pointer to our data area, so that blocks are filled in as they are allocated, with nothing put
   // onto the real tpop stack.  If we hit an error, that's OK, because whatever we did get allocated will be freed when the result block is freed.  We use GAE so that we don't abort on error
   A *pushxsave = jt->tnextpushp; jt->tnextpushp=AAV(z);  // save tstack info before allocation
-// obsolete   DQ(n, GAE(y,wt,m,r,f+ws,break); MC(CAV(y),wv,k); wv+=k; AC(y)=ACUC1; if(wt&RECURSIBLE){AFLAG(y)=wt; jtra(y,wt);});   // allocate, but don't grow the tstack.  Set usecount of cell to 1.  ra0() if recursible.  Put allocated addr into *jt->tnextpushp++
   JMCDECL(endmask) JMCSETMASK(endmask,k+SZI-1,0)   // set mask for JMCR - OK to copy SZIs
   DQ(n, GAE(y,wt,m,r,f+ws,break); JMCR(CAV(y),wv,k+SZI-1,lp000,0,endmask); wv+=k; INCORPRAZAPPED(y,wt));   // allocate, but don't grow the tstack.  Set usecount of cell to 1.  ra0() if recursible.  Put allocated addr into *jt->tnextpushp++
 
 
   jt->tnextpushp=pushxsave;   // restore tstack pointer
-// obsolete   AFLAG(w)&=~AFPRISTINE;
   //   Since we are copying contents of w, it must lose PRISTINE status if it is boxed
   PRISTCLRF(w);  // destroys w
   ASSERT(y!=0,EVWSFULL);  // if we broke out an allocation failure, fail.  Since the block is recursive, when it is tpop()d it will recur to delete contents
@@ -90,7 +84,6 @@ F2PREFIP;ARGCHK2(a,w);
   I i; for(i=AR(a)-1; i>=0&&AS(a)[i]==AS(ABACK(a))[i];--i); if(i<0)a = ABACK(a);
  }
 #endif
-#if 1 // obsolete 
  ASSERT(!((AT(a)|AT(w))&SPARSE),EVNONCE);   // can't box sparse values
  I optype=FAV(self)->localuse.lclr[0];  // flag: sign set if (,<) or ,&< or (;<) which will always box w; bit 0 set if (,<)
  realizeifvirtual(w); realizeifvirtual(a);  // it's going into an array, so realize it
@@ -106,7 +99,6 @@ F2PREFIP;ARGCHK2(a,w);
   if(unboxempty<0){
    // w was unboxed or empty.  Put it directly into neww, then ra or zap it.  If DIRECT abandoned, make result PRISTINE
    AFLAGORLOCAL(neww,(-(AT(w)&DIRECT))&((aband)<<AFPRISTINEX))  // starts PRISTINE if abandoned DIRECT
-// obsolete    if(aband>((AT(w)^AFLAG(w))&RECURSIBLE)){*AZAPLOC(w)=0;}else{ra(w);}  // zappable if abandoned recursive or direct
    raczap(w,aband!=0,c&=~ACINPLACE;)  // INCORPNC+this=INCORPRA, but using zap when abandoned
    INCORPNC(w); AAV(neww)[0]=w;   // mark w as inside neww
   }else{
@@ -144,14 +136,12 @@ F2PREFIP;ARGCHK2(a,w);
    // Store a into w & return.  If a was abandoned recursive or direct, zap it, else ra.  If a is DIRECT abandoned, allow w to stay PRISTINE
    AFLAGANDLOCAL(w,((-(AT(a)&DIRECT))&((aband)<<AFPRISTINEX))|~AFPRISTINE)  // stays PRISTINE if abandoned DIRECT
    raczap(a,aband!=0,c&=~ACINPLACE;)  // INCORPNC+this=INCORPRA, but using zap when abandoned
-// obsolete    if(aband>((AT(a)^AFLAG(a))&RECURSIBLE)){*AZAPLOC(a)=0;}else{ra(a);}  // zappable if abandoned and not recursible nonrecursive
    INCORPNC(a);   // mark a incorped
   }
   // a has the new value to add at the front of the list
   AK(w)-=SZI; AN(w)=AS(w)[0]=AN(w)+1; AAV(w)[0]=a;  // install a at front, add to counts
   RETF(w);  // return the augmented result
  }
-#endif
  // else fall through to handle general case
  if((-AN(w)&SGNIF(AT(w),BOXX))>=0){w = jtbox(JTIPWonly,w);}
  R jtover(jtinplace,jtbox(JTIPAtoW,a),w);  // box empty or unboxed w, join to boxed a
@@ -634,19 +624,7 @@ F1(jtrazeh){A*wv,y,z;C*xv,*yv,*zv;I c=0,ck,dk,i,k,n,p,r,*s,t;
   y=wv[i]; dk=1==AR(y)?k:k*AS(y)[1];  // y is contents of this box; dk is # atoms in each row of THIS Input box;
   if(!dk)continue;  // if empty, nothing to move
   xv=zv; zv+=dk; // xv is output pointer for this column; advance zv to next column
-// obsolete   if(t&BOX)RZ(y=car(y));
   yv=CAV(y);
-#if 0  // obsolete 
-  switch(0==(I)xv%dk&&0==ck%dk?dk:0){
-  case sizeof(I): {I*u,*v=(I*)yv; DQ(p, u=(I*)xv; *u=*v++;    xv+=ck;);} break;
-#if SY_64
-  case sizeof(int):{int*u,*v=(int*)yv; DQ(p, u=(int*)xv; *u=*v++; xv+=ck;);} break;
-#endif
-  case sizeof(S): {S*u,*v=(S*)yv; DQ(p, u=(S*)xv; *u=*v++;    xv+=ck;);} break;
-  case sizeof(C):                 DQ(p, *xv=*yv++;            xv+=ck;); break;
-  default:                        DQ(p, MC(xv,yv,dk); yv+=dk; xv+=ck;); break;
-  }
-#endif
   DQ(p, MC(xv,yv,dk); yv+=dk; xv+=ck;);
  }
  RETF(z);

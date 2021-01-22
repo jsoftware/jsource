@@ -70,8 +70,6 @@ typedef struct rngdata {
     US uq_us;       // accessing both flags at once
     struct {
      C    bstkreqd;   // set if we MUST create a stack entry for each named call clear for task
-// obsolete #define PMCTRBPMON 1  // set if PM ctr is running
-// obsolete #define PMCTRBSTKREQD 2
      B    spfreeneeded;     // When set, we should perform a garbage-collection pass clear for task
     } uq_c;        // accessing as bytes
    } uq;   // flags needed only by unquote
@@ -122,7 +120,6 @@ typedef struct rngdata {
 // cacheline 2 ends inside the pool struct (3 qwords extra)
 
 // things needed by name lookup (unquote)
-// obsolete  I modifiercounter;  // incremented whenever anything happens that could alter modifier lookup: assignment/deletion of a modifier, or any change to locales or path
  LS *callstack;   // [1+NFCALL]; // named fn calls: stack.  Usually only a little is used
  I4 callstacknext;    /* named fn calls: current depth                   */
  I4 fcalln;           /* named fn calls: maximum permissible depth   migrated    */
@@ -287,129 +284,6 @@ typedef JST* JS;  // shared part of struct
  I*   numloctbl;         // pointer to data area for locale-number to locale translation
  UI4  numlocsize;       // AN(JT(jt,stnum))
 #endif
-// obsolete C    typesizes[32];    // the length of an allocated item of each type
-// obsolete  UC   prioritytype[11];  // type bit for the priority types
-// obsolete  UC   typepriority[19];  // priority value for the noun types
-// obsolete  C cxspecials;       // 1 if special testing needed in cx loop (pm or debug)    
-// obsolete  I    mulofloloc;       // index of the result at which II multiply overflow occurred  scaf  $
-// obsolete  D    cctdefault;        /* default complementary comparison tolerance set by user                    */
-// obsolete  C    outseq[3];		    /* EOL: "LF" "CR" "CRLF"                           */
-// obsolete I    redefined;        /* symbol table entry of redefined explicit defn  scaf */
-// obsolete  DC   dcs;              /* ptr to debug stack entry for current script     */
-// obsolete A     dbalpha;          /* left  argument for rerun                        */
-// obsolete  I    dbjump;           /* line to jump to                                 */
-// obsolete  A    dbomega;          /* right argument for rerun                        */
-// obsolete  A    dbresult;         /* result to pop to the next level                 */
-// obsolete  C    dbss;             /* single step mode                                */
-// obsolete  DC   dbssd;            /* stack entry d corresp. to d->dcss setting       */
-// obsolete  A    dbssexec;         /* single step: execute string                     */
-// obsolete  C    dbsusact;         /* suspension action                               */
-// obsolete  A*   nvrav;            /* AAV(jt->nvra)      $                             */
-// obsolete  UI4  nvran;            // number of atoms in nvrav    $
-// obsolete  B    asgn;             /* 1 iff last operation on this line is assignment  $  */
-// obsolete  B    tostdout;         /* 1 if output to stdout       $                    */
-// end cache line 4.  10 bytes carry over.  next cache line is junk; we don't expect to use these types much
-// obsolete B    nflag;            /* 1 if space required before name               */
-// obsolete  B    tmonad;           /* tacit translator: 1 iff monad         >          */
-// obsolete  B    tsubst;           /* tacit translator           >                     */
-// obsolete  I    flkn;             /* file lock count                                 */
-// obsolete  I    fopn;             /* open files count                                */
-// obsolete  D    fuzz;             /* fuzz (sometimes set to 0)  scaf  $                   */
-// obsolete  B    prxthornuni;         /* 1 iff ": allowed to produce C2T result    >      */
-// obsolete  B    jprx;             /* 1 iff ": for jprx (jconsole output)       >      */
-// obsolete  C    unicodex78;       /* 1 iff disallow numeric argument for 7 8 u:  >  scaf  */
-// 3 words free
-// obsolete  I    filler[3];
-// obsolete  I    stmax;            /* numbered locales maximum number                 */
-// obsolete  A    stptr;            /* numbered locale symbol table ptrs               */
-// obsolete  I    stused;           /* entries in stnum/stptr in use                   */
-// obsolete  I    sttsize;          // length of hash table, =AN(JT(jt,stnum))
-// obsolete  L*   sympv;            /* symbol pool array value ptr, (L*)AV(JT(jt,symp))   */
-// obsolete  I    symindex;         /* symbol table index (monotonically increasing)   */
-// obsolete  L*   cursymb;          /* current symbol table entry                      */
-// obsolete  I    arg;              /* integer argument                                */
-// obsolete  A    bxa;              /* array of box drawing characters                 */
-// obsolete  I    cdna;             /* # of used entries in cdarg                      */
-// obsolete  I    cdnl;             /* # of used entries in cdhashl                    */
-// obsolete  I    cdns;             /* length of used portion of cdstr                 */
-// obsolete  C*   dirbase;          /* for directory search                            */
-// obsolete  C    diratts[7];       /* set by ismatch, read by dir1                    */
-// obsolete  C    dirmode[11];      /* set by ismatch, read by dir1                    */
-// obsolete  C    dirrwx[3];        /* set by ismatch, read by dir1                    */
-// obsolete #if !SY_WINCE
-// obsolete  struct stat dirstatbuf; //set by ismatch, read by dir1
-// obsolete #if !SY_64 && (SYS & SYS_LINUX)
-// obsolete  struct stat dummy1;    // stat above should be stat64
-// obsolete  struct stat dummy2;    // reserve extra to avoid stomping disp
-// obsolete #endif
-// obsolete #endif 
-// obsolete  I    fxi;              /* f. depth countdown                              */
-// obsolete  A    fxpath;           /* f. path of names                                */
-// obsolete  A*   fxpv;             /* f. AAV(fxpath)                                  */
-// obsolete AF   lcp;              /* linear representation paren function            */
-// obsolete  A    ltext;            /* linear representation text                      */
-// obsolete AF   ltie;             /* linear representation tie   function            */
-// obsolete  I    mtyo;				      /* jsto output type - jfwrite arg to jpr           */
-// obsolete  C*   mtyostr;          /* jsto string                                     */
-// obsolete  B    pmrec;            /* perf. monitor: 0 entry/exit; 1 all              */
-// obsolete  I    pmctr;            /* perf. monitor: ctr>0 means do monitoring        */
-// obsolete  PM0* pmu;              /* perf. monitor: (PM0)AV(pma)                     */
-// obsolete  PM*  pmv;              /* perf. monitor: (PM*)(sizeof(PM0)+CAV(pma))      */
-// obsolete  I    sbfillfactor;     /* ?SB for binary tree                              */
-// obsolete  I    sbgap;            /* ?SB for binary tree                              */
-// obsolete  A    sbh;              /* SB hash table of indices; -1 means unused       */
-// obsolete  I*   sbhv;             /* *SB points to ravel of sbh                       */
-// obsolete  I    sbroot;           /* ?SB root of the binary tree                      */
-// obsolete  A    sbs;              /* *SB string                                       */
-// obsolete  I    sbsn;             /* *SB string length so far                         */
-// obsolete  C*   sbsv;             /* *SB points to ravel of sbs                       */
-// obsolete I    sbun;             /* *SB cardinality                                  */
-// obsolete  SBU* sbuv;             /* *SB points to ravel of sbu                       */
-// obsolete  int  sdinited;         /* sockets                                         */
-// obsolete  I4   slisti;           /* index into slist of current script     $         */
-// obsolete  A    sclist;           /* slisti when items of slist were added           */
-// obsolete  I    slistn;           /* slist # of real entries                         */
-// obsolete  D    spfor;            /* semi-global for use by spfor()                  */
-// obsolete  C*   th2buf;           /* space for formatting one number                 */
-// obsolete  I    th2bufn;          /* current max length of buf                       */
-// obsolete  UI   timelimit;        /* execution time limit milliseconds               */
-// obsolete  TA*  ttab;             /* tacit translator                                */
-// obsolete  I    ttabi;            /* tacit translator                                */
-// obsolete  I    ttabi0;           /* tacit translator                                */
-// obsolete  UF   rngf;             /* RNG: rngF[rng]                                  */
-// obsolete // workareas for individual primitives, overlapping in the same memory
-// obsolete union {
-// obsolete struct{
-// obsolete  D determ;  // determinant of the triangular matrix, if the matrix to be inverted was B01 or INT.  Set to 0 to suppress INT rounding
-// obsolete } minv;
-// obsolete  struct {
-// obsolete   B    nla[256];         /* namelist names mask                             */
-// obsolete   I    nlt;              /* namelist type  mask                             */
-// obsolete  } namelist;
-// obsolete struct {
-// obsolete  I    postflags;  // what to do with the result
-// obsolete } compsc;
-// obsolete #if (SYS & SYS_UNIX)
-// obsolete  C    dirnamebuf[NPATH];/* for directory search                            */
-// obsolete #endif
-// obsolete  struct {
-// obsolete   CMP  comp;             /* comparison function in sort                     */
-// obsolete   B    compusejt;        // set if the parameter to comparison function is jt rather than n
-// obsolete   I    compk;            /* comparison: byte size of each item              */
-// obsolete   I    complt;           /* comparison: denotes less    than                */
-// obsolete   I    compn;            /* comparison: number of atoms in each item        */
-// obsolete   C*   compsev;          /* comparison: sparse element value ptr            */
-// obsolete   I    compsi;           /* comparison: sparse current cell index           */
-// obsolete   I*   compstv;          /* comparison: sparse element item indices         */
-// obsolete   I    compswf;          /* comparison: sparse wf value                     */
-// obsolete   I    compsxc;          /* comparison: sparse aii(x)                       */
-// obsolete   C*   compsxv;          /* comparison: sparse AV(x)                        */
-// obsolete   I    compsyc;          /* comparison: sparse aii(y) or AS(y)[1]         */
-// obsolete   I*   compsyv;          /* comparison: sparse AV(y)                        */
-// obsolete   C*   compv;            /* comparison: beginning of data area              */
-// obsolete  } compare;
-// obsolete } workareas;
-// obsolete // the offset at this point is about 0x14E8, so everything up to here will fit in a single 0x2000-byte DRAM page
 
 #undef J
 #define J JJ

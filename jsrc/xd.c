@@ -305,13 +305,13 @@ static int ismatch(J jt,C*pat,C*name,struct stat *dirstatbuf,C *diratts, C *dirm
  raw_stat[sizeof(struct stat)-2]=76;
  raw_stat[sizeof(struct stat)-3]=54;
 #endif
- strcpy(/* obsolete jt->*/dirbase,name); if(stat(/* obsolete jt->workareas.*/dirnamebuf,dirstatbuf))R 0;
+ strcpy(dirbase,name); if(stat(dirnamebuf,dirstatbuf))R 0;
  if('.'!=*pat && ((!strcmp(name,"."))||(!strcmp(name,".."))))R 0;
  if(fnmatch(pat,name,0)) R 0;
 /* Set up dirrwx, diratts, and dirmode for this file */
- dirrwx[0]=access(/* obsolete jt->workareas.*/dirnamebuf,R_OK)?'-':'r';
- dirrwx[1]=access(/* obsolete jt->workareas.*/dirnamebuf,W_OK)?'-':'w';
- dirrwx[2]=access(/* obsolete jt->workareas.*/dirnamebuf,X_OK)?'-':'x';
+ dirrwx[0]=access(dirnamebuf,R_OK)?'-':'r';
+ dirrwx[1]=access(dirnamebuf,W_OK)?'-':'w';
+ dirrwx[2]=access(dirnamebuf,X_OK)?'-':'x';
  strcpy(diratts,"------");
  diratts[0]=(dirrwx[0]=='r'&&dirrwx[1]=='-')?'r':'-';
  diratts[1]=('.'==name[0])?'h':'-';
@@ -360,8 +360,7 @@ F1(jtjdir){PROLOG(0103);A*v,z,*zv;C*dir,*pat,*s,*x;I j=0,n=32;DIR*DP;struct dire
   * SYSV and BSD have different return types for sprintf(),
   * so we use less efficient but portable code.
   */
-// obsolete  sprintf(jt->workareas.dirnamebuf,"%s/",dir); jt->dirbase=jt->workareas.dirnamebuf+strlen(jt->workareas.dirnamebuf,dirbase); f=readdir(DP);
- sprintf(dirnamebuf,"%s/",dir); C */*obsolete jt->*/dirbase=dirnamebuf+strlen(dirnamebuf); f=readdir(DP);
+ sprintf(dirnamebuf,"%s/",dir); C *dirbase=dirnamebuf+strlen(dirnamebuf); f=readdir(DP);
  GATV0(z,BOX,n,1); zv=AAV(z);
  while(f){
   if(ismatch(jt,pat,f->d_name,dirstatbuf,diratts,dirmode,dirrwx,dirnamebuf,dirbase)){

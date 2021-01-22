@@ -115,7 +115,6 @@ static A jtmemoput(J jt,I x,I y,A self,A z){A*cv,h,*hv,q;I *jv,k,m,*mv,*v;
  q=hv[2]; cv=AAV(q); m=AN(q);
  // If the buffer must be extended, allocate a new one
  if(m<=2**mv){A cc,*cu=cv,jj;I i,*ju=jv,n=m,*u;
-// obsolete A* _ttop=jt->tnextpushp;
   FULLHASHSIZE(2**mv,BOXSIZE,1,0,m);  // # boxes to allocate to get at least 2**mv slots
   RZ(jj=mkwris(reshape(v2(m,2L),sc(IMIN)))); ACINITZAP(jj) jv= AV(jj);  // init arg table to IMIN
   GATV0(cc,BOX,m,1); ACINITZAPRECUR(cc,BOX) cv=AAV(cc);  // the old table is recursive - the new one must be too
@@ -129,11 +128,8 @@ static A jtmemoput(J jt,I x,I y,A self,A z){A*cv,h,*hv,q;I *jv,k,m,*mv,*v;
   }
   // Free the old buffers, ras() the new to make them recursive usect, then clear the tpops to bring the usecount down to 1
   // h has recursive usecount
-// obsolete   q=hv[1]; AC(q)=1; fa(q); INSTALLBOXNF(h,hv,1,jj);  // expunge old table, install new one.  Could use mf().  h is not virtual
-// obsolete   q=hv[2]; AC(q)=1; fa(q); ACINCR(cc); hv[2]=cc;   // not INSTALLBOX(h,hv,2,cc); because we DO NOT want to increment the counts in the values already in the table.  But we do in the cc itself
   mf(hv[1]); hv[1]=jj;   // expunge old table, new one raised above, install.   h is not virtual
   mf(hv[2]); hv[2]=cc;   // not INSTALLBOX(h,hv,2,cc); because we DO NOT want to increment the counts in the values already in the table.  cc itself raised above
-// obsolete   tpop(_ttop);  // get the new buffers off the tpush stack so we can safely free them in the lines above. (no longer needed)
  }
  ++*mv;
  k=HIC(x,y)%m; v=jv+2*k; while(IMIN!=*v){v+=2; if(v==jv+2*m)v=jv;}
@@ -148,12 +144,6 @@ static I jtint0(J jt,A w){A x;
  if(unlikely(AR(w)))R IMIN;
  if(unlikely(!(AT(w)&B01+INT)))w=pcvt(INT,w);
  R w&&INT&AT(w)?BIV0(w):IMIN;
-// obsolete  if(NUMERIC&AT(w))switch(UNSAFE(AT(w))){
-// obsolete   case B01: R (I)BAV(w)[0];
-// obsolete   case INT: R AV(w)[0];
-// obsolete  }
-// obsolete  x=pcvt(INT,w); 
-// obsolete  R x&&INT&AT(x)?AV(x)[0]:IMIN; 
 }
 
 static DF1(jtmemo1){DECLF;A z;I x,y;

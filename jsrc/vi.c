@@ -1011,7 +1011,6 @@ static IOF(jtiobs){A*av,h=*hp,*wv,y;B b,bk,*yb,*zb;C*zc;I acn,*hu,*hv,l,m1,md,s,
  if(mode<IPHOFFSET)RZ(*hp=h=nodupgrade(a,acr,ac,acn,0,n,m,b,bk));
  if(w==mark)R mark;
  hv=AV(h)+bk*(m-1);
-// obsolete jt->workareas.compare.complt=-1;
  for(l=0;l<ac;++l,av+=acn,wv+=wcn,hv+=m){  // loop for each result in a
   // m1=index of last item, which may be less than m if there were discarded duplicates (signaled by last index <0)
   s=hv[bk?1-m:m-1]; m1=0>s?-s:m-1; hu=hv-m1*bk;
@@ -1273,8 +1272,6 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z;B mk=w==mark,th;
  th=HOMO(at,wt); jt->min=0;  // are args compatible? clear return values from irange
  // Indicate if float args need to be canonicalized for -0.  should do this in the hash
  I cvtsneeded = 0;  // 1 means convert a, 2 means convert w
-// obsolete  if(th&&TYPESNE(t,at))RZ(a=t&XNUM?xcvt(XMEXMT,a):cvt(t,a)) else if(t&FL+CMPX      )cvtsneeded=1;
-// obsolete  if(th&&TYPESNE(t,wt))RZ(w=t&XNUM?xcvt(XMEXMT,w):cvt(t,w)) else if(t&FL+CMPX&&a!=w)cvtsneeded|=2;
  if(th&&TYPESNE(t,at))RZ(a=cvt(t|VFRCEXMT,a)) else if(t&FL+CMPX      )cvtsneeded=1;
  if(th&&TYPESNE(t,wt))RZ(w=cvt(t|VFRCEXMT,w)) else if(t&FL+CMPX&&a!=w)cvtsneeded|=2;
 
@@ -1599,10 +1596,8 @@ F1(jtnubsieve){
 F1(jtnub){ 
  F1PREFIP;ARGCHK1(w);
  if(SPARSE&AT(w)||AFLAG(w)&AFNJA)R repeat(nubsieve(w),w); 
-// obsolete  R indexofsub(INUB,w,w);
  A z; RZ(z=indexofsub(INUB,w,w));
  // We extracted from w, so mark it (or its backer if virtual) non-pristine.  If w was pristine and inplaceable, transfer its pristine status to the result.  We overwrite w because it is no longer in use
-// obsolete  I awflg=AFLAG(w); AFLAG(z)|=awflg&((SGNTO0(AC(w))&((I)jtinplace>>JTINPLACEWX))<<AFPRISTINEX); if(unlikely(awflg&AFVIRTUAL)){w=ABACK(w); awflg=AFLAG(w);} AFLAG(w)=awflg&~AFPRISTINE;
  PRISTXFERF(z,w)
  RETF(z);
 }    /* ~.w */
@@ -1619,7 +1614,6 @@ F2(jtless){A x=w;I ar,at,k,r,*s,wr,*ws,wt;
  RZ(x=!(at&SPARSE)&&HOMO(at,wt)&&TYPESEQ(at,maxtype(at,wt))&&!(AFLAG(a)&AFNJA)?indexofsub(ILESS,x,a):
      repeat(not(eps(a,x)),a));
  // We extracted from a, so mark it non-pristine.  If a was pristine and inplaceable, transfer its pristine status to the result
-// obsolete  I af=AFLAG(a); AFLAG(x)|=af&((SGNTO0(AC(a))&((I)jtinplace>>JTINPLACEAX))<<AFPRISTINEX); if(unlikely(af&AFVIRTUAL)){a=ABACK(a); af=AFLAG(a);} AFLAG(a)=af&~AFPRISTINE;
  PRISTXFERAF(x,a)
  RETF(x);
 }    /* a-.w */

@@ -29,7 +29,7 @@
 
 B jtparseinit(JS jjt, I nthreads){A x;
  I threadno; for(threadno=0;threadno<nthreads;++threadno){JJ jt=&jjt->threaddata[threadno];
-  GAT0(x,INT,20,1); ACINIT(x,ACUC1) jt->nvra=x; /* obsolete jt->nvrav=AAV(x); jt->nvran=(UI4)AN(x); */  // Initial stack.  Size is doubled as needed
+  GAT0(x,INT,20,1); ACINIT(x,ACUC1) jt->nvra=x;   // Initial stack.  Size is doubled as needed
   // ras not required because this is called during initialization 
  }
  R 1;
@@ -146,7 +146,6 @@ static DF2(jtisf){RZ(symbis(onm(a),CALL1(FAV(self)->valencefns[0],w,0L),ABACK(se
 // return sets stack[0] to -1 if this is a final assignment
 static PSTK* jtis(J jt,PSTK *stack){B ger=0;C *s;
  A asgblk=stack[1].a; I asgt=AT(asgblk); A v=stack[2].a, n=stack[0].a;  // value and name
-// obsolete  jt->asgn = stack[0].t==1;  // if the word number of the lhs is 1, it's either (noun)=: or name=: or 'value'=: at the beginning of the line; so indicate
  J jtinplace=(J)((I)jt+((stack[0].t==1)<<JTFINALASGNX));   // set JTFINALASGN if this is final assignment
  stack[1+(stack[0].t==1)].t=-1;  // if the word number of the lhs is 1, it's either (noun)=: or name=: or 'value'=: at the beginning of the line;
   // store -1 to the new stack[0].t.  Otherwise, make a harmless store to new stack[-1].t
@@ -154,7 +153,6 @@ static PSTK* jtis(J jt,PSTK *stack){B ger=0;C *s;
  else {
   // Point to the block for the assignment; fetch the assignment pseudochar (=. or =:); choose the starting symbol table
   // depending on which type of assignment (but if there is no local symbol table, always use the global)
-// obsolete   A symtab=jt->locsyms; if(!(asgt&ASGNLOCAL)||AN(jt->locsyms)==1)symtab=jt->global;
   A symtab=jt->locsyms; if(unlikely((SGNIF(asgt,ASGNLOCALX)&(1-AN(jt->locsyms)))>=0))symtab=jt->global;
   if(unlikely((AT(n)&BOXMULTIASSIGN)!=0)){
    // string assignment, where the NAME blocks have already been computed.  Use them.  The fast case is where we are assigning a boxed list
@@ -370,7 +368,7 @@ static A virthook(J jtip, A f, A g){
 // of worrying about names on the stack.  Note that local names are not put onto the stack, so absence of AFNVR suffices for them.
 #endif
 // extend NVR stack, returning the A block for it.  stack error on fail, since that's the likely cause
-A jtextnvr(J jt){ASSERT(jt->parserstackframe.nvrtop<32000,EVSTACK); RZ(jt->nvra = ext(1, jt->nvra)); /* obsolete jt->nvran=(UI4)AN(jt->nvra); jt->nvrav = AAV(jt->nvra); */ R jt->nvra;}
+A jtextnvr(J jt){ASSERT(jt->parserstackframe.nvrtop<32000,EVSTACK); RZ(jt->nvra = ext(1, jt->nvra));  R jt->nvra;}
 
 #define BACKMARKS 3   // amount of space to leave for marks at the end.  Because we stack 3 words before we start to parse, we will
  // never see 4 marks on the stack - the most we can have is 1 value + 3 marks.
@@ -384,7 +382,6 @@ A jtparsea(J jt, A *queue, I m){PSTK * RESTRICT stack;A z,*v;I es;
   // Save info for error typeout.  We save sentence info once, and token info for every executed fragment
  PFRAME oframe=jt->parserstackframe;   // save all the stack status
  jt->parserstackframe.parserqueue=queue; jt->parserstackframe.parserqueuelen=(US)m;  // addr & length of words being parsed
-// obsolete  jt->asgn = 0;
  if(likely(m>1)) {  // normal case where there is a fragment to parse
   // save $: stack.  The recursion point for $: is set on every verb execution here, and there's no need to restore it until the parse completes
   A savfs=jt->sf;  // push $: stack
@@ -502,7 +499,6 @@ rdglob: ;
          // (via namerefacv), no special protection is needed.  And, it is not needed for local names, because they are inaccessible to deletion in called
          // functions (that is, the user should not use u. to delete a local name).  If a local name is deleted, we always defer the deletion till the end of the sentence, easier than checking
          // When NVR is set, AM is used to hold the count of NVR stacking, so we can't have NVR and NJA both set.  User manages NJAs separately anyway
-// obsolete         if(likely(s!=0))if(likely(s->val!=0))if(AT(s->val)&NOUN)if(likely(!(AFLAG(s->val)&AFNVR))){ 
         if(likely(s!=0))if(likely(s->val!=0))if(AT(s->val)&NOUN){ 
          // Normally local variables never get close to here because they have bucket info.  But if they are computed assignemts,
          // or inside eval strings, they may come through this path.  If one of them is y, it might be virtual.  Thus, we must make sure we don't
@@ -743,7 +739,6 @@ RECURSIVERESULTSCHECK
    // before we exited, we backed the stack to before the initial mark entry.  At this point stack[0] is invalid,
    // stack[1] is the initial mark, stack[2] is the result, and stack[3] had better be the first ending mark
    z=stack[2].a;   // stack[0..1] are the mark; this is the sentence result, if there is no error
-// obsolete   if(!(PTISCAVN(stack[2])&&PTISM(stack[3]))){jt->parserstackframe.parsercurrtok = 0; jsignal(EVSYNTAX); z=0;}  // OK if 0 or 1 words left (0 should not occur)
    if(unlikely(!(PTOKEND(stack[2],stack[3])))){jt->parserstackframe.parsercurrtok = 0; jsignal(EVSYNTAX); z=0;}  // OK if 0 or 1 words left (0 should not occur)
   }else{
 failparse:  // If there was an error during execution or name-stacking, exit with failure.  Error has already been signaled.  Remove zombiesym
@@ -762,7 +757,6 @@ failparse:  // If there was an error during execution or name-stacking, exit wit
   v=AAV1(jt->nvra)+nvrotop;  // point to our region of the nvr area
   UI zcompval = !z||AT(z)&NOUN?0:-1;  // if z is 0, or a noun, immediately free only values !=z.  Otherwise don't free anything
   DQ(jt->parserstackframe.nvrtop-nvrotop, A vv = *v;
-// obsolete  
    if(likely(--AM(vv)==0)){I vf = AFLAG(vv); AFLAGAND(vv,~(AFNVR|AFNVRUNFREED)) if(!(vf&AFNVRUNFREED))if(((UI)z^(UI)vv)>zcompval){fanano0(vv);}else{tpushna(vv);}}
   ++v;);   // schedule deferred frees.
     // na so that we don't audit, since audit will relook at this NVR stack

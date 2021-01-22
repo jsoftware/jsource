@@ -78,8 +78,6 @@
  }
  
  // iterator support
-// obsolete I jtcountnl(J jt) { R jt->numlocsize; }  // number of locales to reference by index
-// obsolete A jtindexnl(J jt,I n) { R findnl(n); }  // the locale address, or 0 if none
 #else
 // Hashed version, without locale reuse
 #if BW==64
@@ -95,7 +93,6 @@ static A jtinitnl(J jt){A q;
  JT(jt,stnum)=q;  // save address of block
  AK(JT(jt,stnum))=0;  // set next number to allocate
  AM(JT(jt,stnum))=0;  // set number in use
-// obsolete jt->sttsize=s;  // set size of table
  R q;  // return no error
 }
 
@@ -117,7 +114,7 @@ static I jtgetnl(J jt){
    }
   }
   AK(new)=AK(JT(jt,stnum)); ACINITZAP(new) AM(new)=AM(JT(jt,stnum));  // before freeing the block, copy # locales and next locales#
-  fa(JT(jt,stnum)); JT(jt,stnum)=new; /* obsolete jt->sttsize=AN(new);*/ // install the new table, release the old
+  fa(JT(jt,stnum)); JT(jt,stnum)=new; // install the new table, release the old
  }
  R AK(JT(jt,stnum));  // return index of next allocation
 }
@@ -186,13 +183,13 @@ A jtindexnl(J jt,I n) { R (A)IAV0(JT(jt,stnum))[n]; }  // the locale address, or
 // The SYMB table is always allocated with rank 0.  The stored rank is 1 for named locales, 0 for others
 A jtstcreate(J jt,C k,I p,I n,C*u){A g,x,xx;C s[20];L*v;
  GATV0(g,SYMB,(p+1)&-2,0);   // have odd number of hashchains, excluding LINFO
- // Allocate a symbol for the locale info, install in special hashchain 0.  Set flag; // obsolete  set sn to the symindex at time of allocation
+ // Allocate a symbol for the locale info, install in special hashchain 0.  Set flag;
  // (it is queried by 18!:31)
  // The allocation clears all the hash chain bases, including the one used for SYMLINFO
  switch(k){
   case 0:  /* named locale */
    AR(g)=1;   // set rank to indicate named locale.  It is left 0 in numbered or local
-   RZ(v=symnew(&LXAV0(g)[SYMLINFO],0)); v->flag|=LINFO; /* obsolete v->sn=(US)jt->symindex++; */   // put new block into locales table, allocate at head of chain without non-PERMANENT marking
+   RZ(v=symnew(&LXAV0(g)[SYMLINFO],0)); v->flag|=LINFO;    // put new block into locales table, allocate at head of chain without non-PERMANENT marking
    RZ(x=nfs(n,u));  // this fills in the hash for the name
    // Install name and path.  Path is 'z' except in z locale itself, which has empty path
    ACINITZAP(x); LOCNAME(g)=x; xx=zpath; if(unlikely('z'==*u))if(unlikely(1==n)){xx=vec(BOX,0L,0L); ras(xx);} LOCPATH(g) = xx;   // zpath is permanent
@@ -201,10 +198,9 @@ A jtstcreate(J jt,C k,I p,I n,C*u){A g,x,xx;C s[20];L*v;
    symbisdel(x,g,JT(jt,stloc));
    break;
   case 1:  /* numbered locale */
-   RZ(v=symnew(&LXAV0(g)[SYMLINFO],0)); v->flag|=LINFO; /* obsolete v->sn=(US)jt->symindex++; */   // put new block into locales table, allocate at head of chain without non-PERMANENT marking
+   RZ(v=symnew(&LXAV0(g)[SYMLINFO],0)); v->flag|=LINFO;   // put new block into locales table, allocate at head of chain without non-PERMANENT marking
    sprintf(s,FMTI,n); RZ(x=nfs(strlen(s),s)); NAV(x)->bucketx=n; // this fills in the hash for the name; we save locale# if numeric
    ACINITZAP(x); LOCNAME(g)=x; LOCPATH(g)=zpath;  // ras() is never virtual.  zpath is permanent, no ras needed
-// obsolete  ras(zpath);
    // Put this locale into the in-use list at an empty location.  ras(g) at that time
    jtinstallnl(jt, g);  // put the locale into the numbered list at the value most recently returned (which must be n)
    break;
@@ -344,7 +340,6 @@ F1(jtlocnl1){A a; GAT0(a,B01,256,1) memset(CAV1(a),C1,256L);  R locnlx(a,w);}
 F2(jtlocnl2){UC*u;
  ARGCHK2(a,w);
  ASSERT(LIT&AT(a),EVDOMAIN);
-// obsolete  memset(jt->workareas.namelist.nla,C0,256); 
  A tmp; GAT0(tmp,B01,256,1) memset(CAV1(tmp),C0,256L);
  u=UAV(a); DQ(AN(a),CAV1(tmp)[*u++]=1;);
  R locnlx(tmp,w); 
@@ -371,7 +366,6 @@ F2(jtlocpath2){A g; AD * RESTRICT x;
  // paths are special: the shape of each string holds the bucketx for the string.  Install that.
  AD * RESTRICT z; RZ(z=ca(x)); DO(AN(x), A t; RZ(t=ca(AT(AAV(x)[i])&((INT|B01))?thorn1(AAV(x)[i]):AAV(x)[i]));  AS(t)[0]=BUCKETXLOC(AN(t),CAV(t)); AAV(z)[i]=incorp(t);)  // ? why so many copies?  test before thorn1 not reqd
  fa(LOCPATH(g)); razap(z); LOCPATH(g)=z;
-// obsolete  ++jt->modifiercounter;  // invalidate any extant lookups of modifier names
  R mtm;
 }    /* 18!:2  set locale path */
 
@@ -424,7 +418,6 @@ F1(jtlocswitch){A g;
  // If there is no name executing, there would be nothing to process this push; so don't push for unnamed execs (i. e. from console)
  if(jt->curname)pushcallstack1(CALLSTACKPOPFROM,jt->global);
  SYMSETGLOBAL(jt->locsyms,g);
-// obsolete  ++jt->modifiercounter;  // invalidate any extant lookups of modifier names
 
  R mtm;
 }    /* 18!:4  switch locale */
@@ -494,7 +487,6 @@ F1(jtlocexmark){A g,*wv,y,z;B *zv;C*u;I i,m,n;L*v;
 
 // destroy symbol table g.  
 B jtlocdestroy(J jt,A g){
-// obsolete  ++jt->modifiercounter;  // invalidate any extant lookups of modifier names
  // Look at the name to see whether the locale is named or numbered
  NM *locname=NAV(LOCNAME(g));  // NM block for name
  B isnum = '9'>=locname->s[0];  // first char of name tells the type

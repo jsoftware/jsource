@@ -130,7 +130,6 @@ static DF2(atcomp){AF f;A z;
  I postflags=(I)f&3;  // extract postprocessing from return
  f=(AF)((I)f&-4);    // restore function address
  if(f){
-// obsolete   I postflags=jt->workareas.compsc.postflags;
   z=f(jt,a,w,self);
   if(z){if(postflags&2){z=num((IAV(z)[0]!=AN(AR(a)>=AR(w)?a:w))^(postflags&1));}}
  }else z=upon2(a,w,self);
@@ -144,7 +143,6 @@ static DF2(atcomp0){A z;AF f;
  f=(AF)((I)f&-4);    // restore function address
  PUSHCCT(1.0)
  if(f){
-// obsolete   I postflags=jt->workareas.compsc.postflags;
   z=f(jt,a,w,self);
   if(z){if(postflags&2){z=num((IAV(z)[0]!=AN(AR(a)>=AR(w)?a:w))^(postflags&1));}}
  }else z=upon2(a,w,self);

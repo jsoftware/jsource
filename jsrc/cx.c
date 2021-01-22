@@ -155,13 +155,7 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
   ASSERT(locsym!=0,EVDOMAIN);  // if the valence is not defined, give valence error
   if(likely(!(AR(locsym)&LSYMINUSE))){AR(locsym)|=LSYMINUSE;gsfctdl|=32;}  // remember if we are using the original symtab
   else{RZ(locsym=clonelocalsyms(locsym));}
-// obsolete   if(likely(!(jt->uflags.us.cx.cx_us | (sflg&(VLOCK|VXOP|VTRY1|VTRY2))))){
   if(unlikely((jt->uflags.us.cx.cx_c.db | (sflg&(VTRY1|VTRY2))))){
-// obsolete    LINE(sv);
-// obsolete    locsym=hv[3];  // fetch pointer to preallocated symbol table
-// obsolete    ASSERT(locsym!=0,EVDOMAIN);  // if the valence is not defined, give valence error
-// obsolete    if(!(AR(locsym)&LSYMINUSE)){AR(locsym)|=LSYMINUSE;gsfctdl|=32;}  // remember if we are using the original symtab
-// obsolete    else{RZ(locsym=clonelocalsyms(locsym));}
    // special processing required
    // if we are in debug mode, the call to this defn should be on the stack (unless debug was entered under program control).  If it is, point to its
    // stack frame, which functions as a flag to indicate that we are debugging.  If the function is locked we ignore debug mode
@@ -181,8 +175,6 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
     }
 
     // With debug on, we will save pointers to the sentence being executed in the stack frame we just allocated
-// obsolete     // We will keep cxspecials set in all levels where debug was set at the start of the frame
-// obsolete     jt->cxspecials=1;
    }
 
    // If the verb contains try., allocate a try-stack area for it.  Remember debug state coming in so we can restore on exit
@@ -253,7 +245,6 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
  while(1){CW *ci;
   // i holds the control-word number of the current control word
   // Check for debug and other modes
-// obsolete   if(unlikely(jt->cxspecials!=0)){  // fast check to see if we have overhead functions to perform
   if(unlikely(jt->uflags.us.cx.cx_us!=0)){  // fast check to see if we have overhead functions to perform
    if(!(gsfctdl&(16+1))&&jt->uflags.us.cx.cx_c.db){
     // If we haven't done so already, allocate an area to use for the SI entries for sentences executed here, if needed.  We need a new area only if we are debugging.  Don't do it if locked.
@@ -277,8 +268,6 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
    if(jt->uflags.us.cx.cx_c.pmctr&&C1==((PM0*)CAV1(JT(jt,pma)))->rec&&FAV(self)->flag&VNAMED)pmrecord(jt->curname,jt->global?LOCNAME(jt->global):0,i,isdyad?VAL2:VAL1);
    // If the executing verb was reloaded during debug, switch over to the modified definition
    DC siparent;
-// obsolete     if((gsfctdl&16)&&jt->redefined){A *hv;
-// obsolete     if((siparent=thisframe->dclnk)&&jt->redefined==siparent->dcn&&DCCALL==siparent->dctype&&self!=siparent->dcf){
    if(gsfctdl&16){
      if(thisframe->dcredef&&(siparent=thisframe->dclnk)&&siparent->dcn&&DCCALL==siparent->dctype&&self!=siparent->dcf){A *hv;
       self=siparent->dcf; V *sv=FAV(self); LINE(sv); siparent->dcc=hv[1];  // LINE sets pointers for subsequent line lookups
@@ -289,7 +278,6 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
      }
     thisframe->dcredef=0;
    }
-// obsolete    if(!((I)(jt->uflags.us.cx.cx_c.pmctr)|(I)(gsfctdl&16)))jt->cxspecials=0;  // if no more special work to do, close the gate
   }
 
   // Don't do the loop-exit test until debug has had the chance to update the execution line.  For example, we might be asked to reexecute the last line of the definition
@@ -537,7 +525,6 @@ dobblock:
  if(likely(gsfctdl&32)){AR(locsym)=LLOCALTABLE; symfreeha(locsym);}
  // Pop the private-area stack
  SYMSETLOCAL(prevlocsyms);
-// obsolete  jt->asgn=0;
  // Now that we have deleted all the local symbols, we can see if we were returning one.
  // See if EPILOG pushed a pointer to the block we are returning.  If it did, and the usecount we are returning is 1, set this
  // result as inplaceable and install the address of the tpop stack into AM (as is required for all inplaceable blocks).  If the usecount is inplaceable 1,
@@ -576,10 +563,6 @@ static DF1(xop1){
 static I jtxop(J jt,A w){I i,k;
  // init flags to 'not found'
  I fndflag=0;
-// obsolete  // Loop through monad and dyad
-// obsolete  A *wv=AAV(w); 
-// obsolete  for(k=0;k<=HN+0;k+=HN){    // for monad and dyad cases...
-// obsolete   A w=wv[k];  // w is now the box containing the words of the expdef
  A *wv=AAV(w);
    
  I in=AN(w);
@@ -649,7 +632,6 @@ static F1(jtlineit){
 // Convert ASCII w to boxed lines.  Create separate lists of boxes for monad and dyad
 // if preparsed is set, we know the lines have gone through wordil already & it is OK
 // to do it again.  This means we are processing 9 :  n
-// obsolete static B jtsent12c(J jt,A w,A*m,A*d,I preparsed){C*p,*q,*r,*s,*x;A z;
 static A jtsent12c(J jt,A w){C*p,*q,*r,*s,*x;A z;
  ASSERT(!AN(w)||LIT&AT(w),EVDOMAIN);
  ASSERT(2>=AR(w),EVRANK);
@@ -678,36 +660,8 @@ static A jtsent12c(J jt,A w){C*p,*q,*r,*s,*x;A z;
  // Now we have compacted all the lines.  Box them
  AS(wil)[0]=linex;  // advance to dyad, set its length
  R jtboxcut0(jt,wil,w,ds(CWORDS));
-#if 0  // obsolete 
-  RZ(w=lineit(w));  // make lines LF-terminated
-  x=p=r=CAV(w);  /* p: monad start; r: dyad start */
-  q=s=p+AN(w);   /* q: monad end;   s: dyad end   */
-  while(x<s){
-   q=x;
-   while(' '==*x)++x; if(':'==*x){while(' '==*++x); if(CLF==*x){r=++x; break;}}
-   while(CLF!=*x++);
-  }
-  if(x==s)q=r=s;
-  A zc=cut(ds(CBOX),num(-2));  // create function for <;._2
-  *m=df1(z,str(q-p,p),zc);
-  *d=df1(z,str(s-r,r),zc);
- R *m&&*d;
- R df1(z,w,cut(ds(CBOX),num(-2)));  // create function for <;._2
-#endif
 }    /* literal fret-terminated or matrix sentences into monad/dyad */
 
-#if 0 // obsolete 
-static B jtsent12b(J jt,A w,A*m,A*d){A t,*wv,y,*yv;I j,*v;
- ASSERT(1>=AR(w),EVRANK);
- wv=AAV(w); 
- GATV(y,BOX,AN(w),AR(w),AS(w)); yv=AAV(y);
- DO(AN(w), RZ(yv[i]=vs(wv[i])););
- RZ(t=indexof(y,link(chrcolon,str(1L,":")))); v=AV(t); j=MIN(*v,v[1]);
- *m=take(sc(j  ),y); 
- *d=drop(sc(j+1),y);
- R 1;
-}    /* boxed sentences into monad/dyad */
-#else
 // Audit w to make sure it contains all strings; convert to LIT if needed
 static A jtsent12b(J jt,A w){A t,*wv,y,*yv;I j,*v;
  ASSERT(1>=AR(w),EVRANK);
@@ -716,7 +670,6 @@ static A jtsent12b(J jt,A w){A t,*wv,y,*yv;I j,*v;
  DO(AN(w), RZ(yv[i]=incorp(vs(wv[i]))););
  R y;
 }    /* boxed sentences into monad/dyad */
-#endif
 
 // Install bucket info into the NAME type t, if it is a local name
 // actstv points to the chain headers, actstn is the number of chains
@@ -896,7 +849,6 @@ A jtclonelocalsyms(J jt, A a){A z;I j;I an=AN(a); LX *av=LXAV0(a),*zv;
  zv[0]=av[0]; // Copy as LX; really it's a UI4
  // Go through each hashchain of the model, after the first one.  We know the non-PERMANENT flags are off
  for(j=SYMLINFOSIZE;j<an;++j) {LX *zhbase=&zv[j]; LX ahx=av[j]; LX ztx=0; // hbase->chain base, hx=index of current element, ztx is element to insert after
-// obsolete   while(ahx&&(LAV0(JT(jt,symp)))[ahx].flag&LPERMANENT) {L *l;  // for each permanent entry...
   while(SYMNEXTISPERM(ahx)) {L *l;  // for each permanent entry...
    RZ(l=symnew(zhbase,SYMNEXT(ztx)));   // append new symbol after tail (or head, if tail is empty), as PERMANENT
    *zhbase=SYMNEXT(*zhbase);  // zhbase points to the pointer to the entry we just added.  First time, that's the chain base
@@ -922,7 +874,7 @@ F2(jtcolon){A d,h,*hv,m;C*s;I flag=VFLAGNONE,n,p;
  }
  RE(n=i0(a));  // m : n; set n=value of a argument
  I col0;  // set if it was m : 0
- if(col0=equ(w,num(0))){RZ(w=colon0(n)); /* obsolete if(!n)R w; */}   // if m : 0, read up to the ) .  If 0 : n, return the string unedited
+ if(col0=equ(w,num(0))){RZ(w=colon0(n)); }   // if m : 0, read up to the ) .  If 0 : n, return the string unedited
  if(!n){ra0(w); RCA(w);}  // noun - return it.  Give it recursive usecount
  if((C2T+C4T)&AT(w))RZ(w=cvt(LIT,w));
  I splitloc=-1;   // will hold line number of : line
@@ -930,7 +882,6 @@ F2(jtcolon){A d,h,*hv,m;C*s;I flag=VFLAGNONE,n,p;
  else{  // not tacit translator - preparse the body
   // we want to get all forms to a common one: a list of boxed strings.  If we went through m : 0, we are in that form
   // already.  Convert strings
-// obsolete   RZ(BOX&AT(w)?sent12b(w,&m,&d):sent12c(w,&m,&d,n==9));  // get monad & dyad parts;
   if(!col0)if(BOX&AT(w)){RZ(w=sent12b(w))}else{RZ(w=sent12c(w))}  // convert to list of boxes
   // If there is a control line )x at the top of the definition, parse it now and discard it from m
   if(likely(AN(w)!=0))if(unlikely(AN(AAV(w)[0])&&CAV(AAV(w)[0])[0]==')')){
@@ -944,10 +895,6 @@ F2(jtcolon){A d,h,*hv,m;C*s;I flag=VFLAGNONE,n,p;
    // discard the control line
    RZ(w=beheadW(w));
    // Noun DD
-// obsolete    // if the selected type is 0 (noun), add LFs at the end, run it together into one line, and return it
-// obsolete    if(n==0){  // noun DD
-// obsolete     RETF(w=raze(every2(w,scc(CLF),(A)&sfn0overself)));
-// obsolete    }
   }
   // find the location of the ':' divider line, if any.  But don't recognize : on the last line, since it could
   // conceivably be the return value from a modifier
@@ -968,7 +915,6 @@ F2(jtcolon){A d,h,*hv,m;C*s;I flag=VFLAGNONE,n,p;
  // The h argument is logically h[2][HN] where the boxes hold (parsed words, in a row);(info for each control word);(original commented text (optional));(local symbol table)
  // Non-noun results cannot become inputs to verbs, so we do not force them to be recursive
  if((1LL<<n)&0x206){  // types 1, 2, 9
-// obsolete   I fndflag=xop(h);   // 4=mnuv 2=x 1=y
   I fndflag=xop(hv[0])|xop(hv[0+HN]);   // 8=mu 4=nv 2=x 1=y, combined for both valences
   // for 9 : n, figure out best type after looking at n
   if(n==9){
@@ -976,15 +922,9 @@ F2(jtcolon){A d,h,*hv,m;C*s;I flag=VFLAGNONE,n,p;
    if(n==4){hv[HN]=hv[0]; hv[0]=mtv; hv[HN+1]=hv[1]; hv[1]=mtv; hv[HN+2]=hv[2]; hv[2]=mtv; flag=(flag&~VTRY2)+VTRY1; }  // if we created a dyadic verb, shift the monad over to the dyad and clear the monad, incl try flag
   } 
   if(n<=2){  // adv or conj after autodetection
-// obsolete    fndflag=(fndflag&7)|((fndflag&8)>>1);  // scaf put back in old form
-// obsolete    b=fndflag>4;   // set if there is mnuv and xy scaf
-// obsolete    if(b)flag|=VXOPR;   // if this def refers to xy, set VXOPR
-// obsolete    ASSERT(!BETWEENC(fndflag,1,3),EVNONCE);  // scaf
     flag|=REPSGN(-(fndflag&3))&VXOPR;   // if this def refers to xy, set VXOPR
-// obsolete if(BETWEENC(fndflag,1,3))jfwrite(str(129,"************ Old-style definition encountered.  It will be invalid after the beta period.\nIt has x/y without u/v/m/n **********\n"),num(2));
    // if there is only one valence defined, that will be the monad.  Swap it over to the dyad in two cases: (1) it is a non-operator conjunction: the operands will be the two verbs;
    // (2) it is an operator with a reference to x
-// obsolete    if(((-AN(m))&(AN(d)-1)&(((fndflag-5)&(1-n))|(5-fndflag)))<0){A*u=hv,*v=hv+HN,x; DQ(HN, x=*u; *u++=*v; *v++=x;);}  // if not, it executes on uv only; if conjunction, make the default the 'dyad' by swapping monad/dyad
    if(((-AN(m))&(AN(d)-1)&((SGNIFNOT(flag,VXOPRX)&(1-n))|(SGNIF(flag,VXOPRX)&SGNIF(fndflag,1))))<0){A*u=hv,*v=hv+HN,x; DQ(HN, x=*u; *u++=*v; *v++=x;);}  // if not, it executes on uv only; if conjunction, make the default the 'dyad' by swapping monad/dyad
    // for adv/conj, flag has operator status from here on
   }
@@ -1160,31 +1100,6 @@ A jtddtokens(J jt,A w,I env){
     ddschbgnx=0;  // start scan back at the beginning
    }
   }
-
-#if 0 // obsolete
-  //  create a faux block for the input to enqueue, so we can insert AM
-  A ddwds; fauxblockINT(ddfaux,0,3); fauxINT(ddwds,ddfaux,0,3)  AS(ddwds)[0]=ddendx-ddbgnx-1; AS(ddwds)[1]=2; AS(ddwds)[2]=1; AN(ddwds)=2*(ddendx-ddbgnx-1);
-  AK(ddwds)=(C*)(wilv+ddbgnx+1)-(C*)ddwds;  // point to data after the DDBGN
-// obsolete   A qwds; RZ(qwds=enqueue(ddwds,w,env&3)); I opflags=xop(qwds)|1;  // see what args are given - if no args at all, use y  scaf
-// obsolete   I deftype; CTLZI(opflags,deftype); deftype=(0x2143>>(deftype<<2))&0xf;  // digit number for the definition scaf let cx do it
-  A ddstg; RZ(ddstg=unwordil(ddwds,w,2+1));  // create string form: ask for enclosing quotes and 4 bytes of extra space.. Result is always writable
-  // Add (m:) to the string so we can refer to it
-  
-  I ddstglen=AN(ddstg); AN(ddstg)=AS(ddstg)[0]=ddstglen+4; C* suffv=CAV(ddstg)+ddstglen; suffv[0]='('; suffv[1]='9'; suffv[2]=':'; suffv[3]=')';
-  // append the new chars to w
-  I ddstgbgn=AN(w); RZ(w=jtapip(jtinplace,w,ddstg));   // remember where new string starts in combined string; add on to the character list
-  // replace the words of the DD with 5 word slots.  Transfer comment-at-end status to the new wordlist
-  I commentdiff=AS(wil)[0]-AM(wil);  // remember comment status, 0 or 1
-  RZ(wil=over(take(sc(ddbgnx+5),wil),drop(sc(ddendx+1),wil))); makewritable(wil);  // replace DD with 5 slots
-  AM(wil)=AS(wil)[0]-commentdiff;  // restore comment status to new wordlist
-  wv=CAV(w); nw=AS(wil)[0]; wilv=voidAV(wil);  // refresh pointer to word indexes, and length
-  // install pointers to the DD: ( m : string )
-  wilv[ddbgnx+3][0]=ddstgbgn; ddstglen+=ddstgbgn; wilv[ddbgnx+3][1]=ddstglen;  // word: 'string'
-  wilv[ddbgnx][0]=ddstglen; wilv[ddbgnx][1]=ddstglen+1;  // word: (
-  wilv[ddbgnx+1][0]=ddstglen+1; wilv[ddbgnx+1][1]=ddstglen+2;  // word: m
-  wilv[ddbgnx+2][0]=ddstglen+2; wilv[ddbgnx+2][1]=ddstglen+3;  // word: :
-  wilv[ddbgnx+4][0]=ddstglen+3; wilv[ddbgnx+4][1]=ddstglen+4;  // word: )
-#endif
 
   // We have replaced one DD with its equivalent explicit definition.  Rescan the line, starting at the first location where DDBGN was seen
   for(firstddbgnx=ddschbgnx;firstddbgnx<nw;++firstddbgnx){US ch2=*(US*)(wv+wilv[firstddbgnx][0]); ASSERT(!(ch2==DDEND&&(wilv[firstddbgnx][1]-wilv[firstddbgnx][0]==2)),EVCTRL) if(ch2==DDBGN&&(wilv[firstddbgnx][1]-wilv[firstddbgnx][0]==2))break; }

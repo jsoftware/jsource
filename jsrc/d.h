@@ -11,7 +11,6 @@
 
 // values returned in box 0 of an AFDEBUGRESULT value - big enough to be an integer
 
-// obsolete #define SUSCONT     0       /* continue current suspension                  */
 #define SUSCLEAR    7       /* clear stack                                  */
 #define SUSRUN      2       /* run again                                    */
 #define SUSRET      3       /* return result                                */

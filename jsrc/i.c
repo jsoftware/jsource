@@ -58,9 +58,6 @@ JS gjt=0; // JPF debug - convenience debug single process - points to shared are
 // The jt we are given is a throwaway, needed ONLY so we can allocate some A blocks here.  Anything stored
 // into jt will never be used.  jinit3 will later be called with the real jt, to initialize it
 B jtglobinit(JS jjt){A x,y;J jt=MTHREAD(jjt);  // initialize in master thread
-// obsolete  MC(jt->typesizes,typesizes,sizeof(jt->typesizes));  // required for ma.  Repeated for each thread in jtinit3
-// obsolete  MC(jt->typepriority,typepriority,sizeof(jt->typepriority));  // may not be needed
-// obsolete MC(jt->prioritytype,prioritytype,sizeof(jt->prioritytype));  // may not be needed
  jtmeminit(jjt,1);  // init allocation queues & tpop stack, master thread only
  RZ(y=rifvs(str(1L,"z")));     ACX(y); AS(y)[0]=BUCKETXLOC(1,"z");   // for paths, the shape holds the bucketx
  GA(x,BOX, 1,1,0); ACX(x); AAV(x)[0]=y; zpath=x; AFLAGORLOCAL(zpath,AT(zpath)&TRAVERSIBLE)  // ensure that traversible types in pst are marked traversible, so tpush/ra/fa will not recur on them
@@ -148,15 +145,11 @@ if(((-1) >> 1) != -1)*(I *)4 = 104;
 #endif
  INITJT(jjt,asgzomblevel) = 1;  // allow premature change to zombie names, but not data-dependent errors
  INITJT(jjt,assert) = 1;
-// obsolete  RZ(INITJT(jjt,bx)a=cstr("+++++++++|-")); INITJT(jjt,bx)=CAV(INITJT(jjt,bx)a);
  MC(INITJT(jjt,bx),"+++++++++|-",sizeof(INITJT(jjt,bx)));
-// obsolete  jt->cctdefault=
  INITJT(jjt,disp)[0]=1; INITJT(jjt,disp)[1]=5;
  INITJT(jjt,outmaxafter)=222;
  INITJT(jjt,outmaxlen)=256;
-// obsolete strcpy(jt->outseq,"\x0a");
  INITJT(jjt,retcomm)=1;
-// obsolete  jt->tostdout=1;
  INITJT(jjt,transposeflag)=1;
 // INITJT(jjt,int64rflag)=0;
  MC(INITJT(jjt,baselocale),"base",sizeof(INITJT(jjt,baselocale)));   // establish value & hash of "base"
@@ -214,9 +207,6 @@ static C jtjinit3(JS jjt){S t;
 /* required for jdll and doesn't hurt others */
  gjt=jjt; // global jt for JPF debug
  
-// obsolete MC(jt->typesizes,typesizes,sizeof(jt->typesizes));  // required for ma.
-// obsolete  MC(jt->typepriority,typepriority,sizeof(jt->typepriority));  // required for ma.  Repeated for each thread in jtinit3
-// obsolete  MC(jt->prioritytype,prioritytype,sizeof(jt->prioritytype));  // required for ma.  Repeated for each thread in jtinit3
 #if (SYS & SYS_DOS)
  t=EM_ZERODIVIDE+EM_INVALID; _controlfp(t,t);
 #endif
@@ -227,8 +217,6 @@ static C jtjinit3(JS jjt){S t;
  fpsetmask(0);
 #endif
  INITJT(jjt,tssbase)=tod();  // starting time for all threads
-// obsolete  jt->prxthornuni=0;  // init to non-unicode (normal) state
-// obsolete  jt->jprx=0;      // init to non jprx jconsole output (normal) state
  // Initialize subsystems in order.  Each initializes all threads, if there are thread variables
  RZ(jtbufferinit(jjt,MAXTHREADS)); // init the buffers pointed to by jjt
  RZ(jtmeminit(jjt,MAXTHREADS));

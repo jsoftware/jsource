@@ -74,9 +74,6 @@ A jtevery(J jt, A w, A fs){A * RESTRICT wv,x,z,* RESTRICT zv;
   if(likely(AT(x)&DIRECT)){
    flags&=SGNIFPRISTINABLE(AC(x))|~ACINPLACE;  // sign bit of flags will hold PRISTINE status of result: 1 if all DIRECT and inplaceable or PERMANENT.  NOTE that x may be the initial virtw.
          // If so, we will still let it show PRISTINE in z, because for virtw to be inplace, it must be abandoned or virtual, neither of which can be used again
-// obsolete    // If the verb returned its input, that means the input is escaping and the argument block is no longer pristine.  We only need to worry about this when the arg was pristine, which
-// obsolete    // means that x must be DIRECT.
-// obsolete    if(unlikely(x==virtw))AFLAG(w)&=~AFPRISTINE;
   }else{
     // not DIRECT.  result must be non-pristine, and we need to turn off pristinity of x since we are going to incorporate it
     flags&=~ACINPLACE;  // result not pristine
@@ -94,7 +91,6 @@ A jtevery(J jt, A w, A fs){A * RESTRICT wv,x,z,* RESTRICT zv;
    realizeifvirtual(x); razap(x);   // Since we are moving the result into a recursive box, we must ra() it.  This plus rifv plus pristine removal=INCORPRA.  We could save some fetches by bundling this code into the DIRECT path
    // We have to see if virtw escaped.  If so, we must mark w non-PRISTINE.  Since we are concerned about virtw itself escaping, rather than a part of it,
    // we can look at its usecount after it the result is incorporated into the new result
-// obsolete    AFLAG(w)&=~(wcchg<<AFPRISTINEX);
   } else {
    // result will be opened.  It is nonrecursive.  description in result.h.  We don't have to realize or ra
    if(AFLAG(x)&AFUNINCORPABLE){RZ(x=clonevirtual(x));}
@@ -122,8 +118,6 @@ A jtevery(J jt, A w, A fs){A * RESTRICT wv,x,z,* RESTRICT zv;
 #endif
   }
   ASSERT(!(SPARSE&AT(x)),EVNONCE);
-// obsolete   // Restore usecount to virtw.  We can't just store back what it was, because it may have been modified in the verb.
-// obsolete   AC(virtw)&=~ACINPLACE;
   // Store result & advance to next cell
   *zv++=x;
   if(unlikely(!--natoms))break;  // break to avoid fetching over the end of the input
@@ -214,9 +208,6 @@ A jtevery2(J jt, A a, A w, A fs){A*av,*wv,x,z,*zv;
   if(likely(AT(x)&DIRECT)){
    flags&=SGNIFPRISTINABLE(AC(x))|~ACINPLACE;  // sign bit of flags will hold PRISTINE status of result: 1 if all DIRECT and inplaceable or PERMANENT.  NOTE that x may be the initial virtw.
          // If so, we will still let it show PRISTINE in z, because for virtw to be inplace, it must be abandoned or virtual, neither of which can be used again
-// obsolete    // If the verb returned its input, that means the input is escaping and the argument block is no longer pristine.  We only need to worry about this when the arg was pristine, which
-// obsolete    // means that x must be DIRECT.
-// obsolete    if(unlikely(x==virtw))AFLAG(w)&=~AFPRISTINE;
   }else{
     // not DIRECT.  result must be non-pristine, and we need to turn off pristinity of x since we are going to incorporate it
     flags&=~ACINPLACE;  // result not pristine
@@ -237,7 +228,6 @@ A jtevery2(J jt, A a, A w, A fs){A*av,*wv,x,z,*zv;
    realizeifvirtual(x); razap(x);   // Since we are moving the result into a recursive box, we must ra() it.  This plus rifv plus pristine removal=INCORPRA.  We could save some fetches by bundling this code into the DIRECT path
    // We have to see if virtw escaped.  If so, we must mark w non-PRISTINE.  Since we are concerned about virtw itself escaping, rather than a part of it,
    // we can look at its usecount after it the result is incorporated into the new result
-// obsolete    AFLAG(w)&=~(wcchg<<AFPRISTINEX);
   } else {
    // result will be opened.  It is nonrecursive.  description in result.h.  We don't have to realize or ra
    if(AFLAG(x)&AFUNINCORPABLE){RZ(x=clonevirtual(x));}
@@ -251,8 +241,6 @@ A jtevery2(J jt, A a, A w, A fs){A*av,*wv,x,z,*zv;
 
 
 
-// obsolete   // Restore usecount to virta and virtw.  We can't just store back what it was, because it may have been modified in the verb.
-// obsolete   AC(virtw)&=~ACINPLACE; AC(virta)&=~ACINPLACE;
   ASSERT(!(SPARSE&AT(x)),EVNONCE);
   // Store result & advance to next cell
   *zv++=x;

@@ -216,7 +216,6 @@ static F1(jtii){ARGCHK1(w); I j; RETF(IX(SETIC(w,j)));}
 // this code is repeated in result.h
 I jtmaxtype(J jt,I s,I t){
  // If values differ and are both nonzero...
-// obsolete  I resultbit = PRIORITYTYPE(MAX(jt->typepriority[CTTZ(s)],jt->typepriority[CTTZ(t)]));  // Get the higher-priority type
  I resultbit = PRIORITYTYPE(MAX(TYPEPRIORITY(s),TYPEPRIORITY(t)));  // Get the higher-priority type
  if(unlikely(((s|t)&SPARSE))!=0){ASSERT(!((s|t)&(C2T|C4T|XNUM|RAT|SBT)),EVDOMAIN); R (I)1 << (resultbit+SB01X-B01X);}  // If either operand sparse, return sparse version
  R (I)1 << resultbit;   // otherwise, return normal version
@@ -227,24 +226,6 @@ void mvc(I m,void*z,I n,void*w){I p=n,r;static I k=sizeof(D);  // ???
  // first copy n bytes; thereafter p is the number of bytes we have copied; copy that amount again
  MC(z,w,MIN(p,m)); while(m>p){r=m-p; MC(p+(C*)z,z,MIN(p,r)); p+=p;}
 }
-
-/* // obsolete faster but on some compilers runs afoul of things that look like NaNs 
-   // exponent bytes are silently changed by one bit
-void mvc(I m,void*z,I n,void*w){I p=n,r;static I k=sizeof(D);
- if(m<k||k<n||(I)z%k){MC(z,w,MIN(p,m)); while(m>p){r=m-p; MC(p+(C*)z,z,MIN(p,r)); p+=p;}}
- else{C*e,*s;D d[7],d0,*v;
-  p=0==k%n?8:6==n?24:n*k;  // p=lcm(k,n)
-  e=(C*)d; s=w; DO(p, *e++=s[i%n];);
-  v=(D*)z; d0=*d;
-  switch(p){
-   case  8: DQ(m/p, *v++=d0;); break;
-   case 24: DQ(m/p, *v++=d0; *v++=d[1]; *v++=d[2];); break;
-   case 40: DQ(m/p, *v++=d0; *v++=d[1]; *v++=d[2]; *v++=d[3]; *v++=d[4];); break;
-   case 56: DQ(m/p, *v++=d0; *v++=d[1]; *v++=d[2]; *v++=d[3]; *v++=d[4]; *v++=d[5]; *v++=d[6];);
-  }
-  if(r=m%p){s=(C*)v; e=(C*)d; DO(r, *s++=e[i];);}
-}}
-*/
 
 // odometer, up to the n numbers s[]
 A jtodom(J jt,I r,I n,I* RESTRICT s){A z;I m,mn,*u,*zv;

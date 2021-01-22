@@ -21,7 +21,6 @@ extern B compxu(I,X*,X*);
 extern B compxd(I,X*,X*);
 extern B compqu(I,Q*,Q*);
 extern B compqd(I,Q*,Q*);
-// obsolete extern B compp(I,I*,I*);
 
 extern int  compspdsB(SORT * RESTRICT,I,I);
 extern int  compspdsD(SORT * RESTRICT,I,I);

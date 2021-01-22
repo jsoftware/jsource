@@ -500,7 +500,6 @@ F1(jtrngselects){I i;struct rngparms*vv=jt->rngdata->rngparms;
   case DXI: RZ(rngga(i,  vv)); jt->rngdata->rngw=SY_64?64:30; break;
   case MRI: RZ(rngga(i,  vv)); jt->rngdata->rngw=SY_64?64:31; break;
  }
-// obsolete  jt->rngdata->rngf=jt->rngdata->rngparms[jt->rngdata->rng].rngF;
  R mtv;
 }
 
@@ -843,7 +842,6 @@ static F2(jtrollksubdot){A z;I an,*av,k,m1,n,p,q,r,sh;UI m,mk,s,t,*u,x=jt->rngda
   B*c=(B*)u; DQ(r&(SZI-1), *c++=1&t; t>>=1;);
  }else{
   r=n; s=GMOF(m,x); if(s==x)s=0;
-// obsolete   k=0; j=1; while(m>j){++k; j<<=1;}
   CTLZI(m-1,k); ++k; k=m==1?0:k;
   if(k&&(1LL<<k)==m){  /* m=2^k but is not 1 or 2 */
    p=jt->rngdata->rngw/k; q=n/p; r=n%p; mk=m-1;

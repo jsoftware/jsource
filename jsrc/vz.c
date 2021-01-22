@@ -48,12 +48,6 @@ ZF2(jtzdiv){ZF2DECL;D t;
   if(ABS(c)<ABS(d)){t=a; a=-b; b=t;  t=c; c=-d; d=t;}
   a/=c; b/=c; d/=c; t=1+d*d; zr=(a+TYMES(b,d))/t; zi=(b-TYMES(a,d))/t;
  }else if(ZNZ(u)){  // division by 0
-// obsolete   switch(2*(I )(0>a)+(I )(0>b)){  // scaf rewrite w/o switch
-// obsolete   case 0: if(a> b)zr= inf; else zi= inf; break; 
-// obsolete   case 1: if(a>-b)zr= inf; else zi=-inf; break;
-// obsolete   case 2: if(a<-b)zr=-inf; else zi= inf; break;
-// obsolete   case 3: if(a< b)zr=-inf; else zi=-inf;
-// obsolete   }
   if(ABS(a)>ABS(b))zr=a/0.0;else zi=b/0.0;  // set the larger axis to infibity
  }
  ZEPILOG;
@@ -111,14 +105,6 @@ ZF2(jtzgcd){D a,b;Z t,z;I lim;
  I RrIi=(((v.re>0)*2+(v.re==0))*2+(v.im>0))*2+(v.im==0);  // classify result signs en bloc
  z.re=ABS(v.re); z.im=ABS(v.im);
  if((0xf1f4>>RrIi)&1){D zt=z.re; z.re=z.im; z.im=zt;}  // swap if re==0, or im!=0&(re>0!=im>0) 1111 0001 1111 0100
-// obsolete  z.re=a=v.re; z.im=b=v.im;
-// obsolete  switch(2*(I )(0>a)+(I )(0>b)){  // scaf rewrite w/o switch
-// obsolete   case 0: if(!a){z.re= b; z.im=0;}                        break;
-// obsolete   case 1:                              z.re=-b; z.im= a;  break;
-// obsolete   case 2: if(!b){z.re=-a; z.im=0;}else{z.re= b; z.im=-a;} break;
-// obsolete   case 3:                              z.re=-a; z.im=-b;
-// obsolete  }
-// obsolete  if(zz.re!=z.re||zz.im!=z.im)SEGFAULT;  // scaf
  R z;
 }
 
@@ -292,14 +278,7 @@ DF1(jtexppi){A z;B b;D r,th,y;I k;Z*v,t;
  v=ZAV(w); r=exp(PI*v->re); y=v->im; if(b=0>y)y=-y;  // take exp of real part, set y=imaginary part
  th=y-2*(I)(y/2); k=(I)(2*th); if(k!=2*th)k=-1; else if(b&&k)k=4-k;
  if(!((UI)k<=(UI)3))R expn1(pix(w));   // if k is not an exact multiple of 0.5, revert - what good is that???
-// obsolete  switch(k){  // scaf rewrite w/o switch
-// obsolete   case 0: t.re= r; t.im= 0; break;
-// obsolete   case 1: t.re= 0; t.im= r; break;
-// obsolete   case 2: t.re=-r; t.im= 0; break;
-// obsolete   case 3: t.re= 0; t.im=-r; break;
-// obsolete  }
  GAT0(z,CMPX,1,0); ZAV(z)[0].re=ZAV(z)[0].im=0; DAV(z)[k&1]=r*(1-(k&2));  // set result to 0, then store into real or imag, possibly changing sign
-// obsolete  ZAV(z)[0]=t;
  R z;
 }    /* special code for ^@o. */
 

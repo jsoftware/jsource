@@ -237,11 +237,6 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,UI lrrr,UI lcrrcr,AF f2){
  F2PREFIP;PROLOG(0042);A virta,virtw,z;I acn,ak,mn,wcn,wk;
  I outerframect, outerrptct, innerframect, innerrptct, aof, wof, sof, lof, sif, lif, *lis, *los;
  ARGCHK2(a,w);
-// obsolete  I lr=(UI)lrrr>>RANKTX, rr=lrrr&RANKTMSK;
-// obsolete  I lcr=(UI)lcrrcr>>RANKTX, rcr=lcrrcr&RANKTMSK;  // scaf
-// obsolete  af=AR(a)-lr; wf=AR(w)-rr;   // frames wrt innermost cell
-// obsolete if(AR(a)<lr || AR(w)<rr || lr>lcr || rr>rcr || lr<0 || rr<0 || AR(a)<lcr || AR(w)<rcr)SEGFAULT;  // * scaf
-// obsolete  if(unlikely(!(af|wf))){R CALL2IP(f2,a,w,fs);}  // if there's only one cell and no frame, run on it, that's the result.
  if(unlikely((UI)lrrr==(((UI)AR(a)<<RANKTX)+AR(w)))){R CALL2IP(f2,a,w,fs);}  // if there's only one cell and no frame, run on it, that's the result.
  if(unlikely(((AT(a)|AT(w))&SPARSE)!=0))R sprank2(a,w,fs,(UI)lcrrcr>>RANKTX,lcrrcr&RANKTMSK,f2);  // this needs to be updated to handle multiple ranks
 // lr,rr are the ranks of the underlying verb.  lcr,rcr are the cell-ranks given by u"lcr rcr.
@@ -272,8 +267,6 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,UI lrrr,UI lcrrcr,AF f2){
  // fetch empty-argument flags
  state|=(SGNTO0(-AN(a))<<STATEANOTEMPTYX)|(SGNTO0(-AN(w))<<STATEWNOTEMPTYX)|((SGNTO0(-AN(a))&SGNTO0(-AN(w)))<<STATEAWNOTEMPTYX);
  // RANKONLY verbs were handled in the caller to this routine, but fs might be RANKATOP.  In that case we can include its rank in the loop here, which will save loop setups
-// obsolete  if(unlikely((I)(((FAV(fs)->flag2&(VF2RANKATOP2|VF2BOXATOP2))-1)|(-((rr^rcr)|(lr^lcr))))>=0)){  // prospective new ranks to include
-// obsolete  if(unlikely((I)((-(FAV(fs)->flag2&(VF2RANKATOP2|VF2BOXATOP2)))&((lrrr^lcrrcr)-1))<0)){  // prospective new ranks to include, provided ?r=?cr
  if(unlikely((UI)(FAV(fs)->flag2&(VF2RANKATOP2|VF2BOXATOP2))>(UI)REPSGN(lrrr-lcrrcr))){  // if there are new ranks to include, provided ?r=?cr
  I lr=(UI)lrrr>>RANKTX, rr=lrrr&RANKTMSK;
  I t=(I)lr(fs); lr=t<lr?t:lr; t=(I)rr(fs); rr=t<rr?t:rr;   // get the ranks if we accept the new cell
@@ -282,21 +275,17 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,UI lrrr,UI lcrrcr,AF f2){
   // if we are using the BOXATOP from f, we can also use the raze flags.  Set these only if BOXATOP to prevent us from incorrectly
   // marking the result block as having uniform items if we didn't go through the assembly loop here
   state |= (-state) & (I)jtinplace & (JTWILLBEOPENED|JTCOUNTITEMS);
-// obsolete   af=AR(a)-lr; wf=AR(w)-rr;   // frames wrt new innermost cell
   lrrr=(lr<<RANKTX)+rr;  // reconstitute the combined llrr
  }
  UI afwf=((UI)AR(a)<<RANKTX)+AR(w)-lrrr;   // frames
 
  // Get the length of the outer frames, which are needed only if either "-rank is greater than the verb rank,
  // either argument has frame with respect to the "-ranks, and those frames are not the same length
-// obsolete  aof=AR(a)-lcr; wof=AR(w)-rcr;   // ?of = outer frame
  I aofwof=((UI)AR(a)<<RANKTX)+AR(w)-lcrrcr;  // outer frames
-// obsolete  if(likely(0<=(((lr-lcr)|(rr-rcr))&(-(aof^wof))))){los=0; lof=aof=wof=0; outerframect=outerrptct=1;  // no outer frame unless it's needed
  if(likely((I)((lrrr-lcrrcr)&(-((aofwof>>RANKTX)^(aofwof&RANKTMSK))))>=0)){los=0; lof=aof=wof=0; outerframect=outerrptct=1;  // no outer frame unless it's needed
  }else{
   // outerframect is the number of cells in the shorter frame; outerrptct is the number of cells in the residual frame
   // find smaller/larger frame/shape, and indicate if a is the repeated arg (otherwise we assume w)
-// obsolete   wof=wof<0?0:wof; aof=aof<0?0:aof; lof=aof; sof=wof; los=AS(a); lof=aof-wof<0?wof:lof; sof=aof-wof<0?aof:sof; los=aof-wof<0?AS(w):los; state|=(aof-wof)&STATEOUTERREPEATA;
   wof=aofwof&RANKTMSK; aof=aofwof>>RANKTX; lof=aof; sof=wof; los=AS(a); lof=aof-wof<0?wof:lof; sof=aof-wof<0?aof:sof; los=aof-wof<0?AS(w):los; state|=(aof-wof)&STATEOUTERREPEATA;
   ASSERTAGREE(AS(a),AS(w),sof)  // prefixes must agree
   CPROD(state&STATEAWNOTEMPTY,outerframect,sof,los); CPROD(state&STATEAWNOTEMPTY,outerrptct,lof-sof,los+sof);  // get # cells in frame, and in unmatched frame

@@ -13,20 +13,13 @@
 
 
 B jtxsinit(JS jjt,I nthreads){A x;JJ jt=MTHREAD(jjt);
- GAT0(x,BOX,10,1);/* obsolete  memset(AV(x),C0,AN(x)*SZI);*/ ACINITZAP(x); INITJT(jjt,slist)=x; AS(INITJT(jjt,slist))[0]=0;  // init block, set item count to 0.  This block is NOT recursive but becomes one if extended
-// obsolete  ras(x); iniit block has no tpop
-// obsolete  GAT0(x,INT,10,1); memset(AV(x),C0,AN(x)*SZI); ras(x); jt->sclist=x;
+ GAT0(x,BOX,10,1); ACINITZAP(x); INITJT(jjt,slist)=x; AS(INITJT(jjt,slist))[0]=0;  // init block, set item count to 0.  This block is NOT recursive but becomes one if extended
  MTHREAD(jjt)->currslistx=-1;  // indicate 'not in script' in master thread
  R 1;
 }
 
 F1(jtsnl){ASSERTMTV(w); R vec(BOX,AS(JT(jt,slist))[0],AAV(JT(jt,slist)));}
      /* 4!:3  list of script names */
-
-#if 0 // obsolete
-F1(jtscnl){ASSERTMTV(w); R vec(INT,AS(JT(jt,slist))[0],AAV(jt->sclist));}
-     /* 4!:8  list of script indices which loaded slist */
-#endif
 
 
 #if (SYS & SYS_MACINTOSH)
@@ -51,7 +44,6 @@ void setftype(C*v,OSType type,OSType crea){C p[256];FInfo f;
 
 #define SEEKLEAK 0
 static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;DC d;
-// obsolete B xt=jt->tostdout;
  if(equ(w,num(1)))R mtm;
  RZ(w=vs(w));
  // Handle locking.  Global glock has lock status for higher levels.  We see if this text is locked; if so, we mark lock status for this level
@@ -66,11 +58,9 @@ static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;DC d;
  C oldnmcachescript=jt->namecaching&1;  // save the per-script part of the status
  FDEPINC(1);   // No ASSERTs or returns till the FDEPDEC below
  RZ(d=deba(DCSCRIPT,0L,w,(A)si));
-// obsolete  jt->dcs=d; jt->dcs->dcpflags=(!(tso&&!JT(jt,seclev)))<<JTPRNOSTDOUTX;  // set flag to indicate suppression of output
  d->dcpflags=(!(tso&&!JT(jt,seclev)))<<JTPRNOSTDOUTX;  // set flag to indicate suppression of output
  J jtinplace=(J)((I)jt|d->dcpflags);  // create typeout flags to pass along: no output class, suppression as called for in tso
  d->dcss=1;  // indicate this script is not overridden by suspension
-// obsolete  jt->tostdout=tso&&!JT(jt,seclev);
  A *old=jt->tnextpushp;
  switch(ce){
  // loop over the lines.  jgets may fail, in which case we leave that as the error code for the sentence.
@@ -82,14 +72,11 @@ static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;DC d;
   I stbytes = spbytesinuse();
 #endif
   while(x&&!jt->jerr){jt->etxn=0;                           jtimmea(jtinplace,x=jgets("   ")); tpop(old);}
-// obsolete   jt->asgn=0;
 #if SEEKLEAK
   I endbytes=spbytesinuse(); if(endbytes-stbytes > 1000)printf("%lld bytes lost\n",endbytes-stbytes);
 #endif
   }
  }
-// obsolete  jt->dcs=xd;
-// obsolete  jt->tostdout=xt;
   debz();
  FDEPDEC(1);  // ASSERT OK now
  jt->namecaching&=~1; jt->namecaching|=oldnmcachescript;  // pop the per-script part
@@ -101,9 +88,7 @@ static F1(jtaddscriptname){I i;
  RE(i=i0(indexof(vec(BOX,AS(JT(jt,slist))[0],AAV(JT(jt,slist))),box(ravel(w)))));  // look up only in the defined names
  if(AS(JT(jt,slist))[0]==i){
   if(AS(JT(jt,slist))[0]==AN(JT(jt,slist))){RZ(JT(jt,slist)=ext(1,JT(jt,slist)));}  // extend, preserving curr index (destroying len momentarily)
-// obsolete RZ(jt->sclist=ext(1,jt->sclist));
   INCORP(w); RZ(ras(w)); RZ(AAV(JT(jt,slist))[i]=w);
-// obsolete  *(AS(JT(jt,slist))[0]+IAV(jt->sclist))=jt->currslistx;
   AS(JT(jt,slist))[0]=i+1;  // set new len
  }
  R sc(i);

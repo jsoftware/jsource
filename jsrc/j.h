@@ -1228,19 +1228,13 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x
 #define TYPEPRIORITY(t) (((((t)&0xff)?0x765a9410:((t)&0xff00)?0x5a941000:0x328)>>((CTTZ(t)&0x7)*4))&0xf)
 #endif
 
-// obsolete #define PRISTCOMSET(w,flg) awback=(w); if(unlikely((flg&AFVIRTUAL)!=0)){awback=ABACK(awback); flg=AFLAG(awback);} AFLAG(awback)=flg&~AFPRISTINE;
-// obsolete #define PRISTCOMSETF(w,flg) if(unlikely((flg&AFVIRTUAL)!=0)){w=ABACK(w); flg=AFLAG(w);} AFLAG(w)=flg&~AFPRISTINE;   // used only at end, when w can be destroyed
-// obsolete #define PRISTCOMMON(w,exe) awflg=AFLAG(w); exe PRISTCOMSET(w,awflg)
 // same but destroy w
-// obsolete #define PRISTCLRF(w,exe) I awflg=AFLAG(w); exe PRISTCOMSETF(w,awflg)
 #define PRISTCLRF(w) if(unlikely((AFLAG(w)&AFVIRTUAL)!=0)){w=ABACK(w);} AFLAGPRISTNO(w)   // used only at end, when w can be destroyed
 #define PRISTCOMMON(w) awback=(w); PRISTCLRF(awback)
 #define PRISTCLRNODCL(w) PRISTCOMMON(w)
 // normal entry points.  clear PRISTINE flag in w (or its backer, if virtual) because we have removed something from it
 #define PRISTCLR(w) A awback; PRISTCLRNODCL(w)
 // same, but destroy w in the process
-// obsolete #define PRISTCLRF(w) PRISTCLRF(w,)
-// obsolete #define PRISTCLRF(w) PRISTCLRF(w)
 // transfer pristinity of w to z
 #define PRISTXFER(z,w) AFLAGORLOCAL(z,AFLAG(w)&((SGNTO0(AC(w))&((I)jtinplace>>JTINPLACEWX))<<AFPRISTINEX)) PRISTCOMMON(w)
 // transfer pristinity of w to z, destroying w
@@ -1251,7 +1245,6 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x
 // transfer pristinity from a AND w to z (not if a==w)
 #define PRISTXFERF2(z,a,w) AFLAGORLOCAL(z,AFLAG(a)&AFLAG(w)&(((a!=w)&SGNTO0(AC(a)&AC(w))&((I)jtinplace>>JTINPLACEAX)&((I)jtinplace>>JTINPLACEWX))<<AFPRISTINEX)) \
                            PRISTCLRF(a) PRISTCLRF(w)
-// obsolete                            PRISTCOMSETF(a,aflg) PRISTCOMSETF(w,wflg)
 // PROD multiplies a list of numbers, where the product is known not to overflow a signed int (for example, it might be part of the shape of a nonempty dense array)
 // assign length first so we can sneak some computation into ain in va2
 #define PROD(z,length,ain) {I _i=(length); I * RESTRICT _zzt=(ain)-2; \
@@ -1336,7 +1329,6 @@ if(likely(z<3)){_zzt+=z; z=(I)&oneone; _zzt=_i&3?_zzt:(I*)z; z=_i&2?(I)_zzt:z; z
 // data.  So, we clear the inplace variables if we don't want to allow that: if the user set zomblevel=0, or if there is no local symbol table
 // (which means the user is fooling around at the keyboard & performance is not as important as transparency)
 #define CLEARZOMBIE     {jt->assignsym=0;}  // Used when we know there shouldn't be an assignsym, just in case
-// obsolete #define PUSHZOMB L*savassignsym = jt->assignsym; if(savassignsym){if(unlikely(((JT(jt,asgzomblevel)-1)|((AN(jt->locsyms)-2)))<0)){CLEARZOMBIE}}  // test is (JT(jt,asgzomblevel)==0||AN(jt->locsyms)<2)
 #define PUSHZOMB L*savassignsym = jt->assignsym; if(unlikely(JT(jt,asgzomblevel)==0)){CLEARZOMBIE}
 #define POPZOMB {jt->assignsym=savassignsym;}
 #define R               return

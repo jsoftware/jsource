@@ -32,22 +32,6 @@
 #endif
 
 // create a mask of bits in which a difference is considered significant for floating-point purposes.
-#if 0  // obsolete
-static void ctmask(J jt){
- // New version: we have to find the max maskvalue such that x+tolerance and x-tolerance are not separated by more than one
- // maskpoint, for any x.  The worst-case x occurs where the mantissa of x is as big as it can be, e. g. 1.1111111111...
- // At that point the tolerance band above is t/(t+1) times the approx value (2 in the example).  The tolerance band below is about the same,
- // and the sum of the two must not exceed the mask size.  We calculate the mask in floating point as 2 - 2 * 2*(t/(t+1)) which will
- // give its floating-point representation.  We then adjust the mask by forcing the exponent to be masked, and clearing any bits below the
- // highest clear bit
- if(jt->cct!=1.0){
-  D p=2.0 - (4.0*(1.0-jt->cct))/(2.0-jt->cct);
-  IL q=0xffffffff00000000LL | *(UIL*)&p;
-  q&=q>>1; q&=q>>2; q&=q>>4; q&=q>>8; q&=q>>16;
-  jt->ctmask=(UIL)q;
- }else{jt->ctmask = ~0LL;}
-}    /* 1 iff significant wrt comparison tolerance */
-#else
 // cct is complementary comparison tolerance; return 
 static UIL calcctmask(D cct){
  // New version: we have to find the max maskvalue such that x+tolerance and x-tolerance are not separated by more than one
@@ -60,13 +44,10 @@ static UIL calcctmask(D cct){
  if(likely(cct==1.0))R ~0LL;  // intolerant ct
  // user specified ct.  Calculate the mask for it
  D p=2.0 - (4.0*(1.0-cct))/(2.0-cct);
-// obsolete  IL q=0xffffffff00000000LL | *(UIL*)&p;
-// obsolete  q&=q>>1; q&=q>>2; q&=q>>4; q&=q>>8; q&=q>>16;
  UIL q=(~*(UIL*)&p)<<16;  // shift exponent away & complement
  I zeropos; CTLZI(q,zeropos);   // get bit# of highest 0 bit (+ 16, because of shift) - 15 if all bits were 1
  R ((UIL)~0LL)<<(zeropos-15);
 }
-#endif
 
 #if (C_AVX2&&SY_64) || EMU_AVX2
 static void fillwords(void* x, UI4 storeval, I nstores){
@@ -380,7 +361,6 @@ static UI hiq(Q*v){A y=v->n; R hici(AN(y),UIAV(y));}
 
 // Hash a single double, using only the bits in ctmask.
 //  not required for tolerant comparison, but if we tried to do tolerant comparison through the fast code it would help
-// obsolete static UI jthid(J jt,D d){R *(UIL*)&d!=NEGATIVE0?CRC32LL(-1L,*(UIL*)&d&jt->ctmask):CRC32LL(-1L,0);}
 static UI cthid(UIL ctmask,D d){R *(UIL*)&d!=NEGATIVE0?CRC32LL(-1L,*(UIL*)&d&ctmask):CRC32LL(-1L,0);}
 
 // Hash the data in the given A, which is an element of the box we are hashing
@@ -388,7 +368,6 @@ static UI cthid(UIL ctmask,D d){R *(UIL*)&d!=NEGATIVE0?CRC32LL(-1L,*(UIL*)&d&ctm
 // If literal, hash the whole thing
 // If numeric, convert first atom to float and hash it after multiplying by hct.  hct will change to give low/high values
 // Q: called only for singletons?
-// obsolete static UI jthia(J jt,D hct,A y){UC*yv;D d;I n,t;Q*u;
 static UI cthia(UIL ctmask,D hct,A y){UC*yv;D d;I n,t;Q*u;
  n=AN(y); t=AT(y); yv=UAV(y);
  if(((n-1)|SGNIF(t,BOXX))<0)R hic((I)AR(y)*SZI,(UC*)AS(y));  // boxed or empty
@@ -1258,7 +1237,6 @@ static IOF(jtiobs){A*av,*wv,y;B *yb,*zb;C*zc;I acn,*hu,*hv,l,m1,md,s,wcn,*zi,*zv
  }
  if(w==mark)R h;
  hv=AV(h)+bk*(asct-1);
-// obsolete  jt->workareas.compare.complt=-1;  // set comparison mode for our comparisons
  for(l=0;l<ac;++l,av+=acn,wv+=wcn,hv+=asct){  // loop for each result in a
   // m1=index of last item-1, which may be less than m-1 if there were discarded duplicates (signaled by last index <0)
   s=hv[bk?1-asct:asct-1]; m1=0>s?~s:asct-1; hu=hv-m1*bk;
@@ -1854,7 +1832,6 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
   // p>>booladj is the number of hashtable entries we need.  booladj is 0 for full hash, 3 if we just need one byte-encoded boolean per input value, 5 if just one bit per input value
   UI booladj=(mode&(IIOPMSK&~(IIDOT^IICO)))?5:0;  // boolean allowed when not i./i:
   p=0;  // indicate we haven't come up with the table size yet.  It depends on reverse and small-range decisions
-// obsolete   if(unlikely(((fnx+1)&t&BOX+FL+CMPX)!=0))ctmask(jt);   // calculate ctmask if comparison is tolerant and there might be floats
 
   if(unlikely((t&BOX+XNUM+RAT)!=0)){
    if(t&BOX){I t1; fnx=(fnx&1)&&(1<n||usebs(a,ac,m))?FNTBLBOXSSORT:1<n?FNTBLBOXARRAY:(fnx&1)?FNTBLBOXINTOLERANT:

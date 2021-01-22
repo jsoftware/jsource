@@ -22,17 +22,14 @@ DF2(jtunquote){A z;I flgd0cp;  // flgs: 1=pseudofunction 2=cached lookup 8=execu
  if(likely(thisname!=0)){  // normal names
   jt->curname=thisname;  // set failing name before we have value errors
   // normal path for named functions
-// obsolete   if(AM(self)==jt->modifiercounter&&v->localuse.lvp[0]){
   I4 cachedlkp=v->localuse.lI4[0];  // negative if cacheable; positive if cached
   if(cachedlkp>0){
    // There is a lookup for this nameref - use it
    fs=LAV0(JT(jt,symp))[cachedlkp].val;
    if(likely(fs!=0)){
     // the lookup exists.  If it has a (necessarily direct) locative, we must fetch the locative so we switch to it
-// obsolete     if(unlikely(NAV(thisname)->flag&NMLOC)){RZ(explocale=sybaseloc(thisname));}  //  get the explicit locale.  0 if erroneous locale
     if(unlikely(NAV(thisname)->flag&NMLOC)){RZ(explocale=stfindcre(AN(thisname)-NAV(thisname)->m-2,1+NAV(thisname)->m+NAV(thisname)->s,NAV(thisname)->bucketx));}  //  extract locale string, find/create locale
     else explocale=0;  // if no direct locative, set so
-// obsolete    stabent=(L*)fs;  // set stabent to NONZERO to indicate not a pseudofunction
     flgd0cp|=2;  // indicate cached lookup
    }else{cachedlkp=v->localuse.lI4[0]=SYMNONPERM; goto valgone;}  // if the value vanished, it must have been erased by hand.  Reenable caching but keep looking
   }else{
@@ -56,7 +53,6 @@ valgone: ;
    I4 cachable=(I4)(I)stabent&1; stabent=(L*)((I)stabent&~1);  // extract cachable flag from stabent & clear it
    fs=stabent->val;  // fetch the value of the name
    ASSERT(fs!=0,EVVALUE); // make sure the name's value is given also
-// obsolete    // Remember the resolved value and the current modifiercounter, UNLESS the name does not permit remembering the lookup
    ASSERT(PARTOFSPEECHEQACV(AT(self),AT(fs)),EVDOMAIN);   // make sure its part of speech has not changed since the name was parsed
    // if this reference allows caching (lI4[0]<0), save the value if it comes from a cachable source, and attach the primitive block to the name
    if(unlikely((cachedlkp&(-cachable))<0)){
@@ -79,7 +75,6 @@ ASSERTSYS(AFLAG(thisname)&NAME,"nonrecursive name"); // scaf
         //  This wipes out bucket info in self, but that will not be needed since we have cached the lookup
     }
    }
-// obsolete    if(v->localuse.lvp[0]){v->localuse.lvp[0]=fs; AM(self)=jt->modifiercounter;}
   }
  }else{
   // here for pseudo-named function.  The actual name is in g, and the function itself is pointed to by h.  The verb is an anonymous explicit modifier that has received operands (but not arguments)
@@ -92,10 +87,8 @@ ASSERTSYS(AFLAG(thisname)&NAME,"nonrecursive name"); // scaf
   // The pseudo-named function was created under debug mode.  If the same sequence had been parsed outside of debug, it would have been anonymous.  This has
   // implications: anonymous verbs do not push/pop the locale stack.  If bstkreqd is set, ALL functions will push the stack here.  That is bad, because
   // it means that a function that modifies the current locale behaves differently depending on whether debug is on or not.  We set a flag to indicate the case
-// obsolete   stabent=0;  // no symbol table for pseudo-names, since they aren't looked up
   flgd0cp|=1;  // indicate pseudofunction
  }
-// obsolete  I dyadex = w!=self;   // if we were called with w,fs,fs, we are a monad.  Otherwise (a,w,fs) dyad
  v=FAV(fs);  // repurpose v to point to the resolved verb block
 #if !USECSTACK
  I d=v->fdep; if(!d)RE(d=fdep(fs));  // get stack depth of this function, for overrun prevention
@@ -110,13 +103,11 @@ ASSERTSYS(AFLAG(thisname)&NAME,"nonrecursive name"); // scaf
    explocale=AKGST(jt->locsyms);  // fetch global syms for the caller's environment, so we stack it next
   }
   pushcallstack1d(CALLSTACKPOPLOCALE,jt->global); jt->global=explocale;  // move to new implied locale.  DO NOT change locale it lt->locsyms.  It is set only by explicit action so that on a chain of locatives it stays unchanged
-// obsolete   ++jt->modifiercounter;  // invalidate any extant lookups of modifier names
  }
  // ************** no errors till the stack has been popped
  w=flgd0cp&8?w:(A)fs;  // set up the bivalent argument with the new self, since fs may have been changed
 
  // Execute the name.  First check 4 flags at once to see if anything special is afoot: debug, pm, bstk, garbage collection
-// obsolete  if(likely(!(jt->uflags.ui4|(v->flag&VLOCK)))) {   // scaf don't test VLOCK
  if(likely(!(jt->uflags.ui4))) {
   // No special processing. Just run the entity
   // We have to raise the usecount, in case the name is deleted while running.  But that will be very rare.  Plus, we know that the executable type is recursive and non-inplaceable.
@@ -133,16 +124,12 @@ ASSERTSYS(AFLAG(thisname)&NAME,"nonrecursive name"); // scaf
   // Extra processing is required.  Check each option individually
   if(jt->uflags.us.cx.cx_c.pmctr)pmrecord(thisname,jt->global?LOCNAME(jt->global):0,-1L,flgd0cp&8?VAL2:VAL1);  // Record the call to the name, if perf monitoring on
   // If we are required to insert a marker for each call, do so (if it hasn't been done already).  But not for pseudo-named functions
-// obsolete   if(stabent!=0 && jt->uflags.us.uq.uq_c.bstkreqd && callstackx==jt->callstacknext){pushcallstack1d(CALLSTACKPOPLOCALE,jt->global);}  //  If cocurrent is about, make every call visible
   if(!(flgd0cp&1) && jt->uflags.us.uq.uq_c.bstkreqd && callstackx==jt->callstacknext){pushcallstack1d(CALLSTACKPOPLOCALE,jt->global);}  //  If cocurrent is about, make every call visible
   if(jt->uflags.us.cx.cx_c.db&&!(jt->glock||VLOCK&v->flag)&&jt->recurstate<RECSTATEPROMPT){  // The verb is locked if it is marked as locked, or if the script is locked; if recursive JDo, can't enter debug suspension so ignore debug
-// obsolete    jt->cursymb=stabent;
    z=dbunquote(flgd0cp&8?a:0,flgd0cp&8?w:a,fs,flgd0cp&3?0:stabent);  // if debugging, go do that.  save last sym lookup as debug parm if it is valid (not cached or pseudoname)
   }else{
-// obsolete    ra(fs);  // should assert recursive usecount
    if(unlikely(!(flgd0cp&2)))ACINCR(fs);  // protect the entity if not cached
    A s=jt->sf; jt->sf=fs; z=v->valencefns[flgd0cp>>3]((J)(((REPSGN(SGNIF(v->flag,(flgd0cp>>3)+VJTFLGOK1X)))|~JTFLAGMSK)&(I)jtinplace),a,w,fs); jt->sf=s;
-// obsolete    fa(fs); 
   if(unlikely(!(flgd0cp&2))){ACDECR(fs); if(unlikely(AC(fs)<=0)){ACINCR(fs); fa(fs);}}
   }
   if(jt->uflags.us.cx.cx_c.pmctr)pmrecord(thisname,jt->global?LOCNAME(jt->global):0,-2L,flgd0cp&8?VAL2:VAL1);  // record the return from call
@@ -157,12 +144,10 @@ ASSERTSYS(AFLAG(thisname)&NAME,"nonrecursive name"); // scaf
  jt->curname=savname;  // restore the executing name
  if(unlikely(callstackx!=jt->callstacknext)){  // normal case, with no stack, bypasses all this
   // There are stack entries.  Process them
-// obsolete   if(likely(jt->callstack[callstackx].type==CALLSTACKPOPLOCALE && callstackx+1==jt->callstacknext)) {
   if(likely(((jt->callstack[callstackx].type^CALLSTACKPOPLOCALE) | ((callstackx+1)^jt->callstacknext))==0)) {   // jt->callstack[callstackx].type==CALLSTACKPOPLOCALE && callstackx+1==jt->callstacknext
    // The only thing on the stack is a simple POP.  Do the pop.  This & the previous case account for almost all the calls here
    SYMSETGLOBAL(jt->locsyms,jt->callstack[callstackx].value);  // restore global locale
    jt->callstacknext=(I4)callstackx;  // restore stackpointer for caller
-// obsolete    ++jt->modifiercounter;  // invalidate any extant lookups of modifier names
   }else{
    // Locales were changed or deleted.  Process the stack fully
    // Find the locale to return to.  This will be the locale of the POP, or jt->global unchanged if there is a POPFROM or there is no POP.
@@ -180,7 +165,6 @@ ASSERTSYS(AFLAG(thisname)&NAME,"nonrecursive name"); // scaf
    }while(i!=callstackx);
    // if we encountered u./v., we have now restored the previous local symbols so that it is OK to restore the globals into it
    if(earlyloc&&!fromfound){SYMSETGLOBAL(jt->locsyms,earlyloc);} // If there is a POP to do, do it
-// obsolete  ++jt->modifiercounter;}; invalidate any extant lookups of modifier names
    // Delete the deletable locales.  If we encounter the (possibly new) current locale, remember that fact and don't delete it.
    I delcurr=0;  // set if we have to delete jt->global
    i=jt->callstacknext;  // back to front
@@ -228,7 +212,6 @@ A jtnamerefacv(J jt, A a, L* w){A y;V*v;
  if(!y||NOUN&AT(y))R y;  // return if error or it's a noun
  // This reference might escape into another context, either (1) by becoming part of a
  // non-noun result; (2) being assigned to a global name; (3) being passed into an explicit modifier: so we clear the bucket info if we ra() the reference
-// obsolete  NAV(a)->bucket = 0;  // Clear bucket info so we won't try to look up using local info.  kludge this modifies the original a; not so bad, since it's usually not local; but ugly
  v=FAV(y);
  // We cannot be guaranteed that the definition in place when a reference is created is the same value that is there when the reference
  // is used.  Thus, we can't guarantee inplaceability by copying INPLACE bits from f to the result, and we just set INPLACE for everything
@@ -239,12 +222,6 @@ A jtnamerefacv(J jt, A a, L* w){A y;V*v;
  RZ(z);
  // if the nameref is cachable, either because the name is cachable or name caching is enabled now, enable caching in lI4
  FAV(z)->localuse.lI4[0]=(NAV(a)->flag&NMCACHED || (jt->namecaching && !(NAV(a)->flag&(NMILOC|NMDOT|NMIMPLOC))))<<SYMNONPERMX;  // 0x80.. to enable caching, otherwise 0
-// obsolete  // To prevent having to look up the name every time it is executed, we will remember the address of the block (in localuse), AND the modifier counter at the time of the lookup (in AM).  We can't use
-// obsolete  // old lookups on locatives or canned names like xyuvmn, and we leave localuse 0 as a flag of that condition to help logic in unquote
-// obsolete  // If the original name was not defined (w==0), don't set a value so that it will be looked up again to produce value error
-// obsolete  if(w&&!(NAV(a)->flag&(NMLOC|NMILOC|NMDOT))){
-// obsolete   FAV(z)->localuse.lvp[0]=y; AM(z)=jt->modifiercounter; ACIPNO(z);  // can't use AM in an inplaceable block
-// obsolete  }
  R z;
 }
 

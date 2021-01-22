@@ -631,9 +631,8 @@ static DF2(jtinfixd){A z;C*x,*y;I c=0,d,k,m,n,p,q,r,*s,wr,*ws,wt,zc;
  s=AS(z); s[0]=d; s[1]=zc; MCISH(s+2,1+ws,r-2);   // install shape
  k=c<<bplg(wt);   // k=#bytes in a cell of result
  if(likely(AN(z)!=0)){
-// obsolete   if(m>=0){ q=p*k; DQ(d, MC(x,y,q);    x+=q; y+=k;);  // m>0, overlapping inputs, copy them
   if(m>=0){ q=p*k; JMCDECL(endmask) JMCSETMASK(endmask,q+SZI-1,0) DQ(d, JMCR(x,y,q+(SZI-1),lbl1,0,endmask) x+=q; y+=k;);  // m>0, overlapping inputs, copy them
-  }else{JMC(x,y,n*k+(SZI-1),lbl2,0)  /* obsolete if(unlikely((q=d*p-n)!=0))*/fillv(wt,q*c,x+n*k);    // nonoverlapping: copy en bloc and fill
+  }else{JMC(x,y,n*k+(SZI-1),lbl2,0)  fillv(wt,q*c,x+n*k);    // nonoverlapping: copy en bloc and fill
   }
  }
  RETF(z);

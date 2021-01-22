@@ -7,8 +7,6 @@
 #include "vg.h"
 // Places marked TUNE have parameters that must be tuned to the hardware
 
-// obsolete #define GBEGIN(L)  I olt=jt->workareas.compare.complt; jt->workareas.compare.complt=L
-// obsolete #define GEND      jt->workareas.compare.complt=olt;
 
 // Ideas for work:
 // Sort/grade 2-integer lists by radix?
@@ -24,7 +22,6 @@
 /* merge sort with special code for n<:5                                */
 /*                                                                      */
 /************************************************************************/
-// obsolete #define VS(i,j)          (0<CALL1(jt->workareas.compare.comp,u[i],u[j]))
 #define XC(i,j)          {q=u[i]; u[i]=u[j]; u[j]=q;}
 #define P3(i,j,k)        {ui=u[i]; uj=u[j]; uk=u[k]; u[0]=ui; u[1]=uj; u[2]=uk;}
 #define P5(i,j,k,l,m)    {ui=u[i]; uj=u[j]; uk=u[k]; ul=u[l]; um=u[m];  \
@@ -271,7 +268,6 @@ I grcol2(I d,I c,US*yv,I n,I*xv,I*zv,const I m,US*u,I flags){
 // We interpret the input as integer form so that we can hide the item number in an infinity without turning it into a NaN
 static GF(jtgrdq){F1PREFJT;
  // For stability, we keep all the interior sorts ascending.  Here we set a code to precondition the values so that comes out right
-// obsolete  I sortdown63=(~sortblok->lt)&IMIN;  // sign bit set if sorting down; other bits 0
  I sortdown63=SGNIF((I)jtinplace,JTDESCENDX)&IMIN;  // sign bit set if sorting down; other bits 0
  // See how many bits we must reserve for the item number, and make a mask for the item number
  unsigned long hbit; CTLZI(n-1,hbit); ++hbit; I itemmask=((I)1<<hbit)-1;  // mask where the item number will go
@@ -331,14 +327,12 @@ static GF(jtgrd){F1PREFJT;A x,y;int b;D*v,*wv;I *g,*h,nneg,*xv;US*u;void *yv;I c
   u=(US*)wv+FPLSBWDX;   // point to LSB of input
   // count the number of negative values, call it nneg.  Set b to mean 'both negative and nonnegative are present'
   // If we are doing all negative values, just change the direction and return the sorted values without reversal
-// obsolete   {v=wv; nneg=0; DQ(n, nneg+=(((US*)v)[FPMSBWDX]>>15); ++v;); b=0<nneg&&nneg<n;}
   {v=wv; nneg=0; DQ(n, nneg+=(((US*)v)[FPMSBWDX]>>15); ++v;); b=BETWEENO(nneg,0,n);}
   // set the ping-pong buffer pointers so we will end up with the output in zv.  If b is set, we have 5 passes (one final sign-correction pass); if not, 4
   // h is the even-numbered output buffer.  if b is off, we start writing to x and finish in z; if b is set, we start writing to z, finish the 4th pass
   // in x, then the postpass ends in z
   g=b?xv:zv; h=b?zv:xv;
   // sort from LSB to MSB.  Sort in the order requested UNLESS all the values are negative; then reverse the order and save the postpass
-// obsolete   colflags=grcol(65536,0L,yv,n,0LL,h,sizeof(D)/sizeof(US),u,((1-sortblok->lt)^((nneg==n)<<1)));  // 'up' in bit 1, inverted if all neg
   colflags=grcol(65536,0L,yv,n,0LL,h,sizeof(D)/sizeof(US),u,(((~(I)jtinplace>>(JTDESCENDX-1))&2)^((nneg==n)<<1)));  // 'up' in bit 1, inverted if all neg
   colflags=grcol(65536,0L,yv,n,h, g,sizeof(D)/sizeof(US),u+=WDINC,colflags);
   colflags=grcol(65536,0L,yv,n,g, h,sizeof(D)/sizeof(US),u+=WDINC,colflags);
@@ -696,14 +690,6 @@ static GF(jtgrs){F1PREFJT;R gri(m,ai,n,sborder(w),zv);}
 F2(jtgrade1p){PROLOG(0074);A x,z;I n,*s,*xv,*zv;
  RZ(x=curtail(a)); IRS2(x,w,0L,1L,1L,jtfrom,z); z=grade1(z); EPILOG(z);
  // A special sort function for this is a bad idea, because the indirection is repeated so often
-#if 0 // obsolete
- s=AS(w); n=s[0]; jt->workareas.compare.compn=s[1]-1; jt->workareas.compare.compk=SZI*s[1];
- jt->workareas.compare.comp=compp; jt->workareas.compare.compsyv=AV(a); jt->workareas.compare.compv=CAV(w); jt->workareas.compare.compusejt=1;
- GATV0(z,INT,n,1); zv=AV(z);
- GATV0(x,INT,n,1); xv=AV(x);
- msortitems(jmsort,n,(void**)zv,(void**)xv);
- EPILOG(z);
-#endif
 }    /* /:(}:a){"1 w , permutation a, integer matrix w */
 
 

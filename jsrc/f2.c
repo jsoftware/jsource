@@ -8,15 +8,12 @@
 
 
 static F2(jtth2box){A z;I n,p,q,*v,x,y;
-// obsolete  p=jt->pos[0]; q=jt->pos[1];
  RZ(a=vi(a)); n=AN(a); v=AV(a);
  ASSERT(1>=AR(a),EVRANK);
  ASSERT(1==n||2==n,EVLENGTH);
  x=v[0]; y=2>n?0:v[1]; 
  ASSERT((UI)x<=2&&(UI)y<=2,EVDOMAIN);
-// obsolete  jt->pos[0]=x; jt->pos[1]=y;
  z=jtthorn1xy(jt,w,(x<<JTTHORNXX)+(y<<JTTHORNYX));  // override default box positioning 
-// obsolete  jt->pos[0]=p; jt->pos[1]=q;
  RETF(z);
 }
 
@@ -260,7 +257,6 @@ static A jtth2ctrl(J jt,A a,A*ep,A*mp,A*dp,A*sp,I*zkp){A da,ea,ma,s;B b=1,*ev,r,
  }
  // Now that we know the conversion buffer size, allocate it
  GATV0(s,LIT,lenreqd,1);
-// obsolete  jt->th2buf=CAV(s);
  // Output total line width if it is valid, 0 if not
  *zkp=b?zk:0; R s;
 }    /* parse format control (left argument of ":) */

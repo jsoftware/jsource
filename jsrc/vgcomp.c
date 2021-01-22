@@ -20,22 +20,16 @@ B compxu(I n, X *a, X *b){SORT *sbk=(SORT *)n; I j; n=sbk->n; J jt=(J)((I)sbk->j
 B compxd(I n, X *a, X *b){SORT *sbk=(SORT *)n; I j; n=sbk->n; J jt=(J)((I)sbk->jt&~JTFLAGMSK); do{if(j=xcompare(*b,*a))R SGNTO0(j); if(!--n)break; ++a; ++b;}while(1); R a<b;} // xcompare returns 1/0/-1
 B compqu(I n, Q *a, Q *b){SORT *sbk=(SORT *)n; I j; n=sbk->n; J jt=(J)((I)sbk->jt&~JTFLAGMSK); do{if(j=QCOMP(*a,*b))R SGNTO0(j); if(!--n)break; ++a; ++b;}while(1); R a<b;} // QCOMP returns 1/0/-1
 B compqd(I n, Q *a, Q *b){SORT *sbk=(SORT *)n; I j; n=sbk->n; J jt=(J)((I)sbk->jt&~JTFLAGMSK); do{if(j=QCOMP(*b,*a))R SGNTO0(j); if(!--n)break; ++a; ++b;}while(1); R a<b;} // QCOMP returns 1/0/-1
-// obsolete B compp(I n,I *a, I *b){J jt=(J)n; I*cv=jt->workareas.compare.compsyv; DO(jt->workareas.compare.compn, if(a[cv[i]]!=b[cv[i]])R a[cv[i]]<b[cv[i]];); R a<b;}
 
 #define CF(f)            int f(SORT * RESTRICT sortblok,I a,I b)
 
 // if expr true (1), return 1; if 0, return -1
-// obsolete #define RETGT(x) ((((x)^(((I)jtinplace>>JTDESCENDX)&1))<<1)-1) 
 #define RETGT(x) (((x)<<1)-1) 
 
-// obsolete #define COMPDCLP(T)      T*x=(T*)(jt->workareas.compare.compv+a*jt->workareas.compare.compk),*y=(T*)(jt->workareas.compare.compv+b*jt->workareas.compare.compk)
 #define COMPDCLQ(T)      T*x=(T*)av,*y=(T*)wv
 #define COMPDCLS(T)      T*x=(T*)SBAV(a),*y=(T*)SBAV(w)
-// obsolete #define COMPLOOP(T,m)    {COMPDCLP(T); DO(m, if(x[i]!=y[i])R RETGT(x[i]>y[i]);)}
 #define COMPLOOQ(T,m)    {COMPDCLQ(T); DO(m, if(x[i]!=y[i])R RETGT(x[i]>y[i]);)}
 #define COMPLOOS(T,m)    {COMPDCLS(T); DO(m, if(SBNE(x[i],y[i]))R RETGT(SBGT(x[i],y[i])););}
-// obsolete #define COMPLOOPF(T,m,f) {COMPDCLP(T);I j; DO(m, if(j=f(x[i],y[i]))R j;);}
-// obsolete #define COMPLOOPG(T,m,f) {COMPDCLP(T);I j; DO(m, if(j=f(x[i],y[i]))R RETGT(j>0););}
 #define COMPLOOQG(T,m,f) {COMPDCLQ(T);I j; DO(m, if(j=f(x[i],y[i]))R RETGT(j>0););}
 
 // this is used by routines outside of sort/merge & therefore a & w can be dissimilar
@@ -45,7 +39,6 @@ I jtcompare(J jt,A a,A w){C*av,*wv;I ar,an,*as,at,c,d,j,m,t,wn,wr,*ws,wt;F1PREFJ
  an=AN(a); at=an?AT(a):B01; ar=AR(a); as=AS(a);
  wn=AN(w); wt=wn?AT(w):B01; wr=AR(w); ws=AS(w); t=maxtyped(at,wt);
  if(unlikely(!HOMO(at,wt))){
-// obsolete R RETGT(at&BOX?1:wt&BOX?0:at&JCHAR?1:wt&JCHAR?0:at&SBT?1:0);
   ar=(at>>SBTX)&1; ar=wt&JCHAR?0:ar; ar=at&JCHAR?1:ar; ar=wt&BOX?0:ar; ar=at&BOX?1:ar; R RETGT(ar);
  }
  if(unlikely(ar!=wr))R RETGT(ar>wr);  // unequal ranks, higher rank is bigger

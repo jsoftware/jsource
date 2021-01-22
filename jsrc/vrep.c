@@ -76,12 +76,9 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
   // now n has the number of words of a to skip.  Get the number of extra bytes in the last word.
   UI nextwd=avv[n];  // partially-filled word to check
   n<<=LGSZI;  // convert skipct to bytes
-// obsolete   I ctinlast=m-n; ctinlast=(ctinlast>7)?7:ctinlast;  // ctinlast=# bytes valid in last word - never more than 7, could be 0
   // Convert skipcount to bytes, and advance wvv to point to the first cell that may move
-// obsolete   n+=CTTZI(((nextwd^VALIDBOOLEAN))|(1LL<<(ctinlast<<LGBB)))>>LGBB;  // complement; install sentinel 1; count original 1s, add to n
   n+=CTTZI(nextwd^VALIDBOOLEAN)>>LGBB;  // complement; count original 1s, add to n.  m cannot be 0 so there must be a valid 0 bit in nextwd
   zvv=wvv=(C*)wvv+k*n;  // step input over items left in place; use that as the starting output pointer also
-// obsolete  zvv=CAV(z)+k*n;   // step the output pointer over the initial items left in place
   exactlen=!!(k&(SZI-1));  // if items are not multiples `of I, require exact len.  Since we skip an unchanged prefix, we will seldom have address contention during the copy
   // since the input is abandoned and no cell is ever duplicated, pristinity is unchanged
  }
@@ -110,7 +107,6 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
 #if BW==64
    case sizeof(UI4): while(bitstack){I bitx=CTTZI(bitstack); *(UI4*)zvv=((UI4*)wvv)[bitx]; zvv=(C*)zvv+k; bitstack&=bitstack-1;} break;
 #endif
-// obsolete    default: while(bitstack){I bitx=CTTZI(bitstack); MC(zvv,(C*)wvv+k*bitx,k); zvv=(C*)zvv+k; bitstack&=bitstack-1;} break;
    default: while(bitstack){I bitx=CTTZI(bitstack); JMCR(zvv,(C*)wvv+k*bitx,k+((SZI-1)&(exactlen-1)),lp000,exactlen,endmask); zvv=(C*)zvv+k; bitstack&=bitstack-1;} break;  // overwrite OK
    }
 

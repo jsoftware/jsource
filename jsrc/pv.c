@@ -223,21 +223,17 @@ static A jttparse(J jt,A w,A locsyms,I tmonad,I tsubst,TA *ttab,I *ttabi,I ttabi
  R t?jtvfinal(jt,t,tmonad,tsubst,ttab,ttabi,ttabi0):cfn(x);
 }
 
-F1(jtvtrans){PROLOG(0053);A locsyms,y,z=0;/* obsolete B tmonad,tsubst;*/I c,i,ttabi;TA ttab[NTTAB]/* obsolete ,*ttab0*/;
-// obsolete  /* local=jt->locsyms; obsolete ttab0=jt->ttab; tsubst=jt->tsubst; tmonad=jt->tmonad; */  // scaf get rid of local
+F1(jtvtrans){PROLOG(0053);A locsyms,y,z=0;I c,i,ttabi;TA ttab[NTTAB];
  RZ(ttab[0].a=cstr("x")); ttab[0].t=ds(CLEFT);
  RZ(ttab[1].a=cstr("y")); ttab[1].t=RT; c=2;
  for(i=0;!z&&2>i;++i){
   RZ(y=vtokens(w));  // return AM bit0=monad
   I tmonad=AM(y);
-// obsolete  jt->ttab=ttab; jt->ttabi=jt->ttabi0=c;
   ttabi=c;
   RZ(locsyms=stcreate(2,40,0L,0L));  // not necessary to set global pointers
   symbis(mnuvxynam[5],num(1),locsyms); if(!tmonad)symbis(mnuvxynam[4],num(1),locsyms); 
-// obsolete   jt->tsubst=0==i;
   z=jttparse(jt,y,locsyms,tmonad,0==i,ttab,&ttabi,c); RESETERR;
   if(i&&!z)z=colon(num(4-tmonad),w);
  }
- /* obsolete jt->locsyms=local;  jt->tmonad=tmonad; jt->ttab=ttab0; jt->tsubst=tsubst; */
  EPILOG(z);
 }

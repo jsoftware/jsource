@@ -33,15 +33,12 @@ static A jtssdo(J jt,A a,A w,C c){DC d,e;I n;
  while(d&&DCCALL!=d->dctype)d=d->dclnk;     /* find topmost call               */
  ASSERT(d!=0,EVDOMAIN);                        /* must have a call                */
  if(a)RE(n=lnumcw(i0(a),d->dcc));           // for dyad, source line # to cw line #
-// obsolete  jt->dbsusact=SUSSS;
  switch(c){
   case SSSTEPOVER: DGOTO(d,a?n:d->dcix) d->dcss=c;    break;  // rerun stop line (executing it), then stop in this function
   case SSSTEPINTO: DGOTO(d,a?n:d->dcix) d->dcss=c;    break;  // rerun stop line(executing it), then stop in any function
   case SSSTEPOUT:  DGOTO(d,a?n:d->dcix) d->dcss=0;   ssnext(d,SSSTEPOVERs); break;  // rerun stop line, stop in calling function
   case SSCUTBACK:  DGOTO(d,-1) d->dcss=0; e=ssnext(d,SSSTEPOVERs); if(e)DGOTO(e,e->dcix) break;  // terminate current verb, resume previous fn, stop before executing there
  }
-// obsolete fa(jt->dbssexec); if(AN(w)){RZ(ras(w)); jt->dbssexec=w;}else jt->dbssexec=0;
-// obsolete  jt->dbssexec=AN(w)?w:ds(CACE);
  // Return a suspension-ending value
  A z; RZ(z=mkwris(box(sc(SUSSS)))); AFLAGORLOCAL(z,AFDEBUGRESULT) R z;
 }

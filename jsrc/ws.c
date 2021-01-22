@@ -112,7 +112,6 @@ C spellin(I n,C*s){
 // s is a buffer long enough to hold the longest spelling.  Fill it with the spelling of c
 void spellit(UC c,UC *s){
  I spell=spellouttab[c]; // Fetch inf2/inf1 graphic
-// obsolete  s[0]=(C)spell; s[1]=(C)(0xe9700>>((spell>>8)&0xf)); s[2]=(C)(0xe9700>>(spell>>12));   // 0011101(0) 0010111(0) 00000000  for NUL . :, with overlap
  s[0]=(C)spell; s[1]=(C)(0x203a2e00>>(((spell>>8)&0x3)<<3)); s[2]=(C)(0x203a2e00>>(((spell>>10)&0x3)<<3));   // 00100000 00111010 00101110 00000000  for NUL . :, with overlap
 }
 

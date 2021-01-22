@@ -60,7 +60,6 @@
 #define FREECHK(x) if(!FREE(x))SEGFAULT;  // crash on error
 #endif
 
-// obsolete static void jttraverse(J,A,AF);
 
 #if LEAKSNIFF
 static I leakcode;
@@ -123,18 +122,15 @@ F1(jtmemhashs){
 
 #endif
 
-// obsolete // msize[k]=2^k, for sizes up to the size of an I.  Not used in this file any more
 B jtmeminit(JS jjt,I nthreads){I k,m=MLEN;
  INITJT(jjt,adbreakr)=INITJT(jjt,adbreak)=&breakdata; /* required for ma to work */
  INITJT(jjt,mmax) =(I)1<<(m-1);
  I threadno; for(threadno=0;threadno<nthreads;++threadno){JJ jt=&jjt->threaddata[threadno];
-// obsolete   if(jt->tstackcurr==0){  //
   // init tpop stack
   jt->tstackcurr=(A*)MALLOC(NTSTACK+NTSTACKBLOCK);  // save address of first allocation
   jt->malloctotal = NTSTACK+NTSTACKBLOCK;
   jt->tnextpushp = (A*)(((I)jt->tstackcurr+NTSTACKBLOCK)&(-NTSTACKBLOCK));  // get address of aligned block AFTER the first word
   *jt->tnextpushp++=0;  // blocks chain to blocks, allocations to allocations.  0 in first block indicates end.  We will never try to go past the first allo, so no chain needed
-// obsolete   }
   // init all subpools to empty, setting the garbage-collection trigger points
   for(k=PMINL;k<=PLIML;++k){jt->mfree[-PMINL+k].ballo=SBFREEB;jt->mfree[-PMINL+k].pool=0;}  // init so we garbage-collect after SBFREEB frees
   jt->mfreegenallo=-SBFREEB*(PLIML+1-PMINL);   // balance that with negative general allocation
@@ -241,8 +237,6 @@ B jtspfree(J jt){I i;A p;
 // return space used by w and its descendants
 static D jtspfor1(J jt, A w){D tot=0.0;
  if(unlikely(w==0))R 0.0;
-// obsolete  if(BOX&AT(w)){A*wv=AAV(w); DO(AN(w), if(wv[i])spfor1(wv[i]););}
-// obsolete  else if(AT(w)&TRAVERSIBLE)traverse(w,jtspfor1); 
  switch(CTTZ(AT(w))){
   case XNUMX: case BOXX:
    if(!(AFLAG(w)&AFNJA)){A*wv=AAV(w);
@@ -278,7 +272,6 @@ static D jtspfor1(J jt, A w){D tot=0.0;
 F1(jtspfor){A*wv,x,y,z;C*s;D*zv;I i,m,n;
  ARGCHK1(w);
  n=AN(w); wv=AAV(w);
-// obsolete   v=&jt->spfor;
  ASSERT(!n||BOX&AT(w),EVDOMAIN);
  GATV(z,FL,n,AR(w),AS(w)); zv=DAV(z); 
  for(i=0;i<n;++i){
@@ -287,7 +280,6 @@ F1(jtspfor){A*wv,x,y,z;C*s;D*zv;I i,m,n;
   ASSERT(1>=AR(x),EVRANK);
   ASSERT(vnm(m,s),EVILNAME);
   RZ(y=symbrd(nfs(m,s))); 
-// obsolete   *v=0.0; spfor1(y); zv[i]=*v;
   zv[i]=spfor1(y);
  }
  RETF(z);
@@ -296,7 +288,6 @@ F1(jtspfor){A*wv,x,y,z;C*s;D*zv;I i,m,n;
 F1(jtspforloc){A*wv,x,y,z;C*s;D tot,*zv;I i,j,m,n;L*u;LX *yv,c;
  ARGCHK1(w);
  n=AN(w); wv=AAV(w);
-// obsolete   v=&jt->spfor;
  ASSERT(!n||BOX&AT(w),EVDOMAIN);
  GATV(z,FL,n,AR(w),AS(w)); zv=DAV(z);   // zv-> results
  for(i=0;i<n;++i){   // loop over each name given...
@@ -318,8 +309,6 @@ F1(jtspforloc){A*wv,x,y,z;C*s;D tot,*zv;I i,j,m,n;L*u;LX *yv,c;
   tot+=spfor1(LOCPATH(y)); tot+=spfor1(LOCNAME(y));  // add in the size of the path and name
   m=AN(y); yv=LXAV0(y); 
   for(j=SYMLINFOSIZE;j<m;++j){  // for each name in the locale
-// obsolete    c=yv[j];
-// obsolete    while(c){tot+=sizeof(L); u=c+LAV0(JT(jt,symp)); tot+=spfor1(u->name); tot+=spfor1(u->val); c=u->next;}  // add in the size of the name itself and the value, and the L block for the name
    for(c=yv[j];c=SYMNEXT(c),c;c=u->next){tot+=sizeof(L); u=c+LAV0(JT(jt,symp)); tot+=spfor1(u->name); tot+=spfor1(u->val);}  // add in the size of the name itself and the value, and the L block for the name
   }
   zv[i]=tot;
@@ -542,27 +531,6 @@ static void freesymb(J jt, A w){I j,wn=AN(w); LX k,kt,* RESTRICT wv=LXAV0(w);
  }
 }
 
-#if 0 // obsolete
-static void jttraverse(J jt,A wd,AF f){
- switch(CTTZ(AT(wd))){
-  case XNUMX: case BOXX:
-   if(!(AFLAG(wd)&AFNJA)){A*wv=AAV(wd);
-   {DO(AN(wd), if(wv[i])CALL1(f,wv[i],0L););}
-   }
-   break;
-  case VERBX: case ADVX:  case CONJX: 
-   {V*v=FAV(wd); if(v->fgh[0])CALL1(f,v->fgh[0],0L); if(v->fgh[1])CALL1(f,v->fgh[1],0L); if(v->fgh[2])CALL1(f,v->fgh[2],0L);} break;
-  case XDX:
-   {DX*v=(DX*)AV(wd); DQ(AN(wd), if(v->x)CALL1(f,v->x,0L); ++v;);} break;
-  case RATX:  
-   {A*v=AAV(wd); DQ(2*AN(wd), if(*v)CALL1(f,*v++,0L););} break;
-  case SB01X: case SINTX: case SFLX: case SCMPXX: case SLITX: case SBOXX:
-   {P*v=PAV(wd); if(SPA(v,a))CALL1(f,SPA(v,a),0L); if(SPA(v,e))CALL1(f,SPA(v,e),0L); if(SPA(v,i))CALL1(f,SPA(v,i),0L); if(SPA(v,x))CALL1(f,SPA(v,x),0L);} break;
- }
-}
-
-void jtfh(J jt,A w){fr(w);}
-#endif
 
 // overview of the usecount routines
 //
@@ -714,7 +682,6 @@ A jtgc (J jt,A w,A* old){
    tpop(old);  // delete everything allocated on the stack, except for w and b which were protected
    // if the block backing w has no reason to persist except as the backer for w, we delete it to avoid wasting space.  We must realize w to protect it; and we must also ra() the contents of w to protect them.
    // If there are multiple virtual blocks relying on the backer, we can't realize them all so we have to keep the backer around.
-// obsolete    if(((AC(b)-2)&(AC(b)-bc))<0){A origw = w; RZ(w=realize(w)); radescend(w,); fa(b); mf(origw); }  // if b is about to be deleted, get w out of the way.  w cannot be sparse.  Since we
    if(unlikely(AC(b)<bc)){A origw = w; RZ(w=realize(w)); radescend(w,); fa(b); mf(origw); }  // if b exists only for w, delete b.  get w out of the way.  w cannot be sparse.  Since we
                                       // raised the usecount of w only, we use mf rather than fa to free just the virtual block
                                       // fa the backer to undo the ra when the virtual block was created
@@ -753,7 +720,6 @@ A jtgc (J jt,A w,A* old){
  // Since w now has recursive usecounts (except for sparse, which is never inplaceable), we don't have to do a full fa() on a block that is returning
  // inplaceable - we just reset the usecount in the block.  If the block is returning inplaceable, we must update AM if we tpush; AM may have other uses if it is not returning inplaceable
  I cafter=AC(w); if((c&(1-cafter))>=0){A **amptr=(c<0?&AZAPLOC(w):(A**)&jt->shapesink); *amptr=jt->tnextpushp; tpush(w);}  // push unless was inplaceable and was not freed during tpop
-// obsolete  cafter=c<0?c:cafter; ACRESET(w,cafter);;
  I *cptr=&AC(w); cptr=c<0?cptr:(I*)&jt->shapesink; *cptr=c; // make inplaceable if it was originally
  R w;
 }
@@ -835,7 +801,6 @@ I jtfa(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
    // that the parent block will not be freed by the caller.  We set its usecount to 1 and wait for it to be freed when the reference is freed
    if(AC(ref)<=1){FAV(ref)->fgh[0]=0; rc=0;  // cachedref going away - clear the pointer to prevent refree
    }else{  // cachedref survives - modify its NM block to break the loop
-// obsolete     RZ(wd=ca(wd)); ACINITZAP(wd); NAV(wd)->cachedref=0; FAV(ref)->fgh[0]=wd; // clone, clear ref in clone to leave name only, repait ref to use new name scaf kludge allo failure here is fatal could rescind upcoming free?
     NAV(wd)->cachedref=0; ACSET(wd,1) rc=1; // clear ref to leave name only, set count so it will free when reference is freed, prevent free of wd in caller
    }
    fana(ref);  // free, now that nm is unlooped
@@ -1248,31 +1213,6 @@ F1(jtca){A z;I t;P*wp,*zp;
 // clone block only if it is read-only
 F1(jtcaro){ if(AFLAG(w)&AFRO){RETF(ca(w));} RETF(w); }
 
-#if 0 // obsolete 
-// clone recursive.
-F1(jtcar){A*u,*wv,z;I n;P*p;V*v;
- RZ(z=ca(w));
- n=AN(w);
- switch(CTTZ(AT(w))){
-  case RATX:  n+=n;
-  case XNUMX:
-  case BOXX:  u=AAV(z); wv=AAV(w);  DO(n, RZ(*u++=car(wv[i]));); break;
-  case SB01X: case SLITX: case SINTX: case SFLX: case SCMPXX: case SBOXX:
-   p=PAV(z); 
-   SPB(p,a,car(SPA(p,a)));
-   SPB(p,e,car(SPA(p,e)));
-   SPB(p,i,car(SPA(p,i)));
-   SPB(p,x,car(SPA(p,x)));
-   break;
-  case VERBX: case ADVX: case CONJX: 
-   v=FAV(z); 
-   if(v->fgh[0])RZ(v->fgh[0]=car(v->fgh[0])); // no need to INCORP these, since no one will look and they aren't virtual
-   if(v->fgh[1])RZ(v->fgh[1]=car(v->fgh[1])); 
-   if(v->fgh[2])RZ(v->fgh[2]=car(v->fgh[2]));
- }
- R z;
-}
-#endif
 // clone virtual block, producing a new virtual block
 F1(jtclonevirtual){
  A z; RZ(z=virtual(w,0,AR(w)));  // allocate a new virtual block
@@ -1294,7 +1234,6 @@ A jtext(J jt,B b,A w){A z;I c,k,m,m1,t;
  m1=allosize(z)/k;  // start this divide before the copy
  MC(AV(z),AV(w),AN(w)*bpt);                 /* copy old contents      */
  MCISH(&AS(z)[1],&AS(w)[1],AR(w)-1);
-// obsolete  if(b){ras(z); fa(w);}          // 1=b iff w is permanent.  This frees up the old space.
  if(b){ACINITZAP(z); mf(w);}          // 1=b iff w is permanent.  This frees up the old block but not the contents, which were transferred as is
  AS(z)[0]=m1; AN(z)=m1*c;       /* "optimal" use of space */
  if(!(t&DIRECT))memset(CAV(z)+m*k,C0,k*(m1-m));  // if non-DIRECT type, zero out new values to make them NULL

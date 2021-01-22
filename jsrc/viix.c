@@ -21,8 +21,6 @@ static B jtiixBX(J jt,I n,I m,A a,A w,I*zv){B*av,*b,descend;I p,q;
  b=memchr(av,1-descend,n);  // if ascending, get position of 1st 1; if descending, 1st 0.
  p=(b-av)-(1-descend); p=(1-descend)|(I)b?p:-1; p=descend|(I)b?p:0; // set p to position of 0 (descending) or before 1st 1 (ascending).  If descending & 0 not found, use -1; if ascending & 1 not found, use 0
  q=(b-av)-descend; q=descend|(I)b?q:-1; q=(1-descend)|(I)b?q:0; // set q to position of 1 (ascending) or before 1st 0 (descending).  If ascending & 1 not found, use -1; if descending & 0 not found, use 0
-// obsolete  b=memchr(av,C0,n); p=b?b-av:-1;
-// obsolete  b=memchr(av,C1,n); q=b?b-av:-1;
  switch(AT(w)){
  case INT: BXLOOP(I); break;
  case FL:  BXLOOP(D); break;
@@ -100,7 +98,6 @@ static B jtiixI(J jt,I n,I m,A a,A w,I*zv){A t;B ascend;I*av,j,p,q,*tv,*u,*v,*vv
 // large values unsuitable for a branch table, and also took advantage of the fact that
 // codes produced by multiple combinations, such as LIT,B01 and B01,FL which both produce
 // 1111 would not generate spurious accepted cases because only one of them is HOMO.
-// obsolete #define TT(s,t) (((s)&16)<<3)+(((s)&7)<<4)+(((t)&16)>>1)+((t)&7)
 #define CVCASE(a,b)     (6*((0x28c>>(a))&7)+((0x28c>>(b))&7))   // Must distinguish 0 2 3 4 6 7->4 3 1 0 2 5  01010001100
 #define CVCASECHAR(a,b) ((4*(0x30004>>(a))+(0x30004>>(b)))&0xf)  // distinguish character cases and SBT
 
@@ -124,7 +121,6 @@ F2(jticap2){A*av,*wv,z;C*uu,*vv;I ar,*as,at,b,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t,wr,*
    if((I)((r>>2)+2*n)<(I)(m*nlg)){RZ(iixI(n,m,a,w,zv)); R z;}  // weight misbranches as equiv to 8 stores
   }
  }
-// obsolete  jt->workareas.compare.complt=-1;
  cc=0; uu=CAV(a); vv=CAV(a)+(c*(n-1)<<bplg(at));
  // first decide if the input array is ascending or descending, comparing the first & last items atom by atom
  switch(CTTZ(at)){

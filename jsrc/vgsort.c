@@ -323,7 +323,6 @@ static SF(jtsortu){F1PREFIP;A y,z;I i;UI4 *yv;C4 j,s,*wv,*zv;
   memset(yv+rng.min,C0,rng.range*sizeof(UI4)); 
   DQ(n, ++yv[*wv++];);
   I incr = 1-(((I)jtinplace>>(JTDESCENDX-1))&2); j=(C4)(rng.min+(REPSGN(incr)&(rng.range-1)));
-// obsolete   DQ(rng.range, s=yv[j]; DQ(s, *zv=j; zv=(C4*)((C*)zv+zincr);) j+=(C4)incr;)
   DQ(rng.range, s=yv[j]; DQ(s, *zv++=j;) j+=(C4)incr;)
  }
  R z;

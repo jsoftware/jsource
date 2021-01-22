@@ -32,7 +32,6 @@ static B stopsub(C*p,C*nw,I md){C*q,*s;I n;
 B jtdbstop(J jt,DC d,I i){A a;B b,c=0,e;C nw[11],*s,*t,*u,*v;I md,n,p,q;
  if(!d)R 0;  // if there is no debug stack, there is no stop
  // Handle stop owing to single-step
-// obsolete  if(!jt->dbss&&d->dcss){d->dcss=0; DBSSD(DBBLOK)=0; c=i!=d->dcstop; d->dcstop=i; R c;}
  switch(d->dcss){
  case SSSTEPINTO:  d->dcss=SSSTEPINTOs; break;  // first time is executing the stop line.  Then wait for any next line
  case SSSTEPOVER:  d->dcss=SSSTEPOVERs; break;  // first time is executing the stop line.  Then wait for line in this function

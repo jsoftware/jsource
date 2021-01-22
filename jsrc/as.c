@@ -253,7 +253,6 @@ static DF1(jtssg){F1PREFIP;PROLOG(0020);A a,z;I i,n,r,wr;
  for(i=0;i<n;++i){   // loop through items, noting that the first is the tail itself
   if(i){RZ(z=CALL2IP(f2,a,z,fs));}   // apply the verb to the arguments (except the first time)
   // In case we are performing f&.>, we must set z non-PRISTINE, which it is by definition because all its boxes have escaped into the running result
-// obsolete   AFLAG(z)&=~AFPRISTINE;  // we just stored z, so it's never pristine here
 
 #define ZZBODY
 #include "result.h"

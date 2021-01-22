@@ -637,18 +637,6 @@ static void docall(FARPROC fp, I*d, I cnt, DoF* dd, I dcnt, C zl, I*v, B alterna
   r=(r<<shiftamt)>>shiftamt;  // fill em
   r=zl=='n'?0:r;  // handle 'n' specially: store 0
   *v=r;  // write out the formatted return code
-// obsolete   switch(zl&0x1f){   // kludge scaf could do this with shift
-// obsolete    case 'c'&0x1f: *(C*)v=(C)r;  break;
-// obsolete    case 'w'&0x1f: *(US*)v=(US)r;break;
-// obsolete    case 'u'&0x1f: *(C4*)v=(C4)r;break;
-// obsolete    case 'b'&0x1f: *v=(I)(BYTE)r;break;
-// obsolete    case 's'&0x1f: *v=(I)(S)r;   break;
-// obsolete    case 'i'&0x1f: *v=(I)(int)r; break;
-// obsolete    case 'l'&0x1f:
-// obsolete    case 'x'&0x1f:
-// obsolete    case '*'&0x1f: *v=r;         break;
-// obsolete    case 'n'&0x1f: *v=0;         break;
-// obsolete   }
  }else
 #if !SY_64 && !defined(__arm__)
  {D r;
@@ -721,7 +709,6 @@ static B jtcdinit(J jt){A x;
  RZ(x=exta(LIT,1L,1L,         5000L)); ACINITZAP(x) memset(AV(x),C0,AN(x)); JT(jt,cdstr)=x;
  RZ(JT(jt,cdhash) =cdgahash(4*AS(JT(jt,cdarg))[0]));
  RZ(JT(jt,cdhashl)=cdgahash(NLIBS+16           ));  // will round up to power of 2 - we allow 100 libraries, which will almost never be used, so we don't get the usual 2x
-// obsolete  jt->cdna=jt->cdns=jt->cdnl=0;
  AM(JT(jt,cdarg))=AM(JT(jt,cdstr))=AM(JT(jt,cdhash))=AM(JT(jt,cdhashl))=0;  // init all tables to empty
  R 1;
 }
@@ -745,21 +732,12 @@ static B jtcdinit(J jt){A x;
 // a is a string block for a cd string
 // result is the address in cdarg of the CCT block for the string, or 0 if not found
 static CCT*jtcdlookup(J jt,A a){
-// obsolete  hn=AN(JT(jt,cdhash)); hv=AV(JT(jt,cdhash)); pv=(CCT*)AV(JT(jt,cdarg)); s=CAV(JT(jt,cdstr));
-// obsolete  an=AN(a); av=UAV(a); j=hic(an,av)%hn;
-// obsolete  while(0<=(k=hv[j])){if(an==pv[k].an&&!memcmpne(av,s+pv[k].ai,an))R k+pv; if((j=(j+1))==hn)j=0;}
  HASHLOOKUP(JT(jt,cdhash),AN(a),UAV(a),a,&pv[k])
-// obsolete  R 0;
 }
 
 // av->null-terminated name of library
 // result is h field of the entry in cdarg for the library.  This entry may come from any CCT that matches the library name
 static HMODULE jtcdlookupl(J jt,C*av){
-// obsolete C*s;CCT*pv;I an,hn,*hv,j,k;
-// obsolete  hn=AN(JT(jt,cdhashl)); hv=AV(JT(jt,cdhashl)); pv=(CCT*)AV(JT(jt,cdarg)); s=CAV(JT(jt,cdstr));
-// obsolete  an=strlen(av); j=hic(an,av)%hn;
-// obsolete  while(0<=(k=hv[j])){if(an==pv[k].ln&&!memcmpne(av,s+pv[k].li,an))R pv[k].h; if((j=(j+1))==hn)j=0;}
-// obsolete  R 0;
  I an=strlen(av);
  HASHLOOKUP(JT(jt,cdhashl),an,av,l,pv[k].h)
 }
@@ -777,14 +755,9 @@ static CCT*jtcdinsert(J jt,A a,CCT*cc){A x;C*s;CCT*pv,*z;I an,hn,k;
  while(AM(JT(jt,cdstr)) > AN(JT(jt,cdstr))-an){I oldm=AM(JT(jt,cdstr)); RZ(JT(jt,cdstr)=ext(1,JT(jt,cdstr))); AM(JT(jt,cdstr))=oldm;}  // double allocations as needed, keep count
  while(AM(JT(jt,cdarg))==AS(JT(jt,cdarg))[0]){I oldm=AM(JT(jt,cdarg)); RZ(JT(jt,cdarg)=ext(1,JT(jt,cdarg))); AM(JT(jt,cdarg))=oldm;}
  s=CAV(JT(jt,cdstr)); pv=(CCT*)AV(JT(jt,cdarg));
-// obsolete  cc->ai=jt->cdns; MC(s+jt->cdns,CAV(a),an); jt->cdns+=an;
-// obsolete  z=pv+jt->cdna; MC(z,cc,sizeof(CCT)); k=jt->cdna++;
-// obsolete  if(AN(JT(jt,cdhash))<=2*jt->cdna){k=0; RZ(x=cdgahash(2*jt->cdna)); fa(JT(jt,cdhash)); JT(jt,cdhash)=x;}
  cc->ai=AM(JT(jt,cdstr)); MC(s+AM(JT(jt,cdstr)),CAV(a),an); AM(JT(jt,cdstr))+=an;
  z=pv+AM(JT(jt,cdarg)); MC(z,cc,sizeof(CCT)); k=AM(JT(jt,cdarg));
  if(AN(JT(jt,cdarg))<=2*AM(JT(jt,cdarg))){RZ(x=cdgahash(2*AM(JT(jt,cdarg)))); fa(JT(jt,cdhash)); JT(jt,cdhash)=x; AM(JT(jt,cdarg))=k; AM(JT(jt,cdhash))=0; k=0;}  // reallo if needed, and signal to rehash all
-// obsolete  hv=AV(JT(jt,cdhash)); hn=AN(JT(jt,cdhash));
-// obsolete  DQ(jt->cdna-k, j=hic(pv[k].an,s+pv[k].ai)%hn; while(0<=hv[j])if((j=(j+1))==hn)j=0; hv[j]=k; ++k;);
  // insert the last k elements of pv into the table.  This will be either all of them (on a rehash) or just the last 1.
  ++AM(JT(jt,cdarg)); DQ(AM(JT(jt,cdarg))-k, HASHINSERT(JT(jt,cdhash),pv[k].an,s+pv[k].ai,k) ++k;);  // add 1 ele to cdarg, and all or 1 to cdhash
  R z;
@@ -841,12 +814,8 @@ static CCT*jtcdload(J jt,CCT*cc,C*lib,C*proc){B ha=0;FARPROC f;HMODULE h;
  /* assumes the hash table for libraries (JT(jt,cdhashl)) is fixed sized */
  /* assumes cc will be cached as next entry of JT(jt,cdarg)              */
  if(ha){
-// obsolete I hn,*hv,j;
   // a new lib was loaded and verified.  Add it to the hash
   HASHINSERT(JT(jt,cdhashl),cc->ln,lib,AM(JT(jt,cdarg)))
-// obsolete   ++jt->cdnl;
-// obsolete   hv=AV(JT(jt,cdhashl)); hn=AN(JT(jt,cdhashl));
-// obsolete   j=hic(cc->ln,lib)%hn; while(0<=hv[j])if((j=(j+1))==hn)j=0; hv[j]=jt->cdna;
  }
  R cc;
 }
@@ -965,7 +934,6 @@ strcpy(proc,"x15lseek32");
  R cc;
 }
 
-// obsolete #define CDT(x,y) ((x)+32*(y))  // encode 0 1 2 3 17 18-> 4 2 1 0 3 5  1011. .... .... .... 0100
 #define CDT(x,y) (6*((0x160004>>(x))&7)+((0x160004>>(y))&0x7))  // encode 0 1 2 3 17 18-> 4 2 1 0 3 5  1011. .... .... .... 0100
 
 static I*jtconvert0(J jt,I zt,I*v,I wt,C*u){D p,q;I k=0;US s;C4 s4;
@@ -1011,7 +979,6 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
     data[NCDARGS*2],dcnt=0,fcnt=0,*dv,i,n,per,t,xn,xr,xt,*xv; DoF dd[NCDARGS];
  FPREFIP(J);  // save inplace flag
  n=cc->n;  // n is # cd args
-// obsolete  if(n&&!(wt&BOX)){DO(n, CDASSERT(!cc->star[i],DEPARM+256*i));}
  if(unlikely(((n-1)|SGNIF(wt,BOXX))>=0)){DO(n, CDASSERT(!cc->star[i],DEPARM+256*i));}  // if there are args, and w is not boxed, verify there are no pointer args
  zbx=cc->zbx; zv=1+(A*)zv0; dv=data; u=wu; xr=0;  // zv->first input arg  zbx is 1 if the result includes the input boxes; 0 if just bare value
  for(i=0;i<n;++i,++zv){  // for each input field
@@ -1029,7 +996,6 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
   if(likely(wt&BOX)){  // inputs are boxes, pointed to by wv
    x=wv[i]; xt=AT(x); xn=AN(x); xr=AR(x);   // x is argument i
    boxatomsgn=-star&(xr-1)&SGNIF(xt,BOXX);  // neg if boxed atom used as pointer
-// obsolete    CDASSERT(!xr||star,per);         /* non-pointers must be scalars */
    CDASSERT((-xr&(star-1))>=0,per);         /* non-pointers must be scalars   !xr||star */
 // long way   lit=star&&xt&LIT&&(c=='b'||c=='s'&&0==(xn&1)||c=='f'&&0==(xn&3));
    // litsgn means x is a character area whose address can be used as a source for numeric data
@@ -1047,7 +1013,6 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
   }
   // now xv points to the actual arg data for arg i, and an A-block for same has been installed into *zv
   // if wt&BOX only, x is an A-block for arg i
-// obsolete   if(star&&!xr&&xt&BOX){           // scalar boxed integer/boolean scalar is a pointer - NOT memu'd.  If xt is a box, wt must have been a box
   if(unlikely(boxatomsgn<0)){           // scalar boxed integer/boolean scalar is a pointer - NOT memu'd.  If xt is a box, wt must have been a box
    y=AAV(x)[0];   // fetch the address of the A-block for the pointer
    CDASSERT(!AR(y)&&AT(y)&B01+INT,per);  // pointer must be B01 or INT type (if B01, nust be nullptr)
@@ -1145,7 +1110,6 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
 #endif
 #endif
 #endif
-// obsolete     break;
    }else if(likely(c=='f')){   // single-precision arg
 #if SY_MACPPC
           dd[dcnt++]=(float)*(D*)xv;
@@ -1187,7 +1151,6 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
              f=(float)*(D*)xv; *dv++=*(int*)&f;
 #endif
 #endif
-// obsolete              break;
    }
   }
  }  // end of loop for each argument
@@ -1265,12 +1228,9 @@ void dllquit(J jt){CCT*av;I j,*v;
  v=AV(JT(jt,cdhashl)); av=(CCT*)AV(JT(jt,cdarg));
  DQ(AN(JT(jt,cdhashl)), j=*v++; if(0<=j)FREELIB(av[j].h););
  fa(JT(jt,cdarg));   JT(jt,cdarg)  =0;
-// obsolete jt->cdna=0;
  fa(JT(jt,cdstr));   JT(jt,cdstr)  =0;
-// obsolete  jt->cdns=0;
  fa(JT(jt,cdhash));  JT(jt,cdhash) =0;
  fa(JT(jt,cdhashl)); JT(jt,cdhashl)=0;
-// obsolete  jt->cdnl=0;
 }    /* dllquit - shutdown and cdf clean up dll call resources */
 
 F1(jtcdf){ASSERTMTV(w); dllquit(jt); R mtm;}
@@ -1498,14 +1458,6 @@ F1(jtcallbackx){
  ASSERTMTV(w);
  R vec(INT,cbxn,cbx);
 } /* 15!:17 return x callback arguments */
-
-#if 0 // obsolete 
-F1(jtnfeoutstr){I k;
- RE(k=i0(w));
- ASSERT(0==k,EVDOMAIN);
- R cstr(jt->mtyostr?jt->mtyostr:(C*)"");
-} /* 15!:18 return last jsto output */
-#endif
 
 F1(jtcdjt){
  ASSERTMTV(w);

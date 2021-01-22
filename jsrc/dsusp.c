@@ -32,7 +32,6 @@ DC jtdeba(J jt,C t,void *x,void *y,A fs){DC d;
   case DCCALL:   
    d->dcx=x; d->dcy=y; d->dcf=fs; 
    d->dca=jt->curname; d->dcm=NAV(d->dca)->m;
-// obsolete   d->dcn=(I)jt->cursymb;
    d->dcstop=-2;
    // dcn fill in in caller
    // if we were waiting to step into a function, this is it: mark this function as stoppable
@@ -88,7 +87,6 @@ static DC suspset(DC d){DC e=0;
 }    /* find topmost call and set suspension flag */
 
 static B jterrcap(J jt){A y,*yv;
-// obsolete  jt->dbsusact=SUSCLEAR;
  GAT0(y,BOX,4,1); yv=AAV(y);
  RZ(yv[0]=sc(jt->jerr1));
  RZ(yv[1]=str(jt->etxn1,jt->etx));
@@ -104,15 +102,11 @@ static A jtsusp(J jt){A z;
  // to execute; the values are filled in when there is an error.  We are about to call immex to run sentences,
  // and it will create a stack frame for its result.  CREATION of this stack frame will overwrite the current top-of-stack
  // if it holds error information.  So, we create an empty frame to take the store from immex.  This frame has no display.
-// obsolete  jt->dbsusact=SUSCLEAR;  // if we can't add a frame, exit suspension
  RZ(deba(DCJUNK,0,0,0)); // create spacer frame
-// obsolete  jt->dbsusact=SUSCONT;
  A *old=jt->tnextpushp;  // fence must be after we have allocated our stack block
  // If the failure happened while a script was being loaded, we have to take jgets() out of script mode so we can prompt the user.  We will restore on exit
  DC d; for(d=jt->sitop; d&&d->dctype!=DCSCRIPT; d=d->dclnk);  // d-> last SCRIPT type, if any
  if(d&&!(JT(jt,dbuser)&0x80))d->dcss=0;  // in super-debug mode (dbr 16b81), we continue reading suspension lines from the script; otherwise turn it off
-// obsolete t=jt->tostdout;
-// obsolete  jt->tostdout=1;
  // Make sure we have a decent amount of stack space left to run sentences in suspension
 #if USECSTACK
  jt->cstackmin=MAX(jt->cstackinit-(CSTACKSIZE-CSTACKRESERVE),jt->cstackmin-CSTACKSIZE/10);
@@ -120,11 +114,9 @@ static A jtsusp(J jt){A z;
  jt->fdepn =MIN(NFDEP ,jt->fdepn +NFDEP /10);
 #endif
  jt->fcalln=MIN(NFCALL,jt->fcalln+NFCALL/10);
-// obsolete  if (AT(jt->dbssexec)&LIT){RESETERR; immex(jt->dbssexec); tpop(old);}  // force typeout
  // if there is a 13!:15 sentence (latent expression) to execute before going into debug, do it
  if(JT(jt,dbtrap)){RESETERR; immex(JT(jt,dbtrap)); tpop(old);}  // force typeout
  // Loop executing the user's sentences until one returns a value that is flagged as 'end of suspension'
-// obsolete  while(jt->dbsusact==SUSCONT){A  inp;
  while(1){A  inp;
   jt->jerr=0;
   if(jt->iepdo&&JT(jt,iep)){
@@ -157,10 +149,8 @@ static A jtsusp(J jt){A z;
   jt->fcalln =NFCALL;
  }
  debz(); 
-// obsolete  jt->dcs=d;  // restore jgets() state
  if(d)d->dcss=1;  // restore jgets() state if there is an active script
  R z;
-// obsolete  jt->tostdout=t;
 }    /* user keyboard loop while suspended */
 
 // Go into debug mode.  Run sentences in suspension until we come out of suspension
@@ -169,7 +159,6 @@ static A jtsusp(J jt){A z;
 // We come into debug when there has been an error with debug enabled.  Stops are detected as errors before the stopped line is executed.
 // Tacit definitions detect stop before they execute.
 static A jtdebug(J jt){A z=0;C e;DC c,d;
-// obsolete  if(DBSSD(DBBLOK)){(DC)DBSSD(DBBLOK)->dcss=0; DBSSD(DBBLOK)=0;}  // clear previous single-step state - should do at end instead
  c=jt->sitop; while(c){if(c->dctype==DCCALL)c->dcss=0; c=c->dclnk;}  // clear all previous ss state, since this might be a new error
  RZ(d=suspset(jt->sitop));  // find the topmost CALL frame and mark it as suspended
  if(d->dcix<0)R 0;  // if the verb has exited, all we can do is return
@@ -197,7 +186,6 @@ static A jtdebug(J jt){A z=0;C e;DC c,d;
  case SUSSS:  // single-step continuation
   z=mtm; break;  // pick up wherever it left off; no result
  }
-// obsolete  if(jt->dbsusact!=SUSCLEAR)jt->dbsusact=SUSCONT;
  d->dcsusp=0;   // Mark the current definition as no longer suspended
  // If there is an error, set z=0; if not, make sure z is nonzero (use i. 0 0)
  if(jt->jerr)z=0; // return z=0 to cause us to look for resumption address
@@ -247,14 +235,11 @@ A jtdbunquote(J jt,A a,A w,A self,L *stabent){A t,z;B s;DC d;V*sv;
    // executed 13!:8]0, and we should continue on outside of debug mode
    if(!z&&jt->uflags.us.cx.cx_c.db){d->dcj=jt->jerr; movecurrtoktosi(jt); z=debug(); if(self!=jt->sitop->dcf)self=jt->sitop->dcf;}
    if(!(d->dcnewlineno&&d->dcix!=-1))break;  // if 'run' specified (by jump not to -1), loop again.  Otherwise exit with result given
-// obsolete    if(b){fa(a); fa(w);}
    // for 'run', the value of z gives the argument(s) to set; but if no args given, leave them unchanged
    if(AN(z)){w=AAV(z)[0]; a=AN(z)==2?AAV(z)[1]:0;}  // extract new args if there are any
-// obsolete    if(b=jt->dbalpha||jt->dbomega){a=jt->dbalpha; w=jt->dbomega; jt->dbalpha=jt->dbomega=0;}
   }
  }
  if(d->dcss)ssnext(d,d->dcss);  // if we step over/into on the last line of a function, we must stop on the next line of the caller
-// obsolete  if(jt->dbss==SSSTEPINTOs)jt->dbss=0;
  debz();
  R z;
 }    /* function call, debug version */
@@ -271,10 +256,8 @@ F1(jtdbc){UC k;
   ASSERT(!(k&~0x81),EVDOMAIN);
   ASSERT(!k||!jt->glock,EVDOMAIN);
  }
-// obsolete  jt->redefined=0;
  if(AN(w)){
   jt->uflags.us.cx.cx_c.db=k&1; JT(jt,dbuser)=k;
-// obsolete  jt->cxspecials=1;
 #if USECSTACK
   jt->cstackmin=jt->cstackinit-((CSTACKSIZE-CSTACKRESERVE)>>k);
 #else
@@ -282,7 +265,6 @@ F1(jtdbc){UC k;
 #endif
   jt->fcalln=NFCALL/(k?2:1);
  }
-// obsolete  jt->dbsusact=SUSCLEAR;
 
  A z; RZ(z=ca(mtm)); AFLAGORLOCAL(z,AFDEBUGRESULT) R z;
 }    /* 13!:0  clear stack; enable/disable suspension */
@@ -303,7 +285,6 @@ static F2(jtdbrr){DC d;
  RE(0);
  d=jt->sitop; while(d&&DCCALL!=d->dctype)d=d->dclnk; 
  ASSERT(d&&VERB&AT(d->dcf)&&!d->dcc,EVDOMAIN);  // must be tacit verb
-// obsolete RZ(ras(a)); jt->dbalpha=a; RZ(ras(w)); jt->dbomega=w;
  A z; RZ(z=box(w)); if(a)RZ(z=over(w,box(a))); 
  RZ(z=mkwris(link(sc(SUSRUN),z))); AFLAGORLOCAL(z,AFDEBUGRESULT)  // RUN ; w [;a]
  R z;

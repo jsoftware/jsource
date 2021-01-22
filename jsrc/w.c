@@ -65,15 +65,11 @@ F1(jtwordil){A z;I s,i,m,n,nv,*x;UC*v;
  for(i=0;i<n;++i){   // run the state machine
   I prevs=s;  // state before new character
   I currc=ctype[v[i]];  // get class of input character
-// obsolete if(!jt->directdef&&(currc==CDD||currc==CDDZ))currc=CX;  // if direct def disabled, treat { } as CX
   C *statebase=(C*)state+currc; s=statebase[s&0xf0];  // top 4 bits of s are state line; currc indexes the char code.  This fetches new state
   // Handle followon numerics.  If the previous state was 'followon numeric' and the new character is CX/CS/CQ, we will emit after this state but
   // we need to overwrite the previous numeric.  Decrement the pointer by 2 before writing.  This runs while the state-fetch is happening and is fast enough to allow
   // the store addresses to be calculated before the next fetch
   prevs&=8; prevs&=((8LL<<CX)|(8LL<<CS)|(8LL<<CQ)|(8LL<<CDD)|(8LL<<CDDZ)|(8LL<<CU))>>currc; x=(I*)((I)x-(prevs<<((LGSZI+1)-3)));  // if followon numeric and CX/CS/CQ/CDD/CDDZ, subtract from x, to move x back 2 positions if coming out of followon numeric with a number
-// obsolete   currc+=16-CX; currc&=16; prevs=2*prevs+1; currc&=prevs;   // set currc to 16 iff CX/CS/CQ; move 'followon numeric' flag to bit 4; combine
-// obsolete   // the +1 is to trick the compiler.  Without it it moves the &16 onto prevs, but prevs is the critical path
-// obsolete   x=(I*)((I)x-(currc>>(3-LGSZI)));  // subtract from x, to move x back 2 positions if coming out of followon numeric with a number
   // handle {{. etc.  It looked like a DD but turns out to be inflected.  We have outed the start for the first character;
   // we also outed the second character but did not accept the word.  We accept it now by advancing x over it
   // Use an IF because this is rare and we don't want it in the normal path
@@ -82,12 +78,10 @@ F1(jtwordil){A z;I s,i,m,n,nv,*x;UC*v;
   // state is an end+1 or start value, and 2 if an end+1 AND start value)
   x[0]=i; x[1]=i; x+=s&3;
  }
-// obsolete  if((s>>4)==SQ){jsignal3(EVOPENQ,w,x[-1]); R 0;}  // error if open quote, giving the complete failing line
  // force an EI at the end, as if with a space.  We will owe one increment of x, repaid when we calculate m.
  //  If the line ends without a token being open (spaces perhaps) this will be half of a field and will be shifted away
  x=(I*)((I)x-(((s<<1)&16)>>(3-LGSZI)));    // same as above, with CS as the character
  *x=i;
-// obsolete  m=((x-AV(z))+1)>>1; AS(z)[0]=m; AM(z)=m+REPSGN((I)(SE(SNZ,0)-1)-s); // Calculate & install count; if last field is NB., subtract 1 from word count
  m=((x-AV(z))+1)>>1; AS(z)[0]=m; AM(z)=m-((((1LL<<SNZ)|(1LL<<SZ))>>(s>>4))&1); // Calculate & install count; if last field is NB., subtract 1 from word count
  if(unlikely((s>>4)==SQ))AM(z)=-1;  // error if open quote, indicated by nag AM
  R z;
@@ -104,7 +98,6 @@ A jtunwordil(J jt, A wil, A w, I opts){A z;
  GATV0(z,LIT,buflen,1); C *zv0=CAV(z), *zv=zv0;  // allocate the buffer, point to beginning, set scan pointer
  UI dupchar=(opts&1)?'\'':256; *zv='\''; zv+=(opts&1);  // if dup requested, set to look for quotes and install leading quote
  DO(n, C *w0=wv+wilv[i][0]; C *wend=wv+wilv[i][1]; while(w0!=wend){C c=*w0++; *zv++=c; if(c==dupchar)*zv++=c;})  // copy all words, with 1 space between, duplicating where needed
-// obsolete  zv[-1]='\''; zv-=1-(opts&1);  // install final quote (over final space) if needed; back up over it if not needed
  AS(z)[0]=AN(z)=zv-zv0;  // install length of result
  RETF(z);
 }

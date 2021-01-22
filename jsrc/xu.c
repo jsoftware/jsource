@@ -741,7 +741,6 @@ F1(jttoutf16){A z;I n,t,q,b=0,j; UC* wv; US* c2v; C4* c4v; A c4; I *v;
  ARGCHK1(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w); wv=UAV(w);
  if(!n) {GATV(z,LIT,n,AR(w),AS(w)); R z;}; // empty lit list
  ASSERT(t&(NUMERIC+JCHAR), EVDOMAIN);
-// obsolete  if(jt->unicodex78){ASSERT(t&JCHAR, EVDOMAIN);}
  if(NUMERIC&t) // u16 from int
  {
   RZ(w=vi(w));
@@ -825,7 +824,6 @@ ARGCHK1(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w);
 if(!n) {GATV(z,LIT,n,AR(w),AS(w)); R z;}; // empty lit list
 if(t&LIT)RCA(w); // char unchanged
 ASSERT(t&(NUMERIC+JCHAR), EVDOMAIN);
-// obsolete if(jt->unicodex78){ASSERT(t&JCHAR, EVDOMAIN);}
 if(NUMERIC&t)
 {
 RZ(w=vi(w));

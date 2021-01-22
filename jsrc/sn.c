@@ -129,10 +129,6 @@ F1(jtnc){A*wv,x,y,z;I i,n,t,*zv;L*v;
 }    /* 4!:0  name class */
 
 // these functions are called with an a arg that is a 256-char rank-1 boolean map giving the initial characters wanted, and AS(a)[0] is a mask of allowed types
-// obsolete static SYMWALK(jtnlxxx, A,BOX,20,1, jt->workareas.namelist.nla[*((UC*)NAV(d->name)->s)]&&jt->workareas.namelist.nlt&AT(d->val), 
-// obsolete     RZ(*zv++=incorp(sfn(SFNSIMPLEONLY,d->name))) )
-// obsolete        SYMWALK(jtnlsym, A,BOX,20,1, jt->workareas.namelist.nla[*((UC*)NAV(d->name)->s)],
-// obsolete     RZ(*zv++=incorp(sfn(SFNSIMPLEONLY,d->name))) )
 static SYMWALK(jtnlxxx, A,BOX,20,1, CAV1(a)[((UC*)NAV(d->name)->s)[0]]&&AS(a)[0]&AT(d->val), 
     RZ(*zv++=incorp(sfn(SFNSIMPLEONLY,d->name))) )
 
@@ -145,7 +141,6 @@ static const I nlmask[] = {NOUN,ADV,CONJ,VERB, MARK,MARK,SYMB,MARK};
 static F2(jtnlx){A z=mtv;B b;I m=0,*v,x;
  RZ(w=vi(w)); v=AV(w); 
  DQ(AN(w), x=*v++; m|=nlmask[BETWEENC(x,0,6)?x:7];); 
-// obsolete  jt->workareas.namelist.nlt=m&RHS; b=1&&jt->workareas.namelist.nlt&RHS;
  AS(a)[0]=m&RHS; b=1&&AS(a)[0]&RHS;  // AS(a)[0] is used for the type mask
  ASSERT(!(m&MARK),EVDOMAIN);
  if(b           )RZ(z=nlxxx(a,jt->global));
@@ -160,7 +155,6 @@ F1(jtnl1){A a; GAT0(a,B01,256,1) memset(CAV1(a),C1,256L); R nlx(a,w);}
 F2(jtnl2){UC*u;
  ARGCHK2(a,w);
  ASSERT(LIT&AT(a),EVDOMAIN);
-// obsolete  memset(jt->workareas.namelist.nla,C0,256L); 
  A tmp; GAT0(tmp,B01,256,1) memset(CAV1(tmp),C0,256L);
  u=UAV(a); DQ(AN(a),CAV1(a=tmp)[*u++]=1;);
  R nlx(tmp,w);
@@ -227,7 +221,6 @@ F1(jtnch){A ch;B b;LX *e;I i,m,n;L*d;
 
 
 F1(jtex){A*wv,y,z;B*zv;I i,n;L*v;
-// obsolete I modifierchg=0;
  ARGCHK1(w);
  n=AN(w); wv=AAV(w); 
  ASSERT(((n-1)|SGNIF(AT(w),BOXX))<0,EVDOMAIN);
@@ -252,11 +245,9 @@ F1(jtex){A*wv,y,z;B*zv;I i,n;L*v;
     }
     if(AFLAG(v->val)&AFNVRUNFREED){ras(v->val); AFLAGAND(v->val,~AFNVRUNFREED)}  // indicate deferred free, and protect from the upcoming free; but if already deferred-free, reduce the usecount now
    }
-// obsolete    if(!(v->name->flag&NMDOT)&&v->val&&AT(v->val)&(VERB|ADV|CONJ))modifierchg=1;  // if we delete a modifier, remember that fact
    L *zombsym; if(unlikely((zombsym=probedel(NAV(v->name)->m,NAV(v->name)->s,NAV(v->name)->hash,locfound))!=0)){fa(zombsym->name); zombsym->name=0;};  // delete the symbol (incl name and value) in the locale in which it is defined; leave orphan value with no name
              // if the probe returns nonzero, it was a cached value which is not unmoored: we must free the name
   }
  }
-// obsolete  jt->modifiercounter+=modifierchg;
  RETF(z);
 }    /* 4!:55 expunge */

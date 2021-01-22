@@ -369,11 +369,9 @@ DF1(jtwd){A z=0;C*p=0;D*pd;I e,*pi,t;V*sv;
   jt->recurstate&=~RECSTATEBUSY;  // back to IDLE/PROMPT state
   if(SMOPTLOCALE&IJT(jt,smoption)) {
 // pass locale as parameter of callback
-// obsolete     e= IJT(jt,smdowd)? ((dowdtype2)(IJT(jt,smdowd)))(jt, (int)t, w, &z, getlocale(jt)) : EVDOMAIN;
     e=((dowdtype2)(IJT(jt,smdowd)))(JJTOJ(jt), (int)t, w, &z, getlocale(JJTOJ(jt)));
   } else {
 // front-end will call getlocale() inside callback
-// obsolete     e=IJT(jt,smdowd) ? ((dowdtype)(IJT(jt,smdowd)))(jt, (int)t, w, &z) : EVDOMAIN;
     e=((dowdtype)(IJT(jt,smdowd)))(JJTOJ(jt), (int)t, w, &z);
   }
   jt->recurstate|=RECSTATEBUSY;  // wd complete, go back to normal running state, BUSY normally or RECUR if a prompt is pending
@@ -394,7 +392,6 @@ static char breaknone=0;
 
 // Init anything the sessions manager needs in the jt for a new instance
 B jtsesminit(JS jjt, I nthreads){R 1;}
-// obsolete IJT(jt,adbreakr)=IJT(jt,adbreak)=&breakdata; 
 
 // Main entry point to run the sentence in *lp in the master thread, or in the thread given if jt is not a JS pointer
 int _stdcall JDo(JS jt, C* lp){int r; UI savcstackmin, savcstackinit, savqtstackinit;
@@ -404,7 +401,6 @@ int _stdcall JDo(JS jt, C* lp){int r; UI savcstackmin, savcstackinit, savqtstack
   savcstackmin=jm->cstackmin, savcstackinit=jm->cstackinit, savqtstackinit=JT(jt,qtstackinit);  // save stack pointers over recursion, in case the host resets them
   ASSERTTHREAD(!(jm->recurstate&(RECSTATEBUSY&RECSTATERECUR)),EVCTRL)  // fail if BUSY or RECUR
   // we know that in PROMPT state there is no volatile C state about, such as zombie status
-// obsolete  CLEARZOMBIE   // since we are executing a surprise call, the verb that is prompting might have set assignsym, which is about to be invalidated.  Clear that.
  }
 #if USECSTACK
  if(JT(jt,cstacktype)==2){
@@ -580,15 +576,10 @@ void jsto(JS jt,I type,C*s){C e;I ex;
   // we execute the sentence:  type output_jfe_ s    in the master thread
   fauxblockINT(fauxtok,3,1); A tok; fauxBOXNR(tok,fauxtok,3,1);  // allocate 3-word sentence on stack, rank 1
   AAV1(tok)[0]=num(type); AAV1(tok)[1]=jtnfs(jm,11,"output_jfe_"); AAV1(tok)[2]=jtcstr(jm,s);  // the sentence to execute, tokenized
-// obsolete   C q[]="0 output_jfe_ (15!:18)0";
-// obsolete   q[0]+=(C)type;
-// obsolete   jt->mtyostr=s;
   e=jm->jerr; ex=jm->etxn;   // save error state before running the output sentence
   jm->jerr=0; jm->etxn=0;
   JT(jt,adbreakr)=&breakdata;
-// obsolete   exec1(cstr(q));
   jtparse(jm,tok);  // run it, ignoring errors.
-// obsolete  jt->asgn=0;
   JT(jt,adbreakr)=JT(jt,adbreak);
   jm->jerr=e; jm->etxn=ex; // restore
  }else{
@@ -648,7 +639,6 @@ int _stdcall JFree(JS jt){
   SETJTJM(jt,jt,jm)
   breakclose(jt);
   jm->jerr=0; jm->etxn=0; /* clear old errors */
-// obsolete   if(JT(jt,xep)&&AN(JT(jt,xep))){A *old=jm->tnextpushp; jtimmex(jm,JT(jt,xep)); fajt(jm,JT(jt,xep)); JT(jt,xep)=0; jm->jerr=0; jm->etxn=0; tpop(old); }  // run with typeout enabled
   if(JT(jt,xep)&&AN(JT(jt,xep))){jtimmex(jm,JT(jt,xep));}  // If there is an exit sentence, run it & force typeout.  No need to tidy up since the heap is going away
   dllquit(jm);  // clean up call dll
   free(JT(jt,heap));  // free the initial allocation

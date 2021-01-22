@@ -218,7 +218,6 @@ F1(jtpmctr){D x;I q;
  x=q+(D)((PM0*)(CAV1(JT(jt,pma))))->pmctr;
  ASSERT(IMIN<=x&&x<FLIMAX,EVDOMAIN);
  ((PM0*)(CAV1(JT(jt,pma))))->pmctr=q=(I)x; jt->uflags.us.cx.cx_c.pmctr=!!q;  // tell cx and unquote to look for pm
-// obsolete  jt->cxspecials=1;
  R sc(q);
 }    /* add w to pmctr */
 
@@ -249,7 +248,6 @@ F2(jtpmarea2){A x;B a0,a1,*av;C*v;I an,n=0,s=sizeof(PM),s0=sizeof(PM0),wn;PM0*u;
  wn=AN(w);  // wn=length in bytes
  ASSERT(!wn||wn>=s+s0,EVLENGTH);  // make sure it can record at least 1 sample
  x=JT(jt,pma);   // read incumbent sample buffer
-// obsolete  jt->pmctr=0;
  jt->uflags.us.cx.cx_c.pmctr=0;  // clear sample counter and tracking status
  if(wn){ras(w); JT(jt,pma)=w;}else JT(jt,pma)=0;  // set new buffer address, if it is valid
  if(JT(jt,pma))spstarttracking();else spendtracking();  // track memory usage whenever PM is running
@@ -257,7 +255,6 @@ F2(jtpmarea2){A x;B a0,a1,*av;C*v;I an,n=0,s=sizeof(PM),s0=sizeof(PM0),wn;PM0*u;
  if(wn){  // if we are turning on profiling
   v=CAV1(w);   // we put a PM0 struct at the beginning of the buffer, and use the rest for PM records
   u=(PM0*)v; 
-// obsolete   jt->pmv=(PM*)(s0+v); 
   u->rec=a0;
   u->n=n=(wn-s0)/s;   // fill in the header block
   u->i=0;
@@ -275,7 +272,6 @@ F2(jtpmarea2){A x;B a0,a1,*av;C*v;I an,n=0,s=sizeof(PM),s0=sizeof(PM0),wn;PM0*u;
 // val is the PM counter
 void jtpmrecord(J jt,A name,A loc,I lc,int val){A x,y;B b;PM*v;PM0*u;
  u=(PM0*)CAV1(JT(jt,pma));  // u-> pm control area
-// obsolete  v=jt->pmv+u->i;  // v -> next PM slot to fill
  v=(PM*)(CAV1(JT(jt,pma))+sizeof(PM0))+u->i;  // v -> next PM slot to fill
  if(b=u->wrapped){x=v->name; y=v->loc;}  // If this slot already has valid name/loc, extract those values for free
  ++u->i;  // Advance index to next slot
@@ -348,17 +344,3 @@ F1(jtpmstats){A x,z;I*zv;PM0*u;
  R z;
 }
 
-#if 0 // obsolete 
-F1(jttlimq){ASSERTMTV(w); R scf(0.001*jt->timelimit);}
-
-F1(jttlims){D d;
- ARGCHK1(w);
- ASSERT(!AR(w),EVRANK);
- if(!(FL&AT(w)))RZ(w=cvt(FL,w));
- d=DAV(w)[0];
- ASSERT(0<=d,EVDOMAIN);
- ASSERT(FLIMAX>1000*d,EVLIMIT);
- jt->timelimit=(UI)(1000*d);
- R mtm;
-}
-#endif

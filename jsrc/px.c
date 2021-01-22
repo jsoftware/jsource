@@ -34,7 +34,6 @@ F1(jtexec1){A z;
   F1RANK(1,jtexec1,DUMMYSELF);
   A savself = jt->sf;  // in case we are in a recursion, preserve the restart point
   STACKCHKOFL FDEPINC(1); z=PARSERVALUE(parse(ddtokens(vs(w),4+1+(AN(jt->locsyms)>1)))); FDEPDEC(1);  // replace DDs, but require that they be complete within the string (no jgets)
-// obsolete  jt->asgn=0; 
  jt->sf=savself;
  }
  RETF(z&&!(AT(z)&NOUN)?mtv:z);  // if non-noun result, return empty $0
@@ -51,7 +50,6 @@ F1(jtimmex){F1PREFJT;A z;
  // to its previous state, including locales
  AKGST(jt->locsyms)=jt->global; // in case the sentence has operators, set a locale for it
  STACKCHKOFL FDEPINC(1); z=parse(AT(w)&BOX?w:tokens(w,1+(AN(jt->locsyms)>1))); FDEPDEC(1);
-// obsolete if(z&&!jt->asgn)jtjpr(jtinplace,z);
  if(((I)z&REPSGN(SGNIFNOT(z,PARSERASGNX)))&&!(AFLAG(z)&AFDEBUGRESULT))jtjpr(jtinplace,z);   // z not 0 && LSB of z is 0 && Result is not for debug
  RETF(z);
 }

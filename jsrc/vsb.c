@@ -294,19 +294,16 @@ static I jtsbextend(J jt,I n,C*s,UI h,I hi){A x;I c,*hv,j,p;SBU*v;
   AK(JT(jt,sbu))=AKXR(4); AS(JT(jt,sbu))[1]=sizeof(SBU)/SZI; AS(JT(jt,sbu))[2]=1; AS(JT(jt,sbu))[3]=1; AN(JT(jt,sbu))=AS(JT(jt,sbu))[0]*AS(JT(jt,sbu))[1];  // reconstruct fields for extend
   RZ(x=ext(1,JT(jt,sbu))); JT(jt,sbu)=x; AM(x)=c;
   FILLFACTOR=sfill; GAP=sgap; ROOT=sroot; SETSTRINGTABLE(ssbs); SETHASHTABLE(ssbh);    // restore
-// obsolete  JT(jt,sbu)v=(SBU*)AV(x);
  }
  if(AN(STRINGTABLE)<n+AM(STRINGTABLE)){            /* extend sbs strings           */
   GATV0(x,LIT,2*(n+AM(STRINGTABLE)),1); ACINITZAP(x) MC(CAV(x),CAV1(STRINGTABLE),AM(STRINGTABLE)); AM(x)=AM(STRINGTABLE);
   fa(STRINGTABLE); SETSTRINGTABLE(x);  // can't
-// obsolete  STRINGTABLEv=CAV(x);
  }
  if(AN(HASHTABLE)<2*c){                   /* extend sbh hash table        */
 
   FULLHASHSIZE(2*AN(HASHTABLE),INTSIZE,1,0,p);
   RZ(x=apvwr(p,-1L,0L)); ACINITZAP(x); hv=AV(x); v=SBUV4(JT(jt,sbu)); I oroot=ROOT;
   fa(HASHTABLE); SETHASHTABLE(x); ROOT=oroot;
-// obsolete  HASHTABLEv= AV(x);
   DO(c, j=INITHASH(v++->h); while(0<=hv[j]){if(--j<0)j+=AN(HASHTABLE);} hv[j]=i;);
   hi=INITHASH(h);                               /* new hi wrt new sbh size      */
   while(0<=hv[hi]){if(--hi<0)hi+=AN(HASHTABLE);} 
@@ -374,7 +371,6 @@ static SB jtsbprobe(J jt,S c2,I n,C*s,I test){B b;UC*t;I hi,ui;SBU*u;UI h,hn;UC*
     case 8:
     case 0: if(n==u->n&&!memcmpne(t,s,n))R(SB)ui; break;
   }}
-// obsolete   ++hi; hi&=(I )(hi==(I)hn)-1;                         /* next hash table index        */
   if(--hi<0)hi+=AN(HASHTABLE);
   }
  }   /* insert new symbol or get existing symbol */
@@ -692,12 +688,9 @@ static F1(jtsbsetdata){A h,s,u,*wv,x;
  u=JT(jt,sbu); s=STRINGTABLE; h=HASHTABLE;
  RZ(x=ca(reshape((over(shape(wv[2]),v2(1,1))),wv[2]))); ACINITZAP(x); JT(jt,sbu)=x;  // make shape nx11x1x1
  AM(JT(jt,sbu))=AV(wv[0])[0];
-// obsolete  JT(jt,sbu)v=(SBU*)AV(x);
  RZ(x=ca(wv[3])); ACINITZAP(x); SETSTRINGTABLE(x);
  AM(STRINGTABLE)=AV(wv[1])[0];
-//  obsolete  STRINGTABLEv=     CAV(x);
  RZ(x=ca(wv[4])); ACINITZAP(x); SETHASHTABLE(x);
-// obsolete  HASHTABLEv=      AV(x);
  ROOT      =AV(wv[5])[0];
  FILLFACTOR=AV(wv[6])[0];
  GAP       =AV(wv[7])[0];
@@ -857,12 +850,9 @@ B jtsbtypeinit(JS jjt, I nthreads){A x;I c=sizeof(SBU)/SZI,s[4],p;JJ jt=MTHREAD(
  s[0]=2000; s[1]=c; s[2]=1; s[3]=1;
  GATVR(x,INT,s[0]*c,4,s);          INITJT(jjt,sbu)=x;  // ras() not required
  GA(x,LIT,20000,1,0); SETSTRINGTABLE(x);
-// obsolete  STRINGTABLEv=     CAV(x);
  AM(STRINGTABLE)=0;  // size too big for GAT; initialization anyway
  FULLHASHSIZE(2000,INTSIZE,1,0,p);  // initial allo
  RZ(x=apvwr(p,-1L,0L)); SETHASHTABLE(x);
-// obsolete  IAV1(HASHTABLE)=      AV(x);
-// obsolete  INITJT(jjt,sbu)v=(SBU*)AV(x);
  GAP=15;                /* TWICE the difference in order numbers we want after re-ordering */
  FILLFACTOR=1024;
  ROOT=0;                /* initialize binary tree; initialize the empty symbol (used as fill) */

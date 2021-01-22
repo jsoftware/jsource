@@ -22,8 +22,8 @@ B jtxoinit(JS jjt, I nthreads){A x;JJ jt=MTHREAD(jjt);
  _setmode(_fileno(stdout),_O_BINARY);
  _setmode(_fileno(stderr),_O_BINARY);
 #endif
- GAT0(x,BOX,8,1); /* obsolete memset(AV(x),C0,AN(x)*SZI); */ ACINITZAP(x); INITJT(jjt,fopa)=x;  // called during init - this is NOT a recursive block but it becomes one if extended
- GAT0(x,INT,8,1);                             ACINITZAP(x); INITJT(jjt,fopf)=x; AM(INITJT(jjt,fopf))=0;  // AM is # valid files
+ GAT0(x,BOX,8,1);  ACINITZAP(x); INITJT(jjt,fopa)=x;  // called during init - this is NOT a recursive block but it becomes one if extended
+ GAT0(x,INT,8,1);  ACINITZAP(x); INITJT(jjt,fopf)=x; AM(INITJT(jjt,fopf))=0;  // AM is # valid files
  R 1;
 }
 
@@ -111,7 +111,6 @@ B jtadd2(J jt,F f1,F f2,C*cmd){A c,x;I ct=AM(JT(jt,fopf));
  if(ct+2>AN(JT(jt,fopf))){RZ(JT(jt,fopa)=ext(1,JT(jt,fopa))); RZ(JT(jt,fopf)=ext(1,JT(jt,fopf))); AM(JT(jt,fopf))=ct;}
  *cmd='<';x=cstr(cmd); ACINITZAP(x) RZ(AAV(JT(jt,fopa))[ct]=x); RZ(IAV(JT(jt,fopf))[ct]=(I)f1);
  *cmd='>';x=cstr(cmd); ACINITZAP(x) RZ(AAV(JT(jt,fopa))[ct+1]=x); RZ(IAV(JT(jt,fopf))[ct+1]=(I)f2);
-// obsolete will crash fa(c);
  R 1;
 }   /* add 2 entries to AM(JT(jt,fopf)) table (for hostio); null arg commits entries */
 #endif

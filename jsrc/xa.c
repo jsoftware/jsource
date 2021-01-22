@@ -24,7 +24,6 @@ F1(jtboxq){ASSERTMTV(w); R str(sizeof(JT(jt,bx)),JT(jt,bx));}
 F1(jtboxs){A x;
  RZ(w=vs(w));
  ASSERT(sizeof(JT(jt,bx))==AS(w)[0],EVLENGTH);
-// obsolete  x=JT(jt,bx)a; RZ(ras(w)); RZ(JT(jt,bx)a=w); JT(jt,bx)=CAV(JT(jt,bx)a); fa(x);
  MC(JT(jt,bx),CAV(w),sizeof(JT(jt,bx)));
  R mtv;
 }  // box-display characters
@@ -38,7 +37,6 @@ F1(jtcts){D d;
  RZ(w=cvt(FL,w)); d=DAV(w)[0];
  ASSERT(0<=d,EVDOMAIN); 
  ASSERT(d<=5.820766091e-11,EVDOMAIN);
-// obsolete  jt->cctdefault=
  jt->cct=1.0-d;
  R mtv;
 }
@@ -113,22 +111,11 @@ F1(jtieps){
 // 9!:38
 F1(jtoutparmq){A z;D*u;I*v;
  ASSERTMTV(w);
-#if 0 // obsolete 
- if(IMAX==JT(jt,outmaxlen)||IMAX==JT(jt,outmaxbefore)||IMAX==JT(jt,outmaxafter)){
-  GAT0(z,FL, 4,1); u=DAV(z);
-  u[0]=(D)JT(jt,outeol);
-  u[1]=JT(jt,outmaxlen)==IMAX?inf:(D)JT(jt,outmaxlen);
-  u[2]=JT(jt,outmaxbefore)==IMAX?inf:(D)JT(jt,outmaxbefore);
-  u[3]=JT(jt,outmaxafter)==IMAX?inf:(D)JT(jt,outmaxafter);
- }else{
-#else
  GAT0(z,INT,4,1); v= AV(z);
  v[0]=JT(jt,outeol);
  v[1]=JT(jt,outmaxlen);
  v[2]=JT(jt,outmaxbefore);
  v[3]=JT(jt,outmaxafter);
-// obsolete  }
-#endif
  RETF(z);
 }
 
@@ -158,7 +145,6 @@ F1(jtposs){I n,p,q,*v;
  ASSERT(1==n||2==n,EVLENGTH);
  if(1==n)p=q=*v; else{p=v[0]; q=v[1];} 
  ASSERT(BETWEENC(p,0,2)&&BETWEENC(q,0,2),EVDOMAIN);
-// obsolete  jt->pos[0]=p; jt->pos[1]=q;   
  jt->boxpos=(p<<JTTHORNXX)+(q<<JTTHORNYX);
  R mtv;
 }
@@ -230,21 +216,6 @@ F1(jtsysq){I j;
  R sc(j);
 }
 
-#if 0  // obsolete 
-F1(jtxepq){
- ASSERTMTV(w); 
- R JT(jt,xep)?JT(jt,xep):mtv;
-}
-
-F1(jtxeps){
- ARGCHK1(w);
- ASSERT(1>=AR(w),EVRANK);
- ASSERT(!AN(w)||AT(w)&LIT,EVDOMAIN);
- fa(JT(jt,xep));
- RZ(ras(w)); RZ(JT(jt,xep)=w); 
- R mtm;
-}
-#endif
 F1(jtasgzombq){ASSERTMTV(w); R sc(JT(jt,asgzomblevel));}
 
 F1(jtasgzombs){I k; 
@@ -253,22 +224,6 @@ F1(jtasgzombs){I k;
  JT(jt,asgzomblevel)=(C)k;
  R mtm;
 }
-
-#if 0 // obsolete 
-// 9!:54/55  undocumented
-// unicodex78;       /* 1 iff disallow numeric argument for 7 8 u:      */
-F1(jtunicodex78q){
- ASSERTMTV(w);
- R sc(jt->unicodex78);
-}
-
-F1(jtunicodex78s){I k;
- RE(k=i0(w));
- ASSERT(BETWEENC(k,0,1),EVDOMAIN);
- jt->unicodex78=(C)k;
- R mtm;
-}
-#endif
 
 // 9!:56  undocumented
 // query/override cpu feature

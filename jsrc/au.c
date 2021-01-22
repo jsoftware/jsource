@@ -85,7 +85,6 @@ B jtprimitive(J jt,A w){A x=w;V*v;
  R!VAV(x)->fgh[0];
 }    /* 1 iff w is a primitive */
 
-
 // w is a conj, f C n
 // Return 1 if f is of the form <@:g  (or <@g when g has infinite rank)
 B jtboxatop(J jt,A w){ARGCHK1(w); R 1&boxat(FAV(w)->fgh[0],RMAX,RMAX,RMAX);}

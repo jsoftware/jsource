@@ -315,19 +315,20 @@ vb__l y
 vb__ =: 9:
 9 -: g1 ''
 
-NB. direct locative cachable
+NB. direct locative cachable and applies locative
+vb_z_ =: 1: # coname
+vb__ -: 2: # coname
 9!:5 (2)
 g1 =. 3 : 0
-vb__ y
+vb_z_ y
 )
 9!:5 (0)
 
-9 -: g1 ''
-9 -: g1 ''
-
+(,<,'z') -: g1 ''
+(,<,'z') -: g1 ''
 4!:55 <'vb__'
-9 -: g1 ''
-9 -: g1 ''
+(,<,'z') -: g1 ''
+(,<,'z') -: g1 ''
 
 NB. reference is cachable outside original context
 4!:55 <'vb__'
@@ -434,6 +435,6 @@ g1 =. 3 : 0
 3 -: g1 ''
 
 
-4!:55 ;:'f0 f1 f2 f3 g0 g1 g2 g3 g4 g5 gvb r test vb__ vb_z_'
+4!:55 ;:'f0 f1 f2 f3 g0 g1 g2 g3 g4 g5 gvb l r test vb__ vb_z_'
 
 

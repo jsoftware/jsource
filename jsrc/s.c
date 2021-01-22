@@ -376,7 +376,8 @@ static A jtlocindirect(J jt,I n,C*u,UI4 hash){A x,y;C*s,*v,*xv;I k,xn;
 A jtsybaseloc(J jt,A a) {I m,n;NM*v;
  n=AN(a); v=NAV(a); m=v->m;
  // Locative: find the indirect locale to start on, or the named locale, creating the locale if not found
- R NMILOC&v->flag?locindirect(n-m-2,2+m+v->s,(UI4)v->bucketx):stfindcre(n-m-2,1+m+v->s,v->bucketx);
+ if(likely(!(NMILOC&v->flag)))R stfindcre(n-m-2,1+m+v->s,v->bucketx);
+ R locindirect(n-m-2,2+m+v->s,(UI4)v->bucketx);
 }
 
 // look up a name (either simple or locative) using the full name resolution

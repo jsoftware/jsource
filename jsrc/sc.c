@@ -27,7 +27,10 @@ DF2(jtunquote){A z;
    // There is a lookup for this nameref - use it
    fs=LAV0(JT(jt,symp))[cachedlkp].val;
    if(likely(fs!=0)){
-    explocale=0;  // flag no explicit locale
+    // the lookup exists.  If it has a (necessarily direct) locative, we must fetch the locative so we switch to it
+// obsolete     if(unlikely(NAV(thisname)->flag&NMLOC)){RZ(explocale=sybaseloc(thisname));}  //  get the explicit locale.  0 if erroneous locale
+    if(unlikely(NAV(thisname)->flag&NMLOC)){RZ(explocale=stfindcre(AN(thisname)-NAV(thisname)->m-2,1+NAV(thisname)->m+NAV(thisname)->s,NAV(thisname)->bucketx));}  //  extract locale string, find/create locale
+    else explocale=0;  // if no direct locative, set so
     stabent=(L*)fs;  // set stabent to NONZERO to indicate not a pseudofunction
    }else{cachedlkp=v->localuse.lI4[0]=SYMNONPERM; goto valgone;}  // if the value vanished, it must have been erased by hand.  Reenable caching but keep looking
   }else{

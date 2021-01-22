@@ -697,11 +697,11 @@ typedef struct{UI4 hash;I4 bucket;I bucketx;A cachedref;UC m;C flag,s[1];} NM;
 // m: length of non-locale part of name note 255-byte limit! (AN holds the length of the entire name including the locative)
 /* s: string part of full name (1 to ?? characters, including locale of assignment if given)           */
 
-#define NMLOC           1       /* direct   locale abc_lm_                 */
-#define NMILOC          2       /* indirect locale abc__de__fgh ...        */
-#define NMDOT           4       /* one of the names m. n. u. v. x. y.      */
+#define NMLOC           1       // direct   locale abc_lm_   only one of NMLOC/NMILOC/NMIMPLOC is set
+#define NMILOC          2       // indirect locale abc__de__fgh ...     only one of NMLOC/NMILOC/NMIMPLOC is set
+#define NMDOT           4       // one of the names m. n. u. v. x. y.      */
 #define NMXY            8       // x/y, which must have NAMEBYVALUE set
-#define NMIMPLOC        16      // this NM block is in u./v.
+#define NMIMPLOC        16      // this NM block is u./v.     only one of NMLOC/NMILOC/NMIMPLOC is set
 #define NMCACHEDX       5
 #define NMCACHED        (1<<NMCACHEDX)      // This NM is to cache any valid lookup
 #define NMCACHEDSYMX    6

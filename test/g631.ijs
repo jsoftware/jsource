@@ -395,4 +395,4 @@ a > _1000 + 7!:0 ''
 
 (,<,<0) -: ((}: , 0: each@:{:) each) @: (00"_ each each) ,<,<,<97   NB. used to free block prematurely
 
-4!:55 ;:'a ckprist countis e isprist ispristorunbox isro isvirt o pe t1 totient v1 v2 v3 x y '
+4!:55 ;:'a ckprist countis e gname isprist ispristorunbox isro isvirt o pe t1 totient v1 v2 v3 x y '

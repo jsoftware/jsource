@@ -529,14 +529,18 @@ rdglob: ;
         // Or, for special names (x. u. etc) that are always stacked by value, keep the value
         // If a modifier has no names in its value, we will stack it by value.  The Dictionary says all modifiers are stacked by value, but
         // that will make for tough debugging.  We really want to minimize overhead for each/every/inv.
+        // But: if the name is any kind of locative, we have to have a full nameref so unquote can switch locales: can't use the value then
         // Otherwise (normal adv/verb/conj name), replace with a 'name~' reference
-        if((AT(sv)|at)&(NOUN|NAMEBYVALUE|NAMELESSMOD)){   // use value if noun or special name, or known nameless
-         if(unlikely(AT(sv)&NAMELESSMOD&((I)NAV(y)->flag<<(NAMELESSMODX-NMCACHEDX)))){
-          // cachable nameless modifier.  store the value in the name, and flag that it's a symbol index, flag the value as cached in case it gets deleted
+        if((AT(sv)|at)&(NOUN|NAMEBYVALUE)){   // use value if noun or special name
+         y=sv; at=AT(sv);
+        }else if(unlikely(AT(sv)&NAMELESSMOD && !(NAV(y)->flag&NMLOC+NMILOC+NMIMPLOC+NMDOT))){
+         // nameless modifier, and not a locative.  Don't create a reference; maybe cache the value
+         if(NAV(y)->flag&NMCACHED){
+          // cachable and not a locative (and not a noun).  store the value in the name, and flag that it's a symbol index, flag the value as cached in case it gets deleted
           NAV(y)->cachedref=(A)(s-LAV0(JT(jt,symp))); NAV(y)->flag|=NMCACHEDSYM; s->flag|=LCACHED; NAV(y)->bucket=0;  // clear bucket info so we will skip that search - this name is forever cached
          }
          y=sv; at=AT(sv);
-        } else {
+        }else{  // not a noun/nonlocative-nameless-modifier.  Make a reference
          y = namerefacv(y, s);   // Replace other acv with reference
          EPZ(y)
          at=AT(y);  // refresh the type with the type of the resolved name

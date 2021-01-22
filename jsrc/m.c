@@ -751,13 +751,13 @@ A jtgc (J jt,A w,A* old){
  // ineffective if the code goes through the fa() path here, because components that were modified will be freed immediately rather than later.  In those places we
  // must either use gc3() which always does the tpush, or do ACIPNO to force us through the tpush path here.  We generally use gc3().
  // Since w now has recursive usecounts (except for sparse, which is never inplaceable), we don't have to do a full fa() on a block that is returning
- // inplaceable - we just reset the usecount in the block.  If the block is returning inplaceable, we must update AM if we tpush
+ // inplaceable - we just reset the usecount in the block.  If the block is returning inplaceable, we must update AM if we tpush; AM may have other uses if it is not returning inplaceable
  I cafter=AC(w); if((c&(1-cafter))>=0){A **amptr=(c<0?&AZAPLOC(w):(A**)&jt->shapesink); *amptr=jt->tnextpushp; tpush(w);}  // push unless was inplaceable and was not freed during tpop
 // obsolete  cafter=c<0?c:cafter; ACRESET(w,cafter);;
  I *cptr=&AC(w); cptr=c<0?cptr:(I*)&jt->shapesink; *cptr=c; // make inplaceable if it was originally
  R w;
 }
-
+// EPILOGZAP: ra00; zap; tpop; AM=t->tnextpushp; tpush(w); ACRESET(, ACINPLACE|ACUC1)
 // similar to jtgc, but done the simple way, by ra/pop/push always.  This is the thing to use if the argument
 // is nonstandard, such as an argument that is operated on in-place with the result that the contents are younger than
 // the enclosing area.  Modify the args if they need to be realized

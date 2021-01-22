@@ -503,7 +503,10 @@ rdglob: ;
         // If a modifier has no names in its value, we will stack it by value.  The Dictionary says all modifiers are stacked by value, but
         // that will make for tough debugging.  We really want to minimize overhead for each/every/inv.
         // Otherwise (normal adv/verb/conj name), replace with a 'name~' reference
-        if((AT(sv)|at)&(NOUN|NAMEBYVALUE|NAMELESSMOD)){   // use value if noun or special name
+        if((AT(sv)|at)&(NOUN|NAMEBYVALUE)){   // use value if noun or special name
+         y=sv; at=AT(sv);
+        }else if(unlikely(AT(sv)&NAMELESSMOD && !(NAV(y)->flag&NMLOC+NMILOC+NMIMPLOC+NMDOT))){
+         // nameless modifier, and not a locative.  Don't create a reference
          y=sv; at=AT(sv);
         } else {
          y = namerefacv(y, s);   // Replace other acv with reference

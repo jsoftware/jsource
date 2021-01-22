@@ -473,7 +473,8 @@ typedef I SI;
 #define ACIPISOK(a)     (AC(a)<1)  // OK to modify if INPLACE set - set only when usecount=1
 #define ACUC(a)         (AC(a)&(~ACINPLACE))  // just the usecount portion
 #define ACUC1           (ACUSECOUNT*1) // <= this is usecount==1; > is UC>1
-#define ACINCR(a)       if(!ACISPERM(AC(a)))(AC(a)=(AC(a)+1)&~ACINPLACE)
+#define ACINCR(a)       if(likely(!ACISPERM(AC(a))))(AC(a)=(AC(a)+1)&~ACINPLACE)
+#define ACDECR(a)       if(likely(!ACISPERM(AC(a))))(AC(a)=(AC(a)-1))
 #define ACINIT(a,v)     AC(a)=(v);  // used when it is known that a has just been allocated & is not shared
 #define ACRESET(a,v)    AC(a)=(v);  // used when it is known that a has is not shared (perhaps it's UNINCORPABLE)
 #define ACSET(a,v)      AC(a)=(v);  // used when a might be shared and this must be atomic

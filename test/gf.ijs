@@ -167,7 +167,7 @@ f=: (C +:)"0 f.
 (f -: (!+:)) y=: 10 ?@$ 6
 
 
-4!:55 ;:'a ambi ar b C cap dec dyad eachh f fact fact1 eq g i inc lr '
+4!:55 ;:'a a001 ambi ar b C cap dec dyad eachh f fact fact1 eq g i inc lr '
 4!:55 ;:'mat monad plus s sgn slash t v ws y'
 
 

@@ -153,18 +153,28 @@ static F1(jtrevsp){A a,q,x,y,z;I c,f,k,m,n,r,*v,wr;P*wp,*zp;
 F1(jtreverse){A z;C*wv,*zv;I f,k,m,n,nk,r,*v,*ws,wt,wr;
  F1PREFIP;ARGCHK1(w);
  if(unlikely((SPARSE&AT(w))!=0))R revsp(w);
- if(jt->fill)R rotate(num(-1),w);  // rank is set - not inplaceable because it uses fill
- wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r;  // no RESETRANK - we don't call any primitive from here on
- if(!(r&&AN(w))){R RETARG(w);}  // no atoms or reversing atoms - keep input unchanged
- wt=AT(w); ws=AS(w); wv=CAV(w);
- n=ws[f]; 
- m=1; DO(f, m*=ws[i];);
- k=bpnoun(wt); v=1+f+ws; DQ(r-1, k*=*v++;); nk=n*k;
- GA(z,wt,AN(w),wr,ws); zv=CAV(z);
- // w is going to be replaced.  That makes it non-pristine; but if it is inplaceable it can pass its pristinity to the result, as long as there is no fill
- PRISTXFERF(z,w)
+ if(unlikely(jt->fill!=0))R rotate(num(-1),w);  // rank is set - not inplaceable because it uses fill
+ wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r;  // no RESETRANK - we don't call any primitive from here on  wr=rank of arg r=eff rank f=len of frame
+// obsolete  if(!(r&&AN(w))){R RETARG(w);}  // no atoms or reversing atoms - keep input unchanged
+ ws=AS(w); I *an=ws+f; an=r?an:&oneone[0]; n=*an;    // n=number of subitems of the cell to be reversed
+ if(unlikely(((-r)&(1-n)))>=0){R RETARG(w);}  // rank 0 or 0-1 atoms in item - keep input unchanged
+ wt=AT(w); wv=CAV(w);  // wv->source data
+ // obsolete  n=ws[f];   // n=number of subitems of the cell to be reversed
+ // obsolete m=1; DO(f, m*=ws[i];);
+ PROD(m,f,ws); PROD(k,r-1,ws+f+1);  // m=# argument cells k=#atoms in one subitem
+ // obsolete  k=bpnoun(wt); v=1+f+ws; DQ(r-1, k*=*v++;); nk=n*k;
+ k<<=bplg(wt); nk=n*k;  // k=#bytes in subitem  nk=#bytes in cell
+ if((AC(w)&SGNIF(jtinplace,JTINPLACEWX))<0){z=w;}  // inplace: leave pristinity of w alone
+ else{GA(z,wt,AN(w),wr,ws); PRISTCLRF(w)}  // new copy: allocate new area, make w non-pristine since it escapes
  // w has been destroyed
+ zv=CAV(z);  // zv->target data
+ // obsolete  // w is going to be replaced.  That makes it non-pristine; but if it is inplaceable it can pass its pristinity to the result, since there is no fill
+ // obsolete  PRISTXFERF(z,w)
+// macro to copy from both ends, swapping.  one last copy at the end, if needed (otherwise discard it)
+#define COPY2ENDS(T) {DQ(m, T *s1=(T*)wv; T *t1=(T*)zv; T *sn=(T*)(wv+nk)-1; T *tn=(T*)(zv+nk)-1; \
+                      DQ(n>>1, T x0=*s1; T xn=*sn; *t1=xn; *tn=x0; ++s1; --sn; ++t1; --tn;) t1=n&1?t1:(T*)&jt->shapesink; *t1=*s1;  wv+=nk; zv+=nk;)}
  switch(k){
+#if 0 // obsolete 
   case sizeof(I): {I*s=(I*)wv,*t,*u=(I*)zv; DQ(m, t=s+=n; DQ(n, *u++=*--t;););} break;
   default:        {C*s=wv-k,*t; DQ(m, t=s+=nk; DQ(n, MC(zv,t,k); zv+=k; t-=k;););} break;
   case sizeof(C): {C*s=    wv,*t,*u=    zv; DQ(m, t=s+=n; DQ(n, *u++=*--t;););} break;
@@ -174,6 +184,26 @@ F1(jtreverse){A z;C*wv,*zv;I f,k,m,n,nk,r,*v,*ws,wt,wr;
 #endif
 #if !SY_64 && SY_WIN32
   case sizeof(D): {D*s=(D*)wv,*t,*u=(D*)zv; DQ(m, t=s+=n; DQ(n, *u++=*--t;););} break;
+#endif
+#else
+ case sizeof(I): COPY2ENDS(I) break;
+ case sizeof(C): COPY2ENDS(C) break;
+ case sizeof(S): COPY2ENDS(S) break;
+#if SY_64
+ case sizeof(I4):COPY2ENDS(I4) break;
+#endif
+#if 0 // obsolete
+#if !SY_64 && SY_WIN32   must not do this unless the words are valid D types
+ case sizeof(D): COPY2ENDS(D) break;
+#endif
+#endif
+ default:
+  if(zv==wv){  // reverse in place
+   I nI=(k-1)>>LGSZI; I nB=(-k)&(SZI-1);  // number of words to copy (may be 0), number of bytes NOT to copy, 0-7.  Overfetch allowed but not overstore
+   {DQ(m, C *s1=wv; C *sn=(wv+nk)-k; \
+    DQ(n>>1, I *i1=(I*)s1; I *in=(I*)sn; I xx; DQ(nI, xx=*i1; *i1=*in; *in=xx; ++ i1; ++in;) xx=*i1; I yy=*in; STOREBYTES(i1,yy,nB) STOREBYTES(in,xx,nB) s1+=k; sn-=k;) wv+=nk;)}  // center item stays in place
+  }else{C*s=wv-k,*t; DQ(m, t=s+=nk; DQ(n, MC(zv,t,k); zv+=k; t-=k;););}  // one-ended copy, not in place
+  break;
 #endif
  }
  RETF(z);

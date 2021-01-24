@@ -230,6 +230,7 @@ B jtsymbinit(JS jjt,I nthreads){A q;JJ jt=MTHREAD(jjt);
  // Allocate a symbol table with just 1 (empty) chain; then set length to 1 indicating 0 chains; make this the current local symbols, to use when no explicit def is running
  RZ(jt->locsyms=stcreate(2,2,0,0)); AKGST(jt->locsyms)=jt->global; AN(jt->locsyms)=1; AM(jt->locsyms)=(I)jt->locsyms;  // close chain so u. at top level has no effect
  // That inited the symbol tables for the master thread.  Worker threads must copy when they start execution
+ INITJT(jjt,emptylocale)=jt->locsyms;  // save the empty locale to use for searches that bypass locals
  R 1;
 }
 

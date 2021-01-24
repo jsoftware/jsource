@@ -52,6 +52,7 @@ extern DF1(jtcork1);
 extern F1(jtcpufeature);
 extern F1(jtcrc1);
 extern F1(jtcrccompile);
+extern F1(jtcreatecachedref);
 extern F1(jtctq);
 extern F1(jtcts);
 extern F1(jtcurtail);

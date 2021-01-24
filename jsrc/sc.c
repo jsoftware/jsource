@@ -225,7 +225,6 @@ A jtnamerefacv(J jt, A a, L* w){A y;V*v;
  R z;
 }
 
-
 // return reference to the name given in w, used when moving from queue to stack
 // For a noun, the reference points to the data, and has rank/shape info
 // For other types, we build a function ref to 'name~', and fill in the type, rank, and a pointer to the name;
@@ -235,7 +234,21 @@ A jtnameref(J jt,A w,A locsyms){
  R namerefacv(w,syrd(w,locsyms));  // get the symbol-table slot for the name (don't store the locale-name); return its 'value'
 }    /* argument assumed to be a NAME */
 
-// Create a pseudo-named entity.  a is the name, w is the actual entity
+// Adverb 4!:8 create looked-up cacheable reference to (possibly boxed) literal name a
+// The name must be defined.  It supplies the type and rank of the reference.  We require the name to be defined so that
+// there will not be a circular reference if a name in a numbered locale is a reference to the same name
+F1(jtcreatecachedref){
+ A nm; RZ(nm=onm(w)); // create name from arg
+ ASSERT(!(NAV(nm)->flag&(NMILOC|NMDOT|NMIMPLOC)),EVDOMAIN) // if special name or indirect locative, error
+ L *sym=syrd(nm,JT(jt,emptylocale));  // look up name, but not in local symbols.  We start with the current locale (?? should start with the path?)
+ ASSERT(sym!=0,EVVALUE);  // return if error or name not defined
+ A z=sym->val; if(unlikely(AT(z)&NOUN))R z;  // if name is a noun, return its value
+ RZ(z=fdef(0,CTILDE,AT(z), jtunquote1,jtunquote, nm,0L,0L, (z->flag&VASGSAFE)+(VJTFLGOK1|VJTFLGOK2), FAV(z)->mr,lrv(FAV(z)),rrv(FAV(z))));// create reference
+ FAV(z)->localuse.lI4[0]=sym-LAV0(JT(jt,symp));  // convert symbol address back to index in case symbols are relocated
+ sym->flag|=LCACHED;  // protect the value from changes.  We do not chain back from the name
+ RETF(z);
+}
+
 // Result has type ':' but goes to unquote.  We mark a pseudo-named entity by having f=0, g=name, h=actual entity to execute
 F2(jtnamerefop){V*v;
  ARGCHK2(a,w);

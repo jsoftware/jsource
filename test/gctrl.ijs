@@ -434,7 +434,32 @@ g1 =. 3 : 0
 7 -: g0 ''
 3 -: g1 ''
 
+NB. 4!:8
+'value error' -: ". etx '''undefname'' 4!:8'
+4!:55 <'vb__'
+vb_z_ =: 9:
+9!:5 (2)
+g1=: 3 : 0
+vb=:'vb' 4!:8
+''
+)
+9!:5 (0)
+numloc1=:cocreate''
+(;:'base z') copath numloc1
+g1__numloc1''
+numloc2=:cocreate''
+(;:'base z') copath numloc2
+vb__ =: 5:
+g1__numloc2''
+9 -: vb__numloc1 ''  NB. cached refs are distinguished
+5 -: vb__numloc2 ''
+4!:55 ;:'vb_z_ vb__'
+9 -: vb__numloc1 ''  NB. cached refs are really cached
+5 -: vb__numloc2 ''
+18!:55 numloc1,numloc2
 
-4!:55 ;:'f0 f1 f2 f3 g0 g1 g2 g3 g4 g5 gvb l r test vb__ vb_z_'
+
+
+4!:55 ;:'f0 f1 f2 f3 g0 g1 g2 g3 g4 g5 gvb l numloc1 numloc2 r test vb__ vb_z_'
 
 

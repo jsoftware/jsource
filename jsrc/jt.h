@@ -227,6 +227,7 @@ typedef struct JSTstruct {
 // end of cache line 2
 
 // little-used stuff
+ A emptylocale;      // locale with no symbols, used when not running explicits, or to avoid searching the local syms
  D tssbase;          /* initial 6!:0''                            */
  A iep;              /* immediate execution phrase                      */
  A pma;              /* perf. monitor: data area                        */

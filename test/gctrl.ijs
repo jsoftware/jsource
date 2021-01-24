@@ -439,7 +439,7 @@ NB. 4!:8
 4!:55 <'vb__'
 vb_z_ =: 9:
 9!:5 (2)
-g1=. 3 : 0
+g1__=. 3 : 0
 vb=:'vb' 4!:8
 ''
 )
@@ -460,6 +460,6 @@ g1__numloc2''
 
 
 
-4!:55 ;:'f0 f1 f2 f3 g0 g1 g2 g3 g4 g5 gvb l numloc1 numloc2 r test vb__ vb_z_'
+4!:55 ;:'f0 f1 f2 f3 g0 g1 g1__ g2 g3 g4 g5 gvb l numloc1 numloc2 r test vb__ vb_z_'
 
 

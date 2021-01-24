@@ -390,7 +390,7 @@ F2(jtqco2){A q,y,z;B b,bb,xt;I c,j,k,m,*qv,wn,wr,*yv,*zv;
   q=repeat(ge(y,sc(k-m)),q);
   R lamin2(nub(q),df2(z,q,q,sldot(ds(CPOUND))));
  }else{
-  GATV(z,INT,wn*m,1+wr,AS(w)); AS(z)[wr]=m; zv=AV(z);
+  GATV0(z,INT,wn*m,1+wr); MCISH(AS(z),AS(w),wr) AS(z)[wr]=m; zv=AV(z);  // avoid overfetch of AS(w)
   memset(zv,C0,AN(z)*SZI);
   j=0; c=AS(q)[wr]; DQ(wn, DQ(c, if(qv[j]&&m>yv[j])++zv[yv[j]]; ++j;); zv+=m;);
   RETF(AT(w)&XNUM+RAT?cvt(XNUM,z):z);
@@ -414,7 +414,7 @@ F1(jtfactor){PROLOG(0063);A y,z;I c,d,i,k,m,n,q,*u,*v,wn,*wv,*zv;
  if(n>2147483647)R cvt(INT,xfactor(w));
 #endif
  u=AV(JT(jt,p4792)); c=8*SZI-2;
- GATV(z,INT,c*wn,1+AR(w),AS(w)); AS(z)[AR(w)]=c; v=zv=AV(z);
+ GATV0(z,INT,c*wn,1+AR(w)); MCISH(AS(z),AS(w),AR(w)) AS(z)[AR(w)]=c; v=zv=AV(z);
  for(i=m=0;i<wn;++i){
   n=*wv++;
   DO(AN(JT(jt,p4792)), d=u[i]; q=n/d; while(n==q*d){*v++=d; n=q; q/=d;} if(q<d)break;);

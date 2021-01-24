@@ -35,7 +35,7 @@
 #define afrom2(x0,x1,x2,x3)         jtafrom2(jt,(x0),(x1),(x2),(x3))
 #define afzrndID(x,y)               jtafzrndID(jt,(x),(y))
 #define aii(x)                      jtaii(jt,(x))
-#define aindex(x0,x1,x2,x3)         jtaindex(jt,(x0),(x1),(x2),(x3))
+#define aindex(x0,x1,x2)            jtaindex(jt,(x0),(x1),(x2))
 #define aindex1(x0,x1,x2,x3)        jtaindex1(jt,(x0),(x1),(x2),(x3))
 #define am1a(x0,x1,x2,x3)           jtam1a(jt,(x0),(x1),(x2),(x3))
 #define am1e(x0,x1,x2,x3)           jtam1e(jt,(x0),(x1),(x2),(x3))

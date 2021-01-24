@@ -1718,6 +1718,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
   // ?r=rank of argument, ?cr=rank the verb is applied at, ?f=length of frame, ?s->shape, ?t=type, ?n=#atoms
   // prehash is set if w argument is omitted (we are just prehashing the a arg)
   f=af?af:wf; s=af?as:ws; r=acr?acr-1:0; f1=wcr-r;  // see below.  f1<0 here means cell of w has rank smaller than the item of a-cell, thus there are no matches possible
+        // f1 is length of frame in w
   I f1clamp=REPSGN(f1); I disagree; TESTDISAGREE(disagree,as+af+1,ws+wf+(~f1clamp&f1),r)
   if(unlikely(f1clamp<disagree)){I f0,*v;A z;   // true if f1<0 OR disagree!=0
    // Dyad where shape of an item of a does not match shape of a cell of w.  Return appropriate not-found
@@ -1726,8 +1727,8 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
    SETICFR(a,af,acr,m);  f0=MAX(0,f1); RE(zn=mult(prod(f,s),prod(f0,ws+wf)));
    switch(mode&IIOPMSK){
     case IIDOT:  
-    case IICO:    GATV(z,INT,zn,f+f0,s); if(af)MCISH(f+AS(z),ws+wf,f0); v=AV(z); DQ(zn, *v++=m;); R z;
-    case IEPS:    GATV(z,B01,zn,f+f0,s); if(af)MCISH(f+AS(z),ws+wf,f0); memset(BAV(z),C0,zn); R z;
+    case IICO:    GATV0(z,INT,zn,f+f0); MCISH(AS(z),s,f) if(af)MCISH(f+AS(z),ws+wf,f0); v=AV(z); DQ(zn, *v++=m;); R z;  // mustn't overfetch s
+    case IEPS:    GATV0(z,B01,zn,f+f0); MCISH(AS(z),s,f) if(af)MCISH(f+AS(z),ws+wf,f0); memset(BAV(z),C0,zn); R z;  // mustn't overfetch s
     case ILESS:                              RCA(w);
     case IIFBEPS:                            R mtv;
     case IANYEPS: case IALLEPS: case II0EPS: R num(0);
@@ -2003,11 +2004,11 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
  switch(mode&(IPHCALC|IIOPMSK)){
   default:      fauxINT(z,zfaux,1,0) break;   // if prehashed, we must create an area that can hold at least one stored result
   case IIDOT: case IFORKEY:
-  case IICO:    GATV(z,INT,zn,f+f1,     s); if(af)MCISH(f+AS(z),ws+wf,f1); break;
-  case INUBSV:  GATV(z,B01,zn,f+f1+!acr,s); if(af)MCISH(f+AS(z),ws+wf,f1); if(!acr)AS(z)[AR(z)-1]=1; break;
+  case IICO:    GATV0(z,INT,zn,f+f1); MCISH(AS(z),s,f) MCISH(f+AS(z),ws+wf,f1); break;  // mustn't overfetch s
+  case INUBSV:  GATV0(z,B01,zn,f+f1+!acr); MCISH(AS(z),s,f) MCISH(f+AS(z),ws+wf,f1); if(!acr)AS(z)[AR(z)-1]=1; break;  // mustn't overfetch s
   case INUB:    {I q; PRODX(q,AR(a)-1,AS(a)+1,m+1) GA(z,t,q,MAX(1,wr),ws); AS(z)[0]=m+1; break;}  // +1 because we speculatively overwrite.  Was MIN(m,p) but we don't have the range yet   scaf yes we do
   case ILESS:   GA(z,t,AN(w),MAX(1,wr),ws); break;
-  case IEPS:    GATV(z,B01,zn,f+f1,     s); if(af)MCISH(f+AS(z),ws+wf,f1); break;
+  case IEPS:    GATV0(z,B01,zn,f+f1); MCISH(AS(z),s,f) MCISH(f+AS(z),ws+wf,f1); break;
   case INUBI:   GATV0(z,INT,m+1,1); break;  // +1 because we speculatively overwrite  Was MIN(m,p) but we don't have the range yet scaf yes we do
   // (e. i. 0:) and friends don't do anything useful if e. produces rank > 1.  The search for 0/1 always fails
   case II0EPS: case II1EPS: case IJ0EPS: case IJ1EPS:

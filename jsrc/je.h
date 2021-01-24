@@ -616,7 +616,7 @@ extern A        jtac1(J,AF);
 extern A        jtac2(J,AF);
 extern B        jtadd2(J,F,F,C*);
 extern I        jtaii(J,A);
-extern B        jtaindex(J,A,A,I,A*);
+extern A        jtaindex(J,A,A,I);
 extern A        jtam1a(J,A,A,A,B);
 extern A        jtam1e(J,A,A,A,B);
 extern A        jtam1sp(J,A,A,A,B);

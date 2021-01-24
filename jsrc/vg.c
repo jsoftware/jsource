@@ -723,7 +723,8 @@ A jtgr1(J jt,A w){F1PREFJT;PROLOG(0075);A z;I c,f,ai,m,n,r,*s,t,wn,wr,zn;
   RE(zn=mult(prod(f,s),n));
  }
  // allocate the entire result area, one int per item in each input cell
- GATV(z,INT,zn,1+f,s); if(!r)AS(z)[f]=1;
+// obsolete  GATV(z,INT,zn,1+f,s); if(!r)AS(z)[f]=1;
+ GATV0(z,INT,zn,1+f); MCISH(AS(z),s,f) if(unlikely(!r))AS(z)[f]=1;else AS(z)[f]=AS(w)[f];  // mustn't overfetch shape if r=0
  // if there are no atoms, or we are grading things with 0-1 item, return an index vector of the appropriate shape 
  if(((wn-1)|(n-2))<0)R reshape(shape(z),IX(n));
  // do the grade, using a special-case routine if possible

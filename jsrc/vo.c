@@ -466,7 +466,7 @@ F1(jtope){A cs,*v,y,z;I nonh;C*x;I i,n,*p,q=RMAX,r=0,*s,t=0,te=0,*u,zn;
  else{I klg; I m;
   PRODX(m,r,u,1); DPMULDE(n,m,zn); klg=bplg(t); q=m<<klg;
   // Allocate result area & copy in shape (= frame followed by result-cell shape)
-  GA(z,t,zn,r+AR(w),AS(w)); MCISH(AS(z)+AR(w),u,r); x=CAV(z); fillv(t,zn,x);  // init to a:  fills  bug copy shape could overrun w
+  GA(z,t,zn,r+AR(w),0); MCISH(AS(z),AS(w),AR(w)) MCISH(AS(z)+AR(w),u,r); x=CAV(z); fillv(t,zn,x);  // init to a:  fills
   for(i=0;i<n;++i){
    y=v[i];   // get pointer to contents
 #if AUDITBOXAC

@@ -141,7 +141,7 @@ F2(jtfrombs){A ind;I acr,af,ar,wcr,wf,wr;
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr; af=ar-acr;
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK;
  ASSERT(!af,EVNONCE);
- if(ar){RE(aindex(a,w,wf,&ind)); ASSERT(ind!=0,EVNONCE); R frombsn(ind,w,wf);}
+ if(ar){RZ(ind=aindex(a,w,wf)); ind=(A)((I)ind&~1LL); ASSERT(ind!=0,EVNONCE); R frombsn(ind,w,wf);}
  else R frombs1(AAV(a)[0],w,wf);
 }    /* a{"r w for boxed a and sparse w */
 

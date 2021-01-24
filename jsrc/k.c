@@ -475,7 +475,7 @@ F2(jtxco2){A z;B b;I j,n,r,*s,t,*wv,*zu,*zv;
   case  1: R xco1(w);
   case  2: 
    if(!(t&RAT))RZ(w=cvt(RAT,w));
-   GATV(z,XNUM,2*n,r+1,AS(w)); AS(z)[r]=2;
+   GATV0(z,XNUM,2*n,r+1); MCISH(AS(z),AS(w),r) AS(z)[r]=2;  // don't overfetch from AS(w)
    MC(AV(z),AV(w),2*n*SZI);
    R z;
   case  3:

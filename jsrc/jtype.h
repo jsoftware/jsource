@@ -846,6 +846,7 @@ typedef struct {AF valencefns[2];A fgh[3];union { D lD; void *lvp[2]; I lI; I4 l
 #define VGERL           (((I)1)<<VGERLX)          /* gerund left  argument           */
 #define VGERR           (I)512          /* gerund right argument           */
 #define VTAYFINITE      (I)1024         /* t. finite polynomial            */
+#define VIRS1X          11
 #define VIRS1           (I)2048         /* 11 monad has integral rank support */
 #define VIRS2X          12
 #define VIRS2           (((I)1)<<VIRS2X)         /* 12 dyad  has integral rank support */

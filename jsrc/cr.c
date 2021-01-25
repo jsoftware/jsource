@@ -115,11 +115,13 @@ A jtrank1ex(J jt,AD * RESTRICT w,A fs,I rr,AF f1){F1PREFIP;PROLOG(0041);A z,virt
  EPILOG(zz);
 }
 
-// Streamlined version when rank is 0.  In this version we look for ATOPOPEN (i. e. each and every)
-// f1 is the function to use if there are no flags, OR if there is just 1 cell with no frame or a cell of fill 
+// Streamlined version when rank is 0.  In this version we look for ATOPOPEN (i. e. every)
+// f1 is the function to use if there are no flags, OR if there is just 1 cell with no frame or a cell of fill
+// "Supports IRS", which means nothing except that we ignore input rank
 A jtrank1ex0(J jt,AD * RESTRICT w,A fs,AF f1){F1PREFIP;PROLOG(0041);A z,virtw;
    I wk;
  ARGCHK1(w);
+ RESETRANK;  // in case we are called with IRS, clear it
  if(unlikely(!AR(w))){R CALL1IP(f1,w,fs);}  // if there's only one cell and no frame, run on it, that's the result.  Make this as fast as possible.
  // Switch to sparse code if argument is sparse
  if(unlikely((AT(w)&SPARSE)!=0))R sprank1(w,fs,0,f1);
@@ -726,19 +728,21 @@ static DF2(jtrank20){R jtrank2ex0(jt,a,w,self,jtrank20atom);}  // pass inplaceab
 
 
 // a"w; result is a verb
-F2(jtqq){A t;AF f1,f2;D*d;I hv[3],n,r[3],vf,flag2=0,*v;A ger=0;
+F2(jtqq){AF f1,f2;I hv[3],n,r[3],vf,flag2=0,*v;A ger=0;
  ARGCHK2(a,w);
  // The localuse value in the function will hold the ranks from w.
- if(VERB&AT(w)){
-  // verb v.  Extract the ranks into a floating-point list
-  GAT0(t,FL,3,1); d=DAV(t);
-  n=r[0]=hv[0]=mr(w); d[0]=n<=-RMAX?-inf:RMAX<=n?inf:n;
-  n=r[1]=hv[1]=lr(w); d[1]=n<=-RMAX?-inf:RMAX<=n?inf:n;
-  n=r[2]=hv[2]=rr(w); d[2]=n<=-RMAX?-inf:RMAX<=n?inf:n;
-  // The floating-list is what we will call the v operand into rank?ex.  It holds the nominal verb ranks which may be negative
-  // h is the integer version
-  w=t;
- }else{
+ if(unlikely(VERB&AT(w))){
+  // verb v.  Extract the ranks into an integer list, which goes into the derived verb
+// obsolete   GAT0(t,FL,3,1); d=DAV(t);
+// obsolete   n=r[0]=hv[0]=mr(w); d[0]=n<=-RMAX?-inf:RMAX<=n?inf:n;
+// obsolete   n=r[1]=hv[1]=lr(w); d[1]=n<=-RMAX?-inf:RMAX<=n?inf:n;
+// obsolete   n=r[2]=hv[2]=rr(w); d[2]=n<=-RMAX?-inf:RMAX<=n?inf:n;
+// obsolete   GAT0(t,INT,3,1);
+  r[0]=hv[0]=mr(w);
+  r[1]=hv[1]=lr(w);
+  r[2]=hv[2]=rr(w);
+// obsolete   w=t;
+ }else{A t;
   // Noun v. Extract and turn into 3 values, stored in h
   n=AN(w);
   ASSERT(1>=AR(w),EVRANK);
@@ -748,10 +752,10 @@ F2(jtqq){A t;AF f1,f2;D*d;I hv[3],n,r[3],vf,flag2=0,*v;A ger=0;
   hv[1]=v[3==n]; hv[1]=hv[1]>RMAX?RMAX:hv[1]; hv[1]=hv[1]<-RMAX?-RMAX:hv[1]; r[1]=DR(hv[1]);
   hv[2]=v[n-1];  hv[2]=hv[2]>RMAX?RMAX:hv[2]; hv[2]=hv[2]<-RMAX?-RMAX:hv[2]; r[2]=DR(hv[2]);
  }
- // r is the actual verb ranks, never negative.
+ // r is the actual verb ranks, i. e. _ if given ranks are negative
 
  // Get the action routines and flags to use for the derived verb
- if(NOUN&AT(a)){  // could be gerund"n or noun"n
+ if(unlikely(NOUN&AT(a))){  // could be gerund"n or noun"n
   // gerund requires: some rank not RMAX; boxed m; rank of m=1; and then the gerund must be well formed
   if(((hv[0]^RMAX)|(hv[1]^RMAX)|(hv[2]^RMAX)) && !((AR(a)^1) | (AT(a)&(NOUN&~BOX))) && (ger=fxeachv(1LL,a))){
    f1=cycr1; f2=cycr2;  // process this with the cyclic-gerund routines
@@ -766,6 +770,10 @@ F2(jtqq){A t;AF f1,f2;D*d;I hv[3],n,r[3],vf,flag2=0,*v;A ger=0;
   }
  }else{
   V* av=FAV(a);   // point to verb info
+  // if the rank is superfluous (meaning it is exactly the same as the rank of the verb) ignore it, returning the original verb.  We have seen
+  // enough beginner code with +"0 to make this worthwhile.  The display will leave out the "0, to emphasize the equivalence.  We do this only
+  // for noun w, to allow use of +"+ to avoid special code
+  if(unlikely(((VERB&AT(w))|(av->mr^hv[0])|(av->lrr^((hv[1]<<RANKTX)+hv[2])))==0))R a;
   // The flags for u indicate its IRS and atomic status.  If atomic (for monads only), ignore the rank, just point to
   // the action routine for the verb.  Otherwise, choose the appropriate rank routine, depending on whether the verb
   // supports IRS.  The IRS verbs may profitably support inplacing, so we enable it for them.
@@ -774,6 +782,8 @@ F2(jtqq){A t;AF f1,f2;D*d;I hv[3],n,r[3],vf,flag2=0,*v;A ger=0;
   // IRS, go to the appropriate routine depending on the sign of rank; otherwise we will be doing an explicit rank loop: distinguish
   // rank-0, quick rank (rank is positive and a is NOT a rankonly type that may need to be combined), and all-purpose cases
   if(av->flag&VISATOMIC1){f1=jtrank10atom;}else{if(av->flag&VIRS1){f1=hv[0]>=0?rank1i:rank1in;}else{f1=hv[0]?(hv[0]>=0&&!(av->flag2&VF2RANKONLY1)?rank1q:rank1):jtrank10; flag2|=VF2RANKONLY1;}}
+  // if the monad rank in v is 0, we can surely ignore any higher rank, except in the rank of the compound.  We set IRS1 here so any later "n is fast
+  vf|=(hv[0]==0)<<VIRS1X;
   // For dyad: atomic verbs take the rank from this block, so we take the action routine, and also the parameter it needs; these parameters mean that only
   // nonnegative rank can be accomodated; otherwise, use processor for IRS (there is one for nonnegative, one for negative rank); if not IRS, there are processors for:
   // rank 0; nonneg ranks where fs is NOT a rank operator; general case
@@ -789,7 +799,7 @@ F2(jtqq){A t;AF f1,f2;D*d;I hv[3],n,r[3],vf,flag2=0,*v;A ger=0;
   }
  }
 
- // Create the derived verb.  The derived verb (u"n) NEVER supports IRS; it inplaces if the action verb u supports inplacing
+ // Create the derived verb.  The derived verb (u"n) inplaces if the action verb u supports inplacing; it supports IRS only for monadic rank 0
  A z; RZ(z=fdef(flag2,CQQ,VERB, f1,f2, a,w,ger, vf, r[0],r[1],r[2]));
  FAV(z)->localuse.lI4[0]=(I4)hv[0]; FAV(z)->localuse.lI4[1]=(I4)hv[1]; FAV(z)->localuse.lI4[2]=(I4)hv[2];  // pass the possibly-negative ranks in through localuse
  R z;

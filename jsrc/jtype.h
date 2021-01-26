@@ -649,6 +649,7 @@ typedef struct {A name,val;US flag;S sn;LX next;} L;
                                     // This value passes into AFLAGS and must not overlap anything there
 #define LHASNAME        (I)32      // name is nonnull - this value is not used internally; it appears in the result of 18!:31
 #define LHASVALUE       (I)64     // value is nonnull - this value is not used internally; it appears in the result of 18!:31
+#define LREADONLY       (I)128   // symbol cannot be reassigned (it is xxx or xxx_index)
 // in LINFO entry
 #define LMOD            (I)1          // table has had new entries added (used for local symbol tables only)
 

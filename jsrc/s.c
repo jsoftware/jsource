@@ -485,20 +485,26 @@ L* jtprobeisquiet(J jt,A a,A locsyms){A g;  // locsyms is used in the call, but 
 
 // assign symbol: assign name a in symbol table g to the value w (but g is special if jt->assignsym is nonnull)
 // Result points to the symbol-table block for the assignment
-L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I m,n,wn,wr;L*e;
- ARGCHK2(a,w); RZ(g)
+L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;L*e;
+ ARGCHK2(a,w);
  // If we have an assignsym, we have looked this name up already, so just use the symbol-table entry found then
  // in this case g is the type field of the name being assigned; and jt->locsyms must exist, since it comes from
  // an explicit definition
+ I anmf=NAV(a)->flag; RZ(g)
  if(jt->assignsym) {
-  ASSERT(((I)g&ASGNLOCAL||NAV(a)->flag&(NMLOC|NMILOC)||!probelocal(a,jt->locsyms)),EVDOMAIN)  //  if global assignment not to locative, verify non locally defined
+// obsolete   ASSERT(((I)g&ASGNLOCAL||NAV(a)->flag&(NMLOC|NMILOC)||!probelocal(a,jt->locsyms)),EVDOMAIN)  //  if global assignment not to locative, verify non locally defined
+  if(unlikely((((I)g&ASGNLOCAL)|(anmf&(NMLOC|NMILOC)))==0))ASSERT(!probelocal(a,jt->locsyms),EVDOMAIN)  // if non-locative, give error if there is a local
+// obsolete   ASSERT(((I)g&ASGNLOCAL||NAV(a)->flag&(NMLOC|NMILOC)||!probelocal(a,jt->locsyms)),EVDOMAIN)  //  if global assignment not to locative, verify non locally defined
   e = jt->assignsym;   // point to the symbol-table entry being assigned
   CLEARZOMBIE   // clear until next use.
  } else {A jtlocal=jt->locsyms;
-  n=AN(a); NM *v=NAV(a); m=v->m;  // n is length of name, v points to string value of name, m is length of non-locale part of name
-  if(likely(n==m))ASSERT(!(g==jt->global&&probelocal(a,jtlocal)),EVDOMAIN)  // if non-locative, give error if there is a local
+// obsolete   if(likely(n==m))ASSERT(!(g==jt->global&&probelocal(a,jtlocal)),EVDOMAIN)  // if non-locative, give error if there is a local
+  if(likely(!(anmf&(NMLOC|NMILOC)))){if(unlikely(g==jt->global))ASSERT(!probelocal(a,jtlocal),EVDOMAIN)  // if non-locative, give error if there is a local
     // symbol table, and we are assigning to the global symbol table, and the name is defined in the local table
-  else{C*s=1+m+v->s; RZ(g=NMILOC&v->flag?locindirect(n-m-2,1+s,(UI4)v->bucketx):stfindcre(n-m-2,s,v->bucketx));}
+  }else{I n=AN(a); I m=NAV(a)->m;    // locative: n is length of name, v points to string value of name, m is length of non-locale part of name
+// obsolete    C*s=1+m+NAV(a)->s; RZ(g=anmf&NMILOC?locindirect(n-m-2,1+s,(UI4)NAV(a)->bucketx):stfindcre(n-m-2,s,NAV(a)->bucketx));
+   C*s=1+m+NAV(a)->s; if(unlikely(anmf&NMILOC))g=locindirect(n-m-2,1+s,(UI4)NAV(a)->bucketx);else g=stfindcre(n-m-2,s,NAV(a)->bucketx); RZ(g);
+  }
     // locative: s is the length of name_.  Find the symbol table to use, creating one if none found
   // Now g has the symbol table to store into
   RZ(e=g==jtlocal?probeislocal(a) : probeis(a,g));   // set e to symbol-table slot to use
@@ -508,8 +514,9 @@ L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I m,n,wn,wr;L*e;
    // assignment (ex: (nm =: 3 : '...') y).  There seems to be no ill effect, because VNAMED isn't used much.
  }
  if(unlikely(jt->uflags.us.cx.cx_c.db))RZ(redef(w,e));  // if debug, check for changes to stack
- if(unlikely(e->flag&LCACHED)){
-  // We are reassigning a value that is cached somewhere.  We must protect the old value.  We will create a new symbol after e, transfer ownership of
+ if(unlikely(e->flag&(LCACHED|LREADONLY))){  // exception cases
+  ASSERT(!(e->flag&LREADONLY),EVRO)  // if writing read-only value (xxx_index), fail
+  // LCACHED: We are reassigning a value that is cached somewhere.  We must protect the old value.  We will create a new symbol after e, transfer ownership of
   // the name to the new symbol, and then delete e, which will actually just make it a value-only unmoored symbol
   L *newe; RZ(newe=symnew(0,(e-LAV0(JT(jt,symp)))|SYMNONPERM)) probedel(NAV(e->name)->m,NAV(e->name)->s,NAV(e->name)->hash,g); newe->name=e->name; e->name=0; e=newe;
  }
@@ -585,7 +592,7 @@ L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I m,n,wn,wr;L*e;
   ASSERT(!(AFRO&xaf),EVRO);   // error if read-only value
   if(x!=w){  // replacing name with different mapped data.  If data is the same, just leave it alone
    realizeifvirtual(w);  // realize if virtual.  The copy stored in the mapped array must be real
-   I wt=AT(w); wn=AN(w); wr=AR(w); m=wn<<bplg(wt);
+   I wt=AT(w); wn=AN(w); wr=AR(w); I m=wn<<bplg(wt);
    ASSERT(wt&DIRECT,EVDOMAIN);  // boxed, extended, etc can't be assigned to memory-mapped array
    ASSERT(allosize(x)>=m,EVALLOC);  // ensure the file area can hold the data
    AT(x)=wt; AN(x)=wn; AR(x)=(RANKT)wr; MCISH(AS(x),AS(w),wr); MC(AV(x),AV(w),m);  // copy in the data

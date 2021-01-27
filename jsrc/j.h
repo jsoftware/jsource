@@ -443,9 +443,6 @@ extern unsigned int __cdecl _clearfp (void);
 #define NPATH           1024            /* max length for path names,      */
                                         /* including trailing 0 byte       */
 
-#define NTSTACK         16384L          // number of BYTES in an allocated block of tstack - pointers to allocated blocks - allocation is bigger to leave this many bytes on boundary
-#define NTSTACKBLOCK    2048            // boundary for beginning of stack block
-
 // OBSOLETE OLD WAY (with USECSTACK off)
 // Sizes for the internal stacks.  The goal here is to detect a runaway recursion before it creates a segfault.  This cannot
 // be done with precision because we don't know how much C stack we have, or how much is used by a recursion (and anyway it depends on
@@ -588,6 +585,14 @@ extern unsigned int __cdecl _clearfp (void);
 #define MEMHISTO 0       // set to create a histogram of memory requests, interrogated by 9!:54/9!:55
 
 #define MAXTHREADS 1  // maximum number of threads
+
+// tpop stack is allocated in units of NTSTACK, but processed in units of NTSTACKBLOCK on an NTSTCKBLOCK boundary to reduce waste in each allocation.
+// If we audit execution results, we use a huge allocation so that tpop pointers can be guaranteed never to need a second one, & will thus be ordered
+#define NTSTACK         (1LL<<(AUDITEXECRESULTS?24:14))          // number of BYTES in an allocated block of tstack - pointers to allocated blocks - allocation is bigger to leave this many bytes on boundary
+#define NTSTACKBLOCK    2048            // boundary for beginning of stack block
+
+
+
 
 #define ADDBYTESINI1(t) (t=(t&ALTBYTES)+((t>>8)&ALTBYTES)) // sig in 01ff01ff01ff01ff, then xxxxxxxx03ff03ff, then xxxxxxxxxxxx07ff, then 00000000000007ff
 #if BW==64

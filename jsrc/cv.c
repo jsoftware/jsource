@@ -44,9 +44,9 @@ static DF1(jtfitfill1){DECLFG;F1PREFIP;A z; jt->fill=gs; z=CALL1IP(f1,  w,fs); j
 static DF2(jtfitfill2){DECLFG;F2PREFIP;A z; jt->fill=gs; z=CALL2IP(f2,a,w,fs); jt->fill=0; RETF(z);}
 
 static DF1(jtfitpp1){DECLFG;A z;C d[8],*s=3+jt->pp;
- MC(d,s,8L); 
- sprintf(s,FMTI"g",AV(gs)[0]); 
- z=CALL1(f1,w,fs); MC(s,d,8L);
+ MC(d,s,sizeof(jt->pp)-3);   // stack default jy->pp over call
+ snprintf(s,sizeof(jt->pp)-3,FMTI"g",AV(gs)[0]); 
+ z=CALL1(f1,w,fs); MC(s,d,sizeof(jt->pp)-3);  // fs is ": f1 is thorn1
  RETF(z);
 }
 

@@ -241,6 +241,7 @@ static A jtminvdet(J jt,A w,D *det){PROLOG(0068);A q,y,z;I m,n,*s,t,wr;
   if(1<wr&&m==n)y=w; else{q=cant1(w); y=pdt(q,w);}
   z=drop(v2(0L,n),gausselm(stitch(y,reshape(v2(n,n),take(sc(1+n),xco1(scf(1.0)))))));
   if(2>wr)z=tymes(reshape(mtv,z),w); else if(m>n)z=pdt(z,q);
+  *det=0.0;  // disable integer correction, in case a % w with a integer
  }else{
   // not RAT/XNUM.  Calculate inverse as R^-1 Q^-1 after taking QR decomp & using Q^-1=Q*
   *det=(t&B01+INT&&2==wr&&m==n)?1.0:0.0;  // if taking inverse of square int, allow setting up for correction afterward
@@ -292,7 +293,8 @@ F2(jtmdiv){PROLOG(0069);A z;I t;
  if(t&SPARSE)R mdivsp(a,w);
  D detv; // place to build determinant of inverse
  z=jtminvdet(jt,w,&detv);  // take generalized inverse of w, setting up for icor if needed
- z=pdt(2>AR(w)?reshape(shape(w),z):z,a);  // a * w^-1
+ z=pdt(2>AR(w)?reshape(shape(w),z):z,a);  // w^-1 mp a
  if(AT(a)&B01+INT)z=icor(z,detv);  // integer correct if a is not float (& correction is possible)
  EPILOG(z);
 }
+

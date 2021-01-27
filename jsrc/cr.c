@@ -371,7 +371,7 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,UI lrrr,UI lcrrcr,AF f2){
       // invoke the function, get the result for one cell
       RZ(z=CALL2IP(f2,virta,virtw,fs));
 #if AUDITEXECRESULTS
-      auditblock(z,1,1);
+      auditblock(jt,z,1,1);
 #endif
 
 #define ZZBODY  // assemble results
@@ -406,7 +406,7 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,UI lrrr,UI lcrrcr,AF f2){
   // indication that anything unusual happened.  So fail then
   WITHDEBUGOFF(z=CALL2(f2,virta,virtw,fs);)
 #if AUDITEXECRESULTS
-  auditblock(z,1,1);
+  auditblock(jt,z,1,1);
 #endif
   if(unlikely(jt->jerr!=0)){if(EMSK(jt->jerr)&EXIGENTERROR)RZ(z); z=num(0); RESETERR;}  // use 0 as result if error encountered
   GA(zz,AT(z),0L,lof+lif+AR(z),0L); zzs=AS(zz);
@@ -773,7 +773,7 @@ F2(jtqq){AF f1,f2;I hv[3],n,r[3],vf,flag2=0,*v;A ger=0;
   // if the rank is superfluous (meaning it is exactly the same as the rank of the verb) ignore it, returning the original verb.  We have seen
   // enough beginner code with +"0 to make this worthwhile.  The display will leave out the "0, to emphasize the equivalence.  We do this only
   // for noun w, to allow use of +"+ to avoid special code
-  if(unlikely(((VERB&AT(w))|(av->mr^hv[0])|(av->lrr^((hv[1]<<RANKTX)+hv[2])))==0))R a;
+  if(unlikely(((VERB&AT(w))|(av->mr^hv[0])|((av->lrr>>RANKTX)^hv[1])|((av->lrr&RANKTMSK)^hv[2]))==0))R a;
   // The flags for u indicate its IRS and atomic status.  If atomic (for monads only), ignore the rank, just point to
   // the action routine for the verb.  Otherwise, choose the appropriate rank routine, depending on whether the verb
   // supports IRS.  The IRS verbs may profitably support inplacing, so we enable it for them.

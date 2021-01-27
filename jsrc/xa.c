@@ -157,7 +157,7 @@ F1(jtppq){C*end;I k;
 
 F1(jtpps){I k;
  RE(sc(k=i0(w))); ASSERT(0<k,EVDOMAIN); ASSERT(k<=NPP,EVLIMIT);
- sprintf(3+jt->pp,FMTI"g", k);
+ snprintf(3+jt->pp,sizeof(jt->pp)-3,FMTI"g", k);
  R mtv;
 }
 
@@ -440,10 +440,10 @@ F2(jtgemmtune2){I j,k;
 F1(jtaudittdisab){
 #if MEMAUDIT&2
  I k,oldval;
- oldval = jt->audittstackdisabled;  // return value
+ oldval = JT(jt,audittstackdisabled);  // return value
  RE(k=i0(w));  // get arg
- if(k&2){jt->audittstackdisabled=0; audittstack(jt);}  // run once if so requested
- jt->audittstackdisabled=k;
+ if(k&2){JT(jt,audittstackdisabled)=0; audittstack(jt);}  // run once if so requested
+ JT(jt,audittstackdisabled)=k;
  R sc(oldval);
 #else
  R sc(0);

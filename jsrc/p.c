@@ -214,8 +214,10 @@ static PSTK * (*(lines58[]))() = {jtpfork,jtphook,jtis,jtpparen};  // handlers f
 // and that any block marked PRISTINE, if boxed, has DIRECT descendants with usecount 1
 // Initial call has nonrecurok and virtok both set
 
-void auditblock(A w, I nonrecurok, I virtok) {
+void auditblock(J jt,A w, I nonrecurok, I virtok) {
  if(!w)R;
+ if(AC(w)<0&&AZAPLOC(w)==0)SEGFAULT;
+ if(AC(w)<0&&!(AFLAG(w)&AFVIRTUAL)&&AZAPLOC(w)>=jt->tnextpushp)SEGFAULT;  // requires large NTSTACK
  if(AC(w)<0&&!(AFLAG(w)&AFVIRTUAL)&&((I)AZAPLOC(w)<0x100000||(*AZAPLOC(w)!=0&&*AZAPLOC(w)!=w)))SEGFAULT;  // if no zaploc for inplaceable block, error
  I nonrecur = (AT(w)&RECURSIBLE) && ((AT(w)^AFLAG(w))&RECURSIBLE);  // recursible type, but not marked recursive
  if(AFLAG(w)&AFVIRTUAL && !(AFLAG(w)&AFUNINCORPABLE))if(AFLAG(ABACK(w))&AFVIRTUAL)SEGFAULT;  // make sure e real backer is valid and not virtual
@@ -232,17 +234,17 @@ void auditblock(A w, I nonrecurok, I virtok) {
    DO(AN(w), if(wv[i]&&(AC(wv[i])<0))SEGFAULT;)
    I acbias=(AFLAG(w)&BOX)!=0;  // subtract 1 if recursive
    if(AFLAG(w)&AFPRISTINE){DO(AN(w), if(!(AT(wv[i])&DIRECT))SEGFAULT;)}  // wv[i]&&(AC(w)-acbias)>1|| can't because other uses may be not deleted yet
-   {DO(AN(w), auditblock(wv[i],nonrecur,0););}
+   {DO(AN(w), auditblock(jt,wv[i],nonrecur,0););}
    }
    break;
   case VERBX: case ADVX:  case CONJX: 
-   {V*v=VAV(w); auditblock(v->fgh[0],nonrecur,0);
-    auditblock(v->fgh[1],nonrecur,0);
-    auditblock(v->fgh[2],nonrecur,0);} break;
+   {V*v=VAV(w); auditblock(jt,v->fgh[0],nonrecur,0);
+    auditblock(jt,v->fgh[1],nonrecur,0);
+    auditblock(jt,v->fgh[2],nonrecur,0);} break;
   case SB01X: case SINTX: case SFLX: case SCMPXX: case SLITX: case SBOXX:
    {P*v=PAV(w);  A x;
    x = SPA(v,a); if(!(AT(x)&DIRECT))SEGFAULT; x = SPA(v,e); if(!(AT(x)&DIRECT))SEGFAULT; x = SPA(v,i); if(!(AT(x)&DIRECT))SEGFAULT; x = SPA(v,x); if(!(AT(x)&DIRECT))SEGFAULT;
-   auditblock(SPA(v,a),nonrecur,0); auditblock(SPA(v,e),nonrecur,0); auditblock(SPA(v,i),nonrecur,0); auditblock(SPA(v,x),nonrecur,0);} break;
+   auditblock(jt,SPA(v,a),nonrecur,0); auditblock(jt,SPA(v,e),nonrecur,0); auditblock(jt,SPA(v,i),nonrecur,0); auditblock(jt,SPA(v,x),nonrecur,0);} break;
   case B01X: case INTX: case FLX: case CMPXX: case LITX: case C2TX: case C4TX: case SBTX: case NAMEX: case SYMBX: case CONWX: if(NOUN & (AT(w) ^ (AT(w) & -AT(w))))SEGFAULT; break;
   case ASGNX: break;
   default: break; SEGFAULT;
@@ -650,7 +652,7 @@ RECURSIVERESULTSCHECK
 #endif
       EPZ(y);  // fail parse if error
 #if AUDITEXECRESULTS
-      auditblock(y,1,1);
+      auditblock(jt,y,1,1);
 #endif
 #if MEMAUDIT&0x2
       if(AC(y)==0 || (AC(y)<0 && AC(y)!=ACINPLACE+ACUC1))SEGFAULT; 
@@ -663,14 +665,13 @@ RECURSIVERESULTSCHECK
       // We can free all DIRECT blocks, and PRISTINE also.  We mustn't free non-PRISTINE boxes because the contents are at large
       // and might be freed while in use elsewhere.
       // We mustn't free VIRTUAL blocks because they have to be zapped differently.  When we work that out, we will free them here too
+      // NOTE that AZAPLOC may be invalid now, if the block was raised and then lowered for a period.  But if the arg is now abandoned,
+      // and it was abandoned on input, and it wasn't returned, it must be safe to zap it using the zaploc BEFORE the call
       {
       if(arg1=*tpopw){  // if the arg has a place on the stack, look at it to see if the block is still around
        I c=AC(arg1); c=arg1==y?0:c;
        if((c&(-(AT(arg1)&DIRECT)|SGNIF(AFLAG(arg1),AFPRISTINEX)))<0){   // inplaceable and not return value.
         if(!(AFLAG(arg1)&AFVIRTUAL)){  // for now, don't handle virtuals (which includes UNINCORPABLEs)
-#if MEMAUDIT&0x02
-         if(*(A*)ABACK(arg1)!=arg1)SEGFAULT;
-#endif
          *tpopw=0; fanapop(arg1,AFLAG(arg1));  // zap the top block; if recursive, fa the contents
         }
        }
@@ -679,9 +680,6 @@ RECURSIVERESULTSCHECK
        I c=AC(arg2); c=arg2==y?0:c; c=arg1==arg2?0:c;
        if((c&(-(AT(arg2)&DIRECT)|SGNIF(AFLAG(arg2),AFPRISTINEX)))<0){  // inplaceable, not return value, not same as arg1, dyad.  Safe to check AC even if freed as arg1
         if(!(AFLAG(arg2)&AFVIRTUAL)){  // for now, don't handle virtuals
-#if MEMAUDIT&0x02
-         if(*(A*)ABACK(arg2)!=arg2)SEGFAULT;
-#endif
          *tpopa=0; fanapop(arg2,AFLAG(arg2));
         }
        }
@@ -705,7 +703,7 @@ RECURSIVERESULTSCHECK
 #endif
       EPZ(y);  // fail parse if error
 #if AUDITEXECRESULTS
-      auditblock(y,1,1);
+      auditblock(jt,y,1,1);
 #endif
 #if MEMAUDIT&0x2
       if(AC(y)==0 || (AC(y)<0 && AC(y)!=ACINPLACE+ACUC1))SEGFAULT; 
@@ -722,7 +720,7 @@ RECURSIVERESULTSCHECK
 #endif
      EPZ(stack)  // fail if error
 #if AUDITEXECRESULTS
-     if(pline<=6)auditblock(stack[1].a,1,1);  // () and asgn have already been audited
+     if(pline<=6)auditblock(jt,stack[1].a,1,1);  // () and asgn have already been audited
 #endif
 #if MEMAUDIT&0x2
       if(m>=0 && (AC(stack[0].a)==0 || (AC(stack[0].a)<0 && AC(stack[0].a)!=ACINPLACE+ACUC1)))SEGFAULT; 

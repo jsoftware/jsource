@@ -465,7 +465,7 @@ R num(0);
 // nextpushp might start out on a boundary
 void audittstack(J jt){F1PREFIP;
 #if BW==64 && MEMAUDIT&2
- if(jt->audittstackdisabled&1)R;
+ if(JT(jt,audittstackdisabled)&1)R;
  A *ttop;
  A *nvrav=AAV1(jt->nvra);
  // verify counts start clear
@@ -486,7 +486,9 @@ void audittstack(J jt){F1PREFIP;
   }
   ttop = (A*)*ttop;  // back up to end of previous block, or 0 if last block
  }
- DO(jt->parserstackframe.nvrtop, if(!(AFLAG(nvrav[i])&AFNVRUNFREED))auditsimdelete(nvrav[i]);)
+ // simulate nvr-stack frees
+ DO(jt->parserstackframe.nvrtop, if(--AM(nvrav[i])==0){if(!(AFLAG(nvrav[i])&AFNVRUNFREED))auditsimdelete(nvrav[i]);})
+ DO(jt->parserstackframe.nvrtop, ++AM(nvrav[i])==0;)  // restore AMs
  // again to clear the counts
  for(ttop=jt->tnextpushp-!!((I)jt->tnextpushp&(NTSTACKBLOCK-1));ttop;){
   for(;(I)ttop&(NTSTACKBLOCK-1);ttop--){
@@ -764,7 +766,7 @@ if(np&&AC(np)<0)SEGFAULT;  // contents are never inplaceable
  } else if(t&(VERB|ADV|CONJ)){V* RESTRICT v=FAV(wd);
   // ACV.
   // If it is a nameref, clear the bucket info.  Explanation in nameref()
-  if(v->id==CTILDE&&AT(v->fgh[0])&NAME)NAV(v->fgh[0])->bucket=0;
+  if(unlikely(v->id==CTILDE))if(v->fgh[0]&&AT(v->fgh[0])&NAME)NAV(v->fgh[0])->bucket=0;
   //  Recur on each component
   raonlys(v->fgh[0]); raonlys(v->fgh[1]); raonlys(v->fgh[2]);
  } else if(t&(RAT|XNUM|XD)) {A* RESTRICT v=AAV(wd);

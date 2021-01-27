@@ -600,7 +600,7 @@ extern DF2(jtrollkx);
 extern DF2(jtsumattymes1);
 extern DF2(jtxop2);
 #if AUDITEXECRESULTS
-extern void auditblock(A w, I nonrecurok, I virtok);
+extern void auditblockJ (jt,A w, I nonrecurok, I virtok);
 #endif
 #if FORCEVIRTUALINPUTS
 extern A virtifnonip(J jt, I ipok, A buf);

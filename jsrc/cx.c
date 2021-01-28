@@ -36,17 +36,15 @@
 // If the sentence fails, we go into debug mode and don't return until the user releases us
 #define parseline(z) {C attnval=*JT(jt,adbreakr); A *queue=line+ci->i; I m=ci->n; if(likely(!attnval)){if(likely(!(gsfctdl&16)))z=PARSERVALUE(parsea(queue,m));else {thisframe->dclnk->dcix=i; z=PARSERVALUE(parsex(queue,m,ci,callframe));}}else{jsignal(EVATTN); z=0;} }
 
-typedef struct{A t,x,line;C*iv,*xv;I j,n; I4 k,w;} CDATA;
 /* for_xyz. t do. control data   */
-/* line  'for_xyz.'              */
-/* t     iteration array         */
-/* n     #t                      */
-/* k     length of name xyz      */
-/* x     text xyz_index          */
-/* xv    ptr to text xyz_index   */
-/* iv    ptr to text xyz         */
-/* j     iteration index         */
-/* w     cw code                 */
+typedef struct{
+ A t;  // iteration array for for_xyz., select. value, or nullptr for for.
+ I j;  // iteration index
+ I niter;  // for for. and for_xyz., number of iterations (number of items in T block)
+ I4 w; // cw code for the structure
+ LX itemsym;  // symbol number of xyz, 0 for for.
+ LX indexsym;  // symbol unmber of xyz_index, 0 for for.
+} CDATA;
 
 #define WCD            (sizeof(CDATA)/sizeof(I))
 
@@ -54,27 +52,83 @@ typedef struct{I4 d,t,e,b;} TD;  // line numbers of catchd., catcht., end. and t
 #define WTD            (sizeof(TD)/sizeof(I))
 #define NTD            17     /* maximum nesting for try/catch */
 
+// called from for. or select. to start filling in the entry
+static B forinitnames(J jt,CDATA*cv,I cwtype,A line){
+ cv->j=-1;                               /* iteration index     */
+ cv->t=0;  // init no selector value/iterator list
+ cv->w=cwtype;  // remember type of control struct
+ if(cwtype==CFOR){
+  // for for_xyz., get the symbol indexes for xyz & xyz_index
+  I k=AN(line)-5;  /* length of item name; -1 if omitted (for.; for_. not allowed) */
+  if(k>0){A x;  // if it is a for_xyz.
+   // We need a string buffer for "xyz_index".  Use the stack if the name is short
+   C ss[20], *s; if(unlikely(k>sizeof(ss)-6)){GATV0(x,LIT,k+6,1); s=CAV1(x);}else s=ss;  // s point to buffer
+   MC(s,CAV(line)+4,k);  MC(s+k,"_index",6L);  // move "xyz_index" into *s
+   cv->itemsym=(probeislocal(nfs(k,s)))-LAV0(JT(jt,symp));  // get index of symbol in table, which must have been preallocated
+   L *indexl; cv->indexsym=(indexl=probeislocal(nfs(k+6,s)))-LAV0(JT(jt,symp));
+   if(unlikely(k>sizeof(ss)-6)){ACINITZAP(x); fr(x);}  // remove tpop and free, now that we're done.  We may be in a loop 
+   // Make initial assignment to xyz_index, and mark it readonly
+   // Since we remove the readonly at the end of the loop, the user might have changed our value; so if there is
+   // an incumbent value, we remove it.  We also zap the value we install, just as in any normal assignment
+   ASSERT(!(indexl->flag&LREADONLY),EVRO)  // it had better not be readonly now
+   fa(indexl->val);  // if there is an incumbent value, discard it
+   A xx; GAT0(xx,INT,1,0); IAV0(xx)[0]=-1;  // -1 is the iteration number if there are no iterations
+   ACINITZAP(xx); indexl->val=xx;  // raise usecount, install as value of xyz_index
+   indexl->flag|=LREADONLY;  // in the loop, the user may not modify xyz_index
+  }else{cv->itemsym=cv->indexsym=0;}  // if not for_xyz., indicate with 0 indexes
+ }
+ R 1;  // normal return
+}
 
+// called to init the iterator for for.
 static B jtforinit(J jt,CDATA*cv,A t){A x;C*s,*v;I k;
  ASSERT(t!=0,EVCTRL);
- RZ(ras(t)); cv->t=t;                            /* iteration array     */
- SETIC(t,cv->n);                            /* # of items in t     */
- cv->j=-1;                               /* iteration index     */
- cv->x=0;
- k=AN(cv->line)-5; cv->k=(I4)k;                 /* length of item name; -1 if omitted (for.; for_. not allowed) */
- if((-k&-cv->n)<0){                         /* for_xyz.       k>0 and cv->n >0     */
-  s=4+CAV(cv->line); RZ(x=str(6+k,s)); ACINITZAP(x); cv->x=x;
-  cv->xv=v=CAV(x); MC(k+v,"_index",6L);  /* index name          */
-  cv->iv=s;                              /* item name           */
- }
+ SETIC(t,cv->niter);                            /* # of items in t     */
+ if(likely(cv->indexsym!=0)){RZ(ras(t)); cv->t=t;}  // if we need to save iteration array, do so, and protect from free
+ // create virtual block for the iteration.  We will store this in xyz.  We have to do usecount by hand because
+ // true virtual blocks are freed only by tpop, and we will be freeing this in unstackcv, either normally or at end-of-definition
+ // is freed.  We must keep ABACK in case we create a virtual block from xyz.
+ // If there is an incumbent value, discard it
+
+ // Calculate the item size and save it
+
+ // Allocate a to-be-virtual block.  Zap it, fill it in, make noninplaceable.  Point it to the data
+
+ // Install the virtual block as xyz, and remember its address
+
+// obsolete  SETIC(t,cv->n);                            /* # of items in t     */
+// obsolete  cv->x=0;
+// obsolete  k=AN(cv->line)-5;
+// obsolete  cv->k=(I4)k;                 
+// obsolete  if(k>0){                         /* for_xyz.       k>0 and cv->n >0     */
+// obsolete   s=4+CAV(cv->line); RZ(x=str(6+k,s));
+// obsolete     cv->xv=v=CAV(x); MC(k+v,"_index",6L);  /* index name          */
+// obsolete   cv->iv=s;                              /* item name           */
+// obsolete   }
  R 1;
 }    /* for. do. end. initializations */
 
-// A for. block is ending.   free the text string "xyz_index" (if saved) and the iteration array, Don't delete any names
+// A for. block is ending.   Free the iteration array.  Don't delete any names.  Mark the index as no longer readonly (in case we start the loop again)
 static B jtunstackcv(J jt,CDATA*cv){
- if(cv->x){fa(cv->x);}
- fa(cv->t); 
+// obsolete  if(cv->x){fa(cv->x);}
+ if(cv->w==CFOR){
+  if(cv->indexsym){  // if for_xyz. ...
+   LAV0(JT(jt,symp))[cv->indexsym].flag&=~LREADONLY;  // xyz_index is no longer readonly.  It is still available for inspection
+   // If xyz still points to the virtual block, we must be exiting the loop early: the value must remain, so realize it
+
+   // remove the virtual block.  Its usecount must be 1, since it would be realized before being installed anywhere else
+  }
+ }
+ fa(cv->t);  // decr the for/select value, protected at beginning.  NOP if it is 0
  R 1;
+}
+
+// call here when we find that xyz_index has been aliased.  We remove it, free it, and replace it with a new block.  Return 0 if error
+static A swapitervbl(J jt,A old,A *valloc){
+ fa(old);  // discard the old value
+ GAT0(old,INT,1,0);
+ ACINITZAP(old); *valloc=old;  // raise usecount, install as value of xyz_index
+ R old;
 }
 
 static void jttryinit(J jt,TD*v,I i,CW*cw){I j=i,t=0;
@@ -382,27 +436,42 @@ dobblock:
     if(gsfctdl&8){I m=AN(cd)/WCD; BZ(cd=ext(1,cd)); cv=(CDATA*)AV(cd)+m-1; r=AN(cd)/WCD-m;}
     else  {r=9; GAT0E(cd,INT,9*WCD,1,i=-1; z=0; continue); ACINITZAP(cd) cv=(CDATA*)AV(cd)-1; gsfctdl|=8;}   // 9=r
 
-   ++cv; --r; 
+   ++cv; --r;
+   BZ(forinitnames(jt,cv,cwtype,line[ci->i]));
    // indicate no t result (test value for select., iteration array for for.) and clear iteration index
    // remember the line number of the for./select.
-   cv->t=cv->x=0; cv->line=line[ci->i]; cv->w=ci->type; ++i;
+// obsolete    cv->t=0; cv->w=ci->type;
+ ++i;
+// obsolete cv->x=0; cv->line=line[ci->i];
    break;
   case CDOF:   // do. after for.
    // do. after for. .  If this is first time, initialize the iterator
-   if(unlikely(!cv->t)){
+   if(unlikely(cv->j<0)){
     BASSERT(t!=0,EVCTRL);   // Error if no sentences in T-block
     CHECKNOUN    // if t is not a noun, signal error on the last line executed in the T block
     BZ(forinit(cv,t)); t=0;
    }
    ++cv->j;  // step to first (or next) iteration
-   if(cv->x){A x;  // assign xyz and xyz_index for for_xyz.
-    if(unlikely(!(ci->canend&2)))BZ(z=rat(z));   // if z might be the result, protect it over the possible frees during this assignment
-    symbisdel(nfs(6+cv->k,cv->xv),x=sc(cv->j),locsym);  // Assign iteration number.  since there is no sentence, take deletion off nvr stack
-    symbisdel(nfs(  cv->k,cv->iv),cv->j<cv->n?from(x,cv->t):mtv,locsym);
-   }
-   if(cv->j<cv->n){  // if there are more iterations to do...
-    ++i; continue;   // advance to next line and process it
-   }
+// obsolete    if(cv->x){A x;  // assign xyz and xyz_index for for_xyz.
+// obsolete     if(unlikely(!(ci->canend&2)))BZ(z=rat(z));   // if z might be the result, protect it over the possible frees during this assignment
+// obsolete     symbisdel(nfs(6+cv->k,cv->xv),x=sc(cv->j),locsym);  // Assign iteration number.  since there is no sentence, take deletion off nvr stack
+// obsolete     symbisdel(nfs(  cv->k,cv->iv),cv->j<cv->n?from(x,cv->t):mtv,locsym);
+// obsolete    }
+   if(likely(cv->indexsym!=0)){
+    L *sympv=LAV0(JT(jt,symp));  // base of symbol array
+    A *aval=&sympv[cv->indexsym].val;  // address of iteration-count slot
+    A iterct=*aval;  // A block for iteration count
+    if(unlikely(AC(iterct)>1))BZ(iterct=swapitervbl(jt,iterct,aval));  // if value is now aliased, swap it out before we change it
+    IAV0(iterct)[0]=cv->j;  // Install iteration number into the readonly index
+    aval=&sympv[cv->itemsym].val;  // switch aval to address of item slot
+    if(unlikely(!(ci->canend&2)))BZ(z=rat(z));   // if z might be the result, protect it over the free
+    if(likely(*aval!=0))fa(*aval)  // discard & free incumbent
+    if(likely(cv->j<cv->niter)){  // if there are more iterations to do...
+     A fv; BZ(fv=from(iterct,cv->t)); realizeifvirtualB(fv); ra(fv) *aval=fv;  // select item and assign.  Too bad about the realize(); maybe we can do better
+     ++i; continue;   // advance to next line and process it
+    }
+    *aval=mtv;  // after last iteration, set xyz to mtv
+   }else if(likely(cv->j<cv->niter)){++i; continue;}  // advance to next line and process it
    // if there are no more iterations, fall through...
   case CENDSEL:
    // end. for select., and do. for for. after the last iteration, must pop the stack - just once
@@ -429,7 +498,7 @@ dobblock:
    // We just pop till we have popped a non-select.
    // Must rat() if the current result might be final result, in case it includes the variables we will delete in unstack
    if(unlikely(!(ci->canend&2)))BZ(z=rat(z));   // protect possible result from pop
-   do{I fin=cv->w!=CSELECT&&cv->w!=CSELECTN; unstackcv(cv); --cv; ++r; if(fin)break;}while(1);
+   do{I fin=cv->w!=CSELECT&&cv->w!=CSELECTN; unstackcv(cv); --cv; ++r; if(fin)break;}while(1);  // scaf codes
    i=ci->go;     // continue at new location
    // It must also pop the try. stack, if the destination is outside the try.-end. range
    if(gsfctdl&4){tdi=trypopgoto(tdv,tdi,i); gsfctdl^=tdi?0:4;}
@@ -775,7 +844,7 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
    I cwlen = AN(lv[cwv[j].i]);
    if(cwlen>4){  // for_xyz.
     // for_xyz. found.  Lookup xyz and xyz_index
-    A xyzname = str(cwlen+1,CAV(lv[cwv[j].i])+4);
+    A xyzname = str(cwlen+1,CAV(lv[cwv[j].i])+4);  // +1 is -5 for_. +6 _index
     RZ(probeis(nfs(cwlen-5,CAV(xyzname)),pfst));  // create xyz
     MC(CAV(xyzname)+cwlen-5,"_index",6L);    // append _index to name
     RZ(probeis(nfs(cwlen+1,CAV(xyzname)),pfst));  // create xyz_index

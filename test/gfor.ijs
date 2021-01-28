@@ -283,6 +283,44 @@ i;i_index
 (5;2) -: f 1 3 5 7 9
 ((i.0);5) -: f 1 2 3 4 6
 
+NB. old value of xyz freed
+f =. 3 : 0
+a =. i. 1e6
+for_a. 1 2 3 do.
+end.
+1
+)
+f"0 i. 1e3
+
+NB. index readonly
+f =. 3 : 0
+for_a. 1 2 3 do.
+a_index =. a_index
+end.
+0
+)
+'read-only data' -: f etx ''
+
+NB. xyz not readonly
+f =. 3 : 0
+for_a. i. 1e3 do.
+a =. i. 1e6
+end.
+1
+)
+f''
+
+NB. Can't nest w/ same name
+f =. 3 : 0
+for_a. 1 2 3 do.
+ for_a. 1 2 3 do.
+ end.
+end.
+0
+)
+'read-only data' -: f etx ''
+
+
 4!:55 ;:'a C comp f f0 f1 f1a f2 f2a f3 f3a f4 f5 f6 f7 f8 f9 f10 f11 f12'
 4!:55 ;:'g0 g1 n queens x '
 

@@ -126,7 +126,7 @@ static I conendsel(I endline,I top,I stack[],CW*con){I c=endline-1,d=0,j,ot=top,
  // c will hold the cw one before the one to go to if the previous test fails (init to one before end.)
  while(1){
   j=stack[--top]; t=(j+con)->type;    // back up to next cw
-  if(t==CSELECT||t==CSELECTN)break;                //when we hit select., we're done
+  if((t^CSELECT)<=(CSELECT^CSELECTN))break;                //when we hit select., we're done
   if(t==CDOSEL){d=j; (j+con)->go=(US)(1+c);}  // on do., remember line# of do. in d; point that do. to the failure position
   else{                            // must be case./fcase.
    c=j; (j+con)->go=(US)endline;          // set failed-compare point to be the case. test; point case. to the end. (end-of-case goes to end.)

@@ -22,17 +22,17 @@
 #define CFOR           17
 #define CDOF           18
 #define CBREAKF        19
-#define CSELECT        20
-#define CCASE          21
-#define CFCASE         22
-#define CDOSEL         23
-#define CENDSEL        24
-#define CASSERT        25
-#define CTHROW         26
-#define CCATCHD        27
-#define CCATCHT        28
-#define CSELECTN       29
+#define CSELECT        20  // paired with CSELECTN
+#define CSELECTN       21
+#define CCASE          22
+#define CFCASE         23
+#define CDOSEL         24
+#define CASSERT        25  // testcase depends on this number
+#define CENDSEL        26
+#define CTHROW         27
+#define CCATCHD        28
+#define CCATCHT        29
 #define CBREAKS        30   // break. with select. as containing looping struct
 #define CCONTS         31   // continue. with select. as containing looping struct
-// following codes cannot be tested by a shift; they alias to lower values
+// following codes cannot be tested by a shift; they alias to lower values on 32-bit machines
 #define CBBLOCKEND     (32+CBBLOCK)  // B followed by end. that falls through to NSI without other action

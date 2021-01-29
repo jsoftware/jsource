@@ -284,7 +284,7 @@ i;i_index
 ((i.0);5) -: f 1 2 3 4 6
 
 NB. old value of xyz and xyz_index  freed
-f =. 3 : 0
+f =: 3 : 0
 a =. i. 1e6
 a_index =. i. 1e6
 for_a. 1 2 3 do.
@@ -294,7 +294,7 @@ end.
 f"0 i. 1e3
 
 NB. index readonly
-f =. 3 : 0
+f =: 3 : 0
 for_a. 1 2 3 do.
 a_index =. a_index
 end.
@@ -303,7 +303,7 @@ end.
 'read-only data' -: f etx ''
 
 NB. xyz not readonly
-f =. 3 : 0
+f =: 3 : 0
 for_a. i. 1e3 do.
 a =. i. 1e6
 end.
@@ -312,7 +312,7 @@ end.
 f''
 
 NB. Can't nest w/ same name
-f =. 3 : 0
+f =: 3 : 0
 for_a. 1 2 3 do.
  for_a. 1 2 3 do.
  end.
@@ -322,7 +322,7 @@ end.
 'read-only data' -: f etx ''
 
 NB. readonly removed at end of loop
-f =. 3 : 0
+f =: 3 : 0
 for_a. 1 2 3 do.
 end.
 for_a. 1 2 3 do.

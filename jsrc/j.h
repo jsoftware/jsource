@@ -1410,7 +1410,7 @@ if(likely(z<3)){_zzt+=z; z=(I)&oneone; _zzt=_i&3?_zzt:(I*)z; z=_i&2?(I)_zzt:z; z
 #define SYMSETLOCAL(l) (AKGST(l)=jt->global, jt->locsyms=(l))  // change the locals to l
 #define SYMPUSHLOCAL(l) (AM(l)=(I)jt->locsyms, SYMSETLOCAL(l))  // push l onto locals stack
 // fa() the value when a symbol is deleted/reassigned.  If the symbol was ABANDONED, don't fa() because there was no ra() - but do revert 1 to 8..1 
-#define SYMVALFA(l) if(unlikely(((l).flag&LWASABANDONED)!=0)){(l).flag&=~LWASABANDONED; AC((l).val)|=ACINPLACE&(AC((l).val)-2);}else{fa((l).val);}
+#define SYMVALFA(l) if(unlikely(((l).flag&LWASABANDONED)!=0)){(l).flag&=~LWASABANDONED; AC((l).val)|=ACINPLACE&(AC((l).val)-2);}else{A v=(l).val; fa(v);}
 #define SZA             ((I)sizeof(A))
 #define LGSZA    LGSZI  // we always require A and I to have same size
 #define SZD             ((I)sizeof(D))

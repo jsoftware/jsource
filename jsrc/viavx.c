@@ -1727,8 +1727,8 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
    SETICFR(a,af,acr,m);  f0=MAX(0,f1); RE(zn=mult(prod(f,s),prod(f0,ws+wf)));
    switch(mode&IIOPMSK){
     case IIDOT:  
-    case IICO:    GATV0(z,INT,zn,f+f0); MCISH(AS(z),s,f) if(af)MCISH(f+AS(z),ws+wf,f0); v=AV(z); DQ(zn, *v++=m;); R z;  // mustn't overfetch s
-    case IEPS:    GATV0(z,B01,zn,f+f0); MCISH(AS(z),s,f) if(af)MCISH(f+AS(z),ws+wf,f0); memset(BAV(z),C0,zn); R z;  // mustn't overfetch s
+    case IICO:    GATV0(z,INT,zn,f+f0); MCISH(AS(z),s,f) MCISH(f+AS(z),ws+wf,f0); v=AV(z); DQ(zn, *v++=m;); R z;  // mustn't overfetch s
+    case IEPS:    GATV0(z,B01,zn,f+f0); MCISH(AS(z),s,f) MCISH(f+AS(z),ws+wf,f0); memset(BAV(z),C0,zn); R z;  // mustn't overfetch s
     case ILESS:                              RCA(w);
     case IIFBEPS:                            R mtv;
     case IANYEPS: case IALLEPS: case II0EPS: R num(0);

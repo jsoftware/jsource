@@ -2,6 +2,7 @@
 NB. x i.y with wrong rank/shape -----------------------------------------
 
 f0=: 4 : 0
+xx =: x [ yy =: y
  assert. (  7$3)   -: (  3 4  $x) i.        7 2$y
  assert. (5 7$3)   -: (5 3 4  $x) i."2   ]5 7 2$y
  assert. (5 7$3)   -: (  3 4  $x) i."2   ]5 7 2$y
@@ -191,6 +192,6 @@ NB. Verify that y can have the long frame
 ((i. 2 3 4)&i. i. 4 5) -:  (i. 2 3 4)&(i."i.) i. 4 5
 
 
-4!:55 ;:'f0 f1 f2 f3 f4 f5 f6 f7 f8 f9 fa fb'
+4!:55 ;:'f0 f1 f2 f3 f4 f5 f6 f7 f8 f9 fa fb xx yy'
 
 

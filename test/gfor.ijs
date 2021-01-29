@@ -283,9 +283,10 @@ i;i_index
 (5;2) -: f 1 3 5 7 9
 ((i.0);5) -: f 1 2 3 4 6
 
-NB. old value of xyz freed
+NB. old value of xyz and xyz_index  freed
 f =. 3 : 0
 a =. i. 1e6
+a_index =. i. 1e6
 for_a. 1 2 3 do.
 end.
 1
@@ -319,6 +320,19 @@ end.
 0
 )
 'read-only data' -: f etx ''
+
+NB. readonly removed at end of loop
+f =. 3 : 0
+for_a. 1 2 3 do.
+end.
+for_a. 1 2 3 do.
+ break.
+end.
+for_a. 1 2 3 do.
+end.
+1
+)
+f ''
 
 
 4!:55 ;:'a C comp f f0 f1 f1a f2 f2a f3 f3a f4 f5 f6 f7 f8 f9 f10 f11 f12'

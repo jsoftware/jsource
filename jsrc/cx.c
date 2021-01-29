@@ -39,8 +39,10 @@
 /* for_xyz. t do. control data   */
 typedef struct{
  A t;  // iteration array for for_xyz., select. value, or nullptr for for.
+ A item;  // if for_xyz, the sorta-virtual block we are using to hold the value
  I j;  // iteration index
  I niter;  // for for. and for_xyz., number of iterations (number of items in T block)
+ I itemsiz;  // size of an item of xyz, in bytes
  I4 w; // cw code for the structure
  LX itemsym;  // symbol number of xyz, 0 for for.
  LX indexsym;  // symbol unmber of xyz_index, 0 for for.
@@ -62,11 +64,11 @@ static B forinitnames(J jt,CDATA*cv,I cwtype,A line){
   I k=AN(line)-5;  /* length of item name; -1 if omitted (for.; for_. not allowed) */
   if(k>0){A x;  // if it is a for_xyz.
    // We need a string buffer for "xyz_index".  Use the stack if the name is short
-   C ss[20], *s; if(unlikely(k>sizeof(ss)-6)){GATV0(x,LIT,k+6,1); s=CAV1(x);}else s=ss;  // s point to buffer
+   C ss[20], *s; if(unlikely(k>(I)(sizeof(ss)-6))){GATV0(x,LIT,k+6,1); s=CAV1(x);}else s=ss;  // s point to buffer
    MC(s,CAV(line)+4,k);  MC(s+k,"_index",6L);  // move "xyz_index" into *s
    cv->itemsym=(probeislocal(nfs(k,s)))-LAV0(JT(jt,symp));  // get index of symbol in table, which must have been preallocated
    L *indexl; cv->indexsym=(indexl=probeislocal(nfs(k+6,s)))-LAV0(JT(jt,symp));
-   if(unlikely(k>sizeof(ss)-6)){ACINITZAP(x); fr(x);}  // remove tpop and free, now that we're done.  We may be in a loop 
+   if(unlikely(k>(I)(sizeof(ss)-6))){ACINITZAP(x); fr(x);}  // remove tpop and free, now that we're done.  We may be in a loop 
    // Make initial assignment to xyz_index, and mark it readonly
    // Since we remove the readonly at the end of the loop, the user might have changed our value; so if there is
    // an incumbent value, we remove it.  We also zap the value we install, just as in any normal assignment
@@ -84,18 +86,25 @@ static B forinitnames(J jt,CDATA*cv,I cwtype,A line){
 static B jtforinit(J jt,CDATA*cv,A t){A x;C*s,*v;I k;
  ASSERT(t!=0,EVCTRL);
  SETIC(t,cv->niter);                            /* # of items in t     */
- if(likely(cv->indexsym!=0)){RZ(ras(t)); cv->t=t;}  // if we need to save iteration array, do so, and protect from free
- // create virtual block for the iteration.  We will store this in xyz.  We have to do usecount by hand because
- // true virtual blocks are freed only by tpop, and we will be freeing this in unstackcv, either normally or at end-of-definition
- // is freed.  We must keep ABACK in case we create a virtual block from xyz.
- // If there is an incumbent value, discard it
-
- // Calculate the item size and save it
-
- // Allocate a to-be-virtual block.  Zap it, fill it in, make noninplaceable.  Point it to the data
-
- // Install the virtual block as xyz, and remember its address
-
+ if(likely(cv->indexsym!=0)){
+  // for_xyz.   protect iterator value and save it; create virtual item name
+  ASSERT(!(AT(t)&SPARSE),EVNONCE)
+  ra(t) cv->t=t;  // if we need to save iteration array, do so, and protect from free
+  // create virtual block for the iteration.  We will store this in xyz.  We have to do usecount by hand because
+  // true virtual blocks are freed only by tpop, and we will be freeing this in unstackcv, either normally or at end-of-definition
+  // is freed.  We must keep ABACK in case we create a virtual block from xyz.
+  // We store the block in 2 places: cv and symp.val.  We ra() once for each place
+  // If there is an incumbent value, discard it
+  A *aval=&LAV0(JT(jt,symp))[cv->itemsym].val; A val=*aval;  // stored reference address; incumbent value there
+  fa(val); *aval=0;  // free the incumbent if any, clear val in symbol in case of error
+  // Calculate the item size and save it
+  I isz; I r=AR(t)-1; r=r<0?0:r; PROD(isz,r,AS(t)+1); I tt=AT(t); cv->itemsiz=isz<<bplg(tt); // rank of item; number of bytes in an item
+  // Allocate a sorta-virtual block.  Zap it, fill it in, make noninplaceable.  Point it to the item before the data, since we preincrement in the loop
+  A svb; GA(svb,tt,isz,r,AS(t)+1); // one item
+  AK(svb)=(CAV(t)-(C*)svb)-cv->itemsiz; ACINITZAP(svb); ACINIT(svb,2); AFLAGINIT(svb,(tt&RECURSIBLE)|AFVIRTUAL); ABACK(svb)=t;  // We DO NOT raise the backer because this is sorta-virtual
+  // Install the virtual block as xyz, and remember its address
+  cv->item=*aval=svb;  // save in 2 places, commensurate with AC of 2
+ }
 // obsolete  SETIC(t,cv->n);                            /* # of items in t     */
 // obsolete  cv->x=0;
 // obsolete  k=AN(cv->line)-5;
@@ -108,15 +117,17 @@ static B jtforinit(J jt,CDATA*cv,A t){A x;C*s,*v;I k;
  R 1;
 }    /* for. do. end. initializations */
 
-// A for. block is ending.   Free the iteration array.  Don't delete any names.  Mark the index as no longer readonly (in case we start the loop again)
+// A for/select. block is ending.   Free the iteration array.  Don't delete any names.  Mark the index as no longer readonly (in case we start the loop again)
 static B jtunstackcv(J jt,CDATA*cv){
 // obsolete  if(cv->x){fa(cv->x);}
  if(cv->w==CFOR){
-  if(cv->indexsym){  // if for_xyz. ...
+  if(cv->t){  // if for_xyz. that has processed forinit ...
    LAV0(JT(jt,symp))[cv->indexsym].flag&=~LREADONLY;  // xyz_index is no longer readonly.  It is still available for inspection
    // If xyz still points to the virtual block, we must be exiting the loop early: the value must remain, so realize it
-
-   // remove the virtual block.  Its usecount must be 1, since it would be realized before being installed anywhere else
+   A svb=cv->item;  // the sorta-virtual block for the item
+   if(unlikely(LAV0(JT(jt,symp))[cv->itemsym].val==svb)){A newb; RZ(newb=realize(svb)); ACINITZAP(newb); fa(svb); LAV0(JT(jt,symp))[cv->itemsym].val=newb;}  // realize stored value if virtual
+   // Decrement the usecount to account for being removed from cv - this is the final free of the svb
+   fr(svb);  // MUST NOT USE fa() so that we don't recur and free svb's current contents in cv->t
   }
  }
  fa(cv->t);  // decr the for/select value, protected at beginning.  NOP if it is 0
@@ -434,7 +445,7 @@ dobblock:
    // if it fills up, double it as required
    if(!r)
     if(gsfctdl&8){I m=AN(cd)/WCD; BZ(cd=ext(1,cd)); cv=(CDATA*)AV(cd)+m-1; r=AN(cd)/WCD-m;}
-    else  {r=9; GAT0E(cd,INT,9*WCD,1,i=-1; z=0; continue); ACINITZAP(cd) cv=(CDATA*)AV(cd)-1; gsfctdl|=8;}   // 9=r
+    else  {r=9; GAT0E(cd,INT,9*WCD,1,i=-1; z=0; continue); ACINITZAP(cd) cv=(CDATA*)IAV1(cd)-1; gsfctdl|=8;}   // 9=r   scaf IAV1
 
    ++cv; --r;
    BZ(forinitnames(jt,cv,cwtype,line[ci->i]));
@@ -465,12 +476,17 @@ dobblock:
     IAV0(iterct)[0]=cv->j;  // Install iteration number into the readonly index
     aval=&sympv[cv->itemsym].val;  // switch aval to address of item slot
     if(unlikely(!(ci->canend&2)))BZ(z=rat(z));   // if z might be the result, protect it over the free
-    if(likely(*aval!=0))fa(*aval)  // discard & free incumbent
+// obsolete     if(likely(*aval!=0))fa(*aval)  // discard & free incumbent
     if(likely(cv->j<cv->niter)){  // if there are more iterations to do...
-     A fv; BZ(fv=from(iterct,cv->t)); realizeifvirtualB(fv); ra(fv) *aval=fv;  // select item and assign.  Too bad about the realize(); maybe we can do better
+    // if xyz has been reassigned, fa the incumbent and reinstate the sorta-virtual block, advanced to the next item
+     AK(cv->item)+=cv->itemsiz;  // advance to next item
+     if(unlikely(*aval!=cv->item)){A val=*aval; fa(val) val=cv->item; ra(val) *aval=val;}  // discard & free incumbent, switch to sorta-virtual, raise it
+// obsolete      A fv; BZ(fv=from(iterct,cv->t)); realizeifvirtualB(fv); ra(fv) *aval=fv;  // select item and assign.  Too bad about the realize(); maybe we can do better
      ++i; continue;   // advance to next line and process it
     }
-    *aval=mtv;  // after last iteration, set xyz to mtv
+    // ending the iteration.  set xyz to i.0
+    {A val=*aval; fa(val)}  // discard & free incumbent, probably the sorta-virtual block
+    *aval=mtv;  // after last iteration, set xyz to mtv, which is permanent
    }else if(likely(cv->j<cv->niter)){++i; continue;}  // advance to next line and process it
    // if there are no more iterations, fall through...
   case CENDSEL:
@@ -573,7 +589,7 @@ dobblock:
 
  if(unlikely(gsfctdl&16)){debz();}   // pair with the deba if we did one
  A prevlocsyms=(A)AM(locsym);  // get symbol table to return to, before we free the old one
- if(likely(!(gsfctdl&8))){
+ if(likely(!(gsfctdl&8))){  // scaf test should include cv!=cvminus1
   // Normal path.  protect the result block and free everything allocated here, possibly including jt->locsyms if it was cloned (it is on the stack now)
   z=EPILOGNORET(z);  // protect return value from being freed when the symbol table is.  Must also be before stack cleanup, in case the return value is xyz_index or the like
  }else{
@@ -582,7 +598,7 @@ dobblock:
   // table that we need to pop from.  So we protect the symbol table during the cleanup of the result and stack.
   ra(locsym);  // protect local symtable - not contents
   z=EPILOGNORET(z);  // protect return value from being freed when the symbol table is.  Must also be before stack cleanup, in case the return value is xyz_index or the like
-  CDATA *cvminus1 = (CDATA*)VAV(cd)-1; while(cv!=cvminus1){unstackcv(cv); --cv;}  // clean up any remnants left on the for/select stack
+  CDATA *cvminus1 = (CDATA*)IAV1(cd)-1; while(cv!=cvminus1){unstackcv(cv); --cv;}  // clean up any remnants left on the for/select stack
   fa(cd);  // have to delete explicitly, because we had to ext() the block and thus protect it with ra()
   fa(locsym);  // unprotect local syms.  This deletes them if they were cloned
  }

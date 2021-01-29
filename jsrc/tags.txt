@@ -6,6 +6,4 @@ j901-release-e-1
 j902-beta-a
 j902-beta-f
 j902-release-a
-
-
 j903-beta-b+

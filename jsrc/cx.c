@@ -454,7 +454,7 @@ dobblock:
    // indicate no t result (test value for select., iteration array for for.) and clear iteration index
    // remember the line number of the for./select.
 // obsolete    cv->t=0; cv->w=ci->type;
- ++i;
+   ++i;
 // obsolete cv->x=0; cv->line=line[ci->i];
    break;
   case CDOF:   // do. after for.
@@ -558,8 +558,8 @@ dobblock:
    if(likely((UI)i<(UI)(nG0ysfctdl>>16)))if(likely(!((((cwtype=(ci=i+cw)->type)&31)^CBBLOCK)+jt->uflags.us.cx.cx_us)))goto dobblock;  // avoid indirect-branch overhead on the likely  case. ... do. bblock
    break;
   default:   //   CELSE CWHILST CGOTO CEND
-   if(unlikely(2<=*JT(jt,adbreakr))) { BASSERT(0,EVBREAK);} 
-     // this is JBREAK0, but we have to finish the loop.  This is double-ATTN, and bypasses the TRY block
+   if(unlikely(2<=*JT(jt,adbreakr))) {BASSERT(0,EVBREAK);} 
+     // JBREAK0, but we have to finish the loop.  This is double-ATTN, and bypasses the TRY block
    i=ci->go;  // Go to the next sentence, whatever it is
   }
  }  // end of main loop

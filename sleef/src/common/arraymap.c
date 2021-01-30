@@ -206,8 +206,8 @@ void *ArrayMap_get(ArrayMap *thiz, uint64_t key) {
 #define LINELEN (1024*1024)
 
 ArrayMap *ArrayMap_load(const char *fn, const char *prefix, const char *idstr, int doLock) {
-  const int idstrlen = strlen(idstr);
-  int prefixLen = strlen(prefix) + 3;
+  const size_t idstrlen = strlen(idstr);
+  size_t prefixLen = strlen(prefix) + 3;
 
   if (prefixLen >= LINELEN-10 || idstrlen >= LINELEN-10) return NULL;
  
@@ -270,8 +270,8 @@ ArrayMap *ArrayMap_load(const char *fn, const char *prefix, const char *idstr, i
 int ArrayMap_save(ArrayMap *thiz, const char *fn, const char *prefix, const char *idstr) {
   assert(thiz != NULL && thiz->magic == MAGIC_ARRAYMAP);
 
-  const int idstrlen = strlen(idstr);
-  int prefixLen = strlen(prefix) + 3;
+  const size_t idstrlen = strlen(idstr);
+  size_t prefixLen = strlen(prefix) + 3;
 
   if (prefixLen >= LINELEN-10 || idstrlen >= LINELEN-10) return -1;
 

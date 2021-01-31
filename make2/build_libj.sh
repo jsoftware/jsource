@@ -84,6 +84,7 @@ common="$OPENMP -fPIC -O2 -fvisibility=hidden -fno-strict-aliasing  \
  -Wno-empty-body \
  -Wno-format-overflow \
  -Wno-implicit-fallthrough \
+ -Wno-int-to-pointer-cast \
  -Wno-maybe-uninitialized \
  -Wno-missing-field-initializers \
  -Wno-parentheses \

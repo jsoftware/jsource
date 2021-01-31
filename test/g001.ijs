@@ -329,7 +329,7 @@ NB. too close to rely on now (100 (6!:2) 'fa ''one''') < (100 (6!:2) 'fa ''two''
 
 NB. leaks that have been fixed
 NB. a =. 4 - 3  NB. allocate a as an integer
-a =. 300 + 7!:0''  NB. 300 is slop to allow in memory alloc
+a =. (IF64{600 300) + 7!:0''  NB. 300 is slop to allow in memory alloc
 1: ]^:0: <"0 i. 1e4
 a > 7!:0''
 

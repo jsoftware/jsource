@@ -274,7 +274,7 @@ static inline omp_int_t omp_get_max_threads() { return 1;}
 #define strtoI          strtol
 #endif
 
-#define NEGATIVE0       0x8000000000000000LL   // IEEE -0 (double precision)
+#define NEGATIVE0       (UIL)0x8000000000000000LL   // IEEE -0 (double precision)
 
 #define C4MAX           0xffffffffUL
 #define C4MIN           0L

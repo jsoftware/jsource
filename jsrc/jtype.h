@@ -558,7 +558,30 @@ typedef I SI;
 #define FIXASTOPATINV 16  // to fixa: stop afixing a branch when it gets to a an explicit obverse
 
 
-typedef struct {I i;US n,go,source;C type;C canend;} CW;
+#if 0  // obsolete 
+typedef struct {
+ C type;
+ C canend;
+ US sentn;
+ I sentx;
+ US go;
+ US source;
+} CW;
+#else
+typedef struct {
+ union{
+  struct {
+   C type;  // control-word number from w.h
+   C canend;  // Indicates that the most-recent B-block result can (1) or can't (2) become the result of the running definition.  0 means we don't know yet.
+   US sentn;    // number of tokens in the sentence
+   I4 sentx;   // index of the start of the sentence in the sequential list of tokens for the definition
+  } indiv;  // individual fields
+  UI group[2-SY_64];  // fields all in one or two words
+ } ig;
+ US go;  // line number.  Depends on type; can be loop-to point, failing-branch point, or error handler
+ US source;  // source line number
+} CW;
+#endif
 
 /* control word (always has corresponding token string)                             */
 /* type   - as specified in w.h                                            */

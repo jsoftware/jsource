@@ -246,12 +246,12 @@ A jtunDD(J jt, A w){F1PREFIP;
 
 static A jtunparse1(J jt,CW*c,A x,I j,A y){A q,z;C*s;I t;
  // for BBLOCK/TBLOCK types, convert the lines to displayable by displaying them as if for error messages, and copying the result
- switch(t=c->type){
+ switch(t=c->ig.indiv.type){
   case CBBLOCK: case CBBLOCKEND: case CTBLOCK: RZ(z=unparse(x));  break;
   case CASSERT:               RZ(q=unparse(x)); GATV0(z,LIT,8+AN(q),1); s=CAV(z); 
                               MC(s,"assert. ",8L); MC(8+s,CAV(q),AN(q)); break;
   case CLABEL:  case CGOTO:   RZ(z=ca(AAV(x)[0])); break;
-  case CFOR:                  RZ(z=c->n?AAV(x)[0]:spellcon(t)); break;
+  case CFOR:                  RZ(z=c->ig.indiv.sentn?AAV(x)[0]:spellcon(t)); break;
   default:                    RZ(z=spellcon(t));
  }
  // if the CW we processed comes from the same source lime, append it and return the combination; ootherwise return the new
@@ -272,7 +272,7 @@ static A*jtunparse1a(J jt,I m,A*hv,A*zv){A*v,x,y;CW*u;I i,j,k;
  y=hv[1]; u=(CW*)AV(y);  // u is running pointer through control words
  y=0; j=k=-1;
  for(i=0;i<m;++i,++u){  // for each word
-  RZ(x=unparse1(u,vec(BOX,u->n,v+u->i),j,y)); // append new line to y or else return it as x if it is on a new line.
+  RZ(x=unparse1(u,vec(BOX,u->ig.indiv.sentn,v+u->ig.indiv.sentx),j,y)); // append new line to y or else return it as x if it is on a new line.
   k=u->source;
   if(j<k){if(y)*zv++=jtunDD(jt,y); DQ(k-j-1, *zv++=mtv;);}  // if we are about to move to a new line, save y and zap the surplus control words on the line to empties
   y=x; j=k;
@@ -321,8 +321,8 @@ static F2(jtxrep){A h,*hv,*v,x,z,*zv;CW*u;I i,j,n,q[3],*s;V*wv;
  zv=AAV(z);
  for(i=0;i<n;++i,++u){
   RZ(*zv++=incorp(sc(i)));
-  q[0]=u->type; q[1]=u->go; q[2]=u->source; RZ(*zv++=incorp(vec(INT,3L,q)));
-  RZ(*zv++=incorp(unparse1(u,vec(BOX,u->n,v+u->i),-1L,0L)));
+  q[0]=u->ig.indiv.type; q[1]=u->go; q[2]=u->source; RZ(*zv++=incorp(vec(INT,3L,q)));
+  RZ(*zv++=incorp(unparse1(u,vec(BOX,u->ig.indiv.sentn,v+u->ig.indiv.sentx),-1L,0L)));
  }
  R z;
 }    /* explicit representation -- h parameter for : definitions */

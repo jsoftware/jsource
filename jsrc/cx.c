@@ -25,6 +25,12 @@
 #define BASSERT(b,e)   {if(unlikely(!(b))){jsignal(e); i=-1; z=0; continue;}}
 #define BZ(e)          if(unlikely(!(e))){i=-1; z=0; continue;}
 
+#if SY_64
+#define CWSENTX (cwgroup>>32)  // .sentx
+#else
+#define CWSENTX (cw[i].ig.indiv.sentx)
+#endif
+
 // sv->h is the A block for the [2][4] array of saved info for the definition; hv->[4] boxes of info for the current valence;
 // line-> box 0 - tokens; x->box 1 - A block for control words; n (in flag word)=#control words; cw->array of control-word data, a CW struct for each
 #define LINE(sv)       {A x; \
@@ -34,7 +40,7 @@
 // Parse/execute a line, result in z.  If locked, reveal nothing.  Save current line number in case we reexecute
 // If the sentence passes a u/v into an operator, the current symbol table will become the prev and will have the u/v environment info
 // If the sentence fails, we go into debug mode and don't return until the user releases us
-#define parseline(z) {C attnval=*JT(jt,adbreakr); A *queue=line+ci->i; I m=ci->n; if(likely(!attnval)){if(likely(!(nG0ysfctdl&16)))z=PARSERVALUE(parsea(queue,m));else {thisframe->dclnk->dcix=i; z=PARSERVALUE(parsex(queue,m,ci,callframe));}}else{jsignal(EVATTN); z=0;} }
+#define parseline(z) {C attnval=*JT(jt,adbreakr); A *queue=line+CWSENTX; I m=(cwgroup>>16)&0xffff; if(likely(!attnval)){if(likely(!(nG0ysfctdl&16)))z=PARSERVALUE(parsea(queue,m));else {thisframe->dclnk->dcix=i; z=PARSERVALUE(parsex(queue,m,cw+i,callframe));}}else{jsignal(EVATTN); z=0;} }
 
 /* for_xyz. t do. control data   */
 typedef struct{
@@ -146,7 +152,7 @@ static void jttryinit(J jt,TD*v,I i,CW*cw){I j=i,t=0;
  v->b=(I4)i;v->d=v->t=0;
  while(t!=CEND){
   j=(j+cw)->go;  // skip through just the control words for this try. structure
-  switch(t=(j+cw)->type){
+  switch(t=(j+cw)->ig.indiv.type){
    case CCATCHD: v->d=(I4)j; break;
    case CCATCHT: v->t=(I4)j; break;
    case CEND:    v->e=(I4)j; break;
@@ -308,7 +314,8 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
  A t=0;  // last T-block result
  I4 bi;   // cw number of last B-block result.  Needed only if it gets a NONNOUN error - can force to memory
  I4 ti;   // cw number of last T-block result.  Needed only if it gets a NONNOUN error
- while(1){CW *ci;
+ while(1){
+// obsolete CW *ci;
   // i holds the control-word number of the current control word
   // Check for debug and other modes
   if(unlikely(jt->uflags.us.cx.cx_us!=0)){  // fast check to see if we have overhead functions to perform
@@ -349,64 +356,23 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
 
   // Don't do the loop-exit test until debug has had the chance to update the execution line.  For example, we might be asked to reexecute the last line of the definition
   if(unlikely((UI)i>=(UI)(nG0ysfctdl>>16)))break;
-  ci=i+cw;   // ci->control-word info
+// obsolete   ci=i+cw;   // ci->control-word info
   // process the control word according to its type
-  I cwtype;
-  switch(((cwtype=ci->type)&31)){  // highest cw is 33, but it aliases to 1 & there is no 32
-  case CIF: case CWHILE: case CELSEIF: 
-   i=ci->go;  // Go to the next sentence, whatever it is
-   if(unlikely((UI)i>=(UI)(nG0ysfctdl>>16)))break;  // no fallthrough if line exits
-   if(unlikely(((cwtype=(ci=i+cw)->type)^CTBLOCK)+jt->uflags.us.cx.cx_us))break;  // avoid indirect-branch overhead on the likely case
-  case CASSERT:
-  case CTBLOCK:
-tblockcase:
-   // execute and parse line as if for B block, except save the result in t
-   // If there is a possibility that the previous B result may become the result of this definition,
-   // protect it during the frees during the T block.  Otherwise, just free memory
-   if(likely(ci->canend&2))tpop(old);else z=gc(z,old);   // 2 means previous B can't be the result
-   parseline(t);
-   // Check for assert.  Since this is only for T-blocks we tolerate the test (rather than duplicating code)
-   if(unlikely(ci->type==CASSERT))if(JT(jt,assert)&&t&&!(NOUN&AT(t)&&all1(eq(num(1),t))))t=pee(line,ci,EVASSERT,nG0ysfctdl<<(BW-2),callframe);  // if assert., signal post-execution error if result not all 1s.  May go into debug; sets to result after debug
-   if(likely(t!=0)){ti=i,++i;  // if no error, continue on
-    if(likely((UI)i<(UI)(nG0ysfctdl>>16)))if(likely(!(((cwtype=(ci=i+cw)->type)^CDO)+jt->uflags.us.cx.cx_us)))goto docase;  // avoid indirect-branch overhead on the likely case
-   }else if((nG0ysfctdl&16)&&DB1&jt->uflags.us.cx.cx_c.db)ti=i,i=debugnewi(i+1,thisframe,self);  // error in debug mode: when coming out of debug, go to new line (there had better be one)
-   else if(EVTHROW==jt->jerr){if(nG0ysfctdl&4&&(tdv+tdi-1)->t){i=(tdv+tdi-1)->t+1; RESETERR;}else BASSERT(0,EVTHROW);}  // if throw., and there is a catch., do so
-   else{i=ci->go; if(i<SMAX){RESETERR; z=mtm; if(nG0ysfctdl&4){if(!--tdi){jt->uflags.us.cx.cx_c.db=(UC)(nG0ysfctdl>>8); nG0ysfctdl^=4;}}}else z=0;}  // uncaught error: if we take error exit, we might not have protected z, which is not needed anyway; so clear it to prevent invalid use
-     // if we are not taking the error exit, we still need to set z to a safe value since we might not have protected it.  This is B1 try. if. error do. end. catch. return. end.
-   break;
-  case CDO:
-docase:
-   // do. here is one following if., elseif., or while. .  It always follows a T block, and skips the
-   // following B block if the condition is false.
-  {A tt=t; tt=t?t:mtv;  // missing t looks like '' which is true
-   //  Start by assuming condition is true; set to move to the next line then
-   ++i;
-   // Quick true cases are: nonexistent t; empty t; direct numeric t with low byte nonzero.  This gets most of the true.  We add in char types and BOX cause it's free (they are always true)
-   if(likely(AN(tt)))if((-(AT(tt)&(B01|LIT|INT|FL|CMPX|C2T|C4T|BOX))&-((I)CAV(tt)[0]))>=0){I nexti=ci->go;  // C cond is false if (type direct or BOX) and (value not 0).  J cond is true then.  Musn't fetch CAV[0] if AN==0
-    // here the type is indirect or the low byte is 0.  We must compare more
-    while(1){  // 2 loops if sparse
-     if(likely(AT(tt)&INT+B01)){i=BIV0(tt)?i:nexti; break;} // INT and B01 are most common
-     if(AT(tt)&FL){i=DAV(tt)[0]?i:nexti; break;}
-     if(AT(tt)&CMPX){i=DAV(tt)[0]||DAV(tt)[1]?i:nexti; break;}
-     if(AT(tt)&(RAT|XNUM)){i=1<AN(XAV(tt)[0])||IAV(XAV(tt)[0])[0]?i:nexti; break;}
-     if(!(AT(tt)&NOUN)){CHECKNOUN}  // will take error
-     // other types test true, which is how i is set
-     if(!(SPARSE&AT(tt)))break;
-     BZ(tt=denseit(tt)); if(AN(tt)==0)break;  // convert sparse to dense - this could make the length go to 0, in which case true
-    }
-   }
-   }
-   t=0;  // Indicate no T block, now that we have processed it
-   if((UI)i>=(UI)(nG0ysfctdl>>16)||((((cwtype=(ci=i+cw)->type)&31)^CBBLOCK)+jt->uflags.us.cx.cx_us))break;  // avoid indirect-branch overhead on the likely case
-   // fall through if continuing to BBLOCK (normal)
-  case CBBLOCK: case CBBLOCKEND:
+  I cwgroup;
+  // **************** top of main dispatch loop ********************
+  switch(((cwgroup=cw[i].ig.group[0])&31)){  // highest cw is 33, but it aliases to 1 & there is no 32
+
+  // The top cases handle the case of if. T do. B B B... end B B...      without looping back to the switch except for the if.
+  case CBBLOCK: case CBBLOCKEND:  // placed first because likely case for unpredicted first line of definition
 dobblock:
    // B-block (present on every sentence in the B-block)
    // run the sentence
    tpop(old); parseline(z);
    // if there is no error, or ?? debug mode, step to next line
-   if(likely(z!=0)){bi=i; i+=(cwtype>>5)+1;  // go to next sentence, or to the one after that if it's harmless end. 
-    if(likely((UI)i<(UI)(nG0ysfctdl>>16)))if(likely(!((((cwtype=(ci=i+cw)->type)&31)^CBBLOCK)+jt->uflags.us.cx.cx_us)))goto dobblock;  // avoid indirect-branch overhead on the likely case
+   if(likely(z!=0)){bi=i; i+=((cwgroup>>5)&1)+1;  // go to next sentence, or to the one after that if it's harmless end. 
+    if(unlikely((UI)i>=(UI)(nG0ysfctdl>>16)))break;  // end of definition
+    if(unlikely(((((cwgroup=cw[i].ig.group[0])^CBBLOCK)&0x1f)+jt->uflags.us.cx.cx_us)!=0))break;  // not another B block
+    goto dobblock;  // avoid indirect-branch overhead on the likely case
     // BBLOCK is usually followed by another BBLOCK, but another important followon is END followed by BBLOCK.  BBLOCKEND means
     // 'bblock followed by end that falls through', i. e. a bblock whose successor is i+2.  By handling that we process all sequences of if. T do. B end. B... without having to go through the switch;
     // this means the switch will learn to go to the if.
@@ -421,11 +387,64 @@ dobblock:
    // with the for./select. structures hanging on.  Solution would be to save the for/select stackpointer in the
    // try. stack, so that when we go to the catch. we can cut the for/select stack back to where it
    // was when the try. was encountered
-   }else{i=ci->go; if(i<SMAX){RESETERR; z=mtm; if(nG0ysfctdl&4){if(!--tdi){jt->uflags.us.cx.cx_c.db=(UC)(nG0ysfctdl>>8); nG0ysfctdl^=4;}}}  // z might not have been protected: keep it safe. This is B1 try. error catch. return. end.
+   }else{i=cw[i].go; if(i<SMAX){RESETERR; z=mtm; if(nG0ysfctdl&4){if(!--tdi){jt->uflags.us.cx.cx_c.db=(UC)(nG0ysfctdl>>8); nG0ysfctdl^=4;}}}  // z might not have been protected: keep it safe. This is B1 try. error catch. return. end.
    }
    break;
 
-  // The rest of the cases are accessed only by indirect branch or fixed fallthrough
+  case CIF: case CWHILE: case CELSEIF:
+     // in a long run of only if. and B blocks, the only switches executed will go to the if. processor, predictably
+   i=cw[i].go;  // Go to the next sentence, whatever it is
+   if(unlikely((UI)i>=(UI)(nG0ysfctdl>>16)))break;  // no fallthrough if line exits
+   if(unlikely((((cwgroup=cw[i].ig.group[0])^CTBLOCK)&0xff)+jt->uflags.us.cx.cx_us))break;  // avoid indirect-branch overhead on the likely case
+   // fall through to...
+  case CASSERT:
+  case CTBLOCK:
+tblockcase:
+   // execute and parse line as if for B block, except save the result in t
+   // If there is a possibility that the previous B result may become the result of this definition,
+   // protect it during the frees during the T block.  Otherwise, just free memory
+   if(likely(cwgroup&0x200))tpop(old);else z=gc(z,old);   // 2 means previous B can't be the result
+   parseline(t);
+   // Check for assert.  Since this is only for T-blocks we tolerate the test (rather than duplicating code)
+   if(unlikely((cwgroup&0xff)==CASSERT))if(JT(jt,assert)&&t&&!(NOUN&AT(t)&&all1(eq(num(1),t))))t=pee(line,cw+i,EVASSERT,nG0ysfctdl<<(BW-2),callframe);  // if assert., signal post-execution error if result not all 1s.  May go into debug; sets to result after debug
+   if(likely(t!=0)){ti=i,++i;  // if no error, continue on
+    if(unlikely((UI)i>=(UI)(nG0ysfctdl>>16)))break;  // exit if end of defn
+    if(unlikely(((((cwgroup=cw[i].ig.group[0])^CDO)&0xff)+jt->uflags.us.cx.cx_us)!=0))break;  // break if T block extended
+    goto docase;  // avoid indirect-branch overhead on the likely case, if. T do.
+   }else if((nG0ysfctdl&16)&&DB1&jt->uflags.us.cx.cx_c.db)ti=i,i=debugnewi(i+1,thisframe,self);  // error in debug mode: when coming out of debug, go to new line (there had better be one)
+   else if(EVTHROW==jt->jerr){if(nG0ysfctdl&4&&(tdv+tdi-1)->t){i=(tdv+tdi-1)->t+1; RESETERR;}else BASSERT(0,EVTHROW);}  // if throw., and there is a catch., do so
+   else{i=cw[i].go; if(i<SMAX){RESETERR; z=mtm; if(nG0ysfctdl&4){if(!--tdi){jt->uflags.us.cx.cx_c.db=(UC)(nG0ysfctdl>>8); nG0ysfctdl^=4;}}}else z=0;}  // uncaught error: if we take error exit, we might not have protected z, which is not needed anyway; so clear it to prevent invalid use
+     // if we are not taking the error exit, we still need to set z to a safe value since we might not have protected it.  This is B1 try. if. error do. end. catch. return. end.
+   break;
+
+  case CDO:
+docase:
+   // do. here is one following if., elseif., or while. .  It always follows a T block, and skips the
+   // following B block if the condition is false.
+  {A tt=t; tt=t?t:mtv;  // missing t looks like '' which is true
+   //  Start by assuming condition is true; set to move to the next line then
+   ++i;
+   // Quick true cases are: nonexistent t; empty t; direct numeric t with low byte nonzero.  This gets most of the true.  We add in char types and BOX cause it's free (they are always true)
+   if(likely(AN(tt)))if((-(AT(tt)&(B01|LIT|INT|FL|CMPX|C2T|C4T|BOX))&-((I)CAV(tt)[0]))>=0){I nexti=cw[i-1].go;  // C cond is false if (type direct or BOX) and (value not 0).  J cond is true then.  Musn't fetch CAV[0] if AN==0
+    // here the type is indirect or the low byte is 0.  We must compare more
+    while(1){  // 2 loops if sparse
+     if(likely(AT(tt)&INT+B01)){i=BIV0(tt)?i:nexti; break;} // INT and B01 are most common
+     if(AT(tt)&FL){i=DAV(tt)[0]?i:nexti; break;}
+     if(AT(tt)&CMPX){i=DAV(tt)[0]||DAV(tt)[1]?i:nexti; break;}
+     if(AT(tt)&(RAT|XNUM)){i=1<AN(XAV(tt)[0])||IAV(XAV(tt)[0])[0]?i:nexti; break;}
+     if(!(AT(tt)&NOUN)){CHECKNOUN}  // will take error
+     // other types test true, which is how i is set
+     if(!(SPARSE&AT(tt)))break;
+     BZ(tt=denseit(tt)); if(AN(tt)==0)break;  // convert sparse to dense - this could make the length go to 0, in which case true
+    }
+   }
+   }
+   t=0;  // Indicate no T block, now that we have processed it
+   if(unlikely((UI)i>=(UI)(nG0ysfctdl>>16)))break;
+   if(unlikely(((((cwgroup=cw[i].ig.group[0])^CBBLOCK)&0x1f)+jt->uflags.us.cx.cx_us)!=0))break;  // check for end of definition of special types
+   goto dobblock;   // normal case, continue with B processing, without switch overhead
+
+  // ************* The rest of the cases are accessed only by indirect branch or fixed fallthrough ********************
   case CTRY:
    // try.  create a try-stack entry, step to next line
    BASSERT(tdi<NTD,EVLIMIT);
@@ -437,7 +456,7 @@ dobblock:
    break;
   case CCATCH: case CCATCHD: case CCATCHT:
    // catch.  pop the try-stack, go to end., reset debug state.  There should always be a try. stack here
-   if(nG0ysfctdl&4){if(!--tdi){jt->uflags.us.cx.cx_c.db=(UC)(nG0ysfctdl>>8); nG0ysfctdl^=4;} i=1+(tdv+tdi)->e;}else i=ci->go; break;
+   if(nG0ysfctdl&4){if(!--tdi){jt->uflags.us.cx.cx_c.db=(UC)(nG0ysfctdl>>8); nG0ysfctdl^=4;} i=1+(tdv+tdi)->e;}else i=cw[i].go; break;
   case CTHROW:
    // throw.  Create a throw error
    BASSERT(0,EVTHROW);
@@ -450,10 +469,10 @@ dobblock:
     else  {r=9; GAT0E(cd,INT,9*WCD,1,i=-1; z=0; continue); ACINITZAP(cd) cv=(CDATA*)IAV1(cd)-1; nG0ysfctdl|=8;}   // 9=r
 
    ++cv; --r;
-   BZ(forinitnames(jt,cv,cwtype,line[ci->i]));
-   // indicate no t result (test value for select., iteration array for for.) and clear iteration index
-   // remember the line number of the for./select.
-// obsolete    cv->t=0; cv->w=ci->type;
+   BZ(forinitnames(jt,cv,cwgroup&0xff,line[CWSENTX]));  // setup the names, before we see the iteration value
+// obsolete    // indicate no t result (test value for select., iteration array for for.) and clear iteration index
+// obsolete    // remember the line number of the for./select.
+// obsolete    cv->t=0; cv->w=ci->ig.indiv.type;
    ++i;
 // obsolete cv->x=0; cv->line=line[ci->i];
    break;
@@ -466,7 +485,7 @@ dobblock:
    }
    ++cv->j;  // step to first (or next) iteration
 // obsolete    if(cv->x){A x;  // assign xyz and xyz_index for for_xyz.
-// obsolete     if(unlikely(!(ci->canend&2)))BZ(z=rat(z));   // if z might be the result, protect it over the possible frees during this assignment
+// obsolete     if(unlikely(!(ci->ig.indiv.canend&2)))BZ(z=rat(z));   // if z might be the result, protect it over the possible frees during this assignment
 // obsolete     symbisdel(nfs(6+cv->k,cv->xv),x=sc(cv->j),locsym);  // Assign iteration number.  since there is no sentence, take deletion off nvr stack
 // obsolete     symbisdel(nfs(  cv->k,cv->iv),cv->j<cv->n?from(x,cv->t):mtv,locsym);
 // obsolete    }
@@ -477,7 +496,7 @@ dobblock:
     if(unlikely(AC(iterct)>1))BZ(iterct=swapitervbl(jt,iterct,aval));  // if value is now aliased, swap it out before we change it
     IAV0(iterct)[0]=cv->j;  // Install iteration number into the readonly index
     aval=&sympv[cv->itemsym].val;  // switch aval to address of item slot
-    if(unlikely(!(ci->canend&2)))BZ(z=rat(z));   // if z might be the result, protect it over the free
+    if(unlikely(!(cwgroup&0x200)))BZ(z=rat(z));   // if z might be the result, protect it over the free
 // obsolete     if(likely(*aval!=0))fa(*aval)  // discard & free incumbent
     if(likely(cv->j<cv->niter)){  // if there are more iterations to do...
     // if xyz has been reassigned, fa the incumbent and reinstate the sorta-virtual block, advanced to the next item
@@ -495,19 +514,19 @@ dobblock:
    // end. for select., and do. for for. after the last iteration, must pop the stack - just once
    // Must rat() if the current result might be final result, in case it includes the variables we will delete in unstack
    // (this includes ONLY xyz_index, so perhaps we should avoid rat if stack empty or xyz_index not used)
-   if(unlikely(!(ci->canend&2)))BZ(z=rat(z)); unstackcv(cv); --cv; ++r; 
-   i=ci->go;    // continue at new location
+   if(unlikely(!(cwgroup&0x200)))BZ(z=rat(z)); unstackcv(cv); --cv; ++r; 
+   i=cw[i].go;    // continue at new location
    break;
   case CBREAKS:
   case CCONTS:
    // break./continue-in-while. must pop the stack if there is a select. nested in the loop.  These are
    // any number of SELECTN, up to the SELECT 
-   if(unlikely(!(ci->canend&2)))BZ(z=rat(z));   // protect possible result from pop, if it might be the final result
+   if(unlikely(!(cwgroup&0x200)))BZ(z=rat(z));   // protect possible result from pop, if it might be the final result
    do{I fin=cv->w==CSELECT; unstackcv(cv); --cv; ++r; if(fin)break;}while(1);
     // fall through to...
   case CBREAK:
   case CCONT:  // break./continue. in while., outside of select.
-   i=ci->go;   // After popping any select. off the stack, continue at new address
+   i=cw[i].go;   // After popping any select. off the stack, continue at new address
    // It must also pop the try. stack, if the destination is outside the try.-end. range
    if(nG0ysfctdl&4){tdi=trypopgoto(tdv,tdi,i); nG0ysfctdl^=tdi?0:4;}
    break;
@@ -515,16 +534,16 @@ dobblock:
    // break. in a for. must first pop any active select., and then pop the for.
    // We just pop till we have popped a non-select.
    // Must rat() if the current result might be final result, in case it includes the variables we will delete in unstack
-   if(unlikely(!(ci->canend&2)))BZ(z=rat(z));   // protect possible result from pop
+   if(unlikely(!(cwgroup&0x200)))BZ(z=rat(z));   // protect possible result from pop
 // obsolete    do{I fin=cv->w!=CSELECT&&cv->w!=CSELECTN; unstackcv(cv); --cv; ++r; if(fin)break;}while(1);
    do{I fin=cv->w; unstackcv(cv); --cv; ++r; if((fin^CSELECT)>(CSELECT^CSELECTN))break;}while(1);  // exit on non-SELECT/SELECTN
-   i=ci->go;     // continue at new location
+   i=cw[i].go;     // continue at new location
    // It must also pop the try. stack, if the destination is outside the try.-end. range
    if(nG0ysfctdl&4){tdi=trypopgoto(tdv,tdi,i); nG0ysfctdl^=tdi?0:4;}
    break;
   case CRETURN:
    // return.  Protect the result during free, pop the stack back to empty, set i (which will exit)
-   i=ci->go;   // If there is a try stack, restore to initial debug state.  Probably safe to  do unconditionally
+   i=cw[i].go;   // If there is a try stack, restore to initial debug state.  Probably safe to  do unconditionally
    if(nG0ysfctdl&4)jt->uflags.us.cx.cx_c.db=(UC)(nG0ysfctdl>>8);  // if we had an unfinished try. struct, restore original debug state
    break;
   case CCASE:
@@ -537,8 +556,8 @@ dobblock:
     CHECKNOUN    // if t is not a noun, signal error on the last line executed in the T block
     BZ(ras(t)); cv->t=t; t=0;  // protect t from free while we are comparing with it, save in stack
    }
-   i=ci->go;  // Go to next sentence, which might be in the default case (if T block is empty)
-   if(likely((UI)i<(UI)(nG0ysfctdl>>16)))if(likely(!(((cwtype=(ci=i+cw)->type)^CTBLOCK)+jt->uflags.us.cx.cx_us)))goto tblockcase;  // avoid indirect-branch overhead on the likely case, which is case. t-block do.
+   i=cw[i].go;  // Go to next sentence, which might be in the default case (if T block is empty)
+   if(likely((UI)i<(UI)(nG0ysfctdl>>16)))if(likely(!((((cwgroup=cw[i].ig.group[0])^CTBLOCK)&0xff)+jt->uflags.us.cx.cx_us)))goto tblockcase;  // avoid indirect-branch overhead on the likely case, which is case. t-block do.
    break;  // if it's not a t-block, take the indirect branch
   case CDOSEL:   // do. after case. or fcase.
    // do. for case./fcase. evaluates the condition.  t is the result (a T block); if it is nonexistent
@@ -548,19 +567,19 @@ dobblock:
     CHECKNOUN
     if(!((AT(t)|AT(cv->t))&BOX)){
      // if neither t nor cv is boxed, just compare for equality.  Boxed empty goes through the other path
-     if(!equ(t,cv->t))i=ci->go;  // should perhaps take the scalar case specially & send it through singleton code
+     if(!equ(t,cv->t))i=cw[i-1].go;  // should perhaps take the scalar case specially & send it through singleton code
     }else{
-     if(all0(eps(boxopen(cv->t),boxopen(t))))i=ci->go;  // if case tests false, jump around bblock   test is cv +./@:,@:e. boxopen t
+     if(all0(eps(boxopen(cv->t),boxopen(t))))i=cw[i-1].go;  // if case tests false, jump around bblock   test is cv +./@:,@:e. boxopen t
     }
     // Clear t to ensure that the next case./fcase. does not reuse this value
     t=0;
    }
-   if(likely((UI)i<(UI)(nG0ysfctdl>>16)))if(likely(!((((cwtype=(ci=i+cw)->type)&31)^CBBLOCK)+jt->uflags.us.cx.cx_us)))goto dobblock;  // avoid indirect-branch overhead on the likely  case. ... do. bblock
+   if(likely((UI)i<(UI)(nG0ysfctdl>>16)))if(likely(!((((cwgroup=cw[i].ig.group[0])^CBBLOCK)&0x1f)+jt->uflags.us.cx.cx_us)))goto dobblock;  // avoid indirect-branch overhead on the likely  case. ... do. bblock
    break;
   default:   //   CELSE CWHILST CGOTO CEND
    if(unlikely(2<=*JT(jt,adbreakr))) {BASSERT(0,EVBREAK);} 
      // JBREAK0, but we have to finish the loop.  This is double-ATTN, and bypasses the TRY block
-   i=ci->go;  // Go to the next sentence, whatever it is
+   i=cw[i].go;  // Go to the next sentence, whatever it is
   }
  }  // end of main loop
 
@@ -859,11 +878,11 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
  // Go through the control-word table, looking for for_xyz.  Add xyz and xyz_index to the local table too.
  I cn=AN(c); CW *cwv=(CW*)AV(c);  // Get # control words, address of first
  for(j=0;j<cn;++j) {   // look at each control word
-  if(cwv[j].type==CFOR){  // for.
-   I cwlen = AN(lv[cwv[j].i]);
+  if(cwv[j].ig.indiv.type==CFOR){  // for.
+   I cwlen = AN(lv[cwv[j].ig.indiv.sentx]);
    if(cwlen>4){  // for_xyz.
     // for_xyz. found.  Lookup xyz and xyz_index
-    A xyzname = str(cwlen+1,CAV(lv[cwv[j].i])+4);  // +1 is -5 for_. +6 _index
+    A xyzname = str(cwlen+1,CAV(lv[cwv[j].ig.indiv.sentx])+4);  // +1 is -5 for_. +6 _index
     RZ(probeis(nfs(cwlen-5,CAV(xyzname)),pfst));  // create xyz
     MC(CAV(xyzname)+cwlen-5,"_index",6L);    // append _index to name
     RZ(probeis(nfs(cwlen+1,CAV(xyzname)),pfst));  // create xyz_index

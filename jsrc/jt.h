@@ -100,12 +100,12 @@ typedef struct rngdata {
  B iepdo;            // 1 iff do iep clear for task
  UC jerr1;            // last non-zero jerr                 migrated  clear for task
 // ** end of initialized part
+ A xmod;             // extended integer: the m in m&|@f inherit for task
+ C pp[8];            // print precision (sprintf field for numeric output) inherit for task
  C xmode;            // extended integer operating mode inherit for task
  C boxpos;           // boxed output x-y positioning, low bits xxyy00 inherit for task
  C glock;            // 0=unlocked, 1=perm lock, 2=temp lock inherit for task
-// 3 bytes free
- A xmod;             // extended integer: the m in m&|@f inherit for task
- C pp[8];            // print precision (sprintf field for numeric output) inherit for task
+ C endinitfill[5];   // unused space
 // *** end of the region saved at task startup
 // end of cacheline 1 (little used)
 

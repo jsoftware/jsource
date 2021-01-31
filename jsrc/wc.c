@@ -16,7 +16,7 @@ static A jtcongotoblk(J jt,I n,CW*con){A z;CW*d=con;I i,j,k,*u,*v;
  u=v=AV(z);
  for(i=j=0;i<n;++i,++d){
   *u++=-1; *u++=-1; 
-  switch(d->type){
+  switch(d->ig.indiv.type){
    case CEND: 
     v[k]=i; while(0<k&&0<v[k])k-=2; break;
    case CCASE: case CCATCH: case CDO: case CELSE: case CELSEIF: case CFCASE:
@@ -33,13 +33,13 @@ static I jtcongotochk(J jt,I i,I j,A x){I k,n,*v;
  R -1;
 }    /* i: goto; j: label; return -1 if ok or i if bad */
 
-#define LABELEQU(m,s,e)    (CLABEL==e->type&&(x=lv[e->i],!memcmpne(s,6+CAV(x),m)))
+#define LABELEQU(m,s,e)    (CLABEL==e->ig.indiv.type&&(x=lv[e->ig.indiv.sentx],!memcmpne(s,6+CAV(x),m)))
 
 static I jtcongoto(J jt,I n,CW*con,A*lv){A x,z;C*s;CW*d=con,*e;I i,j,k,m;
  RZ(z=congotoblk(n,con));
  for(i=0;i<n;++i,++d)
-  if(CGOTO==d->type){
-   x=lv[d->i]; s=5+CAV(x); m=0; while('.'!=s[m])++m; ++m;
+  if(CGOTO==d->ig.indiv.type){
+   x=lv[d->ig.indiv.sentx]; s=5+CAV(x); m=0; while('.'!=s[m])++m; ++m;
    e=con-1; j=-1;
    DO(n, ++e; if(LABELEQU(m,s,e)){j=1+i; d->go=(US)j; break;});
    CWASSERT(0<=j);
@@ -81,14 +81,14 @@ static I conend(I i,I j,I k,CW*b,CW*c,CW*d,I p,I q,I r){I e,m,t;
    // we will skip over break. for inner loops, which have already been processed). 
    CWASSERT(b&&d); b->go=(US)(1+k); m=i-k-1;   // get # cws between (after while.) and (before end.)
    // fill in break. to go after end., or continue. to go after while.; leave others unchanged
-   DQ(m, ++d; t=d->type; if(SMAX==d->go)d->go=(((((I)1<<CBREAK)|((I)1<<CBREAKS))>>t)&1)?(US)e :(((((I)1<<CCONT)|((I)1<<CCONTS))>>(t&31))&1)?(US)(1+k):(US)SMAX;);
+   DQ(m, ++d; t=d->ig.indiv.type; if(SMAX==d->go)d->go=(((((I)1<<CBREAK)|((I)1<<CBREAKS))>>t)&1)?(US)e :(((((I)1<<CCONT)|((I)1<<CCONTS))>>(t&31))&1)?(US)(1+k):(US)SMAX;);
    break;
   case CWCASE(CFOR,CDOF):
    // for. is like while., but end. and continue. go back to the do., and break. is marked as BREAKF
    // to indicate that the for. must be popped off the execution stack.  breakf. is needed even if the block
    // was previously marked as in select.
    CWASSERT(b&&d); b->go=(US)j;   m=i-k-1;
-   DQ(m, ++d; t=d->type; if(SMAX==d->go)d->go=(((((I)1<<CBREAK)|((I)1<<CBREAKS))>>t)&1)?(d->type=CBREAKF,(US)e):(((((I)1<<CCONT)|((I)1<<CCONTS))>>(t&31))&1)?(US)j:(US)SMAX;);
+   DQ(m, ++d; t=d->ig.indiv.type; if(SMAX==d->go)d->go=(((((I)1<<CBREAK)|((I)1<<CBREAKS))>>t)&1)?(d->ig.indiv.type=CBREAKF,(US)e):(((((I)1<<CCONT)|((I)1<<CCONTS))>>(t&31))&1)?(US)j:(US)SMAX;);
  }
  R -1;
 }
@@ -99,7 +99,7 @@ static I conendtry(I e,I top,I stack[],CW*con){CW*v;I c[3],d[4],i=-1,j,k=0,m,t=0
  // fill d[] with end. line# followed by catchx. numbers, in descending order of line #s.  Error if repeated catch. type
  while(top&&t!=CTRY){
   j=stack[--top];
-  switch(t=(j+con)->type){
+  switch(t=(j+con)->ig.indiv.type){
    case CTRY:    break;
    case CCATCH:  CWASSERT(0>c[0]); c[0]=d[k++]=j; break;
    case CCATCHD: CWASSERT(0>c[1]); c[1]=d[k++]=j; break;
@@ -115,8 +115,8 @@ static I conendtry(I e,I top,I stack[],CW*con){CW*v;I c[3],d[4],i=-1,j,k=0,m,t=0
  // any hitherto not-processed throw. to go to the catch. (if it exists) or catchd. (if no catch.).
  // That way, unfielded throw. counts as an error that can be picked up in catch.
  // kludge if break/continue encountered:  while. do. try. break. catch. end. end.  leaves the break pointing past the outer end, and the try stack unpopped
- if     (0<=c[0]){ii=(US)(1+c[0]); v=j+con; DQ(m-j-1, ++v; if(SMAX==v->go&&!(((((I)1<<CCONT)|((I)1<<CCONTS)|((I)1<<CBREAK)|((I)1<<CBREAKS))>>(v->type&31))&1))v->go=ii;);}
- else if(0<=c[1]){ii=(US)(1+c[1]); v=j+con; DQ(m-j-1, ++v; if(SMAX==v->go&&!(((((I)1<<CCONT)|((I)1<<CCONTS)|((I)1<<CBREAK)|((I)1<<CBREAKS))>>(v->type&31))&1))v->go=ii;);}
+ if     (0<=c[0]){ii=(US)(1+c[0]); v=j+con; DQ(m-j-1, ++v; if(SMAX==v->go&&!(((((I)1<<CCONT)|((I)1<<CCONTS)|((I)1<<CBREAK)|((I)1<<CBREAKS))>>(v->ig.indiv.type&31))&1))v->go=ii;);}
+ else if(0<=c[1]){ii=(US)(1+c[1]); v=j+con; DQ(m-j-1, ++v; if(SMAX==v->go&&!(((((I)1<<CCONT)|((I)1<<CCONTS)|((I)1<<CBREAK)|((I)1<<CBREAKS))>>(v->ig.indiv.type&31))&1))v->go=ii;);}
  R top;  //return stack pointer with the try. ... end. removed
 }    /* result is new value of top */
 
@@ -125,7 +125,7 @@ static I conendsel(I endline,I top,I stack[],CW*con){I c=endline-1,d=0,j,ot=top,
  // Go through the stack in reverse order till we hit the select.
  // c will hold the cw one before the one to go to if the previous test fails (init to one before end.)
  while(1){
-  j=stack[--top]; t=(j+con)->type;    // back up to next cw
+  j=stack[--top]; t=(j+con)->ig.indiv.type;    // back up to next cw
   if((t^CSELECT)<=(CSELECT^CSELECTN))break;                //when we hit select., we're done
   if(t==CDOSEL){d=j; (j+con)->go=(US)(1+c);}  // on do., remember line# of do. in d; point that do. to the failure position
   else{                            // must be case./fcase.
@@ -135,7 +135,7 @@ static I conendsel(I endline,I top,I stack[],CW*con){I c=endline-1,d=0,j,ot=top,
  }}
  (c+con)->go=(US)(1+c);  // set first case. to fall through to the first test
  // j points to the select. for this end.  Replace any hitherto unfilled break./continue. with BREAKS/CONTS
- DQ(endline-j-2, ++j; if(SMAX==con[j].go){if(CBREAK==con[j].type)con[j].type=CBREAKS;else if(CCONT==con[j].type)con[j].type=CCONTS;});
+ DQ(endline-j-2, ++j; if(SMAX==con[j].go){if(CBREAK==con[j].ig.indiv.type)con[j].ig.indiv.type=CBREAKS;else if(CCONT==con[j].ig.indiv.type)con[j].ig.indiv.type=CCONTS;});
  R top;     // return stack with select. ... end. removed
 }    /* result is new value of top */
 
@@ -149,12 +149,12 @@ static I jtconall(J jt,I n,CW*con){A y;CW*b=0,*c=0,*d=0;I e,i,j,k,p=0,q,r,*stack
   // b, c, d -> con entries, p, q, r are cw-types   for current cw, previous cw on stack, 2d-previous cw on stack
   // e is the next sequential instruction (following instruction i, the current line)
   // tb counts the number of unclosed if. statements.  If this is nonzero, every sentence becomes a T-block sentence
-  q=r=0; e=1+i;             b=i+con; p=b->type;
-  if(0<top){j=stack[top-1]; c=j+con; q=c->type;}
-  if(1<top){k=stack[top-2]; d=k+con; r=d->type;}
+  q=r=0; e=1+i;             b=i+con; p=b->ig.indiv.type;
+  if(0<top){j=stack[top-1]; c=j+con; q=c->ig.indiv.type;}
+  if(1<top){k=stack[top-2]; d=k+con; r=d->ig.indiv.type;}
   switch(p){
    case CBBLOCK:
-     if(tb)b->type=CTBLOCK;   // In case of  if. if. x do. y end. do. end., y is NOT eligible to be the result, because
+     if(tb)b->ig.indiv.type=CTBLOCK;   // In case of  if. if. x do. y end. do. end., y is NOT eligible to be the result, because
      // it is executed  in a T block; so we switch B to T inside ANY T block
      break;
    case CLABEL:  b->go=(US)e;           break;  // label goes to NSI
@@ -182,8 +182,8 @@ static I jtconall(J jt,I n,CW*con){A y;CW*b=0,*c=0,*d=0;I e,i,j,k,p=0,q,r,*stack
     if(wb) {   // analyze only if in loop
      // Go back through the stack till we hit a loop.  If we find a SELECT along the way, change this to a SELECTN
      I s;  // stack pointer
-     for(s=top-1;con[stack[s]].type!=CFOR && con[stack[s]].type!=CWHILE && con[stack[s]].type!=CWHILST;--s) {
-      if(con[stack[s]].type==CSELECT){b->type=CSELECTN;break;}
+     for(s=top-1;con[stack[s]].ig.indiv.type!=CFOR && con[stack[s]].ig.indiv.type!=CWHILE && con[stack[s]].ig.indiv.type!=CWHILST;--s) {
+      if(con[stack[s]].ig.indiv.type==CSELECT){b->ig.indiv.type=CSELECTN;break;}
      } 
     }
     stack[top++]=i; ++tb;  break;            // push addr of cw, increment t-block count
@@ -191,7 +191,7 @@ static I jtconall(J jt,I n,CW*con){A y;CW*b=0,*c=0,*d=0;I e,i,j,k,p=0,q,r,*stack
     CWASSERT(((((I)1<<CIF)|((I)1<<CELSEIF)|((I)1<<CSELECT)|((I)1<<CWHILE)|((I)1<<CWHILST)|((I)1<<CFOR)|((I)1<<CCASE)|((I)1<<CFCASE))>>(q&31))&1);   // first, make sure do. is allowed here
      // classify the do. based on struct: if for. do., call it DOF; if [f]case. do, call it DOSEL;
      // otherwise (if./elseif., while./whilst.) leave it as DO
-    b->type=q==CFOR?CDOF:q==CCASE||q==CFCASE?CDOSEL:CDO;
+    b->ig.indiv.type=q==CFOR?CDOF:q==CCASE||q==CFCASE?CDOSEL:CDO;
     stack[top++]=i; --tb;                    // push the line# of the DO line; and note that this ends a T block
     break;
    case CELSEIF:                             // elseif. - like end. + if.
@@ -210,7 +210,7 @@ static I jtconall(J jt,I n,CW*con){A y;CW*b=0,*c=0,*d=0;I e,i,j,k,p=0,q,r,*stack
    case CEND:                                // end. run a conend... routine to update pointers in the cws. q->the do., r->the starting cw of the structure
     switch(q){
     case CDOSEL:                            // if [f]case. ... do. ... end. 
-     top=conendsel(i,top,stack,con); CWASSERT(0<=top); b->type=CENDSEL; break;  // end the select., and change the cw to ENDSEL
+     top=conendsel(i,top,stack,con); CWASSERT(0<=top); b->ig.indiv.type=CENDSEL; break;  // end the select., and change the cw to ENDSEL
     case CCATCH: case CCATCHD: case CCATCHT:  // if a catch?.
      CWASSERT(1<=top);
      top=conendtry(i,top,stack,con); CWASSERT(0<=top);                  break;  // end the catch, verify validity
@@ -220,7 +220,7 @@ static I jtconall(J jt,I n,CW*con){A y;CW*b=0,*c=0,*d=0;I e,i,j,k,p=0,q,r,*stack
      CWASSERT(0>conend(i,j,k,b,c,d,p,q,r));   // update the controls matching this end.
     }
     // if the END was not ENDSEL and goes to NSI, change the preceding block from BBLOCK to BBLOCKEND
-    if(i+1<n&&b->go==i+1&&q!=CDOSEL&&con[i-1].type==CBBLOCK)con[i-1].type=CBBLOCKEND;
+    if(i+1<n&&b->go==i+1&&q!=CDOSEL&&con[i-1].ig.indiv.type==CBBLOCK)con[i-1].ig.indiv.type=CBBLOCKEND;
   }
 }
  // when it's over, the stack should be empty.  If not, return the index of the top control on the stack
@@ -228,48 +228,48 @@ static I jtconall(J jt,I n,CW*con){A y;CW*b=0,*c=0,*d=0;I e,i,j,k,p=0,q,r,*stack
  // Fill in the canend field, which tells whether the previous B-block result can become the overall result.  It is used only
  // in T blocks and end./continue./break.
  // Clear canend to 0, meaning 'don't know'.  1=must return, 2=won't return, 4/8=provisional values of same
- DO(n, con[i].canend=0;);
+ DO(n, con[i].ig.indiv.canend=0;);
  // Go through in reverse order, filling in a line if we have the status of its successors
  // Repeat until there are no more changes
  I madechange;  // set if we made a change
  do{
   madechange=0;  // init to no change
   for(i=n-1;i>=0;--i){
-   I origcanend=con[i].canend;
+   I origcanend=con[i].ig.indiv.canend;
    if(!(origcanend&3)){  // if the value is filled in with a final already, we won't change it
-    switch(con[i].type) {
+    switch(con[i].ig.indiv.type) {
      case CBBLOCK: case CBBLOCKEND: case CTHROW:
-      con[i].canend = 8+2; break;  // These are by definition not an end
+      con[i].ig.indiv.canend = 8+2; break;  // These are by definition not an end
      case CRETURN:
-      con[i].canend = 4+1; break;  // These by definition ARE an end
+      con[i].ig.indiv.canend = 4+1; break;  // These by definition ARE an end
      case CFOR: case CSELECTN: case CSELECT: case CLABEL:
       // These blocks inherit only from NSI
-      if(i>=n-1)con[i].canend = 4+1;  // The last line of the function is the end
-      else con[i].canend = con[i+1].canend;  // Only successor is NSI, use that
+      if(i>=n-1)con[i].ig.indiv.canend = 4+1;  // The last line of the function is the end
+      else con[i].ig.indiv.canend = con[i+1].ig.indiv.canend;  // Only successor is NSI, use that
       break;
      case CTBLOCK: case CASSERT:
       // These blocks inherit from NSI only, but if go is NOT off the end, they also inherit from go, which is
       // catch. or the like.  If go is off the end, the function is taking an error and the result is immaterial
-      if(i>=n-1)con[i].canend = 4+1;  // The last line of the function is the end
-      else if(con[i].go>=n)con[i].canend = con[i+1].canend;   // if go is off the end, use NSI
-      else con[i].canend = con[con[i].go].canend & con[i+1].canend;  // otherwise, make 2 only if both successors are 2
+      if(i>=n-1)con[i].ig.indiv.canend = 4+1;  // The last line of the function is the end
+      else if(con[i].go>=n)con[i].ig.indiv.canend = con[i+1].ig.indiv.canend;   // if go is off the end, use NSI
+      else con[i].ig.indiv.canend = con[con[i].go].ig.indiv.canend & con[i+1].ig.indiv.canend;  // otherwise, make 2 only if both successors are 2
       break;
      case CTRY: case CCATCH: case CCATCHD: case CCATCHT: case CDOF: case CDOSEL: case CDO:
       // These blocks inherit either from NSI or from go
-      if(i==n-1)con[i].canend = 4+1;  // The last line of the function is the end
-      else if(con[i].go>=n)con[i].canend = 4+1;   // if go is off the end, use that
-      else con[i].canend = con[con[i].go].canend & con[i+1].canend;  // otherwise, make 2 only if both successors are 2
+      if(i==n-1)con[i].ig.indiv.canend = 4+1;  // The last line of the function is the end
+      else if(con[i].go>=n)con[i].ig.indiv.canend = 4+1;   // if go is off the end, use that
+      else con[i].ig.indiv.canend = con[con[i].go].ig.indiv.canend & con[i+1].ig.indiv.canend;  // otherwise, make 2 only if both successors are 2
       break;
      case CENDSEL: case CBREAK: case CCONT: case CBREAKS: case CCONTS: case CBREAKF: case CCASE: case CFCASE:
      case CIF: case CELSE: case CWHILE: case CWHILST: case CELSEIF: case CGOTO: case CEND:
        // These blocks inherit only from GO, but on a backward branch they provisionally inherit from NSI
-      if(con[i].go>=n)con[i].canend = 4+1;  // If jump off the end, that's end
-      else if(con[i].go>=i)con[i].canend = con[con[i].go].canend;  // Only successor is go, use that
-      else if(i==n-1)con[i].canend = 4+1;  // backward branch but NSI is off the end: end
-      else con[i].canend = (con[i+1].canend&0xc) | ((con[i+1].canend&con[con[i].go].canend)>>2); // backward branch: provisionally accept NSI; ratify it if go matches
+      if(con[i].go>=n)con[i].ig.indiv.canend = 4+1;  // If jump off the end, that's end
+      else if(con[i].go>=i)con[i].ig.indiv.canend = con[con[i].go].ig.indiv.canend;  // Only successor is go, use that
+      else if(i==n-1)con[i].ig.indiv.canend = 4+1;  // backward branch but NSI is off the end: end
+      else con[i].ig.indiv.canend = (con[i+1].ig.indiv.canend&0xc) | ((con[i+1].ig.indiv.canend&con[con[i].go].ig.indiv.canend)>>2); // backward branch: provisionally accept NSI; ratify it if go matches
       break;
     }
-    madechange|=origcanend^con[i].canend;  // remember if we made a change
+    madechange|=origcanend^con[i].ig.indiv.canend;  // remember if we made a change
    }
   }
  }while(madechange);
@@ -389,7 +389,7 @@ B jtpreparse(J jt,A w,A*zl,A*zc){PROLOG(0004);A c,l,*lv,*v,w0,w1,*wv,x,y;B b=0,t
    if(k==CASSERT){ASSERTCW(!as,i  ); as=1;}   // if assert., verify not preceded by assert.; go to post-assert. state
    else if(1==as){ASSERTCW(!k, i); as=2; --n;}   // verify assert. not followed by cw; back up to overwrite assert. block; go to post-post-assert. state
    d=n+cv;                              // d->CW block for this sentence
-   d->type=k?(C)k:2==as?CASSERT:CBBLOCK;  // install type; if not cw, call it BBLOCK unless it's the block after assert.
+   d->ig.indiv.type=k?(C)k:2==as?CASSERT:CBBLOCK;  // install type; if not cw, call it BBLOCK unless it's the block after assert.
    d->source=(US)i;                     /* source line number for this sentence   */
    // If this cw ends the verb, set a special goto line number; otherwise point to NSI
    d->go= (((((I)1<<0)|((I)1<<CCONT)|((I)1<<CBREAK)|((I)1<<CCONTS)|((I)1<<CBREAKS)|((I)1<<CTHROW))>>k)&1) ? (US)SMAX : k==CRETURN ? (US)SMAX-1 : (US)(1+n);
@@ -404,7 +404,7 @@ B jtpreparse(J jt,A w,A*zl,A*zc){PROLOG(0004);A c,l,*lv,*v,w0,w1,*wv,x,y;B b=0,t
     if(k)lv[m]=incorp(x); else ICPY(m+lv,AAV(x),q);   // install word(s): the cw, or the words of the queue
    }
    // Now that the words have been moved, install the index to them, and their number, into the cw info; step word pointer over the words added (even if empty spaces)
-   d->i=m; d->n=(US)q; m+=q;
+   d->ig.indiv.sentx=m; d->ig.indiv.sentn=(US)q; m+=q;
    if(2==as)as=0;  // get out of post-post-assert. state if we are in it
    ++n;
  }}

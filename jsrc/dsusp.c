@@ -196,7 +196,7 @@ static A jtdebug(J jt){A z=0;C e;DC c,d;
 // we reconstruct conditions at the beginning of the parse, and set an error on token 1.
 A jtpee(J jt,A *queue,CW*ci,I err,I lk,DC c){A z=0;
  ASSERT(lk<=0,err);  //  locked fn is totally opaque, with no stack.  Exit with 0 result, indicating error
- jt->parserstackframe.parserqueue=queue+ci->i; jt->parserstackframe.parserqueuelen=(I4)ci->n; jt->parserstackframe.parsercurrtok=1;  // unless locked, indicate failing-sentence info
+ jt->parserstackframe.parserqueue=queue+ci->ig.indiv.sentx; jt->parserstackframe.parserqueuelen=(I4)ci->ig.indiv.sentn; jt->parserstackframe.parsercurrtok=1;  // unless locked, indicate failing-sentence info
  jsignal(err);   // signal the requested error
  // enter debug mode if that is enabled
  if(c&&jt->uflags.us.cx.cx_c.db){jt->sitop->dcj=jt->jerr; z=debug(); jt->sitop->dcj=0;} //  d is PARSE type; set d->dcj=err#; d->dcn must remain # tokens debz();  not sure why we change previous frame

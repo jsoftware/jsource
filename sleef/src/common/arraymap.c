@@ -231,7 +231,7 @@ ArrayMap *ArrayMap_load(const char *fn, const char *prefix, const char *idstr, i
   char *line = malloc(sizeof(char) * (LINELEN+10));
   line[idstrlen] = '\0';
   
-  if ((int)fread(line, sizeof(char), idstrlen, fp) != idstrlen ||
+  if (fread(line, sizeof(char), idstrlen, fp) != idstrlen ||
       strcmp(idstr, line) != 0) {
     if (doLock) FUNLOCK(fp);
     fclose(fp);
@@ -307,7 +307,7 @@ int ArrayMap_save(ArrayMap *thiz, const char *fn, const char *prefix, const char
   char *line = malloc(sizeof(char) * (LINELEN+10));
   line[idstrlen] = '\0';
 
-  if ((int)fread(line, sizeof(char), idstrlen, fp) == idstrlen && strcmp(idstr, line) == 0) {
+  if (fread(line, sizeof(char), idstrlen, fp) == idstrlen && strcmp(idstr, line) == 0) {
     for(;;) {
       line[LINELEN] = '\0';
       if (fgets(line, LINELEN, fp) == NULL) break;

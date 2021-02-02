@@ -571,11 +571,12 @@ extern unsigned int __cdecl _clearfp (void);
 // Debugging options
 
 // Use MEMAUDIT to sniff out errant memory alloc/free
-#define MEMAUDIT 0x1d       // scaf        // Bitmask for memory audits: 1=check headers 2=full audit of tpush/tpop 4=write garbage to memory before freeing it 8=write garbage to memory after getting it
+#define MEMAUDIT 0x00       // Bitmask for memory audits: 1=check headers 2=full audit of tpush/tpop 4=write garbage to memory before freeing it 8=write garbage to memory after getting it
                      // 16=audit freelist at every alloc/free (starting after you have run 6!:5 (1) to turn it on)
+                     // 0x20 audit freelist at end of every sentence regardless of 6!:5
  // 13 (0xD) will verify that there are no blocks being used after they are freed, or freed prematurely.  If you get a wild free, turn on bit 0x2
  // 2 will detect double-frees before they happen, at the time of the erroneous tpush
-
+#define MEMAUDITPCALLENABLE 1     // expression for enabling stack auditing - enable auditing when true
 #define AUDITEXECRESULTS 0    // When set, we go through all execution results to verify recursive and virtual bits are OK, and m nonzero if AC<0
 #define FORCEVIRTUALINPUTS 0  // When 1 set, we make all non-inplaceable noun inputs to executions VIRTUAL.  Tests should still run
                            // When 2 set, make all outputs from RETF() virtual.  Tests for inplacing will fail; that's OK if nothing crashes
@@ -597,11 +598,13 @@ extern unsigned int __cdecl _clearfp (void);
 #define ADDBYTESINI1(t) (t=(t&ALTBYTES)+((t>>8)&ALTBYTES)) // sig in 01ff01ff01ff01ff, then xxxxxxxx03ff03ff, then xxxxxxxxxxxx07ff, then 00000000000007ff
 #if BW==64
 #define ALTBYTES 0x00ff00ff00ff00ffLL
+#define ALTSHORTS 0x0000ffff0000ffffLL
 // t has totals per byte-lane, result combines them into single total.  t must be an lvalue
 #define ADDBYTESINIn(t) (t = (t>>32) + t, t = (t>>16) + t, t&=0xffff) // sig in 01ff01ff01ff01ff, then xxxxxxxx03ff03ff, then xxxxxxxxxxxx07ff, then 00000000000007ff
 #define VALIDBOOLEAN 0x0101010101010101LL   // valid bits in a Boolean
 #else
 #define ALTBYTES 0x00ff00ffLL
+#define ALTSHORTS 0x0000ffffLL
 #define ADDBYTESINIn(t) (t = (t>>16) + t, t&=0xffff) // sig in 01ff01ff, then xxxx03ff, then 000003ff
 #define VALIDBOOLEAN 0x01010101   // valid bits in a Boolean
 #endif
@@ -1354,7 +1357,7 @@ if(likely(z<3)){_zzt+=z; z=(I)&oneone; _zzt=_i&3?_zzt:(I*)z; z=_i&2?(I)_zzt:z; z
 #define RNE(exp)        {R jt->jerr?0:(exp);}
 #define RZ(exp)         {if(unlikely(!(exp)))R0}
 #if MEMAUDIT&0xc
-#define DEADARG(x)      (x?(AFLAG(x)&CONW?SEGFAULT:0):0); if(MEMAUDIT&0x10)auditmemchains(); if(MEMAUDIT&0x2)audittstack(jt); 
+#define DEADARG(x)      (((I)(x)&~3)?(AFLAG((A)((I)(x)&~3))&CONW?SEGFAULT:0):0); if(MEMAUDIT&0x10)auditmemchains(); if(MEMAUDIT&0x2)audittstack(jt); 
 #define ARGCHK1D(x)     ARGCHK1(x)  // these not needed normally, but useful for debugging
 #define ARGCHK2D(x,y)   ARGCHK2(x,y)
 #else

@@ -145,13 +145,16 @@ B jtmeminit(JS jjt,I nthreads){I k,m=MLEN;
 
 // Audit all memory chains to detect overrun
 #if SY_64
-#define AUDITFILL ||(US)AFHRH(Wx)!=Wx->fill
+#define AUDITFILL ||(US)AFHRH(Wx)!=Wx->fill||((MEMAUDIT&0x4)?AC(Wx)!=(I)0xdeadbeefdeadbeefLL:0)
 #else
-#define AUDITFILL 
+#define AUDITFILL ||((MEMAUDIT&0x4)?AC(Wx)!=(I)0xdeadbeefL:0)
 #endif
 void jtauditmemchains(J jt){F1PREFIP;
-#if MEMAUDIT&16
-I Wi,Wj;A Wx,prevWx=0; if(JT(jt,peekdata)){for(Wi=PMINL;Wi<=PLIML;++Wi){Wj=0; Wx=(jt->mfree[-PMINL+Wi].pool); while(Wx){if(FHRHPOOLBIN(AFHRH(Wx))!=(Wi-PMINL)AUDITFILL||Wj>0x10000000)SEGFAULT; prevWx=Wx; Wx=AFCHAIN(Wx); ++Wj;}}}
+#if MEMAUDIT&0x30
+I Wi,Wj;A Wx,prevWx=0; if((MEMAUDITPCALLENABLE)&&((MEMAUDIT&0x20)||JT(jt,peekdata))){
+ for(Wi=PMINL;Wi<=PLIML;++Wi){Wj=0; Wx=(jt->mfree[-PMINL+Wi].pool);
+ while(Wx){if(FHRHPOOLBIN(AFHRH(Wx))!=(Wi-PMINL)AUDITFILL||Wj>0x10000000)SEGFAULT; prevWx=Wx; Wx=AFCHAIN(Wx); ++Wj;}}
+}
 #endif
 }
 
@@ -1033,7 +1036,8 @@ if((I)jt&3)SEGFAULT;
     u=(A)((C*)z+PSIZE); chn = 0; hrh = FHRHENDVALUE(1+blockx-PMINL); DQ(PSIZE/2>>blockx, u=(A)((C*)u-n); AFCHAIN(u)=chn; chn=u; hrh -= FHRHBININCR(1+blockx-PMINL); AFHRH(u)=hrh; u->fill=(US)AFHRH(u););    // chain blocks to each other; set chain of last block to 0
     AFHRH(u) = hrh|FHRHROOT;  u->fill=(US)AFHRH(u);  // flag first block as root.  It has 0 offset already
 #else
-    u=(A)((C*)z+PSIZE); chn = 0; hrh = FHRHENDVALUE(1+blockx-PMINL); DQ(PSIZE/2>>blockx, u=(A)((C*)u-n); AFCHAIN(u)=chn; chn=u; hrh -= FHRHBININCR(1+blockx-PMINL); AFHRH(u)=hrh;);    // chain blocks to each other; set chain of last block to 0
+    u=(A)((C*)z+PSIZE); chn = 0; hrh = FHRHENDVALUE(1+blockx-PMINL);
+    DQ(PSIZE/2>>blockx, u=(A)((C*)u-n); AFCHAIN(u)=chn; chn=u; if(MEMAUDIT&4)AC(u)=(I)0xdeadbeefdeadbeefLL; hrh -= FHRHBININCR(1+blockx-PMINL); AFHRH(u)=hrh;);    // chain blocks to each other; set chain of last block to 0
     AFHRH(u) = hrh|FHRHROOT;    // flag first block as root.  It has 0 offset already
 #endif
     jt->mfree[-PMINL+1+blockx].pool=(A)((C*)u+n);  // the second block becomes the head of the free list
@@ -1128,6 +1132,9 @@ auditmemchains();
 #if MEMAUDIT&15
 if((I)jt&3)SEGFAULT;
 #endif
+#if MEMAUDIT&4
+if((AC(w)>>(BW-2))==-1)SEGFAULT;  // high bits 11 must be deadbeef
+#endif
 #if LEAKSNIFF
  if(leakcode){I i;
   // Remove block from the table if the address matches
@@ -1142,7 +1149,7 @@ if((I)jt&3)SEGFAULT;
  I blockx=FHRHPOOLBIN(hrh);   // pool index, if pool
  I allocsize;  // size of full allocation for this block
  // SYMB must free as a monolith, with the symbols returned when the hashtables are
- if(unlikely(AT(w)==SYMB)){
+ if(unlikely(AT(w)==SYMB)){  // == since high bit may be used as flag 
   freesymb(jt,w);
  }
 #if MEMAUDIT&1

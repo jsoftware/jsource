@@ -347,7 +347,7 @@
 // the current block is being decremented to 0 usecount or does not have recursive usecount
 // fa() audits the tstack, for use outside the tpop system.  fadecr does just the decrement (for when AC is known > 1)
 // Zczero is ~0 if usecount is going negative, 0 otherwise.  Usecount 1->0, 8..1->8..2, 4..0 unchanged, others decrement
-#define fadecr(x) I Zc=AC(x); AC(x)=Zc=Zc-1+((UI)Zc>>(BW-2));  // this does the decrement only, checking for PERMANENT
+#define fadecr(x) I Zc=AC(x); if((MEMAUDIT&0x4)&&(Zc>>(BW-2))==-1)SEGFAULT; AC(x)=Zc=Zc-1+((UI)Zc>>(BW-2));  // this does the decrement only, checking for PERMANENT
 #define faaction(jt,x, nomfaction) {fadecr(x) I tt=AT(x); Zc=REPSGN(Zc-1); if(unlikely(((tt&=TRAVERSIBLE)&(Zc|~AFLAG(x)))!=0))jtfa(jt,(x),tt); if(likely(Zc!=0)){jtmf(jt,x);} nomfaction}
 #define faactionrescindable(jt,x, nomfaction) {fadecr(x) I tt=AT(x); Zc=REPSGN(Zc-1); if(unlikely(((tt&=TRAVERSIBLE)&(Zc|~AFLAG(x)))!=0))if(unlikely(jtfa(jt,(x),tt)!=0))Zc=0; if(likely(Zc!=0)){jtmf(jt,x);} nomfaction}
 #define fajt(jt,x) {if(likely((x)!=0))faaction(jt,(x),else {if(MEMAUDIT&2)audittstack(jt);})}
@@ -1246,7 +1246,7 @@
 #define unparse1a(x,y,z)            jtunparse1a(jt,(x),(y),(z))
 #define unparsem(x,y)               jtunparsem(jt,(x),(y))
 #define unquote(x,y,z)              jtunquote(jt,(x),(y),(z))
-#define unstackcv(x)                jtunstackcv(jt,(x))
+#define unstackcv(x,y)              jtunstackcv(jt,(x),(y))
 #define unwordil(x,y,z)             jtunwordil(jt,(x),(y),(z))
 #define unzero(x)                   jtunzero(jt,(x))
 #define upon2(x,y,z)                jtupon2(jt,(x),(y),(z))

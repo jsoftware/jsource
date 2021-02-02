@@ -283,6 +283,17 @@ i;i_index
 (5;2) -: f 1 3 5 7 9
 ((i.0);5) -: f 1 2 3 4 6
 
+(<5555) -: 3 : 'for_i. <5555 do. i end.' ''   NB. used to crash
+555 -: 3 : 'for_i. <5555 do. i end. 555' ''
+f =: 3 : 0
+for_i. y do.
+  if. i = <5 do. break. end.
+end.
+i;i_index
+)
+((<5);2) -: f (<"0) 1 3 5 7 9
+((i.0);5) -: f (<"0) 1 2 3 4 6
+
 NB. old value of xyz and xyz_index  freed
 f =: 3 : 0
 a =. i. 1e6
@@ -333,6 +344,16 @@ end.
 1
 )
 f ''
+
+f =: 13!:8 @#
+f0 =: 3 : 0
+for_t. y do.
+ f y
+end.
+)
+'break' -: f0 etx 'xx';'yy'
+
+
 
 
 4!:55 ;:'a C comp f f0 f1 f1a f2 f2a f3 f3a f4 f5 f6 f7 f8 f9 f10 f11 f12'

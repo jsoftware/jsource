@@ -765,6 +765,10 @@ failparse:  // If there was an error during execution or name-stacking, exit wit
   audittstack(jt);
 #endif
   jt->sf=savfs;  // pop $: stack
+#if MEMAUDIT&0x20
+     auditmemchains();  // trap here while we still have the parseline
+#endif
+
   // NOW it is OK to return.  Insert the final-assignment bit (sign of stack[2]) into the return
   R (A)((I)z+SGNTO0I4(stack[2].t));  // this is the return point from normal parsing
 

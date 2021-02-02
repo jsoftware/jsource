@@ -98,7 +98,7 @@ static B jtforinit(J jt,CDATA*cv,A t){A x;C*s,*v;I k;
   ra(t) cv->t=t;  // if we need to save iteration array, do so, and protect from free
   // create virtual block for the iteration.  We will store this in xyz.  We have to do usecount by hand because
   // true virtual blocks are freed only by tpop, and we will be freeing this in unstackcv, either normally or at end-of-definition
-  // is freed.  We must keep ABACK in case we create a virtual block from xyz.
+  // We must keep ABACK in case we create a virtual block from xyz.
   // We store the block in 2 places: cv and symp.val.  We ra() once for each place
   // If there is an incumbent value, discard it
   A *aval=&LAV0(JT(jt,symp))[cv->itemsym].val; A val=*aval;  // stored reference address; incumbent value there
@@ -123,15 +123,39 @@ static B jtforinit(J jt,CDATA*cv,A t){A x;C*s,*v;I k;
  R 1;
 }    /* for. do. end. initializations */
 
+#if 0 // obsolete 
+// Go through for. stack blocks, realizing any sorta-virtual items.  This is needed only during error processing when the stack was not cleaned normally.
+// We have to do this because the sorta-virtual must use fr, not fa, and normal frees don't know that
+// cv is the pointer to current stack, cv0 is the pointer to the stack base-1.  Stack must exist
+static B jtrestackcv(J jt,CDATA*cv,CDATA*cv0){
+ for(;cv!=cv0;--cv){
+  if(cv->w==CFOR){
+   if(cv->t){  // if for_xyz. that has processed forinit ...
+    A svb=cv->item;  // the sorta-virtual block for the item
+    if(unlikely(LAV0(JT(jt,symp))[cv->itemsym].val==svb)){  // the svb is still in the value
+     A newb; RZ(newb=realize(svb)); ACINITZAP(newb); fa(svb); LAV0(JT(jt,symp))[cv->itemsym].val=newb;  // realize stored value if virtual.  svb will be freed later
+    }
+   }
+  }
+ }
+ R 1;
+}
+#endif
+
 // A for/select. block is ending.   Free the iteration array.  Don't delete any names.  Mark the index as no longer readonly (in case we start the loop again)
-static B jtunstackcv(J jt,CDATA*cv){
+// if assignvirt is set (normal), the xyz value is realized and reassigned if it is still the svb.  Otherwise it is freed and the value expunged.
+static B jtunstackcv(J jt,CDATA*cv,I assignvirt){
 // obsolete  if(cv->x){fa(cv->x);}
  if(cv->w==CFOR){
   if(cv->t){  // if for_xyz. that has processed forinit ...
    LAV0(JT(jt,symp))[cv->indexsym].flag&=~LREADONLY;  // xyz_index is no longer readonly.  It is still available for inspection
    // If xyz still points to the virtual block, we must be exiting the loop early: the value must remain, so realize it
    A svb=cv->item;  // the sorta-virtual block for the item
-   if(unlikely(LAV0(JT(jt,symp))[cv->itemsym].val==svb)){A newb; RZ(newb=realize(svb)); ACINITZAP(newb); fa(svb); LAV0(JT(jt,symp))[cv->itemsym].val=newb;}  // realize stored value if virtual
+   if(unlikely(LAV0(JT(jt,symp))[cv->itemsym].val==svb)){A newb;
+    fa(svb);   // remove svb from itemsym.val.  Safe, because it can't be the last free
+    if(likely(assignvirt)){RZ(newb=realize(svb)); ACINITZAP(newb); ra00(newb,AT(newb)); LAV0(JT(jt,symp))[cv->itemsym].val=newb;  // realize stored value, raise, make recursive, store in symbol table
+    }else{LAV0(JT(jt,symp))[cv->itemsym].val=0;}  // after error, we needn't bother with a value
+   }
    // Decrement the usecount to account for being removed from cv - this is the final free of the svb
    fr(svb);  // MUST NOT USE fa() so that we don't recur and free svb's current contents in cv->t
   }
@@ -514,7 +538,7 @@ docase:
    // end. for select., and do. for for. after the last iteration, must pop the stack - just once
    // Must rat() if the current result might be final result, in case it includes the variables we will delete in unstack
    // (this includes ONLY xyz_index, so perhaps we should avoid rat if stack empty or xyz_index not used)
-   if(unlikely(!(cwgroup&0x200)))BZ(z=rat(z)); unstackcv(cv); --cv; ++r; 
+   if(unlikely(!(cwgroup&0x200)))BZ(z=rat(z)); unstackcv(cv,1); --cv; ++r; 
    i=cw[i].go;    // continue at new location
    break;
   case CBREAKS:
@@ -522,7 +546,7 @@ docase:
    // break./continue-in-while. must pop the stack if there is a select. nested in the loop.  These are
    // any number of SELECTN, up to the SELECT 
    if(unlikely(!(cwgroup&0x200)))BZ(z=rat(z));   // protect possible result from pop, if it might be the final result
-   do{I fin=cv->w==CSELECT; unstackcv(cv); --cv; ++r; if(fin)break;}while(1);
+   do{I fin=cv->w==CSELECT; unstackcv(cv,1); --cv; ++r; if(fin)break;}while(1);
     // fall through to...
   case CBREAK:
   case CCONT:  // break./continue. in while., outside of select.
@@ -536,7 +560,7 @@ docase:
    // Must rat() if the current result might be final result, in case it includes the variables we will delete in unstack
    if(unlikely(!(cwgroup&0x200)))BZ(z=rat(z));   // protect possible result from pop
 // obsolete    do{I fin=cv->w!=CSELECT&&cv->w!=CSELECTN; unstackcv(cv); --cv; ++r; if(fin)break;}while(1);
-   do{I fin=cv->w; unstackcv(cv); --cv; ++r; if((fin^CSELECT)>(CSELECT^CSELECTN))break;}while(1);  // exit on non-SELECT/SELECTN
+   do{I fin=cv->w; unstackcv(cv,1); --cv; ++r; if((fin^CSELECT)>(CSELECT^CSELECTN))break;}while(1);  // exit on non-SELECT/SELECTN
    i=cw[i].go;     // continue at new location
    // It must also pop the try. stack, if the destination is outside the try.-end. range
    if(nG0ysfctdl&4){tdi=trypopgoto(tdv,tdi,i); nG0ysfctdl^=tdi?0:4;}
@@ -620,7 +644,7 @@ docase:
   // table that we need to pop from.  So we protect the symbol table during the cleanup of the result and stack.
   ra(locsym);  // protect local symtable - not contents
   z=EPILOGNORET(z);  // protect return value from being freed when the symbol table is.  Must also be before stack cleanup, in case the return value is xyz_index or the like
-  while(cv!=(CDATA*)IAV1(cd)-1){unstackcv(cv); --cv;}  // clean up any remnants left on the for/select stack
+  while(cv!=(CDATA*)IAV1(cd)-1){unstackcv(cv,0); --cv;}  // clean up any remnants left on the for/select stack
   fa(cd);  // have to delete explicitly, because we had to ext() the block and thus protect it with ra()
   fa(locsym);  // unprotect local syms.  This deletes them if they were cloned
  }

@@ -519,15 +519,18 @@ static DF1(jtreducesp){A a,g,z;B b;I f,n,r,*v,wn,wr,*ws,wt,zt;P*wp;
  R jt->jerr>=EWOV?IRS1(w,self,r,jtreducesp,z):z;
 }    /* f/"r for sparse w */
 
-#define BR2IFX(T,F)     {T*u=(T*)wv,*v=u+d,x,y;                                           \
+#if 0 // obsolete   discards
+*v=u+d,
+                         if(1<d)DQ(m, DQ(d, x=*u++; y=*v++; *zv++=x F y; ); u+=d; v+=d;) 
+*v=u+d,                         if(1<d)DQ(m, DQ(d, x=*u++; y=*v++; *zv++=F(x,y);); u+=d; v+=d;)
+
+#define BR2IFX(T,F)     {T*u=(T*)wv,x,y;                                           \
                          GATV(z,B01,wn>>1,wr-1,ws); zv=BAV(z);                               \
-                         if(1<d)DQ(m, DQ(d, x=*u++; y=*v++; *zv++=x F y; ); u+=d; v+=d;)  \
-                         else   DQ(m,       x=*u++; y=*u++; *zv++=x F y;               ); \
+                         DQ(m,       x=*u++; y=*u++; *zv++=x F y;               ); \
                         }
-#define BR2PFX(T,F)     {T*u=(T*)wv,*v=u+d,x,y;                                           \
+#define BR2PFX(T,F)     {T*u=(T*)wv,x,y;                                           \
                          GATV(z,B01,wn>>1,wr-1,ws); zv=BAV(z);                               \
-                         if(1<d)DQ(m, DQ(d, x=*u++; y=*v++; *zv++=F(x,y);); u+=d; v+=d;)  \
-                         else   DQ(m,       x=*u++; y=*u++; *zv++=F(x,y);              ); \
+                         DQ(m,       x=*u++; y=*u++; *zv++=F(x,y);              ); \
                         }
 #define BTABIFX(F)      {btab[0                        ]=0 F 0;  \
                          btab[C_LE?256:  1]=0 F 1;  \
@@ -539,11 +542,83 @@ static DF1(jtreducesp){A a,g,z;B b;I f,n,r,*v,wn,wr,*ws,wt,zt;P*wp;
                          btab[C_LE?  1:256]=F(1,0); \
                          btab[257                      ]=F(1,1); \
                         }
-#define BR2CASE(t,id)   (((id)*7)+((0x160008>>(t))&7))  // unique inputs are 0 1 2 3 16 17 18-> 0 4 2 1 6 3 5    10110 .... .... .... 1000
+#else
+#define BR2CASE(t,id)   ((((id)-CSTARCO)*7)+((0x160008>>(t))&7))  // unique inputs are 0 1 2 3 16 17 18-> 0 4 2 1 6 3 5    10110 .... .... .... 1000
+// perform expression op on x and y, which have booleans in alternate bytes
+// m is the number of bytes
+#if SY_64
+#define BOOLPAIRS(op) \
+ {I *u=(I*)wv,x,y; UI4 *zvui=(UI4*)zv; /* running pointer, operand areas */ \
+ DQ((m+SZI-1)>>(LGSZI-1), x=*u++; y=(x>>8); x=op; x&=ALTBYTES; x|=x>>8; x&=ALTSHORTS; x|=x>>16; x&=VALIDBOOLEAN; *zvui++=(UI4)x;)}
+#define LITEQ(op) \
+ {I *u=(I*)wv,x,y; UI4 *zvui=(UI4*)zv; /* running pointer, operand areas */ \
+ DQ((m+SZI-1)>>(LGSZI-1), x=*u++; y=(x>>8); x&=ALTBYTES; y&=ALTBYTES; x=(op((x^y)+ALTBYTES)>>8)&(ALTBYTES&VALIDBOOLEAN); x|=x>>8; x&=ALTSHORTS; x|=x>>16; *zvui++=(UI4)x;)}
+#else
+#define BOOLPAIRS(op) \
+ {I *u=(I*)wv,x,y; UI4 *zvus=(US*)zv; /* running pointer, operand areas */ \
+ DQ((m+SZI-1)>>(LGSZI-1), x=*u++; y=(x>>8); x=op; x&=ALTBYTES; x|=x>>8; x&=VALIDBOOLEAN; *zvus++=(US)x;)}
+#define LITEQ(op) \
+ {I *u=(I*)wv,x,y; US *zvui=(US*)zv; /* running pointer, operand areas */ \
+ DQ((m+SZI-1)>>(LGSZI-1), x=*u++; y=(x>>8); x&=ALTBYTES; y&=ALTBYTES; x=(op((x^y)+ALTBYTES)>>8)&(ALTBYTES&VALIDBOOLEAN); x|=x>>8; *zvus++=(US)x;)}
+#endif
+#define TYPEDPAIRS(T,op) {T*u=(T*)wv,x,y; DQ(m, x=*u++; y=*u++; *zv++=op;)}
+// compare literals for equality/inequality.  op  is ~ for ==
+
+// handle reduction along final axis of length 2.  cv is case# to run.  Return allocated result
+static A jtreduce2(J jt,A w,I cv,I f){A z=(A)1;B *zv;I m,*ws;
+ I wn=AN(w); I wr=AR(w); ws=AS(w); void *wv=voidAV(w);
+ PROD(m,f,ws);  // number of cells, each 2 atoms
+ GATV(z,B01,wn>>1,wr-1,ws); zv=BAV(z);
+// obsolete  PROD(c,r,f+ws); d=c>>1;c,d,
+ switch(cv){
+  case BR2CASE(B01X,CEQ     ): BOOLPAIRS(~x^y) break;
+  case BR2CASE(B01X,CNE     ): BOOLPAIRS(x^y) break;
+  case BR2CASE(B01X,CLT     ): BOOLPAIRS(~x&y) break;
+  case BR2CASE(B01X,CLE     ): BOOLPAIRS(~x|y) break;
+  case BR2CASE(B01X,CGT     ): BOOLPAIRS(x&~y) break;
+  case BR2CASE(B01X,CGE     ): BOOLPAIRS(x|~y) break;
+  case BR2CASE(B01X,CMAX    ):
+  case BR2CASE(B01X,CPLUSDOT): BOOLPAIRS(x|y) break;
+  case BR2CASE(B01X,CPLUSCO ): BOOLPAIRS(~(x|y)) break;
+  case BR2CASE(B01X,CMIN    ):
+  case BR2CASE(B01X,CSTAR   ):
+  case BR2CASE(B01X,CSTARDOT): BOOLPAIRS(x&y) break;
+  case BR2CASE(B01X,CSTARCO ): BOOLPAIRS(~(x&y)) break;
+  case BR2CASE(LITX,CEQ     ): LITEQ(~); break;
+  case BR2CASE(LITX,CNE     ): LITEQ(); break;
+  case BR2CASE(C2TX,CEQ     ): TYPEDPAIRS(US,x==y); break;
+  case BR2CASE(C2TX,CNE     ): TYPEDPAIRS(US,x!=y); break;
+  case BR2CASE(C4TX,CEQ     ): TYPEDPAIRS(C4,x==y); break;
+  case BR2CASE(C4TX,CNE     ): TYPEDPAIRS(C4,x!=y); break;
+  case BR2CASE(SBTX,CEQ     ): TYPEDPAIRS(SB,x==y); break;
+  case BR2CASE(SBTX,CLT     ): TYPEDPAIRS(SB,SBLT(x,y)); break;
+  case BR2CASE(SBTX,CLE     ): TYPEDPAIRS(SB,SBLE(x,y)); break;
+  case BR2CASE(SBTX,CGT     ): TYPEDPAIRS(SB,SBGT(x,y)); break;
+  case BR2CASE(SBTX,CGE     ): TYPEDPAIRS(SB,SBGE(x,y)); break;
+  case BR2CASE(SBTX,CNE     ): TYPEDPAIRS(SB,x!=y); break;
+  case BR2CASE(INTX,CEQ     ): TYPEDPAIRS(I,x==y); break;
+  case BR2CASE(INTX,CLT     ): TYPEDPAIRS(I,x<y); break;
+  case BR2CASE(INTX,CLE     ): TYPEDPAIRS(I,x<=y); break;
+  case BR2CASE(INTX,CGT     ): TYPEDPAIRS(I,x>y); break;
+  case BR2CASE(INTX,CGE     ): TYPEDPAIRS(I,x>=y); break;
+  case BR2CASE(INTX,CNE     ): TYPEDPAIRS(I,x!=y); break;
+  case BR2CASE(FLX, CEQ     ): TYPEDPAIRS(D,TEQ(x,y)); break;
+  case BR2CASE(FLX, CLT     ): TYPEDPAIRS(D,TLT(x,y)); break;
+  case BR2CASE(FLX, CLE     ): TYPEDPAIRS(D,TLE(x,y)); break;
+  case BR2CASE(FLX, CGT     ): TYPEDPAIRS(D,TGT(x,y)); break;
+  case BR2CASE(FLX, CGE     ): TYPEDPAIRS(D,TGE(x,y)); break;
+  case BR2CASE(FLX, CNE     ): TYPEDPAIRS(D,TNE(x,y)); break;
+  default: ASSERTSYS(0,"reduce2");
+ }
+ R z;
+}    /* f/"r for dense w over an axis of length 2; boolean results only */
+#endif
+#if 0  // obsolete
 // handle reduction along final axis of length 2.  Return result block if we can handle the combination, otherwise 1; or 0 if we hit an error
-static A jtreduce2(J jt,A w,C id,I f,I r){A z=(A)1;B b=0,btab[258],*zv;I c,d,m,wn,wr,*ws,*wv;
+static A jtreduce2(J jt,A w,C id,I f,I r){A z=(A)1;B b=0,btab[258],*zv;I m,wn,wr,*ws,*wv;
  wn=AN(w); wr=AR(w); ws=AS(w); wv=AV(w);
- PROD(m,f,ws); PROD(c,r,f+ws); d=c>>1;
+ PROD(m,f,ws);  // number of cells, each 2 atoms
+// obsolete  PROD(c,r,f+ws); d=c>>1;c,d,
  switch(BR2CASE(CTTZ(AT(w)),id)){
   case BR2CASE(B01X,CEQ     ): if(b=1==r)BTABIFX(==   ); break;
   case BR2CASE(B01X,CNE     ): if(b=1==r)BTABIFX(!=   ); break;
@@ -587,6 +662,24 @@ static A jtreduce2(J jt,A w,C id,I f,I r){A z=(A)1;B b=0,btab[258],*zv;I c,d,m,w
  R z;
 }    /* f/"r for dense w over an axis of length 2; boolean results only */
 
+#else
+#define TW0(x,y) ((BR2CASE(x,y)>>LGBW)==0?1LL<<(BR2CASE(x,y)&(BW-1)):0)
+#define TW1(x,y) ((BR2CASE(x,y)>>LGBW)==1?1LL<<(BR2CASE(x,y)&(BW-1)):0)
+#define TW2(x,y) ((BR2CASE(x,y)>>LGBW)==2?1LL<<(BR2CASE(x,y)&(BW-1)):0)
+#define TW3(x,y) ((BR2CASE(x,y)>>LGBW)==3?1LL<<(BR2CASE(x,y)&(BW-1)):0)
+#define TWV0 TW0(B01X,CEQ)+TW0(B01X,CNE)+TW0(B01X,CLT)+TW0(B01X,CLE)+TW0(B01X,CGT)+TW0(B01X,CGE)+TW0(B01X,CMAX)+TW0(B01X,CPLUSDOT)+TW0(B01X,CPLUSCO)+TW0(B01X,CMIN)+TW0(B01X,CSTAR)+TW0(B01X,CSTARDOT)+ \
+TW0(B01X,CSTARCO)+TW0(LITX,CEQ)+TW0(LITX,CNE)+TW0(C2TX,CEQ)+TW0(C2TX,CNE)+TW0(C4TX,CEQ)+TW0(C4TX,CNE)+TW0(SBTX,CEQ)+TW0(SBTX,CLT)+TW0(SBTX,CLE)+TW0(SBTX,CGT)+TW0(SBTX,CGE)+TW0(SBTX,CNE)+ \
+TW0(INTX,CEQ)+TW0(INTX,CLT)+TW0(INTX,CLE)+TW0(INTX,CGT)+TW0(INTX,CGE)+TW0(INTX,CNE)+TW0(FLX, CEQ)+TW0(FLX, CLT)+TW0(FLX, CLE)+TW0(FLX, CGT)+TW0(FLX, CGE)+TW0(FLX, CNE)
+#define TWV1 TW1(B01X,CEQ)+TW1(B01X,CNE)+TW1(B01X,CLT)+TW1(B01X,CLE)+TW1(B01X,CGT)+TW1(B01X,CGE)+TW1(B01X,CMAX)+TW1(B01X,CPLUSDOT)+TW1(B01X,CPLUSCO)+TW1(B01X,CMIN)+TW1(B01X,CSTAR)+TW1(B01X,CSTARDOT)+ \
+TW1(B01X,CSTARCO)+TW1(LITX,CEQ)+TW1(LITX,CNE)+TW1(C2TX,CEQ)+TW1(C2TX,CNE)+TW1(C4TX,CEQ)+TW1(C4TX,CNE)+TW1(SBTX,CEQ)+TW1(SBTX,CLT)+TW1(SBTX,CLE)+TW1(SBTX,CGT)+TW1(SBTX,CGE)+TW1(SBTX,CNE)+ \
+TW1(INTX,CEQ)+TW1(INTX,CLT)+TW1(INTX,CLE)+TW1(INTX,CGT)+TW1(INTX,CGE)+TW1(INTX,CNE)+TW1(FLX, CEQ)+TW1(FLX, CLT)+TW1(FLX, CLE)+TW1(FLX, CGT)+TW1(FLX, CGE)+TW1(FLX, CNE)
+#define TWV2 TW2(B01X,CEQ)+TW2(B01X,CNE)+TW2(B01X,CLT)+TW2(B01X,CLE)+TW2(B01X,CGT)+TW2(B01X,CGE)+TW2(B01X,CMAX)+TW2(B01X,CPLUSDOT)+TW2(B01X,CPLUSCO)+TW2(B01X,CMIN)+TW2(B01X,CSTAR)+TW2(B01X,CSTARDOT)+ \
+TW2(B01X,CSTARCO)+TW2(LITX,CEQ)+TW2(LITX,CNE)+TW2(C2TX,CEQ)+TW2(C2TX,CNE)+TW2(C4TX,CEQ)+TW2(C4TX,CNE)+TW2(SBTX,CEQ)+TW2(SBTX,CLT)+TW2(SBTX,CLE)+TW2(SBTX,CGT)+TW2(SBTX,CGE)+TW2(SBTX,CNE)+ \
+TW2(INTX,CEQ)+TW2(INTX,CLT)+TW2(INTX,CLE)+TW2(INTX,CGT)+TW2(INTX,CGE)+TW2(INTX,CNE)+TW2(FLX, CEQ)+TW2(FLX, CLT)+TW2(FLX, CLE)+TW2(FLX, CGT)+TW2(FLX, CGE)+TW2(FLX, CNE)
+#define TWV3 TW3(B01X,CEQ)+TW3(B01X,CNE)+TW3(B01X,CLT)+TW3(B01X,CLE)+TW3(B01X,CGT)+TW3(B01X,CGE)+TW3(B01X,CMAX)+TW3(B01X,CPLUSDOT)+TW3(B01X,CPLUSCO)+TW3(B01X,CMIN)+TW3(B01X,CSTAR)+TW3(B01X,CSTARDOT)+ \
+TW3(B01X,CSTARCO)+TW3(LITX,CEQ)+TW3(LITX,CNE)+TW3(C2TX,CEQ)+TW3(C2TX,CNE)+TW3(C4TX,CEQ)+TW3(C4TX,CNE)+TW3(SBTX,CEQ)+TW3(SBTX,CLT)+TW3(SBTX,CLE)+TW3(SBTX,CGT)+TW3(SBTX,CGE)+TW3(SBTX,CNE)+ \
+TW3(INTX,CEQ)+TW3(INTX,CLT)+TW3(INTX,CLE)+TW3(INTX,CGT)+TW3(INTX,CGE)+TW3(INTX,CNE)+TW3(FLX, CEQ)+TW3(FLX, CLT)+TW3(FLX, CLE)+TW3(FLX, CGT)+TW3(FLX, CGE)+TW3(FLX, CNE)
+#endif
 static DF1(jtreduce){A z;I d,f,m,n,r,t,wr,*ws,zt;
  F1PREFIP;ARGCHK1(w);
  if(unlikely((SPARSE&AT(w))!=0))R reducesp(w,self);  // If sparse, go handle it
@@ -602,7 +695,12 @@ static DF1(jtreduce){A z;I d,f,m,n,r,t,wr,*ws,zt;
   if(unlikely(r==1))if(likely(wt&B01+LIT+INT+FL+SBT+C2T+C4T)){  // 2 items: special processing only if the operation is on rank 1: then we avoid loop overheads
    C id=FAV(FAV(self)->fgh[0])->id; 
    if(unlikely(BETWEENC(id,CSTARCO,CMAX))){  // only boolean results are supported
-    if((z=jtreduce2(jt,w,id,f,r))!=(A)1)R z;  // try the fast routine, continue on if it doesn't take the operation.  Return if error
+   I cv=BR2CASE(CTTZ(wt),id); I cwd=TWV0; cwd=(cv>>LGBW)==1?TWV1:cwd;
+#if !SY_64
+   cwd=(cv>>LGBW)==2?TWV2:cwd; cwd=(cv>>LGBW)==3?TWV3:cwd;
+#endif
+   if(likely(((1LL<<(cv&(BW-1)))&cwd)!=0))R jtreduce2(jt,w,cv,f);
+// obsolete     if((z=jtreduce2(jt,w,id,f,r))!=(A)1)R z;  // try the fast routine, continue on if it doesn't take the operation.  Return if error
    }
   }  // fall through for 2 items that can't be handled specially
  }

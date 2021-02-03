@@ -695,7 +695,7 @@ static DF1(jtreduce){A z;I d,f,m,n,r,t,wr,*ws,zt;
   if(unlikely(r==1))if(likely(wt&B01+LIT+INT+FL+SBT+C2T+C4T)){  // 2 items: special processing only if the operation is on rank 1: then we avoid loop overheads
    C id=FAV(FAV(self)->fgh[0])->id; 
    if(unlikely(BETWEENC(id,CSTARCO,CMAX))){  // only boolean results are supported
-   I cv=BR2CASE(CTTZ(wt),id); I cwd=TWV0; cwd=(cv>>LGBW)==1?TWV1:cwd;
+   I cv=BR2CASE(CTTZ(wt),id); UI cwd=TWV0; cwd=(cv>>LGBW)==1?TWV1:cwd;
 #if !SY_64
    cwd=(cv>>LGBW)==2?TWV2:cwd; cwd=(cv>>LGBW)==3?TWV3:cwd;
 #endif

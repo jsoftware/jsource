@@ -250,6 +250,7 @@ F2(jtforeign){I p,q;
   case XC(13,20): R CDERIV(CIBEAM, jtdbstepover1,jtdbstepover2,VFLAGNONE,RMAX,RMAX,RMAX);
   case XC(13,21): R CDERIV(CIBEAM, jtdbstepinto1,jtdbstepinto2,VFLAGNONE,RMAX,RMAX,RMAX);
   case XC(13,22): R CDERIV(CIBEAM, jtdbstepout1, jtdbstepout2, VFLAGNONE,RMAX,RMAX,RMAX);
+  case XC(13,23): R CDERIV(CIBEAM, jtcheckfreepool, 0,         VFLAGNONE,RMAX,RMAX,RMAX);
   case XC(13,80): R CDERIV(CIBEAM, 0,            jtfindrange,  VFLAGNONE,RMAX,RMAX,RMAX);
   case XC(13,81): R CDERIV(CIBEAM, 0,            jtfindrange4, VFLAGNONE,RMAX,RMAX,RMAX);
   case XC(13,82): R CDERIV(CIBEAM, 0,            jtfindrange2, VFLAGNONE,RMAX,RMAX,RMAX);

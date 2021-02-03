@@ -145,7 +145,7 @@ B jtmeminit(JS jjt,I nthreads){I k,m=MLEN;
 
 // Audit all memory chains to detect overrun
 #if SY_64
-#define AUDITFILL ||(US)AFHRH(Wx)!=Wx->fill||((MEMAUDIT&0x4)?AC(Wx)!=(I)0xdeadbeefdeadbeefLL:0)
+#define AUDITFILL ||((MEMAUDIT&17)&&(US)AFHRH(Wx)!=Wx->fill)||((MEMAUDIT&0x4)?AC(Wx)!=(I)0xdeadbeefdeadbeefLL:0)
 #else
 #define AUDITFILL ||((MEMAUDIT&0x4)?AC(Wx)!=(I)0xdeadbeefL:0)
 #endif
@@ -157,7 +157,30 @@ I Wi,Wj;A Wx,prevWx=0; if((MEMAUDITPCALLENABLE)&&((MEMAUDIT&0x20)||JT(jt,peekdat
 }
 #endif
 }
-
+// 13!:23  check the memory free list, a la auditmemchains()
+// return error info, a 2-atom list where
+//  atom 0 is return code 0=OK 1=pool number corrupted 2=header corrupted 3=usecount corrupted (valid only if MEMAUDIT&0x4) 4=loop in chain 
+//  atom 1 is lg of failing blocksize
+// if arg is not empty, crash on any error
+F1(jtcheckfreepool){
+ I Wi,Wj,ecode=0;A Wx,prevWx=0; 
+ for(Wi=PMINL;Wi<=PLIML;++Wi){  // for each free list
+  Wj=0; Wx=(jt->mfree[-PMINL+Wi].pool);  // get head of chain, init count of # eles
+  while(Wx){
+   if(FHRHPOOLBIN(AFHRH(Wx))!=(Wi-PMINL)){ecode=1; break;}  // will crash here if chain is corrupted
+#if MEMAUDIT&17 && SY_64
+   if((US)AFHRH(Wx)!=Wx->fill){ecode=2; break;}
+#endif
+#if MEMAUDIT&4
+   if(AC(Wx)!=(I)0xdeadbeefdeadbeefLL){ecode=3; break;}
+#endif
+   if(Wj>0x10000000){ecode=4; break;}
+   prevWx=Wx; Wx=AFCHAIN(Wx); ++Wj;  // prevwx saves previous value in case of wild pointer
+  }
+ }
+ if(ecode&&AN(w))SEGFAULT;  // if arg not empty, crash on all errors
+ R v2(ecode,ecode?Wi:0);  // return error code and chain 
+}
 
 F1(jtspcount){A z;I c=0,i,j,*v;A x;
  ASSERTMTV(w);

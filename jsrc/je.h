@@ -47,6 +47,7 @@ extern F1(jtcdot1);
 extern F1(jtcdproc1);
 extern F1(jtceil1);
 extern F1(jtcerrno);
+extern F1(jtcheckfreepool);
 extern F1(jtconjug);
 extern DF1(jtcork1);
 extern F1(jtcpufeature);

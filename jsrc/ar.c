@@ -555,10 +555,10 @@ static DF1(jtreducesp){A a,g,z;B b;I f,n,r,*v,wn,wr,*ws,wt,zt;P*wp;
  DQ((m+SZI-1)>>(LGSZI-1), x=*u++; y=(x>>8); x&=ALTBYTES; y&=ALTBYTES; x=(op((x^y)+ALTBYTES)>>8)&(ALTBYTES&VALIDBOOLEAN); x|=x>>8; x&=ALTSHORTS; x|=x>>16; *zvui++=(UI4)x;)}
 #else
 #define BOOLPAIRS(op) \
- {I *u=(I*)wv,x,y; UI4 *zvus=(US*)zv; /* running pointer, operand areas */ \
+ {I *u=(I*)wv,x,y; US *zvus=(US*)zv; /* running pointer, operand areas */ \
  DQ((m+SZI-1)>>(LGSZI-1), x=*u++; y=(x>>8); x=op; x&=ALTBYTES; x|=x>>8; x&=VALIDBOOLEAN; *zvus++=(US)x;)}
 #define LITEQ(op) \
- {I *u=(I*)wv,x,y; US *zvui=(US*)zv; /* running pointer, operand areas */ \
+ {I *u=(I*)wv,x,y; US *zvus=(US*)zv; /* running pointer, operand areas */ \
  DQ((m+SZI-1)>>(LGSZI-1), x=*u++; y=(x>>8); x&=ALTBYTES; y&=ALTBYTES; x=(op((x^y)+ALTBYTES)>>8)&(ALTBYTES&VALIDBOOLEAN); x|=x>>8; *zvus++=(US)x;)}
 #endif
 #define TYPEDPAIRS(T,op) {T*u=(T*)wv,x,y; DQ(m, x=*u++; y=*u++; *zv++=op;)}

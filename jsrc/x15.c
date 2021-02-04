@@ -1325,7 +1325,15 @@ F2(jtmemw){C*u;I m,n,t,*v;
 
 // 15!:15 memu - make a copy of y if it is not writable (inplaceable and not read-only)
 // We have to check jt in case this usage is in a fork that will use the block later
-F1(jtmemu) { F1PREFIP; ARGCHK1(w); if(!((I)jtinplace&JTINPLACEW && (AC(w)<(AFLAG(w)<<((BW-1)-AFROX)))))w=ca(w); if(AT(w)&LAST0)*(C4*)&CAV(w)[AN(w)*bpnoun(AT(w))]=0;  RETF(w); }  // append 0 so that calls from cd append NUL termination
+F1(jtmemu) { F1PREFIP; ARGCHK1(w); if(!((I)jtinplace&JTINPLACEW && (AC(w)<(AFLAG(w)<<((BW-1)-AFROX)))))w=ca(w);
+ // We will NUL-terminate a string in case called routines need it (not sure this is necessary)
+#if SY_64
+ if(unlikely((AT(w)&LAST0)!=0))*(C4*)&CAV(w)[AN(w)*bpnoun(AT(w))]=0;  // on 64-bit systems, always safe to add 4 bytes at end of data
+#else
+ if(unlikely((AT(w)&LAST0)!=0)){I nulofst=AN(w)*bpnoun(AT(w)); *(UI4*)&CAV(w)[nulofst&~3]&=~((UI4)-1<<((nulofst&3)<<LGBB));}  // zero out the 4-byte word starting at NUL.  addr 00->mask w/0, 01->ff 02->ffff 03->ffffff
+#endif
+ RETF(w);
+}
 F2(jtmemu2) { RETF(ca(w)); }  // dyad - force copy willy-nilly
 
 F1(jtgh15){A z;I k; RE(k=i0(w)); RZ(z=gah(k,0L)); ACINCR(z); R sc((I)z);}

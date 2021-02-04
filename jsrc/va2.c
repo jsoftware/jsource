@@ -676,7 +676,6 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
    // For sparse, repurpose ak/wk/mf/nf to hold acr/wcr/af/wf, which we will pass into vasp.  This allows acr/wcr/af/wf to be block-local
    // Note: this code passed the test suite even when fr was garbage
   }
-  // TODO: for 64-bit, we could move f and r into upper jtinplace; use bit 4 of jtinplace for testing below; make f/r block-local; extract f/r below as needed
  }
 
  RESETRANK;  // Ranks are required for xnum/rat/sparse, which call IRS-enabled routines internally.  We could suppress this for mainline types, perhaps in var().  Anyone who sets this must set it back,
@@ -770,6 +769,8 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
 
    // The work has been done.  If there was no error, check for optional conversion-if-possible or -if-necessary
    if(likely(rc==EVOK)){if(unlikely((I)jtinplace&VRI+VRD))z=cvz((I)jtinplace,z); RETF(z);  // normal return is here.  The rest is error recovery
+
+   // ********* error recovery starts here **********
    }else if(rc-EWOVIP>=0){A zz;C *zzv;I zzk;
     // Here for overflow that can be corrected in place
 // not yet    if(rc==EVOKCLEANUP){jt->mulofloloc=0; RETF(z);}  // if multiply that did not overflow, clear the oflo position for next time, and return
@@ -780,7 +781,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
     zzv=CAV(zz);  // point to new-result data
     // Set up pointers etc for the overflow handling.  Set b=1 if w is taken for the x argument to repair
     if(rc==EWOVIP+EWOVIPMULII){D *zzvd=(D*)zzv; I *zvi=IAV(z);
-     // Multiply repair.  We have to convert all the pre-overflow results to float, and then finish the multiplies
+     // Integer-multiply repair.  We have to convert all the pre-overflow results to float, and then finish the multiplies
      DQ(mulofloloc, *zzvd++=(D)*zvi++;);  // convert the multiply results to float.  mulofloloc is known negative, and must be complemented
      // Now repeat the processing.  Unlike with add/subtract overflow, we have to match up all the argument atoms
      {C *av=CAV(a); C *wv=CAV(w);
@@ -826,9 +827,12 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
     }
     R zz;  // Return the result after overflow has been corrected
    }
-   // retry required, not inplaceable.  Signal the error code to the caller.  If the error is not retryable, set the error message
+   // retry required, not inplaceable.  Signal the error code to the caller.  If the error is not retryable, set the error message.
+   // The caller will call again with the error set, which will change our selection of processing routines
    if(rc<=NEVM)jsignal(rc);else jt->jerr=(UC)rc;
   }
+
+ // sparse processing:
  }else{z=vasp(a,w,FAV(self)->id,aadocv->f,aadocv->cv,atype(aadocv->cv),rtype(aadocv->cv),mf,aawwzk[0],nf,aawwzk[1],fr>>RANKTX,(RANKT)fr-(fr>>RANKTX)); if(!jt->jerr)R z;}  // handle sparse arrays separately.
  R 0;  // return to the caller, who will retry any retryable errors
 }    /* scalar fn primitive and f"r main control */

@@ -28,3 +28,4 @@ EXPORTS
                 JInt64R             @28
                 JGetR               @29
                 JSMX                @30
+                Jassoc              @31

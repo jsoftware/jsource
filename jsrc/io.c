@@ -760,6 +760,20 @@ static int setterm(JS jt, C* name, I* jtype, I* jrank, I* jshape, I* jdata)
  return jm->jerr;
 }
 
+int _stdcall Jassoc(JS jt, C* name, A w)
+{
+ SETJTJM(jt,jt,jm)
+ int er;
+ char gn[256];
+ if(FUNC&AT(w)) return EVDOMAIN;
+ // validate name
+ if(strlen(name) >= sizeof(gn)) return EVILNAME;
+ if(valid(name, gn)) return EVILNAME;
+ jm->jerr=0;
+ jtjset(jm,gn, w);
+ return jm->jerr;
+}
+
 int _stdcall JSetM(JS jt, C* name, I* jtype, I* jrank, I* jshape, I* jdata)
 {
  SETJTJM(jt,jt,jm)

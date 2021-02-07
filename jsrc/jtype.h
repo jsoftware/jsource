@@ -458,16 +458,18 @@ typedef I SI;
 #define ACUSECOUNT      (I)1  // lower bits used for usecount
 #define ACAND(a,v)      AC(a)&=(v);
 #define ACOR(a,v)       AC(a)|=(v);
-#define ACIPNO(a)       ACAND(a,~ACINPLACE)
 #define ACIPYES(a)      ACOR(a,ACINPLACE)
 #define ACIPISOK(a)     (AC(a)<1)  // OK to modify if INPLACE set - set only when usecount=1
 #define ACUC(a)         (AC(a)&(~ACINPLACE))  // just the usecount portion
 #define ACUC1           (ACUSECOUNT*1) // <= this is usecount==1; > is UC>1
-#define ACINCR(a)       if(likely(!ACISPERM(AC(a))))(AC(a)=(AC(a)+1)&~ACINPLACE)
-#define ACDECR(a)       if(likely(!ACISPERM(AC(a))))(AC(a)=(AC(a)-1))
+#define ACINCRLOCAL(a)       if(likely(!ACISPERM(AC(a))))(AC(a)=(AC(a)+1)&~ACINPLACE)
+#define ACDECRLOCAL(a)       if(likely(!ACISPERM(AC(a))))(AC(a)=(AC(a)-1))
+#define ACIPNO(a)       ACAND(a,~ACINPLACE)
+#define ACINCR(a)       ACINCRLOCAL(a)
+#define ACDECR(a)       ACDECRLOCAL(a)
 #define ACINIT(a,v)     AC(a)=(v);  // used when it is known that a has just been allocated & is not shared
 #define ACRESET(a,v)    AC(a)=(v);  // used when it is known that a has is not shared (perhaps it's UNINCORPABLE)
-#define ACSET(a,v)      AC(a)=(v);  // used when a might be shared and this must be atomic
+#define ACSET(a,v)      AC(a)=(v);  // used when a might be shared, but atomic not needed
 #define ACFAUX(a,v)     AC(a)=(v);  // used when a is known to be a faux block
 #define ACINITZAP(a)    {*AZAPLOC(a)=0; ACINIT(a,ACUC1)}  // effect ra() immediately after allocation, by zapping
 #define ACINITZAPRECUR(a,t) {*AZAPLOC(a)=0; ACINIT(a,ACUC1); AFLAG(a)|=(t)&RECURSIBLE;}  // effect ra() immediately after allocation, by zapping, and make the block recursive if possible
@@ -538,13 +540,13 @@ typedef I SI;
 #define AFAUDITUCX      32   // this & above is used for auditing the stack (you must run stack audits on a 64-bit system)
 #define AFAUDITUC       ((I)1<<AFAUDITUCX)    // this field is used for auditing the tstack, holds the number of deletes implied on the stack for the block
 #define AFLAGINIT(a,v)  AFLAG(a)=(v);  // used when it is known that a has just been allocated & is not shared
-#define AFLAGRESET(a,v) AFLAG(a)=(v);  // used when it is known that a has is not shared (perhaps it's UNINCORPABLE)
+#define AFLAGRESET(a,v) AFLAG(a)=(v);  // used when it is known that a is not shared (perhaps it's UNINCORPABLE)
 #define AFLAGSET(a,v)   AFLAG(a)=(v);  // used when a might be shared and this must be atomic
 #define AFLAGFAUX(a,v)  AFLAG(a)=(v);  // used when a is known to be a faux block
-#define AFLAGAND(a,v)   AFLAG(a)&=(v);
-#define AFLAGOR(a,v)    AFLAG(a)|=(v);
 #define AFLAGANDLOCAL(a,v)   AFLAG(a)&=(v);  // LOCAL functions are used when the block is known not to be shared
 #define AFLAGORLOCAL(a,v)    AFLAG(a)|=(v);
+#define AFLAGAND(a,v)   AFLAG(a)&=(v);
+#define AFLAGOR(a,v)    AFLAG(a)|=(v);
 #define AFLAGPRISTNO(a) AFLAGANDLOCAL(a,~AFPRISTINE)  // nothing from another thread can be PRISTINE
 // Flags in the AR field of local symbol tables
 #define LSYMINUSE 1  // This bit is set in the rank of the original symbol table when it is in use

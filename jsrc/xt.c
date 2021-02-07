@@ -277,8 +277,8 @@ void jtpmrecord(J jt,A name,A loc,I lc,int val){A x,y;B b;PM*v;PM0*u;
  ++u->i;  // Advance index to next slot
  if(u->i>u->n){u->wrapped=1; if(u->trunc){u->i=u->n; R;}else u->i=0;}  // If we stepped off the end,
   // reset next pointer to 0 (if not trunc) or stay pegged at then end (if trunc).  Trunc comes from the original x to start_jpm_
- v->name=name; if(name)ACINCR(name);  // move name/loc; incr use counts
- v->loc =loc;  if(loc )ACINCR(loc ); if(b){fa(x); fa(y);}  // If this slot was overwritten, decr use counts, freeing
+ v->name=name; if(name)ACINCRLOCAL(name);  // move name/loc; incr use counts
+ v->loc =loc;  if(loc )ACINCRLOCAL(loc ); if(b){fa(x); fa(y);}  // If this slot was overwritten, decr use counts, freeing
  v->val =val;  // Save the NSI data
  v->lc  =lc;
  v->s=jt->bytesmax-u->s;

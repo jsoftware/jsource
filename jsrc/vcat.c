@@ -216,7 +216,7 @@ F2(jtover){AD * RESTRICT z;C*zv;I replct,framect,acr,af,ar,*as,k,ma,mw,p,q,r,t,w
     xfer=aflg&wflg&(RECURSIBLE|AFPRISTINE);  
     xfer&=REPSGN((JTINPLACEA-((JTINPLACEA+JTINPLACEW)*(a!=w)&(I)jtinplace))&AC(a)&AC(w)&SGNIF(xfer,AFPRISTINEX));
      // xfer is the transferable recursibility if any: both abandoned, both recursible, not same blocks
-    AFLAGORLOCAL(z,xfer); xfer|=AFPRISTINE; AFLAGSET(a,aflg&=~xfer) AFLAGSET(w,wflg&=~xfer)  // transfer inplaceability/pristinity; always clear pristinity from a/w
+    AFLAGORLOCAL(z,xfer); xfer|=AFPRISTINE; AFLAGAND(a,~xfer) AFLAGAND(w,~xfer)  // transfer inplaceability/pristinity; always clear pristinity from a/w
     // We extracted from a and w, so mark them (or the backer if virtual) non-pristine.  If both were pristine and abandoned, transfer its pristine status to the result
     // if they were boxed nonempty, a and w have not been changed.  Otherwise the PRISTINE flag doesn't matter.
     // If a and w are the same, we mustn't mark the result pristine!  It has repetitions

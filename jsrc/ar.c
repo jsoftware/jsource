@@ -243,6 +243,41 @@ REDUCCPFX(tymesinsO, D, I, TYMESO)
    _mm_storel_pd(z++,_mm256_castpd256_pd128 (acc0)); /* store the single result */ \
   )
 
+// f/ on rank>1, going down columns to save bandwidth
+#define redprim256rk2(prim,identity,label) \
+ __m256i endmask; /* length mask for the last word */ \
+ _mm256_zeroupper(VOIDARG); \
+  /* prim/ vectors */ \
+  __m256d idreg=_mm256_set1_pd(identity); \
+  endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-d)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
+  DQ(m, D *x0; I n0; \
+   DQ((d-1)>>LGNPAR, \
+    x0=x; n0=n; __m256d acc0=idreg; __m256d acc1=idreg; __m256d acc2=idreg; __m256d acc3=idreg; \
+    switch(n0&3){ \
+    label##1: \
+    case 0: acc0=prim(acc0,_mm256_loadu_pd(x0)); x0+=d; \
+    case 3: acc1=prim(acc1,_mm256_loadu_pd(x0)); x0+=d; \
+    case 2: acc2=prim(acc2,_mm256_loadu_pd(x0)); x0+=d; \
+    case 1: acc3=prim(acc3,_mm256_loadu_pd(x0)); x0+=d; \
+    if((n0-=4)>0)goto label##1; \
+    } \
+    acc0=prim(acc0,acc1);  acc2=prim(acc2,acc3); acc0=prim(acc0,acc2); _mm256_storeu_pd(z,acc0); \
+    x+=NPAR; z+=NPAR; \
+   ) \
+   x0=x; n0=n; __m256d acc0=idreg; __m256d acc1=idreg; __m256d acc2=idreg; __m256d acc3=idreg; \
+   switch(n0&3){ \
+   label##2: \
+   case 0: acc0=prim(acc0,_mm256_maskload_pd(x0,endmask)); x0+=d; \
+   case 3: acc1=prim(acc1,_mm256_maskload_pd(x0,endmask)); x0+=d; \
+   case 2: acc2=prim(acc2,_mm256_maskload_pd(x0,endmask)); x0+=d; \
+   case 1: acc3=prim(acc3,_mm256_maskload_pd(x0,endmask)); x0+=d; \
+   if((n0-=4)>0)goto label##2; \
+   } \
+   acc0=prim(acc0,acc1);  acc2=prim(acc2,acc3); acc0=prim(acc0,acc2); _mm256_maskstore_pd(z,endmask,acc0); \
+   x=x0-((d-1)&-NPAR); z+=((d-1)&(NPAR-1))+1; \
+  )
+
+
 AHDRR(plusinsD,D,D){I i;D* RESTRICT y;
   NAN0;
   // latency of add is 4, so use 4 accumulators
@@ -254,11 +289,34 @@ AHDRR(plusinsD,D,D){I i;D* RESTRICT y;
                        DQ(n>>2, v0=PLUS(*--x,v0); v1=PLUS(*--x,v1); v2=PLUS(*--x,v2); v3=PLUS(*--x,v3);); v0+=v1; v2+=v3;*--z=v0+v2;)
 #endif
   }
-  else{z+=(m-1)*d; x+=(m*n-1)*d;
+  else{
+#if 0 && (C_AVX&&SY_64) || EMU_AVX
+   redprim256rk2(_mm256_add_pd,0.0,lbl)
+#elif 1  // scaf
+   // add down the columns to reduce memory b/w.  4 accumulators
+   DQ(m, D *x0;
+    DQ(d, x0=x;
+     I n0=n; D acc0=0.0; D acc1=0.0; D acc2=0.0; D acc3=0.0;
+     switch(n0&3){
+     loopback:
+     case 0: acc0+=*x0; x0+=d;
+     case 3: acc1+=*x0; x0+=d;
+     case 2: acc2+=*x0; x0+=d;
+     case 1: acc3+=*x0; x0+=d;
+     if((n0-=4)>0)goto loopback;
+     }
+     acc0+=acc1; acc2+=acc3; acc0+=acc2; *z++=acc0;
+     ++x;
+    )
+    x=x0-(d-1); 
+   )
+#else
+   z+=(m-1)*d; x+=(m*n-1)*d;
    for(i=0;i<m;++i,z-=d){I rc;
     y=x; x-=d; if(255&(rc=plusDD(1,d,x,y,z,jt)))R rc; x-=d;
     DQ(n-2,    if(255&(rc=plusDD(1,d,x,z,z,jt)))R rc; x-=d; );
    }
+#endif
   }
   R NANTEST?EVNAN:EVOK;
 }

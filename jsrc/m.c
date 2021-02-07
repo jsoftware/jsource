@@ -822,7 +822,7 @@ I jtfa(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
   };
   fana(np);  // free the contents
  } else if(t&NAME){A ref;
-  if((ref=NAV(wd)->cachedref)!=0 && !(NAV(wd)->flag&NMCACHEDSYM)){I rc;  // reference, and not to a symbol.  must be to a reference
+  if((ref=NAV(wd)->cachedref)!=0 && !(NAV(wd)->flag&NMCACHEDSYM)){I rc;  // reference, and not to a symbol.  must be to a ~ reference
    // we have to free cachedref, but it is tricky because it points back to us and we will have a double-free.  So, we have to change
    // the pointer to us, which is in fgh[0].  We look at the usecount of cachedref: if it is going to go away on the next fa(), we just clear fgh[0];
    // if it is going to stick around (which means that it is part of a tacit function that got assigned to a name, or the like), we return nonzero so

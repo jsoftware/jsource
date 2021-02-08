@@ -247,7 +247,6 @@ REDUCCPFX(tymesinsO, D, I, TYMESO)
 #define redprim256rk2(prim,identity,label) \
  __m256i endmask; /* length mask for the last word */ \
  _mm256_zeroupper(VOIDARG); \
-  /* prim/ vectors */ \
   __m256d idreg=_mm256_set1_pd(identity); \
   endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-d)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
   DQ(m, D *x0; I n0; \
@@ -290,9 +289,9 @@ AHDRR(plusinsD,D,D){I i;D* RESTRICT y;
 #endif
   }
   else{
-#if 0 && (C_AVX&&SY_64) || EMU_AVX
+#if (C_AVX&&SY_64) || EMU_AVX
    redprim256rk2(_mm256_add_pd,0.0,lbl)
-#elif 1  // scaf
+#elif 1
    // add down the columns to reduce memory b/w.  4 accumulators
    DQ(m, D *x0;
     DQ(d, x0=x;

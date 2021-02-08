@@ -77,7 +77,7 @@ a=:o._40+?10 5$100
 (<\. -: < bsd) a
 (<\. -: < bsd) ,a
 (]\. -: ] bsd) a
-(+/\. -: +/ bsd) a
+1e_12 > | , (+/\. - +/ bsd) a  NB. +/ uses multiple accumulators and cannot be exactly modeled
 
 NB. complex
 a=:^0j0.01*_400+?10 5$1000

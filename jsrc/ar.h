@@ -30,17 +30,20 @@
     DQ(n-2,    vecfn(1,d,x,z,z,jt); x-=d;);        \
   }}R EVOK;}
 
+#if 0 // obsolete
+z+=(m-1)*d; x+=(m*n-1)*d;                                        \
+   for(i=0;i<m;++i,z-=d){                                    \
+    Tx* RESTRICT y=x; x-=d; vecfn(1,d,x,y,z,jt); x-=d;        \
+    DQ(n-2,    vecfn(1,d,x,z,z,jt); x-=d;);  
+#endif
 // used on idempotent verbs, using 4 accumulators but using the 256-bit instructions if available
 #if (C_AVX&&SY_64) || EMU_AVX
 #define REDUCEPFXIDEM2PRIM256(f,Tz,Tx,pfx,vecfn,prim,identity)  \
  AHDRR(f,Tz,Tx){I i;                              \
   if(d==1){redprim256rk1(prim,identity)}  \
-     \
-  else{z+=(m-1)*d; x+=(m*n-1)*d;                                        \
-   for(i=0;i<m;++i,z-=d){                                    \
-    Tx* RESTRICT y=x; x-=d; vecfn(1,d,x,y,z,jt); x-=d;        \
-    DQ(n-2,    vecfn(1,d,x,z,z,jt); x-=d;);        \
-  }}R EVOK;}
+  else{redprim256rk2(prim,identity,label)} \
+ R EVOK; \
+}
 #else
 #define REDUCEPFXIDEM2PRIM256(f,Tz,Tx,pfx,vecfn,prim,identity) REDUCEPFXIDEM2(f,Tz,Tx,pfx,vecfn)
 #endif

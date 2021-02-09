@@ -899,7 +899,6 @@
 #define rdot1(x)                    jtrdot1(jt,(x))   
 #define realize(x)                  jtrealize(jt,(x))
 #define realizeifvirtual(x)         {if(unlikely((AFLAG(x)&AFVIRTUAL)!=0))RZ((x)=realize(x));}
-#define realizeifvirtual(x)         {if(unlikely((AFLAG(x)&AFVIRTUAL)!=0))RZ((x)=realize(x));}
 #define realizeifvirtualB(x)        {if(unlikely((AFLAG(x)&AFVIRTUAL)!=0))BZ((x)=realize(x));} // for use in cx, where errors not allowed
 #define rifv(x)                     realizeifvirtual(x)
 #define rifvs(x)                    jtrifvs(jt,(x))

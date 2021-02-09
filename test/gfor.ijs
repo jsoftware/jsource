@@ -284,6 +284,7 @@ i;i_index
 ((i.0);5) -: f 1 2 3 4 6
 
 (<5555) -: 3 : 'for_i. <5555 do. i end.' ''   NB. used to crash
+(<5555) -: 3 : 'for_i. 2 {. <"0 ] 1 5555 30 do. i end.' ''
 555 -: 3 : 'for_i. <5555 do. i end. 555' ''
 f =: 3 : 0
 for_i. y do.
@@ -352,6 +353,16 @@ for_t. y do.
 end.
 )
 'break' -: f0 etx 'xx';'yy'
+
+f =: 3 : 0
+in =. y
+for_abc. 2 {. in do.
+   foo =. 1 + 1
+end.
+in
+)
+1: ": f <"0 i.10
+1: ": f i.10
 
 
 

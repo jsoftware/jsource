@@ -223,58 +223,74 @@ REDUCCPFX( plusinsO, D, I,  PLUSO)
 REDUCCPFX(minusinsO, D, I, MINUSO) 
 REDUCCPFX(tymesinsO, D, I, TYMESO) 
 
-#define redprim256rk1(prim,identity) \
- __m256i endmask; /* length mask for the last word */ \
- _mm256_zeroupper(VOIDARG); \
-  /* prim/ vectors */ \
-  __m256d idreg=_mm256_set1_pd(identity); \
-  endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
-  DQ(m, __m256d acc0=idreg; __m256d acc1=idreg; __m256d acc2=idreg; __m256d acc3=idreg; \
+#if 0  // obsolete 
    DQ((n-1)>>(2+LGNPAR), acc0=prim(acc0,_mm256_loadu_pd(x)); acc1=prim(acc1,_mm256_loadu_pd(x+NPAR)); acc2=prim(acc2,_mm256_loadu_pd(x+2*NPAR)); acc3=prim(acc3,_mm256_loadu_pd(x+3*NPAR)); x+=4*NPAR; ) \
    if((n-1)&((4-1)<<LGNPAR)){acc0=prim(acc0,_mm256_loadu_pd(x));\
     if(((n-1)&((4-1)<<LGNPAR))>=2*NPAR){acc1=prim(acc1,_mm256_loadu_pd(x+NPAR)); \
      if(((n-1)&((4-1)<<LGNPAR))>2*NPAR){acc2=prim(acc2,_mm256_loadu_pd(x+2*NPAR));} \
     } \
-    x += (n-1)&((4-1)<<LGNPAR); \
+    x += (n-1)&((4-1)<<LGNPAR);
+
+
+   x += m*n; z+=m; DQ(m, D v0=0.0; D v1=0.0; if(((n+1)&3)==0)v1=*--x; D v2=0.0; if(n&2)v2=*--x; D v3=0.0; if(n&3)v3=*--x;
+                       DQ(n>>2, v0=PLUS(*--x,v0); v1=PLUS(*--x,v1); v2=PLUS(*--x,v2); v3=PLUS(*--x,v3);); v0+=v1; v2+=v3;*--z=v0+v2;)
+
+#endif
+#define redprim256rk1(prim,identity) \
+ __m256i endmask; /* length mask for the last word */ \
+ _mm256_zeroupper(VOIDARG); \
+ /* prim/ vectors */ \
+ __m256d idreg=_mm256_set1_pd(identity); \
+ endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
+ DQ(m, I n0=(n-1)>>LGNPAR; __m256d acc0=idreg; __m256d acc1=idreg; __m256d acc2=idreg; __m256d acc3=idreg; \
+  if(n0>0){ \
+   switch(n0&3){ \
+   loopback: \
+   case 0: acc0=prim(acc0,_mm256_loadu_pd(x)); x+=NPAR; \
+   case 3: acc1=prim(acc1,_mm256_loadu_pd(x)); x+=NPAR; \
+   case 2: acc2=prim(acc2,_mm256_loadu_pd(x)); x+=NPAR; \
+   case 1: acc3=prim(acc3,_mm256_loadu_pd(x)); x+=NPAR; \
+   if((n0-=4)>0)goto loopback; \
    } \
-   acc3=prim(acc3,_mm256_blendv_pd(idreg,_mm256_maskload_pd(x,endmask),_mm256_castsi256_pd(endmask))); x+=((n-1)&(NPAR-1))+1; \
-   acc0=prim(acc0,acc1); acc2=prim(acc2,acc3); acc0=prim(acc0,acc2); /* combine accumulators vertically */ \
-   acc0=prim(acc0,_mm256_permute2f128_pd(acc0,acc0,0x01)); acc0=prim(acc0,_mm256_permute_pd(acc0,0xf));   /* combine accumulators horizontally  01+=23, 0+=1 */ \
-   _mm_storel_pd(z++,_mm256_castpd256_pd128 (acc0)); /* store the single result */ \
-  )
+  } \
+  acc0=prim(acc0,_mm256_blendv_pd(idreg,_mm256_maskload_pd(x,endmask),_mm256_castsi256_pd(endmask))); x+=((n-1)&(NPAR-1))+1; \
+  acc0=prim(acc0,acc1); acc2=prim(acc2,acc3); acc0=prim(acc0,acc2); /* combine accumulators vertically */ \
+  acc0=prim(acc0,_mm256_permute2f128_pd(acc0,acc0,0x01)); acc0=prim(acc0,_mm256_permute_pd(acc0,0xf));   /* combine accumulators horizontally  01+=23, 0+=1 */ \
+  _mm_storel_pd(z++,_mm256_castpd256_pd128 (acc0)); /* store the single result */ \
+ )
 
 // f/ on rank>1, going down columns to save bandwidth
 #define redprim256rk2(prim,identity,label) \
  __m256i endmask; /* length mask for the last word */ \
  _mm256_zeroupper(VOIDARG); \
-  __m256d idreg=_mm256_set1_pd(identity); \
-  endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-d)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
-  DQ(m, D *x0; I n0; \
-   DQ((d-1)>>LGNPAR, \
-    x0=x; n0=n; __m256d acc0=idreg; __m256d acc1=idreg; __m256d acc2=idreg; __m256d acc3=idreg; \
-    switch(n0&3){ \
-    label##1: \
-    case 0: acc0=prim(acc0,_mm256_loadu_pd(x0)); x0+=d; \
-    case 3: acc1=prim(acc1,_mm256_loadu_pd(x0)); x0+=d; \
-    case 2: acc2=prim(acc2,_mm256_loadu_pd(x0)); x0+=d; \
-    case 1: acc3=prim(acc3,_mm256_loadu_pd(x0)); x0+=d; \
-    if((n0-=4)>0)goto label##1; \
-    } \
-    acc0=prim(acc0,acc1);  acc2=prim(acc2,acc3); acc0=prim(acc0,acc2); _mm256_storeu_pd(z,acc0); \
-    x+=NPAR; z+=NPAR; \
-   ) \
+ __m256d idreg=_mm256_set1_pd(identity); \
+ endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-d)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
+ DQ(m, D *x0; I n0; \
+  DQ((d-1)>>LGNPAR, \
    x0=x; n0=n; __m256d acc0=idreg; __m256d acc1=idreg; __m256d acc2=idreg; __m256d acc3=idreg; \
    switch(n0&3){ \
-   label##2: \
-   case 0: acc0=prim(acc0,_mm256_maskload_pd(x0,endmask)); x0+=d; \
-   case 3: acc1=prim(acc1,_mm256_maskload_pd(x0,endmask)); x0+=d; \
-   case 2: acc2=prim(acc2,_mm256_maskload_pd(x0,endmask)); x0+=d; \
-   case 1: acc3=prim(acc3,_mm256_maskload_pd(x0,endmask)); x0+=d; \
-   if((n0-=4)>0)goto label##2; \
+   label##1: \
+   case 0: acc0=prim(acc0,_mm256_loadu_pd(x0)); x0+=d; \
+   case 3: acc1=prim(acc1,_mm256_loadu_pd(x0)); x0+=d; \
+   case 2: acc2=prim(acc2,_mm256_loadu_pd(x0)); x0+=d; \
+   case 1: acc3=prim(acc3,_mm256_loadu_pd(x0)); x0+=d; \
+    if((n0-=4)>0)goto label##1; \
    } \
-   acc0=prim(acc0,acc1);  acc2=prim(acc2,acc3); acc0=prim(acc0,acc2); _mm256_maskstore_pd(z,endmask,acc0); \
-   x=x0-((d-1)&-NPAR); z+=((d-1)&(NPAR-1))+1; \
-  )
+   acc0=prim(acc0,acc1);  acc2=prim(acc2,acc3); acc0=prim(acc0,acc2); _mm256_storeu_pd(z,acc0); \
+   x+=NPAR; z+=NPAR; \
+  ) \
+  x0=x; n0=n; __m256d acc0=idreg; __m256d acc1=idreg; __m256d acc2=idreg; __m256d acc3=idreg; \
+  switch(n0&3){ \
+  label##2: \
+  case 0: acc0=prim(acc0,_mm256_maskload_pd(x0,endmask)); x0+=d; \
+  case 3: acc1=prim(acc1,_mm256_maskload_pd(x0,endmask)); x0+=d; \
+  case 2: acc2=prim(acc2,_mm256_maskload_pd(x0,endmask)); x0+=d; \
+  case 1: acc3=prim(acc3,_mm256_maskload_pd(x0,endmask)); x0+=d; \
+   if((n0-=4)>0)goto label##2; \
+  } \
+  acc0=prim(acc0,acc1);  acc2=prim(acc2,acc3); acc0=prim(acc0,acc2); _mm256_maskstore_pd(z,endmask,acc0); \
+  x=x0-((d-1)&-NPAR); z+=((d-1)&(NPAR-1))+1; \
+ )
 
 
 AHDRR(plusinsD,D,D){I i;D* RESTRICT y;
@@ -284,8 +300,14 @@ AHDRR(plusinsD,D,D){I i;D* RESTRICT y;
 #if (C_AVX&&SY_64) || EMU_AVX
    redprim256rk1(_mm256_add_pd,0.0)
 #else
-   x += m*n; z+=m; DQ(m, D v0=0.0; D v1=0.0; if(((n+1)&3)==0)v1=*--x; D v2=0.0; if(n&2)v2=*--x; D v3=0.0; if(n&3)v3=*--x;
-                       DQ(n>>2, v0=PLUS(*--x,v0); v1=PLUS(*--x,v1); v2=PLUS(*--x,v2); v3=PLUS(*--x,v3);); v0+=v1; v2+=v3;*--z=v0+v2;)
+  DQ(m, I n0=n; D acc0=0.0, acc1=0.0, acc2=0.0, acc3=0.0;
+   switch(n0&3){
+   loopback:
+   case 0: acc0+=*x++; case 3: acc1+=*x++; case 2: acc2+=*x++; case 1: acc3+=*x++; 
+   if((n0-=4)>0)goto loopback;
+   }
+   v0+=v1; v2+=v3; *z++=v0+v2;
+  )
 #endif
   }
   else{

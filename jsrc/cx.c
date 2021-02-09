@@ -95,6 +95,7 @@ static B jtforinit(J jt,CDATA*cv,A t){A x;C*s,*v;I k;
  if(likely(cv->indexsym!=0)){
   // for_xyz.   protect iterator value and save it; create virtual item name
   ASSERT(!(AT(t)&SPARSE),EVNONCE)
+  rifv(t);  // it would be work to handle virtual t, because you can't just ra() a virtual, as virtuals are freed only from the tpop stack.  So we wimp out & realize.
   ra(t) cv->t=t;  // if we need to save iteration array, do so, and protect from free
   // create virtual block for the iteration.  We will store this in xyz.  We have to do usecount by hand because
   // true virtual blocks are freed only by tpop, and we will be freeing this in unstackcv, either normally or at end-of-definition

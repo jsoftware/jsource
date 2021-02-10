@@ -102,7 +102,7 @@ set(test_cases
     g132
     g13x
     g15x
-  # g18x
+    g18x
     g1x
     g1x0
     g1x1

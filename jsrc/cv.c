@@ -66,7 +66,7 @@ F2(jtfit){A f;C c;I k,l,m,r;V*sv;
   case CFLOOR: case CCEIL:  case CSTILE: case CPLUSDOT:  case CSTARDOT: case CABASE:
   case CNOT:   case CXCO:   case CSPARSE:   case CEBAR:
    R fitct(a,w,cno);
-  case CSLASH:
+  case CSLASH: ;
    I wval; RE(wval=i0(w)); ASSERT(wval==0,EVDOMAIN);  // only f/!.0 is supported
    ASSERT(FAV(sv->fgh[0])->id==CPLUS,EVDOMAIN)  // Must be +/!:0
    R CDERIV(CFIT,jtcompsum,0,VIRS1, m,l,r);  // supports IRS

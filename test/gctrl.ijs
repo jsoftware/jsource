@@ -90,6 +90,9 @@ f0=. {{     NB. empty first line
   (populate idxmut) idxmut"_} y
 )
 
+r =: {{ y }} :. {{ y }}
+'3 : ''y '' :.(3 : ''y '')' -: 5!:5 <'r'
+
 NB. Nameref caching
 NB. names are cached
 4!:55 ;:'vb__ vb_z_'

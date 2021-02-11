@@ -1206,20 +1206,20 @@ A jtddtokens(J jt,A w,I env){
    ddschbgnx=0;  // start scan back at the beginning
   }else{
    // ********* NORMAL DD *******
-   // We have found an innermost non-noun DD, running from ddbgnx to ddendx.  Convert it to ( m : 'string' ) form
+   // We have found an innermost non-noun DD, running from ddbgnx to ddendx.  Convert it to ( 9 : 'string' ) form
    // convert all the chars of the DD to a quoted string block
    // if the first line is empty (meaning the first word is a linefeed by itself), skip it
    I firstcharx=wilv[ddbgnx+1][0]; if(wv[firstcharx]=='\n')++firstcharx;  // just one skipped line
    A ddqu; RZ(ddqu=strq(wilv[ddendx][0]-firstcharx,wv+firstcharx));
    // append the string for the start/end of DD
    I bodystart=AN(w), bodylen=AN(ddqu), trailstart=wilv[ddendx][1];  // start/len of body in w, and start of after-DD text
-   RZ(ddqu=jtapip(jtinplace,ddqu,str(7,")( 9 : ")));
+   RZ(ddqu=jtapip(jtinplace,ddqu,str(8,") ( 9 : ")));
    // append the new stuff to w
    RZ(w=jtapip(jtinplace,w,ddqu));
    wv=CAV(w);   // refresh data pointer.  Number of words has not changed, nor have indexes
    // Replace ddbgnx and ddendx with the start/end strings.  Fill in the middle, if any, with everything in between
    wilv[ddbgnx][0]=AN(w)-6; wilv[ddbgnx][1]=AN(w);  //  ( 9 :  
-   wilv[ddbgnx+1][0]=bodystart; fillv=&wilv[ddbgnx+1][1]; DQ(2*(ddendx-ddbgnx)-1, *fillv++=bodystart+bodylen+1;)  // everything in between
+   wilv[ddbgnx+1][0]=bodystart; fillv=&wilv[ddbgnx+1][1]; DQ(2*(ddendx-ddbgnx)-1, *fillv++=bodystart+bodylen+2;)  // everything in between, and trailing )SP
    // continue the search.
    if(ddbgnx==firstddbgnx){ddschbgnx=ddendx+1;  //   If this was not a nested DD, we can simply pick up the search after ddendx.
    }else{

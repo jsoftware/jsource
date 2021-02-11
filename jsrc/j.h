@@ -784,7 +784,7 @@ extern unsigned int __cdecl _clearfp (void);
 // GAE executes the given expression when there is an error
 #define GAE(v,t,n,r,s,erraction)   {HISTOCALL if(unlikely(!(v=ga(t,(I)(n),(I)(r),(I*)(s)))))erraction;}
 // GAT*, used when the type and all rank/shape are known at compile time.  The compiler precalculates almost everything
-// For best results declare name as: AD* RESTRICT name;  The number of bytes, rounded up with overhead added, must not exceed 2^(PMINL+4)
+// For best results declare name as: AD* RESTRICT name;  For GAT the number of bytes, rounded up with overhead added, must not exceed 2^(PMINL+4)
 #define GATS(name,type,atoms,rank,shaape,size,shapecopier,erraction) \
 { ASSERT(!((rank)&~RMAX),EVLIMIT); \
  I bytes = ALLOBYTES(atoms,rank,size,(type)&LAST0,(type)&NAME); \

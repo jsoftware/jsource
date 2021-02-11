@@ -300,13 +300,13 @@ AHDRR(plusinsD,D,D){I i;D* RESTRICT y;
 #if (C_AVX&&SY_64) || EMU_AVX
    redprim256rk1(_mm256_add_pd,0.0)
 #else
-  DQ(m, I n0=n; D acc0=0.0, acc1=0.0, acc2=0.0, acc3=0.0;
+  DQ(m, I n0=n; D acc0=0.0; D acc1=0.0; D acc2=0.0; D acc3=0.0;
    switch(n0&3){
-   loopback:
+   loopback2:
    case 0: acc0+=*x++; case 3: acc1+=*x++; case 2: acc2+=*x++; case 1: acc3+=*x++; 
-   if((n0-=4)>0)goto loopback;
+   if((n0-=4)>0)goto loopback2;
    }
-   v0+=v1; v2+=v3; *z++=v0+v2;
+   acc0+=acc1; acc2+=acc3; *z++=acc0+acc2;
   )
 #endif
   }
@@ -365,6 +365,115 @@ REDUCEPFXIDEM2PRIM256(  mininsD, D, D, MIN, minDD, _mm256_min_pd, inf   )
 REDUCEPFX(  mininsX, X, X, XMIN, minXX, minXX  )
 REDUCEPFX(  mininsS, SB,SB,SBMIN, minSS, minSS )
 
+// +/!.0"r, compensated summation
+static DF1(jtreduce);  // forward declaration
+DF1(jtcompsum){
+ ARGCHK1(w)
+ I wr=AR(w); I *ws=AS(w);
+ // Create  r: the effective rank; f: length of frame; n: # items in a CELL of w
+ I r=(RANKT)jt->ranks; r=wr<r?wr:r; I f=wr-r; I n; SETICFR(w,f,r,n);  // no RESETRANK
+ // if the argument is not float, or if there are not more than 2 items, process as normal +/
+ if(unlikely((-(AT(w)&FL)&(2-n))>=0))R reduce(w,FAV(self)->fgh[0]);
+ // calculate cell sizes and allocate the result
+ I d; PROD(d,r-1,f+ws+1);  //  */ }. $ cell
+ // m=*/ frame (i. e. #cells to operate on)
+ // r cannot be 0 (would be handled above).  Calculate low part of zn first
+ I m; PROD(m,f,ws);
+ // Allocate the result area
+ A z; GATV(z,FL,m*d,MAX(0,wr-1),ws); if(1<r)MCISH(f+AS(z),f+1+ws,r-1);  // allocate, and install shape below the frame
+ if(unlikely(m*d==0)){RETF(z);}  // mustn't call the function on an empty argument!
+ // Do the operation
+ NAN0;
+ D *wv=DAV(w), *zv=DAV(z);
+#if (C_AVX&&SY_64) || EMU_AVX
+ __m256i endmask; /* length mask for the last word */
+ _mm256_zeroupper(VOIDARG);
+ __m256d idreg=_mm256_set1_pd(0.0);
+ if(d==1){
+  // rank-1 case: operate across the row, with 4 accumulators
+  endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */
+  for(;m>0;--m){
+   I n0=(n-1)>>LGNPAR; __m256d acc0=idreg; __m256d acc1=idreg; __m256d acc2=idreg; __m256d acc3=idreg;
+   __m256d c0=idreg; __m256d c1=idreg; __m256d c2=idreg; __m256d c3=idreg;  // error terms
+   __m256d y;  __m256d t;   // new input value, temp to hold high part of sum
+   if(n0>0){
+    switch(n0&3){
+    loopback:
+    case 0: y=_mm256_sub_pd(_mm256_loadu_pd(wv),c0); t=_mm256_add_pd(acc0,y); c0=_mm256_sub_pd(_mm256_sub_pd(t,acc0),y); acc0=t; wv+=NPAR;
+    case 3: y=_mm256_sub_pd(_mm256_loadu_pd(wv),c1); t=_mm256_add_pd(acc1,y); c1=_mm256_sub_pd(_mm256_sub_pd(t,acc1),y); acc1=t; wv+=NPAR;
+    case 2: y=_mm256_sub_pd(_mm256_loadu_pd(wv),c2); t=_mm256_add_pd(acc2,y); c2=_mm256_sub_pd(_mm256_sub_pd(t,acc2),y); acc2=t; wv+=NPAR;
+    case 1: y=_mm256_sub_pd(_mm256_loadu_pd(wv),c3); t=_mm256_add_pd(acc3,y); c3=_mm256_sub_pd(_mm256_sub_pd(t,acc3),y); acc3=t; wv+=NPAR;
+    if((n0-=4)>0)goto loopback;
+    }
+   }
+   y=_mm256_sub_pd(_mm256_maskload_pd(wv,endmask),c0); t=_mm256_add_pd(acc0,y); c0=_mm256_sub_pd(_mm256_sub_pd(t,acc0),y); acc0=t; wv+=NPAR; wv+=((n-1)&(NPAR-1))+1;
+   c0=_mm256_add_pd(c0,c1); c2=_mm256_add_pd(c2,c3);    // add all the low parts together - the low bits of the low will not make it through to the result
+   y=_mm256_sub_pd(acc1,c0); t=_mm256_add_pd(acc0,y); c0=_mm256_sub_pd(_mm256_sub_pd(t,acc0),y); acc0=t;
+   y=_mm256_sub_pd(acc3,c2); t=_mm256_add_pd(acc2,y); c2=_mm256_sub_pd(_mm256_sub_pd(t,acc2),y); acc2=t;
+   c0=_mm256_add_pd(c0,c2);
+   y=_mm256_sub_pd(acc2,c0); t=_mm256_add_pd(acc0,y); c0=_mm256_sub_pd(_mm256_sub_pd(t,acc0),y); acc0=t;
+   // acc0/c0 survive.  Combine horizontally
+   c0=_mm256_add_pd(c0,_mm256_permute2f128_pd(c0,c0,0x01)); acc1=_mm256_permute2f128_pd(acc0,acc0,0x01);  // c0:  01+=23, acc1<-23
+   y=_mm256_sub_pd(acc1,c0); t=_mm256_add_pd(acc0,y); c0=_mm256_sub_pd(_mm256_sub_pd(t,acc0),y); acc0=t;  // combine 01+23
+   c0=_mm256_add_pd(c0,_mm256_permute_pd(c0,0xf)); acc1=_mm256_permute_pd(acc0,0xf);   // combine c0+c1, acc1<-1
+   y=_mm256_sub_pd(acc1,c0); t=_mm256_add_pd(acc0,y);   // combine 01+23
+   _mm_storel_pd(zv++,_mm256_castpd256_pd128(t)); // store the single result
+  }
+ }else{
+  // rank>1, going down columns to save bandwidth
+  endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-d)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */
+  DQ(m, D *wv0; I n0;
+   __m256d y; __m256d t;   // new input value, temp to hold high part of sum
+   __m256d acc0; __m256d acc1; __m256d acc2; __m256d acc3; __m256d c0; __m256d c1; __m256d c2; __m256d c3;  // accumulators, error terms
+   DQ((d-1)>>LGNPAR,
+    wv0=wv; n0=n; acc0=acc1=acc2=acc3=c0=c1=c2=c3=idreg;
+    switch(n0&3){
+    label1:
+    case 0: y=_mm256_sub_pd(_mm256_loadu_pd(wv0),c0); t=_mm256_add_pd(acc0,y); c0=_mm256_sub_pd(_mm256_sub_pd(t,acc0),y); acc0=t; wv0+=d;
+    case 3: y=_mm256_sub_pd(_mm256_loadu_pd(wv0),c1); t=_mm256_add_pd(acc1,y); c1=_mm256_sub_pd(_mm256_sub_pd(t,acc1),y); acc1=t; wv0+=d;
+    case 2: y=_mm256_sub_pd(_mm256_loadu_pd(wv0),c2); t=_mm256_add_pd(acc2,y); c2=_mm256_sub_pd(_mm256_sub_pd(t,acc2),y); acc2=t; wv0+=d;
+    case 1: y=_mm256_sub_pd(_mm256_loadu_pd(wv0),c3); t=_mm256_add_pd(acc3,y); c3=_mm256_sub_pd(_mm256_sub_pd(t,acc3),y); acc3=t; wv0+=d;
+     if((n0-=4)>0)goto label1;
+    }
+    // combine accumulators
+    c0=_mm256_add_pd(c0,c1); c2=_mm256_add_pd(c2,c3);    // add all the low parts together - the low bits of the low will not make it through to the result
+    y=_mm256_sub_pd(acc1,c0); t=_mm256_add_pd(acc0,y); c0=_mm256_sub_pd(_mm256_sub_pd(t,acc0),y); acc0=t;
+    y=_mm256_sub_pd(acc3,c2); t=_mm256_add_pd(acc2,y); c2=_mm256_sub_pd(_mm256_sub_pd(t,acc2),y); acc2=t;
+    c0=_mm256_add_pd(c0,c2);
+    y=_mm256_sub_pd(acc2,c0); t=_mm256_add_pd(acc0,y);
+    _mm256_storeu_pd(zv,t); wv+=NPAR; zv+=NPAR;
+   )
+   // repeat for partial column
+   wv0=wv; n0=n; acc0=acc1=acc2=acc3=c0=c1=c2=c3=idreg;
+   switch(n0&3){
+   label2:
+    case 0: y=_mm256_sub_pd(_mm256_maskload_pd(wv0,endmask),c0); t=_mm256_add_pd(acc0,y); c0=_mm256_sub_pd(_mm256_sub_pd(t,acc0),y); acc0=t; wv0+=d;
+    case 3: y=_mm256_sub_pd(_mm256_maskload_pd(wv0,endmask),c1); t=_mm256_add_pd(acc1,y); c1=_mm256_sub_pd(_mm256_sub_pd(t,acc1),y); acc1=t; wv0+=d;
+    case 2: y=_mm256_sub_pd(_mm256_maskload_pd(wv0,endmask),c2); t=_mm256_add_pd(acc2,y); c2=_mm256_sub_pd(_mm256_sub_pd(t,acc2),y); acc2=t; wv0+=d;
+    case 1: y=_mm256_sub_pd(_mm256_maskload_pd(wv0,endmask),c3); t=_mm256_add_pd(acc3,y); c3=_mm256_sub_pd(_mm256_sub_pd(t,acc3),y); acc3=t; wv0+=d;
+    if((n0-=4)>0)goto label2;
+   }
+   c0=_mm256_add_pd(c0,c1); c2=_mm256_add_pd(c2,c3);    // add all the low parts together - the low bits of the low will not make it through to the result
+   y=_mm256_sub_pd(acc1,c0); t=_mm256_add_pd(acc0,y); c0=_mm256_sub_pd(_mm256_sub_pd(t,acc0),y); acc0=t;
+   y=_mm256_sub_pd(acc3,c2); t=_mm256_add_pd(acc2,y); c2=_mm256_sub_pd(_mm256_sub_pd(t,acc2),y); acc2=t;
+   c0=_mm256_add_pd(c0,c2);
+   y=_mm256_sub_pd(acc2,c0); t=_mm256_add_pd(acc0,y);
+   _mm256_maskstore_pd(zv,endmask,t);
+   wv=wv0-((d-1)&-NPAR); zv+=((d-1)&(NPAR-1))+1;
+  )
+ }
+#else
+ D t, y;
+ if(d==1){
+  DQ(m, D acc=0.0; D c=0.0; DQ(n, y=*wv-c; t=acc+y; acc=t-acc; c=acc-y; acc=t; ++wv;) *zv++=acc;)
+ }else{
+  // add down the columns to reduce memory b/w.  4 accumulators
+  DQ(m, D *wv0; DQ(d, wv0=wv; D acc=0.0; D c=0.0; DQ(n, y=*wv0-c; t=acc+y; acc=t-acc; c=acc-y; acc=t; wv0+=d;) *zv++=acc; ++wv;) wv=wv0-(d-1); )
+ }
+#endif
+ NAN1;
+ RETF(z);
+}
 
 static DF1(jtred0){DECLF;A x,z;I f,r,wr,*s;
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; RESETRANK; s=AS(w);
@@ -765,7 +874,7 @@ static DF1(jtreduce){A z;I d,f,m,n,r,t,wr,*ws,zt;
  wr=AR(w); ws=AS(w);
  // Create  r: the effective rank; f: length of frame; n: # items in a CELL of w
  r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; SETICFR(w,f,r,n);  // no RESETRANK
- // Handle the special cases: neutrals, single items
+ // Handle the special cases: neutrals, single items, lists of length 2
  I wt=AT(w); wt=AN(w)?wt:B01;   // Treat empty as Boolean type
 
  if(unlikely(n<=2)){

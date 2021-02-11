@@ -88,19 +88,19 @@ plus=: 4 : 'x+y'
 NB. +/!.0 D ----------------------------------------------------------------
 
 f =: 4 : 0"0 1  NB. y is shape of region, x is rank of sums
-big =: (, -@:(+/))@}:"x y ?@$ 1e8   NB. large integers adding to 0
-small =: y ?@$ 0   NB. floats in range 0-1
-bigfloat =: big+small  NB. floats with large & small components
-smalltrunc =: bigfloat-big  NB. the actual small parts of bigfloat
+big =. (, -@:(+/))@}:"x y ?@$ 1e8   NB. large integers adding to 0
+small =. y ?@$ 0   NB. floats in range 0-1
+bigfloat =. big+small  NB. floats with large & small components
+smalltrunc =. bigfloat-big  NB. the actual small parts of bigfloat
 ((+/"x smalltrunc) + +/"x big) ; (+/"x bigfloat) ; (+/!.0"x bigfloat)  NB. correct total, +/ version, +/!.0 version
 )
-0.05 > 1 ([: | [: -/ 0 2 {::"0 _ f)"0 ] 1e7 + i. 17
-0.05 > 1 ([: | [: -/ 0 2 {::"0 _ f)"0 ] >: i. 32
+0.05 > 1 ([: | [: -/ 0 2 {::"0 _ f)"0 x =: 1e7 + i. 17
+0.05 > 1 ([: | [: -/ 0 2 {::"0 _ f)"0 x =: >: i. 32
 0 -: +/!.0 i. 0
-0.05 > _ ([: | [: -/ 0 2 {::"0 _ f)"0 1/ ] (1e6 + i. 20) ,"0 ] 6
-0.005 > _ ([: | [: -/ 0 2 {::"0 _ f)"0 1/ ] (1e5) ,"0 ] >: i. 20
-, 1e_6 > 2 ([: | [: -/ 0 2 {::"0 _ f)"0 1/ ] > { 1 2 3 ; (>: i. 20) ; (>: i. 20)
-, 1e_6 > 2 3 ([: | [: -/ 0 2 {::"0 _ f)"0 1/ ] > { 1 2 3 ; (>: i. 20) ; (>: i. 20)
+0.05 > _ ([: | [: -/ 0 2 {::"0 _ f)"0 1/ x =: (1e6 + i. 20) ,"0 ] 6
+0.005 > _ ([: | [: -/ 0 2 {::"0 _ f)"0 1/ x =: (1e5) ,"0 ] >: i. 20
+, 1 2 3 ([: *./@, 1e_6 > [: | [: -/ 0 2 {::"0 _ f)"0 1/ x =: > { 1 2 3 ; (>: i. 20) ; (>: i. 20)
+, 1 2 3 4 ([: *./@, 1e_6 > [: | [: -/ 0 2 {::"0 _ f)"0 1/ x =: > { 1 2 3 ; (>: i. 20) ; (>: i. 20) ; (>: i. 20)
 
 NB. +/ Z ----------------------------------------------------------------
 

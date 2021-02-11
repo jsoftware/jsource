@@ -406,7 +406,7 @@ DF1(jtcompsum){
     if((n0-=4)>0)goto loopback;
     }
    }
-   y=_mm256_sub_pd(_mm256_maskload_pd(wv,endmask),c0); t=_mm256_add_pd(acc0,y); c0=_mm256_sub_pd(_mm256_sub_pd(t,acc0),y); acc0=t; wv+=NPAR; wv+=((n-1)&(NPAR-1))+1;
+   y=_mm256_sub_pd(_mm256_maskload_pd(wv,endmask),c0); t=_mm256_add_pd(acc0,y); c0=_mm256_sub_pd(_mm256_sub_pd(t,acc0),y); acc0=t; wv+=((n-1)&(NPAR-1))+1;
    c0=_mm256_add_pd(c0,c1); c2=_mm256_add_pd(c2,c3);    // add all the low parts together - the low bits of the low will not make it through to the result
    y=_mm256_sub_pd(acc1,c0); t=_mm256_add_pd(acc0,y); c0=_mm256_sub_pd(_mm256_sub_pd(t,acc0),y); acc0=t;
    y=_mm256_sub_pd(acc3,c2); t=_mm256_add_pd(acc2,y); c2=_mm256_sub_pd(_mm256_sub_pd(t,acc2),y); acc2=t;

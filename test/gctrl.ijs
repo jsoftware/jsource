@@ -77,7 +77,7 @@ NB.
 (r =: '3 : 0' , LF , 0 : 0 , ')') -:5!:5<'f0'
 NB.
 ; {{   '<', (|. y), '>'
- }}&.> |. 'one'; 'two'; 'three'
+ }} &.> |. 'one'; 'two'; 'three'
 )
 
 f0=. {{     NB. empty first line

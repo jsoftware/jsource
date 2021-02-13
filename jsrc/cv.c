@@ -57,17 +57,21 @@ static DF2(jtfitf2){V*sv=FAV(self); A z; R df2(z,a,w,fit(fix(sv->fgh[0],zeroione
 // Preserve IRS1/IRS2 from u in result verb (exception: CEXP)
 // Preserve VISATOMIC1 from u (applies only to numeric atomic ops)
 F2(jtfit){A f;C c;I k,l,m,r;V*sv;
- ASSERTVN(a,w);
+ ASSERTVN(a,w);  // a must be a verb, w a noun
  sv=FAV(a); m=sv->mr; l=lrv(sv); r=rrv(sv);
  I cno=0;
- switch(sv->id){
+ switch(sv->id){I wval;
   case CSLDOT: cno=1;   case CLE: case CLT: case CGE: case CGT: case CNE: case CEQ: ++cno;
   case CMATCH: case CEPS:   case CIOTA:  case CICO:      case CNUB:     case CSTAR:  
   case CFLOOR: case CCEIL:  case CSTILE: case CPLUSDOT:  case CSTARDOT: case CABASE:
   case CNOT:   case CXCO:   case CSPARSE:   case CEBAR:
    R fitct(a,w,cno);
+  case CQQ: ;
+   RE(wval=i0(w)); ASSERT(wval==0,EVDOMAIN);  // only f"r!.0 is supported
+   ASSERT(sv->valencefns[1]==jtsumattymes1,EVDOMAIN)  // Must be +/@:*"1!:0
+   R CDERIV(CFIT,0,jtsumattymes1,VIRS2, m,l,r);  // supports IRS
   case CSLASH: ;
-   I wval; RE(wval=i0(w)); ASSERT(wval==0,EVDOMAIN);  // only f/!.0 is supported
+   RE(wval=i0(w)); ASSERT(wval==0,EVDOMAIN);  // only f/!.0 is supported
    ASSERT(FAV(sv->fgh[0])->id==CPLUS,EVDOMAIN)  // Must be +/!:0
    R CDERIV(CFIT,jtcompsum,0,VIRS1, m,l,r);  // supports IRS
   case CEXP:

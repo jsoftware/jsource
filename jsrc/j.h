@@ -1428,12 +1428,23 @@ if(likely(z<3)){_zzt+=z; z=(I)&oneone; _zzt=_i&3?_zzt:(I*)z; z=_i&2?(I)_zzt:z; z
 #define SZS            ((I)sizeof(S))
 #define LGSZS   1  // lg (bytes in an S)
 
+#if (C_AVX2&&SY_64) || EMU_AVX
+// create double-precision product of inputs
+#define TWOPROD(in0,in1,outhi,outlo) outhi=_mm256_mul_pd(in0,in1); outlo=_mm256_fmsub_pd(in0,in1,outhi);
+// create double-precision sum of inputs, where it is not known which is larger  NOTE in0 and outhi might be identical.  Needs t and signbit.
+#define TWOSUM(in0,in1,outhi,outlo) t=_mm256_andnot_pd(sgnbit,in0); outlo=_mm256_andnot_pd(sgnbit,in1); t=_mm256_sub_pd(t,outlo); \
+                                    outlo=_mm256_blendv_pd(in0,in1,t); t=_mm256_blendv_pd(in1,in0,t); \
+                                    outhi=_mm256_add_pd(in0,in1); outlo=_mm256_sub_pd(outlo,outhi); outlo=_mm256_add_pd(outlo,t);  // 1 if in1 larger; select outlo=max t=min
+#else
+#define TWOSPLIT(a,x,y) y=(a)*134217730.0; x=y-(a); x=y-x; y=(a)-x;   // must avoid compiler tuning
+#define TWOSUM(in0,in1,outhi,outlo) t=(in0)+(in1); outlo=t-(in0); outlo=((in0) - (t-outlo)) + ((in1)-outlo); outhi=t;
+#define TWOPROD(in0,in1,outhi,outlo) TWOSPLIT(in0,i00,i01) TWOSPLIT(in1,i10,i11) outhi=(in0)*(in1); outlo=i01*i11 - (((outhi-i00*i10) - i01*i10) - i00*i11);  // must avoid compiler tuning   needs t, i00, i01, i10, i11
+#endif
 #define VAL1            '\001'
 #define VAL2            '\002'
 // like vec(INT,n,v), but without the call and using shape-copy
 #define VECI(z,n,v) {GATV0(z,INT,(I)(n),1); MCISH(IAV1(z),(v),(I)(n));}
 #define WITHDEBUGOFF(stmt) {UC d=jt->uflags.us.cx.cx_c.db; jt->uflags.us.cx.cx_c.db=0; stmt jt->uflags.us.cx.cx_c.db=d;}  // execute stmt with debug turned off
-
 #if C_LE
 #if BW==64
 #define IHALF0  0x00000000ffffffffLL

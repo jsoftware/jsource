@@ -1030,7 +1030,7 @@ I jtsumattymesprods(J jt,I it,void *avp, void *wvp,I dplen,I nfro,I nfri,I ndpo,
 
 
 
-// +/@:*"1 with IRS
+// +/@:*"1 with IRS, also +/@:*"1!.0 on float args
 DF2(jtsumattymes1){
  ARGCHK2(a,w);
  I ar=AR(a); I wr=AR(w); I acr=jt->ranks>>RANKTX; I wcr=jt->ranks&RMAX;
@@ -1043,6 +1043,7 @@ DF2(jtsumattymes1){
  RESETRANK;  // This is required if we go to slower code
  // if an argument is empty, sparse, has cell-rank 0, or not a fast arithmetic type, revert to the code for f/@:g atomic
  if(((-((AT(a)|AT(w))&(NOUN&~(B01|INT|FL))))|(AN(a)-1)|(AN(w)-1)|(acr-1)|(wcr-1))<0) { // test for all unusual cases
+  if(FAV(self)->id==CFIT)self=FAV(self)->fgh[0];  // lose the !.0 if we revert
   R rank2ex(a,w,FAV(self)->fgh[0],MIN(acr,1),MIN(wcr,1),acr,wcr,jtfslashatg);
  }
  // We can handle it here, and both ranks are at least 1.
@@ -1055,10 +1056,10 @@ DF2(jtsumattymes1){
  if(acr>wcr){A t=w; I tr=wr; I tcr=wcr; w=a; wr=ar; wcr=acr; a=t; ar=tr; acr=tcr;}
 
  // Convert arguments as required
- I it=MAX(AT(a),AT(w));  // if input types are dissimilar, convert to the larger
- if(it!=(AT(w)|AT(a))){
+ I it=MAX(AT(a),AT(w)); it=FAV(self)->id==CFIT?FL:it;   // if input types are dissimilar, convert to the larger.  For +/@:*"1!.0, convert everything to float
+ if(unlikely(it!=(AT(w)|AT(a)))){
   if(TYPESNE(it,AT(a))){RZ(a=cvt(it,a));}  // convert to common input type
-  else if(TYPESNE(it,AT(w))){RZ(w=cvt(it,w));}
+  if(TYPESNE(it,AT(w))){RZ(w=cvt(it,w));}
  }
 
  // Verify inner frames match
@@ -1068,7 +1069,7 @@ DF2(jtsumattymes1){
  I dplen = AS(a)[ar-1];  // number of atoms in 1 dot-product
  I ndpo; PROD(ndpo,acr-1,AS(w)+wr-wcr);  // number of cells of a = # 2d-level loops
  I ndpi; PROD(ndpi,wcr-acr,AS(w)+wr-wcr+acr-1);  // number of times each cell of a must be repeated (= excess frame of w)
- I zn=ndpo*ndpi;  // number of results from 1 inner cell.  This can't overflow since frames agree and operands are not empty
+// obsolete  I zn=ndpo*ndpi;  // number of results from 1 inner cell.  This can't overflow since frames agree and operands are not empty
 
  A z; 
  // if there is frame, create the outer loop values
@@ -1090,7 +1091,87 @@ DF2(jtsumattymes1){
   MCISH(zs,longs,af+commonf); MCISH(zs+af+commonf,ws+wr-wcr,wcr-1);
  }
 
- RZ(jtsumattymesprods(jt,it,voidAV(a),voidAV(w),dplen,nfro,nfri,ndpo,ndpi,voidAV(z)));  // eval, check for error
+ if(likely(FAV(self)->id!=CFIT)){RZ(jtsumattymesprods(jt,it,voidAV(a),voidAV(w),dplen,nfro,nfri,ndpo,ndpi,voidAV(z)));  // eval, check for error
+ }else{
+  // here for +/@:*"1!.0, double-precision dot product  https://www-pequan.lip6.fr/~graillat/papers/IC2012.pdf
+  NAN0;
+#if (C_AVX2&&SY_64) || EMU_AVX
+#define OGITA(in0,in1,n) TWOPROD(in0,in1,h,r) TWOSUM(p##n,h,p##n,q) s##n=_mm256_add_pd(_mm256_add_pd(q,r),s##n);
+  __m256i endmask; /* length mask for the last word */
+  _mm256_zeroupper(VOIDARG);
+  __m256d idreg=_mm256_set1_pd(0.0);
+  __m256d sgnbit=_mm256_castsi256_pd(_mm256_set1_epi64x(0x8000000000000000));
+  endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-dplen)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */
+  D * RESTRICT av=DAV(a),* RESTRICT wv=DAV(w); D * RESTRICT zv=DAV(z);
+  for(--nfro;nfro>=0;--nfro){
+   I jj=nfri; D *ov0=it&BOX?av:wv; 
+   while(1){
+    I iii=ndpo-1;for(;iii>=0;--iii){
+     I j=ndpi; D *av0=av; /* i is how many a's are left, j is how many w's*/
+     while(1){
+      // do one dot-product, av*wv, length dplen
+      I n0=(dplen-1)>>LGNPAR; __m256d p0=idreg; __m256d p1=idreg; __m256d p2=idreg; __m256d p3=idreg;
+      __m256d s0=idreg; __m256d s1=idreg; __m256d s2=idreg; __m256d s3=idreg;  // error terms
+      __m256d h; __m256d r; __m256d q; __m256d t;   // new input value, temp to hold high part of sum
+      if(n0>0){
+       switch(n0&3){
+       loopback:
+       case 0: OGITA(_mm256_loadu_pd(av),_mm256_loadu_pd(wv),0) av+=NPAR; wv+=NPAR;
+       case 3: OGITA(_mm256_loadu_pd(av),_mm256_loadu_pd(wv),1) av+=NPAR; wv+=NPAR;
+       case 2: OGITA(_mm256_loadu_pd(av),_mm256_loadu_pd(wv),2) av+=NPAR; wv+=NPAR;
+       case 1: OGITA(_mm256_loadu_pd(av),_mm256_loadu_pd(wv),3) av+=NPAR; wv+=NPAR;
+       if((n0-=4)>0)goto loopback;
+       }
+      }
+      OGITA(_mm256_maskload_pd(av,endmask),_mm256_maskload_pd(wv,endmask),0) av+=((dplen-1)&(NPAR-1))+1; wv+=((dplen-1)&(NPAR-1))+1;  // the remnant at the end
+      s0=_mm256_add_pd(s0,s1); s2=_mm256_add_pd(s2,s3); s0=_mm256_add_pd(s0,s2);   // add all the low parts together - the low bits of the low will not make it through to the result
+      TWOSUM(p0,p1,p0,s1) TWOSUM(p2,p3,p2,s2) s2=_mm256_add_pd(s1,s2); s0=_mm256_add_pd(s0,s2);   // add 0+1, 2+3
+      TWOSUM(p0,p2,p0,s1) s0=_mm256_add_pd(s0,s1);  // 0+2
+     // p0/s0 survive.  Combine horizontally
+      s0=_mm256_add_pd(s0,_mm256_permute2f128_pd(s0,s0,0x01)); p1=_mm256_permute2f128_pd(p0,p0,0x01);  // s0: 01+=23, p1<-23
+      TWOSUM(p0,p1,p0,s1); s0=_mm256_add_pd(s0,s1); // combine p=01+23
+      s0=_mm256_add_pd(s0,_mm256_permute_pd(s0,0xf)); p1=_mm256_permute_pd(p0,0xf);   // combine s0+s1, acc1<-1
+      TWOSUM(p0,p1,p0,s1); s0=_mm256_add_pd(s0,s1);    // combine 0123, combine all low parts
+      p0=_mm256_add_pd(p0,s0);  // add low parts back into high in case there is overlap
+      _mm_storel_pd(zv++,_mm256_castpd256_pd128(p0)); // store the single result
+      if(!--j)break; av=av0;  // repeat a if needed
+     }
+    }
+    if(!--jj)break;
+    if(it&BOX)av=ov0;else wv=ov0;  // repeat whichever arg needs it (there must be one, if jj is not 1)
+   }
+  }
+#else
+  D * RESTRICT av=DAV(a),* RESTRICT wv=DAV(w); D * RESTRICT zv=DAV(z);
+  for(--nfro;nfro>=0;--nfro){
+   I jj=nfri; D *ov0=it&BOX?av:wv; 
+   while(1){
+    I iii=ndpo-1;for(;iii>=0;--iii){
+     I j=ndpi; D *av0=av; /* i is how many a's are left, j is how many w's*/
+     while(1){
+      // do one dot-product, av*wv, length dplen;
+      D p=0.0, s=0.0;
+      DQ(dplen, D h; D r; D q; D t; D i00; D i01; D i10; D i11; TWOPROD(*av,*wv,h,r) TWOSUM(p,h,p,q) s=q+r+s; ++av; ++wv;)
+// obsolete I i;for(i=dplen-1;i>=0;i--){
+// obsolete       TWOPROD(*av,*wv,h,r)
+// obsolete printf("*av=%f *wv=%f h=%f r=%g ",*av,*wv,h,r);
+// obsolete       TWOSUM(p,h,p,q)
+// obsolete printf("p=%f q=%g ",p,q);
+// obsolete       s=q+r+s;
+// obsolete printf("s=%g\n",s);
+// obsolete       ++av; ++wv;
+// obsolete }
+      *zv++=p+s; // store the single result
+      if(!--j)break; av=av0;  // repeat a if needed
+     }
+    }
+    if(!--jj)break;
+    if(it&BOX)av=ov0;else wv=ov0;  // repeat whichever arg needs it (there must be one, if jj is not 1)
+   }
+  }
+ #endif
+  NAN1;
+ } 
  RETF(z);
 }
 

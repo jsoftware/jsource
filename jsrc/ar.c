@@ -396,31 +396,29 @@ DF1(jtcompsum){
    I n0=(n-1)>>LGNPAR; __m256d acc0=idreg; __m256d acc1=idreg; __m256d acc2=idreg; __m256d acc3=idreg;
    __m256d c0=idreg; __m256d c1=idreg; __m256d c2=idreg; __m256d c3=idreg;  // error terms
    __m256d y;  __m256d t;   // new input value, temp to hold high part of sum
+#define KAHAN(in,n) y=_mm256_sub_pd(in,c##n); t=_mm256_add_pd(acc##n,y); c##n=_mm256_sub_pd(_mm256_sub_pd(t,acc##n),y); acc##n=t;
    if(n0>0){
     switch(n0&3){
     loopback:
-    case 0: y=_mm256_sub_pd(_mm256_loadu_pd(wv),c0); t=_mm256_add_pd(acc0,y); c0=_mm256_sub_pd(_mm256_sub_pd(t,acc0),y); acc0=t; wv+=NPAR;
-    case 3: y=_mm256_sub_pd(_mm256_loadu_pd(wv),c1); t=_mm256_add_pd(acc1,y); c1=_mm256_sub_pd(_mm256_sub_pd(t,acc1),y); acc1=t; wv+=NPAR;
-    case 2: y=_mm256_sub_pd(_mm256_loadu_pd(wv),c2); t=_mm256_add_pd(acc2,y); c2=_mm256_sub_pd(_mm256_sub_pd(t,acc2),y); acc2=t; wv+=NPAR;
-    case 1: y=_mm256_sub_pd(_mm256_loadu_pd(wv),c3); t=_mm256_add_pd(acc3,y); c3=_mm256_sub_pd(_mm256_sub_pd(t,acc3),y); acc3=t; wv+=NPAR;
+    case 0: KAHAN(_mm256_loadu_pd(wv),0) wv+=NPAR; case 3: KAHAN(_mm256_loadu_pd(wv),1) wv+=NPAR; case 2: KAHAN(_mm256_loadu_pd(wv),2) wv+=NPAR; case 1: KAHAN(_mm256_loadu_pd(wv),3) wv+=NPAR;
     if((n0-=4)>0)goto loopback;
     }
    }
-   y=_mm256_sub_pd(_mm256_maskload_pd(wv,endmask),c0); t=_mm256_add_pd(acc0,y); c0=_mm256_sub_pd(_mm256_sub_pd(t,acc0),y); acc0=t; wv+=((n-1)&(NPAR-1))+1;
-   c0=_mm256_add_pd(c0,c1); c2=_mm256_add_pd(c2,c3);    // add all the low parts together - the low bits of the low will not make it through to the result
-   y=_mm256_sub_pd(acc1,c0); t=_mm256_add_pd(acc0,y); c0=_mm256_sub_pd(_mm256_sub_pd(t,acc0),y); acc0=t;
-   y=_mm256_sub_pd(acc3,c2); t=_mm256_add_pd(acc2,y); c2=_mm256_sub_pd(_mm256_sub_pd(t,acc2),y); acc2=t;
-   c0=_mm256_add_pd(c0,c2);
-   y=_mm256_sub_pd(acc2,c0); t=_mm256_add_pd(acc0,y); c0=_mm256_sub_pd(_mm256_sub_pd(t,acc0),y); acc0=t;
-   // acc0/c0 survive.  Combine horizontally
-   c0=_mm256_add_pd(c0,_mm256_permute2f128_pd(c0,c0,0x01)); acc1=_mm256_permute2f128_pd(acc0,acc0,0x01);  // c0:  01+=23, acc1<-23
-   y=_mm256_sub_pd(acc1,c0); t=_mm256_add_pd(acc0,y); c0=_mm256_sub_pd(_mm256_sub_pd(t,acc0),y); acc0=t;  // combine 01+23
+   KAHAN(_mm256_maskload_pd(wv,endmask),0) wv+=((n-1)&(NPAR-1))+1;
+   __m256d sgnbit=_mm256_castsi256_pd(_mm256_set1_epi64x(0x8000000000000000));
+   c0=_mm256_add_pd(c0,c1); c2=_mm256_add_pd(c2,c3); c0=_mm256_add_pd(c0,c2);   // add all the low parts together - the low bits of the low will not make it through to the result
+   TWOSUM(acc0,acc1,acc0,c1) TWOSUM(acc2,acc3,acc2,c2) c2=_mm256_add_pd(c1,c2); c0=_mm256_sub_pd(c2,c0);   // add 0+1, 2+3  KAHAN corrections are negative - change that now
+   TWOSUM(acc0,acc2,acc0,c1) c0=_mm256_add_pd(c0,c1);  // 0+2
+  // acc0/c0 survive.  Combine horizontally
+   c0=_mm256_add_pd(c0,_mm256_permute2f128_pd(c0,c0,0x01)); acc1=_mm256_permute2f128_pd(acc0,acc0,0x01);  // c0: 01+=23, acc1<-23
+   TWOSUM(acc0,acc1,acc0,c1); c0=_mm256_add_pd(c0,c1); // combine p=01+23
    c0=_mm256_add_pd(c0,_mm256_permute_pd(c0,0xf)); acc1=_mm256_permute_pd(acc0,0xf);   // combine c0+c1, acc1<-1
-   y=_mm256_sub_pd(acc1,c0); t=_mm256_add_pd(acc0,y);   // combine 01+23
-   _mm_storel_pd(zv++,_mm256_castpd256_pd128(t)); // store the single result
+   TWOSUM(acc0,acc1,acc0,c1); c0=_mm256_add_pd(c0,c1);    // combine 0123, combine all low parts
+   acc0=_mm256_add_pd(acc0,c0);  // add low parts back into high in case there is overlap
+   _mm_storel_pd(zv++,_mm256_castpd256_pd128(acc0)); // store the single result
   }
  }else{
-  // rank>1, going down columns to save bandwidth
+  // rank>1, going down columns to save bandwidth and add accuracy
   endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-d)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */
   DQ(m, D *wv0; I n0;
    __m256d y; __m256d t;   // new input value, temp to hold high part of sum
@@ -429,37 +427,30 @@ DF1(jtcompsum){
     wv0=wv; n0=n; acc0=acc1=acc2=acc3=c0=c1=c2=c3=idreg;
     switch(n0&3){
     label1:
-    case 0: y=_mm256_sub_pd(_mm256_loadu_pd(wv0),c0); t=_mm256_add_pd(acc0,y); c0=_mm256_sub_pd(_mm256_sub_pd(t,acc0),y); acc0=t; wv0+=d;
-    case 3: y=_mm256_sub_pd(_mm256_loadu_pd(wv0),c1); t=_mm256_add_pd(acc1,y); c1=_mm256_sub_pd(_mm256_sub_pd(t,acc1),y); acc1=t; wv0+=d;
-    case 2: y=_mm256_sub_pd(_mm256_loadu_pd(wv0),c2); t=_mm256_add_pd(acc2,y); c2=_mm256_sub_pd(_mm256_sub_pd(t,acc2),y); acc2=t; wv0+=d;
-    case 1: y=_mm256_sub_pd(_mm256_loadu_pd(wv0),c3); t=_mm256_add_pd(acc3,y); c3=_mm256_sub_pd(_mm256_sub_pd(t,acc3),y); acc3=t; wv0+=d;
+    case 0: KAHAN(_mm256_loadu_pd(wv0),0) wv0+=d; case 3: KAHAN(_mm256_loadu_pd(wv0),1) wv0+=d; case 2: KAHAN(_mm256_loadu_pd(wv0),2) wv0+=d; case 1: KAHAN(_mm256_loadu_pd(wv0),3) wv0+=d;
      if((n0-=4)>0)goto label1;
     }
     // combine accumulators
-    c0=_mm256_add_pd(c0,c1); c2=_mm256_add_pd(c2,c3);    // add all the low parts together - the low bits of the low will not make it through to the result
-    y=_mm256_sub_pd(acc1,c0); t=_mm256_add_pd(acc0,y); c0=_mm256_sub_pd(_mm256_sub_pd(t,acc0),y); acc0=t;
-    y=_mm256_sub_pd(acc3,c2); t=_mm256_add_pd(acc2,y); c2=_mm256_sub_pd(_mm256_sub_pd(t,acc2),y); acc2=t;
-    c0=_mm256_add_pd(c0,c2);
-    y=_mm256_sub_pd(acc2,c0); t=_mm256_add_pd(acc0,y);
-    _mm256_storeu_pd(zv,t); wv+=NPAR; zv+=NPAR;
+    __m256d sgnbit=_mm256_castsi256_pd(_mm256_set1_epi64x(0x8000000000000000));
+    c0=_mm256_add_pd(c0,c1); c2=_mm256_add_pd(c2,c3); c0=_mm256_add_pd(c0,c2);   // add all the low parts together - the low bits of the low will not make it through to the result
+    TWOSUM(acc0,acc1,acc0,c1) TWOSUM(acc2,acc3,acc2,c2) c2=_mm256_add_pd(c1,c2); c0=_mm256_sub_pd(c2,c0);   // add 0+1, 2+3  KAHAN corrections are negative - change that now
+    TWOSUM(acc0,acc2,acc0,c1) c0=_mm256_add_pd(c1,c0);  // 0+2
+    acc0=_mm256_add_pd(acc0,c0);  // add low parts back into high in case there is overlap
+    _mm256_storeu_pd(zv,acc0); wv+=NPAR; zv+=NPAR;
    )
    // repeat for partial column
    wv0=wv; n0=n; acc0=acc1=acc2=acc3=c0=c1=c2=c3=idreg;
    switch(n0&3){
    label2:
-    case 0: y=_mm256_sub_pd(_mm256_maskload_pd(wv0,endmask),c0); t=_mm256_add_pd(acc0,y); c0=_mm256_sub_pd(_mm256_sub_pd(t,acc0),y); acc0=t; wv0+=d;
-    case 3: y=_mm256_sub_pd(_mm256_maskload_pd(wv0,endmask),c1); t=_mm256_add_pd(acc1,y); c1=_mm256_sub_pd(_mm256_sub_pd(t,acc1),y); acc1=t; wv0+=d;
-    case 2: y=_mm256_sub_pd(_mm256_maskload_pd(wv0,endmask),c2); t=_mm256_add_pd(acc2,y); c2=_mm256_sub_pd(_mm256_sub_pd(t,acc2),y); acc2=t; wv0+=d;
-    case 1: y=_mm256_sub_pd(_mm256_maskload_pd(wv0,endmask),c3); t=_mm256_add_pd(acc3,y); c3=_mm256_sub_pd(_mm256_sub_pd(t,acc3),y); acc3=t; wv0+=d;
+    case 0: KAHAN(_mm256_maskload_pd(wv0,endmask),0) wv0+=d; case 3: KAHAN(_mm256_maskload_pd(wv0,endmask),1) wv0+=d; case 2: KAHAN(_mm256_maskload_pd(wv0,endmask),2) wv0+=d; case 1: KAHAN(_mm256_maskload_pd(wv0,endmask),3) wv0+=d;
     if((n0-=4)>0)goto label2;
    }
-   c0=_mm256_add_pd(c0,c1); c2=_mm256_add_pd(c2,c3);    // add all the low parts together - the low bits of the low will not make it through to the result
-   y=_mm256_sub_pd(acc1,c0); t=_mm256_add_pd(acc0,y); c0=_mm256_sub_pd(_mm256_sub_pd(t,acc0),y); acc0=t;
-   y=_mm256_sub_pd(acc3,c2); t=_mm256_add_pd(acc2,y); c2=_mm256_sub_pd(_mm256_sub_pd(t,acc2),y); acc2=t;
-   c0=_mm256_add_pd(c0,c2);
-   y=_mm256_sub_pd(acc2,c0); t=_mm256_add_pd(acc0,y);
-   _mm256_maskstore_pd(zv,endmask,t);
-   wv=wv0-((d-1)&-NPAR); zv+=((d-1)&(NPAR-1))+1;
+   __m256d sgnbit=_mm256_castsi256_pd(_mm256_set1_epi64x(0x8000000000000000));
+   c0=_mm256_add_pd(c0,c1); c2=_mm256_add_pd(c2,c3); c0=_mm256_add_pd(c0,c2);   // add all the low parts together - the low bits of the low will not make it through to the result
+   TWOSUM(acc0,acc1,acc0,c1) TWOSUM(acc2,acc3,acc2,c2) c2=_mm256_add_pd(c1,c2); c0=_mm256_sub_pd(c2,c0);   // add 0+1, 2+3  KAHAN corrections are negative - change that now
+   TWOSUM(acc0,acc2,acc0,c1) c0=_mm256_add_pd(c1,c0);  // 0+2
+   acc0=_mm256_add_pd(acc0,c0);  // add low parts back into high in case there is overlap
+   _mm256_storeu_pd(zv,acc0); wv=wv0-((d-1)&-NPAR); zv+=((d-1)&(NPAR-1))+1;
   )
  }
 #else

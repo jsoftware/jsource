@@ -1095,7 +1095,7 @@ DF2(jtsumattymes1){
  }else{
   // here for +/@:*"1!.0, double-precision dot product  https://www-pequan.lip6.fr/~graillat/papers/IC2012.pdf
   NAN0;
-#if (C_AVX2&&SY_64) || EMU_AVX
+#if (C_AVX2&&SY_64) || EMU_AVX2
 #define OGITA(in0,in1,n) TWOPROD(in0,in1,h,r) TWOSUM(p##n,h,p##n,q) s##n=_mm256_add_pd(_mm256_add_pd(q,r),s##n);
   __m256i endmask; /* length mask for the last word */
   _mm256_zeroupper(VOIDARG);

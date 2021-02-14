@@ -1428,7 +1428,7 @@ if(likely(z<3)){_zzt+=z; z=(I)&oneone; _zzt=_i&3?_zzt:(I*)z; z=_i&2?(I)_zzt:z; z
 #define SZS            ((I)sizeof(S))
 #define LGSZS   1  // lg (bytes in an S)
 
-#if (C_AVX2&&SY_64) || EMU_AVX
+#if (C_AVX2&&SY_64) || EMU_AVX2
 // create double-precision product of inputs
 #define TWOPROD(in0,in1,outhi,outlo) outhi=_mm256_mul_pd(in0,in1); outlo=_mm256_fmsub_pd(in0,in1,outhi);
 // create double-precision sum of inputs, where it is not known which is larger  NOTE in0 and outhi might be identical.  Needs t and signbit.

@@ -29,12 +29,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 
-if("${CMAKE_C_COMPILER_FRONTEND_VARIANT}" STREQUAL "MSVC")
-    get_filename_component(_cl_bin_dir ${CMAKE_C_COMPILER} DIRECTORY)
-    file(TO_CMAKE_PATH "${_cl_bin_dir}/../lib/libomp.lib" OpenMP_libomp_LIBRARY)
-    file(TO_CMAKE_PATH "${_cl_bin_dir}/libomp.dll" OpenMP_libomp_DLL)
-endif()
-
 find_package(StandardMathLibrary REQUIRED)
 find_package(OpenMP)
 find_package(JNI)

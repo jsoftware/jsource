@@ -194,15 +194,23 @@ target_sources(j PRIVATE
 
 configure_file(jversion-x.h ${CMAKE_CURRENT_SOURCE_DIR}/jversion.h COPYONLY)
 
+if("${CMAKE_C_COMPILER_FRONTEND_VARIANT}" STREQUAL "MSVC")
+    get_filename_component(_cl_bin_dir ${CMAKE_C_COMPILER} DIRECTORY)
+    get_filename_component(OpenMP_libomp_LIB
+        "${_cl_bin_dir}/../lib/libomp.lib" ABSOLUTE)
+    file(TO_CMAKE_PATH "${_cl_bin_dir}/libomp.dll" OpenMP_libomp_DLL)
+endif()
+
 if(OpenMP_C_FOUND)
     target_link_libraries(j PRIVATE OpenMP::OpenMP_C)
 
-    if(DEFINED OpenMP_libomp_DLL)
+    if(DEFINED OpenMP_libomp_DLL AND
+        OpenMP_libomp_LIBRARY STREQUAL OpenMP_libomp_LIB)
         add_custom_command(
             TARGET j POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy
                 ${OpenMP_libomp_DLL}
-                "${CMAKE_CURRENT_BINARY_DIR}$<${is_multi_config}:/$<CONFIG>>"
+                $<TARGET_FILE_DIR:j>
         )
     endif()
 endif()

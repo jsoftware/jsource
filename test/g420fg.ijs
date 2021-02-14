@@ -197,6 +197,30 @@ NB. Test for NaN
 0 _ 1 (+/@:*"1 -: +/@:*"_"1) _ 0 2   NB. removable NaN
 'NaN error' -: _ 0 __ +/@:*"1 etx  1 1 1
 
+NB. x +/@:*"1!.0 y ---------------------------------------------------------
+f =: 3 : 0"1   NB. x is rank to use for left arg; y is len of product;rank;left frame;right frame
+'len rnk lf rf' =. y
+l =. <. -: len
+maxin =. <. %: 1e15 % len  NB. max product to avoid loss of precision in sum
+big1 =. ((lf,l) ?@$ maxin) + (lf,l) ?@$ 0
+big2 =. ((rf,l) ?@$ maxin) + (rf,l) ?@$ 0
+op1 =. big1 ,"1 (-big1) ,"1 (1e_5)  NB. the dot-product will cancel out, leaving 1e_10
+op2 =. big2 ,"1 big2 ,"1 (1e_5)
+if. 2 | len do. op1 =. op1 ,"1 (0) [ op2 =. op2 ,"1 (0) end.
+perm =. ?~ >: len
+NB. op1__ =: op1 [ op2__ =: op2 [ rnk__ =: rnk [ perm__ =: perm
+op1 +/@:*"1!.0"rnk&:(perm&{"1) op2
+)
+1e_15 > | 1e_10 - f 1e5;1;'';''
+1e_15 > | 1e_10 - f (, 1 1e5+/i. 17) ;"0 1 ]1;'';''
+1e_15 > | 1e_10 - f (, 1 1e5+/i. 17) ;"0 1 ]1;'';2
+1e_15 > | 1e_10 - f (, 1 1e5+/i. 17) ;"0 1 ]1;2;''
+1e_15 > | 1e_10 - f (, 1 1e5+/i. 17) ;"0 1 ]2;2 2 2;''
+
+NB. Test for NaN
+'NaN error' -: 0 _ 1 (+/@:*"1!.0) etx _ 0 2   NB. in exact calculation, any infinity causes a NaN
+'NaN error' -: _ 0 __ +/@:*"1 etx  1 1 1
+
 4!:55 ;:'f p q space test testsub x xx y yy x0 y0'
 
 

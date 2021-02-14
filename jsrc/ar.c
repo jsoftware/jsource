@@ -450,7 +450,7 @@ DF1(jtcompsum){
    TWOSUM(acc0,acc1,acc0,c1) TWOSUM(acc2,acc3,acc2,c2) c2=_mm256_add_pd(c1,c2); c0=_mm256_sub_pd(c2,c0);   // add 0+1, 2+3  KAHAN corrections are negative - change that now
    TWOSUM(acc0,acc2,acc0,c1) c0=_mm256_add_pd(c1,c0);  // 0+2
    acc0=_mm256_add_pd(acc0,c0);  // add low parts back into high in case there is overlap
-   _mm256_storeu_pd(zv,acc0); wv=wv0-((d-1)&-NPAR); zv+=((d-1)&(NPAR-1))+1;
+   _mm256_maskstore_pd(zv,endmask,acc0); wv=wv0-((d-1)&-NPAR); zv+=((d-1)&(NPAR-1))+1;
   )
  }
 #else

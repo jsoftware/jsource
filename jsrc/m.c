@@ -1056,12 +1056,12 @@ if((I)jt&3)SEGFAULT;
     // split the allocation into blocks.  Chain them together, and flag the base.  We chain them in ascending order (the order doesn't matter), but
     // we visit them in back-to-front order so the first-allocated headers are in cache
 #if MEMAUDIT&17 && BW==64
-    u=(A)((C*)z+PSIZE); chn = 0; hrh = FHRHENDVALUE(1+blockx-PMINL); DQ(PSIZE/2>>blockx, u=(A)((C*)u-n); AFCHAIN(u)=chn; chn=u; hrh -= FHRHBININCR(1+blockx-PMINL); AFHRH(u)=hrh; u->fill=(US)AFHRH(u););    // chain blocks to each other; set chain of last block to 0
-    AFHRH(u) = hrh|FHRHROOT;  u->fill=(US)AFHRH(u);  // flag first block as root.  It has 0 offset already
-#else
     u=(A)((C*)z+PSIZE); chn = 0; hrh = FHRHENDVALUE(1+blockx-PMINL);
-    DQ(PSIZE/2>>blockx, u=(A)((C*)u-n); AFCHAIN(u)=chn; chn=u; if(MEMAUDIT&4)AC(u)=(I)0xdeadbeefdeadbeefLL; hrh -= FHRHBININCR(1+blockx-PMINL); AFHRH(u)=hrh;);    // chain blocks to each other; set chain of last block to 0
-    AFHRH(u) = hrh|FHRHROOT;    // flag first block as root.  It has 0 offset already
+    DQ(PSIZE/2>>blockx, u=(A)((C*)u-n); AFCHAIN(u)=chn; chn=u; if(MEMAUDIT&4)AC(u)=(I)0xdeadbeefdeadbeefLL; hrh -= FHRHBININCR(1+blockx-PMINL); AFHRH(u)=hrh; u->fill=(US)AFHRH(u););   // chain blocks to each other; set chain of last block to 0
+    AFHRH(u) = hrh|FHRHROOT;  u->fill=(US)AFHRH(u);    // flag first block as root.  It has 0 offset already
+#else
+    u=(A)((C*)z+PSIZE); chn = 0; hrh = FHRHENDVALUE(1+blockx-PMINL); DQ(PSIZE/2>>blockx, u=(A)((C*)u-n); AFCHAIN(u)=chn; chn=u; hrh -= FHRHBININCR(1+blockx-PMINL); AFHRH(u)=hrh;);    // chain blocks to each other; set chain of last block to 0
+    AFHRH(u) = hrh|FHRHROOT;  // flag first block as root.  It has 0 offset already
 #endif
     jt->mfree[-PMINL+1+blockx].pool=(A)((C*)u+n);  // the second block becomes the head of the free list
     mfreeb-=PSIZE;     // We are adding a bunch of free blocks now...

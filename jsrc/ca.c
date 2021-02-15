@@ -74,10 +74,6 @@ static DF1(jtmodpow1){A g=FAV(self)->fgh[1]; R rank2ex0(FAV(g)->fgh[0],w,self,jt
      /* m&|@(n&^) w ; m guaranteed to be INT or XNUM */
 
 
-//#define CS1IP(lpclass,f,exp,x) CS1IPext(lpclass,static,f,exp,x)
-//#define CS1IPext(lpclass,cellclass,f,exp,x) cellclass DF1(f##cell){F1PREFIP;DECLFG;A z;PROLOG(x); exp; EPILOG(z);} lpclass DF1(f){PREF1(f##cell); R f##cell(jt,w,self);}
-//#define CS2IP(cellclass,class,f,exp,x) cellclass DF2(f##cell){F2PREFIP;DECLFG;A z;PROLOG(x); exp; EPILOG(z);} class DF2(f){PREF2(f##cell); R f##cell(jt,a,w,self);}
-
 
 // u@v and u@:v
 // TODO: no  need for protw checking?
@@ -93,15 +89,17 @@ z=(f1)(jtinplace,gx,fs);
 RZ(z); EPILOG(z);}
 DF1(on1){PREF1(on1cell); R on1cell(jt,w,self);}
 
-CS2IP(,,jtupon2, \
-{PUSHZOMB; ARGCHK2D(a,w) A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)(intptr_t)((I)a+((I)jtinplace&JTINPLACEA)); A gx; \
-RZ(gx=(g2)((J)(intptr_t)(((I)jtinplace&(~(JTWILLBEOPENED+JTCOUNTITEMS))) + (REPSGN(SGNIF(FAV(gs)->flag,VJTFLGOK2X)) & FAV(fs)->flag2 & VF2WILLOPEN1+VF2USESITEMCOUNT1)),a,w,gs));  /* inplace g */ \
-ARGCHK1D(gx) \
-/* inplace gx unless it is protected */ \
-POPZOMB; jtinplace=(J)(intptr_t)(((I)jtinplace&~(JTINPLACEW))+(((I )(gx!=prota)&(I )(gx!=protw))*JTINPLACEW));  \
-jtinplace=FAV(fs)->flag&VJTFLGOK1?jtinplace:jt; \
-RZ(z=(f1)(jtinplace,gx,fs));} \
-,0114)
+DF2(jtupon2cell){F2PREFIP;DECLFG;A z;PROLOG(0114);
+PUSHZOMB; ARGCHK2D(a,w) A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)(intptr_t)((I)a+((I)jtinplace&JTINPLACEA)); A gx;
+RZ(gx=(g2)((J)(intptr_t)(((I)jtinplace&(~(JTWILLBEOPENED+JTCOUNTITEMS))) + (REPSGN(SGNIF(FAV(gs)->flag,VJTFLGOK2X)) & FAV(fs)->flag2 & VF2WILLOPEN1+VF2USESITEMCOUNT1)),a,w,gs));  /* inplace g */
+ARGCHK1D(gx)
+/* inplace gx unless it is protected */
+POPZOMB; jtinplace=(J)(intptr_t)(((I)jtinplace&~(JTINPLACEW))+(((I )(gx!=prota)&(I )(gx!=protw))*JTINPLACEW)); 
+jtinplace=FAV(fs)->flag&VJTFLGOK1?jtinplace:jt;
+RZ(z=(f1)(jtinplace,gx,fs));
+EPILOG(z);}
+DF2(jtupon2){PREF2(jtupon2cell); R jtupon2cell(jt,a,w,self);}
+
 // special case for rank 0.  Transfer to loop.  
 // if there is only one cell, process it through on1, which understands this type
 static DF1(jton10){R jtrank1ex0(jt,w,self,on1cell);}  // pass inplaceability through
@@ -116,18 +114,21 @@ static DF2(onright2){F2PREFIP; R (FAV(FAV(self)->fgh[0])->valencefns[0])((J)((I)
 static DF1(onconst1){DECLFG;R (f1)(jt,gs,fs);}
 static DF2(onconst2){DECLFG;R (f1)(jt,gs,fs);}
 
+
 // x u&v y
 // We don't bother passing WILLOPEN from u into v, since it's rarely used.  We do pass WILLOPEN into u.
-CS2IP(static,static,on2, \
- A ga;A gw;PUSHZOMB; \
- /* here for execution on a single cell */ \
- A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)(intptr_t)((I)a+((I)jtinplace&JTINPLACEA)); \
- /* take inplaceability of each monad from the corresponding dyad argument */ \
- RZ(gw=(g1)(JTIPWonly,w,gs)); \
- RZ(ga=(g1)(JTIPAtoW,a,gs));  /* Move bit 1 to bit 0, clear bit 1 */ \
- POPZOMB; jtinplace=(J)(intptr_t)(((I)jtinplace&~(JTINPLACEA+JTINPLACEW))+(I )(ga!=prota)*JTINPLACEA+(I )(gw!=protw)*JTINPLACEW); jtinplace=FAV(fs)->flag&VJTFLGOK2?jtinplace:jt; \
- RZ(z=(f2)(jtinplace,ga,gw,fs)); \
-,0023)
+static DF2(on2cell){F2PREFIP;DECLFG;A z;PROLOG(0023);
+ A ga;A gw;PUSHZOMB;
+ /* here for execution on a single cell */
+ A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)(intptr_t)((I)a+((I)jtinplace&JTINPLACEA));
+ /* take inplaceability of each monad from the corresponding dyad argument */
+ RZ(gw=(g1)(JTIPWonly,w,gs));
+ RZ(ga=(g1)(JTIPAtoW,a,gs));  /* Move bit 1 to bit 0, clear bit 1 */
+ POPZOMB; jtinplace=(J)(intptr_t)(((I)jtinplace&~(JTINPLACEA+JTINPLACEW))+(I )(ga!=prota)*JTINPLACEA+(I )(gw!=protw)*JTINPLACEW); jtinplace=FAV(fs)->flag&VJTFLGOK2?jtinplace:jt;
+ RZ(z=(f2)(jtinplace,ga,gw,fs));
+EPILOG(z);}
+static DF2(on2){PREF2(on2cell); R on2cell(jt,a,w,self);}
+
 static DF2(on20){R jtrank2ex0(jt,a,w,self,on2cell);}  // pass inplaceability through
 
 static DF2(atcomp){AF f;A z;

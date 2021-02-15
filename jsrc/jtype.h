@@ -492,7 +492,7 @@ typedef I SI;
   )  // OK to inplace ordinary operation
 #else
 #define EXTENDINPLACENJA(a,w)  ( ((AC(a)&(((AN(a)+AN(w))^AN(a))-AN(a)))<0) || \
-  ( ( ((((AN(a)+AN(w))^AN(a))-AN(a))<0) || AFLAG(a)&AFNJA ) && (jt->asginfo.zombieval==a || (!jt->asginfo.assignsym&&AC(a)==1&&(virtreqd=1,!(AFLAG(a)&(AFRO|AFVIRTUAL))))) && notonupperstack(a) )   /* scaf combine */ \
+  ( (((((AN(a)+AN(w))^AN(a))-AN(a))|SGNIF(AFLAG(a),AFNJAX))<0) && (jt->asginfo.zombieval==a || (!jt->asginfo.assignsym&&AC(a)==1&&(virtreqd=1,!(AFLAG(a)&(AFRO|AFVIRTUAL))))) && notonupperstack(a) )   /* scaf combine */ \
  )  // OK to inplace ordinary operation
 #endif
 

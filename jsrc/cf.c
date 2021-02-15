@@ -214,31 +214,32 @@ static DF1(taa){TDECL; A z,t; df1(t,w,fs); ASSERT(!t||AT(t)&NOUN+VERB,EVSYNTAX);
 static DF1(tvc){TDECL; A z; R df2(z,fs,w,gs);}  /* also nc */
 static DF1(tcv){TDECL; A z; R df2(z,w,gs,fs);}  /* also cn */
 
-CS1IPext(static,,jthook1, \
-{PUSHZOMB; A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); \
-A gx; RZ(gx=(g1)((J)(intptr_t)(((I)jt + ((FAV(fs)->flag2>>(VF2WILLOPEN2WX-VF2WILLOPEN1X)) & (VF2WILLOPEN1+VF2USESITEMCOUNT1) & REPSGN(SGNIF(FAV(gs)->flag,VJTFLGOK1X))))),w,gs));  /* cannot inplace g.  jtinplace is always set */ \
-/* inplace gx unless it is protected */ \
-POPZOMB; \
-jtinplace=(J)(intptr_t)(((I)jtinplace&~(JTINPLACEA+JTINPLACEW)) + (JTINPLACEA*((I)jtinplace&JTINPLACEW)) + ((gx!=protw)*JTINPLACEW)); \
-jtinplace=FAV(fs)->flag&VJTFLGOK2?jtinplace:jt; \
-RZ(z=(f2)(jtinplace,w,gx,fs)); \
-} \
-, 0111)
+DF1(jthook1cell){F1PREFIP;DECLFG;A z;PROLOG(0111); 
+PUSHZOMB; A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW));
+A gx; RZ(gx=(g1)((J)(intptr_t)(((I)jt + ((FAV(fs)->flag2>>(VF2WILLOPEN2WX-VF2WILLOPEN1X)) & (VF2WILLOPEN1+VF2USESITEMCOUNT1) & REPSGN(SGNIF(FAV(gs)->flag,VJTFLGOK1X))))),w,gs));  /* cannot inplace g.  jtinplace is always set */
+/* inplace gx unless it is protected */
+POPZOMB;
+jtinplace=(J)(intptr_t)(((I)jtinplace&~(JTINPLACEA+JTINPLACEW)) + (JTINPLACEA*((I)jtinplace&JTINPLACEW)) + ((gx!=protw)*JTINPLACEW));
+jtinplace=FAV(fs)->flag&VJTFLGOK2?jtinplace:jt;
+RZ(z=(f2)(jtinplace,w,gx,fs));
+EPILOG(z);
+}
+static DF1(jthook1){PREF1(jthook1cell); R jthook1cell(jt,w,self);}
 
-// hook2cell is external
-CS2IP(,static,jthook2, \
-{PUSHZOMB; A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)(intptr_t)((I)a+((I)jtinplace&JTINPLACEA)); \
-A gx; RZ(gx=(g1)((J)(intptr_t)((I)jt + ((((I)jtinplace&((a!=w)<<JTINPLACEWX)) + ((FAV(fs)->flag2>>(VF2WILLOPEN2WX-VF2WILLOPEN1X)) & JTWILLBEOPENED+JTCOUNTITEMS)) & REPSGN(SGNIF(FAV(gs)->flag,VJTFLGOK1X)))),w,gs));  /* inplace g unless a=w.  jtinplace is always set */ \
-/* inplace gx unless it is protected */ \
-POPZOMB; jtinplace=(J)(intptr_t)(((I)jtinplace&~(JTINPLACEW))+(((I )(gx!=prota)&(I )(gx!=protw))*JTINPLACEW)); \
-jtinplace=FAV(fs)->flag&VJTFLGOK2?jtinplace:jt; \
-RZ(z=(f2)(jtinplace,a,gx,fs)); \
-} \
-, 0112)
+DF2(jthook2cell){F2PREFIP;DECLFG;A z;PROLOG(0112);
+PUSHZOMB; A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)(intptr_t)((I)a+((I)jtinplace&JTINPLACEA));
+A gx; RZ(gx=(g1)((J)(intptr_t)((I)jt + ((((I)jtinplace&((a!=w)<<JTINPLACEWX)) + ((FAV(fs)->flag2>>(VF2WILLOPEN2WX-VF2WILLOPEN1X)) & JTWILLBEOPENED+JTCOUNTITEMS)) & REPSGN(SGNIF(FAV(gs)->flag,VJTFLGOK1X)))),w,gs));  /* inplace g unless a=w.  jtinplace is always set */
+/* inplace gx unless it is protected */
+POPZOMB; jtinplace=(J)(intptr_t)(((I)jtinplace&~(JTINPLACEW))+(((I )(gx!=prota)&(I )(gx!=protw))*JTINPLACEW));
+jtinplace=FAV(fs)->flag&VJTFLGOK2?jtinplace:jt;
+RZ(z=(f2)(jtinplace,a,gx,fs));
+EPILOG(z);
+} 
+static DF2(jthook2){PREF2(jthook2cell); R jthook2cell(jt,a,w,self);}
 
 static DF1(jthkiota){DECLFG;A a,e;I n;P*p;
  ARGCHK1(w);
- SETIC(w,n);\
+ SETIC(w,n);
  if(SB01&AT(w)&&1==AR(w)){
   p=PAV(w); a=SPA(p,a); e=SPA(p,e); 
   R BAV(e)[0]||equ(mtv,a) ? repeat(w,IX(n)) : repeat(SPA(p,x),ravel(SPA(p,i)));

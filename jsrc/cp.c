@@ -224,27 +224,31 @@ static DF2(jtpowg2){A z,h=FAV(self)->fgh[2]; R df2(z,a,w,AAV(h)[0]);}
 // most instances of u^:v (run through powop) have v as verb
 
 // here for u^:v y
-CS1IP(static,jtpowv1, \
-A u; A v; RZ(u=CALL1(g1,  w,gs));  /* execute v */ \
-if(!AR(u) && (v=vib(u)) && !(IAV(v)[0]&~1)){z=IAV(v)[0]?(FAV(fs)->valencefns[0])(FAV(fs)->flag&VJTFLGOK1?jtinplace:jt,w,fs):w;} \
-else{RESETERR; RZ(u = powop(fs,u,(A)1));  \
-z=(FAV(u)->valencefns[0])(FAV(u)->flag&VJTFLGOK1?jtinplace:jt,w,u);} \
-,0108)
+DF1(jtpowv1cell){F1PREFIP;DECLFG;A z;PROLOG(0108);
+A u; A v; RZ(u=CALL1(g1,  w,gs));  /* execute v */
+if(!AR(u) && (v=vib(u)) && !(IAV(v)[0]&~1)){z=IAV(v)[0]?(FAV(fs)->valencefns[0])(FAV(fs)->flag&VJTFLGOK1?jtinplace:jt,w,fs):w;}
+else{RESETERR; RZ(u = powop(fs,u,(A)1)); 
+z=(FAV(u)->valencefns[0])(FAV(u)->flag&VJTFLGOK1?jtinplace:jt,w,u);}
+EPILOG(z);
+}
+static DF1(fjtpowv1){PREF1(jtpowv1cell); R jtpowv1cell(jt,w,self);}
 // here for x u^:v y 
-CS2IP(static,static,jtpowv2, \
-A u; A v; RZ(u=CALL2(g2,a,w,gs));  /* execute v */ \
-if(!AR(u) && (v=vib(u)) && !(IAV(v)[0]&~1)){z=IAV(v)[0]?(FAV(fs)->valencefns[1])(FAV(fs)->flag&VJTFLGOK2?jtinplace:jt,a,w,fs):w;} \
-else{RESETERR; RZ(u = powop(fs,u,(A)1));  \
-z=(FAV(u)->valencefns[1])(FAV(u)->flag&VJTFLGOK2?jtinplace:jt,a,w,u);} \
-,0109)
+static DF2(jtpowv2cell){F2PREFIP;DECLFG;A z;PROLOG(0109);
+A u; A v; RZ(u=CALL2(g2,a,w,gs));  /* execute v */
+if(!AR(u) && (v=vib(u)) && !(IAV(v)[0]&~1)){z=IAV(v)[0]?(FAV(fs)->valencefns[1])(FAV(fs)->flag&VJTFLGOK2?jtinplace:jt,a,w,fs):w;}
+else{RESETERR; RZ(u = powop(fs,u,(A)1)); 
+z=(FAV(u)->valencefns[1])(FAV(u)->flag&VJTFLGOK2?jtinplace:jt,a,w,u);}
+EPILOG(z);}
+static DF2(jtpowv2){PREF2(jtpowv2cell); R jtpowv2cell(jt,a,w,self);}
 // here for x u@:]^:v y and x u@]^:v y
-CS2IP(static,static,jtpowv2a, \
-jtinplace=(J)((I)jtinplace&~JTINPLACEA); /* monads always have IP2 clear */ \
-A u; A v; fs=FAV(fs)->fgh[0]; RZ(u=CALL2(g2,a,w,gs));  /* execute v */ \
-if(!AR(u) && (v=vib(u)) && !(IAV(v)[0]&~1)){z=IAV(v)[0]?(FAV(fs)->valencefns[0])(FAV(fs)->flag&VJTFLGOK1?jtinplace:jt,w,fs):w;} \
-else{RESETERR; RZ(u = powop(fs,u,(A)1));  \
-z=(FAV(u)->valencefns[0])(FAV(u)->flag&VJTFLGOK1?jtinplace:jt,w,u);} \
-,0110)
+static DF2(jtpowv2acell){F2PREFIP;DECLFG;A z;PROLOG(0110);
+jtinplace=(J)((I)jtinplace&~JTINPLACEA); /* monads always have IP2 clear */
+A u; A v; fs=FAV(fs)->fgh[0]; RZ(u=CALL2(g2,a,w,gs));  /* execute v */
+if(!AR(u) && (v=vib(u)) && !(IAV(v)[0]&~1)){z=IAV(v)[0]?(FAV(fs)->valencefns[0])(FAV(fs)->flag&VJTFLGOK1?jtinplace:jt,w,fs):w;}
+else{RESETERR; RZ(u = powop(fs,u,(A)1)); 
+z=(FAV(u)->valencefns[0])(FAV(u)->flag&VJTFLGOK1?jtinplace:jt,w,u);}
+EPILOG(z);}
+static DF2(jtpowv2a){PREF2(jtpowv2acell); R jtpowv2acell(jt,a,w,self);}
 
 // This executes the conjunction u^:v to produce a derived verb.  If the derived verb
 // contains verb v or gerund v, it executes v on the xy arguments and then calls jtpowop

@@ -108,7 +108,6 @@ typedef struct rngdata {
  C pp[7];            // print precision (sprintf field for numeric output) inherit for task
  C glock;            // 0=unlocked, 1=perm lock, 2=temp lock inherit for task
 // end of cacheline 1 (little used)
- C endinitfill[1];   // unused space   scaf this wastes 7 bytes of next cacheline
 // *** end of the region saved at task startup
 
 // everything after here persists over the life of the thread

@@ -35,17 +35,15 @@
 #define PREF1IP(f)      {I m=mr(self);            F1RANKIP(  m,f,self);}
 #define PREF2IP(f)      {I l=lr(self),r=rr(self); F2RANKIP(l,r,f,self);}
 
-#define AS1(f,exp,x)      DF1(f){F1PREFIP;PROLOG(x);DECLF ;A z; PREF1(f); z=(exp); EPILOG(z);}
-#define AS2(f,exp,x)      DF2(f){F2PREFIP;PROLOG(x);DECLF ;A z; PREF2(f); z=(exp); EPILOG(z);}
-#define CS1(f,exp,x)      DF1(f){PROLOG(x);DECLFG;A z; PREF1(f); z=(exp); EPILOG(z);}
-#define CS2(f,exp,x)      DF2(f){PROLOG(x);DECLFG;A z; PREF2(f); z=(exp); EPILOG(z);}
-// implied rank loops.  If the arg has frame, loop over the cells.  f##cell operates on a single cell with no rank check
-// inplaceability is passed through
-#define CS1IP(lpclass,f,exp,x) CS1IPext(lpclass,static,f,exp,x)
-#define CS1IPext(lpclass,cellclass,f,exp,x) cellclass DF1(f##cell){F1PREFIP;DECLFG;A z;PROLOG(x); exp; EPILOG(z);} lpclass DF1(f){PREF1(f##cell); R f##cell(jt,w,self);}
-#define CS2IP(cellclass,class,f,exp,x) cellclass DF2(f##cell){F2PREFIP;DECLFG;A z;PROLOG(x); exp; EPILOG(z);} class DF2(f){PREF2(f##cell); R f##cell(jt,a,w,self);}
-
-
+// obsolete #define AS1(f,exp,x)      DF1(f){F1PREFIP;PROLOG(x);DECLF ;A z; PREF1(f); z=(exp); EPILOG(z);}
+// obsolete #define AS2(f,exp,x)      DF2(f){F2PREFIP;PROLOG(x);DECLF ;A z; PREF2(f); z=(exp); EPILOG(z);}
+// obsolete #define CS1(f,exp,x)      DF1(f){PROLOG(x);DECLFG;A z; PREF1(f); z=(exp); EPILOG(z);}
+// obsolete #define CS2(f,exp,x)      DF2(f){PROLOG(x);DECLFG;A z; PREF2(f); z=(exp); EPILOG(z);}
+// obsolete // implied rank loops.  If the arg has frame, loop over the cells.  f##cell operates on a single cell with no rank check
+// obsolete // inplaceability is passed through
+// obsolete #define CS1IP(lpclass,f,exp,x) CS1IPext(lpclass,static,f,exp,x)
+// obsolete #define CS1IPext(lpclass,cellclass,f,exp,x) cellclass DF1(f##cell){F1PREFIP;DECLFG;A z;PROLOG(x); exp; EPILOG(z);} lpclass DF1(f){PREF1(f##cell); R f##cell(jt,w,self);}
+// obsolete #define CS2IP(cellclass,class,f,exp,x) cellclass DF2(f##cell){F2PREFIP;DECLFG;A z;PROLOG(x); exp; EPILOG(z);} class DF2(f){PREF2(f##cell); R f##cell(jt,a,w,self);}
 
 #define ADERIV(id,f1,f2,flag,m,l,r)  fdef(0,id,VERB,(AF)(f1),(AF)(f2),w,0L,0L,(flag),(I)(m),(I)(l),(I)(r))
 #define CDERIV(id,f1,f2,flag,m,l,r)  fdef(0,id,VERB,(AF)(f1),(AF)(f2),a,w ,0L,(flag),(I)(m),(I)(l),(I)(r))

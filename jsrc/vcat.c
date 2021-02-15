@@ -299,7 +299,7 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;I ak,k,p,*u,*v,wk,wm,wn;
    // crawl through w looking for a.
    // Instead, we simply convert w to recursive-usecount.  This may take some time if w is complex, but it will (1) increment the
    // usecount of a if any part of w refers to a (3) make the eventual incrementing of usecount in a quicker.  After we have resolved w we see if the usecount of a has budged.  If not, we can proceed with inplacing.
-   if(at&BOX){
+   if(unlikely(at&BOX)){
     ra0(w);  // ensure w is recursive usecount.  This will be fast if w has 1=L.
     an=(AC(a)>ac)?0:an;  // turn off inplacing if w referred to a
     an&=virtreqd-1;  // turn off inplacing if the result must be virtual

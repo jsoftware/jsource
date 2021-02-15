@@ -5,10 +5,11 @@
 
 #include "j.h"
 
-
 // obv1 and obv2 merely pass the call to f.  Since we took the inplace flags for the compound from the original a, we can pass them on too
-CS1IP(static,obv1, z=(f1)(jtinplace,w,fs),0103)
-CS2IP(static,static,obv2, z=(f2)(jtinplace,a,w,fs),0104)
+static DF1(obv1cell){F1PREFIP;DECLFG;A z;PROLOG(0103); z=(f1)(jtinplace,w,fs); EPILOG(z);}
+static DF1(obv1){PREF1(obv1cell); R obv1cell(jt,w,self);}
+static DF2(obv2cell){F2PREFIP;DECLFG;A z;PROLOG(0104); z=(f2)(jtinplace,a,w,fs); EPILOG(z);}
+static DF2(obv2){PREF2(obv2cell); R obv2cell(jt,a,w,self);}
 
 // Set ASGSAFE from a&w; set INPLACE from a
 F2(jtobverse){ASSERTVV(a,w); R CDERIV(COBVERSE,obv1,obv2,((FAV(a)->flag&FAV(w)->flag&VASGSAFE)+(FAV(a)->flag&(VJTFLGOK1|VJTFLGOK2))),mr(a),lr(a),rr(a));}

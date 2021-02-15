@@ -5,12 +5,15 @@
 
 #include "j.h"
 #include "ve.h"
+#include "vcomp.h"
 
 
 #if BW==64
 static AMONPS(floorDI,I,D,
- I rc=0; UI fbits; D mplrs[2]; mplrs[0]=2.0-jt->cct; mplrs[1]=jt->cct-0.00000000000000011; ,
- {if(((fbits=*(UI*)x)&0x7fffffffffffffff)<0x43c0000000000000){I neg=SGNTO0((*(UI*)x)-SGNTO0(*(UI*)x)); *z=(I)(*x*mplrs[neg])-neg;}  // -0 is NOT neg; take everything up to +-2^61
+ I rc=0; UI fbits; ,
+// obsolete  D mplrs[2]; mplrs[0]=2.0-jt->cct; mplrs[1]=jt->cct-0.00000000000000011; ,
+ {if(likely(((fbits=*(UI*)x)&0x7fffffffffffffff)<0x43c0000000000000)){D wdv=jround(*x); *z=wdv-TGT(wdv,*x);}
+// obsolete I neg=SGNTO0((*(UI*)x)-SGNTO0(*(UI*)x)); D t=(*x*mplrs[neg])-neg; *z=(I)MIN(t,*x+0.4);}  // -0 is NOT neg; take everything up to +-2^61.  Limit correction to 0.4 so we don't go too high for big input
   // if there is a value above 2^61, encode it by setting bit 62 to the opposite of bit 63 (we know bit 62 was 1 originally).  Remember the fact that we need a correction pass.
   // See if the value must be promoted to floating-point in the correction pass.  Return value of EWOVFLOOR0 if there are values all of which fit in an integer, EWOVFLOOR1 if float is required
   else{rc|=EWOVFLOOR0; D d=tfloor(*x); *z=fbits^(SGNTO0(fbits)<<(BW-2)); if(d!=(I)d)rc|=EWOVFLOOR1;} } ,  // we use DQ; i is n-1-reali, ~i = (reali-n+1)-1 = i-n
@@ -24,8 +27,10 @@ static AMON(floorZ, Z,Z, *z=zfloor(*x);)
 
 #if BW==64
 static AMONPS(ceilDI,I,D,
- I rc=0; UI fbits; D mplrs[2]; mplrs[0]=2.0-jt->cct; mplrs[1]=jt->cct-0.00000000000000011; ,
- {if(((fbits=*(UI*)x)&0x7fffffffffffffff)<0x43c0000000000000){I pos=SGNTO0((0-*(UI*)x)-SGNTO0(0-*(UI*)x)); *z=(I)(*x*mplrs[pos])+pos;}  // 0 is NOT pos; take everything up to +-2^61
+ I rc=0; UI fbits; ,
+// obsolete  D mplrs[2]; mplrs[0]=2.0-jt->cct; mplrs[1]=jt->cct-0.00000000000000011; ,
+ {if(likely(((fbits=*(UI*)x)&0x7fffffffffffffff)<0x43c0000000000000)){D wdv=jround(*x); *z=wdv+TLT(wdv,*x);}
+// obsolete I pos=SGNTO0((0-*(UI*)x)-SGNTO0(0-*(UI*)x)); *z=(I)(*x*mplrs[pos])+pos;}  // 0 is NOT pos; take everything up to +-2^61
   // if there is a value above 2^61, encode it by setting bit 62 to the opposite of bit 63 (we know bit 62 was 1 originally).  Remember the fact that we need a correction pass.
   // See if the value must be promoted to floating-point in the correction pass.  Return value of -2 if there are values all of which fit in an integer, -3 if float is required
   else{rc|=EWOVFLOOR0; D d=tceil(*x); *z=fbits^(SGNTO0(fbits)<<(BW-2)); if(d!=(I)d)rc|=EWOVFLOOR1;} } ,  // we use DQ; i is n-1-reali, ~i = (reali-n+1)-1 = i-n

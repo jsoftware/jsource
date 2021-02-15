@@ -139,7 +139,7 @@
 #define ccvt(x,y,z)                 jtccvt(jt,(x),(y),(z))
 #define cdexec1(x0,x1,x2,x3,x4,x5)  jtcdexec1(jt,(x0),(x1),(x2),(x3),(x4),(x5))
 #define cdgahash(x)                 jtcdgahash(jt,(x))   
-#define cdinit()                    jtcdinit(jt)   
+// obsolete #define cdinit()                    jtcdinit(jt)   
 #define cdinsert(x,y)               jtcdinsert(jt,(x),(y))   
 #define cdload(x,y,z)               jtcdload(jt,(x),(y),(z))
 #define cdlookup(x)                 jtcdlookup(jt,(x))   

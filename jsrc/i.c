@@ -221,6 +221,7 @@ static C jtjinit3(JS jjt){S t;
  RZ(jtbufferinit(jjt,MAXTHREADS)); // init the buffers pointed to by jjt
  RZ(jtmeminit(jjt,MAXTHREADS));
  RZ(jtsesminit(jjt,MAXTHREADS));  // master only
+ RZ(jtcdinit(jjt,MAXTHREADS));  // master only
  RZ(jtevinit(jjt,MAXTHREADS));  // master only
  RZ(jtconsinit(jjt,MAXTHREADS));
  RZ(jtxsinit(jjt,MAXTHREADS));  // must be before symbinit  master only

@@ -640,6 +640,7 @@ extern B*       jtbfi(J,I,A,B);
 extern D        jtbindd(J,D,D);
 extern B        jtbitwisecharamp(J,UC*,I,UC*,UC*);
 extern B        jtboxatop(J,A);
+extern B        jtcdinit(JS,I);
 extern A        jtcelloffset(J,AD * RESTRICT,AD * RESTRICT);
 extern A        jtcharmap(J,A,A,A);
 extern B        jtcheckmf(J);

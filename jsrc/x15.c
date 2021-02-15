@@ -163,11 +163,11 @@ typedef float (_cdecl    *ALTCALLF)();
 typedef struct {
  FARPROC fp;                    /* proc function address                */
  HMODULE h;                     /* library (module) handle              */
- I ai;                          /* argument string index in cdstr       */
+ I ai;                          /* argument string index in cdstr      */
  I an;                          /* argument string length               */
- I li;                          /* library name index in cdstr          */
+ I li;                          /* library name index in cdhashl          */
  I ln;                          /* library name length                  */
- I pi;                          /* proc name index in cdstr             */
+ I pi;                          /* proc name index in cdhash             */
  I pn;                          /* proc name length                     */
  I n;                           /* number of arguments (excl. result)   */
  I zt;                          /* result jtype                         */
@@ -697,19 +697,19 @@ static void convertup(I*pi,I n,C t){I j=n;
 /* cdhashl - hash table for libraries (modules)                         */
 // AM(cdhashl) is # entries filled, max (NLIBS)
 
-// allocate hashtable, fill with -1
+// allocate hashtable, fill with -1.  Result is address
 static A jtcdgahash(J jt,I n){A z;I hn;
  FULLHASHSIZE(n,INTSIZE,0,0,hn);
  GATV0(z,INT,hn,0); ACINITZAP(z); memset(AV(z),CFF,hn*SZI);  // no rank - use all words for table
  R z;
 }
 
-static B jtcdinit(J jt){A x;
- RZ(x=exta(LIT,2L,sizeof(CCT),100L )); ACINITZAP(x) memset(AV(x),C0,AN(x)); JT(jt,cdarg)=x;
- RZ(x=exta(LIT,1L,1L,         5000L)); ACINITZAP(x) memset(AV(x),C0,AN(x)); JT(jt,cdstr)=x;
- RZ(JT(jt,cdhash) =cdgahash(4*AS(JT(jt,cdarg))[0]));
- RZ(JT(jt,cdhashl)=cdgahash(NLIBS+16           ));  // will round up to power of 2 - we allow 100 libraries, which will almost never be used, so we don't get the usual 2x
- AM(JT(jt,cdarg))=AM(JT(jt,cdstr))=AM(JT(jt,cdhash))=AM(JT(jt,cdhashl))=0;  // init all tables to empty
+B jtcdinit(JS jjt,I nthreads){A x;JJ jt=MTHREAD(jjt);
+ RZ(x=exta(LIT,2L,sizeof(CCT),100L )); ACINITZAP(x) memset(AV(x),C0,AN(x)); INITJT(jjt,cdarg)=x;
+ RZ(INITJT(jjt,cdhash) =cdgahash(4*AS(INITJT(jjt,cdarg))[0]));
+ RZ(INITJT(jjt,cdhashl)=cdgahash(NLIBS+16           ));  // will round up to power of 2 - we allow 100 libraries, which will almost never be used, so we don't get the usual 2x
+ RZ(x=exta(LIT,0L,1L,         5000L)); ACINITZAP(x) memset(AV(x),C0,AN(x)); INITJT(jjt,cdstr)=x;  // AR is used as the lock for cds.  Do this last; it indicates validity for all
+ AM(INITJT(jjt,cdstr))=AM(INITJT(jjt,cdarg))=AM(INITJT(jjt,cdhash))=AM(INITJT(jjt,cdhashl))=0;  // init all tables to empty
  R 1;
 }
 
@@ -722,7 +722,7 @@ static B jtcdinit(J jt){A x;
 
 // see if v->string (length n) is in hashtable tbl.  The hash in tbl contains indexes into cdarg, or -1 for empty slot.
 // return retval, where pv[k] is the address of the found slot in cdarg
-#define HASHLOOKUP(tbl,nn,vv,pvklett,retval) I j=HASHINDEX(tbl,nn,vv); I *hv=IAV0(tbl); C *s=CAV1(JT(jt,cdstr)); CCT*pv=(CCT*)CAV2(JT(jt,cdarg)); \
+#define HASHLOOKUP(tbl,nn,vv,pvklett,retval) I j=HASHINDEX(tbl,nn,vv); I *hv=IAV0(tbl); C *s=CAV0(JT(jt,cdstr)); CCT*pv=(CCT*)CAV2(JT(jt,cdarg)); \
  while(1){I k=hv[j]; if(k<0)R 0; if(nn==pv[k].pvklett##n&&!memcmpne(vv,s+pv[k].pvklett##i,nn))R retval; if(--j<0)j+=AN(tbl);}
 
 // add v->string (length n) to hashtable tbl.  argx is the index to insert into the hashtable.  Increment AM(tbl), which contains the # hashed items
@@ -1193,7 +1193,7 @@ F2(jtcd){A z;C*tv,*wv,*zv;CCT*cc;I k,m,n,p,q,t,wr,*ws,wt;
  F2PREFIP;
  ARGCHK2(a,w);
  AFLAGPRISTNO(w)  // we transfer boxes from w to the result, thereby letting them escape.  That makes w non-pristine
- if(!JT(jt,cdarg))RZ(cdinit());
+// obsolete  if(!JT(jt,cdarg))RZ(cdinit());
  if(1<AR(a)){I rr=AR(w); rr=rr==0?1:rr; R rank2ex(a,w,DUMMYSELF,1L,rr,1L,rr,jtcd);}
  wt=AT(w); wr=AR(w); ws=AS(w); PRODX(m,wr-1,ws,1);
  ASSERT(wt&DENSE,EVDOMAIN);
@@ -1224,13 +1224,16 @@ F2(jtcd){A z;C*tv,*wv,*zv;CCT*cc;I k,m,n,p,q,t,wr,*ws,wt;
 #endif
 
 void dllquit(J jt){CCT*av;I j,*v;
- if(!JT(jt,cdarg))R;
+ if(!JT(jt,cdstr))R;   // if we never initialized, don't free
  v=AV(JT(jt,cdhashl)); av=(CCT*)AV(JT(jt,cdarg));
- DQ(AN(JT(jt,cdhashl)), j=*v++; if(0<=j)FREELIB(av[j].h););
- fa(JT(jt,cdarg));   JT(jt,cdarg)  =0;
- fa(JT(jt,cdstr));   JT(jt,cdstr)  =0;
- fa(JT(jt,cdhash));  JT(jt,cdhash) =0;
- fa(JT(jt,cdhashl)); JT(jt,cdhashl)=0;
+ DQ(AN(JT(jt,cdhashl)), j=*v++; if(0<=j)FREELIB(av[j].h););   // unload all libraries
+// obsolete  fa(JT(jt,cdarg));   JT(jt,cdarg)  =0;
+// obsolete  fa(JT(jt,cdstr));   JT(jt,cdstr)  =0;
+// obsolete  fa(JT(jt,cdhash));  JT(jt,cdhash) =0;
+// obsolete  fa(JT(jt,cdhashl)); JT(jt,cdhashl)=0;
+ memset(CAV(JT(jt,cdstr)),C0,AN(JT(jt,cdstr))); memset(CAV(JT(jt,cdarg)),C0,AN(JT(jt,cdarg))); memset(CAV(JT(jt,cdhash)),CFF,SZI*AN(JT(jt,cdhash))); memset(CAV(JT(jt,cdhashl)),CFF,SZI*AN(JT(jt,cdhashl)));  // clear contents of tables
+ AM(JT(jt,cdstr))=AM(JT(jt,cdarg))=AM(JT(jt,cdhash))=AM(JT(jt,cdhashl))=0;  // reset all tables to empty
+ // leave the tables allocated
 }    /* dllquit - shutdown and cdf clean up dll call resources */
 
 F1(jtcdf){ASSERTMTV(w); dllquit(jt); R mtm;}
@@ -1477,7 +1480,8 @@ F1(jtcdlibl){
  ASSERT(LIT&AT(w),EVDOMAIN);
  ASSERT(1>=AR(w),EVRANK);
  ASSERT(AN(w),EVLENGTH);
- if(!JT(jt,cdarg))R num(0);
+// obsolete  if(!JT(jt,cdarg))R num(0);
+ if(!AM(JT(jt,cdarg)))R num(0);
  R sc((I)cdlookupl(CAV(w)));
 }    /* 15!:20 return library handle */
 
@@ -1486,7 +1490,7 @@ F1(jtcdproc1){CCT*cc;
  ASSERT(LIT&AT(w),EVDOMAIN);
  ASSERT(1>=AR(w),EVRANK);
  ASSERT(AN(w),EVLENGTH);
- if(!JT(jt,cdarg))RE(cdinit());
+// obsolete  if(!JT(jt,cdarg))RE(cdinit());
  C* enda=&CAV(w)[AN(w)]; C endc=*enda; *enda=0; cc=cdparse(w,1); *enda=endc; RE(cc); // should do outside rank2 loop?
  R sc((I)cc->fp);
 }    /* 15!:21 return proc address */

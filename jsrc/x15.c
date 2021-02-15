@@ -1305,9 +1305,6 @@ F2(jtmemw){C*u;I m,n,t,*v;
 
 // 15!:15 memu - make a copy of y if it is not writable (inplaceable and not read-only)
 // We have to check jt in case this usage is in a fork that will use the block later
-F1(jtmemu) { F1PREFIP; ARGCHK1(w); if(!((I)jtinplace&JTINPLACEW && (AC(w)<(AFLAG(w)<<((BW-1)-AFROX)))))w=ca(w); if(AT(w)&LAST0)*(C4*)&CAV(w)[AN(w)*bp(AT(w))]=0;  RETF(w); }  // append 0 so that calls from cd append NUL termination
-// 15!:15 memu - make a copy of y if it is not writable (inplaceable and not read-only)
-// We have to check jt in case this usage is in a fork that will use the block later
 F1(jtmemu) { F1PREFIP; ARGCHK1(w); if(!((I)jtinplace&JTINPLACEW && (AC(w)<(AFLAG(w)<<((BW-1)-AFROX)))))w=ca(w);
  // We will NUL-terminate a string in case called routines need it (not sure this is necessary)
 #if SY_64

@@ -483,7 +483,7 @@ L* jtprobeisquiet(J jt,A a,A locsyms){A g;  // locsyms is used in the call, but 
 }
 
 
-// assign symbol: assign name a in symbol table g to the value w (but g is special if jt->assignsym is nonnull)
+// assign symbol: assign name a in symbol table g to the value w (but g is special if jt->asginfo.assignsym is nonnull)
 // Result points to the symbol-table block for the assignment
 L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;L*e;
  ARGCHK2(a,w);
@@ -491,11 +491,11 @@ L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;L*e;
  // in this case g is the type field of the name being assigned; and jt->locsyms must exist, since it comes from
  // an explicit definition
  I anmf=NAV(a)->flag; RZ(g)
- if(jt->assignsym) {
+ if(jt->asginfo.assignsym) {
+  e = jt->asginfo.assignsym;   // point to the symbol-table entry being assigned
 // obsolete   ASSERT(((I)g&ASGNLOCAL||NAV(a)->flag&(NMLOC|NMILOC)||!probelocal(a,jt->locsyms)),EVDOMAIN)  //  if global assignment not to locative, verify non locally defined
   if(unlikely((((I)g&ASGNLOCAL)|(anmf&(NMLOC|NMILOC)))==0))ASSERT(!probelocal(a,jt->locsyms),EVDOMAIN)  // if non-locative, give error if there is a local
 // obsolete   ASSERT(((I)g&ASGNLOCAL||NAV(a)->flag&(NMLOC|NMILOC)||!probelocal(a,jt->locsyms)),EVDOMAIN)  //  if global assignment not to locative, verify non locally defined
-  e = jt->assignsym;   // point to the symbol-table entry being assigned
   CLEARZOMBIE   // clear until next use.
  } else {A jtlocal=jt->locsyms;
 // obsolete   if(likely(n==m))ASSERT(!(g==jt->global&&probelocal(a,jtlocal)),EVDOMAIN)  // if non-locative, give error if there is a local

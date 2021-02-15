@@ -72,9 +72,9 @@ static A jtzpadn(J jt,A z,A ind,B ip){A a,ai,i1,p,p1,q,t,x,x0,y,y0,y1;B*b;I c,d,
   RZ(t=shape(x)); *AV(t)=m; RZ(x=from(q,over(x,reshape(t,SPA(zp,e)))));
   // if z is assigned to a name, the use counts need to be adjusted: the old ones need to be decremented
   // to remove the assignment, and the new ones need to be incremented to prevent them from being freed
-  // until the name is freed.  We detect the case from jt->assignsym being set to the address of z
+  // until the name is freed.  We detect the case from jt->asginfo.assignsym being set to the address of z
   // (if the block could not be inplaced, z will have been changed)
-  if(jt->assignsym&&jt->assignsym->val==z){RZ(ras(y)); RZ(ras(x)); fa(y0); fa(x0);}
+  if(jt->asginfo.assignsym&&jt->asginfo.assignsym->val==z){RZ(ras(y)); RZ(ras(x)); fa(y0); fa(x0);}
   SPB(zp,i,y); SPB(zp,x,x);
  }
  R z;

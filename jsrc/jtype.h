@@ -478,15 +478,23 @@ typedef I SI;
 #define ACISPERM(c)     ((I)((UI)(c)+(UI)(c))<0)  // is PERMANENT bit set?
 #define SGNIFPRISTINABLE(c) ((c)+ACPERMANENT)  // sign is set if this block is OK in a PRISTINE boxed noun
 // same, but s is an expression that is neg if it's OK to inplace
-#define ASGNINPLACESGN(s,w)  (((s)&AC(w))<0 || ((s)&(AC(w)-2))<0 &&jt->assignsym&&jt->assignsym->val==w&&(!(AFLAG(w)&AFRO+AFNVR)||(!(AFLAG(w)&AFRO)&&notonupperstack(w))))  // OK to inplace ordinary operation
-#define ASGNINPLACESGNNJA(s,w)  ( ((s)&AC(w))<0 || (((s)&(AC(w)-2))<0||(((s)&(AC(w)-3)&SGNIF(AFLAG(w),AFNJAX))<0))&&jt->assignsym&&jt->assignsym->val==w&&(!(AFLAG(w)&AFRO+AFNVR)||(!(AFLAG(w)&AFRO)&&notonupperstack(w))))  // OK to inplace ordinary operation
+// obsolete #define ASGNINPLACESGN(s,w)  (((s)&AC(w))<0 || ((s)&(AC(w)-2))<0 &&jt->asginfo.assignsym&&jt->asginfo.assignsym->val==w&&(!(AFLAG(w)&AFRO+AFNVR)||(!(AFLAG(w)&AFRO)&&notonupperstack(w))))  // OK to inplace ordinary operation
+#define ASGNINPLACESGN(s,w)  (((s)&AC(w))<0 || jt->asginfo.zombieval==w&&((s)<0)&&(!(AFLAG(w)&AFNVR)||notonupperstack(w)))  // OK to inplace ordinary operation
+// obsolete #define ASGNINPLACESGNNJA(s,w)  ( ((s)&AC(w))<0 || (((s)&(AC(w)-2))<0||(((s)&(AC(w)-3)&SGNIF(AFLAG(w),AFNJAX))<0))&&jt->asginfo.assignsym&&jt->asginfo.assignsym->val==w&&(!(AFLAG(w)&AFRO+AFNVR)||(!(AFLAG(w)&AFRO)&&notonupperstack(w))))  // OK to inplace ordinary operation
+#define ASGNINPLACESGNNJA(s,w)  ASGNINPLACESGN(s,w)  // OK to inplace ordinary operation
 // define virtreqd and set it to 0 to start   scaf no LIT B01 C2T etc
 // This is used in apip.  We must ALWAYS allow inplacing for NJA types, but for ordinary inplacing we don't bother if the number of atoms of w pushes a over a power-of-2 boundary
+#if 0  // obsolete 
 #define EXTENDINPLACENJA(a,w)  ( ((AC(a)&(((AN(a)+AN(w))^AN(a))-AN(a)))<0) || \
-  ((((AC(a)-2)&(((AN(a)+AN(w))^AN(a))-AN(a)))<0)||(AC(a)==2&&AFLAG(a)&AFNJA)) && \
-  ( (jt->assignsym&&jt->assignsym->val==a&&!(AFLAG(a)&AFRO)) || (!jt->assignsym&&(virtreqd=1,!(AFLAG(a)&(AFRO|AFVIRTUAL)))) ) && \
+ ((((AC(a)-2)&(((AN(a)+AN(w))^AN(a))-AN(a)))<0)||(AC(a)==2&&AFLAG(a)&AFNJA)) && \
+  ( (jt->asginfo.assignsym&&jt->asginfo.assignsym->val==a&&!(AFLAG(a)&AFRO)) || (!jt->asginfo.assignsym&&(virtreqd=1,!(AFLAG(a)&(AFRO|AFVIRTUAL)))) ) && \
   notonupperstack(a) \
+  )  // OK to inplace ordinary operation
+#else
+#define EXTENDINPLACENJA(a,w)  ( ((AC(a)&(((AN(a)+AN(w))^AN(a))-AN(a)))<0) || \
+  ( ( ((((AN(a)+AN(w))^AN(a))-AN(a))<0) || AFLAG(a)&AFNJA ) && (jt->asginfo.zombieval==a || (!jt->asginfo.assignsym&&AC(a)==1&&(virtreqd=1,!(AFLAG(a)&(AFRO|AFVIRTUAL))))) && notonupperstack(a) )   /* scaf combine */ \
  )  // OK to inplace ordinary operation
+#endif
 
 /* Values for AFLAG(x) field of type A                                     */
 // the flags defined here must be mutually exclusive with TRAVERSIBLE
@@ -650,7 +658,7 @@ typedef struct {I e,p;X x;} DX;
 #define SYMNEXT(s) ((s)&~SYMNONPERM)  // address of next symbol
 #define SYMNEXTISPERM(s) ((s)>0)  // true if next symbol is permanent
 
-typedef struct {A name,val;US flag;S sn;LX next;} L;
+typedef struct {A name,val;US flag;S sn;LX next;} L;  // name must come first because of the way we use validitymask[11]
 
 /* symbol pool entry                         LINFO entry (named/numbered)      */
 //-------------------------------------------------------------------------

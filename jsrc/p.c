@@ -149,7 +149,7 @@ static PSTK* jtis(J jt,PSTK *stack){B ger=0;C *s;
  J jtinplace=(J)((I)jt+((stack[0].t==1)<<JTFINALASGNX));   // set JTFINALASGN if this is final assignment
  stack[1+(stack[0].t==1)].t=-1;  // if the word number of the lhs is 1, it's either (noun)=: or name=: or 'value'=: at the beginning of the line;
   // store -1 to the new stack[0].t.  Otherwise, make a harmless store to new stack[-1].t
- if(likely(jt->assignsym!=0)){jtsymbis(jtinplace,n,v,(A)asgt);}   // Assign to the known name.  Pass in the type of the ASGN
+ if(likely(jt->asginfo.assignsym!=0)){jtsymbis(jtinplace,n,v,(A)asgt);}   // Assign to the known name.  Pass in the type of the ASGN
  else {
   // Point to the block for the assignment; fetch the assignment pseudochar (=. or =:); choose the starting symbol table
   // depending on which type of assignment (but if there is no local symbol table, always use the global)
@@ -360,12 +360,12 @@ static A virthook(J jtip, A f, A g){
 // Any assignment to a name is resolved to an address when the copula is encountered and there
 //  is only one execution on the stack.  This resolution will always succeed for a local assignment to a name.
 //  For a global assignment to a locative, it may fail, or may resolve to an address that is different from
-//  the correct address after the execution.  The address of the L block for the symbol to be assigned is stored in jt->assignsym.
+//  the correct address after the execution.  The address of the L block for the symbol to be assigned is stored in jt->asginfo.assignsym.
 //
-// [As a time-saving maneuver, we store jt->assignsym even if the name is not in-placeable because of its type or usecount.
-// We can use jt->assignsym to avoid re-looking-up the name.]
+// [As a time-saving maneuver, we store jt->asginfo.assignsym even if the name is not in-placeable because of its type or usecount.
+// We can use jt->asginfo.assignsym to avoid re-looking-up the name.]
 //
-// If jt->assignsym is set, the (necessarily inplaceable) verb may choose to perform an in-place
+// If jt->asginfo.assignsym is set, the (necessarily inplaceable) verb may choose to perform an in-place
 // operation.  It will check usecounts and addresses to decide whether to do this, and it bears the responsibility
 // of worrying about names on the stack.  Note that local names are not put onto the stack, so absence of AFNVR suffices for them.
 #endif
@@ -604,11 +604,17 @@ endname: ;
      // We have fs already.  arg1 will come from position 2 3 1 1 1 depending on stack line; arg2 will come from 1 2 3 2 3
      if(pmask&0x7){A y;  // lines 0 1 2, verb execution
       // Verb execution (in order: V N, V V N, N V N).  We must support inplacing, including assignment in place, and support recursion
+      // CODING NOTE: after considerable trial and error I found this ordering, whose purpose is to start the load of the indirect branch address as early as
+      // possible before the branch.  Check the generated code on any change of compiler.
+      // Since we have half a dozen or so cycles to fill, push the $: stack and close up the execution stack BEFORE we execute the verb.  If we didn't close up the stack, we
+      // could avoid having the $: stack by having $: look into the execution stack to find the verb that is being executed.  But overall it is faster to pay the expense of the $:
+      // stack in exchange for being able to fill the time before & after the misprediction
+      AF actionfn=FAV(fs)->valencefns[pline>>1];  // the routine we will execute.  It's going to take longer to read this than we can fill before the branch is mispredicted, usually
       jt->sf=fs;  // set new recursion point for $:
       // While we are waiting for the branch address, work on inplacing.  See if the primitive being executed is inplaceable
       if((FAV(fs)->flag>>(pline>>1))&VJTFLGOK1){L *s;
        // Inplaceable.  If it is an assignment to a known name that has a value, remember the name and the value
-       // We handle =: N V N, =: V N, =: V V N.  In the last case both Vs must be ASGSAFE.  When we set jt->assignsym we are warranting
+       // We handle =: N V N, =: V N, =: V V N.  In the last case both Vs must be ASGSAFE.  When we set jt->asginfo.assignsym we are warranting
        // that the next assignment will be to the name, and that the reassigned value is available for inplacing.  In the V V N case,
        // this may be over two verbs
        if(PTISASGNNAME(stack[0]))if(likely(PTISM(stackfs[2]))){   // assignment to name; nothing in the stack to the right of what we are about to execute; well-behaved function (doesn't change locales)
@@ -617,17 +623,14 @@ endname: ;
         s=((FAV(fs)->flag&(FAV(stack[1].a)->flag|((~pmask)<<(VASGSAFEX-1))))&VASGSAFE)?s:0;
         // It is OK to remember the address of the symbol being assigned, because anything that might conceivably create a new symbol (and thus trigger
         // a relocation of the symbol table) is marked as not ASGSAFE
-        jt->assignsym=s;  // remember the symbol being assigned.  It may have no value yet, but that's OK - save the lookup
+        jt->asginfo.assignsym=s;  // remember the symbol being assigned.  It may have no value yet, but that's OK - save the lookup
+        // to save time in the verbs (which execute more often than this parse), see if the assignment target is suitable for inplacing.  Set zombieval to point to the value if so
+        // We require flags indicate not read-only, and usecount==1 (or 2 if NJA block)
+        s=s?s:(L*)(validitymask+11); A zval=s->val; zval=zval?zval:(A)(validitymask+11); zval=AC(zval)==(((AFLAG(zval)&AFRO)-1)&(((AFLAG(zval)&AFNJA)>>1)+1))?zval:0; jt->asginfo.zombieval=zval;  // needs AFRO=1, AFNJA=2
        }
        jt=(J)(intptr_t)((I)jt+(pline|1));   // set bit 0, and bit 1 if dyadic
       }
       // jt has been corrupted, now holding inplacing info
-      // CODING NOTE: after considerable trial and error I found this ordering, whose purpose is to start the load of the indirect branch address as early as
-      // possible before the branch.  Check the generated code on any change of compiler.
-      // Since we have half a dozen or so cycles to fill, push the $: stack and close up the execution stack BEFORE we execute the verb.  If we didn't close up the stack, we
-      // could avoid having the $: stack by having $: look into the execution stack to find the verb that is being executed.  But overall it is faster to pay the expense of the $:
-      // stack in exchange for being able to fill the time before & after the misprediction
-      AF actionfn=FAV(fs)->valencefns[pline>>1];  // the routine we will execute.  It's going to take longer to read this than we can fill before the branch is mispredicted, usually
       // There is no need to set the token number in the result, since it must be a noun and will never be executed
       // Close up the stack.  For lines 0&2 we don't need two writes, so they are duplicates
       A arg2=stack[pline+1].a;   // 2nd arg, fs or right dyad  1 2 3 (2 3)
@@ -643,7 +646,8 @@ endname: ;
       // This calculation should run to completion while the expected misprediction is being processed
       A *tpopw=AZAPLOC(arg2); tpopw=(AC(arg2)&((AFLAG(arg2)&(AFVIRTUAL|AFUNINCORPABLE))-1))<0?tpopw:(A*)&validitymask[15];  // point to pointer to arg2 (if it is inplace) - only if dyad
       A *tpopa=AZAPLOC(arg1); tpopa=(AC(arg1)&((AFLAG(arg1)&(AFVIRTUAL|AFUNINCORPABLE))-1))<0?tpopa:(A*)&validitymask[15]; tpopw=(pline&2)?tpopw:tpopa; // monad: w fs  dyad: a w   if monad, change to w w  
-      y=(*actionfn)(jt,arg1,arg2,fs);  // expect pipeline break
+      y=(*actionfn)(jt,arg1,arg2,fs);
+      // expect pipeline break
       jt=(J)(intptr_t)((I)jt&~JTFLAGMSK);
       // jt is OK again
 RECURSIVERESULTSCHECK

@@ -588,7 +588,7 @@ A jtincorp(J jt, A w) {ARGCHK1(w); INCORP(w); R w;}
 // offset is offset in atoms from start of w; r is rank
 // result block is never inplaceable, never recursible, virtual.  Can return 0 if allocation error
 // result is PRISTINE iff the backer is
-// This is inplaceable, and we inplace the w block.  'Inplaceable' here includes being the target of jt->assignsym
+// This is inplaceable, and we inplace the w block.  'Inplaceable' here includes being the target of jt->asginfo.assignsym
 // We fill in everything but AN and AS, which are done in the caller
 // You should be wary of making an NJA block virtual, because with a usecount of 1 it might be inplaced by the code for x,y or x u}y
 // If this code is called with inplacing turned on (* w inplaceable), we assume that w is going to be replaced by the virtual result,

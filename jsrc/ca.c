@@ -73,19 +73,25 @@ static DF2(jtmodpow2){A h;B b,c;I at,m,n,wt,x,z;
 static DF1(jtmodpow1){A g=FAV(self)->fgh[1]; R rank2ex0(FAV(g)->fgh[0],w,self,jtmodpow2);}  // m must be an atom; I think n can have shape.  But we treat w as atomic
      /* m&|@(n&^) w ; m guaranteed to be INT or XNUM */
 
+
+//#define CS1IP(lpclass,f,exp,x) CS1IPext(lpclass,static,f,exp,x)
+//#define CS1IPext(lpclass,cellclass,f,exp,x) cellclass DF1(f##cell){F1PREFIP;DECLFG;A z;PROLOG(x); exp; EPILOG(z);} lpclass DF1(f){PREF1(f##cell); R f##cell(jt,w,self);}
+//#define CS2IP(cellclass,class,f,exp,x) cellclass DF2(f##cell){F2PREFIP;DECLFG;A z;PROLOG(x); exp; EPILOG(z);} class DF2(f){PREF2(f##cell); R f##cell(jt,a,w,self);}
+
+
 // u@v and u@:v
 // TODO: no  need for protw checking?
-CS1IP(,on1, \
-{PUSHZOMB; ARGCHK1D(w); A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); \
-A gx; RZ(gx=(g1)((J)(intptr_t)(((I)jtinplace&(~(JTWILLBEOPENED+JTCOUNTITEMS))) + (REPSGN(SGNIF(FAV(gs)->flag,VJTFLGOK1X)) & FAV(fs)->flag2 & VF2WILLOPEN1+VF2USESITEMCOUNT1)),w,gs));  /* inplace g.  Copy WILLOPEN from f to WILLBEOPENED for g  jtinplace is set for g */ \
-ARGCHK1D(gx) \
-/* inplace gx unless it is protected */ \
-POPZOMB; \
-jtinplace=(J)(intptr_t)(((I)jtinplace&~(JTINPLACEW))+((I )(gx!=protw)*JTINPLACEW));  \
-jtinplace=FAV(fs)->flag&VJTFLGOK1?jtinplace:jt; \
-z=(f1)(jtinplace,gx,fs);} \
-RZ(z); \
-,0113)
+static DF1(on1cell){F1PREFIP;DECLFG;A z;PROLOG(0113);
+PUSHZOMB; ARGCHK1D(w); A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW));
+A gx; RZ(gx=(g1)((J)(intptr_t)(((I)jtinplace&(~(JTWILLBEOPENED+JTCOUNTITEMS))) + (REPSGN(SGNIF(FAV(gs)->flag,VJTFLGOK1X)) & FAV(fs)->flag2 & VF2WILLOPEN1+VF2USESITEMCOUNT1)),w,gs));  /* inplace g.  Copy WILLOPEN from f to WILLBEOPENED for g  jtinplace is set for g */
+ARGCHK1D(gx)
+/* inplace gx unless it is protected */
+POPZOMB;
+jtinplace=(J)(intptr_t)(((I)jtinplace&~(JTINPLACEW))+((I )(gx!=protw)*JTINPLACEW)); 
+jtinplace=FAV(fs)->flag&VJTFLGOK1?jtinplace:jt;
+z=(f1)(jtinplace,gx,fs);
+RZ(z); EPILOG(z);}
+DF1(on1){PREF1(on1cell); R on1cell(jt,w,self);}
 
 CS2IP(,,jtupon2, \
 {PUSHZOMB; ARGCHK2D(a,w) A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)(intptr_t)((I)a+((I)jtinplace&JTINPLACEA)); A gx; \

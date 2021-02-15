@@ -76,19 +76,21 @@ typedef struct rngdata {
   } us;   // access as US
  } uflags;   // 
  UI4 ranks;            // low half: rank of w high half: rank of a  for IRS init for task
-// 4 bytes free
+ S etxn;             // strlen(etx)                        migrated clear for task
+ S etxn1;            // last non-zero etxn                 migrated clear for task
  UI cstackmin;        // red warning for C stack pointer init for task
- L *assignsym;       // symbol-table entry for the symbol about to be assigned      scaf  need to use LX when multithreaded clear/inherit for task
- A sf;               /* for $: clear for task                                         */
+ struct ASGINFO {
+  L *assignsym;       // symbol-table entry for the symbol about to be assigned      scaf  need to use LX when multithreaded clear/inherit for task
+  A zombieval;    // the value that the verb result will be assigned to, if the assignment is safe and has inplaceable usecount and not read-only
+ } asginfo;
  A locsyms;  // local symbol table, or dummy empty symbol table if none init for task
 // end of cacheline 0
+ A sf;               /* for $: clear for task                                         */
  I4 nthreads;  // number of threads to use, or 0 if we haven't checked init for task
  I4 threadrecip16;  // reciprocal of nthreads, 16 bits of fraction init for task
  UI cstackinit;       // C stack pointer at beginning of execution init for task
  I bytes;            // bytes currently in use - used only during 7!:1 clear for task
  I bytesmax;         // high-water mark of "bytes" - used only during 7!:1 clear for task
- S etxn;             // strlen(etx)                        migrated clear for task
- S etxn1;            // last non-zero etxn                 migrated clear for task
  B foldrunning;      // 1 if fold is running (allows Z:) clear for task
  UC jerr;             // error number (0 means no error)    migrated  clear for task
  C recurstate;       // state of recursions through JDo migrated init for task
@@ -100,14 +102,14 @@ typedef struct rngdata {
  B iepdo;            // 1 iff do iep clear for task
  UC jerr1;            // last non-zero jerr                 migrated  clear for task
 // ** end of initialized part
- A xmod;             // extended integer: the m in m&|@f inherit for task
- C pp[8];            // print precision (sprintf field for numeric output) inherit for task
  C xmode;            // extended integer operating mode inherit for task
  C boxpos;           // boxed output x-y positioning, low bits xxyy00 inherit for task
+ A xmod;             // extended integer: the m in m&|@f inherit for task
+ C pp[7];            // print precision (sprintf field for numeric output) inherit for task
  C glock;            // 0=unlocked, 1=perm lock, 2=temp lock inherit for task
- C endinitfill[5];   // unused space
-// *** end of the region saved at task startup
 // end of cacheline 1 (little used)
+ C endinitfill[1];   // unused space   scaf this wastes 7 bytes of next cacheline
+// *** end of the region saved at task startup
 
 // everything after here persists over the life of the thread
 

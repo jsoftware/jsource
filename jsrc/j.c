@@ -45,13 +45,13 @@ CREBLOCKVEC2I(mtm,B01)    /* ,0   also extended integer 0                       
 D   jnan=NAN;               /* _.                                   */
 A   mnuvxynam[6]={0,0,0,0,0,0};   // name blocks for all arg names
 // NOTE: for fetching IDs we use the validitymask as a safe place to fetch 0s from.  We know that
-// validitymask[15] will be 0 and we use &validitymask[12] as an A* with AT of 0 (a non-function) or an L* with val=0; and &validitymask[0] as a V* with ID of 0
+// validitymask[15] will be 0 and we use &validitymask[11] as (an A* with AT=0 (a non-function) and AC=0) or an L* with val=0; and &validitymask[0] as a V* with ID of 0
 #if !SY_64
 long long validitymask[16]={-1, -1, 0, 0, -1, -1, 0, 0, -1, -1, 0, 0,0,0,0,0};  // maskload expect s64x2 mask
 #elif C_AVX || EMU_AVX || EMU_AVX2
 I __attribute__((aligned(CACHELINESIZE))) validitymask[16]={-1, -1, -1, -1, 0, 0, 0, 0, -1, -1, -1, -1,0,0,0,0};  // allows inverted mask
 #else
-I validitymask[16]={-1, -1, 0, 0, -1, -1, 0, 0, -1, -1, 0, 0,0,0,0,0};  // native ss2/neon register is s64x2
+I __attribute__((aligned(CACHELINESIZE))) validitymask[16]={-1, -1, 0, 0, -1, -1, 0, 0, -1, -1, 0, 0,0,0,0,0};  // native ss2/neon register is s64x2
 #endif
 
 I Bnum[22][9-SY_64] = {  // the numbers we keep at hand.  0 and 1 are B01, the rest INT; but the first 2 are integer forms of 0 and 1

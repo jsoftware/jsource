@@ -312,7 +312,8 @@ static DF2(jtamendn2){F2PREFIP;PROLOG(0007);A e,z; B b;I atd,wtd,t,t1;P*p;
  RE(t=maxtyped(atd,wtd)); t1=STYPE(t); RZ(a=TYPESEQ(t,atd)?a:cvt(AT(a)&SPARSE?t1:t,a));
  // Keep the original address if the caller allowed it, precision of y is OK, the usecount allows inplacing, and the dense type is either
  // DIRECT or this is a boxed memory-mapped array
- B ip=((I)jtinplace&JTINPLACEW) && (ACIPISOK(w) || jt->assignsym&&jt->assignsym->val==w&&AC(w)<=1)
+// obsolete  B ip=((I)jtinplace&JTINPLACEW) && (ACIPISOK(w) || jt->asginfo.assignsym&&jt->asginfo.assignsym->val==w&&AC(w)<=1)
+ B ip=((I)jtinplace&JTINPLACEW) && (ACIPISOK(w) || jt->asginfo.zombieval==w&&AC(w)<=1)
      &&TYPESEQ(t,wtd)&&(t&DIRECT);
  // see if inplaceable.  If not, convert w to correct precision (note that cvt makes a copy if the precision is already right)
  if(ip){ASSERT(!(AFRO&AFLAG(w)),EVRO); z=w;}else RZ(z=cvt(t1,w));

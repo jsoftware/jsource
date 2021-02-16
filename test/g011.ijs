@@ -28,24 +28,26 @@ _ __ -: <. _ __
 fl =. 3 : '<. y'"0
 cl =. 3 : '>. y'"0   NB. singletons
 cl0 =. 3 : '>.!.0 y'"0
-assert. 2e13 2e14 2e15 = <. 2e13 2e14 2e15 +/ 1e_1 * i: 5
-assert. 2e13 2e14 2e15 = >. 2e13 2e14 2e15 +/ 1e_1 * i: 5
-assert. _2e13 _2e14 _2e15 = <. _2e13 _2e14 _2e15 +/ 1e_1 * i: 5
-assert. _2e13 _2e14 _2e15 = >. _2e13 _2e14 _2e15 +/ 1e_1 * i: 5
-assert. 2e13 2e14 2e15 = <. 2e13 2e14 2e15 +/ 0.4 + 1e_2 * i: 5
-assert. (2e13 2e14 2e15) = >. 2e13 2e14 2e15 +/ 0.4 + 1e_2 * i: 5  NB. Not >:, because for big int <. y can be > y, etc 
-assert. (>: 2e13 2e14 2e15) = (>.!.0) 2e13 2e14 2e15 +/ 0.4 + 1e_2 * i: 5
-assert. _2e13 _2e14 _2e15 = <. _2e13 _2e14 _2e15 +/ 0.4 + 1e_2 * i: 5
-assert. (_2e13 _2e14 _2e15) = >. _2e13 _2e14 _2e15 +/ 0.4 + 1e_2 * i: 5
-assert. 2e13 2e14 2e15 = fl 2e13 2e14 2e15 +/ 1e_1 * i: 5
-assert. 2e13 2e14 2e15 = cl 2e13 2e14 2e15 +/ 1e_1 * i: 5
-assert. _2e13 _2e14 _2e15 = fl _2e13 _2e14 _2e15 +/ 1e_1 * i: 5
-assert. _2e13 _2e14 _2e15 = cl _2e13 _2e14 _2e15 +/ 1e_1 * i: 5
-assert. 2e13 2e14 2e15 = fl 2e13 2e14 2e15 +/ 0.4 + 1e_2 * i: 5
-assert. (2e13 2e14 2e15) = cl 2e13 2e14 2e15 +/ 0.4 + 1e_2 * i: 5  NB. Not >:, because for big int <. y can be > y, etc 
-assert. (>: 2e13 2e14 2e15) = cl0 2e13 2e14 2e15 +/ 0.4 + 1e_2 * i: 5
-assert. _2e13 _2e14 _2e15 = cl _2e13 _2e14 _2e15 +/ 0.4 + 1e_2 * i: 5
-assert. (_2e13 _2e14 _2e15) = cl _2e13 _2e14 _2e15 +/ 0.4 + 1e_2 * i: 5
+NB. i. 3 because 2000000000000000.4 turns to 2..5 on input, then rounds up on non-AVX
+NB. 0.2 for same reason
+assert. 2e13 2e14 2e15 = <. 2e13 2e14 2e15 +/ 1e_1 * i: 3
+assert. 2e13 2e14 2e15 = >. 2e13 2e14 2e15 +/ 1e_1 * i: 3
+assert. _2e13 _2e14 _2e15 = <. _2e13 _2e14 _2e15 +/ 1e_1 * i: 3
+assert. _2e13 _2e14 _2e15 = >. _2e13 _2e14 _2e15 +/ 1e_1 * i: 3
+assert. 2e13 2e14 2e15 = <. 2e13 2e14 2e15 +/ 0.2 + 1e_2 * i: 3
+assert. (2e13 2e14 2e15) = >. 2e13 2e14 2e15 +/ 0.2 + 1e_2 * i: 3  NB. Not >:, because for big int <. y can be > y, etc 
+assert. (>: 2e13 2e14 2e15) = (>.!.0) 2e13 2e14 2e15 +/ 0.2 + 1e_2 * i: 3
+assert. _2e13 _2e14 _2e15 = <. _2e13 _2e14 _2e15 +/ 0.2 + 1e_2 * i: 3
+assert. (_2e13 _2e14 _2e15) = >. _2e13 _2e14 _2e15 +/ 0.2 + 1e_2 * i: 3
+assert. 2e13 2e14 2e15 = fl 2e13 2e14 2e15 +/ 1e_1 * i: 3
+assert. 2e13 2e14 2e15 = cl 2e13 2e14 2e15 +/ 1e_1 * i: 3
+assert. _2e13 _2e14 _2e15 = fl _2e13 _2e14 _2e15 +/ 1e_1 * i: 3
+assert. _2e13 _2e14 _2e15 = cl _2e13 _2e14 _2e15 +/ 1e_1 * i: 3
+assert. 2e13 2e14 2e15 = fl 2e13 2e14 2e15 +/ 0.2 + 1e_2 * i: 3
+assert. (2e13 2e14 2e15) = cl 2e13 2e14 2e15 +/ 0.2 + 1e_2 * i: 3  NB. Not >:, because for big int <. y can be > y, etc 
+assert. (>: 2e13 2e14 2e15) = cl0 2e13 2e14 2e15 +/ 0.2 + 1e_2 * i: 3
+assert. _2e13 _2e14 _2e15 = cl _2e13 _2e14 _2e15 +/ 0.2 + 1e_2 * i: 3
+assert. (_2e13 _2e14 _2e15) = cl _2e13 _2e14 _2e15 +/ 0.2 + 1e_2 * i: 3
 1
 )
 

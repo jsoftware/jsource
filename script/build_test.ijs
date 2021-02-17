@@ -5,11 +5,12 @@ build uses make2 for linux/macos
 JE binaries are copied to git/jlibrary/bin with qualified names (e.g. libjavx2.so)
    build'jconsole'
    build'libtsdll'
-   build'libj'          NB. 'libjavx' 'libjavx2'
-   build_all 'beta-x'   NB. build all
+   build'libj'       NB. 'libjavx' 'libjavx2' - with current jvserion.h
+   build_all''       NB. build all - with current jversion.h
    
    get_jversion''
-   set_jversion'beta-x' 
+   set_jversion''    NB. version and type set by build_for
+   build_for'J903-beta-f'
 
 windows builds done with vs2019
 
@@ -25,9 +26,33 @@ spawn - linux/macos/windows
    runit 'libj'    ;'runjd.ijs' NB. jd
    
    runit_all''   NB. ddall/pacman/jd on all - written to file
+   
+*** 903 beta
+   build_for 'J903-beta-f'
+   
+
 )   
 
 load'~addons/misc/miscutils/utils.ijs'
+
+target=: ''
+
+build_for=: 3 : 0
+'invalid'assert 'J-'=0 4{y
+v=: 3{.}.y
+t=: 5}.y
+'bad jversion'assert +/902 903=0".v
+'bad jtype'assert (('beta-'-:5{.t)*.6=#t)+.('release-'-:8{.t)*.9=#t
+target=: y
+version=: v
+type=: t
+target;version;type
+)
+
+git_status=: 3 : 0
+echo shell_jtask_'cd git/jsource ; git status'
+echo LF,get_jversion''
+)
 
 build_test=: 3 : '' NB. for whichscript
 
@@ -132,16 +157,40 @@ get_jversion=: 3 : 0
 fread'git/jsource/jsrc/jversion.h'
 )
 
+NB. '903';'beta-f'
 set_jversion=: 3 : 0
-'bad jversion'assert (('beta-'-:5{.y)*.6=#y)+.('release-'-:8{.y)*.9=#y
+'build_for must be run first'assert -.target-:''
 f=. 'git/jsource/jsrc/jversion.h'
 a=. fread f
+
+i=. 1 i.~'jversion ' E. a
+i=. >:i+(i}.a)i.'"'
+'jversion not found'assert i<#a
+a=. (i{.a),(":version),(i+3)}.a
+
+i=. 1 i.~'jtype ' E. a
+i=. >:i+(i}.a)i.'"'
+'jversion not found'assert i<#a
+c=. (i}.a)i.'"'
+a=. (i{.a),type,(i+c)}.a
+
+echo a
+
+
+
+
+return.
+
+d=. }.i}.a
+
+
+
 i=. 1 i.~'"beta-' E. a
 d=. }.i}.a
 d=. (d i.'"'){.d
 a=. a rplc d;y
 echo a
-a fwrite f
+NB. a fwrite f
 )
 
 
@@ -170,7 +219,7 @@ echo fread stderr
 
 build_all=: 3 : 0
 'do not run in JHS'assert -.IFJHS
-set_jversion y
+echo 'building: ',get_jversion''
 build each 'jconsole';'libtsdll';'libj';'libjavx';'libjavx2'
 )
 

@@ -27,7 +27,10 @@ spawn - linux/macos/windows
    
    runit_all''   NB. ddall/pacman/jd on all - written to file
    
-*** 903 beta
+*** publish release/beta/maintenace
+   git branch -a  -list branches
+   git checkout branch
+   
    build_for 'J903-beta-f'
    
 

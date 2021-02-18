@@ -1,6 +1,10 @@
 man=: 0 : 0
 manage building/testing J releases/betas from J
 
+   git_status''           NB. report git status and jversion
+   build_for'J903-beta-e' NB. set build globals and jversion.h
+   
+
 build uses make2 for linux/macos
 JE binaries are copied to git/jlibrary/bin with qualified names (e.g. libjavx2.so)
    build'jconsole'
@@ -38,7 +42,16 @@ spawn - linux/macos/windows
 
 load'~addons/misc/miscutils/utils.ijs'
 
-target=: ''
+pgit=:      'git/jsource'
+pversionh=: pgit,'/jsrc/jversion.h'
+
+jversion_template=: 0 : 0
+#define jversion  "XXX"
+#define jplatform "PLATFORM"
+#define jtype     "TYPE"
+#define jlicense  "commercial"
+#define jbuilder  "www.jsoftware.com"
+)
 
 build_for=: 3 : 0
 'invalid'assert 'J-'=0 4{y
@@ -46,10 +59,13 @@ v=: 3{.}.y
 t=: 5}.y
 'bad jversion'assert +/902 903=0".v
 'bad jtype'assert (('beta-'-:5{.t)*.6=#t)+.('release-'-:8{.t)*.9=#t
-target=: y
+BUILD=: y
 version=: v
 type=: t
-target;version;type
+platform=: ;(('Win';'Linux';'Darwin')i.<UNAME){'windows';'linux';'darwin'
+t=. jversion_template rplc 'XXX';v;'PLATFORM';platform;'TYPE';type
+t fwrite pversionh
+git_status''
 )
 
 git_status=: 3 : 0
@@ -57,11 +73,14 @@ echo shell_jtask_'cd git/jsource ; git status'
 echo LF,get_jversion''
 )
 
+git_log=: 3 : 0
+shell_jtask_ 'cd git/jsource ; git log --pretty=format:"%h%x09%an%x09%ad%x09%s" >~/git.log'
+2000{.fread 'git.log'
+)
+
 build_test=: 3 : '' NB. for whichscript
 
-t=. ;whichscript'build_test'
-t=. (t i:'/'){.t
-pmake2=: '/make2',~(t i:'/'){.t
+pmake2=: pgit,'/make2'
 ptemp=:  jpath'~temp/jbuild'
 
 mkdir_j_ jpath ptemp
@@ -157,47 +176,14 @@ echo done
 )
 
 get_jversion=: 3 : 0
-fread'git/jsource/jsrc/jversion.h'
+fread pversionh
 )
 
-NB. '903';'beta-f'
-set_jversion=: 3 : 0
-'build_for must be run first'assert -.target-:''
-f=. 'git/jsource/jsrc/jversion.h'
-a=. fread f
-
-i=. 1 i.~'jversion ' E. a
-i=. >:i+(i}.a)i.'"'
-'jversion not found'assert i<#a
-a=. (i{.a),(":version),(i+3)}.a
-
-i=. 1 i.~'jtype ' E. a
-i=. >:i+(i}.a)i.'"'
-'jversion not found'assert i<#a
-c=. (i}.a)i.'"'
-a=. (i{.a),type,(i+c)}.a
-
-echo a
-
-
-
-
-return.
-
-d=. }.i}.a
-
-
-
-i=. 1 i.~'"beta-' E. a
-d=. }.i}.a
-d=. (d i.'"'){.d
-a=. a rplc d;y
-echo a
-NB. a fwrite f
-)
 
 
 build=: 3 : 0
+'build_for must be run first'assert 0=nc<'BUILD'
+echo BUILD,' ',y
 suf=. suffix
 select. y
 case. 'jconsole' do.
@@ -222,7 +208,7 @@ echo fread stderr
 
 build_all=: 3 : 0
 'do not run in JHS'assert -.IFJHS
-echo 'building: ',get_jversion''
+git_status''
 build each 'jconsole';'libtsdll';'libj';'libjavx';'libjavx2'
 )
 

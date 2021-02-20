@@ -77,10 +77,12 @@ L* jtsymnew(J jt,LX*hv, LX tailx){LX j;L*u,*v;
 // Reset the fields in the deleted blocks.
 // This is used only for freeing local symbol tables, thus does not need to clear the name/path or worry about CACHED values
 extern void jtsymfreeha(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
+ LX freeroot=0; LX *freetailchn=(LX *)jt->shapesink;  // sym index of first freed ele; addr of chain field in last freed ele
  L *jtsympv=LAV0(JT(jt,symp));  // Move base of symbol block to a register.  Block 0 is the base of the free chain.  MUST NOT move the base of the free queue to a register,
-  // because when we free a locale it frees its symbols here, and one of them might be a verb that contains a nested SYMB, giving recursion.  It is safe to move sympv to a register because
+  // because when we free an explicit locale it frees its symbols here, and one of them might be a verb that contains a nested SYMB, giving recursion.  It is safe to move sympv to a register because
   // we know there will be no allocations during the free process.
  // loop through each hash chain, clearing the blocks in the chain.  Do not clear chain 0, which holds x/y bucket numbers
+ // There cannot be any CACHED blocks here,  since they exist only in named locales
  for(j=SYMLINFOSIZE;j<wn;++j){
   LX *aprev=&wv[j];  // this points to the predecessor of the last block we processed
   // process the chain
@@ -101,7 +103,8 @@ extern void jtsymfreeha(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
    *aprev=0;  // only the PERMANENT survive
    // We are now pointing at the first non-permanent, if any.  Erase them all, deleting the name and value
    if(k){
-    LX k1=SYMNEXT(k);  // remember first non-PERMANENT 
+    LX k1=SYMNEXT(k);  // remember first non-PERMANENT
+    freeroot=freeroot?freeroot:k1;  // remember overall first value
     do{
      k=SYMNEXT(k);  // remove address flagging
      aprev=&jtsympv[k].next;  // save last item we processed here
@@ -109,10 +112,12 @@ extern void jtsymfreeha(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
      k=jtsympv[k].next;
     }while(k);
     // make the non-PERMANENTs the base of the free pool & chain previous pool from them
-    *aprev=jtsympv[0].next; jtsympv[0].next=k1;
+    *freetailchn=k1; freetailchn=aprev;  // free chain may have permanent flags
+// obsolete     *aprev=jtsympv[0].next; jtsympv[0].next=k1;
    }
   }
  }
+ if(likely(freeroot!=0)){*freetailchn=jtsympv[0].next;jtsympv[0].next=freeroot;}  // put all blocks freed here onto the free chain
 }
 
 static SYMWALK(jtsympoola, I,INT,100,1, 1, *zv++=j;)

@@ -293,7 +293,7 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
   // directly.
   // Assignments here are special.  At this point we know that the value is coming in from a different namespace, and that it will be
   // freed in that namespace.  Thus, (1) there is no need to realize a virtual block - we can just assign it to x/y, knowing that it is
-  // not tying up a backer that could have been freed otherwise (we do have to raise the usecount, but not by ras()); (2) if the input
+  // not tying up a backer that could have been freed otherwise (we do have to raise the usecount); (2) if the input
   // has been abandoned, we do not need to raise the usecount here: we can just mark the arg non-inplaceable, usecount 1 and take advantage
   // of assignment in place here - in this case we must flag the name to suppress decrementing the usecount on reassignment or final free.  In
   // both cases we know the block will be freed by the caller.
@@ -307,7 +307,10 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
    // We can handle an abandoned argument only if it is direct or recursive, since only those values can be assigned to a name
    if((a!=w)&SGNTO0(AC(w)&(((AT(w)^AFLAG(w))&RECURSIBLE)-1))&((I)jtinplace>>JTINPLACEWX)){
     ybuckptr->flag=LPERMANENT|LWASABANDONED; ACIPNO(w);  // remember, blocks from every may be 0x8..2, and we must preserve the usecount then as if we ra()d it
-   }else ra(w);
+   }else{
+    ra(w);  // not abandoned: raise the block
+    if((likely(!(AFLAG(w)&AFVIRTUAL+AFNJA)))){AMNVRCINI(w)}  // since the block is now named, if it is not virtual it must switch to NVR interpretation of AM
+   }
    ybuckptr->val=w; ybuckptr->sn=jt->currslistx;
   }
     // for x (if given), slot is from the beginning of hashchain EXCEPT when that collides with y; then follow y's chain
@@ -316,7 +319,7 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
    if(!C_CRC32C&&xbuckptr==ybuckptr)xbuckptr=xbuckptr->next+sympv;
    if((a!=w)&SGNTO0(AC(a)&(((AT(a)^AFLAG(a))&RECURSIBLE)-1))&((I)jtinplace>>JTINPLACEAX)){
     xbuckptr->flag=LPERMANENT|LWASABANDONED; ACIPNO(a);
-   }else ra(a);
+   }else{ra(a); if((likely(!(AFLAG(a)&AFVIRTUAL+AFNJA)))){AMNVRCINI(a)}}
    xbuckptr->val=a; xbuckptr->sn=jt->currslistx;
   }
   // Do the other assignments, which occur less frequently, with symbis

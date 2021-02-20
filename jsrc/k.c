@@ -336,7 +336,7 @@ B jtccvt(J jt,I tflagged,A w,A*y){F1PREFIP;A d;I n,r,*s,wt; void *wv,*yv;I t=tfl
  // Perform the conversion based on data types
  // For branch-table efficiency, we split the literal conversions into one block, and
  // the rest in another
- if(unlikely((t|wt)&(LIT+C2T+C4T+BIT+SBT+XD+XZ))) {   // there are no SBT+XD+XZ conversions, but we have to show domain error
+ if(unlikely((t|wt)&(LIT+C2T+C4T+SBT+XD+XZ))) {   // there are no SBT+XD+XZ conversions, but we have to show domain error
    // one of the types is literal.
    // we must account for all NOUN types.  If there is a non-char, that's an error
   ASSERT(!((t|wt)&(SBT+XD+XZ+NUMERIC+BOX)),EVDOMAIN);  // No conversions for these types

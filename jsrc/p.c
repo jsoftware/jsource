@@ -37,17 +37,18 @@ B jtparseinit(JS jjt, I nthreads){A x;
 
 // w is a block that looks ripe for in-place assignment.  We just have to make sure that it is not in use somewhere up the stack.
 // It isn't, if (1) it isn't on the stack at all; (2) if it was put on the stack by the currently-executing sentence.  We call this
-// routine only when we are checking inplacing for final assignments, for which the parser stack is guaranteed to be empty; so any
+// routine only when we are checking inplacing for final assignments, or for virtual extension.  For final assignment the parser stack is guaranteed to be empty; so any
 // use of the name that was called for by this sentence must be finished
 I jtnotonupperstack(J jt, A w) {
-  // w is known nonzero.  In-place assign it only if its NVR count is 1, indicating that only one sentence may have this name stacked
-  if(likely(AM(w)==1)){
-   // see if name was stacked (for the first time) in this very sentence
-   A *v=jt->parserstackframe.nvrotop+AAV1(jt->nvra);  // point to current-sentence region of the nvr area
-   DQ(jt->parserstackframe.nvrtop-jt->parserstackframe.nvrotop, if(*v==w)R 1; ++v;);   // if name stacked in this sentence, that's OK
-  }
-  // not stacked here, so not reassignable here.  see if name was not stacked at all - that would be OK
-  R !(AFLAG(w)&AFNVR);   // return OK if name not stacked (rare, because if it wasn't stacked in the current sentence why would we think we can inplace it?)
+ // w is known nonzero.  In-place assign it only if its NVR count is 1, indicating that only one sentence may have this name stacked
+ // This test is not locked because if we inplace we have a race condition anyway; so we have to have higher-level means to avoid that
+ if(likely((AM(w)&~AMFREED)==AMNV+AMNVRCT*1)){
+  // see if name was stacked (for the only time) in this very sentence
+  A *v=jt->parserstackframe.nvrotop+AAV1(jt->nvra);  // point to current-sentence region of the nvr area
+  DQ(jt->parserstackframe.nvrtop-jt->parserstackframe.nvrotop, if(*v==w)R 1; ++v;);   // if name stacked in this sentence, that's OK
+ }
+ // not stacked here, so not reassignable here.  see if name was not stacked at all - that would be OK
+ R !(AM(w)&(-(AM(w)&AMNV)<<1));   // return OK if name not using NV semantics or stackcount=0 (rare, since why did we think is might be inplacable?)
 }
 
 
@@ -502,17 +503,19 @@ rdglob: ;
          // functions (that is, the user should not use u. to delete a local name).  If a local name is deleted, we always defer the deletion till the end of the sentence, easier than checking
          // When NVR is set, AM is used to hold the count of NVR stacking, so we can't have NVR and NJA both set.  User manages NJAs separately anyway
         if(likely(s!=0))if(likely(s->val!=0))if(AT(s->val)&NOUN){ 
-         // Normally local variables never get close to here because they have bucket info.  But if they are computed assignemts,
+         // Normally local variables never get close to here because they have bucket info.  But if they are computed assignments,
          // or inside eval strings, they may come through this path.  If one of them is y, it might be virtual.  Thus, we must make sure we don't
-         // damage AM in that case.  We don't need NVR then, because locals never need NVR.
-         if(likely(!(AFLAG(s->val)&AFNVR+AFNJA+AFVIRTUAL))){
-          // on the FIRST NVR, we set NVR|UNFREED, and AM=1.  On subsequent ones we increment AM
-          AFLAGOR(s->val,AFNVR|AFNVRUNFREED)  // mark the value as protected and not yet deferred-freed
-          AM(s->val)=1;  // set NVR count on the first encounter
+         // damage AM in that case.  We don't need NVR then, because locals never need NVR.  Similarly, an LABANDONED name does not have NVR semantics, so leave it alone
+         if(likely(!(AFLAG(s->val)&AFNJA+AFVIRTUAL)))if(likely((AM(s->val)&AMNV)!=0)){
+// obsolete           // on the FIRST NVR, we set NVR|UNFREED, and AM=1.  On subsequent ones we increment AM
+// obsolete           AFLAGOR(s->val,AFNVR|AFNVRUNFREED)  // mark the value as protected and not yet deferred-freed
+// obsolete           AFLAGOR(s->val,AFNVR)  // mark the value as protected and not yet deferred-freed
+          // NOTE that if the name was deleted in another task s->val will be invalid and we will crash
+          AMNVRINCR(s->val)  // add 1 to the NVR count, now that we are stacking
           AAV1(jt->nvra)[jt->parserstackframe.nvrtop++] = s->val;   // record the place where the value was protected, so we can free it when this sentence completes
-         }else if(likely(!(AFLAG(s->val)&AFNJA+AFVIRTUAL))){
-          ++AM(s->val);
-          AAV1(jt->nvra)[jt->parserstackframe.nvrtop++] = s->val;   // record the place where the value was protected, so we can free it when this sentence completes
+// obsolete          }else if(likely(!(AFLAG(s->val)&AFNJA+AFVIRTUAL))){
+// obsolete           ++AM(s->val);
+// obsolete           AAV1(jt->nvra)[jt->parserstackframe.nvrtop++] = s->val;   // record the place where the value was protected, so we can free it when this sentence completes
          }  // if NJA/virtual, leave NVR alone
         }
        }
@@ -758,9 +761,13 @@ failparse:  // If there was an error during execution or name-stacking, exit wit
   // We apply the final free only when the NVR count goes to 0, to make sure we hold off till the last stacked reference has been seen off
   v=AAV1(jt->nvra)+nvrotop;  // point to our region of the nvr area
   UI zcompval = !z||AT(z)&NOUN?0:-1;  // if z is 0, or a noun, immediately free only values !=z.  Otherwise don't free anything
-  DQ(jt->parserstackframe.nvrtop-nvrotop, A vv = *v;
-   if(likely(--AM(vv)==0)){I vf = AFLAG(vv); AFLAGAND(vv,~(AFNVR|AFNVRUNFREED)) if(!(vf&AFNVRUNFREED))if(((UI)z^(UI)vv)>zcompval){fanano0(vv);}else{tpushna(vv);}}
-  ++v;);   // schedule deferred frees.
+  DQ(jt->parserstackframe.nvrtop-nvrotop, A vv = *v;I am;
+   // if the NVR count is 1 before we decrement, we have hit the last stacked use & we free the block.
+// obsolete    if(likely(--AM(vv)==0)){I vf = AFLAG(vv); AFLAGAND(vv,~(AFNVR|AFNVRUNFREED)) if(!(vf&AFNVRUNFREED))if(((UI)z^(UI)vv)>zcompval){fanano0(vv);}else{tpushna(vv);}}
+   // if we are performing (or finally deferring) the FINAL free, the value must be a complete zombie and cannot be active anywhere; otherwise we must clear it.  We clear it always
+   if(likely((AMNVRDECR(vv,am))<2*AMNVRCT)){if(am&AMFREED){AMNVRAND(vv,~AMFREED) if(((UI)z^(UI)vv)>zcompval){fanano0(vv);}else{tpushna(vv);}}}
+// obsolete I vf = AFLAG(vv); AFLAGAND(vv,~(AFNVR|AFNVRUNFREED)) 
+   ++v;);   // schedule deferred frees.
     // na so that we don't audit, since audit will relook at this NVR stack
 
   // Still can't return till frame-stack popped

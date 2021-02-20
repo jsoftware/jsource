@@ -482,7 +482,7 @@ L* jtprobeisquiet(J jt,A a,A locsyms){A g;  // locsyms is used in the call, but 
  R probeis(a, g);  // return pointer to slot, creating one if not found
 }
 
-
+static I abandflag=LWASABANDONED;  // use this flag if there is no incumbent value
 // assign symbol: assign name a in symbol table g to the value w (but g is special if jt->asginfo.assignsym is nonnull)
 // Result points to the symbol-table block for the assignment
 L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;L*e;
@@ -522,37 +522,34 @@ L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;L*e;
  }
  x=e->val;   // if x is 0, this name has not been assigned yet; if nonzero, x points to the incumbent value
  I xaf;  // holder for nvr/free flags
- I xt;  // If not assigned, use empty type
- if(x){
-   xaf=AFLAG(x); xt=AT(x); // if assigned, get the actual flags, from the name and the old value
-   if(unlikely((e->flag&LWASABANDONED)!=0)){
-     // Reassigning an x/y that was abandoned into this execution.  We did not increment the value when we started, so we'd better not decrement now.
-     // However, we did change 8..1 to 1, and if the 1 is still there, we set it back to 8..1 so that the caller can see that the value is unincorporated.
-     // The case where x==w is of interest (it comes up in x =. x , 5).  In that case we will not change the usecount of x/w below, so we have to keep the ABANDONED
-     // status in sync with the usecount.  The best thing is to keep both unchanged, so that we can continue to inplace x
-     ACOR(x,ACINPLACE&(AC(x)-1-(x!=w)))  // apply ABANDONED: 1 -> 8..1 but only if we are going to replace x; we don't want 8..1 in an active name
-     e->flag&=~((x!=w)<<LWASABANDONEDX);  // turn off abandoned flag after it has been applied, but only if we replace x
-     xaf = AFNVRUNFREED; // ignore other flags; set xaf as if x==0 to avoid any other usecount changes
-   }
- } else {xaf = AFNVRUNFREED; xt=0;}   // If name is not assigned, indicate that it is not read-only or memory-mapped.  Also set 'impossible' code of unfreed+not NVR
+// obsolete   I xt;  // If not assigned, use empty type
+ {I *aaf=&AFLAG(x); aaf=x?aaf:&abandflag; xaf=*aaf;}  // flags from x, of LWASABANDONED if there is no x
  if(likely(!(AFNJA&xaf))){
   I wt=AT(w);
   // Normal case of non-memory-mapped assignment.
   // If we are assigning the same data block that's already there, don't bother with changing use counts or anything else (assignment-in-place)
   if(likely(x!=w)){
-   if(unlikely(((xt|wt)&(VERB|CONJ|ADV))!=0)){
-    // If we are assigning a adverb value, check to see if it is nameless, and mark the value if it is
-    if(unlikely((wt&ADV)!=0))AT(w)=wt|(I)nameless(w)<<NAMELESSMODX;
-   }
+// obsolete    if(unlikely(((xt|wt)&(VERB|CONJ|ADV))!=0)){
+// obsolete     // If we are assigning a adverb value, check to see if it is nameless, and mark the value if it is
+   if(unlikely((wt&ADV)!=0))AT(w)=wt|(I)nameless(w)<<NAMELESSMODX;
+// obsolete    }
    // Increment the use count of the value being assigned, to reflect the fact that the assigned name will refer to it.
    // This realizes any virtual value, and makes the usecount recursive if the type is recursible
    // If the value is abandoned inplaceable, we can just zap it, set its usecount to 1, and make it recursive if not already
    // We do this only for final assignment, because we are creating a name that would then need to be put onto the NVR stack for protection if the sentence continued
+   // If w does not contain NVR information, initialize it to do so.  LSB indicates NVR; till then it is a zap pointer
    rifv(w); // must realize any virtual
    if(likely((SGNIF((I)jtinplace,JTFINALASGNX)&AC(w)&(-(wt&NOUN)))<0)){  // if final assignment of abandoned noun
     *AZAPLOC(w)=0; ACRESET(w,ACUC1) if(unlikely(((wt^AFLAG(w))&RECURSIBLE)!=0)){AFLAGORLOCAL(w,wt&RECURSIBLE) jtra(w,wt);}  // zap it, make it non-abandoned, make it recursive (incr children if was nonrecursive).  This is like raczap(1)
       // NOTE: NJA can't zap either, but it never has AC<0
-   }else ra(w);  // if zap not allowed, just ra() the whole thing
+    AMNVRSET(w,AMNV);  // going from abandoned to name semantics: set NVR info in value
+   }else{
+    ra(w);  // if zap not allowed, just ra() the whole thing
+    if(likely(!(AFLAG(w)&AFNJA)))AMNVRCINI(w);  // if not using name semantics now, and not NJA, initialize to name semantics
+   }
+   e->val=w;   // install the new value
+
+   // We have raised the usecount of w.  Now dispose of x
    // If this is a reassignment, we need to decrement the use count in the old name, since that value is no longer used.
    // But if the value of the name is 'out there' in the sentence (coming from an earlier reference), we'd better not delete
    // that value until its last use.
@@ -561,33 +558,77 @@ L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;L*e;
    // won't be freed till later.  By deferring all deletions we don't have to worry about whether local values are on the stack; and that allows us to avoid putting local values
    // on the NVR stack at all.
    // ABANDONED values can never be NVR (which are never inplaceable), so they will be flagged as !NVR,!UNFREED,ABANDONED
-   if(likely((xaf&AFNVRUNFREED)!=0)){  // x is 0, or unfreed on the NVR stack, or abandoned.  Do not fa().  0 is probably the normal case (assignment to unassigned name)
-    if(unlikely((xaf&AFNVR)!=0)){AFLAGAND(x,~AFNVRUNFREED)} // If unfreed on the NVR stack, mark as to-be-freed on the stack.  This defers the deletion
-    // x=0 case, and LABANDONED case, go through quietly making no change to the usecount of x
-   }else{  // x is non0 and either already marked as freed on the NVR stack or must be put there now, or VIRTUAL
-    if(likely(!(xaf&(AFNVR|AFVIRTUAL)))){
-     // (1) the value in x is not on the NVR stack.  But it may still be at large in the sentence, because we don't push local names
-     // onto the NVR stack.  So, we defer the deletion until the end of the sentence, by adding the name to the NVR stack.  If we are already at the end of the sentence
-     // we can avoid this, and just fa(), since the local name cannot be in use higher uup
-     // (2) the value is not VIRTUAL.  The only way for an assigned value to be VIRTUAL is for it to be an initial assignment to x/y.  And to get here
-     // the value must not have been adandoned.  So the usecount was raised on assignment (otherwise we would have gone through the no-fa special case).  So it is safe to fa() immediately then
-     if(likely((I)jtinplace&JTFINALASGN)){
-      fa(x);  // sentence is ending, no need to defer free
-     }else{
-      // must push onto NVR stack for the first time
+// obsolete     xt=AT(x); // if assigned, get the actual flags, from the the old value
+   if(((xaf|e->flag)&LWASABANDONED)!=0){
+    // here for the cases where we don't change the usecount in x: nonexistent or abandoned x
+    if(unlikely((e->flag&LWASABANDONED)!=0)){
+     // Reassigning an x/y that was abandoned into this execution.  We did not increment the value when we started, so we'd better not decrement now.
+     // However, we did change 8..1 to 1, and if the 1 is still there, we set it back to 8..1 so that the caller can see that the value is unincorporated.
+     // The case where x==w is of interest (it comes up in x =. x , 5).  In that case we will not change the usecount of x/w below, so we have to keep the ABANDONED
+     // status in sync with the usecount.  The best thing is to keep both unchanged, so that we can continue to inplace x
+// obsolete      ACOR(x,ACINPLACE&(AC(x)-1-(x!=w)))  // apply ABANDONED: 1 -> 8..1 but only if we are going to replace x; we don't want 8..1 in an active name
+     ACOR(x,ACINPLACE&(AC(x)-2))  // apply ABANDONED: 1 -> 8..1 but only if we are going to replace x; we don't want 8..1 in an active name
+// obsolete      e->flag&=~((x!=w)<<LWASABANDONEDX);  // turn off abandoned flag after it has been applied, but only if we replace x
+     e->flag&=~(1LL<<LWASABANDONEDX);  // turn off abandoned flag after it has been applied, but only if we replace x
+// obsolete      xaf = AFNVRUNFREED; // ignore other flags; set xaf as if x==0 to avoid any other usecount changes
+    }
+   }else{
+    // x must be decremented, one way or another.  If the value is virtual, it will eventually be freed by tpop, so we can just nonrecursively decrement the usecount now
+    if(unlikely((xaf&AFVIRTUAL)!=0)){fadecr(x)  // virtual value, AM is still the backer
+    }else{I am,nam;
+     // Normal reassignment of a name.  AM must have NVR semantics.  What we do depends on NVR status
+// obsolete if(!(AM(x)&AMNV))SEGFAULT;  // scaf
+     AMNVRFREEACT(x,(I)jtinplace&JTFINALASGN,am,nam)  // analyze AM
+     if(likely(am==nam)){fa(x);  // look at AM field, loaded into AM.  If value is on NVR and already deferred-free, OR if not on NVR and this is final assignment, we can free.  The block may still be in use elsewhere
+     }else if(unlikely((am&-AMNVRCT)==0)){
+      // (1) the value in x is not on the NVR stack.  But it may still be at large in the sentence, because we don't push local names
+      // onto the NVR stack.  So, we defer the deletion until the end of the sentence, by adding the name to the NVR stack.  If we are already at the end of the sentence
+      // we avoid this, and just fa(), since the local name cannot be in use higher up
+      // (2) the value is not VIRTUAL.  The only way for an assigned value to be VIRTUAL is for it to be an initial assignment to x/y.  And to get here
+      // the value must not have been adandoned.  So the usecount was raised on assignment (otherwise we would have gone through the no-fa special case).  So it is safe to fa() immediately then
       A nvra=jt->nvra;
       if(unlikely((I)(jt->parserstackframe.nvrtop+1U) > AN(nvra)))RZ(nvra=extnvr());  // Extend nvr stack if necessary.  copied from parser
       AAV1(nvra)[jt->parserstackframe.nvrtop++] = x;   // record the place where the value was protected (i. e. this sentence); it will be freed when this sentence finishes
-      AFLAGOR(x,AFNVR)  // mark the value as protected in NVR stack
-      AM(x)=1;  // When NVR is set, AM must contain count of # times value has been pushed onto the stack
      }
-    }else{
-     // already NVR+FREED or VIRTUAL: 'free' this time, knowing the real free will happen later,  We know usecount>1, but it may be PERMANENT; decrement it if not
-     fadecr(x)
+     // if the block was on the NVR stack and not freed, we have marked it freed and we will just wait for the eventual deletion
+// obsolete      if(unlikely((AM(x)&-AMNVRCT)!=0)){
+// obsolete       // value is on NVR stack: free must be deferred to end-of-stack.
+// obsolete       if(likely((AM(x)&AMFREED)==0))AMNVROR(x,AMFREED); // If on the NVR stack and not yet freed, mark as to-be-freed on the stack.  This defers the deletion
+// obsolete       else{fa(x)}  // on the NVR stack, already marked as freed: will be freed later, just decr usecount here
+// obsolete      }else if(likely((I)jtinplace&JTFINALASGN)){fa(x);  // sentence is ending, no need to defer free
+// obsolete      }else{
+// obsolete       // non-final assignment with no NVR stack: must push onto NVR stack for the first time.
+// obsolete       A nvra=jt->nvra;
+// obsolete       if(unlikely((I)(jt->parserstackframe.nvrtop+1U) > AN(nvra)))RZ(nvra=extnvr());  // Extend nvr stack if necessary.  copied from parser
+// obsolete       AAV1(nvra)[jt->parserstackframe.nvrtop++] = x;   // record the place where the value was protected (i. e. this sentence); it will be freed when this sentence finishes
+// obsolete       AFLAGOR(x,AFNVR)  // mark the value as protected in NVR stack
+// obsolete       AMNVRINCR(x);  // NVR count is 0 coming in; we increment it
+// obsolete       AMNVROR(x,AMFREED);  // mark it for deferred free so that the local value will persist to end-of-sentence
+// obsolete      }
+// obsolete     }
+// obsolete    }
+// obsolete    if(likely((xaf&AFNVRUNFREED)!=0)){  // x is 0, or unfreed on the NVR stack, or abandoned.  Do not fa().  0 is probably the normal case (assignment to unassigned name)
+// obsolete     if(unlikely((xaf&AFNVR)!=0)){AFLAGAND(x,~AFNVRUNFREED)} // If unfreed on the NVR stack, mark as to-be-freed on the stack.  This defers the deletion
+// obsolete     // x=0 case, and LABANDONED case, go through quietly making no change to the usecount of x
+// obsolete    }else{  // x is non0 and either already marked as freed on the NVR stack or must be put there now, or VIRTUAL
+// obsolete     if(likely(!(xaf&(AFNVR|AFVIRTUAL)))){
+// obsolete      if(likely((I)jtinplace&JTFINALASGN)){
+// obsolete       fa(x);  // sentence is ending, no need to defer free
+// obsolete      }else{
+// obsolete       // non-final assignment: must push onto NVR stack for the first time.
+// obsolete       A nvra=jt->nvra;
+// obsolete       if(unlikely((I)(jt->parserstackframe.nvrtop+1U) > AN(nvra)))RZ(nvra=extnvr());  // Extend nvr stack if necessary.  copied from parser
+// obsolete       AAV1(nvra)[jt->parserstackframe.nvrtop++] = x;   // record the place where the value was protected (i. e. this sentence); it will be freed when this sentence finishes
+// obsolete       AFLAGOR(x,AFNVR)  // mark the value as protected in NVR stack
+// obsolete       AM(x)=1;  // When NVR is set, AM must contain count of # times value has been pushed onto the stack
+// obsolete      }
+// obsolete     }else{
+// obsolete      // already NVR+FREED or VIRTUAL: 'free' this time, knowing the real free will happen later,  We know usecount>1, but it may be PERMANENT; decrement it if not
+// obsolete      fadecr(x)
+// obsolete     }
     }
    }
-   e->val=w;   // install the new value
-  } 
+  }
  } else {  // x exists, and is either read-only or memory-mapped
   ASSERT(!(AFRO&xaf),EVRO);   // error if read-only value
   if(x!=w){  // replacing name with different mapped data.  If data is the same, just leave it alone

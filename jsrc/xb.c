@@ -396,7 +396,7 @@ F1(jtisnan){A*wv,z;B*u;D*v;I n,t;
  RETF(z);
 }
 
-
+#if 0 // obsolete 
 F1(jtbit1){A z;B*wv;BT*zv;I c,i,j,n,p,q,r,*s;UI x,y;
  ARGCHK1(w);
  if(!(B01&AT(w)))RZ(w=cvt(B01,w));
@@ -423,6 +423,7 @@ F1(jtbit1){A z;B*wv;BT*zv;I c,i,j,n,p,q,r,*s;UI x,y;
 F2(jtbit2){
  ASSERT(0,EVNONCE);
 }    /* convert byte booleans to bit booleans */
+#endif
 
 /* Copyright 2014, Jsoftware Inc.  All rights reserved. */
 // datetime epoch routines

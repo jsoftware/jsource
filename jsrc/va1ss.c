@@ -27,8 +27,8 @@ A jtssingleton1(J jt, A w,A self){A z;
  // Allocate the result area
  {
   // Calculate inplaceability for a and w.
-  // Inplaceable if: count=1 and zombieval, or count<0, PROVIDED the arg is inplaceable and the block is not UNINCORPABLE
-  I wipok = ((((AC(w)-1)|((I)w^(I)jt->asginfo.zombieval))==0)|(SGNTO0(AC(w)))) & ((UI)jtinplace>>JTINPLACEWX) & !(AFLAG(w)&AFUNINCORPABLE+AFRO+AFNVR);
+  // Inplaceable if: count=1 and zombieval, or count<0, PROVIDED the arg is inplaceable and the block is not UNINCORPABLE.  No inplace if on NVR stack (AM is NVR and count>0)
+  I wipok = ((((AC(w)-1)|((I)w^(I)jt->asginfo.zombieval))==0)|(SGNTO0(AC(w)))) & ((UI)jtinplace>>JTINPLACEWX) & !(AFLAG(w)&AFUNINCORPABLE+AFRO) & ((AM(w)&SGNTO0(AM(w)-AMNVRCT))^1);
   if(wipok){ z=w; } else {GATV(z, FL, 1, AR(w), AS(w));}
  }
 

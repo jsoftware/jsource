@@ -813,9 +813,13 @@ qd=: 3 : 'jdlast=: <,''a'''
 t=: >@{:@qd
 (t'')-:t''
 
-NB. Verify that names defined up the stack prevents assignment through assignsym
-t =: 5 6 7
-5 6 7 -: ([ 3 : 't =: 4 (1}) t'@+:) t
+NB. Verify that names defined up the stack prevent assignment through assignsym
+t =: 5 6 7 8 9
+5 6 7 8 9 -: ([ 3 : 't =: 4 (1}) t'@+:) t
+5 4 7 8 9 -: ([ 3 : 'y =. 4 (1}) y'@:+:) t
+5 4 7 8 9 -: ([ 3 : 't =: y =. 4 (1}) y'@:+:) t
+10 4 14 16 18 -: ([ 3 : 'y =. 4 (1}) y'@}.) t
+10 4 14 16 18 -: ([ 3 : 't =: y =. 4 (1}) y'@}.) t
 
 t =: 5 6 7
 5 6 7 -: ([ 3 : 't =: t , 0'@+:) t

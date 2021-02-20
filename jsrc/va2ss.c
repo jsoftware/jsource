@@ -52,9 +52,9 @@ A jtssingleton(J jt, A a,A w,A self,RANK2T awr,RANK2T ranks){A z;
  // Allocate the result area
  {
   // Calculate inplaceability for a and w.  Result must be 0 or 1
-  // Inplaceable if: count=1 and zombieval, or count<0, PROVIDED the arg is inplaceable and the block is not UNINCORPABLE
-  I aipok = ((((AC(a)-1)|((I)a^(I)jt->asginfo.zombieval))==0)|(SGNTO0(AC(a)))) & ((UI)jtinplace>>JTINPLACEAX) & !(AFLAG(a)&AFUNINCORPABLE+AFRO+AFNVR);
-  I wipok = ((((AC(w)-1)|((I)w^(I)jt->asginfo.zombieval))==0)|(SGNTO0(AC(w)))) & ((UI)jtinplace>>JTINPLACEWX) & !(AFLAG(w)&AFUNINCORPABLE+AFRO+AFNVR);
+  // Inplaceable if: count=1 and zombieval, or count<0, PROVIDED the arg is inplaceable and the block is not UNINCORPABLE  No inplace if on NVR stack (AM is NVR and count>0)
+  I aipok = ((((AC(a)-1)|((I)a^(I)jt->asginfo.zombieval))==0)|(SGNTO0(AC(a)))) & ((UI)jtinplace>>JTINPLACEAX) & !(AFLAG(a)&AFUNINCORPABLE+AFRO) & ((AM(a)&SGNTO0(AM(a)-AMNVRCT))^1);
+  I wipok = ((((AC(w)-1)|((I)w^(I)jt->asginfo.zombieval))==0)|(SGNTO0(AC(w)))) & ((UI)jtinplace>>JTINPLACEWX) & !(AFLAG(w)&AFUNINCORPABLE+AFRO) & ((AM(w)&SGNTO0(AM(w)-AMNVRCT))^1);
   z=0;
   // find or allocate the result area
   if(awr==0){  // both atoms

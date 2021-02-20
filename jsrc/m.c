@@ -168,9 +168,6 @@ F1(jtcheckfreepool){
   Wj=0; Wx=(jt->mfree[-PMINL+Wi].pool);  // get head of chain, init count of # eles
   while(Wx){
    if(FHRHPOOLBIN(AFHRH(Wx))!=(Wi-PMINL)){ecode=1; break;}  // will crash here if chain is corrupted
-#if MEMAUDIT&17 && SY_64
-   if((US)AFHRH(Wx)!=Wx->fill){ecode=2; break;}
-#endif
 #if MEMAUDIT&4
    if(AC(Wx)!=(I)0xdeadbeefdeadbeefLL){ecode=3; break;}
 #endif
@@ -513,8 +510,8 @@ void audittstack(J jt){F1PREFIP;
   ttop = (A*)*ttop;  // back up to end of previous block, or 0 if last block
  }
  // simulate nvr-stack frees
- DO(jt->parserstackframe.nvrtop, if(--AM(nvrav[i])==0){if(!(AFLAG(nvrav[i])&AFNVRUNFREED))auditsimdelete(nvrav[i]);})
- DO(jt->parserstackframe.nvrtop, ++AM(nvrav[i])==0;)  // restore AMs
+ DO(jt->parserstackframe.nvrtop, if((AM(nvrav[i])-=AMNVRCT)==AMFREED){auditsimdelete(nvrav[i]);})
+ DO(jt->parserstackframe.nvrtop, AM(nvrav[i])+=AMNVRCT)  // restore AMs
  // again to clear the counts
  for(ttop=jt->tnextpushp-!!((I)jt->tnextpushp&(NTSTACKBLOCK-1));ttop;){
   for(;(I)ttop&(NTSTACKBLOCK-1);ttop--){
@@ -1057,8 +1054,8 @@ if((I)jt&3)SEGFAULT;
     // we visit them in back-to-front order so the first-allocated headers are in cache
 #if MEMAUDIT&17 && BW==64
     u=(A)((C*)z+PSIZE); chn = 0; hrh = FHRHENDVALUE(1+blockx-PMINL);
-    DQ(PSIZE/2>>blockx, u=(A)((C*)u-n); AFCHAIN(u)=chn; chn=u; if(MEMAUDIT&4)AC(u)=(I)0xdeadbeefdeadbeefLL; hrh -= FHRHBININCR(1+blockx-PMINL); AFHRH(u)=hrh; u->fill=(US)AFHRH(u););   // chain blocks to each other; set chain of last block to 0
-    AFHRH(u) = hrh|FHRHROOT;  u->fill=(US)AFHRH(u);    // flag first block as root.  It has 0 offset already
+    DQ(PSIZE/2>>blockx, u=(A)((C*)u-n); AFCHAIN(u)=chn; chn=u; if(MEMAUDIT&4)AC(u)=(I)0xdeadbeefdeadbeefLL; hrh -= FHRHBININCR(1+blockx-PMINL); AFHRH(u)=hrh;);   // chain blocks to each other; set chain of last block to 0
+    AFHRH(u) = hrh|FHRHROOT;    // flag first block as root.  It has 0 offset already
 #else
     u=(A)((C*)z+PSIZE); chn = 0; hrh = FHRHENDVALUE(1+blockx-PMINL); DQ(PSIZE/2>>blockx, u=(A)((C*)u-n); AFCHAIN(u)=chn; chn=u; hrh -= FHRHBININCR(1+blockx-PMINL); AFHRH(u)=hrh;);    // chain blocks to each other; set chain of last block to 0
     AFHRH(u) = hrh|FHRHROOT;  // flag first block as root.  It has 0 offset already
@@ -1084,9 +1081,6 @@ if((I)jt&3)SEGFAULT;
    nt += n;
    {I ot=jt->malloctotalhwmk; ot=ot>nt?ot:nt; jt->malloctotal=nt; jt->malloctotalhwmk=ot;}
    AFHRH(z) = (US)FHRHSYSJHDR(1+blockx);    // Save the size of the allocation so we know how to free it and how big it was
-#if MEMAUDIT&17 && SY_64
-   z->fill=(US)AFHRH(z);
-#endif
    jt->mfreegenallo=mfreeb+=n;    // mfreegenallo includes the byte count allocated for large blocks (incl pad)
   }
 #if MEMAUDIT&8

@@ -123,7 +123,10 @@ struct AD {
  } kchain;
  FLAGT flag;
  union {
-  I m;  // Multi-use field. (1) For NJA/SMM blocks, size of allocation. (2) for NVR blocks (that are not NJA), the number of times the block has been put on the NVR stack.
+  I m;  // Multi-use field. (1) For NJA/SMM blocks, size of allocation. (2) for any non-NJA value that has ever been assigned to a name, AM holds NVR information.
+        // Bit 0 is set to indicate that AM has NVR data (all result values start with AM pointing to tstack with bit 0 clear); bit 1 is set if a free for the value has
+        // been deferred and must be applied when the NVR count goes to 0; bits 2 and up are the NVR count, i. e. the number of times the value is on the NVR stack
+        // Bit 0 is set to initiate this use when a value is assigned to a name for the first time (and NVR count is set to 0 then)
         // (3) for blocks coming out of a COUNTITEMS verb, holds the number of items in the
         // raze of the noun (if the types are identical) (4) for SYMB tables for explicit definitions, the address of the calling symbol table (5) for the block
         // holding the amend offsets in x u} y, the number of axes of y that are built into the indexes in u (6) no longer used
@@ -147,11 +150,11 @@ struct AD {
  US h;   // reserved for allocator.  Not used for AFNJA memory
 #if BW==64
  US origin;
- US fill;   // On 64-bit systems, there will be a padding word here - insert in case compiler doesn't
+ S lock;   // can be used as a lock
 #endif
 #else
 #if BW==64
- US fill;   // On 64-bit systems, there will be a padding word here - insert in case compiler doesn't
+ S lock;   // can be used as a lock
  US origin;
 #endif
  US h;   // reserved for allocator.  Not used for AFNJA memory
@@ -283,10 +286,10 @@ typedef I SI;
 #define RATX 7
 #define RAT             ((I)1L<<RATX)         /* Q  rational number              */
 #define RATSIZE sizeof(Q)
-#define BITX 8
-#define BIT             ((I)1L<<BITX)         /* BT bit boolean                  */
+// obsolete #define BITX 8
+// obsolete #define BIT             ((I)1L<<BITX)         /* BT bit boolean                  */
 // No size for BIT, since it is fractional
-// Bit 9 unused
+// Bit 8-9 unused
 #define SB01X 10
 #define SB01            ((I)1L<<SB01X)        /* P  sparse boolean               */
 #define SB01SIZE sizeof(P)
@@ -404,8 +407,8 @@ typedef I SI;
 
 #define ANY             -1L
 #define SPARSE          (SB01+SINT+SFL+SCMPX+SLIT+SBOX)
-#define NUMERIC         (B01+BIT+INT+FL+CMPX+XNUM+RAT+SB01+SINT+SFL+SCMPX)
-#define DIRECT          (LIT+C2T+C4T+B01+BIT+INT+FL+CMPX+SBT)
+#define NUMERIC         (B01+INT+FL+CMPX+XNUM+RAT+SB01+SINT+SFL+SCMPX)
+#define DIRECT          (LIT+C2T+C4T+B01+INT+FL+CMPX+SBT)
 #define JCHAR           (LIT+C2T+C4T+SLIT)
 #define NOUN            (NUMERIC+JCHAR+BOX+SBOX+SBT)
 #define DENSE           (NOUN&~SPARSE)
@@ -451,6 +454,16 @@ typedef I SI;
 #define STYPE(t)        (((t)&(B01|LIT|INT|FL|CMPX|BOX))<<(SB01X-B01X))
 #define DTYPE(t)        (((t)&(SB01|SLIT|SINT|SFL|SCMPX|SBOX))>>(SB01X-B01X))
 
+// flags in AM
+#define AMNVX 0   // set if the value has been assigned to a name is used for NVR status
+#define AMNV ((I)1<<AMNVX)
+#define AMFREEDX 1   // set if a free for the value has been deferred & it should be freed when NVR count goes to 0
+#define AMFREED ((I)1<<AMFREEDX)
+#define AMIMMUTX 2   // set if the block has been marked immutable and cannot be inplaced
+#define AMIMMUT ((I)1<<AMIMMUTX)
+#define AMNVRCTX 3  // start of NVR count: the number of times this value is on the NVR stack
+#define AMNVRCT ((I)1<<AMNVRCTX)
+
 // Flags in the count field of type A
 #define ACINPLACEX      (BW-1)
 #define ACINPLACE       ((I)((UI)1<<ACINPLACEX))  // set when this block CAN be used in inplace operations.  Always the sign bit.
@@ -480,7 +493,8 @@ typedef I SI;
 #define SGNIFPRISTINABLE(c) ((c)+ACPERMANENT)  // sign is set if this block is OK in a PRISTINE boxed noun
 // same, but s is an expression that is neg if it's OK to inplace
 // obsolete #define ASGNINPLACESGN(s,w)  (((s)&AC(w))<0 || ((s)&(AC(w)-2))<0 &&jt->asginfo.assignsym&&jt->asginfo.assignsym->val==w&&(!(AFLAG(w)&AFRO+AFNVR)||(!(AFLAG(w)&AFRO)&&notonupperstack(w))))  // OK to inplace ordinary operation
-#define ASGNINPLACESGN(s,w)  (((s)&AC(w))<0 || jt->asginfo.zombieval==w&&((s)<0)&&(!(AFLAG(w)&AFNVR)||notonupperstack(w)))  // OK to inplace ordinary operation
+// obsolete #define ASGNINPLACESGN(s,w)  (((s)&AC(w))<0 || jt->asginfo.zombieval==w&&((s)<0)&&(!(AFLAG(w)&AFNVR)||notonupperstack(w)))  // OK to inplace ordinary operation
+#define ASGNINPLACESGN(s,w)  (((s)&AC(w))<0 || jt->asginfo.zombieval==w&&((s)<0)&&(!(AM(w)&(-(AM(w)&AMNV)<<AMNVRCTX))||notonupperstack(w)))  // OK to inplace ordinary operation
 // obsolete #define ASGNINPLACESGNNJA(s,w)  ( ((s)&AC(w))<0 || (((s)&(AC(w)-2))<0||(((s)&(AC(w)-3)&SGNIF(AFLAG(w),AFNJAX))<0))&&jt->asginfo.assignsym&&jt->asginfo.assignsym->val==w&&(!(AFLAG(w)&AFRO+AFNVR)||(!(AFLAG(w)&AFRO)&&notonupperstack(w))))  // OK to inplace ordinary operation
 #define ASGNINPLACESGNNJA(s,w)  ASGNINPLACESGN(s,w)  // OK to inplace ordinary operation
 // define virtreqd and set it to 0 to start   scaf no LIT B01 C2T etc
@@ -492,9 +506,11 @@ typedef I SI;
   notonupperstack(a) \
   )  // OK to inplace ordinary operation
 #else
-#define EXTENDINPLACENJA(a,w)  ( ((AC(a)&(((AN(a)+AN(w))^AN(a))-AN(a)))<0) || \
-  ( (((((AN(a)+AN(w))^AN(a))-AN(a))|SGNIF(AFLAG(a),AFNJAX))<0) && (jt->asginfo.zombieval==a || (!jt->asginfo.assignsym&&AC(a)==1&&(virtreqd=1,!(AFLAG(a)&(AFRO|AFVIRTUAL))))) && notonupperstack(a) )   /* scaf combine */ \
- )  // OK to inplace ordinary operation
+#define EXTENDINPLACENJA(a,w)  ( ((AC(a)&(((AN(a)+AN(w))^AN(a))-AN(a)))<0) || /* inplaceable value that will probably fit */ \
+  ( (((((AN(a)+AN(w))^AN(a))-AN(a))|SGNIF(AFLAG(a),AFNJAX))<0) &&  /* value will probably fit OR is NJA */\
+    (jt->asginfo.zombieval==a || (!jt->asginfo.assignsym&&AC(a)==1&&(virtreqd=1,!(AFLAG(a)&(AFRO|AFVIRTUAL))))) &&  \
+    (!(AM(w)&(-(AM(w)&AMNV)<<AMNVRCTX))||notonupperstack(a)) )   /* scaf why upperstack on virt extension?  & virt exten when ac<=1*/ \
+  )  // OK to inplace ordinary operation
 #endif
 
 /* Values for AFLAG(x) field of type A                                     */
@@ -507,14 +523,17 @@ typedef I SI;
 #define AFDEBUGRESULTX  2           // special flag for values that alter debug state
 #define AFDEBUGRESULT   ((I)1<<AFDEBUGRESULTX)
 // Note: bit 4 is LABANDONED which is merged here
-#define AFNVRX          8
-#define AFNVR           ((I)1<<AFNVRX)  // This value is on the parser's execution stack, and must not be freed until it is removed.  Stacked values start as NVR+UNFREED.  If NVR is set, AM contains the
-                                       // number of times the value is on the nvr stack.  Ir is freed when the value goes to 0.  NVR is not set if NJA is set.
+// Note: bits 8-9 are used to hold AM flags merged in symbis
+#define AFNVRFLAGX      8
+// obsolete #define AFNVRX          8
+// obsolete #define AFNVR           ((I)1<<AFNVRX)  // This value is on the parser's execution stack, and must not be freed until it is removed.  Set when a named value is put onto the NVR stack.  If NVR is set, AM contains the
+// obsolete                                        // number of times the value is on the nvr stack.  NVR is not set if NJA is set.
 // the spacing of VIRTUALBOXED->UNIFORMITEMS must match ZZFLAGWILLBEOPENED->ZZCOUNTITEMS
 #define AFUNIFORMITEMSX 22     // matches MARK
 #define AFUNIFORMITEMS  ((I)1<<AFUNIFORMITEMSX)  // It is known that this boxed array has contents whose items are of uniform shape and type
-#define AFNVRUNFREEDX   18
-#define AFNVRUNFREED    ((I)1<<AFNVRUNFREEDX)  // This value does NOT need to be freed by the parser, even though it was stacked
+// obsolete #define AFNVRUNFREEDX   18
+// obsolete #define AFNVRUNFREED    ((I)1<<AFNVRUNFREEDX)  // This value does NOT have a deferred free outstanding.  Set when the value is first assigned to a name, or whenever AM goes to 0 indicating that the value
+// obsolete                                                // is no longer on the NVR stack.  If UNFREED is 0, the value is freed when its AM goes to 0 (i. e. when it is no longer on the nvr stack)
 #define AFVIRTUALX      17      // matches C2TX
 #define AFVIRTUAL       ((I)1<<AFVIRTUALX)  // this block is a VIRTUAL block: a subsequence of another block.  The data pointer points to the actual data, and the
                                  // m field points to the start of the block containing the actual data.  A VIRTUAL block cannot be incorporated into another block, and it
@@ -557,6 +576,21 @@ typedef I SI;
 #define AFLAGAND(a,v)   AFLAG(a)&=(v);
 #define AFLAGOR(a,v)    AFLAG(a)|=(v);
 #define AFLAGPRISTNO(a) AFLAGANDLOCAL(a,~AFPRISTINE)  // nothing from another thread can be PRISTINE
+// following used to modify AM as NVR count
+#define AMNVRINCR(a) AM(a)+=AMNVRCT;  // increment, no return
+#define AMNVRDECR(a,am) (am=AM(a),AM(a)-=AMNVRCT,am)  // save count, decrement, return old value
+#define AMNVRSET(a,x) (AM(a)=(x))
+#define AMNVRAND(a,x) (AM(a)&=(x));  // AND, no return
+// decide action and new AM value to free a
+// nvrct!=0, !free -> set free
+// nvrct!=0, free -> no chg, fa
+// nvrct==0, final -> no chg, fa
+// nvrct==0, !final, free -> (disaster about to happen, someone else is freeing the block we are about to use)
+// nvrct==0, !final, !free -> stack, incr nvrct, set free
+// v==nv if all we have to do is fa
+// old value of AM is loaded into v.  nv is a temp.  final is an expression whose value is 1 iff this is a final assignment, else 0
+#define AMNVRFREEACT(a,final,v,nv) (v=AM(a),nv=v|AMFREED,nv=v&-AMNVRCT?nv:1*AMNVRCT+AMFREED+AMNV,nv=v<((final)<<AMNVRCTX)?v:nv,AM(a)=nv);
+#define AMNVRCINI(a) {if(!(AM(a)&AMNV))AMNVRSET(a,AMNV);}  // if AM doesn't have NVR semantics, initialize it
 // Flags in the AR field of local symbol tables
 #define LSYMINUSE 1  // This bit is set in the rank of the original symbol table when it is in use
 #define LNAMEADDED LPERMANENT  // Set in rank when a new name is added to the local symbol table.  We transfer the bit from the L flags to the rank-flag

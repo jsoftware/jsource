@@ -172,7 +172,7 @@ L* jtprobedel(J jt,I l,C*string,UI4 hash,A g){
   LX delblockx=SYMNEXT(*asymx);
   if(!delblockx)R 0;  // if chain empty or ended, not found
   L *sym=LAV0(JT(jt,symp))+delblockx;  // address of next in chain, before we delete it
-  IFCMPNAME(NAV(sym->name),string,l,     // (1) exact match - if there is a value, use this slot, else say not found
+  IFCMPNAME(NAV(sym->name),string,l,hash,     // (1) exact match - if there is a value, use this slot, else say not found
     {
      if(unlikely(sym->flag&LCACHED)){
       *asymx=sym->next;   // cached: just unhook from chain.  can't be permanent
@@ -193,14 +193,20 @@ L* jtprobedel(J jt,I l,C*string,UI4 hash,A g){
 // result is L* address of the symbol-table entry for the name, or 0 if not found
 L*jtprobe(J jt,I l,C*string,UI4 hash,A g){
  RZ(g);
+// obsolete  LX symx=LXAV0(g)[SYMHASH(hash,AN(g)-SYMLINFOSIZE)];  // get index of start of chain
  LX symx=LXAV0(g)[SYMHASH(hash,AN(g)-SYMLINFOSIZE)];  // get index of start of chain
- while(1){
-  if(!symx)R 0;  // if chain empty or ended, not found
-  symx=SYMNEXT(symx);
-  L *sym=LAV0(JT(jt,symp))+symx;
-  IFCMPNAME(NAV(sym->name),string,l,R sym->val?sym:0;)     // (1) exact match - if there is a value, use this slot, else say not found
-  symx=sym->next;   // mismatch - step to next
+ L *sympv=LAV0(JT(jt,symp));  // base of symbol table
+ L *symnext, *sym=sympv+SYMNEXT(symx);  // first symbol address - might be the free root if symx is 0
+ while(symx){  // loop is unrolled 1 time
+  // sym is the symbol to process, symx is its index.  Start by reading next in chain.  One overread is OK, will be symbol 0 (the root of the freequeue)
+  symnext=sympv+SYMNEXT(symx=sym->next);
+// obsolete   if(!symx)R 0;  // if chain empty or ended, not found
+// obsolete   symx=SYMNEXT(symx);
+  IFCMPNAME(NAV(sym->name),string,l,hash,R sym->val?sym:0;)     // (1) exact match - if there is a value, use this slot, else say not found
+// obsolete   symx=sym->next;   // mismatch - step to next
+  sym=symnext;  // advance to value we read
  }
+ R 0;
 }
 
 // a is A for name; result is L* address of the symbol-table entry in the local symbol table, if there is one
@@ -215,11 +221,11 @@ L *jtprobelocal(J jt,A a,A locsyms){NM*u;I b,bx;
    // If no new names have been assigned since the table was created, we can skip this search, since it must fail (this is the path for words in z eg)
    if(likely(!(AR(locsyms)&LNAMEADDED)))R 0;
    LX lx = LXAV0(locsyms)[b];  // index of first block if any
-   I m=u->m; C* s=u->s;  // length/addr of name from name block
+   I m=u->m; C* s=u->s; UI4 hsh=u->hash; // length/addr of name from name block, and hash
    while(0>++bx){lx = LAV0(JT(jt,symp))[lx].next;}  // all PERMANENT
    // Now lx is the index of the first name that might match.  Do the compares
    while(lx=SYMNEXT(lx)) {L* l = lx+LAV0(JT(jt,symp));  // symbol entry
-    IFCMPNAME(NAV(l->name),s,m,R l->val?l : 0;)
+    IFCMPNAME(NAV(l->name),s,m,hsh,R l->val?l : 0;)
     lx = l->next;
    }
    R 0;  // no match.
@@ -246,7 +252,7 @@ L *jtprobeislocal(J jt,A a){NM*u;I b,bx;L *sympv=LAV0(JT(jt,symp));
   if(0 > (bx = ~u->bucketx)){
    // positive bucketx (now negative); that means skip that many items and then do name search
    // Even if we know there have been no names assigned we have to spin to the end of the chain
-   I m=u->m; C* s=u->s;  // length/addr of name from name block
+   I m=u->m; C* s=u->s; UI4 hsh=u->hash;  // length/addr of name from name block, and hash
    LX tx = lx;  // tx will hold the address of the last item in the chain, in case we have to add a new symbol
    L* l;
 
@@ -254,7 +260,7 @@ L *jtprobeislocal(J jt,A a){NM*u;I b,bx;L *sympv=LAV0(JT(jt,symp));
    // Now lx is the index of the first name that might match.  Do the compares
    while(lx=SYMNEXT(lx)) {
     l = lx+sympv;  // symbol entry
-    IFCMPNAME(NAV(l->name),s,m,R l;)
+    IFCMPNAME(NAV(l->name),s,m,hsh,R l;)
     tx = lx; lx = l->next;
    }
    // not found, create new symbol.  If tx is 0, the queue is empty, so adding at the head is OK; otherwise add after tx.  Make it non-PERMANENT
@@ -283,12 +289,12 @@ L *jtprobeislocal(J jt,A a){NM*u;I b,bx;L *sympv=LAV0(JT(jt,symp));
 // result is L* symbol-table entry to use
 // if not found, one is created
 L*jtprobeis(J jt,A a,A g){C*s;LX *hv,tx;I m;L*v;NM*u;L *sympv=LAV0(JT(jt,symp));
- u=NAV(a); m=u->m; s=u->s; hv=LXAV0(g)+SYMHASH(u->hash,AN(g)-SYMLINFOSIZE);  // get bucket number among the hash tables
+ u=NAV(a); m=u->m; s=u->s; UI4 hsh=u->hash; hv=LXAV0(g)+SYMHASH(u->hash,AN(g)-SYMLINFOSIZE);  // get hashchain base among the hash tables
  if(tx=SYMNEXT(*hv)){                                 /* !*hv means (0) empty slot    */
   v=tx+sympv;
   while(1){                               
    u=NAV(v->name);
-   IFCMPNAME(u,s,m,R v;)    // (1) exact match - may or may not have value
+   IFCMPNAME(u,s,m,hsh,R v;)    // (1) exact match - may or may not have value
    if(!v->next)break;                                /* (2) link list end */
    v=(tx=SYMNEXT(v->next))+sympv;
   }

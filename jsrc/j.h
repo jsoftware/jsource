@@ -839,7 +839,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define SETIC(w,targ)   (targ=AS(w)[0], targ=AR(w)?targ:1)  //   (AR(w) ? AS(w)[0] : 1L)
 #define ICMP(z,w,n)     memcmpne((z),(w),(n)*SZI)
 #define ICPY(z,w,n)     memcpy((z),(w),(n)*SZI)
-#define IFCMPNAME(name,string,len,stmt) if(likely((name)->m==(len)))if(likely(!memcmpne((name)->s,string,len)))stmt
+#define IFCMPNAME(name,string,len,hsh,stmt) if((name)->hash==(hsh))if(likely((name)->m==(len)))if(likely(!memcmpne((name)->s,string,len)))stmt  // if name matches hash and string, execute stmt
 
 // Mark a block as incorporated by removing its inplaceability.  The blocks that are tested for incorporation are ones that are allocated by partitioning, and they will always start out as inplaceable
 // If a block is virtual, it must be realized before it can be incorporated.  realized blocks always start off inplaceable and non-pristine

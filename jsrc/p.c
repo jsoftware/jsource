@@ -473,14 +473,14 @@ A jtparsea(J jt, A *queue, I m){PSTK * RESTRICT stack;A z,*v;I es;
          if(likely(!(AR(jt->locsyms)&LNAMEADDED)))goto rdglob;
          // from here on it is rare to find a name - usually they're globals defined elsewhere
          LX lx = LXAV0(jt->locsyms)[NAV(y)->bucket];  // index of first block if any
-         I m=NAV(y)->m; C* nm=NAV(y)->s;  // length/addr of name from name block
+         I m=NAV(y)->m; C* nm=NAV(y)->s; UI4 hsh=NAV(y)->hash;  // length/addr of name from name block
          while(0>++bx){lx = LAV0(JT(jt,symp))[lx].next;}
          // Now lx is the index of the first name that might match.  Do the compares
          while(1) {
           if(lx==0)goto rdglob;  // If we run off chain, go read from globals
           lx=SYMNEXT(lx);  // we are now into non-PERMANENT symbols & must clear the flag
           s = lx+LAV0(JT(jt,symp));  // symbol entry
-          IFCMPNAME(NAV(s->name),nm,m,{if(s->val==0)goto rdglob; break;})  // if match, we're done looking; could be not found, if no value
+          IFCMPNAME(NAV(s->name),nm,m,hsh,{if(s->val==0)goto rdglob; break;})  // if match, we're done looking; could be not found, if no value
           lx = s->next;
          }
          // Here there was a value in the local symbol table

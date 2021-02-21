@@ -61,7 +61,7 @@ L* jtsymnew(J jt,LX*hv, LX tailx){LX j;L*u,*v;
  while(!(j=SYMNEXT(LAV0(JT(jt,symp))[0].next)))RZ(symext(1));  /* extend pool if req'd        */
  LAV0(JT(jt,symp))[0].next=LAV0(JT(jt,symp))[j].next;       /* new top of stack            */
  u=j+LAV0(JT(jt,symp));  // the new symbol.  u points to it, j is its index
- if(SYMNEXT(tailx)) {L *t=SYMNEXT(tailx)+LAV0(JT(jt,symp));
+ if(likely(SYMNEXT(tailx)!=0)) {L *t=SYMNEXT(tailx)+LAV0(JT(jt,symp));
   // appending to tail, must be a symbol.  Queue is known to be nonempty
   u->next=t->next;t->next=j|(tailx&SYMNONPERM);  // it's always the end: point to next & prev, and chain from prev.  Everything added here is non-PERMANENT
  }else{
@@ -589,7 +589,7 @@ L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;L*e;
     }else{I am,nam;
      // Normal reassignment of a name.  AM must have NVR semantics.  What we do depends on NVR status
 // obsolete if(!(AM(x)&AMNV))SEGFAULT;  // scaf
-     AMNVRFREEACT(x,(I)jtinplace&JTFINALASGN,am,nam)  // analyze AM
+     AMNVRFREEACT(x,(I)jtinplace&JTFINALASGN,am,nam)  // analyze AM.  This sets am/nam as used by following code
      if(likely(am==nam)){fa(x);  // look at AM field, loaded into AM.  If value is on NVR and already deferred-free, OR if not on NVR and this is final assignment, we can free.  The block may still be in use elsewhere
      }else if(unlikely((am&-AMNVRCT)==0)){
       // (1) the value in x is not on the NVR stack.  But it may still be at large in the sentence, because we don't push local names

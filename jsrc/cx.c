@@ -432,9 +432,11 @@ tblockcase:
    // If there is a possibility that the previous B result may become the result of this definition,
    // protect it during the frees during the T block.  Otherwise, just free memory
    if(likely(cwgroup&0x200))tpop(old);else z=gc(z,old);   // 2 means previous B can't be the result
-   parseline(t);
    // Check for assert.  Since this is only for T-blocks we tolerate the test (rather than duplicating code)
-   if(unlikely((cwgroup&0xff)==CASSERT))if(JT(jt,assert)&&t&&!(NOUN&AT(t)&&all1(eq(num(1),t))))t=pee(line,cw+i,EVASSERT,nG0ysfctdl<<(BW-2),callframe);  // if assert., signal post-execution error if result not all 1s.  May go into debug; sets to result after debug
+   if(unlikely((cwgroup&0xff)==CASSERT)){
+    if(JT(jt,assert)){parseline(t); if(t&&!(NOUN&AT(t)&&all1(eq(num(1),t))))t=pee(line,cw+i,EVASSERT,nG0ysfctdl<<(BW-2),callframe);  // if assert., signal post-execution error if result not all 1s.  May go into debug; sets to result after debug
+    }else{++i; break;}  // if ignored assert, go to NSI
+   }else{parseline(t);}
    if(likely(t!=0)){ti=i,++i;  // if no error, continue on
     if(unlikely((UI)i>=(UI)(nG0ysfctdl>>16)))break;  // exit if end of defn
     if(unlikely(((((cwgroup=cw[i].ig.group[0])^CDO)&0xff)+jt->uflags.us.cx.cx_us)!=0))break;  // break if T block extended

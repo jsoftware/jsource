@@ -74,6 +74,20 @@ s=: 0 : 0
 
 'control error' -: ex '3 : s' 
 
+NB. assert doesn't run when 0=9!:35''
+f =. 3 : 0
+assert. 0 < y =. +: y
+y
+)
+4 -: f 2
+'assertion failure' -: f etx  _2
+9!:35 ] 0
+2 -: f 2
+_2 -: f _2
+9!:35 ] 1
+
+
+
 9!:41 ws
 
 4!:55 ;:'f lf s word ws'

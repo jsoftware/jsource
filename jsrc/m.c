@@ -535,7 +535,8 @@ static void freesymb(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
   fr(LOCNAME(w));
   // clear the data fields   kludge but this is how it was done (should be done in symnew)
   jtsympv[k].name=0;jtsympv[k].val=0;jtsympv[k].sn=0;jtsympv[k].flag=0;
-  jtsympv[k].next=jtsympv[0].next;jtsympv[0].next=k;  // LAV0(JT(jt,symp))[0] is the base of the free chain
+  freeroot=k; freetailchn=&jtsympv[k].next;  // init free chain to 1 item
+// obsolete   jtsympv[k].next=jtsympv[0].next;jtsympv[0].next=k;  // LAV0(JT(jt,symp))[0] is the base of the free chain
  }
  // loop through each hash chain, clearing the blocks in the chain
  for(j=SYMLINFOSIZE;j<wn;++j){

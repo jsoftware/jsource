@@ -152,8 +152,9 @@ A jtrank1ex0(J jt,AD * RESTRICT w,A fs,AF f1){F1PREFIP;PROLOG(0041);A z,virtw;
     // <@: <@ <& <&:
     // Because the outermost rank is 0, <@f by itself is OK; but later, as in (<@f)@>, it is not.  <@:f is.  So check for infinite rank
     if(state&ZZFLAGATOPOPEN1 && FAV(fs)->mr<RMAX)break;  // not first, and not infinite rank: ignore
-    // Advance fs to the g of <@g
-    fs=FAV(fs)->fgh[1+((FAV(fs)->flag2>>VF2ISCCAPX)&1)]; f1=FAV(fs)->valencefns[0];
+    // Advance fs to the g of <@:g, and the function with it
+// obsolete     fs=FAV(fs)->fgh[1+((FAV(fs)->flag2>>VF2ISCCAPX)&1)]; f1=FAV(fs)->valencefns[0];  // ```
+    fs=FAV(fs)->fgh[1]; f1=FAV(fs)->valencefns[0];
    }
    state|=fstate;  // We accepted the new f, so take its flags
   }
@@ -476,8 +477,9 @@ A jtrank2ex0(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,AF f2){F2PREFIP;PROLOG(00
     // <@: <@ <& <&:
     // Because the outermost rank is 0, <@f by itself is OK; but later, as in (<@f)@>, it is not.  <@:f is.  So check for infinite rank
     if(state&ZZFLAGATOPOPEN2W && FAV(fs)->mr<RMAX)break;  // not first, and not infinite rank: ignore
-    // Advance fs to the g of <@g
-    fs=FAV(fs)->fgh[1+((FAV(fs)->flag2>>VF2ISCCAPX)&1)]; f2=FAV(fs)->valencefns[1];
+    // Advance fs to the g of <@:g, and the function with it
+// obsolete     fs=FAV(fs)->fgh[1+((FAV(fs)->flag2>>VF2ISCCAPX)&1)]; f2=FAV(fs)->valencefns[1];   // ```
+    fs=FAV(fs)->fgh[1]; f2=FAV(fs)->valencefns[1];
    }
    state|=fstate;  // We accepted the new f, so take its flags
   }
@@ -790,9 +792,10 @@ F2(jtqq){AF f1,f2;I hv[3],n,r[3],vf,flag2=0,*v;A ger=0;
   if(av->flag&VFUSEDOK2&&(hv[1]|hv[2])>=0){f2=av->valencefns[1];}
   else if(av->flag&VIRS2){f2=(hv[1]|hv[2])>=0?rank2i:rank2in;}else{f2=(hv[1]|hv[2])?((hv[1]|hv[2])>=0&&!(av->flag2&VF2RANKONLY2)?rank2q:rank2):jtrank20;flag2|=VF2RANKONLY2;}
   // Test for special cases
-  if(av->valencefns[1]==jtfslashatg && r[1]==1 && r[2]==1){  // f@:g"1 1 where f and g are known atomic
-   I isfork=av->id==CFORK;
-   if(FAV(FAV(isfork?av->fgh[1]:av->fgh[0])->fgh[0])->id==CPLUS && FAV(isfork?av->fgh[2]:av->fgh[1])->id==CSTAR) {
+  if(av->valencefns[1]==jtfslashatg && r[1]==1 && r[2]==1){  // f/@:g"1 1 where f and g are known atomic
+// obsolete    I isfork=av->id==CFORK;  // ```
+// obsolete    if(FAV(FAV(isfork?av->fgh[1]:av->fgh[0])->fgh[0])->id==CPLUS && FAV(isfork?av->fgh[2]:av->fgh[1])->id==CSTAR) {
+   if(FAV(FAV(av->fgh[0])->fgh[0])->id==CPLUS && FAV(av->fgh[1])->id==CSTAR) {
     // +/@:*"1 1 or ([: +/ *)"1 1 .  Use special rank-1 routine.  It supports IRS, but not inplacing (fslashatg didn't inplace either)
     f2=jtsumattymes1; vf |= VIRS2; flag2 &= ~VF2RANKONLY2; vf &=~(VJTFLGOK2);  // switch to new routine, which supports IRS but not inplacing
    }

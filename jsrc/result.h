@@ -63,7 +63,8 @@
 // Where f is depends on whether the modifier is f@:g or ([: g h)
 #define ZZPARMSNOFS(framelen,ncells) zzframelen=(framelen); zzncells=(ncells);
 #define ZZPARMS(framelen,ncells,valence) ZZPARMSNOFS(framelen,ncells)  \
- if(!ZZASSUMEBOXATOP&&ZZFLAGWORD&ZZFLAGBOXATOP){fs=FAV(fs)->fgh[1+((FAV(fs)->flag2>>VF2ISCCAPX)&1)]; f##valence=FAV(fs)->valencefns[valence-1];}  // if BOXATOP, we must look back into the verb
+ if(!ZZASSUMEBOXATOP&&ZZFLAGWORD&ZZFLAGBOXATOP){fs=FAV(fs)->fgh[1]; f##valence=FAV(fs)->valencefns[valence-1];}  // if BOXATOP, we must look back into the verb  ```
+// obsolete  if(!ZZASSUMEBOXATOP&&ZZFLAGWORD&ZZFLAGBOXATOP){fs=FAV(fs)->fgh[1+((FAV(fs)->flag2>>VF2ISCCAPX)&1)]; f##valence=FAV(fs)->valencefns[valence-1];}  // if BOXATOP, we must look back into the verb  ```
 
 // user must define ZZINSTALLFRAME(optr) to move frame into optr++ (don't forget to increment optr!)
 

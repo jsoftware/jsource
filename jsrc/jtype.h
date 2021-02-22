@@ -953,8 +953,9 @@ typedef struct {AF valencefns[2];A fgh[3];union { D lD; void *lvp[2]; I lI; I4 l
 #define VF2WILLOPEN1X      4   // This verb will open y as its first act.  Monad case only
 #define VF2WILLOPEN1       ((I)(((I)1)<<VF2WILLOPEN1X))
 // must leave a gap for WILLBEOPENED in result.h
-#define VF2ISCCAPX        5   // flags (if any) came from ([: g h) rather than f@:g
-#define VF2ISCCAP         ((I)(((I)1)<<VF2ISCCAPX))
+// 6 free
+// obsolete #define VF2ISCCAPX        5   // flags (if any) came from ([: g h) rather than f@:g  ```
+// obsolete #define VF2ISCCAP         ((I)(((I)1)<<VF2ISCCAPX))
 // next flag must be same as JTCOUNTITEMS
 #define VF2USESITEMCOUNT1X 7   // This verb can make use of an item count stored in m.  Monad case only
 #define VF2USESITEMCOUNT1  ((I)(((I)1)<<VF2USESITEMCOUNT1X))

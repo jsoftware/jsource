@@ -21,13 +21,15 @@ static B consf(A w){A f;C c;
 
 static F2(jtfong){A f;C c;V*v;
  ARGCHK2(a,w);
- v=FAV(a); c=v->id; f=v->fgh[0];
- R c==CRIGHT ? w : c==CFORK&&(NOUN&AT(f)||CCAP==ID(f)) ? folk(f,v->fgh[1],fong(v->fgh[2],w)) : folk(ds(CCAP),a,w);
-}   // [: f g  with simplifications: [: ] w -> w;  [: (N/[: x y) w -> N/[: x [: y w   and y omittrd if ]
+ v=FAV(a); c=v->id; f=v->fgh[0]; A g=v->fgh[1];  A h=v->fgh[2];
+ if(c==CFORK&&h==0){h=g; g=f; f=ds(CCAP);}   // reconsitute capped fork 
+ R (c&~1)==CLEFT ? w : c==CFORK&&(NOUN&AT(f)||CCAP==ID(f)) ? folk(f,g,fong(h,w)) : folk(ds(CCAP),a,w);
+}   // [: f g  with simplifications: [: ][ w -> w;  [: (N/[: x y) w -> N/[: x [: y w   and y omitted if ][
 
 static F1(jtinvfork){A f,fi,g,gi,h,k;B b,c;V*v;
  ARGCHK1(w);
- v=FAV(w); RZ(f=unname(v->fgh[0])); g=v->fgh[1]; RZ(h=unname(v->fgh[2]));
+ v=FAV(w);
+ if(v->fgh[2]){RZ(f=unname(v->fgh[0])); g=v->fgh[1]; RZ(h=unname(v->fgh[2]));}else{f=ds(CCAP); g=v->fgh[0]; RZ(h=unname(v->fgh[1]));}  // reconsitute capped fork
  if(CCAP==ID(f))R fong(invrecur(h),invrecur(g));
  c=1&&NOUN&AT(f); b=c||consf(f);
  ASSERT(b!=consf(h),EVDOMAIN);

@@ -75,7 +75,7 @@ s=: 0 : 0
 'control error' -: ex '3 : s' 
 
 NB. assert doesn't run when 0=9!:35''
-f =. 3 : 0
+f =: 3 : 0
 assert. 0 < y =. +: y
 y
 )

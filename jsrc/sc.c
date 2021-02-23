@@ -50,16 +50,20 @@ valgone: ;
    }
    // syrd1 returns bit 0 set if the value is from a named locale, i. e. is cachable.  probelocal always returns with that flag off, since local symbols are never cachable
    ASSERT(stabent!=0,EVVALUE);  // name must be defined
-   I4 cachable=(I4)(I)stabent&1; stabent=(L*)((I)stabent&~1);  // extract cachable flag from stabent & clear it
-   fs=stabent->val;  // fetch the value of the name
+   I4 cacheable=(I4)(I)stabent&1; stabent=(L*)((I)stabent&~1);  // extract cachable flag from stabent & clear it
+   fs=stabent->val;  // fetch the value for the name
    ASSERT(fs!=0,EVVALUE); // make sure the name's value is given also
    ASSERT(PARTOFSPEECHEQACV(AT(self),AT(fs)),EVDOMAIN);   // make sure its part of speech has not changed since the name was parsed
    // if this reference allows caching (lI4[0]<0), save the value if it comes from a cachable source, and attach the primitive block to the name
-   if(unlikely((cachedlkp&(-cachable))<0)){
+   if(unlikely((cachedlkp&(-cacheable))<0)){
     // point the nameref to the lookup result.  This prevents further changes to the lookup
     v->localuse.lI4[0]=stabent-LAV0(JT(jt,symp));  // convert symbol address back to index in case symbols are relocated
     stabent->flag|=LCACHED;  // protect the value from changes
-     // we could mark the lookup as cached, but if debug is on we want to display the lookup value first time through 
+    // set the flags in the nameref to what they are in the value.  This will allow compounds using this nameref (created in the parsing of later sentences)
+    // to use the flags.  If we do PPPP, this will be too late
+    v->flag=FAV(fs)->flag&(VIRS1+VIRS2+VJTFLGOK1+VJTFLGOK2+VASGSAFE);  // combining flags
+    v->flag2=FAV(fs)->flag2&(VF2BOXATOP1+VF2BOXATOP2+VF2WILLOPEN1+VF2USESITEMCOUNT1+VF2ATOPOPEN1+VF2ATOPOPEN2W+VF2ATOPOPEN2A+VF2RANKATOP1+VF2RANKATOP2+VF2RANKONLY1+VF2RANKONLY2+VF2WILLOPEN2W+VF2WILLOPEN2A+VF2USESITEMCOUNT2W+VF2USESITEMCOUNT2A);  // combining flags
+     // we could mark the lookup as cached, but if debug is on we want to display the lookup value first time through    ???
      // If the NM block is cachable, point it to the nameref.  The NM block must be marked cachable AND still be pointed to by the explicit definition, which
      // means that its usecount must be more than what comes from the nameref.  If the explicit definition has been deleted, we must ensure that we don't put a loop
      // in the chains, because there will never be a free from the non-nameref side to break the loop
@@ -221,6 +225,7 @@ A jtnamerefacv(J jt, A a, L* w){A y;V*v;
  A z=fdef(0,CTILDE,AT(y), jtunquote1,jtunquote, a,0L,0L, (v->flag&VASGSAFE)+(VJTFLGOK1|VJTFLGOK2), v->mr,lrv(v),rrv(v));  // create value of 'name~', with correct rank, part of speech, and safe/inplace bits
  RZ(z);
  // if the nameref is cachable, either because the name is cachable or name caching is enabled now, enable caching in lI4
+ // If the nameref is cached, we will fill in the flags in the reference after we first resolve the name
  FAV(z)->localuse.lI4[0]=(NAV(a)->flag&NMCACHED || (jt->namecaching && !(NAV(a)->flag&(NMILOC|NMDOT|NMIMPLOC))))<<SYMNONPERMX;  // 0x80.. to enable caching, otherwise 0
  R z;
 }

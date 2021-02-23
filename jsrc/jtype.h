@@ -909,12 +909,12 @@ typedef struct {AF valencefns[2];A fgh[3];union { D lD; void *lvp[2]; I lI; I4 l
 #define VFKEYSLASHFX  (FLX+1)  // (in f/.) function coded for, 0=<. 1=>. 2=+
 #define VFKEYSLASHF      (((I)3)<<VFKEYSLASHFX)
 
-
 // bits 8 and above are available for all verbs:
 #define VGERLX          8
 #define VGERL           (((I)1)<<VGERLX)          /* gerund left  argument           */
 #define VGERR           (I)512          /* gerund right argument           */
-#define VTAYFINITE      (I)1024         /* t. finite polynomial            */
+// obsolete #define VTAYFINITE      (I)1024         /* t. finite polynomial            */
+// bit 10 free
 #define VIRS1X          11
 #define VIRS1           (I)2048         /* 11 monad has integral rank support */
 #define VIRS2X          12
@@ -978,11 +978,11 @@ typedef struct {AF valencefns[2];A fgh[3];union { D lD; void *lvp[2]; I lI; I4 l
 // Next 4 flags must be spaced so they can shift down to WILLOPEN1 and COUNTITEMS1
 #define VF2WILLOPEN2WX      15   // This verb will open y as its first act.  Monad case only
 #define VF2WILLOPEN2W       ((I)(((I)1)<<VF2WILLOPEN2WX))
-#define VF2WILLOPEN2AX      16   // This verb will open y as its first act.  Monad case only
+#define VF2WILLOPEN2AX      16   // This verb will open x as its first act.  Monad case only
 #define VF2WILLOPEN2A       ((I)(((I)1)<<VF2WILLOPEN2AX))
-#define VF2USESITEMCOUNT2WX 18   // This verb can make use of an item count stored in m.  Monad case only
+#define VF2USESITEMCOUNT2WX 18   // This verb can make use of an item count stored in y.  Monad case only
 #define VF2USESITEMCOUNT2W  ((I)(((I)1)<<VF2USESITEMCOUNT2WX))
-#define VF2USESITEMCOUNT2AX 19   // This verb can make use of an item count stored in m.  Monad case only
+#define VF2USESITEMCOUNT2AX 19   // This verb can make use of an item count stored in y.  Monad case only
 #define VF2USESITEMCOUNT2A  ((I)(((I)1)<<VF2USESITEMCOUNT2AX))
 
 // layout of primitive, in the primtbl.  It is a memory header (shape 0) followed by a V

@@ -461,6 +461,18 @@ g1__numloc2''
 5 -: vb__numloc2 ''
 18!:55 numloc1,numloc2
 
+NB. Combining attributes are cached, making the second execution faster
+9!:5 (2)
+vb__ =: +
+f0 =. 3 : 0
+y vb"+ y
+) 
+r =: 1e6 ?@$ 0
+(6!:2 'f0 r') < 0.5 * (6!:2 'f0 r')
+9!:5 (0)
+
+
+
 
 
 4!:55 ;:'f0 f1 f2 f3 g0 g1 g1__ g2 g3 g4 g5 gvb l numloc1 numloc2 r test vb__ vb_z_'

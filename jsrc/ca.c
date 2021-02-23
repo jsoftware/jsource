@@ -77,7 +77,7 @@ static DF1(jtmodpow1){A g=FAV(self)->fgh[1]; R rank2ex0(FAV(g)->fgh[0],w,self,jt
 
 // u@v and u@:v
 // TODO: no  need for protw checking?
-static DF1(on1cell){F1PREFIP;DECLFG;A z;PROLOG(0113);
+DF1(on1cell){F1PREFIP;DECLFG;A z;PROLOG(0113);
 PUSHZOMB; ARGCHK1D(w); A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW));
 A gx; RZ(gx=(g1)((J)(intptr_t)(((I)jtinplace&(~(JTWILLBEOPENED+JTCOUNTITEMS))) + (REPSGN(SGNIF(FAV(gs)->flag,VJTFLGOK1X)) & FAV(fs)->flag2 & VF2WILLOPEN1+VF2USESITEMCOUNT1)),w,gs));  /* inplace g.  Copy WILLOPEN from f to WILLBEOPENED for g  jtinplace is set for g */
 ARGCHK1D(gx)
@@ -86,7 +86,9 @@ POPZOMB;
 jtinplace=(J)(intptr_t)(((I)jtinplace&~(JTINPLACEW))+((I )(gx!=protw)*JTINPLACEW)); 
 jtinplace=FAV(fs)->flag&VJTFLGOK1?jtinplace:jt;
 z=(f1)(jtinplace,gx,fs);
-RZ(z); EPILOG(z);}
+RZ(z);
+EPILOG(z);
+}
 DF1(on1){PREF1(on1cell); R on1cell(jt,w,self);}
 
 DF2(jtupon2cell){F2PREFIP;DECLFG;A z;PROLOG(0114);
@@ -97,7 +99,8 @@ ARGCHK1D(gx)
 POPZOMB; jtinplace=(J)(intptr_t)(((I)jtinplace&~(JTINPLACEW))+(((I )(gx!=prota)&(I )(gx!=protw))*JTINPLACEW)); 
 jtinplace=FAV(fs)->flag&VJTFLGOK1?jtinplace:jt;
 RZ(z=(f1)(jtinplace,gx,fs));
-EPILOG(z);}
+EPILOG(z);
+}
 DF2(jtupon2){PREF2(jtupon2cell); R jtupon2cell(jt,a,w,self);}
 
 // special case for rank 0.  Transfer to loop.  

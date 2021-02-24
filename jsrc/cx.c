@@ -963,7 +963,7 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
    jtcalclocalbuckets(jt,t,actstv,actstn-SYMLINFOSIZE);  // install bucket info into name
    // if the name is unbucketed, OR it has positive bucketx (meaning 'not found') it is not a simple local name.
    // If it is also not indirect, x., or u., it is eligible for caching - if that is enabled
-   if(jt->namecaching && !(NAV(t)->flag&(NMILOC|NMDOT|NMIMPLOC)) && (NAV(t)->bucket==0||NAV(t)->bucketx>0))NAV(t)->flag|=NMCACHED;
+   if(jt->namecaching && !(NAV(t)->flag&(NMILOC|NMDOT|NMIMPLOC)) && (NAV(t)->bucket==0||NAV(t)->bucketx>=0))NAV(t)->flag|=NMCACHED;
    if(!(type>=3 || flags&VXOPR)){  // If this is NOT guaranteed to return a noun...
     NAV(t)->bucket=0; NAV(t)->bucketx=0;  // remove the bucket indexes we calculated
    }

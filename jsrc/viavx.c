@@ -1490,7 +1490,13 @@ end1: ;
    // if alimr<0, next index=aliml+stride but clamped to stay in bounds; if fall off the end, run out with 'not found'
    I addstride=aliml+stride; newx=alimr<0?addstride:newx;  // look for bracket if we havn't found one yet
    if(unlikely(newx>=asct)){  // if the search for a bracket runs us off the end, reset it and handle any tail
-   
+    if(aliml==asct-1){
+     // the last item of a is less than wsct.  Run to the end with 'not found'
+     while(zx!=zend)*zv++=asct;  // all the rest not found
+     break;  // we're done with this a/w
+    }
+    // not all done, continue search at last atom
+    newx=asct-1;  // try reading from the last location
    }
 
    // select the read for the next probe and start reading it

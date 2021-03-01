@@ -37,7 +37,7 @@ valgone: ;
    if(!(NAV(thisname)->flag&(NMLOC|NMILOC|NMIMPLOC))) {  // simple name, and not u./v.
     explocale=0;  // flag no explicit locale
     if(likely(!(stabent = probelocal(thisname,jt->locsyms)))){stabent=syrd1(NAV(thisname)->m,NAV(thisname)->s,NAV(thisname)->hash,jt->global);}  // Try local, then look up the name starting in jt->global
-   }else{  // locative or u/v
+   }else{  // locative or u./v.
     if(!(NAV(thisname)->flag&NMIMPLOC)){  // locative
      RZ(explocale=sybaseloc(thisname));  //  get the explicit locale.  0 if erroneous locale
      stabent=syrd1(NAV(thisname)->m,NAV(thisname)->s,NAV(thisname)->hash,explocale);  // Look up the name starting in the locale of the locative

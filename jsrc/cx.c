@@ -333,7 +333,6 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
  // allocation that has to remain throughout this routine.
  // If the user turns on debugging in the middle of a definition, we will raise old when he does
  A *old=jt->tnextpushp;
-auditblock(jt,0,1,1);  // scaf
 
  // loop over each sentence
  A cd=0;  // pointer to block holding the for./select. stack, if any
@@ -388,7 +387,6 @@ auditblock(jt,0,1,1);  // scaf
 // obsolete   ci=i+cw;   // ci->control-word info
   // process the control word according to its type
   I cwgroup;
-auditblock(jt,0,1,1);  // scaf
   // **************** top of main dispatch loop ********************
   switch(((cwgroup=cw[i].ig.group[0])&31)){  // highest cw is 33, but it aliases to 1 & there is no 32
 
@@ -614,7 +612,6 @@ docase:
    i=cw[i].go;  // Go to the next sentence, whatever it is
   }
  }  // end of main loop
-auditblock(jt,0,1,1);  // scaf
  // We still must not take an error exit in this runout.  We have to hang around to the end to restore symbol tables, pointers, etc.
 
  FDEPDEC(1);  // OK to ASSERT now
@@ -633,16 +630,13 @@ auditblock(jt,0,1,1);  // scaf
    // It is OK to refer to other symbol tables, since they will be removed if they try to escape at higher lavels and in the meantime can be executed; but
    // there is no way we could have a reference to such an implied locative unless we also had a reference to the current table; so we replace only the
    // first locative in each branch
-auditblock(jt,0,1,1);  // scaf
    z=fix(z,sc(FIXALOCSONLY|FIXALOCSONLYLOWEST));
-auditblock(jt,0,1,1);  // scaf
   }else {pee(line,&cw[bi],EVNONNOUN,nG0ysfctdl<<(BW-2),callframe); z=0;}  // signal error, set z to 'no result'
  }else{
   // No result.  Must be an error
   if(nG0ysfctdl&4)jt->uflags.us.cx.cx_c.db=(UC)(nG0ysfctdl>>8);  // if we had an unfinished try. struct, restore original debug state
   // Since we initialized z to i. 0 0, there's nothing more to do
  }
-auditblock(jt,0,1,1);  // scaf
 
  if(unlikely(nG0ysfctdl&16)){debz();}   // pair with the deba if we did one
  A prevlocsyms=(A)AM(locsym);  // get symbol table to return to, before we free the old one
@@ -660,24 +654,19 @@ auditblock(jt,0,1,1);  // scaf
   fa(locsym);  // unprotect local syms.  This deletes them if they were cloned
  }
  // locsym may have been freed now
-auditblock(jt,0,1,1);  // scaf
 
  // If we are using the original local symbol table, clear it (free all values, free non-permanent names) for next use.  We know it hasn't been freed yet
  // We detect original symbol table by rank LSYMINUSE - other symbol tables are assigned rank 0.
  // Tables are born with NAMEADDED off.  It gets set when a name is added.  Setting back to initial state here, we clear NAMEADDED
-auditblock(jt,0,1,1);  // scaf
  if(likely(nG0ysfctdl&32)){AR(locsym)=LLOCALTABLE; symfreeha(locsym);}
  // Pop the private-area stack
-auditblock(jt,0,1,1);  // scaf
  SYMSETLOCAL(prevlocsyms);
-auditblock(jt,0,1,1);  // scaf
  // Now that we have deleted all the local symbols, we can see if we were returning one.
  // See if EPILOG pushed a pointer to the block we are returning.  If it did, and the usecount we are returning is 1, set this
  // result as inplaceable and install the address of the tpop stack into AM (as is required for all inplaceable blocks).  If the usecount is inplaceable 1,
  // we don't do this, because it is possible that the AM slot was inherited from higher up the stack.
  // Note that we know we are not returning a virtual block here, so it is OK to write to AM
  if(likely(z!=0))if(likely((_ttop!=jt->tnextpushp)==AC(z))){ACRESET(z,ACINPLACE|ACUC1) AZAPLOC(z)=_ttop;}  // AC can't be 0.  The block is not in use elsewhere
-auditblock(jt,0,1,1);  // scaf
  RETF(z);
 }
 
@@ -822,7 +811,7 @@ static A jtsent12b(J jt,A w){A t,*wv,y,*yv;I j,*v;
 // actstv points to the chain headers, actstn is the number of chains
 // all the chains have had the non-PERMANENT flag cleared in the pointers
 static void jtcalclocalbuckets(J jt, A t, LX *actstv, I actstn){LX k;
- if(!(NAV(t)->flag&(NMLOC|NMILOC))){  // don't store if we KNOW we won't be looking up in the local symbol table
+ if(!(NAV(t)->flag&(NMLOC|NMILOC))){  // don't store if we KNOW we won't be looking up in the local symbol table - and bucketx contains a hash/# for NMLOC
   I4 compcount=0;  // number of comparisons before match
   // lv[j] is a simplename.  We will install the bucket/index fields
   NM *tn = NAV(t);  // point to the NM part of the name block
@@ -975,7 +964,7 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
    // If it is also not indirect, x., or u., it is eligible for caching - if that is enabled
    if(jt->namecaching && !(NAV(t)->flag&(NMILOC|NMDOT|NMIMPLOC)) && (NAV(t)->bucket==0||NAV(t)->bucketx>=0))NAV(t)->flag|=NMCACHED;
    if(!(type>=3 || flags&VXOPR)){  // If this is NOT guaranteed to return a noun...
-    NAV(t)->bucket=0; NAV(t)->bucketx=0;  // remove the bucket indexes we calculated
+    NAV(t)->bucket=0;  // remove the bucket number, but leave bucketx, which has hash info for NMLOC types
    }
   }else if((AT(t)&BOX+BOXMULTIASSIGN)==BOX+BOXMULTIASSIGN){
    if(type>=3 || flags&VXOPR){  // If this is guaranteed to return a noun...

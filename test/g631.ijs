@@ -83,6 +83,8 @@ o =: &
 '>:&.o' -: 5!:5 <'pe'
 e =: &.>
 (<5) -: (e =: >:)e <4  NB. If e were stacked by reference, this would fail
+e =: 1 : 'u&.>'
+'domain error' -: ". etx '(e =: >:)e <4'  NB. Locative produces reference
 exx_z_ =: &.>
 'domain error' -: ". etx '(exx_z_ =: >:)exx_z_ <4'  NB. Locative produces reference
 o =: >

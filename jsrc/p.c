@@ -216,8 +216,6 @@ static PSTK * (*(lines58[]))() = {jtpfork,jtphook,jtis,jtpparen};  // handlers f
 // Initial call has nonrecurok and virtok both set
 
 void auditblock(J jt,A w, I nonrecurok, I virtok) {
-if(!(AT(jt->global)==SYMB))SEGFAULT;
-R;  // scaf
  if(!w)R;
  if(AC(w)<0&&AZAPLOC(w)==0)SEGFAULT;
  if(AC(w)<0&&!(AFLAG(w)&AFVIRTUAL)&&AZAPLOC(w)>=jt->tnextpushp)SEGFAULT;  // requires large NTSTACK

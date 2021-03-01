@@ -517,6 +517,8 @@ extern unsigned int __cdecl _clearfp (void);
 #define IPHANYEPS       (IPHOFFSET+IANYEPS)
 #define IPHALLEPS       (IPHOFFSET+IALLEPS)
 #define IPHIFBEPS       (IPHOFFSET+IIFBEPS)
+#define ISFUX            14
+#define ISFU            (((I)1)<<ISFUX)  // i.!.1 - sequential file update
 
 #if C_AVX   // _mm_round_pd requires sse4.1
 #define jceil(x) _mm_cvtsd_f64(_mm_round_pd(_mm_set1_pd(x),(_MM_FROUND_TO_POS_INF |_MM_FROUND_NO_EXC)))
@@ -577,7 +579,7 @@ extern unsigned int __cdecl _clearfp (void);
  // 13 (0xD) will verify that there are no blocks being used after they are freed, or freed prematurely.  If you get a wild free, turn on bit 0x2
  // 2 will detect double-frees before they happen, at the time of the erroneous tpush
 #define MEMAUDITPCALLENABLE 1     // expression for enabling stack auditing - enable auditing when true
-#define AUDITEXECRESULTS 0    // When set, we go through all execution results to verify recursive and virtual bits are OK, and m nonzero if AC<0
+#define AUDITEXECRESULTS 1    // scaf // When set, we go through all execution results to verify recursive and virtual bits are OK, and m nonzero if AC<0
 #define FORCEVIRTUALINPUTS 0  // When 1 set, we make all non-inplaceable noun inputs to executions VIRTUAL.  Tests should still run
                            // When 2 set, make all outputs from RETF() virtual.  Tests for inplacing will fail; that's OK if nothing crashes
 // set FINDNULLRET to trap when a routine returns 0 without having set an error message
@@ -758,9 +760,9 @@ extern unsigned int __cdecl _clearfp (void);
 // Because the Boolean dyads read beyond the end of the byte area (up to 1 extra word), we add one SZI-1 for islast (which includes B01), rather than adding 1
 // NOTE: sizeof(NM) is rounded up to a word multiple; offsetof() would be better.  But since it overallocates only for names of >20 characters, we keep it as is
 #define ALLOBYTESVSZ(atoms,rank,size,islast,isname)      ( ((((rank)|(!SY_64))*SZI  + ((islast)? (isname)?(NORMAH*SZI+sizeof(NM)+SZI-1-1):(NORMAH*SZI+SZI-1-1) : (NORMAH*SZI-1)) + (atoms)*(size)))  )  // # bytes to allocate allowing 1 I for string pad - include mem hdr - minus 1
-// here when size is constant.  The number of bytes, rounded up with overhead added, must not exceed 2^(PMINL+4)
+// here when size is constant.  The number of bytes, rounded up with overhead added, must not exceed 2^(PMINL+5)
 #define ALLOBYTES(atoms,rank,size,islast,isname)      ((size&(SZI-1))?ALLOBYTESVSZ(atoms,rank,size,islast,isname):(SZI*(((rank)|(!SY_64))+NORMAH+((size)>>LGSZI)*(atoms)+!!(islast))-1))  // # bytes to allocate-1
-#define ALLOBLOCK(n) ((n)<2*PMIN?((n)<PMIN?PMINL-1:PMINL) : (n)<8*PMIN?((n)<4*PMIN?PMINL+1:PMINL+2) : (n)<32*PMIN?((n)<16*PMIN?PMINL+3:PMINL+4) : IMIN)   // lg2(#bytes to allocate)-1.  n is #bytes-1
+#define ALLOBLOCK(n) ((n)<2*PMIN?((n)<PMIN?PMINL-1:PMINL) : (n)<8*PMIN?((n)<4*PMIN?PMINL+1:PMINL+2) : (n)<32*PMIN?((n)<16*PMIN?PMINL+3:PMINL+4) : *(volatile I*)0)   // lg2(#bytes to allocate)-1.  n is #bytes-1
 // value to put into name->bucketx for locale names: number if numeric, hash otherwise
 #define BUCKETXLOC(len,s) ((*(s)<='9')?strtoI10s((len),(s)):(I)nmhash((len),(s)))
 // GA() is used when the type is unknown.  This routine is in m.c and documents the function of these macros.
@@ -1436,10 +1438,12 @@ if(likely(z<3)){_zzt+=z; z=(I)&oneone; _zzt=_i&3?_zzt:(I*)z; z=_i&2?(I)_zzt:z; z
 #define TWOSUM(in0,in1,outhi,outlo) t=_mm256_andnot_pd(sgnbit,in0); outlo=_mm256_andnot_pd(sgnbit,in1); t=_mm256_sub_pd(t,outlo); \
                                     outlo=_mm256_blendv_pd(in0,in1,t); t=_mm256_blendv_pd(in1,in0,t); \
                                     outhi=_mm256_add_pd(in0,in1); outlo=_mm256_sub_pd(outlo,outhi); outlo=_mm256_add_pd(outlo,t);  // 1 if in1 larger; select outlo=max t=min
+#define DPADD(hi0,lo0,hi1,lo1,outhi,outlo)  outhi=_mm256_add_pd(hi0,hi1); outlo=_mm256_add_pd(lo0,lo1);
 #else
 #define TWOSPLIT(a,x,y) y=(a)*134217730.0; x=y-(a); x=y-x; y=(a)-x;   // must avoid compiler tuning
 #define TWOSUM(in0,in1,outhi,outlo) t=(in0)+(in1); outlo=t-(in0); outlo=((in0) - (t-outlo)) + ((in1)-outlo); outhi=t;
 #define TWOPROD(in0,in1,outhi,outlo) TWOSPLIT(in0,i00,i01) TWOSPLIT(in1,i10,i11) outhi=(in0)*(in1); outlo=i01*i11 - (((outhi-i00*i10) - i01*i10) - i00*i11);  // must avoid compiler tuning   needs t, i00, i01, i10, i11
+#define DPADD(hi0,lo0,hi1,lo1,outhi,outlo)  outhi=hi0+hi1; outlo=lo0+lo1;
 #endif
 #define VAL1            '\001'
 #define VAL2            '\002'

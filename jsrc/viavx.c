@@ -443,8 +443,6 @@ static B jteqa0(J jt,I n,A*u,A*v){PUSHCCT(1.0) B res=1; DQ(n, if(!equ(*u,*v)){re
  n    target item # atoms
  wsct    # target items in a left-arg cell, which may include multiple right-arg cells (number of searches)
  k    target item # bytes
- acr  left  rank
- wcr  right rank
  ac   # left  arg cells  (cells, NOT items)
  wc   # right arg cells
  ak   # bytes left  arg cells, or 0 if only 1 cell
@@ -763,7 +761,7 @@ static IOFX(Z,UI4,jtioz02,, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n)
 // Do the operation.  Build a hash for a except when self-index
 #define IOFT(T,TH,f,hash,FXY,FYY,FYYKEY,expa,expw)   \
  IOF(f){I acn=ak/sizeof(T),  \
-        wcn=wk/sizeof(T),* RESTRICT zv=AV(z);T* RESTRICT av=(T*)AV(a),* RESTRICT wv=(T*)AV(w);I md; \
+        wcn=wk/sizeof(T),* zv=AV(z);T* RESTRICT av=(T*)AV(a),* wv=(T*)AV(w);I md; \
         D tl=jt->cct,tr=1/tl;I il,jx; D x=0.0;  /* =0.0 to stifle warning */    \
         IH *hh=IHAV(h); I p=hh->datarange; TH * RESTRICT hv=hh->data.TH; UIL ctmask=calcctmask(jt->cct);   \
   __m128i vp, vpstride;   /* v for hash/v for search; stride for each */ \
@@ -1423,6 +1421,96 @@ static IOFXW(Z,UI4,jtiowz02,, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&wv[n*hj],2*
   R h;                                                                               \
  }
 
+// *************************** eighth class: x i. y where a and w are both sorted ***********************
+// process as for sequential file update.  Items of a are integer atoms only for now
+/*
+ asct    target axis length (number of things to be searched from in a single pass)
+ n    target item # atoms
+ wsct    # target items in a left-arg cell, which may include multiple right-arg cells (number of searches)
+ k    target item # bytes
+ ac   # left  arg cells  (cells, NOT items)
+ wc   # right arg cells
+ ak   # bytes left  arg cells, or 0 if only 1 cell
+ wk   # bytes right arg cells, or 0 if only one cell
+ a    left  arg
+ w    right arg, or mark for m&i. or m&i: or e.&n or -.&n
+ h   pointer to hash table or to 0
+ z    result
+*/
+static IOF(jtiosfu){I i;
+ I acn=ak>>LGSZI; I wcn=wk>>LGSZI; I * RESTRICT zv=IAV(z);
+ I *RESTRICT av=IAV(a), *wv=IAV(w);
+ for(;ac>0;av+=acn,wv+=wcn,--ac){  // loop for each cell of i."r
+  I stride=asct/(wsct+1);  // expected spacing between samples of a
+  I *RESTRICT wv0=wv;  // running pointer through w (they may be repeated)
+#if 1
+  I ax=0; I curra=av[ax]; // index of current item of a, and its value
+  for(i=wsct;i>0;--i){  // for each result atom in the cell
+   // curra is the last value matched, and ax is its index
+   I currw=*wv0++;  // fetch next item of w
+   while(curra<currw){
+    if(unlikely(++ax==asct)){
+     do{*zv++=asct;}while(--i>0);  // use 'not found' for the rest of the atoms
+     goto end1;  //  this list is finished
+    }
+    curra=av[ax];  // normal case of not end-of-search argument - get next atom
+   }
+   // write out the next value
+   I nv=ax; nv=curra==currw?nv:asct; *zv++=nv;
+  }
+end1: ;
+#else
+  I aval, ax, wval, aliml, alimr, zval, *zend=zv+wsct;
+  while(1){
+   // av is the start of the a vector
+   // wv0 points to the data we will read into wval1
+   // zv points to the next output location
+   // aval is the value read from a; it has just become available
+   // ax is the index of aval
+   // wval is the w value to compare aval against, i. e. the value corresponding to the next output.
+   //  wval is *wv0 and is continually refetched, so it is coming from L1 always & will probably arrive before aval
+   // aliml is the index of the highest value that is known to be less than wval
+   // alimr is the index of the lowest value that is known to be >= wval, or -1 if that bound has not been found
+   // zval is the result value to write
+
+   // we should start calculation of both branches of newx here
+
+   // Move the brackets depending on the value fetched
+   aliml=aval<wval?ax:aliml; alimr=aval<wval?alimr:ax;
+
+   // write the result (always).  The result is the index of the last match we found
+   zval=aval==wval?ax:zval; *zv=zval;  // write out the match if any.  This frees up aval, wval, ax
+
+   // calculate next index to fetch from: midway between the limits, rounded down
+   I newx=(aliml+alimr)>>1;
+   // if we would be fetching from a limit (must be the lower), we're done with this value, set flag to incr w and z
+   I nextwz=REPSGN(newx-(aliml+1));  // -1 if next fetch is for new w, 0 otherwise   scaf move to sign of newx
+   alimr|=nextwz;  // at start of new w, set right lim to -1 to indicate limit not found yet
+   // if we have not found an upper limit, advance by the stride until we have bracketed the value
+   // if alimr<0, next index=aliml+stride but clamped to stay in bounds; if fall off the end, run out with 'not found'
+   I addstride=aliml+stride; newx=alimr<0?addstride:newx;  // look for bracket if we havn't found one yet
+   if(unlikely(newx>=asct)){  // if the search for a bracket runs us off the end, reset it and handle any tail
+   
+   }
+
+   // select the read for the next probe and start reading it
+   aval=av[newx];  // fetch the next value to check
+
+   // if we are moving to a new wval, increment z and reset zval to 'not found'
+   zv-=nextwz; zval=nextwz<0?asct:zval;
+   // if aval==wval, set zval=ax
+   // write zval, increment if next probe is for next w value and set zval='not found'
+   // exit if zv is past the end
+   if(unlikely(zv==zend))break;
+  
+   // increment wv if the next probe is for the next w value, start reading w
+   wv0-=nextwz; wval=*wv0;  // read value, always in L1 cache
+   ax=newx;  // remember the index of the value we are reading
+  }
+#endif
+ }
+ R z;   // harmless nonzero return that we can fetch AM() from
+}
 
 static IOFXWS(jtio42w,I,US)  static IOFXWS(jtio44w,I,UI4)  // INT-sized items, using small/large hashtable
 
@@ -1613,10 +1701,10 @@ static CR condrange2(US *s,I n,I min,I max,I maxrange){CR ret;I i;US x;
 // Table to look up routine from index
 // 0-11, 16-19 are hashes for various types, calculated by bit-twisting
 // 32-51 are reverse hashes (i. e hash w, look up items of a)
-#define FNTABLEPREFIX 1  // number of leading entries used for special types
+#define FNTABLEPREFIX 2  // number of leading entries used for special types
 #define FNTBLSMALL1 12  // small-range, 1-byte items
-#define FNTBLSMALL2 13  // small-range, 1-byte items
-#define FNTBLSMALL4 14  // small-range, 1-byte items
+#define FNTBLSMALL2 13  // small-range, 2-byte items
+#define FNTBLSMALL4 14  // small-range, 4-byte items
 #define FNTBLONEINT 15  // hash of single INT-sized exact value
 #define FNTBLBOXARRAY 20  // array of boxes, tolerant or not (we just hash on shape)
 #define FNTBLBOXINTOLERANT 21  // single box but intolerant
@@ -1629,7 +1717,8 @@ static CR condrange2(US *s,I n,I min,I max,I maxrange){CR ret;I i;US x;
 #define FNTBLSIZE 54  // number of functions - before the second half
 static const AF fntbl[]={
 // prefix: routines used without hashtables, flags, etc
- jtiosc,  // sequential comparison (-1) - we pass in extra args
+ jtiosc,  // sequential comparison (-2) - we pass in extra args
+ jtiosfu,   // i.!.1 - sequential file update (-1)
 // US tables
  jtioc,jtioc,jtioc,jtioc,jtioi,jtioi,jtioi,jtioi,  // bool, INT
  jtiod,jtioc0,jtiod1,jtioc01,jtio12,jtio22,jtio42,jtioi1,   // FL (then small-range, then ONEINT)
@@ -1706,7 +1795,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
   // 1.0.  The expression then means '1.0 or not inexact'
   // If the problem is small, use sequential search to save analysis and hashing time
   // TUNE  From testing 8/2019 on SkylakeX, sequential search wins if an<=10 or wn<=7, or an+wn<=40
-  if((((an-11)|(wn-8)|(an+wn-41))<0)&&((ar^1)+TYPESXOR(at,wt))==0&&(((1-wr)|SGNIFNOT(mode,IIOREPSX)|(-((acr^1)|(wr^wcr)|((at|wt)&SPARSE)))|(an-1)|(wn-1))>=0)){
+  if((((an-11)|(wn-8)|(an+wn-41))<0)&&((ar^1)+TYPESXOR(at,wt))==0&&(((1-wr)|SGNIF(mode,ISFUX)|SGNIFNOT(mode,IIOREPSX)|(-((acr^1)|(wr^wcr)|((at|wt)&SPARSE)))|(an-1)|(wn-1))>=0)){
    // Fast path for (vector i./i:/e./key atom or short vector) - if not prehashing.  Do sequential search
    I zt=((mode&IIOPMSK)==IEPS)?B01:INT;  // the result type depends on the operation.
    A z; GA(z,zt,wn,wr,ws);
@@ -1803,10 +1892,11 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
  // m*number of results.  The cost of small-range hashing is at best 10 cycles per atom added to the table and 8 cycles per lookup.
  // (full hashing is considerably more expensive); also a fair amount of time for range-checking and table-clearing, and further testing here
  // Here we just use the empirical observations that worked for atoms  TUNE
- if((((((I)m-11)|(zn-8)|((I)m+zn-41)|fnx)<0)) && (((((-(wc^1))&(-(wc^ac)))|SGNIFNOT(mode,IIOREPSX))&~fnx)>=0)){   // wc==1 or ac and IOREPS, or empty/inhomo
+ if(unlikely(mode&ISFU)){fnx=fnx<0?fnx:1; fnx-=2;    // i.!.0 (qualified earlier for rank & type) - use special function, no hashtable.  But preserve codes -3 & -4 for inhomo/empty
+ }else if((((((I)m-11)|(zn-8)|((I)m+zn-41)|fnx)<0)) && (((((-(wc^1))&(-(wc^ac)))|SGNIFNOT(mode,IIOREPSX))&~fnx)>=0)){   // wc==1 or ac and IOREPS, or empty/inhomo
           //  small enough operation, or  empty/inhomo   test size first because partially checked already & failed TUNE
     // this will not choose sequential search enough when the cells are large (comparisons then are cheap because of early exit)
-  fnx-=1;  // now fnx is -3 for inhomo, -2 for empty, -1 for sequential.  This is ready for lookup.
+  fnx-=2;  // now fnx is -4 for inhomo, -3 for empty, -1 for SFU, -2 for sequential.  This is ready for lookup.
 //  jtiosc(jt,mode,n,m,c,ac,wc,a,w,z); // simple sequential search without hashing
  }else{
 // jtioa* BOX
@@ -1829,7 +1919,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
   // we allocate 4 extra entries to make sure we can write a quadword at the end, and to ensure there are sentinels
 
 // testing#define HASHFACTOR 6.0  // multiple of p over m, found empirically
-  fnx=-2 + (1.0==jt->cct); // we haven't figured it out yet.  fnx is -2 for tolerant, -1 for intolerant
+  fnx=-2 + (1.0==jt->cct); // we haven't figured it out yet.  Change meaning of fnx: fnx is -2 for tolerant, -1 for intolerant
   // p>>booladj is the number of hashtable entries we need.  booladj is 0 for full hash, 3 if we just need one byte-encoded boolean per input value, 5 if just one bit per input value
   UI booladj=(mode&(IIOPMSK&~(IIDOT^IICO)))?5:0;  // boolean allowed when not i./i:
   p=0;  // indicate we haven't come up with the table size yet.  It depends on reverse and small-range decisions
@@ -2022,7 +2112,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
  }
 
  // Create result for empty/inhomogeneous arguments, & return
- if(unlikely(fnx<-1)){  // if empty (-2) or inhomo (-3), create the result immediately
+ if(unlikely(fnx<-2)){  // if empty (-3) or inhomo (-4), create the result immediately
   I witems; SETICFR(w,0,wr>r,witems);   // # items of w, in case we are doing i.&0 eg on result of e., which will have that many items
   switch(mode&(IIOPMSK)){  // if PHCALC, we never got here
   // If empty argument or result, or inhomogeneous arguments, return an appropriate empty or not-found
@@ -2034,7 +2124,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
   case INUBSV:  R reshape(shape(z),take(sc(m),num(1)));
   case INUB:    AN(z)=0; AS(z)[0]=m?1:0; R z;
   case ILESS:   if(m)AN(z)=AS(z)[0]=0; else MC(AV(z),AV(w),AN(w)<<klg); R z;
-  case IEPS:    R reshape(shape(z),num(m&&(!n||(~fnx&1))));  // ~fnx&1 is true if homo
+  case IEPS:    R reshape(shape(z),num(m&&(!n||(fnx&1))));  // fnx&1 is true if homo
   case INUBI:   R m?iv0:mtv;
   // th<0 means that the result of e. would have rank>1 and would never compare against either 0 or 1
   case II0EPS:  R sc(n&&zn?0L        :witems         );
@@ -2175,6 +2265,14 @@ F1(jtnubind0){A z;
  PUSHCCT(1.0) z=SPARSE&AT(w)?icap(nubsieve(w)):indexofsub(INUBI,w,w); POPCCT
  R z;
 }    /* I.@(~:!.0) w */
+
+// x i.!.1 y - assumes xy -: /:~ xy (integer atoms only for now)
+F2(jtsfu){
+ ARGCHK2(a,w);
+ I type=ISFU+IIDOT; type=(NOUN&~(INT))&(AT(a)|AT(w))?IIDOT:type;
+ I l=jt->ranks>>RANKTX; l=AR(a)<l?AR(a):l; type=l!=1?IIDOT:type; // If the cells of a are not atoms, we revert to standard methods
+ R indexofsub(type,a,w);
+}    /* a i.!.1"r w */
 
 // = y    
 F1(jtsclass){A e,x,xy,y,z;I c,j,m,n,*v;P*p;

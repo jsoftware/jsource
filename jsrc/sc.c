@@ -108,7 +108,7 @@ ASSERTSYS(AFLAG(thisname)&NAME,"nonrecursive name"); // scaf
    jt->locsyms=(A)AM(jt->locsyms);  // get the local syms at the time u/v was assigned; make them current.  Leave GST unchanged in it
    explocale=AKGST(jt->locsyms);  // fetch global syms for the caller's environment, so we stack it next
   }
-  pushcallstack1d(CALLSTACKPOPLOCALE,jt->global); jt->global=explocale;  // move to new implied locale.  DO NOT change locale it lt->locsyms.  It is set only by explicit action so that on a chain of locatives it stays unchanged
+  pushcallstack1d(CALLSTACKPOPLOCALE,jt->global); jt->global=explocale;  // move to new implied locale.  DO NOT change locale in lt->locsyms.  It is set only by explicit action so that on a chain of locatives it stays unchanged
  }
  // ************** no errors till the stack has been popped
  w=flgd0cp&8?w:(A)fs;  // set up the bivalent argument with the new self, since fs may have been changed

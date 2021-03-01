@@ -1096,7 +1096,11 @@ DF2(jtsumattymes1){
   // here for +/@:*"1!.0, double-precision dot product  https://www-pequan.lip6.fr/~graillat/papers/IC2012.pdf
   NAN0;
 #if (C_AVX2&&SY_64) || EMU_AVX2
+#if 1  // higher precision
 #define OGITA(in0,in1,n) TWOPROD(in0,in1,h,r) TWOSUM(p##n,h,p##n,q) s##n=_mm256_add_pd(_mm256_add_pd(q,r),s##n);
+#else
+#define OGITA(in0,in1,n) TWOPROD(in0,in1,h,r) DPADD(p##n,s##n,h,r,p##n,s##n);
+#endif
   __m256i endmask; /* length mask for the last word */
   _mm256_zeroupper(VOIDARG);
   __m256d idreg=_mm256_set1_pd(0.0);
@@ -1124,6 +1128,7 @@ DF2(jtsumattymes1){
        }
       }
       OGITA(_mm256_maskload_pd(av,endmask),_mm256_maskload_pd(wv,endmask),0) av+=((dplen-1)&(NPAR-1))+1; wv+=((dplen-1)&(NPAR-1))+1;  // the remnant at the end
+#if 1  // higher precision
       s0=_mm256_add_pd(s0,s1); s2=_mm256_add_pd(s2,s3); s0=_mm256_add_pd(s0,s2);   // add all the low parts together - the low bits of the low will not make it through to the result
       TWOSUM(p0,p1,p0,s1) TWOSUM(p2,p3,p2,s2) s2=_mm256_add_pd(s1,s2); s0=_mm256_add_pd(s0,s2);   // add 0+1, 2+3
       TWOSUM(p0,p2,p0,s1) s0=_mm256_add_pd(s0,s1);  // 0+2
@@ -1133,6 +1138,16 @@ DF2(jtsumattymes1){
       s0=_mm256_add_pd(s0,_mm256_permute_pd(s0,0xf)); p1=_mm256_permute_pd(p0,0xf);   // combine s0+s1, acc1<-1
       TWOSUM(p0,p1,p0,s1); s0=_mm256_add_pd(s0,s1);    // combine 0123, combine all low parts
       p0=_mm256_add_pd(p0,s0);  // add low parts back into high in case there is overlap
+#else
+      s0=_mm256_add_pd(s0,s1); s2=_mm256_add_pd(s2,s3); s0=_mm256_add_pd(s0,s2);   // add all the low parts together - the low bits of the low will not make it through to the result
+      p0=_mm256_add_pd(p0,p1); p2=_mm256_add_pd(p2,p3); p0=_mm256_add_pd(p0,p2);   // add all the high parts
+     // p0/s0 survive.  Combine horizontally
+      s0=_mm256_add_pd(s0,_mm256_permute2f128_pd(s0,s0,0x01));  // 02, 13
+      p0=_mm256_add_pd(p0,_mm256_permute2f128_pd(p0,p0,0x01));
+      s0=_mm256_add_pd(s0,_mm256_permute_pd(s0,0xf));   // 0123
+      p0=_mm256_add_pd(p0,_mm256_permute_pd(p0,0xf));
+      p0=_mm256_add_pd(p0,s0);  // add low parts back into high in case there is overlap
+#endif
       _mm_storel_pd(zv++,_mm256_castpd256_pd128(p0)); // store the single result
       if(!--j)break; av=av0;  // repeat a if needed
      }
@@ -1151,7 +1166,8 @@ DF2(jtsumattymes1){
      while(1){
       // do one dot-product, av*wv, length dplen;
       D p=0.0, s=0.0;
-      DQ(dplen, D h; D r; D q; D t; D i00; D i01; D i10; D i11; TWOPROD(*av,*wv,h,r) TWOSUM(p,h,p,q) s=q+r+s; ++av; ++wv;)
+// Ogita      DQ(dplen, D h; D r; D q; D t; D i00; D i01; D i10; D i11; TWOPROD(*av,*wv,h,r) TWOSUM(p,h,p,q) s=q+r+s; ++av; ++wv;)
+      DQ(dplen, D h; D r; D q; D t; D i00; D i01; D i10; D i11; TWOPROD(*av,*wv,h,r) DPADD(p,s,h,r,p,s)  ++av; ++wv;)
 // obsolete I i;for(i=dplen-1;i>=0;i--){
 // obsolete       TWOPROD(*av,*wv,h,r)
 // obsolete printf("*av=%f *wv=%f h=%f r=%g ",*av,*wv,h,r);

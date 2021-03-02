@@ -16,7 +16,11 @@ fitctvector(jtfitcteq,jtatomic2(jtinplace,a,w,fs))
 static DF2(jtfitctkey){DECLFG;R jtkeyct(jt,a,w,fs,FAV(self)->localuse.lD);}  // inplace is OK, since we don't use jt
 
 // To avoid multiple indirect branches, we vector the common comparisons to a routine that jumps directly to them
-static const AF aff2[] = {jtfitct2,jtfitcteq,jtfitctkey,jtsfu};
+static const AF aff2[] = {jtfitct2,jtfitcteq,jtfitctkey
+#if SY_64
+ ,jtsfu   // only in viavx.c
+#endif
+};
 // cno is 3 for i., 2 for f/., 1 for comparison, 0 otherwise
 static A jtfitct(J jt,A a,A w,I cno){V*sv;
  ARGCHK2(a,w);
@@ -63,7 +67,9 @@ F2(jtfit){A f;C c;I k,l,m,r;V*sv;
  sv=FAV(a); m=sv->mr; l=lrv(sv); r=rrv(sv);
  I cno=0;
  switch(sv->id){I wval;
-  case CIOTA: ++cno;
+#if SY_64
+  case CIOTA: ++cno;  // i.!.1 supported only in viavx.c
+#endif
   case CSLDOT: ++cno;   case CLE: case CLT: case CGE: case CGT: case CNE: case CEQ: ++cno;
   case CMATCH: case CEPS:    case CICO:      case CNUB:     case CSTAR:  
   case CFLOOR: case CCEIL:  case CSTILE: case CPLUSDOT:  case CSTARDOT: case CABASE:

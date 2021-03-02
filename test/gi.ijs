@@ -783,20 +783,20 @@ THRESHOLD +.  0.8 > %/ (,&2&.> 10 11) f/ 1000 2000  NB. 10 is sequential, has lo
 THRESHOLD +.  1.5 >  (,&2&.> 1000 2000) f/ 1000 2000   NB. if sequential, the ratio will be high
 
 NB. x i.!.1 "r y --------------------------------------------------------
-f =: 4 : 0"1  NB. x is left shape, y is right
-l =: /:~"1 x ?@$ 1e6
-r =: /:~"1 y ?@$ 1e6
+f =: 4 : 0"1  NB. x is (left shape;offset,range), y is (right shape;offset,range)
+'ls lor'=. x [ 'rs ror' =. y
+l =: /:~"1 ls ({.@] + (?@$ {:)) lor
+r =: /:~"1 rs ({.@] + (?@$ {:)) ror
 assert. (l i.!.1"1 r) -: (l i."1 r)
 1
 )
-10 f 10
-20 f 10
-10 f 20
-f/~ ,. 0 1 10 11 12 13 14 , 200+i. 15
-f/~ 5 ,. 0 1 10 11 12 13 14 , 200+i. 15
+(10;0 1e6) f (10;0 1e6)
+(20;0 1e6) f (10;0 1e6)
+(10;0 1e6) f (20;0 1e6)
+1: f/~ (<"1 ,. 0 1 10 11 12 13 14 , 200+i. 15) ,"0/ ((<"1) _5e4 1e6 , _5e5 1e7 ,: _5e6 1e8)
+1: f/~ ((<"1) 5 ,. 0 1 10 11 12 13 14 , 200+i. 15) ,"0/ ((<"1) _5e4 1e6 , _5e5 1e7 ,: _5e6 1e8)
 
-
-4!:55 ;:'a adot1 adot2 sdot0 b c ciof ct f f1 f2 g iota j map n p q t test x xx y yy'
+4!:55 ;:'a adot1 adot2 sdot0 b c ciof ct f f1 f2 g iota j l r map n p q t test x xx y yy'
 4!:55 ;:'xop yop1 yopn'
 4!:55 ;: 'mtchontally mtchonreshape mtchontally0 mtchonreshape0'
 randfini''

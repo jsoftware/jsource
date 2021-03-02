@@ -1431,19 +1431,22 @@ static IOFXW(Z,UI4,jtiowz02,, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&wv[n*hj],2*
  ac   # left  arg cells  (cells, NOT items)
  wc   # right arg cells
  ak   # bytes left  arg cells, or 0 if only 1 cell
- wk   # bytes right arg cells, or 0 if only one cell
+ wk   # bytes right arg cells, or 0 if only 1 cell
  a    left  arg
  w    right arg, or mark for m&i. or m&i: or e.&n or -.&n
  h   pointer to hash table or to 0
  z    result
 */
 static IOF(jtiosfu){I i;
+ D dasct=(D)asct, dwsct=(D)wsct;
  I acn=ak>>LGSZI; I wcn=wk>>LGSZI; I * RESTRICT zv=IAV(z);
  I *RESTRICT av=IAV(a), *wv=IAV(w);
  for(;ac>0;av+=acn,wv+=wcn,--ac){  // loop for each cell of i."r
-  I stride=asct/(wsct+1);  // expected spacing between samples of a
-  I *RESTRICT wv0=wv;  // running pointer through w (they may be repeated)
-#if 1
+  // stride in a is (w spacing)/(a spacing), i. e. (w range/wn)/(a range/an)
+  I stride=(I)((dasct*(D)(wv[wsct-1]-wv[0]+1))/(dwsct*(D)(av[asct-1]-av[0]+1)));  // expected spacing between samples of a
+  stride=stride<=0?1:stride; stride=stride>asct?asct:stride;  // must always guarantee progress, and keep stride reasonable
+  I zvwvofst=(I)wv-(I)zv;  // distance from zv to corresponding wv
+#if 0
   I ax=0; I curra=av[ax]; // index of current item of a, and its value
   for(i=wsct;i>0;--i){  // for each result atom in the cell
    // curra is the last value matched, and ax is its index
@@ -1461,58 +1464,82 @@ static IOF(jtiosfu){I i;
 end1: ;
 #else
   I aval, ax, wval, aliml, alimr, zval, *zend=zv+wsct;
+  // find a starting point within a stride of the beginning of the correct point, put it into aliml
+  aliml=-1; alimr=asct; wval=*(I*)((I)zv+zvwvofst);
+#pragma clang loop_unroll(disable)
+  while(1){
+   ax=(alimr+aliml)>>1;  // overflow not possible
+   aval=av[ax];  // fetch the value
+   if(ax-aliml<=stride)break;  // stop when the ends get close
+   aliml=aval<wval?ax:aliml; alimr=aval<wval?alimr:ax;
+  }
+  zval=asct; alimr=-1; ax=aliml+stride; ax=ax>asct-1?asct-1:ax;  // init values as if coming from the last read, which is searching for a new w value
+  aval=av[ax]; wval=*(I*)((I)zv+zvwvofst);
   while(1){
    // av is the start of the a vector
-   // wv0 points to the data we will read into wval1
    // zv points to the next output location
+   // zv+zvwvofst points to the data we will read into wval
    // aval is the value read from a; it has just become available
    // ax is the index of aval
    // wval is the w value to compare aval against, i. e. the value corresponding to the next output.
-   //  wval is *wv0 and is continually refetched, so it is coming from L1 always & will probably arrive before aval
+   //  wval is continually refetched, so it is coming from L1 always & will probably arrive before aval
    // aliml is the index of the highest value that is known to be less than wval
    // alimr is the index of the lowest value that is known to be >= wval, or -1 if that bound has not been found
    // zval is the result value to write
+   // stride is the amount to skip between searches
+   // asct and zend are used to find end of a/w
 
-   // we should start calculation of both branches of newx here
+   // calculate newx/nextwv as if aval<wval
+   // alimr stays unchanged.  new search only if ax=alimr-1, but we always continue an ongoing search
+   I newxl=(ax+alimr)>>1;  // new brackets will be (ax,alimr).  We round down
+   I newwz=(I)(newxl==ax)<<(BW-1);  // set sign if we are STARTING new search, only if ax = alimr-1.  If alimr<0 already this will never be set: newxl<ax then
+   stride+=ax; newxl=alimr<0?stride:newxl; stride-=ax;  // if alimr<0 coming in it will stay that way: continue the search, setting newx=ax+stride
+   if(unlikely(newxl>=asct)){
+    // prevent overfetch on a if we get close to the end
+    if(aliml==asct-1)break;  // we're done with this a/w
+    // not all done, continue search at last atom
+    newxl=(asct-1);  // try reading from the last location
+   }
+   newxl+=newwz;  // combine index and new-search bits
+
+   // calculate newx/nextwv as if aval>=wval.  aliml stays unchanged
+   // set new search and use stride if ax=aliml+1
+   I newxr=(aliml+ax)>>1;  // new brackets are (aliml,ax)
+   newwz=(I)(newxr==aliml)<<(BW-1);  // set sign if we are STARTING new search
+   stride+=aliml; newxr=newxr==aliml?stride:newxr; stride-=aliml;  // if we were searching, the search is over; take stride only for new search
+   if(unlikely(newxr>=asct)){
+    // prevent overfetch on a if we get close to the end
+    if(aliml==asct-1)break;  // we're done with this a/w
+    // not all done, continue search at last atom
+    newxr=(asct-1);  // try reading from the last location
+   }
+   newxr+=newwz;  // combine index and new-search bits
+
+   // here we wait for the new value to settle
+   // select the read for the next probe and start reading it
+   newxl=aval<wval?newxl:newxr; I aval1=av[newxl];  // free newxr; fetch the next value to check
 
    // Move the brackets depending on the value fetched
    aliml=aval<wval?ax:aliml; alimr=aval<wval?alimr:ax;
 
+   // if aval==wval, set zval=ax
    // write the result (always).  The result is the index of the last match we found
    zval=aval==wval?ax:zval; *zv=zval;  // write out the match if any.  This frees up aval, wval, ax
 
-   // calculate next index to fetch from: midway between the limits, rounded down
-   I newx=(aliml+alimr)>>1;
-   // if we would be fetching from a limit (must be the lower), we're done with this value, set flag to incr w and z
-   I nextwz=REPSGN(newx-(aliml+1));  // -1 if next fetch is for new w, 0 otherwise   scaf move to sign of newx
-   alimr|=nextwz;  // at start of new w, set right lim to -1 to indicate limit not found yet
-   // if we have not found an upper limit, advance by the stride until we have bracketed the value
-   // if alimr<0, next index=aliml+stride but clamped to stay in bounds; if fall off the end, run out with 'not found'
-   I addstride=aliml+stride; newx=alimr<0?addstride:newx;  // look for bracket if we havn't found one yet
-   if(unlikely(newx>=asct)){  // if the search for a bracket runs us off the end, reset it and handle any tail
-    if(aliml==asct-1){
-     // the last item of a is less than wsct.  Run to the end with 'not found'
-     while(zx!=zend)*zv++=asct;  // all the rest not found
-     break;  // we're done with this a/w
-    }
-    // not all done, continue search at last atom
-    newx=asct-1;  // try reading from the last location
-   }
-
-   // select the read for the next probe and start reading it
-   aval=av[newx];  // fetch the next value to check
-
    // if we are moving to a new wval, increment z and reset zval to 'not found'
-   zv-=nextwz; zval=nextwz<0?asct:zval;
-   // if aval==wval, set zval=ax
-   // write zval, increment if next probe is for next w value and set zval='not found'
-   // exit if zv is past the end
-   if(unlikely(zv==zend))break;
-  
+   zv=(I*)((I)zv+((UI)newxl>>((BW-1)-LGSZI)));  // shift newxl bit 63 (new z bit) to bit 3 (=8), add to zv
+   if(unlikely(zv==zend))break;   // exit if zv is past the end
    // increment wv if the next probe is for the next w value, start reading w
-   wv0-=nextwz; wval=*wv0;  // read value, always in L1 cache
-   ax=newx;  // remember the index of the value we are reading
+   wval=*(I*)((I)zv+zvwvofst);  // read value, always in L1 cache
+
+   ax=newxl<<1; ax>>=1;  // remember the index of the value we are reading - without the flag bit
+   alimr|=REPSGN(newxl);  // if we are starting a search, note that in alimr
+   zval=alimr<0?asct:zval;  // if starting or continuing new search, OK to reset the match indicator
+  
+   aval=aval1;  // move value fetched into next loop iter
   }
+  while(zv!=zend)*zv++=asct;  // all the rest not found
+#pragma clang loop_unroll(enable)
 #endif
  }
  R z;   // harmless nonzero return that we can fetch AM() from

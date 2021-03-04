@@ -29,7 +29,7 @@ static A jtfitct(J jt,A a,A w,I cno){V*sv;
  // Get the tolerance, as a float
  D d; if(likely(w==num(0)))d=0.0; else{if(!(AT(w)&FL))RZ(w=cvt(FL,w)); d=DAV(w)[0];}  // 0 is usual; otherwise it better be FL, but convert in case its value is 0
  // Handle i.!.1 specially; otherwise drop i. back to normal
- if(unlikely(cno==3))if(d==1.0){if(SY_64)d=0;else cno=0;}else cno=0;   // i.!.1 is special on 64-bit systems; others just specify fit
+ if(unlikely(cno==3))if(d==1.0){d=1.0-jt->cct; if(!SY_64)cno=0;}else cno=0;   // i.!.1 is special on 64-bit systems; others just specify fit
  ASSERT(0<=d&&d<5.82076609134675e-11,EVDOMAIN);  // can't be greater than 2^_34
  A fn = fdef(0,CFIT,VERB,(AF)(jtfitct1),aff2[cno],a,w ,0L,sv->flag&(VIRS1|VIRS2|VJTFLGOK1|VJTFLGOK2|VISATOMIC1),(I)(sv->mr),lrv(sv),rrv(sv));  // preserve INPLACE flags
  RZ(fn); FAV(fn)->localuse.lD = 1.0-d; R fn;  // save the fit value in this verb

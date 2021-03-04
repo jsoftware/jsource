@@ -396,7 +396,6 @@ DF1(jtcompsum){
    I n0=(n-1)>>LGNPAR; __m256d acc0=idreg; __m256d acc1=idreg; __m256d acc2=idreg; __m256d acc3=idreg;
    __m256d c0=idreg; __m256d c1=idreg; __m256d c2=idreg; __m256d c3=idreg;  // error terms
    __m256d y;  __m256d t;   // new input value, temp to hold high part of sum
-#define KAHAN(in,n) y=_mm256_sub_pd(in,c##n); t=_mm256_add_pd(acc##n,y); c##n=_mm256_sub_pd(_mm256_sub_pd(t,acc##n),y); acc##n=t;
    if(n0>0){
     switch(n0&3){
     loopback:
@@ -407,8 +406,8 @@ DF1(jtcompsum){
    KAHAN(_mm256_maskload_pd(wv,endmask),0) wv+=((n-1)&(NPAR-1))+1;
    __m256d sgnbit=_mm256_castsi256_pd(_mm256_set1_epi64x(0x8000000000000000));
    c0=_mm256_add_pd(c0,c1); c2=_mm256_add_pd(c2,c3); c0=_mm256_add_pd(c0,c2);   // add all the low parts together - the low bits of the low will not make it through to the result
-   TWOSUM(acc0,acc1,acc0,c1) TWOSUM(acc2,acc3,acc2,c2) c2=_mm256_add_pd(c1,c2); c0=_mm256_sub_pd(c2,c0);   // add 0+1, 2+3  KAHAN corrections are negative - change that now
-   TWOSUM(acc0,acc2,acc0,c1) c0=_mm256_add_pd(c0,c1);  // 0+2
+   TWOSUM(acc0,acc1,acc0,c1) TWOSUM(acc2,acc3,acc2,c2) c2=_mm256_add_pd(c1,c2); c0=_mm256_add_pd(c2,c0);   // add 0+1, 2+3; combine all low parts of Kahan corrections into low total
+   TWOSUM(acc0,acc2,acc0,c1) c0=_mm256_add_pd(c0,c1);  // 0+2, bringing along low part
   // acc0/c0 survive.  Combine horizontally
    c0=_mm256_add_pd(c0,_mm256_permute2f128_pd(c0,c0,0x01)); acc1=_mm256_permute2f128_pd(acc0,acc0,0x01);  // c0: 01+=23, acc1<-23
    TWOSUM(acc0,acc1,acc0,c1); c0=_mm256_add_pd(c0,c1); // combine p=01+23

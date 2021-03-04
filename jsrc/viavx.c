@@ -1438,14 +1438,9 @@ static IOFXW(Z,UI4,jtiowz02,, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&wv[n*hj],2*
  z    result
 */
 static IOF(jtiosfu){I i;
- D dasct=(D)asct, dwsct=(D)wsct;
  I acn=ak>>LGSZI; I wcn=wk>>LGSZI; I * RESTRICT zv=IAV(z);
  I *RESTRICT av=IAV(a), *wv=IAV(w);
  for(;ac>0;av+=acn,wv+=wcn,--ac){  // loop for each cell of i."r
-  // stride in a is (w spacing)/(a spacing), i. e. (w range/wn)/(a range/an)
-  I stride=(I)((dasct*(D)(wv[wsct-1]-wv[0]+1))/(dwsct*(D)(av[asct-1]-av[0]+1)));  // expected spacing between samples of a
-  stride=stride<=0?1:stride; stride=stride>asct?asct:stride;  // must always guarantee progress, and keep stride reasonable
-  I zvwvofst=(I)wv-(I)zv;  // distance from zv to corresponding wv
 #if 0
   I ax=0; I curra=av[ax]; // index of current item of a, and its value
   for(i=wsct;i>0;--i){  // for each result atom in the cell
@@ -1463,84 +1458,125 @@ static IOF(jtiosfu){I i;
   }
 end1: ;
 #else
-  I aval, ax, wval, aliml, alimr, zval, *zend=zv+wsct;
-  // find a starting point within a stride of the beginning of the correct point, put it into aliml
-  aliml=-1; alimr=asct; wval=*(I*)((I)zv+zvwvofst);
+  if(wsct<(asct>>4)){
+   I *zend=zv+wsct;  // end+1 of output area
+   I zvwvofst=(I)wv-(I)zv;  // distance from zv to corresponding wv
+   // here when y is much shorter than x.  We will use binary search to avoid having to touch every cacheline of x.
+   // We use the same search order for every starting value of y so that we ensure that the path to the leaf is
+   // mostly in cache.  And, we don't try to avoid branches since they will mostly predict correctly, until the
+   // last few
+   //
+   // we could try to start the search from a saved position, as long as we don't change the search path
+   I wval, aliml, alimr, zval;
+   // find a starting point within a stride of the beginning of the correct point, put it into aliml
+   aliml=0; alimr=asct-1; wval=*(I*)((I)zv+zvwvofst);
 #pragma clang loop_unroll(disable)
-  while(1){
-   ax=(alimr+aliml)>>1;  // overflow not possible
-   aval=av[ax];  // fetch the value
-   if(ax-aliml<=stride)break;  // stop when the ends get close
-   aliml=aval<wval?ax:aliml; alimr=aval<wval?alimr:ax;
-  }
-  zval=asct; alimr=-1; ax=aliml+stride; ax=ax>asct-1?asct-1:ax;  // init values as if coming from the last read, which is searching for a new w value
-  aval=av[ax]; wval=*(I*)((I)zv+zvwvofst);
-  while(1){
-   // av is the start of the a vector
-   // zv points to the next output location
-   // zv+zvwvofst points to the data we will read into wval
-   // aval is the value read from a; it has just become available
-   // ax is the index of aval
-   // wval is the w value to compare aval against, i. e. the value corresponding to the next output.
-   //  wval is continually refetched, so it is coming from L1 always & will probably arrive before aval
-   // aliml is the index of the highest value that is known to be less than wval
-   // alimr is the index of the lowest value that is known to be >= wval, or -1 if that bound has not been found
-   // zval is the result value to write
-   // stride is the amount to skip between searches
-   // asct and zend are used to find end of a/w
+   zval=asct;
+#if 0 // obsolete 
+ ax=(aliml+alimr)>>1;  // init values as if coming from the last read
+  aval=av[ax]; I startsch=ax|IMIN;  // we start all searches in the middle
+#endif
+#pragma clang loop_unroll(disable)
+   while(1){
+    // av is the start of the a vector
+    // zv points to the next output location
+    // zv+zvwvofst points to the data we will read into wval
+    // aval is the value read from a
+    // ax is the index of aval
+    // wval is the w value to compare aval against, i. e. the value corresponding to the next output.
+    // aliml is the index of the smallest value that is not known to be less than wval
+    // alimr is the index of the largest value that is not known to be >= wval
+    // zval is the result value to write
+    // asct and zend are used to find end of a/w
 
+    I ax=(aliml+alimr)>>1;  // get midpoint address
+    I aval=av[ax];  // read the value
+    if(aval<wval){aliml=ax+1;}else{alimr=ax-1; zval=aval==wval?ax:zval;}  // update endpoints
+    if(alimr<aliml){ // if end of search...
+     *zv++=zval;  // write out the match status
+     if(unlikely(zv==zend))break;   // exit if zv is past the end
+     wval=*(I*)((I)zv+zvwvofst);  // read next value, always in L1 cache
+     zval=asct; alimr=asct-1; aliml=0; // we know there is at least one value to read
+    }
+#if 0  // obsolete
    // calculate newx/nextwv as if aval<wval
-   // alimr stays unchanged.  new search only if ax=alimr-1, but we always continue an ongoing search
+   // alimr stays unchanged.  new search only if ax=alimr-1
    I newxl=(ax+alimr)>>1;  // new brackets will be (ax,alimr).  We round down
-   I newwz=(I)(newxl==ax)<<(BW-1);  // set sign if we are STARTING new search, only if ax = alimr-1.  If alimr<0 already this will never be set: newxl<ax then
-   stride+=ax; newxl=alimr<0?stride:newxl; stride-=ax;  // if alimr<0 coming in it will stay that way: continue the search, setting newx=ax+stride
-   if(unlikely(newxl>=asct)){
-    // prevent overfetch on a if we get close to the end
-    if(aliml==asct-1)break;  // we're done with this a/w
-    // not all done, continue search at last atom
-    newxl=(asct-1);  // try reading from the last location
-   }
-   newxl+=newwz;  // combine index and new-search bits
+   newxl=newxl==ax?startsch:newxl;  //   // if new search, brackets are (-1,asct)
 
    // calculate newx/nextwv as if aval>=wval.  aliml stays unchanged
    // set new search and use stride if ax=aliml+1
    I newxr=(aliml+ax)>>1;  // new brackets are (aliml,ax)
-   newwz=(I)(newxr==aliml)<<(BW-1);  // set sign if we are STARTING new search
-   stride+=aliml; newxr=newxr==aliml?stride:newxr; stride-=aliml;  // if we were searching, the search is over; take stride only for new search
-   if(unlikely(newxr>=asct)){
-    // prevent overfetch on a if we get close to the end
-    if(aliml==asct-1)break;  // we're done with this a/w
-    // not all done, continue search at last atom
-    newxr=(asct-1);  // try reading from the last location
-   }
-   newxr+=newwz;  // combine index and new-search bits
+   newxr=newxr==aliml?startsch:newxr;  //   // if new search, brackets are (-1,asct)
 
    // here we wait for the new value to settle
    // select the read for the next probe and start reading it
-   newxl=aval<wval?newxl:newxr; I aval1=av[newxl];  // free newxr; fetch the next value to check
+   newxl=aval<wval?newxl:newxr;
+   aliml=aval<wval?ax:aliml; alimr=aval<wval?alimr:ax;  // move the left or right boundary
+   zval=aval==wval?ax:zval;  // see if we had an exact match
+   aval=av[newxl];  // free newxr; fetch the next value to check
 
+   if(newxl>=0){
+    // normal case of continuing previous search
+    ax=newxl;  // remember fetched index for next time
+   }else{
+    // this fetch starts a new search.  Write the old, read the new, reset the brackets
+    *zv++=zval;  // write out the match status
+    if(unlikely(zv==zend))break;   // exit if zv is past the end
+    wval=*(I*)((I)zv+zvwvofst);  // read next value, always in L1 cache
+    ax=newxl<<1; ax>>=1;  // get index we're reading, without the sign bit
+    zval=asct; alimr=asct; aliml=-1; 
+   }
+#endif
+#if 0 // obsolete 
    // Move the brackets depending on the value fetched
-   aliml=aval<wval?ax:aliml; alimr=aval<wval?alimr:ax;
 
    // if aval==wval, set zval=ax
    // write the result (always).  The result is the index of the last match we found
-   zval=aval==wval?ax:zval; *zv=zval;  // write out the match if any.  This frees up aval, wval, ax
+   zval=aval==wval?ax:zval;  // see if we had an exact match
+ *zv=zval;  // write out the match if any.  This frees up aval, wval, ax
 
    // if we are moving to a new wval, increment z and reset zval to 'not found'
-   zv=(I*)((I)zv+((UI)newxl>>((BW-1)-LGSZI)));  // shift newxl bit 63 (new z bit) to bit 3 (=8), add to zv
+   ax=newxl<<1; ax>>=1;  // remember the index of the value we are reading - without the flag bit
+   zv=(I*)((I)zv+(newxl>>=((BW-1)-LGSZI)));  // shift newxl bit 63 (new z bit) to bit 3 (=8), add to zv
    if(unlikely(zv==zend))break;   // exit if zv is past the end
    // increment wv if the next probe is for the next w value, start reading w
    wval=*(I*)((I)zv+zvwvofst);  // read value, always in L1 cache
 
-   ax=newxl<<1; ax>>=1;  // remember the index of the value we are reading - without the flag bit
-   alimr|=REPSGN(newxl);  // if we are starting a search, note that in alimr
-   zval=alimr<0?asct:zval;  // if starting or continuing new search, OK to reset the match indicator
-  
-   aval=aval1;  // move value fetched into next loop iter
-  }
-  while(zv!=zend)*zv++=asct;  // all the rest not found
+   zval=newxl?asct:zval; alimr=newxl?asct:alimr; aliml=newxl?-1:aliml; // if starting new search, set big right look
+#endif   
+   }
+#pragma clang loop_unroll(disable)
+   while(zv!=zend)*zv++=asct;  // all the rest not found
 #pragma clang loop_unroll(enable)
 #endif
+  }else{
+   // y is almost as big as x.  There is no gain from trying to skip through the cache, so we will process x and y sequentially
+   I *zend=zv+wsct-1;  // end of output area
+   I ax=0, *av0=av, *wv0=wv; 
+   I a0=*av0++, w0=*wv0++;
+   if(unlikely(wsct==1)){wv0=jt->shapesink; ++zend;}  // special processing needed when we fill next-last output.   Here we start there
+   while(1){
+    if(unlikely(ax==asct-1))break;
+    I a1=*av0, w1=*wv0;
+    I adva=a0<w0?SZI:0;
+    av0=(I*)((I)av0+adva); ax+=adva>>LGSZI; adva^=SZI;
+    wv0=(I*)((I)wv0+adva);
+    I zval=asct; zval=a0==w0?ax:zval; *zv=zval;
+    zv=(I*)((I)zv+adva);
+    if(unlikely(zv==zend)){if(wv0==jt->shapesink+1)break; wv0=jt->shapesink; ++zend;}  // if we are about to fill last z, we are about to overfetch w.  Point wv0 harmlessly.  Second time, ewe're through
+    a0=adva?a0:a1; w0=adva?w1:w0;
+   }
+   // at the end we stopped before handling the last element of a (because we would have overfetched a if we continued)
+   // put out all the rest of w.  We have incremented wv0 once 
+#pragma clang loop_unroll(disable)
+   if(unlikely(zv!=zend)){  // more output needed
+    if(likely(wv0!=jt->shapesink))++zend;  // if we stopped before the very last result, we have an extra one to do
+    while(1){*zv++=w0==a0?ax:asct; if(zv==zend)break; w0=*wv0++;}  // handle all the remaining ws, checking against the last a
+   }
+#pragma clang loop_unroll(enable)
+   
+  }
  }
  R z;   // harmless nonzero return that we can fetch AM() from
 }

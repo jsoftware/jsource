@@ -946,6 +946,10 @@ extern unsigned int __cdecl _clearfp (void);
 #define JTIPEX1S(name,arg,self) jt##name(JTIPW,arg,self)   // like name(arg,self) but inplace
 #define JTIPAEX2(name,arga,argw) jt##name(JTIPA,arga,argw)   // like name(arga,argw) but inplace on a
 #define JTIPAEX2S(name,arga,argw,self) jt##name(JTIPA,arga,argw,self)   // like name(arga,argw,self) but inplace on a
+// compensated accumulation with multiple accumulators.  Accumulators are acc##n, low part is c##n.
+// We add in to accumulators n.  This is defined so that c is the amount that must be ADDED to the total to make it right
+// uses temps y and t
+#define KAHAN(in,n) y=_mm256_add_pd(in,c##n); t=_mm256_add_pd(acc##n,y); c##n=_mm256_sub_pd(y,_mm256_sub_pd(t,acc##n)); acc##n=t;
 // given a unique num, define loop begin and end labels
 #define LOOPBEGIN(num) lp##num
 #define LOOPEND(num) lp##num##e

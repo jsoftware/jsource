@@ -247,9 +247,9 @@ L *jtprobelocal(J jt,A a,A locsyms){NM*u;I b,bx;
 L *jtprobeislocal(J jt,A a){NM*u;I b,bx;L *sympv=LAV0(JT(jt,symp));
  // If there is bucket information, there must be a local symbol table, so search it
  ARGCHK1(a);u=NAV(a);  // u->NM block
- if(b = u->bucket){
+ if((likely((b = u->bucket)!=0))){
   LX lx = LXAV0(jt->locsyms)[b];  // index of first block if any
-  if(0 > (bx = ~u->bucketx)){
+  if(unlikely(0 > (bx = ~u->bucketx))){
    // positive bucketx (now negative); that means skip that many items and then do name search
    // Even if we know there have been no names assigned we have to spin to the end of the chain
    I m=u->m; C* s=u->s; UI4 hsh=u->hash;  // length/addr of name from name block, and hash

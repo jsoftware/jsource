@@ -537,7 +537,9 @@ extern F2(jtscz2);
 extern F2(jtself2);
 extern F2(jtsetfv);
 extern F2(jtsfrom);
+#if SY_64
 extern F2(jtsfu);
+#endif
 extern F2(jtshasum2);
 extern F2(jtsmmcar);
 extern F2(jtsmmis);

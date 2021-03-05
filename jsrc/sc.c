@@ -50,7 +50,7 @@ valgone: ;
    }
    // syrd1 returns bit 0 set if the value is from a named locale, i. e. is cachable.  probelocal always returns with that flag off, since local symbols are never cachable
    ASSERT(stabent!=0,EVVALUE);  // name must be defined
-   I4 cacheable=(I4)(I)stabent&1; stabent=(L*)((I)stabent&~1);  // extract cachable flag from stabent & clear it
+   I4 cacheable=(I4)(I)stabent&LNAMED; stabent=(L*)((I)stabent&~LNAMED);  // extract cachable flag from stabent & clear it
    fs=stabent->val;  // fetch the value for the name
    ASSERT(fs!=0,EVVALUE); // make sure the name's value is given also
    ASSERT(PARTOFSPEECHEQACV(AT(self),AT(fs)),EVDOMAIN);   // make sure its part of speech has not changed since the name was parsed

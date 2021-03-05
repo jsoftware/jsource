@@ -188,7 +188,7 @@ A jtstcreate(J jt,C k,I p,I n,C*u){A g,x,xx;C s[20];L*v;
  // The allocation clears all the hash chain bases, including the one used for SYMLINFO
  switch(k){
   case 0:  /* named locale */
-   AR(g)=1;   // set rank to indicate named locale.  It is left 0 in numbered or local
+   AR(g)=LNAMED;   // set rank to indicate named locale
    RZ(v=symnew(&LXAV0(g)[SYMLINFO],0)); v->flag|=LINFO;    // put new block into locales table, allocate at head of chain without non-PERMANENT marking
    RZ(x=nfs(n,u));  // this fills in the hash for the name
    // Install name and path.  Path is 'z' except in z locale itself, which has empty path
@@ -274,7 +274,10 @@ A jtstfind(J jt,I n,C*u,I bucketx){L*v;
 // n=-1 means 'numbered locale, don't bother checking digits'   u is invalid
 A jtstfindcre(J jt,I n,C*u,I bucketx){
  A v = stfind(n,u,bucketx);  // lookup
- if(v)R v;  // return if found
+ if(likely(v!=0)){  // name found
+  if(unlikely(LOCPATH(v)==0))LOCPATH(v)=zpath;  // if the path is null, this is a zombie empty locale is the path of some other locale.  Bring it back to life by setting a default path
+  R v;  // return the locale found
+ }
  if(n>=0&&'9'<*u){  // nonnumeric locale:
   I p; FULLHASHSIZE(1LL<<(5+JT(jt,locsize)[0]),SYMBSIZE,1,SYMLINFOSIZE,p);
   R stcreate(0,p,n,u);  // create it with name
@@ -349,10 +352,13 @@ F2(jtlocnl2){UC*u;
 }    /* 18!:1 locale name list */
 
 static A jtlocale(J jt,B b,A w){A g=0,*wv,y;
- if(((AR(w)-1) & -(AT(w)&(INT|B01)))<0)R (b?jtstfindcre:jtstfind)(jt,-1,0,BIV0(w));  // atomic integer is OK
- RZ(vlocnl(1,w));
- wv=AAV(w); 
- DO(AN(w), y=AT(w)&BOX?AAV(w)[i]:sc(IAV(w)[i]); if(!(g=(b?jtstfindcre:jtstfind)(jt,AT(y)&(INT|B01)?-1:AN(y),CAV(y),AT(y)&(INT|B01)?BIV0(y):BUCKETXLOC(AN(y),CAV(y)))))R 0;);
+ if(((AR(w)-1) & -(AT(w)&(INT|B01)))<0){  // atomic integer is OK
+  if(!((g=(b?jtstfindcre:jtstfind)(jt,-1,0,BIV0(w)))&&LOCPATH(g)))R 0;  // error if name not found/created or if name was found but deleted
+ }else{
+  RZ(vlocnl(1,w));
+  wv=AAV(w); 
+  DO(AN(w), y=AT(w)&BOX?AAV(w)[i]:sc(IAV(w)[i]); if(!((g=(b?jtstfindcre:jtstfind)(jt,AT(y)&(INT|B01)?-1:AN(y),CAV(y),AT(y)&(INT|B01)?BIV0(y):BUCKETXLOC(AN(y),CAV(y))))&&LOCPATH(g)))R 0;);
+ }
  R g;
 }    /* last locale (symbol table) from boxed locale names; 0 if none or error.  if b=1, create locale */
 
@@ -488,12 +494,18 @@ F1(jtlocexmark){A g,*wv,y,z;B *zv;C*u;I i,m,n;L*v;
  R z;
 }    /* 18!:55 destroy a locale (but only mark for destruction if on stack) */
 
-// destroy symbol table g.  
+// destroy symbol table g, which must be named or numbered
 B jtlocdestroy(J jt,A g){
+ // see if the locale exists (and has not been deleted already).  Return fast if not
+
+ // delete the variables and the path.  Leave the name.  Set path pointer to 0 to indicate it has been deleted
+
+ // lower the usecount.  The locale and the name will be freed when the usecount goes to 0
  // Look at the name to see whether the locale is named or numbered
  NM *locname=NAV(LOCNAME(g));  // NM block for name
- B isnum = '9'>=locname->s[0];  // first char of name tells the type
- if(isnum){
+// obsolete  B isnum = '9'>=locname->s[0];  // first char of name tells the type
+ if(likely(!(AR(g)&LNAMED))){
+// obsolete  if(likely('9'>=locname->s[0])){
   // For numbered locale, find the locale in the list of numbered locales, wipe it out, free the locale, and decrease the number of those locales
   RZ(redefg(g)); jterasenl(jt,locname->bucketx); fr(g);  // remove the locale from the hash table, then free the locale and its names
  } else {

@@ -327,7 +327,7 @@ F1(jtspforloc){A*wv,x,y,z;C*s;D tot,*zv;I i,j,m,n;L*u;LX *yv,c;
    bucketx=BUCKETXLOC(m,s);
   }
   y=stfind(m,s,bucketx);   // y is the block for the locale
-  ASSERT(y!=0,EVLOCALE);
+  ASSERT(y!=0&&LOCPATH(y),EVLOCALE);
   tot=(D)(FHRHSIZE(AFHRH(y)));  // start with the size of the locale block (always a normal block)
   tot+=spfor1(LOCPATH(y)); tot+=spfor1(LOCNAME(y));  // add in the size of the path and name
   m=AN(y); yv=LXAV0(y); 

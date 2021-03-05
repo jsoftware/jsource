@@ -308,7 +308,7 @@ L*jtprobeis(J jt,A a,A g){C*s;LX *hv,tx;I m;L*v;NM*u;L *sympv=LAV0(JT(jt,symp));
 // look up a non-locative name using the locale path
 // g is the current locale, l/string=length/name, hash is the hash for it
 // result is L* symbol-table slot for the name, or 0 if none
-// Bit 0 of the result is set iff the name was found in a named locale
+// Bit 0 (LNAMED) of the result is set iff the name was found in a named locale
 L*jtsyrd1(J jt,I l,C *string,UI4 hash,A g){A*v,x,y;L*e;
 // if(b&&jt->local&&(e=probe(NAV(a)->m,NAV(a)->s,NAV(a)->hash,jt->local))){av=NAV(a); R e;}  // return if found local
  RZ(g);  // make sure there is a locale...
@@ -344,8 +344,8 @@ static A jtlocindirect(J jt,I n,C*u,UI4 hash){A x,y;C*s,*v,*xv;I k,xn;
   k=s-v; s=v-2;    // k=length of indirect locative; s->end+1 of next name if any
   if(!e){  // first time through
    e=probe(k,v,hash,jt->locsyms);  // look up local first
-   if(!e)e=(L*)((I)syrd1(k,v,hash,jt->global)&~1);  // if not local, try global, and remove cachable flag
-  }else e=(L*)((I)syrd1(k,v,(UI4)nmhash(k,v),g)&~1);   // look up later indirect locatives, yielding an A block for a locative; remove cachable flag
+   if(!e)e=(L*)((I)syrd1(k,v,hash,jt->global)&~LNAMED);  // if not local, try global, and remove cachable flag
+  }else e=(L*)((I)syrd1(k,v,(UI4)nmhash(k,v),g)&~LNAMED);   // look up later indirect locatives, yielding an A block for a locative; remove cachable flag
   ASSERTN(e,EVVALUE,nfs(k,v));  // verify found
   y=e->val;    // y->A block for locale
   ASSERTN(!AR(y),EVRANK,nfs(k,v));   // verify atomic
@@ -387,7 +387,7 @@ L*jtsyrd(J jt,A a,A locsyms){A g;
   if(e = probelocal(a,locsyms)){R e;}  // return flagging the result if local
   g=jt->global;  // Continue with the current locale
  } else RZ(g=sybaseloc(a));
- R (L*)((I)syrd1(NAV(a)->m,NAV(a)->s,NAV(a)->hash,g)&~1);  // Not local: look up the name starting in locale g
+ R (L*)((I)syrd1(NAV(a)->m,NAV(a)->s,NAV(a)->hash,g)&~LNAMED);  // Not local: look up the name starting in locale g
 }
 // same, but return locale in which found
 A jtsyrdforlocale(J jt,A a){A g;
@@ -410,7 +410,7 @@ L*jtsyrdnobuckets(J jt,A a){A g;
   if(!NAV(a)->bucket && (e = probe(NAV(a)->m,NAV(a)->s,NAV(a)->hash,jt->locsyms))){R e;}  // return if found locally from name
   g=jt->global;  // Start with the current locale
  } else RZ(g=sybaseloc(a));  // if locative, start in locative locale
- R (L*)((I)syrd1(NAV(a)->m,NAV(a)->s,NAV(a)->hash,g)&~1);  // Not local: look up the name starting in locale g
+ R (L*)((I)syrd1(NAV(a)->m,NAV(a)->s,NAV(a)->hash,g)&~LNAMED);  // Not local: look up the name starting in locale g
 }
 
 

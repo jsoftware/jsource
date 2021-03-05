@@ -592,8 +592,10 @@ typedef I SI;
 // old value of AM is loaded into v.  nv is a temp.  final is an expression whose value is 1 iff this is a final assignment, else 0
 #define AMNVRFREEACT(a,final,v,nv) (v=AM(a),nv=v|AMFREED,nv=v&-AMNVRCT?nv:1*AMNVRCT+AMFREED+AMNV,nv=v<((final)<<AMNVRCTX)?v:nv,AM(a)=nv);
 #define AMNVRCINI(a) {if(!(AM(a)&AMNV))AMNVRSET(a,AMNV);}  // if AM doesn't have NVR semantics, initialize it
-// Flags in the AR field of local symbol tables
+
+// Flags in the AR field of symbol tables
 #define LSYMINUSE 1  // This bit is set in the rank of the original symbol table when it is in use
+#define LNAMED 1   // set in the rank of a named locale table.  This bit is passed in the return from jtsyrd1
 #define LNAMEADDED LPERMANENT  // Set in rank when a new name is added to the local symbol table.  We transfer the bit from the L flags to the rank-flag
 #define LLOCALTABLE 16  // Set in rank of all local symbol tables.  This indicates that the first hashchain holds x/y info and should not be freed as a symbol
 

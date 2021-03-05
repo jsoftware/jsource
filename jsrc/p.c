@@ -465,8 +465,7 @@ A jtparsea(J jt, A *queue, I m){PSTK * RESTRICT stack;A z,*v;I es;
        if(likely(NAV(y)->bucket!=0)){I bx;L *sympv=LAV0(JT(jt,symp));
         if(likely(0 <= (bx = ~NAV(y)->bucketx))){   // negative bucketx (now positive); skip that many items, and then you're at the right place.  This is the path for almost all local symbols
          s = LXAV0(jt->locsyms)[NAV(y)->bucket]+sympv;  // fetch hashchain headptr, point to L for first symbol
-#pragma clang loop unroll(disable)
-         while(bx--){s = s->next+sympv;}  // skip the prescribed number
+         NOUNROLL while(bx--){s = s->next+sympv;}  // skip the prescribed number
          if(unlikely(s->val==0))goto rdglob;  // if value has not been assigned, ignore it
         }else{
          // positive bucketx (now negative); that means skip that many items and then do name search.  This is set for words that were recognized as names but were not detected as assigned-to in the definition.  This is the path for global symbols
@@ -475,8 +474,7 @@ A jtparsea(J jt, A *queue, I m){PSTK * RESTRICT stack;A z,*v;I es;
          // from here on it is rare to find a name - usually they're globals defined elsewhere
          LX lx = LXAV0(jt->locsyms)[NAV(y)->bucket];  // index of first block if any
          I m=NAV(y)->m; C* nm=NAV(y)->s; UI4 hsh=NAV(y)->hash;  // length/addr of name from name block
-#pragma clang loop unroll(disable)
-         while(0>++bx){lx = sympv[lx].next;}
+         NOUNROLL while(0>++bx){lx = sympv[lx].next;}
          // Now lx is the index of the first name that might match.  Do the compares
          while(1) {
           if(lx==0)goto rdglob;  // If we run off chain, go read from globals

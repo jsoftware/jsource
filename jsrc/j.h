@@ -1021,6 +1021,7 @@ extern unsigned int __cdecl _clearfp (void);
 // ??? is_mm256_zeroupper really needed
 // -mavx or /arch:AVX should already generate VEX encoded for SSE instructions
 #define _mm256_zeroupperx(x)
+#define NOUNROLL _Pragma("clang loop unroll(disable)")  // put this just before a loop to disable unroll
 #define NPAR ((I)(sizeof(__m256d)/sizeof(D))) // number of Ds processed in parallel
 #define LGNPAR 2  // no good automatic way to do this
 // loop for atomic parallel ops.  // fixed: n is #atoms (never 0), x->input, z->result, u=input atom4 and result

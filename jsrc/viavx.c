@@ -1470,14 +1470,12 @@ end1: ;
    I wval, aliml, alimr, zval;
    // find a starting point within a stride of the beginning of the correct point, put it into aliml
    aliml=0; alimr=asct-1; wval=*(I*)((I)zv+zvwvofst);
-#pragma clang loop_unroll(disable)
    zval=asct;
 #if 0 // obsolete 
  ax=(aliml+alimr)>>1;  // init values as if coming from the last read
   aval=av[ax]; I startsch=ax|IMIN;  // we start all searches in the middle
 #endif
-#pragma clang loop_unroll(disable)
-   while(1){
+   NOUNROLL while(1){
     // av is the start of the a vector
     // zv points to the next output location
     // zv+zvwvofst points to the data we will read into wval
@@ -1546,9 +1544,7 @@ end1: ;
    zval=newxl?asct:zval; alimr=newxl?asct:alimr; aliml=newxl?-1:aliml; // if starting new search, set big right look
 #endif   
    }
-#pragma clang loop_unroll(disable)
-   while(zv!=zend)*zv++=asct;  // all the rest not found
-#pragma clang loop_unroll(enable)
+   NOUNROLL while(zv!=zend)*zv++=asct;  // all the rest not found
 #endif
   }else{
    // y is almost as big as x.  There is no gain from trying to skip through the cache, so we will process x and y sequentially
@@ -1569,12 +1565,10 @@ end1: ;
    }
    // at the end we stopped before handling the last element of a (because we would have overfetched a if we continued)
    // put out all the rest of w.  We have incremented wv0 once 
-#pragma clang loop_unroll(disable)
    if(unlikely(zv!=zend)){  // more output needed
     if(likely(wv0!=jt->shapesink))++zend;  // if we stopped before the very last result, we have an extra one to do
-    while(1){*zv++=w0==a0?ax:asct; if(zv==zend)break; w0=*wv0++;}  // handle all the remaining ws, checking against the last a
+    NOUNROLL while(1){*zv++=w0==a0?ax:asct; if(zv==zend)break; w0=*wv0++;}  // handle all the remaining ws, checking against the last a
    }
-#pragma clang loop_unroll(enable)
    
   }
  }

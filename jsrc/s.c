@@ -58,7 +58,7 @@ B jtsymext(J jt,B b){A x,y;I j,m,n,*v,xn,yn;L*u;
 // The stored chain pointer to the new record is given the non-PERMANENT status from the sign of tailx
 // result is new symbol
 L* jtsymnew(J jt,LX*hv, LX tailx){LX j;L*u,*v;
- while(!(j=SYMNEXT(LAV0(JT(jt,symp))[0].next)))RZ(symext(1));  /* extend pool if req'd        */
+ NOUNROLL while(!(j=SYMNEXT(LAV0(JT(jt,symp))[0].next)))RZ(symext(1));  /* extend pool if req'd        */
  LAV0(JT(jt,symp))[0].next=LAV0(JT(jt,symp))[j].next;       /* new top of stack            */
  u=j+LAV0(JT(jt,symp));  // the new symbol.  u points to it, j is its index
  if(likely(SYMNEXT(tailx)!=0)) {L *t=SYMNEXT(tailx)+LAV0(JT(jt,symp));
@@ -88,7 +88,7 @@ extern void jtsymfreeha(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
   // process the chain
   if(k=*aprev){
    // first, free the PERMANENT values (if any), but not the names
-   do{
+   NOUNROLL do{
     if(!SYMNEXTISPERM(k))break;  // we are about to free k.  exit if it is not permanent
     aprev=&jtsympv[k].next;  // save last item we processed here
     if(jtsympv[k].val){
@@ -222,9 +222,9 @@ L *jtprobelocal(J jt,A a,A locsyms){NM*u;I b,bx;
    if(likely(!(AR(locsyms)&LNAMEADDED)))R 0;
    LX lx = LXAV0(locsyms)[b];  // index of first block if any
    I m=u->m; C* s=u->s; UI4 hsh=u->hash; // length/addr of name from name block, and hash
-   while(0>++bx){lx = LAV0(JT(jt,symp))[lx].next;}  // all PERMANENT
+   NOUNROLL while(0>++bx){lx = LAV0(JT(jt,symp))[lx].next;}  // all PERMANENT
    // Now lx is the index of the first name that might match.  Do the compares
-   while(lx=SYMNEXT(lx)) {L* l = lx+LAV0(JT(jt,symp));  // symbol entry
+   NOUNROLL while(lx=SYMNEXT(lx)) {L* l = lx+LAV0(JT(jt,symp));  // symbol entry
     IFCMPNAME(NAV(l->name),s,m,hsh,R l->val?l : 0;)
     lx = l->next;
    }
@@ -233,7 +233,7 @@ L *jtprobelocal(J jt,A a,A locsyms){NM*u;I b,bx;
    LX lx = LXAV0(locsyms)[b];  // index of first block if any
    L* l = lx+LAV0(JT(jt,symp));  // fetch hashchain headptr, point to L for first symbol
    // negative bucketx (now positive); skip that many items, and then you're at the right place
-   while(bx--){l = l->next+LAV0(JT(jt,symp));}  // all permanent
+   NOUNROLL while(bx--){l = l->next+LAV0(JT(jt,symp));}  // all permanent
    R l->val?l:0;
   }
  } else {
@@ -256,9 +256,9 @@ L *jtprobeislocal(J jt,A a){NM*u;I b,bx;L *sympv=LAV0(JT(jt,symp));
    LX tx = lx;  // tx will hold the address of the last item in the chain, in case we have to add a new symbol
    L* l;
 
-   while(0>++bx){tx = lx; lx = sympv[lx].next;}  // all permanent
+   NOUNROLL while(0>++bx){tx = lx; lx = sympv[lx].next;}  // all permanent
    // Now lx is the index of the first name that might match.  Do the compares
-   while(lx=SYMNEXT(lx)) {
+   NOUNROLL while(lx=SYMNEXT(lx)) {
     l = lx+sympv;  // symbol entry
     IFCMPNAME(NAV(l->name),s,m,hsh,R l;)
     tx = lx; lx = l->next;
@@ -270,7 +270,7 @@ L *jtprobeislocal(J jt,A a){NM*u;I b,bx;L *sympv=LAV0(JT(jt,symp));
    R l;
   } else {L* l = lx+sympv;  // fetch hashchain headptr, point to L for first symbol
    // negative bucketx (now positive); skip that many items, and then you're at the right place
-   while(bx--){l = l->next+sympv;}  // all permanent
+   NOUNROLL while(bx--){l = l->next+sympv;}  // all permanent
    R l;  // return 
   }
  } else {
@@ -292,7 +292,7 @@ L*jtprobeis(J jt,A a,A g){C*s;LX *hv,tx;I m;L*v;NM*u;L *sympv=LAV0(JT(jt,symp));
  u=NAV(a); m=u->m; s=u->s; UI4 hsh=u->hash; hv=LXAV0(g)+SYMHASH(u->hash,AN(g)-SYMLINFOSIZE);  // get hashchain base among the hash tables
  if(tx=SYMNEXT(*hv)){                                 /* !*hv means (0) empty slot    */
   v=tx+sympv;
-  while(1){                               
+  NOUNROLL while(1){                               
    u=NAV(v->name);
    IFCMPNAME(u,s,m,hsh,R v;)    // (1) exact match - may or may not have value
    if(!v->next)break;                                /* (2) link list end */
@@ -315,7 +315,7 @@ L*jtsyrd1(J jt,I l,C *string,UI4 hash,A g){A*v,x,y;L*e;
  if(e=probe(l,string,hash,g)){e=(L*)((I)e+AR(g)); R e;}  // and if the name is defined there, use it
  RZ(y = LOCPATH(g));   // Not found in locale.  We must use the path
  v=AAV(y); 
- // in LOCPATH the 'shape' of each string is used to store the bucketx
+ // in LOCPATH the 'shape' of each string is used to store the bucket
  DO(AN(y), x=v[i]; if(e=probe(l,string,hash,g=stfindcre(AN(x),CAV(x),AS(x)[0]))){e=(L*)((I)e+AR(g)); break;});  // return when name found.  Create path locale if it does not exist
  R e;  // fall through: not found
 }    /* find name a where the current locale is g */ 
@@ -340,7 +340,7 @@ static A jtlocindirect(J jt,I n,C*u,UI4 hash){A x,y;C*s,*v,*xv;I k,xn;
  L *e=0;  // value looked up
  s=n+u;   // s->end+1 of name
  while(u<s){
-  v=s; while('_'!=*--v); ++v;  // v->start of last indirect locative
+  v=s; NOUNROLL while('_'!=*--v); ++v;  // v->start of last indirect locative
   k=s-v; s=v-2;    // k=length of indirect locative; s->end+1 of next name if any
   if(!e){  // first time through
    e=probe(k,v,hash,jt->locsyms);  // look up local first
@@ -419,7 +419,7 @@ static A jtdllsymaddr(J jt,A w,C flag){A*wv,x,y,z;I i,n,*zv;L*v;
  n=AN(w); wv=AAV(w); 
  ASSERT(!n||BOX&AT(w),EVDOMAIN);
  GATV(z,INT,n,AR(w),AS(w)); zv=AV(z); 
- for(i=0;i<n;++i){
+ NOUNROLL for(i=0;i<n;++i){
   x=wv[i]; v=syrd(nfs(AN(x),CAV(x)),jt->locsyms); 
   ASSERT(v!=0,EVVALUE);
   y=v->val;

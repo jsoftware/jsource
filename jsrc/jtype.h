@@ -128,7 +128,8 @@ struct AD {
         // been deferred and must be applied when the NVR count goes to 0; bits 2 and up are the NVR count, i. e. the number of times the value is on the NVR stack
         // Bit 0 is set to initiate this use when a value is assigned to a name for the first time (and NVR count is set to 0 then)
         // (3) for blocks coming out of a COUNTITEMS verb, holds the number of items in the
-        // raze of the noun (if the types are identical) (4) for SYMB tables for explicit definitions, the address of the calling symbol table (5) for the block
+        // raze of the noun (if the types are identical) (4) for SYMB tables for explicit definitions, the address of the calling symbol table; for other SYMB tables,
+        // a Bloom filter of the hashes assigned in the locale (using the low bits of the hash) (5) for the block
         // holding the amend offsets in x u} y, the number of axes of y that are built into the indexes in u (6) no longer used
         // (7) in the return from wordil, holds the number of words if any final NB. is discarded; (8) in the result of indexofsub when called for FORKEY, contains the
         // number of partitions found; (9) in the self block for y L: n and u S: n, the address of the fs block for u; (10) in the call to jtisf (multiple assignment), holds the

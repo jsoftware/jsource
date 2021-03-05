@@ -196,13 +196,15 @@ A jtstcreate(J jt,C k,I p,I n,C*u){A g,x,xx;C s[20];L*v;
    // Assign this name in the locales symbol table to point to the allocated SYMB block
    // This does ras() on g
    symbisdel(x,g,JT(jt,stloc));
+   AM(g)=0;  // Init Bloom filter to 'nothing assigned'
    break;
   case 1:  /* numbered locale */
    RZ(v=symnew(&LXAV0(g)[SYMLINFO],0)); v->flag|=LINFO;   // put new block into locales table, allocate at head of chain without non-PERMANENT marking
    sprintf(s,FMTI,n); RZ(x=nfs(strlen(s),s)); NAV(x)->bucketx=n; // this fills in the hash for the name; we save locale# if numeric
    ACINITZAP(x); LOCNAME(g)=x; LOCPATH(g)=zpath;  // ras() is never virtual.  zpath is permanent, no ras needed
    // Put this locale into the in-use list at an empty location.  ras(g) at that time
-   jtinstallnl(jt, g);  // put the locale into the numbered list at the value most recently returned (which must be n)
+   jtinstallnl(jt, g);  // put the locale into the numbered list at n
+   AM(g)=0;  // Init Bloom filter to 'nothing assigned'
    break;
   case 2:  /* local symbol table */
    // Don't invalidate ACV lookups, since the local symbol table is not in any path

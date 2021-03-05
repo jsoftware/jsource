@@ -462,10 +462,11 @@ A jtparsea(J jt, A *queue, I m){PSTK * RESTRICT stack;A z,*v;I es;
        // To save some overhead, we inline this and do the analysis in a different order here
        // The important performance case is local names with bucket info.  Pull that out & do it without the call overhead
        // This code is copied from s.c
-       if(likely(NAV(y)->bucket!=0)){I bx;
+       if(likely(NAV(y)->bucket!=0)){I bx;L *sympv=LAV0(JT(jt,symp));
         if(likely(0 <= (bx = ~NAV(y)->bucketx))){   // negative bucketx (now positive); skip that many items, and then you're at the right place.  This is the path for almost all local symbols
-         s = LXAV0(jt->locsyms)[NAV(y)->bucket]+LAV0(JT(jt,symp));  // fetch hashchain headptr, point to L for first symbol
-         while(bx--){s = s->next+LAV0(JT(jt,symp));}  // skip the prescribed number
+         s = LXAV0(jt->locsyms)[NAV(y)->bucket]+sympv;  // fetch hashchain headptr, point to L for first symbol
+#pragma clang loop unroll(disable)
+         while(bx--){s = s->next+sympv;}  // skip the prescribed number
          if(unlikely(s->val==0))goto rdglob;  // if value has not been assigned, ignore it
         }else{
          // positive bucketx (now negative); that means skip that many items and then do name search.  This is set for words that were recognized as names but were not detected as assigned-to in the definition.  This is the path for global symbols
@@ -474,12 +475,13 @@ A jtparsea(J jt, A *queue, I m){PSTK * RESTRICT stack;A z,*v;I es;
          // from here on it is rare to find a name - usually they're globals defined elsewhere
          LX lx = LXAV0(jt->locsyms)[NAV(y)->bucket];  // index of first block if any
          I m=NAV(y)->m; C* nm=NAV(y)->s; UI4 hsh=NAV(y)->hash;  // length/addr of name from name block
-         while(0>++bx){lx = LAV0(JT(jt,symp))[lx].next;}
+#pragma clang loop unroll(disable)
+         while(0>++bx){lx = sympv[lx].next;}
          // Now lx is the index of the first name that might match.  Do the compares
          while(1) {
           if(lx==0)goto rdglob;  // If we run off chain, go read from globals
           lx=SYMNEXT(lx);  // we are now into non-PERMANENT symbols & must clear the flag
-          s = lx+LAV0(JT(jt,symp));  // symbol entry
+          s = lx+sympv;  // symbol entry
           IFCMPNAME(NAV(s->name),nm,m,hsh,{if(s->val==0)goto rdglob; break;})  // if match, we're done looking; could be not found, if no value
           lx = s->next;
          }
@@ -488,7 +490,7 @@ A jtparsea(J jt, A *queue, I m){PSTK * RESTRICT stack;A z,*v;I es;
        }else{
         // No bucket info.  Usually this is a locative/global, but it could be an explicit modifier, console level, or ".
         // If the name has a cached reference, use it
-        if(likely(NAV(y)->cachedref!=0)){
+        if(likely(NAV(y)->cachedref!=0)){  // if the user doesn't care enough to turn on caching, performance must not be that important
          A cachead=NAV(y)->cachedref; // use the cached address
          if(unlikely(NAV(y)->flag&NMCACHEDSYM)){cachead=(A)((LAV0(JT(jt,symp))[(I)cachead]).val); if(unlikely(!cachead)){jsignal(EVVALUE);FP}}  // if it's a symbol index, fetch that.  value error only if cached symbol deleted
          y=cachead; at=AT(y); goto endname; // take its type, proceed

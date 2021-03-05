@@ -61,30 +61,30 @@ static B jtiixI(J jt,I n,I m,A a,A w,I*zv){A t;B ascend;I*av,j,p,q,*tv,*u,*v,*vv
       if(b)q=k-1; else p=k+1;}
 // Binary search without misprediction, on atoms
 #define BSLOOP1x(CMP)    /* if CMP is true, move q; otherwise p */       \
-  y=*wv++; p=0; q=n-1; k=q>>1;         \
+  y=*wv++; p=-1; q=n; k=(q-1)>>1;         \
   do{   /* empty lists handled earlier */ \
    x=av[k]; /* read the next value */ \
-   I p2=k+1; I q1=k-1; I k2; MID(k2,p2,q); MID(k,p,q1); /* calculate new values for kpq depending on which way the compare turns out.  2=upper side (ie if p moved), 1=lower side (if q moved) */\
-   k=CMP?k:k2; p=CMP?p:p2; q=CMP?q1:q; /* move k first to start next fetch */\
-  }while(q>=p); 
+   I k2, k1=k; MID(k2,k,q); k=k2-((q-p)>>1); /* calculate new values for k */\
+   k=CMP?k:k2; p=CMP?p:k1; q=CMP?k1:q; /* move k first to start next fetch */\
+  }while(q>p+1); 
 
 #define BSLOOPN(NE,CMP)        \
   p=0; q=n-1;                  \
   while(p<=q){MID(k,p,q); u=av+c*k; v=wv; b=1; DQ(c, x=*u++; y=*v++; if(NE){CMP; break;}); /* make this compare fixed length? */   \
       if(b)q=k-1; else p=k+1;}
-// Without misprediction
+// Without misprediction.
 #define BSLOOPNx(NE,CMP)    /* if CMP is true, move q; otherwise p */       \
-  p=0; q=n-1; k=(q>>1);         \
+  p=-1; q=n; k=(q-1)>>1;         \
   do{   /* empty lists handled earlier */ \
-   u=av+k*c; v=wv; b=1; DQ(c, x=*u; y=*v; if(NE){b=(CMP); break;} ++u; ++v;);  \
-   I p2=k+1; I q1=k-1; I k2; MID(k2,p2,q); MID(k,p,q1);   /* calculate new values for kpq depending on which way the compare turns out.  2=upper side (ie if p moved), 1=lower side (if q moved) */\
-   k=b?k:k2; p=b?p:p2; q=b?q1:q; /* move k first to start next fetch */\
-  }while(q>=p); 
+   u=av+k*c; v=wv; I _n=c; while(1){x=*u; y=*v; if(--_n==0||NE)break; ++u; ++v;};  \
+   I k2, k1=k; MID(k2,k,q); k=k2-((q-p)>>1); /* calculate new values for k */\
+   k=CMP?k:k2; p=CMP?p:k1; q=CMP?k1:q; /* move k first to start next fetch */\
+  }while(q>p+1); 
 
 #define BSLOOP(Ta,Tw)       \
  {Ta*av=(Ta*)AV(a),x; Tw y; Tw*wv=(Tw*)AV(w);                                             \
-   if(c==1){if(ge!=1)DQ(m, BSLOOP1x(x>=y); *zv++=q+1;)else DQ(m, BSLOOP1x(x<=y); *zv++=q+1;)}      \
-   else{if(ge!=1)DQ(m, Ta* u; Tw *v; BSLOOPNx(x!=y,x>y); *zv++=q+1; wv+=c;)else DQ(m, Ta* u; Tw *v; BSLOOPNx(x!=y,x<y); *zv++=q+1; wv+=c;)}      \
+   if(c==1){if(ge!=1)DQ(m, BSLOOP1x(x>=y); *zv++=q;)else DQ(m, BSLOOP1x(x<=y); *zv++=q;)}      \
+   else{if(ge!=1)DQ(m, Ta* u; Tw *v; BSLOOPNx(x!=y,x>=y); *zv++=q; wv+=c;)else DQ(m, Ta* u; Tw *v; BSLOOPNx(x!=y,x<=y); *zv++=q; wv+=c;)}      \
  }
 
 #define BSLOOF(Ta,Tw,COMP)  \

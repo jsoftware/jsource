@@ -56,7 +56,7 @@
  }
  
  // delete the locale numbered n, if it exists
- static void jterasenl(J jt, I n){
+void jterasenl(J jt, I n){
   if(jtfindnl(jt,n)){  // if locale exists
    I newblock=(I)&jt->numloctbl[n];
    // chain the new block off the old tail
@@ -137,7 +137,7 @@ A jtfindnl(J jt, I n){
 }
 
 // delete the locale numbered n, if it exists
-static void jterasenl(J jt, I n){
+void jterasenl(J jt, I n){
  I probe=HASHSLOT(n,AN(JT(jt,stnum)));  // start of search.  Look backward, wrapping around, until we find a match or an empty.
  while(IAV0(JT(jt,stnum))[probe]){if(NAV(LOCNAME((A)IAV0(JT(jt,stnum))[probe]))->bucketx==n)break; if(--probe<0)probe=AN(JT(jt,stnum))-1;}  // wrap around at beginning of block
  // We have found the match, or are at an empty if no match.  Either way, mark the location as empty and scan forward to find the next empty,
@@ -390,9 +390,10 @@ static F2(jtloccre){A g,y;C*s;I n,p;L*v;
   g=v->val; 
   LX *u=SYMLINFOSIZE+LXAV0(g); DO(AN(g)-SYMLINFOSIZE, ASSERT(!u[i],EVLOCALE););
 // obsolete   probedel(n,s,(UI4)nmhash(n,s),JT(jt,stloc));  // delete the symbol for the locale, and the locale itself
-  // if there is a path, free it.  Then set the default path
-  fa(LOCPATH(g)); LOCPATH(g)=zpath;
+  fa(LOCPATH(g)); LOCPATH(g)=zpath;  // if there is a path, free it.  Then set the default path
+  AM(g)=0;  // Reset the Bloom filter for the now-empty locale
  }else{
+  // new named locale needed
   FULLHASHSIZE(1LL<<(p+5),SYMBSIZE,1,SYMLINFOSIZE,p);  // get table, size 2^p+6 minus a little
   RZ(stcreate(0,p,n,s));
  }
@@ -465,7 +466,7 @@ F1(jtlocmap){A g,q,x,y,*yv,z,*zv;I c=-1,d,j=0,m,*qv,*xv;
  R z;
 }    /* 18!:30 locale map */
 
-static SYMWALK(jtredefg,B,B01,100,1,1,RZ(redef(mark,d)))
+SYMWALK(jtredefg,B,B01,100,1,1,RZ(redef(mark,d)))
      /* check for redefinition (erasure) of entire symbol table */
 
 F1(jtlocexmark){A g,*wv,y,z;B *zv;C*u;I i,m,n;L*v;
@@ -500,23 +501,21 @@ F1(jtlocexmark){A g,*wv,y,z;B *zv;C*u;I i,m,n;L*v;
 }    /* 18!:55 destroy a locale (but only mark for destruction if on stack) */
 
 // destroy symbol table g, which must be named or numbered
+// We cannot delete the symbol table, because it may be extant in paths.  So we empty the locale, and clear its path to 0
+// to indicate that it is a zombie.  We reset the Bloom filter to make sure the path doesn't respond to any names.  We also reduce the
+// usecount.  When the locale is no longer in any paths, it will be freed along with the name.
 B jtlocdestroy(J jt,A g){
- // see if the locale exists (and has not been deleted already).  Return fast if not
-
- // delete the variables and the path.  Leave the name.  Set path pointer to 0 to indicate it has been deleted
-
+ // see if the locale has been deleted already.  Return fast if so
+ if(unlikely(!LOCPATH(g)))R 1;  // already deleted - can't do it again
+ RZ(redefg(g));  // abort if the locale contains the currently-running definition
+ freesymb(jt,g);   // delete all the values
+ fa(LOCPATH(g));   // delete the path too.  block is recursive; must fa() to free sublevels
+ // Set path pointer to 0 to indicate it has been emptied; clear Bloom filter
+ LOCPATH(g)=0; AM(g)=0;
+ memset(LXAV0(g)+1,0,(AN(g)-SYMLINFOSIZE)*sizeof(LXAV0(g)[0]));  // scaf clear all hashchains
  // lower the usecount.  The locale and the name will be freed when the usecount goes to 0
- // Look at the name to see whether the locale is named or numbered
- NM *locname=NAV(LOCNAME(g));  // NM block for name
-// obsolete  B isnum = '9'>=locname->s[0];  // first char of name tells the type
- if(likely(!(AR(g)&LNAMED))){
-// obsolete  if(likely('9'>=locname->s[0])){
-  // For numbered locale, find the locale in the list of numbered locales, wipe it out, free the locale, and decrease the number of those locales
-  RZ(redefg(g)); jterasenl(jt,locname->bucketx); fr(g);  // remove the locale from the hash table, then free the locale and its names
- } else {
-  // For named locale, find the entry for this locale in the locales symbol table, and free the locale and the entry for it
-  RZ(redefg(g)); probedel(locname->m,locname->s,locname->hash,JT(jt,stloc));  // free the L block for the locale, which frees the locale itself and its names
- }
- if(g==jt->global)SYMSETGLOBAL(jt->locsyms,0);
+ fa(g);
+
+ if(g==jt->global)SYMSETGLOBAL(jt->locsyms,0);  // if we deleted the global locale, indicate that now there isn't one
  R 1;
 }    /* destroy locale jt->callg[i] (marked earlier by 18!:55) */

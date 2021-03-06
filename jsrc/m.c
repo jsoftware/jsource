@@ -523,21 +523,12 @@ void audittstack(J jt){F1PREFIP;
 #endif
 }
 
-// Free all symbols pointed to by the SYMB block w, iincluding PERMANENT ones.  But don't return CACHED values to the symbol pool
-static void freesymb(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
+// Free all symbols pointed to by the SYMB block w, including PERMANENT ones.  But don't return CACHED values to the symbol pool
+void freesymb(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
  LX freeroot=0; LX *freetailchn=(LX *)jt->shapesink;  // sym index of first freed ele; addr of chain field in last freed ele
  L *jtsympv=LAV0(JT(jt,symp));  // Move base of symbol block to a register.  Block 0 is the base of the free chain.  MUST NOT move the base of the free queue to a register,
   // because when we free a locale it frees its symbols here, and one of them might be a verb that contains a nested SYMB, giving recursion.  It is safe to move sympv to a register because
   // we know there will be no allocations during the free process.
- // First, free the path and name (in the SYMLINFO block), and then free the SYMLINFO block itself
- if(!(AR(w)&LLOCALTABLE)&&(k=wv[SYMLINFO])){  // for local symbol tables, LINFO is not a hashchain; and it might have had an error in allocation
-  fa(LOCPATH(w));   // block is recursive; must fa() to free sublevels
-  fr(LOCNAME(w));
-  // clear the data fields   kludge but this is how it was done (should be done in symnew)
-  jtsympv[k].name=0;jtsympv[k].val=0;jtsympv[k].sn=0;jtsympv[k].flag=0;
-  freeroot=k; freetailchn=&jtsympv[k].next;  // init free chain to 1 item
-// obsolete   jtsympv[k].next=jtsympv[0].next;jtsympv[0].next=k;  // LAV0(JT(jt,symp))[0] is the base of the free chain
- }
  // loop through each hash chain, clearing the blocks in the chain
  for(j=SYMLINFOSIZE;j<wn;++j){
   // free the chain; kt->last block freed
@@ -1171,8 +1162,36 @@ if((AC(w)>>(BW-2))==-1)SEGFAULT;  // high bits 11 must be deadbeef
  I allocsize;  // size of full allocation for this block
  // SYMB must free as a monolith, with the symbols returned when the hashtables are
  if(unlikely(AT(w)==SYMB)){  // == since high bit may be used as flag 
-  freesymb(jt,w);
+  if(likely(AR(w)&LLOCALTABLE)){
+   // local tables have no path or name, and are not listed in any index.  Just delete the local names
+   freesymb(jt,w);   // delete all the names/values
+  }else{
+   // freeing a named/numbered locale.  The locale must have had all names freed earlier, and the path must be 0.
+   // First, free the path and name (in the SYMLINFO block), and then free the SYMLINFO block itself
+   LX k,* RESTRICT wv=LXAV0(w);
+   L *jtsympv=LAV0(JT(jt,symp));
+   if(likely((k=wv[SYMLINFO])!=0)){  // if no error in allocation...
+    // Remove the locale from its global table, depending on whether it is named or numbered
+    NM *locname=NAV(LOCNAME(w));  // NM block for name
+// obsolete  B isnum = '9'>=locname->s[0];  // first char of name tells the type
+    if(likely(!(AR(w)&LNAMED))){
+// obsolete  if(likely('9'>=locname->s[0])){
+     // For numbered locale, find the locale in the list of numbered locales, wipe it out, free the locale, and decrease the number of those locales
+     jterasenl(jt,locname->bucketx);  // remove the locale from the hash table
+    } else {
+     // For named locale, find the entry for this locale in the locales symbol table, and free the locale and the entry for it
+     ACINIT(w,2) probedel(locname->m,locname->s,locname->hash,JT(jt,stloc));  // free the L block for the locale.  Protect the locale itself so it is not freed, as we are just about to do that
+    }
+    // Free the name
+    fr(LOCNAME(w));
+    // clear the data fields in the symbol   kludge but this is how it was done (should be done in symnew)
+    jtsympv[k].name=0;jtsympv[k].val=0;jtsympv[k].sn=0;jtsympv[k].flag=0;
+    jtsympv[k].next=jtsympv[0].next;jtsympv[0].next=k;  // put symbol on the free list.  LAV0(JT(jt,symp))[0] is the base of the free chain
+   }
+  }
+  // continue to free the table itself
  }
+ // ** this is a recursion point - mustn't load any names into registers before here **
 #if MEMAUDIT&1
  if(hrh==0 || blockx>(PLIML-PMINL+1))SEGFAULT;  // pool number must be valid
 #if MEMAUDIT&17

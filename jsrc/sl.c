@@ -163,13 +163,13 @@ static void jterasenl(J jt, I n){
 // return list of active numbered locales, using namelist mask
 static A jtactivenl(J jt){A y;
  GATV0(y,INT,AN(JT(jt,stnum)),1); I *yv=IAV(y);   // allocate place to hold numbers of active locales
- I nloc=0; DO(AN(JT(jt,stnum)), if(IAV0(JT(jt,stnum))[i]){yv[nloc]=NAV(LOCNAME((A)IAV0(JT(jt,stnum))[i]))->bucketx; ++nloc;})
+ I nloc=0; DO(AN(JT(jt,stnum)), if(IAV0(JT(jt,stnum))[i]&&(LOCPATH((A)IAV0(JT(jt,stnum))[i]))){yv[nloc]=NAV(LOCNAME((A)IAV0(JT(jt,stnum))[i]))->bucketx; ++nloc;})
  R every(take(sc(nloc),y),ds(CTHORN));  // ":&.> nloc{.y
 }
 
 // iterator support.  countnl returns a number of iterations.  indexnl returns the A block (or 0) for 
 I jtcountnl(J jt) { R AN(JT(jt,stnum)); }  // number of locales to reference by index
-A jtindexnl(J jt,I n) { R (A)IAV0(JT(jt,stnum))[n]; }  // the locale address, or 0 if none
+A jtindexnl(J jt,I n) {A z=(A)IAV0(JT(jt,stnum))[n]; R z&&LOCPATH(z)?z:0; }  // the locale address, or 0 if none
 
 #endif
 
@@ -257,6 +257,7 @@ F1(jtlocsizes){I p,q,*v;
 // locale name is known to be valid
 // n=0 means 'use base locale'
 // n=-1 means 'numbered locale, don't bother checking digits'   u is invalid
+// The slot me return might be a zombie, if LOCPATH is clear.  The caller must check.
 A jtstfind(J jt,I n,C*u,I bucketx){L*v;
  if(!n){n=sizeof(JT(jt,baselocale)); u=JT(jt,baselocale);bucketx=JT(jt,baselocalehash);}
  if(n>0&&'9'<*u){  // named locale   > because baselocale is known to be non-empty
@@ -317,17 +318,17 @@ F1(jtlocnc){A*wv,y,z;C c,*u;I i,m,n,*zv;
  n=AN(w); wv=AAV(w); 
  GATV(z,INT,n,AR(w),AS(w)); zv=AV(z);
  if(!n)R z;  // if no input, return empty before handling numeric-atom case
- if(AT(w)&(INT|B01)){IAV(z)[0]=findnl(BIV0(w))?1:-1; RETF(z);}  // if integer, must have been atomic or empty.  Handle the one value
+ if(AT(w)&(INT|B01)){IAV(z)[0]=(y=findnl(BIV0(w)))&&LOCPATH(y)?1:-1; RETF(z);}  // if integer, must have been atomic or empty.  Handle the one value
  for(i=0;i<n;++i){
   y=wv[i];
   if(!AR(y)&&AT(y)&((INT|B01))){  // atomic numeric locale
    zv[i]=findnl(BIV0(y))?1:-1;  // OK because the boxed value cannot be virtual, thus must have padding
-  }else{
+  }else{L *yy;
    // string locale, whether number or numeric
    m=AN(y); u=CAV(y); c=*u; 
    if(!vlocnm(m,u))zv[i]=-2;
-   else if(c<='9') zv[i]=findnl(strtoI10s(m,u))?1:-1;
-   else            zv[i]=probe(m,u,(UI4)nmhash(m,u),JT(jt,stloc))?0:-1;
+   else if(c<='9') zv[i]=(y=findnl(strtoI10s(m,u)))&&LOCPATH(y)?1:-1;
+   else            zv[i]=(yy=probe(m,u,(UI4)nmhash(m,u),JT(jt,stloc)))&&LOCPATH(yy->val)?0:-1;
   }
  }
  RETF(z);
@@ -384,14 +385,18 @@ static F2(jtloccre){A g,y;C*s;I n,p;L*v;
  if(MARK&AT(a))p=JT(jt,locsize)[0]; else{RE(p=i0(a)); ASSERT(0<=p,EVDOMAIN); ASSERT(p<14,EVLIMIT);}
  y=AAV(w)[0]; n=AN(y); s=CAV(y);
  if(v=probe(n,s,(UI4)nmhash(n,s),JT(jt,stloc))){   // scaf this is disastrous if the named locale is on the stack
-  // named locale exists.  Verify no defined names, then delete it
+  // named locale exists.  It may be zombie or not, but we have to keep using the same locale, since it may be out there in paths
+  // verify locale is empty
   g=v->val; 
   LX *u=SYMLINFOSIZE+LXAV0(g); DO(AN(g)-SYMLINFOSIZE, ASSERT(!u[i],EVLOCALE););
-  probedel(n,s,(UI4)nmhash(n,s),JT(jt,stloc));  // delete the symbol for the locale, and the locale itself
+// obsolete   probedel(n,s,(UI4)nmhash(n,s),JT(jt,stloc));  // delete the symbol for the locale, and the locale itself
+  // if there is a path, free it.  Then set the default path
+  fa(LOCPATH(g)); LOCPATH(g)=zpath;
+ }else{
+  FULLHASHSIZE(1LL<<(p+5),SYMBSIZE,1,SYMLINFOSIZE,p);  // get table, size 2^p+6 minus a little
+  RZ(stcreate(0,p,n,s));
  }
- FULLHASHSIZE(1LL<<(p+5),SYMBSIZE,1,SYMLINFOSIZE,p);  // get table, size 2^p+6 minus a little
- RZ(stcreate(0,p,n,s));
- R boxW(ca(y));
+ R boxW(ca(y));  // result is boxed string of name - we copy it, perhaps not needed
 }    /* create a locale named w with hash table size a */
 
 static F1(jtloccrenum){C s[20];I k,p;
@@ -401,7 +406,7 @@ static F1(jtloccrenum){C s[20];I k,p;
  FULLHASHSIZE(1LL<<(p+5),SYMBSIZE,1,SYMLINFOSIZE,p);  // get table, size 2^p+6 minus a little
  RZ(stcreate(1,p,k,0L));
  sprintf(s,FMTI,k); 
- R boxW(cstr(s));
+ R boxW(cstr(s));  // result is boxed string of name
 }    /* create a numbered locale with hash table size n */
 
 F1(jtloccre1){

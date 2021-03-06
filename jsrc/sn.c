@@ -132,7 +132,7 @@ F1(jtnc){A*wv,x,y,z;I i,n,t,*zv;L*v;
 static SYMWALK(jtnlxxx, A,BOX,20,1, CAV1(a)[((UC*)NAV(d->name)->s)[0]]&&AS(a)[0]&AT(d->val), 
     RZ(*zv++=incorp(sfn(SFNSIMPLEONLY,d->name))) )
 
-       SYMWALK(jtnlsym, A,BOX,20,1, CAV1(a)[((UC*)NAV(d->name)->s)[0]],
+SYMWALK(jtnlsym, A,BOX,20,1, LOCPATH(d->val)&&CAV1(a)[((UC*)NAV(d->name)->s)[0]],
     RZ(*zv++=incorp(sfn(SFNSIMPLEONLY,d->name))) )
 
 static const I nlmask[] = {NOUN,ADV,CONJ,VERB, MARK,MARK,SYMB,MARK};

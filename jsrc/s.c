@@ -502,32 +502,61 @@ static I abandflag=LWASABANDONED;  // use this flag if there is no incumbent val
 // Result points to the symbol-table block for the assignment
 L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;L*e;
  ARGCHK2(a,w);
- // If we have an assignsym, we have looked this name up already, so just use the symbol-table entry found then
- // in this case g is the type field of the name being assigned; and jt->locsyms must exist, since it comes from
- // an explicit definition
- I anmf=NAV(a)->flag; RZ(g)
- if(jt->asginfo.assignsym) {
-  e = jt->asginfo.assignsym;   // point to the symbol-table entry being assigned
-// obsolete   ASSERT(((I)g&ASGNLOCAL||NAV(a)->flag&(NMLOC|NMILOC)||!probelocal(a,jt->locsyms)),EVDOMAIN)  //  if global assignment not to locative, verify non locally defined
-  if(unlikely((((I)g&ASGNLOCAL)|(anmf&(NMLOC|NMILOC)))==0))ASSERT(!probelocal(a,jt->locsyms),EVDOMAIN)  // if non-locative, give error if there is a local
-// obsolete   ASSERT(((I)g&ASGNLOCAL||NAV(a)->flag&(NMLOC|NMILOC)||!probelocal(a,jt->locsyms)),EVDOMAIN)  //  if global assignment not to locative, verify non locally defined
-  CLEARZOMBIE   // clear until next use.
- } else {A jtlocal=jt->locsyms;
-// obsolete   if(likely(n==m))ASSERT(!(g==jt->global&&probelocal(a,jtlocal)),EVDOMAIN)  // if non-locative, give error if there is a local
-  if(likely(!(anmf&(NMLOC|NMILOC)))){if(unlikely(g==jt->global))ASSERT(!probelocal(a,jtlocal),EVDOMAIN)  // if non-locative, give error if there is a local
-    // symbol table, and we are assigning to the global symbol table, and the name is defined in the local table
-  }else{I n=AN(a); I m=NAV(a)->m;    // locative: n is length of name, v points to string value of name, m is length of non-locale part of name
-   // locative: s is the length of name_.  Find the symbol table to use, creating one if none found
-// obsolete    C*s=1+m+NAV(a)->s; RZ(g=anmf&NMILOC?locindirect(n-m-2,1+s,(UI4)NAV(a)->bucketx):stfindcre(n-m-2,s,NAV(a)->bucketx));
-   C*s=1+m+NAV(a)->s; if(unlikely(anmf&NMILOC))g=locindirect(n-m-2,1+s,(UI4)NAV(a)->bucketx);else g=stfindcre(n-m-2,s,NAV(a)->bucketx); RZ(g);
-  }
-  // Now g has the symbol table to store into
-  RZ(e=g==jtlocal?probeislocal(a) : probeis(a,g));   // set e to symbol-table slot to use
-  if(unlikely(AT(w)&FUNC))if(likely(FAV(w)->fgh[0]!=0)){if(FAV(w)->id==CCOLON)FAV(w)->flag|=VNAMED; if(jt->glock)FAV(w)->flag|=VLOCK;}
-   // If the new value is a function created by n : m, this becomes a named function; if running a locked function, this is locked too.
-   // kludge  these flags are modified in the input area (w), which means they will be improperly set in the result of the
-   // assignment (ex: (nm =: 3 : '...') y).  There seems to be no ill effect, because VNAMED isn't used much.
+// obsolete  // If we have an assignsym, we have looked this name up already, so just use the symbol-table entry found then
+// obsolete  // in this case g is the type field of the name being assigned; and jt->locsyms must exist, since it comes from
+// obsolete  // an explicit definition
+// obsolete  I anmf=NAV(a)->flag; RZ(g)
+// obsolete  if(jt->asginfo.assignsym) {
+// obsolete   e = jt->asginfo.assignsym;   // point to the symbol-table entry being assigned
+// obsolete // obsolete   ASSERT(((I)g&ASGNLOCAL||NAV(a)->flag&(NMLOC|NMILOC)||!probelocal(a,jt->locsyms)),EVDOMAIN)  //  if global assignment not to locative, verify non locally defined
+// obsolete   if(unlikely((((I)g&ASGNLOCAL)|(anmf&(NMLOC|NMILOC)))==0))ASSERT(!probelocal(a,jt->locsyms),EVDOMAIN)  // if non-locative, give error if there is a local
+// obsolete // obsolete   ASSERT(((I)g&ASGNLOCAL||NAV(a)->flag&(NMLOC|NMILOC)||!probelocal(a,jt->locsyms)),EVDOMAIN)  //  if global assignment not to locative, verify non locally defined
+// obsolete   CLEARZOMBIE   // clear until next use.
+// obsolete  } else {A jtlocal=jt->locsyms;
+// obsolete // obsolete   if(likely(n==m))ASSERT(!(g==jt->global&&probelocal(a,jtlocal)),EVDOMAIN)  // if non-locative, give error if there is a local
+// obsolete   if(likely(!(anmf&(NMLOC|NMILOC)))){if(unlikely(g==jt->global))ASSERT(!probelocal(a,jtlocal),EVDOMAIN)  // if non-locative, give error if there is a local
+// obsolete     // symbol table, and we are assigning to the global symbol table, and the name is defined in the local table
+// obsolete   }else{I n=AN(a); I m=NAV(a)->m;    // locative: n is length of name, v points to string value of name, m is length of non-locale part of name
+// obsolete    // locative: s is the length of name_.  Find the symbol table to use, creating one if none found
+// obsolete // obsolete    C*s=1+m+NAV(a)->s; RZ(g=anmf&NMILOC?locindirect(n-m-2,1+s,(UI4)NAV(a)->bucketx):stfindcre(n-m-2,s,NAV(a)->bucketx));
+// obsolete    C*s=1+m+NAV(a)->s; if(unlikely(anmf&NMILOC))g=locindirect(n-m-2,1+s,(UI4)NAV(a)->bucketx);else g=stfindcre(n-m-2,s,NAV(a)->bucketx); RZ(g);
+// obsolete   }
+// obsolete   // Now g has the symbol table to store into
+// obsolete   RZ(e=g==jtlocal?probeislocal(a) : probeis(a,g));   // set e to symbol-table slot to use
+// obsolete   if(unlikely(AT(w)&FUNC))if(likely(FAV(w)->fgh[0]!=0)){if(FAV(w)->id==CCOLON)FAV(w)->flag|=VNAMED; if(jt->glock)FAV(w)->flag|=VLOCK;}
+// obsolete    // If the new value is a function created by n : m, this becomes a named function; if running a locked function, this is locked too.
+// obsolete    // kludge  these flags are modified in the input area (w), which means they will be improperly set in the result of the
+// obsolete    // assignment (ex: (nm =: 3 : '...') y).  There seems to be no ill effect, because VNAMED isn't used much.
+// obsolete  }
+ I anmf=NAV(a)->flag; RZ(g)  // fetch flags for the name
+ A jtlocal=jt->locsyms, jtglobal=jt->global;  // current private/public symbol tables
+ e = jt->asginfo.assignsym; // set e if assignsym
+ if(unlikely((anmf&(NMLOC|NMILOC))!=0)){I n=AN(a); I m=NAV(a)->m;
+  // locative: n is length of name, v points to string value of name, m is length of non-locale part of name
+  // Find the symbol table to use, creating one if none found.  Unfortunately assignsym doesn't give us the symbol table
+//obsolete    C*s=1+m+NAV(a)->s; RZ(g=anmf&NMILOC?locindirect(n-m-2,1+s,(UI4)NAV(a)->bucketx):stfindcre(n-m-2,s,NAV(a)->bucketx));
+  C*s=1+m+NAV(a)->s; if(unlikely(anmf&NMILOC))g=locindirect(n-m-2,1+s,(UI4)NAV(a)->bucketx);else g=stfindcre(n-m-2,s,NAV(a)->bucketx); RZ(g);
+ }else{  // no locative: if g is a flag for assignsym, set it to the correct symbol table
+  A asgloc=jtglobal; asgloc=(I)g&ASGNLOCAL?jtlocal:asgloc; g=e?asgloc:g;  // if assignsym, set g based on local/global assignment
+  // not locative assignment, check for global assignment to a locally-defined name
+  if(unlikely(g==jtglobal))ASSERT(!probelocal(a,jtlocal),EVDOMAIN)
  }
+ // g has the locale we are writing to
+ anmf=AR(g);  // get rank-flags for the locale g
+ if(e){
+  // we are writing to the slot passed in jt->assignsym
+  CLEARZOMBIE   // clear until next use
+ }else{
+ // we don't have e, look it up & check NAMED
+  RZ(e=g==jtlocal?probeislocal(a) : probeis(a,g));   // set e to symbol-table slot to use
+  // If the new value is a function created by n : m, this becomes a named function; if running a locked function, this is locked too.
+  // kludge  these flags are modified in the input area (w), which means they will be improperly set in the result of the
+  // assignment (ex: (nm =: 3 : '...') y).  There seems to be no ill effect, because VNAMED isn't used much.
+  if(unlikely(AT(w)&FUNC))if(likely(FAV(w)->fgh[0]!=0)){if(FAV(w)->id==CCOLON)FAV(w)->flag|=VNAMED; if(jt->glock)FAV(w)->flag|=VLOCK;}
+ }
+ // if we are writing to a non-local table, apply the Bloom filter
+ if(unlikely((anmf&LLOCALTABLE)==0))BLOOMOR(g,BLOOMMASK(NAV(a)->hash));
+
  if(unlikely(jt->uflags.us.cx.cx_c.db))RZ(redef(w,e));  // if debug, check for changes to stack
  if(unlikely(e->flag&(LCACHED|LREADONLY))){  // exception cases
   ASSERT(!(e->flag&LREADONLY),EVRO)  // if writing read-only value (xxx_index), fail

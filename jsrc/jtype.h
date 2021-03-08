@@ -724,6 +724,10 @@ typedef struct {A name,val;US flag;S sn;LX next;} L;  // name must come first be
 // in LINFO entry
 #define LMOD            (I)1          // table has had new entries added (used for local symbol tables only)
 
+// In Global symbol tables (including numbered) AK is LOCPATH, and AM is LOCBLOOM
+#define LOCBLOOM(x) AM(x)
+#define BLOOMOR(x,v) {LOCBLOOM(x)|=(v);}  // or a new value into the Bloom filter
+
 
 // Definition of callstack
 

@@ -661,6 +661,7 @@ RECURSIVERESULTSCHECK
 #if AUDITEXECRESULTS
       auditblock(jt,y,1,1);
 #endif
+// obsolete if(probe(1,"z",(UI4)nmhash(1,"z"),JT(jt,stloc))->val!=AAV0(zpath)[0])SEGFAULT;  // scaf
 #if MEMAUDIT&0x2
       if(AC(y)==0 || (AC(y)<0 && AC(y)!=ACINPLACE+ACUC1))SEGFAULT; 
       audittstack(jt);

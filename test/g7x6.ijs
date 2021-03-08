@@ -13,7 +13,7 @@ NB. #y  letters in the name
 spl=: 4 : 0   NB. space needed for locale y with hash table size x
  z=. spn >y                      NB. locale name
  z=. z+(4)*2^6+x          NB. hash table
- z=. z+7!:5 <'p' [ p=. 18!:2 y   NB. path
+NB.  z=. z+7!:5 <'p' [ p=. 18!:2 y   NB. leave out the patch since it's other locales
  z=. z+ (+/spn&> v) + +/ (IF64{16 24) + 7!:5 v=. ,&('_',(>y),'_')&.>(nl__y '')-.;:'x y'  NB. 24 is length of L block
 )
 

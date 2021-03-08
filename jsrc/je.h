@@ -984,7 +984,7 @@ extern Z        zeroZ;
 extern const dcomplex zone;
 extern const dcomplex zzero;
 extern I oneone[2];
-extern A        zpath;
+// extern A        zpath;
 extern I iotavec[IOTAVECLEN];  // ascending integers, starting at IOTAVECBEGIN
 extern const UC typesizes[32];
 /* cpu feature */

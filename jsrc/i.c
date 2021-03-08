@@ -59,8 +59,8 @@ JS gjt=0; // JPF debug - convenience debug single process - points to shared are
 // into jt will never be used.  jinit3 will later be called with the real jt, to initialize it
 B jtglobinit(JS jjt){A x,y;J jt=MTHREAD(jjt);  // initialize in master thread
  jtmeminit(jjt,1);  // init allocation queues & tpop stack, master thread only
- RZ(y=rifvs(str(1L,"z")));     ACX(y); AS(y)[0]=BUCKETXLOC(1,"z");   // for paths, the shape holds the bucketx
- GA(x,BOX, 1,1,0); ACX(x); AAV(x)[0]=y; zpath=x; AFLAGORLOCAL(zpath,AT(zpath)&TRAVERSIBLE)  // ensure that traversible types in pst are marked traversible, so tpush/ra/fa will not recur on them
+// obsolete  RZ(y=rifvs(str(1L,"z")));     ACX(y); AS(y)[0]=BUCKETXLOC(1,"z");   // for paths, the shape holds the bucketx
+// obsolete  GA(x,BOX, 1,1,0); ACX(x); AAV(x)[0]=y; zpath=x; AFLAGORLOCAL(zpath,AT(zpath)&TRAVERSIBLE)  // ensure that traversible types in pst are marked traversible, so tpush/ra/fa will not recur on them
  RZ(mnuvxynam[0]=makename("m"));
  RZ(mnuvxynam[1]=makename("n"));
  RZ(mnuvxynam[2]=makename("u"));

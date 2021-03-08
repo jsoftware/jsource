@@ -211,8 +211,9 @@ typedef struct JSTstruct {
  A implocref[2];     // references to 'u.'~ and 'v.'~, marked as implicit locatives scaf
  C baselocale[4];    // will be "base"
  UI4 baselocalehash;   // name hash for base locale
- A sbu;              /* SB data for each unique symbol                  */
+ A zpath;    // path 'z', used for all initial paths
 // end of cache line 1
+ A sbu;              /* SB data for each unique symbol                  */
  A p4792;            // pointer to p: i. 4792, filled in on first use
 
 // DLL stuff
@@ -224,8 +225,8 @@ typedef struct JSTstruct {
 // file stuff
  A flkd;             /* file lock data: number, index, length           */
  A fopa;             /* open files boxed names                          */
- A fopf;             /* open files corresp. file numbers                */
 // end of cache line 2
+ A fopf;             /* open files corresp. file numbers                */
 
 // little-used stuff
  A emptylocale;      // locale with no symbols, used when not running explicits, or to avoid searching the local syms
@@ -255,8 +256,8 @@ typedef struct JSTstruct {
  void *smoutput;
  void *smpoll;           /* re-used in wd                                   */
  void *opbstr;           /* com ptr to BSTR for captured output             */
- C *breakfn;  // [NPATH];   /* break file name                                 */
 // end of cache line 4
+ C *breakfn;  // [NPATH];   /* break file name                                 */
  C* capture;          /* capture output for python->J etc.               */
  UI smoption;         /* wd options, see comment in jtwd                 */
  I sm;               /* sm options set by JSM()                         */
@@ -264,8 +265,8 @@ typedef struct JSTstruct {
  I transposeflag;    /* com flag for transposed arrays                  */
  void *iomalloc;   // address of block, if any, allocated in io.c to be returned to the FE
  I iomalloclen;   // length of the allocated block (in case we can reuse it)
- UI qtstackinit;      // jqt front-end C stack pointer    
 // end of cache line 5
+ UI qtstackinit;      // jqt front-end C stack pointer    
  I* breakfh;          /* win break file handle                           */
  I* breakmh;          /* win break map handle                            */
  A xep;              /* exit execution phrase                           */

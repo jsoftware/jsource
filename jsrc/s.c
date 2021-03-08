@@ -312,22 +312,26 @@ L*jtprobeis(J jt,A a,A g){C*s;LX *hv,tx;I m;L*v;NM*u;L *sympv=LAV0(JT(jt,symp));
 L*jtsyrd1(J jt,I l,C *string,UI4 hash,A g){A*v,x,y;L*e;
 // if(b&&jt->local&&(e=probe(NAV(a)->m,NAV(a)->s,NAV(a)->hash,jt->local))){av=NAV(a); R e;}  // return if found local
  RZ(g);  // make sure there is a locale...
- if(e=probe(l,string,hash,g)){e=(L*)((I)e+AR(g)); R e;}  // and if the name is defined there, use it
- RZ(y = LOCPATH(g));   // Not found in locale.  We must use the path
- v=AAV(y); 
- // in LOCPATH the 'shape' of each string is used to store the bucket
- DO(AN(y), x=v[i]; if(e=probe(l,string,hash,g=stfindcre(AN(x),CAV(x),AS(x)[0]))){e=(L*)((I)e+AR(g)); break;});  // return when name found.  Create path locale if it does not exist
+// obsolete  if(e=probe(l,string,hash,g)){e=(L*)((I)e+AR(g)); R e;}  // and if the name is defined there, use it
+// obsolete  RZ(y = LOCPATH(g));   // Not found in locale.  We must use the path
+// obsolete  v=AAV(y); 
+// obsolete  // in LOCPATH the 'shape' of each string is used to store the bucket
+// obsolete  DO(AN(y), x=v[i]; if(e=probe(l,string,hash,g=stfindcre(AN(x),CAV(x),AS(x)[0]))){e=(L*)((I)e+AR(g)); break;});  // return when name found.  Create path locale if it does not exist
+// obsolete  v=AAV0(LOCPATH(g)); A p=*v++; do{A pn=*v++; if(e=probe(l,string,hash,p)){e=(L*)((I)e+AR(p)); break;} p=pn;}while(p);  // return when name found.
+ I bloom=BLOOMMASK(hash); v=AAV0(LOCPATH(g)); do{A gn=*v++; if(bloom==bloom&AM(g))if(e=probe(l,string,hash,g)){e=(L*)((I)e+AR(g)); break;} g=gn;}while(g);  // return when name found.
  R e;  // fall through: not found
 }    /* find name a where the current locale is g */ 
 // same, but return the locale in which the name is found.  We know the name will be found somewhere
-A jtsyrd1forlocale(J jt,I l,C *string,UI4 hash,A g){A*v,x,y;L*e;
+A jtsyrd1forlocale(J jt,I l,C *string,UI4 hash,A g){A*v,x,y;
 // if(b&&jt->local&&(e=probe(NAV(a)->m,NAV(a)->s,NAV(a)->hash,jt->local))){av=NAV(a); R e;}  // return if found local
  RZ(g);  // make sure there is a locale...
- if(e=probe(l,string,hash,g))R g;  // and if the name is defined there, use it
- RZ(y = LOCPATH(g));   // Not found in locale.  We must use the path
- v=AAV(y); 
- // in LOCPATH the 'shape' of each string is used to store the bucketx
- DO(AN(y), x=v[i]; if(e=probe(l,string,hash,g=stfindcre(AN(x),CAV(x),AS(x)[0])))break;);  // return when name found.  Create path locale if it does not exist
+// obsolete  if(e=probe(l,string,hash,g))R g;  // and if the name is defined there, use it
+// obsolete  RZ(y = LOCPATH(g));   // Not found in locale.  We must use the path
+// obsolete  v=AAV(y); 
+// obsolete  // in LOCPATH the 'shape' of each string is used to store the bucketx
+// obsolete  v=AAV0(LOCPATH(g)); A p=*v++; do{A pn=*v++; if(e=probe(l,string,hash,p)){break;} p=pn;}while(p);  // return when name found.
+ I bloom=BLOOMMASK(hash); v=AAV0(LOCPATH(g)); do{A gn=*v++; if(bloom==bloom&AM(g))if(probe(l,string,hash,g)){break;} g=gn;}while(g);  // return when name found.
+// obsolete  DO(AN(y), x=v[i]; if(e=probe(l,string,hash,g=stfindcre(AN(x),CAV(x),AS(x)[0])))break;);  // return when name found.  Create path locale if it does not exist
  R g;
 }
 
@@ -494,7 +498,7 @@ L* jtprobeisquiet(J jt,A a,A locsyms){A g;  // locsyms is used in the call, but 
 }
 
 static I abandflag=LWASABANDONED;  // use this flag if there is no incumbent value
-// assign symbol: assign name a in symbol table g to the value w (but g is special if jt->asginfo.assignsym is nonnull)
+// assign symbol: assign name a in symbol table g to the value w (but g is special if jt->asginfo.assignsym is nonnull, and is ignored if a is a locative)
 // Result points to the symbol-table block for the assignment
 L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;L*e;
  ARGCHK2(a,w);
@@ -513,10 +517,10 @@ L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;L*e;
   if(likely(!(anmf&(NMLOC|NMILOC)))){if(unlikely(g==jt->global))ASSERT(!probelocal(a,jtlocal),EVDOMAIN)  // if non-locative, give error if there is a local
     // symbol table, and we are assigning to the global symbol table, and the name is defined in the local table
   }else{I n=AN(a); I m=NAV(a)->m;    // locative: n is length of name, v points to string value of name, m is length of non-locale part of name
+   // locative: s is the length of name_.  Find the symbol table to use, creating one if none found
 // obsolete    C*s=1+m+NAV(a)->s; RZ(g=anmf&NMILOC?locindirect(n-m-2,1+s,(UI4)NAV(a)->bucketx):stfindcre(n-m-2,s,NAV(a)->bucketx));
    C*s=1+m+NAV(a)->s; if(unlikely(anmf&NMILOC))g=locindirect(n-m-2,1+s,(UI4)NAV(a)->bucketx);else g=stfindcre(n-m-2,s,NAV(a)->bucketx); RZ(g);
   }
-    // locative: s is the length of name_.  Find the symbol table to use, creating one if none found
   // Now g has the symbol table to store into
   RZ(e=g==jtlocal?probeislocal(a) : probeis(a,g));   // set e to symbol-table slot to use
   if(unlikely(AT(w)&FUNC))if(likely(FAV(w)->fgh[0]!=0)){if(FAV(w)->id==CCOLON)FAV(w)->flag|=VNAMED; if(jt->glock)FAV(w)->flag|=VLOCK;}
@@ -535,6 +539,7 @@ L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;L*e;
  I xaf;  // holder for nvr/free flags
 // obsolete   I xt;  // If not assigned, use empty type
  {I *aaf=&AFLAG(x); aaf=x?aaf:&abandflag; xaf=*aaf;}  // flags from x, of LWASABANDONED if there is no x
+
  if(likely(!(AFNJA&xaf))){
   I wt=AT(w);
   // Normal case of non-memory-mapped assignment.

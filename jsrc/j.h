@@ -108,7 +108,7 @@
 #define _CMP_LE          2
 #define _CMP_UNORD       3
 #define _CMP_NEQ         4
-#define _CMP_NLT         5
+#define _CMP_NLT   MEMA      5
 #define _CMP_NLE         6
 #define _CMP_ORD         7
 #undef _CMP_EQ_OQ
@@ -573,7 +573,7 @@ extern unsigned int __cdecl _clearfp (void);
 // Debugging options
 
 // Use MEMAUDIT to sniff out errant memory alloc/free
-#define MEMAUDIT 0x00       // Bitmask for memory audits: 1=check headers 2=full audit of tpush/tpop 4=write garbage to memory before freeing it 8=write garbage to memory after getting it
+#define MEMAUDIT 0x00 // Bitmask for memory audits: 1=check headers 2=full audit of tpush/tpop 4=write garbage to memory before freeing it 8=write garbage to memory after getting it
                      // 16=audit freelist at every alloc/free (starting after you have run 6!:5 (1) to turn it on)
                      // 0x20 audit freelist at end of every sentence regardless of 6!:5
  // 13 (0xD) will verify that there are no blocks being used after they are freed, or freed prematurely.  If you get a wild free, turn on bit 0x2
@@ -669,6 +669,7 @@ extern unsigned int __cdecl _clearfp (void);
 // BETWEENx requires that lo be <= hi
 #define BETWEENC(x,lo,hi) ((UI)((x)-(lo))<=(UI)((hi)-(lo)))   // x is in [lo,hi]
 #define BETWEENO(x,lo,hi) ((UI)((x)-(lo))<(UI)((hi)-(lo)))   // x is in [lo,hi)
+#define BLOOMMASK(hash) 0   // Bloom filter for a given hash
 #define BMK(x) (1LL<<(x))  // bit number x
 // test for equality of 2 8-bit values simultaneously
 #define BOTHEQ8(x,y,X,Y) ( ((US)(C)(x)<<8)+(US)(C)(y) == ((US)(C)(X)<<8)+(US)(C)(Y) )

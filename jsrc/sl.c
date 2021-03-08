@@ -197,7 +197,7 @@ A jtstcreate(J jt,C k,I p,I n,C*u){A g,x,xx;C s[20];L*v;
    // Assign this name in the locales symbol table to point to the allocated SYMB block
    // This does ras() on g
    symbisdel(x,g,JT(jt,stloc));
-   AM(g)=0;  // Init Bloom filter to 'nothing assigned'
+   LOCBLOOM(g)=0;  // Init Bloom filter to 'nothing assigned'
    break;
   case 1:  /* numbered locale */
    RZ(v=symnew(&LXAV0(g)[SYMLINFO],0)); v->flag|=LINFO;   // put new block into locales table, allocate at head of chain without non-PERMANENT marking
@@ -205,7 +205,7 @@ A jtstcreate(J jt,C k,I p,I n,C*u){A g,x,xx;C s[20];L*v;
    ACINITZAP(x); LOCNAME(g)=x; LOCPATH(g)=JT(jt,zpath);  // ras() is never virtual.  zpath is permanent, no ras needed
    // Put this locale into the in-use list at an empty location.  ras(g) at that time
    jtinstallnl(jt, g);  // put the locale into the numbered list at n
-   AM(g)=0;  // Init Bloom filter to 'nothing assigned'
+   LOCBLOOM(g)=0;  // Init Bloom filter to 'nothing assigned'
    break;
   case 2:  /* local symbol table */
    // Don't invalidate ACV lookups, since the local symbol table is not in any path
@@ -235,7 +235,7 @@ B jtsymbinit(JS jjt,I nthreads){A q,zloc;JJ jt=MTHREAD(jjt);
  FULLHASHSIZE(1LL<<10,SYMBSIZE,1,SYMLINFOSIZE,p);  // about 2^11 chains
  RZ(jt->global=stcreate(0,p,sizeof(INITJT(jjt,baselocale)),INITJT(jjt,baselocale)));
  // Allocate a symbol table with just 1 (empty) chain; then set length to 1 indicating 0 chains; make this the current local symbols, to use when no explicit def is running
- RZ(jt->locsyms=stcreate(2,2,0,0)); AKGST(jt->locsyms)=jt->global; AN(jt->locsyms)=1; AM(jt->locsyms)=(I)jt->locsyms; ACX(jt->locsyms); // close chain so u. at top level has no effect.  Bloom filter immaterial since chains empty
+ RZ(jt->locsyms=stcreate(2,2,0,0)); AKGST(jt->locsyms)=jt->global; AN(jt->locsyms)=1; AM(jt->locsyms)=(I)jt->locsyms; ACX(jt->locsyms); // close chain so u. at top level has no effect.  No Bloom filter since local table
  // That inited the symbol tables for the master thread.  Worker threads must copy when they start execution
  INITJT(jjt,emptylocale)=jt->locsyms;  // save the empty locale to use for searches that bypass locals
  // Go back and fix the path for z locale to be the empty locale (which is what we use when the path itself is empty)
@@ -421,7 +421,7 @@ static F2(jtloccre){A g,y;C*s;I n,p;L*v;
   LX *u=SYMLINFOSIZE+LXAV0(g); DO(AN(g)-SYMLINFOSIZE, ASSERT(!u[i],EVLOCALE););
 // obsolete   probedel(n,s,(UI4)nmhash(n,s),JT(jt,stloc));  // delete the symbol for the locale, and the locale itself
   if(LOCPATH(g)){fa(LOCPATH(g))}else{ra(g);}  LOCPATH(g)=JT(jt,zpath);  // if there is a path, free it; if not raise to protect the incoming path.  Then set the default path
-  AM(g)=0;  // Reset the Bloom filter for the now-empty locale
+  LOCBLOOM(g)=0;  // Reset the Bloom filter for the now-empty locale
  }else{
   // new named locale needed
   FULLHASHSIZE(1LL<<(p+5),SYMBSIZE,1,SYMLINFOSIZE,p);  // get table, size 2^p+6 minus a little
@@ -543,7 +543,7 @@ B jtlocdestroy(J jt,A g){
  freesymb(jt,g);   // delete all the values
  fa(LOCPATH(g));   // delete the path too.  block is recursive; must fa() to free sublevels
  // Set path pointer to 0 to indicate it has been emptied; clear Bloom filter
- LOCPATH(g)=0; AM(g)=0;
+ LOCPATH(g)=0; LOCBLOOM(g)=0;
  memset(LXAV0(g)+1,0,(AN(g)-SYMLINFOSIZE)*sizeof(LXAV0(g)[0]));  // scaf clear all hashchains
  // lower the usecount.  The locale and the name will be freed when the usecount goes to 0
  fa(g);

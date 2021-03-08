@@ -1185,7 +1185,7 @@ if((AC(w)>>(BW-2))==-1)SEGFAULT;  // high bits 11 must be deadbeef
     }
     // Free the name
     fr(LOCNAME(w));
-    // clear the data fields in the symbol   kludge but this is how it was done (should be done in symnew)
+    // clear the data fields in symbol 0   kludge but this is how it was done (should be done in symnew)
     jtsympv[k].name=0;jtsympv[k].val=0;jtsympv[k].sn=0;jtsympv[k].flag=0;
     jtsympv[k].next=jtsympv[0].next;jtsympv[0].next=k;  // put symbol on the free list.  LAV0(JT(jt,symp))[0] is the base of the free chain
    }

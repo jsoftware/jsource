@@ -120,6 +120,7 @@ struct AD {
   I k;
   A chain;   // used when block is on free chain
   A globalst;  // for local symbol tables (SYMB types), AK points to the active global symbol table when the current sentence started parsing
+  A locpath;  // for non-local SYMB (named and numeric), AK points to the path, which uses AAV0 and stores addresses of SYMBs
  } kchain;
  FLAGT flag;
  union {

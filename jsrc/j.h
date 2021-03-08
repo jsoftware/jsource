@@ -669,7 +669,13 @@ extern unsigned int __cdecl _clearfp (void);
 // BETWEENx requires that lo be <= hi
 #define BETWEENC(x,lo,hi) ((UI)((x)-(lo))<=(UI)((hi)-(lo)))   // x is in [lo,hi]
 #define BETWEENO(x,lo,hi) ((UI)((x)-(lo))<(UI)((hi)-(lo)))   // x is in [lo,hi)
-#define BLOOMMASK(hash) 0   // Bloom filter for a given hash
+#if SY_64
+// The Bloom filter is set of 4 16-bit sections.  For each hash value, a single bit is set in each section.  The LOCBLOOM of a locale holds the OR or all the Bloom masks that
+// have been written.  When a value is looked up, we skip the table if LOCBLOOM doesn't have a 1 in each position presented by the new mask.
+#define BLOOMMASK(hash) ((1LL<<((hash)&15))+(10000LL<<(((hash)>>4)&15))+(100000000LL<<(((hash)>>8)&15))+(1000000000000LL<<(((hash)>>12)&15)))   // Bloom filter for a given hash
+#else
+#define BLOOMMASK(hash) ((1L<<((hash)&15))+(10000L<<(((hash)>>4)&15)))   // Bloom filter for a given hash
+#endif
 #define BMK(x) (1LL<<(x))  // bit number x
 // test for equality of 2 8-bit values simultaneously
 #define BOTHEQ8(x,y,X,Y) ( ((US)(C)(x)<<8)+(US)(C)(y) == ((US)(C)(X)<<8)+(US)(C)(Y) )

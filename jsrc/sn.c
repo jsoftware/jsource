@@ -268,7 +268,7 @@ F1(jtex){A*wv,y,z;B*zv;I i,n;L*v;
 // obsolete      if((AM(v->val)&AMNV+AMFREED)==AMNV){ras(v->val); AMNVROR(v->val,AMFREED);}  // NVR not yet deferred: indicate deferred free, and protect from the upcoming free; but if already deferred-free, let it reduce the usecount now
 // obsolete     }
 // obsolete    }
-   L *zombsym; if(unlikely((zombsym=probedel(NAV(v->name)->m,NAV(v->name)->s,NAV(v->name)->hash,locfound))!=0)){fa(zombsym->name); zombsym->name=0;};  // delete the symbol (incl name and value) in the locale in which it is defined; leave orphan value with no name
+   L *zombsym; if(unlikely((zombsym=jtprobedel((J)((I)jt+NAV(v->name)->m),NAV(v->name)->s,NAV(v->name)->hash,locfound))!=0)){fa(zombsym->name); zombsym->name=0;};  // delete the symbol (incl name and value) in the locale in which it is defined; leave orphan value with no name
              // if the probe returns nonzero, it was a cached value which is not unmoored: we must free the name
   }
  }

@@ -268,7 +268,8 @@ F1(jtlocsizes){I p,q,*v;
 A jtstfind(J jt,I n,C*u,I bucketx){L*v;
  if(!n){n=sizeof(JT(jt,baselocale)); u=JT(jt,baselocale);bucketx=JT(jt,baselocalehash);}
  if(n>0&&'9'<*u){  // named locale   > because *u is known to be non-empty
-  v=probe(n,u,(UI4)bucketx,JT(jt,stloc));
+  ASSERT(n<256,EVLIMIT);
+  v=jtprobe((J)((I)jt+n),u,(UI4)bucketx,JT(jt,stloc));
   if(v)R v->val;   // if there is a symbol, return its value
  }else{
   R findnl(bucketx);
@@ -338,7 +339,7 @@ F1(jtlocnc){A*wv,y,z;C c,*u;I i,m,n,*zv;
    m=AN(y); u=CAV(y); c=*u; 
    if(!vlocnm(m,u))zv[i]=-2;
    else if(c<='9') zv[i]=(y=findnl(strtoI10s(m,u)))&&LOCPATH(y)?1:-1;
-   else            zv[i]=(yy=probe(m,u,(UI4)nmhash(m,u),JT(jt,stloc)))&&LOCPATH(yy->val)?0:-1;
+   else            zv[i]=(yy=jtprobe((J)((I)jt+m),u,(UI4)nmhash(m,u),JT(jt,stloc)))&&LOCPATH(yy->val)?0:-1;
   }
  }
  RETF(z);
@@ -413,8 +414,8 @@ F2(jtlocpath2){A g,h; AD * RESTRICT x;
 static F2(jtloccre){A g,y;C*s;I n,p;L*v;
  ARGCHK2(a,w);
  if(MARK&AT(a))p=JT(jt,locsize)[0]; else{RE(p=i0(a)); ASSERT(0<=p,EVDOMAIN); ASSERT(p<14,EVLIMIT);}
- y=AAV(w)[0]; n=AN(y); s=CAV(y);
- if(v=probe(n,s,(UI4)nmhash(n,s),JT(jt,stloc))){   // scaf this is disastrous if the named locale is on the stack
+ y=AAV(w)[0]; n=AN(y); s=CAV(y); ASSERT(n<256,EVLIMIT);
+ if(v=jtprobe((J)((I)jt+n),s,(UI4)nmhash(n,s),JT(jt,stloc))){   // scaf this is disastrous if the named locale is on the stack
   // named locale exists.  It may be zombie or not, but we have to keep using the same locale, since it may be out there in paths
   // verify locale is empty
   g=v->val; 
@@ -512,8 +513,9 @@ F1(jtlocexmark){A g,*wv,y,z;B *zv;C*u;I i,m,n;L*v;
    if(AT(y)&(INT|B01)){g = findnl(BIV0(y));
    }else{
     m=AN(y); u=CAV(y);
+    ASSERT(m<256,EVLIMIT);
     if('9'>=*u){g = findnl(strtoI10s(m,u));}
-    else {v=probe(m,u,(UI4)nmhash(m,u),JT(jt,stloc)); if(v)g=v->val;}  // g is locale block for named locale
+    else {v=jtprobe((J)((I)jt+m),u,(UI4)nmhash(m,u),JT(jt,stloc)); if(v)g=v->val;}  // g is locale block for named locale
    }
   }
   if(g){I k;  // if the specified locale exists in the system...

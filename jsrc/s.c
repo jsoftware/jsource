@@ -318,7 +318,7 @@ L*jtsyrd1(J jt,I l,C *string,UI4 hash,A g){A*v,x,y;L*e;
 // obsolete  // in LOCPATH the 'shape' of each string is used to store the bucket
 // obsolete  DO(AN(y), x=v[i]; if(e=probe(l,string,hash,g=stfindcre(AN(x),CAV(x),AS(x)[0]))){e=(L*)((I)e+AR(g)); break;});  // return when name found.  Create path locale if it does not exist
 // obsolete  v=AAV0(LOCPATH(g)); A p=*v++; do{A pn=*v++; if(e=probe(l,string,hash,p)){e=(L*)((I)e+AR(p)); break;} p=pn;}while(p);  // return when name found.
- I bloom=BLOOMMASK(hash); v=AAV0(LOCPATH(g)); do{A gn=*v++; if(bloom==bloom&AM(g))if(e=probe(l,string,hash,g)){e=(L*)((I)e+AR(g)); break;} g=gn;}while(g);  // return when name found.
+ I bloom=BLOOMMASK(hash); v=AAV0(LOCPATH(g)); do{A gn=*v++; if(bloom==(bloom&AM(g)))if(e=probe(l,string,hash,g)){e=(L*)((I)e+AR(g)); break;} g=gn;}while(g);  // return when name found.
  R e;  // fall through: not found
 }    /* find name a where the current locale is g */ 
 // same, but return the locale in which the name is found.  We know the name will be found somewhere
@@ -330,7 +330,7 @@ A jtsyrd1forlocale(J jt,I l,C *string,UI4 hash,A g){A*v,x,y;
 // obsolete  v=AAV(y); 
 // obsolete  // in LOCPATH the 'shape' of each string is used to store the bucketx
 // obsolete  v=AAV0(LOCPATH(g)); A p=*v++; do{A pn=*v++; if(e=probe(l,string,hash,p)){break;} p=pn;}while(p);  // return when name found.
- I bloom=BLOOMMASK(hash); v=AAV0(LOCPATH(g)); do{A gn=*v++; if(bloom==bloom&AM(g))if(probe(l,string,hash,g)){break;} g=gn;}while(g);  // return when name found.
+ I bloom=BLOOMMASK(hash); v=AAV0(LOCPATH(g)); do{A gn=*v++; if(bloom==(bloom&AM(g)))if(probe(l,string,hash,g)){break;} g=gn;}while(g);  // return when name found.
 // obsolete  DO(AN(y), x=v[i]; if(e=probe(l,string,hash,g=stfindcre(AN(x),CAV(x),AS(x)[0])))break;);  // return when name found.  Create path locale if it does not exist
  R g;
 }

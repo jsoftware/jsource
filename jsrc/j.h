@@ -108,7 +108,7 @@
 #define _CMP_LE          2
 #define _CMP_UNORD       3
 #define _CMP_NEQ         4
-#define _CMP_NLT   MEMA      5
+#define _CMP_NLT         5
 #define _CMP_NLE         6
 #define _CMP_ORD         7
 #undef _CMP_EQ_OQ

@@ -417,11 +417,17 @@ static F2(jtloccre){A g,y;C*s;I n,p;L*v;
  y=AAV(w)[0]; n=AN(y); s=CAV(y); ASSERT(n<256,EVLIMIT);
  if(v=jtprobe((J)((I)jt+n),s,(UI4)nmhash(n,s),JT(jt,stloc))){   // scaf this is disastrous if the named locale is on the stack
   // named locale exists.  It may be zombie or not, but we have to keep using the same locale, since it may be out there in paths
-  // verify locale is empty
-  g=v->val; 
-  LX *u=SYMLINFOSIZE+LXAV0(g); DO(AN(g)-SYMLINFOSIZE, ASSERT(!u[i],EVLOCALE););
+  g=v->val;
+  if(LOCPATH(g)){
+   // verify locale is empty (if it is zombie, its hashchains are garbage - clear them)
+   LX *u=SYMLINFOSIZE+LXAV0(g); DO(AN(g)-SYMLINFOSIZE, ASSERT(!u[i],EVLOCALE););
+   fa(LOCPATH(g))  // free old path
+  }else{
+   memset(LXAV0(g)+1,0,(AN(g)-SYMLINFOSIZE)*sizeof(LXAV0(g)[0]));  // scaf clear all hashchains
+   ra(g);  // going from zombie to valid adds to the usecount
 // obsolete   probedel(n,s,(UI4)nmhash(n,s),JT(jt,stloc));  // delete the symbol for the locale, and the locale itself
-  if(LOCPATH(g)){fa(LOCPATH(g))}else{ra(g);}  LOCPATH(g)=JT(jt,zpath);  // if there is a path, free it; if not raise to protect the incoming path.  Then set the default path
+  }
+  LOCPATH(g)=JT(jt,zpath);  // Set the default path
   LOCBLOOM(g)=0;  // Reset the Bloom filter for the now-empty locale
  }else{
   // new named locale needed
@@ -544,9 +550,9 @@ B jtlocdestroy(J jt,A g){
  RZ(redefg(g));  // abort if the locale contains the currently-running definition
  freesymb(jt,g);   // delete all the values
  fa(LOCPATH(g));   // delete the path too.  block is recursive; must fa() to free sublevels
- // Set path pointer to 0 to indicate it has been emptied; clear Bloom filter
+ // Set path pointer to 0 to indicate it has been emptied; clear Bloom filter.  Leave hashchains since the Bloom filter will ensure they are never used
  LOCPATH(g)=0; LOCBLOOM(g)=0;
- memset(LXAV0(g)+1,0,(AN(g)-SYMLINFOSIZE)*sizeof(LXAV0(g)[0]));  // scaf clear all hashchains
+// obsolete  memset(LXAV0(g)+1,0,(AN(g)-SYMLINFOSIZE)*sizeof(LXAV0(g)[0]));  // scaf clear all hashchains
  // lower the usecount.  The locale and the name will be freed when the usecount goes to 0
  fa(g);
 

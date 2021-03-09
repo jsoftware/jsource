@@ -1739,9 +1739,9 @@ static inline UINT _clearfp(void){int r=fetestexcept(FE_ALL_EXCEPT);
 #endif
 #else // C_USEMULTINTRINSIC 0 - use standard-C version (64-bit)
 #define DPMULDECLS
-#define DPMUL(x,y,z,s) {I _l, _x=(x), _y=(y); D _d; _l=_x*_y; _d=(D)_x*(D)_y-(D)_l; *z=_l; _d=ABS(_d); if(_d>1e8)s}  // *z may be the same as x or y
+#define DPMUL(x,y,z,s) {I _l, _x=(x), _y=(y); D _d; _l=_x*_y; _d=(D)_x*(D)_y-(D)_l; *z=_l; _d=ABS(_d); if(_d>1e8){s}}  // *z may be the same as x or y
 #define DPMULDDECLS
-#define DPMULD(x,y,z,s) {I _l, _x=(x), _y=(y); D _d; _l=_x*_y; _d=(D)_x*(D)_y-(D)_l; z=_l; _d=ABS(_d); if(_d>1e8)s}
+#define DPMULD(x,y,z,s) {I _l, _x=(x), _y=(y); D _d; _l=_x*_y; _d=(D)_x*(D)_y-(D)_l; z=_l; _d=ABS(_d); if(_d>1e8){s}}
 #define DPMULDZ(x,y,z) DPMULD(x,y,z,z=0;)
 #define DPMULDE(x,y,z)  DPMULD(x,y,z,ASSERT(0,EVLIMIT))
 #endif
@@ -1752,20 +1752,20 @@ static inline UINT _clearfp(void){int r=fetestexcept(FE_ALL_EXCEPT);
 #if defined(MMSC_VER)  // SY_WIN32
 // optimizer can't handle this #define SPDPADD(addend, sumlo, sumhi) {C c; c=_addcarry_u32(0,addend,sumlo,&sumlo); _addcarry_u32(c,0,sumhi,&sumhi);}
 #define DPMULDECLS unsigned __int64 _p;
-#define DPMUL(x,y,z,s) _p = __emul(x,y); *z=(I)_p; if((_p+0x80000000U)>0xFFFFFFFFU)s
+#define DPMUL(x,y,z,s) _p = __emul(x,y); *z=(I)_p; if((_p+0x80000000U)>0xFFFFFFFFU){s}
 #define DPMULDDECLS unsigned __int64 _p;
-#define DPMULD(x,y,z,s) _p = __emul(x,y); z=(I)_p; if((_p+0x80000000U)>0xFFFFFFFFU)s
+#define DPMULD(x,y,z,s) _p = __emul(x,y); z=(I)_p; if((_p+0x80000000U)>0xFFFFFFFFU){s}
 #else
 #define DPMULDECLS
-#define DPMUL(x,y,z,s) if(__builtin_smull_overflow(x,y,z))s
+#define DPMUL(x,y,z,s) if(__builtin_smull_overflow(x,y,z)){s}
 #define DPMULDDECLS
-#define DPMULD(x,y,z,s) if(__builtin_smull_overflow(x,y,&z))s
+#define DPMULD(x,y,z,s) if(__builtin_smull_overflow(x,y,&z)){s}
 #endif
 #else // C_USEMULTINTRINSIC 0 - use standard-C version (32-bit)
 #define DPMULDECLS D _p;
-#define DPMUL(x,y,z,s) _p = (D)x*(D)y; *z=(I)_p; if(_p>IMAX||_p<IMIN)s
+#define DPMUL(x,y,z,s) _p = (D)x*(D)y; *z=(I)_p; if(_p>IMAX||_p<IMIN){s}
 #define DPMULDDECLS D _p;
-#define DPMULD(x,y,z,s) _p = (D)x*(D)y; z=(I)_p; if(_p>IMAX||_p<IMIN)s
+#define DPMULD(x,y,z,s) _p = (D)x*(D)y; z=(I)_p; if(_p>IMAX||_p<IMIN){s}
 #endif
 #define DPMULDZ(x,y,z) DPMULD(x,y,z,z=0;)
 #define DPMULDE(x,y,z) RE(z=mult(x,y))

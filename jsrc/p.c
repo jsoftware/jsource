@@ -378,7 +378,7 @@ A jtextnvr(J jt){ASSERT(jt->parserstackframe.nvrtop<32000,EVSTACK); RZ(jt->nvra 
 #define FRONTMARKS 1  // amount of space to leave for front-of-string mark
 // Parse a J sentence.  Input is the queue of tokens
 // Result has PARSERASGNX (bit 0) set if the last thing is an assignment
-A jtparsea(J jt, A *queue, I m){PSTK * RESTRICT stack;A z,*v;I es;
+A jtparsea(J jt, A *queue, I m){PSTK * RESTRICT stack;A z,*v;
  // jt->parsercurrtok must be set before executing anything that might fail; it holds the original
  // word number+1 of the token that failed.  jt->parsercurrtok is set before dispatching an action routine,
  // so that the information is available for formatting an error display
@@ -431,10 +431,11 @@ A jtparsea(J jt, A *queue, I m){PSTK * RESTRICT stack;A z,*v;I es;
   stack[0].pt = stack[1].pt = stack[2].pt = PTMARK;  // install initial ending marks.  word numbers and value pointers are unused
 
   // Set number of extra words to pull from the queue.  We always need 2 words after the first before a match is possible.
-  es = 2;
+  I es = 2;
   // scaf for debugging if(jt->parsercalls==0xdd)
   // scaf for debugging  jt->parsercalls=0xdd;
   // DO NOT RETURN from inside the parser loop.  Stacks must be processed.
+  LX *locbuckets=LXAV0(jt->locsyms);  // the local symbol table cannot change during the parse
 
   while(1){  // till no more matches possible...
     UI4 stack0pt;  // will hold the EDGE+AVN value, which doesn't change much and is stored late
@@ -464,7 +465,7 @@ A jtparsea(J jt, A *queue, I m){PSTK * RESTRICT stack;A z,*v;I es;
        // This code is copied from s.c
        if(likely(NAV(y)->bucket!=0)){I bx;L *sympv=LAV0(JT(jt,symp));
         if(likely(0 <= (bx = ~NAV(y)->bucketx))){   // negative bucketx (now positive); skip that many items, and then you're at the right place.  This is the path for almost all local symbols
-         s = LXAV0(jt->locsyms)[NAV(y)->bucket]+sympv;  // fetch hashchain headptr, point to L for first symbol
+         s = locbuckets[NAV(y)->bucket]+sympv;  // fetch hashchain headptr, point to L for first symbol
          NOUNROLL while(bx--){s = s->next+sympv;}  // skip the prescribed number
          if(unlikely(s->val==0))goto rdglob;  // if value has not been assigned, ignore it
         }else{
@@ -472,7 +473,7 @@ A jtparsea(J jt, A *queue, I m){PSTK * RESTRICT stack;A z,*v;I es;
          // If no new names have been assigned since the table was created, we can skip this search, since it must fail (this is the path for words in z eg)
          if(likely(!(AR(jt->locsyms)&LNAMEADDED)))goto rdglob;
          // from here on it is rare to find a name - usually they're globals defined elsewhere
-         LX lx = LXAV0(jt->locsyms)[NAV(y)->bucket];  // index of first block if any
+         LX lx = locbuckets[NAV(y)->bucket];  // index of first block if any
          I m=NAV(y)->m; C* nm=NAV(y)->s; UI4 hsh=NAV(y)->hash;  // length/addr of name from name block
          NOUNROLL while(0>++bx){lx = sympv[lx].next;}
          // Now lx is the index of the first name that might match.  Do the compares

@@ -300,8 +300,8 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
   // Virtual abandoned blocks are both cases at once.  That's OK.
   UI4 yxbucks = *(UI4*)LXAV0(locsym);  // get the yx bucket indexes, stored in first hashchain by crelocalsyms
   L *sympv=LAV0(JT(jt,symp));  // bring into local
-  L *ybuckptr = LXAV0(locsym)[(US)yxbucks]+sympv;  // pointer to sym block for y, known to exist
-  L *xbuckptr = LXAV0(locsym)[yxbucks>>16]+sympv;  // pointer to sym block for x
+  L *ybuckptr = &sympv[LXAV0(locsym)[(US)yxbucks]];  // pointer to sym block for y, known to exist
+  L *xbuckptr = &sympv[LXAV0(locsym)[yxbucks>>16]];  // pointer to sym block for x
   if(likely(w!=0)){  // If y given, install it & incr usecount as in assignment.  Include the script index of the modification
    // If input is abandoned inplace and not the same as x, DO NOT increment usecount, but mark as abandoned and make not-inplace.  Otherwise ra
    // We can handle an abandoned argument only if it is direct or recursive, since only those values can be assigned to a name
@@ -311,7 +311,7 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
     ra(w);  // not abandoned: raise the block
     if((likely(!(AFLAG(w)&AFVIRTUAL+AFNJA)))){AMNVRCINI(w)}  // since the block is now named, if it is not virtual it must switch to NVR interpretation of AM
    }
-   ybuckptr->val=w; ybuckptr->sn=jt->currslistx;
+   ybuckptr->val=w; ybuckptr->sn=jt->currslistx;  // finish the assignment
   }
     // for x (if given), slot is from the beginning of hashchain EXCEPT when that collides with y; then follow y's chain
     // We have verified that hardware CRC32 never results in collision, but the software hashes do (needs to be confirmed on ARM CPU hardware CRC32C)

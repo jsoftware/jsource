@@ -25,7 +25,7 @@ DF2(jtunquote){A z;I flgd0cp;  // flgs: 1=pseudofunction 2=cached lookup 8=execu
   I4 cachedlkp=v->localuse.lI4[0];  // negative if cacheable; positive if cached
   if(cachedlkp>0){
    // There is a lookup for this nameref - use it
-   fs=LAV0(JT(jt,symp))[cachedlkp].val;
+   fs=JT(jt,sympv)[cachedlkp].val;
    if(likely(fs!=0)){
     // the lookup exists.  If it has a (necessarily direct) locative, we must fetch the locative so we switch to it
     if(unlikely(NAV(thisname)->flag&NMLOC)){RZ(explocale=stfindcre(AN(thisname)-NAV(thisname)->m-2,1+NAV(thisname)->m+NAV(thisname)->s,NAV(thisname)->bucketx));}  //  extract locale string, find/create locale
@@ -57,7 +57,7 @@ valgone: ;
    // if this reference allows caching (lI4[0]<0), save the value if it comes from a cachable source, and attach the primitive block to the name
    if(unlikely((cachedlkp&(-cacheable))<0)){
     // point the nameref to the lookup result.  This prevents further changes to the lookup
-    v->localuse.lI4[0]=stabent-LAV0(JT(jt,symp));  // convert symbol address back to index in case symbols are relocated
+    v->localuse.lI4[0]=stabent-JT(jt,sympv);  // convert symbol address back to index in case symbols are relocated
     stabent->flag|=LCACHED;  // protect the value from changes
     // set the flags in the nameref to what they are in the value.  This will allow compounds using this nameref (created in the parsing of later sentences)
     // to use the flags.  If we do PPPP, this will be too late
@@ -251,7 +251,7 @@ F1(jtcreatecachedref){
  ASSERT(sym!=0,EVVALUE);  // return if error or name not defined
  A z=sym->val; if(unlikely(AT(z)&NOUN))R z;  // if name is a noun, return its value
  RZ(z=fdef(0,CTILDE,AT(z), jtunquote1,jtunquote, nm,0L,0L, (z->flag&VASGSAFE)+(VJTFLGOK1|VJTFLGOK2), FAV(z)->mr,lrv(FAV(z)),rrv(FAV(z))));// create reference
- FAV(z)->localuse.lI4[0]=sym-LAV0(JT(jt,symp));  // convert symbol address back to index in case symbols are relocated
+ FAV(z)->localuse.lI4[0]=sym-JT(jt,sympv);  // convert symbol address back to index in case symbols are relocated
  sym->flag|=LCACHED;  // protect the value from changes.  We do not chain back from the name
  RETF(z);
 }

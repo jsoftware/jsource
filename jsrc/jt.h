@@ -189,7 +189,7 @@ typedef struct JSTstruct {
 
 // parsing, lookup, explicit definition execution
  A stloc;            /* locales symbol table                            */
- A symp;             /* symbol pool array                               */
+ L *sympv;           // symbol pool array.  This is offset LAV0 into the allocated block.  Symbol 0 is used as the root of the free chain
  A slist;            /* files used in right arg to 0!:    */
  B assert;           /* 1 iff evaluate assert. statements               */
  B stch;             /* enable setting of changed bit                   */

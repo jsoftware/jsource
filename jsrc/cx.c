@@ -72,8 +72,8 @@ static B forinitnames(J jt,CDATA*cv,I cwtype,A line){
    // We need a string buffer for "xyz_index".  Use the stack if the name is short
    C ss[20], *s; if(unlikely(k>(I)(sizeof(ss)-6))){GATV0(x,LIT,k+6,1); s=CAV1(x);}else s=ss;  // s point to buffer
    MC(s,CAV(line)+4,k);  MC(s+k,"_index",6L);  // move "xyz_index" into *s
-   cv->itemsym=(probeislocal(nfs(k,s)))-LAV0(JT(jt,symp));  // get index of symbol in table, which must have been preallocated
-   L *indexl; cv->indexsym=(indexl=probeislocal(nfs(k+6,s)))-LAV0(JT(jt,symp));
+   cv->itemsym=(probeislocal(nfs(k,s)))-JT(jt,sympv);  // get index of symbol in table, which must have been preallocated
+   L *indexl; cv->indexsym=(indexl=probeislocal(nfs(k+6,s)))-JT(jt,sympv);
    if(unlikely(k>(I)(sizeof(ss)-6))){ACINITZAP(x); fr(x);}  // remove tpop and free, now that we're done.  We may be in a loop 
    // Make initial assignment to xyz_index, and mark it readonly
    // Since we remove the readonly at the end of the loop, the user might have changed our value; so if there is
@@ -102,7 +102,7 @@ static B jtforinit(J jt,CDATA*cv,A t){A x;C*s,*v;I k;
   // We must keep ABACK in case we create a virtual block from xyz.
   // We store the block in 2 places: cv and symp.val.  We ra() once for each place
   // If there is an incumbent value, discard it
-  A *aval=&LAV0(JT(jt,symp))[cv->itemsym].val; A val=*aval;  // stored reference address; incumbent value there
+  A *aval=&JT(jt,sympv)[cv->itemsym].val; A val=*aval;  // stored reference address; incumbent value there
   fa(val); *aval=0;  // free the incumbent if any, clear val in symbol in case of error
   // Calculate the item size and save it
   I isz; I r=AR(t)-1; r=r<0?0:r; PROD(isz,r,AS(t)+1); I tt=AT(t); cv->itemsiz=isz<<bplg(tt); // rank of item; number of bytes in an item
@@ -133,8 +133,8 @@ static B jtrestackcv(J jt,CDATA*cv,CDATA*cv0){
   if(cv->w==CFOR){
    if(cv->t){  // if for_xyz. that has processed forinit ...
     A svb=cv->item;  // the sorta-virtual block for the item
-    if(unlikely(LAV0(JT(jt,symp))[cv->itemsym].val==svb)){  // the svb is still in the value
-     A newb; RZ(newb=realize(svb)); ACINITZAP(newb); fa(svb); LAV0(JT(jt,symp))[cv->itemsym].val=newb;  // realize stored value if virtual.  svb will be freed later
+    if(unlikely(JT(jt,sympv)[cv->itemsym].val==svb)){  // the svb is still in the value
+     A newb; RZ(newb=realize(svb)); ACINITZAP(newb); fa(svb); JT(jt,sympv)[cv->itemsym].val=newb;  // realize stored value if virtual.  svb will be freed later
     }
    }
   }
@@ -149,13 +149,13 @@ static B jtunstackcv(J jt,CDATA*cv,I assignvirt){
 // obsolete  if(cv->x){fa(cv->x);}
  if(cv->w==CFOR){
   if(cv->t){  // if for_xyz. that has processed forinit ...
-   LAV0(JT(jt,symp))[cv->indexsym].flag&=~LREADONLY;  // xyz_index is no longer readonly.  It is still available for inspection
+   JT(jt,sympv)[cv->indexsym].flag&=~LREADONLY;  // xyz_index is no longer readonly.  It is still available for inspection
    // If xyz still points to the virtual block, we must be exiting the loop early: the value must remain, so realize it
    A svb=cv->item;  // the sorta-virtual block for the item
-   if(unlikely(LAV0(JT(jt,symp))[cv->itemsym].val==svb)){A newb;
+   if(unlikely(JT(jt,sympv)[cv->itemsym].val==svb)){A newb;
     fa(svb);   // remove svb from itemsym.val.  Safe, because it can't be the last free
-    if(likely(assignvirt)){RZ(newb=realize(svb)); ACINITZAP(newb); ra00(newb,AT(newb)); LAV0(JT(jt,symp))[cv->itemsym].val=newb;  // realize stored value, raise, make recursive, store in symbol table
-    }else{LAV0(JT(jt,symp))[cv->itemsym].val=0;}  // after error, we needn't bother with a value
+    if(likely(assignvirt)){RZ(newb=realize(svb)); ACINITZAP(newb); ra00(newb,AT(newb)); JT(jt,sympv)[cv->itemsym].val=newb;  // realize stored value, raise, make recursive, store in symbol table
+    }else{JT(jt,sympv)[cv->itemsym].val=0;}  // after error, we needn't bother with a value
    }
    // Decrement the usecount to account for being removed from cv - this is the final free of the svb
    fr(svb);  // MUST NOT USE fa() so that we don't recur and free svb's current contents in cv->t
@@ -299,7 +299,7 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
   // both cases we know the block will be freed by the caller.
   // Virtual abandoned blocks are both cases at once.  That's OK.
   UI4 yxbucks = *(UI4*)LXAV0(locsym);  // get the yx bucket indexes, stored in first hashchain by crelocalsyms
-  L *sympv=LAV0(JT(jt,symp));  // bring into local
+  L *sympv=JT(jt,sympv);  // bring into local
   L *ybuckptr = &sympv[LXAV0(locsym)[(US)yxbucks]];  // pointer to sym block for y, known to exist
   L *xbuckptr = &sympv[LXAV0(locsym)[yxbucks>>16]];  // pointer to sym block for x
   if(likely(w!=0)){  // If y given, install it & incr usecount as in assignment.  Include the script index of the modification
@@ -520,7 +520,7 @@ docase:
 // obsolete     symbisdel(nfs(  cv->k,cv->iv),cv->j<cv->n?from(x,cv->t):mtv,locsym);
 // obsolete    }
    if(likely(cv->indexsym!=0)){
-    L *sympv=LAV0(JT(jt,symp));  // base of symbol array
+    L *sympv=JT(jt,sympv);  // base of symbol array
     A *aval=&sympv[cv->indexsym].val;  // address of iteration-count slot
     A iterct=*aval;  // A block for iteration count
     if(unlikely(AC(iterct)>1))BZ(iterct=swapitervbl(jt,iterct,aval));  // if value is now aliased, swap it out before we change it
@@ -820,7 +820,7 @@ static void jtcalclocalbuckets(J jt, A t, LX *actstv, I actstn){LX k;
   // search through the chain, looking for a match on name.  If we get a match, the bucket index is the one's complement
   // of the number of items compared before the match.  If we get no match, the bucket index is the number
   // of items compared (= the number of items in the chain)
-  L *sympv=LAV0(JT(jt,symp));
+  L *sympv=JT(jt,sympv);
   for(k=actstv[tn->bucket];k;++compcount,k=sympv[k].next){  // k chases the chain of symbols in selected bucket
    if(tn->m==NAV(sympv[k].name)->m&&!memcmpne(tn->s,NAV(sympv[k].name)->s,tn->m)){compcount=~compcount; break;}
   }
@@ -921,7 +921,7 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
 
  // Count the assigned names, and allocate a symbol table of the right size to hold them.  We won't worry too much about collisions, since we will be assigning indexes in the definition.
  // We choose the smallest feasible table to reduce the expense of clearing it at the end of executing the verb
- I pfstn=AN(pfst); LX*pfstv=LXAV0(pfst),pfx; I asgct=0; L *sympv=LAV0(JT(jt,symp));
+ I pfstn=AN(pfst); LX*pfstv=LXAV0(pfst),pfx; I asgct=0; L *sympv=JT(jt,sympv);
  for(j=SYMLINFOSIZE;j<pfstn;++j){  // for each hashchain
   for(pfx=pfstv[j];pfx=SYMNEXT(pfx),pfx;pfx=sympv[pfx].next){++asgct;}  // chase the chain and count.  The chains have MSB flag, which must be removed
  }
@@ -935,17 +935,17 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
  // So we add them by hand - just y and possibly x.  They will be added later too
  RZ(probeis(mnuvxynam[5],actst));if(!(!dyad&&(type>=3||(flags&VXOPR)))){RZ(probeis(mnuvxynam[4],actst));}
  for(j=1;j<pfstn;++j){  // for each hashchain
-  for(pfx=pfstv[j];pfx=SYMNEXT(pfx);pfx=LAV0(JT(jt,symp))[pfx].next){L *newsym;
-   A nm=LAV0(JT(jt,symp))[pfx].name;
+  for(pfx=pfstv[j];pfx=SYMNEXT(pfx);pfx=JT(jt,sympv)[pfx].next){L *newsym;
+   A nm=JT(jt,sympv)[pfx].name;
    RZ(newsym=probeis(nm,actst));  // create new symbol (or possibly overwrite old argument name)
-   newsym->flag = LAV0(JT(jt,symp))[pfx].flag|LPERMANENT;   // Mark as permanent
+   newsym->flag = JT(jt,sympv)[pfx].flag|LPERMANENT;   // Mark as permanent
   }
  }
  I actstn=AN(actst); LX*actstv=LXAV0(actst);  // # hashchains in new symbol table, and pointer to hashchain table
 
  // Go through all the newly-created chains and clear the non-PERMANENT flag that was set in each root and next pointer.  This flag is set to
  // indicate that the symbol POINTED TO is non-permanent.
- sympv=LAV0(JT(jt,symp));  // refresh pointer to symbols
+ sympv=JT(jt,sympv);  // refresh pointer to symbols
  for(j=1;j<actstn;++j){  // for each hashchain
   actstv[j]=SYMNEXT(actstv[j]); for(pfx=actstv[j];pfx;pfx=sympv[pfx].next)sympv[pfx].next=SYMNEXT(sympv[pfx].next);  // set PERMANENT for all symbols in the table
  }
@@ -988,13 +988,13 @@ A jtclonelocalsyms(J jt, A a){A z;I j;I an=AN(a); LX *av=LXAV0(a),*zv;
   while(SYMNEXTISPERM(ahx)) {L *l;  // for each permanent entry...
    RZ(l=symnew(zhbase,SYMNEXT(ztx)));   // append new symbol after tail (or head, if tail is empty), as PERMANENT
    *zhbase=SYMNEXT(*zhbase);  // zhbase points to the pointer to the entry we just added.  First time, that's the chain base
-   A nm=(LAV0(JT(jt,symp)))[ahx].name;
+   A nm=(JT(jt,sympv))[ahx].name;
    l->name=nm; ra(l->name);  // point symbol table to the name block, and increment its use count accordingly
-   l->flag=(LAV0(JT(jt,symp)))[ahx].flag&(LINFO|LPERMANENT);  // Preserve only flags that persist
-   ztx = ztx?(LAV0(JT(jt,symp)))[ztx].next : *zhbase;  // ztx=index to value we just added.  We avoid address calculation because of the divide.  If we added
+   l->flag=(JT(jt,sympv))[ahx].flag&(LINFO|LPERMANENT);  // Preserve only flags that persist
+   ztx = ztx?(JT(jt,sympv))[ztx].next : *zhbase;  // ztx=index to value we just added.  We avoid address calculation because of the divide.  If we added
       // at head, the added block is the new head; otherwise it's pointed to by previous tail
    zhbase=&l->next;  // after the first time, zhbase is the chain field of the tail
-   ahx = (LAV0(JT(jt,symp)))[ahx].next;  // advance to next symbol
+   ahx = (JT(jt,sympv))[ahx].next;  // advance to next symbol
   }
  }
  R z;

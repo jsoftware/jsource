@@ -4,9 +4,9 @@
 /* For Symbol Tables aka Locales                                           */
 
 // The first L block in a symbol table is used to point to the locale-name rather than hash chains
-// obsolete #define LOCPATH(g) ((LAV0(JT(jt,symp)))[LXAV0(g)[SYMLINFO]].val)
+// obsolete #define LOCPATH(g) ((JT(jt,sympv))[LXAV0(g)[SYMLINFO]].val)
 #define LOCPATH(g) (g)->kchain.locpath
-#define LOCNAME(g) ((LAV0(JT(jt,symp)))[LXAV0(g)[SYMLINFO]].name)
+#define LOCNAME(g) ((JT(jt,sympv))[LXAV0(g)[SYMLINFO]].name)
 
 
 /* macro to define a function that walks through a symbol table */
@@ -28,7 +28,7 @@
   for(i=1;i<n;++i){                  \
    k=SYMNEXT(*e++);  /* initial symbol index */  \
    while(j=k){                         \
-   d=j+LAV0(JT(jt,symp));                                            \
+   d=j+JT(jt,sympv);                                            \
    k=SYMNEXT(d->next);                                                \
    if((d->name)&&(d->val)&&(SELECT)){                        \
     if(m==AS(z)[0]){RZ(z=ext(0,z)); zv=(m*(COL))+(T*)AV(z);}   \

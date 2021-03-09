@@ -66,7 +66,7 @@ typedef UI4                RANK2T;  // 2 ranks, (l<<16)|r
 #define RANK2TX            32   // # bits in a RANK2T
 #define RANK2TMSK           0xFFFFFFFFU
 typedef I                  FLAGT;
-typedef I4                LX;  // index of an L block in LAV0(JT(jt,symp))
+typedef I4                LX;  // index of an L block in JT(jt,sympv)
 
 typedef struct AD AD;
 typedef AD *A;

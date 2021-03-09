@@ -463,7 +463,7 @@ A jtparsea(J jt, A *queue, I m){PSTK * RESTRICT stack;A z,*v;
        // To save some overhead, we inline this and do the analysis in a different order here
        // The important performance case is local names with bucket info.  Pull that out & do it without the call overhead
        // This code is copied from s.c
-       if(likely(NAV(y)->bucket!=0)){I bx;L *sympv=LAV0(JT(jt,symp));
+       if(likely(NAV(y)->bucket!=0)){I bx;L *sympv=JT(jt,sympv);
         if(likely(0 <= (bx = ~NAV(y)->bucketx))){   // negative bucketx (now positive); skip that many items, and then you're at the right place.  This is the path for almost all local symbols
          s = locbuckets[NAV(y)->bucket]+sympv;  // fetch hashchain headptr, point to L for first symbol
          NOUNROLL while(bx--){s = s->next+sympv;}  // skip the prescribed number
@@ -491,7 +491,7 @@ A jtparsea(J jt, A *queue, I m){PSTK * RESTRICT stack;A z,*v;
         // If the name has a cached reference, use it
         if(likely(NAV(y)->cachedref!=0)){  // if the user doesn't care enough to turn on caching, performance must not be that important
          A cachead=NAV(y)->cachedref; // use the cached address
-         if(unlikely(NAV(y)->flag&NMCACHEDSYM)){cachead=(A)((LAV0(JT(jt,symp))[(I)cachead]).val); if(unlikely(!cachead)){jsignal(EVVALUE);FP}}  // if it's a symbol index, fetch that.  value error only if cached symbol deleted
+         if(unlikely(NAV(y)->flag&NMCACHEDSYM)){cachead=(A)((JT(jt,sympv)[(I)cachead]).val); if(unlikely(!cachead)){jsignal(EVVALUE);FP}}  // if it's a symbol index, fetch that.  value error only if cached symbol deleted
          y=cachead; at=AT(y); goto endname; // take its type, proceed
         }
 rdglob: ;
@@ -539,7 +539,7 @@ rdglob: ;
          // nameless modifier, and not a locative.  Don't create a reference; maybe cache the value
          if(NAV(y)->flag&NMCACHED){
           // cachable and not a locative (and not a noun).  store the value in the name, and flag that it's a symbol index, flag the value as cached in case it gets deleted
-          NAV(y)->cachedref=(A)(s-LAV0(JT(jt,symp))); NAV(y)->flag|=NMCACHEDSYM; s->flag|=LCACHED; NAV(y)->bucket=0;  // clear bucket info so we will skip that search - this name is forever cached
+          NAV(y)->cachedref=(A)(s-JT(jt,sympv)); NAV(y)->flag|=NMCACHEDSYM; s->flag|=LCACHED; NAV(y)->bucket=0;  // clear bucket info so we will skip that search - this name is forever cached
          }
          y=sv; at=AT(sv);
         }else{  // not a noun/nonlocative-nameless-modifier.  Make a reference

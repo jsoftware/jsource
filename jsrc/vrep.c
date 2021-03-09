@@ -218,7 +218,8 @@ static REPF(jtrep1s){A ax,e,x,y,z;B*b;I c,d,cd,j,k,m,n,p,q,*u,*v,wr,*ws;P*wp,*zp
  if(AT(a)&SCMPX)R rep1d(denseit(a),w,wf,wcr);
  RE(rep1sa(a,&c,&d)); cd=c+d;
  if(DENSE&AT(w))R rep1d(d?jdot2(sc(c),sc(d)):sc(c),w,wf,wcr);  // here if dense w
- wr=AR(w); ws=AS(w); n=wcr?ws[wf]:1; RE(m=mult(n,cd));
+ wr=AR(w); ws=AS(w); n=wcr?ws[wf]:1; DPMULDE(n,cd,m)
+// obsolete  RE(m=mult(n,cd));
  wp=PAV(w); e=SPA(wp,e); ax=SPA(wp,a); y=SPA(wp,i); x=SPA(wp,x);
  GASPARSE(z,AT(w),1,wr+!wcr,ws); AS(z)[wf]=m; zp=PAV(z);
  RE(b=bfi(wr,ax,1));

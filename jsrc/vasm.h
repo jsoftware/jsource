@@ -510,6 +510,6 @@ C asminnerprodx(I,I*,I,I*);
 #define PLUSS(n,z,x)      {I s=0,u,v; x+=n; z+=n; DQ(n, u=~s; v=*--x; s+=v; u^=v; v^=s; *--z=s; if(XANDY(u,v)<0)R EWOV;);}
 // overflow if (~ssign^vsign)&&(resultsign^vsign), i. e. input signs differ and result has different sign from minuend
 #define MINUSS(n,z,x)     {I s=0,u,v; x+=n; z+=n; DQ(n, u=s; v=*--x; s=v-u; u^=v; v^=s; *--z=s; if(XANDY(u,v)<0)R EWOV;);}
-#define TYMESS(n,z,x)      {DPMULDDECLS I s=1; x+=n; z+=n; DQ(n, --x; --z; DPMULD(*x,s,s, R EWOV; *z=s;))}
+#define TYMESS(n,z,x)      {DPMULDDECLS I s=1; x+=n; z+=n; DQ(n, --x; --z; DPMULD(*x,s,s, R EWOV;) *z=s;)}
 
 #endif

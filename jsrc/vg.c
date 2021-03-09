@@ -720,7 +720,8 @@ A jtgr1(J jt,A w){F1PREFJT;PROLOG(0075);A z;I c,f,ai,m,n,r,*s,t,wn,wr,zn;
   PROD(m,f,s); PROD1(ai,r-1,f+s+1); c=ai*n; zn=m*n;
  }else{
   // empty w.  The number of cells may overflow, but reshape will catch that
-  RE(zn=mult(prod(f,s),n));
+// obsolete   RE(zn=mult(prod(f,s),n));
+  DPMULDE(prod(f,s),n,zn);
  }
  // allocate the entire result area, one int per item in each input cell
 // obsolete  GATV(z,INT,zn,1+f,s); if(!r)AS(z)[f]=1;

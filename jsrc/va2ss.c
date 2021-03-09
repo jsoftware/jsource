@@ -147,9 +147,11 @@ A jtssingleton(J jt, A a,A w,A self,RANK2T awr,RANK2T ranks){A z;
  case SSINGCASE(VA2CSTAR-VA2CBW1111,SSINGBI): SSSTORENV(SSRDB(a)?SSRDI(w):0,z,INT,I) R z;
  case SSINGCASE(VA2CSTAR-VA2CBW1111,SSINGIB): SSSTORENV(SSRDB(w)?SSRDI(a):0,z,INT,I) R z;
  case SSINGCASE(VA2CSTAR-VA2CBW1111,SSINGII): {I av=SSRDI(a), wv=SSRDI(w), zv;
-   if(!(av&&wv)) SSSTORENV(0L,z,INT,I)
-   else if (zv=jtmult(0,av,wv)) SSSTORENV(zv,z,INT,I)  // 0 result on errors
-   else SSSTORE((D)av*(D)wv,z,FL,D)
+// obsolete    if(!(av&&wv)) SSSTORENV(0L,z,INT,I)
+// obsolete    else if (zv=jtmult(0,av,wv)) SSSTORENV(zv,z,INT,I)  // 0 result on errors
+// obsolete    else SSSTORE((D)av*(D)wv,z,FL,D)
+   DPMULD(av,wv,zv,SSSTORE((D)av*(D)wv,z,FL,D))  // overflow
+   else SSSTORENV(zv,z,INT,I)  // normal
    R z;}
  case SSINGCASE(VA2CSTAR-VA2CBW1111,SSINGDD): {D av=SSRDD(a), wv=SSRDD(w);
    SSSTORENVFL(TYMES(av,wv),z,FL,D) R z;}

@@ -312,7 +312,8 @@ D jtdgcd(J jt,D a,D b){D a1,b1,t;B stop = 0;
  R a;
 }    /* D.L. Forkes 1984; E.E. McDonnell 1992 */
 I jtilcm(J jt,I a,I b){I z;I d;
- if(a&&b){RZ(d=igcd(a,b)); if(0==(z=jtmult(0,a,b/d)))jt->jerr=EWOV; R z;}else R 0;
+ if(a&&b){RZ(d=igcd(a,b)); DPMULD(a,b/d,z,jt->jerr=EWOV; z=0;) R z;}else R 0;
+// obsolete  if(0==(z=jtmult(0,a,b/d)))jt->jerr=EWOV; R z;}else R 0;
 }
 
 #define GCDIO(u,v)      (dgcd((D)u,(D)v))

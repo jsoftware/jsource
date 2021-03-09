@@ -18,7 +18,7 @@
 /* elements are interpreted per type L (see jtype.h)                       */
 /* a linked list of free entries is kept using the next pointer                  */
 // JT(jt,symp):     symbol pool array fixed rank 0, holding L entries (each 3 Is (4 in 32-bit))
-// LXAV0(JT(jt,symp))    symbol pool array base.  First ele is base of free chain
+// LAV0(JT(jt,symp))    symbol pool array base.  First ele is base of free chain
 // AM(JT(jt,symp)) symbol table index (monotonically increasing) - not really needed
 
 

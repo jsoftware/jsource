@@ -1022,13 +1022,13 @@ extern unsigned int __cdecl _clearfp (void);
 // #define NAN1T           {if(_SW_INVALID&_clearfp()){fprintf(stderr,"nan error: file %s line %d\n",__FILE__,__LINE__);jsignal(EVNAN);     }}
 #endif
 
+#define NOUNROLL _Pragma("clang loop unroll(disable)")  // put this just before a loop to disable unroll
 #if (C_AVX&&SY_64) || EMU_AVX
 // j64avx gcc _mm256_zeroupper -O2 failed SLEEF for expression % /\ ^:_1 ,: 1 2 3  => 1 2 0
 // upper half of all YMM registers clear AFTER loading endmask
 // ??? is_mm256_zeroupper really needed
 // -mavx or /arch:AVX should already generate VEX encoded for SSE instructions
 #define _mm256_zeroupperx(x)
-#define NOUNROLL _Pragma("clang loop unroll(disable)")  // put this just before a loop to disable unroll
 #define NPAR ((I)(sizeof(__m256d)/sizeof(D))) // number of Ds processed in parallel
 #define LGNPAR 2  // no good automatic way to do this
 // loop for atomic parallel ops.  // fixed: n is #atoms (never 0), x->input, z->result, u=input atom4 and result
@@ -1730,9 +1730,9 @@ static inline UINT _clearfp(void){int r=fetestexcept(FE_ALL_EXCEPT);
 #define DPUMUL(x,y,z,h) {z=_umul128((x),(y),&(h));}  // product in z and h
 #else
 #define DPMULDECLS
-#define DPMUL(x,y,z,s) if(unlikely(__builtin_smulll_overflow(x,y,z)))s
+#define DPMUL(x,y,z,s) if(unlikely(__builtin_smulll_overflow(x,y,z))){s}
 #define DPMULDDECLS
-#define DPMULD(x,y,z,s) if(unlikely(__builtin_smulll_overflow(x,y,&z)))s
+#define DPMULD(x,y,z,s) if(unlikely(__builtin_smulll_overflow(x,y,&z))){s}
 #define DPMULDZ(x,y,z) z=__builtin_smulll_overflow(x,y,&z)?0:z;
 #define DPMULDE(x,y,z) ASSERT(!__builtin_smulll_overflow(x,y,&z),EVLIMIT)
 #define DPUMUL(x,y,z,h) {__int128 _t; _t=(__int128)(x)*(__int128)(y); z=(I)_t; h=(I)(_t>>64);}  // product in z and h

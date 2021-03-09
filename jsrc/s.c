@@ -41,7 +41,7 @@
 #define symcol ((sizeof(L)+SZI-1)/SZI)
 
 B jtsymext(J jt,B b){A x,y;I j,m,n,*v,xn,yn;L*u;
- if(b){y=(A)((I)JT(jt,sympv)-(I)LAV0(0)); j=allosize(y)+NORMAH*SZI; yn=AN(y); n=yn/symcol;}  // .  Get header addr; extract allo size from header (approx)
+ if(b){y=(A)((I)JT(jt,sympv)-AKXR(0)); j=allosize(y)+NORMAH*SZI; yn=AN(y); n=yn/symcol;}  // .  Get header addr by backing off offset of LAV0; extract allo size from header (approx)
  else {            j=((I)1)<<12;                  yn=0; n=1;   }  // n is # rows in chain base + old values
  m=j<<1;                              /* new size in bytes           */
  m-=AKXR(0);                  /* less array overhead         */
@@ -133,7 +133,7 @@ F1(jtsympool){A aa,q,x,y,*yv,z,*zv;I i,n,*u,*xv;L*pv;LX j,*v;
  ASSERT(1==AR(w),EVRANK); 
  ASSERT(!AN(w),EVLENGTH);
  GAT0(z,BOX,3,1); zv=AAV(z);
- n=AN((A)((I)JT(jt,sympv)-(I)LAV0(0)))/symcol; pv=JT(jt,sympv);
+ n=AN((A)((I)JT(jt,sympv)-AKXR(0)))/symcol; pv=JT(jt,sympv);
  GATV0(x,INT,n*5,2); AS(x)[0]=n; AS(x)[1]=5; xv= AV(x); zv[0]=incorp(x);  // box 0: sym info
  GATV0(y,BOX,n,  1);                         yv=AAV(y); zv[1]=incorp(y);  // box 1: 
  for(i=0;i<n;++i,++pv){         /* per pool entry       */

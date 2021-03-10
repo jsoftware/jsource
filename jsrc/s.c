@@ -96,6 +96,7 @@ extern void jtsymfreeha(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
    // first, free the PERMANENT values (if any), but not the names
    NOUNROLL do{
     if(!SYMNEXTISPERM(k))break;  // we are about to free k.  exit if it is not permanent
+    I nextk=jtsympv[k].next;  // unroll loop 1 time
     aprev=&jtsympv[k].next;  // save last item we processed here
     if(jtsympv[k].val){
      // if the value was abandoned to an explicit definition, we took usecount 8..1  -> 1 ; revert that.  Can't change an ACPERMANENT!
@@ -103,7 +104,7 @@ extern void jtsymfreeha(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
      SYMVALFA(jtsympv[k]);
      jtsympv[k].val=0;  // clear value - don't clear name
     }
-    k=jtsympv[k].next;
+    k=nextk;
    }while(k);
    // clear chain in last PERMANENT block
    *aprev=0;  // only the PERMANENT survive
@@ -113,9 +114,10 @@ extern void jtsymfreeha(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
     freeroot=freeroot?freeroot:k1;  // remember overall first value
     do{
      k=SYMNEXT(k);  // remove address flagging
+     I nextk=jtsympv[k].next;  // unroll loop once
      aprev=&jtsympv[k].next;  // save last item we processed here
      fa(jtsympv[k].name);fa(jtsympv[k].val);jtsympv[k].name=0;jtsympv[k].val=0;jtsympv[k].sn=0;jtsympv[k].flag=0;
-     k=jtsympv[k].next;
+     k=nextk;
     }while(k);
     // make the non-PERMANENTs the base of the free pool & chain previous pool from them
     *freetailchn=k1; freetailchn=aprev;  // free chain may have permanent flags
@@ -224,13 +226,15 @@ L *jtprobelocal(J jt,A a,A locsyms){NM*u;I b,bx;
  // There is always a local symbol table, but it may be empty
  ARGCHK1(a);u=NAV(a);  // u->NM block
  if(likely((b = u->bucket)!=0)){
+  L *sympv=JT(jt,sympv);  // base of symbol array
   if(0 > (bx = ~u->bucketx)){
    // positive bucketx (now negative); that means skip that many items and then do name search.  This is set for words that were recognized as names but were not detected as assigned-to in the definition
    // If no new names have been assigned since the table was created, we can skip this search, since it must fail (this is the path for words in z eg)
    if(likely(!(AR(locsyms)&LNAMEADDED)))R 0;
    LX lx = LXAV0(locsyms)[b];  // index of first block if any
    I m=u->m; C* s=u->s; UI4 hsh=u->hash; // length/addr of name from name block, and hash
-   NOUNROLL while(0>++bx){lx = JT(jt,sympv)[lx].next;}  // all PERMANENT
+   if(unlikely(++bx!=0)){NOUNROLL do{lx = sympv[lx].next;}while(++bx);}  // rattle off the permanents, usually 1
+// obsolete    NOUNROLL while(0>++bx){lx = JT(jt,sympv)[lx].next;}  // all PERMANENT
    // Now lx is the index of the first name that might match.  Do the compares
    NOUNROLL while(lx=SYMNEXT(lx)) {L* l = lx+JT(jt,sympv);  // symbol entry
     IFCMPNAME(NAV(l->name),s,m,hsh,R l->val?l : 0;)
@@ -241,7 +245,8 @@ L *jtprobelocal(J jt,A a,A locsyms){NM*u;I b,bx;
    LX lx = LXAV0(locsyms)[b];  // index of first block if any
    L* l = lx+JT(jt,sympv);  // fetch hashchain headptr, point to L for first symbol
    // negative bucketx (now positive); skip that many items, and then you're at the right place
-   NOUNROLL while(bx--){l = l->next+JT(jt,sympv);}  // all permanent
+   if(unlikely(bx>0)){NOUNROLL do{l = l->next+sympv;}while(--bx);}  // skip the prescribed number, which is usually 1
+// obsolete    NOUNROLL while(bx--){l = l->next+JT(jt,sympv);}  // all permanent
    R l->val?l:0;
   }
  } else {
@@ -318,7 +323,7 @@ L*jtprobeis(J jt,A a,A g){C*s;LX *hv,tx;I m;L*v;NM*u;L *sympv=JT(jt,sympv);
 // result is L* symbol-table slot for the name, or 0 if none
 // Bit 0 (LNAMED) of the result is set iff the name was found in a named locale
 L*jtsyrd1(J jt,C *string,UI4 hash,A g){A*v,x,y;L*e=0;
-// if(b&&jt->local&&(e=probe(NAV(a)->m,NAV(a)->s,NAV(a)->hash,jt->local))){av=NAV(a); R e;}  // return if found local
+// obsolete if(b&&jt->local&&(e=probe(NAV(a)->m,NAV(a)->s,NAV(a)->hash,jt->local))){av=NAV(a); R e;}  // return if found local
  RZ(g);  // make sure there is a locale...
 // obsolete  if(e=probe(l,string,hash,g)){e=(L*)((I)e+AR(g)); R e;}  // and if the name is defined there, use it
 // obsolete  RZ(y = LOCPATH(g));   // Not found in locale.  We must use the path
@@ -563,7 +568,7 @@ L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;L*e;
   // assignment (ex: (nm =: 3 : '...') y).  There seems to be no ill effect, because VNAMED isn't used much.
   if(unlikely(AT(w)&FUNC))if(likely(FAV(w)->fgh[0]!=0)){if(FAV(w)->id==CCOLON)FAV(w)->flag|=VNAMED; if(jt->glock)FAV(w)->flag|=VLOCK;}
  }
- // if we are writing to a non-local table, apply the Bloom filter
+ // if we are writing to a non-local table, update the table's Bloom filter
  if(unlikely((anmf&LLOCALTABLE)==0))BLOOMOR(g,BLOOMMASK(NAV(a)->hash));
 
  if(unlikely(jt->uflags.us.cx.cx_c.db))RZ(redef(w,e));  // if debug, check for changes to stack

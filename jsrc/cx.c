@@ -926,7 +926,7 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
   for(pfx=pfstv[j];pfx=SYMNEXT(pfx),pfx;pfx=sympv[pfx].next){++asgct;}  // chase the chain and count.  The chains have MSB flag, which must be removed
  }
 
- asgct = asgct + (asgct>>1); // leave 33% empty space, since we will have resolved most names here
+ asgct = asgct + ((asgct+4)>>1); // leave 33% empty space + 2, since we will have resolved most names here
  RZ(actst=stcreate(2,asgct,0L,0L));  // Allocate the symbol table we will use
  *(UI4*)LXAV0(actst)=(UI4)((SYMHASH(NAV(mnuvxynam[4])->hash,AN(actst)-SYMLINFOSIZE)<<16)+SYMHASH(NAV(mnuvxynam[5])->hash,AN(actst)-SYMLINFOSIZE));  // get the yx bucket indexes for a table of this size, save in first hashchain
 

@@ -535,14 +535,16 @@ void freesymb(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
   // free the chain; kt->last block freed
   if(k=wv[j]){LX *asymx=&wv[j];  // pointer to previous chain
    do{
-    k=SYMNEXT(k);fa(jtsympv[k].name);jtsympv[k].name=0;  // always release name
+    k=SYMNEXT(k);
+    LX nextk=jtsympv[k].next;  // unroll loop 1 time
+    fa(jtsympv[k].name);jtsympv[k].name=0;  // always release name
     if(likely(!(jtsympv[k].flag&LCACHED))){
 // obsolete      kt=k;  // save tail pointer of freed items
      SYMVALFA(jtsympv[k]);    // free value
      jtsympv[k].val=0;jtsympv[k].sn=0;jtsympv[k].flag=0;
      asymx=&jtsympv[k].next;  // make the current next field the previous for the next iteration
     }else{*asymx=SYMNEXT(jtsympv[k].next);}  // for cached value, remove from list to be freed.  It becomes unmoored.
-    k=jtsympv[k].next;  // advance to next block in chain
+    k=nextk;  // advance to next block in chain
    }while(k);
    // if the chain is not (now) empty, make it the base of the free pool & chain previous pool from it.  CACHED items have been removed
 // obsolete    if(likely(wv[j]!=0)){jtsympv[kt].next=jtsympv[0].next;jtsympv[0].next=wv[j];}  // free chain may have permanent flags

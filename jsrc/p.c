@@ -373,6 +373,7 @@ static A virthook(J jtip, A f, A g){
 // extend NVR stack, returning the A block for it.  stack error on fail, since that's the likely cause
 A jtextnvr(J jt){ASSERT(jt->parserstackframe.nvrtop<32000,EVSTACK); RZ(jt->nvra = ext(1, jt->nvra));  R jt->nvra;}
 
+I buckhist[]={0,0,0,0,0};  // scaf histogram of bucket indexes
 #define BACKMARKS 3   // amount of space to leave for marks at the end.  Because we stack 3 words before we start to parse, we will
  // never see 4 marks on the stack - the most we can have is 1 value + 3 marks.
 #define FRONTMARKS 1  // amount of space to leave for front-of-string mark
@@ -466,7 +467,7 @@ A jtparsea(J jt, A *queue, I m){PSTK * RESTRICT stack;A z,*v;
        if(likely(NAV(y)->bucket!=0)){I bx;L *sympv=JT(jt,sympv);
         if(likely(0 <= (bx = ~NAV(y)->bucketx))){   // negative bucketx (now positive); skip that many items, and then you're at the right place.  This is the path for almost all local symbols
          s = locbuckets[NAV(y)->bucket]+sympv;  // fetch hashchain headptr, point to L for first symbol
-         NOUNROLL while(bx--){s = s->next+sympv;}  // skip the prescribed number
+         if(unlikely(bx>0)){NOUNROLL do{s = s->next+sympv;}while(--bx);}  // skip the prescribed number, which is usually 1
          if(unlikely(s->val==0))goto rdglob;  // if value has not been assigned, ignore it
         }else{
          // positive bucketx (now negative); that means skip that many items and then do name search.  This is set for words that were recognized as names but were not detected as assigned-to in the definition.  This is the path for global symbols
@@ -475,13 +476,13 @@ A jtparsea(J jt, A *queue, I m){PSTK * RESTRICT stack;A z,*v;
          // from here on it is rare to find a name - usually they're globals defined elsewhere
          LX lx = locbuckets[NAV(y)->bucket];  // index of first block if any
          I m=NAV(y)->m; C* nm=NAV(y)->s; UI4 hsh=NAV(y)->hash;  // length/addr of name from name block
-         NOUNROLL while(0>++bx){lx = sympv[lx].next;}
+         if(unlikely(++bx!=0)){NOUNROLL do{lx = sympv[lx].next;}while(++bx);}  // rattle off the permanents, usually 1
          // Now lx is the index of the first name that might match.  Do the compares
          while(1) {
           if(lx==0)goto rdglob;  // If we run off chain, go read from globals
           lx=SYMNEXT(lx);  // we are now into non-PERMANENT symbols & must clear the flag
           s = lx+sympv;  // symbol entry
-          IFCMPNAME(NAV(s->name),nm,m,hsh,{if(s->val==0)goto rdglob; break;})  // if match, we're done looking; could be not found, if no value
+          IFCMPNAME(NAV(s->name),nm,m,hsh,{if(unlikely(s->val==0))goto rdglob; break;})  // if match, we're done looking; could be not found, if no value
           lx = s->next;
          }
          // Here there was a value in the local symbol table

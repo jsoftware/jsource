@@ -217,6 +217,20 @@ static PSTK * (*(lines58[]))() = {jtpfork,jtphook,jtis,jtpparen};  // handlers f
 
 void auditblock(J jt,A w, I nonrecurok, I virtok) {
  if(!w)R;
+// look for missing name in local symbols
+ L *jtsympv=JT(jt,sympv);  // Move base of symbol block to a register.  Block 0 is the base of the free chain.  MUST NOT move the base of the free queue to a register,
+ A locals=jt->locsyms;
+ LX k,* RESTRICT localsv=LXAV0(locals); I j;
+ for(j=SYMLINFOSIZE;j<AN(locals);++j){  // scaf
+  if(k=localsv[j]){
+   do{
+    k=SYMNEXT(k);
+    if(jtsympv[k].name==0)SEGFAULT;
+    k=jtsympv[k].next;  // go to next
+   }while(k);  // do the whole chain
+  }
+ }  // scaf
+ R;  // scaf
  if(AC(w)<0&&AZAPLOC(w)==0)SEGFAULT;
  if(AC(w)<0&&!(AFLAG(w)&AFVIRTUAL)&&AZAPLOC(w)>=jt->tnextpushp)SEGFAULT;  // requires large NTSTACK
  if(AC(w)<0&&!(AFLAG(w)&AFVIRTUAL)&&((I)AZAPLOC(w)<0x100000||(*AZAPLOC(w)!=0&&*AZAPLOC(w)!=w)))SEGFAULT;  // if no zaploc for inplaceable block, error

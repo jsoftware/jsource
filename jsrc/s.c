@@ -305,11 +305,14 @@ L*jtprobeis(J jt,A a,A g){C*s;LX *hv,tx;I m;L*v;NM*u;L *sympv=JT(jt,sympv);
  u=NAV(a); m=u->m; s=u->s; UI4 hsh=u->hash; hv=LXAV0(g)+SYMHASH(u->hash,AN(g)-SYMLINFOSIZE);  // get hashchain base among the hash tables
  if(tx=SYMNEXT(*hv)){                                 /* !*hv means (0) empty slot    */
   v=tx+sympv;
-  NOUNROLL while(1){                               
-   u=NAV(v->name);
-   IFCMPNAME(u,s,m,hsh,R v;)    // (1) exact match - may or may not have value
-   if(!v->next)break;                                /* (2) link list end */
-   v=(tx=SYMNEXT(v->next))+sympv;
+  NOUNROLL while(1){
+   LX lxnext=v->next;  // unroll loop once
+   if(likely(1||v->name!=0)){  // in global tables, name may be 0 for unmoored cached reference  scaf for bug-finding
+    u=NAV(v->name);
+    IFCMPNAME(u,s,m,hsh,R v;)    // (1) exact match - may or may not have value
+   }
+   if(!lxnext)break;                                /* (2) link list end */
+   v=(tx=SYMNEXT(lxnext))+sympv;
   }
  }
  // not found, create new symbol.  If tx is 0, the queue is empty, so adding at the head is OK; otherwise add after tx

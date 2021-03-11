@@ -190,7 +190,7 @@ typedef struct JSTstruct {
 // parsing, lookup, explicit definition execution
  A stloc;            /* locales symbol table                            */
  L *sympv;           // symbol pool array.  This is offset LAV0 into the allocated block.  Symbol 0 is used as the root of the free chain
- A slist;            /* files used in right arg to 0!:    */
+ A slist;            // boxed list of filenames used in right arg to 0!:, matches the entries made in sn fiels of L blocks
  B assert;           /* 1 iff evaluate assert. statements               */
  B stch;             /* enable setting of changed bit                   */
  C asgzomblevel;     // 0=do not assign zombie name before final assignment; 1=allow premature assignment of complete result; 2=allow premature assignment even of incomplete result   

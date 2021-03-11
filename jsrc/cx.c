@@ -40,7 +40,18 @@
 // Parse/execute a line, result in z.  If locked, reveal nothing.  Save current line number in case we reexecute
 // If the sentence passes a u/v into an operator, the current symbol table will become the prev and will have the u/v environment info
 // If the sentence fails, we go into debug mode and don't return until the user releases us
-#define parseline(z) {C attnval=*JT(jt,adbreakr); A *queue=line+CWSENTX; I m=(cwgroup>>16)&0xffff; if(likely(!attnval)){if(likely(!(nG0ysfctdl&16)))z=PARSERVALUE(parsea(queue,m));else {thisframe->dclnk->dcix=i; z=PARSERVALUE(parsex(queue,m,cw+i,callframe));}}else{jsignal(EVATTN); z=0;} }
+#if NAMETRACK
+#define SETTRACK memset(trackinfo,' ',sizeof(trackinfo)); wx=0; \
+ wlen=sprintf(trackinfo,"%d: ",cw[i].source); wx+=wlen; trackinfo[wx++]=' '; \
+ AK(trackbox)=(C*)queue-(C*)trackbox; AN(trackbox)=AS(trackbox)[0]=m; trackstg=unparse(trackbox); \
+ wlen=AN(trackstg); wlen=wlen+wx>sizeof(trackinfo)-1?sizeof(trackinfo)-1-wx:wlen; memcpy(trackinfo+wx,CAV(trackstg),wlen); wx+=wlen+1; \
+ trackinfo[wx]=0;  // null-terminate the info
+#else
+#define SETTRACK
+#endif
+#define parseline(z) {C attnval=*JT(jt,adbreakr); A *queue=line+CWSENTX; I m=(cwgroup>>16)&0xffff; \
+ SETTRACK \
+ if(likely(!attnval)){if(likely(!(nG0ysfctdl&16)))z=PARSERVALUE(parsea(queue,m));else {thisframe->dclnk->dcix=i; z=PARSERVALUE(parsex(queue,m,cw+i,callframe));}}else{jsignal(EVATTN); z=0;} }
 
 /* for_xyz. t do. control data   */
 typedef struct{
@@ -225,6 +236,12 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
  UI nG0ysfctdl;  // flags: 1=locked 2=debug(& not locked) 4=tdi!=0 8=cd!=0 16=thisframe!=0 32=symtable was the original (i. e. AR(symtab)&LSYMINUSE)
              // 64=call is dyadic 128=0    0xff00=original debug flag byte (must be highest bit)  0xffff0000=#cws in the definition
  DC callframe=0;  // pointer to the debug frame of the caller to this function (only if it's named), but 0 if we are not debugging
+#if NAMETRACK
+ // bring out the name, locale, and script into easy-to-display name
+ C trackinfo[256];  // will hold name followed by locale
+ fauxblock(trackunp); A trackbox; fauxBOXNR(trackbox,trackunp,0,1)  // faux block for line to unparse.  Will be filled in
+ I wx=0, wlen; A trackstg;   // index/len we will write to; unparsed line
+#endif
 
  TD*tdv=0;  // pointer to base of try. stack
  I tdi=0;  // index of the next open slot in the try. stack

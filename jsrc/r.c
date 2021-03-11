@@ -246,6 +246,11 @@ A jtunDD(J jt, A w){F1PREFIP;
  RETF(incorp(w));
 }
 
+// unparse a line of an explicit definition corresponding to a control word for the line
+// c points to the control word
+// x is boxed array of tokens for the line
+// j is the line number we are accumulating
+// y is unparse of previous CWs found on the line
 static A jtunparse1(J jt,CW*c,A x,I j,A y){A q,z;C*s;I t;
  // for BBLOCK/TBLOCK types, convert the lines to displayable by displaying them as if for error messages, and copying the result
  switch(t=c->ig.indiv.type){
@@ -254,9 +259,9 @@ static A jtunparse1(J jt,CW*c,A x,I j,A y){A q,z;C*s;I t;
                               MC(s,"assert. ",8L); MC(8+s,CAV(q),AN(q)); break;
   case CLABEL:  case CGOTO:   RZ(z=ca(AAV(x)[0])); break;
   case CFOR:                  RZ(z=c->ig.indiv.sentn?AAV(x)[0]:spellcon(t)); break;
-  default:                    RZ(z=spellcon(t));
+  default:                    RZ(z=spellcon(t)); break;
  }
- // if the CW we processed comes from the same source lime, append it and return the combination; ootherwise return the new
+ // if the CW we processed comes from the same source line, append it and return the combination; ootherwise return the new
  if(j==c->source){
   GATV0(q,LIT,1+AN(y)+AN(z),1); s=CAV(q); 
   MC(s,CAV(y),AN(y)); s+=AN(y); *s++=' '; MC(s,CAV(z),AN(z)); 

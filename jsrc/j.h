@@ -582,6 +582,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define AUDITEXECRESULTS 0    // scaf // When set, we go through all execution results to verify recursive and virtual bits are OK, and m nonzero if AC<0
 #define FORCEVIRTUALINPUTS 0  // When 1 set, we make all non-inplaceable noun inputs to executions VIRTUAL.  Tests should still run
                            // When 2 set, make all outputs from RETF() virtual.  Tests for inplacing will fail; that's OK if nothing crashes
+#define NAMETRACK 1  // turn on to define trackinfo in unquote and xdefn
 // set FINDNULLRET to trap when a routine returns 0 without having set an error message
 #define FINDNULLRET 0
 
@@ -1722,9 +1723,9 @@ static inline UINT _clearfp(void){int r=fetestexcept(FE_ALL_EXCEPT);
 #if defined(MMSC_VER)  // SY_WIN32
 #define DPMULDECLS
 // DPMUL: *z=x*y, execute s if overflow
-#define DPMUL(x,y,z,s) {I _l,_h; *z=_l=_mul128(x,y,&_h); if(_h+(SGNTO0(_l)))s}
+#define DPMUL(x,y,z,s) {I _l,_h; *z=_l=_mul128(x,y,&_h); if(_h+(SGNTO0(_l))){s}}
 #define DPMULDDECLS
-#define DPMULD(x,y,z,s) {I _h; z=_mul128(x,y,&_h); if(_h+(SGNTO0(z)))s}
+#define DPMULD(x,y,z,s) {I _h; z=_mul128(x,y,&_h); if(_h+(SGNTO0(z))){s}}
 #define DPMULDZ(x,y,z) DPMULD(x,y,z,z=0;)
 #define DPMULDE(x,y,z)  DPMULD(x,y,z,ASSERT(0,EVLIMIT))
 #define DPUMUL(x,y,z,h) {z=_umul128((x),(y),&(h));}  // product in z and h

@@ -25,7 +25,8 @@ DF2(jtunquote){A z;I flgd0cp;  // flgs: 1=pseudofunction 2=cached lookup 8=execu
   I4 cachedlkp=v->localuse.lI4[0];  // negative if cacheable; positive if cached
   if(cachedlkp>0){
    // There is a lookup for this nameref - use it
-   fs=JT(jt,sympv)[cachedlkp].val;
+   stabent=&JT(jt,sympv)[cachedlkp];  // the symbol block for the cached item
+   fs=stabent->val;  // the value of the cached item
    if(likely(fs!=0)){
     // the lookup exists.  If it has a (necessarily direct) locative, we must fetch the locative so we switch to it
     if(unlikely(NAV(thisname)->flag&NMLOC)){RZ(explocale=stfindcre(AN(thisname)-NAV(thisname)->m-2,1+NAV(thisname)->m+NAV(thisname)->s,NAV(thisname)->bucketx));}  //  extract locale string, find/create locale
@@ -94,7 +95,21 @@ ASSERTSYS(AFLAG(thisname)&NAME,"nonrecursive name"); // scaf
   // implications: anonymous verbs do not push/pop the locale stack.  If bstkreqd is set, ALL functions will push the stack here.  That is bad, because
   // it means that a function that modifies the current locale behaves differently depending on whether debug is on or not.  We set a flag to indicate the case
   flgd0cp|=1;  // indicate pseudofunction
+  stabent=0;  // no name lookup was performed
  }
+#if NAMETRACK
+ // bring out the name, locale, and script into easy-to-display name
+ C trackinfo[256];  // will hold name followed by locale
+ memset(trackinfo,' ',sizeof(trackinfo));  // clear name & locale
+ I wx=0, wlen;   // index/len we will write to
+ wlen=AN(thisname); wlen=wlen+wx>sizeof(trackinfo)-3?sizeof(trackinfo)-3-wx:wlen; memcpy(trackinfo+wx,NAV(thisname)->s,wlen); wx+=wlen+1;  // copy in the full name
+ A locnm=LOCNAME(jt->global);  // name of current global locale
+ wlen=AN(locnm); wlen=wlen+wx>sizeof(trackinfo)-2?sizeof(trackinfo)-2-wx:wlen; memcpy(trackinfo+wx,NAV(locnm)->s,wlen); wx+=wlen+1;  // copy in the locale name
+ if(stabent&&stabent->sn>=0){
+  wlen=AN(AAV(JT(jt,slist))[stabent->sn]); wlen=wlen+wx>sizeof(trackinfo)-1?sizeof(trackinfo)-1-wx:wlen; memcpy(trackinfo+wx,CAV(AAV(JT(jt,slist))[stabent->sn]),wlen); wx+=wlen+1;  // copy in the locale name
+ }
+ trackinfo[wx]=0;  // null-terminate the info
+#endif
  v=FAV(fs);  // repurpose v to point to the resolved verb block
 #if !USECSTACK
  I d=v->fdep; if(!d)RE(d=fdep(fs));  // get stack depth of this function, for overrun prevention

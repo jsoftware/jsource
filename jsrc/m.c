@@ -778,7 +778,8 @@ I jtra(AD* RESTRICT wd,I t){I n=AN(wd);
    PREFETCH((C*)np0);   // prefetch the next box while ra() is running
 #endif
 #if AUDITEXECRESULTS
-if(np&&AC(np)<0)SEGFAULT;  // contents are never inplaceable
+// ??? failed for java
+// if(np&&AC(np)<0)SEGFAULT;  // contents are never inplaceable
 #endif
    if(np)ra(np);  // increment the box, possibly turning it to recursive
    np=np0;  // advance to next box

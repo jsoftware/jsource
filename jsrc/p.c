@@ -230,6 +230,17 @@ void auditblock(J jt,A w, I nonrecurok, I virtok) {
    }while(k);  // do the whole chain
   }
  }  // scaf
+ locals=jt->global;  // repeat for globals
+ localsv=LXAV0(locals);
+ for(j=SYMLINFOSIZE;j<AN(locals);++j){  // scaf
+  if(k=localsv[j]){
+   do{
+    k=SYMNEXT(k);
+    if(jtsympv[k].name==0)SEGFAULT;
+    k=jtsympv[k].next;  // go to next
+   }while(k);  // do the whole chain
+  }
+ }  // scaf
  R;  // scaf
  if(AC(w)<0&&AZAPLOC(w)==0)SEGFAULT;
  if(AC(w)<0&&!(AFLAG(w)&AFVIRTUAL)&&AZAPLOC(w)>=jt->tnextpushp)SEGFAULT;  // requires large NTSTACK

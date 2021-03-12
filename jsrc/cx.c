@@ -238,7 +238,7 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
  DC callframe=0;  // pointer to the debug frame of the caller to this function (only if it's named), but 0 if we are not debugging
 #if NAMETRACK
  // bring out the name, locale, and script into easy-to-display name
- extern C trackinfo[256];  // will hold name followed by locale
+ C trackinfo[256];  // will hold name followed by locale
  fauxblock(trackunp); A trackbox; fauxBOXNR(trackbox,trackunp,0,1)  // faux block for line to unparse.  Will be filled in
  UI wx=0, wlen; A trackstg;   // index/len we will write to; unparsed line
 #endif

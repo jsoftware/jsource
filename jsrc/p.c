@@ -7,10 +7,6 @@
 #include "p.h"
 #include <stdint.h>
 
-#if NAMETRACK
-extern C trackinfo[256];
-#endif
-
 #define RECURSIVERESULTSCHECK   // obsolete
 //  if(y&&(AT(y)&NOUN)&&!(AFLAG(y)&AFVIRTUAL)&&((AT(y)^AFLAG(y))&RECURSIBLE))SEGFAULT;  // stop if nonrecursive noun result detected
 
@@ -229,12 +225,7 @@ void auditblock(J jt,A w, I nonrecurok, I virtok) {
   if(k=localsv[j]){
    do{
     k=SYMNEXT(k);
-    if(jtsympv[k].name==0){
-#if NAMETRACK
-fprintf(stderr,"trackinfo %s\n",trackinfo);
-#endif
-      SEGFAULT;
-    }
+    if(jtsympv[k].name==0)SEGFAULT;
     k=jtsympv[k].next;  // go to next
    }while(k);  // do the whole chain
   }
@@ -245,12 +236,7 @@ fprintf(stderr,"trackinfo %s\n",trackinfo);
   if(k=localsv[j]){
    do{
     k=SYMNEXT(k);
-    if(jtsympv[k].name==0){
-#if NAMETRACK
-fprintf(stderr,"trackinfo %s\n",trackinfo);
-#endif
-      SEGFAULT;
-    }
+    if(jtsympv[k].name==0)SEGFAULT;
     k=jtsympv[k].next;  // go to next
    }while(k);  // do the whole chain
   }

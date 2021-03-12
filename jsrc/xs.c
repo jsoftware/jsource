@@ -48,7 +48,7 @@ static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;DC d;
  // bring out the name, locale, and script into easy-to-display name
  C trackinfo[256];  // will hold name followed by locale
  forcetomemory(&trackinfo);
-#define SETTRACK if(x){memset(trackinfo,0,sizeof(trackinfo)); memcpy(trackinfo,CAV(x),MIN(sizeof(trackinfo),AN(x)));}
+#define SETTRACK if(x){memset(trackinfo,0,sizeof(trackinfo)); memcpy(trackinfo,CAV(x),MIN((I)sizeof(trackinfo),AN(x)));}
 #else
 #define SETTRACK
 #endif

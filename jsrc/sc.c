@@ -107,7 +107,7 @@ ASSERTSYS(AFLAG(thisname)&NAME,"nonrecursive name"); // scaf
  A locnm=LOCNAME(jt->global);  // name of current global locale
  wlen=AN(locnm); wlen=wlen+wx>sizeof(trackinfo)-2?sizeof(trackinfo)-2-wx:wlen; memcpy(trackinfo+wx,NAV(locnm)->s,wlen); wx+=wlen+1;  // copy in the locale name
  if(stabent&&stabent->sn>=0){
-  wlen=AN(AAV(JT(jt,slist))[stabent->sn]); wlen=wlen+wx>sizeof(trackinfo)-1?sizeof(trackinfo)-1-wx:wlen; memcpy(trackinfo+wx,CAV(AAV(JT(jt,slist))[stabent->sn]),wlen); wx+=wlen+1;  // copy in the locale name
+  wlen=AN(AAV(JT(jt,slist))[stabent->sn]); wlen=wlen+wx>sizeof(trackinfo)-1?sizeof(trackinfo)-1-wx:wlen; memcpy(trackinfo+wx,CAV(AAV(JT(jt,slist))[stabent->sn]),wlen); wx+=wlen;  // copy in the locale name
  }
  trackinfo[wx]=0;  // null-terminate the info
 #endif

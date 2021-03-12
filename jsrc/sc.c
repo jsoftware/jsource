@@ -100,6 +100,7 @@ ASSERTSYS(AFLAG(thisname)&NAME,"nonrecursive name"); // scaf
 #if NAMETRACK
  // bring out the name, locale, and script into easy-to-display name
  C trackinfo[256];  // will hold name followed by locale
+ forcetomemory(&trackinfo);
  memset(trackinfo,' ',sizeof(trackinfo));  // clear name & locale
  UI wx=0, wlen;   // index/len we will write to
  wlen=AN(thisname); wlen=wlen+wx>sizeof(trackinfo)-3?sizeof(trackinfo)-3-wx:wlen; memcpy(trackinfo+wx,NAV(thisname)->s,wlen); wx+=wlen+1;  // copy in the full name

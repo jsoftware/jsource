@@ -44,6 +44,14 @@ void setftype(C*v,OSType type,OSType crea){C p[256];FInfo f;
 
 #define SEEKLEAK 0
 static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;DC d;
+#if NAMETRACK
+ // bring out the name, locale, and script into easy-to-display name
+ C trackinfo[256];  // will hold name followed by locale
+ forcetomemory(&trackinfo);
+#define SETTRACK if(x){memset(trackinfo,' ',sizeof(trackinfo)); memcpy_s(trackinfo,sizeof(trackinfo),CAV(x),AN(x));}
+#else
+#define SETTRACK
+#endif
  if(equ(w,num(1)))R mtm;
  RZ(w=vs(w));
  // Handle locking.  Global glock has lock status for higher levels.  We see if this text is locked; if so, we mark lock status for this level
@@ -64,14 +72,14 @@ static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;DC d;
  A *old=jt->tnextpushp;
  switch(ce){
  // loop over the lines.  jgets may fail, in which case we leave that as the error code for the sentence.
- case 0: while(x&&!jt->jerr){jt->etxn=0;                           jtimmex(jtinplace,x=ddtokens(jgets("   "),1+(AN(jt->locsyms)>1))); tpop(old);} break;  // lgets returns 0 for error or EOF
- case 1: while(x           ){if(!JT(jt,seclev))jtshowerr(jtinplace); jt->jerr=0; jtimmex(jtinplace,x=ddtokens(jgets("   "),1+(AN(jt->locsyms)>1))); tpop(old);} break;
+ case 0: while(x&&!jt->jerr){jt->etxn=0; x=jgets("   "); SETTRACK jtimmex(jtinplace,x=ddtokens(x,1+(AN(jt->locsyms)>1))); tpop(old);} break;  // lgets returns 0 for error or EOF
+ case 1: while(x           ){if(!JT(jt,seclev))jtshowerr(jtinplace); jt->jerr=0; x=jgets("   ");  SETTRACK  jtimmex(jtinplace,x=ddtokens(x,1+(AN(jt->locsyms)>1))); tpop(old);} break;
  case 2:
  case 3: {
 #if SEEKLEAK
   I stbytes = spbytesinuse();
 #endif
-  while(x&&!jt->jerr){jt->etxn=0;                           jtimmea(jtinplace,x=jgets("   ")); tpop(old);}
+  while(x&&!jt->jerr){jt->etxn=0; x=jgets("   "); SETTRACK jtimmea(jtinplace,x); tpop(old);}
 #if SEEKLEAK
   I endbytes=spbytesinuse(); if(endbytes-stbytes > 1000)printf("%lld bytes lost\n",endbytes-stbytes);
 #endif

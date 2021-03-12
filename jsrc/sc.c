@@ -101,7 +101,7 @@ ASSERTSYS(AFLAG(thisname)&NAME,"nonrecursive name"); // scaf
  // bring out the name, locale, and script into easy-to-display name
  C trackinfo[256];  // will hold name followed by locale
  memset(trackinfo,' ',sizeof(trackinfo));  // clear name & locale
- I wx=0, wlen;   // index/len we will write to
+ UI wx=0, wlen;   // index/len we will write to
  wlen=AN(thisname); wlen=wlen+wx>sizeof(trackinfo)-3?sizeof(trackinfo)-3-wx:wlen; memcpy(trackinfo+wx,NAV(thisname)->s,wlen); wx+=wlen+1;  // copy in the full name
  A locnm=LOCNAME(jt->global);  // name of current global locale
  wlen=AN(locnm); wlen=wlen+wx>sizeof(trackinfo)-2?sizeof(trackinfo)-2-wx:wlen; memcpy(trackinfo+wx,NAV(locnm)->s,wlen); wx+=wlen+1;  // copy in the locale name

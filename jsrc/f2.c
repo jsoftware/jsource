@@ -30,11 +30,11 @@ static I jtc2j(J jt,B e,I m,C*zv,A*cellbuf){C c,*s,*t;I k,p;
   // exponent is e+n[n...] or e-n[n...]  Step over the e, and - if present
   ++t; t+='-'==*t;
   // count k=the number of leading + or 0 characters in the exponent; leave c=stopper character
-  k=0; while(c=t[k],c=='0'||c=='+')++k;
+  k=0; NOUNROLL while(c=t[k],c=='0'||c=='+')++k;
   if(k){
    // There are +0 characters to delete.  If we ran off the end of the exponent, back up and use one 0 (which should be there already)
    if(!c||' '==c){*t++='0'; --k;}
-   while(t[0]=t[k])++t;  // close up the skipped characters, till end of string (including the\0)
+   NOUNROLL while(t[0]=t[k])++t;  // close up the skipped characters, till end of string (including the\0)
    // t now points to trailing \0.  Set p=(field width)-(# characters copied) = #spare characters at end of field
    // if m is 0, p is negative.  Fill to end-of-field with spaces, and append \0 if there was any fill
    p=m-(t-CAV1(*cellbuf)); DQ(p,*t++=' ';); if(0<=p)CAV1(*cellbuf)[m]=0;
@@ -70,7 +70,7 @@ static B jtfmtex(J jt,I m,I d,I n,I*xv,B b,I c,I q,I ex,A*cellbuf){B bm=b||m;C*u
  k=v-CAV1(*cellbuf)-(2+bm);
  if(k<d){memset(v,'0',d-k); v+=d-k;}
  else if(k>d&&(u=v=CAV1(*cellbuf)+d+2+bm,'5'<=*v)){
-  while('9'==*--u);
+  NOUNROLL while('9'==*--u);
   if(' '!=*u)++*u; else{*++u='1'; ++ex;}
   memset(u+1,'0',v-u-1);
  }
@@ -103,7 +103,7 @@ static B jtfmtq(J jt,B e,I m,I d,C*s,I t,Q*wv,A*cellbuf){B b;C*v=CAV1(*cellbuf);
   ex=XBASEN*(AN(y.n)-AN(y.d));
   g=xtymes(x,xpow(xc(10L),xc(1+d-ex)));
   RZ(x=xdiv(g,y.d,XMFLR));
-  while(1==xcompare(a,x)){--ex; g=xtymes(xc(10L),g); RZ(x=xdiv(g,y.d,XMFLR));}
+  NOUNROLL while(1==xcompare(a,x)){--ex; g=xtymes(xc(10L),g); RZ(x=xdiv(g,y.d,XMFLR));}
   if(b)x=negate(x);
  }else x=xdiv(xtymes(y.n,a),y.d,XMFLR);
  RZ(x=xdiv(xplus(x,xc(5L)),xc(10L),XMFLR));
@@ -186,7 +186,7 @@ static A jtth2a(J jt,B e,I m,I d,C*s,I n,I t,I wk,C*wv,B first,A*cellbuf){PROLOG
  b = e;  // init no negative exponential values (if field is exponential).  0 if nonexponential field
  for(i=q=0;i<n;++i){
   fmt1(e,m0,d,s,t,wv,cellbuf);  // Create the (null-terminated) string in th2buf.  m0=0
-  while(p<q+(I)strlen(CAV1(*cellbuf))+1){RZ(z=over(z,z)); p+=p; zv=CAV(z);}  // If new string overflows output area, double the output-area size
+  NOUNROLL while(p<q+(I)strlen(CAV1(*cellbuf))+1){RZ(z=over(z,z)); p+=p; zv=CAV(z);}  // If new string overflows output area, double the output-area size
    // u->place to put string; convert th2buf to j form in *u; k=length of string; update string pointer & null-terminate string; advance to next input value
    u=q+zv; q+=k=c2j(e,0L,u,cellbuf); zv[q++]=0; wv+=wk;
    // Exponential-field sign spacing:

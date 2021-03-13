@@ -36,7 +36,7 @@ DC jtdeba(J jt,C t,void *x,void *y,A fs){DC d;
    // dcn fill in in caller
    // if we were waiting to step into a function, this is it: mark this function as stoppable
    // and remove the stop in the caller
-   DC e=d->dclnk; while(e&&DCCALL!=e->dctype)e=e->dclnk;  // find previous call
+   DC e=d->dclnk; NOUNROLL while(e&&DCCALL!=e->dctype)e=e->dclnk;  // find previous call
    if(e&&e->dcss==SSSTEPINTOs){d->dcss=SSSTEPINTOs; e->dcss=0;}
  }
  R d;
@@ -47,7 +47,7 @@ void jtdebz(J jt){jt->sitop=jt->sitop->dclnk;}
 
 F1(jtsiinfo){A z,*zv;DC d;I c=5,n,*s;
  ASSERTMTV(w);
- n=0; d=jt->sitop; while(d){++n; d=d->dclnk;}
+ n=0; d=jt->sitop; NOUNROLL while(d){++n; d=d->dclnk;}
  GATV0(z,BOX,c*n,2); s=AS(z); s[0]=n; s[1]=c; zv=AAV(z);
  d=jt->sitop;
  while(d){
@@ -79,7 +79,7 @@ I lnumsi(DC d){A c;I i;
 
 
 static DC suspset(DC d){DC e=0;
- while(d&&DCCALL!=d->dctype){e=d; d=d->dclnk;}  /* find bottommost call                 */
+ NOUNROLL while(d&&DCCALL!=d->dctype){e=d; d=d->dclnk;}  /* find bottommost call                 */
  if(!(d&&DCCALL==d->dctype))R 0;                /* don't suspend if no such call     */
  if(d->dcc){RZ(e); e->dcsusp=1;}               // if explicit, set susp on line - there should always be a following frame, but if not do nothing
  else      d->dcsusp=1;                         /* if not explicit, set susp on call */
@@ -159,7 +159,7 @@ static A jtsusp(J jt){A z;
 // We come into debug when there has been an error with debug enabled.  Stops are detected as errors before the stopped line is executed.
 // Tacit definitions detect stop before they execute.
 static A jtdebug(J jt){A z=0;C e;DC c,d;
- c=jt->sitop; while(c){if(c->dctype==DCCALL)c->dcss=0; c=c->dclnk;}  // clear all previous ss state, since this might be a new error
+ c=jt->sitop; NOUNROLL while(c){if(c->dctype==DCCALL)c->dcss=0; c=c->dclnk;}  // clear all previous ss state, since this might be a new error
  RZ(d=suspset(jt->sitop));  // find the topmost CALL frame and mark it as suspended
  if(d->dcix<0)R 0;  // if the verb has exited, all we can do is return
  e=jt->jerr; jt->jerr=0;
@@ -181,7 +181,7 @@ static A jtdebug(J jt){A z=0;C e;DC c,d;
  case SUSCLEAR:  // exit from debug
   jt->jerr=e;    // restore the error state before debug
   c=jt->sitop; z=mtm;  // in case no error, give empty result
-  while(c){if(DCCALL==c->dctype)DGOTO(c,-1) c=c->dclnk;} break;   // exit from all functions, back to immed mode
+  NOUNROLL while(c){if(DCCALL==c->dctype)DGOTO(c,-1) c=c->dclnk;} break;   // exit from all functions, back to immed mode
  case SUSNEXT:  // continue execution on next line
  case SUSSS:  // single-step continuation
   z=mtm; break;  // pick up wherever it left off; no result
@@ -283,7 +283,7 @@ F1(jtdbjump){I jump; RE(jump=i0(w)); A z; RZ(z=mkwris(link(sc(SUSJUMP),sc(jump))
 
 static F2(jtdbrr){DC d;
  RE(0);
- d=jt->sitop; while(d&&DCCALL!=d->dctype)d=d->dclnk; 
+ d=jt->sitop; NOUNROLL while(d&&DCCALL!=d->dctype)d=d->dclnk; 
  ASSERT(d&&VERB&AT(d->dcf)&&!d->dcc,EVDOMAIN);  // must be tacit verb
  A z; RZ(z=box(w)); if(a)RZ(z=over(w,box(a))); 
  RZ(z=mkwris(link(sc(SUSRUN),z))); AFLAGORLOCAL(z,AFDEBUGRESULT)  // RUN ; w [;a]

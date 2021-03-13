@@ -86,12 +86,12 @@ static I histarea[16384][2] = {0};  // name, frequency of calls to jtgaf
 void memhashadd(I lineno, C *string){
  C string8[8]="        ";  // padded string
  string+=strlen(string);  // go to end
- while(string[-1]!='/' && string[-1]!='\\')--string;  // back up to filename
+ NOUNROLL while(string[-1]!='/' && string[-1]!='\\')--string;  // back up to filename
  I nwrit=snprintf(string8,8,"%lld",lineno);
  memcpy(string8+nwrit,string,MIN(8-nwrit,(I)strlen(string)));
  I stringi=*(I*)&string8;  // the string as int
  UI hash=16383&hic(sizeof(string8),string8);
- while(1){if(histarea[hash][0]==stringi)break; if(histarea[hash][0]==0){histarea[hash][0]=stringi; break;} if(--hash<0)hash=16383;}  // find hash slot
+ NOUNROLL while(1){if(histarea[hash][0]==stringi)break; if(histarea[hash][0]==0){histarea[hash][0]=stringi; break;} if(--hash<0)hash=16383;}  // find hash slot
  ++histarea[hash][1];  // increment count
 }
 
@@ -153,7 +153,7 @@ void jtauditmemchains(J jt){F1PREFIP;
 #if MEMAUDIT&0x30
 I Wi,Wj;A Wx,prevWx=0; if((MEMAUDITPCALLENABLE)&&((MEMAUDIT&0x20)||JT(jt,peekdata))){
  for(Wi=PMINL;Wi<=PLIML;++Wi){Wj=0; Wx=(jt->mfree[-PMINL+Wi].pool);
- while(Wx){if(FHRHPOOLBIN(AFHRH(Wx))!=(Wi-PMINL)AUDITFILL||Wj>0x10000000)SEGFAULT; prevWx=Wx; Wx=AFCHAIN(Wx); ++Wj;}}
+ NOUNROLL while(Wx){if(FHRHPOOLBIN(AFHRH(Wx))!=(Wi-PMINL)AUDITFILL||Wj>0x10000000)SEGFAULT; prevWx=Wx; Wx=AFCHAIN(Wx); ++Wj;}}
 }
 #endif
 }
@@ -166,7 +166,7 @@ F1(jtcheckfreepool){
  I Wi,Wj,ecode=0;A Wx,prevWx=0; 
  for(Wi=PMINL;Wi<=PLIML;++Wi){  // for each free list
   Wj=0; Wx=(jt->mfree[-PMINL+Wi].pool);  // get head of chain, init count of # eles
-  while(Wx){
+  NOUNROLL while(Wx){
    if(FHRHPOOLBIN(AFHRH(Wx))!=(Wi-PMINL)){ecode=1; break;}  // will crash here if chain is corrupted
 #if MEMAUDIT&4
    if(AC(Wx)!=(I)0xdeadbeefdeadbeefLL){ecode=3; break;}
@@ -182,7 +182,7 @@ F1(jtcheckfreepool){
 F1(jtspcount){A z;I c=0,i,j,*v;A x;
  ASSERTMTV(w);
  GATV0(z,INT,2*(-PMINL+PLIML+1),2); v=AV(z);
- for(i=PMINL;i<=PLIML;++i){j=0; x=(jt->mfree[-PMINL+i].pool); while(x){x=AFCHAIN(x); ++j;} if(j){++c; *v++=(I)1<<i; *v++=j;}}
+ for(i=PMINL;i<=PLIML;++i){j=0; x=(jt->mfree[-PMINL+i].pool); NOUNROLL while(x){x=AFCHAIN(x); ++j;} if(j){++c; *v++=(I)1<<i; *v++=j;}}
  v=AS(z); v[0]=c; v[1]=2; AN(z)=2*c;
  RETF(z);
 }    /* 7!:3 count of unused blocks */
@@ -772,7 +772,7 @@ I jtra(AD* RESTRICT wd,I t){I n=AN(wd);
   A* RESTRICT wv=AAV(wd);  // pointer to box pointers
   if(n==0)R 0;  // Can't be mapped boxed; skip everything if no boxes
   np=*wv;  // prefetch first box
-  while(--n>0){AD* np0;  // n is always >0 to start.  Loop for n-1 times
+  NOUNROLL while(--n>0){AD* np0;  // n is always >0 to start.  Loop for n-1 times
    np0=*++wv;  // fetch next box if it exists, otherwise harmless value.  This fetch settles while the ra() is running
 #ifdef PREFETCH
    PREFETCH((C*)np0);   // prefetch the next box while ra() is running
@@ -807,7 +807,7 @@ I jtfa(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
   A* RESTRICT wv=AAV(wd);  // pointer to box pointers
   if(n==0)R 0;  // Can't be mapped boxed; skip everything if no boxes
   np=*wv;  // prefetch first box
-  while(--n>0){AD* np0;  // n is always >0 to start.  Loop for n-1 times
+  NOUNROLL while(--n>0){AD* np0;  // n is always >0 to start.  Loop for n-1 times
    np0=*++wv;  // fetch next box if it exists, otherwise harmless value.  This fetch settles while the ra() is running
 #ifdef PREFETCH
    PREFETCH((C*)np0);   // prefetch the next box while ra() is running
@@ -852,7 +852,7 @@ A *jttpush(J jt,AD* RESTRICT wd,I t,A *pushp){I af=AFLAG(wd); I n=AN(wd);
 // THIS CODE IS NEVER EXECUTED
   // boxed.  Loop through each box, recurring if called for.
   A* RESTRICT wv=AAV(wd);  // pointer to box pointers
-  while(n--){
+  NOUNROLL while(n--){
    A np=*wv; ++wv;   // point to block for box
    if(np){     // it can be 0 if there was error
     I tp=AT(np); I flg=AFLAG(np); // fetch type
@@ -935,7 +935,7 @@ void jttpop(J jt,A *old){A *endingtpushp;
   endingtpushp=(A*)((I)pushp&(-NTSTACKBLOCK));  // in case oldx in different block, use start of this one
   endingtpushp=((I)pushp^(I)old)&(-NTSTACKBLOCK)?endingtpushp:old;  // if old in this block, use it
   np=*pushp;   // get addr of first block to free
-  while(pushp!=endingtpushp){A np0;
+  NOUNROLL while(pushp!=endingtpushp){A np0;
    // np has next block to process.  It is *pushp
    --pushp;  // back up to next block (might be one after the last).  pushp now points to the block being processed in this pass
    // It is OK to prefetch the next box even on the last pass, because the next pointer IS a pointer to a valid box, or a chain pointer
@@ -1155,7 +1155,7 @@ if((AC(w)>>(BW-2))==-1)SEGFAULT;  // high bits 11 must be deadbeef
   // Remove block from the table if the address matches
   I *lv=IAV(leakblock);
   for(i = 0;i<leaknbufs&&lv[2*i]!=(I)w;++i);  // find the match
-  if(i<leaknbufs){while(i+1<leaknbufs){lv[2*i]=lv[2*i+2]; lv[2*i+1]=lv[2*i+3]; ++i;} leaknbufs=i;}  // remove it
+  if(i<leaknbufs){NOUNROLL while(i+1<leaknbufs){lv[2*i]=lv[2*i+2]; lv[2*i+1]=lv[2*i+3]; ++i;} leaknbufs=i;}  // remove it
  }
 #endif
 

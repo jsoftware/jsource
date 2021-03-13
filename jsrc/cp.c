@@ -39,7 +39,7 @@ static F2(jttclosure){A z;I an,*av,c,d,i,wn,wr,wt,*wv,*zv,*zz;
  zv=AV(z); zz=zv+AN(z);
  if(1==wn){   // just 1 result, which will be a list
   *zv++=c=*wv;  // store first selection
-  do{
+  NOUNROLL do{
    if(zv==zz){i=zv-AV(z); ASSERT(i<=an,EVLIMIT) RZ(z=ext(0,z)); zv=AV(z)+i; zz=AV(z)+AN(z);}  // if we have more results than items in a, there must be a cycle - quit
    d=c; if((UI)c>=(UI)an){c+=an; ASSERT((UI)c<(UI)an,EVINDEX);} *zv++=c=av[c];  // d is prev selection, c is next.  Store c
   }while(c!=d);  // stop when we get a repeated value (normal exit)
@@ -47,7 +47,7 @@ static F2(jttclosure){A z;I an,*av,c,d,i,wn,wr,wt,*wv,*zv,*zz;
  }else{  // multiple starting points.  Each cell of result has one successor for each starting point.
   ICPY(zv,wv,wn); zv+=wn;
   I resultdiff;
-  do{
+  NOUNROLL do{
    if(zv==zz){i=zv-AV(z); ASSERT(i<=an*wn,EVLIMIT) RZ(z=ext(0,z)); zv=AV(z)+i; zz=AV(z)+AN(z);}  // break if there is a cycle
    resultdiff=0; DQ(wn, d=c=zv[-wn]; if((UI)c>=(UI)an){c+=an; ASSERT((UI)c<(UI)an,EVINDEX);} *zv++=c=av[c]; resultdiff|=c^d;);  // set diff if not a steady state
   }while(resultdiff);

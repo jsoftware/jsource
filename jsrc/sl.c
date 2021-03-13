@@ -26,7 +26,7 @@
  static I jtgetnl(J jt){
   if(jt->numlocdelqn<DELAYBEFOREREUSE){
    // There are not enough blocks in the delq to guarantee that the next free will lie fallow long enough.  Increase the allocation
-   A x; UI oldsize=jt->numlocsize; do{RZ(x=ext(1,JT(jt,stnum))) JT(jt,stnum)=x;}while(jt->numlocdelqn+AN(x)-oldsize<DELAYBEFOREREUSE);   // extend & save the allocation.  ext handles the usecount.  Stop when we have enough
+   A x; UI oldsize=jt->numlocsize; do{RZ(x=ext(1,JT(jt,stnum))) JT(jt,stnum)=x;}NOUNROLL while(jt->numlocdelqn+AN(x)-oldsize<DELAYBEFOREREUSE);   // extend & save the allocation.  ext handles the usecount.  Stop when we have enough
    jt->numlocdelqn += AN(x)-oldsize;  // add the new allocation into the size of the delq
    I relodist=(I)IAV(x)-(I)jt->numloctbl;  // relocation factor
    I oldbase=(I)jt->numloctbl; I *reloptr=IAV(x);  // treat the locale pointer as integers for arithmetic here
@@ -109,7 +109,7 @@ static I jtgetnl(J jt){
   I i; for(i=0;i<AN(JT(jt,stnum));++i){
    A st; if(st=(A)IAV0(JT(jt,stnum))[i]){  // if there is a value hashed...
     I probe=HASHSLOT(NAV(LOCNAME(st))->bucketx,s);  // start of search.  Look backward, wrapping around, until we find an empty.  We never have duplicates
-    while(IAV0(new)[probe]){if(--probe<0)probe=AN(new)-1;}  // find empty slot
+    NOUNROLL while(IAV0(new)[probe]){if(--probe<0)probe=AN(new)-1;}  // find empty slot
     IAV0(new)[probe]=(I)st;  // install in new hashtable
    }
   }
@@ -123,7 +123,7 @@ static I jtgetnl(J jt){
 static void jtinstallnl(J jt, A l){
  ACINITZAP(l);  // protect new value in table
  I probe=HASHSLOT(AK(JT(jt,stnum)),AN(JT(jt,stnum)));  // start of search.  Look backward, wrapping around, until we find an empty.  We never have duplicates
- while(IAV0(JT(jt,stnum))[probe]){if(--probe<0)probe=AN(JT(jt,stnum))-1;}  // find empty slot
+ NOUNROLL while(IAV0(JT(jt,stnum))[probe]){if(--probe<0)probe=AN(JT(jt,stnum))-1;}  // find empty slot
  IAV0(JT(jt,stnum))[probe]=(I)l;  // put new locale in the empty slot
  ++AK(JT(jt,stnum));  // increment next-locale ticket
  ++AM(JT(jt,stnum));  // increment number of locales outstanding
@@ -132,22 +132,22 @@ static void jtinstallnl(J jt, A l){
 // return the address of the locale block for number n, or 0 if not found
 A jtfindnl(J jt, I n){
  I probe=HASHSLOT(n,AN(JT(jt,stnum)));  // start of search.  Look backward, wrapping around, until we find match or an empty.
- while(IAV0(JT(jt,stnum))[probe]){if(NAV(LOCNAME((A)IAV0(JT(jt,stnum))[probe]))->bucketx==n)R (A)IAV0(JT(jt,stnum))[probe]; if(--probe<0)probe=AN(JT(jt,stnum))-1;}  // return if locale match; wrap around at beginning of block
+ NOUNROLL while(IAV0(JT(jt,stnum))[probe]){if(NAV(LOCNAME((A)IAV0(JT(jt,stnum))[probe]))->bucketx==n)R (A)IAV0(JT(jt,stnum))[probe]; if(--probe<0)probe=AN(JT(jt,stnum))-1;}  // return if locale match; wrap around at beginning of block
  R 0;  // if no match, return failure
 }
 
 // delete the locale numbered n, if it exists
 void jterasenl(J jt, I n){
  I probe=HASHSLOT(n,AN(JT(jt,stnum)));  // start of search.  Look backward, wrapping around, until we find a match or an empty.
- while(IAV0(JT(jt,stnum))[probe]){if(NAV(LOCNAME((A)IAV0(JT(jt,stnum))[probe]))->bucketx==n)break; if(--probe<0)probe=AN(JT(jt,stnum))-1;}  // wrap around at beginning of block
+ NOUNROLL while(IAV0(JT(jt,stnum))[probe]){if(NAV(LOCNAME((A)IAV0(JT(jt,stnum))[probe]))->bucketx==n)break; if(--probe<0)probe=AN(JT(jt,stnum))-1;}  // wrap around at beginning of block
  // We have found the match, or are at an empty if no match.  Either way, mark the location as empty and scan forward to find the next empty,
  // moving back blocks that might have hashed into the newly vacated spot
  if(IAV0(JT(jt,stnum))[probe])--AM(JT(jt,stnum));  // if we found something to delete, decrement # locales outstanding
- while(1){  // probe points to either the original deletion point or a value that was just copied to an earlier position.  Either way it gets deleted
+ NOUNROLL while(1){  // probe points to either the original deletion point or a value that was just copied to an earlier position.  Either way it gets deleted
   IAV0(JT(jt,stnum))[probe]=0;  // delete the now-invalid or -moved location
   I lastdel=probe;    // remember where the hole is
   I probehash;   // will hold original hash of probe
-  do{
+  NOUNROLL do{
    if(--probe<0)probe=AN(JT(jt,stnum))-1;  // back up to next location to inspect
    if(!IAV0(JT(jt,stnum))[probe])R;  // if we hit another hole, there can be no more value that need copying, we're done  *** RETURN POINT ***
    probehash=HASHSLOT(NAV(LOCNAME((A)IAV0(JT(jt,stnum))[probe]))->bucketx,AN(JT(jt,stnum)));  // see where the probed cell would like to hash

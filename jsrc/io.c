@@ -682,10 +682,10 @@ F1(jtbreakfns){A z;I *fh,*mh=0; void* ad;
 
 int valid(C* psrc, C* psnk)
 {
- while(*psrc == ' ') ++psrc;
+ NOUNROLL while(*psrc == ' ') ++psrc;
  if(!isalpha(*psrc)) return EVILNAME;
- while(isalnum(*psrc) || *psrc=='_') *psnk++ = *psrc++;
- while(*psrc == ' ') ++psrc;
+ NOUNROLL while(isalnum(*psrc) || *psrc=='_') *psnk++ = *psrc++;
+ NOUNROLL while(*psrc == ' ') ++psrc;
  if(*psrc) return EVILNAME;
  *psnk = 0;
  return 0;  

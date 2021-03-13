@@ -326,8 +326,8 @@ static A jtdir1(J jt,struct dirent*f,struct stat *dirstatbuf,C *diratts, C *dirm
  ts[3]=tm->tm_hour; ts[4]=tm->tm_min; ts[5]=tm->tm_sec;
  s=f->d_name; n=strlen(s);
  GAT0(z,BOX,6,1); zv=AAV(z);
- RZ(zv[0]=vec(LIT,n,s)); 
- RZ(zv[1]=vec(INT,6L,ts));
+ RZ(zv[0]=incorp(vec(LIT,n,s))); 
+ RZ(zv[1]=incorp(vec(INT,6L,ts)));
  sz=dirstatbuf[0].st_size;
 #if !SY_64 && defined(ANDROID)
  UC* raw_stat=(UC*)dirstatbuf;
@@ -340,10 +340,10 @@ static A jtdir1(J jt,struct dirent*f,struct stat *dirstatbuf,C *diratts, C *dirm
  }
 #endif
  sz=sz<0?-1:sz;
- RZ(zv[2]=sc(sz));
- RZ(zv[3]=vec(LIT,3L, dirrwx ));
- RZ(zv[4]=vec(LIT, 6L,diratts));
- RZ(zv[5]=vec(LIT,10L,dirmode));
+ RZ(zv[2]=incorp(sc(sz)));
+ RZ(zv[3]=incorp(vec(LIT,3L, dirrwx )));
+ RZ(zv[4]=incorp(vec(LIT, 6L,diratts)));
+ RZ(zv[5]=incorp(vec(LIT,10L,dirmode)));
  R z;
 }
 
@@ -365,7 +365,7 @@ F1(jtjdir){PROLOG(0103);A*v,z,*zv;C*dir,*pat,*s,*x;I j=0,n=32;DIR*DP;struct dire
  while(f){
   if(ismatch(jt,pat,f->d_name,dirstatbuf,diratts,dirmode,dirrwx,dirnamebuf,dirbase)){
    if(j==n){RZ(z=ext(0,z)); n=AN(z); zv=AAV(z);}
-   RZ(zv[j++]=jtdir1(jt,f,dirstatbuf,diratts,dirmode,dirrwx));
+   RZ(zv[j++]=incorp(jtdir1(jt,f,dirstatbuf,diratts,dirmode,dirrwx)));
   }
   f=readdir(DP);
  }

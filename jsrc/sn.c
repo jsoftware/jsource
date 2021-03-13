@@ -22,7 +22,7 @@ B jtvnm(J jt,I n,C *s){C c,t;I j;
  // Now t is the mask of invalidity, and j is the index one before the first __ (-1 if no __)
  if((t&1)+((cn!='_')&SGNTO0(j)))R 1^(t&1);   // Return if accumulated error, or if not trailing '_' and no __ (normal return)
  // If the last char is _, any ind loc is invalid (but not trailing __); scan to find previous _ (call its index j, error if 0); audit locale name, or OK if empty (base locale)
- if(cn=='_'){if(j>=0)R j==n-3; j=n-3; do{if(s[j]=='_')R((ctype[(UC)s[j+1]]&CA)||vlocnm(n-j-2,s+j+1));}while(--j>0); R 0;}  // return if any __, including at end; find last '_', which cannot be in the last 2 chars; see if valid locale name; if no '_', error
+ if(cn=='_'){if(j>=0)R j==n-3; j=n-3; NOUNROLL do{if(s[j]=='_')R((ctype[(UC)s[j+1]]&CA)||vlocnm(n-j-2,s+j+1));}while(--j>0); R 0;}  // return if any __, including at end; find last '_', which cannot be in the last 2 chars; see if valid locale name; if no '_', error
  // Here last char was not _, and j is still pointed after __ if any
  // There is an indirect locative.  Scan all of them, verifying first char of each name is alphabetic (all chars were verified alphameric above)
  // Also verify that any _ is preceded or followed by _
@@ -63,7 +63,7 @@ A jtnfs(J jt,I n,C*s){A z;C f,*t;I m,p;NM*zv;
  // Split name into simplename and locale, verify length of each; set flag and hash for locative/indirect locative
  if('_'==*t){
    // name ends with _: direct locative
-   --t; while(s<t&&'_'!=*t)--t; f=NMLOC; p=n-2-(t-s); m=n-(2+p);  // t->_ before localename, p=#locale name, m=#simplename
+   --t; NOUNROLL while(s<t&&'_'!=*t)--t; f=NMLOC; p=n-2-(t-s); m=n-(2+p);  // t->_ before localename, p=#locale name, m=#simplename
    // install hash/number for the direct locale
    zv->bucketx=BUCKETXLOC(p,t+1);  // number if numeric, hash otherwise
  }else{

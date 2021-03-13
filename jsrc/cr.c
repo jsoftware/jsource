@@ -139,7 +139,7 @@ A jtrank1ex0(J jt,AD * RESTRICT w,A fs,AF f1){F1PREFIP;PROLOG(0041);A z,virtw;
  if(likely((AN(w))!=0)){  // if no cells, go handle fill before we advance over flags
   // Here there are cells to execute on.  Collect ATOP flags
   // RANKONLY verbs contain an invalid f1 pointer (it was used to get to a call to here).  We have to step over the RANKONLY to get to what we can execute
-  while(FAV(fs)->flag2&VF2RANKONLY1){fs=FAV(fs)->fgh[0]; f1=FAV(fs)->valencefns[0];}
+  NOUNROLL while(FAV(fs)->flag2&VF2RANKONLY1){fs=FAV(fs)->fgh[0]; f1=FAV(fs)->valencefns[0];}
 
   while(1){  // loop collecting ATOPs
    I fstate=(FAV(fs)->flag2&(VF2BOXATOP1|VF2ATOPOPEN1))>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // extract <@ and @> status bits from f
@@ -464,7 +464,7 @@ A jtrank2ex0(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,AF f2){F2PREFIP;PROLOG(00
   // elide the execution is when BOXATOP occurs at the first node, i.e. for an each that is not boxed
 
   // RANKONLY verbs contain an invalid f1 pointer (it was used to get to a call to here).  We have to step over the RANKONLY to get to what we can execute
-  while(FAV(fs)->flag2&VF2RANKONLY2){fs=FAV(fs)->fgh[0]; f2=FAV(fs)->valencefns[1];}
+  NOUNROLL while(FAV(fs)->flag2&VF2RANKONLY2){fs=FAV(fs)->fgh[0]; f2=FAV(fs)->valencefns[1];}
 
   while(1){  // loop collecting ATOPs
   I fstate=(FAV(fs)->flag2&(VF2BOXATOP2|VF2ATOPOPEN2A|VF2ATOPOPEN2W))>>(VF2BOXATOP2X-ZZFLAGBOXATOPX);  // extract <@ and @> status bits from f
@@ -679,7 +679,7 @@ static DF1(rank1){DECLF;I m,wr;
  wr=AR(w); efr(m,wr,(I)sv->localuse.lI4[0]);
  // We know that the first call is RANKONLY, and we consume any other RANKONLYs in the chain until we get to something else.  The something else becomes the
  // fs/f1 to rank1ex.  Until we can handle multiple fill neighborhoods, we mustn't consume a verb of lower rank
- while(FAV(fs)->flag2&VF2RANKONLY1){
+ NOUNROLL while(FAV(fs)->flag2&VF2RANKONLY1){
   I hm=FAV(fs)->localuse.lI4[0]; efr(hm,m,hm); if(hm<m)break;  // if new rank smaller than old, abort
   m=hm; fs=FAV(fs)->fgh[0]; f1=FAV(fs)->valencefns[0];
  }
@@ -712,7 +712,7 @@ static DF2(rank2){DECLF;I ar,l=sv->localuse.lI4[1],r=sv->localuse.lI4[2],wr;
   // We know that the current call is RANKONLY, and we consume any other RANKONLYs in the chain until we get to something else.  The something else becomes the
   // fs/f1 to rank1ex.  We have to stop if the new ranks will not fit in the two slots allotted to them.
   // This may lead to error until we support multiple fill neighborhoods
-  while(FAV(fs)->flag2&VF2RANKONLY2){
+  NOUNROLL while(FAV(fs)->flag2&VF2RANKONLY2){
    I hlr=FAV(fs)->localuse.lI4[1]; I hrr=FAV(fs)->localuse.lI4[2]; efr(hlr,llr,hlr); efr(hrr,lrr,hrr);  // fetch ranks of new verb, resolve negative, clamp against old inner rank
    if((hlr^llr)|(hrr^lrr)){  // if there is a new rank to insert...
     if((l^llr)|(r^lrr))break;  // if lower slot full, exit, we can't add a new one

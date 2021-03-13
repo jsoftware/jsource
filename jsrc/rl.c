@@ -164,7 +164,7 @@ A jtdecorate(J jt,A w,I t){
   if(needdot){w=over(w,scc('.')); RZ(w=mkwris(w)); DQ(AN(w) , if(CAV(w)[i]==' ')R w;  if(CAV(w)[i]=='e'){C f='.'; C *s=&CAV(w)[i]; DO(AN(w)-i, C ff=s[i]; s[i]=f; f=ff;)}) }
  }else if(t&INT){
  // integer: if the string contains nothing but one-digit 0/1 values, insert '0' before last number
-  I l=AN(w); C *s=CAV(w); do{if((*s&-2)!='0')break; ++s; if(--l==0)break; if(*s!=' ')break; ++s;}while(--l);
+  I l=AN(w); C *s=CAV(w); NOUNROLL do{if((*s&-2)!='0')break; ++s; if(--l==0)break; if(*s!=' ')break; ++s;}while(--l);
   if(l==0){I ls=0; DQ(AN(w), if(CAV(w)[i]==' ') ls=i;); w=ls?jtdinsert(jt,w,scc('0'),ls+1):over(scc('0'),w);}
  }else if(t&XNUM) w=jtdcapp(jt, w,'x',scc('x')); // extended: make sure there is an x somewhere in the string, else put 'x' at end
  else if(t&RAT) w=jtdcapp(jt, w,'r',cstr("r1")); // rational: make sure there is an r somewhere in the string, else put 'r1' at end

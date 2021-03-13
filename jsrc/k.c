@@ -143,7 +143,7 @@ static X jtxd1(J jt,D p, I mode){PROLOG(0052);A t;D d,e=tfloor(p),q,r;I m,*u;
  if(p== inf)R vci(XPINF);
  if(p==-inf)R vci(XNINF);
  GAT0(t,INT,30,1); u=AV(t); m=0; d=ABS(p); 
- while(0<d){
+ NOUNROLL while(0<d){
   q=jfloor(d/XBASE); r=d-q*XBASE; u[m++]=(I)r; d=q;
   if(m==AN(t)){RZ(t=ext(0,t)); u=AV(t);}
  }
@@ -251,7 +251,7 @@ static B jtDXfI(J jt,I p,A w,DX*x){B b;I e,c,d,i,j,n,r,u[XIDIG],*v;
   c=v[i]; b=c==IMIN; d=b?-(1+c):ABS(c); j=0;
   DO(XIDIG, u[i]=r=d%XBASE; d/=XBASE; if(r)j=i;);
   ++j; *u+=b;
-  e=XBASEN*(j-1); d=u[j-1]; while(d){++e; d/=10;} 
+  e=XBASEN*(j-1); d=u[j-1]; NOUNROLL while(d){++e; d/=10;} 
   if(0>c)DO(j, u[i]=-u[i];);
   x[i].e=e; x[i].p=p; x[i].x=vec(INT,j,u);;
  }
@@ -263,7 +263,7 @@ static B jtDXfI(J jt,I p,A w,DX*x){A y;I b,c,d,dd,e,i,m,n,q,r,*wv,*yv;
  n=AN(w); wv=AV(w); m=(p+XBASEN-1)/XBASEN;
  for(i=0;i<n;++i){
   c=wv[i]; d=dd=c==IMIN?-(1+c):ABS(c); 
-  if(d){e=0; while(d){++e; r=d%10; d=d/10;}}else e=1;
+  if(d){e=0; NOUNROLL while(d){++e; r=d%10; d=d/10;}}else e=1;
   GATV0(y,INT,m,1); yv=AV(y);
   r=p%XBASEN; q=!!r+((e-r)+XBASEN-1)/XBASEN; 
   if(d=(e-r)%XBASEN){b=1; DQ(XBASEN, b*=10; --d; if(!d)break;);}else b=XBASE;

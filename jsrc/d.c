@@ -45,7 +45,7 @@ static void jtefmt(J jt,C*s,I i){
 void jtshowerr(J jt){F1PREFJT;C b[1+2*NETX],*p,*q,*r;
  if(jt->etxn&&!((I)jtinplace&JTPRNOSTDOUT)){  // if there is a message and it is not suppressed...
   p=b; q=jt->etx; r=q+jt->etxn;
-  while(q<r&&p<b+2*NETX-3){if(*q==CLF){strcpy(p,OUTSEQ); p+=strlen(OUTSEQ); ++q;}else *p++=*q++;}  // avoid buffer overrun on huge typeouts
+  NOUNROLL while(q<r&&p<b+2*NETX-3){if(*q==CLF){strcpy(p,OUTSEQ); p+=strlen(OUTSEQ); ++q;}else *p++=*q++;}  // avoid buffer overrun on huge typeouts
   *p=0;
 #ifdef ANDROID
   A z=tocesu8(str(strlen(b),b));
@@ -157,7 +157,7 @@ static B jtdebsi1(J jt,DC d){I t;
 
 F1(jtdbstack){DC d=jt->sitop; 
  ASSERTMTV(w);
- if(d){if(DCCALL!=d->dctype)d=d->dclnk; while(d){debdisp(d); d=d->dclnk;}}
+ if(d){if(DCCALL!=d->dctype)d=d->dclnk; NOUNROLL while(d){debdisp(d); d=d->dclnk;}}
  R mtm;
 }    /* 13!:1  display SI stack */
 

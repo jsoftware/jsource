@@ -112,7 +112,7 @@ extern void jtsymfreeha(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
    if(k){
     LX k1=SYMNEXT(k);  // remember first non-PERMANENT
     freeroot=freeroot?freeroot:k1;  // remember overall first value
-    do{
+    NOUNROLL do{
      k=SYMNEXT(k);  // remove address flagging
      I nextk=jtsympv[k].next;  // unroll loop once
      aprev=&jtsympv[k].next;  // save last item we processed here
@@ -211,7 +211,7 @@ L*jtprobe(J jt,C*string,UI4 hash,A g){
  LX symx=LXAV0(g)[SYMHASH(hash,AN(g)-SYMLINFOSIZE)];  // get index of start of chain
  L *sympv=JT(jt,sympv);  // base of symbol table
  L *symnext, *sym=sympv+SYMNEXT(symx);  // first symbol address - might be the free root if symx is 0
- while(symx){  // loop is unrolled 1 time
+ NOUNROLL while(symx){  // loop is unrolled 1 time
   // sym is the symbol to process, symx is its index.  Start by reading next in chain.  One overread is OK, will be symbol 0 (the root of the freequeue)
   symnext=sympv+SYMNEXT(symx=sym->next);
 // obsolete   if(!symx)R 0;  // if chain empty or ended, not found
@@ -335,7 +335,7 @@ L*jtsyrd1(J jt,C *string,UI4 hash,A g){A*v,x,y;L*e=0;
 // obsolete  // in LOCPATH the 'shape' of each string is used to store the bucket
 // obsolete  DO(AN(y), x=v[i]; if(e=probe(l,string,hash,g=stfindcre(AN(x),CAV(x),AS(x)[0]))){e=(L*)((I)e+AR(g)); break;});  // return when name found.  Create path locale if it does not exist
 // obsolete  v=AAV0(LOCPATH(g)); A p=*v++; do{A pn=*v++; if(e=probe(l,string,hash,p)){e=(L*)((I)e+AR(p)); break;} p=pn;}while(p);  // return when name found.
- I bloom=BLOOMMASK(hash); v=AAV0(LOCPATH(g)); do{A gn=*v++; if(bloom==(bloom&LOCBLOOM(g)))if(e=jtprobe(jt,string,hash,g)){e=(L*)((I)e+AR(g)); break;} g=gn;}while(g);  // return when name found.
+ I bloom=BLOOMMASK(hash); v=AAV0(LOCPATH(g)); NOUNROLL do{A gn=*v++; if(bloom==(bloom&LOCBLOOM(g)))if(e=jtprobe(jt,string,hash,g)){e=(L*)((I)e+AR(g)); break;} g=gn;}while(g);  // return when name found.
  R e;  // fall through: not found
 }    /* find name a where the current locale is g */ 
 // same, but return the locale in which the name is found.  We know the name will be found somewhere
@@ -347,7 +347,7 @@ A jtsyrd1forlocale(J jt,C *string,UI4 hash,A g){A*v,x,y;
 // obsolete  v=AAV(y); 
 // obsolete  // in LOCPATH the 'shape' of each string is used to store the bucketx
 // obsolete  v=AAV0(LOCPATH(g)); A p=*v++; do{A pn=*v++; if(e=probe(l,string,hash,p)){break;} p=pn;}while(p);  // return when name found.
- I bloom=BLOOMMASK(hash); v=AAV0(LOCPATH(g)); do{A gn=*v++; if(bloom==(bloom&LOCBLOOM(g)))if(jtprobe(jt,string,hash,g)){break;} g=gn;}while(g);  // return when name found.
+ I bloom=BLOOMMASK(hash); v=AAV0(LOCPATH(g)); NOUNROLL do{A gn=*v++; if(bloom==(bloom&LOCBLOOM(g)))if(jtprobe(jt,string,hash,g)){break;} g=gn;}while(g);  // return when name found.
 // obsolete  DO(AN(y), x=v[i]; if(e=probe(l,string,hash,g=stfindcre(AN(x),CAV(x),AS(x)[0])))break;);  // return when name found.  Create path locale if it does not exist
  R g;
 }
@@ -486,7 +486,7 @@ F1(jtsymbrdlock){A y;
 // returns nonzero for OK to allow the assignment to proceed
 B jtredef(J jt,A w,L*v){A f;DC c,d;
  // find the most recent DCCALL, exit if none
- d=jt->sitop; while(d&&!(DCCALL==d->dctype&&d->dcj))d=d->dclnk; if(!(d&&DCCALL==d->dctype&&d->dcj))R 1;
+ d=jt->sitop; NOUNROLL while(d&&!(DCCALL==d->dctype&&d->dcj))d=d->dclnk; if(!(d&&DCCALL==d->dctype&&d->dcj))R 1;
  if(v==(L*)d->dcn){  // if the saved stabent (from the unquote lookup) matches the name being assigned...
   // attempted reassignment of the executing name
   // insist that the redefinition have the same type, and the same explicit character
@@ -498,10 +498,10 @@ B jtredef(J jt,A w,L*v){A f;DC c,d;
   // Reassignment outside of debug continues executing the old definition
   if(CCOLON==FAV(w)->id){d->dcredef=1;}
   // Erase any stack entries after the redefined call
-  c=jt->sitop; while(c&&DCCALL!=c->dctype){c->dctype=DCJUNK; c=c->dclnk;}
+  c=jt->sitop; NOUNROLL while(c&&DCCALL!=c->dctype){c->dctype=DCJUNK; c=c->dclnk;}
  }
  // Don't allow redefinition of a name that is suspended higher up on the stack
- c=d; while(c=c->dclnk){ ASSERTN(!(DCCALL==c->dctype&&v==(L*)c->dcn),EVSTACK,c->dca);}
+ c=d; NOUNROLL while(c=c->dclnk){ ASSERTN(!(DCCALL==c->dctype&&v==(L*)c->dcn),EVSTACK,c->dca);}
  R 1;
 }    /* check for changes to stack */
 

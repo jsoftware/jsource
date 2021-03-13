@@ -192,14 +192,16 @@ static void jttryinit(J jt,TD*v,I i,CW*cw){I j=i,t=0;
    case CCATCHD: v->d=(I4)j; break;
    case CCATCHT: v->t=(I4)j; break;
    case CEND:    v->e=(I4)j; break;
-}}}  /* processing on hitting try. */
+  }
+ }
+}  /* processing on hitting try. */
 
 // tdv points to the try stack or 0 if none; tdi is index of NEXT try. slot to fill; i is goto line number
 // if there is a try stack, pop its stack frames if they don't include the line number of the goto
 // result is new value for tdi
 // This is called only if tdi is nonzero & therefore we have a stack
 static I trypopgoto(TD* tdv, I tdi, I dest){
- while(tdi&&!BETWEENC(dest,tdv[tdi-1].b,tdv[tdi-1].e))--tdi;  // discard stack frame if structure does not include dest
+ NOUNROLL while(tdi&&!BETWEENC(dest,tdv[tdi-1].b,tdv[tdi-1].e))--tdi;  // discard stack frame if structure does not include dest
  R tdi;
 }
 
@@ -570,7 +572,7 @@ docase:
    // break./continue-in-while. must pop the stack if there is a select. nested in the loop.  These are
    // any number of SELECTN, up to the SELECT 
    if(unlikely(!(cwgroup&0x200)))BZ(z=rat(z));   // protect possible result from pop, if it might be the final result
-   do{I fin=cv->w==CSELECT; unstackcv(cv,1); --cv; ++r; if(fin)break;}while(1);
+   NOUNROLL do{I fin=cv->w==CSELECT; unstackcv(cv,1); --cv; ++r; if(fin)break;}while(1);
     // fall through to...
   case CBREAK:
   case CCONT:  // break./continue. in while., outside of select.
@@ -584,7 +586,7 @@ docase:
    // Must rat() if the current result might be final result, in case it includes the variables we will delete in unstack
    if(unlikely(!(cwgroup&0x200)))BZ(z=rat(z));   // protect possible result from pop
 // obsolete    do{I fin=cv->w!=CSELECT&&cv->w!=CSELECTN; unstackcv(cv); --cv; ++r; if(fin)break;}while(1);
-   do{I fin=cv->w; unstackcv(cv,1); --cv; ++r; if((fin^CSELECT)>(CSELECT^CSELECTN))break;}while(1);  // exit on non-SELECT/SELECTN
+   NOUNROLL do{I fin=cv->w; unstackcv(cv,1); --cv; ++r; if((fin^CSELECT)>(CSELECT^CSELECTN))break;}while(1);  // exit on non-SELECT/SELECTN
    i=cw[i].go;     // continue at new location
    // It must also pop the try. stack, if the destination is outside the try.-end. range
    if(nG0ysfctdl&4){tdi=trypopgoto(tdv,tdi,i); nG0ysfctdl^=tdi?0:4;}
@@ -667,7 +669,7 @@ docase:
   // table that we need to pop from.  So we protect the symbol table during the cleanup of the result and stack.
   ra(locsym);  // protect local symtable - not contents
   z=EPILOGNORET(z);  // protect return value from being freed when the symbol table is.  Must also be before stack cleanup, in case the return value is xyz_index or the like
-  while(cv!=(CDATA*)IAV1(cd)-1){unstackcv(cv,0); --cv;}  // clean up any remnants left on the for/select stack
+  NOUNROLL while(cv!=(CDATA*)IAV1(cd)-1){unstackcv(cv,0); --cv;}  // clean up any remnants left on the for/select stack
   fa(cd);  // have to delete explicitly, because we had to ext() the block and thus protect it with ra()
   fa(locsym);  // unprotect local syms.  This deletes them if they were cloned
  }
@@ -761,14 +763,14 @@ static A jtcolon0(J jt, I deftype){A l,z;C*p,*q,*s;A *sb;I m,n;
   if(deftype!=0)RZ(l=ddtokens(l,8+2));  // if non-noun def, handle DDs, for explicit def, return string, allow jgets().  Leave noun contents untouched
   // check for end: ) by itself, possibly with spaces
   m=AN(l); p=q=CAV(l); 
-  while(p<q+m&&' '==*p)++p; if(p<q+m&&')'==*p){while(p<q+m&&' '==*++p); if(p>=m+q)break;}  // if ) with nothing else but blanks, stop
+  NOUNROLL while(p<q+m&&' '==*p)++p; if(p<q+m&&')'==*p){NOUNROLL while(p<q+m&&' '==*++p); if(p>=m+q)break;}  // if ) with nothing else but blanks, stop
   // There is a new line.  Append it to the growing result.
   if(isboxed){
    if((C2T+C4T)&AT(l))RZ(l=cvt(LIT,l));  // each line must be LIT
-   while(AN(z)<=n+1){RZ(z=ext(0,z)); sb=AAV(z);}  // extend the result if necessary
+   NOUNROLL while(AN(z)<=n+1){RZ(z=ext(0,z)); sb=AAV(z);}  // extend the result if necessary
    sb[n]=incorp(l); ++n; // append the line, increment line number
   }else{
-   while(AN(z)<=n+m){RZ(z=ext(0,z)); s=CAV(z);}  // extend the result if necessary
+   NOUNROLL while(AN(z)<=n+m){RZ(z=ext(0,z)); s=CAV(z);}  // extend the result if necessary
    MC(s+n,q,m); n+=m; s[n]=CLF; ++n;  // append LF at end of each line
   }
  }
@@ -805,7 +807,7 @@ static A jtsent12c(J jt,A w){C*p,*q,*r,*s,*x;A z;
  while(i<wiln){
   // we have just finished a line.  currlinest is the first character position of the next line
   // a real line.  scan to find next DDSEP.  There must be one.
-  while(wv[wilv[i][0]]!=DDSEP)++i;  // advance to LF
+  NOUNROLL while(wv[wilv[i][0]]!=DDSEP)++i;  // advance to LF
   // add the new line - everything except the LF - to the line list
   wilv[linex][0]=currlinest; wilv[linex][1]=wilv[i][0];  // add the line
   ++linex; currlinest=wilv[i][0]+1;  // advance line pointer, skip over the LF to start of next line

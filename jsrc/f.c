@@ -59,8 +59,8 @@ static FMTF(jtfmtD,D){B q;C buf[1+WD],c,*t;D x=*v;I k=0;
  MC(s,buf+q,WD+1-q);
  if(t=strchr(s,'e')){
   if('-'==*++t)*t++=CSIGN;
-  while(c=t[k],c=='0'||c=='+')k++;
-  if(k)while(t[0]=t[k])t++;
+  NOUNROLL while(c=t[k],c=='0'||c=='+')k++;
+  if(k)NOUNROLL while(t[0]=t[k])t++;
 }}
 
 static FMTF(jtfmtZ,Z){fmtD(s,&v->re); if(v->im){I k=strlen(s); s[k]='j'; fmtD(&s[k+1],&v->im);}}

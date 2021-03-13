@@ -20,9 +20,9 @@ static B stopsub(C*p,C*nw,I md){C*q,*s;I n;
  s=strchr(p,'*'); if(s&&q>s)R 1;
  n=strlen(nw);
  while(q>p){
-  while(' '==*p)++p;
+  NOUNROLL while(' '==*p)++p;
   if(!strncmp(p,nw,n)&&(q==p+n||' '==p[n]))R 1;
-  while(q>p&&' '!=*p)++p;
+  NOUNROLL while(q>p&&' '!=*p)++p;
  }
  R 0;
 }
@@ -36,22 +36,22 @@ B jtdbstop(J jt,DC d,I i){A a;B b,c=0,e;C nw[11],*s,*t,*u,*v;I md,n,p,q;
  case SSSTEPINTO:  d->dcss=SSSTEPINTOs; break;  // first time is executing the stop line.  Then wait for any next line
  case SSSTEPOVER:  d->dcss=SSSTEPOVERs; break;  // first time is executing the stop line.  Then wait for line in this function
  case SSSTEPOVERs:
- case SSSTEPINTOs: c=i!=d->dcstop; d->dcstop=i; while(d){if(d->dctype==DCCALL)d->dcss=0; d=d->dclnk;} R c;  // about to execute a second line.  stop, unless already stopped there; clear all stops once we take a stop
+ case SSSTEPINTOs: c=i!=d->dcstop; d->dcstop=i; NOUNROLL while(d){if(d->dctype==DCCALL)d->dcss=0; d=d->dclnk;} R c;  // about to execute a second line.  stop, unless already stopped there; clear all stops once we take a stop
 // others not stored
  }
  // if no single-step stop, try looking the line up in the stops table
  if(i==d->dcstop){d->dcstop=-2; R 0;}     /* not stopping if already stopped at the same place */
  if(!(JT(jt,dbstops)))R 0; s=CAV(str0(JT(jt,dbstops))); sprintf(nw,FMTI,i);
  a=d->dca; n=d->dcm; t=NAV(a)->s; md=d->dcx&&d->dcy?2:1; 
- while(s){
-  while(' '==*s)++s; if(b='~'==*s)++s; while(' '==*s)++s;
+ NOUNROLL while(s){
+  NOUNROLL while(' '==*s)++s; if(b='~'==*s)++s; while(' '==*s)++s;
   u=strchr(s,'*'); v=strchr(s,' '); if(!v)break;; 
   if(!u||u>v)e=!strncmp(s,t,MAX(n,v-s));
   else{p=u-s; q=v-u-1; e=p<=n&&!strncmp(s,t,p)&&q<=n&&!strncmp(1+u,t+n-q,q);}
   if(e){s=1+v; if(stopsub(s,nw,md)){if(b){c=0; break;} c=1;}}
   s=strchr(s,';'); if(s)++s;
  }
- if(c){d->dcstop=i;  while(d){if(d->dctype==DCCALL)d->dcss=0; d=d->dclnk;}}  // if stop found, turn off single-step everywhere
+ if(c){d->dcstop=i;  NOUNROLL while(d){if(d->dctype==DCCALL)d->dcss=0; d=d->dclnk;}}  // if stop found, turn off single-step everywhere
  else  d->dcstop=-2;
  R c;
 }    /* stop on line i? */

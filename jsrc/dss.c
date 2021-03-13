@@ -11,7 +11,7 @@
 
 DC jtssnext(J jt,DC d,C c){
  d=d->dclnk;
- while(d&&DCCALL!=d->dctype)d=d->dclnk;      /* find next call                 */
+ NOUNROLL while(d&&DCCALL!=d->dctype)d=d->dclnk;      /* find next call                 */
  if(d&&!d->dcsusp){d->dcss=c; } 
  else             {d=0;      }
  R d;
@@ -25,12 +25,12 @@ static A jtssdo(J jt,A a,A w,C c){DC d,e;I n;
  RZ(w=vs(w));
  ASSERT(jt->uflags.us.cx.cx_c.db,EVDOMAIN);
  d=jt->sitop;                               /* cut back to topmost suspension  */
- while(d&&!d->dcsusp){                      /* do until topmost suspension     */
+ NOUNROLL while(d&&!d->dcsusp){                      /* do until topmost suspension     */
   if(d->dctype==DCCALL)DGOTO(d,-1)    /* terminate each call             */
   d=d->dclnk;
  }
  ASSERT(d!=0,EVDOMAIN);                        /* must have a suspension          */
- while(d&&DCCALL!=d->dctype)d=d->dclnk;     /* find topmost call               */
+ NOUNROLL while(d&&DCCALL!=d->dctype)d=d->dclnk;     /* find topmost call               */
  ASSERT(d!=0,EVDOMAIN);                        /* must have a call                */
  if(a)RE(n=lnumcw(i0(a),d->dcc));           // for dyad, source line # to cw line #
  switch(c){

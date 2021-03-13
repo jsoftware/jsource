@@ -310,10 +310,8 @@ L*jtprobeis(J jt,A a,A g){C*s;LX *hv,tx;I m;L*v;NM*u;L *sympv=JT(jt,sympv);
   v=tx+sympv;
   NOUNROLL while(1){
    LX lxnext=v->next;  // unroll loop once
-   if(likely(1||v->name!=0)){  // in global tables, name may be 0 for unmoored cached reference  scaf for bug-finding
-    u=NAV(v->name);
-    IFCMPNAME(u,s,m,hsh,R v;)    // (1) exact match - may or may not have value
-   }
+   u=NAV(v->name);  // name may be 0 but only in unmoored cached references, which are never on any chain
+   IFCMPNAME(u,s,m,hsh,R v;)    // (1) exact match - may or may not have value
    if(!lxnext)break;                                /* (2) link list end */
    v=(tx=SYMNEXT(lxnext))+sympv;
   }
@@ -509,10 +507,15 @@ B jtredef(J jt,A w,L*v){A f;DC c,d;
 
 // find symbol entry for name a in symbol table g; this is known to be global assignment
 // the name a may require lookup through the path; once we find the locale, we search only in it
-// Result is &symbol-table entry, if one exists
+// Result is &symbol-table entry for the name, or a new one
+// We are called for purposes of setting assignsym for inplace assignments.  The symbol we create will eventually be assigned
+// except when the locale is changed by the verb being called.  That is exceedingly rare.  When it happens, the ysmbol entry created
+// here will persist until the locale is deleted (it has a name and no value).  Normally the symbol created here will be the target
+// of its assignment - possibly only eventually after execution of a verb - and it will be used then.  We go ahead and create the
+// symbol rather than failing the lookup because it does save a lookup in the eventual call to symbis.
 L* jtprobeisquiet(J jt,A a,A locsyms){A g;  // locsyms is used in the call, but is not needed in the function
  I n=AN(a); NM* v=NAV(a); I m=v->m;  // n is length of name, v points to string value of name, m is length of non-locale part of name
- if(n==m){g=jt->global;}   // if not locative, define in default locale
+ if(likely(n==m)){g=jt->global;}   // if not locative, define in default locale
  else{C* s=1+m+v->s; if(!(g=NMILOC&v->flag?locindirect(n-m-2,1+s,(UI4)v->bucketx):stfindcre(n-m-2,s,v->bucketx))){RESETERR; R 0;}}  // if locative, find the locale for the assignment; error is not fatal
  R probeis(a, g);  // return pointer to slot, creating one if not found
 }

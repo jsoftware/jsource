@@ -277,6 +277,9 @@ A jtstfind(J jt,I n,C*u,I bucketx){L*v;
  R 0;  // not found
 }
 
+// Bring a destroyed locale back to life as if it were newly created: clear the chains, set the default path, clear the Bloom filter
+#define REINITZOMBLOC(g) memset(LXAV0(g)+1,0,(AN(g)-SYMLINFOSIZE)*sizeof(LXAV0(g)[0])); LOCPATH(g)=JT(jt,zpath); LOCBLOOM(g)=0;
+
 // look up locale name, and create the locale if not found
 // If a locale is returned, its path has been made nonnull
 // bucketx is hash (for named locale) or number (for numeric locale)
@@ -285,7 +288,7 @@ A jtstfind(J jt,I n,C*u,I bucketx){L*v;
 A jtstfindcre(J jt,I n,C*u,I bucketx){
  A v = stfind(n,u,bucketx);  // lookup
  if(likely(v!=0)){  // name found
-  if(unlikely(LOCPATH(v)==0)){LOCPATH(v)=JT(jt,zpath); ra(v);}  // if the path is null, this is a zombie empty locale in the path of some other locale.  Bring it back to life by setting a default path
+  if(unlikely(LOCPATH(v)==0)){ra(v); REINITZOMBLOC(v)}  // if the path is null, this is a zombie empty locale in the path of some other locale.  Bring it back to life
    // setting a path must be accompanied by raising the usecount, because a locale is liable to be erased when its path is nonnull and it must survive as a zombie then
   R v;  // return the locale found
  }
@@ -423,12 +426,10 @@ static F2(jtloccre){A g,y;C*s;I n,p;L*v;
    LX *u=SYMLINFOSIZE+LXAV0(g); DO(AN(g)-SYMLINFOSIZE, ASSERT(!u[i],EVLOCALE););
    fa(LOCPATH(g))  // free old path
   }else{
-   memset(LXAV0(g)+1,0,(AN(g)-SYMLINFOSIZE)*sizeof(LXAV0(g)[0]));  // scaf clear all hashchains
    ra(g);  // going from zombie to valid adds to the usecount
 // obsolete   probedel(n,s,(UI4)nmhash(n,s),JT(jt,stloc));  // delete the symbol for the locale, and the locale itself
   }
-  LOCPATH(g)=JT(jt,zpath);  // Set the default path
-  LOCBLOOM(g)=0;  // Reset the Bloom filter for the now-empty locale
+  REINITZOMBLOC(g);  // bring the dead locale back to life: clear chains, set path, clear Bloom filter
  }else{
   // new named locale needed
   FULLHASHSIZE(1LL<<(p+5),SYMBSIZE,1,SYMLINFOSIZE,p);  // get table, size 2^p+6 minus a little
@@ -449,14 +450,14 @@ static F1(jtloccrenum){C s[20];I k,p;
 
 F1(jtloccre1){
  ARGCHK1(w);
- if(AN(w))R rank2ex0(mark,vlocnl(2+1,w),DUMMYSELF,jtloccre);
+ if(AN(w))R rank2ex0(mark,vlocnl(2+1,w),DUMMYSELF,jtloccre);  // if arg not empty, it is a list of locale names
  ASSERT(1==AR(w),EVRANK);
  R loccrenum(mark);
 }    /* 18!:3  create locale */
 
 F2(jtloccre2){
  ARGCHK2(a,w);
- if(AN(w))R rank2ex0(a,vlocnl(2+1,w),DUMMYSELF,jtloccre);
+ if(AN(w))R rank2ex0(a,vlocnl(2+1,w),DUMMYSELF,jtloccre);  // if arg not empty, it is a list of locale names
  ASSERT(1==AR(w),EVRANK);
  R rank1ex0(a,DUMMYSELF,jtloccrenum);
 }    /* 18!:3  create locale with specified hash table size */

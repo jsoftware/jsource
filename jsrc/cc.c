@@ -617,11 +617,11 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[12
     while(n>0){    // where we load bits SZI at a time
      // skip empty words, to get best speed on near-zero a.  This exits with the first unskipped word in bits.  The test XORs the target with bits, then looks for presence of any 0 byte.
      // 0 byte is detected by subtracting 1 from each byte's LSB and seeing if that causes the byte's MSB to switch from 0 to 1.  If any does, stop & process.  If not, skip the word.  Always leave 1 word so we have a batch to process
-     while(1){if(n<(2*SZI))break; I bytecomp=valI^bits; if(((~bytecomp)&(bytecomp-(I)0x0101010101010101))&(I)0x8080808080808080)break;    bits=*wvv++; d+=SZI; n-=SZI;}
+     NOUNROLL while(1){if(n<(2*SZI))break; I bytecomp=valI^bits; if(((~bytecomp)&(bytecomp-(I)0x0101010101010101))&(I)0x8080808080808080)break;    bits=*wvv++; d+=SZI; n-=SZI;}
      UI bitstack;  // the bits packed together and processed one by one
      {I batchsize=n>>LGSZI; batchsize=MIN(BB,batchsize);  // batch size, never 0
      // XOR to put 0 bytes on frets; combine bits so that a boolean bit is 0 only if all bits of its byte are 0, i. e. 0 only if fret
-     bitstack=0; while(--batchsize>0){I bits2=*wvv++; bits ^=valI; ZBYTESTOZBITS(bits); bits&=VALIDBOOLEAN; PACKBITSINTO(bits,bitstack); bits=bits2;};  // process all but the last in batch; keep read pipe ahead. There is a carried dependency over PACKBITS, but the next word's bits can overlap it
+     bitstack=0; NOUNROLL while(--batchsize>0){I bits2=*wvv++; bits ^=valI; ZBYTESTOZBITS(bits); bits&=VALIDBOOLEAN; PACKBITSINTO(bits,bitstack); bits=bits2;};  // process all but the last in batch; keep read pipe ahead. There is a carried dependency over PACKBITS, but the next word's bits can overlap it
      }// Handle the last word of the batch.  It might have non-Boolean data at the end, AFTER the Boolean padding.  Just clear the non-boolean part in this line
      bits ^=valI; ZBYTESTOZBITS(bits); bits&=VALIDBOOLEAN; PACKBITSINTO(bits,bitstack);
      bitstack=~bitstack;     // Convert not-a-fret bits to fret bits
@@ -658,10 +658,10 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[12
     d=1-pfx; // If first fret is in position 0, that's length 0 for prefix, length 1 for suffix
     while(n>0){    // where we load bits SZI at a time
      // skip empty words, to get best speed on near-zero a.  This exits with the first unskipped word in bits
-     while(bits==0 && n>=(2*SZI)){bits=*wvv++; d+=SZI; n-=SZI;}  // fast-forward over zeros.  Always leave 1 word so we have a batch to process
+     NOUNROLL while(bits==0 && n>=(2*SZI)){bits=*wvv++; d+=SZI; n-=SZI;}  // fast-forward over zeros.  Always leave 1 word so we have a batch to process
      UI bitstack;  // the bits packed together and processed one by one
      {I batchsize=n>>LGSZI; batchsize=MIN(BB,batchsize);  // batch size, never 0
-     bitstack=0; while(--batchsize>0){I bits2=*wvv++; PACKBITSINTO(bits,bitstack); bits=bits2;};  // process all but the last in batch; keep read pipe ahead. There is a carried dependency over PACKBITS, but the next word's bits can overlap it
+     bitstack=0; NOUNROLL while(--batchsize>0){I bits2=*wvv++; PACKBITSINTO(bits,bitstack); bits=bits2;};  // process all but the last in batch; keep read pipe ahead. There is a carried dependency over PACKBITS, but the next word's bits can overlap it
      }// Handle the last word of the batch.  It might have non-Boolean data at the end, AFTER the Boolean padding.  Just clear the non-boolean part in this line
      bits&=VALIDBOOLEAN; PACKBITSINTO(bits,bitstack);
      // Now handle the last batch, by discarding garbage bits at the end and then shifting the lead bit down to bit 0

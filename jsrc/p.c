@@ -497,7 +497,7 @@ A jtparsea(J jt, A *queue, I m){PSTK * RESTRICT stack;A z,*v;
         }else{
          // positive bucketx (now negative); that means skip that many items and then do name search.  This is set for words that were recognized as names but were not detected as assigned-to in the definition.  This is the path for global symbols
          // If no new names have been assigned since the table was created, we can skip this search, since it must fail (this is the path for words in z eg)
-         if(likely(!(AR(jt->locsyms)&LNAMEADDED)))goto rdglob;
+         if(likely(!(AR(jt->locsyms)&ARNAMEADDED)))goto rdglob;
          // from here on it is rare to find a name - usually they're globals defined elsewhere
          LX lx = locbuckets[NAV(y)->bucket];  // index of first block if any
          I m=NAV(y)->m; C* nm=NAV(y)->s; UI4 hsh=NAV(y)->hash;  // length/addr of name from name block
@@ -520,7 +520,7 @@ A jtparsea(J jt, A *queue, I m){PSTK * RESTRICT stack;A z,*v;
          if(unlikely(NAV(y)->flag&NMCACHEDSYM)){cachead=(A)((JT(jt,sympv)[(I)cachead]).val); if(unlikely(!cachead)){jsignal(EVVALUE);FP}}  // if it's a symbol index, fetch that.  value error only if cached symbol deleted
          y=cachead; at=AT(y); goto endname; // take its type, proceed
         }
-rdglob: ;
+rdglob: ;  // here when we tried the buckets and failed
         jt->parserstackframe.parsercurrtok = (I4)(m+1);  // syrd can fail, so we have to set the error-word number (before it was decremented) before calling
         s=syrdnobuckets(y);  // do full symbol lookup, knowing that we have checked for buckets already
          // In case the name is assigned during this sentence (including subroutines), remember the data block that the name created

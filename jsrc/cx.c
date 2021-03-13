@@ -233,7 +233,7 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
  A *line;   // pointer to the words of the definition.  Filled in by LINE
 // obsolete  I n;  // number of lines in the definition.  Filled in by LINE could be US
  CW *cw;  // pointer to control-word info for the definition.  Filled in by LINE
- UI nG0ysfctdl;  // flags: 1=locked 2=debug(& not locked) 4=tdi!=0 8=cd!=0 16=thisframe!=0 32=symtable was the original (i. e. AR(symtab)&LSYMINUSE)
+ UI nG0ysfctdl;  // flags: 1=locked 2=debug(& not locked) 4=tdi!=0 8=cd!=0 16=thisframe!=0 32=symtable was the original (i. e. !AR(symtab)&ARLSYMINUSE)
              // 64=call is dyadic 128=0    0xff00=original debug flag byte (must be highest bit)  0xffff0000=#cws in the definition
  DC callframe=0;  // pointer to the debug frame of the caller to this function (only if it's named), but 0 if we are not debugging
 #if NAMETRACK
@@ -268,7 +268,7 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
   // This code duplicated below
   locsym=hv[3];  // fetch pointer to preallocated symbol table
   ASSERT(locsym!=0,EVDOMAIN);  // if the valence is not defined, give valence error
-  if(likely(!(AR(locsym)&LSYMINUSE))){AR(locsym)|=LSYMINUSE;nG0ysfctdl|=32;}  // remember if we are using the original symtab
+  if(likely(!(AR(locsym)&ARLSYMINUSE))){AR(locsym)|=ARLSYMINUSE;nG0ysfctdl|=32;}  // remember if we are using the original symtab
   else{RZ(locsym=clonelocalsyms(locsym));}
   if(unlikely((jt->uflags.us.cx.cx_c.db | (sflg&(VTRY1|VTRY2))))){
    // special processing required
@@ -674,9 +674,9 @@ docase:
  // locsym may have been freed now
 
  // If we are using the original local symbol table, clear it (free all values, free non-permanent names) for next use.  We know it hasn't been freed yet
- // We detect original symbol table by rank LSYMINUSE - other symbol tables are assigned rank 0.
+ // We detect original symbol table by rank ARLSYMINUSE - other symbol tables are assigned rank 0.
  // Tables are born with NAMEADDED off.  It gets set when a name is added.  Setting back to initial state here, we clear NAMEADDED
- if(likely(nG0ysfctdl&32)){AR(locsym)=LLOCALTABLE; symfreeha(locsym);}
+ if(likely(nG0ysfctdl&32)){AR(locsym)=ARLOCALTABLE; symfreeha(locsym);}
  // Pop the private-area stack
  SYMSETLOCAL(prevlocsyms);
  // Now that we have deleted all the local symbols, we can see if we were returning one.

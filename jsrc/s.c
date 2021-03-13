@@ -176,11 +176,14 @@ F1(jtsympool){A aa,q,x,y,*yv,z,*zv;I i,n,*u,*xv;L*pv;LX j,*v;
 L* jtprobedel(J jt,C*string,UI4 hash,A g){
  F1PREFIP;
  RZ(g);
+ L *sympv=JT(jt,sympv);  // base of symbol pool
  LX *asymx=LXAV0(g)+SYMHASH(hash,AN(g)-SYMLINFOSIZE);  // get pointer to index of start of chain; address of previous symbol in chain
+ LX delblockx=*asymx;
  while(1){
-  LX delblockx=SYMNEXT(*asymx);
+  delblockx=SYMNEXT(delblockx);
   if(!delblockx)R 0;  // if chain empty or ended, not found
-  L *sym=JT(jt,sympv)+delblockx;  // address of next in chain, before we delete it
+  L *sym=sympv+delblockx;  // address of next in chain, before we delete it
+  LX nextdelblockx=sym->next;  // unroll loop once
   IFCMPNAME(NAV(sym->name),string,(I)jtinplace&0xff,hash,     // (1) exact match - if there is a value, use this slot, else say not found
     {
      if(unlikely(sym->flag&LCACHED)){
@@ -188,13 +191,14 @@ L* jtprobedel(J jt,C*string,UI4 hash,A g){
       R sym;
      }else{
       SYMVALFA(*sym); sym->val=0;   // decr usecount in value; remove value from symbol
-      if(!(sym->flag&LPERMANENT)){*asymx=sym->next; fa(sym->name); sym->name=0; sym->flag=0; sym->sn=0; sym->next=JT(jt,sympv)[0].next; JT(jt,sympv)[0].next=delblockx;}  // add to symbol free list
+      if(!(sym->flag&LPERMANENT)){*asymx=sym->next; fa(sym->name); sym->name=0; sym->flag=0; sym->sn=0; sym->next=sympv[0].next; sympv[0].next=delblockx;}  // add to symbol free list
      }
      R 0;
     }
    // if match, bend predecessor around deleted block, return address of match (now deleted but still points to value)
   )
   asymx=&sym->next;   // mismatch - step to next
+  delblockx=nextdelblockx;
  }
 }
 
@@ -230,7 +234,7 @@ L *jtprobelocal(J jt,A a,A locsyms){NM*u;I b,bx;
   if(0 > (bx = ~u->bucketx)){
    // positive bucketx (now negative); that means skip that many items and then do name search.  This is set for words that were recognized as names but were not detected as assigned-to in the definition
    // If no new names have been assigned since the table was created, we can skip this search, since it must fail (this is the path for words in z eg)
-   if(likely(!(AR(locsyms)&LNAMEADDED)))R 0;
+   if(likely(!(AR(locsyms)&ARNAMEADDED)))R 0;
    LX lx = LXAV0(locsyms)[b];  // index of first block if any
    I m=u->m; C* s=u->s; UI4 hsh=u->hash; // length/addr of name from name block, and hash
    if(unlikely(++bx!=0)){NOUNROLL do{lx = sympv[lx].next;}while(++bx);}  // rattle off the permanents, usually 1
@@ -268,7 +272,6 @@ L *jtprobeislocal(J jt,A a){NM*u;I b,bx;L *sympv=JT(jt,sympv);
    I m=u->m; C* s=u->s; UI4 hsh=u->hash;  // length/addr of name from name block, and hash
    LX tx = lx;  // tx will hold the address of the last item in the chain, in case we have to add a new symbol
    L* l;
-
    NOUNROLL while(0>++bx){tx = lx; lx = sympv[lx].next;}  // all permanent
    // Now lx is the index of the first name that might match.  Do the compares
    NOUNROLL while(lx=SYMNEXT(lx)) {
@@ -279,7 +282,7 @@ L *jtprobeislocal(J jt,A a){NM*u;I b,bx;L *sympv=JT(jt,sympv);
    // not found, create new symbol.  If tx is 0, the queue is empty, so adding at the head is OK; otherwise add after tx.  Make it non-PERMANENT
    RZ(l=symnew(&LXAV0(jt->locsyms)[b],tx|SYMNONPERM)); 
    ra(a); l->name=a;  // point symbol table to the name block, and increment its use count accordingly
-   AR(jt->locsyms)|=LNAMEADDED;  // Mark that a name has been added beyond what was known at preprocessing time
+   AR(jt->locsyms)|=ARNAMEADDED;  // Mark that a name has been added beyond what was known at preprocessing time
    R l;
   } else {L* l = lx+sympv;  // fetch hashchain headptr, point to L for first symbol
    // negative bucketx (now positive); skip that many items, and then you're at the right place
@@ -324,7 +327,7 @@ L*jtprobeis(J jt,A a,A g){C*s;LX *hv,tx;I m;L*v;NM*u;L *sympv=JT(jt,sympv);
 // look up a non-locative name using the locale path
 // g is the current locale, l/string=length/name, hash is the hash for it (l is carried in the low 8 bits of jt)
 // result is L* symbol-table slot for the name, or 0 if none
-// Bit 0 (LNAMED) of the result is set iff the name was found in a named locale
+// Bit 0 (ARNAMED) of the result is set iff the name was found in a named locale
 L*jtsyrd1(J jt,C *string,UI4 hash,A g){A*v,x,y;L*e=0;
 // obsolete if(b&&jt->local&&(e=probe(NAV(a)->m,NAV(a)->s,NAV(a)->hash,jt->local))){av=NAV(a); R e;}  // return if found local
  RZ(g);  // make sure there is a locale...
@@ -363,10 +366,10 @@ static A jtlocindirect(J jt,I n,C*u,UI4 hash){A x,y;C*s,*v,*xv;I k,xn;
   v=s; NOUNROLL while('_'!=*--v); ++v;  // v->start of last indirect locative
   k=s-v; s=v-2;    // k=length of indirect locative; s->end+1 of next name if any
   ASSERT(k<256,EVLIMIT);
-  if(!e){  // first time through
+  if(likely(!e)){  // first time through
    e=jtprobe((J)((I)jt+k),v,hash,jt->locsyms);  // look up local first
-   if(!e)e=(L*)((I)jtsyrd1((J)((I)jt+k),v,hash,jt->global)&~LNAMED);  // if not local, try global, and remove cachable flag
-  }else e=(L*)((I)jtsyrd1((J)((I)jt+k),v,(UI4)nmhash(k,v),g)&~LNAMED);   // look up later indirect locatives, yielding an A block for a locative; remove cachable flag
+   if(!e)e=(L*)((I)jtsyrd1((J)((I)jt+k),v,hash,jt->global)&~ARNAMED);  // if not local, try global, and remove cachable flag
+  }else e=(L*)((I)jtsyrd1((J)((I)jt+k),v,(UI4)nmhash(k,v),g)&~ARNAMED);   // look up later indirect locatives, yielding an A block for a locative; remove cachable flag
   ASSERTN(e,EVVALUE,nfs(k,v));  // verify found
   y=e->val;    // y->A block for locale
   ASSERTN(!AR(y),EVRANK,nfs(k,v));   // verify atomic
@@ -374,7 +377,7 @@ static A jtlocindirect(J jt,I n,C*u,UI4 hash){A x,y;C*s,*v,*xv;I k,xn;
   }else{
    ASSERTN(BOX&AT(y),EVDOMAIN,nfs(k,v));  // verify box
    x=AAV(y)[0]; if((((I)AR(x)-1)&-(AT(x)&(INT|B01)))<0) {
-    // Boxed integer - use that as bucketx
+    // Boxed integer - use that as bucketx, the locale number
     g=findnl(BIV0(x)); ASSERT(g!=0,EVLOCALE);  // boxed integer, look it up
    }else{
     xn=AN(x); xv=CAV(x);   // x->boxed contents, xn=length, xv->string
@@ -403,17 +406,17 @@ A jtsybaseloc(J jt,A a) {I m,n;NM*v;
 // This code is copied in p.c
 L*jtsyrd(J jt,A a,A locsyms){A g;
  ARGCHK1(a);
- if(!(NAV(a)->flag&(NMLOC|NMILOC))){L *e;
+ if(likely(!(NAV(a)->flag&(NMLOC|NMILOC)))){L *e;
   // If there is a local symbol table, search it first
   if(e = probelocal(a,locsyms)){R e;}  // return flagging the result if local
   g=jt->global;  // Continue with the current locale
  } else RZ(g=sybaseloc(a));
- R (L*)((I)jtsyrd1((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,g)&~LNAMED);  // Not local: look up the name starting in locale g
+ R (L*)((I)jtsyrd1((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,g)&~ARNAMED);  // Not local: look up the name starting in locale g
 }
 // same, but return locale in which found
 A jtsyrdforlocale(J jt,A a){A g;
  ARGCHK1(a);
- if(!(NAV(a)->flag&(NMLOC|NMILOC))){L *e;
+ if(likely(!(NAV(a)->flag&(NMLOC|NMILOC)))){L *e;
   // If there is a local symbol table, search it first
   if(e = probelocal(a,jt->locsyms)){R jt->locsyms;}  // return flagging the result if local
   g=jt->global;  // Start with the current locale
@@ -426,12 +429,12 @@ A jtsyrdforlocale(J jt,A a){A g;
 // This code is copied in p.c
 L*jtsyrdnobuckets(J jt,A a){A g;
  ARGCHK1(a);
- if(!(NAV(a)->flag&(NMLOC|NMILOC))){L *e;
-  // If there is a local symbol table, search it first
-  if(!NAV(a)->bucket && (e = jtprobe((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,jt->locsyms))){R e;}  // return if found locally from name
+ if(likely(!(NAV(a)->flag&(NMLOC|NMILOC)))){L *e;
+  // If there is a local symbol table, search it first - but only if there is no bucket info.  If there is bucket info we have checked already
+  if(unlikely(!NAV(a)->bucket))if(e = jtprobe((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,jt->locsyms)){R e;}  // return if found locally from name
   g=jt->global;  // Start with the current locale
  } else RZ(g=sybaseloc(a));  // if locative, start in locative locale
- R (L*)((I)jtsyrd1((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,g)&~LNAMED);  // Not local: look up the name starting in locale g
+ R (L*)((I)jtsyrd1((J)((I)jt+NAV(a)->m),NAV(a)->s,NAV(a)->hash,g)&~ARNAMED);  // Not local: look up the name starting in locale g
 }
 
 
@@ -572,7 +575,7 @@ L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;L*e;
   if(unlikely(AT(w)&FUNC))if(likely(FAV(w)->fgh[0]!=0)){if(FAV(w)->id==CCOLON)FAV(w)->flag|=VNAMED; if(jt->glock)FAV(w)->flag|=VLOCK;}
  }
  // if we are writing to a non-local table, update the table's Bloom filter
- if(unlikely((anmf&LLOCALTABLE)==0))BLOOMOR(g,BLOOMMASK(NAV(a)->hash));
+ if(unlikely((anmf&ARLOCALTABLE)==0))BLOOMOR(g,BLOOMMASK(NAV(a)->hash));
 
  if(unlikely(jt->uflags.us.cx.cx_c.db))RZ(redef(w,e));  // if debug, check for changes to stack
  if(unlikely(e->flag&(LCACHED|LREADONLY))){  // exception cases

@@ -595,10 +595,10 @@ typedef I SI;
 #define AMNVRCINI(a) {if(!(AM(a)&AMNV))AMNVRSET(a,AMNV);}  // if AM doesn't have NVR semantics, initialize it
 
 // Flags in the AR field of symbol tables
-#define LSYMINUSE 1  // This bit is set in the rank of the original symbol table when it is in use
-#define LNAMED 1   // set in the rank of a named locale table.  This bit is passed in the return from jtsyrd1
-#define LNAMEADDED LPERMANENT  // Set in rank when a new name is added to the local symbol table.  We transfer the bit from the L flags to the rank-flag
-#define LLOCALTABLE 16  // Set in rank of all local symbol tables.  This indicates that the first hashchain holds x/y info and should not be freed as a symbol
+#define ARNAMED 1   // set in the rank of a named locale table.  This bit is passed in the return from jtsyrd1
+#define ARNAMEADDED LPERMANENT  // Set in rank when a new name is added to the local symbol table.  We transfer the bit from the L flags to the rank-flag
+#define ARLOCALTABLE 16  // Set in rank of all local symbol tables.  This indicates that the first hashchain holds x/y info and should not be freed as a symbol
+#define ARLSYMINUSE 32  // This bit is set in the rank of the original symbol table when it is in use
 
 #define SFNSIMPLEONLY 1   // to sfn: return simple name only, discarding any locative
 
@@ -765,6 +765,7 @@ typedef struct{UI4 hash;I4 bucket;I bucketx;A cachedref;UC m;C flag,s[1];} NM;
 // m: length of non-locale part of name note 255-byte limit! (AN holds the length of the entire name including the locative)
 /* s: string part of full name (1 to ?? characters, including locale of assignment if given)           */
 
+// values in flag:
 #define NMLOC           1       // direct   locale abc_lm_   only one of NMLOC/NMILOC/NMIMPLOC is set
 #define NMILOC          2       // indirect locale abc__de__fgh ...     only one of NMLOC/NMILOC/NMIMPLOC is set
 #define NMDOT           4       // one of the names m. n. u. v. x. y.      */

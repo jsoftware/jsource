@@ -188,7 +188,7 @@ A jtstcreate(J jt,C k,I p,I n,C*u){A g,x,xx;C s[20];L*v;
  // The allocation clears all the hash chain bases, including the one used for SYMLINFO
  switch(k){
   case 0:  /* named locale */
-   AR(g)=LNAMED;   // set rank to indicate named locale
+   AR(g)=ARNAMED;   // set rank to indicate named locale
    RZ(v=symnew(&LXAV0(g)[SYMLINFO],0)); v->flag|=LINFO;    // put new block into locales table, allocate at head of chain without non-PERMANENT marking
    RZ(x=nfs(n,u));  // this fills in the hash for the name
    // Install name and path.  Path is 'z'. correct for all but z locale itself, which is overwritten at initialization
@@ -209,7 +209,7 @@ A jtstcreate(J jt,C k,I p,I n,C*u){A g,x,xx;C s[20];L*v;
    break;
   case 2:  /* local symbol table */
    // Don't invalidate ACV lookups, since the local symbol table is not in any path
-   AR(g)|=LLOCALTABLE;  // flag this as a local table so the first hashchain is not freed
+   AR(g)|=ARLOCALTABLE;  // flag this as a local table so the first hashchain is not freed
    // The first hashchain is not used as a symbol pointer - it holds xy bucket info
    ;
  }

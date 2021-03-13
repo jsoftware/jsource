@@ -1165,7 +1165,7 @@ if((AC(w)>>(BW-2))==-1)SEGFAULT;  // high bits 11 must be deadbeef
  I allocsize;  // size of full allocation for this block
  // SYMB must free as a monolith, with the symbols returned when the hashtables are
  if(unlikely(AT(w)==SYMB)){  // == since high bit may be used as flag 
-  if(likely(AR(w)&LLOCALTABLE)){
+  if(likely(AR(w)&ARLOCALTABLE)){
    // local tables have no path or name, and are not listed in any index.  Just delete the local names
    freesymb(jt,w);   // delete all the names/values
   }else{
@@ -1177,7 +1177,7 @@ if((AC(w)>>(BW-2))==-1)SEGFAULT;  // high bits 11 must be deadbeef
     // Remove the locale from its global table, depending on whether it is named or numbered
     NM *locname=NAV(LOCNAME(w));  // NM block for name
 // obsolete  B isnum = '9'>=locname->s[0];  // first char of name tells the type
-    if(likely(!(AR(w)&LNAMED))){
+    if(likely(!(AR(w)&ARNAMED))){
 // obsolete  if(likely('9'>=locname->s[0])){
      // For numbered locale, find the locale in the list of numbered locales, wipe it out, free the locale, and decrease the number of those locales
      jterasenl(jt,locname->bucketx);  // remove the locale from the hash table

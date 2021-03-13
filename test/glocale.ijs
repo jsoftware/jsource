@@ -725,9 +725,32 @@ dhs2liso=: ]
 f =: _1 (1 : '] dhs2liso_nonlocale_ ]')  NB. ref in non-verb messed up lookup
 coclass 'base'
 
+NB. ensure destroyed locale reset properly
+coclass 'abcpristloc'  NB. absolutely new locale
+('abcpristloc';'z') copath 'nonlocale'  NB. protect it from deletion
+(<"1 (+&(i.26)&.(a.&i.) 'a') ,. 26$'0123456789') =: 0  NB. Fill up Bloom filter
+a_abcpristloc_ =: 5
+b_abcpristloc_ =: 6
+c_abcpristloc_ =: 11
+c = a + b
+5 = a_nonlocale_
+coclass 'base'
+18!:55 ;:'abcpristloc'  NB. now zombie  usecount 1
+coclass 'abcpristloc'  NB. revive: check reinited  usecount 2
+_1 = 4!:0 ;:'a0 a b c a_nonlocale_'
+coclass 'base'  NB. take abcpristloc out of execution
+18!:55 ;:'abcpristloc'  NB. now zombie  NB. usecount 1
+s1 =: 7!:0''
+('base';'z') copath 'nonlocale'  NB. frees abcpristloc
+s1 > 7!:0''
+
+
+
+
+
 4!:55 ;:'a a_z_ ab c d dd dhs2liso dhs2liso_nonlocale_ e ee f '
 4!:55 ;:'indirect k lcreate ldestroy lname lnc lnl lpath lswitch '
-4!:55 ;:'not_a_locative spnow t test x xy_z_ xy_nonlocale_ y '
-18!:55 ;:'nonlocale'
+4!:55 ;:'not_a_locative s1 s2 s3 spnow t test x xy_z_ xy_nonlocale_ y '
+18!:55 ;:'abcpristloc nonlocale'
 
 

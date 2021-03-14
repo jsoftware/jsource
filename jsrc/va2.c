@@ -821,7 +821,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
       // we must multiply out the repeat to leave n=1.
       av=CAV(nipw?w:a);  // point to the not-in-place argument
       I nsgn=SGNTO0(n); n^=REPSGN(n); if(nipw==nsgn){m *= n; n = 1;} n^=-nipw;  // force n to <=1; make n flag indicate whether args were switched
-      I i=mf; I jj=nf; while(1){((AHDR2FN*)adocv.f)(n,m,av,zv,zzv,jt); if(!--i)break; zv+=aawwzk[4]; zzv+=zzk; I jj1=--jj; jj=jj<0?nf:jj; av+=aawwzk[2*nipw+1+REPSGN(jj1)];}  // jj1 is -1 on the last inner iter, where we use outer incr
+      I i=mf; I jj=nf; NOUNROLL while(1){((AHDR2FN*)adocv.f)(n,m,av,zv,zzv,jt); if(!--i)break; zv+=aawwzk[4]; zzv+=zzk; I jj1=--jj; jj=jj<0?nf:jj; av+=aawwzk[2*nipw+1+REPSGN(jj1)];}  // jj1 is -1 on the last inner iter, where we use outer incr
 #endif
      }
     }
@@ -1020,9 +1020,9 @@ I jtsumattymesprods(J jt,I it,void *avp, void *wvp,I dplen,I nfro,I nfri,I ndpo,
   SUMATLOOP(I,D,D total0=0.0; D total1=0.0; if(dplen&1)total1=(D)*av++*(D)*wv++; DQ(dplen>>1, total0+=(D)*av++*(D)*wv++; total1+=(D)*av++*(D)*wv++;); *zv++=total0+total1;)
  }else{
   SUMATLOOP(B,I,
-   I total=0; I k=dplen; I *avi=(I*)av; I *wvi=(I*)wv;
-    while(k>>LGSZI){I kn=MIN(255,k>>LGSZI); k-=kn<<LGSZI; I total2=0; DQ(kn, total2+=*avi++&*wvi++;) ADDBYTESINI(total2); total+=total2;} av=(B*)avi; wv=(B*)wvi; DQ(k, total+=*av++&*wv++;)
-   *zv++=total;
+   I total=0; I total2; I *avi=(I*)av; I *wvi=(I*)wv; I q=(dplen-1)>>LGSZI;
+// obsolete     NOUNROLL while(k>>LGSZI){I kn=MIN(255,k>>LGSZI); k-=kn<<LGSZI; I total2=0; DQ(kn, total2+=*avi++&*wvi++;) ADDBYTESINI(total2); total+=total2;} av=(B*)avi; wv=(B*)wvi; DQ(k, total+=*av++&*wv++;)  // scaf faster tail
+    NOUNROLL while(1){total2=0; DQ(MIN(254,q), total2+=*avi++&*wvi++;) q-=254; if(q<=0)break; ADDBYTESINI(total2); total+=total2;} total2+=(*avi&*wvi)&((UI)~(I)0 >> (((-dplen)&(SZI-1))<<3)); ADDBYTESINI(total2); total+=total2;
   )
  }
  R 1;
@@ -1074,7 +1074,7 @@ DF2(jtsumattymes1){
  A z; 
  // if there is frame, create the outer loop values
  I nfro,nfri;  // outer loop counts, and which arg is repeated
- if(((ar-acr)|(wr-wcr))==0){  // normal case
+ if(likely(((ar-acr)|(wr-wcr))==0)){  // normal case
   nfro=nfri=1;  // no outer loops, repeata immaterial
   GA(z,FL>>(it&B01),ndpo*ndpi,wcr-1,AS(w));  // type is INT if inputs booleans, otherwise FL
  }else{
@@ -1092,7 +1092,7 @@ DF2(jtsumattymes1){
   MCISH(zs,longs,af+commonf); MCISH(zs+af+commonf,ws+wr-wcr,wcr-1);
  }
 
- if(likely(FAV(self)->id!=CFIT)){RZ(jtsumattymesprods(jt,it,voidAV(a),voidAV(w),dplen,nfro,nfri,ndpo,ndpi,voidAV(z)));  // eval, check for error
+ if(likely(FAV(self)->id!=CFIT)){RZ(jtsumattymesprods(jt,it,voidAV(a),voidAV(w),dplen,nfro,nfri,ndpo,ndpi,voidAV(z)));  // eval standard dot-product, check for error
  }else{
   // here for +/@:*"1!.0, double-precision dot product  https://www-pequan.lip6.fr/~graillat/papers/IC2012.pdf
   NAN0;

@@ -168,13 +168,13 @@ static B jtrfcq(J jt,I m,A w,A*zz,A*ww){A q,x,y,z;B b;I i,j,wt;Q*qv,rdx,rq,*wv,*
   b=0;  // set 'no rational root found'
   // If the value found IS a root, divide it from the polynomial repeatedly, and move a copy
   // to the result for each repetition
-  while(deflateq(1,m-j,qv,rq)){*zv++=rq; ++j; b=1;}
+  NOUNROLL while(deflateq(1,m-j,qv,rq)){*zv++=rq; ++j; b=1;}
   // Laguerre came up empty.  Try something else
   if(!b){Q q1;
    // Try adjusting the numerator of the Laguerre result by +-1, and see if they work
    q1=rq; q1.n=iv1;
-   rq=qplus (rq,q1); while(deflateq(1,m-j,qv,rq)){*zv++=rq; ++j; b=1;}
-   rq=qminus(rq,q1); while(deflateq(1,m-j,qv,rq)){*zv++=rq; ++j; b=1;}
+   rq=qplus (rq,q1); NOUNROLL while(deflateq(1,m-j,qv,rq)){*zv++=rq; ++j; b=1;}
+   rq=qminus(rq,q1); NOUNROLL while(deflateq(1,m-j,qv,rq)){*zv++=rq; ++j; b=1;}
   }
   // If we found a root, refresh the copies of the complex versions, and account for the roots we have found
   if(b){AN(q)=AS(q)[0]=1+m-j; rdx=maxdenom(1+m-j,qv); RZ(y=cvt(CMPX,q)); yv=ZAV(y); i=j;}

@@ -22,7 +22,7 @@ X jtxev2(J jt,A a,A w,C*s){A y;
 }
 
 X jtxc(J jt,I n){I m=1,p,*zv;X z; 
- p=n; while(p/=XBASE)++m;
+ p=n; NOUNROLL while(p/=XBASE)++m;
  GATV0(z,INT,m,1); zv=AV(z);
  p=n; DO(m, zv[i]=p%XBASE; p/=XBASE;);
  R z;
@@ -59,7 +59,7 @@ XF1(jtxstd){A z;B b;I c=0,d,i,j,k,m=XBASE,n,*zv;
   else          c=0;
  }
  if(c)R apip(z,sc(c));
- j=n-1; while(j&&!zv[j])--j; ++j;
+ j=n-1; NOUNROLL while(j&&!zv[j])--j; ++j;
  R j==n?z:vec(INT,j,zv);
 }    /* convert to standard form */
 
@@ -306,7 +306,7 @@ static XF2(jtxroot){A q;D x;I an,*av,c,d,r,wn,*wv;X n,n1,p,t,z;
  RZ(n=xc(r)); RZ(n1=xc(r-1));
  RZ(t=xdiv(w,p=xpow(z,n1),XMFLR));
  RZ(z=xdiv(xplus(t,xtymes(z,n1)),n,XMFLR))
- while(1){
+ NOUNROLL while(1){
   RZ(t=xdiv(w,p=xpow(z,n1),XMFLR));
   if(1>xcompare(z,t))break;
   RZ(z=xdiv(xplus(t,xtymes(z,n1)),n,XMFLR))

@@ -229,7 +229,7 @@ A jttokens(J jt,A w,I env){A t; RZ(t=wordil(w)); ASSERT(AM(t)>=0,EVOPENQ) R enqu
 
 // u is output pointer  uu->end+1 of output area  p is length of 
 #define CHKJ(j)             ASSERT(BETWEENO((j),0,i),EVINDEX);
-#define EXTZ(T,p)           while(uu<p+u){k=u-(T*)AV(z); RZ(z=ext(0,z)); u=k+(T*)AV(z); uu=(T*)AV(z)+AN(z);}
+#define EXTZ(T,p)           NOUNROLL while(uu<p+u){k=u-(T*)AV(z); RZ(z=ext(0,z)); u=k+(T*)AV(z); uu=(T*)AV(z)+AN(z);}
 
 #define EMIT0c(T,j,i,r,c)   {CHKJ(j); p=(i)-(j); EXTZ(T,1); RZ(*u++=incorp(str(p,(j)+wv)));}
 #define EMIT0b(T,j,i,r,c)   {CHKJ(j); p=(i)-(j); EXTZ(T,1); RZ(*u++=incorp(vec(B01,p,(j)+wv)));}

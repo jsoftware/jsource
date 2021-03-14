@@ -221,7 +221,7 @@ DF1(jtatomic1){A z;
  // while it's convenient, check for empty result
  jtinplace=(J)((I)jtinplace+(((SGNTO0(awm1)))<<JTEMPTYX));
  // Run the full dyad, retrying if a retryable error is returned
- while(1){  // run until we get no error
+ NOUNROLL while(1){  // run until we get no error
   z=jtva1(jtinplace,w,self);  // execute the verb
   if(z||jt->jerr<=NEVM){RETF(z);}   // return if no error or error not retryable
   jtinplace=(J)((I)jtinplace|JTRETRY);  // indicate that we are retrying the operation

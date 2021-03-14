@@ -32,8 +32,8 @@ static A jtcants(J jt,A a,A w,A z){A a1,q,y;B*b,*c;I*u,wr,zr;P*wp,*zp;
 // exp moves one cell into the result area with postincrement, e. g. *u++=*(C*)v;
 #define CANTA(T,exp)  \
  {T*u=(T*)zv; C*v=(C*)wv;                                                  \
-  do{j = r-1; I mvr1=mv[j]; DQ(sv[j], exp; v+=mvr1;)                        \
-   do{v-=mv[j]*sv[j]; tv[j]=0; --j; if(j<0)break; v+=mv[j]; ++tv[j];}while(sv[j]==tv[j]);  \
+  NOUNROLL do{j = r-1; I mvr1=mv[j]; DQ(sv[j], exp; v+=mvr1;)                        \
+   NOUNROLL do{v-=mv[j]*sv[j]; tv[j]=0; --j; if(j<0)break; v+=mv[j]; ++tv[j];}while(sv[j]==tv[j]);  \
   }while(j>=0); \
  }
 

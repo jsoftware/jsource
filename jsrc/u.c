@@ -149,13 +149,14 @@ I bsum(I n,B*b){I q=(n-1)>>LGSZI,z=0;UI t,*v;
  if(n==0)R z;
  v=(UI*)b;
  // Do word-size sections, max 255 at a time, till all finished
- while(q>0){
-  t=0; DQ(MIN(q,255), t+=*v++;); q-=255;  // sig in ffffffffffffffff
+ NOUNROLL while(1){
+  t=0; DQ(MIN(q,254), t+=*v++;); q-=254;  // sig in ffffffffffffffff
+  if(q<=0)break;   // exit after last section, always with room for 1 more
   ADDBYTESINI(t);  // convert byte-lane total to single total
-  z = z + t;   // clear garbage, add sig
+  z+=t;   // add sig
  }
 // finish up any remnant, 1-8 bytes
- t=*v&((UI)~(I)0 >> (((-n)&(SZI-1))<<3)); ADDBYTESINI(t); z+=t;
+ t+=*v&((UI)~(I)0 >> (((-n)&(SZI-1))<<3)); ADDBYTESINI(t); z+=t;
  R z;
 }    /* sum of boolean vector b */
 
@@ -193,12 +194,12 @@ A jtifb(J jt,I n,B* RESTRICT b){A z;I p,* RESTRICT zv;
   // skip empty words, to get best speed on near-zero a.  This exits with the first unskipped word in bits
   while(bits==0 && n>=(2*SZI)){zbase+=SZI; bits=*wvv++; n-=SZI;}  // fast-forward over zeros.  Always leave 1 word so we have a batch to process
   I batchsize=n>>LGSZI; batchsize=MIN(BB,batchsize);
-  UI bitstack=0; while(--batchsize>0){I bits2=*wvv++; PACKBITSINTO(bits,bitstack); bits=bits2;};  // keep read pipe ahead
+  UI bitstack=0; while(--batchsize>0){I bits2=*wvv++; PACKBITSINTO(bits,bitstack); bits=bits2;};  // keep read pipe ahead.  Each loop gets SZI bits, * BB=BW
   // Handle the last word of the batch.  It might have non-Boolean data at the end, AFTER the Boolean padding.  Just clear the non-boolean part in this line
   bits&=VALIDBOOLEAN; PACKBITSINTO(bits,bitstack);
   // Now handle the last batch, by discarding garbage bits at the end and then shifting the lead bit down to bit 0
   if(n>=BW+SZI)bits=*wvv++;else {n-=n&(SZI-1)?SZI:0; bitstack<<=(BW-n)&(SZI-1); bitstack>>=BW-n;}  // discard invalid trailing bits; shift leading byte to position 0.  For non-last batches, start on next batch
-  while(bitstack){I bitx=CTTZI(bitstack); *zv++=zbase+bitx; bitstack&=bitstack-1;}
+  NOUNROLL while(bitstack){I bitx=CTTZI(bitstack); *zv++=zbase+bitx; bitstack&=bitstack-1;}
   zbase+=BW;  // advance base to next batch of 64
   n-=BW;  // decr count left
  }
@@ -224,7 +225,7 @@ I jtmaxtype(J jt,I s,I t){
 // Copy m bytes from w to z, repeating every n bytes if n<m
 void mvc(I m,void*z,I n,void*w){I p=n,r;static I k=sizeof(D);  // ???
  // first copy n bytes; thereafter p is the number of bytes we have copied; copy that amount again
- MC(z,w,MIN(p,m)); while(m>p){r=m-p; MC(p+(C*)z,z,MIN(p,r)); p+=p;}
+ MC(z,w,MIN(p,m)); NOUNROLL while(m>p){r=m-p; MC(p+(C*)z,z,MIN(p,r)); p+=p;}
 }
 
 // odometer, up to the n numbers s[]

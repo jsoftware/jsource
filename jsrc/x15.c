@@ -723,10 +723,10 @@ B jtcdinit(JS jjt,I nthreads){A x;JJ jt=MTHREAD(jjt);
 // see if v->string (length n) is in hashtable tbl.  The hash in tbl contains indexes into cdarg, or -1 for empty slot.
 // return retval, where pv[k] is the address of the found slot in cdarg
 #define HASHLOOKUP(tbl,nn,vv,pvklett,retval) I j=HASHINDEX(tbl,nn,vv); I *hv=IAV0(tbl); C *s=CAV0(JT(jt,cdstr)); CCT*pv=(CCT*)CAV2(JT(jt,cdarg)); \
- while(1){I k=hv[j]; if(k<0)R 0; if(nn==pv[k].pvklett##n&&!memcmpne(vv,s+pv[k].pvklett##i,nn))R retval; if(--j<0)j+=AN(tbl);}
+ NOUNROLL while(1){I k=hv[j]; if(k<0)R 0; if(nn==pv[k].pvklett##n&&!memcmpne(vv,s+pv[k].pvklett##i,nn))R retval; if(--j<0)j+=AN(tbl);}
 
 // add v->string (length n) to hashtable tbl.  argx is the index to insert into the hashtable.  Increment AM(tbl), which contains the # hashed items
-#define HASHINSERT(tbl,n,v,argx) I j=HASHINDEX(tbl,n,v); I *hv=IAV0(tbl); ++AM(tbl); while(hv[j]>=0)if(--j<0)j+=AN(tbl); hv[j]=argx;
+#define HASHINSERT(tbl,n,v,argx) I j=HASHINDEX(tbl,n,v); I *hv=IAV0(tbl); ++AM(tbl); NOUNROLL while(hv[j]>=0)if(--j<0)j+=AN(tbl); hv[j]=argx;
 
 
 // a is a string block for a cd string
@@ -752,8 +752,8 @@ static HMODULE jtcdlookupl(J jt,C*av){
 // if the string table or the table of CCTs gets full it is extended
 static CCT*jtcdinsert(J jt,A a,CCT*cc){A x;C*s;CCT*pv,*z;I an,hn,k;
  an=AN(a);
- while(AM(JT(jt,cdstr)) > AN(JT(jt,cdstr))-an){I oldm=AM(JT(jt,cdstr)); RZ(JT(jt,cdstr)=ext(1,JT(jt,cdstr))); AM(JT(jt,cdstr))=oldm;}  // double allocations as needed, keep count
- while(AM(JT(jt,cdarg))==AS(JT(jt,cdarg))[0]){I oldm=AM(JT(jt,cdarg)); RZ(JT(jt,cdarg)=ext(1,JT(jt,cdarg))); AM(JT(jt,cdarg))=oldm;}
+ NOUNROLL while(AM(JT(jt,cdstr)) > AN(JT(jt,cdstr))-an){I oldm=AM(JT(jt,cdstr)); RZ(JT(jt,cdstr)=ext(1,JT(jt,cdstr))); AM(JT(jt,cdstr))=oldm;}  // double allocations as needed, keep count
+ NOUNROLL while(AM(JT(jt,cdarg))==AS(JT(jt,cdarg))[0]){I oldm=AM(JT(jt,cdarg)); RZ(JT(jt,cdarg)=ext(1,JT(jt,cdarg))); AM(JT(jt,cdarg))=oldm;}
  s=CAV(JT(jt,cdstr)); pv=(CCT*)AV(JT(jt,cdarg));
  cc->ai=AM(JT(jt,cdstr)); MC(s+AM(JT(jt,cdstr)),CAV(a),an); AM(JT(jt,cdstr))+=an;
  z=pv+AM(JT(jt,cdarg)); MC(z,cc,sizeof(CCT)); k=AM(JT(jt,cdarg));
@@ -863,20 +863,20 @@ static CCT*jtcdparse(J jt,A a,I empty){C c,lib[NPATH],*p,proc[NPATH],*s,*s0;CCT*
  if(cc=cdlookup(a))R cc;
  cc=&cct; cc->an=an=AN(a); s=s0=CAV(str0(a));
  /* library (module, file) name */
- while(*s==' ')++s; p=*s=='"'?strchr(++s,'"'):strchr(s,' '); li=s-s0; cc->ln=p?p-s:0;
+ NOUNROLL while(*s==' ')++s; p=*s=='"'?strchr(++s,'"'):strchr(s,' '); li=s-s0; cc->ln=p?p-s:0;
  CDASSERT(p&&NPATH>cc->ln,DEBADLIB);
  cc->cc=1==cc->ln&&('0'==*s||'1'==*s)?*s:0;
  /* procedure name */
  s=p+1+(I )(*p=='"');
- while(*s==' ')++s; p=strchr(s,' '); if(!p)p=s+strlen(s);    pi=s-s0; cc->pn=p-s;
+ NOUNROLL while(*s==' ')++s; p=strchr(s,' '); if(!p)p=s+strlen(s);    pi=s-s0; cc->pn=p-s;
  CDASSERT(NPATH>cc->pn,DEBADFN);
  /* > + % */
  s=p+1;
- cc->zbx      =1; while(*s==' ')++s; if('>'==*s){cc->zbx      =0; ++s;}
- cc->alternate=0; while(*s==' ')++s; if('+'==*s){cc->alternate=1; ++s;}
- cc->fpreset  =0; while(*s==' ')++s; if('%'==*s){cc->fpreset  =1; ++s;}
+ cc->zbx      =1; NOUNROLL while(*s==' ')++s; if('>'==*s){cc->zbx      =0; ++s;}
+ cc->alternate=0; NOUNROLL while(*s==' ')++s; if('+'==*s){cc->alternate=1; ++s;}
+ cc->fpreset  =0; NOUNROLL while(*s==' ')++s; if('%'==*s){cc->fpreset  =1; ++s;}
  /* result type declaration */
- while(*s==' ')++s;
+ NOUNROLL while(*s==' ')++s;
  if(empty&&!*s){
   cc->zl=c='x'; cc->zt=cdjtype(c);
  }else{

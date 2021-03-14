@@ -206,7 +206,7 @@ F1(jtnch){A ch;B b;LX *e;I i,m,n;L*d;
   // named locales first
   for(i=1;i<n;++i,++e)if(*e){
    d=SYMNEXT(*e)+JT(jt,sympv);
-   while(1){
+   NOUNROLL while(1){
     RZ(ch=nch1(b,d->val,&m,ch));
     if(!d->next)break;
     d=SYMNEXT(d->next)+JT(jt,sympv);

@@ -72,14 +72,14 @@ static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;DC d;
  A *old=jt->tnextpushp;
  switch(ce){
  // loop over the lines.  jgets may fail, in which case we leave that as the error code for the sentence.
- case 0: while(x&&!jt->jerr){jt->etxn=0; x=jgets("   "); SETTRACK jtimmex(jtinplace,x=ddtokens(x,1+(AN(jt->locsyms)>1))); tpop(old);} break;  // lgets returns 0 for error or EOF
- case 1: while(x           ){if(!JT(jt,seclev))jtshowerr(jtinplace); jt->jerr=0; x=jgets("   ");  SETTRACK  jtimmex(jtinplace,x=ddtokens(x,1+(AN(jt->locsyms)>1))); tpop(old);} break;
+ case 0: NOUNROLL while(x&&!jt->jerr){jt->etxn=0; x=jgets("   "); SETTRACK jtimmex(jtinplace,x=ddtokens(x,1+(AN(jt->locsyms)>1))); tpop(old);} break;  // lgets returns 0 for error or EOF
+ case 1: NOUNROLL while(x           ){if(!JT(jt,seclev))jtshowerr(jtinplace); jt->jerr=0; x=jgets("   ");  SETTRACK  jtimmex(jtinplace,x=ddtokens(x,1+(AN(jt->locsyms)>1))); tpop(old);} break;
  case 2:
  case 3: {
 #if SEEKLEAK
   I stbytes = spbytesinuse();
 #endif
-  while(x&&!jt->jerr){jt->etxn=0; x=jgets("   "); SETTRACK jtimmea(jtinplace,x); tpop(old);}
+  NOUNROLL while(x&&!jt->jerr){jt->etxn=0; x=jgets("   "); SETTRACK jtimmea(jtinplace,x); tpop(old);}
 #if SEEKLEAK
   I endbytes=spbytesinuse(); if(endbytes-stbytes > 1000)printf("%lld bytes lost\n",endbytes-stbytes);
 #endif

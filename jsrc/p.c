@@ -398,7 +398,6 @@ static A virthook(J jtip, A f, A g){
 // extend NVR stack, returning the A block for it.  stack error on fail, since that's the likely cause
 A jtextnvr(J jt){ASSERT(jt->parserstackframe.nvrtop<32000,EVSTACK); RZ(jt->nvra = ext(1, jt->nvra));  R jt->nvra;}
 
-I buckhist[]={0,0,0,0,0};  // scaf histogram of bucket indexes
 #define BACKMARKS 3   // amount of space to leave for marks at the end.  Because we stack 3 words before we start to parse, we will
  // never see 4 marks on the stack - the most we can have is 1 value + 3 marks.
 #define FRONTMARKS 1  // amount of space to leave for front-of-string mark
@@ -503,7 +502,7 @@ A jtparsea(J jt, A *queue, I m){PSTK * RESTRICT stack;A z,*v;
          I m=NAV(y)->m; C* nm=NAV(y)->s; UI4 hsh=NAV(y)->hash;  // length/addr of name from name block
          if(unlikely(++bx!=0)){NOUNROLL do{lx = sympv[lx].next;}while(++bx);}  // rattle off the permanents, usually 1
          // Now lx is the index of the first name that might match.  Do the compares
-         while(1) {
+         NOUNROLL while(1) {
           if(lx==0)goto rdglob;  // If we run off chain, go read from globals
           lx=SYMNEXT(lx);  // we are now into non-PERMANENT symbols & must clear the flag
           s = lx+sympv;  // symbol entry

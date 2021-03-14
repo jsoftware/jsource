@@ -246,8 +246,8 @@ A jtconnum(J jt,I n,C*s){PROLOG(0101);A y,z;B (*f)(J,I,C*,void*),p=1;C c,*v;I d=
   GA(z,t,mc,r,AS(w)); if(0<r&&1!=c)AS(z)[r-1]=c; zv=(T*)AV(z);            \
   RZ(a=cvt(t,a)); a0=*(T*)AV(a);                                            \
   while(i<mc){                                                              \
-   while(u<uu&&C0==*u)++u;                                                  \
-   while(u>=y){while(i<j)zv[i++]=a0; j+=c; y+=n; if(i==mc)R z;}             \
+   NOUNROLL while(u<uu&&C0==*u)++u;                                                  \
+   NOUNROLL while(u>=y){NOUNROLL while(i<j)zv[i++]=a0; j+=c; y+=n; if(i==mc)R z;}             \
    x=strchr(u,C0); if(x<uu)k=x-u; else{uu[-1]=C0; k=uu-1-u;}               \
    b=','==u[0]||','==u[k-1];                                                \
    x=u; DO(k, d=u[i]; if(','!=d)*x++=d==CSIGN?'-':d;); *x=C0;               \
@@ -337,10 +337,10 @@ B valueisint; // set if the value we are processing is really an int
  // rather than row-by-row
  while(1){   // Loop for each field - we know there's at least one, thus n>0
   // Skip over any \0 characters we are pointing at
-  while(u<uu&&C0==*u)++u;
+  NOUNROLL while(u<uu&&C0==*u)++u;
   // If we have consumed all the input for the current row, fill the rest of the
   // row with defaults, then advance input & output to next row; return if all done
-  while(u>=y){while(k<j)INSDEFAULT j+=c; y+=n;}
+  NOUNROLL while(u>=y){NOUNROLL while(k<j)INSDEFAULT j+=c; y+=n;}
   if(k>=mc)break;   // exit loop if all inputs processed
   // Read a number from the input, leaving v pointing to the character that stopped the conversion
   // If we are trying ints first to avoid floating-point truncation, do so
@@ -356,8 +356,8 @@ B valueisint; // set if the value we are processing is really an int
    case ',':
     // comma.  We will remove commas from the number and then rescan it.
     b=u==v; x=v;   // b='first character was comma'; x is output pointer for the copy
-    while(d=*++v)if(','!=d)*x++=d;   // copy to end-of-field, discarding commas
-    if(b||','==v[-1]){INSDEFAULT u=v;}else while(v>x)*x++=C0;  // if first or last character is comma, use default and continue, skipping the field;
+    NOUNROLL while(d=*++v)if(','!=d)*x++=d;   // copy to end-of-field, discarding commas
+    if(b||','==v[-1]){INSDEFAULT u=v;}else{NOUNROLL while(v>x)*x++=C0;}  // if first or last character is comma, use default and continue, skipping the field;
        // otherwise put \0 over the characters after the last copied one, and go back to rescan the number
     continue;
    case '-':
@@ -389,7 +389,7 @@ B valueisint; // set if the value we are processing is really an int
     // but if special character at beginning of field, that's not a valid complex number, fall through to...
    default:
     // Other stopper character, that's invalid, use default, skip the field
-    INSDEFAULT while(C0!=*++v); u=v;
+    INSDEFAULT NOUNROLL while(C0!=*++v); u=v;
  }}
  // All done.  If we ended still looking for ints, the whole result must be int, so flag it as such
  if(tryingint)AT(z) = INT;

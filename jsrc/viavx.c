@@ -329,7 +329,7 @@ static __forceinline UI hici(I k, UI* v){
   UI crc; crc=CRC32L(-1LL,v[0]); if(k>=-1){crc=CRC32L(crc,v[1]); if(k==0)crc=CRC32L(crc,v[2]);} R crc;
  }
  UI crc0=-1, crc1=crc0, crc2=crc0;
- do{
+ NOUNROLL do{
   crc0=CRC32L(crc0,v[0]); crc1=CRC32L(crc1,v[1]); crc2=CRC32L(crc2,v[2]);
   v+=3, k-=3;
  }while(k>=0);  // at end k is negative, and we have gone through the loop origk%3 times
@@ -496,7 +496,7 @@ static B jteqa0(J jt,I n,A*u,A*v){PUSHCCT(1.0) B res=1; DQ(n, if(!equ(*u,*v)){re
 // only if the hash search does not find a match.  If (store) is 2, the entry that we found is cleared, by setting it to maxcount+1, when we find a match.
 // When (store)=2, we also ignore hash entries containing maxcount+1, treating them as failed compares
 // Independent of (store), (fstmt) is executed if the item is found in the hash table, and (nfstmt) is executed if it is not found.
-#define FINDP(T,TH,hsrc,name,exp,fstmt,nfstmt,store) do{if(hj==hsrc##sct){ \
+#define FINDP(T,TH,hsrc,name,exp,fstmt,nfstmt,store) NOUNROLL do{if(hj==hsrc##sct){ \
   if(store==1)hv[name]=(TH)i; nfstmt break;}  /* this is the not-found case */ \
   if((store!=2||hj<hsrc##sct)&&(v=(T*)_mm_extract_epi64(vp,1),!(exp))){if(store==2)hv[name]=(TH)(hsrc##sct+1); fstmt break;} /* found */ \
   if(--name<0)name+=p; hj=hv[name]; /* miscompare, nust continue search */ \
@@ -659,7 +659,7 @@ static IOFX(Z,UI4,jtioz02,, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n)
 
 // FIND for write.  j is the scan pointer through the hashtable, and has been initialized to the starting bucket
 // store i into the hashtable if not found.  The test should be intolerant except for NUB/KEY operation
-#define FINDWR(TH,exp) do{if(asct==(hj=hv[j])){hv[j]=(TH)i; break;}if(!(exp))break;if(--j<0)j+=p;}while(1);
+#define FINDWR(TH,exp) NOUNROLL do{if(asct==(hj=hv[j])){hv[j]=(TH)i; break;}if(!(exp))break;if(--j<0)j+=p;}while(1);
 
 // functions for building the hash table for tolerant comparison.  expa is the function for detecting matches on a values
 
@@ -1202,7 +1202,7 @@ static A jtnodupgrade(J jt,A a,I acr,I ac,I acn,I ad,I n,I asct,I md,I bk){A*av,
  {A* RESTRICT u=wv+n*(ii),* RESTRICT v;I i,j,p,q;I t;  \
   for(i=ii;icmp;iinc,uinc){          \
    p=0; q=m1;                        \
-   while(p<=q){                      \
+   NOUNROLL while(p<=q){                      \
     t=0; j=(p+q)>>1; v=av+n*hu[j];    \
     DO(n, if(t=compare(u[i],v[i]))break;);  \
     if(0<t)p=j+1; else q=t?j-1:-2;   \
@@ -2375,7 +2375,7 @@ F1(jtsclass){A e,x,xy,y,z;I c,j,m,n,*v;P*p;
 // start searching at index j, and stop when j points to a slot that is empty, or for which exp is false
 // (exp is a test for not-equal, normally referring to v (the current element being hashed) and hv (the data field for
 // the first block that hashed to this address)
-#define FIND(exp) while(asct>(hj=hv[j])&&(exp)){if(--j<0)j+=p;}
+#define FIND(exp) NOUNROLL while(asct>(hj=hv[j])&&(exp)){if(--j<0)j+=p;}
 
 // function to search forward
 // T is the type of the data

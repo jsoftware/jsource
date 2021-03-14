@@ -93,21 +93,21 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
   UI *avv=(UI*)(CAV(a)+n); n=m-n; n+=((n&(SZI-1))?SZI:0); UI bits=*avv++;  // prime the pipeline for top of loop.  Extend n only if needed to get all bits, and only by a full word
   while(n>0){    // where we load bits SZI at a time
    // skip empty words, to get best speed on near-zero a.  This exits with the first unskipped word in bits
-   while(bits==0 && n>=(2*SZI)){bits=*avv++; n-=SZI; wvv=(C*)wvv+(k<<LGSZI);}  // fast-forward over zeros.  Always leave 1 word so we have a batch to process
+   NOUNROLL while(bits==0 && n>=(2*SZI)){bits=*avv++; n-=SZI; wvv=(C*)wvv+(k<<LGSZI);}  // fast-forward over zeros.  Always leave 1 word so we have a batch to process
    I batchsize=n>>LGSZI; batchsize=MIN(BB,batchsize);
-   UI bitstack=0; while(--batchsize>0){I bits2=*avv++; PACKBITSINTO(bits,bitstack); bits=bits2;};  // keep read pipe ahead
+   UI bitstack=0; NOUNROLL while(--batchsize>0){I bits2=*avv++; PACKBITSINTO(bits,bitstack); bits=bits2;};  // keep read pipe ahead
    // Handle the last word of the batch.  It might have non-Boolean data at the end, AFTER the Boolean padding.  Just clear the non-boolean part in this line
    bits&=VALIDBOOLEAN; PACKBITSINTO(bits,bitstack);
    // Now handle the last batch, by removing initial extension if any, discarding garbage bits at the end, and then shifting the lead bit down to bit 0
    if(n>=BW+SZI)bits=*avv++;else {n-=n&(SZI-1)?SZI:0; bitstack<<=(BW-n)&(SZI-1); bitstack>>=BW-n;}  // discard invalid trailing bits; shift leading byte to position 0.  For non-last batches, start on next batch
    switch(k){  // copy the words
-   case sizeof(UI): while(bitstack){I bitx=CTTZI(bitstack); *(UI*)zvv=((UI*)wvv)[bitx]; zvv=(C*)zvv+k; bitstack&=bitstack-1;} break;
-   case sizeof(C): while(bitstack){I bitx=CTTZI(bitstack); *(C*)zvv=((C*)wvv)[bitx]; zvv=(C*)zvv+k; bitstack&=bitstack-1;} break;
-   case sizeof(US): while(bitstack){I bitx=CTTZI(bitstack); *(US*)zvv=((US*)wvv)[bitx]; zvv=(C*)zvv+k; bitstack&=bitstack-1;} break;
+   case sizeof(UI): NOUNROLL while(bitstack){I bitx=CTTZI(bitstack); *(UI*)zvv=((UI*)wvv)[bitx]; zvv=(C*)zvv+k; bitstack&=bitstack-1;} break;
+   case sizeof(C): NOUNROLL while(bitstack){I bitx=CTTZI(bitstack); *(C*)zvv=((C*)wvv)[bitx]; zvv=(C*)zvv+k; bitstack&=bitstack-1;} break;
+   case sizeof(US): NOUNROLL while(bitstack){I bitx=CTTZI(bitstack); *(US*)zvv=((US*)wvv)[bitx]; zvv=(C*)zvv+k; bitstack&=bitstack-1;} break;
 #if BW==64
-   case sizeof(UI4): while(bitstack){I bitx=CTTZI(bitstack); *(UI4*)zvv=((UI4*)wvv)[bitx]; zvv=(C*)zvv+k; bitstack&=bitstack-1;} break;
+   case sizeof(UI4): NOUNROLL while(bitstack){I bitx=CTTZI(bitstack); *(UI4*)zvv=((UI4*)wvv)[bitx]; zvv=(C*)zvv+k; bitstack&=bitstack-1;} break;
 #endif
-   default: while(bitstack){I bitx=CTTZI(bitstack); JMCR(zvv,(C*)wvv+k*bitx,k+((SZI-1)&(exactlen-1)),lp000,exactlen,endmask); zvv=(C*)zvv+k; bitstack&=bitstack-1;} break;  // overwrite OK
+   default: NOUNROLL while(bitstack){I bitx=CTTZI(bitstack); JMCR(zvv,(C*)wvv+k*bitx,k+((SZI-1)&(exactlen-1)),lp000,exactlen,endmask); zvv=(C*)zvv+k; bitstack&=bitstack-1;} break;  // overwrite OK
    }
 
    wvv=(C*)wvv+(k<<LGBW);  // advance base to next batch of 64

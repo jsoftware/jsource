@@ -459,7 +459,7 @@ F1(jtope){A cs,*v,y,z;I nonh;C*x;I i,n,*p,q=RMAX,r=0,*s,t=0,te=0,*u,zn;
   ASSERT(!(t&SPARSE&&t&XNUM+RAT),EVDOMAIN);  // don't allow a sparse that requires promotion to indirect
   te=t;  // te holds the type to use
  }
- t=te&-te; while(te&=(te-1)){RE(t=maxtypene(t,te&-te));}  // get highest-priority type (which may be sparse)
+ t=te&-te; NOUNROLL while(te&=(te-1)){RE(t=maxtypene(t,te&-te));}  // get highest-priority type (which may be sparse)
  // allocate place to build shape of result-cell; initialize to 1s above q, zeros below (this is adding leading 1s to missing leading axes)
  fauxblockINT(csfaux,4,1); fauxINT(cs,csfaux,r,1) u=AV(cs); DO(r-q, u[i]=1;); p=u+r-q; DO(q, p[i]=0;);
  // find the shape of a result-cell
@@ -516,7 +516,7 @@ static A jtrazeg(J jt,A w,I t,I n,I r,A*v,I nonempt){A h,h1,y,z;C*zu;I c=0,i,j,k
     if(r==yr&&0==ys[0])continue;  // if y is unextended and has no cells, it will not contribute, no matter what the cell-shape
     // see if the shape of y-cell (after rank extension) matches the shape of result-cell.  If not, there will be fill
     for(yr=yr-1,k=r-1;yr>=0&&ys[yr]==s[k];--yr,--k);  // see if unextended cell-shape matches
-    if(yr<0)while(k>0&&s[k]==1)--k;   // if all that match, check to see if extended cell-shape==1
+    if(yr<0){NOUNROLL while(k>0&&s[k]==1)--k;}   // if all that match, check to see if extended cell-shape==1
     if(k>0) {   // If we compared all the way back to the entire rank or one short (since we only care about CELL shape), there will be no fill
      ASSERT(HOMO(t, AT(jt->fill)), EVDOMAIN); t = maxtyped(t, AT(jt->fill));  // Include fill in the result-type.  It better fit in with the others
      break;  // one fill is enough
@@ -578,7 +578,7 @@ F1(jtraze){A*v,y,z,* RESTRICT zv;C* RESTRICT zu;I *wws,d,i,klg,m=0,n,r=1,t=0,te=
    ASSERT((POSIFHOMO(t,0)&-(t^BOX)&-(t^SBT))>=0,EVDOMAIN);  // no mixed nonempties: t is homo num/char or all boxed or all symbol
    te=t;  // te holds the type to use
   }else if(jt->fill){te=AT(jt->fill);}  // all empty: use fill type if given.
-  t=te&-te; while(te&=(te-1)){t=maxtypedne(t,te&-te);}  // get highest-priority type
+  t=te&-te; NOUNROLL while(te&=(te-1)){t=maxtypedne(t,te&-te);}  // get highest-priority type
   // t is the type to use.  i is 0 if there were no nonempties
   // if there are only empties, t is the type to use
   // if the cell-rank was 2 or higher, there may be reshaping and fill needed - go to the general case

@@ -626,7 +626,7 @@ gotdate: ;
    c=*++sp;  // skip decimal point
    DO(prec, if(!ISDIGIT(c))break; N+=nanopowers[i]*((UI)c-(UI)'0'); c=*++sp;)  // harder than it looks!  We use memory to avoid long carried dependency from the multiply chain
    // discard trailing digits that we are skipping
-   while(ISDIGIT(c))c=*++sp;
+   NOUNROLL while(ISDIGIT(c))c=*++sp;
   }
 hittz:
   // Timezone [+-]HH[[:]MM]  or Z
@@ -643,7 +643,7 @@ hittz:
    }
   }else if(c=='Z')c=*++sp;  // no numbered timezone; skip Zulu timezone if given
   // Verify no significance after end
-  while(c){if(c!=' ')DOERR; c=*++sp;}
+  NOUNROLL while(c){if(c!=' ')DOERR; c=*++sp;}
 gottime: ;
   // We have all the components.  Combine Y M D hh mm ss N into nanosec time
   // This copies the computation in eft except that we have N here.  eft uses unsigned vbls for hh,mm, we don't - no problem

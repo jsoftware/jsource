@@ -77,7 +77,7 @@ static I fsize(F f){
 
 static A jtrdns(J jt,F f){A za,z;I n=1024;size_t r,tr=0;
  GAT0(za,LIT,1024,1); clearerr(f);
- while(!feof(f) && (r=fread(CAV(za)+tr,sizeof(C),n-tr,f))){
+ NOUNROLL while(!feof(f) && (r=fread(CAV(za)+tr,sizeof(C),n-tr,f))){
   tr+=r; if(tr==(U)n){RZ(za=ext(0,za));n*=2;}
  }
  if(tr==(U)n)z=za;
@@ -97,7 +97,7 @@ A jtrd(J jt,F f,I j,I n){A z;C*x;I p=0;size_t q=1;
 
  clearerr(f);
  GATV0(z,LIT,n,1); x=CAV(z);
- while(q&&n>p){
+ NOUNROLL while(q&&n>p){
   p+=q=fread(p+x,sizeof(C),(size_t)(n-p),f);
   if(ferror(f))R jerrno();
  }
@@ -115,7 +115,7 @@ static B jtwa(J jt,F f,I j,A w){C*x;I n,p=0;size_t q=1;
 #endif
  
  clearerr(f);
- while(q&&n>p){
+ NOUNROLL while(q&&n>p){
   p+=q=fwrite(p+x,sizeof(C),(size_t)(n-p),f); 
   if(ferror(f))R jerrno()?1:0;
  }

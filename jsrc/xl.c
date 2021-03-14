@@ -95,7 +95,7 @@ static A jtunlj(J jt,I j){B b;I*u,*v;
 }    /* unlock the j-th entry in JT(jt,flkd) */
 
 B jtunlk(J jt,I x){I j=0,*v=AV(JT(jt,flkd)); 
- while(j<AM(JT(jt,flkd))){while(x==*v)RZ(unlj(j)); ++j; v+=LKC;} 
+ NOUNROLL while(j<AM(JT(jt,flkd))){while(x==*v)RZ(unlj(j)); ++j; v+=LKC;} 
  R 1;
 }    /* unlock all existing locks for file# x */
 

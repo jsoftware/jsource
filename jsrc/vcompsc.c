@@ -116,14 +116,14 @@
   p=n>>LGSZI; r1=n&(SZI-1);                                       \
   if     (!AR(a)){                                                           \
    ASSIGNX(av);                                                              \
-   while((p-=255)>0){t=0; DQ(255, t+=F(x,    *wv++);); ADDBYTESINI(t); z+=t;}              \
+   NOUNROLL while((p-=255)>0){t=0; DQ(255, t+=F(x,    *wv++);); ADDBYTESINI(t); z+=t;}              \
          t=0; DQ(p+255,   t+=F(x,    *wv++);); ADDBYTESINI(t); z+=t; x=F(x,  *wv);  \
   }else if(!AR(w)){                                                          \
    ASSIGNX(wv);                                                              \
-   while((p-=255)>0){t=0; DQ(255, t+=F(*av++,x    );); ADDBYTESINI(t); z+=t;}              \
+   NOUNROLL while((p-=255)>0){t=0; DQ(255, t+=F(*av++,x    );); ADDBYTESINI(t); z+=t;}              \
          t=0; DQ(p+255,   t+=F(*av++,x    );); ADDBYTESINI(t); z+=t; x=F(*av,x  );  \
   }else{                                                                     \
-   while((p-=255)>0){t=0; DQ(255, t+=F(*av++,*wv++);); ADDBYTESINI(t); z+=t;}              \
+   NOUNROLL while((p-=255)>0){t=0; DQ(255, t+=F(*av++,*wv++);); ADDBYTESINI(t); z+=t;}              \
          t=0; DQ(p+255,   t+=F(*av++,*wv++);); ADDBYTESINI(t); z+=t; x=F(*av,*wv);  \
   }                                                                          \
   x &= ((I)1<<(r1<<LGBB))-1; ADDBYTESINI(x); z+=x;    /* C_LE */                                                       \

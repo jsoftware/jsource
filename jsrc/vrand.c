@@ -120,7 +120,7 @@ static void jtgb_init(J jt,UI s){I*A;register I i,next=1,prev,seed;
 
 static I jtgb_unif_rand(J jt,I m){
  register UI r,t=two_to_the_31-(two_to_the_31 % m);
- do r=gb_next(); while(t<=r);
+ NOUNROLL do r=gb_next(); while(t<=r);
  R r%m;
 }
 
@@ -630,14 +630,14 @@ static F2(jtrollksub){A z;I an,*av,k,m1,n,p,q,r,sh;UI m,mk,s,t,*u,x=jt->rngdata-
    // here if w is a power of 2, >2; take bits from each value.  s cannot be 0
    k=CTTZI(m);  // lg(m)
    p=jt->rngdata->rngw/k; mk=m-1;  // p=#results per random number; r is number of values left after bit processing
-   r-=p; while(r>=0){do{t=NEXT;}while(s<=t); DQU(p, *u++=mk&t; t>>=k;) r-=p;}  // deal p at a time till we are as close to n as we can get
+   r-=p; NOUNROLL while(r>=0){NOUNROLL do{t=NEXT;}while(s<=t); DQU(p, *u++=mk&t; t>>=k;) r-=p;}  // deal p at a time till we are as close to n as we can get
    r+=p;  // rebias to get # values still needed
   }
   if(BW==64&&m<(1LL<<50)){ 
    // If we can do the calculation in the floating-point unit, do
    D md=m*X64; DQ(r, *u++=(I)(md*((D)(I)NEXT+(D)x63)); )   // avoid unsigned conversion, which requires conditional correction
   }else{
-   if(r&&s)DQ(r, while(s<=(t=NEXT)); *u++=t%m;) else DQ(r, *u++=NEXT%m;);
+   if(r&&s)DQ(r, NOUNROLL while(s<=(t=NEXT)); *u++=t%m;) else DQ(r, *u++=NEXT%m;);
   }
  }
  R z;
@@ -656,11 +656,11 @@ static X jtxrand(J jt,X x){PROLOG(0090);A q,z;B b=1;I j,m,n,*qv,*xv,*zv;
  GATV0(q,INT,m,1); qv=AV(q);  // allocate place to hold base, qv-> result digits
  DO(m-1, qv[i]=XBASE;); qv[m-1]=xv[n-1]+1;  // init base to the largest possible value in each Digit
  // loop to roll random values until we get one that is less than x
- do{
+ NOUNROLL do{
   RZ(z=roll(q)); zv=AV(z);  // roll one value in each Digit position
   DQ(j=m, --j; if(xv[j]!=zv[j]){b=xv[j]<zv[j]; break;});  // MS mismatched Digit tells the tale; if no mismatch, that's too high, keep b=1
  }while(b);  // loop till b=0
- j=m-1; while(0<j&&!zv[j])--j; AN(z)=AS(z)[0]=++j;  // remove leading 0s from (tail of) result
+ j=m-1; NOUNROLL while(0<j&&!zv[j])--j; AN(z)=AS(z)[0]=++j;  // remove leading 0s from (tail of) result
  EPILOG(z);
 }    /* ?x where x is a single strictly positive extended integer */
 
@@ -731,7 +731,7 @@ static A jtrollnot0(J jt,A w,B*b){A z;I j,m1,n,*u,*v;UI m,s,t,x=jt->rngdata->rng
   v=AV(w); u=AV(z);
   for(j=0;j<n;++j){
    m1=*v++; if(!m1)R mark; ASSERT(0<=m1,EVDOMAIN); m=m1;
-   s=GMOF(m,x); t=NEXT; if(s)while(s<=t)t=NEXT; *u++=t%m;
+   s=GMOF(m,x); t=NEXT; if(s){NOUNROLL while(s<=t)t=NEXT;} *u++=t%m;
  }}
  *b=1; R z;
 }    /* ?n$x where x is not 0, maybe */
@@ -742,7 +742,7 @@ static A jtrollany(J jt,A w,B*b){A z;D*u;I j,m1,n,sh,*v;UI m,mk,s,t,x=jt->rngdat
  for(j=0;j<n;++j){
   m1=*v++; ASSERT(0<=m1,EVDOMAIN); m=m1;
   if(0==m)*u++=sh?NEXTD1:NEXTD0; 
-  else{s=GMOF(m,x); t=NEXT; if(s)while(s<=t)t=NEXT; *u++=(D)(t%m);}
+  else{s=GMOF(m,x); t=NEXT; if(s){NOUNROLL while(s<=t)t=NEXT;} *u++=(D)(t%m);}
  }
  *b=1; R z;
 }    /* ?s$x where x can be anything and 1<#x */
@@ -772,7 +772,7 @@ F2(jtdeal){A z;I at,j,k,m,n,wt,*zv;UI c,s,t,x=jt->rngdata->rngparms[jt->rngdata-
  else if(m*3.0<n||(x&&x<=(UI)n)){  // TUNE for about m=100000; the cutoff would be higher for smaller n
 #if BW==64
   // calculate the number of values to deal: m, plus a factor times the expected number of collisions, plus 2 for good measure.  Will never exceed n.  Repeats a little less than 1% of the time for n between 30 and 300
-  A h=sc(m+4+(I)((n<1000?2.4:2.2)*((D)m+(D)n*(pow((((D)(n-1))/(D)n),(D)m)-1)))); do{RZ(z=nub(rollksub(h,w)));}while(AN(z)<m); RZ(z=jttake(JTIPW,a,z));
+  A h=sc(m+4+(I)((n<1000?2.4:2.2)*((D)m+(D)n*(pow((((D)(n-1))/(D)n),(D)m)-1)))); NOUNROLL do{RZ(z=nub(rollksub(h,w)));}while(AN(z)<m); RZ(z=jttake(JTIPW,a,z));
 #else
   A h,y; I d,*hv,i,i1,p,q,*v,*yv;
   FULLHASHSIZE(2*m,INTSIZE,1,0,p);
@@ -848,10 +848,10 @@ static F2(jtrollksubdot){A z;I an,*av,k,m1,n,p,q,r,sh;UI m,mk,s,t,*u,x=jt->rngda
    switch((s?2:0)+(1<p)){
     case 0: DQ(q,           t=NEXT;         *u++=mk&t;         ); break;
     case 1: DQ(q,           t=NEXT;   DQ(p, *u++=mk&t; t>>=k;);); break;
-    case 2: DQ(q, while(s<=(t=NEXT));       *u++=mk&t;         ); break;
-    case 3: DQ(q, while(s<=(t=NEXT)); DQ(p, *u++=mk&t; t>>=k;););
+    case 2: DQ(q, NOUNROLL while(s<=(t=NEXT));       *u++=mk&t;         ); break;
+    case 3: DQ(q, NOUNROLL while(s<=(t=NEXT)); DQ(p, *u++=mk&t; t>>=k;););
   }}
-  if(r&&s)DQ(r, while(s<=(t=NEXT)); *u++=t%m;) else DQ(r, *u++=NEXT%m;);
+  if(r&&s)DQ(r, NOUNROLL while(s<=(t=NEXT)); *u++=t%m;) else DQ(r, *u++=NEXT%m;);
  }
  R z;
 }
@@ -873,11 +873,11 @@ static X jtxranddot(J jt,X x){PROLOG(0090);A q,z;B b=1;I j,m,n,*qv,*xv,*zv;
  GATV0(q,INT,m,1); qv=AV(q);  // allocate place to hold base, qv-> result digits
  DO(m-1, qv[i]=XBASE;); qv[m-1]=xv[n-1]+1;  // init base to the largest possible value in each Digit
  // loop to roll random values until we get one that is less than x
- do{
+ NOUNROLL do{
   RZ(z=roll(q)); zv=AV(z);  // roll one value in each Digit position
   DQ(j=m, --j; if(xv[j]!=zv[j]){b=xv[j]<zv[j]; break;});  // MS mismatched Digit tells the tale; if no mismatch, that's too high, keep b=1
  }while(b);  // loop till b=0
- j=m-1; while(0<j&&!zv[j])--j; AN(z)=AS(z)[0]=++j;  // remove leading 0s from (tail of) result
+ j=m-1; NOUNROLL while(0<j&&!zv[j])--j; AN(z)=AS(z)[0]=++j;  // remove leading 0s from (tail of) result
  EPILOG(z);
 }    /* ?x where x is a single strictly positive extended integer */
 
@@ -955,7 +955,7 @@ static A jtrollnot0dot(J jt,A w,B*b){A z;I j,m1,n,*u,*v;UI m,s,t,x=jt->rngdata->
   v=AV(w); u=AV(z);
   for(j=0;j<n;++j){
    m1=*v++; if(!m1)R mark; ASSERT(0<=m1,EVDOMAIN); m=m1;
-   s=GMOF(m,x); t=NEXT; if(s)while(s<=t)t=NEXT; *u++=t%m;
+   s=GMOF(m,x); t=NEXT; if(s){NOUNROLL while(s<=t)t=NEXT;} *u++=t%m;
  }}
  *b=1; R z;
 }    /* ?n$x where x is not 0, maybe */
@@ -968,7 +968,7 @@ static A jtrollanydot(J jt,A w,B*b){A z;D*u;I j,m1,n,sh,*v;UI m,mk,s,t,x=jt->rng
  for(j=0;j<n;++j){
   m1=*v++; ASSERT(0<=m1,EVDOMAIN); m=m1;
   if(0==m)*u++=sh?NEXTD1:NEXTD0; 
-  else{s=GMOF(m,x); t=NEXT; if(s)while(s<=t)t=NEXT; *u++=(D)(t%m);}
+  else{s=GMOF(m,x); t=NEXT; if(s){NOUNROLL while(s<=t)t=NEXT;} *u++=(D)(t%m);}
  }
  *b=1; R z;
 }    /* ?s$x where x can be anything and 1<#x */
@@ -1005,14 +1005,14 @@ static F2(jtdealdot){A h,y,z;I at,d,*hv,i,i1,j,k,m,n,p,q,*v,wt,*yv,*zv;UI c,s,t,
   GATV0(y,INT,2+2*m,1); yv=AV(y); d=2;
   GATV0(z,INT,m,1); zv=AV(z);
   for(i=0;i<m;++i){
-   s=GMOF(c,x); t=NEXT; if(s)while(s<=t)t=NEXT; j=i+t%c--;
-   q=i%p; while(hv[q]&&(v=yv+hv[q],i!=*v))q=(1+q)%p; i1=hv[q]?v[1]:i;
-   q=j%p; while(hv[q]&&(v=yv+hv[q],j!=*v))q=(1+q)%p;
+   s=GMOF(c,x); t=NEXT; if(s){NOUNROLL while(s<=t)t=NEXT;} j=i+t%c--;
+   q=i%p; NOUNROLL while(hv[q]&&(v=yv+hv[q],i!=*v))q=(1+q)%p; i1=hv[q]?v[1]:i;
+   q=j%p; NOUNROLL while(hv[q]&&(v=yv+hv[q],j!=*v))q=(1+q)%p;
    if(hv[q]){++v; *zv++=*v; *v=i1;}
    else{v=yv+d; *zv++=*v++=j; *v=i1; hv[q]=d; d+=2;}
  }}else{
   RZ(z=apvwr(n,0L,1L)); zv=AV(z);
-  DO(m, s=GMOF(c,x); t=NEXT; if(s)while(s<=t)t=NEXT; j=i+t%c--; k=zv[i]; zv[i]=zv[j]; zv[j]=k;);
+  DO(m, s=GMOF(c,x); t=NEXT; if(s){NOUNROLL while(s<=t)t=NEXT;} j=i+t%c--; k=zv[i]; zv[i]=zv[j]; zv[j]=k;);
   AN(z)=AS(z)[0]=m;
  }
  RETF(at&XNUM+RAT||wt&XNUM+RAT?xco1(z):z);

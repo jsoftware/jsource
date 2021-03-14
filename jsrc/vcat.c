@@ -140,40 +140,44 @@ static F2(jtovg){A s,z;C*x;I ar,*as,c,k,m,n,r,*sv,t,wr,*ws,zn;
 
 // these variants copy vectors or scalars, with optional repetition of items and, for the scalars, scalar repetition
 static void moveawVV(C *zv,C *av,C *wv,I c,I k,I ma,I mw,I arptreset,I wrptreset){
+ JMCDECL(endmaska) JMCSETMASK(endmaska,ma+(SZI-1),0)
+ JMCDECL(endmaskw) JMCSETMASK(endmaskw,mw+(SZI-1),0)
  I arptct=arptreset-1; I wrptct=wrptreset-1;
  if((arptct|wrptct)==0) {
    // fastest case: no replication, no scalars
   while(--c>=0){
    // copy one cell from a; advance z; advance a
-   JMC(zv,av,ma+(SZI-1),loop1,0); zv+=ma; av+=ma;
+   JMCR(zv,av,ma+(SZI-1),loop1,0,endmaska); zv+=ma; av+=ma;
    // repeat for w
-   JMC(zv,wv,mw+(SZI-1),loop2,0); zv+=mw; wv+=mw;
+   JMCR(zv,wv,mw+(SZI-1),loop2,0,endmaskw); zv+=mw; wv+=mw;
   }
  }else{
   while(--c>=0){
    // copy one cell from a; advance z; advance a if not repeated
-   JMC(zv,av,ma+(SZI-1),loop3,0); zv+=ma; --arptct; av+=REPSGN(arptct)&ma; arptct+=REPSGN(arptct)&arptreset;
+   JMCR(zv,av,ma+(SZI-1),loop3,0,endmaska); zv+=ma; --arptct; av+=REPSGN(arptct)&ma; arptct+=REPSGN(arptct)&arptreset;
    // repeat for w
-   JMC(zv,wv,mw+(SZI-1),loop4,0); zv+=mw; --wrptct; wv+=REPSGN(wrptct)&mw; wrptct+=REPSGN(wrptct)&wrptreset;
+   JMCR(zv,wv,mw+(SZI-1),loop4,0,endmaskw); zv+=mw; --wrptct; wv+=REPSGN(wrptct)&mw; wrptct+=REPSGN(wrptct)&wrptreset;
   }
  }
 }
 static void moveawVS(C *zv,C *av,C *wv,I c,I k,I ma,I mw,I arptreset,I wrptreset){
+ JMCDECL(endmaska) JMCSETMASK(endmaska,ma+(SZI-1),0)
  I arptct=arptreset-1; I wrptct=wrptreset-1;
  while(--c>=0){
   // copy one cell from a; advance z; advance a if not repeated
-  JMC(zv,av,ma+(SZI-1),loop1,0); zv+=ma; --arptct; av+=REPSGN(arptct)&ma; arptct+=REPSGN(arptct)&arptreset;
+  JMCR(zv,av,ma+(SZI-1),loop1,0,endmaska); zv+=ma; --arptct; av+=REPSGN(arptct)&ma; arptct+=REPSGN(arptct)&arptreset;
   // repeat for w
   mvc(mw,zv,k,wv); zv+=mw; --wrptct; wv+=REPSGN(wrptct)&k; wrptct+=REPSGN(wrptct)&wrptreset;
  }
 }
 static void moveawSV(C *zv,C *av,C *wv,I c,I k,I ma,I mw,I arptreset,I wrptreset){
+ JMCDECL(endmaskw) JMCSETMASK(endmaskw,mw+(SZI-1),0)
  I arptct=arptreset-1; I wrptct=wrptreset-1;
  while(--c>=0){
   // copy one cell from a; advance z; advance a if not repeated
   mvc(ma,zv,k,av); zv+=ma; --arptct; av+=REPSGN(arptct)&k; arptct+=REPSGN(arptct)&arptreset;
   // repeat for w
-  JMC(zv,wv,mw+(SZI-1),loop1,0); zv+=mw; --wrptct; wv+=REPSGN(wrptct)&mw; wrptct+=REPSGN(wrptct)&wrptreset;
+  JMCR(zv,wv,mw+(SZI-1),loop1,0,endmaskw); zv+=mw; --wrptct; wv+=REPSGN(wrptct)&mw; wrptct+=REPSGN(wrptct)&wrptreset;
  }
 }
 int (*p[4]) (int x, int y);

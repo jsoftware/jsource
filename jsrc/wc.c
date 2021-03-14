@@ -39,7 +39,7 @@ static I jtcongoto(J jt,I n,CW*con,A*lv){A x,z;C*s;CW*d=con,*e;I i,j,k,m;
  RZ(z=congotoblk(n,con));
  for(i=0;i<n;++i,++d)
   if(CGOTO==d->ig.indiv.type){
-   x=lv[d->ig.indiv.sentx]; s=5+CAV(x); m=0; while('.'!=s[m])++m; ++m;
+   x=lv[d->ig.indiv.sentx]; s=5+CAV(x); m=0; NOUNROLL while('.'!=s[m])++m; ++m;
    e=con-1; j=-1;
    DO(n, ++e; if(LABELEQU(m,s,e)){j=1+i; d->go=(US)j; break;});
    CWASSERT(0<=j);
@@ -400,7 +400,7 @@ B jtpreparse(J jt,A w,A*zl,A*zc){PROLOG(0004);A c,l,*lv,*v,w0,w1,*wv,x,y;B b=0,t
    ASSERT(q<SMAX,EVLIMIT);
    // append the words (which are a queue or a cw) to the list of words
    if(x){                               // set unless the control word is not needed (it usually isn't)
-    while(AN(l)<m+q){RZ(l=ext(0,l)); lv=AAV(l);}  // if word buffer filled, extend it & refresh data pointer
+    NOUNROLL while(AN(l)<m+q){RZ(l=ext(0,l)); lv=AAV(l);}  // if word buffer filled, extend it & refresh data pointer
     if(k)lv[m]=incorp(x); else ICPY(m+lv,AAV(x),q);   // install word(s): the cw, or the words of the queue
    }
    // Now that the words have been moved, install the index to them, and their number, into the cw info; step word pointer over the words added (even if empty spaces)

@@ -141,14 +141,14 @@ AHDRR(plusinsB,I,B){
    for(nn=n;nn>=4*SZI;){  // till we get to the end...
     I nloops=nn>>(LGSZI+2); nloops=nloops>255?255:nloops;  // max 255 loops, each 4 words
     nn-=nloops<<(LGSZI+2);  // keep nn = # bytes remaining
-    I acc0=0, acc1=0, acc2=0, acc3=0;  
+    UI acc0=0, acc1=0, acc2=0, acc3=0;  
     DQ(nloops, acc0+=xu[0]; acc1+=xu[1]; acc2+=xu[2]; acc3+=xu[3]; xu+=4;);  // add up each byte-lane
     // collect all the values we read
     ADDBYTESINI1(acc0); ADDBYTESINI1(acc1); ADDBYTESINI1(acc2); ADDBYTESINI1(acc3); // add alternate bytes
     acc0+=acc1+acc2+acc3; ADDBYTESINIn(acc0); acc+=acc0; // collect all significance
    }
    // Now we have up to 4 words to finish, one of which may be partial.  Continue wordwise.  Overfetch is OK up to SZI-1 bytes
-   I acc0=0;
+   UI acc0=0;
    // we create the mask: 0 if no bytes left, ~0 if >=SZI bytes left, otherwise validity mask.  Littleendian
    UI bytemask=(UI)~0>>(((-nn)&(SZI-1))<<3); bytemask=nn&-SZI?~0:bytemask; bytemask=nn<=0?0:bytemask;  // nn=0->~0->~0->0  nn=1->00ff nn=8->~0 nn=9->00ff->~0
    // if the word has no valid data, back up to avoid overfetch.  Since arg can't have 0 length, that will always be a valid fetch

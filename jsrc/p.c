@@ -224,7 +224,7 @@ void auditblock(J jt,A w, I nonrecurok, I virtok) {
  if(AFLAG(w)&AFVIRTUAL && !(AFLAG(w)&AFUNINCORPABLE))if(AFLAG(ABACK(w))&AFVIRTUAL)SEGFAULT;  // make sure e real backer is valid and not virtual
  if(nonrecur&&!nonrecurok)SEGFAULT;
  if(AFLAG(w)&(AFVIRTUAL|AFUNINCORPABLE)&&!virtok)SEGFAULT;
- if(AT(w)==0xdeadbeefdeadbeef)SEGFAULT;
+ if(AT(w)==(I)0xdeadbeefdeadbeef)SEGFAULT;
  switch(CTTZ(AT(w))){
   case RATX:  
    {A*v=AAV(w); DO(2*AN(w), if(v[i])if(!(((AT(v[i])&NOUN)==INT) && !(AFLAG(v[i])&AFVIRTUAL)))SEGFAULT;);} break;

@@ -1523,7 +1523,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z;B mk=w==mark,th;
     case IIFBEPS:               ztype=PREHRESIVN; break; // integer vector with length check
    }
    xv[0]=mode; xv[1]=n; xv[2]=k; xv[3]=jt->min; xv[4]=(I)fn; xv[5]=ztype; 
-   zv[0]=x; zv[1]=rifvs(h); zv[2]=hi;
+   zv[0]=incorp(x); zv[1]=incorp(h); zv[2]=hi;
   }
  }  // end of 'not sequential comparison' which means we need a hashtable
  I forkeyresult=AM(z);

@@ -202,7 +202,7 @@ static A jtdir1(J jt,LPWIN32_FIND_DATAW f,C* fn) {A z,*zv;C rwx[3],*s,*t;I n,ts[
 #if SY_64
  RZ(zv[2]=incorp(sc(((I)f->nFileSizeHigh<<32) + (I)f->nFileSizeLow)));
 #else
- RZ(zv[2]=sc(   (f->nFileSizeHigh || 0>(I)f->nFileSizeLow)?-1:f->nFileSizeLow ));  
+ RZ(zv[2]=incorp(sc(   (f->nFileSizeHigh || 0>(I)f->nFileSizeLow)?-1:f->nFileSizeLow )));  
 #endif
  RZ(zv[3]=incorp(str(3L,rwx)));
  RZ(zv[4]=incorp(attv((S)f->dwFileAttributes)));

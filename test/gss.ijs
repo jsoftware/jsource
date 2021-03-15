@@ -25,7 +25,7 @@ NB. Verify that singleton gets same result as 1 item of an array, and also in "0
 compss =: 1 : 0 (&>)
 yy =: y
 assert. (val =. u f. etx y) -: (({.@:(u f.&(2 $ ,:))) etx y)
-assert. (u f."0&:(5&$) y) -: 5&$@:(u f.) y
+assert. (u f."+&:(5&$) y) -: 5&$@:(u f.) y
 assert. (val =. u f. etx y) -:&(3!:0) (({.@:(u f.&(2 $ ,:))) etx y)
 if. 2 ~: 3!:0 val do.
 assert. val -: u f. etx 0 + y
@@ -36,7 +36,7 @@ xx =: x
 yy =: y
 assert. (val =. x u f. etx y) -: (x ({.@:(u f.&(2 $ ,:))) etx y)
 assert. (val =. x u f. etx y) -:&(3!:0) (x ({.@:(u f.&(2 $ ,:))) etx y)
-assert. (x (u f."0&:(5&$) etx) y) -: x 5&$@:(u f.) etx y
+assert. (x (u f."+&:(5&$) etx) y) -: x 5&$@:(u f.) etx y
 if. 2 ~: 3!:0 val do.
 assert. val -: x u 0 + y
 assert. val -: x u 0 + y

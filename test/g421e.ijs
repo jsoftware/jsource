@@ -22,16 +22,16 @@ data=: 4 : 0
 
 test=: 1 : 0
  yy=: y data 17 19
- assert. (u/"_/. -: u//.)   yy
- assert. (u/"_/. -: u//.) |:yy
+ assert. (u/"]/. -: u//.)   yy
+ assert. (u/"]/. -: u//.) |:yy
  1
 )
 
 test2=: 2 : 0
  xx=: y data 17
  yy=: y data 23
- assert. xx (u//.@(v/) -: u/"_/.@(v/"_)) yy
- assert. yy (u//.@(v/) -: u/"_/.@(v/"_)) xx
+ assert. xx (u//.@(v/) -: u/"]/.@(v/"])) yy
+ assert. yy (u//.@(v/) -: u/"]/.@(v/"])) xx
  1
 )
 

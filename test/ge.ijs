@@ -48,7 +48,7 @@ NB. Similar to e.'' are cases of fills with a rank loop that alters boxing
 0 1 -: $ (0$a:) i.@(3!:0)@[&> (0$4)
 0 4 -: $ (0$a:) i.@(3!:0)@]&> (0$4)
 
-1 1 -: $ ]@>"0 0 _~ ,1
+1 1 -: $ ]@>"0 _~ ,1
 1 1 -: $ ]@>"0 _ 0~ ,1
 (,1) -: $ ]@>"_ 0 0~ ,1
 

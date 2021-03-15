@@ -265,7 +265,7 @@ f =. 4 : 0
 assert. x (; -: link) y
 assert. x ((;<) -: (link<)) y
 assert. x (,&< -: (link<)) y
-if. boxed x do. assert. x ((,<) -: (,"_ <)) y end.
+if. boxed x do. assert. x ((,<) -: (,"] <)) y end.
 1
 )
 

@@ -59,7 +59,6 @@ v=: 3{.}.y
 t=: 5}.y
 'bad jversion'assert +/902 903=0".v
 'bad jtype'assert (('beta-'-:5{.t)*.6=#t)+.('release-'-:8{.t)*.9=#t
-BUILD=: y
 version=: v
 type=: t
 platform=: ;(('Win';'Linux';'Darwin')i.<UNAME){'windows';'linux';'darwin'
@@ -182,8 +181,6 @@ fread pversionh
 
 
 build=: 3 : 0
-'build_for must be run first'assert 0=nc<'BUILD'
-echo BUILD,' ',y
 suf=. suffix
 select. y
 case. 'jconsole' do.
@@ -209,6 +206,7 @@ echo fread stderr
 build_all=: 3 : 0
 'do not run in JHS'assert -.IFJHS
 git_status''
+echo get_jversion''
 build each 'jconsole';'libtsdll';'libj';'libjavx';'libjavx2'
 )
 

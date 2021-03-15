@@ -178,8 +178,6 @@ get_jversion=: 3 : 0
 fread pversionh
 )
 
-
-
 build=: 3 : 0
 suf=. suffix
 select. y
@@ -206,7 +204,6 @@ echo fread stderr
 build_all=: 3 : 0
 'do not run in JHS'assert -.IFJHS
 git_status''
-echo get_jversion''
 build each 'jconsole';'libtsdll';'libj';'libjavx';'libjavx2'
 )
 

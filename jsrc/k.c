@@ -73,6 +73,111 @@ static KF1(jtC4fromC2){US*v;C4*x;
  R 1;
 }
 
+typedef struct {I a; I b; I c; I d;} int4;
+static __attribute__((aligned(CACHELINESIZE))) int4 Ifours[16] = {
+{0,0,0,0}, {1,0,0,0}, {0,1,0,0}, {1,1,0,0}, {0,0,1,0}, {1,0,1,0}, {0,1,1,0}, {1,1,1,0}, {0,0,0,1}, {1,0,0,1}, {0,1,0,1}, {1,1,0,1}, {0,0,1,1}, {1,0,1,1}, {0,1,1,1}, {1,1,1,1},
+};
+
+// conversion of bytes, with overfetch
+static KF1(jtIfromB){
+ int4 sink;  // we divert stores to here
+ I n=AN(w); UI *wv=UIAV(w); int4 *zv=yv;
+ UI b8;  // 8 bits
+ while(1){
+  b8=*wv++;  // fetch next 8 bits
+  if((n-=SZI)<=0)break;  // exit loop with b8 set if not >8 slots left
+  b8|=b8>>7; b8|=b8>>14;  // now bits 0-3 and 32-35 have 4 binary values
+  b8&=(UI)0xf0000000f;  // remove garb.
+  *zv++=Ifours[b8&0xf];  // move 4 Is
+#if SY_64
+  *zv++=Ifours[b8>>32];  // move 4 Is
+#endif
+ }
+ // we have moved all the full 8-bit sections; handle the last one, 1-8 bytes.  n is -7 to 0
+ b8&=VALIDBOOLEAN; b8|=b8>>7; b8|=b8>>14;  // last section may have garbage; clear it.  now bits 0-3 and 32-35 have 4 binary values
+ b8&=(UI)0xf0000000f;  // remove garb.
+ I *zvI=(I*)zv;  // take output address before we divert it
+ n+=SZI-1;  // n is 0 to 7, # words to move-1
+#if SY_64
+ // if there is a full 4-bit section, copy it and advance to remnant.  n must be -7 to -4
+ zv=n&4?zv:&sink;  // if moving only 1-4 words, divert this
+ *zv=Ifours[b8&0xf];  // move the 4-bit section
+ zvI+=n&4;  // advance word output pointer if we copied the 4-bit section
+ b8>>=(n&4)<<LGBB;  // if we wrote the bits out, shift in the new ones
+ n&=4-1;  // get length of remnant-1, 0-3
+#endif
+ // move the remnant, 1-4 bytes
+ *zvI++=b8&1; zvI=n<1?&jt->shapesink[0]:zvI; *zvI++=(b8>>=1)&1;  zvI=n<2?&jt->shapesink[0]:zvI; *zvI++=(b8>>=1)&1; zvI=n<3?&jt->shapesink[0]:zvI; *zvI=(b8>>=1)&1;
+ R 1;
+}
+
+typedef struct {D a; D b; D c; D d;} dbl4;
+static __attribute__((aligned(CACHELINESIZE))) dbl4 Dfours[16] = {
+{0,0,0,0}, {1,0,0,0}, {0,1,0,0}, {1,1,0,0}, {0,0,1,0}, {1,0,1,0}, {0,1,1,0}, {1,1,1,0}, {0,0,0,1}, {1,0,0,1}, {0,1,0,1}, {1,1,0,1}, {0,0,1,1}, {1,0,1,1}, {0,1,1,1}, {1,1,1,1},
+};
+
+// conversion of bytes, with overfetch
+static KF1(jtDfromB){
+ dbl4 sink;  // we divert stores to here
+ I n=AN(w); UI *wv=UIAV(w); dbl4 *zv=yv;
+ UI b8;  // 8 bits
+ while(1){
+  b8=*wv++;  // fetch next 8 bits
+  if((n-=SZI)<=0)break;  // exit loop with b8 set if not 4 slots left
+  b8|=b8>>7; b8|=b8>>14;  // now bits 0-3 and 32-35 have 4 binary values
+  b8&=(UI)0xf0000000f;  // remove garb.
+  *zv++=Dfours[b8&0xf];  // move 4 Is
+#if SY_64
+  *zv++=Dfours[b8>>32];  // move 4 Is
+#endif
+ }
+ // we have moved all the full 8-bit sections; handle the last one, 1-8 bytes.  n is -7 to 0
+ b8&=VALIDBOOLEAN; b8|=b8>>7; b8|=b8>>14;  // last section may have garbage; clear it.  now bits 0-3 and 32-35 have 4 binary values
+ b8&=(UI)0xf0000000f;  // remove garb.
+ D *zvD=(D*)zv;  // take output address before we divert it
+ n+=SZI-1;  // n is 0 to 7, # words to move-1
+#if SY_64
+ // if there is a full 4-bit section, copy it and advance to remnant.  n must be -7 to -4
+ zv=n&4?zv:&sink;  // if moving only 1-4 words, divert this
+ *zv=Dfours[b8&0xf];  // move the 4-bit section
+ zvD+=n&4;  // advance word output pointer if we copied the 4-bit section
+ b8>>=(n&4)<<LGBB;  // if we wrote the bits out, shift in the new ones
+ n&=4-1;  // get length of remnant-1, 0-3
+#endif
+ // move the remnant, 1-4 bytes
+ *zvD++=b8&1; zvD=n<1?(D*)&jt->shapesink[0]:zvD; *zvD++=(b8>>=1)&1;  zvD=n<2?(D*)&jt->shapesink[0]:zvD; *zvD++=(b8>>=1)&1; zvD=n<3?(D*)&jt->shapesink[0]:zvD; *zvD=(b8>>=1)&1;
+ R 1;
+}
+
+#if SY_64 && (C_AVX || EMU_AVX)
+static KF1(jtDfromI){I n=AN(w); D *x=DAV(w); D *z=yv;
+/* Optimized full range int64_t to double conversion           */
+/* Emulate _mm256_cvtepi64_pd()                                */
+// Tip o'hat to wim and Peter Cordes on stackoverflow
+ AVXATOMLOOP(
+    __m256i magic_i_lo   = _mm256_set1_epi64x(0x4330000000000000);                /* 2^52               encoded as floating-point  */
+    __m256i magic_i_hi32 = _mm256_set1_epi64x(0x4530000080000000);                /* 2^84 + 2^63        encoded as floating-point  */
+    __m256i magic_i_all  = _mm256_set1_epi64x(0x4530000080100000);                /* 2^84 + 2^63 + 2^52 encoded as floating-point  */
+    __m256d magic_d_all  = _mm256_castsi256_pd(magic_i_all);
+ ,
+// AVX512  u=_mm256_cvtepi64_pd(_mm256_castpd_si256(u));
+    __m256i u_lo         = _mm256_blend_epi32(magic_i_lo, _mm256_castpd_si256(u), 0b01010101);         /* Blend the 32 lowest significant bits of u with magic_int_lo                                                   */
+    __m256i u_hi         = _mm256_srli_epi64(_mm256_castpd_si256(u), 32);                              /* Extract the 32 most significant bits of u                                                                     */
+            u_hi         = _mm256_xor_si256(u_hi, magic_i_hi32);                  /* Flip the msb of u_hi and blend with 0x45300000                                                                */
+    __m256d u_hi_dbl     = _mm256_sub_pd(_mm256_castsi256_pd(u_hi), magic_d_all); /* Compute in double precision:                                                                                  */
+    u       = _mm256_add_pd(u_hi_dbl, _mm256_castsi256_pd(u_lo));    /* (u_hi - magic_d_all) + u_lo  Do not assume associativity of floating point addition !!                        */
+ ,
+  R 1;
+ )
+}
+#else
+static KF1(jtDfromI){I n; I *x=IAV(w); D *z=yv;
+DQ(n, *z++=(D)*x++;)
+R 1;
+#endif
+
+
+
 static KF1(jtBfromI){B*x;I n,p,*v;
  n=AN(w); v=AV(w); x=(B*)yv;
  DQ(n, p=*v++; *x++=(B)p; if(p&-2)R 0;);
@@ -352,15 +457,18 @@ B jtccvt(J jt,I tflagged,A w,A*y){F1PREFIP;A d;I n,r,*s,wt; void *wv,*yv;I t=tfl
  }
  // types here must both be among B01 INT FL CMPX XNUM RAT
  switch (CVCASE(CTTZ(t),CTTZ(wt))){
-  case CVCASE(INTX, B01X): {I*x = yv; B*v = (B*)wv; DQ(n, *x++ = *v++;); } R 1;
+// obsolete   case CVCASE(INTX, B01X): {I*x = yv; B*v = (B*)wv; DQ(n, *x++ = *v++;); } R 1;
+  case CVCASE(INTX, B01X): R jtIfromB(jt, w, yv);
   case CVCASE(XNUMX, B01X): R XfromB(w, yv);
   case CVCASE(RATX, B01X): GATV(d, XNUM, n, r, s); R XfromB(w, AV(d)) && QfromX(d, yv);
-  case CVCASE(FLX, B01X): {D*x = (D*)yv; B*v = (B*)wv; DQ(n, *x++ = *v++;); } R 1;
+// obsolete   case CVCASE(FLX, B01X): {D*x = (D*)yv; B*v = (B*)wv; DQ(n, *x++ = *v++;); } R 1;
+  case CVCASE(FLX, B01X): R jtDfromB(jt, w, yv);
   case CVCASE(CMPXX, B01X): {Z*x = (Z*)yv; B*v = (B*)wv; DQ(n, x++->re = *v++;); } R 1;
   case CVCASE(B01X, INTX): R BfromI(w, yv);
   case CVCASE(XNUMX, INTX): R XfromI(w, yv);
   case CVCASE(RATX, INTX): GATV(d, XNUM, n, r, s); R XfromI(w, AV(d)) && QfromX(d, yv);
-  case CVCASE(FLX, INTX): {D*x = (D*)yv; I*v = wv; DQ(n, *x++ = (D)*v++;); } R 1;
+// obsolete   case CVCASE(FLX, INTX): {D*x = (D*)yv; I*v = wv; DQ(n, *x++ = (D)*v++;); } R 1;
+  case CVCASE(FLX, INTX): R jtDfromI(jt, w, yv);
   case CVCASE(CMPXX, INTX): {Z*x = (Z*)yv; I*v = wv; DQ(n, x++->re = (D)*v++;); } R 1;
   case CVCASE(B01X, FLX): R BfromD(w, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZ);
   case CVCASE(INTX, FLX): R IfromD(w, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZ);

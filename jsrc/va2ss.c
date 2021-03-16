@@ -150,7 +150,7 @@ A jtssingleton(J jt, A a,A w,A self,RANK2T awr,RANK2T ranks){A z;
 // obsolete    if(!(av&&wv)) SSSTORENV(0L,z,INT,I)
 // obsolete    else if (zv=jtmult(0,av,wv)) SSSTORENV(zv,z,INT,I)  // 0 result on errors
 // obsolete    else SSSTORE((D)av*(D)wv,z,FL,D)
-   DPMULD(av,wv,zv,SSSTORE((D)av*(D)wv,z,FL,D))  // overflow
+   DPMULDDECLS DPMULD(av,wv,zv,SSSTORE((D)av*(D)wv,z,FL,D))  // overflow
    else SSSTORENV(zv,z,INT,I)  // normal
    R z;}
  case SSINGCASE(VA2CSTAR-VA2CBW1111,SSINGDD): {D av=SSRDD(a), wv=SSRDD(w);

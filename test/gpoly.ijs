@@ -14,9 +14,9 @@ test =: 3 : 0
  assert. *./ 1e_6  > c (+/@:|@[ %~ |@]) c p. >{:r
  assert. *./ 1e_13 > c %&(+/@:|)~ -/c,:d
  assert. (c p. z) -:!.1e_12 r p. z
- assert. (c p. z) -:!.1e_12 d p. z
+ assert. (c p. z) -:!.1e_11 d p. z
  assert. (c p. x) -:!.1e_12 r p. x
- assert. (c p. x) -:!.1e_12 d p. x
+ assert. (c p. x) -:!.1e_11 d p. x
  assert. (p. c) -: p. c,0 0 0 0 0
  1
 )

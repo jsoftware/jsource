@@ -971,8 +971,7 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
  }
 
  // Go back through the words of the definition, and add bucket/index information for each simplename, and cachability flag
- // Note that variable names must be replaced by clones so they are not overwritten
- // Don't do this if this definition might return a non-noun (i. e. is an adverb/conjunction not operating on xy)
+ // If this definition might return a non-noun (i. e. is an adverb/conjunction not operating on xy) there is a problem.
  // In that case, the returned result might contain local names; but these names contain bucket information
  // and are valid only in conjunction with the symbol table for this definition.  To prevent the escape of
  // incorrect bucket information, don't have any (this is easier than trying to remove it from the returned

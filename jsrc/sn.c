@@ -35,10 +35,11 @@ B jtvnm(J jt,I n,C *s){C c,t;I j;
 
 B vlocnm(I n,C*s){
  I accummask=0; DO(n, UC c=s[i]; C t=ctype[c]; t=c=='_'?CX:t; accummask|=t;)  // create mask of types encountered.  Treat  '_' as nonalphameric
- if(accummask&~(CA|C9))R 0;  // error if any non-alphameric encountered
- if(n<2)R (B)n;  // error if n=0; OK if n=1 (any alphameric is OK then)
+ if(unlikely(accummask&~(CA|C9)))R 0;  // error if any non-alphameric encountered
+ if(unlikely(n<2))R (B)n;  // error if n=0; OK if n=1 (any alphameric is OK then)
  if(s[0]>'9')R 1;  // if nonnumeric locale, alphameric name must be OK
- if(s[0]=='0'||n>(SZI==8?18:9))R 0;  // numeric locale: if (multi-digit) locale starts with '0', or number is too long for an I (conservatively), error
+ if(unlikely(s[0]=='0'))R 0;
+ if(unlikely(n>(SZI==8?18:9)))R 0;  // numeric locale: if (multi-digit) locale starts with '0', or number is too long for an I (conservatively), error
  R accummask==C9;   // if there are any alphabetics, give error
 }    /* validate locale name: 1 if locale-name OK, 0 if error */
 

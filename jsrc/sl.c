@@ -266,7 +266,7 @@ F1(jtlocsizes){I p,q,*v;
 // n=-1 means 'numbered locale, don't bother checking digits'   u is invalid
 // The slot we return might be a zombie, if LOCPATH is clear.  The caller must check.
 A jtstfind(J jt,I n,C*u,I bucketx){L*v;
- if(!n){n=sizeof(JT(jt,baselocale)); u=JT(jt,baselocale);bucketx=JT(jt,baselocalehash);}
+ if(unlikely(!n)){n=sizeof(JT(jt,baselocale)); u=JT(jt,baselocale);bucketx=JT(jt,baselocalehash);}
  if(n>0&&'9'<*u){  // named locale   > because *u is known to be non-empty
   ASSERT(n<256,EVLIMIT);
   v=jtprobe((J)((I)jt+n),u,(UI4)bucketx,JT(jt,stloc));

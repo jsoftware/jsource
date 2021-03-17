@@ -171,9 +171,10 @@ static KF1(jtDfromI){I n=AN(w); D *x=DAV(w); D *z=yv;
  )
 }
 #else
-static KF1(jtDfromI){I n; I *x=IAV(w); D *z=yv;
+static KF1(jtDfromI){I n=AN(w); I *x=IAV(w); D *z=yv;
 DQ(n, *z++=(D)*x++;)
 R 1;
+}
 #endif
 
 

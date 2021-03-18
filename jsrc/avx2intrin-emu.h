@@ -107,6 +107,24 @@ static __emu_inline __emu##type __emu_mm256_##func##256( __emu##type m256_param1
     return ( res.emu##type ); \
 }
 
+/** \{Reference,_mm256_blend_epi32} */
+static __emu_inline __emu__m256i __emu_mm256_blend_epi32_REF        ( __emu__m256i a, __emu__m256i b, const int mask )
+{
+    __emv__m256i A,B,ret;
+    A.emu__m256i = a;
+    B.emu__m256i = b;
+    ret.__emu_arr[0] = (mask & 0x1) ? B.__emu_arr[0] : A.__emu_arr[0];
+    ret.__emu_arr[1] = (mask & 0x2) ? B.__emu_arr[1] : A.__emu_arr[1];
+    ret.__emu_arr[2] = (mask & 0x4) ? B.__emu_arr[2] : A.__emu_arr[2];
+    ret.__emu_arr[3] = (mask & 0x8) ? B.__emu_arr[3] : A.__emu_arr[3];
+    ret.__emu_arr[4] = (mask & 0x10) ? B.__emu_arr[4] : A.__emu_arr[4];
+    ret.__emu_arr[5] = (mask & 0x20) ? B.__emu_arr[5] : A.__emu_arr[5];
+    ret.__emu_arr[6] = (mask & 0x40) ? B.__emu_arr[6] : A.__emu_arr[6];
+    ret.__emu_arr[7] = (mask & 0x80) ? B.__emu_arr[7] : A.__emu_arr[7];
+    return ret.emu__m256i;
+}
+
+
 static __emu_inline __emu__m256i __emu_mm256_broadcastb_epi8        ( __m128i a )
 {
     __emv__m256i A;
@@ -312,6 +330,7 @@ __emu_maskstore_impl( __emu_mm256_maskstore_epi64, __emu__m256i, __emu__m256i, _
 #undef _mm256_add_epi64
 #undef _mm256_andnot_si256
 #undef _mm256_and_si256
+#undef _mm256_blend_epi32
 #undef _mm256_broadcastb_epi8
 #undef _mm256_cmpeq_epi64
 #undef _mm256_cmpeq_epi8
@@ -339,6 +358,7 @@ __emu_maskstore_impl( __emu_mm256_maskstore_epi64, __emu__m256i, __emu__m256i, _
 #define _mm256_add_epi64 __emu_mm256_add_epi64
 #define _mm256_andnot_si256 __emu_mm256_andnot_si256
 #define _mm256_and_si256 __emu_mm256_and_si256
+#define _mm256_blend_epi32 __emu_mm256_blend_epi32_REF
 #define _mm256_broadcastb_epi8 __emu_mm256_broadcastb_epi8
 #define _mm256_cmpeq_epi64 __emu_mm256_cmpeq_epi64
 #define _mm256_cmpeq_epi8 __emu_mm256_cmpeq_epi8

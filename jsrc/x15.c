@@ -1193,7 +1193,6 @@ F2(jtcd){A z;C*tv,*wv,*zv;CCT*cc;I k,m,n,p,q,t,wr,*ws,wt;
  F2PREFIP;
  ARGCHK2(a,w);
  AFLAGPRISTNO(w)  // we transfer boxes from w to the result, thereby letting them escape.  That makes w non-pristine
-// obsolete  if(!JT(jt,cdarg))RZ(cdinit());
  if(1<AR(a)){I rr=AR(w); rr=rr==0?1:rr; R rank2ex(a,w,DUMMYSELF,1L,rr,1L,rr,jtcd);}
  wt=AT(w); wr=AR(w); ws=AS(w); PRODX(m,wr-1,ws,1);
  ASSERT(wt&DENSE,EVDOMAIN);
@@ -1227,10 +1226,6 @@ void dllquit(J jt){CCT*av;I j,*v;
  if(!JT(jt,cdstr))R;   // if we never initialized, don't free
  v=AV(JT(jt,cdhashl)); av=(CCT*)AV(JT(jt,cdarg));
  DQ(AN(JT(jt,cdhashl)), j=*v++; if(0<=j)FREELIB(av[j].h););   // unload all libraries
-// obsolete  fa(JT(jt,cdarg));   JT(jt,cdarg)  =0;
-// obsolete  fa(JT(jt,cdstr));   JT(jt,cdstr)  =0;
-// obsolete  fa(JT(jt,cdhash));  JT(jt,cdhash) =0;
-// obsolete  fa(JT(jt,cdhashl)); JT(jt,cdhashl)=0;
  memset(CAV(JT(jt,cdstr)),C0,AN(JT(jt,cdstr))); memset(CAV(JT(jt,cdarg)),C0,AN(JT(jt,cdarg))); memset(CAV(JT(jt,cdhash)),CFF,SZI*AN(JT(jt,cdhash))); memset(CAV(JT(jt,cdhashl)),CFF,SZI*AN(JT(jt,cdhashl)));  // clear contents of tables
  AM(JT(jt,cdstr))=AM(JT(jt,cdarg))=AM(JT(jt,cdhash))=AM(JT(jt,cdhashl))=0;  // reset all tables to empty
  // leave the tables allocated
@@ -1480,7 +1475,6 @@ F1(jtcdlibl){
  ASSERT(LIT&AT(w),EVDOMAIN);
  ASSERT(1>=AR(w),EVRANK);
  ASSERT(AN(w),EVLENGTH);
-// obsolete  if(!JT(jt,cdarg))R num(0);
  if(!AM(JT(jt,cdarg)))R num(0);
  R sc((I)cdlookupl(CAV(w)));
 }    /* 15!:20 return library handle */
@@ -1490,7 +1484,6 @@ F1(jtcdproc1){CCT*cc;
  ASSERT(LIT&AT(w),EVDOMAIN);
  ASSERT(1>=AR(w),EVRANK);
  ASSERT(AN(w),EVLENGTH);
-// obsolete  if(!JT(jt,cdarg))RE(cdinit());
  C* enda=&CAV(w)[AN(w)]; C endc=*enda; *enda=0; cc=cdparse(w,1); *enda=endc; RE(cc); // should do outside rank2 loop?
  R sc((I)cc->fp);
 }    /* 15!:21 return proc address */

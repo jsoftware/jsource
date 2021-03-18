@@ -33,29 +33,6 @@ ARGCHK2D(fx,hx) \
 /* The call to g is inplaceable if g allows it, UNLESS fx or hx is the same as disallowed y.  Pass in WILLOPEN from the input */ \
 POPZOMB; RZ(z=(g2)((J)(intptr_t)((((I)jtinplace&(~(JTINPLACEA+JTINPLACEW)))|(((I )(fx!=protw)&(I )(fx!=prota))*JTINPLACEA+((I )(hx!=protw)&(I )(hx!=prota)*JTINPLACEW)))&(REPSGN(SGNIF(FAV(gs)->flag,VJTFLGOK2X))|~JTFLAGMSK)),fx,hx,gs));}
 
-#if 0  // obsolete
-// similar for cap, but now we can inplace the call to h
-#define CAP1 {PUSHZOMB; A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); \
-A hx; RZ(hx=(h1)((J)(intptr_t)(((I)jtinplace&(~(JTWILLBEOPENED+JTCOUNTITEMS))) + (REPSGN(SGNIF(FAV(hs)->flag,VJTFLGOK1X)) & FAV(gs)->flag2 & JTWILLBEOPENED+JTCOUNTITEMS)),w,hs));  /* inplace g.  jtinplace is set for g */ \
-/* inplace gx unless it is protected */ \
-POPZOMB; \
-jtinplace=(J)(intptr_t)(((I)jtinplace&~(JTINPLACEW))+((I )(hx!=protw)*JTINPLACEW));  \
-jtinplace=FAV(gs)->flag&VJTFLGOK1?jtinplace:jt; \
-RZ(z=(g1)(jtinplace,hx,gs));}
-
-#define CAP2 {PUSHZOMB; A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)(intptr_t)((I)a+((I)jtinplace&JTINPLACEA)); \
-A hx; RZ(hx=(h2)((J)(intptr_t)(((I)jtinplace&(~(JTWILLBEOPENED+JTCOUNTITEMS))) + (REPSGN(SGNIF(FAV(hs)->flag,VJTFLGOK2X)) & FAV(gs)->flag2 & JTWILLBEOPENED+JTCOUNTITEMS)),a,w,hs));  /* inplace g */ \
-/* inplace gx unless it is protected */ \
-POPZOMB; jtinplace=(J)(intptr_t)(((I)jtinplace&~(JTINPLACEW))+(((I )(hx!=prota)&(I )(hx!=protw))*JTINPLACEW));  \
-jtinplace=FAV(gs)->flag&VJTFLGOK1?jtinplace:jt; \
-RZ(z=(g1)(jtinplace,hx,gs));}
-
-
-
-DF1(jtcork1){F1PREFIP;DECLFGH;PROLOG(0026);A z;  CAP1; EPILOG(z);}
-DF2(jtcork2){F2PREFIP;DECLFGH;PROLOG(0027);A z;  CAP2; EPILOG(z);}
-#endif
-
 static DF1(jtfolk1){F1PREFIP;DECLFGH;PROLOG(0028);A z; FOLK1; EPILOG(z);}
 static DF2(jtfolk2){F2PREFIP;DECLFGH;PROLOG(0029);A z; FOLK2;
  EPILOG(z);}
@@ -97,7 +74,6 @@ static DF2(jtfolkcomp){F2PREFIP;DECLFGH;A z;AF f;
   z=f(jt,a,w,self);
   if(z){if(postflags&2){z=num((IAV(z)[0]!=AN(AR(a)>=AR(w)?a:w))^(postflags&1));}}
   EPILOGNORET(z);
-// obsolete  }else if(cap(fs))CAP2 else FOLK2;
  }else z=(hs?jtfolk2:jtupon2)(jt,a,w,self);
  RETF(z);
 }
@@ -114,7 +90,6 @@ static DF2(jtfolkcomp0){F2PREFIP;DECLFGH;A z;AF f;
   if(z){if(postflags&2){z=num((IAV(z)[0]!=AN(AR(a)>=AR(w)?a:w))^(postflags&1));}}
   EPILOGNORET(z);
  }else z=(hs?jtfolk2:jtupon2)(jt,a,w,self);
-// obsolete  }else if(cap(fs))CAP2 else FOLK2;
  POPCCT  //  bug: if we RZd early we leave ct unpopped
  RETF(z);
 }
@@ -156,7 +131,6 @@ A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I
   // Copy the open/raze status from v into u@v
    flag2 |= hv->flag2&(VF2WILLOPEN1|VF2WILLOPEN2W|VF2WILLOPEN2A|VF2USESITEMCOUNT1|VF2USESITEMCOUNT2W|VF2USESITEMCOUNT2A);
    if(gi==CBOX)flag2|=VF2BOXATOP1|VF2BOXATOP2;   // [: < h
-// obsolete    f1=jtcork1; f2=jtcork2;
    f1=on1cell; f2=jtupon2cell;
    if(BOTHEQ8(gi,hi,CSLASH,CDOLLAR)&&FAV(gv->fgh[0])->id==CSTAR){f1=jtnatoms;}  // [: */ $
    if(gi==CPOUND){f1=hi==CCOMMA?jtnatoms:f1; f1=hi==CDOLLAR?jtrank:f1;}  // [: # ,   [: # $

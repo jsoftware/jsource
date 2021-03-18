@@ -123,41 +123,12 @@ static B jtforinit(J jt,CDATA*cv,A t){A x;C*s,*v;I k;
   // Install the virtual block as xyz, and remember its address
   cv->item=*aval=svb;  // save in 2 places, commensurate with AC of 2
  }
-// obsolete  SETIC(t,cv->n);                            /* # of items in t     */
-// obsolete  cv->x=0;
-// obsolete  k=AN(cv->line)-5;
-// obsolete  cv->k=(I4)k;                 
-// obsolete  if(k>0){                         /* for_xyz.       k>0 and cv->n >0     */
-// obsolete   s=4+CAV(cv->line); RZ(x=str(6+k,s));
-// obsolete     cv->xv=v=CAV(x); MC(k+v,"_index",6L);  /* index name          */
-// obsolete   cv->iv=s;                              /* item name           */
-// obsolete   }
  R 1;
 }    /* for. do. end. initializations */
-
-#if 0 // obsolete 
-// Go through for. stack blocks, realizing any sorta-virtual items.  This is needed only during error processing when the stack was not cleaned normally.
-// We have to do this because the sorta-virtual must use fr, not fa, and normal frees don't know that
-// cv is the pointer to current stack, cv0 is the pointer to the stack base-1.  Stack must exist
-static B jtrestackcv(J jt,CDATA*cv,CDATA*cv0){
- for(;cv!=cv0;--cv){
-  if(cv->w==CFOR){
-   if(cv->t){  // if for_xyz. that has processed forinit ...
-    A svb=cv->item;  // the sorta-virtual block for the item
-    if(unlikely(JT(jt,sympv)[cv->itemsym].val==svb)){  // the svb is still in the value
-     A newb; RZ(newb=realize(svb)); ACINITZAP(newb); fa(svb); JT(jt,sympv)[cv->itemsym].val=newb;  // realize stored value if virtual.  svb will be freed later
-    }
-   }
-  }
- }
- R 1;
-}
-#endif
 
 // A for/select. block is ending.   Free the iteration array.  Don't delete any names.  Mark the index as no longer readonly (in case we start the loop again)
 // if assignvirt is set (normal), the xyz value is realized and reassigned if it is still the svb.  Otherwise it is freed and the value expunged.
 static B jtunstackcv(J jt,CDATA*cv,I assignvirt){
-// obsolete  if(cv->x){fa(cv->x);}
  if(cv->w==CFOR){
   if(cv->t){  // if for_xyz. that has processed forinit ...
    JT(jt,sympv)[cv->indexsym].flag&=~LREADONLY;  // xyz_index is no longer readonly.  It is still available for inspection
@@ -233,7 +204,6 @@ static I debugnewi(I i, DC thisframe, A self){
 DF2(jtxdefn){F2PREFIP;PROLOG(0048);
  RE(0);
  A *line;   // pointer to the words of the definition.  Filled in by LINE
-// obsolete  I n;  // number of lines in the definition.  Filled in by LINE could be US
  CW *cw;  // pointer to control-word info for the definition.  Filled in by LINE
  UI nG0ysfctdl;  // flags: 1=locked 2=debug(& not locked) 4=tdi!=0 8=cd!=0 16=thisframe!=0 32=symtable was the original (i. e. !AR(symtab)&ARLSYMINUSE)
              // 64=call is dyadic 128=0    0xff00=original debug flag byte (must be highest bit)  0xffff0000=#cws in the definition
@@ -363,7 +333,6 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
  I4 bi;   // cw number of last B-block result.  Needed only if it gets a NONNOUN error - can force to memory
  I4 ti;   // cw number of last T-block result.  Needed only if it gets a NONNOUN error
  while(1){
-// obsolete CW *ci;
   // i holds the control-word number of the current control word
   // Check for debug and other modes
   if(unlikely(jt->uflags.us.cx.cx_us!=0)){  // fast check to see if we have overhead functions to perform
@@ -404,7 +373,6 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
 
   // Don't do the loop-exit test until debug has had the chance to update the execution line.  For example, we might be asked to reexecute the last line of the definition
   if(unlikely((UI)i>=(UI)(nG0ysfctdl>>16)))break;
-// obsolete   ci=i+cw;   // ci->control-word info
   // process the control word according to its type
   I cwgroup;
   // **************** top of main dispatch loop ********************
@@ -520,11 +488,7 @@ docase:
 
    ++cv; --r;
    BZ(forinitnames(jt,cv,cwgroup&0xff,line[CWSENTX]));  // setup the names, before we see the iteration value
-// obsolete    // indicate no t result (test value for select., iteration array for for.) and clear iteration index
-// obsolete    // remember the line number of the for./select.
-// obsolete    cv->t=0; cv->w=ci->ig.indiv.type;
    ++i;
-// obsolete cv->x=0; cv->line=line[ci->i];
    break;
   case CDOF:   // do. after for.
    // do. after for. .  If this is first time, initialize the iterator
@@ -534,11 +498,6 @@ docase:
     BZ(forinit(cv,t)); t=0;
    }
    ++cv->j;  // step to first (or next) iteration
-// obsolete    if(cv->x){A x;  // assign xyz and xyz_index for for_xyz.
-// obsolete     if(unlikely(!(ci->ig.indiv.canend&2)))BZ(z=rat(z));   // if z might be the result, protect it over the possible frees during this assignment
-// obsolete     symbisdel(nfs(6+cv->k,cv->xv),x=sc(cv->j),locsym);  // Assign iteration number.  since there is no sentence, take deletion off nvr stack
-// obsolete     symbisdel(nfs(  cv->k,cv->iv),cv->j<cv->n?from(x,cv->t):mtv,locsym);
-// obsolete    }
    if(likely(cv->indexsym!=0)){
     L *sympv=JT(jt,sympv);  // base of symbol array
     A *aval=&sympv[cv->indexsym].val;  // address of iteration-count slot
@@ -547,12 +506,10 @@ docase:
     IAV0(iterct)[0]=cv->j;  // Install iteration number into the readonly index
     aval=&sympv[cv->itemsym].val;  // switch aval to address of item slot
     if(unlikely(!(cwgroup&0x200)))BZ(z=rat(z));   // if z might be the result, protect it over the free
-// obsolete     if(likely(*aval!=0))fa(*aval)  // discard & free incumbent
     if(likely(cv->j<cv->niter)){  // if there are more iterations to do...
     // if xyz has been reassigned, fa the incumbent and reinstate the sorta-virtual block, advanced to the next item
      AK(cv->item)+=cv->itemsiz;  // advance to next item
      if(unlikely(*aval!=cv->item)){A val=*aval; fa(val) val=cv->item; ra(val) *aval=val;}  // discard & free incumbent, switch to sorta-virtual, raise it
-// obsolete      A fv; BZ(fv=from(iterct,cv->t)); realizeifvirtualB(fv); ra(fv) *aval=fv;  // select item and assign.  Too bad about the realize(); maybe we can do better
      ++i; continue;   // advance to next line and process it
     }
     // ending the iteration.  set xyz to i.0
@@ -585,7 +542,6 @@ docase:
    // We just pop till we have popped a non-select.
    // Must rat() if the current result might be final result, in case it includes the variables we will delete in unstack
    if(unlikely(!(cwgroup&0x200)))BZ(z=rat(z));   // protect possible result from pop
-// obsolete    do{I fin=cv->w!=CSELECT&&cv->w!=CSELECTN; unstackcv(cv); --cv; ++r; if(fin)break;}while(1);
    NOUNROLL do{I fin=cv->w; unstackcv(cv,1); --cv; ++r; if((fin^CSELECT)>(CSELECT^CSELECTN))break;}while(1);  // exit on non-SELECT/SELECTN
    i=cw[i].go;     // continue at new location
    // It must also pop the try. stack, if the destination is outside the try.-end. range
@@ -1003,9 +959,6 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
    // if the name is not shared, it is not a simple local name.
    // If it is also not indirect, x., or u., it is eligible for caching - if that is enabled
    if(jt->namecaching && !(NAV(t)->flag&(NMILOC|NMDOT|NMIMPLOC|NMSHARED)))NAV(t)->flag|=NMCACHED;
-// obsolete    if(!()){  // If this is NOT guaranteed to return a noun...
-// obsolete     NAV(t)->bucket=0;  // remove the bucket number, but leave bucketx, which has hash info for NMLOC types
-// obsolete    }
   }else if((AT(t)&BOX+BOXMULTIASSIGN)==BOX+BOXMULTIASSIGN){
    A *tv=AAV(t); DO(AN(t), jtcalclocalbuckets(jt,&tv[i],actstv,actstn-SYMLINFOSIZE,type>=3 || flags&VXOPR,AFLAG(t)&BOX);)  // calculate details about the boxed names
   }

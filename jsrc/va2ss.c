@@ -45,7 +45,6 @@ static I intforD(J jt, D d){D q;I z;
 A jtssingleton(J jt, A a,A w,A self,RANK2T awr,RANK2T ranks){A z;
  F2PREFIP;
  // Get the address of an inplaceable assignment, if any
-// obsolete  L *asym = jt->asginfo.assignsym; asym=asym?asym:(L*)(validitymask+12); asym=(L*)asym->val; // pending assignment if any; if non0, fetch address of value (otherwise 0)
  I aiv=FAV(self)->lc;   // temp, but start as function #
  I caseno=(aiv&0x7f)-VA2CBW1111; caseno=caseno<0?0:caseno;
  caseno=SSINGCASE(caseno,SSINGENC(AT(a),AT(w)));  // start calculating case early
@@ -147,9 +146,6 @@ A jtssingleton(J jt, A a,A w,A self,RANK2T awr,RANK2T ranks){A z;
  case SSINGCASE(VA2CSTAR-VA2CBW1111,SSINGBI): SSSTORENV(SSRDB(a)?SSRDI(w):0,z,INT,I) R z;
  case SSINGCASE(VA2CSTAR-VA2CBW1111,SSINGIB): SSSTORENV(SSRDB(w)?SSRDI(a):0,z,INT,I) R z;
  case SSINGCASE(VA2CSTAR-VA2CBW1111,SSINGII): {I av=SSRDI(a), wv=SSRDI(w), zv;
-// obsolete    if(!(av&&wv)) SSSTORENV(0L,z,INT,I)
-// obsolete    else if (zv=jtmult(0,av,wv)) SSSTORENV(zv,z,INT,I)  // 0 result on errors
-// obsolete    else SSSTORE((D)av*(D)wv,z,FL,D)
    DPMULDDECLS DPMULD(av,wv,zv,SSSTORE((D)av*(D)wv,z,FL,D))  // overflow
    else SSSTORENV(zv,z,INT,I)  // normal
    R z;}

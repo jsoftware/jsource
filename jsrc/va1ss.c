@@ -21,7 +21,6 @@
 A jtssingleton1(J jt, A w,A self){A z;
  F2PREFIP;
  // Get the address of an inplaceable assignment, if any
-// obsolete  L *asym = jt->asginfo.assignsym; asym=asym?asym:(L*)(validitymask+12); asym=(L*)asym->val; // pending assignment if any; if non0, fetch address of value (otherwise 0)
  I wiv=FAV(self)->lc;   // temp, but start as function #
  wiv = SSINGCASE(wiv-VA2CMIN,SSINGENC(AT(w)));
  // Allocate the result area
@@ -39,7 +38,6 @@ A jtssingleton1(J jt, A w,A self){A z;
  case SSINGCASE(VA2CMIN-VA2CMIN,SSINGENC(B01)): 
  case SSINGCASE(VA2CMIN-VA2CMIN,SSINGENC(INT)): R w;
  case SSINGCASE(VA2CMIN-VA2CMIN,SSINGENC(FL)):
-// obsolete    {D x=SSRDD(w); wdv=jround(x); D xf=jfloor(x); if(likely(TNE(x,wdv)))wdv=xf;}  // do round/floor in parallel
    {D x=SSRDD(w); wdv=jround(x); wdv-=TGT(wdv,x);}  // do round/floor in parallel
    if(likely(wdv == (D)(I)wdv)) SSSTORE((I)wdv,z,INT,I) else SSSTORENVFL(wdv,z,FL,D)
    R z;
@@ -48,7 +46,6 @@ A jtssingleton1(J jt, A w,A self){A z;
  case SSINGCASE(VA2CMAX-VA2CMIN,SSINGENC(B01)):
  case SSINGCASE(VA2CMAX-VA2CMIN,SSINGENC(INT)): R w;
  case SSINGCASE(VA2CMAX-VA2CMIN,SSINGENC(FL)):
-// obsolete    {D x=SSRDD(w); wdv=jround(x); D xc=jceil(x); if(likely(TNE(x,wdv)))wdv=xc;}  // do round/ceil in parallel
    {D x=SSRDD(w); wdv=jround(x); wdv+=TLT(wdv,x);}  // do round/ceil in parallel
    if(likely(wdv == (D)(I)wdv)) SSSTORE((I)wdv,z,INT,I) else SSSTORENVFL(wdv,z,FL,D)
    R z;

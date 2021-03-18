@@ -336,7 +336,6 @@ static DF2(jtgoutfix){A h,*hv,x,z,*zv;I m,n;
 }
 
 static DF2(jtoutfix){F2PREFIP;PROLOG(117);DECLF ;A z; PREF2(jtoutfix); z=eachl(omask(a,w),w,atop(fs,ds(CPOUND))); EPILOG(z);}
-// obsolete AS2(jtoutfix, eachl(omask(a,w),w,atop(fs,ds(CPOUND))),0117)
 
 static DF2(jtofxinv){A f,fs,z;C c;I t;V*v;
  F2RANKW(0,RMAX,jtofxinv,self);

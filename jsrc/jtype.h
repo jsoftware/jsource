@@ -289,8 +289,6 @@ typedef I SI;
 #define RATX 7
 #define RAT             ((I)1L<<RATX)         /* Q  rational number              */
 #define RATSIZE sizeof(Q)
-// obsolete #define BITX 8
-// obsolete #define BIT             ((I)1L<<BITX)         /* BT bit boolean                  */
 // No size for BIT, since it is fractional
 // Bit 8-9 unused
 #define SB01X 10
@@ -495,26 +493,15 @@ typedef I SI;
 #define ACISPERM(c)     ((I)((UI)(c)+(UI)(c))<0)  // is PERMANENT bit set?
 #define SGNIFPRISTINABLE(c) ((c)+ACPERMANENT)  // sign is set if this block is OK in a PRISTINE boxed noun
 // same, but s is an expression that is neg if it's OK to inplace
-// obsolete #define ASGNINPLACESGN(s,w)  (((s)&AC(w))<0 || ((s)&(AC(w)-2))<0 &&jt->asginfo.assignsym&&jt->asginfo.assignsym->val==w&&(!(AFLAG(w)&AFRO+AFNVR)||(!(AFLAG(w)&AFRO)&&notonupperstack(w))))  // OK to inplace ordinary operation
-// obsolete #define ASGNINPLACESGN(s,w)  (((s)&AC(w))<0 || jt->asginfo.zombieval==w&&((s)<0)&&(!(AFLAG(w)&AFNVR)||notonupperstack(w)))  // OK to inplace ordinary operation
 #define ASGNINPLACESGN(s,w)  (((s)&AC(w))<0 || jt->asginfo.zombieval==w&&((s)<0)&&(!(AM(w)&(-(AM(w)&AMNV)<<AMNVRCTX))||notonupperstack(w)))  // OK to inplace ordinary operation
-// obsolete #define ASGNINPLACESGNNJA(s,w)  ( ((s)&AC(w))<0 || (((s)&(AC(w)-2))<0||(((s)&(AC(w)-3)&SGNIF(AFLAG(w),AFNJAX))<0))&&jt->asginfo.assignsym&&jt->asginfo.assignsym->val==w&&(!(AFLAG(w)&AFRO+AFNVR)||(!(AFLAG(w)&AFRO)&&notonupperstack(w))))  // OK to inplace ordinary operation
 #define ASGNINPLACESGNNJA(s,w)  ASGNINPLACESGN(s,w)  // OK to inplace ordinary operation
 // define virtreqd and set it to 0 to start   scaf no LIT B01 C2T etc
 // This is used in apip.  We must ALWAYS allow inplacing for NJA types, but for ordinary inplacing we don't bother if the number of atoms of w pushes a over a power-of-2 boundary
-#if 0  // obsolete 
-#define EXTENDINPLACENJA(a,w)  ( ((AC(a)&(((AN(a)+AN(w))^AN(a))-AN(a)))<0) || \
- ((((AC(a)-2)&(((AN(a)+AN(w))^AN(a))-AN(a)))<0)||(AC(a)==2&&AFLAG(a)&AFNJA)) && \
-  ( (jt->asginfo.assignsym&&jt->asginfo.assignsym->val==a&&!(AFLAG(a)&AFRO)) || (!jt->asginfo.assignsym&&(virtreqd=1,!(AFLAG(a)&(AFRO|AFVIRTUAL)))) ) && \
-  notonupperstack(a) \
-  )  // OK to inplace ordinary operation
-#else
 #define EXTENDINPLACENJA(a,w)  ( ((AC(a)&(((AN(a)+AN(w))^AN(a))-AN(a)))<0) || /* inplaceable value that will probably fit */ \
   ( (((((AN(a)+AN(w))^AN(a))-AN(a))|SGNIF(AFLAG(a),AFNJAX))<0) &&  /* value will probably fit OR is NJA */\
     (jt->asginfo.zombieval==a || (!jt->asginfo.assignsym&&AC(a)==1&&(virtreqd=1,!(AFLAG(a)&(AFRO|AFVIRTUAL))))) &&  \
     (!(AM(w)&(-(AM(w)&AMNV)<<AMNVRCTX))||notonupperstack(a)) )   /* scaf why upperstack on virt extension?  & virt exten when ac<=1*/ \
   )  // OK to inplace ordinary operation
-#endif
 
 /* Values for AFLAG(x) field of type A                                     */
 // the flags defined here must be mutually exclusive with TRAVERSIBLE
@@ -528,15 +515,9 @@ typedef I SI;
 // Note: bit 4 is LABANDONED which is merged here
 // Note: bits 8-9 are used to hold AM flags merged in symbis
 #define AFNVRFLAGX      8
-// obsolete #define AFNVRX          8
-// obsolete #define AFNVR           ((I)1<<AFNVRX)  // This value is on the parser's execution stack, and must not be freed until it is removed.  Set when a named value is put onto the NVR stack.  If NVR is set, AM contains the
-// obsolete                                        // number of times the value is on the nvr stack.  NVR is not set if NJA is set.
 // the spacing of VIRTUALBOXED->UNIFORMITEMS must match ZZFLAGWILLBEOPENED->ZZCOUNTITEMS
 #define AFUNIFORMITEMSX 22     // matches MARK
 #define AFUNIFORMITEMS  ((I)1<<AFUNIFORMITEMSX)  // It is known that this boxed array has contents whose items are of uniform shape and type
-// obsolete #define AFNVRUNFREEDX   18
-// obsolete #define AFNVRUNFREED    ((I)1<<AFNVRUNFREEDX)  // This value does NOT have a deferred free outstanding.  Set when the value is first assigned to a name, or whenever AM goes to 0 indicating that the value
-// obsolete                                                // is no longer on the NVR stack.  If UNFREED is 0, the value is freed when its AM goes to 0 (i. e. when it is no longer on the nvr stack)
 #define AFVIRTUALX      17      // matches C2TX
 #define AFVIRTUAL       ((I)1<<AFVIRTUALX)  // this block is a VIRTUAL block: a subsequence of another block.  The data pointer points to the actual data, and the
                                  // m field points to the start of the block containing the actual data.  A VIRTUAL block cannot be incorporated into another block, and it
@@ -610,16 +591,6 @@ typedef I SI;
 #define FIXASTOPATINV 16  // to fixa: stop afixing a branch when it gets to a an explicit obverse
 
 
-#if 0  // obsolete 
-typedef struct {
- C type;
- C canend;
- US sentn;
- I sentx;
- US go;
- US source;
-} CW;
-#else
 typedef struct {
  union{
   struct {
@@ -633,7 +604,6 @@ typedef struct {
  US go;  // line number.  Depends on type; can be loop-to point, failing-branch point, or error handler
  US source;  // source line number
 } CW;
-#endif
 
 /* control word (always has corresponding token string)                             */
 /* type   - as specified in w.h                                            */
@@ -929,7 +899,6 @@ typedef struct {AF valencefns[2];A fgh[3];union { D lD; void *lvp[2]; I lI; I4 l
 #define VGERLX          8
 #define VGERL           (((I)1)<<VGERLX)          /* gerund left  argument           */
 #define VGERR           (I)512          /* gerund right argument           */
-// obsolete #define VTAYFINITE      (I)1024         /* t. finite polynomial            */
 // bit 10 free
 #define VIRS1X          11
 #define VIRS1           (I)2048         /* 11 monad has integral rank support */
@@ -970,8 +939,6 @@ typedef struct {AF valencefns[2];A fgh[3];union { D lD; void *lvp[2]; I lI; I4 l
 #define VF2WILLOPEN1       ((I)(((I)1)<<VF2WILLOPEN1X))
 // must leave a gap for WILLBEOPENED in result.h
 // 6 free
-// obsolete #define VF2ISCCAPX        5   // flags (if any) came from ([: g h) rather than f@:g  ```
-// obsolete #define VF2ISCCAP         ((I)(((I)1)<<VF2ISCCAPX))
 // next flag must be same as JTCOUNTITEMS
 #define VF2USESITEMCOUNT1X 7   // This verb can make use of an item count stored in m.  Monad case only
 #define VF2USESITEMCOUNT1  ((I)(((I)1)<<VF2USESITEMCOUNT1X))

@@ -192,7 +192,6 @@ A jtstcreate(J jt,C k,I p,I n,C*u){A g,x,xx;C s[20];L*v;
    RZ(v=symnew(&LXAV0(g)[SYMLINFO],0)); v->flag|=LINFO;    // put new block into locales table, allocate at head of chain without non-PERMANENT marking
    RZ(x=nfs(n,u));  // this fills in the hash for the name
    // Install name and path.  Path is 'z'. correct for all but z locale itself, which is overwritten at initialization
-// obsolete    ACINITZAP(x); LOCNAME(g)=x; xx=zpath; if(unlikely('z'==*u))if(unlikely(1==n)){xx=vec(BOX,0L,0L); ras(xx);} LOCPATH(g) = xx;   // zpath is permanent
    ACINITZAP(x); LOCNAME(g)=x; LOCPATH(g)=JT(jt,zpath);   // zpath is permanent
    // Assign this name in the locales symbol table to point to the allocated SYMB block
    // This does ras() on g
@@ -227,8 +226,6 @@ B jtsymbinit(JS jjt,I nthreads){A q,zloc;JJ jt=MTHREAD(jjt);
  FULLHASHSIZE(1LL<<12,SYMBSIZE,1,SYMLINFOSIZE,p);  // about 2^13 chains
  RZ(zloc=stcreate(0,p,1L,"z")); ACX(zloc);   // make the z locale permanent
  // create zpath, the default path to use for all other locales
-// obsolete  RZ(y=rifvs(str(1L,"z")));     ACX(y); AS(y)[0]=BUCKETXLOC(1,"z");   // for paths, the shape holds the bucketx
-// obsolete  GA(x,BOX, 1,1,0); ACX(x); AAV(x)[0]=y; zpath=x; AFLAGORLOCAL(zpath,AT(zpath)&TRAVERSIBLE)  // ensure that traversible types in pst are marked traversible, so tpush/ra/fa will not recur on them
  GATV0(q,BOX,2,0); AAV0(q)[0]=zloc; AAV0(q)[1]=0; ACX(q); JT(jt,zpath)=q;   // install z locale and ending 0; make the path permanent too .  In case we get reinitialized, we have to make sure zpath is set only once
  // init the symbol tables for the master thread.  Worker threads must copy when they start execution
  // init base locale
@@ -384,18 +381,13 @@ F1(jtlocpath1){AD * RESTRICT g; AD * RESTRICT z; F1RANK(0,jtlocpath1,DUMMYSELF);
  GATV0(z,BOX,AN(g),1); A *zv=AAV1(z),*zv0=zv; A *gv=AAV0(g);  // allocate result, point to input & output areas
  DO(AN(g), if(*gv&&*gv!=JT(jt,emptylocale)){A gg=sfn(0,LOCNAME(*gv)); ACINITZAP(gg); *zv++=gg;} ++gv;)  // move strings except for the null terminator and the leading empty (if path was null)
  AN(z)=AS(z)[0]=zv-zv0; R z;  // install number of strings added & return
-// obsolete  RZ(z=ca(g)); DO(AN(g), A t; RZ(t=ca(AAV(g)[i])); AS(t)[0]=AN(t); ACIPNO(t); AAV(z)[i]=t;) R z;
 }
  // for paths, the shape holds the bucketx.  We must create a new copy that has the shape restored, and must incorporate it
      /* 18!:2  query locale path */
 
 F2(jtlocpath2){A g,h; AD * RESTRICT x;
  F2RANK(1,0,jtlocpath2,DUMMYSELF);
-// obsolete  if(AN(a))RZ(locale(1,a));  // Don't audit empty a
-// obsolete  RZ(x=every(ravel(a),ds(CCOMMA)));
  RZ(g=locale(1,w));
-// obsolete  // paths are special: the shape of each string holds the bucketx for the string.  Install that.
-// obsolete  AD * RESTRICT z; RZ(z=ca(x)); DO(AN(x), A t; RZ(t=ca(AT(AAV(x)[i])&((INT|B01))?thorn1(AAV(x)[i]):AAV(x)[i]));  AS(t)[0]=BUCKETXLOC(AN(t),CAV(t)); AAV(z)[i]=incorp(t);)  // ? why so many copies?  test before thorn1 not reqd
  // The path is a recursive boxed list where each box is a SYMB type.  The usecount of each SYMB is incremented when it is added to the path.
  // When a locale is in a path the raised usecount prevents it from ever being deleted.  It has its Bloom filter zeroed so that it never searches for names
  // When all locales that have it in the path have been removed, the locale (including the name) will be deleted
@@ -429,7 +421,6 @@ static F2(jtloccre){A g,y;C*s;I n,p;L*v;
    fa(LOCPATH(g))  // free old path
   }else{
    ra(g);  // going from zombie to valid adds to the usecount
-// obsolete   probedel(n,s,(UI4)nmhash(n,s),JT(jt,stloc));  // delete the symbol for the locale, and the locale itself
   }
   REINITZOMBLOC(g);  // bring the dead locale back to life: clear chains, set path, clear Bloom filter
  }else{
@@ -555,7 +546,6 @@ B jtlocdestroy(J jt,A g){
  fa(LOCPATH(g));   // delete the path too.  block is recursive; must fa() to free sublevels
  // Set path pointer to 0 to indicate it has been emptied; clear Bloom filter.  Leave hashchains since the Bloom filter will ensure they are never used
  LOCPATH(g)=0; LOCBLOOM(g)=0;
-// obsolete  memset(LXAV0(g)+1,0,(AN(g)-SYMLINFOSIZE)*sizeof(LXAV0(g)[0]));  // scaf clear all hashchains
  // lower the usecount.  The locale and the name will be freed when the usecount goes to 0
  fa(g);
 

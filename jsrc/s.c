@@ -121,7 +121,6 @@ extern void jtsymfreeha(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
     }while(k);
     // make the non-PERMANENTs the base of the free pool & chain previous pool from them
     *freetailchn=k1; freetailchn=aprev;  // free chain may have permanent flags
-// obsolete     *aprev=jtsympv[0].next; jtsympv[0].next=k1;
    }
   }
  }
@@ -207,17 +206,13 @@ L* jtprobedel(J jt,C*string,UI4 hash,A g){
 L*jtprobe(J jt,C*string,UI4 hash,A g){
  RZ(g);
  F2PREFIP;
-// obsolete  LX symx=LXAV0(g)[SYMHASH(hash,AN(g)-SYMLINFOSIZE)];  // get index of start of chain
  LX symx=LXAV0(g)[SYMHASH(hash,AN(g)-SYMLINFOSIZE)];  // get index of start of chain
  L *sympv=JT(jt,sympv);  // base of symbol table
  L *symnext, *sym=sympv+SYMNEXT(symx);  // first symbol address - might be the free root if symx is 0
  NOUNROLL while(symx){  // loop is unrolled 1 time
   // sym is the symbol to process, symx is its index.  Start by reading next in chain.  One overread is OK, will be symbol 0 (the root of the freequeue)
   symnext=sympv+SYMNEXT(symx=sym->next);
-// obsolete   if(!symx)R 0;  // if chain empty or ended, not found
-// obsolete   symx=SYMNEXT(symx);
   IFCMPNAME(NAV(sym->name),string,(I)jtinplace&0xff,hash,R sym->val?sym:0;)     // (1) exact match - if there is a value, use this slot, else say not found
-// obsolete   symx=sym->next;   // mismatch - step to next
   sym=symnext;  // advance to value we read
  }
  R 0;
@@ -238,7 +233,6 @@ L *jtprobelocal(J jt,A a,A locsyms){NM*u;I b,bx;
    LX lx = LXAV0(locsyms)[b];  // index of first block if any
    I m=u->m; C* s=u->s; UI4 hsh=u->hash; // length/addr of name from name block, and hash
    if(unlikely(++bx!=0)){NOUNROLL do{lx = sympv[lx].next;}while(++bx);}  // rattle off the permanents, usually 1
-// obsolete    NOUNROLL while(0>++bx){lx = JT(jt,sympv)[lx].next;}  // all PERMANENT
    // Now lx is the index of the first name that might match.  Do the compares
    NOUNROLL while(lx=SYMNEXT(lx)) {L* l = lx+JT(jt,sympv);  // symbol entry
     IFCMPNAME(NAV(l->name),s,m,hsh,R l->val?l : 0;)
@@ -250,7 +244,6 @@ L *jtprobelocal(J jt,A a,A locsyms){NM*u;I b,bx;
    L* l = lx+JT(jt,sympv);  // fetch hashchain headptr, point to L for first symbol
    // negative bucketx (now positive); skip that many items, and then you're at the right place
    if(unlikely(bx>0)){NOUNROLL do{l = l->next+sympv;}while(--bx);}  // skip the prescribed number, which is usually 1
-// obsolete    NOUNROLL while(bx--){l = l->next+JT(jt,sympv);}  // all permanent
    R l->val?l:0;
   }
  } else {
@@ -329,14 +322,7 @@ L*jtprobeis(J jt,A a,A g){C*s;LX *hv,tx;I m;L*v;NM*u;L *sympv=JT(jt,sympv);
 // result is L* symbol-table slot for the name, or 0 if none
 // Bit 0 (ARNAMED) of the result is set iff the name was found in a named locale
 L*jtsyrd1(J jt,C *string,UI4 hash,A g){A*v,x,y;L*e=0;
-// obsolete if(b&&jt->local&&(e=probe(NAV(a)->m,NAV(a)->s,NAV(a)->hash,jt->local))){av=NAV(a); R e;}  // return if found local
  RZ(g);  // make sure there is a locale...
-// obsolete  if(e=probe(l,string,hash,g)){e=(L*)((I)e+AR(g)); R e;}  // and if the name is defined there, use it
-// obsolete  RZ(y = LOCPATH(g));   // Not found in locale.  We must use the path
-// obsolete  v=AAV(y); 
-// obsolete  // in LOCPATH the 'shape' of each string is used to store the bucket
-// obsolete  DO(AN(y), x=v[i]; if(e=probe(l,string,hash,g=stfindcre(AN(x),CAV(x),AS(x)[0]))){e=(L*)((I)e+AR(g)); break;});  // return when name found.  Create path locale if it does not exist
-// obsolete  v=AAV0(LOCPATH(g)); A p=*v++; do{A pn=*v++; if(e=probe(l,string,hash,p)){e=(L*)((I)e+AR(p)); break;} p=pn;}while(p);  // return when name found.
  I bloom=BLOOMMASK(hash); v=AAV0(LOCPATH(g)); NOUNROLL do{A gn=*v++; if(bloom==(bloom&LOCBLOOM(g)))if(e=jtprobe(jt,string,hash,g)){e=(L*)((I)e+AR(g)); break;} g=gn;}while(g);  // return when name found.
  R e;  // fall through: not found
 }    /* find name a where the current locale is g */ 
@@ -344,13 +330,7 @@ L*jtsyrd1(J jt,C *string,UI4 hash,A g){A*v,x,y;L*e=0;
 A jtsyrd1forlocale(J jt,C *string,UI4 hash,A g){A*v,x,y;
 // if(b&&jt->local&&(e=probe(NAV(a)->m,NAV(a)->s,NAV(a)->hash,jt->local))){av=NAV(a); R e;}  // return if found local
  RZ(g);  // make sure there is a locale...
-// obsolete  if(e=probe(l,string,hash,g))R g;  // and if the name is defined there, use it
-// obsolete  RZ(y = LOCPATH(g));   // Not found in locale.  We must use the path
-// obsolete  v=AAV(y); 
-// obsolete  // in LOCPATH the 'shape' of each string is used to store the bucketx
-// obsolete  v=AAV0(LOCPATH(g)); A p=*v++; do{A pn=*v++; if(e=probe(l,string,hash,p)){break;} p=pn;}while(p);  // return when name found.
  I bloom=BLOOMMASK(hash); v=AAV0(LOCPATH(g)); NOUNROLL do{A gn=*v++; if(bloom==(bloom&LOCBLOOM(g)))if(jtprobe(jt,string,hash,g)){break;} g=gn;}while(g);  // return when name found.
-// obsolete  DO(AN(y), x=v[i]; if(e=probe(l,string,hash,g=stfindcre(AN(x),CAV(x),AS(x)[0])))break;);  // return when name found.  Create path locale if it does not exist
  R g;
 }
 
@@ -527,39 +507,12 @@ static I abandflag=LWASABANDONED;  // use this flag if there is no incumbent val
 // Result points to the symbol-table block for the assignment
 L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;L*e;
  ARGCHK2(a,w);
-// obsolete  // If we have an assignsym, we have looked this name up already, so just use the symbol-table entry found then
-// obsolete  // in this case g is the type field of the name being assigned; and jt->locsyms must exist, since it comes from
-// obsolete  // an explicit definition
-// obsolete  I anmf=NAV(a)->flag; RZ(g)
-// obsolete  if(jt->asginfo.assignsym) {
-// obsolete   e = jt->asginfo.assignsym;   // point to the symbol-table entry being assigned
-// obsolete // obsolete   ASSERT(((I)g&ASGNLOCAL||NAV(a)->flag&(NMLOC|NMILOC)||!probelocal(a,jt->locsyms)),EVDOMAIN)  //  if global assignment not to locative, verify non locally defined
-// obsolete   if(unlikely((((I)g&ASGNLOCAL)|(anmf&(NMLOC|NMILOC)))==0))ASSERT(!probelocal(a,jt->locsyms),EVDOMAIN)  // if non-locative, give error if there is a local
-// obsolete // obsolete   ASSERT(((I)g&ASGNLOCAL||NAV(a)->flag&(NMLOC|NMILOC)||!probelocal(a,jt->locsyms)),EVDOMAIN)  //  if global assignment not to locative, verify non locally defined
-// obsolete   CLEARZOMBIE   // clear until next use.
-// obsolete  } else {A jtlocal=jt->locsyms;
-// obsolete // obsolete   if(likely(n==m))ASSERT(!(g==jt->global&&probelocal(a,jtlocal)),EVDOMAIN)  // if non-locative, give error if there is a local
-// obsolete   if(likely(!(anmf&(NMLOC|NMILOC)))){if(unlikely(g==jt->global))ASSERT(!probelocal(a,jtlocal),EVDOMAIN)  // if non-locative, give error if there is a local
-// obsolete     // symbol table, and we are assigning to the global symbol table, and the name is defined in the local table
-// obsolete   }else{I n=AN(a); I m=NAV(a)->m;    // locative: n is length of name, v points to string value of name, m is length of non-locale part of name
-// obsolete    // locative: s is the length of name_.  Find the symbol table to use, creating one if none found
-// obsolete // obsolete    C*s=1+m+NAV(a)->s; RZ(g=anmf&NMILOC?locindirect(n-m-2,1+s,(UI4)NAV(a)->bucketx):stfindcre(n-m-2,s,NAV(a)->bucketx));
-// obsolete    C*s=1+m+NAV(a)->s; if(unlikely(anmf&NMILOC))g=locindirect(n-m-2,1+s,(UI4)NAV(a)->bucketx);else g=stfindcre(n-m-2,s,NAV(a)->bucketx); RZ(g);
-// obsolete   }
-// obsolete   // Now g has the symbol table to store into
-// obsolete   RZ(e=g==jtlocal?probeislocal(a) : probeis(a,g));   // set e to symbol-table slot to use
-// obsolete   if(unlikely(AT(w)&FUNC))if(likely(FAV(w)->fgh[0]!=0)){if(FAV(w)->id==CCOLON)FAV(w)->flag|=VNAMED; if(jt->glock)FAV(w)->flag|=VLOCK;}
-// obsolete    // If the new value is a function created by n : m, this becomes a named function; if running a locked function, this is locked too.
-// obsolete    // kludge  these flags are modified in the input area (w), which means they will be improperly set in the result of the
-// obsolete    // assignment (ex: (nm =: 3 : '...') y).  There seems to be no ill effect, because VNAMED isn't used much.
-// obsolete  }
  I anmf=NAV(a)->flag; RZ(g)  // fetch flags for the name
  A jtlocal=jt->locsyms, jtglobal=jt->global;  // current private/public symbol tables
  e = jt->asginfo.assignsym; // set e if assignsym
  if(unlikely((anmf&(NMLOC|NMILOC))!=0)){I n=AN(a); I m=NAV(a)->m;
   // locative: n is length of name, v points to string value of name, m is length of non-locale part of name
   // Find the symbol table to use, creating one if none found.  Unfortunately assignsym doesn't give us the symbol table
-//obsolete    C*s=1+m+NAV(a)->s; RZ(g=anmf&NMILOC?locindirect(n-m-2,1+s,(UI4)NAV(a)->bucketx):stfindcre(n-m-2,s,NAV(a)->bucketx));
   C*s=1+m+NAV(a)->s; if(unlikely(anmf&NMILOC))g=locindirect(n-m-2,1+s,(UI4)NAV(a)->bucketx);else g=stfindcre(n-m-2,s,NAV(a)->bucketx); RZ(g);
  }else{  // no locative: if g is a flag for assignsym, set it to the correct symbol table
   A asgloc=jtglobal; asgloc=(I)g&ASGNLOCAL?jtlocal:asgloc; g=e?asgloc:g;  // if assignsym, set g based on local/global assignment
@@ -591,7 +544,6 @@ L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;L*e;
  }
  x=e->val;   // if x is 0, this name has not been assigned yet; if nonzero, x points to the incumbent value
  I xaf;  // holder for nvr/free flags
-// obsolete   I xt;  // If not assigned, use empty type
  {I *aaf=&AFLAG(x); aaf=x?aaf:&abandflag; xaf=*aaf;}  // flags from x, of LWASABANDONED if there is no x
 
  if(likely(!(AFNJA&xaf))){
@@ -599,10 +551,7 @@ L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;L*e;
   // Normal case of non-memory-mapped assignment.
   // If we are assigning the same data block that's already there, don't bother with changing use counts or anything else (assignment-in-place)
   if(likely(x!=w)){
-// obsolete    if(unlikely(((xt|wt)&(VERB|CONJ|ADV))!=0)){
-// obsolete     // If we are assigning a adverb value, check to see if it is nameless, and mark the value if it is
    if(unlikely((wt&ADV)!=0))AT(w)=wt|(I)nameless(w)<<NAMELESSMODX;
-// obsolete    }
    // Increment the use count of the value being assigned, to reflect the fact that the assigned name will refer to it.
    // This realizes any virtual value, and makes the usecount recursive if the type is recursible
    // If the value is abandoned inplaceable, we can just zap it, set its usecount to 1, and make it recursive if not already
@@ -628,7 +577,6 @@ L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;L*e;
    // won't be freed till later.  By deferring all deletions we don't have to worry about whether local values are on the stack; and that allows us to avoid putting local values
    // on the NVR stack at all.
    // ABANDONED values can never be NVR (which are never inplaceable), so they will be flagged as !NVR,!UNFREED,ABANDONED
-// obsolete     xt=AT(x); // if assigned, get the actual flags, from the the old value
    if(((xaf|e->flag)&LWASABANDONED)!=0){
     // here for the cases where we don't change the usecount in x: nonexistent or abandoned x
     if(unlikely((e->flag&LWASABANDONED)!=0)){
@@ -636,18 +584,14 @@ L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;L*e;
      // However, we did change 8..1 to 1, and if the 1 is still there, we set it back to 8..1 so that the caller can see that the value is unincorporated.
      // The case where x==w is of interest (it comes up in x =. x , 5).  In that case we will not change the usecount of x/w below, so we have to keep the ABANDONED
      // status in sync with the usecount.  The best thing is to keep both unchanged, so that we can continue to inplace x
-// obsolete      ACOR(x,ACINPLACE&(AC(x)-1-(x!=w)))  // apply ABANDONED: 1 -> 8..1 but only if we are going to replace x; we don't want 8..1 in an active name
      ACOR(x,ACINPLACE&(AC(x)-2))  // apply ABANDONED: 1 -> 8..1 but only if we are going to replace x; we don't want 8..1 in an active name
-// obsolete      e->flag&=~((x!=w)<<LWASABANDONEDX);  // turn off abandoned flag after it has been applied, but only if we replace x
      e->flag&=~(1LL<<LWASABANDONEDX);  // turn off abandoned flag after it has been applied, but only if we replace x
-// obsolete      xaf = AFNVRUNFREED; // ignore other flags; set xaf as if x==0 to avoid any other usecount changes
     }
    }else{
     // x must be decremented, one way or another.  If the value is virtual, it will eventually be freed by tpop, so we can just nonrecursively decrement the usecount now
     if(unlikely((xaf&AFVIRTUAL)!=0)){fadecr(x)  // virtual value, AM is still the backer
     }else{I am,nam;
      // Normal reassignment of a name.  AM must have NVR semantics.  What we do depends on NVR status
-// obsolete if(!(AM(x)&AMNV))SEGFAULT;  // scaf
      AMNVRFREEACT(x,(I)jtinplace&JTFINALASGN,am,nam)  // analyze AM.  This sets am/nam as used by following code
      if(likely(am==nam)){fa(x);  // look at AM field, loaded into AM.  If value is on NVR and already deferred-free, OR if not on NVR and this is final assignment, we can free.  The block may still be in use elsewhere
      }else if(unlikely((am&-AMNVRCT)==0)){
@@ -661,41 +605,6 @@ L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;L*e;
       AAV1(nvra)[jt->parserstackframe.nvrtop++] = x;   // record the place where the value was protected (i. e. this sentence); it will be freed when this sentence finishes
      }
      // if the block was on the NVR stack and not freed, we have marked it freed and we will just wait for the eventual deletion
-// obsolete      if(unlikely((AM(x)&-AMNVRCT)!=0)){
-// obsolete       // value is on NVR stack: free must be deferred to end-of-stack.
-// obsolete       if(likely((AM(x)&AMFREED)==0))AMNVROR(x,AMFREED); // If on the NVR stack and not yet freed, mark as to-be-freed on the stack.  This defers the deletion
-// obsolete       else{fa(x)}  // on the NVR stack, already marked as freed: will be freed later, just decr usecount here
-// obsolete      }else if(likely((I)jtinplace&JTFINALASGN)){fa(x);  // sentence is ending, no need to defer free
-// obsolete      }else{
-// obsolete       // non-final assignment with no NVR stack: must push onto NVR stack for the first time.
-// obsolete       A nvra=jt->nvra;
-// obsolete       if(unlikely((I)(jt->parserstackframe.nvrtop+1U) > AN(nvra)))RZ(nvra=extnvr());  // Extend nvr stack if necessary.  copied from parser
-// obsolete       AAV1(nvra)[jt->parserstackframe.nvrtop++] = x;   // record the place where the value was protected (i. e. this sentence); it will be freed when this sentence finishes
-// obsolete       AFLAGOR(x,AFNVR)  // mark the value as protected in NVR stack
-// obsolete       AMNVRINCR(x);  // NVR count is 0 coming in; we increment it
-// obsolete       AMNVROR(x,AMFREED);  // mark it for deferred free so that the local value will persist to end-of-sentence
-// obsolete      }
-// obsolete     }
-// obsolete    }
-// obsolete    if(likely((xaf&AFNVRUNFREED)!=0)){  // x is 0, or unfreed on the NVR stack, or abandoned.  Do not fa().  0 is probably the normal case (assignment to unassigned name)
-// obsolete     if(unlikely((xaf&AFNVR)!=0)){AFLAGAND(x,~AFNVRUNFREED)} // If unfreed on the NVR stack, mark as to-be-freed on the stack.  This defers the deletion
-// obsolete     // x=0 case, and LABANDONED case, go through quietly making no change to the usecount of x
-// obsolete    }else{  // x is non0 and either already marked as freed on the NVR stack or must be put there now, or VIRTUAL
-// obsolete     if(likely(!(xaf&(AFNVR|AFVIRTUAL)))){
-// obsolete      if(likely((I)jtinplace&JTFINALASGN)){
-// obsolete       fa(x);  // sentence is ending, no need to defer free
-// obsolete      }else{
-// obsolete       // non-final assignment: must push onto NVR stack for the first time.
-// obsolete       A nvra=jt->nvra;
-// obsolete       if(unlikely((I)(jt->parserstackframe.nvrtop+1U) > AN(nvra)))RZ(nvra=extnvr());  // Extend nvr stack if necessary.  copied from parser
-// obsolete       AAV1(nvra)[jt->parserstackframe.nvrtop++] = x;   // record the place where the value was protected (i. e. this sentence); it will be freed when this sentence finishes
-// obsolete       AFLAGOR(x,AFNVR)  // mark the value as protected in NVR stack
-// obsolete       AM(x)=1;  // When NVR is set, AM must contain count of # times value has been pushed onto the stack
-// obsolete      }
-// obsolete     }else{
-// obsolete      // already NVR+FREED or VIRTUAL: 'free' this time, knowing the real free will happen later,  We know usecount>1, but it may be PERMANENT; decrement it if not
-// obsolete      fadecr(x)
-// obsolete     }
     }
    }
   }

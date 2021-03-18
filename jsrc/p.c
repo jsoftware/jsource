@@ -373,6 +373,7 @@ static A virthook(J jtip, A f, A g){
 // extend NVR stack, returning the A block for it.  stack error on fail, since that's the likely cause
 A jtextnvr(J jt){ASSERT(jt->parserstackframe.nvrtop<32000,EVSTACK); RZ(jt->nvra = ext(1, jt->nvra));  R jt->nvra;}
 
+static I iscavn[]={0,0};  // how many As scaf
 #define BACKMARKS 3   // amount of space to leave for marks at the end.  Because we stack 3 words before we start to parse, we will
  // never see 4 marks on the stack - the most we can have is 1 value + 3 marks.
 #define FRONTMARKS 1  // amount of space to leave for front-of-string mark
@@ -513,15 +514,9 @@ rdglob: ;  // here when we tried the buckets and failed
          // or inside eval strings, they may come through this path.  If one of them is y, it might be virtual.  Thus, we must make sure we don't
          // damage AM in that case.  We don't need NVR then, because locals never need NVR.  Similarly, an LABANDONED name does not have NVR semantics, so leave it alone
          if(likely(!(AFLAG(s->val)&AFNJA+AFVIRTUAL)))if(likely((AM(s->val)&AMNV)!=0)){
-// obsolete           // on the FIRST NVR, we set NVR|UNFREED, and AM=1.  On subsequent ones we increment AM
-// obsolete           AFLAGOR(s->val,AFNVR|AFNVRUNFREED)  // mark the value as protected and not yet deferred-freed
-// obsolete           AFLAGOR(s->val,AFNVR)  // mark the value as protected and not yet deferred-freed
           // NOTE that if the name was deleted in another task s->val will be invalid and we will crash
           AMNVRINCR(s->val)  // add 1 to the NVR count, now that we are stacking
           AAV1(jt->nvra)[jt->parserstackframe.nvrtop++] = s->val;   // record the place where the value was protected, so we can free it when this sentence completes
-// obsolete          }else if(likely(!(AFLAG(s->val)&AFNJA+AFVIRTUAL))){
-// obsolete           ++AM(s->val);
-// obsolete           AAV1(jt->nvra)[jt->parserstackframe.nvrtop++] = s->val;   // record the place where the value was protected, so we can free it when this sentence completes
          }  // if NJA/virtual, leave NVR alone
         }
        }
@@ -667,7 +662,6 @@ RECURSIVERESULTSCHECK
 #if AUDITEXECRESULTS
       auditblock(jt,y,1,1);
 #endif
-// obsolete if(probe(1,"z",(UI4)nmhash(1,"z"),JT(jt,stloc))->val!=AAV0(zpath)[0])SEGFAULT;  // scaf
 #if MEMAUDIT&0x2
       if(AC(y)==0 || (AC(y)<0 && AC(y)!=ACINPLACE+ACUC1))SEGFAULT; 
       audittstack(jt);
@@ -770,10 +764,8 @@ failparse:  // If there was an error during execution or name-stacking, exit wit
   UI zcompval = !z||AT(z)&NOUN?0:-1;  // if z is 0, or a noun, immediately free only values !=z.  Otherwise don't free anything
   DQ(jt->parserstackframe.nvrtop-nvrotop, A vv = *v;I am;
    // if the NVR count is 1 before we decrement, we have hit the last stacked use & we free the block.
-// obsolete    if(likely(--AM(vv)==0)){I vf = AFLAG(vv); AFLAGAND(vv,~(AFNVR|AFNVRUNFREED)) if(!(vf&AFNVRUNFREED))if(((UI)z^(UI)vv)>zcompval){fanano0(vv);}else{tpushna(vv);}}
    // if we are performing (or finally deferring) the FINAL free, the value must be a complete zombie and cannot be active anywhere; otherwise we must clear it.  We clear it always
    if(likely((AMNVRDECR(vv,am))<2*AMNVRCT)){if(am&AMFREED){AMNVRAND(vv,~AMFREED) if(((UI)z^(UI)vv)>zcompval){fanano0(vv);}else{tpushna(vv);}}}
-// obsolete I vf = AFLAG(vv); AFLAGAND(vv,~(AFNVR|AFNVRUNFREED)) 
    ++v;);   // schedule deferred frees.
     // na so that we don't audit, since audit will relook at this NVR stack
 

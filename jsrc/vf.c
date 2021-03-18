@@ -112,7 +112,6 @@ F2(jtrotate){A origw=w,y,z;B b;C*u,*v;I acr,af,ar,*av,d,k,m,n,p,*s,wcr,wf,wn,wr;
  RZ(a=vi(a));
  // special case: if a is atomic 0, and cells of w are not atomic
  if((wcr!=0)&(((ar|IAV(a)[0])==0)))R RETARG(w);   // 0 |. y, return y
-// obsolete  if(((1-acr)|((-af)&(-acr|(wf-1))))<0)R df2(z,a,w,qq(qq(ds(CROT),v2(1L,RMAX)),v2(acr,wcr)));  // if multiple a-lists per cell, or a has frame and (a cell is not an atom or w has no frame) handle rank by using " for it
  if(((1-acr)|((-af)&(-acr|(wf-1))))<0)R rank2ex(a,w,DUMMYSELF,MIN(acr,1),wcr,acr,wcr,jtrotate);  // if multiple a-lists per cell, or a has frame and (a cell is not an atom or w has no frame) handle rank by using " for it
  if(((wcr-1)&(1-p))<0){RZ(w=reshape(apip(shape(w),apv(p,1L,0L)),w)); wr=wcr=p;}  // if cell is an atom, extend it up to #axes being rotated   !wcr && p>1
  ASSERT(((-wcr)&(wcr-p))>=0,EVLENGTH);    // !wcr||p<=wcr  !(wcr&&p>wcr)
@@ -156,47 +155,24 @@ F1(jtreverse){A z;C*wv,*zv;I f,k,m,n,nk,r,*v,*ws,wt,wr;
  if(unlikely((SPARSE&AT(w))!=0))R revsp(w);
  if(unlikely(jt->fill!=0))R rotate(num(-1),w);  // rank is set - not inplaceable because it uses fill
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r;  // no RESETRANK - we don't call any primitive from here on  wr=rank of arg r=eff rank f=len of frame
-// obsolete  if(!(r&&AN(w))){R RETARG(w);}  // no atoms or reversing atoms - keep input unchanged
  ws=AS(w); I *an=ws+f; an=r?an:&oneone[0]; n=*an;    // n=number of subitems of the cell to be reversed
  if(unlikely(((-r)&(1-n)))>=0){R RETARG(w);}  // rank 0 or 0-1 atoms in item - keep input unchanged
  wt=AT(w); wv=CAV(w);  // wv->source data
- // obsolete  n=ws[f];   // n=number of subitems of the cell to be reversed
- // obsolete m=1; DO(f, m*=ws[i];);
  PROD(m,f,ws); PROD(k,r-1,ws+f+1);  // m=# argument cells k=#atoms in one subitem
- // obsolete  k=bpnoun(wt); v=1+f+ws; DQ(r-1, k*=*v++;); nk=n*k;
  k<<=bplg(wt); nk=n*k;  // k=#bytes in subitem  nk=#bytes in cell
  if((AC(w)&SGNIF(jtinplace,JTINPLACEWX))<0){z=w;}  // inplace: leave pristinity of w alone
  else{GA(z,wt,AN(w),wr,ws); PRISTCLRF(w)}  // new copy: allocate new area, make w non-pristine since it escapes
  // w has been destroyed
  zv=CAV(z);  // zv->target data
- // obsolete  // w is going to be replaced.  That makes it non-pristine; but if it is inplaceable it can pass its pristinity to the result, since there is no fill
- // obsolete  PRISTXFERF(z,w)
 // macro to copy from both ends, swapping.  one last copy at the end, if needed (otherwise discard it)
 #define COPY2ENDS(T) {DQ(m, T *s1=(T*)wv; T *t1=(T*)zv; T *sn=(T*)(wv+nk)-1; T *tn=(T*)(zv+nk)-1; \
                       DQ(n>>1, T x0=*s1; T xn=*sn; *t1=xn; *tn=x0; ++s1; --sn; ++t1; --tn;) t1=n&1?t1:(T*)&jt->shapesink; *t1=*s1;  wv+=nk; zv+=nk;)}
  switch(k){
-#if 0 // obsolete 
-  case sizeof(I): {I*s=(I*)wv,*t,*u=(I*)zv; DQ(m, t=s+=n; DQ(n, *u++=*--t;););} break;
-  default:        {C*s=wv-k,*t; DQ(m, t=s+=nk; DQ(n, MC(zv,t,k); zv+=k; t-=k;););} break;
-  case sizeof(C): {C*s=    wv,*t,*u=    zv; DQ(m, t=s+=n; DQ(n, *u++=*--t;););} break;
-  case sizeof(S): {S*s=(S*)wv,*t,*u=(S*)zv; DQ(m, t=s+=n; DQ(n, *u++=*--t;););} break;
-#if SY_64
-  case sizeof(int):{int*s=(int*)wv,*t,*u=(int*)zv; DQ(m, t=s+=n; DQ(n, *u++=*--t;););} break;
-#endif
-#if !SY_64 && SY_WIN32
-  case sizeof(D): {D*s=(D*)wv,*t,*u=(D*)zv; DQ(m, t=s+=n; DQ(n, *u++=*--t;););} break;
-#endif
-#else
  case sizeof(I): COPY2ENDS(I) break;
  case sizeof(C): COPY2ENDS(C) break;
  case sizeof(S): COPY2ENDS(S) break;
 #if SY_64
  case sizeof(I4):COPY2ENDS(I4) break;
-#endif
-#if 0 // obsolete
-#if !SY_64 && SY_WIN32   must not do this unless the words are valid D types
- case sizeof(D): COPY2ENDS(D) break;
-#endif
 #endif
  default:
   if(zv==wv){  // reverse in place
@@ -205,7 +181,6 @@ F1(jtreverse){A z;C*wv,*zv;I f,k,m,n,nk,r,*v,*ws,wt,wr;
     DQ(n>>1, I *i1=(I*)s1; I *in=(I*)sn; I xx; DQ(nI, xx=*i1; *i1=*in; *in=xx; ++ i1; ++in;) xx=*i1; I yy=*in; STOREBYTES(i1,yy,nB) STOREBYTES(in,xx,nB) s1+=k; sn-=k;) wv+=nk;)}  // center item stays in place
   }else{C*s=wv-k,*t; DQ(m, t=s+=nk; DQ(n, MC(zv,t,k); zv+=k; t-=k;););}  // one-ended copy, not in place
   break;
-#endif
  }
  RETF(z);
 }    /* |."r w */

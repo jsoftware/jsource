@@ -252,23 +252,6 @@ F1(jtex){A*wv,y,z;B*zv;I i,n;L*v;
      ras(v->val);
     }
    }
-// obsolete    if((locfound==jt->locsyms)|(AFLAG(v->val)&AFNVRUNFREED)){  // see if local or NVR, which would cause us to defer the free.  Any non-AMNV must be local
-// obsolete    if((locfound==jt->locsyms)|(AM(v->val)&-AMNVRCT)){  // see if local or NVR, which would cause us to defer the free.  Any non-AMNV must be local
-// obsolete     if(!(AFLAG(v->val)&AFNVR+AFNJA+AFVIRTUAL)){  // We can't set NVR if it is set already, or if AM is otherwise needed.  In that case don't defer the free.
-// obsolete     if(!(AFLAG(v->val)&AFNJA+AFVIRTUAL)){  // if AM is engaged (NJA or virtual), cannot defer, must free immediately  Only x/y can be virtual
-// obsolete      if(((AM(v->val)&(-(AM(v->val)&AMNV)<<AMNVRCTX)))==0){  // We can't set NVR if it is set already
-// obsolete       // The symbol is a local symbol not on the NVR stack.  We must put it onto the NVR stack.
-// obsolete       A nvra=jt->nvra;
-// obsolete       if(unlikely((I)(jt->parserstackframe.nvrtop+1U) > AN(nvra)))RZ(nvra=extnvr());  // Extend nvr stack if necessary.  copied from parser
-// obsolete       AAV1(nvra)[jt->parserstackframe.nvrtop++] = v->val;   // record the place where the value was protected; it will be freed when this sentence finishes
-// obsolete       AFLAGOR(v->val,AFNVR|AFNVRUNFREED)  // mark the value as protected
-// obsolete       AMNVRSET(v->val,AMNV+1*AMNVRCT);  // set initial count of NVRs for the value
-// obsolete      }
-// obsolete     if(AFLAG(v->val)&AFNVRUNFREED){ras(v->val); AFLAGAND(v->val,~AFNVRUNFREED)}  // indicate deferred free, and protect from the upcoming free; but if already deferred-free, reduce the usecount now
-// obsolete      // If the value is now under NVR semantics (possibly because we just pushed it), defer the free if possible
-// obsolete      if((AM(v->val)&AMNV+AMFREED)==AMNV){ras(v->val); AMNVROR(v->val,AMFREED);}  // NVR not yet deferred: indicate deferred free, and protect from the upcoming free; but if already deferred-free, let it reduce the usecount now
-// obsolete     }
-// obsolete    }
    L *zombsym; if(unlikely((zombsym=jtprobedel((J)((I)jt+NAV(v->name)->m),NAV(v->name)->s,NAV(v->name)->hash,locfound))!=0)){fa(zombsym->name); zombsym->name=0;};  // delete the symbol (incl name and value) in the locale in which it is defined; leave orphan value with no name
              // if the probe returns nonzero, it was a cached value which is not unmoored: we must free the name
   }

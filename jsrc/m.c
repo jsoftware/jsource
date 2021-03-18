@@ -539,7 +539,6 @@ void freesymb(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
     LX nextk=jtsympv[k].next;  // unroll loop 1 time
     fa(jtsympv[k].name);jtsympv[k].name=0;  // always release name
     if(likely(!(jtsympv[k].flag&LCACHED))){
-// obsolete      kt=k;  // save tail pointer of freed items
      SYMVALFA(jtsympv[k]);    // free value
      jtsympv[k].val=0;jtsympv[k].sn=0;jtsympv[k].flag=0;
      asymx=&jtsympv[k].next;  // make the current next field the previous for the next iteration
@@ -547,7 +546,6 @@ void freesymb(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
     k=nextk;  // advance to next block in chain
    }while(k);
    // if the chain is not (now) empty, make it the base of the free pool & chain previous pool from it.  CACHED items have been removed
-// obsolete    if(likely(wv[j]!=0)){jtsympv[kt].next=jtsympv[0].next;jtsympv[0].next=wv[j];}  // free chain may have permanent flags
    if(likely(wv[j]!=0)){freeroot=freeroot?freeroot:wv[j]; *freetailchn=wv[j]; freetailchn=asymx;}  // free chain may have permanent flags   save addr of the very first freed item
   }
  }
@@ -1176,9 +1174,7 @@ if((AC(w)>>(BW-2))==-1)SEGFAULT;  // high bits 11 must be deadbeef
    if(likely((k=wv[SYMLINFO])!=0)){  // if no error in allocation...
     // Remove the locale from its global table, depending on whether it is named or numbered
     NM *locname=NAV(LOCNAME(w));  // NM block for name
-// obsolete  B isnum = '9'>=locname->s[0];  // first char of name tells the type
     if(likely(!(AR(w)&ARNAMED))){
-// obsolete  if(likely('9'>=locname->s[0])){
      // For numbered locale, find the locale in the list of numbered locales, wipe it out, free the locale, and decrease the number of those locales
      jterasenl(jt,locname->bucketx);  // remove the locale from the hash table
     } else {

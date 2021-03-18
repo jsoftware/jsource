@@ -1021,7 +1021,6 @@ I jtsumattymesprods(J jt,I it,void *avp, void *wvp,I dplen,I nfro,I nfri,I ndpo,
  }else{
   SUMATLOOP(B,I,
    I total=0; UI total2; I *avi=(I*)av; I *wvi=(I*)wv; I q=(dplen-1)>>LGSZI;
-// obsolete     NOUNROLL while(k>>LGSZI){I kn=MIN(255,k>>LGSZI); k-=kn<<LGSZI; I total2=0; DQ(kn, total2+=*avi++&*wvi++;) ADDBYTESINI(total2); total+=total2;} av=(B*)avi; wv=(B*)wvi; DQ(k, total+=*av++&*wv++;)  // scaf faster tail
     NOUNROLL while(1){total2=0; DQ(MIN(254,q), total2+=*avi++&*wvi++;) q-=254; if(q<=0)break; ADDBYTESINI(total2); total+=total2;} total2+=(*avi&*wvi)&((UI)~(I)0 >> (((-dplen)&(SZI-1))<<3)); ADDBYTESINI(total2); total+=total2;
     *zv++=total;
   )
@@ -1070,7 +1069,6 @@ DF2(jtsumattymes1){
  I dplen = AS(a)[ar-1];  // number of atoms in 1 dot-product
  I ndpo; PROD(ndpo,acr-1,AS(w)+wr-wcr);  // number of cells of a = # 2d-level loops
  I ndpi; PROD(ndpi,wcr-acr,AS(w)+wr-wcr+acr-1);  // number of times each cell of a must be repeated (= excess frame of w)
-// obsolete  I zn=ndpo*ndpi;  // number of results from 1 inner cell.  This can't overflow since frames agree and operands are not empty
 
  A z; 
  // if there is frame, create the outer loop values
@@ -1087,7 +1085,6 @@ DF2(jtsumattymes1){
   ASSERTAGREE(as,ws,commonf)  // verify common frame
   PROD(nfri,af,longs+commonf); PROD(nfro,commonf,longs);   // number of outer loops, number of repeats
   I zn = ndpo*ndpi*nfro; DPMULDE(zn,nfri,zn);  // no error possible till we extend the shape
-// obsolete  RE(zn=mult(zn,nfri));
   GA(z,FL>>(it&B01),zn,af+commonf+wcr-1,0); I *zs=AS(z);  // type is INT if inputs booleans, otherwise FL
   // install the shape
   MCISH(zs,longs,af+commonf); MCISH(zs+af+commonf,ws+wr-wcr,wcr-1);
@@ -1173,15 +1170,6 @@ DF2(jtsumattymes1){
 #else
       DQ(dplen, D h; D r; D q; D t; D i00; D i01; D i10; D i11; TWOPROD(*av,*wv,h,r) DPADD(p,s,h,r,p,s)  ++av; ++wv;)
 #endif
-// obsolete I i;for(i=dplen-1;i>=0;i--){
-// obsolete       TWOPROD(*av,*wv,h,r)
-// obsolete printf("*av=%f *wv=%f h=%f r=%g ",*av,*wv,h,r);
-// obsolete       TWOSUM(p,h,p,q)
-// obsolete printf("p=%f q=%g ",p,q);
-// obsolete       s=q+r+s;
-// obsolete printf("s=%g\n",s);
-// obsolete       ++av; ++wv;
-// obsolete }
       *zv++=p+s; // store the single result
       if(!--j)break; av=av0;  // repeat a if needed
      }
@@ -1205,7 +1193,6 @@ DF2(jtfslashatg){A fs,gs,y,z;B b;C*av,*wv;I ak,an,ar,*as,at,m,
  wn=AN(w); wr=AR(w); ws=AS(w); wt=AT(w); wt=wn?wt:B01;
  b=ar<=wr; r=b?wr:ar; rs=b?ar:wr; s=b?ws:as; nn=s[0]; nn=r?nn:1;  // b='w has higher rank'; r=higher rank rs=lower rank s->longer shape  nn=#items in longer-shape arg
  ASSERTAGREE(as,ws,MIN(ar,wr));
-// obsolete  I isfork=CFORK==FAV(self)->id; fs=FAV(self)->fgh[0+isfork]; gs=FAV(self)->fgh[1+isfork];   // b=0 if @:, 1 if fork; take fs,gs accordingly  ```
  fs=FAV(self)->fgh[0]; gs=FAV(self)->fgh[1];   // b=0 if @:, 1 if fork; take fs,gs accordingly  ```
  rs=MAX(1,rs); PROD(m,rs-1,s+1); PROD(n,r-rs,s+rs); zn=m*n;   // zn=#atoms in _1-cell of longer arg = #atoms in result; m=#atoms in _1-cell of shorter arg  n=#times to repeat shorter arg  (*/ surplus longer shape)
    // if the short-frame arg is an atom, move its rank to 1 so we get the lengths of the _1-cells of the replicated arguments

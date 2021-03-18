@@ -402,9 +402,7 @@ static A jtopes(J jt,I zt,A cs,A w){A a,d,e,sh,t,*wv,x,x1,y,y1,z;B*b;C*xv;I an,*
  GATV0(sh,INT,1+c,1L); s=AV(sh); s[0]=m; j=1; DO(wcr, if(!b[i])s[j++]=zs[wr+i];); 
  RE(xc=prod(c,1+s)); xk=xc*dk;
  GATV0(d,INT,wr,1); dv=AV(d); memset(dv,C0,wr*SZI);
-// obsolete  RE(i=mult(m,xc));
  DPMULDE(m,xc,i) GA(x,dt, i,1+c,s); xv=CAV(x); mvc(m*xk,xv,dk,AV(e));
-// obsolete  RE(i=mult(m,yc));
  DPMULDE(m,yc,i) GATV0(y,INT,i,2L); v=AS(y); *v=m; v[1]=yc; yv=AV(y); memset(yv,C0,SZI*i);
  for(i=p=0;i<n;++i){
   RZ(opes2(&x1,&y1,b,a,e,wv[i],wcr)); v=AS(y1); m1=v[0]; k=v[1];

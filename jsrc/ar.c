@@ -223,19 +223,6 @@ REDUCCPFX( plusinsO, D, I,  PLUSO)
 REDUCCPFX(minusinsO, D, I, MINUSO) 
 REDUCCPFX(tymesinsO, D, I, TYMESO) 
 
-#if 0  // obsolete 
-   DQ((n-1)>>(2+LGNPAR), acc0=prim(acc0,_mm256_loadu_pd(x)); acc1=prim(acc1,_mm256_loadu_pd(x+NPAR)); acc2=prim(acc2,_mm256_loadu_pd(x+2*NPAR)); acc3=prim(acc3,_mm256_loadu_pd(x+3*NPAR)); x+=4*NPAR; ) \
-   if((n-1)&((4-1)<<LGNPAR)){acc0=prim(acc0,_mm256_loadu_pd(x));\
-    if(((n-1)&((4-1)<<LGNPAR))>=2*NPAR){acc1=prim(acc1,_mm256_loadu_pd(x+NPAR)); \
-     if(((n-1)&((4-1)<<LGNPAR))>2*NPAR){acc2=prim(acc2,_mm256_loadu_pd(x+2*NPAR));} \
-    } \
-    x += (n-1)&((4-1)<<LGNPAR);
-
-
-   x += m*n; z+=m; DQ(m, D v0=0.0; D v1=0.0; if(((n+1)&3)==0)v1=*--x; D v2=0.0; if(n&2)v2=*--x; D v3=0.0; if(n&3)v3=*--x;
-                       DQ(n>>2, v0=PLUS(*--x,v0); v1=PLUS(*--x,v1); v2=PLUS(*--x,v2); v3=PLUS(*--x,v3);); v0+=v1; v2+=v3;*--z=v0+v2;)
-
-#endif
 #define redprim256rk1(prim,identity) \
  __m256i endmask; /* length mask for the last word */ \
  _mm256_zeroupper(VOIDARG); \
@@ -697,30 +684,6 @@ static DF1(jtreducesp){A a,g,z;B b;I f,n,r,*v,wn,wr,*ws,wt,zt;P*wp;
  R jt->jerr>=EWOV?IRS1(w,self,r,jtreducesp,z):z;
 }    /* f/"r for sparse w */
 
-#if 0 // obsolete   discards
-*v=u+d,
-                         if(1<d)DQ(m, DQ(d, x=*u++; y=*v++; *zv++=x F y; ); u+=d; v+=d;) 
-*v=u+d,                         if(1<d)DQ(m, DQ(d, x=*u++; y=*v++; *zv++=F(x,y);); u+=d; v+=d;)
-
-#define BR2IFX(T,F)     {T*u=(T*)wv,x,y;                                           \
-                         GATV(z,B01,wn>>1,wr-1,ws); zv=BAV(z);                               \
-                         DQ(m,       x=*u++; y=*u++; *zv++=x F y;               ); \
-                        }
-#define BR2PFX(T,F)     {T*u=(T*)wv,x,y;                                           \
-                         GATV(z,B01,wn>>1,wr-1,ws); zv=BAV(z);                               \
-                         DQ(m,       x=*u++; y=*u++; *zv++=F(x,y);              ); \
-                        }
-#define BTABIFX(F)      {btab[0                        ]=0 F 0;  \
-                         btab[C_LE?256:  1]=0 F 1;  \
-                         btab[C_LE?  1:256]=1 F 0;  \
-                         btab[257                      ]=1 F 1;  \
-                        }
-#define BTABPFX(F)      {btab[0                        ]=F(0,0); \
-                         btab[C_LE?256:  1]=F(0,1); \
-                         btab[C_LE?  1:256]=F(1,0); \
-                         btab[257                      ]=F(1,1); \
-                        }
-#else
 #define BR2CASE(t,id)   ((((id)-CSTARCO)*7)+((0x160008>>(t))&7))  // unique inputs are 0 1 2 3 16 17 18-> 0 4 2 1 6 3 5    10110 .... .... .... 1000
 // perform expression op on x and y, which have booleans in alternate bytes
 // m is the number of bytes
@@ -747,7 +710,6 @@ static A jtreduce2(J jt,A w,I cv,I f){A z=(A)1;B *zv;I m,*ws;
  I wn=AN(w); I wr=AR(w); ws=AS(w); void *wv=voidAV(w);
  PROD(m,f,ws);  // number of cells, each 2 atoms
  GATV(z,B01,wn>>1,wr-1,ws); zv=BAV(z);
-// obsolete  PROD(c,r,f+ws); d=c>>1;c,d,
  switch(cv){
   case BR2CASE(B01X,CEQ     ): BOOLPAIRS(~x^y) break;
   case BR2CASE(B01X,CNE     ): BOOLPAIRS(x^y) break;
@@ -790,57 +752,6 @@ static A jtreduce2(J jt,A w,I cv,I f){A z=(A)1;B *zv;I m,*ws;
  }
  R z;
 }    /* f/"r for dense w over an axis of length 2; boolean results only */
-#endif
-#if 0  // obsolete
-// handle reduction along final axis of length 2.  Return result block if we can handle the combination, otherwise 1; or 0 if we hit an error
-static A jtreduce2(J jt,A w,C id,I f,I r){A z=(A)1;B b=0,btab[258],*zv;I m,wn,wr,*ws,*wv;
- wn=AN(w); wr=AR(w); ws=AS(w); wv=AV(w);
- PROD(m,f,ws);  // number of cells, each 2 atoms
-// obsolete  PROD(c,r,f+ws); d=c>>1;c,d,
- switch(BR2CASE(CTTZ(AT(w)),id)){
-  case BR2CASE(B01X,CEQ     ): if(b=1==r)BTABIFX(==   ); break;
-  case BR2CASE(B01X,CNE     ): if(b=1==r)BTABIFX(!=   ); break;
-  case BR2CASE(B01X,CLT     ): if(b=1==r)BTABIFX(<    ); break;
-  case BR2CASE(B01X,CLE     ): if(b=1==r)BTABIFX(<=   ); break;
-  case BR2CASE(B01X,CGT     ): if(b=1==r)BTABIFX(>    ); break;
-  case BR2CASE(B01X,CGE     ): if(b=1==r)BTABIFX(>=   ); break;
-  case BR2CASE(B01X,CMAX    ):
-  case BR2CASE(B01X,CPLUSDOT): if(b=1==r)BTABIFX(||   ); break;
-  case BR2CASE(B01X,CPLUSCO ): if(b=1==r)BTABPFX(BNOR ); break;
-  case BR2CASE(B01X,CMIN    ):
-  case BR2CASE(B01X,CSTAR   ):
-  case BR2CASE(B01X,CSTARDOT): if(b=1==r)BTABIFX(&&   ); break;
-  case BR2CASE(B01X,CSTARCO ): if(b=1==r)BTABPFX(BNAND); break;
-  case BR2CASE(LITX,CEQ     ): BR2IFX(C,== ); break;
-  case BR2CASE(LITX,CNE     ): BR2IFX(C,!= ); break;
-  case BR2CASE(C2TX,CEQ     ): BR2IFX(US,== ); break;
-  case BR2CASE(C2TX,CNE     ): BR2IFX(US,!= ); break;
-  case BR2CASE(C4TX,CEQ     ): BR2IFX(C4,== ); break;
-  case BR2CASE(C4TX,CNE     ): BR2IFX(C4,!= ); break;
-  case BR2CASE(SBTX,CEQ     ): BR2IFX(SB,== ); break;
-  case BR2CASE(SBTX,CLT     ): BR2PFX(SB,SBLT); break;
-  case BR2CASE(SBTX,CLE     ): BR2PFX(SB,SBLE); break;
-  case BR2CASE(SBTX,CGT     ): BR2PFX(SB,SBGT); break;
-  case BR2CASE(SBTX,CGE     ): BR2PFX(SB,SBGE); break;
-  case BR2CASE(SBTX,CNE     ): BR2IFX(SB,!= ); break;
-  case BR2CASE(INTX,CEQ     ): BR2IFX(I,== ); break;
-  case BR2CASE(INTX,CLT     ): BR2IFX(I,<  ); break;
-  case BR2CASE(INTX,CLE     ): BR2IFX(I,<= ); break;
-  case BR2CASE(INTX,CGT     ): BR2IFX(I,>  ); break;
-  case BR2CASE(INTX,CGE     ): BR2IFX(I,>= ); break;
-  case BR2CASE(INTX,CNE     ): BR2IFX(I,!= ); break;
-  case BR2CASE(FLX, CEQ     ): BR2PFX(D,TEQ); break;
-  case BR2CASE(FLX, CLT     ): BR2PFX(D,TLT); break;
-  case BR2CASE(FLX, CLE     ): BR2PFX(D,TLE); break;
-  case BR2CASE(FLX, CGT     ): BR2PFX(D,TGT); break;
-  case BR2CASE(FLX, CGE     ): BR2PFX(D,TGE); break;
-  case BR2CASE(FLX, CNE     ): BR2PFX(D,TNE); break;
- }
- if(b){S*u=(S*)wv; GATV(z,B01,wn>>1,wr-1,ws); zv=BAV(z); DQ(m, *zv++=btab[*u++];);}
- R z;
-}    /* f/"r for dense w over an axis of length 2; boolean results only */
-
-#else
 #define TW0(x,y) ((BR2CASE(x,y)>>LGBW)==0?1LL<<(BR2CASE(x,y)&(BW-1)):0)
 #define TW1(x,y) ((BR2CASE(x,y)>>LGBW)==1?1LL<<(BR2CASE(x,y)&(BW-1)):0)
 #define TW2(x,y) ((BR2CASE(x,y)>>LGBW)==2?1LL<<(BR2CASE(x,y)&(BW-1)):0)
@@ -857,7 +768,6 @@ TW2(INTX,CEQ)+TW2(INTX,CLT)+TW2(INTX,CLE)+TW2(INTX,CGT)+TW2(INTX,CGE)+TW2(INTX,C
 #define TWV3 TW3(B01X,CEQ)+TW3(B01X,CNE)+TW3(B01X,CLT)+TW3(B01X,CLE)+TW3(B01X,CGT)+TW3(B01X,CGE)+TW3(B01X,CMAX)+TW3(B01X,CPLUSDOT)+TW3(B01X,CPLUSCO)+TW3(B01X,CMIN)+TW3(B01X,CSTAR)+TW3(B01X,CSTARDOT)+ \
 TW3(B01X,CSTARCO)+TW3(LITX,CEQ)+TW3(LITX,CNE)+TW3(C2TX,CEQ)+TW3(C2TX,CNE)+TW3(C4TX,CEQ)+TW3(C4TX,CNE)+TW3(SBTX,CEQ)+TW3(SBTX,CLT)+TW3(SBTX,CLE)+TW3(SBTX,CGT)+TW3(SBTX,CGE)+TW3(SBTX,CNE)+ \
 TW3(INTX,CEQ)+TW3(INTX,CLT)+TW3(INTX,CLE)+TW3(INTX,CGT)+TW3(INTX,CGE)+TW3(INTX,CNE)+TW3(FLX, CEQ)+TW3(FLX, CLT)+TW3(FLX, CLE)+TW3(FLX, CGT)+TW3(FLX, CGE)+TW3(FLX, CNE)
-#endif
 static DF1(jtreduce){A z;I d,f,m,n,r,t,wr,*ws,zt;
  F1PREFIP;ARGCHK1(w);
  if(unlikely((SPARSE&AT(w))!=0))R reducesp(w,self);  // If sparse, go handle it
@@ -878,7 +788,6 @@ static DF1(jtreduce){A z;I d,f,m,n,r,t,wr,*ws,zt;
    cwd=(cv>>LGBW)==2?TWV2:cwd; cwd=(cv>>LGBW)==3?TWV3:cwd;
 #endif
    if(likely(((1LL<<(cv&(BW-1)))&cwd)!=0))R jtreduce2(jt,w,cv,f);
-// obsolete     if((z=jtreduce2(jt,w,id,f,r))!=(A)1)R z;  // try the fast routine, continue on if it doesn't take the operation.  Return if error
    }
   }  // fall through for 2 items that can't be handled specially
  }
@@ -1025,7 +934,6 @@ static DF1(jtredcateach){A*u,*v,*wv,x,*xv,z,*zv;I f,m,mn,n,r,wr,*ws,zm,zn;I n1=0
  wr=AR(w); ws=AS(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; RESETRANK;
  SETICFR(w,f,r,n);
  if(!r||1>=n)R reshape(repeat(ne(sc(f),IX(wr)),shape(w)),n?w:ds(CACE));
-// obsolete  if(!(BOX&AT(w)))R df1(z,cant2(sc(f),w),qq(ds(CBOX),zeroionei(1)));  // handle unboxed args
  if(!(BOX&AT(w))){A t; RZ(t=cant2(sc(f),w)) R IRS1(t,0,1,jtbox,z);}  // handle unboxed args by transposing on the given axis and then boxing lists
 // bug: ,&.>/ y does scalar replication wrong
 // wv=AN(w)+AAV(w); DQ(AN(w), if(AN(*--wv)&&AR(*wv)&&n1&&n2) ASSERT(0,EVNONCE); if((!AR(*wv))&&n1)n2=1; if(AN(*wv)&&1<AR(*wv))n1=1;);

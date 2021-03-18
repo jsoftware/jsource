@@ -242,7 +242,6 @@ static A jtjstd(J jt,A w,A ind,I *cellframelen){A j=0,k,*v,x;I b;I d,i,n,r,*u,wr
  wr=AR(w); ws=AS(w); b=-AN(ind)&SGNIF(AT(ind),BOXX);  // b<0 = indexes are boxed and nonempty
  if(!wr){x=from(ind,zeroionei(0)); *cellframelen=0; R x;}  // if w is an atom, the best you can get is indexes of 0.  No axes are used
  if((b&-AR(ind))<0){   // array of boxed indexes
-// obsolete   RE(aindex(ind,w,0L,&j));  // see if the boxes are homogeneous
   RZ(j=aindex(ind,w,0L)); j=(A)((I)j&~1LL);  // see if the boxes are homogeneous, or erroneous
   if(!j){  // if not homogeneous...
    RZ(x=MODIFIABLE(from(ind,increm(iota(shape(w)))))); u=AV(x); // go back to the original indexes, select from table of all possible incremented indexes; since it is incremented, it is writable
@@ -312,7 +311,6 @@ static DF2(jtamendn2){F2PREFIP;PROLOG(0007);A e,z; B b;I atd,wtd,t,t1;P*p;
  RE(t=maxtyped(atd,wtd)); t1=STYPE(t); RZ(a=TYPESEQ(t,atd)?a:cvt(AT(a)&SPARSE?t1:t,a));
  // Keep the original address if the caller allowed it, precision of y is OK, the usecount allows inplacing, and the dense type is either
  // DIRECT or this is a boxed memory-mapped array
-// obsolete  B ip=((I)jtinplace&JTINPLACEW) && (ACIPISOK(w) || jt->asginfo.assignsym&&jt->asginfo.assignsym->val==w&&AC(w)<=1)
  B ip=((I)jtinplace&JTINPLACEW) && (ACIPISOK(w) || jt->asginfo.zombieval==w&&AC(w)<=1)
      &&TYPESEQ(t,wtd)&&(t&DIRECT);
  // see if inplaceable.  If not, convert w to correct precision (note that cvt makes a copy if the precision is already right)
@@ -321,7 +319,6 @@ static DF2(jtamendn2){F2PREFIP;PROLOG(0007);A e,z; B b;I atd,wtd,t,t1;P*p;
  p=PAV(z); e=SPA(p,e); b=!AR(a)&&equ(a,e);
  p=PAV(a); if(unlikely(AT(a)&SPARSE&&!equ(e,SPA(p,e)))){RZ(a=denseit(a)); }
  if(AT(ind)&NUMERIC||!AR(ind))z=(b?jtam1e:AT(a)&SPARSE?jtam1sp:jtam1a)(jt,a,z,AT(ind)&NUMERIC?box(ind):ope(ind),ip);
-// obsolete  else{RE(aindex(ind,z,0L,(A*)&ind)); ASSERT(ind!=0,EVNONCE); z=(b?jtamne:AT(a)&SPARSE?jtamnsp:jtamna)(jt,a,z,ind,ip);}  // A* for the #$&^% type-checking
  else{RZ(ind=aindex(ind,z,0L)); ind=(A)((I)ind&~1LL); ASSERT(ind!=0,EVNONCE); z=(b?jtamne:AT(a)&SPARSE?jtamnsp:jtamna)(jt,a,z,ind,ip);}  // A* for the #$&^% type-checking
  EPILOGZOMB(z);   // do the full push/pop since sparse in-place has zombie elements in z
 }

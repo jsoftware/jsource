@@ -43,7 +43,6 @@ static F1(jtvtokens){A t,*y,z;I n,*s;TA*x;
 static F1(jtcfn){I j; R !AR(w)&&INT&AT(w)&&(j=AV(w)[0],-9<=j&&j<=9)?FCONS(w):qq(w,ainf);}
      /* constant function with value w */
 
-// obsolete static A jttine(J jt,A w,I tmonad){V*v; R w&&tmonad&&(v=FAV(w),CP==v->fgh[0]&&RT==v->fgh[2])?v->fgh[1]:w;}
 static A jttine(J jt,A w,I tmonad){V*v; R w&&tmonad&&(v=FAV(w),v->id==CFORK&&(v->fgh[2]?v->fgh[0]:CP)==CP&&RT==(v->fgh[2]?v->fgh[2]:v->fgh[1]))?(v->fgh[2]?v->fgh[1]:v->fgh[0]):w;}
      /* if monad and w = [: g ], then g; else just w itself */
 
@@ -80,7 +79,6 @@ TACT(jtvmonad){A fs;TA y,z={num(1),0};V*v;
 }
 
 static I jtdcase(J jt,I xi,V*v){
-// obsolete  R !v ? 0 : 0>xi ? 1 : CFORK!=v->id ? 2 : NOUN&AT(v->fgh[0]) ? 3 : CP==v->fgh[0] ? 4 : 5;
  R !v ? 0 : 0>xi ? 1 : CFORK!=v->id ? 2 : NOUN&AT(v->fgh[0]) ? 3 : v->fgh[2]==0 ? 4 : 5;
 }    
 /* 0   x        */

@@ -1471,10 +1471,6 @@ end1: ;
    // find a starting point within a stride of the beginning of the correct point, put it into aliml
    aliml=0; alimr=asct-1; wval=*(I*)((I)zv+zvwvofst);
    zval=asct;
-#if 0 // obsolete 
- ax=(aliml+alimr)>>1;  // init values as if coming from the last read
-  aval=av[ax]; I startsch=ax|IMIN;  // we start all searches in the middle
-#endif
    NOUNROLL while(1){
     // av is the start of the a vector
     // zv points to the next output location
@@ -1496,53 +1492,6 @@ end1: ;
      wval=*(I*)((I)zv+zvwvofst);  // read next value, always in L1 cache
      zval=asct; alimr=asct-1; aliml=0; // we know there is at least one value to read
     }
-#if 0  // obsolete
-   // calculate newx/nextwv as if aval<wval
-   // alimr stays unchanged.  new search only if ax=alimr-1
-   I newxl=(ax+alimr)>>1;  // new brackets will be (ax,alimr).  We round down
-   newxl=newxl==ax?startsch:newxl;  //   // if new search, brackets are (-1,asct)
-
-   // calculate newx/nextwv as if aval>=wval.  aliml stays unchanged
-   // set new search and use stride if ax=aliml+1
-   I newxr=(aliml+ax)>>1;  // new brackets are (aliml,ax)
-   newxr=newxr==aliml?startsch:newxr;  //   // if new search, brackets are (-1,asct)
-
-   // here we wait for the new value to settle
-   // select the read for the next probe and start reading it
-   newxl=aval<wval?newxl:newxr;
-   aliml=aval<wval?ax:aliml; alimr=aval<wval?alimr:ax;  // move the left or right boundary
-   zval=aval==wval?ax:zval;  // see if we had an exact match
-   aval=av[newxl];  // free newxr; fetch the next value to check
-
-   if(newxl>=0){
-    // normal case of continuing previous search
-    ax=newxl;  // remember fetched index for next time
-   }else{
-    // this fetch starts a new search.  Write the old, read the new, reset the brackets
-    *zv++=zval;  // write out the match status
-    if(unlikely(zv==zend))break;   // exit if zv is past the end
-    wval=*(I*)((I)zv+zvwvofst);  // read next value, always in L1 cache
-    ax=newxl<<1; ax>>=1;  // get index we're reading, without the sign bit
-    zval=asct; alimr=asct; aliml=-1; 
-   }
-#endif
-#if 0 // obsolete 
-   // Move the brackets depending on the value fetched
-
-   // if aval==wval, set zval=ax
-   // write the result (always).  The result is the index of the last match we found
-   zval=aval==wval?ax:zval;  // see if we had an exact match
- *zv=zval;  // write out the match if any.  This frees up aval, wval, ax
-
-   // if we are moving to a new wval, increment z and reset zval to 'not found'
-   ax=newxl<<1; ax>>=1;  // remember the index of the value we are reading - without the flag bit
-   zv=(I*)((I)zv+(newxl>>=((BW-1)-LGSZI)));  // shift newxl bit 63 (new z bit) to bit 3 (=8), add to zv
-   if(unlikely(zv==zend))break;   // exit if zv is past the end
-   // increment wv if the next probe is for the next w value, start reading w
-   wval=*(I*)((I)zv+zvwvofst);  // read value, always in L1 cache
-
-   zval=newxl?asct:zval; alimr=newxl?asct:alimr; aliml=newxl?-1:aliml; // if starting new search, set big right look
-#endif   
    }
    NOUNROLL while(zv!=zend)*zv++=asct;  // all the rest not found
 #endif
@@ -1877,7 +1826,6 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
    if(((af-wf)&-af)<0){f1+=wf-af; wf=af;}  // see below for discussion about long frame in w
    I witems=ws[0]; witems=wr>r?witems:1;  // # items of w, in case we are doing i.&0 eg on result of e., which will have that many items
    SETICFR(a,af,acr,m);  f0=MAX(0,f1); DPMULDE(prod(f,s),prod(f0,ws+wf),zn)
-// obsolete  RE(zn=mult(prod(f,s),prod(f0,ws+wf)));
    switch(mode&IIOPMSK){
     case IIDOT:  
     case IICO:    GATV0(z,INT,zn,f+f0); MCISH(AS(z),s,f) MCISH(f+AS(z),ws+wf,f0); v=AV(z); DQ(zn, *v++=m;); R z;  // mustn't overfetch s
@@ -1928,7 +1876,6 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
  }else{
   // An argument is empty.  We must beware of overflow in counting cells.  Just do it the old slow way
   n=acr?prod(acr-1,as+af+1):1; DPMULDE(prod(f,s),prod(f1,ws+wf),zn)
-// obsolete  RE(zn=mult(prod(f,s),prod(f1,ws+wf)));
   k=n<<klg;
   ac=prod(af,as); ak=ac?(an<<klg)/ac:0;  // ac = #cells of a
   wc=prod(wf,ws); wk=wc?(wn<<klg)/wc:0; c=1<ac?wk/k:zn; wk*=1<wc;

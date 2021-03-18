@@ -396,34 +396,6 @@ F1(jtisnan){A*wv,z;B*u;D*v;I n,t;
  RETF(z);
 }
 
-#if 0 // obsolete 
-F1(jtbit1){A z;B*wv;BT*zv;I c,i,j,n,p,q,r,*s;UI x,y;
- ARGCHK1(w);
- if(!(B01&AT(w)))RZ(w=cvt(B01,w));
- n=AN(w); r=AR(w); wv=BAV(w); s=AS(w);
- GA(z,BIT,n,AR(w),AS(w)); zv=(BT*)AV(z);
- if(!r)*zv=*wv?'\200':0;
- else if(n){
-  c=8*SZI; 
-  i=s[r-1]; r= p=n/i; q=i/c; r=i-c*q;
-  for(i=0;i<p;++i){
-   for(j=0;j<q;++j){
-    x=0; y=1+(UI)IMAX; 
-    DQ(c, if(*wv++)x^=y; y>>=1;); 
-    *zv++=x;
-   }
-    x=0; y=1+(UI)IMAX; 
-    DQ(r, if(*wv++)x^=y; y>>=1;); 
-    *zv++=x;
-  }
- }
- R z;
-}    /* convert byte booleans to bit booleans */
-
-F2(jtbit2){
- ASSERT(0,EVNONCE);
-}    /* convert byte booleans to bit booleans */
-#endif
 
 /* Copyright 2014, Jsoftware Inc.  All rights reserved. */
 // datetime epoch routines

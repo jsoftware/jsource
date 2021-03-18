@@ -4,7 +4,6 @@
 /* For Symbol Tables aka Locales                                           */
 
 // The first L block in a symbol table is used to point to the locale-name rather than hash chains
-// obsolete #define LOCPATH(g) ((JT(jt,sympv))[LXAV0(g)[SYMLINFO]].val)
 #define LOCPATH(g) (g)->kchain.locpath
 #define LOCNAME(g) ((JT(jt,sympv))[LXAV0(g)[SYMLINFO]].name)
 

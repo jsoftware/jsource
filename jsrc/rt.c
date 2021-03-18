@@ -50,7 +50,6 @@ static F1(jtgraft){A p,q,t,*u,x,y,z,*zv;C*v;I d,j,k,m,n,*pv,*s,xn,*xv,yn,*yv;
  GATV0(z,BOX,yn,1); zv=AAV(z);
  u=AAV(w);
  for(j=0;j<yn;++j){
-// obsolete   RE(k=mult(m,yv[j]));
   DPMULDE(m,yv[j],k); GATV0(q,LIT,k,2); s=AS(q); *s=m; *++s=yv[j];
   v=CAV(q); memset(v,' ',AN(q));
   pv[1]=yv[j]; k=j-yn; DO(xn, *pv=xv[i]; RE(v+=pad(p,u[k+=yn],v)););
@@ -101,7 +100,6 @@ static F1(jttconnect){A*wv,x,y,z;B b,d;C c,*u,*xv,*yv,*zv;I e,i,j,m,n,p,q,zn;
  ARGCHK1(w);
  n=AN(w); wv=AAV(w); y=wv[0]; m=AS(y)[0];
  e=0; DO(n,e+=AS(wv[i])[1];);
-// obsolete  RE(zn=mult(m,e));
  DPMULDE(m,e,zn); GATVR(z,LIT,zn,2,AS(y)); AS(z)[1]=e; zv=CAV(z);
  for(i=0;i<n;++i){
   y=wv[i]; q=AS(y)[1]; yv=CAV(y);

@@ -129,7 +129,6 @@ static DF2(jtcut02){F2PREFIP;A fs,q,qq,*qv,z,zz=0;I*as,c,e,i,ii,j,k,m,n,*u,*ws;P
 DF2(jtspecialatoprestart){
   ARGCHK3(a,w,self);  // return fast if there has been an error
   V *sv=FAV(self);  // point to verb info for the current overall compound
-// obsolete   R a==mark?(sv->id==CFORK?jtcork1:on1)(jt,w,self) : (sv->id==CFORK?jtcork2:jtupon2)(jt,a,w,self);  // figure out the default routine that should process the compound, and transfer to it  ```
   R a==mark?on1(jt,w,self) : jtupon2(jt,a,w,self);  // figure out the default routine that should process the compound, and transfer to it  ```
 }
 
@@ -881,7 +880,6 @@ static A jtpartfscan(J jt,A a,A w,I cv,B pfx,C id,C ie){A z=0;B*av;I m,n,zt;
 DF2(jtrazecut2){A fs,gs,z=0;B b; I neg,pfx;C id,sep,*u,*v,*wv,*zv;I d,k,m=0,wi,p,q,r,*s,wt;
     VARPS adocv;
  ARGCHK2(a,w);
-// obsolete  gs=FAV(self)->fgh[1+(CFORK==FAV(self)->id)]; vv=VAV(gs); y=vv->fgh[0]; fs=VAV(y)->fgh[1];  // self is ;@:(<@(f/\);.1)     gs  gs is <@(f/\);.1   y is <@(f/\)  fs is   f/\  ...
  gs=FAV(self)->fgh[1]; fs=VAV(VAV(gs)->fgh[0])->fgh[1];  // self is ;@:(<@(f/\);.1)     gs  gs is <@(f/\);.1   y is <@(f/\)  fs is   f/\  ...
  p=SETIC(w,wi); wt=AT(w); k=(I)VAV(gs)->localuse.lvp[0]; neg=0>k; pfx=k==1||k==-1; b=neg&&pfx;   // p,wi is # items of w; 
  id=FAV(fs)->id;  // fs is f/id   where id is \ \.

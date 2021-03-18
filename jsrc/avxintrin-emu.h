@@ -639,6 +639,21 @@ static __emu_inline __m128i _mm_maddubs_epi16_SSE2( __m128i a,  __m128i b)
    	return a;
 }
 
+/** \{Reference,_mm256_blend_epi32} */
+static __emu_inline __emu__m256i __emu_mm256_blend_epi32_REF        ( __emu__m256i a, __emu__m256i b, const int mask )
+{
+    __emu__m256i ret;
+    ret.__emu_arr[0] = (mask & 0x1) ? b.__emu_arr[0] : a.__emu_arr[0];
+    ret.__emu_arr[1] = (mask & 0x2) ? b.__emu_arr[1] : a.__emu_arr[1];
+    ret.__emu_arr[2] = (mask & 0x4) ? b.__emu_arr[2] : a.__emu_arr[2];
+    ret.__emu_arr[3] = (mask & 0x8) ? b.__emu_arr[3] : a.__emu_arr[3];
+    ret.__emu_arr[4] = (mask & 0x10) ? b.__emu_arr[4] : a.__emu_arr[4];
+    ret.__emu_arr[5] = (mask & 0x20) ? b.__emu_arr[5] : a.__emu_arr[5];
+    ret.__emu_arr[6] = (mask & 0x40) ? b.__emu_arr[6] : a.__emu_arr[6];
+    ret.__emu_arr[7] = (mask & 0x80) ? b.__emu_arr[7] : a.__emu_arr[7];
+    return ret;
+}
+
 /** \AVX{Reference,_mm256_extract_epi64} */
 static __emu_inline __emu_int64_t __emu_mm256_extract_epi64( __emu__m256i a, const int ndx )
 {
@@ -1758,7 +1773,9 @@ __emu_maskstore_impl( __emu_mm256_maskstore_epi64, __emu__m256i, __emu__m256i, _
 
 #define _mm256_movemask_epi8 __emu_mm256_movemask_epi8
 
+#define _mm256_blend_epi32 __emu_mm256_blend_epi32_REF
 #define _mm256_extract_epi64 __emu_mm256_extract_epi64
+
 #define _mm256_fmadd_pd __emu_mm256_fmadd_pd
 #define _mm256_fmadd_ps __emu_mm256_fmadd_ps
 #define _mm256_fmsub_pd __emu_mm256_fmsub_pd

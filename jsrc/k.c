@@ -149,7 +149,7 @@ static KF1(jtDfromB){
  R 1;
 }
 
-#if SY_64 && (C_AVX || EMU_AVX)
+#if SY_64 && (C_AVX2 || EMU_AVX2)
 static KF1(jtDfromI){I n=AN(w); D *x=DAV(w); D *z=yv;
 /* Optimized full range int64_t to double conversion           */
 /* Emulate _mm256_cvtepi64_pd()                                */
@@ -161,11 +161,16 @@ static KF1(jtDfromI){I n=AN(w); D *x=DAV(w); D *z=yv;
     __m256d magic_d_all  = _mm256_castsi256_pd(magic_i_all);
  ,
 // AVX512  u=_mm256_cvtepi64_pd(_mm256_castpd_si256(u));
+#if defined(__aarch64__)
+   u.vect_f64[0] = vcvtq_f64_s64(vreinterpretq_f64_s64(u.vect_f64[0]));
+   u.vect_f64[1] = vcvtq_f64_s64(vreinterpretq_f64_s64(u.vect_f64[1]));
+#else
     __m256i u_lo         = _mm256_blend_epi32(magic_i_lo, _mm256_castpd_si256(u), 0b01010101);         /* Blend the 32 lowest significant bits of u with magic_int_lo                                                   */
     __m256i u_hi         = _mm256_srli_epi64(_mm256_castpd_si256(u), 32);                              /* Extract the 32 most significant bits of u                                                                     */
             u_hi         = _mm256_xor_si256(u_hi, magic_i_hi32);                  /* Flip the msb of u_hi and blend with 0x45300000                                                                */
     __m256d u_hi_dbl     = _mm256_sub_pd(_mm256_castsi256_pd(u_hi), magic_d_all); /* Compute in double precision:                                                                                  */
     u       = _mm256_add_pd(u_hi_dbl, _mm256_castsi256_pd(u_lo));    /* (u_hi - magic_d_all) + u_lo  Do not assume associativity of floating point addition !!                        */
+#endif
  ,
   R 1;
  )

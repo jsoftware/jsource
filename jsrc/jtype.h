@@ -252,6 +252,7 @@ typedef I SI;
 #define SBAV(x)         ((SB*)((C*)(x)+AK(x)))  /* symbol                  */
 #define SBUV4(x)        ((SBU*)((C*)(x)+AKXR(4)))  // symbol, nonvirtual rank 4
 #define voidAV(x)       ((void*)((C*)(x)+AK(x)))  // unknown
+#define UNLXAV0(x)      ((A)((I)(x)-AKXR(0)))   // go from a pointer to LXAV0 back to the base of the A block
 
 #if C_LE
 #define BIV0(w) (IAV(w)[0]&(1-((AT(w)&INT)>>(INTX-1))))  // the first (presumably only) value in w, when w is an INT or B01 type
@@ -599,6 +600,8 @@ typedef I SI;
 #define ARNAMEADDED LPERMANENT  // Set in rank when a new name is added to the local symbol table.  We transfer the bit from the L flags to the rank-flag
 #define ARLOCALTABLE 16  // Set in rank of all local symbol tables.  This indicates that the first hashchain holds x/y info and should not be freed as a symbol
 #define ARLSYMINUSE 32  // This bit is set in the rank of the original symbol table when it is in use
+#define ARLCLONEDX NMSHAREDX  // set if this is a cloned local symbol table (in which symbol numbers are invalid)
+#define ARLCLONED (1LL<<ARLCLONEDX)  // set if this is a cloned local symbol table (in which symbol numbers are invalid)
 
 #define SFNSIMPLEONLY 1   // to sfn: return simple name only, discarding any locative
 
@@ -748,22 +751,24 @@ typedef struct {
 #define pushcallstack1(t,v) {ASSERT(jt->callstacknext<jt->fcalln,EVSTACK);  pushcallstack(jt->callstacknext,(t),(v));}
 #define pushcallstack1d(t,v) {FDEPDEC(d); ASSERT(jt->callstacknext<jt->fcalln,EVSTACK);  pushcallstack(jt->callstacknext,(t),(v));}
 
-
-typedef struct{UI4 hash;I4 bucket;I bucketx;A cachedref;UC m;C flag,s[1];} NM;
-
-/* hash: hash for non-locale part of name                                 */
-// bucket: (for local simple names) the index of the hash chain for this symbol when viewed as a local
+// NM struct: pointed to by the name field of a symbol, and used for lookups.  Names are allocated with rank 1 (??)
+typedef struct{
+ UI4 hash;  // hash for non-locale part of name
+ I4 bucket; // (for local simple names) the index of the hash chain for this symbol when viewed as a local
 //   0 if chain index not known or name is a locative
-// bucketx: (for local simple names, only if bucket!=0) the number of chain entries to discard before
+ I bucketx; // (for local simple names, only if bucket!=0) the number of chain entries to discard before
 //   starting name search.  If negative, use one's complement and do not bother with name search - symbol-table entry
 //   is guaranteed to be at that position
 //   (for direct locatives) the hash of the locative - if numbered, the number itself.
 //   (for indirect locatives) hash of the last indirect name
-//   (for locale names in SYMLINFO of a numbered locale) the locale number 
-// cachedref: (only for cachable NAME blocks): the nameref for this name entry, if it is not a noun.  The cached ref may or may not have the LX of the symbol for the name
+//   (for locale names in SYMLINFO of a numbered locale) the locale number
+ A cachedref; // (only for cachable NAME blocks): the nameref for this name entry, if it is not a noun.  The cached ref may or may not have the LX of the symbol for the name
 //         if flag&NMCACHEDSYM is set, the value here is the index of a symbol with the value to use for the name - it could be from a NAMELESS modifier
-// m: length of non-locale part of name note 255-byte limit! (AN holds the length of the entire name including the locative)
-/* s: string part of full name (1 to ?? characters, including locale of assignment if given)           */
+ LX symx;  // (only for SHARED names, which are only local variables and never cachable) the index of the symbol allocated in the primary symbol table
+ UC m; // length of non-locale part of name note 255-byte limit! (AN holds the length of the entire name including the locative)
+ C flag, // string part of full name (1 to ?? characters, including locale of assignment if given)
+ s[1];  // up to 24 chars fit in a 128B allo
+} NM;
 
 // values in flag:
 #define NMLOC           1       // direct   locale abc_lm_   only one of NMLOC/NMILOC/NMIMPLOC is set
@@ -772,9 +777,11 @@ typedef struct{UI4 hash;I4 bucket;I bucketx;A cachedref;UC m;C flag,s[1];} NM;
 #define NMXY            8       // x/y, which must have NAMEBYVALUE set
 #define NMIMPLOC        16      // this NM block is u./v.     only one of NMLOC/NMILOC/NMIMPLOC is set
 #define NMCACHEDX       5
-#define NMCACHED        (1<<NMCACHEDX)      // This NM is to cache any valid lookup
+#define NMCACHED        (1LL<<NMCACHEDX)      // This NM is to cache any valid lookup
 #define NMCACHEDSYMX    6
-#define NMCACHEDSYM     (1<<NMCACHEDSYMX)      // This NM is storing a symbol index, not a pointer tio a reference
+#define NMCACHEDSYM     (1<<NMCACHEDSYMX)      // This NM is storing a symbol index, not a pointer to a reference
+#define NMSHAREDX    7
+#define NMSHARED     (1LL<<NMSHAREDX)      // This NM is for a locally-defined name and is shared by all references to the name
 
 
 typedef struct {I a,e,i,x;} P;

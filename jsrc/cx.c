@@ -827,25 +827,44 @@ static A jtsent12b(J jt,A w){A t,*wv,y,*yv;I j,*v;
  R y;
 }    /* boxed sentences into monad/dyad */
 
-// Install bucket info into the NAME type t, if it is a local name
+// If *t is a local name, replace it with a pointer to a shared copy, namely the block in the symbol-name already
+// Also install bucket info into a local name (but leave the hashes calculated for others)
+// in any case, if dobuckets is 0, remove the bucket field (NOT bucketx).  Clearing the bucket field will prevent
+// a name's escaping and being used in another context with invalid bucket info.  bucketx must survive in case it holds
+// a valid hash of a locative name
 // actstv points to the chain headers, actstn is the number of chains
 // all the chains have had the non-PERMANENT flag cleared in the pointers
-static void jtcalclocalbuckets(J jt, A t, LX *actstv, I actstn){LX k;
- if(!(NAV(t)->flag&(NMLOC|NMILOC))){  // don't store if we KNOW we won't be looking up in the local symbol table - and bucketx contains a hash/# for NMLOC
+// recur is set if *t is part of a recursive noun
+static A jtcalclocalbuckets(J jt, A *t, LX *actstv, I actstn, I dobuckets, I recur){LX k;
+ A tv=*t;  // the actual NAME block
+ L *sympv=JT(jt,sympv);  // base of symbol table
+ if(!(NAV(tv)->flag&(NMLOC|NMILOC))){  // don't store if we KNOW we won't be looking up in the local symbol table - and bucketx contains a hash/# for NMLOC/NMILOC
   I4 compcount=0;  // number of comparisons before match
-  // lv[j] is a simplename.  We will install the bucket/index fields
-  NM *tn = NAV(t);  // point to the NM part of the name block
+  // tv is a simplename.  We will install the bucket/index fields
   // Get the bucket number by reproducing the calculation in the symbol-table routine
-  tn->bucket=(I4)SYMHASH(tn->hash,actstn);  // bucket number of name hash
+  I4 bucket=(I4)SYMHASH(NAV(tv)->hash,actstn);  // bucket number of name hash
   // search through the chain, looking for a match on name.  If we get a match, the bucket index is the one's complement
   // of the number of items compared before the match.  If we get no match, the bucket index is the number
   // of items compared (= the number of items in the chain)
-  L *sympv=JT(jt,sympv);
-  for(k=actstv[tn->bucket];k;++compcount,k=sympv[k].next){  // k chases the chain of symbols in selected bucket
-   if(tn->m==NAV(sympv[k].name)->m&&!memcmpne(tn->s,NAV(sympv[k].name)->s,tn->m)){compcount=~compcount; break;}
+  for(k=actstv[bucket];k;++compcount,k=sympv[k].next){  // k chases the chain of symbols in selected bucket
+   if(NAV(tv)->m==NAV(sympv[k].name)->m&&!memcmpne(NAV(tv)->s,NAV(sympv[k].name)->s,NAV(tv)->m)){
+    // match found.  this is a local name.  Replace it with the shared copy, flag as shared, set negative bucket#
+    A oldtv=tv;
+    *t=tv=sympv[k].name;  // use shared copy
+    if(recur){ras(tv); fa(oldtv);} // if we are installing into a recursive box, increment/decr usecount new/old
+    NAV(tv)->flag|=NMSHARED;  // tag the shared copy as shared
+    // Remember the exact location of the symbol.  It will not move as long as this symbol table is alive.  We can
+    // use it only when we are in this primary symbol table
+    NAV(tv)->symx=k;  // keep index of the allocated symbol
+    compcount=~compcount;  // negative bucket indicates found symbol
+    break;
+   }
   }
-  tn->bucketx=compcount;
+  NAV(tv)->bucket=bucket;  // fill in the bucket in the (possibly modified) name
+  NAV(tv)->bucketx=compcount;
  }
+ if(!dobuckets)NAV(tv)->bucket=0;  // remove bucket if this name not allowed to have them
+ R tv;
 }
 
 EVERYFS(onmself,jtonm,0,0,VFLAGNONE)  // create self to pass into every
@@ -953,10 +972,12 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
  // Transfer the symbols from the pro-forma table to the result table, hashing using the table size
  // For fast argument assignment, we insist that the arguments be the first symbols added to the table.
  // So we add them by hand - just y and possibly x.  They will be added later too
- RZ(probeis(mnuvxynam[5],actst));if(!(!dyad&&(type>=3||(flags&VXOPR)))){RZ(probeis(mnuvxynam[4],actst));}
+ RZ(probeis(ca(mnuvxynam[5]),actst));if(!(!dyad&&(type>=3||(flags&VXOPR)))){RZ(probeis(ca(mnuvxynam[4]),actst));}
  for(j=1;j<pfstn;++j){  // for each hashchain
   for(pfx=pfstv[j];pfx=SYMNEXT(pfx);pfx=JT(jt,sympv)[pfx].next){L *newsym;
    A nm=JT(jt,sympv)[pfx].name;
+   // If we are transferring a PERMANENT name, we have to clone it, because the name may be local & if it is we may install bucket info or a symbol index
+   if(ACISPERM(AC(nm)))RZ(nm=ca(nm));   // only cases are mnuvxy
    RZ(newsym=probeis(nm,actst));  // create new symbol (or possibly overwrite old argument name)
    newsym->flag = JT(jt,sympv)[pfx].flag|LPERMANENT;   // Mark as permanent
   }
@@ -978,17 +999,15 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
  // result).  The definition will still benefit from the preallocation of the symbol table.
  for(j=0;j<ln;++j) {
   if(AT(t=lv[j])&NAME) {
-   jtcalclocalbuckets(jt,t,actstv,actstn-SYMLINFOSIZE);  // install bucket info into name
-   // if the name is unbucketed, OR it has positive bucketx (meaning 'not found') it is not a simple local name.
+   t=jtcalclocalbuckets(jt,&lv[j],actstv,actstn-SYMLINFOSIZE,type>=3 || flags&VXOPR,0);  // install bucket info into name
+   // if the name is not shared, it is not a simple local name.
    // If it is also not indirect, x., or u., it is eligible for caching - if that is enabled
-   if(jt->namecaching && !(NAV(t)->flag&(NMILOC|NMDOT|NMIMPLOC)) && (NAV(t)->bucket==0||NAV(t)->bucketx>=0))NAV(t)->flag|=NMCACHED;
-   if(!(type>=3 || flags&VXOPR)){  // If this is NOT guaranteed to return a noun...
-    NAV(t)->bucket=0;  // remove the bucket number, but leave bucketx, which has hash info for NMLOC types
-   }
+   if(jt->namecaching && !(NAV(t)->flag&(NMILOC|NMDOT|NMIMPLOC|NMSHARED)))NAV(t)->flag|=NMCACHED;
+// obsolete    if(!()){  // If this is NOT guaranteed to return a noun...
+// obsolete     NAV(t)->bucket=0;  // remove the bucket number, but leave bucketx, which has hash info for NMLOC types
+// obsolete    }
   }else if((AT(t)&BOX+BOXMULTIASSIGN)==BOX+BOXMULTIASSIGN){
-   if(type>=3 || flags&VXOPR){  // If this is guaranteed to return a noun...
-    A *tv=AAV(t); DO(AN(t), jtcalclocalbuckets(jt,tv[i],actstv,actstn-SYMLINFOSIZE);)  // install bucket info into boxed names
-   }
+   A *tv=AAV(t); DO(AN(t), jtcalclocalbuckets(jt,&tv[i],actstv,actstn-SYMLINFOSIZE,type>=3 || flags&VXOPR,AFLAG(t)&BOX);)  // calculate details about the boxed names
   }
  }
  R actst;
@@ -999,7 +1018,7 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
 // The rank-flag of the table is 'not modified'
 // static A jtclonelocalsyms(J jt, A a){A z;I j;I an=AN(a); I *av=AV(a);I *zv;
 A jtclonelocalsyms(J jt, A a){A z;I j;I an=AN(a); LX *av=LXAV0(a),*zv;
- RZ(z=stcreate(2,AN(a),0L,0L)); zv=LXAV0(z);  // allocate the clone; zv->clone hashchains
+ RZ(z=stcreate(2,AN(a),0L,0L)); zv=LXAV0(z); AR(z)|=ARLCLONED;  // allocate the clone; zv->clone hashchains; set flag to indicate cloned
  // Copy the first hashchain, which has the x/v hashes
  zv[0]=av[0]; // Copy as LX; really it's a UI4
  // Go through each hashchain of the model, after the first one.  We know the non-PERMANENT flags are off

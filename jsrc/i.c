@@ -21,7 +21,7 @@
 // create name block for xyuvmn
 static A jtmakename(J jt,C*s){A z;I m;NM*zv;
  m=strlen(s);
- GATV0(z,NAME,m,1); zv=NAV(z);  // Use GATV because GA doesn't support NAME type
+ GATV0(z,NAME,m,1); AT(z)=NAME|NAMEBYVALUE; zv=NAV(z);  // Use GATV because GA doesn't support NAME type; but we must have NAMEBYVALUE set
  MC(zv->s,s,m); zv->s[m]=0;
  zv->m   =(UC)m; 
  zv->bucket=0;

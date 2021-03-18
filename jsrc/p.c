@@ -462,8 +462,13 @@ A jtparsea(J jt, A *queue, I m){PSTK * RESTRICT stack;A z,*v;
        // otherwise resolve nouns to values, and others to 'name~' references
        // To save some overhead, we inline this and do the analysis in a different order here
        // The important performance case is local names with bucket info.  Pull that out & do it without the call overhead
-       // This code is copied from s.c
-       if(likely(NAV(y)->bucket!=0)){I bx;L *sympv=JT(jt,sympv);
+       // This code is copied from s.c, except for the symx: since that occurs only in explicit definitions we can get to it only through here
+       I locstflags=AR(UNLXAV0(locbuckets));  // flags from local symbol table
+       L *sympv=JT(jt,sympv);
+       if(likely((SGNIF(locstflags,ARLCLONEDX)|(NAV(y)->symx-1))>=0)){  // if we are using primary table and there is a symbol stored there...
+        s=sympv+(I)NAV(y)->symx;  // get address of symbol in primary table
+        if(unlikely(s->val==0))goto rdglob;  // if value has not been assigned, ignore it
+       }else if(likely(NAV(y)->bucket!=0)){I bx;
         if(likely(0 <= (bx = ~NAV(y)->bucketx))){   // negative bucketx (now positive); skip that many items, and then you're at the right place.  This is the path for almost all local symbols
          s = locbuckets[NAV(y)->bucket]+sympv;  // fetch hashchain headptr, point to L for first symbol
          if(unlikely(bx>0)){NOUNROLL do{s = s->next+sympv;}while(--bx);}  // skip the prescribed number, which is usually 1
@@ -471,7 +476,7 @@ A jtparsea(J jt, A *queue, I m){PSTK * RESTRICT stack;A z,*v;
         }else{
          // positive bucketx (now negative); that means skip that many items and then do name search.  This is set for words that were recognized as names but were not detected as assigned-to in the definition.  This is the path for global symbols
          // If no new names have been assigned since the table was created, we can skip this search, since it must fail (this is the path for words in z eg)
-         if(likely(!(AR(jt->locsyms)&ARNAMEADDED)))goto rdglob;
+         if(likely(!(locstflags&ARNAMEADDED)))goto rdglob;
          // from here on it is rare to find a name - usually they're globals defined elsewhere
          LX lx = locbuckets[NAV(y)->bucket];  // index of first block if any
          I m=NAV(y)->m; C* nm=NAV(y)->s; UI4 hsh=NAV(y)->hash;  // length/addr of name from name block
@@ -622,7 +627,7 @@ endname: ;
        // that the next assignment will be to the name, and that the reassigned value is available for inplacing.  In the V V N case,
        // this may be over two verbs
        if(PTISASGNNAME(stack[0]))if(likely(PTISM(stackfs[2]))){   // assignment to name; nothing in the stack to the right of what we are about to execute; well-behaved function (doesn't change locales)
-        s=((AT(stack[0].a))&ASGNLOCAL?jtprobelocal:jtprobeisquiet)(jt,queue[m-1],jt->locsyms);  // look up the target.  It will usually be found (in an explicit definition)
+        s=((AT(stack[0].a))&ASGNLOCAL?jtprobelocal:jtprobeisquiet)(jt,queue[m-1],UNLXAV0(locbuckets));  // look up the target.  It will usually be found (in an explicit definition)
         // Don't remember the assignand if it may change during execution, i. e. if the verb is unsafe.  For line 1 we have to look at BOTH verbs that come after the assignment
         s=((FAV(fs)->flag&(FAV(stack[1].a)->flag|((~pmask)<<(VASGSAFEX-1))))&VASGSAFE)?s:0;
         // It is OK to remember the address of the symbol being assigned, because anything that might conceivably create a new symbol (and thus trigger

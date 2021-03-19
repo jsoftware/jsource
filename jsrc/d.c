@@ -132,7 +132,7 @@ static void jtseeparse(J jt,DC d){A*v;I m;
 
 // w is a list of words, originally from a single sentence.  Result is string form of the words.
 // nflag is display status: bit0=space needed before numeric value, bit1=parens required around non-primitive
-static A jtunparse(J jt,A w,I nflag){A*v,z;
+A jtunparse(J jt,A w,I nflag){A*v,z;
  ARGCHK1(w);
  jt->etxn=0;
  v=AAV(w); DO(AN(w), nflag=disp(v[i],nflag);); z=str(jt->etxn,jt->etx);

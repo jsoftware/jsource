@@ -966,6 +966,21 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
  R actst;
 }
 
+// l is the A block for all the words/queues used in the definition
+// c is the table of control-word info used in the definition
+// type is the m operand to m : n, indicating part of speech to be produced
+// We preparse what we can in the definition
+static I pppp(J jt, A l, A c){I j;
+ // Go through the control-word table, looking at each sectence
+ I cn=AN(c); CW *cwv=(CW*)AV(c);  // Get # control words, address of first
+ for(j=0;j<cn;++j) {   // look at each control word
+  if((((1LL<<(BW-CBBLOCK-1))|(1LL<<(BW-CTBLOCK-1)))<<(cwv[j].ig.indiv.type&31))<0){  // BBLOCK or TBLOCK
+   // scan the sentence for PPPP.  If found, parse the PPPP and replace the sequence in the sentence; reduce the length
+  }
+ }
+ R 1;
+}
+
 // a is a local symbol table, possibly in use
 // result is a copy of it, ready to use.  All PERMANENT symbols are copied over and given empty values, without inspecting any non-PERMANENT ones
 // The rank-flag of the table is 'not modified'
@@ -1061,9 +1076,15 @@ F2(jtcolon){A d,h,*hv,m;C*s;I flag=VFLAGNONE,n,p;
  // definition is executed, so that we wouldn't take up the space for library verbs; but since we don't explicitly free
  // the components of the explicit def, we'd better do it now, so that the usecounts are all identical
  if(4>=n) {
-  // Don't bother to create a symbol table for an empty definition, since it is a domain error
-  if(AN(hv[1]))RZ(hv[3] = incorp(crelocalsyms(hv[0],hv[1],n,0,flag)));  // wordss,cws,type,monad,flag
-  if(AN(hv[HN+1]))RZ(hv[HN+3] = incorp(crelocalsyms(hv[HN+0], hv[HN+1],n,1,flag)));  // words,cws,type,dyad,flag
+  // explicit definitions.  Create local symbol table and pppp
+  I hnofst=0; do{  // for each valence
+   // Don't bother to create a symbol table for an empty definition, since it is a domain error
+// obsolete   if(AN(hv[1]))RZ(hv[3] = incorp(crelocalsyms(hv[0],hv[1],n,0,flag)));  // wordss,cws,type,monad,flag
+   if(AN(hv[hnofst+1])){
+    RZ(hv[hnofst+3] = incorp(crelocalsyms(hv[hnofst+0], hv[hnofst+1],n,!!hnofst,flag)));  // words,cws,type,dyad,flag
+    pppp(jt, hv[hnofst+0], hv[hnofst+1]);  // words,cws,type,dyad,flag
+   }
+  }while((hnofst+=HN)<=HN);
  }
  A z;
  switch(n){

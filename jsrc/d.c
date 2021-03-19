@@ -30,7 +30,7 @@ static void jteputv(J jt,A w){I m=NETX-jt->etxn; if(m>0){jt->etxn+=thv(w,MIN(m,2
      /* numeric vector w */
 
 static void jteputq(J jt,A w,I nflag){C q=CQUOTE,*s;
- if(equ(ds(CALP),w))eputs(" a."+!nflag);
+ if(equ(ds(CALP),w))eputs(" a."+!(nflag&1));
  else{
   eputc(q);
   s=CAV(w); DO(AN(w), eputc(s[i]); if(q==s[i])eputc(q););
@@ -58,21 +58,40 @@ void jtshowerr(J jt){F1PREFJT;C b[1+2*NETX],*p,*q,*r;
  jt->etxn=0;
 }
 
+static I jtdisp(J jt,A w,I nflag);
+// format one non-noun entity into the error line
+// nflags contains display flags: 1=space before number, 2=parens around non-primitive
+// The entity came from a single sentence but may be compound.  Display it on a single line
 static void jtdspell(J jt,C id,A w,I nflag){C c,s[5];
- if(id==CFCONS){if(nflag)eputc(' '); eputv(FAV(w)->fgh[2]); eputc(':');}
+ // constant verbs require looking at h
+ if(id==CFCONS){if((nflag&1))eputc(' '); eputv(FAV(w)->fgh[2]); eputc(':');}
  else{
+  // get fgh if any.  Format f if any, then the primitive, then g if any.  fgh are present only in ACV type (ASGN doesn't have them at all)
+  A f,g,h;
+  if(AT(w)&VERB+ADV+CONJ){f=FAV(w)->fgh[0], g=FAV(w)->fgh[1], h=FAV(w)->fgh[2];}else{f=g=h=0;}  // plain value for fgh
+  if(id==CFORK){if(h==0){h=g; g=f; f=ds(CCAP);}else h=0;}  // reconstitute [: g h; otherwise we display h only for fork
+  if(g&&!f){f=g; g=0;}  // if adverb has its arg in g rather than f, restore it to f
+  // if this is not a primitive, we must enclose it in parentheses if we are told to in nflag or if it was originally defined as a hook/fork which must have used parentheses
+  I parenhere=(g||h)&&(BETWEENC(id,CHOOK,CADVF)||nflag&2);  // set if we need parens around our value
+  if(parenhere)eputc('(');
+  if(f)nflag=disp(f,0);  // display left side if any
+  // display the primitive, with a leading space if it begins with inflection or a digit
   s[0]=' '; s[4]=0;
   spellit(id,1+s);
   c=s[1]; 
-  eputs(s+!(c==CESC1||c==CESC2||nflag&&((ctype[(UC)c]&~CA)==0)));
-}}
+  eputs(s+!(c==CESC1||c==CESC2||(nflag&1)&&((ctype[(UC)c]&~CA)==0)));
+  if(g)nflag=disp(g,2);  // display right side if any
+  if(h)nflag=disp(h,2);  // display end of fork if any
+  if(parenhere)eputc(')');
+ }
+}
 
 static F1(jtsfn0){R sfn(0,w);}  // return string form of full name for a NAME block
 EVERYFS(sfn0overself,jtsfn0,jtover,0,VFLAGNONE)
 
 // print a noun; nflag if space needed before name/numeric; return new value of nflag
 static I jtdisp(J jt,A w,I nflag){B b=1&&AT(w)&NAME+NUMERIC;
- if(b&&nflag)eputc(' ');
+ if(b&&(nflag&1))eputc(' ');
  switch(CTTZ(AT(w))){
  case B01X:
  case INTX:
@@ -81,16 +100,16 @@ static I jtdisp(J jt,A w,I nflag){B b=1&&AT(w)&NAME+NUMERIC;
  case XNUMX: 
  case RATX:  eputv(w);                break;
  case BOXX:
-  if(!(AT(w)&BOXMULTIASSIGN)){eputs(" a:"+!nflag); break;}
+  if(!(AT(w)&BOXMULTIASSIGN)){eputs(" a:"+!(nflag&1)); break;}
   // If this is an array of names, turn it back into a character string with spaces between
   else{w=curtail(raze(every2(every(w,(A)&sfn0overself),chrspace,(A)&sfn0overself)));}  // }: (string&.> names) ,&.> ' '  then fall through to display it
- case LITX:  eputq(w,nflag);                break;
+ case LITX:  eputq(w,(nflag&1));                break;
  case NAMEX: ep(AN(w),NAV(w)->s);     break;
  case LPARX: eputc('(');              break;
  case RPARX: eputc(')');              break;
- case ASGNX: dspell(CAV(w)[0],w,nflag);       break;
+ case ASGNX: dspell(CAV(w)[0],w,(nflag&1));       break;
  case MARKX:                          break;
- default:   dspell(FAV(w)->id,w,nflag);     break;
+ default:   dspell(FAV(w)->id,w,(nflag&1)|2);     break;  // if non-primitive, it might have had parnes when created
  }
  R b;  // new nflag
 }
@@ -111,9 +130,11 @@ static void jtseeparse(J jt,DC d){A*v;I m;
  }
 }    /* display error line */
 
-F1(jtunparse){A*v,z;
+// w is a list of words, originally from a single sentence.  Result is string form of the words.
+// nflag is display status: bit0=space needed before numeric value, bit1=parens required around non-primitive
+static A jtunparse(J jt,A w,I nflag){A*v,z;
  ARGCHK1(w);
- jt->etxn=0; I nflag=0;
+ jt->etxn=0;
  v=AAV(w); DO(AN(w), nflag=disp(v[i],nflag);); z=str(jt->etxn,jt->etx);
  jt->etxn=0;
  R z;

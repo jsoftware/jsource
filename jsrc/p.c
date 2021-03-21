@@ -376,7 +376,7 @@ static A virthook(J jtip, A f, A g){
 // extend NVR stack, returning the A block for it.  stack error on fail, since that's the likely cause
 A jtextnvr(J jt){ASSERT(jt->parserstackframe.nvrtop<32000,EVSTACK); RZ(jt->nvra = ext(1, jt->nvra));  R jt->nvra;}
 
-static I iscavn[]={0,0};  // how many As scaf
+// obsolete static I iscavn[]={0,0};  // how many As scaf
 #define BACKMARKS 3   // amount of space to leave for marks at the end.  Because we stack 3 words before we start to parse, we will
  // never see 4 marks on the stack - the most we can have is 1 value + 3 marks.
 #define FRONTMARKS 1  // amount of space to leave for front-of-string mark
@@ -625,7 +625,12 @@ endname: ;
        // that the next assignment will be to the name, and that the reassigned value is available for inplacing.  In the V V N case,
        // this may be over two verbs
        if(PTISASGNNAME(stack[0]))if(likely(PTISM(stackfs[2]))){   // assignment to name; nothing in the stack to the right of what we are about to execute; well-behaved function (doesn't change locales)
-        if(likely((AT(stack[0].a))&ASGNLOCAL))s=jtprobeislocal(jt,queue[m-1]); else s=jtprobeisquiet(jt,queue[m-1],UNLXAV0(locbuckets));
+        if(likely((AT(stack[0].a))&ASGNLOCAL)){
+         // local assignment.  To avoid subroutine call overhead, make a quick check for primary symbol
+         if(likely((SGNIF(AR(UNLXAV0(locbuckets)),ARLCLONEDX)|(NAV(queue[m-1])->symx-1))>=0)){  // if we are using primary table and there is a symbol stored there...
+          s=JT(jt,sympv)+(I)NAV(queue[m-1])->symx;  // get address of symbol in primary table.  There may be no value; that's OK
+         }else{s=jtprobeislocal(jt,queue[m-1]);}
+        }else s=jtprobeisquiet(jt,queue[m-1],UNLXAV0(locbuckets));  // global assignment, get slot address
 // obsolete         s=((AT(stack[0].a))&ASGNLOCAL?jtprobelocal:jtprobeisquiet)(jt,queue[m-1],UNLXAV0(locbuckets));  // look up the target.  It will usually be found (in an explicit definition)
         // Don't remember the assignand if it may change during execution, i. e. if the verb is unsafe.  For line 1 we have to look at BOTH verbs that come after the assignment
         s=((FAV(fs)->flag&(FAV(stack[1].a)->flag|((~pmask)<<(VASGSAFEX-1))))&VASGSAFE)?s:0;

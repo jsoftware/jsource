@@ -383,16 +383,7 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
 dobblock:
    // B-block (present on every sentence in the B-block)
    // run the sentence
-   tpop(old);
-// parseline(z); // scaf
-{C attnval=*JT(jt,adbreakr);
- A *queue=line+CWSENTX;
- I m=(cwgroup>>16)&0xffff;
- if(likely(!attnval)){
- if(likely(!(nG0ysfctdl&16)))
-  z=PARSERVALUE(parsea(queue,m));
-else {thisframe->dclnk->dcix=i; z=PARSERVALUE(parsex(queue,m,cw+i,callframe));}}else{jsignal(EVATTN); z=0;} }
-
+   tpop(old); parseline(z);
    // if there is no error, or ?? debug mode, step to next line
    if(likely(z!=0)){bi=i; i+=((cwgroup>>5)&1)+1;  // go to next sentence, or to the one after that if it's harmless end. 
     if(unlikely((UI)i>=(UI)(nG0ysfctdl>>16)))break;  // end of definition
@@ -988,34 +979,37 @@ static I pppp(J jt, A l, A c){I j; A fragbuf[20], *fragv=fragbuf; I fragl=sizeof
    // scan the sentence for PPPP.  If found, parse the PPPP and replace the sequence in the sentence; reduce the length
    A *lvv=lv+cwv[j].ig.indiv.sentx;  // pointer to sentence words
    I startx=0, endx=cwv[j].ig.indiv.sentn;  // start and end+1 index of sentence
-   // Look forward for )
-   while(startx<endx && !(AT(lvv[startx])&RPAR))++startx; if(startx==endx)break;  // find ), exit loop if none, finished
-   // Scan backward looking for (, to get length, and checking for disqualifying entities
-   I rparx=startx; // remember where the ) is
-   while(--startx>=0 && !(AT(lvv[startx])==LPAR)){  // look for matching (   use = because LPAR can be a NAMELESS flag
-    if(AT(lvv[startx])&RPAR+ASGN+NAME)break;  // =. not allowed; ) indicates previous disqualified block; NAME is unknowable
-    if(AT(lvv[startx])&CONJ && FAV(lvv[startx])->id==CIBEAM)break;  // !: not allowed: might produce adverb/conj to do who-knows-what
-    if(AT(lvv[startx])&CONJ && FAV(lvv[startx])->id==CCOLON && !(AT(lvv[startx-1])&VERB))break;  //: allowed only in u : v form
+   // loop till we have found all the parens
+   while(1){
+    // Look forward for )
+    while(startx<endx && !(AT(lvv[startx])&RPAR))++startx; if(startx==endx)break;  // find ), exit loop if none, finished
+    // Scan backward looking for (, to get length, and checking for disqualifying entities
+    I rparx=startx; // remember where the ) is
+    while(--startx>=0 && !(AT(lvv[startx])==LPAR)){  // look for matching (   use = because LPAR can be a NAMELESS flag
+     if(AT(lvv[startx])&RPAR+ASGN+NAME)break;  // =. not allowed; ) indicates previous disqualified block; NAME is unknowable
+     if(AT(lvv[startx])&CONJ && FAV(lvv[startx])->id==CIBEAM)break;  // !: not allowed: might produce adverb/conj to do who-knows-what
+     if(AT(lvv[startx])&CONJ && FAV(lvv[startx])->id==CCOLON && !(AT(lvv[startx-1])&VERB))break;  //: allowed only in u : v form
+    }
+    if(startx>=0 && (AT(lvv[startx])==LPAR)){
+     // The ) was matched and the () can be processed.
+     // We have to make sure no verbs in the fragment will be executed.  They might have side effects, such as increased space usage.
+     // copy the fragment between () to a temp buffer, replacing any verb with [:
+     if(fragl<rparx-startx-1){A fb; GATV0(fb,INT,rparx-startx-1,0) fragv=AAV0(fb); fragl=AN(fb);}  // if the fragment buffer isn't big enough, allocate a new one
+     DO(rparx-startx-1, fragv[i]=AT(lvv[startx+i+1])&VERB?ds(CCAP):lvv[startx+i+1];)  // copy the fragment, not including (), with verbs replaced
+     // parse the temp for error, which will usually be an attempt to execute a verb
+     parsea(fragv,rparx-startx-1);
+     if(likely(jt->jerr==0)){
+      // no error: parse the actual () block
+      A pfrag; RZ(pfrag=parsea(&lvv[startx+1],rparx-startx-1));
+      // Replace the () block with its parse, close up the sentence, zero the ending area
+      lvv[startx]=pfrag; DO(endx-(rparx+1), lvv[startx+1+i]=lvv[rparx+1+i];) DP(rparx-startx, lvv[endx+i]=0;) 
+      // Adjust the end pointer and the ) position
+      cwv[j].ig.indiv.sentn=endx-=rparx-startx; rparx=startx;  // back up to account for discarded tokens; resume as if the parse result was at ) position
+     }else{RESETERR} // skipping because of error; clear error indic
+    }
+    // Whether we skipped or not, rpar now has the adjusted position of the ) and endx is correct relative to it.  Advance to next ) search
+    startx=rparx+1;  // continue look after )
    }
-   if(startx>=0 && (AT(lvv[startx])==LPAR)){
-    // The ) was matched and the () can be processed.
-    // We have to make sure no verbs in the fragment will be executed.  They might have side effects, such as increased space usage.
-    // copy the fragment between () to a temp buffer, replacing any verb with [:
-    if(fragl<rparx-startx-1){A fb; GATV0(fb,INT,rparx-startx-1,0) fragv=AAV0(fb); fragl=AN(fb);}  // if the fragment buffer isn't big enough, allocate a new one
-    DO(rparx-startx-1, fragv[i]=AT(lvv[startx+i+1])&VERB?ds(CCAP):lvv[startx+i+1];)  // copy the fragment, not including (), with verbs replaced
-    // parse the temp for error, which will usually be an attempt to execute a verb
-    parsea(fragv,rparx-startx-1);
-    if(likely(jt->jerr==0)){
-     // no error: parse the actual () block
-     A pfrag; RZ(pfrag=parsea(&lvv[startx+1],rparx-startx-1));
-     // Replace the () block with its parse, close up the sentence, zero the ending area
-     lvv[startx]=pfrag; DO(endx-(rparx+1), lvv[startx+1+i]=lvv[rparx+1+i];) DP(rparx-startx, lvv[endx+i]=0;) 
-     // Adjust the end pointer and the ) position
-     cwv[j].ig.indiv.sentn=endx-=rparx-startx; rparx=startx;  // back up to account for discarded tokens; resume as if the parse result was at ) position
-    }else{RESETERR} // skipping because of error; clear error indic
-   }
-   // Whether we skipped or not, rpar now has the adjusted position of the ) and endx is correct relative to it.  Advance to next ) search
-   startx=rparx+1;  // continue look after )
   }
  }
  R 1;

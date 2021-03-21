@@ -226,6 +226,7 @@ L *jtprobelocal(J jt,A a,A locsyms){NM*u;I b,bx;
  ARGCHK1(a);u=NAV(a);  // u->NM block
  if(likely((b = u->bucket)!=0)){
   L *sympv=JT(jt,sympv);  // base of symbol array
+  // we don't check for primary symbol index because that is normally picked up in parsea
   if(0 > (bx = ~u->bucketx)){
    // positive bucketx (now negative); that means skip that many items and then do name search.  This is set for words that were recognized as names but were not detected as assigned-to in the definition
    // If no new names have been assigned since the table was created, we can skip this search, since it must fail (this is the path for words in z eg)
@@ -491,7 +492,7 @@ B jtredef(J jt,A w,L*v){A f;DC c,d;
 // the name a may require lookup through the path; once we find the locale, we search only in it
 // Result is &symbol-table entry for the name, or a new one
 // We are called for purposes of setting assignsym for inplace assignments.  The symbol we create will eventually be assigned
-// except when the locale is changed by the verb being called.  That is exceedingly rare.  When it happens, the ysmbol entry created
+// except when the locale is changed by the verb being called.  That is exceedingly rare.  When it happens, the symbol entry created
 // here will persist until the locale is deleted (it has a name and no value).  Normally the symbol created here will be the target
 // of its assignment - possibly only eventually after execution of a verb - and it will be used then.  We go ahead and create the
 // symbol rather than failing the lookup because it does save a lookup in the eventual call to symbis.
@@ -551,6 +552,8 @@ L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;L*e;
   // Normal case of non-memory-mapped assignment.
   // If we are assigning the same data block that's already there, don't bother with changing use counts or anything else (assignment-in-place)
   if(likely(x!=w)){
+   // if the value we are assigning is an ADV, and it contains no name references, mark the value as NAMELESS to speed up later parsing.
+   // NOTE that the value may be in use elsewhere; may even be a primitive.. Perhaps we should flag the name rather than the value.  But namelessness is a characteristic of the value.
    if(unlikely((wt&ADV)!=0))AT(w)=wt|(I)nameless(w)<<NAMELESSMODX;
    // Increment the use count of the value being assigned, to reflect the fact that the assigned name will refer to it.
    // This realizes any virtual value, and makes the usecount recursive if the type is recursible

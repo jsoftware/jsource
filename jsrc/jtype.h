@@ -350,7 +350,7 @@ typedef I SI;
 // NOTE: VERB must be above all NOUN bits because of CONJCASE
 #define LPARX 28
 #define LPAR            ((I)1L<<LPARX)    /* I  left  parenthesis            */
-// note: LPAR used as flag to cvt() see below
+// note: LPAR used as flag to cvt() see below; also as modifier to ADV type
 #define LPARSIZE sizeof(I)
 // CONJ must be 1 bit below RPAR, with no parsable type (including any flags that might be set, see below) higher than RPAR
 #define CONJX 29

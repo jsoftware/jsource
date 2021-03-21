@@ -521,6 +521,24 @@ IGNOREIFFVI 4000 < 7!:2 'a =: (] ] (, {.)) a'
 9!:53 (1)
 IGNOREIFFVI 4000 > 7!:2 'a =: (, {.) a'
 IGNOREIFFVI 4000 < 7!:2 'a =: (, {.@unsafename) a'
+NB. singleton hook
+a =: 10+1
+aad =: 15!:14 <'a'
+a =: a + 4
+aad2=:15!:14 <'a'  NB. On NVR stack, so not inplaceable
+aad ~: aad2
+a =: a (+ ]) 4
+aad=:15!:14 <'a'  NB. On NVR stack, so not inplaceable
+aad ~: aad2
+3 : 0 ''
+a =. 10+1
+aad =. 15!:14 <'a'
+a =. a + 4
+assert. aad = 15!:14 <'a' [ 1  NB. not on NVR in defn
+a =. a (+ ]) 4
+assert. aad = 15!:14 <'a' [ 2 NB. not on NVR in defn (hook)
+1
+)
 9!:53 (0)
 
 
@@ -918,6 +936,6 @@ f3 =: 3 : 'p =. 10000 # a'
 
 
 
-4!:55 ;:'a a1 b f f1 f2 f3 f4 f5 f6 f7 f8 f9 f10 f11 f12 f13 global i ipexp jdlast l0 l1 local max min nmm nb qd t test testa unsafename undefinedname x'
+4!:55 ;:'a a1 aad aad2 b f f1 f2 f3 f4 f5 f6 f7 f8 f9 f10 f11 f12 f13 global i ipexp jdlast l0 l1 local max min nmm nb qd t test testa unsafename undefinedname x'
 
 

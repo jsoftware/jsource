@@ -52,14 +52,15 @@ A jtssingleton(J jt, A a,A w,A self,RANK2T awr,RANK2T ranks){A z;
  {
   // Calculate inplaceability for a and w.  Result must be 0 or 1
   // Inplaceable if: count=1 and zombieval, or count<0, PROVIDED the arg is inplaceable and the block is not UNINCORPABLE  No inplace if on NVR stack (AM is NVR and count>0)
-  I aipok = ((((AC(a)-1)|((I)a^(I)jt->asginfo.zombieval))==0)|(SGNTO0(AC(a)))) & ((UI)jtinplace>>JTINPLACEAX) & !(AFLAG(a)&AFUNINCORPABLE+AFRO) & ((AM(a)&SGNTO0(AM(a)-AMNVRCT))^1);
-  I wipok = ((((AC(w)-1)|((I)w^(I)jt->asginfo.zombieval))==0)|(SGNTO0(AC(w)))) & ((UI)jtinplace>>JTINPLACEWX) & !(AFLAG(w)&AFUNINCORPABLE+AFRO) & ((AM(w)&SGNTO0(AM(w)-AMNVRCT))^1);
-  z=0;
+  I aipok = ((((AC(a)-1)|((I)a^(I)jt->asginfo.zombieval))==0)|(SGNTO0(AC(a)))) & ((UI)jtinplace>>JTINPLACEAX) & !(AFLAG(a)&AFUNINCORPABLE+AFRO) & ~(AM(a)&SGNTO0((AMNVRCT-1)-AM(a)));
+  I wipok = ((((AC(w)-1)|((I)w^(I)jt->asginfo.zombieval))==0)|(SGNTO0(AC(w)))) & ((UI)jtinplace>>JTINPLACEWX) & !(AFLAG(w)&AFUNINCORPABLE+AFRO) & ~(AM(w)&SGNTO0((AMNVRCT-1)-AM(w)));
   // find or allocate the result area
-  if(awr==0){  // both atoms
+  z=0;
+  if(likely(awr==0)){  // both atoms
    // The usual case: both singletons are atoms.  Verb rank is immaterial.  Pick any inplaceable input, or allocate a FL atom if none
-   // For comparison operations leave z=0 rather than allocate, so we can use num[].  But if we can inplace that's better
-   z=aipok?a:z; z=wipok?w:z; if(!((I)z|(aiv&0x80)))GAT0(z,FL,1,0);  // top  bit of lc means 'comparison'
+   // For comparison operations don't allocate, just return from num().  Leave z=0 to indicate this case
+// obsolete    z=aipok?a:z; z=wipok?w:z;
+   if((aipok|wipok)+(aiv&0x80)){z=aipok?a:z; z=wipok?w:z;}else GAT0(z,FL,1,0);  // top  bit of lc means 'comparison'
   }else{
    // The nouns have rank, and thus there may be frames.  Calculate the rank of the result, and then see if we can inplace an argument of the needed rank
    I4 fa=(awr>>RANKTX)-(ranks>>RANKTX); fa=fa<0?0:fa;  // framelen of a - will become larger frame, and then desired rank
@@ -374,10 +375,11 @@ A jtssingleton(J jt, A a,A w,A self,RANK2T awr,RANK2T ranks){A z;
  SSSTORE(ziv,z,INT,I) R z;
 
  compareresult:
- ziv&=1;  // Since we are writing into num[], invest 1 instruction to make sure we don't have an invalid boolean
- // If we did not inplace a result block, return num[ziv].  To avoid a misbranch, we store the value and type into num[], which is OK since they never change what's there already
- aiv=(I)(num(ziv)); z=z?z:(A)aiv;
- SSSTORE((B)ziv,z,B01,B) R z;
+// obsolete  ziv&=1;  // Since we are writing into num[], invest 1 instruction to make sure we don't have an invalid boolean
+// obsolete  // If we did not inplace/allocate a result block, return num[ziv].
+ if(!z)R num(ziv);  // Don't store into num[].  Could perhaps do this without the branch, but it seems too lengthy
+// obsolete  aiv=(I)(num(ziv)); z=z?z:(A)aiv;
+ SSSTORE((B)ziv,z,B01,B) R z;  // OK to store into allocated/inplace area.
 
  circleresult: ;
  D cirvals[3]={adv,wdv};  // put ops into memory

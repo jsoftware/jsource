@@ -3,8 +3,8 @@ NB. 7!:6 ----------------------------------------------------------------
 
 (7!:6 <'') -: 7!:6 <'base'
 
-spn=: 3 : '>.&.(2&^.) 64 >. ((>.&.(%&k) 8+k+k+3)+k*(7+1))+(k-1)+#y [ k=.IF64{4 8'   NB. space needed for a name
-NB. >.&.(%&k) 8+k+k+3 sizeof(NM)     should be 8+k+k+2 offsetof(NM,s)
+spn=: 3 : '>.&.(2&^.) 64 >. ((>.&.(%&k) 4+4+k+k+4+3)+k*(7+1))+(k-1)+#y [ k=.IF64{4 8'   NB. space needed for a name
+NB. >.&.(%&k) 4+4+k+k+4+1+1+1 sizeof(NM)     should be 8=4+4+k+k+4+1+1 offsetof(NM,s)   hash+bucket+bucketx+cachedref+symx+m+flag
 NB. 7   header words
 NB. 1   shape (no alignment needed)
 NB. 1   trailing 0 pad - full word-1 because B01 ops need it, will round up
@@ -13,7 +13,7 @@ NB. #y  letters in the name
 spl=: 4 : 0   NB. space needed for locale y with hash table size x
  z=. spn >y                      NB. locale name
  z=. z+(4)*2^6+x          NB. hash table
-NB.  z=. z+7!:5 <'p' [ p=. 18!:2 y   NB. leave out the patch since it's other locales
+NB.  z=. z+7!:5 <'p' [ p=. 18!:2 y   NB. leave out the path since it's other locales
  z=. z+ (+/spn&> v) + +/ (IF64{16 24) + 7!:5 v=. ,&('_',(>y),'_')&.>(nl__y '')-.;:'x y'  NB. 24 is length of L block
 )
 

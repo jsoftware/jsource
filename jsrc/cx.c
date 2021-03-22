@@ -992,12 +992,17 @@ static I pppp(J jt, A l, A c){I j; A fragbuf[20], *fragv=fragbuf; I fragl=sizeof
     }
     if(startx>=0 && (AT(lvv[startx])==LPAR)){
      // The ) was matched and the () can be processed.
-     // We have to make sure no verbs in the fragment will be executed.  They might have side effects, such as increased space usage.
-     // copy the fragment between () to a temp buffer, replacing any verb with [:
-     if(fragl<rparx-startx-1){A fb; GATV0(fb,INT,rparx-startx-1,0) fragv=AAV0(fb); fragl=AN(fb);}  // if the fragment buffer isn't big enough, allocate a new one
-     DO(rparx-startx-1, fragv[i]=AT(lvv[startx+i+1])&VERB?ds(CCAP):lvv[startx+i+1];)  // copy the fragment, not including (), with verbs replaced
-     // parse the temp for error, which will usually be an attempt to execute a verb
-     parsea(fragv,rparx-startx-1);
+     // See if the () block was a (( )) block.  If it is, we will execute it even if it contains verbs
+     I doublep = (rparx+1<endx) && (AT(lvv[rparx+1])==RPAR) && (startx>0) && (AT(lvv[startx-1])==LPAR);  // is (( ))?
+     if(doublep){--startx, ++rparx;  // (( )), expand the look to include outer ()
+     }else{
+      // Not (( )).  We have to make sure no verbs in the fragment will be executed.  They might have side effects, such as increased space usage.
+      // copy the fragment between () to a temp buffer, replacing any verb with [:
+      if(fragl<rparx-startx-1){A fb; GATV0(fb,INT,rparx-startx-1,0) fragv=AAV0(fb); fragl=AN(fb);}  // if the fragment buffer isn't big enough, allocate a new one
+      DO(rparx-startx-1, fragv[i]=AT(lvv[startx+i+1])&VERB?ds(CCAP):lvv[startx+i+1];)  // copy the fragment, not including (), with verbs replaced
+      // parse the temp for error, which will usually be an attempt to execute a verb
+      parsea(fragv,rparx-startx-1);
+     }
      if(likely(jt->jerr==0)){
       // no error: parse the actual () block
       A pfrag; RZ(pfrag=parsea(&lvv[startx+1],rparx-startx-1));

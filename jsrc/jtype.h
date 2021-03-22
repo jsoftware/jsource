@@ -79,7 +79,9 @@ typedef AD *A;
 // following bit is used on input to jtcvt only
 #define JTNOFUZZX       1   // comparison on legal float conversion should be exact
 #define JTNOFUZZ        (((I)1)<<JTNOFUZZX)
-// following bit is used inside jtlrep only
+// following bits is used inside/input to jtlrep only
+#define JTNORESETERRX   0   // create fully parenthesized output
+#define JTNORESETERR        (((I)1)<<JTNORESETERRX)
 #define JTPARENSX       1   // create fully parenthesized output
 #define JTPARENS        (((I)1)<<JTPARENSX)
 // following bits are passed into jpr/jpr1/immex/immea/showerr/wri
@@ -545,6 +547,8 @@ typedef I SI;
    // If a PRISTINE virtual block is realized, the backer must become non-PRISTINE (because its contents are escaping).
    // If a PRISTINE block is incorporated, it must lose PRISTINE status because it is no longer possible to know whether contents may have been fetched while the
    // block was incorporated.
+#define AFDPARENX 25     // matches CONW
+#define AFDPAREN  ((I)1<<AFDPARENX)  // In the words of an external definition, this word came from (( )) and must use linear rep for its display
    // MUST BE GREATER THAN ANY DIRECT FLAG
 #define AFUPPERTRIX 30      // matches RPAR
 #define AFUPPERTRI  ((I)1<<AFUPPERTRIX)  // (used in cip.c) This is an upper-triangular matrix

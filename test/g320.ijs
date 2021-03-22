@@ -541,6 +541,26 @@ test=: 4 : '((n,x)$''x'') (,"1 -: cat"1) (n,y)$''y'''
 
 test"0/~i.20
 
+NB. Verify all types of empty allowed without producing error
+l =: 0 10&$&.> (0;4;'a';4.;a:;1j1;1r2;2x;(u:'a');10&u:'a')
+r =: 0&$&.> (0;4;'a';4.;a:;1j1;1r2;2x;(u:'a');10&u:'a')
+l 4 : '0 11 -: $ x ,"1 0 y'&>/ r
+l 4 : '0 11 -: $ x ,. y'&>/ r
+NB. Verify type of higher-priority empty survives
+l 4 : 0&>/ r
+lt =. 3!:0 x
+rt =. 3!:0 r
+pri =. 1 2 131072 262144 4 32 64 128 65536 8 16
+(x >.&.(pri&i.)&(3!:0) y) = 3!:0 x ,"1 0 y
+)
+l 4 : 0&>/ r
+lt =. 3!:0 x
+rt =. 3!:0 r
+pri =. 1 2 131072 262144 4 32 64 128 65536 8 16
+(x >.&.(pri&i.)&(3!:0) y) = 3!:0 x ,. y
+)
+
+
 NB. read-only (AVRO) not modified
 xx =: i. 3
 xx =: >: xx
@@ -597,6 +617,6 @@ xx =. | xx
 )
 
 
-4!:55 ;:'adot1 adot2 sdot0 cat f n r t test x xx y yy'
+4!:55 ;:'adot1 adot2 sdot0 cat f n l r t test x xx y yy'
 randfini''
 

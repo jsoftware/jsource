@@ -91,6 +91,11 @@ EVERYFS(sfn0overself,jtsfn0,jtover,0,VFLAGNONE)
 
 // print a noun; nflag if space needed before name/numeric; return new value of nflag
 static I jtdisp(J jt,A w,I nflag){B b=1&&AT(w)&NAME+NUMERIC;
+ // if this is a noun from a (( )) block, we have to take its linear rep, since it might not be displayable in 1 line
+ if(AFLAG(w)&AFDPAREN&&AT(w)&NOUN){
+  eputc('('); I se=jt->jerr; jt->jerr=EVSUPPRESS; w=lrep(w); RZ(w); jt->jerr=se; ep(AN(w),CAV(w)); eputc(')');  // out the lin rep
+  R 0;  // new nflag - none since we added )
+ }
  if(b&&(nflag&1))eputc(' ');
  switch(CTTZ(AT(w))){
  case B01X:
@@ -191,7 +196,7 @@ F1(jtdbstackz){A y,z;
 
 
 static void jtjsigstr(J jt,I e,I n,C*s){
- if(jt->jerr){jt->curname=0; R;}   // clear error-name indicator
+ if(jt->jerr){if(jt->jerr!=EVSUPPRESS)jt->curname=0; R;}   // clear error-name indicator
  if(e!=EVSTOP)moveparseinfotosi(jt); jt->jerr=(C)e; jt->jerr1=(C)e; jt->etxn=0;  // before we display, move error info from parse variables to si; but if STOP, it's already installed
  dhead(0,0L);
  if(jt->uflags.us.cx.cx_c.db&&!spc()){eputs("ws full (can not suspend)"); eputc(CLF); jt->uflags.us.cx.cx_c.db=0;}

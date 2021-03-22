@@ -1005,7 +1005,7 @@ static I pppp(J jt, A l, A c){I j; A fragbuf[20], *fragv=fragbuf; I fragl=sizeof
      }
      if(likely(jt->jerr==0)){
       // no error: parse the actual () block
-      A pfrag; RZ(pfrag=parsea(&lvv[startx+1],rparx-startx-1));
+      A pfrag; RZ(pfrag=parsea(&lvv[startx+1],rparx-startx-1)); AFLAGORLOCAL(pfrag,doublep<<AFDPARENX);  // if this came from (( )), mark such in the value
       // Replace the () block with its parse, close up the sentence, zero the ending area
       lvv[startx]=pfrag; DO(endx-(rparx+1), lvv[startx+1+i]=lvv[rparx+1+i];) DP(rparx-startx, lvv[endx+i]=0;) 
       // Adjust the end pointer and the ) position

@@ -258,32 +258,45 @@ typedef I AHDRSFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);
   suff \
  }
 
-// commute=bit0 = commutative, bit1 set if incomplete y must be filled with 0 (to avoid isub oflo), bit2 set if incomplete x must be filled with i (for fdiv NaN) 
+// commute=bit0 = commutative, bit1 set if incomplete y must be filled with 0 (to avoid isub oflo), bit2 set if incomplete x must be filled with i (for fdiv NaN), bit3 set for int-to-float on x, bit4 for int-to-float on y
 #define primop256(name,commute,pref,zzop,suff) \
 AHDR2(name,D,D,D){ \
  __m256d xx,yy,zz; \
  __m256i endmask; /* length mask for the last word */ \
  _mm256_zeroupper(VOIDARG); \
    /* will be removed except for divide */ \
- pref \
+ CVTEPI64DECLS pref \
  if(n-1==0){ \
   /* vector-to-vector, no repetitions */ \
   endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-m)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
-  DQ((m-1)>>LGNPAR, xx=_mm256_loadu_pd(x); yy=_mm256_loadu_pd(y); zzop; _mm256_storeu_pd(z, zz); x+=NPAR; y+=NPAR; z+=NPAR;) \
+  DQ((m-1)>>LGNPAR, xx=_mm256_loadu_pd(x); yy=_mm256_loadu_pd(y); \
+   if(commute&8){CVTEPI64(xx,xx)} if(commute&16){CVTEPI64(yy,yy)}  \
+   zzop; _mm256_storeu_pd(z, zz); x+=NPAR; y+=NPAR; z+=NPAR; \
+  ) \
   /* runout, using mask */ \
-  xx=_mm256_maskload_pd(x,endmask); yy=_mm256_maskload_pd(y,endmask); if(commute&4)xx=_mm256_blendv_pd(_mm256_set1_pd(1.0),xx,_mm256_castsi256_pd(endmask)); zzop; _mm256_maskstore_pd(z, endmask, zz); \
+  xx=_mm256_maskload_pd(x,endmask); yy=_mm256_maskload_pd(y,endmask); if(commute&4)xx=_mm256_blendv_pd(_mm256_set1_pd(1.0),xx,_mm256_castsi256_pd(endmask)); \
+  if(commute&8){CVTEPI64(xx,xx)} if(commute&16){CVTEPI64(yy,yy)}  \
+  zzop; _mm256_maskstore_pd(z, endmask, zz); \
  }else{ \
   if(!(commute&1)&&n-1<0){n=~n; \
    /* atom+vector */ \
    endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1)))); \
-   DQ(m, xx=_mm256_set1_pd(*x); ++x; \
-     DQ((n-1)>>LGNPAR, yy=_mm256_loadu_pd(y); zzop; _mm256_storeu_pd(z, zz); y+=NPAR; z+=NPAR;)  yy=_mm256_maskload_pd(y,endmask); if(commute&4)xx=_mm256_blendv_pd(_mm256_set1_pd(1.0),xx,_mm256_castsi256_pd(endmask)); zzop; _mm256_maskstore_pd(z, endmask, zz); \
+   DQ(m, xx=_mm256_set1_pd(*x); if(commute&8){CVTEPI64(xx,xx)} ++x; \
+     DQ((n-1)>>LGNPAR, yy=_mm256_loadu_pd(y); if(commute&16){CVTEPI64(yy,yy)} \
+      zzop; _mm256_storeu_pd(z, zz); y+=NPAR; z+=NPAR; \
+     )  yy=_mm256_maskload_pd(y,endmask); if(commute&4)xx=_mm256_blendv_pd(_mm256_set1_pd(1.0),xx,_mm256_castsi256_pd(endmask)); \
+     if(commute&16){CVTEPI64(yy,yy)}  \
+     zzop; _mm256_maskstore_pd(z, endmask, zz); \
      y+=((n-1)&(NPAR-1))+1; z+=((n-1)&(NPAR-1))+1;) \
   }else{ \
    /* vector+atom */ \
    if(commute&1){I taddr=(I)x^(I)y; x=n<0?y:x; y=(D*)((I)x^taddr); n^=REPSGN(n);}; endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1)))); \
-   DQ(m, yy=_mm256_set1_pd(*y); ++y; \
-     DQ((n-1)>>LGNPAR, xx=_mm256_loadu_pd(x); zzop; _mm256_storeu_pd(z, zz); x+=NPAR; z+=NPAR;)  xx=_mm256_maskload_pd(x,endmask); if(commute&2)yy=_mm256_blendv_pd(_mm256_castsi256_pd(endmask),yy,_mm256_castsi256_pd(endmask)); zzop; _mm256_maskstore_pd(z, endmask, zz); \
+   DQ(m, yy=_mm256_set1_pd(*y); if(commute&16){CVTEPI64(yy,yy)} ++y; \
+     DQ((n-1)>>LGNPAR, xx=_mm256_loadu_pd(x); if(commute&8){CVTEPI64(xx,xx)} \
+      zzop; _mm256_storeu_pd(z, zz); x+=NPAR; z+=NPAR; \
+     )  xx=_mm256_maskload_pd(x,endmask); if(commute&2)yy=_mm256_blendv_pd(_mm256_castsi256_pd(endmask),yy,_mm256_castsi256_pd(endmask)); \
+     if(commute&8){CVTEPI64(xx,xx)} \
+     zzop; _mm256_maskstore_pd(z, endmask, zz); \
      x+=((n-1)&(NPAR-1))+1; z+=((n-1)&(NPAR-1))+1;) \
   } \
  } \

@@ -579,7 +579,7 @@ extern unsigned int __cdecl _clearfp (void);
  // 13 (0xD) will verify that there are no blocks being used after they are freed, or freed prematurely.  If you get a wild free, turn on bit 0x2
  // 2 will detect double-frees before they happen, at the time of the erroneous tpush
 #define MEMAUDITPCALLENABLE 1     // expression for enabling stack auditing - enable auditing when true
-#define AUDITEXECRESULTS 0    // scaf // When set, we go through all execution results to verify recursive and virtual bits are OK, and m nonzero if AC<0
+#define AUDITEXECRESULTS 0    // When set, we go through all execution results to verify recursive and virtual bits are OK, and m nonzero if AC<0
 #define FORCEVIRTUALINPUTS 0  // When 1 set, we make all non-inplaceable noun inputs to executions VIRTUAL.  Tests should still run
                            // When 2 set, make all outputs from RETF() virtual.  Tests for inplacing will fail; that's OK if nothing crashes
 #define NAMETRACK 0  // turn on to define trackinfo in unquote, xdefn, line
@@ -773,6 +773,29 @@ extern unsigned int __cdecl _clearfp (void);
 #define ALLOBLOCK(n) ((n)<2*PMIN?((n)<PMIN?PMINL-1:PMINL) : (n)<8*PMIN?((n)<4*PMIN?PMINL+1:PMINL+2) : (n)<32*PMIN?((n)<16*PMIN?PMINL+3:PMINL+4) : *(volatile I*)0)   // lg2(#bytes to allocate)-1.  n is #bytes-1
 // value to put into name->bucketx for locale names: number if numeric, hash otherwise
 #define BUCKETXLOC(len,s) ((*(s)<='9')?strtoI10s((len),(s)):(I)nmhash((len),(s)))
+// Support for int-to-float, in parallel.  Input is u, 64-bit int with a type of float; result is 64-bit floats.  Define DECLS first.
+#if 1
+#define CVTEPI64DECLS  __m256i magic_i_lo   = _mm256_set1_epi64x(0x4330000000000000);                /* 2^52               encoded as floating-point  */ \
+      __m256i magic_i_hi32 = _mm256_set1_epi64x(0x4530000080000000);                /* 2^84 + 2^63        encoded as floating-point  */ \
+      __m256i magic_i_all  = _mm256_set1_epi64x(0x4530000080100000);                /* 2^84 + 2^63 + 2^52 encoded as floating-point  */
+// obsolete     __m256d magic_d_all  = _mm256_castsi256_pd(magic_i_all);
+// AVX512  u=_mm256_cvtepi64_pd(_mm256_castpd_si256(u));
+#if defined(__aarch64__)
+#define  CVTEPI64(z,u)   z.vect_f64[0] = vcvtq_f64_s64(vreinterpretq_f64_s64(u.vect_f64[0])); \
+                         z.vect_f64[1] = vcvtq_f64_s64(vreinterpretq_f64_s64(u.vect_f64[1]));
+#else
+#define  CVTEPI64(z,u)  __m256i u_lo = _mm256_blend_epi32(magic_i_lo, _mm256_castpd_si256(u), 0b01010101);         /* Blend the 32 lowest significant bits of u with magic_int_lo */ \
+                        __m256i u_hi = _mm256_srli_epi64(_mm256_castpd_si256(u), 32);     /* Extract the 32 most significant bits of u */ \
+                          u_hi = _mm256_xor_si256(u_hi, magic_i_hi32); /* Flip the msb of u_hi and blend with 0x45300000 */ \
+                        __m256d u_hi_dbl = _mm256_sub_pd(_mm256_castsi256_pd(u_hi), _mm256_castsi256_pd(magic_i_all)); /* Compute in double precision:  */ \
+                         z = _mm256_add_pd(u_hi_dbl, _mm256_castsi256_pd(u_lo));  /* (u_hi - magic_d_all) + u_lo  Do not assume associativity of floating point addition !! */
+#endif
+#else
+// Here for native instruction support
+#define CVTEPI64DECLS
+#define CVTEPI64(z,u) z=_mm256_cvtepi64_pd(_mm256_castpd_si256(u));
+#endif
+
 // GA() is used when the type is unknown.  This routine is in m.c and documents the function of these macros.
 // NEVER use GA() for NAME types - it doesn't honor it.
 // SHAPER is used when shape is given and rank is SDT.  Usually 0/1 use COPYSHAPE0 but they can use this; it always copies from the shaape.  This works only up to rank 2 (but could be extended if needed)

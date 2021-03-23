@@ -54,6 +54,20 @@ APFX(  divDD, D,D,D, DIV,NAN0;,ASSERTWR(!NANTEST,EVNAN); R EVOK;)
 #endif
 
 #if (C_AVX2&&SY_64) || EMU_AVX2
+primop256(plusDI,16,NAN0;,zz=_mm256_add_pd(xx,yy),R NANTEST?EVNAN:EVOK;)
+primop256(plusID,8,NAN0;,zz=_mm256_add_pd(xx,yy),R NANTEST?EVNAN:EVOK;)
+primop256(minusDI,16,NAN0;,zz=_mm256_sub_pd(xx,yy),R NANTEST?EVNAN:EVOK;)
+primop256(minusID,8,NAN0;,zz=_mm256_sub_pd(xx,yy),R NANTEST?EVNAN:EVOK;)
+primop256(minDI,16,,zz=_mm256_min_pd(xx,yy),R EVOK;)
+primop256(minID,8,,zz=_mm256_min_pd(xx,yy),R EVOK;)
+primop256(maxDI,16,,zz=_mm256_max_pd(xx,yy),R EVOK;)
+primop256(maxID,8,,zz=_mm256_max_pd(xx,yy),R EVOK;)
+primop256(tymesDI,16,D *zsav=z;NAN0;,zz=_mm256_mul_pd(xx,yy),if(NANTEST){z=zsav; DQ(n*m, if(_isnan(*z))*z=0.0; ++z;)} R EVOK;)
+primop256(tymesID,8,D *zsav=z;NAN0;,zz=_mm256_mul_pd(xx,yy),if(NANTEST){z=zsav; DQ(n*m, if(_isnan(*z))*z=0.0; ++z;)} R EVOK;)
+primop256(divDI,20,D *zsav=z; D *xsav=x; D *ysav=y; I nsav=n;NAN0;,zz=_mm256_div_pd(xx,yy),
+  if(NANTEST){z=zsav; xsav=zsav==ysav?xsav:ysav; m*=n; n=(nsav^SGNIF(zsav==ysav,0))>=0?n:1; nsav=--n; DQ(m, if(_isnan(*z)){ASSERTWR(*xsav==0,EVNAN); *z=0.0;} ++z; --n; xsav-=REPSGN(n); n=n<0?nsav:n;)} R EVOK;)
+primop256(divID,12,D *zsav=z; D *xsav=x; D *ysav=y; I nsav=n;NAN0;,zz=_mm256_div_pd(xx,yy),
+  if(NANTEST){z=zsav; xsav=zsav==ysav?xsav:ysav; m*=n; n=(nsav^SGNIF(zsav==ysav,0))>=0?n:1; nsav=--n; DQ(m, if(_isnan(*z)){ASSERTWR(*xsav==0,EVNAN); *z=0.0;} ++z; --n; xsav-=REPSGN(n); n=n<0?nsav:n;)} R EVOK;)
 primop256(plusII,1,__m256d oflo=_mm256_setzero_pd();,
  zz=_mm256_castsi256_pd(_mm256_add_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy))); oflo=_mm256_or_pd(oflo,_mm256_andnot_pd(_mm256_xor_pd(xx,yy),_mm256_xor_pd(xx,zz)));,
  R _mm256_movemask_pd(oflo)?EWOVIP+EWOVIPPLUSII:EVOK;)
@@ -67,6 +81,9 @@ primop256(maxII,1,,
  zz=_mm256_blendv_pd(yy,xx,_mm256_castsi256_pd(_mm256_cmpgt_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)))); ,R EVOK;
 )
 #else
+AIFX(minusDI, D,D,I, -) AIFX(minusID, D,I,D, -    ) APFX(  minID, D,I,D, MIN,,R EVOK;)   APFX(  minDI, D,D,I, MIN,,R EVOK;) APFX(  maxID, D,I,D, MAX,,R EVOK;)  APFX(  maxDI, D,D,I, MAX,,R EVOK;) 
+APFX(tymesID, D,I,D, TYMESID,,R EVOK;) APFX(tymesDI, D,D,I, TYMESDI,,R EVOK;) APFX(  divID, D,I,D, DIV,,R EVOK;) APFX(  divDI, D,D,I, DIVI,,R EVOK;) 
+ AIFX( plusDI, D,D,I, +) AIFX( plusID, D,I,D, +   )
 // II add, noting overflow and leaving it, possibly in place
 AHDR2(plusII,I,I,I){I u;I v;I w;I oflo=0;
  // overflow is (input signs equal) and (result sign differs from one of them)
@@ -201,34 +218,32 @@ APFX(minusIO, D,I,I, MINUSO,,R EVOK;)
 APFX(tymesIO, D,I,I, TYMESO,,R EVOK;)
 
 AIFX( plusBB, I,B,B, +     )    /* plusBI */                AIFX( plusBD, D,B,D, +   )
-   /* plusIB */                 /* plusII */                AIFX( plusID, D,I,D, +   )
-AIFX( plusDB, D,D,B, +     )  AIFX( plusDI, D,D,I, +)       /* plusDD */
+   /* plusIB */                 /* plusII */                
+AIFX( plusDB, D,D,B, +     )       /* plusDD */
 APFX( plusZZ, Z,Z,Z, zplus,NAN0;,ASSERTWR(!NANTEST,EVNAN); R EVOK; )
 
-
 AIFX(minusBB, I,B,B, -     )    /* minusBI */               AIFX(minusBD, D,B,D, -    )
-  /* minusIB */                 /* minusII */               AIFX(minusID, D,I,D, -    )
-AIFX(minusDB, D,D,B, -     )  AIFX(minusDI, D,D,I, -)       /* minusDD */
+  /* minusIB */                 /* minusII */               
+AIFX(minusDB, D,D,B, -     )        /* minusDD */
 APFX(minusZZ, Z,Z,Z, zminus,NAN0;,ASSERTWR(!NANTEST,EVNAN); R EVOK;)
-
     /* andBB */                 /* tymesBI */                   /* tymesBD */            
-    /* tymesIB */               /* tymesII */               APFX(tymesID, D,I,D, TYMESID,,R EVOK;)  
-    /* tymesDB */             APFX(tymesDI, D,D,I, TYMESDI,,R EVOK;)    /* tymesDD */ 
+    /* tymesIB */               /* tymesII */                
+    /* tymesDB */                /* tymesDD */ 
 APFX(tymesZZ, Z,Z,Z, ztymes,NAN0;,ASSERTWR(!NANTEST,EVNAN); R EVOK; )
 
 APFX(  divBB, D,B,B, DIVBB,,R EVOK;)   APFX(  divBI, D,B,I, DIVI,,R EVOK;)    APFX(  divBD, D,B,D, DIV,,R EVOK;)
-APFX(  divIB, D,I,B, DIVI ,,R EVOK;)   APFX(  divII, D,I,I, DIVI,,R EVOK;)    APFX(  divID, D,I,D, DIV,,R EVOK;)
-APFX(  divDB, D,D,B, DIVI ,,R EVOK;)   APFX(  divDI, D,D,I, DIVI,,R EVOK;)       /* divDD */
+APFX(  divIB, D,I,B, DIVI ,,R EVOK;)   APFX(  divII, D,I,I, DIVI,,R EVOK;)    
+APFX(  divDB, D,D,B, DIVI ,,R EVOK;)         /* divDD */
 APFX(  divZZ, Z,Z,Z, zdiv,NAN0;,HDR1JERRNAN  )
 
      /* orBB */               APFX(  minBI, I,B,I, MIN,,R EVOK;)     APFX(  minBD, D,B,D, MIN,,R EVOK;)    
-APFX(  minIB, I,I,B, MIN,,R EVOK;)     /* minII */                   APFX(  minID, D,I,D, MIN,,R EVOK;)  
-APFX(  minDB, D,D,B, MIN,,R EVOK;)     APFX(  minDI, D,D,I, MIN,,R EVOK;)        /* minDD */
+APFX(  minIB, I,I,B, MIN,,R EVOK;)     /* minII */                   
+APFX(  minDB, D,D,B, MIN,,R EVOK;)           /* minDD */
 APFX(  minSS, SB,SB,SB, SBMIN,,R EVOK;)
 
     /* andBB */               APFX(  maxBI, I,B,I, MAX,,R EVOK;)     APFX(  maxBD, D,B,D, MAX,,R EVOK;)    
-APFX(  maxIB, I,I,B, MAX,,R EVOK;)     /* maxII */                   APFX(  maxID, D,I,D, MAX,,R EVOK;)  
-APFX(  maxDB, D,D,B, MAX,,R EVOK;)     APFX(  maxDI, D,D,I, MAX,,R EVOK;)         /* maxDD */
+APFX(  maxIB, I,I,B, MAX,,R EVOK;)     /* maxII */                    
+APFX(  maxDB, D,D,B, MAX,,R EVOK;)            /* maxDD */
 APFX(  maxSS, SB,SB,SB, SBMAX,,R EVOK;)
 
 D jtremdd(J jt,D a,D b){D q,x,y;

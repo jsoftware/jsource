@@ -198,7 +198,7 @@ static F1X(jtlnum){F1PREFIP;A b,d,t,*v,y;B p;I n;
    v[4]=spellout(CIOTA); v[5]=thorn1(p?shape(w):negate(shape(w)));
    RE(y); R raze(y);
   }
-  if(!(jt->jerr==EVSUPPRESS))RESETERR;   // if there was an error getting to p, clear it - unless the error info is in use
+  RESETERRC;   // if there was an error getting to p, clear it - don't clear error text if frozen
  }
  // not clever; just out the atoms
  R over(lshape(w),lnum1(t));
@@ -368,8 +368,7 @@ static DF1X(jtlrr){F1PREFIP;A hs,t,*tv;C id;I fl,m;V*v;
 // jt flags indicate the handling of adding enclosing () and handling `
 // This routine MUST NOT be called with normal inplacing bits
 F1(jtlrep){PROLOG(0056);A z;A ltextb=0, *ltext=&ltextb;
- z=jtlrr(jt,w,w,ltext);  // the w for self is just any nonzero to indicate top-level call
- if(jt->jerr!=0&&jt->jerr!=EVSUPPRESS)R 0;
+ RE(z=jtlrr(jt,w,w,ltext));  // the w for self is just any nonzero to indicate top-level call.  Exit if error
  if(*ltext)z=apip(z,*ltext);
  EPILOG(z);
 }

@@ -975,7 +975,7 @@ static I pppp(J jt, A l, A c){I j; A fragbuf[20], *fragv=fragbuf; I fragl=sizeof
  I cn=AN(c); CW *cwv=(CW*)AV(c);  // Get # control words, address of first
  A *lv=AAV(l);  // address of words in sentences
  for(j=0;j<cn;++j) {   // look at each control word
-  if((((1LL<<(BW-CBBLOCK-1))|(1LL<<(BW-CTBLOCK-1)))<<(cwv[j].ig.indiv.type&31))<0){  // BBLOCK or TBLOCK
+  if(((((I)1<<(BW-CBBLOCK-1))|((I)1<<(BW-CTBLOCK-1)))<<(cwv[j].ig.indiv.type&31))<0){  // BBLOCK or TBLOCK
    // scan the sentence for PPPP.  If found, parse the PPPP and replace the sequence in the sentence; reduce the length
    A *lvv=lv+cwv[j].ig.indiv.sentx;  // pointer to sentence words
    I startx=0, endx=cwv[j].ig.indiv.sentn;  // start and end+1 index of sentence

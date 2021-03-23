@@ -155,7 +155,15 @@ _ _ _ -: +`-`*@.| b. 0
 3 ( (+/@])`(*/@])`(+/@:*:@])@.(<:@:(| (+/"1)))"1 -: (+/"1@])`(*/"1@])`(+/@:*:"1@])@.(<:@:(| (+/"1))) ) i. 4 5
 3 ( (+/@])`(*/@])`(+/@:*:@])@.(<:@:(| (+/"1)))"1 -: (+/"1@])`(*/"1@])`(+/@:*:"1@])@.(<:@:(| (+/"1))) ) i. 15 5
 
+'rank error' -:  0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 ":`2:`3:`4: @. +  etx 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0  NB. failed
 
+NB. Inplacing
+(1e6 * SZI * IF64 { 5.75 4.5) > 7!:2 '+:`-:@.(0"0) i. _1e6'  NB. inplaceable: create, (apply vb), grade, from, apply gerund vb (inplace on 64 bits), copy result.  From not virtual on list
+(1e6 * 8 * IF64 { 4 4.5) > 7!:2 '+:`-:@.(0"0) 1. + i. _1e6'  NB. inplaceable: create, add (inplace on 64 bits), (apply vb), grade, from, apply gerund vb (inplace), copy result
+(1e6 * SZI * IF64 { 7.75 6.5) > 7!:2 '(i. 1e6) >.`-:@.(0"0) i. _1e6'  NB. One more create, one more from, inplaceable on 64-bit
+(1e6 * SZI * IF64 { 4.5 4.5) < 7!:2 '#"0`-:@.(0"0) i. _1e6'  NB. not inplaceable
+(1e6 * 8 * IF64 { 4 4.5) < 7!:2 '0.5&+@#"0`-:@.(0"0) 1. + i. _1e6'  NB. not inplaceable: create, add (inplace on 64 bits), (apply vb), grade, from, apply gerund vb (not inplace), copy result
+(1e6 * SZI * IF64 { 7.75 6.5) < 7!:2 '(i. 1e6) (0.5&+@#"0@])`-:@.(0"0) i. _1e6'  NB. not inplaceable
 
 4!:55 ;:'ack agenda ar c1 c2 c3 basis decr do erf f f0 f1 form from from1 '
 4!:55 ;:'g ifopen ind mask '

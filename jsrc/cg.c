@@ -254,7 +254,7 @@ static DF2(jtcasei12){A vres,z;I gerit[128/SZI],ZZFLAGWORD;
    //  pull the function for the value, execute on the value with forced attributes (ASSUMEBOXATOP, WILLBEOPENED, COUNTITEMS)
    // take inplaceability from the selected verb always - we have made the cells inplaceable if possible
     A fs=AAV(FAV(self)->fgh[2])[currres];  // fetch the gerund to execute
-    RZ(z=(FAV(fs)->valencefns[ZZFLAGWORD>>ZZFLAGISDYADX])((J)((I)jt+((FAV(fs)->flag>>((ZZFLAGWORD>>ZZFLAGISDYADX)+VJTFLGOK1X))*(((I)1<<(ZZFLAGWORD>>ZZFLAGISDYADX))-1))),
+    RZ(z=(FAV(fs)->valencefns[ZZFLAGWORD>>ZZFLAGISDYADX])((J)((I)jt+(REPSGN(SGNIF(FAV(fs)->flag,(ZZFLAGWORD>>ZZFLAGISDYADX)+VJTFLGOK1X))&(((I)2<<(ZZFLAGWORD>>ZZFLAGISDYADX))-1))),
      virta,ZZFLAGWORD&ZZFLAGISDYAD?virtw:fs,fs));  // execute gerund at infinite rank, inplace from VJTFLGOK1/2 depending on valence
 
 #define ZZBODY  // assemble results

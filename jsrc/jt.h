@@ -76,7 +76,7 @@ typedef struct rngdata {
   } us;   // access as US
  } uflags;   // 
  UI4 ranks;            // low half: rank of w high half: rank of a  for IRS init for task
- S etxn;             // strlen(etx)                        migrated clear for task
+ S etxn;             // strlen(etx) but set negative to freeze changes to the error line
  S etxn1;            // last non-zero etxn                 migrated clear for task
  UI cstackmin;        // red warning for C stack pointer init for task
  struct ASGINFO {

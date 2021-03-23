@@ -1367,6 +1367,7 @@ if(likely(z<3)){_zzt+=z; z=(I)&oneone; _zzt=_i&3?_zzt:(I*)z; z=_i&2?(I)_zzt:z; z
 #define RCA(w)          R w
 #define RE(exp)         {if(unlikely(((exp),jt->jerr!=0)))R 0;}
 #define RESETERR        {jt->etxn=jt->jerr=0;}
+#define RESETERRC       {jt->jerr=0; jt->etxn=MIN(jt->etxn,0);}  // clear error; clear error text too, but not if frozen
 #define RESETERRANDMSG  {jt->etxn1=jt->etxn=jt->jerr=0;}
 #define RESETRANK       (jt->ranks=(RANK2T)~0)
 #define RNE(exp)        {R jt->jerr?0:(exp);}

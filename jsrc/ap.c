@@ -93,7 +93,7 @@
   DQ(m, yy=zz; DQ(q, *zz++=*xx++;); DQ(n-1, DQ(q, *zz++=pfx(*yy,*xx); ++xx; ++yy;)));  \
  R EVOK;}
 
-#if 1  // obsolete
+#if 0  // obsolete
 #define PREFIXBFX(f,pfx,ipfx,spfx,bpfx,vexp)          \
  AHDRP(f,B,B){B* y;I j,q;                        \
   if(1==d)for(j=0;j<m;++j){vexp}                      \
@@ -103,10 +103,11 @@
   else DQ(m, y=z; DQ(d, *z++=*x++;); DQ(n-1, DQ(d, *z++=bpfx(*y,*x); ++x; ++y;)));  \
   R EVOK;}    /* f/\"r z for boolean associative atomic function f */
 #else
+// must not overstore because of inplace
 #define PREFIXBFX(f,pfx,ipfx,spfx,bpfx,vexp)          \
  AHDRP(f,B,B){B* y;I j,q;                        \
   if(1==d)for(j=0;j<m;++j){vexp}                      \
-  else DQ(m, y=z; DQ(d, *z++=*x++;); DQ(n-1, DQ(d, *z++=bpfx(*y,*x); ++x; ++y;)));  \
+  else DQ(m, y=z; JMC(z,x,d,f##lbl,1); z+=d; x+=d; DQ(n-1, DQ((d-1)>>LGSZI, *(I*)z=pfx(*(I*)y,*(I*)x); x+=SZI; y+=SZI; z+=SZI;) I nct=(-d)&(SZI-1); STOREBYTES(z,pfx(*(I*)y,*(I*)x),nct) x+=SZI-nct; y+=SZI-nct; z+=SZI-nct;))  \
   R EVOK;}    /* f/\"r z for boolean associative atomic function f */
 #endif
 #else
@@ -134,9 +135,13 @@
 
 PREFIXBFX( orpfxB, OR, IOR, SOR, BOR,  BFXANDOR(C1,C0))
 PREFIXBFX(andpfxB, AND,IAND,SAND,BAND, BFXANDOR(C0,C1))
+#if 1 // obsolete 
 PREFIXBFX( nepfxB, NE, INE, SNE, BNE, {B b=0; DQ(n, *z++=b^=  *x++;);})
 PREFIXBFX( eqpfxB, EQ, IEQ, SEQ, BEQ, {B b=1; DQ(n, *z++=b=b==*x++;);})
-
+#else
+PREFIXBFX( nepfxB, NE, INE, SNE, BNE, {B b=0; DQ((n-1)>>LGSZI, *(I*)z=pfx(*(I*)y,*(I*)x); x+=SZI; y+=SZI; z+=SZI;) I nct=(-n)&(SZI-1); STOREBYTES(z,pfx(*(I*)y,*(I*)x),nct) x+=SZI-nct; y+=SZI-nct; z+=SZI-nct;})
+PREFIXBFX( eqpfxB, EQ, IEQ, SEQ, BEQ, {B b=1; DQ((n-1)>>LGSZI, *(I*)z=pfx(*(I*)y,*(I*)x); x+=SZI; y+=SZI; z+=SZI;) I nct=(-n)&(SZI-1); STOREBYTES(z,pfx(*(I*)y,*(I*)x),nct) x+=SZI-nct; y+=SZI-nct; z+=SZI-nct;})
+#endif
 
 // m is */frame, n is #cells, d is length of each cell, p is 1 for <, 0 for <:
 // the result is ~p until we hit an input=p; then p thereafter

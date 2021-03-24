@@ -57,7 +57,8 @@
   q=d/sizeof(T);              \
   DQ(m, yy=zz; DQ(q, *--zz=*--xx;); DQ(n-1, DQ(q, --xx; --yy; --zz; *zz=pfx(*xx,*yy);)));  \
  }
-  
+
+#if 0  // obsolete
 #define SUFFIXBFX(f,pfx,ipfx,spfx,bpfx,vexp)  \
  AHDRP(f,B,B){B v,* RESTRICT y;I q;                                        \
   x+=m*d*n; z+=m*d*n;                                           \
@@ -67,6 +68,14 @@
   if(0==(d&(sizeof(US  )-1))){SUFFIXBFXLOOP(US,  spfx); R EVOK;}              \
   DQ(m, y=z; DQ(d, *--z=*--x;); DQ(n-1, DQ(d, --x; --y; --z; *z=bpfx(*x,*y);)));R EVOK;  \
  }
+#else
+#define SUFFIXBFX(f,pfx,ipfx,spfx,bpfx,vexp)  \
+ AHDRP(f,B,B){B v,* RESTRICT y;I q;                                        \
+  x+=m*d*n; z+=m*d*n;                                           \
+  if(1==d){DQ(m, *--z=v=*--x; DQ(n-1, --x; --z; *z=v=(vexp);)); R EVOK;}  \
+  DQ(m, z-=d; x-=d; JMC(z,x,d,f##lbl,1); DQ(n-1, x-=d; z-=d; C *z0=z; C *x0=x; y=z+d; DQ((d-1)>>LGSZI, *(I*)z=pfx(*(I*)x,*(I*)y); x+=SZI; y+=SZI; z+=SZI;) I nct=(-d)&(SZI-1); STOREBYTES(z,pfx(*(I*)x,*(I*)y),nct) z=z0; x=x0;)) R EVOK;  \
+ }
+#endif
 #else
 #define SUFFIXBFX(f,pfx,ipfx,spfx,bpfx,vexp)  \
  AHDRS(f,B,B){B v;I i,q,r,t,*xi,*yi,*zi;                         \
@@ -86,16 +95,16 @@
  }}
 #endif
 
-SUFFIXBFX(   orsfxB, OR,  IOR,  SOR,  BOR,  *x||v   ) 
-SUFFIXBFX(  andsfxB, AND, IAND, SAND, BAND, *x&&v   )
+SUFFIXBFX(   orsfxB, OR,  IOR,  SOR,  BOR,  *x|v   ) 
+SUFFIXBFX(  andsfxB, AND, IAND, SAND, BAND, *x&v   )
 SUFFIXBFX(   eqsfxB, EQ,  IEQ,  SEQ,  BEQ,  *x==v   )
 SUFFIXBFX(   nesfxB, NE,  INE,  SNE,  BNE,  *x!=v   )
 SUFFIXBFX(   ltsfxB, LT,  ILT,  SLT,  BLT,  *x< v   )
 SUFFIXBFX(   lesfxB, LE,  ILE,  SLE,  BLE,  *x<=v   )
 SUFFIXBFX(   gtsfxB, GT,  IGT,  SGT,  BGT,  *x> v   )
 SUFFIXBFX(   gesfxB, GE,  IGE,  SGE,  BGE,  *x>=v   )
-SUFFIXBFX(  norsfxB, NOR, INOR, SNOR, BNOR, !(*x||v))
-SUFFIXBFX( nandsfxB, NAND,INAND,SNAND,BNAND,!(*x&&v))
+SUFFIXBFX(  norsfxB, NOR, INOR, SNOR, BNOR, (*x|v)^1)
+SUFFIXBFX( nandsfxB, NAND,INAND,SNAND,BNAND,(*x&v)^1)
 
 SUFFIXOVF( plussfxI, I, I,  PLUSS, PLUSVV)
 SUFFIXOVF(minussfxI, I, I, MINUSS,MINUSVV)

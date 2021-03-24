@@ -135,12 +135,39 @@
 
 PREFIXBFX( orpfxB, OR, IOR, SOR, BOR,  BFXANDOR(C1,C0))
 PREFIXBFX(andpfxB, AND,IAND,SAND,BAND, BFXANDOR(C0,C1))
-#if 1 // obsolete 
+#if 0 // obsolete 
 PREFIXBFX( nepfxB, NE, INE, SNE, BNE, {B b=0; DQ(n, *z++=b^=  *x++;);})
 PREFIXBFX( eqpfxB, EQ, IEQ, SEQ, BEQ, {B b=1; DQ(n, *z++=b=b==*x++;);})
 #else
-PREFIXBFX( nepfxB, NE, INE, SNE, BNE, {B b=0; DQ((n-1)>>LGSZI, *(I*)z=pfx(*(I*)y,*(I*)x); x+=SZI; y+=SZI; z+=SZI;) I nct=(-n)&(SZI-1); STOREBYTES(z,pfx(*(I*)y,*(I*)x),nct) x+=SZI-nct; y+=SZI-nct; z+=SZI-nct;})
-PREFIXBFX( eqpfxB, EQ, IEQ, SEQ, BEQ, {B b=1; DQ((n-1)>>LGSZI, *(I*)z=pfx(*(I*)y,*(I*)x); x+=SZI; y+=SZI; z+=SZI;) I nct=(-n)&(SZI-1); STOREBYTES(z,pfx(*(I*)y,*(I*)x),nct) x+=SZI-nct; y+=SZI-nct; z+=SZI-nct;})
+// 0 1 2 3 4 5 6 7
+//
+// 0 1 2 3 4 5 6 7
+//   0 1 2 3 4 5 6
+//
+// 0 1 2 3 4 5 6 7
+//   0 1 2 3 4 5 6
+//     0 1 2 3 4 5
+//       0 1 2 3 4
+//
+// 0 1 2 3 4 5 6 7
+//   0 1 2 3 4 5 6
+//     0 1 2 3 4 5
+//       0 1 2 3 4
+//         0 1 2 3
+//           0 1 2
+//             0 1
+//               0
+#if SY_64
+#define PFXSXOR(t) t^=(t<<8); t^=(t<<16); t^=(t<<32);
+#else
+#define PFXSXOR(t) t^=(t<<8); t^=(t<<16);
+#endif
+
+
+PREFIXBFX( nepfxB, NE, INE, SNE, BNE, {I t=0; DQ((n-1)>>LGSZI, t=*(I*)x^(t>>(BB*(SZI-1))); PFXSXOR(t) *(I*)z=t; x+=SZI; z+=SZI;) \
+            I nct=(-n)&(SZI-1); t=*(I*)x^(t>>(BB*(SZI-1))); PFXSXOR(t) *(I*)z=t; STOREBYTES(z,t,nct) x+=SZI-nct; z+=SZI-nct;})
+PREFIXBFX( eqpfxB, EQ, IEQ, SEQ, BEQ, {I t=VALIDBOOLEAN; DQ((n-1)>>LGSZI, t=*(I*)x^(t>>(BB*(SZI-1))); PFXSXOR(t) t^=ALTBYTES&VALIDBOOLEAN; *(I*)z=t; *(I*)z=t; x+=SZI; z+=SZI;) \
+            I nct=(-n)&(SZI-1); t=*(I*)x^(t>>(BB*(SZI-1))); PFXSXOR(t) t^=ALTBYTES&VALIDBOOLEAN; STOREBYTES(z,t,nct) x+=SZI-nct; z+=SZI-nct;})
 #endif
 
 // m is */frame, n is #cells, d is length of each cell, p is 1 for <, 0 for <:

@@ -273,17 +273,21 @@ A jtvci(J jt,I k){A z; GAT0(z,INT,1,1); IAV(z)[0]=k; RETF(z);}
 A jtvec(J jt,I t,I n,void*v){A z; GA(z,t,n,1,0); MC(AV(z),v,n<<bplg(t)); RETF(z);}
 
 // return A-block for list of type t, length n, and values *v
-// with special handling to coerce boolean type
+// with special handling to coerce boolean type.  We do not overfetch.
 #if defined(__GNUC__) && !defined(__clang__)
 #pragma push_options
 #pragma optimize ("unroll-loops")
 #endif
 #if (C_AVX2&&SY_64) || EMU_AVX2
-A jtvecb01(J jt,I t,I n,void*v){A z; GA(z,t,n,1,0);if(t&B01){C*p=(C*)AV(z),*q=v; 
-__m256i zeros=_mm256_setzero_si256();
-__m256i ones=_mm256_set1_epi8(1);
-__m256i ffs=_mm256_set1_epi8(0xffu);
-UI n0=n<<bplg(t);
+A jtvecb01(J jt,I t,I n,void*v){A z;
+ GA(z,t,n,1,0);   // allocate buffer
+ if(t&B01){C*p=(C*)AV(z),*q=v;
+  // for booleans, enforce valid boolean result: convert any nonzero to 0x01
+  __m256i zeros=_mm256_setzero_si256();
+  __m256i ones=_mm256_set1_epi8(1);
+// obsolete  __m256i ffs=_mm256_set1_epi8(0xffu);
+  UI n0=n;  // number of bytes to do
+#if 0 // obsolete  don't align the source, since that will unalign the dest, which is worse
 UI mis=((uintptr_t)q)&31u;
 mis=(mis>n0)?n0:mis;
 if(mis){
@@ -293,10 +297,21 @@ n0-=mis;
 #endif
 while(mis--)*p++=!!(*q++);
 }
-while (n0 >= 32) {
- _mm256_storeu_si256((__m256i *)p,_mm256_and_si256(_mm256_xor_si256(_mm256_cmpeq_epi8(_mm256_load_si256((__m256i*)q),zeros),ffs),ones));
- n0-=32;p+=32;q+=32;
-}
+#endif
+  // move full 32-byte sections
+  NOUNROLL while (n0 >= 32) {
+// obsolete   _mm256_storeu_si256((__m256i *)p,_mm256_and_si256(_mm256_xor_si256(_mm256_cmpeq_epi8(_mm256_load_si256((__m256i*)q),zeros),ffs),ones));
+  _mm256_storeu_si256((__m256i *)p,_mm256_add_epi8(_mm256_cmpeq_epi8(_mm256_loadu_si256((__m256i*)q),zeros),ones));  // 0->ff->0  non0->0->1
+   n0-=32;p+=32;q+=32;
+  }
+  // move full 8-byte sections
+  NOUNROLL while(n0>=SZI){
+   I b8=*(I*)q;  // fetch bytes
+   b8=(b8|((((UI)(b8&~VALIDBOOLEAN)>>1)+((UI)~(VALIDBOOLEAN<<(BB-1))))>>(BB-1)))&VALIDBOOLEAN;  // set bit 7 if bits 1-7 not 0; shift to bit 0; OR; mask to boolean
+   *(I*)p=b8;  // store the result
+   n0-=SZI;p+=SZI;q+=SZI;
+  }
+#if 0 // obsolete 
 if (n0 >= 16) {
 __m128i zeros=_mm_setzero_si128();
 __m128i ones=_mm_set1_epi8(1);
@@ -307,8 +322,12 @@ __m128i ffs=_mm_set1_epi8(0xffu);
 #if defined(__clang__)
 #pragma clang loop vectorize(enable) interleave_count(4)
 #endif
-while(n0--)*p++=!!(*q++);
-}else MC(AV(z),v,n<<bplg(t)); RETF(z);}
+#endif
+  // finish by moving individual bytes
+  NOUNROLL while(n0--)*p++=!!(*q++);
+ }else{MC(AV(z),v,n<<bplg(t));}  // non-boolean, just copy
+ RETF(z);
+}
 #elif __SSE2__
 A jtvecb01(J jt,I t,I n,void*v){A z; GA(z,t,n,1,0);if(t&B01){C*p=(C*)AV(z),*q=v; 
 __m128i zeros=_mm_setzero_si128();

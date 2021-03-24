@@ -1046,7 +1046,7 @@ extern unsigned int __cdecl _clearfp (void);
 // #define NAN1T           {if(_SW_INVALID&_clearfp()){fprintf(stderr,"nan error: file %s line %d\n",__FILE__,__LINE__);jsignal(EVNAN);     }}
 #endif
 
-#define NOUNROLL _Pragma("clang loop unroll(disable)")  // put this just before a loop to disable unroll
+#define NOUNROLL _Pragma("clang loop unroll(disable)") _Pragma("clang loop vectorize(disable)")  // put this just before a loop to disable unroll
 #if (C_AVX&&SY_64) || EMU_AVX
 // j64avx gcc _mm256_zeroupper -O2 failed SLEEF for expression % /\ ^:_1 ,: 1 2 3  => 1 2 0
 // upper half of all YMM registers clear AFTER loading endmask

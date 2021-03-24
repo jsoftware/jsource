@@ -112,9 +112,10 @@ static I jtebarprep(J jt,A a,A w,A*za,A*zw,I*zc){I ar,at,m,n,t,wr,wt,memlimit;CR
 // parameter and return interpretation depend on function
 static A jtebar1C(J jt, C *av, C *wv, I an, I wn, C* zv, I type, A z){
  // Init 32-byte copies of the first character to match
- __m128i zero = _mm_setzero_si128();
- __m256i a0 = _mm256_broadcastb_epi8(_mm_insert_epi8(zero, av[0], 0));
- __m256i a1 = _mm256_broadcastb_epi8(_mm_insert_epi8(zero, av[1], 0));
+// obsolete  __m256i zero = _mm256_setzero_si256();
+ __m256i a0 = _mm256_set1_epi8(av[0]);
+ __m256i a1 = _mm256_set1_epi8(av[1]);
+// obsolete  __m256i a1 = _mm256_broadcastb_epi8(_mm256_insert_epi8(zero, av[1], 0));
  // figure endpoint for fast search: 32 bytes before end if an <=32; 
  // if an > 32, we will skip the final section if the endpoint is end-an+1: no match possible if wv=wvend
  I temp = an - 1; temp = temp <32?32: temp;   // back up 32 bytes, or n-1, whichever is greater

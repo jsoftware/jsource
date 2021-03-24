@@ -95,7 +95,8 @@ static I hashallo(IH * RESTRICT hh,UI p,UI asct,I md){
   // REVERSED types always initialize to 1, whether packed or not
   // this is a kludge - the initialization value should be passed in by the caller, in asct
   UI4 fillval = md&IREVERSED?(md&IIMODPACK?255:1):((md&(IIMODPACK+IIOPMSK))<=INUBI); fillval|=fillval<<8; fillval|=fillval<<16;
-  fillwords((__m128i*)hh->data.UI, fillval, p>>LGSZI);  // fill 64-bit words with 32-bit values
+// obsolete   fillwords((__m128i*)hh->data.UI, fillval, p>>LGSZI);  // fill 64-bit words with 32-bit values
+  fillwords(hh->data.UI, fillval, p>>LGSZI);  // fill 64-bit words with 32-bit values
   // If the invalid area grows, update the invalid hwmk, and also the partition
   p >>= hh->hashelelgsize;  // convert p to hash index 
   if(p>hh->invalidhi){
@@ -166,7 +167,8 @@ static I hashallo(IH * RESTRICT hh,UI p,UI asct,I md){
   // so it is safe to overfill with fullword stores
   UI storeval=asct; if(hh->hashelelgsize==1)storeval |= storeval<<16;  // Pad store value to 64 bits, dropping excess on smaller machines
   I nstores=((p<<hh->hashelelgsize)+SZI-1)>>LGSZI;  // get count of partially-filled words
-  fillwords((__m128i*)hh->data.UI, (UI4)storeval, nstores);  // fill 64-bit words with 32-bit values
+// obsolete   fillwords((__m128i*)hh->data.UI, (UI4)storeval, nstores);  // fill 64-bit words with 32-bit values
+  fillwords(hh->data.UI, (UI4)storeval, nstores);  // fill 64-bit words with 32-bit values
   // Clear everything past the first allocation to 0, indicating 'not touched yet'.  But we can elide this if it is already 0, which we can tell by
   // examining the partition pointer and the right-hand index.  This is important if FORCE0 was set for i."r: we will repeatedly reset the base, and
   // we need to avoid clearing the whole buffer for any time after the first.

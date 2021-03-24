@@ -225,7 +225,7 @@ REDUCCPFX(tymesinsO, D, I, TYMESO)
 
 #define redprim256rk1(prim,identity) \
  __m256i endmask; /* length mask for the last word */ \
- _mm256_zeroupper(VOIDARG); \
+ _mm256_zeroupperx(VOIDARG) \
  /* prim/ vectors */ \
  __m256d idreg=_mm256_set1_pd(identity); \
  endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
@@ -249,7 +249,7 @@ REDUCCPFX(tymesinsO, D, I, TYMESO)
 // f/ on rank>1, going down columns to save bandwidth
 #define redprim256rk2(prim,identity,label) \
  __m256i endmask; /* length mask for the last word */ \
- _mm256_zeroupper(VOIDARG); \
+ _mm256_zeroupperx(VOIDARG) \
  __m256d idreg=_mm256_set1_pd(identity); \
  endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-d)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
  DQ(m, D *x0; I n0; \
@@ -374,7 +374,7 @@ DF1(jtcompsum){
  D *wv=DAV(w), *zv=DAV(z);
 #if (C_AVX&&SY_64) || EMU_AVX
  __m256i endmask; /* length mask for the last word */
- _mm256_zeroupper(VOIDARG);
+ _mm256_zeroupperx(VOIDARG)
  __m256d idreg=_mm256_set1_pd(0.0);
  if(d==1){
   // rank-1 case: operate across the row, with 4 accumulators

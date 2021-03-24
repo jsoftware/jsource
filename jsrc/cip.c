@@ -78,7 +78,7 @@ static F2(jtpdtby){A z;B b,*u,*v,*wv;C er=0;I at,m,n,p,t,wt,zk;
 I blockedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I pnom,I pstored,I flgs){
  // Since we sometimes use 128-bit instructions in other places, make sure we don't get stuck in slow state
  NAN0;
- _mm256_zeroupper();
+ _mm256_zeroupperx(VOIDARG) 
  __m256d z00=_mm256_setzero_pd(); // set here to avoid warnings
  // handle small mx2 separately
  // for(each vertical strip of w, processed 4-16 values at a time)
@@ -247,7 +247,7 @@ static I cachedmmultx(J jt,D* av,D* wv,D* zv,I m,I n,I pnom,I pstored,I flgs){D 
  // point to cache-aligned areas we will use for staging the inner-product info
  // flgs is 0 for float, 1 for complex, i. e. lg2(# values per atom), 2 for upper-tri, 4 for INT.  If FLGCMP is set, n and p are even, and give the lengths of the arguments in values
  // Since we sometimes use 128-bit instructions in other places, make sure we don't get stuck in slow state
- _mm256_zeroupper();
+_mm256_zeroupperx(VOIDARG) 
  D *cvw = (D*)(((I)&c+(CACHELINESIZE-1))&-CACHELINESIZE);  // place where cache-blocks of w are staged
  D (*cva)[2][OPHEIGHT][CACHEHEIGHT] = (D (*)[2][OPHEIGHT][CACHEHEIGHT])(((I)cvw+(CACHEHEIGHT+1)*CACHEWIDTH*sizeof(D)+(CACHELINESIZE-1))&-CACHELINESIZE);   // place where expanded rows of a are staged
  // If a is upper-triangular, we write out the entire column of z values only when we process the last section of the w stripe.  If w is also upper-triangular,

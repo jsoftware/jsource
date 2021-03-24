@@ -539,7 +539,7 @@ static B jteqa0(J jt,I n,A*u,A*v){PUSHCCT(1.0) B res=1; DQ(n, if(!equ(*u,*v)){re
         IH *hh=IHAV(h); p=hh->datarange;  hv=hh->data.TH;  \
  \
   __m128i vp, vpstride;   /* v for hash/v for search; stride for each */ \
-  _mm256_zeroupper(VOIDARG);  \
+  _mm256_zeroupperx(VOIDARG)  \
   setup \
   vp=_mm_set1_epi32(0);  /* to avoid warnings */ \
   md=mode&IIOPMSK;   /* clear upper flags including REFLEX bit */                                            \
@@ -767,7 +767,7 @@ static IOFX(Z,UI4,jtioz02,, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n)
         D tl=jt->cct,tr=1/tl;I il,jx; D x=0.0;  /* =0.0 to stifle warning */    \
         IH *hh=IHAV(h); I p=hh->datarange; TH * RESTRICT hv=hh->data.TH; UIL ctmask=calcctmask(jt->cct);   \
   __m128i vp, vpstride;   /* v for hash/v for search; stride for each */ \
-  _mm256_zeroupper(VOIDARG);  \
+  _mm256_zeroupperx(VOIDARG)  \
   __m128d xval, xnew, xrot; SETXNEW \
   vp=_mm_setzero_si128();  /* to avoid warnings */ \
   md=mode&IIOPMSK;   /* clear upper flags including REFLEX bit */                            \
@@ -926,7 +926,7 @@ static IOFT(A,UI4,jtioa12,cthia(ctmask,1.0,*v),TFINDBX,TFINDBY,TFINDBYKEY,!equ(*
 #define IOFSMALLRANGE(f,T,Ttype)    \
  IOF(f){IH *hh=IHAV(h);I e,l;T* RESTRICT av,* RESTRICT wv;T max,min; UI p; \
   mode|=((mode&(IIOPMSK&~(IIDOT^IICO)))|((I)a^(I)w)|(ac^wc))?0:IIMODREFLEX; \
-  _mm256_zeroupper(VOIDARG);  \
+  _mm256_zeroupperx(VOIDARG)  \
   av=(T*)AV(a); wv=(T*)AV(w); \
   min=(T)hh->datamin; p=hh->datarange; max=min+(T)p-1; \
   e=1==wc?0:wsct; if(w==mark){wsct=0;} \
@@ -1303,7 +1303,7 @@ static I jtutype(J jt,A w,I c){A*wv,x;I m,t;
         IH *hh=IHAV(h); p=hh->datarange;  hv=hh->data.TH;  \
  \
   __m128i vp, vpstride;   /* v for hash/v for search; stride for each */ \
-  _mm256_zeroupper(VOIDARG);  \
+  _mm256_zeroupperx(VOIDARG)  \
   setup \
   vp=_mm_setzero_si128();  /* to avoid warnings */ \
   md=mode&IIOPMSK;   /* clear upper flags including REFLEX bit */  \
@@ -1403,7 +1403,7 @@ static IOFXW(Z,UI4,jtiowz02,, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&wv[n*hj],2*
   We will compress the hashtable after self-classifying w.  We compare against L2 size; there is value in staying in L1 too */ \
   UC *hvp; if((p<(L2CACHESIZE>>hh->hashelelgsize))||(mode&(IIOPMSK^(IICO|IIDOT)))){hvp=0;}else{A hvpa; GATV0(hvpa,INT,3+(p>>LGBW),0); hvp=UCAV(hvpa)-BYTENO(minimum)+SZI;} \
   \
-  _mm256_zeroupper(VOIDARG);  \
+  _mm256_zeroupperx(VOIDARG)  \
   md=mode&(IIOPMSK|IIMODPACK);   /* clear upper flags including REFLEX bit */  \
   for(l=0;l<ac;++l,av+=acn,wv+=wcn){I chainct=0;  /* number of chains in w */   \
    /* zv progresses through the result - for those versions that support IRS */ \

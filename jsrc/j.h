@@ -1059,7 +1059,7 @@ extern unsigned int __cdecl _clearfp (void);
 //                                                                                  __SSE2__    atom2
 #define AVXATOMLOOP(preloop,loopbody,postloop) \
  __m256i endmask;  __m256d u; \
- _mm256_zeroupperx(VOIDARG); \
+ _mm256_zeroupperx(VOIDARG) \
  endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1))));  /* mask for 0 1 2 3 4 5 is xxxx 0001 0011 0111 1111 0001 */ \
                                                          /* __SSE2__ mask for 0 1 2 3 4 5 is xx 01 11 01 11 01 */ \
  preloop \
@@ -1078,7 +1078,7 @@ extern unsigned int __cdecl _clearfp (void);
 // version that pipelines one read ahead.  Input to loopbody2 is zu; result of loopbody1 is in zt
 #define AVXATOMLOOPPIPE(preloop,loopbody1,loopbody2,postloop) \
  __m256i endmask;  __m256d u, zt, zu; \
- _mm256_zeroupperx(VOIDARG); \
+ _mm256_zeroupperx(VOIDARG) \
  endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1))));  /* mask for 0 1 2 3 4 5 is xxxx 0001 0011 0111 1111 0001 */ \
                                                          /* __SSE2__ mask for 0 1 2 3 4 5 is xx 01 11 01 11 01 */ \
  preloop \
@@ -1098,7 +1098,7 @@ extern unsigned int __cdecl _clearfp (void);
 // Dyadic version.  v is right argument, u is still result
 #define AVXATOMLOOP2(preloop,loopbody,postloop) \
  __m256i endmask;  __m256d u,v; \
- _mm256_zeroupperx(VOIDARG); \
+ _mm256_zeroupperx(VOIDARG) \
  endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1))));  /* mask for 0 1 2 3 4 5 is xxxx 0001 0011 0111 1111 0001 */ \
                                                          /* __SSE2__ mask for 0 1 2 3 4 5 is xx 01 11 01 11 01 */ \
  preloop \

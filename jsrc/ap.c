@@ -93,6 +93,7 @@
   DQ(m, yy=zz; DQ(q, *zz++=*xx++;); DQ(n-1, DQ(q, *zz++=pfx(*yy,*xx); ++xx; ++yy;)));  \
  R EVOK;}
 
+#if 1  // obsolete
 #define PREFIXBFX(f,pfx,ipfx,spfx,bpfx,vexp)          \
  AHDRP(f,B,B){B* y;I j,q;                        \
   if(1==d)for(j=0;j<m;++j){vexp}                      \
@@ -101,6 +102,13 @@
   else if(0==(d&(sizeof(US  )-1)))PREFIXBFXLOOP(US,  spfx)  \
   else DQ(m, y=z; DQ(d, *z++=*x++;); DQ(n-1, DQ(d, *z++=bpfx(*y,*x); ++x; ++y;)));  \
   R EVOK;}    /* f/\"r z for boolean associative atomic function f */
+#else
+#define PREFIXBFX(f,pfx,ipfx,spfx,bpfx,vexp)          \
+ AHDRP(f,B,B){B* y;I j,q;                        \
+  if(1==d)for(j=0;j<m;++j){vexp}                      \
+  else DQ(m, y=z; DQ(d, *z++=*x++;); DQ(n-1, DQ(d, *z++=bpfx(*y,*x); ++x; ++y;)));  \
+  R EVOK;}    /* f/\"r z for boolean associative atomic function f */
+#endif
 #else
 #define PREFIXBFX(f,pfx,ipfx,spfx,bpfx,vexp)          \
  AHDRP(f,B,B){B*tv;I i,q,r,t,*xi,*yi,*zi;                      \

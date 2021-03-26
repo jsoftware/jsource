@@ -163,6 +163,7 @@ __EMU_M256_IMPL_M2( __m256, add_ps );
 __EMU_M256_IMPL_M2( __m256i, cmpeq_epi8 );
 __EMU_M256_IMPL_M2( __m256i, cmpeq_epi64 );
 __EMU_M256_IMPL_M2( __m256i, mul_epu32 );
+__EMU_M256_IMPL_M2( __m256i, add_epi8 );
 __EMU_M256_IMPL_M2( __m256i, sub_epi8 );
 __EMU_M256_128_IMPL_M2( __m256i, and_si  );
 __EMU_M256_128_IMPL_M2( __m256i, xor_si  );
@@ -328,6 +329,7 @@ __emu_maskstore_impl( __emu_mm256_maskstore_epi64, __emu__m256i, __emu__m256i, _
 #ifndef __EMU_M256AVX2_NOMAP
 
 #undef _mm256_add_epi64
+#undef _mm256_add_epi8
 #undef _mm256_andnot_si256
 #undef _mm256_and_si256
 #undef _mm256_blend_epi32
@@ -356,6 +358,7 @@ __emu_maskstore_impl( __emu_mm256_maskstore_epi64, __emu__m256i, __emu__m256i, _
 #undef _mm256_xor_si256
 
 #define _mm256_add_epi64 __emu_mm256_add_epi64
+#define _mm256_add_epi8 __emu_mm256_add_epi8
 #define _mm256_andnot_si256 __emu_mm256_andnot_si256
 #define _mm256_and_si256 __emu_mm256_and_si256
 #define _mm256_blend_epi32 __emu_mm256_blend_epi32_REF

@@ -1058,15 +1058,16 @@ extern unsigned int __cdecl _clearfp (void);
 #define LGNPAR 2  // no good automatic way to do this
 // loop for atomic parallel ops.  // fixed: n is #atoms (never 0), x->input, z->result, u=input atom4 and result
 //                                                                                  __SSE2__    atom2
+// loop advances x and y to end +1 of region
 #define AVXATOMLOOP(preloop,loopbody,postloop) \
  __m256i endmask;  __m256d u; \
  _mm256_zeroupperx(VOIDARG) \
  endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1))));  /* mask for 0 1 2 3 4 5 is xxxx 0001 0011 0111 1111 0001 */ \
                                                          /* __SSE2__ mask for 0 1 2 3 4 5 is xx 01 11 01 11 01 */ \
  preloop \
- I i=(n-1)>>LGNPAR;  /* # loops for 0 1 2 3 4 5 is x 0 0 0 0 1 */ \
+ UI i=(n+NPAR-1)>>LGNPAR;  /* # loops for 0 1 2 3 4 5 is x 0 0 0 0 1 */ \
             /* __SSE2__ # loops for 0 1 2 3 4 5 is x 1 0 1 0 1 */ \
- while(--i>=0){ u=_mm256_loadu_pd(x); \
+ NOUNROLL while(--i!=0){ u=_mm256_loadu_pd(x); \
   loopbody \
   _mm256_storeu_pd(z, u); x+=NPAR; z+=NPAR; \
  } \
@@ -1397,7 +1398,7 @@ if(likely(z<3)){_zzt+=z; z=(I)&oneone; _zzt=_i&3?_zzt:(I*)z; z=_i&2?(I)_zzt:z; z
 #define RNE(exp)        {R jt->jerr?0:(exp);}
 #define RZ(exp)         {if(unlikely(!(exp)))R0}
 #if MEMAUDIT&0xc
-#define DEADARG(x)      (((I)(x)&~3)?(AFLAG((A)((I)(x)&~3))&CONW?SEGFAULT:0):0); if(MEMAUDIT&0x10)auditmemchains(); if(MEMAUDIT&0x2)audittstack(jt); 
+#define DEADARG(x)      (((I)(x)&~3)?(AFLAG((A)((I)(x)&~3))&LPAR?SEGFAULT:0):0); if(MEMAUDIT&0x10)auditmemchains(); if(MEMAUDIT&0x2)audittstack(jt); 
 #define ARGCHK1D(x)     ARGCHK1(x)  // these not needed normally, but useful for debugging
 #define ARGCHK2D(x,y)   ARGCHK2(x,y)
 #else

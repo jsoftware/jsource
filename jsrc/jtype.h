@@ -552,6 +552,7 @@ typedef I SI;
    // MUST BE GREATER THAN ANY DIRECT FLAG
 #define AFUPPERTRIX 30      // matches RPAR
 #define AFUPPERTRI  ((I)1<<AFUPPERTRIX)  // (used in cip.c) This is an upper-triangular matrix
+// NOTE: bit 28 (LPAR) is used to check for freed bufs in DEADARG
 
 #define AFAUDITUCX      32   // this & above is used for auditing the stack (you must run stack audits on a 64-bit system)
 #define AFAUDITUC       ((I)1<<AFAUDITUCX)    // this field is used for auditing the tstack, holds the number of deletes implied on the stack for the block

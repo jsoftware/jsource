@@ -162,8 +162,7 @@ PREFIXBFX( eqpfxB, EQ, IEQ, SEQ, BEQ, {B b=1; DQ(n, *z++=b=b==*x++;);})
 #else
 #define PFXSXOR(t) t^=(t<<8); t^=(t<<16);
 #endif
-
-
+// word-wide =/\ t holds the previous word result; its high byte is chained to the low byte of the next word.  XOR cascade follows the pattern above.  + differs from ~: in the alternating pattern
 PREFIXBFX( nepfxB, NE, INE, SNE, BNE, {I t=0; DQ((n-1)>>LGSZI, t=*(I*)x^(t>>(BB*(SZI-1))); PFXSXOR(t) *(I*)z=t; x+=SZI; z+=SZI;) \
             I nct=(-n)&(SZI-1); t=*(I*)x^(t>>(BB*(SZI-1))); PFXSXOR(t) *(I*)z=t; STOREBYTES(z,t,nct) x+=SZI-nct; z+=SZI-nct;})
 PREFIXBFX( eqpfxB, EQ, IEQ, SEQ, BEQ, {I t=VALIDBOOLEAN; DQ((n-1)>>LGSZI, t=*(I*)x^(t>>(BB*(SZI-1))); PFXSXOR(t) t^=ALTBYTES&VALIDBOOLEAN; *(I*)z=t; *(I*)z=t; x+=SZI; z+=SZI;) \
@@ -291,10 +290,28 @@ PREFIXPFX( pluspfxB, I, B,  PLUS, plusIB , R EVOK; )
 AHDRP(pluspfxD,D,D){I i;
  NAN0;
  if(d==1){
+#if C_AVX2  // this version is not faster in emulation
+  // This doesn't run much faster than the 2-up scalar version, but I'm leaving it in because it is 1 cycle faster and
+  // the algorithm would extend well to 512-bit instructions
+  // clang insists on reordering the loop, putting the update of acc AFTER the creation of the final u.  This lengthens the chain by 1 clock so we take 6 cycles for 4 words
+  DQ(m,
+  AVXATOMLOOP(
+    __m256d high3=_mm256_loadu_pd((D*)(validitymask+7));
+    __m256d acc=_mm256_setzero_pd(); __m256d accs;  // accumulator and place to save it 
+    ,
+    u=_mm256_add_pd(_mm256_permute4x64_pd(u,0x90),_mm256_and_pd(u,high3));  // -123 + 0012
+    u=_mm256_add_pd(_mm256_permute2f128_pd(u,u,0x08),u);  // finish scan of the 4 input values
+    accs=acc; acc=_mm256_add_pd(acc,u);  // accumulate in lane 3.  This is the only carried dependency for acc
+    u=_mm256_add_pd(u,_mm256_permute4x64_pd(accs,0xff));  // add in total previously accumulated
+    ,
+    )
+  )
+#else
   I n3=n/3; I rem=n-n3*3;  // number of triplets, number of extras
   DQ(m, D t0; D t1; D t2; D t12; D t01; if(rem<1){t0=0.0; t12=t1=0.0;}else {*z++=t0=*x++; if(rem==1){t12=t1=0.0;}else{t12=t1=*x++; *z++=t0+t1;}} t2=0.0;
-    DQ(n3, t0+=*x++; *z++ =t0+t12; t1+=*x++; t01=t0+t1; *z++ =t01+t2; t2+=*x++; *z++ =t2+t01; t12=t1+t2;)
+    DQ(n3, t0+=*x++; *z++ =t0+t12; t1+=*x++; t01=t0+t1; *z++ =t01+t2; t2+=*x++; *z++ =t2+t01; t12=t1+t2;)  // use 2 accumulators
   )
+#endif
  }else{
   for(i=0;i<m;++i){                                              
    MC(z,x,d*sizeof(D)); x+=d; 

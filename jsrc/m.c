@@ -16,7 +16,7 @@
 
 #define LEAKSNIFF 0
 
-#define ALIGNTOCACHE 0   // set to 1 to align each block to cache-line boundary.  Will reduce cache usage for headers
+#define ALIGNTOCACHE 1   // set to 1 to align each block to cache-line boundary.  Will reduce cache usage for headers
 #define TAILPAD (32)  // we must ensure that a 32-byte masked op fetch to the last byte doesn't run off into unallocated memory
 
 #define MEMJMASK 0xf   // these bits of j contain subpool #; higher bits used for computation for subpool entries
@@ -1067,7 +1067,7 @@ if((I)jt&3)SEGFAULT;
    I *v;
    n+=TAILPAD+CACHELINESIZE;  // add to the allocation for the fixed tail and the alignment area
    ASSERT(v=MALLOC(n),EVWSFULL);
-   z=(MS *)(((I)v+CACHELINESIZE)&-CACHELINESIZE);   // get cache-aligned section
+   z=(A)(((I)v+CACHELINESIZE)&-CACHELINESIZE);   // get cache-aligned section
    ((I**)z)[-1] = v;    // save address of original allocation
 #else
    // Allocate without alignment

@@ -278,25 +278,27 @@ A jtstfind(J jt,I n,C*u,I bucketx){L*v;
 
 // Bring a destroyed locale back to life as if it were newly created: clear the chains, set the default path, clear the Bloom filter
 #define REINITZOMBLOC(g) memset(LXAV0(g)+1,0,(AN(g)-SYMLINFOSIZE)*sizeof(LXAV0(g)[0])); LOCPATH(g)=JT(jt,zpath); LOCBLOOM(g)=0;
-
+static F2(jtloccre);
 // look up locale name, and create the locale if not found
 // If a locale is returned, its path has been made nonnull
 // bucketx is hash (for named locale) or number (for numeric locale)
 // n=0 means 'use base locale'
 // n=-1 means 'numbered locale, don't bother checking digits'   u is invalid
 A jtstfindcre(J jt,I n,C*u,I bucketx){
- A v = stfind(n,u,bucketx);  // lookup
- if(likely(v!=0)){  // name found
-  if(unlikely(LOCPATH(v)==0)){ra(v); REINITZOMBLOC(v)}  // if the path is null, this is a zombie empty locale in the path of some other locale.  Bring it back to life
-   // setting a path must be accompanied by raising the usecount, because a locale is liable to be erased when its path is nonnull and it must survive as a zombie then
-  R v;  // return the locale found
- }
- // here the locale must be created
- if(n>=0&&'9'<*u){  // nonnumeric locale:
-  I p; FULLHASHSIZE(1LL<<(5+JT(jt,locsize)[0]),SYMBSIZE,1,SYMLINFOSIZE,p);
-  R stcreate(0,p,n,u);  // create it with name
- }else{
-  ASSERT(0,EVLOCALE); // illegal to create numeric locale explicitly
+ while(1){
+  A v = stfind(n,u,bucketx);  // lookup.  NOTE another thread could delete the locale while we're looking at it - could always zombie it?
+  if(likely(v!=0)){  // name found
+   if(unlikely(LOCPATH(v)==0)){ra(v); REINITZOMBLOC(v)}  // if the path is null, this is a zombie empty locale in the path of some other locale.  Bring it back to life
+    // setting a path must be accompanied by raising the usecount, because a locale is liable to be erased when its path is nonnull and it must survive as a zombie then
+   R v;  // return the locale found
+  }
+  // here the locale must be created (rare)
+  if(n>=0&&'9'<*u){  // nonnumeric locale:
+// obsolete    I p; FULLHASHSIZE(1LL<<(5+JT(jt,locsize)[0]),SYMBSIZE,1,SYMLINFOSIZE,p);
+   RZ(jtloccre(jt,mark,boxW(str(n,u))));  // create it with name - we will loop back to look it up again
+  }else{
+   ASSERT(0,EVLOCALE); // illegal to create numeric locale explicitly
+  }
  }
 }
 

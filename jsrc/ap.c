@@ -291,10 +291,39 @@ AHDRP(pluspfxD,D,D){I i;
  NAN0;
  if(d==1){
 #if C_AVX2  // this version is not faster in emulation
-  // This doesn't run much faster than the 2-up scalar version, but I'm leaving it in because it is 1 cycle faster and
-  // the algorithm would extend well to 512-bit instructions
-  // clang insists on reordering the loop, putting the update of acc AFTER the creation of the final u.  This lengthens the chain by 1 clock so we take 6 cycles for 4 words
   DQ(m,
+#if 0  // obsolete overkill
+ __m256i endmask;  __m256d u;
+ _mm256_zeroupperx(VOIDARG)
+ endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1))));  /* mask for 0 1 2 3 4 5 is xxxx 0001 0011 0111 1111 0001 */
+                                                         /* __SSE2__ mask for 0 1 2 3 4 5 is xx 01 11 01 11 01 */
+    __m256d high3=_mm256_loadu_pd((D*)(validitymask+7));
+    __m256d acc0=_mm256_setzero_pd(); __m256d acc1;  // accumulator and place to save it 
+ UI i=(n+NPAR-1)>>LGNPAR;  /* # loops for 0 1 2 3 4 5 is x 0 0 0 0 1 */
+            /* __SSE2__ # loops for 0 1 2 3 4 5 is x 1 0 1 0 1 */
+ NOUNROLL while(--i!=0){
+   u=_mm256_loadu_pd(x);
+    u=_mm256_add_pd(_mm256_permute4x64_pd(u,0x90),_mm256_and_pd(u,high3));  // -123 + 0012
+    u=_mm256_add_pd(_mm256_permute2f128_pd(u,u,0x08),u);  // finish scan of the 4 input values
+    acc1=_mm256_add_pd(acc0,u);  // accumulate in lane 3.  This is the only carried dependency for acc
+    u=_mm256_add_pd(u,_mm256_permute4x64_pd(acc0,0xff));  // add in total previously accumulated
+  _mm256_storeu_pd(z, u); x+=NPAR; z+=NPAR;
+   if(unlikely(--i==0)){acc0=acc1; break;}
+   u=_mm256_loadu_pd(x);
+    u=_mm256_add_pd(_mm256_permute4x64_pd(u,0x90),_mm256_and_pd(u,high3));  // -123 + 0012
+    u=_mm256_add_pd(_mm256_permute2f128_pd(u,u,0x08),u);  // finish scan of the 4 input values
+    acc0=_mm256_add_pd(acc1,u);  // accumulate in lane 3.  This is the only carried dependency for acc
+    u=_mm256_add_pd(u,_mm256_permute4x64_pd(acc1,0xff));  // add in total previously accumulated
+  _mm256_storeu_pd(z, u); x+=NPAR; z+=NPAR;
+ }
+ u=_mm256_maskload_pd(x,endmask);
+  u=_mm256_add_pd(_mm256_permute4x64_pd(u,0x90),_mm256_and_pd(u,high3));  // -123 + 0012
+  u=_mm256_add_pd(_mm256_permute2f128_pd(u,u,0x08),u);  // finish scan of the 4 input values
+  u=_mm256_add_pd(u,_mm256_permute4x64_pd(acc0,0xff));  // add in total previously accumulated
+ _mm256_maskstore_pd(z, endmask, u);
+ x+=((n-1)&(NPAR-1))+1; z+=((n-1)&(NPAR-1))+1;
+#else
+  // clang insists on reordering the loop, putting the update of acc AFTER the creation of the final u.  Turns out OK
   AVXATOMLOOP(
     __m256d high3=_mm256_loadu_pd((D*)(validitymask+7));
     __m256d acc=_mm256_setzero_pd(); __m256d accs;  // accumulator and place to save it 
@@ -305,6 +334,7 @@ AHDRP(pluspfxD,D,D){I i;
     u=_mm256_add_pd(u,_mm256_permute4x64_pd(accs,0xff));  // add in total previously accumulated
     ,
     )
+#endif
   )
 #else
   I n3=n/3; I rem=n-n3*3;  // number of triplets, number of extras

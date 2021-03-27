@@ -9,6 +9,7 @@ tags
  $ git checkout master
  $ git pull
  
+ $ cd ~
  $ git/jsource/script/tag.sh j903-beta-?
  $ cd git/jsource
  $ git checkout tags/j903-beta-x

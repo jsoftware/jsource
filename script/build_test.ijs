@@ -4,6 +4,16 @@ manage building/testing J releases/betas from J
    git_status''           NB. report git status and jversion
    build_for'J903-beta-e' NB. set build globals and jversion.h
    
+tags
+ $ cd git/jsource
+ $ git checkout master
+ $ git pull
+ 
+ $ git/jsource/script/tag.sh j903-beta-?
+ $ cd git/jsource
+ $ git checkout tags/j903-beta-x
+
+
 
 build uses make2 for linux/macos
 JE binaries are copied to git/jlibrary/bin with qualified names (e.g. libjavx2.so)

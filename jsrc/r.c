@@ -261,7 +261,7 @@ static A jtunparse1(J jt,CW*c,A x,I j,A y){A q,z;C*s;I t;
   case CFOR:                  RZ(z=c->ig.indiv.sentn?AAV(x)[0]:spellcon(t)); break;
   default:                    RZ(z=spellcon(t)); break;
  }
- // if the CW we processed comes from the same source line, append it and return the combination; ootherwise return the new
+ // if the CW we processed comes from the same source line, append it and return the combination; otherwise return the new
  if(j==c->source){
   GATV0(q,LIT,1+AN(y)+AN(z),1); s=CAV(q); 
   MC(s,CAV(y),AN(y)); s+=AN(y); *s++=' '; MC(s,CAV(z),AN(z)); 

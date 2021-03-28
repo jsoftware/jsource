@@ -69,17 +69,20 @@ static void jtdspell(J jt,C id,A w,I nflag){C c,s[5];
   // get fgh if any.  Format f if any, then the primitive, then g if any.  fgh are present only in ACV type (ASGN doesn't have them at all)
   A f,g,h;
   if(AT(w)&VERB+ADV+CONJ){f=FAV(w)->fgh[0], g=FAV(w)->fgh[1], h=FAV(w)->fgh[2];}else{f=g=h=0;}  // plain value for fgh
-  if(id==CFORK){if(h==0){h=g; g=f; f=ds(CCAP);}else h=0;}  // reconstitute [: g h; otherwise we display h only for fork
+  if(id==CFORK){if(h==0){h=g; g=f; f=ds(CCAP);}}else h=0;  // reconstitute [: g h; otherwise we display h only for fork
   if(g&&!f){f=g; g=0;}  // if adverb has its arg in g rather than f, restore it to f
   // if this is not a primitive, we must enclose it in parentheses if we are told to in nflag or if it was originally defined as a hook/fork which must have used parentheses
-  I parenhere=(g||h)&&(BETWEENC(id,CHOOK,CADVF)||nflag&2);  // set if we need parens around our value
+  I invisiblemod=BETWEENC(id,CHOOK,CADVF);  // true if hook/fork/advf
+  I parenhere=(g||h)&&(invisiblemod||nflag&2);  // set if we need parens around our value
   if(parenhere)eputc('(');
   if(f)nflag=disp(f,0);  // display left side if any
-  // display the primitive, with a leading space if it begins with inflection or a digit
-  s[0]=' '; s[4]=0;
-  spellit(id,1+s);
-  c=s[1]; 
-  eputs(s+!(c==CESC1||c==CESC2||(nflag&1)&&((ctype[(UC)c]&~CA)==0)));
+  // display the primitive, with a leading space if it begins with inflection or a digit.  Don't display the code for an invisible modifier - that's used only for ARs
+  if(!invisiblemod){
+   s[0]=' '; s[4]=0;
+   spellit(id,1+s);
+   c=s[1]; 
+   eputs(s+!(c==CESC1||c==CESC2||(nflag&1)&&((ctype[(UC)c]&~CA)==0)));
+  }
   if(g)nflag=disp(g,2);  // display right side if any
   if(h)nflag=disp(h,2);  // display end of fork if any
   if(parenhere)eputc(')');
@@ -115,7 +118,7 @@ static I jtdisp(J jt,A w,I nflag){B b=1&&AT(w)&NAME+NUMERIC;
  case RPARX: eputc(')');              break;
  case ASGNX: dspell(CAV(w)[0],w,(nflag&1));       break;
  case MARKX:                          break;
- default:   dspell(FAV(w)->id,w,(nflag&1)|2);     break;  // if non-primitive, it might have had parnes when created
+ default:   dspell(FAV(w)->id,w,(nflag&1)|2);     break;  // if non-primitive, it might have had parens when created
  }
  R b;  // new nflag
 }

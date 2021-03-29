@@ -184,7 +184,7 @@ static A jtinpl(JJ jt,B b,I n,C*s){C c;I k=0;
 #if _WIN32
  if(n&&(c=s[n-1],CCR==c))--n;
 #endif
- ASSERT(!*IJT(jt,adbreak),EVINPRUPT);
+ ASSERT(!*IJT(jt,adbreakr),EVINPRUPT);
  if(!b){ /* 1==b means literal input */
   if(n&&COFF==s[n-1])joff(num(0));
   c=IJT(jt,bx)[9]; if((UC)c>127)DO(n, if(' '!=s[i]&&c!=s[i]){k=i; break;});

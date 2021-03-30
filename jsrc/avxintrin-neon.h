@@ -2444,11 +2444,6 @@ FORCE_INLINE __m256d _mm256_andnot_pd(__m256d a, __m256d b)
     return res_m256d;
 }
 
-FORCE_INLINE __m128d _mm_sqrt_pd(__m128d in)
-{
- return vsqrtq_f64(in);
-}
-
 FORCE_INLINE __m256d _mm256_sqrt_pd(__m256d in)
 {
  __m256d res;

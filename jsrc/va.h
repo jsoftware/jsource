@@ -258,6 +258,15 @@ typedef I AHDRSFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);
   suff \
  }
 
+// TUNE as of 20210330 Skylake 2.5GHz
+// measurements with  2.5e9*(#i)%~(*/$a0)%~6!:2'3 : ''for. i do. a2>.a3 end. 0'' 0'  on length 1e3, aligned or not
+// units: cycles/word on +
+// shortest loop time unrolled 4 times < 0.23
+//                             2 times 0.28
+//                             0 times 0.40
+// times: not inplace 0.55, inplace aligned 0.34, inplace unaligned 0.55, 1address 0.23
+// conclusion: unroll by 4 on 1address , by 2 on 2-3 address
+
 // commute=bit0 = commutative, bit1 set if incomplete y must be filled with 0 (to avoid isub oflo), bit2 set if incomplete x must be filled with i (for fdiv NaN),
 // bit3 set for int-to-float on x, bit4 for int-to-float on y
 // bit5 set to suppress loop-unrolling
@@ -275,133 +284,125 @@ AHDR2(name,D,D,D){ \
   if((-alignreq&(NPAR-m))<0){ \
    endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-alignreq));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
    xx=_mm256_loadu_pd(x); yy=_mm256_loadu_pd(y); \
-   if(commute&8){CVTEPI64(xx,xx)} if(commute&16){CVTEPI64(yy,yy)}  \
+   if((commute)&8){CVTEPI64(xx,xx)} if((commute)&16){CVTEPI64(yy,yy)}  \
    zzop;  _mm256_maskstore_pd(z, endmask, zz); x+=alignreq; y+=alignreq; z+=alignreq; m-=alignreq;  /* leave remlen>0 */ \
   } \
   endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-m)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
-  if(!(commute&32)){ \
+  if(!((commute)&32)){ \
    UI n0=(m-1)>>LGNPAR; \
    if(n0>0){ \
-    UI n1=(n0+3)>>2; \
-    switch(n0&3){ \
-    name##lp1: \
+    UI n1=(n0+1)>>1; \
+    switch(n0&1){ \
+    name##lp11: \
     case 0: \
      xx=_mm256_loadu_pd(x); yy=_mm256_loadu_pd(y); \
-     if(commute&8){CVTEPI64(xx,xx)} if(commute&16){CVTEPI64(yy,yy)}  \
-     zzop; _mm256_storeu_pd(z, zz); x+=NPAR; y+=NPAR; z+=NPAR; \
-    case 3: \
-     xx=_mm256_loadu_pd(x); yy=_mm256_loadu_pd(y); \
-     if(commute&8){CVTEPI64(xx,xx)} if(commute&16){CVTEPI64(yy,yy)}  \
-     zzop; _mm256_storeu_pd(z, zz); x+=NPAR; y+=NPAR; z+=NPAR; \
-    case 2: \
-     xx=_mm256_loadu_pd(x); yy=_mm256_loadu_pd(y); \
-     if(commute&8){CVTEPI64(xx,xx)} if(commute&16){CVTEPI64(yy,yy)}  \
+     if((commute)&8){CVTEPI64(xx,xx)} if((commute)&16){CVTEPI64(yy,yy)}  \
      zzop; _mm256_storeu_pd(z, zz); x+=NPAR; y+=NPAR; z+=NPAR; \
     case 1: \
      xx=_mm256_loadu_pd(x); yy=_mm256_loadu_pd(y); \
-     if(commute&8){CVTEPI64(xx,xx)} if(commute&16){CVTEPI64(yy,yy)}  \
+     if((commute)&8){CVTEPI64(xx,xx)} if((commute)&16){CVTEPI64(yy,yy)}  \
      zzop; _mm256_storeu_pd(z, zz); x+=NPAR; y+=NPAR; z+=NPAR; \
-    if(--n1!=0)goto name##lp1; \
+    if(--n1!=0)goto name##lp11; \
     } \
    } \
   }else{ \
    DQ((m-1)>>LGNPAR, xx=_mm256_loadu_pd(x); yy=_mm256_loadu_pd(y); \
-    if(commute&8){CVTEPI64(xx,xx)} if(commute&16){CVTEPI64(yy,yy)}  \
+    if((commute)&8){CVTEPI64(xx,xx)} if((commute)&16){CVTEPI64(yy,yy)}  \
     zzop; _mm256_storeu_pd(z, zz); x+=NPAR; y+=NPAR; z+=NPAR; \
    ) \
   } \
   /* runout, using mask */ \
   xx=_mm256_maskload_pd(x,endmask); yy=_mm256_maskload_pd(y,endmask); \
-  if(commute&8){CVTEPI64(xx,xx)} if(commute&16){CVTEPI64(yy,yy)} \
-  if(commute&2)yy=_mm256_blendv_pd(_mm256_castsi256_pd(endmask),yy,_mm256_castsi256_pd(endmask)); \
-  if(commute&4)xx=_mm256_blendv_pd(_mm256_set1_pd(1.0),xx,_mm256_castsi256_pd(endmask)); \
+  if((commute)&8){CVTEPI64(xx,xx)} if((commute)&16){CVTEPI64(yy,yy)} \
+  if((commute)&2)yy=_mm256_blendv_pd(_mm256_castsi256_pd(endmask),yy,_mm256_castsi256_pd(endmask)); \
+  if((commute)&4)xx=_mm256_blendv_pd(_mm256_set1_pd(1.0),xx,_mm256_castsi256_pd(endmask)); \
   zzop; _mm256_maskstore_pd(z, endmask, zz); \
  }else{ \
-  if(!(commute&1)&&n-1<0){n=~n; \
+  if(!((commute)&1)&&n-1<0){n=~n; \
    /* atom+vector */ \
-   DQ(m, xx=_mm256_set1_pd(*x); if(commute&8){CVTEPI64(xx,xx)} ++x; \
+   DQ(m, xx=_mm256_set1_pd(*x); if((commute)&8){CVTEPI64(xx,xx)} ++x; \
     I n0=n; \
     I alignreq=(-(I)z>>LGSZI)&(NPAR-1); \
     if((-alignreq&(NPAR-n0))<0){ \
      endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-alignreq));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
-     yy=_mm256_loadu_pd(y); if(commute&16){CVTEPI64(yy,yy)}  \
+     yy=_mm256_loadu_pd(y); if((commute)&16){CVTEPI64(yy,yy)}  \
      zzop; _mm256_maskstore_pd(z, endmask, zz); y+=alignreq; z+=alignreq; n0-=alignreq;  /* leave remlen>0 */ \
     } \
     endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n0)&(NPAR-1)))); \
-    if(!(commute&32)){ \
+    if(!((commute)&32)){ \
      UI n1=(n0-1)>>LGNPAR; \
      if(n1>0){ \
       UI n2=(n1+3)>>2; \
       switch(n1&3){ \
-      name##lp2: \
+      name##lp02: \
       case 0: \
-       yy=_mm256_loadu_pd(y); if(commute&16){CVTEPI64(yy,yy)} \
+       yy=_mm256_loadu_pd(y); if((commute)&16){CVTEPI64(yy,yy)} \
        zzop; _mm256_storeu_pd(z, zz); y+=NPAR; z+=NPAR; \
       case 3: \
-       yy=_mm256_loadu_pd(y); if(commute&16){CVTEPI64(yy,yy)} \
+       yy=_mm256_loadu_pd(y); if((commute)&16){CVTEPI64(yy,yy)} \
        zzop; _mm256_storeu_pd(z, zz); y+=NPAR; z+=NPAR; \
       case 2: \
-       yy=_mm256_loadu_pd(y); if(commute&16){CVTEPI64(yy,yy)} \
+       yy=_mm256_loadu_pd(y); if((commute)&16){CVTEPI64(yy,yy)} \
        zzop; _mm256_storeu_pd(z, zz); y+=NPAR; z+=NPAR; \
       case 1: \
-       yy=_mm256_loadu_pd(y); if(commute&16){CVTEPI64(yy,yy)} \
+       yy=_mm256_loadu_pd(y); if((commute)&16){CVTEPI64(yy,yy)} \
        zzop; _mm256_storeu_pd(z, zz); y+=NPAR; z+=NPAR; \
-      if(--n2!=0)goto name##lp2; \
+      if(--n2!=0)goto name##lp02; \
       } \
      } \
     }else{ \
-     DQ((n0-1)>>LGNPAR, yy=_mm256_loadu_pd(y); if(commute&16){CVTEPI64(yy,yy)} \
+     DQ((n0-1)>>LGNPAR, yy=_mm256_loadu_pd(y); if((commute)&16){CVTEPI64(yy,yy)} \
       zzop; _mm256_storeu_pd(z, zz); y+=NPAR; z+=NPAR; \
      ) \
     } \
     yy=_mm256_maskload_pd(y,endmask); \
-    if(commute&16){CVTEPI64(yy,yy)} if(commute&2)yy=_mm256_blendv_pd(_mm256_castsi256_pd(endmask),yy,_mm256_castsi256_pd(endmask)); \
-    if(commute&4)xx=_mm256_blendv_pd(_mm256_set1_pd(1.0),xx,_mm256_castsi256_pd(endmask)); \
+    if((commute)&16){CVTEPI64(yy,yy)} if((commute)&2)yy=_mm256_blendv_pd(_mm256_castsi256_pd(endmask),yy,_mm256_castsi256_pd(endmask)); \
+    if((commute)&4)xx=_mm256_blendv_pd(_mm256_set1_pd(1.0),xx,_mm256_castsi256_pd(endmask)); \
     zzop; _mm256_maskstore_pd(z, endmask, zz); \
     y+=((n0-1)&(NPAR-1))+1; z+=((n0-1)&(NPAR-1))+1; \
    ) \
   }else{ \
    /* vector+atom */ \
-   if(commute&1){I taddr=(I)x^(I)y; x=n<0?y:x; y=(D*)((I)x^taddr); n^=REPSGN(n);} \
-   DQ(m, yy=_mm256_set1_pd(*y); if(commute&16){CVTEPI64(yy,yy)} ++y; \
+   if((commute)&1){I taddr=(I)x^(I)y; x=n<0?y:x; y=(D*)((I)x^taddr); n^=REPSGN(n);} \
+   DQ(m, yy=_mm256_set1_pd(*y); if((commute)&16){CVTEPI64(yy,yy)} ++y; \
     I n0=n; \
     I alignreq=(-(I)z>>LGSZI)&(NPAR-1); \
     if((-alignreq&(NPAR-n0))<0){ \
      endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-alignreq));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
-     xx=_mm256_loadu_pd(x); if(commute&8){CVTEPI64(xx,xx)} \
+     xx=_mm256_loadu_pd(x); if((commute)&8){CVTEPI64(xx,xx)} \
      zzop; _mm256_maskstore_pd(z, endmask, zz); x+=alignreq; z+=alignreq; n0-=alignreq;  /* leave remlen>0 */ \
     } \
     endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n0)&(NPAR-1)))); \
-    if(!(commute&32)){ \
+    if(!((commute)&32)){ \
      UI n1=(n0-1)>>LGNPAR; \
      if(n1>0){ \
       UI n2=(n1+3)>>2; \
       switch(n1&3){ \
-      name##lp3: \
+      name##lp03: \
       case 0: \
-       xx=_mm256_loadu_pd(x); if(commute&8){CVTEPI64(xx,xx)} \
+       xx=_mm256_loadu_pd(x); if((commute)&8){CVTEPI64(xx,xx)} \
        zzop; _mm256_storeu_pd(z, zz); x+=NPAR; z+=NPAR; \
       case 3: \
-       xx=_mm256_loadu_pd(x); if(commute&8){CVTEPI64(xx,xx)} \
+       xx=_mm256_loadu_pd(x); if((commute)&8){CVTEPI64(xx,xx)} \
        zzop; _mm256_storeu_pd(z, zz); x+=NPAR; z+=NPAR; \
       case 2: \
-       xx=_mm256_loadu_pd(x); if(commute&8){CVTEPI64(xx,xx)} \
+       xx=_mm256_loadu_pd(x); if((commute)&8){CVTEPI64(xx,xx)} \
        zzop; _mm256_storeu_pd(z, zz); x+=NPAR; z+=NPAR; \
       case 1: \
-       xx=_mm256_loadu_pd(x); if(commute&8){CVTEPI64(xx,xx)} \
+       xx=_mm256_loadu_pd(x); if((commute)&8){CVTEPI64(xx,xx)} \
        zzop; _mm256_storeu_pd(z, zz); x+=NPAR; z+=NPAR; \
-      if(--n2!=0)goto name##lp3; \
+      if(--n2!=0)goto name##lp03; \
       } \
      } \
     }else{ \
-     DQ((n0-1)>>LGNPAR, xx=_mm256_loadu_pd(x); if(commute&8){CVTEPI64(xx,xx)} \
+     DQ((n0-1)>>LGNPAR, xx=_mm256_loadu_pd(x); if((commute)&8){CVTEPI64(xx,xx)} \
       zzop; _mm256_storeu_pd(z, zz); x+=NPAR; z+=NPAR; \
      ) \
     } \
     xx=_mm256_maskload_pd(x,endmask); \
-    if(commute&8){CVTEPI64(xx,xx)} \
-    if(commute&2)yy=_mm256_blendv_pd(_mm256_castsi256_pd(endmask),yy,_mm256_castsi256_pd(endmask)); \
-    if(commute&4)xx=_mm256_blendv_pd(_mm256_set1_pd(1.0),xx,_mm256_castsi256_pd(endmask)); \
+    if((commute)&8){CVTEPI64(xx,xx)} \
+    if((commute)&2)yy=_mm256_blendv_pd(_mm256_castsi256_pd(endmask),yy,_mm256_castsi256_pd(endmask)); \
+    if((commute)&4)xx=_mm256_blendv_pd(_mm256_set1_pd(1.0),xx,_mm256_castsi256_pd(endmask)); \
     zzop; _mm256_maskstore_pd(z, endmask, zz); \
     x+=((n0-1)&(NPAR-1))+1; z+=((n0-1)&(NPAR-1))+1; \
    ) \

@@ -320,7 +320,7 @@ AHDR2(name,D,D,D){ \
   if(!(commute&1)&&n-1<0){n=~n; \
    /* atom+vector */ \
    DQ(m, xx=_mm256_set1_pd(*x); if(commute&8){CVTEPI64(xx,xx)} ++x; \
-    UI n0=n; \
+    I n0=n; \
     I alignreq=(-(I)z>>LGSZI)&(NPAR-1); \
     if((-alignreq&(NPAR-n0))<0){ \
      endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-alignreq));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
@@ -364,7 +364,7 @@ AHDR2(name,D,D,D){ \
    /* vector+atom */ \
    if(commute&1){I taddr=(I)x^(I)y; x=n<0?y:x; y=(D*)((I)x^taddr); n^=REPSGN(n);} \
    DQ(m, yy=_mm256_set1_pd(*y); if(commute&16){CVTEPI64(yy,yy)} ++y; \
-    UI n0=n; \
+    I n0=n; \
     I alignreq=(-(I)z>>LGSZI)&(NPAR-1); \
     if((-alignreq&(NPAR-n0))<0){ \
      endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-alignreq));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
@@ -394,7 +394,7 @@ AHDR2(name,D,D,D){ \
       } \
      } \
     }else{ \
-     DQ((n-1)>>LGNPAR, xx=_mm256_loadu_pd(x); if(commute&8){CVTEPI64(xx,xx)} \
+     DQ((n0-1)>>LGNPAR, xx=_mm256_loadu_pd(x); if(commute&8){CVTEPI64(xx,xx)} \
       zzop; _mm256_storeu_pd(z, zz); x+=NPAR; z+=NPAR; \
      ) \
     } \

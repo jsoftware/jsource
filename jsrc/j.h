@@ -784,11 +784,11 @@ extern unsigned int __cdecl _clearfp (void);
 #define  CVTEPI64(z,u)   z.vect_f64[0] = vcvtq_f64_s64(vreinterpretq_f64_s64(u.vect_f64[0])); \
                          z.vect_f64[1] = vcvtq_f64_s64(vreinterpretq_f64_s64(u.vect_f64[1]));
 #else
-#define  CVTEPI64(z,u)  __m256i u_lo = _mm256_blend_epi32(magic_i_lo, _mm256_castpd_si256(u), 0b01010101);         /* Blend the 32 lowest significant bits of u with magic_int_lo */ \
+#define  CVTEPI64(z,u) { __m256i u_lo = _mm256_blend_epi32(magic_i_lo, _mm256_castpd_si256(u), 0b01010101);         /* Blend the 32 lowest significant bits of u with magic_int_lo */ \
                         __m256i u_hi = _mm256_srli_epi64(_mm256_castpd_si256(u), 32);     /* Extract the 32 most significant bits of u */ \
                           u_hi = _mm256_xor_si256(u_hi, magic_i_hi32); /* Flip the msb of u_hi and blend with 0x45300000 */ \
                         __m256d u_hi_dbl = _mm256_sub_pd(_mm256_castsi256_pd(u_hi), _mm256_castsi256_pd(magic_i_all)); /* Compute in double precision:  */ \
-                         z = _mm256_add_pd(u_hi_dbl, _mm256_castsi256_pd(u_lo));  /* (u_hi - magic_d_all) + u_lo  Do not assume associativity of floating point addition !! */
+                         z = _mm256_add_pd(u_hi_dbl, _mm256_castsi256_pd(u_lo));}  /* (u_hi - magic_d_all) + u_lo  Do not assume associativity of floating point addition !! */
 #endif
 #else
 // Here for native instruction support
@@ -1059,22 +1059,43 @@ extern unsigned int __cdecl _clearfp (void);
 // loop for atomic parallel ops.  // fixed: n is #atoms (never 0), x->input, z->result, u=input atom4 and result
 //                                                                                  __SSE2__    atom2
 // loop advances x and y to end +1 of region
-#define AVXATOMLOOP(preloop,loopbody,postloop) \
+// parms: bit0=suppress unrolling, bit1=use maskload for any aligning fetch
+#define AVXATOMLOOP(parms,lbl,preloop,loopbody,postloop) \
  __m256i endmask;  __m256d u; \
  _mm256_zeroupperx(VOIDARG) \
- endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1))));  /* mask for 0 1 2 3 4 5 is xxxx 0001 0011 0111 1111 0001 */ \
-                                                         /* __SSE2__ mask for 0 1 2 3 4 5 is xx 01 11 01 11 01 */ \
  preloop \
- UI i=(n+NPAR-1)>>LGNPAR;  /* # loops for 0 1 2 3 4 5 is x 0 0 0 0 1 */ \
-            /* __SSE2__ # loops for 0 1 2 3 4 5 is x 1 0 1 0 1 */ \
- NOUNROLL while(--i!=0){ u=_mm256_loadu_pd(x); \
-  loopbody \
-  _mm256_storeu_pd(z, u); x+=NPAR; z+=NPAR; \
+ I n0=n; \
+ I alignreq=(-(I)z>>LGSZI)&(NPAR-1); \
+ if((-alignreq&(NPAR-n0))<0){ \
+  endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-alignreq));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
+  if(!((parms)&2))u=_mm256_loadu_pd(x);else u=_mm256_maskload_pd(x,endmask);; \
+  loopbody _mm256_maskstore_pd(z, endmask, u); x+=alignreq; z+=alignreq; n0-=alignreq;  /* leave remlen>0 */ \
  } \
- u=_mm256_maskload_pd(x,endmask); \
- loopbody \
- _mm256_maskstore_pd(z, endmask, u); \
- x+=((n-1)&(NPAR-1))+1; z+=((n-1)&(NPAR-1))+1; \
+ endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n0)&(NPAR-1)))); \
+ if(!((parms)&1)){ \
+  UI n1=(n0-1)>>LGNPAR;   /* # PAR-blocks for 0 1 2 3 4 5 is x 0 0 0 0 1 */\
+             /* __SSE2__ # PAR-blocks for 0 1 2 3 4 5 is x 1 0 1 0 1 */ \
+  if(n1>0){ \
+   UI n2=(n1+3)>>2; /* # 4-blocks (first is short) */ \
+   switch(n1&3){ \
+   lbl: \
+   case 0: \
+    u=_mm256_loadu_pd(x); loopbody _mm256_storeu_pd(z, u); x+=NPAR; z+=NPAR;  \
+   case 3: \
+    u=_mm256_loadu_pd(x); loopbody _mm256_storeu_pd(z, u); x+=NPAR; z+=NPAR;  \
+   case 2: \
+    u=_mm256_loadu_pd(x); loopbody _mm256_storeu_pd(z, u); x+=NPAR; z+=NPAR;  \
+   case 1: \
+    u=_mm256_loadu_pd(x); loopbody _mm256_storeu_pd(z, u); x+=NPAR; z+=NPAR;  \
+   if(--n2!=0)goto lbl; \
+   } \
+  } \
+ }else{ \
+  UI i=(n0+NPAR-1)>>LGNPAR;  \
+  NOUNROLL while(--i!=0){ u=_mm256_loadu_pd(x); loopbody _mm256_storeu_pd(z, u); x+=NPAR; z+=NPAR;} \
+ } \
+ u=_mm256_maskload_pd(x,endmask);  loopbody _mm256_maskstore_pd(z, endmask, u); \
+ x+=((n0-1)&(NPAR-1))+1; z+=((n0-1)&(NPAR-1))+1; \
  postloop
 
 // version that pipelines one read ahead.  Input to loopbody2 is zu; result of loopbody1 is in zt
@@ -1185,7 +1206,7 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x
 #define LGNPAR 1  // 128-bit no good automatic way to do this
 // loop for atomic parallel ops.  // fixed: n is #atoms (never 0), x->input, z->result, u=input atom4 and result
 //                                                                                  __SSE2__    atom2
-#define AVXATOMLOOP(preloop,loopbody,postloop) \
+#define AVXATOMLOOP(parms,lbl,preloop,loopbody,postloop) \
  int64x2_t endmask;  float64x2_t u; \
  endmask = vec_loadu_si128((int64x2_t*)(validitymask+((-n)&(NPAR-1))));  /* mask for 0 1 2 3 4 5 is xx 01 11 01 11 01 */ \
  preloop \

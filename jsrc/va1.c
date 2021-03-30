@@ -48,7 +48,7 @@ static AMON(sqrtI,  D,I, ASSERTWR(0<=*x,EWIMAG); *z=sqrt((D)*x);)
 
 #if (C_AVX&&SY_64) || EMU_AVX
 AHDR1(sqrtD,D,D){
- AVXATOMLOOP(
+ AVXATOMLOOP(1,lbl,
  __m256d zero; zero=_mm256_setzero_pd();
  __m256d neg; __m256d comp; __m256d anyneg; anyneg=zero;
 
@@ -63,7 +63,7 @@ AHDR1(sqrtD,D,D){
 }
 
 AHDR1(absD,D,D){
- AVXATOMLOOP(
+ AVXATOMLOOP(0,lbl,
   __m256d absmask; absmask=_mm256_castsi256_pd(_mm256_set1_epi64x (0x7fffffffffffffff));
  ,
   u=_mm256_and_pd(u,absmask);

@@ -48,7 +48,7 @@ APFX(powZZ, Z,Z,Z, zpow  ,,HDR1JERR)
 APFX(cirZZ, Z,Z,Z, zcir  ,NAN0;,HDR1JERRNAN)
 
 // Call SLEEF with no checking
-#define TRIGUNLIM(sleeffn)  {AVXATOMLOOP( \
+#define TRIGUNLIM(lbl,sleeffn)  {AVXATOMLOOP(1,lbl, \
  , \
  u=sleeffn(u); \
  , \
@@ -57,7 +57,7 @@ APFX(cirZZ, Z,Z,Z, zcir  ,NAN0;,HDR1JERRNAN)
 
 // Call SLEEF after checking symmetric 2-sided limits.  If comp is not true everywhere, signal err, else call sleeffn
 #if (C_AVX&&SY_64) || EMU_AVX
-#define TRIGSYMM(limit,comp,err,sleeffn)  {AVXATOMLOOP( \
+#define TRIGSYMM(lbl,limit,comp,err,sleeffn)  {AVXATOMLOOP(1,lbl, \
  __m256d thmax; thmax=_mm256_set1_pd(limit); \
  __m256d absmask; absmask=_mm256_castsi256_pd(_mm256_set1_epi64x(0x7fffffffffffffff)); \
  , \
@@ -67,7 +67,7 @@ APFX(cirZZ, Z,Z,Z, zcir  ,NAN0;,HDR1JERRNAN)
  )}
 
 // Call SLEEF after checking limits, but calculate the value to use then
-#define TRIGCLAMP(limit,decls,comp,argmod,sleeffn,resultmod)  {AVXATOMLOOP( \
+#define TRIGCLAMP(limit,decls,comp,argmod,sleeffn,resultmod)  {AVXATOMLOOP(1,lbl, \
  __m256d thmax; thmax=_mm256_set1_pd(limit); \
  decls \
  __m256d absmask; absmask=_mm256_castsi256_pd(_mm256_set1_epi64x(0x7fffffffffffffff)); \
@@ -81,7 +81,7 @@ APFX(cirZZ, Z,Z,Z, zcir  ,NAN0;,HDR1JERRNAN)
 
 #elif defined(__GNUC__)   // vector extension
 
-#define TRIGSYMM(limit,comp,err,sleeffn)  {AVXATOMLOOP( \
+#define TRIGSYMM(lbl,limit,comp,err,sleeffn)  {AVXATOMLOOP(1,lbl, \
  float64x2_t thmax={limit COMMA limit}; \
  float64x2_t absmask={*(D *)&m7f COMMA *(D *)&m7f}; \
  , \
@@ -92,7 +92,7 @@ APFX(cirZZ, Z,Z,Z, zcir  ,NAN0;,HDR1JERRNAN)
  )}
 
 // Call SLEEF after checking limits, but calculate the value to use then
-#define TRIGCLAMP(limit,decls,comp,argmod,sleeffn,resultmod)  {AVXATOMLOOP( \
+#define TRIGCLAMP(limit,decls,comp,argmod,sleeffn,resultmod)  {AVXATOMLOOP(1,lbl, \
  float64x2_t thmax={limit COMMA limit}; \
  decls \
  D absmask={*(D *)&m7f COMMA *(D *)&m7f}; \
@@ -106,7 +106,7 @@ APFX(cirZZ, Z,Z,Z, zcir  ,NAN0;,HDR1JERRNAN)
 #endif
 
 #if SLEEF
-AHDR1(expD,D,D) {  AVXATOMLOOP(
+AHDR1(expD,D,D) {  AVXATOMLOOP(1,lbl,
  ,
  u=Sleef_expd4(u);
  ,
@@ -115,7 +115,7 @@ AHDR1(expD,D,D) {  AVXATOMLOOP(
 }
 
 #if (C_AVX&&SY_64) || EMU_AVX
-AHDR1(logD,D,D) {  AVXATOMLOOP(
+AHDR1(logD,D,D) {  AVXATOMLOOP(1,lbl,
  __m256d zero; zero=_mm256_setzero_pd();
  ,
  ASSERTWR(_mm256_movemask_pd(_mm256_cmp_pd(u, zero,_CMP_LT_OQ))==0,EWIMAG);
@@ -130,10 +130,10 @@ AHDR2(powDI,D,D,I) {I v;
  else if(n-1<0)DQ(m, D u=*x++; DQC(n, *z++=intpow( u,*y);      y++;))
  else{  // repeated exponent: use parallel instructions
   DQ(m, v=*y++;  // for each exponent
-   AVXATOMLOOP(  // build result in u, which is also the input
+   AVXATOMLOOP(1, lbl, // build result in u, which is also the input
     __m256d one = _mm256_set1_pd(1.0);
    ,
-    __m256d upow;
+    {__m256d upow;
     UI rempow;  // power left to take
     if(v>=0){  // positive power
      upow=u; u = one;   // init result to 1 before powers
@@ -142,7 +142,7 @@ AHDR2(powDI,D,D,I) {I v;
      upow = u = _mm256_div_pd(one,u);  // start power at -1
      rempow=~v;  // subtract one from pos pow since we start with recip (avoids IMIN problem)
     }
-    while(rempow){if(rempow&1)u=_mm256_mul_pd(u,upow); upow=_mm256_mul_pd(upow,upow); rempow>>=1;}
+    while(rempow){if(rempow&1)u=_mm256_mul_pd(u,upow); upow=_mm256_mul_pd(upow,upow); rempow>>=1;}}
    ,
    )
   )
@@ -158,7 +158,7 @@ AHDR2(powDD,D,D,D) {D v;
    if(v==0){DQ(n, *z++=1.0;) x+=n;}
    else if(ABS(v)==inf){DQ(n, D u=*x++; ASSERT(u>=0,EWIMAG); if(u==1.0)*z=1.0; else{D vv = u>1.0?v:-v;*z=v>0?inf:0.0;} ++z;)}
    else{
-    AVXATOMLOOP(  // build result in u, which is also the input
+    AVXATOMLOOP(1,lbl,  // build result in u, which is also the input
       __m256d zero = _mm256_setzero_pd();
       __m256d vv = _mm256_set1_pd(v);  // 4 copies of exponent  (2 if __SSE2__)
      ,
@@ -174,7 +174,7 @@ AHDR2(powDD,D,D,D) {D v;
  HDR1JERR
 }
 #elif defined(__GNUC__)   // vector extension
-AHDR1(logD,D,D) {  AVXATOMLOOP(
+AHDR1(logD,D,D) {  AVXATOMLOOP(1,lbl,
  float64x2_t zero={0.0 COMMA 0.0};
  ,
  ASSERTWR(vec_any_si128(u<zero)==0,EWIMAG);
@@ -189,7 +189,7 @@ AHDR2(powDI,D,D,I) {I v;
  else if(n-1<0)DQ(m, D u=*x++; DQC(n, *z++=intpow( u,*y);      y++;))
  else{  // repeated exponent: use parallel instructions
   DQ(m, v=*y++;  // for each exponent
-   AVXATOMLOOP(  // build result in u, which is also the input
+   AVXATOMLOOP(1,lbl,  // build result in u, which is also the input
     float64x2_t one = {1.0 COMMA 1.0};
    ,
     float64x2_t upow;
@@ -217,7 +217,7 @@ AHDR2(powDD,D,D,D) {D v;
    if(v==0){DQ(n, *z++=1.0;) x+=n;}
    else if(ABS(v)==inf){DQ(n, D u=*x++; ASSERT(u>=0,EWIMAG); if(u==1.0)*z=1.0; else{D vv = u>1.0?v:-v;*z=v>0?inf:0.0;} ++z;)}
    else{
-    AVXATOMLOOP(  // build result in u, which is also the input
+    AVXATOMLOOP(1,lbl,  // build result in u, which is also the input
       float64x2_t zero = {0.0 COMMA 0.0};
       float64x2_t vv = {v COMMA v};  // 4 copies of exponent  (2 if __SSE2__)
      ,
@@ -252,7 +252,7 @@ static I jtcirx(J jt,I n,I k,D*z,D*x){D p,t;
  case  0: DQ(n, t=*x++; ASSERTWR(ABS(t)<=1.0, EWIMAG ); *z++=sqrt(1.0-t*t);); break;
  case  1: ;
 #if SLEEF
-TRIGSYMM(THMAX,_CMP_GT_OQ,EVLIMIT,Sleef_sind4)
+TRIGSYMM(lbl1,THMAX,_CMP_GT_OQ,EVLIMIT,Sleef_sind4)
 IGNORENAN
 #else
    DQ(n, t=*x++; ASSERTWR(ABS(t)<THMAX,EVLIMIT); *z++=sin(t););
@@ -260,7 +260,7 @@ IGNORENAN
    break;
  case  2:  ;
 #if SLEEF
-TRIGSYMM(THMAX,_CMP_GT_OQ,EVLIMIT,Sleef_cosd4)
+TRIGSYMM(lbl2,THMAX,_CMP_GT_OQ,EVLIMIT,Sleef_cosd4)
 IGNORENAN
 #else
  DQ(n, t=*x++; ASSERTWR(ABS(t)<THMAX,EVLIMIT); *z++=cos(t););
@@ -268,7 +268,7 @@ IGNORENAN
  break;
  case  3:  ;
 #if SLEEF
- TRIGSYMM(THMAX,_CMP_GT_OQ,EVLIMIT,Sleef_tand4)
+ TRIGSYMM(lbl3,THMAX,_CMP_GT_OQ,EVLIMIT,Sleef_tand4)
 #else
  DQ(n, t=*x++; ASSERTWR(ABS(t)<THMAX,EVLIMIT); *z++=tan(t););       
 #endif
@@ -278,7 +278,7 @@ IGNORENAN
  case  6: DQ(n, t=*x++;                                     *z++=t<-EMAX2||    EMAX2<t?inf:cosh(t););     break;
  case  7: ;
 #if SLEEF
- TRIGUNLIM(Sleef_tanhd4)
+ TRIGUNLIM(lbl7,Sleef_tanhd4)
  NAN0;  // SLEEF gives the correct answer but may raise a NaN flag
 #else
 // math library tanh is slooooow  case  7: DQ(n, t=*x++;                                     *z++=t<-TMAX?-1:TMAX<t?1:tanh(t););           break;
@@ -287,7 +287,7 @@ IGNORENAN
  break;
  case -1: ;
 #if SLEEF
-  TRIGSYMM(1.0,_CMP_GT_OQ,EWIMAG,Sleef_asind4)
+  TRIGSYMM(lblm1,1.0,_CMP_GT_OQ,EWIMAG,Sleef_asind4)
 #else
   DQ(n, t=*x++; ASSERTWR( -1.0<=t&&t<=1.0, EWIMAG ); *z++=asin(t););
 #if defined(ANDROID) && (defined(__aarch32__)||defined(__arm__)||defined(__aarch64__))
@@ -298,14 +298,14 @@ NAN0;
  break;
  case -2: ;
 #if SLEEF
-  TRIGSYMM(1.0,_CMP_GT_OQ,EWIMAG,Sleef_acosd4)
+  TRIGSYMM(lblm2,1.0,_CMP_GT_OQ,EWIMAG,Sleef_acosd4)
 #else
   DQ(n, t=*x++; ASSERTWR( -1.0<=t&&t<=1.0, EWIMAG ); *z++=acos(t););
 #endif
   break;
  case -3: ;
 #if SLEEF
-  TRIGUNLIM(Sleef_atand4)
+  TRIGUNLIM(lblm3,Sleef_atand4)
 #else
   DQ(n,                                             *z++=atan(*x++););
 #endif

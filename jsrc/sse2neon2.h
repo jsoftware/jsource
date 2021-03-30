@@ -73,10 +73,10 @@ FORCE_INLINE __m128d _mm_permute_pd(__m128d a, int control)
 // }
 
 // Reads the lower 64 bits of b and stores them into the lower 64 bits of a.
-FORCE_INLINE void _mm_storel_pd(double * mem_addr, __m128d a)
-{
-    *mem_addr = vget_low_u64(vreinterpretq_u64_f64(a));
-}
+// FORCE_INLINE void _mm_storel_pd(double * mem_addr, __m128d a)
+// {
+//     *mem_addr = vget_low_u64(vreinterpretq_u64_f64(a));
+// }
 
 // FORCE_INLINE __m128d _mm_set_pd(double e1, double e0)
 // {

@@ -324,7 +324,7 @@ AHDRP(pluspfxD,D,D){I i;
  x+=((n-1)&(NPAR-1))+1; z+=((n-1)&(NPAR-1))+1;
 #else
   // clang insists on reordering the loop, putting the update of acc AFTER the creation of the final u.  Turns out OK
-  AVXATOMLOOP(3,lbl,  // need maskload to load 0s after valid area
+  AVXATOMLOOP(3,lbl,  // unroll not needed; need maskload to load 0s after valid area
     __m256d high3=_mm256_loadu_pd((D*)(validitymask+7));
     __m256d acc=_mm256_setzero_pd(); __m256d accs;  // accumulator and place to save it 
     ,
@@ -718,8 +718,8 @@ static DF2(jtinfixd){A z;C*x,*y;I c=0,d,k,m,n,p,q,r,*s,wr,*ws,wt,zc;
  s=AS(z); s[0]=d; s[1]=zc; MCISH(s+2,1+ws,r-2);   // install shape
  k=c<<bplg(wt);   // k=#bytes in a cell of result
  if(likely(AN(z)!=0)){
-  if(m>=0){ q=p*k; JMCDECL(endmask) JMCSETMASK(endmask,q+SZI-1,0) DQ(d, JMCR(x,y,q+(SZI-1),lbl1,0,endmask) x+=q; y+=k;);  // m>0, overlapping inputs, copy them
-  }else{JMC(x,y,n*k+(SZI-1),lbl2,0)  fillv(wt,q*c,x+n*k);    // nonoverlapping: copy en bloc and fill
+  if(m>=0){ q=p*k; JMCDECL(endmask) JMCSETMASK(endmask,q,0) DQ(d, JMCR(x,y,q,lbl1,0,endmask) x+=q; y+=k;);  // m>0, overlapping inputs, copy them
+  }else{JMC(x,y,n*k,lbl2,0)  fillv(wt,q*c,x+n*k);    // nonoverlapping: copy en bloc and fill
   }
  }
  RETF(z);

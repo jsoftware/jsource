@@ -155,7 +155,7 @@ do{
        if(zexpshift>=0){zzcelllen<<=zexpshift; zzcellp<<=zexpshift;}else{zzcelllen>>=-zexpshift; zzcellp>>=-zexpshift;}
        // if the new type is recursible, make sure zz is recursive.  This simplifies logic below
        ra00(zz,zt);  // make recursive if recursible
-       JMCSETMASK(zzendmask,zzcelllen+(ZZSTARTATEND^1)*(SZI-1),ZZSTARTATEND)   // when len changes, reset mask
+       JMCSETMASK(zzendmask,zzcelllen,ZZSTARTATEND)   // when len changes, reset mask
       }
      }else{
       // empty cells.  Just adjust the type, using the type priority
@@ -186,7 +186,7 @@ do{
      jtra(z,AT(z));   // raise children only and make them recursive
     }
     // copy the cells, which have been raised if needed.  If we are copying forward, it is OK to copy fullwords
-    JMCR(CAV(zz)+zzcellp,AV(z),zzcelllen+(ZZSTARTATEND^1)*(SZI-1),loop1,ZZSTARTATEND,zzendmask)
+    JMCR(CAV(zz)+zzcellp,AV(z),zzcelllen,loop1,ZZSTARTATEND,zzendmask)
     // Release the result now that we have copied its elements.  We do this rather than calling tpop to save the overhead, on the grounds that
     // any routine that allocated memory should have freed it, so the only thing on the tpop stack should be the result.  We do this only if the
     // result was inplaceable: otherwise the block is protected somewhere else and we can't free it.
@@ -309,7 +309,7 @@ do{
   // If result is sparse, allocate 0 atoms; later, change the allocation to something that will never match a result (viz a list with negative shape)
   zzr=(zzt&SPARSE)?1:zzr; natoms=(zzt&SPARSE)?0:natoms;
   zzcelllen=natoms<<bplg(zzt);  // number of bytes in one cell.
-  JMCSETMASK(zzendmask,zzcelllen+(ZZSTARTATEND^1)*(SZI-1),ZZSTARTATEND)   // set mask for JMCR
+  JMCSETMASK(zzendmask,zzcelllen,ZZSTARTATEND)   // set mask for JMCR
 
   // # cells in result is passed in as zzncells
   // Get # atoms to allocate

@@ -140,44 +140,44 @@ static F2(jtovg){A s,z;C*x;I ar,*as,c,k,m,n,r,*sv,t,wr,*ws,zn;
 
 // these variants copy vectors or scalars, with optional repetition of items and, for the scalars, scalar repetition
 static void moveawVV(C *zv,C *av,C *wv,I c,I k,I ma,I mw,I arptreset,I wrptreset){
- JMCDECL(endmaska) JMCSETMASK(endmaska,ma+(SZI-1),0)
- JMCDECL(endmaskw) JMCSETMASK(endmaskw,mw+(SZI-1),0)
+ JMCDECL(endmaska) JMCSETMASK(endmaska,ma,0)
+ JMCDECL(endmaskw) JMCSETMASK(endmaskw,mw,0)
  I arptct=arptreset-1; I wrptct=wrptreset-1;
  if((arptct|wrptct)==0) {
    // fastest case: no replication, no scalars
   while(--c>=0){
    // copy one cell from a; advance z; advance a
-   JMCR(zv,av,ma+(SZI-1),loop1,0,endmaska); zv+=ma; av+=ma;
+   JMCR(zv,av,ma,loop1,0,endmaska); zv+=ma; av+=ma;
    // repeat for w
-   JMCR(zv,wv,mw+(SZI-1),loop2,0,endmaskw); zv+=mw; wv+=mw;
+   JMCR(zv,wv,mw,loop2,0,endmaskw); zv+=mw; wv+=mw;
   }
  }else{
   while(--c>=0){
    // copy one cell from a; advance z; advance a if not repeated
-   JMCR(zv,av,ma+(SZI-1),loop3,0,endmaska); zv+=ma; --arptct; av+=REPSGN(arptct)&ma; arptct+=REPSGN(arptct)&arptreset;
+   JMCR(zv,av,ma,loop3,0,endmaska); zv+=ma; --arptct; av+=REPSGN(arptct)&ma; arptct+=REPSGN(arptct)&arptreset;
    // repeat for w
-   JMCR(zv,wv,mw+(SZI-1),loop4,0,endmaskw); zv+=mw; --wrptct; wv+=REPSGN(wrptct)&mw; wrptct+=REPSGN(wrptct)&wrptreset;
+   JMCR(zv,wv,mw,loop4,0,endmaskw); zv+=mw; --wrptct; wv+=REPSGN(wrptct)&mw; wrptct+=REPSGN(wrptct)&wrptreset;
   }
  }
 }
 static void moveawVS(C *zv,C *av,C *wv,I c,I k,I ma,I mw,I arptreset,I wrptreset){
- JMCDECL(endmaska) JMCSETMASK(endmaska,ma+(SZI-1),0)
+ JMCDECL(endmaska) JMCSETMASK(endmaska,ma,0)
  I arptct=arptreset-1; I wrptct=wrptreset-1;
  while(--c>=0){
   // copy one cell from a; advance z; advance a if not repeated
-  JMCR(zv,av,ma+(SZI-1),loop1,0,endmaska); zv+=ma; --arptct; av+=REPSGN(arptct)&ma; arptct+=REPSGN(arptct)&arptreset;
+  JMCR(zv,av,ma,loop1,0,endmaska); zv+=ma; --arptct; av+=REPSGN(arptct)&ma; arptct+=REPSGN(arptct)&arptreset;
   // repeat for w
   mvc(mw,zv,k,wv); zv+=mw; --wrptct; wv+=REPSGN(wrptct)&k; wrptct+=REPSGN(wrptct)&wrptreset;
  }
 }
 static void moveawSV(C *zv,C *av,C *wv,I c,I k,I ma,I mw,I arptreset,I wrptreset){
- JMCDECL(endmaskw) JMCSETMASK(endmaskw,mw+(SZI-1),0)
+ JMCDECL(endmaskw) JMCSETMASK(endmaskw,mw,0)
  I arptct=arptreset-1; I wrptct=wrptreset-1;
  while(--c>=0){
   // copy one cell from a; advance z; advance a if not repeated
   mvc(ma,zv,k,av); zv+=ma; --arptct; av+=REPSGN(arptct)&k; arptct+=REPSGN(arptct)&arptreset;
   // repeat for w
-  JMCR(zv,wv,mw+(SZI-1),loop1,0,endmaskw); zv+=mw; --wrptct; wv+=REPSGN(wrptct)&mw; wrptct+=REPSGN(wrptct)&wrptreset;
+  JMCR(zv,wv,mw,loop1,0,endmaskw); zv+=mw; --wrptct; wv+=REPSGN(wrptct)&mw; wrptct+=REPSGN(wrptct)&wrptreset;
  }
 }
 int (*p[4]) (int x, int y);
@@ -213,7 +213,7 @@ F2(jtover){AD * RESTRICT z;C*zv;I replct,framect,acr,af,ar,*as,k,ma,mw,p,q,r,t,w
     I si=AS(s)[0]; si=ar==wr?si:1; si+=AS(l)[0]; si=lr==0?2:si; lr=lr==0?1:lr; ASSERT(si>=0,EVLIMIT);  // get short item count; adjust to 1 if lower rank; add long item count; check for overflow; adjust if atom+atom
     I klg=bplg(t); I alen=AN(a)<<klg; I wlen=AN(w)<<klg;
     GA(z,t,AN(a)+AN(w),lr,AS(l)); AS(z)[0]=si; C *x=CAV(z);  // install # items after copying shape
-    JMC(x,CAV(a),alen+(SZI-1),loop1,0); JMC(x+alen,CAV(w),wlen+(SZI-1),loop2,0);
+    JMC(x,CAV(a),alen,loop1,0); JMC(x+alen,CAV(w),wlen,loop2,0);
     // If a & w are both recursive abandoned pristine, we can take ownership of the contents by marking them nonrecursive and marking z recursive.
     // We could also zap a & w, but we don't because it's just a box header and it will be freed by a caller anyway - and they might be virtual, which would fail
     // Pristinity is required because otherwise there might be blocks present in both, and the usecount would be too low in result

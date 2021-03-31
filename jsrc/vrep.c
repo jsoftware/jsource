@@ -79,14 +79,14 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
   // Convert skipcount to bytes, and advance wvv to point to the first cell that may move
   n+=CTTZI(nextwd^VALIDBOOLEAN)>>LGBB;  // complement; count original 1s, add to n.  m cannot be 0 so there must be a valid 0 bit in nextwd
   zvv=wvv=(C*)wvv+k*n;  // step input over items left in place; use that as the starting output pointer also
-  exactlen=!!(k&(SZI-1));  // if items are not multiples `of I, require exact len.  Since we skip an unchanged prefix, we will seldom have address contention during the copy
+  exactlen=!!(k&(SZI-1));  // if items are not multiples `of I, require exact len.  Since we skip an unchanged prefix, we will seldom have address contention during the copy  scaf could tighten this 
   // since the input is abandoned and no cell is ever duplicated, pristinity is unchanged
  }
  AS(z)[wf]=p;  // move in length of item axis, #bytes per item of cell
  if(!zn)R z;  // If no atoms to process, return empty
 
 // original  DO(c, DO(m, if(b[i]){MC(zv,wv,k); zv+=k;} wv+=k;);); break;
- JMCDECL(endmask) JMCSETMASK(endmask,k+((SZI-1)&(exactlen-1)),exactlen)   // set up for irregular move, if we need one
+ JMCDECL(endmask) JMCSETMASK(endmask,k,exactlen)   // set up for irregular move, if we need one
   
  while(--c>=0){
   // at top of loop n is biased by the number of leading bytes to skip. wvv points to the first byte to process
@@ -107,7 +107,7 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
 #if BW==64
    case sizeof(UI4): NOUNROLL while(bitstack){I bitx=CTTZI(bitstack); *(UI4*)zvv=((UI4*)wvv)[bitx]; zvv=(C*)zvv+k; bitstack&=bitstack-1;} break;
 #endif
-   default: NOUNROLL while(bitstack){I bitx=CTTZI(bitstack); JMCR(zvv,(C*)wvv+k*bitx,k+((SZI-1)&(exactlen-1)),lp000,exactlen,endmask); zvv=(C*)zvv+k; bitstack&=bitstack-1;} break;  // overwrite OK
+   default: NOUNROLL while(bitstack){I bitx=CTTZI(bitstack); JMCR(zvv,(C*)wvv+k*bitx,k,lp000,exactlen,endmask); zvv=(C*)zvv+k; bitstack&=bitstack-1;} break;  // overwrite OK
    }
 
    wvv=(C*)wvv+(k<<LGBW);  // advance base to next batch of 64

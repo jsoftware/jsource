@@ -732,7 +732,7 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[12
     // boxes will be in AAV(z), in order.  Details of hijacking tnextpushp are discussed in jtbox().
     A *pushxsave = jt->tnextpushp; jt->tnextpushp=AAV(zz);  // save tstack info before allocation
     // **** MUST NOT FAIL FROM HERE UNTIL THE END, WHERE THE ALLOCATION SYSTEM CAN BE RESTORED ****
-    EACHCUT(GAE(z,wt,d*wcn,r,AS(w),break); AS(z)[0]=d; ACINIT(z,ACUC1) JMC(CAV(z),v1,d*k+(SZI-1),lp000,0) ra00(z,wt););    // allocate, but don't grow the tstack.  Set usecount of cell to 1.  make recursive (cannot be sparse).  Put allocated addr into *jt->tnextpushp++
+    EACHCUT(GAE(z,wt,d*wcn,r,AS(w),break); AS(z)[0]=d; ACINIT(z,ACUC1) JMC(CAV(z),v1,d*k,lp000,0) ra00(z,wt););    // allocate, but don't grow the tstack.  Set usecount of cell to 1.  make recursive (cannot be sparse).  Put allocated addr into *jt->tnextpushp++
     // restore the allocation system
     jt->tnextpushp=pushxsave;   // restore tstack pointer
     // **** ALLOCATION SYSTEM OK NOW ****

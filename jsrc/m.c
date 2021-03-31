@@ -145,7 +145,7 @@ B jtmeminit(JS jjt,I nthreads){I k,m=MLEN;
 
 // Audit all memory chains to detect overrun
 #if SY_64
-#define AUDITFILL ||((MEMAUDIT&17)&&(US)AFHRH(Wx)!=Wx->fill)||((MEMAUDIT&0x4)?AC(Wx)!=(I)0xdeadbeefdeadbeefLL:0)
+#define AUDITFILL ||((MEMAUDIT&0x4)?AC(Wx)!=(I)0xdeadbeefdeadbeefLL:0)
 #else
 #define AUDITFILL ||((MEMAUDIT&0x4)?AC(Wx)!=(I)0xdeadbeefL:0)
 #endif

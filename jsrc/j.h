@@ -918,50 +918,63 @@ extern unsigned int __cdecl _clearfp (void);
 // call to atomic2(), similar to IRS2.  fs is a local block to use to hold the rank (declared as D fs[16]), cxx is the Cxx value of the function to be called
 #define ATOMIC2(jt,a,w,fs,l,r,cxx) (FAV((A)(fs))->fgh[0]=ds(cxx), FAV((A)(fs))->id=CQQ, FAV((A)(fs))->lrr=(RANK2T)((l)<<RANKTX)+(r), jtatomic2(jt,(a),(w),(A)fs))
 
-// memory copy, for J blocks.  Like memcpy, but knows it can fetch outside the arg boundaries for LIT-type args
+// memory copy, for J blocks.  Like memcpy, but knows it can fetch outside the arg boundaries for LIT-type args.  l may be 0
 // if bytelen is 1, the arg may be of any length; if 0, must be a multiple of Is and the low bits of length are ignored; full words only are moved
 // address may be identical but otherwise should not overlap
-// Normal use allowing overcopy: JMC(d,s,l+(SZI-1),lbl,0)    where lbl is a unique statement label
+// Normal use allowing overcopy: JMC(d,s,l,lbl,0)    where lbl is a unique statement label
 // Normal use not allowing overcopy: JMC(d,s,l,lbl,1)    where lbl is a unique statement label
-// For use in loop, allowing overcopy: JMCDECL(endmask) JMCSETMASK(endmask,l+(SZI-1),0)   DO(...,  JMCR(d,s,l+(SZI-1),lbl,0,endmask)    )
+// For use in loop, allowing overcopy: JMCDECL(endmask) JMCSETMASK(endmask,l,0)   DO(...,  JMCR(d,s,l,lbl,0,endmask)    )
 // For use in loop, not allowing overcopy: JMCDECL(endmask) JMCSETMASK(endmask,l,1)   DO(...,  JMCR(d,s,l,lbl,1,endmask)    )
+//
+// Unaligned stores seem to take 10 cycles to clear, so we try to have no more than 1 of them.  If the length exceeds one store,
+// move 1 full store to begin with and align the store pointer and length to within that block
 #if C_AVX2 || EMU_AVX2
 #define JMCDECL(mskname) __m256i mskname;
-#define JMCSETMASK(mskname,l,bytelen) mskname=_mm256_loadu_si256((__m256i*)(validitymask+((-(((l)-bytelen)>>LGSZI))&(NPAR-1)))); /* 0->1111 1->1000 3->1110 */
-#define JMCcommon(d,s,l,lbl,bytelen,mskname,mskdecl) \
+#define JMCSETMASK(mskname,l,bytelen) mskname=_mm256_loadu_si256((__m256i*)(validitymask+((-(((l)+SZI*(1-bytelen)-1)>>LGSZI))&(NPAR-1)))); /* 0->1111 1->1000 3->1110 */
+#define JMCcommon(d,s,l,lbl,bytelen,mskname,mskdecl,mskset) \
 { \
- I ll=(l)-bytelen; \
- if(likely(!bytelen||ll>=0)){ \
-  void *src=(s); \
-  PREFETCH(src);  /* start bringing in the start of data */  \
-  void *dst=(d); \
-  mskdecl \
+ void *src=(s); \
+ PREFETCH(src);  /* start bringing in the start of data */  \
+ mskdecl \
+ void *dst=(d); \
+ I ll=(l);  /* len of valid data */ \
+ /* if the operation is long, move 1 block to align the store pointer */ \
+ if(ll>NPAR*SZI){ \
+  _mm256_storeu_si256((__m256i*)dst,_mm256_loadu_si256((__m256i*)src)); \
+  I overwr=(I)dst&(NPAR*SZI-1); dst=(C*)dst+NPAR*SZI-overwr; src=(C*)src+NPAR*SZI-overwr; ll-=NPAR*SZI-overwr; JMCSETMASK(mskname,ll,bytelen) \
+ }else{mskset}  /* if short op, set mask if not set outside loop */ \
+ if(likely(ll>0)){ /* an empty vector has no guaranteed pad */ \
+  ll+=SZI*(1-bytelen)-1; /* len-1 to move, rounded up if moving qwords */  \
   /* copy the remnants at the end - bytes and Is.  Do this early because they have address conflicts that will take 20 */ \
   /* cycles to sort out, and we can put that time into the switch and loop branch overhead */ \
   /* First, the odd bytes if any */ \
   /* if there is 1 byte to do low bits of ll are 0, which means protect 7 bytes, thus 0->7, 1->6, 7->0 */ \
-  if(likely(bytelen!=0))STOREBYTES((C*)dst+(ll&(-SZI)),*(UI*)((C*)src+(ll&(-SZI))),~ll&(SZI-1));  /* copy remnant, 1-8 bytes. */ \
+  if(bytelen!=0)STOREBYTES((C*)dst+(ll&(-SZI)),*(UI*)((C*)src+(ll&(-SZI))),~ll&(SZI-1));  /* copy remnant, 1-8 bytes. */ \
   /* copy up till last section */ \
-  if(likely((ll&=(-SZI))>0)){  /* reduce ll by # bytes processed above, 1-8 (if bytelen), 0 if !bytelen (discarding garbage length).  Any left? */ \
+  if(likely((ll-=SZI)>=0)||(bytelen==0)){  /* reduce ll by # bytes processed above, 1-8 (if bytelen), 0 if !bytelen (discarding garbage length).  Any left? */ \
    /* copy last section, 1-4 Is. ll bits 00->4 bytes, 01->3 bytes, etc  */ \
-   ll=(ll-SZI)&(-NPAR*SZI);  /* ll=start of last section, 1-4 Is */ \
+   ll&=(-NPAR*SZI);  /* ll=start of last section, 1-4 Is */ \
    _mm256_maskstore_epi64((I*)((C*)dst+ll),mskname,_mm256_maskload_epi64((I*)((C*)src+ll),mskname)); \
    /* copy 128-byte sections, first one being 0, 4, 8, or 12 Is. There could be 0 to do */ \
-   switch((ll>>(LGNPAR+LGSZI))&(4-1)){ \
-   lbl: _mm256_storeu_si256((__m256i*)dst,_mm256_loadu_si256((__m256i*)src)); dst=(C*)dst+NPAR*SZI; src=(C*)src+NPAR*SZI; \
-   case 3: _mm256_storeu_si256((__m256i*)dst,_mm256_loadu_si256((__m256i*)src)); dst=(C*)dst+NPAR*SZI; src=(C*)src+NPAR*SZI; \
-   case 2: _mm256_storeu_si256((__m256i*)dst,_mm256_loadu_si256((__m256i*)src)); dst=(C*)dst+NPAR*SZI; src=(C*)src+NPAR*SZI; \
-   case 1: _mm256_storeu_si256((__m256i*)dst,_mm256_loadu_si256((__m256i*)src)); dst=(C*)dst+NPAR*SZI; src=(C*)src+NPAR*SZI; \
-   case 0: if(likely((ll-=4*NPAR*SZI)>=0))goto lbl; \
+   UI n128=((ll+((NPAR-1)<<(LGNPAR+LGSZI)))>>(LGNPAR+LGSZI+2));  /* # 128-byte blocks with data, could be 0 */ \
+   if(n128>0){ /* this test is worthwhile for short args */ \
+    switch((ll>>(LGNPAR+LGSZI))&(4-1)){ \
+    lbl: ; \
+    case 0: _mm256_storeu_si256((__m256i*)dst,_mm256_loadu_si256((__m256i*)src)); dst=(C*)dst+NPAR*SZI; src=(C*)src+NPAR*SZI; \
+    case 3: _mm256_storeu_si256((__m256i*)dst,_mm256_loadu_si256((__m256i*)src)); dst=(C*)dst+NPAR*SZI; src=(C*)src+NPAR*SZI; \
+    case 2: _mm256_storeu_si256((__m256i*)dst,_mm256_loadu_si256((__m256i*)src)); dst=(C*)dst+NPAR*SZI; src=(C*)src+NPAR*SZI; \
+    case 1: _mm256_storeu_si256((__m256i*)dst,_mm256_loadu_si256((__m256i*)src)); dst=(C*)dst+NPAR*SZI; src=(C*)src+NPAR*SZI; \
+    if(--n128>0)goto lbl; /* default case */ \
+    } \
    } \
   } \
  } \
 }
-#define JMC(d,s,l,lbl,bytelen) JMCcommon(d,s,l,lbl,bytelen,endmask,JMCDECL(endmask) JMCSETMASK(endmask,ll,0))  //   0->1111 1->1000 3->1110 bytelen has already been applied here
-#define JMCR(d,s,l,lbl,bytelen,maskname) JMCcommon(d,s,l,lbl,bytelen,maskname,)
+#define JMC(d,s,l,lbl,bytelen) JMCcommon(d,s,l,lbl,bytelen,endmask,JMCDECL(endmask),JMCSETMASK(endmask,ll,bytelen))  //   0->1111 1->1000 3->1110 bytelen has already been applied here
+#define JMCR(d,s,l,lbl,bytelen,maskname) JMCcommon(d,s,l,lbl,bytelen,maskname,,)
 #else
-#define JMC(d,s,l,lbl,bytelen) MC(d,s,bytelen?(l):(l)&-SZI);
-#define JMCR(d,s,l,lbl,bytelen,maskname) MC(d,s,bytelen?(l):(l)&-SZI);
+#define JMC(d,s,l,lbl,bytelen) MC(d,s,l);
+#define JMCR(d,s,l,lbl,bytelen,maskname) MC(d,s,l);
 #define JMCDECL(mskname)
 #define JMCSETMASK(mskname,l,bytelen)
 #endif

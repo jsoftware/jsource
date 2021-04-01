@@ -1,10 +1,5 @@
 #include "cpuinfo.h"
 
-#if defined(TARGET_OS_IPHONE)||defined(TARGET_OS_IOS)||defined(TARGET_OS_TV)||defined(TARGET_OS_WATCH)
-#define TARGET_IOSDEVICE 1
-#endif
-
-
 extern uint64_t g_cpuFeatures;
 
 #if defined(__aarch32__)||defined(__arm__)||defined(_M_ARM)
@@ -18,7 +13,7 @@ void cpuInit(void)
 
 #elif defined(__aarch64__)||defined(_M_ARM64)
 
-#ifndef TARGET_IOSDEVICE
+#ifndef __APPLE__
 #include <sys/auxv.h>
 #include <asm/hwcap.h>
 #include <arm_neon.h>
@@ -30,7 +25,7 @@ void cpuInit(void)
 {
   g_cpuFeatures = 0;
 
-#ifndef TARGET_IOSDEVICE
+#ifndef __APPLE__
   unsigned long hwcaps= getauxval(AT_HWCAP);
 
 #if defined(ANDROID)
@@ -370,7 +365,7 @@ void OPENSSL_setcap(void)
 {
 #if defined(__aarch64__)||defined(_M_ARM64)
   OPENSSL_armcap_P = ARMV7_NEON;
-#ifndef TARGET_IOSDEVICE
+#ifndef __APPLE__
   OPENSSL_armcap_P |= (g_cpuFeatures & ARM_HWCAP_AES) ? ARMV8_AES : 0;
   OPENSSL_armcap_P |= (g_cpuFeatures & ARM_HWCAP_SHA1) ? ARMV8_SHA1 : 0;
   OPENSSL_armcap_P |= (g_cpuFeatures & ARM_HWCAP_SHA2) ? ARMV8_SHA256 : 0;

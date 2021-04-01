@@ -19,12 +19,15 @@ jplatform=(..) j64x=(..) ./build_libj.sh
 
 where 
 jplatform : linux darwin raspberry  (default host)
-j64x : j64 j64avx j64avx2 j32  (default host or j64avx)
+j64x : j64 j64avx j64avx2 j64arm j32  (default host or j64avx)
 
 # binaries generated inside the bin folder under jsource
 
 # eg. build j64 binaries
 jplatform=linux j64x=j64 ./build_libj.sh
+
+# apple m1 libj.dylib
+jplatform=darwin j64x=j64arm NO_SHA_ASM=1 ./build_libj.sh
 
 # linux and j64 is the default on 64-bit linux, so this is fine
 ./build_libj.sh
@@ -32,6 +35,9 @@ jplatform=linux j64x=j64 ./build_libj.sh
 # the easiest way to build all binaries
 # this will run ./clean.sh and can detect the host platform
 ./build_all.sh
+
+# apple m1
+j64x=j64arm NO_SHA_ASM=1 ./build_all.sh
 
 # test
 # copy binaries to jlibrary/bin folder 

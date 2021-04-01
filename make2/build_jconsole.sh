@@ -36,7 +36,11 @@ USE_LINENOISE="${USE_LINENOISE:=1}"
 # use -DC_NOMULTINTRINSIC to continue to use more standard c in version 4
 # too early to move main linux release package to gcc 5
 
+if [ -z "${j64x##*arm*}" ]; then
+macmin="-target arm64-apple-macos11"
+else
 macmin="-mmacosx-version-min=10.6"
+fi
 
 if [ "x$CC" = x'' ] ; then
 if [ -f "/usr/bin/cc" ]; then
@@ -153,6 +157,10 @@ LDFLAGS=" -ldl $LDTHREAD $macmin "
 ;;
 darwin_j64avx2)
 CFLAGS="$common $macmin"
+LDFLAGS=" -ldl $LDTHREAD $macmin "
+;;
+darwin_j64arm) # darwin arm
+CFLAGS="$common $macmin -march=armv8-a+crc "
 LDFLAGS=" -ldl $LDTHREAD $macmin "
 ;;
 windows_j32)

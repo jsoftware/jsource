@@ -35,7 +35,11 @@ fi
 # use -DC_NOMULTINTRINSIC to continue to use more standard c in version 4
 # too early to move main linux release package to gcc 5
 
+if [ -z "${j64x##*arm*}" ]; then
+macmin="-target arm64-apple-macos11"
+else
 macmin="-mmacosx-version-min=10.6"
+fi
 
 if [ "x$CC" = x'' ] ; then
 if [ -f "/usr/bin/cc" ]; then
@@ -339,6 +343,17 @@ SRC_ASM="${SRC_ASM_MAC}"
 GASM_FLAGS="$macmin"
 FLAGS_SLEEF=" -DENABLE_AVX2 "
 FLAGS_BASE64=" -DHAVE_AVX2=1 "
+;;
+
+darwin_j64arm) # darwin arm
+TARGET=libj.dylib
+CFLAGS="$common $macmin $common -march=armv8-a+crc -DC_CRC32C=1 "
+LDFLAGS=" -dynamiclib -lm -ldl $LDOPENMP $LDTHREAD $macmin"
+OBJS_AESARM=" aes-arm.o "
+SRC_ASM=""
+GASM_FLAGS="$macmin"
+FLAGS_SLEEF=" -DENABLE_ADVSIMD "
+FLAGS_BASE64=" -DHAVE_NEON64=1 "
 ;;
 
 windows_j32) # windows x86

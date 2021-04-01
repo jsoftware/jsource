@@ -89,7 +89,7 @@ z=(f1)(jtinplace,gx,fs);
 RZ(z);
 EPILOG(z);
 }
-DF1(on1){PREF1(on1cell); R on1cell(jt,w,self);}
+DF1(on1){PREF1(on1cell); R on1cell(jt,w,self);}  // pass inplaceability through
 
 DF2(jtupon2cell){F2PREFIP;DECLFG;A z;PROLOG(0114);
 PUSHZOMB; ARGCHK2D(a,w) A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)(intptr_t)((I)a+((I)jtinplace&JTINPLACEA)); A gx;
@@ -101,7 +101,7 @@ jtinplace=FAV(fs)->flag&VJTFLGOK1?jtinplace:jt;
 RZ(z=(f1)(jtinplace,gx,fs));
 EPILOG(z);
 }
-DF2(jtupon2){PREF2(jtupon2cell); R jtupon2cell(jt,a,w,self);}
+DF2(jtupon2){PREF2(jtupon2cell); R jtupon2cell(jt,a,w,self);}  // pass inplaceability through
 
 // special case for rank 0.  Transfer to loop.  
 // if there is only one cell, process it through on1, which understands this type
@@ -139,9 +139,9 @@ static DF2(atcomp){AF f;A z;
  f=atcompf(a,w,self);
  I postflags=(I)f&3;  // extract postprocessing from return
  f=(AF)((I)f&-4);    // restore function address
- if(f){
+ if(likely(f!=0)){
   z=f(jt,a,w,self);
-  if(z){if(postflags&2){z=num((IAV(z)[0]!=AN(AR(a)>=AR(w)?a:w))^(postflags&1));}}
+  if(likely(z!=0)){if(postflags&2){z=num((IAV(z)[0]!=AN(AR(a)>=AR(w)?a:w))^(postflags&1));}}
  }else z=upon2(a,w,self);
  RETF(z);
 }
@@ -152,9 +152,9 @@ static DF2(atcomp0){A z;AF f;
  I postflags=(I)f&3;  // extract postprocessing from return
  f=(AF)((I)f&-4);    // restore function address
  PUSHCCT(1.0)
- if(f){
+ if(likely(f!=0)){
   z=f(jt,a,w,self);
-  if(z){if(postflags&2){z=num((IAV(z)[0]!=AN(AR(a)>=AR(w)?a:w))^(postflags&1));}}
+  if(likely(z!=0)){if(postflags&2){z=num((IAV(z)[0]!=AN(AR(a)>=AR(w)?a:w))^(postflags&1));}}
  }else z=upon2(a,w,self);
  RETF(z);
 }
@@ -182,7 +182,7 @@ static DF2(atcomp0){A z;AF f;
 F2(jtatop){A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=0,m=-1;V*av,*wv;
  ASSERTVVn(a,w);
  av=FAV(a); c=av->id;
- if(AT(w)&NOUN){  // u@n
+ if(unlikely((AT(w)&NOUN)!=0)){  // u@n
   if(c==CEXEC){  // ".@n
    // See if the argument is a string containing a single name.  If so, pass the name into the verb.
    // We can't lex a general sentence because lexing requires context to know how to treat assignments.  And,
@@ -194,7 +194,7 @@ F2(jtatop){A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=0,m=-1
  }
  wv=FAV(w); d=wv->id;
  if((d&~1)==CLEFT){
-  // the very common case u@] and u@[.  Take ASGSAFE and inplaceability from u.  No IRS.  Vector the monad straight to u; vector the dyad to our routine that shuffles args and inplace bits
+  // the very common case u@] and u@[.  Take ASGSAFE and inplaceability from u.  No IRS.
   flag2 |= c==CBOX?(VF2BOXATOP1|VF2BOXATOP2):0;   // if <@][, note that
   R fdef(0,CAT,VERB, onright1,d&1?onright2:onleft2, a,w,0, (av->flag&VASGSAFE)+(av->flag&VJTFLGOK1)*((VJTFLGOK2+VJTFLGOK1)/VJTFLGOK1), RMAX,RMAX,RMAX);
  }
@@ -253,8 +253,8 @@ F2(jtatop){A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=0,m=-1
   flag+=((6+(cd&1))+8*((cb+n)&7))&REPSGN(~n); flag&=REPSGN(n)|~VJTFLGOK2;  // only if n>=0, set comp type & clear FLGOK2
  }
 
- if(d==COPE&&!(flag2&VF2BOXATOP1))flag2|=VF2ATOPOPEN1;  // @>, but not <@> which would be confused with &.>
- if(d==CCOMMA&&av->valencefns[0]==jtisitems)f1=jtisnotempty;  // *@#@,
+ if(unlikely(d==COPE))if(!(flag2&VF2BOXATOP1))flag2|=VF2ATOPOPEN1;  // @>, but not <@> which would be confused with &.>
+ if(unlikely(d==CCOMMA))if(av->valencefns[0]==jtisitems)f1=jtisnotempty;  // *@#@,
 
  // Copy the open/raze status from v into u@v
  flag2 |= wv->flag2&(VF2WILLOPEN1|VF2WILLOPEN2W|VF2WILLOPEN2A|VF2USESITEMCOUNT1|VF2USESITEMCOUNT2W|VF2USESITEMCOUNT2A);
@@ -263,8 +263,8 @@ F2(jtatop){A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=0,m=-1
  // 
  // Install the flags to indicate that this function starts out with a rank loop, and thus can be subsumed into a higher rank loop
  // If the compound has rank 0, switch to the loop for that; if rank is infinite, avoid the loop
- if(f1==on1){flag2|=VF2RANKATOP1; if(wv->mr==RMAX)f1=on1cell; else{if(wv->mr==0)f1=jton10;}}
- if(f2==jtupon2){flag2|=VF2RANKATOP2; if(wv->lrr==(UI)R2MAX)f2=jtupon2cell; else{if(wv->lrr==0)f2=jtupon20;}}
+ if(likely(f1==on1)){flag2|=VF2RANKATOP1; f1=wv->mr==RMAX?on1cell:f1; f1=wv->mr==0?jton10:f1;}
+ if(likely(f2==jtupon2)){flag2|=VF2RANKATOP2; f2=wv->lrr==(UI)R2MAX?jtupon2cell:f2; f2=wv->lrr==0?jtupon20:f2;}
 
  R fdef(flag2,CAT,VERB, f1,f2, a,w,h, flag, (I)wv->mr,(I)lrv(wv),rrv(wv));
 }
@@ -325,7 +325,7 @@ F2(jtatco){A f,g;AF f1=on1cell,f2=jtupon2cell;C c,d,e;I flag, flag2=0,m=-1;V*av,
 // e has been destroyed
 
  // comparison combinations
- if(0<=m){
+ if(unlikely(0<=m)){
   // the left side is a comparison combiner.  See if the right is a comparison
   e=d;  // repurpose e as comparison op
   e=d==CFIT&&wv->localuse.lD==1.0?FAV(wv->fgh[0])->id:e;  // e is the comparison op
@@ -348,9 +348,9 @@ F2(jtampco){AF f1=on1cell,f2=on2cell;C c,d;I flag,flag2=0,linktype=0;V*wv;
  c=ID(a); wv=FAV(w); d=wv->id;  // c=pseudochar for u, d=pseudochar for v
  // Set flag wfith ASGSAFE status from f/g; keep INPLACE? in sync with f1,f2.  Inplace only if monad v can handle it
  flag = ((FAV(a)->flag&wv->flag)&VASGSAFE)+((wv->flag&VJTFLGOK1)*((VJTFLGOK2+VJTFLGOK1)/VJTFLGOK1));
- if(c==CBOX){flag2 |= VF2BOXATOP1;}  // mark this as <@f - monad only
- else if(BOTHEQ8(c,d,CSLASH,CCOMMA)){f1=jtredravel;}    // f/&:, y
- else if(BOTHEQ8(c,d,CRAZE,CCUT)&&boxatop(w)){  // w is <@g;.k    detect ;&:(<@(f/\));._2 _1 1 2 y
+ if(unlikely(c==CBOX)){flag2 |= VF2BOXATOP1;}  // mark this as <@f - monad only
+ else if(unlikely(BOTHEQ8(c,d,CSLASH,CCOMMA))){f1=jtredravel;}    // f/&:, y
+ else if(unlikely(BOTHEQ8(c,d,CRAZE,CCUT)))if(boxatop(w)){  // w is <@g;.k    detect ;&:(<@(f/\));._2 _1 1 2 y
   if((((I)1)<<(wv->localuse.lI+3))&0x36) { // fetch k (cut type); bits are 3 2 1 0 _1 _2 _3; is 1/2-cut?
    A wf=wv->fgh[0]; V *wfv=FAV(wf); A g=wfv->fgh[1]; V *gv=FAV(g);  // w is <@g;.k  find g
    if((gv->id&~(CBSLASH^CBSDOT))==CBSLASH) {  // g is gf\ or gf\.
@@ -361,8 +361,8 @@ F2(jtampco){AF f1=on1cell,f2=on2cell;C c,d;I flag,flag2=0,linktype=0;V*wv;
    }
   }
  }
- else if(BOTHEQ8(c,d,CGRADE,CGRADE)){f1=jtranking;  flag&=~VJTFLGOK1;flag+=VIRS1;}  // /:&:/: monad
- else if(BOTHEQ8(c,d,CCOMMA,CBOX)){f2=jtlink; linktype=ACINPLACE;}  // x ,&< y   supports IP 
+ else if(unlikely(BOTHEQ8(c,d,CGRADE,CGRADE))){f1=jtranking;  flag&=~VJTFLGOK1;flag+=VIRS1;}  // /:&:/: monad
+ else if(unlikely(BOTHEQ8(c,d,CCOMMA,CBOX))){f2=jtlink; linktype=ACINPLACE;}  // x ,&< y   supports IP 
 
  // Copy the monad open/raze status from v into u&:v
  flag2 |= wv->flag2&(VF2WILLOPEN1|VF2USESITEMCOUNT1);
@@ -412,20 +412,20 @@ F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;I flag,flag2=0,linktype=0,mode=-1,p,r;V*u,*
   // a improperly.  If the noun is inplaceable there's no way it can get assigned to a name after m&v
   // Otherwise, mark the noun as non-inplaceable (so it will not be modified during use).  If the derived verb is used in another sentence, it must first be
   // assigned to a name, which will protect values inside it.
-  if(AC(a)>=0){flag &= ~VASGSAFE;}else{ACIPNO(a);}
+  if(likely(AC(a)>=0)){flag &= ~VASGSAFE;}else{ACIPNO(a);}   // scaf could do better?
   
-  if((-AN(a)&-AR(a))<0){
+  if((-AN(a)&-AR(a))<0){  // a is not atomic and not empty
     // c holds the pseudochar for the v op.  If v is u!.n, replace c with the pseudochar for n
     // Also set b if the fit is !.0
-   if(b=c==CFIT&&v->fgh[1]==num(0))c=ID(v->fgh[0]); 
+   if(unlikely(b=c==CFIT))if(v->fgh[1]==num(0))c=ID(v->fgh[0]); 
    mode=-1; mode=c==CIOTA?IIDOT:mode; mode=c==CICO?IICO:mode;
   }
-  if(0<=mode){
+  if(unlikely(0<=mode)){
    if(b){PUSHCCT(1.0) h=indexofsub(mode,a,mark); POPCCT f1=ixfixedleft0; flag&=~VJTFLGOK1;}
    else {            h=indexofsub(mode,a,mark);             f1=ixfixedleft ; flag&=~VJTFLGOK1;}
   }else switch(c){
    case CWORDS: RZ(a=fsmvfya(a)); f1=jtfsmfx; flag&=~VJTFLGOK1; break;
-   case CIBEAM: if(v->fgh[0]&&v->fgh[1]&&128==i0(v->fgh[0])&&3==i0(v->fgh[1])){RZ(h=crccompile(a)); f1=jtcrcfixedleft; flag&=~VJTFLGOK1;}
+   case CIBEAM: if(v->fgh[0]&&v->fgh[1]&&128==i0(v->fgh[0])&&3==i0(v->fgh[1])){RZ(h=crccompile(a)); f1=jtcrcfixedleft; flag&=~VJTFLGOK1;} break;
   }
   R fdef(0,CAMP,VERB, f1,with2, a,w,h, flag, RMAX,RMAX,RMAX);
  case VN: 
@@ -437,16 +437,16 @@ F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;I flag,flag2=0,linktype=0,mode=-1,p,r;V*u,*
   // a improperly.  If the noun is isnplaceable there's no way it can get assigned to a name after m&v
   // Otherwise, mark the noun as non-inplaceable (so it will not be modified during use).  If the derived verb is used in another sentence, it must first be
   // assigned to a name, which will protect values inside it.
-  if(AC(w)>=0){flag &= ~VASGSAFE;}else{ACIPNO(w);}
+  if(likely(AC(w)>=0)){flag &= ~VASGSAFE;}else{ACIPNO(w);}
   if((-AN(w)&-AR(w))<0){
     // c holds the pseudochar for the v op.  If v is u!.n, replace c with the pseudochar for n
     // Also set b if the fit is !.0
-   c=v->id; p=v->flag&255; if(b=c==CFIT&&v->fgh[1]==num(0))c=ID(v->fgh[0]);
-   if(7==(p&7))mode=II0EPS+(p>>3);  /* (e.i.0:)  etc. */
+   c=v->id; p=v->flag&255; if(unlikely(b=c==CFIT))if(v->fgh[1]==num(0))c=ID(v->fgh[0]);
+   if(unlikely(7==(p&7)))mode=II0EPS+(p>>3);  /* (e.i.0:)  etc. */
    else      mode=c==CEPS?IEPS:-1;
   }
-  if(0<=mode){
-   if(b){PUSHCCT(1.0) h=indexofsub(mode,w,mark); POPCCT f1=ixfixedright0; flag&=~VJTFLGOK1;}
+  if(unlikely(0<=mode)){
+   if(unlikely(b)){PUSHCCT(1.0) h=indexofsub(mode,w,mark); POPCCT f1=ixfixedright0; flag&=~VJTFLGOK1;}
    else {            h=indexofsub(mode,w,mark);             f1=ixfixedright ; flag&=~VJTFLGOK1;}
   }
   R fdef(0,CAMP,VERB, f1,with2, a,w,h, flag, RMAX,RMAX,RMAX);
@@ -456,7 +456,7 @@ F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;I flag,flag2=0,linktype=0,mode=-1,p,r;V*u,*
   v=FAV(w); c=v->id; r=v->mr;   // c=pseudochar for v
   // Set flag with ASGSAFE status from f/g; keep INPLACE? in sync with f1,f2.  To save tests later, inplace only if monad v can handle it
   flag = ((FAV(a)->flag&v->flag)&VASGSAFE)+((v->flag&VJTFLGOK1)*((VJTFLGOK2+VJTFLGOK1)/VJTFLGOK1));
-  if((c&~4)==CFORK){   // FORK &
+  if(unlikely((c&~4)==CFORK)){   // FORK &
    if(c==CFORK)d=ID(v->fgh[2]);
    if(CIOTA==ID(v->fgh[1])&&(!d||((d&~1)==CLEFT)&&equ(ds(CALP),v->fgh[0]))){  // a.&i. or (a. i. ][)
     u=FAV(a); d=u->id;
@@ -492,8 +492,8 @@ F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;I flag,flag2=0,linktype=0,mode=-1,p,r;V*u,*
  // Install the flags to indicate that this function starts out with a rank loop, and thus can be subsumed into a higher rank loop
  // If the compound has rank 0, switch to the loop for that; if infinite rank, avoid the loop
  // Even though we don't test for infinite, allow this node to be flagged as rankloop so it can combine with others
-  if(f1==on1){flag2|=VF2RANKATOP1; if(r==RMAX)f1=on1cell; else{if(r==0)f1=jton10;}}
-  if(f2==on2){flag2|=VF2RANKATOP2; if(r==RMAX)f2=on2cell; else{if(r==0)f2=on20;}}
+  if(f1==on1){flag2|=VF2RANKATOP1; f1=r==RMAX?on1cell:f1; f1=r==0?jton10:f1;}
+  if(f2==on2){flag2|=VF2RANKATOP2; f2=r==RMAX?on2cell:f2; f2=r==0?on20:f2;}
   A z; RZ(z=fdef(flag2,CAMP,VERB, f1,f2, a,w,0L, flag, r,r,r));
   FAV(z)->localuse.lclr[0]=linktype; R z;
  default: ASSERTSYS(0,"amp");

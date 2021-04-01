@@ -675,7 +675,13 @@ typedef struct {I e,p;X x;} DX;
 #define SYMNEXT(s) ((s)&~SYMNONPERM)  // address of next symbol
 #define SYMNEXTISPERM(s) ((s)>0)  // true if next symbol is permanent
 
-typedef struct {A name,val;US flag;S sn;LX next;} L;  // name must come first because of the way we use validitymask[11]
+typedef struct {
+ A name;  // name on lhs of assignment; in LINFO, pointer to NM block.  May be 0 in zombie values (modified cached values)
+ A val;  // rhs of assignment, or 0 for PERMANENT symbols that have not yet been assigned
+ US flag;  // Lxx flags, see below.  Not used for LINFO (AR is used for locale flags)
+ S sn;  // script index the name was defined in.  Not used for LINFO
+ LX next;  // LX of next value in chain.  0 for end-of-chain.  SYMNONPERM is set in chain field if the next-in-chain exists and is not LPERMANENT
+} L;  // name must come first because of the way we use validitymask[11]
 
 /* symbol pool entry                         LINFO entry (named/numbered)      */
 //-------------------------------------------------------------------------
@@ -704,6 +710,10 @@ typedef struct {A name,val;US flag;S sn;LX next;} L;  // name must come first be
 #define LMOD            (I)1          // table has had new entries added (used for local symbol tables only)
 
 // In Global symbol tables (including numbered) AK is LOCPATH, and AM is LOCBLOOM
+// The first L block in a symbol table is used to point to the locale-name rather than hash chains
+#define LOCNAME(g) ((JT(jt,sympv))[LXAV0(g)[SYMLINFO]].name)
+#define LOCTHREAD(g)  ((JT(jt,sympv))[LXAV0(g)[SYMLINFO]].next)
+#define LOCPATH(g) (g)->kchain.locpath
 #define LOCBLOOM(x) AM(x)
 #define BLOOMOR(x,v) {LOCBLOOM(x)|=(v);}  // or a new value into the Bloom filter
 

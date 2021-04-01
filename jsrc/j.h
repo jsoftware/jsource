@@ -956,15 +956,16 @@ extern unsigned int __cdecl _clearfp (void);
    ll&=(-NPAR*SZI);  /* ll=start of last section, 1-4 Is */ \
    _mm256_maskstore_epi64((I*)((C*)dst+ll),mskname,_mm256_maskload_epi64((I*)((C*)src+ll),mskname)); \
    /* copy 128-byte sections, first one being 0, 4, 8, or 12 Is. There could be 0 to do */ \
-   UI n128=((ll+((NPAR-1)<<(LGNPAR+LGSZI)))>>(LGNPAR+LGSZI+2));  /* # 128-byte blocks with data, could be 0 */ \
+   /* the 2s here are lg2(#duff cases).  With 8 cases we got 8% faster for in-place copy; not worth the extra prefetches normally? */ \
+   UI n128=((ll+((((I)1<<2)-1)<<(LGNPAR+LGSZI)))>>(LGNPAR+LGSZI+2));  /* # 128-byte blocks with data, could be 0 */ \
    if(n128>0){ /* this test is worthwhile for short args */ \
-    switch((ll>>(LGNPAR+LGSZI))&(4-1)){ \
+    switch((ll>>(LGNPAR+LGSZI))&(((I)1<<2)-1)){ \
     lbl: ; \
     case 0: _mm256_storeu_si256((__m256i*)dst,_mm256_loadu_si256((__m256i*)src)); dst=(C*)dst+NPAR*SZI; src=(C*)src+NPAR*SZI; \
     case 3: _mm256_storeu_si256((__m256i*)dst,_mm256_loadu_si256((__m256i*)src)); dst=(C*)dst+NPAR*SZI; src=(C*)src+NPAR*SZI; \
     case 2: _mm256_storeu_si256((__m256i*)dst,_mm256_loadu_si256((__m256i*)src)); dst=(C*)dst+NPAR*SZI; src=(C*)src+NPAR*SZI; \
     case 1: _mm256_storeu_si256((__m256i*)dst,_mm256_loadu_si256((__m256i*)src)); dst=(C*)dst+NPAR*SZI; src=(C*)src+NPAR*SZI; \
-    if(--n128>0)goto lbl; /* default case */ \
+    if(--n128>0)goto lbl; \
     } \
    } \
   } \

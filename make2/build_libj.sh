@@ -26,6 +26,8 @@ if [ "`uname -m`" = "x86_64" ]; then
 j64x="${j64x:=j64avx}"
 elif [ "`uname -m`" = "aarch64" ]; then
 j64x="${j64x:=j64}"
+elif [ "`uname -m`" = "arm64" ]; then
+j64x="${j64x:=j64arm}"
 else
 j64x="${j64x:=j32}"
 fi
@@ -37,6 +39,7 @@ fi
 
 if [ -z "${j64x##*arm*}" ]; then
 macmin="-target arm64-apple-macos11"
+NO_SHA_ASM="${NO_SHA_ASM:=1}"
 else
 macmin="-mmacosx-version-min=10.6"
 fi

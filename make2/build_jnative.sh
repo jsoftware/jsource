@@ -26,6 +26,8 @@ if [ "`uname -m`" = "x86_64" ]; then
 j64x="${j64x:=j64avx}"
 elif [ "`uname -m`" = "aarch64" ]; then
 j64x="${j64x:=j64}"
+elif [ "`uname -m`" = "arm64" ]; then
+j64x="${j64x:=j64arm}"
 else
 j64x="${j64x:=j32}"
 fi
@@ -35,7 +37,11 @@ fi
 # use -DC_NOMULTINTRINSIC to continue to use more standard c in version 4
 # too early to move main linux release package to gcc 5
 
+if [ -z "${j64x##*arm*}" ]; then
+macmin="-target arm64-apple-macos11"
+else
 macmin="-mmacosx-version-min=10.6"
+fi
 
 if [ "x$CC" = x'' ] ; then
 if [ -f "/usr/bin/cc" ]; then
@@ -152,6 +158,11 @@ LDFLAGS=" $macmin -dynamiclib "
 darwin_j64avx2)
 TARGET=libjnative.dylib
 CFLAGS="$common $macmin -I$JAVA_HOME/include -I$JAVA_HOME/include/darwin "
+LDFLAGS=" $macmin -dynamiclib "
+;;
+darwin_j64arm) # darwin arm
+TARGET=libjnative.dylib
+CFLAGS="$common $macmin -march=armv8-a+crc -I$JAVA_HOME/include -I$JAVA_HOME/include/darwin "
 LDFLAGS=" $macmin -dynamiclib "
 ;;
 *)

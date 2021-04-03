@@ -34,6 +34,7 @@ extern char jversion[];
 extern GUID jclsid;
 extern GUID jlibid;
 extern GUID jiid;
+extern "C" HINSTANCE g_hinst;
 
 class CJServer : public SERVERCLASS
     {

@@ -27,7 +27,7 @@ extern "C"
 	void* _stdcall JInit();
 	long runit(WCHAR* p, BOOL f);
 	int uniflag = -1;	// -1 not set (unicode), 0 ansi, 1 unicode
-	HINSTANCE g_hinst;
+//	HINSTANCE g_hinst;
 // #ifdef _JDLL
 	void touni(char* src, WCHAR* sink);
 	void toasc(WCHAR* src, LPSTR sink);

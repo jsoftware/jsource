@@ -68,7 +68,7 @@ static void jtdspell(J jt,C id,A w,I nflag){C c,s[5];
  else{
   // get fgh if any.  Format f if any, then the primitive, then g if any.  fgh are present only in ACV type (ASGN doesn't have them at all)
   A f,g,h;
-  if(AT(w)&VERB+ADV+CONJ){f=FAV(w)->fgh[0], g=FAV(w)->fgh[1], h=FAV(w)->fgh[2];}else{f=g=h=0;}  // plain value for fgh
+  if(AT(w)&VERB+ADV+CONJ){f=FAV(w)->fgh[0], g=id==CBOX?0:FAV(w)->fgh[1], h=FAV(w)->fgh[2];}else{f=g=h=0;}  // plain value for fgh; ignore g field in BOX, which is there to resemble <@]
   if(id==CFORK){if(h==0){h=g; g=f; f=ds(CCAP);}}else h=0;  // reconstitute [: g h; otherwise we display h only for fork
   if(g&&!f){f=g; g=0;}  // if adverb has its arg in g rather than f, restore it to f
   // if this is not a primitive, we must enclose it in parentheses if we are told to in nflag or if it was originally defined as a hook/fork which must have used parentheses

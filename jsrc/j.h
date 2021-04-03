@@ -1416,7 +1416,7 @@ if(likely(z<3)){_zzt+=z; z=(I)&oneone; _zzt=_i&3?_zzt:(I*)z; z=_i&2?(I)_zzt:z; z
 #define POPZOMB {jt->asginfo=savasginfo;}
 #define R               return
 #if FINDNULLRET   // When we return 0, we should always have an error code set.  trap if not
-#define R0 {if(jt->jerr)R A0;else SEGFAULT;}
+#define R0 {if(!jt->jerr)SEGFAULT; R 0;}
 #else
 #define R0 R 0;
 #endif
@@ -1432,6 +1432,7 @@ if(likely(z<3)){_zzt+=z; z=(I)&oneone; _zzt=_i&3?_zzt:(I*)z; z=_i&2?(I)_zzt:z; z
 #define RESETRANK       (jt->ranks=(RANK2T)~0)
 #define RNE(exp)        {R jt->jerr?0:(exp);}
 #define RZ(exp)         {if(unlikely(!(exp)))R0}
+#define RZQ(exp)         {if(unlikely(!(exp)))R 0;}  // allows FINDNULLRET without jt
 #if MEMAUDIT&0xc
 #define DEADARG(x)      (((I)(x)&~3)?(AFLAG((A)((I)(x)&~3))&LPAR?SEGFAULT:0):0); if(MEMAUDIT&0x10)auditmemchains(); if(MEMAUDIT&0x2)audittstack(jt); 
 #define ARGCHK1D(x)     ARGCHK1(x)  // these not needed normally, but useful for debugging

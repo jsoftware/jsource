@@ -50,7 +50,7 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
  m=AN(a);   // m is # minor cells in a major cell, i. e. #booleans in a
  void *zvv; void *wvv=voidAV(w); I n; // pointer to output area; pointer to input data; number of prefix bytes to skip in first cell
  p=bsum(m,BAV(a));  // p=# 1s in result, i. e. length of result item axis
- if(m==p){RETF(w);}  // if all the bits are 1, we can return very quickly.  It's rare, but so cheap to test for.
+ if(unlikely(m==p)){RETF(w);}  // if all the bits are 1, we can return very quickly.  It's rare, but so cheap to test for.
  PROD(c,wf,AS(w)); PROD(k,wcr-1,AS(w)+wf+1); // c=#major cells, k=#atoms per item of cell
  I zn=c*k*p;  // zn=#atoms in result
  k<<=bplg(AT(w));   // k is now # bytes/cell
@@ -79,7 +79,7 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
   // Convert skipcount to bytes, and advance wvv to point to the first cell that may move
   n+=CTTZI(nextwd^VALIDBOOLEAN)>>LGBB;  // complement; count original 1s, add to n.  m cannot be 0 so there must be a valid 0 bit in nextwd
   zvv=wvv=(C*)wvv+k*n;  // step input over items left in place; use that as the starting output pointer also
-  exactlen=!!(k&(SZI-1));  // if items are not multiples `of I, require exact len.  Since we skip an unchanged prefix, we will seldom have address contention during the copy  scaf could tighten this 
+  exactlen=!!(k&(SZI-1));  // if items are not multiples of I, require exact len.  Since we skip an unchanged prefix, we will seldom have address contention during the copy  scaf could tighten this 
   // since the input is abandoned and no cell is ever duplicated, pristinity is unchanged
  }
  AS(z)[wf]=p;  // move in length of item axis, #bytes per item of cell

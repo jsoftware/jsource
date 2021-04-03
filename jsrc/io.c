@@ -112,6 +112,61 @@ A recursive JDo may use a DD, but only if it is fully contained in the string
 
 */
 
+
+/* break attention attn interrupt crtl+c
+
+user doc at: https://code.jsoftware.com/wiki/Guides/Interrupt
+
+JE uses JATTN and JBREAK0 to stop execution of sentences with an error
+
+JATTN signals an attention at the start of a line
+JBREAK0 signals an interrupt in a long compute, 6!:3, socket select, ...
+
+JATTN and JBREAK0 poll a breakbyte
+ the value can be 0 continue, 1 signal in JATTN, or >1 signal in JBREAK0
+
+address of the breakbyte is at the start of jt
+
+a separate task or thread increments the breakbyte to request a break
+ JE resets to 0 on new user input
+
+jconsole is simplest case as ctrl+c is runs as a signal
+ and gets breakbyte address from jt and increments it
+ crtl+c logically runs a separate thread and can do this while JE is running
+
+there is not always a ctrl+c mechanism to access breakbyte
+
+in that case, the user runs verb setbreak to create a mapped breakfile with a
+published name that uses the first byte of the mapped file as breakbyte
+
+another task (J or whatever) gets the name of the breakfile and
+ accessed the first byte to signal JE
+
+verb break gets the breakfile name and writes the first byte is
+
+study the definitions of setbreak and break in a J session and 9!:46/47 C code
+
+when J starts, the jt address of the breakbyte is the compiled byte breakdata
+running setbreak sets the address to the first byte of the newly mapped file
+
+JHS has the additional complication of critical sections of J code
+ JHS frontend input/output code is implement in J
+ a break in this code can can cause a crash or confusion
+ JHS must be able to mask off break during the critical sections
+
+ currently this is done by changing the jt address of the breakbyte to address a 0 byte
+ and then reseting it at the end of the critical section
+ 
+ there are problems in this code and it is proposed that:
+  setting/resettting the jt address of breakbyte is
+  replaced by setting/resetting a jt->breakmask
+
+problems with current implementation:
+ adbreakr should only be set by init and by setbreak
+ conflict between default of breakdata vs setbreak
+ adbreak should probably be killed off - replaced by jt->breakmask
+*/
+
 #ifdef _WIN32
 #include <windows.h>
 #include <winbase.h>

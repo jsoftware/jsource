@@ -125,7 +125,7 @@ JBREAK0 signals an interrupt in a long compute, 6!:3, socket select, ...
 JATTN and JBREAK0 poll a breakbyte
  the value can be 0 continue, 1 signal in JATTN, or >1 signal in JBREAK0
 
-address of the breakbyte is at the start of jt
+the first word in jt (jt->adbreak) is a pointer to the breakbyte
 
 a separate task or thread increments the breakbyte to request a break
  JE resets to 0 on new user input
@@ -140,13 +140,14 @@ in that case, the user runs verb setbreak to create a mapped breakfile with a
 published name that uses the first byte of the mapped file as breakbyte
 
 another task (J or whatever) gets the name of the breakfile and
- accessed the first byte to signal JE
+ writes to the first byte (only!!) to signal JE
 
-verb break gets the breakfile name and writes the first byte is
+verb break gets the breakfile name and writes the first byte is ???
 
 study the definitions of setbreak and break in a J session and 9!:46/47 C code
+??? where is setbreak?  do you mean breakfns?  where is break?
 
-when J starts, the jt address of the breakbyte is the compiled byte breakdata
+when J starts, the jt address of the breakbyte is the compiled byte breakdata[0]
 running setbreak sets the address to the first byte of the newly mapped file
 
 JHS has the additional complication of critical sections of J code

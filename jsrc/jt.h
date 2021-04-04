@@ -198,7 +198,8 @@ typedef struct JSTstruct {
 #if MEMAUDIT & 2
  C audittstackdisabled;   // set to 1 to disable auditing
 #endif
-// 4 bytes free
+ C breakbytes[2];    // first byte: used for signals when there is no mapped breakfile.  Bit 0=ATTN request, bit 1=BREAK request
+// 2 bytes free
 
 // stuff used during verb execution
  void *heap;            // heap handle for large allocations

@@ -4,7 +4,7 @@ NB. special code for [: ; <@(f/\);.n and [: ; <@(f/\.);.n ---------------
 test=: 1 : 0
  :
  f=: u
- neareq =. 1e_12 > >./@:|@:-
+ neareq =.  [: *./ (1e_12 >. 1e_13 * >.&:|) > |@:-
  if. *./0=#;.1~x do.
   assert. (0#y)                    -: x ([: ; <@(u f./\ );. 1) etx y
   assert. (0#y)                    -: x ([: ; <@(u f./\.);. 1) etx y

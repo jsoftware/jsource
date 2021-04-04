@@ -840,7 +840,7 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[12
 
 static DF1(jtcut1){R cut2(mark,w,self);}
 
-#if 0   // never executed
+#if 0   // obsolete
 #define PSCASE(id,zt,wt)    ((id)+256*(zt)+1024*(wt))
 #define PSLOOP(Tz,Tw,F,v0)      \
     {B*u;Tw* RESTRICT wv;Tz s=v0,x,* RESTRICT zv;                   \

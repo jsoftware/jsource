@@ -156,7 +156,7 @@ F1(jtreverse){A z;C*wv,*zv;I f,k,m,n,nk,r,*v,*ws,wt,wr;
  if(unlikely(jt->fill!=0))R rotate(num(-1),w);  // rank is set - not inplaceable because it uses fill
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r;  // no RESETRANK - we don't call any primitive from here on  wr=rank of arg r=eff rank f=len of frame
  ws=AS(w); I *an=ws+f; an=r?an:&oneone[0]; n=*an;    // n=number of subitems of the cell to be reversed
- if(unlikely(((-r)&(1-n)))>=0){R RETARG(w);}  // rank 0 or 0-1 atoms in item - keep input unchanged
+ if(unlikely(((-r)&(1-n))>=0)){R RETARG(w);}  // rank 0 or 0-1 atoms in item - keep input unchanged
  wt=AT(w); wv=CAV(w);  // wv->source data
  PROD(m,f,ws); PROD(k,r-1,ws+f+1);  // m=# argument cells k=#atoms in one subitem
  k<<=bplg(wt); nk=n*k;  // k=#bytes in subitem  nk=#bytes in cell

@@ -125,10 +125,12 @@ JBREAK0 signals an interrupt in a long compute, 6!:3, socket select, ...
 JATTN and JBREAK0 poll a breakbyte
  the value can be 0 continue, 1 signal in JATTN, or >1 signal in JBREAK0
 
+NOTE: some JEs define a multi-byte breakarea.  ONLY THE FIRST BYTE can be changed by break processing
+
 the first word in jt (jt->adbreak) is a pointer to the breakbyte
 
 a separate task or thread increments the breakbyte to request a break
- JE resets to 0 on new user input
+ JE resets to 0 on new user input or on processing an error (including the one caused by ATTN/BREAK0)
 
 jconsole is simplest case as ctrl+c is runs as a signal
  and gets breakbyte address from jt and increments it
@@ -142,30 +144,23 @@ published name that uses the first byte of the mapped file as breakbyte
 another task (J or whatever) gets the name of the breakfile and
  writes to the first byte (only!!) to signal JE
 
-verb break gets the breakfile name and writes the first byte is ???
+verb jtbreakfns gets the breakfile name and points jt->adbreak to it
 
 study the definitions of setbreak and break in a J session and 9!:46/47 C code
 ??? where is setbreak?  do you mean breakfns?  where is break?
 
-when J starts, the jt address of the breakbyte is the compiled byte breakdata[0]
-running setbreak sets the address to the first byte of the newly mapped file
+when J starts, the jt address of the breakbyte is an internal workarea jt->breakbytes
+running jtbreakfns sets the address to the first byte of the newly mapped file
 
 JHS has the additional complication of critical sections of J code
- JHS frontend input/output code is implement in J
+ JHS frontend input/output code is implemented in J
  a break in this code can can cause a crash or confusion
  JHS must be able to mask off break during the critical sections
 
- currently this is done by changing the jt address of the breakbyte to address a 0 byte
- and then reseting it at the end of the critical section
- 
- there are problems in this code and it is proposed that:
-  setting/resettting the jt address of breakbyte is
-  replaced by setting/resetting a jt->breakmask
+ this is done by havuing TWO pointers to the breakbyte: one for requesting a break (jt->adbreak)
+ and another for testing (jt->adbreakr).  Normally these are the same, but to disable break adbreakr is
+ set to a pointer to a fixed 0 byte; it at the end of the critical section adbreakr is set back to equal adbreak.
 
-problems with current implementation:
- adbreakr should only be set by init and by setbreak
- conflict between default of breakdata vs setbreak
- adbreak should probably be killed off - replaced by jt->breakmask
 */
 
 #ifdef _WIN32
@@ -243,7 +238,7 @@ static A jtinpl(JJ jt,B b,I n,C*s){C c;I k=0;
  ASSERT(!*IJT(jt,adbreakr),EVINPRUPT);
  if(!b){ /* 1==b means literal input */
   if(n&&COFF==s[n-1])joff(num(0));
-  c=IJT(jt,bx)[9]; if((UC)c>127)DO(n, if(' '!=s[i]&&c!=s[i]){k=i; break;});
+  c=IJT(jt,bx)[9]; if((UC)c>127)DO(n, if(' '!=s[i]&&c!=s[i]){k=i; break;});  // discard stuff that looks like error typeout
  }
  R str(n-k,s+k);
 }
@@ -257,9 +252,10 @@ static I advl(I j,I n,C*s){B b;C c,*v;
 }    /* advance one line on CR, CRLF, or LF */
 
 void breakclose(JS jt);
+#define WITHATTNDISABLED(s) JT(jt,adbreakr)=(C*)&break0; s  JT(jt,adbreakr)=JT(jt,adbreak);
 
 static C* nfeinput(JS jt,C* s){A y;
- JT(jt,adbreakr)=&breakdata; y=jtexec1(MTHREAD(jt),jtcstr(MTHREAD(jt),s)); JT(jt,adbreakr)=JT(jt,adbreak);
+ WITHATTNDISABLED(y=jtexec1(MTHREAD(jt),jtcstr(MTHREAD(jt),s));)  // exec the sentence with break interrupts disabled
  if(!y){breakclose(jt);exit(2);} /* J input verb failed */
  jtwri(jt,MTYOLOG,"",strlen(CAV(y)),CAV(y));  // call to nfeinput() comes from a prompt or from jdo.  In either case we want to display the result.  Thus jt
  return CAV(y); /* don't combine with previous line! CAV runs (x) 2 times! */
@@ -270,7 +266,7 @@ static C* nfeinput(JS jt,C* s){A y;
 // otherwise processed in inpl
 // Lines may come from a script, in which case return 0 on EOF, but EVINPRUPT is still possible as an error
 A jtjgets(JJ jt,C*p){A y;B b;C*v;I j,k,m,n;UC*s;
- *IJT(jt,adbreak)=0;
+ *IJT(jt,adbreak)=0;  // turn off any pending break
  if(b=1==*p)p=""; /* 1 means literal input; remember & clear prompt */
  DC d; for(d=jt->sitop; d&&d->dctype!=DCSCRIPT; d=d->dclnk);  // d-> last SCRIPT type, if any
  if(d&&d->dcss){   // enabled DCSCRIPT debug type - means we are reading from file (or string)  for 0!:x
@@ -308,9 +304,13 @@ A jtjgets(JJ jt,C*p){A y;B b;C*v;I j,k,m,n;UC*s;
 #if SYS&SYS_UNIX
 void breakclose(JS jt)
 {
- if(JT(jt,adbreak)==&breakdata) return;
+// obsolete if(JT(jt,adbreak)==&breakdata) return;
+ if(JT(jt,adbreak)==(C*)&JT(jt,breakbytes)) return;  // if no mapped file has been created, exit fast
+ *&JT(jt,breakbytes)=*(US*)(JT(jt,adbreak));  // copy over any pending break request, plus other breakdata
  munmap(JT(jt,adbreak),1);
- JT(jt,adbreakr)=JT(jt,adbreak)=&breakdata;
+// obsolete  JT(jt,adbreakr)=JT(jt,adbreak)=&breakdata;
+ if(JT(jt,adbreakr)==JT(jt,adbreak))JT(jt,adbreakr)=(C*)&JT(jt,breakbytes);  // move to look at the new data - but not if attn disabled
+ JT(jt,adbreak)=(C*)&JT(jt,breakbytes);  // move request pointer in any case
  close((intptr_t)JT(jt,breakfh));
  JT(jt,breakfh)=0;
  unlink(JT(jt,breakfn));
@@ -319,9 +319,12 @@ void breakclose(JS jt)
 #else
 void breakclose(JS jt)
 {
- if(JT(jt,adbreak)==&breakdata) return;
+ if(JT(jt,adbreak)==(C*)&JT(jt,breakbytes)) return;  // if no mapped file has been created, exit fast
+ *&JT(jt,breakbytes)=*(US*)(JT(jt,adbreak));  // copy over any pending break request, plus other breakdata
  UnmapViewOfFile(JT(jt,adbreak));
- JT(jt,adbreakr)=JT(jt,adbreak)=&breakdata;
+// obsolete  JT(jt,adbreakr)=JT(jt,adbreak)=&breakdata;
+ if(JT(jt,adbreakr)==JT(jt,adbreak))JT(jt,adbreakr)=(C*)&JT(jt,breakbytes);  // move to look at the new data - but not if attn disabled
+ JT(jt,adbreak)=(C*)&JT(jt,breakbytes);  // move attn-request pointer in any case
  CloseHandle(JT(jt,breakmh));
  JT(jt,breakmh)=0;
  CloseHandle(JT(jt,breakfh));
@@ -356,7 +359,7 @@ static I jdo(JS jt, C* lp){I e;A x;JJ jm=MTHREAD(jt);  // get address of thread 
  I4 savcallstack = jm->callstacknext;
  if(JT(jt,capture))JT(jt,capture)[0]=0; // clear capture buffer
  A *old=jm->tnextpushp;
- *JT(jt,adbreak)=0;
+ *JT(jt,adbreak)=0;  // remove pending ATTN before executing the sentence
  x=jtinpl(jm,0,(I)strlen(lp),lp);
  // All these immexes run with result-display enabled (jt flags=0)
  // Run any enabled immex sentences both before & after the line being executed.  I don't understand why we do it before, but it can't hurt since there won't be any.
@@ -634,9 +637,9 @@ void jsto(JS jt,I type,C*s){C e;I ex;
   AAV1(tok)[0]=num(type); AAV1(tok)[1]=jtnfs(jm,11,"output_jfe_"); AAV1(tok)[2]=jtcstr(jm,s);  // the sentence to execute, tokenized
   e=jm->jerr; ex=jm->etxn;   // save error state before running the output sentence
   jm->jerr=0; jm->etxn=0;
-  JT(jt,adbreakr)=&breakdata;
-  jtparse(jm,tok);  // run it, ignoring errors.
-  JT(jt,adbreakr)=JT(jt,adbreak);
+// obsolete   JT(jt,adbreakr)=(C*)&break0;  // disable ATTN during the prompt
+  WITHATTNDISABLED(jtparse(jm,tok);)  // run sentence, with no interrupts.  ignore errors.
+// obsolete   JT(jt,adbreakr)=JT(jt,adbreak);  // reenable ATTN, which might be pending now
   jm->jerr=e; jm->etxn=ex; // restore
  }else{
   // Normal output.  Call the output routine
@@ -732,7 +735,9 @@ F1(jtbreakfns){A z;I *fh,*mh=0; void* ad;
  strcpy(IJT(jt,breakfn),CAV(w));
  IJT(jt,breakfh)=fh;
  IJT(jt,breakmh)=mh;
- IJT(jt,adbreakr)=IJT(jt,adbreak)=ad;
+ *(US*)ad==*(US*)IJT(jt,adbreak);  // copy breakstatus from current setting
+ if(IJT(jt,adbreakr)==IJT(jt,adbreak))IJT(jt,adbreakr)=ad;  // move attn-read pointer, unless interrupts disabled
+ IJT(jt,adbreak)=ad;  // start using the mapped area
  R mtm;
 }
 

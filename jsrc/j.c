@@ -34,7 +34,7 @@ CREBLOCKATOMI(mark,MARK,0)  // parser mark, also used generally as a special val
 CREBLOCKATOMI(imax,INT,IMAX)  // max positive value
 CREBLOCKATOMI(chrcolon,LIT,':')  // the one character
 CREBLOCKATOMI(chrspace,LIT,' ')  // the one character
-C   breakdata=0;   // always 0: used 
+US   break0=0;   // always 0: used to ignore ATTN interrupts
 D   inf=INFINITY;                /* _                                    */
 D   infm=-INFINITY;               /* __                                   */
 #define CREBLOCKVEC1I(name,t,v) I __attribute__((aligned(CACHELINESIZE))) B##name[9]={(7+1)*SZI,(t)&TRAVERSIBLE,0,(t),ACPERMANENT,1,1,1,(v)};

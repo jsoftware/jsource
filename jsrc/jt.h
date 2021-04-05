@@ -184,8 +184,8 @@ typedef JTT* JJ;  // thread-specific part of struct
 // Must be aligned on a 256-byte boundary for flags; but better to align on a DRAM page boundary to avoid precharge
 typedef struct JSTstruct {
 // shared area
- C* adbreak;			/* must be first! ad mapped shared file break flag */
- C* adbreakr;         // read location: same as adbreak, except that when we are ignoring interrupts it points to a byte of 0
+ C* adbreak;		// must be first! ad mapped shared file break flag.  Inits to jst->breakbytes; switched to file area if a breakfile is created
+ C* adbreakr;         // read location: same as adbreak, except that when we are ignoring interrupts it points to break0, which is a read-only byte of 0
 
 // parsing, lookup, explicit definition execution
  A stloc;            /* locales symbol table                            */
@@ -198,7 +198,7 @@ typedef struct JSTstruct {
 #if MEMAUDIT & 2
  C audittstackdisabled;   // set to 1 to disable auditing
 #endif
- C breakbytes[2];    // first byte: used for signals when there is no mapped breakfile.  Bit 0=ATTN request, bit 1=BREAK request
+ US breakbytes;    // first byte: used for signals when there is no mapped breakfile.  Bit 0=ATTN request, bit 1=BREAK request
 // 2 bytes free
 
 // stuff used during verb execution

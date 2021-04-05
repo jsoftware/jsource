@@ -1075,14 +1075,15 @@ extern unsigned int __cdecl _clearfp (void);
 // loop advances x and y to end +1 of region
 // parms: bit0=suppress unrolling, bit1=use maskload for any aligning fetch
 #define AVXATOMLOOP(parms,lbl,preloop,loopbody,postloop) \
- __m256i endmask;  __m256d u; \
+ __m256i endmask;  __m256d u; __m256d neut=_mm256_setzero_pd(); \
  _mm256_zeroupperx(VOIDARG) \
  preloop \
  I n0=n; \
  I alignreq=(-(I)z>>LGSZI)&(NPAR-1); \
  if((-alignreq&(NPAR-n0))<0){ \
   endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-alignreq));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
-  if(!((parms)&2))u=_mm256_loadu_pd(x);else u=_mm256_maskload_pd(x,endmask);; \
+  /* obsolete if(!((parms)&2))u=_mm256_loadu_pd(x);else u=_mm256_maskload_pd(x,endmask); */\
+  u=_mm256_loadu_pd(x); if(((parms)&2))u=_mm256_blendv_pd(neut,u,endmask); \
   loopbody _mm256_maskstore_pd(z, endmask, u); x+=alignreq; z+=alignreq; n0-=alignreq;  /* leave remlen>0 */ \
  } \
  endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n0)&(NPAR-1)))); \

@@ -136,7 +136,7 @@ static B jtunstackcv(J jt,CDATA*cv,I assignvirt){
    A svb=cv->item;  // the sorta-virtual block for the item
    if(unlikely(JT(jt,sympv)[cv->itemsym].val==svb)){A newb;
     fa(svb);   // remove svb from itemsym.val.  Safe, because it can't be the last free
-    if(likely(assignvirt)){RZ(newb=realize(svb)); ACINITZAP(newb); ra00(newb,AT(newb)); JT(jt,sympv)[cv->itemsym].val=newb;  // realize stored value, raise, make recursive, store in symbol table
+    if(likely(assignvirt!=0)){RZ(newb=realize(svb)); ACINITZAP(newb); ra00(newb,AT(newb)); JT(jt,sympv)[cv->itemsym].val=newb;  // realize stored value, raise, make recursive, store in symbol table
     }else{JT(jt,sympv)[cv->itemsym].val=0;}  // after error, we needn't bother with a value
    }
    // Decrement the usecount to account for being removed from cv - this is the final free of the svb

@@ -325,11 +325,11 @@ AHDRP(pluspfxD,D,D){I i;
 #else
   // clang insists on reordering the loop, putting the update of acc AFTER the creation of the final u.  Turns out OK
   AVXATOMLOOP(3,lbl,  // unroll not needed; need maskload to load 0s after valid area
-    __m256d high3=_mm256_loadu_pd((D*)(validitymask+7));
-    __m256d acc=_mm256_setzero_pd(); __m256d accs;  // accumulator and place to save it 
+    neut=_mm256_set1_pd(0.0);
+    __m256d acc=neut; __m256d accs;  // accumulator and place to save it 
     ,
-    u=_mm256_add_pd(_mm256_permute4x64_pd(u,0x90),_mm256_and_pd(u,high3));  // -123 + 0012
-    u=_mm256_add_pd(_mm256_permute2f128_pd(u,u,0x08),u);  // finish scan of the 4 input values
+    u=_mm256_add_pd(_mm256_permute4x64_pd(u,0x90),_mm256_blend_pd(u,neut,0x01));  // -123 + 0012
+    u=_mm256_add_pd(_mm256_permute2f128_pd(u,neut,0x02),u);  // finish scan of the 4 input values --01 + 0123
     accs=acc; acc=_mm256_add_pd(acc,u);  // accumulate in lane 3.  This is the only carried dependency for acc
     u=_mm256_add_pd(u,_mm256_permute4x64_pd(accs,0xff));  // add in total previously accumulated
     ,
@@ -350,6 +350,33 @@ AHDRP(pluspfxD,D,D){I i;
  }
  R NANTEST?EVNAN:EVOK;
 }   /* for associative functions only */
+
+// macro version of the above, for general use
+#define PREFIXPFXAVX2(fn,neutral,pfx,vecfn,avxinst,ending) \
+AHDRP(fn,D,D){I i; \
+ NAN0; \
+ if(d==1){ \
+  DQ(m, \
+  AVXATOMLOOP(3,lbl, \
+    neut=_mm256_set1_pd(neutral); \
+    __m256d acc=neut; __m256d accs; \
+    , \
+    u=avxinst(_mm256_permute4x64_pd(u,0x90),_mm256_blend_pd(u,neut,0x01)); \
+    u=avxinst(_mm256_permute2f128_pd(u,neut,0x02),u); \
+    accs=acc; acc=avxinst(acc,u); \
+    u=avxinst(u,_mm256_permute4x64_pd(accs,0xff)); \
+    , \
+    ) \
+  ) \
+ }else{ \
+  for(i=0;i<m;++i){ \
+   MC(z,x,d*sizeof(D)); x+=d;  \
+   DQ(n-1, vecfn(1,d,z,x,z+d,jt); z+=d; x+=d;); z+=d; \
+  } \
+ } \
+ ending \
+}   /* for associative functions only */
+
 PREFIXNAN( pluspfxZ, Z, Z,  zplus, plusZZ  )
 PREFIXPFX( pluspfxX, X, X,  xplus, plusXX ,HDR1JERR; )
 PREFIXPFX( pluspfxQ, Q, Q,  qplus, plusQQ ,HDR1JERR; )
@@ -369,13 +396,21 @@ PREALTNAN(  divpfxD, D, D,  DIVPA  )
 PREALTNAN(  divpfxZ, Z, Z,  DIVPZ  )
 
 PREFIXPFX(  maxpfxI, I, I,  MAX , maxII   ,R EVOK;)
+#if C_AVX  // not better in emulation
+PREFIXPFXAVX2(maxpfxD,infm,MAX,maxDD,_mm256_max_pd,R EVOK;)
+#else
 PREFIXPFX(  maxpfxD, D, D,  MAX , maxDD   ,R EVOK;)
+#endif
 PREFIXPFX(  maxpfxX, X, X,  XMAX, maxXX   ,R EVOK;)
 PREFIXPFX(  maxpfxQ, Q, Q,  QMAX, maxQQ   ,R EVOK;)
 PREFIXPFX(  maxpfxS, SB,SB, SBMAX, maxSS  ,R EVOK;)
 
 PREFIXPFX(  minpfxI, I, I,  MIN, minII    ,R EVOK;)
+#if C_AVX  // not better in emulation
+PREFIXPFXAVX2(minpfxD,inf,MIN,minDD,_mm256_min_pd,R EVOK;)
+#else
 PREFIXPFX(  minpfxD, D, D,  MIN, minDD    ,R EVOK;)
+#endif
 PREFIXPFX(  minpfxX, X, X,  XMIN, minXX   ,R EVOK;)
 PREFIXPFX(  minpfxQ, Q, Q,  QMIN, minQQ   ,R EVOK;)
 PREFIXPFX(  minpfxS, SB,SB, SBMIN, minSS  ,R EVOK;)

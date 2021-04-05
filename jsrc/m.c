@@ -123,7 +123,7 @@ F1(jtmemhashs){
 #endif
 
 B jtmeminit(JS jjt,I nthreads){I k,m=MLEN;
- INITJT(jjt,adbreakr)=INITJT(jjt,adbreak)=&breakdata; /* required for ma to work */
+ INITJT(jjt,adbreakr)=INITJT(jjt,adbreak)=(C*)&INITJT(jjt,breakbytes); /* required for ma to work */
  INITJT(jjt,mmax) =(I)1<<(m-1);
  I threadno; for(threadno=0;threadno<nthreads;++threadno){JJ jt=&jjt->threaddata[threadno];
   // init tpop stack

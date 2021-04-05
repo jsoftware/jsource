@@ -942,7 +942,7 @@ extern I Bimax[];
 #define imax ((A)&Bimax)
 extern I Bmark[];
 #define mark ((A)&Bmark)
-extern C        breakdata;
+extern US  break0;
 extern I Bchrcolon[];
 #define chrcolon ((A)&Bchrcolon)
 extern I Bchrspace[];

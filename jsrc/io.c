@@ -252,7 +252,9 @@ static I advl(I j,I n,C*s){B b;C c,*v;
 }    /* advance one line on CR, CRLF, or LF */
 
 void breakclose(JS jt);
-#define WITHATTNDISABLED(s) JT(jt,adbreakr)=(C*)&break0; s  JT(jt,adbreakr)=JT(jt,adbreak);
+#define DISABLEATTN JT(jt,adbreakr)=(C*)&break0;
+#define ENABLEATTN JT(jt,adbreakr)=JT(jt,adbreak);
+#define WITHATTNDISABLED(s) {DISABLEATTN s ENABLEATTN}
 
 static C* nfeinput(JS jt,C* s){A y;
  WITHATTNDISABLED(y=jtexec1(MTHREAD(jt),jtcstr(MTHREAD(jt),s));)  // exec the sentence with break interrupts disabled
@@ -634,13 +636,15 @@ void jsto(JS jt,I type,C*s){C e;I ex;
   // here for Native Front End state, toggled by 15!:16
   // we execute the sentence:  type output_jfe_ s    in the master thread
   fauxblockINT(fauxtok,3,1); A tok; fauxBOXNR(tok,fauxtok,3,1);  // allocate 3-word sentence on stack, rank 1
-  AAV1(tok)[0]=num(type); AAV1(tok)[1]=jtnfs(jm,11,"output_jfe_"); AAV1(tok)[2]=jtcstr(jm,s);  // the sentence to execute, tokenized
+  DISABLEATTN
+  AAV1(tok)[0]=num(type); AAV1(tok)[1]=jtnfs(jm,11,"output_jfe_"); AAV1(tok)[2]=jtcstr(jm,s);  // the sentence to execute, tokenized.  Better not fail!
   e=jm->jerr; ex=jm->etxn;   // save error state before running the output sentence
   jm->jerr=0; jm->etxn=0;
 // obsolete   JT(jt,adbreakr)=(C*)&break0;  // disable ATTN during the prompt
-  WITHATTNDISABLED(jtparse(jm,tok);)  // run sentence, with no interrupts.  ignore errors.
+  jtparse(jm,tok);  // run sentence, with no interrupts.  ignore errors.
 // obsolete   JT(jt,adbreakr)=JT(jt,adbreak);  // reenable ATTN, which might be pending now
   jm->jerr=e; jm->etxn=ex; // restore
+  ENABLEATTN
  }else{
   // Normal output.  Call the output routine
   if(JT(jt,smoutput)){((outputtype)(JT(jt,smoutput)))(jt,(int)type,s);R;} // JFE output

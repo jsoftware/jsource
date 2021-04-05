@@ -1,5 +1,5 @@
 coclass <'jsocket'
-coinsert 'jsocket jdefs'
+coinsert 'jdefs'
 
 jsystemdefs 'hostdefs'
 jsystemdefs 'netdefs'

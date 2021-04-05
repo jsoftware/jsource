@@ -157,7 +157,7 @@ JHS has the additional complication of critical sections of J code
  a break in this code can can cause a crash or confusion
  JHS must be able to mask off break during the critical sections
 
- this is done by havuing TWO pointers to the breakbyte: one for requesting a break (jt->adbreak)
+ this is done by having TWO pointers to the breakbyte: one for requesting a break (jt->adbreak)
  and another for testing (jt->adbreakr).  Normally these are the same, but to disable break adbreakr is
  set to a pointer to a fixed 0 byte; it at the end of the critical section adbreakr is set back to equal adbreak.
 

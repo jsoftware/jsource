@@ -1083,7 +1083,7 @@ extern unsigned int __cdecl _clearfp (void);
  if((-alignreq&(NPAR-n0))<0){ \
   endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-alignreq));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
   /* obsolete if(!((parms)&2))u=_mm256_loadu_pd(x);else u=_mm256_maskload_pd(x,endmask); */\
-  u=_mm256_loadu_pd(x); if(((parms)&2))u=_mm256_blendv_pd(neut,u,endmask); \
+  u=_mm256_loadu_pd(x); if(((parms)&2))u=_mm256_blendv_pd(neut,u,_mm256_castsi256_pd(endmask)); \
   loopbody _mm256_maskstore_pd(z, endmask, u); x+=alignreq; z+=alignreq; n0-=alignreq;  /* leave remlen>0 */ \
  } \
  endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n0)&(NPAR-1)))); \

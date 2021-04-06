@@ -639,7 +639,7 @@ endname: ;
         jt->asginfo.assignsym=s;  // remember the symbol being assigned.  It may have no value yet, but that's OK - save the lookup
         // to save time in the verbs (which execute more often than this parse), see if the assignment target is suitable for inplacing.  Set zombieval to point to the value if so
         // We require flags indicate not read-only, and usecount==1 (or 2 if NJA block)
-        s=s?s:(L*)(validitymask+11); A zval=s->val; zval=zval?zval:(A)(validitymask+11); zval=AC(zval)==(((AFLAG(zval)&AFRO)-1)&(((AFLAG(zval)&AFNJA)>>1)+1))?zval:0; jt->asginfo.zombieval=zval;  // needs AFRO=1, AFNJA=2
+        s=s?s:SYMVAL0; A zval=s->val; zval=zval?zval:AFLAG0; zval=AC(zval)==(((AFLAG(zval)&AFRO)-1)&(((AFLAG(zval)&AFNJA)>>1)+1))?zval:0; jt->asginfo.zombieval=zval;  // needs AFRO=1, AFNJA=2
        }
        jt=(J)(intptr_t)((I)jt+(pline|1));   // set bit 0, and bit 1 if dyadic
       }
@@ -657,8 +657,8 @@ endname: ;
       // the address of the tpop slot IF the arg is inplaceable now.  Then after execution we will pick up again, knowing to quit if the tpop slot
       // has been zapped.  We keep pointers for a/w rather than 1/2 for branch-prediction purposes
       // This calculation should run to completion while the expected misprediction is being processed
-      A *tpopw=AZAPLOC(arg2); tpopw=(AC(arg2)&((AFLAG(arg2)&(AFVIRTUAL|AFUNINCORPABLE))-1))<0?tpopw:(A*)&validitymask[15];  // point to pointer to arg2 (if it is inplace) - only if dyad
-      A *tpopa=AZAPLOC(arg1); tpopa=(AC(arg1)&((AFLAG(arg1)&(AFVIRTUAL|AFUNINCORPABLE))-1))<0?tpopa:(A*)&validitymask[15]; tpopw=(pline&2)?tpopw:tpopa; // monad: w fs  dyad: a w   if monad, change to w w  
+      A *tpopw=AZAPLOC(arg2); tpopw=(AC(arg2)&((AFLAG(arg2)&(AFVIRTUAL|AFUNINCORPABLE))-1))<0?tpopw:ZAPLOC0;  // point to pointer to arg2 (if it is inplace) - only if dyad
+      A *tpopa=AZAPLOC(arg1); tpopa=(AC(arg1)&((AFLAG(arg1)&(AFVIRTUAL|AFUNINCORPABLE))-1))<0?tpopa:ZAPLOC0; tpopw=(pline&2)?tpopw:tpopa; // monad: w fs  dyad: a w   if monad, change to w w  
       y=(*actionfn)(jt,arg1,arg2,fs);
       // expect pipeline break
       jt=(J)(intptr_t)((I)jt&~JTFLAGMSK);
@@ -774,7 +774,7 @@ RECURSIVERESULTSCHECK
    if(unlikely(!(PTOKEND(stack[2],stack[3])))){jt->parserstackframe.parsercurrtok = 0; jsignal(EVSYNTAX); z=0;}  // OK if 0 or 1 words left (0 should not occur)
   }else{
 failparse:  // If there was an error during execution or name-stacking, exit with failure.  Error has already been signaled.  Remove zombiesym
-   CLEARZOMBIE z=0; stack=(PSTK*)(validitymask+12)-2;  // set stack to something that IS NOT a final assignment
+   CLEARZOMBIE z=0; stack=PSTK2NOTFINALASGN;  // set stack to something that IS NOT a final assignment
   }
 #if MEMAUDIT&0x2
   audittstack(jt);

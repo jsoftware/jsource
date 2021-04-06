@@ -185,7 +185,7 @@ typedef JTT* JJ;  // thread-specific part of struct
 typedef struct JSTstruct {
 // shared area
  C* adbreak;		// must be first! ad mapped shared file break flag.  Inits to jst->breakbytes; switched to file area if a breakfile is created
- C* adbreakr;         // read location: same as adbreak, except that when we are ignoring interrupts it points to break0, which is a read-only byte of 0
+ C* adbreakr;         // read location: same as adbreak, except that when we are ignoring interrupts it points to a read-only byte of 0
 
 // parsing, lookup, explicit definition execution
  A stloc;            /* locales symbol table                            */

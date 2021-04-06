@@ -41,8 +41,8 @@ static const C alp[256]={0x00,0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x0a,
 0xe0,0xe1,0xe2,0xe3,0xe4,0xe5,0xe6,0xe7,0xe8,0xe9,0xea,0xeb,0xec,0xed,0xee,0xef,0xf0,0xf1,0xf2,0xf3,0xf4,0xf5,0xf6,0xf7,0xf8,0xf9,0xfa,0xfb,0xfc,0xfd,0xfe,0xff};
 
 #define PRIMNOUN(id,t,an,ar,val) [id]={{AKXR(ar),(t)&TRAVERSIBLE,0,(t),ACPERMANENT,(an),(ar)} , {.primint=val} }
-#define PRIMALL(id,t,f0,f1,f,g,h,initpm1,initpm2,rm,rl,rr,vflg,vflg2,an,ar,lc) \
- [id]={{AKXR(ar),(t)&TRAVERSIBLE,0,(t),ACPERMANENT,(an),(ar)},{{{f0,f1},{f,g,h},{initpm1,initpm2},(vflg),(vflg2),(RANK2T)((rl<<RANKTX)+rr),(RANKT)rm,id,lc}}}
+#define PRIMALL(idd,t,f0,f1,f,g,h,initpm1,initpm2,rm,rl,rr,vflg,vflg2,an,ar,lcc) \
+ [idd]={{AKXR(ar),(t)&TRAVERSIBLE,0,(t),ACPERMANENT,(an),(ar)},{{.valencefns={f0,f1},.fgh={f,g,h},.localuse={initpm1,initpm2},.flag=(vflg),.flag2=(vflg2),.lrr=(RANK2T)((rl<<RANKTX)+rr),.mr=(RANKT)rm,.id=idd,.lc=lcc}}}
 #define PRIMACV(id,t,f0,f1,rm,rl,rr,vflg,vflg2) PRIMALL(id,t,f0,f1,0,0,0,.lfns=(AF)0,(AF)0,rm,rl,rr,vflg,vflg2,(VERBSIZE+SZI-1)>>LGSZI,0,0)
 #define PRIMACVPARM(id,t,f0,f1,rm,rl,rr,vflg,vflg2,initpm1,initpm2) PRIMALL(id,t,f0,f1,0,0,0,initpm1,initpm2,rm,rl,rr,vflg,vflg2,(VERBSIZE+SZI-1)>>LGSZI,0,0)
 #define PRIMATOMIC2(id,t,f0,f1,rm,rl,rr,vflg,vflg2) PRIMALL(id,t,f0,f1,0,0,0,.lfns=(AF)(va+VA2##id),(AF)0,rm,rl,rr,VISATOMIC2|(vflg),vflg2,(VERBSIZE+SZI-1)>>LGSZI,0, \

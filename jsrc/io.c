@@ -252,7 +252,7 @@ static I advl(I j,I n,C*s){B b;C c,*v;
 }    /* advance one line on CR, CRLF, or LF */
 
 void breakclose(JS jt);
-#define DISABLEATTN JT(jt,adbreakr)=(C*)&break0;
+#define DISABLEATTN JT(jt,adbreakr)=BREAK0;
 #define ENABLEATTN JT(jt,adbreakr)=JT(jt,adbreak);
 #define WITHATTNDISABLED(s) {DISABLEATTN s ENABLEATTN}
 

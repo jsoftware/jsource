@@ -863,9 +863,16 @@ typedef struct{
 
 
 
-typedef struct {AF valencefns[2];A fgh[3];union { D lD; void *lvp[2]; I lI; I4 lI4[4]; I lclr[2]; AF lfns[2]; struct {I parm; AF func;} lpf; } localuse;I4 flag;UI4 flag2; RANK2T lrr; RANKT mr; C id; C lc;} V;  // two cachelines exactly in 64-bit
-// the localuse fields are not freed or counted for space, as the f/g/h fields are.  It is for local optimizations only.  We put if first so that the rest of
-// the block, which is used more, is in a single cacheline.  Local uses are:
+typedef struct {
+ RANK2T lrr;  // combining dyad ranks: (left<<RANKTX)|right
+ RANKT mr;  // combining monad rank
+ C id;  // pseudochar for the function encoded here
+ C lc;  // lc is a local-use byte.  Used in atomic dyads to indicate which singleton function to execute.  in the derived function from fold, lc has the original id byte of the fold op
+ // end of first cacheline, which is not used much during execution
+ AF valencefns[2];
+ A fgh[3];
+ union { D lD; void *lvp[2]; I lI; I4 lI4[4]; I lclr[2]; AF lfns[2]; struct {I parm; AF func;} lpf; } localuse;
+// the localuse fields are not freed or counted for space, as the f/g/h fields are.  It is for local optimizations only.  Local uses are:
 // for ATOMIC ops, lvp[] is pointer to the VA/UA block for adocv [dyad then monad]
 // for name references (id=CTILDE), lvp[0] is LX value of the last resolution
 // for FIT conj, the CCT data
@@ -877,14 +884,13 @@ typedef struct {AF valencefns[2];A fgh[3];union { D lD; void *lvp[2]; I lI; I4 l
 // for u&.[:]v, lvp[0] points to the verb whose inverse is needed
 // for x <;.0 y  and  x (<;.0~ -~/"2)~ y, lpf.parm is ~0 for first, 0 for second, and func points to failover routine
 // for dyads ; (,<) ,&[:]<  lclr[0] indicates which function
+ I4 flag;
+ UI4 flag2;
+} V;  // two cachelines exactly in 64-bit
+// The AN and AR fields of functions are not used
 
-// lc is a local-use byte.  Used in atomic dyads to indicate which singleton function to execute
-// in the derived function from fold, lc has the original id byte of the fold op
 
-// id must be in the last word  so that we can use validitymask to point to it
-
-
-#define ID(f)  FAV(AT(f?f:(A)(validitymask+12))&FUNC?f:(A)validitymask)->id  // can be branchless, if compiler can manage it
+#define ID(f)  FAV(AT(f?f:FUNCTYPE0)&FUNC?f:FUNCID0)->id  // can be branchless, if compiler can manage it
 #define VFLAGNONE 0L
 #define VRTNNONE ((A)0)
   
@@ -982,6 +988,17 @@ typedef struct {AF valencefns[2];A fgh[3];union { D lD; void *lvp[2]; I lI; I4 l
 #define VF2USESITEMCOUNT2W  ((I)(((I)1)<<VF2USESITEMCOUNT2WX))
 #define VF2USESITEMCOUNT2AX 19   // This verb can make use of an item count stored in y.  Monad case only
 #define VF2USESITEMCOUNT2A  ((I)(((I)1)<<VF2USESITEMCOUNT2AX))
+
+// Canned blocks
+// NOTE: for fetching IDs we use the validitymask as a safe place to fetch 0s from.  We know that
+// validitymask[15] will be 0 and we use &validitymask[11] as (an A* with AT=0 (a non-function) and AC=0) or an L* with val=0; and &validitymask[0] as a V* with ID of 0
+#define FUNCTYPE0 ((A)(validitymask+12))  // 0 0 0 0, which has a 0 in the AT field
+#define FUNCID0 ((A)(validitymask+12))  // 0, which has a 0 in the id field of V
+#define SYMVAL0 ((L*)(validitymask+12))  // 0 0, which has a 0 in the val field of L
+#define AFLAG0 ((A)(validitymask+12))  // 0 0, which has a 0 in the flag field of A
+#define ZAPLOC0 ((A*)(validitymask+12))  // 0 used as a null pointer to the tpop stack
+#define PSTK2NOTFINALASGN ((PSTK*)(validitymask+12)-2)  // 0 in position [2], signifying NOT final assignment (used for errors)
+#define BREAK0 ((C*)(validitymask+12))  // 0 to indicate no ATTN requested
 
 // layout of primitive, in the primtbl.  It is a memory header (shape 0) followed by a V
 typedef struct __attribute__((aligned(CACHELINESIZE))) {I memhdr[AKXR(0)/SZI]; union { V primvb; I primint; } prim; } PRIM;  // two cachelines exactly in 64-bit

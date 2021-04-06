@@ -34,7 +34,6 @@ CREBLOCKATOMI(mark,MARK,0)  // parser mark, also used generally as a special val
 CREBLOCKATOMI(imax,INT,IMAX)  // max positive value
 CREBLOCKATOMI(chrcolon,LIT,':')  // the one character
 CREBLOCKATOMI(chrspace,LIT,' ')  // the one character
-US   break0=0;   // always 0: used to ignore ATTN interrupts
 D   inf=INFINITY;                /* _                                    */
 D   infm=-INFINITY;               /* __                                   */
 #define CREBLOCKVEC1I(name,t,v) I __attribute__((aligned(CACHELINESIZE))) B##name[9]={(7+1)*SZI,(t)&TRAVERSIBLE,0,(t),ACPERMANENT,1,1,1,(v)};
@@ -44,8 +43,9 @@ CREBLOCKVEC1I(iv1,INT,1)     /* ,1   also extended integer 1                    
 CREBLOCKVEC2I(mtm,B01)    /* ,0   also extended integer 0                                */
 D   jnan=NAN;               /* _.                                   */
 A   mnuvxynam[6]={0,0,0,0,0,0};   // name blocks for all arg names
-// NOTE: for fetching IDs we use the validitymask as a safe place to fetch 0s from.  We know that
-// validitymask[15] will be 0 and we use &validitymask[11] as (an A* with AT=0 (a non-function) and AC=0) or an L* with val=0; and &validitymask[0] as a V* with ID of 0
+// validitymask is used mostly to set a sequence of all1/all0 words in a ymm reg.  We also use it as a read-only area containing
+// 0 or 1 fields.  We put all those fields over validitymask so that we use just one cacheline for all the uses.  The mappings into
+// validitymask are in jtype.h
 #if !SY_64
 long long validitymask[16]={-1, -1, 0, 0, -1, -1, 0, 0, -1, -1, 0, 0,0,0,0,0};  // maskload expect s64x2 mask
 #elif C_AVX || EMU_AVX || EMU_AVX2

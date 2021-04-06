@@ -74,11 +74,11 @@ int main(){
 	printf ("IPPROTO_MAX=: %d\n",IPPROTO_MAX);
 	puts("");
 	puts("");
-	printf ("INADDR_ANY=: %lu\n",INADDR_ANY);
+	printf ("INADDR_ANY=: %u\n",INADDR_ANY);
 	printf ("INADDR_LOOPBACK=: %d\n",INADDR_LOOPBACK);
-	printf ("INADDR_BROADCAST=: %lu\n",INADDR_BROADCAST);
+	printf ("INADDR_BROADCAST=: %u\n",INADDR_BROADCAST);
 #ifdef INADDR_NONE
-	printf ("INADDR_NONE=: %lu\n",INADDR_NONE);
+	printf ("INADDR_NONE=: %u\n",INADDR_NONE);
 #else
 	puts ("INADDR_NONE=: _1");
 #endif

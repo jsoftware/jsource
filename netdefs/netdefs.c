@@ -25,8 +25,8 @@
 int main(){
 	printf ("NB. do not edit -- created by sym2ijs\n\n");
 	printf ("cocurrent <'jdefs'\n\n");
-	printf ("FIONBIO=: %d\n",FIONBIO);
-	printf ("FIONREAD=: %d\n",FIONREAD);
+	printf ("FIONBIO=: %d\n",(int)FIONBIO);
+	printf ("FIONREAD=: %d\n",(int)FIONREAD);
 	printf ("FD_SETSIZE=: %d\n",FD_SETSIZE);
 	puts("");
 	printf ("sockaddr_sz=: " FMTI "\n",sizeof (struct sockaddr));
@@ -60,7 +60,7 @@ int main(){
 	printf ("h_addr_list_sz=: " FMTI "\n",sizeof(((struct hostent*)0)->h_addr_list));
 	puts("");
 	puts("");
-	printf ("SIOCATMARK=: %d\n",SIOCATMARK);
+	printf ("SIOCATMARK=: %d\n",(int)SIOCATMARK);
 	puts("");
 	puts("");
 	printf ("IPPROTO_IP=: %d\n",IPPROTO_IP);
@@ -152,7 +152,7 @@ int main(){
 	printf ("msg_iov_sz=: " FMTI "\n",sizeof(((struct msghdr*)0)->msg_iov));
 	printf ("msg_iovlen_off=: " FMTI "\n",offset(struct msghdr,msg_iovlen));
 	printf ("msg_iovlen_sz=: " FMTI "\n",sizeof(((struct msghdr*)0)->msg_iovlen));
-#if defined(linux) || defined(Darwin)
+#if defined(linux) || defined(__APPLE__)
 	printf ("msg_control_off=: " FMTI "\n",offset(struct msghdr,msg_control));
 	printf ("msg_control_sz=: " FMTI "\n",sizeof(((struct msghdr*)0)->msg_control));
 	printf ("msg_controllen_off=: " FMTI "\n",offset(struct msghdr,msg_controllen));

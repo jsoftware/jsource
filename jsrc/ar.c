@@ -961,8 +961,8 @@ F1(jtslash){A h;AF f1;C c;V*v;I flag=0;
  }
  RZ(h=qq(w,v2(lr(w),RMAX)));  // create the rank compound to use if dyad
  RZ(h=fdef(0,CSLASH,VERB, f1,jtoprod, w,0L,h, flag|FAV(ds(CSLASH))->flag, RMAX,RMAX,RMAX));
- // set lvp[1] to point to the VARPSA block for w if w is atomic dyad; otherwise to the null VARPSA block
- FAV(h)->localuse.lvp[1]=v->flag&VISATOMIC2?((VA*)v->localuse.lvp[0])->rps:&rpsnull;
+ // set localuse to point to the VARPSA block for w if w is atomic dyad; otherwise to the null VARPSA block
+ FAV(h)->localuse.lu1.redfn=v->flag&VISATOMIC2?((VA*)((I)va+v->localuse.lu1.uavandx[1]))->rps:&rpsnull;
  R h;
 }
 
@@ -992,7 +992,7 @@ static DF2(jtfoldx){F2PREFIP;  // this stands in place of jtxdefn, which inplace
  // define the flags as the special global
  RZ(symbis(nfs(11,"Foldtype_j_"),sc(foldflag),jt->locsyms));
  // execute the Fold.  While it is running, set the flag to allow Z:
- B foldrunning=jt->foldrunning; jt->foldrunning=1; A z=(*(FAV(self)->localuse.lfns[1]))(jt,a,w,self); jt->foldrunning=foldrunning;
+ B foldrunning=jt->foldrunning; jt->foldrunning=1; A z=(*(FAV(self)->localuse.lu1.foldfn))(jt,a,w,self); jt->foldrunning=foldrunning;
  // if there was an error, save the error code and recreate the error at this level, to cover up details inside the script
  if(jt->jerr){I e=jt->jerr; RESETERR; jsignal(e);}
  R z;
@@ -1015,7 +1015,7 @@ found: ;
  // Apply Fold_j_ to the input arguments, creating a derived verb to do the work
  A derivvb; RZ(derivvb=unquote(a,w,foldconj));
  // Modify the derived verb to go to our preparatory stub.  Save the dyadic entry point for the derived verb so the stub can call it
- FAV(derivvb)->localuse.lfns[1]=FAV(derivvb)->valencefns[1];
+ FAV(derivvb)->localuse.lu1.foldfn=FAV(derivvb)->valencefns[1];
  FAV(derivvb)->valencefns[0]=FAV(derivvb)->valencefns[1]=jtfoldx;
  // Tell the stub what the original fold type was
  FAV(derivvb)->lc=FAV(self)->id;

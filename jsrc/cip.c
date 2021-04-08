@@ -1050,9 +1050,10 @@ static A jtipbx(J jt,A a,A w,C c,C d){A g=0,x0,x1,z;B*av,*av0,b,*v0,*v1,*zv;C c0
 static DF2(jtdotprod){A fs,gs;C c;I r;V*sv;
  ARGCHK3(a,w,self);
  sv=FAV(self); fs=sv->fgh[0]; gs=sv->fgh[1];  // op is fs . gs
- if((SGNIF(AT(a)&AT(w),B01X)&-AN(a)&-AN(w)&-(FAV(gs)->flag&VISATOMIC2))<0&&CSLASH==ID(fs)&&  // fs is c/
-     (c=FAV(FAV(fs)->fgh[0])->id,c==CSTARDOT||c==CPLUSDOT||c==CNE))R ipbx(a,w,c,FAV(gs)->id);  // [+.*.~:]/ . boolean
-r=lr(gs);   // left rank of v
+ if((SGNIF(AT(a)&AT(w),B01X)&-AN(a)&-AN(w)&-(FAV(gs)->flag&VISATOMIC2))<0&&CSLASH==FAV(fs)->id&&  // fs is c/
+// obsolete      (c=FAV(FAV(fs)->fgh[0])->id,c==CSTARDOT||c==CPLUSDOT||c==CNE))R ipbx(a,w,c,FAV(gs)->id);  // [+.*.~:]/ . boolean
+     (c=FAV(FAV(fs)->fgh[0])->id,BETWEENC((c^(CPLUSDOT^CEQ)),CSTARDOT,CNE)))R ipbx(a,w,c,FAV(gs)->id);  // [+.*.~:]/ . boolean   swap = and +., then test for range
+ r=lr(gs);   // left rank of v
  A z; R df2(z,a,w,atop(fs,qq(gs,v2(r==RMAX?r:1+r,RMAX))));  // inner product according to the Dic
 }
 
@@ -1076,11 +1077,12 @@ DF1(jtdetxm){A z; R dotprod(IRS1(w,0L,1L,jthead,z),det(minors(w),self),self);}
 
 F2(jtdot){A f,h=0;AF f2=jtdotprod;C c,d;
  ASSERTVV(a,w);
- if(CSLASH==ID(a)){
-  f=FAV(a)->fgh[0]; c=ID(f); d=ID(w);  // op was c/ . d
+ if(CSLASH==FAV(a)->id){
+  f=FAV(a)->fgh[0]; c=FAV(f)->id; d=FAV(w)->id;  // op was c/ . d
   if(d==CSTAR){
    if(c==CPLUS )f2=jtpdt;   // +/ . * is a special function
    if(c==CMINUS)RZ(h=eval("[: -/\"1 {.\"2 * |.\"1@:({:\"2)"));  // -/ . * - calculate some function used by determinant?
- }}
+  }
+ }
  R fdef(0,CDOT,VERB, jtdet,f2, a,w,h, 0L, 2L,RMAX,RMAX);
 }

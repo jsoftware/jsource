@@ -112,7 +112,7 @@ A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I
   if(((AT(f)^B01)|AR(f)|BAV0(f)[0])==0&&BOTHEQ8(gi,hi,CEPS,CDOLLAR))f1=jtisempty;  // 0 e. $, accepting only boolean 0
   if(LIT&AT(f)&&1==AR(f)&&BOTHEQ8(gi,hi,CTILDE,CFORK)&&CFROM==ID(gv->fgh[0])){
    x=hv->fgh[0];
-   if(LIT&AT(x)&&1==AR(x)&&CIOTA==ID(hv->fgh[1])&&CRIGHT==ID(hv->fgh[2])){f1=jtcharmapa;  flag &=~(VJTFLGOK1);}  // (N {~ N i, ])
+   if(LIT&AT(x)&&1==AR(x)&&CIOTA==ID(hv->fgh[1])&&CRIGHT==ID(hv->fgh[2])){f1=jtcharmapa;  flag &=~(VJTFLGOK1);}  // (N {~ N i. ])
   }
   R fdef(0,CFORK,VERB, f1,jtnvv2, f,g,h, flag, RMAX,RMAX,RMAX);
  }
@@ -125,69 +125,73 @@ A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I
  }
 
  switch(fi){
-  case CCAP:
-   // capped fork.  inplace if h can handle it, ASGSAFE if gh are safe
-   flag=(hv->flag&(VJTFLGOK1|VJTFLGOK2))+((gv->flag&hv->flag)&VASGSAFE);  // We accumulate the flags for the derived verb.  Start with ASGSAFE if all descendants are, and inplacing if h handles it
+ case CCAP:
+  // capped fork.  inplace if h can handle it, ASGSAFE if gh are safe
+  flag=(hv->flag&(VJTFLGOK1|VJTFLGOK2))+((gv->flag&hv->flag)&VASGSAFE);  // We accumulate the flags for the derived verb.  Start with ASGSAFE if all descendants are, and inplacing if h handles it
   // Copy the open/raze status from v into u@v
-   flag2 |= hv->flag2&(VF2WILLOPEN1|VF2WILLOPEN2W|VF2WILLOPEN2A|VF2USESITEMCOUNT1|VF2USESITEMCOUNT2W|VF2USESITEMCOUNT2A);
-   if(gi==CBOX)flag2|=VF2BOXATOP1|VF2BOXATOP2;   // [: < h
-   f1=on1cell; f2=jtupon2cell;
-   if(BOTHEQ8(gi,hi,CSLASH,CDOLLAR)&&FAV(gv->fgh[0])->id==CSTAR){f1=jtnatoms;}  // [: */ $
-   if(gi==CPOUND){f1=hi==CCOMMA?jtnatoms:f1; f1=hi==CDOLLAR?jtrank:f1;}  // [: # ,   [: # $
-               break; /* [: g h */
-  case CSLASH: if(BOTHEQ8(gi,hi,CDIV,CPOUND)&&CPLUS==ID(fv->fgh[0])){f1=jtmean; flag|=VIRS1; flag &=~(VJTFLGOK1);} break;  /* +/%# */
-  case CAMP:   /* x&i.     { y"_ */
-  case CFORK:  /* (x i. ]) { y"_ */
-   if(hi==CQQ&&(y=hv->fgh[0],LIT&AT(y)&&1==AR(y))&&equ(ainf,hv->fgh[1])&&
-       (x=fv->fgh[0],LIT&AT(x)&&1==AR(x))&&CIOTA==ID(fv->fgh[1])&&
-       (fi==CAMP||CRIGHT==ID(fv->fgh[2]))){f1=jtcharmapb; flag &=~(VJTFLGOK1);} break;
-  case CAT:    /* <"1@[ { ] */
-   if(BOTHEQ8(gi,hi,CLBRACE,CRIGHT)){                                   
-    p=fv->fgh[0]; q=fv->fgh[1]; 
-    if(CLEFT==ID(q)&&CQQ==ID(p)&&(v=VAV(p),x=v->fgh[0],CLT==ID(x)&&v->fgh[1]==num(1))){f2=jtsfrom; flag &=~(VJTFLGOK2);}
-   }
-   break;
+  flag2 |= hv->flag2&(VF2WILLOPEN1|VF2WILLOPEN2W|VF2WILLOPEN2A|VF2USESITEMCOUNT1|VF2USESITEMCOUNT2W|VF2USESITEMCOUNT2A);
+  if(gi==CBOX)flag2|=VF2BOXATOP1|VF2BOXATOP2;   // [: < h
+  f1=on1cell; f2=jtupon2cell;
+  if(BOTHEQ8(gi,hi,CSLASH,CDOLLAR)&&FAV(gv->fgh[0])->id==CSTAR){f1=jtnatoms;}  // [: */ $
+  if(gi==CPOUND){f1=hi==CCOMMA?jtnatoms:f1; f1=hi==CDOLLAR?jtrank:f1;}  // [: # ,   [: # $
+              break; /* [: g h */
+ case CSLASH: if(BOTHEQ8(gi,hi,CDIV,CPOUND)&&CPLUS==FAV(fv->fgh[0])->id){f1=jtmean; flag|=VIRS1; flag &=~(VJTFLGOK1);} break;  /* +/%# */
+ case CAMP:   /* x&i.     { y"_ */
+ case CFORK:  /* (x i. ]) { y"_ */
+  if(hi==CQQ&&(y=hv->fgh[0],LIT&AT(y)&&1==AR(y))&&equ(ainf,hv->fgh[1])&&
+      (x=fv->fgh[0],LIT&AT(x)&&1==AR(x))&&CIOTA==ID(fv->fgh[1])&&
+      (fi==CAMP||CRIGHT==ID(fv->fgh[2]))){f1=jtcharmapb; flag &=~(VJTFLGOK1);} break;
+ case CAT:    /* <"1@[ { ] */
+  if(BOTHEQ8(gi,hi,CLBRACE,CRIGHT)){                                   
+   p=fv->fgh[0]; q=fv->fgh[1]; 
+// obsolete     if(CQQ==FAV(p)->id&&CLEFT==ID(q)&&(v=VAV(p),x=v->fgh[0],CLT==ID(x)&&v->fgh[1]==num(1))){f2=jtsfrom; flag &=~(VJTFLGOK2);}
+   if(CQQ==FAV(p)->id&&CLEFT==ID(q)&&(CLT==ID(FAV(p)->fgh[0])&&FAV(p)->fgh[1]==num(1))){f2=jtsfrom; flag &=~(VJTFLGOK2);}
+  }
+  break;
  }
- switch(fi==CCAP?gi:hi){
-  case CQUERY:  if((hi&~1)==CPOUND){f2=jtrollk; flag &=~(VJTFLGOK2);}  break;  // [: ? #  or  [: ? $
-  case CQRYDOT: if((hi&~1)==CPOUND){f2=jtrollkx; flag &=~(VJTFLGOK2);} break;  // [: ?. #  or  [: ?. $ 
-  case CICAP:   if(fi==CCAP){if(hi==CNE)f1=jtnubind; else if(FIT0(CNE,hv)){f1=jtnubind0; flag &=~(VJTFLGOK1);}}else if(hi==CEBAR){f2=jtifbebar; flag&=~VJTFLGOK2;} break;
-  case CSLASH:  c=ID(gv->fgh[0])+1; m=-1;m=BETWEENC(c,CPLUS+1,CSTARDOT+1)?c:m;  // set m to 4-6 if [: + +. *./  h  or  f   + +. *. mod    h/  ??
-                if(fi==CCAP&&FAV(gv->fgh[0])->flag&FAV(h)->flag&VISATOMIC2){f2=jtfslashatg;}  // [: f/ g when f and g are both atomic
-                break;
-  case CFCONS:  if(hi==CFCONS){x=hv->fgh[2]; m=gi+BAV(x)[0]; m=(UI)(B01&AT(x))>((UI)(gi&~2)-CIOTA)?m:-1;} break;  // x-> constant; must be boolean, and i./i:   non-[: i. 0:/1: sets m to 0/1
-  case CRAZE:   if(hi==CCUT){   // [: ; h;.n
-                 j=hv->localuse.lI;
-                 if(hv->valencefns[1]==jtboxcut0){f2=jtrazecut0; flag &=~(VJTFLGOK2);}
-                 else if(boxatop(h)){  // h is <@g;.j   detect ;@:(<@(f/\);._2 _1 1 2
-                  if((((I)1)<<(j+3))&0x36) { // fbits are 3 2 1 0 _1 _2 _3; is 1/2-cut?
-                   A wf=hv->fgh[0]; V *wfv=FAV(wf); A hg=wfv->fgh[1]; V *hgv=FAV(hg);  // w is <@g;.k  find g
-                   if((I)(((hgv->id^CBSLASH)-1)|((hgv->id^CBSDOT)-1))<0) {  // g is gf\ or gf\.
-                    A hgf=hgv->fgh[0]; V *hgfv=FAV(hgf);  // find gf
-                    if(hgfv->id==CSLASH){  // gf is gff/  .  We will analyze gff later
-                     f1=jtrazecut1; f2=jtrazecut2; flag&=~(VJTFLGOK1|VJTFLGOK2);
-                    }
-                   }
-                  }
-                 }
 
-                } break;
+ // m will be 0-7 for a comparison combination.  bit 2 of m is set for [: op/ comp, 0 for comp i: 0:/1:
+ // m bits 0-1 indicate the combiner: +/ +./ *./ 
+ switch(fi==CCAP?gi:hi){
+ case CQUERY:  if((hi&~1)==CPOUND){f2=jtrollk; flag &=~(VJTFLGOK2);}  break;  // [: ? #  or  [: ? $
+ case CQRYDOT: if((hi&~1)==CPOUND){f2=jtrollkx; flag &=~(VJTFLGOK2);} break;  // [: ?. #  or  [: ?. $ 
+ case CICAP:   if(fi==CCAP){if(hi==CNE)f1=jtnubind; else if(FIT0(CNE,hv)){f1=jtnubind0; flag &=~(VJTFLGOK1);}}else if(hi==CEBAR){f2=jtifbebar; flag&=~VJTFLGOK2;} break;
+ case CSLASH:  c=ID(gv->fgh[0])+1; m=-1;m=BETWEENC(c,CPLUS+1,CSTARDOT+1)?c:m;  // set m to 4-6 if [: + +. *./  h  [or  f   + +. *. mod    h/, never used]
+               if(fi==CCAP&&FAV(gv->fgh[0])->flag&FAV(h)->flag&VISATOMIC2){f2=jtfslashatg;}  // [: f/ g when f and g are both atomic, treat as special
+               break;
+ case CFCONS:  if(hi==CFCONS){x=hv->fgh[2]; m=gi+BAV(x)[0]; m=(UI)(B01&AT(x))>((UI)(gi&~2)-CIOTA)?m:-1;} break;  // x-> constant; must be boolean, and i./i:   non-[: i. 0:/1: sets m to 0/1
+ case CRAZE:
+  if(hi==CCUT){   // [: ; h;.n
+   j=hv->localuse.lu1.gercut.cutn;  // cut type
+   if(hv->valencefns[1]==jtboxcut0){f2=jtrazecut0; flag &=~(VJTFLGOK2);}
+   else if(boxatop(h)){  // h is <@g;.j   detect ;@:(<@(f/\);._2 _1 1 2
+    if((((I)1)<<(j+3))&0x36) { // fbits are 3 2 1 0 _1 _2 _3; is 1/2-cut?
+     A wf=hv->fgh[0]; V *wfv=FAV(wf); A hg=wfv->fgh[1]; V *hgv=FAV(hg);  // w is <@g;.k  find g
+     if((I)(((hgv->id^CBSLASH)-1)|((hgv->id^CBSDOT)-1))<0) {  // g is gf\ or gf\.
+      A hgf=hgv->fgh[0]; V *hgfv=FAV(hgf);  // find gf
+      if(hgfv->id==CSLASH){  // gf is gff/  .  We will analyze gff later
+       f1=jtrazecut1; f2=jtrazecut2; flag&=~(VJTFLGOK1|VJTFLGOK2);
+      }
+     }
+    }
+   }
+  } break;
  }
 
  // comparison combinations
- if(0<=m){
-  // m has information about the comparison combiner.  See if the right is a comparison
+ if(0<=m){  // comparison combiner has been found.  Is there a comparison?
+  // m has information about the comparison combiner.  See if there is a comparison
   V *cv=(m&=7)>=4?hv:fv;  // cv point to comp in comp i. 0:  or [: +/ comp
   I d=cv->id;  // comparison op
-  I e=d; e=d==CFIT&&cv->localuse.lD==1.0?FAV(cv->fgh[0])->id:e;  // comparison op, possibly from fit
+  I e=d; e=d==CFIT&&cv->localuse.lu1.cct==1.0?FAV(cv->fgh[0])->id:e;  // comparison op, possibly from u!.0
   if(BETWEENC(e,CEQ,CEPS)){
    // valid comparison combination.  m is the combiner, e is the comparison
    f2=d==CFIT?jtfolkcomp0:jtfolkcomp;  // valid comparison type: switch to it
-   flag+=(e-CEQ)+8*m; flag &=~(VJTFLGOK1|VJTFLGOK2);  // set comp type; entry point does not allow jt flags
+   flag+=(e-CEQ)+8*m; flag &=~(VJTFLGOK1|VJTFLGOK2);  // set comp type mmmeee; entry point does not allow jt flags
   }
  }
 
- // the zstored form of a capped fork shifts gh to the place of fg and leaves h==0.  This allows the code for
+ // the stored form of a capped fork shifts gh to the place of fg and leaves h==0.  This allows the code for
  // [: g h to be the same as f@:g
  if(fi==CCAP){f=g; g=h; h=0;}  // dehydrate capped fork
  // If this fork is not a special form, set the flags to indicate whether the f verb does not use an
@@ -251,9 +255,9 @@ static DF1(jthkodom){DECLFG;B b=0;I n,*v;
 static DF1(jthkindexofmaxmin){I z=0;
  ARGCHK2(w,self);
  I n=AN(w);
- if(!(1==AR(w)&&AT(w)&INT+FL))R hook1(w,self);
+ if(!(1==AR(w)&&AT(w)&INT+FL))R hook1(w,self);  // revert if not int/fl args
  if(n>1){
-  switch((AT(w)&INT)+(CICO==ID(FAV(self)->fgh[0])?2:0)+(CMAX==ID(FAV(FAV(self)->fgh[1])->fgh[0]))){
+  switch((AT(w)&INT)+(FAV(FAV(self)->fgh[0])->id&2)+(FAV(FAV(FAV(self)->fgh[1])->fgh[0])->id&1)){  // INT*4+ICO*2+MAX
   case 0: IDOTSEARCH(D,<,<=)
   case 1: IDOTSEARCH(D,>,>=)
   case 2: ICOSEARCH(D,<,<=)
@@ -293,8 +297,9 @@ F2(jthook){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE,linktype=0;V*u,*v;
    }else if(d==CLDOT){   // (compare L.)
     I comptype=0; comptype=c==CLT?VFHKLVLGT:comptype; comptype=c==CGT?VFHKLVLDEC:comptype; comptype=c==CLE?VFHKLVLDEC+VFHKLVLGT:comptype; comptype=c==CGE?4:comptype;
     if(comptype){flag|=comptype; f2=jthklvl2; flag &=~VJTFLGOK2;}
-   }else        switch(c){
-    case CSLDOT:  if(COMPOSE(d)&&e==CIOTA&&CPOUND==ID(v->fgh[1])){  // (f/. i.@#)  or @:
+   }else{
+    switch(c){
+    case CSLDOT:  if(COMPOSE(d)&&e==CIOTA&&CPOUND==ID(v->fgh[1])){  // (f/. i.@#)  or @: & &:
                    if(CBOX==ID(u->fgh[0])){f1=jtkeybox; flag &=~VJTFLGOK1;} // (</. i.@#)
                    else if(u->valencefns[1]==jtkeyheadtally){f1=jtkeyheadtally; flag &=~VJTFLGOK1;} // ((#,{.)/. i.@#) or  (({.,#)/. i.@#)
                   } break;
@@ -303,20 +308,21 @@ F2(jthook){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE,linktype=0;V*u,*v;
     case CIOTA:   
     case CICO:    if(BOTHEQ8(d,(e&~1),CSLASH,CMIN)){f1=jthkindexofmaxmin; flag &=~VJTFLGOK1;} break;  // >./ <./
     case CFROM:   if(d==CGRADE){f2=jtordstati; flag &=~VJTFLGOK2;} else if(d==CTILDE&&e==CGRADE){f2=jtordstat; flag &=~VJTFLGOK2;}
+    }
    }
    // Return the derived verb
    A z;RZ(z=fdef(0,CHOOK, VERB, f1,f2, a,w,0L, flag, RMAX,RMAX,RMAX));
-   FAV(z)->localuse.lclr[0]=linktype; R z;  // if it's a form of ;, install the form
+   FAV(z)->localuse.lu1.linkvb=linktype; R z;  // if it's a form of ;, install the form
   // All other cases produce an adverb
   case BD(ADV, ADV ): f1=taa; break;
   case BD(NOUN,CONJ):
   case BD(VERB,CONJ):
-   f1=tvc; id=ID(w);
+   f1=tvc; id=FAV(w)->id;
    if(BOX&AT(a)&&(id==CATDOT||id==CGRAVE||id==CGRCO)&&gerexact(a))flag+=VGERL;
    break;
   case BD(CONJ,NOUN):
   case BD(CONJ,VERB):
-   f1=tcv; id=ID(a);
+   f1=tcv; id=FAV(a)->id;
    if(BOX&AT(w)&&(id==CGRAVE||id==CPOWOP&&1<AN(w))&&gerexact(w))flag+=VGERR;
  }
  R fdef(0,CADVF, ADV, f1,0L, a,w,0L, flag, 0L,0L,0L);

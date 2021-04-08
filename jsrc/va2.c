@@ -476,7 +476,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
   I wt=AT(w);
   if(likely(!(((I)jtinplace&(JTRETRY|JTEMPTY))+((at|wt)&(NOUN&~(B01|INT|FL)))))){  // no error, bool/int/fl args, no empties
    // Here for the fast and important case, where the arguments are both B01/INT/FL
-   VA *vainfo=(VA*)FAV(self)->localuse.lvp[0];  // extract table line from the primitive
+   VA *vainfo=((VA*)((I)va+FAV(self)->localuse.lu1.uavandx[1]));  // extract table line from the primitive
    // The index into va is atype*3 + wtype, calculated sneakily.  We test here to avoid the call overhead
    aadocv=&vainfo->p2[(at>>(INTX-1))+((at+wt)>>INTX)];
   }else{
@@ -1326,7 +1326,7 @@ VA2 jtvar(J jt,A self,I at,I wt){I t;
   // B,I,D; then [9] CMPX [10] XINT (but not RAT) [11] RAT [12] SBT (symbol)
   // then [13-19] are for verb/, with precisions B I D Z X Q Symb
   // [20-26] for verb\, and [27-33] for verb\.
-  VA *vainfo=(VA*)FAV(self)->localuse.lvp[0];  // extract table line from the primitive
+  VA *vainfo=((VA*)((I)va+FAV(self)->localuse.lu1.uavandx[1]));  // extract table line from the primitive
   if(!((t=(at|wt))&(NOUN&~(B01|INT|FL)))){
    // Here for the fast and important case, where the arguments are both B01/INT/FL
    // The index into va is atype*3 + wtype, calculated sneakily

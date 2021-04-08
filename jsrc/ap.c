@@ -739,7 +739,7 @@ static DF2(jtinfixd){A z;C*x,*y;I c=0,d,k,m,n,p,q,r,*s,wr,*ws,wt,zc;
  wr=AR(w); ws=AS(w); wt=AT(w); SETIC(w,n);   // n=#items of w
  RE(m=i0(vib(a))); if(m==IMAX){m=n+1;} p=m==IMIN?IMAX:ABS(m);  // m=x arg, p=abs(m)
  if(0>m){p=MIN(p,n); if(likely(p!=0))d=(n+p-1)/p;else d=0;}else{ASSERT(IMAX-1>n-m,EVDOMAIN); d=MAX(0,1+n-m);}  // d=#partitions; error if n-m+1 overflows
- if(unlikely(CCOMMA==ID(FAV(self)->fgh[0]))){RE(c=aii(w)); DPMULDE(p,c,zc) r=2;}  // c=#atoms in item of w; zc=#atoms in cell of result; r=result rank
+ if(unlikely(CCOMMA==FAV(FAV(self)->fgh[0])->id)){RE(c=aii(w)); DPMULDE(p,c,zc) r=2;}  // c=#atoms in item of w; zc=#atoms in cell of result; r=result rank
  else{if(n)RE(c=aii(w)); zc=p; r=wr?1+wr:2;}   // if w has no items, proceed allocating 0 items of result
  // if m<0 and there is no final shard, create a virtual result
  q=d*p-n;   // number of uncopied or overcopied cells.  Uncopied cells are a shard when m<0; overcopied cells happen whem m>1.
@@ -938,7 +938,7 @@ static DF2(jtmovfslash){A x,z;B b;C id,*wv,*zv;I d,m,m0,p,t,wk,wt,zi,zk,zt;
  if(m==1)R AR(w)?w:ravel(w);  // 1 f/\ w is always w, except on an atom
  if((SGNIF((m0==2)&FAV(self)->flag,VFSCANIRSX)&-(wt&DENSE)&(1-p))<0)R jtinfix2(jt,w,self);  // if  2 u/\ y supports IRS, go do (}: u }.) y - faster than cells - if >1 cell and dense  uses VFSCANIRSX=0
  if((((2^m)-1)|(m-1)|(p-m))<0)R jtinfixprefix2(jt,a,w,self);  // If m is 0 or 2, or if there is just 1 infix, go to general case
- x=FAV(self)->fgh[0]; x=FAV(x)->fgh[0]; id=ID(x); 
+ x=FAV(self)->fgh[0]; x=FAV(x)->fgh[0]; id=FAV(x)->id; 
  if(wt&B01){id=id==CMIN?CSTARDOT:id; id=id==CMAX?CPLUSDOT:id;}
  if(id==CBDOT&&(x=VAV(x)->fgh[1],INT&AT(x)&&!AR(x)))id=(C)AV(x)[0];
  switch(AR(w)&&BETWEENC(m0,0,AS(w)[0])?id:0){
@@ -991,7 +991,7 @@ F1(jtbslash){A f;AF f1=jtinfixprefix1,f2=jtinfixprefix2;V*v;I flag=FAV(ds(CBSLAS
  }
  RZ(f=ADERIV(CBSLASH,f1,f2,flag,RMAX,0L,RMAX));
  // Fill in the lvp[1] field: with 0 if not f/\; with the lookup field for f/ if f/\ .
- FAV(f)->localuse.lvp[1]=v->id==CSLASH?v->localuse.lvp[1]:0;  // f is nonnull if f/\ .
+ FAV(f)->localuse.lu1.redfn=v->id==CSLASH?v->localuse.lu1.redfn:0;  // f is nonnull if f/\ .
  R f;
 }
 

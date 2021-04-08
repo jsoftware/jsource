@@ -85,7 +85,7 @@ F2PREFIP;ARGCHK2(a,w);
  }
 #endif
  ASSERT(!((AT(a)|AT(w))&SPARSE),EVNONCE);   // can't box sparse values
- I optype=FAV(self)->localuse.lclr[0];  // flag: sign set if (,<) or ,&< or (;<) which will always box w; bit 0 set if (,<)
+ I optype=FAV(self)->localuse.lu1.linkvb;  // flag: sign set if (,<) or ,&< or (;<) which will always box w; bit 0 set if (,<)
  realizeifvirtual(w); realizeifvirtual(a);  // it's going into an array, so realize it
  // if (,<) and a is not boxed singleton atom/list, revert
  if(unlikely((optype&1)>((AT(a)>>BOXX)&SGNTO0((AR(a)-2)&((AN(a)^1)-1))))){R jthook2cell(jtinplace,a,w,self);}  // (,<) and ((not boxed) or (rank>1) or (n!=1)) - revert to normal processing

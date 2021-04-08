@@ -988,6 +988,8 @@ extern UC       hwaes;
 extern UC       hwfma;
 extern VARPSA rpsnull;
 extern PRIM sfn0overself;
+extern UA va1tab[];
+extern VA va[];
 
 #if (SYS & SYS_ATARIST+SYS_ATT3B1)
 extern int      memcmp();       /* C library fn                            */

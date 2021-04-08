@@ -1243,19 +1243,23 @@ RESTRICTF A jtgah(J jt,I r,A w){A z;
 // clone w, returning the address of the cloned area.  Result is NOT recursive, not AFRO, not virtual
 F1(jtca){A z;I t;P*wp,*zp;
  ARGCHK1(w);
- t=AT(w);
+ I n=AN(w);  t=AT(w);
  if(unlikely((t&SPARSE)!=0)){
-  GASPARSE(z,t,AN(w),AR(w),AS(w))
+  GASPARSE(z,t,n,AR(w),AS(w))
   wp=PAV(w); zp=PAV(z);
   SPB(zp,a,ca(SPA(wp,a)));
   SPB(zp,e,ca(SPA(wp,e)));
   SPB(zp,i,ca(SPA(wp,i)));
   SPB(zp,x,ca(SPA(wp,x)));
  }else{
-  if(t&NAME){GATV(z,NAME,AN(w),AR(w),AS(w));AT(z)=t;}  // GA does not allow NAME type, for speed
-  else GA(z,t,AN(w),AR(w),AS(w));
+  if(t&NAME){GATV(z,NAME,n,AR(w),AS(w));AT(z)=t;}  // GA does not allow NAME type, for speed
+  else {
+   n=t&FUNC?(VERBSIZE+SZI-1)>>LGSZI:n;  // AN field of func is used for 
+   GA(z,t,n,AR(w),AS(w));
+   AN(z)=AN(w);  // copy AN, which has its own meaning in FUNC
+  }
   I bpt; if(likely(CTTZ(t)<=C4TX))bpt=bpnoun(t);else bpt=bp(t);
-  MC(AV(z),AV(w),(AN(w)*bpt)+(t&NAME?sizeof(NM):0));}
+  MC(AV(z),AV(w),(n*bpt)+(t&NAME?sizeof(NM):0));}
  R z;
 }
 // clone block only if it is read-only

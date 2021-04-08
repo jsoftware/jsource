@@ -261,14 +261,14 @@ DF2(jteachr){ARGCHK3(a,w,self); I rcr=AR(w)-1<0?0:AR(w)-1; I rr=rr(self); rr=rcr
 // u&.v
 // PUSH/POP ZOMB is performed in atop/amp/ampco
 // under is for when we could not precalculate the inverse.  The verb is in localuse
-static DF1(jtunder1){F1PREFIP;DECLFG;A fullf; RZ(fullf=atop(invrecur(fix(sv->localuse.lvp[0],sc(FIXASTOPATINV))),sv->fgh[2])); R (FAV(fullf)->valencefns[0])(FAV(fullf)->flag&VJTFLGOK1?jtinplace:jt,w,fullf);}
-static DF2(jtunder2){F2PREFIP;DECLFG;A fullf; RZ(fullf=atop(invrecur(fix(sv->localuse.lvp[0],sc(FIXASTOPATINV))),sv->fgh[2])); R (FAV(fullf)->valencefns[1])(FAV(fullf)->flag&VJTFLGOK2?jtinplace:jt,a,w,fullf);}
+static DF1(jtunder1){F1PREFIP;DECLFG;A fullf; RZ(fullf=atop(invrecur(fix(sv->localuse.lu1.wvb,sc(FIXASTOPATINV))),sv->fgh[2])); R (FAV(fullf)->valencefns[0])(FAV(fullf)->flag&VJTFLGOK1?jtinplace:jt,w,fullf);}
+static DF2(jtunder2){F2PREFIP;DECLFG;A fullf; RZ(fullf=atop(invrecur(fix(sv->localuse.lu1.wvb,sc(FIXASTOPATINV))),sv->fgh[2])); R (FAV(fullf)->valencefns[1])(FAV(fullf)->flag&VJTFLGOK2?jtinplace:jt,a,w,fullf);}
 // underh has the inverse precalculated, and the inplaceability set from it.  It handles &. and &.: which differ only in rank
 static DF1(jtunderh1){F1PREFIP;DECLFGH; R (FAV(hs)->valencefns[0])(jtinplace,w,hs);}
 static DF2(jtunderh2){F2PREFIP;DECLFGH; R (FAV(hs)->valencefns[1])(jtinplace,a,w,hs);}
 // undco is for when we could not precalculate the inverse
-static DF1(jtundco1){F1PREFIP;DECLFG;A fullf; RZ(fullf=atop(inv(sv->localuse.lvp[0]),sv->fgh[2])); R (FAV(fullf)->valencefns[0])(FAV(fullf)->flag&VJTFLGOK1?jtinplace:jt,w,fullf);}
-static DF2(jtundco2){F2PREFIP;DECLFG;A fullf; RZ(fullf=atop(inv(sv->localuse.lvp[0]),sv->fgh[2])); R (FAV(fullf)->valencefns[1])(FAV(fullf)->flag&VJTFLGOK2?jtinplace:jt,a,w,fullf);}
+static DF1(jtundco1){F1PREFIP;DECLFG;A fullf; RZ(fullf=atop(inv(sv->localuse.lu1.wvb),sv->fgh[2])); R (FAV(fullf)->valencefns[0])(FAV(fullf)->flag&VJTFLGOK1?jtinplace:jt,w,fullf);}
+static DF2(jtundco2){F2PREFIP;DECLFG;A fullf; RZ(fullf=atop(inv(sv->localuse.lu1.wvb),sv->fgh[2])); R (FAV(fullf)->valencefns[1])(FAV(fullf)->flag&VJTFLGOK2?jtinplace:jt,a,w,fullf);}
 
 // versions for rank 0 (including each).  Passes inplaceability through
 // if there is only one cell, process it through under[h]1, which understands this type; if more, loop through
@@ -303,7 +303,7 @@ F2(jtunder){A x,wvb=w;AF f1,f2;B b,b1;C c,uid;I gside=-1;V*u,*v;
   gside=AN(AAV(w)[0])==0;  // the index to the argument v will act on (or -1 if not gerund)
   wvb=fx(AAV(w)[gside]);  // turn the gerund into a verb
  }
- ASSERTVV(a,wvb); v=FAV(wvb);  // v is id of w
+ ASSERTVV(a,wvb); v=FAV(wvb);  // v is V* for w
  c=0; f1=0; f2=0;
  // Set flag with ASGSAFE status of u/v, and inplaceable.  It will stay inplaceable unless we select an uninplaceable processing routine, or we
  // learn that v is uninplaceable.  If v is unknown, keep inplaceable, because we will later evaluate the compound & might be able to inplace then
@@ -315,7 +315,7 @@ F2(jtunder){A x,wvb=w;AF f1,f2;B b,b1;C c,uid;I gside=-1;V*u,*v;
    // We do not expose BOXATOP or ATOPOPEN flags, because we want all u&.> to go through this path & thus we don't want to allow other loops to break in
    // We set VIRS1 just in case a user writes u&.>"n which we can ignore
    // The flags are ignored during u&.>, but they can forward through to affect previous verbs.
- case CFORK: c=((ID(v->fgh[2]))&~1)!=CLEFT;  // ``` set c to 0 if h IS ][; fall through
+ case CFORK: c=((ID(v->fgh[2]))&~1)!=CLEFT;  // ``` set c to 0 if non-capped fork with h ][; fall through
  case CAMP:  
   u=FAV(a);  // point to a in a&.w.  w is f1&g1 or (f1 g1 h1)
   if(b1=CSLASH==(uid=u->id)){x=u->fgh[0]; if(AT(x)&VERB){u=FAV(x);uid=u->id;}else uid=0;}   // cases: f&.{f1&g1 or (f1 g1 h1)}  b1=0    f/&.{f1&g1 or (f1 g1 h1)}   b1=1
@@ -350,7 +350,7 @@ F2(jtunder){A x,wvb=w;AF f1,f2;B b,b1;C c,uid;I gside=-1;V*u,*v;
  if(!f2){f2=rlr+rrr?(flag&VFUNDERHASINV?jtunderh2:jtunder2):(flag&VFUNDERHASINV?jtunderh20:jtunder20); flag2|=VF2RANKATOP2; flag&=FAV(h)->flag|(~VJTFLGOK2);}  // allow inplace if v is known inplaceable
  RZ(h=fdef(flag2,CUNDER,VERB,(AF)(f1),(AF)(f2),a,w,h,(flag),rmr,rlr,rrr));
  // install wvb into the verb so we can get to it if needed
- FAV(h)->localuse.lvp[0]=wvb;
+ FAV(h)->localuse.lu1.wvb=wvb;
  R h;
 }
 
@@ -385,6 +385,6 @@ F2(jtundco){AF f1=0,f2;I gside=-1, flag=0;
  if(!f1)f1=flag&VFUNDERHASINV?jtunderh1:jtundco1; f2=flag&VFUNDERHASINV?jtunderh2:jtundco2; flag |= (FAV(a)->flag&FAV(wvb)->flag&VASGSAFE) + (FAV(h)->flag&(VJTFLGOK1|VJTFLGOK2));
  RZ(h=fdef(0,CUNDCO,VERB,(AF)(f1),(AF)(f2),a,w,h,flag,RMAX,RMAX,RMAX));
  // install wvb into the verb so we can get to it if needed
- FAV(h)->localuse.lvp[0]=wvb;
+ FAV(h)->localuse.lu1.wvb=wvb;
  R h;
 }

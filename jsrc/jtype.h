@@ -861,31 +861,49 @@ typedef struct{
 #define SBC2  1         /* 1 iff 2-byte character                          */
 #define SBC4  2         /* 2 iff 4-byte character                          */
 
+// Info for calling an atomic verb
+typedef struct {VF f;I cv;} VA2;  // for dyads
+typedef struct {VA1F f;I cv;} VA1;  // for monads
+typedef struct {VARPSF f;I cv;} VARPS;  // for reduce/prefix/suffix
 
+typedef struct {I nprec; VARPS actrtns[];} VARPSA;
+typedef struct {VA2 p2[13];VARPSA *rps;} VA;
+typedef struct {VA1 p1[6];} UA;
 
 typedef struct {
+ // the localuse fields are not freed or counted for space, as the f/g/h fields are.  They are for local optimizations only.
+ union {
+  // start with the larger localuse, which requires a second cacheline.  This is 16 bytes, the first 8 of which are in the excess (first) cacheline
+  I4 clr[4];   // used to init to 0 - extends the union for 32-bit
+  struct {AF func; I parm;} boxcut0;  // for x <;.0 y  and  x (<;.0~ -~/"2)~ y, .parm is ~0 for first, 0 for second, and .func points to failover routine (seldom used).  func in first cacheline
+  I4 srank[4];   // for RANK conj, the signed ranks - extends the union in 32-bit
+  // the rest do not require both cachelines in 64-bit
+  struct {
+   I filler;  // pad to cacheline
+   // end of first cacheline, which is not used much during execution
+   union {  // 8 bytes in the second (main) cacheline
+    D cct;  // for FIT conj, the CCT data.  For 32-bit, this extends the union, but that's OK since it doesn't add a cacheline.
+    struct {
+     I4 cgerx; // For cyclic iterators, the index of the next gerund to execute.  Here to avoid conflict with cut
+     I4 cutn;  // for u;.n where n is nonzero, n.  u/. also goes through this code.  There could be cyclic iterators but not boxcut
+    } gercut;
+    VARPSA *redfn;  // for reductions (u/ u/\ u/\.) address of rps block (may be dummy block)
+    US uavandx[2];   // offset from start of va/va1tbl to VA/UA block for adocv [monad then dyad]
+    AF foldfn;  // for Fold final operator, pointer to the dyadic EP of the handler (xdefn or unquote)
+    A wvb;  // for u&.[:]v, the verb whose inverse is needed
+    I linkvb;  // for dyads ; (,<) ,&[:]<  indicates which function
+    LX cachedref;  //  for namerefs ('name'~), 0 if non-cachable, neg if cachable but not yet cached, positive if cached
+   } lu1;  // this is the high-use stuff in the second cacheline
+  };
+ } localuse;
+ AF valencefns[2];   // function to call for monad,dayd
+ A fgh[3];  // operands of modifiers.  h is used for forks and also as a storage spot for parms.  all 3 are freed when the V block is freed
+ I4 flag;
+ UI4 flag2;
  RANK2T lrr;  // combining dyad ranks: (left<<RANKTX)|right
  RANKT mr;  // combining monad rank
  C id;  // pseudochar for the function encoded here
  C lc;  // lc is a local-use byte.  Used in atomic dyads to indicate which singleton function to execute.  in the derived function from fold, lc has the original id byte of the fold op
- // end of first cacheline, which is not used much during execution
- AF valencefns[2];
- A fgh[3];
- union { D lD; void *lvp[2]; I lI; I4 lI4[4]; I lclr[2]; AF lfns[2]; struct {I parm; AF func;} lpf; } localuse;
-// the localuse fields are not freed or counted for space, as the f/g/h fields are.  It is for local optimizations only.  Local uses are:
-// for ATOMIC ops, lvp[] is pointer to the VA/UA block for adocv [dyad then monad]
-// for name references (id=CTILDE), lvp[0] is LX value of the last resolution
-// for FIT conj, the CCT data
-// for RANK conj, lI4[0-2] has the signed ranks
-// for Fold final operator, lfns[1] has pointer to the dyadic EP of the handler (xdefn or unquote)
-// For cyclic iterators, lI has the index of the next gerund to execute
-// for u;.n where n is nonzero, lvp[0] holds n.  u/. also goes through this code
-// for reductions (u/ u/\ u/\.) lvp[1] points to the VA block for u
-// for u&.[:]v, lvp[0] points to the verb whose inverse is needed
-// for x <;.0 y  and  x (<;.0~ -~/"2)~ y, lpf.parm is ~0 for first, 0 for second, and func points to failover routine
-// for dyads ; (,<) ,&[:]<  lclr[0] indicates which function
- I4 flag;
- UI4 flag2;
 } V;  // two cachelines exactly in 64-bit
 // The AN and AR fields of functions are not used
 
@@ -989,6 +1007,9 @@ typedef struct {
 #define VF2USESITEMCOUNT2AX 19   // This verb can make use of an item count stored in y.  Monad case only
 #define VF2USESITEMCOUNT2A  ((I)(((I)1)<<VF2USESITEMCOUNT2AX))
 
+// layout of primitive, in the primtbl.  It is a memory header (shape 0) followed by a V
+typedef struct __attribute__((aligned(CACHELINESIZE))) {I memhdr[AKXR(0)/SZI]; union { V primvb; I primint; } prim; } PRIM;  // two cachelines exactly in 64-bit
+
 // Canned blocks
 // NOTE: for fetching IDs we use the validitymask as a safe place to fetch 0s from.  We know that
 // validitymask[15] will be 0 and we use &validitymask[11] as (an A* with AT=0 (a non-function) and AC=0) or an L* with val=0; and &validitymask[0] as a V* with ID of 0
@@ -1000,17 +1021,6 @@ typedef struct {
 #define PSTK2NOTFINALASGN ((PSTK*)(validitymask+12)-2)  // 0 in position [2], signifying NOT final assignment (used for errors)
 #define BREAK0 ((C*)(validitymask+12))  // 0 to indicate no ATTN requested
 
-// layout of primitive, in the primtbl.  It is a memory header (shape 0) followed by a V
-typedef struct __attribute__((aligned(CACHELINESIZE))) {I memhdr[AKXR(0)/SZI]; union { V primvb; I primint; } prim; } PRIM;  // two cachelines exactly in 64-bit
-
-// Info for calling an atomic verb
-typedef struct {VF f;I cv;} VA2;  // for dyads
-typedef struct {VA1F f;I cv;} VA1;  // for monads
-typedef struct {VARPSF f;I cv;} VARPS;  // for reduce/prefix/suffix
-
-typedef struct {I nprec; VARPS actrtns[];} VARPSA;
-typedef struct {VA2 p2[13];VARPSA *rps;} VA;
-typedef struct {VA1 p1[6];} UA;
 
 
 typedef struct {DX re;DX im;} ZX;

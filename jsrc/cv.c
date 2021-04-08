@@ -6,14 +6,14 @@
 #include "j.h"
 
 
-static DF1(jtfitct1){DECLFG;F1PREFIP;A z; PUSHCCT(FAV(self)->localuse.lD) z=CALL1IP(f1,  w,fs); POPCCT RETF(z);}  // lD has the complementary ct
+static DF1(jtfitct1){DECLFG;F1PREFIP;A z; PUSHCCT(FAV(self)->localuse.lu1.cct) z=CALL1IP(f1,  w,fs); POPCCT RETF(z);}  // lD has the complementary ct
 
-#define fitctvector(name,vector) static DF2(name){DECLFG;F2PREFIP;A z; PUSHCCT(FAV(self)->localuse.lD) z=vector; POPCCT RETF(z);}
+#define fitctvector(name,vector) static DF2(name){DECLFG;F2PREFIP;A z; PUSHCCT(FAV(self)->localuse.lu1.cct) z=vector; POPCCT RETF(z);}
 fitctvector(jtfitct2,CALL2IP(f2,a,w,fs))
 fitctvector(jtfitcteq,jtatomic2(jtinplace,a,w,fs))
 
 // for key, we pass in the tolerance to use for the classification
-static DF2(jtfitctkey){DECLFG;R jtkeyct(jt,a,w,fs,FAV(self)->localuse.lD);}  // inplace is OK, since we don't use jt
+static DF2(jtfitctkey){DECLFG;R jtkeyct(jt,a,w,fs,FAV(self)->localuse.lu1.cct);}  // inplace is OK, since we don't use jt
 
 // To avoid multiple indirect branches, we vector the common comparisons to a routine that jumps directly to them
 static const AF aff2[] = {jtfitct2,jtfitcteq,jtfitctkey
@@ -32,7 +32,7 @@ static A jtfitct(J jt,A a,A w,I cno){V*sv;
  if(unlikely(cno==3))if(d==1.0){d=1.0-jt->cct; if(!SY_64)cno=0;}else cno=0;   // i.!.1 is special on 64-bit systems; others just specify fit
  ASSERT(0<=d&&d<5.82076609134675e-11,EVDOMAIN);  // can't be greater than 2^_34
  A fn = fdef(0,CFIT,VERB,(AF)(jtfitct1),aff2[cno],a,w ,0L,sv->flag&(VIRS1|VIRS2|VJTFLGOK1|VJTFLGOK2|VISATOMIC1),(I)(sv->mr),lrv(sv),rrv(sv));  // preserve INPLACE flags
- RZ(fn); FAV(fn)->localuse.lD = 1.0-d; R fn;  // save the fit value in this verb
+ RZ(fn); FAV(fn)->localuse.lu1.cct = 1.0-d; R fn;  // save the fit value in this verb
 }
 
 static DF2(jtfitexp2){

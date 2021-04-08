@@ -24,8 +24,8 @@ static DF2(jtexeccyclicgerund){  // call is w,self or a,w,self
  // find the real self, valence-dependent
   F2PREFIP;ARGCHK1(w);
  I ismonad=(AT(w)>>VERBX)&1; self=ismonad?w:self;
- I nexttoexec=FAV(self)->localuse.lI; A vbtoexec=AAV(FAV(self)->fgh[2])[nexttoexec]; AF fntoexec=FAV(vbtoexec)->valencefns[1-ismonad]; ASSERT(fntoexec!=0,EVDOMAIN); // get fn to exec
- ++nexttoexec; nexttoexec=AN(FAV(self)->fgh[2])==nexttoexec?0:nexttoexec; FAV(self)->localuse.lI=nexttoexec; // cyclically advance exec pointer
+ I nexttoexec=FAV(self)->localuse.lu1.gercut.cgerx; A vbtoexec=AAV(FAV(self)->fgh[2])[nexttoexec]; AF fntoexec=FAV(vbtoexec)->valencefns[1-ismonad]; ASSERT(fntoexec!=0,EVDOMAIN); // get fn to exec
+ ++nexttoexec; nexttoexec=AN(FAV(self)->fgh[2])==nexttoexec?0:nexttoexec; FAV(self)->localuse.lu1.gercut.cgerx=nexttoexec; // cyclically advance exec pointer
  w=ismonad?vbtoexec:w; R (*fntoexec)(jtinplace,a,w,vbtoexec);  // vector to the function, as a,vbtoexec or a,w,vbtoexec as appropriate
 }
 // similar, for executing m@.v.  This for I selectors
@@ -33,12 +33,12 @@ static DF2(jtexecgerundcellI){  // call is w,self or a,w,self
  // find the real self, valence-dependent
  F2PREFIP;ARGCHK1(w);
  I ismonad=(AT(w)>>VERBX)&1; self=ismonad?w:self;
- I nexttoexec=FAV(self)->localuse.lI;
+ I nexttoexec=FAV(self)->localuse.lu1.gercut.cgerx;
  I gerx=IAV(FAV(self)->fgh[1])[nexttoexec];
  gerx+=REPSGN(gerx)&AN(FAV(self)->fgh[2]);
  ASSERT(BETWEENO(gerx,0,AN(FAV(self)->fgh[2])),EVINDEX);
  A vbtoexec=AAV(FAV(self)->fgh[2])[gerx]; AF fntoexec=FAV(vbtoexec)->valencefns[1-ismonad]; ASSERT(fntoexec!=0,EVDOMAIN); // get fn to exec
- ++nexttoexec; FAV(self)->localuse.lI=nexttoexec; // cyclically advance exec pointer
+ ++nexttoexec; FAV(self)->localuse.lu1.gercut.cgerx=nexttoexec; // cyclically advance exec pointer
  w=ismonad?vbtoexec:w; R (*fntoexec)(jtinplace,a,w,vbtoexec);  // vector to the function, as a,vbtoexec or a,w,vbtoexec as appropriate
 }
 // This for B selectors
@@ -46,12 +46,12 @@ static DF2(jtexecgerundcellB){  // call is w,self or a,w,self
  // find the real self, valence-dependent
  F2PREFIP;ARGCHK1(w);
  I ismonad=(AT(w)>>VERBX)&1; self=ismonad?w:self;
- I nexttoexec=FAV(self)->localuse.lI;
+ I nexttoexec=FAV(self)->localuse.lu1.gercut.cgerx;
  I gerx=BAV(FAV(self)->fgh[1])[nexttoexec];
  gerx+=REPSGN(gerx)&AN(FAV(self)->fgh[2]);
  ASSERT(BETWEENO(gerx,0,AN(FAV(self)->fgh[2])),EVINDEX);
  A vbtoexec=AAV(FAV(self)->fgh[2])[gerx]; AF fntoexec=FAV(vbtoexec)->valencefns[1-ismonad]; ASSERT(fntoexec!=0,EVDOMAIN); // get fn to exec
- ++nexttoexec; FAV(self)->localuse.lI=nexttoexec; // cyclically advance exec pointer
+ ++nexttoexec; FAV(self)->localuse.lu1.gercut.cgerx=nexttoexec; // cyclically advance exec pointer
  w=ismonad?vbtoexec:w; R (*fntoexec)(jtinplace,a,w,vbtoexec);  // vector to the function, as a,vbtoexec or a,w,vbtoexec as appropriate
 }
 
@@ -61,7 +61,7 @@ static DF2(jtexecgerundcellB){  // call is w,self or a,w,self
 // the gerund must not be empty
 A jtcreatecycliciterator(J jt, A z, A w){
  // Create the (skeletal) clone, point it to come to the execution point, set the next-verb number to 0
- ACFAUX(z,ACPERMANENT) AT(z)=VERB; FAV(z)->fgh[2]=FAV(w)->fgh[2]; FAV(z)->mr=FAV(w)->mr; FAV(z)->valencefns[0]=FAV(z)->valencefns[1]=jtexeccyclicgerund; FAV(z)->localuse.lI=0;
+ ACFAUX(z,ACPERMANENT) AT(z)=VERB; FAV(z)->fgh[2]=FAV(w)->fgh[2]; FAV(z)->mr=FAV(w)->mr; FAV(z)->valencefns[0]=FAV(z)->valencefns[1]=jtexeccyclicgerund; FAV(z)->localuse.lu1.gercut.cgerx=0;
  FAV(z)->flag2=0; FAV(z)->id=CCYCITER;   // clear flags, and give this verb a proper id so it can be checked for
  if(MEMAUDIT&0xc)AFLAGFAUX(z,0)  // in debug, flags must be valid
  R z;
@@ -72,7 +72,7 @@ static A jtcreategerunditerator(J jt, A z, A w, A r){  // z is result area, w is
  if(!(AT(r)&(INT|B01)))RZ(r=cvt(INT,r));
  // Create the (skeletal) clone, point it to come to the execution point, set the next-verb number to 0
  ACFAUX(z,ACPERMANENT) AT(z)=VERB; FAV(z)->fgh[2]=FAV(w)->fgh[2]; FAV(z)->fgh[1]=r; FAV(z)->mr=FAV(w)->mr;
- FAV(z)->valencefns[0]=FAV(z)->valencefns[1]=AT(r)&INT?jtexecgerundcellI:jtexecgerundcellB; FAV(z)->localuse.lI=0;
+ FAV(z)->valencefns[0]=FAV(z)->valencefns[1]=AT(r)&INT?jtexecgerundcellI:jtexecgerundcellB; FAV(z)->localuse.lu1.gercut.cgerx=0;
  FAV(z)->flag2=0;
  if(MEMAUDIT&0xc)AFLAGFAUX(z,0)  // in debug, flags must be valid
  R z;

@@ -124,7 +124,7 @@
 #define CPLUSCO    (C)0x21  // +:
 #define CSTAR      (C)0x22  //
 #define CPLUS      (C)0x23  // + +. *. must stay in order.  Low digit is combining type-1
-#define CPLUSDOT   (C)0x24  // +.
+#define CPLUSDOT   (C)0x24  // +.  +. *. x ~:  are so tested
 #define CSTARDOT   (C)0x25  // *.
 #define CEQ        (C)0x26 // =   must be paired with ~:  = through e. are in the order used by comparison combination
 #define CNE        (C)0x27 // ~:
@@ -138,7 +138,7 @@
 #define CEPS       (C)0x2d  // e.
 #define CMIN       (C)0x2e  // <.
 #define CFLOOR     (C)0x2e  // <.
-#define CMAX       (C)0x2f  // >.
+#define CMAX       (C)0x2f  // >. must be paired with <. as upper of pair
 #define CCEIL      (C)0x2f  // >. 20-2f used in cip.c and ar.c
 #define CNOUN      (C)0x30  // '0' - used in AR for noun
 #define CSLASH     (C)0x31  // /

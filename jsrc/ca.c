@@ -5,7 +5,7 @@
 
 #include "j.h"
 
-
+// <.@ >.@ and the like, monad 
 static DF1(jtonf1){PROLOG(0021);DECLFG;A z;I flag=sv->flag,m=jt->xmode;
  PREF1(jtonf1);
  if(primitive(gs))if(flag&VFLR)jt->xmode=XMFLR; else if(flag&VCEIL)jt->xmode=XMCEIL;
@@ -15,12 +15,13 @@ static DF1(jtonf1){PROLOG(0021);DECLFG;A z;I flag=sv->flag,m=jt->xmode;
  EPILOG(z);
 }
 
+// <.@ >.@ and the like, dyad 
 static DF2(jtuponf2){PROLOG(0022);DECLFG;A z;I flag=sv->flag,m=jt->xmode;
  ARGCHK2(a,w);
  if(primitive(gs))if(flag&VFLR)jt->xmode=XMFLR; else if(flag&VCEIL)jt->xmode=XMCEIL;
  if(RAT&AT(a))RZ(a=pcvt(XNUM,a));
  if(RAT&AT(w))RZ(w=pcvt(XNUM,w));
- RZ(z=INT&AT(a)&AT(w)&&CDIV==ID(gs)?intdiv(a,w):CALL1(f1,CALL2(g2,a,w,gs),fs));
+ RZ(z=INT&AT(a)&AT(w)&&FAV(gs)->id==CDIV?intdiv(a,w):CALL1(f1,CALL2(g2,a,w,gs),fs));
  jt->xmode=m;
  EPILOG(z);
 }
@@ -217,7 +218,7 @@ F2(jtatop){A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=0,m=-1
   case CQRYDOT: if((d&-2)==CPOUND){f2=jtrollkx; flag&=~VJTFLGOK2;} break;  // # $
   case CRAZE:  // detect ;@(<@(f/\));.
    if(d==CCUT&&boxatop(w)){  // w is <@g;.k
-    if((((I)1)<<(wv->localuse.lI+3))&0x36) { // fetch k (cut type); bits are 3 2 1 0 _1 _2 _3; is 1/2-cut?
+    if((((I)1)<<(wv->localuse.lu1.gercut.cutn+3))&0x36) { // fetch k (cut type); bits are 3 2 1 0 _1 _2 _3; is 1/2-cut?
      A wf=wv->fgh[0]; V *wfv=FAV(wf); A g=wfv->fgh[1]; V *gv=FAV(g);  // w is <@g;.k  find g
      if((gv->id&~(CBSLASH^CBSDOT))==CBSLASH) {  // g is gf\ or gf\.
       A gf=gv->fgh[0]; V *gfv=FAV(gf);  // find gf
@@ -245,7 +246,7 @@ F2(jtatop){A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=0,m=-1
  // cd comes from the comparison operator, here e. (6) E. (7)
  // comparison flag is cd+8*m
  C cd=d;  // local copy of id of w
- if(((d&~1)==CEBAR)||(d==CFIT&&(cd=FAV(wv->fgh[0])->id)==CEPS)&&wv->localuse.lD==1.0){I n=-1;
+ if(((d&~1)==CEBAR)||(d==CFIT&&(cd=FAV(wv->fgh[0])->id)==CEPS)&&wv->localuse.lu1.cct==1.0){I n=-1;
   I cb=0;  // will be the id of the combining operator
   if(c==CSLASH){cb=FAV(av->fgh[0])->id; n=BETWEENC(cb,CPLUS,CSTARDOT)?0:n; cb+=1;}  // +/@ set cb to id of + +. *., plus 1 to match code for combining op
   else if(c==CAMP){cb=FAV(av->fgh[0])->id; A cr=av->fgh[1]; cr=(cb&~2)==CIOTA?cr:0; n=cr==num(0)?0:n; n=cr==num(1)?1:n;} // i.&0  already has combining op, set n if 0 or 1
@@ -272,7 +273,7 @@ F2(jtatop){A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=0,m=-1
 // u@:v
 F2(jtatco){A f,g;AF f1=on1cell,f2=jtupon2cell;C c,d,e;I flag, flag2=0,m=-1;V*av,*wv;
  ASSERTVV(a,w);
- av=FAV(a); c=av->id; f=av->fgh[0]; g=av->fgh[1]; e=ID(f);   /// c=op for a, d=op for w   if a is r&s, f is r and e is its id; and g is s
+ av=FAV(a); c=av->id; f=av->fgh[0]; g=av->fgh[1]; e=ID(f);   /// c=op for a, d=op for w   if a is compound r m [s], f is r and e is its id; and g is s
  wv=FAV(w); d=wv->id;
  if((d&~1)==CLEFT){
   // the very common case u@:] and u@:[.  Take ASGSAFE and inplaceability from u.  No IRS.  Vector the monad straight to u; vector the dyad to our routine that shuffles args and inplace bits
@@ -307,7 +308,7 @@ F2(jtatco){A f,g;AF f1=on1cell,f2=jtupon2cell;C c,d,e;I flag, flag2=0,m=-1;V*av,
 
   case CSEMICO:  // u@:(v;.k)
    if(d==CCUT){I j;
-    j=wv->localuse.lI;   // cut type, valid EXCEPT for <;.0 which is detected by function:
+    j=wv->localuse.lu1.gercut.cutn;   // cut type, valid EXCEPT for <;.0 which is detected by function:
     if(wv->valencefns[1]==jtboxcut0){f2=jtrazecut0; flag&=~VJTFLGOK2;}  // detect ;@:(<;.0), used for substring extraction
     else if(boxatop(w)){  // w is <@g;.j   detect ;@:(<@(f/\);._2 _1 1 2
      if((((I)1)<<(j+3))&0x36) { // fbits are 3 2 1 0 _1 _2 _3; is 1/2-cut?
@@ -328,7 +329,7 @@ F2(jtatco){A f,g;AF f1=on1cell,f2=jtupon2cell;C c,d,e;I flag, flag2=0,m=-1;V*av,
  if(unlikely(0<=m)){
   // the left side is a comparison combiner.  See if the right is a comparison
   e=d;  // repurpose e as comparison op
-  e=d==CFIT&&wv->localuse.lD==1.0?FAV(wv->fgh[0])->id:e;  // e is the comparison op
+  e=d==CFIT&&wv->localuse.lu1.cct==1.0?FAV(wv->fgh[0])->id:e;  // e is the comparison op
   if(BETWEENC(e,CEQ,CEPS)){
    // valid comparison combination.  m is the combiner, e is the comparison
    f2=d==CFIT?atcomp0:atcomp;  // if valid comparison type, switch to it
@@ -345,13 +346,13 @@ F2(jtatco){A f,g;AF f1=on1cell,f2=jtupon2cell;C c,d,e;I flag, flag2=0,m=-1;V*av,
 // u&:v
 F2(jtampco){AF f1=on1cell,f2=on2cell;C c,d;I flag,flag2=0,linktype=0;V*wv;
  ASSERTVV(a,w);
- c=ID(a); wv=FAV(w); d=wv->id;  // c=pseudochar for u, d=pseudochar for v
+ c=FAV(a)->id; wv=FAV(w); d=wv->id;  // c=pseudochar for u, d=pseudochar for v
  // Set flag wfith ASGSAFE status from f/g; keep INPLACE? in sync with f1,f2.  Inplace only if monad v can handle it
  flag = ((FAV(a)->flag&wv->flag)&VASGSAFE)+((wv->flag&VJTFLGOK1)*((VJTFLGOK2+VJTFLGOK1)/VJTFLGOK1));
  if(unlikely(c==CBOX)){flag2 |= VF2BOXATOP1;}  // mark this as <@f - monad only
  else if(unlikely(BOTHEQ8(c,d,CSLASH,CCOMMA))){f1=jtredravel;}    // f/&:, y
  else if(unlikely(BOTHEQ8(c,d,CRAZE,CCUT)))if(boxatop(w)){  // w is <@g;.k    detect ;&:(<@(f/\));._2 _1 1 2 y
-  if((((I)1)<<(wv->localuse.lI+3))&0x36) { // fetch k (cut type); bits are 3 2 1 0 _1 _2 _3; is 1/2-cut?
+  if((((I)1)<<(wv->localuse.lu1.gercut.cutn+3))&0x36) { // fetch k (cut type); bits are 3 2 1 0 _1 _2 _3; is 1/2-cut?
    A wf=wv->fgh[0]; V *wfv=FAV(wf); A g=wfv->fgh[1]; V *gv=FAV(g);  // w is <@g;.k  find g
    if((gv->id&~(CBSLASH^CBSDOT))==CBSLASH) {  // g is gf\ or gf\.
     A gf=gv->fgh[0]; V *gfv=FAV(gf);  // find gf
@@ -370,7 +371,7 @@ F2(jtampco){AF f1=on1cell,f2=on2cell;C c,d;I flag,flag2=0,linktype=0;V*wv;
  // Install the flags to indicate that this function starts out with a rank loop, and thus can be subsumed into a higher rank loop
  flag2|=(f1==on1cell)<<VF2RANKATOP1X;  flag2|=VF2RANKATOP2; 
  A z; RZ(z=fdef(flag2,CAMPCO,VERB, f1,f2, a,w,0L, flag, RMAX,RMAX,RMAX));
- FAV(z)->localuse.lclr[0]=linktype; R z;
+ FAV(z)->localuse.lu1.linkvb=linktype; R z;
 }
 
 // m&v and u&n.  Never inplace the noun argument, since the verb may
@@ -401,7 +402,7 @@ static DF1(ixfixedright0){A z;V*v=FAV(self);
 static DF2(with2){A z; R df1(z,w,powop(self,a,0));}
 
 // u&v
-F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;I flag,flag2=0,linktype=0,mode=-1,p,r;V*u,*v;
+F2(jtamp){A h=0;AF f1,f2;B b;C c;I flag,flag2=0,linktype=0,mode=-1,p,r;V*v;
  ARGCHK2(a,w);
  switch(CONJCASE(a,w)){
  case NV:
@@ -415,9 +416,9 @@ F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;I flag,flag2=0,linktype=0,mode=-1,p,r;V*u,*
   if(likely(AC(a)>=0)){flag &= ~VASGSAFE;}else{ACIPNO(a);}   // scaf could do better?
   
   if((-AN(a)&-AR(a))<0){  // a is not atomic and not empty
-    // c holds the pseudochar for the v op.  If v is u!.n, replace c with the pseudochar for n
-    // Also set b if the fit is !.0
-   if(unlikely(b=c==CFIT))if(v->fgh[1]==num(0))c=ID(v->fgh[0]); 
+    // c holds the pseudochar for the v op.  If v is u!.0, replace c with the pseudochar for n
+    // Also set b on any u!.n
+   if(unlikely(b=c==CFIT))if(v->fgh[1]==num(0))c=FAV(v->fgh[0])->id; 
    mode=-1; mode=c==CIOTA?IIDOT:mode; mode=c==CICO?IICO:mode;
   }
   if(unlikely(0<=mode)){
@@ -441,7 +442,7 @@ F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;I flag,flag2=0,linktype=0,mode=-1,p,r;V*u,*
   if((-AN(w)&-AR(w))<0){
     // c holds the pseudochar for the v op.  If v is u!.n, replace c with the pseudochar for n
     // Also set b if the fit is !.0
-   c=v->id; p=v->flag&255; if(unlikely(b=c==CFIT))if(v->fgh[1]==num(0))c=ID(v->fgh[0]);
+   c=v->id; p=v->flag&255; if(unlikely(b=c==CFIT))if(v->fgh[1]==num(0))c=FAV(v->fgh[0])->id;
    if(unlikely(7==(p&7)))mode=II0EPS+(p>>3);  /* (e.i.0:)  etc. */
    else      mode=c==CEPS?IEPS:-1;
   }
@@ -456,14 +457,14 @@ F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;I flag,flag2=0,linktype=0,mode=-1,p,r;V*u,*
   v=FAV(w); c=v->id; r=v->mr;   // c=pseudochar for v
   // Set flag with ASGSAFE status from f/g; keep INPLACE? in sync with f1,f2.  To save tests later, inplace only if monad v can handle it
   flag = ((FAV(a)->flag&v->flag)&VASGSAFE)+((v->flag&VJTFLGOK1)*((VJTFLGOK2+VJTFLGOK1)/VJTFLGOK1));
-  if(unlikely((c&~4)==CFORK)){   // FORK &
-   if(c==CFORK)d=ID(v->fgh[2]);
-   if(CIOTA==ID(v->fgh[1])&&(!d||((d&~1)==CLEFT)&&equ(ds(CALP),v->fgh[0]))){  // a.&i. or (a. i. ][)
-    u=FAV(a); d=u->id;
-    if(BETWEENC(d,CEQ,CGT)){f2=jtcharfn2; flag&=~VJTFLGOK2;}  // any comparison
+  if(unlikely((c&~4)==CFORK)){C d=CLEFT;  // u&(FORK/&)
+   if(c==CFORK)d=ID(v->fgh[2]);  // d is CLEFT if &, 0 if capped fork, otherwise from h of fork
+   if(CIOTA==FAV(v->fgh[1])->id&&(d&~1)==CLEFT&&equ(ds(CALP),v->fgh[0])){  // (FORK/&) is a.&i. or (a. i. ][)
+    d=FAV(a)->id;
+    if(BETWEENC(d,CEQ,CGT)){f2=jtcharfn2; flag&=~VJTFLGOK2;}  // any comparison - comp&(a.&i. or (a. i. ][))
    }
   }
-  switch(ID(a)){   // if we matched the a.&i. code above, a must be a. and its ID will be 0
+  switch(FAV(a)->id){
   case CBOX:   flag |= VF2BOXATOP1; break;  // mark this as <@f for the monad
   case CGRADE: if(c==CGRADE){f1=jtranking; flag+=VIRS1; flag&=~VJTFLGOK1;} break;  // /:&/: y
   case CSLASH: if(c==CCOMMA){f1=jtredravel; } break;   // f/&, y
@@ -472,7 +473,7 @@ F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;I flag,flag2=0,linktype=0,mode=-1,p,r;V*u,*
   case CFLOOR: f1=jtonf1; flag+=VFLR; flag&=~VJTFLGOK1; break;   // <.@g
   case CRAZE:  // detect ;@(<@(f/\));.
    if(c==CCUT&&boxatop(w)){  // w is <@g;.k
-    if((((I)1)<<(v->localuse.lI+3))&0x36) { // fetch k (cut type); bits are 3 2 1 0 _1 _2 _3; is 1/2-cut?
+    if((((I)1)<<(v->localuse.lu1.gercut.cutn+3))&0x36) { // fetch k (cut type); bits are 3 2 1 0 _1 _2 _3; is 1/2-cut?
      A wf=v->fgh[0]; V *wfv=FAV(wf); A g=wfv->fgh[1]; V *gv=FAV(g);  // w is <@g;.k  find g
      if((gv->id&~(CBSLASH^CBSDOT))==CBSLASH) {  // g is gf\ or gf\.
       A gf=gv->fgh[0]; V *gfv=FAV(gf);  // find gf
@@ -483,19 +484,19 @@ F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;I flag,flag2=0,linktype=0,mode=-1,p,r;V*u,*
     }
    }
    break;
- }
- if(c==COPE)flag2|=flag2&VF2BOXATOP1?VF2ATOPOPEN2A|VF2ATOPOPEN2W:VF2ATOPOPEN1|VF2ATOPOPEN2A|VF2ATOPOPEN2W;  // &>, but not <&> which would be confused with &.>
+  }
+  if(c==COPE)flag2|=flag2&VF2BOXATOP1?VF2ATOPOPEN2A|VF2ATOPOPEN2W:VF2ATOPOPEN1|VF2ATOPOPEN2A|VF2ATOPOPEN2W;  // &>, but not <&> which would be confused with &.>
 
- // Copy the monad open/raze status from v into u&v
- flag2 |= v->flag2&(VF2WILLOPEN1|VF2USESITEMCOUNT1);
+  // Copy the monad open/raze status from v into u&v
+  flag2 |= v->flag2&(VF2WILLOPEN1|VF2USESITEMCOUNT1);
 
- // Install the flags to indicate that this function starts out with a rank loop, and thus can be subsumed into a higher rank loop
- // If the compound has rank 0, switch to the loop for that; if infinite rank, avoid the loop
- // Even though we don't test for infinite, allow this node to be flagged as rankloop so it can combine with others
+  // Install the flags to indicate that this function starts out with a rank loop, and thus can be subsumed into a higher rank loop
+  // If the compound has rank 0, switch to the loop for that; if infinite rank, avoid the loop
+  // Even though we don't test for infinite, allow this node to be flagged as rankloop so it can combine with others
   if(f1==on1){flag2|=VF2RANKATOP1; f1=r==RMAX?on1cell:f1; f1=r==0?jton10:f1;}
   if(f2==on2){flag2|=VF2RANKATOP2; f2=r==RMAX?on2cell:f2; f2=r==0?on20:f2;}
   A z; RZ(z=fdef(flag2,CAMP,VERB, f1,f2, a,w,0L, flag, r,r,r));
-  FAV(z)->localuse.lclr[0]=linktype; R z;
+  FAV(z)->localuse.lu1.linkvb=linktype; R z;
  default: ASSERTSYS(0,"amp");
  case NN: ASSERT(0,EVDOMAIN);
  }

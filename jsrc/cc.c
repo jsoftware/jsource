@@ -139,9 +139,9 @@ DF2(jtboxcut0){A z;
  // NOTE: this routine is called from jtwords.  In that case, self comes from jtwords and is set up with the parm for x (<;.0~ -~/"2)~ y but with no failover routine.
  // Thus, the preliminary tests must not cause a failover.  They don't, because the inputs from jtwords are known to be well-formed
  // We require a have rank >=2, not sparse
- if(unlikely(((1-(I)AR(a))&(((AT(a)|AT(w))&SPARSE)-1))>=0))R (FAV(self)->localuse.lpf.func)(jtinplace,a,w,self);
+ if(unlikely(((1-(I)AR(a))&(((AT(a)|AT(w))&SPARSE)-1))>=0))R (FAV(self)->localuse.boxcut0.func)(jtinplace,a,w,self);
  // Shape of a must end 2 1 - a one-dimensional selection
- if((AS(a)[AR(a)-2]^2)|(AS(a)[AR(a)-1]^1))R (FAV(self)->localuse.lpf.func)(jtinplace,a,w,self);
+ if((AS(a)[AR(a)-2]^2)|(AS(a)[AR(a)-1]^1))R (FAV(self)->localuse.boxcut0.func)(jtinplace,a,w,self);
  // it is a (set of) one-dimensional selection
  // a must be integral
  RZ(a=vib(a));  // make a integer
@@ -161,14 +161,14 @@ DF2(jtboxcut0){A z;
  A y;
  // Step through each block: fetch start/end; verify both positive and inrange; calc size of block; alloc and move; make block recursive
  I *av=IAV(a);  // pointer to first start/length pair
- I abslength=(I)FAV(self)->localuse.lpf.parm;  // 0 for start/length, ~0 for start/end+1
+ I abslength=(I)FAV(self)->localuse.boxcut0.parm;  // 0 for start/length, ~0 for start/end+1
  wr=wr==0?1:wr;   // We use this rank to allocate the boxes - we always create arrays
  DQ(resatoms,
    I start=av[0]; I endorlen=av[1];
-   if(!(BETWEENO(start,0,wi))){jt->tnextpushp=pushxsave; R (FAV(self)->localuse.lfns[1])(jtinplace,a,w,self);}  // verify start in range - failover if not
+   if(!(BETWEENO(start,0,wi))){jt->tnextpushp=pushxsave; R (FAV(self)->localuse.boxcut0.func)(jtinplace,a,w,self);}  // verify start in range - failover if not
    endorlen+=start&abslength;  // convert len to end+1 form
    endorlen=endorlen>wi?wi:endorlen; endorlen-=start;  // get length; limit length, convert back to true length
-   if(endorlen<0){jt->tnextpushp=pushxsave; R (FAV(self)->localuse.lfns[1])(jtinplace,a,w,self);}  // failover if len negative.  Overflow is not a practical possibility
+   if(endorlen<0){jt->tnextpushp=pushxsave; R (FAV(self)->localuse.boxcut0.func)(jtinplace,a,w,self);}  // failover if len negative.  Overflow is not a practical possibility
    I substratoms=endorlen*cellsize;
    // Allocate the result box.  If WILLBEOPENED, make it a virtual block.  Otherwise copy the data
    GAE(y,t,(I)jtinplace&JTWILLBEOPENED?0:substratoms,wr,AS(w),break); AS(y)[0]=endorlen;  // allocate, but don't grow the tstack. Fix up the shape
@@ -218,7 +218,7 @@ DF2(jtrazecut0){A z;C*wv,*zv;I ar,*as,(*av)[2],j,k,m,n,wt;
 
 static DF2(jtcut2bx){A*av,b,t,x,*xv,y,*yv;B*bv;I an,bn,i,j,m,p,q,*u,*v,*ws;
  ARGCHK3(a,w,self);
- q=(I)FAV(self)->localuse.lvp[0];  // fetch the n in the original u;.n
+ q=(I)FAV(self)->localuse.lu1.gercut.cutn;  // fetch the n in the original u;.n
  an=AN(a); av=AAV(a);  ws=AS(w);
  ASSERT(an<=AR(w),EVLENGTH);
  GATV0(x,BOX,an,1); xv=AAV(x);  // could be faux
@@ -248,7 +248,7 @@ static DF2(jtcut2bx){A*av,b,t,x,*xv,y,*yv;B*bv;I an,bn,i,j,m,p,q,*u,*v,*ws;
  R cut02(t,w,self);
 }    /* a f;.n w for boxed a, with special code for matrix w */
 
-
+// this macro is used only for sparse matrices
 #define CUTSWITCH(EACHC)  \
  switch(id){A z,*za;C id1,*v1,*zc;I d,i,j,ke,q,*zi,*zs;                 \
   case CPOUND:                                                               \
@@ -325,7 +325,7 @@ static A jtsely(J jt,A y,I r,I i,I j){A z;I c,*s,*v;
 
 static DF2(jtcut2sx){PROLOG(0024);DECLF;A h=0,*hv,y,yy;B b,neg,pfx,*u,*v;C id;I d,e,hn,m,n,p,t,yn,*yu,*yv;P*ap;V*vf;
  PREF2(jtcut2sx);
- SETIC(w,n); t=AT(w); m=(I)sv->localuse.lvp[0]; neg=0>m; pfx=m==1||m==-1; b=neg&&pfx;  // m = n from u;.n
+ SETIC(w,n); t=AT(w); m=(I)sv->localuse.lu1.gercut.cutn; neg=0>m; pfx=m==1||m==-1; b=neg&&pfx;  // m = n from u;.n
  RZ(a=a==mark?eps(w,take(num(pfx?1:-1),w)):DENSE&AT(a)?sparse1(a):a);
  ASSERT(n==AS(a)[0],EVLENGTH);
  ap=PAV(a);
@@ -581,7 +581,7 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[12
 
  // Time to find the frets.  If we are acting on behalf of Key /., freat are already in the single buffer
  if(FAV(self)->id==CCUT){   // see if we are acting on behalf of /.  Fall through if not
-  pfx=(I)FAV(self)->localuse.lvp[0]; neg=SGNTO0(pfx); pfx&=1;  // neg=cut type is _1/_2; pfx=cut type is 1/_1
+  pfx=(I)FAV(self)->localuse.lu1.gercut.cutn; neg=SGNTO0(pfx); pfx&=1;  // neg=cut type is _1/_2; pfx=cut type is 1/_1
   if(a!=mark){  // dyadic forms
    if(((AN(a)-1)&(-n))<0){  // empty x, do one call on the entire w if y is non-empty
     R CALL1(f1,w,fs);
@@ -881,7 +881,7 @@ DF2(jtrazecut2){A fs,gs,z=0;B b; I neg,pfx;C id,sep,*u,*v,*wv,*zv;I d,k,m=0,wi,p
     VARPS adocv;
  ARGCHK2(a,w);
  gs=FAV(self)->fgh[1]; fs=VAV(VAV(gs)->fgh[0])->fgh[1];  // self is ;@:(<@(f/\);.1)     gs  gs is <@(f/\);.1   y is <@(f/\)  fs is   f/\  ...
- p=SETIC(w,wi); wt=AT(w); k=(I)VAV(gs)->localuse.lvp[0]; neg=0>k; pfx=k==1||k==-1; b=neg&&pfx;   // p,wi is # items of w; 
+ p=SETIC(w,wi); wt=AT(w); k=(I)VAV(gs)->localuse.lu1.gercut.cutn; neg=0>k; pfx=k==1||k==-1; b=neg&&pfx;   // k is n from u;.n  p,wi is # items of w; 
  id=FAV(fs)->id;  // fs is f/id   where id is \ \.
   // if f is atomic/\ or atomic /\., set ado and cv with info for the operation
  varps(adocv,fs,wt,1+(id!=CBSLASH));   // fs is f/\  type 1 is f/\ 2 is f/\.
@@ -956,7 +956,7 @@ static DF2(jttess2){A z,zz=0,virtw,strip;I n,rs[3],cellatoms,cellbytes,vmv,hmv,v
 #define ZZFLAGWORD state
  I state;
  RZ(a=tesa(a,w));   // expand x to canonical form, with trailing axes-in-full deleted
- n=(I)FAV(self)->localuse.lvp[0]; state=ZZFLAGINITSTATE|((~n)&STATETAKE);  // n=op type (as in u;.n); set TAKE bit if code=3: we will shorten out-of-bounds args
+ n=(I)FAV(self)->localuse.lu1.gercut.cutn; state=ZZFLAGINITSTATE|((~n)&STATETAKE);  // n=op type (as in u;.n); set TAKE bit if code=3: we will shorten out-of-bounds args
  I wr=AR(w); I wt=AT(w); // rank of w, type of w
  I *as=AS(a), *av=IAV(a), axisct=as[1];  // a-> shape of a, axisct=# axes in a, av->mv/size area
  // get shape of final result
@@ -1165,7 +1165,7 @@ F2(jtcut){A h=0,z;I flag=0,k;
  switch(k){
  case 0:          if(FAV(a)->id==CBOX){   // <;.0
   RZ(z=fdef(0,CCUT,VERB, jtcut01,jtboxcut0, a,w,h, flag|VJTFLGOK2, RMAX,2L,RMAX));
-  FAV(z)->localuse.lpf.parm=~0; FAV(z)->localuse.lpf.func=jtcut02;  // store parms to specify start/len format
+  FAV(z)->localuse.boxcut0.parm=~0; FAV(z)->localuse.boxcut0.func=jtcut02;  // store parms to specify start/len format
   R z;
   }
   z=fdef(0,CCUT,VERB, jtcut01,jtcut02, a,w,h, flag|VJTFLGOK2, RMAX,2L,RMAX); break;
@@ -1175,6 +1175,6 @@ F2(jtcut){A h=0,z;I flag=0,k;
  default:         ASSERT(0,EVDOMAIN);
  }
  RZ(z);
- FAV(z)->localuse.lvp[0]=(void *)k;  // remember the integer form of the cut selector  This is saved for all cases EXCEPT jtboxcut0.  0-cut will not look at it
+ FAV(z)->localuse.lu1.gercut.cutn=k;  // remember the integer form of the cut selector  This is saved for all cases EXCEPT jtboxcut0.  0-cut will not look at it
  R z;
 }

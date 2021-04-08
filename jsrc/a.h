@@ -46,4 +46,5 @@
 
 
 // TRUE if v is c!.0.  This is used for detecting use of special code.
-#define FIT0(c,v)       (CFIT==v->id&&c==ID(v->fgh[0])&&v->localuse.lD==1.0)
+// obsolete #define FIT0(c,v)       (CFIT==v->id&&c==ID(v->fgh[0])&&v->localuse.lu1.cct==1.0)
+#define FIT0(c,v)       (CFIT==v->id&&c==FAV(v->fgh[0])->id&&v->localuse.lu1.cct==1.0)

@@ -95,7 +95,7 @@ static AHDR1(oneB,C,C){memset(z,C1,n); R EVOK;}
 
 extern AHDR1FN expI, expD, logI, logD;
 
-const UA va1tab[]={
+UA va1tab[]={
  /* <. */ {{{ 0,VB}, {  0,VI}, {floorDI,VI+VIP64}, {floorZ,VZ}, {  0,VX}, {floorQ,VX}}},
  /* >. */ {{{ 0,VB}, {  0,VI}, { ceilDI,VI+VIP64}, { ceilZ,VZ}, {  0,VX}, { ceilQ,VX}}},
  /* +  */ {{{ 0,VB}, {  0,VI}, {    0,VD}, { cjugZ,VZ}, {  0,VX}, {   0,VQ}}},
@@ -136,7 +136,7 @@ static A jtva1s(J jt,A w,A self,I cv,VA1F ado){A e,x,z,ze,zx;B c;I n,oprc,t,zt;P
 #define VA1CASE(e,f) (10*(e)+(f))
 
 static A jtva1(J jt,A w,A self){A z;I cv,n,t,wt,zt;VA1F ado;
- UA *u=(UA *)FAV(self)->localuse.lvp[1];
+ UA *u=((UA*)((I)va1tab+FAV(self)->localuse.lu1.uavandx[0]));
  F1PREFIP;ARGCHK1(w);
  wt=AT(w); n=AN(w); wt=(I)jtinplace&JTEMPTY?B01:wt;
 #if SY_64

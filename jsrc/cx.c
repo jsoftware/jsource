@@ -237,7 +237,6 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
   LINE(sv);
   // Create symbol table for this execution.  If the original symbol table is not in use (rank unflagged), use it;
   // otherwise clone a copy of it.  We have to do this before we create the debug frame
-  // This code duplicated below
   locsym=hv[3];  // fetch pointer to preallocated symbol table
   ASSERT(locsym!=0,EVDOMAIN);  // if the valence is not defined, give valence error
   if(likely(!(AR(locsym)&ARLSYMINUSE))){AR(locsym)|=ARLSYMINUSE;nG0ysfctdl|=32;}  // remember if we are using the original symtab
@@ -634,7 +633,7 @@ docase:
  // If we are using the original local symbol table, clear it (free all values, free non-permanent names) for next use.  We know it hasn't been freed yet
  // We detect original symbol table by rank ARLSYMINUSE - other symbol tables are assigned rank 0.
  // Tables are born with NAMEADDED off.  It gets set when a name is added.  Setting back to initial state here, we clear NAMEADDED
- if(likely(nG0ysfctdl&32)){AR(locsym)=ARLOCALTABLE; symfreeha(locsym);}
+ if(likely(nG0ysfctdl&32)){symfreeha(locsym); AR(locsym)=ARLOCALTABLE;}
  // Pop the private-area stack
  SYMSETLOCAL(prevlocsyms);
  // Now that we have deleted all the local symbols, we can see if we were returning one.

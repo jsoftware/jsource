@@ -777,7 +777,9 @@ extern unsigned int __cdecl _clearfp (void);
 #if 1
 #define CVTEPI64DECLS  __m256i magic_i_lo   = _mm256_set1_epi64x(0x4330000000000000);                /* 2^52               encoded as floating-point  */ \
       __m256i magic_i_hi32 = _mm256_set1_epi64x(0x4530000080000000);                /* 2^84 + 2^63        encoded as floating-point  */ \
-      __m256i magic_i_all  = _mm256_set1_epi64x(0x4530000080100000);                /* 2^84 + 2^63 + 2^52 encoded as floating-point  */
+      __m256i magic_i_all  = _mm256_set1_epi64x(0x4530000080100000);                /* 2^84 + 2^63 + 2^52 encoded as floating-point  */ \
+      __m256d zero=_mm256_setzero_pd(); __m256d oned=_mm256_set1_pd(1.0); __m256d onei=_mm256_castsi256_pd(_mm256_set1_epi64x(1));  \
+      __m256d bytelane=_mm256_castsi256_pd(_mm256_set_epi64x(0x1000000,0x10000,0x100,0x1));
 // obsolete     __m256d magic_d_all  = _mm256_castsi256_pd(magic_i_all);
 // AVX512  u=_mm256_cvtepi64_pd(_mm256_castpd_si256(u));
 #if defined(__aarch64__)
@@ -795,6 +797,34 @@ extern unsigned int __cdecl _clearfp (void);
 #define CVTEPI64DECLS
 #define CVTEPI64(z,u) z=_mm256_cvtepi64_pd(_mm256_castpd_si256(u));
 #endif
+// increment address by n items
+#define INCRBID(ad,n,commute,id,bi,bd) ad=(D*)((I)ad+((I)(n)<<(((commute)&((bi)|(bd)))?0:LGSZD)));
+// load 4 atoms.  For boolean each lane looks at a different byte
+#define LDBID(z,ad,commute,id,bi,bd) { if((commute)&((bi)|(bd)))z=_mm256_set1_pd(*ad); else z=_mm256_loadu_pd(ad); }
+// load 4 atoms. masking.  For boolean each lane looks at a different byte
+#define LDBIDM(z,ad,commute,id,bi,bd,endmask) { if((commute)&((bi)|(bd)))z=_mm256_set1_pd(*ad); else z=_mm256_maskload_pd(ad,endmask); }
+// load 1 atom into all lanes
+#define LDBID1(z,ad,commute,id,bi,bd) {z=_mm256_set1_pd(*ad); }
+// convert a LDBID/LDBIDM to D or I.  0x400=multiplying bool, -1 or 0
+#define CVTBID(z,u,commute,id,bi,bd) \
+                        { if((commute)&(id)){ CVTEPI64(z,u) \
+                          }else if((commute)&(bi)){ \
+                            z=_mm256_castsi256_pd(_mm256_cmpeq_epi64(_mm256_castpd_si256(bytelane),_mm256_castpd_si256(_mm256_and_pd(u,bytelane)))); \
+                            if(!((commute)&0x400)) z=_mm256_and_pd(z,onei); \
+                          }else if((commute)&(bd)){ \
+                            z=_mm256_castsi256_pd(_mm256_cmpeq_epi64(_mm256_castpd_si256(bytelane),_mm256_castpd_si256(_mm256_and_pd(u,bytelane)))); \
+                            if(!((commute)&0x400)) z=_mm256_and_pd(z,oned); \
+                        } }
+// convert a LDBID1 to D or I
+#define  CVTBID1(z,u,commute,id,bi,bd) \
+                        { if((commute)&(id)){ CVTEPI64(z,u) \
+                          }else if((commute)&(bi)){ \
+                            z=_mm256_and_pd(u,onei); \
+                            if(((commute)&0x400))z=_mm256_castsi256_pd(_mm256_cmpeq_epi64(_mm256_castpd_si256(onei),_mm256_castpd_si256(z))); \
+                          }else if((commute)&(bd)){ \
+                            z=_mm256_castsi256_pd(_mm256_cmpeq_epi64(_mm256_castpd_si256(onei),_mm256_castpd_si256(_mm256_and_pd(u,onei)))); \
+                            if(!((commute)&0x400)) z=_mm256_and_pd(z,oned); \
+                        } }
 
 // GA() is used when the type is unknown.  This routine is in m.c and documents the function of these macros.
 // NEVER use GA() for NAME types - it doesn't honor it.

@@ -895,7 +895,7 @@ typedef struct {
     LX cachedref;  //  for namerefs ('name'~), 0 if non-cachable, neg if cachable but not yet cached, positive if cached
    } lu1;  // this is the high-use stuff in the second cacheline
   };
- } localuse;
+ } localuse;  // always 16 bytes, 4 I4s
  AF valencefns[2];   // function to call for monad,dayd
  A fgh[3];  // operands of modifiers.  h is used for forks and also as a storage spot for parms.  all 3 are freed when the V block is freed
  I4 flag;
@@ -904,7 +904,7 @@ typedef struct {
  RANKT mr;  // combining monad rank
  C id;  // pseudochar for the function encoded here
  C lc;  // lc is a local-use byte.  Used in atomic dyads to indicate which singleton function to execute.  in the derived function from fold, lc has the original id byte of the fold op
-} V;  // two cachelines exactly in 64-bit
+} V;  // two cachelines exactly in 64-bit (16 Is); 20 I4s in 32-bit
 // The AN and AR fields of functions are not used
 
 
@@ -1012,9 +1012,9 @@ typedef struct __attribute__((aligned(CACHELINESIZE))) {I memhdr[AKXR(0)/SZI]; u
 
 // Canned blocks
 // NOTE: for fetching IDs we use the validitymask as a safe place to fetch 0s from.  We know that
-// validitymask[15] will be 0 and we use &validitymask[11] as (an A* with AT=0 (a non-function) and AC=0) or an L* with val=0; and &validitymask[0] as a V* with ID of 0
+// validitymask[15] will be 0 on any platform
 #define FUNCTYPE0 ((A)(validitymask+12))  // 0 0 0 0, which has a 0 in the AT field
-#define FUNCID0 ((A)(validitymask+12))  // 0, which has a 0 in the id field of V
+#define FUNCID0 ((A)(validitymask-4*(!SY_64)))  // 0 in index [15] ([19] for 32-bit), which has a 0 in the id field of V
 #define SYMVAL0 ((L*)(validitymask+12))  // 0 0, which has a 0 in the val field of L
 #define AFLAG0 ((A)(validitymask+12))  // 0 0, which has a 0 in the flag field of A
 #define ZAPLOC0 ((A*)(validitymask+12))  // 0 used as a null pointer to the tpop stack

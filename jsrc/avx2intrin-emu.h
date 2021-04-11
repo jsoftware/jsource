@@ -153,6 +153,7 @@ static __emu_inline __emu__m256i __emu_mm256_srli_epi64 ( __emu__m256i a, int im
     return A.emu__m256i;
 }
 
+__EMU_M256_IMPL_M2( __m256i, cmpgt_epi32 );
 __EMU_M256_IMPL_M2( __m256i, cmpgt_epi64 );
 __EMU_M256_IMPL_M2( __m256i, add_epi64 );
 __EMU_M256_IMPL_M2( __m256i, sub_epi64 );
@@ -336,6 +337,7 @@ __emu_maskstore_impl( __emu_mm256_maskstore_epi64, __emu__m256i, __emu__m256i, _
 #undef _mm256_broadcastb_epi8
 #undef _mm256_cmpeq_epi64
 #undef _mm256_cmpeq_epi8
+#undef _mm256_cmpgt_epi32
 #undef _mm256_cmpgt_epi64
 #undef _mm256_fmadd_pd
 #undef _mm256_fmadd_ps
@@ -365,6 +367,7 @@ __emu_maskstore_impl( __emu_mm256_maskstore_epi64, __emu__m256i, __emu__m256i, _
 #define _mm256_broadcastb_epi8 __emu_mm256_broadcastb_epi8
 #define _mm256_cmpeq_epi64 __emu_mm256_cmpeq_epi64
 #define _mm256_cmpeq_epi8 __emu_mm256_cmpeq_epi8
+#define _mm256_cmpgt_epi32 __emu_mm256_cmpgt_epi32
 #define _mm256_cmpgt_epi64 __emu_mm256_cmpgt_epi64
 #define _mm256_fmadd_pd __emu_mm256_fmadd_pd
 #define _mm256_fmadd_ps __emu_mm256_fmadd_ps

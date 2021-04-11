@@ -725,6 +725,7 @@ static __emu_inline __emu__m256i __emu_mm256_srli_epi64 ( __emu__m256i a, int im
 }
 
 // avx2
+__EMU_M256_IMPL_M2( __m256i, cmpgt_epi32 );
 __EMU_M256_IMPL_M2( __m256i, cmpgt_epi64 );
 __EMU_M256_IMPL_M2( __m256i, add_epi64 );
 __EMU_M256_IMPL_M2( __m256i, sub_epi64 );
@@ -1533,6 +1534,7 @@ __emu_maskstore_impl( __emu_mm256_maskstore_epi64, __emu__m256i, __emu__m256i, _
 #define __m256i __emu__m256i
 #define __m256d __emu__m256d
 
+#define _mm256_cmpgt_epi32    __emu_mm256_cmpgt_epi32
 #define _mm256_cmpgt_epi64    __emu_mm256_cmpgt_epi64
 #define _mm256_add_epi64    __emu_mm256_add_epi64
 #define _mm256_sub_epi64    __emu_mm256_sub_epi64

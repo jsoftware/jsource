@@ -123,7 +123,7 @@ AHDRP(f,B,B){  \
 REDUCECFX(  eqinsB, EQ,  IEQ,  SEQ,  BEQ,  vdone(m,n,x,z,(B)(n&1)))
 REDUCECFX(  neinsB, NE,  INE,  SNE,  BNE,  vdone(m,n,x,z,1       ))
 REDUCECFX(  orinsB, OR,  IOR,  SOR,  BOR,  {DQ(m, *z++=1&&memchr(x,C1,n);                         x+=n;)}) 
-REDUCECFX( andinsB, AND, IAND, SAND, BAND, {DQ(m, *z++=!  memchr(x,C0,n);                         x+=n;}))
+REDUCECFX( andinsB, AND, IAND, SAND, BAND, {DQ(m, *z++=!  memchr(x,C0,n);                         x+=n;)})
 REDUCEBFX(  ltinsB, LT,  ILT,  SLT,  BLT,  {DQ(m, *z++= x[n-1]&&!memchr(x,C1,n-1)?1:0;          x+=n;)})
 REDUCEBFX(  leinsB, LE,  ILE,  SLE,  BLE,  {DQ(m, *z++=!x[n-1]&&!memchr(x,C0,n-1)?0:1;          x+=n;)})
 REDUCEBFX(  gtinsB, GT,  IGT,  SGT,  BGT,  {DQ(m, B *y=memchr(x,C0,n); *z++=1&&(y?1&(y-x):1&n);      x+=n;)})

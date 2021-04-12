@@ -41,32 +41,6 @@ primop256(plusDI,16,,zz=_mm256_add_pd(xx,yy),R EVOK;)
 primop256(plusID,8,,zz=_mm256_add_pd(xx,yy),R EVOK;)
 primop256(plusDB,0xa00,,zz=_mm256_add_pd(xx,yy),R EVOK;)
 primop256(plusBD,0x900,,zz=_mm256_add_pd(xx,yy),R EVOK;)
-primop256(minusDI,16,,zz=_mm256_sub_pd(xx,yy),R EVOK;)
-primop256(minusID,8,,zz=_mm256_sub_pd(xx,yy),R EVOK;)
-primop256(minusDB,0xa00,,zz=_mm256_sub_pd(xx,yy),R EVOK;)
-primop256(minusBD,0x100,,zz=_mm256_sub_pd(xx,yy),R EVOK;)
-primop256(minDI,16,,zz=_mm256_min_pd(xx,yy),R EVOK;)
-primop256(minID,8,,zz=_mm256_min_pd(xx,yy),R EVOK;)
-primop256(minBD,0x100,,zz=_mm256_min_pd(xx,yy),R EVOK;)
-primop256(minDB,0x200,,zz=_mm256_min_pd(xx,yy),R EVOK;)
-primop256(maxDI,16,,zz=_mm256_max_pd(xx,yy),R EVOK;)
-primop256(maxID,8,,zz=_mm256_max_pd(xx,yy),R EVOK;)
-primop256(maxBD,0x100,,zz=_mm256_max_pd(xx,yy),R EVOK;)
-primop256(maxDB,0x200,,zz=_mm256_max_pd(xx,yy),R EVOK;)
-primop256(tymesDI,16,D *zsav=z;NAN0;,zz=_mm256_mul_pd(xx,yy),if(NANTEST){z=zsav; DQ(n*m, if(_isnan(*z))*z=0.0; ++z;)} R EVOK;)
-primop256(tymesDB,0x600,,zz=_mm256_and_pd(xx,yy),R EVOK;)
-primop256(tymesIB,0x600,,zz=_mm256_and_pd(xx,yy),R EVOK;)  // scaf duplicated fn
-primop256(tymesID,8,D *zsav=z;NAN0;,zz=_mm256_mul_pd(xx,yy),if(NANTEST){z=zsav; DQ(n*m, if(_isnan(*z))*z=0.0; ++z;)} R EVOK;)
-primop256(tymesBD,0x500,,zz=_mm256_and_pd(xx,yy),R EVOK;)
-primop256(tymesBI,0x500,,zz=_mm256_and_pd(xx,yy),R EVOK;)  // scaf duplicated fn
-primop256(divDI,20,I msav=m; D *zsav=z; D *xsav=x; D *ysav=y; I nsav=n;NAN0;,zz=_mm256_div_pd(xx,yy),
-  if(NANTEST){m=msav; z=zsav; xsav=zsav==ysav?xsav:ysav; m*=n; n=(nsav^SGNIF(zsav==ysav,0))>=0?n:1; nsav=--n; DQ(m, if(_isnan(*z)){ASSERTWR(*xsav==0,EVNAN); *z=0.0;} ++z; --n; xsav-=REPSGN(n); n=n<0?nsav:n;)} R EVOK;)
-primop256(divID,12,I msav=m; D *zsav=z; D *xsav=x; D *ysav=y; I nsav=n;NAN0;,zz=_mm256_div_pd(xx,yy),
-  if(NANTEST){m=msav; z=zsav; xsav=zsav==ysav?xsav:ysav; m*=n; n=(nsav^SGNIF(zsav==ysav,0))>=0?n:1; nsav=--n; DQ(m, if(_isnan(*z)){ASSERTWR(*xsav==0,EVNAN); *z=0.0;} ++z; --n; xsav-=REPSGN(n); n=n<0?nsav:n;)} R EVOK;)
-primop256(divDB,0x204,I msav=m; D *zsav=z; C *bsav=(C*)y; D *ysav=y; I nsav=n;NAN0;,zz=_mm256_div_pd(xx,yy),
-  if(NANTEST){m=msav; z=zsav; m*=n; n=nsav>=0?n:1; nsav=--n; DQ(m, if(_isnan(*z)){ASSERTWR(*bsav==0,EVNAN); *z=0.0;} ++z; --n; bsav-=REPSGN(n); n=n<0?nsav:n;)} R EVOK;)
-primop256(divBD,0x104,I msav=m; D *zsav=z; C *bsav=(C*)x; D *ysav=y; I nsav=n;NAN0;,zz=_mm256_div_pd(xx,yy),
-  if(NANTEST){m=msav; z=zsav; m*=n; n=nsav<0?n:1; nsav=--n; DQ(m, if(_isnan(*z)){ASSERTWR(*bsav==0,EVNAN); *z=0.0;} ++z; --n; bsav-=REPSGN(n); n=n<0?nsav:n;)} R EVOK;)
 primop256(plusII,0x21,__m256d oflo=_mm256_setzero_pd();,
  zz=_mm256_castsi256_pd(_mm256_add_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy))); oflo=_mm256_or_pd(oflo,_mm256_andnot_pd(_mm256_xor_pd(xx,yy),_mm256_xor_pd(xx,zz)));,
  R _mm256_movemask_pd(oflo)?EWOVIP+EWOVIPPLUSII:EVOK;)
@@ -76,27 +50,65 @@ primop256(plusBI,0x860,__m256d oflo=_mm256_setzero_pd();,
 primop256(plusIB,0x8a0,__m256d oflo=_mm256_setzero_pd();,
  zz=_mm256_castsi256_pd(_mm256_add_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy))); oflo=_mm256_or_pd(oflo,_mm256_castsi256_pd(_mm256_cmpgt_epi32(_mm256_castpd_si256(xx),_mm256_castpd_si256(zz))));,
  R _mm256_movemask_pd(oflo)?EWOVIP+EWOVIPPLUSIB:EVOK;)
+primop256(plusBB,0xc0,,
+zz=_mm256_castsi256_pd(_mm256_add_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)));,R EVOK;)
+primop256(minusDI,16,,zz=_mm256_sub_pd(xx,yy),R EVOK;)
+primop256(minusID,8,,zz=_mm256_sub_pd(xx,yy),R EVOK;)
+primop256(minusDB,0xa00,,zz=_mm256_sub_pd(xx,yy),R EVOK;)
+primop256(minusBD,0x100,,zz=_mm256_sub_pd(xx,yy),R EVOK;)
 primop256(minusII,0x22,__m256d oflo=_mm256_setzero_pd();,
  zz=_mm256_castsi256_pd(_mm256_sub_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy))); oflo=_mm256_or_pd(oflo,_mm256_and_pd(_mm256_xor_pd(xx,yy),_mm256_xor_pd(xx,zz)));,
  R _mm256_movemask_pd(oflo)?EWOVIP+EWOVIPMINUSII:EVOK;)
 primop256(minusBI,0x62,__m256d oflo=_mm256_setzero_pd();,
- zz=_mm256_castsi256_pd(_mm256_sub_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy))); oflo=_mm256_or_pd(oflo,_mm256_and_pd(_mm256_xor_pd(xx,yy),_mm256_xor_pd(xx,zz)));,
+ zz=_mm256_castsi256_pd(_mm256_sub_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)));oflo=_mm256_or_pd(oflo,_mm256_and_pd(zz,yy));,  // only oflo is b - imin,
  R _mm256_movemask_pd(oflo)?EWOVIP+EWOVIPMINUSBI:EVOK;)
 primop256(minusIB,0x8a2,__m256d oflo=_mm256_setzero_pd();,
- zz=_mm256_castsi256_pd(_mm256_sub_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy))); oflo=_mm256_or_pd(oflo,_mm256_castsi256_pd(_mm256_cmpgt_epi32(_mm256_castpd_si256(zz),_mm256_castpd_si256(xx))));,
+ zz=_mm256_castsi256_pd(_mm256_sub_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy))); oflo=_mm256_or_pd(oflo,_mm256_castsi256_pd(_mm256_cmpgt_epi64(_mm256_castpd_si256(zz),_mm256_castpd_si256(xx))));,
  R _mm256_movemask_pd(oflo)?EWOVIP+EWOVIPMINUSIB:EVOK;)
+primop256(minusBB,0xe0,,
+ zz=_mm256_castsi256_pd(_mm256_sub_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)));,R EVOK;)
+primop256(minDI,16,,zz=_mm256_min_pd(xx,yy),R EVOK;)
+primop256(minID,8,,zz=_mm256_min_pd(xx,yy),R EVOK;)
+primop256(minBD,0x100,,zz=_mm256_min_pd(xx,yy),R EVOK;)
+primop256(minDB,0x200,,zz=_mm256_min_pd(xx,yy),R EVOK;)
 primop256(minII,1,,
  zz=_mm256_blendv_pd(xx,yy,_mm256_castsi256_pd(_mm256_cmpgt_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)))); ,R EVOK;)
 primop256(minBI,0x40,,
  zz=_mm256_blendv_pd(xx,yy,_mm256_castsi256_pd(_mm256_cmpgt_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)))); ,R EVOK;)
 primop256(minIB,0x80,,
  zz=_mm256_blendv_pd(xx,yy,_mm256_castsi256_pd(_mm256_cmpgt_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)))); ,R EVOK;)
+primop256(maxDI,16,,zz=_mm256_max_pd(xx,yy),R EVOK;)
+primop256(maxID,8,,zz=_mm256_max_pd(xx,yy),R EVOK;)
+primop256(maxBD,0x100,,zz=_mm256_max_pd(xx,yy),R EVOK;)
+primop256(maxDB,0x200,,zz=_mm256_max_pd(xx,yy),R EVOK;)
 primop256(maxII,1,,
  zz=_mm256_blendv_pd(yy,xx,_mm256_castsi256_pd(_mm256_cmpgt_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)))); ,R EVOK;)
 primop256(maxBI,0x40,,
  zz=_mm256_blendv_pd(yy,xx,_mm256_castsi256_pd(_mm256_cmpgt_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)))); ,R EVOK;)
 primop256(maxIB,0x80,,
  zz=_mm256_blendv_pd(yy,xx,_mm256_castsi256_pd(_mm256_cmpgt_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)))); ,R EVOK;)
+primop256(tymesDI,16,D *zsav=z;NAN0;,zz=_mm256_mul_pd(xx,yy),if(NANTEST){z=zsav; DQ(n*m, if(_isnan(*z))*z=0.0; ++z;)} R EVOK;)
+primop256(tymesDB,0x480,,zz=_mm256_and_pd(yy,xx),R EVOK;)
+primop256(tymesIB,0x480,,zz=_mm256_and_pd(yy,xx),R EVOK;)  // scaf duplicated fn
+primop256(tymesID,8,D *zsav=z;NAN0;,zz=_mm256_mul_pd(xx,yy),if(NANTEST){z=zsav; DQ(n*m, if(_isnan(*z))*z=0.0; ++z;)} R EVOK;)
+primop256(tymesBD,0x440,,zz=_mm256_and_pd(xx,yy),R EVOK;)
+primop256(tymesBI,0x440,,zz=_mm256_and_pd(xx,yy),R EVOK;)  // scaf duplicated fn
+primop256(divDI,0x14,I msav=m; D *zsav=z; D *xsav=x; D *ysav=y; I nsav=n;NAN0;,zz=_mm256_div_pd(xx,yy),
+  if(NANTEST){m=msav; z=zsav; xsav=zsav==ysav?xsav:ysav; m*=n; n=(nsav^SGNIF(zsav==ysav,0))>=0?n:1; nsav=--n; DQ(m, if(_isnan(*z)){ASSERTWR(*xsav==0,EVNAN); *z=0.0;} ++z; --n; xsav-=REPSGN(n); n=n<0?nsav:n;)} R EVOK;)
+primop256(divII,0x1c,I msav=m; D *zsav=z; D *xsav=x; D *ysav=y; I nsav=n;NAN0;,zz=_mm256_div_pd(xx,yy),
+  if(NANTEST){m=msav; z=zsav; xsav=zsav==ysav?xsav:ysav; m*=n; n=(nsav^SGNIF(zsav==ysav,0))>=0?n:1; nsav=--n; DQ(m, if(_isnan(*z)){ASSERTWR(*xsav==0,EVNAN); *z=0.0;} ++z; --n; xsav-=REPSGN(n); n=n<0?nsav:n;)} R EVOK;)
+primop256(divBB,0x324,I msav=m; D *zsav=z; C *bsav=(C*)x;  I nsav=n;NAN0;,zz=_mm256_div_pd(xx,yy),  // x B->D, y B->D, no unroll, 0s at end
+  if(NANTEST){m=msav; z=zsav; m*=n; n=nsav<0?n:1; nsav=--n; DQ(m, if(_isnan(*z)){ASSERTWR(*bsav==0,EVNAN); *z=0.0;} ++z; --n; bsav-=REPSGN(n); n=n<0?nsav:n;)} R EVOK;)
+primop256(divID,0xc,I msav=m; D *zsav=z; D *xsav=x; D *ysav=y; I nsav=n;NAN0;,zz=_mm256_div_pd(xx,yy),
+  if(NANTEST){m=msav; z=zsav; xsav=zsav==ysav?xsav:ysav; m*=n; n=(nsav^SGNIF(zsav==ysav,0))>=0?n:1; nsav=--n; DQ(m, if(_isnan(*z)){ASSERTWR(*xsav==0,EVNAN); *z=0.0;} ++z; --n; xsav-=REPSGN(n); n=n<0?nsav:n;)} R EVOK;)
+primop256(divDB,0x224,I msav=m; D *zsav=z; C *bsav=(C*)y; I nsav=n;NAN0;,zz=_mm256_div_pd(xx,yy),
+  if(NANTEST){m=msav; z=zsav; m*=n; n=nsav>=0?n:1; nsav=--n; DQ(m, if(_isnan(*z)){ASSERTWR(*bsav==0,EVNAN); *z=0.0;} ++z; --n; bsav-=REPSGN(n); n=n<0?nsav:n;)} R EVOK;)
+primop256(divIB,0x22c,I msav=m; D *zsav=z; C *bsav=(C*)y; I nsav=n;NAN0;,zz=_mm256_div_pd(xx,yy),  // x I->D, y B->D, no unroll, 0s at end
+  if(NANTEST){m=msav; z=zsav; m*=n; n=nsav>=0?n:1; nsav=--n; DQ(m, if(_isnan(*z)){ASSERTWR(*bsav==0,EVNAN); *z=0.0;} ++z; --n; bsav-=REPSGN(n); n=n<0?nsav:n;)} R EVOK;)
+primop256(divBD,0x104,I msav=m; D *zsav=z; C *bsav=(C*)x; I nsav=n;NAN0;,zz=_mm256_div_pd(xx,yy),
+  if(NANTEST){m=msav; z=zsav; m*=n; n=nsav<0?n:1; nsav=--n; DQ(m, if(_isnan(*z)){ASSERTWR(*bsav==0,EVNAN); *z=0.0;} ++z; --n; bsav-=REPSGN(n); n=n<0?nsav:n;)} R EVOK;)
+primop256(divBI,0x134,I msav=m; D *zsav=z; C *bsav=(C*)x; I nsav=n;NAN0;,zz=_mm256_div_pd(xx,yy),  // x B->D, y I->D, no unroll, 0s at end
+  if(NANTEST){m=msav; z=zsav; m*=n; n=nsav<0?n:1; nsav=--n; DQ(m, if(_isnan(*z)){ASSERTWR(*bsav==0,EVNAN); *z=0.0;} ++z; --n; bsav-=REPSGN(n); n=n<0?nsav:n;)} R EVOK;)
 #else
 AIFX(minusDI, D,D,I, -) AIFX(minusID, D,I,D, -    ) APFX(  minID, D,I,D, MIN,,R EVOK;)   APFX(  minDI, D,D,I, MIN,,R EVOK;) APFX(  maxID, D,I,D, MAX,,R EVOK;)  APFX(  maxDI, D,D,I, MAX,,R EVOK;) 
 APFX(tymesID, D,I,D, TYMESID,,R EVOK;) APFX(tymesDI, D,D,I, TYMESDI,,R EVOK;) APFX(  divID, D,I,D, DIV,,R EVOK;) APFX(  divDI, D,D,I, DIVI,,R EVOK;) 
@@ -192,6 +204,12 @@ APFX(  minIB, I,I,B, MIN,,R EVOK;)     /* minII */
 APFX(  minDB, D,D,B, MIN,,R EVOK;)           /* minDD */
 APFX(  maxIB, I,I,B, MAX,,R EVOK;)     /* maxII */                    
 APFX(  maxDB, D,D,B, MAX,,R EVOK;)            /* maxDD */
+APFX(  divBB, D,B,B, DIVBB,,R EVOK;) 
+AIFX(minusBB, I,B,B, -     )    /* minusBI */            
+  APFX(  divBI, D,B,I, DIVI,,R EVOK;) 
+APFX(  divIB, D,I,B, DIVI ,,R EVOK;)
+   APFX(  divII, D,I,I, DIVI,,R EVOK;)    
+AIFX( plusBB, I,B,B, +     )    /* plusBI */   
 #endif
 
 // II multiply, in double precision.  Always return error code so we can clean up
@@ -253,11 +271,9 @@ APFX( plusIO, D,I,I,  PLUSO,,R EVOK;)
 APFX(minusIO, D,I,I, MINUSO,,R EVOK;)
 APFX(tymesIO, D,I,I, TYMESO,,R EVOK;)
 
-AIFX( plusBB, I,B,B, +     )    /* plusBI */   
    /* plusIB */                 /* plusII */                
 APFX( plusZZ, Z,Z,Z, zplus,NAN0;,ASSERTWR(!NANTEST,EVNAN); R EVOK; )
 
-AIFX(minusBB, I,B,B, -     )    /* minusBI */            
   /* minusIB */                 /* minusII */               
 APFX(minusZZ, Z,Z,Z, zminus,NAN0;,ASSERTWR(!NANTEST,EVNAN); R EVOK;)
     /* andBB */                 /* tymesBI */                   /* tymesBD */            
@@ -265,10 +281,6 @@ APFX(minusZZ, Z,Z,Z, zminus,NAN0;,ASSERTWR(!NANTEST,EVNAN); R EVOK;)
     /* tymesDB */                /* tymesDD */ 
 APFX(tymesZZ, Z,Z,Z, ztymes,NAN0;,ASSERTWR(!NANTEST,EVNAN); R EVOK; )
 
-APFX(  divBB, D,B,B, DIVBB,,R EVOK;) 
-  APFX(  divBI, D,B,I, DIVI,,R EVOK;) 
-APFX(  divIB, D,I,B, DIVI ,,R EVOK;)
-   APFX(  divII, D,I,I, DIVI,,R EVOK;)    
 APFX(  divZZ, Z,Z,Z, zdiv,NAN0;,HDR1JERRNAN  )
 
      /* orBB */

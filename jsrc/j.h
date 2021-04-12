@@ -704,10 +704,13 @@ extern unsigned int __cdecl _clearfp (void);
 #define DF2(f)          A f(JJ jt,A a,A w,A self)
 #define DO(n,stm)       {I i=0,_n=(n); for(;i<_n;i++){stm}}  // i runs from 0 to n-1
 #define DP(n,stm)       {I i=-(n);    for(;i<0;++i){stm}}   // i runs from -n to -1 (faster than DO)
-#define DQ(n,stm)       {I i=(I)(n)-1;    for(;i>=0;--i){stm}}  // i runs from n-1 downto 0 (fastest when you don't need i)
+#define DQ(n,stm)       {I i=(I)(n)-1;    for(;i>=0;--i){stm}}   // i runs from n-1 downto 0 (fastest when you don't need i)
+// obsolete #define DQ(n,stm)       {UI i=(n); if((I)i>0){--i; do{stm}while(i--);}}  // i runs from n-1 downto 0 (fastest when you don't need i)
+#define DQNOUNROLL(n,stm) {UI i=(n); if((I)i>0){--i; NOUNROLL do{stm}while(i--);}}  // i runs from n-1 downto 0 (fastest when you don't need i).  i is UI
 #define DOU(n,stm)      {I i=0,_n=(n); do{stm}while(++i<_n);}  // i runs from 0 to n-1, always at least once
 #define DPU(n,stm)      {I i=-(n);    do{stm}while(++i<0);}   // i runs from -n to -1 (faster than DO), always at least once
 #define DQU(n,stm)      {I i=(I)(n)-1;  do{stm}while(--i>=0);}  // i runs from n-1 downto 0, always at least once
+// obsolete #define DQU(n,stm)      {UI i=(UI)(n)-1;  do{stm}while(i--);}  // i runs from n-1 downto 0, always at least once
 #define DOSTEP(n,step,stm) {I i=0,_n=(n); for(;_n;i++,_n-=(step)){stm}}  // i runs from 0 to n-1, but _n counts down
 
 // C suffix indicates that the count is one's complement
@@ -774,14 +777,15 @@ extern unsigned int __cdecl _clearfp (void);
 // value to put into name->bucketx for locale names: number if numeric, hash otherwise
 #define BUCKETXLOC(len,s) ((*(s)<='9')?strtoI10s((len),(s)):(I)nmhash((len),(s)))
 // Support for int-to-float, in parallel.  Input is u, 64-bit int with a type of float; result is 64-bit floats.  Define DECLS first.
-#if 1
-#define CVTEPI64DECLS  __m256i magic_i_lo   = _mm256_set1_epi64x(0x4330000000000000);                /* 2^52               encoded as floating-point  */ \
-      __m256i magic_i_hi32 = _mm256_set1_epi64x(0x4530000080000000);                /* 2^84 + 2^63        encoded as floating-point  */ \
-      __m256i magic_i_all  = _mm256_set1_epi64x(0x4530000080100000);                /* 2^84 + 2^63 + 2^52 encoded as floating-point  */ \
-      __m256d zero=_mm256_setzero_pd(); __m256d oned=_mm256_set1_pd(1.0); __m256d onei=_mm256_castsi256_pd(_mm256_set1_epi64x(1));  \
-      __m256d bytelane=_mm256_castsi256_pd(_mm256_set_epi64x(0x1000000,0x10000,0x100,0x1));
+// we use initecho() to initialize zero and oned because the compiler moves the initialization to inside the loop
+#define CVTEPI64DECLS  __m256i magic_i_lo = _mm256_castpd_si256(_mm256_broadcast_sd(&two_52)); /* 2^52 */ \
+      __m256i magic_i_hi32 = _mm256_castpd_si256(_mm256_broadcast_sd(&two_84_63)); /* 2^84+2^63 */  \
+      __m256i magic_i_all  = _mm256_castpd_si256(_mm256_broadcast_sd(&two_84_63_52)); /* 2^84 + 2^63 + 2^52 */ \
+      __m256d zero=_mm256_broadcast_sd(&zone.imag); __m256d oned=_mm256_broadcast_sd(&zone.real);  __m256d onei=_mm256_broadcast_sd((const double *)&oneone[0]);    \
+      __m256i dts=_mm256_castpd_si256(_mm256_loadu_pd((D*)disttosign));  \
 // obsolete     __m256d magic_d_all  = _mm256_castsi256_pd(magic_i_all);
 // AVX512  u=_mm256_cvtepi64_pd(_mm256_castpd_si256(u));
+#if 1
 #if defined(__aarch64__)
 #define  CVTEPI64(z,u)   z.vect_f64[0] = vcvtq_f64_s64(vreinterpretq_f64_s64(u.vect_f64[0])); \
                          z.vect_f64[1] = vcvtq_f64_s64(vreinterpretq_f64_s64(u.vect_f64[1]));
@@ -794,36 +798,34 @@ extern unsigned int __cdecl _clearfp (void);
 #endif
 #else
 // Here for native instruction support
-#define CVTEPI64DECLS
 #define CVTEPI64(z,u) z=_mm256_cvtepi64_pd(_mm256_castpd_si256(u));
 #endif
 // increment address by n items
 #define INCRBID(ad,n,commute,id,bi,bd) ad=(D*)((I)ad+((I)(n)<<(((commute)&((bi)|(bd)))?0:LGSZD)));
 // load 4 atoms.  For boolean each lane looks at a different byte
-#define LDBID(z,ad,commute,id,bi,bd) { if((commute)&((bi)|(bd)))z=_mm256_set1_pd(*ad); else z=_mm256_loadu_pd(ad); }
+#define LDBID(z,ad,commute,id,bi,bd) {if((commute)&((bi)|(bd))){z=_mm256_broadcast_sd(ad); if((commute)&(bi))z=_mm256_castsi256_pd(_mm256_cvtepu8_epi64(_mm256_castsi256_si128(_mm256_castpd_si256(z))));} else z=_mm256_loadu_pd(ad); }
 // load 4 atoms. masking.  For boolean each lane looks at a different byte
-#define LDBIDM(z,ad,commute,id,bi,bd,endmask) { if((commute)&((bi)|(bd)))z=_mm256_set1_pd(*ad); else z=_mm256_maskload_pd(ad,endmask); }
+#define LDBIDM(z,ad,commute,id,bi,bd,endmask) {if((commute)&((bi)|(bd))){z=_mm256_broadcast_sd(ad); if((commute)&(bi))z=_mm256_castsi256_pd(_mm256_cvtepu8_epi64(_mm256_castsi256_si128(_mm256_castpd_si256(z))));} else z=_mm256_maskload_pd(ad,endmask); }
 // load 1 atom into all lanes
-#define LDBID1(z,ad,commute,id,bi,bd) {z=_mm256_set1_pd(*ad); }
-// convert a LDBID/LDBIDM to D or I.  0x400=multiplying bool, -1 or 0
+#define LDBID1(z,ad,commute,id,bi,bd) {z=_mm256_broadcast_sd(ad);}
+// convert a LDBID/LDBIDM to D or I.  Only the LSB of each B can be set.  0x400 turns -1 to 1, for multiplication
 #define CVTBID(z,u,commute,id,bi,bd) \
                         { if((commute)&(id)){ CVTEPI64(z,u) \
                           }else if((commute)&(bi)){ \
-                            z=_mm256_castsi256_pd(_mm256_cmpeq_epi64(_mm256_castpd_si256(bytelane),_mm256_castpd_si256(_mm256_and_pd(u,bytelane)))); \
-                            if(!((commute)&0x400)) z=_mm256_and_pd(z,onei); \
+                            if((commute)&0x400){z=_mm256_castsi256_pd(_mm256_cmpeq_epi64(_mm256_castpd_si256(onei),_mm256_castpd_si256(u)));} \
                           }else if((commute)&(bd)){ \
-                            z=_mm256_castsi256_pd(_mm256_cmpeq_epi64(_mm256_castpd_si256(bytelane),_mm256_castpd_si256(_mm256_and_pd(u,bytelane)))); \
-                            if(!((commute)&0x400)) z=_mm256_and_pd(z,oned); \
+                            z=_mm256_castsi256_pd(_mm256_sllv_epi64(_mm256_castpd_si256(u),dts)); \
+                            z=_mm256_blendv_pd(zero,oned,z); \
                         } }
-// convert a LDBID1 to D or I
+// convert a LDBID1 to D or I.  z is garbage except for low byte.  0x400 turns -1 to 1, for multiplication
 #define  CVTBID1(z,u,commute,id,bi,bd) \
                         { if((commute)&(id)){ CVTEPI64(z,u) \
                           }else if((commute)&(bi)){ \
                             z=_mm256_and_pd(u,onei); \
-                            if(((commute)&0x400))z=_mm256_castsi256_pd(_mm256_cmpeq_epi64(_mm256_castpd_si256(onei),_mm256_castpd_si256(z))); \
+                            if((commute)&0x400){z=_mm256_castsi256_pd(_mm256_cmpeq_epi64(_mm256_castpd_si256(onei),_mm256_castpd_si256(z)));} \
                           }else if((commute)&(bd)){ \
-                            z=_mm256_castsi256_pd(_mm256_cmpeq_epi64(_mm256_castpd_si256(onei),_mm256_castpd_si256(_mm256_and_pd(u,onei)))); \
-                            if(!((commute)&0x400)) z=_mm256_and_pd(z,oned); \
+                            z=_mm256_castsi256_pd(_mm256_slli_epi64(_mm256_castpd_si256(u),63)); \
+                            z=_mm256_blendv_pd(zero,oned,z); \
                         } }
 
 // GA() is used when the type is unknown.  This routine is in m.c and documents the function of these macros.

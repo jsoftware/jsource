@@ -1303,3 +1303,7 @@ A jtexta(J jt,I t,I r,I c,I m){A z;I m1;
 // forcetomemory does nothing, but it does take an array as argument.  This will spook the compiler out of trying to assign parts of the array to registers.
 void forcetomemory(void * w){R; }
 
+#if (C_AVX2&&SY_64) || EMU_AVX2
+__m256d initecho(void * addr) {R _mm256_broadcast_sd((D*)addr);}   // no longer used
+#endif
+

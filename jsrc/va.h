@@ -272,8 +272,8 @@ typedef I AHDRSFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);
 // bit5 set to suppress loop-unrolling
 // bit6 set for bool-to-int on x, bit7 for bool-to-int on y
 // bit8 set for bool-to-float on x, bit9 for bool-to-float on y
-// bit10 this is a boolean multiply function: convert B to -1 if true, 0 if false, and skip if repeated op true
-// bit10 this is a boolean addition function: skip if repeated op false
+// bit10 this is a boolean multiply function: skip if repeated op true
+// bit11 this is a boolean addition function: skip if repeated op false
 #define primop256(name,commute,pref,zzop,suff) \
 AHDR2(name,D,D,D){ \
  __m256d xx,yy,zz; \
@@ -296,8 +296,8 @@ AHDR2(name,D,D,D){ \
   if(!((commute)&(32+16+8))){ \
    UI n0=(m-1)>>LGNPAR; \
    if(n0>0){ \
-    UI n1=(n0+1)>>1; \
-    switch(n0&1){ \
+    UI n1=(n0+(((I)1<<1)-1))>>1; \
+    switch(n0&(((I)1<<1)-1)){ \
     name##lp11: \
     case 0: \
      LDBID(xx,x,commute,0x8,0x40,0x100) LDBID(yy,y,commute,0x10,0x80,0x200)  \
@@ -311,7 +311,7 @@ AHDR2(name,D,D,D){ \
     } \
    } \
   }else{ \
-   DQ((m-1)>>LGNPAR, \
+   DQNOUNROLL((m-1)>>LGNPAR, \
      LDBID(xx,x,commute,0x8,0x40,0x100) LDBID(yy,y,commute,0x10,0x80,0x200)  \
      CVTBID(xx,xx,commute,0x8,0x40,0x100) CVTBID(yy,yy,commute,0x10,0x80,0x200)  \
      zzop; _mm256_storeu_pd(z, zz); INCRBID(x,NPAR,commute,0x8,0x40,0x100) INCRBID(y,NPAR,commute,0x10,0x80,0x200) INCRBID(z,NPAR,commute,0,0,0)  \
@@ -326,7 +326,7 @@ AHDR2(name,D,D,D){ \
  }else{ \
   if(!((commute)&1)&&n-1<0){n=~n; \
    /* atom+vector */ \
-   DQ(m, \
+   DQNOUNROLL(m, \
     if(unlikely((commute)&0x140 && (((commute)&0x400 && z==y && *(C*)x!=0) || ((commute)&0x800 && z==y && *(C*)x==0)))){ \
      INCRBID(x,1,commute,0x8,0x40,0x100) INCRBID(y,n,commute,0x10,0x80,0x200) INCRBID(z,n,commute,0,0,0) \
     }else{      LDBID1(xx,x,commute,0x8,0x40,0x100) CVTBID1(xx,xx,commute,0x8,0x40,0x100) INCRBID(x,1,commute,0x8,0x40,0x100) \
@@ -342,8 +342,8 @@ AHDR2(name,D,D,D){ \
      if(!((commute)&(32+16))){ \
       UI n1=(n0-1)>>LGNPAR; \
       if(n1>0){ \
-       UI n2=(n1+3)>>2; \
-       switch(n1&3){ \
+       UI n2=(n1+(((I)1<<2)-1))>>2; \
+       switch(n1&(((I)1<<2)-1)){ \
        name##lp02: \
        case 0: \
         LDBID(yy,y,commute,0x10,0x80,0x200) CVTBID(yy,yy,commute,0x10,0x80,0x200)  \
@@ -361,7 +361,7 @@ AHDR2(name,D,D,D){ \
        } \
       } \
      }else{ \
-      DQ((n0-1)>>LGNPAR, \
+      DQNOUNROLL((n0-1)>>LGNPAR, \
        LDBID(yy,y,commute,0x10,0x80,0x200) CVTBID(yy,yy,commute,0x10,0x80,0x200)  \
        zzop; _mm256_storeu_pd(z, zz); INCRBID(y,NPAR,commute,0x10,0x80,0x200) INCRBID(z,NPAR,commute,0,0,0)  \
       ) \
@@ -376,7 +376,7 @@ AHDR2(name,D,D,D){ \
   }else{ \
    /* vector+atom */ \
    if((commute)&1){I taddr=(I)x^(I)y; x=n<0?y:x; y=(D*)((I)x^taddr); n^=REPSGN(n);} \
-   DQ(m, \
+   DQNOUNROLL(m, \
     if(unlikely((commute)&0x280 && (((commute)&0x400 && z==x && *(C*)y!=0) || ((commute)&0x800 && z==x && *(C*)y==0)))){ \
      INCRBID(x,n,commute,0x8,0x40,0x100) INCRBID(y,1,commute,0x10,0x80,0x200) INCRBID(z,n,commute,0,0,0) \
     }else { \
@@ -393,8 +393,8 @@ AHDR2(name,D,D,D){ \
      if(!((commute)&(32+8))){ \
       UI n1=(n0-1)>>LGNPAR; \
       if(n1>0){ \
-       UI n2=(n1+3)>>2; \
-       switch(n1&3){ \
+       UI n2=(n1+(((I)1<<2)-1))>>2; \
+       switch(n1&(((I)1<<2)-1)){ \
        name##lp03: \
        case 0: \
         LDBID(xx,x,commute,0x8,0x40,0x100) CVTBID(xx,xx,commute,0x8,0x40,0x100)  \
@@ -412,7 +412,7 @@ AHDR2(name,D,D,D){ \
        } \
       } \
      }else{ \
-      DQ((n0-1)>>LGNPAR, \
+      DQNOUNROLL((n0-1)>>LGNPAR, \
        LDBID(xx,x,commute,0x8,0x40,0x100) CVTBID(xx,xx,commute,0x8,0x40,0x100)  \
        zzop; _mm256_storeu_pd(z, zz); INCRBID(x,NPAR,commute,0x8,0x40,0x100) INCRBID(z,NPAR,commute,0,0,0) \
       ) \

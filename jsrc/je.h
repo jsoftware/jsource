@@ -990,6 +990,13 @@ extern VARPSA rpsnull;
 extern PRIM sfn0overself;
 extern UA va1tab[];
 extern VA va[];
+#if (C_AVX2&&SY_64) || EMU_AVX2
+extern __m256d initecho(void *);
+#endif
+extern D two_52;  // 2^52
+extern D two_84_63;  // 2^84+2^63
+extern D two_84_63_52;  // 2^84 + 2^63 + 2^52  for int-float conversion
+extern I disttosign[4];  // bit between (bit 0 of byte) and sign bit of lane
 
 #if (SYS & SYS_ATARIST+SYS_ATT3B1)
 extern int      memcmp();       /* C library fn                            */

@@ -82,9 +82,13 @@ UC  hwfma=0;              // blis cpu tuning
 //!      I   v00[2]={0,0};         // vector value to use for rank 0 0
 // const UC  bit[8]={(UC)0x80, (UC)0x40, (UC)0x20, (UC)0x10, (UC)0x08, (UC)0x04, (UC)0x02, (UC)0x01};
 const double dzero=0.0;   // used by gemm
-const dcomplex zone={1.0,0.0};  // used gy gemm
+const dcomplex zone={1.0,0.0};  // used by gemm and primop256
 const dcomplex zzero={0.0,0.0};
-I oneone[2]={1,1};  // used by PROD
+I oneone[2]={1,1};  // used by PROD and primop256
+D two_52=4503599627370496.0;  // 2^52
+D two_84_63=19342822337206103650074624.0;  // 2^84+2^63
+D two_84_63_52=19342822341709703277445120.0;  // 2^84 + 2^63 + 2^52  for int-float conversion
+I disttosign[4]={63-0,63-8,63-16,63-24};  // bit between (bit 0 of byte) and sign bit of lane
 
 // For each Type, the length of a data-item of that type.  The order
 // here is by number of trailing 0s in the (32-bit) type; aka the bit-number index.

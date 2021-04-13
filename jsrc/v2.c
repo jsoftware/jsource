@@ -521,7 +521,7 @@ static B jtranec(J jt,X w,X*zg,X*za,X*zb,X*zx,X*zy){A mm,t;I*tv;X a,aa,b,bb,g,x,
  R 1;
 }    /* random elliptic curve */
 
-static A jtdb1b2(J jt,I n,X w){A t,z;D c,d,lg,n1=(D)n-1,p,r;I m,s[2],*v,*zv;
+static A jtdb1b2(J jt,I n,X w){A t,z;D c,d,lg,n1=(D)n-1,p,r;I m,s[3],*v,*zv;
  s[0]=n; s[1]=2; GATVR(z,INT,2*n,2,s); zv=v=AV(z);
  RZ(t=cvt(FL,scx(w))); d=DAV(t)[0]; 
  lg=log(d); c=log(sqrt(d)); r=exp(sqrt(0.5)+sqrt(c*log(c)))/lg;

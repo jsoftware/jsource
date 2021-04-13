@@ -39,7 +39,7 @@ valgone: ;
     explocale=0;  // flag no explicit locale
     if(likely(!(stabent = probelocal(thisname,jt->locsyms)))){stabent=jtsyrd1((J)((I)jt+NAV(thisname)->m),NAV(thisname)->s,NAV(thisname)->hash,jt->global);}  // Try local, then look up the name starting in jt->global
    }else{  // locative or u./v.
-    if(!(NAV(thisname)->flag&NMIMPLOC)){  // locative
+    if(likely(!(NAV(thisname)->flag&NMIMPLOC))){  // locative
      RZ(explocale=sybaseloc(thisname));  //  get the explicit locale.  0 if erroneous locale
      stabent=jtsyrd1((J)((I)jt+NAV(thisname)->m),NAV(thisname)->s,NAV(thisname)->hash,explocale);  // Look up the name starting in the locale of the locative
     }else{  // u./v.  We have to look at the assigned name/value to know whether this is an implied locative (it usually is)

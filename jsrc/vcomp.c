@@ -196,7 +196,7 @@ primcmpD256(gtDD, _mm256_andnot_pd(eq,_mm256_cmp_pd(u,v,_CMP_GT_OQ)) , _mm256_cm
 primcmpD256(leDD, _mm256_or_pd(eq,_mm256_cmp_pd(u,v,_CMP_LT_OQ)) , _mm256_cmp_pd(u,v,_CMP_LE_OQ) , )
 primcmpD256(ltDD, _mm256_andnot_pd(eq,_mm256_cmp_pd(u,v,_CMP_LT_OQ)) , _mm256_cmp_pd(u,v,_CMP_LT_OQ) , )
 primcmpD256(eqDD, eq , _mm256_cmp_pd(u,v,_CMP_EQ_OQ) , )
-primcmpD256(neDD, _mm256_xor_pd(eq,one) , _mm256_cmp_pd(u,v,_CMP_NEQ_OQ) , __m256d one=_mm256_castsi256_pd(_mm256_set1_epi64x(0xffffffffffffffff));)   // warnings from one=_mm256_cmp_pd(cct,cct,_CMP_TRUE_UQ);
+primcmpD256(neDD, _mm256_xor_pd(eq,one) , _mm256_cmp_pd(u,v,_CMP_NEQ_OQ) , __m256d one=_mm256_broadcast_sd((D*)&validitymask);)   // warnings from one=_mm256_cmp_pd(cct,cct,_CMP_TRUE_UQ);
 
 #define primcmpI256(name,result,decls) \
 AHDR2(name,B,I,I){ \
@@ -249,7 +249,7 @@ AHDR2(name,B,I,I){ \
 }
 
 primcmpI256(eqII, _mm256_cmpeq_epi64(u,v) , )
-primcmpI256(neII, _mm256_xor_si256(one,_mm256_cmpeq_epi64(u,v)) , __m256i one=_mm256_set1_epi64x(0xffffffffffffffff);)
+primcmpI256(neII, _mm256_xor_si256(one,_mm256_cmpeq_epi64(u,v)) , __m256i one=_mm256_castpd_si256(_mm256_broadcast_sd((D*)&validitymask));)
 primcmpI256(gtII, _mm256_cmpgt_epi64(u,v) , )
 primcmpI256(geII, _mm256_or_si256(_mm256_cmpeq_epi64(u,v),_mm256_cmpgt_epi64(u,v)) , )
 primcmpI256(ltII, _mm256_cmpgt_epi64(v,u) , )

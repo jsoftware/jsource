@@ -38,12 +38,16 @@ SORTQSCOPE void SORTQNAME(SORTQTYPE *v, I n){
    if(--stackp<0)R;  // back up stack; if we're finishing the last call, we're through
    l=stack[stackp][0]; r=stack[stackp][1];  // resume the next 
   }
-  // medium or long batch: partition it and recur
+  // medium or long batch (6 or more): partition it and recur
   // choose the pivot as the median of first/last/middle, and exchange it with the end of the array
   SORTQTYPE pivot;
-  {I pivotcomp = 0xc6>>(4*(v[l]>v[(l+r)>>1]) + 2*(v[l]>v[r]) + (v[(l+r)>>1]>v[r]));  // l>m, l>r, m>r 000 lmr  001 lrm  010 -  011 rlm  100 mlr  101 -  110 mrl  111 rml
+  {
+   // actually we advance the first/last to quartile positions, to avoid a worst-case when an almost-sorted list has some very small numbers
+   // added to the end.  In that case a small value is chosen as the pivot and replaced at the end with another small value
+   I ll=l+((r-l)>>2), rr=r-((r-l)>>2); 
+   I pivotcomp = 0xc6>>(4*(v[ll]>v[(ll+rr)>>1]) + 2*(v[ll]>v[rr]) + (v[(ll+rr)>>1]>v[rr]));  // l>m, l>r, m>r 000 lmr  001 lrm  010 -  011 rlm  100 mlr  101 -  110 mrl  111 rml
       // encode l as 00 r as 11 m as 01/10, the sequence is mr-ll-rm 01 11 10 00 00 01 11 10  0 1 1 0 0 0 1 1 0 (LE) -> 011000110  0xc6
-   I pivotx=((pivotcomp&1?r:l)+(pivotcomp&2?r:l))>>1; pivot=v[pivotx]; v[pivotx]=v[r];  // pick the median pivot, swap it (notionally) with the last 
+   I pivotx=((pivotcomp&1?rr:ll)+(pivotcomp&2?rr:ll))>>1; pivot=v[pivotx]; v[pivotx]=v[r];  // pick the median pivot, swap it (notionally) with the last 
   }
 #if SORTQCOND
    SORTQTYPE256 pivot256=SORTQSET256(pivot,pivot,pivot,pivot);  // copy pivot across regs

@@ -101,10 +101,10 @@ I blockedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I pnom,I pstored,I flgs){
 #define ST1(wr,wc) _mm256_storeu_pd(zv1+(wr)*n+(wc)*NPAR,z##wr##wc);
 #define ST2(wc) {ST1(0,wc) ST1(1,wc)}
 #define MUL2x4(wr,wc,ldm) {ldm(wr,wc) z0##wc=MUL_ACC(z0##wc,a0,wt); z1##wc=MUL_ACC(z1##wc,a1,wt);}  // (wr,wc) is multiplied by a0,:a1
-#define MUL2x16r(nc,ac,ldm) {a0=_mm256_set1_pd(av1[0+(ac)]); a1=_mm256_set1_pd(av1[pstored+(ac)]); MUL2x4(ac,0,ldm) if(nc>1)MUL2x4(ac,1,ldm) if(nc>2)MUL2x4(ac,2,ldm) if(nc>3)MUL2x4(ac,3,ldm)}  // ac is col of a=row of w
+#define MUL2x16r(nc,ac,ldm) {a0=_mm256_broadcast_sd(&av1[0+(ac)]); a1=_mm256_broadcast_sd(&av1[pstored+(ac)]); MUL2x4(ac,0,ldm) if(nc>1)MUL2x4(ac,1,ldm) if(nc>2)MUL2x4(ac,2,ldm) if(nc>3)MUL2x4(ac,3,ldm)}  // ac is col of a=row of w
 #define MUL2x16(nr,nc,ldm) {MUL2x16r(nc,0,ldm) if((nr)>1)MUL2x16r(nc,1,ldm)}
 #define MUL1x4(wr,wc,ldm) {ldm(wr,wc) z0##wc=MUL_ACC(z0##wc,a0,wt);}  // (wr,wc) is multiplied by a0
-#define MUL1x16(nc,ldm) {a0=_mm256_set1_pd(av1[0]); MUL1x4(0,0,ldm) if((nc)>1)MUL1x4(0,1,ldm) if((nc)>2)MUL1x4(0,2,ldm) if((nc)>3)MUL1x4(0,3,ldm)}  // ac is col of a=row of w
+#define MUL1x16(nc,ldm) {a0=_mm256_broadcast_sd(&av1[0]); MUL1x4(0,0,ldm) if((nc)>1)MUL1x4(0,1,ldm) if((nc)>2)MUL1x4(0,2,ldm) if((nc)>3)MUL1x4(0,3,ldm)}  // ac is col of a=row of w
 #define WMZ(wr,wc) {z##wr##wc=_mm256_sub_pd(LD4EXP(wr,wc,zv1),z##wr##wc);}
  // Handle the special case where a is small, mx2 m<=4.  We MUST do this because %. expects to be able operate on w inplace when m is 2x2.  We want to do this because
  // it reduces the inner-loop overhead.
@@ -112,7 +112,7 @@ I blockedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I pnom,I pstored,I flgs){
  if(((pnom-2)|(pnom-m))==0){  // m=p=2
   // m is 2x2.  preload it, then read pairs of inputs to produce pairs of outputs.  Must allow inplace ops
   D *wv1=wv, *zv1=zv;  // scan pointer through row-pairs of w and z (which may be the same)
-  __m256d z10, a00=_mm256_set1_pd(av[0]), a01=_mm256_set1_pd(av[1]), a10=_mm256_set1_pd(av[2]), a11=_mm256_set1_pd(av[3]);
+  __m256d z10, a00=_mm256_broadcast_sd(&av[0]), a01=_mm256_broadcast_sd(&av[1]), a10=_mm256_broadcast_sd(&av[2]), a11=_mm256_broadcast_sd(&av[3]);
   while(nrem>NPAR){  // guarantee nonempty remnant
    __m256d w0=_mm256_loadu_pd(wv1), w1=_mm256_loadu_pd(wv1+n);
    z00=_mm256_mul_pd(a00,w0); z00=MUL_ACC(z00,a01,w1); z10=_mm256_mul_pd(a10,w0); z10=MUL_ACC(z10,a11,w1);
@@ -202,10 +202,10 @@ I blockedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I pnom,I pstored,I flgs){
    z00=INITTO0(z00); __m256d z01=z00, z02=z00, z03=z00;  // 4 accumulators for latency
    D *wv1=wvtri;  // top-left of current strip of w
    while(1){  // loop with 4 accumulators to create dot-product.  We can run about one product per cycle
-    z00=MUL_ACC(z00,_mm256_set1_pd(av1[0]),_mm256_maskload_pd(wv1+0*n,mask)); if(--prem<=0)break;
-    z01=MUL_ACC(z01,_mm256_set1_pd(av1[1]),_mm256_maskload_pd(wv1+1*n,mask)); if(--prem<=0)break;
-    z02=MUL_ACC(z02,_mm256_set1_pd(av1[2]),_mm256_maskload_pd(wv1+2*n,mask)); if(--prem<=0)break;
-    z03=MUL_ACC(z03,_mm256_set1_pd(av1[3]),_mm256_maskload_pd(wv1+3*n,mask));
+    z00=MUL_ACC(z00,_mm256_broadcast_sd(&av1[0]),_mm256_maskload_pd(wv1+0*n,mask)); if(--prem<=0)break;
+    z01=MUL_ACC(z01,_mm256_broadcast_sd(&av1[1]),_mm256_maskload_pd(wv1+1*n,mask)); if(--prem<=0)break;
+    z02=MUL_ACC(z02,_mm256_broadcast_sd(&av1[2]),_mm256_maskload_pd(wv1+2*n,mask)); if(--prem<=0)break;
+    z03=MUL_ACC(z03,_mm256_broadcast_sd(&av1[3]),_mm256_maskload_pd(wv1+3*n,mask));
     av1+=4; wv1+=4*n;  // advance to next columns of a and rows of w
     if(--prem<=0)break;
    };
@@ -377,7 +377,7 @@ _mm256_zeroupperx(VOIDARG)
       if(a4rem==CACHEHEIGHT&&a2rem>3){
         __m256d wval0, wval1, aval;
 #define LDW(opno)  wval0=_mm256_load_pd(&c4base[opno*CACHEWIDTH+0]); wval1=_mm256_load_pd(&c4base[opno*CACHEWIDTH+NPAR]);  // opno=outer-product number
-#define ONEP(opno,opx) aval=_mm256_set1_pd((*a4base0)[0][opx][opno]); z##opx##0 = MUL_ACC(z##opx##0,wval0,aval); z##opx##1 = MUL_ACC(z##opx##1,wval1,aval);  // opx=a row number=mul# within outer product  could allow compiler to gather commons
+#define ONEP(opno,opx) aval=_mm256_broadcast_sd(&(*a4base0)[0][opx][opno]); z##opx##0 = MUL_ACC(z##opx##0,wval0,aval); z##opx##1 = MUL_ACC(z##opx##1,wval1,aval);  // opx=a row number=mul# within outer product  could allow compiler to gather commons
 #define OUTERP(opno) LDW(opno) ONEP(opno,0) ONEP(opno,1) ONEP(opno,2) ONEP(opno,3)
        OUTERP(0) OUTERP(1) OUTERP(2) OUTERP(3) OUTERP(4) OUTERP(5) OUTERP(6) OUTERP(7) OUTERP(8) OUTERP(9) OUTERP(10) OUTERP(11) OUTERP(12) OUTERP(13) OUTERP(14) OUTERP(15)
 // prefetch doesn't seem to help
@@ -386,7 +386,7 @@ _mm256_zeroupperx(VOIDARG)
        // variable version
        do{
         __m256d wval0=_mm256_load_pd(&c4base[0]), wval1=_mm256_load_pd(&c4base[NPAR]);
-#define COL0(row) {z##row##0 = MUL_ACC(z##row##0,wval0,_mm256_set1_pd((*a4base0)[0][row][0])); z##row##1 = MUL_ACC(z##row##1,wval1,_mm256_set1_pd((*a4base0)[0][row][0]));}
+#define COL0(row) {z##row##0 = MUL_ACC(z##row##0,wval0,_mm256_broadcast_sd(&(*a4base0)[0][row][0])); z##row##1 = MUL_ACC(z##row##1,wval1,_mm256_broadcast_sd(&(*a4base0)[0][row][0]));}
         COL0(0); if(a2rem>1)COL0(1) if(a2rem>1)COL0(2) if(a2rem>3)COL0(3)
         a4base0=(D (*)[2][OPHEIGHT][CACHEHEIGHT])((D*)a4base0+1);  // advance to next col
         c4base+=CACHEWIDTH;  // advance to next row
@@ -441,11 +441,11 @@ _mm256_zeroupperx(VOIDARG)
        // do all the columns of a, but only 2 rows.  This is half the outer product
        do{
         __m256d wval0=_mm256_loadu_pd(&c4base[0]), wval1=_mm256_loadu_pd(&c4base[NPAR]), aval;
-        aval=_mm256_set1_pd((*a4base0)[0][0][0]); z00r = MUL_ACC(z00r,wval0,aval); z01r = MUL_ACC(z01r,wval1,aval);  // rrrr * riri => riri
-        aval=_mm256_set1_pd((*a4base0)[1][0][0]); z00i = MUL_ACC(z00i,wval0,aval); z01i = MUL_ACC(z01i,wval1,aval);   // iiii * riri => iRiR
+        aval=_mm256_broadcast_sd(&(*a4base0)[0][0][0]); z00r = MUL_ACC(z00r,wval0,aval); z01r = MUL_ACC(z01r,wval1,aval);  // rrrr * riri => riri
+        aval=_mm256_broadcast_sd(&(*a4base0)[1][0][0]); z00i = MUL_ACC(z00i,wval0,aval); z01i = MUL_ACC(z01i,wval1,aval);   // iiii * riri => iRiR
         if(a5rem>1){
-         aval=_mm256_set1_pd((*a4base0)[0][1][0]); z10r = MUL_ACC(z10r,wval0,aval); z11r = MUL_ACC(z11r,wval1,aval);  // rrrr * riri => riri
-         aval=_mm256_set1_pd((*a4base0)[1][1][0]); z10i = MUL_ACC(z10i,wval0,aval); z11i = MUL_ACC(z11i,wval1,aval);   // iiii * riri => iRiR
+         aval=_mm256_broadcast_sd(&(*a4base0)[0][1][0]); z10r = MUL_ACC(z10r,wval0,aval); z11r = MUL_ACC(z11r,wval1,aval);  // rrrr * riri => riri
+         aval=_mm256_broadcast_sd(&(*a4base0)[1][1][0]); z10i = MUL_ACC(z10i,wval0,aval); z11i = MUL_ACC(z11i,wval1,aval);   // iiii * riri => iRiR
         }
         a4base0=(D (*)[2][OPHEIGHT][CACHEHEIGHT])((D*)a4base0+1);  // advance to next col
         c4base+=CACHEWIDTH;  // advance to next row

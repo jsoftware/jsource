@@ -346,8 +346,8 @@ DF2(jtpoly2){F2PREFIP;A c,za;I b;D*ad,d,p,*x,u,*z;I an,at,j,t,n,wt;Z*az,e,q,*wz,
 #if SLEEF
    if(postfn)
    {AVXATOMLOOPPIPE(
-    __m256d a0;__m256d t0;  t0=_mm256_set1_pd(ad[1]);
-    a0=_mm256_set1_pd(ad[0]);
+    __m256d a0;__m256d t0;  t0=_mm256_broadcast_sd(&ad[1]);
+    a0=_mm256_broadcast_sd(&ad[0]);
 ,
     zt=MUL_ACC(a0,u,t0);
 ,
@@ -357,8 +357,8 @@ DF2(jtpoly2){F2PREFIP;A c,za;I b;D*ad,d,p,*x,u,*z;I an,at,j,t,n,wt;Z*az,e,q,*wz,
    else
 #endif
    {AVXATOMLOOP(0,lbl2,
-    __m256d a0;__m256d t0;  t0=_mm256_set1_pd(ad[1]);
-    a0=_mm256_set1_pd(ad[0]);
+    __m256d a0;__m256d t0;  t0=_mm256_broadcast_sd(&ad[1]);
+    a0=_mm256_broadcast_sd(&ad[0]);
 ,
     u=MUL_ACC(a0,u,t0);
 ,
@@ -367,8 +367,8 @@ DF2(jtpoly2){F2PREFIP;A c,za;I b;D*ad,d,p,*x,u,*z;I an,at,j,t,n,wt;Z*az,e,q,*wz,
 #if SLEEF
    if(postfn)
    {AVXATOMLOOPPIPE(
-    __m256d a0;__m256d a1;__m256d t0;__m256d t; t0=_mm256_set1_pd(ad[2]);
-    a1=_mm256_set1_pd(ad[1]); a0=_mm256_set1_pd(ad[0]);
+    __m256d a0;__m256d a1;__m256d t0;__m256d t; t0=_mm256_broadcast_sd(&ad[2]);
+    a1=_mm256_broadcast_sd(&ad[1]); a0=_mm256_broadcast_sd(&ad[0]);
 ,
     t=t0; t=MUL_ACC(a1,u,t); zt=MUL_ACC(a0,u,t);
 ,
@@ -378,25 +378,25 @@ DF2(jtpoly2){F2PREFIP;A c,za;I b;D*ad,d,p,*x,u,*z;I an,at,j,t,n,wt;Z*az,e,q,*wz,
    else
 #endif
    {AVXATOMLOOP(0,lbl3,
-    __m256d a0;__m256d a1;__m256d t0;__m256d t;  t0=_mm256_set1_pd(ad[2]);
-    a1=_mm256_set1_pd(ad[1]); a0=_mm256_set1_pd(ad[0]);
+    __m256d a0;__m256d a1;__m256d t0;__m256d t;  t0=_mm256_broadcast_sd(&ad[2]);
+    a1=_mm256_broadcast_sd(&ad[1]); a0=_mm256_broadcast_sd(&ad[0]);
 ,
     t=t0; t=MUL_ACC(a1,u,t); u=MUL_ACC(a0,u,t);
 ,
    )} break;
   case 4:
    {AVXATOMLOOP(0,lbl4,
-    __m256d a0;__m256d a1;__m256d a2;__m256d t0;__m256d t;  t0=_mm256_set1_pd(ad[3]);
-    a2=_mm256_set1_pd(ad[2]); a1=_mm256_set1_pd(ad[1]); a0=_mm256_set1_pd(ad[0]);
+    __m256d a0;__m256d a1;__m256d a2;__m256d t0;__m256d t;  t0=_mm256_broadcast_sd(&ad[3]);
+    a2=_mm256_broadcast_sd(&ad[2]); a1=_mm256_broadcast_sd(&ad[1]); a0=_mm256_broadcast_sd(&ad[0]);
 ,
     t=t0; t=MUL_ACC(a2,u,t); t=MUL_ACC(a1,u,t); u=MUL_ACC(a0,u,t);
 ,
    )} break;
   case 5:
    {AVXATOMLOOP(1,lbl5,
-    __m256d a0;__m256d a1;__m256d a2;__m256d a3;__m256d t0;__m256d t;  t0=_mm256_set1_pd(ad[4]);
-    a3=_mm256_set1_pd(ad[3]); a2=_mm256_set1_pd(ad[2]);
-    a1=_mm256_set1_pd(ad[1]); a0=_mm256_set1_pd(ad[0]);
+    __m256d a0;__m256d a1;__m256d a2;__m256d a3;__m256d t0;__m256d t;  t0=_mm256_broadcast_sd(&ad[4]);
+    a3=_mm256_broadcast_sd(&ad[3]); a2=_mm256_broadcast_sd(&ad[2]);
+    a1=_mm256_broadcast_sd(&ad[1]); a0=_mm256_broadcast_sd(&ad[0]);
 ,
     t=t0; t=MUL_ACC(a3,u,t); t=MUL_ACC(a2,u,t);
     t=MUL_ACC(a1,u,t); u=MUL_ACC(a0,u,t);
@@ -405,9 +405,9 @@ DF2(jtpoly2){F2PREFIP;A c,za;I b;D*ad,d,p,*x,u,*z;I an,at,j,t,n,wt;Z*az,e,q,*wz,
    )} break;
   default:
     {AVXATOMLOOP(1,lbld,
-    __m256d t0;__m256d t;  t0=_mm256_set1_pd(ad[an-1]);
+    __m256d t0;__m256d t;  t0=_mm256_broadcast_sd(&ad[an-1]);
 ,
-    t=t0; DQ(an-1, t=MUL_ACC(_mm256_set1_pd(ad[i]),u,t);); u=t;
+    t=t0; DQ(an-1, t=MUL_ACC(_mm256_broadcast_sd(&ad[i]),u,t);); u=t;
 ,
     ;
    )} break;

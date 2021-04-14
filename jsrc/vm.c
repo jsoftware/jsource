@@ -58,7 +58,7 @@ APFX(cirZZ, Z,Z,Z, zcir  ,NAN0;,HDR1JERRNAN)
 // Call SLEEF after checking symmetric 2-sided limits.  If comp is not true everywhere, signal err, else call sleeffn
 #if (C_AVX&&SY_64) || EMU_AVX
 #define TRIGSYMM(lbl,limit,comp,err,sleeffn)  {AVXATOMLOOP(1,lbl, \
- __m256d thmax; thmax=_mm256_set1_pd(limit); \
+ __m256d thmax; thmax=_mm256_broadcast_sd(&limit); \
  __m256d absmask; absmask=_mm256_castsi256_pd(_mm256_set1_epi64x(0x7fffffffffffffff)); \
  , \
  ASSERTWR(_mm256_movemask_pd(_mm256_cmp_pd(_mm256_and_pd(u,absmask), thmax,comp))==0,err); \
@@ -68,7 +68,7 @@ APFX(cirZZ, Z,Z,Z, zcir  ,NAN0;,HDR1JERRNAN)
 
 // Call SLEEF after checking limits, but calculate the value to use then
 #define TRIGCLAMP(limit,decls,comp,argmod,sleeffn,resultmod)  {AVXATOMLOOP(1,lbl, \
- __m256d thmax; thmax=_mm256_set1_pd(limit); \
+ __m256d thmax; thmax=_mm256_broadcast_sd(&limit); \
  decls \
  __m256d absmask; absmask=_mm256_castsi256_pd(_mm256_set1_epi64x(0x7fffffffffffffff)); \
  , \
@@ -131,7 +131,7 @@ AHDR2(powDI,D,D,I) {I v;
  else{  // repeated exponent: use parallel instructions
   DQ(m, v=*y++;  // for each exponent
    AVXATOMLOOP(1, lbl, // build result in u, which is also the input
-    __m256d one = _mm256_set1_pd(1.0);
+    __m256d one = _mm256_broadcast_sd(&zone.real);
    ,
     {__m256d upow;
     UI rempow;  // power left to take
@@ -160,7 +160,7 @@ AHDR2(powDD,D,D,D) {D v;
    else{
     AVXATOMLOOP(1,lbl,  // build result in u, which is also the input
       __m256d zero = _mm256_setzero_pd();
-      __m256d vv = _mm256_set1_pd(v);  // 4 copies of exponent  (2 if __SSE2__)
+      __m256d vv = _mm256_broadcast_sd(&v);  // 4 copies of exponent  (2 if __SSE2__)
      ,
       ASSERTWR(_mm256_movemask_pd(_mm256_cmp_pd(u, zero,_CMP_LT_OQ))==0,EWIMAG);
       u=Sleef_log2d4(u);
@@ -244,6 +244,7 @@ APFX(powDD, D,D,D, pospow,,HDR1JERR)
 #endif
 AMON(expI,   D,I, *z=*x<EMIN?0.0:EMAX<*x?inf:exp((D)*x);)
 AMON(logI,   D,I, ASSERTWR(0<=*x,EWIMAG); *z=log((D)*x);)
+static D thmaxx=THMAX;
 
 static I jtcirx(J jt,I n,I k,D*z,D*x){D p,t;
  NAN0;
@@ -252,7 +253,7 @@ static I jtcirx(J jt,I n,I k,D*z,D*x){D p,t;
  case  0: DQ(n, t=*x++; ASSERTWR(ABS(t)<=1.0, EWIMAG ); *z++=sqrt(1.0-t*t);); break;
  case  1: ;
 #if SLEEF
-TRIGSYMM(lbl1,THMAX,_CMP_GT_OQ,EVLIMIT,Sleef_sind4)
+TRIGSYMM(lbl1,thmaxx,_CMP_GT_OQ,EVLIMIT,Sleef_sind4)
 IGNORENAN
 #else
    DQ(n, t=*x++; ASSERTWR(ABS(t)<THMAX,EVLIMIT); *z++=sin(t););
@@ -260,7 +261,7 @@ IGNORENAN
    break;
  case  2:  ;
 #if SLEEF
-TRIGSYMM(lbl2,THMAX,_CMP_GT_OQ,EVLIMIT,Sleef_cosd4)
+TRIGSYMM(lbl2,thmaxx,_CMP_GT_OQ,EVLIMIT,Sleef_cosd4)
 IGNORENAN
 #else
  DQ(n, t=*x++; ASSERTWR(ABS(t)<THMAX,EVLIMIT); *z++=cos(t););
@@ -268,7 +269,7 @@ IGNORENAN
  break;
  case  3:  ;
 #if SLEEF
- TRIGSYMM(lbl3,THMAX,_CMP_GT_OQ,EVLIMIT,Sleef_tand4)
+ TRIGSYMM(lbl3,thmaxx,_CMP_GT_OQ,EVLIMIT,Sleef_tand4)
 #else
  DQ(n, t=*x++; ASSERTWR(ABS(t)<THMAX,EVLIMIT); *z++=tan(t););       
 #endif
@@ -287,7 +288,7 @@ IGNORENAN
  break;
  case -1: ;
 #if SLEEF
-  TRIGSYMM(lblm1,1.0,_CMP_GT_OQ,EWIMAG,Sleef_asind4)
+  TRIGSYMM(lblm1,zone.real,_CMP_GT_OQ,EWIMAG,Sleef_asind4)
 #else
   DQ(n, t=*x++; ASSERTWR( -1.0<=t&&t<=1.0, EWIMAG ); *z++=asin(t););
 #if defined(ANDROID) && (defined(__aarch32__)||defined(__arm__)||defined(__aarch64__))
@@ -298,7 +299,7 @@ NAN0;
  break;
  case -2: ;
 #if SLEEF
-  TRIGSYMM(lblm2,1.0,_CMP_GT_OQ,EWIMAG,Sleef_acosd4)
+  TRIGSYMM(lblm2,zone.real,_CMP_GT_OQ,EWIMAG,Sleef_acosd4)
 #else
   DQ(n, t=*x++; ASSERTWR( -1.0<=t&&t<=1.0, EWIMAG ); *z++=acos(t););
 #endif

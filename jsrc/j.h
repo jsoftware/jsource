@@ -520,10 +520,10 @@ extern unsigned int __cdecl _clearfp (void);
 #define ISFUX            14
 #define ISFU            (((I)1)<<ISFUX)  // i.!.1 - sequential file update
 
-#if C_AVX   // _mm_round_pd requires sse4.1
-#define jceil(x) _mm_cvtsd_f64(_mm_round_pd(_mm_set1_pd(x),(_MM_FROUND_TO_POS_INF |_MM_FROUND_NO_EXC)))
-#define jfloor(x) _mm_cvtsd_f64(_mm_round_pd(_mm_set1_pd(x),(_MM_FROUND_TO_NEG_INF |_MM_FROUND_NO_EXC)))
-#define jround(x) _mm_cvtsd_f64(_mm_round_pd(_mm_set1_pd(x),(_MM_FROUND_TO_NEAREST_INT |_MM_FROUND_NO_EXC)))
+#if C_AVX   // _mm_round_pd requires sse4.1, mm256 needs avx
+#define jceil(x) _mm256_cvtsd_f64(_mm256_round_pd(_mm256_set1_pd(x),(_MM_FROUND_TO_POS_INF |_MM_FROUND_NO_EXC)))
+#define jfloor(x) _mm256_cvtsd_f64(_mm256_round_pd(_mm256_set1_pd(x),(_MM_FROUND_TO_NEG_INF |_MM_FROUND_NO_EXC)))
+#define jround(x) _mm256_cvtsd_f64(_mm256_round_pd(_mm256_set1_pd(x),(_MM_FROUND_TO_NEAREST_INT |_MM_FROUND_NO_EXC)))
 #else
 #define jceil(x) ceil(x)
 #define jfloor(x) floor(x)

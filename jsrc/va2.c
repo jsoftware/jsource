@@ -1102,8 +1102,8 @@ DF2(jtsumattymes1){
 #endif
   __m256i endmask; /* length mask for the last word */
   _mm256_zeroupperx(VOIDARG)
-  __m256d idreg=_mm256_set1_pd(0.0);
-  __m256d sgnbit=_mm256_castsi256_pd(_mm256_set1_epi64x(0x8000000000000000));
+  __m256d idreg=_mm256_setzero_pd();
+  __m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin);
   endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-dplen)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */
   D * RESTRICT av=DAV(a),* RESTRICT wv=DAV(w); D * RESTRICT zv=DAV(z);
   for(--nfro;nfro>=0;--nfro){

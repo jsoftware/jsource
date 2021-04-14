@@ -321,7 +321,7 @@ AHDR2(name,D,D,D){ \
   LDBIDM(xx,x,commute,0x8,0x40,0x100,endmask) LDBIDM(yy,y,commute,0x10,0x80,0x200,endmask)  \
   CVTBID(xx,xx,commute,0x8,0x40,0x100) CVTBID(yy,yy,commute,0x10,0x80,0x200)  \
   if((commute)&2)yy=_mm256_blendv_pd(_mm256_castsi256_pd(endmask),yy,_mm256_castsi256_pd(endmask)); \
-  if((commute)&4)xx=_mm256_blendv_pd(_mm256_set1_pd(1.0),xx,_mm256_castsi256_pd(endmask)); \
+  if((commute)&4)xx=_mm256_blendv_pd(_mm256_broadcast_sd(&zone.real),xx,_mm256_castsi256_pd(endmask)); \
   zzop; _mm256_maskstore_pd(z, endmask, zz); \
  }else{ \
   if(!((commute)&1)&&n-1<0){n=~n; \
@@ -368,7 +368,7 @@ AHDR2(name,D,D,D){ \
      } \
      LDBIDM(yy,y,commute,0x10,0x80,0x200,endmask) CVTBID(yy,yy,commute,0x10,0x80,0x200)  \
      if((commute)&2)yy=_mm256_blendv_pd(_mm256_castsi256_pd(endmask),yy,_mm256_castsi256_pd(endmask)); \
-     if((commute)&4)xx=_mm256_blendv_pd(_mm256_set1_pd(1.0),xx,_mm256_castsi256_pd(endmask)); \
+     if((commute)&4)xx=_mm256_blendv_pd(_mm256_broadcast_sd(&zone.real),xx,_mm256_castsi256_pd(endmask)); \
      zzop; _mm256_maskstore_pd(z, endmask, zz); \
      INCRBID(y,((n0-1)&(NPAR-1))+1,commute,0x10,0x80,0x200) INCRBID(z,((n0-1)&(NPAR-1))+1,commute,0,0,0)  \
     } \
@@ -419,7 +419,7 @@ AHDR2(name,D,D,D){ \
      } \
      LDBIDM(xx,x,commute,0x8,0x40,0x100,endmask) CVTBID(xx,xx,commute,0x8,0x40,0x100)  \
      if((commute)&2)yy=_mm256_blendv_pd(_mm256_castsi256_pd(endmask),yy,_mm256_castsi256_pd(endmask)); \
-     if((commute)&4)xx=_mm256_blendv_pd(_mm256_set1_pd(1.0),xx,_mm256_castsi256_pd(endmask)); \
+     if((commute)&4)xx=_mm256_blendv_pd(_mm256_broadcast_sd(&zone.real),xx,_mm256_castsi256_pd(endmask)); \
      zzop; _mm256_maskstore_pd(z, endmask, zz); \
      INCRBID(x,((n0-1)&(NPAR-1))+1,commute,0x8,0x40,0x100) INCRBID(z,((n0-1)&(NPAR-1))+1,commute,0,0,0) \
     } \

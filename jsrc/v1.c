@@ -185,7 +185,7 @@ I memcmpnefl(void *s, void *t, I l, J jt){
   R 0xf!=_mm256_movemask_pd(_mm256_cmp_pd(u,v,_CMP_EQ_OQ));  // no miscompares, compare equal
  }
  // tolerant comparison
- __m256d cct=_mm256_set1_pd(jt->cct);
+ __m256d cct=_mm256_broadcast_sd(&jt->cct);
  if(i){
   do{
    u=_mm256_loadu_pd(x); v=_mm256_loadu_pd(y); x+=NPAR; y+=NPAR;
@@ -239,7 +239,7 @@ oneloop:
   b ^= 0xf==_mm256_movemask_pd(_mm256_and_pd(allmatches,_mm256_cmp_pd(u,v,_CMP_EQ_OQ)));  // no miscompares, compare equal
  }else{
   // tolerant comparison
-  __m256d cct=_mm256_set1_pd(jt->cct);
+  __m256d cct=_mm256_broadcast_sd(&jt->cct);
   if(i0){
    I i = i0;  // inner loop size
    do{  // unfortunately it's probably not worth checking for lengths 5-8 & we will have a misbranch whenever length > 4

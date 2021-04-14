@@ -227,7 +227,7 @@ REDUCCPFX(tymesinsO, D, I, TYMESO)
  __m256i endmask; /* length mask for the last word */ \
  _mm256_zeroupperx(VOIDARG) \
  /* prim/ vectors */ \
- __m256d idreg=_mm256_set1_pd(identity); \
+ __m256d idreg=_mm256_broadcast_sd(&identity); \
  endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
  DQ(m, I n0=(n-1)>>LGNPAR; __m256d acc0=idreg; __m256d acc1=idreg; __m256d acc2=idreg; __m256d acc3=idreg; \
   if(n0>0){ \
@@ -250,7 +250,7 @@ REDUCCPFX(tymesinsO, D, I, TYMESO)
 #define redprim256rk2(prim,identity,label) \
  __m256i endmask; /* length mask for the last word */ \
  _mm256_zeroupperx(VOIDARG) \
- __m256d idreg=_mm256_set1_pd(identity); \
+ __m256d idreg=_mm256_broadcast_sd(&identity); \
  endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-d)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
  DQ(m, D *x0; I n0; \
   DQ((d-1)>>LGNPAR, \
@@ -285,7 +285,7 @@ AHDRR(plusinsD,D,D){I i;D* RESTRICT y;
   // latency of add is 4, so use 4 accumulators
   if(d==1){
 #if (C_AVX&&SY_64) || EMU_AVX
-   redprim256rk1(_mm256_add_pd,0.0)
+   redprim256rk1(_mm256_add_pd,dzero)
 #else
   DQ(m, I n0=n; D acc0=0.0; D acc1=0.0; D acc2=0.0; D acc3=0.0;
    switch(n0&3){
@@ -299,7 +299,7 @@ AHDRR(plusinsD,D,D){I i;D* RESTRICT y;
   }
   else{
 #if (C_AVX&&SY_64) || EMU_AVX
-   redprim256rk2(_mm256_add_pd,0.0,lbl)
+   redprim256rk2(_mm256_add_pd,dzero,lbl)
 #elif 1
    // add down the columns to reduce memory b/w.  4 accumulators
    DQ(m, D *x0;
@@ -375,7 +375,7 @@ DF1(jtcompsum){
 #if (C_AVX&&SY_64) || EMU_AVX
  __m256i endmask; /* length mask for the last word */
  _mm256_zeroupperx(VOIDARG)
- __m256d idreg=_mm256_set1_pd(0.0);
+ __m256d idreg=_mm256_setzero_pd();
  if(d==1){
   // rank-1 case: operate across the row, with 4 accumulators
   endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */
@@ -391,7 +391,7 @@ DF1(jtcompsum){
     }
    }
    KAHAN(_mm256_maskload_pd(wv,endmask),0) wv+=((n-1)&(NPAR-1))+1;
-   __m256d sgnbit=_mm256_castsi256_pd(_mm256_set1_epi64x(0x8000000000000000));
+   __m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin);
    c0=_mm256_add_pd(c0,c1); c2=_mm256_add_pd(c2,c3); c0=_mm256_add_pd(c0,c2);   // add all the low parts together - the low bits of the low will not make it through to the result
    TWOSUM(acc0,acc1,acc0,c1) TWOSUM(acc2,acc3,acc2,c2) c2=_mm256_add_pd(c1,c2); c0=_mm256_add_pd(c2,c0);   // add 0+1, 2+3; combine all low parts of Kahan corrections into low total
    TWOSUM(acc0,acc2,acc0,c1) c0=_mm256_add_pd(c0,c1);  // 0+2, bringing along low part
@@ -417,7 +417,7 @@ DF1(jtcompsum){
      if((n0-=4)>0)goto label1;
     }
     // combine accumulators
-    __m256d sgnbit=_mm256_castsi256_pd(_mm256_set1_epi64x(0x8000000000000000));
+    __m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin);
     c0=_mm256_add_pd(c0,c1); c2=_mm256_add_pd(c2,c3); c0=_mm256_add_pd(c0,c2);   // add all the low parts together - the low bits of the low will not make it through to the result
     TWOSUM(acc0,acc1,acc0,c1) TWOSUM(acc2,acc3,acc2,c2) c2=_mm256_add_pd(c1,c2); c0=_mm256_sub_pd(c2,c0);   // add 0+1, 2+3  KAHAN corrections are negative - change that now
     TWOSUM(acc0,acc2,acc0,c1) c0=_mm256_add_pd(c1,c0);  // 0+2
@@ -431,7 +431,7 @@ DF1(jtcompsum){
     case 0: KAHAN(_mm256_maskload_pd(wv0,endmask),0) wv0+=d; case 3: KAHAN(_mm256_maskload_pd(wv0,endmask),1) wv0+=d; case 2: KAHAN(_mm256_maskload_pd(wv0,endmask),2) wv0+=d; case 1: KAHAN(_mm256_maskload_pd(wv0,endmask),3) wv0+=d;
     if((n0-=4)>0)goto label2;
    }
-   __m256d sgnbit=_mm256_castsi256_pd(_mm256_set1_epi64x(0x8000000000000000));
+   __m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin);
    c0=_mm256_add_pd(c0,c1); c2=_mm256_add_pd(c2,c3); c0=_mm256_add_pd(c0,c2);   // add all the low parts together - the low bits of the low will not make it through to the result
    TWOSUM(acc0,acc1,acc0,c1) TWOSUM(acc2,acc3,acc2,c2) c2=_mm256_add_pd(c1,c2); c0=_mm256_sub_pd(c2,c0);   // add 0+1, 2+3  KAHAN corrections are negative - change that now
    TWOSUM(acc0,acc2,acc0,c1) c0=_mm256_add_pd(c1,c0);  // 0+2

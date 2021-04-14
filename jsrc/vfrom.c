@@ -99,13 +99,15 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wk,wn,wr,*ws,zn;
   // moving I/D.  Use GATHER instruction.  Future hardware can exploit that.
   {__m256i endmask; /* length mask for the last word */ 
    _mm256_zeroupperx(VOIDARG)
-   __m256i wstride=_mm256_set1_epi64x(p);  // atoms between cells
+// obsolete    __m256i wstride=_mm256_set1_epi64x(p);  // atoms between cells
+   __m256i wstride=_mm256_broadcastq_epi64(_mm_insert_epi64(_mm_setzero_si128(),p,0));  // atoms between cells
    I * RESTRICT v=(I*)wv; I* RESTRICT x=(I*)zv;  // input and output pointers
    if(an==1){  // special case of atom {"1 y
     if(m==1){  // the atom { list case is pretty common
      *x=v[j];  // just move the one value
     }else{
-     __m256i lanestride=_mm256_mul_epu32(wstride,_mm256_set_epi64x(3,2,1,0));  // each lane accesses a different cell
+// obsolete      __m256i lanestride=_mm256_mul_epu32(wstride,_mm256_set_epi64x(3,2,1,0));  // each lane accesses a different cell
+     __m256i lanestride=_mm256_mul_epu32(wstride,_mm256_loadu_si256((__m256i*)&iotavec[-IOTAVECBEGIN]));  // each lane accesses a different cell
      endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-m)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */
      v+=j;  // advance base pointer to the column we are fetching
      wstride=_mm256_slli_epi64(wstride,LGNPAR);  // repurpose wstride to be stride between groups of 4 cells

@@ -284,7 +284,7 @@ A jtvecb01(J jt,I t,I n,void*v){A z;
  if(t&B01){C*p=(C*)AV(z),*q=v;
   // for booleans, enforce valid boolean result: convert any nonzero to 0x01
   __m256i zeros=_mm256_setzero_si256();
-  __m256i ones=_mm256_set1_epi8(1);
+  __m256i ones=_mm256_castpd_si256(_mm256_broadcast_sd((D*)&Ivalidboolean));
 // obsolete  __m256i ffs=_mm256_set1_epi8(0xffu);
   UI n0=n;  // number of bytes to do
 #if 0 // obsolete  don't align the source, since that will unalign the dest, which is worse

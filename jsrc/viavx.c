@@ -54,7 +54,8 @@ static void fillwords(void* x, UI4 storeval, I nstores){
  __m256i* storeptr = (__m256i*)x;
  if(nstores==0)return;
  __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-nstores)&(NPAR-1))));  // mask for 0 1 2 3 4 5 is xxxx 0001 0011 0111 1111 0001
- __m256i store256=_mm256_set1_epi32(storeval);
+// obsolete  __m256i store256=_mm256_set1_epi32(storeval);
+ __m256i store256=_mm256_broadcastd_epi32(_mm_insert_epi32(_mm_setzero_si128(),storeval,0));  // atoms between cells
  I n4=(nstores-1)>>LGNPAR;  // # full stores
  if(n4){
   if(n4&1)goto l1;
@@ -759,7 +760,7 @@ static IOFX(Z,UI4,jtioz02,, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n)
              }else{DO(wsct, FYY(TH,expa,expw,{},hj==asct,il=hj;); if(il==i){MC(zc,v,k); zc+=k;}; v=(T*)((C*)v+k); );}   \
  }
 
-#define SETXNEW  __m128d tltr; tltr=_mm_set_pd(tl,tr); xnew=xrot=xval=_mm_sub_pd(tltr,tltr);
+#define SETXNEW  __m128d tltr; tltr=_mm_set_pd(tl,tr); xnew=xrot=xval=_mm_setzero_pd();
 // Do the operation.  Build a hash for a except when self-index
 #define IOFT(T,TH,f,hash,FXY,FYY,FYYKEY,expa,expw)   \
  IOF(f){I acn=ak/sizeof(T),  \
@@ -1537,10 +1538,12 @@ static IOFXWS(jtio42w,I,US)  static IOFXWS(jtio44w,I,UI4)  // INT-sized items, u
 CR condrange(I *s,I n,I min,I max,I maxrange){CR ret;
  if(!n)goto fail;
  I nqw=(n-1)>>LGNPAR;  // number of full qwords
- __m256i min0, min1, max0, max1;
+ __m256i min0=_mm256_broadcastq_epi64(_mm_insert_epi64(_mm_setzero_si128(),min,0));  // atoms between cells
+ __m256i max0=_mm256_broadcastq_epi64(_mm_insert_epi64(_mm_setzero_si128(),max,0));  // atoms between cells
+ __m256i min1, max1;
  __m256i maxmask = _mm256_loadu_si256((__m256i const *)(validitymask+6));  // 0 0 ffff ffff for sign switching
  __m256i endmask= _mm256_loadu_si256((__m256i const *)(validitymask+((-n)&(NPAR-1))));
- min0=_mm256_set1_epi64x(min); max0=_mm256_set1_epi64x(max);
+// obsolete  min0=_mm256_set1_epi64x(min); max0=_mm256_set1_epi64x(max);
  if(nqw--){
   // read the last batch into min/max1
   min1 = max1 = _mm256_loadu_si256((__m256i const *)(s+(nqw<<LGNPAR)));

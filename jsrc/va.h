@@ -463,10 +463,10 @@ AHDR2(name,D,D,D){ \
 
 
 // n and m are never 0.
-#if 0 // waiting till me learn how to XCTL
+#if 0 // obsolete waiting till me learn how to XCTL
 static void f##1(J jt,I m,void* RESTRICTI z,void* RESTRICTI x,void* RESTRICTI y){I u,v; \
  if((C_AVX&&SY_64)||EMU_AVX){__m256i u256,v256; \
-  __m256i bool256=_mm256_set1_epi64x(0x0101010101010101); /* valid boolean bits */ \
+  __m256i bool256=_mm256_castpd_si256(_mm256_broadcast_sd(&Iivalidbytes)); /* valid boolean bits */ \
   __m256i workarea; workarea=_mm256_xor_si256(bool256,bool256); /* temp, init to avoid warning */ \
   DQ((m-1)>>(LGSZI+LGNPAR), u256=_mm256_loadu_si256((__m256i*)x); v256=_mm256_loadu_si256((__m256i*)y); \
    _mm256_storeu_si256((__m256i*)z, fuv); x=(C*)x+NPAR*SZI; y=(C*)y+NPAR*SZI; z=(C*)z+NPAR*SZI; \

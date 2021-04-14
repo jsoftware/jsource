@@ -19,11 +19,11 @@
 D jttfloor(J jt,D v){D x; R (x=jround(v), x-TGT(x,v));}
 D jttceil (J jt,D v){D x; R (x=jround(v), x+TLT(x,v));}
 
-BPFX(eqBB, EQ,BEQ,EQ,BEQ, _mm256_xor_pd(bool256,_mm256_xor_pd(u256,v256)) , ,__m256d bool256=_mm256_castsi256_pd(_mm256_set1_epi64x(0x0101010101010101));)
+BPFX(eqBB, EQ,BEQ,EQ,BEQ, _mm256_xor_pd(bool256,_mm256_xor_pd(u256,v256)) , ,__m256d bool256=_mm256_broadcast_sd((D*)&Ivalidboolean);)
 BPFX(neBB, NE,BNE,NE,BNE, _mm256_xor_pd(u256,v256) , ,)
 BPFX(ltBB, LT,BLT,GT,BGT, _mm256_andnot_pd(u256,v256) , ,)
-BPFX(leBB, LE,BLE,GE,BGE, _mm256_xor_pd(bool256,_mm256_andnot_pd(v256,u256)) , ,__m256d bool256=_mm256_castsi256_pd(_mm256_set1_epi64x(0x0101010101010101));)
-BPFX(geBB, GE,BGE,LE,BLE, _mm256_xor_pd(bool256,_mm256_andnot_pd(u256,v256)) , ,__m256d bool256=_mm256_castsi256_pd(_mm256_set1_epi64x(0x0101010101010101));)
+BPFX(leBB, LE,BLE,GE,BGE, _mm256_xor_pd(bool256,_mm256_andnot_pd(v256,u256)) , ,__m256d bool256=_mm256_broadcast_sd((D*)&Ivalidboolean);)
+BPFX(geBB, GE,BGE,LE,BLE, _mm256_xor_pd(bool256,_mm256_andnot_pd(u256,v256)) , ,__m256d bool256=_mm256_broadcast_sd((D*)&Ivalidboolean);)
 BPFX(gtBB, GT,BGT,LT,BLT, _mm256_andnot_pd(v256,u256) , , )
  
 
@@ -35,7 +35,7 @@ APFX(eqXX, B,X,X, equ,, R EVOK;)
 APFX(eqQQ, B,Q,Q, QEQ,, R EVOK;)
 BPFXAVX2(eqCC, CMPEQCC,x, CMPEQCC, x,
    (workarea=_mm256_castpd_si256(_mm256_xor_pd(u256,v256)), _mm256_castsi256_pd(_mm256_and_si256(_mm256_srli_epi64(_mm256_andnot_si256(workarea,_mm256_sub_epi8(workarea,bool256)),7),bool256))) ,
-   I work; , __m256i workarea; __m256i bool256=_mm256_set1_epi64x(0x0101010101010101);
+   I work; , __m256i workarea; __m256i bool256=_mm256_castpd_si256(_mm256_broadcast_sd((D*)&Ivalidboolean));
    )
 
                            EQTEMPLATE(eqCS, B,UC,US, CMPEQ,, R EVOK;)  EQTEMPLATE(eqSC, B,US,UC, CMPEQ,, R EVOK;)  EQTEMPLATE(eqSS, B,S,S, CMPEQ,, R EVOK;)
@@ -51,7 +51,7 @@ APFX(neXX, B,X,X, !equ,, R EVOK;)
 APFX(neQQ, B,Q,Q, !QEQ,, R EVOK;)
 BPFXAVX2(neCC, CMPNECC,x, CMPNECC, x,
    (workarea=_mm256_castpd_si256(_mm256_xor_pd(u256,v256)), _mm256_castsi256_pd(_mm256_andnot_si256(_mm256_srli_epi64(_mm256_andnot_si256(workarea,_mm256_sub_epi8(workarea,bool256)),7),bool256))) ,
-   I work; , __m256i workarea; __m256i bool256=_mm256_set1_epi64x(0x0101010101010101);
+   I work; , __m256i workarea; __m256i bool256=_mm256_castpd_si256(_mm256_broadcast_sd((D*)&Ivalidboolean));
    )
                            NETEMPLATE(neCS, B,UC,US, CMPNE,, R EVOK;)  NETEMPLATE(neSC, B,US,UC, CMPNE,, R EVOK;)  NETEMPLATE(neSS, B,S,S, CMPNE,, R EVOK;)
 NETEMPLATE(neUU, B,C4,C4, CMPNE,, R EVOK;)  NETEMPLATE(neUS, B,C4,US, CMPNE,, R EVOK;)  NETEMPLATE(neSU, B,US,C4, CMPNE,, R EVOK;)
@@ -220,7 +220,7 @@ AHDR2(name,B,I,I){ \
   if(n-1<0){n=~n; \
    /* atom+vector */ \
    endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1)))); \
-   DQ(m,; u=_mm256_set1_epi64x(*x); ++x; \
+   DQ(m,; u=_mm256_castpd_si256(_mm256_broadcast_sd((D*)x)); ++x; \
      DQ((n-1)>>LGNPAR, \
        v=_mm256_loadu_si256((__m256i*)y); \
        eq=result; \
@@ -233,7 +233,7 @@ AHDR2(name,B,I,I){ \
   }else{ \
    /* vector+atom */ \
    endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1)))); \
-   DQ(m, v=_mm256_set1_epi64x(*y); ++y; \
+   DQ(m, v=_mm256_castpd_si256(_mm256_broadcast_sd((D*)y)); ++y; \
      DQ((n-1)>>LGNPAR, \
        u=_mm256_loadu_si256((__m256i*)x); \
        eq=result; \

@@ -64,7 +64,7 @@ AHDR1(sqrtD,D,D){
 
 AHDR1(absD,D,D){
  AVXATOMLOOP(0,lbl,
-  __m256d absmask; absmask=_mm256_castsi256_pd(_mm256_set1_epi64x (0x7fffffffffffffff));
+  __m256d absmask; absmask=_mm256_broadcast_sd((D*)&Iimax);
  ,
   u=_mm256_and_pd(u,absmask);
  ,

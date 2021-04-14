@@ -59,7 +59,7 @@ APFX(cirZZ, Z,Z,Z, zcir  ,NAN0;,HDR1JERRNAN)
 #if (C_AVX&&SY_64) || EMU_AVX
 #define TRIGSYMM(lbl,limit,comp,err,sleeffn)  {AVXATOMLOOP(1,lbl, \
  __m256d thmax; thmax=_mm256_broadcast_sd(&limit); \
- __m256d absmask; absmask=_mm256_castsi256_pd(_mm256_set1_epi64x(0x7fffffffffffffff)); \
+ __m256d absmask; absmask=_mm256_broadcast_sd((D*)&Iimax); \
  , \
  ASSERTWR(_mm256_movemask_pd(_mm256_cmp_pd(_mm256_and_pd(u,absmask), thmax,comp))==0,err); \
  u=sleeffn(u); \
@@ -70,7 +70,7 @@ APFX(cirZZ, Z,Z,Z, zcir  ,NAN0;,HDR1JERRNAN)
 #define TRIGCLAMP(limit,decls,comp,argmod,sleeffn,resultmod)  {AVXATOMLOOP(1,lbl, \
  __m256d thmax; thmax=_mm256_broadcast_sd(&limit); \
  decls \
- __m256d absmask; absmask=_mm256_castsi256_pd(_mm256_set1_epi64x(0x7fffffffffffffff)); \
+ __m256d absmask; absmask=_mm256_broadcast_sd((D*)&Iimax); \
  , \
  __m256d outofbounds = _mm256_cmp_pd(u, thmax,comp); \
  argmod \

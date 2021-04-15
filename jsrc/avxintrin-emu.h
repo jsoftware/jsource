@@ -113,7 +113,9 @@
 #define _mm_blendv_ps _mm_blendv_ps_SSE2
 #define _mm_cmpeq_epi64 _mm_cmpeq_epi64_REF
 #define _mm_cmpgt_epi64 _mm_cmpgt_epi64_REF
+#define _mm_cvtepu8_epi64 _mm_cvtepu8_epi64_SSE2
 #define _mm_extract_epi64 _mm_extract_epi64_REF
+#define _mm_insert_epi32 _mm_insert_epi32_REF
 #define _mm_insert_epi64 _mm_insert_epi64_REF
 #define _mm_insert_epi8 _mm_insert_epi8_REF
 #define _mm_testc_si128 _mm_testc_si128_REF
@@ -139,10 +141,12 @@ extern "C" {
     #define __EMU_M256_ALIGN( a ) __declspec(align(a))
     #define __emu_inline          __forceinline
     #define __emu_int64_t         __int64
+    #define __emu_uint64_t        unsigned __int64
 #elif defined( __GNUC__ )
     #define __EMU_M256_ALIGN( a ) __attribute__((__aligned__(a)))
     #define __emu_inline          __inline __attribute__((__always_inline__))
     #define __emu_int64_t         long long
+    #define __emu_uint64_t        unsigned long long
 #else
     #error "unsupported platform"
 #endif
@@ -564,6 +568,16 @@ static __emu_inline __m128i _mm_insert_epi8_REF( __m128i a, int b, const int ndx
     return A;
 }
 
+/** \SSE4_1{Reference,_mm_insert_epi32} */
+static __emu_inline __m128i _mm_insert_epi32_REF( __m128i a, int b, const int ndx )
+{
+    __m128i A;
+    A = a;
+
+    ((int*)(&A))[ndx & 0x3] = b;
+    return A;
+}
+
 /** \SSE4_1{Reference,_mm_insert_epi64} */
 static __emu_inline __m128i _mm_insert_epi64_REF( __m128i a, long long b, const int ndx )
 {
@@ -708,6 +722,24 @@ static __emu_inline __emu__m256i __emu_mm256_broadcastb_epi8        ( __m128i a 
     return A;
 }
 
+static __emu_inline __emu__m256i __emu_mm256_broadcastd_epi32       ( __m128i a )
+{
+    __emu__m256i A;
+    int *m = (int*) &a;
+    int *p = (int*) &A;
+    for (int i=0; i<8; i++) p[i] = m[0];
+    return A;
+}
+
+static __emu_inline __emu__m256i __emu_mm256_broadcastq_epi64       ( __m128i a )
+{
+    __emu__m256i A;
+    __emu_int64_t *m = (__emu_int64_t*) &a;
+    __emu_int64_t *p = (__emu_int64_t*) &A;
+    for (int i=0; i<4; i++) p[i] = m[0];
+    return A;
+}
+
 static __emu_inline __emu__m256i __emu_mm256_slli_epi64 ( __emu__m256i a, int imm )
 {
     __emu__m256i A;
@@ -724,6 +756,23 @@ static __emu_inline __emu__m256i __emu_mm256_srli_epi64 ( __emu__m256i a, int im
     return A;
 }
 
+#if defined(__clang__)
+#define __emu_mm256_srli_si256( a, imm ) \
+({                                       \
+    __emu__m256i A;                      \
+    A.__emu_m128[0] = _mm_srli_si128( a.__emu_m128[0], imm); \
+    A.__emu_m128[1] = _mm_srli_si128( a.__emu_m128[1], imm); \
+    A; \
+})
+#else
+static __emu_inline __emu__m256i __emu_mm256_srli_si256 ( __emu__m256i a, int imm )
+{
+    __emu__m256i A;
+    A.__emu_m128[0] = _mm_srli_si128( a.__emu_m128[0], imm);
+    A.__emu_m128[1] = _mm_srli_si128( a.__emu_m128[1], imm);
+    return A;
+}
+#endif
 // avx2
 __EMU_M256_IMPL_M2( __m256i, cmpgt_epi32 );
 __EMU_M256_IMPL_M2( __m256i, cmpgt_epi64 );
@@ -1524,6 +1573,33 @@ static __emu_inline __emu__m256i __emu_mm256_mask_i64gather_epi64( __emu__m256i 
 __emu_maskload_impl( __emu_mm256_maskload_epi64, __emu__m256i, __emu__m256i, __emu_int64_t, __emu_int64_t );
 __emu_maskstore_impl( __emu_mm256_maskstore_epi64, __emu__m256i, __emu__m256i, __emu_int64_t, __emu_int64_t );
 
+/** \SSE4_1{SSE2,_mm_cvtepu8_epi64} */
+static __emu_inline __m128i _mm_cvtepu8_epi64_SSE2 ( __m128i a)
+{
+ __m128i b = _mm_setzero_si128 ();
+ a = _mm_unpacklo_epi8(a, b);
+ a = _mm_unpacklo_epi16(a, b);
+ return _mm_unpacklo_epi32(a, b);
+}
+
+static __emu_inline __emu__m256i __emu_mm256_cvtepu8_epi64(__m128i a)
+{
+ __emu__m256i res;
+ res.__emu_m128[0] = _mm_cvtepu8_epi64(a);
+ res.__emu_m128[1] = _mm_cvtepu8_epi64(_mm_srli_si128(a,2));
+ return res;
+}
+
+static __emu_inline __emu__m256i __emu_mm256_sllv_epi64(__emu__m256i a, __emu__m256i count)
+{
+ __emu__m256i res;
+ __emu_uint64_t *c = (__emu_uint64_t*) &count;
+ __emu_int64_t *m = (__emu_int64_t*) &a;
+ __emu_int64_t *p = (__emu_int64_t*) &res;
+ for (int i=0; i<4; i++) p[i] = (c[i]<64) ? (m[i]<<c[i]) : 0;
+ return res;
+}
+
 #if defined __cplusplus
 }; /* End "C" */
 #endif /* __cplusplus */
@@ -1766,8 +1842,11 @@ __emu_maskstore_impl( __emu_mm256_maskstore_epi64, __emu__m256i, __emu__m256i, _
 #define _mm256_mul_epu32 __emu_mm256_mul_epu32
 #define _mm256_slli_epi64 __emu_mm256_slli_epi64
 #define _mm256_srli_epi64 __emu_mm256_srli_epi64
+#define _mm256_srli_si256 __emu_mm256_srli_si256
 
 #define _mm256_broadcastb_epi8 __emu_mm256_broadcastb_epi8
+#define _mm256_broadcastd_epi32 __emu_mm256_broadcastd_epi32
+#define _mm256_broadcastq_epi64 __emu_mm256_broadcastq_epi64
 
 #define _mm256_cmpeq_epi8 __emu_mm256_cmpeq_epi8
 #define _mm256_cmpeq_epi64 __emu_mm256_cmpeq_epi64
@@ -1789,6 +1868,9 @@ __emu_maskstore_impl( __emu_mm256_maskstore_epi64, __emu__m256i, __emu__m256i, _
 #define _mm256_mask_i64gather_epi64 __emu_mm256_mask_i64gather_epi64
 #define _mm256_permute2x128_si256 __emu_mm256_permute2x128_si256
 #define _mm256_permute4x64_pd __emu_mm256_permute4x64_pd
+
+#define _mm256_cvtepu8_epi64 __emu_mm256_cvtepu8_epi64
+#define _mm256_sllv_epi64 __emu_mm256_sllv_epi64
 
 #endif /* __EMU_M256_NOMAP */
 

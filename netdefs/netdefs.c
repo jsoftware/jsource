@@ -74,11 +74,23 @@ int main(){
 	printf ("IPPROTO_MAX=: %d\n",IPPROTO_MAX);
 	puts("");
 	puts("");
+#if !defined(ANDROID)
 	printf ("INADDR_ANY=: %u\n",INADDR_ANY);
+#else
+	printf ("INADDR_ANY=: %lu\n",INADDR_ANY);
+#endif
 	printf ("INADDR_LOOPBACK=: %d\n",INADDR_LOOPBACK);
+#if !defined(ANDROID)
 	printf ("INADDR_BROADCAST=: %u\n",INADDR_BROADCAST);
+#else
+	printf ("INADDR_BROADCAST=: %lu\n",INADDR_BROADCAST);
+#endif
 #ifdef INADDR_NONE
+#if !defined(ANDROID)
 	printf ("INADDR_NONE=: %u\n",INADDR_NONE);
+#else
+	printf ("INADDR_NONE=: %lu\n",INADDR_NONE);
+#endif
 #else
 	puts ("INADDR_NONE=: _1");
 #endif

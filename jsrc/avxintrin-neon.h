@@ -768,7 +768,7 @@ FORCE_INLINE void _mm256_zeroupper(void)
 
 // FORCE_INLINE __m256i _mm256_srli_si256(__m256i a, const int imm8)
 #define _mm256_srli_si256( a,  imm8) \
-{ \
+({ \
     assert(imm8 >=0 && imm8 <256); \
     __m256i result_m256i; \
     if (likely(imm8 > 0 && imm8 <= 15)) { \
@@ -781,7 +781,7 @@ FORCE_INLINE void _mm256_zeroupper(void)
         result_m256i.vect_s8[1] = vdupq_n_s8(0); \
     }  \
     result_m256i; \
-}
+})
 
 FORCE_INLINE __m256i _mm256_unpackhi_epi8(__m256i a, __m256i b)
 {
@@ -1252,6 +1252,44 @@ FORCE_INLINE __m256 _mm256_cvtepi32_ps(__m256i a)
     ret.vect_f32[0] = vcvtq_f32_s32(a.vect_s32[0]);
     ret.vect_f32[1] = vcvtq_f32_s32(a.vect_s32[1]);
     return ret;
+}
+
+// Converts the four unsigned 8-bit integers in the lower 32 bits to four
+// unsigned 64-bit integers.
+FORCE_INLINE __m256i _mm256_cvtepu8_epi64(__m128i a)
+{
+    __m256i ret;
+    ret.vect_s64[0] = _mm_cvtepu8_epi64(a);
+    ret.vect_s64[1] = _mm_cvtepu8_epi64(_mm_srli_si128(a,2));
+    return ret;
+}
+
+FORCE_INLINE  __m256i _mm256_sllv_epi64(__m256i a, __m256i count)
+{
+ __m256i res;
+ uint64_t *c = (uint64_t*) &count;
+ int64_t *m = (int64_t*) &a;
+ int64_t *p = (int64_t*) &res;
+ for (int i=0; i<4; i++) p[i] = (c[i]<64) ? (m[i]<<c[i]) : 0;
+ return res;
+}
+
+FORCE_INLINE __m256i _mm256_broadcastd_epi32       ( __m128i a )
+{
+    __m256i A;
+    int *m = (int*) &a;
+    int *p = (int*) &A;
+    for (int i=0; i<8; i++) p[i] = m[0];
+    return A;
+}
+
+FORCE_INLINE __m256i _mm256_broadcastq_epi64_REF   ( __m128i a )
+{
+    __m256i A;
+    int64_t *m = (int64_t*) &a;
+    int64_t *p = (int64_t*) &A;
+    for (int i=0; i<4; i++) p[i] = m[0];
+    return A;
 }
 
 FORCE_INLINE __m256i _mm256_shuffle_epi8(__m256i a, __m256i b)

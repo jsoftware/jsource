@@ -754,7 +754,7 @@ static DF2(jtinfixd){A z;C*x,*y;I c=0,d,k,m,n,p,q,r,*s,wr,*ws,wt,zc;
  k=c<<bplg(wt);   // k=#bytes in a cell of result
  if(likely(AN(z)!=0)){
   if(m>=0){ q=p*k; JMCDECL(endmask) JMCSETMASK(endmask,q,0) DQ(d, JMCR(x,y,q,lbl1,0,endmask) x+=q; y+=k;);  // m>0, overlapping inputs, copy them
-  }else{JMC(x,y,n*k,lbl2,0)  fillv(wt,q*c,x+n*k);    // nonoverlapping: copy en bloc and fill
+  }else{JMC(x,y,n*k,lbl2,0)  fillv0(wt); mvc(q*k,x+n*k,sizeof(jt->fillv0),jt->fillv0);    // nonoverlapping: copy en bloc and fill
   }
  }
  RETF(z);

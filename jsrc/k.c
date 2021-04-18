@@ -353,9 +353,8 @@ static KF1(jtXfromQ){Q*v;X*x;
  R !jt->jerr;
 }
 
-// Imaginary parts have already been cleared
 static KF1(jtZfromD){
- D *wv=DAV(w); Z *zv=yv; DQ(AN(w), zv++->re=*wv++;) R 1;
+ D *wv=DAV(w); Z *zv=yv; DQ(AN(w), zv->im=0.0; zv++->re=*wv++;) R 1;
 }
 
 static B jtDXfI(J jt,I p,A w,DX*x){B b;I e,c,d,i,j,n,r,u[XIDIG],*v;
@@ -444,7 +443,7 @@ B jtccvt(J jt,I tflagged,A w,A*y){F1PREFIP;A d;I n,r,*s,wt; void *wv,*yv;I t=tfl
  // If n and AN have been modified, it doesn't matter for rank-1 arguments whether the shape of the result is listed as n or s[0] since only n atoms will
  // be used.  For higher ranks, we need the shape from s.  So it's just as well that we take the shape from s now
  *y=d;  wv=voidAV(w); // return the address of the new block
- if(unlikely(t&CMPX))fillv(t,n,(C*)yv);   // why??  just fill in imaginary parts as we need to
+// obsolete  if(unlikely(t&CMPX))fillv(t,n,(C*)yv);   // why??  just fill in imaginary parts as we need to
  if(unlikely(!n))R 1;
  // Perform the conversion based on data types
  // For branch-table efficiency, we split the literal conversions into one block, and
@@ -469,12 +468,12 @@ B jtccvt(J jt,I tflagged,A w,A*y){F1PREFIP;A d;I n,r,*s,wt; void *wv,*yv;I t=tfl
   case CVCASE(XNUMX, B01X): R XfromB(w, yv);
   case CVCASE(RATX, B01X): GATV(d, XNUM, n, r, s); R XfromB(w, AV(d)) && QfromX(d, yv);
   case CVCASE(FLX, B01X): R jtDfromB(jt, w, yv);
-  case CVCASE(CMPXX, B01X): {Z*x = (Z*)yv; B*v = (B*)wv; DQ(n, x++->re = *v++;); } R 1;
+  case CVCASE(CMPXX, B01X): {Z*x = (Z*)yv; B*v = (B*)wv; DQ(n, x->im=0.0; x++->re = *v++;); } R 1;
   case CVCASE(B01X, INTX): R BfromI(w, yv);
   case CVCASE(XNUMX, INTX): R XfromI(w, yv);
   case CVCASE(RATX, INTX): GATV(d, XNUM, n, r, s); R XfromI(w, AV(d)) && QfromX(d, yv);
   case CVCASE(FLX, INTX): R jtDfromI(jt, w, yv);
-  case CVCASE(CMPXX, INTX): {Z*x = (Z*)yv; I*v = wv; DQ(n, x++->re = (D)*v++;); } R 1;
+  case CVCASE(CMPXX, INTX): {Z*x = (Z*)yv; I*v = wv; DQ(n, x->im=0.0; x++->re = (D)*v++;); } R 1;
   case CVCASE(B01X, FLX): R BfromD(w, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZ);
   case CVCASE(INTX, FLX): R IfromD(w, yv, (I)jtinplace&JTNOFUZZ?0.0:FUZZ);
   case CVCASE(XNUMX, FLX): R XfromD(w, yv, (jt->xmode&REPSGN(SGNIFNOT(tflagged,XCVTXNUMORIDEX)))|(tflagged>>XCVTXNUMCVX));

@@ -17,36 +17,60 @@ F2(jtsetfv){A q=jt->fill;I t;
   RE(t=t?maxtype(t,AT(q)):AT(q)); // get type needed for fill
   if(TYPESNE(t,AT(q)))RZ(q=cvt(t,q));  // convert the user's type if needed
   jt->fillv=CAV(q);   // jt->fillv points to the fill atom
- }else{if(!t)t=AT(w); fillv(t,1L,jt->fillv0); jt->fillv=jt->fillv0;}    // empty fill.  move 1 std fill atom to fillv0 and point jt->fillv at it
+ }else{if(!t)t=AT(w); fillv0(t); jt->fillv=jt->fillv0;}    // empty fill.  create std fill in fillv0 and point jt->fillv at it
  R TYPESEQ(t,AT(w))?w:cvt(t,w);  // note if w is boxed and nonempty this won't change it
 }
 
-F1(jtfiller){A z; ARGCHK1(w); GA(z,AT(w),1,0,0); fillv(AT(w),1L,CAV(z)); R z;}
-
-// There are 7 fill actions, encoded in 3 bits:
-// 00x fill with memset of the single byte 00x00000  (0 or SP)
-// 01x fill with mvc from 0x2000[0000], number of bytes/atom=2<<x
-// 100 fill with pointer to mtv
-// 110 fill with pointer to iv0 (for XNUM)
-// 111 fill with pointers to iv0/iv1 alternately (for RAT)
-#if !SY_64
-// keep this to doc the fill magic#
-static C fillactions[]={0, 1, 0,   0, 0, 4, 6, 7, 0, 0, 0,    1, 0, 0, 0, 4, 0, 2, 3};  // 011 010 000 100 000 000 000 001 000 000 000 111 110 100 000 000 000 001 000 = d0800200fa0008
-#endif
-
-// move n default fills of type t to *v
-void jtfillv(J jt,I t,I n,C*v){
- I k=bplg(t);
+// Allocate a block for an atom of fill with type same as w, and move in the fill value.  Used to create a fill-cell
+F1(jtfiller){A z; ARGCHK1(w); I wt=AT(w); fillv0(wt); GA(z,wt,1,0,0);
 #if SY_64
- I fillaction=(0xd0800200fa0008>>(3*CTTZ(t)))&7;  // get 3-bit action code
+ IAV0(z)[0]=*(I*)&jt->fillv0[0]; if(unlikely(wt&CMPX+RAT))IAV0(z)[1]=*(I*)&jt->fillv0[SZI];  // first word always fits; maybe not the second
 #else
- I fillaction=fillactions[CTTZ(t)];
+ IAV0(z)[0]=*(I*)&jt->fillv0[0]; IAV0(z)[1]=*(I*)&jt->fillv0[SZI]; IAV0(z)[2]=*(I*)&jt->fillv0[2*SZI]; IAV0(z)[3]=*(I*)&jt->fillv0[3*SZI]; 
 #endif
- if(likely((fillaction&6)==0)){memset(v,fillaction<<5,n<<k);  // types 00x: fill with 00 or 20 - direct numeric or LIT
- }else{  // others require filling with multibyte value
-  mvc(n<<k,v,2LL<<(((SY_64?0xea40:0x9540)>>(fillaction<<1))&3),&fillvalues[(fillaction>>1)-1]);  // lg2(len)-1 is (7) 3 2 2 2 1 0 x x (0)  1110 1010 0100 0000 = ea40   index in fillvalues=2 2 1 1 0 0 x x
-                                                                                                    // 32 bit         2 1 1 1 1 0 x x      1001 0101 0100 0000 = 9540
+// obsolete  fillv(AT(w),1L,CAV(z));
+ R z;
+}
+
+// obsolete // There are 7 fill actions, encoded in 3 bits:
+// obsolete // 00x fill with memset of the single byte 00x00000  (0 or SP)
+// obsolete // 01x fill with mvc from 0x[0000]0020, number of bytes/atom=2<<x
+// obsolete // 100 fill with pointer to mtv
+// obsolete // 110 fill with pointer to iv0 (for XNUM)
+// obsolete // 111 fill with pointers to iv0/iv1 alternately (for RAT)
+// obsolete #if !SY_64
+// obsolete // keep this to doc the fill magic#
+// obsolete static C fillactions[]={0, 1, 0,   0, 0, 4, 6, 7, 0, 0, 0,    1, 0, 0, 0, 4, 0, 2, 3};  // 011 010 000 100 000 000 000 001 000 000 000 111 110 100 000 000 000 001 000 = d0800200fa0008
+// obsolete #endif
+
+// fill fillv0 with default fills of type t to *v
+void jtfillv0(J jt,I t){I fillvalue0;
+// obsolete  I k=bplg(t);
+ if(likely(t&B01+LIT+INT+FL+CMPX+SB01+SLIT+SINT+SFL+SCMPX+SBT+BOX+SBOX)){  // normal case - direct num or LIT, or BOX
+  fillvalue0=t&LIT+SLIT?0x20*VALIDBOOLEAN:0; fillvalue0=t&BOX+SBOX?(I)mtv:fillvalue0;  // get SP or 0
+  *(I*)&jt->fillv0[0]=fillvalue0; *(I*)&jt->fillv0[SZI]=fillvalue0;  // copy to output
+#if !SY_64
+  *(I*)&jt->fillv0[2*SZI]=fillvalue0; *(I*)&jt->fillv0[3*SZI]=fillvalue0;
+#endif
+ }else{
+  fillvalue0=(I)0x0020002000200020; fillvalue0=t&C4T?(I)0x0000002000000020:fillvalue0; fillvalue0=t&XNUM+RAT?(I)iv0:fillvalue0;
+  I fillvalue1=(I)iv1; fillvalue1=t&RAT?fillvalue1:fillvalue0; 
+  *(I*)&jt->fillv0[0]=fillvalue0; *(I*)&jt->fillv0[SZI]=fillvalue1;  // copy to output
+#if !SY_64
+  *(I*)&jt->fillv0[2*SZI]=fillvalue0; *(I*)&jt->fillv0[3*SZI]=fillvalue1;
+#endif
  }
+// obsolete #if SY_64
+// obsolete // obsolete  I fillaction=(0xd0800200fa0008>>(3*CTTZ(t)))&7;  // get 3-bit action code
+// obsolete #else
+// obsolete  I fillaction=fillactions[CTTZ(t)];
+// obsolete #endif
+// obsolete  if(likely((fillaction&6)==0)){fillaction<<=5; fillaction*=VALIDBOOLEAN;
+// obsolete  }else{  // others require filling with multibyte value
+// obsolete   mvc(n<<k,v,2LL<<(((SY_64?0xea40:0x9540)>>(fillaction<<1))&3),&fillvalues[(fillaction>>1)-1]);  // lg2(len)-1 is (7) 3 2 2 2 1 0 x x (0)  1110 1010 0100 0000 = ea40   index in fillvalues=2 2 1 1 0 0 x x
+// obsolete   fillaction=(I)fillvalues[(fillaction>>1)-1] & (fillaction==3?ALTSHORTS:~0);  // lg2(len)-1 is (7) 3 2 2 2 1 0 x x (0)  1110 1010 0100 0000 = ea40   index in fillvalues=2 2 1 1 0 0 x x
+// obsolete                                                                                  // mask out the low half if 4-byte chars
+// obsolete memset(v,fillaction<<5,n<<k);  // types 00x: fill with 00 or 20 - direct numeric or LIT
 }
 
 

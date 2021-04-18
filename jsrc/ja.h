@@ -386,7 +386,7 @@
 #endif
 #define fdepger(x)                  jtfdepger(jt,(x))
 #define filler(x)                   jtfiller(jt,(x))  
-#define fillv(x,y,z)                jtfillv(jt,(x),(y),(z))
+#define fillv0(x)               jtfillv0(jt,(x))
 #define findnl(x)                   jtfindnl(jt, (x))
 // x is locale number, result is address of symbol table, or 0 if nonexistent locale
 // only for non-reuse #define findnlz(x,z)                {if((UI)(n)>=jt->numlocsize)z=0; else {z=(A)(jt->numloctbl[n]); z=((UI)((I*)z-jt->numloctbl)<jt->numlocsize)?0:z;}}

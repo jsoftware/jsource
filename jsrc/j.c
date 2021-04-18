@@ -67,9 +67,9 @@ struct Bd1 Bnumvr[3] = {  // floating-point 0, 1, and 2, used for constants
 {{AKXR(0),FL&TRAVERSIBLE,0,FL,ACPERMANENT,1,0},2.0}
 };
 //I   v00[2]={0,0};         // vector value to use for rank 0 0
-A   __attribute__((aligned(32))) fillvalues[4]={(A)0x20,mtv,iv0,iv1};  // values to use for fills: char, box, xnum, rat
+// obsolete A   __attribute__((aligned(32))) fillvalues[4]={(A)0x0020002000200020,mtv,iv0,iv1};  // values to use for fills: char, box, xnum, rat
 D   pf=0;                 /* performance frequency                */
-// we now take zeroQ out of fillvalues Q   zeroQ={iv0,iv1};          /* 0r1                                  */
+Q   zeroQ={iv0,iv1};          /* 0r1                                  */
 DX  zeroDX={0,0,iv1};       /* 0                                    */
 Z   zeroZ={0,0};          /* 0j0                                  */
 I   iotavec[IOTAVECLEN];  // return values for i. small

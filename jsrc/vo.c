@@ -147,7 +147,7 @@ F2PREFIP;ARGCHK2(a,w);
  R jtover(jtinplace,jtbox(JTIPAtoW,a),w);  // box empty or unboxed w, join to boxed a
 }
 
-// Calculate the value to use for r arg of copyresultcell: bit 0=ra() flag, next 15=rank requiring fill, higher=-(#leading axes of 1)
+// Calculate the value to use for rf arg of copyresultcell: bit 0=ra() flag, next 15=rank requiring fill, higher=-(#leading axes of 1)
 // zs, zr = address/length of shape of result cell   s,r = address/length of shape of cell to copy
 static I rescellrarg(I *zs, I zr, I *s, I r){
  zs+=zr, s+=r;  // advance to end+1 of shapes
@@ -156,7 +156,7 @@ static I rescellrarg(I *zs, I zr, I *s, I r){
  R (r-zr)<<1;  // join fields & return
 }
 
-// copy w into memory area z, which is known to be big enough to hold it (like povtake, but recursive implementation that doesn't require pre-fill)
+// copy *w into memory area z, which is known to be big enough to hold it (like povtake, but recursive implementation that doesn't require pre-fill)
 // the types of w and z are the same
 // sizes is +/\. (shape of z),bp(t(z)), i. e. the number of bytes in a result cell of each possible rank
 // rf (bits 16 up) is the negative of number of leading axes of rank 1 to be appended to w
@@ -171,13 +171,13 @@ static C *copyresultcell(J jt, C *z, C *w, I *sizes, I rf, I *s){I wadv;I r=rf>>
   // r=0   This can only happen if lower r was 0 originally, since we stop recursion at r=1.  r=0 means that
   // the entire r matched the suffix of the shape of zcell, and we can copy the entire cell
   wadv=sizes[0];
-  if(unlikely(rf&1)){DO(wadv>>LGSZI, A a=((A*)w)[i]; ra(a); ((A*)z)[i]=a;)}else{MC(z,w,wadv);}
+  if(unlikely(rf&1)){DO(wadv>>LGSZI, A a=((A*)w)[i]; ra(a); ((A*)z)[i]=a;)}else{JMC(z,w,wadv,lbl,1);}  // mustn't overcopy since we may go in reverse order
   R wadv+w;
  }
  // otherwise there will be fill
  C *endoffill=z+sizes[0];  // save address of end of area
  if(r==1){
-  // r=1 (after r1 exhausted).  Lower cells are taken in full, so we can copy the cells en bloc
+  // r=1.  Lower cells are taken in full, so we can copy the cells en bloc
   wadv = s[0]*sizes[1]; // number of bytes to move
   if(unlikely(rf&1)){DO(wadv>>LGSZI, A a=((A*)w)[i]; ra(a); ((A*)z)[i]=a;)}else{MC(z,w,wadv);}
   w+=wadv; z+=wadv; // move the valid data, and advance pointers
@@ -216,9 +216,10 @@ A jtassembleresults(J jt, I ZZFLAGWORD, A zz, A zzbox, A* zzboxp, I zzcellp, I z
   I *zzcs=AS(zzcellshape);  // zzcs->shape of padded result cell (may be a faux A block) AS[] is shape, AR is rank, AN is allocation
   I zzcr=AR(zzcellshape);  // zzcr=rank of result cell
   zzresultpri=(zpri>zzresultpri)?zpri:zzresultpri; I zft=((I)1)<<(PRIORITYTYPE(zzresultpri&255));  // zft=highest precision encountered
-  fillv(zft,1L,jt->fillv0); I zfs=bpnoun(zft); mvc(sizeof(jt->fillv0),jt->fillv0,zfs,jt->fillv0);  // create 16 bytes of fill.  zfs is byte=length of 1 atom of result type
+  fillv0(zft);  // create 16 bytes of fill.
+// obsolete   fillv(zft,1L,jt->fillv0); mvc(sizeof(jt->fillv0),jt->fillv0,zfs,jt->fillv0);  // create 16 bytes of fill. 
 
-  zzcs[zzcr]=zfs;  // length of 0-cell is byte-length of atom - store after the shape - we know there's room
+  I zfs=bpnoun(zft); zzcs[zzcr]=zfs;  // length of 0-cell is byte-length of atom - store after the shape - we know there's room.  zfs is byte=length of 1 atom of result type
 
   // if the result has different type from the values in zz, convert zz en bloc to type zft
   if(TYPESNE(zft,zzt)){I zzatomshift=CTTZ(bpnoun(zzt)); I zexpshift = CTTZ(bpnoun(zft))-zzatomshift;  // shift for size of atom; expansion factor of the conversion, as shift amount
@@ -303,7 +304,6 @@ A jtassembleresults(J jt, I ZZFLAGWORD, A zz, A zzbox, A* zzboxp, I zzcellp, I z
     // cell comes from zz.  It needs no conversion, since we convert zz whenever we see a precision change.
     // If type is BOX, we know that zz was originally recursive and that its recursive status has been copied/identitied into zztemp; either way no ra is required
     // For other recursible types, the only way for zztemp to be recursive is for it to be identical with zz, so no ra is called for then either.
-    // C *copyresultcell(J jt, C *z, C *w, I *sizes, I r, I *s){I wadv;
     zzcell-=zzcelllen;   // back up to next input cell.  This pointer moves only for results that come from zz
     if(tempp==zzcell)break;  // if we start to copy in-place, we must be before the first wreck, and we can leave remaining cells in place
     copyresultcell(jt,tempp,zzcell,zzcs,zzcopyresr,zzcopyress);
@@ -338,16 +338,22 @@ A jtassembleresults(J jt, I ZZFLAGWORD, A zz, A zzbox, A* zzboxp, I zzcellp, I z
  R zz;
 }
 
+// move in a cell with fill
+// a is shape of filled cell, w is cell (with correct type), *x is target address
+// We assume the result area already has fill copied to it
 static B povtake(J jt,A a,A w,C*x){B b;C*v;I d,i,j,k,m,n,p,q,r,*s,*ss,*u,*uu,y;
- if(!w)R 0;
+ ARGCHK1(w);
  r=AR(w); n=AN(w); k=bpnoun(AT(w)); v=CAV(w);
- if(1>=r){MC(x,v,k*n); R 1;}
+ if(1>=r){MC(x,v,k*n); R 1;}  // if list, fill is contiguous, just copy the data
  m=AN(a); u=AV(a); s=AS(w);
- p=0; d=1; DO(r, if(u[m-1-i]==s[r-1-i]){d*=s[r-1-i]; ++p;}else break;);
- b=0; DO(r-p, if(b=1<s[i])break;);
- if(!b){MC(x,v,k*n); R 1;}
- k*=d; n/=d; ss=s+r-p; uu=u+m-p;
- for(i=0;i<n;++i){
+ p=0; d=1; DO(r, if(u[m-1-i]==s[r-1-i]){d*=s[r-1-i]; ++p;}else break;);  // p=#trailing axes of w that fill the cell; d=total # atoms in a p-cell of result
+// obsolete  I f; PROD(f,r-p,s);  // f=#p-cells in w
+ b=0; DO(r-p, if(b=1<s[i])break;);  // b=0 iff all axes of w above the p-cell have unit length
+ if(!b){MC(x,v,k*n); R 1;}  // unit-length cell filling low aces: fill is contiguous at end, just copy
+// obsolete  if(f==1){MC(x,v,k*n); R 1;}  // cell filling low axes with frame all 1: fill is contiguous at end, just copy
+ k*=d; ss=s+r-p; uu=u+m-p;  // k=#bytes of p-cell, n=#p-cells, ss->bottom axis+1 of p-frame of w, uu->bottom axis+1 of p-frame of a
+ n/=d;
+ for(i=0;i<n;++i){  // for each p-cell
   y=0; d=1; q=i; /* y=.a#.((-$a){.(($a)$1),$w)#:i */
   s=ss; u=uu; DQ(r-p, j=*--s; y+=q%j*d; d*=*--u; q/=j;);
   MC(x+y*k,v,k); v+=k;
@@ -425,7 +431,7 @@ static A jtopes(J jt,I zt,A cs,A w){A a,d,e,sh,t,*wv,x,x1,y,y1,z;B*b;C*xv;I an,*
 // If y cannot be inplaced, we have to make sure we don't return an inplaceable reference to a part of y.  This would happen
 // if y contained inplaceable components (possible if y came from < yy or <"r yy).  In that case, mark the result as non-inplaceable.
 // We don't support inplacing here yet so just do that always
-F1(jtope){A cs,*v,y,z;I nonh;C*x;I i,n,*p,q=RMAX,r=0,*s,t=0,te=0,*u,zn;
+F1(jtope){A cs,*v,y,z;C*x;I i,n,*p,q,r,*s,*u,zn;
  ARGCHK1(w);
  v=AAV(w);
  if(likely((RANKT)((AT(w)&BOX)>>BOXX)>AR(w))){   // boxed and rank=0
@@ -439,44 +445,87 @@ F1(jtope){A cs,*v,y,z;I nonh;C*x;I i,n,*p,q=RMAX,r=0,*s,t=0,te=0,*u,zn;
  n=AN(w);
  if(unlikely(((AT(w)&BOX)&REPSGN(-n))==0))RCA(w);  // return w if empty or open
  PROLOG(0080);
- // Here we have an array of boxes.  We will create a new block with the concatenated contents (even if there is only one box), and thus we don't need to turn of pristine in w
- // set q=min rank of contents, r=max rank of contents
- for(i=0;i<n;++i){
-  y=v[i]; r=MAX(r,AR(y)); q=MIN(q,AR(y));
-  if(AN(y))t|=AT(y); else te|=AT(y);  // accumulate types, either nonempty or empty
+ // Here we have an array of boxes.  We will create a new block with the concatenated contents (even if there is only one box), and thus we don't need to turn off pristine in w
+ // set q=min rank of contents, r=max rank of contents, t=type-masks for nonempty, te=type-masks for empty
+ // Get the max cell-size if rank 1 or 2, and an indicator if all the shapes were equal
+ // if (all shapes equal, taking omitted shape as 1), there is no fill
+ //
+ // We could keep track of whether the low 2 axes require fill, but fill overhead just isn't that high
+// obsolete  r=q=AR(v[0]);
+ I *shapeptr; I maxshape0=0; I maxshape1=0; r=0; q=RMAX;  // max axis_1, max axis _2, max rank, min rank
+// obsolete  shapeptr=&AS(v[0])[AR(v[0])-1]; shapeptr=AR(v[0])>0?shapeptr:&oneone[0]; maxshape0=*shapeptr;  // max axis _1
+// obsolete  shapeptr=&AS(v[0])[AR(v[0])-2]; shapeptr=AR(v[0])>1?shapeptr:&oneone[0]; maxshape1=*shapeptr;  // max axis _2
+// obsolete  I fillreqd=0;  // set nonzero if the 1-extended shapes don't match
+// obsolete  I te=AT(y); I t=AN(y)?te:0;  // te=all types including empties; t=nonempty types.  If t!=0, te is immaterial
+ I te=0; I t=0;  // te=all types including empties; t=nonempty types.  If t!=0, te is immaterial
+ for(i=0;i<n;++i){I s;
+  y=v[i]; r=MAX(r,AR(y)); q=MIN(q,AR(y));  // could do this with shift if rank limited to 63
+  if(likely(AN(y)!=0))t|=AT(y); te|=AT(y);  // accumulate types, either nonempty or empty.  Probably all the same AN, so use branch
+  // accumulate max shape.  Extend short shapes with 1
+  shapeptr=&AS(y)[AR(y)-1]; shapeptr=AR(y)>0?shapeptr:&oneone[1]; s=*shapeptr; maxshape0=MAX(maxshape0,s);
+  --shapeptr; shapeptr=AR(y)>1?shapeptr:&oneone[1]; s=*shapeptr; maxshape1=MAX(maxshape1,s);
  }
+ // r is (max) rank of result cell, q is smallest input-cell rank
+ // If an input rank was > 2, we don't know whether we need fill or not, so assume the worst
+
  // if there was a nonempty, verify that the nonempties are compatible and find the highest-priority one
  // Fill creates a subtlety: we don't know whether empty boxes are going to contribute to
  // the result or not.  In a case like (0 2$a:),'' the '' will contribute, but the (0 2$a:) will
  // not.  And, we don't want to require compatibility with the fill-cell if nothing is filled.
  // So, we don't check compatibility for empty boxes.
- // The homogeneity flag h is set if max rank is 1 and there is 0 or 1 nonempty type.  In that case fill is 1-dimensional and we just copy into the result area
- nonh = (r&~1) | (t&(t-1));  // non homogeneous if rank is not 0 or 1, or if there is more than 1 bit set in t
- if(t){
+ // The homogeneity flag h is set if max rank is 1 and there is 0 or 1 nonempty type.  In that case fill is contiguous for each cell and we just copy into the result area
+// obsolete  nonh = (r&~1) | (t&(t-1));  // non homogeneous if rank is not 0 or 1, or if there is more than 1 bit set in t
+ if(likely(t!=0)){
   ASSERT((POSIFHOMO(t,0)&-(t^BOX)&-(t^SBT))>=0,EVDOMAIN);  // no mixed nonempties: t is homo num/char or all boxed or all symbol
   ASSERT(!(t&SPARSE&&t&XNUM+RAT),EVDOMAIN);  // don't allow a sparse that requires promotion to indirect
   te=t;  // te holds the type to use
  }
  t=te&-te; NOUNROLL while(te&=(te-1)){RE(t=maxtypene(t,te&-te));}  // get highest-priority type (which may be sparse)
- // allocate place to build shape of result-cell; initialize to 1s above q, zeros below (this is adding leading 1s to missing leading axes)
- fauxblockINT(csfaux,4,1); fauxINT(cs,csfaux,r,1) u=AV(cs); DO(r-q, u[i]=1;); p=u+r-q; DO(q, p[i]=0;);
- // find the shape of a result-cell
- DO(n, y=v[i]; s=AS(y); p=u+r-AR(y); DO(AR(y),p[i]=MAX(p[i],s[i]);););
- if(unlikely((t&SPARSE)!=0))RZ(z=opes(t,cs,w))
- else{I klg; I m;
-  PRODX(m,r,u,1); DPMULDE(n,m,zn); klg=bplg(t); q=m<<klg;
-  // Allocate result area & copy in shape (= frame followed by result-cell shape)
-  GA(z,t,zn,r+AR(w),0); MCISH(AS(z),AS(w),AR(w)) MCISH(AS(z)+AR(w),u,r); x=CAV(z); fillv(t,zn,x);  // init to a:  fills
-  for(i=0;i<n;++i){
-   y=v[i];   // get pointer to contents
+ // allocate place to build shape of result-cell;
+ fauxblockINT(csfaux,5,1); I klg=bplg(t); I m;  // m is # atoms in cell
+ if(likely(((t&SPARSE)+r)<2)){
+  // Not sparse, and cell ranks were all < 2.  We know the max shape
+  u=csfaux+2; u[r-1]=maxshape0; u[r-2]=maxshape1;  // u->cell shape; fill in the ranks we know
+  DPMULDE(maxshape0,maxshape1,m);  // number of atoms in cell
+ }else{
+  // A cell had high rank (or was sparse).  We have to go back & recount the high ranks
+  fauxINT(cs,csfaux,r+1,1) AS(cs)[0]=AN(cs)=r; u=IAV(cs);  // allocate extra axis for use in copyresultcell
+  DO(r-q, u[i]=1;); p=u+r-q; DO(q-2, p[i]=0;); u[r-1]=maxshape0; u[r-2]=maxshape1;  // initialize to 1s above q, zeros below (this is adding leading 1s to missing leading axes); fill in known axes
+  // find the shape of a result-cell
+  DO(n, y=v[i]; s=AS(y); p=u+r-AR(y); DO(AR(y)-2,p[i]=MAX(p[i],s[i]);););  // go through blocks again finding max shape (not checking last 2 axes)
+  if(unlikely((t&SPARSE)!=0)){z=opes(t,cs,w); EPILOG(z);} // if sparse, use sparse code
+  else{
+   PRODX(m,r,u,1);  // # atoms in cell
+// obsolete    fillreqd=1;  // we have to assume there is fill if we couldn't verify otherwise
+  }
+ }
+ // u->shape of cell, m=#atoms in cell.  Allocate result area & copy in shape (= frame followed by result-cell shape)
+ DPMULDE(n,m,zn);  // Get total # results atoms now that we know result-cell size
+ GA(z,t,zn,r+AR(w),0); I *zcs=AS(z)+AR(w); MCISH(zcs,u,r); MCISH(AS(z),AS(w),AR(w))  // zcs->result-cell shape
+ x=CAV(z);  // x=output pointer, init to 1st cell
+// obsolete  fillv(t,zn,x);  // init to a:  fills
+// obsolete  if(fillreqd){
+  // fill is (or may be) needed: create fill area, and convert cell-shape to cell-size vector needed by copyresultcell
+ fillv0(t);  // create 16 bytes of fill.
+// obsolete  mvc(sizeof(jt->fillv0),jt->fillv0,zfs,jt->fillv0);zfs is byte-length of 1 atom of result type
+ I zfs=(I)1<<klg; u[r]=zfs; DQ(r, u[i]=zfs*=u[i];)  // convert each atom of result-cell shape to the length in bytes of the corresponding cell; u->first length
+// obsolete  }
+ // Now move the results.  They may need conversion or fill
+ JMCDECL(endmask) JMCSETMASK(endmask,m<<klg,0)
+ for(i=0;i<n;++i){  // for each input box
+  y=v[i];   // get pointer to contents
 #if AUDITBOXAC
    if(!(AFLAG(w)&AFVIRTUALBOXED)&&AC(y)<0)SEGFAULT;
 #endif
-   if(!nonh)                MC(x,AV(y),AN(y)<<klg);  // homogeneous atomic types: fill only at end, copy the valid part
-   else if(TYPESEQ(t,AT(y))&&m==AN(y))MC(x,AV(y),q);   // cell of maximum size: copy it entire
-   else if(AN(y))             RZ(povtake(jt,cs,TYPESEQ(t,AT(y))?y:cvt(t,y),x));  // otherwise add fill
-   x+=q;
-  }
+  if(unlikely(!TYPESEQ(t,AT(y))))RZ(y=cvt(t,y));
+  if(AN(y)==m)JMCR(x,CAV(y),m<<klg,lbl,0,endmask)
+// obsolete MC(x,CAV(y),m<<klg);
+  else copyresultcell(jt,x,CAV(y),u,rescellrarg(zcs,r,AS(y),AR(y)),AS(y));
+  x+=m<<klg;  // advance output pointer by cell length
+// obsolete    if(!nonh)                MC(x,AV(y),AN(y)<<klg);  // homogeneous atomic types: fill only at end, copy the valid part
+// obsolete    else if(TYPESEQ(t,AT(y))&&m==AN(y))MC(x,AV(y),q);   // cell of maximum size: copy it entire
+// obsolete    else if(AN(y))             RZ(povtake(jt,cs,TYPESEQ(t,AT(y))?y:cvt(t,y),x));  // otherwise add fill
+// obsolete    x+=q;
  }
  EPILOG(z);
 }

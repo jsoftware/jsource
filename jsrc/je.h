@@ -693,7 +693,7 @@ extern A        jtfdef(J,I,C,I,AF,AF,A,A,A,I,I,I,I);
 #if !USECSTACK
 extern I        jtfdep(J,A);
 #endif
-extern void     jtfillv(J,I,I,C*);        /* "fill" name conflict on Mac             */
+extern void     jtfillv0(J,I);        /* "fill" name conflict on Mac             */
 extern A        jtfindnl(J,I);
 extern I        jtfnum(J,A);
 extern A        jtfolk(J,A,A,A);  /* "fork" name conflict under UNIX         */

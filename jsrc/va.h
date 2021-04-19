@@ -519,7 +519,7 @@ AHDR2(f,void,void,void){ I u,v;       \
      _mm256_storeu_pd(z, fuv); y=(C*)y+NPAR*SZI; z=(C*)z+NPAR*SZI; \
     ) \
    } \
-   u=_mm_extract_epi64(_mm256_castsi256_si128(u256),0); x=(C*)x+1; \
+   u=_mm_extract_epi64(_mm256_castsi256_si128(_mm256_castpd_si256(u256)),0); x=(C*)x+1; \
    DQ(((n-1)>>LGSZI)&(NPAR-1), v=*(I*)y; *(I*)z=pfx(u,v); y=(C*)y+SZI; z=(C*)z+SZI;)           \
    v=*(I*)y; u=pfx(u,v); STOREBYTES(z,u,(-n)&(SZI-1)); y=(I*)((UC*)y+(((n-1)&(SZI-1))+1)); z=(I*)((UC*)z+(((n-1)&(SZI-1))+1)); \
   ) \
@@ -531,7 +531,7 @@ AHDR2(f,void,void,void){ I u,v;       \
      _mm256_storeu_pd(z, fuv); x=(C*)x+NPAR*SZI; z=(C*)z+NPAR*SZI; \
     ) \
    } \
-   v=_mm_extract_epi64(_mm256_castsi256_si128(v256),0); y=(C*)y+1; \
+   v=_mm_extract_epi64(_mm256_castsi256_si128(_mm256_castpd_si256(v256)),0); y=(C*)y+1; \
    DQ(((n-1)>>LGSZI)&(NPAR-1), u=*(I*)x; *(I*)z=pfx(u,v); x=(C*)x+SZI; z=(C*)z+SZI;)         \
    u=*(I*)x; u=pfx(u,v); STOREBYTES(z,u,(-n)&(SZI-1)); x=(I*)((UC*)x+(((n-1)&(SZI-1))+1)); z=(I*)((UC*)z+(((n-1)&(SZI-1))+1)); \
   ) \

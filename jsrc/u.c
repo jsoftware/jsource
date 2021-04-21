@@ -272,9 +272,7 @@ void mvc(I m,void*z,I n,void*w){
    }
    if(unlikely((m&=-SZI)==0))R; --m;  // account for bytes moved; return if we have moved all; keep m as count-1
   }
-  /* copy last section, 1-4 Is. ll bits 00->4 bytes, 01->3 bytes, etc  */
   m&=(-NPAR*SZI);  /* m=start of last section, 1-4 Is */
-  _mm256_maskstore_epi64((I*)((C*)z+m),endmask,wd);
   /* store 128-byte sections, first one being 0, 4, 8, or 12 Is. There could be 0 to do */
   /* the 2s here are lg2(#duff cases).  With 8 cases we got 8% faster for in-place copy; not worth the extra prefetches normally? */
   UI n128=((m+((((I)1<<2)-1)<<(LGNPAR+LGSZI)))>>(LGNPAR+LGSZI+2));  /* # 128-byte blocks with data, could be 0 */
@@ -288,6 +286,9 @@ void mvc(I m,void*z,I n,void*w){
    if(--n128>0)goto lbl;
    }
   }
+  // copy last section, 1-4 Is. ll bits 00->4 bytes, 01->3 bytes, etc
+  // do it here so that the previous loop doesn't have back-to-back branches in the small loop, trying to save one lousy update of z
+  _mm256_maskstore_epi64((I*)z,endmask,wd);
   R;
  }
  // if argument doesn't fit into 32 bytes, fall through to slow way

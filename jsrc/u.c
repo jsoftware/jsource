@@ -223,6 +223,7 @@ I jtmaxtype(J jt,I s,I t){
 }
 
 // Copy m bytes from w to z, repeating every n bytes if n<m
+// This overfetches from z and w, but does not overstore z
 void mvc(I m,void*z,I n,void*w){
  if(unlikely(m==0))R;  // fast return if nothing to copy
 #if (C_AVX2&&SY_64) || EMU_AVX2
@@ -231,8 +232,7 @@ void mvc(I m,void*z,I n,void*w){
  // overhead; it repeatedly reads from memory needlessly, which will erroneously pull the filled area into caches.
  // If the argument can evenly fill up 32 bytes, we can load it into a register here and write repeatedly.
  // This is JMC without the reading.
- if((((n&-n&(2*NPAR*SZI-1))^n)+(m&(n-1)))==0){  // n is power of 2, and not > 32, and result area is a multiple of cells
-#if 1
+ if(likely((((n&-n&(2*NPAR*SZI-1))^n)+((m&(n-1))&(REPSGN(-(((I)z|m)&(SZI-1))))))==0)){  // n is power of 2, and not > 32, and (result area is a multiple of cells OR is I-aligned in address and length)
   PREFETCH(w);  /* start bringing in the start of data */ 
   __m256i endmask, wd; UI wdi;  // replicated data
   // replicate the input as needed to word size, then on up to 32-byte size
@@ -261,6 +261,8 @@ void mvc(I m,void*z,I n,void*w){
   if(unlikely(m--&(SZI-1))){  // convert m to len-1, but first see if there is a remnant
    // the last word is partially filled.  This could be the end of a long value, if the initial address was
    // misaligned; but it will not wrap over a cell boundary of an I or larger (since the input was an even multiple of cells of w)
+   // If target is a word multiple on a word boundary, it might not be an even multiple of cells but it can never come here either, since
+   // it will never have a remnant lees than a full I
    if(likely(n<=SZI)){
     // the cell is SZI or less.  It must end at the end of wdi, but may have multiple repeats.
     STOREBYTES((C*)z+(m&(-SZI)),wdi>>((~m&(SZI-1))<<BB),~m&(SZI-1));  // copy remnant, 1-8 bytes.  Discard discardable bytes from front of wdi
@@ -273,7 +275,7 @@ void mvc(I m,void*z,I n,void*w){
   /* copy last section, 1-4 Is. ll bits 00->4 bytes, 01->3 bytes, etc  */
   m&=(-NPAR*SZI);  /* m=start of last section, 1-4 Is */
   _mm256_maskstore_epi64((I*)((C*)z+m),endmask,wd);
-  /* copy 128-byte sections, first one being 0, 4, 8, or 12 Is. There could be 0 to do */
+  /* store 128-byte sections, first one being 0, 4, 8, or 12 Is. There could be 0 to do */
   /* the 2s here are lg2(#duff cases).  With 8 cases we got 8% faster for in-place copy; not worth the extra prefetches normally? */
   UI n128=((m+((((I)1<<2)-1)<<(LGNPAR+LGSZI)))>>(LGNPAR+LGSZI+2));  /* # 128-byte blocks with data, could be 0 */
   if(n128>0){ /* this test is worthwhile for short args */
@@ -287,21 +289,68 @@ void mvc(I m,void*z,I n,void*w){
    }
   }
   R;
-#endif
  }
  // if argument doesn't fit into 32 bytes, fall through to slow way
 #endif
+#if 0  // obsolete 
  I p=n,r;
  // first copy n bytes; thereafter p is the number of bytes we have copied; copy that amount again
  MC(z,w,MIN(p,m)); NOUNROLL while(m>p){r=m-p; MC(p+(C*)z,z,MIN(p,r)); p+=p;}
+#else
+ C *zz=z;  // running output pointer
+ if(n<SZI){
+  // if w has < 8 bytes, replicate it to Is, write them out up to an even multiple of Is.  n must be >= 2 here if we went through the bob-copy code above
+  //
+  I nbitsinw=n<<LGBB; UI wdmsk=(*(UI*)w<<(BW-nbitsinw))>>(BW-nbitsinw); // valid bits, and w data masked to just valid bytes
+  I shiftct=nbitsinw; I fullrepbits=nbitsinw; UI wdi=wdmsk;  // running shift count, number of bits in largest full rep of w, full word of data with repeats
+  wdi|=wdi<<shiftct; shiftct<<=1; fullrepbits=shiftct<BW?shiftct:fullrepbits; shiftct=shiftct<BW?shiftct:0;  // shift in another rep, remember if it fits, clear shift if not
+#if SY_64
+  wdi|=wdi<<shiftct; fullrepbits=n==3?6*BB:fullrepbits; // length 2/4 can set length to 2/4 bytes indiscriminately, as long as the data is filled in for the whole word
+#endif
+#if !((C_AVX2&&SY_64) || EMU_AVX2)
+  if(n==1){fullrepbits=BW; if(SY_64)wdi|=wdi<<32;}  // if n=1 possible, check for it
+#endif
 
-#if 0
- // if w has < 8 bytes, replicate it to Is, write them out up to an even multiple of Is
- t=0;
- while(m>t+
+  // Store even words, for an even # reps (to leave it at an even boundary) unless z ends first
+  I nwds=MIN(n<<4,(m-1)>>LGSZI); // # full words to move
+  I srct=BW-fullrepbits, slct=fullrepbits;
+  DQ(nwds, *(UI*)zz=wdi; zz+=SZI; wdi=(wdi>>srct)|((wdi>>srct)<<slct);)  // store and cycle the bytes
+  m-=nwds<<LGSZI;  // account for bytes moved
+  if(unlikely(m<=SZI)){
+   // nothing left but a remnant <= 1 word, finish it here
+   STOREBYTES(zz,wdi,SZI-m);  // # bytes is m, # to leave is SZI-m
+   R;
+  }
+  // there is more to do.  Housekeep the variables to indicate that we have a larger area in w
+  w=z;  // after this copy we will be copying from the beginning of the result area
+  n=nwds<<LGSZI;  // we moved w above; now set source size to len of repeated w data
+ }
+ I nn=n;  // length of current source buffer, as it expands.  MUST BE >= SZI now
+ I movlen=0;   // length moved from w in the final copy in the loop
  // copy as long as there is extra space in the output (or destination is an even word length), allowing overstore
+ if(m>SZI)while(1){
+  // if m and z are both I-aligned, we can move fullwords without actually getting an overstore
+  // Otherwise, we must limit the move to less than m to ensure overstore does not actually exceed the buffer boundary
+  I storelimit=m-(REPSGN(-((m|(I)zz)&(SZI-1)))&(SZI-1));  // m, backed up by SZI-1 if necessary
+  movlen=MIN(storelimit,nn);  // # bytes we can safely move
+  JMC(zz,w,movlen,lbl2,0)   // move allowing overstore
+  zz+=movlen;  // advance output pointer
+  m-=movlen;   // decrement length
+  if(m<=SZI)break;  // if we can't copy more, exit while we still point to the last buffer copied
+  I addlen=movlen; addlen=w==z?addlen:0; nn+=addlen;   // increase size of doubled buffer, except first time when we are not appending to previous move
+  w=z;  // from now on we move from the beginning of the output area and append to it
+ }
 
- // copy final remnant if any, 0-7 bytes
+ // copy final remnant if any, 0-SZI bytes
+ if(unlikely(m>0)){
+  // there is a remnant to insert without overstore.  It starts at offset movlen into w and runs for m bytes.  It may wrap the end of the buffer, or even start outside it
+  movlen=(movlen==nn)?0:movlen;  // if we fully copied w, wrap to 0 so we don't overfetch after w
+  UI wdi=*(UI*)((C*)w+movlen);  // pick up the next bytes to move, possibly with overfetch
+  if(unlikely(movlen+m>nn)){  // if the next move wraps the end of the buffer...
+   UI wrapi=*(UI*)w; I wrappos=(nn-movlen)<<LGBB; wdi=((wdi<<(BW-wrappos))>>(BW-wrappos))|(wrapi<<wrappos);  // join up the full value to store
+  }
+  STOREBYTES(zz,wdi,SZI-m);    // # bytes is m, # to leave is SZI-m
+ }
 #endif
 }
 

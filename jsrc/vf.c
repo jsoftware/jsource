@@ -43,12 +43,13 @@ F1(jtfiller){A z; ARGCHK1(w); I wt=AT(w); fillv0(wt); GA(z,wt,1,0,0);
 // obsolete static C fillactions[]={0, 1, 0,   0, 0, 4, 6, 7, 0, 0, 0,    1, 0, 0, 0, 4, 0, 2, 3};  // 011 010 000 100 000 000 000 001 000 000 000 111 110 100 000 000 000 001 000 = d0800200fa0008
 // obsolete #endif
 
-// fill fillv0 with default fills of type t to *v
+// Put at least 1 default fill of type t into jt->fillv0, and put its size into jt->fillv0len
 void jtfillv0(J jt,I t){I fillvalue0;
 // obsolete  I k=bplg(t);
+ jt->fillv0len=bpnoun(t);  // save the minimum fill-cell size
  if(likely(t&B01+LIT+INT+FL+CMPX+SB01+SLIT+SINT+SFL+SCMPX+SBT+BOX+SBOX)){  // normal case - direct num or LIT, or BOX
-  fillvalue0=t&LIT+SLIT?0x20*VALIDBOOLEAN:0; fillvalue0=t&BOX+SBOX?(I)mtv:fillvalue0;  // get SP or 0
-  *(I*)&jt->fillv0[0]=fillvalue0; *(I*)&jt->fillv0[SZI]=fillvalue0;  // copy to output
+  fillvalue0=t&LIT+SLIT?0x20*VALIDBOOLEAN:0; fillvalue0=t&BOX+SBOX?(I)mtv:fillvalue0;  // get SP or 0, of mtv for box
+  *(I*)&jt->fillv0[0]=fillvalue0; *(I*)&jt->fillv0[SZI]=fillvalue0;  // copy to output   scaf could just do 1 value, 1 byte long except for BOX
 #if !SY_64
   *(I*)&jt->fillv0[2*SZI]=fillvalue0; *(I*)&jt->fillv0[3*SZI]=fillvalue0;
 #endif

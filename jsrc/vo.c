@@ -192,7 +192,8 @@ static C *copyresultcell(J jt, C *z, C *w, I *sizes, I rf, I *s){I wadv;I r=rf>>
   }
  }
  // copy the fill, from z (new output pointer) to endoffill (end+1 of output cell)
- mvc(endoffill-z,z,sizeof(jt->fillv0),jt->fillv0);
+// obsolete  mvc(endoffill-z,z,sizeof(jt->fillv0),jt->fillv0);
+ mvc(endoffill-z,z,jt->fillv0len,jt->fillv0);  // use atom size of default fill
  R w;
 }
 

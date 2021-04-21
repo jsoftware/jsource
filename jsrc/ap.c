@@ -216,7 +216,7 @@ static B jtpscangt(J jt,I m,I d,I n,B*z,B*x,I apas){
  I a=apas&1, pp=(apas>>1)&1, pa=(apas>>2)&1, ps=apas>>3;  // extract values from mask
  if(d==1){I i;
   for(i=0;i<m;++i){
-   A t;B b,*cc="\000\001\000",e,*p=cc+pp,*v;B*u;I i,j;
+   A t;B b,*cc="\000\001\000\001\000\001\000\001\000",e,*p=cc+pp,*v;B*u;I i,j;  // *p must be overfetchable
    if(v=memchr(x,a,n)){
     j=v-x; b=j&1; 
     mvc(j,z,2L,p); memset(z+j,b^ps,n-j); z[j]=b^pa;
@@ -751,10 +751,10 @@ static DF2(jtinfixd){A z;C*x,*y;I c=0,d,k,m,n,p,q,r,*s,wr,*ws,wt,zc;
  }
  GA(z,wt,d*p*c,r,0); x=CAV(z); y=CAV(w);   // allocate result, set x=output pointer y=input pointer
  s=AS(z); s[0]=d; s[1]=zc; MCISH(s+2,1+ws,r-2);   // install shape
- k=c<<bplg(wt);   // k=#bytes in a cell of result
+ I katom=(I)1<<bplg(wt); k=c<<bplg(wt);   // k=#bytes in a cell of result
  if(likely(AN(z)!=0)){
   if(m>=0){ q=p*k; JMCDECL(endmask) JMCSETMASK(endmask,q,0) DQ(d, JMCR(x,y,q,lbl1,0,endmask) x+=q; y+=k;);  // m>0, overlapping inputs, copy them
-  }else{JMC(x,y,n*k,lbl2,0)  fillv0(wt); mvc(q*k,x+n*k,sizeof(jt->fillv0),jt->fillv0);    // nonoverlapping: copy en bloc and fill
+  }else{JMC(x,y,n*k,lbl2,0)  fillv0(wt); mvc(q*k,x+n*k,katom,jt->fillv0);    // nonoverlapping: copy en bloc and fill
   }
  }
  RETF(z);

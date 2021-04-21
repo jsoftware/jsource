@@ -223,9 +223,86 @@ I jtmaxtype(J jt,I s,I t){
 }
 
 // Copy m bytes from w to z, repeating every n bytes if n<m
-void mvc(I m,void*z,I n,void*w){I p=n,r;static I k=sizeof(D);  // ???
+void mvc(I m,void*z,I n,void*w){
+ if(unlikely(m==0))R;  // fast return if nothing to copy
+#if (C_AVX2&&SY_64) || EMU_AVX2
+ // The main use of mvc is memset and fill.
+ // The short version has some deficiencies: it calls memcpy repeatedly, which adds overhead, including alignment
+ // overhead; it repeatedly reads from memory needlessly, which will erroneously pull the filled area into caches.
+ // If the argument can evenly fill up 32 bytes, we can load it into a register here and write repeatedly.
+ // This is JMC without the reading.
+ if((((n&-n&(2*NPAR*SZI-1))^n)+(m&(n-1)))==0){  // n is power of 2, and not > 32, and result area is a multiple of cells
+#if 1
+  PREFETCH(w);  /* start bringing in the start of data */ 
+  __m256i endmask, wd; UI wdi;  // replicated data
+  // replicate the input as needed to word size, then on up to 32-byte size
+  if(likely(n<=SZI)){
+   wdi=*(I*)w; wdi<<=(SZI-n)<<LGBB; wdi>>=(SZI-n)<<LGBB;  // zero out bits above the size
+   I shiftamt=n<<LGBB; wdi|=(wdi<<(shiftamt&(7*BB))); shiftamt<<=1; wdi|=(wdi<<(shiftamt&(7*BB))); shiftamt<<=1; wdi|=(wdi<<(shiftamt&(7*BB)));  // replicate to word size
+   wd=_mm256_broadcastq_epi64(_mm_insert_epi64(_mm_setzero_si128(),wdi,0));  // further replicate to 32-byte size
+  }else if(n==2*SZI){  // 16 bytes to begin with
+   wd=_mm256_broadcastsi128_si256(_mm_loadu_si128((__m128i*)w));  // load em
+  }else{  // 32 bytes to begin with
+   wd=_mm256_loadu_si256((__m256i*)w);  // load em
+  }
+  // if the operation is long, move 2 blocks to align the store pointer
+  I misalign=(I)z&(NPAR*SZI-1);
+  if((UI)m>(((UI)misalign-1)|2*NPAR*SZI)){  // if store address is misaligned and length is > 2 stores...
+   _mm256_storeu_si256((__m256i*)z,wd); z=(C*)z+NPAR*SZI; _mm256_storeu_si256((__m256i*)z,wd);   // do the 2 stores
+   z=(C*)z+NPAR*SZI-misalign; m-=2*NPAR*SZI-misalign;
+   // if the misalignment was not a multiple of the size of the atoms, refetch the store value
+   if(unlikely(misalign&(n-1)))wd=_mm256_loadu_si256((__m256i*)((I)z-NPAR*SZI));
+  }
+  endmask=_mm256_loadu_si256((__m256i*)(validitymask+((-(m>>LGSZI))&(NPAR-1)))); // here byte-remnant is OPTIONAL so 00xxx->0->1111, 01xxx->3->1000, 10xxx->2->1100
+  /* copy the remnants at the end - bytes and Is.  Do this early because they have address conflicts that will take 20 */
+  /* cycles to sort out, and we can put that time into the switch and loop branch overhead */
+  /* First, the odd bytes if any */
+  /* if there is 1 byte to do low bits of ll are 0, which means protect 7 bytes, thus 0->7, 1->6, 7->0 */
+  if(unlikely(m--&(SZI-1))){  // convert m to len-1, but first see if there is a remnant
+   // the last word is partially filled.  This could be the end of a long value, if the initial address was
+   // misaligned; but it will not wrap over a cell boundary of an I or larger (since the input was an even multiple of cells of w)
+   if(likely(n<=SZI)){
+    // the cell is SZI or less.  It must end at the end of wdi, but may have multiple repeats.
+    STOREBYTES((C*)z+(m&(-SZI)),wdi>>((~m&(SZI-1))<<BB),~m&(SZI-1));  // copy remnant, 1-8 bytes.  Discard discardable bytes from front of wdi
+   }else{
+    // cell bigger than SZI.  Align data to end of input w
+    STOREBYTES((C*)z+(m&(-SZI)),*(I*)((C*)w+n-SZI+(~m&(SZI-1))),~m&(SZI-1));  // copy remnant, 1-8 bytes.  Discard discardable bytes from front of last SZI bytes of wd
+   }
+   if(unlikely((m&=-SZI)==0))R; --m;  // account for bytes moved; return if we have moved all; keep m as count-1
+  }
+  /* copy last section, 1-4 Is. ll bits 00->4 bytes, 01->3 bytes, etc  */
+  m&=(-NPAR*SZI);  /* m=start of last section, 1-4 Is */
+  _mm256_maskstore_epi64((I*)((C*)z+m),endmask,wd);
+  /* copy 128-byte sections, first one being 0, 4, 8, or 12 Is. There could be 0 to do */
+  /* the 2s here are lg2(#duff cases).  With 8 cases we got 8% faster for in-place copy; not worth the extra prefetches normally? */
+  UI n128=((m+((((I)1<<2)-1)<<(LGNPAR+LGSZI)))>>(LGNPAR+LGSZI+2));  /* # 128-byte blocks with data, could be 0 */
+  if(n128>0){ /* this test is worthwhile for short args */
+   switch((m>>(LGNPAR+LGSZI))&(((I)1<<2)-1)){
+   lbl: ;
+   case 0: _mm256_storeu_si256((__m256i*)z,wd); z=(C*)z+NPAR*SZI;
+   case 3: _mm256_storeu_si256((__m256i*)z,wd); z=(C*)z+NPAR*SZI;
+   case 2: _mm256_storeu_si256((__m256i*)z,wd); z=(C*)z+NPAR*SZI;
+   case 1: _mm256_storeu_si256((__m256i*)z,wd); z=(C*)z+NPAR*SZI;
+   if(--n128>0)goto lbl;
+   }
+  }
+  R;
+#endif
+ }
+ // if argument doesn't fit into 32 bytes, fall through to slow way
+#endif
+ I p=n,r;
  // first copy n bytes; thereafter p is the number of bytes we have copied; copy that amount again
  MC(z,w,MIN(p,m)); NOUNROLL while(m>p){r=m-p; MC(p+(C*)z,z,MIN(p,r)); p+=p;}
+
+#if 0
+ // if w has < 8 bytes, replicate it to Is, write them out up to an even multiple of Is
+ t=0;
+ while(m>t+
+ // copy as long as there is extra space in the output (or destination is an even word length), allowing overstore
+
+ // copy final remnant if any, 0-7 bytes
+#endif
 }
 
 // odometer, up to the n numbers s[]

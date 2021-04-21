@@ -127,7 +127,8 @@ typedef struct rngdata {
  A curname;          // current name, an A block containing an NM
  A nvra;             // data blocks that are in execution somewhere - always non-virtual, always rank 1, AS[0] holds current pointer
  I4 parsercalls;      /* # times parser was called          migrated             */
-// 4 bytes free
+ C fillv0len;   // length of fill installed in fillv0
+// 3 bytes free
 // end of cacheline 3
  I shapesink[2];     // garbage area used as load/store targets of operations we don't want to branch around migrated
 // things needed for allocation of large blocks
@@ -141,7 +142,7 @@ typedef struct rngdata {
 // things needed by execution of certain verbs
  A idothash0;        // 2-byte hash table for use by i.    migrated
  A idothash1;        // 4-byte hash table for use by i.    migrated
- A fill;             // fill     stuck here as filler
+ A fill;             // user fill atom
  C* fillv;            /* fill value                                      */
  C fillv0[sizeof(Z)];/* default fill value                              */
  RNG *rngdata;    // separately allocated block for RNG

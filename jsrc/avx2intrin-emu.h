@@ -153,6 +153,14 @@ static __emu_inline __emu__m256i __emu_mm256_broadcastq_epi64       ( __m128i a 
     return A.emu__m256i;
 }
 
+static __emu_inline __emu__m256i __emu_mm256_broadcastsi128_si256       ( __m128i a )
+{
+    __emv__m256i A;
+    A.__emu_m128[0] = a;
+    A.__emu_m128[1] = a;
+    return A.emu__m256i;
+}
+
 static __emu_inline __emu__m256i __emu_mm256_slli_epi64 ( __emu__m256i a, int imm )
 {
     __emv__m256i A;
@@ -397,6 +405,7 @@ static __emu_inline __emu__m256i __emu_mm256_cvtepu8_epi64(__m128i a)
 #undef _mm256_broadcastb_epi8
 #undef _mm256_broadcastd_epi32
 #undef _mm256_broadcastq_epi64
+#undef _mm256_broadcastsi128_si256
 #undef _mm256_cmpeq_epi64
 #undef _mm256_cmpeq_epi8
 #undef _mm256_cmpgt_epi32
@@ -432,6 +441,7 @@ static __emu_inline __emu__m256i __emu_mm256_cvtepu8_epi64(__m128i a)
 #define _mm256_broadcastb_epi8 __emu_mm256_broadcastb_epi8
 #define _mm256_broadcastd_epi32 __emu_mm256_broadcastd_epi32
 #define _mm256_broadcastq_epi64 __emu_mm256_broadcastq_epi64
+#define _mm256_broadcastsi128_si256 __emu_mm256_broadcastsi128_si256
 #define _mm256_cmpeq_epi64 __emu_mm256_cmpeq_epi64
 #define _mm256_cmpeq_epi8 __emu_mm256_cmpeq_epi8
 #define _mm256_cmpgt_epi32 __emu_mm256_cmpgt_epi32

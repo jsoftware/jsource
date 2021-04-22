@@ -413,7 +413,7 @@ finish:
 int rmdir2(J jt, const wchar_t *dir){A z;US*zv;
  SHFILEOPSTRUCTW sh;
  GATV0(z,C2T,wcslen(dir)+2,1); zv=USAV(z);
- memcpy(zv,dir,wcslen(dir)*sizeof(wchar_t));
+ MC(zv,dir,wcslen(dir)*sizeof(wchar_t));
  zv[1+wcslen(dir)]=zv[wcslen(dir)]=0;  // doubly null terminated string
  sh.hwnd   = NULL;
  sh.wFunc  = FO_DELETE;

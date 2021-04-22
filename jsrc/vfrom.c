@@ -501,7 +501,7 @@ F2(jtsfrom){
     default: ;
      // It is OK to pad to an I boundary, because any block with cells not a multiple of I is padded to an I
      C* RESTRICT zv=CAV(z); C *RESTRICT wv=CAV(w);     JMCDECL(endmask) JMCSETMASK(endmask,cellsize,0) 
-     DQ(AN(ind), JMCR(zv,wv+*iv++*cellsize,cellsize,loop1,0,endmask); zv+=cellsize;)  // use memcpy
+     DQ(AN(ind), JMCR(zv,wv+*iv++*cellsize,cellsize,loop1,0,endmask); zv+=cellsize;)
      break;
     }
     RETF(z);

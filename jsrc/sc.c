@@ -103,11 +103,11 @@ ASSERTSYS(AFLAG(thisname)&NAME,"nonrecursive name"); // scaf
  forcetomemory(&trackinfo);
  memset(trackinfo,' ',sizeof(trackinfo));  // clear name & locale
  UI wx=0, wlen;   // index/len we will write to
- wlen=AN(thisname); wlen=wlen+wx>sizeof(trackinfo)-3?sizeof(trackinfo)-3-wx:wlen; memcpy(trackinfo+wx,NAV(thisname)->s,wlen); wx+=wlen+1;  // copy in the full name
+ wlen=AN(thisname); wlen=wlen+wx>sizeof(trackinfo)-3?sizeof(trackinfo)-3-wx:wlen; MC(trackinfo+wx,NAV(thisname)->s,wlen); wx+=wlen+1;  // copy in the full name
  A locnm=LOCNAME(jt->global);  // name of current global locale
- wlen=AN(locnm); wlen=wlen+wx>sizeof(trackinfo)-2?sizeof(trackinfo)-2-wx:wlen; memcpy(trackinfo+wx,NAV(locnm)->s,wlen); wx+=wlen+1;  // copy in the locale name
+ wlen=AN(locnm); wlen=wlen+wx>sizeof(trackinfo)-2?sizeof(trackinfo)-2-wx:wlen; MC(trackinfo+wx,NAV(locnm)->s,wlen); wx+=wlen+1;  // copy in the locale name
  if(stabent&&stabent->sn>=0){
-  wlen=AN(AAV(JT(jt,slist))[stabent->sn]); wlen=wlen+wx>sizeof(trackinfo)-1?sizeof(trackinfo)-1-wx:wlen; memcpy(trackinfo+wx,CAV(AAV(JT(jt,slist))[stabent->sn]),wlen); wx+=wlen;  // copy in the locale name
+  wlen=AN(AAV(JT(jt,slist))[stabent->sn]); wlen=wlen+wx>sizeof(trackinfo)-1?sizeof(trackinfo)-1-wx:wlen; MC(trackinfo+wx,CAV(AAV(JT(jt,slist))[stabent->sn]),wlen); wx+=wlen;  // copy in the locale name
  }
  trackinfo[wx]=0;  // null-terminate the info
 #endif

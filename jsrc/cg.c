@@ -286,7 +286,7 @@ static DF2(jtcasei12){A vres,z;I gerit[128/SZI],ZZFLAGWORD;
      I blkitemct=AS(thisblk)[0];  // number of cells
      C *resptr=CAV(thisblk);  // running input pointer
      if(zk==SZI){DQ(blkitemct, *(I*)(zv+zk* *agrade)=*(I*)resptr; resptr+=zk; ++agrade;)   // copy words - could use scatter
-     }else{DQ(blkitemct, memcpy(zv+zk* *agrade,resptr,zk); resptr+=zk; ++agrade;)  // copy blocks
+     }else{DQ(blkitemct, MC(zv+zk* *agrade,resptr,zk); resptr+=zk; ++agrade;)  // copy blocks
      }
      ++blkx;  // advance to next input block
     }while(blkx!=nblkscreated);  // loop till all blocks processed

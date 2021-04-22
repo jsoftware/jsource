@@ -978,15 +978,13 @@ extern unsigned int __cdecl _clearfp (void);
  if(likely(ll>0)){ /* an empty vector has no guaranteed pad */ \
   ll+=SZI*(1-bytelen)-1; /* len-1 to move, rounded up if moving qwords */  \
   /* copy the remnants at the end - bytes and Is.  Do this early because they have address conflicts that will take 20 */ \
-  /* cycles to sort out, and we can put that time into the switch and loop branch overhead */ \
+  /* cycles to sort out, and we can put that time into the switch and loop branch overhead  NO - see below */ \
   /* First, the odd bytes if any */ \
   /* if there is 1 byte to do low bits of ll are 0, which means protect 7 bytes, thus 0->7, 1->6, 7->0 */ \
   if(bytelen!=0)STOREBYTES((C*)dst+(ll&(-SZI)),*(UI*)((C*)src+(ll&(-SZI))),~ll&(SZI-1));  /* copy remnant, 1-8 bytes. */ \
   /* copy up till last section */ \
   if(likely((ll-=SZI)>=0)||(bytelen==0)){  /* reduce ll by # bytes processed above, 1-8 (if bytelen), 0 if !bytelen (discarding garbage length).  Any left? */ \
-   /* copy last section, 1-4 Is. ll bits 00->4 bytes, 01->3 bytes, etc  */ \
    ll&=(-NPAR*SZI);  /* ll=start of last section, 1-4 Is */ \
-   _mm256_maskstore_epi64((I*)((C*)dst+ll),mskname,_mm256_maskload_epi64((I*)((C*)src+ll),mskname)); \
    /* copy 128-byte sections, first one being 0, 4, 8, or 12 Is. There could be 0 to do */ \
    /* the 2s here are lg2(#duff cases).  With 8 cases we got 8% faster for in-place copy; not worth the extra prefetches normally? */ \
    UI n128=((ll+((((I)1<<2)-1)<<(LGNPAR+LGSZI)))>>(LGNPAR+LGSZI+2));  /* # 128-byte blocks with data, could be 0 */ \
@@ -1000,6 +998,8 @@ extern unsigned int __cdecl _clearfp (void);
     if(--n128>0)goto lbl; \
     } \
    } \
+   /* copy last section, 1-4 Is. ll bits 00->4 Is, 01->3 Is, etc  Do last so that previous loop doesn't have back-to-back branches  */ \
+   _mm256_maskstore_epi64((I*)dst,mskname,_mm256_maskload_epi64((I*)src,mskname)); \
   } \
  } \
 }

@@ -88,7 +88,7 @@ void memhashadd(I lineno, C *string){
  string+=strlen(string);  // go to end
  NOUNROLL while(string[-1]!='/' && string[-1]!='\\')--string;  // back up to filename
  I nwrit=snprintf(string8,8,"%lld",lineno);
- memcpy(string8+nwrit,string,MIN(8-nwrit,(I)strlen(string)));
+ MC(string8+nwrit,string,MIN(8-nwrit,(I)strlen(string)));
  I stringi=*(I*)&string8;  // the string as int
  UI hash=16383&hic(sizeof(string8),string8);
  NOUNROLL while(1){if(histarea[hash][0]==stringi)break; if(histarea[hash][0]==0){histarea[hash][0]=stringi; break;} if(--hash<0)hash=16383;}  // find hash slot
@@ -1115,7 +1115,7 @@ RESTRICTF A jtgafv(J jt, I bytes){UI4 j;
 }
 
 RESTRICTF A jtga(J jt,I type,I atoms,I rank,I* shaape){A z;
- // Get the number of bytes needed, including the header, the atoms, and a full I appended for types that require a
+ // Get the number of bytes needed-1, including the header, the atoms, and a full I appended for types that require a
  // trailing NUL (because boolean-op code needs it)
  I bpt; if(likely(CTTZ(type)<=C4TX))bpt=bpnoun(type);else bpt=bp(type);
  I bytes = ALLOBYTESVSZ(atoms,rank,bpt,type&LAST0,0);  // We never use GA for NAME types, so we don't need to check for it

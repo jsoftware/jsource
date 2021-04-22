@@ -300,7 +300,7 @@ void mvc(I m,void*z,I n,void*w){
 #else
  C *zz=z;  // running output pointer
  if(n<SZI){
-  // if w has < 8 bytes, replicate it to Is, write them out up to an even multiple of Is.  n must be >= 2 here if we went through the bob-copy code above
+  // if w has < 8 bytes, replicate it to Is, write them out up to an even multiple of Is.  n must be >= 2 here if we went through the non-copy code above
   //
   I nbitsinw=n<<LGBB; UI wdmsk=(*(UI*)w<<(BW-nbitsinw))>>(BW-nbitsinw); // valid bits, and w data masked to just valid bytes
   I shiftct=nbitsinw; I fullrepbits=nbitsinw; UI wdi=wdmsk;  // running shift count, number of bits in largest full rep of w, full word of data with repeats
@@ -309,7 +309,7 @@ void mvc(I m,void*z,I n,void*w){
   wdi|=wdi<<shiftct; fullrepbits=n==3?6*BB:fullrepbits; // length 2/4 can set length to 2/4 bytes indiscriminately, as long as the data is filled in for the whole word
 #endif
 #if !((C_AVX2&&SY_64) || EMU_AVX2)
-  if(n==1){fullrepbits=BW; if(SY_64)wdi|=wdi<<32;}  // if n=1 possible, check for it
+  if(n==1){fullrepbits=BW; wdi|=wdi<<(BW/2);}  // if n=1 possible, check for it
 #endif
 
   // Store even words, for an even # reps (to leave it at an even boundary) unless z ends first

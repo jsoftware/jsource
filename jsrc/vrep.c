@@ -190,7 +190,7 @@ static REPF(jtrep1d){A z;C*wv,*zv;I c,k,m,n,p=0,q,t,*ws,zk,zn;
  if(t&B01){p=bsum(m,BAV(a)); // bsum in case a is big.  Atomic boolean was handled earlier
  }else{I*x; 
   RZ(a=vi(a)); x=AV(a); 
-  DO(m, ASSERT(0<=x[i],EVDOMAIN); p+=x[i]; ASSERT(0<=p,EVLIMIT););  // p=#items in result
+  DO(m, ASSERT(0<=x[i],EVDOMAIN); p+=x[i]; ASSERT(0<=p,EVLIMIT););  // p=#items in result  scaf should use scan
  }
  DPMULDE(p,n,q);  // q=length of result item  axis.  +/a copies, each of length n
  DPMULDE(p,AN(w),zn);

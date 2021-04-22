@@ -44,7 +44,7 @@
 #define SETTRACK memset(trackinfo,' ',sizeof(trackinfo)); wx=0; \
  wlen=sprintf(trackinfo,"%d: ",cw[i].source); wx+=wlen; trackinfo[wx++]=' '; \
  AK(trackbox)=(C*)queue-(C*)trackbox; AN(trackbox)=AS(trackbox)[0]=m; trackstg=unparse(trackbox); \
- wlen=AN(trackstg); wlen=wlen+wx>sizeof(trackinfo)-1?sizeof(trackinfo)-1-wx:wlen; memcpy(trackinfo+wx,CAV(trackstg),wlen); wx+=wlen; \
+ wlen=AN(trackstg); wlen=wlen+wx>sizeof(trackinfo)-1?sizeof(trackinfo)-1-wx:wlen; MC(trackinfo+wx,CAV(trackstg),wlen); wx+=wlen; \
  trackinfo[wx]=0;  // null-terminate the info
 #else
 #define SETTRACK

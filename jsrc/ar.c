@@ -229,15 +229,19 @@ REDUCCPFX(tymesinsO, D, I, TYMESO)
  /* prim/ vectors */ \
  __m256d idreg=_mm256_broadcast_sd(&identity); \
  endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
- DQ(m, I n0=(n-1)>>LGNPAR; __m256d acc0=idreg; __m256d acc1=idreg; __m256d acc2=idreg; __m256d acc3=idreg; \
-  if(n0>0){ \
-   switch(n0&3){ \
+ DQ(m, __m256d acc0=idreg; __m256d acc1=idreg; __m256d acc2=idreg; __m256d acc3=idreg; \
+  UI n2=DUFFLPCT(n-1,2);  /* # turns through duff loop */ \
+  if(n2>0){ \
+   UI backoff=DUFFBACKOFF(n-1,2); \
+   x+=(backoff+1)*NPAR; \
+   switch(backoff){ \
    loopback: \
-   case 0: acc0=prim(acc0,_mm256_loadu_pd(x)); x+=NPAR; \
-   case 3: acc1=prim(acc1,_mm256_loadu_pd(x)); x+=NPAR; \
-   case 2: acc2=prim(acc2,_mm256_loadu_pd(x)); x+=NPAR; \
-   case 1: acc3=prim(acc3,_mm256_loadu_pd(x)); x+=NPAR; \
-   if((n0-=4)>0)goto loopback; \
+   case -1: acc0=prim(acc0,_mm256_loadu_pd(x)); \
+   case -2: acc1=prim(acc1,_mm256_loadu_pd(x+1*NPAR)); \
+   case -3: acc2=prim(acc2,_mm256_loadu_pd(x+2*NPAR)); \
+   case -4: acc3=prim(acc3,_mm256_loadu_pd(x+3*NPAR)); \
+   x+=4*NPAR; \
+   if(--n2!=0)goto loopback; \
    } \
   } \
   acc0=prim(acc0,_mm256_blendv_pd(idreg,_mm256_maskload_pd(x,endmask),_mm256_castsi256_pd(endmask))); x+=((n-1)&(NPAR-1))+1; \
@@ -380,14 +384,21 @@ DF1(jtcompsum){
   // rank-1 case: operate across the row, with 4 accumulators
   endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */
   for(;m>0;--m){
-   I n0=(n-1)>>LGNPAR; __m256d acc0=idreg; __m256d acc1=idreg; __m256d acc2=idreg; __m256d acc3=idreg;
+   __m256d acc0=idreg; __m256d acc1=idreg; __m256d acc2=idreg; __m256d acc3=idreg;
    __m256d c0=idreg; __m256d c1=idreg; __m256d c2=idreg; __m256d c3=idreg;  // error terms
    __m256d y;  __m256d t;   // new input value, temp to hold high part of sum
-   if(n0>0){
-    switch(n0&3){
+   UI n2=DUFFLPCT(n-1,2);  /* # turns through duff loop */
+   if(n2>0){
+    UI backoff=DUFFBACKOFF(n-1,2);
+    wv+=(backoff+1)*NPAR;
+    switch(backoff){
     loopback:
-    case 0: KAHAN(_mm256_loadu_pd(wv),0) wv+=NPAR; case 3: KAHAN(_mm256_loadu_pd(wv),1) wv+=NPAR; case 2: KAHAN(_mm256_loadu_pd(wv),2) wv+=NPAR; case 1: KAHAN(_mm256_loadu_pd(wv),3) wv+=NPAR;
-    if((n0-=4)>0)goto loopback;
+    case -1: KAHAN(_mm256_loadu_pd(wv),0)
+    case -2: KAHAN(_mm256_loadu_pd(wv+1*NPAR),0)
+    case -3: KAHAN(_mm256_loadu_pd(wv+2*NPAR),0)
+    case -4: KAHAN(_mm256_loadu_pd(wv+3*NPAR),0)
+    wv+=4*NPAR;
+    if(--n2!=0)goto loopback;
     }
    }
    KAHAN(_mm256_maskload_pd(wv,endmask),0) wv+=((n-1)&(NPAR-1))+1;

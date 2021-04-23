@@ -1130,20 +1130,29 @@ extern unsigned int __cdecl _clearfp (void);
  } \
  endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n0)&(NPAR-1)))); \
  if(!((parms)&1)){ \
-  UI n1=(n0-1)>>LGNPAR;   /* # PAR-blocks for 0 1 2 3 4 5 is x 0 0 0 0 1 */\
-             /* __SSE2__ # PAR-blocks for 0 1 2 3 4 5 is x 1 0 1 0 1 */ \
-  if(n1>0){ \
-   UI n2=(n1+3)>>2; /* # 4-blocks (first is short) */ \
-   switch(n1&3){ \
+  UI n2=DUFFLPCT(n0-1,3);  /* # turns through duff loop */ \
+  if(n2>0){ \
+   UI backoff=DUFFBACKOFF(n0-1,3); \
+   x+=(backoff+1)*NPAR; z+=(backoff+1)*NPAR; \
+   switch(backoff){ \
    lbl: \
-   case 0: \
-    u=_mm256_loadu_pd(x); loopbody _mm256_storeu_pd(z, u); x+=NPAR; z+=NPAR;  \
-   case 3: \
-    u=_mm256_loadu_pd(x); loopbody _mm256_storeu_pd(z, u); x+=NPAR; z+=NPAR;  \
-   case 2: \
-    u=_mm256_loadu_pd(x); loopbody _mm256_storeu_pd(z, u); x+=NPAR; z+=NPAR;  \
-   case 1: \
-    u=_mm256_loadu_pd(x); loopbody _mm256_storeu_pd(z, u); x+=NPAR; z+=NPAR;  \
+   case -1: \
+    u=_mm256_loadu_pd(x); loopbody _mm256_storeu_pd(z, u);  \
+   case -2: \
+    u=_mm256_loadu_pd(x+1*NPAR); loopbody _mm256_storeu_pd(z+1*NPAR, u);  \
+   case -3: \
+    u=_mm256_loadu_pd(x+2*NPAR); loopbody _mm256_storeu_pd(z+2*NPAR, u);  \
+   case -4: \
+    u=_mm256_loadu_pd(x+3*NPAR); loopbody _mm256_storeu_pd(z+3*NPAR, u);  \
+   case -5: \
+    u=_mm256_loadu_pd(x+4*NPAR); loopbody _mm256_storeu_pd(z+4*NPAR, u);  \
+   case -6: \
+    u=_mm256_loadu_pd(x+5*NPAR); loopbody _mm256_storeu_pd(z+5*NPAR, u);  \
+   case -7: \
+    u=_mm256_loadu_pd(x+6*NPAR); loopbody _mm256_storeu_pd(z+6*NPAR, u);  \
+   case -8: \
+    u=_mm256_loadu_pd(x+7*NPAR); loopbody _mm256_storeu_pd(z+7*NPAR, u);  \
+   x+=8*NPAR; z+=8*NPAR; \
    if(--n2!=0)goto lbl; \
    } \
   } \

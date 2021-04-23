@@ -994,18 +994,20 @@ extern unsigned int __cdecl _clearfp (void);
   if(bytelen!=0)STOREBYTES((C*)dst+(ll&(-SZI)),*(UI*)((C*)src+(ll&(-SZI))),~ll&(SZI-1));  /* copy remnant, 1-8 bytes. */ \
   /* copy up till last section */ \
   if(likely((ll-=SZI)>=0)||(bytelen==0)){  /* reduce ll (=len-1) by # bytes processed above, 1-8 (if bytelen), 0 if !bytelen (discarding garbage length).  Any left? */ \
-   ll&=(-NPAR*SZI);  /* ll=start of last section, 1-4 Is */ \
+/* obsolete    ll&=(-NPAR*SZI);  ll=start of last section, 1-4 Is */ \
    /* copy 128-byte sections, first one being 0, 4, 8, or 12 Is. There could be 0 to do */ \
-   /* the 2s here are lg2(#duff cases).  With 8 cases we got 8% faster for in-place copy; not worth the extra prefetches normally? */ \
-   UI n128=((ll+((((I)1<<2)-1)<<(LGNPAR+LGSZI)))>>(LGNPAR+LGSZI+2));  /* # 128-byte blocks with data, could be 0 */ \
-   if(n128>0){ /* this test is worthwhile for short args */ \
-    switch((ll>>(LGNPAR+LGSZI))&(((I)1<<2)-1)){ \
+   UI n2=DUFFLPCT(ll>>LGSZI,2);  /* # turns through duff loop */ \
+   if(n2>0){ \
+    UI backoff=DUFFBACKOFF(ll>>LGSZI,2); \
+    dst=(C*)dst+(backoff+1)*NPAR*SZI; src=(C*)src+(backoff+1)*NPAR*SZI; \
+    switch(backoff){ \
     lbl: ; \
-    case 0: _mm256_storeu_si256((__m256i*)dst,_mm256_loadu_si256((__m256i*)src)); dst=(C*)dst+NPAR*SZI; src=(C*)src+NPAR*SZI; \
-    case 3: _mm256_storeu_si256((__m256i*)dst,_mm256_loadu_si256((__m256i*)src)); dst=(C*)dst+NPAR*SZI; src=(C*)src+NPAR*SZI; \
-    case 2: _mm256_storeu_si256((__m256i*)dst,_mm256_loadu_si256((__m256i*)src)); dst=(C*)dst+NPAR*SZI; src=(C*)src+NPAR*SZI; \
-    case 1: _mm256_storeu_si256((__m256i*)dst,_mm256_loadu_si256((__m256i*)src)); dst=(C*)dst+NPAR*SZI; src=(C*)src+NPAR*SZI; \
-    if(--n128>0)goto lbl; \
+    case -1: _mm256_storeu_si256((__m256i*)dst,_mm256_loadu_si256((__m256i*)src)); \
+    case -2: _mm256_storeu_si256((__m256i*)((C*)dst+1*NPAR*SZI),_mm256_loadu_si256((__m256i*)((C*)src+1*NPAR*SZI))); \
+    case -3: _mm256_storeu_si256((__m256i*)((C*)dst+2*NPAR*SZI),_mm256_loadu_si256((__m256i*)((C*)src+2*NPAR*SZI))); \
+    case -4: _mm256_storeu_si256((__m256i*)((C*)dst+3*NPAR*SZI),_mm256_loadu_si256((__m256i*)((C*)src+3*NPAR*SZI))); \
+    dst=(C*)dst+4*NPAR*SZI; src=(C*)src+4*NPAR*SZI; \
+    if(--n2>0)goto lbl; \
     } \
    } \
    /* copy last section, 1-4 Is. ll bits 00->4 Is, 01->3 Is, etc  Do last so that previous loop doesn't have back-to-back branches  */ \

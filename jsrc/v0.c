@@ -345,13 +345,11 @@ DF2(jtpoly2){F2PREFIP;A c,za;I b;D*ad,d,p,*x,u,*z;I an,at,j,t,n,wt;Z*az,e,q,*wz,
   case 2:
 #if SLEEF
    if(postfn)
-   {AVXATOMLOOPPIPE(
+   {AVXATOMLOOP(1,lbl2a,
     __m256d a0;__m256d t0;  t0=_mm256_broadcast_sd(&ad[1]);
     a0=_mm256_broadcast_sd(&ad[0]);
 ,
-    zt=MUL_ACC(a0,u,t0);
-,
-    u=Sleef_expd4(zu);
+     u=Sleef_expd4(MUL_ACC(a0,u,t0));
 ,
    )NAN0; }
    else
@@ -366,13 +364,11 @@ DF2(jtpoly2){F2PREFIP;A c,za;I b;D*ad,d,p,*x,u,*z;I an,at,j,t,n,wt;Z*az,e,q,*wz,
   case 3:
 #if SLEEF
    if(postfn)
-   {AVXATOMLOOPPIPE(
+   {AVXATOMLOOP(1,lbl3a,
     __m256d a0;__m256d a1;__m256d t0;__m256d t; t0=_mm256_broadcast_sd(&ad[2]);
     a1=_mm256_broadcast_sd(&ad[1]); a0=_mm256_broadcast_sd(&ad[0]);
 ,
-    t=t0; t=MUL_ACC(a1,u,t); zt=MUL_ACC(a0,u,t);
-,
-    u=Sleef_expd4(zu);
+    t=t0; t=MUL_ACC(a1,u,t); u=Sleef_expd4(MUL_ACC(a0,u,t));
 ,
    )NAN0; }
    else

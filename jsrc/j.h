@@ -800,12 +800,22 @@ extern unsigned int __cdecl _clearfp (void);
 // Here for native instruction support
 #define CVTEPI64(z,u) z=_mm256_cvtepi64_pd(_mm256_castpd_si256(u));
 #endif
+// # turns through a Duff loop of m1+1 elements, with 2<<lgduff instances in the loop.  We assume we are handling [1,NPAR] elements at the end
+#define DUFFLPCT(m1,lgduff) ((((m1)+((((I)1<<(lgduff))-1)<<LGNPAR))>>(LGNPAR+(lgduff))))
+// calculate the (backoff-1) in elements for the first pass through the Duff loop.  This (negative) value+1 must be added to the initial addresses
+#define DUFFBACKOFF(m1,lgduff) ((((m1)>>LGNPAR)-1)|-((I)1<<(lgduff)))  // 0->-1, 7->-2, 1->-8
+// offset by n items
+#define OFFSETBID(ad,n,commute,id,bi,bd) (D*)((I)ad+((I)(n)<<(((commute)&((bi)|(bd)))?0:LGSZD)))
 // increment address by n items
-#define INCRBID(ad,n,commute,id,bi,bd) ad=(D*)((I)ad+((I)(n)<<(((commute)&((bi)|(bd)))?0:LGSZD)));
+#define INCRBID(ad,n,commute,id,bi,bd) ad=OFFSETBID(ad,n,commute,id,bi,bd);
 // load 4 atoms.  For boolean each lane looks at a different byte
-#define LDBID(z,ad,commute,id,bi,bd) {if((commute)&((bi)|(bd))){z=_mm256_broadcast_sd(ad); if((commute)&(bi))z=_mm256_castsi256_pd(_mm256_cvtepu8_epi64(_mm256_castsi256_si128(_mm256_castpd_si256(z))));} else z=_mm256_loadu_pd(ad); }
+#define LDBID(z,ad,commute,id,bi,bd) {if((commute)&((bi)|(bd))){z=_mm256_broadcast_sd(ad); \
+                                      if((commute)&(bi))z=_mm256_castsi256_pd(_mm256_cvtepu8_epi64(_mm256_castsi256_si128(_mm256_castpd_si256(z))));} else z=_mm256_loadu_pd(ad); }
+#define LDOBID(z,ad,n,commute,id,bi,bd) {if((commute)&((bi)|(bd))){z=_mm256_broadcast_sd(OFFSETBID(ad,n,commute,id,bi,bd))); \
+                                      if((commute)&(bi))z=_mm256_castsi256_pd(_mm256_cvtepu8_epi64(_mm256_castsi256_si128(_mm256_castpd_si256(z))));} else z=_mm256_loadu_pd(OFFSETBID(ad,n,commute,id,bi,bd))); }
 // load 4 atoms. masking.  For boolean each lane looks at a different byte
-#define LDBIDM(z,ad,commute,id,bi,bd,endmask) {if((commute)&((bi)|(bd))){z=_mm256_broadcast_sd(ad); if((commute)&(bi))z=_mm256_castsi256_pd(_mm256_cvtepu8_epi64(_mm256_castsi256_si128(_mm256_castpd_si256(z))));} else z=_mm256_maskload_pd(ad,endmask); }
+#define LDBIDM(z,ad,commute,id,bi,bd,endmask) {if((commute)&((bi)|(bd))){z=_mm256_broadcast_sd(ad); \
+                                               if((commute)&(bi))z=_mm256_castsi256_pd(_mm256_cvtepu8_epi64(_mm256_castsi256_si128(_mm256_castpd_si256(z))));} else z=_mm256_maskload_pd(ad,endmask); }
 // load 1 atom into all lanes
 #define LDBID1(z,ad,commute,id,bi,bd) {z=_mm256_broadcast_sd(ad);}
 // convert a LDBID/LDBIDM to D or I.  Only the LSB of each B can be set.  0x400 turns -1 to 1, for multiplication
@@ -983,7 +993,7 @@ extern unsigned int __cdecl _clearfp (void);
   /* if there is 1 byte to do low bits of ll are 0, which means protect 7 bytes, thus 0->7, 1->6, 7->0 */ \
   if(bytelen!=0)STOREBYTES((C*)dst+(ll&(-SZI)),*(UI*)((C*)src+(ll&(-SZI))),~ll&(SZI-1));  /* copy remnant, 1-8 bytes. */ \
   /* copy up till last section */ \
-  if(likely((ll-=SZI)>=0)||(bytelen==0)){  /* reduce ll by # bytes processed above, 1-8 (if bytelen), 0 if !bytelen (discarding garbage length).  Any left? */ \
+  if(likely((ll-=SZI)>=0)||(bytelen==0)){  /* reduce ll (=len-1) by # bytes processed above, 1-8 (if bytelen), 0 if !bytelen (discarding garbage length).  Any left? */ \
    ll&=(-NPAR*SZI);  /* ll=start of last section, 1-4 Is */ \
    /* copy 128-byte sections, first one being 0, 4, 8, or 12 Is. There could be 0 to do */ \
    /* the 2s here are lg2(#duff cases).  With 8 cases we got 8% faster for in-place copy; not worth the extra prefetches normally? */ \
@@ -1145,6 +1155,7 @@ extern unsigned int __cdecl _clearfp (void);
  x+=((n0-1)&(NPAR-1))+1; z+=((n0-1)&(NPAR-1))+1; \
  postloop
 
+#if 0 // obsolete
 // version that pipelines one read ahead.  Input to loopbody2 is zu; result of loopbody1 is in zt
 #define AVXATOMLOOPPIPE(preloop,loopbody1,loopbody2,postloop) \
  __m256i endmask;  __m256d u, zt, zu; \
@@ -1182,6 +1193,7 @@ extern unsigned int __cdecl _clearfp (void);
  loopbody \
  _mm256_maskstore_pd(z, endmask, u); \
  postloop
+#endif
 
 #elif defined(__GNUC__)   // vector extension
 
@@ -1268,7 +1280,7 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x
  vec_maskstore_pd(z, endmask, u); \
  x+=((n-1)&(NPAR-1))+1; z+=((n-1)&(NPAR-1))+1; \
  postloop
-
+#if 0 // obsolete 
 // version that pipelines one read ahead.  Input to loopbody2 is zu; result of loopbody1 is in zt
 #define AVXATOMLOOPPIPE(preloop,loopbody1,loopbody2,postloop) \
  int64x2_t endmask;  float64x2_t u, zt, zu; \
@@ -1302,7 +1314,7 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x
  loopbody \
  _mm_maskstore_pd(z, endmask, u); \
  postloop
-
+#endif
 #endif
 
 #define NUMMAX          9    // largest number represented in num[]

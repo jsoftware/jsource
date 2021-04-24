@@ -262,7 +262,7 @@ void mvc(I m,void*z,I n,void*w){
    // the last word is partially filled.  This could be the end of a long value, if the initial address was
    // misaligned; but it will not wrap over a cell boundary of an I or larger (since the input was an even multiple of cells of w)
    // If target is a word multiple on a word boundary, it might not be an even multiple of cells but it can never come here either, since
-   // it will never have a remnant lees than a full I
+   // it will never have a remnant less than a full I
    if(likely(n<=SZI)){
     // the cell is SZI or less.  It must end at the end of wdi, but may have multiple repeats.
     STOREBYTES((C*)z+(m&(-SZI)),wdi>>((~m&(SZI-1))<<BB),~m&(SZI-1));  // copy remnant, 1-8 bytes.  Discard discardable bytes from front of wdi
@@ -314,7 +314,7 @@ void mvc(I m,void*z,I n,void*w){
   if(n==1){fullrepbits=BW; wdi|=wdi<<(BW/2);}  // if n=1 possible, check for it
 #endif
 
-  // Store even words, for an even # reps (to leave it at an even boundary) unless z ends first
+  // Store full words, for an aliquot # reps (to leave it at an even boundary) unless z ends first
   I nwds=MIN(n<<4,(m-1)>>LGSZI); // # full words to move
   I srct=BW-fullrepbits, slct=fullrepbits;
   DQ(nwds, *(UI*)zz=wdi; zz+=SZI; wdi=(wdi>>srct)|((wdi>>srct)<<slct);)  // store and cycle the bytes

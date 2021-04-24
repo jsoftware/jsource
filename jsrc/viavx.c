@@ -1536,43 +1536,67 @@ static IOFXWS(jtio42w,I,US)  static IOFXWS(jtio44w,I,UI4)  // INT-sized items, u
 // min and max are initial values for min/max
 #if C_AVX2 || EMU_AVX2
 CR condrange(I *s,I n,I min,I max,I maxrange){CR ret;
- if(!n)goto fail;
- I nqw=(n-1)>>LGNPAR;  // number of full qwords
+ if(unlikely(n==0))goto fail;
+ I nqw=(n-1)>>LGNPAR;  // number of full-or-partial widewords-1
  __m256i min0=_mm256_broadcastq_epi64(_mm_insert_epi64(_mm_setzero_si128(),min,0));  // atoms between cells
  __m256i max0=_mm256_broadcastq_epi64(_mm_insert_epi64(_mm_setzero_si128(),max,0));  // atoms between cells
- __m256i min1, max1;
+ __m256i min1, max1, min2=min0, max2=max0, min3=min0, max3=max0;
  __m256i maxmask = _mm256_loadu_si256((__m256i const *)(validitymask+6));  // 0 0 ffff ffff for sign switching
  __m256i endmask= _mm256_loadu_si256((__m256i const *)(validitymask+((-n)&(NPAR-1))));
 // obsolete  min0=_mm256_set1_epi64x(min); max0=_mm256_set1_epi64x(max);
- if(nqw--){
-  // read the last batch into min/max1
+ if(nqw--){  // if there are at least 2 blocks...
+  // nqw is now #blocks-2, because we are going to read the last one in here, leaving one less to process 
+  // read the last batch into min/max1.  It might well hold the biggest or smallest values
   min1 = max1 = _mm256_loadu_si256((__m256i const *)(s+(nqw<<LGNPAR)));
+  // since we just read the last full block, nqw is now the number yet to do-1 (including the ending masked block), i. e. nqw is # full blocks to do
   I batchsize = 16;  // number of batches to read before checking for range exceeded
-  while(nqw>0){
+  while(nqw>0){  // at least 2 blocks left - we will always leave the last one for the masked load
    I compn=batchsize; compn=compn+120>nqw?nqw:compn;  // number to read before combining values.  A break+compare costs the same as 30 batches
    nqw-=compn;  // decr for all the reads we will make
-   do{
-    __m256i temp = _mm256_loadu_si256((__m256i const *)s); s+=NPAR;  // read next batch & advance
-    min0 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(min0),_mm256_castsi256_pd(temp),_mm256_castsi256_pd(_mm256_cmpgt_epi64(min0,temp))));  // if min>temp, take temp
-    max0 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(temp),_mm256_castsi256_pd(max0),_mm256_castsi256_pd(_mm256_cmpgt_epi64(max0,temp))));  // if max>temp, take max
-    if(!--compn)break;
-    temp = _mm256_loadu_si256((__m256i const *)s); s+=NPAR;  // read next batch & advance
-    min1 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(min1),_mm256_castsi256_pd(temp),_mm256_castsi256_pd(_mm256_cmpgt_epi64(min1,temp))));  // if min>temp, take temp
-    max1 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(temp),_mm256_castsi256_pd(max1),_mm256_castsi256_pd(_mm256_cmpgt_epi64(max1,temp))));  // if max>temp, take max
-   }while(--compn);
+#define TAKEMINOF(z,x)  z = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(z),_mm256_castsi256_pd(x),_mm256_castsi256_pd(_mm256_cmpgt_epi64(z,x))));  // if min>temp, take temp
+#define TAKEMAXOF(z,x)  z = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(x),_mm256_castsi256_pd(z),_mm256_castsi256_pd(_mm256_cmpgt_epi64(z,x))));  // if max>temp, take max
+   UI n2=DUFFLPCT(compn<<LGNPAR,2);  // # turns through duff loop - always at least 1 because compn>=1.  Input to DUFF* is # elements-1
+   __m256i temp;
+   UI backoff=DUFFBACKOFF(compn<<LGNPAR,2);
+   s+=(backoff+1)*NPAR;
+   switch(backoff){
+   lbl: ;
+   case -1: temp = _mm256_loadu_si256((__m256i const *)s); TAKEMINOF(min0,temp) TAKEMAXOF(max0,temp)
+   case -2: temp = _mm256_loadu_si256((__m256i const *)(s+1*NPAR)); TAKEMINOF(min1,temp) TAKEMAXOF(max1,temp)
+   case -3: temp = _mm256_loadu_si256((__m256i const *)(s+2*NPAR)); TAKEMINOF(min2,temp) TAKEMAXOF(max2,temp)
+   case -4: temp = _mm256_loadu_si256((__m256i const *)(s+3*NPAR)); TAKEMINOF(min3,temp) TAKEMAXOF(max3,temp)
+   s+=4*NPAR;
+   if(--n2>0)goto lbl;
+   }
+// obsolete    do{
+// obsolete     __m256i temp = _mm256_loadu_si256((__m256i const *)s); s+=NPAR;  // read next batch & advance
+// obsolete     min0 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(min0),_mm256_castsi256_pd(temp),_mm256_castsi256_pd(_mm256_cmpgt_epi64(min0,temp))));  // if min>temp, take temp
+// obsolete     max0 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(temp),_mm256_castsi256_pd(max0),_mm256_castsi256_pd(_mm256_cmpgt_epi64(max0,temp))));  // if max>temp, take max
+// obsolete     if(!--compn)break;
+// obsolete     temp = _mm256_loadu_si256((__m256i const *)s); s+=NPAR;  // read next batch & advance
+// obsolete     min1 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(min1),_mm256_castsi256_pd(temp),_mm256_castsi256_pd(_mm256_cmpgt_epi64(min1,temp))));  // if min>temp, take temp
+// obsolete     max1 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(temp),_mm256_castsi256_pd(max1),_mm256_castsi256_pd(_mm256_cmpgt_epi64(max1,temp))));  // if max>temp, take max
+// obsolete   }while(--compn);
    if(nqw==0)break;  // all batches read, read the remnant and finish
    // more batches to read.  Check for early exit
-   // combine the 8 mins into one, and the 8 maxes.  Take the difference & see if it exceeds max allowable range
-   min0 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(min0),_mm256_castsi256_pd(min1),_mm256_castsi256_pd(_mm256_cmpgt_epi64(min0,min1))));  // if min>temp, take temp
-   max0 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(max1),_mm256_castsi256_pd(max0),_mm256_castsi256_pd(_mm256_cmpgt_epi64(max0,max1))));  // if max>temp, take max
+   // combine the mins into one, and the maxes.  Take the difference & see if it exceeds max allowable range
+   // first combine the wide accumulators
+   TAKEMINOF(min0,min1) TAKEMAXOF(max0,max1) TAKEMINOF(min2,min3) TAKEMAXOF(max2,max3) TAKEMINOF(min0,min2) TAKEMAXOF(max0,max2)
+// obsolete    min0 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(min0),_mm256_castsi256_pd(min1),_mm256_castsi256_pd(_mm256_cmpgt_epi64(min0,min1))));  // if min>temp, take temp
+// obsolete    max0 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(max1),_mm256_castsi256_pd(max0),_mm256_castsi256_pd(_mm256_cmpgt_epi64(max0,max1))));  // if max>temp, take max
+   // rearrange the 4-wide min/max accumulators to mixed min/max
    min1 = _mm256_permute2x128_si256(min0,max0,0x21);  // now min1 has low 2 values of max0 in the high part, and the high 2 values of min0 in the low part
    max1 = _mm256_castpd_si256(_mm256_blend_pd(_mm256_castsi256_pd(min0),_mm256_castsi256_pd(max0),0xc));  // max1 has low 2 values of min0 in the low part, top 2 values of max0 in the high part
    // Top 2 values of min/max 1 are from max, low 2 are from min.  Do min/max compares simultaneously, comparing as if for min and then changing the sign for the top 2 values
    min1 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(min1),_mm256_castsi256_pd(max1),_mm256_castsi256_pd(_mm256_xor_si256(maxmask,_mm256_cmpgt_epi64(min1,max1)))));  // if min>max, take max; unless switched
-   // Now min1 is mina minb maxa maxb.  Swap in lane and finish the min and max compares
-   max1 = _mm256_castpd_si256(_mm256_permute_pd(_mm256_castsi256_pd(min1),0x5));  // minb mina maxb maxa
-   min1 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(min1),_mm256_castsi256_pd(max1),_mm256_castsi256_pd(_mm256_xor_si256(maxmask,_mm256_cmpgt_epi64(min1,max1)))));  // if min>max, take max; unless switched
-   if((UI)(_mm256_extract_epi64(min1,2)-_mm256_extract_epi64(min1,0))>=(UI)maxrange)goto fail;  // abort if range limit exceeded
+   // Now min1 is mina minb maxa maxb.  Extract into integer ALU to finish
+   I tmp;
+   min = _mm256_extract_epi64(min1,0); tmp= _mm256_extract_epi64(min1,1); min=tmp<min?tmp:min;
+   max = _mm256_extract_epi64(min1,2); tmp= _mm256_extract_epi64(min1,3); max=tmp>max?tmp:max;  // grand min/max
+   if(unlikely((UI)(max-min)>=(UI)maxrange))goto fail;  // abort if range limit exceeded
+// obsolete    max1 = _mm256_castpd_si256(_mm256_permute_pd(_mm256_castsi256_pd(min1),0x5));  // minb mina maxb maxa
+// obsolete    min1 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(min1),_mm256_castsi256_pd(max1),_mm256_castsi256_pd(_mm256_xor_si256(maxmask,_mm256_cmpgt_epi64(min1,max1)))));  // if min>max, take max; unless switched
+// obsolete    if((UI)(_mm256_extract_epi64(min1,2)-_mm256_extract_epi64(min1,0))>=(UI)maxrange)goto fail;  // abort if range limit exceeded
    // the check above takes 20 cycles.  Increase the batchsize up to ~1000 cycles
    //  Now the values in min/max 0/1 are all scrambled, but the min is somewhere in min0 and the max is somewhere in max0, and min1/max1 contain all valid values
    batchsize<<=2; batchsize=batchsize>1024?1024:batchsize;   // after the first compare, which includes the end batch, grow batch size rapidly
@@ -1580,22 +1604,28 @@ CR condrange(I *s,I n,I min,I max,I maxrange){CR ret;
   s+=NPAR;  // skip over the last batch, previously read
  }else{min1=min0; max1=max0;}
  // append the last section, 1-4 longs
- __m256i temp = _mm256_maskload_epi64(s,endmask); s+=NPAR;  // read valid values
- min0 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(min0),_mm256_castsi256_pd(temp),_mm256_castsi256_pd(_mm256_and_si256(_mm256_cmpgt_epi64(min0,temp),endmask))));  // if min>temp, take temp
- max0 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(max0),_mm256_castsi256_pd(temp),_mm256_castsi256_pd(_mm256_and_si256(_mm256_cmpgt_epi64(temp,max0),endmask))));  // if max>temp, take max
+ TAKEMINOF(min2,min3) TAKEMAXOF(max2,max3)  // free min3/max3
+ __m256i temp = _mm256_maskload_epi64(s,endmask);  // read valid values
+ min0 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(min0),_mm256_castsi256_pd(temp),_mm256_castsi256_pd(_mm256_and_si256(_mm256_cmpgt_epi64(min0,temp),endmask))));  // masked TAKEMINOF
+ max0 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(max0),_mm256_castsi256_pd(temp),_mm256_castsi256_pd(_mm256_and_si256(_mm256_cmpgt_epi64(temp,max0),endmask))));
  // make final combination
- // combine the 8 mins into one, and the 8 maxes.  Take the difference & see if it exceeds max allowable range
- min0 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(min0),_mm256_castsi256_pd(min1),_mm256_castsi256_pd(_mm256_cmpgt_epi64(min0,min1))));  // if min>temp, take temp
- max0 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(max1),_mm256_castsi256_pd(max0),_mm256_castsi256_pd(_mm256_cmpgt_epi64(max0,max1))));  // if max>temp, take max
+   // combine the mins into one, and the maxes.  Take the difference & see if it exceeds max allowable range
+ TAKEMINOF(min0,min1) TAKEMAXOF(max0,max1) TAKEMINOF(min0,min2) TAKEMAXOF(max0,max2)
+// obsolete  min0 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(min0),_mm256_castsi256_pd(min1),_mm256_castsi256_pd(_mm256_cmpgt_epi64(min0,min1))));  // if min>temp, take temp
+// obsolete  max0 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(max1),_mm256_castsi256_pd(max0),_mm256_castsi256_pd(_mm256_cmpgt_epi64(max0,max1))));  // if max>temp, take max
  min1 = _mm256_permute2x128_si256(min0,max0,0x21);  // now min1 has low 2 values of max0 in the high part, and the high 2 values of min0 in the low part
  max1 = _mm256_castpd_si256(_mm256_blend_pd(_mm256_castsi256_pd(min0),_mm256_castsi256_pd(max0),0xc));  // max1 has low 2 values of min0 in the low part, top 2 values of max0 in the high part
  // Top 2 values of min/max 1 are from max, low 2 are from min.  Do min/max compares simultaneously, comparing as if for min and then changing the sign for the top 2 values
  min1 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(min1),_mm256_castsi256_pd(max1),_mm256_castsi256_pd(_mm256_xor_si256(maxmask,_mm256_cmpgt_epi64(min1,max1)))));  // if min>max, take max; unless switched
- // Now min1 is mina minb maxa maxb.  Swap in lane and finish the min and max compares
- max1 = _mm256_castpd_si256(_mm256_permute_pd(_mm256_castsi256_pd(min1),0x5));  // minb mina maxb maxa
- min1 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(min1),_mm256_castsi256_pd(max1),_mm256_castsi256_pd(_mm256_xor_si256(maxmask,_mm256_cmpgt_epi64(min1,max1)))));  // if min>max, take max; unless switched
- I rmin = _mm256_extract_epi64(min1,0); I rmax = _mm256_extract_epi64(min1,2); if((UI)(rmax-rmin)>=(UI)maxrange)goto fail;
- ret.min=rmin; ret.range=rmax-rmin+1;  // because the tests succeed, this will give the proper range
+// obsolete  // Now min1 is mina minb maxa maxb.  Swap in lane and finish the min and max compares
+// obsolete  max1 = _mm256_castpd_si256(_mm256_permute_pd(_mm256_castsi256_pd(min1),0x5));  // minb mina maxb maxa
+// obsolete  min1 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(min1),_mm256_castsi256_pd(max1),_mm256_castsi256_pd(_mm256_xor_si256(maxmask,_mm256_cmpgt_epi64(min1,max1)))));  // if min>max, take max; unless switched
+// obsolete  I rmin = _mm256_extract_epi64(min1,0); I rmax = _mm256_extract_epi64(min1,2); if((UI)(rmax-rmin)>=(UI)maxrange)goto fail;
+ // Now min1 is mina minb maxa maxb.  Extract into integer ALU to finish
+ I tmp;
+ min = _mm256_extract_epi64(min1,0); tmp= _mm256_extract_epi64(min1,1); min=tmp<min?tmp:min;
+ max = _mm256_extract_epi64(min1,2); tmp= _mm256_extract_epi64(min1,3); max=tmp>max?tmp:max;  // grand min/max
+ if(unlikely((UI)(max-min)>=(UI)maxrange))goto fail; ret.min=min; ret.range=max-min+1;  // because the tests succeed, this will give the proper range
  R ret;
 fail: ret.min=ret.range=0; R ret;
 }

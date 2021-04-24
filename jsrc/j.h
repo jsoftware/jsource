@@ -800,7 +800,7 @@ extern unsigned int __cdecl _clearfp (void);
 // Here for native instruction support
 #define CVTEPI64(z,u) z=_mm256_cvtepi64_pd(_mm256_castpd_si256(u));
 #endif
-// # turns through a Duff loop of m1+1 elements, with 2<<lgduff instances in the loop.  We assume we are handling [1,NPAR] elements at the end
+// # turns through a Duff loop of m1+1 elements, with 1<<lgduff instances in the loop.  We assume we are handling [1,NPAR] elements at the end
 #define DUFFLPCT(m1,lgduff) ((((m1)+((((I)1<<(lgduff))-1)<<LGNPAR))>>(LGNPAR+(lgduff))))
 // calculate the (backoff-1) in elements for the first pass through the Duff loop.  This (negative) value+1 must be added to the initial addresses
 #define DUFFBACKOFF(m1,lgduff) ((((m1)>>LGNPAR)-1)|-((I)1<<(lgduff)))  // 0->-1, 7->-2, 1->-8

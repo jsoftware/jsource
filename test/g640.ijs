@@ -92,6 +92,8 @@ test1"0 x: 5 555 55555
 
 (> 10000&(?@$)) 10000099999x NB. verify extended results in range
 
+0 = +/0~:?"0 (10000)$1x  NB. used to fail, only when memory-scrubber on
+
 'domain error' -: ? etx 'abc'
 'domain error' -: ? etx 2 3 _4
 'domain error' -: ? etx 2 3.4 5

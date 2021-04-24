@@ -657,7 +657,7 @@ static X jtxrand(J jt,X x){PROLOG(0090);A q,z;B b=1;I j,m,n,*qv,*xv,*zv;
  DO(m-1, qv[i]=XBASE;); qv[m-1]=xv[n-1]+1;  // init base to the largest possible value in each Digit
  // loop to roll random values until we get one that is less than x
  NOUNROLL do{
-  RZ(z=roll(q)); zv=AV(z);  // roll one value in each Digit position
+  RZ(z=roll(q)); if(unlikely(AT(z)&B01))RZ(z=cvt(INT,z)); zv=AV(z);  // roll one value in each Digit position; if by chance it comes back Boolean, input must have been single digit 1, convert to ,1
   DQ(j=m, --j; if(xv[j]!=zv[j]){b=xv[j]<zv[j]; break;});  // MS mismatched Digit tells the tale; if no mismatch, that's too high, keep b=1
  }while(b);  // loop till b=0
  j=m-1; NOUNROLL while(0<j&&!zv[j])--j; AN(z)=AS(z)[0]=++j;  // remove leading 0s from (tail of) result

@@ -1113,17 +1113,24 @@ DF2(jtsumattymes1){
      I j=ndpi; D *av0=av; /* i is how many a's are left, j is how many w's*/
      while(1){
       // do one dot-product, av*wv, length dplen
-      I n0=(dplen-1)>>LGNPAR; __m256d acc0=idreg; __m256d acc1=idreg; __m256d acc2=idreg; __m256d acc3=idreg;
+      __m256d acc0=idreg; __m256d acc1=idreg; __m256d acc2=idreg; __m256d acc3=idreg;
       __m256d c0=idreg; __m256d c1=idreg; __m256d c2=idreg; __m256d c3=idreg;  // error terms
       __m256d h; __m256d y; __m256d q; __m256d t;   // new input value, temp to hold high part of sum
-      if(n0>0){
-       switch(n0&3){
+      UI n2=DUFFLPCT(dplen-1,2);  /* # turns through duff loop */
+      if(n2>0){
+       UI backoff=DUFFBACKOFF(dplen-1,2);
+       av+=(backoff+1)*NPAR; wv+=(backoff+1)*NPAR;
+       switch(backoff){
+// obsolete       I n0=(dplen-1)>>LGNPAR;
+// obsolete       if(n0>0){
+// obsolete        switch(n0&3){
        loopback:
-       case 0: OGITA(_mm256_loadu_pd(av),_mm256_loadu_pd(wv),0) av+=NPAR; wv+=NPAR;
-       case 3: OGITA(_mm256_loadu_pd(av),_mm256_loadu_pd(wv),1) av+=NPAR; wv+=NPAR;
-       case 2: OGITA(_mm256_loadu_pd(av),_mm256_loadu_pd(wv),2) av+=NPAR; wv+=NPAR;
-       case 1: OGITA(_mm256_loadu_pd(av),_mm256_loadu_pd(wv),3) av+=NPAR; wv+=NPAR;
-       if((n0-=4)>0)goto loopback;
+       case -1: OGITA(_mm256_loadu_pd(av),_mm256_loadu_pd(wv),0)
+       case -2: OGITA(_mm256_loadu_pd(av+1*NPAR),_mm256_loadu_pd(wv+1*NPAR),1)
+       case -3: OGITA(_mm256_loadu_pd(av+2*NPAR),_mm256_loadu_pd(wv+2*NPAR),2)
+       case -4: OGITA(_mm256_loadu_pd(av+3*NPAR),_mm256_loadu_pd(wv+3*NPAR),3)
+       av+=4*NPAR; wv+=4*NPAR;
+       if(--n2>0)goto loopback;
        }
       }
       OGITA(_mm256_maskload_pd(av,endmask),_mm256_maskload_pd(wv,endmask),0) av+=((dplen-1)&(NPAR-1))+1; wv+=((dplen-1)&(NPAR-1))+1;  // the remnant at the end

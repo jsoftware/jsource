@@ -517,7 +517,7 @@ AHDR2(name,D,D,D){ \
 
 
 // n and m are never 0.
-#if 0 // obsolete waiting till me learn how to XCTL
+#if 0 // obsolete waiting till we learn how to XCTL
 static void f##1(J jt,I m,void* RESTRICTI z,void* RESTRICTI x,void* RESTRICTI y){I u,v; \
  if((C_AVX&&SY_64)||EMU_AVX){__m256i u256,v256; \
   __m256i bool256=_mm256_castpd_si256(_mm256_broadcast_sd(&Iivalidbytes)); /* valid boolean bits */ \

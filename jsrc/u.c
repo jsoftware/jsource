@@ -272,18 +272,20 @@ void mvc(I m,void*z,I n,void*w){
    }
    if(unlikely((m&=-SZI)==0))R; --m;  // account for bytes moved; return if we have moved all; keep m as count-1
   }
-  m&=(-NPAR*SZI);  /* m=start of last section, 1-4 Is */
+// obsolete   m&=(-NPAR*SZI);  /* m=start of last section, 1-4 Is */
   /* store 128-byte sections, first one being 0, 4, 8, or 12 Is. There could be 0 to do */
-  /* the 2s here are lg2(#duff cases).  With 8 cases we got 8% faster for in-place copy; not worth the extra prefetches normally? */
-  UI n128=((m+((((I)1<<2)-1)<<(LGNPAR+LGSZI)))>>(LGNPAR+LGSZI+2));  /* # 128-byte blocks with data, could be 0 */
-  if(n128>0){ /* this test is worthwhile for short args */
-   switch((m>>(LGNPAR+LGSZI))&(((I)1<<2)-1)){
+  UI n2=DUFFLPCT(m>>LGSZI,2);  /* # turns through duff loop */
+  if(n2>0){
+   UI backoff=DUFFBACKOFF(m>>LGSZI,2);
+   z=(C*)z+(backoff+1)*NPAR*SZI;
+   switch(backoff){
    lbl: ;
-   case 0: _mm256_storeu_si256((__m256i*)z,wd); z=(C*)z+NPAR*SZI;
-   case 3: _mm256_storeu_si256((__m256i*)z,wd); z=(C*)z+NPAR*SZI;
-   case 2: _mm256_storeu_si256((__m256i*)z,wd); z=(C*)z+NPAR*SZI;
-   case 1: _mm256_storeu_si256((__m256i*)z,wd); z=(C*)z+NPAR*SZI;
-   if(--n128>0)goto lbl;
+   case -1: _mm256_storeu_si256((__m256i*)z,wd);
+   case -2: _mm256_storeu_si256((__m256i*)((C*)z+1*NPAR*SZI),wd);
+   case -3: _mm256_storeu_si256((__m256i*)((C*)z+2*NPAR*SZI),wd);
+   case -4: _mm256_storeu_si256((__m256i*)((C*)z+3*NPAR*SZI),wd);
+   z=(C*)z+4*NPAR*SZI;
+   if(--n2>0)goto lbl;
    }
   }
   // copy last section, 1-4 Is. ll bits 00->4 bytes, 01->3 bytes, etc

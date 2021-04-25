@@ -25,7 +25,7 @@ static DF2(secf2){F2PREFIP; A h=FAV(self)->fgh[2]; ASSERT(!JT(jt,seclev),EVSECUR
 static DF2(jtfindrange){
  ARGCHK2(a,w);
  I *av = AV(a);
- CR rng = condrange(AV(w),AN(w),av[0],av[1],av[2]);
+ CR rng = condrange(AV(w),AN(w),av[0],av[1],av[2]);  // starting min, starting max, max range
  R v2(rng.min,rng.range);
 } // 13!:80
 static DF2(jtfindrange4){

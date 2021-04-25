@@ -478,7 +478,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define ILESS           4
 #define INUBI           5
 #define IEPS            6
-// the I...EPS values below are wired into the function table at the end of vcompsc.c
+// the I...EPS values below are wired into the function table at the end of vcompsc.c, where they are combined with a comparison
 #define II0EPS          7  // this must come first; other base on it
 #define II1EPS          8
 #define IJ0EPS          9
@@ -486,8 +486,8 @@ extern unsigned int __cdecl _clearfp (void);
 #define ISUMEPS         11
 #define IANYEPS         12
 #define IALLEPS         13
-#define IIFBEPS         14
-#define IFORKEY         15  // special key support: like i.~, but add # values mapped to the index
+#define IIFBEPS         14   // I.@e.
+#define IFORKEY         15  // special key support: like i.~, but add # values mapped to the index, and return #unique values in AM
 #define IIMODFIELD      0x70  // bits used to indicate processing options
 #define IIMODPACK       0x10  // modifier for type.  (small-range search except i./i:) In IIDOT/IICO, indicates reflexive application.  In others, indicates that the
                               // bitmask should be stored as packed bits rather than bytes

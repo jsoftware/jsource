@@ -1541,7 +1541,7 @@ CR condrange(I *s,I n,I min,I max,I maxrange){CR ret;
  __m256i min0=_mm256_broadcastq_epi64(_mm_insert_epi64(_mm_setzero_si128(),min,0));  // atoms between cells
  __m256i max0=_mm256_broadcastq_epi64(_mm_insert_epi64(_mm_setzero_si128(),max,0));  // atoms between cells
  __m256i min1, max1, min2=min0, max2=max0, min3=min0, max3=max0;
- __m256i maxmask = _mm256_loadu_si256((__m256i const *)(validitymask+6));  // 0 0 ffff ffff for sign switching
+ __m256i ones = _mm256_cmpeq_epi8(min0,min0);  // all ones for switching max to complement form
  __m256i endmask= _mm256_loadu_si256((__m256i const *)(validitymask+((-n)&(NPAR-1))));
 // obsolete  min0=_mm256_set1_epi64x(min); max0=_mm256_set1_epi64x(max);
  if(nqw--){  // if there are at least 2 blocks...
@@ -1584,22 +1584,32 @@ CR condrange(I *s,I n,I min,I max,I maxrange){CR ret;
    TAKEMINOF(min0,min1) TAKEMAXOF(max0,max1) TAKEMINOF(min2,min3) TAKEMAXOF(max2,max3) TAKEMINOF(min0,min2) TAKEMAXOF(max0,max2)
 // obsolete    min0 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(min0),_mm256_castsi256_pd(min1),_mm256_castsi256_pd(_mm256_cmpgt_epi64(min0,min1))));  // if min>temp, take temp
 // obsolete    max0 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(max1),_mm256_castsi256_pd(max0),_mm256_castsi256_pd(_mm256_cmpgt_epi64(max0,max1))));  // if max>temp, take max
-   // rearrange the 4-wide min/max accumulators to mixed min/max
-   min1 = _mm256_permute2x128_si256(min0,max0,0x21);  // now min1 has low 2 values of max0 in the high part, and the high 2 values of min0 in the low part
-   max1 = _mm256_castpd_si256(_mm256_blend_pd(_mm256_castsi256_pd(min0),_mm256_castsi256_pd(max0),0xc));  // max1 has low 2 values of min0 in the low part, top 2 values of max0 in the high part
-   // Top 2 values of min/max 1 are from max, low 2 are from min.  Do min/max compares simultaneously, comparing as if for min and then changing the sign for the top 2 values
-   min1 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(min1),_mm256_castsi256_pd(max1),_mm256_castsi256_pd(_mm256_xor_si256(maxmask,_mm256_cmpgt_epi64(min1,max1)))));  // if min>max, take max; unless switched
-   // Now min1 is mina minb maxa maxb.  Extract into integer ALU to finish
-   I tmp;
-   min = _mm256_extract_epi64(min1,0); tmp= _mm256_extract_epi64(min1,1); min=tmp<min?tmp:min;
-   max = _mm256_extract_epi64(min1,2); tmp= _mm256_extract_epi64(min1,3); max=tmp>max?tmp:max;  // grand min/max
-   if(unlikely((UI)(max-min)>=(UI)maxrange))goto fail;  // abort if range limit exceeded
+   // Convert max to complement so we can do min/max simultaneously
+   min1=_mm256_xor_si256(ones,max0);  //  min1 destroyed! min1 now complement form X X X X
+   max1=_mm256_blend_epi32(min0,min1,0x33);  // max1 destroyed! now has X n X n
+   min1=_mm256_blend_epi32(min0,min1,0xcc);  // min1 now has n X n X  (X=compl max, n=min)
+   max1=_mm256_castpd_si256(_mm256_permute_pd(_mm256_castsi256_pd(max1),0x5));  // max1 has n X n X
+   TAKEMINOF(min1,max1);  // min1 is n X n X
+   max1=_mm256_permute4x64_epi64(min1,0x0e);  // max1 has n X - -  from upper min1
+   TAKEMINOF(min1,max1);  // min1 is n X - -, the overall min & compl max
+   min = _mm256_extract_epi64(min1,0); max = _mm256_extract_epi64(min1,1);  // max is still complement
+// obsolete    // rearrange the 4-wide min/max accumulators to mixed min/max
+// obsolete    min1 = _mm256_permute2x128_si256(min0,max0,0x21);  // now min1 has low 2 values of max0 in the high part, and the high 2 values of min0 in the low part
+// obsolete    max1 = _mm256_castpd_si256(_mm256_blend_pd(_mm256_castsi256_pd(min0),_mm256_castsi256_pd(max0),0xc));  // max1 has low 2 values of min0 in the low part, top 2 values of max0 in the high part
+// obsolete    // Top 2 values of min/max 1 are from max, low 2 are from min.  Do min/max compares simultaneously, comparing as if for min and then changing the sign for the top 2 values
+// obsolete    min1 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(min1),_mm256_castsi256_pd(max1),_mm256_castsi256_pd(_mm256_xor_si256(maxmask,_mm256_cmpgt_epi64(min1,max1)))));  // if min>max, take max; unless switched
+// obsolete    // Now min1 is mina minb maxa maxb.  Extract into integer ALU to finish
+// obsolete    I tmp;
+// obsolete    min = _mm256_extract_epi64(min1,0); tmp= _mm256_extract_epi64(min1,1); min=tmp<min?tmp:min;
+// obsolete    max = _mm256_extract_epi64(min1,2); tmp= _mm256_extract_epi64(min1,3); max=tmp>max?tmp:max;  // grand min/max
+   if(unlikely((UI)((~max)-min)>=(UI)maxrange))goto fail;  // abort if range limit exceeded
 // obsolete    max1 = _mm256_castpd_si256(_mm256_permute_pd(_mm256_castsi256_pd(min1),0x5));  // minb mina maxb maxa
 // obsolete    min1 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(min1),_mm256_castsi256_pd(max1),_mm256_castsi256_pd(_mm256_xor_si256(maxmask,_mm256_cmpgt_epi64(min1,max1)))));  // if min>max, take max; unless switched
 // obsolete    if((UI)(_mm256_extract_epi64(min1,2)-_mm256_extract_epi64(min1,0))>=(UI)maxrange)goto fail;  // abort if range limit exceeded
    // the check above takes 20 cycles.  Increase the batchsize up to ~1000 cycles
    //  Now the values in min/max 0/1 are all scrambled, but the min is somewhere in min0 and the max is somewhere in max0, and min1/max1 contain all valid values
    batchsize<<=2; batchsize=batchsize>1024?1024:batchsize;   // after the first compare, which includes the end batch, grow batch size rapidly
+   min1=min0; max1=max0;  // restore the complement registers
   }
   s+=NPAR;  // skip over the last batch, previously read
  }else{min1=min0; max1=max0;}
@@ -1613,19 +1623,28 @@ CR condrange(I *s,I n,I min,I max,I maxrange){CR ret;
  TAKEMINOF(min0,min1) TAKEMAXOF(max0,max1) TAKEMINOF(min0,min2) TAKEMAXOF(max0,max2)
 // obsolete  min0 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(min0),_mm256_castsi256_pd(min1),_mm256_castsi256_pd(_mm256_cmpgt_epi64(min0,min1))));  // if min>temp, take temp
 // obsolete  max0 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(max1),_mm256_castsi256_pd(max0),_mm256_castsi256_pd(_mm256_cmpgt_epi64(max0,max1))));  // if max>temp, take max
- min1 = _mm256_permute2x128_si256(min0,max0,0x21);  // now min1 has low 2 values of max0 in the high part, and the high 2 values of min0 in the low part
- max1 = _mm256_castpd_si256(_mm256_blend_pd(_mm256_castsi256_pd(min0),_mm256_castsi256_pd(max0),0xc));  // max1 has low 2 values of min0 in the low part, top 2 values of max0 in the high part
- // Top 2 values of min/max 1 are from max, low 2 are from min.  Do min/max compares simultaneously, comparing as if for min and then changing the sign for the top 2 values
- min1 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(min1),_mm256_castsi256_pd(max1),_mm256_castsi256_pd(_mm256_xor_si256(maxmask,_mm256_cmpgt_epi64(min1,max1)))));  // if min>max, take max; unless switched
+ // Convert max to complement so we can do min/max simultaneously
+ min1=_mm256_xor_si256(ones,max0);  //  min1 destroyed! min1 now complement form X X X X
+ max1=_mm256_blend_epi32(min0,min1,0x33);  // max1 destroyed! now has X n X n
+ min1=_mm256_blend_epi32(min0,min1,0xcc);  // min1 now has n X n X  (X=compl max, n=min)
+ max1=_mm256_castpd_si256(_mm256_permute_pd(_mm256_castsi256_pd(max1),0x5));  // max1 has n X n X
+ TAKEMINOF(min1,max1);  // min1 is n X n X, which includes everything
+ max1=_mm256_permute4x64_epi64(min1,0x0e);  // max1 has n X - -  from upper min1
+ TAKEMINOF(min1,max1);  // min1 is n X - -, the overall min & compl max
+ min = _mm256_extract_epi64(min1,0); max = _mm256_extract_epi64(min1,1);  // max is still complement
+// obsolete  min1 = _mm256_permute2x128_si256(min0,max0,0x21);  // now min1 has low 2 values of max0 in the high part, and the high 2 values of min0 in the low part
+// obsolete  max1 = _mm256_castpd_si256(_mm256_blend_pd(_mm256_castsi256_pd(min0),_mm256_castsi256_pd(max0),0xc));  // max1 has low 2 values of min0 in the low part, top 2 values of max0 in the high part
+// obsolete  // Top 2 values of min/max 1 are from max, low 2 are from min.  Do min/max compares simultaneously, comparing as if for min and then changing the sign for the top 2 values
+// obsolete  min1 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(min1),_mm256_castsi256_pd(max1),_mm256_castsi256_pd(_mm256_xor_si256(maxmask,_mm256_cmpgt_epi64(min1,max1)))));  // if min>max, take max; unless switched
 // obsolete  // Now min1 is mina minb maxa maxb.  Swap in lane and finish the min and max compares
 // obsolete  max1 = _mm256_castpd_si256(_mm256_permute_pd(_mm256_castsi256_pd(min1),0x5));  // minb mina maxb maxa
 // obsolete  min1 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(min1),_mm256_castsi256_pd(max1),_mm256_castsi256_pd(_mm256_xor_si256(maxmask,_mm256_cmpgt_epi64(min1,max1)))));  // if min>max, take max; unless switched
 // obsolete  I rmin = _mm256_extract_epi64(min1,0); I rmax = _mm256_extract_epi64(min1,2); if((UI)(rmax-rmin)>=(UI)maxrange)goto fail;
- // Now min1 is mina minb maxa maxb.  Extract into integer ALU to finish
- I tmp;
- min = _mm256_extract_epi64(min1,0); tmp= _mm256_extract_epi64(min1,1); min=tmp<min?tmp:min;
- max = _mm256_extract_epi64(min1,2); tmp= _mm256_extract_epi64(min1,3); max=tmp>max?tmp:max;  // grand min/max
- if(unlikely((UI)(max-min)>=(UI)maxrange))goto fail; ret.min=min; ret.range=max-min+1;  // because the tests succeed, this will give the proper range
+// obsolete  // Now min1 is mina minb maxa maxb.  Extract into integer ALU to finish
+// obsolete  I tmp;
+// obsolete  min = _mm256_extract_epi64(min1,0); tmp= _mm256_extract_epi64(min1,1); min=tmp<min?tmp:min;
+// obsolete  max = _mm256_extract_epi64(min1,2); tmp= _mm256_extract_epi64(min1,3); max=tmp>max?tmp:max;  // grand min/max
+ if(unlikely((UI)((~max)-min)>=(UI)maxrange))goto fail; ret.min=min; ret.range=(~max)-min+1;  // because the tests succeed, this will give the proper range
  R ret;
 fail: ret.min=ret.range=0; R ret;
 }
@@ -2205,6 +2224,10 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
  *((mode&IIOPMSK)==IFORKEY?(I*)&AM(z):(I*)&jt->shapesink)=forkeyresult;
  RETF(z);
 }    /* a i."r w main control */
+
+// verb to vector combine@e. compounds.  The i. code is in the self
+// because these are e. compounds we swap a and w
+DF2(jtcombineeps){ARGCHK3(a,w,self);R indexofsub(II0EPS+((FAV(self)->flag>>3)&7),w,a);}
 
 // verb to execute compounds like m&i. e.&n .  m/n has already been hashed and the result saved away
 A jtindexofprehashed(J jt,A a,A w,A hs){A h,*hv,x,z;AF fn;I ar,*as,at,c,f1,k,m,mode,n,

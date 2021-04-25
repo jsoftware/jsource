@@ -4,15 +4,15 @@
 /* Verbs: Comparatives                                                     */
 /*                                                                         */
 /* Special code for the following cases:                                   */
-/*    comp i. 0:          i.&0@:comp                                       */
+/*    comp i. 0:          i.&0@:comp    IIF0EPS                            */
 /*    comp i. 1:          i.&1@:comp                                       */
 /*    comp i: 0:          i:&0@:comp                                       */
 /*    comp i: 1:          i:&1@:comp                                       */
 /*    [: + / comp         + /@:comp                                        */
-/*    [: +./ comp         +./@:comp   1: e. comp                           */
-/*    0: e. comp                                                           */
-/*    [: I. comp          I.@:comp       no longer supported               */
-/* where comp is one of the following:                                     */
+/*    [: +./ comp         +./@:comp                                        */
+/*    0: e. comp          1: e. comp                                       */
+//    [: I. comp          I.@:comp       no longer supported except for e.and E.
+/* where comp is one of the following (in order):                                     */
 /*    = ~: < <: >: > E. e.                                                 */
 
 #include "j.h"
@@ -268,25 +268,17 @@ static AF atcompSB[]={  /* table for SBT vs. SBT */
  sumeqS,sumneS,sumltS,sumleS,sumgeS,sumgtS,
 };
 
-// the special case for compounds like +/@e.
-static F2( jti0eps){R indexofsub( II0EPS,w,a);}
-static F2( jti1eps){R indexofsub( II1EPS,w,a);}
-static F2( jtj0eps){R indexofsub( IJ0EPS,w,a);}
-static F2( jtj1eps){R indexofsub( IJ1EPS,w,a);}
-static F2(jtsumeps){R indexofsub(ISUMEPS,w,a);}
-static F2(jtanyeps){R indexofsub(IANYEPS,w,a);}
-static F2(jtalleps){R indexofsub(IALLEPS,w,a);}
-
-// This table is indexed by m[5 4 3 0]
-static AF atcompX[]={   /* table for any vs. any */
-          0L,  jti0eps,
-    jti1ebar,  jti1eps,
-          0L,  jtj0eps,
-          0L,  jtj1eps,
-   jtsumebar, jtsumeps,
-   jtanyebar, jtanyeps,
-          0L, jtalleps,
-};
+// obsolete // the special case for compounds like +/@e., which are i.-family forms
+// obsolete static F2( jti0eps){R indexofsub( II0EPS,w,a);}
+// obsolete static F2( jti1eps){R indexofsub( II1EPS,w,a);}
+// obsolete static F2( jtj0eps){R indexofsub( IJ0EPS,w,a);}
+// obsolete static F2( jtj1eps){R indexofsub( IJ1EPS,w,a);}
+// obsolete static F2(jtsumeps){R indexofsub(ISUMEPS,w,a);}
+// obsolete static F2(jtanyeps){R indexofsub(IANYEPS,w,a);}
+// obsolete static F2(jtalleps){R indexofsub(IALLEPS,w,a);}
+// obsolete 
+// This table is indexed by m[5 4 3] but only a few combinations are generated
+static AF atcompX[]={0L, jti1ebar, 0L, 0L, jtsumebar, jtanyebar};
 
 
 // f (the comparison op) is bits 0-2 of m, the combining op is 3-5 of m
@@ -326,9 +318,11 @@ AF jtatcompf(J jt,A a,A w,A self){I m;
   if((AT(a)&AT(w)&(LIT+C2T+C4T+SBT))){R (AF)((I)(AT(a)&LIT?atcompC:AT(a)&C2T?atcompUS:AT(a)&C4T?atcompC4:atcompSB)[6*search+comp]+postflags);}
   R 0;
  }else{  // E. (6) or e. (7)
-  if((AR(a)|AR(w))>1){if(!(m&1)||AR(a)>(AR(w)?AR(w):1))R0;}  // some rank > 1, fail if E. or e. returns rank>1
-  if(((m&1)|(AN(a)-1))==0)R 0;  // E. when a is a singleton - no need for the full E. treatment
-  R atcompX[((m>>2)&~1)+(m&1)];  // choose i.-family routine; postflags are 0
+  if(unlikely((AR(a)|AR(w))>1)){if(!(m&1)||AR(a)>(AR(w)?AR(w):1))R0;}  // some rank > 1, fail if E. or (e. returns rank>1)
+  if(unlikely(((m&1)|(AN(a)-1))==0))R 0;  // E. when a is a singleton - no need for the full E. treatment
+  if(likely(m&1))R jtcombineeps;  // e. types: direct i.-family types, go to routine to vector there
+  // all that's left is E.
+  R atcompX[m>>3];  // choose i.-family routine; postflags are 0
  }
 }    /* function table look-up for  comp i. 1:  and  i.&1@:comp  etc. */
 

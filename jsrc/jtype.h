@@ -913,7 +913,10 @@ typedef struct {
 #define VRTNNONE ((A)0)
   
                                         /* type V flag values              */
-// bits 0-7 are used in comparison compounds to encode the type of compound, see vcompsc.c
+// bits 0-5 are used in comparison compounds to encode the type of compound, see vcompsc.c
+// They are examined during u&n and m&v processing.  Bits 0-2 are the comparison type, bit 3-5 are the action type.
+// NOTE: comparison type e. is type 7.  If u&n sees bits 0-2=111 in u, it will generate a hashtable.  To prevent this from
+// happening incorrectly, leave bit 2=0.
 // for other types, they are defined as follows:
 #define VFATOPL         JTINPLACEW     // (in forks and v0`v1`v2) f/v0 is x@[, so OK to inplace w arg of h
 #define VFATOPR         JTINPLACEA     // (in forks and v0`v1`v2) f/v0 is x@], so OK to inplace a arg of h
@@ -933,6 +936,7 @@ typedef struct {
 #define VFKEYSLASHT      (((I)(2*FL-1))<<VFKEYSLASHTX)
 #define VFKEYSLASHFX  (FLX+1)  // (in f/.) function coded for, 0=<. 1=>. 2=+
 #define VFKEYSLASHF      (((I)3)<<VFKEYSLASHFX)
+// leave bit 2 open
 
 // bits 8 and above are available for all verbs:
 #define VGERLX          8

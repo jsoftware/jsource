@@ -470,7 +470,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define IOTAVECLEN 400
 
 // modes for indexofsub()
-#define IIOPMSK         0xf     // operation bits
+#define IIOPMSK         0xf     // operation bits.  INTER also uses bit 3, which is included as a modifier in the switches
 #define IIDOT           0        // IIDOT and IICO must be 0-1
 #define IICO            1
 #define INUBSV          2
@@ -479,33 +479,41 @@ extern unsigned int __cdecl _clearfp (void);
 #define INUBI           5
 #define IEPS            6
 // the I...EPS values below are wired into the function table at the end of vcompsc.c, where they are combined with a comparison
-#define II0EPS          7  // this must come first; other base on it
-#define II1EPS          8
-#define IJ0EPS          9
-#define IJ1EPS          10
-#define ISUMEPS         11
-#define IANYEPS         12
-#define IALLEPS         13
+#define II0EPS          7  // i.&0@:e.   this must come first; others base on it
+#define II1EPS          8  // i.&1@:e.
+#define IJ0EPS          9  // i:&0@:e.
+#define IJ1EPS          10  // i:&1@:e.
+#define ISUMEPS         11  // +/@:e.
+#define IANYEPS         12  // +./@:e.
+#define IALLEPS         13  // *./@:e.
 #define IIFBEPS         14   // I.@e.
 #define IFORKEY         15  // special key support: like i.~, but add # values mapped to the index, and return #unique values in AM
+#define IINTER          (ILESS+0x10)  // ([ -. -.)  PACK and REFLEX are never set for LESS
 #define IIMODFIELD      0x70  // bits used to indicate processing options
-#define IIMODPACK       0x10  // modifier for type.  (small-range search except i./i:) In IIDOT/IICO, indicates reflexive application.  In others, indicates that the
+#define IIMODPACKX      4
+#define IIMODPACK       (((I)1)<<IIMODPACKX)  // modifier for type.  (small-range search except i./i:) In IIDOT/IICO, indicates reflexive application.  In others, indicates that the
                               // bitmask should be stored as packed bits rather than bytes
 
-#define IIMODREFLEXX    4
+#define IIMODREFLEXX    4   // overlaps IIMODPACK and also IINTER
 #define IIMODREFLEX     (((I)1)<<IIMODREFLEXX)  // (small-range i. and i:) this is i.~/i:~ (hashing) this is i.~/i:~/~./~:/I.@:~.
-#define IIMODFULL       0x20  // (small-range search) indicates that the min/max values cover the entire range of possible inputs, so no range checking is required.  Always set for hashing
-#define IIMODBASE0      0x40  // set in small-range i./i: (which never use BITS) to indicate that the hashtable starts at index 0 and has m in the place of unused indexes.  Set in hashing always, with same meaning
-#define IIMODBITS       0x80  // set if the hash field stores bits rather than indexes.  Used only for small-range and not i./i:.  IIMODPACK qualifies this, indicating that the bits are packed
+#define IIMODFULLX      5
+#define IIMODFULL       (((I)1)<<IIMODFULLX)  // (small-range search) indicates that the min/max values cover the entire range of possible inputs, so no range checking is required.  Always set for hashing
+#define IIMODBASE0X     6
+#define IIMODBASE0      (((I)1)<<IIMODBASE0X)  // set in small-range i./i: (which never use BITS) to indicate that the hashtable starts at index 0 and has m in the place of unused indexes.  Set in hashing always, with same meaning
+#define IIMODBITSX      7
+#define IIMODBITS       (((I)1)<<IIMODBITSX)  // set if the hash field stores bits rather than indexes.  Used only for small-range and not i./i:.  IIMODPACK qualifies this, indicating that the bits are packed
 #define IIMODFORCE0X    8
 #define IIMODFORCE0     (((I)1)<<IIMODFORCE0X)  // set to REQUIRE a (non-bit) allocation to reset to offset 0 and clear
 #define IPHCALCX        9
 #define IPHCALC         (((I)1)<<IPHCALCX)   // set when we are calculating a prehashed table
-#define IINOTALLOCATED  0x400  // internal flag, set when the block has not been allocated
+#define IINOTALLOCATEDX  10
+#define IINOTALLOCATED  (((I)1)<<IINOTALLOCATEDX)  // internal flag, set when the block has not been allocated
 #define IIOREPSX        11
 #define IIOREPS         (((I)1)<<IIOREPSX)  // internal flag, set if mode is i./i:/e./key, but not if prehashing
-#define IREVERSED       0x1000   // set if we have decided to reverse the hash in a small-range situation
-#define IPHOFFSET       0x2000              /* offset for prehashed versions - set when we are using a prehashed table   */
+#define IREVERSEDX      12
+#define IREVERSED       (((I)1)<<IREVERSEDX)   // set if we have decided to reverse the hash in a small-range situation
+#define IPHOFFSETX      13
+#define IPHOFFSET       (((I)1)<<IPHOFFSETX)              /* offset for prehashed versions - set when we are using a prehashed table   */
 #define IPHIDOT         (IPHOFFSET+IIDOT)
 #define IPHICO          (IPHOFFSET+IICO)
 #define IPHEPS          (IPHOFFSET+IEPS)
@@ -517,7 +525,8 @@ extern unsigned int __cdecl _clearfp (void);
 #define IPHANYEPS       (IPHOFFSET+IANYEPS)
 #define IPHALLEPS       (IPHOFFSET+IALLEPS)
 #define IPHIFBEPS       (IPHOFFSET+IIFBEPS)
-#define ISFUX            14
+#define IPHINTER        (IPHOFFSET+IINTER)
+#define ISFUX           14
 #define ISFU            (((I)1)<<ISFUX)  // i.!.1 - sequential file update
 
 #if C_AVX   // _mm_round_pd requires sse4.1, mm256 needs avx

@@ -597,7 +597,7 @@ static B jtredspsprep(J jt,C id,I f,I zt,A a,A e,A x,A y,I*zm,I**zdv,B**zpv,I**z
  v=AS(y); yr=v[0]; yc=v[1]; yr1=yr-1;
  RZ(d=grade1(eq(a,sc(f)))); dv=AV(d); 
  DO(AN(a), if(i!=dv[i]){RZ(q=grade1p(d,y)); qv=AV(q); break;});
- GATV0(p,B01,yr,1); pv=BAV(p); memset(pv,C0,yr);
+ GATV0(p,B01,yr,1); pv=BAV(p); mvc(yr,pv,8,MEMSET00);
  u=yv=AV(y); m=mm=0; j=-1; if(qv)v=yv+yc*qv[0];
  for(k=0;k<yr1;++k){
   if(qv){u=v; v=yv+yc*qv[1+k];}else v=u+yc;

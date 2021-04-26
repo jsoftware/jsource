@@ -1904,7 +1904,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
    switch(mode&IIOPMSK){
     case IIDOT:  
     case IICO:    GATV0(z,INT,zn,f+f0); MCISH(AS(z),s,f) MCISH(f+AS(z),ws+wf,f0); v=AV(z); DQ(zn, *v++=m;); R z;  // mustn't overfetch s
-    case IEPS:    GATV0(z,B01,zn,f+f0); MCISH(AS(z),s,f) MCISH(f+AS(z),ws+wf,f0); memset(BAV(z),C0,zn); R z;  // mustn't overfetch s
+    case IEPS:    GATV0(z,B01,zn,f+f0); MCISH(AS(z),s,f) MCISH(f+AS(z),ws+wf,f0); mvc(zn,BAV(z),8,MEMSET00); R z;  // mustn't overfetch s
     case ILESS:                              RCA(w);
     case IINTER:                             R take(zeroionei(0),w);
     case IIFBEPS:                            R mtv;

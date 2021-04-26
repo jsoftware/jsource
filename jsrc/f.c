@@ -210,7 +210,7 @@ static A jtthsb(J jt,A w,A prxthornuni){A d,z;C*zv;I c,*dv,m,n,p,q,r,*s;SB*x,*y;
 // sum of col padding space is over estimated
 // can be reduced by the minimum of p-((zv-zv1)-1) of all rows
 // change trailing padding space to NUL, all NUL will be removed in jtprx
-               if(i==c-1)memset(zv,0,p-((zv-zv1)-1));
+               if(i==c-1)mvc(p-((zv-zv1)-1),zv,8,MEMSET00);
                j++;););
 #else
 // first pass to reduce padding space
@@ -231,7 +231,7 @@ static A jtthsb(J jt,A w,A prxthornuni){A d,z;C*zv;I c,*dv,m,n,p,q,r,*s;SB*x,*y;
 //                 `   utf8    col max - disp width  space
                zv+=1 + ev[j] + (dwv[i]-ewv[j])       + 1;
 // change trailing padding space to NUL, all NUL will be removed in jtprx
-               if(i==c-1)memset(zv,0,p-((zv-zv1)-1));
+               if(i==c-1)mvc(p-((zv-zv1)-1),zv,8,MEMSET00);
                j++;););
 #endif
   }else{

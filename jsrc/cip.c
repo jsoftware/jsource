@@ -33,16 +33,16 @@ static A jtipprep(J jt,A a,A w,I zt,I*pm,I*pn,I*pp){A z=mark;I*as,ar,ar1,m,mn,n,
 
 #define PDTBY(Tz,Tw,INC)          \
  {Tw*v,*wv;Tz c,*x,zero,*zv;      \
-  v=wv=(Tw*)AV(w); zv=(Tz*)AV(z); memset(&zero,C0,sizeof(Tz));     \
+  v=wv=(Tw*)AV(w); zv=(Tz*)AV(z); mvc(sizeof(Tz),&zero,8,MEMSET00);     \
   if(1==n)DQ(m, v=wv; c=zero;           DQ(p,       if(*u++)INC(c,*v);             ++v;);             *zv++=c;)   \
-  else    DQ(m, v=wv; memset(zv,C0,zk); DQ(p, x=zv; if(*u++)DQ(n, INC(*x,*v); ++x; ++v;) else v+=n;); zv+=n;  );  \
+  else    DQ(m, v=wv; mvc(zk,zv,8,MEMSET00); DQ(p, x=zv; if(*u++)DQ(n, INC(*x,*v); ++x; ++v;) else v+=n;); zv+=n;  );  \
  }
 
 #define PDTXB(Tz,Ta,INC,INIT)     \
  {Ta*u;Tz c,*x,zero,*zv;          \
-  u=   (Ta*)AV(a); zv=(Tz*)AV(z); memset(&zero,C0,sizeof(Tz));     \
+  u=   (Ta*)AV(a); zv=(Tz*)AV(z); mvc(sizeof(Tz),&zero,8,MEMSET00);     \
   if(1==n)DQ(m, v=wv; c=zero;           DQ(p,                   if(*v++)INC(c,*u); ++u;  ); *zv++=c;)   \
-  else    DQ(m, v=wv; memset(zv,C0,zk); DQ(p, x=zv; INIT; DQ(n, if(*v++)INC(*x,c); ++x;);); zv+=n;  );  \
+  else    DQ(m, v=wv; mvc(zk,zv,8,MEMSET00); DQ(p, x=zv; INIT; DQ(n, if(*v++)INC(*x,c); ++x;);); zv+=n;  );  \
  }
 
 static F2(jtpdtby){A z;B b,*u,*v,*wv;C er=0;I at,m,n,p,t,wt,zk;
@@ -252,7 +252,7 @@ _mm256_zeroupperx(VOIDARG)
  D (*cva)[2][OPHEIGHT][CACHEHEIGHT] = (D (*)[2][OPHEIGHT][CACHEHEIGHT])(((I)cvw+(CACHEHEIGHT+1)*CACHEWIDTH*sizeof(D)+(CACHELINESIZE-1))&-CACHELINESIZE);   // place where expanded rows of a are staged
  // If a is upper-triangular, we write out the entire column of z values only when we process the last section of the w stripe.  If w is also upper-triangular,
  // we stop processing sections before we get to the bottom.  So in that case (which never happens currently), clear the entire result areas leaving 0 in the untouched bits
- if((flgs&(FLGWUTRI|FLGAUTRI))==(FLGWUTRI|FLGAUTRI))memset(zv,C0,m*n*SZD);  // if w is upper-triangular, we will not visit all the z values and we must clear the lower-triangular part.  Here we just clear them all
+ if((flgs&(FLGWUTRI|FLGAUTRI))==(FLGWUTRI|FLGAUTRI))mvc(m*n*SZD,zv,8,MEMSET00);  // if w is upper-triangular, we will not visit all the z values and we must clear the lower-triangular part.  Here we just clear them all
  // process each 64-float vertical stripe of w against the entirety of a, producing the corresponding columns of z
  D* w0base = wv; D* z0base = zv; I w0rem = n;   // w0rem counts doubles
  for(;w0rem>0;w0rem-=CACHEWIDTH,w0base+=CACHEWIDTH,z0base+=CACHEWIDTH){
@@ -543,7 +543,7 @@ I cachedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){D c[(CACHEHEIGHT+1)*CAC
  D *cvw = (D*)(((I)&c+(CACHELINESIZE-1))&-CACHELINESIZE);  // place where cache-blocks of w are staged
  D *cva = (D*)(((I)cvw+(CACHEHEIGHT+1)*CACHEWIDTH*sizeof(D)+(CACHELINESIZE-1))&-CACHELINESIZE);   // place where expanded rows of a are staged
  // zero the result area
- memset(zv,C0,m*n*sizeof(D));
+ mvc(m*n*sizeof(D),zv,8,MEMSET00);
  // process each 64-float vertical stripe of w, producing the corresponding columns of z
  D* w0base = wv; D* z0base = zv; I w0rem = n;
  for(;w0rem>0;w0rem-=CACHEWIDTH,w0base+=CACHEWIDTH,z0base+=CACHEWIDTH){
@@ -695,7 +695,7 @@ F2(jtpdt){PROLOG(0038);A z;I ar,at,i,m,n,p,p1,t,wr,wt;
  m=t; m=t&INT?FL:m; m=t&B01?INT:m;  // type of result, promoting bool and int
  RZ(z=ipprep(a,w,m,&m,&n,&p));  // allocate the result area, with the needed shape and type
  if(AN(z)==0)R z;  // return without computing if result is empty
- if(!p){memset(AV(z),C0,AN(z)<<bplg(AT(z))); R z;}  // if dot-products are all 0 length, set them all to 0
+ if(!p){mvc(AN(z)<<bplg(AT(z)),AV(z),8,MEMSET00); R z;}  // if dot-products are all 0 length, set them all to 0
  // If either arg is atomic, reshape it to a list
  if(!ar!=!wr){if(ar)RZ(w=reshape(sc(p),w)) else RZ(a=reshape(sc(p),a));}
  p1=p-1;
@@ -761,7 +761,7 @@ oflo2:
      if((UI)probsize < (UI)JT(jt,igemm_thres)){RZ(a=cvt(FL,a)); RZ(w=cvt(FL,w)); cachedmmult(jt,DAV(a),DAV(w),DAV(z),m,n,p,0);}  // Do our matrix multiply - converting   TUNE
      else {
       // for large problem, use BLAS
-      memset(DAV(z),C0,m*n*sizeof(D));
+      mvc(m*n*sizeof(D),DAV(z),8,MEMSET00);
       igemm_nn(m,n,p,1,(I*)DAV(a),p,1,(I*)DAV(w),n,1,0,DAV(z),n,1);
     }
     // If the result has a value that has been truncated, we should keep it as a float.  Unfortunately, there is no way to be sure that some
@@ -794,7 +794,7 @@ oflo2:
     DQ(m, D tot=0; wv=AV(w); DQ(p, tot+=((D)*av++)*((D)*wv++);) *zv++=tot;)
     smallprob=0;  // Don't compute it again
    }else if(!(smallprob = m*n*(IL)p<1000LL)){  // if small problem, avoid the startup overhead of the matrix version  TUNE
-      memset(DAV(z),C0,m*n*sizeof(D));
+      mvc(m*n*sizeof(D),DAV(z),8,MEMSET00);
       igemm_nn(m,n,p,1,(I*)DAV(a),p,1,(I*)DAV(w),n,1,0,DAV(z),n,1);
    }
    // If there was a floating-point error, retry it the old way in case it was _ * 0
@@ -877,7 +877,7 @@ time1 (x,y)&,"0 ((256 1e20 1e20 65536 > x*y) # 0 1 2 3) +/ lens
     smallprob=0;
     if((n&3)==3){blockedmmult(jt,DAV(a),DAV(w),DAV(z),m,n,p,0);}
     else if(n&2){
-     memset(DAV(z),C0,m*n*sizeof(D));
+     mvc(m*n*sizeof(D),DAV(z),8,MEMSET00);
      dgemm_nn(m,n,p,1.0,DAV(a),p,1,DAV(w),n,1,0.0,DAV(z),n,1);
     }else if(n&1){cachedmmult(jt,DAV(a),DAV(w),DAV(z),m,n,p,0);
     }else smallprob=1;
@@ -894,7 +894,7 @@ time1 ,&(x,y)"0 ((256 1e20 1e20 65536 > x*y) # 0 1 2 3) +/ lens
     smallprob=0;
     if((m&3)==3){blockedmmult(jt,DAV(a),DAV(w),DAV(z),m,n,p,0);}
     else if(m&2){
-     memset(DAV(z),C0,m*n*sizeof(D));
+     mvc(m*n*sizeof(D),DAV(z),8,MEMSET00);
      dgemm_nn(m,n,p,1.0,DAV(a),p,1,DAV(w),n,1,0.0,DAV(z),n,1);
     }else if(m&1){cachedmmult(jt,DAV(a),DAV(w),DAV(z),m,n,p,0);
     }else smallprob=1;
@@ -906,7 +906,7 @@ time1 ,&(x,y)"0 ((256 1e20 1e20 65536 > x*y) # 0 1 2 3) +/ lens
     D *av=DAV(a), *wv=DAV(w), *zv=DAV(z);  //  pointers to sections
     I flgs=((AFLAG(a)>>(AFUPPERTRIX-FLGAUTRIX))&FLGAUTRI)|((AFLAG(w)>>(AFUPPERTRIX-FLGWUTRIX))&FLGWUTRI);  // flags from a or w
     if((UI)(m*n*(IL)p)>=(UI)JT(jt,dgemm_thres)){   // test for BLAS.  For AVX2 this should not be taken; for other architectures tuning is required
-     memset(DAV(z),C0,m*n*sizeof(D));
+     mvc(m*n*sizeof(D),DAV(z),8,MEMSET00);
      dgemm_nn(m,n,p,1.0,DAV(a),p,1,DAV(w),n,1,0.0,DAV(z),n,1);
     } else {
      smallprob=1^cachedmmult(jt,av,wv,zv,m,n,p,flgs);  // run the cached mult; if NaN error, remember that fact
@@ -918,7 +918,7 @@ time1 ,&(x,y)"0 ((256 1e20 1e20 65536 > x*y) # 0 1 2 3) +/ lens
       cachedmmult(jt,DAV(a),DAV(w),DAV(z),m,n,p,((AFLAG(a)>>(AFUPPERTRIX-FLGAUTRIX))&FLGAUTRI)|((AFLAG(w)>>(AFUPPERTRIX-FLGWUTRIX))&FLGWUTRI));  // Do our one-core matrix multiply - real   TUNE this is 160x160 times 160x160.  Tell routine if uppertri
      else{
       // If the problem is really big, use BLAS
-      memset(DAV(z),C0,m*n*sizeof(D));
+      mvc(m*n*sizeof(D),DAV(z),8,MEMSET00);
       dgemm_nn(m,n,p,1.0,DAV(a),p,1,DAV(w),n,1,0.0,DAV(z),n,1);
      }
     }
@@ -946,7 +946,7 @@ time1 ,&(x,y)"0 ((256 1e20 1e20 65536 > x*y) # 0 1 2 3) +/ lens
     if((UI)probsize<(UI)JT(jt,zgemm_thres)){smallprob=1^cachedmmult(jt,DAV(a),DAV(w),DAV(z),m,n*2,p*2,((AFLAG(a)>>(AFUPPERTRIX-FLGAUTRIX))&FLGAUTRI)|((AFLAG(w)>>(AFUPPERTRIX-FLGWUTRIX))&FLGWUTRI)|FLGCMP);}  // Do the fast matrix multiply - complex.  Change widths to widths in D atoms, not complex atoms  TUNE  this is 130x130 times 130x130
     else {
       // Large problem - start up BLAS
-      memset(DAV(z),C0,2*m*n*sizeof(D));
+      mvc(2*m*n*sizeof(D),DAV(z),8,MEMSET00);
       zgemm_nn(m,n,p,zone,(dcomplex*)DAV(a),p,1,(dcomplex*)DAV(w),n,1,zzero,(dcomplex*)DAV(z),n,1);
     }
    }

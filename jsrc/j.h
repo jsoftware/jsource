@@ -879,7 +879,7 @@ extern unsigned int __cdecl _clearfp (void);
  if(likely(name!=0)){   \
  AK(name)=akx; AT(name)=(type); AN(name)=atoms;   \
  AR(name)=(RANKT)(rank);     \
- if(!((type)&DIRECT)){if(SY_64){if(rank==0)AS(name)[0]=0; if((bytes-32)&-32)memset((C*)(AS(name)+1),C0,(bytes-32)&-32);}else{memset((C*)name+akx,C0,bytes+1-akx);}}  \
+ if(!((type)&DIRECT)){if(SY_64){if(rank==0)AS(name)[0]=0; if((bytes-32)&-32)mvc((bytes-32)&-32,(C*)(AS(name)+1),8,MEMSET00);}else{mvc(bytes+1-akx,(C*)name+akx,8,MEMSET00);}}  \
  shapecopier(name,type,atoms,rank,shaape)   \
     \
  }else{erraction;} \
@@ -900,7 +900,7 @@ extern unsigned int __cdecl _clearfp (void);
  I akx=AKXR(rank);   \
  if(likely(name!=0)){   \
   AK(name)=akx; AT(name)=(type); AN(name)=atoms; AR(name)=(RANKT)(rank);     \
-  if(!((type)&DIRECT)){if(SY_64){AS(name)[0]=0; memset((C*)(AS(name)+1),C0,(bytes-32)&-32);}else{memset((C*)name+akx,C0,bytes+1-akx);}}   /* overclears the data but never over buffer bdy */ \
+  if(!((type)&DIRECT)){if(SY_64){AS(name)[0]=0; mvc((bytes-32)&-32,(C*)(AS(name)+1),8,MEMSET00);}else{mvc(bytes+1-akx,(C*)name+akx,8,MEMSET00);}}   /* overclears the data but never over buffer bdy */ \
   shapecopier(name,type,atoms,rank,shaape)   \
      \
  }else{erraction;} \

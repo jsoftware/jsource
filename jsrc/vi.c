@@ -1219,7 +1219,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z;B mk=w==mark,th;
    switch(mode){
     case IIDOT:  
     case IICO:    GATV(z,INT,zn,f+f0,s); if(af)MCISH(f+AS(z),ws+wf,f0); v=AV(z); DQ(zn, *v++=m;); R z;
-    case IEPS:    GATV(z,B01,zn,f+f0,s); if(af)MCISH(f+AS(z),ws+wf,f0); memset(BAV(z),C0,zn); R z;
+    case IEPS:    GATV(z,B01,zn,f+f0,s); if(af)MCISH(f+AS(z),ws+wf,f0); mvc(zn,BAV(z),8,MEMSET00); R z;
     case ILESS:                              RCA(w);
     case IIFBEPS:                            R mtv;
     case IANYEPS: case IALLEPS: case II0EPS: R num(0);

@@ -103,7 +103,7 @@ F1(jtmemhistoq){
 
 F1(jtmemhistos){I k;
  ASSERTMTV(w); 
- memset(jt->memhisto,0,sizeof(jt->memhisto));
+ mvc(sizeof(jt->memhisto),jt->memhisto,8,MEMSET00);
  R mtm;
 }
 
@@ -116,7 +116,7 @@ F1(jtmemhashq){
 }
 F1(jtmemhashs){
  ASSERTMTV(w); 
- memset(histarea,0,sizeof(histarea));
+ mvc(sizeof(histarea,histarea,8,MEMSET00));
  R mtm;
 }
 
@@ -1130,7 +1130,7 @@ RESTRICTF A jtga(J jt,I type,I atoms,I rank,I* shaape){A z;
  // Set rank, and shape if user gives it.  This might leave the shape unset, but that's OK
  AR(z)=(RANKT)rank;   // Storing the extra last I (as was done originally) might wipe out rank, so defer storing rank till here
  // Since we allocate powers of 2, we can make the memset a multiple of 32 bytes.  The value of an atomic box would come before the cleared region, but we pick that up here when the shape is cleared
- if(!(type&DIRECT)){if(SY_64){memset((C*)(AS(z)+1),C0,(bytes-32)&-32);}else{memset((C*)z+akx,C0,bytes+1-akx);}}  // bytes=63=>0 bytes cleared.  bytes=64=>32 bytes cleared.  bytes=64 means the block is 65 bytes long
+ if(!(type&DIRECT)){if(SY_64){mvc((bytes-32)&-32,(C*)(AS(z)+1),8,MEMSET00);}else{mvc(bytes+1-akx,(C*)z+akx,8,MEMSET00);}}  // bytes=63=>0 bytes cleared.  bytes=64=>32 bytes cleared.  bytes=64 means the block is 65 bytes long
  GACOPYSHAPEG(z,type,atoms,rank,shaape)  /* 1==atoms always if t&SPARSE  */  // copy shape by hand since short
   // Tricky point: if rank=0, GACOPYSHAPEG stores 0 in AS[0] so we don't have to do that in the DIRECT path
    // All non-DIRECT types have items that are multiples of I, so no need to round the length
@@ -1288,7 +1288,7 @@ A jtext(J jt,B b,A w){A z;I c,k,m,m1,t;
  MCISH(&AS(z)[1],&AS(w)[1],AR(w)-1);
  if(b){ACINITZAP(z); mf(w);}          // 1=b iff w is permanent.  This frees up the old block but not the contents, which were transferred as is
  AS(z)[0]=m1; AN(z)=m1*c;       /* "optimal" use of space */
- if(!(t&DIRECT))memset(CAV(z)+m*k,C0,k*(m1-m));  // if non-DIRECT type, zero out new values to make them NULL
+ if(!(t&DIRECT))mvc(k*(m1-m),CAV(z)+m*k,8,MEMSET00);  // if non-DIRECT type, zero out new values to make them NULL
  R z;
 }
 
@@ -1296,7 +1296,7 @@ A jtexta(J jt,I t,I r,I c,I m){A z;I m1;
  GA(z,t,m*c,r,0); 
  I k=bp(t); AS(z)[0]=m1=allosize(z)/(c*k); AN(z)=m1*c;
  if(2==r)*(1+AS(z))=c;
- if(!(t&DIRECT))memset(AV(z),C0,k*AN(z));
+ if(!(t&DIRECT))mvc(k*AN(z),AV(z),8,MEMSET00);
  R z;
 }    /* "optimal" allocation for type t rank r, c atoms per item, >=m items */
 

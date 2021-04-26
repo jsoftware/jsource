@@ -34,8 +34,7 @@ ARGCHK2D(fx,hx) \
 POPZOMB; RZ(z=(g2)((J)(intptr_t)((((I)jtinplace&(~(JTINPLACEA+JTINPLACEW)))|(((I )(fx!=protw)&(I )(fx!=prota))*JTINPLACEA+((I )(hx!=protw)&(I )(hx!=prota)*JTINPLACEW)))&(REPSGN(SGNIF(FAV(gs)->flag,VJTFLGOK2X))|~JTFLAGMSK)),fx,hx,gs));}
 
 static DF1(jtfolk1){F1PREFIP;DECLFGH;PROLOG(0028);A z; FOLK1; EPILOG(z);}
-static DF2(jtfolk2){F2PREFIP;DECLFGH;PROLOG(0029);A z; FOLK2;
- EPILOG(z);}
+static DF2(jtfolk2){F2PREFIP;DECLFGH;PROLOG(0029);A z; FOLK2; EPILOG(z);}
 
 // see if f is defined as [:, as a single name
 static B jtcap(J jt,A x){V*v;L *l;
@@ -150,8 +149,7 @@ A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I
   break;
  }
 
- // m will be 0-7 for a comparison combination.  bit 2 of m is set for [: op/ comp, 0 for comp i: 0:/1:
- // m bits 0-1 indicate the combiner: +/ +./ *./ 
+ // m will be 0-7 for a comparison combination m+II0EPS
  switch(fi==CCAP?gi:hi){
  case CQUERY:  if((hi&~1)==CPOUND){f2=jtrollk; flag &=~(VJTFLGOK2);}  break;  // [: ? #  or  [: ? $
  case CQRYDOT: if((hi&~1)==CPOUND){f2=jtrollkx; flag &=~(VJTFLGOK2);} break;  // [: ?. #  or  [: ?. $ 
@@ -178,12 +176,21 @@ A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I
   } break;
  }
 
- // comparison combinations
+#if C_CRC32C && SY_64
+ if(unlikely(fi==CLEFT)){
+  I d=hv->id; d=d==CFIT&&hv->localuse.lu1.cct==1.0?FAV(hv->fgh[0])->id:d;  // comparison op, possibly from u!.0
+  I c=hv->id; I e=c; e=e==CFIT?FAV(hv->fgh[0])->id:e;  // comparison op, possibly from u!.f
+  if(BOTHEQ8(d,e,CLESS,CLESS)){  // ([ -. -.)  and ([ -. -.!.f) - the middle -. can also be !.0.  It is implemented as !.0
+   f2=jtintersect;  // treat the compound as a primitive of its own
+  }
+ }
+#endif
+
+ // comparison combinations II0EPS-IIFBEPS.  If the comparison is e. these go through indexofsub, but first the ranks have to be tested in compsc
  if(0<=m){  // comparison combiner has been found.  Is there a comparison?
   // m has information about the comparison combiner.  See if there is a comparison
   V *cv=(m&=7)>=4?hv:fv;  // cv point to comp in comp i. 0:  or [: +/ comp
-  I d=cv->id;  // comparison op
-  I e=d; e=d==CFIT&&cv->localuse.lu1.cct==1.0?FAV(cv->fgh[0])->id:e;  // comparison op, possibly from u!.0
+  I d=cv->id; I e=d; e=e==CFIT&&cv->localuse.lu1.cct==1.0?FAV(cv->fgh[0])->id:e;  // comparison op, possibly from u!.0
   if(BETWEENC(e,CEQ,CEPS)){
    // valid comparison combination.  m is the combiner, e is the comparison
    f2=d==CFIT?jtfolkcomp0:jtfolkcomp;  // valid comparison type: switch to it

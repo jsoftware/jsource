@@ -49,6 +49,7 @@ static UIL calcctmask(D cct){
  R ((UIL)~0LL)<<(zeropos-15);
 }
 
+#if 0  // obsolete 
 #if (C_AVX2&&SY_64) || EMU_AVX2
 static void fillwords(void* x, UI4 storeval, I nstores){
  __m256i* storeptr = (__m256i*)x;
@@ -76,6 +77,7 @@ static __forceinline void fillwords(void* x, UI4 storeval, I nstores){
  if(nstores&1)_mm_storel_epi64 (storeptr, store128);  // If there is an odd word, store it
 }
 #endif
+#endif
 
 // Routine to allocate sections of the hash tables
 // *hh is the hash table we have selected, p is the number of hash entries we need, asct is the maximum+1 value that needs to be stored in an entry
@@ -95,9 +97,10 @@ static I hashallo(IH * RESTRICT hh,UI p,UI asct,I md){
   // ~. ~: I.@~. -.   all prefer the table to be complemented and thus initialized to 1.
   // REVERSED types always initialize to 1, whether packed or not
   // this is a kludge - the initialization value should be passed in by the caller, in asct
-  UI4 fillval = md&IREVERSED?(md&IIMODPACK?255:1):((md&(IIMODPACK+IIOPMSK))<=INUBI); fillval|=fillval<<8; fillval|=fillval<<16;
+  UI fillval = md&IREVERSED?(md&IIMODPACK?255:1):((md&(IIMODPACK+IIOPMSK))<=INUBI); fillval|=fillval<<8; fillval|=fillval<<16;  // mvc overfetches, so need full UI
 // obsolete   fillwords((__m128i*)hh->data.UI, fillval, p>>LGSZI);  // fill 64-bit words with 32-bit values
-  fillwords(hh->data.UI, fillval, p>>LGSZI);  // fill 64-bit words with 32-bit values
+// obsolete   fillwords(hh->data.UI, fillval, p>>LGSZI);  // fill 64-bit words with 32-bit values
+  mvc(p,hh->data.UI,4,&fillval);  // fill with repeated copies of fillval
   // If the invalid area grows, update the invalid hwmk, and also the partition
   p >>= hh->hashelelgsize;  // convert p to hash index 
   if(p>hh->invalidhi){
@@ -166,10 +169,11 @@ static I hashallo(IH * RESTRICT hh,UI p,UI asct,I md){
   md |= IIMODBASE0;  // if we clear the region, mention that so that we get the fastest code
   // Clear the entries of the first allocation to asct.  Use fullword stores or cache-line stores.  Our allocations are always multiples of fullwords,
   // so it is safe to overfill with fullword stores
-  UI storeval=asct; if(hh->hashelelgsize==1)storeval |= storeval<<16;  // Pad store value to 64 bits, dropping excess on smaller machines
-  I nstores=((p<<hh->hashelelgsize)+SZI-1)>>LGSZI;  // get count of partially-filled words
+  UI storeval=asct; if(hh->hashelelgsize==1)storeval |= storeval<<16;  // Pad store value to 64 bits, dropping excess on smaller machines.  mvc overfetches
+// obsolete   I nstores=((p<<hh->hashelelgsize)+SZI-1)>>LGSZI;  // get count of partially-filled words
 // obsolete   fillwords((__m128i*)hh->data.UI, (UI4)storeval, nstores);  // fill 64-bit words with 32-bit values
-  fillwords(hh->data.UI, (UI4)storeval, nstores);  // fill 64-bit words with 32-bit values
+// obsolete   fillwords(hh->data.UI, (UI4)storeval, nstores);  // fill 64-bit words with 32-bit values
+  mvc(((p<<hh->hashelelgsize)+SZI-1)&-SZI,hh->data.UI,4,&storeval);  // fill with repeated copies of fillval
   // Clear everything past the first allocation to 0, indicating 'not touched yet'.  But we can elide this if it is already 0, which we can tell by
   // examining the partition pointer and the right-hand index.  This is important if FORCE0 was set for i."r: we will repeatedly reset the base, and
   // we need to avoid clearing the whole buffer for any time after the first.
@@ -530,6 +534,10 @@ static B jteqa0(J jt,I n,A*u,A*v){PUSHCCT(1.0) B res=1; DQ(n, if(!equ(*u,*v)){re
 #define XMVP(T,TH,hash,exp,stride,reflex)      \
  if(k==SZI){XDOP(T,TH,hash,exp,stride,{},{*(I*)zc=*(I*)_mm_extract_epi64(vp,1); zc+=SZI;},reflex); }  \
  else      {XDOP(T,TH,hash,exp,stride,{},{MC(zc,(C*)_mm_extract_epi64(vp,1),k); zc+=k;},reflex); }
+// version for ([ -. -.)
+#define XMVPI(T,TH,hash,exp,stride,reflex)      \
+ if(k==SZI){XDOP(T,TH,hash,exp,stride,{*(I*)zc=*(I*)_mm_extract_epi64(vp,1); zc+=SZI;},{},reflex); }  \
+ else      {XDOP(T,TH,hash,exp,stride,{MC(zc,(C*)_mm_extract_epi64(vp,1),k); zc+=k;},{},reflex); }
 
 // The main search routine, given a, w, mode, etc, for datatypes with no comparison tolerance
 
@@ -561,6 +569,7 @@ static B jteqa0(J jt,I n,A*u,A*v){PUSHCCT(1.0) B res=1; DQ(n, if(!equ(*u,*v)){re
    case INUBSV|IIMODREFLEX: { B *zb=(B*)zv; XDOP(T,TH,hash,exp,stride,{*zb++=0;},{*zb++=1;},1) zv=(I*)zb;} /* IRS - keep zv running */  break;  \
    case INUB|IIMODREFLEX: { C *zc=(C*)zv;       XMVP(T,TH,hash,exp,stride,1);                ZCSHAPE; }   break;  \
    case ILESS: { C *zc=(C*)zv; XMVP(T,TH,hash,exp,stride,0);                ZCSHAPE; }   break;  \
+   case IINTER: { C *zc=(C*)zv; XMVPI(T,TH,hash,exp,stride,0);                ZCSHAPE; }   break;  \
    case INUBI|IIMODREFLEX: {I *zi=zv;  XDOP(T,TH,hash,exp,stride,{},{*zi++=i;},1) ZISHAPE; }   break;  \
    case IEPS: { B *zb=(B*)zv;  XDOP(T,TH,hash,exp,stride,{*zb++=1;},{*zb++=0;},0) zv=(I*)zb;} /* this has IRS, so zv must be kept right */                       break;  \
     /* the rest are f@:e., none of which have IRS */ \
@@ -733,10 +742,7 @@ static IOFX(Z,UI4,jtioz02,, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n)
  if(il>=i){HASHSLOT(cthia(ctmask,1.0,*v))  FINDWR(TH,expa); il=i;} \
  }
 
-
-
-
-// loop to process each item of w.
+// ******* macros to process each item of w *******
 // FXY is a TFIND macro, charged with setting il.
 // Set il, execute the statement, advance to the next item
 #define TDOXY(T,TH,FXY,expa,expw,fstmt0,endtest1,fstmt1,stmt)  \
@@ -754,6 +760,11 @@ static IOFX(Z,UI4,jtioz02,, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n)
   {if(k==sizeof(T)){DQ(wsct, FXY(TH,expa,expw,goto found3;,hj==asct,il=hj;); *(T*)zc=*(T*)v; zc+=(il==asct)*sizeof(T); found3: v=(T*)((C*)v+k); );  \
             }else{DQ(wsct, FXY(TH,expa,expw,goto found2;,hj==asct,goto found2;); {MC(zc,v,k); zc+=k;}; found2: v=(T*)((C*)v+k); );}  \
  }
+// For ([ -. -.)
+#define TMVXI(T,TH,FXY,expa,expw)   \
+  {if(k==sizeof(T)){DQ(wsct, FXY(TH,expa,expw,{},hj==asct,il=hj;); *(T*)zc=*(T*)v; zc+=(il!=asct)*sizeof(T); v=(T*)((C*)v+k); );  \
+            }else{DQ(wsct, FXY(TH,expa,expw,{},hj==asct,il=hj;); if(il!=asct){MC(zc,v,k); zc+=k;}; v=(T*)((C*)v+k); );}  \
+ }
 // for ~.  Same idea, but reflexive.  FYY is always TFINDBYKEY
 #define TMVY(T,TH,FYY,expa,expw)   \
   {if(k==sizeof(T)){DO(wsct, FYY(TH,expa,expw,{},hj==asct,il=hj;); *(T*)zc=*(T*)v; zc+=(i==il)*sizeof(T); v=(T*)((C*)v+k); );     \
@@ -762,6 +773,11 @@ static IOFX(Z,UI4,jtioz02,, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n)
 
 #define SETXNEW  __m128d tltr; tltr=_mm_set_pd(tl,tr); xnew=xrot=xval=_mm_setzero_pd();
 // Do the operation.  Build a hash for a except when self-index
+// FXY is a TFIND macro, charged with setting il.
+// FYY similar, for reflexive searches
+// FYYKEY similar for nub/key - they add to the hash only if noun found
+// expa - test for matches during hashing.  expa is true for NO match.  n v av hj are available as parameters
+// expw - test for matches during lookup, i. e. reading hashtable.  expw is true for NO match.  n v av hj are available as parameters
 #define IOFT(T,TH,f,hash,FXY,FYY,FYYKEY,expa,expw)   \
  IOF(f){I acn=ak/sizeof(T),  \
         wcn=wk/sizeof(T),* zv=AV(z);T* RESTRICT av=(T*)AV(a),* wv=(T*)AV(w);I md; \
@@ -791,6 +807,7 @@ static IOFX(Z,UI4,jtioz02,, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n)
     case INUBSV|IIMODREFLEX:{T * RESTRICT v=wv; I j, hj; B * RESTRICT zb=(B*)zv; TDOXY(T,TH,FYYKEY,expw,expw,{},hj>=il,il=hj;,*zb++=i==il;); zv=(I*)zb;} break;  /* zv must keep running */  \
     case INUB|IIMODREFLEX:  {T * RESTRICT v=wv; I j, hj; D * RESTRICT zd=(D*)zv; C * RESTRICT zc=(C*)zv; TMVY(T,TH,FYYKEY,expw,expw); ZCSHAPE; }    break;  \
     case ILESS: {T * RESTRICT v=wv; I j, hj; D * RESTRICT zd=(D*)zv; C * RESTRICT zc=(C*)zv; TMVX(T,TH,FXY,expa,expw); ZCSHAPE; }    break;  \
+    case IINTER: {T * RESTRICT v=wv; I j, hj; D * RESTRICT zd=(D*)zv; C * RESTRICT zc=(C*)zv; TMVXI(T,TH,FXY,expa,expw); ZCSHAPE; }    break;  \
     case INUBI|IIMODREFLEX: {T * RESTRICT v=wv; I j, hj; I * RESTRICT zi=zv; TDOXY(T,TH,FYYKEY,expw,expw,{},hj>=il,il=hj;,*zi=i; zi+=(i==il);); ZISHAPE;} break;  \
     case IEPS:  {T * RESTRICT v=wv; I j, hj; B * RESTRICT zb=(B*)zv; TDOXY(T,TH,FXY,expa,expw,{},hj>=il,il=hj;,*zb++=(il!=asct);); zv=(I*)zb;} break;   /* zv must keep running */ \
     case II0EPS: {T * RESTRICT v=wv; I j, hj; I * RESTRICT zi=zv; I s=wsct; TDOXY(T,TH,FXY,expa,expw,{},hj>=il,il=hj;,if(asct==il){s=i; break;}); *zi=s;} break;  \
@@ -851,14 +868,14 @@ static IOFT(A,UI4,jtioa12,cthia(ctmask,1.0,*v),TFINDBX,TFINDBY,TFINDBYKEY,!equ(*
 
 // creation of the value vector
 
-// The bitmask was cleared to 0 by hashalloc
+// The bitmask was cleared to 0/1 by hashalloc depending on function
 // Boolean/bit hashtables.  Used  where the position doesn't matter, i. e. for all but i./i: 
 // Set TRUE for each value found.  hh->currentlo will always be 0.  zi starts at 0, since values don't matter
 // The value in the cell is 0 or 1, since we don't care what the original position was
 // We init the table to 0 or 1 depending on the primitive; but we always use 0 for PACKed bits, because it's never right to add
 // an instruction to building the table
 #define SDO(T,bitdef)  UC* RESTRICT hu=hh->data.UC-min; if(!(mode&IPHOFFSET)){T* RESTRICT mav=av; DO(asct, hu[mav[i]]=1-bitdef;)}
-#define SDOP(T)  UC* RESTRICT hu=hh->data.UC-BYTENO(min); if(!(mode&IPHOFFSET)){T* RESTRICT mav=av; DO(asct, hu[BYTENO(mav[i])]|=1<<BITNO(mav[i]);)}
+#define SDOP(T)  UC* RESTRICT hu=hh->data.UC-BYTENO(min); if(!(mode&IPHOFFSET)){T* RESTRICT mav=av; DO(asct, hu[BYTENO(mav[i])]|=1<<BITNO(mav[i]);)}  // packed version
 
 // US/UI4 hashtables
 // the value in the cell indicates the original input position; the index of the cell indicates the input value
@@ -889,7 +906,7 @@ static IOFT(A,UI4,jtioa12,cthia(ctmask,1.0,*v),TFINDBX,TFINDBY,TFINDBYKEY,!equ(*
                           while(zi){T v=mwv[zi]; Ttype *hv=hu+v; if(v<min)hv=def; if(v>max)hv=def; zv[zi]=*hv; ++zi;}}
 #define SCOZF0(T,Ttype,vv) {zie=wsct-1; I * RESTRICT zv=AV(z)+l*wsct; while(zie>=0){zv[zie]=hu[wv[zie]]; --zie;}}  // backwards scan
 
-// for e. -. u@e. - for each item of w, see if it is in the value table.  Set v to the value read from the table (1 if in table).
+// for e. -. u@e. ([ -. -.) - for each item of w, see if it is in the value table.  Set v to the value read from the table (1 if in table).
 // The table is always allocated as a bit vector and therefore is at offset 0 in the table
 // wv[i] is the data value read, if that's needed
 // Declare the result vector, and prebias it for our loop if needed.  indexed is 1 if zv will be referred to as zv[i], 0 if by *zv
@@ -914,6 +931,7 @@ static IOFT(A,UI4,jtioa12,cthia(ctmask,1.0,*v),TFINDBX,TFINDBY,TFINDBYKEY,!equ(*
 #define SMCASEF(casename, text) case IIMODFULL+casename: text break;
 #define SMCASEP(casename, text) case IIMODPACK+casename: text break;
 #define SMCASE1(casename, text) case IIMODFULL+IIMODPACK+casename: text break;
+// action here is (parms to SCO*) cleanup  - the cleanup comes after the SCO* loop
 #define SMFULLPACK(T,bitdef,casename,decl,action) SMCASE0(casename, {SDO(T,bitdef) decl SCOW action}) SMCASEF(casename, {SDO(T,bitdef) decl SCOWF action}) SMCASEP(casename, {SDOP(T) decl SCOWP action}) SMCASE1(casename, {SDOP(T) decl SCOWPF action})
 #define SMFULLPACQ(T,bitdef,casename,decl,action) SMCASE0(casename, {SDO(T,bitdef) decl SCQW action}) SMCASEF(casename, {SDO(T,bitdef) decl SCQWF action}) SMCASEP(casename, {SDOP(T) decl SCQWP action}) SMCASE1(casename, {SDOP(T) decl SCQWPF action})
 // EPS builds a full-size result and thus can scan FULLs in either order; we choose backwards
@@ -976,9 +994,10 @@ static IOFT(A,UI4,jtioa12,cthia(ctmask,1.0,*v),TFINDBX,TFINDBY,TFINDBYKEY,!equ(*
    case IIMODFULL+IICO:    {SDOA(T,Ttype); SCOZF(T,Ttype,asct);} break;  \
    case IIMODBASE0+IICO:   {SDOA(T,Ttype);  SCOZ0(T,Ttype,asct);} break;  \
    case IIMODBASE0+IIMODFULL+IICO: {SDOA(T,Ttype); SCOZF0(T,Ttype,asct);} break;  \
-    /* Boolean indexes from here on.  These must support FULL and PACK */ \
+    /* Boolean indexes from here on.  These must support FULL and PACK.  bitdef appears twice */ \
    SMFULLPACKEPS(T,0,IEPS,  (T,0,zv[i]=v;)) /* EPS scans FULL args backwards for cache coherence */ \
    SMFULLPACK(T,1,ILESS,  DCLZVO(T,0) T *zv0=zv; , (T,1,*zv=mwv[i]; zv+=v;); AS(z)[0]= zv-zv0; AN(z)=n*(zv-zv0);)  \
+   SMFULLPACK(T,0,IINTER,  DCLZVO(T,0) T *zv0=zv; , (T,0,*zv=mwv[i]; zv+=v;); AS(z)[0]= zv-zv0; AN(z)=n*(zv-zv0);)  \
    SMFULLPACK(T,0,II0EPS, DCLZVO(I,0) I s=wsct; , (T,0,if(!v){s+=i; break;});*zv++=s;)  \
    SMFULLPACK(T,0,II1EPS, DCLZVO(I,0) I s=wsct; , (T,0,if(v){s+=i; break;});*zv++=s; )  \
    SMFULLPACQ(T,0,IJ0EPS, DCLZVQ(I,0) I s=wsct; , (T,0,if(!v){s=i; break;});*zv++=s;)  \
@@ -998,6 +1017,7 @@ static IOFSMALLRANGE(jtio22,US,US)  static IOFSMALLRANGE(jtio24,US,UI4)  // 2-by
 static IOFSMALLRANGE(jtio42,I,US)  static IOFSMALLRANGE(jtio44,I,UI4)  // 4/8-byte items, using small/large hashtable
 
 // ******************* fourth class: sequential comparison ***************************************
+// implemented only for i. i: e. u/.   - perhaps should revert for other compounds
 
 #define IOSCCASE(bit,multi,mode) ((8*(multi)+(bit))*4+((mode)&3))
 
@@ -1254,6 +1274,7 @@ static IOF(jtiobs){A*av,*wv,y;B *yb,*zb;C*zc;I acn,*hu,*hv,l,m1,md,s,wcn,*zi,*zv
    case IICO:         BSLOOPAW(*zv++=-2==q?hu[j]:asct);                       break;
    case IEPS:         BSLOOPAW(*zb++=-2==q);                               break;
    case ILESS:        BSLOOPAW(if(-2< q){MC(zc,u,k); zc+=k;}); ZCSHAPE;    break;
+   case IINTER:       BSLOOPAW(if(!(-2< q)){MC(zc,u,k); zc+=k;}); ZCSHAPE;    break;
    case II0EPS:  s=asct; BSLOOPAW(if(-2< q){s=i; break;});        *zi++=s;    break;
    case IJ0EPS:  s=asct; BSLOOQAW(if(-2< q){s=i; break;});        *zi++=s;    break;
    case II1EPS:  s=asct; BSLOOPAW(if(-2==q){s=i; break;});        *zi++=s;    break;
@@ -1885,6 +1906,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
     case IICO:    GATV0(z,INT,zn,f+f0); MCISH(AS(z),s,f) MCISH(f+AS(z),ws+wf,f0); v=AV(z); DQ(zn, *v++=m;); R z;  // mustn't overfetch s
     case IEPS:    GATV0(z,B01,zn,f+f0); MCISH(AS(z),s,f) MCISH(f+AS(z),ws+wf,f0); memset(BAV(z),C0,zn); R z;  // mustn't overfetch s
     case ILESS:                              RCA(w);
+    case IINTER:                             R take(zeroionei(0),w);
     case IIFBEPS:                            R mtv;
     case IANYEPS: case IALLEPS: case II0EPS: R num(0);
     case ISUMEPS:                            R sc(0L);
@@ -2163,7 +2185,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
   case IICO:    GATV0(z,INT,zn,f+f1); MCISH(AS(z),s,f) MCISH(f+AS(z),ws+wf,f1); break;  // mustn't overfetch s
   case INUBSV:  GATV0(z,B01,zn,f+f1+!acr); MCISH(AS(z),s,f) MCISH(f+AS(z),ws+wf,f1); if(!acr)AS(z)[AR(z)-1]=1; break;  // mustn't overfetch s
   case INUB:    {I q; PRODX(q,AR(a)-1,AS(a)+1,m+1) GA(z,t,q,MAX(1,wr),ws); AS(z)[0]=m+1; break;}  // +1 because we speculatively overwrite.  Was MIN(m,p) but we don't have the range yet   scaf yes we do
-  case ILESS:   GA(z,t,AN(w),MAX(1,wr),ws); break;
+  case ILESS: case IINTER:   GA(z,t,AN(w),MAX(1,wr),ws); break;
   case IEPS:    GATV0(z,B01,zn,f+f1); MCISH(AS(z),s,f) MCISH(f+AS(z),ws+wf,f1); break;
   case INUBI:   GATV0(z,INT,m+1,1); break;  // +1 because we speculatively overwrite  Was MIN(m,p) but we don't have the range yet scaf yes we do
   // (e. i. 0:) and friends don't do anything useful if e. produces rank > 1.  The search for 0/1 always fails
@@ -2190,6 +2212,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
   case INUBSV:  R reshape(shape(z),take(sc(m),num(1)));
   case INUB:    AN(z)=0; AS(z)[0]=m?1:0; R z;
   case ILESS:   if(m)AN(z)=AS(z)[0]=0; else MC(AV(z),AV(w),AN(w)<<klg); R z;
+  case IINTER:  R take(zeroionei(0),w);
   case IEPS:    R reshape(shape(z),num(m&&(!n||(fnx&1))));  // fnx&1 is true if homo
   case INUBI:   R m?iv0:mtv;
   // th<0 means that the result of e. would have rank>1 and would never compare against either 0 or 1
@@ -2301,13 +2324,35 @@ F2(jtless){A x=w;I ar,at,k,r,*s,wr,*ws,wt;
  F2PREFIP;ARGCHK2(a,w);
  at=AT(a); ar=AR(a); 
  wt=AT(w); wr=AR(w); r=MAX(1,ar);
- if(ar>1+wr)RCA(a);  // if w's rank is smaller than that of a cell of a, nothing can be removed, return a
+ if(unlikely(ar>1+wr))RCA(a);  // if w's rank is smaller than that of a cell of a, nothing can be removed, return a
  // if w's rank is larger than that of a cell of a, reheader w to look like a list of such cells
- if((-wr&-(r^wr))<0){RZ(x=virtual(w,0,r)); AN(x)=AN(w); s=AS(x); ws=AS(w); k=ar>wr?0:1+wr-r; I s0; PRODX(s0,k,ws,1) s[0]=s0; MCISH(1+s,k+ws,r-1);}  //  use fauxvirtual here
- // if nothing special (like sparse, or incompatible types, or x requires conversion) do the fast way; otherwise (-. x e. y) # y
+ if(unlikely((-wr&-(r^wr))<0)){RZ(x=virtual(w,0,r)); AN(x)=AN(w); s=AS(x); ws=AS(w); k=ar>wr?0:1+wr-r; I s0; PRODX(s0,k,ws,1) s[0]=s0; MCISH(1+s,k+ws,r-1);}  //  use fauxvirtual here
+ // if nothing special (like sparse, or incompatible types, or x requires conversion) do the fast way; otherwise (-. x e. y) # x 
  // because LESS allocates a large array to hold all the values, we use the slower, less memory-intensive, version if a is mapped
  RZ(x=(NEGIFHOMO(at,wt)&((TYPESXOR(at,maxtyped(at,wt))|(at&SPARSE)|(AFLAG(a)&AFNJA))-1))<0?indexofsub(ILESS,x,a):
      repeat(not(eps(a,x)),a));
+ // We extracted from a, so mark it (or its backer if virtual) non-pristine.  If a was pristine and inplaceable, transfer its pristine status to the result
+ PRISTXFERAF(x,a)
+ RETF(x);
+}    /* a-.w */
+
+// x ([ -. -.[!.f]) y.  does not have IRS
+DF2(jtintersect){A x=w;I ar,at,k,r,*s,wr,*ws,wt;
+ F2PREFIP;ARGCHK2(a,w);
+ at=AT(a); ar=AR(a); 
+ wt=AT(w); wr=AR(w); r=MAX(1,ar);
+ if(unlikely(ar>1+wr))RCA(a);  // if w's rank is smaller than that of a cell of a, nothing can be removed, return a
+ // if w's rank is larger than that of a cell of a, reheader w to look like a list of such cells
+ if(unlikely((-wr&-(r^wr))<0)){RZ(x=virtual(w,0,r)); AN(x)=AN(w); s=AS(x); ws=AS(w); k=ar>wr?0:1+wr-r; I s0; PRODX(s0,k,ws,1) s[0]=s0; MCISH(1+s,k+ws,r-1);}  //  use fauxvirtual here
+ // comparison tolerance may be encoded in h - apply it if so
+ D savcct = jt->cct;
+ if(unlikely(FAV(FAV(self)->fgh[2])->id==CFIT))jt->cct=FAV(FAV(self)->fgh[2])->localuse.lu1.cct;
+ // if nothing special (like sparse, or incompatible types, or x requires conversion) do the fast way; otherwise (-. x e. y) # x 
+ // because LESS allocates a large array to hold all the values, we use the slower, less memory-intensive, version if a is mapped
+ x=(NEGIFHOMO(at,wt)&((TYPESXOR(at,maxtyped(at,wt))|(at&SPARSE)|(AFLAG(a)&AFNJA))-1))<0?indexofsub(IINTER,x,a):
+     repeat(eps(a,x),a);
+ jt->cct=savcct;
+ RZ(x);
  // We extracted from a, so mark it (or its backer if virtual) non-pristine.  If a was pristine and inplaceable, transfer its pristine status to the result
  PRISTXFERAF(x,a)
  RETF(x);

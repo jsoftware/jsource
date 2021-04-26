@@ -483,6 +483,9 @@ extern F2(jtlamin2);
 extern F2(jtlcapco);
 extern F2(jtleft2);
 extern F2(jtless);
+#if C_CRC32C && SY_64
+extern DF2(jtintersect);
+#endif
 extern DF2(jtlink);
 extern F2(jtloccre2);
 extern F2(jtlock2);

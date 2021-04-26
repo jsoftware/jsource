@@ -125,7 +125,7 @@ static B jtiopart(J jt,A w,I r,I mm,I*zc,A*zi,A*zj,A*zx){A b,f,wx,x,wy,y;B*bv;
  if(!all1(b)){RZ(wx=repeat(b,wx)); RZ(wy=repeat(b,wy));}
  v=AV(wy); m=AS(wy)[0]; n=AS(wy)[1]; nd=n-d;
  GATV0(b,B01,m,1); bv=BAV(b);
- if     (0==d){memset(bv,C0,m); if(m)*bv=1;}
+ if     (0==d){mvc(m,bv,8,MEMSET00); if(m)*bv=1;}
  else if(1==d){j=-1; DO(m, bv[i]=j!=*v; j=*v; v+=n;);}
  else{
   GATV0(x,INT,d,1); xv=AV(x); *xv=-1;

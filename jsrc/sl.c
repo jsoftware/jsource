@@ -89,7 +89,7 @@ void jterasenl(J jt, I n){
 // Runs in master thread
 static A jtinitnl(J jt){A q;
  I s; FULLHASHSIZE(5*1,INTSIZE,0,0,s);  // at least 5 slots, so we always have at least 2 empties
- GATV0(q,INT,s,0); memset(IAV(q),0,s*SZI);  // allocate hashtable and clear to 0
+ GATV0(q,INT,s,0); mvc(s*SZI,IAV(q),8,MEMSET00);  // allocate hashtable and clear to 0
  JT(jt,stnum)=q;  // save address of block
  AK(JT(jt,stnum))=0;  // set next number to allocate
  AM(JT(jt,stnum))=0;  // set number in use
@@ -104,7 +104,7 @@ static I jtgetnl(J jt){
  if(2*AM(JT(jt,stnum))>AN(JT(jt,stnum))){
   // Allocate a new block.  Don't use ext because we have to keep the old one for rehashing
   I s; FULLHASHSIZE(2*AM(JT(jt,stnum))+2,INTSIZE,0,0,s);
-  A new; GATV0(new,INT,s,0); memset(IAV(new),0,s*SZI);  // allocate hashtable and clear to 0
+  A new; GATV0(new,INT,s,0); mvc(s*SZI,IAV(new),8,MEMSET00);  // allocate hashtable and clear to 0
   // rehash the old table into the new
   I i; for(i=0;i<AN(JT(jt,stnum));++i){
    A st; if(st=(A)IAV0(JT(jt,stnum))[i]){  // if there is a value hashed...
@@ -277,7 +277,7 @@ A jtstfind(J jt,I n,C*u,I bucketx){L*v;
 }
 
 // Bring a destroyed locale back to life as if it were newly created: clear the chains, set the default path, clear the Bloom filter
-#define REINITZOMBLOC(g) memset(LXAV0(g)+1,0,(AN(g)-SYMLINFOSIZE)*sizeof(LXAV0(g)[0])); LOCPATH(g)=JT(jt,zpath); LOCBLOOM(g)=0;
+#define REINITZOMBLOC(g) mvc((AN(g)-SYMLINFOSIZE)*sizeof(LXAV0(g)[0]),LXAV0(g)+1,8,MEMSET00); LOCPATH(g)=JT(jt,zpath); LOCBLOOM(g)=0;
 static F2(jtloccre);
 // look up locale name, and create the locale if not found
 // If a locale is returned, its path has been made nonnull
@@ -362,7 +362,7 @@ F1(jtlocnl1){A a; GAT0(a,B01,256,1) memset(CAV1(a),C1,256L);  R locnlx(a,w);}
 F2(jtlocnl2){UC*u;
  ARGCHK2(a,w);
  ASSERT(LIT&AT(a),EVDOMAIN);
- A tmp; GAT0(tmp,B01,256,1) memset(CAV1(tmp),C0,256L);
+ A tmp; GAT0(tmp,B01,256,1) mvc(256L,CAV1(tmp),8,MEMSET00);
  u=UAV(a); DQ(AN(a),CAV1(tmp)[*u++]=1;);
  R locnlx(tmp,w); 
 }    /* 18!:1 locale name list */

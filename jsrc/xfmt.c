@@ -266,10 +266,10 @@ static F2(jtfmtprecomp) {A*as,base,fb,len,strs,*u,z;B*bits,*bw;D dtmp,*dw;
  if(1<nf){GATV0(base,INT,nf*4,2); s=AS(base); *s++=nf; *s=4;}else GATV0(base,INT,3+nc,1);
  GATV0(strs,BOX,nf*NMODVALS,2); s=AS(strs); *s++=nf; *s=NMODVALS;
  GATV(len, INT,n,wr,ws); 
- GATV(fb,  B01,n,wr,ws); memset(BAV(fb),C0,n);
+ GATV(fb,  B01,n,wr,ws); mvc(n,BAV(fb),8,MEMSET00);
  GAT0(z,BOX,4,1); u=AAV(z); *u++=incorp(base); *u++=incorp(strs); *u++=incorp(len); *u++=incorp(fb); 
  ib=AV(base); as=AAV(strs); u=AAV(a);
- if(1==nf){MC(ib,AV(*u),SZI*3); memset(ib+3,C0,SZI*nc); DO(NMODVALS, *as++=incorp(u[i+1]);)}
+ if(1==nf){MC(ib,AV(*u),SZI*3); mvc(SZI*nc,ib+3,8,MEMSET00); DO(NMODVALS, *as++=incorp(u[i+1]);)}
  else DQ(nf, MC(ib,AV(*u),SZI*3); ib[3]=0; ib+=4; DO(NMODVALS, *as++=incorp(u++[1]);) ++u; )
  bits=BAV(fb);
  switch(CTTZNOFLAG(wt)) {

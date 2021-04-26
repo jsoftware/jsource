@@ -164,7 +164,7 @@ static C* jtbrepfill(J jt,B b,B d,A w,C *zv){I klg,kk;
    // 0 to provide repeatable results.
    // Make sure there is a zero byte if the string is empty
    {I suffsize = MIN(4*SZI,origzv+blksize-zv);  // len of area to clear to 0 
-   memset((origzv+blksize)-suffsize,C0,suffsize);   // clear suffix
+   mvc(suffsize,(origzv+blksize)-suffsize,8,MEMSET00);   // clear suffix
    MC(zv,u,n<<klg); break;}      // copy the valid part of the data
   }
   R origzv+blksize;  // return next output position
@@ -392,7 +392,7 @@ F1(jtisnan){A*wv,z;B*u;D*v;I n,t;
  if (t&FL){v=DAV(w); DQ(n, *u++=_isnan(*v++););}  // float - check each atom
  else if(t&CMPX){v=DAV(w); DQ(n, *u++=_isnan(v[0])|_isnan(v[1]); v+=2;);}  // complex - check each half
  else if(t&BOX){wv=AAV(w); DO(n, *u++=isnanq(wv[i]);); RE(0);}  // boxed - check contents
- else memset(u,C0,n);  // other types are never NaN
+ else mvc(n,u,8,MEMSET00);  // other types are never NaN
  RETF(z);
 }
 

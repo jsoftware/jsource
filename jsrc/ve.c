@@ -167,7 +167,7 @@ AHDR2(minusIB,I,I,B){I u;I v;I w;I oflo=0;
 // BI multiply, using clear/copy
 AHDR2(tymesBI,I,B,I){I v;
  if(n-1==0)  DQ(m, I u=*x; *z++=*y&-u; x++; y++; )
- else if(n-1<0){n=~n; DQ(m, B u=*x++; if(u){if(z!=y)MC(z,y,n<<LGSZI);}else{memset(z,0,n<<LGSZI);} z+=n; y+=n;)}
+ else if(n-1<0){n=~n; DQ(m, B u=*x++; if(u){if(z!=y)MC(z,y,n<<LGSZI);}else{mvc(n<<LGSZI,z,8,MEMSET00);} z+=n; y+=n;)}
  else DQ(m, v=*y++; DQ(n, I u=*x; *z++=v&-u; x++;))
  R EVOK;
 }
@@ -175,13 +175,13 @@ AHDR2(tymesBI,I,B,I){I v;
 AHDR2(tymesIB,I,I,B){I u;
  if(n-1==0)  DQ(m, I v=*y; *z++=*x&-v; x++; y++; )
  else if(n-1<0)DQ(m, u=*x++; DQC(n, I v=*y; *z++=u&-v; y++;))
- else DQ(m, B v=*y++; if(v){if(z!=x)MC(z,x,n<<LGSZI);}else{memset(z,0,n<<LGSZI);} z+=n; x+=n;)
+ else DQ(m, B v=*y++; if(v){if(z!=x)MC(z,x,n<<LGSZI);}else{mvc(n<<LGSZI,z,8,MEMSET00);} z+=n; x+=n;)
  R EVOK;
 }
 // BD multiply, using clear/copy
 AHDR2(tymesBD,D,B,D){
  if(n-1==0)  DQ(m, D *yv=(D*)&dzero; yv=*x?y:yv; *z++=*yv; x++; y++; )
- else if(n-1<0){n=~n; DQ(m, B u=*x++; if(u){if(z!=y)MC(z,y,n*sizeof(D));}else{memset(z,0,n*sizeof(D));} z+=n; y+=n;)}
+ else if(n-1<0){n=~n; DQ(m, B u=*x++; if(u){if(z!=y)MC(z,y,n*sizeof(D));}else{mvc(n*sizeof(D),z,8,MEMSET00);} z+=n; y+=n;)}
  else DQ(m, DQ(n, D *yv=(D*)&dzero; yv=*x?y:yv; *z++=*yv; x++;) ++y;)
  R EVOK;
 }
@@ -189,7 +189,7 @@ AHDR2(tymesBD,D,B,D){
 AHDR2(tymesDB,D,D,B){
  if(n-1==0)  DQ(m, D *yv=(D*)&dzero; yv=*y?x:yv; *z++=*yv; x++; y++; )
  else if(n-1<0)DQ(m, DQC(n, D *yv=(D*)&dzero; yv=*y?x:yv; *z++=*yv; y++;) ++x;)
- else DQ(m, B v=*y++; if(v){if(z!=x)MC(z,x,n*sizeof(D));}else{memset(z,0,n*sizeof(D));} z+=n; x+=n;)
+ else DQ(m, B v=*y++; if(v){if(z!=x)MC(z,x,n*sizeof(D));}else{mvc(n*sizeof(D),z,8,MEMSET00);} z+=n; x+=n;)
  R EVOK;
 }
 AIFX( plusBD, D,B,D, +   )
@@ -431,7 +431,7 @@ F1(jtbase1){A z;B*v;I c,m,n,p,r,*s,t,*x;
  CPROD1(n,m,r-1,s);
  GATV(z,INT,m,r?r-1:0,s); x=AV(z); v=BAV(w);
  if(c)DQ(m, p=0; DQ(c, p=2*p+*v++;); *x++=p;)
- else memset(x,C0,m*SZI);
+ else mvc(m*SZI,x,8,MEMSET00);
  RETF(z);
 }
 

@@ -48,7 +48,7 @@ static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;DC d;
  // bring out the name, locale, and script into easy-to-display name
  C trackinfo[256];  // will hold name followed by locale
  forcetomemory(&trackinfo);
-#define SETTRACK if(x){memset(trackinfo,0,sizeof(trackinfo)); MC(trackinfo,CAV(x),MIN((I)sizeof(trackinfo),AN(x)));}
+#define SETTRACK if(x){mvc(sizeof(trackinfo),trackinfo,8,MEMSET00); MC(trackinfo,CAV(x),MIN((I)sizeof(trackinfo),AN(x)));}
 #else
 #define SETTRACK
 #endif
@@ -124,7 +124,7 @@ static A jtlinf(J jt,A a,A w,C ce,B tso){A x,y,z;B lk=0;C*s;I i=-1,n,oldi=jt->cu
  z=line(x,i,ce,tso); 
  jt->currslistx=oldi;  // pop script#
 #if SYS & SYS_PCWIN
- if(lk)memset(AV(x),C0,AN(x));  /* security paranoia */
+ if(lk)mvc(AN(x),AV(x),8,MEMSET00);  /* security paranoia */
 #endif
  R z;
 }

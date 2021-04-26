@@ -49,7 +49,7 @@ B jtsymext(J jt,B b){A x,y;I j,m,n,*v,xn,yn;L*u;
  xn=m*symcol;          /* new pool array atoms        */
  GATV0(x,INT,xn,0); v=(I*)LAV0(x);                 /* new pool array              */
  if(b)ICPY(v,LAV0(y),yn);                     /* copy old data to new array  */
- memset(v+yn,C0,SZI*(xn-yn));               /* 0 unused area for safety    */
+ mvc(SZI*(xn-yn),v+yn,8,MEMSET00);               /* 0 unused area for safety    */
  u=n+(L*)v; j=1+n;
  DQ(m-n-1, u++->next=(LX)(j++););                 /* build free list extension, leave last chain 0   */
  if(b)u->next=JT(jt,sympv)[0].next;              /* push extension onto stack   */

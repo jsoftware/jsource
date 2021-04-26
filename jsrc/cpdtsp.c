@@ -137,7 +137,7 @@ static F2(jtpdtspmm){A z,zi,zj,zx,zy,*old;D*axv,c,d,*dv,*wxv,*zyv;
  ARGCHK2(a,w);
  RZ(mmprep(PAV(a),&m,&aiv,0L ,0L  ,&axv)); aivm=m+aiv;
  RZ(mmprep(PAV(w),&m,&wiv,&wm,&wnv,&wxv));
- GATV0(zy,FL,AS(w)[1],1); zyv=DAV(zy); memset(zyv,C0,AN(zy)*sizeof(D));
+ GATV0(zy,FL,AS(w)[1],1); zyv=DAV(zy); mvc(AN(zy)*sizeof(D),zyv,8,MEMSET00);
  old=jt->tnextpushp; 
  RZ(zj=exta(INT,1L,1L,1000L)); zjv0=AV(zj);
  RZ(zi=exta(INT,2L,2L,1000L));

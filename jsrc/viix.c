@@ -27,7 +27,7 @@ static B jtiixBX(J jt,I n,I m,A a,A w,I*zv){B*av,*b,descend;I p,q;
  case B01:
   b=BAV(w);
   if(descend){DQ(m, *zv++=p*!*b++;)         /* p q */
-  }else if(p<0){memset(zv,C0,m*SZI);  /*   q */
+  }else if(p<0){mvc(m*SZI,zv,8,MEMSET00);  /*   q */
   }else if(q<0){DQ(m, *zv++=n* *b++;)  /* p   */
   }else{DQ(m, *zv++=q* *b++;)  /* p q */
   }

@@ -96,9 +96,9 @@ static F1(jtbitslplus){A t,z;I i,m,mm,n,n1,p,q,*u,wr,*ws,*zv;UC c,*vc,*wv;UI*v,*
  wr=AR(w);
  if(1>=wr)R sc(bitsum(AN(w),UAV(w)));
  ws=AS(w); m=*ws; if(m)n=AN(w)/m; else PROD(n,wr-1,1+ws); 
- GATV(z,INT,n,wr-1,1+ws); zv=AV(z); memset(zv,C0,SZI*n);
+ GATV(z,INT,n,wr-1,1+ws); zv=AV(z); mvc(SZI*n,zv,8,MEMSET00);
  if(!n)R z;
- if(!m){memset(zv,C0,n*SZI); R z;}
+ if(!m){mvc(n*SZI,zv,8,MEMSET00); R z;}
 #if SY_64
  mm=255;
  if(!ptab[1]){UC*v;UI x; v=(UC*)&x; DO(256, c=(UC)i; x=0; DO(8, if(c&(UC)1)v[7-i]=1; c>>=1;); ptab[i]=x;);}
@@ -244,7 +244,7 @@ static F1(jtbitravel){A z;I c,m,rw,wn,wr,*ws;UC*wv,*zv;
    wv+=r1;
   }
   if(r&&t)*zv++=k;
-  if(wn%BW)memset(zv,C0,(BW-wn%BW)/BB);
+  if(wn%BW)mvc((BW-wn%BW,zv,8,MEMSET00)/BB);
  }else MC(zv,wv,wn/BB);
  R z;
 }    /* , bit array */

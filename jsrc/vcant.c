@@ -79,7 +79,7 @@ static F2(jtcanta){A m,s,t,z;C*wv,*zv;I*av,j,*mv,r,*sv,*tv,wf,wr,*ws,zn,zr,ms[4]
  GA(z,AT(w),zn,zr,sv); if(!zn)R z;  // allocate result.  If result is empty, return it now
  // now run the transpose
  zv=CAV(z); wv=CAV(w);
- memset(tv,C0,r*SZI);  // repurpose tv to be the index list of the input pointer, and set to 0s.  Only the first r axes matter
+ mvc(r*SZI,tv,8,MEMSET00);  // repurpose tv to be the index list of the input pointer, and set to 0s.  Only the first r axes matter
  switch(cellsizeb){
  case sizeof(I): CANTA(I, *u++=*(I*)v;); break;
  case sizeof(C): CANTA(C, *u++=*(C*)v;); break;

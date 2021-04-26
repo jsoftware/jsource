@@ -42,7 +42,7 @@ A jtpaxis(J jt,I r,A a){A y,z;B*b;I j,*u,*v;
  if(!(INT&AT(a)))RZ(a=cvt(INT,a));
  u=AV(a);
  GATV0(y,B01,r,1); b=BAV(y); 
- memset(b,C0,r); DO(AN(a), j=u[i]; b[0>j?j+r:j]=1;);
+ mvc(r,b,8,MEMSET00); DO(AN(a), j=u[i]; b[0>j?j+r:j]=1;);
  GATV0(z,INT,r,1); v= AV(z); 
  DO(r, if( b[i])*v++=i;);
  DO(r, if(!b[i])*v++=i;);
@@ -53,7 +53,7 @@ static A jtvaxis(J jt,I r,A a){A y;B*b;I j,n,*v;
  RZ(a=cvt(INT,a)); 
  n=AN(a); v=AV(a); 
  ASSERT(1>=AR(a),EVRANK);
- GATV0(y,B01,r,1); b=BAV(y); memset(b,C0,r);
+ GATV0(y,B01,r,1); b=BAV(y); mvc(r,b,8,MEMSET00);
  DO(n, j=v[i]; if(0>j)j+=r; ASSERT(0<=j&&j<r&&!b[j],EVINDEX); b[j]=1;);
  R caro(ifb(r,b));   // avoid readonly
 }    /* standardize axes to be non-negative, sorted */

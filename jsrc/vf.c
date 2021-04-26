@@ -84,7 +84,7 @@ static F2(jtrotsp){PROLOG(0071);A q,x,y,z;B bx,by;I acr,af,ar,*av,d,k,m,n,p,*qv,
  if(!wcr&&1<p){RZ(w=reshape(over(shape(w),apv(p,1L,0L)),w)); wr=wcr=p;}
  ASSERT(!wcr||p<=wcr,EVLENGTH);
  s=AS(w);
- GATV0(q,INT,wr,1L); qv=AV(q); memset(qv,C0,wr*SZI); 
+ GATV0(q,INT,wr,1L); qv=AV(q); mvc(wr*SZI,qv,8,MEMSET00); 
  RZ(a=vi(a)); v=AV(a); 
  DO(p, k=v[i]; d=s[wf+i]; qv[wf+i]=!d?0:0<k?k%d:k==IMIN?d-(-d-k)%d:d-(-k)%d;);
  wp=PAV(w); a=SPA(wp,a); RZ(y=ca(SPA(wp,i))); SETIC(y,m);

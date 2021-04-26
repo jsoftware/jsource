@@ -20,7 +20,7 @@ static A jtrankingb(J jt,A w,I wf,I wcr,I m,I n,I k){A z;C*wv;I i,j,p,t,*zv;TTYP
  GATV0(z,INT,m*n,1+wf); MCISH(AS(z),AS(w),wf+1-!wcr) if(!wcr)AS(z)[wf]=1; zv=AV(z);
  if(2==k){US*v;
   for(i=0;i<m;++i){
-   memset(yv,C0,p*sizeof(*yv)); 
+   mvc(p*sizeof(*yv),yv,8,MEMSET00); 
    for(j=0,v=(US*)wv;j<n;++j){I bb=*v++; bb|=bb<<9; bb>>=8; ++yv[bb&3];} // convert 2 bits to 1 value, big-endian
    RANKINGSUMSCAN(p);
    for(j=0,v=(US*)wv;j<n;++j){I bb=*v++; bb|=bb<<9; bb>>=8; *zv++=yv[bb&3]++;}  // fetch the value
@@ -28,7 +28,7 @@ static A jtrankingb(J jt,A w,I wf,I wcr,I m,I n,I k){A z;C*wv;I i,j,p,t,*zv;TTYP
   }
  }else{int*v;
   for(i=0;i<m;++i){
-   memset(yv,C0,p*sizeof(*yv)); 
+   mvc(p*sizeof(*yv),yv,8,MEMSET00); 
    for(j=0,v=(int*)wv;j<n;++j){I bb=*v++; bb|=bb<<9; bb|=bb<<18; bb>>=24; ++yv[bb&0xf];}  // big-endian
    RANKINGSUMSCAN(p);
    for(j=0,v=(int*)wv;j<n;++j){I bb=*v++; bb|=bb<<9; bb|=bb<<18; bb>>=24; *zv++=yv[bb&0xf]++;}
@@ -70,7 +70,7 @@ F1(jtranking){A y,z;C*wv;I icn,i,k,m,n,t,wcr,wf,wn,wr,*ws,wt,*zv;CR rng;TTYPE *y
  GATV0(z,INT,m*n,1+wf); MCISH(AS(z),ws,wf+1-!wcr) if(!wcr)AS(z)[wf]=1; zv=AV(z);
  GATV0(y,C4T,rng.range,1); yv=C4AV(y); yu=yv-rng.min;
  for(i=0;i<m;++i){
-  memset(yv,C0,rng.range*sizeof(*yv));
+  mvc(rng.range*sizeof(*yv),yv,8,MEMSET00);
   switch(k){
    case sizeof(I): if(wt&INT){RANKINGLOOP(I); break;}
 #if SY_64

@@ -161,7 +161,7 @@ static SF(jtsortb){F1PREFJT;A z;B up,*u,*v;I i,s;
  up=(~(I)jtinplace>>JTDESCENDX)&1;  u=BAV(w);
  for(i=0;i<m;++i){
   s=bsum(n,u);
-  if(up){memset(v,C0,n-s); memset(v+n-s,C1,s  );}
+  if(up){mvc(n-s,v,8,MEMSET00); memset(v+n-s,C1,s  );}
   else  {memset(v,C1,s  ); memset(v+s,  C0,n-s);}
   u+=n; v+=n;
  }
@@ -295,7 +295,7 @@ static SF(jtsorti){F1PREFIP;A y,z;I i;UI4 *yv;I j,s,*wv,*zv;
  zv=AV(z);
  // clear all totals to 0, then bias address of area so the data fits
  for(i=0;i<m;++i){  // for each list...
-  memset(yv+rng.min,C0,rng.range*sizeof(UI4)); 
+  mvc(rng.range*sizeof(UI4),yv+rng.min,8,MEMSET00); 
   DQ(n, ++yv[*wv++];);  // increment total for each input atom
   // run through the totals, copying in the requisite # repetitions of each value
   // We have to disguise the loop to prevent VS from producing a REP STOS, which we don't want because the loop is usually short
@@ -320,7 +320,7 @@ static SF(jtsortu){F1PREFIP;A y,z;I i;UI4 *yv;C4 j,s,*wv,*zv;
  GATV0(y,C4T,rng.range,1); yv=C4AV(y)-rng.min;
  GA(z,AT(w),AN(w),AR(w),AS(w)); zv=C4AV(z);
  for(i=0;i<m;++i){
-  memset(yv+rng.min,C0,rng.range*sizeof(UI4)); 
+  mvc(rng.range*sizeof(UI4),yv+rng.min,8,MEMSET00); 
   DQ(n, ++yv[*wv++];);
   I incr = 1-(((I)jtinplace>>(JTDESCENDX-1))&2); j=(C4)(rng.min+(REPSGN(incr)&(rng.range-1)));
   DQ(rng.range, s=yv[j]; DQ(s, *zv++=j;) j+=(C4)incr;)

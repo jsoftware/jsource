@@ -73,7 +73,7 @@ static F1(jtbminv){A*wv,x,z=w;I i,j,m,r,*s,t=0,*u,**v,*y,wn,wr,*ws;
  wn=AN(w); wr=AR(w); ws=AS(w); wv=AAV(w); 
  if(1>=wr)R raze(w);
  if(!wn)R iota(reshape(sc(wr),num(0)));
- GATV0(x,INT,wr,1); u=AV(x); memset(u,C0,wr*SZI);
+ GATV0(x,INT,wr,1); u=AV(x); mvc(wr*SZI,u,8,MEMSET00);
  GATV0(x,INT,wr,1); v=(I**)AV(x);
  DO(wr, m=ws[i]; GATV0(x,INT,m,1); memset(v[i]=AV(x),CFF,m*SZI););
  for(i=0;i<wn;++i){
@@ -87,7 +87,7 @@ static F1(jtbminv){A*wv,x,z=w;I i,j,m,r,*s,t=0,*u,**v,*y,wn,wr,*ws;
  if(!z){A f,h,*zv;I*hv;
   GATVR(z,BOX,wn,2,ws); zv=AAV(z);
   GATV0(h,INT,wr,1); hv=AV(h);
-  GA(f,t,1,1,0); RZ(f=filler(f)); memset(u,C0,wr*SZI);
+  GA(f,t,1,1,0); RZ(f=filler(f)); mvc(wr*SZI,u,8,MEMSET00);
   for(i=0;i<wn;++i){
    zv[i]=x=wv[i];
    if(2>AR(x)){DO(wr, hv[i]=v[i][u[i]];); RZ(zv[i]=diag(x,reshape(h,f)));}

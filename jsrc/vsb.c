@@ -413,7 +413,7 @@ static A jtsbunlit(J jt,C cx,A w){A z;S c2;I i,m,wc,wr,*ws;SB*zv;
  wr=AR(w); ws=AS(w); wc=ws[wr-1];
  PRODX(m,wr-1,ws,1);
  GATV(z,SBT,m,wr-1,ws); zv=SBAV(z);
- if(!wc)mvc(m*sizeof(SB),zv,8,MEMSET00);
+ if(!wc)mvc(m*sizeof(SB),zv,1,MEMSET00);
  else if(c2&SBC4){C4 c=(C4)cx,*s,*wv=C4AV(w);
   for(i=0;i<m;++i){
    s=wc+wv; DQ(wc, if(c!=*--s)break;);   /* exclude trailing "blanks"    */
@@ -599,11 +599,11 @@ static A jtsbcheck1(J jt,A una,A sna,A u,A s,A h,A roota,A ff,A gp,I intcall){PR
  ASSERTD(c<=AN(h),"c bounded by #h");
  b=0; DO(AN(h), j=hv[i]; if(-1==j)b=1; else ASSERTD((UI)j<(UI)c,"h index"););
  ASSERTD(b,"h full");
- GATV0(x,B01,c,1); lfv=BAV(x); mvc(c,lfv,8,MEMSET00);
- GATV0(x,B01,c,1); rtv=BAV(x); mvc(c,rtv,8,MEMSET00);
- GATV0(x,B01,c,1); dnv=BAV(x); mvc(c,dnv,8,MEMSET00);
- GATV0(x,B01,c,1); upv=BAV(x); mvc(c,upv,8,MEMSET00);
- GATV0(x,LIT,c,1); ptv=CAV(x); mvc(c,ptv,8,MEMSET00); ptv[0]=1;
+ GATV0(x,B01,c,1); lfv=BAV(x); mvc(c,lfv,1,MEMSET00);
+ GATV0(x,B01,c,1); rtv=BAV(x); mvc(c,rtv,1,MEMSET00);
+ GATV0(x,B01,c,1); dnv=BAV(x); mvc(c,dnv,1,MEMSET00);
+ GATV0(x,B01,c,1); upv=BAV(x); mvc(c,upv,1,MEMSET00);
+ GATV0(x,LIT,c,1); ptv=CAV(x); mvc(c,ptv,1,MEMSET00); ptv[0]=1;
  GATV0(x,BOX,c,1); xv=AAV(x); RZ(xv[0]=incorp(str(uv->n,sv+uv->i)));
  GATV0(y,INT,c,1); yv= AV(y); yv[0]=uv->order;
  for(i=1,v=1+uv;i<c;++i,++v){S c2;I ord,vi,vn;UC*vc;UI k;

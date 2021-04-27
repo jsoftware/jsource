@@ -141,7 +141,7 @@ static F1(jtfmtparse){A x,z,*zv;B ml[2+NMODVALS],mod,t;C c,*cu="srqpnmdbijklc",*
  if(n&&(C2T+C4T)&AT(w))RZ(w=uco2(num(5),w));
  ASSERT(1>=AR(w),EVRANK);
  ASSERT(!n||LIT&AT(w),EVDOMAIN); 
- wv=CAV(w); n1=1+n; t=c=0; fb=0; mi=-1; memset(ml,C1,sizeof(ml));
+ wv=CAV(w); n1=1+n; t=c=0; fb=0; mi=-1; mvc(sizeof(ml),ml,1,MEMSET01);
  for(i=0;i<n1;++i){
   mod=t^1; c=wv[i]; c=i==n?0:c;
   if(i==n)ASSERT(!t,EVDOMAIN)
@@ -160,7 +160,7 @@ static F1(jtfmtparse){A x,z,*zv;B ml[2+NMODVALS],mod,t;C c,*cu="srqpnmdbijklc",*
   if(BETWEENC(c,'0','9')){RZ(widthdp(str(n-i,wv+i),vals,vals+1)); break;} 
  }
  if(mtv!=zv[NMODVALS]){C*cu="e,.-*",*cv,subs[5];
-  x=zv[NMODVALS]; n=AN(x); cv=CAV(x); MC(subs,cu,5L); memset(ml,C1,5L);
+  x=zv[NMODVALS]; n=AN(x); cv=CAV(x); MC(subs,cu,5L); mvc(5L,ml,1,MEMSET01);
   ASSERT(0==(n&1)&&10>=n,EVDOMAIN);
   DQ(n>>1, ASSERT(s=strchr(cu,*cv++),EVDOMAIN); j=s-cu; ASSERT(ml[j],EVDOMAIN); ml[j]=0; subs[j]=*cv++;);
   RZ(zv[NMODVALS]=incorp(str(5L,subs)));
@@ -266,10 +266,10 @@ static F2(jtfmtprecomp) {A*as,base,fb,len,strs,*u,z;B*bits,*bw;D dtmp,*dw;
  if(1<nf){GATV0(base,INT,nf*4,2); s=AS(base); *s++=nf; *s=4;}else GATV0(base,INT,3+nc,1);
  GATV0(strs,BOX,nf*NMODVALS,2); s=AS(strs); *s++=nf; *s=NMODVALS;
  GATV(len, INT,n,wr,ws); 
- GATV(fb,  B01,n,wr,ws); mvc(n,BAV(fb),8,MEMSET00);
+ GATV(fb,  B01,n,wr,ws); mvc(n,BAV(fb),1,MEMSET00);
  GAT0(z,BOX,4,1); u=AAV(z); *u++=incorp(base); *u++=incorp(strs); *u++=incorp(len); *u++=incorp(fb); 
  ib=AV(base); as=AAV(strs); u=AAV(a);
- if(1==nf){MC(ib,AV(*u),SZI*3); mvc(SZI*nc,ib+3,8,MEMSET00); DO(NMODVALS, *as++=incorp(u[i+1]);)}
+ if(1==nf){MC(ib,AV(*u),SZI*3); mvc(SZI*nc,ib+3,1,MEMSET00); DO(NMODVALS, *as++=incorp(u[i+1]);)}
  else DQ(nf, MC(ib,AV(*u),SZI*3); ib[3]=0; ib+=4; DO(NMODVALS, *as++=incorp(u++[1]);) ++u; )
  bits=BAV(fb);
  switch(CTTZNOFLAG(wt)) {

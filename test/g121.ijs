@@ -245,7 +245,7 @@ NB. x ([ -. -.) y  set intersection --------------------------------------------
 rank =: #@$
 dr   =: rank@] - 0&>.@<:@rank@[
 res  =: (dr (*/@{. , }.) $@]) $ ,@]
-intersect =: [`(([ e. res) # [)@.((<: >:)&rank)
+intersect =: (0$[)`(([ e. res) # [)@.((<: >:)&rank)
 
 NB. Boolean
 t (([ -. -.) -: intersect) (?30   $#t){t=:1=?100 2 3$3

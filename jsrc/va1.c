@@ -91,7 +91,7 @@ static AMON(logZ,   Z,Z, *z=zlog(*x);)
 static AMONPS(absI,   I,I, I vtot=0; , I val=*x; val=(val^REPSGN(val))-REPSGN(val); vtot |= val; *z=val; , R vtot<0?EWOV:EVOK;)
 static AMONPS(absZ,   D,Z, , *z=zmag(*x); , HDR1JERR)
 
-static AHDR1(oneB,C,C){memset(z,C1,n); R EVOK;}
+static AHDR1(oneB,C,C){mvc(n,z,1,MEMSET01); R EVOK;}
 
 extern AHDR1FN expI, expD, logI, logD;
 

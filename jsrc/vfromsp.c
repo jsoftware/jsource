@@ -21,7 +21,7 @@ static A jtfromis1(J jt,A ind,A w,A z,I wf){A a,a1,j1,p,q,x,x1,y,y1;C*xu,*xuu,*x
  if(h){q=grade1(fromr(sc(h),y)); RZ(y=ifrom(q,y)); RZ(x=ifrom(q,x));}
  RZ(q=odom(2L,r,AS(ind))); iv=AV(q);
  m=AS(y)[0]; s=0; j=-1; u=h+AV(y); v=u+an;
- GATV0(p,INT,m,1); pv=AV(p); memset(pv,CFF,SZI*m);
+ GATV0(p,INT,m,1); pv=AV(p); mvc(SZI*m,pv,1,MEMSETFF);
  GATV0(q,INT,m,1); qu=AV(q);
  GATV0(q,INT,m,1); qv=AV(q);
  DO(m-1, if(*u!=*v){pv[s]=*u; qu[s]=1+j; qv[s++]=i-j; j=i;} u=v; v+=an;); 

@@ -744,7 +744,7 @@ JS heapinit(int size)
 		return 0;
 	}
  jt = (JS)(((I)jt+JTALIGNBDY-1)&-JTALIGNBDY);  // force to SDRAM page boundary
-	mvc(sizeof(JST),jt,8,MEMSET00);
+	mvc(sizeof(JST),jt,1,MEMSET00);
 	JT(jt,heap) = h;
 	return jt;
 }

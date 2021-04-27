@@ -1305,8 +1305,8 @@ F1(jtsquare){ARGCHK1(w); R tymes(w,w);}   // leave inplaceable in w only  ?? nev
 F1(jtrecip ){ARGCHK1(w); SETCONPTR(1) R divide(conptr,w);}
 F1(jthalve ){ARGCHK1(w); if(!(AT(w)&XNUM+RAT))R tymes(onehalf,w); IPSHIFTWA; R divide(w,num(2));} 
 
-static AHDR2(zeroF,B,void,void){mvc(m*(n^REPSGN(n)),z,8,MEMSET00);R EVOK;}
-static AHDR2(oneF,B,void,void){memset(z,C1,m*(n^REPSGN(n)));R EVOK;}
+static AHDR2(zeroF,B,void,void){mvc(m*(n^REPSGN(n)),z,1,MEMSET00);R EVOK;}
+static AHDR2(oneF,B,void,void){mvc(m*(n^REPSGN(n)),z,1,MEMSET01);R EVOK;}
 
 // table of routines to handle = ~:
 static VF eqnetbl[2][16] = {

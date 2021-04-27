@@ -58,7 +58,7 @@ static B jtvaspprep(J jt,A a,A w,I t,I af,I acr,I wf,I wcr,I f,I r,A*ae,A*ay,A*a
      A aa,e,x,wa;B*b,sa,sw;I c,d,m,n,*u,*v;P*ap,*wp;
  sa=1&&AT(a)&SPARSE; 
  sw=1&&AT(w)&SPARSE;
- GATV0(x,B01,f+r,1); b=BAV(x); memset(b,C1,f); mvc(r,b+f,8,MEMSET00);
+ GATV0(x,B01,f+r,1); b=BAV(x); mvc(f,b,1,MEMSET01); mvc(r,b+f,1,MEMSET00);
  if(sa){ap=PAV(a); aa=SPA(ap,a); u=AV(aa); d=f-af; DO(AN(aa), c=u[i]; if(af<=c)b[c+d]=1;);}
  if(sw){wp=PAV(w); wa=SPA(wp,a); v=AV(wa); d=f-wf; DO(AN(wa), c=v[i]; if(wf<=c)b[c+d]=1;);}
  GATV0(x,INT,f+r,1); u=AV(x); m=0; DO(af, if(b[i])u[m++]=i;); DO(acr, if(b[f+i])u[m++]=af+i;); 
@@ -76,7 +76,7 @@ static B jtvaspeqprep(J jt,A a,A w,I t,I f,I r,A*ae,A*ay,A*ax,A*we,A*wy,A*wx,A*z
      A aa,e,q,x,wa;B*b,sa,sw;I n,*v;P*p;
  sa=1&&AT(a)&SPARSE; 
  sw=1&&AT(w)&SPARSE; n=f+r;
- GATV0(x,B01,n,1); b=BAV(x); mvc(n,b,8,MEMSET00);
+ GATV0(x,B01,n,1); b=BAV(x); mvc(n,b,1,MEMSET00);
  if(sa){p=PAV(a); aa=SPA(p,a); v=AV(aa); DO(AN(aa), b[v[i]]=1;);}
  if(sw){p=PAV(w); wa=SPA(p,a); v=AV(wa); DO(AN(wa), b[v[i]]=1;);}
  q=ifb(n,b); makewritable(q) *za=q;  // avoid readonly result

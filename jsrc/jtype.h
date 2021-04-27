@@ -1026,7 +1026,7 @@ typedef struct __attribute__((aligned(CACHELINESIZE))) {I memhdr[AKXR(0)/SZI]; u
 #define BREAK0 ((C*)(validitymask+12))  // 0 to indicate no ATTN requested
 #define MEMSET00 ((C*)(validitymask+6))  // 8 bytes of 0, for memset
 #define MEMSETFF ((C*)(validitymask))  // 8 bytes of 0xff, for memset
-#define MEMSET01 ((C*)Ivalidboolean)  // 8 bytes of 0x01, for memset
+#define MEMSET01 ((C*)&Ivalidboolean)  // 8 bytes of 0x01, for memset
 
 
 

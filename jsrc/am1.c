@@ -51,7 +51,7 @@ static A jtssel(J jt,A z,A ind){A a,*iv,p,q,x,y;B*b;I*av,c,i,j,m,n,*u,*v,*yv;P*z
  zp=PAV(z);
  y=SPA(zp,i); v=AS(y); m=v[0]; c=v[1]; yv=AV(y); 
  a=SPA(zp,a); n=AN(a); av=AV(a); 
- GATV0(p,B01,m,1); b=BAV(p); memset(b,C1,m);
+ GATV0(p,B01,m,1); b=BAV(p); mvc(m,b,1,MEMSET01);
  GATV0(q,INT,m,1); v=AV(q); iv=AAV(ind);  
  for(i=0;i<n;++i){
   j=av[i]; if(j>=AN(ind))break;
@@ -120,7 +120,7 @@ static A jtscubc(J jt,A z,A i1,A p){A a,q,s,y,y1;B*qv;I c,d,h,j=-1,m,n,*sv,*u,*v
  RZ(y=repeat(p,SPA(zp,i))); m=AS(y)[0];
  RZ(y1=take(v2(m,n),y)); v=AV(y1);
  GATV0(q,B01,m,1); qv=BAV(q);
- if(m){mvc(m,qv,8,MEMSET00); DO(m-1, if(ICMP(v,v+n,n)){if(d>i-j)qv[i]=1; j=i;} v+=n;); if(d>(m-1)-j)qv[m-1]=1;}
+ if(m){mvc(m,qv,1,MEMSET00); DO(m-1, if(ICMP(v,v+n,n)){if(d>i-j)qv[i]=1; j=i;} v+=n;); if(d>(m-1)-j)qv[m-1]=1;}
  RZ(y1=repeat(q,y1)); c=AS(y1)[0];
  if(!c)R mtm;
  R less(stitch(repeat(sc(d),y1),reitem(sc(c*d),odom(2L,h,sv))),y);

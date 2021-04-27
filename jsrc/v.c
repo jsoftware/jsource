@@ -46,7 +46,7 @@ F1(jtravel){A a,c,q,x,y,y0,z;B*b;I f,j,m,r,*u,*v,*yv;P*wp,*zp;
  wp=PAV(w); zp=PAV(z);
  RZ(b=bfi(AR(w),SPA(wp,a),1)); 
  if(memchr(b+f,C1,r)){
-  if(memchr(b+f,C0,r)){memset(b+f,C1,r); RZ(w=reaxis(ifb(AR(w),b),w)); wp=PAV(w); x=SPA(wp,x);}
+  if(memchr(b+f,C0,r)){mvc(r,b+f,1,MEMSET01); RZ(w=reaxis(ifb(AR(w),b),w)); wp=PAV(w); x=SPA(wp,x);}
   else RZ(x=ca(SPA(wp,x)));
   a=ifb(1+f,b); makewritable(a)   // avoid readonly block
   GATV0(c,INT,r,1L); v=r+AV(c); j=AR(w); m=1; DQ(r, *--v=m; m*=AS(w)[--j];);
@@ -138,7 +138,7 @@ A jtcharmap(J jt,A w,A x,A y){A z;B bb[256];I k,n,wn;UC c,*u,*v,zz[256];
  RZ(w&&x&&y);
  if(!(LIT&AT(w)))R from(indexof(x,w),y);
  wn=AN(w); n=MIN(AN(x),AN(y)); u=n+UAV(x); v=n+UAV(y);
- k=256; mvc(256,bb,8,MEMSET00); if(n<AN(y))memset(zz,UAV(y)[n],256);  // bb is array telling which input chars are in x; zz is result char to map for given input byte.  If not exact mapping, init z to the 'not found' char
+ k=256; mvc(256,bb,1,MEMSET00); if(n<AN(y))memset(zz,UAV(y)[n],256);  // bb is array telling which input chars are in x; zz is result char to map for given input byte.  If not exact mapping, init z to the 'not found' char
  DQ(n, c=*--u; zz[c]=*--v; k-=(I)bb[c]^1; bb[c]=1;);   // mark characters in x, and count down to see if we hit all 256.  Note earliest mapped character for each
  GATV(z,LIT,wn,AR(w),AS(w)); v=UAV(z); u=UAV(w);
  if(((k-1)&(n-AN(y)))>=0)DQ(wn, c=*u++; ASSERT(bb[c],EVINDEX); *v++=zz[c];)  // not all codes mapped AND #x>=#y, meaning index error possible on {

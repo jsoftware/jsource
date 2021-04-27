@@ -40,7 +40,7 @@ A jtpind(J jt,I n,A w){A z;I j,*v;
 A jtpfill(J jt,I n,A w){PROLOG(0081);A b,z;B*bv;I*wv,*zv;
  RZ(w=pind(n,w));  wv=AV(w);  // convert to positive indexes, wv-> indexes
  GATV0(z,INT,n,1); zv=AV(z);  // allocate result area
- GATV0(b,B01,n,1); bv=BAV(b); memset(bv,C1,n);   // binary vector, init to 1
+ GATV0(b,B01,n,1); bv=BAV(b); mvc(n,bv,1,MEMSET01);   // binary vector, init to 1
  DO(AN(w), bv[wv[i]]=0;);  // clear flag in indexes that appear
  DO(n, *zv=i; zv+=bv[i];); ASSERT((zv-AV(z))+AN(w)==n,EVINDEX); ICPY(zv,wv,AN(w));  // prefix result with missing indexes; verify the result accounts for all indexes
  EPILOG(z);
@@ -50,11 +50,11 @@ static F1(jtcfd){A b,q,x,z,*zv;B*bv;I c,i,j,n,*qv,*u,*v,zn;
  ARGCHK1(w);
  if(c=1&&INT&AT(w)){
   n=AN(w); v=AV(w);
-  GATV0(b,B01,1+n,1); bv=BAV(b); mvc(n,bv,8,MEMSET00);
+  GATV0(b,B01,1+n,1); bv=BAV(b); mvc(n,bv,1,MEMSET00);
   DO(n, j=v[i]; if((UI)j>=(UI)n||bv[j]){c=0; break;} bv[j]=1;);
  }
  if(!c){n=ord(w); RZ(w=pfill(n,w)); v=AV(w); GATV0(b,B01,1+n,1);}
- bv=BAV(b); mvc(1+n,bv,8,MEMSET00); ++bv;
+ bv=BAV(b); mvc(1+n,bv,1,MEMSET00); ++bv;
  i=0; j=n-1; zn=(I)(log((D)n)+1.6); 
  GATV0(q,INT,n, 1); qv= AV(q);
  GATV0(z,BOX,zn,1); zv=AAV(z);
@@ -73,7 +73,7 @@ static F1(jtcfd){A b,q,x,z,*zv;B*bv;I c,i,j,n,*qv,*u,*v,zn;
 static A jtdfc(J jt,I n,A w){PROLOG(0082);A b,q,*wv,z;B*bv;I c,j,qn,*qv,*x;
  RE(n); ARGCHK1(w);
  ASSERT(0<=n,EVINDEX);
- GATV0(b,B01,n,1); bv=BAV(b); memset(bv,C1,n);
+ GATV0(b,B01,n,1); bv=BAV(b); mvc(n,bv,1,MEMSET01);
  RZ(z=apvwr(n,0L,1L)); x=AV(z);
  wv=AAV(w); 
  for(j=AN(w)-1;0<=j;j--){
@@ -100,7 +100,7 @@ F1(jtpparity){A x,y,z;B *u;I i,j,k,m,n,p,r,*s,*v,*zv;
  GATV0(y,B01,n,1); u=BAV(y);
  GATV(z,INT,m,r?r-1:0,s); zv=AV(z);
  for(i=0;i<m;++i){
-  j=0; p=1; memset(u,C1,n);
+  j=0; p=1; mvc(n,u,1,MEMSET01);
   DO(n, k=v[i]; if(0>k)v[i]=k+=n; if((UI)k<(UI)n&&u[k])u[k]=0; else{j=1+n; break;});  // if there are repeated indexes, set j high to force 0 result
   for(;j<n;++j)if(j!=v[j]){k=j; DQ(n-j-1, ++k; if(j==v[k]){v[k]=v[j]; p=-p; break;});}  // if interchange required, find it and do it (half of it, anyway)
   zv[i]=p&(j-n-1);   // return parity or 0

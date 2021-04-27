@@ -88,7 +88,7 @@ F2(jtaes2)
     if(padding) {
       if(n1)memset(out+n-(16-n1),16-n1,16-n1);
       else memset(out+n-16,16,16);
-    } else if(n1)mvc(16-n1,out+n-(16-n1),8,MEMSET00);
+    } else if(n1)mvc(16-n1,out+n-(16-n1),1,MEMSET00);
   }
 #if (defined(__i386__) || defined(_M_X64) || defined(__x86_64__))
 #if !defined(ANDROID)
@@ -126,7 +126,7 @@ F2(jtaes2)
     ASSERT(n1&&n1<=16,EVDOMAIN);
     for(i=n1; i>0; i--)ASSERT(n1==out[n-i],EVDOMAIN);
     AS(z)[0]=AN(z)=n-n1;
-    mvc(n1,out+n-n1,8,MEMSET00);
+    mvc(n1,out+n-n1,1,MEMSET00);
   }
   R z;
 }

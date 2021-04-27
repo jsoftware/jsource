@@ -166,7 +166,7 @@ I grcol4(I d,I c,UI4*yv,I n,I*xv,I*zv,const I m,US*u,I flags){
  if(flags&8){
  // Here we know that the previous pass found all the values were sign-extensions.  So we just clear the first and last values, and the flag
   flags &= ~8;
- }else{mvc(d*sizeof(*yv),c+yv,8,MEMSET00);}  // full clear if the fast option is not selected
+ }else{mvc(d*sizeof(*yv),c+yv,1,MEMSET00);}  // full clear if the fast option is not selected
  // increment the bucket for each input value
  v=u; DQ(n, ++yv[*v]; v+=m;);
  // If all the values are sign-extensions (which will happen often) we can short-circuit much of the processing, including the rolling sum
@@ -228,7 +228,7 @@ I grcol2(I d,I c,US*yv,I n,I*xv,I*zv,const I m,US*u,I flags){
  yv[0]=yv[65535]=0;
  if(flags&8){
   flags &= ~8;
- }else{mvc(d*sizeof(*yv),c+yv,8,MEMSET00);}
+ }else{mvc(d*sizeof(*yv),c+yv,1,MEMSET00);}
  v=u; DQ(n, ++yv[*v]; v+=m;);
  if(xv&&((ct00=yv[0])+(ctff=yv[65535])==n)){
   flags|=8;
@@ -565,7 +565,7 @@ static GF(jtgri){F1PREFJT;A x,y;B up;I e,i,*v,*wv,*xv;UI4 *yv,*yvb;I c=ai*n;
   // If d is odd, we end up in the block we start in; not if d is even.  So, if d is even, we swap
   // zv and xv, to end up in zv.  xv is always defined when d is even.
   if(!(ai&1)){I *tv=zv; zv=xv; xv=tv;}  // zv<->xv
-  mvc(rng.range*sizeof(UI4),yvb,8,MEMSET00);  // clear the table
+  mvc(rng.range*sizeof(UI4),yvb,1,MEMSET00);  // clear the table
   v=wv+ai-1;   // start in the lowest-significance column
   // create frequency count for each value
   DQ(n, ++yv[*v]; v+=ai;);
@@ -583,7 +583,7 @@ static GF(jtgri){F1PREFJT;A x,y;B up;I e,i,*v,*wv,*xv;UI4 *yv,*yvb;I c=ai*n;
    {I *tv=zv; zv=xv; xv=tv;}  // zv<->xv
    --v;  // back up to next-higher-significance column
    // clear the area
-   mvc(rng.range*sizeof(UI4),yvb,8,MEMSET00);
+   mvc(rng.range*sizeof(UI4),yvb,1,MEMSET00);
    // *v is the base of the vector to process, which has stride d.  Process the elements in the order given by the previous grade.
    {I *vv=v; DQ(n, ++yv[*vv]; vv+=ai;); }  // scan all the values
    // create running sum
@@ -611,7 +611,7 @@ static GF(jtgru){F1PREFJT;A x,y;B up;I e,i,*xv;UI4 *yv,*yvb;C4 *v,*wv;I c=ai*n;
  }
  for(i=0;i<m;++i){
   if(!(ai&1)){I *tv=zv; zv=xv; xv=tv;}
-  mvc(rng.range*sizeof(UI4),yvb,8,MEMSET00);
+  mvc(rng.range*sizeof(UI4),yvb,1,MEMSET00);
   v=wv+ai-1;
   DQ(n, ++yv[*v]; v+=ai;);
   if(up){UI4 k,s=0,*yvi = yvb+rng.range; DP(rng.range, k=yvi[i]; yvi[i]=s; s+=k;) }
@@ -622,7 +622,7 @@ static GF(jtgru){F1PREFJT;A x,y;B up;I e,i,*xv;UI4 *yv,*yvb;C4 *v,*wv;I c=ai*n;
   for(e=ai-2;0<=e;--e){
    {I *tv=zv; zv=xv; xv=tv;} 
    --v;
-   mvc(rng.range*sizeof(UI4),yvb,8,MEMSET00);
+   mvc(rng.range*sizeof(UI4),yvb,1,MEMSET00);
    {C4 *vv=v; DQ(n, ++yv[*vv]; vv+=ai;); }
    if(up){UI4 k, s=0, *yvi = yvb+rng.range; DP(rng.range, k=yvi[i]; yvi[i]=s; s+=k;) }
    else {UI4 k,s=0; DQ(rng.range, k=yvb[i]; yvb[i]=s; s+=k;); }
@@ -637,7 +637,7 @@ static GF(jtgru){F1PREFJT;A x,y;B up;I e,i,*xv;UI4 *yv,*yvb;C4 *v,*wv;I c=ai*n;
 #define DOCOL1(p,iicalc0,iicalc1,ind,vinc)  \
  {I*g,*h,   j=p-1,k,s=0;UC*v;                          \
   if(b){g=xv; h=zv; b=0;}else{g=zv; h=xv; b=1;}        \
-  mvc(ps,yv,8,MEMSET00);                                    \
+  mvc(ps,yv,1,MEMSET00);                                    \
   v=vv; DQ(n, ++yv[iicalc0]; v+=ai;);                   \
   if(up)DO(p, k=yv[i]; yv[i  ]=s; s+=k;)               \
   else  DQ(p, k=yv[j]; yv[j--]=s; s+=k;);              \
@@ -647,7 +647,7 @@ static GF(jtgru){F1PREFJT;A x,y;B up;I e,i,*xv;UI4 *yv,*yvb;C4 *v,*wv;I c=ai*n;
 #define DOCOL4(p,iicalc0,iicalc1,ind,vinc)  \
  {I*g,*h,ii,j=p-1,k,s=0;UC*v;                          \
   if(b){g=xv; h=zv; b=0;}else{g=zv; h=xv; b=1;}        \
-  mvc(ps,yv,8,MEMSET00);                                    \
+  mvc(ps,yv,1,MEMSET00);                                    \
   v=vv; DQ(n, IND4(iicalc0); ++yv[ii]; v+=ai;);         \
   if(up)DO(p, k=yv[i]; yv[i  ]=s; s+=k;)               \
   else  DQ(p, k=yv[j]; yv[j--]=s; s+=k;);              \

@@ -116,7 +116,7 @@ XF2(jtxtymes){A z;I an,*av,c,d,e,i,j,m=XBASE,n,*v,wn,*wv,*zv;
  wn=AN(w); wv=AV(w); d=wv[wn-1];
  if(!c||!d)R iv0;
  if(c==XPINF||c==XNINF||d==XPINF||d==XNINF)R rifvsdebug(vci(0<c*d?XPINF:XNINF));
- n=an+wn; GATV0(z,INT,n,1); zv=v=AV(z); mvc(n*SZI,zv,8,MEMSET00);
+ n=an+wn; GATV0(z,INT,n,1); zv=v=AV(z); mvc(n*SZI,zv,1,MEMSET00);
  for(i=0;i<an;++i,++zv){
   if(c=av[i])for(j=0;j<wn;++j){
    d=zv[j]+=c*wv[j];

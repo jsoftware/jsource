@@ -204,13 +204,13 @@ AHDRR(plusinsB,I,B){I dw,i,p,q,r,r1,s;UC*tu;UI*v;
    x=(B*)v; DQ(r1, s+=*x++;); 
    *z++=s;
  }}else{A t;UI*tv;
-  dw=(d+SZI-1)>>LGSZI; p=dw*SZI; mvc(m*d*SZI,z,8,MEMSET00);
+  dw=(d+SZI-1)>>LGSZI; p=dw*SZI; mvc(m*d*SZI,z,1,MEMSET00);
   q=n/255; r=n%255;
   t=ga(INT,dw,1,0); if(!t)R;
   tu=UAV(t); tv=(UI*)tu; v=(UI*)x;
   for(i=0;i<m;++i,z+=d){
-   DO(q, mvc(p,tv,8,MEMSET00); DO(255, DO(dw,tv[i]+=v[i];); x+=d; v=(UI*)x;); DO(d,z[i]+=tu[i];));
-         mvc(p,tv,8,MEMSET00); DO(r,   DO(dw,tv[i]+=v[i];); x+=d; v=(UI*)x;); DO(d,z[i]+=tu[i];) ;
+   DO(q, mvc(p,tv,1,MEMSET00); DO(255, DO(dw,tv[i]+=v[i];); x+=d; v=(UI*)x;); DO(d,z[i]+=tu[i];));
+         mvc(p,tv,1,MEMSET00); DO(r,   DO(dw,tv[i]+=v[i];); x+=d; v=(UI*)x;); DO(d,z[i]+=tu[i];) ;
 }}}  /* +/"r w on boolean w, originally by Roger Moore */
 #endif
 
@@ -597,7 +597,7 @@ static B jtredspsprep(J jt,C id,I f,I zt,A a,A e,A x,A y,I*zm,I**zdv,B**zpv,I**z
  v=AS(y); yr=v[0]; yc=v[1]; yr1=yr-1;
  RZ(d=grade1(eq(a,sc(f)))); dv=AV(d); 
  DO(AN(a), if(i!=dv[i]){RZ(q=grade1p(d,y)); qv=AV(q); break;});
- GATV0(p,B01,yr,1); pv=BAV(p); mvc(yr,pv,8,MEMSET00);
+ GATV0(p,B01,yr,1); pv=BAV(p); mvc(yr,pv,1,MEMSET00);
  u=yv=AV(y); m=mm=0; j=-1; if(qv)v=yv+yc*qv[0];
  for(k=0;k<yr1;++k){
   if(qv){u=v; v=yv+yc*qv[1+k];}else v=u+yc;

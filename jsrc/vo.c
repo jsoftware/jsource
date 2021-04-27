@@ -291,7 +291,7 @@ A jtassembleresults(J jt, I ZZFLAGWORD, A zz, A zzbox, A* zzboxp, I zzcellp, I z
       // current zzcell up to the last tempp that was filled (note that *tempp has not been filled yet).  In other words, we have
       // to fill zzncells+1 cells: the ones we haven't started, plus the one we failed on
       if(zztemp==zz&&zztemprecur){
-       mvc((startatend>0)?tempp+zfs-zzcell:zzcell-tempp,(startatend>0)?zzcell:tempp,8,MEMSET00);  // clear, depending on direction.  If normal, we are going
+       mvc((startatend>0)?tempp+zfs-zzcell:zzcell-tempp,(startatend>0)?zzcell:tempp,1,MEMSET00);  // clear, depending on direction.  If normal, we are going
          // from zzcell, which has been copied from, through the end of tempp, which has not been copied to yet.  If reverse, we go from
          // tempp, which has not been copied to, to zzcell, which has been copied.
       }
@@ -364,7 +364,7 @@ static B povtake(J jt,A a,A w,C*x){B b;C*v;I d,i,j,k,m,n,p,q,r,*s,*ss,*u,*uu,y;
 
 static B jtopes1(J jt,B**zb,A*za,A*ze,I*zm,A cs,A w){A a,e=0,q,*wv,x;B*b;I i,k,m=0,n,*v,wcr;P*p;
  n=AN(w); wcr=AN(cs); wv=AAV(w);
- GATV0(x,B01,wcr,1); b=BAV(x); mvc(wcr,b,8,MEMSET00);
+ GATV0(x,B01,wcr,1); b=BAV(x); mvc(wcr,b,1,MEMSET00);
  for(i=0;i<n;++i)
   if(q=wv[i],SPARSE&AT(q)){
    p=PAV(q); x=SPA(p,x); m+=AS(x)[0];
@@ -408,9 +408,9 @@ static A jtopes(J jt,I zt,A cs,A w){A a,d,e,sh,t,*wv,x,x1,y,y1,z;B*b;C*xv;I an,*
  GATV0(t,INT,yc, 1L); v=AV(t); DO(wr, v[i]=i;); DO(an, v[wr+i]=wr+av[i];); SPB(zp,a,t);
  GATV0(sh,INT,1+c,1L); s=AV(sh); s[0]=m; j=1; DO(wcr, if(!b[i])s[j++]=zs[wr+i];); 
  RE(xc=prod(c,1+s)); xk=xc*dk;
- GATV0(d,INT,wr,1); dv=AV(d); mvc(wr*SZI,dv,8,MEMSET00);
+ GATV0(d,INT,wr,1); dv=AV(d); mvc(wr*SZI,dv,1,MEMSET00);
  DPMULDE(m,xc,i) GA(x,dt, i,1+c,s); xv=CAV(x); mvc(m*xk,xv,dk,AV(e));
- DPMULDE(m,yc,i) GATV0(y,INT,i,2L); v=AS(y); *v=m; v[1]=yc; yv=AV(y); mvc(SZI*i,yv,8,MEMSET00);
+ DPMULDE(m,yc,i) GATV0(y,INT,i,2L); v=AS(y); *v=m; v[1]=yc; yv=AV(y); mvc(SZI*i,yv,1,MEMSET00);
  for(i=p=0;i<n;++i){
   RZ(opes2(&x1,&y1,b,a,e,wv[i],wcr)); v=AS(y1); m1=v[0]; k=v[1];
   if(m<p+m1){
@@ -535,7 +535,7 @@ F1(jtope){A cs,*v,y,z;C*x;I i,n,*p,q,r,*s,*u,zn;
 // w is the data to raze (boxed), t is type of nonempty boxes of w, n=#,w, r=max rank of contents of w, v->w data,
 static A jtrazeg(J jt,A w,I t,I n,I r,A*v,I nonempt){A h,h1,y,z;C*zu;I c=0,i,j,k,m,*s,*v1,yr,*ys;UI p;
  // Calculate the shape of a result-cell (it has rank r-1); and c, the number of result-cells
- fauxblockINT(hfaux,4,1); fauxINT(h,hfaux,r,1) s=AV(h); mvc(r*SZI,s,8,MEMSET00);  // h will hold the shape of the result; s->shape data; clear to 0 for compares below
+ fauxblockINT(hfaux,4,1); fauxINT(h,hfaux,r,1) s=AV(h); mvc(r*SZI,s,1,MEMSET00);  // h will hold the shape of the result; s->shape data; clear to 0 for compares below
  for(i=0;i<n;++i){   // loop over all contents
   // y->A block for contents of w[i]; yr=rank of y; ys->shape of y
   // if contents has the same rank as result, it is an array of result-cells, and each item adds

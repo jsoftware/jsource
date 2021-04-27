@@ -182,7 +182,7 @@ static B jtbufferinit(JS jjt,I nthreads){
  I threadno; for(threadno=0;threadno<nthreads;++threadno){JJ jt=&jjt->threaddata[threadno];
   jt->etx=malloc(1+NETX);  // error-message buffer
   jt->callstack=(LS *)malloc(sizeof(LS)*(1+NFCALL));  // function-call stack
-  jt->rngdata=(RNG*)(((I)malloc(sizeof(RNG)+CACHELINESIZE)+CACHELINESIZE-1)&-CACHELINESIZE); mvc(sizeof(RNG),jt->rngdata,8,MEMSET00);  // place to hold RNG data, aligned to cacheline
+  jt->rngdata=(RNG*)(((I)malloc(sizeof(RNG)+CACHELINESIZE)+CACHELINESIZE-1)&-CACHELINESIZE); mvc(sizeof(RNG),jt->rngdata,1,MEMSET00);  // place to hold RNG data, aligned to cacheline
  }
  R 1;
 }

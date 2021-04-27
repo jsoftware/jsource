@@ -675,7 +675,7 @@ __attribute__((constructor)) static void Initializer(int argc, char** argv, char
  JS jtnobdy=malloc(sizeof(JST)+JTALIGNBDY-1);
  if(!jtnobdy) R;
  JS jt = (JS)(((I)jtnobdy+JTALIGNBDY-1)&-JTALIGNBDY);  // force to SDRAM page boundary
- mvc(sizeof(JST),jt,8,MEMSET00);
+ mvc(sizeof(JST),jt,1,MEMSET00);
  if(!jtglobinit(jt)){free(jtnobdy); R;}
  dll_initialized= 1; JT(jt,heap)=(void *)jtnobdy;  // save allo address for later free
  // The g_jt heap MUST NOT be freed, because it holds the blocks pointed to by initialized globals.
@@ -689,7 +689,7 @@ JS _stdcall JInit(void){
  JS jtnobdy;
  RZ(jtnobdy=malloc(sizeof(JST)+JTALIGNBDY-1));
  JS jt = (JS)(((I)jtnobdy+JTALIGNBDY-1)&-JTALIGNBDY);  // force to SDRAM page boundary
- mvc(sizeof(JST),jt,8,MEMSET00);
+ mvc(sizeof(JST),jt,1,MEMSET00);
  // Initialize all the info for the shared region and the master thread
  if(!jtjinit2(jt,0,0)){free(jtnobdy); R 0;};
  JT(jt,heap)=(void *)jtnobdy;  // save allo address for later free

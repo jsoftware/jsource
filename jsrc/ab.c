@@ -44,11 +44,11 @@ REDUCEPFX(bw1101insI, UI,UI, BW1101, bw1101II, bw1101II)   static REDUCEPFX(bw11
 REDUCEPFX(bw1110insI, UI,UI, BW1110, bw1110II, bw1110II)   static REDUCEPFX(bw1110insC, UC,UC, BW1110, bw1110CC, bw1110CC)
 /* see below */                        /* see below */
 
-       AHDRR(bw0000insI,UI,UI){I k=SZI*m*d; memset(z,C0 ,k); R EVOK;}
-static AHDRR(bw0000insC,UC,UC){I k=    m*d; memset(z,C0 ,k); R EVOK;}
+       AHDRR(bw0000insI,UI,UI){I k=SZI*m*d; mvc(k,z,1,MEMSET00); R EVOK;}
+static AHDRR(bw0000insC,UC,UC){I k=    m*d; mvc(k,z,1,MEMSET00); R EVOK;}
 
-       AHDRR(bw1111insI,UI,UI){I k=SZI*m*d; memset(z,CFF,k); R EVOK;}
-static AHDRR(bw1111insC,UC,UC){I k=    m*d; memset(z,CFF,k); R EVOK;}
+       AHDRR(bw1111insI,UI,UI){I k=SZI*m*d; mvc(k,z,1,MEMSETFF); R EVOK;}
+static AHDRR(bw1111insC,UC,UC){I k=    m*d; mvc(k,z,1,MEMSETFF); R EVOK;}
 
        AHDRR(bw0011insI,UI,UI){I k=d*(n-1);                        DQ(m, DQ(d, *z++=  *x++;); x+=k;);R EVOK;}
 static AHDRR(bw0011insC,UC,UC){I k=d*(n-1);                        DQ(m, DQ(d, *z++=  *x++;); x+=k;);R EVOK;}

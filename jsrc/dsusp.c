@@ -23,7 +23,7 @@ void moveparseinfotosi(J jt){movesentencetosi(jt,jt->parserstackframe.parserqueu
 
 DC jtdeba(J jt,C t,void *x,void *y,A fs){DC d;
  {A q; GAT0(q,LIT,sizeof(DST),1); d=(DC)AV(q);}
- mvc(sizeof(DST),d,8,MEMSET00);
+ mvc(sizeof(DST),d,1,MEMSET00);
  if(jt->sitop&&t!=DCJUNK)moveparseinfotosi(jt);  // if we are creating a space between normal and suspension, don't modify the normal stack
  d->dctype=t; d->dclnk=jt->sitop; jt->sitop=d;
  switch(t){

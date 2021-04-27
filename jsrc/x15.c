@@ -700,15 +700,15 @@ static void convertup(I*pi,I n,C t){I j=n;
 // allocate hashtable, fill with -1.  Result is address
 static A jtcdgahash(J jt,I n){A z;I hn;
  FULLHASHSIZE(n,INTSIZE,0,0,hn);
- GATV0(z,INT,hn,0); ACINITZAP(z); memset(AV(z),CFF,hn*SZI);  // no rank - use all words for table
+ GATV0(z,INT,hn,0); ACINITZAP(z); mvc(hn*SZI,AV(z),1,MEMSETFF);  // no rank - use all words for table
  R z;
 }
 
 B jtcdinit(JS jjt,I nthreads){A x;JJ jt=MTHREAD(jjt);
- RZ(x=exta(LIT,2L,sizeof(CCT),100L )); ACINITZAP(x) mvc(AN(x),AV(x),8,MEMSET00); INITJT(jjt,cdarg)=x;
+ RZ(x=exta(LIT,2L,sizeof(CCT),100L )); ACINITZAP(x) mvc(AN(x),AV(x),1,MEMSET00); INITJT(jjt,cdarg)=x;
  RZ(INITJT(jjt,cdhash) =cdgahash(4*AS(INITJT(jjt,cdarg))[0]));
  RZ(INITJT(jjt,cdhashl)=cdgahash(NLIBS+16           ));  // will round up to power of 2 - we allow 100 libraries, which will almost never be used, so we don't get the usual 2x
- RZ(x=exta(LIT,0L,1L,         5000L)); ACINITZAP(x) mvc(AN(x),AV(x),8,MEMSET00); INITJT(jjt,cdstr)=x;  // AR is used as the lock for cds.  Do this last; it indicates validity for all
+ RZ(x=exta(LIT,0L,1L,         5000L)); ACINITZAP(x) mvc(AN(x),AV(x),1,MEMSET00); INITJT(jjt,cdstr)=x;  // AR is used as the lock for cds.  Do this last; it indicates validity for all
  AM(INITJT(jjt,cdstr))=AM(INITJT(jjt,cdarg))=AM(INITJT(jjt,cdhash))=AM(INITJT(jjt,cdhashl))=0;  // init all tables to empty
  R 1;
 }

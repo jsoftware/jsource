@@ -9,8 +9,8 @@
 static A jtsprarg(J jt,I f,A x){A q;B*b,c;I r;P*xp;
  r=AR(x); xp=PAV(x);
  if(SPARSE&AT(x)){c=1; RZ(b=bfi(r,SPA(xp,a),1)); DO(f, if(!b[i]){c=0; break;});}
- else{c=0; GATV0(q,B01,r,1); b=BAV(q); mvc(r,b,8,MEMSET00);}
- memset(b,C1,f);
+ else{c=0; GATV0(q,B01,r,1); b=BAV(q); mvc(r,b,1,MEMSET00);}
+ mvc(f,b,1,MEMSET01);
  R c||!r?x:reaxis(ifb(r,b),x);
 }    /* ensure frame axes are sparse */
 
@@ -28,7 +28,7 @@ static B*jtspredge(J jt,A y,I f,I*zm){A q;B*b;I c,m,n,*v;
  v=AS(y); n=v[0]; c=v[1]; m=n?1:0;
  GATV0(q,B01,n,1); b=BAV(q);
  if(n){
-  if(f){v=AV(y); DO(n-1, if(b[i]=1&&ICMP(v,v+c,f))++m; v+=c;);}else mvc(n,b,8,MEMSET00);
+  if(f){v=AV(y); DO(n-1, if(b[i]=1&&ICMP(v,v+c,f))++m; v+=c;);}else mvc(n,b,1,MEMSET00);
   b[n-1]=1;
  }
  *zm=m;
@@ -57,7 +57,7 @@ static A jtsprz(J jt,A z0,A y,A e,I f,I*s){A a,a0,q,y0,z;B d;I c,et,h,m,n,r,t,*u
  if(d){SPB(zp,a,apvwr(f,0L,1L)); SPB(zp,i,y); SPB(zp,x,TYPESEQ(m,t)?z0:cvt(m,z0)); R z;}
  zq=PAV(z0); y0=SPA(zq,i); v=AS(y0); n=v[0]; c=v[1]; v=AV(y0);
  ASSERT(equ(e,SPA(zq,e)),EVNONCE);
- h=AS(y)[0]; GATV0(q,INT,h,1); u=AV(q); mvc(h*SZI,u,8,MEMSET00); 
+ h=AS(y)[0]; GATV0(q,INT,h,1); u=AV(q); mvc(h*SZI,u,1,MEMSET00); 
  if(n){h=-1; DO(n-1, if(v[0]!=v[c]){u[*v]=i-h; h=i;} v+=c;); u[*v]=n-1-h;}
  SPB(zp,i,stitch(repeat(q,y),dropr(1L,y0)));
  a0=SPA(zq,a); v=AV(a0);

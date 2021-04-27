@@ -439,7 +439,7 @@ static F2(jtmatchs){A ae,ax,p,q,we,wx,x;B*b,*pv,*qv;D d;I acr,an=0,ar,c,j,k,m,n,
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; RESETRANK;
  if(ar>acr||wr>wcr)R rank2ex(a,w,DUMMYSELF,acr,wcr,acr,wcr,jtmatchs);
  if(ar!=wr||memcmpne(AS(a),AS(w),r*SZI)||!HOMO(AT(a),AT(w)))R num(0);
- GATV0(x,B01,r,1L); b=BAV(x); mvc(r,b,8,MEMSET00);
+ GATV0(x,B01,r,1L); b=BAV(x); mvc(r,b,1,MEMSET00);
  if(SPARSE&AT(a)){ap=PAV(a); x=SPA(ap,a); v=AV(x); an=AN(x); DO(an, b[v[i]]=1;);}
  if(SPARSE&AT(w)){wp=PAV(w); x=SPA(wp,a); v=AV(x); wn=AN(x); DO(wn, b[v[i]]=1;);} 
  c=0; DO(r, c+=b[i];);
@@ -448,7 +448,7 @@ static F2(jtmatchs){A ae,ax,p,q,we,wx,x;B*b,*pv,*qv;D d;I acr,an=0,ar,c,j,k,m,n,
  RZ(x=indexof(SPA(ap,i),SPA(wp,i))); v=AV(x);
  GATV0(p,B01,m,1); pv=BAV(p);
  GATV0(q,B01,n,1); qv=BAV(q); 
- memset(pv,C1,m); DO(n, j=*v++; if(j<m)pv[j]=qv[i]=0; else qv[i]=1;);
+ mvc(m,pv,1,MEMSET01); DO(n, j=*v++; if(j<m)pv[j]=qv[i]=0; else qv[i]=1;);
  if(memchr(pv,C1,m)&&!all1(eq(we,repeat(p,ax))))R num(0);
  if(memchr(qv,C1,n)&&!all1(eq(ae,repeat(q,wx))))R num(0);
  j=0; DO(m, if(pv[i])++j;);

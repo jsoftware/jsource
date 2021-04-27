@@ -160,7 +160,7 @@ F1(jtgrd1sp){F1PREFJT;PROLOG(0077);A z;B b,c,*wb;I j,m,wcr,wf,wr;P*wp;
  wp=PAV(w);
  RZ(wb=bfi(wr,SPA(wp,a),1));
  m=0; j=wr; b=c=0; 
- DO(wf, if(wb[i])++m;); if(1<=m&&m<wf){c=1; memset(wb,C1,wf);}
+ DO(wf, if(wb[i])++m;); if(1<=m&&m<wf){c=1; mvc(wf,wb,1,MEMSET01);}
  DQ(wcr, --j; if(wb[j])b=1; else if(b){c=1; wb[j]=1;});
  if(c)RZ(w=reaxis(ifb(wr,wb),w));
  switch(2*wb[0]+wb[wf]){
@@ -246,7 +246,7 @@ F2(jtgrd2sp){F1PREFJT;PROLOG(0078);A z;B b,c,*wb;I acr,af,am,ar,*as,j,m,wcr,wf,w
  wp=PAV(w);
  RZ(wb=bfi(wr,SPA(wp,a),1));
  m=0; j=wr; b=c=0; 
- DO(wf, if(wb[i])++m;); if(1<=m&&m<wf){c=1; memset(wb,C1,wf);}
+ DO(wf, if(wb[i])++m;); if(1<=m&&m<wf){c=1; mvc(wf,wb,1,MEMSET01);}
  DQ(wcr, --j; if(wb[j])b=1; else if(b){c=1; wb[j]=1;});
  if(c){b=a==w; RZ(w=reaxis(ifb(wr,wb),w)); if(b)a=w;}
  switch((2*wb[0]+wb[wf])*(a==w&&af==wf&&acr==wcr)){

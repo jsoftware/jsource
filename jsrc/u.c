@@ -321,7 +321,7 @@ void mvc(I m,void*z,I n,void*w){
   m-=nwds<<LGSZI;  // account for bytes moved
   if(unlikely(m<=SZI)){
    // nothing left but a remnant <= 1 word, finish it here
-   STOREBYTES(zz,wdi,SZI-m);  // # bytes is m, # to leave is SZI-m
+   if(m)STOREBYTES(zz,wdi,SZI-m);  // # bytes is m, # to leave is SZI-m
    R;
   }
   // there is more to do.  Housekeep the variables to indicate that we have a larger area in w

@@ -134,7 +134,7 @@ static F1X(jtlbox){F1PREFIP;A p,*v,*vv,*wv,x,y;B b=0;I n;
  }
  DO(n, x=wv[i]; if((AR(x)^1)|(~AT(x)&LIT)){b=1; break;});
  if(!b){C c[256],d,*t;UC*s;
-  memset(c,1,sizeof(c)); 
+  mvc(sizeof(c),c,1,MEMSET01); 
   RZ(x=raze(w)); s=UAV(x);
   DQ(AN(x), c[*s++]=0;);
   if(c[CQUOTE]&&equ(w,words(x)))R over(cstr(";:"),lchar(x));

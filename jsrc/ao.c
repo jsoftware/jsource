@@ -301,7 +301,7 @@ A jtkeyct(J jt,A a,A w,A self,D toler){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
     // indexofsub detected that small-range processing is in order.  Information about the range is secreted in fields of a
     ai=(A)((I)ai-1); I k=AN(ai); I datamin=AK(ai); I p=AM(ai);  // get size of an item in bytes, smallest item, range+1
     // allocate a tally area and clear it to ~0
-    A ftbl; GATV0(ftbl,INT,p,1); void **ftblv=voidAV(ftbl); memset(ftblv,~0,p<<LGSZI);
+    A ftbl; GATV0(ftbl,INT,p,1); void **ftblv=voidAV(ftbl); mvc(p<<LGSZI,ftblv,1,MEMSETFF);
     // pass through the inputs, setting ftblv to 0 if there is a partition, and counting the number of partitions
     I valmsk=(UI)~0LL>>(((-k)&(SZI-1))<<LGBB);  // mask to leave the k lowest bytes valid
     ftblv-=datamin;  // bias starting addr so that values hit the table
@@ -440,7 +440,7 @@ A jtkeyct(J jt,A a,A w,A self,D toler){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
   // indexofsub detected that small-range processing is in order.  Information about the range is secreted in fields of a
   ai=(A)((I)ai-1); I k=AN(ai); I datamin=AK(ai); I p=AM(ai);  // get size of an item, smallest item, range+1
   // allocate a tally area and clear it.  Could use narrower table perhaps
-  A ftbl; GATV0(ftbl,INT,p,1); I *ftblv=IAV(ftbl); mvc(p<<LGSZI,ftblv,8,MEMSET00);
+  A ftbl; GATV0(ftbl,INT,p,1); I *ftblv=IAV(ftbl); mvc(p<<LGSZI,ftblv,1,MEMSET00);
   // pass through the inputs, counting the negative of the number of slots mapped to each index
   I valmsk=(UI)~0LL>>(((-k)&(SZI-1))<<LGBB);  // mask to leave the k lowest bytes valid
   ftblv-=datamin;  // bias starting addr so that values hit the table
@@ -678,7 +678,7 @@ static DF2(jtkeytally){F2PREFIP;PROLOG(0016);A z,q;I at,j,k,n,r,s,*qv,*u,*v;
   // we should do small-range processing.  Extract the info
   ai=(A)((I)ai-1); I k=AN(ai); I datamin=AK(ai); I p=AM(ai);  // get size of an item in bytes, smallest item, range+1
   // allocate a tally area and clear it to 0
-  A ftbl; GATV0(ftbl,INT,p,1); I *ftblv=voidAV(ftbl); memset(ftblv,~0,p<<LGSZI);
+  A ftbl; GATV0(ftbl,INT,p,1); I *ftblv=voidAV(ftbl); mvc(p<<LGSZI,ftblv,1,MEMSETFF);
   // pass through the inputs, setting ftbl to tally-1, and counting the number of partitions
   I valmsk=(UI)~0LL>>(((-k)&(SZI-1))<<LGBB);  // mask to leave the k lowest bytes valid
   ftblv-=datamin;  // bias starting addr so that values hit the table
@@ -740,7 +740,7 @@ DF2(jtkeyheadtally){F2PREFIP;PROLOG(0017);A f,q,x,y,z;I b;I at,*av,k,n,r,*qv,*u,
    // we should do small-range processing.  Extract the info
    ai=(A)((I)ai-1); I k=AN(ai); I datamin=AK(ai); I p=AM(ai);  // get size of an item in bytes, smallest item, range+1
    // allocate a tally area and clear it to 0
-   A ftbl; GATV0(ftbl,INT,p,1); I *ftblv=voidAV(ftbl); memset(ftblv,~0,p<<LGSZI);
+   A ftbl; GATV0(ftbl,INT,p,1); I *ftblv=voidAV(ftbl); mvc(p<<LGSZI,ftblv,1,MEMSETFF);
    // pass through the inputs, setting ftbl to tally-1, and counting the number of partitions
    I valmsk=(UI)~0LL>>(((-k)&(SZI-1))<<LGBB);  // mask to leave the k lowest bytes valid
    ftblv-=datamin;  // bias starting addr so that values hit the table

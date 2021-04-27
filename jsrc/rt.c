@@ -51,7 +51,7 @@ static F1(jtgraft){A p,q,t,*u,x,y,z,*zv;C*v;I d,j,k,m,n,*pv,*s,xn,*xv,yn,*yv;
  u=AAV(w);
  for(j=0;j<yn;++j){
   DPMULDE(m,yv[j],k); GATV0(q,LIT,k,2); s=AS(q); *s=m; *++s=yv[j];
-  v=CAV(q); memset(v,' ',AN(q));
+  v=CAV(q); mvc(AN(q),v,1,iotavec-IOTAVECBEGIN+' ');
   pv[1]=yv[j]; k=j-yn; DO(xn, *pv=xv[i]; RE(v+=pad(p,u[k+=yn],v)););
   zv[j]=incorp(q);
  }
@@ -61,7 +61,7 @@ static F1(jtgraft){A p,q,t,*u,x,y,z,*zv;C*v;I d,j,k,m,n,*pv,*s,xn,*xv,yn,*yv;
   v=CAV(t);         DO(m, if(' '!=*v){j=i;   break;} v+=n;);
   v=CAV(t)+AN(t)-n; DO(m, if(' '!=*v){k=m-i; break;} v-=n;);
   d=k-j;
-  GATV0(p,LIT,m,1); v=CAV(p); memset(v,' ',m);
+  GATV0(p,LIT,m,1); v=CAV(p); mvc(m,v,1,iotavec-IOTAVECBEGIN+' ');
   if(1==d)*(v+j)=JT(jt,bx)[10]; else{memset(v+j,JT(jt,bx)[9],d); v[j]=*JT(jt,bx); v[k-1]=JT(jt,bx)[6];}
  }
  RZ(zv[0]=incorp(stitch(p,t)));
@@ -72,7 +72,7 @@ static A jtcenter(J jt,A a,I j,I k,I m){A z;C*x;I n,*s,zn;
  ARGCHK1(a);
  n=AN(a); DPMULDE(m,n,zn); GATV0(z,LIT,zn,2); s=AS(z); *s=m; *++s=n;
 RE(zn=mult(m,n));
- x=CAV(z); memset(x,' ',AN(z)); MC(x+n*(j+((m-(j+k))>>1)),AV(a),n);
+ x=CAV(z); mvc(AN(z),x,1,iotavec-IOTAVECBEGIN+' '); MC(x+n*(j+((m-(j+k))>>1)),AV(a),n);
  R z;
 }
 

@@ -41,7 +41,7 @@
 // If the sentence passes a u/v into an operator, the current symbol table will become the prev and will have the u/v environment info
 // If the sentence fails, we go into debug mode and don't return until the user releases us
 #if NAMETRACK
-#define SETTRACK memset(trackinfo,' ',sizeof(trackinfo)); wx=0; \
+#define SETTRACK mvc(sizeof(trackinfo),trackinfo,1,iotavec-IOTAVECBEGIN+' '); wx=0; \
  wlen=sprintf(trackinfo,"%d: ",cw[i].source); wx+=wlen; trackinfo[wx++]=' '; \
  AK(trackbox)=(C*)queue-(C*)trackbox; AN(trackbox)=AS(trackbox)[0]=m; trackstg=unparse(trackbox); \
  wlen=AN(trackstg); wlen=wlen+wx>sizeof(trackinfo)-1?sizeof(trackinfo)-1-wx:wlen; MC(trackinfo+wx,CAV(trackstg),wlen); wx+=wlen; \

@@ -50,11 +50,11 @@ static I jtc2j(J jt,B e,I m,C*zv,A*cellbuf){C c,*s,*t;I k,p;
   if(!m&&' '==s[0]){++t; --k;}
  }
  // If the field has fixed width and the formatted result doesn't fit, fill result area with ***
- if(m&&m<k)memset(zv,'*',m);
+ if(m&&m<k)mvc(m,zv,1,iotavec-IOTAVECBEGIN+'*');
  else{
   // If the field is wider than the result, install spaces (to right or left depending on exponential flag)
   //  (I don't see why this is necessary); also advance zv to point to the result area if not exponential
-  if(k<m){memset(zv+e*k,' ',m-k); if(!e)zv+=m-k;}
+  if(k<m){mvc(m-k,zv+e*k,1,iotavec-IOTAVECBEGIN+' '); if(!e)zv+=m-k;}
   // In all cases except ***-fill, copy the result to the output area
   DO(k, c=t[i]; *zv++='-'==c?CSIGN:c;);
  }
@@ -68,11 +68,11 @@ static B jtfmtex(J jt,I m,I d,I n,I*xv,B b,I c,I q,I ex,A*cellbuf){B bm=b||m;C*u
  k=(XBASEN+d+1-q)/XBASEN; k=MIN(n-1,k);
  DQ(k, c=*--xv; sprintf(v,FMTI04,b?-c:c); v+=XBASEN;);
  k=v-CAV1(*cellbuf)-(2+bm);
- if(k<d){memset(v,'0',d-k); v+=d-k;}
+ if(k<d){mvc(d-k,v,1,iotavec-IOTAVECBEGIN+'0'); v+=d-k;}
  else if(k>d&&(u=v=CAV1(*cellbuf)+d+2+bm,'5'<=*v)){
   NOUNROLL while('9'==*--u);
   if(' '!=*u)++*u; else{*++u='1'; ++ex;}
-  memset(u+1,'0',v-u-1);
+  mvc(v-u-1,u+1,1,iotavec-IOTAVECBEGIN+'0');
  }
  CAV1(*cellbuf)[bm]=CAV1(*cellbuf)[bm+1]; CAV1(*cellbuf)[bm+1]='.'; sprintf(v-!d,"e"FMTI"",ex);
  R 1;
@@ -84,13 +84,13 @@ static B jtfmtx(J jt,B e,I m,I d,C*s,I t,X*wv,A*cellbuf){B b;C*v=CAV1(*cellbuf);
  if(c==XPINF){if(b)*v++='_'; *v++='_'; *v=0; R 1;}
  q=c>999?4:c>99?3:c>9?2:1; p=q+XBASEN*(n-1);
  if(e)R fmtex(m,d,n,xv,b,c,q,p-1,cellbuf);
- else if(m&&m<b+p+d+!!d){memset(v,'*',m); v[m]=0;}
+ else if(m&&m<b+p+d+!!d){mvc(m,v,1,iotavec-IOTAVECBEGIN+'*'); v[m]=0;}
  else{
   if(AN(*cellbuf)<4+p+d){GATV0(*cellbuf,LIT,4+p+d,1); v=CAV1(*cellbuf);}
   if(' '==s[0])*v++=' '; if(b)*v++='_'; 
   sprintf(v,FMTI,c); v+=q;
   DQ(n-1, c=*--xv; sprintf(v,FMTI04,b?-c:c); v+=XBASEN;); 
-  if(d){*v++='.'; memset(v,'0',d); v[d]=0;}
+  if(d){*v++='.'; mvc(d,v,1,iotavec-IOTAVECBEGIN+'0'); v[d]=0;}
  }
  R 1;
 }    /* format one extended integer */
@@ -110,7 +110,7 @@ static B jtfmtq(J jt,B e,I m,I d,C*s,I t,Q*wv,A*cellbuf){B b;C*v=CAV1(*cellbuf);
  n=AN(x); xv=AV(x)+n-1; c=*xv; b=0>c; if(b)c=-c;
  q=c>999?4:c>99?3:c>9?2:1; p=q+XBASEN*(n-1); if(c||!e)ex+=p-d-1;
  if(e)R fmtex(m,d,n,xv,b,c,q,ex,cellbuf);
- else if(m&&m<b+d+(I )!!d+(0>ex?1:1+ex)){memset(v,'*',m); v[m]=0;}
+ else if(m&&m<b+d+(I )!!d+(0>ex?1:1+ex)){mvc(m,v,1,iotavec-IOTAVECBEGIN+'*'); v[m]=0;}
  else{
   if(AN(*cellbuf)<4+p+d){GATV0(*cellbuf,LIT,4+p+d,1); v=CAV1(*cellbuf);}
   if(' '==s[0])*v++=' '; if(b)*v++='_';
@@ -202,7 +202,7 @@ static A jtth2a(J jt,B e,I m,I d,C*s,I n,I t,I wk,C*wv,B first,A*cellbuf){PROLOG
  // Allocate final result area, an nxm table of characters.  Install shape
  GATV0(y,LIT,n*m,2); AS(y)[0]=n; AS(y)[1]=m;
  // Clear result area to spaces.  Set yv-> first result string, u->first intermediate formatted string
- yv=CAV(y); memset(yv,' ',AN(y));  u=zv;
+ yv=CAV(y); mvc(AN(y),yv,1,iotavec-IOTAVECBEGIN+' ');  u=zv;
  // Copy the strings from the formatting area (u->) to the result area (yv->)
  // For exponential fields, start copying from the left, leaving one space if there is a negative sign somewhere else
  // in the column but not in this value; advance to next input & output

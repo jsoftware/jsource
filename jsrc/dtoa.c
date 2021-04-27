@@ -3423,7 +3423,7 @@ B jtecvt(J jt, D dw, I ndp, int *decpt, int *sign, C *dest)
  di->ndp=(int)ndp; di->result=dest;
  y=d2a_dtoa(di, dw, 2, (int)ndp, decpt, sign, (char**)&z);
  RZ(y&&z);
- memset(z, '0', ndp-(z-y));
+ mvc( ndp-(z-y),z,1,iotavec-IOTAVECBEGIN+'0');
  R 1;
 }
 

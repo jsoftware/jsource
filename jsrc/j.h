@@ -467,7 +467,7 @@ extern unsigned int __cdecl _clearfp (void);
 
 // start and length for the stored vector of ascending integers
 #define IOTAVECBEGIN (-20)
-#define IOTAVECLEN 400
+#define IOTAVECLEN 400   // must be <= 256 so all memsets can be sourced from here
 
 // modes for indexofsub()
 #define IIOPMSKX        5  // # bits of flags

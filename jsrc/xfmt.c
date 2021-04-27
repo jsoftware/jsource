@@ -216,7 +216,7 @@ static B jtsprintfI(J jt, C *x, I m, I dp, I iw, C *subs) {I r,g;
 }
 
 static B jtsprintfnD(J jt, C *x, I m, I dp, D dw, C *subs) {I nd;int decpt, sign;
- if(dw==0) { memset(x, '0', m); if(dp) x[1]=SUBd; R 1; }
+ if(dw==0) { mvc( m,x,1,iotavec-IOTAVECBEGIN+'0'); if(dp) x[1]=SUBd; R 1; }
  if(ABS(dw) < 1) nd=dp; else nd=m-!!dp;
  RZ(ecvt(dw,nd,&decpt,&sign,x));
  if(decpt > 0) {
@@ -224,7 +224,7 @@ static B jtsprintfnD(J jt, C *x, I m, I dp, D dw, C *subs) {I nd;int decpt, sign
   if(dp) x[decpt]=SUBd;
  } else {
   memmove(x+2-decpt, x, dp+decpt); 
-  memset(x, '0', 2-decpt);
+  mvc( 2-decpt,x,1,iotavec-IOTAVECBEGIN+'0');
   if(dp) x[1]=SUBd;
  }
  R 1;
@@ -415,7 +415,7 @@ static A jtfmtallcol(J jt, A a, A w, I mode) {A *a1v,base,fb,len,strs,*u,v,x;
     ib+=4; --imod; ib=(imod==0)?AV(base):ib; imod=(imod==0)?nf:imod;
     if(0<ib[0]) GATV0(*a1v, LIT, ib[0], 1)
     else GATV0(*a1v, LIT, *il, 1) 
-    incorp(*a1v); memset(CAV(*a1v), ' ', AN(*a1v)); 
+    incorp(*a1v); mvc( AN(*a1v),CAV(*a1v),1,iotavec-IOTAVECBEGIN+' '); 
     a1v++; il++; 
    );
    break;
@@ -426,7 +426,7 @@ static A jtfmtallcol(J jt, A a, A w, I mode) {A *a1v,base,fb,len,strs,*u,v,x;
     if(0<ib[0]) zs[1]=ib[0]; 
     else zs[1]=ib[3+(1<nf?0:i)]; 
     GATVR(*a1v, LIT, zs[0]*zs[1], 2, zs);
-    incorp(*a1v); memset(CAV(*a1v), ' ', AN(*a1v)); 
+    incorp(*a1v); mvc( AN(*a1v),CAV(*a1v),1,iotavec-IOTAVECBEGIN+' '); 
     *cvv++=CAV(*a1v);
     a1v++; if(1<nf) ib+=4; 
    );
@@ -438,7 +438,7 @@ static A jtfmtallcol(J jt, A a, A w, I mode) {A *a1v,base,fb,len,strs,*u,v,x;
           if(1<nf) ib+=4; );
    zs[0]=prod(wr-1,ws); zs[1]=coll;
    GATVR(x, LIT, zs[0]*zs[1], 2, zs);
-   memset(CAV(x), ' ', AN(x));
+   mvc( AN(x),CAV(x),1,iotavec-IOTAVECBEGIN+' ');
    break;
   default: ASSERTSYS(0, "jtfmtallcol: mode");
  }
@@ -467,8 +467,8 @@ static A jtfmtallcol(J jt, A a, A w, I mode) {A *a1v,base,fb,len,strs,*u,v,x;
   if(l>0 && l<*il) memset(cv,SUBs,l);  // can't dereference il if l==0.  If field too short, fill with user's * character
   else {
    // first, install background if r<xx> given; otherwise blanks
-   if(0<=l && mL){if(nR)mvc(k,cv,nR,cR); else memset(cv+*il, ' ', l-*il);}
-   else if(0<=l) {if(nR)mvc(k,cv,nR,cR); else memset(cv, ' ', l-*il); cv+=l-*il;}
+   if(0<=l && mL){if(nR)mvc(k,cv,nR,cR); else mvc( l-*il,cv+*il,1,iotavec-IOTAVECBEGIN+' ');}
+   else if(0<=l) {if(nR)mvc(k,cv,nR,cR); else mvc( l-*il,cv,1,iotavec-IOTAVECBEGIN+' '); cv+=l-*il;}
    // format the value.
    if(*bits&BITSf) {  // value is _ __ _. (and therefore FL type)
     if(mI && *bits&BITS__)MC(cv, cI, nI);  // NULL has priority i<xx>

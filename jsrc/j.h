@@ -835,7 +835,8 @@ extern unsigned int __cdecl _clearfp (void);
                           }else if((commute)&(bi)){ \
                             if((commute)&0x400){z=_mm256_castsi256_pd(_mm256_cmpeq_epi64(_mm256_castpd_si256(onei),_mm256_castpd_si256(u)));} \
                           }else if((commute)&(bd)){ \
-                            z=_mm256_castsi256_pd(_mm256_sllv_epi64(_mm256_castpd_si256(u),dts)); \
+                            if(C_AVX2)z=_mm256_castsi256_pd(_mm256_sllv_epi64(_mm256_castpd_si256(u),dts)); \
+                            else z=_mm256_castsi256_pd(_mm256_cmpeq_epi64(dts,_mm256_and_si256(dts,_mm256_castpd_si256(u)))); \
                             z=_mm256_blendv_pd(zero,oned,z); \
                         } }
 // convert a LDBID1 to D or I.  z is garbage except for low byte.  0x400 turns -1 to 1, for multiplication

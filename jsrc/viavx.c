@@ -1611,7 +1611,7 @@ CR condrange(I *s,I n,I min,I max,I maxrange){CR ret;
    min1=_mm256_castps_si256(_mm256_blend_ps(_mm256_castsi256_ps(min0),_mm256_castsi256_ps(min1),0xcc));  // min1 now has n X n X  (X=compl max, n=min)
    max1=_mm256_castpd_si256(_mm256_permute_pd(_mm256_castsi256_pd(max1),0x5));  // max1 has n X n X
    TAKEMINOF(min1,max1);  // min1 is n X n X
-   max1=_mm256_permute4x64_epi64(min1,0x0e);  // max1 has n X - -  from upper min1
+   max1=_mm256_permute2f128_si256(min1,min1,0x01);  // max1 has n X - -  from upper min1
    TAKEMINOF(min1,max1);  // min1 is n X - -, the overall min & compl max
    min = _mm256_extract_epi64(min1,0); max = _mm256_extract_epi64(min1,1);  // max is still complement
 // obsolete    // rearrange the 4-wide min/max accumulators to mixed min/max
@@ -1650,7 +1650,7 @@ CR condrange(I *s,I n,I min,I max,I maxrange){CR ret;
  min1=_mm256_castps_si256(_mm256_blend_ps(_mm256_castsi256_ps(min0),_mm256_castsi256_ps(min1),0xcc));  // min1 now has n X n X  (X=compl max, n=min)
  max1=_mm256_castpd_si256(_mm256_permute_pd(_mm256_castsi256_pd(max1),0x5));  // max1 has n X n X
  TAKEMINOF(min1,max1);  // min1 is n X n X, which includes everything
- max1=_mm256_permute4x64_epi64(min1,0x0e);  // max1 has n X - -  from upper min1
+ max1=_mm256_permute2f128_si256(min1,min1,0x01);  // max1 has n X - -  from upper min1
  TAKEMINOF(min1,max1);  // min1 is n X - -, the overall min & compl max
  min = _mm256_extract_epi64(min1,0); max = _mm256_extract_epi64(min1,1);  // max is still complement
 // obsolete  min1 = _mm256_permute2x128_si256(min0,max0,0x21);  // now min1 has low 2 values of max0 in the high part, and the high 2 values of min0 in the low part

@@ -348,7 +348,7 @@ static void jtfram(J jt,I k,I n,I*x,C*v,I cw){C a,b=9==k,d,l,r;
  // Different version for each character size
  switch (cw){
  case 1:   // version for LIT output array
-  {*v++=l; DO(n, memset(v,a,x[i]-1); v+=x[i]-1;*v++=d;);*--v=r;}break;
+  {*v++=l; DO(n,  mvc(x[i]-1,v,1,iotavec-IOTAVECBEGIN+a); v+=x[i]-1;*v++=d;);*--v=r;}break;
  case 2: // version for C2T output array
   {US *u=(US*)v;I j; *u++=l; DO(n, for(j=x[i]-1;j>0;--j)*u++=a; *u++=d;); *--u=r;} break;
  case 4: // version for C4T output array

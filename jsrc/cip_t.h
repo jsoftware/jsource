@@ -20,7 +20,7 @@ for(i=0;i<m;++i, zv+=n, av0+=p){
  for(j=1;j<p;++j){
   // perform one inner product of b (an atom of x) with the corresponding cell f
   // if b==e, this will saturate the result; abort the innerproduct then
-  b=*av; av+=ana; if(b==eskip)continue; if(b==esat){memset(zv,c==CPLUSDOT?C1:C0,n); break;}
+  b=*av; av+=ana; if(b==eskip)continue; if(b==esat){ mvc(n,zv,1,iotavec-IOTAVECBEGIN+(c==CPLUSDOT)); break;}
   // If the result doesn't saturate, perform the calculation.  uv->result, vv->item of w, depending on b value
   uu=(I*)zv; vv=(I*)(b?v1+j*wc:v0+j*wc);
   // Do all the fullword operations

@@ -96,7 +96,7 @@ B jtb0(J jt,A w){if(!(w))R 0; ASSERT(!AR(w),EVRANK); if(!(B01&AT(w)))RZ(w=cvt(B0
 // NOTE: the caller modifies this result inplace, so it must not be shared or readonly
 B*jtbfi(J jt,I n,A w,B p){A t;B* RESTRICT b;I* RESTRICT v;
  GATV0(t,B01,n+1,1); b=BAV(t);  // allo n+1 slots
- memset(b,!p,(n|(SZI-1))+1); v=AV(w); DO(AN(w), b[v[i]]=p;);
+ mvc((n|(SZI-1))+1,b,1,iotavec-IOTAVECBEGIN+(p^1)); v=AV(w); DO(AN(w), b[v[i]]=p;);
  R b;
 }    // boolean mask from integers: p=(i.>:n)e.w  where *./w<n
 

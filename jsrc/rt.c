@@ -37,7 +37,7 @@ static I jtpad(J jt,A a,A w,C*zv){C dash,*u,*v,*wv;I c,d,r,*s;
   if(c==d)MC(zv,wv,AN(w));
   else{I k;
    zv-=d; v=zv+c-1; u=wv-c; dash=JT(jt,bx)[10];
-   DQ(SETIC(w,k), MC(zv+=d,u+=c,c); v+=d; if(dash==*v)memset(1+v,dash,d-c););
+   DQ(SETIC(w,k), MC(zv+=d,u+=c,c); v+=d; if(dash==*v)mvc(d-c,1+v,1,iotavec-IOTAVECBEGIN+dash););
  }}
  R r*d;
 }
@@ -62,7 +62,7 @@ static F1(jtgraft){A p,q,t,*u,x,y,z,*zv;C*v;I d,j,k,m,n,*pv,*s,xn,*xv,yn,*yv;
   v=CAV(t)+AN(t)-n; DO(m, if(' '!=*v){k=m-i; break;} v-=n;);
   d=k-j;
   GATV0(p,LIT,m,1); v=CAV(p); mvc(m,v,1,iotavec-IOTAVECBEGIN+' ');
-  if(1==d)*(v+j)=JT(jt,bx)[10]; else{memset(v+j,JT(jt,bx)[9],d); v[j]=*JT(jt,bx); v[k-1]=JT(jt,bx)[6];}
+  if(1==d)*(v+j)=JT(jt,bx)[10]; else{ mvc(d,v+j,1,iotavec-IOTAVECBEGIN+JT(jt,bx)[9]); v[j]=*JT(jt,bx); v[k-1]=JT(jt,bx)[6];}
  }
  RZ(zv[0]=incorp(stitch(p,t)));
  R z;

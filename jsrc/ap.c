@@ -172,7 +172,7 @@ PREFIXBFX( eqpfxB, EQ, IEQ, SEQ, BEQ, {I t=VALIDBOOLEAN; DQ((n-1)>>LGSZI, t=*(I*
 // m is */frame, n is #cells, d is length of each cell, p is 1 for <, 0 for <:
 // the result is ~p until we hit an input=p; then p thereafter
 static B jtpscanlt(J jt,I m,I d,I n,B*z,B*x,B p){A t;B*v;I i;
- memset(z,p^1,m*n*d); 
+ mvc(m*n*d,z,1,iotavec-IOTAVECBEGIN+(p^1)); 
  if(1==d)DQ(m, if(v=memchr(x,p,n))*(z+(v-x))=p; z+=n; x+=n;)
  else{
   I *xiv0=(I*)x, *ziv0=(I*)z;  // word-long pointers running through each cell
@@ -219,7 +219,7 @@ static B jtpscangt(J jt,I m,I d,I n,B*z,B*x,I apas){
    A t;B b,*cc="\000\001\000\001\000\001\000\001\000",e,*p=cc+pp,*v;B*u;I i,j;  // *p must be overfetchable
    if(v=memchr(x,a,n)){
     j=v-x; b=j&1; 
-    mvc(j,z,2L,p); memset(z+j,b^ps,n-j); z[j]=b^pa;
+    mvc(j,z,2L,p);  mvc(n-j,z+j,1,iotavec-IOTAVECBEGIN+(b^ps)); z[j]=b^pa;
    }else mvc(n,z,2L,p);
    z+=n; x+=n;
   }

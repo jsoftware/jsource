@@ -545,7 +545,7 @@ static A jtsblit(J jt,C c,A w){A z;S c2=0;I k,m=0,n;SB*v,*v0;SBU*u;
  GA(z,c2&SBC4?C4T:c2&SBC2?C2T:LIT,n*m,1+AR(w),0); MCISH(AS(z),AS(w),AR(w)) AS(z)[AR(w)]=m;
  if(c2&SBC4){C4*zv=C4AV(z); DQ(n, u=SBUV(*v++); C2FSB(zv,u,3,m,c););}
  else if(c2&SBC2){US*zv=USAV(z); DQ(n, u=SBUV(*v++); C2FSB(zv,u,3,m,c););}
- else  {C*zv=CAV(z); memset(zv,c,n*m); DO(n, u=SBUV(*v++); MC(zv,SBSV(u->i),u->n); zv+=m;);}
+ else  {C*zv=CAV(z); mvc(n*m,zv,1,iotavec-IOTAVECBEGIN+(c)); DO(n, u=SBUV(*v++); MC(zv,SBSV(u->i),u->n); zv+=m;);}
  R z;
 }    /* literal array for symbol array w padded with c */
 

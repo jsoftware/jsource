@@ -29,7 +29,7 @@ F1(jtvaspz){A e,x,y;B c,*u,*xu,*xv;I j,n,*v,*yu,*yv,xc,yc;P*wp;
   ++j;
  }
  n=(yu-yv)/yc;
- if(1==xc)memset(xv,c,n);
+ if(1==xc)mvc(n,xv,1,iotavec-IOTAVECBEGIN+(c));
  AS(y)[0]=n; AN(y)=n*yc;
  AS(x)[0]=n; AN(x)=n*xc;
  RETF(w);

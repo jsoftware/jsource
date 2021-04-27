@@ -1559,8 +1559,8 @@ static IOFXWS(jtio42w,I,US)  static IOFXWS(jtio44w,I,UI4)  // INT-sized items, u
 CR condrange(I *s,I n,I min,I max,I maxrange){CR ret;
  if(unlikely(n==0))goto fail;
  I nqw=(n-1)>>LGNPAR;  // number of full-or-partial widewords-1
- __m256i min0=_mm256_broadcastq_epi64(_mm_insert_epi64(_mm_setzero_si128(),min,0));  // atoms between cells
- __m256i max0=_mm256_broadcastq_epi64(_mm_insert_epi64(_mm_setzero_si128(),max,0));  // atoms between cells
+ __m256i min0=_mm256_set1_epi64x(min);  // atoms between cells
+ __m256i max0=_mm256_set1_epi64x(max);  // atoms between cells
  __m256i min1, max1, min2=min0, max2=max0, min3=min0, max3=max0;
  __m256i ones = _mm256_cmpeq_epi8(min0,min0);  // all ones for switching max to complement form
  __m256i endmask= _mm256_loadu_si256((__m256i const *)(validitymask+((-n)&(NPAR-1))));
@@ -1607,8 +1607,8 @@ CR condrange(I *s,I n,I min,I max,I maxrange){CR ret;
 // obsolete    max0 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(max1),_mm256_castsi256_pd(max0),_mm256_castsi256_pd(_mm256_cmpgt_epi64(max0,max1))));  // if max>temp, take max
    // Convert max to complement so we can do min/max simultaneously
    min1=_mm256_xor_si256(ones,max0);  //  min1 destroyed! min1 now complement form X X X X
-   max1=_mm256_blend_epi32(min0,min1,0x33);  // max1 destroyed! now has X n X n
-   min1=_mm256_blend_epi32(min0,min1,0xcc);  // min1 now has n X n X  (X=compl max, n=min)
+   max1=_mm256_castps_si256(_mm256_blend_ps(_mm256_castsi256_ps(min0),_mm256_castsi256_ps(min1),0x33));  // max1 destroyed! now has X n X n
+   min1=_mm256_castps_si256(_mm256_blend_ps(_mm256_castsi256_ps(min0),_mm256_castsi256_ps(min1),0xcc));  // min1 now has n X n X  (X=compl max, n=min)
    max1=_mm256_castpd_si256(_mm256_permute_pd(_mm256_castsi256_pd(max1),0x5));  // max1 has n X n X
    TAKEMINOF(min1,max1);  // min1 is n X n X
    max1=_mm256_permute4x64_epi64(min1,0x0e);  // max1 has n X - -  from upper min1
@@ -1646,8 +1646,8 @@ CR condrange(I *s,I n,I min,I max,I maxrange){CR ret;
 // obsolete  max0 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(max1),_mm256_castsi256_pd(max0),_mm256_castsi256_pd(_mm256_cmpgt_epi64(max0,max1))));  // if max>temp, take max
  // Convert max to complement so we can do min/max simultaneously
  min1=_mm256_xor_si256(ones,max0);  //  min1 destroyed! min1 now complement form X X X X
- max1=_mm256_blend_epi32(min0,min1,0x33);  // max1 destroyed! now has X n X n
- min1=_mm256_blend_epi32(min0,min1,0xcc);  // min1 now has n X n X  (X=compl max, n=min)
+ max1=_mm256_castps_si256(_mm256_blend_ps(_mm256_castsi256_ps(min0),_mm256_castsi256_ps(min1),0x33));  // max1 destroyed! now has X n X n
+ min1=_mm256_castps_si256(_mm256_blend_ps(_mm256_castsi256_ps(min0),_mm256_castsi256_ps(min1),0xcc));  // min1 now has n X n X  (X=compl max, n=min)
  max1=_mm256_castpd_si256(_mm256_permute_pd(_mm256_castsi256_pd(max1),0x5));  // max1 has n X n X
  TAKEMINOF(min1,max1);  // min1 is n X n X, which includes everything
  max1=_mm256_permute4x64_epi64(min1,0x0e);  // max1 has n X - -  from upper min1

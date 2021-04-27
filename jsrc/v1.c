@@ -375,7 +375,7 @@ static B jtmatchsub(J jt,A a,A w,B* RESTRICT x,I af,I wf,I m,I n,I b1){C*av,*wv;
  if(((shapediff-1)&(-c)&p)>=0){  // skip compare if rank differ, or if shapes differ, or if inhomo, or if empty; not checking for identical args
   // create result, !b1 if there was a difference in shape or inhomo, b1 otherwise
   p=1^SGNTO0((shapediff-1)&((c-1)|p));  // p=1 if error, =no match  ignore inhomo error if empty
-  if(x)memset(x,p^b1,m*n);else b1=1; R p^b1;  // write 'error' if writing enabled; return false
+  if(x)mvc(m*n,x,1,iotavec-IOTAVECBEGIN+(p^b1));else b1=1; R p^b1;  // write 'error' if writing enabled; return false
  }
  }
 
@@ -476,7 +476,7 @@ F2(jtmatch){A z;I af,m,n,mn,wf;
   // The compare for each cell is 1 if the cell-shapes are the same
   p=AR(a)-af; b=p==(AR(w)-wf)&&!ICMP(af+AS(a),wf+AS(w),p);   // b =  shapes are the same
   // Allocate & return result
-  GATV(z,B01,mn,wf,AS(w)); memset(BAV(z),b^eqis0,mn); R z;
+  GATV(z,B01,mn,wf,AS(w)); mvc(mn,BAV(z),1,iotavec-IOTAVECBEGIN+(b^eqis0)); R z;
  }
  // There are atoms.  If there is only 1 cell to compare, do it quickly
  if(wf==0){

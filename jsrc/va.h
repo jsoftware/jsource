@@ -567,7 +567,7 @@ AHDR2(f,void,void,void){ I u,v;       \
   u=*(I*)x; v=*(I*)y; u=pfx(u,v); STOREBYTES(z,u,(-m)&(SZI-1));  \
  }else if(n-1<0){n=~n;                      \
   DQ(m, \
-   __m256d u256;__m256d v256; u256=_mm256_castsi256_pd(_mm256_broadcastb_epi8(_mm256_castsi256_si128(_mm256_castpd_si256(_mm256_broadcast_sd(x))))); \
+   __m256d u256;__m256d v256; u256=_mm256_castsi256_pd(_mm256_set1_epi8(*(C*)x)); \
    if((n-1)>>(LGSZI+LGNPAR)){decls256 \
     DQU((n-1)>>(LGSZI+LGNPAR), v256=_mm256_loadu_pd(y); \
      _mm256_storeu_pd(z, fuv); y=(C*)y+NPAR*SZI; z=(C*)z+NPAR*SZI; \
@@ -579,7 +579,7 @@ AHDR2(f,void,void,void){ I u,v;       \
   ) \
  }else{  \
   DQ(m, \
-   __m256d u256;__m256d v256; v256=_mm256_castsi256_pd(_mm256_broadcastb_epi8(_mm256_castsi256_si128(_mm256_castpd_si256(_mm256_broadcast_sd(y))))); \
+   __m256d u256;__m256d v256; v256=_mm256_castsi256_pd(_mm256_set1_epi8(*(C*)y)); \
    if((n-1)>>(LGSZI+LGNPAR)){decls256 \
     DQU((n-1)>>(LGSZI+LGNPAR), u256=_mm256_loadu_pd(x); \
      _mm256_storeu_pd(z, fuv); x=(C*)x+NPAR*SZI; z=(C*)z+NPAR*SZI; \

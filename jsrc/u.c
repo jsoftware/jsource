@@ -239,9 +239,9 @@ void mvc(I m,void*z,I n,void*w){
   if(likely(n<=SZI)){
    wdi=*(I*)w; wdi<<=(SZI-n)<<LGBB; wdi>>=(SZI-n)<<LGBB;  // zero out bits above the size
    I shiftamt=n<<LGBB; wdi|=(wdi<<(shiftamt&(7*BB))); shiftamt<<=1; wdi|=(wdi<<(shiftamt&(7*BB))); shiftamt<<=1; wdi|=(wdi<<(shiftamt&(7*BB)));  // replicate to word size
-   wd=_mm256_broadcastq_epi64(_mm_insert_epi64(_mm_setzero_si128(),wdi,0));  // further replicate to 32-byte size
+   wd=_mm256_set1_epi64x(wdi);  // further replicate to 32-byte size
   }else if(n==2*SZI){  // 16 bytes to begin with
-   wd=_mm256_broadcastsi128_si256(_mm_loadu_si128((__m128i*)w));  // load em
+   wd=_mm256_castpd_si256(_mm256_broadcast_pd((__m128d*)w));  // load em
   }else{  // 32 bytes to begin with
    wd=_mm256_loadu_si256((__m256i*)w);  // load em
   }

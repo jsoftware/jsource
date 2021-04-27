@@ -131,7 +131,7 @@
 #endif
 
 #define BFXANDOR(c0,c1)  \
- {B*y=memchr(x,c0,n); if(y){q=y-x; memset(z,c1,q); memset(z+q,c0,n-q);}else memset(z,c1,n); x+=d*n; z+=d*n;}
+ {B*y=memchr(x,c0,n); if(y){q=y-x; mvc(q,z,1,iotavec-IOTAVECBEGIN+(c1)); mvc(n-q,z+q,1,iotavec-IOTAVECBEGIN+(c0));}else mvc(n,z,1,iotavec-IOTAVECBEGIN+(c1)); x+=d*n; z+=d*n;}
 
 PREFIXBFX( orpfxB, OR, IOR, SOR, BOR,  BFXANDOR(C1,C0))
 PREFIXBFX(andpfxB, AND,IAND,SAND,BAND, BFXANDOR(C0,C1))

@@ -800,7 +800,8 @@ extern unsigned int __cdecl _clearfp (void);
 #define  CVTEPI64(z,u)   z.vect_f64[0] = vcvtq_f64_s64(vreinterpretq_f64_s64(u.vect_f64[0])); \
                          z.vect_f64[1] = vcvtq_f64_s64(vreinterpretq_f64_s64(u.vect_f64[1]));
 #else
-#define  CVTEPI64(z,u) { __m256i u_lo = _mm256_blend_epi32(magic_i_lo, _mm256_castpd_si256(u), 0b01010101);         /* Blend the 32 lowest significant bits of u with magic_int_lo */ \
+
+#define  CVTEPI64(z,u) { __m256i u_lo = _mm256_castps_si256(_mm256_blend_ps(_mm256_castsi256_ps(magic_i_lo),_mm256_castpd_ps(u),0b01010101));         /* Blend the 32 lowest significant bits of u with magic_int_lo */ \
                         __m256i u_hi = _mm256_srli_epi64(_mm256_castpd_si256(u), 32);     /* Extract the 32 most significant bits of u */ \
                           u_hi = _mm256_xor_si256(u_hi, magic_i_hi32); /* Flip the msb of u_hi and blend with 0x45300000 */ \
                         __m256d u_hi_dbl = _mm256_sub_pd(_mm256_castsi256_pd(u_hi), _mm256_castsi256_pd(magic_i_all)); /* Compute in double precision:  */ \

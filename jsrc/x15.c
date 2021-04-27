@@ -1226,7 +1226,9 @@ void dllquit(J jt){CCT*av;I j,*v;
  if(!JT(jt,cdstr))R;   // if we never initialized, don't free
  v=AV(JT(jt,cdhashl)); av=(CCT*)AV(JT(jt,cdarg));
  DQ(AN(JT(jt,cdhashl)), j=*v++; if(0<=j)FREELIB(av[j].h););   // unload all libraries
- memset(CAV(JT(jt,cdstr)),C0,AN(JT(jt,cdstr))); memset(CAV(JT(jt,cdarg)),C0,AN(JT(jt,cdarg))); memset(CAV(JT(jt,cdhash)),CFF,SZI*AN(JT(jt,cdhash))); memset(CAV(JT(jt,cdhashl)),CFF,SZI*AN(JT(jt,cdhashl)));  // clear contents of tables
+ mvc(AN(JT(jt,cdstr)),CAV(JT(jt,cdstr)),1,MEMSET00); mvc(AN(JT(jt,cdarg)),CAV(JT(jt,cdarg)),1,MEMSET00); 
+ mvc(SZI*AN(JT(jt,cdhash)),CAV(JT(jt,cdhash)),1,MEMSETFF); mvc(SZI*AN(JT(jt,cdhashl)),CAV(JT(jt,cdhashl)),1,MEMSETFF); 
+// obsolete memset(,C0,); memset(CAV(JT(jt,cdarg)),C0,AN(JT(jt,cdarg))); memset(CAV(JT(jt,cdhash)),CFF,SZI*AN(JT(jt,cdhash))); memset(CAV(JT(jt,cdhashl)),CFF,SZI*AN(JT(jt,cdhashl)));  // clear contents of tables
  AM(JT(jt,cdstr))=AM(JT(jt,cdarg))=AM(JT(jt,cdhash))=AM(JT(jt,cdhashl))=0;  // reset all tables to empty
  // leave the tables allocated
 }    /* dllquit - shutdown and cdf clean up dll call resources */

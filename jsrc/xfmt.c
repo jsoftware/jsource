@@ -464,7 +464,7 @@ static A jtfmtallcol(J jt, A a, A w, I mode) {A *a1v,base,fb,len,strs,*u,v,x;
    case 2: k=0<l?l:coll; cv=cx; cx+=k; break;
    default: ASSERTSYS(0, "jtfmtallcol: mode");
   }
-  if(l>0 && l<*il) memset(cv,SUBs,l);  // can't dereference il if l==0.  If field too short, fill with user's * character
+  if(l>0 && l<*il) mvc(l,cv,1,iotavec-IOTAVECBEGIN+(SUBs));  // can't dereference il if l==0.  If field too short, fill with user's * character
   else {
    // first, install background if r<xx> given; otherwise blanks
    if(0<=l && mL){if(nR)mvc(k,cv,nR,cR); else mvc( l-*il,cv+*il,1,iotavec-IOTAVECBEGIN+' ');}

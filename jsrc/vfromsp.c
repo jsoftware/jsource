@@ -71,7 +71,7 @@ static A jtaaxis(J jt,A w,I wf,A a,I r,I h,I*pp,I*qq,I*rr){A q;B*b,*c,*d;I wr,x,
  GATV0(q,B01,zr,1); c=BAV(q); 
  x=y=z=0; d=b; DQ(wf, if(*d++)++x;); DQ(h, if(*d++)++y;); DQ(wr-wf-h, if(*d++)++z;);
  *pp=x; *qq=y; *rr=z;
- MC(c,b,wf); memset(c+wf,y?C1:C0,r); MC(c+wf+r,b+wf+h,wr-wf-h);
+ MC(c,b,wf); mvc(r,c+wf,1,iotavec-IOTAVECBEGIN+(y?C1:C0)); MC(c+wf+r,b+wf+h,wr-wf-h);
  A bvec=ifb(zr,c); makewritable(bvec) R bvec;  // avoid readonly
 }
 

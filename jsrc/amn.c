@@ -90,7 +90,8 @@ static A jtastdn(J jt,A a,A z,A ind){A a1,q,r,s;B*b;I ar,*as,*av,d,ir,n,n1,*v,zr
  if(ar<d)RZ(a=reshape(s,a));
  zp=PAV(z); a1=SPA(zp,a); av=AV(a1); n1=n-1;
  GATV0(s,B01,zr,1); b=BAV(s); 
- mvc(zr,b,1,MEMSET00); DO(AN(a1), b[av[i]]=1;); memset(b,!memchr(b,C1,n)?C0:C1,n);
+ mvc(zr,b,1,MEMSET00); DO(AN(a1), b[av[i]]=1;); mvc(n,b,1,iotavec-IOTAVECBEGIN+(!memchr(b,C1,n)?C0:C1)); 
+
  GATV0(r,INT,zr-n1,1); v=AV(r); *v++=ar-(zr-n); DQ(zr-n, *v++=1;);
  RZ(q=dgrade1(repeat(r,vec(B01,zr-n1,b+n1))));
  R equ(q,IX(ar))?a:cant2(q,a);

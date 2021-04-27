@@ -86,8 +86,8 @@ F2(jtaes2)
   MC(out,CAV(w),AN(w));
   if(!decrypt) {
     if(padding) {
-      if(n1)memset(out+n-(16-n1),16-n1,16-n1);
-      else memset(out+n-16,16,16);
+      if(n1)mvc(16-n1,out+n-(16-n1),1,iotavec-IOTAVECBEGIN+(16-n1));
+      else mvc(16,out+n-16,1,iotavec-IOTAVECBEGIN+(16));
     } else if(n1)mvc(16-n1,out+n-(16-n1),1,MEMSET00);
   }
 #if (defined(__i386__) || defined(_M_X64) || defined(__x86_64__))

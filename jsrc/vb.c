@@ -113,9 +113,11 @@ static I jtebarprep(J jt,A a,A w,A*za,A*zw,I*zc){I ar,at,m,n,t,wr,wt,memlimit;CR
 static A jtebar1C(J jt, C *av, C *wv, I an, I wn, C* zv, I type, A z){
  // Init 32-byte copies of the first characters to match
 // obsolete  __m256i zero = _mm256_setzero_si256();
- __m256i a0 = _mm256_castpd_si256(_mm256_broadcast_sd((D*)av));  // fetch first two bytes (plus others)
- __m256i a1 = _mm256_broadcastb_epi8(_mm256_castsi256_si128(_mm256_srli_si256(a0,1)));  // replicate byte 1 across all bytelanes (shift count is bytes)
- a0 = _mm256_broadcastb_epi8(_mm256_castsi256_si128(a0));  // replicate byte 0 across all bytelanes
+// obsolete  __m256i a0 = _mm256_castpd_si256(_mm256_broadcast_sd((D*)av));  // fetch first two bytes (plus others)
+// obsolete  __m256i a1 = _mm256_broadcastb_epi8(_mm256_castsi256_si128(_mm256_srli_si256(a0,1)));  // replicate byte 1 across all bytelanes (shift count is bytes)
+ __m256i a0 = _mm256_set1_epi8(av[0]);  // fetch first byte into all byte positions
+ __m256i a1 = _mm256_set1_epi8(av[1]);  // fetch first byte into all byte positions
+// obsolete  a0 = _mm256_broadcastb_epi8(_mm256_castsi256_si128(a0));  // replicate byte 0 across all bytelanes
 // obsolete  __m256i a1 = _mm256_broadcastb_epi8(_mm256_insert_epi8(zero, av[1], 0));
  // figure endpoint for fast search: 32 bytes before end if an <=32; 
  // if an > 32, we will skip the final section if the endpoint is end-an+1: no match possible if wv=wvend
@@ -225,7 +227,7 @@ F2(jtebar){PROLOG(0065);A y,z;B*zv;C*av,*wv;I c,d,i,k=0,m,n,p,*yv;
   case -4: R ebarvec(a,w);
   }
  }
- GATV0(z,B01,n,AR(w)); zv=BAV(z); memset(zv,m==0,n); if((-m&-n)>=0)R z;  // if x empty, return all 1s
+ GATV0(z,B01,n,AR(w)); zv=BAV(z); mvc(n,zv,1,iotavec-IOTAVECBEGIN+(m==0)); if((-m&-n)>=0)R z;  // if x empty, return all 1s
 #if C_AVX2 || EMU_AVX2
  if(AT(w)&LIT+B01){jtebar1C(jt, av,wv, m,n,zv,0,0); R z;}
 #endif

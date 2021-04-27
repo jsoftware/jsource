@@ -297,7 +297,7 @@ F1(jtpmunpack){A*au,*av,c,t,x,z,*zv;B*b;D*dv;I*iv,k,k1,m,n,p,q,wn,*wv;PM*v,*v0,*
  if(!(INT&AT(w)))RZ(w=cvt(INT,w));
  wn=AN(w); wv=AV(w);
  u=(PM0*)AV(JT(jt,pma)); p=u->wrapped?u->n-u->i:0; q=u->i; n=p+q;
- GATV0(x,B01,n,1); b=BAV(x); memset(b,wn?C0:C1,n);
+ GATV0(x,B01,n,1); b=BAV(x); mvc(n,b,1,iotavec-IOTAVECBEGIN+(wn?C0:C1));
  if(wn){
   DO(wn, k=wv[i]; if(0>k)k+=n; ASSERT((UI)k<(UI)n,EVINDEX); b[k]=1;);
   m=0; 

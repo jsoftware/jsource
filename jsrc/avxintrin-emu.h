@@ -1483,6 +1483,21 @@ static __emu_inline __emu__m256i __emu_mm256_permute2x128_si256 (__emu__m256i a,
  return A;
 }
 
+static __emu_inline __emu__m256i __emu_mm256_permute4x64_epi64(__emu__m256i a, const int control)
+{
+    __emu__m256i A;
+    __emu_int64_t* ptr_a = (__emu_int64_t*) &a;
+    const int id0 = control & 0x03;
+    const int id1 = (control >> 2) & 0x03;
+    const int id2 = (control >> 4) & 0x03;
+    const int id3 = (control >> 6) & 0x03;
+    (A.__emu_m128[0])[0] = ptr_a[id0];
+    (A.__emu_m128[0])[1] = ptr_a[id1];
+    (A.__emu_m128[1])[0] = ptr_a[id2];
+    (A.__emu_m128[1])[1] = ptr_a[id3];
+    return A;
+}
+
 static __emu_inline __emu__m256d __emu_mm256_permute4x64_pd(__emu__m256d a, const int control)
 {
     __emu__m256d A;
@@ -1876,6 +1891,7 @@ static __emu_inline __emu__m256i __emu_mm256_sllv_epi64(__emu__m256i a, __emu__m
 #define _mm256_i64gather_pd __emu_mm256_i64gather_pd
 #define _mm256_mask_i64gather_epi64 __emu_mm256_mask_i64gather_epi64
 #define _mm256_permute2x128_si256 __emu_mm256_permute2x128_si256
+#define _mm256_permute4x64_epi64 __emu_mm256_permute4x64_epi64
 #define _mm256_permute4x64_pd __emu_mm256_permute4x64_pd
 
 #define _mm256_cvtepu8_epi64 __emu_mm256_cvtepu8_epi64

@@ -376,10 +376,10 @@ CDPROC D _stdcall fd(float f0, D d0, float f1, D d1, float* fp, D* fd){
 CDPROC D _stdcall fdi(F a,D b,I c,F d,D e,I f,F g,D h,I i,F j,D k,I l,F m,D n,I o,F p,D q,I r,F s,D t,I u,F v,D w,I x,F y,D z){
        return a+b+c+d+e+f+g+h+i+j+k+l+m+n+o+p+q+r+s+t+u+v+w+x+y+z;}
 CDPROC D _stdcall ffi(F a,F b,I c,F d,F e,I f,F g,F h,I i,F j,F k,I l,F m,F n,I o,F p,F q,I r,F s,F t,I u,F v,F w,I x,F y,F z){
-#ifndef _WIN32
-fprintf(stdout, "%f %f %li %f %f %li %f %f %li %f %f %li %f %f %li %f %f %li %f %f %li %f %f %li %f %f \n",
-                 a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z);
-#endif
+// #ifndef _WIN32
+// fprintf(stdout, "%f %f %li %f %f %li %f %f %li %f %f %li %f %f %li %f %f %li %f %f %li %f %f %li %f %f \n",
+//                  a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z);
+// #endif
        return a+b+c+d+e+f+g+h+i+j+k+l+m+n+o+p+q+r+s+t+u+v+w+x+y+z;}
 
 // __cdecl - default C calling convention

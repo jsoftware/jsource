@@ -268,19 +268,31 @@ static __emu_inline __emu__m256i __emu_mm256_permute2x128_si256 (__emu__m256i a,
  return A.emu__m256i;
 }
 
+#if defined(__clang__)
+#define __emu_mm256_permute4x64_epi64( a, control) \
+({                                                              \
+   _mm256_castpd_si256(_mm256_permute4x64_pd(_mm256_castsi256_pd(a),control)); \
+})
+#else
+static __emu_inline __emu__m256i __emu_mm256_permute4x64_epi64(__emu__m256i a, const int control)
+{
+   return _mm256_castpd_si256(_mm256_permute4x64_pd(_mm256_castsi256_pd(a),control));
+}
+#endif
+
 static __emu_inline __emu__m256d __emu_mm256_permute4x64_pd(__emu__m256d a, const int control)
 {
     __emv__m256d A;
-    double ptr_a[4];
-    _mm256_storeu_pd(ptr_a, a);
+    __emv__m256d av;
+    av.emu__m256d = a;
     const int id0 = control & 0x03;
     const int id1 = (control >> 2) & 0x03;
     const int id2 = (control >> 4) & 0x03;
     const int id3 = (control >> 6) & 0x03;
-    (A.__emu_m128[0])[0] = ptr_a[id0];
-    (A.__emu_m128[0])[1] = ptr_a[id1];
-    (A.__emu_m128[1])[0] = ptr_a[id2];
-    (A.__emu_m128[1])[1] = ptr_a[id3];
+    (A.__emu_m128[0])[0] = av.__emu_arr[id0];
+    (A.__emu_m128[0])[1] = av.__emu_arr[id1];
+    (A.__emu_m128[1])[0] = av.__emu_arr[id2];
+    (A.__emu_m128[1])[1] = av.__emu_arr[id3];
     return A.emu__m256d;
 }
 
@@ -380,8 +392,19 @@ static __emu_inline void  name(type *a, mask_vec_type mask, vec_type data) { \
             a[i] = p_data[i];                                 \
 }
 
-__emu_maskload_impl( __emu_mm256_maskload_epi64, __emu__m256i, __emu__m256i, __emu_int64_t, __emu_int64_t );
-__emu_maskstore_impl( __emu_mm256_maskstore_epi64, __emu__m256i, __emu__m256i, __emu_int64_t, __emu_int64_t );
+// __emu_maskload_impl( __emu_mm256_maskload_epi64, __emu__m256i, __emu__m256i, __emu_int64_t, __emu_int64_t );
+// __emu_maskstore_impl( __emu_mm256_maskstore_epi64, __emu__m256i, __emu__m256i, __emu_int64_t, __emu_int64_t );
+
+static __emu_inline __emu__m256i __emu_mm256_maskload_epi64(__emu_int64_t const *b , __emu__m256i m)
+{
+ return _mm256_castpd_si256(_mm256_maskload_pd((double const *)b ,  m));
+}
+
+
+static void __emu_mm256_maskstore_epi64(__emu_int64_t *b , __emu__m256i m, __emu__m256i a)
+{
+ _mm256_maskstore_pd((double*)b, m, _mm256_castsi256_pd(a));
+}
 
 static __emu_inline __emu__m256i __emu_mm256_cvtepu8_epi64(__m128i a)
 {
@@ -424,6 +447,7 @@ static __emu_inline __emu__m256i __emu_mm256_cvtepu8_epi64(__m128i a)
 #undef _mm256_mul_epu32
 #undef _mm256_or_si256
 #undef _mm256_permute2x128_si256
+#undef _mm256_permute4x64_epi64
 #undef _mm256_permute4x64_pd
 #undef _mm256_slli_epi64
 #undef _mm256_sllv_epi64
@@ -460,6 +484,7 @@ static __emu_inline __emu__m256i __emu_mm256_cvtepu8_epi64(__m128i a)
 #define _mm256_mul_epu32 __emu_mm256_mul_epu32
 #define _mm256_or_si256 __emu_mm256_or_si256
 #define _mm256_permute2x128_si256 __emu_mm256_permute2x128_si256
+#define _mm256_permute4x64_epi64 __emu_mm256_permute4x64_epi64
 #define _mm256_permute4x64_pd __emu_mm256_permute4x64_pd
 #define _mm256_slli_epi64 __emu_mm256_slli_epi64
 #define _mm256_sllv_epi64 __emu_mm256_sllv_epi64

@@ -1232,16 +1232,26 @@ __emu_mm_broadcast_impl( __emu_mm_broadcast_sd, __m128d, double )
 __emu_mm_broadcast_impl( __emu_mm256_broadcast_ss, __emu__m256, float )
 __emu_mm_broadcast_impl( __emu_mm256_broadcast_sd, __emu__m256d, double )
 
-#define __emu_mm_broadcast2_impl( name, res_type, type )    \
+#define __emu_mm_broadcast2s_impl( name, res_type, type)    \
 static __emu_inline res_type  name(type const *a) {         \
+    type b = _mm_loadu_ps((float*)a);                       \
     res_type res;                                           \
-    res.__emu_m128[ 0 ] = *a;                               \
-    res.__emu_m128[ 1 ] = *a;                               \
+    res.__emu_m128[ 0 ] = b;                                \
+    res.__emu_m128[ 1 ] = b;                                \
     return res;                                             \
 }
 
-__emu_mm_broadcast2_impl( __emu_mm256_broadcast_ps, __emu__m256, __m128 )
-__emu_mm_broadcast2_impl( __emu_mm256_broadcast_pd, __emu__m256d, __m128d )
+#define __emu_mm_broadcast2d_impl( name, res_type, type)    \
+static __emu_inline res_type  name(type const *a) {         \
+    type b = _mm_loadu_pd((double*)a);                      \
+    res_type res;                                           \
+    res.__emu_m128[ 0 ] = b;                                \
+    res.__emu_m128[ 1 ] = b;                                \
+    return res;                                             \
+}
+
+__emu_mm_broadcast2s_impl( __emu_mm256_broadcast_ps, __emu__m256, __m128 )
+__emu_mm_broadcast2d_impl( __emu_mm256_broadcast_pd, __emu__m256d, __m128d )
 
 static __emu_inline __emu__m256  __emu_mm256_insertf128_ps(__emu__m256 a, __m128 b, int offset)  { a.__emu_m128[ offset ] = b; return a; }
 static __emu_inline __emu__m256d __emu_mm256_insertf128_pd(__emu__m256d a, __m128d b, int offset)  { a.__emu_m128[ offset ] = b; return a; }

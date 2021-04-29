@@ -1968,8 +1968,8 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
  }
 
  // fnx is -2 if inhomo args, 0 otherwise
- fnx|=REPSGN(SGNIFNOT(mode,IPHCALCX)&(((I)m-1)|(n-1)|(zn-1)));  // fnx is -2 if inhomo and not empty, -1 if empty, 0 otherwise
-    // but if precalc, we leave fnx at 0
+ fnx|=REPSGN(SGNIFNOT(mode,IPHCALCX)&(((I)m-1)|(n-1)|(zn-1)));
+ // fnx is -2 if inhomo and not empty, -1 if empty, 0 otherwise  but if precalc, we leave fnx at 0
  // Choose the function to use for performing the operation, in 'fnx'
  // fnx starts negative and is set to nonnegative when we know what function to use.
  // While fnx is negative, bit 0 means 'intolerant comparison'
@@ -2185,7 +2185,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
   case IICO:    GATV0(z,INT,zn,f+f1); MCISH(AS(z),s,f) MCISH(f+AS(z),ws+wf,f1); break;  // mustn't overfetch s
   case INUBSV:  GATV0(z,B01,zn,f+f1+!acr); MCISH(AS(z),s,f) MCISH(f+AS(z),ws+wf,f1); if(!acr)AS(z)[AR(z)-1]=1; break;  // mustn't overfetch s
   case INUB:    {I q; PRODX(q,AR(a)-1,AS(a)+1,m+1) GA(z,t,q,MAX(1,wr),ws); AS(z)[0]=m+1; break;}  // +1 because we speculatively overwrite.  Was MIN(m,p) but we don't have the range yet   scaf yes we do
-  case ILESS: case IINTER:   GA(z,t,AN(w),MAX(1,wr),ws); break;
+  case ILESS: case IINTER:   GA(z,AT(w),AN(w),MAX(1,wr),ws); break;
   case IEPS:    GATV0(z,B01,zn,f+f1); MCISH(AS(z),s,f) MCISH(f+AS(z),ws+wf,f1); break;
   case INUBI:   GATV0(z,INT,m+1,1); break;  // +1 because we speculatively overwrite  Was MIN(m,p) but we don't have the range yet scaf yes we do
   // (e. i. 0:) and friends don't do anything useful if e. produces rank > 1.  The search for 0/1 always fails
@@ -2211,7 +2211,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
   case IICO:    R reshape(shape(z),sc(n?m:m-1));
   case INUBSV:  R reshape(shape(z),take(sc(m),num(1)));
   case INUB:    AN(z)=0; AS(z)[0]=m?1:0; R z;
-  case ILESS:   if(m)AN(z)=AS(z)[0]=0; else MC(AV(z),AV(w),AN(w)<<klg); R z;
+  case ILESS:   if(m&&fnx==-3)AN(z)=AS(z)[0]=0; else MC(AV(z),AV(w),AN(w)<<bplg(AT(w))); R z;  // y has atoms or 
   case IINTER:  R take(zeroionei(0),w);
   case IEPS:    R reshape(shape(z),num(m&&(!n||(fnx&1))));  // fnx&1 is true if homo
   case INUBI:   R m?iv0:mtv;
@@ -2253,29 +2253,52 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
 DF2(jtcombineeps){ARGCHK3(a,w,self);R indexofsub(II0EPS+((FAV(self)->flag>>3)&7),w,a);}
 
 // verb to execute compounds like m&i. e.&n .  m/n has already been hashed and the result saved away
-A jtindexofprehashed(J jt,A a,A w,A hs){A h,*hv,x,z;AF fn;I ar,*as,at,c,f1,k,m,mode,n,
+// a is the arg that was indexed, used only if we have to revert to rerunning the operation
+// w is the arg to be applied to the index
+// hs is the hashtable
+A jtindexofprehashed(J jt,A a,A w,A hs,A self){A h,*hv,x,z;AF fn;I ar,*as,at,c,f1,k,m,mode,n,
      r,t,*xv,wr,*ws,wt;
  ARGCHK3(a,w,hs);
  // hv is (info vector);(hashtable);(byte index validity)
  hv=AAV(hs); x=hv[0]; h=hv[1]; 
  // get the info from the info vector
- xv=AV(x); mode=xv[0]; n=xv[1]; k=xv[2]; /* noavx jt->min=xv[3]; */ fn=(AF)xv[4];
+ xv=AV(x); mode=xv[0]; n=xv[1]; k=xv[2]; /* noavx jt->min=xv[3]; */ fn=(AF)xv[4];  // n=#atoms in item of table, k=#bytes
  ar=AR(a); as=AS(a); at=AT(a); t=at; SETIC(a,m); 
  wr=AR(w); ws=AS(w); wt=AT(w);
- r=ar?ar-1:0;
- f1=wr-r;
+ r=ar?ar-1:0;   // r=rank of a hashed item
+ f1=wr-r;   // frame of w wrt items of a.  Negative if w's cells are too big
  PRODX(c,f1,ws,1);  // c=#cells of w (and result)
  // audit conformance of input shapes.  If there is an error, pass to the main code to get the error result
  // Use c=0 as an error flag
- c &= REPSGN(~(f1|(ar-r)));   // w must have rank big enough to hold a cell of a.  Clear c if f1<0 or r>ar
- if(ICMP(as+ar-r,ws+f1,r))c=0;  // and its shape at that rank must match the shape of a cell of a
+ // for e.-compounds that do arithmetic, w must have the shape of an item in the hash, or a list of them (i. e. framelen 0 or 1); otherwise nonce error (below)
+ // for e.-compounds that merely search, w must have the shape of an item in the hash, or a list of them (i. e. framelen 0 or 1); otherwise not found (below)
+ // for LESS types, an item of w must have the shape of an item in the hash; otherwise revert
+ // for other types (which can be only IEPS/IIDOT/IICO), an item of w can have larger rank
+// obsolete  c &= REPSGN(~(f1|(ar-r)));   // w must have rank big enough to hold a cell of a.  Clear c if f1<0 or r>ar
+ if(likely((c&=REPSGN(~f1))>0)){  // revert if w has higher rank than a cell of a
+  c=ICMP(as+ar-r,ws+f1,r)?0:c;  // verify agreement in cell-shape, set c=0 if not
+  if(((I)1<<mode&IIOPMSK)&(((I)1<<ILESS)|((I)1<<IINTER))){
+   if(f1<(wr!=0)||f1>1){
+    // LESS/INTER where the hashtable has the wrong cell-rank.  Revert
+    // LESS/INTER cannot revert simply by calling indexofsub, because a has to be reshaped to make the cell-rank match the item of w.
+    R (mode&IIOPMSK)==ILESS?less(w,a):jtintersect(jt,w,a,self);
+   }
+  }
+ }
+ c=typeged(t,wt)?c:0;   // OK to use hash if w doesn't have higher precision
  // If there is any error, switch back to the non-prehashed code.  We must remove any command bits from mode, leaving just the operation type
- if(unlikely((-m&-n&-c&NEGIFHOMO(t,wt)&(wt-(t+1)))>=0))R indexofsub(mode&IIOPMSK,a,w);
+// obsolete  if(unlikely((-m&-n&-c&NEGIFHOMO(t,wt)&(wt-(t+1)))>=0))R indexofsub(mode&IIOPMSK,a,w);  // empty in a or w, or inhomo, or w has higher precision than the hash
+ if(unlikely((-m&-n&-c&NEGIFHOMO(t,wt))>=0))R indexofsub(mode&IIOPMSK,a,w);  // empty in a or w, or inhomo, or w has higher precision than the hash
+
+ // convert type of w if needed
+ if(TYPESNE(t,wt))RZ(w=cvt(t,w))
+ // call the action routine
 
  // allocate enough space for the result, depending on the type of the operation
  switch(mode&IIOPMSK){
   // Some types that do not produce correct results if the result of e. has rank >1.  We give nonce error if that happens
   default: GATV(z,INT,c,    f1, ws); break;
+  case ILESS: case IINTER: GA(z,t,AN(w),MAX(1,wr),ws); break;
   case IIFBEPS: ASSERT(wr<=MAX(ar,1),EVNONCE); GATV(z,INT,c,    f1, ws); break;
   case IEPS: GATV(z,B01,c,    f1, ws); break;
   case IANYEPS: case IALLEPS: ASSERT(wr<=MAX(ar,1),EVNONCE); GAT0(z,B01,1,    0); break;
@@ -2284,9 +2307,6 @@ A jtindexofprehashed(J jt,A a,A w,A hs){A h,*hv,x,z;AF fn;I ar,*as,at,c,f1,k,m,m
  }
  // save info used by the routines
  // noavx jt->hin=AN(hi); jt->hiv=AV(hi);
- // convert type of w if needed
- if(TYPESNE(t,wt))RZ(w=cvt(t,w))
- // call the action routine
  RZ(fn(jt,mode+IPHOFFSET,n,m,c,(I)1,(I)1,a,w,z,k,(I)0,(I)0,h))
  R z;
 }
@@ -2329,7 +2349,8 @@ F2(jtless){A x=w;I ar,at,k,r,*s,wr,*ws,wt;
  if(unlikely((-wr&-(r^wr))<0)){RZ(x=virtual(w,0,r)); AN(x)=AN(w); s=AS(x); ws=AS(w); k=ar>wr?0:1+wr-r; I s0; PRODX(s0,k,ws,1) s[0]=s0; MCISH(1+s,k+ws,r-1);}  //  use fauxvirtual here
  // if nothing special (like sparse, or incompatible types, or x requires conversion) do the fast way; otherwise (-. x e. y) # x 
  // because LESS allocates a large array to hold all the values, we use the slower, less memory-intensive, version if a is mapped
- RZ(x=(NEGIFHOMO(at,wt)&((TYPESXOR(at,maxtyped(at,wt))|(at&SPARSE)|(AFLAG(a)&AFNJA))-1))<0?indexofsub(ILESS,x,a):
+// obsolete  RZ(x=(NEGIFHOMO(at,wt)&((TYPESXOR(at,maxtyped(at,wt))|(at&SPARSE)|(AFLAG(a)&AFNJA))-1))<0?indexofsub(ILESS,x,a):
+ RZ(x=(((at&SPARSE)|(AFLAG(a)&AFNJA))-1)<0?indexofsub(ILESS,x,a):
      repeat(not(eps(a,x)),a));
  // We extracted from a, so mark it (or its backer if virtual) non-pristine.  If a was pristine and inplaceable, transfer its pristine status to the result
  PRISTXFERAF(x,a)
@@ -2346,12 +2367,12 @@ DF2(jtintersect){A x=w;I ar,at,k,r,*s,wr,*ws,wt;
  if(unlikely((-wr&-(r^wr))<0)){RZ(x=virtual(w,0,r)); AN(x)=AN(w); s=AS(x); ws=AS(w); k=ar>wr?0:1+wr-r; I s0; PRODX(s0,k,ws,1) s[0]=s0; MCISH(1+s,k+ws,r-1);}  //  use fauxvirtual here
  // comparison tolerance may be encoded in h - apply it if so
  D savcct = jt->cct;
- if(unlikely(FAV(FAV(self)->fgh[2])->id==CFIT))jt->cct=FAV(FAV(self)->fgh[2])->localuse.lu1.cct;
+ PUSHCCTIF(FAV(FAV(self)->fgh[2])->localuse.lu1.cct,unlikely(FAV(FAV(self)->fgh[2])->id==CFIT))   // scaf should get this from self
  // if nothing special (like sparse, or incompatible types, or x requires conversion) do the fast way; otherwise (-. x e. y) # x 
  // because LESS allocates a large array to hold all the values, we use the slower, less memory-intensive, version if a is mapped
  x=(NEGIFHOMO(at,wt)&((TYPESXOR(at,maxtyped(at,wt))|(at&SPARSE)|(AFLAG(a)&AFNJA))-1))<0?indexofsub(IINTER,x,a):
      repeat(eps(a,x),a);
- jt->cct=savcct;
+ POPCCT
  RZ(x);
  // We extracted from a, so mark it (or its backer if virtual) non-pristine.  If a was pristine and inplaceable, transfer its pristine status to the result
  PRISTXFERAF(x,a)

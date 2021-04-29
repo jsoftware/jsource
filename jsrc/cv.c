@@ -31,7 +31,7 @@ static A jtfitct(J jt,A a,A w,I cno){V*sv;
  // Handle i.!.1 specially; otherwise drop i. back to normal
  if(unlikely(cno==3))if(d==1.0){d=1.0-jt->cct; if(!SY_64)cno=0;}else cno=0;   // i.!.1 is special on 64-bit systems; others just specify fit
  ASSERT(0<=d&&d<5.82076609134675e-11,EVDOMAIN);  // can't be greater than 2^_34
- A fn = fdef(0,CFIT,VERB,(AF)(jtfitct1),aff2[cno],a,w ,0L,sv->flag&(VIRS1|VIRS2|VJTFLGOK1|VJTFLGOK2|VISATOMIC1),(I)(sv->mr),lrv(sv),rrv(sv));  // preserve INPLACE flags
+ A fn = fdef(0,CFIT,VERB,(AF)(jtfitct1),aff2[cno],a,w ,0L,sv->flag&(VIRS1|VIRS2|VJTFLGOK1|VJTFLGOK2|VISATOMIC1|VFCOMPCOMP),(I)(sv->mr),lrv(sv),rrv(sv));  // preserve INPLACE flags
  RZ(fn); FAV(fn)->localuse.lu1.cct = 1.0-d; R fn;  // save the fit value in this verb
 }
 
@@ -62,6 +62,7 @@ static DF2(jtfitf2){V*sv=FAV(self); A z; R df2(z,a,w,fit(fix(sv->fgh[0],zeroione
 // Fit conjunction u!.n
 // Preserve IRS1/IRS2 from u in result verb (exception: CEXP)
 // Preserve VISATOMIC1 from u (applies only to numeric atomic ops)
+// Preserve comparison-combination flags for tolerance fit, in case this is a fit-allowing primitive that uses them
 F2(jtfit){A f;C c;I k,l,m,r;V*sv;
  ASSERTVN(a,w);  // a must be a verb, w a noun
  sv=FAV(a); m=sv->mr; l=lrv(sv); r=rrv(sv);
@@ -93,9 +94,10 @@ F2(jtfit){A f;C c;I k,l,m,r;V*sv;
    if(c==CPOUND){ASSERT(!AR(w),EVRANK); R CDERIV(CFIT,0,jtfitfill2,VFLAGNONE,m,l,r);}  // CPOWOP has no VIRS
    ASSERT(c==CAMP,EVDOMAIN);
    f=FAV(f)->fgh[1]; ASSERT(CPOUND==ID(f),EVDOMAIN);
+  // fill atoms:
   case CPOUND:  case CTAKE:  case CTAIL: case CCOMMA:  case CCOMDOT: case CLAMIN: case CRAZE:
    ASSERT(!AR(w),EVRANK);  /* fall thru */
-  case CROT: case CDOLLAR: 
+  case CROT: case CDOLLAR:  // these allow an empty array 
    ASSERT(1>=AR(w),EVRANK);
    ASSERT(!AR(w)||!AN(w),EVLENGTH);
    R CDERIV(CFIT,jtfitfill1,jtfitfill2,sv->flag&(VIRS1|VIRS2|VJTFLGOK1|VJTFLGOK2),m,l,r); // preserve INPLACE flags

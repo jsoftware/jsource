@@ -797,8 +797,10 @@ typedef struct {
  UI invalidhi;   // the end+1 of the area used for a bit table  (as an index into hash table, rounded up to multiple of I)
  I datamin;  // (for small-range use) minimum value in the data
  UI datarange;  // (for small-range use) range+1 of the data
- // 11 words here; 7 words of header (we allocate no shape); 2 words of memory-allocation header; so this block is 20 words after the
- // memory allocation, and thus is on the same 256-bit boundary as the allocation.
+ D cct;  // if this is tolerant, the cct used to build the table
+ // 12 words here; 7 words of header (we allocate no shape);  so this block is 19 words after the
+ // memory allocation; add one fill to get on the same 256-bit boundary as the allocation.
+ I filler;
  union {   // We index into the data with varying strides, depending on the range of the data
   UC UC[1];  // cannot have union of empty vectors
   US US[1];
@@ -882,7 +884,7 @@ typedef struct {
    I filler;  // pad to cacheline
    // end of first cacheline, which is not used much during execution
    union {  // 8 bytes in the second (main) cacheline
-    D cct;  // for FIT conj, the CCT data.  For 32-bit, this extends the union, but that's OK since it doesn't add a cacheline.
+    D cct;  // for comparison tolerance, FIT conj  =!.n OR comparison combination (i.&1@:(e.[!.n])) OR [e-].&n OR m&i[.:] the CCT, 0 for default (never in an actual prehash).  For 32-bit, this extends the union, but that's OK since it doesn't add a cacheline.
     struct {
      I4 cgerx; // For cyclic iterators, the index of the next gerund to execute.  Here to avoid conflict with cut
      I4 cutn;  // for u;.n where n is nonzero, n.  u/. also goes through this code.  There could be cyclic iterators but not boxcut
@@ -913,13 +915,16 @@ typedef struct {
 #define VRTNNONE ((A)0)
   
                                         /* type V flag values              */
-// bits 0-5 are used in comparison compounds to encode the type of compound, see vcompsc.c
+// bits 0-6 are used in comparison compounds to encode the type of compound, see vcompsc.c
+// They must have this setting when the verb is fit u!.n or -. ([ -. -.) i. i: e. or a comparison compound
 // They are examined during u&n and m&v processing.  Bits 0-2 are the comparison type, bit 3-5 are the action type.
 // NOTE: comparison type e. is type 7.  If u&n sees bits 0-2=111 in u, it will generate a hashtable.  To prevent this from
 // happening incorrectly, leave bit 2=0.
+#define VFCOMPCOMP      0xff  // flag bits for comparison compounds, also used for other purposes
+// NOTE: comparison flags pun with VFATOP[RL] in (comp i[.:] [01]:) but that's OK because the constant verbs don't inplace thus they ignore the punned flags
 // for other types, they are defined as follows:
-#define VFATOPL         JTINPLACEW     // (in forks and v0`v1`v2) f/v0 is x@[, so OK to inplace w arg of h
-#define VFATOPR         JTINPLACEA     // (in forks and v0`v1`v2) f/v0 is x@], so OK to inplace a arg of h
+#define VFATOPL         JTINPLACEW     // (in execution of forks and v0`v1`v2) f/v0 is x@[, so OK to inplace w arg of h
+#define VFATOPR         JTINPLACEA     // (in execution of forks and v0`v1`v2) f/v0 is x@], so OK to inplace a arg of h
 #define VFHKLVLDECX     0   // (in (compare L.) hooks) set for > and <: to indicate increment of x needed before levelle
 #define VFHKLVLDEC      (((I)1)<<VFHKLVLDECX)
 #define VFHKLVLGTX      1   // (in (compare L.) hooks) set for < and <: to indicate complement of result of levelle needed

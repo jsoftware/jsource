@@ -528,7 +528,7 @@
 #define incorp(x)                   jtincorp(jt,(x))  
 #define increm(x)                   jtincrem(jt,(x))  
 #define indexof(x,y)                jtindexof(jt,(x),(y))
-#define indexofprehashed(x,y,z)     jtindexofprehashed(jt,(x),(y),(z))
+#define indexofprehashed(x,y,z)     jtindexofprehashed(jt,(x),(y),(z),self)
 #define indexofss(x,y,z)            jtindexofss(jt,(x),(y),(z))
 #define indexofsub(x,y,z)           jtindexofsub(jt,(x),(y),(z))
 #define indexofxx(x,y,z)            jtindexofxx(jt,(x),(y),(z))
@@ -667,8 +667,9 @@
 // reversed        001 0000 0111 0000 0011 1001 1000 1010 0010 1001 0100 0100 0010 0000
 #define maxtypene(x,y)              jtmaxtype(jt,(x),(y))
 #define maxtype(x,y)                (((x)==(y))?(x):maxtypene(x,y))
-#define maxtypedne(x,y) (TYPEPRIORITY(x)>TYPEPRIORITY(y)?(x):(y))  // d means 'dense'
+#define maxtypedne(x,y)             (TYPEPRIORITY(x)>TYPEPRIORITY(y)?(x):(y))  // d means 'dense'
 #define maxtyped(x,y)               (((x)==(y))?(x):maxtypedne(x,y))
+#define typeged(x,y)                (TYPEPRIORITY(x)>=TYPEPRIORITY(y))
 // For sparse types, we encode here the corresponding dense type
 #define mdiv(x,y)                   jtmdiv(jt,(x),(y))   
 #define mdivsp(x,y)                 jtmdivsp(jt,(x),(y))

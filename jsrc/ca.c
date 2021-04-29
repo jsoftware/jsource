@@ -135,6 +135,7 @@ static DF2(on2){PREF2(on2cell); R on2cell(jt,a,w,self);}
 
 static DF2(on20){R jtrank2ex0(jt,a,w,self,on2cell);}  // pass inplaceability through
 
+#if 0 // obsolete
 static DF2(atcomp){AF f;A z;
  ARGCHK2(a,w); 
  f=atcompf(a,w,self);
@@ -146,13 +147,14 @@ static DF2(atcomp){AF f;A z;
  }else z=upon2(a,w,self);
  RETF(z);
 }
+#endif
 
-static DF2(atcomp0){A z;AF f;
+static DF2(atcomp){A z;AF f;
  ARGCHK2(a,w);
  f=atcompf(a,w,self);
  I postflags=(I)f&3;  // extract postprocessing from return
  f=(AF)((I)f&-4);    // restore function address
- PUSHCCT(1.0)
+ PUSHCCTIF(FAV(self)->localuse.lu1.cct,FAV(self)->localuse.lu1.cct!=0.0)
  if(likely(f!=0)){
   z=f(jt,a,w,self);
   if(likely(z!=0)){if(postflags&2){z=num((IAV(z)[0]!=AN(AR(a)>=AR(w)?a:w))^(postflags&1));}}
@@ -243,14 +245,17 @@ F2(jtatop){A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=0,m=-1
  // comparison combinations
  // we calculate m for the combining operator: i.&0 (0), i.&1 (1), i:&0 (2), i:&1 (3),, +/ (4), +,/ (5), *./ (6)  [formerly I. was 7]
  // m is (u char code + n)&7 where n is 0, but 1 in i&1 types.  We set n to -1 if there is no comparison operator
- // cd comes from the comparison operator, here e. (6) E. (7)
+ // cd comes from the comparison operator, here only E. (6) e. (7)
  // comparison flag is cd+8*m
  C cd=d;  // local copy of id of w
- if(((d&~1)==CEBAR)||(d==CFIT&&(cd=FAV(wv->fgh[0])->id)==CEPS)&&wv->localuse.lu1.cct==1.0){I n=-1;
+ D cct=0.0;  // cct for comparison combination, 0=use default
+// obsolete  if(((d&~1)==CEBAR)||(d==CFIT&&(cd=FAV(wv->fgh[0])->id)==CEPS)&&wv->localuse.lu1.cct==1.0){I n=-1;
+ if(((d&~1)==CEBAR)||(d==CFIT&&(cct=FAV(wv->fgh[0])->localuse.lu1.cct,cd=FAV(wv->fgh[0])->id)==CEPS)){I n=-1;
   I cb=0;  // will be the id of the combining operator
   if(c==CSLASH){cb=FAV(av->fgh[0])->id; n=BETWEENC(cb,CPLUS,CSTARDOT)?0:n; cb+=1;}  // +/@ set cb to id of + +. *., plus 1 to match code for combining op
   else if(c==CAMP){cb=FAV(av->fgh[0])->id; A cr=av->fgh[1]; cr=(cb&~2)==CIOTA?cr:0; n=cr==num(0)?0:n; n=cr==num(1)?1:n;} // i.&0  already has combining op, set n if 0 or 1
-  f2=n>=0?atcomp:f2; f2=(REPSGN(~n)&d)==CFIT?atcomp0:f2;  // if valid comparison type, switch to it
+// obsolete   f2=n>=0?atcomp:f2; f2=(REPSGN(~n)&d)==CFIT?atcomp0:f2;  // if valid comparison type, switch to it
+  f2=n>=0?atcomp:f2;  // if valid comparison type, switch to it
   flag+=((6+(cd&1))+8*((cb+n)&7))&REPSGN(~n); flag&=REPSGN(n)|~VJTFLGOK2;  // only if n>=0, set comp type & clear FLGOK2
  }
 
@@ -267,7 +272,8 @@ F2(jtatop){A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=0,m=-1
  if(likely(f1==on1)){flag2|=VF2RANKATOP1; f1=wv->mr==RMAX?on1cell:f1; f1=wv->mr==0?jton10:f1;}
  if(likely(f2==jtupon2)){flag2|=VF2RANKATOP2; f2=wv->lrr==(UI)R2MAX?jtupon2cell:f2; f2=wv->lrr==0?jtupon20:f2;}
 
- R fdef(flag2,CAT,VERB, f1,f2, a,w,h, flag, (I)wv->mr,(I)lrv(wv),rrv(wv));
+  A z=fdef(flag2,CAT,VERB, f1,f2, a,w,h, flag, (I)wv->mr,(I)lrv(wv),rrv(wv));
+  RZ(z); FAV(z)->localuse.lu1.cct=cct; R z;
 }
 
 // u@:v
@@ -326,13 +332,16 @@ F2(jtatco){A f,g;AF f1=on1cell,f2=jtupon2cell;C c,d,e;I flag, flag2=0,m=-1;V*av,
 // e has been destroyed
 
  // comparison combinations
+ C cct=0.0;  // cct to use, 0='use default'
  if(unlikely(0<=m)){
   // the left side is a comparison combiner.  See if the right is a comparison
   e=d;  // repurpose e as comparison op
-  e=d==CFIT&&wv->localuse.lu1.cct==1.0?FAV(wv->fgh[0])->id:e;  // e is the comparison op
+// obsolete   e=d==CFIT&&wv->localuse.lu1.cct==1.0?FAV(wv->fgh[0])->id:e;  // e is the comparison op
+  e=d==CFIT&&(cct=wv->localuse.lu1.cct,1)?FAV(wv->fgh[0])->id:e;  // e is the comparison op
   if(BETWEENC(e,CEQ,CEPS)){
    // valid comparison combination.  m is the combiner, e is the comparison
-   f2=d==CFIT?atcomp0:atcomp;  // if valid comparison type, switch to it
+// obsolete    f2=d==CFIT?atcomp0:atcomp;  // if valid comparison type, switch to it
+   f2=atcomp;  // if valid comparison type, switch to it
    flag+=(e-CEQ)+8*(m&7); flag&=~VJTFLGOK2;  // set comp type & clear FLGOK2
   }
  }
@@ -340,7 +349,8 @@ F2(jtatco){A f,g;AF f1=on1cell,f2=jtupon2cell;C c,d,e;I flag, flag2=0,m=-1;V*av,
  // Copy the open/raze status from v into u@v
  flag2 |= wv->flag2&(VF2WILLOPEN1|VF2WILLOPEN2W|VF2WILLOPEN2A|VF2USESITEMCOUNT1|VF2USESITEMCOUNT2W|VF2USESITEMCOUNT2A);
 
- R fdef(flag2,CATCO,VERB, f1,f2, a,w,0L, flag, RMAX,RMAX,RMAX);
+ A z=fdef(flag2,CATCO,VERB, f1,f2, a,w,0L, flag, RMAX,RMAX,RMAX);
+ RZ(z); FAV(z)->localuse.lu1.cct=cct; R z;
 }
 
 // u&:v
@@ -384,16 +394,16 @@ static DF1(withr){F1PREFIP;DECLFG; jtinplace=(J)(intptr_t)((I)jtinplace+((I)jtin
 
 // Here for m&i. and m&i:, computing a prehashed table from a
 // v->fgh[2] is the info/hash/bytemask result from calculating the prehash
-static DF1(ixfixedleft  ){V*v=FAV(self); R indexofprehashed(v->fgh[0],w,v->fgh[2]);}
+static DF1(ixfixedleft){V*v=FAV(self); PUSHCCT(v->localuse.lu1.cct) A z=indexofprehashed(v->fgh[0],w,v->fgh[2]); POPCCT R z;}  // must use the ct when table was created
 // Here for compounds like (i.&0@:e.)&n or -.&n that compute a prehashed table from w
 static DF1(ixfixedright ){V*v=FAV(self); R indexofprehashed(v->fgh[1],w,v->fgh[2]);}
 
-// Here if ct was 0 when the compound was created - we must keep it 0
-static DF1(ixfixedleft0 ){A z;V*v=FAV(self); 
- PUSHCCT(1.0) z=indexofprehashed(v->fgh[0],w,v->fgh[2]); POPCCT
- R z;
-}
-
+// obsolete // Here if ct was 0 when the compound was created - we must keep it 0
+// obsolete static DF1(ixfixedleft0 ){A z;V*v=FAV(self); 
+// obsolete  PUSHCCT(1.0) z=indexofprehashed(v->fgh[0],w,v->fgh[2]); POPCCT
+// obsolete  R z;
+// obsolete }
+// obsolete 
 static DF1(ixfixedright0){A z;V*v=FAV(self); 
  PUSHCCT(1.0) z=indexofprehashed(v->fgh[1],w,v->fgh[2]); POPCCT 
  R z;
@@ -402,7 +412,7 @@ static DF1(ixfixedright0){A z;V*v=FAV(self);
 static DF2(with2){A z; R df1(z,w,powop(self,a,0));}
 
 // u&v
-F2(jtamp){A h=0;AF f1,f2;B b;C c;I flag,flag2=0,linktype=0,mode=-1,p,r;V*v;
+F2(jtamp){A h=0,z;AF f1,f2;B b;C c;I flag,flag2=0,linktype=0,mode=-1,p,r;V*v;
  ARGCHK2(a,w);
  switch(CONJCASE(a,w)){
  case NV:
@@ -415,36 +425,42 @@ F2(jtamp){A h=0;AF f1,f2;B b;C c;I flag,flag2=0,linktype=0,mode=-1,p,r;V*v;
   // assigned to a name, which will protect values inside it.
   if(likely(AC(a)>=0)){flag &= ~VASGSAFE;}else{ACIPNO(a);}   // scaf could do better?
   
+  D cct;  // cct that was used for this table
   if((-AN(a)&-AR(a))<0){  // a is not atomic and not empty
     // c holds the pseudochar for the v op.  If v is u!.0, replace c with the pseudochar for n
     // Also set b on any u!.n
-   if(unlikely(b=c==CFIT))if(v->fgh[1]==num(0))c=FAV(v->fgh[0])->id; 
-   mode=-1; mode=c==CIOTA?IIDOT:mode; mode=c==CICO?IICO:mode;
+// obsolete    if(unlikely(b=c==CFIT))if(v->fgh[1]==num(0))c=FAV(v->fgh[0])->id; 
+// obsolete    mode=-1; mode=c==CIOTA?IIDOT:mode; mode=c==CICO?IICO:mode;
+   if(unlikely(b=c==CFIT))c=FAV(v->fgh[0])->id;
+   if((c&~2)==CIOTA){if(b)cct=v->localuse.lu1.cct; mode=c==CIOTA?IIDOT:IICO;}
   }
   if(unlikely(0<=mode)){
-   if(b){PUSHCCT(1.0) h=indexofsub(mode,a,mark); POPCCT f1=ixfixedleft0; flag&=~VJTFLGOK1;}
-   else {            h=indexofsub(mode,a,mark);             f1=ixfixedleft ; flag&=~VJTFLGOK1;}
+// obsolete    if(b){PUSHCCT(1.0) h=indexofsub(mode,a,mark); POPCCT f1=ixfixedleft0; flag&=~VJTFLGOK1;}  // m&(i.!.0) or m&(i:!.0)
+// obsolete    else {            h=indexofsub(mode,a,mark);             f1=ixfixedleft ; flag&=~VJTFLGOK1;}  // m&i. or m&i: 
+   {PUSHCCTIF(cct,b) h=indexofsub(mode,a,mark); cct=jt->cct; POPCCT f1=ixfixedleft; flag&=~VJTFLGOK1; RZ(h)}  // m&i[.:][!.f], and remember cct when we created the table
   }else switch(c){
    case CWORDS: RZ(a=fsmvfya(a)); f1=jtfsmfx; flag&=~VJTFLGOK1; break;
    case CIBEAM: if(v->fgh[0]&&v->fgh[1]&&128==i0(v->fgh[0])&&3==i0(v->fgh[1])){RZ(h=crccompile(a)); f1=jtcrcfixedleft; flag&=~VJTFLGOK1;} break;
   }
-  R fdef(0,CAMP,VERB, f1,with2, a,w,h, flag, RMAX,RMAX,RMAX);
+  z=fdef(0,CAMP,VERB, f1,with2, a,w,h, flag, RMAX,RMAX,RMAX);
+  RZ(z); FAV(z)->localuse.lu1.cct=cct; R z;
  case VN: 
   f1=withr; v=FAV(a);
   // set flag according to ASGSAFE of verb, and INPLACE and IRS from the dyad of the verb 
   // kludge mark it not ASGSAFE in case it is a name that is being reassigned.  We could use nvr stack to check for that.
   flag=((v->flag&(VJTFLGOK2|VIRS2))>>1)+(v->flag&VASGSAFE);
   // If the noun is not inplaceable now, we have to turn off ASGSAFE, because we may have a form like a =: 5 (a&+)@:+ a which would inplace
-  // a improperly.  If the noun is isnplaceable there's no way it can get assigned to a name after m&v
+  // a improperly.  If the noun is inplaceable there's no way it can get assigned to a name after m&v
   // Otherwise, mark the noun as non-inplaceable (so it will not be modified during use).  If the derived verb is used in another sentence, it must first be
   // assigned to a name, which will protect values inside it.
   if(likely(AC(w)>=0)){flag &= ~VASGSAFE;}else{ACIPNO(w);}
   if((-AN(w)&-AR(w))<0){
-    // c holds the pseudochar for the v op.  If v is u!.n, replace c with the pseudochar for n
+    // 
+    // c holds the pseudochar for the v op.  If v is u!.0, replace c with the pseudochar for n
     // Also set b if the fit is !.0
    c=v->id; p=v->flag&255; if(unlikely(b=c==CFIT))if(v->fgh[1]==num(0))c=FAV(v->fgh[0])->id;
-   if(unlikely(7==(p&7)))mode=II0EPS+(p>>3);  /* (e.i.0:)  etc. */
-   else      mode=c==CEPS?IEPS:-1;
+   if(unlikely(7==(p&7)))mode=((II0EPS-1+(p>>3))&0xf)+1;  // e.-compound&n including -. e. ([ -. -.)
+// obsolete    else      mode=c==CEPS?IEPS:-1;   // e.&n  e.!.0&n  
   }
   if(unlikely(0<=mode)){
    if(unlikely(b!=0)){PUSHCCT(1.0) h=indexofsub(mode,w,mark); POPCCT f1=ixfixedright0; flag&=~VJTFLGOK1;}
@@ -495,7 +511,7 @@ F2(jtamp){A h=0;AF f1,f2;B b;C c;I flag,flag2=0,linktype=0,mode=-1,p,r;V*v;
   // Even though we don't test for infinite, allow this node to be flagged as rankloop so it can combine with others
   if(f1==on1){flag2|=VF2RANKATOP1; f1=r==RMAX?on1cell:f1; f1=r==0?jton10:f1;}
   if(f2==on2){flag2|=VF2RANKATOP2; f2=r==RMAX?on2cell:f2; f2=r==0?on20:f2;}
-  A z; RZ(z=fdef(flag2,CAMP,VERB, f1,f2, a,w,0L, flag, r,r,r));
+  RZ(z=fdef(flag2,CAMP,VERB, f1,f2, a,w,0L, flag, r,r,r));
   FAV(z)->localuse.lu1.linkvb=linktype; R z;
  default: ASSERTSYS(0,"amp");
  case NN: ASSERT(0,EVDOMAIN);

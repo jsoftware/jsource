@@ -92,7 +92,7 @@ PRIM primtab[256] = {
  /*  *. */  PRIMATOMIC2(CSTARDOT,VERB, jtpolar,   jtatomic2,    0,   0,   0   ,VISATOMIC1|VFUSEDOK2|VIRS2|VASGSAFE|VJTFLGOK2,VF2NONE),
  /*  *: */  PRIMATOMIC2(CSTARCO, VERB, jtsquare,  jtatomic2,   0,   0,   0   ,VISATOMIC1|VFUSEDOK2|VIRS2|VASGSAFE|VJTFLGOK1|VJTFLGOK2,VF2NONE),
  /*  -  */  PRIMATOMIC2(CMINUS,  VERB, jtnegate,  jtatomic2,  0,   0,   0   ,VISATOMIC1|VFUSEDOK2|VIRS2|VASGSAFE|VJTFLGOK1|VJTFLGOK2,VF2NONE),
- /*  -. */  PRIMACV(CNOT,    VERB, jtnot,     jtless,   0,   RMAX,RMAX,VISATOMIC1|VASGSAFE|VJTFLGOK1,VF2NONE),
+ /*  -. */  PRIMACV(CNOT,    VERB, jtnot,     jtless,   0,   RMAX,RMAX,VISATOMIC1|VASGSAFE|VJTFLGOK1|(7+(((ILESS-II0EPS)&0xf)<<3)),VF2NONE),  // native compound allowing &n
  /*  -: */  PRIMACV(CHALVE,  VERB, jthalve,   jtmatch,  0,   RMAX,RMAX,VISATOMIC1|VIRS2|VASGSAFE|VJTFLGOK1,VF2NONE),  // alias CMATCH
  /*  %  */  PRIMATOMIC2(CDIV,    VERB, jtrecip,   jtatomic2, 0,   0,   0   ,VISATOMIC1|VFUSEDOK2|VIRS2|VASGSAFE|VJTFLGOK1|VJTFLGOK2,VF2NONE),
  /*  %. */  PRIMACV(CDOMINO, VERB, jtminv,    jtmdiv,   2,   RMAX,2   ,VASGSAFE,VF2NONE),
@@ -164,7 +164,7 @@ PRIM primtab[256] = {
  /*  A. */  PRIMACV(CATOMIC, VERB, jtadot1,   jtadot2,  1,   0,   RMAX,VASGSAFE,VF2NONE),
  /*  b. */  PRIMACV(CBDOT,   ADV,  jtbdot,    jtdomainerr2, 0,   0,   0   ,VASGSAFE,VF2NONE),
  /*  C. */  PRIMACV(CCYCLE,  VERB, jtcdot1,   jtcdot2,  1,   1,   RMAX,VASGSAFE,VF2NONE),
- /*  e. */  PRIMACV(CEPS,    VERB, jtrazein,  jteps,    RMAX,RMAX,RMAX,VASGSAFE|VIRS2,VF2NONE),
+ /*  e. */  PRIMACV(CEPS,    VERB, jtrazein,  jteps,    RMAX,RMAX,RMAX,VASGSAFE|VIRS2|(7+(((IEPS-II0EPS)&0xf)<<3)),VF2NONE),
  /*  E. */  PRIMACV(CEBAR,   VERB, jtdomainerr1, jtebar,   0,   RMAX,RMAX,VASGSAFE,VF2NONE),
  /*  f. */  PRIMACV(CFIX,    ADV,  jtfix,     jtdomainerr2, 0,   0,   0   ,VFLAGNONE,VF2NONE),
  /*  H. */  PRIMACV(CHGEOM,  CONJ, jtdomainerr1, jthgeom,  0,   0,   0   ,VISATOMIC1|VASGSAFE,VF2NONE),

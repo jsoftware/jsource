@@ -115,6 +115,7 @@ F1(jtjico1){A y,z;B b;D d,*v;I c,m,n;
  RETF(z);
 }
 
+// _9: to 9:, return the saved value.  These MUST NOT inplace because of a pun in the coding of comparison combination flags
 DF1(jtnum1){ARGCHK2(w,self); R FAV(self)->fgh[2];}
 DF2(jtnum2){ARGCHK3(a,w,self); R FAV(self)->fgh[2];}
 

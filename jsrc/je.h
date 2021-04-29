@@ -721,7 +721,7 @@ extern I        jtigcd(J,I,I);
 extern I        jtilcm(J,I,I);
 extern A        jtincorp(J,A);
 extern A        jtindexnl(J,I);
-extern A        jtindexofprehashed(J,A,A,A);
+extern A        jtindexofprehashed(J,A,A,A,A);
 extern A        jtindexofss(J,I,A,A);
 extern A        jtindexofsub(J,I,A,A);
 extern A        jtindexofxx(J,I,A,A);

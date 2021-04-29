@@ -232,11 +232,11 @@ void mvc(I m,void*z,I n,void*w){
  // overhead; it repeatedly reads from memory needlessly, which will erroneously pull the filled area into caches.
  // If the argument can evenly fill up 32 bytes, we can load it into a register here and write repeatedly.
  // This is JMC without the reading.
- if(likely((((n&-n&(2*NPAR*SZI-1))^n)+((m&(n-1))&(REPSGN(-(((I)z|m)&(SZI-1))))))==0)){  // n is power of 2, and not > 32, and (result area is a multiple of cells OR is I-aligned in address and length)
+ if((((n&-n&(2*NPAR*SZI-1))^n)+((m&(n-1))&(REPSGN(-(((I)z|m)&(SZI-1))))))==0){  // n is power of 2, and not > 32, and (result area is a multiple of cells OR is I-aligned in address and length)
   PREFETCH(w);  /* start bringing in the start of data */ 
   __m256i endmask, wd; UI wdi;  // replicated data
   // replicate the input as needed to word size, then on up to 32-byte size
-  if(likely(n<=SZI)){
+  if(n<=SZI){
    wdi=*(I*)w; wdi<<=(SZI-n)<<LGBB; wdi>>=(SZI-n)<<LGBB;  // zero out bits above the size
    I shiftamt=n<<LGBB; wdi|=(wdi<<(shiftamt&(7*BB))); shiftamt<<=1; wdi|=(wdi<<(shiftamt&(7*BB))); shiftamt<<=1; wdi|=(wdi<<(shiftamt&(7*BB)));  // replicate to word size
    wd=_mm256_set1_epi64x(wdi);  // further replicate to 32-byte size

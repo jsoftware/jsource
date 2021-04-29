@@ -4,6 +4,7 @@
 /* Extern Declarations                                                     */
 #include "gemm.h"
 
+extern DF2(atcomp);
 extern F1(jtabase1);
 extern F1(jtadot1);
 extern F1(jtarep);
@@ -445,6 +446,7 @@ extern F2(jtfmt12);
 extern F2(jtfmt22);
 extern DF2(jtfold);
 extern DF2(jtfoldZ);
+extern DF2(jtfolk2);
 extern F2(jtforeign);
 extern F2(jtforeignextra);
 extern F2(jtfrom);

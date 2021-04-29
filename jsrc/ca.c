@@ -149,16 +149,18 @@ static DF2(atcomp){AF f;A z;
 }
 #endif
 
-static DF2(atcomp){A z;AF f;
+DF2(atcomp){A z;AF f;
  ARGCHK2(a,w);
  f=atcompf(a,w,self);
  I postflags=(I)f&3;  // extract postprocessing from return
  f=(AF)((I)f&-4);    // restore function address
  PUSHCCTIF(FAV(self)->localuse.lu1.cct,FAV(self)->localuse.lu1.cct!=0.0)
- if(likely(f!=0)){
+ if(f!=0){
   z=f(jt,a,w,self);
   if(likely(z!=0)){if(postflags&2){z=num((IAV(z)[0]!=AN(AR(a)>=AR(w)?a:w))^(postflags&1));}}
- }else z=upon2(a,w,self);
+// obsolete  }else z=upon2(a,w,self);
+ }else z=(FAV(self)->fgh[2]?jtfolk2:jtupon2)(jt,a,w,self);   // revert if can't use special code
+ POPCCT
  RETF(z);
 }
 
@@ -332,7 +334,7 @@ F2(jtatco){A f,g;AF f1=on1cell,f2=jtupon2cell;C c,d,e;I flag, flag2=0,m=-1;V*av,
 // e has been destroyed
 
  // comparison combinations
- C cct=0.0;  // cct to use, 0='use default'
+ D cct=0.0;  // cct to use, 0='use default'
  if(unlikely(0<=m)){
   // the left side is a comparison combiner.  See if the right is a comparison
   e=d;  // repurpose e as comparison op
@@ -392,11 +394,11 @@ F2(jtampco){AF f1=on1cell,f2=on2cell;C c,d;I flag,flag2=0,linktype=0;V*wv;
 static DF1(withl){F1PREFIP;DECLFG; A z; I r=(RANKT)jt->ranks; IRSIP2(fs,w,gs,RMAX,(RANKT)jt->ranks,g2,z); RETF(z);}
 static DF1(withr){F1PREFIP;DECLFG; jtinplace=(J)(intptr_t)((I)jtinplace+((I)jtinplace&JTINPLACEW)); A z; I r=(RANKT)jt->ranks; IRSIP2(w,gs,fs,(RANKT)jt->ranks,RMAX,f2,z); RETF(z);}
 
-// Here for m&i. and m&i:, computing a prehashed table from a
+// Here for m&i. and m&i:, computing a prehashed table from a.  Make sure we use the pricision in effect when the hash was made
 // v->fgh[2] is the info/hash/bytemask result from calculating the prehash
 static DF1(ixfixedleft){V*v=FAV(self); PUSHCCT(v->localuse.lu1.cct) A z=indexofprehashed(v->fgh[0],w,v->fgh[2]); POPCCT R z;}  // must use the ct when table was created
 // Here for compounds like (i.&0@:e.)&n or -.&n that compute a prehashed table from w
-static DF1(ixfixedright ){V*v=FAV(self); R indexofprehashed(v->fgh[1],w,v->fgh[2]);}
+static DF1(ixfixedright ){V*v=FAV(self); PUSHCCT(v->localuse.lu1.cct) A z=indexofprehashed(v->fgh[1],w,v->fgh[2]); POPCCT R z;}
 
 // obsolete // Here if ct was 0 when the compound was created - we must keep it 0
 // obsolete static DF1(ixfixedleft0 ){A z;V*v=FAV(self); 
@@ -404,16 +406,17 @@ static DF1(ixfixedright ){V*v=FAV(self); R indexofprehashed(v->fgh[1],w,v->fgh[2
 // obsolete  R z;
 // obsolete }
 // obsolete 
-static DF1(ixfixedright0){A z;V*v=FAV(self); 
- PUSHCCT(1.0) z=indexofprehashed(v->fgh[1],w,v->fgh[2]); POPCCT 
- R z;
-}
+// obsolete static DF1(ixfixedright0){A z;V*v=FAV(self); 
+// obsolete  PUSHCCT(1.0) z=indexofprehashed(v->fgh[1],w,v->fgh[2]); POPCCT 
+// obsolete  R z;
+// obsolete }
 
 static DF2(with2){A z; R df1(z,w,powop(self,a,0));}
 
 // u&v
 F2(jtamp){A h=0,z;AF f1,f2;B b;C c;I flag,flag2=0,linktype=0,mode=-1,p,r;V*v;
  ARGCHK2(a,w);
+  D cct;  // cct that was used for this comparison compound, if any
  switch(CONJCASE(a,w)){
  case NV:
   f1=withl; v=FAV(w); c=v->id;
@@ -425,7 +428,6 @@ F2(jtamp){A h=0,z;AF f1,f2;B b;C c;I flag,flag2=0,linktype=0,mode=-1,p,r;V*v;
   // assigned to a name, which will protect values inside it.
   if(likely(AC(a)>=0)){flag &= ~VASGSAFE;}else{ACIPNO(a);}   // scaf could do better?
   
-  D cct;  // cct that was used for this table
   if((-AN(a)&-AR(a))<0){  // a is not atomic and not empty
     // c holds the pseudochar for the v op.  If v is u!.0, replace c with the pseudochar for n
     // Also set b on any u!.n
@@ -456,17 +458,25 @@ F2(jtamp){A h=0,z;AF f1,f2;B b;C c;I flag,flag2=0,linktype=0,mode=-1,p,r;V*v;
   if(likely(AC(w)>=0)){flag &= ~VASGSAFE;}else{ACIPNO(w);}
   if((-AN(w)&-AR(w))<0){
     // 
-    // c holds the pseudochar for the v op.  If v is u!.0, replace c with the pseudochar for n
-    // Also set b if the fit is !.0
-   c=v->id; p=v->flag&255; if(unlikely(b=c==CFIT))if(v->fgh[1]==num(0))c=FAV(v->fgh[0])->id;
-   if(unlikely(7==(p&7)))mode=((II0EPS-1+(p>>3))&0xf)+1;  // e.-compound&n including -. e. ([ -. -.)
+    // c holds the pseudochar for the v op.  If v is u!.n, replace c with the pseudochar for n
+    // Also set b if the fit is !.n
+// obsolete    c=v->id; p=v->flag&255; if(unlikely(b=c==CFIT))if(v->fgh[1]==num(0))c=FAV(v->fgh[0])->id;
+// obsolete    if(unlikely(7==(p&7)))mode=((II0EPS-1+(p>>3))&0xf)+1;  // e.-compound&n including -. e. ([ -. -.) or any i.&1@:e.
+    c=v->id;p=v->flag;if(unlikely(b=c==CFIT)){cct=v->localuse.lu1.cct; p=FAV(v->fgh[0])->flag;}
+   if(unlikely(7==(p&7))){
+    mode=((II0EPS-1+((p&VFCOMPCOMP)>>3))&0xf)+1;  // e.-compound&n including -. e. ([ -. -.) or any i.&1@:e.
+    if(mode==IINTER){cct=v->localuse.lu1.cct; b=cct!=0;}  // ([-.-.) always has cct, but it might be 0 indicating default
+    {PUSHCCTIF(cct,b) h=indexofsub(mode,w,mark); cct=jt->cct; POPCCT f1=ixfixedright; flag&=~VJTFLGOK1; RZ(h)}  // m&i[.:][!.f], and remember cct when we created the table
+   }
 // obsolete    else      mode=c==CEPS?IEPS:-1;   // e.&n  e.!.0&n  
+// obsolete   }
+// obsolete   if(unlikely(0<=mode)){
+// obsolete    {PUSHCCTIF(cct,b) h=indexofsub(mode,a,mark); cct=jt->cct; POPCCT f1=ixfixedright; flag&=~VJTFLGOK1; RZ(h)}  // m&i[.:][!.f], and remember cct when we created the table
+// obsolete    if(unlikely(b!=0)){PUSHCCT(1.0) h=indexofsub(mode,w,mark); POPCCT f1=ixfixedright0; flag&=~VJTFLGOK1;}
+// obsolete    else {            h=indexofsub(mode,w,mark);             f1=ixfixedright ; flag&=~VJTFLGOK1;}
   }
-  if(unlikely(0<=mode)){
-   if(unlikely(b!=0)){PUSHCCT(1.0) h=indexofsub(mode,w,mark); POPCCT f1=ixfixedright0; flag&=~VJTFLGOK1;}
-   else {            h=indexofsub(mode,w,mark);             f1=ixfixedright ; flag&=~VJTFLGOK1;}
-  }
-  R fdef(0,CAMP,VERB, f1,with2, a,w,h, flag, RMAX,RMAX,RMAX);
+  z=fdef(0,CAMP,VERB, f1,with2, a,w,h, flag, RMAX,RMAX,RMAX);
+  RZ(z); FAV(z)->localuse.lu1.cct=cct; R z;
  case VV:
   // u&v
   f1=on1; f2=on2;

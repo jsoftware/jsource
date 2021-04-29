@@ -34,7 +34,7 @@ ARGCHK2D(fx,hx) \
 POPZOMB; RZ(z=(g2)((J)(intptr_t)((((I)jtinplace&(~(JTINPLACEA+JTINPLACEW)))|(((I )(fx!=protw)&(I )(fx!=prota))*JTINPLACEA+((I )(hx!=protw)&(I )(hx!=prota)*JTINPLACEW)))&(REPSGN(SGNIF(FAV(gs)->flag,VJTFLGOK2X))|~JTFLAGMSK)),fx,hx,gs));}
 
 static DF1(jtfolk1){F1PREFIP;DECLFGH;PROLOG(0028);A z; FOLK1; EPILOG(z);}
-static DF2(jtfolk2){F2PREFIP;DECLFGH;PROLOG(0029);A z; FOLK2; EPILOG(z);}
+DF2(jtfolk2){F2PREFIP;DECLFGH;PROLOG(0029);A z; FOLK2; EPILOG(z);}
 
 // see if f is defined as [:, as a single name
 static B jtcap(J jt,A x){V*v;L *l;
@@ -63,6 +63,7 @@ jtinplace=FAV(gs)->flag&VJTFLGOK2?jtinplace:jt;
 A z;RZ(z=(g2)(jtinplace,fs,hx,gs));
 EPILOG(z);}
 
+#if 0  // obsolete
 static DF2(jtfolkcomp){F2PREFIP;DECLFGH;A z;AF f;
  ARGCHK2(a,w);
  f=atcompf(a,w,self);
@@ -77,12 +78,12 @@ static DF2(jtfolkcomp){F2PREFIP;DECLFGH;A z;AF f;
  RETF(z);
 }
 
-static DF2(jtfolkcomp0){F2PREFIP;DECLFGH;A z;AF f;
+static DF2(jtfolkcomp){F2PREFIP;DECLFGH;A z;AF f;
  ARGCHK2(a,w);
- PUSHCCT(1.0)
  f=atcompf(a,w,self);
  I postflags=(I)f&3;  // extract postprocessing from return
  f=(AF)((I)f&-4);    // restore function address
+ PUSHCCTIF(FAV(self)->localuse.lu1.cct,FAV(self)->localuse.lu1.cct!=0.0)
  if(f){
   PROLOG(0035);
   z=f(jt,a,w,self);
@@ -92,6 +93,8 @@ static DF2(jtfolkcomp0){F2PREFIP;DECLFGH;A z;AF f;
  POPCCT  //  bug: if we RZd early we leave ct unpopped
  RETF(z);
 }
+#endif
+
 
 static DF1(jtcharmapa){V*v=FAV(self); R charmap(w,FAV(v->fgh[2])->fgh[0],v->fgh[0]);}
 static DF1(jtcharmapb){V*v=FAV(self); R charmap(w,FAV(v->fgh[0])->fgh[0],FAV(v->fgh[2])->fgh[0]);}
@@ -176,12 +179,15 @@ A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I
   } break;
  }
 
+ D cct=0.0;  // cct to use, 0='use default'
 #if C_CRC32C && SY_64
  if(unlikely(fi==CLEFT)){
-  I d=hv->id; d=d==CFIT&&hv->localuse.lu1.cct==1.0?FAV(hv->fgh[0])->id:d;  // comparison op, possibly from u!.0
-  I c=hv->id; I e=c; e=e==CFIT?FAV(hv->fgh[0])->id:e;  // comparison op, possibly from u!.f
+  I d=gv->id; d=d==CFIT&&hv->localuse.lu1.cct==1.0?FAV(hv->fgh[0])->id:d;  // middle -. of [-.-. .  We implement as if !.0 given, so we allow the user to give that
+  I c=hv->id; I e=c; if(unlikely(e==CFIT)){cct=hv->localuse.lu1.cct; e=FAV(hv->fgh[0])->id;}  // comparison op, possibly from u!.f
   if(BOTHEQ8(d,e,CLESS,CLESS)){  // ([ -. -.)  and ([ -. -.!.f) - the middle -. can also be !.0.  It is implemented as !.0
    f2=jtintersect;  // treat the compound as a primitive of its own
+   flag|=(7+(((IINTER-II0EPS)&0xf)<<3));  // flag it like -.
+   // if tolerance given on second -., it is now in cct
   }
  }
 #endif
@@ -190,10 +196,13 @@ A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I
  if(0<=m){  // comparison combiner has been found.  Is there a comparison?
   // m has information about the comparison combiner.  See if there is a comparison
   V *cv=(m&=7)>=4?hv:fv;  // cv point to comp in comp i. 0:  or [: +/ comp
-  I d=cv->id; I e=d; e=e==CFIT&&cv->localuse.lu1.cct==1.0?FAV(cv->fgh[0])->id:e;  // comparison op, possibly from u!.0
+// obsolete   I d=cv->id; I e=d; e=e==CFIT&&cv->localuse.lu1.cct==1.0?FAV(cv->fgh[0])->id:e;  // comparison op, possibly from u!.0
+  I d=cv->id; I e=d; e=e==CFIT&&(cct=cv->localuse.lu1.cct,1)?FAV(cv->fgh[0])->id:e;  // comparison op, possibly from u!.0
   if(BETWEENC(e,CEQ,CEPS)){
    // valid comparison combination.  m is the combiner, e is the comparison
-   f2=d==CFIT?jtfolkcomp0:jtfolkcomp;  // valid comparison type: switch to it
+// obsolete    f2=d==CFIT?jtfolkcomp0:jtfolkcomp;  // valid comparison type: switch to it
+// obsolete    f2=jtfolkcomp;  // valid comparison type: switch to it
+   f2=atcomp;  // valid comparison type: switch to it
    flag+=(e-CEQ)+8*m; flag &=~(VJTFLGOK1|VJTFLGOK2);  // set comp type mmmeee; entry point does not allow jt flags
   }
  }
@@ -204,7 +213,8 @@ A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I
  // If this fork is not a special form, set the flags to indicate whether the f verb does not use an
  // argument.  In that case h can inplace the unused argument.
  if(f1==jtfolk1 && f2==jtfolk2) flag |= atoplr(f);
- R fdef(flag2,CFORK,VERB, f1,f2, f,g,h, flag, RMAX,RMAX,RMAX);
+ A z=fdef(flag2,CFORK,VERB, f1,f2, f,g,h, flag, RMAX,RMAX,RMAX);
+ RZ(z); FAV(z)->localuse.lu1.cct=cct; R z;
 }
 
 // Handlers for to  handle w (aa), w (vc), w (cv)

@@ -2367,7 +2367,7 @@ DF2(jtintersect){A x=w;I ar,at,k,r,*s,wr,*ws,wt;
  if(unlikely((-wr&-(r^wr))<0)){RZ(x=virtual(w,0,r)); AN(x)=AN(w); s=AS(x); ws=AS(w); k=ar>wr?0:1+wr-r; I s0; PRODX(s0,k,ws,1) s[0]=s0; MCISH(1+s,k+ws,r-1);}  //  use fauxvirtual here
  // comparison tolerance may be encoded in h - apply it if so
  D savcct = jt->cct;
- PUSHCCTIF(FAV(FAV(self)->fgh[2])->localuse.lu1.cct,unlikely(FAV(FAV(self)->fgh[2])->id==CFIT))   // scaf should get this from self
+ PUSHCCTIF(FAV(self)->localuse.lu1.cct,FAV(self)->localuse.lu1.cct!=0)   // if there is a CT, use it
  // if nothing special (like sparse, or incompatible types, or x requires conversion) do the fast way; otherwise (-. x e. y) # x 
  // because LESS allocates a large array to hold all the values, we use the slower, less memory-intensive, version if a is mapped
  x=(NEGIFHOMO(at,wt)&((TYPESXOR(at,maxtyped(at,wt))|(at&SPARSE)|(AFLAG(a)&AFNJA))-1))<0?indexofsub(IINTER,x,a):

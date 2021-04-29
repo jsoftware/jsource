@@ -9,7 +9,7 @@ NB.    [: +./ comp         +./@:comp
 NB.    [: *./ comp         *./@:comp
 NB.    [: I.  comp         I. @:comp
 NB. where comp is one of the following:
-NB.    = ~: < <: >: > E. e.
+NB.    = ~: < <: >: > E. e.   with optional tolerance
 
 sp=: 7!:2
 
@@ -482,6 +482,34 @@ NB. Verify reversion for other types
 4 -: (i. 10x) +/@:> 11r2
 4 -: 'abcdefegehie' +/@:= 'e'
 'domain error' -: 'abcdefegehie' +/@:> etx 'e'
+
+NB. Verify toler honored in compound
+10 = 1 +/@:(=!.1e_12) 1 + 1e_14 * i. 10
+1 = 1 +/@:(=!.1e_16) 1 + 1e_14 * i. 10
+0 = # 1 -.!.1e_12~ 1 + 1e_14 * i. 10
+9 = # 1 -.!.1e_16~ 1 + 1e_14 * i. 10
+10 = # 1 ([ -. -.!.1e_12)~ 1 + 1e_14 * i. 10
+1 = # 1 ([ -. -.!.1e_16)~ 1 + 1e_14 * i. 10
+
+yy =: 2e7 $ 1 + 1e_14  NB. Must be big so that temp hashtable is released
+(#yy) = yy +/@:(=!.1e_12) yy
+10000 > 7!:2 'yy +/@:(=!.1e_12) yy'
+f =: +/@:(e.!.1e_12)&yy
+(#yy) = f yy
+10000 > 7!:2 'f yy'
+f =: -.!.1e_12&yy
+0 = f yy
+xx =: (#yy) $ 1.0
+0 = # yy -.!.1e_12 xx
+(#yy) = # yy -.!.1e_16 xx
+0 = # -.!.1e_12&xx yy
+(#yy) = # -.!.1e_16&xx yy
+(7!:2 'yy  -.!.1e_12 yy') > 1.5 * 7!:2 'f yy'
+(#yy) = # yy ([ -. -.!.1e_12) xx
+0 = # yy ([ -. -.!.1e_16) xx
+(#yy) = # ([ -. -.!.1e_12)&xx yy
+0 = # ([ -. -.!.1e_16)&xx yy
+(7!:2 'yy ([ -. -.!.1e_16) yy') > 1.5 * 7!:2 'f yy'
 
 
 

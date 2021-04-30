@@ -443,7 +443,12 @@ s f&>/ t
 
 NB. comparison tolerance
 10 = # (1 + 1e_15 * i. 10) ([ -. -.) 1
-1 = # (1 + 1e_15 * i. 10) ([ -. -.!.0) 1
+1 = # (1 + 1e_15 * i. 10) ([ -.!.0 -.!.0) 1
+
+NB. Verify -.!.0 in the middle is treated like -.
+yy =: 1e6 $ 1.0
+10000 > (7!:2 'yy ([ -. -.) 1') - (7!:2 'yy ([ -.!.0 -.) 1')
+(-.IF64) +. (7!:2 'yy ([ -.!.1e_12 -.) 1') > 1.5 * (7!:2 'yy ([ -.!.0 -.) 1')
 
 
 4!:55 ;:'adot1 adot2 sdot0 dr f intersect less not rank res s t x xx yy'

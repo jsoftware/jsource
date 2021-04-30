@@ -464,7 +464,7 @@ F2(jtamp){A h=0,z;AF f1,f2;B b;C c;I flag,flag2=0,linktype=0,mode=-1,p,r;V*v;
 // obsolete    if(unlikely(7==(p&7)))mode=((II0EPS-1+(p>>3))&0xf)+1;  // e.-compound&n including -. e. ([ -. -.) or any i.&1@:e.
     c=v->id;p=v->flag;if(unlikely(b=c==CFIT)){cct=v->localuse.lu1.cct; p=FAV(v->fgh[0])->flag;}
    if(unlikely(7==(p&7))){
-    mode=((II0EPS-1+((p&VFCOMPCOMP)>>3))&0xf)+1;  // e.-compound&n including -. e. ([ -. -.) or any i.&1@:e.
+    mode=((II0EPS-1+((p&VFCOMPCOMP)>>3))&0xf)+1;  // e.-compound&n including e. -. ([ -. -.) or any i.&1@:e.  - LESS/INTER not in 32-bit
     if(mode==IINTER){cct=v->localuse.lu1.cct; b=cct!=0;}  // ([-.-.) always has cct, but it might be 0 indicating default
     {PUSHCCTIF(cct,b) h=indexofsub(mode,w,mark); cct=jt->cct; POPCCT f1=ixfixedright; flag&=~VJTFLGOK1; RZ(h)}  // m&i[.:][!.f], and remember cct when we created the table
    }

@@ -884,7 +884,7 @@ typedef struct {
    I filler;  // pad to cacheline
    // end of first cacheline, which is not used much during execution
    union {  // 8 bytes in the second (main) cacheline
-    D cct;  // for comparison tolerance, FIT conj  =!.n OR comparison combination (i.&1@:(e.[!.n])) OR [e-].&n OR m&i[.:] the CCT, 0 for default (never in an actual prehash).  For 32-bit, this extends the union, but that's OK since it doesn't add a cacheline.
+    D cct;  // for comparison tolerance, FIT conj  =!.n OR comparison combination (i.&1@:(e.[!.n])) OR [e. i. ([-.-.)]&n OR m&i[.:] the CCT, 0 for default (never in an actual prehash).  For 32-bit, this extends the union, but that's OK since it doesn't add a cacheline.
     struct {
      I4 cgerx; // For cyclic iterators, the index of the next gerund to execute.  Here to avoid conflict with cut
      I4 cutn;  // for u;.n where n is nonzero, n.  u/. also goes through this code.  There could be cyclic iterators but not boxcut

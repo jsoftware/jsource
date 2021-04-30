@@ -2277,7 +2277,7 @@ A jtindexofprehashed(J jt,A a,A w,A hs,A self){A h,*hv,x,z;AF fn;I ar,*as,at,c,f
 // obsolete  c &= REPSGN(~(f1|(ar-r)));   // w must have rank big enough to hold a cell of a.  Clear c if f1<0 or r>ar
  if(likely((c&=REPSGN(~f1))>0)){  // revert if w has higher rank than a cell of a
   c=ICMP(as+ar-r,ws+f1,r)?0:c;  // verify agreement in cell-shape, set c=0 if not
-  if(((I)1<<mode&IIOPMSK)&(((I)1<<ILESS)|((I)1<<IINTER))){
+  if(((I)1<<(mode&IIOPMSK))&(((I)1<<ILESS)|((I)1<<IINTER))){
    if(f1<(wr!=0)||f1>1){
     // LESS/INTER where the hashtable has the wrong cell-rank.  Revert
     // LESS/INTER cannot revert simply by calling indexofsub, because a has to be reshaped to make the cell-rank match the item of w.

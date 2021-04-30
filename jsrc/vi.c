@@ -1538,7 +1538,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z;B mk=w==mark,th;
 DF2(jtcombineeps){ARGCHK3(a,w,self);R indexofsub(II0EPS+((FAV(self)->flag>>3)&7),w,a);}
 
 // verb to handle compounds like m&i. e.&n .  m/n has already been hashed and the result saved away
-A jtindexofprehashed(J jt,A a,A w,A hs){A h,hi,*hv,x,z;AF fn;I ar,*as,at,c,f1,k,m,mode,n,
+A jtindexofprehashed(J jt,A a,A w,A hs,A self){A h,hi,*hv,x,z;AF fn;I ar,*as,at,c,f1,k,m,mode,n,
      r,t,*xv,wr,*ws,wt,ztype;
  ARGCHK3(a,w,hs);
  // hv is (info vector);(hashtable);(byte index valididty)

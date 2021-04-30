@@ -149,14 +149,21 @@ static DF2(atcomp){AF f;A z;
 }
 #endif
 
+// handler for comparison compounds including ones that go through i.
+// We have to look at the ranks to decide what function to execute or whether to revert
+// scaf should 
 DF2(atcomp){A z;AF f;
  ARGCHK2(a,w);
+ // call analysis routine with the arguments/  Low 2 bits of return are postprocessing flags
  f=atcompf(a,w,self);
  I postflags=(I)f&3;  // extract postprocessing from return
  f=(AF)((I)f&-4);    // restore function address
+ // If the compound includes CT, apply it
  PUSHCCTIF(FAV(self)->localuse.lu1.cct,FAV(self)->localuse.lu1.cct!=0.0)
  if(f!=0){
+  // a suitable processing function was found apply it
   z=f(jt,a,w,self);
+  // postprocessing needed: 0x=none, 10=+./ (result is binary 0 if search completed), 11=*./ (result is binary 1 if search completed)
   if(likely(z!=0)){if(postflags&2){z=num((IAV(z)[0]!=AN(AR(a)>=AR(w)?a:w))^(postflags&1));}}
 // obsolete  }else z=upon2(a,w,self);
  }else z=(FAV(self)->fgh[2]?jtfolk2:jtupon2)(jt,a,w,self);   // revert if can't use special code
@@ -397,7 +404,7 @@ static DF1(withr){F1PREFIP;DECLFG; jtinplace=(J)(intptr_t)((I)jtinplace+((I)jtin
 // Here for m&i. and m&i:, computing a prehashed table from a.  Make sure we use the pricision in effect when the hash was made
 // v->fgh[2] is the info/hash/bytemask result from calculating the prehash
 static DF1(ixfixedleft){V*v=FAV(self); PUSHCCT(v->localuse.lu1.cct) A z=indexofprehashed(v->fgh[0],w,v->fgh[2]); POPCCT R z;}  // must use the ct when table was created
-// Here for compounds like (i.&0@:e.)&n or -.&n that compute a prehashed table from w
+// Here for compounds like (i.&0@:e.)&n  e.&n -.&n that compute a prehashed table from w
 static DF1(ixfixedright ){V*v=FAV(self); PUSHCCT(v->localuse.lu1.cct) A z=indexofprehashed(v->fgh[1],w,v->fgh[2]); POPCCT R z;}
 
 // obsolete // Here if ct was 0 when the compound was created - we must keep it 0

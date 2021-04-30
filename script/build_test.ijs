@@ -103,7 +103,7 @@ clean=: './clean.sh' NB. set clean=: '' to avoid compiles
 3 : 0'' 
 if. UNAME-:'Linux' do.
  platform=: 'linux'
- compiler=: 'clang-8'
+ compiler=: 'clang'
  suffix=: '.so'
  terminal=: 'x-terminal-emulator -e '
 else.

@@ -102,22 +102,27 @@ extern ADECLP(bw1001pfxI,UI,UI);  extern ADECLR(bw1001insI,UI,UI);  extern ADECL
                                   extern ADECLR(bw1110insI,UI,UI);  extern ADECLS(bw1110sfxI,UI,UI);
 extern ADECLP(bw1111pfxI,UI,UI);  extern ADECLR(bw1111insI,UI,UI);  extern ADECLS(bw1111sfxI,UI,UI);
 
-extern ADECL2(bw0000II,UI,UI,UI);
-extern ADECL2(bw0001II,UI,UI,UI);
-extern ADECL2(bw0010II,UI,UI,UI);
-extern ADECL2(bw0011II,UI,UI,UI);
-extern ADECL2(bw0100II,UI,UI,UI);
-extern ADECL2(bw0101II,UI,UI,UI);
-extern ADECL2(bw0110II,UI,UI,UI);
-extern ADECL2(bw0111II,UI,UI,UI);
-extern ADECL2(bw1000II,UI,UI,UI);
-extern ADECL2(bw1001II,UI,UI,UI);
-extern ADECL2(bw1010II,UI,UI,UI);
-extern ADECL2(bw1011II,UI,UI,UI);
-extern ADECL2(bw1100II,UI,UI,UI);
-extern ADECL2(bw1101II,UI,UI,UI);
-extern ADECL2(bw1110II,UI,UI,UI);
-extern ADECL2(bw1111II,UI,UI,UI);
+#if (C_AVX&&SY_64) || EMU_AVX
+#define BID void
+#else
+#define BID UI
+#endif
+extern ADECL2(bw0000II,BID,BID,BID);
+extern ADECL2(bw0001II,BID,BID,BID);
+extern ADECL2(bw0010II,BID,BID,BID);
+extern ADECL2(bw0011II,BID,BID,BID);
+extern ADECL2(bw0100II,BID,BID,BID);
+extern ADECL2(bw0101II,BID,BID,BID);
+extern ADECL2(bw0110II,BID,BID,BID);
+extern ADECL2(bw0111II,BID,BID,BID);
+extern ADECL2(bw1000II,BID,BID,BID);
+extern ADECL2(bw1001II,BID,BID,BID);
+extern ADECL2(bw1010II,BID,BID,BID);
+extern ADECL2(bw1011II,BID,BID,BID);
+extern ADECL2(bw1100II,BID,BID,BID);
+extern ADECL2(bw1101II,BID,BID,BID);
+extern ADECL2(bw1110II,BID,BID,BID);
+extern ADECL2(bw1111II,BID,BID,BID);
 
 extern ADECL2(  andBB,void,void,void);
 extern ADECL2(  binDD,D,D,D);

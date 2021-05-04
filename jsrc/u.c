@@ -227,13 +227,13 @@ I jtmaxtype(J jt,I s,I t){
 void mvc(I m,void*z,I n,void*w){
  if(unlikely(m==0))R;  // fast return if nothing to copy
 #if (C_AVX2&&SY_64) || EMU_AVX2
+ PREFETCH(w);  /* start bringing in the start of data */ 
  // The main use of mvc is memset and fill.
  // The short version has some deficiencies: it calls memcpy repeatedly, which adds overhead, including alignment
  // overhead; it repeatedly reads from memory needlessly, which will erroneously pull the filled area into caches.
  // If the argument can evenly fill up 32 bytes, we can load it into a register here and write repeatedly.
  // This is JMC without the reading.
  if((((n&-n&(2*NPAR*SZI-1))^n)+((m&(n-1))&(REPSGN(-(((I)z|m)&(SZI-1))))))==0){  // n is power of 2, and not > 32, and (result area is a multiple of cells OR is I-aligned in address and length)
-  PREFETCH(w);  /* start bringing in the start of data */ 
   __m256i endmask, wd; UI wdi;  // replicated data
   // replicate the input as needed to word size, then on up to 32-byte size
   if(n<=SZI){
@@ -247,7 +247,7 @@ void mvc(I m,void*z,I n,void*w){
   }
   // if the operation is long, move 2 blocks to align the store pointer
   I misalign=(I)z&(NPAR*SZI-1);
-  if((UI)m>(((UI)misalign-1)|2*NPAR*SZI)){  // if store address is misaligned and length is > 2 stores...
+  if((UI)m>(((UI)misalign-1)|4*NPAR*SZI)){  // if store address is misaligned and length is big enough   TUNE
    _mm256_storeu_si256((__m256i*)z,wd); z=(C*)z+NPAR*SZI; _mm256_storeu_si256((__m256i*)z,wd);   // do the 2 stores
    z=(C*)z+NPAR*SZI-misalign; m-=2*NPAR*SZI-misalign;
    // if the misalignment was not a multiple of the size of the atoms, refetch the store value

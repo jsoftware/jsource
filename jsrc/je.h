@@ -1006,6 +1006,7 @@ extern I disttosign[4];  // bit between (bit 0 of byte) and sign bit of lane
 extern I Ivalidboolean;  // masks 
 extern I Iimin;
 extern I Iimax;
+extern I fortesting;
 
 #if (SYS & SYS_ATARIST+SYS_ATT3B1)
 extern int      memcmp();       /* C library fn                            */

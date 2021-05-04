@@ -76,6 +76,7 @@ I   iotavec[IOTAVECLEN];  // return values for i. small
 uint64_t g_cpuFeatures;   // blis
 UC  hwaes=0;              // hardware aes support
 UC  hwfma=0;              // blis cpu tuning
+I fortesting=0;   // used for measurements
 // globals end
 
 // global const start -  do not need globinit

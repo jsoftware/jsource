@@ -993,7 +993,7 @@ extern unsigned int __cdecl _clearfp (void);
  void *dst=(d); \
  I ll=(l);  /* len of valid data */ \
  /* if the operation is long, move 1 block to align the store pointer */ \
- if(ll>NPAR*SZI){ \
+ if(ll>32*SZI){ /* TUNE should depend on repetition? */\
   _mm256_storeu_si256((__m256i*)dst,_mm256_loadu_si256((__m256i*)src)); \
   I overwr=(I)dst&(NPAR*SZI-1); dst=(C*)dst+NPAR*SZI-overwr; src=(C*)src+NPAR*SZI-overwr; ll-=NPAR*SZI-overwr; JMCSETMASK(mskname,ll,bytelen) \
  }else{mskset}  /* if short op, set mask if not set outside loop */ \

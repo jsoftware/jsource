@@ -22,10 +22,10 @@ primop256(plusDD,1,NAN0;,zz=_mm256_add_pd(xx,yy),R NANTEST?EVNAN:EVOK;)
 primop256(minusDD,0,NAN0;,zz=_mm256_sub_pd(xx,yy),R NANTEST?EVNAN:EVOK;)
 primop256(minDD,1,,zz=_mm256_min_pd(xx,yy),R EVOK;)
 primop256(maxDD,1,,zz=_mm256_max_pd(xx,yy),R EVOK;)
-primop256(tymesDD,1,I msav=m; D *zsav=z;NAN0;,zz=_mm256_mul_pd(xx,yy),if(NANTEST){m=msav; z=zsav; DQ(n*m, if(_isnan(*z))*z=0.0; ++z;)} R EVOK;)
+primop256(tymesDD,1,I msav=m; D *zsav=z;NAN0;,zz=_mm256_mul_pd(xx,yy),if(NANTEST){m=msav; z=zsav; DQ(n*m, if(_isnan(*(D*)z))*(D*)z=0.0; z=(C*)z+SZD;)} R EVOK;)
 // div can fail from 0%0 (which we turn to 0) or inf%inf (which we fail)
 primop256(divDD,4,I msav=m; D *zsav=z; D *xsav=x; D *ysav=y; I nsav=n;NAN0;,zz=_mm256_div_pd(xx,yy),
-  if(NANTEST){m=msav; z=zsav; xsav=zsav==ysav?xsav:ysav; m*=n; n=(nsav^SGNIF(zsav==ysav,0))>=0?n:1; nsav=--n; DQ(m, if(_isnan(*z)){ASSERTWR(*xsav==0,EVNAN); *z=0.0;} ++z; --n; xsav-=REPSGN(n); n=n<0?nsav:n;)} R EVOK;)
+  if(NANTEST){m=msav; z=zsav; xsav=zsav==ysav?xsav:ysav; m*=n; n=(nsav^SGNIF(zsav==ysav,0))>=0?n:1; nsav=--n; DQ(m, if(_isnan(*(D*)z)){ASSERTWR(*xsav==0,EVNAN); *(D*)z=0.0;} z=(C*)z+SZD; --n; xsav-=REPSGN(n); n=n<0?nsav:n;)} R EVOK;)
 
 #else
 APFX( plusDD, D,D,D, PLUS,NAN0;,ASSERTWR(!NANTEST,EVNAN); R EVOK;)
@@ -87,28 +87,28 @@ primop256(maxBI,0x40,,
  zz=_mm256_blendv_pd(yy,xx,_mm256_castsi256_pd(_mm256_cmpgt_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)))); ,R EVOK;)
 primop256(maxIB,0x80,,
  zz=_mm256_blendv_pd(yy,xx,_mm256_castsi256_pd(_mm256_cmpgt_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)))); ,R EVOK;)
-primop256(tymesDI,16,D *zsav=z;NAN0;,zz=_mm256_mul_pd(xx,yy),if(NANTEST){z=zsav; DQ(n*m, if(_isnan(*z))*z=0.0; ++z;)} R EVOK;)
+primop256(tymesDI,16,D *zsav=z;NAN0;,zz=_mm256_mul_pd(xx,yy),if(NANTEST){z=zsav; DQ(n*m, if(_isnan(*(D*)z))*(D*)z=0.0; z=(C*)z+SZD;)} R EVOK;)
 primop256(tymesDB,0x480,,zz=_mm256_and_pd(yy,xx),R EVOK;)
 primop256(tymesIB,0x480,,zz=_mm256_and_pd(yy,xx),R EVOK;)  // scaf duplicated fn
-primop256(tymesID,8,D *zsav=z;NAN0;,zz=_mm256_mul_pd(xx,yy),if(NANTEST){z=zsav; DQ(n*m, if(_isnan(*z))*z=0.0; ++z;)} R EVOK;)
+primop256(tymesID,8,D *zsav=z;NAN0;,zz=_mm256_mul_pd(xx,yy),if(NANTEST){z=zsav; DQ(n*m, if(_isnan(*(D*)z))*(D*)z=0.0; z=(C*)z+SZD;)} R EVOK;)
 primop256(tymesBD,0x440,,zz=_mm256_and_pd(xx,yy),R EVOK;)
 primop256(tymesBI,0x440,,zz=_mm256_and_pd(xx,yy),R EVOK;)  // scaf duplicated fn
 primop256(divDI,0x14,I msav=m; D *zsav=z; D *xsav=x; D *ysav=y; I nsav=n;NAN0;,zz=_mm256_div_pd(xx,yy),
-  if(NANTEST){m=msav; z=zsav; xsav=zsav==ysav?xsav:ysav; m*=n; n=(nsav^SGNIF(zsav==ysav,0))>=0?n:1; nsav=--n; DQ(m, if(_isnan(*z)){ASSERTWR(*xsav==0,EVNAN); *z=0.0;} ++z; --n; xsav-=REPSGN(n); n=n<0?nsav:n;)} R EVOK;)
+  if(NANTEST){m=msav; z=zsav; xsav=zsav==ysav?xsav:ysav; m*=n; n=(nsav^SGNIF(zsav==ysav,0))>=0?n:1; nsav=--n; DQ(m, if(_isnan(*(D*)z)){ASSERTWR(*xsav==0,EVNAN); *(D*)z=0.0;} z=(C*)z+SZD; --n; xsav-=REPSGN(n); n=n<0?nsav:n;)} R EVOK;)
 primop256(divII,0x1c,I msav=m; D *zsav=z; D *xsav=x; D *ysav=y; I nsav=n;NAN0;,zz=_mm256_div_pd(xx,yy),
-  if(NANTEST){m=msav; z=zsav; xsav=zsav==ysav?xsav:ysav; m*=n; n=(nsav^SGNIF(zsav==ysav,0))>=0?n:1; nsav=--n; DQ(m, if(_isnan(*z)){ASSERTWR(*xsav==0,EVNAN); *z=0.0;} ++z; --n; xsav-=REPSGN(n); n=n<0?nsav:n;)} R EVOK;)
+  if(NANTEST){m=msav; z=zsav; xsav=zsav==ysav?xsav:ysav; m*=n; n=(nsav^SGNIF(zsav==ysav,0))>=0?n:1; nsav=--n; DQ(m, if(_isnan(*(D*)z)){ASSERTWR(*xsav==0,EVNAN); *(D*)z=0.0;} z=(C*)z+SZD; --n; xsav-=REPSGN(n); n=n<0?nsav:n;)} R EVOK;)
 primop256(divBB,0x324,I msav=m; D *zsav=z; C *bsav=(C*)x;  I nsav=n;NAN0;,zz=_mm256_div_pd(xx,yy),  // x B->D, y B->D, no unroll, 0s at end
-  if(NANTEST){m=msav; z=zsav; m*=n; n=nsav<0?n:1; nsav=--n; DQ(m, if(_isnan(*z)){ASSERTWR(*bsav==0,EVNAN); *z=0.0;} ++z; --n; bsav-=REPSGN(n); n=n<0?nsav:n;)} R EVOK;)
+  if(NANTEST){m=msav; z=zsav; m*=n; n=nsav<0?n:1; nsav=--n; DQ(m, if(_isnan(*(D*)z)){ASSERTWR(*bsav==0,EVNAN); *(D*)z=0.0;} z=(C*)z+SZD; --n; bsav-=REPSGN(n); n=n<0?nsav:n;)} R EVOK;)
 primop256(divID,0xc,I msav=m; D *zsav=z; D *xsav=x; D *ysav=y; I nsav=n;NAN0;,zz=_mm256_div_pd(xx,yy),
-  if(NANTEST){m=msav; z=zsav; xsav=zsav==ysav?xsav:ysav; m*=n; n=(nsav^SGNIF(zsav==ysav,0))>=0?n:1; nsav=--n; DQ(m, if(_isnan(*z)){ASSERTWR(*xsav==0,EVNAN); *z=0.0;} ++z; --n; xsav-=REPSGN(n); n=n<0?nsav:n;)} R EVOK;)
+  if(NANTEST){m=msav; z=zsav; xsav=zsav==ysav?xsav:ysav; m*=n; n=(nsav^SGNIF(zsav==ysav,0))>=0?n:1; nsav=--n; DQ(m, if(_isnan(*(D*)z)){ASSERTWR(*xsav==0,EVNAN); *(D*)z=0.0;} z=(C*)z+SZD; --n; xsav-=REPSGN(n); n=n<0?nsav:n;)} R EVOK;)
 primop256(divDB,0x224,I msav=m; D *zsav=z; C *bsav=(C*)y; I nsav=n;NAN0;,zz=_mm256_div_pd(xx,yy),
-  if(NANTEST){m=msav; z=zsav; m*=n; n=nsav>=0?n:1; nsav=--n; DQ(m, if(_isnan(*z)){ASSERTWR(*bsav==0,EVNAN); *z=0.0;} ++z; --n; bsav-=REPSGN(n); n=n<0?nsav:n;)} R EVOK;)
+  if(NANTEST){m=msav; z=zsav; m*=n; n=nsav>=0?n:1; nsav=--n; DQ(m, if(_isnan(*(D*)z)){ASSERTWR(*bsav==0,EVNAN); *(D*)z=0.0;} z=(C*)z+SZD; --n; bsav-=REPSGN(n); n=n<0?nsav:n;)} R EVOK;)
 primop256(divIB,0x22c,I msav=m; D *zsav=z; C *bsav=(C*)y; I nsav=n;NAN0;,zz=_mm256_div_pd(xx,yy),  // x I->D, y B->D, no unroll, 0s at end
-  if(NANTEST){m=msav; z=zsav; m*=n; n=nsav>=0?n:1; nsav=--n; DQ(m, if(_isnan(*z)){ASSERTWR(*bsav==0,EVNAN); *z=0.0;} ++z; --n; bsav-=REPSGN(n); n=n<0?nsav:n;)} R EVOK;)
+  if(NANTEST){m=msav; z=zsav; m*=n; n=nsav>=0?n:1; nsav=--n; DQ(m, if(_isnan(*(D*)z)){ASSERTWR(*bsav==0,EVNAN); *(D*)z=0.0;} z=(C*)z+SZD; --n; bsav-=REPSGN(n); n=n<0?nsav:n;)} R EVOK;)
 primop256(divBD,0x104,I msav=m; D *zsav=z; C *bsav=(C*)x; I nsav=n;NAN0;,zz=_mm256_div_pd(xx,yy),
-  if(NANTEST){m=msav; z=zsav; m*=n; n=nsav<0?n:1; nsav=--n; DQ(m, if(_isnan(*z)){ASSERTWR(*bsav==0,EVNAN); *z=0.0;} ++z; --n; bsav-=REPSGN(n); n=n<0?nsav:n;)} R EVOK;)
+  if(NANTEST){m=msav; z=zsav; m*=n; n=nsav<0?n:1; nsav=--n; DQ(m, if(_isnan(*(D*)z)){ASSERTWR(*bsav==0,EVNAN); *(D*)z=0.0;} z=(C*)z+SZD; --n; bsav-=REPSGN(n); n=n<0?nsav:n;)} R EVOK;)
 primop256(divBI,0x134,I msav=m; D *zsav=z; C *bsav=(C*)x; I nsav=n;NAN0;,zz=_mm256_div_pd(xx,yy),  // x B->D, y I->D, no unroll, 0s at end
-  if(NANTEST){m=msav; z=zsav; m*=n; n=nsav<0?n:1; nsav=--n; DQ(m, if(_isnan(*z)){ASSERTWR(*bsav==0,EVNAN); *z=0.0;} ++z; --n; bsav-=REPSGN(n); n=n<0?nsav:n;)} R EVOK;)
+  if(NANTEST){m=msav; z=zsav; m*=n; n=nsav<0?n:1; nsav=--n; DQ(m, if(_isnan(*(D*)z)){ASSERTWR(*bsav==0,EVNAN); *(D*)z=0.0;} z=(C*)z+SZD; --n; bsav-=REPSGN(n); n=n<0?nsav:n;)} R EVOK;)
 #else
 AIFX(minusDI, D,D,I, -) AIFX(minusID, D,I,D, -    ) APFX(  minID, D,I,D, MIN,,R EVOK;)   APFX(  minDI, D,D,I, MIN,,R EVOK;) APFX(  maxID, D,I,D, MAX,,R EVOK;)  APFX(  maxDI, D,D,I, MAX,,R EVOK;) 
 APFX(tymesID, D,I,D, TYMESID,,R EVOK;) APFX(tymesDI, D,D,I, TYMESDI,,R EVOK;) APFX(  divID, D,I,D, DIV,,R EVOK;) APFX(  divDI, D,D,I, DIVI,,R EVOK;) 

@@ -268,13 +268,17 @@ check_report''
 check_report=: 3 : 0
 r=. <;._2 fread report
 t=. 'failed: 0'
-'ddall failures' assert 3=+/;(<t)=(#t){.each r
+if. 3~:+/;(<t)=(#t){.each r do. echo 'RUN failures' end.
 
 t=. 'Done.'
-'runpacman failures' assert 3=+/;(<t)=(#t){.each r
+if. 3~:+/;(<t)=(#t){.each r do. echo 'pacman failures' end.
 
 t=. '0 failed'
-'runjd failures' assert 3=+/;(<t)=(#t){.each r
+if. 3~:+/;(<t)=(#t){.each r do.
+ echo 'jd failures'
+ t=. 'loadd'
+ echo >' ',each~.((<t)=(#t){.each r)#r
+end. 
 i.0 0
 )
 

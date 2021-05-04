@@ -125,6 +125,13 @@
 #define _CMP_NEQ_OQ _CMP_NEQ
 #endif
 
+#ifndef C_AVX2
+#define C_AVX2 0
+#endif
+#ifndef C_AVX
+#define C_AVX 0
+#endif
+
 #if defined(__aarch64__)||defined(_M_ARM64)
 #if EMU_AVX
 #undef EMU_AVX2

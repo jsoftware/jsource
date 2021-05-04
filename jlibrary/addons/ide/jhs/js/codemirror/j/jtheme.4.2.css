@@ -1,8 +1,0 @@
-/* expand/override codemirror.css defaults */
-
-.cm-s-default span.cm-local  {color: #00f;}
-.cm-s-default span.cm-global {color: #f00;}
-.cm-s-default span.cm-control{color: #708;}
-.cm-s-default span.cm-string {color: #a11;}
-.cm-s-default span.cm-comment{color: #090;}
-

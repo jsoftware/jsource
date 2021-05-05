@@ -419,7 +419,14 @@ VA va[]={
 
 A jtcvz(J jt,I cv,A w){I t;
  t=AT(w);
- if(cv&VRD&&!(t&FL) )R pcvt(FL,w);  // convert if possible
+ if(cv&VRD&&!(t&FL) ){
+  // conversion to D is needed only when we took the real/int/mag of a complex number and we want a FL result from that
+  // unfortunately it's hard to tell when that's what we did; rather than converting intolerantly (which would work but allocates
+  // a block always), we scan here to see if all the imaginary parts are 0; if so, then we convert
+  Z *wv=ZAV(w); DQ(AN(w), if((*wv).im!=0)R w; ++wv;)
+  // imaginaries all 0, can demote to float
+  R pcvt(FL,w);  // convert if possible
+ }
  if(cv&VRI&&!(t&INT))R icvt(w);  // convert to integer if possible
  R w;
 }    /* convert result */
@@ -1369,7 +1376,7 @@ VA2 jtvar(J jt,A self,I at,I wt){I t;
   retva2.f=0;  // error if not filled in
   switch((UC)FAV(self)->id){
   case CCIRCLE: if(jt->jerr==EWIMAG){retva2.f=(VF)cirZZ; retva2.cv=VZ+VZZ+VRD;} break;
-  case CEXP: if(jt->jerr==EWIMAG){retva2.f=(VF)powZZ; retva2.cv=VZ+VZZ+VRD;}
+  case CEXP: if(jt->jerr==EWIMAG){retva2.f=(VF)powZZ; retva2.cv=VZ+VZZ;}
              else if(jt->jerr==EWRAT){retva2.f=(VF)powQQ; retva2.cv=VQ+VQQ;}
              else if(jt->jerr==EWIRR){retva2.f=(VF)powDD; retva2.cv=VD+VDD;} break;
   case CBANG: if(jt->jerr==EWIRR){retva2.f=(VF)binDD; retva2.cv=VD+VDD;} break;

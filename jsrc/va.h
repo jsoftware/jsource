@@ -266,6 +266,7 @@ typedef I AHDRSFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);
 //                             0 times 0.40
 // times: not inplace 0.55, inplace aligned 0.34, inplace unaligned input 0.55, 1address 0.23.  Unaligned result 2.3
 // conclusion: unroll by 4 on 1address , by 2 on 2-3 address
+// This was done with poor choice of address modes; needs to be rerun
 
 // commute=bit0 = commutative, bit1 set if incomplete y must be filled with 0 (to avoid isub oflo), bit2 set if incomplete x must be filled with i (for fdiv NaN),
 // bit3 set for int-to-float on x, bit4 for int-to-float on y

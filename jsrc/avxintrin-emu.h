@@ -1127,8 +1127,9 @@ __EMU_M256_IMPL_M1_RET( __m256i, __m256, cvttps_epi32 );
 
 // avx2
 __EMU_M256_IMPL_M2( __m256i, add_epi8 );
-__EMU_M256_IMPL_M2( __m256i, cmpeq_epi8 );
+__EMU_M256_IMPL_M2( __m256i, cmpeq_epi32 );
 __EMU_M256_IMPL_M2( __m256i, cmpeq_epi64 );
+__EMU_M256_IMPL_M2( __m256i, cmpeq_epi8 );
 __EMU_M256_IMPL_M2( __m256i, mul_epu32 );
 __EMU_M256_IMPL_M2( __m256i, sub_epi8 );
 __EMU_M256_128_IMPL_M2( __m256i, and_si  );
@@ -1888,8 +1889,9 @@ static __emu_inline __emu__m256i __emu_mm256_sllv_epi64(__emu__m256i a, __emu__m
 #define _mm256_broadcastq_epi64 __emu_mm256_broadcastq_epi64
 #define _mm256_broadcastsi128_si256 __emu_mm256_broadcastsi128_si256
 
-#define _mm256_cmpeq_epi8 __emu_mm256_cmpeq_epi8
+#define _mm256_cmpeq_epi32 __emu_mm256_cmpeq_epi32
 #define _mm256_cmpeq_epi64 __emu_mm256_cmpeq_epi64
+#define _mm256_cmpeq_epi8 __emu_mm256_cmpeq_epi8
 
 #define _mm256_maskload_epi64 __emu_mm256_maskload_epi64
 #define _mm256_maskstore_epi64 __emu_mm256_maskstore_epi64

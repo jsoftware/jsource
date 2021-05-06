@@ -425,7 +425,7 @@ A jtcvz(J jt,I cv,A w){I t;
   // a block always), we scan here to see if all the imaginary parts are 0; if so, then we convert
   Z *wv=ZAV(w); DQ(AN(w), if((*wv).im!=0)R w; ++wv;)
   // imaginaries all 0, can demote to float
-  R pcvt(FL,w);  // convert if possible
+  R cvt(FL,w);  // convert - must be possible
  }
  if(cv&VRI&&!(t&INT))R icvt(w);  // convert to integer if possible
  R w;

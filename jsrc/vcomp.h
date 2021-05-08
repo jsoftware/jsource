@@ -64,6 +64,12 @@
 #define AGE(x,y)       ((x)>=(y))
 #define AGT(x,y)       ((x)> (y))
 
+// bytewise comparisons of characters.  Leaves a bit set if the condition is true 
+#define ACNE(x,y)      ((x)^(y))
+#define ACEQ(x,y)      (((~((x)^(y))|BOOLEANSIGN)-~BOOLEANSIGN)&~((x)^(y))&BOOLEANSIGN)  // low 7 bits 0, and high bit 0, after XOR
+#define ACEQB(x,y)     ((UI)ACEQ(x,y)>>(BB-1))  // same, as boolean in bit 0 of byte
+#define ACNEB(x,y)     ((UI)((((((x)^(y))&~BOOLEANSIGN)+~BOOLEANSIGN)|((x)^(y)))&BOOLEANSIGN)>>(BB-1))
+
 // intolerant versions of the same form
 #define EQ0(u,v)       ((u)==(v))
 #define EQXD0(u,v)     EQ0((D)u,   v)

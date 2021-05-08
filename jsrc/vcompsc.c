@@ -78,7 +78,7 @@
  }
 
 
-/* Now define byte-parallel (4 bytes at a time) versions of above  */
+/* Now define byte-parallel (word at a time) versions of above  */
 
 #define JNDBR(yy)      if(r&&(y=yy))DO(r, if(yv[r-1-i])R sc(n-1-i););
 
@@ -91,9 +91,9 @@
   an=AN(a); av=AV(a);                                                             \
   wn=AN(w); wv=AV(w); n=1; n=AR(a)?an:n; n=AR(w)?wn:n;                      \
   q=(n+(SZI-1))>>LGSZI;                                           \
-  if     (!AR(a)){ASSIGNX(av); DO(q, if(y=F(x,    *wv++))INDB3;);}  \
-  else if(!AR(w)){ASSIGNX(wv); DO(q, if(y=F(*av++,x    ))INDB3;);}  \
-  else           {             DO(q, if(y=F(*av++,*wv++))INDB3;);}  \
+  if     (!AR(a)){ASSIGNX(av); DO(q, if(y=F(x,    *wv))INDB3; ++wv;);}  \
+  else if(!AR(w)){ASSIGNX(wv); DO(q, if(y=F(*av,x    ))INDB3; ++av;);}  \
+  else           {             DO(q, if(y=F(*av,*wv))INDB3; ++av; ++wv;);}  \
   R sc(n);                                                                        \
  }
 
@@ -103,9 +103,9 @@
   wn=AN(w); wv=AV(w); n=1; n=AR(a)?an:n; n=AR(w)?wn:n;                      \
   if((q=(n-1)>>LGSZI)<0)R zeroionei(0); r=((n-1)&(SZI-1));  /* # first bytes to do minus 1 */                                                                           \
   I i=q;                                                                       \
-  if     (!AR(a)){ASSIGNX(av); wv+=q; y=(F(x,*wv))&(((I)0x100<<(r<<3))-1); while(1){if(y)JNDB3; if(--i<0)break; y=F(x,*--wv);} }  \
-  else if(!AR(w)){ASSIGNX(wv); av+=q; y=(F(*av,x))&(((I)0x100<<(r<<3))-1); while(1){if(y)JNDB3; if(--i<0)break; y=F(*--av,x);} }  \
-  else           {av+=q;       wv+=q; y=(F(*av,*wv))&(((I)0x100<<(r<<3))-1); while(1){if(y)JNDB3; if(--i<0)break; y=F(*--av,*--wv);} }  \
+  if     (!AR(a)){ASSIGNX(av); wv+=q; y=(F(x,*wv))&(((I)0x100<<(r<<3))-1); while(1){if(y)JNDB3; if(--i<0)break; --wv; y=F(x,*wv);} }  \
+  else if(!AR(w)){ASSIGNX(wv); av+=q; y=(F(*av,x))&(((I)0x100<<(r<<3))-1); while(1){if(y)JNDB3; if(--i<0)break; --av; y=F(*av,x);} }  \
+  else           {av+=q;       wv+=q; y=(F(*av,*wv))&(((I)0x100<<(r<<3))-1); while(1){if(y)JNDB3; if(--i<0)break; --av; --wv; y=F(*av,*wv);} }  \
   R sc(n);                                                                                    \
  }
 
@@ -116,15 +116,15 @@
   p=n>>LGSZI; r1=n&(SZI-1);                                       \
   if     (!AR(a)){                                                           \
    ASSIGNX(av);                                                              \
-   NOUNROLL while((p-=255)>0){t=0; DQ(255, t+=F(x,    *wv++);); ADDBYTESINI(t); z+=t;}              \
-         t=0; DQ(p+255,   t+=F(x,    *wv++);); ADDBYTESINI(t); z+=t; x=F(x,  *wv);  \
+   NOUNROLL while((p-=255)>0){t=0; DQ(255, t+=F(x,    *wv); ++wv;); ADDBYTESINI(t); z+=t;}              \
+         t=0; DQ(p+255,   t+=F(x,    *wv); ++wv;); ADDBYTESINI(t); z+=t; x=F(x,  *wv);  \
   }else if(!AR(w)){                                                          \
    ASSIGNX(wv);                                                              \
-   NOUNROLL while((p-=255)>0){t=0; DQ(255, t+=F(*av++,x    );); ADDBYTESINI(t); z+=t;}              \
-         t=0; DQ(p+255,   t+=F(*av++,x    );); ADDBYTESINI(t); z+=t; x=F(*av,x  );  \
+   NOUNROLL while((p-=255)>0){t=0; DQ(255, t+=F(*av,x    ); ++av;); ADDBYTESINI(t); z+=t;}              \
+         t=0; DQ(p+255,   t+=F(*av,x    ); ++av;); ADDBYTESINI(t); z+=t; x=F(*av,x  );  \
   }else{                                                                     \
-   NOUNROLL while((p-=255)>0){t=0; DQ(255, t+=F(*av++,*wv++);); ADDBYTESINI(t); z+=t;}              \
-         t=0; DQ(p+255,   t+=F(*av++,*wv++);); ADDBYTESINI(t); z+=t; x=F(*av,*wv);  \
+   NOUNROLL while((p-=255)>0){t=0; DQ(255, t+=F(*av,*wv); ++av; ++wv;); ADDBYTESINI(t); z+=t;}              \
+         t=0; DQ(p+255,   t+=F(*av,*wv); ++av; ++wv;); ADDBYTESINI(t); z+=t; x=F(*av,*wv);  \
   }                                                                          \
   x &= ((I)1<<(r1<<LGBB))-1; ADDBYTESINI(x); z+=x;    /* C_LE */                                                       \
   R sc(z);                                                                   \
@@ -133,6 +133,7 @@
 INDB( i0eqBB,B,B,NE   )  INDF( i0eqBI,B,I,ANE  )  INDF0( i0eqBD,B,D,TNEXD,NEXD0)  /* =  */
 INDF( i0eqIB,I,B,ANE  )  INDF( i0eqII,I,I,ANE  )  INDF0( i0eqID,I,D,TNEXD,NEXD0)
 INDF0( i0eqDB,D,B,TNEDX,NEDX0)  INDF0( i0eqDI,D,I,TNEDX,NEDX0)  INDF0( i0eqDD,D,D,TNE,NE0  )
+
 JNDB( j0eqBB,B,B,NE   )  JNDF( j0eqBI,B,I,ANE  )  JNDF0( j0eqBD,B,D,TNEXD,NEXD0)
 JNDF( j0eqIB,I,B,ANE  )  JNDF( j0eqII,I,I,ANE  )  JNDF0( j0eqID,I,D,TNEXD,NEXD0)
 JNDF0( j0eqDB,D,B,TNEDX,NEDX0)  JNDF0( j0eqDI,D,I,TNEDX,NEDX0)  JNDF0( j0eqDD,D,D,TNE,NE0  )
@@ -223,9 +224,12 @@ static AF atcompxy[]={  /* table for (B01,INT,FL) vs. (B01,INT,FL) */
  sumgtBB,sumgtBI,sumgtBD,  sumgtIB,sumgtII,sumgtID,  sumgtDB,sumgtDI,sumgtDD,
 };
 
-INDF( i0eqC,C,C,ANE)  INDF( i0neC,C,C,AEQ)
-JNDF( j0eqC,C,C,ANE)  JNDF( j0neC,C,C,AEQ)
-SUMF(sumeqC,C,C,AEQ)  SUMF(sumneC,C,C,ANE)
+INDB( i0eqC,C,C,ACNE)  INDB( i0neC,C,C,ACEQ)
+JNDB( j0eqC,C,C,ACNE)  JNDB( j0neC,C,C,ACEQ)
+SUMB(sumeqC,C,C,ACEQB)  SUMB(sumneC,C,C,ACNEB)
+// obsolete INDF( i0eqC,C,C,ANE)  INDF( i0neC,C,C,AEQ)
+// obsolete JNDF( j0eqC,C,C,ANE)  JNDF( j0neC,C,C,AEQ)
+// obsolete SUMF(sumeqC,C,C,AEQ)  SUMF(sumneC,C,C,ANE)
 
 static AF atcompC[]={   /* table for LIT vs. LIT */
   i0eqC,  i0neC, 0L,0L,0L,0L,

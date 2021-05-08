@@ -629,6 +629,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define VALIDBOOLEAN 0x01010101   // valid bits in a Boolean
 #endif
 #define ADDBYTESINI(t) (ADDBYTESINI1(t) , ADDBYTESINIn(t)) // sig in 01ff01ff, then xxxx03ff, then 000003ff
+#define BOOLEANSIGN (VALIDBOOLEAN<<(BB-1))
 
 // macros for bit testing
 #define SGNIF(v,bitno) ((I)(v)<<(BW-1-(bitno)))  // Sets sign bit if the numbered bit is set

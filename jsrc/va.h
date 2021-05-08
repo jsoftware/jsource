@@ -268,14 +268,32 @@ typedef I AHDRSFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);
 // conclusion: unroll by 4 on 1address , by 2 on 2-3 address
 // This was done with poor choice of address modes; needs to be rerun
 
-// commute=bit0 = commutative, bit1 set if incomplete y must be filled with 0 (to avoid isub oflo), bit2 set if incomplete x must be filled with i (for fdiv NaN),
+// fz=bit0 = commutative, bit1 set if incomplete y must be filled with 0 (to avoid isub oflo), bit2 set if incomplete x must be filled with i (for fdiv NaN),
 // bit3 set for int-to-float on x, bit4 for int-to-float on y
 // bit5 set to suppress loop-unrolling
 // bit6 set for bool-to-int on x, bit7 for bool-to-int on y
 // bit8 set for bool-to-float on x, bit9 for bool-to-float on y
 // bit10 this is a boolean multiply function: skip if repeated op true
 // bit11 this is a boolean addition function: skip if repeated op false
-#define primop256(name,commute,pref,zzop,suff) \
+// bit12 this is a comparison combination
+// 
+
+// do one computation. xy bit 0 means fetch/incr y, bit 1 means fetch/incr x.  lineno is the offset to the row being worked on
+#define PRMDO(zzop,xy,fz,lineno)  if(xy&2)LDBID(xx,OFFSETBID(x,lineno*NPAR,fz,0x8,0x40,0x100),fz,0x8,0x40,0x100) if(xy&1)LDBID(yy,OFFSETBID(y,lineno*NPAR,fz,0x10,0x80,0x200),fz,0x10,0x80,0x200)  \
+     if(xy&2)CVTBID(xx,xx,fz,0x8,0x40,0x100) if(xy&1)CVTBID(yy,yy,fz,0x10,0x80,0x200)  \
+     zzop; _mm256_storeu_pd(OFFSETBID(z,lineno*NPAR,0,0,0,0), zz);
+
+#define PRMALIGN(zzop,xy,fz,len)  I alignreq=(-(I)z>>LGSZI)&(NPAR-1); \
+  if((-alignreq&(8*NPAR-len))<0){ \
+   endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-alignreq));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
+   if(xy&2)LDBID(xx,x,fz,0x8,0x40,0x100) if(xy&1)LDBID(yy,y,fz,0x10,0x80,0x200)  \
+   if(xy&2)CVTBID(xx,xx,fz,0x8,0x40,0x100) if(xy&1)CVTBID(yy,yy,fz,0x10,0x80,0x200)  \
+   zzop; _mm256_maskstore_pd(z, endmask, zz); if(xy&2)INCRBID(x,alignreq,fz,0x8,0x40,0x100) if(xy&1)INCRBID(y,alignreq,fz,0x10,0x80,0x200) INCRBID(z,alignreq,fz,0,0,0)  \
+   len-=alignreq;  /* leave remlen>0 */ \
+  } \
+  endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-len)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */
+
+#define primop256(name,fz,pref,zzop,suff) \
 I name(I n,I m,void* RESTRICTI x,void* RESTRICTI y,void* RESTRICTI z,J jt){ \
  __m256d xx,yy,zz; \
  __m256i endmask; /* length mask for the last word */ \
@@ -285,198 +303,109 @@ I name(I n,I m,void* RESTRICTI x,void* RESTRICTI y,void* RESTRICTI z,J jt){ \
  if(n-1==0){ \
   /* vector-to-vector, no repetitions */ \
   /* align dest to NPAR boundary, if needed and len makes it worthwhile */ \
-  I alignreq=(-(I)z>>LGSZI)&(NPAR-1); \
-  if((-alignreq&(NPAR-m))<0){ \
-   endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-alignreq));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
-   LDBID(xx,x,commute,0x8,0x40,0x100) LDBID(yy,y,commute,0x10,0x80,0x200)  \
-   CVTBID(xx,xx,commute,0x8,0x40,0x100) CVTBID(yy,yy,commute,0x10,0x80,0x200)  \
-   zzop; _mm256_maskstore_pd(z, endmask, zz); INCRBID(x,alignreq,commute,0x8,0x40,0x100) INCRBID(y,alignreq,commute,0x10,0x80,0x200) INCRBID(z,alignreq,commute,0,0,0)  \
-   m-=alignreq;  /* leave remlen>0 */ \
-  } \
-  endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-m)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
-  if(!((commute)&(32+16+8))){ \
+  PRMALIGN(zzop,3,fz,m) \
+  if(!((fz)&(32+16+8))){ \
    UI n2=DUFFLPCT(m-1,3);  /* # turns through duff loop */ \
    if(n2>0){ \
     UI backoff=DUFFBACKOFF(m-1,3); \
-    INCRBID(x,(backoff+1)*NPAR,commute,0x8,0x40,0x100) INCRBID(y,(backoff+1)*NPAR,commute,0x10,0x80,0x200) INCRBID(z,(backoff+1)*NPAR,0,0,0,0); \
+    INCRBID(x,(backoff+1)*NPAR,fz,0x8,0x40,0x100) INCRBID(y,(backoff+1)*NPAR,fz,0x10,0x80,0x200) INCRBID(z,(backoff+1)*NPAR,0,0,0,0); \
     switch(backoff){ \
     name##lp01: \
-    case -1: \
-     LDBID(xx,x,commute,0x8,0x40,0x100) LDBID(yy,y,commute,0x10,0x80,0x200)  \
-     CVTBID(xx,xx,commute,0x8,0x40,0x100) CVTBID(yy,yy,commute,0x10,0x80,0x200)  \
-     zzop; _mm256_storeu_pd(z, zz); \
-    case -2: \
-     LDBID(xx,OFFSETBID(x,1*NPAR,commute,0x8,0x40,0x100),commute,0x8,0x40,0x100) LDBID(yy,OFFSETBID(y,1*NPAR,commute,0x10,0x80,0x200),commute,0x10,0x80,0x200)  \
-     CVTBID(xx,xx,commute,0x8,0x40,0x100) CVTBID(yy,yy,commute,0x10,0x80,0x200)  \
-     zzop; _mm256_storeu_pd(OFFSETBID(z,1*NPAR,0,0,0,0), zz);  \
-    case -3: \
-     LDBID(xx,OFFSETBID(x,2*NPAR,commute,0x8,0x40,0x100),commute,0x8,0x40,0x100) LDBID(yy,OFFSETBID(y,2*NPAR,commute,0x10,0x80,0x200),commute,0x10,0x80,0x200)  \
-     CVTBID(xx,xx,commute,0x8,0x40,0x100) CVTBID(yy,yy,commute,0x10,0x80,0x200)  \
-     zzop; _mm256_storeu_pd(OFFSETBID(z,2*NPAR,0,0,0,0), zz);  \
-    case -4: \
-     LDBID(xx,OFFSETBID(x,3*NPAR,commute,0x8,0x40,0x100),commute,0x8,0x40,0x100) LDBID(yy,OFFSETBID(y,3*NPAR,commute,0x10,0x80,0x200),commute,0x10,0x80,0x200)  \
-     CVTBID(xx,xx,commute,0x8,0x40,0x100) CVTBID(yy,yy,commute,0x10,0x80,0x200)  \
-     zzop; _mm256_storeu_pd(OFFSETBID(z,3*NPAR,0,0,0,0), zz); \
-    case -5: \
-     LDBID(xx,OFFSETBID(x,4*NPAR,commute,0x8,0x40,0x100),commute,0x8,0x40,0x100) LDBID(yy,OFFSETBID(y,4*NPAR,commute,0x10,0x80,0x200),commute,0x10,0x80,0x200)  \
-     CVTBID(xx,xx,commute,0x8,0x40,0x100) CVTBID(yy,yy,commute,0x10,0x80,0x200)  \
-     zzop; _mm256_storeu_pd(OFFSETBID(z,4*NPAR,0,0,0,0), zz);  \
-    case -6: \
-     LDBID(xx,OFFSETBID(x,5*NPAR,commute,0x8,0x40,0x100),commute,0x8,0x40,0x100) LDBID(yy,OFFSETBID(y,5*NPAR,commute,0x10,0x80,0x200),commute,0x10,0x80,0x200)  \
-     CVTBID(xx,xx,commute,0x8,0x40,0x100) CVTBID(yy,yy,commute,0x10,0x80,0x200)  \
-     zzop; _mm256_storeu_pd(OFFSETBID(z,5*NPAR,0,0,0,0), zz);  \
-    case -7: \
-     LDBID(xx,OFFSETBID(x,6*NPAR,commute,0x8,0x40,0x100),commute,0x8,0x40,0x100) LDBID(yy,OFFSETBID(y,6*NPAR,commute,0x10,0x80,0x200),commute,0x10,0x80,0x200)  \
-     CVTBID(xx,xx,commute,0x8,0x40,0x100) CVTBID(yy,yy,commute,0x10,0x80,0x200)  \
-     zzop; _mm256_storeu_pd(OFFSETBID(z,6*NPAR,0,0,0,0), zz);  \
-    case -8: \
-     LDBID(xx,OFFSETBID(x,7*NPAR,commute,0x8,0x40,0x100),commute,0x8,0x40,0x100) LDBID(yy,OFFSETBID(y,7*NPAR,commute,0x10,0x80,0x200),commute,0x10,0x80,0x200)  \
-     CVTBID(xx,xx,commute,0x8,0x40,0x100) CVTBID(yy,yy,commute,0x10,0x80,0x200)  \
-     zzop; _mm256_storeu_pd(OFFSETBID(z,7*NPAR,0,0,0,0), zz); \
-    INCRBID(x,8*NPAR,commute,0x8,0x40,0x100) INCRBID(y,8*NPAR,commute,0x10,0x80,0x200) INCRBID(z,8*NPAR,0,0,0,0) \
+    case -1: PRMDO(zzop,3,fz,0) case -2: PRMDO(zzop,3,fz,1) case -3: PRMDO(zzop,3,fz,2) case -4: PRMDO(zzop,3,fz,3) case -5: PRMDO(zzop,3,fz,4) case -6: PRMDO(zzop,3,fz,5) case -7: PRMDO(zzop,3,fz,6) case -8: PRMDO(zzop,3,fz,7) \
+    INCRBID(x,8*NPAR,fz,0x8,0x40,0x100) INCRBID(y,8*NPAR,fz,0x10,0x80,0x200) INCRBID(z,8*NPAR,0,0,0,0) \
     if(--n2!=0)goto name##lp01; \
     } \
    } \
   }else{ \
    DQNOUNROLL((m-1)>>LGNPAR, \
-     LDBID(xx,x,commute,0x8,0x40,0x100) LDBID(yy,y,commute,0x10,0x80,0x200)  \
-     CVTBID(xx,xx,commute,0x8,0x40,0x100) CVTBID(yy,yy,commute,0x10,0x80,0x200)  \
-     zzop; _mm256_storeu_pd(z, zz); INCRBID(x,NPAR,commute,0x8,0x40,0x100) INCRBID(y,NPAR,commute,0x10,0x80,0x200) INCRBID(z,NPAR,commute,0,0,0)  \
+     PRMDO(zzop,3,fz,0) INCRBID(x,NPAR,fz,0x8,0x40,0x100) INCRBID(y,NPAR,fz,0x10,0x80,0x200) INCRBID(z,NPAR,fz,0,0,0)  \
    ) \
   } \
   /* runout, using mask */ \
-  LDBIDM(xx,x,commute,0x8,0x40,0x100,endmask) LDBIDM(yy,y,commute,0x10,0x80,0x200,endmask)  \
-  CVTBID(xx,xx,commute,0x8,0x40,0x100) CVTBID(yy,yy,commute,0x10,0x80,0x200)  \
-  if((commute)&2)yy=_mm256_blendv_pd(_mm256_castsi256_pd(endmask),yy,_mm256_castsi256_pd(endmask)); \
-  if((commute)&4)xx=_mm256_blendv_pd(_mm256_broadcast_sd(&zone.real),xx,_mm256_castsi256_pd(endmask)); \
+  LDBIDM(xx,x,fz,0x8,0x40,0x100,endmask) LDBIDM(yy,y,fz,0x10,0x80,0x200,endmask)  \
+  CVTBID(xx,xx,fz,0x8,0x40,0x100) CVTBID(yy,yy,fz,0x10,0x80,0x200)  \
+  if((fz)&2)yy=_mm256_blendv_pd(_mm256_castsi256_pd(endmask),yy,_mm256_castsi256_pd(endmask)); \
+  if((fz)&4)xx=_mm256_blendv_pd(_mm256_broadcast_sd(&zone.real),xx,_mm256_castsi256_pd(endmask)); \
   zzop; _mm256_maskstore_pd(z, endmask, zz); \
  }else{ \
-  if(!((commute)&1)&&n-1<0){n=~n; \
+  if(!((fz)&1)&&n-1<0){n=~n; \
    /* atom+vector */ \
    DQNOUNROLL(m, \
-    if(unlikely((commute)&0x140 && (((commute)&0x400 && z==y && *(C*)x!=0) || ((commute)&0x800 && z==y && *(C*)x==0)))){ \
-     INCRBID(x,1,commute,0x8,0x40,0x100) INCRBID(y,n,commute,0x10,0x80,0x200) INCRBID(z,n,commute,0,0,0) \
-    }else{      LDBID1(xx,x,commute,0x8,0x40,0x100) CVTBID1(xx,xx,commute,0x8,0x40,0x100) INCRBID(x,1,commute,0x8,0x40,0x100) \
+    if(unlikely((fz)&0x140 && (((fz)&0x400 && z==y && *(C*)x!=0) || ((fz)&0x800 && z==y && *(C*)x==0)))){ \
+     INCRBID(x,1,fz,0x8,0x40,0x100) INCRBID(y,n,fz,0x10,0x80,0x200) INCRBID(z,n,fz,0,0,0) \
+    }else{      LDBID1(xx,x,fz,0x8,0x40,0x100) CVTBID1(xx,xx,fz,0x8,0x40,0x100) INCRBID(x,1,fz,0x8,0x40,0x100) \
      I n0=n; \
      I alignreq=(-(I)z>>LGSZI)&(NPAR-1); \
-     if((-alignreq&(NPAR-n0))<0){ \
+     if((-alignreq&(8*NPAR-n0))<0){ \
       endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-alignreq));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
-      LDBID(yy,y,commute,0x10,0x80,0x200) CVTBID(yy,yy,commute,0x10,0x80,0x200)  \
-      zzop; _mm256_maskstore_pd(z, endmask, zz); INCRBID(y,alignreq,commute,0x10,0x80,0x200) INCRBID(z,alignreq,commute,0,0,0)  \
+      LDBID(yy,y,fz,0x10,0x80,0x200) CVTBID(yy,yy,fz,0x10,0x80,0x200)  \
+      zzop; _mm256_maskstore_pd(z, endmask, zz); INCRBID(y,alignreq,fz,0x10,0x80,0x200) INCRBID(z,alignreq,fz,0,0,0)  \
       n0-=alignreq;  /* leave remlen>0 */ \
      } \
      endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n0)&(NPAR-1)))); \
-     if(!((commute)&(32+16))){ \
+     if(!((fz)&(32+16))){ \
       UI n2=DUFFLPCT(n0-1,3);  /* # turns through duff loop */ \
       if(n2>0){ \
        UI backoff=DUFFBACKOFF(n0-1,3); \
-       INCRBID(y,(backoff+1)*NPAR,commute,0x10,0x80,0x200) INCRBID(z,(backoff+1)*NPAR,0,0,0,0) \
+       INCRBID(y,(backoff+1)*NPAR,fz,0x10,0x80,0x200) INCRBID(z,(backoff+1)*NPAR,0,0,0,0) \
        switch(backoff){ \
        name##lp02: \
-       case -1: \
-        LDBID(yy,y,commute,0x10,0x80,0x200) CVTBID(yy,yy,commute,0x10,0x80,0x200)  \
-        zzop; _mm256_storeu_pd(z, zz); \
-       case -2: \
-        LDBID(yy,OFFSETBID(y,1*NPAR,commute,0x10,0x80,0x200),commute,0x10,0x80,0x200) CVTBID(yy,yy,commute,0x10,0x80,0x200)  \
-        zzop; _mm256_storeu_pd(OFFSETBID(z,1*NPAR,0,0,0,0), zz);  \
-       case -3: \
-        LDBID(yy,OFFSETBID(y,2*NPAR,commute,0x10,0x80,0x200),commute,0x10,0x80,0x200) CVTBID(yy,yy,commute,0x10,0x80,0x200)  \
-        zzop; _mm256_storeu_pd(OFFSETBID(z,2*NPAR,0,0,0,0), zz);  \
-       case -4: \
-        LDBID(yy,OFFSETBID(y,3*NPAR,commute,0x10,0x80,0x200),commute,0x10,0x80,0x200) CVTBID(yy,yy,commute,0x10,0x80,0x200)  \
-        zzop; _mm256_storeu_pd(OFFSETBID(z,3*NPAR,0,0,0,0), zz); \
-       case -5: \
-        LDBID(yy,OFFSETBID(y,4*NPAR,commute,0x10,0x80,0x200),commute,0x10,0x80,0x200) CVTBID(yy,yy,commute,0x10,0x80,0x200)  \
-        zzop; _mm256_storeu_pd(OFFSETBID(z,4*NPAR,0,0,0,0), zz);  \
-       case -6: \
-        LDBID(yy,OFFSETBID(y,5*NPAR,commute,0x10,0x80,0x200),commute,0x10,0x80,0x200) CVTBID(yy,yy,commute,0x10,0x80,0x200)  \
-        zzop; _mm256_storeu_pd(OFFSETBID(z,5*NPAR,0,0,0,0), zz);  \
-       case -7: \
-        LDBID(yy,OFFSETBID(y,6*NPAR,commute,0x10,0x80,0x200),commute,0x10,0x80,0x200) CVTBID(yy,yy,commute,0x10,0x80,0x200)  \
-        zzop; _mm256_storeu_pd(OFFSETBID(z,6*NPAR,0,0,0,0), zz);  \
-       case -8: \
-        LDBID(yy,OFFSETBID(y,7*NPAR,commute,0x10,0x80,0x200),commute,0x10,0x80,0x200) CVTBID(yy,yy,commute,0x10,0x80,0x200)  \
-        zzop; _mm256_storeu_pd(OFFSETBID(z,7*NPAR,0,0,0,0), zz); \
-       INCRBID(y,8*NPAR,commute,0x10,0x80,0x200) INCRBID(z,8*NPAR,0,0,0,0); \
+       case -1: PRMDO(zzop,1,fz,0) case -2: PRMDO(zzop,1,fz,1) case -3: PRMDO(zzop,1,fz,2) case -4: PRMDO(zzop,1,fz,3) case -5: PRMDO(zzop,1,fz,4) case -6: PRMDO(zzop,1,fz,5) case -7: PRMDO(zzop,1,fz,6) case -8: PRMDO(zzop,1,fz,7) \
+       INCRBID(y,8*NPAR,fz,0x10,0x80,0x200) INCRBID(z,8*NPAR,0,0,0,0); \
        if(--n2!=0)goto name##lp02; \
        } \
       } \
      }else{ \
       DQNOUNROLL((n0-1)>>LGNPAR, \
-       LDBID(yy,y,commute,0x10,0x80,0x200) CVTBID(yy,yy,commute,0x10,0x80,0x200)  \
-       zzop; _mm256_storeu_pd(z, zz); INCRBID(y,NPAR,commute,0x10,0x80,0x200) INCRBID(z,NPAR,commute,0,0,0)  \
+       PRMDO(zzop,1,fz,0) INCRBID(y,NPAR,fz,0x10,0x80,0x200) INCRBID(z,NPAR,fz,0,0,0)  \
       ) \
      } \
-     LDBIDM(yy,y,commute,0x10,0x80,0x200,endmask) CVTBID(yy,yy,commute,0x10,0x80,0x200)  \
-     if((commute)&2)yy=_mm256_blendv_pd(_mm256_castsi256_pd(endmask),yy,_mm256_castsi256_pd(endmask)); \
-     if((commute)&4)xx=_mm256_blendv_pd(_mm256_broadcast_sd(&zone.real),xx,_mm256_castsi256_pd(endmask)); \
+     LDBIDM(yy,y,fz,0x10,0x80,0x200,endmask) CVTBID(yy,yy,fz,0x10,0x80,0x200)  \
+     if((fz)&2)yy=_mm256_blendv_pd(_mm256_castsi256_pd(endmask),yy,_mm256_castsi256_pd(endmask)); \
+     if((fz)&4)xx=_mm256_blendv_pd(_mm256_broadcast_sd(&zone.real),xx,_mm256_castsi256_pd(endmask)); \
      zzop; _mm256_maskstore_pd(z, endmask, zz); \
-     INCRBID(y,((n0-1)&(NPAR-1))+1,commute,0x10,0x80,0x200) INCRBID(z,((n0-1)&(NPAR-1))+1,commute,0,0,0)  \
+     INCRBID(y,((n0-1)&(NPAR-1))+1,fz,0x10,0x80,0x200) INCRBID(z,((n0-1)&(NPAR-1))+1,fz,0,0,0)  \
     } \
    ) \
   }else{ \
    /* vector+atom */ \
-   if((commute)&1){I taddr=(I)x^(I)y; x=n<0?y:x; y=(D*)((I)x^taddr); n^=REPSGN(n);} \
+   if((fz)&1){I taddr=(I)x^(I)y; x=n<0?y:x; y=(D*)((I)x^taddr); n^=REPSGN(n);} \
    DQNOUNROLL(m, \
-    if(unlikely((commute)&0x280 && (((commute)&0x400 && z==x && *(C*)y!=0) || ((commute)&0x800 && z==x && *(C*)y==0)))){ \
-     INCRBID(x,n,commute,0x8,0x40,0x100) INCRBID(y,1,commute,0x10,0x80,0x200) INCRBID(z,n,commute,0,0,0) \
+    if(unlikely((fz)&0x280 && (((fz)&0x400 && z==x && *(C*)y!=0) || ((fz)&0x800 && z==x && *(C*)y==0)))){ \
+     INCRBID(x,n,fz,0x8,0x40,0x100) INCRBID(y,1,fz,0x10,0x80,0x200) INCRBID(z,n,fz,0,0,0) \
     }else { \
-     LDBID1(yy,y,commute,0x10,0x80,0x200) CVTBID1(yy,yy,commute,0x10,0x80,0x200) INCRBID(y,1,commute,0x10,0x80,0x200) \
+     LDBID1(yy,y,fz,0x10,0x80,0x200) CVTBID1(yy,yy,fz,0x10,0x80,0x200) INCRBID(y,1,fz,0x10,0x80,0x200) \
      I n0=n; \
      I alignreq=(-(I)z>>LGSZI)&(NPAR-1); \
-     if((-alignreq&(NPAR-n0))<0){ \
+     if((-alignreq&(8*NPAR-n0))<0){ \
       endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-alignreq));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
-      LDBID(xx,x,commute,0x8,0x40,0x100) CVTBID(xx,xx,commute,0x8,0x40,0x100)  \
-      zzop; _mm256_maskstore_pd(z, endmask, zz); INCRBID(x,alignreq,commute,0x8,0x40,0x100) INCRBID(z,alignreq,commute,0,0,0)  \
+      LDBID(xx,x,fz,0x8,0x40,0x100) CVTBID(xx,xx,fz,0x8,0x40,0x100)  \
+      zzop; _mm256_maskstore_pd(z, endmask, zz); INCRBID(x,alignreq,fz,0x8,0x40,0x100) INCRBID(z,alignreq,fz,0,0,0)  \
       n0-=alignreq;  /* leave remlen>0 */ \
      } \
      endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n0)&(NPAR-1)))); \
-     if(!((commute)&(32+8))){ \
+     if(!((fz)&(32+8))){ \
       UI n2=DUFFLPCT(n0-1,3);  /* # turns through duff loop */ \
       if(n2>0){ \
        UI backoff=DUFFBACKOFF(n0-1,3); \
-       INCRBID(x,(backoff+1)*NPAR,commute,0x8,0x40,0x100) INCRBID(z,(backoff+1)*NPAR,0,0,0,0); \
+       INCRBID(x,(backoff+1)*NPAR,fz,0x8,0x40,0x100) INCRBID(z,(backoff+1)*NPAR,0,0,0,0); \
        switch(backoff){ \
        name##lp03: \
-       case -1: \
-        LDBID(xx,x,commute,0x8,0x40,0x100) CVTBID(xx,xx,commute,0x8,0x40,0x100)  \
-        zzop; _mm256_storeu_pd(z, zz); \
-       case -2: \
-        LDBID(xx,OFFSETBID(x,1*NPAR,commute,0x8,0x40,0x100),commute,0x8,0x40,0x100) CVTBID(xx,xx,commute,0x8,0x40,0x100)  \
-        zzop; _mm256_storeu_pd(OFFSETBID(z,1*NPAR,0,0,0,0), zz);  \
-       case -3: \
-        LDBID(xx,OFFSETBID(x,2*NPAR,commute,0x8,0x40,0x100),commute,0x8,0x40,0x100) CVTBID(xx,xx,commute,0x8,0x40,0x100)  \
-        zzop; _mm256_storeu_pd(OFFSETBID(z,2*NPAR,0,0,0,0), zz);  \
-       case -4: \
-        LDBID(xx,OFFSETBID(x,3*NPAR,commute,0x8,0x40,0x100),commute,0x8,0x40,0x100) CVTBID(xx,xx,commute,0x8,0x40,0x100)  \
-        zzop; _mm256_storeu_pd(OFFSETBID(z,3*NPAR,0,0,0,0), zz); \
-       case -5: \
-        LDBID(xx,OFFSETBID(x,4*NPAR,commute,0x8,0x40,0x100),commute,0x8,0x40,0x100) CVTBID(xx,xx,commute,0x8,0x40,0x100)  \
-        zzop; _mm256_storeu_pd(OFFSETBID(z,4*NPAR,0,0,0,0), zz);  \
-       case -6: \
-        LDBID(xx,OFFSETBID(x,5*NPAR,commute,0x8,0x40,0x100),commute,0x8,0x40,0x100) CVTBID(xx,xx,commute,0x8,0x40,0x100)  \
-        zzop; _mm256_storeu_pd(OFFSETBID(z,5*NPAR,0,0,0,0), zz);  \
-       case -7: \
-        LDBID(xx,OFFSETBID(x,6*NPAR,commute,0x8,0x40,0x100),commute,0x8,0x40,0x100) CVTBID(xx,xx,commute,0x8,0x40,0x100)  \
-        zzop; _mm256_storeu_pd(OFFSETBID(z,6*NPAR,0,0,0,0), zz);  \
-       case -8: \
-        LDBID(xx,OFFSETBID(x,7*NPAR,commute,0x8,0x40,0x100),commute,0x8,0x40,0x100) CVTBID(xx,xx,commute,0x8,0x40,0x100)  \
-        zzop; _mm256_storeu_pd(OFFSETBID(z,7*NPAR,0,0,0,0), zz); \
-       INCRBID(x,8*NPAR,commute,0x8,0x40,0x100) INCRBID(z,8*NPAR,0,0,0,0); \
+       case -1: PRMDO(zzop,2,fz,0) case -2: PRMDO(zzop,2,fz,1) case -3: PRMDO(zzop,2,fz,2) case -4: PRMDO(zzop,2,fz,3) case -5: PRMDO(zzop,2,fz,4) case -6: PRMDO(zzop,2,fz,5) case -7: PRMDO(zzop,2,fz,6) case -8: PRMDO(zzop,2,fz,7) \
+       INCRBID(x,8*NPAR,fz,0x8,0x40,0x100) INCRBID(z,8*NPAR,0,0,0,0); \
        if(--n2!=0)goto name##lp03; \
        } \
       } \
      }else{ \
       DQNOUNROLL((n0-1)>>LGNPAR, \
-       LDBID(xx,x,commute,0x8,0x40,0x100) CVTBID(xx,xx,commute,0x8,0x40,0x100)  \
-       zzop; _mm256_storeu_pd(z, zz); INCRBID(x,NPAR,commute,0x8,0x40,0x100) INCRBID(z,NPAR,commute,0,0,0) \
+       PRMDO(zzop,2,fz,0) INCRBID(x,NPAR,fz,0x8,0x40,0x100) INCRBID(z,NPAR,fz,0,0,0) \
       ) \
      } \
-     LDBIDM(xx,x,commute,0x8,0x40,0x100,endmask) CVTBID(xx,xx,commute,0x8,0x40,0x100)  \
-     if((commute)&2)yy=_mm256_blendv_pd(_mm256_castsi256_pd(endmask),yy,_mm256_castsi256_pd(endmask)); \
-     if((commute)&4)xx=_mm256_blendv_pd(_mm256_broadcast_sd(&zone.real),xx,_mm256_castsi256_pd(endmask)); \
+     LDBIDM(xx,x,fz,0x8,0x40,0x100,endmask) CVTBID(xx,xx,fz,0x8,0x40,0x100)  \
+     if((fz)&2)yy=_mm256_blendv_pd(_mm256_castsi256_pd(endmask),yy,_mm256_castsi256_pd(endmask)); \
+     if((fz)&4)xx=_mm256_blendv_pd(_mm256_broadcast_sd(&zone.real),xx,_mm256_castsi256_pd(endmask)); \
      zzop; _mm256_maskstore_pd(z, endmask, zz); \
-     INCRBID(x,((n0-1)&(NPAR-1))+1,commute,0x8,0x40,0x100) INCRBID(z,((n0-1)&(NPAR-1))+1,commute,0,0,0) \
+     INCRBID(x,((n0-1)&(NPAR-1))+1,fz,0x8,0x40,0x100) INCRBID(z,((n0-1)&(NPAR-1))+1,fz,0,0,0) \
     } \
    ) \
   } \

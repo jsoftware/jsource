@@ -290,12 +290,38 @@ typedef I AHDRSFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);
    endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-alignreq));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
    if(xy&2)LDBID(xx,x,fz,0x8,0x40,0x100) if(xy&1)LDBID(yy,y,fz,0x10,0x80,0x200)  \
    if(xy&2)CVTBID(xx,xx,fz,0x8,0x40,0x100) if(xy&1)CVTBID(yy,yy,fz,0x10,0x80,0x200)  \
-   zzop; _mm256_maskstore_pd(z, endmask, zz); PRMINCR(xy,fz,alignreq) \
+   zzop; _mm256_maskstore_pd(z, endmask, zz); PRMINCR(xy,fz,alignreq)  /* need mask store in case inplace */ \
    len-=alignreq;  /* leave remlen>0 */ \
   } \
   endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-len)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */
 
 // obsolete  if(xy&2)INCRBID(x,alignreq,fz,0x8,0x40,0x100) if(xy&1)INCRBID(y,alignreq,fz,0x10,0x80,0x200) INCRBID(z,alignreq,fz,0,0,0)
+
+#define PRMDUFF(zzop,xy,fz,len,lpmsk) \
+     if(!((fz)&(lpmsk))){ \
+      UI n2=DUFFLPCT(len-1,3);  /* # turns through duff loop */ \
+      if(n2>0){ \
+       UI backoff=DUFFBACKOFF(len-1,3); \
+       PRMINCR(xy,fz,(backoff+1)*NPAR) \
+       switch(backoff){ \
+       name##lp0##xy: \
+       case -1: PRMDO(zzop,xy,fz,0) case -2: PRMDO(zzop,xy,fz,1) case -3: PRMDO(zzop,xy,fz,2) case -4: PRMDO(zzop,xy,fz,3) case -5: PRMDO(zzop,xy,fz,4) case -6: PRMDO(zzop,xy,fz,5) case -7: PRMDO(zzop,xy,fz,6) case -8: PRMDO(zzop,xy,fz,7) \
+       PRMINCR(xy,fz,8*NPAR) \
+       if(--n2!=0)goto name##lp0##xy; \
+       } \
+      } \
+     }else{ \
+      DQNOUNROLL((len-1)>>LGNPAR, \
+       PRMDO(zzop,xy,fz,0) PRMINCR(xy,fz,NPAR)  \
+      ) \
+     } \
+
+#define PRMMASK(zzop,xy,fz) if(xy&2)LDBIDM(xx,x,fz,0x8,0x40,0x100,endmask) if(xy&1)LDBIDM(yy,y,fz,0x10,0x80,0x200,endmask)  \
+  if(xy&2)CVTBID(xx,xx,fz,0x8,0x40,0x100) if(xy&1)CVTBID(yy,yy,fz,0x10,0x80,0x200)  \
+  if((fz)&2)yy=_mm256_blendv_pd(_mm256_castsi256_pd(endmask),yy,_mm256_castsi256_pd(endmask)); \
+  if((fz)&4)xx=_mm256_blendv_pd(_mm256_broadcast_sd(&zone.real),xx,_mm256_castsi256_pd(endmask)); \
+  zzop; _mm256_maskstore_pd(z, endmask, zz);
+
 
 #define primop256(name,fz,pref,zzop,suff) \
 I name(I n,I m,void* RESTRICTI x,void* RESTRICTI y,void* RESTRICTI z,J jt){ \
@@ -308,59 +334,20 @@ I name(I n,I m,void* RESTRICTI x,void* RESTRICTI y,void* RESTRICTI z,J jt){ \
   /* vector-to-vector, no repetitions */ \
   /* align dest to NPAR boundary, if needed and len makes it worthwhile */ \
   PRMALIGN(zzop,3,fz,m) \
-  if(!((fz)&(32+16+8))){ \
-   UI n2=DUFFLPCT(m-1,3);  /* # turns through duff loop */ \
-   if(n2>0){ \
-    UI backoff=DUFFBACKOFF(m-1,3); \
-    PRMINCR(3,fz,(backoff+1)*NPAR) \
-    switch(backoff){ \
-    name##lp01: \
-    case -1: PRMDO(zzop,3,fz,0) case -2: PRMDO(zzop,3,fz,1) case -3: PRMDO(zzop,3,fz,2) case -4: PRMDO(zzop,3,fz,3) case -5: PRMDO(zzop,3,fz,4) case -6: PRMDO(zzop,3,fz,5) case -7: PRMDO(zzop,3,fz,6) case -8: PRMDO(zzop,3,fz,7) \
-    PRMINCR(3,fz,8*NPAR) \
-    if(--n2!=0)goto name##lp01; \
-    } \
-   } \
-  }else{ \
-   DQNOUNROLL((m-1)>>LGNPAR, \
-     PRMDO(zzop,3,fz,0) PRMINCR(3,fz,NPAR)  \
-   ) \
-  } \
-  /* runout, using mask */ \
-  LDBIDM(xx,x,fz,0x8,0x40,0x100,endmask) LDBIDM(yy,y,fz,0x10,0x80,0x200,endmask)  \
-  CVTBID(xx,xx,fz,0x8,0x40,0x100) CVTBID(yy,yy,fz,0x10,0x80,0x200)  \
-  if((fz)&2)yy=_mm256_blendv_pd(_mm256_castsi256_pd(endmask),yy,_mm256_castsi256_pd(endmask)); \
-  if((fz)&4)xx=_mm256_blendv_pd(_mm256_broadcast_sd(&zone.real),xx,_mm256_castsi256_pd(endmask)); \
-  zzop; _mm256_maskstore_pd(z, endmask, zz); \
+  PRMDUFF(zzop,3,fz,m,32+16+8) \
+  PRMMASK(zzop,3,fz) /* runout, using mask */ \
  }else{ \
   if(!((fz)&1)&&n-1<0){n=~n; \
    /* atom+vector */ \
    DQNOUNROLL(m, \
     if(unlikely((fz)&0x140 && (((fz)&0x400 && z==y && *(C*)x!=0) || ((fz)&0x800 && z==y && *(C*)x==0)))){ \
      INCRBID(x,1,fz,0x8,0x40,0x100) INCRBID(y,n,fz,0x10,0x80,0x200) INCRBID(z,n,fz,0,0,0) \
-    }else{      LDBID1(xx,x,fz,0x8,0x40,0x100) CVTBID1(xx,xx,fz,0x8,0x40,0x100) INCRBID(x,1,fz,0x8,0x40,0x100) \
+    }else{ \
+     LDBID1(xx,x,fz,0x8,0x40,0x100) CVTBID1(xx,xx,fz,0x8,0x40,0x100) INCRBID(x,1,fz,0x8,0x40,0x100) \
      I n0=n; \
      PRMALIGN(zzop,1,fz,n0) \
-     if(!((fz)&(32+16))){ \
-      UI n2=DUFFLPCT(n0-1,3);  /* # turns through duff loop */ \
-      if(n2>0){ \
-       UI backoff=DUFFBACKOFF(n0-1,3); \
-       PRMINCR(1,fz,(backoff+1)*NPAR) \
-       switch(backoff){ \
-       name##lp02: \
-       case -1: PRMDO(zzop,1,fz,0) case -2: PRMDO(zzop,1,fz,1) case -3: PRMDO(zzop,1,fz,2) case -4: PRMDO(zzop,1,fz,3) case -5: PRMDO(zzop,1,fz,4) case -6: PRMDO(zzop,1,fz,5) case -7: PRMDO(zzop,1,fz,6) case -8: PRMDO(zzop,1,fz,7) \
-       PRMINCR(1,fz,8*NPAR) \
-       if(--n2!=0)goto name##lp02; \
-       } \
-      } \
-     }else{ \
-      DQNOUNROLL((n0-1)>>LGNPAR, \
-       PRMDO(zzop,1,fz,0) PRMINCR(1,fz,NPAR)  \
-      ) \
-     } \
-     LDBIDM(yy,y,fz,0x10,0x80,0x200,endmask) CVTBID(yy,yy,fz,0x10,0x80,0x200)  \
-     if((fz)&2)yy=_mm256_blendv_pd(_mm256_castsi256_pd(endmask),yy,_mm256_castsi256_pd(endmask)); \
-     if((fz)&4)xx=_mm256_blendv_pd(_mm256_broadcast_sd(&zone.real),xx,_mm256_castsi256_pd(endmask)); \
-     zzop; _mm256_maskstore_pd(z, endmask, zz); \
+     PRMDUFF(zzop,1,fz,n0,32+16) \
+     PRMMASK(zzop,1,fz) /* runout, using mask */ \
      PRMINCR(1,fz,((n0-1)&(NPAR-1))+1)  \
     } \
    ) \
@@ -374,27 +361,8 @@ I name(I n,I m,void* RESTRICTI x,void* RESTRICTI y,void* RESTRICTI z,J jt){ \
      LDBID1(yy,y,fz,0x10,0x80,0x200) CVTBID1(yy,yy,fz,0x10,0x80,0x200) INCRBID(y,1,fz,0x10,0x80,0x200) \
      I n0=n; \
      PRMALIGN(zzop,2,fz,n0) \
-     if(!((fz)&(32+8))){ \
-      UI n2=DUFFLPCT(n0-1,3);  /* # turns through duff loop */ \
-      if(n2>0){ \
-       UI backoff=DUFFBACKOFF(n0-1,3); \
-       PRMINCR(2,fz,(backoff+1)*NPAR) \
-       switch(backoff){ \
-       name##lp03: \
-       case -1: PRMDO(zzop,2,fz,0) case -2: PRMDO(zzop,2,fz,1) case -3: PRMDO(zzop,2,fz,2) case -4: PRMDO(zzop,2,fz,3) case -5: PRMDO(zzop,2,fz,4) case -6: PRMDO(zzop,2,fz,5) case -7: PRMDO(zzop,2,fz,6) case -8: PRMDO(zzop,2,fz,7) \
-       PRMINCR(2,fz,8*NPAR) \
-       if(--n2!=0)goto name##lp03; \
-       } \
-      } \
-     }else{ \
-      DQNOUNROLL((n0-1)>>LGNPAR, \
-       PRMDO(zzop,2,fz,0) PRMINCR(2,fz,NPAR) \
-      ) \
-     } \
-     LDBIDM(xx,x,fz,0x8,0x40,0x100,endmask) CVTBID(xx,xx,fz,0x8,0x40,0x100)  \
-     if((fz)&2)yy=_mm256_blendv_pd(_mm256_castsi256_pd(endmask),yy,_mm256_castsi256_pd(endmask)); \
-     if((fz)&4)xx=_mm256_blendv_pd(_mm256_broadcast_sd(&zone.real),xx,_mm256_castsi256_pd(endmask)); \
-     zzop; _mm256_maskstore_pd(z, endmask, zz); \
+     PRMDUFF(zzop,2,fz,n0,32+8) \
+     PRMMASK(zzop,2,fz) /* runout, using mask */ \
      PRMINCR(2,fz,((n0-1)&(NPAR-1))+1)  \
     } \
    ) \

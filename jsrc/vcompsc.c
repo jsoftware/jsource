@@ -14,10 +14,94 @@
 //    [: I. comp          I.@:comp       no longer supported except for e.and E.
 /* where comp is one of the following (in order):                                     */
 /*    = ~: < <: >: > E. e.                                                 */
+// The routines do not have IRS.
 
 #include "j.h"
 #include "ve.h"
 #include "vcomp.h"
+
+// fz=bit0 = commutative, bit1 set if incomplete y must be filled with 0 (to avoid isub oflo), bit2 set if incomplete x must be filled with i (for fdiv NaN),
+// bit3 set for int-to-float on x, bit4 for int-to-float on y
+// bit5 set to suppress loop-unrolling
+// bit6 set for bool-to-int on x, bit7 for bool-to-int on y
+// bit8 set for bool-to-float on x, bit9 for bool-to-float on y
+// bit10 this is a boolean multiply function: skip if repeated op true
+// bit11 this is a boolean addition function: skip if repeated op false
+// 
+
+// do one computation. xy bit 0 means fetch/incr y, bit 1 means fetch/incr x.  lineno is the offset to the row being worked on
+#define CPRMDO(zzop,xy,fz,lineno,inv)  if((xy)&2)LDBID(xx,OFFSETBID(x,lineno*NPAR,fz,0x8,0x40,0x100),fz,0x8,0x40,0x100) if((xy)&1)LDBID(yy,OFFSETBID(y,lineno*NPAR,fz,0x10,0x80,0x200),fz,0x10,0x80,0x200)  \
+     if((xy)&2)CVTBID(xx,xx,fz,0x8,0x40,0x100) if((xy)&1)CVTBID(yy,yy,fz,0x10,0x80,0x200)  \
+     zzop; if((xy)&4){if((maskatend=_mm256_movemask_pd(zz))!=inv*15)goto outs0;} else if((maskatend=_mm256_movemask_pd(zz))!=inv*15)goto out##lineno;
+
+#define CPRMINCR(xy,fz,ct) if((xy)&2)INCRBID(x,ct,fz,0x8,0x40,0x100) if((xy)&1)INCRBID(y,ct,fz,0x10,0x80,0x200)
+
+#define CPRMALIGN(zzop,xy,fz,len)  \
+  endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-len)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */
+
+#define CPRMDUFF(zzop,xy,fz,len,lpmsk,inv) \
+     I origlen=len; \
+     if(!((fz)&(lpmsk))){ \
+      orign2=n2=DUFFLPCT(len-1,3);  /* # turns through duff loop */ \
+      if(n2>0){ \
+       backoff=DUFFBACKOFF(len-1,3); \
+       CPRMINCR(xy,fz,(backoff+1)*NPAR) \
+       switch(backoff){ \
+       lp0##xy: \
+       case -1: CPRMDO(zzop,xy,fz,0,inv) case -2: CPRMDO(zzop,xy,fz,1,inv) case -3: CPRMDO(zzop,xy,fz,2,inv) case -4: CPRMDO(zzop,xy,fz,3,inv) \
+       case -5: CPRMDO(zzop,xy,fz,4,inv) case -6: CPRMDO(zzop,xy,fz,5,inv) case -7: CPRMDO(zzop,xy,fz,6,inv) case -8: CPRMDO(zzop,xy,fz,7,inv) \
+       CPRMINCR(xy,fz,8*NPAR) \
+       if(--n2!=0)goto lp0##xy; \
+       } \
+       n2<<=3; orign2<<=3; orign2+=backoff+1; \
+      } \
+     }else{orign2=n2=(len-1)>>LGNPAR; \
+      if(n2!=0){NOUNROLL do{CPRMDO(zzop,4+(xy),fz,0,inv) CPRMINCR(xy,fz,NPAR)}while(--n2!=0);}  \
+     } \
+
+#define CPRMMASK(zzop,xy,fz,inv) if((xy)&2)LDBIDM(xx,x,fz,0x8,0x40,0x100,endmask) if((xy)&1)LDBIDM(yy,y,fz,0x10,0x80,0x200,endmask)  \
+  if((xy)&2)CVTBID(xx,xx,fz,0x8,0x40,0x100) if((xy)&1)CVTBID(yy,yy,fz,0x10,0x80,0x200)  \
+  zzop; maskatend=inv?_mm256_movemask_pd(_mm256_and_pd(_mm256_castsi256_pd(endmask),zz)):_mm256_movemask_pd(_mm256_or_pd(_mm256_xor_pd(ones,_mm256_castsi256_pd(endmask)),zz)); goto outs0;
+
+
+#define cprimop256(name,fz,pref,zzop,inv) \
+A name(J jt,A a,A w){ \
+ __m256d xx,yy,zz; void *x=voidAV(a),*y=voidAV(w); \
+ __m256i endmask; /* length mask for the last word */ \
+ __m256d ones=_mm256_setzero_pd(); ones=_mm256_castsi256_pd(_mm256_cmpeq_epi32(_mm256_castpd_si256(ones),_mm256_castpd_si256(ones))); \
+ I natend, maskatend; \
+ UI backoff; UI n2, orign2; \
+ _mm256_zeroupperx(VOIDARG) \
+   /* will be removed except for divide */ \
+ CVTEPI64DECLS pref \
+ I n0=AN(w); \
+ if(AR(a)&AR(w)){ \
+  /* vector-to-vector, no repetitions */ \
+  /* align dest to NPAR boundary, if needed and len makes it worthwhile */ \
+  CPRMALIGN(zzop,3,fz,n0) \
+  CPRMDUFF(zzop,3,fz,n0,32+16+8,inv) \
+  CPRMMASK(zzop,3,fz,inv) /* runout, using mask */ \
+ }else{ \
+  if(!((fz)&1)&&AR(a)==0){ \
+   /* atom+vector */ \
+   LDBID1(xx,x,fz,0x8,0x40,0x100) CVTBID1(xx,xx,fz,0x8,0x40,0x100) INCRBID(x,1,fz,0x8,0x40,0x100) \
+   CPRMALIGN(zzop,1,fz,n0) \
+   CPRMDUFF(zzop,1,fz,n0,32+16,inv) \
+   CPRMMASK(zzop,1,fz,inv) /* runout, using mask */ \
+  }else{ \
+   /* vector+atom */ \
+   if((fz)&1){I taddr=(I)x^(I)y; I tn=AN(a); x=AR(a)==0?y:x; n0=AR(a)==0?n0:tn; y=(D*)((I)x^taddr);}else n0=AN(a);  \
+   LDBID1(yy,y,fz,0x10,0x80,0x200) CVTBID1(yy,yy,fz,0x10,0x80,0x200) INCRBID(y,1,fz,0x10,0x80,0x200) \
+   CPRMALIGN(zzop,2,fz,n0) \
+   CPRMDUFF(zzop,2,fz,n0,32+8,inv) \
+   CPRMMASK(zzop,2,fz,inv) /* runout, using mask */ \
+  } \
+ } \
+ out0: natend=0; goto out;  out1: natend=1; goto out;  out2: natend=2; goto out;  out3: natend=3; goto out; \
+ out4: natend=4; goto out;  out5: natend=5; goto out;  out6: natend=6; goto out;  out7: natend=7; out: \
+ n2<<=3; orign2<<=3; orign2+=natend+backoff+1; \
+ outs0: n2=orign2-n2; n2<<=LGNPAR; n2+=CTTZI((maskatend^(inv*15))|16); R sc(n2); \
+}
 
 
 #define INDF(f,T0,T1,F)  \
@@ -130,9 +214,80 @@
   R sc(z);                                                                   \
  }
 
-INDB( i0eqBB,B,B,NE   )  INDF( i0eqBI,B,I,ANE  )  INDF0( i0eqBD,B,D,TNEXD,NEXD0)  /* =  */
-INDF( i0eqIB,I,B,ANE  )  INDF( i0eqII,I,I,ANE  )  INDF0( i0eqID,I,D,TNEXD,NEXD0)
-INDF0( i0eqDB,D,B,TNEDX,NEDX0)  INDF0( i0eqDI,D,I,TNEDX,NEDX0)  INDF0( i0eqDD,D,D,TNE,NE0  )
+#if 0
+primcmpD256(geDD, _mm256_or_pd(eq,_mm256_cmp_pd(xx,yy,_CMP_GT_OQ)) , _mm256_cmp_pd(xx,yy,_CMP_GE_OQ) , )
+primcmpD256(gtDD, _mm256_andnot_pd(eq,_mm256_cmp_pd(xx,yy,_CMP_GT_OQ)) , _mm256_cmp_pd(xx,yy,_CMP_GT_OQ) , )
+primcmpD256(leDD, _mm256_or_pd(eq,_mm256_cmp_pd(xx,yy,_CMP_LT_OQ)) , _mm256_cmp_pd(xx,yy,_CMP_LE_OQ) , )
+primcmpD256(ltDD, _mm256_andnot_pd(eq,_mm256_cmp_pd(xx,yy,_CMP_LT_OQ)) , _mm256_cmp_pd(xx,yy,_CMP_LT_OQ) , )
+primcmpD256(eqDD, eq , _mm256_cmp_pd(xx,yy,_CMP_EQ_OQ) , )
+primcmpD256(neDD, _mm256_xor_pd(eq,one) , _mm256_cmp_pd(xx,yy,_CMP_NEQ_OQ) , __m256d one=_mm256_broadcast_sd((D*)&validitymask);)   // warnings from one=_mm256_cmp_pd(cct,cct,_CMP_TRUE_UQ);
+
+     eq=_mm256_xor_pd(_mm256_cmp_pd(xx,_mm256_mul_pd(yy,cct),_CMP_GT_OQ),_mm256_cmp_pd(yy,_mm256_mul_pd(xx,cct),_CMP_LE_OQ));
+#endif
+
+#if (C_AVX&&SY_64) || EMU_AVX
+#define XCTL0(nm0) if(jt->cct==1.0)R nm0(jt,a,w); __m256d cct=_mm256_broadcast_sd(&jt->cct);  // xfer to intolerant if called for
+#define ZZTEQ zz=_mm256_xor_pd(_mm256_cmp_pd(xx,_mm256_mul_pd(yy,cct),_CMP_GT_OQ),_mm256_cmp_pd(yy,_mm256_mul_pd(xx,cct),_CMP_LE_OQ));  // tolerant =
+#define NOTZZ  zz=_mm256_xor_pd(zz,ones)
+
+// =
+cprimop256(i0eqII,1,,zz=_mm256_castsi256_pd(_mm256_cmpeq_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)));,1)
+cprimop256(i0eqBI,0x40,,zz=_mm256_castsi256_pd(_mm256_cmpeq_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy))); ,1)
+cprimop256(i0eqIB,0x80,,zz=_mm256_castsi256_pd(_mm256_cmpeq_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy))); ,1)
+cprimop256(i0eqDD0,1,,zz=_mm256_cmp_pd(xx,yy,_CMP_NEQ_OQ),0)
+cprimop256(i0eqDD,1,XCTL0(i0eqDD0), ZZTEQ ,1)
+cprimop256(i0eqBD0,0x100,,zz=_mm256_cmp_pd(xx,yy,_CMP_NEQ_OQ),0)
+cprimop256(i0eqBD,0x100,XCTL0(i0eqBD0), ZZTEQ ,1)
+cprimop256(i0eqID0,0x08,,zz=_mm256_cmp_pd(xx,yy,_CMP_NEQ_OQ),0)
+cprimop256(i0eqID,0x08,XCTL0(i0eqID0), ZZTEQ ,1)
+cprimop256(i0eqDB0,0x200,,zz=_mm256_cmp_pd(xx,yy,_CMP_NEQ_OQ),0)
+cprimop256(i0eqDB,0x200,XCTL0(i0eqDB0), ZZTEQ ,1)
+cprimop256(i0eqDI0,0x10,,zz=_mm256_cmp_pd(xx,yy,_CMP_NEQ_OQ),0)
+cprimop256(i0eqDI,0x10,XCTL0(i0eqDI0), ZZTEQ ,1)
+
+// ~:
+cprimop256(i0neII,1,,zz=_mm256_castsi256_pd(_mm256_cmpeq_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)));,0)
+cprimop256(i0neBI,0x40,,zz=_mm256_castsi256_pd(_mm256_cmpeq_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)));,0)
+cprimop256(i0neIB,0x80,,zz=_mm256_castsi256_pd(_mm256_cmpeq_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)));,0)
+cprimop256(i0neDD0,1,,zz=_mm256_cmp_pd(xx,yy,_CMP_EQ_OQ),0)
+cprimop256(i0neDD,1,XCTL0(i0neDD0), ZZTEQ,0)
+cprimop256(i0neBD0,0x100,,zz=_mm256_cmp_pd(xx,yy,_CMP_EQ_OQ),0)
+cprimop256(i0neBD,0x100,XCTL0(i0neBD0), ZZTEQ,0)
+cprimop256(i0neID0,0x08,,zz=_mm256_cmp_pd(xx,yy,_CMP_EQ_OQ),0)
+cprimop256(i0neID,0x08,XCTL0(i0neID0), ZZTEQ,0)
+cprimop256(i0neDB0,0x200,,zz=_mm256_cmp_pd(xx,yy,_CMP_EQ_OQ),0)
+cprimop256(i0neDB,0x200,XCTL0(i0neDB0), ZZTEQ,0)
+cprimop256(i0neDI0,0x10,,zz=_mm256_cmp_pd(xx,yy,_CMP_EQ_OQ),0)
+cprimop256(i0neDI,0x10,XCTL0(i0neDI0), ZZTEQ,0)
+
+// <
+cprimop256(i0ltII,0,,zz=_mm256_castsi256_pd(_mm256_cmpgt_epi64(_mm256_castpd_si256(yy),_mm256_castpd_si256(xx)));,1)
+cprimop256(i0ltBI,0x40,,zz=_mm256_castsi256_pd(_mm256_cmpgt_epi64(_mm256_castpd_si256(yy),_mm256_castpd_si256(xx)));,1)
+cprimop256(i0ltIB,0x80,,zz=_mm256_castsi256_pd(_mm256_cmpgt_epi64(_mm256_castpd_si256(yy),_mm256_castpd_si256(xx)));,1)
+cprimop256(i0ltDD0,0,,zz=_mm256_cmp_pd(xx,yy,_CMP_GE_OQ),0)
+cprimop256(i0ltDD,0,XCTL0(i0ltDD0), ZZTEQ zz=_mm256_andnot_pd(zz,_mm256_cmp_pd(xx,yy,_CMP_LT_OQ)),1)
+cprimop256(i0ltBD0,0x100,,zz=_mm256_cmp_pd(xx,yy,_CMP_GE_OQ),0)
+cprimop256(i0ltBD,0x100,XCTL0(i0ltBD0), ZZTEQ zz=_mm256_andnot_pd(zz,_mm256_cmp_pd(xx,yy,_CMP_LT_OQ)),1)
+cprimop256(i0ltID0,0x08,,zz=_mm256_cmp_pd(xx,yy,_CMP_GE_OQ),0)
+cprimop256(i0ltID,0x08,XCTL0(i0ltID0), ZZTEQ zz=_mm256_andnot_pd(zz,_mm256_cmp_pd(xx,yy,_CMP_LT_OQ)),1)
+cprimop256(i0ltDB0,0x200,,zz=_mm256_cmp_pd(xx,yy,_CMP_GE_OQ),0)
+cprimop256(i0ltDB,0x200,XCTL0(i0ltDB0), ZZTEQ zz=_mm256_andnot_pd(zz,_mm256_cmp_pd(xx,yy,_CMP_LT_OQ)),1)
+cprimop256(i0ltDI0,0x10,,zz=_mm256_cmp_pd(xx,yy,_CMP_GE_OQ),0)
+cprimop256(i0ltDI,0x10,XCTL0(i0ltDI0), ZZTEQ zz=_mm256_andnot_pd(zz,_mm256_cmp_pd(xx,yy,_CMP_LT_OQ)),1)
+
+#else
+INDF( i0eqII,I,I,ANE  ) INDF( i0eqIB,I,B,ANE  )   INDF( i0eqBI,B,I,ANE  )  INDF0( i0eqDD,D,D,TNE,NE0  )
+INDF0( i0eqBD,B,D,TNEXD,NEXD0) INDF0( i0eqID,I,D,TNEXD,NEXD0) INDF0( i0eqDB,D,B,TNEDX,NEDX0)  INDF0( i0eqDI,D,I,TNEDX,NEDX0)
+ INDF( i0neBI,B,I,AEQ  )  INDF0( i0neBD,B,D,TEQXD,EQXD0)  /* ~: */
+INDF( i0neIB,I,B,AEQ  )  INDF( i0neII,I,I,AEQ  )  INDF0( i0neID,I,D,TEQXD,EQXD0)
+INDF0( i0neDB,D,B,TEQDX,EQDX0)  INDF0( i0neDI,D,I,TEQDX,EQDX0)  INDF0( i0neDD,D,D,TEQ,EQ0  )
+  INDF( i0ltBI,B,I,AGE  )  INDF0( i0ltBD,B,D,TGEXD,GEXD0)  /* <  */
+INDF( i0ltIB,I,B,AGE  )  INDF( i0ltII,I,I,AGE  )  INDF0( i0ltID,I,D,TGEXD,GEXD0)
+INDF0( i0ltDB,D,B,TGEDX,GEDX0)  INDF0( i0ltDI,D,I,TGEDX,GEDX0)  INDF0( i0ltDD,D,D,TGE,GE0  )
+#endif
+
+INDB( i0eqBB,B,B,NE   )  
+
 
 JNDB( j0eqBB,B,B,NE   )  JNDF( j0eqBI,B,I,ANE  )  JNDF0( j0eqBD,B,D,TNEXD,NEXD0)
 JNDF( j0eqIB,I,B,ANE  )  JNDF( j0eqII,I,I,ANE  )  JNDF0( j0eqID,I,D,TNEXD,NEXD0)
@@ -142,9 +297,7 @@ SUMB(sumeqBB,B,B,EQ   )  SUMF(sumeqBI,B,I,AEQ  )  SUMF0(sumeqBD,B,D,TEQXD,EQXD0)
 SUMF(sumeqIB,I,B,AEQ  )  SUMF(sumeqII,I,I,AEQ  )  SUMF0(sumeqID,I,D,TEQXD,EQXD0)
 SUMF0(sumeqDB,D,B,TEQDX,EQDX0)  SUMF0(sumeqDI,D,I,TEQDX,EQDX0)  SUMF0(sumeqDD,D,D,TEQ,EQ0  )
 
-INDB( i0neBB,B,B,EQ   )  INDF( i0neBI,B,I,AEQ  )  INDF0( i0neBD,B,D,TEQXD,EQXD0)  /* ~: */
-INDF( i0neIB,I,B,AEQ  )  INDF( i0neII,I,I,AEQ  )  INDF0( i0neID,I,D,TEQXD,EQXD0)
-INDF0( i0neDB,D,B,TEQDX,EQDX0)  INDF0( i0neDI,D,I,TEQDX,EQDX0)  INDF0( i0neDD,D,D,TEQ,EQ0  )
+INDB( i0neBB,B,B,EQ   ) 
 
 JNDB( j0neBB,B,B,EQ   )  JNDF( j0neBI,B,I,AEQ  )  JNDF0( j0neBD,B,D,TEQXD,EQXD0)
 JNDF( j0neIB,I,B,AEQ  )  JNDF( j0neII,I,I,AEQ  )  JNDF0( j0neID,I,D,TEQXD,EQXD0)
@@ -154,9 +307,7 @@ SUMB(sumneBB,B,B,NE   )  SUMF(sumneBI,B,I,ANE  )  SUMF0(sumneBD,B,D,TNEXD,NEXD0)
 SUMF(sumneIB,I,B,ANE  )  SUMF(sumneII,I,I,ANE  )  SUMF0(sumneID,I,D,TNEXD,NEXD0)
 SUMF0(sumneDB,D,B,TNEDX,NEDX0)  SUMF0(sumneDI,D,I,TNEDX,NEDX0)  SUMF0(sumneDD,D,D,TNE,NE0  )
 
-INDB( i0ltBB,B,B,GE   )  INDF( i0ltBI,B,I,AGE  )  INDF0( i0ltBD,B,D,TGEXD,GEXD0)  /* <  */
-INDF( i0ltIB,I,B,AGE  )  INDF( i0ltII,I,I,AGE  )  INDF0( i0ltID,I,D,TGEXD,GEXD0)
-INDF0( i0ltDB,D,B,TGEDX,GEDX0)  INDF0( i0ltDI,D,I,TGEDX,GEDX0)  INDF0( i0ltDD,D,D,TGE,GE0  )
+INDB( i0ltBB,B,B,GE   )
 
 JNDB( j0ltBB,B,B,GE   )  JNDF( j0ltBI,B,I,AGE  )  JNDF0( j0ltBD,B,D,TGEXD,GEXD0)
 JNDF( j0ltIB,I,B,AGE  )  JNDF( j0ltII,I,I,AGE  )  JNDF0( j0ltID,I,D,TGEXD,GEXD0)
@@ -201,7 +352,6 @@ JNDF0( j0gtDB,D,B,TLEDX,LEDX0)  JNDF0( j0gtDI,D,I,TLEDX,LEDX0)  JNDF0( j0gtDD,D,
 SUMB(sumgtBB,B,B,GT   )  SUMF(sumgtBI,B,I,AGT  )  SUMF0(sumgtBD,B,D,TGTXD,GTXD0)
 SUMF(sumgtIB,I,B,AGT  )  SUMF(sumgtII,I,I,AGT  )  SUMF0(sumgtID,I,D,TGTXD,GTXD0)
 SUMF0(sumgtDB,D,B,TGTDX,GTDX0)  SUMF0(sumgtDI,D,I,TGTDX,GTDX0)  SUMF0(sumgtDD,D,D,TGT,GT0  )
-
 
 static AF atcompxy[]={  /* table for (B01,INT,FL) vs. (B01,INT,FL) */
  i0eqBB, i0eqBI, i0eqBD,   i0eqIB, i0eqII, i0eqID,   i0eqDB, i0eqDI, i0eqDD,   /* 0 */
@@ -308,6 +458,7 @@ AF jtatcompf(J jt,A a,A w,A self){I m;
   // verify rank is OK, based on operation
   if((AR(a)|AR(w))>1){R (m>=(4<<3))?(AF)jtfslashatg:0;}   // If an operand has rank>1, reject it unless it can be turned to f/@g special. postflags are 0
   ASSERT(AN(a)==AN(w)||((AR(a)&AR(w))==0),EVLENGTH)   // agreement is same length or one an atom - we know ranks<=1
+  if(unlikely((-AN(a)&-AN(w)>=0)))R0;  // if either arg empty, skip our loop
   // split m into search and comparison
   I search=m>>3; I comp=m&7;
   // Change +./ to i.&1, *./ to i.&0; save flag bits to include in return address

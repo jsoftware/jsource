@@ -50,6 +50,8 @@ data=: 3 : 0
 
 testvv=: 2 : 0  NB. vector vector
   :
+ ri =: (210+i. 40) # 10
+ for_c. i: 100 do.   assert. (u (5 c}ri) v (5 c}ri)) -: (5 c}ri) (u f.)@:(v f.) (5 c}ri) [ cc =: c end.
  assert. (u xb v yb) -: xb (u f.)@:(v f.) yb
  assert. (u xb v yi) -: xb (u f.)@:(v f.) yi
  assert. (u xb v yd) -: xb (u f.)@:(v f.) yd
@@ -76,6 +78,8 @@ testvv=: 2 : 0  NB. vector vector
 
 testsv=: 2 : 0  NB. scalar vector
   :
+ ri =: (210+i. 40) # 10
+ for_c. i: 100 do.   assert. (u 5 v (5 c}ri)) -: 5 (u f.)@:(v f.) (5 c}ri) [ cc =: c end.
  assert. (u 0  v zb) -: 0  (u f.)@:(v f.) zb
  assert. (u 0  v zi) -: 0  (u f.)@:(v f.) zi
  assert. (u 0  v zd) -: 0  (u f.)@:(v f.) zd
@@ -114,6 +118,8 @@ testsv=: 2 : 0  NB. scalar vector
 
 testvs=: 2 : 0  NB. vector scalar
   :
+ ri =: (210+i. 40) # 10
+ for_c. i: 100 do.   assert. (u (5 c}ri) v 5) -: (5 c}ri) (u f.)@:(v f.) 5 [ cc =: c end.
  assert. (u xb v 0 ) -: xb (u f.)@:(v f.) 0
  assert. (u xb v 1 ) -: xb (u f.)@:(v f.) 1
  assert. (u xb v ai) -: xb (u f.)@:(v f.) ai
@@ -514,7 +520,7 @@ t =: 7!:2 'f yy'
 
 
 
-4!:55 ;:'ad ai as data expression f ftab sp SPTOLER'
+4!:55 ;:'ad ai as cc data expression f ftab ri sp SPTOLER'
 4!:55 ;:'t test testbsv testbvs testbvv testc testE testsp'
 4!:55 ;:'testss testsv testvs testvv'
 4!:55 ;:'xa xb xb1 xb2 xb3 xb4 xb5 xb6 xb7 xc xd xi xj xs xx'

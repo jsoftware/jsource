@@ -824,7 +824,7 @@ extern unsigned int __cdecl _clearfp (void);
 // calculate the (backoff-1) in elements for the first pass through the Duff loop.  This (negative) value+1 must be added to the initial addresses
 #define DUFFBACKOFF(m1,lgduff) ((((m1)>>LGNPAR)-1)|-((I)1<<(lgduff)))  // 0->-1, 7->-2, 1->-8
 // offset by n items
-#define OFFSETBID(ad,n,commute,id,bi,bd) (D*)((I)ad+((I)(n)<<(((commute)&((bi)|(bd)))?0:LGSZD)))
+#define OFFSETBID(ad,n,commute,id,bi,bd) (D*)((I)ad+((I)(n)*(((commute)&((bi)|(bd)))?1:SZD)))  // using shift gives warning on clang can't left-shift a negative constant!
 // increment address by n items
 #define INCRBID(ad,n,commute,id,bi,bd) ad=OFFSETBID(ad,n,commute,id,bi,bd);
 // load 4 atoms.  For boolean each lane looks at a different byte

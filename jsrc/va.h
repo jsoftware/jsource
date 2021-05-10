@@ -304,10 +304,10 @@ typedef I AHDRSFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);
        UI backoff=DUFFBACKOFF(len-1,3); \
        PRMINCR(xy,fz,(backoff+1)*NPAR) \
        switch(backoff){ \
-       name##lp0##xy: \
+       do{ \
        case -1: PRMDO(zzop,xy,fz,0) case -2: PRMDO(zzop,xy,fz,1) case -3: PRMDO(zzop,xy,fz,2) case -4: PRMDO(zzop,xy,fz,3) case -5: PRMDO(zzop,xy,fz,4) case -6: PRMDO(zzop,xy,fz,5) case -7: PRMDO(zzop,xy,fz,6) case -8: PRMDO(zzop,xy,fz,7) \
        PRMINCR(xy,fz,8*NPAR) \
-       if(--n2!=0)goto name##lp0##xy; \
+       }while(--n2!=0); \
        } \
       } \
      }else{ \

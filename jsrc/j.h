@@ -1021,13 +1021,13 @@ extern unsigned int __cdecl _clearfp (void);
     UI backoff=DUFFBACKOFF(ll>>LGSZI,2); \
     dst=(C*)dst+(backoff+1)*NPAR*SZI; src=(C*)src+(backoff+1)*NPAR*SZI; \
     switch(backoff){ \
-    lbl: ; \
+    do{ \
     case -1: _mm256_storeu_si256((__m256i*)dst,_mm256_loadu_si256((__m256i*)src)); \
     case -2: _mm256_storeu_si256((__m256i*)((C*)dst+1*NPAR*SZI),_mm256_loadu_si256((__m256i*)((C*)src+1*NPAR*SZI))); \
     case -3: _mm256_storeu_si256((__m256i*)((C*)dst+2*NPAR*SZI),_mm256_loadu_si256((__m256i*)((C*)src+2*NPAR*SZI))); \
     case -4: _mm256_storeu_si256((__m256i*)((C*)dst+3*NPAR*SZI),_mm256_loadu_si256((__m256i*)((C*)src+3*NPAR*SZI))); \
     dst=(C*)dst+4*NPAR*SZI; src=(C*)src+4*NPAR*SZI; \
-    if(--n2>0)goto lbl; \
+    }while(--n2>0); \
     } \
    } \
    /* copy last section, 1-4 Is. ll bits 00->4 Is, 01->3 Is, etc  Do last so that previous loop doesn't have back-to-back branches  */ \
@@ -1157,7 +1157,7 @@ extern unsigned int __cdecl _clearfp (void);
    UI backoff=DUFFBACKOFF(n0-1,3); \
    x+=(backoff+1)*NPAR; z+=(backoff+1)*NPAR; \
    switch(backoff){ \
-   lbl: \
+   do{ \
    case -1: \
     u=_mm256_loadu_pd(x); loopbody _mm256_storeu_pd(z, u);  \
    case -2: \
@@ -1175,7 +1175,7 @@ extern unsigned int __cdecl _clearfp (void);
    case -8: \
     u=_mm256_loadu_pd(x+7*NPAR); loopbody _mm256_storeu_pd(z+7*NPAR, u);  \
    x+=8*NPAR; z+=8*NPAR; \
-   if(--n2!=0)goto lbl; \
+   }while(--n2!=0); \
    } \
   } \
  }else{ \

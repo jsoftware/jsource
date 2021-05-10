@@ -279,13 +279,13 @@ void mvc(I m,void*z,I n,void*w){
    UI backoff=DUFFBACKOFF(m>>LGSZI,2);
    z=(C*)z+(backoff+1)*NPAR*SZI;
    switch(backoff){
-   lbl: ;
+   do{ ;
    case -1: _mm256_storeu_si256((__m256i*)z,wd);
    case -2: _mm256_storeu_si256((__m256i*)((C*)z+1*NPAR*SZI),wd);
    case -3: _mm256_storeu_si256((__m256i*)((C*)z+2*NPAR*SZI),wd);
    case -4: _mm256_storeu_si256((__m256i*)((C*)z+3*NPAR*SZI),wd);
    z=(C*)z+4*NPAR*SZI;
-   if(--n2>0)goto lbl;
+   }while(--n2>0);
    }
   }
   // copy last section, 1-4 Is. ll bits 00->4 bytes, 01->3 bytes, etc

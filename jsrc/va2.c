@@ -1131,13 +1131,13 @@ DF2(jtsumattymes1){
 // obsolete       I n0=(dplen-1)>>LGNPAR;
 // obsolete       if(n0>0){
 // obsolete        switch(n0&3){
-       loopback:
+       do{
        case -1: OGITA(_mm256_loadu_pd(av),_mm256_loadu_pd(wv),0)
        case -2: OGITA(_mm256_loadu_pd(av+1*NPAR),_mm256_loadu_pd(wv+1*NPAR),1)
        case -3: OGITA(_mm256_loadu_pd(av+2*NPAR),_mm256_loadu_pd(wv+2*NPAR),2)
        case -4: OGITA(_mm256_loadu_pd(av+3*NPAR),_mm256_loadu_pd(wv+3*NPAR),3)
        av+=4*NPAR; wv+=4*NPAR;
-       if(--n2>0)goto loopback;
+       }while(--n2>0);
        }
       }
       OGITA(_mm256_maskload_pd(av,endmask),_mm256_maskload_pd(wv,endmask),0) av+=((dplen-1)&(NPAR-1))+1; wv+=((dplen-1)&(NPAR-1))+1;  // the remnant at the end

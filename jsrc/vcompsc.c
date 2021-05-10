@@ -46,11 +46,11 @@
        backoff=DUFFBACKOFF((len)-1,3); \
        CPRMINCR(xy,fz,(backoff+1)*NPAR) \
        switch(backoff){ \
-       lp0##xy: \
+       do{ \
        case -1: CPRMDO(zzop,xy,fz,0,inv) case -2: CPRMDO(zzop,xy,fz,1,inv) case -3: CPRMDO(zzop,xy,fz,2,inv) case -4: CPRMDO(zzop,xy,fz,3,inv) \
        case -5: CPRMDO(zzop,xy,fz,4,inv) case -6: CPRMDO(zzop,xy,fz,5,inv) case -7: CPRMDO(zzop,xy,fz,6,inv) case -8: CPRMDO(zzop,xy,fz,7,inv) \
        CPRMINCR(xy,fz,8*NPAR) \
-       if(--n2!=0)goto lp0##xy; \
+       }while(--n2!=0); \
        } \
        n2<<=3; orign2<<=3; orign2+=backoff+1; \
       } \

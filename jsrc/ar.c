@@ -235,13 +235,13 @@ REDUCCPFX(tymesinsO, D, I, TYMESO)
    UI backoff=DUFFBACKOFF(n-1,2); \
    x+=(backoff+1)*NPAR; \
    switch(backoff){ \
-   loopback: \
+   do{ \
    case -1: acc0=prim(acc0,_mm256_loadu_pd(x)); \
    case -2: acc1=prim(acc1,_mm256_loadu_pd(x+1*NPAR)); \
    case -3: acc2=prim(acc2,_mm256_loadu_pd(x+2*NPAR)); \
    case -4: acc3=prim(acc3,_mm256_loadu_pd(x+3*NPAR)); \
    x+=4*NPAR; \
-   if(--n2!=0)goto loopback; \
+   }while(--n2!=0); \
    } \
   } \
   acc0=prim(acc0,_mm256_blendv_pd(idreg,_mm256_maskload_pd(x,endmask),_mm256_castsi256_pd(endmask))); x+=((n-1)&(NPAR-1))+1; \
@@ -392,13 +392,13 @@ DF1(jtcompsum){
     UI backoff=DUFFBACKOFF(n-1,2);
     wv+=(backoff+1)*NPAR;
     switch(backoff){
-    loopback:
+    do{
     case -1: KAHAN(_mm256_loadu_pd(wv),0)
     case -2: KAHAN(_mm256_loadu_pd(wv+1*NPAR),0)
     case -3: KAHAN(_mm256_loadu_pd(wv+2*NPAR),0)
     case -4: KAHAN(_mm256_loadu_pd(wv+3*NPAR),0)
     wv+=4*NPAR;
-    if(--n2!=0)goto loopback;
+    }while(--n2!=0);
     }
    }
    KAHAN(_mm256_maskload_pd(wv,endmask),0) wv+=((n-1)&(NPAR-1))+1;

@@ -1581,13 +1581,13 @@ CR condrange(I *s,I n,I min,I max,I maxrange){CR ret;
    UI backoff=DUFFBACKOFF(compn<<LGNPAR,2);
    s+=(backoff+1)*NPAR;
    switch(backoff){
-   lbl: ;
+   do{
    case -1: temp = _mm256_loadu_si256((__m256i const *)s); TAKEMINOF(min0,temp) TAKEMAXOF(max0,temp)
    case -2: temp = _mm256_loadu_si256((__m256i const *)(s+1*NPAR)); TAKEMINOF(min1,temp) TAKEMAXOF(max1,temp)
    case -3: temp = _mm256_loadu_si256((__m256i const *)(s+2*NPAR)); TAKEMINOF(min2,temp) TAKEMAXOF(max2,temp)
    case -4: temp = _mm256_loadu_si256((__m256i const *)(s+3*NPAR)); TAKEMINOF(min3,temp) TAKEMAXOF(max3,temp)
    s+=4*NPAR;
-   if(--n2>0)goto lbl;
+   }while(--n2>0);
    }
 // obsolete    do{
 // obsolete     __m256i temp = _mm256_loadu_si256((__m256i const *)s); s+=NPAR;  // read next batch & advance

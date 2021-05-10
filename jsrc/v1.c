@@ -105,7 +105,7 @@ static B eqv(I af,I wf,I m,I n,I k,C* RESTRICT av,C* RESTRICT wv,B* RESTRICT z,B
     UI i = n2;  // inner loop size
     x+=(backoff+1)*NPAR; y+=(backoff+1)*NPAR;
     switch(backoff){
-    loopback:
+    do{
     case -1: u=_mm256_loadu_si256 ((__m256i*)x); v=_mm256_loadu_si256 ((__m256i*)y); allmatches=_mm256_and_si256(allmatches,_mm256_cmpeq_epi8(u,v));
     case -2: u=_mm256_loadu_si256 ((__m256i*)(x+1*NPAR)); v=_mm256_loadu_si256 ((__m256i*)(y+1*NPAR)); allmatches=_mm256_and_si256(allmatches,_mm256_cmpeq_epi8(u,v));
     case -3: u=_mm256_loadu_si256 ((__m256i*)(x+2*NPAR)); v=_mm256_loadu_si256 ((__m256i*)(y+2*NPAR)); allmatches=_mm256_and_si256(allmatches,_mm256_cmpeq_epi8(u,v));
@@ -117,7 +117,7 @@ static B eqv(I af,I wf,I m,I n,I k,C* RESTRICT av,C* RESTRICT wv,B* RESTRICT z,B
     x+=8*NPAR; y+=8*NPAR;
     if(n2==1)goto oneloop;  // if we don't have to loop here, avoid the data-dependent branch and fold the comparisons into the last batch 
     if(~_mm256_movemask_epi8(allmatches))goto fail;  // if searches are long, kick out when there is a miscompare
-    if(--i>0)goto loopback;
+    }while(--i>0);
     }
 oneloop:;
    }
@@ -155,7 +155,7 @@ I memcmpne(void *s, void *t, I l){
 // obsolete  I i=(n-1)>>LGNPAR;  /* # loops for 0 1 2 3 4 5 is x 0 0 0 0 1 */
 // obsolete if(i){
 // obsolete   switch(i&3){
-  loopback:
+  do{
   case -1: u=_mm256_loadu_si256 ((__m256i*)x); v=_mm256_loadu_si256 ((__m256i*)y); allmatches=_mm256_and_si256(allmatches,_mm256_cmpeq_epi8(u,v));
   case -2: u=_mm256_loadu_si256 ((__m256i*)(x+1*NPAR)); v=_mm256_loadu_si256 ((__m256i*)(y+1*NPAR)); allmatches=_mm256_and_si256(allmatches,_mm256_cmpeq_epi8(u,v));
   case -3: u=_mm256_loadu_si256 ((__m256i*)(x+2*NPAR)); v=_mm256_loadu_si256 ((__m256i*)(y+2*NPAR)); allmatches=_mm256_and_si256(allmatches,_mm256_cmpeq_epi8(u,v));
@@ -166,7 +166,7 @@ I memcmpne(void *s, void *t, I l){
   case -8: u=_mm256_loadu_si256 ((__m256i*)(x+7*NPAR)); v=_mm256_loadu_si256 ((__m256i*)(y+7*NPAR)); allmatches=_mm256_and_si256(allmatches,_mm256_cmpeq_epi8(u,v));
   x+=8*NPAR; y+=8*NPAR;
   if(~_mm256_movemask_epi8(allmatches))R 1;
-  if(--n2>0)goto loopback;
+  }while(--n2>0);
   }
  }
 
@@ -194,7 +194,7 @@ I memcmpnefl(void *s, void *t, I l, J jt){
    switch(backoff){
  // obsolete  if(i){
  // obsolete    switch(i&3){
-   loopback:
+   do{
    case -1: u=_mm256_loadu_pd(x); v=_mm256_loadu_pd(y); allmatches=_mm256_and_pd(allmatches,_mm256_cmp_pd(u,v,_CMP_EQ_OQ));
    case -2: u=_mm256_loadu_pd(x+1*NPAR); v=_mm256_loadu_pd(y+1*NPAR); allmatches=_mm256_and_pd(allmatches,_mm256_cmp_pd(u,v,_CMP_EQ_OQ));
    case -3: u=_mm256_loadu_pd(x+2*NPAR); v=_mm256_loadu_pd(y+2*NPAR); allmatches=_mm256_and_pd(allmatches,_mm256_cmp_pd(u,v,_CMP_EQ_OQ));
@@ -205,7 +205,7 @@ I memcmpnefl(void *s, void *t, I l, J jt){
    case -8: u=_mm256_loadu_pd(x+7*NPAR); v=_mm256_loadu_pd(y+7*NPAR); allmatches=_mm256_and_pd(allmatches,_mm256_cmp_pd(u,v,_CMP_EQ_OQ));
    x+=8*NPAR; y+=8*NPAR;
    if(0xf!=_mm256_movemask_pd(allmatches))R 1;
-   if(--n2>0)goto loopback;
+   }while(--n2>0);
    }
   }
   u=_mm256_maskload_pd(x,endmask); v=_mm256_maskload_pd(y,endmask); 
@@ -258,7 +258,7 @@ static B eqvfl(I af,I wf,I m,I n,I k,D* RESTRICT av,D* RESTRICT wv,B* RESTRICT z
 // obsolete     if(i0){
 // obsolete      I i = i0;  // inner loop size
 // obsolete      switch(i&3){
-     loopback:
+     do{
      case -1: u=_mm256_loadu_pd(x); v=_mm256_loadu_pd(y); allmatches=_mm256_and_pd(allmatches,_mm256_cmp_pd(u,v,_CMP_EQ_OQ));
      case -2: u=_mm256_loadu_pd(x+1*NPAR); v=_mm256_loadu_pd(y+1*NPAR); allmatches=_mm256_and_pd(allmatches,_mm256_cmp_pd(u,v,_CMP_EQ_OQ));
      case -3: u=_mm256_loadu_pd(x+2*NPAR); v=_mm256_loadu_pd(y+2*NPAR); allmatches=_mm256_and_pd(allmatches,_mm256_cmp_pd(u,v,_CMP_EQ_OQ));
@@ -270,7 +270,7 @@ static B eqvfl(I af,I wf,I m,I n,I k,D* RESTRICT av,D* RESTRICT wv,B* RESTRICT z
      x+=8*NPAR; y+=8*NPAR;
      if(n2==1)goto oneloop;  // if we don't have to loop here, avoid the data-dependent branch and fold the comparisons into the last batch 
      if(0xf!=_mm256_movemask_pd(allmatches))goto fail;
-     if(--i>0)goto loopback;
+     }while(--i>0);
      }
     }
 oneloop:

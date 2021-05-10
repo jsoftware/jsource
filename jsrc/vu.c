@@ -86,7 +86,7 @@ static F1(jttoc2e){A z;I m,n,r;
 static F1(jtifc2){A z;I n,t,*zv;
  ARGCHK1(w);
  n=AN(w); t=AT(w);
- ASSERT(((n-1)&((t&JCHAR)-1))>=0,EVDOMAIN);
+ ASSERT(((-n)&((t&JCHAR)-1))>=0,EVDOMAIN);
  GATV(z,INT,n,AR(w),AS(w)); zv=AV(z);
  if(t&LIT){UC*v=UAV(w); DQ(n, *zv++=*v++;);}
  else if(t&C2T){US*v=USAV(w); DQ(n, *zv++=*v++;);}

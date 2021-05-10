@@ -71,6 +71,11 @@ lr=: 1 : '5!:5 <''u'''
 'domain error' -: _4 u: etx 'abc'
 
 'index error'  -:  4 u: etx 1 2 3 65536
+'domain error' -:  3 u: etx 2 3
+'' -: 3 u: 0$0
+'' -: 3 u: 0$a:
+'' -: 3 u: 0$1.0
+'' -: 3 u: 0$''
 
 'length error' -:  6 u: etx 'abc'
 'length error' -:  6 u: etx 'abcde'

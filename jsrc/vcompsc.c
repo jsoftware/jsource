@@ -26,12 +26,12 @@
 // bit6 set for bool-to-int on x, bit7 for bool-to-int on y
 // bit8 set for bool-to-float on x, bit9 for bool-to-float on y
 // bit12 this is a reverse-index loop
-// 
+// bit13 this is +/@:comp: inv means total is number of trues, otherwise number of falses
 
 // do one computation. xy bit 0 means fetch/incr y, bit 1 means fetch/incr x.  lineno is the offset to the row being worked on
 #define CPRMDO(zzop,xy,fz,lineno,inv)  if((xy)&2)LDBID(xx,OFFSETBID(x,((fz)&0x1000?-1:1)*lineno*NPAR,fz,0x8,0x40,0x100),fz,0x8,0x40,0x100) if((xy)&1)LDBID(yy,OFFSETBID(y,((fz)&0x1000?-1:1)*lineno*NPAR,fz,0x10,0x80,0x200),fz,0x10,0x80,0x200)  \
      if((xy)&2)CVTBID(xx,xx,fz,0x8,0x40,0x100) if((xy)&1)CVTBID(yy,yy,fz,0x10,0x80,0x200)  \
-     zzop; if((xy)&4){if((maskatend=_mm256_movemask_pd(zz))!=inv*15)goto outs0;} else if((maskatend=_mm256_movemask_pd(zz))!=inv*15)goto out##lineno;
+     zzop; if((fz)&0x2000){acc##lineno=_mm256_add_epi64(acc##lineno,_mm256_castpd_si256(zz));} else {if((xy)&4){if((maskatend=_mm256_movemask_pd(zz))!=inv*15)goto outs0;} else if((maskatend=_mm256_movemask_pd(zz))!=inv*15)goto out##lineno;}
 
 #define CPRMINCR(xy,fz,ct) if((xy)&2)INCRBID(x,((fz)&0x1000?-1:1)*(ct),fz,0x8,0x40,0x100) if((xy)&1)INCRBID(y,((fz)&0x1000?-1:1)*(ct),fz,0x10,0x80,0x200)
 
@@ -60,7 +60,8 @@
 
 #define CPRMMASK(zzop,xy,fz,inv) if((xy)&2)LDBIDM(xx,x,fz,0x8,0x40,0x100,endmask) if((xy)&1)LDBIDM(yy,y,fz,0x10,0x80,0x200,endmask)  \
   if((xy)&2)CVTBID(xx,xx,fz,0x8,0x40,0x100) if((xy)&1)CVTBID(yy,yy,fz,0x10,0x80,0x200)  \
-  zzop; maskatend=inv?_mm256_movemask_pd(_mm256_and_pd(_mm256_castsi256_pd(endmask),zz)):_mm256_movemask_pd(_mm256_or_pd(_mm256_xor_pd(ones,_mm256_castsi256_pd(endmask)),zz)); goto outs0;
+  zzop; if((fz)&0x2000){acc0=_mm256_add_epi64(acc0,_mm256_castpd_si256(inv?_mm256_and_pd(_mm256_castsi256_pd(endmask),zz):_mm256_or_pd(_mm256_xor_pd(ones,_mm256_castsi256_pd(endmask)),zz)));} \
+  else{maskatend=inv?_mm256_movemask_pd(_mm256_and_pd(_mm256_castsi256_pd(endmask),zz)):_mm256_movemask_pd(_mm256_or_pd(_mm256_xor_pd(ones,_mm256_castsi256_pd(endmask)),zz)); goto outs0;}
 
 
 #define cprimop256(name,fz,pref,zzop,inv) \
@@ -68,6 +69,7 @@ A name(J jt,A a,A w){ \
  __m256d xx,yy,zz; void *x=voidAV(a),*y=voidAV(w); \
  __m256i endmask; /* length mask for the last word */ \
  __m256d ones=_mm256_setzero_pd(); ones=_mm256_castsi256_pd(_mm256_cmpeq_epi32(_mm256_castpd_si256(ones),_mm256_castpd_si256(ones))); \
+ __m256i acc0=_mm256_setzero_si256(), acc1=acc0, acc2=acc0, acc3=acc0, acc4=acc0, acc5=acc0, acc6=acc0, acc7=acc0; \
  I natend, maskatend; \
  UI backoff; UI n2; I orign2; /* orign2 goes -1 during rev search */ \
  _mm256_zeroupperx(VOIDARG) \

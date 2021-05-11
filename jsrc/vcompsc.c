@@ -60,9 +60,10 @@
 
 #define CPRMMASK(zzop,xy,fz,inv) if((xy)&2)LDBIDM(xx,x,fz,0x8,0x40,0x100,endmask) if((xy)&1)LDBIDM(yy,y,fz,0x10,0x80,0x200,endmask)  \
   if((xy)&2)CVTBID(xx,xx,fz,0x8,0x40,0x100) if((xy)&1)CVTBID(yy,yy,fz,0x10,0x80,0x200)  \
-  zzop; if((fz)&0x2000){acc0=_mm256_add_epi64(acc0,_mm256_castpd_si256(inv?_mm256_and_pd(_mm256_castsi256_pd(endmask),zz):_mm256_or_pd(_mm256_xor_pd(ones,_mm256_castsi256_pd(endmask)),zz)));} \
+  zzop; if((fz)&0x2000){acc7=_mm256_add_epi64(acc7,_mm256_castpd_si256(_mm256_and_pd(_mm256_castsi256_pd(endmask),zz))); goto outs1;} \
   else{maskatend=inv?_mm256_movemask_pd(_mm256_and_pd(_mm256_castsi256_pd(endmask),zz)):_mm256_movemask_pd(_mm256_or_pd(_mm256_xor_pd(ones,_mm256_castsi256_pd(endmask)),zz)); goto outs0;}
 
+// obsolete   zzop; if((fz)&0x2000){acc7=_mm256_add_epi64(acc7,_mm256_castpd_si256(inv?_mm256_and_pd(_mm256_castsi256_pd(endmask),zz):_mm256_or_pd(_mm256_xor_pd(ones,_mm256_castsi256_pd(endmask)),zz))); goto outs1;}
 
 #define cprimop256(name,fz,pref,zzop,inv) \
 A name(J jt,A a,A w){ \
@@ -102,6 +103,10 @@ A name(J jt,A a,A w){ \
  out4: natend=4; goto out;  out5: natend=5; goto out;  out6: natend=6; goto out;  out7: natend=7; out: \
  n2<<=3; orign2<<=3; orign2+=natend+backoff+1; \
  outs0: orign2-=n2; orign2<<=LGNPAR; orign2+=(((fz)&0x1000?inv?0x4322111100000000:0x0000000011112234:inv?0x4010201030102010:0x0102010301020104)>>(maskatend<<2))&7; if((fz)&0x1000){orign2=n0-1-orign2; orign2=orign2<0?n0:orign2;} R sc(orign2); \
+ /* add accums, which give negative result.  Convert to positive; if inv, that's the result, otherwise subtract from i0 */ \
+ outs1: acc0=_mm256_add_epi64(acc0,acc1); acc2=_mm256_add_epi64(acc2,acc3); acc4=_mm256_add_epi64(acc4,acc5); acc6=_mm256_add_epi64(acc6,acc7); acc0=_mm256_add_epi64(acc0,acc2); acc4=_mm256_add_epi64(acc4,acc6); acc0=_mm256_add_epi64(acc0,acc4); \
+  acc0=_mm256_add_epi64(acc0,_mm256_permute2f128_si256(acc0,acc0,0x01)); acc0=_mm256_add_epi64(acc0,_mm256_castpd_si256(_mm256_permute_pd(_mm256_castsi256_pd(acc0),0x0f))); \
+  orign2 = _mm256_extract_epi64(acc0,0); R sc(inv?-orign2:n0+orign2); \
 }
 
 
@@ -248,6 +253,19 @@ cprimop256(j0eqDB0,0x1200,,zz=_mm256_cmp_pd(xx,yy,_CMP_NEQ_OQ),0)
 cprimop256(j0eqDB,0x1200,XCTL0(j0eqDB0), ZZTEQ ,1)
 cprimop256(j0eqDI0,0x1010,,zz=_mm256_cmp_pd(xx,yy,_CMP_NEQ_OQ),0)
 cprimop256(j0eqDI,0x1010,XCTL0(j0eqDI0), ZZTEQ ,1)
+cprimop256(sumeqII,0x2001,,zz=_mm256_castsi256_pd(_mm256_cmpeq_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)));,1)
+cprimop256(sumeqBI,0x2040,,zz=_mm256_castsi256_pd(_mm256_cmpeq_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy))); ,1)
+cprimop256(sumeqIB,0x2080,,zz=_mm256_castsi256_pd(_mm256_cmpeq_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy))); ,1)
+cprimop256(sumeqDD0,0x2001,,zz=_mm256_cmp_pd(xx,yy,_CMP_NEQ_OQ),0)
+cprimop256(sumeqDD,0x2001,XCTL0(sumeqDD0), ZZTEQ ,1)
+cprimop256(sumeqBD0,0x2100,,zz=_mm256_cmp_pd(xx,yy,_CMP_NEQ_OQ),0)
+cprimop256(sumeqBD,0x2100,XCTL0(sumeqBD0), ZZTEQ ,1)
+cprimop256(sumeqID0,0x2008,,zz=_mm256_cmp_pd(xx,yy,_CMP_NEQ_OQ),0)
+cprimop256(sumeqID,0x2008,XCTL0(sumeqID0), ZZTEQ ,1)
+cprimop256(sumeqDB0,0x2200,,zz=_mm256_cmp_pd(xx,yy,_CMP_NEQ_OQ),0)
+cprimop256(sumeqDB,0x2200,XCTL0(sumeqDB0), ZZTEQ ,1)
+cprimop256(sumeqDI0,0x2010,,zz=_mm256_cmp_pd(xx,yy,_CMP_NEQ_OQ),0)
+cprimop256(sumeqDI,0x2010,XCTL0(sumeqDI0), ZZTEQ ,1)
 
 // ~:
 cprimop256(i0neII,0x0001,,zz=_mm256_castsi256_pd(_mm256_cmpeq_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)));,0)
@@ -276,6 +294,19 @@ cprimop256(j0neDB0,0x1200,,zz=_mm256_cmp_pd(xx,yy,_CMP_EQ_OQ),0)
 cprimop256(j0neDB,0x1200,XCTL0(j0neDB0), ZZTEQ,0)
 cprimop256(j0neDI0,0x1010,,zz=_mm256_cmp_pd(xx,yy,_CMP_EQ_OQ),0)
 cprimop256(j0neDI,0x1010,XCTL0(j0neDI0), ZZTEQ,0)
+cprimop256(sumneII,0x2001,,zz=_mm256_castsi256_pd(_mm256_cmpeq_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)));,0)
+cprimop256(sumneBI,0x2040,,zz=_mm256_castsi256_pd(_mm256_cmpeq_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)));,0)
+cprimop256(sumneIB,0x2080,,zz=_mm256_castsi256_pd(_mm256_cmpeq_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)));,0)
+cprimop256(sumneDD0,0x2001,,zz=_mm256_cmp_pd(xx,yy,_CMP_EQ_OQ),0)
+cprimop256(sumneDD,0x2001,XCTL0(sumneDD0), ZZTEQ,0)
+cprimop256(sumneBD0,0x2100,,zz=_mm256_cmp_pd(xx,yy,_CMP_EQ_OQ),0)
+cprimop256(sumneBD,0x2100,XCTL0(sumneBD0), ZZTEQ,0)
+cprimop256(sumneID0,0x2008,,zz=_mm256_cmp_pd(xx,yy,_CMP_EQ_OQ),0)
+cprimop256(sumneID,0x2008,XCTL0(sumneID0), ZZTEQ,0)
+cprimop256(sumneDB0,0x2200,,zz=_mm256_cmp_pd(xx,yy,_CMP_EQ_OQ),0)
+cprimop256(sumneDB,0x2200,XCTL0(sumneDB0), ZZTEQ,0)
+cprimop256(sumneDI0,0x2010,,zz=_mm256_cmp_pd(xx,yy,_CMP_EQ_OQ),0)
+cprimop256(sumneDI,0x2010,XCTL0(sumneDI0), ZZTEQ,0)
 
 // <
 cprimop256(i0ltII,0x0000,,zz=_mm256_castsi256_pd(_mm256_cmpgt_epi64(_mm256_castpd_si256(yy),_mm256_castpd_si256(xx)));,1)
@@ -304,6 +335,19 @@ cprimop256(j0ltDB0,0x1200,,zz=_mm256_cmp_pd(xx,yy,_CMP_GE_OQ),0)
 cprimop256(j0ltDB,0x1200,XCTL0(j0ltDB0), ZZTEQ zz=_mm256_andnot_pd(zz,_mm256_cmp_pd(xx,yy,_CMP_LT_OQ)),1)
 cprimop256(j0ltDI0,0x1010,,zz=_mm256_cmp_pd(xx,yy,_CMP_GE_OQ),0)
 cprimop256(j0ltDI,0x1010,XCTL0(j0ltDI0), ZZTEQ zz=_mm256_andnot_pd(zz,_mm256_cmp_pd(xx,yy,_CMP_LT_OQ)),1)
+cprimop256(sumltII,0x2000,,zz=_mm256_castsi256_pd(_mm256_cmpgt_epi64(_mm256_castpd_si256(yy),_mm256_castpd_si256(xx)));,1)
+cprimop256(sumltBI,0x2040,,zz=_mm256_castsi256_pd(_mm256_cmpgt_epi64(_mm256_castpd_si256(yy),_mm256_castpd_si256(xx)));,1)
+cprimop256(sumltIB,0x2080,,zz=_mm256_castsi256_pd(_mm256_cmpgt_epi64(_mm256_castpd_si256(yy),_mm256_castpd_si256(xx)));,1)
+cprimop256(sumltDD0,0x2000,,zz=_mm256_cmp_pd(xx,yy,_CMP_GE_OQ),0)
+cprimop256(sumltDD,0x2000,XCTL0(sumltDD0), ZZTEQ zz=_mm256_andnot_pd(zz,_mm256_cmp_pd(xx,yy,_CMP_LT_OQ)),1)
+cprimop256(sumltBD0,0x2100,,zz=_mm256_cmp_pd(xx,yy,_CMP_GE_OQ),0)
+cprimop256(sumltBD,0x2100,XCTL0(sumltBD0), ZZTEQ zz=_mm256_andnot_pd(zz,_mm256_cmp_pd(xx,yy,_CMP_LT_OQ)),1)
+cprimop256(sumltID0,0x2008,,zz=_mm256_cmp_pd(xx,yy,_CMP_GE_OQ),0)
+cprimop256(sumltID,0x2008,XCTL0(sumltID0), ZZTEQ zz=_mm256_andnot_pd(zz,_mm256_cmp_pd(xx,yy,_CMP_LT_OQ)),1)
+cprimop256(sumltDB0,0x2200,,zz=_mm256_cmp_pd(xx,yy,_CMP_GE_OQ),0)
+cprimop256(sumltDB,0x2200,XCTL0(sumltDB0), ZZTEQ zz=_mm256_andnot_pd(zz,_mm256_cmp_pd(xx,yy,_CMP_LT_OQ)),1)
+cprimop256(sumltDI0,0x2010,,zz=_mm256_cmp_pd(xx,yy,_CMP_GE_OQ),0)
+cprimop256(sumltDI,0x2010,XCTL0(sumltDI0), ZZTEQ zz=_mm256_andnot_pd(zz,_mm256_cmp_pd(xx,yy,_CMP_LT_OQ)),1)
 
 // <:
 cprimop256(i0leII,0x0000,,zz=_mm256_castsi256_pd(_mm256_cmpgt_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)));,0)
@@ -332,6 +376,19 @@ cprimop256(j0leDB0,0x1200,,zz=_mm256_cmp_pd(xx,yy,_CMP_GT_OQ),0)
 cprimop256(j0leDB,0x1200,XCTL0(j0leDB0), ZZTEQ zz=_mm256_or_pd(zz,_mm256_cmp_pd(xx,yy,_CMP_LT_OQ)),1)
 cprimop256(j0leDI0,0x1010,,zz=_mm256_cmp_pd(xx,yy,_CMP_GT_OQ),0)
 cprimop256(j0leDI,0x1010,XCTL0(j0leDI0), ZZTEQ zz=_mm256_or_pd(zz,_mm256_cmp_pd(xx,yy,_CMP_LT_OQ)),1)
+cprimop256(sumleII,0x2000,,zz=_mm256_castsi256_pd(_mm256_cmpgt_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)));,0)
+cprimop256(sumleBI,0x2040,,zz=_mm256_castsi256_pd(_mm256_cmpgt_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)));,0)
+cprimop256(sumleIB,0x2080,,zz=_mm256_castsi256_pd(_mm256_cmpgt_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)));,0)
+cprimop256(sumleDD0,0x2000,,zz=_mm256_cmp_pd(xx,yy,_CMP_GT_OQ),0)
+cprimop256(sumleDD,0x2000,XCTL0(sumleDD0), ZZTEQ zz=_mm256_or_pd(zz,_mm256_cmp_pd(xx,yy,_CMP_LT_OQ)),1)
+cprimop256(sumleBD0,0x2100,,zz=_mm256_cmp_pd(xx,yy,_CMP_GT_OQ),0)
+cprimop256(sumleBD,0x2100,XCTL0(sumleBD0), ZZTEQ zz=_mm256_or_pd(zz,_mm256_cmp_pd(xx,yy,_CMP_LT_OQ)),1)
+cprimop256(sumleID0,0x2008,,zz=_mm256_cmp_pd(xx,yy,_CMP_GT_OQ),0)
+cprimop256(sumleID,0x2008,XCTL0(sumleID0), ZZTEQ zz=_mm256_or_pd(zz,_mm256_cmp_pd(xx,yy,_CMP_LT_OQ)),1)
+cprimop256(sumleDB0,0x2200,,zz=_mm256_cmp_pd(xx,yy,_CMP_GT_OQ),0)
+cprimop256(sumleDB,0x2200,XCTL0(sumleDB0), ZZTEQ zz=_mm256_or_pd(zz,_mm256_cmp_pd(xx,yy,_CMP_LT_OQ)),1)
+cprimop256(sumleDI0,0x2010,,zz=_mm256_cmp_pd(xx,yy,_CMP_GT_OQ),0)
+cprimop256(sumleDI,0x2010,XCTL0(sumleDI0), ZZTEQ zz=_mm256_or_pd(zz,_mm256_cmp_pd(xx,yy,_CMP_LT_OQ)),1)
 
 // >:
 cprimop256(i0geII,0x0000,,zz=_mm256_castsi256_pd(_mm256_cmpgt_epi64(_mm256_castpd_si256(yy),_mm256_castpd_si256(xx)));,0)
@@ -360,6 +417,19 @@ cprimop256(j0geDB0,0x1200,,zz=_mm256_cmp_pd(xx,yy,_CMP_LT_OQ),0)
 cprimop256(j0geDB,0x1200,XCTL0(j0geDB0), ZZTEQ zz=_mm256_or_pd(zz,_mm256_cmp_pd(xx,yy,_CMP_GT_OQ)),1)
 cprimop256(j0geDI0,0x1010,,zz=_mm256_cmp_pd(xx,yy,_CMP_LT_OQ),0)
 cprimop256(j0geDI,0x1010,XCTL0(j0geDI0), ZZTEQ zz=_mm256_or_pd(zz,_mm256_cmp_pd(xx,yy,_CMP_GT_OQ)),1)
+cprimop256(sumgeII,0x2000,,zz=_mm256_castsi256_pd(_mm256_cmpgt_epi64(_mm256_castpd_si256(yy),_mm256_castpd_si256(xx)));,0)
+cprimop256(sumgeBI,0x2040,,zz=_mm256_castsi256_pd(_mm256_cmpgt_epi64(_mm256_castpd_si256(yy),_mm256_castpd_si256(xx)));,0)
+cprimop256(sumgeIB,0x2080,,zz=_mm256_castsi256_pd(_mm256_cmpgt_epi64(_mm256_castpd_si256(yy),_mm256_castpd_si256(xx)));,0)
+cprimop256(sumgeDD0,0x2000,,zz=_mm256_cmp_pd(xx,yy,_CMP_LT_OQ),0)
+cprimop256(sumgeDD,0x2000,XCTL0(sumgeDD0), ZZTEQ zz=_mm256_or_pd(zz,_mm256_cmp_pd(xx,yy,_CMP_GT_OQ)),1)
+cprimop256(sumgeBD0,0x2100,,zz=_mm256_cmp_pd(xx,yy,_CMP_LT_OQ),0)
+cprimop256(sumgeBD,0x2100,XCTL0(sumgeBD0), ZZTEQ zz=_mm256_or_pd(zz,_mm256_cmp_pd(xx,yy,_CMP_GT_OQ)),1)
+cprimop256(sumgeID0,0x2008,,zz=_mm256_cmp_pd(xx,yy,_CMP_LT_OQ),0)
+cprimop256(sumgeID,0x2008,XCTL0(sumgeID0), ZZTEQ zz=_mm256_or_pd(zz,_mm256_cmp_pd(xx,yy,_CMP_GT_OQ)),1)
+cprimop256(sumgeDB0,0x2200,,zz=_mm256_cmp_pd(xx,yy,_CMP_LT_OQ),0)
+cprimop256(sumgeDB,0x2200,XCTL0(sumgeDB0), ZZTEQ zz=_mm256_or_pd(zz,_mm256_cmp_pd(xx,yy,_CMP_GT_OQ)),1)
+cprimop256(sumgeDI0,0x2010,,zz=_mm256_cmp_pd(xx,yy,_CMP_LT_OQ),0)
+cprimop256(sumgeDI,0x2010,XCTL0(sumgeDI0), ZZTEQ zz=_mm256_or_pd(zz,_mm256_cmp_pd(xx,yy,_CMP_GT_OQ)),1)
 
 // >
 cprimop256(i0gtII,0x0000,,zz=_mm256_castsi256_pd(_mm256_cmpgt_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)));,1)
@@ -388,6 +458,19 @@ cprimop256(j0gtDB0,0x1200,,zz=_mm256_cmp_pd(xx,yy,_CMP_LE_OQ),0)
 cprimop256(j0gtDB,0x1200,XCTL0(j0gtDB0), ZZTEQ zz=_mm256_andnot_pd(zz,_mm256_cmp_pd(xx,yy,_CMP_GT_OQ)),1)
 cprimop256(j0gtDI0,0x1010,,zz=_mm256_cmp_pd(xx,yy,_CMP_LE_OQ),0)
 cprimop256(j0gtDI,0x1010,XCTL0(j0gtDI0), ZZTEQ zz=_mm256_andnot_pd(zz,_mm256_cmp_pd(xx,yy,_CMP_GT_OQ)),1)
+cprimop256(sumgtII,0x2000,,zz=_mm256_castsi256_pd(_mm256_cmpgt_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)));,1)
+cprimop256(sumgtBI,0x2040,,zz=_mm256_castsi256_pd(_mm256_cmpgt_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)));,1)
+cprimop256(sumgtIB,0x2080,,zz=_mm256_castsi256_pd(_mm256_cmpgt_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)));,1)
+cprimop256(sumgtDD0,0x2000,,zz=_mm256_cmp_pd(xx,yy,_CMP_LE_OQ),0)
+cprimop256(sumgtDD,0x2000,XCTL0(sumgtDD0), ZZTEQ zz=_mm256_andnot_pd(zz,_mm256_cmp_pd(xx,yy,_CMP_GT_OQ)),1)
+cprimop256(sumgtBD0,0x2100,,zz=_mm256_cmp_pd(xx,yy,_CMP_LE_OQ),0)
+cprimop256(sumgtBD,0x2100,XCTL0(sumgtBD0), ZZTEQ zz=_mm256_andnot_pd(zz,_mm256_cmp_pd(xx,yy,_CMP_GT_OQ)),1)
+cprimop256(sumgtID0,0x2008,,zz=_mm256_cmp_pd(xx,yy,_CMP_LE_OQ),0)
+cprimop256(sumgtID,0x2008,XCTL0(sumgtID0), ZZTEQ zz=_mm256_andnot_pd(zz,_mm256_cmp_pd(xx,yy,_CMP_GT_OQ)),1)
+cprimop256(sumgtDB0,0x2200,,zz=_mm256_cmp_pd(xx,yy,_CMP_LE_OQ),0)
+cprimop256(sumgtDB,0x2200,XCTL0(sumgtDB0), ZZTEQ zz=_mm256_andnot_pd(zz,_mm256_cmp_pd(xx,yy,_CMP_GT_OQ)),1)
+cprimop256(sumgtDI0,0x2010,,zz=_mm256_cmp_pd(xx,yy,_CMP_LE_OQ),0)
+cprimop256(sumgtDI,0x2010,XCTL0(sumgtDI0), ZZTEQ zz=_mm256_andnot_pd(zz,_mm256_cmp_pd(xx,yy,_CMP_GT_OQ)),1)
 
 #else
 INDF( i0eqII,I,I,ANE  ) INDF( i0eqIB,I,B,ANE  )   INDF( i0eqBI,B,I,ANE  )  INDF0( i0eqDD,D,D,TNE,NE0  )
@@ -425,6 +508,24 @@ INDF0( i0gtDB,D,B,TLEDX,LEDX0)  INDF0( i0gtDI,D,I,TLEDX,LEDX0)  INDF0( i0gtDD,D,
   JNDF( j0gtBI,B,I,ALE  )  JNDF0( j0gtBD,B,D,TLEXD,LEXD0)
 JNDF( j0gtIB,I,B,ALE  )  JNDF( j0gtII,I,I,ALE  )  JNDF0( j0gtID,I,D,TLEXD,LEXD0)
 JNDF0( j0gtDB,D,B,TLEDX,LEDX0)  JNDF0( j0gtDI,D,I,TLEDX,LEDX0)  JNDF0( j0gtDD,D,D,TLE,LE0  )
+SUMF(sumeqII,I,I,AEQ  ) SUMF(sumeqBI,B,I,AEQ  )  SUMF0(sumeqBD,B,D,TEQXD,EQXD0)
+SUMF(sumeqIB,I,B,AEQ  )    SUMF0(sumeqID,I,D,TEQXD,EQXD0)
+SUMF0(sumeqDB,D,B,TEQDX,EQDX0)  SUMF0(sumeqDI,D,I,TEQDX,EQDX0)  SUMF0(sumeqDD,D,D,TEQ,EQ0  )
+  SUMF(sumneBI,B,I,ANE  )  SUMF0(sumneBD,B,D,TNEXD,NEXD0)
+SUMF(sumneIB,I,B,ANE  )  SUMF(sumneII,I,I,ANE  )  SUMF0(sumneID,I,D,TNEXD,NEXD0)
+SUMF0(sumneDB,D,B,TNEDX,NEDX0)  SUMF0(sumneDI,D,I,TNEDX,NEDX0)  SUMF0(sumneDD,D,D,TNE,NE0  )
+  SUMF(sumltBI,B,I,ALT  )  SUMF0(sumltBD,B,D,TLTXD,LTXD0)
+SUMF(sumltIB,I,B,ALT  )  SUMF(sumltII,I,I,ALT  )  SUMF0(sumltID,I,D,TLTXD,LTXD0)
+SUMF0(sumltDB,D,B,TLTDX,LTDX0)  SUMF0(sumltDI,D,I,TLTDX,LTDX0)  SUMF0(sumltDD,D,D,TLT,LT0  )
+ SUMF(sumleBI,B,I,ALE  )  SUMF0(sumleBD,B,D,TLEXD,LEXD0)
+SUMF(sumleIB,I,B,ALE  )  SUMF(sumleII,I,I,ALE  )  SUMF0(sumleID,I,D,TLEXD,LEXD0)
+SUMF0(sumleDB,D,B,TLEDX,LEDX0)  SUMF0(sumleDI,D,I,TLEDX,LEDX0)  SUMF0(sumleDD,D,D,TLE,LE0  )
+  SUMF(sumgeBI,B,I,AGE  )  SUMF0(sumgeBD,B,D,TGEXD,GEXD0)
+SUMF(sumgeIB,I,B,AGE  )  SUMF(sumgeII,I,I,AGE  )  SUMF0(sumgeID,I,D,TGEXD,GEXD0)
+SUMF0(sumgeDB,D,B,TGEDX,GEDX0)  SUMF0(sumgeDI,D,I,TGEDX,GEDX0)  SUMF0(sumgeDD,D,D,TGE,GE0  )
+ SUMF(sumgtBI,B,I,AGT  )  SUMF0(sumgtBD,B,D,TGTXD,GTXD0)
+SUMF(sumgtIB,I,B,AGT  )  SUMF(sumgtII,I,I,AGT  )  SUMF0(sumgtID,I,D,TGTXD,GTXD0)
+SUMF0(sumgtDB,D,B,TGTDX,GTDX0)  SUMF0(sumgtDI,D,I,TGTDX,GTDX0)  SUMF0(sumgtDD,D,D,TGT,GT0  )
 #endif
 
 INDB( i0eqBB,B,B,NE   )  
@@ -432,49 +533,32 @@ INDB( i0eqBB,B,B,NE   )
 
 JNDB( j0eqBB,B,B,NE   )
 
-SUMB(sumeqBB,B,B,EQ   )  SUMF(sumeqBI,B,I,AEQ  )  SUMF0(sumeqBD,B,D,TEQXD,EQXD0)
-SUMF(sumeqIB,I,B,AEQ  )  SUMF(sumeqII,I,I,AEQ  )  SUMF0(sumeqID,I,D,TEQXD,EQXD0)
-SUMF0(sumeqDB,D,B,TEQDX,EQDX0)  SUMF0(sumeqDI,D,I,TEQDX,EQDX0)  SUMF0(sumeqDD,D,D,TEQ,EQ0  )
+SUMB(sumeqBB,B,B,EQ   ) 
 
 INDB( i0neBB,B,B,EQ   ) 
 
 JNDB( j0neBB,B,B,EQ   )
 
-SUMB(sumneBB,B,B,NE   )  SUMF(sumneBI,B,I,ANE  )  SUMF0(sumneBD,B,D,TNEXD,NEXD0)
-SUMF(sumneIB,I,B,ANE  )  SUMF(sumneII,I,I,ANE  )  SUMF0(sumneID,I,D,TNEXD,NEXD0)
-SUMF0(sumneDB,D,B,TNEDX,NEDX0)  SUMF0(sumneDI,D,I,TNEDX,NEDX0)  SUMF0(sumneDD,D,D,TNE,NE0  )
-
+SUMB(sumneBB,B,B,NE   )
 INDB( i0ltBB,B,B,GE   )
 
 JNDB( j0ltBB,B,B,GE   )
 
-SUMB(sumltBB,B,B,LT   )  SUMF(sumltBI,B,I,ALT  )  SUMF0(sumltBD,B,D,TLTXD,LTXD0)
-SUMF(sumltIB,I,B,ALT  )  SUMF(sumltII,I,I,ALT  )  SUMF0(sumltID,I,D,TLTXD,LTXD0)
-SUMF0(sumltDB,D,B,TLTDX,LTDX0)  SUMF0(sumltDI,D,I,TLTDX,LTDX0)  SUMF0(sumltDD,D,D,TLT,LT0  )
-
+SUMB(sumltBB,B,B,LT   )
 INDB( i0leBB,B,B,GT   )
 
 JNDB( j0leBB,B,B,GT   )
-SUMB(sumleBB,B,B,LE   )  SUMF(sumleBI,B,I,ALE  )  SUMF0(sumleBD,B,D,TLEXD,LEXD0)
-SUMF(sumleIB,I,B,ALE  )  SUMF(sumleII,I,I,ALE  )  SUMF0(sumleID,I,D,TLEXD,LEXD0)
-SUMF0(sumleDB,D,B,TLEDX,LEDX0)  SUMF0(sumleDI,D,I,TLEDX,LEDX0)  SUMF0(sumleDD,D,D,TLE,LE0  )
-
+SUMB(sumleBB,B,B,LE   ) 
 INDB( i0geBB,B,B,LT   )
 
 JNDB( j0geBB,B,B,LT   )
 
-SUMB(sumgeBB,B,B,GE   )  SUMF(sumgeBI,B,I,AGE  )  SUMF0(sumgeBD,B,D,TGEXD,GEXD0)
-SUMF(sumgeIB,I,B,AGE  )  SUMF(sumgeII,I,I,AGE  )  SUMF0(sumgeID,I,D,TGEXD,GEXD0)
-SUMF0(sumgeDB,D,B,TGEDX,GEDX0)  SUMF0(sumgeDI,D,I,TGEDX,GEDX0)  SUMF0(sumgeDD,D,D,TGE,GE0  )
-
+SUMB(sumgeBB,B,B,GE   )
 INDB( i0gtBB,B,B,LE   )
 
 JNDB( j0gtBB,B,B,LE   )
 
-SUMB(sumgtBB,B,B,GT   )  SUMF(sumgtBI,B,I,AGT  )  SUMF0(sumgtBD,B,D,TGTXD,GTXD0)
-SUMF(sumgtIB,I,B,AGT  )  SUMF(sumgtII,I,I,AGT  )  SUMF0(sumgtID,I,D,TGTXD,GTXD0)
-SUMF0(sumgtDB,D,B,TGTDX,GTDX0)  SUMF0(sumgtDI,D,I,TGTDX,GTDX0)  SUMF0(sumgtDD,D,D,TGT,GT0  )
-
+SUMB(sumgtBB,B,B,GT   ) 
 static AF atcompxy[]={  /* table for (B01,INT,FL) vs. (B01,INT,FL) */
  i0eqBB, i0eqBI, i0eqBD,   i0eqIB, i0eqII, i0eqID,   i0eqDB, i0eqDI, i0eqDD,   /* 0 */
  i0neBB, i0neBI, i0neBD,   i0neIB, i0neII, i0neID,   i0neDB, i0neDI, i0neDD,

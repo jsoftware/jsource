@@ -24,9 +24,9 @@
 #define VQ              (RAT<<VRESX) /* result type RAT  bit 19                   */
 #define VSB             (SBT<<VRESX) /* result type SBT bit 28                    */
 #define VRESMSK         (VB|VI|VD|VZ|VX|VQ|VSB)  // mask for result-type
-#define VRD             (SLIT<<VRESX)// convert result to D if possible - unused code point
-#define VRI             (SBOX<<VRESX)// convert result to I if possible - unused code point
-// bits VRESX+ 1 10 11 12 are free
+#define VRD             (0x800<<VRESX)// convert result to D if possible - unused code point
+#define VRI             (0x8000<<VRESX)// convert result to I if possible - unused code point
+// bits VRESX+ 1 5 10 12 16 are free
 #define VIPWFLONGX     (SY_64?63:17)  // (must be >RANKTX) internal use in va2.  We use sign bit where possible
 #define VIPWFLONG      ((I)1<<VIPWFLONGX)
 #define VIPOKWX         20      // This routine can put its result over W

@@ -52,7 +52,7 @@ static F2(jttks){PROLOG(0092);A a1,q,x,y,z;B b,c;I an,m,r,*s,*u,*v;P*wp,*zp;
 // general take routine.  a is result frame followed by signed take values i. e. shape of result, w is array
 static F2(jttk){PROLOG(0093);A y,z;B b=0;C*yv,*zv;I c,d,dy,dz,e,i,k,m,n,p,q,r,*s,t,*u;
  n=AN(a); u=AV(a); r=AR(w); s=AS(w); t=AT(w);
- if(unlikely((t&SPARSE)!=0))R tks(a,w);
+ if(unlikely((t&ISSPARSE)!=0))R tks(a,w);
  DO(n, if(!u[i]){b=1; break;}); if(!b)DO(r-n, if(!s[n+i]){b=1; break;});  // if empty take, or take from empty cell, set b
  if(((b-1)&AN(w))==0)R tk0(b,a,w);   // this handles empty w, so PROD OK below   b||!AN(w)
  k=bpnoun(t); z=w; c=q=1;  // c will be #cells for this axis
@@ -77,8 +77,8 @@ static F2(jttk){PROLOG(0093);A y,z;B b=0;C*yv,*zv;I c,d,dy,dz,e,i,k,m,n,p,q,r,*s
 F2(jttake){A s;I acr,af,ar,n,*v,wcr,wf,wr;
  F2PREFIP;
  ARGCHK2(a,w); I wt = AT(w);  // wt=type of w
- if(unlikely((SPARSE&AT(a))!=0))RZ(a=denseit(a));
- if(likely(!(SPARSE&wt)))RZ(w=setfv(w,w)); 
+ if(unlikely((AT(a)&ISSPARSE)!=0))RZ(a=denseit(a));
+ if(likely(!(wt&ISSPARSE)))RZ(w=setfv(w,w)); 
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr; af=ar-acr;  // ?r=rank, ?cr=cell rank, ?f=length of frame
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK; 
  if(((af-1)&(acr-2))>=0){
@@ -97,13 +97,13 @@ F2(jttake){A s;I acr,af,ar,n,*v,wcr,wf,wr;
  if(!(AT(a)&B01+INT)){
   I i; for(i=0;i<AN(s);++i){I m=IAV(s)[i]; I ms=REPSGN(m); if((m^ms)-ms == IMAX)break;}  // see if there are infinities.  They are IMAX/-IMAX, so take abc & see if result is IMAX
   if(i<AN(s)){
-   s=ca(s); if(!(AT(a)&FL))RZ(a=cvt(FL,a));  // copy area we are going to change; put a in a form where we can recognize infinity
+   s=ca(s); if(!ISDENSETYPE(AT(a),FL))RZ(a=cvt(FL,a));  // copy area we are going to change; put a in a form where we can recognize infinity
    for(;i<AN(s);++i){if(DAV(a)[i]==IMIN)IAV(s)[i]=IMIN;else if(INF(DAV(a)[i]))IAV(s)[i]=wcr?ws[wf+i]:1;}  // kludge.  The problem is which huge values to consider infinite.  This is how it was done
   }
  }
  a=s;
-// correct if(!(ar|wf|(SPARSE&wt)|!wcr|(AFLAG(w)&(AFNJA)))){  // if there is only 1 take axis, w has no frame and is not atomic
- if(!(ar|wf|((NOUN&~(DIRECT|RECURSIBLE))&wt)|!wcr|(AFLAG(w)&(AFNJA)))){  // if there is only 1 take axis, w has no frame and is not atomic  NJAwhy
+// obsolete correct if(!(ar|wf|(SPARSE&wt)|!wcr|(AFLAG(w)&(AFNJA)))){  // if there is only 1 take axis, w has no frame and is not atomic
+ if(!(ar|wf|(((NOUN&~(DIRECT|RECURSIBLE))|ISSPARSE)&wt)|!wcr|(AFLAG(w)&(AFNJA)))){  // if there is only 1 take axis, w has no frame and is not atomic  NJAwhy
   // if the length of take is within the bounds of the first axis
   I tklen = IAV(a)[0];  // get the one number in a, the take amount
   I tkasign = REPSGN(tklen);  // 0 if tklen nonneg, ~0 if neg
@@ -151,8 +151,8 @@ F2(jtdrop){A s;I acr,af,ar,d,m,n,*u,*v,wcr,wf,wr;
  }
  n=AN(a); u=AV(a);     // n=#axes to drop, u->1st axis
  // virtual case: scalar a
-// correct if(!(ar|wf|(SPARSE&wt)|!wcr|(AFLAG(w)&(AFNJA)))){  // if there is only 1 take axis, w has no frame and is not atomic
- if(!(ar|wf|((NOUN&~(DIRECT|RECURSIBLE))&wt)|!wcr|(AFLAG(w)&(AFNJA)))){  // if there is only 1 take axis, w has no frame and is not atomic  BJAwhy
+// obsolete correct if(!(ar|wf|(SPARSE&wt)|!wcr|(AFLAG(w)&(AFNJA)))){  // if there is only 1 take axis, w has no frame and is not atomic
+ if(!(ar|wf|(((NOUN&~(DIRECT|RECURSIBLE))|ISSPARSE)&wt)|!wcr|(AFLAG(w)&(AFNJA)))){  // if there is only 1 take axis, w has no frame and is not atomic  BJAwhy
   I * RESTRICT ws=AS(w);  // ws->shape of w
   I droplen = IAV(a)[0];  // get the one number in a, the take amount
   I dropabs = droplen<0?-droplen:droplen;  // ABS(droplen), but may be as high as IMIN
@@ -197,7 +197,7 @@ F1(jthead){I wcr,wf,wr;
  ARGCHK1(w);
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr;  // no RESETRANK so that we can pass rank into other code
  if(!wcr||AS(w)[wf]){  // if cell is atom, or cell has items - which means it's safe to calculate the size of a cell
-  if(((-wf)|((AT(w)&(DIRECT|RECURSIBLE))-1)|(wr-2))>=0){  // frame=0, and DIRECT|RECURSIBLE, and rank>1.  No gain in virtualizing an atom, and it messes up inplacing and allocation-size counting in the tests
+  if(((-wf)|((AT(w)&(DIRECT|RECURSIBLE))-1)|(wr-2))>=0){  // frame=0, and DIRECT|RECURSIBLE, not sparse, and rank>1.  No gain in virtualizing an atom, and it messes up inplacing and allocation-size counting in the tests
    // just one cell (no frame).  Create a virtual block for it, at offset 0
    I wn=AN(w); wcr--; wcr=(wcr<0)?wr:wcr;  // wn=#atoms of w, wcr=rank of cell being created
    A z; RZ(z=virtualip(w,0,wcr));  // allocate the cell.  Now fill in shape & #atoms
@@ -209,7 +209,7 @@ F1(jthead){I wcr,wf,wr;
    // left rank is garbage, but since zeroionei(0) is an atom it doesn't matter
    RETF(jtfrom(jtinplace,zeroionei(0),w));  // could call jtfromi directly for non-sparse w
   }
- }else{RETF(SPARSE&AT(w)?irs2(num(0),take(num( 1),w),0L,0L,wcr,jtfrom):rsh0(w));  // cell of w is empty - create a cell of fills  jt->ranks is still set for use in take.  Left rank is garbage, but that's OK
+ }else{RETF(AT(w)&ISSPARSE?irs2(num(0),take(num( 1),w),0L,0L,wcr,jtfrom):rsh0(w));  // cell of w is empty - create a cell of fills  jt->ranks is still set for use in take.  Left rank is garbage, but that's OK
  }
  // pristinity from the called verb
 }
@@ -219,6 +219,6 @@ F1(jttail){I wcr,wf,wr;
  ARGCHK1(w);
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr;  // no RESETRANK: rank is passed into from/take/rsh0.  Left rank is garbage but that's OK
  R !wcr||AS(w)[wf]?jtfrom(jtinplace,num(-1),w) :  // if cells are atoms, or if the cells are nonempty arrays, result is last cell(s) scaf should generate virtual block here for speed
-     SPARSE&AT(w)?irs2(num(0),take(num(-1),w),0L,0L,wcr,jtfrom):rsh0(w);
+     AT(w)&ISSPARSE?irs2(num(0),take(num(-1),w),0L,0L,wcr,jtfrom):rsh0(w);
  // pristinity from other verbs
 }

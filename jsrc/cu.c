@@ -10,7 +10,7 @@
 static A jteverysp(J jt,A w,A fs){A*wv,x,z,*zv;P*wp,*zp;
  ARGCHK1(w);
  AF f1=FAV(fs)->valencefns[0];
- ASSERT(SBOX&AT(w),EVNONCE);
+ ASSERT((AT(w)&ISSPARSE+BOX)==ISSPARSE+BOX,EVNONCE);
  RZ(z=ca(w));
  wp=PAV(w); x=SPA(wp,x); wv=AAV(x);
  zp=PAV(z); x=SPA(zp,x); zv=AAV(x);
@@ -18,7 +18,7 @@ static A jteverysp(J jt,A w,A fs){A*wv,x,z,*zv;P*wp,*zp;
  R z;
 }
 
-#define EVERYI(exp)  {RZ(x=exp); INCORP(x); RZ(*zv++=x); ASSERT(!(SPARSE&AT(x)),EVNONCE);}
+#define EVERYI(exp)  {RZ(x=exp); INCORP(x); RZ(*zv++=x); ASSERT(!(AT(x)&ISSPARSE),EVNONCE);}
      /* note: x can be non-noun */
 
 // NOTE: internal calls to every/every2 use a skeletal fs created by the EVERYFS macro.  It fills in only
@@ -28,7 +28,7 @@ DF1(jteveryself){R jtevery(jt,w,FAV(self)->fgh[0]);}   // replace u&.> with u an
 A jtevery(J jt, A w, A fs){A * RESTRICT wv,x,z,* RESTRICT zv;
  F1PREFIP;ARGCHK1(w);RESETRANK;  // we claim to support IRS1 but really there's nothing to do for it
  I wt=AT(w), wflag=AFLAG(w), wr=AR(w);
- if(unlikely((SPARSE&wt)!=0))R everysp(w,fs);
+ if(unlikely((wt&ISSPARSE)!=0))R everysp(w,fs);
  I natoms=AN(w);
  // Allocate result area
  GATV(z,BOX,natoms,wr,AS(w));
@@ -71,7 +71,7 @@ A jtevery(J jt, A w, A fs){A * RESTRICT wv,x,z,* RESTRICT zv;
    ACIPNO(virtw); R0;  // restore inplaceability before we exit
   }
   // If x is DIRECT inplaceable, it must be unique and we can inherit them into a pristine result.  Otherwise clear pristinity
-  if(likely(AT(x)&DIRECT)){
+  if(likely((AT(x)&DIRECT)>0)){
    flags&=SGNIFPRISTINABLE(AC(x))|~ACINPLACE;  // sign bit of flags will hold PRISTINE status of result: 1 if all DIRECT and inplaceable or PERMANENT.  NOTE that x may be the initial virtw.
          // If so, we will still let it show PRISTINE in z, because for virtw to be inplace, it must be abandoned or virtual, neither of which can be used again
   }else{
@@ -117,7 +117,7 @@ A jtevery(J jt, A w, A fs){A * RESTRICT wv,x,z,* RESTRICT zv;
    // count then, because no virtual contents would be allowed.  But we are not sure that the EPILOG is safe, and this path is now off to the side
 #endif
   }
-  ASSERT(!(SPARSE&AT(x)),EVNONCE);
+  ASSERT(!(AT(x)&ISSPARSE),EVNONCE);
   // Store result & advance to next cell
   *zv++=x;
   if(unlikely(!--natoms))break;  // break to avoid fetching over the end of the input
@@ -205,7 +205,7 @@ A jtevery2(J jt, A a, A w, A fs){A*av,*wv,x,z,*zv;
    ACIPNO(virtw); ACIPNO(virta); R0;  // restore inplaceability before we exit
   }
   // If x is DIRECT inplaceable, it must be unique and we can inherit them into a pristine result.  Otherwise clear pristinity
-  if(likely(AT(x)&DIRECT)){
+  if(likely((AT(x)&DIRECT)>0)){
    flags&=SGNIFPRISTINABLE(AC(x))|~ACINPLACE;  // sign bit of flags will hold PRISTINE status of result: 1 if all DIRECT and inplaceable or PERMANENT.  NOTE that x may be the initial virtw.
          // If so, we will still let it show PRISTINE in z, because for virtw to be inplace, it must be abandoned or virtual, neither of which can be used again
   }else{
@@ -241,7 +241,7 @@ A jtevery2(J jt, A a, A w, A fs){A*av,*wv,x,z,*zv;
 
 
 
-  ASSERT(!(SPARSE&AT(x)),EVNONCE);
+  ASSERT(!(AT(x)&ISSPARSE),EVNONCE);
   // Store result & advance to next cell
   *zv++=x;
   if(!--natoms)break;

@@ -24,7 +24,7 @@ F1(jtswap){A y;C*s;I n;
   R fdef(0,CTILDE,VERB,(AF)(swap1),(AF)(swap2),w,0L,0L,flag,(I)(RMAX),(I)(rr(w)),(I)(lr(w)));
  }else{
   // evoke.  Ii must be LIT and convertible to ASCII.
-  if((C2T+C4T)&AT(w))RZ(w=cvt(LIT,w)) else ASSERT(LIT&AT(w),EVDOMAIN);
+  if((C2T+C4T)&AT(w))RZ(w=cvt(LIT,w)) else ASSERT(ISDENSETYPE(AT(w),LIT),EVDOMAIN);
   ASSERT(1>=AR(w),EVRANK);  // list or atom only
   n=AN(w); s=CAV(w); 
   ASSERT(vnm(n,s),EVILNAME);   // valid name
@@ -142,7 +142,7 @@ static A jtmemoput(J jt,I x,I y,A self,A z){A*cv,h,*hv,q;I *jv,k,m,*mv,*v;
 // memoable is: atomic int/bool or float with int value
 static I jtint0(J jt,A w){A x;
  if(unlikely(AR(w)))R IMIN;
- if(unlikely(!(AT(w)&B01+INT)))w=pcvt(INT,w);
+ if(unlikely(!(ISDENSETYPE(AT(w),B01+INT))))w=pcvt(INT,w);
  R w&&INT&AT(w)?BIV0(w):IMIN;
 }
 

@@ -504,7 +504,7 @@ SYMWALK(jtredefg,B,B01,100,1,1,RZ(redef(mark,d)))
 
 F1(jtlocexmark){A g,*wv,y,z;B *zv;C*u;I i,m,n;L*v;
  RZ(vlocnl(1,w));
- if(AT(w)&B01)RZ(w=cvt(INT,w));  // Since we have an array, we must convert b01 to INT
+ if(ISDENSETYPE(AT(w),B01))RZ(w=cvt(INT,w));  // Since we have an array, we must convert b01 to INT
  n=AN(w); wv=AAV(w); 
  GATV(z,B01,n,AR(w),AS(w)); zv=BAV(z);
  for(i=0;i<n;++i){

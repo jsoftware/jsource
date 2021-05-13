@@ -1877,12 +1877,12 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
   // IIOREPS indicates i./i:/e./key, which are candidates for reversed search and sequential search.  key will never cause a reversed search, but
   // it must not use sequential search if the comparison is inexact, because then it would conflict with nub and just generally fail because values not in
   // the nub could match later values leaving omitted values
-  mode |= IIOREPS&((((((I)1)<<IIDOT)|(((I)1)<<IICO)|(((I)1)<<IEPS)|(((0x100000&((UI4*)&jt->cct)[1])>((at|wt)&(FLX|CMPX|BOX)))<<IFORKEY))<<IIOREPSX)>>mode);  // remember if i./i:/e./key (and not prehash)
+  mode |= IIOREPS&((((((I)1)<<IIDOT)|(((I)1)<<IICO)|(((I)1)<<IEPS)|(((0x100000&((UI4*)&jt->cct)[1])>(UI)((at|wt)&(FLX|CMPX|BOX)))<<IFORKEY))<<IIOREPSX)>>mode);  // remember if i./i:/e./key (and not prehash)  scaf should be >= don't need at|wt - always reflexive
   // The comparison uses the fact that cct can never go above 1.0, which is 0x3ff0000000000000 in double precision.  To avoid integer-float conversions, we just strip out the bit that signifies
-  // 1.0.  The expression then means '1.0 or not inexact'
+  // 1.0.  The expression then means 'tolerance=1.0 or intolerant comparison'
   // If the problem is small, use sequential search to save analysis and hashing time
   // TUNE  From testing 8/2019 on SkylakeX, sequential search wins if an<=10 or wn<=7, or an+wn<=40
-  if((((an-11)|(wn-8)|(an+wn-41))<0)&&((ar^1)+TYPESXOR(at,wt))==0&&(((1-wr)|SGNIF(mode,ISFUX)|SGNIFNOT(mode,IIOREPSX)|(-((acr^1)|(wr^wcr)|((at|wt)&SPARSE)))|(an-1)|(wn-1))>=0)){
+  if((((an-11)|(wn-8)|(an+wn-41))<0)&&((ar^1)+TYPESXOR(at,wt))==0&&(((1-wr)|SGNIF(mode,ISFUX)|SGNIFNOT(mode,IIOREPSX)|SGNIFSPARSE(at|wt)|(-((acr^1)|(wr^wcr)))|(an-1)|(wn-1))>=0)){
    // Fast path for (vector i./i:/e./key atom or short vector) - if not prehashing.  Do sequential search
    I zt=((mode&IIOPMSK)==IEPS)?B01:INT;  // the result type depends on the operation.
    A z; GA(z,zt,wn,wr,ws);
@@ -1919,12 +1919,12 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
  // f is len of frame of a (or of w if a has no frame); s->shape of a (or of w is a has no frame)
  // r is rank of an item of a cell of a (i. e. rank of a target item), f1 is len of frame of A CELL OF w with respect to target cells, in
  // other words the frame of the results each cell of w will produce
- if(unlikely(((at|wt)&SPARSE)!=0)){A z;
+ if(unlikely(((at|wt)&ISSPARSE)!=0)){A z;
   // Handle sparse arguments
   mode &= IIOPMSK;  // remove flags before going to sparse code
-  if(1>=acr)R af?sprank2(a,w,0L,acr,RMAX,jtindexof):wt&SPARSE?iovxs(mode,a,w):iovsd(mode,a,w);
+  if(1>=acr)R af?sprank2(a,w,0L,acr,RMAX,jtindexof):wt&ISSPARSE?iovxs(mode,a,w):iovsd(mode,a,w);
   if(af|wf)R sprank2(a,w,0L,acr,wcr,jtindexof);
-  switch((at&SPARSE?2:0)+(wt&SPARSE?1:0)){
+  switch((at&ISSPARSE?2:0)+(wt&ISSPARSE?1:0)){
    case 1: z=indexofxx(mode,a,w); break;
    case 2: z=indexofxx(mode,a,w); break;
    case 3: z=indexofss(mode,a,w); break;
@@ -1964,12 +1964,12 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
   fnx=HOMONE(at,wt)?0:-2; /* noavx jt->min=0; */  // are args compatible?  -2 if not.  MARK is inhomo
   if((fnx|(TYPESXOR(t,at)-1))>=0)RZ(a=cvt(t|VFRCEXMT,a))  // convert if homo and TYPESXOR both nonzero
   if((fnx|(TYPESXOR(t,wt)-1))>=0)RZ(w=cvt(t|VFRCEXMT,w))
-  fnx=mode&IPHCALC?0:fnx;  // if prehash, ignore the in homo
+  fnx=mode&IPHCALC?0:fnx;  // if prehash, ignore the inhomo
  }
 
  // fnx is -2 if inhomo args, 0 otherwise
  fnx|=REPSGN(SGNIFNOT(mode,IPHCALCX)&(((I)m-1)|(n-1)|(zn-1)));
- // fnx is -2 if inhomo and not empty, -1 if empty, 0 otherwise  but if precalc, we leave fnx at 0
+ // fnx is -2 if inhomo and not empty, -1 if any arg or result empty, 0 otherwise  but if precalc, we leave fnx at 0
  // Choose the function to use for performing the operation, in 'fnx'
  // fnx starts negative and is set to nonnegative when we know what function to use.
  // While fnx is negative, bit 0 means 'intolerant comparison'
@@ -2200,7 +2200,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
  }
 
  // Create result for empty/inhomogeneous arguments, & return
- if(unlikely(fnx<-2)){  // if empty (-3) or inhomo (-4), create the result immediately
+ if(unlikely(fnx<-2)){  // if something empty (-3) or inhomo (-4), create the result immediately
   I witems; SETICFR(w,0,wr>r,witems);   // # items of w, in case we are doing i.&0 eg on result of e., which will have that many items
   switch(mode&(IIOPMSK)){  // if PHCALC, we never got here
   // If empty argument or result, or inhomogeneous arguments, return an appropriate empty or not-found
@@ -2211,8 +2211,9 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
   case IICO:    R reshape(shape(z),sc(n?m:m-1));
   case INUBSV:  R reshape(shape(z),take(sc(m),num(1)));
   case INUB:    AN(z)=0; AS(z)[0]=m?1:0; R z;
-  case ILESS:   if(m&&fnx==-3)AN(z)=AS(z)[0]=0; else MC(AV(z),AV(w),AN(w)<<bplg(AT(w))); R z;  // y has atoms or 
-  case IINTER:  R take(zeroionei(0),w);
+  case ILESS:   if(m&&fnx==-3)AN(z)=AS(z)[0]=0; else MC(AV(z),AV(w),AN(w)<<bplg(AT(w))); R z;
+  case IINTER:  if(!(m&&fnx==-3))AN(z)=AS(z)[0]=0; R z;  // y has atoms or something is empty, return all of w; otherwise empty
+// obsolete  R take(zeroionei(0),w);
   case IEPS:    R reshape(shape(z),num(m&&(!n||(fnx&1))));  // fnx&1 is true if homo
   case INUBI:   R m?iv0:mtv;
   // th<0 means that the result of e. would have rank>1 and would never compare against either 0 or 1
@@ -2324,7 +2325,7 @@ F2(jtjico2){R indexofsub(IICO,a,w);}
 // ~: y
 F1(jtnubsieve){
  ARGCHK1(w);
- if(unlikely((SPARSE&AT(w))!=0))R nubsievesp(w); 
+ if(unlikely((AT(w)&ISSPARSE)!=0))R nubsievesp(w); 
  jt->ranks=(RANKT)jt->ranks + ((RANKT)jt->ranks<<RANKTX);  // we process as if dyad; make left rank=right rank
  R indexofsub(INUBSV,w,w); 
 }    /* ~:"r w */
@@ -2332,7 +2333,7 @@ F1(jtnubsieve){
 // ~. y  - does not have IRS
 F1(jtnub){ 
  F1PREFIP;ARGCHK1(w);
- if(unlikely(((SPARSE&AT(w))|(AFLAG(w)&AFNJA))!=0))R repeat(nubsieve(w),w);    // sparse or NJA
+ if(unlikely(((AT(w)&ISSPARSE)|(AFLAG(w)&AFNJA))!=0))R repeat(nubsieve(w),w);    // sparse or NJA
  A z; RZ(z=indexofsub(INUB,w,w));
  // We extracted from w, so mark it (or its backer if virtual) non-pristine.  If w was pristine and inplaceable, transfer its pristine status to the result.  We overwrite w because it is no longer in use
  PRISTXFERF(z,w)
@@ -2349,8 +2350,8 @@ F2(jtless){A x=w;I ar,at,k,r,*s,wr,*ws,wt;
  if(unlikely((-wr&-(r^wr))<0)){RZ(x=virtual(w,0,r)); AN(x)=AN(w); s=AS(x); ws=AS(w); k=ar>wr?0:1+wr-r; I s0; PRODX(s0,k,ws,1) s[0]=s0; MCISH(1+s,k+ws,r-1);}  //  use fauxvirtual here
  // if nothing special (like sparse, or incompatible types, or x requires conversion) do the fast way; otherwise (-. x e. y) # x 
  // because LESS allocates a large array to hold all the values, we use the slower, less memory-intensive, version if a is mapped
-// obsolete  RZ(x=(NEGIFHOMO(at,wt)&((TYPESXOR(at,maxtyped(at,wt))|(at&SPARSE)|(AFLAG(a)&AFNJA))-1))<0?indexofsub(ILESS,x,a):
- RZ(x=(((at&SPARSE)|(AFLAG(a)&AFNJA))-1)<0?indexofsub(ILESS,x,a):
+// obsolete  RZ(x=(NEGIFHOMO(at,wt)&((TYPESXOR(at,maxtyped(at,wt))|(at&ISSPARSE)|(AFLAG(a)&AFNJA))-1))<0?indexofsub(ILESS,x,a):
+ RZ(x=((at&ISSPARSE)|SGNIF(AFLAG(a),AFNJAX))>=0?indexofsub(ILESS,x,a):
      repeat(not(eps(a,x)),a));
  // We extracted from a, so mark it (or its backer if virtual) non-pristine.  If a was pristine and inplaceable, transfer its pristine status to the result
  PRISTXFERAF(x,a)
@@ -2370,8 +2371,10 @@ DF2(jtintersect){A x=w;I ar,at,k,r,*s,wr,*ws,wt;
  PUSHCCTIF(FAV(self)->localuse.lu1.cct,FAV(self)->localuse.lu1.cct!=0)   // if there is a CT, use it
  // if nothing special (like sparse, or incompatible types, or x requires conversion) do the fast way; otherwise (-. x e. y) # x 
  // because LESS allocates a large array to hold all the values, we use the slower, less memory-intensive, version if a is mapped
- x=(NEGIFHOMO(at,wt)&((TYPESXOR(at,maxtyped(at,wt))|(at&SPARSE)|(AFLAG(a)&AFNJA))-1))<0?indexofsub(IINTER,x,a):
+ x=((at&ISSPARSE)|SGNIF(AFLAG(a),AFNJAX))>=0?indexofsub(IINTER,x,a):
      repeat(eps(a,x),a);
+// obsolete  x=(NEGIFHOMO(at,wt)&((TYPESXOR(at,maxtyped(at,wt))|(at&ISSPARSE)|(AFLAG(a)&AFNJA))-1))<0?indexofsub(IINTER,x,a):  // scaf remove type test
+// obsolete      repeat(eps(a,x),a);
  POPCCT
  RZ(x);
  // We extracted from a, so mark it (or its backer if virtual) non-pristine.  If a was pristine and inplaceable, transfer its pristine status to the result
@@ -2384,7 +2387,7 @@ F2(jteps){I l,r;
  ARGCHK2(a,w);
  l=jt->ranks>>RANKTX; l=AR(a)<l?AR(a):l;
  r=(RANKT)jt->ranks; r=AR(w)<r?AR(w):r; RESETRANK;
- if(unlikely((SPARSE&(AT(a)|AT(w)))!=0))R lt(irs2(w,a,0L,r,l,jtindexof),sc(r?AS(w)[AR(w)-r]:1));  // for sparse, implement as (# cell of y) > y i. x
+ if(unlikely(((AT(a)|AT(w))&ISSPARSE)!=0))R lt(irs2(w,a,0L,r,l,jtindexof),sc(r?AS(w)[AR(w)-r]:1));  // for sparse, implement as (# cell of y) > y i. x
  jt->ranks=(RANK2T)((r<<RANKTX)+l);  // swap ranks for subroutine.  Subroutine will reset ranks
  R indexofsub(IEPS,w,a);
 }    /* a e."r w */
@@ -2392,20 +2395,20 @@ F2(jteps){I l,r;
 // I.@~: y   does not have IRS
 F1(jtnubind){
  ARGCHK1(w);
- R SPARSE&AT(w)?icap(nubsieve(w)):indexofsub(INUBI,w,w);
+ R AT(w)&ISSPARSE?icap(nubsieve(w)):indexofsub(INUBI,w,w);
 }    /* I.@~: w */
 
 // i.@(~:!.0) y     does not have IRS
 F1(jtnubind0){A z;
  ARGCHK1(w);
- PUSHCCT(1.0) z=SPARSE&AT(w)?icap(nubsieve(w)):indexofsub(INUBI,w,w); POPCCT
+ PUSHCCT(1.0) z=AT(w)&ISSPARSE?icap(nubsieve(w)):indexofsub(INUBI,w,w); POPCCT
  R z;
 }    /* I.@(~:!.0) w */
 
 // x i.!.1 y - assumes xy -: /:~ xy (integer atoms only for now)
 F2(jtsfu){
  ARGCHK2(a,w);
- I type=ISFU+IIDOT; type=(NOUN&~(INT))&(AT(a)|AT(w))?IIDOT:type;
+ I type=ISFU+IIDOT; type=((NOUN|ISSPARSE)&~(INT))&(AT(a)|AT(w))?IIDOT:type;
  I l=jt->ranks>>RANKTX; l=AR(a)<l?AR(a):l; type=l!=1?IIDOT:type; // If the cells of a are not atoms, we revert to standard methods
  R indexofsub(type,a,w);
 }    /* a i.!.1"r w */
@@ -2418,14 +2421,14 @@ F1(jtsclass){A e,x,xy,y,z;I c,j,m,n,*v;P*p;
  SETIC(w,n);   // n=#items of y
  RZ(x=indexof(w,w));   // x = i.~ y
  // if w is dense, return ((x = i.n) # x) =/ x
- if(DENSE&AT(w))R atab(CEQ,repeat(eq(IX(n),x),x),x);
+ if(!(AT(w)&ISSPARSE))R atab(CEQ,repeat(eq(IX(n),x),x),x);
  // if x is sparse... ??
  p=PAV(x); e=SPA(p,e); y=SPA(p,i); RZ(xy=stitch(SPA(p,x),y));
  if(n>AV(e)[0])RZ(xy=over(xy,stitch(e,less(IX(n),y))));
  RZ(xy=grade2(xy,xy)); v=AV(xy);
  c=AS(xy)[0];
  m=j=-1; DQ(c, if(j!=*v){j=*v; ++m;} *v=m; v+=2;);
- GASPARSE(z,SB01,1,2,(I*)0);  v=AS(z); v[0]=1+m; v[1]=n;
+ GASPARSE(z,B01,1,2,(I*)0);  v=AS(z); v[0]=1+m; v[1]=n;
  p=PAV(z); 
  SPB(p,a,v2(0L,1L));
  SPB(p,e,num(0));

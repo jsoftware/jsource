@@ -191,9 +191,9 @@ AHDR2(name,B,D,D){ \
  R EVOK; \
 }
 
-primcmpD256(geDD, _mm256_or_pd(eq,_mm256_cmp_pd(u,v,_CMP_GT_OQ)) , _mm256_cmp_pd(u,v,_CMP_GE_OQ) , )
+primcmpD256(geDD, _mm256_or_pd(eq,_mm256_cmp_pd(u,v,_CMP_GE_OQ)) , _mm256_cmp_pd(u,v,_CMP_GE_OQ) , )
 primcmpD256(gtDD, _mm256_andnot_pd(eq,_mm256_cmp_pd(u,v,_CMP_GT_OQ)) , _mm256_cmp_pd(u,v,_CMP_GT_OQ) , )
-primcmpD256(leDD, _mm256_or_pd(eq,_mm256_cmp_pd(u,v,_CMP_LT_OQ)) , _mm256_cmp_pd(u,v,_CMP_LE_OQ) , )
+primcmpD256(leDD, _mm256_or_pd(eq,_mm256_cmp_pd(u,v,_CMP_LE_OQ)) , _mm256_cmp_pd(u,v,_CMP_LE_OQ) , )
 primcmpD256(ltDD, _mm256_andnot_pd(eq,_mm256_cmp_pd(u,v,_CMP_LT_OQ)) , _mm256_cmp_pd(u,v,_CMP_LT_OQ) , )
 primcmpD256(eqDD, eq , _mm256_cmp_pd(u,v,_CMP_EQ_OQ) , )
 primcmpD256(neDD, _mm256_xor_pd(eq,one) , _mm256_cmp_pd(u,v,_CMP_NEQ_OQ) , __m256d one=_mm256_broadcast_sd((D*)&validitymask);)   // warnings from one=_mm256_cmp_pd(cct,cct,_CMP_TRUE_UQ);

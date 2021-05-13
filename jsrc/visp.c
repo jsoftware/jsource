@@ -20,10 +20,10 @@ static I jtioev(J jt,I mode,A a){A ae,ax,ay,p;B*pv;I j,k,m,n,*yv;P*ap;
 }}   /* index of sparse element */
 
 A jtiovxs(J jt,I mode,A a,A w){A e,x,z;B h;I at,t,wt;P*ap=0,*wp,*zp;
- at=AT(a); if(SPARSE&at){at=DTYPE(at); ap=PAV(a);}
+ at=AT(a); if(at&ISSPARSE){at=DTYPE(at); ap=PAV(a);}
  wt=DTYPE(AT(w)); wp=PAV(w); 
  if(h=HOMO(at,wt))t=maxtype(at,wt);
- GASPARSE(z,SINT,1,AR(w),AS(w)); zp=PAV(z);
+ GASPARSE(z,INT,1,AR(w),AS(w)); zp=PAV(z);
  SPB(zp,a,SPA(wp,a));
  SPB(zp,i,SPA(wp,i));
  e=SPA(wp,e); if(h&&TYPESNE(t,wt))RZ(e=cvt(t,e));
@@ -66,7 +66,7 @@ A jtiovsd(J jt,I mode,A a,A w){A ae,ax,ay,p,z;B h,*pv;I at,j,m,n,t,wt,*v,*yv;P*a
 
 A jtindexofxx(J jt,I mode,A a,A w){A x;B*b,*c,s;I ar,d,j,m,n,wr;P*p;
  ARGCHK2(a,w);
- s=1&&SPARSE&AT(a); ar=AR(a); wr=AR(w); d=wr-ar;
+ s=1&&ISSPARSE&AT(a); ar=AR(a); wr=AR(w); d=wr-ar;
  if(s){p=PAV(a); m=ar; n=wr;}
  else {p=PAV(w); m=wr; n=ar;}
  RZ(b=bfi(m,SPA(p,a),1)); b[0]=1;
@@ -167,7 +167,7 @@ A jtindexofss(J jt,I mode,A a,A w){A ai,aj,ax,wi,wj,wx,x,y,z;B aw=a!=w;I ar,c,m,
  if(aw)DO(AN(x), u[i]=m>u[i]?v[u[i]]:n;)
  else  DO(AN(x), u[i]=v[u[i]];);
  if(!r)R AN(x)?sc(*u):ioe(mode,a);
- GASPARSE(z,SINT,1,r,AS(w)); zp=PAV(z);
+ GASPARSE(z,INT,1,r,AS(w)); zp=PAV(z);
  SPB(zp,a,apvwr(r,0L,1L));
  SPB(zp,e,ioe(mode,a));
  SPB(zp,i,aw?wi:ai);
@@ -188,7 +188,7 @@ F1(jtnubsievesp){A e,x,y,z;I c,j,m,n,r,*s,*u,*v,*vv,wr,*yv;P*p;D rkblk[16];
  GATV0(y,INT,m,2); s=AS(y); s[0]=m; s[1]=1; vv=yv=AV(y);
  if(c)DO(c, if(u[i]==v[i]){if(j<u[i]){*vv++=j; j=n;} *vv++=u[i];})
  if(m&&vv<yv+m)*vv=j;
- GASPARSE(z,SB01,1,1,&n); p=PAV(z);
+ GASPARSE(z,B01,1,1,&n); p=PAV(z);
  SPB(p,a,iv0);
  SPB(p,e,num(0));
  SPB(p,i,y);

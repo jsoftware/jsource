@@ -61,8 +61,8 @@ static F2(jtovs){A ae,ax,ay,q,we,wx,wy,x,y,z,za,ze;B*ab,*wb,*zb;I acr,ar,*as,at,
  if(r>ar)RZ(a=reshape(over(apv(r-ar,1L,0L),shape(a)),a)); as=AS(a);
  if(r>wr)RZ(w=reshape(over(apv(r-wr,1L,0L),shape(w)),w)); ws=AS(w);
  ASSERT(*as<IMAX-*ws,EVLIMIT);
- if(!(at&SPARSE)){wp=PAV(w); RZ(a=sparseit(a,SPA(wp,a),SPA(wp,e)));}
- if(!(wt&SPARSE)){ap=PAV(a); RZ(w=sparseit(w,SPA(ap,a),SPA(ap,e)));}
+ if(!(at&ISSPARSE)){wp=PAV(w); RZ(a=sparseit(a,SPA(wp,a),SPA(wp,e)));}
+ if(!(wt&ISSPARSE)){ap=PAV(a); RZ(w=sparseit(w,SPA(ap,a),SPA(ap,e)));}
  ap=PAV(a); RZ(ab=bfi(r,SPA(ap,a),1)); ae=SPA(ap,e); at=AT(ae);
  wp=PAV(w); RZ(wb=bfi(r,SPA(wp,a),1)); we=SPA(wp,e); wt=AT(we);
  ASSERT(equ(ae,we),EVNONCE);
@@ -185,7 +185,7 @@ static void(*moveawtbl[])() = {moveawVV,moveawVS,moveawSV};
 F2(jtover){AD * RESTRICT z;C*zv;I replct,framect,acr,af,ar,*as,k,ma,mw,p,q,r,t,wcr,wf,wr,*ws,zn;
  F2PREFIP;ARGCHK2(a,w);
  UI jtr=jt->ranks;//  fetch early
- if(unlikely((SPARSE&(AT(a)|AT(w)))!=0)){R ovs(a,w);}  // if either arg is sparse, switch to sparse code
+ if(unlikely(((AT(a)|AT(w))&ISSPARSE)!=0)){R ovs(a,w);}  // if either arg is sparse, switch to sparse code
  // convert args to compatible precisions, changing a and w if needed.  Treat empty arg as boolean if the other is non-Boolean
 // obsolete  if(unlikely(AT(a)!=(t=AT(w)))){t=maxtypedne(AT(a)|((AN(a)==0)>(AN(w)==0)),t|((AN(w)==0)>(AN(a)==0))); t&=-t; if(!TYPESEQ(t,AT(a))){RZ(a=cvt(t,a));} else {RZ(w=cvt(t,w));}}
  if(unlikely(AT(a)!=(t=AT(w)))){t=maxtypedne(AT(a)|((UI)-AN(a)<(UI)AN(w)),t|((UI)-AN(w)<(UI)AN(a))); t&=-t; if(!TYPESEQ(t,AT(a))){RZ(a=cvt(t,a));} else {RZ(w=cvt(t,w));}}
@@ -260,7 +260,7 @@ F2(jtstitch){I ar,wr; A z;
  F2PREFIP;ARGCHK2(a,w);
  ar=AR(a); wr=AR(w);
  ASSERT((-ar&-wr&-(AS(a)[0]^AS(w)[0]))>=0,EVLENGTH);  // a or w scalar, or same # items    always OK to fetch s[0]
- if(likely((((SPARSE&(AT(a)|AT(w)))-1)&(2-ar)&(2-wr))>=0))R IRSIP2(a,w,0L,(ar-1)&RMAX,(wr-1)&RMAX,jtover,z);  // not sparse or rank>2
+ if(likely(((~((AT(a)|AT(w))&ISSPARSE))&(2-ar)&(2-wr))>=0))R IRSIP2(a,w,0L,(ar-1)&RMAX,(wr-1)&RMAX,jtover,z);  // not sparse or rank>2
  R stitchsp2(a,w);  // sparse rank <=2 separately
 }
 
@@ -299,7 +299,7 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;I ak,k,p,*u,*v,wk,wm,wn;
   I at=AT(a), ar=AR(a), wr=AR(w), aflag=AFLAG(a), ac=AC(a), an=AN(a);  // unchanging values
   // Because the test for inplaceability is rather lengthy, start with a quick check of the atom counts.  If adding the atoms in w to those in a
   // would push a over a power-of-2 boundary, skip  the rest of the testing.  We detect this by absence of carry out of the high bit (inside EXTENDINPLACE)
-   if(EXTENDINPLACENJA(a,w) && at&(DIRECT|BOX)) {
+   if(EXTENDINPLACENJA(a,w) && (at&(DIRECT|BOX))>0) {
    // if w is boxed, we have some more checking to do.  We have to make sure we don't end up with a box of a pointing to a itself.  The only way
    // this can happen is if w is (<a) or (<<a) or the like, where w does not have a recursive usecount.  The fastest way to check this would be to
    // crawl through w looking for a.

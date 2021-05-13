@@ -11,7 +11,7 @@ static A jtmerge1(J jt,A w,A ind){PROLOG(0006);A z;C*v,*x;I c,k,r,*s,t,*u;
  ARGCHK2(w,ind);
  RZ(ind=pind(IC(w),ind));
  r=MAX(0,AR(w)-1); s=1+AS(w); t=AT(w); c=aii(w);
- ASSERT(!(t&SPARSE),EVNONCE);
+ ASSERT(!(t&ISSPARSE),EVNONCE);
  ASSERT(r==AR(ind),EVRANK);
  ASSERT(!ICMP(s,AS(ind),r),EVLENGTH);
  GA(z,t,c,r,s); x=CAV(z); v=CAV(w); u=AV(ind); k=bpnoun(t);
@@ -27,11 +27,11 @@ static A jtmerge1(J jt,A w,A ind){PROLOG(0006);A z;C*v,*x;I c,k,r,*s,t,*u;
 static A jtmerge1(J jt,A w,A ind){A z;B*b;C*wc,*zc;D*wd,*zd;I c,it,j,k,m,r,*s,t,*u,*wi,*zi;
  ARGCHK2(w,ind);
  r=MAX(0,AR(w)-1); s=1+AS(w); t=AT(w); k=bpnoun(t); SETIC(w,m); c=aii(w);  // m = # items of w
- ASSERT(!(t&SPARSE),EVNONCE);
+ ASSERT(!(t&ISSPARSE),EVNONCE);
  ASSERT(r==AR(ind),EVRANK);
  ASSERTAGREE(s,AS(ind),r);
  GA(z,t,c,r,s);
- if(!(AT(ind)&B01+INT))RZ(ind=cvt(INT,ind));
+ if(!ISDENSETYPE(AT(ind),B01+INT))RZ(ind=cvt(INT,ind));
  it=AT(ind); u=AV(ind); b=(B*)u;
  ASSERT((-c&(m-2))>=0||(!c||(m==1&&!memchr(b,C1,c))),EVINDEX);  // unless items are empty, m must have items.  if m is 1 all selectors must be 0.  INT will be checked individually, so we just look at the first c bytes
  zi=AV(z); zc=(C*)zi; zd=(D*)zc;
@@ -72,7 +72,7 @@ F1(jtcasev){A b,*u,*v,w1,x,y,z;B*bv,p,q;I*aa,c,*iv,j,m,n,r,*s,t;
  DO(m+1, x=symbrd(v[i]); if(!x){p=0; RESETERR; break;} u[i]=x; p=p&!!(NOUN&AT(x)););  // verify names defined, and are nouns
  if(p){
   b=u[m]; n=AN(b); r=AR(b); s=AS(b); t=AT(*u);  // length, rank, shape, of pqr; type of first value in list
-  p=t&DIRECT&&AT(b)&NUMERIC;    // fail if first value in list is indirect or pqr is not numeric
+  p=(t&DIRECT)>0&&AT(b)&NUMERIC;    // fail if first value in list is indirect or pqr is not numeric
   if(p)DO(m, y=u[i]; if(!(TYPESEQ(t,AT(y))&&r==AR(y)&&!ICMP(s,AS(y),r))){p=0; break;});  // fail if list is not homogeneous in type, rank, and shape
  }
  // If the audit failed, the sentence might work, but we won't be doing it here.  Go run the original sentence
@@ -82,7 +82,7 @@ F1(jtcasev){A b,*u,*v,w1,x,y,z;B*bv,p,q;I*aa,c,*iv,j,m,n,r,*s,t;
  fauxblockINT(aafaux,4,1);
  if(q=2==m&&B01&AT(b)){bv=BAV(b); x=u[0]; y=u[1];}  // fast case: exactly two names x and y
  else{   // slow case
-  if(!(INT&AT(b)))RZ(b=cvt(INT,b));  // convert pqr to int if it's not already
+  if(!ISDENSETYPE(AT(b),INT))RZ(b=cvt(INT,b));  // convert pqr to int if it's not already
   iv=AV(b);    // iv points to the input pqr
   fauxINT(b,aafaux,m,1)  aa=AV(b); DO(m, aa[i]=(I)AV(u[i]););  // create b, which is a list of pointers to the values of the names
  }
@@ -139,7 +139,7 @@ static A jtmerge2(J jt,A a,A w,A ind,I cellframelen){F2PREFIP;A z;I t;
  // the stack is empty, so if there is a virtual block it must be in a higher sentence, and the backing name must appear on the
  // stack in that sentence if the usecount is only 1.
  I ip = ASGNINPLACESGNNJA(SGNIF((I)jtinplace,JTINPLACEWX),w)
-      &&( ((AT(w)&t&(DIRECT|RECURSIBLE))!=0)&(w!=a)&(w!=ind)&((w!=ABACK(a))|(~AFLAG(a)>>AFVIRTUALX)) );
+      &&( ((AT(w)&t&(DIRECT|RECURSIBLE))>0)&(w!=a)&(w!=ind)&((w!=ABACK(a))|(~AFLAG(a)>>AFVIRTUALX)) );
  // if w is boxed, we have to make one more check, to ensure we don't end up with a loop if we do   (<a) m} a.  Force a to be recursive usecount, then see if the usecount of w is changed
  if(-ip&t&RECURSIBLE){
   I oldac = ACUC(w);  // remember original UC of w
@@ -203,7 +203,7 @@ A jtcelloffset(J jt,AD * RESTRICT w,AD * RESTRICT ind){A z;
   // rank of ind>1, and rows of ind are longer than 1. process each row to a cell offset
   I naxes = AS(ind)[AR(ind)-1];
   I nzcells; PROD(nzcells,AR(ind)-1,AS(ind));
-  RZ(ind=AT(ind)&INT?ind:cvt(INT,ind));  // w is now an INT vector, possibly the input argument
+  if(!ISDENSETYPE(AT(ind),INT))RZ(ind=cvt(INT,ind));  // w is now an INT vector, possibly the input argument
   ASSERT(naxes<=AR(w),EVLENGTH);  // length of rows of table must not exceed rank of w
   GATV(z,INT,nzcells,AR(ind)-1,AS(ind)); I *zv=IAV(z);  // allocate result area, point to first cell location.
   I *iv=IAV(ind);// point to first row
@@ -293,33 +293,33 @@ static A jtjstd(J jt,A w,A ind,I *cellframelen){A j=0,k,*v,x;I b;I d,i,n,r,*u,wr
 static DF2(jtamendn2){F2PREFIP;PROLOG(0007);A e,z; B b;I atd,wtd,t,t1;P*p;
  AD * RESTRICT ind=VAV(self)->fgh[0];
  ARGCHK3(a,w,ind);
- if(likely(!((AT(w)|AT(ind))&SPARSE))){
+ if(likely(!((AT(w)|AT(ind))&ISSPARSE))){
   I cellframelen; ind=jstd(w,ind,&cellframelen);   // convert indexes to cell indexes; remember how many were converted
-  z=jtmerge2(jtinplace,AT(a)&SPARSE?denseit(a):a,w,ind,cellframelen);  //  dense a if needed; dense amend
+  z=jtmerge2(jtinplace,AT(a)&ISSPARSE?denseit(a):a,w,ind,cellframelen);  //  dense a if needed; dense amend
   // We modified w which is now not pristine.
   PRISTCLRF(w)
   EPILOG(z);
  }
  // Otherwise, w is sparse
  // ?t = underlying type of ?, s?=nonzero if sparse
- atd=AT(a)&SPARSE?DTYPE(AT(a)):AT(a); wtd=AT(w)&SPARSE?DTYPE(AT(w)):AT(w);
+ atd=AT(a)&ISSPARSE?DTYPE(AT(a)):AT(a); wtd=AT(w)&ISSPARSE?DTYPE(AT(w)):AT(w);
  ASSERT(AT(ind)&NUMERIC+BOX||!AN(ind),EVDOMAIN);
- ASSERT(AT(ind)&DENSE,EVNONCE);  // m must be dense, and numeric or boxed
+ ASSERT(!(AT(ind)&ISSPARSE),EVNONCE);  // m must be dense, and numeric or boxed
  // Sparse w.  a and t must be compatible; sparse w must not be boxed
  ASSERT(!(wtd&BOX),EVNONCE); ASSERT(HOMO(atd,wtd),EVDOMAIN);
  // set t to dense precision of result; t1=corresponding sparse precision; convert a if need be.  Change a's type but not its sparseness
- RE(t=maxtyped(atd,wtd)); t1=STYPE(t); RZ(a=TYPESEQ(t,atd)?a:cvt(AT(a)&SPARSE?t1:t,a));
+ RE(t=maxtyped(atd,wtd)); t1=STYPE(t); RZ(a=TYPESEQ(t,atd)?a:cvt(AT(a)&ISSPARSE?t1:t,a));
  // Keep the original address if the caller allowed it, precision of y is OK, the usecount allows inplacing, and the dense type is either
  // DIRECT or this is a boxed memory-mapped array
  B ip=((I)jtinplace&JTINPLACEW) && (ACIPISOK(w) || jt->asginfo.zombieval==w&&AC(w)<=1)
-     &&TYPESEQ(t,wtd)&&(t&DIRECT);
+     &&TYPESEQ(t,wtd)&&(t&DIRECT)>0;
  // see if inplaceable.  If not, convert w to correct precision (note that cvt makes a copy if the precision is already right)
  if(ip){ASSERT(!(AFRO&AFLAG(w)),EVRO); z=w;}else RZ(z=cvt(t1,w));
  // call the routine to handle the sparse amend
  p=PAV(z); e=SPA(p,e); b=!AR(a)&&equ(a,e);
- p=PAV(a); if(unlikely(AT(a)&SPARSE&&!equ(e,SPA(p,e)))){RZ(a=denseit(a)); }
- if(AT(ind)&NUMERIC||!AR(ind))z=(b?jtam1e:AT(a)&SPARSE?jtam1sp:jtam1a)(jt,a,z,AT(ind)&NUMERIC?box(ind):ope(ind),ip);
- else{RZ(ind=aindex(ind,z,0L)); ind=(A)((I)ind&~1LL); ASSERT(ind!=0,EVNONCE); z=(b?jtamne:AT(a)&SPARSE?jtamnsp:jtamna)(jt,a,z,ind,ip);}  // A* for the #$&^% type-checking
+ p=PAV(a); if(unlikely(AT(a)&ISSPARSE&&!equ(e,SPA(p,e)))){RZ(a=denseit(a)); }
+ if(AT(ind)&NUMERIC||!AR(ind))z=(b?jtam1e:AT(a)&ISSPARSE?jtam1sp:jtam1a)(jt,a,z,AT(ind)&NUMERIC?box(ind):ope(ind),ip);
+ else{RZ(ind=aindex(ind,z,0L)); ind=(A)((I)ind&~1LL); ASSERT(ind!=0,EVNONCE); z=(b?jtamne:AT(a)&ISSPARSE?jtamnsp:jtamna)(jt,a,z,ind,ip);}  // A* for the #$&^% type-checking
  EPILOGZOMB(z);   // do the full push/pop since sparse in-place has zombie elements in z
 }
 
@@ -327,7 +327,7 @@ static DF2(jtamendn2){F2PREFIP;PROLOG(0007);A e,z; B b;I atd,wtd,t,t1;P*p;
 // call merge2 to do the merge.  Pass inplaceability into merge2.
 static DF2(amccv2){F2PREFIP;DECLF; 
  ARGCHK2(a,w); 
- ASSERT(DENSE&AT(w),EVNONCE);  // u} not supported for sparse
+ ASSERT(!(AT(w)&ISSPARSE),EVNONCE);  // u} not supported for sparse
  A x;RZ(x=pind(AN(w),CALL2(f2,a,w,fs)));
  A z=jtmerge2(jtinplace,a,w,x,AR(w));   // The atoms of x include all axes of w, since we are addressing atoms
  // We modified w which is now not pristine.

@@ -105,7 +105,7 @@ static B jtforinit(J jt,CDATA*cv,A t){A x;C*s,*v;I k;
  SETIC(t,cv->niter);                            /* # of items in t     */
  if(likely(cv->indexsym!=0)){
   // for_xyz.   protect iterator value and save it; create virtual item name
-  ASSERT(!(AT(t)&SPARSE),EVNONCE)
+  ASSERT(!(AT(t)&ISSPARSE),EVNONCE)
   rifv(t);  // it would be work to handle virtual t, because you can't just ra() a virtual, as virtuals are freed only from the tpop stack.  So we wimp out & realize.
   ra(t) cv->t=t;  // if we need to save iteration array, do so, and protect from free
   // create virtual block for the iteration.  We will store this in xyz.  We have to do usecount by hand because
@@ -451,7 +451,7 @@ docase:
      if(AT(tt)&(RAT|XNUM)){i=1<AN(XAV(tt)[0])||IAV(XAV(tt)[0])[0]?i:nexti; break;}
      if(!(AT(tt)&NOUN)){CHECKNOUN}  // will take error
      // other types test true, which is how i is set
-     if(!(SPARSE&AT(tt)))break;
+     if(!(AT(tt)&ISSPARSE))break;
      BZ(tt=denseit(tt)); if(AN(tt)==0)break;  // convert sparse to dense - this could make the length go to 0, in which case true
     }
    }

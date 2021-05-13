@@ -209,8 +209,8 @@ static F1X(jtlsparse){F1PREFIP;A a,e,q,t,x,y,z;B ba,be,bn;I j,r,*v;P*p;
  r=AR(w); p=PAV(w); a=SPA(p,a); e=SPA(p,e); y=SPA(p,i); x=SPA(p,x);
  bn=0; v=AS(w); DQ(r, if(!*v++){bn=1; break;});
  ba=0; if(r==AR(a)){v=AV(a); DO(r, if(i!=*v++){ba=1; break;});}
- be=!(AT(w)&SFL&&0==*DAV(e));
- if(be)RZ(z=over(lnoun(e),cstr(SB01&AT(w)?"":SINT&AT(w)?"+-~2":SFL&AT(w)?"+-~2.1":"+-~2j1")));
+ be=!(AT(w)&FL&&0==*DAV(e));
+ if(be)RZ(z=over(lnoun(e),cstr(B01&AT(w)?"":INT&AT(w)?"+-~2":FL&AT(w)?"+-~2.1":"+-~2j1")));
  if(be||ba){
   RZ(z=be?over(lcpx(lnoun(a)),       over(scc(';'),z)):lnoun(a));
   RZ(z=   over(lcpx(lnoun(shape(w))),over(scc(';'),z))         );
@@ -253,7 +253,7 @@ static F1X(jtlnoun0){F1PREFIP;A s,x;B r1;
 static F1X(jtlnoun){F1PREFIP;I t;
  ARGCHK1(w);
  t=AT(w);
- if(unlikely((t&SPARSE)!=0))R lsparse(w);
+ if(unlikely((t&ISSPARSE)!=0))R lsparse(w);
  if(!AN(w))R lnoun0(w);
  switch(CTTZ(t)){
  default:  R lnum(w);

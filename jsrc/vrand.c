@@ -657,7 +657,7 @@ static X jtxrand(J jt,X x){PROLOG(0090);A q,z;B b=1;I j,m,n,*qv,*xv,*zv;
  DO(m-1, qv[i]=XBASE;); qv[m-1]=xv[n-1]+1;  // init base to the largest possible value in each Digit
  // loop to roll random values until we get one that is less than x
  NOUNROLL do{
-  RZ(z=roll(q)); if(unlikely(AT(z)&B01))RZ(z=cvt(INT,z)); zv=AV(z);  // roll one value in each Digit position; if by chance it comes back Boolean, input must have been single digit 1, convert to ,1
+  RZ(z=roll(q)); if(unlikely(ISDENSETYPE(AT(z),B01)))RZ(z=cvt(INT,z)); zv=AV(z);  // roll one value in each Digit position; if by chance it comes back Boolean, input must have been single digit 1, convert to ,1
   DQ(j=m, --j; if(xv[j]!=zv[j]){b=xv[j]<zv[j]; break;});  // MS mismatched Digit tells the tale; if no mismatch, that's too high, keep b=1
  }while(b);  // loop till b=0
  j=m-1; NOUNROLL while(0<j&&!zv[j])--j; AN(z)=AS(z)[0]=++j;  // remove leading 0s from (tail of) result
@@ -750,7 +750,7 @@ static A jtrollany(J jt,A w,B*b){A z;D*u;I j,m1,n,sh,*v;UI m,mk,s,t,x=jt->rngdat
 F1(jtroll){A z;B b=0;I m,wt;
  ARGCHK1(w);
  wt=AT(w);
- ASSERT(wt&DENSE,EVDOMAIN);
+ ASSERT(!(wt&ISSPARSE),EVDOMAIN);
  if(!AN(w)){GATV(z,B01,0,AR(w),AS(w)); R z;}
  if(wt&B01)R rollbool(w);
  if(wt&XNUM+RAT)R rollxnum(w);
@@ -764,7 +764,7 @@ F1(jtroll){A z;B b=0;I m,wt;
 F2(jtdeal){A z;I at,j,k,m,n,wt,*zv;UI c,s,t,x=jt->rngdata->rngparms[jt->rngdata->rng].rngM;UI sq;SETNEXT
  ARGCHK2(a,w);
  at=AT(a); wt=AT(w);
- ASSERT(at&DENSE&at&&wt&DENSE,EVDOMAIN);
+ ASSERT(!((at|wt)&ISSPARSE),EVDOMAIN);
  F2RANK(0,0,jtdeal,DUMMYSELF);
  RE(m=i0(a)); RE(c=n=i0(w));  // c starts as max#+1
  ASSERT(0<=m&&m<=n,EVDOMAIN);  // m and n must both be positive
@@ -978,7 +978,7 @@ static A jtrollanydot(J jt,A w,B*b){A z;D*u;I j,m1,n,sh,*v;UI m,mk,s,t,x=jt->rng
 static F1(jtrolldot){A z;B b=0;I m,wt;
  ARGCHK1(w);
  wt=AT(w);
- ASSERT(wt&DENSE,EVDOMAIN);
+ ASSERT(!(wt&ISSPARSE),EVDOMAIN);
  if(!AN(w)){GATV(z,B01,0,AR(w),AS(w)); R z;}
  if(wt&B01)R rollbool(w);
  if(wt&XNUM+RAT)R rollxnum(w);
@@ -994,7 +994,7 @@ static F1(jtrolldot){A z;B b=0;I m,wt;
 static F2(jtdealdot){A h,y,z;I at,d,*hv,i,i1,j,k,m,n,p,q,*v,wt,*yv,*zv;UI c,s,t,x=jt->rngdata->rngparms[jt->rngdata->rng].rngM;SETNEXT
  ARGCHK2(a,w);
  at=AT(a); wt=AT(w);
- ASSERT(at&DENSE&at&&wt&DENSE,EVDOMAIN);
+ ASSERT(!((at|wt)&ISSPARSE),EVDOMAIN);
  F2RANK(0,0,jtdealdot,DUMMYSELF);
  RE(m=i0(a)); RE(c=n=i0(w));
  ASSERT(0<=m&&m<=n,EVDOMAIN);  // m and n must both be positive

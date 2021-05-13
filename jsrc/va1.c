@@ -142,7 +142,7 @@ static A jtva1(J jt,A w,A self){A z;I cv,n,t,wt,zt;VA1F ado;
 #if SY_64
  VA1 *p=&u->p1[(0x0321000054032100>>(CTTZ(wt)<<2))&7];  // from MSB, we need xxx 011 010 001 xxx 000 xxx xxx   101 100 xxx 011 010 001 xxx 000
 #else
- if(wt&SPARSE){wt=AT(SPA(PAV(w),e));}
+ if(wt&ISSPARSE){wt=AT(SPA(PAV(w),e));}
  VA1 *p=&u->p1[(0x54032100>>(CTTZ(wt)<<2))&7];  // from MSB, we need 101 100 xxx 011 010 001 xxx 000
 #endif
  ASSERT(wt&NUMERIC,EVDOMAIN);
@@ -166,7 +166,7 @@ static A jtva1(J jt,A w,A self){A z;I cv,n,t,wt,zt;VA1F ado;
   RESETERR;
  }
  if(ado==0)R w;  // if function is identity, return arg
- if(unlikely((-(AT(w)&SPARSE)&-n)<0))R va1s(w,self,cv,ado);  // branch off to do sparse
+ if(unlikely(((AT(w)&ISSPARSE)&-n)<0))R va1s(w,self,cv,ado);  // branch off to do sparse
  // from here on is dense va1
  t=atype(cv); zt=rtype(cv);  // extract required type of input and result
  if(t&~wt){RZ(w=cvt(t,w)); jtinplace=(J)((I)jtinplace|JTINPLACEW);}  // convert input if necessary; if we converted, converted result is ipso facto inplaceable.  t is usually 0
@@ -208,7 +208,7 @@ DF1(jtatomic1){A z;
  F1PREFIP;ARGCHK1(w);
  I awm1=AN(w)-1;
  // check for singletons
- if(!(awm1|(AT(w)&(NOUN&~(B01+INT+FL))))){  // len=1 andbool/int/float
+ if(!(awm1|(AT(w)&((NOUN|ISSPARSE)&~(B01+INT+FL))))){  // len=1 andbool/int/float
   z=jtssingleton1(jtinplace,w,self);
   if(z||jt->jerr<=NEVM){RETF(z);}  // normal return, or non-retryable error
   // if retryable error, fall through.  The retry will not be through the singleton code

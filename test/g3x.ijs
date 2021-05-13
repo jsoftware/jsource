@@ -446,10 +446,10 @@ bhdr_pre601=: 4 : 0
 binrep_pre601=: [ bhdr_pre601 (3!:1) 
 
 test=: 3 : 0
- assert. (-: unbin@( 0&binrep_pre601)) y
- assert. (-: unbin@( 1&binrep_pre601)) y
- assert. (-: unbin@(10&binrep_pre601)) y
- assert. (-: unbin@(11&binrep_pre601)) y
+NB. no longer supported  assert. (-: unbin@( 0&binrep_pre601)) y
+NB. no longer supported  assert. (-: unbin@( 1&binrep_pre601)) y
+NB. no longer supported  assert. (-: unbin@(10&binrep_pre601)) y
+NB. no longer supported  assert. (-: unbin@(11&binrep_pre601)) y
  1
 )
  

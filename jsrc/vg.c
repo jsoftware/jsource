@@ -731,12 +731,12 @@ A jtgr1(J jt,A w){F1PREFJT;PROLOG(0075);A z;I c,f,ai,m,n,r,*s,t,wn,wr,zn;
  EPILOG(z);
 }    /*   grade"r w main control for dense w */
 
-F1(jtgrade1 ){A z; ARGCHK1(w); J jtinplace=(J)((I)jt&~JTDESCEND); if(likely(!(SPARSE&AT(w))))RETF(gr1(w)); RETF(grd1sp(w));}
-F1(jtdgrade1){A z; ARGCHK1(w); J jtinplace=(J)(((I)jt&~JTFLAGMSK)|JTDESCEND); if(likely(!(SPARSE&AT(w))))RETF(gr1(w)); RETF(grd1sp(w));}
+F1(jtgrade1 ){A z; ARGCHK1(w); J jtinplace=(J)((I)jt&~JTDESCEND); if(likely(!(AT(w)&ISSPARSE)))RETF(gr1(w)); RETF(grd1sp(w));}
+F1(jtdgrade1){A z; ARGCHK1(w); J jtinplace=(J)(((I)jt&~JTFLAGMSK)|JTDESCEND); if(likely(!(AT(w)&ISSPARSE)))RETF(gr1(w)); RETF(grd1sp(w));}
 // Since grade2 pulls from a, mark a as non-pristine.  But since there can be no repeats, transfer a's pristinity to result if a is inplaceable
 // We do this in jtgr2 because it has a branch where all boxed values go
-F2(jtgrade2 ){F2PREFIP;A z; ARGCHK2(a,w); if(likely(!(SPARSE&AT(w))))RETF(jtgr2((J)((I)jtinplace&~JTDESCEND),a,w)); RETF(jtgrd2sp((J)((I)jtinplace&~JTDESCEND),a,w));}
-F2(jtdgrade2){F2PREFIP;A z; ARGCHK2(a,w); if(likely(!(SPARSE&AT(w))))RETF(jtgr2((J)((I)jtinplace|JTDESCEND),a,w)); RETF(jtgrd2sp((J)((I)jtinplace|JTDESCEND),a,w));}
+F2(jtgrade2 ){F2PREFIP;A z; ARGCHK2(a,w); if(likely(!(AT(w)&ISSPARSE)))RETF(jtgr2((J)((I)jtinplace&~JTDESCEND),a,w)); RETF(jtgrd2sp((J)((I)jtinplace&~JTDESCEND),a,w));}
+F2(jtdgrade2){F2PREFIP;A z; ARGCHK2(a,w); if(likely(!(AT(w)&ISSPARSE)))RETF(jtgr2((J)((I)jtinplace|JTDESCEND),a,w)); RETF(jtgrd2sp((J)((I)jtinplace|JTDESCEND),a,w));}
 
 
 #define OSGT(i,j) (u[i]>u[j])

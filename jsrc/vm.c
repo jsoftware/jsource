@@ -367,16 +367,16 @@ F1(jtrdot1){R expn1(jdot1(w));}
 F2(jtrdot2){R tymes(a,rdot1(w));}
 
 
-F1(jtpolar){ARGCHK1(w); A z; R cvt(SPARSE&AT(w)?SFL:FL,df2(z,v2(10L,12L),w,qq(ds(CCIRCLE),v2(1L,0L))));}
+F1(jtpolar){ARGCHK1(w); A z; R cvt((AT(w)&ISSPARSE)+FL,df2(z,v2(10L,12L),w,qq(ds(CCIRCLE),v2(1L,0L))));}
 
 F1(jtrect){A e,z;B b;I r,t;P*wp,*zp;Z c;
  ARGCHK1(w); 
  t=AT(w); r=AR(w); RESETRANK;   // Run as infinite rank
  ASSERT(!AN(w)||t&NUMERIC,EVDOMAIN);
- if(t&CMPX){GATV0(z,FL,2*AN(w),1+r); MCISH(AS(z),AS(w),r) AS(z)[r]=2; MC(AV(z),AV(w),AN(z)*sizeof(D)); R z;}
- else if(unlikely((t&SPARSE)!=0)){
-  b=1&&t&SCMPX;
-  GASPARSE(z,b?SFL:t,1,1+r,AS(w)); AS(z)[r]=2;
+ if(ISDENSETYPE(t,CMPX)){GATV0(z,FL,2*AN(w),1+r); MCISH(AS(z),AS(w),r) AS(z)[r]=2; MC(AV(z),AV(w),AN(z)*sizeof(D)); R z;}
+ else if(unlikely((t&ISSPARSE)!=0)){
+  b=1&&t&CMPX;
+  GASPARSE(z,b?FL:t,1,1+r,AS(w)); AS(z)[r]=2;
   wp=PAV(w); zp=PAV(z);
   if(b){e=SPA(wp,e); c=*ZAV(e); ASSERT(FFEQ(c.re,c.im),EVSPARSE); SPB(zp,e,scf(c.re));}
   else SPB(zp,e,ca(SPA(wp,e)));
@@ -384,5 +384,5 @@ F1(jtrect){A e,z;B b;I r,t;P*wp,*zp;Z c;
   SPB(zp,i,ca(SPA(wp,i)));
   SPB(zp,x,rect(SPA(wp,x)));
   R z;
- }else R df2(z,w,num(0),qq(ds(CCOMMA),zeroionei(0)));
+ }else R df2(z,w,num(0),qq(ds(CCOMMA),zeroionei(0)));  // scaf use IRS
 }

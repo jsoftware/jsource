@@ -60,7 +60,7 @@ F1(jtimmex){F1PREFJT;A z;
 F1(jtimmea){F1PREFJT;A t,z,z1;
  RZ(w=ddtokens(w,1+(AN(jt->locsyms)>1))); z=jtimmex(jtinplace,w);   // check for DD, allow continuation
  ASSERT(PARSERASGN(z)||!z||!(AT(z)&NOUN)||(t=eq(num(1),z),
-     all1(AT(z)&SPARSE?df1(z1,t,atop(slash(ds(CSTARDOT)),ds(CCOMMA))):t)),EVASSERT);  // apply *./@, if sparse
+     all1(AT(z)&ISSPARSE?df1(z1,t,atop(slash(ds(CSTARDOT)),ds(CCOMMA))):t)),EVASSERT);  // apply *./@, if sparse
  RETF(z);
 }
 

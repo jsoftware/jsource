@@ -203,7 +203,7 @@ static DF1(jtgsuffix){A h,*hv,z,*zv;I m,n,r;
 
 static DF1(jtssg){F1PREFIP;PROLOG(0020);A a,z;I i,n,r,wr;
  ARGCHK1(w);
- ASSERT(DENSE&AT(w),EVNONCE);
+ ASSERT(!(AT(w)&ISSPARSE),EVNONCE);
  // loop over rank - we claim to handle IRS
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; RESETRANK; if(r<wr)R rank1ex(w,self,r,jtssg);
 
@@ -309,7 +309,7 @@ A jtscansp(J jt,A w,A self,AF sf){A e,ee,x,z;B*b;I f,m,j,r,t,wr;P*wp,*zp;
 static DF1(jtsscan){A y,z;I d,f,m,n,r,t,wn,wr,*ws,wt;
  F1PREFIP;ARGCHK1(w);
  wt=AT(w);
- if(unlikely((SPARSE&wt)!=0))R scansp(w,self,jtsscan);
+ if(unlikely((wt&ISSPARSE)!=0))R scansp(w,self,jtsscan);
  wn=AN(w); wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; ws=AS(w); RESETRANK;
  PROD(m,f,ws); PROD1(d,r-1,f+ws+1); I *nn=&ws[f]; nn=r?nn:&I1mem; n=*nn;   // will not be used if WN==0, so PROD ok.  n is # items along the selected rank
  y=FAV(self)->fgh[0]; // y is f/

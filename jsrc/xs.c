@@ -145,16 +145,16 @@ F1(jtscriptnum){
  R rv;  // return prev value
 }
 
-F1(jtscm00 ){I r; ARGCHK1(w);    r=1&&AT(w)&LIT+C2T+C4T; F1RANK(     r,jtscm00, DUMMYSELF); R r?line(w,-1L,0,0):linf(mark,w,0,0);}
-F1(jtscm01 ){I r; ARGCHK1(w);    r=1&&AT(w)&LIT+C2T+C4T; F1RANK(     r,jtscm01, DUMMYSELF); R r?line(w,-1L,0,1):linf(mark,w,0,1);}
-F1(jtscm10 ){I r; ARGCHK1(w);    r=1&&AT(w)&LIT+C2T+C4T; F1RANK(     r,jtscm10, DUMMYSELF); R r?line(w,-1L,1,0):linf(mark,w,1,0);}
-F1(jtscm11 ){I r; ARGCHK1(w);    r=1&&AT(w)&LIT+C2T+C4T; F1RANK(     r,jtscm11, DUMMYSELF); R r?line(w,-1L,1,1):linf(mark,w,1,1);}
-F1(jtsct1  ){I r; ARGCHK1(w);    r=1&&AT(w)&LIT+C2T+C4T; F1RANK(     r,jtsct1,  DUMMYSELF); R r?line(w,-1L,2,1):linf(mark,w,2,1);}
-F1(jtscz1  ){I r; ARGCHK1(w);    r=1&&AT(w)&LIT+C2T+C4T; F1RANK(     r,jtscz1,  DUMMYSELF); R r?line(w,-1L,3,0):linf(mark,w,3,0);}
+F1(jtscm00 ){I r; ARGCHK1(w);    r=ISDENSETYPE(AT(w),LIT+C2T+C4T); F1RANK(     r,jtscm00, DUMMYSELF); R r?line(w,-1L,0,0):linf(mark,w,0,0);}
+F1(jtscm01 ){I r; ARGCHK1(w);    r=ISDENSETYPE(AT(w),LIT+C2T+C4T); F1RANK(     r,jtscm01, DUMMYSELF); R r?line(w,-1L,0,1):linf(mark,w,0,1);}
+F1(jtscm10 ){I r; ARGCHK1(w);    r=ISDENSETYPE(AT(w),LIT+C2T+C4T); F1RANK(     r,jtscm10, DUMMYSELF); R r?line(w,-1L,1,0):linf(mark,w,1,0);}
+F1(jtscm11 ){I r; ARGCHK1(w);    r=ISDENSETYPE(AT(w),LIT+C2T+C4T); F1RANK(     r,jtscm11, DUMMYSELF); R r?line(w,-1L,1,1):linf(mark,w,1,1);}
+F1(jtsct1  ){I r; ARGCHK1(w);    r=ISDENSETYPE(AT(w),LIT+C2T+C4T); F1RANK(     r,jtsct1,  DUMMYSELF); R r?line(w,-1L,2,1):linf(mark,w,2,1);}
+F1(jtscz1  ){I r; ARGCHK1(w);    r=ISDENSETYPE(AT(w),LIT+C2T+C4T); F1RANK(     r,jtscz1,  DUMMYSELF); R r?line(w,-1L,3,0):linf(mark,w,3,0);}
 
-F2(jtscm002){I r; ARGCHK2(a,w); r=1&&AT(w)&LIT+C2T+C4T; F2RANK(RMAX,r,jtscm002,DUMMYSELF); R r?line(w,-1L,0,0):linf(a,   w,0,0);}
-F2(jtscm012){I r; ARGCHK2(a,w); r=1&&AT(w)&LIT+C2T+C4T; F2RANK(RMAX,r,jtscm012,DUMMYSELF); R r?line(w,-1L,0,1):linf(a,   w,0,1);}
-F2(jtscm102){I r; ARGCHK2(a,w); r=1&&AT(w)&LIT+C2T+C4T; F2RANK(RMAX,r,jtscm102,DUMMYSELF); R r?line(w,-1L,1,0):linf(a,   w,1,0);}
-F2(jtscm112){I r; ARGCHK2(a,w); r=1&&AT(w)&LIT+C2T+C4T; F2RANK(RMAX,r,jtscm112,DUMMYSELF); R r?line(w,-1L,1,1):linf(a,   w,1,1);}
-F2(jtsct2  ){I r; ARGCHK2(a,w); r=1&&AT(w)&LIT+C2T+C4T; F2RANK(RMAX,r,jtsct2,  DUMMYSELF); R r?line(w,-1L,2,1):linf(a,   w,2,1);}
-F2(jtscz2  ){I r; ARGCHK2(a,w); r=1&&AT(w)&LIT+C2T+C4T; F2RANK(RMAX,r,jtscz2,  DUMMYSELF); R r?line(w,-1L,3,0):linf(a,   w,3,0);}
+F2(jtscm002){I r; ARGCHK2(a,w); r=ISDENSETYPE(AT(w),LIT+C2T+C4T); F2RANK(RMAX,r,jtscm002,DUMMYSELF); R r?line(w,-1L,0,0):linf(a,   w,0,0);}
+F2(jtscm012){I r; ARGCHK2(a,w); r=ISDENSETYPE(AT(w),LIT+C2T+C4T); F2RANK(RMAX,r,jtscm012,DUMMYSELF); R r?line(w,-1L,0,1):linf(a,   w,0,1);}
+F2(jtscm102){I r; ARGCHK2(a,w); r=ISDENSETYPE(AT(w),LIT+C2T+C4T); F2RANK(RMAX,r,jtscm102,DUMMYSELF); R r?line(w,-1L,1,0):linf(a,   w,1,0);}
+F2(jtscm112){I r; ARGCHK2(a,w); r=ISDENSETYPE(AT(w),LIT+C2T+C4T); F2RANK(RMAX,r,jtscm112,DUMMYSELF); R r?line(w,-1L,1,1):linf(a,   w,1,1);}
+F2(jtsct2  ){I r; ARGCHK2(a,w); r=ISDENSETYPE(AT(w),LIT+C2T+C4T); F2RANK(RMAX,r,jtsct2,  DUMMYSELF); R r?line(w,-1L,2,1):linf(a,   w,2,1);}
+F2(jtscz2  ){I r; ARGCHK2(a,w); r=ISDENSETYPE(AT(w),LIT+C2T+C4T); F2RANK(RMAX,r,jtscz2,  DUMMYSELF); R r?line(w,-1L,3,0):linf(a,   w,3,0);}

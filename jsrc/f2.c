@@ -267,7 +267,7 @@ F2(jtthorn2){PROLOG(0050);A da,ea,h,ma,s,cellbuf,y,*yv,z;B e,*ev;C*sv,*wv,*zv;I 
  // From here on the a arg is rank 0 or 1
  an=AN(a); t=AT(w);  // an=#atoms of a, t=type of w
  if(t&BOX)R th2box(a,w);  // If boxed w, go handle as special case
- ASSERT(t&NUMERIC&&!(t&SPARSE)&&!(AT(a)&SPARSE),EVDOMAIN);  // w must be numeric and dense; a must be dense
+ ASSERT(t&NUMERIC&&!(t&ISSPARSE)&&!(AT(a)&ISSPARSE),EVDOMAIN);  // w must be numeric and dense; a must be dense
  // r=rank of w; ws->shape of w; c=#atoms in 1-cell of w; n = #1-cells of w
  r=AR(w); ws=AS(w); SHAPEN(w,r-1,c);  PRODX(n,r-1,ws,1);
  ASSERT(!AR(a)||c==an,EVLENGTH);  // if a is not an atom, it must have the same length as a 1-cell of w

@@ -114,7 +114,7 @@ F1(jtts0){A x,z;C s[9],*u,*v,*zv;D*xv;I n,q;
  RZ(x=ts(mtv));
  n=AN(w); xv=DAV(x);
  if(!n)R x;
- if(!(AT(w)&LIT))RZ(w=cvt(LIT,w));
+ if(!ISDENSETYPE(AT(w),LIT))RZ(w=cvt(LIT,w));
  GATV(z,LIT,n,AR(w),AS(w)); zv=CAV(z); MC(zv,CAV(w),n);
  q=0; v=zv; DQ(n, q+='Y'==*v++;); u=2==q?s+2:s;   // if only 2 Y, advance over century
  sprintf(s,FMTI04,(I)xv[0]);             v=zv; DQ(n, if(*v=='Y'){*v=*u++; if(!*u)break;} ++v;);
@@ -294,7 +294,7 @@ void jtpmrecord(J jt,A name,A loc,I lc,int val){A x,y;B b;PM*v;PM0*u;
 F1(jtpmunpack){A*au,*av,c,t,x,z,*zv;B*b;D*dv;I*iv,k,k1,m,n,p,q,wn,*wv;PM*v,*v0,*vq;PM0*u;
  ARGCHK1(w);
  ASSERT(JT(jt,pma),EVDOMAIN);
- if(!(INT&AT(w)))RZ(w=cvt(INT,w));
+ if(!ISDENSETYPE(AT(w),INT))RZ(w=cvt(INT,w));
  wn=AN(w); wv=AV(w);
  u=(PM0*)AV(JT(jt,pma)); p=u->wrapped?u->n-u->i:0; q=u->i; n=p+q;
  GATV0(x,B01,n,1); b=BAV(x); mvc(n,b,1,iotavec-IOTAVECBEGIN+(wn?C0:C1));

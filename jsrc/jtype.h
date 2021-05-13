@@ -293,6 +293,7 @@ typedef I SI;
 #define RATSIZE sizeof(Q)
 // No size for BIT, since it is fractional
 // Bit 8-9 unused
+#if 0  // obsolete
 #define SB01X 10
 #define SB01            ((I)1L<<SB01X)        /* P  sparse boolean               */
 #define SB01SIZE sizeof(P)
@@ -311,6 +312,7 @@ typedef I SI;
 #define SBOXX 15
 #define SBOX            ((I)1L<<SBOXX)       /* P  sparse boxed                 */
 #define SBOXSIZE sizeof(P)
+#endif
 #define SBTX 16
 #define SBT             ((I)1L<<SBTX)       /* SB symbol                       */
 #define SBTSIZE sizeof(SB)
@@ -361,9 +363,8 @@ typedef I SI;
 #define RPARX 30
 #define RPAR            ((I)1L<<RPARX)   /* I  right parenthesis            */
 #define RPARSIZE sizeof(I)
-// NOTE maxtype & maybe others require bit 31 to be 0!!
-#define RESVX 31    // reserved so types can be I types
-#define RESV    ((I)1<<RESVX)  // used to hold NOUN status sometimes
+#define ISSPARSEX 31  // NOTE this extends to the sign bit
+#define ISSPARSE            (-((I)1L<<ISSPARSEX))       /* P  sparse boxed                 */
 
 #define ASGNX 21
 #define ASGN            ((I)1L<<ASGNX)     /* I  assignment                   */
@@ -409,21 +410,29 @@ typedef I SI;
 // LPAR   1011    must be allocated by GAF, & not be copied, unless ca() is modified to use length not type
 
 #define ANY             -1L
-#define SPARSE          (SB01+SINT+SFL+SCMPX+SLIT+SBOX)
-#define NUMERIC         (B01+INT+FL+CMPX+XNUM+RAT+SB01+SINT+SFL+SCMPX)
-#define DIRECT          (LIT+C2T+C4T+B01+INT+FL+CMPX+SBT)
-#define JCHAR           (LIT+C2T+C4T+SLIT)
-#define NOUN            (NUMERIC+JCHAR+BOX+SBOX+SBT)
-#define DENSE           (NOUN&~SPARSE)
+// obsolete #define SPARSE          (SB01+SINT+SFL+SCMPX+SLIT+SBOX)
+#define NUMERIC         (B01+INT+FL+CMPX+XNUM+RAT)
+#define DIRECT          ((LIT+C2T+C4T+B01+INT+FL+CMPX+SBT)|ISSPARSE)  // AND must be >0
+#define JCHAR           (LIT+C2T+C4T)
+#define NOUN            (NUMERIC+JCHAR+BOX+SBT)
+// obsolete #define DENSE           (NOUN&~SPARSE)
 #define FUNC            (VERB+ADV+CONJ)
 #define RHS             (NOUN+FUNC)
 #define IS1BYTE         (B01+LIT)
 #define LAST0           (B01+LIT+C2T+C4T+NAME)
+#define SPARSABLE       (B01+INT+FL+CMPX+LIT)  // types that can be made sparse
 // Don't traverse for ra/fa unless one of these bits is set
-#define TRAVERSIBLE     (BOX|VERB|ADV|CONJ|RAT|XNUM|NAME|SB01|SINT|SFL|SCMPX|SLIT|SBOX)
+#define TRAVERSIBLE     (BOX|VERB|ADV|CONJ|RAT|XNUM|NAME|ISSPARSE)
 // Allow recursive usecount in one of these types
-#define RECURSIBLE      (BOX|VERB|ADV|CONJ|RAT|XNUM|NAME)
+#define RECURSIBLE      (BOX|VERB|ADV|CONJ|RAT|XNUM|NAME)  // sparse box not allowed
 #define RECURSIBLENOUN  (RECURSIBLE&NOUN)
+#define SGN1IFSPARSETYPE(t,dt) ((t)&-((t)&(dt)))  // sign 1 if t is sparse and one of dt
+#define SGN0IFDENSETYPE(t,dt) ((t)|(((t)&(dt))-1))  // sign 0 if t is dense and one of dt
+#define ISDENSETYPE(t,dt) (((t)&ISSPARSE+(dt))>0)  // true if t is dense and one of dt
+#define SGNIFSPARSE(t)  (t)  // set sign bit if t is sparse
+#define ISSPRSTEST(t)   ((t)<0)  // true if sparse
+#define SGNIFDENSE(t)   (~(t))  // set sign bit if t is dense
+#define ISDENSE(t)      ((t)>=0)  // true if dense
 // Modifiers that operate on subarrays do so with virtual blocks, and those blocks may be marked as inplaceable if the backing block is inplaceable.
 // The inplaceability applies to the data area, but not necessarily to the block header: if UNINCORPORABLE is set, the header must not be modified (we clone the header in that case)
 // For speedy singletons, there is the additional problem that the operation expects always to write a FL value to the result area, which is OK for any
@@ -437,15 +446,15 @@ typedef I SI;
 //
 // Note: arithmetic dyads on bytes have similar issues, because the 8-byte-at-a-time operations may execute outside the cell of the array.  We detect
 // those cases inside the atomic-dyad code in va2.c.
-#define TYPEVIPOK       (FL+CMPX+SBT+(SZI==SZD?INT:0))
+#define TYPEVIPOK       (FL+CMPX+SBT+(SZI==SZD?INT:0))  // sparse is never inplaceable
 #define TYPESEQ(x,y)    ((x)==(y))  // types are equal
 #define TYPESXOR(x,y)    ((x)^(y))  // types are not equal using full-word logical
 #define TYPESNE(x,y)    ((x)!=(y))  // types are not equal
-#define TYPESLT(x,y)    ((x)<(y))  // type x < type y
-#define TYPESGT(x,y)    ((x)>(y)) // type x > type y
+#define TYPESLT(x,y)    ((UI)(x)<(UI)(y))  // type x < type y
+#define TYPESGT(x,y)    ((UI)(x)>(UI)(y)) // type x > type y
 
-#define PARTOFSPEECHEQ(x,y) (((((x)|(RESV&-((x)&NOUN)))^((y)|(RESV&-((x)&NOUN))))&RESV+CONJ+VERB+ADV)==0)  // using RESV to hold NOUN status, verify parts-of-speech the same
-#define PARTOFSPEECHEQACV(x,y) ((((x)^(y))&RESV+CONJ+VERB+ADV)==0)  // using RESV to hold NOUN status, verify parts-of-speech the same
+#define PARTOFSPEECHEQ(x,y) (((((x)|(RPAR&-((x)&NOUN)))^((y)|(RPAR&-((x)&NOUN))))&RPAR+CONJ+VERB+ADV)==0)  // using RPAR to hold NOUN status, verify parts-of-speech the same
+#define PARTOFSPEECHEQACV(x,y) ((((x)^(y))&RPAR+CONJ+VERB+ADV)==0)  // verify known-nonnoun parts-of-speech the same
 
 // Utility: keep the lowest 1 only
 #define LOWESTBIT(x)    ((x)&-(x))
@@ -454,8 +463,8 @@ typedef I SI;
 #define NEGIFHOMO(s,t)  ( ~POSIFHOMO(s,t) )
 #define HOMO(s,t)       ( POSIFHOMO(s,t)>=0 )
 #define HOMONE(s,t)     HOMO(s,t)
-#define STYPE(t)        (((t)&(B01|LIT|INT|FL|CMPX|BOX))<<(SB01X-B01X))
-#define DTYPE(t)        (((t)&(SB01|SLIT|SINT|SFL|SCMPX|SBOX))>>(SB01X-B01X))
+#define STYPE(t)        ((t)|ISSPARSE)
+#define DTYPE(t)        ((t)&~ISSPARSE)
 
 // flags in AM
 #define AMNVX 0   // set if the value has been assigned to a name is used for NVR status
@@ -549,7 +558,7 @@ typedef I SI;
    // block was incorporated.
 #define AFDPARENX 25     // matches CONW
 #define AFDPAREN  ((I)1<<AFDPARENX)  // In the words of an external definition, this word came from (( )) and must use linear rep for its display
-   // MUST BE GREATER THAN ANY DIRECT FLAG
+   // MUST BE GREATER THAN ANY DIRECT FLAG (not including the SPARSE flag)
 #define AFUPPERTRIX 30      // matches RPAR
 #define AFUPPERTRI  ((I)1<<AFUPPERTRIX)  // (used in cip.c) This is an upper-triangular matrix
 // NOTE: bit 28 (LPAR) is used to check for freed bufs in DEADARG

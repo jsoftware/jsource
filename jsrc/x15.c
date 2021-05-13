@@ -937,7 +937,7 @@ strcpy(proc,"x15lseek32");
 #define CDT(x,y) (6*((0x160004>>(x))&7)+((0x160004>>(y))&0x7))  // encode 0 1 2 3 17 18-> 4 2 1 0 3 5  1011. .... .... .... 0100
 
 static I*jtconvert0(J jt,I zt,I*v,I wt,C*u){D p,q;I k=0;US s;C4 s4;
- if(unlikely((zt|wt)&(NOUN&~(B01+LIT+INT+FL+C2T+C4T))))R 0;  // if unallowed type, abort
+ if(unlikely((zt|wt)&((NOUN|ISSPARSE)&~(B01+LIT+INT+FL+C2T+C4T))))R 0;  // if unallowed type, abort
  switch(CDT(CTTZ(zt),CTTZ(wt))){
   default:           R 0;
   case CDT(FLX, B01X): *(D*)v=*(B*)u; break;
@@ -979,7 +979,7 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
     data[NCDARGS*2],dcnt=0,fcnt=0,*dv,i,n,per,t,xn,xr,xt,*xv; DoF dd[NCDARGS];
  FPREFIP(J);  // save inplace flag
  n=cc->n;  // n is # cd args
- if(unlikely(((n-1)|SGNIF(wt,BOXX))>=0)){DO(n, CDASSERT(!cc->star[i],DEPARM+256*i));}  // if there are args, and w is not boxed, verify there are no pointer args
+ if(unlikely(((n-1)|SGNIF(wt,BOXX))>=0)){DO(n, CDASSERT(!cc->star[i],DEPARM+256*i));}  // if there are args, and w is not boxed, verify there are no pointer parms
  zbx=cc->zbx; zv=1+(A*)zv0; dv=data; u=wu; xr=0;  // zv->first input arg  zbx is 1 if the result includes the input boxes; 0 if just bare value
  for(i=0;i<n;++i,++zv){  // for each input field
 #if SY_UNIX64 && defined(__x86_64__)
@@ -1018,12 +1018,12 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
    CDASSERT(!AR(y)&&AT(y)&B01+INT,per);  // pointer must be B01 or INT type (if B01, nust be nullptr)
    if(unlikely(AT(y)&B01)){CDASSERT(0==BAV(y)[0],per); *dv++=0;}else *dv++=AV(y)[0];  // get nullptr or intptr, save in *dv
   }else if(star){  // pointer, but not boxed atom
-   CDASSERT(xr&&(xt&DIRECT),per);                /* pointer can't point at scalar, and it must point to direct values */
+   CDASSERT(xr&&((xt&DIRECT)>0),per);                /* pointer can't point at scalar, and it must point to direct values */
    // if type is * (not &), make a safe copy.
    if(star&1){RZ(x=jtmemu(jtinplace,x)); if(zbx)*zv=incorp(x); xv=AV(x);}  // what we install into * must be unaliased (into & is ok)
    *dv++=(I)xv;                     /* pointer to J array memory     */
-   CDASSERT(xt&LIT+C2T+C4T+INT+FL+CMPX,per);  // verify J type is DIRECT
-// long way    if(!lit&&(c=='b'||c=='s'||c=='f'||c=='z'||SY_64&&c=='i')){
+   CDASSERT(ISDENSETYPE(xt,LIT+C2T+C4T+INT+FL+CMPX),per);  // verify J type is DIRECT why not B01?
+// obsolete long way    if(!lit&&(c=='b'||c=='s'||c=='f'||c=='z'||SY_64&&c=='i')){
    if(unlikely((litsgn | ((cbit&(((I)1<<('b'-'a'))|((I)1<<('f'-'a'))|((I)1<<('s'-'a'))|((I)1<<('z'-'a'))|((I)SY_64<<('i'-'a'))))-1))>=0)){
     cipv[cipcount]=xv;              /* convert in place arguments */
     cipn[cipcount]=xn;
@@ -1195,7 +1195,7 @@ F2(jtcd){A z;C*tv,*wv,*zv;CCT*cc;I k,m,n,p,q,t,wr,*ws,wt;
  AFLAGPRISTNO(w)  // we transfer boxes from w to the result, thereby letting them escape.  That makes w non-pristine
  if(1<AR(a)){I rr=AR(w); rr=rr==0?1:rr; R rank2ex(a,w,DUMMYSELF,1L,rr,1L,rr,jtcd);}
  wt=AT(w); wr=AR(w); ws=AS(w); PRODX(m,wr-1,ws,1);
- ASSERT(wt&DENSE,EVDOMAIN);
+ ASSERT(!(wt&ISSPARSE),EVDOMAIN);
  ASSERT(LIT&AT(a),EVDOMAIN);
  C* enda=&CAV(a)[AN(a)]; C endc=*enda; *enda=0; cc=cdparse(a,0); *enda=endc; RZ(cc); // should do outside rank2 loop?
  n=cc->n;
@@ -1203,10 +1203,11 @@ F2(jtcd){A z;C*tv,*wv,*zv;CCT*cc;I k,m,n,p,q,t,wr,*ws,wt;
  if(cc->zbx){GATV(z,BOX,m*(1+n),MAX(1,wr),ws); AS(z)[AR(z)-1]=1+n;}
  else{CDASSERT('*'!=cc->zl,DEDEC); GA(z,cc->zt,m,MAX(0,wr-1),ws);}
  // z is always nonrecursive
- if(m&&n&&!(wt&BOX)){
+// obsolete  if(m&&n&&!(wt&BOX)){
+ if(unlikely((-m&-n&SGNIFNOT(wt,BOXX))<0)){
   t=0; tv=cc->tletter; DQ(n, k=cdjtype(*tv++); t=MAX(t,k););
   CDASSERT(HOMO(t,wt),DEPARM);
-  if(!(wt&B01+INT+FL+LIT+C2T+C4T))RZ(w=cvt(wt=t,w));
+  if(!ISDENSETYPE(wt,B01+INT+FL+LIT+C2T+C4T))RZ(w=cvt(wt=t,w));  // if w sparse or not DIRECT, convert it
  }
  wv=CAV(w); zv=CAV(z); k=bpnoun(wt);
  if(1==m)RZ(jtcdexec1(jtinplace,cc,zv,wv,k,wt,0))
@@ -1310,7 +1311,7 @@ F2(jtmemw){C*u;I m,n,t,*v;
  n=AN(w); v=AV(w);
  ASSERT(3==n||4==n,EVLENGTH);
  m=v[2]; t=3==n?LIT:v[3]; u=(C*)(v[0]+v[1]);
- ASSERT(t&B01+LIT+C2T+C4T+INT+FL+CMPX+SBT,EVDOMAIN);
+ ASSERT(ISDENSETYPE(t,B01+LIT+C2T+C4T+INT+FL+CMPX+SBT),EVDOMAIN);
  ASSERT(m==AN(a)||t&LIT+C2T+C4T&&1==AR(a)&&(m-1)==AN(a),EVLENGTH);
  if(B01&AT(a)&&t&INT) RZ(a=cvt(INT,a));
  if(INT&AT(a)&&t&B01) RZ(a=cvt(B01,a));

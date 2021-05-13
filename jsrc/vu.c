@@ -13,7 +13,7 @@ B jtvc1(J jt,I n,US*v){DQ(n, RZ(255>=*v++);); R 1;}
 // if b is 0, raise error if high byte of unicode is not 0
 A jttoc1(J jt,B h,A w){A z;C*wv,*zv;I n;C4*w4;
  ARGCHK1(w);
- if(LIT&AT(w))RCA(w);  // if already ASCII, return
+ if(ISDENSETYPE(AT(w),LIT))RCA(w);  // if already ASCII, return
  n=AN(w); wv=CAV(w);    // number of characters, pointer to characters if any
  w4=C4AV(w);
  ASSERT(!n||(C2T+C4T)&AT(w),EVDOMAIN);  // must be empty or unicode

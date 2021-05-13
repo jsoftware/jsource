@@ -104,7 +104,8 @@ F1(jtgaussdet){A z;I*s;
  ASSERT(2==AR(w),EVRANK);
  s=AS(w);
  ASSERT(s[0]==s[1],EVLENGTH);
- switch(CTTZNOFLAG(AT(w))){
+ if(!(AT(w)&ISSPARSE))
+  switch(CTTZNOFLAG(AT(w))){
   case FLX:   z=detd(ca(w));      break;
   default:   ASSERT(0,EVDOMAIN);
   case B01X:
@@ -112,6 +113,6 @@ F1(jtgaussdet){A z;I*s;
   case CMPXX: z=detz(ca(w));      break;
   case XNUMX: z=detr(cvt(RAT,w)); break;
   case RATX:  z=detr(ca(w));
- }
+  }
  R z==mark?detxm(w,eval("-/ .*")):z;
 }    /* determinant on square matrix */

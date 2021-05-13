@@ -44,7 +44,7 @@ static F2(jtpdtspmv){A ax,b,g,x,wx,y,yi,yj,z;B*bv;I m,n,s[2],*u,*v,*yv;P*ap,*wp,
  ARGCHK2(a,w);
  ap=PAV(a); y=SPA(ap,i); yv=AV(y); s[0]=n=AS(y)[0]; s[1]=1;
  GATVR(yj,INT,n,2,s);
- if(DENSE&AT(w)){
+ if(!(AT(w)&ISSPARSE)){
   GATVR(yi,INT,n,2,s); u=AV(yi); AR(yj)=1; v=AV(yj);
   DQ(n, *u++=*yv++; *v++=*yv++;);
   ax=SPA(ap,x); RZ(wx=from(yj,w));
@@ -71,7 +71,7 @@ static F2(jtpdtspmv){A ax,b,g,x,wx,y,yi,yj,z;B*bv;I m,n,s[2],*u,*v,*yv;P*ap,*wp,
 static F2(jtpdtspvm){A ax,b,g,x,wx,y,yi,yj,z;B*bv;D*av,c,d,*wv,*xv;I m,n,s[2],*u,*v,*yv;P*ap,*wp,*zp;
  ARGCHK2(a,w);
  wp=PAV(w); y=SPA(wp,i); yv=AV(y); s[0]=n=AS(y)[0]; s[1]=1;
- if(DENSE&AT(a)){
+ if(!(AT(a)&ISSPARSE)){
   GATVR(yj,INT,n,2,s); v=AV(yj); 
   av=DAV(a); x=SPA(wp,x); wv=DAV(x);
   GATV0(x,FL,n,1); xv=DAV(x);
@@ -104,7 +104,7 @@ static F2(jtpdtspvm){A ax,b,g,x,wx,y,yi,yj,z;B*bv;D*av,c,d,*wv,*xv;I m,n,s[2],*u
 /* nv - row boundaries in iv             */
 /* xv - ptr to data values               */
 static B jtmmprep(J jt,P*p,I*n,I**iv,I*m,I**nv,D**xv){A x;I j,k,q,*u,*v;
- x=SPA(p,x); if(!(FL&AT(x)))RZ(x=cvt(FL,x)); *xv=DAV(x);
+ x=SPA(p,x); if(!ISDENSETYPE(AT(x),FL))RZ(x=cvt(FL,x)); *xv=DAV(x);
  x=SPA(p,i); *iv=u=AV(x); *n=AN(x);
  if(m&&nv){
   q=AS(x)[0]; k=q?2+u[(q-1)<<1]-*u:1;
@@ -163,7 +163,7 @@ static F2(jtpdtspmm){A z,zi,zj,zx,zy,*old;D*axv,c,d,*dv,*wxv,*zyv;
  }}}
  NAN1;
  AS(zx)[0]=AN(zx)=AS(zi)[0]=n; AN(zi)=n<<1;
- GASPARSE(z,SFL,1,2,AS(a)); AS(z)[1]=AS(w)[1];
+ GASPARSE(z,FL,1,2,AS(a)); AS(z)[1]=AS(w)[1];
  zp=PAV(z); SPB(zp,a,apvwr(2,0L,1L)); SPB(zp,e,scf(0.0)); SPB(zp,i,zi); SPB(zp,x,zx);
  R z;
 }
@@ -172,9 +172,9 @@ static F2(jtpdtspmm){A z,zi,zj,zx,zy,*old;D*axv,c,d,*dv,*wxv,*zyv;
 F2(jtpdtsp){A x;B ab=0,wb=0;P*p;
  ARGCHK2(a,w);
  ASSERT(!AR(a)||!AR(w)||AS(a)[AR(a)-1]==AS(w)[0],EVLENGTH);
- if(AT(a)&FL+SFL&&AT(w)&FL+SFL){
-  if(SPARSE&AT(a)){p=PAV(a); x=SPA(p,a); ab=AR(a)==AN(x)&&equ(num(0),SPA(p,e));}
-  if(SPARSE&AT(w)){p=PAV(w); x=SPA(p,a); wb=AR(w)==AN(x)&&equ(num(0),SPA(p,e));}
+ if(AT(a)&FL&&AT(w)&FL){
+  if(AT(a)&ISSPARSE){p=PAV(a); x=SPA(p,a); ab=AR(a)==AN(x)&&equ(num(0),SPA(p,e));}
+  if(AT(w)&ISSPARSE){p=PAV(w); x=SPA(p,a); wb=AR(w)==AN(x)&&equ(num(0),SPA(p,e));}
  }
  if(ab&&1==AR(a)&&wb&&1==AR(w))R pdtspvv(a,w);
  if(ab&&2==AR(a)&&    1==AR(w))R pdtspmv(a,w);

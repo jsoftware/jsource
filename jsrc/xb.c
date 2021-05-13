@@ -10,7 +10,11 @@
 #pragma warning(disable: 4101)
 #endif
 
-F1(jtstype){ARGCHK1(w); R sc(AT(w)&-AT(w));}
+// conversion from internal type to the result in 3!:x, which matches the published types
+static I toonehottype(I t){t<<=REPSGN(t)&10; R t&-t;}  // if sparse, shift type to sparse output position.  Return only the one bit
+static I fromonehottype(I t){t&=-t; I issp=REPSGN(-(t&0xfc00)); R (t>>(issp&10))|(issp&ISSPARSE);}
+
+F1(jtstype){ARGCHK1(w); R sc(toonehottype(AT(w)));}
      /* 3!:0 w */
 
 // a is integer atom or list, values indicating the desired result
@@ -75,7 +79,7 @@ static I bsize(J jt,B d,B tb,I t,I n,I r,I*s){I k,w,z;
 // size is rounded to integral # words
 static I bsizer(J jt,B d,B tb,A w){A *wv=AAV(w);
  I totalsize = bsize(jt,d,tb,AT(w),AN(w),AR(w),AS(w));
- if(AT(w)&DIRECT)R totalsize;
+ if((AT(w)&DIRECT)>0)R totalsize;
  I nchildren = AN(w); nchildren<<=((AT(w)>>RATX)&1);  // # subblocks
  DO(nchildren, totalsize+=bsizer(jt,d,tb,wv[i]);)
  R totalsize;
@@ -114,7 +118,7 @@ static B jtmvw(J jt,C*v,C*u,I n,B bv,B bu,B dv,B du){C c;
 }    /* move n words from u to v */
 
 // move the header, return new move point
-static C*jtbrephdrq(J jt,B b,B d,A w,C *q){I f,r;I extt = AT(w);
+static C*jtbrephdrq(J jt,B b,B d,A w,C *q){I f,r;I extt = toonehottype(AT(w));
   r=AR(w); f=0;
  RZ(mvw(BF(d,q),(C*)&f,    1L,b,BU,d,SY_64)); *q=d?(b?0xe3:0xe2):(b?0xe1:0xe0);
  RZ(mvw(BT(d,q),(C*)&extt,1L,b,BU,d,SY_64));
@@ -142,7 +146,7 @@ static A jtbreps(J jt,B b,B d,A w){A q,y,z,*zv;C*v;I c=0,kk,m,n;P*wp;
  R raze(z);
 }    /* 3!:1 w for sparse w */
 
-
+// copy data into bin/hex rep
 static C* jtbrepfill(J jt,B b,B d,A w,C *zv){I klg,kk;
  C *origzv=zv;  // remember start of block
  zv=jtbrephdrq(jt,b,d,w,zv);   // fill in the header, advance pointer to after it
@@ -150,7 +154,7 @@ static C* jtbrepfill(J jt,B b,B d,A w,C *zv){I klg,kk;
  I n=AN(w);  // #input atoms
  I t=AT(w);  // input type
  klg=bplg(t); kk=WS(d);
- if(t&DIRECT){
+ if((t&DIRECT)>0){
   I blksize=bsizer(jt,d,1,w);  // get size of this block (never needs recursion)
   switch(CTTZ(t)){
   case SBTX:
@@ -185,7 +189,7 @@ static C* jtbrepfill(J jt,B b,B d,A w,C *zv){I klg,kk;
 static A jtbrep(J jt,B b,B d,A w){A y;I t;
  ARGCHK1(w);
  t=AT(w); 
- if(unlikely((t&SPARSE)!=0))R breps(b,d,w);  // sparse separately
+ if(unlikely((t&ISSPARSE)!=0))R breps(b,d,w);  // sparse separately
  GATV0(y,LIT,bsizer(jt,d,1,w),1);   // allocate entire result
  RZ(jtbrepfill(jt,b,d,w,CAV(y)));   // fill it
  R y;  // return it
@@ -204,7 +208,7 @@ static A jthrep(J jt,B b,B d,A w){A y,z;C c,*hex="0123456789abcdef",*u,*v;I n,s[
 static A jthrep(J jt,B b,B d,A w){A y;C c,*hex="0123456789abcdef",*u,*v;I n,s[2],t;
  ARGCHK1(w);
  t=AT(w); 
- if(unlikely((t&SPARSE)!=0)){A z;  // sparse separately
+ if(unlikely((t&ISSPARSE)!=0)){A z;  // sparse separately
   RZ(y=breps(b,d,w));
   n=AN(y); s[0]=n>>LGWS(d); s[1]=2*WS(d); 
   GATVR(z,LIT,2*n,2,s);  
@@ -255,22 +259,26 @@ static F1(jtunhex){A z;C*u;I c,n;UC p,q,*v;
  RE(z); RETF(z);
 }
 
+// create A from 3!:1 form
 static A jtunbinr(J jt,B b,B d,B pre601,I m,A w){A y,z;C*u=(C*)w,*v;I e,j,kk,n,p,r,*s,t,*vv;
  ASSERT(m>BH(d),EVLENGTH);
  RZ(mvw((C*)&t,BTX(d,pre601,w),1L,BU,b,SY_64,d));
  RZ(mvw((C*)&n,BN(d,w),1L,BU,b,SY_64,d));
  RZ(mvw((C*)&r,BR(d,w),1L,BU,b,SY_64,d)); 
  kk=WS(d); v=BV(d,w,r);
- ASSERT((t==LOWESTBIT(t))&&t&(B01|INT|FL|CMPX|BOX|XNUM|RAT|LIT|C2T|C4T|SB01|SLIT|SINT|SFL|SCMPX|SBOX|SBT),EVDOMAIN);
+ ASSERT(t==LOWESTBIT(t),EVDOMAIN);
+ t=fromonehottype(t);
+// obsolete  ASSERT((t==LOWESTBIT(t))&&t&(B01|INT|FL|CMPX|BOX|XNUM|RAT|LIT|C2T|C4T|SB01|SLIT|SINT|SFL|SCMPX|SBOX|SBT),EVDOMAIN);
+ ASSERT(t&NOUN,EVDOMAIN);
  ASSERT(0<=n,EVDOMAIN);
  ASSERT(BETWEENC(r,0,RMAX),EVRANK);
- p=bsize(jt,d,0,t,n,r,0L); e=t&RAT?n+n:t&SPARSE?1+sizeof(P)/SZI:n; 
+ p=bsize(jt,d,0,t,n,r,0L); e=t&RAT?n+n:t&ISSPARSE?1+sizeof(P)/SZI:n; 
  ASSERT(m>=p,EVLENGTH);
- if(likely((t&DENSE)!=0)){GA(z,t,n,r,0)}else{GASPARSE(z,t,n,r,(I*)0)} s=AS(z);
+ if(likely(!(t&ISSPARSE))){GA(z,t,n,r,0)}else{GASPARSE(z,t,n,r,(I*)0)} s=AS(z);
  RZ(mvw((C*)s,BS(d,w),r,BU,b,SY_64,d)); 
- j=1; DO(r, ASSERT(0<=s[i],EVLENGTH); if(t&DENSE)j*=s[i];); 
+ j=1; DO(r, ASSERT(0<=s[i],EVLENGTH); if(!(t&ISSPARSE))j*=s[i];); 
  ASSERT(j==n,EVLENGTH);
- if(t&BOX+XNUM+RAT+SPARSE){GATV0(y,INT,e,1); vv=AV(y); RZ(mvw((C*)vv,v,e,BU,b,SY_64,d));}
+ if(t&BOX+XNUM+RAT+ISSPARSE){GATV0(y,INT,e,1); vv=AV(y); RZ(mvw((C*)vv,v,e,BU,b,SY_64,d));}
  if(t&BOX+XNUM+RAT){A*zv=AAV(z);I i,k=0,*iv;
   RZ(y=indexof(y,y)); iv=AV(y);
   for(i=0;i<e;++i){
@@ -278,7 +286,7 @@ static A jtunbinr(J jt,B b,B d,B pre601,I m,A w){A y,z;C*u=(C*)w,*v;I e,j,kk,n,p
    ASSERT(BETWEENO(j,0,m),EVINDEX);
    if(i>iv[i])zv[i]=zv[iv[i]];
    else{while(k<e&&j>=vv[k])++k; zv[i]=incorp(unbinr(b,d,pre601,k<e?vv[k]-j:m-j,(A)(u+j)));}
- }}else if(unlikely((t&SPARSE)!=0)){P*zp=PAV(z);
+ }}else if(unlikely((t&ISSPARSE)!=0)){P*zp=PAV(z);
   j=vv[1]; ASSERT(BETWEENO(j,0,m),EVINDEX); SPB(zp,a,unbinr(b,d,pre601,vv[2]-j,(A)(u+j)));
   j=vv[2]; ASSERT(BETWEENO(j,0,m),EVINDEX); SPB(zp,e,unbinr(b,d,pre601,vv[3]-j,(A)(u+j)));
   j=vv[3]; ASSERT(BETWEENO(j,0,m),EVINDEX); SPB(zp,i,unbinr(b,d,pre601,vv[4]-j,(A)(u+j)));
@@ -316,7 +324,7 @@ F1(jtunbin){A q;B b,d;C*v;I c,i,k,m,n,r,t;
  if(!mvw((C*)&n,BN(d,q),1L,BU,0,SY_64,d)){RESETERR; b=1;}
  if(!mvw((C*)&r,BR(d,q),1L,BU,0,SY_64,d)){RESETERR; b=1;}
  b=b||!(t&NOUN&&0<=n&&0<=r&&(r||1==n)&&m>=BH(d)+r*WS(d));
- if(t&DENSE){
+ if(!(t&ISSPARSE)){
   v=BS(d,q); c=1;
   for(i=0;!b&&i<r;++i){
    if(!mvw((C*)&k,v,1L,BU,0,SY_64,d)){RESETERR; b=1;}
@@ -339,10 +347,10 @@ F2(jtic2){A z;I j,m,n,p,*v,*x,zt;I4*y;UI4*y1;S*s;U short*u;
 #else
  ASSERT(ABS(j)<=2,EVDOMAIN);
 #endif
-// long way p=4==j||-4==j?4:3==j||-3==j?8:2==j||-2==j?4:2;
+// p=4==j||-4==j?4:3==j||-3==j?8:2==j||-2==j?4:2;
  p=ABS(j); p+=(I )(p==0)-((p&4)>>1);   // p becomes (|j){1 1 2 3 2
- if(0<j){m=n<<p; zt=LIT; if(!(INT&AT(w)))RZ(w=cvt(INT,w));}
- else   {m=n>>p; zt=INT; ASSERT(!n||LIT&AT(w),EVDOMAIN); ASSERT(!(n&((((I)1)<<p)-1)),EVLENGTH);} 
+ if(0<j){m=n<<p; zt=LIT; if(!ISDENSETYPE(AT(w),INT))RZ(w=cvt(INT,w));}
+ else   {m=n>>p; zt=INT; ASSERT(!n||ISDENSETYPE(AT(w),LIT),EVDOMAIN); ASSERT(!(n&((((I)1)<<p)-1)),EVLENGTH);} 
  GA(z,zt,m,1,0); v=AV(z); x=AV(w); 
  switch(j){
   default: ASSERT(0,EVDOMAIN);
@@ -363,8 +371,8 @@ F2(jtfc2){A z;D*x,*v;I j,m,n,p,zt;float*s;
  n=AN(w);
  RE(j=i0(a));
  p=2==j||-2==j?LGSZD:2;
- if(0<j){m=n<<p; zt=LIT; if(!(FL&AT(w)))RZ(w=cvt(FL,w));}
- else   {m=n>>p; zt=FL; ASSERT(!n||LIT&AT(w),EVDOMAIN); ASSERT(!(n&((((I)1)<<p)-1)),EVLENGTH);} 
+ if(0<j){m=n<<p; zt=LIT; if(!ISDENSETYPE(AT(w),FL))RZ(w=cvt(FL,w));}
+ else   {m=n>>p; zt=FL; ASSERT(!n||ISDENSETYPE(AT(w),LIT),EVDOMAIN); ASSERT(!(n&((((I)1)<<p)-1)),EVLENGTH);} 
  GA(z,zt,m,1,0); v=DAV(z); x=DAV(w);
  switch(j){
   default: ASSERT(0,EVDOMAIN);
@@ -387,7 +395,7 @@ static B jtisnanq(J jt,A w){
 F1(jtisnan){A*wv,z;B*u;D*v;I n,t;
  ARGCHK1(w);
  n=AN(w); t=AT(w);
- ASSERT(t&DENSE,EVNONCE);
+ ASSERT(!(t&ISSPARSE),EVNONCE);
  GATV(z,B01,n,AR(w),AS(w)); u=BAV(z);
  if (t&FL){v=DAV(w); DQ(n, *u++=_isnan(*v++););}  // float - check each atom
  else if(t&CMPX){v=DAV(w); DQ(n, *u++=_isnan(v[0])|_isnan(v[1]); v+=2;);}  // complex - check each half

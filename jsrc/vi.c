@@ -1231,11 +1231,11 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z;B mk=w==mark,th;
  // f is len of frame of a (or of w if a has no frame); s->shape of a (or of w is a has no frame)
  // r is rank of an item of a cell of a (i. e. rank of a target item), f1 is len of frame of A CELL OF w with respect to target cells, in
  // other words the frame of the results each cell of w will produce
- if(at&SPARSE||wt&SPARSE){A z;
+ if(at&ISSPARSE||wt&ISSPARSE){A z;
   // Handle sparse arguments
-  if(1>=acr)R af?sprank2(a,w,0L,acr,RMAX,jtindexof):wt&SPARSE?iovxs(mode,a,w):iovsd(mode,a,w);
+  if(1>=acr)R af?sprank2(a,w,0L,acr,RMAX,jtindexof):wt&ISSPARSE?iovxs(mode,a,w):iovsd(mode,a,w);
   if(af||wf)R sprank2(a,w,0L,acr,wcr,jtindexof);
-  switch((at&SPARSE?2:0)+(wt&SPARSE?1:0)){
+  switch((at&ISSPARSE?2:0)+(wt&ISSPARSE?1:0)){
    case 1: z=indexofxx(mode,a,w); break;
    case 2: z=indexofxx(mode,a,w); break;
    case 3: z=indexofss(mode,a,w); break;
@@ -1591,7 +1591,7 @@ F2(jtjico2){R indexofsub(IICO,a,w);}
 // ~: y
 F1(jtnubsieve){
  ARGCHK1(w);
- if(SPARSE&AT(w))R nubsievesp(w); 
+ if(AT(w)&ISSPARSE)R nubsievesp(w); 
  jt->ranks=(RANKT)jt->ranks + ((RANKT)jt->ranks<<RANKTX);  // we process as if dyad; make left rank=right rank
  R indexofsub(INUBSV,w,w); 
 }    /* ~:"r w */
@@ -1599,7 +1599,7 @@ F1(jtnubsieve){
 // ~. y  - does not have IRS
 F1(jtnub){ 
  F1PREFIP;ARGCHK1(w);
- if(SPARSE&AT(w)||AFLAG(w)&AFNJA)R repeat(nubsieve(w),w); 
+ if(AT(w)&ISSPARSE||AFLAG(w)&AFNJA)R repeat(nubsieve(w),w); 
  A z; RZ(z=indexofsub(INUB,w,w));
  // We extracted from w, so mark it (or its backer if virtual) non-pristine.  If w was pristine and inplaceable, transfer its pristine status to the result.  We overwrite w because it is no longer in use
  PRISTXFERF(z,w)
@@ -1615,7 +1615,7 @@ F2(jtless){A x=w;I ar,at,k,r,*s,wr,*ws,wt;
  // if w's rank is larger than that of a cell of a, reheader w to look like a list of such cells.  The number of atoms stays the same
  if(wr&&r!=wr){RZ(x=virtual(w,0,r)); AN(x)=AN(w); s=AS(x); ws=AS(w); k=ar>wr?0:1+wr-r; *s=prod(k,ws); MCISH(1+s,k+ws,r-1);}  // bug: should test for error on the prod()
  // if nothing special (like sparse, or incompatible types, or x requires conversion) do the fast way; otherwise (-. x e. y) # y
- RZ(x=!(at&SPARSE)&&HOMO(at,wt)&&TYPESEQ(at,maxtype(at,wt))&&!(AFLAG(a)&AFNJA)?indexofsub(ILESS,x,a):
+ RZ(x=!(at&ISSPARSE)&&HOMO(at,wt)&&TYPESEQ(at,maxtype(at,wt))&&!(AFLAG(a)&AFNJA)?indexofsub(ILESS,x,a):
      repeat(not(eps(a,x)),a));
  // We extracted from a, so mark it non-pristine.  If a was pristine and inplaceable, transfer its pristine status to the result
  PRISTXFERAF(x,a)
@@ -1627,7 +1627,7 @@ F2(jteps){I l,r;
  ARGCHK2(a,w);
  l=jt->ranks>>RANKTX; l=AR(a)<l?AR(a):l;
  r=(RANKT)jt->ranks; r=AR(w)<r?AR(w):r; RESETRANK;
- if(SPARSE&(AT(a)|AT(w)))R lt(irs2(w,a,0L,r,l,jtindexof),sc(r?*(AS(w)+AR(w)-r):1));  // for sparse, implement as (# cell of y) > y i. x
+ if(AT(a)|AT(w))&ISSPARSE)R lt(irs2(w,a,0L,r,l,jtindexof),sc(r?*(AS(w)+AR(w)-r):1));  // for sparse, implement as (# cell of y) > y i. x
  jt->ranks=(RANK2T)((r<<RANKTX)+l);  // swap ranks for subroutine.  Subroutine will reset ranks
  R indexofsub(IEPS,w,a);
 }    /* a e."r w */
@@ -1635,13 +1635,13 @@ F2(jteps){I l,r;
 // I.@~: y   does not have IRS
 F1(jtnubind){
  ARGCHK1(w);
- R SPARSE&AT(w)?icap(nubsieve(w)):indexofsub(INUBI,w,w);
+ R AT(w)&ISSPARSE?icap(nubsieve(w)):indexofsub(INUBI,w,w);
 }    /* I.@~: w */
 
 // i.@(~:!.0) y     does not have IRS
 F1(jtnubind0){A z;
  ARGCHK1(w);
- PUSHCCT(1.0) z=SPARSE&AT(w)?icap(nubsieve(w)):indexofsub(INUBI,w,w); POPCCT
+ PUSHCCT(1.0) z=AT(w)&ISSPARSE?icap(nubsieve(w)):indexofsub(INUBI,w,w); POPCCT
  R z;
 }    /* I.@(~:!.0) w */
 
@@ -1653,14 +1653,14 @@ F1(jtsclass){A e,x,xy,y,z;I c,j,m,n,*v;P*p;
  SETIC(w,n);   // n=#items of y
  RZ(x=indexof(w,w));   // x = i.~ y
  // if w is dense, return ((x = i.n) # x) =/ x
- if(DENSE&AT(w))R atab(CEQ,repeat(eq(IX(n),x),x),x);
+ if(!(AT(w)&ISSPARSE))R atab(CEQ,repeat(eq(IX(n),x),x),x);
  // if x is sparse... ??
  p=PAV(x); e=SPA(p,e); y=SPA(p,i); RZ(xy=stitch(SPA(p,x),y));
  if(n>*AV(e))RZ(xy=over(xy,stitch(e,less(IX(n),y))));
  RZ(xy=grade2(xy,xy)); v=AV(xy);
  c=*AS(xy);
  m=j=-1; DQ(c, if(j!=*v){j=*v; ++m;} *v=m; v+=2;);
- GASPARSE(z,SB01,1,2,(I*)0);  v=AS(z); v[0]=1+m; v[1]=n;
+ GASPARSE(z,B01,1,2,(I*)0);  v=AS(z); v[0]=1+m; v[1]=n;
  p=PAV(z); 
  SPB(p,a,v2(0L,1L));
  SPB(p,e,num(0));

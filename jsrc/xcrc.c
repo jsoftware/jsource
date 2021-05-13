@@ -72,8 +72,8 @@ F2(jtqhash12){F2PREFIP; I hsiz; UI crc;
  ARGCHK2(a,w);
  if(AT(w)&NOUN){RE(hsiz=i0(vib(a)));} else{w=a; hsiz=0;}  // fetch hashtable size; set w=data to hash
  ASSERT(hsiz>=0,EVDOMAIN);
- ASSERT(AT(w)&DENSE,EVNONCE);  // not sparse for now
- if(AT(w)&DIRECT){ // Direct value, calculate CRC of atoms
+ ASSERT(!(AT(w)&ISSPARSE),EVNONCE);  // not sparse for now
+ if((AT(w)&DIRECT)>0){ // Direct value, calculate CRC of atoms
   crc=hic(AN(w)<<bplg(AT(w)),UCAV(w));  // sign-extend result if needed to make 64-bit and 32-bit the same numeric value
  }else{   // not DIRECT, calculate CRC of component CRCs
   crc=-1;  // where we accumulate CRC

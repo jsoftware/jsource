@@ -172,8 +172,8 @@ B evoke(A w){V*v=FAV(w); R CTILDE==v->id&&v->fgh[0]&&NAME&AT(v->fgh[0]);}
 
 // Extract the integer value from w, return it.  Set error if non-integral or non-atomic
 I jti0(J jt,A w){ARGCHK1(w);
- if(likely(AT(w)&INT+B01)){ASSERT(!AR(w),EVRANK); R BIV0(w);}  // INT/B01 quickly
- if(likely(AT(w)&FL)){D d=DAV(w)[0]; D e=jround(d); I cval=(I)e;  // FL without call to cvt
+ if(likely(ISDENSETYPE(AT(w),INT+B01))){ASSERT(!AR(w),EVRANK); R BIV0(w);}  // INT/B01 quickly
+ if(likely(ISDENSETYPE(AT(w),FL))){D d=DAV(w)[0]; D e=jround(d); I cval=(I)e;  // FL without call to cvt
   // if an atom is tolerantly equal to integer,  there's a good chance it is exactly equal.
   // infinities will always round to themselves
   ASSERT(d==e || FFIEQ(d,e),EVDOMAIN);
@@ -218,7 +218,7 @@ static F1(jtii){ARGCHK1(w); I j; RETF(IX(SETIC(w,j)));}
 I jtmaxtype(J jt,I s,I t){
  // If values differ and are both nonzero...
  I resultbit = PRIORITYTYPE(MAX(TYPEPRIORITY(s),TYPEPRIORITY(t)));  // Get the higher-priority type
- if(unlikely(((s|t)&SPARSE))!=0){ASSERT(!((s|t)&(C2T|C4T|XNUM|RAT|SBT)),EVDOMAIN); R (I)1 << (resultbit+SB01X-B01X);}  // If either operand sparse, return sparse version
+ if(unlikely(((s|t)&ISSPARSE))!=0){ASSERT(!((s|t)&(C2T|C4T|XNUM|RAT|SBT)),EVDOMAIN); R ISSPARSE|((I)1 << resultbit);}  // If either operand sparse, return sparse version
  R (I)1 << resultbit;   // otherwise, return normal version
 }
 
@@ -494,20 +494,20 @@ for(i=0;i<n<<bplg(t);i++)*p++=!!(*q++);
 #endif
 
 // Convert w to integer if it isn't integer already (the usual conversion errors apply)
-F1(jtvi){ARGCHK1(w); R INT&AT(w)?w:cvt(INT,w);}
+F1(jtvi){ARGCHK1(w); R ISDENSETYPE(AT(w),INT)?w:cvt(INT,w);}
 
 // Audit w to ensure valid integer value(s).  Error if non-integral.  Result is A block for integer array.  Infinities converted to IMAX/-IMAX
 F1(jtvib){A z;D d,e,*wv;I i,n,*zv;
  ARGCHK1(w);
- if(AT(w)&INT)R RETARG(w);  // handle common non-failing cases quickly: INT and boolean
- if(AT(w)&B01){if(!AR(w))R zeroionei(BAV(w)[0]); R cvt(INT,w);}
+ if(ISDENSETYPE(AT(w),INT))R RETARG(w);  // handle common non-failing cases quickly: INT and boolean
+ if(ISDENSETYPE(AT(w),B01)){if(!AR(w))R zeroionei(BAV(w)[0]); R cvt(INT,w);}
  if(w==ainf)R imax;  // sentence words of _ always use the same block, so catch that too
  I p=-IMAX,q=IMAX;
  RANK2T oqr=jt->ranks; RESETRANK;
- if(unlikely((AT(w)&SPARSE)!=0))RZ(w=denseit(w));
+ if(unlikely((AT(w)&ISSPARSE)!=0))RZ(w=denseit(w));
  switch(AT(w)){
  default:
-  if(!(AT(w)&FL))RZ(w=cvt(FL,w));
+  if(!ISDENSETYPE(AT(w),FL))RZ(w=cvt(FL,w));
   n=AN(w); wv=DAV(w);
   GATV(z,INT,n,AR(w),AS(w)); zv=AV(z);
   for(i=0;i<n;++i){
@@ -525,12 +525,12 @@ F1(jtvib){A z;D d,e,*wv;I i,n,*zv;
 }
 
 // Convert w to integer if needed, and verify every atom is nonnegative
-F1(jtvip){I*v; ARGCHK1(w); if(!(INT&AT(w)))RZ(w=cvt(INT,w)); v=AV(w); DQ(AN(w), ASSERT(0<=*v++,EVDOMAIN);); RETF(w);}
+F1(jtvip){I*v; ARGCHK1(w); if(!ISDENSETYPE(AT(w),INT))RZ(w=cvt(INT,w)); v=AV(w); DQ(AN(w), ASSERT(0<=*v++,EVDOMAIN);); RETF(w);}
 
 // Convert w to string, verify it is a list or atom
-F1(jtvs){ARGCHK1(w); ASSERT(1>=AR(w),EVRANK); R LIT&AT(w)?w:cvt(LIT,w);}    
+F1(jtvs){ARGCHK1(w); ASSERT(1>=AR(w),EVRANK); if(!ISDENSETYPE(AT(w),LIT))w=cvt(LIT,w); R w;}    
      /* verify string */
 
 // Convert w to utf8 string, verify it is a list or atom
-F1(jtvslit){ARGCHK1(w); ASSERT(1>=AR(w),EVRANK); R LIT&AT(w)?w:(C2T+C4T)&AT(w)?toutf8(w):cvt(LIT,w);}    
+F1(jtvslit){ARGCHK1(w); ASSERT(1>=AR(w),EVRANK); if(!ISDENSETYPE(AT(w),LIT)){w=AT(w)&(C2T+C4T)?toutf8(w):cvt(LIT,w);} R w;}    
      /* verify string */

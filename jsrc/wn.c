@@ -329,8 +329,8 @@ B valueisint; // set if the value we are processing is really an int
  if(!mc)R z;  // If no fields at all, exit with empty result (avoids infinite loop below)
  // Convert the default to float, unless we are trying big integers.  We try ints if the default is int or infinite,
  // but only on 64-bit systems where int and float have the same size
- if(!(tryingint = sizeof(D)==sizeof(I) && (AT(a)&B01+INT || (fillreqd>=0 && AT(a)&FL)))){RZ(a=cvt(FL,a));}
- else if(AT(a)&B01)RZ(a=cvt(INT,a));  // If we are trying ints, we must promote Bool to int
+ if(!(tryingint = sizeof(D)==sizeof(I) && (ISDENSETYPE(AT(a),B01+INT) || (fillreqd>=0 && ISDENSETYPE(AT(a),FL))))){RZ(a=cvt(FL,a));}
+ else if(ISDENSETYPE(AT(a),B01))RZ(a=cvt(INT,a));  // If we are trying ints, we must promote Bool to int
  // Get the default value; supposedly a (D) but if we are trying ints it might be really an (I)
  a0=DAV(a)[0];
  // loop till all results have been produced.  Some values require a restart, so we control this field-by-field
@@ -401,8 +401,8 @@ F2(jtexec2){A z;B b,p;C d,*v;I at,c,i,k,m,n,r,*s;
  ARGCHK2(a,w);
  ASSERT(!AR(a),EVRANK);  // x must be an atom
  at=AT(a);
- ASSERT(at&NUMERIC,EVDOMAIN);  // x must be numeric
- if(!(LIT&AT(w)))RZ(w=toc1(0,w));  // convert y to ASCII if it isn't already; error if there are non-ASCII characters; error if not character type
+ ASSERT(ISDENSETYPE(at,NUMERIC),EVDOMAIN);  // x must be numeric
+ if(!ISDENSETYPE(AT(w),LIT))RZ(w=toc1(0,w));  // convert y to ASCII if it isn't already; error if there are non-ASCII characters; error if not character type
  m=n=c=0; r=AR(w);   // get rank of y argument
 
  // process each list of the input to see how many numbers it contains.  We will

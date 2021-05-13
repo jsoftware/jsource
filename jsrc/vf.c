@@ -47,8 +47,8 @@ F1(jtfiller){A z; ARGCHK1(w); I wt=AT(w); fillv0(wt); GA(z,wt,1,0,0);
 void jtfillv0(J jt,I t){I fillvalue0;
 // obsolete  I k=bplg(t);
  jt->fillv0len=bpnoun(t);  // save the minimum fill-cell size
- if(likely(t&B01+LIT+INT+FL+CMPX+SB01+SLIT+SINT+SFL+SCMPX+SBT+BOX+SBOX)){  // normal case - direct num or LIT, or BOX
-  fillvalue0=t&LIT+SLIT?0x20*VALIDBOOLEAN:0; fillvalue0=t&BOX+SBOX?(I)mtv:fillvalue0;  // get SP or 0, of mtv for box
+ if(likely(t&B01+LIT+INT+FL+CMPX+SBT+BOX)){  // normal case - direct num or LIT, or BOX
+  fillvalue0=t&LIT?0x20*VALIDBOOLEAN:0; fillvalue0=t&BOX?(I)mtv:fillvalue0;  // get SP or 0, of mtv for box
   *(I*)&jt->fillv0[0]=fillvalue0; *(I*)&jt->fillv0[SZI]=fillvalue0;  // copy to output   scaf could just do 1 value, 1 byte long except for BOX
 #if !SY_64
   *(I*)&jt->fillv0[2*SZI]=fillvalue0; *(I*)&jt->fillv0[3*SZI]=fillvalue0;
@@ -131,7 +131,7 @@ static void jtrot(J jt,I m,I d,I n,I atomsize,I p,I*av,C*u,C*v){I dk,e,k,j,r,x,y
 
 F2(jtrotate){A origw=w,y,z;B b;C*u,*v;I acr,af,ar,*av,d,k,m,n,p,*s,wcr,wf,wn,wr;
  F2PREFIP;ARGCHK2(a,w);
- if(unlikely((SPARSE&AT(w))!=0))R rotsp(a,w);
+ if(unlikely((AT(w)&ISSPARSE)!=0))R rotsp(a,w);
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr; af=ar-acr; p=acr?AS(a)[af]:1;
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK;
  RZ(a=vi(a));
@@ -177,7 +177,7 @@ static F1(jtrevsp){A a,q,x,y,z;I c,f,k,m,n,r,*v,wr;P*wp,*zp;
 
 F1(jtreverse){A z;C*wv,*zv;I f,k,m,n,nk,r,*v,*ws,wt,wr;
  F1PREFIP;ARGCHK1(w);
- if(unlikely((SPARSE&AT(w))!=0))R revsp(w);
+ if(unlikely((AT(w)&ISSPARSE)!=0))R revsp(w);
  if(unlikely(jt->fill!=0))R rotate(num(-1),w);  // rank is set - not inplaceable because it uses fill
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r;  // no RESETRANK - we don't call any primitive from here on  wr=rank of arg r=eff rank f=len of frame
  ws=AS(w); I *an=ws+f; an=r?an:&oneone[0]; n=*an;    // n=number of subitems of the cell to be reversed
@@ -267,7 +267,7 @@ F2(jtreshape){A z;B filling;C*wv,*zv;I acr,ar,c,k,m,n,p,q,r,*s,t,* RESTRICT u,wc
  if((I )(1<acr)|(I )(acr<ar)){z=rank2ex(a,w,DUMMYSELF,MIN(acr,1),wcr,acr,wcr,jtreshape); PRISTCLRF(w) RETF(z);}  // multiple cells - must lose pristinity
  // now a is an atom or a list.  w can have any rank
  RZ(a=vip(a)); r=AN(a); u=AV(a);   // r=length of a   u->values of a
- if(unlikely((SPARSE&AT(w))!=0)){RETF(reshapesp(a,w,wf,wcr));}
+ if(unlikely((AT(w)&ISSPARSE)!=0)){RETF(reshapesp(a,w,wf,wcr));}
  wn=AN(w); PRODX(m,r,u,1) CPROD(wn,c,wf,ws); CPROD(wn,n,wcr,wf+ws);  // m=*/a (#atoms in result)  c=#cells of w  n=#atoms/cell of w
  ASSERT(n||!m||jt->fill,EVLENGTH);  // error if attempt to extend array of no items to some items without fill
  t=AT(w); filling = 0;
@@ -323,7 +323,7 @@ F2(jtreitem){A y,z;I acr,an,ar,r,*v,wcr,wr;
 
 F2(jtexpand){A z;B*av;C*wv,*wx,*zv;I an,*au,i,k,p,wc,wk,wn,wt,zn;
  ARGCHK2(a,w);
- if(!(B01&AT(a)))RZ(a=cvt(B01,a));
+ if(!ISDENSETYPE(AT(a),B01))RZ(a=cvt(B01,a));
  ASSERT(1==AR(a),EVRANK);
  RZ(w=setfv(w,w)); 
  if(!AR(w))R from(a,take(num(-2),w));  // atomic w, use a { _2 {. w

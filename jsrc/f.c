@@ -544,6 +544,7 @@ static F1(jtths){A e,i,x,z;C c,*u,*v;I d,m,n,*s;P*p;
 static A jtthorn1main(J jt,A w,A prxthornuni){PROLOG(0001);A z;
  ARGCHK1(w);
  if(!AN(w))GATV(z,LIT,0,AR(w),AS(w))
+ else if(AT(w)&ISSPARSE)z=ths(w);
  else switch(CTTZ(AT(w))){
   case INTX:  case FLX: case CMPXX:
              z=thn(w);                    break;
@@ -589,8 +590,8 @@ static A jtthorn1main(J jt,A w,A prxthornuni){PROLOG(0001);A z;
   case SBTX:  z=thsb(w,prxthornuni);                   break;
   case NAMEX: z=sfn(0,w);                  break;
   case ASGNX: z=spellout(CAV(w)[0]);         break;
-  case SB01X: case SINTX: case SFLX: case SCMPXX: case SLITX: case SBOXX:
-             z=ths(w);                    break;
+// obsolete   case SB01X: case SINTX: case SFLX: case SCMPXX: case SLITX: case SBOXX:
+// obsolete              z=ths(w);                    break;
   case VERBX: case ADVX:  case CONJX:
    switch((JT(jt,disp))[1]){
     case 1: z=thorn1main(arep(w),prxthornuni); break;
@@ -726,7 +727,7 @@ static A jtjprx(J jt,I ieol,I maxlen,I lb,I la,A w){A y,z;B ch;C e,eov[2],*v,x,*
  // Convert w to a character array; set t=1 if it's LIT, t=2 if C2T, 4 if C4T
  RZ(y=thorn1u(w)); t=bpnoun(AT(y));
  // set ch iff input w is a character type.
- ch=1&&AT(w)&LIT+C2T+C4T+SBT;
+ ch=ISDENSETYPE(AT(w),LIT+C2T+C4T+SBT);
  // r=rank of result (could be anything), s->shape, v->1st char
  r=AR(y); s=AS(y); v=CAV(y);
  // m=length of EOL sequence; *eov=EOL sequence
@@ -749,7 +750,7 @@ static A jtjprx(J jt,I ieol,I maxlen,I lb,I la,A w){A y,z;B ch;C e,eov[2],*v,x,*
  if(ch&&1<m)zn+=countonlines(scaneol,t,v,h,nq,c,lb,la);
  // If the input was character, boxed, or sparse, count the number of bytes that must be added for UTF-8 framing.
  // If the input is another type, there can be no UTF-8 in the string
- nbx=0; if(ch||AT(w)&BOX+SPARSE)zn+=nbx=countonlines(scanbdc,t,v,h,nq,c,lb,la);
+ nbx=0; if(ch||AT(w)&BOX+ISSPARSE)zn+=nbx=countonlines(scanbdc,t,v,h,nq,c,lb,la);
  // Now we can allocate the result array.  Set zu,zv->beginning of the data area
  GATV0(z,LIT,zn,1); zu=zv=CAV(z);
  // h=# beginning lines to output.  If all the lines, including spacing, fit in the user's limit, accept them all; otherwise use the user's starting number

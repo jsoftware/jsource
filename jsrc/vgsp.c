@@ -70,11 +70,11 @@ static A jtgrd1spss(J jt,A w,I wf,I wcr){F1PREFJT;A c,d,t,x,y,z;I cn,*cv,*dv,i,n
  wp=PAV(w); wt=AT(w); ws=AS(w); n=wcr?ws[wf]:1;
  RZ(z=grd1spz(w,wf,wcr)); zv=AV(z);
  SORT sortblok; SORTSP spblok;
- sortblok.f=(CMP)(wt&SB01?compspssB:wt&SINT?compspssI:wt&SFL?compspssD:compspssZ);  // comparison function
+ sortblok.f=(CMP)(wt&B01?compspssB:wt&INT?compspssI:wt&FL?compspssD:compspssZ);  // comparison function
  sortblok.jt=jtinplace;  // jt including direction bit
  x=SPA(wp,e); spblok.sev=CAV(x);
  y=SPA(wp,i); spblok.syv=yv=AV(y); spblok.syc=yc=AS(y)[1];
- x=SPA(wp,x); spblok.sxv=CAV(x);   spblok.sxc=aii(x)*(wt&SCMPX?2:1);
+ x=SPA(wp,x); spblok.sxv=CAV(x);   spblok.sxc=aii(x)*(wt&CMPX?2:1);
  spblok.swf=wf;
  sortblok.sp=&spblok;  // chain sparse parms to main sortblok
  RZ(spsscell(w,wf,wcr,&c,&t));
@@ -127,11 +127,11 @@ static A jtgrd1spds(J jt,A w,I wf,I wcr){F1PREFJT;A c,t,x,y,z;I*cv,m,n,n1,p,*tv,
  wp=PAV(w); wt=AT(w); ws=AS(w); n=wcr?ws[wf]:1; RE(m=prod(wf,ws));
  RZ(z=grd1spz(w,wf,wcr)); zv=AV(z);
  SORT sortblok; SORTSP spblok;
- sortblok.f=(CMP)(wt&SB01?compspdsB:wt&SINT?compspdsI:wt&SFL?compspdsD:compspdsZ);  // comparison function
+ sortblok.f=(CMP)(wt&B01?compspdsB:wt&INT?compspdsI:wt&FL?compspdsD:compspdsZ);  // comparison function
  sortblok.jt=jtinplace;  // jt including direction bit
  x=SPA(wp,e); spblok.sev=CAV(x);
  y=SPA(wp,i); spblok.syv=yv=AV(y); spblok.syc=yc=AS(y)[1]; 
- x=SPA(wp,x); spblok.sxv=CAV(x);   spblok.sxc=p=aii(x)*(wt&SCMPX?2:1);
+ x=SPA(wp,x); spblok.sxv=CAV(x);   spblok.sxc=p=aii(x)*(wt&CMPX?2:1);
  sortblok.n=p/m;
  spblok.swf=wf;
  sortblok.sp=&spblok;  // chain sparse parms to main sortblok
@@ -206,11 +206,11 @@ static A jtgrd2spss(J jt,A w,I wf,I wcr){F1PREFJT;A c,t,x,y,z,zy;
  wp=PAV(w); wt=AT(w); ws=AS(w); n=wcr?ws[wf]:1;
 
  SORT sortblok; SORTSP spblok;
- sortblok.f=(CMP)(wt&SB01?compspssB:wt&SINT?compspssI:wt&SFL?compspssD:compspssZ);  // comparison function
+ sortblok.f=(CMP)(wt&B01?compspssB:wt&INT?compspssI:wt&FL?compspssD:compspssZ);  // comparison function
  sortblok.jt=jtinplace;  // jt including direction bit
  x=SPA(wp,e); spblok.sev=CAV(x);
  y=SPA(wp,i); spblok.syv=yv=AV(y); spblok.syc=yc=AS(y)[1];
- x=SPA(wp,x); spblok.sxv=CAV(x);   spblok.sxc=aii(x)*(wt&SCMPX?2:1);
+ x=SPA(wp,x); spblok.sxv=CAV(x);   spblok.sxc=aii(x)*(wt&CMPX?2:1);
  spblok.swf=wf;
  sortblok.sp=&spblok;  // chain sparse parms to main sortblok
  RZ(spsscell(w,wf,wcr,&c,&t));

@@ -48,16 +48,16 @@ F1(jtranking){A y,z;C*wv;I icn,i,k,m,n,t,wcr,wf,wn,wr,*ws,wt,*zv;CR rng;TTYPE *y
  else{RE(m=prod(wf,ws)); R m?reitem(vec(INT,wf,ws),iota(v2(1L,n))):reshape(vec(INT,1+wf,ws),num(0));}
  PROD1(icn,wcr-1,ws+wf+1); k=icn<<bplg(wt);  // wk=size of atom in bytes; icn=# atoms in an item of a cell  k = *bytes in an item of a CELL of w
  // if Boolean 2- or 4-byte, go off to handle that special case
- if(wt&B01&&(k==2||k==sizeof(int)))R rankingb(w,wf,wcr,m,n,k);
+ if(ISDENSETYPE(wt,B01)&&(k==2||k==sizeof(int)))R rankingb(w,wf,wcr,m,n,k);
  // See if the values qualify for small-range processing
- if(icn==1&&wt&INT+C4T){  // items are individual INTs or C4Ts
+ if(icn==1&&ISDENSETYPE(wt,INT+C4T)){  // items are individual INTs or C4Ts
   // Calculate the largest range we can abide.  The cost of a sort is about n*lg(n)*4 cycles; the cost of small-range indexing is
   // range*4.5 (.5 to clear, 2 to read) + n*6 (4 to increment, 2 to write).  So range can be as high as n*lg(n)*4/4.5 - n*6/4.5
   // approximate lg(n) with bit count.  And always use small-range if range is < 256
   UI4 lgn; CTLZI(wn,lgn);
   I maxrange = wn<64?256:(I)((lgn*4-6)*(D)wn/(4.5*(D)icn));
-  rng = wt&INT?condrange((I*)wv,wn,IMAX,IMIN,maxrange):condrange4((C4*)wv,wn,-1,0,maxrange);
- }else if(k<=2){rng.range=shortrange[wt&(B01+LIT)][k]; rng.min=0;  // if B01, must be 1 byte; otherwise 2^(8*k)
+  rng = ISDENSETYPE(wt,INT)?condrange((I*)wv,wn,IMAX,IMIN,maxrange):condrange4((C4*)wv,wn,-1,0,maxrange);
+ }else if(k<=2){rng.range=shortrange[~REPSGN(wt)&wt&(B01+LIT)][k]; rng.min=0;  // if B01, must be 1 byte; otherwise 2^(8*k)
  }else rng.range=0;
  if(!rng.range){I *yv;
   // small-range not possible.  Do the grade and install each value into its location

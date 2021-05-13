@@ -139,13 +139,13 @@ F1(jtprime){PROLOG(0061);A z;B b=1;I n,t;
  ARGCHK1(w);
  RZ(init4792(jt));
  n=AN(w); t=AT(w);
- if(!(t&INT))RZ(w=pcvt(INT,w));
+ if(!ISDENSETYPE(t,INT))RZ(w=pcvt(INT,w));
  if(INT&AT(w)){
   // if the maximum in the argument is <= PMAX, call prime1.  Force minimum of interval to <=0
   // so that full range compares against PMAX
   if(condrange(AV(w),n,0,IMIN,PMAX).range){b=0; RZ(z=prime1(w));}
  }
- if(b)RZ(z=prime1d(FL&AT(w)?w:cvt(FL,w)));
+ if(b)RZ(z=prime1d(ISDENSETYPE(AT(w),FL)?w:cvt(FL,w)));
  if(t&XNUM+RAT)RZ(z=cvt(XNUM,z));
  EPILOG(z);
 }    /* p:"r w */
@@ -256,8 +256,8 @@ static F1(jtnextprime){A b,fs,x,y;B*bv;I k,n,*xv,*yv;X*wv;
   if(b)R rank1ex0(x,fs,FAV(fs)->valencefns[0]);
   RZ(w=cvt(XNUM,w));
  }
- if(AT(w)&FL+RAT)RZ(w=cvt(XNUM,floor1(       w )));
- if(AT(w)&CMPX  )RZ(w=cvt(XNUM,floor1(cvt(FL,w))));
+ if(ISDENSETYPE(AT(w),FL+RAT))RZ(w=cvt(XNUM,floor1(w)));
+ if(ISDENSETYPE(AT(w),CMPX))RZ(w=cvt(XNUM,floor1(cvt(FL,w))));
  GATV(b,B01,n,AR(w),AS(w)); bv=BAV(b); wv=XAV(w);
  DQ(n, y=*wv++; yv=AV(y); *bv++=0<yv[AN(y)-1]; k=*yv; *xv++=AN(y)==1&&2>k?2-k:(k&1)+1; );
  R rank1ex0(tymes(b,plus(w,x)),fs,FAV(fs)->valencefns[0]);
@@ -273,8 +273,8 @@ static F1(jtprevprime){A fs,x,y;I k,m,n,*xv,*yv;X*wv;
   DQ(n, k=*wv++; ASSERT(2<k,EVDOMAIN); *xv++=3==k?2:(k-2)|1;);
   R rank1ex0(x,fs,FAV(fs)->valencefns[0]);
  }
- if(AT(w)&FL+RAT)RZ(w=cvt(XNUM,ceil1(       w )));
- if(AT(w)&CMPX  )RZ(w=cvt(XNUM,ceil1(cvt(FL,w))));
+ if(ISDENSETYPE(AT(w),FL+RAT))RZ(w=cvt(XNUM,ceil1(w)));
+ if(ISDENSETYPE(AT(w),CMPX))RZ(w=cvt(XNUM,ceil1(cvt(FL,w))));
  wv=XAV(w);
  DQ(n, y=*wv++; yv=AV(y); m=AN(y); k=*yv; ASSERT(0<yv[m-1]&&(1<m||2<k),EVDOMAIN); *xv++=1==m&&3==k?1:1+(k&1););
  R rank1ex0(minus(w,x),fs,FAV(fs)->valencefns[0]);
@@ -402,7 +402,7 @@ F1(jtfactor){PROLOG(0063);A y,z;I c,d,i,k,m,n,q,*u,*v,wn,*wv,*zv;
  ARGCHK1(w);
  RZ(init4792(jt));
  if(AT(w)&XNUM+RAT)R xfactor(w);
- if(AT(w)&FL+CMPX){
+ if(ISDENSETYPE(AT(w),FL+CMPX)){
   RZ(y=pcvt(INT,w)); 
   if(INT&AT(y))w=y; 
   else{RZ(y=pcvt(XNUM,xco1(w))); ASSERT(XNUM&AT(y),EVDOMAIN); R pcvt(INT,xfactor(y));}

@@ -8,7 +8,7 @@
 B jtscheck(J jt,A w){A a,e,x,y;I k1,k2,r,*s,t;P*p;D rkblk[16];
  ARGCHK1(w);
  r=AR(w); s=AS(w); t=AT(w);
- if(t&DENSE)R 1;
+ if(!(t&ISSPARSE))R 1;
  ASSERTSYS(r,"scheck rank");
  DO(r, ASSERTSYS(0<=s[i],"scheck shape"););
  p=PAV(w); a=SPA(p,a); e=SPA(p,e); y=SPA(p,i); x=SPA(p,x);
@@ -39,7 +39,7 @@ static A jtselm(J jt,I t){R t&NUMERIC?cvt(t,num(0)):t&BOX?ds(CACE):chrspace;}
 
 A jtpaxis(J jt,I r,A a){A y,z;B*b;I j,*u,*v;
  ARGCHK1(a);
- if(!(INT&AT(a)))RZ(a=cvt(INT,a));
+ if(!ISDENSETYPE(AT(a),INT))RZ(a=cvt(INT,a));
  u=AV(a);
  GATV0(y,B01,r,1); b=BAV(y); 
  mvc(r,b,1,MEMSET00); DO(AN(a), j=u[i]; b[0>j?j+r:j]=1;);
@@ -74,7 +74,7 @@ static A jtsparse1a(J jt,A s,A a,A e,A y,A x){A z;B*b;I an,*av,et,r,*sv,t,*v;P*p
  ASSERT(!AR(e),EVRANK);   // e must be an atom
  et=AT(e);
  ASSERT(!(et&LIT+BOX),EVNONCE);  // e must be numeric
- ASSERT(STYPE(et)!=0,EVDOMAIN);  // e must be dense
+ ASSERT(ISDENSETYPE(et,SPARSABLE),EVDOMAIN);  // e must be dense
  RZ(b=bfi(r,a,0));
  if(y==mark){
   GAT0(y,INT,0L,2L); v=AS(y); v[0]=0; v[1]=an;
@@ -82,7 +82,7 @@ static A jtsparse1a(J jt,A s,A a,A e,A y,A x){A z;B*b;I an,*av,et,r,*sv,t,*v;P*p
  }else{A q,x1,y1;C*xu,*xv;I i,j,k,m,n,*qv,*u,*yu,*yv;
   ASSERT(2==AR(y),EVRANK);
   ASSERT(an==AS(y)[1],EVLENGTH);
-  if(!(INT&AT(y)))RZ(y=cvt(INT,y));
+  if(!ISDENSETYPE(AT(y),INT))RZ(y=cvt(INT,y));
   GATV0(q,INT,an,1); qv=AV(q); 
   DO(an, qv[i]=sv[av[i]];);
   u=AV(y);
@@ -113,8 +113,8 @@ static A jtsparse1a(J jt,A s,A a,A e,A y,A x){A z;B*b;I an,*av,et,r,*sv,t,*v;P*p
    yv+=an; AN(y1)=yv-AV(y1); AS(y1)[0]=AN(y1)/an; y=y1;
    xv+=k; AS(x1)[0]=(xv-CAV(x1))/k; AN(x1)=m*AS(x1)[0]; x=x1;
  }}
+ ASSERT(ISDENSETYPE(AT(x),SPARSABLE),EVDOMAIN);
  t=STYPE(AT(x)); 
- ASSERT(t!=0,EVDOMAIN);
  GASPARSE(z,t,1,r,sv); p=PAV(z); 
  SPB(p,a,a); 
  SPB(p,e,e); 
@@ -128,7 +128,7 @@ A jtsparseit(J jt,A w,A a,A e){PROLOG(0091);A ax,c,x,y,z;B b,*cv;I cm,cn,m,n,r,*
  RZ(w&&a&&e);
  r=AR(w); t=AT(w); wn=AN(w); n=AN(a);
  ASSERT(!(t&LIT+BOX),EVNONCE);  // must not be LIT or BOX
- ASSERT(STYPE(t)!=0,EVDOMAIN);  // w must be dense
+ ASSERT(ISDENSETYPE(t,SPARSABLE),EVDOMAIN);  // w must be dense
  if(!r){ASSERT(!AN(a),EVINDEX); R ca(w);}
  RZ(z=sparse1a(shape(w),a,e,mark,mark)); p=PAV(z);
  RZ(ax=paxis(r,a));
@@ -136,7 +136,7 @@ A jtsparseit(J jt,A w,A a,A e){PROLOG(0091);A ax,c,x,y,z;B b,*cv;I cm,cn,m,n,r,*
  u=AV(ax); v=AS(w); DO(r, s[i]=v[u[i]];);
  RE(m=prod(n,s)); b=equ(a,IX(r));
  RZ(x=virtual(b?w:cant2(ax,w),0,1+r-n)); AN(x)=AN(w); v=AS(x); *v=m; if(r>n)ICPY(1+v,n+s,r-n);
- b=b&&SB01&AT(z)&&equ(e,num(0)); c=w;
+ b=b&&B01&AT(z)&&equ(e,num(0)); c=w;
  if(!b)RZ(c=not(irs2(reshape(vec(INT,r-n,n+s),SPA(p,e)),x,VFLAGNONE, RMAX,-1L,jtmatch)));
  cn=AN(c); cv=BAV(c); cm=bsum(cn,cv);
  /* RZ(y=abase2(vec(INT,n,s),repeat(c,IX(cn)))); */
@@ -157,7 +157,7 @@ A jtsparseit(J jt,A w,A a,A e){PROLOG(0091);A ax,c,x,y,z;B b,*cv;I cm,cn,m,n,r,*
 F1(jtdenseit){A a,e,q,s1,x,y,z;B b;C*xv,*zv;I an,ck,k,n,r,t,*s,xn,*yv;P*wp;
  ARGCHK1(w);
  r=AR(w); t=AT(w);
- if(!r||t&DENSE)R ca(w);
+ if(!r||!(t&ISSPARSE))R ca(w);
  t=DTYPE(t);
  wp=PAV(w); a=SPA(wp,a); e=SPA(wp,e); x=SPA(wp,x); y=SPA(wp,i); 
  xn=AN(x); an=AN(a); b=equ(a,IX(an));
@@ -174,7 +174,7 @@ F1(jtdenseit){A a,e,q,s1,x,y,z;B b;C*xv,*zv;I an,ck,k,n,r,t,*s,xn,*yv;P*wp;
 F2(jtreaxis){A a1,e,p,q,x,y,z;B*b;I c,d,j,k,m,r,*u,*v,*ws,wt;P*wp,*zp;
  ARGCHK2(a,w);
  wt=AT(w);
- if(wt&DENSE)R sparseit(w,a,selm(wt));
+ if(!(wt&ISSPARSE))R sparseit(w,a,selm(wt));
  r=AR(w); ws=AS(w); wp=PAV(w);
  GASPARSE(z,wt,1L,r,ws); zp=PAV(z); 
  SPBV(zp,a,a1,vaxis(r,a)); 
@@ -231,7 +231,7 @@ static F2(jtaxbytes){A a1,e,p,q,x;B*b;I c,d,j,m,n=0,r,*u,*v,*ws,wt;P*wp;
  r=AR(w); ws=AS(w); wt=AT(w); 
  GATV0(q,INT,r,1); u=AV(q); j=0;
  RZ(a1=vaxis(r,a)); d=AN(a1);  
- if(wt&SPARSE){wp=PAV(w); a=SPA(wp,a); e=SPA(wp,e);    x=SPA(wp,x); c=1;}
+ if(wt&ISSPARSE){wp=PAV(w); a=SPA(wp,a); e=SPA(wp,e);    x=SPA(wp,x); c=1;}
  else         {           a=mtv;       RZ(e=selm(wt)); x=w;         c=0;}
  if(all1(eps(a,a1))){    /* old is subset of new */
   RZ(p=eps(daxis(r,a),a1)); b=BAV(p);
@@ -256,7 +256,7 @@ static F2(jtaxtally){A a1,e,p,q,x;B*b;I c,d,j,m,n=0,r,*u,*v,*ws,wt;P*wp;
  r=AR(w); ws=AS(w); wt=AT(w); 
  GATV0(q,INT,r,1); u=AV(q); j=0;
  RZ(a1=vaxis(r,a)); d=AN(a1);  
- if(wt&SPARSE){wp=PAV(w); a=SPA(wp,a); e=SPA(wp,e);    x=SPA(wp,x); c=1;}
+ if(wt&ISSPARSE){wp=PAV(w); a=SPA(wp,a); e=SPA(wp,e);    x=SPA(wp,x); c=1;}
  else         {           a=mtv;       RZ(e=selm(wt)); x=w;         c=0;}
  if(all1(eps(a,a1))){    /* old is subset of new */
   RZ(p=eps(daxis(r,a),a1)); b=BAV(p);
@@ -279,8 +279,8 @@ F2(jtrezero){A x,z;I at,t,wt,zt;P*wp,*zp;
  at=AT(a); wp=PAV(w); x=SPA(wp,x); wt=AT(x);
  ASSERT(!AR(a),EVRANK);
  ASSERT(HOMO(at,wt),EVDOMAIN);
- RE(t=maxtype(at,wt)); zt=STYPE(t);
- ASSERT(zt!=0,EVDOMAIN);
+ RE(t=maxtype(at,wt));
+ ASSERT(ISDENSETYPE(t,SPARSABLE),EVDOMAIN); zt=STYPE(t);
  GASPARSE(z,zt,1,AR(w),AS(w)); zp=PAV(z);
  SPB(zp,e,TYPESEQ(t,at)?ca(a):cvt(t,a));
  SPB(zp,a,ca(SPA(wp,a)));
@@ -310,7 +310,7 @@ static F1(jtsparsep1){A*wv;I n=0;
 
 static F1(jtsparsen1){A*u,z;P*p;
  ARGCHK1(w);
- ASSERT(SPARSE&AT(w),EVDOMAIN);
+ ASSERT(AT(w)&ISSPARSE,EVDOMAIN);
  GAT0(z,BOX,3,1); u=AAV(z); p=PAV(w);
  u[0]=shape(w); u[1]=ca(SPA(p,a)); u[2]=ca(SPA(p,e));
  RE(0); R z;
@@ -318,13 +318,13 @@ static F1(jtsparsen1){A*u,z;P*p;
 
 F1(jtsparse1){
  ARGCHK1(w);
- if(!AR(w)||SPARSE&AT(w))R ca(w);
+ if(!AR(w)||AT(w)&ISSPARSE)R ca(w);
  R sparseit(w,IX(AR(w)),selm(AT(w)));
 }    /* $. y */
 
 F2(jtsparse2){A*av,q=0;B b;I j,k,t,*v;P*p;
  ARGCHK2(a,w);
- if(BOX&AT(a)){
+ if(ISDENSETYPE(AT(a),BOX)){
   ASSERT(1==AR(a),EVRANK);
   ASSERT(2==AN(a),EVLENGTH);
   av=AAV(a);  a=av[0]; q=av[1];
@@ -334,15 +334,15 @@ F2(jtsparse2){A*av,q=0;B b;I j,k,t,*v;P*p;
  v=AV(a); k=*v;
  ASSERT(2==k||!AR(a),EVRANK);
  ASSERT(2>=AN(a),EVLENGTH);
- p=PAV(w); t=AT(w); b=1&&t&SPARSE;
+ p=PAV(w); t=AT(w); b=1&&t&ISSPARSE;
  ASSERT(b||0<=k&&k<=2,EVDOMAIN);
  switch(k){
-  case 0:  ASSERT(!q,EVDOMAIN); R t&SPARSE?denseit(w):sparse1(w);
+  case 0:  ASSERT(!q,EVDOMAIN); R t&ISSPARSE?denseit(w):sparse1(w);
   case 1:  ASSERT(!q,EVDOMAIN); q=sparsep1(w); PRISTCLRF(w); R q;
   case -1: ASSERT(!q,EVDOMAIN); R sparsen1(w);
   case 2:
    if(AR(a)){j=v[1]; ASSERT(q&&(1==j||2==j),EVDOMAIN); R 1==j?axbytes(q,w):axtally(q,w);}
-   if(q)R reaxis(q,w); else if(b)R rat(SPA(p,a)); else{ASSERT(STYPE(t)!=0,EVDOMAIN); R IX(AR(w));}
+   if(q)R reaxis(q,w); else if(b)R rat(SPA(p,a)); else{ASSERT(ISDENSETYPE(t,SPARSABLE),EVDOMAIN); R IX(AR(w));}
   case 3:  R q?rezero(q,w):rat(SPA(p,e));  // ? there rat()s don't protect anything?  SPA is as permanent as w
   case 4:  ASSERT(!q,EVDOMAIN); R rat(SPA(p,i)); 
   case 5:  ASSERT(!q,EVDOMAIN); R rat(SPA(p,x));

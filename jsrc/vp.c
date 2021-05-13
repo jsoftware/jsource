@@ -9,7 +9,7 @@
 static I jtord(J jt,A w){I j,n,*v,z;
  ARGCHK1(w);
  n=AN(w); z=-n;
- if(n){if(!(INT&AT(w)))RZ(w=cvt(INT,w)); v=AV(w); DQ(n, j=*v++; z=z<j?j:z;); ++z;}
+ if(n){if(!ISDENSETYPE(AT(w),INT))RZ(w=cvt(INT,w)); v=AV(w); DQ(n, j=*v++; z=z<j?j:z;); ++z;}
  R z;
 }  // the order of the permutation w: max element of w (could be negative)
 
@@ -24,7 +24,7 @@ F1(jtpinv){I m=-1,n,*v;  // empty perm will set m=0
 // w contains indexes (its shape is immaterial).  n is the length of the axis.  Result is new array, same shape, with equivalent positive indexes
 A jtpind(J jt,I n,A w){A z;I j,*v;
  RE(n); ARGCHK1(w);
- RZ(z=AT(w)&INT?w:cvt(INT,w));  // z is now an INT vector, possibly the input argument
+ RZ(z=ISDENSETYPE(AT(w),INT)?w:cvt(INT,w));  // z is now an INT vector, possibly the input argument
  // Make a quick scan to see if all are positive, as they usually are
  for(j=AN(z), v=IAV(z);j;--j)if((UI)*v++>=(UI)n)break;
  if(j==0)R z;  // if all indices in range, keep the original vector
@@ -48,7 +48,7 @@ A jtpfill(J jt,I n,A w){PROLOG(0081);A b,z;B*bv;I*wv,*zv;
 
 static F1(jtcfd){A b,q,x,z,*zv;B*bv;I c,i,j,n,*qv,*u,*v,zn;
  ARGCHK1(w);
- if(c=1&&INT&AT(w)){
+ if(c=ISDENSETYPE(AT(w),INT)){
   n=AN(w); v=AV(w);
   GATV0(b,B01,1+n,1); bv=BAV(b); mvc(n,bv,1,MEMSET00);
   DO(n, j=v[i]; if((UI)j>=(UI)n||bv[j]){c=0; break;} bv[j]=1;);

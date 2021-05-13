@@ -69,7 +69,7 @@ A jtcreatecycliciterator(J jt, A z, A w){
 // Similar, but also install r, the list of gerund results that will select the verb to run
 static A jtcreategerunditerator(J jt, A z, A w, A r){  // z is result area, w is gerunds, r is selector list
  // Convert the selectors to integer/boolean
- if(!(AT(r)&(INT|B01)))RZ(r=cvt(INT,r));
+ if(!ISDENSETYPE(AT(r),(INT|B01)))RZ(r=cvt(INT,r));
  // Create the (skeletal) clone, point it to come to the execution point, set the next-verb number to 0
  ACFAUX(z,ACPERMANENT) AT(z)=VERB; FAV(z)->fgh[2]=FAV(w)->fgh[2]; FAV(z)->fgh[1]=r; FAV(z)->mr=FAV(w)->mr;
  FAV(z)->valencefns[0]=FAV(z)->valencefns[1]=AT(r)&INT?jtexecgerundcellI:jtexecgerundcellB; FAV(z)->localuse.lu1.gercut.cgerx=0;
@@ -177,9 +177,9 @@ static DF2(jtcasei12){A vres,z;I gerit[128/SZI],ZZFLAGWORD;
   // that is, if each cell-rank is positive, 0 or IMIN.  We also make sure there are enough results to make the processing worthwhile
   // Since the larger cell-rank must not be negative, we can look only at the smaller
   mr=MIN(ar,wr); // the smaller
-  if(((-mr|~mr)&((AT(w)&SPARSE)-1)&(2*nar-ncells))<0){  // if mr is IMIN or nonneg, and there are enough results compared to # gerunds, reduce # verb executions.  Sparse doesn't do this.
+  if(((-mr|~mr)&~(AT(w)&ISSPARSE)&(2*nar-ncells))<0){  // if mr is IMIN or nonneg, and there are enough results compared to # gerunds, reduce # verb executions.  Sparse doesn't do this.
    // Make sure the results are integer or boolean
-   if(!(AT(vres)&(B01|INT)))RZ(vres=cvt(INT,vres));
+   if(!ISDENSETYPE(AT(vres),(B01|INT)))RZ(vres=cvt(INT,vres));
    // grade the results, as a list
    A gradepm; RZ(gradepm=grade1(ravel(vres)));
    // decide how many result boxes to allocate based on min/max result - it's a byte or an int
@@ -386,7 +386,7 @@ static DF2(jtgcr2){DECLFG;A ff,z0,z1,z2,*hv=AAV(sv->fgh[2]);
 A jtgconj(J jt,A a,A w,C id){A hs,y;B na;I n;
  ARGCHK2(a,w);
  ASSERT(((AT(a)|AT(w))&(VERB|BOX))==(VERB|BOX),EVDOMAIN);  // v`box or box`v
- na=1&&BOX&AT(a); y=na?a:w; n=AN(y);  // na is 1 for gerund}; y is the gerund
+ na=ISDENSETYPE(AT(a),BOX); y=na?a:w; n=AN(y);  // na is 1 for gerund}; y is the gerund
  ASSERT(1>=AR(y),EVRANK);
  ASSERT((n&-2)==2,EVLENGTH);  // length is 2 or 3
  ASSERT(BOX&AT(y),EVDOMAIN);

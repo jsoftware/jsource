@@ -8,7 +8,7 @@
 
 F1(jtcatalog){PROLOG(0072);A b,*wv,x,z,*zv;C*bu,*bv,**pv;I*cv,i,j,k,m=1,n,p,*qv,r=0,*s,t=0,*u;
  F1RANK(1,jtcatalog,DUMMYSELF);
- if((-AN(w)&-(AT(w)&BOX+SBOX))>=0)R box(w);   // empty or unboxed, just box it
+ if((-AN(w)&-(AT(w)&BOX))>=0)R box(w);   // empty or unboxed, just box it
  n=AN(w); wv=AAV(w); 
  DO(n, x=wv[i]; if(AN(x)){p=AT(x); t=t?t:p; ASSERT(HOMO(t,p),EVDOMAIN); RE(t=maxtype(t,p));});  // use vector maxtype; establish type of result
  t=t?t:B01; k=bpnoun(t);  // if all empty, use boolean for result
@@ -51,7 +51,7 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wk,wn,wr,*ws,zn;
  if(unlikely(ar>acr))R rank2ex(a,w,DUMMYSELF,acr,wcr,acr,wcr,jtifrom);  // split a into cells if needed.  Only 1 level of rank loop is used
  // From here on, execution on a single cell of a (on matching cell(s) of w, or all w).  The cell of a may have any rank
  an=AN(a); wn=AN(w); ws=AS(w);
- if(unlikely(!(INT&AT(a))))RZ(a=cvt(INT,a));  // convert boolean or other arg to int
+ if(unlikely(!ISDENSETYPE(AT(a),INT)))RZ(a=cvt(INT,a));  // convert boolean or other arg to int
  // If a is empty, it needs to simulate execution on a cell of fills.  But that might produce error, if w has no
  // items, where 0 { empty is an index error!  In that case, we set wr to 0, in effect making it an atom (since failing exec on fill-cell produces atomic result)
 // if(an==0 && wn==0 && ws[wf]==0)wcr=wr=0;     defer this pending analysis
@@ -310,7 +310,7 @@ A jtaindex(J jt,A a,A w,I wf){A*av,q,z;I an,ar,c,j,k,t,*u,*v,*ws;
  for(j=0;j<an;++j){
   q=av[j]; t=AT(q);
   if(t&BOX)R (A)1;   // if any contents is boxed, error
-  if(!(t&INT))RZ(q=cvt(INT,q));  // if can't convert to INT, error
+  if(!ISDENSETYPE(t,INT))RZ(q=cvt(INT,q));  // if can't convert to INT, error
   if((((c^AN(q))-1)&(AR(q)-2))>=0)R (A)1;   // if not the same length, or rank>1, error
   u=AV(q);
   DO(c, SETNDX(k,u[i],ws[i]) *v++=k;);   // copy in the indexes, with correction for negative indexes
@@ -339,7 +339,7 @@ static B jtaindex1(J jt,A a,A w,I wf,A*ind){A z;I c,i,k,n,t,*v,*ws;
  if(likely(i==0)){z=a;  // If all indexes OK, return the original block
  }else{
   // There was a negative index.  Allocate a new block for a and copy to it.  It must be writable
-  RZ(z=t&INT?ca(a):cvt(INT,a)); v=AV(z);
+  RZ(z=ISDENSETYPE(t,INT)?ca(a):cvt(INT,a)); v=AV(z);
   DQ(n, DO(c, SETNDXRW(k,*v,ws[i]) ++v;););  // convert indexes to nonnegative & check for in-range
  }
  *ind=z;
@@ -436,7 +436,7 @@ F2(jtfrom){I at;A z;
  F2PREFIP;
  ARGCHK2(a,w);
  at=AT(a);
- if(likely(!((AT(a)|AT(w))&(SPARSE)))){
+ if(likely(!((AT(a)|AT(w))&ISSPARSE))){
   // if B01|INT|FL atom { INT|FL|BOX array, and no frame, just pluck the value.  If a is inplaceable and not unincorpable, use it
   // If we turn the result to BOX it will have the original flags, i. e. it will be nonrecursive.  Thus fa will not free the contents, which do not have incremented usecount (and are garbage on error)
   // We allow FL only if it is the same saize as INT
@@ -473,14 +473,14 @@ F2(jtfrom){I at;A z;
    // Here we transferred out of w.  We must mark w non-pristine.  Since there may have been duplicates, we cannot mark z as pristine.  We overwrite w because it is no longer in use
    PRISTCLRF(w)
   }
- }else if(!((AT(a)|AT(w))&(NOUN&~SPARSE))){z=fromss(a,w);}  // sparse cases
- else if(AT(w)&SPARSE){z=at&BOX?frombs(a,w) : fromis(a,w);}
+ }else if(AT(a)&AT(w)&ISSPARSE){z=fromss(a,w);}  // sparse cases
+ else if(AT(w)&ISSPARSE){z=at&BOX?frombs(a,w) : fromis(a,w);}
  else{z=fromsd(a,w);}
  RETF(z);
 }   /* a{"r w main control */
 
 F2(jtsfrom){
- if(!(SPARSE&AT(w))){
+ if(!(AT(w)&ISSPARSE)){
   // Not sparse.  Verify the indexes are numeric and not empty
   if(((AN(a)-1)|(AR(a)-2)|((AT(a)&NUMERIC)-1))>=0){A ind;   // a is an array with rank>1 and numeric.  Rank 1 is unusual & unimportant & we'll ignore it
    // Check indexes for validity; if valid, turn each row into a cell offset

@@ -7,7 +7,7 @@
 #include "result.h"
 
 I level(A w){A*wv;I d,j;
- if((-AN(w)&-(AT(w)&BOX+SBOX))>=0)R 0;
+ if((-AN(w)&-(AT(w)&BOX))>=0)R 0;
  d=0; wv=AAV(w);
  DQ(AN(w), j=level(wv[i]); d=d<j?j:d;);
  R 1+d;
@@ -16,7 +16,7 @@ I level(A w){A*wv;I d,j;
 // return 0 if the level of w is greater than l, 1 if <=
 // terminates early if possible
 I levelle(A w,I l){
- if((-AN(w)&-(AT(w)&BOX+SBOX))>=0)R SGNTO0(~l);  // if arg is unboxed, its level is 0, so return 1 if l>=0
+ if((-AN(w)&-(AT(w)&BOX))>=0)R SGNTO0(~l);  // if arg is unboxed, its level is 0, so return 1 if l>=0
  if(l<=0)R 0;  // (arg is boxed) if l is <=0, arglevel is  > l
  --l; A *wv=AAV(w);
  DO(AN(w), if(!levelle(wv[i],l))R 0;);  // stop as soon as we see level big enough
@@ -27,7 +27,7 @@ F1(jtlevel1){ARGCHK1(w); R sc(level(w));}
 
 F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws; 
  F1PREFIP;ARGCHK1(w);I wt=AT(w); FLAGT waf=AFLAG(w);
- ASSERT(!(SPARSE&wt),EVNONCE);
+ ASSERT(!(wt&ISSPARSE),EVNONCE);
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r;   // no RESETRANK because we call no primitives
  if(likely(!f)){
   // single box: fast path.  Allocate a scalar box and point it to w.  Mark w as incorporated.  Make all results recursive
@@ -65,7 +65,7 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
  RETF(z);
 }    /* <"r w */
 
-F1(jtboxopen){F1PREFIP; ARGCHK1(w); if((-AN(w)&-(AT(w)&BOX+SBOX))>=0){w = jtbox(jtinplace,w);} R w;}
+F1(jtboxopen){F1PREFIP; ARGCHK1(w); if((-AN(w)&-(AT(w)&BOX))>=0){w = jtbox(jtinplace,w);} R w;}
 
 // x ; y, with options for x (,<) y   x (;<) y   x ,&< y
 DF2(jtlink){
@@ -84,7 +84,7 @@ F2PREFIP;ARGCHK2(a,w);
   I i; for(i=AR(a)-1; i>=0&&AS(a)[i]==AS(ABACK(a))[i];--i); if(i<0)a = ABACK(a);
  }
 #endif
- ASSERT(!((AT(a)|AT(w))&SPARSE),EVNONCE);   // can't box sparse values
+ ASSERT(!((AT(a)|AT(w))&ISSPARSE),EVNONCE);   // can't box sparse values
  I optype=FAV(self)->localuse.lu1.linkvb;  // flag: sign set if (,<) or ,&< or (;<) which will always box w; bit 0 set if (,<)
  realizeifvirtual(w); realizeifvirtual(a);  // it's going into an array, so realize it
  // if (,<) and a is not boxed singleton atom/list, revert
@@ -366,7 +366,7 @@ static B jtopes1(J jt,B**zb,A*za,A*ze,I*zm,A cs,A w){A a,e=0,q,*wv,x;B*b;I i,k,m
  n=AN(w); wcr=AN(cs); wv=AAV(w);
  GATV0(x,B01,wcr,1); b=BAV(x); mvc(wcr,b,1,MEMSET00);
  for(i=0;i<n;++i)
-  if(q=wv[i],SPARSE&AT(q)){
+  if(q=wv[i],AT(q)&ISSPARSE){
    p=PAV(q); x=SPA(p,x); m+=AS(x)[0];
    if(!e)e=SPA(p,e); else ASSERT(equ(e,SPA(p,e)),EVSPARSE);
    k=wcr-AR(q); DO(k, b[i]=1;); a=SPA(p,a); v=AV(a); DQ(AN(a), b[k+*v++]=1;);
@@ -380,7 +380,7 @@ static B jtopes1(J jt,B**zb,A*za,A*ze,I*zm,A cs,A w){A a,e=0,q,*wv,x;B*b;I i,k,m
 
 static B jtopes2(J jt,A*zx,A*zy,B*b,A a,A e,A q,I wcr){A x;B*c;I dt,k,r,*s,t;P*p;
  dt=AT(e); r=AR(q); k=wcr-r; t=AT(q);
- if(t&SPARSE){
+ if(t&ISSPARSE){
   p=PAV(q);
   RZ(c=bfi(r,SPA(p,a),1));
   DO(r, if(b[k+i]!=c[i]){RZ(q=reaxis(ifb(r,k+b),q)); break;});
@@ -478,13 +478,16 @@ F1(jtope){A cs,*v,y,z;C*x;I i,n,*p,q,r,*s,*u,zn;
 // obsolete  nonh = (r&~1) | (t&(t-1));  // non homogeneous if rank is not 0 or 1, or if there is more than 1 bit set in t
  if(likely(t!=0)){
   ASSERT((POSIFHOMO(t,0)&-(t^BOX)&-(t^SBT))>=0,EVDOMAIN);  // no mixed nonempties: t is homo num/char or all boxed or all symbol
-  ASSERT(!(t&SPARSE&&t&XNUM+RAT),EVDOMAIN);  // don't allow a sparse that requires promotion to indirect
+  ASSERT(((t^ISSPARSE)&ISSPARSE+XNUM+RAT)<=0,EVDOMAIN);  // don't allow a sparse that requires promotion to indirect
   te=t;  // te holds the type to use
  }
- t=te&-te; NOUNROLL while(te&=(te-1)){RE(t=maxtypene(t,te&-te));}  // get highest-priority type (which may be sparse)
+ I tsparse=te&ISSPARSE; te&=~ISSPARSE; // remove sparse flag
+ t=te&-te; NOUNROLL while(te&=(te-1)){RE(t=maxtypedne(t,te&-te));}  // get highest-priority type
+ t|=tsparse; ASSERT((t&(ISSPARSE|SPARSABLE))!=ISSPARSE,EVDOMAIN);  // error is result is unsparsanle type
  // allocate place to build shape of result-cell;
  fauxblockINT(csfaux,5,1); I klg=bplg(t); I m;  // m is # atoms in cell
- if(likely(((t&SPARSE)+r)<2)){
+// obsolete  if(likely(((t&ISSPARSE)+r)<2)){
+ if(likely(((t&ISSPARSE)|(1-r))>=0)){
   // Not sparse, and cell ranks were all < 2.  We know the max shape
   u=csfaux+2; u[r-1]=maxshape0; u[r-2]=maxshape1;  // u->cell shape; fill in the ranks we know
   DPMULDE(maxshape0,maxshape1,m);  // number of atoms in cell
@@ -494,7 +497,7 @@ F1(jtope){A cs,*v,y,z;C*x;I i,n,*p,q,r,*s,*u,zn;
   DO(r-q, u[i]=1;); p=u+r-q; DO(q-2, p[i]=0;); u[r-1]=maxshape0; u[r-2]=maxshape1;  // initialize to 1s above q, zeros below (this is adding leading 1s to missing leading axes); fill in known axes
   // find the shape of a result-cell
   DO(n, y=v[i]; s=AS(y); p=u+r-AR(y); DO(AR(y)-2,p[i]=MAX(p[i],s[i]);););  // go through blocks again finding max shape (not checking last 2 axes)
-  if(unlikely((t&SPARSE)!=0)){z=opes(t,cs,w); EPILOG(z);} // if sparse, use sparse code
+  if(unlikely((t&ISSPARSE)!=0)){z=opes(t,cs,w); EPILOG(z);} // if sparse, use sparse code
   else{
    PRODX(m,r,u,1);  // # atoms in cell
 // obsolete    fillreqd=1;  // we have to assume there is fill if we couldn't verify otherwise

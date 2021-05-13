@@ -616,7 +616,7 @@ L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;L*e;
   if(x!=w){  // replacing name with different mapped data.  If data is the same, just leave it alone
    realizeifvirtual(w);  // realize if virtual.  The copy stored in the mapped array must be real
    I wt=AT(w); wn=AN(w); wr=AR(w); I m=wn<<bplg(wt);
-   ASSERT(wt&DIRECT,EVDOMAIN);  // boxed, extended, etc can't be assigned to memory-mapped array
+   ASSERT((wt&DIRECT)>0,EVDOMAIN);  // boxed, extended, etc can't be assigned to memory-mapped array
    ASSERT(allosize(x)>=m,EVALLOC);  // ensure the file area can hold the data
    AT(x)=wt; AN(x)=wn; AR(x)=(RANKT)wr; MCISH(AS(x),AS(w),wr); MC(AV(x),AV(w),m);  // copy in the data
   }

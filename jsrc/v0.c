@@ -193,7 +193,7 @@ static B jtrfcq(J jt,I m,A w,A*zz,A*ww){A q,x,y,z;B b;I i,j,wt;Q*qv,rdx,rq,*wv,*
 }    /* roots from coefficients, degree m is 2 or more */
 
 static A jtrfcz(J jt,I m,A w){A x,y,z;B bb=0,real;D c,d;I i;Z r,*xv,*yv,*zv;
- real=!(CMPX&AT(w)); RZ(x=cvt(CMPX,w)); xv=ZAV(x); 
+ real=!ISDENSETYPE(AT(w),CMPX); RZ(x=cvt(CMPX,w)); xv=ZAV(x); 
  GATV0(y,CMPX,1+m,1); yv=ZAV(y); MC(yv,xv,(1+m)*sizeof(Z));
  GATV0(z,CMPX,  m,1); zv=ZAV(z);
  if(2==m){Z a2,b,c,d,z2={2,0};
@@ -225,7 +225,7 @@ static A jtrfcz(J jt,I m,A w){A x,y,z;B bb=0,real;D c,d;I i;Z r,*xv,*yv,*zv;
 static F1(jtrfc){A r,w1;I m=0,n,t;
  n=AN(w); t=AT(w);  // n=#coeffs, t=type
  if(n){
-  ASSERT(t&(DENSE&NUMERIC),EVDOMAIN);  // coeffs must be dense numeric
+  ASSERT(ISDENSETYPE(t,NUMERIC),EVDOMAIN);  // coeffs must be dense numeric
   RZ(r=jico2(ne(w,num(0)),num(1))); m=AV(r)[0]; m=(m==n)?0:m;  // r=block for index of last nonzero; m=degree of polynomial (but 0 if all zeros)
   ASSERT(m||equ(num(0),head(w)),EVDOMAIN);  // error if unsolvable constant polynomial
  }
@@ -296,7 +296,7 @@ DF2(jtpoly2){F2PREFIP;A c,za;I b;D*ad,d,p,*x,u,*z;I an,at,j,t,n,wt;Z*az,e,q,*wz,
  }
  an=AN(a); at=AT(a); b=BOX&at;   // b if mplr/roots form or multinomial; otherwise coeff
  n=AN(w); wt=AT(w);
- ASSERT(!(at&SPARSE),EVNONCE);  // sparse polynomial not supported
+ ASSERT(!(at&ISSPARSE),EVNONCE);  // sparse polynomial not supported
  ASSERT((-an&-(at&NUMERIC+BOX))<0,EVDOMAIN);  // error if degree<0 
  // if we are applying f@:p, revert if not sum-of-powers form
  I postfn=FAV(self)->flag&VFATOPPOLY;  //  index of function to apply after p. 0=none 1=^
@@ -322,12 +322,12 @@ DF2(jtpoly2){F2PREFIP;A c,za;I b;D*ad,d,p,*x,u,*z;I an,at,j,t,n,wt;Z*az,e,q,*wz,
  }
  j=0;  // Set j=1 if there is an infinity in the coeffs/roots.  In that case we can't use Horner's rule (could do this only if !b&&FL?)
  if(t&FL+CMPX){
-        DO(t&FL?an:an+an, u=ad[i]; if(fabs(u)==inf){j=1; break;}); 
+  DO(t&FL?an:an+an, u=ad[i]; if(fabs(u)==inf){j=1; break;}); 
  }
  if((-postfn&((-b)|(1-(an^2))|((t&FL)-1)))<0)R jtupon2cell(jt,a,w,self);  // revert if ^@:p. but not powers (postfn not 0, and a boxed or degree not 1 or 2 or type not FL).  an is final here
  // if we are going to use the fast loop here, allocate space for it.  Inplace if possible
  b=b?3:b;
- if(likely(((j-1)&((t&XNUM+RAT+SPARSE)-1))<0)){
+ if(likely(((j-1)&(t^ISSPARSE)&((t&XNUM+RAT)-1))<0)){  // j==0 & not sparse and not XNUM or RAT
   if(ASGNINPLACESGN(SGNIF((I)jtinplace,JTINPLACEWX),w))za=w;else{GA(za,t,AN(w),AR(w),AS(w));}
   if(n==0){RETF(za);}  // don't run the copy loop if 0 atoms in result
   z=DAV(za); zz=ZAV(za);

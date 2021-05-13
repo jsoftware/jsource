@@ -132,7 +132,7 @@ do{
      // change in rank/shape: fail
    zexprank=(zexprank!=zr)?-1:zexprank;  // if zexprank!=zr, make zexprank negative to make sure loop doesn't overrun the smaller shape
    DO(zexprank, zexprank+=zs[i]^zzs[i];)  // if shapes don't match, set zexprank
-   if(likely(!((zt&SPARSE) + (zexprank^zr)))){  // if there was no wreck...
+   if(likely(!((zt&ISSPARSE) + (zexprank^zr)))){  // if there was no wreck...
     // rank/shape did not change.  What about the type?
     if(unlikely(TYPESNE(zt,zzt))){
      // The type changed.  Convert the types to match.
@@ -201,7 +201,7 @@ do{
 #endif
     // **** z may have been destroyed and must not be used from here on ****
    }else{  // there was a wreck
-    if(unlikely((zt&SPARSE)!=0)){
+    if(unlikely((zt&ISSPARSE)!=0)){
      // we encountered a sparse result.  Ecch.  We are going to have to box all the results and open them.  Remember that fact
      ZZFLAGWORD|=ZZFLAGUSEOPEN;
     }
@@ -253,7 +253,7 @@ do{
    }
   }else{
    // forced-boxed result.  Must not be sparse.  The result box is recursive to begin with, unless WILLBEOPENED is set
-   ASSERT(!(AT(z)&SPARSE),EVNONCE);
+   ASSERT(!(AT(z)&ISSPARSE),EVNONCE);
    // If z is DIRECT inplaceable, it must be unique and we can inherit them into a pristine result.  Otherwise clear pristinity
    ZZFLAGWORD&=((AC(z)>>(BW-AFPRISTINEX))&(-(AT(z)&DIRECT)))|~ZZFLAGPRISTINE;
    if(likely(ZZWILLBEOPENEDNEVER||!(ZZFLAGWORD&ZZFLAGWILLBEOPENED))) {  // scaf it might be better to allow the virtual to be stored in the main result, and realize it only for the looparound z
@@ -307,7 +307,7 @@ do{
   I natoms=AN(z);  // number of atoms per result cell
   I zzt=AT(z); I zzr=AR(z); zzt=(ZZASSUMEBOXATOP||ZZFLAGWORD&ZZFLAGBOXATOP)?BOX:zzt; zzr=(ZZASSUMEBOXATOP||ZZFLAGWORD&ZZFLAGBOXATOP)?0:zzr; natoms=(ZZASSUMEBOXATOP||ZZFLAGWORD&ZZFLAGBOXATOP)?1:natoms;
   // If result is sparse, allocate 0 atoms; later, change the allocation to something that will never match a result (viz a list with negative shape)
-  zzr=(zzt&SPARSE)?1:zzr; natoms=(zzt&SPARSE)?0:natoms;
+  zzr=(zzt&ISSPARSE)?1:zzr; natoms=(zzt&ISSPARSE)?0:natoms;
   zzcelllen=natoms<<bplg(zzt);  // number of bytes in one cell.
   JMCSETMASK(zzendmask,zzcelllen,ZZSTARTATEND)   // set mask for JMCR
 
@@ -322,7 +322,7 @@ do{
   ZZINSTALLFRAME(zzs)
   // Install the result shape.  If we encounter a sparse result,  We are going to have to box all the results and open them.  If the sparse result is the first,
   // we are going to have a situation where nothing can ever get moved into zz, so we have to come up with a plausible zz to make that happen.  We create a zz with negative shape
-  is = AS(z); zzt=-(zzt&SPARSE); DQ(zzr, *zzs++=zzt|*is++;);    // copy result shape; but if SPARSE, make it negative to guarantee miscompare
+  is = AS(z); zzt=zzt&ISSPARSE; DQ(zzr, *zzs++=zzt|*is++;);    // copy result shape; but if SPARSE, make it negative to guarantee miscompare
   // Set up the pointers/sizes for the rest of the operation
   zzboxp=AAV(zz); zzboxp=ZZASSUMEBOXATOP||ZZFLAGWORD&ZZFLAGBOXATOP?zzboxp:0;  // zzboxp=0 normally (to count stores), but for BOXATOP is the store pointer
 #if !ZZSTARTATEND  // going forwards

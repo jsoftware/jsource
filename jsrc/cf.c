@@ -248,7 +248,7 @@ static DF2(jthook2){PREF2(jthook2cell); R jthook2cell(jt,a,w,self);}
 static DF1(jthkiota){DECLFG;A a,e;I n;P*p;
  ARGCHK1(w);
  SETIC(w,n);
- if(SB01&AT(w)&&1==AR(w)){
+ if((AT(w)&ISSPARSE+B01)==ISSPARSE+B01&&1==AR(w)){
   p=PAV(w); a=SPA(p,a); e=SPA(p,e); 
   R BAV(e)[0]||equ(mtv,a) ? repeat(w,IX(n)) : repeat(SPA(p,x),ravel(SPA(p,i)));
  }

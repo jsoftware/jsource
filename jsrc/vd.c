@@ -34,7 +34,7 @@ static A jtrinvip(J jt,A w,I n,I ncomp){PROLOG(0066);A ai,bx,di,z;I m;
  ai=jtrinvip(jt,take(v2(m,m),w),m,ncomp);  // take inverse of w00  kludge could use faux block to avoid take overhead esp for 2x2 FL results
  di=jtrinvip(jt,drop(v2(m,m),w),n-m,ncomp);  // take inverse of w11
  bx=negateW(pdt(ai,pdt(take(v2(m,m-n),w),di)));  // -w00^_1 mp w01 mp w11^_1
- if(AT(w)&SPARSE){z=over(stitch(ai,bx),take(v2(n-m,-n),di));  // should copy this over w, inplace
+ if(AT(w)&ISSPARSE){z=over(stitch(ai,bx),take(v2(n-m,-n),di));  // should copy this over w, inplace
  }else{
   // copy in the pieces, line by line, writing over the input area
   I leftlen = m<<bplg(AT(w)); I rightlen=(n-m)<<bplg(AT(w));
@@ -60,7 +60,7 @@ F1(jtrinv){
  ASSERT(AR(w)==2,EVRANK);  // rank at least 2
  ASSERT(AS(w)[0]==AS(w)[1],EVLENGTH);  // error if not square
  if(!AN(w))R w;  // if empty, return empty
- R jtrinvip(jt,ca(w),AS(w)[0],AT(w)&FL?2:0);  // take the inverse.  Since it runs in place, clone w.  For float, reduce overhead at bottom of recursion
+ R jtrinvip(jt,ca(w),AS(w)[0],ISDENSETYPE(AT(w),FL)?2:0);  // take the inverse.  Since it runs in place, clone w.  For float, reduce overhead at bottom of recursion
 }
 
 // recursive subroutine for qr decomposition, returns q;r
@@ -188,7 +188,7 @@ ARGCHK1(w);
 // qr (?) decomposition of w, returns q;r
 F1(jtqr){A r,z;D c=inf,d=0,x;I n1,n,*s,wr;
  F1RANK(2,jtqr,DUMMYSELF);
- ASSERT(DENSE&AT(w),EVNONCE);
+ ASSERT(!(AT(w)&ISSPARSE),EVNONCE);
  ASSERT(AT(w)&B01+INT+FL+CMPX,EVDOMAIN);
  wr=AR(w); s=AS(w);
  ASSERT(2>wr||s[0]>=s[1],EVLENGTH);
@@ -203,11 +203,11 @@ RETF(z);
 // result has rank 2
 static A jtlq(J jt,A w,D *det){A l;D c=inf,d=0,x;I n1,n,*s,wr;
  F1RANK(2,jtqr,DUMMYSELF);
- ASSERT(DENSE&AT(w),EVNONCE);
+ ASSERT(!(AT(w)&ISSPARSE),EVNONCE);
  ASSERT(AT(w)&B01+INT+FL+CMPX,EVDOMAIN);
  wr=AR(w); s=AS(w);
  ASSERT(2>wr||s[0]>=s[1],EVLENGTH);
- if(AT(w)&B01+INT)RZ(w=cvt(FL,w));  // convert boolean/integer to real
+ if(ISDENSETYPE(AT(w),B01+INT))RZ(w=cvt(FL,w));  // convert boolean/integer to real
  if(wr==1)w=table(w);  // convert column vector to column matrix
  w=conjug(cant1(w));  // create w*, where the result will be built inplace
  RZ(l=jtltqip(jt,w)); n=AS(l)[0]; n1=1+n;
@@ -288,9 +288,9 @@ static F2(jtmdivsp){A a1,x,y;I at,d,m,n,t,*v,xt;P*wp;
 // a %. w  for all types
 F2(jtmdiv){PROLOG(0069);A z;I t;
  F2RANK(RMAX,2,jtmdiv,DUMMYSELF);
- if(AT(a)&SPARSE)RZ(a=denseit(a));
+ if(AT(a)&ISSPARSE)RZ(a=denseit(a));
  t=AT(w);
- if(t&SPARSE)R mdivsp(a,w);
+ if(t&ISSPARSE)R mdivsp(a,w);
  D detv; // place to build determinant of inverse
  z=jtminvdet(jt,w,&detv);  // take generalized inverse of w, setting up for icor if needed
  z=pdt(2>AR(w)?reshape(shape(w),z):z,a);  // w^-1 mp a

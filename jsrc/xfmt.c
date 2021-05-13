@@ -262,7 +262,7 @@ static F2(jtfmtprecomp) {A*as,base,fb,len,strs,*u,z;B*bits,*bw;D dtmp,*dw;
      I d,i,*ib,imod,*iw,*iv,maxl,mods,n,nB,nD,nMN,nPQ,nI,nc,nf,*s,wr,*ws,wt;
  ARGCHK2(a,w); 
  nf=AS(a)[0]; nf=1==AR(a)?1:nf; n=AN(w); wt=AT(w); wr=AR(w); ws=AS(w); SHAPEN(w,wr-1,nc);   // nf=#cells, nc=length of 1-cell (# columns)
- ASSERT(wt&B01+INT+FL, EVDOMAIN);
+ ASSERT(ISDENSETYPE(wt,B01+INT+FL), EVDOMAIN);
  if(1<nf){GATV0(base,INT,nf*4,2); s=AS(base); *s++=nf; *s=4;}else GATV0(base,INT,3+nc,1);
  GATV0(strs,BOX,nf*NMODVALS,2); s=AS(strs); *s++=nf; *s=NMODVALS;
  GATV(len, INT,n,wr,ws); 
@@ -403,7 +403,7 @@ static A jtfmtallcol(J jt, A a, A w, I mode) {A *a1v,base,fb,len,strs,*u,v,x;
     I coll,d,g,h,i,*ib,imod,*iv,*il,j,k,l,m,mods,nB,nD,nM,nN,nP,nQ,nR,nI,nJ,nK,n,nc,nf,t,wr,*ws,y,zs[2];
  ARGCHK1(a); u=AAV(a); base=*u++; strs=*u++; len=*u++; fb=*u++; u=0; subs=0;  // extract components: len->lengths of the values
  ARGCHK1(w); n=AN(w); t=AT(w); wr=AR(w); ws=AS(w); SHAPEN(w,wr-1,nc); 
- ASSERT(B01+INT+FL&t, EVDOMAIN);
+ ASSERT(ISDENSETYPE(t,B01+INT+FL), EVDOMAIN);
 
  nf=1==AR(base)?1:AS(base)[0];
  switch(mode){
@@ -527,7 +527,7 @@ static A jtfmtallcol(J jt, A a, A w, I mode) {A *a1v,base,fb,len,strs,*u,v,x;
 
 static A jtfmtxi(J jt, A a, A w, I mode, I *omode){I lvl;
  ARGCHK2(a,w); *omode=0;
- if(unlikely((SPARSE&AT(w))!=0)) RZ(w=denseit(w));
+ if(unlikely((AT(w)&ISSPARSE)!=0)) RZ(w=denseit(w));
  if(!AN(w))       RZ(w=reshape(shape(w),chrspace));
  if(JCHAR&AT(w))  R df1(a,w,qq(atop(ds(CBOX),ds(CCOMMA)),num(1)));
  ASSERT(1>=AR(a), EVRANK); 
@@ -543,7 +543,7 @@ static A jtfmtxi(J jt, A a, A w, I mode, I *omode){I lvl;
       ASSERT(!(AR(x)&&AT(x)&NUMERIC),EVRANK);});
   A z; R df2(z,reitem(shape(w),a),w,amp(foreign(num(8),num(0)), ds(COPE)));
  } else {
-  if(XNUM+RAT+CMPX&AT(w))RZ(w=cvt(FL,w));
+  if(ISDENSETYPE(AT(w),XNUM+RAT+CMPX))RZ(w=cvt(FL,w));
   *omode=mode;
   R fmtallcol(fmtprecomp(rank1ex0(a,DUMMYSELF,jtfmtparse),w),w,mode);
 }} /* 8!:x internals */

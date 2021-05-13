@@ -889,15 +889,15 @@ extern unsigned int __cdecl _clearfp (void);
  if(likely(name!=0)){   \
  AK(name)=akx; AT(name)=(type); AN(name)=atoms;   \
  AR(name)=(RANKT)(rank);     \
- if(!((type)&DIRECT)){if(SY_64){if(rank==0)AS(name)[0]=0; if((bytes-32)&-32)mvc((bytes-32)&-32,(C*)(AS(name)+1),1,MEMSET00);}else{mvc(bytes+1-akx,(C*)name+akx,1,MEMSET00);}}  \
+ if(!(((type)&DIRECT))>0){if(SY_64){if(rank==0)AS(name)[0]=0; if((bytes-32)&-32)mvc((bytes-32)&-32,(C*)(AS(name)+1),1,MEMSET00);}else{mvc(bytes+1-akx,(C*)name+akx,1,MEMSET00);}}  \
  shapecopier(name,type,atoms,rank,shaape)   \
     \
  }else{erraction;} \
 }
-#define GAT(name,type,atoms,rank,shaape)  GATS(name,type,atoms,rank,shaape,type##SIZE,GACOPYSHAPE,R 0)
-#define GATR(name,type,atoms,rank,shaape)  GATS(name,type,atoms,rank,shaape,type##SIZE,GACOPYSHAPER,R 0)
-#define GAT0(name,type,atoms,rank)  GATS(name,type,atoms,rank,0,type##SIZE,GACOPYSHAPE0,R 0)
-#define GAT0E(name,type,atoms,rank,erraction)  GATS(name,type,atoms,rank,0,type##SIZE,GACOPYSHAPE0,erraction)
+#define GAT(name,type,atoms,rank,shaape)  GATS(name,type,atoms,rank,shaape,type##SIZE,GACOPYSHAPE,R 0)  // shape must not be 0
+#define GATR(name,type,atoms,rank,shaape)  GATS(name,type,atoms,rank,shaape,type##SIZE,GACOPYSHAPER,R 0)  // rank should be SDT
+#define GAT0(name,type,atoms,rank)  GATS(name,type,atoms,rank,0,type##SIZE,GACOPYSHAPE0,R 0)  // shape is 0
+#define GAT0E(name,type,atoms,rank,erraction)  GATS(name,type,atoms,rank,0,type##SIZE,GACOPYSHAPE0,erraction)  // shape is 0, with error branch
 
 // GATV*, used when type is known and something else is variable.  ##SIZE must be applied before type is substituted, so we have GATVS to use inside other macros.  Normally use GATV
 // Note: assigns name before assigning the components of the array, so the components had better not depend on name, i. e. no GATV(z,BOX,AN(z),AR(z),AS(z))
@@ -910,20 +910,21 @@ extern unsigned int __cdecl _clearfp (void);
  I akx=AKXR(rank);   \
  if(likely(name!=0)){   \
   AK(name)=akx; AT(name)=(type); AN(name)=atoms; AR(name)=(RANKT)(rank);     \
-  if(!((type)&DIRECT)){if(SY_64){AS(name)[0]=0; mvc((bytes-32)&-32,(C*)(AS(name)+1),1,MEMSET00);}else{mvc(bytes+1-akx,(C*)name+akx,1,MEMSET00);}}   /* overclears the data but never over buffer bdy */ \
+  if(!(((type)&DIRECT)>0)){if(SY_64){AS(name)[0]=0; mvc((bytes-32)&-32,(C*)(AS(name)+1),1,MEMSET00);}else{mvc(bytes+1-akx,(C*)name+akx,1,MEMSET00);}}   /* overclears the data but never over buffer bdy */ \
   shapecopier(name,type,atoms,rank,shaape)   \
      \
  }else{erraction;} \
 }
 
 // see warnings above under GATVS
-#define GATV(name,type,atoms,rank,shaape) GATVS(name,type,atoms,rank,shaape,type##SIZE,GACOPYSHAPE,R 0)
-#define GATVR(name,type,atoms,rank,shaape) GATVS(name,type,atoms,rank,shaape,type##SIZE,GACOPYSHAPER,R 0)
+#define GATV(name,type,atoms,rank,shaape) GATVS(name,type,atoms,rank,shaape,type##SIZE,GACOPYSHAPE,R 0)  // shape must not be 0
+#define GATVR(name,type,atoms,rank,shaape) GATVS(name,type,atoms,rank,shaape,type##SIZE,GACOPYSHAPER,R 0)  // rank should be SDT
 #define GATV1(name,type,atoms,rank) GATVS(name,type,atoms,rank,0,type##SIZE,GACOPY1,R 0)  // this version copies 1 to the entire shape
 #define GATV0(name,type,atoms,rank) GATVS(name,type,atoms,rank,0,type##SIZE,GACOPYSHAPE0,R 0)  // shape not written unless rank==1
-#define GATV0E(name,type,atoms,rank,erraction) GATVS(name,type,atoms,rank,0,type##SIZE,GACOPYSHAPE0,erraction)  // shape not written unless rank==1
-// use this version when you are allocating a sparse matrix.  It handles the AS[0] field correctly.  ALL sparse allocations must come through here so that AC is set sorrectly
-#define GASPARSE(n,t,a,r,s) {if((r)==1){GA(n,(t),a,1,0); if(s)AS(n)[0]=(s)[0];}else{GA(n,(t),a,r,s)} ACINIT(n,ACUC1);}
+#define GATV0E(name,type,atoms,rank,erraction) GATVS(name,type,atoms,rank,0,type##SIZE,GACOPYSHAPE0,erraction)  // shape not written unless rank==1, with error branch
+// use this version when you are allocating a sparse matrix.  It handles the AS[0] field correctly.  ALL sparse allocations must come through here so that AC is set correctly
+// obsolete #define GASPARSE(n,t,a,r,s) {if((r)==1){GA(n,(t),a,1,0); if(s)AS(n)[0]=(s)[0];}else{GA(n,(t),a,r,s)} ACINIT(n,ACUC1);}
+#define GASPARSE(n,t,a,r,s) {GA(n,BOX,(sizeof(P)/sizeof(A)),r,s); AN(n)=1; AT(n)=(t)|ISSPARSE; if((r)==1){if(s)AS(n)[0]=(s)[0];} ACINIT(n,ACUC1);}
 
 #define HN              4L  // number of boxes per valence to hold exp-def info (words, control words, original (opt.), symbol table)
 // Item count given frame and rank: AS(f) unless r is 0; then 1 
@@ -1073,7 +1074,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define MCISs(dest,src,n) {I * RESTRICT _d=(dest); I _n=~(n); while((_n-=REPSGN(_n))<0)*_d++=*src++;}  // ... this when s increments through the loop
 #define MCISds(dest,src,n) {I _n=~(n); while((_n-=REPSGN(_n))<0)*dest++=*src++;}  // ...this when both
 // Copy shapes.  Optimized for length <5, subroutine for others
-// For AVX, we can profitably use the MASKLOAD/STORE instruction to do all the  testing
+// For AVX, we can profitably use the MASKLOAD/STORE instruction to do all the testing
 // len is # words in shape
 #if 1 && ((C_AVX&&SY_64) || EMU_AVX)  // as with xAGREE, using ymm has too much baggage
 #define MCISH(dest,src,n) \
@@ -1545,7 +1546,7 @@ if(likely(z<3)){_zzt+=z; z=(I)&oneone; _zzt=_i&3?_zzt:(I*)z; z=_i&2?(I)_zzt:z; z
 #endif
 // Input is the name of word of bytes.  Result is modified name, 1 bit per input byte, spaced like B01s, with the bit 0 iff the corresponding input byte was all 0.  Non-boolean bits of result are garbage.
 #define ZBYTESTOZBITS(b) (b=b|((b|(~b+VALIDBOOLEAN))>>7))  // for each byte: zero if b0 off, b7 off, and b7 turns on when you subtract 1 or 2
-// to verify gah conversion #define RETF(exp)       { A retfff=(exp);  if ((retfff) && ((AT(retfff)&SPARSE && AN(retfff)!=1) || (AT(retfff)&DENSE && AN(retfff)!=prod(AR(retfff),AS(retfff)))))SEGFAULT;; R retfff; } // scaf
+// to verify gah conversion #define RETF(exp)       { A retfff=(exp);  if ((retfff) && ((AT(retfff)&ISSPARSE && AN(retfff)!=1) || (!(AT(retfff)&ISSPARSE) && AN(retfff)!=prod(AR(retfff),AS(retfff)))))SEGFAULT;; R retfff; } // scaf
 #define SBSV(x)         (CAV1((A)AN(JT(jt,sbu)))+(I)(x))
 #define SBUV(x)         (SBUV4(JT(jt,sbu))+(I)(x))
 #define SEGFAULT        (*(volatile I*)0 = 0)

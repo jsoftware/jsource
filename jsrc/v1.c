@@ -306,7 +306,7 @@ fail:
 B jtequ(J jt,A a,A w){A x;
  F2PREFIP;ARGCHK2(a,w);  // allow inplace request - it has no effect
  if(a==w)R 1;
- if(unlikely((SPARSE&(AT(a)|AT(w)))!=0))if(AR(a)&&AR(w)){RZ(x=matchs(a,w)); R BAV(x)[0];}
+ if(unlikely(((AT(a)|AT(w))&ISSPARSE)!=0))if(AR(a)&&AR(w)){RZ(x=matchs(a,w)); R BAV(x)[0];}
  R ((B (*)())jtmatchsub)(jt,a,w,0   MATCHSUBDEFAULTS);  // don't check level - it takes too long for big arrays
 }
 
@@ -440,11 +440,11 @@ static F2(jtmatchs){A ae,ax,p,q,we,wx,x;B*b,*pv,*qv;D d;I acr,an=0,ar,c,j,k,m,n,
  if(ar>acr||wr>wcr)R rank2ex(a,w,DUMMYSELF,acr,wcr,acr,wcr,jtmatchs);
  if(ar!=wr||memcmpne(AS(a),AS(w),r*SZI)||!HOMO(AT(a),AT(w)))R num(0);
  GATV0(x,B01,r,1L); b=BAV(x); mvc(r,b,1,MEMSET00);
- if(SPARSE&AT(a)){ap=PAV(a); x=SPA(ap,a); v=AV(x); an=AN(x); DO(an, b[v[i]]=1;);}
- if(SPARSE&AT(w)){wp=PAV(w); x=SPA(wp,a); v=AV(x); wn=AN(x); DO(wn, b[v[i]]=1;);} 
+ if(AT(a)&ISSPARSE){ap=PAV(a); x=SPA(ap,a); v=AV(x); an=AN(x); DO(an, b[v[i]]=1;);}
+ if(AT(w)&ISSPARSE){wp=PAV(w); x=SPA(wp,a); v=AV(x); wn=AN(x); DO(wn, b[v[i]]=1;);} 
  c=0; DO(r, c+=b[i];);
- if(an<c||DENSE&AT(a))RZ(a=reaxis(ifb(r,b),a)); ap=PAV(a); ae=SPA(ap,e); ax=SPA(ap,x); m=AS(ax)[0];
- if(wn<c||DENSE&AT(w))RZ(w=reaxis(ifb(r,b),w)); wp=PAV(w); we=SPA(wp,e); wx=SPA(wp,x); n=AS(wx)[0];
+ if(an<c||!(AT(a)&ISSPARSE))RZ(a=reaxis(ifb(r,b),a)); ap=PAV(a); ae=SPA(ap,e); ax=SPA(ap,x); m=AS(ax)[0];
+ if(wn<c||!(AT(w)&ISSPARSE))RZ(w=reaxis(ifb(r,b),w)); wp=PAV(w); we=SPA(wp,e); wx=SPA(wp,x); n=AS(wx)[0];
  RZ(x=indexof(SPA(ap,i),SPA(wp,i))); v=AV(x);
  GATV0(p,B01,m,1); pv=BAV(p);
  GATV0(q,B01,n,1); qv=BAV(q); 
@@ -464,7 +464,7 @@ F2(jtmatch){A z;I af,m,n,mn,wf;
  I eqis0 = (I)jt&1; jt=(J)((I)jt&~1);
  ARGCHK2(a,w);
  I isatoms = (-AN(a))&(-AN(w));  // neg if both args have atoms
- if(unlikely((SPARSE&(AT(a)|AT(w)))!=0))R ne(num(eqis0),matchs(a,w));
+ if(unlikely(((AT(a)|AT(w))&ISSPARSE)!=0))R ne(num(eqis0),matchs(a,w));
  af=AR(a)-(I)(jt->ranks>>RANKTX); af=af<0?0:af; wf=AR(w)-(I)((RANKT)jt->ranks); wf=wf<0?0:wf; RESETRANK;
  // exchange a and w as needed to ensure a has the shorter frame, i. e. is the repeated argument
  {A ta=a; I ti=af; I afhi=af-wf; a=afhi>=0?w:a; w=afhi>=0?ta:w; af=afhi>=0?wf:af; wf=afhi>=0?ti:wf;} 

@@ -1095,9 +1095,9 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
 #if defined(FAKEAPPLE)
     dvc=(char*)alignto(dvc,sizeof(I));
     *(I*)dvc=iwd; // write extended result
-    dvc+=(dvc-(char*)data<64)?sizeof(I):sizeof(I);
+    dvc+=sizeof(I);
 #else
-    dvc=(char*)alignto(dvc,1<<lglen);
+    dvc=(char*)alignto(dvc,(dvc-(char*)data<64)?sizeof(I):1<<lglen);
     *(I*)dvc=iwd; // write extended result
     dvc+=(dvc-(char*)data<64)?sizeof(I):1<<lglen;
 #endif
@@ -1224,11 +1224,10 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
  if(dcnt>8&&dv-data<=6)dv=data+dcnt-2; /* update dv to point to the end */
 #elif SY_UNIX64 && defined(__aarch64__)
 #if defined(__APPLE__)
-  dv = (I*)alignto(dvc,16); /* stack aligned to 16 byte */
-#else
-  dv = (I*)alignto(dv,16);  /* stack aligned to 16 byte */
+  dv = (I*)alignto(dvc,sizeof(I)); /* update (char*) dvc to (I*) dv */
 #endif
  if(dcnt>8&&dv-data<=8)dv=data+dcnt;  /* update dv to point to the end */
+ dv = (I*)alignto(dv,16);  /* stack aligned to 16 byte */
 #elif !SY_64
  CDASSERT(dv-data<=NCDARGS,DECOUNT); /* D needs 2 I args in 32bit system, check it again. */
 #endif

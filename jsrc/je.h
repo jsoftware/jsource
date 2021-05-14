@@ -981,7 +981,7 @@ extern D        pf;
 extern struct Bd1 Bpie;
 #define pie ((A)&Bpie)
 extern PRIM     primtab[];
-extern const UI4      shortrange[3][4];
+// obsolete extern const UI4      shortrange[3][4];
 extern Z        zeroZ;
 extern const dcomplex zone;
 extern const dcomplex zzero;

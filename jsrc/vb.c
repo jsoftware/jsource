@@ -86,7 +86,8 @@ static I jtebarprep(J jt,A a,A w,A*za,A*zw,I*zc){I ar,at,m,n,t,wr,wt,memlimit;CR
   // We allocate an array for each result in range, so we have to get c and d right
   case C2TX:
   case LITX:
-  case B01X: rng.min=0; rng.range=shortrange[t&B01+LIT][1]; break;
+// obsolete   case B01X: rng.min=0; rng.range=shortrange[t&B01+LIT][1]; break;
+  case B01X: rng.min=0; rng.range=65536; rng.range=t&B01?2:rng.range; rng.range=t&LIT?256:rng.range; break;
   case INTX: case SBTX: rng = condrange(AV(a),m,IMAX,IMIN,memlimit);
              if(rng.range){rng = condrange(AV(w),n,rng.min,rng.min+rng.range-1,memlimit);} break;
   case C4TX: rng = condrange4(C4AV(a),m,-1,0,memlimit);

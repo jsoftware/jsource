@@ -1046,7 +1046,8 @@ A jtclonelocalsyms(J jt, A a){A z;I j;I an=AN(a); LX *av=LXAV0(a),*zv;
 
 F2(jtcolon){A d,h,*hv,m;C*s;I flag=VFLAGNONE,n,p;
  ARGCHK2(a,w);PROLOG(778);
- if(VERB&AT(a)&AT(w)){  // v : v case
+ if(VERB&AT(a)){  // v : v case
+  ASSERT(AT(w)&VERB,EVDOMAIN);   // v : noun is an error
   // If nested v : v, prune the tree
   if(CCOLON==FAV(a)->id&&FAV(a)->fgh[0]&&VERB&AT(FAV(a)->fgh[0])&&VERB&AT(FAV(a)->fgh[1]))a=FAV(a)->fgh[0];  // look for v : v; don't fail if fgh[0]==0 (namerefop).  Must test fgh[0] first
   if(CCOLON==FAV(w)->id&&FAV(w)->fgh[0]&&VERB&AT(FAV(w)->fgh[0])&&VERB&AT(FAV(w)->fgh[1]))w=FAV(w)->fgh[1];

@@ -639,10 +639,8 @@ DF2(jtkeybox){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
  EPILOG(z);
 }    // a <./ w
 
-// indexed by [chartype][k]
-const UI4 shortrange[3][4] = {{0,65536,65536,0}, {0,2,258,0}, {0,256,65536,0}};  // C2T, B01, LIT
-
-
+// obsolete // indexed by [chartype][k]
+// obsolete const UI4 shortrange[3][4] = {{0,65536,65536,0}, {0,2,258,0}, {0,256,65536,0}};  // C2T, B01, LIT
 
 static DF2(jtkeytally);
 

@@ -47,6 +47,7 @@ F1(jtranking){A y,z;C*wv;I icn,i,k,m,n,t,wcr,wf,wn,wr,*ws,wt,*zv;CR rng;TTYPE *y
  if(likely(wn!=0)){PROD(m,wf,ws);}  // If there are atoms, calculate result-shape the fast way
  else{RE(m=prod(wf,ws)); R m?reitem(vec(INT,wf,ws),iota(v2(1L,n))):reshape(vec(INT,1+wf,ws),num(0));}
  PROD1(icn,wcr-1,ws+wf+1); k=icn<<bplg(wt);  // wk=size of atom in bytes; icn=# atoms in an item of a cell  k = *bytes in an item of a CELL of w
+ k&=REPSGN(SGNIFDENSE(wt));  // if sparse w, set k so as to disable all special cases
  // if Boolean 2- or 4-byte, go off to handle that special case
  if(ISDENSETYPE(wt,B01)&&(k==2||k==sizeof(int)))R rankingb(w,wf,wcr,m,n,k);
  // See if the values qualify for small-range processing
@@ -57,7 +58,11 @@ F1(jtranking){A y,z;C*wv;I icn,i,k,m,n,t,wcr,wf,wn,wr,*ws,wt,*zv;CR rng;TTYPE *y
   UI4 lgn; CTLZI(wn,lgn);
   I maxrange = wn<64?256:(I)((lgn*4-6)*(D)wn/(4.5*(D)icn));
   rng = ISDENSETYPE(wt,INT)?condrange((I*)wv,wn,IMAX,IMIN,maxrange):condrange4((C4*)wv,wn,-1,0,maxrange);
- }else if(k<=2){rng.range=shortrange[~REPSGN(wt)&wt&(B01+LIT)][k]; rng.min=0;  // if B01, must be 1 byte; otherwise 2^(8*k)
+ }else if(unlikely(((k-1)&-2)==0)){
+  // special case of k==2.  We assume the worst on range, i. e. 8 bits/byte, EXCEPT that for B01 type we know that the value can never exceed
+  // 1 so we add 2 instead of the last 8 bits
+  rng.min=0; rng.range=(1LL<<((k-(wt&B01))<<3))+((wt&B01)<<(k-1));  // 2, 256, 258, or 65536
+// obsolete rng.range=shortrange[REPSGN(SGNIFDENSE(wt))&wt&(B01+LIT)][k]; rng.min=0;  // if B01, must be 1 byte; otherwise 2^(8*k)
  }else rng.range=0;
  if(!rng.range){I *yv;
   // small-range not possible.  Do the grade and install each value into its location

@@ -81,13 +81,12 @@ typedef double complex double_complex;
 #endif
 
 #include "j.h"
-// test compilation of apple m1 on android
+// test compilation of apple m1
 // #define __APPLE__ 1
-// #define FAKEAPPLE 1
 
 // align memory pointer to natural alignment
-#define alignto(dvc,align) (void*)((uintptr_t)((dvc)+((align)-1)) & ~((align)-1));
-/* 
+#define alignto(dvc,align) (void*)((uintptr_t)((dvc)+((align)-1)) & ~((align)-1))
+/*
 static void* alignto(void* dvc, int align){
 // fprintf(stderr,"%p %d %p \n", dvc, align, (void*)((uintptr_t)((dvc)+((align)-1)) & ~((align)-1)) );
 return (void*)((uintptr_t)((dvc)+((align)-1)) & ~((align)-1));
@@ -989,26 +988,25 @@ static I*jtconvert0(J jt,I zt,I*v,I wt,C*u){D p,q;I k=0;US s;C4 s4;
 static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B zbx;
     C c,cipt[NCDARGS],*u;FARPROC fp;float f;I cipcount=0,cipn[NCDARGS],*cipv[NCDARGS],cv0[2],
     data[NCDARGS*2],dcnt=0,fcnt=0,*dv,i,n,per,t,xn,xr,xt,*xv; DoF dd[NCDARGS];
-#if defined(__APPLE__) && defined(__aarch64__)
+#if defined(__aarch64__)
 // parameter in stack is not fixed size
- char *dvc;
+ char *dvc;        // character pointer to data[]
+ int rcnt=0;       // next general purpose register number
+#define maxrcnt 8  // number of register for passing integral parameter
+#define maxdcnt 8  // number of simd register for passing float/double parameter
 #endif
  FPREFIP(J);  // save inplace flag
  n=cc->n;  // n is # cd args
  if(unlikely(((n-1)|SGNIF(wt,BOXX))>=0)){DO(n, CDASSERT(!cc->star[i],DEPARM+256*i));}  // if there are args, and w is not boxed, verify there are no pointer parms
  zbx=cc->zbx; zv=1+(A*)zv0; dv=data; u=wu; xr=0;  // zv->first input arg  zbx is 1 if the result includes the input boxes; 0 if just bare value
-#if defined(__APPLE__) && defined(__aarch64__)
- dvc=(char*)dv;
+#if defined(__aarch64__)
+ dvc=maxrcnt*sizeof(I)+(char*)data;
 #endif
  for(i=0;i<n;++i,++zv){  // for each input field
 #if SY_UNIX64 && defined(__x86_64__)
   if(dv-data>=6&&dv-data<dcnt-2)dv=data+dcnt-2;
 #elif SY_UNIX64 && defined(__aarch64__)
-#if defined(__APPLE__)
-  if(dcnt>8&&dvc-(char*)data==64)dvc=(char*)(data+dcnt);    /* v0 to v7 fully filled before x0 to x7 */
-#else
-  if(dcnt>8&&dv-data==8)dv=data+dcnt;    /* v0 to v7 fully filled before x0 to x7 */
-#endif
+//  if(dcnt>8&&dvc-(char*)data==64)dvc=(char*)(data+dcnt);    /* v0 to v7 fully filled before x0 to x7 */
 #elif defined(C_CD_ARMHF)
   if((fcnt>16||dcnt>16)&&dv-data==4)dv=data+MAX(fcnt,dcnt)-12;  /* v0 to v15 fully filled before x0 to x3 */
 #endif
@@ -1039,11 +1037,13 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
   if(unlikely(boxatomsgn<0)){           // scalar boxed integer/boolean scalar is a pointer - NOT memu'd.  If xt is a box, wt must have been a box
    y=AAV(x)[0];   // fetch the address of the A-block for the pointer
    CDASSERT(!AR(y)&&AT(y)&B01+INT,per);  // pointer must be B01 or INT type (if B01, nust be nullptr)
-#if defined(__APPLE__) && defined(__aarch64__)
-   if(unlikely(AT(y)&B01)){CDASSERT(0==BAV(y)[0],per); 
-    dvc=(char*)alignto(dvc,sizeof(void*)); *(I*)dvc=0; dvc+=sizeof(void*);
+#if defined(__aarch64__)
+   if(unlikely(AT(y)&B01)){CDASSERT(0==BAV(y)[0],per);
+   if(rcnt<maxrcnt) data[rcnt++]=0; else{
+    dvc=alignto(dvc,sizeof(void*)); *(I*)dvc=0; dvc+=sizeof(void*);}  // get nullptr or intptr, save in *dv
    }else{
-    dvc=(char*)alignto(dvc,sizeof(void*)); *(I*)dvc=AV(y)[0]; dvc+=sizeof(void*);}  // get nullptr or intptr, save in *dv
+   if(rcnt<maxrcnt) data[rcnt++]=AV(y)[0]; else{
+    dvc=alignto(dvc,sizeof(void*)); *(I*)dvc=AV(y)[0]; dvc+=sizeof(void*);}} // get nullptr or intptr, save in *dv
 #else
    if(unlikely(AT(y)&B01)){CDASSERT(0==BAV(y)[0],per); *dv++=0;}else *dv++=AV(y)[0];  // get nullptr or intptr, save in *dv
 #endif
@@ -1051,9 +1051,11 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
    CDASSERT(xr&&((xt&DIRECT)>0),per);                /* pointer can't point at scalar, and it must point to direct values */
    // if type is * (not &), make a safe copy.
    if(star&1){RZ(x=jtmemu(jtinplace,x)); if(zbx)*zv=incorp(x); xv=AV(x);}  // what we install into * must be unaliased (into & is ok)
-#if defined(__APPLE__) && defined(__aarch64__)
-   dvc=(char*)alignto(dvc,sizeof(void*));
+#if defined(__aarch64__)
+   if(rcnt<maxrcnt) data[rcnt++]=(I)xv; else{
+   dvc=alignto(dvc,sizeof(void*));
    *(I*)dvc=(I)xv; dvc+=sizeof(void*); /* pointer to J array memory     */
+   }
 #else
    *dv++=(I)xv;                     /* pointer to J array memory     */
 #endif
@@ -1091,16 +1093,18 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
     I nsig=(I)1<<(lglen+3);  // # significant bits in iwd
     I sxtwd=(iwd<<(BW-nsig))>>(BW-nsig);  // install sign extend over ignored bits
     iwd&=~((sxt-2)<<(nsig-1));  // if not sign-extend, clear upper bits.  Can't shift by BW.  If nsig is 8, sxt=1 ANDs with ~0, sxt=0 ANDs with ~0xFF..FF00
-#if defined(__APPLE__) && defined(__aarch64__)
-#if defined(FAKEAPPLE)
-    dvc=(char*)alignto(dvc,sizeof(I));
+#if defined(__aarch64__)
+   if(rcnt<maxrcnt) data[rcnt++]=iwd; else{
+#if defined(__APPLE__)
+    dvc=alignto(dvc,1<<lglen);
+    *(I*)dvc=iwd; // write extended result
+    dvc+=1<<lglen;
+#else
+    dvc=alignto(dvc,sizeof(I));
     *(I*)dvc=iwd; // write extended result
     dvc+=sizeof(I);
-#else
-    dvc=(char*)alignto(dvc,(dvc-(char*)data<64)?sizeof(I):1<<lglen);
-    *(I*)dvc=iwd; // write extended result
-    dvc+=(dvc-(char*)data<64)?sizeof(I):1<<lglen;
 #endif
+    }
 #else
     *dv++=iwd;  // write extended result
 #endif
@@ -1123,14 +1127,8 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
              /* always need to increment dv, the contents get used from the 14th D */
              *(D*)dv++=dd[dcnt++]=*(D*)xv;
 #elif defined(__aarch64__)
-             dd[dcnt++]=*(D*)xv;
-             if(dcnt>8){
-#if defined(__APPLE__)
-               if(dvc-(char*)data>=64){dvc=(char*)alignto(dvc,sizeof(D)); *(I*)dvc=*xv; dvc+=sizeof(D); } else data[dcnt-1]=*xv;
-#else
-               if(dv-data>=8)*dv++=*xv;else data[dcnt-1]=*xv;
-#endif
-             }
+             if(dcnt<maxdcnt) dd[dcnt++]=*(D*)xv;
+             else { dvc=alignto(dvc,sizeof(D)); *(I*)dvc=*xv; dvc+=sizeof(D); }
 #elif defined(__x86_64__)
              dd[dcnt++]=*(D*)xv;
              if(dcnt>8){ /* push the 9th D and more on to stack (must be the 7th I onward) */
@@ -1176,18 +1174,12 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
 #endif
      /* *dv=0; *(((float*)dv++)+1)=dd[dcnt++]=(float)*(D*)xv; */
   #elif defined(__aarch64__)
+     {f=(float)*(D*)xv;
+      if (dcnt<maxdcnt){dd[dcnt]=0; *(float*)(dd+dcnt++)=f;}
 #if defined(__APPLE__)
-     {f=(float)*(D*)xv; dd[dcnt]=0; *(float*)(dd+dcnt++)=f;
-      if(dcnt>8){
-#if defined(FAKEAPPLE)
-        if(dvc-(char*)data>=64){dvc=(char*)alignto(dvc,sizeof(I)); *(float*)dvc=f; dvc+=sizeof(I); }else *(float*)(data+dcnt-1)=f;}}
+      else {dvc=alignto(dvc,sizeof(float)); *(float*)dvc=f; dvc+=sizeof(float); }}
 #else
-        if(dvc-(char*)data>=64){dvc=(char*)alignto(dvc,sizeof(float)); *(float*)dvc=f; dvc+=sizeof(float); }else *(float*)(data+dcnt-1)=f;}}
-#endif
-#else
-     {f=(float)*(D*)xv; dd[dcnt]=0; *(float*)(dd+dcnt++)=f;
-      if(dcnt>8){
-        if(dv-data>=8)*(float*)(dv++)=f;else *(float*)(data+dcnt-1)=f;}}
+      else {dvc=alignto(dvc,sizeof(I)); *(I*)dvc=0; *(float*)dvc=f; dvc+=sizeof(I); }}
 #endif
   #elif defined(__x86_64__)
      {f=(float)*(D*)xv; dd[dcnt]=0; *(float*)(dd+dcnt++)=f;
@@ -1223,11 +1215,8 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
 #elif SY_UNIX64 && defined(__x86_64__)
  if(dcnt>8&&dv-data<=6)dv=data+dcnt-2; /* update dv to point to the end */
 #elif SY_UNIX64 && defined(__aarch64__)
-#if defined(__APPLE__)
-  dv = (I*)alignto(dvc,sizeof(I)); /* update (char*) dvc to (I*) dv */
-#endif
- if(dcnt>8&&dv-data<=8)dv=data+dcnt;  /* update dv to point to the end */
- dv = (I*)alignto(dv,16);  /* stack aligned to 16 byte */
+ if(rcnt==maxrcnt||dcnt==8) dv=(I*)alignto(dvc,sizeof(I));   /* update (char*) dvc to (I*) dv , 8 byte aligned but will be 16 aligned during stdcalli etc */
+ else dv=data+rcnt;                                          /* stack memory not used dv to point to the end of data */
 #elif !SY_64
  CDASSERT(dv-data<=NCDARGS,DECOUNT); /* D needs 2 I args in 32bit system, check it again. */
 #endif

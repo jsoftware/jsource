@@ -8,7 +8,7 @@
 
 static A jtsprarg(J jt,I f,A x){A q;B*b,c;I r;P*xp;
  r=AR(x); xp=PAV(x);
- if(AT(x)&ISSPARSE){c=1; RZ(b=bfi(r,SPA(xp,a),1)); DO(f, if(!b[i]){c=0; break;});}
+ if(ISSPARSE(AT(x))){c=1; RZ(b=bfi(r,SPA(xp,a),1)); DO(f, if(!b[i]){c=0; break;});}
  else{c=0; GATV0(q,B01,r,1); b=BAV(q); mvc(r,b,1,MEMSET00);}
  mvc(f,b,1,MEMSET01);
  R c||!r?x:reaxis(ifb(r,b),x);
@@ -38,7 +38,7 @@ static B*jtspredge(J jt,A y,I f,I*zm){A q;B*b;I c,m,n,*v;
 static A jtsprz(J jt,A z0,A y,A e,I f,I*s){A a,a0,q,y0,z;B d;I c,et,h,m,n,r,t,*u,*v,zt;P*ep,*zp,*zq;
  RZ(z0&&y&&e);
  ASSERT(AN(e),EVDOMAIN);
- if(AT(e)&ISSPARSE){ep=PAV(e); ASSERT(all1(eq(SPA(ep,e),SPA(ep,x))),EVSPARSE); q=SPA(ep,e);}
+ if(ISSPARSE(AT(e))){ep=PAV(e); ASSERT(all1(eq(SPA(ep,e),SPA(ep,x))),EVSPARSE); q=SPA(ep,e);}
  else{RZ(q=reshape(mtv,e)); ASSERT(all1(eq(q,e)),EVSPARSE);}
  if(!AS(z0)[0]){
   t=AT(q); zt=STYPE(t);
@@ -49,7 +49,7 @@ static A jtsprz(J jt,A z0,A y,A e,I f,I*s){A a,a0,q,y0,z;B d;I c,et,h,m,n,r,t,*u
   R z;
  }
  e=q;
- zt=t=AT(z0); d=t&ISSPARSE?0:1; if(d)zt=STYPE(t); else t=DTYPE(zt);
+ zt=t=AT(z0); d=!ISSPARSE(t); if(d)zt=STYPE(t); else t=DTYPE(zt);
  et=AT(e); m=maxtype(et,t); zt=STYPE(m);
  r=AR(z0);
  GASPARSE(z,zt,1,f+r-1,s); ICPY(AS(z)+f,AS(z0)+1,r-1);

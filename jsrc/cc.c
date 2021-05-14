@@ -139,7 +139,7 @@ DF2(jtboxcut0){A z;
  // NOTE: this routine is called from jtwords.  In that case, self comes from jtwords and is set up with the parm for x (<;.0~ -~/"2)~ y but with no failover routine.
  // Thus, the preliminary tests must not cause a failover.  They don't, because the inputs from jtwords are known to be well-formed
  // We require a have rank >=2, not sparse
- if(unlikely(((1-(I)AR(a))&(~((AT(a)|AT(w))&ISSPARSE)))>=0))R (FAV(self)->localuse.boxcut0.func)(jtinplace,a,w,self);
+ if(unlikely(((1-(I)AR(a))&(SGNIFDENSE(AT(a)|AT(w))))>=0))R (FAV(self)->localuse.boxcut0.func)(jtinplace,a,w,self);
  // Shape of a must end 2 1 - a one-dimensional selection
  if((AS(a)[AR(a)-2]^2)|(AS(a)[AR(a)-1]^1))R (FAV(self)->localuse.boxcut0.func)(jtinplace,a,w,self);
  // it is a (set of) one-dimensional selection
@@ -197,7 +197,7 @@ DF2(jtrazecut0){A z;C*wv,*zv;I ar,*as,(*av)[2],j,k,m,n,wt;
  wt=AT(w); wv=CAV(w);
  ar=AR(a); as=AS(a);
  // we need rank of a>2 (otherwise why bother?), rank of w>0, w not sparse, a not empty, w not empty (to make item-size easier)
- if((((ar-3)|(wt&ISSPARSE)|(AR(w)-1)|(AN(a)-1)))<0)R jtspecialatoprestart(jt,a,w,self);
+ if((((ar-3)|SGNIFSPARSE(wt)|(AR(w)-1)|(AN(a)-1)))<0)R jtspecialatoprestart(jt,a,w,self);
  // the 1-cells of a must be 2x1
  if(unlikely((as[ar-2]^2)|(as[ar-1]^1)))R jtspecialatoprestart(jt,a,w,self);
  n=AS(w)[0]; m=AN(a)>>1;  // number of items of w, number of w-items in result
@@ -326,7 +326,7 @@ static A jtsely(J jt,A y,I r,I i,I j){A z;I c,*s,*v;
 static DF2(jtcut2sx){PROLOG(0024);DECLF;A h=0,*hv,y,yy;B b,neg,pfx,*u,*v;C id;I d,e,hn,m,n,p,t,yn,*yu,*yv;P*ap;V*vf;
  PREF2(jtcut2sx);
  SETIC(w,n); t=AT(w); m=(I)sv->localuse.lu1.gercut.cutn; neg=0>m; pfx=m==1||m==-1; b=neg&&pfx;  // m = n from u;.n
- RZ(a=a==mark?eps(w,take(num(pfx?1:-1),w)):!(AT(a)&ISSPARSE)?sparse1(a):a);
+ RZ(a=a==mark?eps(w,take(num(pfx?1:-1),w)):!ISSPARSE(AT(a))?sparse1(a):a);
  ASSERT(n==AS(a)[0],EVLENGTH);
  ap=PAV(a);
  if(!(equ(num(0),SPA(ap,e))&&AN(SPA(ap,a))))R cut2(cvt(B01,a),w,self); 
@@ -341,7 +341,7 @@ static DF2(jtcut2sx){PROLOG(0024);DECLF;A h=0,*hv,y,yy;B b,neg,pfx,*u,*v;C id;I 
   case 3: v+=yn-1; DQ(yn, if(*v){++m; d=p; *yu++=p=yv[v-u]; e=MAX(e,d-p);} --v;);
  }
  yu=AV(yy); p=pfx?yu[m]:0;
- if(!(t&ISSPARSE)){C*wv;I c,k,r,*s;
+ if(!ISSPARSE(t)){C*wv;I c,k,r,*s;
   r=MAX(1,AR(w)); s=AS(w); wv=CAV(w); c=aii(w); k=c<<bplg(t); 
   CUTSWITCH(EACHCUTSP)
  }else if(id==CPOUND){A z;I i,*zi; 
@@ -557,7 +557,7 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[12
      I ak,at,wcn,d,k,m=0,n,r,wt,*zi;I d1[32]; A pd0; UC *pd, *pdend;  // Don't make d1 too big - it fill lots of stack space
  PREF2(jtcut2);
  // a may have come from /., in which case it is incompletely filled in.  We look at the type, but nothing else
-// obsolete  if(unlikely((SGNIF(AT(a),SB01X)|-(AT(w)&ISSPARSE))<0))R cut2sx(a,w,self);   // special code if a is sparse boolean or w is sparse
+// obsolete  if(unlikely((SGNIF(AT(a),SB01X)|-(AT(w)&SPARSE))<0))R cut2sx(a,w,self);   // special code if a is sparse boolean or w is sparse
  if(unlikely(((SGNIFSPARSE(AT(a))&SGNIF(AT(a),B01X))|SGNIFSPARSE(AT(w)))<0))R cut2sx(a,w,self);   // special code if a is sparse boolean or w is sparse
 #define ZZFLAGWORD state
  I state=ZZFLAGINITSTATE;  // init flags, including zz flags
@@ -886,11 +886,11 @@ DF2(jtrazecut2){A fs,gs,z=0;B b; I neg,pfx;C id,sep,*u,*v,*wv,*zv;I d,k,m=0,wi,p
  id=FAV(fs)->id;  // fs is f/id   where id is \ \.
   // if f is atomic/\ or atomic /\., set ado and cv with info for the operation
  varps(adocv,fs,wt,1+(id!=CBSLASH));   // fs is f/\  type 1 is f/\ 2 is f/\.
- if(AT(w)&ISSPARSE||!adocv.f)R jtspecialatoprestart(jt,a,w,self);  // if sparse w or nonatomic function, do it the long way
+ if(ISSPARSE(AT(w))||!adocv.f)R jtspecialatoprestart(jt,a,w,self);  // if sparse w or nonatomic function, do it the long way
  if(a!=mark){   // dyadic case
   if((-AN(a)&((AR(a)^1)-1)&-(AT(a)&B01))>=0)R jtspecialatoprestart(jt,a,w,self);  // if a is not nonempty boolean list, do it the long way.  This handles ;@: when a has rank>1
   // a is nonempty boolean list
-  if((AT(a)&ISSPARSE)!=0)RZ(a=cvt(B01,a));
+  if(ISSPARSE(AT(a)))RZ(a=cvt(B01,a));
   v=CAV(a); sep=C1;
  }else if(((AR(w)-2)&-(wt&IS1BYTE))<0){a=w; v=CAV(a); sep=v[(wi-1)&(pfx-1)];}  // monad.  Create char list of frets: here if 1-byte list/atom
  else{RZ(a=wi?eps(w,take(num((pfx<<1)-1),w)):mtv); v=CAV(a); sep=C1;}   // here if other types/shapes
@@ -963,7 +963,7 @@ static DF2(jttess2){A z,zz=0,virtw,strip;I n,rs[3],cellatoms,cellbytes,vmv,hmv,v
  // get shape of final result
  tesos(a,w,n,rs);      // vert/horiz shape of 1st 2 axes of result, from argument sizes and cut type
  I nregcells; PROD(nregcells,axisct,av+axisct);  // get size of a region, not including taken-in-full axes.  Must be no bigger than # atoms in w
- if((~(wt&ISSPARSE)&(-wr)&(-AN(w))&(-nregcells)&(-AN(a))&(-rs[0]))>=0){A p;  // if any of those is 0...
+ if((SGNIFDENSE(wt)&(-wr)&(-AN(w))&(-nregcells)&(-AN(a))&(-rs[0]))>=0){A p;  // if any of those is 0...
   // w is sparse, atomic, or empty, or the region has no axes or is empty, or the result is empty.  Go the slow way: create a selector block for each cell, and then apply u;.0 to each cell
   // trailing axes taken in full will be omitted from the shape of the result
   RZ(p=tesos(a,w,n,0));  // recalculate all the result shapes

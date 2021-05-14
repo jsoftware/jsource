@@ -436,7 +436,7 @@ F2(jtfrom){I at;A z;
  F2PREFIP;
  ARGCHK2(a,w);
  at=AT(a);
- if(likely(!((AT(a)|AT(w))&ISSPARSE))){
+ if(likely(!ISSPARSE(AT(a)|AT(w)))){
   // if B01|INT|FL atom { INT|FL|BOX array, and no frame, just pluck the value.  If a is inplaceable and not unincorpable, use it
   // If we turn the result to BOX it will have the original flags, i. e. it will be nonrecursive.  Thus fa will not free the contents, which do not have incremented usecount (and are garbage on error)
   // We allow FL only if it is the same saize as INT
@@ -473,14 +473,14 @@ F2(jtfrom){I at;A z;
    // Here we transferred out of w.  We must mark w non-pristine.  Since there may have been duplicates, we cannot mark z as pristine.  We overwrite w because it is no longer in use
    PRISTCLRF(w)
   }
- }else if(AT(a)&AT(w)&ISSPARSE){z=fromss(a,w);}  // sparse cases
- else if(AT(w)&ISSPARSE){z=at&BOX?frombs(a,w) : fromis(a,w);}
+ }else if(ISSPARSE(AT(a)&AT(w))){z=fromss(a,w);}  // sparse cases
+ else if(ISSPARSE(AT(w))){z=at&BOX?frombs(a,w) : fromis(a,w);}
  else{z=fromsd(a,w);}
  RETF(z);
 }   /* a{"r w main control */
 
 F2(jtsfrom){
- if(!(AT(w)&ISSPARSE)){
+ if(!ISSPARSE((AT(w)))){
   // Not sparse.  Verify the indexes are numeric and not empty
   if(((AN(a)-1)|(AR(a)-2)|((AT(a)&NUMERIC)-1))>=0){A ind;   // a is an array with rank>1 and numeric.  Rank 1 is unusual & unimportant & we'll ignore it
    // Check indexes for validity; if valid, turn each row into a cell offset

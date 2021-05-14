@@ -544,7 +544,7 @@ static F1(jtths){A e,i,x,z;C c,*u,*v;I d,m,n,*s;P*p;
 static A jtthorn1main(J jt,A w,A prxthornuni){PROLOG(0001);A z;
  ARGCHK1(w);
  if(!AN(w))GATV(z,LIT,0,AR(w),AS(w))
- else if(AT(w)&ISSPARSE)z=ths(w);
+ else if(ISSPARSE(AT(w)))z=ths(w);
  else switch(CTTZ(AT(w))){
   case INTX:  case FLX: case CMPXX:
              z=thn(w);                    break;
@@ -750,7 +750,7 @@ static A jtjprx(J jt,I ieol,I maxlen,I lb,I la,A w){A y,z;B ch;C e,eov[2],*v,x,*
  if(ch&&1<m)zn+=countonlines(scaneol,t,v,h,nq,c,lb,la);
  // If the input was character, boxed, or sparse, count the number of bytes that must be added for UTF-8 framing.
  // If the input is another type, there can be no UTF-8 in the string
- nbx=0; if(ch||AT(w)&BOX+ISSPARSE)zn+=nbx=countonlines(scanbdc,t,v,h,nq,c,lb,la);
+ nbx=0; if(ch||AT(w)&BOX+SPARSE)zn+=nbx=countonlines(scanbdc,t,v,h,nq,c,lb,la);
  // Now we can allocate the result array.  Set zu,zv->beginning of the data area
  GATV0(z,LIT,zn,1); zu=zv=CAV(z);
  // h=# beginning lines to output.  If all the lines, including spacing, fit in the user's limit, accept them all; otherwise use the user's starting number

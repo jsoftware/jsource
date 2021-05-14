@@ -937,7 +937,7 @@ strcpy(proc,"x15lseek32");
 #define CDT(x,y) (6*((0x160004>>(x))&7)+((0x160004>>(y))&0x7))  // encode 0 1 2 3 17 18-> 4 2 1 0 3 5  1011. .... .... .... 0100
 
 static I*jtconvert0(J jt,I zt,I*v,I wt,C*u){D p,q;I k=0;US s;C4 s4;
- if(unlikely((zt|wt)&((NOUN|ISSPARSE)&~(B01+LIT+INT+FL+C2T+C4T))))R 0;  // if unallowed type, abort
+ if(unlikely((zt|wt)&((NOUN|SPARSE)&~(B01+LIT+INT+FL+C2T+C4T))))R 0;  // if unallowed type, abort
  switch(CDT(CTTZ(zt),CTTZ(wt))){
   default:           R 0;
   case CDT(FLX, B01X): *(D*)v=*(B*)u; break;
@@ -1195,7 +1195,7 @@ F2(jtcd){A z;C*tv,*wv,*zv;CCT*cc;I k,m,n,p,q,t,wr,*ws,wt;
  AFLAGPRISTNO(w)  // we transfer boxes from w to the result, thereby letting them escape.  That makes w non-pristine
  if(1<AR(a)){I rr=AR(w); rr=rr==0?1:rr; R rank2ex(a,w,DUMMYSELF,1L,rr,1L,rr,jtcd);}
  wt=AT(w); wr=AR(w); ws=AS(w); PRODX(m,wr-1,ws,1);
- ASSERT(!(wt&ISSPARSE),EVDOMAIN);
+ ASSERT(!ISSPARSE(wt),EVDOMAIN);
  ASSERT(LIT&AT(a),EVDOMAIN);
  C* enda=&CAV(a)[AN(a)]; C endc=*enda; *enda=0; cc=cdparse(a,0); *enda=endc; RZ(cc); // should do outside rank2 loop?
  n=cc->n;

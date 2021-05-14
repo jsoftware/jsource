@@ -363,8 +363,8 @@ typedef I SI;
 #define RPARX 30
 #define RPAR            ((I)1L<<RPARX)   /* I  right parenthesis            */
 #define RPARSIZE sizeof(I)
-#define ISSPARSEX 31  // NOTE this extends to the sign bit
-#define ISSPARSE            (-((I)1L<<ISSPARSEX))       /* P  sparse boxed                 */
+#define SPARSEX 31  // NOTE this extends to the sign bit
+#define SPARSE            (-((I)1L<<SPARSEX))       /* P  sparse boxed                 */
 
 #define ASGNX 21
 #define ASGN            ((I)1L<<ASGNX)     /* I  assignment                   */
@@ -412,7 +412,7 @@ typedef I SI;
 #define ANY             -1L
 // obsolete #define SPARSE          (SB01+SINT+SFL+SCMPX+SLIT+SBOX)
 #define NUMERIC         (B01+INT+FL+CMPX+XNUM+RAT)
-#define DIRECT          ((LIT+C2T+C4T+B01+INT+FL+CMPX+SBT)|ISSPARSE)  // AND must be >0
+#define DIRECT          ((LIT+C2T+C4T+B01+INT+FL+CMPX+SBT)|SPARSE)  // AND must be >0
 #define JCHAR           (LIT+C2T+C4T)
 #define NOUN            (NUMERIC+JCHAR+BOX+SBT)
 // obsolete #define DENSE           (NOUN&~SPARSE)
@@ -422,15 +422,15 @@ typedef I SI;
 #define LAST0           (B01+LIT+C2T+C4T+NAME)
 #define SPARSABLE       (B01+INT+FL+CMPX+LIT)  // types that can be made sparse
 // Don't traverse for ra/fa unless one of these bits is set
-#define TRAVERSIBLE     (BOX|VERB|ADV|CONJ|RAT|XNUM|NAME|ISSPARSE)
+#define TRAVERSIBLE     (BOX|VERB|ADV|CONJ|RAT|XNUM|NAME|SPARSE)
 // Allow recursive usecount in one of these types
 #define RECURSIBLE      (BOX|VERB|ADV|CONJ|RAT|XNUM|NAME)  // sparse box not allowed
 #define RECURSIBLENOUN  (RECURSIBLE&NOUN)
 #define SGN1IFSPARSETYPE(t,dt) ((t)&-((t)&(dt)))  // sign 1 if t is sparse and one of dt
 #define SGN0IFDENSETYPE(t,dt) ((t)|(((t)&(dt))-1))  // sign 0 if t is dense and one of dt
-#define ISDENSETYPE(t,dt) (((t)&ISSPARSE+(dt))>0)  // true if t is dense and one of dt
+#define ISDENSETYPE(t,dt) (((t)&SPARSE+(dt))>0)  // true if t is dense and one of dt
 #define SGNIFSPARSE(t)  (t)  // set sign bit if t is sparse
-#define ISSPRSTEST(t)   ((t)<0)  // true if sparse
+#define ISSPARSE(t)     ((t)<0)  // true if sparse
 #define SGNIFDENSE(t)   (~(t))  // set sign bit if t is dense
 #define ISDENSE(t)      ((t)>=0)  // true if dense
 // Modifiers that operate on subarrays do so with virtual blocks, and those blocks may be marked as inplaceable if the backing block is inplaceable.
@@ -463,8 +463,8 @@ typedef I SI;
 #define NEGIFHOMO(s,t)  ( ~POSIFHOMO(s,t) )
 #define HOMO(s,t)       ( POSIFHOMO(s,t)>=0 )
 #define HOMONE(s,t)     HOMO(s,t)
-#define STYPE(t)        ((t)|ISSPARSE)
-#define DTYPE(t)        ((t)&~ISSPARSE)
+#define STYPE(t)        ((t)|SPARSE)
+#define DTYPE(t)        ((t)&~SPARSE)
 
 // flags in AM
 #define AMNVX 0   // set if the value has been assigned to a name is used for NVR status

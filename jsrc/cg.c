@@ -177,7 +177,7 @@ static DF2(jtcasei12){A vres,z;I gerit[128/SZI],ZZFLAGWORD;
   // that is, if each cell-rank is positive, 0 or IMIN.  We also make sure there are enough results to make the processing worthwhile
   // Since the larger cell-rank must not be negative, we can look only at the smaller
   mr=MIN(ar,wr); // the smaller
-  if(((-mr|~mr)&~(AT(w)&ISSPARSE)&(2*nar-ncells))<0){  // if mr is IMIN or nonneg, and there are enough results compared to # gerunds, reduce # verb executions.  Sparse doesn't do this.
+  if(((-mr|~mr)&SGNIFDENSE(AT(w))&(2*nar-ncells))<0){  // if mr is IMIN or nonneg, and there are enough results compared to # gerunds, reduce # verb executions.  Sparse doesn't do this.
    // Make sure the results are integer or boolean
    if(!ISDENSETYPE(AT(vres),(B01|INT)))RZ(vres=cvt(INT,vres));
    // grade the results, as a list

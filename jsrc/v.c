@@ -9,17 +9,17 @@
 F1(jttally ){A z; I k; ARGCHK1(w); z=sc(SETIC(w,k));            RETF(AT(w)&XNUM+RAT?xco1(z):z);}  //  # y
 F1(jtshapex){A z; ARGCHK1(w); VECI(z,AR(w),AS(w)); if(unlikely(((AT(w)&XNUM+RAT)!=0)))z=xco1(z); RETF(z);}
 F1(jtshape){ARGCHK1(w); A z; VECI(z,AR(w),AS(w)); RETF(z);}  // $ y
-F1(jtisempty){ARGCHK1(w); if(unlikely((AT(w)&ISSPARSE)!=0))R eps(zeroionei(0),shape(w)); R num(AN(w)==0);}  // 0 e. $
-F1(jtisnotempty){ARGCHK1(w); if(unlikely((AT(w)&ISSPARSE)!=0))R not(eps(zeroionei(0),shape(w))); R num(AN(w)!=0);}  // *@#@,
+F1(jtisempty){ARGCHK1(w); if(unlikely(ISSPARSE(AT(w))))R eps(zeroionei(0),shape(w)); R num(AN(w)==0);}  // 0 e. $
+F1(jtisnotempty){ARGCHK1(w); if(unlikely(ISSPARSE(AT(w))))R not(eps(zeroionei(0),shape(w))); R num(AN(w)!=0);}  // *@#@,
 F1(jtisitems){ARGCHK1(w); R num(!AR(w)|!!AS(w)[0]);}   // *@#   *@:#
 F1(jtrank){F1PREFIP; ARGCHK1(w); R sc(AR(w));}  // #@$
-F1(jtnatoms){F1PREFIP; A z; ARGCHK1(w); if(unlikely((AT(w)&ISSPARSE)!=0))R df1(z,shape(w),slash(ds(CSTAR))); R sc(AN(w));}   // */@$  #@,
+F1(jtnatoms){F1PREFIP; A z; ARGCHK1(w); if(unlikely(ISSPARSE(AT(w))))R df1(z,shape(w),slash(ds(CSTAR))); R sc(AN(w));}   // */@$  #@,
 
 // ,y and ,"r y - producing virtual blocks
 F1(jtravel){A a,c,q,x,y,y0,z;B*b;I f,j,m,r,*u,*v,*yv;P*wp,*zp;
  F1PREFIP; ARGCHK1(w); 
  r=(RANKT)jt->ranks; r=AR(w)<r?AR(w):r; f=AR(w)-r; // r=effective rank (jt->rank is effective rank from irs1), f=frame
- if(likely(!(AT(w)&ISSPARSE))){
+ if(likely(!ISSPARSE(AT(w)))){
   if(r==1)R RETARG(w);  // if we are enfiling 1-cells, there's nothing to do, return the input (note: AN of sparse array is always 1)
   CPROD(AN(w),m,r,f+AS(w));   // m=#atoms in cell
   if(ASGNINPLACESGN(SGNIF((I)jtinplace,JTINPLACEWX)&(-r),w) && !(AFLAG(w)&AFUNINCORPABLE)){  // inplace allowed, rank not 0 (so shape will fit), usecount is right
@@ -128,7 +128,7 @@ A jtdropr(J jt,I n,A w){ARGCHK1(w); A a,z; RZ(a=sc(n)); R IRS2(a,w,0, RMAX,1L,jt
 F1(jticap){A a,e;I n;P*p;
  F1RANK(1,jticap,DUMMYSELF);
  SETIC(w,n);
- if((AT(w)&ISSPARSE+B01)==ISSPARSE+B01){
+ if((AT(w)&SPARSE+B01)==SPARSE+B01){
   p=PAV(w); a=SPA(p,a); e=SPA(p,e); 
   R BAV(e)[0]||equ(mtv,a) ? repeat(w,IX(n)) : repeat(SPA(p,x),ravel(SPA(p,i)));
  }

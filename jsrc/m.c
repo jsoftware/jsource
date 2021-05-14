@@ -262,14 +262,14 @@ static D jtspfor1(J jt, A w){D tot=0.0;
  if(unlikely(w==0))R 0.0;
  switch(CTTZ(AT(w))){
   case XNUMX: case BOXX:
-   if((AT(w)&ISSPARSE)==0){
+   if(!ISSPARSE(AT(w))){
     if(!(AFLAG(w)&AFNJA)){A*wv=AAV(w);
      {DO(AN(w), if(wv[i])tot+=spfor1(wv[i]););}
     }
     break;
    }
   case B01X: case INTX: case FLX: case CMPXX: case LITX:
-   if((AT(w)&ISSPARSE)!=0){P*v=PAV(w); if(SPA(v,a))tot+=spfor1(SPA(v,a)); if(SPA(v,e))tot+=spfor1(SPA(v,e)); if(SPA(v,i))tot+=spfor1(SPA(v,i)); if(SPA(v,x))tot+=spfor1(SPA(v,x));} break;
+   if(ISSPARSE(AT(w))){P*v=PAV(w); if(SPA(v,a))tot+=spfor1(SPA(v,a)); if(SPA(v,e))tot+=spfor1(SPA(v,e)); if(SPA(v,i))tot+=spfor1(SPA(v,i)); if(SPA(v,x))tot+=spfor1(SPA(v,x));} break;
   case VERBX: case ADVX:  case CONJX: 
    {V*v=FAV(w); if(v->fgh[0])tot+=spfor1(v->fgh[0]); if(v->fgh[1])tot+=spfor1(v->fgh[1]); if(v->fgh[2])tot+=spfor1(v->fgh[2]);} break;
   case XDX:
@@ -793,7 +793,7 @@ if(np&&AC(np)<0)SEGFAULT;  // contents are never inplaceable
  } else if(t&(RAT|XNUM|XD)) {A* RESTRICT v=AAV(wd);
   // single-level indirect forms.  handle each block
   DQ(t&RAT?2*n:n, if(*v)ACINCR(*v); ++v;);
- } else if(t&ISSPARSE){P* RESTRICT v=PAV(wd); A x;
+ } else if(ISSPARSE(t)){P* RESTRICT v=PAV(wd); A x;
   // all elements of sparse blocks are guaranteed non-virtual, so ra will not reassign them
   x = SPA(v,a); raonlys(x);     x = SPA(v,e); raonlys(x);     x = SPA(v,i); raonlys(x);     x = SPA(v,x); raonlys(x);
  }
@@ -835,7 +835,7 @@ I jtfa(J jt,AD* RESTRICT wd,I t){I n=AN(wd);
  } else if(t&(RAT|XNUM|XD)) {A* RESTRICT v=AAV(wd);
   // single-level indirect forms.  handle each block
   DQ(t&RAT?2*n:n, if(*v)fr(*v); ++v;);
- } else if(t&ISSPARSE){P* RESTRICT v=PAV(wd);
+ } else if(ISSPARSE(t)){P* RESTRICT v=PAV(wd);
   fana(SPA(v,a)); fana(SPA(v,e)); fana(SPA(v,i)); fana(SPA(v,x));
  } 
  R 0;
@@ -872,7 +872,7 @@ A *jttpush(J jt,AD* RESTRICT wd,I t,A *pushp){I af=AFLAG(wd); I n=AN(wd);
  } else if(t&(RAT|XNUM|XD)) {A* RESTRICT v=AAV(wd);
   // single-level indirect forms.  handle each block
   DQ(t&RAT?2*n:n, if(*v)tpushi(*v); ++v;);
- } else if(t&ISSPARSE){P* RESTRICT v=PAV(wd);
+ } else if(ISSPARSE(t)){P* RESTRICT v=PAV(wd);
   if(SPA(v,a))tpushi(SPA(v,a)); if(SPA(v,e))tpushi(SPA(v,e)); if(SPA(v,x))tpushi(SPA(v,x)); if(SPA(v,i))tpushi(SPA(v,i));
  }
  R pushp;
@@ -1133,7 +1133,7 @@ RESTRICTF A jtga(J jt,I type,I atoms,I rank,I* shaape){A z;
  AR(z)=(RANKT)rank;   // Storing the extra last I (as was done originally) might wipe out rank, so defer storing rank till here
  // Since we allocate powers of 2, we can make the memset a multiple of 32 bytes.  The value of an atomic box would come before the cleared region, but we pick that up here when the shape is cleared
  if(!((type&DIRECT)>0)){if(SY_64){mvc((bytes-32)&-32,(C*)(AS(z)+1),1,MEMSET00);}else{mvc(bytes+1-akx,(C*)z+akx,1,MEMSET00);}}  // bytes=63=>0 bytes cleared.  bytes=64=>32 bytes cleared.  bytes=64 means the block is 65 bytes long
- GACOPYSHAPEG(z,type,atoms,rank,shaape)  /* 1==atoms always if t&ISSPARSE  */  // copy shape by hand since short
+ GACOPYSHAPEG(z,type,atoms,rank,shaape)  /* 1==atoms always if ISSPARSE(t)  */  // copy shape by hand since short
   // Tricky point: if rank=0, GACOPYSHAPEG stores 0 in AS[0] so we don't have to do that in the DIRECT path
    // All non-DIRECT types have items that are multiples of I, so no need to round the length
  R z;
@@ -1246,7 +1246,7 @@ RESTRICTF A jtgah(J jt,I r,A w){A z;
 F1(jtca){A z;I t;P*wp,*zp;
  ARGCHK1(w);
  I n=AN(w);  t=AT(w);
- if(unlikely((t&ISSPARSE)!=0)){
+ if(unlikely(ISSPARSE(t))){
   GASPARSE(z,t,n,AR(w),AS(w))
   wp=PAV(w); zp=PAV(z);
   SPB(zp,a,ca(SPA(wp,a)));

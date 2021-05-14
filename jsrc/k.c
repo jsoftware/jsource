@@ -392,15 +392,15 @@ static B jtDXfI(J jt,I p,A w,DX*x){A y;I b,c,d,dd,e,i,m,n,q,r,*wv,*yv;
 // copy of the data if w is already of the right type), and returned in *y.  Result is
 // 0 if error, 1 if success.  If the conversion loses precision, error is returned
 // Calls through bcvt are tagged with a flag in jt, indicating to set fuzz=0
-B jtccvt(J jt,I tflagged,A w,A*y){F1PREFIP;A d;I n,r,*s,wt; void *wv,*yv;I t=tflagged&(NOUN|ISSPARSE);
+B jtccvt(J jt,I tflagged,A w,A*y){F1PREFIP;A d;I n,r,*s,wt; void *wv,*yv;I t=tflagged&(NOUN|SPARSE);
  ARGCHK1(w);
  r=AR(w); s=AS(w); wt=AT(w); n=AN(w);
- if(unlikely(((t|wt)&ISSPARSE+BOX+SBT)!=0)){
+ if(unlikely(((t|wt)&SPARSE+BOX+SBT)!=0)){
   // Unusual cases: box, ticker, sparse.
   // Handle sparse
-  if(likely((t|wt)&ISSPARSE)){
+  if(likely(ISSPARSE(t|wt))){
    RANK2T oqr=jt->ranks; RESETRANK; 
-   switch((t&ISSPARSE?2:0)+(AT(w)&ISSPARSE?1:0)){I t1;P*wp,*yp;
+   switch((ISSPARSE(t)?2:0)+(ISSPARSE(AT(w))?1:0)){I t1;P*wp,*yp;
    case 1: RZ(w=denseit(w)); break;  // sparse to dense
    case 2: RZ(*y=sparseit(cvt(DTYPE(t),w),IX(r),cvt(DTYPE(t),num(0)))); jt->ranks=oqr; R 1;  // dense to sparse; convert type first (even if same dtype)
    case 3: // sparse to sparse
@@ -574,12 +574,12 @@ F1(jtcvt0){I n,t;D *u;
 }    /* convert -0 to 0 in place */
 #endif
 
-F1(jtxco1){ARGCHK1(w); ASSERT(!(AT(w)&ISSPARSE),EVNONCE); R cvt(AT(w)&B01+INT+XNUM?XNUM:RAT,w);}
+F1(jtxco1){ARGCHK1(w); ASSERT(!ISSPARSE(AT(w)),EVNONCE); R cvt(AT(w)&B01+INT+XNUM?XNUM:RAT,w);}
 
 F2(jtxco2){A z;B b;I j,n,r,*s,t,*wv,*zu,*zv;
  ARGCHK2(a,w);
  n=AN(w); r=AR(w); t=AT(w);
- ASSERT(!(t&ISSPARSE),EVNONCE);
+ ASSERT(!ISSPARSE(t),EVNONCE);
  RE(j=i0(a));
  switch(j){
   case -2: R aslash1(CDIV,w);

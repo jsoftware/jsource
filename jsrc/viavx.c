@@ -1919,12 +1919,12 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
  // f is len of frame of a (or of w if a has no frame); s->shape of a (or of w is a has no frame)
  // r is rank of an item of a cell of a (i. e. rank of a target item), f1 is len of frame of A CELL OF w with respect to target cells, in
  // other words the frame of the results each cell of w will produce
- if(unlikely(((at|wt)&ISSPARSE)!=0)){A z;
+ if(unlikely(ISSPARSE(at|wt))){A z;
   // Handle sparse arguments
   mode &= IIOPMSK;  // remove flags before going to sparse code
-  if(1>=acr)R af?sprank2(a,w,0L,acr,RMAX,jtindexof):wt&ISSPARSE?iovxs(mode,a,w):iovsd(mode,a,w);
+  if(1>=acr)R af?sprank2(a,w,0L,acr,RMAX,jtindexof):ISSPARSE(wt)?iovxs(mode,a,w):iovsd(mode,a,w);
   if(af|wf)R sprank2(a,w,0L,acr,wcr,jtindexof);
-  switch((at&ISSPARSE?2:0)+(wt&ISSPARSE?1:0)){
+  switch((ISSPARSE(at)?2:0)+(ISSPARSE(wt)?1:0)){
    case 1: z=indexofxx(mode,a,w); break;
    case 2: z=indexofxx(mode,a,w); break;
    case 3: z=indexofss(mode,a,w); break;
@@ -2325,7 +2325,7 @@ F2(jtjico2){R indexofsub(IICO,a,w);}
 // ~: y
 F1(jtnubsieve){
  ARGCHK1(w);
- if(unlikely((AT(w)&ISSPARSE)!=0))R nubsievesp(w); 
+ if(unlikely(ISSPARSE(AT(w))))R nubsievesp(w); 
  jt->ranks=(RANKT)jt->ranks + ((RANKT)jt->ranks<<RANKTX);  // we process as if dyad; make left rank=right rank
  R indexofsub(INUBSV,w,w); 
 }    /* ~:"r w */
@@ -2333,7 +2333,7 @@ F1(jtnubsieve){
 // ~. y  - does not have IRS
 F1(jtnub){ 
  F1PREFIP;ARGCHK1(w);
- if(unlikely(((AT(w)&ISSPARSE)|(AFLAG(w)&AFNJA))!=0))R repeat(nubsieve(w),w);    // sparse or NJA
+ if(unlikely((SGNIFSPARSE(AT(w))|SGNIF(AFLAG(w),AFNJAX))<0))R repeat(nubsieve(w),w);    // sparse or NJA
  A z; RZ(z=indexofsub(INUB,w,w));
  // We extracted from w, so mark it (or its backer if virtual) non-pristine.  If w was pristine and inplaceable, transfer its pristine status to the result.  We overwrite w because it is no longer in use
  PRISTXFERF(z,w)
@@ -2350,8 +2350,8 @@ F2(jtless){A x=w;I ar,at,k,r,*s,wr,*ws,wt;
  if(unlikely((-wr&-(r^wr))<0)){RZ(x=virtual(w,0,r)); AN(x)=AN(w); s=AS(x); ws=AS(w); k=ar>wr?0:1+wr-r; I s0; PRODX(s0,k,ws,1) s[0]=s0; MCISH(1+s,k+ws,r-1);}  //  use fauxvirtual here
  // if nothing special (like sparse, or incompatible types, or x requires conversion) do the fast way; otherwise (-. x e. y) # x 
  // because LESS allocates a large array to hold all the values, we use the slower, less memory-intensive, version if a is mapped
-// obsolete  RZ(x=(NEGIFHOMO(at,wt)&((TYPESXOR(at,maxtyped(at,wt))|(at&ISSPARSE)|(AFLAG(a)&AFNJA))-1))<0?indexofsub(ILESS,x,a):
- RZ(x=((at&ISSPARSE)|SGNIF(AFLAG(a),AFNJAX))>=0?indexofsub(ILESS,x,a):
+// obsolete  RZ(x=(NEGIFHOMO(at,wt)&((TYPESXOR(at,maxtyped(at,wt))|(at&SPARSE)|(AFLAG(a)&AFNJA))-1))<0?indexofsub(ILESS,x,a):
+ RZ(x=(SGNIFSPARSE(at)|SGNIF(AFLAG(a),AFNJAX))>=0?indexofsub(ILESS,x,a):
      repeat(not(eps(a,x)),a));
  // We extracted from a, so mark it (or its backer if virtual) non-pristine.  If a was pristine and inplaceable, transfer its pristine status to the result
  PRISTXFERAF(x,a)
@@ -2371,9 +2371,9 @@ DF2(jtintersect){A x=w;I ar,at,k,r,*s,wr,*ws,wt;
  PUSHCCTIF(FAV(self)->localuse.lu1.cct,FAV(self)->localuse.lu1.cct!=0)   // if there is a CT, use it
  // if nothing special (like sparse, or incompatible types, or x requires conversion) do the fast way; otherwise (-. x e. y) # x 
  // because LESS allocates a large array to hold all the values, we use the slower, less memory-intensive, version if a is mapped
- x=((at&ISSPARSE)|SGNIF(AFLAG(a),AFNJAX))>=0?indexofsub(IINTER,x,a):
+ x=(SGNIFSPARSE(at)|SGNIF(AFLAG(a),AFNJAX))>=0?indexofsub(IINTER,x,a):
      repeat(eps(a,x),a);
-// obsolete  x=(NEGIFHOMO(at,wt)&((TYPESXOR(at,maxtyped(at,wt))|(at&ISSPARSE)|(AFLAG(a)&AFNJA))-1))<0?indexofsub(IINTER,x,a):  // scaf remove type test
+// obsolete  x=(NEGIFHOMO(at,wt)&((TYPESXOR(at,maxtyped(at,wt))|(at&SPARSE)|(AFLAG(a)&AFNJA))-1))<0?indexofsub(IINTER,x,a):  // scaf remove type test
 // obsolete      repeat(eps(a,x),a);
  POPCCT
  RZ(x);
@@ -2387,7 +2387,7 @@ F2(jteps){I l,r;
  ARGCHK2(a,w);
  l=jt->ranks>>RANKTX; l=AR(a)<l?AR(a):l;
  r=(RANKT)jt->ranks; r=AR(w)<r?AR(w):r; RESETRANK;
- if(unlikely(((AT(a)|AT(w))&ISSPARSE)!=0))R lt(irs2(w,a,0L,r,l,jtindexof),sc(r?AS(w)[AR(w)-r]:1));  // for sparse, implement as (# cell of y) > y i. x
+ if(unlikely(ISSPARSE(AT(a)|AT(w))))R lt(irs2(w,a,0L,r,l,jtindexof),sc(r?AS(w)[AR(w)-r]:1));  // for sparse, implement as (# cell of y) > y i. x
  jt->ranks=(RANK2T)((r<<RANKTX)+l);  // swap ranks for subroutine.  Subroutine will reset ranks
  R indexofsub(IEPS,w,a);
 }    /* a e."r w */
@@ -2395,20 +2395,20 @@ F2(jteps){I l,r;
 // I.@~: y   does not have IRS
 F1(jtnubind){
  ARGCHK1(w);
- R AT(w)&ISSPARSE?icap(nubsieve(w)):indexofsub(INUBI,w,w);
+ R ISSPARSE(AT(w))?icap(nubsieve(w)):indexofsub(INUBI,w,w);
 }    /* I.@~: w */
 
 // i.@(~:!.0) y     does not have IRS
 F1(jtnubind0){A z;
  ARGCHK1(w);
- PUSHCCT(1.0) z=AT(w)&ISSPARSE?icap(nubsieve(w)):indexofsub(INUBI,w,w); POPCCT
+ PUSHCCT(1.0) z=ISSPARSE(AT(w))?icap(nubsieve(w)):indexofsub(INUBI,w,w); POPCCT
  R z;
 }    /* I.@(~:!.0) w */
 
 // x i.!.1 y - assumes xy -: /:~ xy (integer atoms only for now)
 F2(jtsfu){
  ARGCHK2(a,w);
- I type=ISFU+IIDOT; type=((NOUN|ISSPARSE)&~(INT))&(AT(a)|AT(w))?IIDOT:type;
+ I type=ISFU+IIDOT; type=((NOUN|SPARSE)&~(INT))&(AT(a)|AT(w))?IIDOT:type;
  I l=jt->ranks>>RANKTX; l=AR(a)<l?AR(a):l; type=l!=1?IIDOT:type; // If the cells of a are not atoms, we revert to standard methods
  R indexofsub(type,a,w);
 }    /* a i.!.1"r w */
@@ -2421,7 +2421,7 @@ F1(jtsclass){A e,x,xy,y,z;I c,j,m,n,*v;P*p;
  SETIC(w,n);   // n=#items of y
  RZ(x=indexof(w,w));   // x = i.~ y
  // if w is dense, return ((x = i.n) # x) =/ x
- if(!(AT(w)&ISSPARSE))R atab(CEQ,repeat(eq(IX(n),x),x),x);
+ if(!ISSPARSE(AT(w)))R atab(CEQ,repeat(eq(IX(n),x),x),x);
  // if x is sparse... ??
  p=PAV(x); e=SPA(p,e); y=SPA(p,i); RZ(xy=stitch(SPA(p,x),y));
  if(n>AV(e)[0])RZ(xy=over(xy,stitch(e,less(IX(n),y))));

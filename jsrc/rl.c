@@ -253,7 +253,7 @@ static F1X(jtlnoun0){F1PREFIP;A s,x;B r1;
 static F1X(jtlnoun){F1PREFIP;I t;
  ARGCHK1(w);
  t=AT(w);
- if(unlikely((t&ISSPARSE)!=0))R lsparse(w);
+ if(unlikely(ISSPARSE(t)))R lsparse(w);
  if(!AN(w))R lnoun0(w);
  switch(CTTZ(t)){
  default:  R lnum(w);

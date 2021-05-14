@@ -20,7 +20,7 @@ static I jtioev(J jt,I mode,A a){A ae,ax,ay,p;B*pv;I j,k,m,n,*yv;P*ap;
 }}   /* index of sparse element */
 
 A jtiovxs(J jt,I mode,A a,A w){A e,x,z;B h;I at,t,wt;P*ap=0,*wp,*zp;
- at=AT(a); if(at&ISSPARSE){at=DTYPE(at); ap=PAV(a);}
+ at=AT(a); if(ISSPARSE(at)){at=DTYPE(at); ap=PAV(a);}
  wt=DTYPE(AT(w)); wp=PAV(w); 
  if(h=HOMO(at,wt))t=maxtype(at,wt);
  GASPARSE(z,INT,1,AR(w),AS(w)); zp=PAV(z);
@@ -66,7 +66,7 @@ A jtiovsd(J jt,I mode,A a,A w){A ae,ax,ay,p,z;B h,*pv;I at,j,m,n,t,wt,*v,*yv;P*a
 
 A jtindexofxx(J jt,I mode,A a,A w){A x;B*b,*c,s;I ar,d,j,m,n,wr;P*p;
  ARGCHK2(a,w);
- s=1&&ISSPARSE&AT(a); ar=AR(a); wr=AR(w); d=wr-ar;
+ s=ISSPARSE(AT(a)); ar=AR(a); wr=AR(w); d=wr-ar;
  if(s){p=PAV(a); m=ar; n=wr;}
  else {p=PAV(w); m=wr; n=ar;}
  RZ(b=bfi(m,SPA(p,a),1)); b[0]=1;

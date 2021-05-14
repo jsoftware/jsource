@@ -426,7 +426,7 @@ static F2(jtweight){ARGCHK2(a,w); A z; R df1(z,behead(over(AR(w)?w:reshape(a,w),
 F1(jtbase1){A z;B*v;I c,m,n,p,r,*s,t,*x;
  ARGCHK1(w);
  n=AN(w); t=AT(w); r=AR(w); s=AS(w); c=AS(w)[r-1]; c=r?c:1;
- ASSERT(!(t&ISSPARSE),EVNONCE);
+ ASSERT(!ISSPARSE(t),EVNONCE);
  if(((c-BW)&SGNIF(t,B01X))>=0)R pdt(w,weight(sc(c),t&RAT+XNUM?cvt(XNUM,num(2)):num(2)));  // 
  CPROD1(n,m,r-1,s);
  GATV(z,INT,m,r?r-1:0,s); x=AV(z); v=BAV(w);
@@ -439,7 +439,7 @@ F2(jtbase2){I ar,*as,at,c,t,wr,*ws,wt;
  ARGCHK2(a,w);
  at=AT(a); ar=AR(a); as=AS(a);
  wt=AT(w); wr=AR(w); ws=AS(w); c=AS(w)[wr-1]; c=wr?c:1;
- ASSERT(!((at|wt)&ISSPARSE),EVNONCE); t=maxtyped(at,wt);
+ ASSERT(!ISSPARSE(at|wt),EVNONCE); t=maxtyped(at,wt);
  if(!(t&at))RZ(a=cvt(t,a));
  if(!(t&wt))RZ(w=cvt(t,w));
  R 1>=ar?pdt(w,weight(sc(c),a)):rank2ex(w,rank2ex(sc(c),a,DUMMYSELF,0L,MIN(ar,1),0L,MIN(ar,1),jtweight),DUMMYSELF,MIN(wr,1),1L,MIN(wr,1),1L,jtpdt);
@@ -450,7 +450,7 @@ F1(jtabase1){A d,z;B*zv;I c,n,p,r,t,*v;UI x;
  ARGCHK1(w);
  // n = #atoms, r=rank, t=type
  n=AN(w); r=AR(w); t=AT(w);
- ASSERT(!(t&ISSPARSE),EVNONCE);
+ ASSERT(!ISSPARSE(t),EVNONCE);
  // Result has rank one more than the input.  If there are no atoms,
  // return (($w),0)($,)w; if Boolean, return (($w),1)($,)w
  if((-n&SGNIFNOT(t,B01X))>=0)R reshape(apip(shape(w),zeroionei(n!=0)),w);
@@ -483,7 +483,7 @@ F2(jtabase2){A z;I an,ar,at,t,wn,wr,wt,zn;
  ARGCHK2(a,w);
  an=AN(a); ar=AR(a); at=AT(a);
  wn=AN(w); wr=AR(w); wt=AT(w);
- ASSERT(!((at|wt)&ISSPARSE),EVNONCE);
+ ASSERT(!ISSPARSE(at|wt),EVNONCE);
  if(1>ar)R residue(a,w);
  if(1==ar&&!((at|wt)&(NOUN-(B01+INT)))){I*av,d,r,*u,*wv,x,*zv;
   // both types are int/boolean, and ar is a list

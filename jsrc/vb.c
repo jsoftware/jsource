@@ -65,7 +65,7 @@ static F2(jtebarvec){A y,z;B*zv;C*av,*wv,*yv;I an,k,n,s,t,wn;
 static I jtebarprep(J jt,A a,A w,A*za,A*zw,I*zc){I ar,at,m,n,t,wr,wt,memlimit;CR rng;
  ar=AR(a); at=AT(a); m=AN(a);
  wr=AR(w); wt=AT(w); n=AN(w);
- ASSERT(!((at|wt)&ISSPARSE),EVNONCE);
+ ASSERT(!ISSPARSE(at|wt),EVNONCE);
  ASSERT(ar==wr||(ar+(wr^1))==0,EVRANK);
  if(unlikely(!HOMO(at,wt)))if(m&&n)R -1;
  if(1<wr)R 2==wr?-2:-3;
@@ -213,7 +213,7 @@ static A jtebar1C(J jt, C *av, C *wv, I an, I wn, C* zv, I type, A z){
 
 F2(jtebar){PROLOG(0065);A y,z;B*zv;C*av,*wv;I c,d,i,k=0,m,n,p,*yv;
  ARGCHK2(a,w);
- ASSERT(!((AT(a) | AT(w)) & ISSPARSE), EVNONCE);
+ ASSERT(!ISSPARSE(AT(a)|AT(w)), EVNONCE);
  ASSERT((AR(a) == AR(w)) || (AR(a) + (AR(w) ^ 1)) == 0, EVRANK);
  if(AN(a)==1)R eq(reshape(mtv,a),w);  // if a is a singleton, just revert to =
  RE(d=ebarprep(a,w,&a,&w,&c));

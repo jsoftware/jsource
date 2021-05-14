@@ -465,14 +465,14 @@ DF1(jtcompsum){
 
 static DF1(jtred0){DECLF;A x,z;I f,r,wr,*s;
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; RESETRANK; s=AS(w);
- if(likely(!(AT(w)&ISSPARSE))){GA(x,AT(w),0L,r,f+s);}else{GASPARSE(x,AT(w),1,r,f+s);}
+ if(likely(!ISSPARSE(AT(w)))){GA(x,AT(w),0L,r,f+s);}else{GASPARSE(x,AT(w),1,r,f+s);}
  R reitem(vec(INT,f,s),lamin1(df1(z,x,(AT(w)&SBT)?idensb(fs):iden(fs))));
 }    /* f/"r w identity case */
 
 // general reduce.  We inplace the results into the next iteration.  This routine cannot inplace its inputs.
 static DF1(jtredg){F1PREFIP;PROLOG(0020);DECLF;AD * RESTRICT a;I i,n,r,wr;
  ARGCHK1(w);
- ASSERT(!(AT(w)&ISSPARSE),EVNONCE);
+ ASSERT(!ISSPARSE(AT(w)),EVNONCE);
  // loop over rank
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; RESETRANK;
  if(r<wr)R rank1ex(w,self,r,jtredg);
@@ -553,7 +553,7 @@ DF1(jtredravel){A f,x,z;I n;P*wp;
  F1PREFIP;
  ARGCHK1(w);
  f=FAV(self)->fgh[0];  // f/
- if(likely(!(AT(w)&ISSPARSE)))R reduce(jtravel(jtinplace,w),f);
+ if(likely(!ISSPARSE(AT(w))))R reduce(jtravel(jtinplace,w),f);
  // The rest is sparse
  wp=PAV(w); x=SPA(wp,x); n=AN(x);
  I rc=EVOK;
@@ -783,7 +783,7 @@ TW3(INTX,CEQ)+TW3(INTX,CLT)+TW3(INTX,CLE)+TW3(INTX,CGT)+TW3(INTX,CGE)+TW3(INTX,C
 #endif
 static DF1(jtreduce){A z;I d,f,m,n,r,t,wr,*ws,zt;
  F1PREFIP;ARGCHK1(w);
- if(unlikely((AT(w)&ISSPARSE)!=0))R reducesp(w,self);  // If sparse, go handle it
+ if(unlikely(ISSPARSE(AT(w))))R reducesp(w,self);  // If sparse, go handle it
  wr=AR(w); ws=AS(w);
  // Create  r: the effective rank; f: length of frame; n: # items in a CELL of w
  r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; SETICFR(w,f,r,n);  // no RESETRANK
@@ -894,7 +894,7 @@ DF1(jtredcat){A z;B b;I f,r,*s,*v,wr;
  b=1==r&&1==s[f];  // special case: ,/ on last axis which has length 1: in that case, the rules say the axis disappears (because of the way ,/ works on length-1 lists)
  if(2>r&&!b)RCA(w);  // in all OTHER cases, result=input for ranks<2
  // use virtual block (possibly self-virtual) for all cases except sparse
- if(likely(!(AT(w)&ISSPARSE))){
+ if(likely(!ISSPARSE(AT(w)))){
   RZ(z=jtvirtual(jtinplace,w,0,wr-1)); AN(z)=AN(w); // Allocate the block.  Then move in AN and shape
   I *zs=AS(z); MCISH(zs,s,f); if(!b){DPMULDE(s[f],s[f+1],zs[f]); MCISH(zs+f+1,s+f+2,r-2);}
   R z;
@@ -922,7 +922,7 @@ static DF1(jtredstitch){A c,y;I f,n,r,*s,*v,wr;
  if(1==r){if(2==n)R RETARG(w); A z1,z2,z3; RZ(IRS2(num(-2),w,0L,0L,1L,jtdrop,z1)); RZ(IRS2(num(-2),w,0L,0L,1L,jttake,z2)); R IRS2(z1,z2,0L,1L,0L,jtover,z3);}
  if(2==r)R IRS1(w,0L,2L,jtcant1,y);
  RZ(c=apvwr(wr,0L,1L)); v=AV(c); v[f]=f+1; v[f+1]=f; RZ(y=cant2(c,w));  // transpose last 2 axes
- if(unlikely((AT(w)&ISSPARSE)!=0)){A x;
+ if(unlikely(ISSPARSE(AT(w)))){A x;
   GATV0(x,INT,f+r-1,1); v=AV(x); MCISH(v,AS(y),f+1);
   DPMULDE(s[f],s[f+2],v[f+1]); MCISH(v+f+2,s+3+f,r-3);
   RETF(reshape(x,y));

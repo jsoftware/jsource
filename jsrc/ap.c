@@ -434,7 +434,7 @@ static DF1(jtprefix){DECLF;I r;
 
 static DF1(jtgprefix){A h,*hv,z,*zv;I m,n,r;
  ARGCHK1(w);
- ASSERT(!(AT(w)&ISSPARSE),EVNONCE);
+ ASSERT(!ISSPARSE(AT(w)),EVNONCE);
  r = (RANKT)jt->ranks; RESETRANK; if(r<AR(w)){R rank1ex(w,self,r,jtgprefix);}
  SETIC(w,n); 
  h=VAV(self)->fgh[2]; hv=AAV(h); m=AN(h);
@@ -533,7 +533,7 @@ static DF2(jtinfixprefix2){F2PREFIP;PROLOG(00202);A fs;I cger[128/SZI];
  ARGCHK1(w);
  PREF2IP(jtinfixprefix2);  // handle rank loop if needed
  wt=AT(w);
- if(unlikely((wt&ISSPARSE)!=0)){
+ if(unlikely(ISSPARSE(wt))){
   // Use the old-style non-virtual code for sparse types
   switch(((VAV(self)->flag&VGERL)>>(VGERLX-1)) + (a==mark)) {  // 2: is gerund  1: is prefix
   case (0+0): R jtinfix(jt,a,w,self);
@@ -716,7 +716,7 @@ static DF1(jtinfixprefix1){F1PREFIP;
 static DF1(jtpscan){A z;I f,n,r,t,wn,wr,*ws,wt;
  F1PREFIP;ARGCHK1(w);
  wt=AT(w);   // get type of w
- if(unlikely((wt&ISSPARSE)!=0))R scansp(w,self,jtpscan);  // if sparse, go do it separately
+ if(unlikely(ISSPARSE(wt)))R scansp(w,self,jtpscan);  // if sparse, go do it separately
  // wn = #atoms in w, wr=rank of w, r=effective rank, f=length of frame, ws->shape of w
  wn=AN(w); wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; RESETRANK; f=wr-r; ws=AS(w);
  // m = #cells, c=#atoms/cell, n = #items per cell
@@ -936,7 +936,7 @@ static DF2(jtmovfslash){A x,z;B b;C id,*wv,*zv;I d,m,m0,p,t,wk,wt,zi,zk,zt;
  SETIC(w,p); wt=AT(w);   // p=#items of w
  RE(m0=i0(vib(a))); m=REPSGN(m0); m=(m^m0)-m; m^=REPSGN(m);  // m0=infx x,  m=abs(m0), handling IMIN
  if(m==1)R AR(w)?w:ravel(w);  // 1 f/\ w is always w, except on an atom
- if((SGNIF((m0==2)&FAV(self)->flag,VFSCANIRSX)&~(wt&ISSPARSE)&(1-p))<0)R jtinfix2(jt,w,self);  // if  2 u/\ y supports IRS, go do (}: u }.) y - faster than cells - if >1 cell and dense  uses VFSCANIRSX=0
+ if((SGNIF((m0==2)&FAV(self)->flag,VFSCANIRSX)&SGNIFDENSE(wt)&(1-p))<0)R jtinfix2(jt,w,self);  // if  2 u/\ y supports IRS, go do (}: u }.) y - faster than cells - if >1 cell and dense  uses VFSCANIRSX=0
  if((((2^m)-1)|(m-1)|(p-m))<0)R jtinfixprefix2(jt,a,w,self);  // If m is 0 or 2, or if there is just 1 infix, go to general case
  x=FAV(self)->fgh[0]; x=FAV(x)->fgh[0]; id=FAV(x)->id; 
  if(wt&B01){id=id==CMIN?CSTARDOT:id; id=id==CMAX?CPLUSDOT:id;}

@@ -12,7 +12,7 @@
 
 // conversion from internal type to the result in 3!:x, which matches the published types
 static I toonehottype(I t){t<<=REPSGN(t)&10; R t&-t;}  // if sparse, shift type to sparse output position.  Return only the one bit
-static I fromonehottype(I t){t&=-t; I issp=REPSGN(-(t&0xfc00)); R (t>>(issp&10))|(issp&ISSPARSE);}
+static I fromonehottype(I t){t&=-t; I issp=REPSGN(-(t&0xfc00)); R (t>>(issp&10))|(issp&SPARSE);}
 
 F1(jtstype){ARGCHK1(w); R sc(toonehottype(AT(w)));}
      /* 3!:0 w */
@@ -189,7 +189,7 @@ static C* jtbrepfill(J jt,B b,B d,A w,C *zv){I klg,kk;
 static A jtbrep(J jt,B b,B d,A w){A y;I t;
  ARGCHK1(w);
  t=AT(w); 
- if(unlikely((t&ISSPARSE)!=0))R breps(b,d,w);  // sparse separately
+ if(unlikely(ISSPARSE(t)))R breps(b,d,w);  // sparse separately
  GATV0(y,LIT,bsizer(jt,d,1,w),1);   // allocate entire result
  RZ(jtbrepfill(jt,b,d,w,CAV(y)));   // fill it
  R y;  // return it
@@ -208,7 +208,7 @@ static A jthrep(J jt,B b,B d,A w){A y,z;C c,*hex="0123456789abcdef",*u,*v;I n,s[
 static A jthrep(J jt,B b,B d,A w){A y;C c,*hex="0123456789abcdef",*u,*v;I n,s[2],t;
  ARGCHK1(w);
  t=AT(w); 
- if(unlikely((t&ISSPARSE)!=0)){A z;  // sparse separately
+ if(unlikely(ISSPARSE(t))){A z;  // sparse separately
   RZ(y=breps(b,d,w));
   n=AN(y); s[0]=n>>LGWS(d); s[1]=2*WS(d); 
   GATVR(z,LIT,2*n,2,s);  
@@ -272,13 +272,13 @@ static A jtunbinr(J jt,B b,B d,B pre601,I m,A w){A y,z;C*u=(C*)w,*v;I e,j,kk,n,p
  ASSERT(t&NOUN,EVDOMAIN);
  ASSERT(0<=n,EVDOMAIN);
  ASSERT(BETWEENC(r,0,RMAX),EVRANK);
- p=bsize(jt,d,0,t,n,r,0L); e=t&RAT?n+n:t&ISSPARSE?1+sizeof(P)/SZI:n; 
+ p=bsize(jt,d,0,t,n,r,0L); e=t&RAT?n+n:ISSPARSE(t)?1+sizeof(P)/SZI:n; 
  ASSERT(m>=p,EVLENGTH);
- if(likely(!(t&ISSPARSE))){GA(z,t,n,r,0)}else{GASPARSE(z,t,n,r,(I*)0)} s=AS(z);
+ if(likely(!ISSPARSE(t))){GA(z,t,n,r,0)}else{GASPARSE(z,t,n,r,(I*)0)} s=AS(z);
  RZ(mvw((C*)s,BS(d,w),r,BU,b,SY_64,d)); 
- j=1; DO(r, ASSERT(0<=s[i],EVLENGTH); if(!(t&ISSPARSE))j*=s[i];); 
+ j=1; DO(r, ASSERT(0<=s[i],EVLENGTH); if(!ISSPARSE(t))j*=s[i];); 
  ASSERT(j==n,EVLENGTH);
- if(t&BOX+XNUM+RAT+ISSPARSE){GATV0(y,INT,e,1); vv=AV(y); RZ(mvw((C*)vv,v,e,BU,b,SY_64,d));}
+ if(t&BOX+XNUM+RAT+SPARSE){GATV0(y,INT,e,1); vv=AV(y); RZ(mvw((C*)vv,v,e,BU,b,SY_64,d));}
  if(t&BOX+XNUM+RAT){A*zv=AAV(z);I i,k=0,*iv;
   RZ(y=indexof(y,y)); iv=AV(y);
   for(i=0;i<e;++i){
@@ -286,7 +286,7 @@ static A jtunbinr(J jt,B b,B d,B pre601,I m,A w){A y,z;C*u=(C*)w,*v;I e,j,kk,n,p
    ASSERT(BETWEENO(j,0,m),EVINDEX);
    if(i>iv[i])zv[i]=zv[iv[i]];
    else{while(k<e&&j>=vv[k])++k; zv[i]=incorp(unbinr(b,d,pre601,k<e?vv[k]-j:m-j,(A)(u+j)));}
- }}else if(unlikely((t&ISSPARSE)!=0)){P*zp=PAV(z);
+ }}else if(unlikely(ISSPARSE(t))){P*zp=PAV(z);
   j=vv[1]; ASSERT(BETWEENO(j,0,m),EVINDEX); SPB(zp,a,unbinr(b,d,pre601,vv[2]-j,(A)(u+j)));
   j=vv[2]; ASSERT(BETWEENO(j,0,m),EVINDEX); SPB(zp,e,unbinr(b,d,pre601,vv[3]-j,(A)(u+j)));
   j=vv[3]; ASSERT(BETWEENO(j,0,m),EVINDEX); SPB(zp,i,unbinr(b,d,pre601,vv[4]-j,(A)(u+j)));
@@ -324,7 +324,7 @@ F1(jtunbin){A q;B b,d;C*v;I c,i,k,m,n,r,t;
  if(!mvw((C*)&n,BN(d,q),1L,BU,0,SY_64,d)){RESETERR; b=1;}
  if(!mvw((C*)&r,BR(d,q),1L,BU,0,SY_64,d)){RESETERR; b=1;}
  b=b||!(t&NOUN&&0<=n&&0<=r&&(r||1==n)&&m>=BH(d)+r*WS(d));
- if(!(t&ISSPARSE)){
+ if(!ISSPARSE(t)){
   v=BS(d,q); c=1;
   for(i=0;!b&&i<r;++i){
    if(!mvw((C*)&k,v,1L,BU,0,SY_64,d)){RESETERR; b=1;}
@@ -395,7 +395,7 @@ static B jtisnanq(J jt,A w){
 F1(jtisnan){A*wv,z;B*u;D*v;I n,t;
  ARGCHK1(w);
  n=AN(w); t=AT(w);
- ASSERT(!(t&ISSPARSE),EVNONCE);
+ ASSERT(!ISSPARSE(t),EVNONCE);
  GATV(z,B01,n,AR(w),AS(w)); u=BAV(z);
  if (t&FL){v=DAV(w); DQ(n, *u++=_isnan(*v++););}  // float - check each atom
  else if(t&CMPX){v=DAV(w); DQ(n, *u++=_isnan(v[0])|_isnan(v[1]); v+=2;);}  // complex - check each half

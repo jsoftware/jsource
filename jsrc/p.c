@@ -246,7 +246,7 @@ void auditblock(J jt,A w, I nonrecurok, I virtok) {
     auditblock(jt,v->fgh[1],nonrecur,0);
     auditblock(jt,v->fgh[2],nonrecur,0);} break;
   case B01X: case INTX: case FLX: case CMPXX: case LITX: case C2TX: case C4TX: case SBTX: case NAMEX: case SYMBX: case CONWX:
-   if(AT(w)&ISSPARSE){P*v=PAV(w);  A x;
+   if(ISSPARSE(AT(w))){P*v=PAV(w);  A x;
     x = SPA(v,a); if(!(AT(x)&DIRECT))SEGFAULT; x = SPA(v,e); if(!((AT(x)&DIRECT)>0))SEGFAULT; x = SPA(v,i); if(!(AT(x)&DIRECT))SEGFAULT; x = SPA(v,x); if(!(AT(x)&DIRECT))SEGFAULT;
     auditblock(jt,SPA(v,a),nonrecur,0); auditblock(jt,SPA(v,e),nonrecur,0); auditblock(jt,SPA(v,i),nonrecur,0); auditblock(jt,SPA(v,x),nonrecur,0);
    }else if(NOUN & (AT(w) ^ (AT(w) & -AT(w))))SEGFAULT;
@@ -279,7 +279,7 @@ F1(jtparse){A z;
 // if ipok is set, inplaceable blocks WILL NOT be virtualized
 A virtifnonip(J jt, I ipok, A buf) {
  RZ(buf);
- if(AT(buf)&NOUN && !(ipok && ACIPISOK(buf)) && !(AT(buf)&ISSPARSE) && !(AFLAG(buf)&(AFNJA))) {A oldbuf=buf;
+ if(AT(buf)&NOUN && !(ipok && ACIPISOK(buf)) && !ISSPARSE(AT(buf)) && !(AFLAG(buf)&(AFNJA))) {A oldbuf=buf;
   buf=virtual(buf,0,AR(buf)); if(!buf && jt->jerr!=EVATTN && jt->jerr!=EVBREAK)SEGFAULT;  // replace non-inplaceable w with virtual block; shouldn't fail except for break testing
   I* RESTRICT s=AS(buf); I* RESTRICT os=AS(oldbuf); DO(AR(oldbuf), s[i]=os[i];);  // shape of virtual matches shape of w except for #items
     AN(buf)=AN(oldbuf);  // install # atoms

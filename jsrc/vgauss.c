@@ -104,7 +104,7 @@ F1(jtgaussdet){A z;I*s;
  ASSERT(2==AR(w),EVRANK);
  s=AS(w);
  ASSERT(s[0]==s[1],EVLENGTH);
- if(!(AT(w)&ISSPARSE))
+ if(!ISSPARSE(AT(w)))
   switch(CTTZNOFLAG(AT(w))){
   case FLX:   z=detd(ca(w));      break;
   default:   ASSERT(0,EVDOMAIN);

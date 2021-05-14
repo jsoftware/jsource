@@ -6,12 +6,12 @@
 #include "j.h"
 
 
-/*
+/* obsolete 
 static A jtmerge1(J jt,A w,A ind){PROLOG(0006);A z;C*v,*x;I c,k,r,*s,t,*u;
  ARGCHK2(w,ind);
  RZ(ind=pind(IC(w),ind));
  r=MAX(0,AR(w)-1); s=1+AS(w); t=AT(w); c=aii(w);
- ASSERT(!(t&ISSPARSE),EVNONCE);
+ ASSERT(!(t&SPARSE),EVNONCE);
  ASSERT(r==AR(ind),EVRANK);
  ASSERT(!ICMP(s,AS(ind),r),EVLENGTH);
  GA(z,t,c,r,s); x=CAV(z); v=CAV(w); u=AV(ind); k=bpnoun(t);
@@ -27,7 +27,7 @@ static A jtmerge1(J jt,A w,A ind){PROLOG(0006);A z;C*v,*x;I c,k,r,*s,t,*u;
 static A jtmerge1(J jt,A w,A ind){A z;B*b;C*wc,*zc;D*wd,*zd;I c,it,j,k,m,r,*s,t,*u,*wi,*zi;
  ARGCHK2(w,ind);
  r=MAX(0,AR(w)-1); s=1+AS(w); t=AT(w); k=bpnoun(t); SETIC(w,m); c=aii(w);  // m = # items of w
- ASSERT(!(t&ISSPARSE),EVNONCE);
+ ASSERT(!ISSPARSE(t),EVNONCE);
  ASSERT(r==AR(ind),EVRANK);
  ASSERTAGREE(s,AS(ind),r);
  GA(z,t,c,r,s);
@@ -293,22 +293,22 @@ static A jtjstd(J jt,A w,A ind,I *cellframelen){A j=0,k,*v,x;I b;I d,i,n,r,*u,wr
 static DF2(jtamendn2){F2PREFIP;PROLOG(0007);A e,z; B b;I atd,wtd,t,t1;P*p;
  AD * RESTRICT ind=VAV(self)->fgh[0];
  ARGCHK3(a,w,ind);
- if(likely(!((AT(w)|AT(ind))&ISSPARSE))){
+ if(likely(!ISSPARSE(AT(w)|AT(ind)))){
   I cellframelen; ind=jstd(w,ind,&cellframelen);   // convert indexes to cell indexes; remember how many were converted
-  z=jtmerge2(jtinplace,AT(a)&ISSPARSE?denseit(a):a,w,ind,cellframelen);  //  dense a if needed; dense amend
+  z=jtmerge2(jtinplace,ISSPARSE(AT(a))?denseit(a):a,w,ind,cellframelen);  //  dense a if needed; dense amend
   // We modified w which is now not pristine.
   PRISTCLRF(w)
   EPILOG(z);
  }
  // Otherwise, w is sparse
  // ?t = underlying type of ?, s?=nonzero if sparse
- atd=AT(a)&ISSPARSE?DTYPE(AT(a)):AT(a); wtd=AT(w)&ISSPARSE?DTYPE(AT(w)):AT(w);
+ atd=ISSPARSE(AT(a))?DTYPE(AT(a)):AT(a); wtd=ISSPARSE(AT(w))?DTYPE(AT(w)):AT(w);
  ASSERT(AT(ind)&NUMERIC+BOX||!AN(ind),EVDOMAIN);
- ASSERT(!(AT(ind)&ISSPARSE),EVNONCE);  // m must be dense, and numeric or boxed
+ ASSERT(!ISSPARSE(AT(ind)),EVNONCE);  // m must be dense, and numeric or boxed
  // Sparse w.  a and t must be compatible; sparse w must not be boxed
  ASSERT(!(wtd&BOX),EVNONCE); ASSERT(HOMO(atd,wtd),EVDOMAIN);
  // set t to dense precision of result; t1=corresponding sparse precision; convert a if need be.  Change a's type but not its sparseness
- RE(t=maxtyped(atd,wtd)); t1=STYPE(t); RZ(a=TYPESEQ(t,atd)?a:cvt(AT(a)&ISSPARSE?t1:t,a));
+ RE(t=maxtyped(atd,wtd)); t1=STYPE(t); RZ(a=TYPESEQ(t,atd)?a:cvt(ISSPARSE(AT(a))?t1:t,a));
  // Keep the original address if the caller allowed it, precision of y is OK, the usecount allows inplacing, and the dense type is either
  // DIRECT or this is a boxed memory-mapped array
  B ip=((I)jtinplace&JTINPLACEW) && (ACIPISOK(w) || jt->asginfo.zombieval==w&&AC(w)<=1)
@@ -317,9 +317,9 @@ static DF2(jtamendn2){F2PREFIP;PROLOG(0007);A e,z; B b;I atd,wtd,t,t1;P*p;
  if(ip){ASSERT(!(AFRO&AFLAG(w)),EVRO); z=w;}else RZ(z=cvt(t1,w));
  // call the routine to handle the sparse amend
  p=PAV(z); e=SPA(p,e); b=!AR(a)&&equ(a,e);
- p=PAV(a); if(unlikely(AT(a)&ISSPARSE&&!equ(e,SPA(p,e)))){RZ(a=denseit(a)); }
- if(AT(ind)&NUMERIC||!AR(ind))z=(b?jtam1e:AT(a)&ISSPARSE?jtam1sp:jtam1a)(jt,a,z,AT(ind)&NUMERIC?box(ind):ope(ind),ip);
- else{RZ(ind=aindex(ind,z,0L)); ind=(A)((I)ind&~1LL); ASSERT(ind!=0,EVNONCE); z=(b?jtamne:AT(a)&ISSPARSE?jtamnsp:jtamna)(jt,a,z,ind,ip);}  // A* for the #$&^% type-checking
+ p=PAV(a); if(unlikely(ISSPARSE(AT(a))&&!equ(e,SPA(p,e)))){RZ(a=denseit(a)); }
+ if(AT(ind)&NUMERIC||!AR(ind))z=(b?jtam1e:ISSPARSE(AT(a))?jtam1sp:jtam1a)(jt,a,z,AT(ind)&NUMERIC?box(ind):ope(ind),ip);
+ else{RZ(ind=aindex(ind,z,0L)); ind=(A)((I)ind&~1LL); ASSERT(ind!=0,EVNONCE); z=(b?jtamne:ISSPARSE(AT(a))?jtamnsp:jtamna)(jt,a,z,ind,ip);}  // A* for the #$&^% type-checking
  EPILOGZOMB(z);   // do the full push/pop since sparse in-place has zombie elements in z
 }
 
@@ -327,7 +327,7 @@ static DF2(jtamendn2){F2PREFIP;PROLOG(0007);A e,z; B b;I atd,wtd,t,t1;P*p;
 // call merge2 to do the merge.  Pass inplaceability into merge2.
 static DF2(amccv2){F2PREFIP;DECLF; 
  ARGCHK2(a,w); 
- ASSERT(!(AT(w)&ISSPARSE),EVNONCE);  // u} not supported for sparse
+ ASSERT(!ISSPARSE(AT(w)),EVNONCE);  // u} not supported for sparse
  A x;RZ(x=pind(AN(w),CALL2(f2,a,w,fs)));
  A z=jtmerge2(jtinplace,a,w,x,AR(w));   // The atoms of x include all axes of w, since we are addressing atoms
  // We modified w which is now not pristine.

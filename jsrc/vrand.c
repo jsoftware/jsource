@@ -750,7 +750,7 @@ static A jtrollany(J jt,A w,B*b){A z;D*u;I j,m1,n,sh,*v;UI m,mk,s,t,x=jt->rngdat
 F1(jtroll){A z;B b=0;I m,wt;
  ARGCHK1(w);
  wt=AT(w);
- ASSERT(!(wt&ISSPARSE),EVDOMAIN);
+ ASSERT(!ISSPARSE(wt),EVDOMAIN);
  if(!AN(w)){GATV(z,B01,0,AR(w),AS(w)); R z;}
  if(wt&B01)R rollbool(w);
  if(wt&XNUM+RAT)R rollxnum(w);
@@ -764,7 +764,7 @@ F1(jtroll){A z;B b=0;I m,wt;
 F2(jtdeal){A z;I at,j,k,m,n,wt,*zv;UI c,s,t,x=jt->rngdata->rngparms[jt->rngdata->rng].rngM;UI sq;SETNEXT
  ARGCHK2(a,w);
  at=AT(a); wt=AT(w);
- ASSERT(!((at|wt)&ISSPARSE),EVDOMAIN);
+ ASSERT(!ISSPARSE(at|wt),EVDOMAIN);
  F2RANK(0,0,jtdeal,DUMMYSELF);
  RE(m=i0(a)); RE(c=n=i0(w));  // c starts as max#+1
  ASSERT(0<=m&&m<=n,EVDOMAIN);  // m and n must both be positive
@@ -978,7 +978,7 @@ static A jtrollanydot(J jt,A w,B*b){A z;D*u;I j,m1,n,sh,*v;UI m,mk,s,t,x=jt->rng
 static F1(jtrolldot){A z;B b=0;I m,wt;
  ARGCHK1(w);
  wt=AT(w);
- ASSERT(!(wt&ISSPARSE),EVDOMAIN);
+ ASSERT(!ISSPARSE(wt),EVDOMAIN);
  if(!AN(w)){GATV(z,B01,0,AR(w),AS(w)); R z;}
  if(wt&B01)R rollbool(w);
  if(wt&XNUM+RAT)R rollxnum(w);
@@ -994,7 +994,7 @@ static F1(jtrolldot){A z;B b=0;I m,wt;
 static F2(jtdealdot){A h,y,z;I at,d,*hv,i,i1,j,k,m,n,p,q,*v,wt,*yv,*zv;UI c,s,t,x=jt->rngdata->rngparms[jt->rngdata->rng].rngM;SETNEXT
  ARGCHK2(a,w);
  at=AT(a); wt=AT(w);
- ASSERT(!((at|wt)&ISSPARSE),EVDOMAIN);
+ ASSERT(!ISSPARSE(at|wt),EVDOMAIN);
  F2RANK(0,0,jtdealdot,DUMMYSELF);
  RE(m=i0(a)); RE(c=n=i0(w));
  ASSERT(0<=m&&m<=n,EVDOMAIN);  // m and n must both be positive

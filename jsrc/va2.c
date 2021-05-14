@@ -440,7 +440,7 @@ A jtcvz(J jt,I cv,A w){I t;
 #define xnumpri 0x998B998AU   // we use shift to select 4-bit sections
 
 #if 0 // for debug, to display info about a sparse block
-if(AT(a)&ISSPARSE){
+if(ISSPARSE(AT(a))){
 printf("va2a: shape="); A spt=a; DO(AR(spt), printf(" %d",AS(spt)[i]);) printf("\n");
 printf("va2a: axes="); spt=SPA(PAV(spt),a); DO(AN(spt), printf(" %d",IAV(spt)[i]);) printf("\n"); 
 printf("va2a: indexes="); spt=SPA(PAV(a),i); DO(AN(spt), printf(" %d",IAV(spt)[i]);) printf("\n");
@@ -481,7 +481,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
  F2PREFIP;
  {I at=AT(a);
   I wt=AT(w);
-  if(likely(!(((I)jtinplace&(JTRETRY|JTEMPTY))+((at|wt)&((ISSPARSE|NOUN)&~(B01|INT|FL)))))){  // no error, bool/int/fl nonsparse args, no empties
+  if(likely(!(((I)jtinplace&(JTRETRY|JTEMPTY))+((at|wt)&((SPARSE|NOUN)&~(B01|INT|FL)))))){  // no error, bool/int/fl nonsparse args, no empties
    // Here for the fast and important case, where the arguments are both B01/INT/FL
    VA *vainfo=((VA*)((I)va+FAV(self)->localuse.lu1.uavandx[1]));  // extract table line from the primitive
    // The index into va is atype*3 + wtype, calculated sneakily.  We test here to avoid the call overhead
@@ -494,8 +494,8 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
    // If we switch a sparse nonnumeric matrix to boolean, that may be a space problem; but we don't
    // support nonnumeric sparse now
    // if an operand is sparse, replace its type with the corresponding non-sparse type, for purposes of testing operand precisions
-   if(unlikely(((at|wt)&ISSPARSE)!=0)){
-    at&=~ISSPARSE; wt&=~ISSPARSE;
+   if(unlikely(ISSPARSE(at|wt))){
+    at&=~SPARSE; wt&=~SPARSE;
     jtinplace=0;  // We use jtinplace==0 as a flag meaning 'sparse'
    }
    // We could allocate the result block here & avoid the test after the allocation later.  But we would have to check for agreement etc
@@ -1048,7 +1048,7 @@ DF2(jtsumattymes1){
    // we do this before we generate failures
  RESETRANK;  // This is required if we go to slower code
  // if an argument is empty, sparse, has cell-rank 0, or not a fast arithmetic type, revert to the code for f/@:g atomic
- if(((-((AT(a)|AT(w))&((NOUN|ISSPARSE)&~(B01|INT|FL))))|(AN(a)-1)|(AN(w)-1)|(acr-1)|(wcr-1))<0) { // test for all unusual cases
+ if(((-((AT(a)|AT(w))&((NOUN|SPARSE)&~(B01|INT|FL))))|(AN(a)-1)|(AN(w)-1)|(acr-1)|(wcr-1))<0) { // test for all unusual cases
   if(FAV(self)->id==CFIT)self=FAV(self)->fgh[0];  // lose the !.0 if we revert
   R rank2ex(a,w,FAV(self)->fgh[0],MIN(acr,1),MIN(wcr,1),acr,wcr,jtfslashatg);
  }
@@ -1210,7 +1210,7 @@ DF2(jtfslashatg){A fs,gs,y,z;B b;C*av,*wv;I ak,an,ar,*as,at,m,
  rs=MAX(1,rs); PROD(m,rs-1,s+1); PROD(n,r-rs,s+rs); zn=m*n;   // zn=#atoms in _1-cell of longer arg = #atoms in result; m=#atoms in _1-cell of shorter arg  n=#times to repeat shorter arg  (*/ surplus longer shape)
    // if the short-frame arg is an atom, move its rank to 1 so we get the lengths of the _1-cells of the replicated arguments
  // look for cases that we should NOT handle with special code: empty arg; less than 4 result items of g (we would allocate 3 here); too few items in result (the internal call overhead is high then) 
- if(unlikely(((~((at|wt)&ISSPARSE))&-an&-wn&(3-nn)&(3-zn))>=0)){R jtupon2cell(jtinplace,a,w,self);}  // if sparse or empty, or just 1 item, do it the old-fashioned way
+ if(unlikely((SGNIFDENSE(at|wt)&-an&-wn&(3-nn)&(3-zn))>=0)){R jtupon2cell(jtinplace,a,w,self);}  // if sparse or empty, or just 1 item, do it the old-fashioned way
  y=FAV(fs)->fgh[0];  // look at f/
  adocv=var(gs,at,wt); ASSERT(adocv.f,EVDOMAIN); yt=rtype(adocv.cv ); t=atype(adocv.cv);  // get type info on g
  adocvf=var(y,yt,yt); ASSERT(adocvf.f,EVDOMAIN); zt=rtype(adocvf.cv);   // get type info on f/
@@ -1257,7 +1257,7 @@ DF2(jtatomic2){A z;
  UI ar=AR(a), wr=AR(w), awr=(ar<<RANKTX)+wr; I awm1=(AN(a)-1)|(AN(w)-1);
  selfranks=jtranks==(RANK2T)~0?selfranks:jtranks;
  // check for singletons
- if(!(awm1|((AT(a)|AT(w))&((NOUN|ISSPARSE)&~(B01+INT+FL))))){
+ if(!(awm1|((AT(a)|AT(w))&((NOUN|SPARSE)&~(B01+INT+FL))))){
   z=jtssingleton(jtinplace,a,w,self,(RANK2T)awr,selfranks);
   if(likely(z!=0)){RETF(z);}  // normal case is good return
   if(unlikely(jt->jerr<=NEVM)){RETF(z);}   // if error is unrecoverable, don't retry
@@ -1289,7 +1289,7 @@ DF2(jtatomic2){A z;
 }
 
 DF2(jtexpn2  ){F2PREFIP; ARGCHK2(a,w); if(unlikely(((((I)AR(w)-1)&SGNIF(AT(w),FLX))<0)))if(unlikely(0.5==DAV(w)[0]))R sqroot(a);  R jtatomic2(jtinplace,a,w,self);}  // use sqrt hardware for sqrt.  Only for atomic w. 
-DF2(jtresidue){F2PREFIP; ARGCHK2(a,w); I intmod; if(!((AT(a)|AT(w))&((NOUN|ISSPARSE)&~INT)|AR(a))&&(intmod=IAV(a)[0], (intmod&-intmod)+(intmod<=0)==0))R intmod2(w,intmod); R jtatomic2(jtinplace,a,w,self);}
+DF2(jtresidue){F2PREFIP; ARGCHK2(a,w); I intmod; if(!((AT(a)|AT(w))&((NOUN|SPARSE)&~INT)|AR(a))&&(intmod=IAV(a)[0], (intmod&-intmod)+(intmod<=0)==0))R intmod2(w,intmod); R jtatomic2(jtinplace,a,w,self);}
 
 
 // These are the unary ops that are implemented using a canned argument

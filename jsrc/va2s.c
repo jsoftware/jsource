@@ -53,11 +53,11 @@ static A jtvasp0(J jt,A a,A w,VF ado,I cv,I t,I zt){A e,x,xx,y,z,ze,zx;B b;I n;P
  R vaspz(z);
 }    /* one argument is sparse and the other is scalar */
 
-/*
+/* obsolete 
 static B jtvaspprep(J jt,A a,A w,I t,I af,I acr,I wf,I wcr,I f,I r,A*ae,A*ay,A*ax,A*we,A*wy,A*wx,A*za){
      A aa,e,x,wa;B*b,sa,sw;I c,d,m,n,*u,*v;P*ap,*wp;
- sa=1&&AT(a)&ISSPARSE; 
- sw=1&&AT(w)&ISSPARSE;
+ sa=1&&AT(a)&SPARSE; 
+ sw=1&&AT(w)&SPARSE;
  GATV0(x,B01,f+r,1); b=BAV(x); mvc(f,b,1,MEMSET01); mvc(r,b+f,1,MEMSET00);
  if(sa){ap=PAV(a); aa=SPA(ap,a); u=AV(aa); d=f-af; DO(AN(aa), c=u[i]; if(af<=c)b[c+d]=1;);}
  if(sw){wp=PAV(w); wa=SPA(wp,a); v=AV(wa); d=f-wf; DO(AN(wa), c=v[i]; if(wf<=c)b[c+d]=1;);}
@@ -74,8 +74,8 @@ static B jtvaspprep(J jt,A a,A w,I t,I af,I acr,I wf,I wcr,I f,I r,A*ae,A*ay,A*a
 
 static B jtvaspeqprep(J jt,A a,A w,I t,I f,I r,A*ae,A*ay,A*ax,A*we,A*wy,A*wx,A*za){
      A aa,e,q,x,wa;B*b,sa,sw;I n,*v;P*p;
- sa=1&&AT(a)&ISSPARSE; 
- sw=1&&AT(w)&ISSPARSE; n=f+r;
+ sa=ISSPARSE(AT(a)); 
+ sw=ISSPARSE(AT(w)); n=f+r;
  GATV0(x,B01,n,1); b=BAV(x); mvc(n,b,1,MEMSET00);
  if(sa){p=PAV(a); aa=SPA(p,a); v=AV(aa); DO(AN(aa), b[v[i]]=1;);}
  if(sw){p=PAV(w); wa=SPA(p,a); v=AV(wa); DO(AN(wa), b[v[i]]=1;);}
@@ -135,7 +135,7 @@ static A jtvaspeq(J jt,A a,A w,C id,VF ado,I cv,I t,I zt,I f,I r){A ae,ax,ay,we,
 
 A jtvasp(J jt,A a,A w,C id,VF ado,I cv,I t,I zt,I af,I acr,I wf,I wcr,I f,I r){A fs,z;
  if(!AR(a)||!AR(w))R vasp0(a,w,ado,cv,t,zt);
- if((AT(a)&ISSPARSE||AT(w)&ISSPARSE)&&spmult(&z,a,w,id,af,acr,wf,wcr))R z;
+ if(ISSPARSE(AT(a)|AT(w))&&spmult(&z,a,w,id,af,acr,wf,wcr))R z;
  if(af!=wf){RZ(fs=ds(id)); R sprank2(a,w,fs,acr,wcr,VAV(fs)->valencefns[1]);}
  if(acr!=wcr)R vaspc(a,w,id,ado,cv,t,zt,af,acr,wf,wcr,f,r);
  R vaspeq(a,w,id,ado,cv,t,zt,f,r);

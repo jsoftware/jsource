@@ -11,7 +11,7 @@
 
 static REPF(jtrepzdx){A p,q,x;P*wp;
  F2PREFIP;ARGCHK2(a,w);
- if(AT(w)&ISSPARSE){wp=PAV(w); x=SPA(wp,e);}
+ if(ISSPARSE(AT(w))){wp=PAV(w); x=SPA(wp,e);}
  else x=jt->fill&&AN(jt->fill)?jt->fill:filler(w);
  RZ(p=repeat(ravel(rect(a)),ravel(stitch(IX(wcr?AS(w)[wf]:1),num(-1)))));
  RZ(IRS2(w,x,0L,wcr,0L,jtover,q));
@@ -26,7 +26,7 @@ static REPF(jtrepzsx){A q,x,y;I c,d,j,k=-1,m,p=0,*qv,*xv,*yv;P*ap;
  RZ(x=cvt(INT,vec(FL,2*m,AV(x)))); xv=AV(x);
  if(equ(num(0),SPA(ap,e))){
   k=c=AS(w)[wf];
-  if(!wf&&ISSPARSE&AT(w)){A a,y;I m,n,q,*v;P*wp;
+  if(!wf&&ISSPARSE(AT(w))){A a,y;I m,n,q,*v;P*wp;
    wp=PAV(w); a=SPA(wp,a);
    if(AN(a)&&!*AV(a)){
     y=SPA(wp,i); v=AS(y); m=v[0]; n=v[1]; v=AV(y);
@@ -46,7 +46,7 @@ static REPF(jtrepzsx){A q,x,y;I c,d,j,k=-1,m,p=0,*qv,*xv,*yv;P*ap;
 static REPF(jtrepbdx){A z;I c,k,m,p;
  // wf and wcr are set.  a is repeated for each cell of w
  F2PREFIP;ARGCHK2(a,w);
- if(AT(w)&ISSPARSE)R irs2(ifb(AN(a),BAV(a)),w,0L,1L,wcr,jtfrom);
+ if(ISSPARSE(AT(w)))R irs2(ifb(AN(a),BAV(a)),w,0L,1L,wcr,jtfrom);
  m=AN(a);   // m is # minor cells in a major cell, i. e. #booleans in a
  void *zvv; void *wvv=voidAV(w); I n; // pointer to output area; pointer to input data; number of prefix bytes to skip in first cell
  p=bsum(m,BAV(a));  // p=# 1s in result, i. e. length of result item axis
@@ -133,7 +133,7 @@ static REPF(jtrepbsx){A ai,c,d,e,g,q,x,wa,wx,wy,y,y1,z,zy;B*b;I*dv,*gv,j,m,n,*u,
   R irs2(q,w,0L,1L,wcr,jtfrom);
  }
  wp=PAV(w);
- if(!(AT(w)&ISSPARSE)||all0(eq(sc(wf),SPA(wp,a)))){RZ(q=denseit(a)); R irs2(ifb(AN(q),BAV(q)),w,0L,1L,wcr,jtfrom);}  // here if dense w
+ if(!ISSPARSE(AT(w))||all0(eq(sc(wf),SPA(wp,a)))){RZ(q=denseit(a)); R irs2(ifb(AN(q),BAV(q)),w,0L,1L,wcr,jtfrom);}  // here if dense w
  wa=SPA(wp,a); wy=SPA(wp,i); wx=SPA(wp,x);
  RZ(q=aslash(CPLUS,a));
  GASPARSE(z,AT(w),1,AR(w),AS(w)); AS(z)[wf]=m=*AV(q);
@@ -215,9 +215,9 @@ static B jtrep1sa(J jt,A a,I*c,I*d){A x;B b;I*v;
 
 static REPF(jtrep1s){A ax,e,x,y,z;B*b;I c,d,cd,j,k,m,n,p,q,*u,*v,wr,*ws;P*wp,*zp;
  F2PREFIP;ARGCHK2(a,w);
- if((AT(a)&(ISSPARSE+CMPX))==(ISSPARSE+CMPX))R rep1d(denseit(a),w,wf,wcr);
+ if((AT(a)&(SPARSE+CMPX))==(SPARSE+CMPX))R rep1d(denseit(a),w,wf,wcr);
  RE(rep1sa(a,&c,&d)); cd=c+d;
- if(!(AT(w)&ISSPARSE))R rep1d(d?jdot2(sc(c),sc(d)):sc(c),w,wf,wcr);  // here if dense w
+ if(!ISSPARSE(AT(w)))R rep1d(d?jdot2(sc(c),sc(d)):sc(c),w,wf,wcr);  // here if dense w
  wr=AR(w); ws=AS(w); n=wcr?ws[wf]:1; DPMULDE(n,cd,m)
  wp=PAV(w); e=SPA(wp,e); ax=SPA(wp,a); y=SPA(wp,i); x=SPA(wp,x);
  GASPARSE(z,AT(w),1,wr+!wcr,ws); AS(z)[wf]=m; zp=PAV(z);
@@ -261,18 +261,18 @@ F2(jtrepeat){A z;I acr,ar,wcr,wf,wr;
  F2PREFIP;ARGCHK2(a,w);
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK;
-I adense=~(AT(a)&ISSPARSE);  // sign set if a is dense
+I adense=SGNIFDENSE(AT(a));  // sign set if a is dense
 // obsolete I att=SGNTO0(-(AT(a)&B01+SB01))+((UI)(-(AT(a)&CMPX+SCMPX))>>(BW-1-1));  // 0 if INT/FL 1 if B01 3 if CMPX
 I att=(AT(a)&B01)+((AT(a)&CMPX)>>(CMPXX-1));  // 0 if INT/FL 1 if B01 2 if CMPX
  att=(-acr&-wcr)>=0?3:att;  // override with 3 if either a or w is an atom
- adense&=(-acr&-wcr)|~(AT(w)&ISSPARSE);  // if a or w is an atom, require both a and w dense
+ adense&=(-acr&-wcr)|SGNIFDENSE(AT(w));  // if a or w is an atom, require both a and w dense
  A (*repfn)() = reptab[2*att+SGNTO0(adense)];  // fetch address to call
 
  // special case: if a is atomic 1, and cells of w are not atomic.  a=0 is fast in the normal path
  if(((-wcr)&(ar-1)&(-(AT(a)&(B01|INT))))<0){I aval = BIV0(a);  // no fast support for float; take all of INT, or 1 bit of B01
   if(!(aval&-2LL)){  // 0 or 1
    if(aval==1)R RETARG(w);   // 1 # y, return y
-   if(!(AT(w)&ISSPARSE)){GA(z,AT(w),0,AR(w),0); MCISH(AS(z),AS(w),AR(w)) AS(z)[wf]=0; RETF(z);}  // 0 # y, return empty
+   if(!ISSPARSE(AT(w))){GA(z,AT(w),0,AR(w),0); MCISH(AS(z),AS(w),AR(w)) AS(z)[wf]=0; RETF(z);}  // 0 # y, return empty
   }
  }
  if(((1-acr)|(acr-ar))<0){z=rank2ex(a,w,DUMMYSELF,MIN(1,acr),wcr,acr,wcr,jtrepeat); PRISTCLRF(w) RETF(z);}  // multiple cells - must lose pristinity; loop if multiple cells of a

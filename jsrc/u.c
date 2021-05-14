@@ -218,7 +218,7 @@ static F1(jtii){ARGCHK1(w); I j; RETF(IX(SETIC(w,j)));}
 I jtmaxtype(J jt,I s,I t){
  // If values differ and are both nonzero...
  I resultbit = PRIORITYTYPE(MAX(TYPEPRIORITY(s),TYPEPRIORITY(t)));  // Get the higher-priority type
- if(unlikely(((s|t)&ISSPARSE))!=0){ASSERT(!((s|t)&(C2T|C4T|XNUM|RAT|SBT)),EVDOMAIN); R ISSPARSE|((I)1 << resultbit);}  // If either operand sparse, return sparse version
+ if(unlikely(ISSPARSE(s|t))){ASSERT(!((s|t)&(C2T|C4T|XNUM|RAT|SBT)),EVDOMAIN); R SPARSE|((I)1 << resultbit);}  // If either operand sparse, return sparse version
  R (I)1 << resultbit;   // otherwise, return normal version
 }
 
@@ -504,7 +504,7 @@ F1(jtvib){A z;D d,e,*wv;I i,n,*zv;
  if(w==ainf)R imax;  // sentence words of _ always use the same block, so catch that too
  I p=-IMAX,q=IMAX;
  RANK2T oqr=jt->ranks; RESETRANK;
- if(unlikely((AT(w)&ISSPARSE)!=0))RZ(w=denseit(w));
+ if(unlikely(ISSPARSE(AT(w))!=0))RZ(w=denseit(w));
  switch(AT(w)){
  default:
   if(!ISDENSETYPE(AT(w),FL))RZ(w=cvt(FL,w));

@@ -890,14 +890,8 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
    ) \
   }
 
-// 
 #if (C_AVX&&SY_64) || EMU_AVX
-// Do one 2x2 product of length dplen.  Leave results in acc000/010.  dplen must be >0
-// av, wv, wv1 are set up
-#define ONEPRODAVXD2(label,mid2x2,last2x2) {\
-   acc000=_mm256_setzero_pd(); acc010=acc000; acc100=acc000; acc110=acc000; \
-   if(dplen<=NPAR)goto label##9; \
-   acc001=acc000; acc011=acc000; acc101=acc000; acc111=acc000; \
+#if 0  // obsolete 
    I rem=dplen; if(rem>8*NPAR)goto label##8; \
    while(rem>NPAR){ \
     if(rem>4*NPAR) \
@@ -909,6 +903,27 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
     if((rem-=8*NPAR)>8*NPAR)goto label##8;  \
    } \
    av-=(NPAR-rem)&-NPAR; wv-=(NPAR-rem)&-NPAR; wv1-=(NPAR-rem)&-NPAR; \
+
+#endif
+
+// Do one 2x2 product of length dplen.  Leave results in accxx0.  dplen must be >0
+// av, wv, wv1 are set up.  Special branch for case of len<=4
+#define ONEPRODAVXD2(label,mid2x2,last2x2) {\
+   acc000=_mm256_setzero_pd(); acc010=acc000; acc100=acc000; acc110=acc000; \
+   if(dplen<=NPAR)goto label##9; \
+   acc001=acc000; acc011=acc000; acc101=acc000; acc111=acc000; \
+   UI n2=DUFFLPCT((dplen)-1,3);  /* # turns through duff loop */ \
+   if(n2>0){ \
+    I backoff=DUFFBACKOFF((dplen)-1,3); \
+    av+=(backoff+1)*NPAR; wv+=(backoff+1)*NPAR; wv1+=(backoff+1)*NPAR; \
+    switch(backoff){ \
+    do{ \
+    case -1: mid2x2(0,0)  case -2: mid2x2(1,1)  case -3: mid2x2(2,0)  case -4: mid2x2(3,1)  \
+    case -5: mid2x2(4,1)  case -6: mid2x2(5,1)  case -7: mid2x2(6,0)  case -8: mid2x2(7,1)  \
+    av+=8*NPAR; wv+=8*NPAR; wv1+=8*NPAR; \
+    }while(--n2!=0); \
+    } \
+   } \
    acc000=_mm256_add_pd(acc000,acc001); acc010=_mm256_add_pd(acc010,acc011); acc100=_mm256_add_pd(acc100,acc101); acc110=_mm256_add_pd(acc110,acc111);  \
    label##9: last2x2  \
    acc000=_mm256_add_pd(acc000,_mm256_permute2f128_pd(acc000,acc000,0x01)); acc010=_mm256_add_pd(acc010,_mm256_permute2f128_pd(acc010,acc010,0x01)); \
@@ -934,13 +949,9 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
  acc100 = MUL_ACC(acc100, _mm256_maskload_pd(&av[dplen+0],endmask), _mm256_maskload_pd(&wv[0],endmask)); \
  acc110 = MUL_ACC(acc110, _mm256_maskload_pd(&av[dplen+0],endmask), _mm256_maskload_pd(&wv1[0],endmask));
 
-// Do one 1x1 product of length dplen.  Leave results in acc000.  dplen must be >0
-// av,  wv, are set up
-#define ONEPRODAVXD1(label,mid1x1,last1x1) {\
-   acc000=_mm256_setzero_pd(); if(dplen<=NPAR)goto label##9; \
-   acc010=acc000; acc100=acc000; acc110=acc000; \
-   acc001=acc000; acc011=acc000; acc101=acc000; acc111=acc000; \
-   I rem=dplen; if(rem>8*NPAR)goto label##8; \
+#if 0  // obsolete 
+
+  I rem=dplen; if(rem>8*NPAR)goto label##8; \
    while(rem>NPAR){ \
     if(rem>4*NPAR) \
      {if(rem>6*NPAR){if(rem>7*NPAR)goto label##7;else goto label##6;}else {if(rem>5*NPAR)goto label##5;else goto label##4;}} \
@@ -954,9 +965,33 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
    acc000=_mm256_add_pd(acc000,acc010); acc100=_mm256_add_pd(acc100,acc110); \
    acc000=_mm256_add_pd(acc000,acc100);  \
    av-=(NPAR-rem)&-NPAR; wv-=(NPAR-rem)&-NPAR; \
+
+#endif
+
+// Do one 1x1 product of length dplen.  Leave results in acc000.  dplen must be >0
+// av,  wv, are set up.  We do a quick check for short arg, since 3-long is a common case
+#define ONEPRODAVXD1(label,mid1x1,last1x1) {\
+   acc000=_mm256_setzero_pd(); if(dplen<=NPAR)goto label##9; \
+   acc010=acc000; acc100=acc000; acc110=acc000; \
+   acc001=acc000; acc011=acc000; acc101=acc000; acc111=acc000; \
+   UI n2=DUFFLPCT((dplen)-1,3);  /* # turns through duff loop */ \
+   if(n2>0){ \
+    I backoff=DUFFBACKOFF((dplen)-1,3); \
+    av+=(backoff+1)*NPAR; wv+=(backoff+1)*NPAR; \
+    switch(backoff){ \
+    do{ \
+    case -1: mid1x1(0,000)  case -2: mid1x1(1,001)  case -3: mid1x1(2,010)  case -4: mid1x1(3,011)  \
+    case -5: mid1x1(4,100)  case -6: mid1x1(5,101)  case -7: mid1x1(6,110)  case -8: mid1x1(7,111)  \
+    av+=8*NPAR; wv+=8*NPAR; \
+    }while(--n2!=0); \
+    } \
+   } \
+   acc000=_mm256_add_pd(acc000,acc001); acc010=_mm256_add_pd(acc010,acc011); acc100=_mm256_add_pd(acc100,acc101); acc110=_mm256_add_pd(acc110,acc111);  \
+   acc000=_mm256_add_pd(acc000,acc010); acc100=_mm256_add_pd(acc100,acc110); \
+   acc000=_mm256_add_pd(acc000,acc100);  \
    label##9: last1x1  \
    acc000=_mm256_add_pd(acc000,_mm256_permute2f128_pd(acc000,acc000,0x01)); \
-   acc000=_mm256_add_pd(acc000,_mm256_permute_pd (acc000,0xf)); \
+   acc000=_mm256_add_pd(acc000,_mm256_permute_pd(acc000,0xf)); \
    av+=((dplen-1)&(NPAR-1))+1;  wv+=((dplen-1)&(NPAR-1))+1; \
    }
 
@@ -969,15 +1004,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
 #define CELL1X1L \
  acc000 = MUL_ACC(acc000, _mm256_maskload_pd(&av[0],endmask), _mm256_maskload_pd(&wv[0],endmask));
 
-
-
-#define ONEPRODD \
- __m256i endmask; /* length mask for the last word */ \
- _mm256_zeroupperx(VOIDARG) \
- /* +/ vectors */ \
- __m256d idreg=_mm256_setzero_pd(); \
- endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-dplen)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
- __m256d acc0=idreg; __m256d acc1=idreg; __m256d acc2=idreg; __m256d acc3=idreg; \
+#if 0 // obsolete 
  DQ((dplen-1)>>(2+LGNPAR), \
   acc0=MUL_ACC(acc0,_mm256_loadu_pd(av),_mm256_loadu_pd(wv)); \
   acc1=MUL_ACC(acc1,_mm256_loadu_pd(av+1*NPAR),_mm256_loadu_pd(wv+1*NPAR)); \
@@ -989,10 +1016,37 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
    if(((dplen-1)&((4-1)<<LGNPAR))>2*NPAR){acc2=MUL_ACC(acc2,_mm256_loadu_pd(av+2*NPAR),_mm256_loadu_pd(wv+2*NPAR));} \
   } \
   av+=(dplen-1)&((4-1)<<LGNPAR); wv+=(dplen-1)&((4-1)<<LGNPAR);  \
+ }
+#endif
+
+#define ONEPRODD \
+ __m256i endmask; /* length mask for the last word */ \
+ _mm256_zeroupperx(VOIDARG) \
+ /* +/ vectors */ \
+ __m256d idreg=_mm256_setzero_pd(); \
+ endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-dplen)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
+ __m256d acc0=idreg; __m256d acc1=idreg; __m256d acc2=idreg; __m256d acc3=idreg; \
+ UI n2=DUFFLPCT((dplen)-1,3);  /* # turns through duff loop */ \
+ if(n2>0){ \
+  I backoff=DUFFBACKOFF((dplen)-1,3); \
+  av+=(backoff+1)*NPAR; wv+=(backoff+1)*NPAR; \
+  switch(backoff){ \
+  do{ \
+  case -1: acc0=MUL_ACC(acc0,_mm256_loadu_pd(av),_mm256_loadu_pd(wv)); \
+  case -2: acc1=MUL_ACC(acc1,_mm256_loadu_pd(av+1*NPAR),_mm256_loadu_pd(wv+1*NPAR)); \
+  case -3: acc2=MUL_ACC(acc2,_mm256_loadu_pd(av+2*NPAR),_mm256_loadu_pd(wv+2*NPAR)); \
+  case -4: acc3=MUL_ACC(acc3,_mm256_loadu_pd(av+3*NPAR),_mm256_loadu_pd(wv+3*NPAR)); \
+  case -5: acc0=MUL_ACC(acc0,_mm256_loadu_pd(av+4*NPAR),_mm256_loadu_pd(wv+4*NPAR)); \
+  case -6: acc1=MUL_ACC(acc1,_mm256_loadu_pd(av+5*NPAR),_mm256_loadu_pd(wv+5*NPAR)); \
+  case -7: acc2=MUL_ACC(acc2,_mm256_loadu_pd(av+6*NPAR),_mm256_loadu_pd(wv+6*NPAR)); \
+  case -8: acc3=MUL_ACC(acc3,_mm256_loadu_pd(av+7*NPAR),_mm256_loadu_pd(wv+7*NPAR)); \
+  av+=8*NPAR; wv+=8*NPAR; \
+  }while(--n2!=0); \
+  } \
  } \
  acc3=MUL_ACC(acc3,_mm256_maskload_pd(av,endmask),_mm256_maskload_pd(wv,endmask)); av+=((dplen-1)&(NPAR-1))+1;  wv+=((dplen-1)&(NPAR-1))+1; \
  acc0=_mm256_add_pd(acc0,acc1); acc2=_mm256_add_pd(acc2,acc3); acc0=_mm256_add_pd(acc0,acc2); /* combine accumulators vertically */ \
- acc0=_mm256_add_pd(acc0,_mm256_permute2f128_pd(acc0,acc0,0x01)); acc0=_mm256_add_pd(acc0,_mm256_permute_pd (acc0,0xf));   /* combine accumulators horizontally  01+=23, 0+=1 */ \
+ acc0=_mm256_add_pd(acc0,_mm256_permute2f128_pd(acc0,acc0,0x01)); acc0=_mm256_add_pd(acc0,_mm256_permute_pd(acc0,0xf));   /* combine accumulators horizontally  01+=23, 0+=1 */ \
  _mm_storel_pd(zv++,_mm256_castpd256_pd128 (acc0));/* store the single result */
 
 #else
@@ -1101,7 +1155,7 @@ DF2(jtsumattymes1){
   // here for +/@:*"1!.0, double-precision dot product  https://www-pequan.lip6.fr/~graillat/papers/IC2012.pdf
   NAN0;
 #if (C_AVX2&&SY_64) || EMU_AVX2
-#if 1  // higher precision.  Required when a large product is added to a small total
+#if 1  // higher precision.  Required when a large product is added to a small total.  Dependeny loop for acc is 4 clocks; for c is 4 clocks.  Total 12 insts, so unrolled 2 would do
 #define OGITA(in0,in1,n) TWOPROD(in0,in1,h,y) TWOSUM(acc##n,h,acc##n,q) c##n=_mm256_add_pd(_mm256_add_pd(q,y),c##n);
 #else
 #define OGITA(in0,in1,n) TWOPROD(in0,in1,h,y) c##n=_mm256_add_pd(y,c##n); KAHAN(h,n)

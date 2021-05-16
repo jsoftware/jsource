@@ -86,14 +86,14 @@ A name(J jt,A a,A w){ \
  }else{ \
   if(!((fz)&1)&&AR(a)==0){ \
    /* atom+vector */ \
-   LDBID1(xx,x,fz,0x8,0x40,0x100) CVTBID1(xx,xx,fz,0x8,0x40,0x100) INCRBID(x,((fz)&0x1000?-1:1)*1,fz,0x8,0x40,0x100) \
+   LDBID1(xx,x,fz,0x8,0x40,0x100) CVTBID1(xx,xx,fz,0x8,0x40,0x100) /* obsolete INCRBID(x,((fz)&0x1000?-1:1)*1,fz,0x8,0x40,0x100) */ \
    CPRMALIGN(zzop,1,fz,n0) \
    CPRMDUFF(zzop,1,fz,n0,32+16,inv) \
    CPRMMASK(zzop,1,fz,inv) /* runout, using mask */ \
   }else{ \
    /* vector+atom */ \
    if((fz)&1){I taddr=(I)x^(I)y; I tn=AN(a); x=AR(a)==0?y:x; n0=AR(a)==0?n0:tn; y=(D*)((I)x^taddr);}else n0=AN(a);  \
-   LDBID1(yy,y,fz,0x10,0x80,0x200) CVTBID1(yy,yy,fz,0x10,0x80,0x200) INCRBID(y,((fz)&0x1000?-1:1)*1,fz,0x10,0x80,0x200) \
+   LDBID1(yy,y,fz,0x10,0x80,0x200) CVTBID1(yy,yy,fz,0x10,0x80,0x200) /* obsolete INCRBID(y,((fz)&0x1000?-1:1)*1,fz,0x10,0x80,0x200) */ \
    CPRMALIGN(zzop,2,fz,n0) \
    CPRMDUFF(zzop,2,fz,n0,32+8,inv) \
    CPRMMASK(zzop,2,fz,inv) /* runout, using mask */ \

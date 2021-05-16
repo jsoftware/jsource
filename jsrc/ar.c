@@ -378,14 +378,14 @@ DF1(jtcompsum){
  D *wv=DAV(w), *zv=DAV(z);
 #if (C_AVX&&SY_64) || EMU_AVX
  __m256i endmask; /* length mask for the last word */
- _mm256_zeroupperx(VOIDARG)
- __m256d idreg=_mm256_setzero_pd();
+ _mm256_zeroupperx(VOIDARG);
  if(d==1){
   // rank-1 case: operate across the row, with 4 accumulators
   endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */
   for(;m>0;--m){
-   __m256d acc0=idreg; __m256d acc1=idreg; __m256d acc2=idreg; __m256d acc3=idreg;
-   __m256d c0=idreg; __m256d c1=idreg; __m256d c2=idreg; __m256d c3=idreg;  // error terms
+   __m256d acc0; __m256d acc1; __m256d acc2; __m256d acc3;
+   __m256d c0; __m256d c1; __m256d c2; __m256d c3;  // error terms
+   acc0=acc1=acc2=acc3=c0=c1=c2=c3=_mm256_setzero_pd();
    __m256d y;  __m256d t;   // new input value, temp to hold high part of sum
    UI n2=DUFFLPCT(n-1,2);  /* # turns through duff loop */
    if(n2>0){
@@ -393,10 +393,12 @@ DF1(jtcompsum){
     wv+=(backoff+1)*NPAR;
     switch(backoff){
     do{
+// NOTE: This runs faster with 4 accumulators, but it is still very limited by FP latency.  clang doesn't even bother putting some variables into registers
+// because there would be no gain
     case -1: KAHAN(_mm256_loadu_pd(wv),0)
-    case -2: KAHAN(_mm256_loadu_pd(wv+1*NPAR),0)
-    case -3: KAHAN(_mm256_loadu_pd(wv+2*NPAR),0)
-    case -4: KAHAN(_mm256_loadu_pd(wv+3*NPAR),0)
+    case -2: KAHAN(_mm256_loadu_pd(wv+1*NPAR),1)
+    case -3: KAHAN(_mm256_loadu_pd(wv+2*NPAR),2)
+    case -4: KAHAN(_mm256_loadu_pd(wv+3*NPAR),3)
     wv+=4*NPAR;
     }while(--n2!=0);
     }
@@ -412,7 +414,8 @@ DF1(jtcompsum){
    c0=_mm256_add_pd(c0,_mm256_permute_pd(c0,0xf)); acc1=_mm256_permute_pd(acc0,0xf);   // combine c0+c1, acc1<-1
    TWOSUM(acc0,acc1,acc0,c1); c0=_mm256_add_pd(c0,c1);    // combine 0123, combine all low parts
    acc0=_mm256_add_pd(acc0,c0);  // add low parts back into high in case there is overlap
-   _mm_storel_pd(zv++,_mm256_castpd256_pd128(acc0)); // store the single result
+   *(I*)zv=_mm256_extract_epi64(_mm256_castpd_si256(acc0),0x0); ++zv;  // store the single result
+//    _mm_storel_pd(zv++,_mm256_castpd256_pd128(acc0));
   }
  }else{
   // rank>1, going down columns to save bandwidth and add accuracy
@@ -421,7 +424,7 @@ DF1(jtcompsum){
    __m256d y; __m256d t;   // new input value, temp to hold high part of sum
    __m256d acc0; __m256d acc1; __m256d acc2; __m256d acc3; __m256d c0; __m256d c1; __m256d c2; __m256d c3;  // accumulators, error terms
    DQ((d-1)>>LGNPAR,
-    wv0=wv; n0=n; acc0=acc1=acc2=acc3=c0=c1=c2=c3=idreg;
+    wv0=wv; n0=n; acc0=acc1=acc2=acc3=c0=c1=c2=c3=_mm256_setzero_pd();
     switch(n0&3){
     label1:
     case 0: KAHAN(_mm256_loadu_pd(wv0),0) wv0+=d; case 3: KAHAN(_mm256_loadu_pd(wv0),1) wv0+=d; case 2: KAHAN(_mm256_loadu_pd(wv0),2) wv0+=d; case 1: KAHAN(_mm256_loadu_pd(wv0),3) wv0+=d;
@@ -436,7 +439,7 @@ DF1(jtcompsum){
     _mm256_storeu_pd(zv,acc0); wv+=NPAR; zv+=NPAR;
    )
    // repeat for partial column
-   wv0=wv; n0=n; acc0=acc1=acc2=acc3=c0=c1=c2=c3=idreg;
+   wv0=wv; n0=n; acc0=acc1=acc2=acc3=c0=c1=c2=c3=_mm256_setzero_pd();
    switch(n0&3){
    label2:
     case 0: KAHAN(_mm256_maskload_pd(wv0,endmask),0) wv0+=d; case 3: KAHAN(_mm256_maskload_pd(wv0,endmask),1) wv0+=d; case 2: KAHAN(_mm256_maskload_pd(wv0,endmask),2) wv0+=d; case 1: KAHAN(_mm256_maskload_pd(wv0,endmask),3) wv0+=d;

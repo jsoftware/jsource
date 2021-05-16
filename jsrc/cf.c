@@ -261,6 +261,7 @@ static DF1(jthkodom){DECLFG;B b=0;I n,*v;
  R CALL2(f2,w,CALL1(g1,w,gs),fs);
 }    /* special code for (#: i.@(* /)) */
 
+#if 0 // obsolete 
 #define IDOTSEARCH(T,comp,compe)  {T *wv=T##AV(w); I optx0=-1; T opt0=wv[0]; I optx1=optx0; T opt1=wv[1]; wv+=2; \
   DO((n>>1)-1, if(wv[0] comp opt0){opt0=wv[0]; optx0=i;} if(wv[1] comp opt1){opt1=wv[1]; optx1=i;} wv+=2;) \
   z=((opt0 comp opt1) || (opt0==opt1&&optx0<=optx1))?2*optx0:2*optx1+1; opt0=opt0 compe opt1?opt0:opt1; z+=2; if(n&1&&wv[0] comp opt0)z=n-1; break;}
@@ -268,9 +269,14 @@ static DF1(jthkodom){DECLFG;B b=0;I n,*v;
 #define ICOSEARCH(T,comp,compe)  {T *wv=T##AV(w)+n-1; I optx0=(n>>1)-1; T opt0=wv[0]; I optx1=optx0; T opt1=wv[-1]; wv-=2; \
   DQ(optx0, if(wv[0] comp opt0){opt0=wv[0]; optx0=i;} if(wv[-1] comp opt1){opt1=wv[-1]; optx1=i;} wv-=2;) \
   z=((opt0 comp opt1) || (opt0==opt1&&optx0>=optx1))?2*optx0+1:2*optx1; opt0=opt0  compe opt1?opt0:opt1; z+=n&1; if(n&1&&wv[0] comp opt0)z=0; break;}
+#endif
 
-static DF1(jthkindexofmaxmin){I z=0;
+static DF1(jthkindexofmaxmin){
  ARGCHK2(w,self);
+ // The code for ordinary search and min/max is very fast.  There's no value in trying to improve it.  The only
+ // thing we have to add is setting tolerant comparison on the search, since we know we will be looking for something that is en exact match
+ PUSHCCT(1.0) A z=hook1(w,self); POPCCT RETF(z);
+#if 0 // obsolete 
  I n=AN(w);
  if(!(1==AR(w)&&AT(w)&INT+FL))R hook1(w,self);  // revert if not int/fl args
  if(n>1){
@@ -286,6 +292,7 @@ static DF1(jthkindexofmaxmin){I z=0;
   }
  }
  R sc(z);
+#endif
 }    /* special code for (i.<./) (i.>./) (i:<./) (i:>./) */
 
 // (compare L.) dyadic

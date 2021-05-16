@@ -1019,6 +1019,89 @@ static IOFSMALLRANGE(jtio42,I,US)  static IOFSMALLRANGE(jtio44,I,UI4)  // 4/8-by
 // ******************* fourth class: sequential comparison ***************************************
 // implemented only for i. i: e. u/.   - perhaps should revert for other compounds
 
+
+// fz=bit0 = commutative, bit1 set if incomplete y must be filled with 0 (to avoid isub oflo), bit2 set if incomplete x must be filled with i (for fdiv NaN),
+// bit3 set for int-to-float on x, bit4 for int-to-float on y
+// bit5 set to suppress loop-unrolling
+// bit6 set for bool-to-int on x, bit7 for bool-to-int on y
+// bit8 set for bool-to-float on x, bit9 for bool-to-float on y
+// bit12 this is a reverse-index loop
+// bit13 not used
+// bit14 this is u./
+// bit15 this is e.
+
+// do one computation. xy bit 0 means fetch/incr y, bit 1 means fetch/incr x.  bit 2 is never used.  lineno is the offset to the row being worked on
+#define CPRMDO(name,zzop,xy,fz,lineno,inv)  if((xy)&2)LDBID(xx,OFFSETBID(x,((fz)&0x1000?-1:1)*lineno*NPAR,fz,0x8,0x40,0x100),fz,0x8,0x40,0x100) if((xy)&1)LDBID(yy,OFFSETBID(y,((fz)&0x1000?-1:1)*lineno*NPAR,fz,0x10,0x80,0x200),fz,0x10,0x80,0x200)  \
+     if((xy)&2)CVTBID(xx,xx,fz,0x8,0x40,0x100) if((xy)&1)CVTBID(yy,yy,fz,0x10,0x80,0x200)  \
+     zzop; if(unlikely((maskatend=_mm256_movemask_pd(zz))!=inv*15)){orign2+=lineno; goto name##out;}
+
+#define CPRMINCR(xy,fz,ct) if((xy)&2)INCRBID(x,((fz)&0x1000?-1:1)*(ct),fz,0x8,0x40,0x100) if((xy)&1)INCRBID(y,((fz)&0x1000?-1:1)*(ct),fz,0x10,0x80,0x200)
+
+// set mask for last group.  Also advance pointer to last block if reversed scan
+#define CPRMALIGN(zzop,xy,fz,len)  \
+  if((fz)&0x1000){CPRMINCR(xy,fz,NPAR-(len)) endmask = _mm256_loadu_si256((__m256i*)(validitymask+5+(((len)-1)&(NPAR-1))));} else endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-(len))&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */
+
+// the short loop is never used here
+#define CPRMDUFF(name,zzop,xy,fz,len,lpmsk,inv) \
+     if(!((fz)&(lpmsk))){ \
+      orign2=n2=DUFFLPCT((len)-1,3);  /* # turns through duff loop */ \
+      orign2<<=3; \
+      if(n2>0){ \
+       backoff=DUFFBACKOFF((len)-1,3); \
+       orign2+=backoff+1;  \
+       CPRMINCR(xy,fz,(backoff+1)*NPAR) \
+       switch(backoff){ \
+       do{ \
+       case -1: CPRMDO(name,zzop,xy,fz,0,inv) case -2: CPRMDO(name,zzop,xy,fz,1,inv) case -3: CPRMDO(name,zzop,xy,fz,2,inv) case -4: CPRMDO(name,zzop,xy,fz,3,inv) \
+       case -5: CPRMDO(name,zzop,xy,fz,4,inv) case -6: CPRMDO(name,zzop,xy,fz,5,inv) case -7: CPRMDO(name,zzop,xy,fz,6,inv) case -8: CPRMDO(name,zzop,xy,fz,7,inv) \
+       CPRMINCR(xy,fz,8*NPAR) \
+       }while(--n2!=0); \
+       } \
+      } \
+     }else{orign2=n2=(len-1)>>LGNPAR; \
+      if(n2!=0){NOUNROLL do{CPRMDO(name,zzop,4+(xy),fz,0,inv) CPRMINCR(xy,fz,NPAR)}while(--n2!=0);}  \
+     } \
+
+#define CPRMMASK(zzop,xy,fz,inv) if((xy)&2)LDBIDM(xx,x,fz,0x8,0x40,0x100,endmask) if((xy)&1)LDBIDM(yy,y,fz,0x10,0x80,0x200,endmask)  \
+  if((xy)&2)CVTBID(xx,xx,fz,0x8,0x40,0x100) if((xy)&1)CVTBID(yy,yy,fz,0x10,0x80,0x200)  \
+  zzop; maskatend=(!!inv^!!((fz)&0x8000))?_mm256_movemask_pd(_mm256_and_pd(_mm256_castsi256_pd(endmask),zz)):_mm256_movemask_pd(_mm256_or_pd(_mm256_xor_pd(ones,_mm256_castsi256_pd(endmask)),zz));  // shift in match for i., nomatch for e.
+
+#define seqsch256(name,fz,pref,zzop,inv) \
+{ \
+ __m256d xx,yy,zz; void *x,*y; \
+ __m256i endmask; /* length mask for the last word */ \
+ __m256d ones=_mm256_setzero_pd(); ones=_mm256_castsi256_pd(_mm256_cmpeq_epi32(_mm256_castpd_si256(ones),_mm256_castpd_si256(ones))); \
+ __m256i acc0=_mm256_setzero_si256(), acc1=acc0, acc2=acc0, acc3=acc0, acc4=acc0, acc5=acc0, acc6=acc0, acc7=acc0; \
+ I maskatend, nuniq=0; \
+ UI backoff; UI n2; I orign2; /* orign2 goes -1 during rev search */ \
+ _mm256_zeroupperx(VOIDARG) \
+   /* will be removed except for divide */ \
+ CVTEPI64DECLS pref \
+ y=v; void *x0=u; \
+ for(;ac;--ac){I nw=wsct; \
+  for(;nw;--nw){x=x0; \
+   I n0=asct; \
+   LDBID1(yy,y,fz,0x10,0x80,0x200) CVTBID1(yy,yy,fz,0x10,0x80,0x200) \
+   CPRMALIGN(zzop,2,fz,n0) \
+   CPRMDUFF(name,zzop,2,fz,n0,32+8,inv) \
+   CPRMMASK(zzop,2,fz,inv) /* runout, using mask */ \
+name##out: \
+   if((fz)&0x8000){*(C*)zv=maskatend!=inv*15; zv=(C*)zv+1; \
+   }else{ \
+    n2<<=3; \
+    orign2-=n2; orign2<<=LGNPAR; \
+    orign2+=(((fz)&0x1000?inv?0x4322111100000000:0x0000000011112234:inv?0x4010201030102010:0x0102010301020104)>>(maskatend<<2))&7; if((fz)&0x1000){orign2=n0-1-orign2; orign2=orign2<0?n0:orign2;} \
+    *(I*)zv=orign2; if((fz)&0x4000){nuniq+=(wsct-nw-orign2)==0; ((I*)zv)[wsct-nw-orign2]++;} zv=(I*)zv+1;  /* if key, look back to incr the first in class */ \
+   } \
+   INCRBID(y,q,fz,0x10,0x80,0x200) \
+  } \
+  INCRBID(x0,p,fz,0x08,0x40,0x100) \
+  y=(1==wc)?v:y; \
+ } \
+ if((fz)&0x4000)AM(z)=nuniq; \
+}
+
+
 #define IOSCCASE(bit,multi,mode) ((8*(multi)+(bit))*4+((mode)&3))
 
 // xe is the expression for reading one comparand, exp is the expression for 'no match between x and av[j]')
@@ -1039,7 +1122,7 @@ static IOFSMALLRANGE(jtio42,I,US)  static IOFSMALLRANGE(jtio44,I,UI4)  // 4/8-by
 // ac is # outer cells of a, asct=#items in 1 inner cell, wc is #outer search cells, wsct is #items to search for per outer cell
 // n is #atoms in a cell
 static A jtiosc(J jt,I mode,I n,I asct,I wsct,I ac,I wc,A a,A w,A z){I j,p,q; void *u,*v,*zv;
- p=ac>1?asct:0; q=REPSGN(1-(wc|wsct)); p*=n; q&=n;  // q=1<wc||1<wsct; number of atoms to move between repeats
+ p=ac>1?asct:0; q=REPSGN(1-(wc|wsct)); p*=n; q&=n;  // q=1<wc||1<wsct; number of atoms to move between repeats p=*atoms of a to move between repeats
  zv=voidAV(z); u=voidAV(a); v=voidAV(w);
  // Create a pseudotype 19 (=XDX) for intolerant comparison.  This puns on XDX-FLX==16
  I bit=CTTZ(AT(a)); bit+=((AT(a)>>FLX)&(jt->cct==1.0))<<4;
@@ -1055,35 +1138,55 @@ static A jtiosc(J jt,I mode,I n,I asct,I wsct,I ac,I wc,A a,A w,A z){I j,p,q; vo
   SCDO(BOXX,A,!equ(x,av[j]));
 #if (C_AVX&&SY_64) || EMU_AVX
   // The instruction set is too quirky to do this with macros
-   case IOSCCASE(XDX,0,IIDOT): {D *wv=(D*)v; D*av=(D*)u; __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-asct)&(NPAR-1)))); 
+#if 0 // obsolete 
+ {D *wv=(D*)v; D*av=(D*)u; __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-asct)&(NPAR-1)))); 
       DQ(ac, 
        DQ(wsct, __m256d x=_mm256_broadcast_sd(wv); D*avv=av; D*avend=av+((asct-1)&(-(I)NPAR)); int cmps; 
         while(1){if(avv==avend)break; if(cmps=_mm256_movemask_pd(_mm256_cmp_pd(x,_mm256_loadu_pd(avv),_CMP_EQ_OQ)))goto fnd001; avv+=NPAR;} 
         cmps=_mm256_movemask_pd(_mm256_and_pd(_mm256_castsi256_pd (endmask),_mm256_cmp_pd(x,_mm256_maskload_pd(avv,endmask),_CMP_EQ_OQ))); 
 fnd001: ; I res=(avv-av)+CTTZ(cmps); res=(cmps==0)?asct:res; *(I*)zv=res; zv=(I*)zv+1;      wv+=q;);
-      av+=p; wv=(1==wc)?(D*)v:wv;);} break; 
-   case IOSCCASE(XDX,0,IFORKEY): {D *wv=(D*)v; D*av=(D*)u; __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-asct)&(NPAR-1)))); I nuniq=0;
+      av+=p; wv=(1==wc)?(D*)v:wv;);}
+#else
+
+#endif
+#if 0 // obsolete 
+ {D *wv=(D*)v; D*av=(D*)u; __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-asct)&(NPAR-1)))); I nuniq=0;
       DQ(ac, 
        DO(wsct, __m256d x=_mm256_broadcast_sd(wv); D*avv=av; D*avend=av+((asct-1)&(-(I)NPAR)); int cmps; 
         while(1){if(avv==avend)break; if(cmps=_mm256_movemask_pd(_mm256_cmp_pd(x,_mm256_loadu_pd(avv),_CMP_EQ_OQ)))goto fnd004; avv+=NPAR;} 
         cmps=_mm256_movemask_pd(_mm256_and_pd(_mm256_castsi256_pd (endmask),_mm256_cmp_pd(x,_mm256_maskload_pd(avv,endmask),_CMP_EQ_OQ))); 
 fnd004: ; I res=(avv-av)+CTTZ(cmps);  *(I*)zv=res; nuniq+=(res-i)==0; ((I*)zv)[res-i]++; zv=(I*)zv+1;      wv+=q;);
-      av+=p; wv=(1==wc)?(D*)v:wv;); AM(z)=nuniq;} break; 
-   case IOSCCASE(XDX,0,IICO): {D *wv=(D*)v; D*av=(D*)u; __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-asct)&(NPAR-1)))); 
+      av+=p; wv=(1==wc)?(D*)v:wv;); AM(z)=nuniq;}
+#else
+
+#endif
+#if 0 // obsolete 
+ {D *wv=(D*)v; D*av=(D*)u; __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-asct)&(NPAR-1)))); 
       DQ(ac, 
        DQ(wsct, __m256d x=_mm256_broadcast_sd(wv); D*avend=av; D*avv=av+((asct-1)&(-(I)NPAR)); int cmps;  
         if(cmps=_mm256_movemask_pd(_mm256_and_pd(_mm256_castsi256_pd (endmask),_mm256_cmp_pd(x,_mm256_maskload_pd(avv,endmask),_CMP_EQ_OQ))))goto fnd002; 
         while(1){if(avv==avend)break; avv-=NPAR; if(cmps=_mm256_movemask_pd(_mm256_cmp_pd(x,_mm256_loadu_pd(avv),_CMP_EQ_OQ)))goto fnd002;} 
 fnd002: ; unsigned long temp; CTLZI(cmps,temp); I res=(avv-av)+temp; res=(cmps==0)?asct:res; *(I*)zv=res; zv=(I*)zv+1;      wv+=q;);
-      av+=p; wv=(1==wc)?(D*)v:wv;);} break; 
-   case IOSCCASE(XDX,0,IEPS): {D *wv=(D*)v; D*av=(D*)u; __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-asct)&(NPAR-1)))); 
+      av+=p; wv=(1==wc)?(D*)v:wv;);}
+#else
+
+#endif
+#if 0 // obsolete 
+ {D *wv=(D*)v; D*av=(D*)u; __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-asct)&(NPAR-1)))); 
       DQ(ac, 
        DQ(wsct, __m256d x=_mm256_broadcast_sd(wv); D*avv=av; D*avend=av+((asct-1)&(-(I)NPAR)); int cmps; 
         while(1){if(avv==avend)break; if(cmps=_mm256_movemask_pd(_mm256_cmp_pd(x,_mm256_loadu_pd(avv),_CMP_EQ_OQ)))goto fnd003; avv+=NPAR;} 
         cmps=_mm256_movemask_pd(_mm256_and_pd(_mm256_castsi256_pd (endmask),_mm256_cmp_pd(x,_mm256_maskload_pd(avv,endmask),_CMP_EQ_OQ))); 
 fnd003: *(C*)zv=SGNTO0(-cmps); zv=(C*)zv+1;      wv+=q;); 
-      av+=p; wv=(1==wc)?(D*)v:wv;);} break; 
+      av+=p; wv=(1==wc)?(D*)v:wv;);}
+#else
+   case IOSCCASE(XDX,0,IIDOT): seqsch256(seqschidotDD0,0x0000,,zz=_mm256_cmp_pd(xx,yy,_CMP_EQ_OQ),0) break; 
+   case IOSCCASE(XDX,0,IFORKEY): seqsch256(seqschkeyDD0,0x4000,,zz=_mm256_cmp_pd(xx,yy,_CMP_EQ_OQ),0) break; 
+   case IOSCCASE(XDX,0,IICO): seqsch256(seqschicoDD0,0x1000,,zz=_mm256_cmp_pd(xx,yy,_CMP_EQ_OQ),0) break; 
+   case IOSCCASE(XDX,0,IEPS): seqsch256(seqschepsDD0,0x8000,,zz=_mm256_cmp_pd(xx,yy,_CMP_EQ_OQ),0) break; 
 
+#endif
+#if 0 // obsolete 
    case IOSCCASE(FLX,0,IIDOT): {D *wv=(D*)v; D*av=(D*)u; __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-asct)&(NPAR-1))));
       __m256d cct=_mm256_broadcast_sd(&jt->cct);
       DQ(ac, 
@@ -1109,12 +1212,20 @@ fnd022: ; unsigned long temp; CTLZI(cmps,temp); I res=(avv-av)+temp; res=(cmps==
 fnd023: *(C*)zv=SGNTO0(-cmps); zv=(C*)zv+1;      wv+=q;); 
       av+=p; wv=(1==wc)?(D*)v:wv;);} break; 
 #else
+#define ZZTEQ zz=_mm256_xor_pd(_mm256_cmp_pd(xx,_mm256_mul_pd(yy,cct),_CMP_GT_OQ),_mm256_cmp_pd(yy,_mm256_mul_pd(xx,cct),_CMP_LE_OQ));  // tolerant =
+   case IOSCCASE(FLX,0,IIDOT): seqsch256(seqschidotDD,0x0000,__m256d cct=_mm256_broadcast_sd(&jt->cct);,ZZTEQ,0) break; 
+   case IOSCCASE(FLX,0,IFORKEY): seqsch256(seqschkeyDD,0x4000,__m256d cct=_mm256_broadcast_sd(&jt->cct);,ZZTEQ,0) break; 
+   case IOSCCASE(FLX,0,IICO): seqsch256(seqschicoDD,0x1000,__m256d cct=_mm256_broadcast_sd(&jt->cct);,ZZTEQ,0) break; 
+   case IOSCCASE(FLX,0,IEPS): seqsch256(seqschepsDD,0x8000,__m256d cct=_mm256_broadcast_sd(&jt->cct);,ZZTEQ,0) break; 
+#endif
+#else
   SCDO(XDX,D,x!=av[j])
   SCDO(FLX,D,!TCMPEQ(jt->cct,x,av[j]));
 #endif
 
 
 #if (C_AVX2&&SY_64) || EMU_AVX2
+#if 0  // obsolete
    case IOSCCASE(INTX,0,IIDOT): {I *wv=(I*)v; I*av=(I*)u; __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-asct)&(NPAR-1)))); 
       DQ(ac, 
        DQ(wsct, __m256i x=_mm256_castpd_si256(_mm256_broadcast_sd((D*)wv)); I*avv=av; I*avend=av+((asct-1)&(-(I)NPAR)); int cmps; 
@@ -1143,7 +1254,12 @@ fnd012: ; unsigned long temp; CTLZI(cmps,temp); I res=(avv-av)+temp; res=(cmps==
         cmps=_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_and_si256(endmask,_mm256_cmpeq_epi64(x,_mm256_maskload_epi64(avv,endmask))))); 
 fnd013: *(C*)zv=SGNTO0(-cmps); zv=(C*)zv+1;      wv+=q;); 
       av+=p; wv=(1==wc)?(I*)v:wv;);} break;
-
+#else
+   case IOSCCASE(INTX,0,IIDOT): seqsch256(seqschidotII,0x0000,,zz=_mm256_castsi256_pd(_mm256_cmpeq_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)));,0) break; 
+   case IOSCCASE(INTX,0,IFORKEY): seqsch256(seqschkeyII,0x4000,,zz=_mm256_castsi256_pd(_mm256_cmpeq_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)));,0) break; 
+   case IOSCCASE(INTX,0,IICO): seqsch256(seqschicoII,0x1000,,zz=_mm256_castsi256_pd(_mm256_cmpeq_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)));,0) break; 
+   case IOSCCASE(INTX,0,IEPS): seqsch256(seqschepsII,0x8000,,zz=_mm256_castsi256_pd(_mm256_cmpeq_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)));,0) break; 
+#endif
 #else
   SCDO(INTX,I,x!=av[j]      );
 #endif
@@ -1881,8 +1997,11 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
   // The comparison uses the fact that cct can never go above 1.0, which is 0x3ff0000000000000 in double precision.  To avoid integer-float conversions, we just strip out the bit that signifies
   // 1.0.  The expression then means 'tolerance=1.0 or intolerant comparison'
   // If the problem is small, use sequential search to save analysis and hashing time
-  // TUNE  From testing 8/2019 on SkylakeX, sequential search wins if an<=10 or wn<=7, or an+wn<=40
-  if((((an-11)|(wn-8)|(an+wn-41))<0)&&((ar^1)+TYPESXOR(at,wt))==0&&(((1-wr)|SGNIF(mode,ISFUX)|SGNIFNOT(mode,IIOREPSX)|SGNIFSPARSE(at|wt)|(-((acr^1)|(wr^wcr)))|(an-1)|(wn-1))>=0)){
+  // TUNE  From testing 5/2021 on SkylakeX.  Hard to tell, since the data is brought into cache
+#define SEQSEARCHIFALT 100  // use sequential search if a shorter than this
+#define SEQSEARCHIFWLT 12  // use sequential search if w shorter than this
+#define SEQSEARCHIFAWLT 200  // use sequential search if a+w shorter than this
+  if((((an-SEQSEARCHIFALT)|(wn-SEQSEARCHIFWLT)|(an+wn-SEQSEARCHIFAWLT))<0)&&((ar^1)+TYPESXOR(at,wt))==0&&(((1-wr)|SGNIF(mode,ISFUX)|SGNIFNOT(mode,IIOREPSX)|SGNIFSPARSE(at|wt)|(-((acr^1)|(wr^wcr)))|(an-1)|(wn-1))>=0)){
    // Fast path for (vector i./i:/e./key atom or short vector) - if not prehashing.  Do sequential search
    I zt=((mode&IIOPMSK)==IEPS)?B01:INT;  // the result type depends on the operation.
    A z; GA(z,zt,wn,wr,ws);
@@ -1981,7 +2100,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
  // (full hashing is considerably more expensive); also a fair amount of time for range-checking and table-clearing, and further testing here
  // Here we just use the empirical observations that worked for atoms  TUNE
  if(unlikely(mode&ISFU)){fnx=fnx<0?fnx:1; fnx-=2;    // i.!.0 (qualified earlier for rank & type) - use special function, no hashtable.  But preserve codes -3 & -4 for inhomo/empty
- }else if((((((I)m-11)|(zn-8)|((I)m+zn-41)|fnx)<0)) && (((((-(wc^1))&(-(wc^ac)))|SGNIFNOT(mode,IIOREPSX))&~fnx)>=0)){   // wc==1 or ac and IOREPS, or empty/inhomo
+ }else if((((((I)m-SEQSEARCHIFALT)|(zn-SEQSEARCHIFWLT)|((I)m+zn-SEQSEARCHIFAWLT)|fnx)<0)) && (((((-(wc^1))&(-(wc^ac)))|SGNIFNOT(mode,IIOREPSX))&~fnx)>=0)){   // wc==1 or ac and IOREPS, or empty/inhomo
           //  small enough operation, or  empty/inhomo   test size first because partially checked already & failed TUNE
     // this will not choose sequential search enough when the cells are large (comparisons then are cheap because of early exit)
   fnx-=2;  // now fnx is -4 for inhomo, -3 for empty, -1 for SFU, -2 for sequential.  This is ready for lookup.

@@ -1060,7 +1060,9 @@ extern unsigned int __cdecl _clearfp (void);
 // compensated accumulation with multiple accumulators.  Accumulators are acc##n, low part is c##n.
 // We add in to accumulators n.  This is defined so that c is the amount that must be ADDED to the total to make it right
 // uses temps y and t
-#define KAHAN(in,n) y=_mm256_add_pd(in,c##n); t=_mm256_add_pd(acc##n,y); acc##n=_mm256_sub_pd(t,acc##n); c##n=_mm256_sub_pd(y,acc##n); acc##n=t;
+#define KAHAN(in,n) {__m256d y, t; y=_mm256_add_pd(in,c##n); t=_mm256_add_pd(acc##n,y); c##n=_mm256_sub_pd(y,_mm256_sub_pd(t,acc##n)); acc##n=t;}
+// similar, but acc and c are in an array.  Uses temp tt
+#define KAHANA(in,n) {__m256d y, t, tt; y=_mm256_add_pd(in,accc[1][n]); tt=accc[0][n]; accc[0][n]=t=_mm256_add_pd(tt,y); accc[1][n]=_mm256_sub_pd(y,_mm256_sub_pd(t,tt));}
 // given a unique num, define loop begin and end labels
 #define LOOPBEGIN(num) lp##num
 #define LOOPEND(num) lp##num##e
@@ -1587,9 +1589,9 @@ if(likely(z<3)){_zzt+=z; z=(I)&oneone; _zzt=_i&3?_zzt:(I*)z; z=_i&2?(I)_zzt:z; z
 // create double-precision product of inputs
 #define TWOPROD(in0,in1,outhi,outlo) outhi=_mm256_mul_pd(in0,in1); outlo=_mm256_fmsub_pd(in0,in1,outhi);
 // create double-precision sum of inputs, where it is not known which is larger  NOTE in0 and outhi might be identical.  Needs t and signbit.
-#define TWOSUM(in0,in1,outhi,outlo) t=_mm256_andnot_pd(sgnbit,in0); outlo=_mm256_andnot_pd(sgnbit,in1); t=_mm256_sub_pd(t,outlo); \
+#define TWOSUM(in0,in1,outhi,outlo) {__m256d t=_mm256_andnot_pd(sgnbit,in0); outlo=_mm256_andnot_pd(sgnbit,in1); t=_mm256_sub_pd(t,outlo); \
                                     outlo=_mm256_blendv_pd(in0,in1,t); t=_mm256_blendv_pd(in1,in0,t); \
-                                    outhi=_mm256_add_pd(in0,in1); outlo=_mm256_sub_pd(outlo,outhi); outlo=_mm256_add_pd(outlo,t);  // 1 if in1 larger; select outlo=max t=min
+                                    outhi=_mm256_add_pd(in0,in1); outlo=_mm256_sub_pd(outlo,outhi); outlo=_mm256_add_pd(outlo,t);}  // 1 if in1 larger; select outlo=max t=min
 #define DPADD(hi0,lo0,hi1,lo1,outhi,outlo)  outhi=_mm256_add_pd(hi0,hi1); outlo=_mm256_add_pd(lo0,lo1);
 #else
 #define TWOSPLIT(a,x,y) y=(a)*134217730.0; x=y-(a); x=y-x; y=(a)-x;   // must avoid compiler tuning

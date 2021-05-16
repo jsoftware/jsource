@@ -970,7 +970,7 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
 // type is the m operand to m : n, indicating part of speech to be produced
 // We preparse what we can in the definition
 static I pppp(J jt, A l, A c){I j; A fragbuf[20], *fragv=fragbuf; I fragl=sizeof(fragbuf)/sizeof(fragbuf[0]);
- // Go through the control-word table, looking at each sectence
+ // Go through the control-word table, looking at each sentence
  I cn=AN(c); CW *cwv=(CW*)AV(c);  // Get # control words, address of first
  A *lv=AAV(l);  // address of words in sentences
  for(j=0;j<cn;++j) {   // look at each control word
@@ -986,8 +986,9 @@ static I pppp(J jt, A l, A c){I j; A fragbuf[20], *fragv=fragbuf; I fragl=sizeof
     I rparx=startx; // remember where the ) is
     while(--startx>=0 && !(AT(lvv[startx])==LPAR)){  // look for matching (   use = because LPAR can be a NAMELESS flag
      if(AT(lvv[startx])&RPAR+ASGN+NAME)break;  // =. not allowed; ) indicates previous disqualified block; NAME is unknowable
+     if(AT(lvv[startx])&VERB && FAV(lvv[startx])->flag2&VF2IMPLOC)break;  // u. v. not allowed: they are half-names
      if(AT(lvv[startx])&CONJ && FAV(lvv[startx])->id==CIBEAM)break;  // !: not allowed: might produce adverb/conj to do who-knows-what
-     if(AT(lvv[startx])&CONJ && FAV(lvv[startx])->id==CCOLON && !(AT(lvv[startx-1])&VERB))break;  //: allowed only in u : v form
+     if(AT(lvv[startx])&CONJ && FAV(lvv[startx])->id==CCOLON && !(AT(lvv[startx-1])&VERB))break;  // : allowed only in u : v form
     }
     if(startx>=0 && (AT(lvv[startx])==LPAR)){
      // The ) was matched and the () can be processed.

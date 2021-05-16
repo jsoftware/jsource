@@ -1024,6 +1024,8 @@ typedef struct {
 #define VF2USESITEMCOUNT2W  ((I)(((I)1)<<VF2USESITEMCOUNT2WX))
 #define VF2USESITEMCOUNT2AX 19   // This verb can make use of an item count stored in y.  Monad case only
 #define VF2USESITEMCOUNT2A  ((I)(((I)1)<<VF2USESITEMCOUNT2AX))
+#define VF2IMPLOCX 20   // This verb is one of u. v.
+#define VF2IMPLOC  ((I)(((I)1)<<VF2IMPLOCX))
 
 // layout of primitive, in the primtbl.  It is a memory header (shape 0) followed by a V
 typedef struct __attribute__((aligned(CACHELINESIZE))) {I memhdr[AKXR(0)/SZI]; union { V primvb; I primint; } prim; } PRIM;  // two cachelines exactly in 64-bit

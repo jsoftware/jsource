@@ -374,6 +374,7 @@ DF1(jtcompsum){
  A z; GATV(z,FL,m*d,MAX(0,wr-1),ws); if(1<r)MCISH(f+AS(z),f+1+ws,r-1);  // allocate, and install shape below the frame
  if(unlikely(m*d==0)){RETF(z);}  // mustn't call the function on an empty argument!
  // Do the operation
+ __m256d __attribute__((aligned(64))) accc[2][8];   // accumulators and error terms
  NAN0;
  D *wv=DAV(w), *zv=DAV(z);
 #if (C_AVX&&SY_64) || EMU_AVX
@@ -384,29 +385,54 @@ DF1(jtcompsum){
   endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */
   for(;m>0;--m){
    __m256d acc0; __m256d acc1; __m256d acc2; __m256d acc3;
-   __m256d c0; __m256d c1; __m256d c2; __m256d c3;  // error terms
+   __m256d c0; __m256d c1; __m256d c2; __m256d c3; // error terms
+// KAHAN has a dependency loop of 4 instructions, thus latency of 16 cycles (Skylake).  It takes unrolling by 8 to get the latency to match
+// the launch rate of 2 cycles per iteration.  This requires spilling results to memory, which will add more latency, but it's still better than unrolling only 4.
+// Unfortunately, clang goes nuts trying to handle this loop, and ends up doing 14 loads and 14 stores for every iteration.  So we have to unroll it
+// by hand using an array to hold the state
+#if 0
    acc0=acc1=acc2=acc3=c0=c1=c2=c3=_mm256_setzero_pd();
-   __m256d y;  __m256d t;   // new input value, temp to hold high part of sum
    UI n2=DUFFLPCT(n-1,2);  /* # turns through duff loop */
    if(n2>0){
     UI backoff=DUFFBACKOFF(n-1,2);
     wv+=(backoff+1)*NPAR;
     switch(backoff){
     do{
-// NOTE: This runs faster with 4 accumulators, but it is still very limited by FP latency.  clang doesn't even bother putting some variables into registers
-// because there would be no gain
     case -1: KAHAN(_mm256_loadu_pd(wv),0)
     case -2: KAHAN(_mm256_loadu_pd(wv+1*NPAR),1)
     case -3: KAHAN(_mm256_loadu_pd(wv+2*NPAR),2)
     case -4: KAHAN(_mm256_loadu_pd(wv+3*NPAR),3)
+    case -5: KAHAN(_mm256_loadu_pd(wv+3*NPAR),4)
+    case -6: KAHAN(_mm256_loadu_pd(wv+1*NPAR),5)
+    case -7: KAHAN(_mm256_loadu_pd(wv+2*NPAR),6)
+    case -8: KAHAN(_mm256_loadu_pd(wv+3*NPAR),7)
     wv+=4*NPAR;
     }while(--n2!=0);
     }
    }
-   KAHAN(_mm256_maskload_pd(wv,endmask),0) wv+=((n-1)&(NPAR-1))+1;
+#else
+   mvc(sizeof(accc),accc,1,MEMSET00);
+   UI nlp=(n-1)>>LGNPAR; 
+   for(;nlp;--nlp){KAHANA(_mm256_loadu_pd(wv),nlp&7) wv+=NPAR;}
+#endif
+   KAHANA(_mm256_maskload_pd(wv,endmask),7) wv+=((n-1)&(NPAR-1))+1;
    __m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin);
-   c0=_mm256_add_pd(c0,c1); c2=_mm256_add_pd(c2,c3); c0=_mm256_add_pd(c0,c2);   // add all the low parts together - the low bits of the low will not make it through to the result
-   TWOSUM(acc0,acc1,acc0,c1) TWOSUM(acc2,acc3,acc2,c2) c2=_mm256_add_pd(c1,c2); c0=_mm256_add_pd(c2,c0);   // add 0+1, 2+3; combine all low parts of Kahan corrections into low total
+   // add all the low parts together into c0 - the low bits of the low will not make it through to the result
+#if 0
+   c1=_mm256_add_pd(c1,c5); c2=_mm256_add_pd(c2,c6); c3=_mm256_add_pd(c3,c7); c0=_mm256_add_pd(c0,c4);
+#else
+   c0=_mm256_add_pd(accc[1][6],accc[1][5]); c1=_mm256_add_pd(accc[1][4],accc[1][3]); c2=_mm256_add_pd(accc[1][2],accc[1][1]); c3=_mm256_add_pd(accc[1][0],accc[1][7]);
+#endif 
+   c0=_mm256_add_pd(c0,c1); c2=_mm256_add_pd(c2,c3); c0=_mm256_add_pd(c0,c2);
+   // TWOSUM the accumulators into acc0, adding all the resulting low parts into c0
+#if 0
+   TWOSUM(acc0,acc4,acc0,c1) c0=_mm256_add_pd(c0,c1); TWOSUM(acc1,acc5,acc1,c1) c0=_mm256_add_pd(c0,c1); 
+   TWOSUM(acc2,acc6,acc2,c1) c0=_mm256_add_pd(c0,c1); TWOSUM(acc3,acc7,acc3,c1) c0=_mm256_add_pd(c0,c1);
+#else
+   TWOSUM(accc[0][6],accc[0][5],acc0,c1) c0=_mm256_add_pd(c0,c1); TWOSUM(accc[0][4],accc[0][3],acc1,c1) c0=_mm256_add_pd(c0,c1); 
+   TWOSUM(accc[0][2],accc[0][1],acc2,c1) c0=_mm256_add_pd(c0,c1); TWOSUM(accc[0][0],accc[0][7],acc3,c1) c0=_mm256_add_pd(c0,c1);
+#endif 
+   TWOSUM(acc0,acc1,acc0,c1) c0=_mm256_add_pd(c0,c1); TWOSUM(acc2,acc3,acc2,c1) c0=_mm256_add_pd(c0,c1);    // add 0+1, 2+3; combine all low parts of Kahan corrections into low total
    TWOSUM(acc0,acc2,acc0,c1) c0=_mm256_add_pd(c0,c1);  // 0+2, bringing along low part
   // acc0/c0 survive.  Combine horizontally
    c0=_mm256_add_pd(c0,_mm256_permute2f128_pd(c0,c0,0x01)); acc1=_mm256_permute2f128_pd(acc0,acc0,0x01);  // c0: 01+=23, acc1<-23
@@ -424,29 +450,49 @@ DF1(jtcompsum){
    __m256d y; __m256d t;   // new input value, temp to hold high part of sum
    __m256d acc0; __m256d acc1; __m256d acc2; __m256d acc3; __m256d c0; __m256d c1; __m256d c2; __m256d c3;  // accumulators, error terms
    DQ((d-1)>>LGNPAR,
-    wv0=wv; n0=n; acc0=acc1=acc2=acc3=c0=c1=c2=c3=_mm256_setzero_pd();
+    wv0=wv;
+#if 0
+    n0=n; acc0=acc1=acc2=acc3=c0=c1=c2=c3=_mm256_setzero_pd();
     switch(n0&3){
     label1:
     case 0: KAHAN(_mm256_loadu_pd(wv0),0) wv0+=d; case 3: KAHAN(_mm256_loadu_pd(wv0),1) wv0+=d; case 2: KAHAN(_mm256_loadu_pd(wv0),2) wv0+=d; case 1: KAHAN(_mm256_loadu_pd(wv0),3) wv0+=d;
      if((n0-=4)>0)goto label1;
     }
-    // combine accumulators
+#else
+    mvc(sizeof(accc),accc,1,MEMSET00);
+    UI nlp=n; 
+    for(;nlp;--nlp){KAHANA(_mm256_loadu_pd(wv0),nlp&7) wv0+=d;}
+#endif
     __m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin);
+    // combine accumulators
+    c0=_mm256_add_pd(accc[1][6],accc[1][5]); c1=_mm256_add_pd(accc[1][4],accc[1][3]); c2=_mm256_add_pd(accc[1][2],accc[1][1]); c3=_mm256_add_pd(accc[1][0],accc[1][7]);
     c0=_mm256_add_pd(c0,c1); c2=_mm256_add_pd(c2,c3); c0=_mm256_add_pd(c0,c2);   // add all the low parts together - the low bits of the low will not make it through to the result
+    TWOSUM(accc[0][7],accc[0][6],acc0,c1) c0=_mm256_add_pd(c0,c1); TWOSUM(accc[0][5],accc[0][4],acc1,c1) c0=_mm256_add_pd(c0,c1); 
+    TWOSUM(accc[0][3],accc[0][2],acc2,c1) c0=_mm256_add_pd(c0,c1); TWOSUM(accc[0][1],accc[0][0],acc3,c1) c0=_mm256_add_pd(c0,c1);
     TWOSUM(acc0,acc1,acc0,c1) TWOSUM(acc2,acc3,acc2,c2) c2=_mm256_add_pd(c1,c2); c0=_mm256_sub_pd(c2,c0);   // add 0+1, 2+3  KAHAN corrections are negative - change that now
     TWOSUM(acc0,acc2,acc0,c1) c0=_mm256_add_pd(c1,c0);  // 0+2
     acc0=_mm256_add_pd(acc0,c0);  // add low parts back into high in case there is overlap
     _mm256_storeu_pd(zv,acc0); wv+=NPAR; zv+=NPAR;
    )
    // repeat for partial column
-   wv0=wv; n0=n; acc0=acc1=acc2=acc3=c0=c1=c2=c3=_mm256_setzero_pd();
+   wv0=wv;
+#if 0
+   n0=n; acc0=acc1=acc2=acc3=c0=c1=c2=c3=_mm256_setzero_pd();
    switch(n0&3){
    label2:
     case 0: KAHAN(_mm256_maskload_pd(wv0,endmask),0) wv0+=d; case 3: KAHAN(_mm256_maskload_pd(wv0,endmask),1) wv0+=d; case 2: KAHAN(_mm256_maskload_pd(wv0,endmask),2) wv0+=d; case 1: KAHAN(_mm256_maskload_pd(wv0,endmask),3) wv0+=d;
     if((n0-=4)>0)goto label2;
    }
+#else
+    mvc(sizeof(accc),accc,1,MEMSET00);
+    UI nlp=n; 
+    for(;nlp;--nlp){KAHANA(_mm256_maskload_pd(wv0,endmask),nlp&7) wv0+=d;}
+#endif
    __m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin);
+   c0=_mm256_add_pd(accc[1][6],accc[1][5]); c1=_mm256_add_pd(accc[1][4],accc[1][3]); c2=_mm256_add_pd(accc[1][2],accc[1][1]); c3=_mm256_add_pd(accc[1][0],accc[1][7]);
    c0=_mm256_add_pd(c0,c1); c2=_mm256_add_pd(c2,c3); c0=_mm256_add_pd(c0,c2);   // add all the low parts together - the low bits of the low will not make it through to the result
+   TWOSUM(accc[0][7],accc[0][6],acc0,c1) c0=_mm256_add_pd(c0,c1); TWOSUM(accc[0][5],accc[0][4],acc1,c1) c0=_mm256_add_pd(c0,c1); 
+   TWOSUM(accc[0][3],accc[0][2],acc2,c1) c0=_mm256_add_pd(c0,c1); TWOSUM(accc[0][1],accc[0][0],acc3,c1) c0=_mm256_add_pd(c0,c1);
    TWOSUM(acc0,acc1,acc0,c1) TWOSUM(acc2,acc3,acc2,c2) c2=_mm256_add_pd(c1,c2); c0=_mm256_sub_pd(c2,c0);   // add 0+1, 2+3  KAHAN corrections are negative - change that now
    TWOSUM(acc0,acc2,acc0,c1) c0=_mm256_add_pd(c1,c0);  // 0+2
    acc0=_mm256_add_pd(acc0,c0);  // add low parts back into high in case there is overlap

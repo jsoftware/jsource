@@ -274,7 +274,7 @@ static DF1(jthkodom){DECLFG;B b=0;I n,*v;
 static DF1(jthkindexofmaxmin){
  ARGCHK2(w,self);
  // The code for ordinary search and min/max is very fast.  There's no value in trying to improve it.  The only
- // thing we have to add is setting tolerant comparison on the search, since we know we will be looking for something that is en exact match
+ // thing we have to add is setting intolerant comparison on the search, since we know we will be looking for something that is en exact match
  PUSHCCT(1.0) A z=hook1(w,self); POPCCT RETF(z);
 #if 0 // obsolete 
  I n=AN(w);

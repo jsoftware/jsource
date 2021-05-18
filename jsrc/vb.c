@@ -235,9 +235,7 @@ matchfnd: ;
     }
     matchmsk &= ~1;  // turn off the match we have processed
    }
-   if(!matchmsk)break;  // no 1st-char matches anywhere - must break because CTTZ fails
-   // advance to next possible match
-   wv += CTTZI(matchmsk);  // advance to possible match
+   wv += CTTZI(matchmsk|(1LL<<31));  // advance to possible match
   }
  }
  // Return with value appropriate for function

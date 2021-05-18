@@ -137,16 +137,15 @@ static A jtebar1C(J jt, C *av, C *wv, I an, I wn, C* zv, I type, A z){
  // scan full 31-byte sections until we hit one containing the first 2 characters
  C *wv0=wv;  // save initial pointer, to get index of match
 #if 1  // obsolete 
- UI match0=(UI)(av[0]==*wv)<<32;
+ UI match0=0;  // bit 32 is the match status of the byte before wv; 0 initially
  // the match status of the first character stored in bit 32
 #endif 
- UI4 matchmsk;
+ UI4 matchmsk; __m256i ws;
  while(wv<wvend){
 #if 1  // obsolete 
-#define EBAR1(offset)  {__m256i ws=_mm256_loadu_si256((__m256i*)(wv+offset*32)); match0 = ((UI)(UI4)_mm256_movemask_epi8(_mm256_cmpeq_epi8(a0, ws)))*2+(match0>>32); \
+#define EBAR1(offset)  {ws=_mm256_loadu_si256((__m256i*)(wv+offset*32)); match0 = ((UI)(UI4)_mm256_movemask_epi8(_mm256_cmpeq_epi8(a0, ws)))*2+(match0>>32); \
  matchmsk=match0&_mm256_movemask_epi8(_mm256_cmpeq_epi8(a1,ws)); if(unlikely(matchmsk!=0)){wv+=offset*32; goto matchfnd;}}
 
-  ++wv;   // for the fast search, wv points to the SECOND character.  We reset this when we leave this loop
   UI n2=DUFFLPCTV((wvend-wv)+32,2,LGSZI+LGNPAR);  /* # turns through duff loop */
   if(n2>0){
    I backoff=DUFFBACKOFFV((wvend-wv)+32,2,LGSZI+LGNPAR);
@@ -158,9 +157,8 @@ static A jtebar1C(J jt, C *av, C *wv, I an, I wn, C* zv, I type, A z){
    }while(--n2!=0);
    }
   }
-  --wv; break;  // if no start found, exit loop.  Back wv to the 1st character, because we haven't checked that position yet
+  break;  // if no start found, exit loop.  Back wv to the 1st character, because we haven't checked that position yet
 matchfnd: ;
-  --wv;  // back wv to the true start position of the first character
   C *endwv=wv+32;  // after we try these 32 start positions, wv will advance to next block
 #else
   // read in 32 bytes
@@ -175,12 +173,15 @@ matchfnd: ;
    C *endwv=wv+31;  // after we try these 31 start positions, wv will advance to next block
 #endif
    // match.  Trying each possible match, refetch it and see if it matches the entire search string
+   // the matches found in matchmsk start at wv-1; we back up the pointer now to indicate that.  At the end
+   // we will restore to the position in scan
+   --wv;  // make wv position agree with matchmsk
    do{
     wv += CTTZI(matchmsk);  // advance to possible match
     matchmsk >>= CTTZI(matchmsk);  // shift the bit of the first match off, so we start after it for the next match
     matchmsk>>=1;
     if(wv < wvend){   // if there are enough bytes left to try fetching
-     __m256i ws = _mm256_loadu_si256((__m256i*)wv);  // fetch the string, in which the first 2 bytes match
+     ws = _mm256_loadu_si256((__m256i*)wv);  // fetch the string, in which the first 2 bytes match
      I match32 = _mm256_movemask_epi8(_mm256_cmpeq_epi8(a32, ws));
      // output the result if any; advance 1 byte to continue search for start characters
      match32 = ((I4)fullmatchmsk|match32)==(I4)~0;  // if all bits =, produce a 1.  match32 has garbage in top 8 bits
@@ -195,9 +196,9 @@ matchfnd: ;
      else R num(1);  // +./@E.
      }
      wv += 1;
-    }else{endwv=wv; matchmsk=0;}  // if we run past the valid compare area, stop comparing & don't advance pointers
+    }else{endwv=wv+1; matchmsk=0;}  // if we run past the valid compare area, stop comparing & don't advance pointers.  Set wv so that after we exit the loop and back up, we are on the wv we found here
    }while(matchmsk!=0);
-   wv=endwv;  // step up to next block, skipping trailing 0s in this block.
+   wv=endwv;  // step up to next block, skipping trailing 0s in this block.  This undoes the decrementing of wv
 #if 0 // obsolete
   }
 #endif
@@ -206,13 +207,15 @@ matchfnd: ;
  // If an>32, there is no need to look
  if(an<=32){
   // This is like the loop above, but we avoid overfetch and exit the loop when out of data.  We crawl through the match positions
+  // The wv passed in from above points to the second character checked, so we have to back up one position
+  wv-=wv!=wv0;  // back up wv to point to the first possible match position - unless that would be before the start of the data
   wvend=wv0+wn-an+1;  // first inadmissible position
   while(wv<wvend){
    // read in valid bytes to end of string
 #ifdef MMSC_VER
-   __m256i ws = _mm256_maskload_epi64((__int64*) wv, _mm256_loadu_si256((__m256i*)(validitymask + (3 - ((wv0+wn-wv-1) >> 3)))));  // bytes of w
+   __m256i ws = _mm256_maskload_epi64((__int64*) wv, _mm256_loadu_si256((__m256i*)(validitymask + MIN((3 - ((wv0+wn-wv-1) >> 3))))));  // bytes of w
 #else
-   __m256i ws = _mm256_maskload_epi64((long long const *) wv, _mm256_loadu_si256((__m256i*)(validitymask + (3 - ((wv0+wn-wv-1) >> 3)))));  // bytes of w
+   __m256i ws = _mm256_maskload_epi64((long long const *) wv, _mm256_loadu_si256((__m256i*)(validitymask + (3 - MIN(3,((wv0+wn-wv-1) >> 3))))));  // bytes of w
 #endif
    // see if the first 2 characters are matched in sequence
    I4 match0 = _mm256_movemask_epi8(_mm256_cmpeq_epi8(a0, ws)); UI4 match1 = _mm256_movemask_epi8(_mm256_cmpeq_epi8(a1, ws));

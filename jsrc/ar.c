@@ -374,10 +374,10 @@ DF1(jtcompsum){
  A z; GATV(z,FL,m*d,MAX(0,wr-1),ws); if(1<r)MCISH(f+AS(z),f+1+ws,r-1);  // allocate, and install shape below the frame
  if(unlikely(m*d==0)){RETF(z);}  // mustn't call the function on an empty argument!
  // Do the operation
- __m256d __attribute__((aligned(64))) accc[2][8];   // accumulators and error terms
  NAN0;
  D *wv=DAV(w), *zv=DAV(z);
 #if (C_AVX&&SY_64) || EMU_AVX
+ __m256d __attribute__((aligned(64))) accc[2][8];   // accumulators and error terms
  __m256i endmask; /* length mask for the last word */
  _mm256_zeroupperx(VOIDARG);
  if(d==1){

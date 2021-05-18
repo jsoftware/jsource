@@ -135,37 +135,72 @@ static A jtebar1C(J jt, C *av, C *wv, I an, I wn, C* zv, I type, A z){
  temp = 32; temp = an<temp?an:temp; I fullmatchmsk = type + (UI4)(-(1LL<<temp));  // high-order 1 bits past the part that needs to be 1s in the mask - max length is 32  top 32 bits 0
  // We put type into fullmatchmsk to save a register
  // scan full 31-byte sections until we hit one containing the first 2 characters
- C *wv0=wv;  // save initial pointer, to get index to match
+ C *wv0=wv;  // save initial pointer, to get index of match
+#if 1  // obsolete 
+ UI match0=(UI)(av[0]==*wv)<<32;
+ // the match status of the first character stored in bit 32
+#endif 
+ UI4 matchmsk;
  while(wv<wvend){
+#if 1  // obsolete 
+#define EBAR1(offset)  {__m256i ws=_mm256_loadu_si256((__m256i*)(wv+offset*32)); match0 = ((UI)(UI4)_mm256_movemask_epi8(_mm256_cmpeq_epi8(a0, ws)))*2+(match0>>32); \
+ matchmsk=match0&_mm256_movemask_epi8(_mm256_cmpeq_epi8(a1,ws)); if(unlikely(matchmsk!=0)){wv+=offset*32; goto matchfnd;}}
+
+  ++wv;   // for the fast search, wv points to the SECOND character.  We reset this when we leave this loop
+  UI n2=DUFFLPCTV((wvend-wv)+32,2,LGSZI+LGNPAR);  /* # turns through duff loop */
+  if(n2>0){
+   I backoff=DUFFBACKOFFV((wvend-wv)+32,2,LGSZI+LGNPAR);
+   wv += (backoff+1)*(SZI*NPAR);
+   switch(backoff){
+   do{
+   case -1: EBAR1(0) case -2: EBAR1(1) case -3: EBAR1(2) case -4: EBAR1(3)
+   wv +=4*(SZI*NPAR);
+   }while(--n2!=0);
+   }
+  }
+  --wv; break;  // if no start found, exit loop.  Back wv to the 1st character, because we haven't checked that position yet
+matchfnd: ;
+  --wv;  // back wv to the true start position of the first character
+  C *endwv=wv+32;  // after we try these 32 start positions, wv will advance to next block
+#else
   // read in 32 bytes
   __m256i ws = _mm256_loadu_si256((__m256i*)wv);  // 32 bytes of w
   // see if the first 2 characters are matched in sequence
   I4 match0 = _mm256_movemask_epi8(_mm256_cmpeq_epi8(a0, ws)); UI4 match1 = _mm256_movemask_epi8(_mm256_cmpeq_epi8(a1, ws));
-  UI4 matchmsk = match0&(match1>>1);
+  matchmsk = match0&(match1>>1);
   if(!matchmsk){
    // no match (presumed the normal case: skip to next 31-byte section
    wv += 31;
   }else{
-   // match.  Refetch it and see if it matches the entire search string
-   wv += CTTZI(matchmsk);  // advance to possible match
-   if(wv < wvend){   // if there are enough bytes left to try fetching
-    ws = _mm256_loadu_si256((__m256i*)wv);  // fetch the string, in which the first 2 bytes match
-    match0 = _mm256_movemask_epi8(_mm256_cmpeq_epi8(a32, ws));
-    // output the result if any; advance 1 byte to continue search for start characters
-    match0 = ((I4)fullmatchmsk|match0)==(I4)~0;  // if all bits =, produce a 1.  match0 has garbage in top 8 bits
-    // if the search string is longer than 32 bytes, finish the comparison
-    if((-match0&(32-an))<0)match0=1^memcmpne(av+32,wv+32,an-32);
-    // perform the action based on the input type (now in fullmatchmsk)
-    if((fullmatchmsk>>56)<1){zv[wv-wv0] = (C)match0;  // E.
-    }else if((fullmatchmsk>>56)==1){zv+=match0&1;   // +/@E.
-    }else if((fullmatchmsk>>56)<3){     // I.@E.  extend if needed; always write result to avoid misbranch
-     if((I*)zv==IAV(z)+AN(z)){I m=AN(z); RZ(z=ext(0,z)); zv=(C*)(m+IAV(z));} *(I*)zv=wv-wv0; zv=(C*)((I*)zv+(match0&1));
-    }else{ if(match0&1)if((fullmatchmsk>>56)==3)R sc(wv-wv0);  // i.&1@:E.
-    else R num(1);  // +./@E.
-    }
-    wv += 1;
-   }
+   C *endwv=wv+31;  // after we try these 31 start positions, wv will advance to next block
+#endif
+   // match.  Trying each possible match, refetch it and see if it matches the entire search string
+   do{
+    wv += CTTZI(matchmsk);  // advance to possible match
+    matchmsk >>= CTTZI(matchmsk);  // shift the bit of the first match off, so we start after it for the next match
+    matchmsk>>=1;
+    if(wv < wvend){   // if there are enough bytes left to try fetching
+     __m256i ws = _mm256_loadu_si256((__m256i*)wv);  // fetch the string, in which the first 2 bytes match
+     I match32 = _mm256_movemask_epi8(_mm256_cmpeq_epi8(a32, ws));
+     // output the result if any; advance 1 byte to continue search for start characters
+     match32 = ((I4)fullmatchmsk|match32)==(I4)~0;  // if all bits =, produce a 1.  match32 has garbage in top 8 bits
+     // if the search string is longer than 32 bytes, finish the comparison
+     if((-match32&(32-an))<0)match32=1^memcmpne(av+32,wv+32,an-32);
+     // perform the action based on the input type (now in fullmatchmsk)
+     if((fullmatchmsk>>56)<1){zv[wv-wv0] = (C)match32;  // E.
+     }else if((fullmatchmsk>>56)==1){zv+=match32&1;   // +/@E.
+     }else if((fullmatchmsk>>56)<3){     // I.@E.  extend if needed; always write result to avoid misbranch
+      if(unlikely((I*)zv==IAV(z)+AN(z))){I m=AN(z); RZ(z=ext(0,z)); zv=(C*)(m+IAV(z));} *(I*)zv=wv-wv0; zv=(C*)((I*)zv+(match32&1));
+     }else{ if(match32&1)if((fullmatchmsk>>56)==3)R sc(wv-wv0);  // i.&1@:E.
+     else R num(1);  // +./@E.
+     }
+     wv += 1;
+    }else{endwv=wv; matchmsk=0;}  // if we run past the valid compare area, stop comparing & don't advance pointers
+   }while(matchmsk!=0);
+   wv=endwv;  // step up to next block, skipping trailing 0s in this block.
+#if 0 // obsolete
   }
+#endif
  }
  // There is one trailing section of 0<length<=32.  Process it without fetching out of bounds
  // If an>32, there is no need to look
@@ -181,7 +216,7 @@ static A jtebar1C(J jt, C *av, C *wv, I an, I wn, C* zv, I type, A z){
 #endif
    // see if the first 2 characters are matched in sequence
    I4 match0 = _mm256_movemask_epi8(_mm256_cmpeq_epi8(a0, ws)); UI4 match1 = _mm256_movemask_epi8(_mm256_cmpeq_epi8(a1, ws));
-   UI4 matchmsk = match0&(match1>>1);
+   matchmsk = match0&(match1>>1);
    if(matchmsk&1){
     // match on 1st char.  See if it all matches in this position
     match0 = _mm256_movemask_epi8(_mm256_cmpeq_epi8(a32, ws));

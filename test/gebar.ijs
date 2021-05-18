@@ -103,7 +103,8 @@ ystg =. y (] {~ (?@# #)) 'abcdefghij'
 xstg =. x (] {~ (?@# #)) 'abcdefgh'
 randpos =. 2 ?@$ y - x
 ystg =. (xstg,xstg) (, randpos +/ i.x)} ystg
-xstg (ebar -: E.) ystg
+assert. xstg (ebar -: E.) ystg [ xstgsav =: xstg [ ystgsav =: ystg
+1
 )
 (30 + 1000 ?@$ 10) f 5000 + 1000 ?@$ 100
 
@@ -278,6 +279,6 @@ olim =: 9!:20''
 (0 $~ 8e6 % IF64 { 4 8) -: (0 3e6 * 2 - IF64)  E. i. 8e6 % IF64 { 4 8 [ 'If this fails, you need ''9!:21 olim'' to restore memory allocation size'
 9!:21 olim
 
-4!:55 ;:'adot1 adot2 sdot0 adot3 adot4 adot5 f g ebar i j m n s t x y G jtree joinroutes olim '
+4!:55 ;:'adot1 adot2 sdot0 adot3 adot4 adot5 f g ebar i j m n s t x y G jtree joinroutes olim xstgsav ystgsav '
 randfini''
 

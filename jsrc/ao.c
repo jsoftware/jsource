@@ -501,7 +501,7 @@ A jtkeyct(J jt,A a,A w,A self,D toler){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
 
 // bivalent entry point: a </. w   or  (</. i.@#) w
 DF2(jtkeybox){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
- ARGCHK2(a,w);  // we don't neep ip, but all jtkey dyads must support it
+ ARGCHK2(a,w);  // we don't need ip, but all jtkey dyads must support it
  if(unlikely(ISSPARSE(AT(a))))R (AT(w)&NOUN?(AF)jtkeysp:(AF)jthook1cell)(jt,a,w,self);  // if sparse, go handle it
  SETIC(a,nitems);   // nitems is # items in a and w
  I cellatoms, celllen;  // number of atoms in an item of w, and the number of bytes therein.  celllen is negative for the monad

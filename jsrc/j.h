@@ -820,9 +820,11 @@ extern unsigned int __cdecl _clearfp (void);
 #define CVTEPI64(z,u) z=_mm256_cvtepi64_pd(_mm256_castpd_si256(u));
 #endif
 // # turns through a Duff loop of m1+1 elements, with 1<<lgduff instances in the loop.  We assume we are handling [1,NPAR] elements at the end
-#define DUFFLPCT(m1,lgduff) ((((m1)+((((I)1<<(lgduff))-1)<<LGNPAR))>>(LGNPAR+(lgduff))))
+#define DUFFLPCTV(m1,lgduff,lgeleperiter) ((((m1)+((((I)1<<(lgduff))-1)<<(lgeleperiter)))>>((lgeleperiter)+(lgduff))))
+#define DUFFLPCT(m1,lgduff) DUFFLPCTV(m1,lgduff,LGNPAR)
 // calculate the (backoff-1) in elements for the first pass through the Duff loop.  This (negative) value+1 must be added to the initial addresses
-#define DUFFBACKOFF(m1,lgduff) ((((m1)>>LGNPAR)-1)|-((I)1<<(lgduff)))  // 0->-1, 7->-2, 1->-8
+#define DUFFBACKOFFV(m1,lgduff,lgeleperiter) ((((m1)>>(lgeleperiter))-1)|-((I)1<<(lgduff)))  // 0->-1, 7->-2, 1->-8
+#define DUFFBACKOFF(m1,lgduff) DUFFBACKOFFV(m1,lgduff,LGNPAR) // 0->-1, 7->-2, 1->-8
 // offset by n items
 #define OFFSETBID(ad,n,commute,id,bi,bd) (D*)((I)ad+((I)(n)*(((commute)&((bi)|(bd)))?1:SZD)))  // using shift gives warning on clang can't left-shift a negative constant!
 // increment address by n items

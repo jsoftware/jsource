@@ -99,6 +99,7 @@ if. IFUNIX do.
   lib=. ' ',~ unxlib 'c'
   api=. 1 : ('(''',lib,''',m) & cd')
   c_open=: 'open i *c i i' api
+  c_open_va=: 'open i *c i x x x x x x i' api
   c_close=: 'close i i' api
   c_read=: 'read x i * x' api
   c_write=: 'write x i * x' api
@@ -257,7 +258,11 @@ fn=. jpath fn
 msize=. <. msize
 ts=. HS+msize
 if. IFUNIX do.
+  if. ('Darwin'-:UNAME) *. 'arm64'-:9!:56'cpu' do.
+  fh=. 0 pick c_open_va fn; (OR O_RDWR, O_CREAT, O_TRUNC); (6#<00) ,< 8b666
+  else.
   fh=. 0 pick c_open fn; (OR O_RDWR, O_CREAT, O_TRUNC); 8b666
+  end.
   c_lseek fh;(<:ts);SEEK_SET
   c_write fh; (,0{a.); 0+1
   c_lseek fh;0 ;SEEK_SET
@@ -300,7 +305,11 @@ ts=. 1!:4 <fn
 if. IFUNIX do.
   'Unix sharename must be same as filename' assert (sn-:'')+.sn-:fn
   'FO FMP FMM'=. ro{mtflags
+  if. ('Darwin'-:UNAME) *. 'arm64'-:9!:56'cpu' do.
+  fh=. >0 { c_open_va fn;FO;(6#<00),<0
+  else.
   fh=. >0 { c_open fn;FO;0
+  end.
   'bad file name/access' assert fh~:_1
   mh=. ts
   fad=. >0{ c_mmap (<0);ts;FMP;FMM;fh;0

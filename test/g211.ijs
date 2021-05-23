@@ -85,6 +85,14 @@ _8&$.  ieq ( 8&$.)
 
 'length error' -: (3;1;4) $. etx 3.4 5
 
+mksa=: 3 : 0
+y=. 3 3
+iso=. 6 2 $ 0 1 1 0 0 2 2 0 1 2 2 1
+vals=. _1 1 _2 2 _3 3
+vals (<"1 iso)} 1 $. y ; (i. # y) ; 00  NB. This failed when sparse array was returned marked inplaceable
+)
+iso=. mksa ''  NB. The assignment didn't ra() the children
+scheck iso
 
 NB. 1$.y ----------------------------------------------------------------
 
@@ -357,6 +365,6 @@ scheck |.x
 (|.d) -: 5 $. |.x
 (,.(n-1)-|.i) -: 4 $. |. x
 
-4!:55 ;:'a b c d e f g h i ieq m n perm r s x y yy '
+4!:55 ;:'a b c d e f g h i ieq iso m mksa n perm r s x y yy '
 
 

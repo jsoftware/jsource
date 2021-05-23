@@ -560,6 +560,7 @@ L* jtsymbis(J jt,A a,A w,A g){F2PREFIP;A x;I wn,wr;L*e;
    // If the value is abandoned inplaceable, we can just zap it, set its usecount to 1, and make it recursive if not already
    // We do this only for final assignment, because we are creating a name that would then need to be put onto the NVR stack for protection if the sentence continued
    // If w does not contain NVR information, initialize it to do so.  LSB indicates NVR; till then it is a zap pointer
+   // SPARSE nouns must never be inplaceable, because their components are not 
    rifv(w); // must realize any virtual
    if(likely((SGNIF((I)jtinplace,JTFINALASGNX)&AC(w)&(-(wt&NOUN)))<0)){  // if final assignment of abandoned noun
     *AZAPLOC(w)=0; ACRESET(w,ACUC1) if(unlikely(((wt^AFLAG(w))&RECURSIBLE)!=0)){AFLAGORLOCAL(w,wt&RECURSIBLE) jtra(w,wt);}  // zap it, make it non-abandoned, make it recursive (incr children if was nonrecursive).  This is like raczap(1)

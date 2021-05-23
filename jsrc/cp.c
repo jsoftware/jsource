@@ -175,7 +175,7 @@ static DF1(jtply1){PROLOG(0040);DECLFG;A zz=0;
  // result is ($n) $ (p i. ,n) { result - avoid the reshape if n is a list, and avoid the from if (p i. ,n) is an index vector
  RZ(p=indexof(p,rn));  // for each input power, the position of its executed result
  if(!equ(IX(np),p))RZ(zz=from(p,zz));  // order result-cells in order of the input powers
- if(AR(n)!=1)zz=reshape(shape(n),zz);  // if n is an arry, use its shape
+ if(AR(n)!=1)zz=reitem(shape(n),zz);  // if n is an array, use its shape
  EPILOG(zz);
 }
 

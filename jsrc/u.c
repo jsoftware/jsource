@@ -189,6 +189,40 @@ A jtifb(J jt,I n,B* RESTRICT b){A z;I p,* RESTRICT zv;
  p=bsum(n,b); 
  if(p==n)R IX(n);
  GATV0(z,INT,p,1); zv=AV(z);
+#if (C_AVX2&&SY_64) || EMU_AVX2
+ if(unlikely(p==0))R z;
+ // do 64 bits at a time
+ UI b64; __m256i b0,b1,bor,zero=_mm256_setzero_si256(); I zbase;
+ B *bx=b;
+
+#define IFB64(offset) b0=_mm256_loadu_si256((__m256i *)(bx+offset*(SZI*NPAR*2))); b1=_mm256_loadu_si256((__m256i *)(bx+offset*(SZI*NPAR*2)+NPAR*SZI)); bor=_mm256_or_si256(b0,b1); if(!_mm256_testz_si256(bor,bor)){ \
+  b64=((UI)(UI4)_mm256_movemask_epi8(_mm256_cmpgt_epi8(b1,zero))<<32)+(UI)(UI4)_mm256_movemask_epi8(_mm256_cmpgt_epi8(b0,zero)); zbase=bx-b+offset*(SZI*NPAR*2); do{*zv++=zbase+CTTZI(b64); b64&=b64-1;}while(b64);}
+
+ UI n2=DUFFLPCTV(n-1,2,LGSZI+LGNPAR+1);  // # turns through duff loop - each one 64 bytes
+ if(n2>0){
+  I backoff=DUFFBACKOFFV(n-1,2,LGSZI+LGNPAR+1);
+  bx += (backoff+1)*(SZI*NPAR*2);
+  switch(backoff){
+  do{
+  case -1: IFB64(0) case -2: IFB64(1) case -3: IFB64(2) case -4: IFB64(3)
+  bx +=4*(SZI*NPAR*2);
+  }while(--n2!=0);
+  }
+ }
+ // handle last batch of 64.  Create mask, possibly repeated
+ n=(n-1)&(2*SZI*NPAR-1);  // get n-1 of remnant
+ I n1=(n>>LGSZI)+1; n1=n1>=NPAR?NPAR:n1; bor=_mm256_loadu_si256((__m256i*)(validitymask+((-n1)&(NPAR-1))));
+ b64=(UI)(UI4)_mm256_movemask_epi8(_mm256_cmpgt_epi8(_mm256_maskload_epi64((I*)bx,bor),zero));
+ // read the second batch.  If n<32, this must be NOPd
+ zbase=bx-b; bx+=n&(SZI*NPAR);  // advance bx only if there is something to read
+
+ n1=(n>>LGSZI)-3; n1=n1<0?0:n1; bor=_mm256_loadu_si256((__m256i*)(validitymask+(4-n1)));
+ b64=b64+((UI)(UI4)_mm256_movemask_epi8(_mm256_cmpgt_epi8(b0 = _mm256_maskload_epi64((I*)bx,bor),zero))<<32);  // scaf
+ // discard invalid bits and write the rest out
+ b64<<=(BW-1)-n; b64>>=(BW-1)-n; while(b64){*zv++=zbase+CTTZI(b64); b64&=b64-1;};
+// obsolete if(p!=zv-AV(z))SEGFAULT;  // scaf
+// obsolete DO(p, if(b[AV(z)[i]]==0)SEGFAULT;)  // scaf
+#else
  n+=(n&(SZI-1))?SZI:0; I zbase=0; UI *wvv=(UI*)b; UI bits=*wvv++;  // prime the pipeline for top of loop
  while(n>0){    // where we load bits SZI at a time
   // skip empty words, to get best speed on near-zero a.  This exits with the first unskipped word in bits
@@ -203,6 +237,7 @@ A jtifb(J jt,I n,B* RESTRICT b){A z;I p,* RESTRICT zv;
   zbase+=BW;  // advance base to next batch of 64
   n-=BW;  // decr count left
  }
+#endif
  R z;
 }    /* integer vector from boolean mask */
 

@@ -86,7 +86,8 @@ typedef struct rngdata {
  A locsyms;  // local symbol table, or dummy empty symbol table if none init for task
 // end of cacheline 0
  A sf;               /* for $: clear for task                                         */
- I4 nthreads;  // number of threads to use, or 0 if we haven't checked init for task
+ S nthreads;  // number of threads to use for primitives, or 0 if we haven't checked init for task
+ S ntasks;     // number of futures allowed, 0 if none
  I4 threadrecip16;  // reciprocal of nthreads, 16 bits of fraction init for task
  UI cstackinit;       // C stack pointer at beginning of execution init for task
  I bytes;            // bytes currently in use - used only during 7!:1 clear for task
@@ -181,6 +182,7 @@ typedef struct rngdata {
 };
 typedef struct JTTstruct JTT;
 typedef JTT* JJ;  // thread-specific part of struct
+#define LGTHREADBLKSIZE 9  // log2 of threaddata
 
 // Must be aligned on a 256-byte boundary for flags; but better to align on a DRAM page boundary to avoid precharge
 typedef struct JSTstruct {
@@ -278,8 +280,8 @@ typedef struct JSTstruct {
  A dbtrap;           /* trap, execute on suspension                     */
  I peekdata;         /* our window into the interpreter                 */
 
- JTT threaddata[MAXTHREADS] __attribute__((aligned(JTFLAGMSK+1)));
-} JST;
+ JTT threaddata[MAXTASKS] __attribute__((aligned(JTFLAGMSK+1)));
+} JST;   // __attribute__((aligned(JTALIGNBDY))) biot allowed
 typedef JST* JS;  // shared part of struct
 
 #if 0 // used only for direct locale numbering
@@ -292,7 +294,7 @@ typedef JST* JS;  // shared part of struct
 
 #undef J
 #define J JJ
-#if MAXTHREADS>1  // for multithreading
+#if MAXTASKS>1  // for multithreading
 #define JJTOJ(jj) ((JS)((I)(jj)&-JTALIGNBDY))
 #else
 #define JJTOJ(jj) ((JS)((I)(jj)-offsetof(struct JSTstruct,threaddata)))
@@ -300,7 +302,6 @@ typedef JST* JS;  // shared part of struct
 #define JT(p,n) JJTOJ(p)->n
 #define INITJT(p,n) (p)->n   // in init functions, jjt points to the JS block and we use this to reference components
 #define MTHREAD(jt) (&jt->threaddata[0])   // master thread for shared jt
-#define LGTHREADBLKSIZE 9  // log2 of threaddata
 #define THREADID(jt) (((jt)&(JTALIGNBDY-1)-offsetof(struct JSTstruct, threaddata[0]))>>LGTHREADBLKSIZE)  // thread number from jt
-enum {xxxx = 1/(offsetof(struct JSTstruct, threaddata[MAXTHREADS])<=JTALIGNBDY) };  // assert not too many threads
+enum {xxxx = 1/(offsetof(struct JSTstruct, threaddata[MAXTASKS])<=JTALIGNBDY) };  // assert not too many threads
 enum {xxxxx = 1/(offsetof(struct JSTstruct, threaddata[1])-offsetof(struct JSTstruct, threaddata[0])==((I)1<<LGTHREADBLKSIZE)) };  // assert size of threaddata what we expected

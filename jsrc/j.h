@@ -607,6 +607,9 @@ extern unsigned int __cdecl _clearfp (void);
 
 #define MAXTHREADS 1  // maximum number of threads
 
+#define MAXTASKS 1  // maximum number of futures running at once (others will suspend)
+#define MAXTASKSRND 4  // MAXTASKS+2, rounded up to power-of-2 bdy to get the the JST block aligned on a multiple of its size
+
 // tpop stack is allocated in units of NTSTACK, but processed in units of NTSTACKBLOCK on an NTSTCKBLOCK boundary to reduce waste in each allocation.
 // If we audit execution results, we use a huge allocation so that tpop pointers can be guaranteed never to need a second one, & will thus be ordered
 #define NTSTACK         (1LL<<(AUDITEXECRESULTS?24:14))          // number of BYTES in an allocated block of tstack - pointers to allocated blocks - allocation is bigger to leave this many bytes on boundary

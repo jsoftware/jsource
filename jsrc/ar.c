@@ -135,8 +135,9 @@ REDUCEBFX(nandinsB, NAND,INAND,SNAND,BNAND,{DQ(m, B *y=memchr(x,C0,n); d=y?y-x:n
 #if SY_ALIGN
 AHDRR(plusinsB,I,B){
  if(d==1){
-  // adding individual booleans  Go a word at a time, with 4 accumulators, up to 255 turns each
   for(;m;--m,x+=n){
+#if 0 // obsolete
+  // adding individual booleans  Go a word at a time, with 4 accumulators, up to 255 turns each
    I acc=0; I nn;  UI *xu=(UI*)x; // number of atoms to go
    for(nn=n;nn>=4*SZI;){  // till we get to the end...
     I nloops=nn>>(LGSZI+2); nloops=nloops>255?255:nloops;  // max 255 loops, each 4 words
@@ -161,6 +162,9 @@ AHDRR(plusinsB,I,B){
    bytemask=(UI)~0>>(((-nn)&(SZI-1))<<3); bytemask=nn<=0?0:bytemask; xu+=REPSGN(nn-1); acc0+=*xu&bytemask;
    // collect significance
    ADDBYTESINI(acc0); acc+=acc0; *z++=acc;  // store total
+#else
+ *z++=bsum(n,x);
+#endif
   }
  }else{
   for(;m;--m,x+=n*d,z+=d){
@@ -171,7 +175,7 @@ AHDRR(plusinsB,I,B){
    for(dd=d;dd>0;dd-=SZI,xu+=1){  // for all columns...
     I acc20=0; I acc21=0; I acc22=0; I acc23=0; I acc24=0; I acc25=0; I acc26=0; I acc27=0; 
     UI *xu2=xu; I nn=n;   // accumulator, address moving down the swath, number of rows left in swath
-    while(nn){  // till swatch finished
+    while(nn){  // till swath finished
      I nloops=nn; nloops=nloops>255?255:nloops;  // max 255 loops, each 4 words
      nn-=nloops;  // keep nn = # bytes remaining
      I acc0=0;

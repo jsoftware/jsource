@@ -50,9 +50,10 @@ NB. unaligned memory access
 11111 22222 33333 555555 -: ". 36 37 38 31 }.&> 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa 11111'; 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa 22222'; 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa 33333'; 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa 555555'
 
 
-NB. x u&.(a:`v) y  and  x u&.(v`:a:) y -----------------------------------------------------------
+NB. semiduals x u&.(a:`v) y  and  x u&.(v`:a:) y -----------------------------------------------------------
 
 'domain error' -: +&.(a:`^.) etx i. 5
+'domain error' -: +:`*: "1&.(a:`>) etx i. 5
 'domain error' -: +&.(^.`a:) etx i. 5
 'domain error' -: ex '+&.(^.`^.)'
 'domain error' -: ex '+&.(a:`a:)'
@@ -71,6 +72,7 @@ NB. x u&.(a:`v) y  and  x u&.(v`:a:) y -----------------------------------------
 0 1 0 -: p.&.(a:`^.) b. 0
 0 0 1 -: +"1&.(^.`a:) b. 0
 _ _ _ -: +&.:(a:`^.) b. 0
+
 
 
 NB. Verify that named adverbs are stacked if the value is nameless

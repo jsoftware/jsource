@@ -147,6 +147,54 @@ I CTLZI_(UI w, UI4*out){
 
 I bsum(I n,B*b){I q=(n-1)>>LGSZI,z=0;UI t,*v;
  if(n==0)R z;
+#if (C_AVX2&&SY_64) || EMU_AVX2
+ // do 64 bits at a time, ending with <32 to finish
+ UI b64; __m256i b0,b1,zero=_mm256_setzero_si256(),baltb=_mm256_set1_epi16(0x00ff),balt16=_mm256_set1_epi32(0x0000ffff),balt1664=_mm256_set1_epi64x(0x000000000000ffff),btotal=zero; I zbase;
+ B *bx=b;
+ b0=zero; b1=zero; 
+ if(n>SZI*NPAR)while(1){
+  // do a section of up to 126 adds in each accumulator
+  I n127=n; n127=n<126*SZI*NPAR*2?n127:126*SZI*NPAR*2;  // limit is 126 loops in each of 2 accumulators
+
+#define BSUM64(offset,acc) b##acc=_mm256_add_epi8(b##acc,_mm256_loadu_si256((__m256i *)(bx+(2*offset+acc)*(SZI*NPAR))));
+
+  UI n2=DUFFLPCTV(n127-1,3,LGSZI+LGNPAR);  // # turns through duff loop - each one 64 bytes
+  if(n2>0){
+   I backoff=DUFFBACKOFFV(n127-1,3,LGSZI+LGNPAR);
+   bx += (backoff+1)*(SZI*NPAR);
+   n-=n2*8*(SZI*NPAR)+(backoff+1)*(SZI*NPAR);  // reduct count of # bytes left
+   switch(backoff){
+   do{
+   case -1: BSUM64(0,0) case -2: BSUM64(0,1) case -3: BSUM64(1,0) case -4: BSUM64(1,1)
+   case -5: BSUM64(2,0) case -6: BSUM64(2,1) case -7: BSUM64(3,0) case -8: BSUM64(3,1)
+   bx +=8*(SZI*NPAR);
+   }while(--n2!=0);
+   }
+  }
+  // if this is the last loop, break out to handle the last batch
+  if(n<=SZI*NPAR)break;
+  // join accumulators and funnel them down a single total of 4 64-bit values
+  b0=_mm256_add_epi16(_mm256_srli_epi16(b0,8),_mm256_and_si256(b0,baltb));  // 00TT00TT00TT00TT in b0
+  b1=_mm256_add_epi16(_mm256_srli_epi16(b1,8),_mm256_and_si256(b1,baltb));   // and b1
+  b1=_mm256_add_epi16(b0,b1);  // now b1 has the total, in 16 16-bit lanes
+  b1=_mm256_add_epi32(_mm256_srli_epi32(b1,16),b1); b1=_mm256_add_epi64(_mm256_srli_epi64(b1,32),b1);  // now have xxxxxxxxxxxxTTTT in each 64-bit section
+  btotal=_mm256_add_epi64(_mm256_and_si256(b1,balt1664),btotal);
+  b0=zero; b1=zero; 
+ }
+ // handle last batch of 32.  Create mask, read the batch, add it into b1.  There are n bytes left to read, n=1 to 32
+ __m256i endmask=_mm256_loadu_si256((__m256i*)((C*)validitymask+32-n));
+ b1=_mm256_add_epi8(b1,_mm256_and_si256(_mm256_loadu_si256((__m256i*)((C*)validitymask+32-n)),_mm256_maskload_epi64((I*)bx, _mm256_loadu_si256((__m256i*)(((I)validitymask+32-n)&-SZI)))));
+   // load the 8-byte section for any valid byte
+ // join accumulators and funnel them down a single total of 4 64-bit values
+ b0=_mm256_add_epi16(_mm256_srli_epi16(b0,8),_mm256_and_si256(b0,baltb));  // 00TT00TT00TT00TT in b0
+ b1=_mm256_add_epi16(_mm256_srli_epi16(b1,8),_mm256_and_si256(b1,baltb));   // and b1
+ b1=_mm256_add_epi16(b0,b1);  // now b1 has the total, in 16 16-bit lanes 00TT...
+ b1=_mm256_add_epi32(_mm256_srli_epi32(b1,16),b1); b1=_mm256_add_epi64(_mm256_srli_epi64(b1,32),b1);  // now have xxxxxxxxxxxxTTTT in each 64-bit section
+ btotal=_mm256_add_epi64(_mm256_and_si256(b1,balt1664),btotal);
+ // add 64-bit sections to get final result
+ btotal=_mm256_add_epi64(btotal,_mm256_castpd_si256(_mm256_permute_pd(_mm256_castsi256_pd(btotal),0xf)));
+ z=_mm256_extract_epi64(btotal,0)+_mm256_extract_epi64(btotal,2);
+ #else
  v=(UI*)b;
  // Do word-size sections, max 255 at a time, till all finished
  NOUNROLL while(1){
@@ -157,6 +205,7 @@ I bsum(I n,B*b){I q=(n-1)>>LGSZI,z=0;UI t,*v;
  }
 // finish up any remnant, 1-8 bytes
  t+=*v&((UI)~(I)0 >> (((-n)&(SZI-1))<<3)); ADDBYTESINI(t); z+=t;
+#endif
  R z;
 }    /* sum of boolean vector b */
 

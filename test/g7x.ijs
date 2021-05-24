@@ -31,7 +31,7 @@ h =: 3 : 0
  whilst. y=.<:y do.
   n=.>:?50
   a=. (n,n) ?@$ 5000
-  b=.%.a
+  try. b=.%.a catch. b =. a =. 2 2 $ 1 0 0 1 end.
   d=.>./|,(=i.n)-a+/ . *b
   pr y,n,d
  end.

@@ -154,7 +154,7 @@ I bsum(I n,B*b){I q=(n-1)>>LGSZI,z=0;UI t,*v;
  b0=zero; b1=zero; 
  if(n>SZI*NPAR)while(1){
   // do a section of up to 126 adds in each accumulator
-  I n127=n; n127=n<126*SZI*NPAR*2?n127:126*SZI*NPAR*2;  // limit is 126 loops in each of 2 accumulators
+  I n127=n; n127=n<254*SZI*NPAR*2?n127:254*SZI*NPAR*2;  // limit is 254 loops in each of 2 accumulators
 
 #define BSUM64(offset,acc) b##acc=_mm256_add_epi8(b##acc,_mm256_loadu_si256((__m256i *)(bx+(2*offset+acc)*(SZI*NPAR))));
 

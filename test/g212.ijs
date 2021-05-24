@@ -31,7 +31,15 @@ ln=: 40&$: : (4 : 0) " 0
 
 0.69314718055994530942 1.09861228866810969140 -: ln 2 3
 
+dv =: {{
+    if. 1 < N=: N+1 do. >: ' ' end.
+    x dv"0 y
+}}
+'domain error' -: 0 dv etx '.';'.' [ N =: 0  NB. Memory was corrupted because the error caused the recursive call not to free symbols
+'domain error' -: 0 dv etx '.';'.' [ N =: 0
+'domain error' -: 0 dv etx '.';'.' [ N =: 0
 
-4!:55 ;:'add f ln p x y'
+
+4!:55 ;:'add dv f ln N p x y'
 
 

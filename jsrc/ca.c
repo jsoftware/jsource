@@ -151,10 +151,9 @@ static DF2(atcomp){AF f;A z;
 
 // handler for comparison compounds including ones that go through i.
 // We have to look at the ranks to decide what function to execute or whether to revert
-// scaf should 
 DF2(atcomp){A z;AF f;
  ARGCHK2(a,w);
- // call analysis routine with the arguments/  Low 2 bits of return are postprocessing flags
+ // call analysis routine with the arguments.  Low 2 bits of return are postprocessing flags
  f=atcompf(a,w,self);
  I postflags=(I)f&3;  // extract postprocessing from return
  f=(AF)((I)f&-4);    // restore function address

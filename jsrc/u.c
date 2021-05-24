@@ -258,15 +258,15 @@ A jtifb(J jt,I n,B* RESTRICT b){A z;I p,* RESTRICT zv;
   }while(--n2!=0);
   }
  }
- // handle last batch of 64.  Create mask, possibly repeated
+ // handle last batch of 64.  Create masks
  n=(n-1)&(2*SZI*NPAR-1);  // get n-1 of remnant
  I n1=(n>>LGSZI)+1; n1=n1>=NPAR?NPAR:n1; bor=_mm256_loadu_si256((__m256i*)(validitymask+((-n1)&(NPAR-1))));
  b64=(UI)(UI4)_mm256_movemask_epi8(_mm256_cmpgt_epi8(_mm256_maskload_epi64((I*)bx,bor),zero));
- // read the second batch.  If n<32, this must be NOPd
+ // read the second batch.  If n<32, this must be NOPd by repeateing the address
  zbase=bx-b; bx+=n&(SZI*NPAR);  // advance bx only if there is something to read
 
  n1=(n>>LGSZI)-3; n1=n1<0?0:n1; bor=_mm256_loadu_si256((__m256i*)(validitymask+(4-n1)));
- b64=b64+((UI)(UI4)_mm256_movemask_epi8(_mm256_cmpgt_epi8(b0 = _mm256_maskload_epi64((I*)bx,bor),zero))<<32);  // scaf
+ b64=b64+((UI)(UI4)_mm256_movemask_epi8(_mm256_cmpgt_epi8(_mm256_maskload_epi64((I*)bx,bor),zero))<<32);
  // discard invalid bits and write the rest out
  b64<<=(BW-1)-n; b64>>=(BW-1)-n; while(b64){*zv++=zbase+CTTZI(b64); b64&=b64-1;};
 // obsolete if(p!=zv-AV(z))SEGFAULT;  // scaf

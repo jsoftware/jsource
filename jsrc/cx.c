@@ -617,13 +617,17 @@ docase:
  A prevlocsyms=(A)AM(locsym);  // get symbol table to return to, before we free the old one
  if(likely((REPSGN(SGNIF(nG0ysfctdl,3))&((I)cv^(I)((CDATA*)IAV1(cd)-1)))==0)){  // if we never allocated cd, or the stack is empty
   // Normal path.  protect the result block and free everything allocated here, possibly including jt->locsyms if it was cloned (it is on the stack now)
-  z=EPILOGNORET(z);  // protect return value from being freed when the symbol table is.  Must also be before stack cleanup, in case the return value is xyz_index or the like
+  if(likely(z!=0))z=EPILOGNORET(z); else tpop(_ttop);  // protect return value from being freed when the symbol table is.  Must also be before stack cleanup, in case the return value is xyz_index or the like
+   // We have to make sure that we clear all atored values, because they may point to virtual blocks, even unincorpable ones, in callers.
+   // tpop will do the trick for cloned symbol tables, and EPILOG calls tpop - EXCEPT when z is 0.  Probably the best solution is to have gc() do the
+   // tpop whenever z is 0, but out of timidity we do it here instead, making sure tpop runs one way or another.  This frees any cloned symbol tables,
+   // and below we free the values from an original local table
  }else{
   // Unusual path with an unclosed contruct (e. g. return. from inside for. loop).  We have to free up the for. stack, but the return value might be one of the names
   // to be deleted on the for. stack, so we must protect the result before we pop the stack.  BUT, EPILOG frees all locally-allocated blocks, which might include the symbol
   // table that we need to pop from.  So we protect the symbol table during the cleanup of the result and stack.
   ra(locsym);  // protect local symtable - not contents
-  z=EPILOGNORET(z);  // protect return value from being freed when the symbol table is.  Must also be before stack cleanup, in case the return value is xyz_index or the like
+  if(likely(z!=0))z=EPILOGNORET(z); else tpop(_ttop);  // protect return value from being freed when the symbol table is.  Must also be before stack cleanup, in case the return value is xyz_index or the like.  See sbove for tpop
   NOUNROLL while(cv!=(CDATA*)IAV1(cd)-1){unstackcv(cv,0); --cv;}  // clean up any remnants left on the for/select stack
   fa(cd);  // have to delete explicitly, because we had to ext() the block and thus protect it with ra()
   fa(locsym);  // unprotect local syms.  This deletes them if they were cloned

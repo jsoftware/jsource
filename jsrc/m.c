@@ -683,7 +683,7 @@ A jtrealize(J jt, A w){A z; I t;
 // if the block could not be realized
 
 
-A jtgc (J jt,A w,A* old){
+A jtgc(J jt,A w,A* old){
  ARGCHK1(w);  // return if no input (could be error or unfilled box)
  I c=AC(w);  // remember original usecount/inplaceability
  // We want to avoid realizing w if possible, so we handle virtual w separately

@@ -6,6 +6,7 @@
 #include "j.h"
 #include "vasm.h"
 #include "vcomp.h"
+#include "ve.h"
 
 #define DIVI(u,v)     (u||v ? ddiv2(u,(D)v) : 0.0)
 #define DIVBB(u,v)    (v?u:u?inf:0.0)
@@ -318,7 +319,8 @@ AHDR2(remII,I,I,I){I u,v;
   DQ(m, u=*x++;
     // take abs(x); handle negative x in a postpass
    UI ua=-u>=0?-u:u;  // abs(x)
-   if(!(ua&(ua-1))){I umsk = ua-1; DQC(n, *z++=umsk&*y++;);  // x is a power of 2, including 0
+// obsolete    if(!(ua&(ua-1))){I umsk = ua-1; DQC(n, *z++=umsk&*y++;);  // x is a power of 2, including 0
+   if(!(ua&(ua-1))){I umsk = ua-1; bw0001II(n,1,&umsk,y,z,jt); z+=~n; y+=~n;   // x is a power of 2, including 0
    }else{
     // calculate 1/abs(x) to 53-bit precision.  Remember, x is at least 3, so the MSB will never have signed significance
     UI uarecip = (UI)(18446744073709551616.0/(D)(I)ua);  // recip, with binary point above the msb.  2^64 / ua
@@ -345,7 +347,7 @@ AHDR2(remII,I,I,I){I u,v;
    else DQC(n, *z++=remii( u,*y);      y++;)
   )
 #endif
- }else      DQ(m, v=*y++; DQ(n, *z++=remii(*x, v); x++;     ));
+ }else      DQ(m, v=*y++; DQ(n, *z++=remii(*x, v); x++;     ));  // repeated y
  R EVOK;
 }
 

@@ -257,7 +257,7 @@ typedef union {
 #else
 #define CONST
 #endif
-#define INLINE __attribute__((always_inline))
+#define INLINE inline __attribute__((always_inline))
 
 #if defined(__MINGW32__) || defined(__MINGW64__) || defined(__CYGWIN__)
 #ifndef SLEEF_STATIC_LIBS

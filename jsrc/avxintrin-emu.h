@@ -756,6 +756,22 @@ static __emu_inline __emu__m256i __emu_mm256_slli_epi64 ( __emu__m256i a, int im
     return A;
 }
 
+static __emu_inline __emu__m256i __emu_mm256_srli_epi16 ( __emu__m256i a, int imm )
+{
+    __emu__m256i A;
+    A.__emu_m128[0] = _mm_srli_epi16( a.__emu_m128[0], imm);
+    A.__emu_m128[1] = _mm_srli_epi16( a.__emu_m128[1], imm);
+    return A;
+}
+
+static __emu_inline __emu__m256i __emu_mm256_srli_epi32 ( __emu__m256i a, int imm )
+{
+    __emu__m256i A;
+    A.__emu_m128[0] = _mm_srli_epi32( a.__emu_m128[0], imm);
+    A.__emu_m128[1] = _mm_srli_epi32( a.__emu_m128[1], imm);
+    return A;
+}
+
 static __emu_inline __emu__m256i __emu_mm256_srli_epi64 ( __emu__m256i a, int imm )
 {
     __emu__m256i A;
@@ -784,6 +800,7 @@ static __emu_inline __emu__m256i __emu_mm256_srli_si256 ( __emu__m256i a, int im
 // avx2
 __EMU_M256_IMPL_M2( __m256i, cmpgt_epi32 );
 __EMU_M256_IMPL_M2( __m256i, cmpgt_epi64 );
+__EMU_M256_IMPL_M2( __m256i, cmpgt_epi8 );
 __EMU_M256_IMPL_M2( __m256i, add_epi64 );
 __EMU_M256_IMPL_M2( __m256i, sub_epi64 );
 
@@ -1126,6 +1143,8 @@ __EMU_M256_IMPL_M1_HL( __m128i, __m256d, cvtpd_epi32);
 __EMU_M256_IMPL_M1_RET( __m256i, __m256, cvttps_epi32 );
 
 // avx2
+__EMU_M256_IMPL_M2( __m256i, add_epi16 );
+__EMU_M256_IMPL_M2( __m256i, add_epi32 );
 __EMU_M256_IMPL_M2( __m256i, add_epi8 );
 __EMU_M256_IMPL_M2( __m256i, cmpeq_epi32 );
 __EMU_M256_IMPL_M2( __m256i, cmpeq_epi64 );
@@ -1650,11 +1669,6 @@ static __emu_inline __emu__m256i __emu_mm256_sllv_epi64(__emu__m256i a, __emu__m
 #define __m256i __emu__m256i
 #define __m256d __emu__m256d
 
-#define _mm256_cmpgt_epi32    __emu_mm256_cmpgt_epi32
-#define _mm256_cmpgt_epi64    __emu_mm256_cmpgt_epi64
-#define _mm256_add_epi64    __emu_mm256_add_epi64
-#define _mm256_sub_epi64    __emu_mm256_sub_epi64
-
 #define _mm256_add_pd    __emu_mm256_add_pd
 #define _mm256_add_ps    __emu_mm256_add_ps
 
@@ -1872,7 +1886,12 @@ static __emu_inline __emu__m256i __emu_mm256_sllv_epi64(__emu__m256i a, __emu__m
 #define _mm256_castsi128_si256 __emu_mm256_castsi128_si256
 
 // avx2
+#define _mm256_add_epi16 __emu_mm256_add_epi16
+#define _mm256_add_epi32 __emu_mm256_add_epi32
 #define _mm256_add_epi8 __emu_mm256_add_epi8
+#define _mm256_add_epi64 __emu_mm256_add_epi64
+#define _mm256_sub_epi64 __emu_mm256_sub_epi64
+
 #define _mm256_and_si256 __emu_mm256_and_si256
 #define _mm256_andnot_si256 __emu_mm256_andnot_si256
 #define _mm256_or_si256 __emu_mm256_or_si256
@@ -1881,6 +1900,8 @@ static __emu_inline __emu__m256i __emu_mm256_sllv_epi64(__emu__m256i a, __emu__m
 
 #define _mm256_mul_epu32 __emu_mm256_mul_epu32
 #define _mm256_slli_epi64 __emu_mm256_slli_epi64
+#define _mm256_srli_epi16 __emu_mm256_srli_epi16
+#define _mm256_srli_epi32 __emu_mm256_srli_epi32
 #define _mm256_srli_epi64 __emu_mm256_srli_epi64
 #define _mm256_srli_si256 __emu_mm256_srli_si256
 
@@ -1892,6 +1913,9 @@ static __emu_inline __emu__m256i __emu_mm256_sllv_epi64(__emu__m256i a, __emu__m
 #define _mm256_cmpeq_epi32 __emu_mm256_cmpeq_epi32
 #define _mm256_cmpeq_epi64 __emu_mm256_cmpeq_epi64
 #define _mm256_cmpeq_epi8 __emu_mm256_cmpeq_epi8
+#define _mm256_cmpgt_epi32 __emu_mm256_cmpgt_epi32
+#define _mm256_cmpgt_epi64 __emu_mm256_cmpgt_epi64
+#define _mm256_cmpgt_epi8 __emu_mm256_cmpgt_epi8
 
 #define _mm256_maskload_epi64 __emu_mm256_maskload_epi64
 #define _mm256_maskstore_epi64 __emu_mm256_maskstore_epi64

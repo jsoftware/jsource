@@ -107,9 +107,10 @@ A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I
  // Start flags with ASGSAFE (if g and h are safe), and with INPLACEOK to match the setting of f1,f2.  Turn off inplacing that neither f nor h can handle
  if(NOUN&AT(f)){  /* nvv, including y {~ x i. ] */
   flag=(hv->flag&(VJTFLGOK1|VJTFLGOK2))+((gv->flag&hv->flag)&VASGSAFE);  // We accumulate the flags for the derived verb.  Start with ASGSAFE if all descendants are.
-  // Mark the noun as non-inplaceable.  If the derived verb is used in another sentence, it must first be
-  // assigned to a name, which will protects values inside it.
-  ACIPNO(f);  // This justifies keeping the result ASGSAFE
+// obsolete   // Mark the noun as non-inplaceable.  If the derived verb is used in another sentence, it must first be
+// obsolete   // assigned to a name, which will protects values inside it.
+// obsolete   ACIPNO(f);  // This justifies keeping the result ASGSAFE
+  RZ(f=makenounasgsafe(jt, f))   // adjust usecount so that the value cannot be inplaced
   f1=jtnvv1;
   if(((AT(f)^B01)|AR(f)|BAV0(f)[0])==0&&BOTHEQ8(gi,hi,CEPS,CDOLLAR))f1=jtisempty;  // 0 e. $, accepting only boolean 0
   if(LIT&AT(f)&&1==AR(f)&&BOTHEQ8(gi,hi,CTILDE,CFORK)&&CFROM==ID(gv->fgh[0])){

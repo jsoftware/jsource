@@ -419,6 +419,18 @@ static DF1(ixfixedright ){V*v=FAV(self); PUSHCCT(v->localuse.lu1.cct) A z=indexo
 
 static DF2(with2){A z; R df1(z,w,powop(self,a,0));}
 
+// a is a noun block that is going into a derived entity.  We flag it so that it cannot be modified by in-place assignment.
+A makenounasgsafe(J jt, A w){
+ // if w is virtual, realize it
+ INCORP(w);
+ // if w if PERMANENT or NJA, or if usecount is not exactly 1, it's OK: either the value can't present for inplacing or it will be rejected because of usecount.
+ if((AC(w)|REPSGN(SGNIF(AC(w),ACPERMANENTX)))!=ACUC1||AFLAG(w)&AFNJA){ACIPNO(w); R w;}
+ // the ambiguous case is usecount=1.  This might be an assigned name, and there might or might not be other outstanding references to the name.  We trickily
+ // knock the usecount off 1 by ra()ing the value and also tpushing it: no net change to the usecount, but the value will be non-inplaceable permanently
+ // this trick will cover the usecount up until the derived entity is deleted or saved; after that it is OK on its own
+ ra(w); tpush(w); R w;  // raise usecount (making recursive), then tpush
+}
+
 // u&v
 F2(jtamp){A h=0,z;AF f1,f2;B b;C c;I flag,flag2=0,linktype=0,mode=-1,p,r;V*v;
  ARGCHK2(a,w);
@@ -428,11 +440,12 @@ F2(jtamp){A h=0,z;AF f1,f2;B b;C c;I flag,flag2=0,linktype=0,mode=-1,p,r;V*v;
   f1=withl; v=FAV(w); c=v->id;
   // set flag according to ASGSAFE of verb, and INPLACE and IRS from the dyad of the verb
   flag=((v->flag&(VJTFLGOK2|VIRS2))>>1)+(v->flag&VASGSAFE);
-  // If the noun is not inplaceable now, we have to turn off ASGSAFE, because we may have a form like a =: 5 (a&+)@:+ a which would inplace
-  // a improperly.  If the noun is inplaceable there's no way it can get assigned to a name after m&v
-  // Otherwise, mark the noun as non-inplaceable (so it will not be modified during use).  If the derived verb is used in another sentence, it must first be
-  // assigned to a name, which will protect values inside it.
-  if(likely(AC(a)>=0)){flag &= ~VASGSAFE;}else{ACIPNO(a);}   // scaf could do better?
+// obsolete   // If the noun is not inplaceable now, we have to turn off ASGSAFE, because we may have a form like a =: 5 (a&+)@:+ a which would inplace
+// obsolete   // a improperly.  If the noun is inplaceable there's no way it can get assigned to a name after m&v
+// obsolete   // Otherwise, mark the noun as non-inplaceable (so it will not be modified during use).  If the derived verb is used in another sentence, it must first be
+// obsolete   // assigned to a name, which will protect values inside it.
+// obsolete   if(likely(AC(a)>=0)){flag &= ~VASGSAFE;}else{ACIPNO(a);}   // scaf could do better?
+  RZ(a=makenounasgsafe(jt, a))   // adjust usecount so that the value cannot be inplaced
   
   if((-AN(a)&-AR(a))<0){  // a is not atomic and not empty
     // c holds the pseudochar for the v op.  If v is u!.0, replace c with the pseudochar for n
@@ -457,11 +470,12 @@ F2(jtamp){A h=0,z;AF f1,f2;B b;C c;I flag,flag2=0,linktype=0,mode=-1,p,r;V*v;
   // set flag according to ASGSAFE of verb, and INPLACE and IRS from the dyad of the verb 
   // kludge mark it not ASGSAFE in case it is a name that is being reassigned.  We could use nvr stack to check for that.
   flag=((v->flag&(VJTFLGOK2|VIRS2))>>1)+(v->flag&VASGSAFE);
-  // If the noun is not inplaceable now, we have to turn off ASGSAFE, because we may have a form like a =: 5 (a&+)@:+ a which would inplace
-  // a improperly.  If the noun is inplaceable there's no way it can get assigned to a name after m&v
-  // Otherwise, mark the noun as non-inplaceable (so it will not be modified during use).  If the derived verb is used in another sentence, it must first be
-  // assigned to a name, which will protect values inside it.
-  if(likely(AC(w)>=0)){flag &= ~VASGSAFE;}else{ACIPNO(w);}
+// obsolete   // If the noun is not inplaceable now, we have to turn off ASGSAFE, because we may have a form like a =: 5 (a&+)@:+ a which would inplace
+// obsolete   // a improperly.  If the noun is inplaceable there's no way it can get assigned to a name after m&v
+// obsolete   // Otherwise, mark the noun as non-inplaceable (so it will not be modified during use).  If the derived verb is used in another sentence, it must first be
+// obsolete   // assigned to a name, which will protect values inside it.
+// obsolete   if(likely(AC(w)>=0)){flag &= ~VASGSAFE;}else{ACIPNO(w);}
+  RZ(w=makenounasgsafe(jt, w))   // adjust usecount so that the value cannot be inplaced
   if((-AN(w)&-AR(w))<0){
     // 
     // c holds the pseudochar for the v op.  If v is u!.n, replace c with the pseudochar for n

@@ -902,6 +902,7 @@ extern void     jstpoll(J);
 extern void     jststop(J);
 extern I        level(A);
 extern I        levelle(A,I);
+extern A        makenounasgsafe(J,A);
 extern void     mvc(I,void*,I,void*);
 extern B        nameless(A);
 extern D        qpf(void);

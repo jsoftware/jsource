@@ -507,10 +507,31 @@ a =: 'abc'
 a =: 'abc' (, , (, , [)) 'b'
 a -: 'abcbabcbabc' 
 
-            
+9!:53 (1)
+a =: >: i. 9  NB. >: so not AFRO
+a =: (a ,~ 1 ,~ ]) a  NB. value in nvv must be protected
+((>: i. 9) , 1 , (>: i. 9)) -: a
 
+a =: >: i. 9  NB. >: so not AFRO
+a =: ([: ,&a 1 ,~ ]) a  NB. value in nvv must be protected
+((>: i. 9) , 1 , (>: i. 9)) -: a
+
+a =: >: i. 1e6  NB. not AFRO
+3000 > 7!:2 'a =: 5&+ a'
+
+a =: 100 100 ?@$ 0
+22000 > 7!:2 'a =: 99 I.@:(<&0.001)@,@]} a'
+
+a =: 'ab'
+b =: 1e5 $ 'abdab'
+3000 > 7!:2 'b =: ([: ,&a ''z'' ,~ ]) b'
+((1e5 $ 'abdab') , 'zab') -: b
+'ab' -: a
+a =: ([: ,&a 'z' ,~ ]) a
+'abzab' -: a
 
 NB. hook
+9!:53 (0)
 ('c' ,~ 999 $ 'abc') -: (, {:) 999 $ 'abc'
 IGNOREIFFVI 3000 > 7!:2 '(, {:) 888 $ ''abc'''
 ('c' ,~ 1000 # 'a') -: (1000 # 'a') (, ]) 'c'

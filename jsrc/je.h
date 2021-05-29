@@ -591,6 +591,7 @@ extern DF1(jtatomic1);
 extern DF2(jtatomic2);
 extern DF2(jtbitwisechar);
 extern DF2(jtcharfn2);
+extern DF2(jtdeadband);
 extern DF2(jtunquote);
 extern A jtdbunquote(J,A,A,A,L*);
 extern DF2(jtdfs2);

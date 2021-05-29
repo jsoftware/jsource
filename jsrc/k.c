@@ -154,7 +154,7 @@ static KF1(jtDfromI){I n=AN(w); D *x=DAV(w); D *z=yv;
 /* Optimized full range int64_t to double conversion           */
 /* Emulate _mm256_cvtepi64_pd()                                */
 // Tip o'hat to wim and Peter Cordes on stackoverflow
- AVXATOMLOOP(0,lbl,
+ AVXATOMLOOP(0,
   CVTEPI64DECLS
 // obsolete     __m256i magic_i_lo   = _mm256_set1_epi64x(0x4330000000000000);                /* 2^52               encoded as floating-point  */
 // obsolete     __m256i magic_i_hi32 = _mm256_set1_epi64x(0x4530000080000000);                /* 2^84 + 2^63        encoded as floating-point  */

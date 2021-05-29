@@ -324,7 +324,7 @@ AHDRP(pluspfxD,D,D){I i;
  x+=((n-1)&(NPAR-1))+1; z+=((n-1)&(NPAR-1))+1;
 #else
   // clang insists on reordering the loop, putting the update of acc AFTER the creation of the final u.  Turns out OK
-  AVXATOMLOOP(3,lbl,  // unroll not needed; need maskload to load 0s after valid area
+  AVXATOMLOOP(3,  // unroll not needed; need maskload to load 0s after valid area
     neut=_mm256_setzero_pd();
     __m256d acc=neut; __m256d accs;  // accumulator and place to save it 
     ,
@@ -357,7 +357,7 @@ AHDRP(fn,D,D){I i; \
  NAN0; \
  if(d==1){ \
   DQ(m, \
-  AVXATOMLOOP(3,lbl, \
+  AVXATOMLOOP(3, \
     neut=_mm256_broadcast_sd(&neutral); \
     __m256d acc=neut; __m256d accs; \
     , \

@@ -1142,11 +1142,11 @@ extern unsigned int __cdecl _clearfp (void);
 #define _mm256_zeroupperx(x)
 #define NPAR ((I)(sizeof(__m256d)/sizeof(D))) // number of Ds processed in parallel
 #define LGNPAR 2  // no good automatic way to do this
-// loop for atomic parallel ops.  // fixed: n is #atoms (never 0), x->input, z->result, u=input atom4 and result
-//                                                                                  __SSE2__    atom2
+// loop for atomic parallel ops.  // fixed: n is #atoms (never 0), x->input (as D*), z->result (as D*), u=input atom4 and result
+//                                                                                                  __SSE2__    atom2
 // loop advances x and y to end +1 of region
 // parms: bit0=suppress unrolling, bit1=use maskload for any aligning fetch
-#define AVXATOMLOOP(parms,lbl,preloop,loopbody,postloop) \
+#define AVXATOMLOOP(parms,preloop,loopbody,postloop) \
  __m256i endmask;  __m256d u; __m256d neut=_mm256_setzero_pd(); \
  _mm256_zeroupperx(VOIDARG) \
  preloop \
@@ -1304,7 +1304,7 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x
 #define LGNPAR 1  // 128-bit no good automatic way to do this
 // loop for atomic parallel ops.  // fixed: n is #atoms (never 0), x->input, z->result, u=input atom4 and result
 //                                                                                  __SSE2__    atom2
-#define AVXATOMLOOP(parms,lbl,preloop,loopbody,postloop) \
+#define AVXATOMLOOP(parms,preloop,loopbody,postloop) \
  int64x2_t endmask;  float64x2_t u; \
  endmask = vec_loadu_si128((int64x2_t*)(validitymask+((-n)&(NPAR-1))));  /* mask for 0 1 2 3 4 5 is xx 01 11 01 11 01 */ \
  preloop \

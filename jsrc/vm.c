@@ -48,7 +48,7 @@ APFX(powZZ, Z,Z,Z, zpow  ,,HDR1JERR)
 APFX(cirZZ, Z,Z,Z, zcir  ,NAN0;,HDR1JERRNAN)
 
 // Call SLEEF with no checking
-#define TRIGUNLIM(lbl,sleeffn)  {AVXATOMLOOP(1,lbl, \
+#define TRIGUNLIM(lbl,sleeffn)  {AVXATOMLOOP(1, \
  , \
  u=sleeffn(u); \
  , \
@@ -57,7 +57,7 @@ APFX(cirZZ, Z,Z,Z, zcir  ,NAN0;,HDR1JERRNAN)
 
 // Call SLEEF after checking symmetric 2-sided limits.  If comp is not true everywhere, signal err, else call sleeffn
 #if (C_AVX&&SY_64) || EMU_AVX
-#define TRIGSYMM(lbl,limit,comp,err,sleeffn)  {AVXATOMLOOP(1,lbl, \
+#define TRIGSYMM(lbl,limit,comp,err,sleeffn)  {AVXATOMLOOP(1, \
  __m256d thmax; thmax=_mm256_broadcast_sd(&limit); \
  __m256d absmask; absmask=_mm256_broadcast_sd((D*)&Iimax); \
  , \
@@ -67,7 +67,7 @@ APFX(cirZZ, Z,Z,Z, zcir  ,NAN0;,HDR1JERRNAN)
  )}
 
 // Call SLEEF after checking limits, but calculate the value to use then
-#define TRIGCLAMP(limit,decls,comp,argmod,sleeffn,resultmod)  {AVXATOMLOOP(1,lbl, \
+#define TRIGCLAMP(limit,decls,comp,argmod,sleeffn,resultmod)  {AVXATOMLOOP(1, \
  __m256d thmax; thmax=_mm256_broadcast_sd(&limit); \
  decls \
  __m256d absmask; absmask=_mm256_broadcast_sd((D*)&Iimax); \
@@ -81,7 +81,7 @@ APFX(cirZZ, Z,Z,Z, zcir  ,NAN0;,HDR1JERRNAN)
 
 #elif defined(__GNUC__)   // vector extension
 
-#define TRIGSYMM(lbl,limit,comp,err,sleeffn)  {AVXATOMLOOP(1,lbl, \
+#define TRIGSYMM(lbl,limit,comp,err,sleeffn)  {AVXATOMLOOP(1, \
  float64x2_t thmax={limit COMMA limit}; \
  float64x2_t absmask={*(D *)&m7f COMMA *(D *)&m7f}; \
  , \
@@ -92,7 +92,7 @@ APFX(cirZZ, Z,Z,Z, zcir  ,NAN0;,HDR1JERRNAN)
  )}
 
 // Call SLEEF after checking limits, but calculate the value to use then
-#define TRIGCLAMP(limit,decls,comp,argmod,sleeffn,resultmod)  {AVXATOMLOOP(1,lbl, \
+#define TRIGCLAMP(limit,decls,comp,argmod,sleeffn,resultmod)  {AVXATOMLOOP(1, \
  float64x2_t thmax={limit COMMA limit}; \
  decls \
  D absmask={*(D *)&m7f COMMA *(D *)&m7f}; \
@@ -106,7 +106,7 @@ APFX(cirZZ, Z,Z,Z, zcir  ,NAN0;,HDR1JERRNAN)
 #endif
 
 #if SLEEF
-AHDR1(expD,D,D) {  AVXATOMLOOP(1,lbl,
+AHDR1(expD,D,D) {  AVXATOMLOOP(1,
  ,
  u=Sleef_expd4(u);
  ,
@@ -115,7 +115,7 @@ AHDR1(expD,D,D) {  AVXATOMLOOP(1,lbl,
 }
 
 #if (C_AVX&&SY_64) || EMU_AVX
-AHDR1(logD,D,D) {  AVXATOMLOOP(1,lbl,
+AHDR1(logD,D,D) {  AVXATOMLOOP(1,
  __m256d zero; zero=_mm256_setzero_pd();
  ,
  ASSERTWR(_mm256_movemask_pd(_mm256_cmp_pd(u, zero,_CMP_LT_OQ))==0,EWIMAG);
@@ -130,7 +130,7 @@ AHDR2(powDI,D,D,I) {I v;
  else if(n-1<0)DQ(m, D u=*x++; DQC(n, *z++=intpow( u,*y);      y++;))
  else{  // repeated exponent: use parallel instructions
   DQ(m, v=*y++;  // for each exponent
-   AVXATOMLOOP(1, lbl, // build result in u, which is also the input
+   AVXATOMLOOP(1, // build result in u, which is also the input
     __m256d one = _mm256_broadcast_sd(&zone.real);
    ,
     {__m256d upow;
@@ -158,7 +158,7 @@ AHDR2(powDD,D,D,D) {D v;
    if(v==0){DQ(n, *z++=1.0;) x+=n;}
    else if(ABS(v)==inf){DQ(n, D u=*x++; ASSERT(u>=0,EWIMAG); if(u==1.0)*z=1.0; else{D vv = u>1.0?v:-v;*z=v>0?inf:0.0;} ++z;)}
    else{
-    AVXATOMLOOP(1,lbl,  // build result in u, which is also the input
+    AVXATOMLOOP(1,  // build result in u, which is also the input
       __m256d zero = _mm256_setzero_pd();
       __m256d vv = _mm256_broadcast_sd(&v);  // 4 copies of exponent  (2 if __SSE2__)
      ,
@@ -174,7 +174,7 @@ AHDR2(powDD,D,D,D) {D v;
  HDR1JERR
 }
 #elif defined(__GNUC__)   // vector extension
-AHDR1(logD,D,D) {  AVXATOMLOOP(1,lbl,
+AHDR1(logD,D,D) {  AVXATOMLOOP(1,
  float64x2_t zero={0.0 COMMA 0.0};
  ,
  ASSERTWR(vec_any_si128(u<zero)==0,EWIMAG);
@@ -189,7 +189,7 @@ AHDR2(powDI,D,D,I) {I v;
  else if(n-1<0)DQ(m, D u=*x++; DQC(n, *z++=intpow( u,*y);      y++;))
  else{  // repeated exponent: use parallel instructions
   DQ(m, v=*y++;  // for each exponent
-   AVXATOMLOOP(1,lbl,  // build result in u, which is also the input
+   AVXATOMLOOP(1,  // build result in u, which is also the input
     float64x2_t one = {1.0 COMMA 1.0};
    ,
     float64x2_t upow;
@@ -217,7 +217,7 @@ AHDR2(powDD,D,D,D) {D v;
    if(v==0){DQ(n, *z++=1.0;) x+=n;}
    else if(ABS(v)==inf){DQ(n, D u=*x++; ASSERT(u>=0,EWIMAG); if(u==1.0)*z=1.0; else{D vv = u>1.0?v:-v;*z=v>0?inf:0.0;} ++z;)}
    else{
-    AVXATOMLOOP(1,lbl,  // build result in u, which is also the input
+    AVXATOMLOOP(1,  // build result in u, which is also the input
       float64x2_t zero = {0.0 COMMA 0.0};
       float64x2_t vv = {v COMMA v};  // 4 copies of exponent  (2 if __SSE2__)
      ,

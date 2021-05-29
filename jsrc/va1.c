@@ -48,7 +48,7 @@ static AMON(sqrtI,  D,I, ASSERTWR(0<=*x,EWIMAG); *z=sqrt((D)*x);)
 
 #if (C_AVX&&SY_64) || EMU_AVX
 AHDR1(sqrtD,D,D){
- AVXATOMLOOP(1,lbl,
+ AVXATOMLOOP(1,
  __m256d zero; zero=_mm256_setzero_pd();
  __m256d neg; __m256d comp; __m256d anyneg; anyneg=zero;
 
@@ -63,7 +63,7 @@ AHDR1(sqrtD,D,D){
 }
 
 AHDR1(absD,D,D){
- AVXATOMLOOP(0,lbl,
+ AVXATOMLOOP(0,
   __m256d absmask; absmask=_mm256_broadcast_sd((D*)&Iimax);
  ,
   u=_mm256_and_pd(u,absmask);
@@ -225,3 +225,26 @@ DF1(jtatomic1){A z;
 }
 
 DF1(jtpix){F1PREFIP; ARGCHK1(w); if(unlikely(XNUM&AT(w)))if(jt->xmode==XMFLR||jt->xmode==XMCEIL)R jtatomic1(jtinplace,w,self); R jtatomic2(jtinplace,pie,w,ds(CSTAR));}
+
+// special code for x ((< |[!.0]) * ]) y, implemented as if !.0
+#if (C_AVX&&SY_64) || EMU_AVX
+DF2(jtdeadband){A zz;
+ F2PREFIP;ARGCHK2(a,w);
+ I n=AN(w);  // number of atoms to process
+  // revert if not the special case we handle: both args FL, not sparse, a is an atom, w is nonempty
+ if(unlikely((((AT(a)|AT(w))&(NOUN+SPARSE))&(REPSGN(((I)AR(a)-1)&-n)))!=FL))R jtfolk2(jtinplace,a,w,self);
+ // allocate the result area, inplacing w if possible
+ if(ASGNINPLACESGN(SGNIF((I)jtinplace,JTINPLACEWX),w)){zz=w;}else{GATV(zz,FL,AN(w),AR(w),AS(w));}
+ // perform the operation
+ D *x=DAV(w), *z=DAV(zz);  // input and output pointers
+ AVXATOMLOOP(0,  // unroll loop
+ __m256d absmsk; absmsk=_mm256_set1_pd(*(D*)&Iimax);
+ __m256d threshold; threshold=_mm256_set1_pd(DAV(a)[0]);  // install threshold
+
+ ,
+  u=_mm256_and_pd(_mm256_cmp_pd(threshold,_mm256_and_pd(absmsk,u),_CMP_LT_OQ),u);  // abs value, compare, set to 0 if < threshold
+ ,
+ )
+ RETF(zz);
+}
+#endif

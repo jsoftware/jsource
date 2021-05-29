@@ -128,7 +128,7 @@
 #define CSTARDOT   (C)0x25  // *.
 #define CEQ        (C)0x26 // =   must be paired with ~:  = through e. are in the order used by comparison combination
 #define CNE        (C)0x27 // ~:
-#define CLT        (C)0x28 // <
+#define CLT        (C)0x28 // <   must be paired with <:
 #define CBOX       (C)0x28 // <
 #define CLE        (C)0x29 // <:
 #define CGE        (C)0x2a // >:

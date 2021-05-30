@@ -323,6 +323,7 @@ AHDRP(pluspfxD,D,D){I i;
  _mm256_maskstore_pd(z, endmask, u);
  x+=((n-1)&(NPAR-1))+1; z+=((n-1)&(NPAR-1))+1;
 #else
+#if 0 // obsolete 
   // clang insists on reordering the loop, putting the update of acc AFTER the creation of the final u.  Turns out OK
   AVXATOMLOOP(3,  // unroll not needed; need maskload to load 0s after valid area
     neut=_mm256_setzero_pd();
@@ -334,6 +335,23 @@ AHDRP(pluspfxD,D,D){I i;
     u=_mm256_add_pd(u,_mm256_permute4x64_pd(accs,0xff));  // add in total previously accumulated
     ,
     )
+#else
+  AVXATOMLOOPEVENODD(2,  // unroll not needed; need maskload to load 0s after valid area
+    neut=_mm256_setzero_pd();
+    __m256d acc0=neut; __m256d acc1=neut; __m256d accs;  // accumulator and place to save it 
+    ,
+    u=_mm256_add_pd(_mm256_permute4x64_pd(u,0x90),_mm256_blend_pd(u,neut,0x01));  // -123 + 0012
+    u=_mm256_add_pd(_mm256_permute2f128_pd(u,neut,0x02),u);  // finish scan of the 4 input values --01 + 0123
+    accs=_mm256_add_pd(acc0,acc1); acc0=_mm256_add_pd(acc0,u);  // accumulate in lane 3.  This is the only carried dependency for acc0
+    u=_mm256_add_pd(u,_mm256_permute4x64_pd(accs,0xff));  // add in total previously accumulated
+    ,
+    u=_mm256_add_pd(_mm256_permute4x64_pd(u,0x90),_mm256_blend_pd(u,neut,0x01));  // -123 + 0012
+    u=_mm256_add_pd(_mm256_permute2f128_pd(u,neut,0x02),u);  // finish scan of the 4 input values --01 + 0123
+    accs=_mm256_add_pd(acc0,acc1); acc1=_mm256_add_pd(acc1,u);  // accumulate in lane 3.  This is the only carried dependency for acc1
+    u=_mm256_add_pd(u,_mm256_permute4x64_pd(accs,0xff));  // add in total previously accumulated
+    ,
+    )
+#endif
 #endif
   )
 #else
@@ -357,13 +375,18 @@ AHDRP(fn,D,D){I i; \
  NAN0; \
  if(d==1){ \
   DQ(m, \
-  AVXATOMLOOP(3, \
+  AVXATOMLOOPEVENODD(2, \
     neut=_mm256_broadcast_sd(&neutral); \
-    __m256d acc=neut; __m256d accs; \
+    __m256d acc0=neut; __m256d acc1=neut; __m256d accs; \
     , \
     u=avxinst(_mm256_permute4x64_pd(u,0x90),_mm256_blend_pd(u,neut,0x01)); \
     u=avxinst(_mm256_permute2f128_pd(u,neut,0x02),u); \
-    accs=acc; acc=avxinst(acc,u); \
+    accs=avxinst(acc0,acc1); acc0=avxinst(acc0,u); \
+    u=avxinst(u,_mm256_permute4x64_pd(accs,0xff)); \
+    , \
+    u=avxinst(_mm256_permute4x64_pd(u,0x90),_mm256_blend_pd(u,neut,0x01)); \
+    u=avxinst(_mm256_permute2f128_pd(u,neut,0x02),u); \
+    accs=avxinst(acc0,acc1); acc1=avxinst(acc1,u); \
     u=avxinst(u,_mm256_permute4x64_pd(accs,0xff)); \
     , \
     ) \

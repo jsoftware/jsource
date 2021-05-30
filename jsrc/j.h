@@ -1194,6 +1194,40 @@ extern unsigned int __cdecl _clearfp (void);
  x+=((n0-1)&(NPAR-1))+1; z+=((n0-1)&(NPAR-1))+1; \
  postloop
 
+// this version to alternate between two code blocks.  block0 is always executed last; block 0 or 1 may be executed first
+// block 0 may be executed once at the beginning to establish alignment
+// the loop is never unrolled: there is one even and one odd block in the loop
+#define AVXATOMLOOPEVENODD(parms,preloop,loopbody0,loopbody1,postloop) \
+ __m256i endmask;  __m256d u; __m256d neut=_mm256_setzero_pd(); \
+ _mm256_zeroupperx(VOIDARG) \
+ preloop \
+ I n0=n; \
+ I alignreq=(-(I)z>>LGSZI)&(NPAR-1); \
+ if((-alignreq&(NPAR-n0))<0){ \
+  endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-alignreq));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
+  /* obsolete if(!((parms)&2))u=_mm256_loadu_pd(x);else u=_mm256_maskload_pd(x,endmask); */\
+  u=_mm256_loadu_pd(x); if(((parms)&2))u=_mm256_blendv_pd(neut,u,_mm256_castsi256_pd(endmask)); \
+  loopbody0 _mm256_maskstore_pd(z, endmask, u); x+=alignreq; z+=alignreq; n0-=alignreq;  /* leave remlen>0 */ \
+ } \
+ endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n0)&(NPAR-1)))); \
+  UI n2=DUFFLPCT(n0-1,1);  /* # turns through duff loop */ \
+  if(n2>0){ \
+   UI backoff=DUFFBACKOFF(n0-1,1); \
+   x+=(backoff+1)*NPAR; z+=(backoff+1)*NPAR; \
+   switch(backoff){ \
+   do{ \
+   case -1: \
+    u=_mm256_loadu_pd(x); loopbody0 _mm256_storeu_pd(z, u);  \
+   case -2: \
+    u=_mm256_loadu_pd(x+1*NPAR); loopbody1 _mm256_storeu_pd(z+1*NPAR, u);  \
+   x+=2*NPAR; z+=2*NPAR; \
+   }while(--n2!=0); \
+   } \
+  } \
+ u=_mm256_maskload_pd(x,endmask);  loopbody0 _mm256_maskstore_pd(z, endmask, u); \
+ x+=((n0-1)&(NPAR-1))+1; z+=((n0-1)&(NPAR-1))+1; \
+ postloop
+
 #if 0 // obsolete
 // version that pipelines one read ahead.  Input to loopbody2 is zu; result of loopbody1 is in zt
 #define AVXATOMLOOPPIPE(preloop,loopbody1,loopbody2,postloop) \

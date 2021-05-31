@@ -738,8 +738,8 @@ FORCE_INLINE void _mm256_zeroupper(void)
 ({ \
     __m256i result_m256i; \
      \
-    if (likely(imm8 >= 0 && imm8 < 64)) { \
-        int64x2_t vect_imm = vdupq_n_s32(-imm8); \
+    if (likely(imm8 >= 0 && imm8 < 16)) { \
+        int16x8_t vect_imm = vdupq_n_s16(-imm8); \
         result_m256i.vect_u16[0] = vshlq_u16(a.vect_u16[0], vect_imm); \
         result_m256i.vect_u16[1] = vshlq_u16(a.vect_u16[1], vect_imm); \
     } else { \
@@ -754,8 +754,8 @@ FORCE_INLINE void _mm256_zeroupper(void)
 ({ \
     __m256i result_m256i; \
      \
-    if (likely(imm8 >= 0 && imm8 < 64)) { \
-        int64x2_t vect_imm = vdupq_n_s32(-imm8); \
+    if (likely(imm8 >= 0 && imm8 < 32)) { \
+        int32x4_t vect_imm = vdupq_n_s32(-imm8); \
         result_m256i.vect_u32[0] = vshlq_u32(a.vect_u32[0], vect_imm); \
         result_m256i.vect_u32[1] = vshlq_u32(a.vect_u32[1], vect_imm); \
     } else { \

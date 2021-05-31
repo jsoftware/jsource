@@ -281,7 +281,7 @@ FLAGS_BASE64=" -DHAVE_AVX2=1 "
 
 raspberry_j32) # linux raspbian arm
 TARGET=libj.so
-CFLAGS="$common -marm -march=armv6 -mfloat-abi=hard -mfpu=vfp -DRASPI "
+CFLAGS="$common -Wno-overflow -marm -march=armv6 -mfloat-abi=hard -mfpu=vfp -DRASPI "
 LDFLAGS=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP $LDTHREAD"
 SRC_ASM="${SRC_ASM_RASPI32}"
 GASM_FLAGS=""

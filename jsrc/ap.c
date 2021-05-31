@@ -107,7 +107,7 @@
 #define PREFIXBFX(f,pfx,ipfx,spfx,bpfx,vexp)          \
  AHDRP(f,B,B){B* y;I j,q;                        \
   if(1==d)for(j=0;j<m;++j){vexp}                      \
-  else DQ(m, y=z; JMC(z,x,d,f##lbl,1); z+=d; x+=d; DQ(n-1, DQ((d-1)>>LGSZI, *(I*)z=pfx(*(I*)y,*(I*)x); x+=SZI; y+=SZI; z+=SZI;) I nct=(-d)&(SZI-1); STOREBYTES(z,pfx(*(I*)y,*(I*)x),nct) x+=SZI-nct; y+=SZI-nct; z+=SZI-nct;))  \
+  else DQ(m, y=z; JMC(z,x,d,1); z+=d; x+=d; DQ(n-1, DQ((d-1)>>LGSZI, *(I*)z=pfx(*(I*)y,*(I*)x); x+=SZI; y+=SZI; z+=SZI;) I nct=(-d)&(SZI-1); STOREBYTES(z,pfx(*(I*)y,*(I*)x),nct) x+=SZI-nct; y+=SZI-nct; z+=SZI-nct;))  \
   R EVOK;}    /* f/\"r z for boolean associative atomic function f */
 #endif
 #else
@@ -776,8 +776,8 @@ static DF2(jtinfixd){A z;C*x,*y;I c=0,d,k,m,n,p,q,r,*s,wr,*ws,wt,zc;
  s=AS(z); s[0]=d; s[1]=zc; MCISH(s+2,1+ws,r-2);   // install shape
  I katom=(I)1<<bplg(wt); k=c<<bplg(wt);   // k=#bytes in a cell of result
  if(likely(AN(z)!=0)){
-  if(m>=0){ q=p*k; JMCDECL(endmask) JMCSETMASK(endmask,q,0) DQ(d, JMCR(x,y,q,lbl1,0,endmask) x+=q; y+=k;);  // m>0, overlapping inputs, copy them
-  }else{JMC(x,y,n*k,lbl2,0)  fillv0(wt); mvc(q*k,x+n*k,katom,jt->fillv0);    // nonoverlapping: copy en bloc and fill
+  if(m>=0){ q=p*k; JMCDECL(endmask) JMCSETMASK(endmask,q,0) DQ(d, JMCR(x,y,q,0,endmask) x+=q; y+=k;);  // m>0, overlapping inputs, copy them
+  }else{JMC(x,y,n*k,0)  fillv0(wt); mvc(q*k,x+n*k,katom,jt->fillv0);    // nonoverlapping: copy en bloc and fill
   }
  }
  RETF(z);

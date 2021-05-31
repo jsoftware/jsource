@@ -186,7 +186,7 @@ do{
      jtra(z,AT(z));   // raise children only and make them recursive
     }
     // copy the cells, which have been raised if needed.  If we are copying forward, it is OK to copy fullwords
-    JMCR(CAV(zz)+zzcellp,AV(z),zzcelllen,loop1,ZZSTARTATEND,zzendmask)
+    JMCR(CAV(zz)+zzcellp,AV(z),zzcelllen,ZZSTARTATEND,zzendmask)
     // Release the result now that we have copied its elements.  We do this rather than calling tpop to save the overhead, on the grounds that
     // any routine that allocated memory should have freed it, so the only thing on the tpop stack should be the result.  We do this only if the
     // result was inplaceable: otherwise the block is protected somewhere else and we can't free it.

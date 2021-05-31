@@ -420,7 +420,7 @@ void mvc(I m,void*z,I n,void*w){
   // Otherwise, we must limit the move to less than m to ensure overstore does not actually exceed the buffer boundary
   I storelimit=m-(REPSGN(-((m|(I)zz)&(SZI-1)))&(SZI-1));  // m, backed up by SZI-1 if necessary
   movlen=MIN(storelimit,nn);  // # bytes we can safely move
-  JMC(zz,w,movlen,lbl2,0)   // move allowing overstore
+  JMC(zz,w,movlen,0)   // move allowing overstore
   zz+=movlen;  // advance output pointer
   m-=movlen;   // decrement length
   if(m<=SZI)break;  // if we can't copy more, exit while we still point to the last buffer copied

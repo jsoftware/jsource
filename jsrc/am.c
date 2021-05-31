@@ -173,7 +173,7 @@ static A jtmerge2(J jt,A a,A w,A ind,I cellframelen){F2PREFIP;A z;I t;
    case sizeof(C):
     {C * RESTRICT zv=CAV(z); C *RESTRICT av=(C*)av0; DO(AN(ind), zv[iv[i]]=*av; ++av; av=(av==(C*)avn)?(C*)av0:av;); break;}  // scatter-copy the data, cyclically
    default: ;
-     C* RESTRICT zv=CAV(z); C *RESTRICT av=(C*)av0; JMCDECL(endmask) JMCSETMASK(endmask,cellsize,1) DO(AN(ind), JMCR(zv+(iv[i]*cellsize),av,cellsize,loop1,1,endmask); av+=cellsize; av=(av==avn)?av0:av;); break;  // scatter-copy the data, cyclically.  Don't overwrite
+     C* RESTRICT zv=CAV(z); C *RESTRICT av=(C*)av0; JMCDECL(endmask) JMCSETMASK(endmask,cellsize,1) DO(AN(ind), JMCR(zv+(iv[i]*cellsize),av,cellsize,1,endmask); av+=cellsize; av=(av==avn)?av0:av;); break;  // scatter-copy the data, cyclically.  Don't overwrite
    }
   }else{
    // the cellsize is bigger than a.  We will have to repeat a within each cell

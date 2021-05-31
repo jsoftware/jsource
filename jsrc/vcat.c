@@ -110,7 +110,7 @@ static C*jtovgmove(J jt,I k,I c,I m,A s,A w,C*x,A z){I d,n,p=c*m;
   if((-n&(d-1))>=0)mvc(k*p,x,k,jt->fillv);  // fill required: w empty or shape short (d>0)
   if(n){  // nonempty cell, must copy in the data
    if(n<p){I *v=AV(s); *v=m; RZ(w=take(d?vec(INT,AR(w),d+v):s,w));}  // incoming cell smaller than result area: take to result-cell size
-   JMC(x,AV(w),k*AN(w),loop1,1);  // copy in the data, now the right cell shape but possibly shorter than the fill  kludge could avoid double copy
+   JMC(x,AV(w),k*AN(w),1);  // copy in the data, now the right cell shape but possibly shorter than the fill  kludge could avoid double copy
   }
  }else{  // scalar replication
   mvc(k*p,x,k,AV(w));
@@ -147,16 +147,16 @@ static void moveawVV(C *zv,C *av,C *wv,I c,I k,I ma,I mw,I arptreset,I wrptreset
    // fastest case: no replication, no scalars
   while(--c>=0){
    // copy one cell from a; advance z; advance a
-   JMCR(zv,av,ma,loop1,0,endmaska); zv+=ma; av+=ma;
+   JMCR(zv,av,ma,0,endmaska); zv+=ma; av+=ma;
    // repeat for w
-   JMCR(zv,wv,mw,loop2,0,endmaskw); zv+=mw; wv+=mw;
+   JMCR(zv,wv,mw,0,endmaskw); zv+=mw; wv+=mw;
   }
  }else{
   while(--c>=0){
    // copy one cell from a; advance z; advance a if not repeated
-   JMCR(zv,av,ma,loop3,0,endmaska); zv+=ma; --arptct; av+=REPSGN(arptct)&ma; arptct+=REPSGN(arptct)&arptreset;
+   JMCR(zv,av,ma,0,endmaska); zv+=ma; --arptct; av+=REPSGN(arptct)&ma; arptct+=REPSGN(arptct)&arptreset;
    // repeat for w
-   JMCR(zv,wv,mw,loop4,0,endmaskw); zv+=mw; --wrptct; wv+=REPSGN(wrptct)&mw; wrptct+=REPSGN(wrptct)&wrptreset;
+   JMCR(zv,wv,mw,0,endmaskw); zv+=mw; --wrptct; wv+=REPSGN(wrptct)&mw; wrptct+=REPSGN(wrptct)&wrptreset;
   }
  }
 }
@@ -165,7 +165,7 @@ static void moveawVS(C *zv,C *av,C *wv,I c,I k,I ma,I mw,I arptreset,I wrptreset
  I arptct=arptreset-1; I wrptct=wrptreset-1;
  while(--c>=0){
   // copy one cell from a; advance z; advance a if not repeated
-  JMCR(zv,av,ma,loop1,0,endmaska); zv+=ma; --arptct; av+=REPSGN(arptct)&ma; arptct+=REPSGN(arptct)&arptreset;
+  JMCR(zv,av,ma,0,endmaska); zv+=ma; --arptct; av+=REPSGN(arptct)&ma; arptct+=REPSGN(arptct)&arptreset;
   // repeat for w
   mvc(mw,zv,k,wv); zv+=mw; --wrptct; wv+=REPSGN(wrptct)&k; wrptct+=REPSGN(wrptct)&wrptreset;
  }
@@ -177,7 +177,7 @@ static void moveawSV(C *zv,C *av,C *wv,I c,I k,I ma,I mw,I arptreset,I wrptreset
   // copy one cell from a; advance z; advance a if not repeated
   mvc(ma,zv,k,av); zv+=ma; --arptct; av+=REPSGN(arptct)&k; arptct+=REPSGN(arptct)&arptreset;
   // repeat for w
-  JMCR(zv,wv,mw,loop1,0,endmaskw); zv+=mw; --wrptct; wv+=REPSGN(wrptct)&mw; wrptct+=REPSGN(wrptct)&wrptreset;
+  JMCR(zv,wv,mw,0,endmaskw); zv+=mw; --wrptct; wv+=REPSGN(wrptct)&mw; wrptct+=REPSGN(wrptct)&wrptreset;
  }
 }
 int (*p[4]) (int x, int y);
@@ -213,7 +213,7 @@ F2(jtover){AD * RESTRICT z;C*zv;I replct,framect,acr,af,ar,*as,k,ma,mw,p,q,r,t,w
     I si=AS(s)[0]; si=ar==wr?si:1; si+=AS(l)[0]; si=lr==0?2:si; lr=lr==0?1:lr; ASSERT(si>=0,EVLIMIT);  // get short item count; adjust to 1 if lower rank; add long item count; check for overflow; adjust if atom+atom
     I klg=bplg(t); I alen=AN(a)<<klg; I wlen=AN(w)<<klg;
     GA(z,t,AN(a)+AN(w),lr,AS(l)); AS(z)[0]=si; C *x=CAV(z);  // install # items after copying shape
-    JMC(x,CAV(a),alen,loop1,0); JMC(x+alen,CAV(w),wlen,loop2,0);
+    JMC(x,CAV(a),alen,0); JMC(x+alen,CAV(w),wlen,0);
     // If a & w are both recursive abandoned pristine, we can take ownership of the contents by marking them nonrecursive and marking z recursive.
     // We could also zap a & w, but we don't because it's just a box header and it will be freed by a caller anyway - and they might be virtual, which would fail
     // Pristinity is required because otherwise there might be blocks present in both, and the usecount would be too low in result
@@ -359,7 +359,7 @@ A jtapip(J jt, A a, A w){F2PREFIP;A h;C*av,*wv;I ak,k,p,*u,*v,wk,wm,wn;
       if((-wr&(1+wr-ar))<0){RZ(setfv(a,w)); mvc(wk-wlen,av+wlen,k,jt->fillv); wprist=0;}  // fill removes pristine status
       AFLAGRESET(a,aflag&=wprist|~AFPRISTINE)  // clear pristine flag in a if w is not also (a must not be virtual)
       // Copy in the actual data, replicating if w is atomic
-      if(wr){JMC(av,wv,wlen,loop1,1)} else mvc(wk,av,k,wv);  // no overcopy because there could be fill
+      if(wr){JMC(av,wv,wlen,1)} else mvc(wk,av,k,wv);  // no overcopy because there could be fill
       // The data has been copied.  Now adjust the result block to match.  If the operation is virtual extension we have to allocate a new block for the result
       if(likely(!virtreqd)){
        // Normal append-in-place.

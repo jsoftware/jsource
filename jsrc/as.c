@@ -73,7 +73,7 @@
  AHDRP(f,B,B){B v,* RESTRICT y;I q;                                        \
   x+=m*d*n; z+=m*d*n;                                           \
   if(1==d){DQ(m, *--z=v=*--x; DQ(n-1, --x; --z; *z=v=(vexp);)); R EVOK;}  \
-  DQ(m, z-=d; x-=d; JMC(z,x,d,f##lbl,1); DQ(n-1, x-=d; z-=d; C *z0=z; C *x0=x; y=z+d; DQ((d-1)>>LGSZI, *(I*)z=pfx(*(I*)x,*(I*)y); x+=SZI; y+=SZI; z+=SZI;) I nct=(-d)&(SZI-1); STOREBYTES(z,pfx(*(I*)x,*(I*)y),nct) z=z0; x=x0;)) R EVOK;  \
+  DQ(m, z-=d; x-=d; JMC(z,x,d,1); DQ(n-1, x-=d; z-=d; C *z0=z; C *x0=x; y=z+d; DQ((d-1)>>LGSZI, *(I*)z=pfx(*(I*)x,*(I*)y); x+=SZI; y+=SZI; z+=SZI;) I nct=(-d)&(SZI-1); STOREBYTES(z,pfx(*(I*)x,*(I*)y),nct) z=z0; x=x0;)) R EVOK;  \
  }
 #endif
 #else

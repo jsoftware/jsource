@@ -148,8 +148,8 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wk,wn,wr,*ws,zn;
    {C* RESTRICT u,* RESTRICT v=(C*)wv,* RESTRICT x=(C*)zv;
     pq=p*k;
     JMCDECL(endmask) JMCSETMASK(endmask,k,0) 
-    if(1==an){v+=j*k; DQ(m,                     u=v;     JMCR(x,u,k,loop1,0,endmask) x+=k; v+=pq;);}
-    else              DQ(m, DO(an, SETJ(av[i]); u=v+j*k; JMCR(x,u,k,loop2,0,endmask) x+=k;); v+=pq;)
+    if(1==an){v+=j*k; DQ(m,                     u=v;     JMCR(x,u,k,0,endmask) x+=k; v+=pq;);}
+    else              DQ(m, DO(an, SETJ(av[i]); u=v+j*k; JMCR(x,u,k,0,endmask) x+=k;); v+=pq;)
    }
    break;
   }
@@ -375,7 +375,7 @@ static A jtafrom2(J jt,A p,A q,A w,I r){A z;C*wv,*zv;I d,e,j,k,m,n,pn,pr,* RESTR
 #endif
  default:        {C* RESTRICT v=wv,* RESTRICT x=zv-k;n=k*n;   // n=#bytes in a cell of w
   JMCDECL(endmask) JMCSETMASK(endmask,k,0) 
-  DQ(m, DO(pn, j=e*pv[i]; DO(qn, x+=k; JMCR(x,v+k*(j+qv[i]),k,loop1,0,endmask);)); v+=n;);} break;
+  DQ(m, DO(pn, j=e*pv[i]; DO(qn, x+=k; JMCR(x,v+k*(j+qv[i]),k,0,endmask);)); v+=n;);} break;
  }
  RETF(z);   // return block
 }   /* (<p;q){"r w  for positive integer arrays p,q */
@@ -501,7 +501,7 @@ F2(jtsfrom){
     default: ;
      // It is OK to pad to an I boundary, because any block with cells not a multiple of I is padded to an I
      C* RESTRICT zv=CAV(z); C *RESTRICT wv=CAV(w);     JMCDECL(endmask) JMCSETMASK(endmask,cellsize,0) 
-     DQ(AN(ind), JMCR(zv,wv+*iv++*cellsize,cellsize,loop1,0,endmask); zv+=cellsize;)
+     DQ(AN(ind), JMCR(zv,wv+*iv++*cellsize,cellsize,0,endmask); zv+=cellsize;)
      break;
     }
     RETF(z);

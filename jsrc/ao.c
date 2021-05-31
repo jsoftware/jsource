@@ -433,7 +433,7 @@ A jtkeyct(J jt,A a,A w,A self,D toler){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
    }
 
    av[avvalue]=(I)partitionptr+celllen;  // store updated end-of-partition after move
-   JMCR(partitionptr,wv,celllen,loop1,1,endmask); wv = (I*)((C*)wv+celllen);  // Don't overwrite, since we are scatter-writing
+   JMCR(partitionptr,wv,celllen,1,endmask); wv = (I*)((C*)wv+celllen);  // Don't overwrite, since we are scatter-writing
 
   }
  }else{I *av;  // running pointer through the inputs
@@ -479,7 +479,7 @@ A jtkeyct(J jt,A a,A w,A self,D toler){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
    I *partitionptr=(I*)(wpermv+partitionndx*celllen);  // place to copy next input to
    *slotaddr=partitionndx+1;  // store updated next-in-partition after move
    // copy the data to the end of its partition and advance the input pointer
-   JMCR(partitionptr,wv,celllen,loop2,1,endmask); wv = (I*)((C*)wv+celllen);  // Don't overwrite, since we are scatter-writing
+   JMCR(partitionptr,wv,celllen,1,endmask); wv = (I*)((C*)wv+celllen);  // Don't overwrite, since we are scatter-writing
 
    av=(I*)((I)av+k);  // advance to next input value
   }
@@ -568,7 +568,7 @@ DF2(jtkeybox){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
    if(celllen>=0) {
      av[avvalue]=(I)partitionptr+celllen;  // store updated end-of-partition after move
      // copy the data to the end of its partition and advance the partition pointer
-    JMCR(partitionptr,wv,celllen,loop3,1,endmask); wv = (I*)((C*)wv+celllen);  // Don't overwrite, since we are scatter-writing
+    JMCR(partitionptr,wv,celllen,1,endmask); wv = (I*)((C*)wv+celllen);  // Don't overwrite, since we are scatter-writing
 
    }else{  // flag for (<./ i.@#)
      *partitionptr=(I)wv;   // store wv itself, which is the index vector
@@ -621,7 +621,7 @@ DF2(jtkeybox){F2PREFIP;PROLOG(0009);A ai,z=0;I nitems;
    if(celllen>=0) {
      *slotaddr=(I)partitionptr+celllen;  // store updated end-of-partition after move
      // copy the data to the end of its partition and advance the partition pointer
-     JMCR(partitionptr,wv,celllen,loop4,1,endmask); wv = (I*)((C*)wv+celllen);  // Don't overwrite, since we are scatter-writing
+     JMCR(partitionptr,wv,celllen,1,endmask); wv = (I*)((C*)wv+celllen);  // Don't overwrite, since we are scatter-writing
    }else{  // flag for (<./ i.@#)
      *slotaddr=(I)partitionptr+SZI;  // store updated end-of-partition after move
      *partitionptr=(I)wv;   // store wv itself, which is the index vector

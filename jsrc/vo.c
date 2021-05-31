@@ -54,7 +54,7 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
   // onto the real tpop stack.  If we hit an error, that's OK, because whatever we did get allocated will be freed when the result block is freed.  We use GAE so that we don't abort on error
   A *pushxsave = jt->tnextpushp; jt->tnextpushp=AAV(z);  // save tstack info before allocation
   JMCDECL(endmask) JMCSETMASK(endmask,k,0)   // set mask for JMCR - OK to copy SZIs
-  DQ(n, GAE(y,wt,m,r,f+ws,break); JMCR(CAV(y),wv,k,lp000,0,endmask); wv+=k; INCORPRAZAPPED(y,wt));   // allocate, but don't grow the tstack.  Set usecount of cell to 1.  ra0() if recursible.  Put allocated addr into *jt->tnextpushp++
+  DQ(n, GAE(y,wt,m,r,f+ws,break); JMCR(CAV(y),wv,k,0,endmask); wv+=k; INCORPRAZAPPED(y,wt));   // allocate, but don't grow the tstack.  Set usecount of cell to 1.  ra0() if recursible.  Put allocated addr into *jt->tnextpushp++
 
 
   jt->tnextpushp=pushxsave;   // restore tstack pointer
@@ -171,7 +171,7 @@ static C *copyresultcell(J jt, C *z, C *w, I *sizes, I rf, I *s){I wadv;I r=rf>>
   // r=0   This can only happen if lower r was 0 originally, since we stop recursion at r=1.  r=0 means that
   // the entire r matched the suffix of the shape of zcell, and we can copy the entire cell
   wadv=sizes[0];
-  if(unlikely(rf&1)){DO(wadv>>LGSZI, A a=((A*)w)[i]; ra(a); ((A*)z)[i]=a;)}else{JMC(z,w,wadv,lbl,1);}  // mustn't overcopy since we may go in reverse order
+  if(unlikely(rf&1)){DO(wadv>>LGSZI, A a=((A*)w)[i]; ra(a); ((A*)z)[i]=a;)}else{JMC(z,w,wadv,1);}  // mustn't overcopy since we may go in reverse order
   R wadv+w;
  }
  // otherwise there will be fill
@@ -522,7 +522,7 @@ F1(jtope){A cs,*v,y,z;C*x;I i,n,*p,q,r,*s,*u,zn;
    if(!(AFLAG(w)&AFVIRTUALBOXED)&&AC(y)<0)SEGFAULT;
 #endif
   if(unlikely(!TYPESEQ(t,AT(y))))RZ(y=cvt(t,y));
-  if(AN(y)==m)JMCR(x,CAV(y),m<<klg,lbl,0,endmask)
+  if(AN(y)==m)JMCR(x,CAV(y),m<<klg,0,endmask)
 // obsolete MC(x,CAV(y),m<<klg);
   else copyresultcell(jt,x,CAV(y),u,rescellrarg(zcs,r,AS(y),AR(y)),AS(y));
   x+=m<<klg;  // advance output pointer by cell length

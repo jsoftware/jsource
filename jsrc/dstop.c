@@ -31,6 +31,7 @@ static B stopsub(C*p,C*nw,I md){C*q,*s;I n;
 // return 1 if we should stop before executing the line
 B jtdbstop(J jt,DC d,I i){A a;B b,c=0,e;C nw[11],*s,*t,*u,*v;I md,n,p,q;
  if(!d)R 0;  // if there is no debug stack, there is no stop
+ if(!strcmp(NAV(d->dca)->s,"output_jfe_"))R 0; // JHS - ignore stepinto output_jfe
  // Handle stop owing to single-step
  switch(d->dcss){
  case SSSTEPINTO:  d->dcss=SSSTEPINTOs; break;  // first time is executing the stop line.  Then wait for any next line

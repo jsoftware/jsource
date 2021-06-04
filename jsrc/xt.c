@@ -178,7 +178,7 @@ F2(jttsit2){A z;D t;I n;
  RE(n=i0(a));
  FDEPINC(1);  // No ASSERTs/returns till the DEPDEC below
  t=qpc(); 
- A *old=jt->tnextpushp; DQ(n, z=exec1(w); if(!z)break; tpop(old);); 
+ A *old=jt->tnextpushp; DQ(n, z=exec1(w); if(!z)break; tpop(old););
  t=qpc()-t;
  FDEPDEC(1);  // Assert OK now
  RZ(z);

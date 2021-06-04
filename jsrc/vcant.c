@@ -36,6 +36,12 @@ static A jtcants(J jt,A a,A w,A z){A a1,q,y;B*b,*c;I*u,wr,zr;P*wp,*zp;
    NOUNROLL do{v-=mv[j]*sv[j]; tv[j]=0; --j; if(j<0)break; v+=mv[j]; ++tv[j];}while(sv[j]==tv[j]);  \
   }while(j>=0); \
  }
+#define CANTB(T,exp)  \
+ {T*u=(T*)zv; C*v=(C*)wv; I v1=mv[r-1]; I v3=3*v1; I dofst=-sv[r-1]&3; UI dlct=(sv[r-1]+3)>>2;  \
+  NOUNROLL do{UI dlct0=dlct; v-=dofst*v1; u-=dofst; switch(dofst){do{case 0: u[0]=*(T*)v; case 1: u[1]=*(T*)(v+v1); case 2: u[2]=*(T*)(v+2*v1); case 3: u[3]=*(T*)(v+v3); v+=4*v1; u+=4; }while(--dlct0);}                        \
+   j = r-1; NOUNROLL do{v-=mv[j]*sv[j]; tv[j]=0; --j; if(j<0)break; v+=mv[j]; ++tv[j];}while(sv[j]==tv[j]);  \
+  }while(j>=0); \
+ }
 
 // a[i] is the axis of the result that axis i of w contributes to - known to be valid and INT type
 // This is the inverse permutation of the x in x |: y
@@ -81,14 +87,14 @@ static F2(jtcanta){A m,s,t,z;C*wv,*zv;I*av,j,*mv,r,*sv,*tv,wf,wr,*ws,zn,zr,ms[4]
  zv=CAV(z); wv=CAV(w);
  mvc(r*SZI,tv,1,MEMSET00);  // repurpose tv to be the index list of the input pointer, and set to 0s.  Only the first r axes matter
  switch(cellsizeb){
- case sizeof(I): CANTA(I, *u++=*(I*)v;); break;
- case sizeof(C): CANTA(C, *u++=*(C*)v;); break;
- case sizeof(S): CANTA(S, *u++=*(S*)v;); break;
+ case sizeof(I): CANTB(I, *u++=*(I*)v;); break;
+ case sizeof(C): CANTB(C, *u++=*(C*)v;); break;
+ case sizeof(S): CANTB(S, *u++=*(S*)v;); break;
 #if SY_64
- case sizeof(I4): CANTA(I4, *u++=*(I4*)v;); break;
+ case sizeof(I4): CANTB(I4, *u++=*(I4*)v;); break;
 #endif
 #if !SY_64 && SY_WIN32
- case sizeof(D): if(AT(w)&FL){CANTA(D, *u++=*(D*)v;); break;}
+ case sizeof(D): if(AT(w)&FL){CANTB(D, *u++=*(D*)v;); break;}
    // move as D type only if echt floats - otherwise they get corrupted.  If not float, fall through to...
 #endif
  default:        CANTA(C, MC(u,v,cellsizeb); u+=cellsizeb;); break;
@@ -96,10 +102,80 @@ static F2(jtcanta){A m,s,t,z;C*wv,*zv;I*av,j,*mv,r,*sv,*tv,wf,wr,*ws,zn,zr,ms[4]
  RETF(z);  // should EPILOG?
 }    /* dyadic transpose in APL\360, a f"(1,r) w where 1>:#$a  */
 
-F1(jtcant1){I r; 
- F1PREFIP;ARGCHK1(w); 
+F1(jtcant1){I r; A z;
+ F1PREFIP;ARGCHK1(w);
  r=(RANKT)jt->ranks; r=AR(w)<r?AR(w):r;   // no RESETRANK; we pass the rank of w on
- A z=canta(apv(r,r-1,-1L),w); RZ(z);  // rank is set
+#if 0  //  (C_AVX2&&SY_64) || EMU_AVX2
+ // This attempt to transpose in 4x4 blocks fails because the stores are very slow if not aligned, and cannot be aligned if the array has odd size.
+ // It took 2.6 clocks/atom (instead of the expected 0.5) because of the store penalties
+ if((-((r^2)|(AR(w)^2))|(AT(w)&(SPARSE|INT|FL)))>0){  // rank 2, FL/INT, not sparse
+  // 2D transpose.  Do it 4x4 at a time with AVX instructions
+  I m=AS(w)[0], n=AS(w)[1];  // m=# columns, n=#rows
+  I m4=(m&-4)>>LGNPAR;   // m4=number of 4-blocks in the vertical stripes
+  GATV0(z,INT,AN(w),2) AT(z)=AT(w); AS(z)[0]=n; AS(z)[1]=m;  // allocate result
+  // We do vertical stripes left to right, finishing with the <4xn horizontal stripe at the bottom
+  // vertical stripes.  Do 4x4 till the end, then the remnant
+  UI n0;  // n0=number of columns remaining
+  // constants for addressing row & columns
+  I wstride1=(n&1)*SZI, wstride3=3*wstride1;  // stride between rows of w
+  I zstride1=(m&1)*SZI, zstride3=3*zstride1;  // stride between rows of z
+  void*wv=DAV(w);
+  void*zv=DAV(z);  // pointers to beginning of result area
+  void *wv0=wv, *zv0=zv;  // running pointers to beginning of stripe
+  if(likely(m4!=0)){  // if there are blocks to do...
+   NOUNROLL for(n0=n;n0>=4;n0-=4){  // for each full vertical strip
+    // wv0 and zv0 point to the starting location of the strip, input and output
+    UI blkrem=m4;
+    NOUNROLL do{
+     __m256d w0,w1,w2,w3,w0t,w2t,wb;
+     w0=_mm256_loadu_pd((D*)wv0); w1=_mm256_loadu_pd((D*)((I)wv0+wstride1)); w2=_mm256_loadu_pd((D*)((I)wv0+2*wstride1)); w3=_mm256_loadu_pd((D*)((I)wv0+wstride3));
+     w0t=_mm256_unpacklo_pd(w0,w1); w2t=_mm256_unpacklo_pd(w2,w3);  // 0426, 8CAE
+     wb=_mm256_blend_pd(w0t,w2t,0b0011); wb=_mm256_permute2f128_pd(wb,wb,0x01);  // 8C26, 268C
+     w1=_mm256_unpackhi_pd(w0,w1); w3=_mm256_unpackhi_pd(w2,w3);  // 1537, 9DBF
+     w0=_mm256_blend_pd(w0t,wb,0b1100); w2=_mm256_blend_pd(w2t,wb,0b0011);  // 048C, 26AE
+     _mm256_storeu_pd((D*)zv0, w0); _mm256_storeu_pd((D*)((C*)zv0+2*zstride1), w2);
+     wb=_mm256_blend_pd(w1,w3,0b0011); wb=_mm256_permute2f128_pd(wb,wb,0x01);  // 9D37, 379D
+     w1=_mm256_blend_pd(w1,wb,0b1100); w3=_mm256_blend_pd(w3,wb,0b0011);  // 159D, 37BF
+     _mm256_storeu_pd((D*)((C*)zv0+zstride1),w1); _mm256_storeu_pd((D*)((C*)zv0+zstride3), w3);
+     wv0=(C*)wv0+(wstride1<<LGNPAR); zv0=(C*)zv0+SZI*NPAR;  // next input & output 4x4
+    }while(--blkrem);
+    // back up to start of strip, then advance to next position
+    wv0=(C*)wv0-wstride1*m4*NPAR+SZI*NPAR;    // next vertical input strip
+    zv0=(C*)zv0-m4*SZI*NPAR+zstride1*NPAR;  // next horizontal output strip
+   }
+   // wv0 and zv0 are pointing to the next input/output, but it is not 4 wide.
+   if(n0>=2){
+    // the remnant is 2-3 columns.  Process like a normal column, but shorten the read/write
+    // use mask loads
+    __m256i endmask= _mm256_loadu_si256((__m256i*)(validitymask+NPAR-n0));
+    UI blkrem=m4;
+    NOUNROLL do{
+     __m256d w0,w1,w2,w3,w0t,w2t,wb;
+     w0=_mm256_maskload_pd((D*)wv0,endmask); w1=_mm256_maskload_pd((D*)((I)wv0+wstride1),endmask); w2=_mm256_maskload_pd((D*)((I)wv0+2*wstride1),endmask); w3=_mm256_maskload_pd((D*)((I)wv0+wstride3),endmask);
+     w0t=_mm256_unpacklo_pd(w0,w1); w2t=_mm256_unpacklo_pd(w2,w3);  // 0426, 8CAE
+     wb=_mm256_blend_pd(w0t,w2t,0b0011); wb=_mm256_permute2f128_pd(wb,wb,0x01);  // 8C26, 268C
+     w1=_mm256_unpackhi_pd(w0,w1); w3=_mm256_unpackhi_pd(w2,w3);  // 1537, 9DBF
+     w0=_mm256_blend_pd(w0t,wb,0b1100); _mm256_storeu_pd((D*)zv0, w0);  // 048c
+     if(n0==3){w2=_mm256_blend_pd(w2t,wb,0b0011); _mm256_storeu_pd((D*)((C*)zv0+2*zstride1), w2);}// 26AE
+     wb=_mm256_permute2f128_pd(w3,w3,0x01);  // --9D
+     w1=_mm256_blend_pd(w1,wb,0b1100);  // 159D
+     _mm256_storeu_pd((D*)((C*)zv0+zstride1),w1);
+     wv0=(C*)wv0+(wstride1<<LGNPAR); zv0=(C*)zv0+SZI*NPAR;  // next input & output 4x4
+    }while(--blkrem);
+   }else if(n0==1){
+    // The remnant is 1 column.  Use scatter-write... if it is implemented
+    DQ(m4*4, *(D*)zv0=*(D*)wv0; wv0=(C*)wv0+wstride1; zv0=(C*)zv0+SZI;)
+   }  // if n0==0, nothing to do
+  }
+  // vertical strips finished, do the horizontal remnant if any
+  if(m&=3){  // if there is a horizontal remnant...
+   wv0=(C*)wv+m4*4*wstride1; zv0=(C*)zv+m4*4*SZI;
+   DQ(n, void *wv1=wv0; void *zv1=zv0; DQ(m, *(D*)zv1=*(D*)wv1; wv1=(C*)wv1+wstride1; zv1=(C*)zv1+SZI;) wv0=(C*)wv0+SZI; zv0=(C*)zv0+zstride1;)
+  }
+ } else
+#endif
+  // !!!!! this might be an else-clause from the conditional section!!!!
+ z=canta(apv(r,r-1,-1L),w); RZ(z);  // rank is set
  // We extracted from w, so mark it (or its backer if virtual) non-pristine.  If w was pristine and inplaceable, transfer its pristine status to the result
  // But if we are returning the input block unchanged, leave pristinity unchanged
  if(z!=w){PRISTXFERF(z,w)}

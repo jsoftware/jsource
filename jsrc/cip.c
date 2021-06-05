@@ -310,7 +310,7 @@ _mm256_zeroupperx(VOIDARG)
       if(!(flgs&(FLGCMP))){
        for(j=0;j<(nvalidops&-NPAR);j+=NPAR){_mm256_store_pd(&(*cva)[0][i][j],_mm256_loadu_pd(a0x)); a0x+=NPAR;}  // quads as long as possible
        for(;j<nvalidops;++j){(*cva)[0][i][j]=*a0x; ++a0x;}  // float
-      }else {for(j=0;j<nvalidops;++j){(*cva)[0][i][j]=*a0x; ++a0x; (*cva)[1][i][j]=*a0x; ++a0x;}}  // complex: real and imaginary  scaf interleave
+      }else {for(j=0;j<nvalidops;++j){(*cva)[0][i][j]=*a0x; ++a0x; (*cva)[1][i][j]=*a0x; ++a0x;}}  // complex: real and imaginary
      }
     }
 
@@ -463,7 +463,7 @@ _mm256_zeroupperx(VOIDARG)
         _mm256_store_pd(zilblock,z00r); _mm256_store_pd(zilblock+NPAR,z01r); _mm256_store_pd(zilblock+2*NPAR,z10r); _mm256_store_pd(zilblock+3*NPAR,z11r);
        }else{
          // for the last z pass we have to store into the final result area
-        if(a3rem>7){  // no problem horizontally  scaf see if should use mask always
+        if(a3rem>7){  // no problem horizontally
          _mm256_storeu_pd(z4base,z00r); _mm256_storeu_pd(z4base+NPAR,z01r);
          if(a5rem>1){_mm256_storeu_pd(z4base+n,z10r); _mm256_storeu_pd(z4base+n+NPAR,z11r);}
         } else {
@@ -724,7 +724,7 @@ F2(jtpdt){PROLOG(0038);A z;I ar,at,i,m,n,p,p1,t,wr,wt;
      DQ(p1, x=zv; c=*u++; er=asminnerprodx(n,x,c,v); if(er)break; v+=n;);
 
  */
-#if C_NA   // non-assembler version
+#if 1   // obsolete C_NA non-assembler version
    // INT product is problematic, because it is used for many internal purposes, such as #. and indexing of { and m} .  For these uses,
    // one argument (usually w) has only one item, a list that is reused.  So, we check for that case; if found we go through faster code that just
    // performs vector inner products, accumulating in registers.  And we have multiple versions of that: one when the totals can't get close to
@@ -771,7 +771,7 @@ oflo2:
     for(zv=DAV(z), i=AN(z); i; --i, ++zv)if(*zv>1e13 || *zv<-1e13)break;   // see if any value is out of range
     if(!i){AT(z)=INT;for(zv=DAV(z), i=AN(z); i; --i, ++zv)*(I*)zv=(I)*zv;}  // if not, convert all to integer
    }
-#else  // !C_NA
+#else  // obsolete !C_NA
     for(i=0;i<m;++i,v=wv,zv+=n){
      x=zv; c=*u++; TYMES1V(n,x,c,v); if(er)break; v+=n;
      DQ(p1, x=zv; c=*u++; er=asminnerprodx(n,x,c,v); if(er)break; v+=n;);

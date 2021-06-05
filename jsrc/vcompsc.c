@@ -28,7 +28,7 @@
 // bit12 this is a reverse-index loop
 // bit13 this is +/@:comp: inv means total is number of trues, otherwise number of falses
 
-// do one computation. xy bit 0 means fetch/incr y, bit 1 means fetch/incr x.  lineno is the offset to the row being worked on
+// do one computation. xy bit 0 means fetch/incr y, bit 1 means fetch/incr x; bit 2 is set if the loop is not unrolled (we can bypassa section).  lineno is the offset to the row being worked on
 #define CPRMDO(zzop,xy,fz,lineno,inv)  if((xy)&2)LDBID(xx,OFFSETBID(x,((fz)&0x1000?-1:1)*lineno*NPAR,fz,0x8,0x40,0x100),fz,0x8,0x40,0x100) if((xy)&1)LDBID(yy,OFFSETBID(y,((fz)&0x1000?-1:1)*lineno*NPAR,fz,0x10,0x80,0x200),fz,0x10,0x80,0x200)  \
      if((xy)&2)CVTBID(xx,xx,fz,0x8,0x40,0x100) if((xy)&1)CVTBID(yy,yy,fz,0x10,0x80,0x200)  \
      zzop; if((fz)&0x2000){acc##lineno=_mm256_add_epi64(acc##lineno,_mm256_castpd_si256(zz));} else {if((xy)&4){if((maskatend=_mm256_movemask_pd(zz))!=inv*15)goto outs0;} else if((maskatend=_mm256_movemask_pd(zz))!=inv*15)goto out##lineno;}

@@ -22,7 +22,7 @@ test1  =: (br -: brep) " 0
 *./ test1 ;:'ar bx boxed oarg'
 *./ test1 ;:'bxroot bxx bxgl bxgr bxg bxtil bxcase bx'
 
-test =: 1 : '(br -: brep) <''x''' 
+test =: 1 : '(br -: brep) <''u''' 
 
 +   test
 +.  test

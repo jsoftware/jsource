@@ -438,8 +438,8 @@ A jtparsea(J jt, A *queue, I m){PSTK * RESTRICT stack;A z,*v;
 
   // Set number of extra words to pull from the queue.  We always need 2 words after the first before a match is possible.
   I es = 2;
-  // scaf for debugging if(jt->parsercalls==0xdd)
-  // scaf for debugging  jt->parsercalls=0xdd;
+  // debugging if(jt->parsercalls==0xdd)
+  // debugging  jt->parsercalls=0xdd;
   // DO NOT RETURN from inside the parser loop.  Stacks must be processed.
   LX *locbuckets=LXAV0(jt->locsyms);  // the local symbol table cannot change during the parse
 

@@ -156,7 +156,7 @@ static DF2(jtcasei12){A vres,z;I gerit[128/SZI],ZZFLAGWORD;
  ZZFLAGWORD=AT(w)&VERB?ZZFLAGINITSTATE|ZZFLAGWILLBEOPENED|ZZFLAGCOUNTITEMS:ZZFLAGINITSTATE|ZZFLAGWILLBEOPENED|ZZFLAGCOUNTITEMS|ZZFLAGISDYAD;  // we collect the results on the cells, but we don't assemble into a result.  To signal this, we force BOXATOP and set WILLBEOPENED
  jtinplace=(J)((I)jtinplace&(a==w?-4:-1));  // Don't allow inplacing if a==w dyad
  self=AT(w)&VERB?w:self; w=AT(w)&VERB?a:w;  // if monad, a==w
- I wr=AR(w); I ar=AR(a); I mr=MAX(wr,ar);    // ranks, and max rank   scaf turn off IRS
+ I wr=AR(w); I ar=AR(a); I mr=MAX(wr,ar);    // ranks, and max rank
  // Execute v at infinite rank
  vres=FAV(self)->fgh[1];   // temp: verb to execute
  RZ(vres=(FAV(vres)->valencefns[ZZFLAGWORD>>ZZFLAGISDYADX])(jt,a,ZZFLAGWORD&ZZFLAGISDYAD?w:vres,vres));  // execute v at infinite rank, not inplace

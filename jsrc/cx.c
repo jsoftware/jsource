@@ -229,7 +229,7 @@ DF2(jtxdefn){F2PREFIP;PROLOG(0048);
   A u,v;  // pointers to args
   // If this is adv/conj, it must be (1/2 : n) executed with no x or y.  Set uv then, and undefine x/y
   u=AT(self)&ADV+CONJ?a:0; v=AT(self)&ADV+CONJ?w:0;
-// saved for next rev   a=AT(self)&ADV+CONJ?0:a; w=AT(self)&ADV+CONJ?0:w;   scaf should do this now?  may leave y undefined
+  a=AT(self)&ADV+CONJ?0:a; w=AT(self)&ADV+CONJ?0:w;    // leave x and y undefined in modifier execution
   nG0ysfctdl|=SGNTO0(-(jt->glock|(sflg&VLOCK)));  // init flags: 1=lock bit, whether from locked script or locked verb
   // If this is a modifier-verb referring to x or y, set u, v to the modifier operands, and sv to the saved modifier (f=type, g=compiled text).  The flags don't change
   if(unlikely((sflg&VXOP)!=0)){u=sv->fgh[0]; v=sv->fgh[2]; sv=VAV(sv->fgh[1]);}
@@ -1203,7 +1203,7 @@ A jtddtokens(J jt,A w,I env){
    A neww=jgets("\001");  // fetch next line, in raw mode
    RE(0); ASSERT(neww!=0,EVCTRL); // fail if jgets failed, or if it returned EOF - problem either way
    // join the new line onto the end of the old one (after discarding trailing NB in the old).  Must add an LF character and a word for it
-   w=jtapip(jtinplace,w,scc(DDSEP));   // append a separator, which is all that remains of the original line   scaf use faux or constant block
+   w=jtapip(jtinplace,w,scc(DDSEP));   // append a separator, which is all that remains of the original line
    jtinplace=(J)((I)jtinplace|JTINPLACEW);  // after the first one, we can certainly inplace on top of w
    I oldchn=AN(w);  // len after adding LF, before adding new line
    RZ(w=jtapip(jtinplace,w,neww));   // join the new character list onto the old, inplace if possible
@@ -1237,7 +1237,7 @@ A jtddtokens(J jt,A w,I env){
     while(1){
      // append the LF for the previous line (unless an empty first line), then the new line itself, to w
      if(enddelimx<wn){
-      w=jtapip(jtinplace,w,scc(DDSEP));   // append a separator   scaf use faux or constant block
+      w=jtapip(jtinplace,w,scc(DDSEP));   // append a separator
       jtinplace=(J)((I)jtinplace|JTINPLACEW);  // after the first one, we can certainly inplace on top of w
      }
      enddelimx=0;   // after the first line, we always install the LF

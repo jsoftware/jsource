@@ -717,7 +717,7 @@ A jtgr1(J jt,A w){F1PREFJT;PROLOG(0075);A z;I c,f,ai,m,n,r,*s,t,wn,wr,zn;
  // Calculate m: #cells in w   n: #items in a cell of w   ai: #atoms in an item of a cell of w  c: #atoms in a cell of w  
  SETICFR(w,f,r,n);  if(wn=AN(w)){
   // If w is not empty, it must have an acceptable number of cells
-  PROD(m,f,s); PROD1(ai,r-1,f+s+1); c=ai*n; zn=m*n;
+  PROD(m,f,s); PROD(ai,r-1,f+s+1); c=ai*n; zn=m*n;
  }else{
   // empty w.  The number of cells may overflow, but reshape will catch that
   DPMULDE(prod(f,s),n,zn);

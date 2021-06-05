@@ -594,7 +594,7 @@ static DF2(jtinfixprefix2){F2PREFIP;PROLOG(00202);A fs;I cger[128/SZI];
  I stride;  // number of items to advance virtual-arg pointers by between cells
  I strideb;  // stride*number of bytes per cell (not used for prefix)
  I wi; SETIC(w,wi);  // wi=#items of w
- PROD1(wc,AR(w)-1,AS(w)+1);  // #atoms in cell of a.  Overflow possible only if wi==0, which will go to fill
+ PROD(wc,AR(w)-1,AS(w)+1);  // #atoms in cell of a.  Overflow possible only if wi==0, which will go to fill
  // set up for prefix/infix.  Calculate # result slots
  if(a!=mark){
   // infix.
@@ -749,7 +749,7 @@ static DF1(jtpscan){A z;I f,n,r,t,wn,wr,*ws,wt;
  VARPS adocv; varps(adocv,self,wt,1);  // fetch info for f/\ and this type of arg
  if(!adocv.f)R IRS1(w,self,r,jtinfixprefix1,z);  // if there is no special function for this type, do general scan
  // Here is the fast special reduce for +/ etc
- I d,m; PROD(m,f,ws); PROD1(d,r-1,ws+f+1);   // m=#scans, d=#atoms in a cell of each scan
+ I d,m; PROD(m,f,ws); PROD(d,r-1,ws+f+1);   // m=#scans, d=#atoms in a cell of each scan
  if((t=atype(adocv.cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));  // convert input if necessary
  // if inplaceable, reuse the input area for the result
  if(ASGNINPLACESGN(SGNIF((I)jtinplace,JTINPLACEWX)&SGNIF(adocv.cv,VIPOKWX),w))z=w; else GA(z,rtype(adocv.cv),wn,wr,ws);

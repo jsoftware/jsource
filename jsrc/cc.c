@@ -60,7 +60,7 @@ static DF2(jtcut02){F2PREFIP;A fs,q,qq,*qv,z,zz=0;I*as,c,e,i,ii,j,k,m,n,*u,*ws;P
  A virtw;  // virtual block to use if any
  fauxblock(virtwfaux);
  if(c==1){
-  PROD1(wcellsize,wr-1,ws+1);  // size in atoms of w cell
+  PROD(wcellsize,wr-1,ws+1);  // size in atoms of w cell
   // allocate virtual block
   fauxvirtual(virtw,virtwfaux,w,wr,ACUC1);  // allocate UNINCORPORABLE block, noninplaceable
   // fill in shape

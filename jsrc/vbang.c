@@ -90,7 +90,7 @@ static D jtdbin(J jt,D x,D y){D c,d,e,h=1.0,p,q,r;I k=0;
  c=y;   if(0<=c)p=jfloor(c); else{k+=4; ++c; p=jfloor(-c);}
  d=y-x; if(0<=d)q=jfloor(d); else{k+=2; ++d; q=jfloor(-d);}
  e=x;   if(0<=e)r=jfloor(e); else{k+=1; ++e; r=jfloor(-e);}
- switch(k){  // scaf remove switch
+ switch(k){
   case 0: h=pq(h,q,&c,&d); h=pq(h,r,&c,&e);                break;
   case 1: h=pq(h,p,&c,&d); h=pq(h,r,&e,&d);           --e; break;
   case 2: h=pq(h,p,&c,&e); h=pq(h,q,&d,&e);      --d;      break;

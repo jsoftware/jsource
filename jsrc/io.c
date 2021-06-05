@@ -352,7 +352,7 @@ F1(jtjoff){I x;
  R 0;
 }
 
-static I jdo(JS jt, C* lp){I e;A x;JJ jm=MTHREAD(jt);  // get address of thread struct we are using (the master thread)    scaf should use JJ as input
+static I jdo(JS jt, C* lp){I e;A x;JJ jm=MTHREAD(jt);  // get address of thread struct we are using (the master thread)
  jm->jerr=0; jm->etxn=0; /* clear old errors */
  // The named-execution stack contains information on resetting the current locale.  If the first named execution deletes the locale it is running in,
  // that deletion is deferred until the locale is no longer running, which is never detected because there is no earlier named execution to clean up.

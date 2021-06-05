@@ -141,7 +141,7 @@ B jtxdivrem(J jt,X a,X w,X*qz,X*rz){B b,c;I*av,d,j,n,*qv,r,y;X q;
  j=n=AN(a); av=AV(a); b=0<=av[n-1];
  y=AV(w)[0]; c=0<=y; if(!c)y=-y; r=0;
  GATV0(q,INT,n,1); qv=AV(q);
- switch(2*b+c){  // scaf rewrite w/o switch
+ switch(2*b+c){
   case 0: DQ(n, --j; d=r*XBASE-av[j]; r=d%y; qv[j]=  d/y ;); r=-r;      break;
   case 1: DQ(n, --j; d=r*XBASE-av[j]; r=d%y; qv[j]=-(d/y);); r=r?y-r:0; break;
   case 2: DQ(n, --j; d=r*XBASE+av[j]; r=d%y; qv[j]=-(d/y);); r=r?r-y:0; break;

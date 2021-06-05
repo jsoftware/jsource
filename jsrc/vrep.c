@@ -79,7 +79,7 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
   // Convert skipcount to bytes, and advance wvv to point to the first cell that may move
   n+=CTTZI(nextwd^VALIDBOOLEAN)>>LGBB;  // complement; count original 1s, add to n.  m cannot be 0 so there must be a valid 0 bit in nextwd
   zvv=wvv=(C*)wvv+k*n;  // step input over items left in place; use that as the starting output pointer also
-  exactlen=!!(k&(SZI-1));  // if items are not multiples of I, require exact len.  Since we skip an unchanged prefix, we will seldom have address contention during the copy  scaf could tighten this 
+  exactlen=!!(k&(SZI-1));  // if items are not multiples of I, require exact len.  Since we skip an unchanged prefix, we will seldom have address contention during the copy
   // since the input is abandoned and no cell is ever duplicated, pristinity is unchanged
  }
  AS(z)[wf]=p;  // move in length of item axis, #bytes per item of cell
@@ -183,21 +183,22 @@ static REPF(jtrepisx){A e,q,x,y;I c,j,m,p=0,*qv,*xv,*yv;P*ap;
 static REPF(jtrep1d){A z;C*wv,*zv;I c,k,m,n,p=0,q,t,*ws,zk,zn;
  F2PREFIP;ARGCHK2(a,w);
  t=AT(a); m=AN(a); ws=AS(w); SETICFR(w,wf,wcr,n);   // n=length of item axis in input.  If atom, is repeated to length of a
+ t=m?t:B01;  // 
  if(t&CMPX){
   if(wcr)R repzdx(from(apv(n,0L,0L),a),w,                wf,wcr);
   else{A za; RZ(za=apv(m,0L,0L)); R repzdx(a,IRS2(za,w,0L,1L,0L,jtfrom,z),wf,1L );}
  }
  if(t&B01){p=bsum(m,BAV(a)); // bsum in case a is big.  Atomic boolean was handled earlier
  }else{I*x; 
-  RZ(a=vi(a)); x=AV(a); 
-  DO(m, ASSERT(0<=x[i],EVDOMAIN); p+=x[i]; ASSERT(0<=p,EVLIMIT););  // p=#items in result  scaf should use scan
+  RZ(a=vi(a)); x=AV(a);
+  I rawin=0, totin=0; DO(m, p+=x[i]; rawin|=x[i]; totin|=p;); ASSERT(0<=rawin,EVDOMAIN); ASSERT(0<=totin,EVLIMIT); // p=#items in result
  }
  DPMULDE(p,n,q);  // q=length of result item  axis.  +/a copies, each of length n
  DPMULDE(p,AN(w),zn);
  GA(z,AT(w),zn,AR(w)+!wcr,0); MCISH(AS(z),AS(w),AR(z)) AS(z)[wf]=q;
  if(!zn)R z;
  wv=CAV(w); zv=CAV(z);
- PROD(c,wf+(I )(wcr!=0),ws); PROD1(k,wcr-1,ws+wf+1); k <<=bplg(AT(w));  // c=#cell-items to process  k=#atoms per cell-item
+ PROD(c,wf+(I )(wcr!=0),ws); PROD(k,wcr-1,ws+wf+1); k <<=bplg(AT(w));  // c=#cell-items to process  k=#atoms per cell-item
  zk=p*k;  // # bytes to fill per item
  DQ(c, mvc(zk,zv,k,wv); zv+=zk; wv+=k;);
  R z;
@@ -261,9 +262,9 @@ F2(jtrepeat){A z;I acr,ar,wcr,wf,wr;
  F2PREFIP;ARGCHK2(a,w);
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK;
-I adense=SGNIFDENSE(AT(a));  // sign set if a is dense
+ I adense=SGNIFDENSE(AT(a));  // sign set if a is dense
 // obsolete I att=SGNTO0(-(AT(a)&B01+SB01))+((UI)(-(AT(a)&CMPX+SCMPX))>>(BW-1-1));  // 0 if INT/FL 1 if B01 3 if CMPX
-I att=(AT(a)&B01)+((AT(a)&CMPX)>>(CMPXX-1));  // 0 if INT/FL 1 if B01 2 if CMPX
+ I att=(AT(a)&B01)+((AT(a)&CMPX)>>(CMPXX-1));  // 0 if INT/FL 1 if B01 2 if CMPX
  att=(-acr&-wcr)>=0?3:att;  // override with 3 if either a or w is an atom
  adense&=(-acr&-wcr)|SGNIFDENSE(AT(w));  // if a or w is an atom, require both a and w dense
  A (*repfn)() = reptab[2*att+SGNTO0(adense)];  // fetch address to call

@@ -80,7 +80,7 @@ typedef struct rngdata {
  S etxn1;            // last non-zero etxn                 migrated clear for task
  UI cstackmin;        // red warning for C stack pointer init for task
  struct ASGINFO {
-  L *assignsym;       // symbol-table entry for the symbol about to be assigned      scaf  need to use LX when multithreaded clear/inherit for task
+  L *assignsym;       // symbol-table entry for the symbol about to be assigned
   A zombieval;    // the value that the verb result will be assigned to, if the assignment is safe and has inplaceable usecount and not read-only
  } asginfo;
  A locsyms;  // local symbol table, or dummy empty symbol table if none init for task
@@ -212,7 +212,7 @@ typedef struct JSTstruct {
  I igemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for integer matrix product.  _1 means 'never'
  I dgemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for float matrix product.  _1 means 'never'
  I zgemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for complex matrix product.  _1 means 'never'
- A implocref[2];     // references to 'u.'~ and 'v.'~, marked as implicit locatives scaf
+ A implocref[2];     // references to 'u.'~ and 'v.'~, marked as implicit locatives
  C baselocale[4];    // will be "base"
  UI4 baselocalehash;   // name hash for base locale
  A zpath;    // path 'z', used for all initial paths

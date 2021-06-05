@@ -124,7 +124,7 @@ ARGCHK1(w);
    D P00=ipa[0]; D P01=ipa[1]; D P11=ipa[3]; D R00=sqrt(P00); D det=P00*P11 - P01*P01;
    ipa[0]=(1/R00); ipa[1]=0; ipa[2]=-P01*(1/R00)*(1/sqrt(det)); ipa[3]=R00*(1/sqrt(det));  // as above
    yv[0]=R00; yv[1]=P01*(1/R00); yv[2]=0; yv[3]=sqrt(det)*(1/R00);  // as above
-   ASSERT(1==cachedmmult(jt,ipa,w0v,w0v,2,cl,2,0),EVNAN); // w1 - (w1 q0*) q0, in place    scaf NaN?
+   ASSERT(1==cachedmmult(jt,ipa,w0v,w0v,2,cl,2,0),EVNAN); // w1 - (w1 q0*) q0, in place
    RETF(y);
   }
 #endif
@@ -156,7 +156,7 @@ ARGCHK1(w);
   AS(y)[0]=rw-m; AS(y)[1]=m;  // now AS and AN are set in y.  q0 has been repurposed.
   D *w1v=DAV(q1);  // addr of w1, same over calls
   RZ(jtsumattymesprods(jt,FL|LIT,w1v,w0v,cl,1,rw-m,1,m,ipv));  // w1 q0*, into ipv is rw-m x cl x m
-  ASSERT(1==cachedmmult(jt,ipv,w0v,w1v,rw-m,cl,m,FLGWMINUSZ),EVNAN); // w1 - (w1 q0*) q0, in place    scaf NaN?
+  ASSERT(1==cachedmmult(jt,ipv,w0v,w1v,rw-m,cl,m,FLGWMINUSZ),EVNAN); // w1 - (w1 q0*) q0, in place
  }else{
 #else
  {

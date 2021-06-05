@@ -93,6 +93,15 @@ f0=. {{     NB. empty first line
 r =: {{ y }} :. {{ y }}
 '3 : ''y '' :.(3 : ''y '')' -: 5!:5 <'r'
 
+r =: {{ u
+(".'x')
+}}
+'value error' -: ". etx '4 r'  NB. x/y not defined in non-operator modifier execution
+r =: {{ u
+(".'y')
+}}
+'value error' -: ". etx '4 r'
+
 NB. Nameref caching
 NB. names are cached
 4!:55 ;:'vb__ vb_z_'

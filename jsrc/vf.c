@@ -49,7 +49,7 @@ void jtfillv0(J jt,I t){I fillvalue0;
  jt->fillv0len=bpnoun(t);  // save the minimum fill-cell size
  if(likely(t&B01+LIT+INT+FL+CMPX+SBT+BOX)){  // normal case - direct num or LIT, or BOX
   fillvalue0=t&LIT?0x20*VALIDBOOLEAN:0; fillvalue0=t&BOX?(I)mtv:fillvalue0;  // get SP or 0, of mtv for box
-  *(I*)&jt->fillv0[0]=fillvalue0; *(I*)&jt->fillv0[SZI]=fillvalue0;  // copy to output   scaf could just do 1 value, 1 byte long except for BOX
+  *(I*)&jt->fillv0[0]=fillvalue0; *(I*)&jt->fillv0[SZI]=fillvalue0;  // copy to output
 #if !SY_64
   *(I*)&jt->fillv0[2*SZI]=fillvalue0; *(I*)&jt->fillv0[3*SZI]=fillvalue0;
 #endif
@@ -144,7 +144,7 @@ F2(jtrotate){A origw=w,y,z;B b;C*u,*v;I acr,af,ar,*av,d,k,m,n,p,*s,wcr,wf,wn,wr;
  RZ(w=setfv(w,w)); u=CAV(w); wn=AN(w); s=AS(w); k=bpnoun(AT(w));  // set fill value if given
  GA(z,AT(w),wn,wr,s); v=CAV(z);
  if(!wn)R z;
- PROD(m,wf,s); PROD1(d,wr-wf-1,s+wf+1); SETICFR(w,wf,wcr,n);   // m=#cells of w, n=#items per cell  d=#atoms per item of cell
+ PROD(m,wf,s); PROD(d,wr-wf-1,s+wf+1); SETICFR(w,wf,wcr,n);   // m=#cells of w, n=#items per cell  d=#atoms per item of cell
  rot(m,d,n,k,1>=p?AN(a):1L,av,u,v);
  if(1<p){
   GA(y,AT(w),wn,wr,s); u=CAV(y); 

@@ -102,7 +102,6 @@ F2(jttake){A s;I acr,af,ar,n,*v,wcr,wf,wr;
   }
  }
  a=s;
-// obsolete correct if(!(ar|wf|(SPARSE&wt)|!wcr|(AFLAG(w)&(AFNJA)))){  // if there is only 1 take axis, w has no frame and is not atomic
  if(!(ar|wf|(((NOUN&~(DIRECT|RECURSIBLE))|SPARSE)&wt)|!wcr|(AFLAG(w)&(AFNJA)))){  // if there is only 1 take axis, w has no frame and is not atomic  NJAwhy
   // if the length of take is within the bounds of the first axis
   I tklen = IAV(a)[0];  // get the one number in a, the take amount
@@ -151,7 +150,6 @@ F2(jtdrop){A s;I acr,af,ar,d,m,n,*u,*v,wcr,wf,wr;
  }
  n=AN(a); u=AV(a);     // n=#axes to drop, u->1st axis
  // virtual case: scalar a
-// obsolete correct if(!(ar|wf|(SPARSE&wt)|!wcr|(AFLAG(w)&(AFNJA)))){  // if there is only 1 take axis, w has no frame and is not atomic
  if(!(ar|wf|(((NOUN&~(DIRECT|RECURSIBLE))|SPARSE)&wt)|!wcr|(AFLAG(w)&(AFNJA)))){  // if there is only 1 take axis, w has no frame and is not atomic  BJAwhy
   I * RESTRICT ws=AS(w);  // ws->shape of w
   I droplen = IAV(a)[0];  // get the one number in a, the take amount

@@ -59,7 +59,6 @@ A jtssingleton(J jt, A a,A w,A self,RANK2T awr,RANK2T ranks){A z;
   if(likely(awr==0)){  // both atoms
    // The usual case: both singletons are atoms.  Verb rank is immaterial.  Pick any inplaceable input, or allocate a FL atom if none
    // For comparison operations don't allocate, just return from num().  Leave z=0 to indicate this case
-// obsolete    z=aipok?a:z; z=wipok?w:z;
    if((aipok|wipok)+(aiv&0x80)){z=aipok?a:z; z=wipok?w:z;}else GAT0(z,FL,1,0);  // top  bit of lc means 'comparison'
   }else{
    // The nouns have rank, and thus there may be frames.  Calculate the rank of the result, and then see if we can inplace an argument of the needed rank
@@ -375,10 +374,7 @@ A jtssingleton(J jt, A a,A w,A self,RANK2T awr,RANK2T ranks){A z;
  SSSTORE(ziv,z,INT,I) R z;
 
  compareresult:
-// obsolete  ziv&=1;  // Since we are writing into num[], invest 1 instruction to make sure we don't have an invalid boolean
-// obsolete  // If we did not inplace/allocate a result block, return num[ziv].
  if(!z)R num(ziv);  // Don't store into num[].  Could perhaps do this without the branch, but it seems too lengthy
-// obsolete  aiv=(I)(num(ziv)); z=z?z:(A)aiv;
  SSSTORE((B)ziv,z,B01,B) R z;  // OK to store into allocated/inplace area.
 
  circleresult: ;

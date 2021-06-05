@@ -58,24 +58,12 @@
   DQ(m, yy=zz; DQ(q, *--zz=*--xx;); DQ(n-1, DQ(q, --xx; --yy; --zz; *zz=pfx(*xx,*yy);)));  \
  }
 
-#if 0  // obsolete
-#define SUFFIXBFX(f,pfx,ipfx,spfx,bpfx,vexp)  \
- AHDRP(f,B,B){B v,* RESTRICT y;I q;                                        \
-  x+=m*d*n; z+=m*d*n;                                           \
-  if(1==d){DQ(m, *--z=v=*--x; DQ(n-1, --x; --z; *z=v=vexp;)); R EVOK;}  \
-  if(0==(d&(sizeof(UI  )-1))){SUFFIXBFXLOOP(UI,   pfx); R EVOK;}              \
-  if(0==(d&(sizeof(UI4)-1))){SUFFIXBFXLOOP(UINT,ipfx); R EVOK;}              \
-  if(0==(d&(sizeof(US  )-1))){SUFFIXBFXLOOP(US,  spfx); R EVOK;}              \
-  DQ(m, y=z; DQ(d, *--z=*--x;); DQ(n-1, DQ(d, --x; --y; --z; *z=bpfx(*x,*y);)));R EVOK;  \
- }
-#else
 #define SUFFIXBFX(f,pfx,ipfx,spfx,bpfx,vexp)  \
  AHDRP(f,B,B){B v,* RESTRICT y;I q;                                        \
   x+=m*d*n; z+=m*d*n;                                           \
   if(1==d){DQ(m, *--z=v=*--x; DQ(n-1, --x; --z; *z=v=(vexp);)); R EVOK;}  \
   DQ(m, z-=d; x-=d; JMC(z,x,d,1); DQ(n-1, x-=d; z-=d; C *z0=z; C *x0=x; y=z+d; DQ((d-1)>>LGSZI, *(I*)z=pfx(*(I*)x,*(I*)y); x+=SZI; y+=SZI; z+=SZI;) I nct=(-d)&(SZI-1); STOREBYTES(z,pfx(*(I*)x,*(I*)y),nct) z=z0; x=x0;)) R EVOK;  \
  }
-#endif
 #else
 #define SUFFIXBFX(f,pfx,ipfx,spfx,bpfx,vexp)  \
  AHDRS(f,B,B){B v;I i,q,r,t,*xi,*yi,*zi;                         \
@@ -375,7 +363,6 @@ static DF2(jtofxassoc){A f,i,j,p,s,x,z;C id,*zv;I c,d,k,kc,m,r,t;V*v;VA2 adocv;
  if(!TYPESEQ(AT(p),AT(s))){rc=EWOV;} else {I klg;  // simulate overflow if different precisions - will convert everything to float
   r=AR(p); PROD(c,AR(p)-1,AS(p)+1) t=AT(p); klg=bplg(t); kc=c<<klg;
   adocv=var(x,t,t); // analyze the u operand
-// obsolete   ASSERTSYS(adocv.f,"ofxassoc");  // scaf
   GA(z,t,c*(1+d),r,AS(p)); AS(z)[0]=1+d; zv=CAV(z);  // allocate result assuming no overflow
   MC(zv,     AV(s),          kc);                     // first cell is {.s, i. e. all but the first infix
   rc=(1<d)?((AHDR2FN*)adocv.f)((I)1,c*(d-1),AV(p),kc+CAV(s),zv+kc,jt):EVOK; rc=rc<0?EWOVIP+EWOVIPMULII:rc;  /* (}:p) f (}.s), with result stored into the result area */  // don't call with 0 length!

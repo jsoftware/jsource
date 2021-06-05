@@ -268,7 +268,6 @@ static A jtunbinr(J jt,B b,B d,B pre601,I m,A w){A y,z;C*u=(C*)w,*v;I e,j,kk,n,p
  kk=WS(d); v=BV(d,w,r);
  ASSERT(t==LOWESTBIT(t),EVDOMAIN);
  t=fromonehottype(t);
-// obsolete  ASSERT((t==LOWESTBIT(t))&&t&(B01|INT|FL|CMPX|BOX|XNUM|RAT|LIT|C2T|C4T|SB01|SLIT|SINT|SFL|SCMPX|SBOX|SBT),EVDOMAIN);
  ASSERT(t&NOUN,EVDOMAIN);
  ASSERT(0<=n,EVDOMAIN);
  ASSERT(BETWEENC(r,0,RMAX),EVRANK);

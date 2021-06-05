@@ -950,7 +950,6 @@ extern I Bimax[];
 #define imax ((A)&Bimax)
 extern I Bmark[];
 #define mark ((A)&Bmark)
-// obsolete extern US  break0;
 extern I Bchrcolon[];
 #define chrcolon ((A)&Bchrcolon)
 extern I Bchrspace[];
@@ -983,7 +982,6 @@ extern D        pf;
 extern struct Bd1 Bpie;
 #define pie ((A)&Bpie)
 extern PRIM     primtab[];
-// obsolete extern const UI4      shortrange[3][4];
 extern Z        zeroZ;
 extern const dcomplex zone;
 extern const dcomplex zzero;

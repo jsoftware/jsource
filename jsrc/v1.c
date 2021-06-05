@@ -83,7 +83,6 @@ static B eqv(I af,I wf,I m,I n,I k,C* RESTRICT av,C* RESTRICT wv,B* RESTRICT z,B
  __m256i u,v;
  // prep for each compare loop
  __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n0)&(NPAR-1))));  /* mask for 0 1 2 3 4 5 is xxxx 0001 0011 0111 1111 0001 */
-// obsolete  I i0=(n0-1)>>LGNPAR;  /* # loops for 0 1 2 3 4 5 is x 0 0 0 0 1 */
  UI n2=DUFFLPCT(n0-1,3);  /* # turns through duff loop */
  UI backoff=DUFFBACKOFF(n0-1,3);
  b1^=1;  // change success value to failure value
@@ -152,9 +151,6 @@ I memcmpne(void *s, void *t, I l){
   UI backoff=DUFFBACKOFF(n-1,3);
   x+=(backoff+1)*NPAR; y+=(backoff+1)*NPAR;
   switch(backoff){
-// obsolete  I i=(n-1)>>LGNPAR;  /* # loops for 0 1 2 3 4 5 is x 0 0 0 0 1 */
-// obsolete if(i){
-// obsolete   switch(i&3){
   do{
   case -1: u=_mm256_loadu_si256 ((__m256i*)x); v=_mm256_loadu_si256 ((__m256i*)y); allmatches=_mm256_and_si256(allmatches,_mm256_cmpeq_epi8(u,v));
   case -2: u=_mm256_loadu_si256 ((__m256i*)(x+1*NPAR)); v=_mm256_loadu_si256 ((__m256i*)(y+1*NPAR)); allmatches=_mm256_and_si256(allmatches,_mm256_cmpeq_epi8(u,v));
@@ -192,8 +188,6 @@ I memcmpnefl(void *s, void *t, I l, J jt){
    UI backoff=DUFFBACKOFF(l-1,3);
    x+=(backoff+1)*NPAR; y+=(backoff+1)*NPAR;
    switch(backoff){
- // obsolete  if(i){
- // obsolete    switch(i&3){
    do{
    case -1: u=_mm256_loadu_pd(x); v=_mm256_loadu_pd(y); allmatches=_mm256_and_pd(allmatches,_mm256_cmp_pd(u,v,_CMP_EQ_OQ));
    case -2: u=_mm256_loadu_pd(x+1*NPAR); v=_mm256_loadu_pd(y+1*NPAR); allmatches=_mm256_and_pd(allmatches,_mm256_cmp_pd(u,v,_CMP_EQ_OQ));
@@ -255,9 +249,6 @@ static B eqvfl(I af,I wf,I m,I n,I k,D* RESTRICT av,D* RESTRICT wv,B* RESTRICT z
      UI i = n2;  // inner loop size
      x+=(backoff+1)*NPAR; y+=(backoff+1)*NPAR;
      switch(backoff){
-// obsolete     if(i0){
-// obsolete      I i = i0;  // inner loop size
-// obsolete      switch(i&3){
      do{
      case -1: u=_mm256_loadu_pd(x); v=_mm256_loadu_pd(y); allmatches=_mm256_and_pd(allmatches,_mm256_cmp_pd(u,v,_CMP_EQ_OQ));
      case -2: u=_mm256_loadu_pd(x+1*NPAR); v=_mm256_loadu_pd(y+1*NPAR); allmatches=_mm256_and_pd(allmatches,_mm256_cmp_pd(u,v,_CMP_EQ_OQ));

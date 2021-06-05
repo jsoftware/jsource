@@ -812,14 +812,6 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
      // if we are repeating cells of the not-in-place, we leave the repetition count in nf, otherwise subsume it in mf
      // b means 'repeat atoms inside a'; so if nipw!=b we repeat atoms of not-in-place, if nipw==b we set n to 1
      {C *av, *zv=CAV(z);
-#if 0  // obsolete 
-      I origc=SGNTO0(nf); I origb=SGNTO0(n);   // see what the original repeat flags were
-      nf^=REPSGN(nf); n^=REPSGN(n);  // take abs of n, nf for calculations here
-      if(nipw){av=CAV(w), awzk[0]=awzk[1];}else{av=CAV(a);} if(nipw==origc){mf *= nf; nf = 1;} if(nipw==origb){m *= n; n = 1;}
-      n^=-nipw;  // install new setting of b flag
-     // We have set up ado,nf,mf,nipw,m,n for the conversion.  Now call the repair routine.  n is # times to repeat a for each z, m*n is # atoms of z/zz
-      DQ(mf, DQ(nf, ((AHDR2FN*)adocv.f)(n,m,av,zv,zzv,jt); zzv+=zzk; zv+=awzk[2];); av+=awzk[0];)  // use each cell of a (nf) times
-#else
       // zv and zzv process without repeats; they contain all the information for the in-place argument (if any).
       // av may have repeats.  Repeats before the function call are handled exactly as the first time through, by using aawwzk.
       // repeats inside the function call (from n) must appear only on a, i. e. n<0 to repeat a, or n==1 for no repeat
@@ -828,7 +820,6 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
       av=CAV(nipw?w:a);  // point to the not-in-place argument
       I nsgn=SGNTO0(n); n^=REPSGN(n); if(nipw==nsgn){m *= n; n = 1;} n^=-nipw;  // force n to <=1; make n flag indicate whether args were switched
       I i=mf; I jj=nf; NOUNROLL while(1){((AHDR2FN*)adocv.f)(n,m,av,zv,zzv,jt); if(!--i)break; zv+=aawwzk[4]; zzv+=zzk; I jj1=--jj; jj=jj<0?nf:jj; av+=aawwzk[2*nipw+1+REPSGN(jj1)];}  // jj1 is -1 on the last inner iter, where we use outer incr
-#endif
      }
     }
     R zz;  // Return the result after overflow has been corrected
@@ -891,20 +882,6 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
   }
 
 #if (C_AVX&&SY_64) || EMU_AVX
-#if 0  // obsolete 
-   I rem=dplen; if(rem>8*NPAR)goto label##8; \
-   while(rem>NPAR){ \
-    if(rem>4*NPAR) \
-     {if(rem>6*NPAR){if(rem>7*NPAR)goto label##7;else goto label##6;}else {if(rem>5*NPAR)goto label##5;else goto label##4;}} \
-    else{if(rem>2*NPAR){if(rem>3*NPAR)goto label##3;else goto label##2;}else {if(rem>1*NPAR)goto label##1;else break;}} \
-    label##8: mid2x2(7,0)  label##7: mid2x2(6,1)  label##6: mid2x2(5,0)  label##5: mid2x2(4,1)  \
-    label##4: mid2x2(3,0)  label##3: mid2x2(2,1)  label##2: mid2x2(1,0)  label##1: mid2x2(0,1)  \
-    av+=8*NPAR; wv+=8*NPAR; wv1+=8*NPAR; \
-    if((rem-=8*NPAR)>8*NPAR)goto label##8;  \
-   } \
-   av-=(NPAR-rem)&-NPAR; wv-=(NPAR-rem)&-NPAR; wv1-=(NPAR-rem)&-NPAR; \
-
-#endif
 
 // Do one 2x2 product of length dplen.  Leave results in accxx0.  dplen must be >0
 // av, wv, wv1 are set up.  Special branch for case of len<=4
@@ -949,25 +926,6 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
  acc100 = MUL_ACC(acc100, _mm256_maskload_pd(&av[dplen+0],endmask), _mm256_maskload_pd(&wv[0],endmask)); \
  acc110 = MUL_ACC(acc110, _mm256_maskload_pd(&av[dplen+0],endmask), _mm256_maskload_pd(&wv1[0],endmask));
 
-#if 0  // obsolete 
-
-  I rem=dplen; if(rem>8*NPAR)goto label##8; \
-   while(rem>NPAR){ \
-    if(rem>4*NPAR) \
-     {if(rem>6*NPAR){if(rem>7*NPAR)goto label##7;else goto label##6;}else {if(rem>5*NPAR)goto label##5;else goto label##4;}} \
-    else{if(rem>2*NPAR){if(rem>3*NPAR)goto label##3;else goto label##2;}else {if(rem>1*NPAR)goto label##1;else break;}} \
-    label##8: mid1x1(7,000)  label##7: mid1x1(6,001)  label##6: mid1x1(5,010)  label##5: mid1x1(4,011)  \
-    label##4: mid1x1(3,100)  label##3: mid1x1(2,101)  label##2: mid1x1(1,110)  label##1: mid1x1(0,111)  \
-    av+=8*NPAR; wv+=8*NPAR;  \
-    if((rem-=8*NPAR)>8*NPAR)goto label##8;  \
-   } \
-   acc000=_mm256_add_pd(acc000,acc001); acc010=_mm256_add_pd(acc010,acc011); acc100=_mm256_add_pd(acc100,acc101); acc110=_mm256_add_pd(acc110,acc111);  \
-   acc000=_mm256_add_pd(acc000,acc010); acc100=_mm256_add_pd(acc100,acc110); \
-   acc000=_mm256_add_pd(acc000,acc100);  \
-   av-=(NPAR-rem)&-NPAR; wv-=(NPAR-rem)&-NPAR; \
-
-#endif
-
 // Do one 1x1 product of length dplen.  Leave results in acc000.  dplen must be >0
 // av,  wv, are set up.  We do a quick check for short arg, since 3-long is a common case
 #define ONEPRODAVXD1(label,mid1x1,last1x1) {\
@@ -1003,21 +961,6 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,RANK2T ra
 // same but with mask, on cell number 0
 #define CELL1X1L \
  acc000 = MUL_ACC(acc000, _mm256_maskload_pd(&av[0],endmask), _mm256_maskload_pd(&wv[0],endmask));
-
-#if 0 // obsolete 
- DQ((dplen-1)>>(2+LGNPAR), \
-  acc0=MUL_ACC(acc0,_mm256_loadu_pd(av),_mm256_loadu_pd(wv)); \
-  acc1=MUL_ACC(acc1,_mm256_loadu_pd(av+1*NPAR),_mm256_loadu_pd(wv+1*NPAR)); \
-  acc2=MUL_ACC(acc2,_mm256_loadu_pd(av+2*NPAR),_mm256_loadu_pd(wv+2*NPAR)); \
-  acc3=MUL_ACC(acc3,_mm256_loadu_pd(av+3*NPAR),_mm256_loadu_pd(wv+3*NPAR)); av+=4*NPAR;  wv+=4*NPAR; \
- ) \
- if((dplen-1)&((4-1)<<LGNPAR)){acc0=MUL_ACC(acc0,_mm256_loadu_pd(av),_mm256_loadu_pd(wv)); \
-  if(((dplen-1)&((4-1)<<LGNPAR))>=2*NPAR){acc1=MUL_ACC(acc1,_mm256_loadu_pd(av+NPAR),_mm256_loadu_pd(wv+NPAR)); \
-   if(((dplen-1)&((4-1)<<LGNPAR))>2*NPAR){acc2=MUL_ACC(acc2,_mm256_loadu_pd(av+2*NPAR),_mm256_loadu_pd(wv+2*NPAR));} \
-  } \
-  av+=(dplen-1)&((4-1)<<LGNPAR); wv+=(dplen-1)&((4-1)<<LGNPAR);  \
- }
-#endif
 
 #define ONEPRODD \
  __m256i endmask; /* length mask for the last word */ \
@@ -1181,9 +1124,6 @@ DF2(jtsumattymes1){
        UI backoff=DUFFBACKOFF(dplen-1,2);
        av+=(backoff+1)*NPAR; wv+=(backoff+1)*NPAR;
        switch(backoff){
-// obsolete       I n0=(dplen-1)>>LGNPAR;
-// obsolete       if(n0>0){
-// obsolete        switch(n0&3){
        do{
        case -1: OGITA(_mm256_loadu_pd(av),_mm256_loadu_pd(wv),0)
        case -2: OGITA(_mm256_loadu_pd(av+1*NPAR),_mm256_loadu_pd(wv+1*NPAR),1)

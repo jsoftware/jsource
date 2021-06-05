@@ -590,8 +590,6 @@ static A jtthorn1main(J jt,A w,A prxthornuni){PROLOG(0001);A z;
   case SBTX:  z=thsb(w,prxthornuni);                   break;
   case NAMEX: z=sfn(0,w);                  break;
   case ASGNX: z=spellout(CAV(w)[0]);         break;
-// obsolete   case SB01X: case SINTX: case SFLX: case SCMPXX: case SLITX: case SBOXX:
-// obsolete              z=ths(w);                    break;
   case VERBX: case ADVX:  case CONJX:
    switch((JT(jt,disp))[1]){
     case 1: z=thorn1main(arep(w),prxthornuni); break;

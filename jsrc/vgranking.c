@@ -62,7 +62,6 @@ F1(jtranking){A y,z;C*wv;I icn,i,k,m,n,t,wcr,wf,wn,wr,*ws,wt,*zv;CR rng;TTYPE *y
   // special case of k==2.  We assume the worst on range, i. e. 8 bits/byte, EXCEPT that for B01 type we know that the value can never exceed
   // 1 so we add 2 instead of the last 8 bits
   rng.min=0; rng.range=(1LL<<((k-(wt&B01))<<3))+((wt&B01)<<(k-1));  // 2, 256, 258, or 65536
-// obsolete rng.range=shortrange[REPSGN(SGNIFDENSE(wt))&wt&(B01+LIT)][k]; rng.min=0;  // if B01, must be 1 byte; otherwise 2^(8*k)
  }else rng.range=0;
  if(!rng.range){I *yv;
   // small-range not possible.  Do the grade and install each value into its location

@@ -63,7 +63,6 @@
   zzop; if((fz)&0x2000){acc7=_mm256_add_epi64(acc7,_mm256_castpd_si256(_mm256_and_pd(_mm256_castsi256_pd(endmask),zz))); goto outs1;} \
   else{maskatend=inv?_mm256_movemask_pd(_mm256_and_pd(_mm256_castsi256_pd(endmask),zz)):_mm256_movemask_pd(_mm256_or_pd(_mm256_xor_pd(ones,_mm256_castsi256_pd(endmask)),zz)); goto outs0;}
 
-// obsolete   zzop; if((fz)&0x2000){acc7=_mm256_add_epi64(acc7,_mm256_castpd_si256(inv?_mm256_and_pd(_mm256_castsi256_pd(endmask),zz):_mm256_or_pd(_mm256_xor_pd(ones,_mm256_castsi256_pd(endmask)),zz))); goto outs1;}
 
 #define cprimop256(name,fz,pref,zzop,inv) \
 A name(J jt,A a,A w){ \
@@ -86,14 +85,14 @@ A name(J jt,A a,A w){ \
  }else{ \
   if(!((fz)&1)&&AR(a)==0){ \
    /* atom+vector */ \
-   LDBID1(xx,x,fz,0x8,0x40,0x100) CVTBID1(xx,xx,fz,0x8,0x40,0x100) /* obsolete INCRBID(x,((fz)&0x1000?-1:1)*1,fz,0x8,0x40,0x100) */ \
+   LDBID1(xx,x,fz,0x8,0x40,0x100) CVTBID1(xx,xx,fz,0x8,0x40,0x100)  \
    CPRMALIGN(zzop,1,fz,n0) \
    CPRMDUFF(zzop,1,fz,n0,32+16,inv) \
    CPRMMASK(zzop,1,fz,inv) /* runout, using mask */ \
   }else{ \
    /* vector+atom */ \
    if((fz)&1){I taddr=(I)x^(I)y; I tn=AN(a); x=AR(a)==0?y:x; n0=AR(a)==0?n0:tn; y=(D*)((I)x^taddr);}else n0=AN(a);  \
-   LDBID1(yy,y,fz,0x10,0x80,0x200) CVTBID1(yy,yy,fz,0x10,0x80,0x200) /* obsolete INCRBID(y,((fz)&0x1000?-1:1)*1,fz,0x10,0x80,0x200) */ \
+   LDBID1(yy,y,fz,0x10,0x80,0x200) CVTBID1(yy,yy,fz,0x10,0x80,0x200)  \
    CPRMALIGN(zzop,2,fz,n0) \
    CPRMDUFF(zzop,2,fz,n0,32+8,inv) \
    CPRMMASK(zzop,2,fz,inv) /* runout, using mask */ \
@@ -583,9 +582,6 @@ static AF atcompxy[]={  /* table for (B01,INT,FL) vs. (B01,INT,FL) */
 INDB( i0eqC,C,C,ACNE)  INDB( i0neC,C,C,ACEQ)
 JNDB( j0eqC,C,C,ACNE)  JNDB( j0neC,C,C,ACEQ)
 SUMB(sumeqC,C,C,ACEQB)  SUMB(sumneC,C,C,ACNEB)
-// obsolete INDF( i0eqC,C,C,ANE)  INDF( i0neC,C,C,AEQ)
-// obsolete JNDF( j0eqC,C,C,ANE)  JNDF( j0neC,C,C,AEQ)
-// obsolete SUMF(sumeqC,C,C,AEQ)  SUMF(sumneC,C,C,ANE)
 
 static AF atcompC[]={   /* table for LIT vs. LIT */
   i0eqC,  i0neC, 0L,0L,0L,0L,
@@ -628,15 +624,6 @@ static AF atcompSB[]={  /* table for SBT vs. SBT */
  sumeqS,sumneS,sumltS,sumleS,sumgeS,sumgtS,
 };
 
-// obsolete // the special case for compounds like +/@e., which are i.-family forms
-// obsolete static F2( jti0eps){R indexofsub( II0EPS,w,a);}
-// obsolete static F2( jti1eps){R indexofsub( II1EPS,w,a);}
-// obsolete static F2( jtj0eps){R indexofsub( IJ0EPS,w,a);}
-// obsolete static F2( jtj1eps){R indexofsub( IJ1EPS,w,a);}
-// obsolete static F2(jtsumeps){R indexofsub(ISUMEPS,w,a);}
-// obsolete static F2(jtanyeps){R indexofsub(IANYEPS,w,a);}
-// obsolete static F2(jtalleps){R indexofsub(IALLEPS,w,a);}
-// obsolete 
 // This table is indexed by m[5 4 3] but only a few combinations are generated
 static AF atcompX[]={0L, jti1ebar, 0L, 0L, jtsumebar, jtanyebar};
 

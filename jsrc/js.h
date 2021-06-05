@@ -26,13 +26,6 @@
 #define C_LE 1
 #endif
 
-// obsolete #ifndef C_NA // noasm/asm
-// obsolete #define C_NA 1
-// obsolete #endif
-// obsolete 
-// obsolete #undef C_NA
-// obsolete #define C_NA 1   // scaf force noasm
-// obsolete 
 /*
 C_CD_?
 cd ABI config for traditional J platorms done with SYS_? and SY_?

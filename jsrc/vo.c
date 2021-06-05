@@ -192,7 +192,6 @@ static C *copyresultcell(J jt, C *z, C *w, I *sizes, I rf, I *s){I wadv;I r=rf>>
   }
  }
  // copy the fill, from z (new output pointer) to endoffill (end+1 of output cell)
-// obsolete  mvc(endoffill-z,z,sizeof(jt->fillv0),jt->fillv0);
  mvc(endoffill-z,z,jt->fillv0len,jt->fillv0);  // use atom size of default fill
  R w;
 }
@@ -218,7 +217,6 @@ A jtassembleresults(J jt, I ZZFLAGWORD, A zz, A zzbox, A* zzboxp, I zzcellp, I z
   I zzcr=AR(zzcellshape);  // zzcr=rank of result cell
   zzresultpri=(zpri>zzresultpri)?zpri:zzresultpri; I zft=((I)1)<<(PRIORITYTYPE(zzresultpri&255));  // zft=highest precision encountered
   fillv0(zft);  // create 16 bytes of fill.
-// obsolete   fillv(zft,1L,jt->fillv0); mvc(sizeof(jt->fillv0),jt->fillv0,zfs,jt->fillv0);  // create 16 bytes of fill. 
 
   I zfs=bpnoun(zft); zzcs[zzcr]=zfs;  // length of 0-cell is byte-length of atom - store after the shape - we know there's room.  zfs is byte=length of 1 atom of result type
 
@@ -348,10 +346,8 @@ static B povtake(J jt,A a,A w,C*x){B b;C*v;I d,i,j,k,m,n,p,q,r,*s,*ss,*u,*uu,y;
  if(1>=r){MC(x,v,k*n); R 1;}  // if list, fill is contiguous, just copy the data
  m=AN(a); u=AV(a); s=AS(w);
  p=0; d=1; DO(r, if(u[m-1-i]==s[r-1-i]){d*=s[r-1-i]; ++p;}else break;);  // p=#trailing axes of w that fill the cell; d=total # atoms in a p-cell of result
-// obsolete  I f; PROD(f,r-p,s);  // f=#p-cells in w
  b=0; DO(r-p, if(b=1<s[i])break;);  // b=0 iff all axes of w above the p-cell have unit length
  if(!b){MC(x,v,k*n); R 1;}  // unit-length cell filling low aces: fill is contiguous at end, just copy
-// obsolete  if(f==1){MC(x,v,k*n); R 1;}  // cell filling low axes with frame all 1: fill is contiguous at end, just copy
  k*=d; ss=s+r-p; uu=u+m-p;  // k=#bytes of p-cell, n=#p-cells, ss->bottom axis+1 of p-frame of w, uu->bottom axis+1 of p-frame of a
  n/=d;
  for(i=0;i<n;++i){  // for each p-cell
@@ -452,12 +448,7 @@ F1(jtope){A cs,*v,y,z;C*x;I i,n,*p,q,r,*s,*u,zn;
  // if (all shapes equal, taking omitted shape as 1), there is no fill
  //
  // We could keep track of whether the low 2 axes require fill, but fill overhead just isn't that high
-// obsolete  r=q=AR(v[0]);
  I *shapeptr; I maxshape0=0; I maxshape1=0; r=0; q=RMAX;  // max axis_1, max axis _2, max rank, min rank
-// obsolete  shapeptr=&AS(v[0])[AR(v[0])-1]; shapeptr=AR(v[0])>0?shapeptr:&oneone[0]; maxshape0=*shapeptr;  // max axis _1
-// obsolete  shapeptr=&AS(v[0])[AR(v[0])-2]; shapeptr=AR(v[0])>1?shapeptr:&oneone[0]; maxshape1=*shapeptr;  // max axis _2
-// obsolete  I fillreqd=0;  // set nonzero if the 1-extended shapes don't match
-// obsolete  I te=AT(y); I t=AN(y)?te:0;  // te=all types including empties; t=nonempty types.  If t!=0, te is immaterial
  I te=0; I t=0;  // te=all types including empties; t=nonempty types.  If t!=0, te is immaterial
  for(i=0;i<n;++i){I s;
   y=v[i]; r=MAX(r,AR(y)); q=MIN(q,AR(y));  // could do this with shift if rank limited to 63
@@ -475,7 +466,6 @@ F1(jtope){A cs,*v,y,z;C*x;I i,n,*p,q,r,*s,*u,zn;
  // not.  And, we don't want to require compatibility with the fill-cell if nothing is filled.
  // So, we don't check compatibility for empty boxes.
  // The homogeneity flag h is set if max rank is 1 and there is 0 or 1 nonempty type.  In that case fill is contiguous for each cell and we just copy into the result area
-// obsolete  nonh = (r&~1) | (t&(t-1));  // non homogeneous if rank is not 0 or 1, or if there is more than 1 bit set in t
  if(likely(t!=0)){
   ASSERT((POSIFHOMO(t,0)&-(t^BOX)&-(t^SBT))>=0,EVDOMAIN);  // no mixed nonempties: t is homo num/char or all boxed or all symbol
   ASSERT(((t^SPARSE)&SPARSE+XNUM+RAT)<=0,EVDOMAIN);  // don't allow a sparse that requires promotion to indirect
@@ -486,7 +476,6 @@ F1(jtope){A cs,*v,y,z;C*x;I i,n,*p,q,r,*s,*u,zn;
  t|=tsparse; ASSERT((t&(SPARSE|SPARSABLE))!=SPARSE,EVDOMAIN);  // error is result is unsparsanle type
  // allocate place to build shape of result-cell;
  fauxblockINT(csfaux,5,1); I klg=bplg(t); I m;  // m is # atoms in cell
-// obsolete  if(likely(((t&SPARSE)+r)<2)){
  if(likely((SGNIFSPARSE(t)|(1-r))>=0)){
   // Not sparse, and cell ranks were all < 2.  We know the max shape
   u=csfaux+2; u[r-1]=maxshape0; u[r-2]=maxshape1;  // u->cell shape; fill in the ranks we know
@@ -500,20 +489,15 @@ F1(jtope){A cs,*v,y,z;C*x;I i,n,*p,q,r,*s,*u,zn;
   if(unlikely(ISSPARSE(t))){z=opes(t,cs,w); EPILOG(z);} // if sparse, use sparse code
   else{
    PRODX(m,r,u,1);  // # atoms in cell
-// obsolete    fillreqd=1;  // we have to assume there is fill if we couldn't verify otherwise
   }
  }
  // u->shape of cell, m=#atoms in cell.  Allocate result area & copy in shape (= frame followed by result-cell shape)
  DPMULDE(n,m,zn);  // Get total # results atoms now that we know result-cell size
  GA(z,t,zn,r+AR(w),0); I *zcs=AS(z)+AR(w); MCISH(zcs,u,r); MCISH(AS(z),AS(w),AR(w))  // zcs->result-cell shape
  x=CAV(z);  // x=output pointer, init to 1st cell
-// obsolete  fillv(t,zn,x);  // init to a:  fills
-// obsolete  if(fillreqd){
   // fill is (or may be) needed: create fill area, and convert cell-shape to cell-size vector needed by copyresultcell
  fillv0(t);  // create 16 bytes of fill.
-// obsolete  mvc(sizeof(jt->fillv0),jt->fillv0,zfs,jt->fillv0);zfs is byte-length of 1 atom of result type
  I zfs=(I)1<<klg; u[r]=zfs; DQ(r, u[i]=zfs*=u[i];)  // convert each atom of result-cell shape to the length in bytes of the corresponding cell; u->first length
-// obsolete  }
  // Now move the results.  They may need conversion or fill
  JMCDECL(endmask) JMCSETMASK(endmask,m<<klg,0)
  for(i=0;i<n;++i){  // for each input box
@@ -523,13 +507,8 @@ F1(jtope){A cs,*v,y,z;C*x;I i,n,*p,q,r,*s,*u,zn;
 #endif
   if(unlikely(!TYPESEQ(t,AT(y))))RZ(y=cvt(t,y));
   if(AN(y)==m)JMCR(x,CAV(y),m<<klg,0,endmask)
-// obsolete MC(x,CAV(y),m<<klg);
   else copyresultcell(jt,x,CAV(y),u,rescellrarg(zcs,r,AS(y),AR(y)),AS(y));
   x+=m<<klg;  // advance output pointer by cell length
-// obsolete    if(!nonh)                MC(x,AV(y),AN(y)<<klg);  // homogeneous atomic types: fill only at end, copy the valid part
-// obsolete    else if(TYPESEQ(t,AT(y))&&m==AN(y))MC(x,AV(y),q);   // cell of maximum size: copy it entire
-// obsolete    else if(AN(y))             RZ(povtake(jt,cs,TYPESEQ(t,AT(y))?y:cvt(t,y),x));  // otherwise add fill
-// obsolete    x+=q;
  }
  EPILOG(z);
 }

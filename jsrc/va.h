@@ -295,7 +295,6 @@ typedef I AHDRSFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);
   } \
   endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-len)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */
 
-// obsolete  if(xy&2)INCRBID(x,alignreq,fz,0x8,0x40,0x100) if(xy&1)INCRBID(y,alignreq,fz,0x10,0x80,0x200) INCRBID(z,alignreq,fz,0,0,0)
 
 #define PRMDUFF(zzop,xy,fz,len,lpmsk) \
      if(!((fz)&(lpmsk))){ \
@@ -405,20 +404,6 @@ I name(I n,I m,void* RESTRICTI x,void* RESTRICTI y,void* RESTRICTI z,J jt){ \
 
 
 // n and m are never 0.
-#if 0 // obsolete waiting till we learn how to XCTL
-static void f##1(J jt,I m,void* RESTRICTI z,void* RESTRICTI x,void* RESTRICTI y){I u,v; \
- if((C_AVX&&SY_64)||EMU_AVX){__m256i u256,v256; \
-  __m256i bool256=_mm256_castpd_si256(_mm256_broadcast_sd(&Iivalidbytes)); /* valid boolean bits */ \
-  __m256i workarea; workarea=_mm256_xor_si256(bool256,bool256); /* temp, init to avoid warning */ \
-  DQ((m-1)>>(LGSZI+LGNPAR), u256=_mm256_loadu_si256((__m256i*)x); v256=_mm256_loadu_si256((__m256i*)y); \
-   _mm256_storeu_si256((__m256i*)z, fuv); x=(C*)x+NPAR*SZI; y=(C*)y+NPAR*SZI; z=(C*)z+NPAR*SZI; \
-  ) \
- } \
- DQ(((m-1)>>LGSZI)&(((C_AVX&&SY_64)||EMU_AVX)?(NPAR-1):-1), u=*(I*)x; v=*(I*)y; *(I*)z=pfx(u,v); x=(C*)x+SZI; y=(C*)y+SZI; z=(C*)z+SZI;);           \
- u=*(I*)x; v=*(I*)y; u=pfx(u,v); STOREBYTES(z,u,(-m)&(SZI-1));  \
-}
-#endif
-
 #define BPFXNOAVX(f,pfx,bpfx,pfyx,bpfyx,fuv,decls,decls256)  \
 AHDR2(f,void,void,void){ I u,v;       \
  decls \

@@ -557,7 +557,6 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[12
      I ak,at,wcn,d,k,m=0,n,r,wt,*zi;I d1[32]; A pd0; UC *pd, *pdend;  // Don't make d1 too big - it fill lots of stack space
  PREF2(jtcut2);
  // a may have come from /., in which case it is incompletely filled in.  We look at the type, but nothing else
-// obsolete  if(unlikely((SGNIF(AT(a),SB01X)|-(AT(w)&SPARSE))<0))R cut2sx(a,w,self);   // special code if a is sparse boolean or w is sparse
  if(unlikely(((SGNIFSPARSE(AT(a))&SGNIF(AT(a),B01X))|SGNIFSPARSE(AT(w)))<0))R cut2sx(a,w,self);   // special code if a is sparse boolean or w is sparse
 #define ZZFLAGWORD state
  I state=ZZFLAGINITSTATE;  // init flags, including zz flags
@@ -840,39 +839,6 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[12
 
 
 static DF1(jtcut1){R cut2(mark,w,self);}
-
-#if 0   // obsolete
-#define PSCASE(id,zt,wt)    ((id)+256*(zt)+1024*(wt))
-#define PSLOOP(Tz,Tw,F,v0)      \
-    {B*u;Tw* RESTRICT wv;Tz s=v0,x,* RESTRICT zv;                   \
-     GA(z,zt,n,1,0);                            \
-     u=m+av; wv=m+(Tw*)AV(w); zv=m+(Tz*)AV(z);  \
-     switch(pfx+2*(id==CBSLASH)){               \
-      case 0: DQ(n, x=*--wv; if(*--u)s=v0; *--zv=F;              ); break;  /* <@(f/\.);.2 */  \
-      case 1: DQ(n, x=*--wv;               *--zv=F; if(*--u)s=v0;); break;  /* <@(f/\.);.1 */  \
-      case 2: DQ(n, x=*wv++;               *zv++=F; if(*u++)s=v0;); break;  /* <@(f/\ );.2 */  \
-      case 3: DQ(n, x=*wv++; if(*u++)s=v0; *zv++=F;              ); break;  /* <@(f/\ );.1 */  \
-    }}
-
-static A jtpartfscan(J jt,A a,A w,I cv,B pfx,C id,C ie){A z=0;B*av;I m,n,zt;
- n=AN(w); m=id==CBSDOT?n:0; zt=rtype(cv); av=BAV(a);
- switch(PSCASE(ie,CTTZ(zt),CTTZ(AT(w)))){
-  case PSCASE(CPLUS,   INTX,B01X):       PSLOOP(I,B,s+=x,      0   );       break;
-  case PSCASE(CPLUS,   FLX, FLX ): NAN0; PSLOOP(D,D,s+=x,      0.0 ); NAN1; break;
-  case PSCASE(CMAX,    INTX,INTX):       PSLOOP(I,I,s=MAX(s,x),IMIN);       break;
-  case PSCASE(CMAX,    FLX, FLX ):       PSLOOP(D,D,s=MAX(s,x),-inf);       break;
-  case PSCASE(CMIN,    INTX,INTX):       PSLOOP(I,I,s=MIN(s,x),IMAX);       break;
-  case PSCASE(CMIN,    FLX, FLX ):       PSLOOP(D,D,s=MIN(s,x),inf );       break;
-  case PSCASE(CMAX,    B01X,B01X):
-  case PSCASE(CPLUSDOT,B01X,B01X):       PSLOOP(B,B,s|=x,      0   );       break;
-  case PSCASE(CMIN,    B01X,B01X):
-  case PSCASE(CSTARDOT,B01X,B01X):       PSLOOP(B,B,s&=x,      1   );       break;
-  case PSCASE(CNE,     B01X,B01X):       PSLOOP(B,B,s^=x,      0   );       break;
-  case PSCASE(CEQ,     B01X,B01X):       PSLOOP(B,B,s=s==x,    1   );       break;
- }
- R z;
-}    /* [: ; <@(ie/\);.k  on vector w */
-#endif
 
 // ;@((<@(f/\));._2 _1 1 2) when  f is atomic   also @: but only when no rank loop required  also \. for \
 // also [: ; (<@(f/\));._2 _1 1 2)  when no rank loop required

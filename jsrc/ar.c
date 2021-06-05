@@ -136,35 +136,7 @@ REDUCEBFX(nandinsB, NAND,INAND,SNAND,BNAND,{DQ(m, B *y=memchr(x,C0,n); d=y?y-x:n
 AHDRR(plusinsB,I,B){
  if(d==1){
   for(;m;--m,x+=n){
-#if 0 // obsolete
-  // adding individual booleans  Go a word at a time, with 4 accumulators, up to 255 turns each
-   I acc=0; I nn;  UI *xu=(UI*)x; // number of atoms to go
-   for(nn=n;nn>=4*SZI;){  // till we get to the end...
-    I nloops=nn>>(LGSZI+2); nloops=nloops>255?255:nloops;  // max 255 loops, each 4 words
-    nn-=nloops<<(LGSZI+2);  // keep nn = # bytes remaining
-    UI acc0=0, acc1=0, acc2=0, acc3=0;  
-    DQ(nloops, acc0+=xu[0]; acc1+=xu[1]; acc2+=xu[2]; acc3+=xu[3]; xu+=4;);  // add up each byte-lane
-    // collect all the values we read
-    ADDBYTESINI1(acc0); ADDBYTESINI1(acc1); ADDBYTESINI1(acc2); ADDBYTESINI1(acc3); // add alternate bytes
-    acc0+=acc1+acc2+acc3; ADDBYTESINIn(acc0); acc+=acc0; // collect all significance
-   }
-   // Now we have up to 4 words to finish, one of which may be partial.  Continue wordwise.  Overfetch is OK up to SZI-1 bytes
-   UI acc0=0;
-   // we create the mask: 0 if no bytes left, ~0 if >=SZI bytes left, otherwise validity mask.  Littleendian
-   UI bytemask=(UI)~0>>(((-nn)&(SZI-1))<<3); bytemask=nn&-SZI?~0:bytemask; bytemask=nn<=0?0:bytemask;  // nn=0->~0->~0->0  nn=1->00ff nn=8->~0 nn=9->00ff->~0
-   // if the word has no valid data, back up to avoid overfetch.  Since arg can't have 0 length, that will always be a valid fetch
-   xu+=REPSGN(nn-1);
-   // fetch the data, mask, accumulate, advance to next word, reduce count for bytes read
-   acc0+=*xu++&bytemask; nn-=SZI;
-   // repeat for other words
-   bytemask=(UI)~0>>(((-nn)&(SZI-1))<<3); bytemask=nn&-SZI?~0:bytemask; bytemask=nn<=0?0:bytemask; xu+=REPSGN(nn-1); acc0+=*xu++&bytemask; nn-=SZI;
-   bytemask=(UI)~0>>(((-nn)&(SZI-1))<<3); bytemask=nn&-SZI?~0:bytemask; bytemask=nn<=0?0:bytemask; xu+=REPSGN(nn-1); acc0+=*xu++&bytemask; nn-=SZI;
-   bytemask=(UI)~0>>(((-nn)&(SZI-1))<<3); bytemask=nn<=0?0:bytemask; xu+=REPSGN(nn-1); acc0+=*xu&bytemask;
-   // collect significance
-   ADDBYTESINI(acc0); acc+=acc0; *z++=acc;  // store total
-#else
  *z++=bsum(n,x);
-#endif
   }
  }else{
   for(;m;--m,x+=n*d,z+=d){

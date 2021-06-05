@@ -726,12 +726,10 @@ extern unsigned int __cdecl _clearfp (void);
 #define DO(n,stm)       {I i=0,_n=(n); for(;i<_n;i++){stm}}  // i runs from 0 to n-1
 #define DP(n,stm)       {I i=-(n);    for(;i<0;++i){stm}}   // i runs from -n to -1 (faster than DO)
 #define DQ(n,stm)       {I i=(I)(n)-1;    for(;i>=0;--i){stm}}   // i runs from n-1 downto 0 (fastest when you don't need i)
-// obsolete #define DQ(n,stm)       {UI i=(n); if((I)i>0){--i; do{stm}while(i--);}}  // i runs from n-1 downto 0 (fastest when you don't need i)
 #define DQNOUNROLL(n,stm) {UI i=(n); if((I)i>0){--i; NOUNROLL do{stm}while(i--);}}  // i runs from n-1 downto 0 (fastest when you don't need i).  i is UI
 #define DOU(n,stm)      {I i=0,_n=(n); do{stm}while(++i<_n);}  // i runs from 0 to n-1, always at least once
 #define DPU(n,stm)      {I i=-(n);    do{stm}while(++i<0);}   // i runs from -n to -1 (faster than DO), always at least once
 #define DQU(n,stm)      {I i=(I)(n)-1;  do{stm}while(--i>=0);}  // i runs from n-1 downto 0, always at least once
-// obsolete #define DQU(n,stm)      {UI i=(UI)(n)-1;  do{stm}while(i--);}  // i runs from n-1 downto 0, always at least once
 #define DOSTEP(n,step,stm) {I i=0,_n=(n); for(;_n;i++,_n-=(step)){stm}}  // i runs from 0 to n-1, but _n counts down
 
 // C suffix indicates that the count is one's complement
@@ -804,7 +802,6 @@ extern unsigned int __cdecl _clearfp (void);
       __m256i magic_i_all  = _mm256_castpd_si256(_mm256_broadcast_sd(&two_84_63_52)); /* 2^84 + 2^63 + 2^52 */ \
       __m256d zero=_mm256_broadcast_sd(&zone.imag); __m256d oned=_mm256_broadcast_sd(&zone.real);  __m256d onei=_mm256_broadcast_sd((const double *)&oneone[0]);    \
       __m256i dts=_mm256_castpd_si256(_mm256_loadu_pd((D*)disttosign));  \
-// obsolete     __m256d magic_d_all  = _mm256_castsi256_pd(magic_i_all);
 // AVX512  u=_mm256_cvtepi64_pd(_mm256_castpd_si256(u));
 #if 1
 #if defined(__aarch64__)
@@ -928,7 +925,6 @@ extern unsigned int __cdecl _clearfp (void);
 #define GATV0(name,type,atoms,rank) GATVS(name,type,atoms,rank,0,type##SIZE,GACOPYSHAPE0,R 0)  // shape not written unless rank==1
 #define GATV0E(name,type,atoms,rank,erraction) GATVS(name,type,atoms,rank,0,type##SIZE,GACOPYSHAPE0,erraction)  // shape not written unless rank==1, with error branch
 // use this version when you are allocating a sparse matrix.  It handles the AS[0] field correctly.  ALL sparse allocations must come through here so that AC is set correctly
-// obsolete #define GASPARSE(n,t,a,r,s) {if((r)==1){GA(n,(t),a,1,0); if(s)AS(n)[0]=(s)[0];}else{GA(n,(t),a,r,s)} ACINIT(n,ACUC1);}
 #define GASPARSE(n,t,a,r,s) {GA(n,BOX,(sizeof(P)/sizeof(A)),r,s); AN(n)=1; AT(n)=(t)|SPARSE; if((r)==1){if(s)AS(n)[0]=(s)[0];} ACINIT(n,ACUC1);}
 
 #define HN              4L  // number of boxes per valence to hold exp-def info (words, control words, original (opt.), symbol table)
@@ -1020,7 +1016,6 @@ extern unsigned int __cdecl _clearfp (void);
   if(bytelen!=0)STOREBYTES((C*)dst+(ll&(-SZI)),*(UI*)((C*)src+(ll&(-SZI))),~ll&(SZI-1));  /* copy remnant, 1-8 bytes. */ \
   /* copy up till last section */ \
   if(likely((ll-=SZI)>=0)||(bytelen==0)){  /* reduce ll (=len-1) by # bytes processed above, 1-8 (if bytelen), 0 if !bytelen (discarding garbage length).  Any left? */ \
-/* obsolete    ll&=(-NPAR*SZI);  ll=start of last section, 1-4 Is */ \
    /* copy 128-byte sections, first one being 0, 4, 8, or 12 Is. There could be 0 to do */ \
    UI n2=DUFFLPCT(ll>>LGSZI,2);  /* # turns through duff loop */ \
    if(n2>0){ \
@@ -1154,7 +1149,6 @@ extern unsigned int __cdecl _clearfp (void);
  I alignreq=(-(I)z>>LGSZI)&(NPAR-1); \
  if((-alignreq&(NPAR-n0))<0){ \
   endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-alignreq));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
-  /* obsolete if(!((parms)&2))u=_mm256_loadu_pd(x);else u=_mm256_maskload_pd(x,endmask); */\
   u=_mm256_loadu_pd(x); if(((parms)&2))u=_mm256_blendv_pd(neut,u,_mm256_castsi256_pd(endmask)); \
   loopbody _mm256_maskstore_pd(z, endmask, u); x+=alignreq; z+=alignreq; n0-=alignreq;  /* leave remlen>0 */ \
  } \
@@ -1205,7 +1199,6 @@ extern unsigned int __cdecl _clearfp (void);
  I alignreq=(-(I)z>>LGSZI)&(NPAR-1); \
  if((-alignreq&(NPAR-n0))<0){ \
   endmask = _mm256_loadu_si256((__m256i*)(validitymask+NPAR-alignreq));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
-  /* obsolete if(!((parms)&2))u=_mm256_loadu_pd(x);else u=_mm256_maskload_pd(x,endmask); */\
   u=_mm256_loadu_pd(x); if(((parms)&2))u=_mm256_blendv_pd(neut,u,_mm256_castsi256_pd(endmask)); \
   loopbody0 _mm256_maskstore_pd(z, endmask, u); x+=alignreq; z+=alignreq; n0-=alignreq;  /* leave remlen>0 */ \
  } \
@@ -1227,46 +1220,6 @@ extern unsigned int __cdecl _clearfp (void);
  u=_mm256_maskload_pd(x,endmask);  loopbody0 _mm256_maskstore_pd(z, endmask, u); \
  x+=((n0-1)&(NPAR-1))+1; z+=((n0-1)&(NPAR-1))+1; \
  postloop
-
-#if 0 // obsolete
-// version that pipelines one read ahead.  Input to loopbody2 is zu; result of loopbody1 is in zt
-#define AVXATOMLOOPPIPE(preloop,loopbody1,loopbody2,postloop) \
- __m256i endmask;  __m256d u, zt, zu; \
- _mm256_zeroupperx(VOIDARG) \
- endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1))));  /* mask for 0 1 2 3 4 5 is xxxx 0001 0011 0111 1111 0001 */ \
-                                                         /* __SSE2__ mask for 0 1 2 3 4 5 is xx 01 11 01 11 01 */ \
- preloop \
- I i=(n-1)>>LGNPAR;  /* # loops for 0 1 2 3 4 5 is x 0 0 0 0 1 */ \
-            /* __SSE2__ # loops for 0 1 2 3 4 5 is x 1 0 1 0 1 */ \
- if(likely(i>0)){u=_mm256_loadu_pd(x); x+=NPAR; loopbody1 \
- while(--i>=0){ u=_mm256_loadu_pd(x); x+=NPAR; \
-  zu=zt; loopbody1 loopbody2 \
-  _mm256_storeu_pd(z, u); z+=NPAR; \
- } zu=zt; loopbody2 _mm256_storeu_pd(z, u); z+=NPAR;} \
- u=_mm256_maskload_pd(x,endmask); \
- loopbody1 zu=zt; loopbody2 \
- _mm256_maskstore_pd(z, endmask, u); \
- x+=((n-1)&(NPAR-1))+1; z+=((n-1)&(NPAR-1))+1; \
- postloop
-
-// Dyadic version.  v is right argument, u is still result
-#define AVXATOMLOOP2(preloop,loopbody,postloop) \
- __m256i endmask;  __m256d u,v; \
- _mm256_zeroupperx(VOIDARG) \
- endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1))));  /* mask for 0 1 2 3 4 5 is xxxx 0001 0011 0111 1111 0001 */ \
-                                                         /* __SSE2__ mask for 0 1 2 3 4 5 is xx 01 11 01 11 01 */ \
- preloop \
- I i=(n-1)>>LGNPAR;  /* # loops for 0 1 2 3 4 5 is x 0 0 0 0 1 */ \
-            /* __SSE2__ # loops for 0 1 2 3 4 5 is x 1 0 1 0 1 */ \
- while(--i>=0){ u=_mm256_loadu_pd(x); v=_mm256_loadu_pd(y); \
-  loopbody \
-  _mm256_storeu_pd(z, u); x+=NPAR; y+=NPAR; z+=NPAR; \
- } \
- u=_mm256_maskload_pd(x,endmask); v=_mm256_maskload_pd(y,endmask); \
- loopbody \
- _mm256_maskstore_pd(z, endmask, u); \
- postloop
-#endif
 
 #elif defined(__GNUC__)   // vector extension
 
@@ -1353,41 +1306,6 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x
  vec_maskstore_pd(z, endmask, u); \
  x+=((n-1)&(NPAR-1))+1; z+=((n-1)&(NPAR-1))+1; \
  postloop
-#if 0 // obsolete 
-// version that pipelines one read ahead.  Input to loopbody2 is zu; result of loopbody1 is in zt
-#define AVXATOMLOOPPIPE(preloop,loopbody1,loopbody2,postloop) \
- int64x2_t endmask;  float64x2_t u, zt, zu; \
- endmask = vec_loadu_si128((int64x2_t*)(validitymask+((-n)&(NPAR-1))));  /* mask for 0 1 2 3 4 5 is xx 01 11 01 11 01 */ \
- preloop \
- I i=(n-1)>>LGNPAR;  /* # loops for 0 1 2 3 4 5 is x 0 0 0 0 1 */ \
-            /* __SSE2__ # loops for 0 1 2 3 4 5 is x 1 0 1 0 1 */ \
- if(i>0){u=*(float64x2_t *)(x); x+=NPAR; loopbody1 \
- while(--i>=0){ u=vec_loadu_pd(x); x+=NPAR; \
-  zu=zt; loopbody1 loopbody2 \
-  vec_storeu_pd(z, u); z+=NPAR; \
- } zu=zt; loopbody2 vec_storeu_pd(z, u); z+=NPAR;} \
- u=vec_maskload_pd(x,endmask); \
- loopbody1 zu=zt; loopbody2 \
- vec_maskstore_pd(z, endmask, u); \
- x+=((n-1)&(NPAR-1))+1; z+=((n-1)&(NPAR-1))+1; \
- postloop
-
-// Dyadic version.  v is right argument, u is still result
-#define AVXATOMLOOP2(preloop,loopbody,postloop) \
- int64x2_t endmask;  float64x2_t u,v; \
- endmask = vec_loadu_si128((int64x2_t*)(validitymask+((-n)&(NPAR-1))));  /* mask for 0 1 2 3 4 5 is xx 01 11 01 11 01 */ \
- preloop \
- I i=(n-1)>>LGNPAR;  /* # loops for 0 1 2 3 4 5 is x 0 0 0 0 1 */ \
-            /* __SSE2__ # loops for 0 1 2 3 4 5 is x 1 0 1 0 1 */ \
- while(--i>=0){ u=vec_loadu_pd(x); v=vec_loadu_pd(y); \
-  loopbody \
-  vec_storeu_pd(z, u); x+=NPAR; y+=NPAR; z+=NPAR; \
- } \
- u=_mm_maskload_pd(x,endmask); v=_mm_maskload_pd(y,endmask); \
- loopbody \
- _mm_maskstore_pd(z, endmask, u); \
- postloop
-#endif
 #endif
 
 #define NUMMAX          9    // largest number represented in num[]
@@ -1457,7 +1375,6 @@ if(likely(_i<3)){_zzt+=_i; z=(I)&oneone; _zzt=_i>=1?_zzt:(I*)z; z=_i>1?(I)_zzt:z
 #define PRODRNK3REG(z,length,ain) {I _i=(length); I * RESTRICT _zzt=(ain)-2; z=(US)_i; \
 if(likely(z<3)){_zzt+=z; z=(I)&oneone; _zzt=_i&3?_zzt:(I*)z; z=_i&2?(I)_zzt:z; z=((I*)z)[0]; z*=_zzt[1];}else{z=prod(z,_zzt+2);} }
 
-// obsolete #define PROD1(result,length,ain) PROD(result,length,ain)  // scaf
 // PRODX replaces CPROD.  It is PROD with a test for overflow included.  To save calls to mult, PRODX takes an initial value
 // PRODX takes the product of init and v[0..n-1], generating error if overflow, but waiting till the end so no error if there is a 0 in the product
 // overflow sets z to the error value of 0; if we see a multiplicand of 0 we stop right away so we can skip the error
@@ -1499,7 +1416,6 @@ if(likely(z<3)){_zzt+=z; z=(I)&oneone; _zzt=_i&3?_zzt:(I*)z; z=_i&2?(I)_zzt:z; z
 // CPROD is to be used to create a test testing #atoms.  Because empty arrays can have cells that have too many atoms, we can't use PROD if
 // we don't know that the array isn't empty or will be checked later
 #define CPROD(t,z,x,a) PRODX(z,x,a,1)
-// obsolete #define CPROD1(t,z,x,a) CPROD(t,z,x,a)
 // PROLOG/EPILOG are the main means of memory allocation/free.  jt->tstack contains a pointer to every block that is allocated by GATV(i. e. all blocks).
 // GA causes a pointer to the block to be pushed onto tstack.  PROLOG saves a copy of the stack pointer in _ttop, a local variable in its function.  Later, tpop(_ttop)
 // can be executed to free every block that the function allocated, without requiring bookkeeping in the function.  This may be done from time to time in

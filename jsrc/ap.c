@@ -93,23 +93,12 @@
   DQ(m, yy=zz; DQ(q, *zz++=*xx++;); DQ(n-1, DQ(q, *zz++=pfx(*yy,*xx); ++xx; ++yy;)));  \
  R EVOK;}
 
-#if 0  // obsolete
-#define PREFIXBFX(f,pfx,ipfx,spfx,bpfx,vexp)          \
- AHDRP(f,B,B){B* y;I j,q;                        \
-  if(1==d)for(j=0;j<m;++j){vexp}                      \
-  else if(0==(d&(sizeof(UI  )-1)))PREFIXBFXLOOP(UI,   pfx)  \
-  else if(0==(d&(sizeof(UINT)-1)))PREFIXBFXLOOP(UINT,ipfx)  \
-  else if(0==(d&(sizeof(US  )-1)))PREFIXBFXLOOP(US,  spfx)  \
-  else DQ(m, y=z; DQ(d, *z++=*x++;); DQ(n-1, DQ(d, *z++=bpfx(*y,*x); ++x; ++y;)));  \
-  R EVOK;}    /* f/\"r z for boolean associative atomic function f */
-#else
 // must not overstore because of inplace
 #define PREFIXBFX(f,pfx,ipfx,spfx,bpfx,vexp)          \
  AHDRP(f,B,B){B* y;I j,q;                        \
   if(1==d)for(j=0;j<m;++j){vexp}                      \
   else DQ(m, y=z; JMC(z,x,d,1); z+=d; x+=d; DQ(n-1, DQ((d-1)>>LGSZI, *(I*)z=pfx(*(I*)y,*(I*)x); x+=SZI; y+=SZI; z+=SZI;) I nct=(-d)&(SZI-1); STOREBYTES(z,pfx(*(I*)y,*(I*)x),nct) x+=SZI-nct; y+=SZI-nct; z+=SZI-nct;))  \
   R EVOK;}    /* f/\"r z for boolean associative atomic function f */
-#endif
 #else
 #define PREFIXBFX(f,pfx,ipfx,spfx,bpfx,vexp)          \
  AHDRP(f,B,B){B*tv;I i,q,r,t,*xi,*yi,*zi;                      \
@@ -135,10 +124,6 @@
 
 PREFIXBFX( orpfxB, OR, IOR, SOR, BOR,  BFXANDOR(C1,C0))
 PREFIXBFX(andpfxB, AND,IAND,SAND,BAND, BFXANDOR(C0,C1))
-#if 0 // obsolete 
-PREFIXBFX( nepfxB, NE, INE, SNE, BNE, {B b=0; DQ(n, *z++=b^=  *x++;);})
-PREFIXBFX( eqpfxB, EQ, IEQ, SEQ, BEQ, {B b=1; DQ(n, *z++=b=b==*x++;);})
-#else
 // 0 1 2 3 4 5 6 7
 //
 // 0 1 2 3 4 5 6 7
@@ -167,7 +152,6 @@ PREFIXBFX( nepfxB, NE, INE, SNE, BNE, {I t=0; DQ((n-1)>>LGSZI, t=*(I*)x^(t>>(BB*
             I nct=(-n)&(SZI-1); t=*(I*)x^(t>>(BB*(SZI-1))); PFXSXOR(t) *(I*)z=t; STOREBYTES(z,t,nct) x+=SZI-nct; z+=SZI-nct;})
 PREFIXBFX( eqpfxB, EQ, IEQ, SEQ, BEQ, {I t=VALIDBOOLEAN; DQ((n-1)>>LGSZI, t=*(I*)x^(t>>(BB*(SZI-1))); PFXSXOR(t) t^=ALTBYTES&VALIDBOOLEAN; *(I*)z=t; *(I*)z=t; x+=SZI; z+=SZI;) \
             I nct=(-n)&(SZI-1); t=*(I*)x^(t>>(BB*(SZI-1))); PFXSXOR(t) t^=ALTBYTES&VALIDBOOLEAN; STOREBYTES(z,t,nct) x+=SZI-nct; z+=SZI-nct;})
-#endif
 
 // m is */frame, n is #cells, d is length of each cell, p is 1 for <, 0 for <:
 // the result is ~p until we hit an input=p; then p thereafter
@@ -292,50 +276,6 @@ AHDRP(pluspfxD,D,D){I i;
  if(d==1){
 #if C_AVX2  // this version is not faster in emulation
   DQ(m,
-#if 0  // obsolete overkill
- __m256i endmask;  __m256d u;
- _mm256_zeroupperx(VOIDARG)
- endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-n)&(NPAR-1))));  /* mask for 0 1 2 3 4 5 is xxxx 0001 0011 0111 1111 0001 */
-                                                         /* __SSE2__ mask for 0 1 2 3 4 5 is xx 01 11 01 11 01 */
-    __m256d high3=_mm256_loadu_pd((D*)(validitymask+7));
-    __m256d acc0=_mm256_setzero_pd(); __m256d acc1;  // accumulator and place to save it 
- UI i=(n+NPAR-1)>>LGNPAR;  /* # loops for 0 1 2 3 4 5 is x 0 0 0 0 1 */
-            /* __SSE2__ # loops for 0 1 2 3 4 5 is x 1 0 1 0 1 */
- NOUNROLL while(--i!=0){
-   u=_mm256_loadu_pd(x);
-    u=_mm256_add_pd(_mm256_permute4x64_pd(u,0x90),_mm256_and_pd(u,high3));  // -123 + 0012
-    u=_mm256_add_pd(_mm256_permute2f128_pd(u,u,0x08),u);  // finish scan of the 4 input values
-    acc1=_mm256_add_pd(acc0,u);  // accumulate in lane 3.  This is the only carried dependency for acc
-    u=_mm256_add_pd(u,_mm256_permute4x64_pd(acc0,0xff));  // add in total previously accumulated
-  _mm256_storeu_pd(z, u); x+=NPAR; z+=NPAR;
-   if(unlikely(--i==0)){acc0=acc1; break;}
-   u=_mm256_loadu_pd(x);
-    u=_mm256_add_pd(_mm256_permute4x64_pd(u,0x90),_mm256_and_pd(u,high3));  // -123 + 0012
-    u=_mm256_add_pd(_mm256_permute2f128_pd(u,u,0x08),u);  // finish scan of the 4 input values
-    acc0=_mm256_add_pd(acc1,u);  // accumulate in lane 3.  This is the only carried dependency for acc
-    u=_mm256_add_pd(u,_mm256_permute4x64_pd(acc1,0xff));  // add in total previously accumulated
-  _mm256_storeu_pd(z, u); x+=NPAR; z+=NPAR;
- }
- u=_mm256_maskload_pd(x,endmask);
-  u=_mm256_add_pd(_mm256_permute4x64_pd(u,0x90),_mm256_and_pd(u,high3));  // -123 + 0012
-  u=_mm256_add_pd(_mm256_permute2f128_pd(u,u,0x08),u);  // finish scan of the 4 input values
-  u=_mm256_add_pd(u,_mm256_permute4x64_pd(acc0,0xff));  // add in total previously accumulated
- _mm256_maskstore_pd(z, endmask, u);
- x+=((n-1)&(NPAR-1))+1; z+=((n-1)&(NPAR-1))+1;
-#else
-#if 0 // obsolete 
-  // clang insists on reordering the loop, putting the update of acc AFTER the creation of the final u.  Turns out OK
-  AVXATOMLOOP(3,  // unroll not needed; need maskload to load 0s after valid area
-    neut=_mm256_setzero_pd();
-    __m256d acc=neut; __m256d accs;  // accumulator and place to save it 
-    ,
-    u=_mm256_add_pd(_mm256_permute4x64_pd(u,0x90),_mm256_blend_pd(u,neut,0x01));  // -123 + 0012
-    u=_mm256_add_pd(_mm256_permute2f128_pd(u,neut,0x02),u);  // finish scan of the 4 input values --01 + 0123
-    accs=acc; acc=_mm256_add_pd(acc,u);  // accumulate in lane 3.  This is the only carried dependency for acc
-    u=_mm256_add_pd(u,_mm256_permute4x64_pd(accs,0xff));  // add in total previously accumulated
-    ,
-    )
-#else
   AVXATOMLOOPEVENODD(2,  // unroll not needed; need maskload to load 0s after valid area
     neut=_mm256_setzero_pd();
     __m256d acc0=neut; __m256d acc1=neut; __m256d accs;  // accumulator and place to save it 
@@ -351,8 +291,6 @@ AHDRP(pluspfxD,D,D){I i;
     u=_mm256_add_pd(u,_mm256_permute4x64_pd(accs,0xff));  // add in total previously accumulated
     ,
     )
-#endif
-#endif
   )
 #else
   I n3=n/3; I rem=n-n3*3;  // number of triplets, number of extras

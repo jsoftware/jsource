@@ -294,7 +294,6 @@ A jtstfindcre(J jt,I n,C*u,I bucketx){
   }
   // here the locale must be created (rare)
   if(n>=0&&'9'<*u){  // nonnumeric locale:
-// obsolete    I p; FULLHASHSIZE(1LL<<(5+JT(jt,locsize)[0]),SYMBSIZE,1,SYMLINFOSIZE,p);
    RZ(jtloccre(jt,mark,boxW(str(n,u))));  // create it with name - we will loop back to look it up again
   }else{
    ASSERT(0,EVLOCALE); // illegal to create numeric locale explicitly

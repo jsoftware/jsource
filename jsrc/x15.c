@@ -1060,7 +1060,6 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
    *dv++=(I)xv;                     /* pointer to J array memory     */
 #endif
    CDASSERT(ISDENSETYPE(xt,LIT+C2T+C4T+INT+FL+CMPX),per);  // verify J type is DIRECT why not B01?
-// obsolete long way    if(!lit&&(c=='b'||c=='s'||c=='f'||c=='z'||SY_64&&c=='i')){
    if(unlikely((litsgn | ((cbit&(((I)1<<('b'-'a'))|((I)1<<('f'-'a'))|((I)1<<('s'-'a'))|((I)1<<('z'-'a'))|((I)SY_64<<('i'-'a'))))-1))>=0)){
     cipv[cipcount]=xv;              /* convert in place arguments */
     cipn[cipcount]=xn;
@@ -1258,7 +1257,6 @@ F2(jtcd){A z;C*tv,*wv,*zv;CCT*cc;I k,m,n,p,q,t,wr,*ws,wt;
  if(cc->zbx){GATV(z,BOX,m*(1+n),MAX(1,wr),ws); AS(z)[AR(z)-1]=1+n;}
  else{CDASSERT('*'!=cc->zl,DEDEC); GA(z,cc->zt,m,MAX(0,wr-1),ws);}
  // z is always nonrecursive
-// obsolete  if(m&&n&&!(wt&BOX)){
  if(unlikely((-m&-n&SGNIFNOT(wt,BOXX))<0)){
   t=0; tv=cc->tletter; DQ(n, k=cdjtype(*tv++); t=MAX(t,k););
   CDASSERT(HOMO(t,wt),DEPARM);
@@ -1284,7 +1282,6 @@ void dllquit(J jt){CCT*av;I j,*v;
  DQ(AN(JT(jt,cdhashl)), j=*v++; if(0<=j)FREELIB(av[j].h););   // unload all libraries
  mvc(AN(JT(jt,cdstr)),CAV(JT(jt,cdstr)),1,MEMSET00); mvc(AN(JT(jt,cdarg)),CAV(JT(jt,cdarg)),1,MEMSET00); 
  mvc(SZI*AN(JT(jt,cdhash)),CAV(JT(jt,cdhash)),1,MEMSETFF); mvc(SZI*AN(JT(jt,cdhashl)),CAV(JT(jt,cdhashl)),1,MEMSETFF); 
-// obsolete memset(,C0,); memset(CAV(JT(jt,cdarg)),C0,AN(JT(jt,cdarg))); memset(CAV(JT(jt,cdhash)),CFF,SZI*AN(JT(jt,cdhash))); memset(CAV(JT(jt,cdhashl)),CFF,SZI*AN(JT(jt,cdhashl)));  // clear contents of tables
  AM(JT(jt,cdstr))=AM(JT(jt,cdarg))=AM(JT(jt,cdhash))=AM(JT(jt,cdhashl))=0;  // reset all tables to empty
  // leave the tables allocated
 }    /* dllquit - shutdown and cdf clean up dll call resources */

@@ -117,8 +117,6 @@ static const UI4 ptcol[11] = {  // there is a gap at SYMB.  CONW is used to hold
 #define PTISASGNNAME(s)  (!((s).pt&0x1))
 #define PTISRPAR(s)  ((s).pt<0x100)
 // converting type field to pt, store in z
-// obsolete #define PTFROMTYPE(z,t) {I pt=CTTZ(t); pt-=LASTNOUNX; pt=pt<0?0:pt; z=ptcol[pt];}
-// obsolete #define PTFROMTYPEASGN(z,t) {I pt=CTTZ(t); pt-=LASTNOUNX; pt=pt<0?0:pt; pt=ptcol[pt]; pt=((t)&CONW)?PTASGNNAME:pt; z=(UI4)pt;}  // clear flag bit if ASGN to name
 #define PTFROMTYPE(z,t) {I pt=CTTZ(t); pt-=(LASTNOUNX+1); pt|=REPSGN(pt); z=ptcol[pt+1];}
 #define PTFROMTYPEASGN(z,t) {I pt=CTTZ(t); pt-=(LASTNOUNX+1); pt|=REPSGN(pt)|((t>>(CONWX-2))&(CONWX-(LASTNOUNX+1))); z=ptcol[pt+1];}  // clear flag bit if ASGN to name, by fetching from unused CONW hole, which is 4 above ASGN
 
@@ -138,11 +136,6 @@ RECURSIVERESULTSCHECK
  stack[1]=stack[0]; R stack+1;  // close up stack & return
 }
 
-// obsolete static PSTK* jtpparen(J jt,PSTK *stack){
-// obsolete  ASSERT(PTISCAVN(stack[1])&&PTISRPAR(stack[2]),EVSYNTAX);  // if error, signal so with 0 stack.  Look only at pt since MARK doesn't have an a
-// obsolete  stack[2].pt=stack[1].pt; stack[2].t=stack[0].t; stack[2].a = stack[1].a;  //  Install result over ).  Use value from expr, token # from (
-// obsolete  R stack+2;  // advance stack pointer to result
-// obsolete }
 // multiple assignment not to constant names.  self has parms.  ABACK(self) is the symbol table to assign to, valencefns[0] is preconditioning routine to open value or convert it to AR
 static DF2(jtisf){RZ(symbis(onm(a),CALL1(FAV(self)->valencefns[0],w,0L),ABACK(self))); R num(0);} 
 
@@ -211,7 +204,6 @@ retstack:  // return, but 0 if error
  stack+=2; if(unlikely(jt->jerr))stack=0; R stack;  // the result is the same value that was assigned
 }
 
-// obsolete static PSTK * (*(lines58[]))() = {jtpfork,jtphook,jtis,jtpparen};  // handlers for parse lines 5-8
 
 #if AUDITEXECRESULTS
 // go through a block to make sure that the descendants of a recursive block are all recursive, and that no descendant is virtual/unincorpable
@@ -378,7 +370,6 @@ static A virthook(J jtip, A f, A g){
 // extend NVR stack, returning the A block for it.  stack error on fail, since that's the likely cause
 A jtextnvr(J jt){ASSERT(jt->parserstackframe.nvrtop<32000,EVSTACK); RZ(jt->nvra = ext(1, jt->nvra));  R jt->nvra;}
 
-// obsolete static I iscavn[]={0,0};  // how many As scaf
 #define BACKMARKS 3   // amount of space to leave for marks at the end.  Because we stack 3 words before we start to parse, we will
  // never see 4 marks on the stack - the most we can have is 1 value + 3 marks.
 #define FRONTMARKS 1  // amount of space to leave for front-of-string mark
@@ -633,7 +624,6 @@ endname: ;
           s=JT(jt,sympv)+(I)NAV(queue[m-1])->symx;  // get address of symbol in primary table.  There may be no value; that's OK
          }else{s=jtprobeislocal(jt,queue[m-1]);}
         }else s=jtprobeisquiet(jt,queue[m-1],UNLXAV0(locbuckets));  // global assignment, get slot address
-// obsolete         s=((AT(stack[0].a))&ASGNLOCAL?jtprobelocal:jtprobeisquiet)(jt,queue[m-1],UNLXAV0(locbuckets));  // look up the target.  It will usually be found (in an explicit definition)
         // Don't remember the assignand if it may change during execution, i. e. if the verb is unsafe.  For line 1 we have to look at BOTH verbs that come after the assignment
         s=((FAV(fs)->flag&(FAV(stack[1].a)->flag|((~pmask)<<(VASGSAFEX-1))))&VASGSAFE)?s:0;
         // It is OK to remember the address of the symbol being assigned, because anything that might conceivably create a new symbol (and thus trigger
@@ -741,8 +731,6 @@ RECURSIVERESULTSCHECK
        EPZ(stack)  // fail if error
       }else{  // paren
        if(likely(PTISCAVN(stack[1])>stack[2].pt)){  // must be [1]=CAVN and [2]=RPAR
-// obsolete        ASSERT(PTISCAVN(stack[1])&&PTISRPAR(stack[2]),EVSYNTAX);  // if error, signal so with 0 stack.  Look only at pt since MARK doesn't have an a
-// obsolete         stack[2].pt=stack[1].pt; stack[2].t=stack[0].t; stack[2].a = stack[1].a;  //  Install result over ).  Use value/type from expr, token # from (
         stack0pt=stack[1].pt; stack[2]=stack[1]; stack[2].t=stack[0].t;  //  Install result over ).  Use value/type from expr, token # from (   Bottom of stack was modified, so refresh the type for it
         stack+=2;  // advance stack pointer to result
        }else{jsignal(EVSYNTAX); FP}  // error if contents of ( not valid
@@ -751,7 +739,6 @@ RECURSIVERESULTSCHECK
       if(pline==5)stack=jtpfork(jt,stack); else stack=jtphook(jt,stack);  // bottom of stack unchanged
       EPZ(stack)  // fail if error
      }
-// obsolete      stack=(*lines58[pline-5])(jt,stack);  // run it
 #if MEMAUDIT&0x10
      auditmemchains();  // trap here while we still have the parseline
 #endif
@@ -762,7 +749,6 @@ RECURSIVERESULTSCHECK
       if(m>=0 && (AC(stack[0].a)==0 || (AC(stack[0].a)<0 && AC(stack[0].a)!=ACINPLACE+ACUC1)))SEGFAULT; 
       audittstack(jt);
 #endif
-// obsolete      stack0pt=stack[0].pt;  // bottom of stack was modified, so refresh the type for it (lines 0-6 don't change it)
     }
    }
   }  // break with stack==0 on error; main exit is when queue is empty (m<0)

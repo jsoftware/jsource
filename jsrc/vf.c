@@ -28,24 +28,12 @@ F1(jtfiller){A z; ARGCHK1(w); I wt=AT(w); fillv0(wt); GA(z,wt,1,0,0);
 #else
  IAV0(z)[0]=*(I*)&jt->fillv0[0]; IAV0(z)[1]=*(I*)&jt->fillv0[SZI]; IAV0(z)[2]=*(I*)&jt->fillv0[2*SZI]; IAV0(z)[3]=*(I*)&jt->fillv0[3*SZI]; 
 #endif
-// obsolete  fillv(AT(w),1L,CAV(z));
  R z;
 }
 
-// obsolete // There are 7 fill actions, encoded in 3 bits:
-// obsolete // 00x fill with memset of the single byte 00x00000  (0 or SP)
-// obsolete // 01x fill with mvc from 0x[0000]0020, number of bytes/atom=2<<x
-// obsolete // 100 fill with pointer to mtv
-// obsolete // 110 fill with pointer to iv0 (for XNUM)
-// obsolete // 111 fill with pointers to iv0/iv1 alternately (for RAT)
-// obsolete #if !SY_64
-// obsolete // keep this to doc the fill magic#
-// obsolete static C fillactions[]={0, 1, 0,   0, 0, 4, 6, 7, 0, 0, 0,    1, 0, 0, 0, 4, 0, 2, 3};  // 011 010 000 100 000 000 000 001 000 000 000 111 110 100 000 000 000 001 000 = d0800200fa0008
-// obsolete #endif
 
 // Put at least 1 default fill of type t into jt->fillv0, and put its size into jt->fillv0len
 void jtfillv0(J jt,I t){I fillvalue0;
-// obsolete  I k=bplg(t);
  jt->fillv0len=bpnoun(t);  // save the minimum fill-cell size
  if(likely(t&B01+LIT+INT+FL+CMPX+SBT+BOX)){  // normal case - direct num or LIT, or BOX
   fillvalue0=t&LIT?0x20*VALIDBOOLEAN:0; fillvalue0=t&BOX?(I)mtv:fillvalue0;  // get SP or 0, of mtv for box
@@ -61,17 +49,6 @@ void jtfillv0(J jt,I t){I fillvalue0;
   *(I*)&jt->fillv0[2*SZI]=fillvalue0; *(I*)&jt->fillv0[3*SZI]=fillvalue1;
 #endif
  }
-// obsolete #if SY_64
-// obsolete // obsolete  I fillaction=(0xd0800200fa0008>>(3*CTTZ(t)))&7;  // get 3-bit action code
-// obsolete #else
-// obsolete  I fillaction=fillactions[CTTZ(t)];
-// obsolete #endif
-// obsolete  if(likely((fillaction&6)==0)){fillaction<<=5; fillaction*=VALIDBOOLEAN;
-// obsolete  }else{  // others require filling with multibyte value
-// obsolete   mvc(n<<k,v,2LL<<(((SY_64?0xea40:0x9540)>>(fillaction<<1))&3),&fillvalues[(fillaction>>1)-1]);  // lg2(len)-1 is (7) 3 2 2 2 1 0 x x (0)  1110 1010 0100 0000 = ea40   index in fillvalues=2 2 1 1 0 0 x x
-// obsolete   fillaction=(I)fillvalues[(fillaction>>1)-1] & (fillaction==3?ALTSHORTS:~0);  // lg2(len)-1 is (7) 3 2 2 2 1 0 x x (0)  1110 1010 0100 0000 = ea40   index in fillvalues=2 2 1 1 0 0 x x
-// obsolete                                                                                  // mask out the low half if 4-byte chars
-// obsolete memset(v,fillaction<<5,n<<k);  // types 00x: fill with 00 or 20 - direct numeric or LIT
 }
 
 

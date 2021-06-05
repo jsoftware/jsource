@@ -724,7 +724,6 @@ F2(jtpdt){PROLOG(0038);A z;I ar,at,i,m,n,p,p1,t,wr,wt;
      DQ(p1, x=zv; c=*u++; er=asminnerprodx(n,x,c,v); if(er)break; v+=n;);
 
  */
-#if 1   // obsolete C_NA non-assembler version
    // INT product is problematic, because it is used for many internal purposes, such as #. and indexing of { and m} .  For these uses,
    // one argument (usually w) has only one item, a list that is reused.  So, we check for that case; if found we go through faster code that just
    // performs vector inner products, accumulating in registers.  And we have multiple versions of that: one when the totals can't get close to
@@ -771,20 +770,6 @@ oflo2:
     for(zv=DAV(z), i=AN(z); i; --i, ++zv)if(*zv>1e13 || *zv<-1e13)break;   // see if any value is out of range
     if(!i){AT(z)=INT;for(zv=DAV(z), i=AN(z); i; --i, ++zv)*(I*)zv=(I)*zv;}  // if not, convert all to integer
    }
-#else  // obsolete !C_NA
-    for(i=0;i<m;++i,v=wv,zv+=n){
-     x=zv; c=*u++; TYMES1V(n,x,c,v); if(er)break; v+=n;
-     DQ(p1, x=zv; c=*u++; er=asminnerprodx(n,x,c,v); if(er)break; v+=n;);
-     if(er)break;
-    }
-    if(er){A z1;D c,* RESTRICT x,* RESTRICT zv;I* RESTRICT u,* RESTRICT v,* RESTRICT wv;
-     GATV(z1,FL,AN(z),AR(z),AS(z)); z=z1;
-     u=AV(a); v=wv=AV(w); zv=DAV(z);
-     for(i=0;i<m;++i,v=wv,zv+=n){
-             x=zv; c=(D)*u++; DQ(n, *x++ =c**v++;);
-      DQ(p1, x=zv; c=(D)*u++; DQ(n, *x+++=c**v++;););
-   }}}
-#endif
 #else
    // 32-bit version - old style, converting to float
   {I smallprob; 
@@ -1051,7 +1036,6 @@ static DF2(jtdotprod){A fs,gs;C c;I r;V*sv;
  ARGCHK3(a,w,self);
  sv=FAV(self); fs=sv->fgh[0]; gs=sv->fgh[1];  // op is fs . gs
  if((SGNIF(AT(a)&AT(w),B01X)&-AN(a)&-AN(w)&-(FAV(gs)->flag&VISATOMIC2))<0&&CSLASH==FAV(fs)->id&&  // fs is c/
-// obsolete      (c=FAV(FAV(fs)->fgh[0])->id,c==CSTARDOT||c==CPLUSDOT||c==CNE))R ipbx(a,w,c,FAV(gs)->id);  // [+.*.~:]/ . boolean
      (c=FAV(FAV(fs)->fgh[0])->id,BETWEENC((c^(CPLUSDOT^CEQ)),CSTARDOT,CNE)))R ipbx(a,w,c,FAV(gs)->id);  // [+.*.~:]/ . boolean   swap = and +., then test for range
  r=lr(gs);   // left rank of v
  A z; R df2(z,a,w,atop(fs,qq(gs,v2(r==RMAX?r:1+r,RMAX))));  // inner product according to the Dic

@@ -319,7 +319,6 @@ AHDR2(remII,I,I,I){I u,v;
   DQ(m, u=*x++;
     // take abs(x); handle negative x in a postpass
    UI ua=-u>=0?-u:u;  // abs(x)
-// obsolete    if(!(ua&(ua-1))){I umsk = ua-1; DQC(n, *z++=umsk&*y++;);  // x is a power of 2, including 0
    if(!(ua&(ua-1))){I umsk = ua-1; bw0001II(n,1,&umsk,y,z,jt); z+=~n; y+=~n;   // x is a power of 2, including 0
    }else{
     // calculate 1/abs(x) to 53-bit precision.  Remember, x is at least 3, so the MSB will never have signed significance

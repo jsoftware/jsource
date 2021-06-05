@@ -16,27 +16,6 @@
 #define FEQ(u,v,fuzz)    (ABS((u)-(v))<=fuzz*MAX(ABS(u),ABS(v)))
 #define FIEQ(u,v,fuzz)   (ABS((u)-(v))<=fuzz*ABS(v))  // used when v is known to be exact integer.  It's close enough, maybe ULP too small on the high end
 
-#if 0  // obsolete 
-#define TOBIT(T,AS)   {T*v=(T*)wv,x; \
-  for(i=0;i<m;++i){                                                       \
-   DO(q, k=0; DO(BB, if(x=*v++){if(AS)k|=bit[i]; else R 0;}); *zv++=k;);  \
-   if(r){k=0; DO(r,  if(x=*v++){if(AS)k|=bit[i]; else R 0;}); *zv++=k;}   \
-   DQ(r1, *zv++=0;);                                                      \
-  }} 
-
-static KF1(jtcvt2bit){I c,i,m,q,r,r1,wr,*ws,*wv;UC k,*zv=(UC*)yv;
- wv=AV(w); wr=AR(w); ws=AS(w); 
- c=wr?ws[wr-1]:1; m=c?AN(w)/c:0; q=c/BB; r=c%BB; r1=c%BW?(BW-c%BW)/BB:0;
- switch(CTTZNOFLAG(AT(w))){
-  default:  R 0;
-  case B01X: TOBIT(B, 1         ); break;
-  case INTX: TOBIT(I, 1==x      ); break;
-  case FLX:  TOBIT(D, FEQ(1.0,x)); break;
- }
- R 1;
-}
-#endif
-
 static KF1(jtC1fromC2){UC*x;US c,*v;
  v=USAV(w); x=(C*)yv;
  DQ(AN(w), c=*v++; if(!(256>c))R 0; *x++=(UC)c;);
@@ -156,23 +135,8 @@ static KF1(jtDfromI){I n=AN(w); D *x=DAV(w); D *z=yv;
 // Tip o'hat to wim and Peter Cordes on stackoverflow
  AVXATOMLOOP(0,
   CVTEPI64DECLS
-// obsolete     __m256i magic_i_lo   = _mm256_set1_epi64x(0x4330000000000000);                /* 2^52               encoded as floating-point  */
-// obsolete     __m256i magic_i_hi32 = _mm256_set1_epi64x(0x4530000080000000);                /* 2^84 + 2^63        encoded as floating-point  */
-// obsolete     __m256i magic_i_all  = _mm256_set1_epi64x(0x4530000080100000);                /* 2^84 + 2^63 + 2^52 encoded as floating-point  */
-// obsolete     __m256d magic_d_all  = _mm256_castsi256_pd(magic_i_all);
  ,
   CVTEPI64(u,u)
-// obsolete // AVX512  u=_mm256_cvtepi64_pd(_mm256_castpd_si256(u));
-// obsolete #if defined(__aarch64__)
-// obsolete    u.vect_f64[0] = vcvtq_f64_s64(vreinterpretq_f64_s64(u.vect_f64[0]));
-// obsolete    u.vect_f64[1] = vcvtq_f64_s64(vreinterpretq_f64_s64(u.vect_f64[1]));
-// obsolete #else
-// obsolete     __m256i u_lo         = _mm256_blend_epi32(magic_i_lo, _mm256_castpd_si256(u), 0b01010101);         /* Blend the 32 lowest significant bits of u with magic_int_lo                                                   */
-// obsolete     __m256i u_hi         = _mm256_srli_epi64(_mm256_castpd_si256(u), 32);                              /* Extract the 32 most significant bits of u                                                                     */
-// obsolete             u_hi         = _mm256_xor_si256(u_hi, magic_i_hi32);                  /* Flip the msb of u_hi and blend with 0x45300000                                                                */
-// obsolete     __m256d u_hi_dbl     = _mm256_sub_pd(_mm256_castsi256_pd(u_hi), magic_d_all); /* Compute in double precision:                                                                                  */
-// obsolete     u       = _mm256_add_pd(u_hi_dbl, _mm256_castsi256_pd(u_lo));    /* (u_hi - magic_d_all) + u_lo  Do not assume associativity of floating point addition !!                        */
-// obsolete #endif
  ,
   R 1;
  )
@@ -443,7 +407,6 @@ B jtccvt(J jt,I tflagged,A w,A*y){F1PREFIP;A d;I n,r,*s,wt; void *wv,*yv;I t=tfl
  // If n and AN have been modified, it doesn't matter for rank-1 arguments whether the shape of the result is listed as n or s[0] since only n atoms will
  // be used.  For higher ranks, we need the shape from s.  So it's just as well that we take the shape from s now
  *y=d;  wv=voidAV(w); // return the address of the new block
-// obsolete  if(unlikely(t&CMPX))fillv(t,n,(C*)yv);   // why??  just fill in imaginary parts as we need to
  if(unlikely(!n))R 1;
  // Perform the conversion based on data types
  // For branch-table efficiency, we split the literal conversions into one block, and

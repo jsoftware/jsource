@@ -29,5 +29,3 @@ extern QF2(jtqplus);
 extern QF2(jtqtymes);
 
 extern Q zeroQ;
-// obsolete extern A   __attribute__((aligned(32))) fillvalues[4];
-// obsolete #define zeroQ ((Q)*(Q*)&fillvalues[2])

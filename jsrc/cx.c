@@ -1124,7 +1124,6 @@ F2(jtcolon){A d,h,*hv,m;C*s;I flag=VFLAGNONE,n,p;
   // explicit definitions.  Create local symbol table and pppp
   I hnofst=0; do{  // for each valence
    // Don't bother to create a symbol table for an empty definition, since it is a domain error
-// obsolete   if(AN(hv[1]))RZ(hv[3] = incorp(crelocalsyms(hv[0],hv[1],n,0,flag)));  // wordss,cws,type,monad,flag
    if(AN(hv[hnofst+1])){
     RZ(hv[hnofst+3] = incorp(crelocalsyms(hv[hnofst+0], hv[hnofst+1],n,!!hnofst,flag)));  // words,cws,type,dyad,flag
     pppp(jt, hv[hnofst+0], hv[hnofst+1]);  // words,cws,type,dyad,flag

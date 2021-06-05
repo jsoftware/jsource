@@ -63,39 +63,6 @@ jtinplace=FAV(gs)->flag&VJTFLGOK2?jtinplace:jt;
 A z;RZ(z=(g2)(jtinplace,fs,hx,gs));
 EPILOG(z);}
 
-#if 0  // obsolete
-static DF2(jtfolkcomp){F2PREFIP;DECLFGH;A z;AF f;
- ARGCHK2(a,w);
- f=atcompf(a,w,self);
- I postflags=(I)f&3;  // extract postprocessing from return
- f=(AF)((I)f&-4);    // restore function address
- if(f){
-  PROLOG(0034);
-  z=f(jt,a,w,self);
-  if(z){if(postflags&2){z=num((IAV(z)[0]!=AN(AR(a)>=AR(w)?a:w))^(postflags&1));}}
-  EPILOGNORET(z);
- }else z=(hs?jtfolk2:jtupon2)(jt,a,w,self);
- RETF(z);
-}
-
-static DF2(jtfolkcomp){F2PREFIP;DECLFGH;A z;AF f;
- ARGCHK2(a,w);
- f=atcompf(a,w,self);
- I postflags=(I)f&3;  // extract postprocessing from return
- f=(AF)((I)f&-4);    // restore function address
- PUSHCCTIF(FAV(self)->localuse.lu1.cct,FAV(self)->localuse.lu1.cct!=0.0)
- if(f){
-  PROLOG(0035);
-  z=f(jt,a,w,self);
-  if(z){if(postflags&2){z=num((IAV(z)[0]!=AN(AR(a)>=AR(w)?a:w))^(postflags&1));}}
-  EPILOGNORET(z);
- }else z=(hs?jtfolk2:jtupon2)(jt,a,w,self);
- POPCCT  //  bug: if we RZd early we leave ct unpopped
- RETF(z);
-}
-#endif
-
-
 static DF1(jtcharmapa){V*v=FAV(self); R charmap(w,FAV(v->fgh[2])->fgh[0],v->fgh[0]);}
 static DF1(jtcharmapb){V*v=FAV(self); R charmap(w,FAV(v->fgh[0])->fgh[0],FAV(v->fgh[2])->fgh[0]);}
 
@@ -107,9 +74,6 @@ A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I
  // Start flags with ASGSAFE (if g and h are safe), and with INPLACEOK to match the setting of f1,f2.  Turn off inplacing that neither f nor h can handle
  if(NOUN&AT(f)){  /* nvv, including y {~ x i. ] */
   flag=(hv->flag&(VJTFLGOK1|VJTFLGOK2))+((gv->flag&hv->flag)&VASGSAFE);  // We accumulate the flags for the derived verb.  Start with ASGSAFE if all descendants are.
-// obsolete   // Mark the noun as non-inplaceable.  If the derived verb is used in another sentence, it must first be
-// obsolete   // assigned to a name, which will protects values inside it.
-// obsolete   ACIPNO(f);  // This justifies keeping the result ASGSAFE
   RZ(f=makenounasgsafe(jt, f))   // adjust usecount so that the value cannot be inplaced
   f1=jtnvv1;
   if(((AT(f)^B01)|AR(f)|BAV0(f)[0])==0&&BOTHEQ8(gi,hi,CEPS,CDOLLAR))f1=jtisempty;  // 0 e. $, accepting only boolean 0
@@ -147,7 +111,6 @@ A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I
  case CAT:    /* <"1@[ { ] */
   if(BOTHEQ8(gi,hi,CLBRACE,CRIGHT)){                                   
    p=fv->fgh[0]; q=fv->fgh[1]; 
-// obsolete     if(CQQ==FAV(p)->id&&CLEFT==ID(q)&&(v=VAV(p),x=v->fgh[0],CLT==ID(x)&&v->fgh[1]==num(1))){f2=jtsfrom; flag &=~(VJTFLGOK2);}
    if(CQQ==FAV(p)->id&&CLEFT==ID(q)&&(CLT==ID(FAV(p)->fgh[0])&&FAV(p)->fgh[1]==num(1))){f2=jtsfrom; flag &=~(VJTFLGOK2);}
   }
   break;
@@ -209,12 +172,9 @@ A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I
  if(0<=m){  // comparison combiner has been found.  Is there a comparison?
   // m has information about the comparison combiner.  See if there is a comparison
   V *cv=(m&=7)>=4?hv:fv;  // cv point to comp in comp i. 0:  or [: +/ comp
-// obsolete   I d=cv->id; I e=d; e=e==CFIT&&cv->localuse.lu1.cct==1.0?FAV(cv->fgh[0])->id:e;  // comparison op, possibly from u!.0
   I d=cv->id; I e=d; e=e==CFIT&&(cct=cv->localuse.lu1.cct,1)?FAV(cv->fgh[0])->id:e;  // comparison op, possibly from u!.0
   if(BETWEENC(e,CEQ,CEPS)){
    // valid comparison combination.  m is the combiner, e is the comparison
-// obsolete    f2=d==CFIT?jtfolkcomp0:jtfolkcomp;  // valid comparison type: switch to it
-// obsolete    f2=jtfolkcomp;  // valid comparison type: switch to it
    f2=atcomp;  // valid comparison type: switch to it
    flag+=(e-CEQ)+8*m; flag &=~(VJTFLGOK1|VJTFLGOK2);  // set comp type mmmeee; entry point does not allow jt flags
   }
@@ -274,38 +234,11 @@ static DF1(jthkodom){DECLFG;B b=0;I n,*v;
  R CALL2(f2,w,CALL1(g1,w,gs),fs);
 }    /* special code for (#: i.@(* /)) */
 
-#if 0 // obsolete 
-#define IDOTSEARCH(T,comp,compe)  {T *wv=T##AV(w); I optx0=-1; T opt0=wv[0]; I optx1=optx0; T opt1=wv[1]; wv+=2; \
-  DO((n>>1)-1, if(wv[0] comp opt0){opt0=wv[0]; optx0=i;} if(wv[1] comp opt1){opt1=wv[1]; optx1=i;} wv+=2;) \
-  z=((opt0 comp opt1) || (opt0==opt1&&optx0<=optx1))?2*optx0:2*optx1+1; opt0=opt0 compe opt1?opt0:opt1; z+=2; if(n&1&&wv[0] comp opt0)z=n-1; break;}
-
-#define ICOSEARCH(T,comp,compe)  {T *wv=T##AV(w)+n-1; I optx0=(n>>1)-1; T opt0=wv[0]; I optx1=optx0; T opt1=wv[-1]; wv-=2; \
-  DQ(optx0, if(wv[0] comp opt0){opt0=wv[0]; optx0=i;} if(wv[-1] comp opt1){opt1=wv[-1]; optx1=i;} wv-=2;) \
-  z=((opt0 comp opt1) || (opt0==opt1&&optx0>=optx1))?2*optx0+1:2*optx1; opt0=opt0  compe opt1?opt0:opt1; z+=n&1; if(n&1&&wv[0] comp opt0)z=0; break;}
-#endif
-
 static DF1(jthkindexofmaxmin){
  ARGCHK2(w,self);
  // The code for ordinary search and min/max is very fast.  There's no value in trying to improve it.  The only
  // thing we have to add is setting intolerant comparison on the search, since we know we will be looking for something that is en exact match
  PUSHCCT(1.0) A z=hook1(w,self); POPCCT RETF(z);
-#if 0 // obsolete 
- I n=AN(w);
- if(!(1==AR(w)&&AT(w)&INT+FL))R hook1(w,self);  // revert if not int/fl args
- if(n>1){
-  switch((AT(w)&INT)+(FAV(FAV(self)->fgh[0])->id&2)+(FAV(FAV(FAV(self)->fgh[1])->fgh[0])->id&1)){  // INT*4+ICO*2+MAX
-  case 0: IDOTSEARCH(D,<,<=)
-  case 1: IDOTSEARCH(D,>,>=)
-  case 2: ICOSEARCH(D,<,<=)
-  case 3: ICOSEARCH(D,>,>=)
-  case 4: IDOTSEARCH(I,<,<=)
-  case 5: IDOTSEARCH(I,>,>=)
-  case 6: ICOSEARCH(I,<,<=)
-  case 7: ICOSEARCH(I,>,>=)
-  }
- }
- R sc(z);
-#endif
 }    /* special code for (i.<./) (i.>./) (i:<./) (i:>./) */
 
 // (compare L.) dyadic

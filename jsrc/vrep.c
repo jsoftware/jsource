@@ -263,7 +263,6 @@ F2(jtrepeat){A z;I acr,ar,wcr,wf,wr;
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK;
  I adense=SGNIFDENSE(AT(a));  // sign set if a is dense
-// obsolete I att=SGNTO0(-(AT(a)&B01+SB01))+((UI)(-(AT(a)&CMPX+SCMPX))>>(BW-1-1));  // 0 if INT/FL 1 if B01 3 if CMPX
  I att=(AT(a)&B01)+((AT(a)&CMPX)>>(CMPXX-1));  // 0 if INT/FL 1 if B01 2 if CMPX
  att=(-acr&-wcr)>=0?3:att;  // override with 3 if either a or w is an atom
  adense&=(-acr&-wcr)|SGNIFDENSE(AT(w));  // if a or w is an atom, require both a and w dense

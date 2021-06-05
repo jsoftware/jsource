@@ -77,13 +77,6 @@ F1(jtbdot){A b,h=0;I j=0,n,*v;
    AF rtn=jtbitwiserotate; rtn=j==33?jtbitwiseshift:rtn;  rtn=j==34?jtbitwiseshifta:rtn; 
    R fdef(0,CBDOT,VERB, jtbitwise1,rtn, 0L,w,0L, VASGSAFE|VJTFLGOK2, 0L,0L,0L);
   }
-// obsolete   switch(j){  // scaf can improve
-// obsolete   case 32: R fdef(0,CBDOT,VERB, jtbitwise1,jtbitwiserotate, 0L,w,0L, VASGSAFE|VJTFLGOK2, 0L,0L,0L);
-// obsolete   case 33: R fdef(0,CBDOT,VERB, jtbitwise1,jtbitwiseshift, 0L,w,0L, VASGSAFE|VJTFLGOK2, 0L,0L,0L);
-// obsolete   case 34: R fdef(0,CBDOT,VERB, jtbitwise1,jtbitwiseshifta, 0L,w,0L, VASGSAFE|VJTFLGOK2, 0L,0L,0L);
-// obsolete   // The code uses a VERB with id CBDOT to stand for the derived verb of m b. .  This is used for spellout and for inverses, so we retain it.
-// obsolete   // We copy the other information from the verb that executes the function.  This contains pointers to the routines, and to the function table
-// obsolete   default: {
   A z=ca(ds(j-16+CBW0000)); RZ(z); RZ(FAV(z)->fgh[1]=rifvs(w)); FAV(z)->id=CBDOT; RETF(z);  // use g field not f to avoid interfering with atomic2
  }
 }

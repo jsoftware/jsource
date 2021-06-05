@@ -269,8 +269,6 @@ A jtifb(J jt,I n,B* RESTRICT b){A z;I p,* RESTRICT zv;
  b64=b64+((UI)(UI4)_mm256_movemask_epi8(_mm256_cmpgt_epi8(_mm256_maskload_epi64((I*)bx,bor),zero))<<32);
  // discard invalid bits and write the rest out
  b64<<=(BW-1)-n; b64>>=(BW-1)-n; while(b64){*zv++=zbase+CTTZI(b64); b64&=b64-1;};
-// obsolete if(p!=zv-AV(z))SEGFAULT;  // scaf
-// obsolete DO(p, if(b[AV(z)[i]]==0)SEGFAULT;)  // scaf
 #else
  n+=(n&(SZI-1))?SZI:0; I zbase=0; UI *wvv=(UI*)b; UI bits=*wvv++;  // prime the pipeline for top of loop
  while(n>0){    // where we load bits SZI at a time
@@ -356,7 +354,6 @@ void mvc(I m,void*z,I n,void*w){
    }
    if(unlikely((m&=-SZI)==0))R; --m;  // account for bytes moved; return if we have moved all; keep m as count-1
   }
-// obsolete   m&=(-NPAR*SZI);  /* m=start of last section, 1-4 Is */
   /* store 128-byte sections, first one being 0, 4, 8, or 12 Is. There could be 0 to do */
   UI n2=DUFFLPCT(m>>LGSZI,2);  /* # turns through duff loop */
   if(n2>0){
@@ -379,11 +376,6 @@ void mvc(I m,void*z,I n,void*w){
  }
  // if argument doesn't fit into 32 bytes, fall through to slow way
 #endif
-#if 0  // obsolete 
- I p=n,r;
- // first copy n bytes; thereafter p is the number of bytes we have copied; copy that amount again
- MC(z,w,MIN(p,m)); NOUNROLL while(m>p){r=m-p; MC(p+(C*)z,z,MIN(p,r)); p+=p;}
-#else
  C *zz=z;  // running output pointer
  if(n<SZI){
   // if w has < 8 bytes, replicate it to Is, write them out up to an even multiple of Is.  n must be >= 2 here if we went through the non-copy code above
@@ -438,7 +430,6 @@ void mvc(I m,void*z,I n,void*w){
   }
   STOREBYTES(zz,wdi,SZI-m);    // # bytes is m, # to leave is SZI-m
  }
-#endif
 }
 
 // odometer, up to the n numbers s[]
@@ -498,22 +489,9 @@ A jtvecb01(J jt,I t,I n,void*v){A z;
   // for booleans, enforce valid boolean result: convert any nonzero to 0x01
   __m256i zeros=_mm256_setzero_si256();
   __m256i ones=_mm256_castpd_si256(_mm256_broadcast_sd((D*)&Ivalidboolean));
-// obsolete  __m256i ffs=_mm256_set1_epi8(0xffu);
   UI n0=n;  // number of bytes to do
-#if 0 // obsolete  don't align the source, since that will unalign the dest, which is worse
-UI mis=((uintptr_t)q)&31u;
-mis=(mis>n0)?n0:mis;
-if(mis){
-n0-=mis;
-#if defined(__clang__)
-#pragma clang loop vectorize(enable) interleave_count(4)
-#endif
-while(mis--)*p++=!!(*q++);
-}
-#endif
   // move full 32-byte sections
   NOUNROLL while (n0 >= 32) {
-// obsolete   _mm256_storeu_si256((__m256i *)p,_mm256_and_si256(_mm256_xor_si256(_mm256_cmpeq_epi8(_mm256_load_si256((__m256i*)q),zeros),ffs),ones));
   _mm256_storeu_si256((__m256i *)p,_mm256_add_epi8(_mm256_cmpeq_epi8(_mm256_loadu_si256((__m256i*)q),zeros),ones));  // 0->ff->0  non0->0->1
    n0-=32;p+=32;q+=32;
   }
@@ -524,18 +502,6 @@ while(mis--)*p++=!!(*q++);
    *(I*)p=b8;  // store the result
    n0-=SZI;p+=SZI;q+=SZI;
   }
-#if 0 // obsolete 
-if (n0 >= 16) {
-__m128i zeros=_mm_setzero_si128();
-__m128i ones=_mm_set1_epi8(1);
-__m128i ffs=_mm_set1_epi8(0xffu);
- _mm_storeu_si128((__m128i *)p,_mm_and_si128(_mm_xor_si128(_mm_cmpeq_epi8(_mm_loadu_si128((__m128i*)q),zeros),ffs),ones));
- n0-=16;p+=16;q+=16;
-}
-#if defined(__clang__)
-#pragma clang loop vectorize(enable) interleave_count(4)
-#endif
-#endif
   // finish by moving individual bytes
   NOUNROLL while(n0--)*p++=!!(*q++);
  }else{MC(AV(z),v,n<<bplg(t));}  // non-boolean, just copy

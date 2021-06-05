@@ -49,36 +49,6 @@ static UIL calcctmask(D cct){
  R ((UIL)~0LL)<<(zeropos-15);
 }
 
-#if 0  // obsolete 
-#if (C_AVX2&&SY_64) || EMU_AVX2
-static void fillwords(void* x, UI4 storeval, I nstores){
- __m256i* storeptr = (__m256i*)x;
- if(nstores==0)return;
- __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-nstores)&(NPAR-1))));  // mask for 0 1 2 3 4 5 is xxxx 0001 0011 0111 1111 0001
-// obsolete  __m256i store256=_mm256_set1_epi32(storeval);
- __m256i store256=_mm256_broadcastd_epi32(_mm_insert_epi32(_mm_setzero_si128(),storeval,0));  // atoms between cells
- I n4=(nstores-1)>>LGNPAR;  // # full stores
- if(n4){
-  if(n4&1)goto l1;
-lp:
-   _mm256_storeu_si256 (storeptr, store256); storeptr++;
-l1:_mm256_storeu_si256 (storeptr, store256); storeptr++;
-   if((n4-=2)>0)goto lp;  // loop must be >= 1 cycle
- }
- _mm256_maskstore_epi64 ((I*)storeptr, endmask,store256);  // finish the last long stores
-}
-#else
-// fill 64-bit words with the 32-bit value in storeval
-static __forceinline void fillwords(void* x, UI4 storeval, I nstores){
- __m128i* storeptr = (__m128i*)x;
- // use 128-bit moves because 256-bit ops have a warmup time on Ivy Bridge.  Eventually convert this to 256-bit stores
- __m128i store128; store128=_mm_set1_epi32(storeval);
- DQ(nstores>>1, _mm_storeu_si128 (storeptr, store128); storeptr++;)
- if(nstores&1)_mm_storel_epi64 (storeptr, store128);  // If there is an odd word, store it
-}
-#endif
-#endif
-
 // Routine to allocate sections of the hash tables
 // *hh is the hash table we have selected, p is the number of hash entries we need, asct is the maximum+1 value that needs to be stored in an entry
 // md gives information about the type of entry, in particular if it is bits or packed bits
@@ -98,8 +68,6 @@ static I hashallo(IH * RESTRICT hh,UI p,UI asct,I md){
   // REVERSED types always initialize to 1, whether packed or not
   // this is a kludge - the initialization value should be passed in by the caller, in asct
   UI fillval = md&IREVERSED?(md&IIMODPACK?255:1):((md&(IIMODPACK+IIOPMSK))<=INUBI); fillval|=fillval<<8; fillval|=fillval<<16;  // mvc overfetches, so need full UI
-// obsolete   fillwords((__m128i*)hh->data.UI, fillval, p>>LGSZI);  // fill 64-bit words with 32-bit values
-// obsolete   fillwords(hh->data.UI, fillval, p>>LGSZI);  // fill 64-bit words with 32-bit values
   mvc(p,hh->data.UI,4,&fillval);  // fill with repeated copies of fillval
   // If the invalid area grows, update the invalid hwmk, and also the partition
   p >>= hh->hashelelgsize;  // convert p to hash index 
@@ -170,9 +138,6 @@ static I hashallo(IH * RESTRICT hh,UI p,UI asct,I md){
   // Clear the entries of the first allocation to asct.  Use fullword stores or cache-line stores.  Our allocations are always multiples of fullwords,
   // so it is safe to overfill with fullword stores
   UI storeval=asct; if(hh->hashelelgsize==1)storeval |= storeval<<16;  // Pad store value to 64 bits, dropping excess on smaller machines.  mvc overfetches
-// obsolete   I nstores=((p<<hh->hashelelgsize)+SZI-1)>>LGSZI;  // get count of partially-filled words
-// obsolete   fillwords((__m128i*)hh->data.UI, (UI4)storeval, nstores);  // fill 64-bit words with 32-bit values
-// obsolete   fillwords(hh->data.UI, (UI4)storeval, nstores);  // fill 64-bit words with 32-bit values
   mvc(((p<<hh->hashelelgsize)+SZI-1)&-SZI,hh->data.UI,4,&storeval);  // fill with repeated copies of fillval
   // Clear everything past the first allocation to 0, indicating 'not touched yet'.  But we can elide this if it is already 0, which we can tell by
   // examining the partition pointer and the right-hand index.  This is important if FORCE0 was set for i."r: we will repeatedly reset the base, and
@@ -1138,86 +1103,15 @@ static A jtiosc(J jt,I mode,I n,I asct,I wsct,I ac,I wc,A a,A w,A z){I j,p,q; vo
   SCDO(BOXX,A,!equ(x,av[j]));
 #if (C_AVX&&SY_64) || EMU_AVX
   // The instruction set is too quirky to do this with macros
-#if 0 // obsolete 
- {D *wv=(D*)v; D*av=(D*)u; __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-asct)&(NPAR-1)))); 
-      DQ(ac, 
-       DQ(wsct, __m256d x=_mm256_broadcast_sd(wv); D*avv=av; D*avend=av+((asct-1)&(-(I)NPAR)); int cmps; 
-        while(1){if(avv==avend)break; if(cmps=_mm256_movemask_pd(_mm256_cmp_pd(x,_mm256_loadu_pd(avv),_CMP_EQ_OQ)))goto fnd001; avv+=NPAR;} 
-        cmps=_mm256_movemask_pd(_mm256_and_pd(_mm256_castsi256_pd (endmask),_mm256_cmp_pd(x,_mm256_maskload_pd(avv,endmask),_CMP_EQ_OQ))); 
-fnd001: ; I res=(avv-av)+CTTZ(cmps); res=(cmps==0)?asct:res; *(I*)zv=res; zv=(I*)zv+1;      wv+=q;);
-      av+=p; wv=(1==wc)?(D*)v:wv;);}
-#else
-
-#endif
-#if 0 // obsolete 
- {D *wv=(D*)v; D*av=(D*)u; __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-asct)&(NPAR-1)))); I nuniq=0;
-      DQ(ac, 
-       DO(wsct, __m256d x=_mm256_broadcast_sd(wv); D*avv=av; D*avend=av+((asct-1)&(-(I)NPAR)); int cmps; 
-        while(1){if(avv==avend)break; if(cmps=_mm256_movemask_pd(_mm256_cmp_pd(x,_mm256_loadu_pd(avv),_CMP_EQ_OQ)))goto fnd004; avv+=NPAR;} 
-        cmps=_mm256_movemask_pd(_mm256_and_pd(_mm256_castsi256_pd (endmask),_mm256_cmp_pd(x,_mm256_maskload_pd(avv,endmask),_CMP_EQ_OQ))); 
-fnd004: ; I res=(avv-av)+CTTZ(cmps);  *(I*)zv=res; nuniq+=(res-i)==0; ((I*)zv)[res-i]++; zv=(I*)zv+1;      wv+=q;);
-      av+=p; wv=(1==wc)?(D*)v:wv;); AM(z)=nuniq;}
-#else
-
-#endif
-#if 0 // obsolete 
- {D *wv=(D*)v; D*av=(D*)u; __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-asct)&(NPAR-1)))); 
-      DQ(ac, 
-       DQ(wsct, __m256d x=_mm256_broadcast_sd(wv); D*avend=av; D*avv=av+((asct-1)&(-(I)NPAR)); int cmps;  
-        if(cmps=_mm256_movemask_pd(_mm256_and_pd(_mm256_castsi256_pd (endmask),_mm256_cmp_pd(x,_mm256_maskload_pd(avv,endmask),_CMP_EQ_OQ))))goto fnd002; 
-        while(1){if(avv==avend)break; avv-=NPAR; if(cmps=_mm256_movemask_pd(_mm256_cmp_pd(x,_mm256_loadu_pd(avv),_CMP_EQ_OQ)))goto fnd002;} 
-fnd002: ; unsigned long temp; CTLZI(cmps,temp); I res=(avv-av)+temp; res=(cmps==0)?asct:res; *(I*)zv=res; zv=(I*)zv+1;      wv+=q;);
-      av+=p; wv=(1==wc)?(D*)v:wv;);}
-#else
-
-#endif
-#if 0 // obsolete 
- {D *wv=(D*)v; D*av=(D*)u; __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-asct)&(NPAR-1)))); 
-      DQ(ac, 
-       DQ(wsct, __m256d x=_mm256_broadcast_sd(wv); D*avv=av; D*avend=av+((asct-1)&(-(I)NPAR)); int cmps; 
-        while(1){if(avv==avend)break; if(cmps=_mm256_movemask_pd(_mm256_cmp_pd(x,_mm256_loadu_pd(avv),_CMP_EQ_OQ)))goto fnd003; avv+=NPAR;} 
-        cmps=_mm256_movemask_pd(_mm256_and_pd(_mm256_castsi256_pd (endmask),_mm256_cmp_pd(x,_mm256_maskload_pd(avv,endmask),_CMP_EQ_OQ))); 
-fnd003: *(C*)zv=SGNTO0(-cmps); zv=(C*)zv+1;      wv+=q;); 
-      av+=p; wv=(1==wc)?(D*)v:wv;);}
-#else
    case IOSCCASE(XDX,0,IIDOT): seqsch256(seqschidotDD0,0x0000,,zz=_mm256_cmp_pd(xx,yy,_CMP_EQ_OQ),0) break; 
    case IOSCCASE(XDX,0,IFORKEY): seqsch256(seqschkeyDD0,0x4000,,zz=_mm256_cmp_pd(xx,yy,_CMP_EQ_OQ),0) break; 
    case IOSCCASE(XDX,0,IICO): seqsch256(seqschicoDD0,0x1000,,zz=_mm256_cmp_pd(xx,yy,_CMP_EQ_OQ),0) break; 
    case IOSCCASE(XDX,0,IEPS): seqsch256(seqschepsDD0,0x8000,,zz=_mm256_cmp_pd(xx,yy,_CMP_EQ_OQ),0) break; 
-
-#endif
-#if 0 // obsolete 
-   case IOSCCASE(FLX,0,IIDOT): {D *wv=(D*)v; D*av=(D*)u; __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-asct)&(NPAR-1))));
-      __m256d cct=_mm256_broadcast_sd(&jt->cct);
-      DQ(ac, 
-       DQ(wsct, __m256d x=_mm256_broadcast_sd(wv); __m256d y; __m256d tolx=_mm256_mul_pd(x,cct); D*avv=av; D*avend=av+((asct-1)&(-(I)NPAR)); int cmps; 
-        while(1){if(avv==avend)break; y=_mm256_loadu_pd(avv); if(cmps=_mm256_movemask_pd(_mm256_xor_pd(_mm256_cmp_pd(x,_mm256_mul_pd(cct,y),_CMP_GT_OQ),_mm256_cmp_pd(tolx,y,_CMP_GE_OQ))))goto fnd021; avv+=NPAR;} 
-        y=_mm256_maskload_pd(avv,endmask); cmps=_mm256_movemask_pd(_mm256_and_pd(_mm256_castsi256_pd (endmask),_mm256_xor_pd(_mm256_cmp_pd(x,_mm256_mul_pd(cct,y),_CMP_GT_OQ),_mm256_cmp_pd(tolx,y,_CMP_GE_OQ)))); 
-fnd021: ; I res=(avv-av)+CTTZ(cmps); res=(cmps==0)?asct:res; *(I*)zv=res; zv=(I*)zv+1;      wv+=q;);
-      av+=p; wv=(1==wc)?(D*)v:wv;);} break;
-   case IOSCCASE(FLX,0,IICO): {D *wv=(D*)v; D*av=(D*)u; __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-asct)&(NPAR-1)))); 
-      __m256d cct=_mm256_broadcast_sd(&jt->cct);
-      DQ(ac, 
-       DQ(wsct, __m256d x=_mm256_broadcast_sd(wv); __m256d y; __m256d tolx=_mm256_mul_pd(x,cct); D*avend=av; D*avv=av+((asct-1)&(-(I)NPAR)); int cmps;  
-        y=_mm256_maskload_pd(avv,endmask); if(cmps=_mm256_movemask_pd(_mm256_and_pd(_mm256_castsi256_pd (endmask),_mm256_xor_pd(_mm256_cmp_pd(x,_mm256_mul_pd(cct,y),_CMP_GT_OQ),_mm256_cmp_pd(tolx,y,_CMP_GE_OQ)))))goto fnd022; 
-        while(1){if(avv==avend)break; avv-=NPAR; y=_mm256_loadu_pd(avv); if(cmps=_mm256_movemask_pd(_mm256_xor_pd(_mm256_cmp_pd(x,_mm256_mul_pd(cct,y),_CMP_GT_OQ),_mm256_cmp_pd(tolx,y,_CMP_GE_OQ))))goto fnd022;} 
-fnd022: ; unsigned long temp; CTLZI(cmps,temp); I res=(avv-av)+temp; res=(cmps==0)?asct:res; *(I*)zv=res; zv=(I*)zv+1;      wv+=q;);
-      av+=p; wv=(1==wc)?(D*)v:wv;);} break; 
-   case IOSCCASE(FLX,0,IEPS): {D *wv=(D*)v; D*av=(D*)u; __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-asct)&(NPAR-1)))); 
-      __m256d cct=_mm256_broadcast_sd(&jt->cct);
-      DQ(ac, 
-       DQ(wsct, __m256d x=_mm256_broadcast_sd(wv); __m256d y; __m256d tolx=_mm256_mul_pd(x,cct); D*avv=av; D*avend=av+((asct-1)&(-(I)NPAR)); int cmps; 
-        while(1){if(avv==avend)break; y=_mm256_loadu_pd(avv); if(cmps=_mm256_movemask_pd(_mm256_xor_pd(_mm256_cmp_pd(x,_mm256_mul_pd(cct,y),_CMP_GT_OQ),_mm256_cmp_pd(tolx,y,_CMP_GE_OQ))))goto fnd023; avv+=NPAR;} 
-        y=_mm256_maskload_pd(avv,endmask); cmps=_mm256_movemask_pd(_mm256_and_pd(_mm256_castsi256_pd (endmask),_mm256_xor_pd(_mm256_cmp_pd(x,_mm256_mul_pd(cct,y),_CMP_GT_OQ),_mm256_cmp_pd(tolx,y,_CMP_GE_OQ)))); 
-fnd023: *(C*)zv=SGNTO0(-cmps); zv=(C*)zv+1;      wv+=q;); 
-      av+=p; wv=(1==wc)?(D*)v:wv;);} break; 
-#else
 #define ZZTEQ zz=_mm256_xor_pd(_mm256_cmp_pd(xx,_mm256_mul_pd(yy,cct),_CMP_GT_OQ),_mm256_cmp_pd(yy,_mm256_mul_pd(xx,cct),_CMP_LE_OQ));  // tolerant =
    case IOSCCASE(FLX,0,IIDOT): seqsch256(seqschidotDD,0x0000,__m256d cct=_mm256_broadcast_sd(&jt->cct);,ZZTEQ,0) break; 
    case IOSCCASE(FLX,0,IFORKEY): seqsch256(seqschkeyDD,0x4000,__m256d cct=_mm256_broadcast_sd(&jt->cct);,ZZTEQ,0) break; 
    case IOSCCASE(FLX,0,IICO): seqsch256(seqschicoDD,0x1000,__m256d cct=_mm256_broadcast_sd(&jt->cct);,ZZTEQ,0) break; 
    case IOSCCASE(FLX,0,IEPS): seqsch256(seqschepsDD,0x8000,__m256d cct=_mm256_broadcast_sd(&jt->cct);,ZZTEQ,0) break; 
-#endif
 #else
   SCDO(XDX,D,x!=av[j])
   SCDO(FLX,D,!TCMPEQ(jt->cct,x,av[j]));
@@ -1225,41 +1119,10 @@ fnd023: *(C*)zv=SGNTO0(-cmps); zv=(C*)zv+1;      wv+=q;);
 
 
 #if (C_AVX2&&SY_64) || EMU_AVX2
-#if 0  // obsolete
-   case IOSCCASE(INTX,0,IIDOT): {I *wv=(I*)v; I*av=(I*)u; __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-asct)&(NPAR-1)))); 
-      DQ(ac, 
-       DQ(wsct, __m256i x=_mm256_castpd_si256(_mm256_broadcast_sd((D*)wv)); I*avv=av; I*avend=av+((asct-1)&(-(I)NPAR)); int cmps; 
-        while(1){if(avv==avend)break; if(cmps=_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_cmpeq_epi64(x,_mm256_loadu_si256((__m256i*)avv)))))goto fnd011; avv+=NPAR;} 
-        cmps=_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_and_si256(endmask,_mm256_cmpeq_epi64(x,_mm256_maskload_epi64(avv,endmask))))); 
-fnd011: ; I res=(avv-av)+CTTZ(cmps); res=(cmps==0)?asct:res; *(I*)zv=res; zv=(I*)zv+1;      wv+=q;);
-      av+=p; wv=(1==wc)?(I*)v:wv;);} break; 
-   case IOSCCASE(INTX,0,IFORKEY): {I *wv=(I*)v; I*av=(I*)u; __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-asct)&(NPAR-1)))); I nuniq=0;
-      DQ(ac, 
-       DO(wsct, __m256i x=_mm256_castpd_si256(_mm256_broadcast_sd((D*)wv)); I*avv=av; I*avend=av+((asct-1)&(-(I)NPAR)); int cmps; 
-        while(1){if(avv==avend)break; if(cmps=_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_cmpeq_epi64(x,_mm256_loadu_si256((__m256i*)avv)))))goto fnd014; avv+=NPAR;} 
-        cmps=_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_and_si256(endmask,_mm256_cmpeq_epi64(x,_mm256_maskload_epi64(avv,endmask))))); 
-fnd014: ; I res=(avv-av)+CTTZ(cmps);  *(I*)zv=res; nuniq+=(res-i)==0; ((I*)zv)[res-i]++; zv=(I*)zv+1;      wv+=q;);
-      av+=p; wv=(1==wc)?(I*)v:wv;); AM(z)=nuniq;} break; 
-   case IOSCCASE(INTX,0,IICO): {I *wv=(I*)v; I*av=(I*)u; __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-asct)&(NPAR-1)))); 
-      DQ(ac, 
-       DQ(wsct, __m256i x=_mm256_castpd_si256(_mm256_broadcast_sd((D*)wv)); I*avend=av; I*avv=av+((asct-1)&(-(I)NPAR)); int cmps;  
-        if(cmps=_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_and_si256(endmask,_mm256_cmpeq_epi64(x,_mm256_maskload_epi64(avv,endmask))))))goto fnd012; 
-        while(1){if(avv==avend)break; avv-=NPAR; if(cmps=_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_cmpeq_epi64(x,_mm256_loadu_si256((__m256i*)avv)))))goto fnd012;} 
-fnd012: ; unsigned long temp; CTLZI(cmps,temp); I res=(avv-av)+temp; res=(cmps==0)?asct:res; *(I*)zv=res; zv=(I*)zv+1;      wv+=q;);
-      av+=p; wv=(1==wc)?(I*)v:wv;);} break; 
-   case IOSCCASE(INTX,0,IEPS): {I *wv=(I*)v; I*av=(I*)u; __m256i endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-asct)&(NPAR-1)))); 
-      DQ(ac, 
-       DQ(wsct, __m256i x=_mm256_castpd_si256(_mm256_broadcast_sd((D*)wv)); I*avv=av; I*avend=av+((asct-1)&(-(I)NPAR)); int cmps; 
-        while(1){if(avv==avend)break; if(cmps=_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_cmpeq_epi64(x,_mm256_loadu_si256((__m256i*)avv)))))goto fnd013; avv+=NPAR;} 
-        cmps=_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_and_si256(endmask,_mm256_cmpeq_epi64(x,_mm256_maskload_epi64(avv,endmask))))); 
-fnd013: *(C*)zv=SGNTO0(-cmps); zv=(C*)zv+1;      wv+=q;); 
-      av+=p; wv=(1==wc)?(I*)v:wv;);} break;
-#else
    case IOSCCASE(INTX,0,IIDOT): seqsch256(seqschidotII,0x0000,,zz=_mm256_castsi256_pd(_mm256_cmpeq_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)));,0) break; 
    case IOSCCASE(INTX,0,IFORKEY): seqsch256(seqschkeyII,0x4000,,zz=_mm256_castsi256_pd(_mm256_cmpeq_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)));,0) break; 
    case IOSCCASE(INTX,0,IICO): seqsch256(seqschicoII,0x1000,,zz=_mm256_castsi256_pd(_mm256_cmpeq_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)));,0) break; 
    case IOSCCASE(INTX,0,IEPS): seqsch256(seqschepsII,0x8000,,zz=_mm256_castsi256_pd(_mm256_cmpeq_epi64(_mm256_castpd_si256(xx),_mm256_castpd_si256(yy)));,0) break; 
-#endif
 #else
   SCDO(INTX,I,x!=av[j]      );
 #endif
@@ -1680,7 +1543,6 @@ CR condrange(I *s,I n,I min,I max,I maxrange){CR ret;
  __m256i min1, max1, min2=min0, max2=max0, min3=min0, max3=max0;
  __m256i ones = _mm256_cmpeq_epi8(min0,min0);  // all ones for switching max to complement form
  __m256i endmask= _mm256_loadu_si256((__m256i const *)(validitymask+((-n)&(NPAR-1))));
-// obsolete  min0=_mm256_set1_epi64x(min); max0=_mm256_set1_epi64x(max);
  if(nqw--){  // if there are at least 2 blocks...
   // nqw is now #blocks-2, because we are going to read the last one in here, leaving one less to process 
   // read the last batch into min/max1.  It might well hold the biggest or smallest values
@@ -1705,22 +1567,11 @@ CR condrange(I *s,I n,I min,I max,I maxrange){CR ret;
    s+=4*NPAR;
    }while(--n2>0);
    }
-// obsolete    do{
-// obsolete     __m256i temp = _mm256_loadu_si256((__m256i const *)s); s+=NPAR;  // read next batch & advance
-// obsolete     min0 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(min0),_mm256_castsi256_pd(temp),_mm256_castsi256_pd(_mm256_cmpgt_epi64(min0,temp))));  // if min>temp, take temp
-// obsolete     max0 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(temp),_mm256_castsi256_pd(max0),_mm256_castsi256_pd(_mm256_cmpgt_epi64(max0,temp))));  // if max>temp, take max
-// obsolete     if(!--compn)break;
-// obsolete     temp = _mm256_loadu_si256((__m256i const *)s); s+=NPAR;  // read next batch & advance
-// obsolete     min1 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(min1),_mm256_castsi256_pd(temp),_mm256_castsi256_pd(_mm256_cmpgt_epi64(min1,temp))));  // if min>temp, take temp
-// obsolete     max1 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(temp),_mm256_castsi256_pd(max1),_mm256_castsi256_pd(_mm256_cmpgt_epi64(max1,temp))));  // if max>temp, take max
-// obsolete   }while(--compn);
    if(nqw==0)break;  // all batches read, read the remnant and finish
    // more batches to read.  Check for early exit
    // combine the mins into one, and the maxes.  Take the difference & see if it exceeds max allowable range
    // first combine the wide accumulators
    TAKEMINOF(min0,min1) TAKEMAXOF(max0,max1) TAKEMINOF(min2,min3) TAKEMAXOF(max2,max3) TAKEMINOF(min0,min2) TAKEMAXOF(max0,max2)
-// obsolete    min0 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(min0),_mm256_castsi256_pd(min1),_mm256_castsi256_pd(_mm256_cmpgt_epi64(min0,min1))));  // if min>temp, take temp
-// obsolete    max0 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(max1),_mm256_castsi256_pd(max0),_mm256_castsi256_pd(_mm256_cmpgt_epi64(max0,max1))));  // if max>temp, take max
    // Convert max to complement so we can do min/max simultaneously
    min1=_mm256_xor_si256(ones,max0);  //  min1 destroyed! min1 now complement form X X X X
    max1=_mm256_castps_si256(_mm256_blend_ps(_mm256_castsi256_ps(min0),_mm256_castsi256_ps(min1),0x33));  // max1 destroyed! now has X n X n
@@ -1730,19 +1581,7 @@ CR condrange(I *s,I n,I min,I max,I maxrange){CR ret;
    max1=_mm256_permute2f128_si256(min1,min1,0x01);  // max1 has n X - -  from upper min1
    TAKEMINOF(min1,max1);  // min1 is n X - -, the overall min & compl max
    min = _mm256_extract_epi64(min1,0); max = _mm256_extract_epi64(min1,1);  // max is still complement
-// obsolete    // rearrange the 4-wide min/max accumulators to mixed min/max
-// obsolete    min1 = _mm256_permute2x128_si256(min0,max0,0x21);  // now min1 has low 2 values of max0 in the high part, and the high 2 values of min0 in the low part
-// obsolete    max1 = _mm256_castpd_si256(_mm256_blend_pd(_mm256_castsi256_pd(min0),_mm256_castsi256_pd(max0),0xc));  // max1 has low 2 values of min0 in the low part, top 2 values of max0 in the high part
-// obsolete    // Top 2 values of min/max 1 are from max, low 2 are from min.  Do min/max compares simultaneously, comparing as if for min and then changing the sign for the top 2 values
-// obsolete    min1 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(min1),_mm256_castsi256_pd(max1),_mm256_castsi256_pd(_mm256_xor_si256(maxmask,_mm256_cmpgt_epi64(min1,max1)))));  // if min>max, take max; unless switched
-// obsolete    // Now min1 is mina minb maxa maxb.  Extract into integer ALU to finish
-// obsolete    I tmp;
-// obsolete    min = _mm256_extract_epi64(min1,0); tmp= _mm256_extract_epi64(min1,1); min=tmp<min?tmp:min;
-// obsolete    max = _mm256_extract_epi64(min1,2); tmp= _mm256_extract_epi64(min1,3); max=tmp>max?tmp:max;  // grand min/max
    if(unlikely((UI)((~max)-min)>=(UI)maxrange))goto fail;  // abort if range limit exceeded
-// obsolete    max1 = _mm256_castpd_si256(_mm256_permute_pd(_mm256_castsi256_pd(min1),0x5));  // minb mina maxb maxa
-// obsolete    min1 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(min1),_mm256_castsi256_pd(max1),_mm256_castsi256_pd(_mm256_xor_si256(maxmask,_mm256_cmpgt_epi64(min1,max1)))));  // if min>max, take max; unless switched
-// obsolete    if((UI)(_mm256_extract_epi64(min1,2)-_mm256_extract_epi64(min1,0))>=(UI)maxrange)goto fail;  // abort if range limit exceeded
    // the check above takes 20 cycles.  Increase the batchsize up to ~1000 cycles
    //  Now the values in min/max 0/1 are all scrambled, but the min is somewhere in min0 and the max is somewhere in max0, and min1/max1 contain all valid values
    batchsize<<=2; batchsize=batchsize>1024?1024:batchsize;   // after the first compare, which includes the end batch, grow batch size rapidly
@@ -1758,8 +1597,6 @@ CR condrange(I *s,I n,I min,I max,I maxrange){CR ret;
  // make final combination
    // combine the mins into one, and the maxes.  Take the difference & see if it exceeds max allowable range
  TAKEMINOF(min0,min1) TAKEMAXOF(max0,max1) TAKEMINOF(min0,min2) TAKEMAXOF(max0,max2)
-// obsolete  min0 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(min0),_mm256_castsi256_pd(min1),_mm256_castsi256_pd(_mm256_cmpgt_epi64(min0,min1))));  // if min>temp, take temp
-// obsolete  max0 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(max1),_mm256_castsi256_pd(max0),_mm256_castsi256_pd(_mm256_cmpgt_epi64(max0,max1))));  // if max>temp, take max
  // Convert max to complement so we can do min/max simultaneously
  min1=_mm256_xor_si256(ones,max0);  //  min1 destroyed! min1 now complement form X X X X
  max1=_mm256_castps_si256(_mm256_blend_ps(_mm256_castsi256_ps(min0),_mm256_castsi256_ps(min1),0x33));  // max1 destroyed! now has X n X n
@@ -1769,18 +1606,6 @@ CR condrange(I *s,I n,I min,I max,I maxrange){CR ret;
  max1=_mm256_permute2f128_si256(min1,min1,0x01);  // max1 has n X - -  from upper min1
  TAKEMINOF(min1,max1);  // min1 is n X - -, the overall min & compl max
  min = _mm256_extract_epi64(min1,0); max = _mm256_extract_epi64(min1,1);  // max is still complement
-// obsolete  min1 = _mm256_permute2x128_si256(min0,max0,0x21);  // now min1 has low 2 values of max0 in the high part, and the high 2 values of min0 in the low part
-// obsolete  max1 = _mm256_castpd_si256(_mm256_blend_pd(_mm256_castsi256_pd(min0),_mm256_castsi256_pd(max0),0xc));  // max1 has low 2 values of min0 in the low part, top 2 values of max0 in the high part
-// obsolete  // Top 2 values of min/max 1 are from max, low 2 are from min.  Do min/max compares simultaneously, comparing as if for min and then changing the sign for the top 2 values
-// obsolete  min1 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(min1),_mm256_castsi256_pd(max1),_mm256_castsi256_pd(_mm256_xor_si256(maxmask,_mm256_cmpgt_epi64(min1,max1)))));  // if min>max, take max; unless switched
-// obsolete  // Now min1 is mina minb maxa maxb.  Swap in lane and finish the min and max compares
-// obsolete  max1 = _mm256_castpd_si256(_mm256_permute_pd(_mm256_castsi256_pd(min1),0x5));  // minb mina maxb maxa
-// obsolete  min1 = _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(min1),_mm256_castsi256_pd(max1),_mm256_castsi256_pd(_mm256_xor_si256(maxmask,_mm256_cmpgt_epi64(min1,max1)))));  // if min>max, take max; unless switched
-// obsolete  I rmin = _mm256_extract_epi64(min1,0); I rmax = _mm256_extract_epi64(min1,2); if((UI)(rmax-rmin)>=(UI)maxrange)goto fail;
-// obsolete  // Now min1 is mina minb maxa maxb.  Extract into integer ALU to finish
-// obsolete  I tmp;
-// obsolete  min = _mm256_extract_epi64(min1,0); tmp= _mm256_extract_epi64(min1,1); min=tmp<min?tmp:min;
-// obsolete  max = _mm256_extract_epi64(min1,2); tmp= _mm256_extract_epi64(min1,3); max=tmp>max?tmp:max;  // grand min/max
  if(unlikely((UI)((~max)-min)>=(UI)maxrange))goto fail; ret.min=min; ret.range=(~max)-min+1;  // because the tests succeed, this will give the proper range
  R ret;
 fail: ret.min=ret.range=0; R ret;
@@ -2332,7 +2157,6 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
   case INUB:    AN(z)=0; AS(z)[0]=m?1:0; R z;
   case ILESS:   if(m&&fnx==-3)AN(z)=AS(z)[0]=0; else MC(AV(z),AV(w),AN(w)<<bplg(AT(w))); R z;
   case IINTER:  if(!(m&&fnx==-3))AN(z)=AS(z)[0]=0; R z;  // y has atoms or something is empty, return all of w; otherwise empty
-// obsolete  R take(zeroionei(0),w);
   case IEPS:    R reshape(shape(z),num(m&&(!n||(fnx&1))));  // fnx&1 is true if homo
   case INUBI:   R m?iv0:mtv;
   // th<0 means that the result of e. would have rank>1 and would never compare against either 0 or 1
@@ -2394,7 +2218,6 @@ A jtindexofprehashed(J jt,A a,A w,A hs,A self){A h,*hv,x,z;AF fn;I ar,*as,at,c,f
  // for e.-compounds that merely search, w must have the shape of an item in the hash, or a list of them (i. e. framelen 0 or 1); otherwise not found (below)
  // for LESS types, an item of w must have the shape of an item in the hash; otherwise revert
  // for other types (which can be only IEPS/IIDOT/IICO), an item of w can have larger rank
-// obsolete  c &= REPSGN(~(f1|(ar-r)));   // w must have rank big enough to hold a cell of a.  Clear c if f1<0 or r>ar
  if(likely((c&=REPSGN(~f1))>0)){  // revert if w has higher rank than a cell of a
   c=ICMP(as+ar-r,ws+f1,r)?0:c;  // verify agreement in cell-shape, set c=0 if not
   if(((I)1<<(mode&IIOPMSK))&(((I)1<<ILESS)|((I)1<<IINTER))){
@@ -2407,7 +2230,6 @@ A jtindexofprehashed(J jt,A a,A w,A hs,A self){A h,*hv,x,z;AF fn;I ar,*as,at,c,f
  }
  c=typeged(t,wt)?c:0;   // OK to use hash if w doesn't have higher precision
  // If there is any error, switch back to the non-prehashed code.  We must remove any command bits from mode, leaving just the operation type
-// obsolete  if(unlikely((-m&-n&-c&NEGIFHOMO(t,wt)&(wt-(t+1)))>=0))R indexofsub(mode&IIOPMSK,a,w);  // empty in a or w, or inhomo, or w has higher precision than the hash
  if(unlikely((-m&-n&-c&NEGIFHOMO(t,wt))>=0))R indexofsub(mode&IIOPMSK,a,w);  // empty in a or w, or inhomo, or w has higher precision than the hash
 
  // convert type of w if needed
@@ -2469,7 +2291,6 @@ F2(jtless){A x=w;I ar,at,k,r,*s,wr,*ws,wt;
  if(unlikely((-wr&-(r^wr))<0)){RZ(x=virtual(w,0,r)); AN(x)=AN(w); s=AS(x); ws=AS(w); k=ar>wr?0:1+wr-r; I s0; PRODX(s0,k,ws,1) s[0]=s0; MCISH(1+s,k+ws,r-1);}  //  use fauxvirtual here
  // if nothing special (like sparse, or incompatible types, or x requires conversion) do the fast way; otherwise (-. x e. y) # x 
  // because LESS allocates a large array to hold all the values, we use the slower, less memory-intensive, version if a is mapped
-// obsolete  RZ(x=(NEGIFHOMO(at,wt)&((TYPESXOR(at,maxtyped(at,wt))|(at&SPARSE)|(AFLAG(a)&AFNJA))-1))<0?indexofsub(ILESS,x,a):
  RZ(x=(SGNIFSPARSE(at)|SGNIF(AFLAG(a),AFNJAX))>=0?indexofsub(ILESS,x,a):
      repeat(not(eps(a,x)),a));
  // We extracted from a, so mark it (or its backer if virtual) non-pristine.  If a was pristine and inplaceable, transfer its pristine status to the result
@@ -2492,8 +2313,6 @@ DF2(jtintersect){A x=w;I ar,at,k,r,*s,wr,*ws,wt;
  // because LESS allocates a large array to hold all the values, we use the slower, less memory-intensive, version if a is mapped
  x=(SGNIFSPARSE(at)|SGNIF(AFLAG(a),AFNJAX))>=0?indexofsub(IINTER,x,a):
      repeat(eps(a,x),a);
-// obsolete  x=(NEGIFHOMO(at,wt)&((TYPESXOR(at,maxtyped(at,wt))|(at&SPARSE)|(AFLAG(a)&AFNJA))-1))<0?indexofsub(IINTER,x,a):  // scaf remove type test
-// obsolete      repeat(eps(a,x),a);
  POPCCT
  RZ(x);
  // We extracted from a, so mark it (or its backer if virtual) non-pristine.  If a was pristine and inplaceable, transfer its pristine status to the result

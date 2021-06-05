@@ -306,11 +306,9 @@ A jtjgets(JJ jt,C*p){A y;B b;C*v;I j,k,m,n;UC*s;
 #if SYS&SYS_UNIX
 void breakclose(JS jt)
 {
-// obsolete if(JT(jt,adbreak)==&breakdata) return;
  if(JT(jt,adbreak)==(C*)&JT(jt,breakbytes)) return;  // if no mapped file has been created, exit fast
  *&JT(jt,breakbytes)=*(US*)(JT(jt,adbreak));  // copy over any pending break request, plus other breakdata
  munmap(JT(jt,adbreak),1);
-// obsolete  JT(jt,adbreakr)=JT(jt,adbreak)=&breakdata;
  if(JT(jt,adbreakr)==JT(jt,adbreak))JT(jt,adbreakr)=(C*)&JT(jt,breakbytes);  // move to look at the new data - but not if attn disabled
  JT(jt,adbreak)=(C*)&JT(jt,breakbytes);  // move request pointer in any case
  close((intptr_t)JT(jt,breakfh));
@@ -324,7 +322,6 @@ void breakclose(JS jt)
  if(JT(jt,adbreak)==(C*)&JT(jt,breakbytes)) return;  // if no mapped file has been created, exit fast
  *&JT(jt,breakbytes)=*(US*)(JT(jt,adbreak));  // copy over any pending break request, plus other breakdata
  UnmapViewOfFile(JT(jt,adbreak));
-// obsolete  JT(jt,adbreakr)=JT(jt,adbreak)=&breakdata;
  if(JT(jt,adbreakr)==JT(jt,adbreak))JT(jt,adbreakr)=(C*)&JT(jt,breakbytes);  // move to look at the new data - but not if attn disabled
  JT(jt,adbreak)=(C*)&JT(jt,breakbytes);  // move attn-request pointer in any case
  CloseHandle(JT(jt,breakmh));
@@ -640,9 +637,7 @@ void jsto(JS jt,I type,C*s){C e;I ex;
   AAV1(tok)[0]=num(type); AAV1(tok)[1]=jtnfs(jm,11,"output_jfe_"); AAV1(tok)[2]=jtcstr(jm,s);  // the sentence to execute, tokenized.  Better not fail!
   e=jm->jerr; ex=jm->etxn;   // save error state before running the output sentence
   jm->jerr=0; jm->etxn=0;
-// obsolete   JT(jt,adbreakr)=(C*)&break0;  // disable ATTN during the prompt
   jtparse(jm,tok);  // run sentence, with no interrupts.  ignore errors.
-// obsolete   JT(jt,adbreakr)=JT(jt,adbreak);  // reenable ATTN, which might be pending now
   jm->jerr=e; jm->etxn=ex; // restore
   ENABLEATTN
  }else{

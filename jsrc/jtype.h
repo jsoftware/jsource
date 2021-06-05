@@ -293,26 +293,6 @@ typedef I SI;
 #define RATSIZE sizeof(Q)
 // No size for BIT, since it is fractional
 // Bit 8-9 unused
-#if 0  // obsolete
-#define SB01X 10
-#define SB01            ((I)1L<<SB01X)        /* P  sparse boolean               */
-#define SB01SIZE sizeof(P)
-#define SLITX 11
-#define SLIT            ((I)1L<<SLITX)        /* P  sparse literal (character)   */
-#define SLITSIZE sizeof(P)
-#define SINTX 12
-#define SINT            ((I)1L<<SINTX)        /* P  sparse integer               */
-#define SINTSIZE sizeof(P)
-#define SFLX 13
-#define SFL             ((I)1L<<SFLX)        /* P  sparse floating point        */
-#define SFLSIZE sizeof(P)
-#define SCMPXX 14
-#define SCMPX           ((I)1L<<SCMPXX)       /* P  sparse complex               */
-#define SCMPXSIZE sizeof(P)
-#define SBOXX 15
-#define SBOX            ((I)1L<<SBOXX)       /* P  sparse boxed                 */
-#define SBOXSIZE sizeof(P)
-#endif
 #define SBTX 16
 #define SBT             ((I)1L<<SBTX)       /* SB symbol                       */
 #define SBTSIZE sizeof(SB)
@@ -410,12 +390,10 @@ typedef I SI;
 // LPAR   1011    must be allocated by GAF, & not be copied, unless ca() is modified to use length not type
 
 #define ANY             -1L
-// obsolete #define SPARSE          (SB01+SINT+SFL+SCMPX+SLIT+SBOX)
 #define NUMERIC         (B01+INT+FL+CMPX+XNUM+RAT)
 #define DIRECT          ((LIT+C2T+C4T+B01+INT+FL+CMPX+SBT)|SPARSE)  // AND must be >0
 #define JCHAR           (LIT+C2T+C4T)
 #define NOUN            (NUMERIC+JCHAR+BOX+SBT)
-// obsolete #define DENSE           (NOUN&~SPARSE)
 #define FUNC            (VERB+ADV+CONJ)
 #define RHS             (NOUN+FUNC)
 #define IS1BYTE         (B01+LIT)

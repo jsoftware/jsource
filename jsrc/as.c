@@ -40,17 +40,6 @@
    DQ(n-1, DQ(d, --x; --y; --z; *z=pfx(*x,*y);));                     \
  }}R EVOK;}
 
-#define SUFFIXOVF(f,Tz,Tx,fs1,fvv)  \
- AHDRS(f,I,I){C er=0;I i,*xx,*y,*zz;                      \
-  xx=x+=m*d*n; zz=z+=m*d*n;                              \
-  if(d==1){                                                 \
-   if(1==n)DQ(m, *--z=*--x;)                                \
-   else    DQ(m, z=zz-=d*n; x=xx-=d*n; fs1(n,z,x);)        \
-  }else{for(i=0;i<m;++i){                                   \
-   DQ(d, *--zz=*--xx;);                                     \
-   DQ(n-1, x=xx-=d; y=zz; z=zz-=d; fvv(d,z,x,y););     \
- }}R EVOK;}
-
 #if SY_ALIGN
 #define SUFFIXBFXLOOP(T,pfx)  \
  {T* RESTRICT xx=(T*)x,* RESTRICT yy,* RESTRICT zz=(T*)z;   \
@@ -94,9 +83,51 @@ SUFFIXBFX(   gesfxB, GE,  IGE,  SGE,  BGE,  *x>=v   )
 SUFFIXBFX(  norsfxB, NOR, INOR, SNOR, BNOR, (*x|v)^1)
 SUFFIXBFX( nandsfxB, NAND,INAND,SNAND,BNAND,(*x&v)^1)
 
+#if 0   // obsolete
+#define SUFFIXOVF(f,Tz,Tx,fs1,fvv)  \
+ AHDRS(f,I,I){C er=0;I i,*xx,*y,*zz;                      \
+  xx=x+=m*d*n; zz=z+=m*d*n;                              \
+  if(d==1){                                                 \
+   if(1==n)DQ(m, *--z=*--x;)                                \
+   else    DQ(m, z=zz-=d*n; x=xx-=d*n; fs1(n,z,x);)        \
+  }else{for(i=0;i<m;++i){                                   \
+   DQ(d, *--zz=*--xx;);                                     \
+   DQ(n-1, x=xx-=d; y=zz; z=zz-=d; fvv(d,z,x,y););     \
+ }}R EVOK;}
+
 SUFFIXOVF( plussfxI, I, I,  PLUSS, PLUSVV)
 SUFFIXOVF(minussfxI, I, I, MINUSS,MINUSVV)
 SUFFIXOVF(tymessfxI, I, I, TYMESS,TYMESVV)
+#else
+#define PLUSS1(x) if(unlikely(__builtin_add_overflow((x),t,&t)))R EWOV;
+#define MINUSS1(x) if(unlikely(__builtin_sub_overflow((x),t,&t)))R EWOV;
+#define TYMESS1(x) if(unlikely(__builtin_mul_overflow((x),t,&t)))R EWOV;
+#define ftz(ft1,offset) ft1(*(I*)((C*)x+(offset))) *(I*)((C*)z+(offset))=t;
+// m is #cells, n is #items per cell, d is #atoms in item
+#define SUFFIXOVF(f,neut,ft1)  \
+ AHDRR(f,I,I){I i,*xx;                          \
+  if(d==1){DQ(m, \
+   UI dlct=(n+3)>>2;  \
+   UI dlct0=dlct; x+=(dlct-1)*(1LL<<2); z+=(dlct-1)*(1LL<<2); I t=neut; switch(n&3){do{case 0: ft1(x[3]) z[3]=t; case 3: ft1(x[2]) z[2]=t; case 2: ft1(x[1]) z[1]=t; case 1: ft1(x[0]) z[0]=t; x-=4; z-=4;}while(--dlct0);}   \
+   x+=n+4; z+=n+4; \
+   ) R EVOK;  \
+  }        \
+  UI dlct=(n+3)>>2; I xstride1=d*SZI; I xstride3=3*xstride1;  \
+  DQ(m,  \
+   DQ(d, x+=d*(dlct-1)*(1LL<<2); z+=d*(dlct-1)*(1LL<<2);  \
+    UI dlct0=dlct; I t=neut; switch(n&3){do{case 0: ftz(ft1,xstride3) case 3: ftz(ft1,2*xstride1) case 2: ftz(ft1,xstride1) case 1: ftz(ft1,0) x=(I*)((C*)x-4*xstride1); z=(I*)((C*)z-4*xstride1);}while(--dlct0);}   \
+    x=(I*)((C*)x+4*xstride1)+1; z=(I*)((C*)z+4*xstride1)+1;  \
+   )  \
+   x+=(n-1)*d; z+=(n-1)*d;  \
+  )  \
+ R EVOK;  \
+ }
+
+SUFFIXOVF( plussfxI, 0, PLUSS1) 
+SUFFIXOVF(minussfxI, 0, MINUSS1) 
+SUFFIXOVF(tymessfxI, 1, TYMESS1)
+
+#endif
 
 SUFFICPFX( plussfxO, D, I, PLUS  )
 SUFFICPFX(minussfxO, D, I, MINUS )

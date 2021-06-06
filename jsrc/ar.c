@@ -82,7 +82,7 @@ static void vdone(I m,I n,B*x,B*z,B pc){
 #endif
 
 // no errors possible here
-#if 0
+#if 0  // obsolete
   // m is # cells to operate on; n is # items in 1 such cell; d is # atoms in one such item
 #define RBFXLOOP(T,pfx)  \
  {T* RESTRICT xx=(T*)x,* RESTRICT yy,*z0,* RESTRICT zz=(T*)z;   \
@@ -136,7 +136,7 @@ REDUCEBFX(nandinsB, NAND,INAND,SNAND,BNAND,{DQ(m, B *y=memchr(x,C0,n); d=y?y-x:n
 AHDRR(plusinsB,I,B){
  if(d==1){
   for(;m;--m,x+=n){
- *z++=bsum(n,x);
+   *z++=bsum(n,x);
   }
  }else{
   for(;m;--m,x+=n*d,z+=d){
@@ -190,10 +190,50 @@ AHDRR(plusinsB,I,B){I dw,i,p,q,r,r1,s;UC*tu;UI*v;
 }}}  /* +/"r w on boolean w, originally by Roger Moore */
 #endif
 
-
+#if 0   // obsolete
+#define REDUCEOVF(f,Tz,Tx,fr1,fvv,frn)  \
+ AHDRR(f,I,I){I er=EVOK;I i,* RESTRICT xx,*y,* RESTRICT zz;                          \
+  if(d==1){xx=x; zz=z; DQ(m, z=zz++; x=xx; fr1(n,z,x); xx += n;); R er;}        \
+  if(1==n){if(sizeof(Tz)!=sizeof(Tx)){DQ(d, *z++=*x++;)}else{MC((C*)z,(C*)x,d*sizeof(Tz));} R er;}   \
+  zz=z+=m*d; xx=x+=m*d*n;                                  \
+  xx-=d; zz-=d;                                                 \
+  for(i=0;i<m;++i,xx-=d,zz-=d){                                 \
+   y=xx;   x=xx-=d; z=zz; fvv(d,z,x,y);                    \
+   DQ(n-2, x=xx-=d; z=zz; frn(d,z,x);  );                  \
+ }R er;}
 REDUCEOVF( plusinsI, I, I,  PLUSR, PLUSVV, PLUSRV) 
 REDUCEOVF(minusinsI, I, I, MINUSR,MINUSVV,MINUSRV) 
 REDUCEOVF(tymesinsI, I, I, TYMESR,TYMESVV,TYMESRV)
+
+#else
+#define PLUSI1(x) if(unlikely(__builtin_add_overflow((x),t,&t)))R EWOV;
+#define MINUSI1(x) if(unlikely(__builtin_sub_overflow((x),t,&t)))R EWOV;
+#define TYMESI1(x) if(unlikely(__builtin_mul_overflow((x),t,&t)))R EWOV;
+// m is #cells, n is #items per cell, d is #atoms in item
+#define REDUCEOVF(f,neut,ft1)  \
+ AHDRR(f,I,I){I i;                          \
+  if(d==1){DQ(m,  \
+   UI dlct=(n+3)>>2;  \
+   UI dlct0=dlct; x+=(dlct-1)*(1LL<<2); I t=neut; switch(n&3){do{case 0: ft1(x[3]) case 3: ft1(x[2]) case 2: ft1(x[1]) case 1: ft1(x[0]) x-=4; }while(--dlct0);}   \
+   *z++=t; x+=n+4;  \
+   ) R EVOK;  \
+  }        \
+  UI dlct=(n+3)>>2; I xstride1=d*SZI; I xstride3=3*xstride1;  \
+  DQ(m,  \
+   DQ(d, x+=d*(dlct-1)*(1LL<<2);  \
+    UI dlct0=dlct; I t=neut; switch(n&3){do{case 0: ft1(*(I*)((C*)x+xstride3)) case 3: ft1(*(I*)((C*)x+2*xstride1)) case 2: ft1(*(I*)((C*)x+xstride1)) case 1: ft1(x[0]) x=(I*)((C*)x-4*xstride1); }while(--dlct0);}   \
+    *z++=t; x=(I*)((C*)x+4*xstride1)+1;  \
+   )  \
+   x+=(n-1)*d;  \
+  )  \
+ R EVOK;  \
+ }
+
+REDUCEOVF( plusinsI, 0, PLUSI1) 
+REDUCEOVF(minusinsI, 0, MINUSI1) 
+REDUCEOVF(tymesinsI, 1, TYMESI1)
+
+#endif
 
 REDUCCPFX( plusinsO, D, I,  PLUSO)
 REDUCCPFX(minusinsO, D, I, MINUSO) 
@@ -259,6 +299,7 @@ REDUCCPFX(tymesinsO, D, I, TYMESO)
   x=x0-((d-1)&-NPAR); z+=((d-1)&(NPAR-1))+1; \
  )
 
+// prim for +/ II  primplusII(x,y)  _mm256_castsi256_pd(_mm256_add_epi64(_mm256_castpd_si256(x),_mm256_castpd_si256(y))); oflo=_mm256_or_pd(oflo,_mm256_andnot_pd(_mm256_xor_pd(x,y),_mm256_xor_pd(x,zz)));,
 
 AHDRR(plusinsD,D,D){I i;D* RESTRICT y;
   NAN0;

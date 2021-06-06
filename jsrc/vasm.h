@@ -4,7 +4,7 @@
 /* Verbs: Assembly Routines for Integer + * - with Overflow                */
 
 /* C routines for platforms without asm support */
-#ifndef OVF
+#if 0  // obsolete 
 
 #if SY_64
 #define DI LD

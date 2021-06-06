@@ -69,13 +69,3 @@
 
 
 
-#define REDUCEOVF(f,Tz,Tx,fr1,fvv,frn)  \
- AHDRR(f,I,I){I er=EVOK;I i,* RESTRICT xx,*y,* RESTRICT zz;                          \
-  if(d==1){xx=x; zz=z; DQ(m, z=zz++; x=xx; fr1(n,z,x); xx += n;); R er;}        \
-  if(1==n){if(sizeof(Tz)!=sizeof(Tx)){DQ(d, *z++=*x++;)}else{MC((C*)z,(C*)x,d*sizeof(Tz));} R er;}   \
-  zz=z+=m*d; xx=x+=m*d*n;                                  \
-  xx-=d; zz-=d;                                                 \
-  for(i=0;i<m;++i,xx-=d,zz-=d){                                 \
-   y=xx;   x=xx-=d; z=zz; fvv(d,z,x,y);                    \
-   DQ(n-2, x=xx-=d; z=zz; frn(d,z,x);  );                  \
- }R er;}

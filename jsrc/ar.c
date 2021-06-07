@@ -272,28 +272,31 @@ REDUCCPFX(tymesinsO, D, I, TYMESO)
  _mm256_zeroupperx(VOIDARG) \
  __m256d idreg=_mm256_broadcast_sd(&identity); \
  endmask = _mm256_loadu_si256((__m256i*)(validitymask+((-d)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
- DQ(m, D *x0; I n0; \
+ I xstride1=d*SZD; I xstride3=3*xstride1; \
+ DQ(m, D *x0; \
   DQ((d-1)>>LGNPAR, \
-   x0=x; n0=n; __m256d acc0=idreg; __m256d acc1=idreg; __m256d acc2=idreg; __m256d acc3=idreg; \
-   switch(n0&3){ \
-   label##1: \
-   case 0: acc0=prim(acc0,_mm256_loadu_pd(x0)); x0+=d; \
-   case 3: acc1=prim(acc1,_mm256_loadu_pd(x0)); x0+=d; \
-   case 2: acc2=prim(acc2,_mm256_loadu_pd(x0)); x0+=d; \
-   case 1: acc3=prim(acc3,_mm256_loadu_pd(x0)); x0+=d; \
-    if((n0-=4)>0)goto label##1; \
+   x0=(D*)((C*)x-((-n)&3)*xstride1); UI n0=(n+3)>>2; __m256d acc0=idreg; __m256d acc1=idreg; __m256d acc2=idreg; __m256d acc3=idreg; \
+   switch(n&3){ \
+   do{ \
+    case 0: acc0=prim(acc0,_mm256_loadu_pd(x0)); \
+    case 3: acc1=prim(acc1,_mm256_loadu_pd((D*)((C*)x0+xstride1))); \
+    case 2: acc2=prim(acc2,_mm256_loadu_pd((D*)((C*)x0+2*xstride1))); \
+    case 1: acc3=prim(acc3,_mm256_loadu_pd((D*)((C*)x0+xstride3))); \
+     x0=(D*)((C*)x0+4*xstride1); \
+   }while(--n0); \
    } \
    acc0=prim(acc0,acc1);  acc2=prim(acc2,acc3); acc0=prim(acc0,acc2); _mm256_storeu_pd(z,acc0); \
    x+=NPAR; z+=NPAR; \
   ) \
-  x0=x; n0=n; __m256d acc0=idreg; __m256d acc1=idreg; __m256d acc2=idreg; __m256d acc3=idreg; \
-  switch(n0&3){ \
-  label##2: \
-  case 0: acc0=prim(acc0,_mm256_maskload_pd(x0,endmask)); x0+=d; \
-  case 3: acc1=prim(acc1,_mm256_maskload_pd(x0,endmask)); x0+=d; \
-  case 2: acc2=prim(acc2,_mm256_maskload_pd(x0,endmask)); x0+=d; \
-  case 1: acc3=prim(acc3,_mm256_maskload_pd(x0,endmask)); x0+=d; \
-   if((n0-=4)>0)goto label##2; \
+  x0=(D*)((C*)x-((-n)&3)*xstride1);  UI n0=(n+3)>>2; __m256d acc0=idreg; __m256d acc1=idreg; __m256d acc2=idreg; __m256d acc3=idreg; \
+  switch(n&3){ \
+  do{ \
+   case 0: acc0=prim(acc0,_mm256_maskload_pd(x0,endmask)); \
+   case 3: acc1=prim(acc1,_mm256_maskload_pd((D*)((C*)x0+xstride1),endmask)); \
+   case 2: acc2=prim(acc2,_mm256_maskload_pd((D*)((C*)x0+2*xstride1),endmask)); \
+   case 1: acc3=prim(acc3,_mm256_maskload_pd((D*)((C*)x0+xstride3),endmask)); \
+    x0=(D*)((C*)x0+4*xstride1); \
+  }while(--n0); \
   } \
   acc0=prim(acc0,acc1);  acc2=prim(acc2,acc3); acc0=prim(acc0,acc2); _mm256_maskstore_pd(z,endmask,acc0); \
   x=x0-((d-1)&-NPAR); z+=((d-1)&(NPAR-1))+1; \

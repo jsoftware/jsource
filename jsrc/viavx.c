@@ -1800,7 +1800,7 @@ static const S fnflags[]={  // 0 values reserved for small-range.  They turn off
 #define OVERHEADSHAPES 100  // checking shapes, types, etc costs this many compares
 
 // mode indicates the type of operation, defined in j.h
-A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
+A jtindexofsub(J jt,I mode,A a,A w){F2PREFIP;PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
     I ac,acr,af,ak,an,ar,*as,at,datamin,f,f1,k,klg,n,r,*s,t,wc,wcr,wf,wk,wn,wr,*ws,wt,zn;UI c,m,p;
  ARGCHK2(a,w);
 
@@ -2122,25 +2122,26 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
  AF ifn=fntbl[FNTABLEPREFIX+fnx];  // get an early start fetching the function we will call
 
  // Allocate the result area.  NOTE that some of the routines, like small-range, always store at least one result; so we have to point z somewhere harmless before launching them. If we are prehashing we skip this.
+ // If the conditions are right, perform the operation inplace
  A z;
  switch(mode&(IPHCALC|IIOPMSK)){
-  default:      fauxINT(z,zfaux,1,0) break;   // if prehashed, we must create an area that can hold at least one stored result
-  case IIDOT: case IFORKEY:
-  case IICO:    GATV0(z,INT,zn,f+f1); MCISH(AS(z),s,f) MCISH(f+AS(z),ws+wf,f1); break;  // mustn't overfetch s
-  case INUBSV:  GATV0(z,B01,zn,f+f1+!acr); MCISH(AS(z),s,f) MCISH(f+AS(z),ws+wf,f1); if(!acr)AS(z)[AR(z)-1]=1; break;  // mustn't overfetch s
-  case INUB:    {I q; PRODX(q,AR(a)-1,AS(a)+1,m+1) GA(z,t,q,MAX(1,wr),ws); AS(z)[0]=m+1; break;}  // +1 because we speculatively overwrite.  Was MIN(m,p) but we don't have the range yet   scaf yes we do
-  case ILESS: case IINTER:   GA(z,AT(w),AN(w),MAX(1,wr),ws); break;
-  case IEPS:    GATV0(z,B01,zn,f+f1); MCISH(AS(z),s,f) MCISH(f+AS(z),ws+wf,f1); break;
-  case INUBI:   GATV0(z,INT,m+1,1); break;  // +1 because we speculatively overwrite  Was MIN(m,p) but we don't have the range yet scaf yes we do
-  // (e. i. 0:) and friends don't do anything useful if e. produces rank > 1.  The search for 0/1 always fails
-  case II0EPS: case II1EPS: case IJ0EPS: case IJ1EPS:
-                if(wr>MAX(ar,1))R sc(wr>r?ws[0]:1); GAT0(z,INT,1,0); break;
-  // ([: I. e.) ([: +/ e.) ([: +./ e.) ([: *./ e.) come here only if e. produces rank 0 or 1.
-  case IIFBEPS: GATV0(z,INT,c+1,1); break;  // +1 because we speculatively overwrite
-  case IANYEPS: case IALLEPS:
-                GAT0(z,B01,1,0); break;
-  case ISUMEPS:
-                GAT0(z,INT,1,0); break;
+ default:      fauxINT(z,zfaux,1,0) break;   // if prehashed, we must create an area that can hold at least one stored result
+ case IIDOT: case IFORKEY:
+ case IICO:    GATV0(z,INT,zn,f+f1); MCISH(AS(z),s,f) MCISH(f+AS(z),ws+wf,f1); break;  // mustn't overfetch s
+ case INUBSV:  GATV0(z,B01,zn,f+f1+!acr); MCISH(AS(z),s,f) MCISH(f+AS(z),ws+wf,f1); if(!acr)AS(z)[AR(z)-1]=1; break;  // mustn't overfetch s
+ case INUB:    {I q; PRODX(q,AR(a)-1,AS(a)+1,m+1) GA(z,t,q,MAX(1,wr),ws); AS(z)[0]=m+1; break;}  // +1 because we speculatively overwrite.  Was MIN(m,p) but we don't have the range yet   scaf yes we do
+ case ILESS: case IINTER:   GA(z,AT(w),AN(w),MAX(1,wr),ws); break;
+ case IEPS:    GATV0(z,B01,zn,f+f1); MCISH(AS(z),s,f) MCISH(f+AS(z),ws+wf,f1); break;
+ case INUBI:   GATV0(z,INT,m+1,1); break;  // +1 because we speculatively overwrite  Was MIN(m,p) but we don't have the range yet scaf yes we do
+ // (e. i. 0:) and friends don't do anything useful if e. produces rank > 1.  The search for 0/1 always fails
+ case II0EPS: case II1EPS: case IJ0EPS: case IJ1EPS:
+               if(wr>MAX(ar,1))R sc(wr>r?ws[0]:1); GAT0(z,INT,1,0); break;
+ // ([: I. e.) ([: +/ e.) ([: +./ e.) ([: *./ e.) come here only if e. produces rank 0 or 1.
+ case IIFBEPS: GATV0(z,INT,c+1,1); break;  // +1 because we speculatively overwrite
+ case IANYEPS: case IALLEPS:
+               GAT0(z,B01,1,0); break;
+ case ISUMEPS:
+               GAT0(z,INT,1,0); break;
  }
 
  // Create result for empty/inhomogeneous arguments, & return
@@ -2311,6 +2312,7 @@ DF2(jtintersect){A x=w;I ar,at,k,r,*s,wr,*ws,wt;
  PUSHCCTIF(FAV(self)->localuse.lu1.cct,FAV(self)->localuse.lu1.cct!=0)   // if there is a CT, use it
  // if nothing special (like sparse, or incompatible types, or x requires conversion) do the fast way; otherwise (-. x e. y) # x 
  // because LESS allocates a large array to hold all the values, we use the slower, less memory-intensive, version if a is mapped
+ // Don't revert to fork!  localuse.lu1.fork2hfn is not set
  x=(SGNIFSPARSE(at)|SGNIF(AFLAG(a),AFNJAX))>=0?indexofsub(IINTER,x,a):
      repeat(eps(a,x),a);
  POPCCT

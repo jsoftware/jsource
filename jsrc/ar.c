@@ -267,7 +267,7 @@ REDUCCPFX(tymesinsO, D, I, TYMESO)
  )
 
 // f/ on rank>1, going down columns to save bandwidth
-#define redprim256rk2(prim,identity,label) \
+#define redprim256rk2(prim,identity) \
  __m256i endmask; /* length mask for the last word */ \
  _mm256_zeroupperx(VOIDARG) \
  __m256d idreg=_mm256_broadcast_sd(&identity); \
@@ -323,7 +323,7 @@ AHDRR(plusinsD,D,D){I i;D* RESTRICT y;
   }
   else{
 #if (C_AVX&&SY_64) || EMU_AVX
-   redprim256rk2(_mm256_add_pd,dzero,lbl)
+   redprim256rk2(_mm256_add_pd,dzero)
 #elif 1
    // add down the columns to reduce memory b/w.  4 accumulators
    DQ(m, D *x0;

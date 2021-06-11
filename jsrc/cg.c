@@ -445,7 +445,8 @@ A jtgadv(J jt,A w,C id){A hs;I n;
  // The derived verb is ASGSAFE if all the components are; it has gerund left-operand; and it supports inplace operation on the dyad
  // Also set the LSB flags to indicate whether v0 is u@[ or u@]
  ASSERT(AT(AAV(hs)[0])&AT(AAV(hs)[1])&AT(AAV(hs)[2])&VERB,EVDOMAIN);
- I flag=(FAV(AAV(hs)[0])->flag&FAV(AAV(hs)[1])->flag&FAV(AAV(hs)[2])->flag&VASGSAFE)+(VGERL|VJTFLGOK2)+atoplr(AAV(hs)[0]);
+ I alr=atoplr(AAV(hs)[0]);
+ I flag=(FAV(AAV(hs)[0])->flag&FAV(AAV(hs)[1])->flag&FAV(AAV(hs)[2])->flag&VASGSAFE)+(VGERL|VJTFLGOK2)+((alr|(alr>>2))&3);
  R fdef(0,id,VERB, jtgav1,jtgav2, w,0L,hs,flag, RMAX,RMAX,RMAX);  // create the derived verb
 }
 

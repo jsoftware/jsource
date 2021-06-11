@@ -111,11 +111,12 @@ I boxat(A x, I m, I l, I r){C c;V*v;
 }    /* 1 iff w is <@:f or <@f where f has infinite rank */
 
 // w is a verb
-// Result has bit 0 set if the verb is [ or ...@[, bit 1 set if ] or ...@]   (or @:)
+// Result has bit 0 set if the verb is [, 2 if ...@[, bit 1 set if ], 3 if ...@]   (or @:)
 // The set bit indicates that argument WILL NOT be examined when w is executed
 I atoplr(A w){
  if(!w)R 0;
  V *v=FAV(w);     // v->verb info, c=id of w
- C id = v->id;if((v->id&-2)==CATCO)id = FAV(v->fgh[1])->id;  // @ @:
- R (id-(CLEFT-1)) & REPSGN((CLEFT-1)-(I)id) & REPSGN((I)id-(CRIGHT+1));  // LEFT->1, RIGHT->2 punning with JINPLACEW/A; but 0 if not LEFT or RIGHT
+ C id = v->id,id2=id; if((id2&-2)==CATCO)id = FAV(v->fgh[1])->id;  // @ @:
+ id = (id-(CLEFT-1)) & REPSGN((CLEFT-1)-(I)id) & REPSGN((I)id-(CRIGHT+1));  // LEFT->1, RIGHT->2 punning with JINPLACEW/A; but 0 if not LEFT or RIGHT
+ R (id2&-2)==CATCO?id<<2:id;  // if @, shift
 }

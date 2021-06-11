@@ -10,6 +10,142 @@
 #define TDECL           V*sv=FAV(self);A fs=sv->fgh[0],gs=sv->fgh[1],hs=sv->fgh[2]
 
 
+// fork, including simple variants and NVV
+#define PTRSNE(a,b) ((((I)(a)^(I)(b))&~(JTINPLACEW|JTINPLACEA))!=0)  // pointers don't match, ignoring low 2 bits
+#define PTR(a) ((A)((I)(a)&~(JTINPLACEW|JTINPLACEA)))  // base of a pointer that might have flag bits
+#define PTROP(p,op,val) ((A)((I)(p) op (val)))
+#define JPTROP(p,op,val) ((J)((I)(p) op (val)))
+
+// opt is a bitmask of variants
+// bit0=h is ][
+// bit4=f is ][ bit5=NVV
+#define FOLK1 {PUSHZOMB; ARGCHK1D(w) A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW));  \
+/* If any result equals protw, it must not be inplaced: if original w is inplaceable, protw will not match anything */ \
+/* the call to h is not inplaceable, but it may allow WILLOPEN and USESITEMCOUNT */ \
+A hx; RZ(hx=(h1)((J)(intptr_t)(((I)jt) + (REPSGN(SGNIF(FAV(hs)->flag,VJTFLGOK1X)) & (FAV(gs)->flag2>>(VF2WILLOPEN2WX-VF2WILLOPEN1X)) & VF2WILLOPEN1+VF2USESITEMCOUNT1)),w,hs)); \
+ARGCHK1D(hx) \
+/* the call to f is inplaceable if the caller allowed inplacing, and f is inplaceable, and the hx is NOT the same as y.  Here only the LSB of jtinplace is used */ \
+A fx; RZ(fx=(f1)((J)(intptr_t)(((I)jt) + (REPSGN(SGNIF(FAV(fs)->flag,VJTFLGOK1X)) & (((I)jtinplace&(I )(hx!=w)) + ((FAV(gs)->flag2>>(VF2WILLOPEN2AX-VF2WILLOPEN1X)) & VF2WILLOPEN1+VF2USESITEMCOUNT1)))),w,fs)); \
+ARGCHK2D(fx,hx) \
+/* The call to g is inplaceable if g allows it, UNLESS fx or hx is the same as disallowed y.  Pass in WILLOPEN from the input */ \
+POPZOMB; RZ(z=(g2)((J)(intptr_t)((((I)jtinplace&(~(JTINPLACEA+JTINPLACEW)))|((I )(fx!=protw)*JTINPLACEA+(I )(hx!=protw)*JTINPLACEW))&(REPSGN(SGNIF(FAV(gs)->flag,VJTFLGOK2X))|~JTFLAGMSK)),fx,hx,gs));}
+
+
+
+#define FORK1(name,opt) \
+DF1(name){F1PREFIP;PROLOG(0000); PUSHZOMB; ARGCHK1D(w) \
+AF ghfn=FAV(FAV(self)->fgh[2])->valencefns[0];  \
+A fs, gs=FAV(self)->fgh[1]; \
+AF ffn; if(!(opt&0x20)){fs=FAV(self)->fgh[0]; ffn=FAV(fs)->valencefns[0];} \
+w = PTROP(w,+,(I)jtinplace&JTINPLACEW); \
+/* the call to h is not inplaceable, but it may allow WILLOPEN and USESITEMCOUNT.  Inplace h if f is x@], but not if a==w  Actually we turn off all flags here if a==w, for comp ease */ \
+A hx; \
+if(opt&0x1){hx=w; \
+}else{J jtf; \
+ A hs=FAV(self)->fgh[2]; \
+ jtf=JPTROP(jt,+,REPSGN(SGNIF(FAV(hs)->flag,VJTFLGOK1X)) & (((I)w&(opt>>5)&1) + ((FAV(gs)->flag2>>(VF2WILLOPEN2WX-VF2WILLOPEN1X)) & VF2WILLOPEN1+VF2USESITEMCOUNT1))); \
+ RZ(hx=(ghfn)(jtf,PTR(w),hs)); \
+ hx=PTROP(hx,+,(I)(hx!=w)*JTINPLACEW);  /* result is inplaceable unless it equals noninplaceable input */ \
+ ARGCHK1D(hx) \
+} \
+/* the call to f is inplaceable if the caller allowed inplacing, and f is inplaceable; but not for an arg equal to hx (which is in use for g).  Both flags in jtinplace are used */ \
+A fx; \
+ghfn=FAV(gs)->valencefns[1];  /* this will be slow but it saves a register */ \
+if(opt&0x20){fx=FAV(self)->fgh[0];  /* NVV - never inplaceable */ \
+}else if(opt&0x10){fx=PTR(w); hx=PTROP(hx,+,((I)w&JTINPLACEW)<<JTINPLACEAX); \
+}else{J jtf; \
+ jtf=JPTROP(jt,+,REPSGN(SGNIF(FAV(fs)->flag,VJTFLGOK1X)) & (((I)w&(JTINPLACEW*(I)PTRSNE(hx,w))) + ((FAV(gs)->flag2>>(VF2WILLOPEN2AX-VF2WILLOPEN1X)) & VF2WILLOPEN1+VF2USESITEMCOUNT1))); \
+ RZ(fx=(ffn)(jtf,PTR(w),fs)); \
+ hx=PTROP(hx,+,(I)(fx!=w)*JTINPLACEA);  /* result is inplaceable unless it equals noninplaceable input */ \
+ ARGCHK2D(fx,hx) \
+} \
+/* The call to g is inplaceable if g allows it, UNLESS fx or hx is the same as disallowed y (passed in the hx value here).  Pass in WILLOPEN from the input */ \
+/* If any result equals protw/prota, it must not be inplaced: if original w/a is inplaceable, protw/prota will not match anything */ \
+/* pass flags from the next prim from the input flags */ \
+POPZOMB; A z; \
+RZ(z=(ghfn)(JPTROP(JPTROP(JPTROP(jtinplace,&,(~(JTINPLACEA+JTINPLACEW))),|,((I)hx&(JTINPLACEW|JTINPLACEA))),&,(REPSGN(SGNIF(FAV(gs)->flag,VJTFLGOK2X))|~JTFLAGMSK)),fx,PTR(hx),gs)); \
+EPILOG(z); \
+}
+
+
+// opt is a bitmask of variants
+// bit0=h is [ bit1=h is ] bit2=h is @[ bit3=h is @]
+// bit4=f is [ bit5=f is ] bit6=f is @[ bit=f is @]  (bits 4-7=0011 for NVV)
+// bit8 is 1 for hook, where h is treated as h@] except for hs purposes
+#define FORK2(name,opt) \
+DF2(name){F2PREFIP;PROLOG(0000); PUSHZOMB; ARGCHK2D(a,w) \
+AF ghfn=FAV(self)->localuse.lu1.fork2hfn; \
+A fs, gs=FAV(self)->fgh[1]; \
+AF ffn; if((opt&0x30)!=0x30){fs=FAV(self)->fgh[0]; if(opt&0xc0){fs=FAV(fs)->fgh[0]; ffn=FAV(fs)->valencefns[0];}else{ffn=FAV(fs)->valencefns[1];}} \
+w = PTROP(w,+,(I)jtinplace&JTINPLACEW); a = PTROP(a,+,(I)jtinplace&JTINPLACEA); \
+/* the call to h is not inplaceable, but it may allow WILLOPEN and USESITEMCOUNT.  Inplace h if f is x@], but not if a==w  Actually we turn off all flags here if a==w, for comp ease */ \
+A hx; \
+if(opt&0x2){hx=w; \
+}else if(opt&0x1){hx=PTROP(a,-,((I)a&JTINPLACEA)>>JTINPLACEAX); \
+}else{J jtf; \
+ A hs=FAV(self)->fgh[2]; \
+ if(opt&0xc){ \
+  /* Don't allow inplacing if a=w, because f will need the value for sure then.  Exception: NVV, where f needs nothing */ \
+  jtf=JPTROP(jt,+,(-((FAV(hs)->flag>>VJTFLGOK1X)&((I)(PTRSNE(a,w)|((opt&0x30)==0x30))))) & (((((I)(opt&0x4?a:w))&(((opt>>4)|(opt>>6))&~(opt>>2)))!=0) + ((FAV(gs)->flag2>>(VF2WILLOPEN2WX-VF2WILLOPEN1X)) & VF2WILLOPEN1+VF2USESITEMCOUNT1))); /* scaf f@][ flag must come from f */\
+  RZ(hx=(ghfn)(jtf,PTR(opt&0x4?a:w),opt&0x100?hs:FAV(hs)->fgh[0])); \
+  hx=PTROP(hx,+,(I)(hx!=(opt&0x4?a:w))*JTINPLACEW);  /* result is inplaceable unless it equals noninplaceable input */ \
+ }else{ \
+  jtf=JPTROP(jt,+,(-((FAV(hs)->flag>>VJTFLGOK2X)&((I)(PTRSNE(a,w)|((opt&0xc0)==0xc0))))) & ((((I)a|(I)w)&(((opt>>4)|(opt>>6))&3)) + ((FAV(gs)->flag2>>(VF2WILLOPEN2WX-VF2WILLOPEN1X)) & VF2WILLOPEN1+VF2USESITEMCOUNT1))); \
+  RZ(hx=(ghfn)(jtf,PTR(a),PTR(w),hs)); \
+  hx=PTROP(hx,+,(I)((hx!=w)&(hx!=a))*JTINPLACEW);  /* result is inplaceable unless it equals noninplaceable input */ \
+ } \
+ ARGCHK1D(hx) \
+} \
+/* the call to f is inplaceable if the caller allowed inplacing, and f is inplaceable; but not for an arg equal to hx (which is in use for g).  Both flags in jtinplace are used */ \
+A fx; \
+ghfn=FAV(gs)->valencefns[1];  /* this will be slow but it saves a register */ \
+if((opt&0x30)==0x30){fx=FAV(self)->fgh[0];  /* NVV - never inplaceable */ \
+}else if(opt&0x20){fx=PTR(w); hx=PTROP(hx,+,((I)w&JTINPLACEW)<<JTINPLACEAX); \
+}else if(opt&0x10){fx=PTR(a); hx=PTROP(hx,+,((I)a&JTINPLACEA)); \
+}else{J jtf; \
+ if(opt&0xc0){ \
+  jtf=JPTROP(jt,+,REPSGN(SGNIF(FAV(fs)->flag,VJTFLGOK1X)) & ((opt&0x40?((I)a>>JTINPLACEAX)&(I)PTRSNE(hx,a):((I)w>>JTINPLACEWX)&(I)PTRSNE(hx,w)) + ((FAV(gs)->flag2>>(VF2WILLOPEN2AX-VF2WILLOPEN1X)) & VF2WILLOPEN1+VF2USESITEMCOUNT1))); \
+  RZ(fx=(ffn)(jtf,PTR(opt&0x40?a:w),fs)); \
+  hx=PTROP(hx,+,((I)(fx!=(opt&0x40?a:w)))*JTINPLACEA);  /* result is inplaceable unless it equals noninplaceable input */ \
+ }else{ \
+  jtf=JPTROP(jt,+,REPSGN(SGNIF(FAV(fs)->flag,VJTFLGOK2X)) & ((((I)a|(I)w)&(JTINPLACEA*(I)PTRSNE(hx,a)+JTINPLACEW*(I)PTRSNE(hx,w))) + ((FAV(gs)->flag2>>(VF2WILLOPEN2AX-VF2WILLOPEN1X)) & VF2WILLOPEN1+VF2USESITEMCOUNT1))); \
+  RZ(fx=(ffn)(jtf,PTR(a),PTR(w),fs)); \
+  hx=PTROP(hx,+,((I)((fx!=w)&(fx!=a)))*JTINPLACEA);  /* result is inplaceable unless it equals noninplaceable input */ \
+ } \
+ ARGCHK2D(fx,hx) \
+} \
+/* The call to g is inplaceable if g allows it, UNLESS fx or hx is the same as disallowed y (passed in the hx value here).  Pass in WILLOPEN from the input */ \
+/* If any result equals protw/prota, it must not be inplaced: if original w/a is inplaceable, protw/prota will not match anything */ \
+/* pass flags from the next prim from the input flags */ \
+POPZOMB; A z; \
+RZ(z=(ghfn)(JPTROP(JPTROP(JPTROP(jtinplace,&,(~(JTINPLACEA+JTINPLACEW))),|,((I)hx&(JTINPLACEW|JTINPLACEA))),&,(REPSGN(SGNIF(FAV(gs)->flag,VJTFLGOK2X))|~JTFLAGMSK)),fx,PTR(hx),gs)); \
+EPILOG(z); \
+}
+
+// 9!:63 return [((AC of x) ; x) ;] inplacingflags ; < (AC of y) ; y
+F1(jtshowinplacing1){F1PREFIP;
+R link(sc((I)jtinplace&JTFLAGMSK),box(link(sc(AC(w)),w)));
+}
+F2(jtshowinplacing2){F2PREFIP;
+R link(link(sc(AC(a)),a),link(sc((I)jtinplace&JTFLAGMSK),box(link(sc(AC(w)),w))));
+}
+
+FORK1(fork100,0x00) FORK1(fork101,0x01) FORK1(fork110,0x10) FORK1(fork111,0x11) FORK1(fork120,0x20) FORK1(fork121,0x21) 
+static AF fork1tbl[3][2]={ {fork100, fork101}, {fork110, fork111}, {fork120, fork121} };
+
+FORK2(fork200,0x00) FORK2(fork201,0x01) FORK2(fork202,0x02) FORK2(fork204,0x04) FORK2(fork208,0x08) FORK2(fork210,0x10) FORK2(fork211,0x11) FORK2(fork212,0x12) FORK2(fork214,0x14) FORK2(fork218,0x18)
+FORK2(fork220,0x20) FORK2(fork221,0x21) FORK2(fork222,0x22) FORK2(fork224,0x24) FORK2(fork228,0x28) FORK2(fork240,0x40) FORK2(fork241,0x41) FORK2(fork242,0x42) FORK2(fork244,0x44) FORK2(fork248,0x48)
+FORK2(fork280,0x80) FORK2(fork281,0x81) FORK2(fork282,0x82) FORK2(fork284,0x84) FORK2(fork288,0x88) FORK2(fork230,0x30) FORK2(fork231,0x31) FORK2(fork232,0x32) FORK2(fork234,0x34) FORK2(fork238,0x38)
+static AF fork2tbl[6][5]={
+{fork200, fork201, fork202, fork204, fork208},
+{fork210, fork211, fork212, fork214, fork218},
+{fork220, fork221, fork222, fork224, fork228},
+{fork240, fork241, fork242, fork244, fork248},
+{fork280, fork281, fork282, fork284, fork288},
+{fork230, fork231, fork232, fork234, fork238},
+};
+
+
 // handle fork, with support for in-place operations
 #define FOLK1 {PUSHZOMB; ARGCHK1D(w) A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW));  \
 /* If any result equals protw, it must not be inplaced: if original w is inplaceable, protw will not match anything */ \
@@ -67,127 +203,146 @@ static DF1(jtcharmapa){V*v=FAV(self); R charmap(w,FAV(v->fgh[2])->fgh[0],v->fgh[
 static DF1(jtcharmapb){V*v=FAV(self); R charmap(w,FAV(v->fgh[0])->fgh[0],FAV(v->fgh[2])->fgh[0]);}
 
 // Create the derived verb for a fork.  Insert in-placeable flags based on routine, and asgsafe based on fgh
-A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I flag,flag2=0,j,m=-1;V*fv,*gv,*hv,*v;
+A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=0,f2=0;B b;C c,fi,gi,hi;I flag,flag2=0,j,m=-1,fline,hcol;V*fv,*gv,*hv,*v;
  RZ(f&&g&&h);
+ // by the parsing rules, g and h must be verbs here
  gv=FAV(g); gi=gv->id;
  hv=FAV(h); hi=hv->id;
+ D cct=0.0;  // cct to use, 0='use default'
  // Start flags with ASGSAFE (if g and h are safe), and with INPLACEOK to match the setting of f1,f2.  Turn off inplacing that neither f nor h can handle
  if(NOUN&AT(f)){  /* nvv, including y {~ x i. ] */
   flag=(hv->flag&(VJTFLGOK1|VJTFLGOK2))+((gv->flag&hv->flag)&VASGSAFE);  // We accumulate the flags for the derived verb.  Start with ASGSAFE if all descendants are.
   RZ(f=makenounasgsafe(jt, f))   // adjust usecount so that the value cannot be inplaced
-  f1=jtnvv1;
+// obsolete   f1=jtnvv1;
+  fline=5;  // set left argtype
   if(((AT(f)^B01)|AR(f)|BAV0(f)[0])==0&&BOTHEQ8(gi,hi,CEPS,CDOLLAR))f1=jtisempty;  // 0 e. $, accepting only boolean 0
   if(LIT&AT(f)&&1==AR(f)&&BOTHEQ8(gi,hi,CTILDE,CFORK)&&CFROM==ID(gv->fgh[0])){
    x=hv->fgh[0];
    if(LIT&AT(x)&&1==AR(x)&&CIOTA==ID(hv->fgh[1])&&CRIGHT==ID(hv->fgh[2])){f1=jtcharmapa;  flag &=~(VJTFLGOK1);}  // (N {~ N i. ])
   }
-  R fdef(0,CFORK,VERB, f1,jtnvv2, f,g,h, flag, RMAX,RMAX,RMAX);
- }
- // not nvv
- fv=FAV(f); fi=cap(f)?CCAP:fv->id; // if f is a name defined as [:, detect that now & treat it as if capped fork
- if(fi!=CCAP){
-  // vvv fork.  inplace if f or h can handle it, ASGSAFE only if all 3 verbs can
-  flag=((fv->flag|hv->flag)&(VJTFLGOK1|VJTFLGOK2))+((fv->flag&gv->flag&hv->flag)&VASGSAFE);  // We accumulate the flags for the derived verb.  Start with ASGSAFE if all descendants are.
-  // if g has WILLOPEN, indicate WILLBEOPENED in f/h
- }
-
- switch(fi){
- case CCAP:
-  // capped fork.  inplace if h can handle it, ASGSAFE if gh are safe
-  flag=(hv->flag&(VJTFLGOK1|VJTFLGOK2))+((gv->flag&hv->flag)&VASGSAFE);  // We accumulate the flags for the derived verb.  Start with ASGSAFE if all descendants are, and inplacing if h handles it
-  // Copy the open/raze status from v into u@v
-  flag2 |= hv->flag2&(VF2WILLOPEN1|VF2WILLOPEN2W|VF2WILLOPEN2A|VF2USESITEMCOUNT1|VF2USESITEMCOUNT2W|VF2USESITEMCOUNT2A);
-  if(gi==CBOX)flag2|=VF2BOXATOP1|VF2BOXATOP2;   // [: < h
-  f1=on1cell; f2=jtupon2cell;
-  if(BOTHEQ8(gi,hi,CSLASH,CDOLLAR)&&FAV(gv->fgh[0])->id==CSTAR){f1=jtnatoms;}  // [: */ $
-  if(gi==CPOUND){f1=hi==CCOMMA?jtnatoms:f1; f1=hi==CDOLLAR?jtrank:f1;}  // [: # ,   [: # $
-              break; /* [: g h */
- case CSLASH: if(BOTHEQ8(gi,hi,CDIV,CPOUND)&&CPLUS==FAV(fv->fgh[0])->id){f1=jtmean; flag|=VIRS1; flag &=~(VJTFLGOK1);} break;  /* +/%# */
- case CAMP:   /* x&i.     { y"_ */
- case CFORK:  /* (x i. ]) { y"_ */
-  if(hi==CQQ&&(y=hv->fgh[0],LIT&AT(y)&&1==AR(y))&&equ(ainf,hv->fgh[1])&&
-      (x=fv->fgh[0],LIT&AT(x)&&1==AR(x))&&CIOTA==ID(fv->fgh[1])&&
-      (fi==CAMP||CRIGHT==ID(fv->fgh[2]))){f1=jtcharmapb; flag &=~(VJTFLGOK1);} break;
- case CAT:    /* <"1@[ { ] */
-  if(BOTHEQ8(gi,hi,CLBRACE,CRIGHT)){                                   
-   p=fv->fgh[0]; q=fv->fgh[1]; 
-   if(CQQ==FAV(p)->id&&CLEFT==ID(q)&&(CLT==ID(FAV(p)->fgh[0])&&FAV(p)->fgh[1]==num(1))){f2=jtsfrom; flag &=~(VJTFLGOK2);}
+// obsolete  R fdef(0,CFORK,VERB, f1,jtnvv2, f,g,h, flag, RMAX,RMAX,RMAX);
+ }else{
+  // not nvv
+  fv=FAV(f); fi=cap(f)?CCAP:fv->id; // if f is a name defined as [:, detect that now & treat it as if capped fork
+  if(fi!=CCAP){
+   // vvv fork.  inplace if f or h can handle it, ASGSAFE only if all 3 verbs can
+   flag=((fv->flag|hv->flag)&(VJTFLGOK1|VJTFLGOK2))+((fv->flag&gv->flag&hv->flag)&VASGSAFE);  // We accumulate the flags for the derived verb.  Start with ASGSAFE if all descendants are.
+   // if g has WILLOPEN, indicate WILLBEOPENED in f/h
   }
-  break;
-// special code for x ((<[!.0] |) * ]) y, implemented as if !.0, also if <:
-#if (C_AVX&&SY_64) || EMU_AVX
- case CHOOK:    // (< |[!.0]) * ]
-  if(BOTHEQ8(gi,hi,CSTAR,CRIGHT)){                                   
-   p=fv->fgh[0]; q=fv->fgh[1];
-   if(FAV(q)->id==CSTILE){
-    I d=FAV(p)->id; d=d==CFIT&&FAV(p)->localuse.lu1.cct==1.0?FAV(FAV(p)->fgh[0])->id:d;  // left side of hook, optionally with !.0
-    if((d&~1)==CLT)f2=jtdeadband;  // accept < or <:
+  switch(fi){
+  case CCAP:
+   // capped fork.  inplace if h can handle it, ASGSAFE if gh are safe
+   flag=(hv->flag&(VJTFLGOK1|VJTFLGOK2))+((gv->flag&hv->flag)&VASGSAFE);  // We accumulate the flags for the derived verb.  Start with ASGSAFE if all descendants are, and inplacing if h handles it
+   // Copy the open/raze status from v into u@v
+   flag2 |= hv->flag2&(VF2WILLOPEN1|VF2WILLOPEN2W|VF2WILLOPEN2A|VF2USESITEMCOUNT1|VF2USESITEMCOUNT2W|VF2USESITEMCOUNT2A);
+   if(gi==CBOX)flag2|=VF2BOXATOP1|VF2BOXATOP2;   // [: < h
+   f1=on1cell; f2=jtupon2cell;
+   if(BOTHEQ8(gi,hi,CSLASH,CDOLLAR)&&FAV(gv->fgh[0])->id==CSTAR){f1=jtnatoms;}  // [: */ $
+   if(gi==CPOUND){f1=hi==CCOMMA?jtnatoms:f1; f1=hi==CDOLLAR?jtrank:f1;}  // [: # ,   [: # $
+               break; /* [: g h */
+  case CSLASH: if(BOTHEQ8(gi,hi,CDIV,CPOUND)&&CPLUS==FAV(fv->fgh[0])->id){f1=jtmean; flag|=VIRS1; flag &=~(VJTFLGOK1);} break;  /* +/%# */
+  case CAMP:   /* x&i.     { y"_ */
+  case CFORK:  /* (x i. ]) { y"_ */
+   if(hi==CQQ&&(y=hv->fgh[0],LIT&AT(y)&&1==AR(y))&&equ(ainf,hv->fgh[1])&&
+       (x=fv->fgh[0],LIT&AT(x)&&1==AR(x))&&CIOTA==ID(fv->fgh[1])&&
+       (fi==CAMP||CRIGHT==ID(fv->fgh[2]))){f1=jtcharmapb; flag &=~(VJTFLGOK1);} break;
+  case CAT:    /* <"1@[ { ] */
+   if(BOTHEQ8(gi,hi,CLBRACE,CRIGHT)){                                   
+    p=fv->fgh[0]; q=fv->fgh[1]; 
+    if(CQQ==FAV(p)->id&&CLEFT==ID(q)&&(CLT==ID(FAV(p)->fgh[0])&&FAV(p)->fgh[1]==num(1))){f2=jtsfrom; flag &=~(VJTFLGOK2);}
    }
-  }
-  break;
-#endif
- }
+   break;
+ // special code for x ((<[!.0] |) * ]) y, implemented as if !.0, also if <:
+ #if (C_AVX&&SY_64) || EMU_AVX
+  case CHOOK:    // (< |[!.0]) * ]
+   if(BOTHEQ8(gi,hi,CSTAR,CRIGHT)){                                   
+    p=fv->fgh[0]; q=fv->fgh[1];
+    if(FAV(q)->id==CSTILE){
+     I d=FAV(p)->id; d=d==CFIT&&FAV(p)->localuse.lu1.cct==1.0?FAV(FAV(p)->fgh[0])->id:d;  // left side of hook, optionally with !.0
+     if((d&~1)==CLT)f2=jtdeadband;  // accept < or <:
+    }
+   }
+   break;
+ #endif
+  } 
 
- // m will be 0-7 for a comparison combination m+II0EPS
- switch(fi==CCAP?gi:hi){
- case CQUERY:  if((hi&~1)==CPOUND){f2=jtrollk; flag &=~(VJTFLGOK2);}  break;  // [: ? #  or  [: ? $
- case CQRYDOT: if((hi&~1)==CPOUND){f2=jtrollkx; flag &=~(VJTFLGOK2);} break;  // [: ?. #  or  [: ?. $ 
- case CICAP:   if(fi==CCAP){if(hi==CNE)f1=jtnubind; else if(FIT0(CNE,hv)){f1=jtnubind0; flag &=~(VJTFLGOK1);}}else if(hi==CEBAR){f2=jtifbebar; flag&=~VJTFLGOK2;} break;
- case CSLASH:  c=ID(gv->fgh[0])+1; m=-1;m=BETWEENC(c,CPLUS+1,CSTARDOT+1)?c:m;  // set m to 4-6 if [: + +. *./  h  [or  f   + +. *. mod    h/, never used]
-               if(fi==CCAP&&FAV(gv->fgh[0])->flag&FAV(h)->flag&VISATOMIC2){f2=jtfslashatg;}  // [: f/ g when f and g are both atomic, treat as special
-               break;
- case CFCONS:  if(hi==CFCONS){x=hv->fgh[2]; m=gi+BAV(x)[0]; m=(UI)(B01&AT(x))>((UI)(gi&~2)-CIOTA)?m:-1;} break;  // x-> constant; must be boolean, and i./i:   non-[: i. 0:/1: sets m to 0/1
- case CRAZE:
-  if(hi==CCUT){   // [: ; h;.n
-   j=hv->localuse.lu1.gercut.cutn;  // cut type
-   if(hv->valencefns[1]==jtboxcut0){f2=jtrazecut0; flag &=~(VJTFLGOK2);}
-   else if(boxatop(h)){  // h is <@g;.j   detect ;@:(<@(f/\);._2 _1 1 2
-    if((((I)1)<<(j+3))&0x36) { // fbits are 3 2 1 0 _1 _2 _3; is 1/2-cut?
-     A wf=hv->fgh[0]; V *wfv=FAV(wf); A hg=wfv->fgh[1]; V *hgv=FAV(hg);  // w is <@g;.k  find g
-     if((I)(((hgv->id^CBSLASH)-1)|((hgv->id^CBSDOT)-1))<0) {  // g is gf\ or gf\.
-      A hgf=hgv->fgh[0]; V *hgfv=FAV(hgf);  // find gf
-      if(hgfv->id==CSLASH){  // gf is gff/  .  We will analyze gff later
-       f1=jtrazecut1; f2=jtrazecut2; flag&=~(VJTFLGOK1|VJTFLGOK2);
+  // m will be 0-7 for a comparison combination m+II0EPS
+  switch(fi==CCAP?gi:hi){
+  case CQUERY:  if((hi&~1)==CPOUND){f2=jtrollk; flag &=~(VJTFLGOK2);}  break;  // [: ? #  or  [: ? $
+  case CQRYDOT: if((hi&~1)==CPOUND){f2=jtrollkx; flag &=~(VJTFLGOK2);} break;  // [: ?. #  or  [: ?. $ 
+  case CICAP:   if(fi==CCAP){if(hi==CNE)f1=jtnubind; else if(FIT0(CNE,hv)){f1=jtnubind0; flag &=~(VJTFLGOK1);}}else if(hi==CEBAR){f2=jtifbebar; flag&=~VJTFLGOK2;} break;
+  case CSLASH:  c=ID(gv->fgh[0])+1; m=-1;m=BETWEENC(c,CPLUS+1,CSTARDOT+1)?c:m;  // set m to 4-6 if [: + +. *./  h  [or  f   + +. *. mod    h/, never used]
+                if(fi==CCAP&&FAV(gv->fgh[0])->flag&FAV(h)->flag&VISATOMIC2){f2=jtfslashatg;}  // [: f/ g when f and g are both atomic, treat as special
+                break;
+  case CFCONS:  if(hi==CFCONS){x=hv->fgh[2]; m=gi+BAV(x)[0]; m=(UI)(B01&AT(x))>((UI)(gi&~2)-CIOTA)?m:-1;} break;  // x-> constant; must be boolean, and i./i:   non-[: i. 0:/1: sets m to 0/1
+  case CRAZE:
+   if(hi==CCUT){   // [: ; h;.n
+    j=hv->localuse.lu1.gercut.cutn;  // cut type
+    if(hv->valencefns[1]==jtboxcut0){f2=jtrazecut0; flag &=~(VJTFLGOK2);}
+    else if(boxatop(h)){  // h is <@g;.j   detect ;@:(<@(f/\);._2 _1 1 2
+     if((((I)1)<<(j+3))&0x36) { // fbits are 3 2 1 0 _1 _2 _3; is 1/2-cut?
+      A wf=hv->fgh[0]; V *wfv=FAV(wf); A hg=wfv->fgh[1]; V *hgv=FAV(hg);  // w is <@g;.k  find g
+      if((I)(((hgv->id^CBSLASH)-1)|((hgv->id^CBSDOT)-1))<0) {  // g is gf\ or gf\.
+       A hgf=hgv->fgh[0]; V *hgfv=FAV(hgf);  // find gf
+       if(hgfv->id==CSLASH){  // gf is gff/  .  We will analyze gff later
+        f1=jtrazecut1; f2=jtrazecut2; flag&=~(VJTFLGOK1|VJTFLGOK2);
+       }
       }
      }
     }
-   }
-  } break;
- }
-
- D cct=0.0;  // cct to use, 0='use default'
-#if C_CRC32C && SY_64
- if(unlikely(fi==CLEFT)){
-  I d=gv->id; d=d==CFIT&&gv->localuse.lu1.cct==1.0?FAV(gv->fgh[0])->id:d;  // middle -. of [-.-. .  We implement as if !.0 given, so we allow the user to give that
-  I c=hv->id; I e=c; if(unlikely(e==CFIT)){cct=hv->localuse.lu1.cct; e=FAV(hv->fgh[0])->id;}  // comparison op, possibly from u!.f
-  if(BOTHEQ8(d,e,CLESS,CLESS)){  // ([ -. -.)  and ([ -. -.!.f) - the middle -. can also be !.0.  It is implemented as !.0
-   f2=jtintersect;  // treat the compound as a primitive of its own
-   flag|=(7+(((IINTER-II0EPS)&0xf)<<3));  // flag it like -.
-   // if tolerance given on second -., it is now in cct
+   } break;
   }
+
+#if C_CRC32C && SY_64
+  if(unlikely(fi==CLEFT)){
+   I d=gv->id; d=d==CFIT&&gv->localuse.lu1.cct==1.0?FAV(gv->fgh[0])->id:d;  // middle -. of [-.-. .  We implement as if !.0 given, so we allow the user to give that
+   I c=hv->id; I e=c; if(unlikely(e==CFIT)){cct=hv->localuse.lu1.cct; e=FAV(hv->fgh[0])->id;}  // comparison op, possibly from u!.f
+   if(BOTHEQ8(d,e,CLESS,CLESS)){  // ([ -. -.)  and ([ -. -.!.f) - the middle -. can also be !.0.  It is implemented as !.0
+    f2=jtintersect;  // treat the compound as a primitive of its own
+    flag|=(7+(((IINTER-II0EPS)&0xf)<<3));  // flag it like -.
+    // if tolerance given on second -., it is now in cct
+   }
  }
 #endif
 
- // comparison combinations II0EPS-IIFBEPS.  If the comparison is e. these go through indexofsub, but first the ranks have to be tested in compsc
- if(0<=m){  // comparison combiner has been found.  Is there a comparison?
-  // m has information about the comparison combiner.  See if there is a comparison
-  V *cv=(m&=7)>=4?hv:fv;  // cv point to comp in comp i. 0:  or [: +/ comp
-  I d=cv->id; I e=d; e=e==CFIT&&(cct=cv->localuse.lu1.cct,1)?FAV(cv->fgh[0])->id:e;  // comparison op, possibly from u!.0
-  if(BETWEENC(e,CEQ,CEPS)){
-   // valid comparison combination.  m is the combiner, e is the comparison
-   f2=atcomp;  // valid comparison type: switch to it
-   flag+=(e-CEQ)+8*m; flag &=~(VJTFLGOK1|VJTFLGOK2);  // set comp type mmmeee; entry point does not allow jt flags
+  // comparison combinations II0EPS-IIFBEPS.  If the comparison is e. these go through indexofsub, but first the ranks have to be tested in compsc
+  if(0<=m){  // comparison combiner has been found.  Is there a comparison?
+   // m has information about the comparison combiner.  See if there is a comparison
+   V *cv=(m&=7)>=4?hv:fv;  // cv point to comp in comp i. 0:  or [: +/ comp
+   I d=cv->id; I e=d; e=e==CFIT&&(cct=cv->localuse.lu1.cct,1)?FAV(cv->fgh[0])->id:e;  // comparison op, possibly from u!.0
+   if(BETWEENC(e,CEQ,CEPS)){
+    // valid comparison combination.  m is the combiner, e is the comparison
+    f2=atcomp;  // valid comparison type: switch to it
+    flag+=(e-CEQ)+8*m; flag &=~(VJTFLGOK1|VJTFLGOK2);  // set comp type mmmeee; entry point does not allow jt flags
+   }
   }
- }
 
- // the stored form of a capped fork shifts gh to the place of fg and leaves h==0.  This allows the code for
- // [: g h to be the same as f@:g
- if(fi==CCAP){f=g; g=h; h=0;}  // dehydrate capped fork
- // If this fork is not a special form, set the flags to indicate whether the f verb does not use an
- // argument.  In that case h can inplace the unused argument.
- if(f1==jtfolk1 && f2==jtfolk2) flag |= atoplr(f);
+  // the stored form of a capped fork shifts gh to the place of fg and leaves h==0.  This allows the code for
+  // [: g h to be the same as f@:g
+  if(fi==CCAP){f=g; g=h; h=0;}  // dehydrate capped fork
+  // If this fork is not a special form, set the flags to indicate whether the f verb does not use an
+  // argument.  In that case h can inplace the unused argument.
+  fline=(CTTZI(atoplr(f)|0x80)+1)&7;  // codes are none,[,],@[,@],noun
+ }
+ hcol=(CTTZI(atoplr(h)|0x80)+1)&7;
+
+ // obsolete if(f1==jtfolk1 && f2==jtfolk2) flag |= atoplr(f);
  A z=fdef(flag2,CFORK,VERB, f1,f2, f,g,h, flag, RMAX,RMAX,RMAX);
- RZ(z); FAV(z)->localuse.lu1.cct=cct; R z;
+ RZ(z);
+ 
+ // set localuse: for intersect or comparison combination, cct; for echt fork, the h routine to call
+ if(!f2){
+  // if using the default handler, set the entry point
+  FAV(z)->valencefns[1]=fork2tbl[fline][hcol];
+  FAV(z)->localuse.lu1.fork2hfn=hcol<=2?hv->valencefns[1]:FAV(hv->fgh[0])->valencefns[0];
+ }else{FAV(z)->localuse.lu1.cct=cct;
+ }
+ if(!f1){
+  fline=(0x200110>>(fline<<2))&3;  // 0/3/4->0,  1/2->1, 5->2
+  hcol=(0b00110>>hcol)&1;  // / 0/3/4->0,  1/2->1
+  FAV(z)->valencefns[0]=fork1tbl[fline][hcol];  // scaf
+ }
+ R z;
 }
 
 // Handlers for to  handle w (aa), w (vc), w (cv)

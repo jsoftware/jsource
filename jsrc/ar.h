@@ -35,7 +35,7 @@
 #define REDUCEPFXIDEM2PRIM256(f,Tz,Tx,pfx,vecfn,prim,identity)  \
  AHDRR(f,Tz,Tx){I i;                              \
   if(d==1){redprim256rk1(prim,identity)}  \
-  else{redprim256rk2(prim,identity,label)} \
+  else{redprim256rk2(prim,identity)} \
  R EVOK; \
 }
 #else

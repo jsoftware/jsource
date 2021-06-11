@@ -106,7 +106,7 @@ F1(jttobase64){
  // past the valid allocation.  We don't worry about load alignment
  for(;n3;--n3){
   I bytes=*(I*)wv;   // read 3 bytes
-  // extract each 6 bits, look it up, shift into result register.  Remember it's bit-endian and we are little-endian
+  // extract each 6 bits, look it up, shift into result register.  Remember it's big-endian and we are little-endian
   // the 3 bytes are characters AAAAABB BBBBCCCC CCDDDDDD in bits
   //                            7     0 15     8 23    16
   // We do byte D first, then C B A, and shift each into the bottom of the result which becomes ABCD, 4 result bytes

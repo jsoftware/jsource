@@ -868,7 +868,9 @@ typedef struct {
   I4 srank[4];   // for RANK conj, the signed ranks - extends the union in 32-bit
   // the rest do not require both cachelines in 64-bit
   struct {
-   I filler;  // pad to cacheline
+   union {
+    I filler;  // pad to cacheline
+   } lu0;
    // end of first cacheline, which is not used much during execution
    union {  // 8 bytes in the second (main) cacheline
     D cct;  // for comparison tolerance, FIT conj  =!.n OR comparison combination (i.&1@:(e.[!.n])) OR [e. i. ([-.-.)]&n OR m&i[.:] the CCT, 0 for default (never in an actual prehash).  For 32-bit, this extends the union, but that's OK since it doesn't add a cacheline.
@@ -882,6 +884,7 @@ typedef struct {
     A wvb;  // for u&.[:]v, the verb whose inverse is needed
     I linkvb;  // for dyads ; (,<) ,&[:]<  indicates which function
     LX cachedref;  //  for namerefs ('name'~), 0 if non-cachable, neg if cachable but not yet cached, positive if cached
+    AF fork2hfn;   // for dyad fork that is NOT a comparison combination or jtintersect, the function to call to process h (might be in h@][)
    } lu1;  // this is the high-use stuff in the second cacheline
   };
  } localuse;  // always 16 bytes, 4 I4s
@@ -970,7 +973,7 @@ typedef struct {
 #define VF2BOXATOP2X      2   // This verb is one of  <@f   <@:f   f&.>  f&.:>
 #define VF2BOXATOP2     ((I)(((I)1)<<VF2BOXATOP2X))
 // next flag must be same as JTWILLBEOPENED
-#define VF2WILLOPEN1X      4   // This verb will open y as its first act.  Monad case only
+#define VF2WILLOPEN1X      4   // This verb will open y as its first act.  Monad case only.  This becomes the WILLBEOPENED flag in jt
 #define VF2WILLOPEN1       ((I)(((I)1)<<VF2WILLOPEN1X))
 // must leave a gap for WILLBEOPENED in result.h
 // 6 free

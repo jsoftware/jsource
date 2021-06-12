@@ -18,31 +18,29 @@
 
 // opt is a bitmask of variants
 // bit0=h is ][
-// bit4=f is ][ bit5=NVV
-#define FOLK1 {PUSHZOMB; ARGCHK1D(w) A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW));  \
-/* If any result equals protw, it must not be inplaced: if original w is inplaceable, protw will not match anything */ \
-/* the call to h is not inplaceable, but it may allow WILLOPEN and USESITEMCOUNT */ \
-A hx; RZ(hx=(h1)((J)(intptr_t)(((I)jt) + (REPSGN(SGNIF(FAV(hs)->flag,VJTFLGOK1X)) & (FAV(gs)->flag2>>(VF2WILLOPEN2WX-VF2WILLOPEN1X)) & VF2WILLOPEN1+VF2USESITEMCOUNT1)),w,hs)); \
-ARGCHK1D(hx) \
-/* the call to f is inplaceable if the caller allowed inplacing, and f is inplaceable, and the hx is NOT the same as y.  Here only the LSB of jtinplace is used */ \
-A fx; RZ(fx=(f1)((J)(intptr_t)(((I)jt) + (REPSGN(SGNIF(FAV(fs)->flag,VJTFLGOK1X)) & (((I)jtinplace&(I )(hx!=w)) + ((FAV(gs)->flag2>>(VF2WILLOPEN2AX-VF2WILLOPEN1X)) & VF2WILLOPEN1+VF2USESITEMCOUNT1)))),w,fs)); \
-ARGCHK2D(fx,hx) \
-/* The call to g is inplaceable if g allows it, UNLESS fx or hx is the same as disallowed y.  Pass in WILLOPEN from the input */ \
-POPZOMB; RZ(z=(g2)((J)(intptr_t)((((I)jtinplace&(~(JTINPLACEA+JTINPLACEW)))|((I )(fx!=protw)*JTINPLACEA+(I )(hx!=protw)*JTINPLACEW))&(REPSGN(SGNIF(FAV(gs)->flag,VJTFLGOK2X))|~JTFLAGMSK)),fx,hx,gs));}
-
-
-
+// bit4=f is ][ bit5=NVV bit6=f not executed
+// bit8 is 1 when h is not given (@: &: hook)
+// hook is 110
+// @: &: is 140
 #define FORK1(name,opt) \
 DF1(name){F1PREFIP;PROLOG(0000); PUSHZOMB; ARGCHK1D(w) \
-AF ghfn=FAV(FAV(self)->fgh[2])->valencefns[0];  \
-A fs, gs=FAV(self)->fgh[1]; \
-AF ffn; if(!(opt&0x20)){fs=FAV(self)->fgh[0]; ffn=FAV(fs)->valencefns[0];} \
+AF ghfn, ffn; A fs, gs, hs; \
+if(opt&0x100){ \
+ /* h is omitted.  Fetch from g and f, and ignore @][ for hs purposes.  hfn is dyad for @: only */ \
+ hs=FAV(self)->fgh[1]; ghfn=FAV(hs)->valencefns[0]; \
+ gs=FAV(self)->fgh[0]; \
+}else{ \
+ /* h is given, fetch for fork.  hfn is in localuse */ \
+ ghfn=FAV(FAV(self)->fgh[2])->valencefns[0];  \
+ hs=FAV(self)->fgh[2]; \
+ gs=FAV(self)->fgh[1]; \
+ if(!(opt&0x20)){fs=FAV(self)->fgh[0]; ffn=FAV(fs)->valencefns[0];} \
+} \
 w = PTROP(w,+,(I)jtinplace&JTINPLACEW); \
 /* the call to h is not inplaceable, but it may allow WILLOPEN and USESITEMCOUNT.  Inplace h if f is x@], but not if a==w  Actually we turn off all flags here if a==w, for comp ease */ \
 A hx; \
 if(opt&0x1){hx=w; \
 }else{J jtf; \
- A hs=FAV(self)->fgh[2]; \
  jtf=JPTROP(jt,+,REPSGN(SGNIF(FAV(hs)->flag,VJTFLGOK1X)) & (((I)w&(opt>>5)&1) + ((FAV(gs)->flag2>>(VF2WILLOPEN2WX-VF2WILLOPEN1X)) & VF2WILLOPEN1+VF2USESITEMCOUNT1))); \
  RZ(hx=(ghfn)(jtf,PTR(w),hs)); \
  hx=PTROP(hx,+,(I)(hx!=w)*JTINPLACEW);  /* result is inplaceable unless it equals noninplaceable input */ \
@@ -50,44 +48,62 @@ if(opt&0x1){hx=w; \
 } \
 /* the call to f is inplaceable if the caller allowed inplacing, and f is inplaceable; but not for an arg equal to hx (which is in use for g).  Both flags in jtinplace are used */ \
 A fx; \
-ghfn=FAV(gs)->valencefns[1];  /* this will be slow but it saves a register */ \
-if(opt&0x20){fx=FAV(self)->fgh[0];  /* NVV - never inplaceable */ \
-}else if(opt&0x10){fx=PTR(w); hx=PTROP(hx,+,((I)w&JTINPLACEW)<<JTINPLACEAX); \
-}else{J jtf; \
- jtf=JPTROP(jt,+,REPSGN(SGNIF(FAV(fs)->flag,VJTFLGOK1X)) & (((I)w&(JTINPLACEW*(I)PTRSNE(hx,w))) + ((FAV(gs)->flag2>>(VF2WILLOPEN2AX-VF2WILLOPEN1X)) & VF2WILLOPEN1+VF2USESITEMCOUNT1))); \
- RZ(fx=(ffn)(jtf,PTR(w),fs)); \
- hx=PTROP(hx,+,(I)(fx!=w)*JTINPLACEA);  /* result is inplaceable unless it equals noninplaceable input */ \
- ARGCHK2D(fx,hx) \
+if(opt&0x40)ghfn=FAV(gs)->valencefns[0];  /* monad g for @:, where f is suppressed */  \
+else{ \
+ ghfn=FAV(gs)->valencefns[1];  /* this will be slow but it saves a register */ \
+ if(opt&0x20){fx=FAV(self)->fgh[0];  /* NVV - never inplaceable */ \
+ }else if(opt&0x10){fx=PTR(w); hx=PTROP(hx,+,((I)w&JTINPLACEW)<<JTINPLACEAX); \
+ }else{J jtf; \
+  jtf=JPTROP(jt,+,REPSGN(SGNIF(FAV(fs)->flag,VJTFLGOK1X)) & (((I)w&(JTINPLACEW*(I)PTRSNE(hx,w))) + ((FAV(gs)->flag2>>(VF2WILLOPEN2AX-VF2WILLOPEN1X)) & VF2WILLOPEN1+VF2USESITEMCOUNT1))); \
+  RZ(fx=(ffn)(jtf,PTR(w),fs)); \
+  hx=PTROP(hx,+,(I)(fx!=w)*JTINPLACEA);  /* result is inplaceable unless it equals noninplaceable input */ \
+  ARGCHK2D(fx,hx) \
+ } \
 } \
 /* The call to g is inplaceable if g allows it, UNLESS fx or hx is the same as disallowed y (passed in the hx value here).  Pass in WILLOPEN from the input */ \
 /* If any result equals protw/prota, it must not be inplaced: if original w/a is inplaceable, protw/prota will not match anything */ \
 /* pass flags from the next prim from the input flags */ \
 POPZOMB; A z; \
-RZ(z=(ghfn)(JPTROP(JPTROP(JPTROP(jtinplace,&,(~(JTINPLACEA+JTINPLACEW))),|,((I)hx&(JTINPLACEW|JTINPLACEA))),&,(REPSGN(SGNIF(FAV(gs)->flag,VJTFLGOK2X))|~JTFLAGMSK)),fx,PTR(hx),gs)); \
+if(opt&0x40){ \
+ RZ(z=(ghfn)(JPTROP(JPTROP(JPTROP(jtinplace,&,(~(JTINPLACEW))),|,((I)hx&(JTINPLACEW))),&,(REPSGN(SGNIF(FAV(gs)->flag,VJTFLGOK2X))|~JTFLAGMSK)),PTR(hx),gs)); \
+}else{ \
+ RZ(z=(ghfn)(JPTROP(JPTROP(JPTROP(jtinplace,&,(~(JTINPLACEA+JTINPLACEW))),|,((I)hx&(JTINPLACEW|JTINPLACEA))),&,(REPSGN(SGNIF(FAV(gs)->flag,VJTFLGOK2X))|~JTFLAGMSK)),fx,PTR(hx),gs)); \
+} \
 EPILOG(z); \
 }
 
 
 // opt is a bitmask of variants
 // bit0=h is [ bit1=h is ] bit2=h is @[ bit3=h is @]
-// bit4=f is [ bit5=f is ] bit6=f is @[ bit=f is @]  (bits 4-7=0011 for NVV)
-// bit8 is 1 for hook, where h is treated as h@] except for hs purposes
+// bit4=f is [ bit5=f is ] bit6=f is @[ bit7=f is @]  (bits 4-7=0011 for NVV, 1100 when f is absent)
+// bit8 is 1 when h is not given (@: &: hook)
+// hook is 118
+// @: is 1c0
+// &: is 148
 #define FORK2(name,opt) \
 DF2(name){F2PREFIP;PROLOG(0000); PUSHZOMB; ARGCHK2D(a,w) \
-AF ghfn=FAV(self)->localuse.lu1.fork2hfn; \
-A fs, gs=FAV(self)->fgh[1]; \
-AF ffn; if((opt&0x30)!=0x30){fs=FAV(self)->fgh[0]; if(opt&0xc0){fs=FAV(fs)->fgh[0]; ffn=FAV(fs)->valencefns[0];}else{ffn=FAV(fs)->valencefns[1];}} \
+AF ghfn, ffn; A fs, gs, hs; \
+if(opt&0x100){ \
+ /* h is omitted.  Fetch from g and f, and ignore @][ for hs purposes.  hfn is dyad for @: only */ \
+ fs=hs=FAV(self)->fgh[1]; ghfn=FAV(hs)->valencefns[!(opt&0x8)]; \
+ gs=FAV(self)->fgh[0]; \
+}else{ \
+ /* h is given, fetch for fork.  hfn is in localuse */ \
+ ghfn=FAV(self)->localuse.lu1.fork2hfn; \
+ if((opt&0x30)!=0x30){fs=FAV(self)->fgh[0]; if(opt&0xc0){fs=FAV(fs)->fgh[0]; ffn=FAV(fs)->valencefns[0];}else{ffn=FAV(fs)->valencefns[1];}} \
+ hs=FAV(self)->fgh[2]; if(opt&0xc)hs=FAV(hs)->fgh[0]; /* honor h@][ for hs purposes */ \
+ gs=FAV(self)->fgh[1]; \
+} \
 w = PTROP(w,+,(I)jtinplace&JTINPLACEW); a = PTROP(a,+,(I)jtinplace&JTINPLACEA); \
 /* the call to h is not inplaceable, but it may allow WILLOPEN and USESITEMCOUNT.  Inplace h if f is x@], but not if a==w  Actually we turn off all flags here if a==w, for comp ease */ \
 A hx; \
 if(opt&0x2){hx=w; \
 }else if(opt&0x1){hx=PTROP(a,-,((I)a&JTINPLACEA)>>JTINPLACEAX); \
 }else{J jtf; \
- A hs=FAV(self)->fgh[2]; \
  if(opt&0xc){ \
   /* Don't allow inplacing if a=w, because f will need the value for sure then.  Exception: NVV, where f needs nothing */ \
   jtf=JPTROP(jt,+,(-((FAV(hs)->flag>>VJTFLGOK1X)&((I)(PTRSNE(a,w)|((opt&0x30)==0x30))))) & (((((I)(opt&0x4?a:w))&(((opt>>4)|(opt>>6))&~(opt>>2)))!=0) + ((FAV(gs)->flag2>>(VF2WILLOPEN2WX-VF2WILLOPEN1X)) & VF2WILLOPEN1+VF2USESITEMCOUNT1))); /* scaf f@][ flag must come from f */\
-  RZ(hx=(ghfn)(jtf,PTR(opt&0x4?a:w),opt&0x100?hs:FAV(hs)->fgh[0])); \
+  RZ(hx=(ghfn)(jtf,PTR(opt&0x4?a:w),hs)); \
   hx=PTROP(hx,+,(I)(hx!=(opt&0x4?a:w))*JTINPLACEW);  /* result is inplaceable unless it equals noninplaceable input */ \
  }else{ \
   jtf=JPTROP(jt,+,(-((FAV(hs)->flag>>VJTFLGOK2X)&((I)(PTRSNE(a,w)|((opt&0xc0)==0xc0))))) & ((((I)a|(I)w)&(((opt>>4)|(opt>>6))&3)) + ((FAV(gs)->flag2>>(VF2WILLOPEN2WX-VF2WILLOPEN1X)) & VF2WILLOPEN1+VF2USESITEMCOUNT1))); \
@@ -98,27 +114,34 @@ if(opt&0x2){hx=w; \
 } \
 /* the call to f is inplaceable if the caller allowed inplacing, and f is inplaceable; but not for an arg equal to hx (which is in use for g).  Both flags in jtinplace are used */ \
 A fx; \
-ghfn=FAV(gs)->valencefns[1];  /* this will be slow but it saves a register */ \
-if((opt&0x30)==0x30){fx=FAV(self)->fgh[0];  /* NVV - never inplaceable */ \
-}else if(opt&0x20){fx=PTR(w); hx=PTROP(hx,+,((I)w&JTINPLACEW)<<JTINPLACEAX); \
-}else if(opt&0x10){fx=PTR(a); hx=PTROP(hx,+,((I)a&JTINPLACEA)); \
-}else{J jtf; \
- if(opt&0xc0){ \
-  jtf=JPTROP(jt,+,REPSGN(SGNIF(FAV(fs)->flag,VJTFLGOK1X)) & ((opt&0x40?((I)a>>JTINPLACEAX)&(I)PTRSNE(hx,a):((I)w>>JTINPLACEWX)&(I)PTRSNE(hx,w)) + ((FAV(gs)->flag2>>(VF2WILLOPEN2AX-VF2WILLOPEN1X)) & VF2WILLOPEN1+VF2USESITEMCOUNT1))); \
-  RZ(fx=(ffn)(jtf,PTR(opt&0x40?a:w),fs)); \
-  hx=PTROP(hx,+,((I)(fx!=(opt&0x40?a:w)))*JTINPLACEA);  /* result is inplaceable unless it equals noninplaceable input */ \
- }else{ \
-  jtf=JPTROP(jt,+,REPSGN(SGNIF(FAV(fs)->flag,VJTFLGOK2X)) & ((((I)a|(I)w)&(JTINPLACEA*(I)PTRSNE(hx,a)+JTINPLACEW*(I)PTRSNE(hx,w))) + ((FAV(gs)->flag2>>(VF2WILLOPEN2AX-VF2WILLOPEN1X)) & VF2WILLOPEN1+VF2USESITEMCOUNT1))); \
-  RZ(fx=(ffn)(jtf,PTR(a),PTR(w),fs)); \
-  hx=PTROP(hx,+,((I)((fx!=w)&(fx!=a)))*JTINPLACEA);  /* result is inplaceable unless it equals noninplaceable input */ \
+if((opt&0xc0)==0xc0)ghfn=FAV(gs)->valencefns[0];  /* monad g for @:, where f is suppressed */  \
+else{ \
+ ghfn=FAV(gs)->valencefns[1];  /* this will be slow but it saves a register */ \
+ if((opt&0x30)==0x30){fx=FAV(self)->fgh[0];  /* NVV - never inplaceable */ \
+ }else if(opt&0x20){fx=PTR(w); hx=PTROP(hx,+,((I)w&JTINPLACEW)<<JTINPLACEAX); \
+ }else if(opt&0x10){fx=PTR(a); hx=PTROP(hx,+,((I)a&JTINPLACEA)); \
+ }else{J jtf; \
+  if(opt&0xc0){ \
+   jtf=JPTROP(jt,+,REPSGN(SGNIF(FAV(fs)->flag,VJTFLGOK1X)) & ((opt&0x40?((I)a>>JTINPLACEAX)&(I)PTRSNE(hx,a):((I)w>>JTINPLACEWX)&(I)PTRSNE(hx,w)) + ((FAV(gs)->flag2>>(VF2WILLOPEN2AX-VF2WILLOPEN1X)) & VF2WILLOPEN1+VF2USESITEMCOUNT1))); \
+   RZ(fx=(ffn)(jtf,PTR(opt&0x40?a:w),fs)); \
+   hx=PTROP(hx,+,((I)(fx!=(opt&0x40?a:w)))*JTINPLACEA);  /* result is inplaceable unless it equals noninplaceable input */ \
+  }else{ \
+   jtf=JPTROP(jt,+,REPSGN(SGNIF(FAV(fs)->flag,VJTFLGOK2X)) & ((((I)a|(I)w)&(JTINPLACEA*(I)PTRSNE(hx,a)+JTINPLACEW*(I)PTRSNE(hx,w))) + ((FAV(gs)->flag2>>(VF2WILLOPEN2AX-VF2WILLOPEN1X)) & VF2WILLOPEN1+VF2USESITEMCOUNT1))); \
+   RZ(fx=(ffn)(jtf,PTR(a),PTR(w),fs)); \
+   hx=PTROP(hx,+,((I)((fx!=w)&(fx!=a)))*JTINPLACEA);  /* result is inplaceable unless it equals noninplaceable input */ \
+  } \
+  ARGCHK2D(fx,hx) \
  } \
- ARGCHK2D(fx,hx) \
 } \
 /* The call to g is inplaceable if g allows it, UNLESS fx or hx is the same as disallowed y (passed in the hx value here).  Pass in WILLOPEN from the input */ \
 /* If any result equals protw/prota, it must not be inplaced: if original w/a is inplaceable, protw/prota will not match anything */ \
 /* pass flags from the next prim from the input flags */ \
 POPZOMB; A z; \
-RZ(z=(ghfn)(JPTROP(JPTROP(JPTROP(jtinplace,&,(~(JTINPLACEA+JTINPLACEW))),|,((I)hx&(JTINPLACEW|JTINPLACEA))),&,(REPSGN(SGNIF(FAV(gs)->flag,VJTFLGOK2X))|~JTFLAGMSK)),fx,PTR(hx),gs)); \
+if((opt&0xc0)==0xc0){ \
+ RZ(z=(ghfn)(JPTROP(JPTROP(JPTROP(jtinplace,&,(~(JTINPLACEW))),|,((I)hx&(JTINPLACEW))),&,(REPSGN(SGNIF(FAV(gs)->flag,VJTFLGOK2X))|~JTFLAGMSK)),PTR(hx),gs)); \
+}else{ \
+ RZ(z=(ghfn)(JPTROP(JPTROP(JPTROP(jtinplace,&,(~(JTINPLACEA+JTINPLACEW))),|,((I)hx&(JTINPLACEW|JTINPLACEA))),&,(REPSGN(SGNIF(FAV(gs)->flag,VJTFLGOK2X))|~JTFLAGMSK)),fx,PTR(hx),gs)); \
+} \
 EPILOG(z); \
 }
 
@@ -350,6 +373,8 @@ static DF1(taa){TDECL; A z,t; df1(t,w,fs); ASSERT(!t||AT(t)&NOUN+VERB,EVSYNTAX);
 static DF1(tvc){TDECL; A z; R df2(z,fs,w,gs);}  /* also nc */
 static DF1(tcv){TDECL; A z; R df2(z,w,gs,fs);}  /* also cn */
 
+
+#if 0 // obsolete
 DF1(jthook1cell){F1PREFIP;DECLFG;A z;PROLOG(0111); 
 PUSHZOMB; A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW));
 A gx; RZ(gx=(g1)((J)(intptr_t)(((I)jt + ((FAV(fs)->flag2>>(VF2WILLOPEN2WX-VF2WILLOPEN1X)) & (VF2WILLOPEN1+VF2USESITEMCOUNT1) & REPSGN(SGNIF(FAV(gs)->flag,VJTFLGOK1X))))),w,gs));  /* cannot inplace g.  jtinplace is always set */
@@ -361,7 +386,6 @@ RZ(z=(f2)(jtinplace,w,gx,fs));
 EPILOG(z);
 }
 static DF1(jthook1){PREF1(jthook1cell); R jthook1cell(jt,w,self);}
-
 DF2(jthook2cell){F2PREFIP;DECLFG;A z;PROLOG(0112);
 PUSHZOMB; A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)(intptr_t)((I)a+((I)jtinplace&JTINPLACEA));
 A gx; RZ(gx=(g1)((J)(intptr_t)((I)jt + ((((I)jtinplace&((a!=w)<<JTINPLACEWX)) + ((FAV(fs)->flag2>>(VF2WILLOPEN2WX-VF2WILLOPEN1X)) & JTWILLBEOPENED+JTCOUNTITEMS)) & REPSGN(SGNIF(FAV(gs)->flag,VJTFLGOK1X)))),w,gs));  /* inplace g unless a=w.  jtinplace is always set */
@@ -372,6 +396,10 @@ RZ(z=(f2)(jtinplace,a,gx,fs));
 EPILOG(z);
 } 
 static DF2(jthook2){PREF2(jthook2cell); R jthook2cell(jt,a,w,self);}
+#else
+FORK2(jthook2cell,0x118)
+FORK1(jthook1cell,0x110)
+#endif
 
 static DF1(jthkiota){DECLFG;A a,e;I n;P*p;
  ARGCHK1(w);
@@ -393,7 +421,7 @@ static DF1(jthkindexofmaxmin){
  ARGCHK2(w,self);
  // The code for ordinary search and min/max is very fast.  There's no value in trying to improve it.  The only
  // thing we have to add is setting intolerant comparison on the search, since we know we will be looking for something that is en exact match
- PUSHCCT(1.0) A z=hook1(w,self); POPCCT RETF(z);
+ PUSHCCT(1.0) A z=jthook1cell(jt,w,self); POPCCT RETF(z);
 }    /* special code for (i.<./) (i.>./) (i:<./) (i:>./) */
 
 // (compare L.) dyadic

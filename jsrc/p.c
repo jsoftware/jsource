@@ -114,7 +114,7 @@ static const UI4 ptcol[11] = {  // there is a gap at SYMB.  CONW is used to hold
 #define PTISM(s)  ((s).pt==PTMARK)
 #define PTOKEND(t2,t3) ((((~(t2).pt)&0x4000)+((t3).pt^PTMARK))==0)  // t2 is CAVN and t3 is MARK
 #define PTISASGN(s)  ((s).pt&0x800000)
-#define PTISASGNNAME(s)  (!((s).pt&0x1))
+#define PTISNOTASGNNAME(s)  (((s).pt&0x1))
 #define PTISRPAR(s)  ((s).pt<0x100)
 // converting type field to pt, store in z
 #define PTFROMTYPE(z,t) {I pt=CTTZ(t); pt-=(LASTNOUNX+1); pt|=REPSGN(pt); z=ptcol[pt+1];}
@@ -609,32 +609,32 @@ endname: ;
       // Since we have half a dozen or so cycles to fill, push the $: stack and close up the execution stack BEFORE we execute the verb.  If we didn't close up the stack, we
       // could avoid having the $: stack by having $: look into the execution stack to find the verb that is being executed.  But overall it is faster to pay the expense of the $:
       // stack in exchange for being able to fill the time before & after the misprediction
-      AF actionfn=FAV(fs)->valencefns[pline>>1];  // the routine we will execute.  It's going to take longer to read this than we can fill before the branch is mispredicted, usually
-      jt->sf=fs;  // set new recursion point for $:
-      // While we are waiting for the branch address, work on inplacing.  See if the primitive being executed is inplaceable
-      if((FAV(fs)->flag>>(pline>>1))&VJTFLGOK1){L *s;
-       // Inplaceable.  If it is an assignment to a known name that has a value, remember the name and the value
-       // We handle =: N V N, =: V N, =: V V N.  In the last case both Vs must be ASGSAFE.  When we set jt->asginfo.assignsym we are warranting
-       // that the next assignment will be to the name, and that the reassigned value is available for inplacing.  In the V V N case,
-       // this may be over two verbs
-       if(PTISASGNNAME(stack[0]))if(likely(PTISM(stackfs[2]))){   // assignment to name; nothing in the stack to the right of what we are about to execute; well-behaved function (doesn't change locales)
-        if(likely((AT(stack[0].a))&ASGNLOCAL)){
-         // local assignment.  To avoid subroutine call overhead, make a quick check for primary symbol
-         if(likely((SGNIF(AR(UNLXAV0(locbuckets)),ARLCLONEDX)|(NAV(queue[m-1])->symx-1))>=0)){  // if we are using primary table and there is a symbol stored there...
-          s=JT(jt,sympv)+(I)NAV(queue[m-1])->symx;  // get address of symbol in primary table.  There may be no value; that's OK
-         }else{s=jtprobeislocal(jt,queue[m-1]);}
-        }else s=jtprobeisquiet(jt,queue[m-1],UNLXAV0(locbuckets));  // global assignment, get slot address
-        // Don't remember the assignand if it may change during execution, i. e. if the verb is unsafe.  For line 1 we have to look at BOTH verbs that come after the assignment
-        s=((FAV(fs)->flag&(FAV(stack[1].a)->flag|((~pmask)<<(VASGSAFEX-1))))&VASGSAFE)?s:0;
-        // It is OK to remember the address of the symbol being assigned, because anything that might conceivably create a new symbol (and thus trigger
-        // a relocation of the symbol table) is marked as not ASGSAFE
-        jt->asginfo.assignsym=s;  // remember the symbol being assigned.  It may have no value yet, but that's OK - save the lookup
-        // to save time in the verbs (which execute more often than this parse), see if the assignment target is suitable for inplacing.  Set zombieval to point to the value if so
-        // We require flags indicate not read-only, and usecount==1 (or 2 if NJA block)
-        s=s?s:SYMVAL0; A zval=s->val; zval=zval?zval:AFLAG0; zval=AC(zval)==(((AFLAG(zval)&AFRO)-1)&(((AFLAG(zval)&AFNJA)>>1)+1))?zval:0; jt->asginfo.zombieval=zval;  // needs AFRO=1, AFNJA=2
-       }
-       jt=(J)(intptr_t)((I)jt+(pline|1));   // set bit 0, and bit 1 if dyadic
+      // Work on inplacing.  See if the primitive being executed is inplaceable
+      pline|=(FAV(fs)->flag>>(pline>>1))&VJTFLGOK1;  // insert VJTFLGOK1 flag if inplaceable
+      // If it is an inplaceable assignment to a known name that has a value, remember the name and the value
+      // We handle =: N V N, =: V N, =: V V N.  In the last case both Vs must be ASGSAFE.  When we set jt->asginfo.assignsym we are warranting
+      // that the next assignment will be to the name, and that the reassigned value is available for inplacing.  In the V V N case,
+      // this may be over two verbs
+      if((pline>>VJTFLGOK1X)>PTISNOTASGNNAME(stack[0]))if(likely(PTISM(stackfs[2]))){L *s;   // assignment to name; nothing in the stack to the right of what we are about to execute; well-behaved function (doesn't change locales)
+       if(likely((AT(stack[0].a))&ASGNLOCAL)){
+        // local assignment.  To avoid subroutine call overhead, make a quick check for primary symbol
+        if(likely((SGNIF(AR(UNLXAV0(locbuckets)),ARLCLONEDX)|(NAV(queue[m-1])->symx-1))>=0)){  // if we are using primary table and there is a symbol stored there...
+         s=JT(jt,sympv)+(I)NAV(queue[m-1])->symx;  // get address of symbol in primary table.  There may be no value; that's OK
+        }else{s=jtprobeislocal(jt,queue[m-1]);}
+       }else s=jtprobeisquiet(jt,queue[m-1],UNLXAV0(locbuckets));  // global assignment, get slot address
+       // Don't remember the assignand if it may change during execution, i. e. if the verb is unsafe.  For line 1 we have to look at BOTH verbs that come after the assignment
+// obsolete        s=((FAV(fs)->flag&(FAV(stack[1].a)->flag|((~pmask)<<(VASGSAFEX-1))))&VASGSAFE)?s:0;
+       s=((FAV(fs)->flag&(FAV(stack[1].a)->flag|((~pline)<<VASGSAFEX)))&VASGSAFE)?s:0;  // pline is 0-2; if not 1, ignore 2nd stkpos
+       // It is OK to remember the address of the symbol being assigned, because anything that might conceivably create a new symbol (and thus trigger
+       // a relocation of the symbol table) is marked as not ASGSAFE
+       jt->asginfo.assignsym=s;  // remember the symbol being assigned.  It may have no value yet, but that's OK - save the lookup
+       // to save time in the verbs (which execute more often than this parse), see if the assignment target is suitable for inplacing.  Set zombieval to point to the value if so
+       // We require flags indicate not read-only, and usecount==1 (or 2 if NJA block)
+       s=s?s:SYMVAL0; A zval=s->val; zval=zval?zval:AFLAG0; zval=AC(zval)==(((AFLAG(zval)&AFRO)-1)&(((AFLAG(zval)&AFNJA)>>1)+1))?zval:0; jt->asginfo.zombieval=zval;  // needs AFRO=1, AFNJA=2
       }
+      jt->sf=fs;  // set new recursion point for $:
+      jt=(J)(intptr_t)((I)jt+((-(pline>>VJTFLGOK1X))&((pline&3)|1)));   // set bit 0, and bit 1 if dyadic
+      pline&=3;  // remove inplaceable flag bit
       // jt has been corrupted, now holding inplacing info
       // There is no need to set the token number in the result, since it must be a noun and will never be executed
       // Close up the stack.  For lines 0&2 we don't need two writes, so they are duplicates
@@ -643,14 +643,16 @@ endname: ;
       A arg1=stack[(0x6>>pline)&3].a;   // 1st arg, monad or left dyad  2 3 1 (1 1)   0110  0 1 2 -> 2 3 1   1 11 111
       stack[pline]=stack[0];  // close up the stack  0->0(NOP)  0->1   0->2
       stack+=(pline>>1)+1;   // finish relocating stack   1 1 2 (1 2)
+      AF actionfn=FAVV(fs)->valencefns[pline>>1];  // the routine we will execute.  We have to wait till after the register pressure or the routine address will be written to memory
       // When the args return from the verb, we will check to see if any were inplaceable and unused.  But there is a problem:
       // the arg may be freed by the verb (if it is inplaceable and gets replaced by a virtual reference).  In this case we can't
       // rely on *arg[12].  But if the value is inplaceable, the one thing we CAN count on is that it has a tpop slot.  So we will save
       // the address of the tpop slot IF the arg is inplaceable now.  Then after execution we will pick up again, knowing to quit if the tpop slot
       // has been zapped.  We keep pointers for a/w rather than 1/2 for branch-prediction purposes
       // This calculation should run to completion while the expected misprediction is being processed
-      A *tpopw=AZAPLOC(arg2); tpopw=(AC(arg2)&((AFLAG(arg2)&(AFVIRTUAL|AFUNINCORPABLE))-1))<0?tpopw:ZAPLOC0;  // point to pointer to arg2 (if it is inplace) - only if dyad
-      A *tpopa=AZAPLOC(arg1); tpopa=(AC(arg1)&((AFLAG(arg1)&(AFVIRTUAL|AFUNINCORPABLE))-1))<0?tpopa:ZAPLOC0; tpopw=(pline&2)?tpopw:tpopa; // monad: w fs  dyad: a w   if monad, change to w w  
+      A *tpopw=AZAPLOC(arg2); tpopw=(A*)((I)tpopw&REPSGN(AC(arg2)&((AFLAG(arg2)&(AFVIRTUAL|AFUNINCORPABLE))-1))); tpopw=tpopw?tpopw:ZAPLOC0;  // point to pointer to arg2 (if it is inplace) - only if dyad
+      A *tpopa=AZAPLOC(arg1); tpopa=(A*)((I)tpopa&REPSGN(AC(arg1)&((AFLAG(arg1)&(AFVIRTUAL|AFUNINCORPABLE))-1))); tpopa=tpopa?tpopa:ZAPLOC0; tpopw=(pline&2)?tpopw:tpopa; // monad: w fs  dyad: a w   if monad, change to w w  
+// obsolete       A *tpopa=AZAPLOC(arg1); tpopa=(AC(arg1)&((AFLAG(arg1)&(AFVIRTUAL|AFUNINCORPABLE))-1))<0?tpopa:ZAPLOC0; tpopw=(pline&2)?tpopw:tpopa; // monad: w fs  dyad: a w   if monad, change to w w  
       y=(*actionfn)(jt,arg1,arg2,fs);
       // expect pipeline break
       jt=(J)(intptr_t)((I)jt&~JTFLAGMSK);
@@ -678,15 +680,16 @@ RECURSIVERESULTSCHECK
       // and it was abandoned on input, and it wasn't returned, it must be safe to zap it using the zaploc BEFORE the call
       {
       if(arg1=*tpopw){  // if the arg has a place on the stack, look at it to see if the block is still around
-       I c=AC(arg1); c=arg1==y?0:c;
+       I c=(UI)AC(arg1)>>(arg1==y);  // get inplaceability; set off if the arg is the result
        if((c&(-(AT(arg1)&DIRECT)|SGNIF(AFLAG(arg1),AFPRISTINEX)))<0){   // inplaceable and not return value.  Sparse blocks are never inplaceable
 // obsolete         if(!(AFLAG(arg1)&AFVIRTUAL)){  // for now, don't handle virtuals (which includes UNINCORPABLEs)
         *tpopw=0; fanapop(arg1,AFLAG(arg1));  // zap the top block; if recursive, fa the contents
 // obsolete         }else SEGFAULT;  // scaf
        }
       }
-      if(arg2=*tpopa){
-       I c=AC(arg2); c=arg2==y?0:c; c=arg1==arg2?0:c;
+      if(arg2=*tpopa){  // if arg1==arg2 this will never load a value requiring action
+       I c=(UI)AC(arg2)>>(arg2==y);
+// obsolete  c=arg1==arg2?0:c;
        if((c&(-(AT(arg2)&DIRECT)|SGNIF(AFLAG(arg2),AFPRISTINEX)))<0){  // inplaceable, not return value, not same as arg1, dyad.  Safe to check AC even if freed as arg1
 // obsolete         if(!(AFLAG(arg2)&AFVIRTUAL)){  // for now, don't handle virtuals
 // obsolete if(arg1==arg2)SEGFAULT;

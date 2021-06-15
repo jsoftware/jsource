@@ -680,17 +680,18 @@ RECURSIVERESULTSCHECK
       if(arg1=*tpopw){  // if the arg has a place on the stack, look at it to see if the block is still around
        I c=AC(arg1); c=arg1==y?0:c;
        if((c&(-(AT(arg1)&DIRECT)|SGNIF(AFLAG(arg1),AFPRISTINEX)))<0){   // inplaceable and not return value.  Sparse blocks are never inplaceable
-        if(!(AFLAG(arg1)&AFVIRTUAL)){  // for now, don't handle virtuals (which includes UNINCORPABLEs)
-         *tpopw=0; fanapop(arg1,AFLAG(arg1));  // zap the top block; if recursive, fa the contents
-        }
+// obsolete         if(!(AFLAG(arg1)&AFVIRTUAL)){  // for now, don't handle virtuals (which includes UNINCORPABLEs)
+        *tpopw=0; fanapop(arg1,AFLAG(arg1));  // zap the top block; if recursive, fa the contents
+// obsolete         }else SEGFAULT;  // scaf
        }
       }
       if(arg2=*tpopa){
        I c=AC(arg2); c=arg2==y?0:c; c=arg1==arg2?0:c;
        if((c&(-(AT(arg2)&DIRECT)|SGNIF(AFLAG(arg2),AFPRISTINEX)))<0){  // inplaceable, not return value, not same as arg1, dyad.  Safe to check AC even if freed as arg1
-        if(!(AFLAG(arg2)&AFVIRTUAL)){  // for now, don't handle virtuals
-         *tpopa=0; fanapop(arg2,AFLAG(arg2));
-        }
+// obsolete         if(!(AFLAG(arg2)&AFVIRTUAL)){  // for now, don't handle virtuals
+// obsolete if(arg1==arg2)SEGFAULT;
+        *tpopa=0; fanapop(arg2,AFLAG(arg2));
+// obsolete         }else SEGFAULT;  // scaf
        }
       }
 #if MEMAUDIT&0x2

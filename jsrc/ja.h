@@ -415,6 +415,7 @@
 #define fnegate(x)                  jtfnegate(jt,(x))
 #define fnum(x)                     jtfnum(jt,(x))
 #define folk(x,y,z)                 jtfolk(jt,(x),(y),(z))
+#define folknohfn(x,y,z)            jtfolk((J)((I)jt|JTFOLKNOHFN),(x),(y),(z))
 #define fong(x,y)                   jtfong(jt,(x),(y))
 #define foreign(x,y)                jtforeign(jt,(x),(y))
 #define foreignextra(x,y)           jtforeignextra(jt,(x),(y))

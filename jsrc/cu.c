@@ -57,8 +57,9 @@ A jtevery(J jt, A w, A fs){A * RESTRICT wv,x,z,* RESTRICT zv;
  while(1){
   // If the input was pristine inplaceable and not virtual (i. e. originally unboxed), flag the contents as inplaceable UNLESS they are PERMANENT
   // If the input is inplaceable, there is no more use for it after this verb.  If it was pristine, every block in it is DIRECT and was either permanent or inplaceable when it was added; so if it's
-  // not PERMANENT it is OK to change the usecount to inplaceable.  We must remove inplaceability on the usecount after execution, in case the input block is recursive and the contents now show a count of 2
-  // We may create a block with usecount 8..2,  That's OK, because it cannot be fa'd unless it is ra'd first, and the ra will wipe out the inplaceability.  We do need to keep the usecount accurate, though.
+  // not PERMANENT it is OK to change the usecount to inplaceable.  We must remove inplaceability on the usecount after execution, in case the input block is recursive and the contents now show a count of 2 (one
+  // of which is the tpop).  Then we create a block with usecount 8..2: That's OK, but it must not be fa'd unless it is ra'd first, so that the ra will wipe out the inplaceability; if it is zapped or fa'd without
+  // ra (as when FORK frees an unused block), the LSB must be inspected.  We do need to keep the usecount accurate after the return, though.
   I wcbefore=AC(virtw); // get (always non-inplaceable) usecount before the call
   if(((AC(virtw)-(flags&ACPERMANENT))&ACINPLACE)<0){  // AC(virtw) always has sign 0
    ACIPYES(virtw);  // make the block inplaceable
@@ -81,9 +82,12 @@ A jtevery(J jt, A w, A fs){A * RESTRICT wv,x,z,* RESTRICT zv;
   }
 
   // Now that we have looked at the original usecount of x (in case it is =virtw), remove inplacing from virtw to restore its proper status
-  ACIPNO(virtw);
-  // if x=virtw, or the usecount of virtw changed, virtw has escaped and w must be marked as not PRISTINE
-  AFLAGAND(w,~(((wcbefore!=AC(virtw))|(x==virtw))<<AFPRISTINEX))
+  // BUT: virtw may have been zapped & freed: detect that and don't touch virtw then
+  if(likely(flags&BOX))if(likely((I)*wv!=0)){  // virtw was not destroyed
+   ACIPNO(virtw);
+   // if x=virtw, or the usecount of virtw changed, virtw has escaped and w must be marked as not PRISTINE
+   AFLAGAND(w,~(((wcbefore!=AC(virtw))|(x==virtw))<<AFPRISTINEX))
+  }
 
   // prepare the result so that it can be incorporated into the overall boxed result
   if(likely(!(flags&JTWILLBEOPENED))) {

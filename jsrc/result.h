@@ -77,10 +77,11 @@
 // ZZFLAGWORD name of flags
 // ZZINSTALLFRAME(zzs) code to initialize frame into *zzs++
  A zzbox=0;  // place where we will save boxed inhomogeneous result cells
+ I zzresultpri = 0;  // highest priority of boxed result-cells (bit 8=nonempty flag)
+ I zzcounteditems=0;  // if we count the number of items in the result, this is where we do it
  A *zzboxp;  // pointer to next slot in zzbox.  Before zzbox is allocated, this is used to count the number of cells processed.
  I zzcellp;  // offset (in bytes) of the next homogeneous result cell.  No gaps are left when an inhomogeneous cell is encountered.
  I zzcelllen;  // length in bytes of a homogeneous result cell.
- I zzresultpri = 0;  // highest priority of boxed result-cells (bit 8=nonempty flag)
  A zzcellshape;  // INT array holding shape of result-cell, with one extra empty at the end.  SA[] is the data, AR is the valid length, AN is the allocated length.  May be a faux block with nothing else valid
  I zzncells;   // number of cells in the result (input)
  I zzframelen;  // length of frame of result.
@@ -284,7 +285,7 @@ do{
      I* zs=AS(z); I* ress=AS(result0); I zr=AR(z); I resr=AR(result0); //fetch info
      I diff=TYPESXOR(AT(z),AT(result0))|(MAX(zr,1)^MAX(resr,1)); resr=(zr>resr)?resr:zr;  DO(resr-1, diff|=zs[i+1]^ress[i+1];)  // see if there is a mismatch.  Fixed loop to avoid misprediction
      ZZFLAGWORD^=(diff!=0)<<ZZFLAGCOUNTITEMSX;  // turn off bit if so 
-     I nitems=zs[0]; nitems=(zr==0)?1:nitems; AM(zz)+=nitems;  // add new items to count in zz.  zs[0] will never segfault, even if z is empty
+     I nitems=zs[0]; nitems=(zr==0)?1:nitems; zzcounteditems+=nitems;  // add new items to count in zz.  zs[0] will never segfault, even if z is empty
     }
     // Note: by checking COUNTITEMS inside WILLBEOPENED we suppress support for COUNTITEMS in \. which sets WILLBEOPENEDNEVER.  It would be safe to
     // count then, because no virtual contents would be allowed.  But we are not sure that the EPILOG is safe, and this path is now off to the side
@@ -331,7 +332,7 @@ do{
   zzcellp=zzcelllen*(zzncells-1);  // init output offset in zz to end+1 of 
   zzboxp+=zzncells-1;     // move zzboxp to end of block
 #endif
-  AM(zz)=0;   // in case we count items in AM, init the count to 0.  This means this block cannot be flagged as inplaceable until the AM field has been reinstated by EPILOG processing 
+// obsolete   AM(zz)=0;   // in case we count items in AM, init the count to 0.  This means this block cannot be flagged as inplaceable until the AM field has been reinstated by EPILOG processing 
  }
 }while(1);  // go back to store the first result
 
@@ -342,18 +343,22 @@ do{
 //*********** exit ************************
 #ifdef ZZEXIT
  // result is now in zz, which must not be 0
- // if ZZFLAGCOUNTITEMS is still set, we got through assembly with all boxed homogeneous. Mark the result.
- // Any bypass path to here must clear ZZFLAGCOUNTITEMS.  Same with WILLBEOPENED, which turns into AFVIRTUALBOXED
- AFLAGORLOCAL(zz,(ZZFLAGWORD&(ZZFLAGWILLBEOPENED|ZZFLAGCOUNTITEMS))<<(AFUNIFORMITEMSX-ZZFLAGCOUNTITEMSX))
 
  // If WILLBEOPENED is set, there is no reason to EPILOG.  We didn't have any wrecks, we didn't allocate any blocks, and we kept the
  // result as a nonrecursive block.  In fact, we must avoid EPILOG because that would increment the usecount of the contents and apply the death warrant; then
  // when the block was finally freed the backer would leak, because the check for the backer is applied only in tpop
 
- // NOTE: AM(zz) still holds the item count for WILLBEOPENED results, even though AC shows inplaceable.  This must not escape into a general result!  But it won't
- // because we know we are going to open result next.  In fact, AM was set to 0 for all blocks, so it is essential that we EPILOG the result of this block to set AM right.
- // Alternatively we could zap zz when it is created
- if(ZZFLAGWORD&ZZFLAGWILLBEOPENED){RETF(zz);}  // no need to check for inhomogeneous results
+// obsolete // NOTE: AM(zz) still holds the item count for WILLBEOPENED results, even though AC shows inplaceable.  This must not escape into a general result!  But it won't
+// obsolete  // because we know we are going to open result next.  In fact, AM was set to 0 for all blocks, so it is essential that we EPILOG the result of this block to set AM right.
+// obsolete  // Alternatively we could zap zz when it is created
+ // if ZZFLAGCOUNTITEMS is still set, we got through assembly with all boxed homogeneous. Mark the result.
+ // Any bypass path to here must clear ZZFLAGCOUNTITEMS.  Same with WILLBEOPENED, which turns into AFVIRTUALBOXED
+ if(ZZFLAGWORD&ZZFLAGWILLBEOPENED){
+  AFLAGORLOCAL(zz,(ZZFLAGWORD&(ZZFLAGWILLBEOPENED|ZZFLAGCOUNTITEMS))<<(AFUNIFORMITEMSX-ZZFLAGCOUNTITEMSX))
+  if(ZZFLAGWORD&ZZFLAGCOUNTITEMS){
+   if(AR(zz)==0)SEGFAULT; AS(zz)[0]=zzcounteditems;
+  } RETF(zz);  // no need to check for inhomogeneous results     scaf
+ }
 
  ASSERT((ZZFLAGWORD&(ZZFLAGHASUNBOX|ZZFLAGHASBOX))!=(ZZFLAGHASUNBOX|ZZFLAGHASBOX),EVDOMAIN);  // if there is a mix of boxed and non-boxed results, fail
  if(ZZFLAGWORD&ZZFLAGBOXALLO){

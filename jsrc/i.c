@@ -201,7 +201,7 @@ static B jtinitfinis(JS jjt,I nthreads){
 
 // initialize the master thread for a new instance.  This fills in the JS block, which will remain
 // for the duration of the instance.  It also fills in the JJ block for each thread
-static C jtjinit3(JS jjt){S t;
+static C jtjinit3(JS jjt){S t;JJ jt=MTHREAD(jjt);
 /* required for jdll and doesn't hurt others */
  gjt=jjt; // global jt for JPF debug
  

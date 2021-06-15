@@ -627,7 +627,7 @@ F1(jtraze){A*v,y,z,* RESTRICT zv;C* RESTRICT zu;I *wws,d,i,klg,m=0,n,r=1,t=0,te=
   // and we just need to extract the rank and the type, and calculate the atoms-per-item.  We know there is at least one box.
   A ww0=AAV(w)[0]; t=AT(ww0); r=AR(ww0); r+=SGNTO0(r-1); wws=&AS(ww0)[0]; // ww0->1st contents; t=type; r=rank>.1; wws->item shape
   PROD(m,r-1,wws+1);  // get #atoms in an item of w
-  I nitems=AM(w);  // total # result items is stored in w
+  I nitems=AS(w)[0];  // total # result items is stored in w
   GA(z,t,m*nitems,r,wws); AS(z)[0]=nitems; // allocate the result area; finish shape
   zu=CAV(z); zv=AAV(z); klg=bplg(t); // input pointers, depending on type; length of an item
   // loop through the boxes copying the data into sequential output positions

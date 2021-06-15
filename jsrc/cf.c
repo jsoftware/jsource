@@ -124,7 +124,7 @@ FORK1(jthook1cell,0x110)
 
 
 // Create the derived verb for a fork.  Insert in-placeable flags based on routine, and asgsafe based on fgh
-A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=0,f2=0;B b;C c,fi,gi,hi;I flag,flag2=0,j,m=-1,fline,hcol;V*fv,*gv,*hv,*v;
+A jtfolk(J jt,A f,A g,A h){F2PREFIP;A p,q,x,y;AF f1=0,f2=0;B b;C c,fi,gi,hi;I flag,flag2=0,j,m=-1,fline,hcol;V*fv,*gv,*hv,*v;
  RZ(f&&g&&h);
  // by the parsing rules, g and h must be verbs here
  gv=FAV(g); gi=gv->id;
@@ -254,14 +254,15 @@ A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=0,f2=0;B b;C c,fi,gi,hi;I flag,flag2=
  // set localuse: for intersect or comparison combination, cct; for echt fork, the h routine to call
  if(!f2){
   // if using the default handler, set the entry point
-  FAV(z)->valencefns[1]=fork2tbl[fline][hcol];
+  AF hfn=fork2tbl[fline][hcol]; hfn=(I)jtinplace&JTFOLKNOHFN?jtfolk2:hfn;  // NOHFN means the caller is going to fool with the result fork, so the EP is unreliable
+  FAV(z)->valencefns[1]=hfn;
   FAV(z)->localuse.lu1.fork2hfn=hcol<=2?hv->valencefns[1]:FAV(hv->fgh[0])->valencefns[0];
  }else{FAV(z)->localuse.lu1.cct=cct;
  }
  if(!f1){
   fline=(0x200110>>(fline<<2))&3;  // 0/3/4->0,  1/2->1, 5->2
   hcol=(0b00110>>hcol)&1;  // / 0/3/4->0,  1/2->1
-  FAV(z)->valencefns[0]=fork1tbl[fline][hcol];  // scaf
+  FAV(z)->valencefns[0]=fork1tbl[fline][hcol];
  }
  R z;
 }

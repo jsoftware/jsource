@@ -76,6 +76,9 @@ typedef AD *A;
 #define JTINPLACEW      (((I)1)<<JTINPLACEWX)
 #define JTINPLACEAX     1   // turn this on in jt to indicate that a can be inplaced.  Must be 1+JTINPLACEWX
 #define JTINPLACEA      (((I)1)<<JTINPLACEAX)
+// following bit used as arg to jtfolk
+#define JTFOLKNOHFNX    2   // set to get the generic fork that does not expect the hfn in localuse
+#define JTFOLKNOHFN      (((I)1)<<JTFOLKNOHFNX)
 // following bit is used on input to jtcvt only
 #define JTNOFUZZX       1   // comparison on legal float conversion should be exact
 #define JTNOFUZZ        (((I)1)<<JTNOFUZZX)
@@ -130,14 +133,13 @@ struct AD {
         // Bit 0 is set to indicate that AM has NVR data (all result values start with AM pointing to tstack with bit 0 clear); bit 1 is set if a free for the value has
         // been deferred and must be applied when the NVR count goes to 0; bits 2 and up are the NVR count, i. e. the number of times the value is on the NVR stack
         // Bit 0 is set to initiate this use when a value is assigned to a name for the first time (and NVR count is set to 0 then)
-        // (3) for blocks coming out of a COUNTITEMS verb, holds the number of items in the
-        // raze of the noun (if the types are identical) (4) for SYMB tables for explicit definitions, the address of the calling symbol table; for other SYMB tables,
-        // a Bloom filter of the hashes assigned in the locale (using the low bits of the hash) (5) for the block
-        // holding the amend offsets in x u} y, the number of axes of y that are built into the indexes in u (6) no longer used
-        // (7) in the return from wordil, holds the number of words if any final NB. is discarded; (8) in the result of indexofsub when called for FORKEY, contains the
-        // number of partitions found; (9) in the self block for y L: n and u S: n, the address of the fs block for u; (10) in the call to jtisf (multiple assignment), holds the
-        // address of the symbol table being assigned to (11) in the y block internal to pv.c, used for flags (12) in hashtables in x15.c and in tickers, the number of entries that have been hashed
-        // (13) in file-lock list and file-number list, the # valid files (14) in JT(jt,stnum), the numbered-locale table, the number of locales outstanding
+        // (3) for SYMB tables for explicit definitions, the address of the calling symbol table; for other SYMB tables,
+        // a Bloom filter of the hashes assigned in the locale (using the low bits of the hash) (4) for the block
+        // holding the amend offsets in x u} y, the number of axes of y that are built into the indexes in u
+        // (5) in the return from wordil, holds the number of words if any final NB. is discarded; (6) in the result of indexofsub when called for FORKEY, contains the
+        // number of partitions found; (7) in the self block for y L: n and u S: n, the address of the fs block for u; (8) in the call to jtisf (multiple assignment), holds the
+        // address of the symbol table being assigned to (9) in the y block internal to pv.c, used for flags (10) in hashtables in x15.c and in tickers, the number of entries that have been hashed
+        // (11) in file-lock list and file-number list, the # valid files (14) in JT(jt,stnum), the numbered-locale table, the number of locales outstanding
   A back; // For VIRTUAL blocks, points to backing block
   A *zaploc;  // For all blocks, AM initially holds a pointer to the place in the tpop stack (or hijacked tpop stack) that points back to the allocated block.  This value is guaranteed
         // to remain valid as long as the block is nonvirtual inplaceable and might possibly return as a result to the parser or result assembly  (in cases under m above, the block cannot become such a result)
@@ -165,6 +167,7 @@ struct AD {
  RANKT r;  // rank
 #endif
  I s[1];   // shape starts here.  NOTE!! s[0] is always OK to fetch.  We allocate 8 words minimum and s[0] is the last.
+  // when AFUNIFORMITEMS is set, s[0] holds the number of items in the raze of the block
 };
 
 typedef struct {A a,t;}TA;
@@ -194,6 +197,7 @@ typedef I SI;
 #define AM(x)           ((x)->mback.m)        /* Max # bytes in ravel            */
 #define ABACK(x)        ((x)->mback.back)        /* In virtual noun, pointer to backing block            */
 #define AZAPLOC(x)      ((x)->mback.zaploc)    // on allocation, the address of the tstack entry that will free the block
+#define AZAPLOCVOL(x)   (((volatile AD *)x)->mback.zaploc)    // on allocation, the address of the tstack entry that will free the block
 #define AZAPLOCV(x)     ((A*)((x)->s[(x)->r]))    // for virtual blocks,  the address of the tstack entry that will free the block
 #define AT(x)           ((x)->tproxy.t)        /* Type; one of the #define below  */
 #define AC(x)           ((x)->c)        /* Reference count.                */
@@ -250,6 +254,7 @@ typedef I SI;
 #define AAV1(x)         ((A*)((C*)(x)+AKXR(1)))  // A block in a stack- or heap-allocated list (rank 1)
 #define VAV(x)          ( (V*)((C*)(x)+AK(x)))  /* verb, adverb, conj      */
 #define FAV(x)          ( (V*)((C*)(x)+AKXR(0)) )  // verb, adverb, conj - always at fixed offset
+#define FAVV(x)         ( (volatile V*)((C*)(x)+AKXR(0)) )  // verb, adverb, conj volatile to avoid delayed fetch
 #define PAV(x)          ( (P*)((C*)(x)+AK(x)))  /* sparse                  */
 #define SBAV(x)         ((SB*)((C*)(x)+AK(x)))  /* symbol                  */
 #define SBUV4(x)        ((SBU*)((C*)(x)+AKXR(4)))  // symbol, nonvirtual rank 4
@@ -506,7 +511,7 @@ typedef I SI;
 #define AFNVRFLAGX      8
 // the spacing of VIRTUALBOXED->UNIFORMITEMS must match ZZFLAGWILLBEOPENED->ZZCOUNTITEMS
 #define AFUNIFORMITEMSX 22     // matches MARK
-#define AFUNIFORMITEMS  ((I)1<<AFUNIFORMITEMSX)  // It is known that this boxed array has contents whose items are of uniform shape and type
+#define AFUNIFORMITEMS  ((I)1<<AFUNIFORMITEMSX)  // It is known that this boxed array has contents whose items are of uniform shape and type; the total number of those items is in AS[0]
 #define AFVIRTUALX      17      // matches C2TX
 #define AFVIRTUAL       ((I)1<<AFVIRTUALX)  // this block is a VIRTUAL block: a subsequence of another block.  The data pointer points to the actual data, and the
                                  // m field points to the start of the block containing the actual data.  A VIRTUAL block cannot be incorporated into another block, and it

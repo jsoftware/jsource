@@ -615,7 +615,7 @@ endname: ;
       // We handle =: N V N, =: V N, =: V V N.  In the last case both Vs must be ASGSAFE.  When we set jt->asginfo.assignsym we are warranting
       // that the next assignment will be to the name, and that the reassigned value is available for inplacing.  In the V V N case,
       // this may be over two verbs
-      if((pline>>VJTFLGOK1X)>PTISNOTASGNNAME(stack[0]))if(likely(PTISM(stackfs[2]))){L *s;   // assignment to name; nothing in the stack to the right of what we are about to execute; well-behaved function (doesn't change locales)
+      if((UI)(pline>>VJTFLGOK1X)>(UI)PTISNOTASGNNAME(stack[0]))if(likely(PTISM(stackfs[2]))){L *s;   // assignment to name; nothing in the stack to the right of what we are about to execute; well-behaved function (doesn't change locales)
        if(likely((AT(stack[0].a))&ASGNLOCAL)){
         // local assignment.  To avoid subroutine call overhead, make a quick check for primary symbol
         if(likely((SGNIF(AR(UNLXAV0(locbuckets)),ARLCLONEDX)|(NAV(queue[m-1])->symx-1))>=0)){  // if we are using primary table and there is a symbol stored there...

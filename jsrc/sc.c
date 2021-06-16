@@ -126,6 +126,7 @@ valgone: ;
   pushcallstack1d(CALLSTACKPOPLOCALE,jt->global); jt->global=explocale;  // move to new implied locale.  DO NOT change locale in lt->locsyms.  It is set only by explicit action so that on a chain of locatives it stays unchanged
  }
  // ************** no errors till the stack has been popped
+ AF actionfn=v->valencefns[flgd0cp>>3];  // index is 'is dyad'.  Load here to allow call address to settle
  w=flgd0cp&8?w:(A)fs;  // set up the bivalent argument with the new self, since fs may have been changed
 
  // Execute the name.  First check 4 flags at once to see if anything special is afoot: debug, pm, bstk, garbage collection
@@ -135,7 +136,6 @@ valgone: ;
   // So, all we have to do is increment the usecount.  If it's a PERMANENT symbol no harm will be done, since we decrement below
   // CODING NOTE: after considerable trial and error I found this ordering, whose purpose is to start the load of the indirect branch address as early as
   // possible before the branch.  Check the generated code on any change of compiler.
-  AF actionfn=v->valencefns[flgd0cp>>3];  // index is 'is dyad'
   if(unlikely(!(flgd0cp&2)))ACINCR(fs);  // protect the entity ONLY if not cached.  If it is cached it will never be truly deleted
   // Recursion through $: does not go higher than the name it was defined in.  We make this happen by pushing the name onto the $: stack
   A s=jt->sf; jt->sf=fs; z=(*actionfn)((J)(((REPSGN(SGNIF(v->flag,(flgd0cp>>3)+VJTFLGOK1X)))|~JTFLAGMSK)&(I)jtinplace),a,w,fs); jt->sf=s;  // keep all flags in jtinplace
@@ -150,7 +150,7 @@ valgone: ;
    z=dbunquote(flgd0cp&8?a:0,flgd0cp&8?w:a,fs,flgd0cp&3?0:stabent);  // if debugging, go do that.  save last sym lookup as debug parm if it is valid (not cached or pseudoname)
   }else{
    if(unlikely(!(flgd0cp&2)))ACINCR(fs);  // protect the entity if not cached
-   A s=jt->sf; jt->sf=fs; z=v->valencefns[flgd0cp>>3]((J)(((REPSGN(SGNIF(v->flag,(flgd0cp>>3)+VJTFLGOK1X)))|~JTFLAGMSK)&(I)jtinplace),a,w,fs); jt->sf=s;
+   A s=jt->sf; jt->sf=fs; z=(*actionfn)((J)(((REPSGN(SGNIF(v->flag,(flgd0cp>>3)+VJTFLGOK1X)))|~JTFLAGMSK)&(I)jtinplace),a,w,fs); jt->sf=s;
   if(unlikely(!(flgd0cp&2))){ACDECR(fs); if(unlikely(AC(fs)<=0)){ACINCR(fs); fa(fs);}}
   }
   if(jt->uflags.us.cx.cx_c.pmctr)pmrecord(thisname,jt->global?LOCNAME(jt->global):0,-2L,flgd0cp&8?VAL2:VAL1);  // record the return from call

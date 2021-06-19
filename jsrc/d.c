@@ -113,7 +113,7 @@ static I jtdisp(J jt,A w,I nflag){B b=1&&AT(w)&NAME+NUMERIC;
   // If this is an array of names, turn it back into a character string with spaces between
   else{w=curtail(raze(every2(every(w,(A)&sfn0overself),chrspace,(A)&sfn0overself)));}  // }: (string&.> names) ,&.> ' '  then fall through to display it
  case LITX:  eputq(w,(nflag&1));                break;
- case NAMEX: ep(AN(w),NAV(w)->s);     break;
+ case NAMEX: ep(AN(w),NAV(w)->s); if(unlikely((AT(w)&NAMEABANDON)!=0)){ep(2,"::");}     break;
  case LPARX: eputc('(');              break;
  case RPARX: eputc(')');              break;
  case ASGNX: dspell(CAV(w)[0],w,(nflag&1));       break;

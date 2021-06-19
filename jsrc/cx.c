@@ -794,7 +794,7 @@ static A jtsent12b(J jt,A w){A t,*wv,y,*yv;I j,*v;
 // a valid hash of a locative name
 // actstv points to the chain headers, actstn is the number of chains
 // all the chains have had the non-PERMANENT flag cleared in the pointers
-// recur is set if *t is part of a recursive noun
+// recur is set if *t is part of a recursive noun.
 static A jtcalclocalbuckets(J jt, A *t, LX *actstv, I actstn, I dobuckets, I recur){LX k;
  A tv=*t;  // the actual NAME block
  L *sympv=JT(jt,sympv);  // base of symbol table
@@ -809,10 +809,13 @@ static A jtcalclocalbuckets(J jt, A *t, LX *actstv, I actstn, I dobuckets, I rec
   for(k=actstv[bucket];k;++compcount,k=sympv[k].next){  // k chases the chain of symbols in selected bucket
    if(NAV(tv)->m==NAV(sympv[k].name)->m&&!memcmpne(NAV(tv)->s,NAV(sympv[k].name)->s,NAV(tv)->m)){
     // match found.  this is a local name.  Replace it with the shared copy, flag as shared, set negative bucket#
+    // suppress this step if the type is ornamented, i. e. if it is name:: - then we need a flagged copy
     A oldtv=tv;
-    *t=tv=sympv[k].name;  // use shared copy
-    if(recur){ras(tv); fa(oldtv);} // if we are installing into a recursive box, increment/decr usecount new/old
-    NAV(tv)->flag|=NMSHARED;  // tag the shared copy as shared
+    if(likely(!(AT(tv)&NAMEABANDON))){  // not name::
+     *t=tv=sympv[k].name;  // use shared copy
+     if(recur){ras(tv); fa(oldtv);} // if we are installing into a recursive box, increment/decr usecount new/old
+     NAV(tv)->flag|=NMSHARED;  // tag the shared copy as shared
+    }
     // Remember the exact location of the symbol.  It will not move as long as this symbol table is alive.  We can
     // use it only when we are in this primary symbol table
     NAV(tv)->symx=k;  // keep index of the allocated symbol
@@ -869,7 +872,7 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
  ln=AN(l); lv=AAV(l);  // Get # words, address of first box
  for(j=1;j<ln;++j) {   // start at 1 because we look at previous word
   t=lv[j-1];  // t is the previous word
-  // look for 'names' =./=: .  If found (and the names do not begin with `, replace the string with a special form: a list of boxes where each box contains a name.
+  // look for 'names' =./=: .  If found (and the names do not begin with `), replace the string with a special form: a list of boxes where each box contains a name.
   // This form can appear only in compiled definitions
   if(AT(lv[j])&ASGN&&AT(t)&LIT&&AN(t)&&CAV(t)[0]!=CGRAVE){
    A neww=words(t);
@@ -882,7 +885,13 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
   if((AT(lv[j])&ASGN+ASGNLOCAL)==(ASGN+ASGNLOCAL)) {  // local assignment
    if(AT(lv[j])&ASGNTONAME){    // preceded by name?
     // Lookup the name, which will create the symbol-table entry for it
-    RZ(probeis(t,pfst));
+    // name:: causes a little trouble.  The name carries with it the :: flag, but we will eventually replace all refs with the srade ref from
+    // this table.  That means we have to remove the :: flag from the stored value, lest every reference appear flagged just because the last one was.
+    // Note that we are here looking only before =., so we are specifically checking for name:: =. ... .  This should be an error, and we might catch
+    // it when executed; but we are just making sure that it doesn't make the refs invalid.  name:: also sets NAMEXY, and we have to leave that because
+    // any valid ref to mnuvxy will need that set; so there is a chance that name:: =. will result in an ordinary reference to the name's having the NAMEXY
+    // flag.  That won't hurt anything significant.
+    L *nml; RZ(nml=probeis(t,pfst)); AT(nml->name)&=~NAMEABANDON;   // put name in symbol table, with ABANDON flag cleared
    } else if(AT(t)&LIT) {
     // LIT followed by =.  Probe each word.  Now that we support lists of NAMEs, this is used only for AR assignments
     // First, convert string to words
@@ -892,13 +901,13 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
      for(kk=0;kk<wdsn;++kk) {
       // Convert word to NAME; if local name, add to symbol table
       if((wnm=onm(wdsv[kk]))) {
-       if(!(NAV(wnm)->flag&(NMLOC|NMILOC)))RZ(probeis(wnm,pfst));
+       if(!(NAV(wnm)->flag&(NMLOC|NMILOC))){L *nml; RZ(nml=probeis(wnm,pfst)); AT(nml->name)&=~NAMEABANDON;}  // see above
       } else RESETERR
      }
     } else RESETERR  // if invalid words, ignore - we don't catch it here
    }else if((AT(t)&BOX+BOXMULTIASSIGN)==BOX+BOXMULTIASSIGN){  // not NAME, not LIT; is it NAMEs box?
     // the special form created above.  Add each non-global name to the symbol table
-    A *tv=AAV(t); DO(AN(t), if(!(NAV(tv[i])->flag&(NMLOC|NMILOC)))RZ(probeis(tv[i],pfst));)
+    A *tv=AAV(t); DO(AN(t), if(!(NAV(tv[i])->flag&(NMLOC|NMILOC))){L *nml; RZ(nml=probeis(tv[i],pfst)); AT(nml->name)&=~NAMEABANDON;})
    }
   } // end 'local assignment'
  }  // for each word in sentence

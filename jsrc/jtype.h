@@ -323,6 +323,7 @@ typedef I SI;
 #define NAMEX 23
 #define NAME            ((I)1L<<NAMEX)    /* NM name                         */
 #define NAMESIZE sizeof(C)   // when we allocate a NAME type, the length is the length of the name string
+// NOTE: VERB, SYMB, and LPAR are used as flags in names
 #define SYMBX 24
 #define SYMB            ((I)1L<<SYMBX)     /* I  locale (symbol table)        */
 #define SYMBSIZE sizeof(LX)
@@ -341,15 +342,13 @@ typedef I SI;
 #define LPAR            ((I)1L<<LPARX)    /* I  left  parenthesis            */
 // note: LPAR used as flag to cvt() see below; also as modifier to ADV type
 #define LPARSIZE sizeof(I)
-// CONJ must be 1 bit below RPAR, with no parsable type (including any flags that might be set, see below) higher than RPAR
+// CONJ must be 1 bit below RPAR, with no parsable type (including any flags that might be set, see below) in CONJ or RPAR
 #define CONJX 29
 #define CONJ            ((I)1L<<CONJX)     /* V  conjunction                  */
 #define CONJSIZE sizeof(V)
 #define RPARX 30
 #define RPAR            ((I)1L<<RPARX)   /* I  right parenthesis            */
 #define RPARSIZE sizeof(I)
-#define SPARSEX 31  // NOTE this extends to the sign bit
-#define SPARSE            (-((I)1L<<SPARSEX))       /* P  sparse boxed                 */
 
 #define ASGNX 21
 #define ASGN            ((I)1L<<ASGNX)     /* I  assignment                   */
@@ -361,8 +360,13 @@ typedef I SI;
 // NOTE: The parser assumes that CONW always means ASGNTONAME, so don't use it in any parseable type (such as NAME, NOUN)
 // ** NOUN types can have the following informational bits set
 #define NOUNCVTVALIDCT  ((I)1L<<SYMBX)     // Flag for jtcvt arg only: if set, convert only the #atoms given in the parameter   Aliases with SYMB
+#define SPARSEX 31  // NOTE this extends to the sign bit
+#define SPARSE            (-((I)1L<<SPARSEX))       /* P  sparse boxed                 */
 // ** NAME type can have the following information flags set
 #define NAMEBYVALUE     ((I)1L<<SYMBX)     // set if the name is one of x x. m m. etc that is always passed by value, never by name   Aliases with SYMB
+#define NAMEABANDONX LPARX
+#define NAMEABANDON            ((I)1L<<NAMEABANDONX)     // name is name::, which will be deassigned after the value is stacked.  NAMEBYVALUE must also be set
+// in the parser VERB is set in a NAME type to indicate use of global symbol table
 // ** BOX type can have the following informational flags set
 #define BOXMULTIASSIGN  ((I)1L<<MARKX)     // set for the target of a direct multiple assignment (i. e. 'x y' =.), which is stored as a boxed list whose contents are NAMEs    aliases with MARK
 // Restriction: CONW must be reserved for use as ASGNTONAME because of how parser tests for it
@@ -477,7 +481,7 @@ typedef I SI;
 #define ACINCR(a)       ACINCRLOCAL(a)
 #define ACDECR(a)       ACDECRLOCAL(a)
 #define ACINIT(a,v)     AC(a)=(v);  // used when it is known that a has just been allocated & is not shared
-#define ACRESET(a,v)    AC(a)=(v);  // used when it is known that a has is not shared (perhaps it's UNINCORPABLE)
+#define ACRESET(a,v)    AC(a)=(v);  // used when it is known that a is not shared (perhaps it's UNINCORPABLE)
 #define ACSET(a,v)      AC(a)=(v);  // used when a might be shared, but atomic not needed
 #define ACFAUX(a,v)     AC(a)=(v);  // used when a is known to be a faux block
 #define ACINITZAP(a)    {*AZAPLOC(a)=0; ACINIT(a,ACUC1)}  // effect ra() immediately after allocation, by zapping
@@ -562,6 +566,7 @@ typedef I SI;
 #define AMNVRDECR(a,am) (am=AM(a),AM(a)-=AMNVRCT,am)  // save count, decrement, return old value
 #define AMNVRSET(a,x) (AM(a)=(x))
 #define AMNVRAND(a,x) (AM(a)&=(x));  // AND, no return
+#define AMNVROR(a,x) (AM(a)|=(x));  // OR, no return
 // decide action and new AM value to free a
 // nvrct!=0, !free -> set free
 // nvrct!=0, free -> no chg, fa

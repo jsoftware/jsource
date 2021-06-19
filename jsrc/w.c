@@ -133,6 +133,7 @@ static A jtconstr(J jt,I n,C*s){A z;C b,c,p,*t,*x;I m=0;
 // w holds the string text of the sentence
 // env is the environment for which this is being parsed: 0=tacit translator, 1=keyboard/immex with no locals, 2=for explicit defn
 // result is a list of parsable words, with types right.  The result is input only to parsing, never to verbs, and thus may be nonrecursive
+// The input is words from a single sentence.  It never contains control words, which were used as frets by the explicit definition
 A jtenqueue(J jt,A a,A w,I env){A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl;UC c;
  ARGCHK2(a,w);
  s=CAV(w); u=AV(a);
@@ -140,8 +141,8 @@ A jtenqueue(J jt,A a,A w,I env){A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl;UC c;
  GATV0(z,BOX,n,1); x=v=AAV(z);   //  allocate list of words; set running word pointer x, and static
    // beginning-of-list pointer v, to start of list of output pointers
  for(i=0;i<n;i++,x++){  // for each word
-  wl=u[1]-u[0]; wi=u[0]+s; c=e=*wi; p=ctype[(UC)c]; b=0;   // wi=first char, wl=length, c=e=first char, p=type of first char, b='no inflections'
-  if(wl==1||(b=((p!=C9)&(wi[wl-1]==CESC1))|(wi[wl-1]==CESC2)))e=spellin(wl,wi);else e=0;  // if word has 1 character, or is a--. or ---:, convert to pseudocharacter
+  wl=u[1]-u[0]; wi=u[0]+s; c=e=*wi; p=ctype[(UC)c]; b=0;   // wi=first char, wl=length, c=e=first char, p=type of first char, b=there are inflections, init to false
+  if(wl==1||(b=((p!=C9)&(wi[wl-1]==CESC1))|(wi[wl-1]==CESC2)))e=spellin(wl,wi);else e=0;  // set b if inflections; if word has 1 character, or is a--. or ---:, convert to pseudocharacter
   if(BETWEENO(c,32,128)&&AK(y=ds(e))){
    // If first char is ASCII, see if the form including inflections is a primitive;
    // if so, that is the word to put into the queue.  No need to copy it
@@ -158,10 +159,18 @@ A jtenqueue(J jt,A a,A w,I env){A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl;UC c;
    *x=y;   // install the value
   } else if(e==CFCONS){RZ(*x=FCONS(connum(wl-1,wi)))  // if the inflected form says [_]0-9:, create word for that
   } else {
-   p=b?b:p;    // otherwise, it's not a primitive, but data, either numeric, string, or name.  Check first character, but fail if inflected form, which must be invalid.  p must be non0
-    // If the name is a call-by-value name (x y u. etc), we mark it as BYVALUE if it is slated for execution in an explicit definition
-   if((p&~CA)==0){ASSERTN(vnm(wl,wi),EVILNAME,nfs(wl,wi)); RZ(*x=nfs(wl,wi)); if((env==2)&&(NAV(*x)->flag&NMXY)){AT(*x)|=NAMEBYVALUE;}  // starts with alphabetic, make it a name, error if invalid name
-   }else if(p==C9){if(unlikely(!(*x=connum(wl,wi)))){I lje=jt->jerr; RESETERR; jsignal3(lje,w,u[0]); R 0;}   // starts with numeric, create numeric constant.. If error, give a message showing the bad number
+   if((p&~CA)==0){
+    // starts with alpha; must be a name.
+    if(unlikely(b)){
+     // Inflection is illegal except for trailing ::
+     if(!(wl>2&&wi[wl-2]==CESC2&&wi[wl-1]==CESC2)){jsignal3(EVSPELL,w,wi-s); R 0;}  // error if not *::
+     wl-=2;  // remove :: from name; leave b set to indicate inflection
+    }
+    ASSERTN(vnm(wl,wi),EVILNAME,nfs(wl,wi)); RZ(*x=nfs(wl,wi));  // error if invalid name; create name block and install it in result
+    if(unlikely((env==2)&&(NAV(*x)->flag&NMXY))){AT(*x)|=NAMEBYVALUE;}     // If the name is a call-by-value name (x y u. etc), we mark it as BYVALUE if it is slated for execution in an explicit definition
+    if(unlikely(b)){AT(*x)|=NAMEBYVALUE|NAMEABANDON;}  // flag name:: for stack processing
+   }else if(unlikely(b)){jsignal3(EVSPELL,w,wi-s); R 0;
+   }else if(p==C9){if(unlikely(!(*x=connum(wl,wi)))){I lje=jt->jerr; RESETERR; jsignal3(lje,w,u[0]); R 0;}   // starts with numeric, create numeric constant.  If error, give a message showing the bad number
    }else if(p==CQ){ RZ(*x=constr(wl,wi));   // start with ', make string constant
    }else{jsignal3(EVSPELL,w,wi-s); R 0;}   // bad first character or inflection
   }

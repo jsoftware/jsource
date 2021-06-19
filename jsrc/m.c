@@ -767,6 +767,7 @@ static A raonlys(AD * RESTRICT w) { RZQ(w);
 
 // This routine handles the recursion for ra().  ra() itself does the top level, this routine handles the contents
 I jtra(AD* RESTRICT wd,I t){I n=AN(wd);
+ // we use if rather than switch because the first leg is most likely and the first two legs get almost everything
  if(t&BOX){AD* np;
   // boxed.  Loop through each box, recurring if called for.  Two passes are intertwined in the loop
   A* RESTRICT wv=AAV(wd);  // pointer to box pointers

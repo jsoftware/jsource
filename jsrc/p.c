@@ -141,13 +141,13 @@ static DF2(jtisf){RZ(symbis(onm(a),CALL1(FAV(self)->valencefns[0],w,0L),ABACK(se
 
 // assignment, single or multiple
 // return sets stack[0] to -1 if this is a final assignment
-static PSTK* jtis(J jt,PSTK *stack){B ger=0;C *s;
- A asgblk=stack[1].a; I asgt=AT(asgblk); A v=stack[2].a, n=stack[0].a;  // value and name
+static PSTK* jtis(J jt,PSTK *stack){
+ I asgt=AT(stack[1].a); A v=stack[2].a, n=stack[0].a;  // value and name
  J jtinplace=(J)((I)jt+((stack[0].t==1)<<JTFINALASGNX));   // set JTFINALASGN if this is final assignment
  stack[1+(stack[0].t==1)].t=-1;  // if the word number of the lhs is 1, it's either (noun)=: or name=: or 'value'=: at the beginning of the line;
   // store -1 to the new stack[0].t.  Otherwise, make a harmless store to new stack[-1].t
  if(likely(jt->asginfo.assignsym!=0)){jtsymbis(jtinplace,n,v,(A)asgt);}   // Assign to the known name.  Pass in the type of the ASGN
- else {
+ else {B ger=0;C *s;
   // Point to the block for the assignment; fetch the assignment pseudochar (=. or =:); choose the starting symbol table
   // depending on which type of assignment (but if there is no local symbol table, always use the global)
   A symtab=jt->locsyms; if(unlikely((SGNIF(asgt,ASGNLOCALX)&(1-AN(jt->locsyms)))>=0))symtab=jt->global;
@@ -313,6 +313,33 @@ static A virthook(J jtip, A f, A g){
 #define jthook virthook
 #endif
 
+// name:: delete the symbol name but not deleting the value.  If the usecount of the value is 1 and it is not on the NVR stack, make it inplaceable.  Replace the nameref with a tpush or NVR free
+static I namecoco(J jt, A y, I at, LX *locbuckets, L *s, A sv, L *sympv){
+ A fndst=UNLXAV0(locbuckets); if(unlikely((at&VERB)!=0))fndst=syrdforlocale(y);  // get locale to use.  This re-looks up global names, but they should be rare in name::
+ LX *asymx=LXAV0(fndst)+SYMHASH(NAV(s->name)->hash,AN(fndst)-SYMLINFOSIZE);  // get pointer to index of start of chain; address of previous symbol in chain
+ LX nextsymx=*asymx;  // symbol number pointed to by asymx, possibly w/permanent indicator
+ while(sympv+SYMNEXT(nextsymx)!=s){asymx=&(sympv+SYMNEXT(nextsymx))->next; nextsymx=*asymx;}
+ // asymx points to the chain field that points to s.  Bend the chain around s to delete symbol; clear val to delete name
+ if(unlikely(s->flag&LCACHED)){*asymx=s->next;  // cached ref: remove its name, making it unmoored.  This ref can't make such a reference but a different ref could
+ }else{
+  s->val=0;  // remove the value ref, but don't touch the value itself
+  if(likely(!SYMNEXTISPERM(nextsymx))){*asymx=s->next; fa(s->name); s->name=0; s->flag=0; s->sn=0; s->next=sympv[0].next; sympv[0].next=nextsymx;}
+ }
+ // the name is deleted, leaving the value.  Make the value inplaceable if there are no refs out against it.  If it is a local variable we think any outstanding
+ // inplaceable refs will last till the end of the sentence, where we tpop the value
+ if(likely((AM(sv)&-AMNVRCT)==0)){
+  // value is not on NVR stack.  Schedule a deletion for the end of the sentence; if this name is the ONLY reference to the value,
+  // make the value inplaceable (and point AM to the death warrant to allow early free)
+  // The difference between this code and jtis() is that we defer the free using the tpop stack rather than the NVR stack
+  if(likely(AC(sv)==ACUC1)){ACSET(sv,ACINPLACE+ACUC1); AZAPLOC(sv)=jt->tnextpushp;}
+  tpushnr(sv);  // install death warrant for this block after the sentence completes
+ }else{
+  // value is on NVR stack.  We cannot free it here or even at the end of the sentence.  Mark a deferred free. but if there is already a deferred free, just fa()
+  if(AM(sv)&AMFREED){fa(sv)}else{AMNVROR(sv,AMFREED)}
+ }
+ R 1;  // always good return.  Any error comes from tpush, where it is fatal
+}
+
 #define FP goto failparse;   // indicate parse failure and exit
 #define EP goto exitparse;   // exit parser, preserving current status
 #define EPZ(x) if(unlikely(!(x))){FP}   // exit parser if x==0
@@ -375,14 +402,14 @@ A jtextnvr(J jt){ASSERT(jt->parserstackframe.nvrtop<32000,EVSTACK); RZ(jt->nvra 
 #define FRONTMARKS 1  // amount of space to leave for front-of-string mark
 // Parse a J sentence.  Input is the queue of tokens
 // Result has PARSERASGNX (bit 0) set if the last thing is an assignment
-A jtparsea(J jt, A *queue, I m){PSTK * RESTRICT stack;A z,*v;
+A jtparsea(J jt, A *queue, I nwds){PSTK * RESTRICT stack;A z,*v;
  // jt->parsercurrtok must be set before executing anything that might fail; it holds the original
  // word number+1 of the token that failed.  jt->parsercurrtok is set before dispatching an action routine,
  // so that the information is available for formatting an error display
   // Save info for error typeout.  We save sentence info once, and token info for every executed fragment
  PFRAME oframe=jt->parserstackframe;   // save all the stack status
- jt->parserstackframe.parserqueue=queue; jt->parserstackframe.parserqueuelen=(US)m;  // addr & length of words being parsed
- if(likely(m>1)) {  // normal case where there is a fragment to parse
+ jt->parserstackframe.parserqueue=queue; jt->parserstackframe.parserqueuelen=(US)nwds;  // addr & length of words being parsed
+ if(likely(nwds>1)) {  // normal case where there is a fragment to parse
   // save $: stack.  The recursion point for $: is set on every verb execution here, and there's no need to restore it until the parse completes
   A savfs=jt->sf;  // push $: stack
 
@@ -392,9 +419,9 @@ A jtparsea(J jt, A *queue, I m){PSTK * RESTRICT stack;A z,*v;
   // to use if there is an error on the word
   // If there is a stack inherited from the previous parse, and it is big enough to hold our queue, just use that.
   // The stack grows down
-  if(unlikely((uintptr_t)jt->parserstackframe.parserstkend1-(uintptr_t)jt->parserstackframe.parserstkbgn < (m+BACKMARKS+FRONTMARKS)*sizeof(PSTK))){A y;
-   ASSERT(m<65000,EVLIMIT);  // To keep the stack frame small, we limit the number of words of a sentence
-   I allo = MAX((m+BACKMARKS+FRONTMARKS)*sizeof(PSTK),PARSERSTKALLO); // number of bytes to allocate.  Allow 4 marks: 1 at beginning, 3 at end
+  if(unlikely((uintptr_t)jt->parserstackframe.parserstkend1-(uintptr_t)jt->parserstackframe.parserstkbgn < (nwds+BACKMARKS+FRONTMARKS)*sizeof(PSTK))){A y;
+   ASSERT(nwds<65000,EVLIMIT);  // To keep the stack frame small, we limit the number of words of a sentence
+   I allo = MAX((nwds+BACKMARKS+FRONTMARKS)*sizeof(PSTK),PARSERSTKALLO); // number of bytes to allocate.  Allow 4 marks: 1 at beginning, 3 at end
    GATV0(y,B01,allo,1);
    jt->parserstackframe.parserstkbgn=(PSTK*)AV(y);   // save start of data area
    // We are taking advantage of the fact the NORMAH is 7, and thus a rank-1 array is aligned on a boundary of its size
@@ -404,7 +431,8 @@ A jtparsea(J jt, A *queue, I m){PSTK * RESTRICT stack;A z,*v;
   stack=jt->parserstackframe.parserstkend1-BACKMARKS;   // start at the end, with 3 marks
 
   ++jt->parsercalls;  // now we are committed to full parse.  Push stacks.
-  I nvrotop=jt->parserstackframe.nvrotop=jt->parserstackframe.nvrtop;  // we have to keep the next-to-top nvr value visible for a subroutine.  It remains as we advance nvrtop.  Save in a local too for comp ease
+// obsolete   US nvrotop=jt->parserstackframe.nvrotop=jt->parserstackframe.nvrtop;  // we have to keep the next-to-top nvr value visible for a subroutine.  It remains as we advance nvrtop.  Save in a local too for comp ease
+  jt->parserstackframe.nvrotop=jt->parserstackframe.nvrtop;  // we have to keep the next-to-top nvr value visible for a subroutine.  It remains as we advance nvrtop.  Save in a local too for comp ease
 
   // We don't actually put a mark in the queue at the beginning.  When m goes down to 0, we move in a mark.
 
@@ -415,20 +443,22 @@ A jtparsea(J jt, A *queue, I m){PSTK * RESTRICT stack;A z,*v;
   // very inefficient.  So, if the sentence is too long, we go through and count the number of names,
   // rather than using a poor upper bound.
   {UI4 maxnvrlen;
-   if (likely(m < 128))maxnvrlen = (UI4)m;   // if short enough, assume they're all names
+   if (likely(nwds < 128))maxnvrlen = (UI4)nwds;   // if short enough, assume they're all names
    else {
     maxnvrlen = 0;
-    DQ(m, maxnvrlen+=(AT(queue[i])>>NAMEX)&1;)
+    DQ(nwds, maxnvrlen+=(AT(queue[i])>>NAMEX)&1;)
    }
    // extend the nvr stack, doubling its size each time, till it can hold our names.  Don't let it get too big.  This code duplicated in 4!:55
-   NOUNROLL while((I)(jt->parserstackframe.nvrtop+maxnvrlen) > AN(jt->nvra))RZ(extnvr());
+   if(unlikely((I)(jt->parserstackframe.nvrtop+maxnvrlen) > AN(jt->nvra))){NOUNROLL do{RZ(extnvr());}while((I)(jt->parserstackframe.nvrtop+maxnvrlen) > AN(jt->nvra));}
   }
+
+  A nexty = queue[nwds-1];   // unroll the fetch loop
 
   // We have the initial stack pointer.  Grow the stack down from there
   stack[0].pt = stack[1].pt = stack[2].pt = PTMARK;  // install initial ending marks.  word numbers and value pointers are unused
 
   // Set number of extra words to pull from the queue.  We always need 2 words after the first before a match is possible.
-  I es = 2;
+  I mes = (nwds<<2)+2;  // mash m and es into 1 register: 
   // debugging if(jt->parsercalls==0xdd)
   // debugging  jt->parsercalls=0xdd;
   // DO NOT RETURN from inside the parser loop.  Stacks must be processed.
@@ -447,12 +477,16 @@ A jtparsea(J jt, A *queue, I m){PSTK * RESTRICT stack;A z,*v;
    do{
     stack--;  // back up to new stack frame, where we will store the new word
 
-    if(likely(--m>=0)) {A y;     // if there is another valid token...
+    if(likely((mes-=4)>=0)){A y;     // if there is another valid token...
      // Move in the new word and check its type.  If it is a name that is not being assigned, resolve its
      // value.  m has the index of the word we just moved
-     I at=AT(y = queue[m]);   // fetch the next word from queue; pop the queue; extract the type, save as at
-     if(at&NAME) {
-      if(!PTISASGN(stack[1])) {L *s;  // Replace a name with its value, unless to left of ASGN.  This test is 'not assignment'
+// obsolete     I at=AT(y = queue[mes>>2]);   // fetch the next word from queue; pop the queue; extract the type, save as at
+     I at=AT(nexty); y=nexty;  // loop was unrolled once.  We can't keep nexty and nextat in regs so we just unroll one
+     nexty = queue[(mes>>2)-1];    // fetch the next word from queue; pop the queue; extract the type, save as at.
+      // The last fetch of nexty fetches from queue[-1].  This will not segfault, and we never come back to fetch from inside that bogus block.
+     stack[0].t = (UI4)((mes>>2)+1);  // install the original token number for the word
+     if(at&NAME){
+      if(!PTISASGN(stack[1])){L *s;  // Replace a name with its value, unless to left of ASGN.  This test is 'not assignment'
 
        // Name, not being assigned
        // Resolve the name.  If the name is x. m. u. etc, always resolve the name to its current value;
@@ -492,12 +526,13 @@ A jtparsea(J jt, A *queue, I m){PSTK * RESTRICT stack;A z,*v;
         // No bucket info.  Usually this is a locative/global, but it could be an explicit modifier, console level, or ".
         // If the name has a cached reference, use it
         if(likely(NAV(y)->cachedref!=0)){  // if the user doesn't care enough to turn on caching, performance must not be that important
+         // Note: this cannot be a NAMEABANDON, because such a name is never stacked where it can have the cachedref filled in
          A cachead=NAV(y)->cachedref; // use the cached address
-         if(unlikely(NAV(y)->flag&NMCACHEDSYM)){cachead=(A)((JT(jt,sympv)[(I)cachead]).val); if(unlikely(!cachead)){jsignal(EVVALUE);FP}}  // if it's a symbol index, fetch that.  value error only if cached symbol deleted
+         if(unlikely(NAV(y)->flag&NMCACHEDSYM)){cachead=(A)((sympv[(I)cachead]).val); if(unlikely(!cachead)){jsignal(EVVALUE);FP}}  // if it's a symbol index, fetch that.  value error only if cached symbol deleted
          y=cachead; at=AT(y); goto endname; // take its type, proceed
         }
 rdglob: ;  // here when we tried the buckets and failed
-        jt->parserstackframe.parsercurrtok = (I4)(m+1);  // syrd can fail, so we have to set the error-word number (before it was decremented) before calling
+        jt->parserstackframe.parsercurrtok = (I4)((mes>>2)+1);  // syrd can fail, so we have to set the error-word number (before it was decremented) before calling
         s=syrdnobuckets(y);  // do full symbol lookup, knowing that we have checked for buckets already
          // In case the name is assigned during this sentence (including subroutines), remember the data block that the name created
          // NOTE: the nvr stack may have been relocated by action routines, so we must refer to the global value of the base pointer
@@ -515,12 +550,12 @@ rdglob: ;  // here when we tried the buckets and failed
           AAV1(jt->nvra)[jt->parserstackframe.nvrtop++] = s->val;   // record the place where the value was protected, so we can free it when this sentence completes
          }  // if NJA/virtual, leave NVR alone
         }
+        at|=VERB;  // indicate that the symbol was not in the local table
        }
        // end of looking at local/global symbol tables
-       // s has the symbol for the name
+       // s has the symbol for the name.  at&VERB is set if the name was found in a global table
        if(likely(s!=0)){   // if symbol was defined...
         A sv = s->val;  // pointer to value block for the name
-        
         EPZ(sv)  // symbol table entry, but no value.
           // Following the original parser, we assume this is an error that has been reported earlier.  No ASSERT here, since we must pop nvr stack
         // The name is defined.  If it's a noun, use its value (the common & fast case)
@@ -529,7 +564,8 @@ rdglob: ;  // here when we tried the buckets and failed
         // that will make for tough debugging.  We really want to minimize overhead for each/every/inv.
         // But: if the name is any kind of locative, we have to have a full nameref so unquote can switch locales: can't use the value then
         // Otherwise (normal adv/verb/conj name), replace with a 'name~' reference
-        if((AT(sv)|at)&(NOUN|NAMEBYVALUE)){   // use value if noun or special name
+        if((AT(sv)|at)&(NOUN|NAMEBYVALUE)){   // use value if noun or special name, or name::
+         if(unlikely(at&NAMEABANDON))namecoco(jt, y, at, locbuckets, s, sv, sympv);  // if name::, go delete the name, leaving the value to be deleted later
          y=sv; at=AT(sv);
         }else if(unlikely(AT(sv)&NAMELESSMOD && !(NAV(y)->flag&NMLOC+NMILOC+NMIMPLOC+NMDOT))){
          // nameless modifier, and not a locative.  Don't create a reference; maybe cache the value
@@ -559,19 +595,22 @@ endname: ;
      // NOTE that we are using the original type for the word, which will be stale if the word was a
      // name that was replaced by name resolution.  We don't care - RPAR was never a name to begin with, and CONJ
      // is much more likely to be a primitive; and we don't want to take the time to refetch the resolved type
-     } else es = (at>>CONJX)?at>>CONJX:es;  // 1 for CONJ, 2 for RPAR, 0 otherwise
+     } else {
+      I es=mes&3; mes=(mes&-4); es=(at>>CONJX)&3?(at>>CONJX)&3:es; mes+=es;  // calculate pull count es (2 if RPAR, 1 if CONJ, 0 otherwise); use it if not 0, else keep old value
+     }
 
      // y has the resolved value, which is never a NAME unless there is an assignment immediately following.
      // Put it onto the stack along with a code indicating part of speech and the token number of the word
-     PTFROMTYPEASGN(stack[0].pt=stack0pt,at);   // stack the internal type too.  We split the ASGN types into with/without name to speed up IPSETZOMB.  Save pt in a register to avoid store forwarding
-     stack[0].t = (UI4)(m+1);  // install the original token number for the word
-     stack[0].a = y;   // finish setting the stack entry, with the new word
+     PTFROMTYPEASGN(stack[0].pt=stack0pt,at);   // stack the internal type too.  We split the ASGN types into with/without name to speed up IPSETZOMB.  Save pt in a register to avoid store forwarding.  This writes to stack0pt
          // and to reduce required initialization of marks.  Here we take advantage of the fact the CONW is set as a flag ONLY in ASGN type, and that PSN-PS is 1
+     stack[0].a = y;   // finish setting the stack entry, with the new word
     }else{  // No more tokens.  If m was 0, we are at the (virtual) mark; otherwise we are finished
-      if(m==-1) {stack[0].pt=stack0pt=PTMARK; break;}  // realize the virtual mark and use it.  a and pt will not be needed
-      EP       // if there's nothing more to pull, parse is over.  This is the normal end-of-parse
+      if(mes&4){stack[0].pt=stack0pt=PTMARK; break;}  // m is <0 and odd; must be -1.  realize the virtual mark and use it.  a and pt will not be needed.
+      EP       // m=-2.  there's nothing more to pull, parse is over.  This is the normal end-of-parse
     }
-   }while(es-->0);  // Repeat if more pulls required.  We also exit with stack==0 if there is an error
+    if(!(mes&3))break;  // exit stack phase when no more to do, leaving es=0
+    --mes;  // decr es count if not 0
+   }while(1);  // Repeat if more pulls required.  We also exit with stack==0 if there is an error
    // words have been pulled from queue
 
   // Now execute fragments as long as there is one to execute
@@ -618,10 +657,10 @@ endname: ;
       if((UI)(pline>>VJTFLGOK1X)>(UI)PTISNOTASGNNAME(stack[0]))if(likely(PTISM(stackfs[2]))){L *s;   // assignment to name; nothing in the stack to the right of what we are about to execute; well-behaved function (doesn't change locales)
        if(likely((AT(stack[0].a))&ASGNLOCAL)){
         // local assignment.  To avoid subroutine call overhead, make a quick check for primary symbol
-        if(likely((SGNIF(AR(UNLXAV0(locbuckets)),ARLCLONEDX)|(NAV(queue[m-1])->symx-1))>=0)){  // if we are using primary table and there is a symbol stored there...
-         s=JT(jt,sympv)+(I)NAV(queue[m-1])->symx;  // get address of symbol in primary table.  There may be no value; that's OK
-        }else{s=jtprobeislocal(jt,queue[m-1]);}
-       }else s=jtprobeisquiet(jt,queue[m-1],UNLXAV0(locbuckets));  // global assignment, get slot address
+        if(likely((SGNIF(AR(UNLXAV0(locbuckets)),ARLCLONEDX)|(NAV(queue[(mes>>2)-1])->symx-1))>=0)){  // if we are using primary table and there is a symbol stored there...
+         s=JT(jt,sympv)+(I)NAV(queue[(mes>>2)-1])->symx;  // get address of symbol in primary table.  There may be no value; that's OK
+        }else{s=jtprobeislocal(jt,queue[(mes>>2)-1]);}
+       }else s=jtprobeisquiet(jt,queue[(mes>>2)-1],UNLXAV0(locbuckets));  // global assignment, get slot address
        // Don't remember the assignand if it may change during execution, i. e. if the verb is unsafe.  For line 1 we have to look at BOTH verbs that come after the assignment
 // obsolete        s=((FAV(fs)->flag&(FAV(stack[1].a)->flag|((~pmask)<<(VASGSAFEX-1))))&VASGSAFE)?s:0;
        s=((FAV(fs)->flag&(FAV(stack[1].a)->flag|((~pline)<<VASGSAFEX)))&VASGSAFE)?s:0;  // pline is 0-2; if not 1, ignore 2nd stkpos
@@ -703,7 +742,7 @@ RECURSIVERESULTSCHECK
       }
      }else{
       // Lines 3-4, conj/adv execution.  We must get the parsing type of the result, but we don't need to worry about inplacing or recursion
-      AF actionfn=FAV(fs)->valencefns[pline-3];  // the routine we will execute.  It's going to take longer to read this than we can fill before the branch is mispredicted, usually
+      AF actionfn=FAVV(fs)->valencefns[pline-3];  // the routine we will execute.  It's going to take longer to read this than we can fill before the branch is mispredicted, usually
       A arg1=stack[1].a;   // 1st arg, monad or left dyad
       A arg2=stack[pline-1].a;   // 2nd arg, fs or right dyad
       UI4 restok=stack[1].t;  // save token # to use for result
@@ -778,9 +817,9 @@ failparse:  // If there was an error during execution or name-stacking, exit wit
   // so we don't free the names quite yet: we put them on the tpush stack to be freed after we know
   // we are through with the result.  If we are returning a noun, free them right away unless they happen to be the very noun we are returning
   // We apply the final free only when the NVR count goes to 0, to make sure we hold off till the last stacked reference has been seen off
-  v=AAV1(jt->nvra)+nvrotop;  // point to our region of the nvr area
+  v=AAV1(jt->nvra)+jt->parserstackframe.nvrotop;  // point to our region of the nvr area
   UI zcompval = !z||AT(z)&NOUN?0:-1;  // if z is 0, or a noun, immediately free only values !=z.  Otherwise don't free anything
-  DQ(jt->parserstackframe.nvrtop-nvrotop, A vv = *v;I am;
+  DQ(jt->parserstackframe.nvrtop-jt->parserstackframe.nvrotop, A vv = *v;I am;
    // if the NVR count is 1 before we decrement, we have hit the last stacked use & we free the block.
    // if we are performing (or finally deferring) the FINAL free, the value must be a complete zombie and cannot be active anywhere; otherwise we must clear it.  We clear it always
    if(likely((AMNVRDECR(vv,am))<2*AMNVRCT)){if(am&AMFREED){AMNVRAND(vv,~AMFREED) if(((UI)z^(UI)vv)>zcompval){fanano0(vv);}else{tpushna(vv);}}}
@@ -801,7 +840,7 @@ failparse:  // If there was an error during execution or name-stacking, exit wit
   R (A)((I)z+SGNTO0I4(stack[2].t));  // this is the return point from normal parsing
 
  }else{A y;  // m<2.  Happens fairly often, and full parse can be omitted
-  if(likely(m==1)){  // exit fast if empty input.  Happens only during load, but we can't deal with it
+  if(likely(nwds==1)){  // exit fast if empty input.  Happens only during load, but we can't deal with it
    // Only 1 word in the queue.  No need to parse - just evaluate & return.  We do it here to avoid parsing
    // overhead, because it happens enough to notice.
    // No ASSERT - must get to the end to pop stack

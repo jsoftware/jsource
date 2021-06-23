@@ -179,6 +179,46 @@ b =. 7!:0''
 b > 2e6+7!:0''
 )
 
+NB. name::
+a =: i. 1e6
+b =: 7!:0''
+1e6 -: # a::
+b > 2e6+7!:0''
+'value error' -: ". etx 'a + 5'
+a =: i. 1e6
+b =: 7!:0''
+1e6 -: ". '# a::'  NB. not deleted
+b < 1e6+7!:0''
+1e6 -: # a
+a =: i. 1e6
+b =: 7!:0''
+1e6 1e6 -: (# a::) , # a   NB. deleted, stack deferred
+b > 2e6+7!:0''
+'value error' -: ". etx 'a + 5'
+3 : 0 ''
+a =. i. 1e6
+b =. 7!:0''
+assert. 1e6 -: # a::
+assert. b > 2e6+7!:0''
+assert. 'value error' -: ". etx 'a + 5'
+a =. i. 1e6
+b =. 7!:0''
+assert. 1e6 -: ". '# a::'  NB. not deleted
+assert. b < 1e6+7!:0''
+assert. 1e6 -: # a
+a =. i. 1e6
+b =. 7!:0''
+NB. 1e6 1e6 -: (# a::) , # a   NB. crashes
+assert. 2e6 -: # a:: , a   NB. deleted, stack deferred
+a =. i. 1e6
+b =. 7!:0''
+assert. 1e6 1e6 -: (# a::) , , # a   NB. deleted, stack deferred
+assert. b > 2e6+7!:0''
+assert. 'value error' -: ". etx 'a + 5'
+1
+)
+
+
 NB. 4!: -----------------------------------------------------------------
 
 jnc   =: 4!:0

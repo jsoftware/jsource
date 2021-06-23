@@ -76,6 +76,9 @@ typedef AD *A;
 #define JTINPLACEW      (((I)1)<<JTINPLACEWX)
 #define JTINPLACEAX     1   // turn this on in jt to indicate that a can be inplaced.  Must be 1+JTINPLACEWX
 #define JTINPLACEA      (((I)1)<<JTINPLACEAX)
+// following bit used as arg to parse
+#define JTFROMEXECX    0   // parser call from ". - makes some features unavailable
+#define JTFROMEXEC      (((I)1)<<JTFROMEXECX)
 // following bit used as arg to jtfolk
 #define JTFOLKNOHFNX    2   // set to get the generic fork that does not expect the hfn in localuse
 #define JTFOLKNOHFN      (((I)1)<<JTFOLKNOHFNX)
@@ -1044,12 +1047,13 @@ typedef struct {DX re;DX im;} ZX;
 /* im - imaginary part                                                     */
 
 
-// parser stack - this MUST have size equal a power of 2!!
+// parser stack - should be a qword for fast copying
 typedef struct {
   // Because the parse decode looks mostly at pt, make that the first thing so that it is always aligned to the beginning
   // of whatever block is usd to copy one stack element to another.
  UI4 pt;  // parser type: code for one of the 9 variants recognized.
- UI4 t;  // token number for this block
+ S filler;
+ US t;  // token number for this block - 16 bits of token.  After assignment, set to -1 if final assignment
  A a;  // pointer to block
 } PSTK;
 

@@ -769,6 +769,7 @@
 #define ovs0(x0,x1,x2,x3)           jtovs0(jt,(x0),(x1),(x2),(x3))
 #define pad(x,y,z)                  jtpad(jt,(x),(y),(z))
 #define parse(x)                    jtparse(jt,(x))
+#define parseforexec(x)             jtparse((J)((I)jt|JTFROMEXEC),(x))
 #define parsea(x,y)                 jtparsea(jt,(x),(y))
 #define parsex(x0,x1,x2,x3)         jtparsex(jt,(x0),(x1),(x2),(x3))
 #define partfscan(x0,x1,x2,x3,x4,x5)  jtpartfscan(jt,(x0),(x1),(x2),(x3),(x4),(x5))

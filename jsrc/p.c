@@ -13,6 +13,31 @@
 
 #define PARSERSTKALLO (490*sizeof(PSTK))  // number of stack entries to allocate, when we allocate, in bytes
 
+/* parsing benchmark
+
+parsing & name lookup
+9!:5 :: 0: 1
+namelkp =: 3 : 0
+totl =. 0.
+for_i. y do. totl =. totl + 1. + 2. + (+/ % #) i end.
+totl
+)
+9!:5 :: 0: 0
+6!:2 'namelkp"2 i. 100 10000 4'
+
+parsing only
+namelkp =: 3 : 0
+totl =. 0.
+for. y do.
+ totl =. totl + 1. + 2. + 3.
+ totl =. * totl
+ totl =. totl - 2
+end.
+totl
+)
+(10) 6!:2 'namelkp i. 1e6'
+
+*/
 /* NVR - named value reference                                          */
 /* a value referenced in the parser which is the value of a name        */
 /* (that is, in some symbol table).                                     */
@@ -110,10 +135,10 @@ static const UI4 ptcol[11] = {  // there is a gap at SYMB.  CONW is used to hold
 // tests for pt types
 #define PTMARK 0x7F0000C9
 #define PTASGNNAME 0x7F8000C8
-#define PTISCAVN(s) ((s).pt&0x4000)
+#define PTISCAVN(pt) (pt&0x4000)
 #define PTISM(s)  ((s).pt==PTMARK)
 #define PTOKEND(t2,t3) ((((~(t2).pt)&0x4000)+((t3).pt^PTMARK))==0)  // t2 is CAVN and t3 is MARK
-#define PTISASGN(s)  ((s).pt&0x800000)
+#define PTISASGN(pt)  ((pt)&0x800000)   // this bit is NAMEX - we use that
 #define PTISNOTASGNNAME(s)  (((s).pt&0x1))
 #define PTISRPAR(s)  ((s).pt<0x100)
 // converting type field to pt, store in z
@@ -255,11 +280,12 @@ void auditblock(J jt,A w, I nonrecurok, I virtok) {
 
 // Run parser, creating a new debug frame.  Explicit defs, which make other tests first, then go through jtparsea
 // the result has bit 0 set if final assignment
-F1(jtparse){A z;
+// JT flags indicate whether call comes from ".
+F1(jtparse){F1PREFIP;A z;
  ARGCHK1(w);
  A *queue=AAV(w); I m=AN(w);   // addr and length of sentence
  RZ(deba(DCPARSE,queue,(A)m,0L));  // We don't need a new stack frame if there is one already and debug is off
- z=parsea(queue,m);
+ z=jtparsea(jtinplace,queue,m);
  debz();
  R z;
 }
@@ -402,7 +428,8 @@ A jtextnvr(J jt){ASSERT(jt->parserstackframe.nvrtop<32000,EVSTACK); RZ(jt->nvra 
 #define FRONTMARKS 1  // amount of space to leave for front-of-string mark
 // Parse a J sentence.  Input is the queue of tokens
 // Result has PARSERASGNX (bit 0) set if the last thing is an assignment
-A jtparsea(J jt, A *queue, I nwds){PSTK * RESTRICT stack;A z,*v;
+// JT flag is used to indicate execution from ". - we can't honor name:: then, or perhaps some assignments
+A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * RESTRICT stack;A z,*v;
  // jt->parsercurrtok must be set before executing anything that might fail; it holds the original
  // word number+1 of the token that failed.  jt->parsercurrtok is set before dispatching an action routine,
  // so that the information is available for formatting an error display
@@ -458,14 +485,14 @@ A jtparsea(J jt, A *queue, I nwds){PSTK * RESTRICT stack;A z,*v;
   stack[0].pt = stack[1].pt = stack[2].pt = PTMARK;  // install initial ending marks.  word numbers and value pointers are unused
 
   // Set number of extra words to pull from the queue.  We always need 2 words after the first before a match is possible.
-  I mes = (nwds<<2)+2;  // mash m and es into 1 register: 
+  I mes = nwds+(3LL<<CONJX);  // mash m and es into 1 register:  bit 29-30 es delayline, low 16 mes
   // debugging if(jt->parsercalls==0xdd)
   // debugging  jt->parsercalls=0xdd;
   // DO NOT RETURN from inside the parser loop.  Stacks must be processed.
   LX *locbuckets=LXAV0(jt->locsyms);  // the local symbol table cannot change during the parse
 
+  UI4 stack0pt=PTMARK;  // will hold the EDGE+AVN value, which doesn't change much and is stored late   someday combine this with mes (64-bit only)
   while(1){  // till no more matches possible...
-    UI4 stack0pt;  // will hold the EDGE+AVN value, which doesn't change much and is stored late
 
     // no executable fragment, pull from the queue.  If we pull ')', there is no way we can execute
     // anything till 2 more words have been pulled, so we pull them here to avoid parse overhead.
@@ -475,18 +502,20 @@ A jtparsea(J jt, A *queue, I nwds){PSTK * RESTRICT stack;A z,*v;
     // the only time it is positive here is the initial filling of the queue
 
    do{
-    stack--;  // back up to new stack frame, where we will store the new word
+    --stack;  // back up to new stack frame, where we will store the new word
 
-    if(likely((mes-=4)>=0)){A y;     // if there is another valid token...
+    --mes;
+    if(likely((mes&0x10000)==0)){A y;     // if there is another valid token...
      // Move in the new word and check its type.  If it is a name that is not being assigned, resolve its
      // value.  m has the index of the word we just moved
 // obsolete     I at=AT(y = queue[mes>>2]);   // fetch the next word from queue; pop the queue; extract the type, save as at
      I at=AT(nexty); y=nexty;  // loop was unrolled once.  We can't keep nexty and nextat in regs so we just unroll one
-     nexty = queue[(mes>>2)-1];    // fetch the next word from queue; pop the queue; extract the type, save as at.
+     nexty = queue[(US)mes-1];    // fetch the next word from queue; pop the queue; extract the type, save as at.
       // The last fetch of nexty fetches from queue[-1].  This will not segfault, and we never come back to fetch from inside that bogus block.
-     stack[0].t = (UI4)((mes>>2)+1);  // install the original token number for the word
-     if(at&NAME){
-      if(!PTISASGN(stack[1])){L *s;  // Replace a name with its value, unless to left of ASGN.  This test is 'not assignment'
+     stack[0].t = (US)(mes+1);  // install the original token number for the word
+// obsolete      if(at&NAME){
+// obsolete       if(!PTISASGN(stack[1])){L *s;  // Replace a name with its value, unless to left of ASGN.  This test is 'not assignment'
+     if((at&NAME)>PTISASGN(stack0pt)){L *s;  // Replace a name with its value, unless to left of ASGN.  This test is 'name and not assignment' uses the fact that NAME flag is <= the flag for assignment
 
        // Name, not being assigned
        // Resolve the name.  If the name is x. m. u. etc, always resolve the name to its current value;
@@ -532,7 +561,7 @@ A jtparsea(J jt, A *queue, I nwds){PSTK * RESTRICT stack;A z,*v;
          y=cachead; at=AT(y); goto endname; // take its type, proceed
         }
 rdglob: ;  // here when we tried the buckets and failed
-        jt->parserstackframe.parsercurrtok = (I4)((mes>>2)+1);  // syrd can fail, so we have to set the error-word number (before it was decremented) before calling
+        jt->parserstackframe.parsercurrtok = (US)(mes+1);  // syrd can fail, so we have to set the error-word number (before it was decremented) before calling
         s=syrdnobuckets(y);  // do full symbol lookup, knowing that we have checked for buckets already
          // In case the name is assigned during this sentence (including subroutines), remember the data block that the name created
          // NOTE: the nvr stack may have been relocated by action routines, so we must refer to the global value of the base pointer
@@ -565,7 +594,7 @@ rdglob: ;  // here when we tried the buckets and failed
         // But: if the name is any kind of locative, we have to have a full nameref so unquote can switch locales: can't use the value then
         // Otherwise (normal adv/verb/conj name), replace with a 'name~' reference
         if((AT(sv)|at)&(NOUN|NAMEBYVALUE)){   // use value if noun or special name, or name::
-         if(unlikely(at&NAMEABANDON))namecoco(jt, y, at, locbuckets, s, sv, sympv);  // if name::, go delete the name, leaving the value to be deleted later
+         if(unlikely(at&NAMEABANDON))if(!((I)jtinplace&JTFROMEXEC))namecoco(jt, y, at, locbuckets, s, sv, sympv);  // if name::, go delete the name, leaving the value to be deleted later
          y=sv; at=AT(sv);
         }else if(unlikely(AT(sv)&NAMELESSMOD && !(NAV(y)->flag&NMLOC+NMILOC+NMIMPLOC+NMDOT))){
          // nameless modifier, and not a locative.  Don't create a reference; maybe cache the value
@@ -588,15 +617,15 @@ rdglob: ;  // here when we tried the buckets and failed
          at=AT(y);  // refresh the type with the type of the resolved name
        }
 endname: ;
-      }
 
-     // If the new word was not a name (whether assigned or not), look to see if it is ) or a conjunction,
+     // If the new word was not an unassigned name, look to see if it is ) or a conjunction,
      // which allow 2 or 1 more pulls from the queue without checking for an executable fragment.
      // NOTE that we are using the original type for the word, which will be stale if the word was a
      // name that was replaced by name resolution.  We don't care - RPAR was never a name to begin with, and CONJ
      // is much more likely to be a primitive; and we don't want to take the time to refetch the resolved type
      } else {
-      I es=mes&3; mes=(mes&-4); es=(at>>CONJX)&3?(at>>CONJX)&3:es; mes+=es;  // calculate pull count es (2 if RPAR, 1 if CONJ, 0 otherwise); use it if not 0, else keep old value
+// obsolete       I es=mes&3; mes=(mes&-4); es=(at>>CONJX)&3?(at>>CONJX)&3:es; mes+=es;  // calculate pull count es (2 if RPAR, 1 if CONJ, 0 otherwise); use it if not 0, else keep old value
+      mes|=at&(3LL<<CONJX);  // calculate pull count es (2 if RPAR, 1 if CONJ, 0 otherwise); OR it in: 00= no more, 01=1 more, 1x=2 more
      }
 
      // y has the resolved value, which is never a NAME unless there is an assignment immediately following.
@@ -605,13 +634,14 @@ endname: ;
          // and to reduce required initialization of marks.  Here we take advantage of the fact the CONW is set as a flag ONLY in ASGN type, and that PSN-PS is 1
      stack[0].a = y;   // finish setting the stack entry, with the new word
     }else{  // No more tokens.  If m was 0, we are at the (virtual) mark; otherwise we are finished
-      if(mes&4){stack[0].pt=stack0pt=PTMARK; break;}  // m is <0 and odd; must be -1.  realize the virtual mark and use it.  a and pt will not be needed.
+      if(mes&1){mes=0x1ffff; stack[0].pt=stack0pt=PTMARK; break;}  // m is <0 and odd; must be -1.  realize the virtual mark and use it.  a and pt will not be needed.  make sure es is 0 when we exit loop
       EP       // m=-2.  there's nothing more to pull, parse is over.  This is the normal end-of-parse
     }
-    if(!(mes&3))break;  // exit stack phase when no more to do, leaving es=0
-    --mes;  // decr es count if not 0
+    if(!(mes&(3LL<<CONJX)))break;  // exit stack phase when no more to do, leaving es=0
+// obsolete     --mes;  // decr es count if not 0
+    mes=(mes&~((UI)-1LL<<CONJX))|((mes>>1)&(1LL<<CONJX));  // decr es count if not 0
    }while(1);  // Repeat if more pulls required.  We also exit with stack==0 if there is an error
-   // words have been pulled from queue
+   // words have been pulled from queue.  es (bits 29-30 of mes) must be 00
 
   // Now execute fragments as long as there is one to execute
    while(1) {
@@ -621,8 +651,12 @@ endname: ;
     // and finally returning the new front-of-stack pointer
 
     // First, create the bitmask of parser lines that are eligible to execute
-    I pmask=(((~stack0pt)&0x80)*2)+((stack0pt>>24) & (stack[1].pt>>16) & (stack[2].pt>>8) & stack[3].pt);  // bit 8 is set ONLY for LPAR
+// obsolete     I pmask=(((~stack0pt)&0x80)*2)+((stack0pt>>24) & (stack[1].pt>>16) & (stack[2].pt>>8) & stack[3].pt);  // bit 8 is set ONLY for LPAR
+// obsolete     I pmask=(((~stack0pt)&0x80)*2)+((stack0pt>>24) & (I)((C*)&stack[1].pt)[2] & (I)((C*)&stack[2].pt)[1]  & (I)((C*)&stack[3].pt)[0] );  // bit 8 is set ONLY for LPAR
+    I pmask=(I)((C*)&stack[1].pt)[2] & (I)((C*)&stack[2].pt)[1]  & (I)((C*)&stack[3].pt)[0];  // bit 8 is set ONLY for LPAR
+    pmask=(((~stack0pt)&0x80)*2)+((stack0pt>>24)&pmask);
     if(!pmask)break;  // If all 0, nothing is dispatchable, go push next word
+    A stk1a=stack[1].a, stk2a=stack[2].a;  // fetch these as early as possible
 
     // We are going to execute an action routine.  This will be an indirect branch, and it will mispredict.  To reduce the cost of the misprediction,
     // we want to pile up as many instructions as we can before the branch, preferably getting out of the way as many loads as possible so that they can finish
@@ -634,10 +668,10 @@ endname: ;
     // Fill in the token# (in case of error) based on the line# we are running
     jt->parserstackframe.parsercurrtok = stack[((I)0x056A9>>(pline*2))&3].t;   // in order 9-0: 0 0 1 1 1 2 2 2 2 1->00 00 01 01 01 10 10 10 10 01->0000 0101 0110 1010 1001
     if(pmask&0x1F){
-     // Here for lines 0-4, which execute the routine pointed to by fs
-     // Get the branch-to address ASAP.  It comes from the appropriate valence of the appropriate stack element.  Stack element is 2 except for line 0; valence is monadic for lines 0 1 4
+     // Here for lines 0-4, which execute the entity pointed to by fs
+     A fs=stk2a; fs=pmask&1?stk1a:fs;  // pointer to the A block for the entity about to be executed
+     I fsflag=FAV(fs)->flag;  // fetch flags early - we usually need them
      PSTK *stackfs=stack+2-(pmask&1);  // stackpointer for the executing word: 1 2 2 2 2
-     A fs=stackfs->a;  // pointer to the A block for the entity about to be executed
 //     AF actionfn=FAV(fs)->valencefns[(pline&2)>>1];  // the routine we will execute.  It's going to take longer to read this than we can fill before the branch is mispredicted, usually
      // We will be making a bivalent call to the action routine; it will be w,fs,fs for monads and a,w,fs for dyads (with appropriate changes for modifiers).  Fetch those arguments
      // We have fs already.  arg1 will come from position 2 3 1 1 1 depending on stack line; arg2 will come from 1 2 3 2 3
@@ -649,7 +683,7 @@ endname: ;
       // could avoid having the $: stack by having $: look into the execution stack to find the verb that is being executed.  But overall it is faster to pay the expense of the $:
       // stack in exchange for being able to fill the time before & after the misprediction
       // Work on inplacing.  See if the primitive being executed is inplaceable
-      pline|=(FAV(fs)->flag>>(pline>>1))&VJTFLGOK1;  // insert VJTFLGOK1 flag if inplaceable
+      pline|=(fsflag>>(pline>>1))&VJTFLGOK1;  // insert VJTFLGOK1 flag if inplaceable
       // If it is an inplaceable assignment to a known name that has a value, remember the name and the value
       // We handle =: N V N, =: V N, =: V V N.  In the last case both Vs must be ASGSAFE.  When we set jt->asginfo.assignsym we are warranting
       // that the next assignment will be to the name, and that the reassigned value is available for inplacing.  In the V V N case,
@@ -657,10 +691,11 @@ endname: ;
       if((UI)(pline>>VJTFLGOK1X)>(UI)PTISNOTASGNNAME(stack[0]))if(likely(PTISM(stackfs[2]))){L *s;   // assignment to name; nothing in the stack to the right of what we are about to execute; well-behaved function (doesn't change locales)
        if(likely((AT(stack[0].a))&ASGNLOCAL)){
         // local assignment.  To avoid subroutine call overhead, make a quick check for primary symbol
-        if(likely((SGNIF(AR(UNLXAV0(locbuckets)),ARLCLONEDX)|(NAV(queue[(mes>>2)-1])->symx-1))>=0)){  // if we are using primary table and there is a symbol stored there...
-         s=JT(jt,sympv)+(I)NAV(queue[(mes>>2)-1])->symx;  // get address of symbol in primary table.  There may be no value; that's OK
-        }else{s=jtprobeislocal(jt,queue[(mes>>2)-1]);}
-       }else s=jtprobeisquiet(jt,queue[(mes>>2)-1],UNLXAV0(locbuckets));  // global assignment, get slot address
+if(mes&0xffff0000)SEGFAULT;  // scaf
+        if(likely((SGNIF(AR(UNLXAV0(locbuckets)),ARLCLONEDX)|(NAV(queue[mes-1])->symx-1))>=0)){  // if we are using primary table and there is a symbol stored there...
+         s=JT(jt,sympv)+(I)NAV(queue[mes-1])->symx;  // get address of symbol in primary table.  There may be no value; that's OK
+        }else{s=jtprobeislocal(jt,queue[mes-1]);}
+       }else s=jtprobeisquiet(jt,queue[mes-1],UNLXAV0(locbuckets));  // global assignment, get slot address
        // Don't remember the assignand if it may change during execution, i. e. if the verb is unsafe.  For line 1 we have to look at BOTH verbs that come after the assignment
 // obsolete        s=((FAV(fs)->flag&(FAV(stack[1].a)->flag|((~pmask)<<(VASGSAFEX-1))))&VASGSAFE)?s:0;
        s=((FAV(fs)->flag&(FAV(stack[1].a)->flag|((~pline)<<VASGSAFEX)))&VASGSAFE)?s:0;  // pline is 0-2; if not 1, ignore 2nd stkpos
@@ -682,6 +717,7 @@ endname: ;
       A arg1=stack[(0x6>>pline)&3].a;   // 1st arg, monad or left dyad  2 3 1 (1 1)   0110  0 1 2 -> 2 3 1   1 11 111
       stack[pline]=stack[0];  // close up the stack  0->0(NOP)  0->1   0->2
       stack+=(pline>>1)+1;   // finish relocating stack   1 1 2 (1 2)
+     // Get the branch-to address.  It comes from the appropriate valence of the appropriate stack element.  Stack element is 2 except for line 0; valence is monadic for lines 0 1 4
       AF actionfn=FAVV(fs)->valencefns[pline>>1];  // the routine we will execute.  We have to wait till after the register pressure or the routine address will be written to memory
       // When the args return from the verb, we will check to see if any were inplaceable and unused.  But there is a problem:
       // the arg may be freed by the verb (if it is inplaceable and gets replaced by a virtual reference).  In this case we can't
@@ -740,10 +776,15 @@ RECURSIVERESULTSCHECK
       audittstack(jt);
 #endif
       }
+      // Most of the executed fragements are executed right here.  If token 0 is AVN, we know that it is impossible for the new stack to be executable (we have just put a noun
+      // in the first position, and if that produced an executable it would have been executed earlier.
+      // Also, if token 0 is EDGE but not LPAR and the pline is 0 or 2, that similarly can't execute (if LPAR and line 0/2, the only possible exec is () )
+      // we save a pass through the matcher in those cases.  But it doesn't seem to help
+// obsolete       if(PTISCAVN(stack0pt))break;
      }else{
       // Lines 3-4, conj/adv execution.  We must get the parsing type of the result, but we don't need to worry about inplacing or recursion
       AF actionfn=FAVV(fs)->valencefns[pline-3];  // the routine we will execute.  It's going to take longer to read this than we can fill before the branch is mispredicted, usually
-      A arg1=stack[1].a;   // 1st arg, monad or left dyad
+      A arg1=stk1a;   // 1st arg, monad or left dyad
       A arg2=stack[pline-1].a;   // 2nd arg, fs or right dyad
       UI4 restok=stack[1].t;  // save token # to use for result
       stack[pline-2]=stack[0]; // close up the stack
@@ -773,7 +814,7 @@ RECURSIVERESULTSCHECK
        stack=jtis(jt,stack); // assignment
        EPZ(stack)  // fail if error
       }else{  // paren
-       if(likely(PTISCAVN(stack[1])>stack[2].pt)){  // must be [1]=CAVN and [2]=RPAR
+       if(likely(PTISCAVN(stack[1].pt)>stack[2].pt)){  // must be [1]=CAVN and [2]=RPAR
         stack0pt=stack[1].pt; stack[2]=stack[1]; stack[2].t=stack[0].t;  //  Install result over ).  Use value/type from expr, token # from (   Bottom of stack was modified, so refresh the type for it
         stack+=2;  // advance stack pointer to result
        }else{jsignal(EVSYNTAX); FP}  // error if contents of ( not valid
@@ -837,7 +878,7 @@ failparse:  // If there was an error during execution or name-stacking, exit wit
 #endif
 
   // NOW it is OK to return.  Insert the final-assignment bit (sign of stack[2]) into the return
-  R (A)((I)z+SGNTO0I4(stack[2].t));  // this is the return point from normal parsing
+  R (A)((I)z+SGNTO0US(stack[2].t));  // this is the return point from normal parsing
 
  }else{A y;  // m<2.  Happens fairly often, and full parse can be omitted
   if(likely(nwds==1)){  // exit fast if empty input.  Happens only during load, but we can't deal with it
@@ -851,6 +892,7 @@ failparse:  // If there was an error during execution or name-stacking, exit wit
       A sv;  // pointer to value block for the name
       RZ(sv = s->val);  // symbol table entry, but no value.  Must be in an explicit definition, so there is no need to raise an error
       if(likely(((AT(sv)|at)&(NOUN|NAMEBYVALUE))!=0)){   // if noun or special name, use value
+       if(unlikely(at&NAMEABANDON))if(!((I)jtinplace&JTFROMEXEC))namecoco(jt, y, at, LXAV0(jt->locsyms), s, sv, JT(jt,sympv));  // if name::, go delete the name, leaving the value to be deleted later
        y=sv;
       } else y = namerefacv(y, s);   // Replace other acv with reference.  Could fail.
     } else {

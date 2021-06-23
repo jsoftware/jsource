@@ -19,7 +19,7 @@
 #include "p.h"
 
 
-A jteval(J jt,C*s){R PARSERVALUE(parse(tokens(cstr(s),1+(AN(jt->locsyms)>1))));}
+A jteval(J jt,C*s){R PARSERVALUE(parseforexec(tokens(cstr(s),1+(AN(jt->locsyms)>1))));}
 
 A jtev1(J jt,    A w,C*s){A z; R df1(z,  w,eval(s));}  // parse *s and apply to w
 A jtev2(J jt,A a,A w,C*s){A z; R df2(z,a,w,eval(s));}  // parse *s and apply to a and w
@@ -33,7 +33,7 @@ F1(jtexec1){A z;
  }else{
   F1RANK(1,jtexec1,DUMMYSELF);
   A savself = jt->sf;  // in case we are in a recursion, preserve the restart point
-  STACKCHKOFL FDEPINC(1); z=PARSERVALUE(parse(ddtokens(vs(w),4+1+(AN(jt->locsyms)>1)))); FDEPDEC(1);  // replace DDs, but require that they be complete within the string (no jgets)
+  STACKCHKOFL FDEPINC(1); z=PARSERVALUE(parseforexec(ddtokens(vs(w),4+1+(AN(jt->locsyms)>1)))); FDEPDEC(1);  // replace DDs, but require that they be complete within the string (no jgets)
  jt->sf=savself;
  }
  RETF(z&&!(AT(z)&NOUN)?mtv:z);  // if non-noun result, return empty $0
@@ -77,14 +77,14 @@ F1(jtexg){A*v,*wv,x,y,z;I n;
  ASSERT(BOX&AT(w),EVDOMAIN);
  GATV0(z,BOX,n,1); v=AAV(z);
  DO(n, x=wv[i]; RZ(*v++=(y=cex(x,jtfx,0L))?y:exg(x)););  // if the AR can be converted to an A, do so; otherwise it should be a list of ARs, recur on each
- R PARSERVALUE(parse(z));
+ R PARSERVALUE(parseforexec(z));
 }
 
 L* jtjset(J jt,C*name,A x){R symbisdel(nfs((I)strlen(name),name),x,jt->global);}
 
 F2(jtapplystr){PROLOG(0054);A fs,z;
  F2RANK(1,RMAX,jtapplystr,DUMMYSELF);
- RZ(fs=PARSERVALUE(parse(tokens(vs(a),1+(AN(jt->locsyms)>1)))));
+ RZ(fs=PARSERVALUE(parseforexec(tokens(vs(a),1+(AN(jt->locsyms)>1)))));
  ASSERT(VERB&AT(fs),EVSYNTAX);
  STACKCHKOFL FDEPINC(d=fdep(fs)); z=CALL1(FAV(fs)->valencefns[0],w,fs); FDEPDEC(d);
  EPILOG(z); 

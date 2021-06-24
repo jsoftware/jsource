@@ -340,7 +340,8 @@ static A virthook(J jtip, A f, A g){
 #endif
 
 // name:: delete the symbol name but not deleting the value.  If the usecount of the value is 1 and it is not on the NVR stack, make it inplaceable.  Replace the nameref with a tpush or NVR free
-static I namecoco(J jt, A y, I at, LX *locbuckets, L *s, A sv, L *sympv){
+static I namecoco(J jt, A y, I at, LX *locbuckets, L *s, A sv, L *sympv){F1PREFIP;
+ if(((I)jtinplace&JTFROMEXEC))R 1;
  A fndst=UNLXAV0(locbuckets); if(unlikely((at&VERB)!=0))fndst=syrdforlocale(y);  // get locale to use.  This re-looks up global names, but they should be rare in name::
  LX *asymx=LXAV0(fndst)+SYMHASH(NAV(s->name)->hash,AN(fndst)-SYMLINFOSIZE);  // get pointer to index of start of chain; address of previous symbol in chain
  LX nextsymx=*asymx;  // symbol number pointed to by asymx, possibly w/permanent indicator
@@ -490,6 +491,7 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * RESTRICT stack;A z,*v;
   // debugging  jt->parsercalls=0xdd;
   // DO NOT RETURN from inside the parser loop.  Stacks must be processed.
   LX *locbuckets=LXAV0(jt->locsyms);  // the local symbol table cannot change during the parse
+  // Move rank flags from locsyms to locbuckets low bits.  NOTE that locbuckets is always on an 8-byte boundary, even in 32-bit code
 
   UI4 stack0pt=PTMARK;  // will hold the EDGE+AVN value, which doesn't change much and is stored late   someday combine this with mes (64-bit only)
   while(1){  // till no more matches possible...
@@ -515,115 +517,121 @@ A jtparsea(J jt, A *queue, I nwds){F1PREFIP;PSTK * RESTRICT stack;A z,*v;
      stack[0].t = (US)(mes+1);  // install the original token number for the word
 // obsolete      if(at&NAME){
 // obsolete       if(!PTISASGN(stack[1])){L *s;  // Replace a name with its value, unless to left of ASGN.  This test is 'not assignment'
-     if((at&NAME)>PTISASGN(stack0pt)){L *s;  // Replace a name with its value, unless to left of ASGN.  This test is 'name and not assignment' uses the fact that NAME flag is <= the flag for assignment
-
-       // Name, not being assigned
-       // Resolve the name.  If the name is x. m. u. etc, always resolve the name to its current value;
-       // otherwise resolve nouns to values, and others to 'name~' references
-       // To save some overhead, we inline this and do the analysis in a different order here
-       // The important performance case is local names with bucket info.  Pull that out & do it without the call overhead
-       // This code is copied from s.c, except for the symx: since that occurs only in explicit definitions we can get to it only through here
-       I locstflags=AR(UNLXAV0(locbuckets));  // flags from local symbol table
-       L *sympv=JT(jt,sympv);
-       if(likely((SGNIF(locstflags,ARLCLONEDX)|(NAV(y)->symx-1))>=0)){  // if we are using primary table and there is a symbol stored there...
-        s=sympv+(I)NAV(y)->symx;  // get address of symbol in primary table
-        if(unlikely(s->val==0))goto rdglob;  // if value has not been assigned, ignore it
-       }else if(likely(NAV(y)->bucket!=0)){I bx;
-        if(likely(0 <= (bx = ~NAV(y)->bucketx))){   // negative bucketx (now positive); skip that many items, and then you're at the right place.  This is the path for almost all local symbols
-         s = locbuckets[NAV(y)->bucket]+sympv;  // fetch hashchain headptr, point to L for first symbol
-         if(unlikely(bx>0)){NOUNROLL do{s = s->next+sympv;}while(--bx);}  // skip the prescribed number, which is usually 1
-         if(unlikely(s->val==0))goto rdglob;  // if value has not been assigned, ignore it
-        }else{
-         // positive bucketx (now negative); that means skip that many items and then do name search.  This is set for words that were recognized as names but were not detected as assigned-to in the definition.  This is the path for global symbols
-         // If no new names have been assigned since the table was created, we can skip this search, since it must fail (this is the path for words in z eg)
-         if(likely(!(locstflags&ARNAMEADDED)))goto rdglob;
-         // from here on it is rare to find a name - usually they're globals defined elsewhere
-         LX lx = locbuckets[NAV(y)->bucket];  // index of first block if any
-         I m=NAV(y)->m; C* nm=NAV(y)->s; UI4 hsh=NAV(y)->hash;  // length/addr of name from name block
-         if(unlikely(++bx!=0)){NOUNROLL do{lx = sympv[lx].next;}while(++bx);}  // rattle off the permanents, usually 1
-         // Now lx is the index of the first name that might match.  Do the compares
-         NOUNROLL while(1) {
-          if(lx==0)goto rdglob;  // If we run off chain, go read from globals
-          lx=SYMNEXT(lx);  // we are now into non-PERMANENT symbols & must clear the flag
-          s = lx+sympv;  // symbol entry
-          IFCMPNAME(NAV(s->name),nm,m,hsh,{if(unlikely(s->val==0))goto rdglob; break;})  // if match, we're done looking; could be not found, if no value
-          lx = s->next;
-         }
-         // Here there was a value in the local symbol table
-        }
+     if((at&NAME)>PTISASGN(stack0pt)){L *s;A sv;  // Replace a name with its value, unless to left of ASGN.  This test is 'name and not assignment' uses the fact that NAME flag is <= the flag for assignment
+      // Name, not being assigned
+      // Resolve the name.  If the name is x. m. u. etc, always resolve the name to its current value;
+      // otherwise resolve nouns to values, and others to 'name~' references
+      // To save some overhead, we inline this and do the analysis in a different order here
+      // The important performance case is local names with bucket info.  Pull that out & do it without the call overhead
+      // This code is copied from s.c, except for the symx: since that occurs only in explicit definitions we can get to it only through here
+      I locstflags=AR(UNLXAV0(locbuckets));  // flags from local symbol table
+      L *sympv=JT(jt,sympv);
+      if(likely((SGNIF(locstflags,ARLCLONEDX)|(NAV(y)->symx-1))>=0)){  // if we are using primary table and there is a symbol stored there...
+       s=sympv+(I)NAV(y)->symx;  // get address of symbol in primary table
+       if(unlikely((sv=s->val)==0))goto rdglob;  // if value has not been assigned, ignore it
+      }else if(likely(NAV(y)->bucket!=0)){I bx;
+       if(likely(0 <= (bx = ~NAV(y)->bucketx))){   // negative bucketx (now positive); skip that many items, and then you're at the right place.  This is the path for almost all local symbols
+        s = locbuckets[NAV(y)->bucket]+sympv;  // fetch hashchain headptr, point to L for first symbol
+        if(unlikely(bx>0)){NOUNROLL do{s = s->next+sympv;}while(--bx);}  // skip the prescribed number, which is usually 1
+        if(unlikely((sv=s->val)==0))goto rdglob;  // if value has not been assigned, ignore it
        }else{
-        // No bucket info.  Usually this is a locative/global, but it could be an explicit modifier, console level, or ".
-        // If the name has a cached reference, use it
-        if(likely(NAV(y)->cachedref!=0)){  // if the user doesn't care enough to turn on caching, performance must not be that important
-         // Note: this cannot be a NAMEABANDON, because such a name is never stacked where it can have the cachedref filled in
-         A cachead=NAV(y)->cachedref; // use the cached address
-         if(unlikely(NAV(y)->flag&NMCACHEDSYM)){cachead=(A)((sympv[(I)cachead]).val); if(unlikely(!cachead)){jsignal(EVVALUE);FP}}  // if it's a symbol index, fetch that.  value error only if cached symbol deleted
-         y=cachead; at=AT(y); goto endname; // take its type, proceed
+        // positive bucketx (now negative); that means skip that many items and then do name search.  This is set for words that were recognized as names but were not detected as assigned-to in the definition.  This is the path for global symbols
+        // If no new names have been assigned since the table was created, we can skip this search, since it must fail (this is the path for words in z eg)
+        if(likely(!(locstflags&ARNAMEADDED)))goto rdglob;
+        // from here on it is rare to find a name - usually they're globals defined elsewhere
+        LX lx = locbuckets[NAV(y)->bucket];  // index of first block if any
+        I m=NAV(y)->m; C* nm=NAV(y)->s; UI4 hsh=NAV(y)->hash;  // length/addr of name from name block
+        if(unlikely(++bx!=0)){NOUNROLL do{lx = sympv[lx].next;}while(++bx);}  // rattle off the permanents, usually 1
+        // Now lx is the index of the first name that might match.  Do the compares
+        NOUNROLL while(1) {
+         if(lx==0)goto rdglob;  // If we run off chain, go read from globals
+         lx=SYMNEXT(lx);  // we are now into non-PERMANENT symbols & must clear the flag
+         s = lx+sympv;  // symbol entry
+         IFCMPNAME(NAV(s->name),nm,m,hsh,{if(unlikely((sv=s->val)==0))goto rdglob; break;})  // if match, we're done looking; could be not found, if no value
+         lx = s->next;
         }
+        // Here there was a value in the local symbol table
+       }
+      }else{
+       // No bucket info.  Usually this is a locative/global, but it could be an explicit modifier, console level, or ".
+       // If the name has a cached reference, use it
+       if(likely(NAV(y)->cachedref!=0)){  // if the user doesn't care enough to turn on caching, performance must not be that important
+        // Note: this cannot be a NAMEABANDON, because such a name is never stacked where it can have the cachedref filled in
+        A cachead=NAV(y)->cachedref; // use the cached address
+        if(unlikely(NAV(y)->flag&NMCACHEDSYM)){cachead=(A)((sympv[(I)cachead]).val); if(unlikely(!cachead)){jsignal(EVVALUE);FP}}  // if it's a symbol index, fetch that.  value error only if cached symbol deleted
+        y=cachead; at=AT(y); goto endname; // take its type, proceed
+       }
 rdglob: ;  // here when we tried the buckets and failed
-        jt->parserstackframe.parsercurrtok = (US)(mes+1);  // syrd can fail, so we have to set the error-word number (before it was decremented) before calling
-        s=syrdnobuckets(y);  // do full symbol lookup, knowing that we have checked for buckets already
-         // In case the name is assigned during this sentence (including subroutines), remember the data block that the name created
-         // NOTE: the nvr stack may have been relocated by action routines, so we must refer to the global value of the base pointer
-         // Stack a named value only once.  This is needed only for names whose VALUE is put onto the stack (i. e. a noun); if we stack a REFERENCE
-         // (via namerefacv), no special protection is needed.  And, it is not needed for local names, because they are inaccessible to deletion in called
-         // functions (that is, the user should not use u. to delete a local name).  If a local name is deleted, we always defer the deletion till the end of the sentence, easier than checking
-         // When NVR is set, AM is used to hold the count of NVR stacking, so we can't have NVR and NJA both set.  User manages NJAs separately anyway
-        if(likely(s!=0))if(likely(s->val!=0))if(AT(s->val)&NOUN){ 
-         // Normally local variables never get close to here because they have bucket info.  But if they are computed assignments,
-         // or inside eval strings, they may come through this path.  If one of them is y, it might be virtual.  Thus, we must make sure we don't
-         // damage AM in that case.  We don't need NVR then, because locals never need NVR.  Similarly, an LABANDONED name does not have NVR semantics, so leave it alone
-         if(likely(!(AFLAG(s->val)&AFNJA+AFVIRTUAL)))if(likely((AM(s->val)&AMNV)!=0)){
-          // NOTE that if the name was deleted in another task s->val will be invalid and we will crash
-          AMNVRINCR(s->val)  // add 1 to the NVR count, now that we are stacking
-          AAV1(jt->nvra)[jt->parserstackframe.nvrtop++] = s->val;   // record the place where the value was protected, so we can free it when this sentence completes
-         }  // if NJA/virtual, leave NVR alone
-        }
-        at|=VERB;  // indicate that the symbol was not in the local table
-       }
-       // end of looking at local/global symbol tables
-       // s has the symbol for the name.  at&VERB is set if the name was found in a global table
-       if(likely(s!=0)){   // if symbol was defined...
-        A sv = s->val;  // pointer to value block for the name
-        EPZ(sv)  // symbol table entry, but no value.
-          // Following the original parser, we assume this is an error that has been reported earlier.  No ASSERT here, since we must pop nvr stack
-        // The name is defined.  If it's a noun, use its value (the common & fast case)
-        // Or, for special names (x. u. etc) that are always stacked by value, keep the value
-        // If a modifier has no names in its value, we will stack it by value.  The Dictionary says all modifiers are stacked by value, but
-        // that will make for tough debugging.  We really want to minimize overhead for each/every/inv.
-        // But: if the name is any kind of locative, we have to have a full nameref so unquote can switch locales: can't use the value then
-        // Otherwise (normal adv/verb/conj name), replace with a 'name~' reference
-        if((AT(sv)|at)&(NOUN|NAMEBYVALUE)){   // use value if noun or special name, or name::
-         if(unlikely(at&NAMEABANDON))if(!((I)jtinplace&JTFROMEXEC))namecoco(jt, y, at, locbuckets, s, sv, sympv);  // if name::, go delete the name, leaving the value to be deleted later
-         y=sv; at=AT(sv);
-        }else if(unlikely(AT(sv)&NAMELESSMOD && !(NAV(y)->flag&NMLOC+NMILOC+NMIMPLOC+NMDOT))){
-         // nameless modifier, and not a locative.  Don't create a reference; maybe cache the value
-         if(NAV(y)->flag&NMCACHED){
-          // cachable and not a locative (and not a noun).  store the value in the name, and flag that it's a symbol index, flag the value as cached in case it gets deleted
-          NAV(y)->cachedref=(A)(s-JT(jt,sympv)); NAV(y)->flag|=NMCACHEDSYM; s->flag|=LCACHED; NAV(y)->bucket=0;  // clear bucket info so we will skip that search - this name is forever cached
+       jt->parserstackframe.parsercurrtok = (US)(mes+1);  // syrd can fail, so we have to set the error-word number (before it was decremented) before calling
+       s=syrdnobuckets(y);  // do full symbol lookup, knowing that we have checked for buckets already
+        // In case the name is assigned during this sentence (including subroutines), remember the data block that the name created
+        // NOTE: the nvr stack may have been relocated by action routines, so we must refer to the global value of the base pointer
+        // Stack a named value only once.  This is needed only for names whose VALUE is put onto the stack (i. e. a noun); if we stack a REFERENCE
+        // (via namerefacv), no special protection is needed.  And, it is not needed for local names, because they are inaccessible to deletion in called
+        // functions (that is, the user should not use u. to delete a local name).  If a local name is deleted, we always defer the deletion till the end of the sentence, easier than checking
+        // When NVR is set, AM is used to hold the count of NVR stacking, so we can't have NVR and NJA both set.  User manages NJAs separately anyway
+       if(likely(s!=0)){
+        if(likely((sv=s->val)!=0)){
+         if(AT(sv)&NOUN){ 
+          // Normally local variables never get close to here because they have bucket info.  But if they are computed assignments,
+          // or inside eval strings, they may come through this path.  If one of them is y, it might be virtual.  Thus, we must make sure we don't
+          // damage AM in that case.  We don't need NVR then, because locals never need NVR.  Similarly, an LABANDONED name does not have NVR semantics, so leave it alone
+          if(likely(!(AFLAG(sv)&AFNJA+AFVIRTUAL)))if(likely((AM(sv)&AMNV)!=0)){
+           // NOTE that if the name was deleted in another task s->val will be invalid and we will crash
+           AMNVRINCR(sv)  // add 1 to the NVR count, now that we are stacking
+           AAV1(jt->nvra)[jt->parserstackframe.nvrtop++] = sv;   // record the place where the value was protected, so we can free it when this sentence completes
+          }  // if NJA/virtual, leave NVR alone
          }
-         y=sv; at=AT(sv);
-        }else{  // not a noun/nonlocative-nameless-modifier.  Make a reference
-         y = namerefacv(y, s);   // Replace other acv with reference
-         EPZ(y)
-         at=AT(y);  // refresh the type with the type of the resolved name
+        }else goto undefname;
+       }else goto undefname;
+       at|=VERB;  // indicate that the symbol was not in the local table
+      }
+      // end of looking at local/global symbol tables
+      // s has the symbol for the name.  at&VERB is set if the name was found in a global table
+// obsolete       if(likely(s!=0)){   // if symbol was defined...
+      if(likely(1)){   // if symbol was defined...
+// obsolete        A sv = s->val;  // pointer to value block for the name
+// obsolete       EPZ(sv)  // symbol table entry, but no value.  Should not occur
+       I svt=AT(sv);
+         // Following the original parser, we assume this is an error that has been reported earlier.  No ASSERT here, since we must pop nvr stack
+       // The name is defined.  If it's a noun, use its value (the common & fast case)
+       // Or, for special names (x. u. etc) that are always stacked by value, keep the value
+       // If a modifier has no names in its value, we will stack it by value.  The Dictionary says all modifiers are stacked by value, but
+       // that will make for tough debugging.  We really want to minimize overhead for each/every/inv.
+       // But: if the name is any kind of locative, we have to have a full nameref so unquote can switch locales: can't use the value then
+       // Otherwise (normal adv/verb/conj name), replace with a 'name~' reference
+       if((svt|at)&(NOUN|NAMEBYVALUE)){   // use value if noun or special name, or name::
+        if(unlikely(at&NAMEABANDON))namecoco(jtinplace, y, at, locbuckets, s, sv, sympv);  // if name::, go delete the name, leaving the value to be deleted later
+        y=sv; at=svt;
+       }else if(unlikely(svt&NAMELESSMOD && !(NAV(y)->flag&NMLOC+NMILOC+NMIMPLOC+NMDOT))){
+        // nameless modifier, and not a locative.  Don't create a reference; maybe cache the value
+        if(NAV(y)->flag&NMCACHED){
+         // cachable and not a locative (and not a noun).  store the value in the name, and flag that it's a symbol index, flag the value as cached in case it gets deleted
+         NAV(y)->cachedref=(A)(s-JT(jt,sympv)); NAV(y)->flag|=NMCACHEDSYM; s->flag|=LCACHED; NAV(y)->bucket=0;  // clear bucket info so we will skip that search - this name is forever cached
         }
-       } else {
-         // undefined name.  If special x. u. etc, that's fatal; otherwise create a dummy ref to [: (to have a verb)
-         if(at&NAMEBYVALUE){jsignal(EVVALUE);FP}  // Report error (Musn't ASSERT: need to pop all stacks) and quit
-         y = namerefacv(y, s);    // this will create a ref to undefined name as verb [:
-         EPZ(y)
-           // if syrd gave an error, namerefacv may return 0.  This will have previously signaled an error
-         at=AT(y);  // refresh the type with the type of the resolved name
+        y=sv; at=svt;
+       }else{  // not a noun/nonlocative-nameless-modifier.  Make a reference
+        y = namerefacv(y, s);   // Replace other acv with reference
+        EPZ(y)
+        at=AT(y);  // refresh the type with the type of the resolved name
        }
+      } else {
+undefname:
+        // undefined name.  If special x. u. etc, that's fatal; otherwise create a dummy ref to [: (to have a verb)
+        if(at&NAMEBYVALUE){jsignal(EVVALUE);FP}  // Report error (Musn't ASSERT: need to pop all stacks) and quit
+        y = namerefacv(y, s);    // this will create a ref to undefined name as verb [:
+        EPZ(y)
+          // if syrd gave an error, namerefacv may return 0.  This will have previously signaled an error
+        at=AT(y);  // refresh the type with the type of the resolved name
+      }
 endname: ;
 
-     // If the new word was not an unassigned name, look to see if it is ) or a conjunction,
-     // which allow 2 or 1 more pulls from the queue without checking for an executable fragment.
-     // NOTE that we are using the original type for the word, which will be stale if the word was a
-     // name that was replaced by name resolution.  We don't care - RPAR was never a name to begin with, and CONJ
-     // is much more likely to be a primitive; and we don't want to take the time to refetch the resolved type
      } else {
+      // If the new word was not an unassigned name, look to see if it is ) or a conjunction,
+      // which allow 2 or 1 more pulls from the queue without checking for an executable fragment.
+      // NOTE that we are using the original type for the word, which will be stale if the word was a
+      // name that was replaced by name resolution.  We don't care - RPAR was never a name to begin with, and CONJ
+      // is much more likely to be a primitive; and we don't want to take the time to refetch the resolved type
 // obsolete       I es=mes&3; mes=(mes&-4); es=(at>>CONJX)&3?(at>>CONJX)&3:es; mes+=es;  // calculate pull count es (2 if RPAR, 1 if CONJ, 0 otherwise); use it if not 0, else keep old value
       mes|=at&(3LL<<CONJX);  // calculate pull count es (2 if RPAR, 1 if CONJ, 0 otherwise); OR it in: 00= no more, 01=1 more, 1x=2 more
      }
@@ -691,7 +699,6 @@ endname: ;
       if((UI)(pline>>VJTFLGOK1X)>(UI)PTISNOTASGNNAME(stack[0]))if(likely(PTISM(stackfs[2]))){L *s;   // assignment to name; nothing in the stack to the right of what we are about to execute; well-behaved function (doesn't change locales)
        if(likely((AT(stack[0].a))&ASGNLOCAL)){
         // local assignment.  To avoid subroutine call overhead, make a quick check for primary symbol
-if(mes&0xffff0000)SEGFAULT;  // scaf
         if(likely((SGNIF(AR(UNLXAV0(locbuckets)),ARLCLONEDX)|(NAV(queue[mes-1])->symx-1))>=0)){  // if we are using primary table and there is a symbol stored there...
          s=JT(jt,sympv)+(I)NAV(queue[mes-1])->symx;  // get address of symbol in primary table.  There may be no value; that's OK
         }else{s=jtprobeislocal(jt,queue[mes-1]);}
@@ -780,7 +787,7 @@ RECURSIVERESULTSCHECK
       // in the first position, and if that produced an executable it would have been executed earlier.
       // Also, if token 0 is EDGE but not LPAR and the pline is 0 or 2, that similarly can't execute (if LPAR and line 0/2, the only possible exec is () )
       // we save a pass through the matcher in those cases.  But it doesn't seem to help
-// obsolete       if(PTISCAVN(stack0pt))break;
+// ineffective?       if(PTISCAVN(stack0pt))break;
      }else{
       // Lines 3-4, conj/adv execution.  We must get the parsing type of the result, but we don't need to worry about inplacing or recursion
       AF actionfn=FAVV(fs)->valencefns[pline-3];  // the routine we will execute.  It's going to take longer to read this than we can fill before the branch is mispredicted, usually
@@ -892,7 +899,7 @@ failparse:  // If there was an error during execution or name-stacking, exit wit
       A sv;  // pointer to value block for the name
       RZ(sv = s->val);  // symbol table entry, but no value.  Must be in an explicit definition, so there is no need to raise an error
       if(likely(((AT(sv)|at)&(NOUN|NAMEBYVALUE))!=0)){   // if noun or special name, use value
-       if(unlikely(at&NAMEABANDON))if(!((I)jtinplace&JTFROMEXEC))namecoco(jt, y, at, LXAV0(jt->locsyms), s, sv, JT(jt,sympv));  // if name::, go delete the name, leaving the value to be deleted later
+       if(unlikely(at&NAMEABANDON))namecoco(jtinplace, y, at, LXAV0(jt->locsyms), s, sv, JT(jt,sympv));  // if name::, go delete the name, leaving the value to be deleted later
        y=sv;
       } else y = namerefacv(y, s);   // Replace other acv with reference.  Could fail.
     } else {
